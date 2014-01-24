@@ -75,6 +75,9 @@ class CompoundPathPreview( GafferUI.PathPreviewWidget ) :
 					self.__tabbedContainer.append( tab, label=label )
 					if label == self.__preferredTab :
 						self.__tabbedContainer.setCurrent( tab )
+			
+			if self.__preferredTab is None :
+				self.__tabbedContainer.setCurrent( self.__tabbedContainer[-1] )
 																	
 	def __currentTabChanged( self, tabbedContainer, current ) :
 	
