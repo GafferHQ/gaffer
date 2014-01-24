@@ -53,7 +53,6 @@ def _qtImport( name, lazy=False ) :
 			__qtModuleName = os.environ["GAFFERUI_QT_BINDINGS"]
 		else :
 			# no preference stated via environment - see what we shipped with
-			import glob
 			if os.path.exists( os.environ["GAFFER_ROOT"] + "/python/PySide" ) :
 				__qtModuleName = "PySide"
 			else :
