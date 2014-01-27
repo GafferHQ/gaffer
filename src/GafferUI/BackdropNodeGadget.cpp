@@ -42,8 +42,6 @@
 
 #include "IECoreGL/Selector.h"
 
-#include "Gaffer/StandardSet.h"
-#include "Gaffer/ScriptNode.h"
 #include "Gaffer/BlockedConnection.h"
 
 #include "GafferUI/BackdropNodeGadget.h"
@@ -85,12 +83,6 @@ BackdropNodeGadget::BackdropNodeGadget( Gaffer::NodePtr node )
 	}
 	
 	node->plugDirtiedSignal().connect( boost::bind( &BackdropNodeGadget::plugDirtied, this, ::_1 ) );
-	
-	if( ScriptNode *script = node->scriptNode() )
-	{
-		script->selection()->memberAddedSignal().connect( boost::bind( &BackdropNodeGadget::selectionChanged, this, ::_1, ::_2 ) );
-		script->selection()->memberRemovedSignal().connect( boost::bind( &BackdropNodeGadget::selectionChanged, this, ::_1, ::_2 ) );
-	}
 	
 	mouseMoveSignal().connect( boost::bind( &BackdropNodeGadget::mouseMove, this, ::_1, ::_2 ) );
 	buttonPressSignal().connect( boost::bind( &BackdropNodeGadget::buttonPress, this, ::_1, ::_2 ) );
@@ -254,10 +246,7 @@ void BackdropNodeGadget::doRender( const Style *style ) const
 	{
 		// normal drawing mode
 	
-		const ScriptNode *script = node()->scriptNode();
-		const bool selected = script && script->selection()->contains( node() );
-
-		style->renderBackdrop( bound, selected ? Style::HighlightedState : Style::NormalState );
+		style->renderBackdrop( bound, getHighlighted() ? Style::HighlightedState : Style::NormalState );
 
 		const std::string title = backdrop->titlePlug()->getValue();
 		if( title.size() )
@@ -401,14 +390,6 @@ void BackdropNodeGadget::leave( Gadget *gadget, const ButtonEvent &event )
 	Pointer::set( 0 );
 	m_hovered = false;
 	renderRequestSignal()( this );
-}
-
-void BackdropNodeGadget::selectionChanged( Gaffer::Set *set, IECore::RunTimeTyped *member )
-{
-	if( member == node() )
-	{
-		renderRequestSignal()( this );
-	}
 }
 
 float BackdropNodeGadget::hoverWidth() const
