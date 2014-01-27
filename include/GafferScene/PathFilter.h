@@ -37,8 +37,6 @@
 #ifndef GAFFERSCENE_PATHFILTER_H
 #define GAFFERSCENE_PATHFILTER_H
 
-#include "boost/regex.hpp"
-
 #include "Gaffer/TypedObjectPlug.h"
 
 #include "GafferScene/Filter.h"
