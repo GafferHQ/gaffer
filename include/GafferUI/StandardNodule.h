@@ -86,7 +86,6 @@ class StandardNodule : public Nodule
 	private :
 
 		bool m_labelVisible;
-		bool m_hovering;
 		bool m_draggingConnection;
 		Imath::V3f m_dragPosition;
 		Imath::V3f m_dragTangent;

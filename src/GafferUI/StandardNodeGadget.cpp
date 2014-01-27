@@ -42,7 +42,6 @@
 #include "IECoreGL/Selector.h"
 
 #include "Gaffer/TypedObjectPlug.h"
-#include "Gaffer/ScriptNode.h"
 #include "Gaffer/CompoundPlug.h"
 #include "Gaffer/StandardSet.h"
 #include "Gaffer/DependencyNode.h"
@@ -162,13 +161,6 @@ StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node, LinearContainer::O
 
 	// connect to the signals we need in order to operate
 	////////////////////////////////////////////////////////
-
-	Gaffer::ScriptNodePtr script = node->scriptNode();
-	if( script )
-	{
-		script->selection()->memberAddedSignal().connect( boost::bind( &StandardNodeGadget::selectionChanged, this, ::_1,  ::_2 ) );
-		script->selection()->memberRemovedSignal().connect( boost::bind( &StandardNodeGadget::selectionChanged, this, ::_1,  ::_2 ) );
-	}
 	
 	node->childAddedSignal().connect( boost::bind( &StandardNodeGadget::childAdded, this, ::_1,  ::_2 ) );
 	node->childRemovedSignal().connect( boost::bind( &StandardNodeGadget::childRemoved, this, ::_1,  ::_2 ) );
@@ -217,13 +209,7 @@ Imath::Box3f StandardNodeGadget::bound() const
 void StandardNodeGadget::doRender( const Style *style ) const
 {
 	// decide what state we're rendering in
-	Gaffer::ConstScriptNodePtr script = node()->scriptNode();
-	
-	Style::State state = Style::NormalState;
-	if( script && script->selection()->contains( node() ) )
-	{
-		state = Style::HighlightedState;
-	}
+	Style::State state = getHighlighted() ? Style::HighlightedState : Style::NormalState;
 	
 	// draw our background frame
 	Box3f b = bound();
@@ -389,14 +375,6 @@ IndividualContainer *StandardNodeGadget::contentsContainer()
 const IndividualContainer *StandardNodeGadget::contentsContainer() const
 {
 	return const_cast<StandardNodeGadget *>( this )->contentsContainer();
-}
-
-void StandardNodeGadget::selectionChanged( Gaffer::Set *selection, IECore::RunTimeTyped *n )
-{
-	if( n==node() )
-	{
-		renderRequestSignal()( this );
-	}
 }
 
 void StandardNodeGadget::childAdded( Gaffer::GraphComponent *parent, Gaffer::GraphComponent *child )

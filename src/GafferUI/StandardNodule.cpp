@@ -61,7 +61,7 @@ IE_CORE_DEFINERUNTIMETYPED( StandardNodule );
 Nodule::NoduleTypeDescription<StandardNodule> StandardNodule::g_noduleTypeDescription( Gaffer::Plug::staticTypeId() );
 
 StandardNodule::StandardNodule( Gaffer::PlugPtr plug )
-	:	Nodule( plug ), m_labelVisible( false ), m_hovering( false ), m_draggingConnection( false )
+	:	Nodule( plug ), m_labelVisible( false ), m_draggingConnection( false )
 {
 	enterSignal().connect( boost::bind( &StandardNodule::enter, this, ::_1, ::_2 ) );
 	leaveSignal().connect( boost::bind( &StandardNodule::leave, this, ::_1, ::_2 ) );
@@ -117,7 +117,7 @@ void StandardNodule::doRender( const Style *style ) const
 	
 	float radius = 0.5f;
 	Style::State state = Style::NormalState;
-	if( m_hovering )
+	if( getHighlighted() )
 	{
 		state = Style::HighlightedState;
 		radius = 1.0f;
@@ -169,7 +169,7 @@ void StandardNodule::renderLabel( const Style *style ) const
 	
 	// now we can actually do the rendering.
 	
-	if( m_hovering )
+	if( getHighlighted() )
 	{
 		glScalef( 1.2, 1.2, 1.2 );
 	}
@@ -182,14 +182,12 @@ void StandardNodule::renderLabel( const Style *style ) const
 
 void StandardNodule::enter( GadgetPtr gadget, const ButtonEvent &event )
 {
-	m_hovering = true;
-	renderRequestSignal()( this );
+	setHighlighted( true );
 }
 
 void StandardNodule::leave( GadgetPtr gadget, const ButtonEvent &event )
 {
-	m_hovering = false;
-	renderRequestSignal()( this );
+	setHighlighted( false );
 }
 
 bool StandardNodule::buttonPress( GadgetPtr gadget, const ButtonEvent &event )
@@ -238,7 +236,7 @@ bool StandardNodule::dragEnter( GadgetPtr gadget, const DragDropEvent &event )
 	connection( event, input, output );
 	if( input )
 	{
-		m_hovering = true;
+		setHighlighted( true );
 		
 		// snap the drag endpoint to our centre, as another little visual indication
 		// that we're well up for being connected.
@@ -288,7 +286,7 @@ bool StandardNodule::dragLeave( GadgetPtr gadget, const DragDropEvent &event )
 {
 	if( this != event.sourceGadget )
 	{
-		m_hovering = false;
+		setHighlighted( false );
 		// if the new drag destination isn't one that would warrant having the labels
 		// showing, then hide them.
 		if( Nodule *newDestination = IECore::runTimeCast<Nodule>( event.destinationGadget ) )
@@ -323,14 +321,13 @@ bool StandardNodule::dragEnd( GadgetPtr gadget, const DragDropEvent &event )
 {
 	GafferUI::Pointer::set( NULL );
 	m_draggingConnection = false;
-	m_hovering = false;
-	renderRequestSignal()( this );
+	setHighlighted( false );
 	return true;
 }
 
 bool StandardNodule::drop( GadgetPtr gadget, const DragDropEvent &event )
 {
-	m_hovering = false;
+	setHighlighted( false );
 	setCompatibleLabelsVisible( event, false );
 	
 	Gaffer::PlugPtr input, output;

@@ -81,9 +81,7 @@ class BackdropNodeGadget : public NodeGadget
 		bool dragMove( Gadget *gadget, const DragDropEvent &event );
 		bool dragEnd( Gadget *gadget, const DragDropEvent &event );
 		void leave( Gadget *gadget, const ButtonEvent &event );
-	
-		void selectionChanged( Gaffer::Set *set, IECore::RunTimeTyped *member );
-	
+		
 		// The width in gadget coordinates that can be hovered and then dragged at the edge of frame.
 		float hoverWidth() const;
 		// -1 means the min in that direction, +1 means the max in that direction, 0

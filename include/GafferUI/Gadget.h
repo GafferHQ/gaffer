@@ -112,6 +112,21 @@ class Gadget : public Gaffer::GraphComponent
 		const Style *style() const;
 		//@}
 
+		/// @name State
+		/// \todo Add setEnabled()/getEnabled() and setVisible()/getVisible()
+		/// methods matching those we have on the Widget class.
+		////////////////////////////////////////////////////////////////////
+		//@{
+		/// Sets whether or not this Gadget should be rendered in a highlighted
+		/// state. This status is not inherited by child Gadgets. Note that highlighted
+		/// drawing has not yet been implemented for all Gadget types. Derived
+		/// classes may reimplement this method as necessary, but must call the base
+		/// class method in their reimplementation.
+		/// \todo Implement highlighted drawing for all Gadget subclasses.
+		virtual void setHighlighted( bool highlighted );
+		bool getHighlighted() const;
+		//@}
+
 		/// @name Transform
 		/// Every Gadget has a transform which dictates how it is positioned
 		/// relative to its parent.
@@ -237,6 +252,8 @@ class Gadget : public Gaffer::GraphComponent
 		void styleChanged();
 		
 		ConstStylePtr m_style;
+		
+		bool m_highlighted;
 		
 		Imath::M44f m_transform;
 		

@@ -62,6 +62,18 @@ class GadgetWrapper : public GafferBindings::GraphComponentWrapper<WrappedType>
 		{
 		}
 		
+		virtual void setHighlighted( bool highlighted )
+		{
+			IECorePython::ScopedGILLock gilLock;
+			boost::python::override f = this->get_override( "setHighlighted" );
+			if( f )
+			{
+				f( highlighted );
+				return;
+			}
+			WrappedType::setHighlighted( highlighted );
+		}
+
 		virtual Imath::Box3f bound() const
 		{
 			IECorePython::ScopedGILLock gilLock;
@@ -102,8 +114,15 @@ class GadgetWrapper : public GafferBindings::GraphComponentWrapper<WrappedType>
 /// IECorePython/ParameterBinding.h for an explanation.
 #define GAFFERUIBINDINGS_DEFGADGETWRAPPERFNS( CLASSNAME )\
 	GAFFERBINDINGS_DEFGRAPHCOMPONENTWRAPPERFNS( CLASSNAME ) \
+	.def( "setHighlighted", &setHighlighted<CLASSNAME> )\
 	.def( "bound", &bound<CLASSNAME> )\
 	.def( "getToolTip", &getToolTip<CLASSNAME> )\
+
+template<typename T>
+static void setHighlighted( T &p, bool highlighted )
+{
+	p.T::setHighlighted( highlighted );
+}
 
 template<typename T>
 static Imath::Box3f bound( const T &p )
