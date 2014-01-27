@@ -56,7 +56,7 @@ using namespace std;
 IE_CORE_DEFINERUNTIMETYPED( Gadget );
 
 Gadget::Gadget( const std::string &name )
-	:	GraphComponent( name ), m_style( 0 ), m_toolTip( "" )
+	:	GraphComponent( name ), m_style( 0 ), m_highlighted( false ), m_toolTip( "" )
 {
 	std::string n = "__Gaffer::Gadget::" + boost::lexical_cast<std::string>( (size_t)this );
 	m_glName = IECoreGL::NameStateComponent::glNameFromName( n, true );
@@ -121,6 +121,22 @@ const Style *Gadget::style() const
 		g = g->parent<Gadget>();
 	}
 	return Style::getDefaultStyle().get();
+}
+
+void Gadget::setHighlighted( bool highlighted )
+{
+	if( highlighted == m_highlighted )
+	{
+		return;
+	}
+	
+	m_highlighted = highlighted;
+	renderRequestSignal()( this );
+}
+
+bool Gadget::getHighlighted() const
+{
+	return m_highlighted;
 }
 
 void Gadget::setTransform( const Imath::M44f &matrix )

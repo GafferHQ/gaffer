@@ -145,6 +145,26 @@ class GadgetTest( GafferUITest.TestCase ) :
 		s2.setColor( GafferUI.StandardStyle.Color.BackgroundColor, IECore.Color3f( 1 ) )
 		self.assertEqual( len( cs ), 3 )
 		self.assertTrue( cs[2][0].isSame( g ) )
+	
+	def testHighlighting( self ) :
+	
+		g = GafferUI.Gadget()
+		self.assertEqual( g.getHighlighted(), False )
+		
+		g.setHighlighted( True )
+		self.assertEqual( g.getHighlighted(), True )
+		
+		g.setHighlighted( False )
+		self.assertEqual( g.getHighlighted(), False )
+		
+		cs = GafferTest.CapturingSlot( g.renderRequestSignal() )
+		
+		g.setHighlighted( False )
+		self.assertEqual( len( cs ), 0 )
+		
+		g.setHighlighted( True )
+		self.assertEqual( len( cs ), 1 )
+		self.assertTrue( cs[0][0].isSame( g ) )
 		
 if __name__ == "__main__":
 	unittest.main()
