@@ -161,6 +161,8 @@ class GraphGadget : public ContainerGadget
 		
 		void rootChildAdded( Gaffer::GraphComponent *root, Gaffer::GraphComponent *child );
 		void rootChildRemoved( Gaffer::GraphComponent *root, Gaffer::GraphComponent *child );
+		void selectionMemberAdded( Gaffer::Set *set, IECore::RunTimeTyped *member );
+		void selectionMemberRemoved( Gaffer::Set *set, IECore::RunTimeTyped *member );
 		void filterMemberAdded( Gaffer::Set *set, IECore::RunTimeTyped *member );
 		void filterMemberRemoved( Gaffer::Set *set, IECore::RunTimeTyped *member );
 		void inputChanged( Gaffer::Plug *dstPlug );
@@ -202,7 +204,9 @@ class GraphGadget : public ContainerGadget
 		RootChangedSignal m_rootChangedSignal;
 		boost::signals::scoped_connection m_rootChildAddedConnection;
 		boost::signals::scoped_connection m_rootChildRemovedConnection;
-
+		boost::signals::scoped_connection m_selectionMemberAddedConnection;
+		boost::signals::scoped_connection m_selectionMemberRemovedConnection;
+		
 		Gaffer::SetPtr m_filter;
 		boost::signals::scoped_connection m_filterMemberAddedConnection;
 		boost::signals::scoped_connection m_filterMemberRemovedConnection;

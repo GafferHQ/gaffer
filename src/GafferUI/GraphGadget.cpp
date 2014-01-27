@@ -126,10 +126,29 @@ void GraphGadget::setRoot( Gaffer::NodePtr root, Gaffer::SetPtr filter )
 		m_rootChildRemovedConnection = m_root->childRemovedSignal().connect( boost::bind( &GraphGadget::rootChildRemoved, this, ::_1, ::_2 ) );
 	}
 	
-	m_scriptNode = runTimeCast<Gaffer::ScriptNode>( m_root );
-	if( !m_scriptNode )
+	Gaffer::ScriptNodePtr scriptNode = runTimeCast<Gaffer::ScriptNode>( m_root );
+	if( !scriptNode )
 	{
-		m_scriptNode = m_root->scriptNode();
+		scriptNode = m_root->scriptNode();
+	}
+	
+	if( scriptNode != m_scriptNode )
+	{
+		m_scriptNode = scriptNode;
+		if( m_scriptNode )
+		{
+			m_selectionMemberAddedConnection = m_scriptNode->selection()->memberAddedSignal().connect(
+				boost::bind( &GraphGadget::selectionMemberAdded, this, ::_1, ::_2 )
+			);
+			m_selectionMemberRemovedConnection = m_scriptNode->selection()->memberRemovedSignal().connect(
+				boost::bind( &GraphGadget::selectionMemberRemoved, this, ::_1, ::_2 )
+			);
+		}
+		else
+		{
+			m_selectionMemberAddedConnection.disconnect();
+			m_selectionMemberAddedConnection.disconnect();
+		}
 	}
 	
 	if( filter != m_filter )
@@ -593,6 +612,28 @@ void GraphGadget::rootChildRemoved( Gaffer::GraphComponent *root, Gaffer::GraphC
 	if( node )
 	{
 		removeNodeGadget( node );
+	}
+}
+
+void GraphGadget::selectionMemberAdded( Gaffer::Set *set, IECore::RunTimeTyped *member )
+{
+	if( Gaffer::Node *node = runTimeCast<Gaffer::Node>( member ) )
+	{
+		if( NodeGadget *nodeGadget = findNodeGadget( node ) )
+		{
+			nodeGadget->setHighlighted( true );
+		}
+	}
+}
+
+void GraphGadget::selectionMemberRemoved( Gaffer::Set *set, IECore::RunTimeTyped *member )
+{
+	if( Gaffer::Node *node = runTimeCast<Gaffer::Node>( member ) )
+	{
+		if( NodeGadget *nodeGadget = findNodeGadget( node ) )
+		{
+			nodeGadget->setHighlighted( false );
+		}
 	}
 }
 
@@ -1272,6 +1313,12 @@ NodeGadget *GraphGadget::addNodeGadget( Gaffer::Node *node )
 	
 	m_nodeGadgets[node] = nodeGadgetEntry;
 	
+	// highlight to reflect selection status
+	if( m_scriptNode && m_scriptNode->selection()->contains( node ) )
+	{
+		nodeGadget->setHighlighted( true );
+	}
+
 	// place it if it's not placed already.	
 	if( !node->getChild<Gaffer::V2fPlug>( "__uiPosition" ) )
 	{

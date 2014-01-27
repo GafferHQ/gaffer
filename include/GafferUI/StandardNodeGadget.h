@@ -106,7 +106,6 @@ class StandardNodeGadget : public NodeGadget
 		typedef std::map<const Gaffer::Plug *, Nodule *> NoduleMap;
 		NoduleMap m_nodules;
 				
-		void selectionChanged( Gaffer::Set *selection, IECore::RunTimeTyped *node );
 		void childAdded( Gaffer::GraphComponent *parent, Gaffer::GraphComponent *child );
 		void childRemoved( Gaffer::GraphComponent *parent, Gaffer::GraphComponent *child );
 		

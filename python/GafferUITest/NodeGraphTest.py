@@ -929,6 +929,35 @@ class NodeGraphTest( GafferUITest.TestCase ) :
 		
 		u = [ x.node().relativeName( script ) for x in g.upstreamNodeGadgets( script["f"] ) ]
 		self.assertEqual( u, [ "e" ] )
+	
+	def testSelectionHighlighting( self ) :
+	
+		script = Gaffer.ScriptNode()
+		
+		script["a"] = GafferTest.AddNode()
+		script["b"] = GafferTest.AddNode()
+		
+		script.selection().add( script["a"] )
+		
+		g = GafferUI.GraphGadget( script )
+		
+		self.assertTrue( g.nodeGadget( script["a"] ).getHighlighted() )
+		self.assertFalse( g.nodeGadget( script["b"] ).getHighlighted() )
+		
+		script.selection().add( script["b"] )
+		
+		self.assertTrue( g.nodeGadget( script["a"] ).getHighlighted() )
+		self.assertTrue( g.nodeGadget( script["b"] ).getHighlighted() )
+
+		script.selection().remove( script["a"] )
+
+		self.assertFalse( g.nodeGadget( script["a"] ).getHighlighted() )
+		self.assertTrue( g.nodeGadget( script["b"] ).getHighlighted() )
+		
+		script.selection().clear()
+		
+		self.assertFalse( g.nodeGadget( script["a"] ).getHighlighted() )
+		self.assertFalse( g.nodeGadget( script["b"] ).getHighlighted() )
 		
 if __name__ == "__main__":
 	unittest.main()
