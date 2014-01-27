@@ -105,7 +105,7 @@ class Box : public Node
 
 	private :
 
-		bool validatePromotability( const Plug *descendantPlug, bool throwExceptions ) const;
+		bool validatePromotability( const Plug *descendantPlug, bool throwExceptions, bool checkNode = true ) const;
 		
 		typedef std::map<ConstPlugPtr, IECore::CompoundDataPtr> PlugMetadataMap;
 		

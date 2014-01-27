@@ -152,7 +152,7 @@ void Box::unpromotePlug( Plug *promotedDescendantPlug )
 	}
 }
 
-bool Box::validatePromotability( const Plug *descendantPlug, bool throwExceptions ) const
+bool Box::validatePromotability( const Plug *descendantPlug, bool throwExceptions, bool checkNode ) const
 {
 	if( !descendantPlug )
 	{
@@ -177,6 +177,22 @@ bool Box::validatePromotability( const Plug *descendantPlug, bool throwException
 			throw IECore::Exception(
 				boost::str(
 					boost::format( "Cannot promote plug \"%s\" as it is not an input plug." ) % descendantPlug->fullName()
+				)
+			);
+		}
+	}
+
+	if( descendantPlug->getFlags( Plug::ReadOnly ) )
+	{
+		if( !throwExceptions )
+		{
+			return false;
+		}
+		else
+		{
+			throw IECore::Exception(
+				boost::str(
+					boost::format( "Cannot promote plug \"%s\" as it is read only." ) % descendantPlug->fullName()
 				)
 			);
 		}
@@ -230,20 +246,33 @@ bool Box::validatePromotability( const Plug *descendantPlug, bool throwException
 		}
 	}
 
-	const Node *descendantNode = descendantPlug->node();
-	if( !descendantNode || descendantNode->parent<Node>() != this )
+	if( checkNode )
 	{
-		if( !throwExceptions )
+		const Node *descendantNode = descendantPlug->node();
+		if( !descendantNode || descendantNode->parent<Node>() != this )
+		{
+			if( !throwExceptions )
+			{
+				return false;
+			}
+			else
+			{
+				throw IECore::Exception(
+					boost::str(
+						boost::format( "Cannot promote plug \"%s\" as its node is not a child of \"%s\"." ) % descendantPlug->fullName() % fullName()
+					)
+				);
+			}
+		}
+	}
+	
+	// check all the children of this plug too
+	for( RecursivePlugIterator it( descendantPlug ); it != it.end(); ++it )
+	{
+		// no need to check the node, because we've already done that ourselves
+		if( !validatePromotability( it->get(), throwExceptions, false ) )
 		{
 			return false;
-		}
-		else
-		{
-			throw IECore::Exception(
-				boost::str(
-					boost::format( "Cannot promote plug \"%s\" as it's node is not a child of \"%s\"." ) % descendantPlug->fullName() % fullName()
-				)
-			);
 		}
 	}
 

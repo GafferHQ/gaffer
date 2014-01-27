@@ -437,11 +437,6 @@ IECore::ConstObjectPtr ValuePlug::getObjectValue() const
 
 void ValuePlug::setObjectValue( IECore::ConstObjectPtr value )
 {
-	if( getFlags( ReadOnly ) )
-	{
-		throw IECore::Exception( boost::str( boost::format( "Cannot set value for read only plug \"%s\"" ) % fullName() ) );
-	}
-	
 	bool haveInput = getInput<Plug>();
 	if( direction()==In && !haveInput )
 	{
@@ -449,10 +444,23 @@ void ValuePlug::setObjectValue( IECore::ConstObjectPtr value )
 		// which we store directly on the plug. when setting this we need to take care
 		// of undo, and also of triggering the plugValueSet signal and propagating the
 		// plugDirtiedSignal.
+		
+		if( getFlags( ReadOnly ) )
+		{
+			// We don't allow static values to be set on read only plugs, so we throw.
+			// Note that it is perfectly acceptable to call setValue() on a read only
+			// plug during a computation because the result is not written onto the
+			// plug itself, so we don't make the check in the case that we call
+			// receiveResult() below. This allows plugs which have inputs to be made
+			// read only after having their input set.
+			throw IECore::Exception( boost::str( boost::format( "Cannot set value for read only plug \"%s\"" ) % fullName() ) );
+		}
+	
 		if( value->isNotEqualTo( m_staticValue ) )
 		{
 			Action::enact( new SetValueAction( this, value ) );
-		}		
+		}
+		
 		return;
 	}
 
