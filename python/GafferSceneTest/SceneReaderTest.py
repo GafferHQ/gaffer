@@ -63,6 +63,7 @@ class SceneReaderTest( GafferSceneTest.SceneTestCase ) :
 		
 		s = GafferScene.SceneReader()
 		s["fileName"].setValue( "/tmp/test.scc" )
+		s["refreshCount"].setValue( self.uniqueInt( "/tmp/test.scc" ) ) # account for our changing of file contents between tests
 		
 		self.assertEqual( len( s["out"].attributes( "/" ) ), 0 )
 		
@@ -91,6 +92,7 @@ class SceneReaderTest( GafferSceneTest.SceneTestCase ) :
 		
 		s = GafferScene.SceneReader()
 		s["fileName"].setValue( "/tmp/test.scc" )
+		s["refreshCount"].setValue( self.uniqueInt( "/tmp/test.scc" ) ) # account for our changing of file contents between tests
 
 		t = GafferScene.SceneTimeWarp()
 		t["in"].setInput( s["out"] )
@@ -123,6 +125,7 @@ class SceneReaderTest( GafferSceneTest.SceneTestCase ) :
 		
 		s = GafferScene.SceneReader()
 		s["fileName"].setValue( "/tmp/test.scc" )
+		s["refreshCount"].setValue( self.uniqueInt( "/tmp/test.scc" ) ) # account for our changing of file contents between tests
 
 		t = GafferScene.SceneTimeWarp()
 		t["in"].setInput( s["out"] )
@@ -163,6 +166,112 @@ class SceneReaderTest( GafferSceneTest.SceneTestCase ) :
 			t["out"], "/staticGroup/staticSphere",
 			childPlugNames = [ "object", "transform", "attributes", "bound" ]
 		)
+
+	def testTagFilteringWholeScene( self ) :
+	
+		s = IECore.SceneCache( "/tmp/test.scc", IECore.IndexedIO.OpenMode.Write )
+		
+		sphereGroup = s.createChild( "sphereGroup" )
+		sphereGroup.writeTags( [ "chrome" ] )
+		sphere = sphereGroup.createChild( "sphere" )
+		sphere.writeObject( IECore.SpherePrimitive(), 0 )
+		
+		planeGroup = s.createChild( "planeGroup" )
+		plane = planeGroup.createChild( "plane" )
+		plane.writeTags( [ "wood", "something" ] )
+		plane.writeObject( IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ), 0 )
+		
+		del s, sphereGroup, sphere, planeGroup, plane
+		
+		# these are all loading everything, although each with
+		# different filters.
+		
+		refreshCount = self.uniqueInt( "/tmp/test.scc" )
+		
+		s1 = GafferScene.SceneReader()
+		s1["fileName"].setValue( "/tmp/test.scc" )
+		s1["refreshCount"].setValue( refreshCount )
+		
+		s2 = GafferScene.SceneReader()
+		s2["fileName"].setValue( "/tmp/test.scc" )
+		s2["refreshCount"].setValue( refreshCount )
+		s2["tags"].setValue( "chrome wood" )
+		
+		s3 = GafferScene.SceneReader()
+		s3["fileName"].setValue( "/tmp/test.scc" )
+		s3["refreshCount"].setValue( refreshCount )
+		s3["tags"].setValue( "chrome something" )
+		
+		# so the resulting scenes should be equal
+		
+		self.assertScenesEqual( s1["out"], s2["out"] )
+		self.assertScenesEqual( s2["out"], s3["out"] )
+		
+		# as should be the hashes, except for childNames
+		
+		self.assertSceneHashesEqual( s1["out"], s2["out"], childPlugNamesToIgnore = ( "childNames", ) )
+		self.assertSceneHashesEqual( s2["out"], s3["out"], childPlugNamesToIgnore = ( "childNames", ) )
+	
+	def testTagFilteringPartialScene( self ) :
+	
+		s = IECore.SceneCache( "/tmp/test.scc", IECore.IndexedIO.OpenMode.Write )
+		
+		sphereGroup = s.createChild( "sphereGroup" )
+		sphereGroup.writeTags( [ "chrome" ] )
+		sphere = sphereGroup.createChild( "sphere" )
+		sphere.writeObject( IECore.SpherePrimitive(), 0 )
+		
+		planeGroup = s.createChild( "planeGroup" )
+		plane = planeGroup.createChild( "plane" )
+		plane.writeTags( [ "wood", "something" ] )
+		plane.writeObject( IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ), 0 )
+		
+		del s, sphereGroup, sphere, planeGroup, plane
+		
+		refreshCount = self.uniqueInt( "/tmp/test.scc" )
+
+		# this one will load everything
+		
+		s1 = GafferScene.SceneReader()
+		s1["fileName"].setValue( "/tmp/test.scc" )
+		s1["refreshCount"].setValue( refreshCount )
+
+		# this one should load just the sphere
+
+		s2 = GafferScene.SceneReader()
+		s2["fileName"].setValue( "/tmp/test.scc" )
+		s2["refreshCount"].setValue( refreshCount )
+		s2["tags"].setValue( "chrome" )
+		
+		# this one should load just the plane
+		
+		s3 = GafferScene.SceneReader()
+		s3["fileName"].setValue( "/tmp/test.scc" )
+		s3["refreshCount"].setValue( refreshCount )
+		s3["tags"].setValue( "wood" )
+	
+		# check childnames
+		
+		self.assertEqual( set( [ str( x ) for x in s1["out"].childNames( "/" ) ] ), set( [ "sphereGroup", "planeGroup" ] ) )
+		self.assertEqual( set( [ str( x ) for x in s2["out"].childNames( "/" ) ] ), set( [ "sphereGroup" ] ) )
+		self.assertEqual( set( [ str( x ) for x in s3["out"].childNames( "/" ) ] ), set( [ "planeGroup" ] ) )
+
+		self.assertEqual( set( [ str( x ) for x in s1["out"].childNames( "/sphereGroup" ) ] ), set( [ "sphere" ] ) )
+		self.assertEqual( set( [ str( x ) for x in s2["out"].childNames( "/sphereGroup" ) ] ), set( [ "sphere" ] ) )
+
+		self.assertEqual( set( [ str( x ) for x in s1["out"].childNames( "/planeGroup" ) ] ), set( [ "plane" ] ) )
+		self.assertEqual( set( [ str( x ) for x in s3["out"].childNames( "/planeGroup" ) ] ), set( [ "plane" ] ) )
+		
+		# check equality of the locations which are preserved
+		
+		self.assertPathsEqual( s1["out"], "/", s2["out"], "/", childPlugNamesToIgnore = ( "childNames", ) )
+		self.assertPathsEqual( s1["out"], "/", s3["out"], "/", childPlugNamesToIgnore = ( "childNames", ) )
+
+		self.assertPathsEqual( s1["out"], "/sphereGroup/sphere", s2["out"], "/sphereGroup/sphere", childPlugNamesToIgnore = ( "childNames", ) )
+		self.assertPathsEqual( s1["out"], "/sphereGroup/sphere", s2["out"], "/sphereGroup/sphere", childPlugNamesToIgnore = ( "childNames", ) )
+
+		self.assertPathsEqual( s1["out"], "/planeGroup/plane", s3["out"], "/planeGroup/plane", childPlugNamesToIgnore = ( "childNames", ) )
+		self.assertPathsEqual( s1["out"], "/planeGroup/plane", s3["out"], "/planeGroup/plane", childPlugNamesToIgnore = ( "childNames", ) )
 		
 	def tearDown( self ) :
 	

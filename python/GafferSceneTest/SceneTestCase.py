@@ -215,6 +215,16 @@ class SceneTestCase( GafferTest.TestCase ) :
 			for i in range( 0, 3 ) :
 				self.assertAlmostEqual( v1[i], v2[i], places )			
 	
+	__uniqueInts = {}
+	@classmethod
+	def uniqueInt( cls, key ) :
+	
+		value = cls.__uniqueInts.get( key, 0 )
+		value += 1
+		cls.__uniqueInts[key] = value
+		
+		return value
+	
 	def __pathToString( self, path ) :
 	
 		return "/" + "/".join( [ p.value() for p in path ] )
