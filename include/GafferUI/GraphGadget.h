@@ -179,6 +179,7 @@ class GraphGadget : public ContainerGadget
 		bool dragEnd( GadgetPtr gadget, const DragDropEvent &event );
 		void calculateDragSnapOffsets( Gaffer::Set *nodes );
 		void offsetNodes( Gaffer::Set *nodes, const Imath::V2f &offset );
+		void updateDragSelection( bool dragEnd );
 		
 		void updateGraph();
 		/// May return NULL if NodeGadget::create() returns NULL, signifying that

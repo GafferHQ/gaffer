@@ -942,6 +942,7 @@ bool GraphGadget::dragMove( GadgetPtr gadget, const DragDropEvent &event )
 	{
 		// we're drag selecting
 		m_lastDragPosition = V2f( i.x, i.y );
+		updateDragSelection( false );
 		renderRequestSignal()( this );
 		return true;
 	}
@@ -1109,24 +1110,7 @@ bool GraphGadget::dragEnd( GadgetPtr gadget, const DragDropEvent &event )
 	}
 	else if( dragMode == Selecting )
 	{
-		Box2f selectionBound;
-		selectionBound.extendBy( m_dragStartPosition );
-		selectionBound.extendBy( m_lastDragPosition );
-	
-		for( ChildContainer::const_iterator it=children().begin(); it!=children().end(); it++ )
-		{
-			NodeGadgetPtr nodeGadget = runTimeCast<NodeGadget>( *it );
-			if( nodeGadget )
-			{
-				Box3f nodeBound3 = nodeGadget->transformedBound();
-				Box2f nodeBound2( V2f( nodeBound3.min.x, nodeBound3.min.y ), V2f( nodeBound3.max.x, nodeBound3.max.y ) );
-				if( boxContains( selectionBound, nodeBound2 ) )
-				{
-					m_scriptNode->selection()->add( nodeGadget->node() );
-				}
-			}
-		}
-	
+		updateDragSelection( true );
 		renderRequestSignal()( this );
 	}
 
@@ -1254,6 +1238,32 @@ void GraphGadget::offsetNodes( Gaffer::Set *nodes, const Imath::V2f &offset )
 		{		
 			Gaffer::V2fPlug *p = node->getChild<Gaffer::V2fPlug>( "__uiPosition" );
 			p->setValue( p->getValue() + offset );
+		}
+	}
+}
+
+void GraphGadget::updateDragSelection( bool dragEnd )
+{
+	Box2f selectionBound;
+	selectionBound.extendBy( m_dragStartPosition );
+	selectionBound.extendBy( m_lastDragPosition );
+	
+	for( NodeGadgetMap::const_iterator it = m_nodeGadgets.begin(), eIt = m_nodeGadgets.end(); it != eIt; ++it )
+	{
+		NodeGadget *nodeGadget = it->second.gadget;
+		const Box3f nodeBound3 = nodeGadget->transformedBound();
+		const Box2f nodeBound2( V2f( nodeBound3.min.x, nodeBound3.min.y ), V2f( nodeBound3.max.x, nodeBound3.max.y ) );
+		if( boxContains( selectionBound, nodeBound2 ) )
+		{
+			nodeGadget->setHighlighted( true );
+			if( dragEnd )
+			{
+				m_scriptNode->selection()->add( const_cast<Gaffer::Node *>( it->first ) );
+			}
+		}
+		else
+		{
+			nodeGadget->setHighlighted( m_scriptNode->selection()->contains( it->first ) );
 		}
 	}
 }
