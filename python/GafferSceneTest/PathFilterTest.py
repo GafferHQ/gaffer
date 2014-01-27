@@ -40,6 +40,7 @@ import unittest
 import IECore
 
 import Gaffer
+import GafferTest
 import GafferScene
 import GafferSceneTest
 
@@ -52,10 +53,10 @@ class PathFilterTest( unittest.TestCase ) :
 	def testAffects( self ) :
 	
 		f = GafferScene.PathFilter()
-		a = f.affects( f["paths"] )
-		self.assertEqual( len( a ), 1 )
-		self.failUnless( a[0].isSame( f["match"] ) )
-	
+		cs = GafferTest.CapturingSlot( f.plugDirtiedSignal() )
+		f["paths"].setValue( IECore.StringVectorData( [ "/a" ] ) )
+		self.assertTrue( "match" in [ x[0].getName() for x in cs ] )
+		
 	def testMatch( self ) :
 	
 		f = GafferScene.PathFilter()
@@ -99,11 +100,11 @@ class PathFilterTest( unittest.TestCase ) :
 				c["scene:path"] = IECore.InternedStringVectorData( path[1:].split( "/" ) )
 				self.assertTrue( f["match"].getValue() & f.Result.ExactMatch )
 	
-	def testInputsDenied( self ) :
+	def testInputsAccepted( self ) :
 	
 		f = GafferScene.PathFilter()
 		p = Gaffer.StringVectorDataPlug( direction = Gaffer.Plug.Direction.Out, defaultValue = IECore.StringVectorData() )
-		self.failIf( f["paths"].acceptsInput( p ) )
+		self.failUnless( f["paths"].acceptsInput( p ) )
 		
 		self.failUnless( f["paths"].getFlags( Gaffer.Plug.Flags.Serialisable ) )
 	
@@ -134,6 +135,56 @@ class PathFilterTest( unittest.TestCase ) :
 		
 		self.assertTrue( isinstance( s["a1"], GafferScene.Attributes ) )
 		self.assertEqual( s["a1"]["filter"].getInput(), None )
+
+	def testPathPlugPromotion( self ) :
+	
+		s = Gaffer.ScriptNode()
 		
+		s["f"] = GafferScene.PathFilter()
+		b = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["f"] ] ) )
+		
+		p = b.promotePlug( b["f"]["paths"] )
+		p.setValue( IECore.StringVectorData( [ "/a", "/red", "/b/c/d" ] ) )
+	
+		for path, result in [
+			( "/a",  GafferScene.Filter.Result.ExactMatch ),
+			( "/red", GafferScene.Filter.Result.ExactMatch ),
+			( "/re", GafferScene.Filter.Result.NoMatch ),
+			( "/redThing", GafferScene.Filter.Result.NoMatch ),
+			( "/b/c/d", GafferScene.Filter.Result.ExactMatch ),
+			( "/c", GafferScene.Filter.Result.NoMatch ),
+			( "/a/b", GafferScene.Filter.Result.AncestorMatch ),
+			( "/blue", GafferScene.Filter.Result.NoMatch ),
+			( "/b/c", GafferScene.Filter.Result.DescendantMatch ),
+		] :
+
+			with Gaffer.Context() as c :
+				c["scene:path"] = IECore.InternedStringVectorData( path[1:].split( "/" ) )
+				self.assertEqual( b["f"]["match"].getValue(), int( result ) )
+	
+	def testPathPlugExpression( self ) :
+	
+		s = Gaffer.ScriptNode()
+		
+		s["f"] = GafferScene.PathFilter()
+		
+		s["e"] = Gaffer.Expression()
+		s["e"]["engine"].setValue( "python" )
+		s["e"]["expression"].setValue(
+			"import IECore\n"
+			"passName = context.get( 'passName', '' )\n"
+			"if passName == 'foreground' :\n"
+			"	paths = IECore.StringVectorData( [ '/a' ] )\n"
+			"else :\n"
+			"	paths = IECore.StringVectorData( [ '/b' ] )\n"
+			"parent['f']['paths'] = paths"
+		)
+		
+		with Gaffer.Context() as c :
+			c["scene:path"] = IECore.InternedStringVectorData( [ "a" ])
+			self.assertEqual( s["f"]["match"].getValue(), GafferScene.Filter.Result.NoMatch )
+			c["passName"] = "foreground"
+			self.assertEqual( s["f"]["match"].getValue(), GafferScene.Filter.Result.ExactMatch )
+			
 if __name__ == "__main__":
 	unittest.main()
