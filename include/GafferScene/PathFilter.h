@@ -37,8 +37,6 @@
 #ifndef GAFFERSCENE_PATHFILTER_H
 #define GAFFERSCENE_PATHFILTER_H
 
-#include "boost/regex.hpp"
-
 #include "Gaffer/TypedObjectPlug.h"
 
 #include "GafferScene/Filter.h"
@@ -65,14 +63,16 @@ class PathFilter : public Filter
 
 	protected :
 
+		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const;
+
 		virtual void hashMatch( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual unsigned computeMatch( const Gaffer::Context *context ) const;
 
 	private :
-	
-		void plugSet( Gaffer::Plug *plug );
-	
-		PathMatcher m_matcher;
+
+		Gaffer::ObjectPlug *pathMatcherPlug();
+		const Gaffer::ObjectPlug *pathMatcherPlug() const;
 	
 		static size_t g_firstPlugIndex;
 

@@ -35,11 +35,10 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/bind.hpp"
-
 #include "Gaffer/Context.h"
 
 #include "GafferScene/ScenePlug.h"
+#include "GafferScene/PathMatcherData.h"
 #include "GafferScene/PathFilter.h"
 
 using namespace GafferScene;
@@ -55,12 +54,8 @@ PathFilter::PathFilter( const std::string &name )
 	:	Filter( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
-	// we don't allow inputs to the paths plug, because then the paths could vary
-	// from computation to computation - resulting in nonsense as far as descendant
-	// matches go.
-	addChild( new StringVectorDataPlug( "paths", Plug::In, new StringVectorData(), Plug::Default & ~Plug::AcceptsInputs ) );
-
-	plugSetSignal().connect( boost::bind( &PathFilter::plugSet, this, ::_1 ) );
+	addChild( new StringVectorDataPlug( "paths", Plug::In, new StringVectorData ) );
+	addChild( new ObjectPlug( "__pathMatcher", Plug::Out, new PathMatcherData ) );
 }
 
 PathFilter::~PathFilter()
@@ -77,12 +72,52 @@ const Gaffer::StringVectorDataPlug *PathFilter::pathsPlug() const
 	return getChild<Gaffer::StringVectorDataPlug>( g_firstPlugIndex );
 }
 
+Gaffer::ObjectPlug *PathFilter::pathMatcherPlug()
+{
+	return getChild<Gaffer::ObjectPlug>( g_firstPlugIndex + 1 );
+}
+
+const Gaffer::ObjectPlug *PathFilter::pathMatcherPlug() const
+{
+	return getChild<Gaffer::ObjectPlug>( g_firstPlugIndex + 1 );
+}
+
 void PathFilter::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
+	Filter::affects( input, outputs );
+	
 	if( input == pathsPlug() )
+	{
+		outputs.push_back( pathMatcherPlug() );
+	}
+	else if( input == pathMatcherPlug() )
 	{
 		outputs.push_back( matchPlug() );
 	}
+}
+
+void PathFilter::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	Filter::hash( output, context, h );
+	
+	if( output == pathMatcherPlug() )
+	{
+		pathsPlug()->hash( h );
+	}
+}
+
+void PathFilter::compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const
+{
+	if( output == pathMatcherPlug() )
+	{
+		ConstStringVectorDataPtr paths = pathsPlug()->getValue();
+		PathMatcherDataPtr pathMatcherData = new PathMatcherData;
+		pathMatcherData->writable().init( paths->readable().begin(), paths->readable().end() );
+		static_cast<ObjectPlug *>( output )->setValue( pathMatcherData );
+		return;
+	}
+	
+	Filter::compute( output, context );
 }
 
 void PathFilter::hashMatch( const Gaffer::Context *context, IECore::MurmurHash &h ) const
@@ -94,7 +129,7 @@ void PathFilter::hashMatch( const Gaffer::Context *context, IECore::MurmurHash &
 		const ScenePlug::ScenePath &path = pathData->readable();
 		h.append( &(path[0]), path.size() );
 	}
-	pathsPlug()->hash( h );
+	pathMatcherPlug()->hash( h );
 }
 
 unsigned PathFilter::computeMatch( const Gaffer::Context *context ) const
@@ -103,17 +138,8 @@ unsigned PathFilter::computeMatch( const Gaffer::Context *context ) const
 	const ScenePathData *pathData = context->get<ScenePathData>( ScenePlug::scenePathContextName, 0 );
 	if( pathData )
 	{
-		return m_matcher.match( pathData->readable() );
+		ConstPathMatcherDataPtr pathMatcher = staticPointerCast<const PathMatcherData>( pathMatcherPlug()->getValue() );
+		return pathMatcher->readable().match( pathData->readable() );
 	}
 	return NoMatch;
 }
-
-void PathFilter::plugSet( Gaffer::Plug *plug )
-{
-	if( plug == pathsPlug() )
-	{
-		ConstStringVectorDataPtr paths = pathsPlug()->getValue();
-		m_matcher.init( paths->readable().begin(), paths->readable().end() );
-	}
-}
-
