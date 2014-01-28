@@ -141,6 +141,9 @@ class CompoundPlugValueWidget( GafferUI.PlugValueWidget ) :
 				continue
 			if isinstance( w, GafferUI.PlugValueWidget ) :
 				w.setReadOnly( readOnly )
+			elif isinstance(  w, GafferUI.PlugWidget ) :
+				w.labelPlugValueWidget().setReadOnly( readOnly )
+				w.plugValueWidget().setReadOnly( readOnly )
 			else :
 				w.plugValueWidget().setReadOnly( readOnly )
 
@@ -209,6 +212,9 @@ class CompoundPlugValueWidget( GafferUI.PlugValueWidget ) :
 				if widget is not None :
 					if isinstance( widget, GafferUI.PlugValueWidget ) :
 						widget.setReadOnly( self.getReadOnly() )
+					elif isinstance(  widget, GafferUI.PlugWidget ) :
+						widget.labelPlugValueWidget().setReadOnly( self.getReadOnly() )
+						widget.plugValueWidget().setReadOnly( self.getReadOnly() )
 					else :
 						widget.plugValueWidget().setReadOnly( self.getReadOnly() )
 			else :
