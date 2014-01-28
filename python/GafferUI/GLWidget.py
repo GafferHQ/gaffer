@@ -85,7 +85,7 @@ class GLWidget( GafferUI.Widget ) :
 			format.setVersion( 2, 1 )
 		
 		graphicsView = _GLGraphicsView( format )
-		self.__graphicsScene = _GLGraphicsScene( graphicsView, Gaffer.WeakMethod( self._draw ) )
+		self.__graphicsScene = _GLGraphicsScene( graphicsView, Gaffer.WeakMethod( self.__draw ) )
 		graphicsView.setScene( self.__graphicsScene )
 		
 		GafferUI.Widget.__init__( self, graphicsView, **kw )
@@ -104,13 +104,15 @@ class GLWidget( GafferUI.Widget ) :
 		item = self.__graphicsScene.addWidget( self.__overlay._qtWidget() )
 		
 	## Called whenever the widget is resized. May be reimplemented by derived
-	# classes if necessary.
+	# classes if necessary. The appropriate OpenGL context will already be current
+	# when this is called.
 	def _resize( self, size ) :
 	
 		GL.glViewport( 0, 0, size.x, size.y )
 	
 	## Derived classes must override this to draw their contents using
-	# OpenGL calls.
+	# OpenGL calls. The appropriate OpenGL context will already be current
+	# when this is called.
 	def _draw( self ) :
 	
 		pass
@@ -121,10 +123,49 @@ class GLWidget( GafferUI.Widget ) :
 		self._glWidget().update()
 	
 	## May be used by derived classes to get access to the internal
-	# QGLWidget - this can be useful for making the correct context current.		
+	# QGLWidget. Note that _makeCurrent() should be used in preference
+	# to _glWidget().makeCurrent(), for the reasons stated in the
+	# documentation for that method.
 	def _glWidget( self ) :
 	
 		return self._qtWidget().viewport()
+	
+	## May be used by derived classes to make the OpenGL context
+	# for this widget current. Returns True if the operation was
+	# successful and False if not. In an ideal world, the return
+	# value would always be True, but it appears that there are
+	# Qt/Mac bugs which cause it not to be from time to time -
+	# typically for newly created Widgets. If False is returned,
+	# no OpenGL operations should be undertaken subsequently by
+	# the caller.
+	def _makeCurrent( self ) :
+		
+		self._qtWidget().viewport().makeCurrent()
+		return self.__framebufferValid()
+		
+	def __framebufferValid( self ) :
+	
+		import OpenGL.GL.framebufferobjects
+		return GL.framebufferobjects.glCheckFramebufferStatus( GL.framebufferobjects.GL_FRAMEBUFFER ) == GL.framebufferobjects.GL_FRAMEBUFFER_COMPLETE
+		
+	def __draw( self ) :
+	
+		# Qt sometimes enters our GraphicsScene.drawBackground() method
+		# with a GL error flag still set. We unset it here so it won't
+		# trigger our own error checking.
+		while GL.glGetError() :
+			pass
+
+		if not self.__framebufferValid() :
+			return
+		
+		# we need to call the init method after a GL context has been
+		# created, and this seems like the only place that is guaranteed.
+		# calling it here does mean we call init() way more than needed,
+		# but it's safe.
+		IECoreGL.init( True )
+		
+		self._draw()
 		
 class _GLGraphicsView( QtGui.QGraphicsView ) :
 
@@ -137,16 +178,41 @@ class _GLGraphicsView( QtGui.QGraphicsView ) :
 		self.setVerticalScrollBarPolicy( QtCore.Qt.ScrollBarAlwaysOff )
 		
 		glWidget = self.__createQGLWidget( format )
-				
+		
+		# On mac, we need to hide the GL widget until the last
+		# possible moment, otherwise we get "invalid drawable"
+		# errors spewing all over the place. See event() for the
+		# spot where we show the widget.
+		glWidget.hide()
+		
 		self.setViewport( glWidget )
 		self.setViewportUpdateMode( self.FullViewportUpdate )
+	
+	def event( self, event ) :
+	
+		if event.type() == event.PolishRequest :
+			# This seems to be the one signal that reliably
+			# lets us know we're becoming genuinely visible
+			# on screen. We use it to show the GL widget we
+			# hid in our constructor.
+			self.viewport().show()
+	
+		return QtGui.QGraphicsView.event( self, event )
 				
 	def resizeEvent( self, event ) :
 	
 		if self.scene() is not None :
+		
 			self.scene().setSceneRect( 0, 0, event.size().width(), event.size().height() )
-			self.viewport().makeCurrent()
-			GafferUI.Widget._owner( self )._resize( IECore.V2i( event.size().width(), event.size().height() ) )
+			owner = GafferUI.Widget._owner( self )
+			
+			# clear any existing errors that may trigger
+			# error checking code in _resize implementations.
+			while GL.glGetError() :
+				pass
+
+			owner._makeCurrent()
+			owner._resize( IECore.V2i( event.size().width(), event.size().height() ) )
 
 	def keyPressEvent( self, event ) :
 				
@@ -305,12 +371,6 @@ class _GLGraphicsScene( QtGui.QGraphicsScene ) :
 		return item
 		
 	def drawBackground( self, painter, rect ) :
-	
-		# we need to call the init method after a GL context has been
-		# created, and this seems like the only place that is guaranteed.
-		# calling it here does mean we call init() way more than needed,
-		# but it's safe.
-		IECoreGL.init( True )
 		
 		self.__backgroundDrawFunction()
 		

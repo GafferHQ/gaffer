@@ -63,7 +63,9 @@ class ImageReader : public ImageNode
 
 		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
 		virtual bool enabled() const;
-				
+		
+		static size_t supportedExtensions( std::vector<std::string> &extensions );
+		
 	protected :
 		
 		virtual void hashFormat( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;

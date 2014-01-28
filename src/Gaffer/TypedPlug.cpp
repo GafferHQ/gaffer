@@ -38,6 +38,7 @@
 #include "Gaffer/TypedPlug.h"
 #include "Gaffer/TypedPlug.inl"
 #include "Gaffer/Context.h"
+#include "Gaffer/NumericPlug.h"
 
 namespace Gaffer
 {
@@ -93,6 +94,43 @@ IECore::MurmurHash StringPlug::hash() const
 
 	// no substitutions
 	return ValuePlug::hash();
+}
+
+// specialise BoolPlug to accept connections from NumericPlugs
+
+template<>
+bool BoolPlug::acceptsInput( const Plug *input ) const
+{
+	if( !ValuePlug::acceptsInput( input ) )
+	{
+		return false;
+	}
+	if( input )
+	{
+		return input->isInstanceOf( staticTypeId() ) ||
+		       input->isInstanceOf( IntPlug::staticTypeId() ) ||
+		       input->isInstanceOf( FloatPlug::staticTypeId() );
+	}
+	return true;
+}
+
+template<>
+void BoolPlug::setFrom( const ValuePlug *other )
+{
+	switch( static_cast<Gaffer::TypeId>(other->typeId()) )
+	{
+		case BoolPlugTypeId :
+			setValue( static_cast<const BoolPlug *>( other )->getValue() );
+			break;
+		case FloatPlugTypeId :
+			setValue( static_cast<const FloatPlug *>( other )->getValue() );
+			break;
+		case IntPlugTypeId :
+			setValue( static_cast<const IntPlug *>( other )->getValue() );
+			break;
+		default :
+			throw IECore::Exception( "Unsupported plug type" );
+	}
 }
 
 // explicit instantiation

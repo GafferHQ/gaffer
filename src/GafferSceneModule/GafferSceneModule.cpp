@@ -85,6 +85,7 @@
 #include "GafferSceneBindings/MixinBinding.h"
 #include "GafferSceneBindings/TransformBinding.h"
 #include "GafferSceneBindings/ParentBinding.h"
+#include "GafferSceneBindings/SceneReaderBinding.h"
 
 using namespace boost::python;
 using namespace GafferScene;
@@ -115,7 +116,6 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	GafferBindings::DependencyNodeClass<ObjectToScene>();
 	GafferBindings::DependencyNodeClass<Camera>();
 	GafferBindings::DependencyNodeClass<GlobalsProcessor>();
-	GafferBindings::DependencyNodeClass<SceneReader>();
 	GafferBindings::NodeClass<SceneWriter>()
 		.def( "execute", &SceneWriter::execute )
 	;
@@ -159,5 +159,6 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	bindMixin();
 	bindTransform();
 	bindParent();
+	bindSceneReader();
 	
 }

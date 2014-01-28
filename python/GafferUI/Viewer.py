@@ -70,13 +70,19 @@ class Viewer( GafferUI.NodeSetEditor ) :
 		
 		GafferUI.NodeSetEditor.__init__( self, self.__gadgetWidget, scriptNode, **kw )
 
-		self.__toolbarFrame = GafferUI.Frame( borderWidth = 4, borderStyle=GafferUI.Frame.BorderStyle.None )
-		self.__gadgetWidget.addOverlay( self.__toolbarFrame )
+		with GafferUI.ListContainer( borderWidth = 2, spacing = 2 ) as toolbarColumn :
+			self.__nodeToolbarFrame = GafferUI.Frame( borderWidth = 0, borderStyle=GafferUI.Frame.BorderStyle.None )
+			self.__toolbarFrame = GafferUI.Frame( borderWidth = 0, borderStyle=GafferUI.Frame.BorderStyle.None )
+		self.__gadgetWidget.addOverlay( toolbarColumn )
 		
 		self.__views = []
 		self.__currentView = None
 
 		self._updateFromSet()
+	
+	def view( self ) :
+	
+		return self.__currentView
 	
 	def __repr__( self ) :
 
@@ -107,7 +113,7 @@ class Viewer( GafferUI.NodeSetEditor ) :
 						if self.__currentView is not None:
 							self.__currentView.__updateRequestConnection = self.__currentView.updateRequestSignal().connect( Gaffer.WeakMethod( self.__updateRequest ) )
 							self.__currentView.__pendingUpdate = True
-							self.__currentView.__toolbar = _ViewToolbar( self.__currentView )
+							self.__currentView.__toolbar = GafferUI.NodeToolbar.create( self.__currentView )
 							self.__views.append( self.__currentView )
 					# if we succeeded in getting a suitable view, then
 					# don't bother checking the other plugs
@@ -116,13 +122,17 @@ class Viewer( GafferUI.NodeSetEditor ) :
 										
 		if self.__currentView is not None :	
 			self.__gadgetWidget.setViewportGadget( self.__currentView.viewportGadget() )
+			self.__nodeToolbarFrame.setChild( GafferUI.NodeToolbar.create( node ) )
 			self.__toolbarFrame.setChild( self.__currentView.__toolbar )
 			if self.__currentView.__pendingUpdate :
 				self.__update()
 		else :
 			self.__gadgetWidget.setViewportGadget( GafferUI.ViewportGadget() )
+			self.__nodeToolbarFrame.setChild( None )
 			self.__toolbarFrame.setChild( None )
-			
+		
+		self.__nodeToolbarFrame.setVisible( self.__nodeToolbarFrame.getChild() is not None )
+
 	def _titleFormat( self ) :
 	
 		return GafferUI.NodeSetEditor._titleFormat( self, _maxNodes = 1, _reverseNodes = True, _ellipsis = False )
@@ -162,42 +172,9 @@ class Viewer( GafferUI.NodeSetEditor ) :
 GafferUI.EditorWidget.registerType( "Viewer", Viewer )
 
 ##########################################################################
-# Toolbar implementation
+# PlugValueWidget and Toolbar registrations
 ##########################################################################
 
-## \todo We could turn this into a general class useable for all nodes and
-# not just views. Then we could use it to create useful toolbars for the node
-# being viewed too. If we do that we should have a pure abstract class called
-# NodeToolbar and then a derived class called StandardToolbar which does the
-# job 90% of the time, as we do with NodeUI and StandardNodeUI.
-class _ViewToolbar( GafferUI.Widget ) :
-
-	def __init__( self, view, **kw ) :
-	
-		self.__row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
-		
-		GafferUI.Widget.__init__( self, self.__row, **kw )
-		
-		for plug in view.children( Gaffer.Plug.staticTypeId() ) :
-			
-			if plug.getName().startswith( "__" ) :
-				continue
-			
-			widget = GafferUI.PlugValueWidget.create( plug )
-			if widget is None :
-				continue
-							
-			if ( isinstance( widget, GafferUI.PlugValueWidget )
-			     and not widget.hasLabel()
-			     and Gaffer.Metadata.plugValue( plug, "label" ) != ""
-			) :
-				widget = GafferUI.PlugWidget( widget )
-				
-			self.__row.append( widget )
-			if Gaffer.Metadata.plugValue( plug, "divider" ) :
-				self.__row.append( GafferUI.Divider( GafferUI.Divider.Orientation.Vertical ) )
-		
-		self.__row.insert( 0, GafferUI.Spacer( IECore.V2i( 1, 1 ) ), expand = True )
-
+GafferUI.NodeToolbar.registerCreator( GafferUI.View.staticTypeId(), GafferUI.StandardNodeToolbar )
 GafferUI.PlugValueWidget.registerCreator( GafferUI.View.staticTypeId(), "in", None )
 GafferUI.PlugValueWidget.registerCreator( GafferUI.View.staticTypeId(), "user", None )

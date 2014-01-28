@@ -63,15 +63,9 @@ class test( Gaffer.Application ) :
 		)
 				
 	def _run( self, args ) :
-	
-		import sys
-		import unittest
-		import GafferTest
-		import GafferUITest
-		import GafferSceneTest
-		import GafferImageTest
-		import GafferImageUITest
 		
+		import unittest
+
 		testSuite = unittest.TestSuite()
 		if args["testCase"].value :
 		
@@ -79,6 +73,12 @@ class test( Gaffer.Application ) :
 			testSuite.addTest( testCase )
 			
 		else :
+		
+			import GafferTest
+			import GafferUITest
+			import GafferSceneTest
+			import GafferImageTest
+			import GafferImageUITest
 		
 			for module in ( GafferTest, GafferUITest, GafferSceneTest, GafferImageTest, GafferImageUITest ) :
 		

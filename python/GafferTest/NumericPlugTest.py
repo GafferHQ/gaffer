@@ -407,6 +407,25 @@ class NumericPlugTest( unittest.TestCase ) :
 		self.assertFalse( s.undoAvailable() )
 		self.assertEqual( s["n"]["p1"].getValue(), 0 )
 		self.assertEqual( s["n"]["p2"].getValue(), 0 )
+	
+	def testConnectionFromBool( self ) :
+	
+		i = Gaffer.IntPlug()
+		f = Gaffer.FloatPlug()
+		b = Gaffer.BoolPlug()
+		
+		i.setInput( b )
+		f.setInput( b )
+		
+		self.assertEqual( b.getValue(), False )
+		self.assertEqual( i.getValue(), 0 )
+		self.assertEqual( f.getValue(), 0 )
+		
+		b.setValue( True )
+		
+		self.assertEqual( b.getValue(), True )
+		self.assertEqual( i.getValue(), 1 )
+		self.assertEqual( f.getValue(), 1 )
 		
 if __name__ == "__main__":
 	unittest.main()

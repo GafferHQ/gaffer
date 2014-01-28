@@ -223,6 +223,17 @@ class ImageReaderTest( unittest.TestCase ) :
 	
 		# call through to c++ test.
 		GafferImageTest.testOIIOExrRead()
-				
+	
+	def testSupportedExtensions( self ) :
+	
+		e = GafferImage.ImageReader.supportedExtensions()
+		
+		self.assertTrue( "exr" in e )
+		self.assertTrue( "jpg" in e )
+		self.assertTrue( "tif" in e )
+		self.assertTrue( "png" in e )
+		self.assertTrue( "cin" in e )
+		self.assertTrue( "dpx" in e )
+		
 if __name__ == "__main__":
 	unittest.main()

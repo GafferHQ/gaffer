@@ -35,6 +35,8 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
+#include "boost/tokenizer.hpp"
+
 #include "OpenImageIO/imagecache.h"
 OIIO_NAMESPACE_USING
 
@@ -121,6 +123,30 @@ bool ImageReader::enabled() const
 	std::string fileName = fileNamePlug()->getValue();
 	const ImageSpec *spec = imageCache()->imagespec( ustring( fileName.c_str() ) );
 	return (spec != 0) ? ImageNode::enabled() : false;
+}
+
+size_t ImageReader::supportedExtensions( std::vector<std::string> &extensions )
+{
+	std::string attr;
+	if( !getattribute( "extension_list", attr ) )
+	{
+		return extensions.size();
+	}
+	
+	typedef boost::tokenizer<boost::char_separator<char> > Tokenizer;
+	Tokenizer formats( attr, boost::char_separator<char>( ";" ) );
+	for( Tokenizer::const_iterator fIt = formats.begin(), eFIt = formats.end(); fIt != eFIt; ++fIt )
+	{
+		size_t colonPos = fIt->find( ':' );
+		if( colonPos != string::npos )
+		{
+			std::string formatExtensions = fIt->substr( colonPos + 1 );
+			Tokenizer extTok( formatExtensions, boost::char_separator<char>( "," ) );
+			std::copy( extTok.begin(), extTok.end(), std::back_inserter( extensions ) );
+		}
+	}
+	
+	return extensions.size();
 }
 
 void ImageReader::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const

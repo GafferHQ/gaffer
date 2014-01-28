@@ -1,7 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2014, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -39,63 +38,41 @@ import IECore
 
 import Gaffer
 import GafferUI
-import GafferSceneUI
 
-class view( Gaffer.Application ) :
-
-	def __init__( self ) :
+## Abstract base class for toolbars representing nodes - 
+# see StandardNodeToolbar for a concrete implementation
+# suitable for most purposes.
+class NodeToolbar( GafferUI.Widget ) :
 	
-		Gaffer.Application.__init__( self )
-		
-		self.parameters().addParameters(
-		
-			[
-				IECore.StringVectorParameter(
-					name = "files",
-					description = "A list of files to view.",
-					defaultValue = IECore.StringVectorData()
-				)
-			]
+	def __init__( self, node, topLevelWidget, **kw ) :
+
+		GafferUI.Widget.__init__( self, topLevelWidget, **kw )
+	
+		self.__node = node
 			
-		)
-		
-		self.parameters().userData()["parser"] = IECore.CompoundObject(
-			{
-				"flagless" : IECore.StringVectorData( [ "files" ] )
-			}
-		)
-		
-	def _run( self, args ) :
+	## Returns the node the toolbar represents.
+	def node( self ) :
 	
-		if len( args["files"] ) < 1 or len( args["files"] ) > 2 :
-		
-			raise Exception( "Must view exactly one file." )
-			
-		self.__window = GafferUI.Window(
-			title = "Gaffer Viewer",
-			sizeMode = GafferUI.Window.SizeMode.Manual
-		)
+		return self.__node
 
-		self.__window.setChild(
-			GafferUI.CompoundPathPreview(
-				Gaffer.FileSystemPath( args["files"][0] )
-			)
-		)
-
-		self.__closedConnection = self.__window.closedSignal().connect( Gaffer.WeakMethod( self.__closed ) )
-		
-		## \todo The window doesn't appear without this naughtiness. I think we either need to
-		# add a similar method in the public interface, or maybe make a SizeConstraintContainer
-		# or something along those lines.
-		self.__window._qtWidget().setMinimumSize( 300, 200 )
-		self.__window.setVisible( True )
-		
-		GafferUI.EventLoop.mainEventLoop().start()
-		
-		return 0
-
-	def __closed( self, window ) :
+	## Creates a NodeToolbar instance for the specified node.
+	# Note that not all nodes have toolbars, so None may be returned.
+	@classmethod
+	def create( cls, node ) :
 	
-		GafferUI.EventLoop.mainEventLoop().stop()
-
-IECore.registerRunTimeTyped( view )
+		nodeHierarchy = IECore.RunTimeTyped.baseTypeIds( node.typeId() )
+		for typeId in [ node.typeId() ] + nodeHierarchy :	
+			creator = cls.__creators.get( typeId, None )
+			if creator is not None :
+				return creator( node )
+		
+		return None
+	
+	__creators = {}
+	## Registers a subclass of NodeToolbar to be used with a specific node type.
+	@classmethod
+	def registerCreator( cls, nodeTypeId, toolbarCreator ) :
+	
+		assert( callable( toolbarCreator ) )
+	
+		cls.__creators[nodeTypeId] = toolbarCreator
