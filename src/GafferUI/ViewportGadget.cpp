@@ -130,7 +130,16 @@ const Imath::V2i &ViewportGadget::getViewport() const
 
 void ViewportGadget::setViewport( const Imath::V2i &viewport )
 {
-	m_cameraController.setResolution( viewport );
+	CameraController::ScreenWindowAdjustment adjustment = CameraController::ScaleScreenWindow;
+	if( const StringData *projection = getCamera()->parametersData()->member<StringData>( "projection" ) )
+	{
+		if( projection->readable() == "orthographic" )
+		{
+			adjustment = CameraController::CropScreenWindow;
+		}
+	}
+	
+	m_cameraController.setResolution( viewport, adjustment );
 }
 
 const IECore::Camera *ViewportGadget::getCamera() const
