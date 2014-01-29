@@ -83,6 +83,10 @@ class Viewer( GafferUI.NodeSetEditor ) :
 	def view( self ) :
 	
 		return self.__currentView
+		
+	def viewGadgetWidget( self ) :
+	
+		return self.__gadgetWidget
 	
 	def __repr__( self ) :
 
