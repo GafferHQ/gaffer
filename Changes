@@ -1,13 +1,40 @@
+#### Core
+
+- Added Support for NumericPlug->BoolPlug and BoolPlug->NumericPlug connections.
+
+#### UI
+
+- Added additional types to the user plug creation menu.
+- Added pre-selection highlighting in the NodeGraph (#94).
+- Added "Create Expression..." menu option for bool plugs.
+- Fixed NodeGraph resizing to crop rather than scale (#10).
+- Fixed read only CompoundPlug labels.
+- Added workarounds for Qt OpenGL problem on OS X (#404 and #396).
+
 #### Scene
 
 - Added Parent node. This allows one hierarchy to be parented into another (#91).
 - Fixed bug which could cause incorrect bound computation at the parent node in the Instancer.
 - Seeds and Instancer classes now preserve existing children of the parent location, renaming the new locations to avoid name clashes if necessary.
+- Added tag filtering to the SceneReader node.
+- Enabled input connections to PathFilter "paths" plug. This allows it to be promoted to box level and be driven by expressions etc (#704).
+
+#### Apps
+
+- Updated view app to contain tabs with different views (info, header, preview etc).
+- Added scene cache previews to the browser and view apps (#416).
 
 #### API
 
 - Removed BranchCreator name plug - derived classes are now responsible for generating the entirety of their branch.
 - Modified BranchCreator hashing slightly to improve performance - derived classes hashBranch*() methods are now responsible for calling the base class implementation.
+- Fixed Box::canPromotePlug( readOnlyPlug ) to return false.
+- Fixed Box::canPromotePlug() to check child plugs too.
+- Fixed bug in read only Plugs with input connections.
+- Added Gadget setHighlighted() and getHighlighted() methods.
+- Added supportedExtensions() methods to ImageReader and SceneReader.
+- Added Viewer.view() and Viewer.viewGadgetWidget() methods.
+- Added NodeToolbar and StandardNodeToolbar classes.
 
 # 0.88.1
 
