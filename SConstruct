@@ -1,7 +1,7 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011-2013, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2014, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2014, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -298,7 +298,7 @@ options.Add(
 options.Add(
 	"CORTEX_SRC_DIR",
 	"The location of the boost source to be used if BUILD_DEPENDENCY_CORTEX is specified.",
-	"$DEPENDENCIES_SRC_DIR/cortex-8.0.0b5",
+	"$DEPENDENCIES_SRC_DIR/cortex-8.0.0",
 )
 
 options.Add(
@@ -487,8 +487,8 @@ env = Environment(
 	options = options,
 
 	GAFFER_MAJOR_VERSION = "0",
-	GAFFER_MINOR_VERSION = "88",
-	GAFFER_PATCH_VERSION = "1",
+	GAFFER_MINOR_VERSION = "89",
+	GAFFER_PATCH_VERSION = "0",
 
 )
 
