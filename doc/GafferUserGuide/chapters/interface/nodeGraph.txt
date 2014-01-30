@@ -65,7 +65,7 @@ The selection can be cleared by:
 * `left-clicking` in the empty space of the NodeGraph.
 * or pressing `Ctrl+Shift+a` whilst focus is on the NodeGraph panel.
 
-When nodes are selected they can be repositioned in within the node graph by `left-click-dragging`. To help with maintaining tidy networks, Gaffer peforms some snapping opertations as you move nodes. If the nodes being re-arranged have connections to any nodes outside the selection, Gaffer will attempt to to snap to their input and outputs such that nodes are centered, connections are horizontal or veritcal, and nodes butt up nicely to each other.
+When nodes are selected they can be repositioned in within the node graph by `left-click-dragging`. To help with maintaining tidy networks, Gaffer performs some snapping operations as you move nodes. If the nodes being re-arranged have connections to any nodes outside the selection, Gaffer will attempt to to snap to their input and outputs such that nodes are centred, connections are horizontal or vertical, and nodes butt up nicely to each other.
 
 
 
@@ -73,7 +73,7 @@ When nodes are selected they can be repositioned in within the node graph by `le
 
 The usual system hotkeys for cut,copy,paste, and deleting nodes will work. See xref:appendices_hotkeys[the appendices] for more details.
 
-In addition to permanently deleting nodes, users have the option of temprorarily disabling a node. This can be helpful to quickly see what change that node is effecting, by viewing the graph down stream of the node and toggling the 'enabled' state on and off. 
+In addition to permanently deleting nodes, users have the option of temporarily disabling a node. This can be helpful to quickly see what change that node is effecting, by viewing the graph down stream of the node and toggling the 'enabled' state on and off. 
 
 * `right-clicking` on a specific node with show a popup menu with an entry for "Enable" which can be checked on/off.
 * alternatively, the hotkey `d` will toggle the 'enabled' state for all selected nodes.
@@ -92,7 +92,7 @@ Gaffer makes extensive use of drag-and-drop behaviours throughout its interface.
 ** This also works for input and output plugs. You can grab a nodule with `middle-click` and drop it to get its path (e.g. `script['MyBox']['MyTransform']['filter']`).
 
 [NOTE]
-Gaffer will indicate when it has content attached to a drag manouver by changing the mouse pointer. Adornments are added to the pointer icon to show the type of data being dragged (i.e. plug, node(s), colour-value, float-value, etc)
+Gaffer will indicate when it has content attached to a drag manoeuvre by changing the mouse pointer. Adornments are added to the pointer icon to show the type of data being dragged (i.e. plug, node(s), colour-value, float-value, etc)
 
 ==== Manipulating noodles anchor:interface_manipulatingNoodles[]
 ===== Connecting nodes
@@ -119,7 +119,7 @@ image::images/chapters/interface/interface_nodeGraph_figDA.png[align="center"]
 
 
 ===== Disconnecting noodles
-Disconnecting noodels is a simple action:
+Disconnecting noodles is a simple action:
 
 * `left-click-drag` one of the ends of a noodle, until that end is disconnected from the plug it was attached to.
 * Then release the mouse and the noodle will be destroyed.
@@ -129,7 +129,7 @@ Disconnecting noodels is a simple action:
 To help minimise overlapping noodles (which can lead to tricky to decipher graph flows), Gaffer allows users to hide both input and output connections of a node.
 In the hidden mode, a small stump noodle is drawn at either end of the connection and the body of the noodle is made invisible. When a node with hidden connections is selected the connections are made visible again.
 
-To hide/unhide connections:
+To hide/un-hide connections:
 
 * `right-click` on a node in the NodeGraph.
 * In the pop-up menu, un-check "Show Input Connections"/"Show Output Connections"
