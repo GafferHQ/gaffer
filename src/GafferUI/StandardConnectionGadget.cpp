@@ -87,8 +87,8 @@ void StandardConnectionGadget::setPositionsFromNodules()
 	
 	if( dstNodule() && m_dragEnd!=Gaffer::Plug::In )
 	{
-		Gadget *dstNoduleParent = dstNodule()->parent<Gadget>();
-		if( dstNoduleParent )
+		Gadget *dstNodeGadget = dstNodule()->ancestor<NodeGadget>();
+		if( dstNodeGadget )
 		{
 			/// \todo
 			/// this is a hack. we're calling bound() to trigger
@@ -100,7 +100,7 @@ void StandardConnectionGadget::setPositionsFromNodules()
 			/// in Gadget.h which suggests that transforms are returned from
 			/// a childTransform() virtual method - this would mean the
 			/// container could update the transform as we request it.
-			dstNoduleParent->bound();
+			dstNodeGadget->bound();
 		}
 		M44f m = dstNodule()->fullTransform( p );
 		m_dstPos = V3f( 0 ) * m;
@@ -111,11 +111,11 @@ void StandardConnectionGadget::setPositionsFromNodules()
 	
 	if( srcNodule() && m_dragEnd!=Gaffer::Plug::Out )
 	{
-		Gadget *srcNoduleParent = srcNodule()->parent<Gadget>();
-		if( srcNoduleParent )
+		Gadget *srcNodeGadget = srcNodule()->ancestor<NodeGadget>();
+		if( srcNodeGadget )
 		{
 			/// \todo See above.
-			srcNoduleParent->bound();
+			srcNodeGadget->bound();
 		}
 		M44f m = srcNodule()->fullTransform( p );
 		m_srcPos = V3f( 0 ) * m;
