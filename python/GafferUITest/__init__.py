@@ -95,6 +95,7 @@ from SectionedCompoundDataPlugValueWidgetTest import SectionedCompoundDataPlugVa
 from PlaybackTest import PlaybackTest
 from SpacerGadgetTest import SpacerGadgetTest
 from BoxUITest import BoxUITest
+from ConnectionGadgetTest import ConnectionGadgetTest
 
 if __name__ == "__main__":
 	unittest.main()

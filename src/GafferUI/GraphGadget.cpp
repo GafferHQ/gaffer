@@ -1467,7 +1467,7 @@ void GraphGadget::addConnectionGadget( Gaffer::Plug *dstPlug )
 		srcNodule = srcNodeGadget->nodule( srcPlug );
 	}
 		
-	ConnectionGadgetPtr connection = new ConnectionGadget( srcNodule, dstNodule );
+	ConnectionGadgetPtr connection = ConnectionGadget::create( srcNodule, dstNodule );
 	updateConnectionGadgetMinimisation( connection.get() );
 	addChild( connection );
 
