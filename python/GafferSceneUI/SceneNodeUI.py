@@ -249,6 +249,12 @@ GafferUI.PlugValueWidget.registerCreator(
 	__pathsPlugWidgetCreator,
 )
 
+GafferUI.Nodule.registerNodule(
+	GafferScene.PathFilter.staticTypeId(),
+	"paths",
+	lambda plug : None,
+)
+
 # UnionFilter
 
 GafferUI.PlugValueWidget.registerCreator(
