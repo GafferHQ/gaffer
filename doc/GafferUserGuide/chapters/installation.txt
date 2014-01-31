@@ -26,7 +26,7 @@ To use *Arnold* with Gaffer you will need to:
 
 
 === OS X anchor:installation_osx[]
-Follow the steps as per the Linux section, but substitute `DYLD_LIBRARY_PATH` for any occurances of `LD_LIBRARY_PATH`.
+Follow the steps as per the Linux section, but substitute `DYLD_LIBRARY_PATH` for any occurrences of `LD_LIBRARY_PATH`.
 
 === Launching Gaffer anchor:installation_launchingGaffer[]
 Once Gaffer is properly installed, simply launch it from the command-line as follows
