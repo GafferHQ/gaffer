@@ -82,8 +82,8 @@ class SceneReaderPathPreview( GafferUI.PathPreviewWidget ) :
 		if hasattr( scene, "numBoundSamples" ) :
 			numSamples = scene.numBoundSamples()
 			if numSamples > 1 :
-				startFrame = int( scene.boundSampleTime( 0 ) * 24.0 )
-				endFrame = int( scene.boundSampleTime( numSamples - 1 ) * 24.0 )
+				startFrame = int( round( scene.boundSampleTime( 0 ) * 24.0 ) )
+				endFrame = int( round( scene.boundSampleTime( numSamples - 1 ) * 24.0 ) )
 				self.__script["frameRange"]["start"].setValue( startFrame )
 				self.__script["frameRange"]["end"].setValue( endFrame )
 				GafferUI.Playback.acquire( self.__script.context() ).setFrameRange( startFrame, endFrame )
