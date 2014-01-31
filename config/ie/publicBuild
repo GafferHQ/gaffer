@@ -2,25 +2,26 @@
 
 BUILD_DIR=$HOME'/publicGafferBuild/builds/gaffer-${GAFFER_MAJOR_VERSION}.${GAFFER_MINOR_VERSION}.${GAFFER_PATCH_VERSION}-${GAFFER_PLATFORM}'
 INSTALL_DIR=$HOME'/publicGafferBuild/packages/gaffer-${GAFFER_MAJOR_VERSION}.${GAFFER_MINOR_VERSION}.${GAFFER_PATCH_VERSION}-${GAFFER_PLATFORM}'
-DEPENDENCIES_SRC_TARBALL=$HOME'/publicGafferBuild/dependencies.tar.gz'
-DEPENDENCIES_UNPACK_DIR=$HOME'/publicGafferBuild'
+DEPENDENCIES_INSTALL_DIR=$HOME'/publicGafferBuild/packages/gafferDependencies-${GAFFER_MAJOR_VERSION}.${GAFFER_MINOR_VERSION}.${GAFFER_PATCH_VERSION}-${GAFFER_PLATFORM}'
+
+DEPENDENCIES_SRC_DIR=$HOME'/publicGafferBuild/gafferDependenciesSource-0.89.0'
 DOXYGEN='/software/apps/doxygen/1.8.4/cent6.x86_64/bin/doxygen'
 RMAN_ROOT='/software/apps/3delight/10.0.49/cent6.x86_64'
-ARNOLD_ROOT='/software/apps/arnold/4.0.9.1/cent6.x86_64'
+ARNOLD_ROOT='/software/apps/arnold/4.1.2.0/cent6.x86_64'
 
 # essential to bypass the ie python wrappers which will screw up the build
 export PATH=/software/apps/scons/2.0.1/bin/:/software/apps/cmake/2.8.4/cent6.x86_64/bin:/usr/local/bin:/usr/bin:/bin
 
-rm -rf $DEPENDENCIES_UNPACK_DIR/dependencies
-tar -xzvf $DEPENDENCIES_SRC_TARBALL -C $DEPENDENCIES_UNPACK_DIR
-
 scons \
+	--no-cache \
 	OPTIONS="" \
 	BUILD_DEPENDENCIES=1 \
-	DEPENDENCIES_SRC_DIR=$DEPENDENCIES_UNPACK_DIR/dependencies \
+	DEPENDENCIES_SRC_DIR=$DEPENDENCIES_SRC_DIR \
 	BUILD_DIR=$BUILD_DIR \
 	INSTALL_DIR=$INSTALL_DIR \
+	DEPENDENCIES_INSTALL_DIR=$DEPENDENCIES_INSTALL_DIR \
 	RMAN_ROOT=$RMAN_ROOT \
 	ARNOLD_ROOT=$ARNOLD_ROOT \
 	DOXYGEN=$DOXYGEN \
+	dependenciesPackage \
 	package
