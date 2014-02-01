@@ -166,16 +166,14 @@ IECore::ConstObjectPtr OSLObject::computeProcessedObject( const ScenePath &path,
 
 	PrimitivePtr outputPrimitive = inputPrimitive->copy();
 
-	ConstCompoundDataPtr shadedPoints = shadingEngine->shade( shadingPoints );
-	const std::vector<Color3f> &ci = shadedPoints->member<Color3fVectorData>( "Ci" )->readable();
-	
-	V3fVectorDataPtr p = new V3fVectorData;
-	p->writable().reserve( ci.size() );
-	std::copy( ci.begin(), ci.end(), back_inserter( p->writable() ) );
-	
-	outputPrimitive->variables["P"] = PrimitiveVariable( PrimitiveVariable::Vertex, p );
-
-	/// \todo Allow shaders to write arbitrary primitive variables.
+	CompoundDataPtr shadedPoints = shadingEngine->shade( shadingPoints );
+	for( CompoundDataMap::const_iterator it = shadedPoints->readable().begin(), eIt = shadedPoints->readable().end(); it != eIt; ++it )
+	{
+		if( it->first != "Ci" )
+		{
+			outputPrimitive->variables[it->first] = PrimitiveVariable( PrimitiveVariable::Vertex, it->second );
+		}
+	}
 			
 	return outputPrimitive;
 }

@@ -57,23 +57,27 @@ class OSLObjectTest( GafferOSLTest.OSLTestCase ) :
 		
 		# shading network to swap x and y
 		
-		globals = GafferOSL.OSLShader()
-		globals.loadShader( "utility/globals" )
+		inPoint = GafferOSL.OSLShader()
+		inPoint.loadShader( "objectProcessing/InPoint" )
 		
 		splitPoint = GafferOSL.OSLShader()
 		splitPoint.loadShader( "utility/splitPoint" )
-		splitPoint["parameters"]["p"].setInput( globals["out"]["globalP"] )
+		splitPoint["parameters"]["p"].setInput( inPoint["out"]["value"] )
 		
-		buildColor = GafferOSL.OSLShader()
-		buildColor.loadShader( "utility/buildColor" )
-		buildColor["parameters"]["r"].setInput( splitPoint["out"]["y"] )
-		buildColor["parameters"]["g"].setInput( splitPoint["out"]["x"] )
+		buildPoint = GafferOSL.OSLShader()
+		buildPoint.loadShader( "utility/buildPoint" )
+		buildPoint["parameters"]["x"].setInput( splitPoint["out"]["y"] )
+		buildPoint["parameters"]["y"].setInput( splitPoint["out"]["x"] )
 		
-		constant = GafferOSL.OSLShader()
-		constant.loadShader( "surface/constant" )
-		constant["parameters"]["Cs"].setInput( buildColor["out"]["c"] )
+		outPoint = GafferOSL.OSLShader()
+		outPoint.loadShader( "objectProcessing/OutPoint" )
+		outPoint["parameters"]["value"].setInput( buildPoint["out"]["p"] )
 		
-		o["shader"].setInput( constant["out"] )
+		primVarShader = GafferOSL.OSLShader()
+		primVarShader.loadShader( "surface/Sum" )
+		primVarShader["parameters"]["in0"].setInput( outPoint["out"]["primitiveVariable"] )
+		
+		o["shader"].setInput( primVarShader["out"] )
 		
 		self.assertScenesEqual( p["out"], o["out"] )
 		
