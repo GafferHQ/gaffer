@@ -39,6 +39,7 @@ import os
 import IECore
 
 import Gaffer
+import GafferTest
 import GafferScene
 import GafferOSL
 import GafferOSLTest
@@ -278,6 +279,27 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		
 		self.assertTrue( inputClosure["parameters"]["i"].acceptsInput( outputClosure["out"]["c"] ) )
 		self.assertFalse( inputClosure["parameters"]["i"].acceptsInput( outputColor["out"]["c"] ) )
+	
+	def testOutputClosureDirtying( self ) :
+	
+		outputClosureShader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/outputClosure.osl" )
+		outputClosure = GafferOSL.OSLShader()
+		outputClosure.loadShader( outputClosureShader )
+		
+		cs = GafferTest.CapturingSlot( outputClosure.plugDirtiedSignal() )
+		
+		outputClosure["parameters"]["e"]["r"].setValue( 10 )
+		
+		self.assertEqual(
+			set( [ x[0].relativeName( x[0].node() ) for x in cs ] ),
+			set( [
+				"parameters.e.r",
+				"parameters.e",
+				"parameters",
+				"out.c",
+				"out",
+			] )
+		)
 		
 if __name__ == "__main__":
 	unittest.main()

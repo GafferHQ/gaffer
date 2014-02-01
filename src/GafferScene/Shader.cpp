@@ -145,7 +145,7 @@ void Shader::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs
 		{
 			if( out->isInstanceOf( CompoundPlug::staticTypeId() ) )
 			{
-				for( RecursiveValuePlugIterator it( out ); it != it.end(); it++ )
+				for( RecursivePlugIterator it( out ); it != it.end(); it++ )
 				{
 					if( !(*it)->isInstanceOf( CompoundPlug::staticTypeId() ) )
 					{
