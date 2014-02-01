@@ -128,6 +128,14 @@ TypeDesc typeDescFromData( const Data *data, const void *&basePointer )
 		case IntVectorDataTypeId :
 			basePointer = static_cast<const IntVectorData *>( data )->baseReadable();
 			return TypeDesc( TypeDesc::INT, static_cast<const IntVectorData *>( data )->readable().size() );
+		case V3fVectorDataTypeId :
+			basePointer = static_cast<const V3fVectorData *>( data )->baseReadable();
+			return TypeDesc(
+				TypeDesc::FLOAT,
+				TypeDesc::VEC3,
+				vecSemanticsFromGeometricInterpretation( static_cast<const V3fVectorData *>( data )->getInterpretation() ),
+				static_cast<const V3fVectorData *>( data )->readable().size()
+			);
 		case Color3fVectorDataTypeId :
 			basePointer = static_cast<const Color3fVectorData *>( data )->baseReadable();
 			return TypeDesc( TypeDesc::FLOAT, TypeDesc::VEC3, TypeDesc::COLOR, static_cast<const IntVectorData *>( data )->readable().size() );
