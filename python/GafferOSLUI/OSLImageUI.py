@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2013, John Haddon. All rights reserved.
+#  Copyright (c) 2013-2014, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -49,10 +49,10 @@ GafferOSL.OSLImage,
 
 """Executes OSL shaders to perform image processing.""",
 
-"channel",
+"shader",
 {
-	"description" : "The channels to be added to the image.",
-	"nodeGadget:nodulePosition" : "left",	
+	"description" : "The shader to be executed - connect the output from an OSL network here.",
+	"nodeGadget:nodulePosition" : "left",
 }
 
 )
@@ -61,12 +61,5 @@ GafferOSL.OSLImage,
 # Nodules
 ##########################################################################
 	
-GafferUI.Nodule.registerNodule( GafferOSL.OSLImage.staticTypeId(), "channel.*", GafferUI.StandardNodule )
-
-GafferUI.Nodule.registerNodule(
-	GafferOSL.OSLImage.staticTypeId(),
-	"channel",
-	lambda plug : GafferUI.CompoundNodule( plug, GafferUI.LinearContainer.Orientation.Y ),
-)
-
+GafferUI.Nodule.registerNodule( GafferOSL.OSLImage.staticTypeId(), "shader", GafferUI.StandardNodule )
 
