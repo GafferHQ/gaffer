@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2013, John Haddon. All rights reserved.
+#  Copyright (c) 2013-2014, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -95,6 +95,29 @@ class OSLObjectTest( GafferOSLTest.OSLTestCase ) :
 		self.assertEqual( boundIn.max.x, boundOut.max.y )
 		self.assertEqual( boundIn.min.y, boundOut.min.x )
 		self.assertEqual( boundIn.max.y, boundOut.max.x )
+	
+	def testOnlyAcceptsSurfaceShaders( self ) :
+	
+		object = GafferOSL.OSLObject()
+		shader = GafferOSL.OSLShader()
+	
+		shader.loadShader( "objectProcessing/OutPoint" )
+		self.assertFalse( object["shader"].acceptsInput( shader["out"] ) )
+
+		shader.loadShader( "surface/Sum" )
+		self.assertTrue( object["shader"].acceptsInput( shader["out"] ) )
+
+	def testAcceptsNone( self ) :
+	
+		object = GafferOSL.OSLObject()
+		self.assertTrue( object["shader"].acceptsInput( None ) )
+	
+	def testAcceptsShaderSwitch( self ) :
+	
+		object = GafferOSL.OSLObject()
+		switch = GafferScene.ShaderSwitch()
 		
+		self.assertTrue( object["shader"].acceptsInput( switch["out"] ) )	
+
 if __name__ == "__main__":
 	unittest.main()

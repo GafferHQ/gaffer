@@ -37,8 +37,9 @@
 #include "IECore/CompoundData.h"
 
 #include "Gaffer/Context.h"
+#include "Gaffer/Box.h"
 
-#include "GafferImage/ChannelMaskPlug.h"
+#include "GafferScene/ShaderSwitch.h"
 
 #include "GafferOSL/OSLImage.h"
 #include "GafferOSL/OSLShader.h"
@@ -111,11 +112,33 @@ bool OSLImage::acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *input
 		return false;
 	}
 	
-	if( plug == shaderPlug() )
+	if( !inputPlug )
 	{
-		return runTimeCast<const OSLShader>( inputPlug->source<Plug>()->node() );
+		return true;
 	}
 	
+	if( plug == shaderPlug() )
+	{
+		const Node *sourceNode = inputPlug->source<Plug>()->node();
+		if( const OSLShader *shader = runTimeCast<const OSLShader>( sourceNode ) )
+		{
+			return shader->typePlug()->getValue() == "osl:surface";
+		}
+		else
+		{
+			// as for the GafferScene::ShaderAssignment, we accept Box and ShaderSwitch
+			// inputs as an indirect means of later getting a connection to a Shader.
+			if(
+				runTimeCast<const Gaffer::Box>( sourceNode ) ||
+				runTimeCast<const GafferScene::ShaderSwitch>( sourceNode )
+			)
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+		
 	return true;
 }
 

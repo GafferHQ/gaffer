@@ -34,6 +34,10 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
+#include "Gaffer/Box.h"
+
+#include "GafferScene/ShaderSwitch.h"
+
 #include "GafferOSL/OSLShader.h"
 #include "GafferOSL/OSLImage.h"
 #include "GafferOSL/OSLObject.h"
@@ -90,9 +94,31 @@ bool OSLObject::acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inpu
 		return false;
 	}
 	
+	if( !inputPlug )
+	{
+		return true;
+	}
+	
 	if( plug == shaderPlug() )
 	{
-		return runTimeCast<const OSLShader>( inputPlug->source<Plug>()->node() );
+		const Node *sourceNode = inputPlug->source<Plug>()->node();
+		if( const OSLShader *shader = runTimeCast<const OSLShader>( sourceNode ) )
+		{
+			return shader->typePlug()->getValue() == "osl:surface";
+		}
+		else
+		{
+			// as for the GafferScene::ShaderAssignment, we accept Box and ShaderSwitch
+			// inputs as an indirect means of later getting a connection to a Shader.
+			if(
+				runTimeCast<const Gaffer::Box>( sourceNode ) ||
+				runTimeCast<const ShaderSwitch>( sourceNode )
+			)
+			{
+				return true;
+			}
+		}
+		return false;
 	}
 	
 	return true;

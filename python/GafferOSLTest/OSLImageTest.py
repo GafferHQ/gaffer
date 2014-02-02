@@ -39,6 +39,7 @@ import os
 import Gaffer
 import GafferTest
 import GafferImage
+import GafferScene
 import GafferOSL
 import GafferOSLTest
 
@@ -133,6 +134,29 @@ class OSLImageTest( GafferOSLTest.OSLTestCase ) :
 		self.assertEqual( outputImage["R"].data, inputImage["R"].data )
 		self.assertEqual( outputImage["G"].data, inputImage["R"].data )
 		self.assertEqual( outputImage["B"].data, inputImage["R"].data )
+
+	def testOnlyAcceptsSurfaceShaders( self ) :
+	
+		image = GafferOSL.OSLImage()
+		shader = GafferOSL.OSLShader()
+	
+		shader.loadShader( "objectProcessing/OutPoint" )
+		self.assertFalse( image["shader"].acceptsInput( shader["out"] ) )
+
+		shader.loadShader( "surface/Sum" )
+		self.assertTrue( image["shader"].acceptsInput( shader["out"] ) )
+
+	def testAcceptsNone( self ) :
+	
+		image = GafferOSL.OSLImage()
+		self.assertTrue( image["shader"].acceptsInput( None ) )
+	
+	def testAcceptsShaderSwitch( self ) :
+	
+		image = GafferOSL.OSLImage()
+		switch = GafferScene.ShaderSwitch()
+		
+		self.assertTrue( image["shader"].acceptsInput( switch["out"] ) )
 		
 if __name__ == "__main__":
 	unittest.main()
