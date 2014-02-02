@@ -64,6 +64,11 @@ OSLImage::OSLImage( const std::string &name )
 	addChild( new Plug( "shader" ) );
 	
 	addChild( new Gaffer::ObjectPlug( "__shading", Gaffer::Plug::Out, new CompoundData() ) );
+
+	// we disable caching for the channel data plug, because our compute
+	// simply references data direct from the shading plug, which will itself
+	// be cached. we don't want to count the memory usage for that twice.
+	outPlug()->channelDataPlug()->setFlags( Plug::Cacheable, false );
 }
 
 OSLImage::~OSLImage()
