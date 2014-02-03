@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2012-2014, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -38,31 +38,38 @@
 #ifndef GAFFERUI_CONNECTIONGADGET_H
 #define GAFFERUI_CONNECTIONGADGET_H
 
-#include "GafferUI/Gadget.h"
+#include "boost/regex.hpp"
 
 #include "Gaffer/Plug.h"
 
-namespace GafferUI
-{
-	IE_CORE_FORWARDDECLARE( Nodule )
-}
+#include "GafferUI/Gadget.h"
 
 namespace GafferUI
 {
 
+IE_CORE_FORWARDDECLARE( Nodule )
+IE_CORE_FORWARDDECLARE( ConnectionGadget )
+
+/// ConnectionGadgets are responsible for drawing the Connections between
+/// Nodules in the node graph, and for implementing the drag and drop of
+/// those connections. The ConnectionsGadget base class is an abstract class - 
+/// see StandardConnectionGadget for a concrete implementation suitable for
+/// most purposes. ConnectionGadget provides a factory mechanism whereby
+/// different creation methods can be called for different plugs on different
+/// nodes - this allows the customisation of connection display. The most
+/// common customisation would be to apply a different style or custom
+/// tooltip - see ConnectionGadgetTest for an example.
 class ConnectionGadget : public Gadget
 {
 
 	public :
 
-		ConnectionGadget( GafferUI::NodulePtr srcNodule, GafferUI::NodulePtr dstNodule );
 		virtual ~ConnectionGadget();
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::ConnectionGadget, ConnectionGadgetTypeId, Gadget );
 		
 		/// Accepts only GraphGadgets as parent.
 		virtual bool acceptsParent( const Gaffer::GraphComponent *potentialParent ) const;		
-		virtual Imath::Box3f bound() const;
 		
 		/// Returns the Nodule representing the source plug in the connection.
 		/// Note that this may be 0 if the source plug belongs to a node which
@@ -73,7 +80,9 @@ class ConnectionGadget : public Gadget
 		Nodule *dstNodule();
 		const Nodule *dstNodule() const;
 		/// May be called to change the connection represented by this gadget.
-		void setNodules( GafferUI::NodulePtr srcNodule, GafferUI::NodulePtr dstNodule );
+		/// Derived classes may reimplement this method but implementations
+		/// must call the base class implementation first.
+		virtual void setNodules( GafferUI::NodulePtr srcNodule, GafferUI::NodulePtr dstNodule );
 
 		/// A minimised connection is drawn only as a small stub
 		/// entering the destination nodule - this can be useful in
@@ -84,45 +93,50 @@ class ConnectionGadget : public Gadget
 		/// May be called by the recipient of a drag to set a more appropriate position
 		/// and tangent for the connection as the drag progresses within the destination.
 		/// Throws if this connection is not currently the source of a connection.
-		void updateDragEndPoint( const Imath::V3f position, const Imath::V3f &tangent );
-
-		virtual std::string getToolTip( const IECore::LineSegment3f &line ) const;
+		virtual void updateDragEndPoint( const Imath::V3f position, const Imath::V3f &tangent ) = 0;
 		
+		/// Creates a ConnectionGadget to represent the connection between the two
+		/// specified Nodules.
+		static ConnectionGadgetPtr create( NodulePtr srcNodule, NodulePtr dstNodule );
+		
+		typedef boost::function<ConnectionGadgetPtr ( NodulePtr, NodulePtr )> ConnectionGadgetCreator;
+		/// Registers a function which will return a ConnectionGadget instance for a
+		/// destination plug of a specific type.
+		static void registerConnectionGadget( IECore::TypeId dstPlugType, ConnectionGadgetCreator creator );
+		/// Registers a function which will return a Nodule instance for destination plugs with
+		/// specific names on a specific type of node. Nodules registered in this way will take
+		/// precedence over those registered above.
+		static void registerConnectionGadget( const IECore::TypeId nodeType, const std::string &dstPlugPathRegex, ConnectionGadgetCreator creator );
+
 	protected :
 
-		void setPositionsFromNodules();
-		
-		void doRender( const Style *style ) const;
+		ConnectionGadget( GafferUI::NodulePtr srcNodule, GafferUI::NodulePtr dstNodule );
+
+		/// Creating a static one of these is a convenient way of registering a ConnectionGadget type.
+		template<class T>
+		struct ConnectionGadgetTypeDescription
+		{
+			ConnectionGadgetTypeDescription( IECore::TypeId dstPlugType ) { ConnectionGadget::registerConnectionGadget( dstPlugType, &creator ); };
+			static ConnectionGadgetPtr creator( NodulePtr srcNodule, NodulePtr dstNodule ) { return new T( srcNodule, dstNodule ); };
+		};
 
 	private :
-		
-		void enter( GadgetPtr gadget, const ButtonEvent &event );
-		void leave( GadgetPtr gadget, const ButtonEvent &event );
-		bool buttonPress( GadgetPtr gadget, const ButtonEvent &event );
-		IECore::RunTimeTypedPtr dragBegin( GadgetPtr gadget, const DragDropEvent &event );	
-		bool dragEnter( GadgetPtr gadget, const DragDropEvent &event );	
-		bool dragMove( GadgetPtr gadget, const DragDropEvent &event );
-		bool dragEnd( GadgetPtr gadget, const DragDropEvent &event );
-		
-		bool nodeSelected( const Nodule *nodule ) const;
-		
-		Imath::V3f m_srcPos;
-		Imath::V3f m_srcTangent;
-		Imath::V3f m_dstPos;
-		Imath::V3f m_dstTangent;
-		
+				
 		NodulePtr m_srcNodule;
 		NodulePtr m_dstNodule;
 		
 		bool m_minimised;
 		
-		Gaffer::Plug::Direction m_dragEnd;
-		
-		bool m_hovering;
+		typedef std::map<IECore::TypeId, ConnectionGadgetCreator> CreatorMap;
+		static CreatorMap &creators();
+
+		typedef std::pair<boost::regex, ConnectionGadgetCreator> RegexAndCreator;
+		typedef std::vector<RegexAndCreator> RegexAndCreatorVector;
+		typedef std::map<IECore::TypeId, RegexAndCreatorVector> NamedCreatorMap;
+		static NamedCreatorMap &namedCreators();
+
 		
 };
-
-IE_CORE_DECLAREPTR( ConnectionGadget );
 
 } // namespace GafferUI
 

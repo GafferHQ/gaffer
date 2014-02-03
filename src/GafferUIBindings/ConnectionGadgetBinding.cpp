@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2014, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -60,15 +60,49 @@ static NodulePtr dstNodule( ConnectionGadget &c )
 	return c.dstNodule();
 }
 
+struct ConnectionGadgetCreator
+{
+	ConnectionGadgetCreator( object fn )
+		:	m_fn( fn )
+	{
+	}
+	
+	ConnectionGadgetPtr operator()( NodulePtr srcNodule, NodulePtr dstNodule )
+	{
+		IECorePython::ScopedGILLock gilLock;
+		ConnectionGadgetPtr result = extract<ConnectionGadgetPtr>( m_fn( srcNodule, dstNodule ) );
+		return result;
+	}
+	
+	private :
+	
+		object m_fn;
+
+};
+
+static void registerConnectionGadget1( IECore::TypeId dstPlugType, object creator )
+{
+	ConnectionGadget::registerConnectionGadget( dstPlugType, ConnectionGadgetCreator( creator ) );
+}
+
+static void registerConnectionGadget2( IECore::TypeId nodeType, const std::string &dstPlugPathRegex, object creator )
+{
+	ConnectionGadget::registerConnectionGadget( nodeType, dstPlugPathRegex, ConnectionGadgetCreator( creator ) );
+}
+
 void GafferUIBindings::bindConnectionGadget()
 {
 	IECorePython::RunTimeTypedClass<ConnectionGadget>()
-		.def( init<GafferUI::NodulePtr, GafferUI::NodulePtr>() )
 		.GAFFERUIBINDINGS_DEFGADGETWRAPPERFNS( ConnectionGadget )
 		.def( "srcNodule", &srcNodule )
 		.def( "dstNodule", &dstNodule )
 		.def( "setNodules", &ConnectionGadget::setNodules )
 		.def( "setMinimised", &ConnectionGadget::setMinimised )
 		.def( "getMinimised", &ConnectionGadget::getMinimised )
+		.def( "create", &ConnectionGadget::create )
+		.staticmethod( "create" )
+		.def( "registerConnectionGadget", &registerConnectionGadget1 )
+		.def( "registerConnectionGadget", &registerConnectionGadget2 )
+		.staticmethod( "registerConnectionGadget" )
 	;
 }

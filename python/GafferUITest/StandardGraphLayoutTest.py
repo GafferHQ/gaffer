@@ -48,6 +48,12 @@ import GafferUITest
 
 class StandardGraphLayoutTest( GafferUITest.TestCase ) :
 
+	def setUp( self ) :
+	
+		GafferUITest.TestCase.setUp( self )
+		
+		GafferUI.Nodule.registerNodule( GafferTest.AddNode.staticTypeId(), "enabled", lambda plug : None )
+
 	def testConnectNode( self ) :
 	
 		s = Gaffer.ScriptNode()
