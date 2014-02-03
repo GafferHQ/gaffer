@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2013-2014, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -38,8 +38,6 @@
 #ifndef GAFFERUI_STANDARDGRAPHLAYOUT_H
 #define GAFFERUI_STANDARDGRAPHLAYOUT_H
 
-#include "OpenEXR/ImathBox.h"
-
 #include "GafferUI/GraphLayout.h"
 
 namespace Gaffer
@@ -71,6 +69,20 @@ class StandardGraphLayout : public GraphLayout
 		virtual void positionNode( GraphGadget *graph, Gaffer::Node *node, const Imath::V2f &fallbackPosition = Imath::V2f( 0 ) ) const;
 		virtual void positionNodes( GraphGadget *graph, Gaffer::Set *nodes, const Imath::V2f &fallbackPosition = Imath::V2f( 0 ) ) const;		
 
+		virtual void layoutNodes( GraphGadget *graph, Gaffer::Set *nodes ) const;
+
+		/// @name Layout algorithm parameters
+		////////////////////////////////////////////////////////////////////
+		//@{
+		/// A multiplier on the preferred connection length.
+		void setConnectionScale( float scale );
+		float getConnectionScale() const;
+		/// A multiplier on the preferred separation between
+		/// adjacent nodes.
+		void setNodeSeparationScale( float scale );
+		float getNodeSeparationScale() const;
+		//@}
+		
 	private :
 	
 		bool connectNodeInternal( GraphGadget *graph, Gaffer::Node *node, Gaffer::Set *potentialInputs, bool insertIfPossible ) const;
@@ -79,18 +91,13 @@ class StandardGraphLayout : public GraphLayout
 		size_t outputPlugs( GraphGadget *graph, Gaffer::Set *nodes, std::vector<Gaffer::Plug *> &plugs ) const;
 		Gaffer::Plug *correspondingOutput( const Gaffer::Plug *input ) const;
 		size_t unconnectedInputPlugs( NodeGadget *nodeGadget, std::vector<Gaffer::Plug *> &plugs ) const;
-						
-		// We calculate node positions based on their connections to other nodes. We first compute a hard
-		// constraint which guarantees that the node is to the side of it's connections indicated by the nodule
-		// tangents. In the case of all connections being either vertical or horizontal, this will only
-		// give us a constraint in one dimension, so we compute a soft constraint for that dimension, based on
-		// trying to keep the node centered between its connections. Returns false if no connections were found
-		// and therefore nothing could be computed, true otherwise.
-		bool nodeConstraints( GraphGadget *graph, Gaffer::Node *node, Gaffer::Set *excludedNodes, Imath::Box2f &hardConstraint, Imath::V2f &softConstraint ) const;
+
+		float m_connectionScale;
+		float m_nodeSeparationScale;
 
 };
 
-IE_CORE_DECLAREPTR( GraphLayout );
+IE_CORE_DECLAREPTR( StandardGraphLayout );
 
 } // namespace GafferUI
 

@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2014, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -67,6 +67,7 @@
 #include "GafferUIBindings/View3DBinding.h"
 #include "GafferUIBindings/PlugGadgetBinding.h"
 #include "GafferUIBindings/GraphLayoutBinding.h"
+#include "GafferUIBindings/StandardGraphLayoutBinding.h"
 #include "GafferUIBindings/PointerBinding.h"
 #include "GafferUIBindings/BackdropNodeGadgetBinding.h"
 #include "GafferUIBindings/SpacerGadgetBinding.h"
@@ -107,6 +108,7 @@ BOOST_PYTHON_MODULE( _GafferUI )
 	bindView3D();
 	bindPlugGadget();
 	bindGraphLayout();
+	bindStandardGraphLayout();
 	bindPointer();
 	bindBackdropNodeGadget();
 	bindSpacerGadget();

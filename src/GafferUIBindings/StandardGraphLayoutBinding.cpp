@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -49,5 +50,9 @@ void GafferUIBindings::bindStandardGraphLayout()
 {
 	IECorePython::RunTimeTypedClass<StandardGraphLayout>()
 		.def( init<>() )
+		.def( "setConnectionScale", &StandardGraphLayout::setConnectionScale )
+		.def( "getConnectionScale", &StandardGraphLayout::getConnectionScale )
+		.def( "setNodeSeparationScale", &StandardGraphLayout::setNodeSeparationScale )
+		.def( "getNodeSeparationScale", &StandardGraphLayout::getNodeSeparationScale )
 	;
 }
