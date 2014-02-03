@@ -90,10 +90,11 @@ class ConnectionGadgetTest( GafferUITest.TestCase ) :
 		
 		self.assertTrue( isinstance( c, GafferUI.StandardConnectionGadget ) )
 		self.assertTrue( c.getStyle() is None )
+		self.assertNotEqual( c.getToolTip( IECore.LineSegment3f() ), "myToolTip" )
 
 		self.assertTrue( isinstance( myC, GafferUI.StandardConnectionGadget ) )
 		self.assertTrue( myC.getStyle().isSame( myStyle ) )
-		self.assertTrue( myC.getToolTip( IECore.LineSegment3f() ) == "myToolTip" )
+		self.assertEqual( myC.getToolTip( IECore.LineSegment3f() ), "myToolTip" )
 	
 	def testPerPlugFactory( self ) :
 	
