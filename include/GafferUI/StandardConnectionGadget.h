@@ -42,6 +42,9 @@
 namespace GafferUI
 {
 
+/// The standard implementation of the abstract ConnectionGadget base
+/// class. Connections endpoints may be dragged + dropped, and the tooltip
+/// displays the name of the source and destination plugs.
 class StandardConnectionGadget : public ConnectionGadget
 {
 

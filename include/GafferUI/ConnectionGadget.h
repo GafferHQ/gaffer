@@ -50,6 +50,15 @@ namespace GafferUI
 IE_CORE_FORWARDDECLARE( Nodule )
 IE_CORE_FORWARDDECLARE( ConnectionGadget )
 
+/// ConnectionGadgets are responsible for drawing the Connections between
+/// Nodules in the node graph, and for implementing the drag and drop of
+/// those connections. The ConnectionsGadget base class is an abstract class - 
+/// see StandardConnectionGadget for a concrete implementation suitable for
+/// most purposes. ConnectionGadget provides a factory mechanism whereby
+/// different creation methods can be called for different plugs on different
+/// nodes - this allows the customisation of connection display. The most
+/// common customisation would be to apply a different style or custom
+/// tooltip - see ConnectionGadgetTest for an example.
 class ConnectionGadget : public Gadget
 {
 
