@@ -96,6 +96,7 @@ from PlaybackTest import PlaybackTest
 from SpacerGadgetTest import SpacerGadgetTest
 from BoxUITest import BoxUITest
 from ConnectionGadgetTest import ConnectionGadgetTest
+from MessageWidgetTest import MessageWidgetTest
 
 if __name__ == "__main__":
 	unittest.main()

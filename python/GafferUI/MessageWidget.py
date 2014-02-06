@@ -34,6 +34,7 @@
 #  
 ##########################################################################
 
+import re
 import sys
 import traceback
 import weakref
@@ -98,8 +99,20 @@ class MessageWidget( GafferUI.Widget ) :
 	def messageHandler( self ) :
 	
 		return self.__messageHandler
+		
+	## It can be useful to forward messages captured by this widget
+	# on to other message handlers - for instance to perform centralised
+	# logging in addition to local display. This method returns a
+	# CompoundMessageHandler which can be used for such forwarding -
+	# simply add a handler with forwardingMessageHandler().addHandler().
+	def forwardingMessageHandler( self ) :
+	
+		return self.__messageHandler._forwarder
 	
 	## May be called to append a message manually.
+	# \note Because these are not real messages, they are not
+	# passed to the forwardingMessageHandler().
+	# \deprecated.
 	def appendMessage( self, level, context, message ) :
 	
 		# make sure relevant button is shown
@@ -131,6 +144,9 @@ class MessageWidget( GafferUI.Widget ) :
 	
 	## May be called to append a message describing an exception. By default the currently handled exception is displayed
 	# but another exception can be displayed by specifying exceptionInfo in the same format as returned by sys.exc_info().
+	# \note Because these are not real messages, they are not
+	# passed to the forwardingMessageHandler().
+	# \deprecated.
 	def appendException( self, exceptionInfo=None ) :
 	
 		if exceptionInfo is None :
@@ -144,7 +160,27 @@ class MessageWidget( GafferUI.Widget ) :
 			str( exceptionInfo[1] ),
 			"".join( traceback.format_exception( *exceptionInfo ) )
 		)
-		
+	
+	## Returns the number of messages being displayed, optionally
+	# restricted to the specified level.
+	def messageCount( self, level = None ) :
+	
+		# rather than count the number of times we receive a call to
+		# appendMessage(), we instead search for messages that are being
+		# displayed in the text. this is necessary because we allow direct
+		# access to textWidget(), so anyone can change the content at any time.
+		if level is not None :
+			return len( re.findall( "^" + IECore.Msg.levelAsString( level ) + " : ", self.__text.getText(), re.MULTILINE ) )
+		else :
+			return sum(
+				[
+					self.messageCount( IECore.Msg.Level.Debug ),
+					self.messageCount( IECore.Msg.Level.Info ),
+					self.messageCount( IECore.Msg.Level.Warning ),
+					self.messageCount( IECore.Msg.Level.Error ),
+				]
+			)
+			
 	def __buttonClicked( self, button ) :
 		
 		## \todo Decide how we allow this to be achieved directly using the public
@@ -170,11 +206,15 @@ class _MessageHandler( IECore.MessageHandler ) :
 	
 		IECore.MessageHandler.__init__( self )	
 		
+		self._forwarder = IECore.CompoundMessageHandler()
+		
 		# using a weak reference because we're owned by the MessageWidget,
 		# so we mustn't have a reference back.	
 		self.__messageWidget = weakref.ref( messageWidget )
 		
 	def handle( self, level, context, msg ) :
+		
+		self._forwarder.handle( level, context, msg )
 		
 		w = self.__messageWidget()
 		
