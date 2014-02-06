@@ -255,7 +255,17 @@ class OpDialogue( GafferUI.Dialogue ) :
 			
 			self.__node.setParameterisedValues()
 			
-			with self.__messageWidget.messageHandler() :
+			# Get the message handler that outputs to our message widget -
+			# we'll use this to display messages the Op emits during execution.
+			if self.__messageCollapsible.getVisible() :
+				messageHandler = self.__messageWidget.messageHandler()
+			else :
+				# A nefarious party has hidden our message widget - we
+				# assume they will be taking care of message handling by some
+				# other means, so we just use the current handler.
+				messageHandler = IECore.MessageHandler.currentHandler()
+			
+			with messageHandler :
 				result = self.__node.getParameterised()[0]()
 									
 		except Exception, e :
@@ -307,10 +317,11 @@ class OpDialogue( GafferUI.Dialogue ) :
 		# Although we computed a result successfully, there may still be minor problems
 		# indicated by messages the Op emitted - check for those.
 		problems = []
-		for level in ( IECore.Msg.Level.Error, IECore.Msg.Level.Warning ) :
-			count = self.__messageWidget.messageCount( level )
-			if count :
-				problems.append( "%d %s%s" % ( count, IECore.Msg.levelAsString( level ).capitalize(), "s" if count > 1 else "" ) )
+		if self.__messageCollapsible.getVisible() :
+			for level in ( IECore.Msg.Level.Error, IECore.Msg.Level.Warning ) :
+				count = self.__messageWidget.messageCount( level )
+				if count :
+					problems.append( "%d %s%s" % ( count, IECore.Msg.levelAsString( level ).capitalize(), "s" if count > 1 else "" ) )
 
 		if not problems :
 			# If there were no problems, then our post execute behaviour may
