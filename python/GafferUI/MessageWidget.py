@@ -34,6 +34,7 @@
 #  
 ##########################################################################
 
+import re
 import sys
 import traceback
 import weakref
@@ -144,7 +145,27 @@ class MessageWidget( GafferUI.Widget ) :
 			str( exceptionInfo[1] ),
 			"".join( traceback.format_exception( *exceptionInfo ) )
 		)
-		
+	
+	## Returns the number of messages being displayed, optionally
+	# restricted to the specified level.
+	def messageCount( self, level = None ) :
+	
+		# rather than count the number of times we receive a call to
+		# appendMessage(), we instead search for messages that are being
+		# displayed in the text. this is necessary because we allow direct
+		# access to textWidget(), so anyone can change the content at any time.
+		if level is not None :
+			return len( re.findall( "^" + IECore.Msg.levelAsString( level ) + " : ", self.__text.getText(), re.MULTILINE ) )
+		else :
+			return sum(
+				[
+					self.messageCount( IECore.Msg.Level.Debug ),
+					self.messageCount( IECore.Msg.Level.Info ),
+					self.messageCount( IECore.Msg.Level.Warning ),
+					self.messageCount( IECore.Msg.Level.Error ),
+				]
+			)
+			
 	def __buttonClicked( self, button ) :
 		
 		## \todo Decide how we allow this to be achieved directly using the public
