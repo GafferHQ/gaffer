@@ -179,6 +179,12 @@ class OpDialogue( GafferUI.Dialogue ) :
 	
 		return self.__opExecutedSignal
 	
+	## Returns the internal MessageWidget used for displaying messages
+	# output by the Op.
+	def messageWidget( self ) :
+	
+		return self.__messageWidget
+	
 	## Causes the dialogue to enter a modal state, returning the result
 	# of executing the Op, or None if the user cancelled the operation. Any
 	# validation or execution errors will be reported to the user and return
