@@ -39,6 +39,7 @@ from __future__ import with_statement
 
 import sys
 import threading
+import traceback
 
 import IECore
 
@@ -294,7 +295,11 @@ class OpDialogue( GafferUI.Dialogue ) :
 		self.__forwardButton.setEnabled( True )
 		self.__forwardButtonClickedConnection = self.__forwardButton.clickedSignal().connect( Gaffer.WeakMethod( self.__initiateParameterEditing ) )
 		
-		self.__messageWidget.appendException( exceptionInfo )
+		self.__messageWidget.messageHandler().handle(
+			IECore.Msg.Level.Error,
+			str( exceptionInfo[1] ),
+			"".join( traceback.format_exception( *exceptionInfo ) )
+		)
 		
 		self.__frame.setChild( self.__progressUI )
 
@@ -337,7 +342,7 @@ class OpDialogue( GafferUI.Dialogue ) :
 			
 		self.__progressLabel.setText( "<h3>" + completionMessage + "</h3>" )
 
-		self.__messageWidget.appendMessage( IECore.Msg.Level.Info, "Result", str( result ) )
+		self.__messageWidget.messageHandler().handle( IECore.Msg.Level.Info, "Result", str( result ) )
 
 		self.__backButton.setText( "Close" )
 		self.__backButton.setEnabled( True )
