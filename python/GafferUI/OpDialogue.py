@@ -158,7 +158,7 @@ class OpDialogue( GafferUI.Dialogue ) :
 			
 			GafferUI.Spacer( IECore.V2i( 1 ), expand=True )
 			
-			with GafferUI.Collapsible( "Details", collapsed = True ) :
+			with GafferUI.Collapsible( "Details", collapsed = True ) as self.__messageCollapsible :
 			
 				self.__messageWidget = GafferUI.MessageWidget()
 				
@@ -231,6 +231,7 @@ class OpDialogue( GafferUI.Dialogue ) :
 		self.__backButton.setEnabled( False )
 		self.__forwardButton.setEnabled( False )
 		self.__messageWidget.textWidget().setText( "" )
+		self.__messageCollapsible.setCollapsed( True )
 		
 		self.__state = self.__State.Execution
 		
@@ -264,12 +265,7 @@ class OpDialogue( GafferUI.Dialogue ) :
 			if self.getModal() :
 				self.__resultOfWait = result
 		
-			if self.__postExecuteBehaviour == self.PostExecuteBehaviour.Close :
-				self.__close()
-			elif self.__postExecuteBehaviour == self.PostExecuteBehaviour.None :
-				self.__initiateParameterEditing()
-			else :
-				self.__initiateResultDisplay( result )
+			self.__initiateResultDisplay( result )
 
  			self.opExecutedSignal()( result )
  			
@@ -281,6 +277,8 @@ class OpDialogue( GafferUI.Dialogue ) :
 		
 		self.__progressIconFrame.setChild( GafferUI.Image( "opDialogueFailure.png" ) )
 		self.__progressLabel.setText( "<h3>Failed</h3>" )
+
+		self.__messageCollapsible.setCollapsed( False )
 	
 		self.__backButton.setText( "Cancel" )
 		self.__backButton.setEnabled( True )
@@ -300,8 +298,38 @@ class OpDialogue( GafferUI.Dialogue ) :
 	
 	def __initiateResultDisplay( self, result ) :
 	
-		self.__progressIconFrame.setChild( GafferUI.Image( "opDialogueSuccess.png" ) )
-		self.__progressLabel.setText( "<h3>Completed</h3>" )
+		# Although we computed a result successfully, there may still be minor problems
+		# indicated by messages the Op emitted - check for those.
+		problems = []
+		for level in ( IECore.Msg.Level.Error, IECore.Msg.Level.Warning ) :
+			count = self.__messageWidget.messageCount( level )
+			if count :
+				problems.append( "%d %s%s" % ( count, IECore.Msg.levelAsString( level ).capitalize(), "s" if count > 1 else "" ) )
+
+		if not problems :
+			# If there were no problems, then our post execute behaviour may
+			# indicate that we don't need to display anything - deal with
+			# those cases.
+			if self.__postExecuteBehaviour == self.PostExecuteBehaviour.Close :
+				self.__close()
+				return
+			elif self.__postExecuteBehaviour == self.PostExecuteBehaviour.None :
+				self.__initiateParameterEditing()
+				return
+		
+		# Either the post execute behaviour says we should display the result, or we're
+		# going to anyway, because we don't want the problems to go unnoticed.
+		
+		self.__progressIconFrame.setChild(
+			GafferUI.Image( "opDialogueSuccessWarning.png" if problems else "opDialogueSuccess.png" )
+		)
+
+		completionMessage = "Completed"
+		if problems :
+			completionMessage += " with " + " and ".join( problems )
+			self.__messageCollapsible.setCollapsed( False )
+			
+		self.__progressLabel.setText( "<h3>" + completionMessage + "</h3>" )
 
 		self.__messageWidget.appendMessage( IECore.Msg.Level.Info, "Result", str( result ) )
 
@@ -313,7 +341,7 @@ class OpDialogue( GafferUI.Dialogue ) :
 		self.__forwardButton.setEnabled( True )
 		self.__forwardButtonClickedConnection = self.__forwardButton.clickedSignal().connect( Gaffer.WeakMethod( self.__initiateParameterEditing ) )
 		
-		if self.__postExecuteBehaviour == self.PostExecuteBehaviour.DisplayResultAndClose :
+		if self.__postExecuteBehaviour in ( self.PostExecuteBehaviour.DisplayResultAndClose, self.PostExecuteBehaviour.Close ) :
 			self.__forwardButton.setVisible( False )
 
 		self.__frame.setChild( self.__progressUI )
