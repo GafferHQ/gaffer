@@ -99,8 +99,20 @@ class MessageWidget( GafferUI.Widget ) :
 	def messageHandler( self ) :
 	
 		return self.__messageHandler
+		
+	## It can be useful to forward messages captured by this widget
+	# on to other message handlers - for instance to perform centralised
+	# logging in addition to local display. This method returns a
+	# CompoundMessageHandler which can be used for such forwarding -
+	# simply add a handler with forwardingMessageHandler().addHandler().
+	def forwardingMessageHandler( self ) :
+	
+		return self.__messageHandler._forwarder
 	
 	## May be called to append a message manually.
+	# \note Because these are not real messages, they are not
+	# passed to the forwardingMessageHandler().
+	# \deprecated.
 	def appendMessage( self, level, context, message ) :
 	
 		# make sure relevant button is shown
@@ -132,6 +144,9 @@ class MessageWidget( GafferUI.Widget ) :
 	
 	## May be called to append a message describing an exception. By default the currently handled exception is displayed
 	# but another exception can be displayed by specifying exceptionInfo in the same format as returned by sys.exc_info().
+	# \note Because these are not real messages, they are not
+	# passed to the forwardingMessageHandler().
+	# \deprecated.
 	def appendException( self, exceptionInfo=None ) :
 	
 		if exceptionInfo is None :
@@ -191,11 +206,15 @@ class _MessageHandler( IECore.MessageHandler ) :
 	
 		IECore.MessageHandler.__init__( self )	
 		
+		self._forwarder = IECore.CompoundMessageHandler()
+		
 		# using a weak reference because we're owned by the MessageWidget,
 		# so we mustn't have a reference back.	
 		self.__messageWidget = weakref.ref( messageWidget )
 		
 	def handle( self, level, context, msg ) :
+		
+		self._forwarder.handle( level, context, msg )
 		
 		w = self.__messageWidget()
 		

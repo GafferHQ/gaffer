@@ -80,6 +80,32 @@ class MessageWidgetTest( GafferUITest.TestCase ) :
 			w.textWidget().setText( "" )
 			assertCounts( 0, 0, 0, 0 )
 
+	def testForwarding( self ) :
+	
+		w = GafferUI.MessageWidget()
+		
+		h = IECore.CapturingMessageHandler()
+		w.forwardingMessageHandler().addHandler( h )
+		
+		self.assertEqual( w.messageCount( IECore.Msg.Level.Error ), 0 )
+		self.assertEqual( len( h.messages ), 0 )
+		
+		with w.messageHandler() :
+			IECore.msg( IECore.Msg.Level.Error, "test", "test" )
+			self.waitForIdle( 10 )
+		
+		self.assertEqual( w.messageCount( IECore.Msg.Level.Error ), 1 )
+		self.assertEqual( len( h.messages ), 1 )
+		
+		w.forwardingMessageHandler().removeHandler( h )
+		
+		with w.messageHandler() :
+			IECore.msg( IECore.Msg.Level.Error, "test", "test" )
+			self.waitForIdle( 10 )
+
+		self.assertEqual( w.messageCount( IECore.Msg.Level.Error ), 2 )
+		self.assertEqual( len( h.messages ), 1 )
+		
 if __name__ == "__main__":
 	unittest.main()
 	
