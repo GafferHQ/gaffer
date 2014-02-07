@@ -1,3 +1,23 @@
+# 0.90.0
+
+#### Scene
+
+- Fixed off-by-one error in scene cache preview frame ranges.
+
+#### UI
+
+- Fixed slight jump when connections are first drawn.
+- Removed PathFilter paths plug representation in the NodeGraph. There aren't really any nodes we would connect to it.
+- Improved OpDialogue warning display. If an Op completes successfully, but emits error or warning messages in the process, these will now always be flagged before the user can continue.
+
+#### API
+
+- Refactored ConnectionGadget into an abstract base class with a factory, to allow for the creation of custom subclasses. A new StandardConnectionGadget class contains the functionality of the old ConnectionGadget. Config files may register creation function for connections to control the type of gadget created, and its style etc.
+- Added MessageWidget.messageCount() method. This returns the number of messages currently being displayed.
+- Added OpDialogue.messageWidget() method. This provides access to the message display for the Op being executed.
+- Added MessageWidget.forwardingMessageHandler(), to allow messages received by the widget to be propagated on to other handlers. This can be useful for connecting the OpDialogue to a centralised logging system.
+- Deprecated MessageWidget appendMessage() and appendException() methods. The same result can be achieved by passing messages via the message handler instead.
+
 # 0.89.0
 
 #### Core
