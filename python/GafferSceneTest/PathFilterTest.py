@@ -135,6 +135,9 @@ class PathFilterTest( unittest.TestCase ) :
 		
 		self.assertTrue( isinstance( s["a1"], GafferScene.Attributes ) )
 		self.assertEqual( s["a1"]["filter"].getInput(), None )
+		
+		# if this is not EveryMatch and the filter is disconnected, the filter will no longer work
+		self.assertEqual( s["a1"]["filter"].getValue(), s["f"].Result.EveryMatch )
 
 	def testPathPlugPromotion( self ) :
 	

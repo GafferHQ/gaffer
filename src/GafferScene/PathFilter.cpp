@@ -141,5 +141,5 @@ unsigned PathFilter::computeMatch( const Gaffer::Context *context ) const
 		ConstPathMatcherDataPtr pathMatcher = staticPointerCast<const PathMatcherData>( pathMatcherPlug()->getValue() );
 		return pathMatcher->readable().match( pathData->readable() );
 	}
-	return NoMatch;
+	return EveryMatch;
 }
