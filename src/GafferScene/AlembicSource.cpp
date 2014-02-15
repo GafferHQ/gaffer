@@ -123,16 +123,19 @@ void AlembicSource::hashObject( const ScenePath &path, const Gaffer::Context *co
 
 Imath::Box3f AlembicSource::computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	AlembicInputPtr i = inputForPath( path );
-	if( i->hasStoredBound() )
+	if( AlembicInputPtr i = inputForPath( path ) )
 	{
-		Box3d b = i->boundAtTime( context->getFrame() / fps() );
-		return Box3f( b.min, b.max );
+		if( i->hasStoredBound() )
+		{
+			Box3d b = i->boundAtTime( context->getFrame() / fps() );
+			return Box3f( b.min, b.max );
+		}
+		else
+		{
+			return unionOfTransformedChildBounds( path, parent );
+		}
 	}
-	else
-	{
-		return unionOfTransformedChildBounds( path, parent );	
-	}
+	return Box3f();
 }
 
 Imath::M44f AlembicSource::computeTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
@@ -194,8 +197,14 @@ IECore::ConstCompoundObjectPtr AlembicSource::computeGlobals( const Gaffer::Cont
 }
 
 IECoreAlembic::AlembicInputPtr AlembicSource::inputForPath( const ScenePath &path ) const
-{	
-	AlembicInputPtr result = Detail::alembicInputCache()->get( fileNamePlug()->getValue() );
+{
+	const std::string fileName = fileNamePlug()->getValue();
+	if( !fileName.size() )
+	{
+		return NULL;
+	}
+	
+	AlembicInputPtr result = Detail::alembicInputCache()->get( fileName );
 	for( ScenePath::const_iterator it = path.begin(), eIt = path.end(); it != eIt; it++ )
 	{	
 		result = result->child( it->value() );

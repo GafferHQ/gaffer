@@ -131,6 +131,21 @@ class AlembicSourceTest( GafferSceneTest.SceneTestCase ) :
 		
 		self.assertSceneValid( a["out"] )
 		self.assertEqual( a["out"].childNames( "/" ), IECore.InternedStringVectorData( [ "front", "pCube1", "persp", "side", "top" ] ) )
+
+	def testEmptyFileName( self ) :
+	
+		a = GafferScene.AlembicSource()
+		a["fileName"].setValue( "" )
+		
+		self.assertSceneValid( a["out"] )
+		self.assertTrue( a["out"].bound( "/" ).isEmpty() )
+	
+	def testInvalidFileName( self ) :
+	
+		a = GafferScene.AlembicSource()
+		a["fileName"].setValue( "nonexistent.abc" )
+		
+		self.assertRaises( RuntimeError, a["out"].childNames, "/" )
 		
 	def tearDown( self ) :
 	
