@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2012-2014, John Haddon. All rights reserved.
 #  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -36,6 +36,7 @@
 ##########################################################################
 
 import os
+import shutil
 import unittest
 
 import IECore
@@ -109,5 +110,35 @@ class AlembicSourceTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( a["out"].fullTransform( "/group1/pCube1" ), a["out"].fullTransform( "/group1" ) * IECore.M44f.createTranslated( IECore.V3f( -1, 0, 0 ) ) )
 		self.assertEqual( a["out"].fullTransform( "/group1/pCube1/pCubeShape1" ), a["out"].fullTransform( "/group1/pCube1" ) )
 
+	__refreshTestFileName = "/tmp/refreshTest.abc"
+	
+	def testRefresh( self ) :
+	
+		shutil.copyfile( os.path.dirname( __file__ ) + "/alembicFiles/cube.abc", self.__refreshTestFileName )
+		
+		a = GafferScene.AlembicSource()
+		a["fileName"].setValue( self.__refreshTestFileName )
+		
+		self.assertSceneValid( a["out"] )
+		self.assertEqual( a["out"].childNames( "/" ), IECore.InternedStringVectorData( [ "group1" ] ) )
+		
+		shutil.copyfile( os.path.dirname( __file__ ) + "/alembicFiles/animatedCube.abc", self.__refreshTestFileName )
+
+		self.assertSceneValid( a["out"] )
+		self.assertEqual( a["out"].childNames( "/" ), IECore.InternedStringVectorData( [ "group1" ] ) )
+
+		a["refreshCount"].setValue( a["refreshCount"].getValue() + 1 )
+		
+		self.assertSceneValid( a["out"] )
+		self.assertEqual( a["out"].childNames( "/" ), IECore.InternedStringVectorData( [ "front", "pCube1", "persp", "side", "top" ] ) )
+		
+	def tearDown( self ) :
+	
+		for f in [
+			self.__refreshTestFileName,
+		] :
+			if os.path.exists( f ) :
+				os.remove( f )
+		
 if __name__ == "__main__":
 	unittest.main()

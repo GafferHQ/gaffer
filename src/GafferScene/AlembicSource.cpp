@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2012-2014, John Haddon. All rights reserved.
 //  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -35,9 +35,7 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "tbb/mutex.h"
-
-#include "boost/tokenizer.hpp"
+#include "boost/bind.hpp"
 
 #include "IECore/LRUCache.h"
 
@@ -90,10 +88,19 @@ using namespace GafferScene::Detail;
 AlembicSource::AlembicSource( const std::string &name )
 	:	FileSource( name )
 {
+	plugSetSignal().connect( boost::bind( &AlembicSource::plugSet, this, ::_1 ) );
 }
 
 AlembicSource::~AlembicSource()
 {
+}
+
+void AlembicSource::plugSet( Gaffer::Plug *plug )
+{
+	if( plug == refreshCountPlug() )
+	{
+		alembicInputCache()->clear();
+	}
 }
 
 void AlembicSource::hashBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
@@ -113,7 +120,6 @@ void AlembicSource::hashObject( const ScenePath &path, const Gaffer::Context *co
 	FileSource::hashObject( path, context, parent, h );
 	h.append( context->getFrame() );
 }
-
 
 Imath::Box3f AlembicSource::computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
