@@ -107,7 +107,7 @@ class AlembicSourceTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertEqual( a["out"].fullTransform( "/" ), IECore.M44f() )
 		self.assertEqual( a["out"].fullTransform( "/group1" ), IECore.M44f.createScaled( IECore.V3f( 2 ) ) * IECore.M44f.createTranslated( IECore.V3f( 2, 0, 0 ) ) )
-		self.assertEqual( a["out"].fullTransform( "/group1/pCube1" ), a["out"].fullTransform( "/group1" ) * IECore.M44f.createTranslated( IECore.V3f( -1, 0, 0 ) ) )
+		self.assertEqual( a["out"].fullTransform( "/group1/pCube1" ), IECore.M44f.createTranslated( IECore.V3f( -1, 0, 0 ) )  * a["out"].fullTransform( "/group1" ) )
 		self.assertEqual( a["out"].fullTransform( "/group1/pCube1/pCubeShape1" ), a["out"].fullTransform( "/group1/pCube1" ) )
 
 	__refreshTestFileName = "/tmp/refreshTest.abc"
