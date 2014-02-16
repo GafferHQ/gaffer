@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2013, John Haddon. All rights reserved.
+//  Copyright (c) 2013-2014, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -159,6 +159,47 @@ OSLShader::~OSLShader()
 OSLRenderer::ConstShadingEnginePtr OSLShader::shadingEngine() const
 {
 	return Detail::g_shadingEngineCache.get( Detail::ShadingEngineCacheKey( this ) );
+}
+
+bool OSLShader::acceptsInput( const Plug *plug, const Plug *inputPlug ) const
+{
+	if( !Shader::acceptsInput( plug, inputPlug ) )
+	{
+		return false;
+	}
+	
+	if( parametersPlug()->isAncestorOf( plug ) )
+	{
+		const Plug *sourcePlug = inputPlug->source<Plug>();
+		const GafferScene::Shader *sourceShader = runTimeCast<const GafferScene::Shader>( sourcePlug->node() );
+		const Plug *sourceShaderOutPlug = sourceShader ? sourceShader->outPlug() : NULL;
+		
+		if( sourceShaderOutPlug && ( sourceShaderOutPlug == inputPlug || sourceShaderOutPlug->isAncestorOf( inputPlug ) ) )
+		{
+			// source is the output of a shader node, so it'd better be
+			// a generic osl shader.
+			if( !sourceShader->isInstanceOf( staticTypeId() ) )
+			{
+				return false;
+			}
+			if( sourceShader->typePlug()->getValue() != "osl:shader" )
+			{
+				return false;
+			}
+			// osl disallows the connection of vectors to colours
+			if( plug->isInstanceOf( Color3fPlug::staticTypeId() ) && inputPlug->isInstanceOf( V3fPlug::staticTypeId() ) )
+			{
+				return false;
+			}
+			// and we can only connect closures into closures
+			if( plug->typeId() == Plug::staticTypeId() && inputPlug->typeId() != Plug::staticTypeId() )
+			{
+				return false;
+			}
+		}
+	}
+	
+	return true;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -529,46 +570,4 @@ void OSLShader::loadShader( const std::string &shaderName, bool keepExistingValu
 	
 	namePlug()->setValue( shaderName );
 	typePlug()->setValue( "osl:" + query.shadertype() );
-}
-
-
-bool OSLShader::acceptsInput( const Plug *plug, const Plug *inputPlug ) const
-{
-	if( !Shader::acceptsInput( plug, inputPlug ) )
-	{
-		return false;
-	}
-	
-	if( parametersPlug()->isAncestorOf( plug ) )
-	{
-		const Plug *sourcePlug = inputPlug->source<Plug>();
-		const GafferScene::Shader *sourceShader = runTimeCast<const GafferScene::Shader>( sourcePlug->node() );
-		const Plug *sourceShaderOutPlug = sourceShader ? sourceShader->outPlug() : NULL;
-		
-		if( sourceShaderOutPlug && ( sourceShaderOutPlug == inputPlug || sourceShaderOutPlug->isAncestorOf( inputPlug ) ) )
-		{
-			// source is the output of a shader node, so it'd better be
-			// a generic osl shader. 
-			if( !sourceShader->isInstanceOf( staticTypeId() ) )
-			{
-				return false;
-			}
-			if( sourceShader->typePlug()->getValue() != "osl:shader" )
-			{
-				return false;
-			}
-			// osl disallows the connection of vectors to colours
-			if( plug->isInstanceOf( Color3fPlug::staticTypeId() ) && inputPlug->isInstanceOf( V3fPlug::staticTypeId() ) )
-			{
-				return false;
-			}
-			// and we can only connect closures into closures
-			if( plug->typeId() == Plug::staticTypeId() && inputPlug->typeId() != Plug::staticTypeId() )
-			{
-				return false;
-			}
-		}		
-	}
-	
-	return true;
 }
