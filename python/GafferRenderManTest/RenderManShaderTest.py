@@ -1004,6 +1004,22 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 		self.assertFalse( shaderNode["parameters"]["coshaderArrayParameterType2"][0].acceptsInput( coshaderType1Node["out"] ) )
 		self.assertTrue( shaderNode["parameters"]["coshaderArrayParameterType2"][0].acceptsInput( coshaderType2Node["out"] ) )
 	
+	def testMultipleCoshaderTypeAnnotations( self ) :
+	
+		coshaderType1And2 = self.compileShader( os.path.dirname( __file__ ) + "/shaders/coshaderType1And2.sl" )
+		coshaderType1And2Node = GafferRenderMan.RenderManShader()
+		coshaderType1And2Node.loadShader( coshaderType1And2 )
+		
+		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/typedCoshaderParameters.sl" )
+		shaderNode = GafferRenderMan.RenderManShader()
+		shaderNode.loadShader( shader )
+		
+		self.assertTrue( shaderNode["parameters"]["coshaderParameter"].acceptsInput( coshaderType1And2Node["out"] ) )
+		self.assertTrue( shaderNode["parameters"]["coshaderParameterType1"].acceptsInput( coshaderType1And2Node["out"] ) )
+		self.assertTrue( shaderNode["parameters"]["coshaderParameterType2"].acceptsInput( coshaderType1And2Node["out"] ) )
+		self.assertFalse( shaderNode["parameters"]["coshaderParameterType3"].acceptsInput( coshaderType1And2Node["out"] ) )
+
+	
 	def testSplitCoshaderPassThrough( self ) :
 	
 		#   C ----S      S is connected to C both directly

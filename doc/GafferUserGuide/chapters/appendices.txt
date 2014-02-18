@@ -197,7 +197,7 @@ Annotations are optional and Gaffer will provide default appearances for all sha
 |Annotation|Use
 |help			|Provides documentation for the shader. This will be displayed as a tooltip in the NodeEditor.
 |primaryInput		|If declared, this annotation determines which input will be passed to downstream nodes if the current node is disabled. Value of this annotation should be a "shader" parameter.
-|coshaderType		|Specifies 'type' for the shader. Only of use for co-shaders designed to be connected to other shaders.
+|coshaderType		|Specifies a space-separated list of 'types' for the shader. Only of use for co-shaders designed to be connected to other shaders.
 |PARAMETER.coshaderType|Specifies the 'type' of co-shader this plug will accept as for connection. Aids usability as noodles will automatically latch on to valid connections, and invalid connections are made impossible.
 |PARAMETER.label	|Can be used to override the label drawn for the plug. Value of label will be displayed as-is (i.e. you must include your own <space> characters)
 |PARAMETER.help		|Allows small documentation strings to be attached to parameters. The help strings are shown in popup tooltips when users hovers over a parameter labels.
