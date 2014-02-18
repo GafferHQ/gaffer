@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2013-2014, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -38,6 +38,7 @@
 #include "boost/algorithm/string/predicate.hpp"
 #include "boost/spirit/include/qi.hpp"
 #include "boost/fusion/adapted/struct.hpp"
+#include "boost/tokenizer.hpp"
 
 #include "IECore/CachedReader.h"
 #include "IECore/VectorTypedData.h"
@@ -196,7 +197,16 @@ bool RenderManShader::acceptsInput( const Plug *plug, const Plug *inputPlug ) co
 				return false;
 			}
 			const StringData *srcType = srcAnnotations->member<StringData>( "coshaderType" );
-			return srcType && srcType->readable() == dstType->readable();
+			if( !srcType )
+			{
+				return false;
+			}
+			
+			// we accept a space (or comma) separated list of source types, so that a coshader
+			// can belong to multiple types.
+			typedef boost::tokenizer<boost::char_separator<char> > Tokenizer;
+			Tokenizer srcTypes( srcType->readable(), boost::char_separator<char>( " ," ) );
+			return find( srcTypes.begin(), srcTypes.end(), dstType->readable() ) != srcTypes.end();
 		}
 		else
 		{

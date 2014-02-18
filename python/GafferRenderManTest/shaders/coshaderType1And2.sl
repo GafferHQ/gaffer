@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2013-2014, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,26 +34,19 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-surface typedCoshaderParameters(
+#pragma annotation "coshaderType" "type1 type2"
 
-	shader coshaderParameter = null;
-#pragma annotation "coshaderParameterType1.coshaderType" "type1"
-	shader coshaderParameterType1 = null;
-#pragma annotation "coshaderParameterType2.coshaderType" "type2"
-	shader coshaderParameterType2 = null;
-#pragma annotation "coshaderParameterType3.coshaderType" "type3"
-	shader coshaderParameterType3 = null;
+class coshaderType1And2(
+
+	float floatParameter = 10;
+	color colorParameter = ( 1, 1, 1 );
 	
-	shader coshaderArrayParameter[4] = { null, null, null, null };
-#pragma annotation "coshaderArrayParameterType1.coshaderType" "type1"
-	shader coshaderArrayParameterType1[4] = { null, null, null, null };
-#pragma annotation "coshaderArrayParameterType2.coshaderType" "type2"
-	shader coshaderArrayParameterType2[4] = { null, null, null, null };
-#pragma annotation "coshaderArrayParameterType3.coshaderType" "type3"
-	shader coshaderArrayParameterType3[4] = { null, null, null, null };
-
 )
 {
-	Ci = 1;
-	Oi = 1;
+	
+	public color aMethodYouWillPayDearlyToCall()
+	{
+		return floatParameter * colorParameter;
+	}
+	
 }
