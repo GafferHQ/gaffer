@@ -717,8 +717,8 @@ class ImageViewGadget : public GafferUI::Gadget
 				color = Color4f( .2f, .2f, .2f, 1.f );
 				glColor( color );
 
-				const int yOffset = ( m_displayWindow.min.y + m_displayWindow.size().y + 1 ) - m_dataWindow.min.y;
-				drawWindow( dataRasterBox, V2f( m_dataWindow.min.x, yOffset - ( m_dataWindow.size().y + 1 ) ), V2f( m_dataWindow.max.x + 1, yOffset ), style );
+				const int newY = m_displayWindow.max.y - m_dataWindow.max.y;
+				drawWindow( dataRasterBox, V2f( m_dataWindow.min.x, newY ), V2f( m_dataWindow.max.x + 1, m_dataWindow.size().y + newY + 1 ), style );
 			}
 
 			/// Draw the selection window.
