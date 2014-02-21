@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2011, John Haddon. All rights reserved.
-//  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2012-2014, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -67,6 +67,12 @@ void TextGadget::setText( const std::string &text )
 	{
 		m_text = text;
 		m_bound = style()->textBound( Style::LabelText, m_text );
+		// we don't want our bounding box in y to change when
+		// the text changes, so we base our y bound on the bound of
+		// the largest character.
+		Imath::Box3f cb = style()->characterBound( Style::LabelText );
+		m_bound.min.y = std::min( m_bound.min.y, cb.min.y );
+		m_bound.max.y = std::max( m_bound.max.y, cb.max.y );
 		renderRequestSignal()( this );
 	}
 }

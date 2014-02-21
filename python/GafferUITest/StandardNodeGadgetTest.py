@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2014, Image Engine Design Inc. All rights reserved.
 #  Copyright (c) 2012, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -132,6 +132,15 @@ class StandardNodeGadgetTest( GafferUITest.TestCase ) :
 				
 		g = GafferUI.StandardNodeGadget( n )
 		self.assertEqual( g.noduleTangent( g.nodule( n["op1"] ) ), IECore.V3f( -1, 0, 0 ) )
+
+	def testNameDoesntAffectHeight( self ) :
+	
+		n = GafferTest.MultiplyNode( "a" )
+		g = GafferUI.StandardNodeGadget( n )
+		h = g.bound().size().y
+		
+		n.setName( "hg" )
+		self.assertEqual( g.bound().size().y, h )
 
 if __name__ == "__main__":
 	unittest.main()
