@@ -38,7 +38,6 @@
 #include "boost/bind.hpp"
 #include "boost/bind/placeholders.hpp"
 
-#include "OpenEXR/ImathRandom.h"
 #include "OpenEXR/ImathPlane.h"
 
 #include "IECore/NullObject.h"
@@ -332,7 +331,7 @@ void GraphGadget::setNodePosition( Gaffer::Node *node, const Imath::V2f &positio
 	Gaffer::V2fPlug *plug = node->getChild<Gaffer::V2fPlug>( g_positionPlugName );
 	if( !plug )
 	{
-		plug = new Gaffer::V2fPlug( "__uiPosition", Gaffer::Plug::In );
+		plug = new Gaffer::V2fPlug( g_positionPlugName, Gaffer::Plug::In );
 		plug->setFlags( Gaffer::Plug::Dynamic, true );
 		node->addChild( plug );
 	}
@@ -1236,7 +1235,7 @@ void GraphGadget::offsetNodes( Gaffer::Set *nodes, const Imath::V2f &offset )
 		NodeGadget *gadget = nodeGadget( node );
 		if( gadget )
 		{		
-			Gaffer::V2fPlug *p = node->getChild<Gaffer::V2fPlug>( "__uiPosition" );
+			Gaffer::V2fPlug *p = node->getChild<Gaffer::V2fPlug>( g_positionPlugName );
 			p->setValue( p->getValue() + offset );
 		}
 	}
@@ -1329,10 +1328,10 @@ NodeGadget *GraphGadget::addNodeGadget( Gaffer::Node *node )
 		nodeGadget->setHighlighted( true );
 	}
 
-	// place it if it's not placed already.	
-	if( !node->getChild<Gaffer::V2fPlug>( "__uiPosition" ) )
+	// place it if it's not placed already.
+	if( !node->getChild<Gaffer::V2fPlug>( g_positionPlugName ) )
 	{
-		m_layout->positionNode( this, node );
+		setNodePosition( node, V2f( 0 ) );
 	}
 	
 	updateNodeGadgetTransform( nodeGadget.get() );
@@ -1370,7 +1369,7 @@ void GraphGadget::updateNodeGadgetTransform( NodeGadget *nodeGadget )
 	Gaffer::Node *node = nodeGadget->node();
 	M44f m;
 	
-	Gaffer::V2fPlug *p = node->getChild<Gaffer::V2fPlug>( "__uiPosition" );
+	Gaffer::V2fPlug *p = node->getChild<Gaffer::V2fPlug>( g_positionPlugName );
 	if( p )
 	{
 		V2f t = p->getValue();
