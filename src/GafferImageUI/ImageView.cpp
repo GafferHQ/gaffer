@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2013-2014, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -716,7 +716,9 @@ class ImageViewGadget : public GafferUI::Gadget
 			{
 				color = Color4f( .2f, .2f, .2f, 1.f );
 				glColor( color );
-				drawWindow( dataRasterBox, m_dataWindow.min, m_dataWindow.max, style );
+
+				const int newY = m_displayWindow.max.y - m_dataWindow.max.y;
+				drawWindow( dataRasterBox, V2f( m_dataWindow.min.x, newY ), V2f( m_dataWindow.max.x + 1, m_dataWindow.size().y + newY + 1 ), style );
 			}
 
 			/// Draw the selection window.
