@@ -57,11 +57,6 @@ IE_CORE_FORWARDDECLARE( ConnectionGadget );
 IE_CORE_FORWARDDECLARE( GraphLayout );
 
 /// The GraphGadget class provides a ui for connecting nodes together.
-/// \todo Implement much better auto-positioning. Currently we try to position
-/// each node the instant it is added to the graph, even though subsequent scripted
-/// operations might add connections and other nodes. We need to batch up such operations,
-/// layout the new nodes as a unit, and then position them based on the existing nodes
-/// they have connections to.
 class GraphGadget : public ContainerGadget
 {
 

@@ -958,6 +958,18 @@ class NodeGraphTest( GafferUITest.TestCase ) :
 		
 		self.assertFalse( g.nodeGadget( script["a"] ).getHighlighted() )
 		self.assertFalse( g.nodeGadget( script["b"] ).getHighlighted() )
+	
+	def testNoDuplicatePositionPlugsAfterPasting( self ) :
+	
+		script = Gaffer.ScriptNode()
+		script["n"] = Gaffer.Node()
+		
+		g = GafferUI.GraphGadget( script )
+		
+		script.execute( script.serialise( script, Gaffer.StandardSet( [ script["n"] ] ) ) )
+		
+		self.assertTrue( "__uiPosition" in script["n1"] )
+		self.assertFalse( "__uiPosition1" in script["n1"] )
 		
 if __name__ == "__main__":
 	unittest.main()

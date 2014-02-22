@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2013-2014, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -58,5 +58,6 @@ void GafferUIBindings::bindGraphLayout()
 		.def( "connectNodes", &GraphLayout::connectNodes )
 		.def( "positionNode", &GraphLayout::positionNode, ( arg_( "graph" ), arg_( "node" ), arg_( "fallbackPosition" ) = Imath::V2f( 0 ) ) )
 		.def( "positionNodes", &GraphLayout::positionNodes, ( arg_( "graph" ), arg_( "nodes" ), arg_( "fallbackPosition" ) = Imath::V2f( 0 ) ) )
+		.def( "layoutNodes", &GraphLayout::layoutNodes, ( arg_( "graph" ), arg_( "nodes" ) = object() ) )
 	;
 }

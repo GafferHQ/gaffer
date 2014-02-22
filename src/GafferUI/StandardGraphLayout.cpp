@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2013-2014, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,11 +35,19 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
+#include <cassert>
+
+#include "boost/graph/adjacency_list.hpp"
+
 #include "OpenEXR/ImathVec.h"
+
+#include "IECore/BoundedKDTree.h"
+#include "IECore/BoxAlgo.h"
 
 #include "Gaffer/Plug.h"
 #include "Gaffer/PlugIterator.h"
 #include "Gaffer/DependencyNode.h"
+#include "Gaffer/StandardSet.h"
 
 #include "GafferUI/StandardGraphLayout.h"
 #include "GafferUI/GraphGadget.h"
@@ -49,16 +57,807 @@
 
 using namespace std;
 using namespace Imath;
+using namespace IECore;
 using namespace Gaffer;
 using namespace GafferUI;
 
+//////////////////////////////////////////////////////////////////////////
+//
+// Layout Engine
+//
+// Internal code for performing node positioning and layout, targeted
+// at the kinds of graphs produced using the StandardNodeGadget.
+//
+// Such graphs are strongly directional, but nodes may accept connections
+// on all sides, and connections may therefore flow horizontally /and/
+// vertically within the same graph. Additionally, each connection endpoint
+// is located at a specific fixed location on the node, so the relative
+// position of inputs to a node is important when attempting to reduce
+// unnecessary crossings among connections.
+//
+// Unfortunately, the standard layered drawing algorithms (such as Sugiyama's)
+// are not a good fit for our purposes because they lay out nodes in a single
+// direction only. Standard force directed algorithms are not a good match
+// for us either, as they produce organic looking graphs which provide no
+// control over the direction of connections, or mechanisms for explicitly
+// reducing crossings.
+//
+// We adopt a hybrid approach where we combine force directed layout with
+// additional hard constraints that enforce the directionality of connections
+// and ordering of inputs to minimise crossings. This approach is based on
+// ideas described in the following paper :
+//
+// Scalable, Versatile and Simple Constrained Graph Layout
+// Tim Dwyer
+// Eurographics/ IEEE-VGTC Symposium on Visualization 2009
+//
+// The current implementation still has plenty of room for improvement -
+// here are a few ideas worth exploring :
+//
+//    - Repulsive forces between nodes, proportional to the length
+//      of the shortest path between them.
+//
+//    - Segmenting the graph into vertical and horizontal chunks
+//      and grouping the nodes in the horizontal chunks after laying
+//      them out separately. Or even better perhaps, preventing the
+//      convex hulls of such chunks from overlapping using the method
+//      described in the Dwyer paper.
+//
+//    - Alignment constraints between nodes with only a single
+//      input/output.
+//
+//    - Investigating the balance between spring stiffness, number
+//      of constraints iterations etc.
+//
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+/// \todo Refactor into simple constraint in single axis,
+/// remove LessThanOrEqualTo.
+class Constraint
+{
+
+	public :
+			
+		enum Type
+		{
+			EqualTo,
+			GreaterThanOrEqualTo,
+			LessThanOrEqualTo
+		};
+		
+		/// \todo Remove - it's only here so we can call m_constraints.resize()
+		/// to remove the collision constraints.
+		Constraint()
+		{
+		}
+		
+		// Enforces p - q ( ==, >=, <= ) d in direction v
+		Constraint( V2f *p, V2f *q, Type type, float d, const V2f &v, float w = 0.5 )
+			:	m_p( p ), m_q( q ), m_type( type ), m_d( d ), m_v( v ), m_w( w )
+		{
+		}
+		
+		void apply() const
+		{
+			const float p = m_v.dot( *m_p );
+			const float q = m_v.dot( *m_q );
+			const float separation = p - q;
+			
+			if( 
+				( m_type == EqualTo && separation == m_d ) ||
+				( m_type == GreaterThanOrEqualTo && separation >= m_d ) ||
+				( m_type == LessThanOrEqualTo && separation <= m_d )	
+			)
+			{
+				return;
+			}
+			
+			const V2f r = m_v * (m_d - separation);
+			*m_p += r * m_w;
+			*m_q -= r * (1.0f - m_w);
+		}
+	
+	private :
+	
+		V2f *m_p;
+		V2f *m_q;
+		Type m_type;
+		float m_d;
+		V2f m_v;
+		float m_w;
+
+};
+
+class LayoutEngine
+{
+
+	public :
+
+		LayoutEngine( GraphGadget *graphGadget, float edgeLengthScale, float nodeSeparationScale )
+			:	m_graphGadget( graphGadget ),
+				m_edgeLength( 5.0f * edgeLengthScale ),
+				m_nodeSeparation( 2.0f * nodeSeparationScale ),
+				m_springStiffness( 0.1 ),
+				m_maxIterations( 10000 ),
+				m_constraintsIterations( 10 )
+		{
+			
+			// Convert the visible graph into our internal boost::graph format.
+			// Start by putting all the visible nodes in the graph as vertices.
+			// Build a map from node to vertex so we can use it to lookup nodes
+			// when inserting edges.
+
+			for( NodeIterator it( graphGadget->getRoot() ); it != it.end(); ++it )
+			{
+				Node *node = it->get();
+				const NodeGadget *nodeGadget = graphGadget->nodeGadget( node );
+				if( !nodeGadget )
+				{
+					continue;
+				}
+
+				Box3f bb = nodeGadget->bound();
+
+				VertexDescriptor v = add_vertex( m_graph );
+				m_graph[v].node = node;
+				m_graph[v].position = graphGadget->getNodePosition( node );
+				m_graph[v].bound = Box2f( V2f( bb.min.x, bb.min.y ), V2f( bb.max.x, bb.max.y ) );
+				m_graph[v].pinned = false;
+				m_nodesToVertices[node] = v;
+			}
+
+			// Put all the visible connections in the graph as edges.
+
+			for( NodesToVertices::const_iterator it = m_nodesToVertices.begin(), eIt = m_nodesToVertices.end(); it != eIt; ++it )
+			{
+				for( RecursiveInputPlugIterator pIt( it->first ); pIt != pIt.end(); ++pIt )
+				{
+					ConnectionGadget *connection = graphGadget->connectionGadget( *pIt );
+					if( !connection || connection->getMinimised() )
+					{
+						continue;
+					}
+
+					const Nodule *srcNodule = connection->srcNodule();
+					if( !srcNodule )
+					{
+						continue;
+					}
+
+					const Nodule *dstNodule = connection->dstNodule();
+			
+					NodesToVertices::const_iterator srcIt = m_nodesToVertices.find( srcNodule->plug()->node() );
+					if( srcIt == m_nodesToVertices.end() )
+					{
+						continue;
+					}
+
+					const NodeGadget *srcNodeGadget = graphGadget->nodeGadget( srcNodule->plug()->node() );
+					const NodeGadget *dstNodeGadget = graphGadget->nodeGadget( dstNodule->plug()->node() );
+					const V3f srcNoduleOffset = srcNodule->transformedBound( srcNodeGadget ).center();
+					const V3f dstNoduleOffset = dstNodule->transformedBound( dstNodeGadget ).center();
+					const V3f srcNoduleTangent( srcNodeGadget->noduleTangent( srcNodule ) );
+					const V3f dstNoduleTangent( dstNodeGadget->noduleTangent( dstNodule ) );
+
+					EdgeDescriptor e = add_edge( srcIt->second, it->second, m_graph ).first;
+					m_graph[e].sourceOffset = V2f( srcNoduleOffset.x, srcNoduleOffset.y );
+					m_graph[e].targetOffset = V2f( dstNoduleOffset.x, dstNoduleOffset.y );
+					m_graph[e].sourceTangent = direction( srcNoduleTangent );
+					m_graph[e].targetTangent = direction( dstNoduleTangent );
+					m_graph[e].idealDirection = direction( srcNoduleTangent - dstNoduleTangent );
+				}
+			}
+
+		}
+				
+		void pinNode( Node *node )
+		{
+			NodesToVertices::const_iterator it = m_nodesToVertices.find( node );
+			if( it == m_nodesToVertices.end() )
+			{
+				return;
+			}
+			
+			m_graph[it->second].pinned = true;
+		}
+		
+		void pinNodes( const Gaffer::Set *nodes, bool invert = false )
+		{
+			for( NodesToVertices::const_iterator it = m_nodesToVertices.begin(), eIt = m_nodesToVertices.end(); it != eIt; ++it )
+			{
+				if( nodes->contains( it->first ) != invert )
+				{
+					m_graph[it->second].pinned = true;
+				}
+			}
+		}
+		
+		void groupNodes( const Gaffer::Set *nodes, const V2f &center )
+		{
+			// get vertex descriptors for the nodes we want to group.
+			// while we're doing that, compute their bounding box.
+			
+			Box2f bound;
+			vector<VertexDescriptor> childVertexDescriptors;
+			for( size_t i = 0, s = nodes->size(); i < s; ++ i )
+			{
+				const Node *node = runTimeCast<const Node>( nodes->member( i ) );
+				if( !node )
+				{
+					continue;
+				}
+				
+				NodesToVertices::iterator it = m_nodesToVertices.find( node );
+				if( it == m_nodesToVertices.end() )
+				{
+					continue;
+				}
+
+				childVertexDescriptors.push_back( it->second );
+				
+				const Vertex &child = m_graph[it->second];			
+				bound.extendBy( child.bound.min + child.position );
+				bound.extendBy( child.bound.max + child.position );
+			}
+			
+			// early out if nothing to group
+			
+			if( childVertexDescriptors.empty() )
+			{
+				return;
+			}
+				
+			// make a new vertex to represent the group, and set its
+			// position and bounding box to enclose the children.
+
+			VertexDescriptor groupDescriptor = add_vertex( m_graph );
+			Vertex &group = m_graph[groupDescriptor];
+			group.node = NULL;
+			group.pinned = false;
+			group.position = bound.center();
+			group.bound = Box2f( bound.min - group.position, bound.max - group.position );
+						
+			// remove and add edges as needed. edges internal to
+			// the group are removed, so that they won't clash with
+			// the constraints we use to keep the children in position
+			// relative to the group. edges connecting nodes inside the
+			// group to nodes outside the group are replaced with edges
+			// connecting the group itself to the external nodes.
+			
+			vector<EdgeDescriptor> edgesToRemove;
+			EdgeIteratorRange e = edges( m_graph );
+			for( EdgeIterator eIt = e.first; eIt != e.second; ++eIt )
+			{
+				const VertexDescriptor s = source( *eIt, m_graph );
+				const VertexDescriptor t = target( *eIt, m_graph );
+				const bool sInternal = nodes->contains( m_graph[s].node );
+				const bool tInternal = nodes->contains( m_graph[t].node );
+				if( !sInternal && !tInternal )
+				{
+					// edge is entirely outside group
+					continue;
+				}
+				
+				if( sInternal != tInternal )
+				{
+					// edge connects group to outside world, move
+					// the edge to the group.
+
+					VertexDescriptor newS = sInternal ? groupDescriptor : s;
+					VertexDescriptor newT = tInternal ? groupDescriptor : t;
+									
+					EdgeDescriptor newEdgeDescriptor = add_edge( newS, newT, m_graph ).first;
+					Edge &newEdge( m_graph[newEdgeDescriptor] );
+										
+					newEdge = m_graph[*eIt];
+					m_graph[newEdgeDescriptor] = m_graph[*eIt];
+					if( sInternal )
+					{
+						newEdge.sourceOffset = ( newEdge.sourceOffset + m_graph[s].position ) - group.position;
+					}
+					else
+					{
+						newEdge.targetOffset = ( newEdge.targetOffset + m_graph[t].position ) - group.position;
+					}
+				}
+																
+				edgesToRemove.push_back( *eIt );
+			}
+			
+			for( vector<EdgeDescriptor>::iterator it = edgesToRemove.begin(), eIt = edgesToRemove.end(); it != eIt; ++it )
+			{
+				remove_edge( *it, m_graph );
+			}
+			
+			// add constraints to keep the children in the right positions relative to the group.
+			
+			for( vector<VertexDescriptor>::const_iterator it = childVertexDescriptors.begin(), eIt = childVertexDescriptors.end(); it != eIt; ++it )
+			{
+				Vertex &child = m_graph[*it];
+				for( int d = 0; d < 2; ++d )
+				{
+					addConstraint(
+						child,
+						group,
+						Constraint::EqualTo,
+						child.position[d] - group.position[d],
+						d == 0 ? V2f( 1, 0 ) : V2f( 0, 1 ),
+						1.0f
+					);
+				}
+			}
+			
+			group.position = center;
+		}
+
+		void addConnectionDirectionConstraints()
+		{
+			
+			EdgeIteratorRange e = edges( m_graph );
+			for( EdgeIterator it = e.first; it != e.second; ++it )
+			{
+				Vertex &src = m_graph[source( *it, m_graph )];
+				Vertex &dst = m_graph[target( *it, m_graph )];
+				const Edge &edge = m_graph[*it];
+				
+				for( int d = 0; d < 2; ++d )
+				{
+					if( edge.idealDirection[d] == 0 )
+					{
+						continue;
+					}
+					
+					const float separation =
+						edge.sourceOffset[d] * edge.idealDirection[d] -
+						edge.targetOffset[d] * edge.idealDirection[d] +
+						m_edgeLength;
+					
+					addConstraint(
+						dst,
+						src,
+						Constraint::GreaterThanOrEqualTo,
+						separation,
+						d == 0 ? V2f( edge.idealDirection[d], 0 ) : V2f( 0, edge.idealDirection[d] )					);
+					
+				}
+			}
+		
+		}
+		
+		void addSiblingConstraints()
+		{
+			VertexIteratorRange v = vertices( m_graph );
+			for( VertexIterator it = v.first; it != v.second; ++it )
+			{
+				addSiblingConstraints( *it, Direction( 0, -1 ) );
+				addSiblingConstraints( *it, Direction( 1, 0 ) );
+			}
+		}
+		
+		void clearConstraints()
+		{
+			m_constraints.clear();
+		}
+		
+		void solve( bool withCollisions )
+		{
+			VertexIteratorRange v = vertices( m_graph );
+			
+			size_t numConstraints = m_constraints.size();
+			for( int i = 0; i < m_maxIterations; ++i )
+			{
+				for( VertexIterator it = v.first; it != v.second; ++it )
+				{
+					Vertex &vt = m_graph[*it];
+					vt.previousPosition = vt.position;
+				}
+			
+				applySprings();
+				applyConstraints( m_constraintsIterations );
+
+				if( withCollisions )
+				{
+					addCollisionConstraints();
+					applyConstraints( m_constraintsIterations );
+					m_constraints.resize( numConstraints );
+				}
+				
+				float maxMovement = 0;
+				for( VertexIterator it = v.first; it != v.second; ++it )
+				{
+					const Vertex &vt = m_graph[*it];
+					maxMovement = max( maxMovement, fabs( vt.position.x - vt.previousPosition.x ) );
+					maxMovement = max( maxMovement, fabs( vt.position.y - vt.previousPosition.y ) );
+				}
+				
+				if( maxMovement < 0.0001 )
+				{
+					break;
+				}
+			}
+		}
+
+		void applyPositions()
+		{
+			VertexIteratorRange v = vertices( m_graph );
+			for( VertexIterator it = v.first; it != v.second; ++it )
+			{
+				const Vertex &v = m_graph[*it];
+				if( v.node )
+				{
+					m_graphGadget->setNodePosition( v.node, v.position );
+				}
+			}
+		}
+		
+	private :
+		
+		// The tangents of connection endpoints are specified by NodeGadgets
+		// as arbitrary V3fs. We make the simplifying assumption that they
+		// are 2 dimensional, and that they are either horizontal, vertical,
+		// or on one of the two 45 degree diagonals. We represent such
+		// directions as integer vectors, where the x and y coordinates may
+		// only have values of -1, 0 or +1.
+		typedef V2s Direction;
+
+		Direction direction( const V3f &v )
+		{
+			V3f vn( v.x, v.y, 0.0f );
+			vn.normalize();
+			return Direction( int( round( vn.x ) ), int( round( vn.y ) ) );
+		}
+
+		// We convert the visible graph of nodes and connections into a boost
+		// graph of vertices and edges, to give us a better representation
+		// for querying and manipulation.
+
+		struct Vertex
+		{
+			// The node this vertex represents.
+			// May be NULL for vertices introduced
+			// by groupNodes().
+			Node *node;
+			// Node position within graph.
+			V2f position;
+			// Node bound in local space.
+			Box2f bound;
+			// True if node is not to be moved
+			bool pinned;
+			
+			// State variables for use in solve().
+			V2f previousPosition;
+			V2f force;
+		};
+
+		struct Edge
+		{
+			// Offsets of plugs relative to
+			// parent node origin.
+			V2f sourceOffset;
+			V2f targetOffset;
+
+			Direction sourceTangent;
+			Direction targetTangent;
+			Direction idealDirection;
+		};
+
+		typedef boost::adjacency_list<boost::listS, boost::listS, boost::bidirectionalS, Vertex, Edge> Graph;
+
+		typedef Graph::vertex_descriptor VertexDescriptor;
+		typedef Graph::edge_descriptor EdgeDescriptor;
+
+		typedef Graph::vertex_iterator VertexIterator;
+		typedef std::pair<VertexIterator, VertexIterator> VertexIteratorRange;
+
+		typedef Graph::in_edge_iterator InEdgeIterator;
+		typedef std::pair<InEdgeIterator, InEdgeIterator> InEdgeIteratorRange;
+
+		typedef Graph::out_edge_iterator OutEdgeIterator;
+		typedef std::pair<OutEdgeIterator, OutEdgeIterator> OutEdgeIteratorRange;
+
+		typedef Graph::edge_iterator EdgeIterator;
+		typedef std::pair<EdgeIterator, EdgeIterator> EdgeIteratorRange;
+
+		typedef std::map<const Node *, VertexDescriptor> NodesToVertices;
+		
+		void addSiblingConstraints( VertexDescriptor vertex, const Direction &edgeDirection )
+		{
+			// find all the edges pointing in the specified direction.
+			
+			std::vector<EdgeDescriptor> edges;
+			InEdgeIteratorRange e = in_edges( vertex, m_graph );
+			for( InEdgeIterator it = e.first; it != e.second; ++it )
+			{
+				if( m_graph[*it].idealDirection == edgeDirection )
+				{
+					edges.push_back( *it );
+				}
+			}
+
+			// sort edges perpendicular to edge direction
+			
+			const int dimension = edgeDirection.x ? 1 : 0;
+			sort( edges.begin(), edges.end(), EdgeTargetOffsetLess( dimension, &m_graph ) );
+			
+			// make constraints among the siblings to keep them in order with
+			// respect to their connection order.
+			
+			Vertex *prev = NULL;
+			for( std::vector<EdgeDescriptor>::const_iterator it = edges.begin(); it != edges.end(); ++it )
+			{
+				Vertex *curr = &(m_graph[source( *it, m_graph )]);
+				if( prev )
+				{
+					const float separation = m_nodeSeparation + 0.5 * (
+						fabs( prev->bound.size()[dimension] ) +
+						fabs( curr->bound.size()[dimension] )
+					);
+				
+					addConstraint(
+						*curr,
+						*prev,
+						Constraint::GreaterThanOrEqualTo,
+						separation,
+						dimension == 0 ? V2f( 1, 0 ) : V2f( 0, 1 )
+					);
+				}
+				prev = curr;
+			}
+		}
+		
+		// Adds a constraint between p and q, adjusting w based on their pinning status.
+		void addConstraint( Vertex &p, Vertex &q, Constraint::Type type, float d, const V2f &v, float w = 0.5f )
+		{
+			if( p.pinned && q.pinned )
+			{
+				return;
+			}
+						
+			if( p.pinned )
+			{
+				w = 0.0f;
+			}
+			else if( q.pinned )
+			{
+				w = 1.0f;
+			}
+			
+			m_constraints.push_back(
+				Constraint(
+					&(p.position),
+					&(q.position),
+					type,
+					d,
+					v,
+					w
+				)
+			);
+		}
+		
+		void addCollisionConstraints()
+		{
+			// build a tree for making fast bound intersection queries
+			
+			vector<VertexDescriptor> vertexDescriptors;
+			vector<Box2f> bounds;
+			
+			const V2f padding( m_nodeSeparation / 2.0f );
+			
+			VertexIteratorRange v = vertices( m_graph );
+			for( VertexIterator it = v.first; it != v.second; ++it )
+			{
+				Box2f b = m_graph[*it].bound;
+				b.min = b.min + m_graph[*it].position - padding;
+				b.max = b.max + m_graph[*it].position + padding;
+				bounds.push_back( b );
+				vertexDescriptors.push_back( *it );
+			}
+		
+			Box2fTree tree( bounds.begin(), bounds.end() );
+			
+			// find colliding bounds, and add constraints to separate them
+			
+			typedef vector<Box2f>::const_iterator BoundIterator;
+			vector<BoundIterator> intersectingBounds;
+			for( BoundIterator it = bounds.begin(), eIt = bounds.end(); it != eIt; ++it )
+			{
+				intersectingBounds.clear();
+				tree.intersectingBounds( *it, intersectingBounds );
+				for( vector<BoundIterator>::const_iterator bIt = intersectingBounds.begin(); bIt != intersectingBounds.end(); ++bIt )
+				{
+					size_t bound1Index = it - bounds.begin();
+					size_t bound2Index = *bIt - bounds.begin();
+					if( bound2Index <= bound1Index )
+					{
+						// we dealt with this collision already, when bound2Index was bound1Index
+						continue;
+					}
+					
+					Vertex &vertex1 = m_graph[vertexDescriptors[bound1Index]];
+					Vertex &vertex2 = m_graph[vertexDescriptors[bound2Index]];
+					
+					const Box2f &bound1 = *it;
+					const Box2f &bound2 = **bIt;
+					
+					const int a = collisionSeparationAxis( vertexDescriptors[bound1Index], vertexDescriptors[bound2Index] );		
+					const V2f v = a == 0 ? V2f( 1, 0 ) : V2f( 0, 1 );
+					
+					float separation = 0.5 * ( bound1.size()[a] + bound2.size()[a] );
+					Vertex *p = &vertex2;
+					Vertex *q = &vertex1;
+					if( vertex1.position[a] > vertex2.position[a] )
+					{
+						p = &vertex1;
+						q = &vertex2;
+					}
+				
+					addConstraint(
+						*p,
+						*q,
+						Constraint::GreaterThanOrEqualTo,
+						separation,
+						v
+					);
+				}
+			}			
+		}
+		
+		int collisionSeparationAxis( VertexDescriptor vertex1, VertexDescriptor vertex2 )
+		{
+			bool foundHorizontalConnection = false;
+			for( int i = 0; i < 2; ++i )
+			{
+				VertexDescriptor vertex = i == 0 ? vertex1 : vertex2;
+				InEdgeIteratorRange inEdges = in_edges( vertex, m_graph );
+				for( InEdgeIterator it = inEdges.first; it != inEdges.second; ++it )
+				{
+					if( m_graph[*it].targetTangent.y )
+					{
+						return 0;
+					}
+					else
+					{
+						foundHorizontalConnection = true;
+					}
+				}
+				OutEdgeIteratorRange outEdges = out_edges( vertex, m_graph );
+				for( OutEdgeIterator it = outEdges.first; it != outEdges.second; ++it )
+				{
+					if( m_graph[*it].sourceTangent.y )
+					{
+						return 0;
+					}
+					else
+					{
+						foundHorizontalConnection = true;
+					}
+				}
+			}
+			
+			return foundHorizontalConnection ? 1 : 0;
+		}
+		
+		void applyConstraints( size_t iterations )
+		{
+			for( size_t i = 0; i < iterations; ++i )
+			{
+				for( std::vector<Constraint>::const_iterator it = m_constraints.begin(), eIt = m_constraints.end(); it != eIt; ++it )
+				{
+					it->apply();
+				}
+			}
+		}
+
+		// Applies forces to the nodes by treating each connection as
+		// a spring connecting the nodes at its ends. These aren't
+		// traditional springs that apply a force down the length of
+		// the spring though - those lead to messy graphs which tend
+		// not to have nice horizontal and vertical directions
+		// of flow, even with our directional constraints included.
+		// Instead, our springs apply a force to bring the two nodes
+		// into their ideal relative positions, which is defined as
+		// being separated by the vector (srcTangent - dstTangent).
+		// This is equivalent to applying a spring separately in the
+		// x and y directions.
+		void applySprings()
+		{
+			VertexIteratorRange v = vertices( m_graph );
+			for( VertexIterator it = v.first; it != v.second; ++it )
+			{
+				m_graph[*it].force = V2f( 0.0f );
+			}
+			
+			EdgeIteratorRange e = edges( m_graph );
+			for( EdgeIterator it = e.first; it != e.second; ++it )
+			{
+				Vertex &src = m_graph[source( *it, m_graph )];
+				Vertex &dst = m_graph[target( *it, m_graph )];
+				if( src.pinned && dst.pinned )
+				{
+					continue;
+				}
+
+				Edge &edge = m_graph[*it];
+				
+				V2f srcPos = src.position + edge.sourceOffset;
+				V2f dstPos = dst.position + edge.targetOffset;
+				
+				V2f offset = dstPos - srcPos;
+				V2f desiredOffset = m_edgeLength * V2f( edge.idealDirection );
+				
+				float w = 0.5f;
+				if( src.pinned )
+				{
+					w = 0.0f;
+				}
+				else if( dst.pinned )
+				{
+					w = 1.0f;
+				}
+				
+				V2f v = desiredOffset - offset;
+				src.force -= v * m_springStiffness * w;
+				dst.force += v * m_springStiffness * ( 1.0f - w );
+			}
+			
+			for( VertexIterator it = v.first; it != v.second; ++it )
+			{
+				m_graph[*it].position += m_graph[*it].force;
+			}		
+		}
+				
+		struct EdgeTargetOffsetLess
+		{
+			EdgeTargetOffsetLess( int dimension, Graph *graph )
+				:	m_dimension( dimension ), m_graph( graph )
+			{
+			}
+			
+			bool operator () ( EdgeDescriptor e1, EdgeDescriptor e2 ) const
+			{
+				const Edge &edge1 = (*m_graph)[e1];
+				const Edge &edge2 = (*m_graph)[e2];
+				return edge1.targetOffset[m_dimension] < edge2.targetOffset[m_dimension];
+			}
+			
+			private :
+			
+				int m_dimension;
+				Graph *m_graph;
+				
+		};
+				
+		GraphGadget *m_graphGadget;
+		Graph m_graph;
+		NodesToVertices m_nodesToVertices;
+		
+		std::vector<Constraint> m_constraints;
+
+		const float m_edgeLength;
+		const float m_nodeSeparation;
+		const float m_springStiffness;
+		const int m_maxIterations;
+		const int m_constraintsIterations;
+			
+};
+
+} // namespace
+
+//////////////////////////////////////////////////////////////////////////
+// StandardGraphLayout implementation
+//////////////////////////////////////////////////////////////////////////
+
 IE_CORE_DEFINERUNTIMETYPED( StandardGraphLayout )
 
-StandardGraphLayout::~StandardGraphLayout()
+StandardGraphLayout::StandardGraphLayout()
+	:	m_connectionScale( 1.0f ), m_nodeSeparationScale( 1.0f )
 {
 }
 
-StandardGraphLayout::StandardGraphLayout()
+StandardGraphLayout::~StandardGraphLayout()
 {
 }
 
@@ -110,133 +909,59 @@ bool StandardGraphLayout::connectNodes( GraphGadget *graph, Gaffer::Set *nodes, 
 
 void StandardGraphLayout::positionNode( GraphGadget *graph, Gaffer::Node *node, const Imath::V2f &fallbackPosition ) const
 {
-	Box2f hardConstraint;
-	V2f softConstraint, position;
-	if( nodeConstraints( graph, node, 0, hardConstraint, softConstraint ) )
-	{
-		if( hardConstraint.min.x < hardConstraint.max.x ) // hard constraint is achievable
-		{
-			position.x = clamp( softConstraint.x, hardConstraint.min.x, hardConstraint.max.x );
-		}
-		else
-		{
-			position.x = hardConstraint.center().x;
-		}
-		
-		if( hardConstraint.min.y < hardConstraint.max.y ) // hard constraint is achievable
-		{
-			position.y = clamp( softConstraint.y, hardConstraint.min.y, hardConstraint.max.y );
-		}
-		else
-		{
-			position.y = hardConstraint.center().y;
-		}
-	}
-	else
-	{
-		position = fallbackPosition;
-	}
+	graph->setNodePosition( node, fallbackPosition );
+
+	LayoutEngine layout( graph, m_connectionScale, m_nodeSeparationScale );
+
+	StandardSetPtr s = new StandardSet();
+	s->add( node );
+	layout.pinNodes( s, true /* invert */ );
+
+	layout.addConnectionDirectionConstraints();
 	
-	graph->setNodePosition( node, position );
+	layout.solve( true /* collision detection on */ );
+	layout.applyPositions();	
 }
 
 void StandardGraphLayout::positionNodes( GraphGadget *graph, Gaffer::Set *nodes, const Imath::V2f &fallbackPosition ) const
 {
-	// get the centre of the bunch of nodes we're positioning
-	
-	V2f centroid( 0 );
-	size_t numNodes = 0;
-	for( size_t i=0, s=nodes->size(); i<s; ++i )
-	{
-		Node *node = IECore::runTimeCast<Node>( nodes->member( i ) );
-		if( !node )
-		{
-			continue;
-		}
-		centroid += graph->getNodePosition( node );
-		numNodes++;
-	}
-	
-	centroid /= numNodes;
-	
-	// figure out the hard and soft constraints per node, combining them
-	// to produce constraints for the centroid.
-	
-	size_t numConstraints = 0;
-	V2f softConstraint( 0 );
-	Box2f hardConstraint = Box2f( V2f( V2f::baseTypeMin() ), V2f( V2f::baseTypeMax() ) );
+	LayoutEngine layout( graph, m_connectionScale, m_nodeSeparationScale );
+	layout.pinNodes( nodes, true /* invert */ );
+	layout.groupNodes( nodes, fallbackPosition );
 
-	for( size_t i=0, s=nodes->size(); i<s; ++i )
+	layout.addConnectionDirectionConstraints();
+
+	layout.solve( false /* collision detection off */ );
+	layout.applyPositions();
+}
+
+void StandardGraphLayout::layoutNodes( GraphGadget *graph, Gaffer::Set *nodes ) const
+{
+	LayoutEngine layout( graph, m_connectionScale, m_nodeSeparationScale );
+	if( nodes )
 	{
-		Node *node = IECore::runTimeCast<Node>( nodes->member( i ) );
-		if( !node )
-		{
-			continue;
-		}
-	
-		V2f nodeSoftConstraint;
-		Box2f nodeHardConstraint;
-		if( nodeConstraints( graph, node, nodes, nodeHardConstraint, nodeSoftConstraint ) )
-		{
-			const V2f nodeOffset = graph->getNodePosition( node ) - centroid;
-			
-			nodeHardConstraint.min -= nodeOffset;
-			nodeHardConstraint.max -= nodeOffset;
-						
-			hardConstraint.min.x = std::max( hardConstraint.min.x, nodeHardConstraint.min.x );
-			hardConstraint.min.y = std::max( hardConstraint.min.y, nodeHardConstraint.min.y );
-			hardConstraint.max.x = std::min( hardConstraint.max.x, nodeHardConstraint.max.x );
-			hardConstraint.max.y = std::min( hardConstraint.max.y, nodeHardConstraint.max.y );
-		
-			softConstraint += nodeSoftConstraint - nodeOffset;
-		
-			numConstraints += 1;
-		}
-	
-	}
-		
-	V2f newCentroid;
-	if( numConstraints )
-	{
-		softConstraint /= numConstraints;
-		
-		if( hardConstraint.min.x < hardConstraint.max.x ) // hard constraint is achievable
-		{
-			newCentroid.x = clamp( softConstraint.x, hardConstraint.min.x, hardConstraint.max.x );
-		}
-		else
-		{
-			newCentroid.x = hardConstraint.center().x;
-		}
-		
-		if( hardConstraint.min.y < hardConstraint.max.y ) // hard constraint is achievable
-		{
-			newCentroid.y = clamp( softConstraint.y, hardConstraint.min.y, hardConstraint.max.y );
-		}
-		else
-		{
-			newCentroid.y = hardConstraint.center().y;
-		}
-	}
-	else
-	{
-		newCentroid = fallbackPosition;
+		layout.pinNodes( nodes, true /* invert */ );
 	}
 	
-	// apply the offset between the old and new centroid to the nodes
+	// do a first round of layout without worrying about
+	// collisions between nodes.
 	
-	for( size_t i=0, s=nodes->size(); i<s; ++i )
-	{
-		Node *node = IECore::runTimeCast<Node>( nodes->member( i ) );
-		if( !node )
-		{
-			continue;
-		}
+	layout.addConnectionDirectionConstraints();
+	layout.addSiblingConstraints();
+	layout.solve( false );
 	
-		const V2f nodeOffset = graph->getNodePosition( node ) - centroid;
-		graph->setNodePosition( node, newCentroid + nodeOffset );
-	}
+	// do a second round of layout, now resolving collisions.
+	// we don't use the sibling constraints during this process
+	// because multiple sets of sibling constraints can conflict
+	// and produce unresolveable constraints that prevent the
+	// collisions detection from working. a better alternative
+	// might be to remove conflicting constraints before applying them.
 	
+	layout.clearConstraints();
+	layout.addConnectionDirectionConstraints();
+	layout.solve( true );
+	
+	layout.applyPositions();
 }
 
 bool StandardGraphLayout::connectNodeInternal( GraphGadget *graph, Gaffer::Node *node, Gaffer::Set *potentialInputs, bool insertIfPossible ) const
@@ -411,98 +1136,22 @@ Gaffer::Plug *StandardGraphLayout::correspondingOutput( const Gaffer::Plug *inpu
 	return 0;
 }
 
-bool StandardGraphLayout::nodeConstraints( GraphGadget *graph, Gaffer::Node *node, Gaffer::Set *excludedNodes, Imath::Box2f &hardConstraint, Imath::V2f &softConstraint ) const
+void StandardGraphLayout::setConnectionScale( float scale )
 {
-	// find all the connections which aren't excluded
-	
-	std::vector<ConnectionGadget *> connections;
-	if( !graph->connectionGadgets( node, connections, excludedNodes ) )
-	{
-		// there's nothing to go on - give up
-		return false;
-	}
-	
-	// figure out a position based on those connections
-	
-	softConstraint = V2f( 0 );
-	hardConstraint = Box2f( V2f( V2f::baseTypeMin() ), V2f( V2f::baseTypeMax() ) );
-	
-	for( std::vector<ConnectionGadget *>::const_iterator it = connections.begin(), eIt = connections.end(); it != eIt; it++ )
-	{
-		// find the nodules at either end of the connection
-		
-		const ConnectionGadget *connection = *it;
-		const Nodule *thisNodule = NULL; // the one on the node we're computing the constraints for
-		const Nodule *otherNodule = NULL; // the one on the other node
-		if( connection->srcNodule()->plug()->node() == node )
-		{
-			thisNodule = connection->srcNodule();
-			otherNodule = connection->dstNodule();
-		}
-		else
-		{
-			thisNodule = connection->dstNodule();
-			otherNodule = connection->srcNodule();
-		}
-	
-		const V3f thisNodulePos = thisNodule->transformedBound( 0 ).center();
-		const V3f otherNodulePos = otherNodule->transformedBound( 0 ).center();
+	m_connectionScale = scale;
+}
 
-		// update the soft constraint using the position of the other nodule
-		
-		softConstraint += V2f( otherNodulePos.x, otherNodulePos.y );
-		
-		// update the hard constraint using the position and tangent of the other nodule
-		
-		const NodeGadget *otherNodeGadget = otherNodule->ancestor<NodeGadget>();
-		const V3f otherTangent = otherNodeGadget->noduleTangent( otherNodule );
-		
-		if( otherTangent.dot( V3f( 0, -1, 0 ) ) > 0.5f ) // down
-		{
-			hardConstraint.max.y = std::min( hardConstraint.max.y, otherNodulePos.y - 10.0f );
-		}
-		else if( otherTangent.dot( V3f( 0, 1, 0 ) ) > 0.5f ) // up
-		{
-			hardConstraint.min.y = std::max( hardConstraint.min.y, otherNodulePos.y + 10.0f );
-		}
-		
-		if( otherTangent.dot( V3f( 1, 0, 0 ) ) > 0.5f ) // right
-		{
-			hardConstraint.min.x = std::max( hardConstraint.min.x, otherNodulePos.x + 10.0f );
-		}
-		else if( otherTangent.dot( V3f( -1, 0, 0 ) ) > 0.5f ) // left
-		{
-			hardConstraint.max.x = std::min( hardConstraint.max.x, otherNodulePos.x - 10.0f );
-		}
-		
-		// update the hard constraint using the position and tangent of this nodule.
-		// in many cases the tangents will be opposite and this will have no effect,
-		// but vertical -> horizontal tangent connections can exist and this is necessary
-		// to take them into account.
-		
-		const NodeGadget *thisNodeGadget = thisNodule->ancestor<NodeGadget>();
-		const V3f thisTangent = thisNodeGadget->noduleTangent( thisNodule );
-		
-		if( thisTangent.dot( V3f( 0, -1, 0 ) ) > 0.5f ) // down
-		{
-			hardConstraint.min.y = std::max( hardConstraint.min.y, otherNodulePos.y + 10.0f );
-		}
-		else if( thisTangent.dot( V3f( 0, 1, 0 ) ) > 0.5f ) // up
-		{
-			hardConstraint.max.y = std::min( hardConstraint.max.y, otherNodulePos.y - 10.0f );
-		}
-		
-		if( thisTangent.dot( V3f( 1, 0, 0 ) ) > 0.5f ) // right
-		{
-			hardConstraint.max.x = std::min( hardConstraint.max.x, otherNodulePos.x - 10.0f );
-		}
-		else if( thisTangent.dot( V3f( -1, 0, 0 ) ) > 0.5f ) // left
-		{
-			hardConstraint.min.x = std::max( hardConstraint.min.x, otherNodulePos.x + 10.0f );
-		}
-	}
+float StandardGraphLayout::getConnectionScale() const
+{
+	return m_connectionScale;
+}
 
-	softConstraint /= connections.size();
-	
-	return true;
+void StandardGraphLayout::setNodeSeparationScale( float scale )
+{
+	m_nodeSeparationScale = scale;
+}
+
+float StandardGraphLayout::getNodeSeparationScale() const
+{
+	return m_nodeSeparationScale;
 }

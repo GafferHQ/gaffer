@@ -91,6 +91,10 @@ class GraphLayout : public IECore::RunTimeTyped
 		/// in the absence of a better means of determining a position.
 		virtual void positionNodes( GraphGadget *graph, Gaffer::Set *nodes, const Imath::V2f &fallbackPosition = Imath::V2f( 0 ) ) const = 0;		
 
+		/// Automatically positions the specified nodes relative to one another to
+		/// make best sense of the connections between them.
+		virtual void layoutNodes( GraphGadget *graph, Gaffer::Set *nodes ) const = 0;
+
 	protected :
 	
 		GraphLayout();		

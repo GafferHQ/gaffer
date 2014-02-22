@@ -57,6 +57,9 @@ def appendDefinitions( menuDefinition, prefix="" ) :
 	menuDefinition.append( prefix + "/Find...", { "command" : find, "shortCut" : "Ctrl+F" } )
 	menuDefinition.append( prefix + "/FindDivider", { "divider" : True } )
 
+	menuDefinition.append( prefix + "/Arrange", { "command" : arrange, "shortCut" : "Ctrl+L" } )
+	menuDefinition.append( prefix + "/ArrangeDivider", { "divider" : True } )
+
 	menuDefinition.append( prefix + "/Select All", { "command" : selectAll, "shortCut" : "Ctrl+A" } )
 	menuDefinition.append( prefix + "/Select None", { "command" : selectNone, "shortCut" : "Shift+Ctrl+A", "active" : __selectionAvailable } )
 
@@ -156,6 +159,24 @@ def find( menu ) :
 	
 	findDialogue.setScope( parent ) 
 	findDialogue.setVisible( True )
+
+## A function suitable as the command for an Edit/Arrange menu item.  It must
+# be invoked from a menu that has a ScriptWindow in its ancestry.
+def arrange( menu ) :
+
+	script, parent = __scriptAndParent( menu )
+	nodeGraph = __nodeGraph( menu, focussedOnly=False )
+	if not nodeGraph :
+		return
+	
+	graph = nodeGraph.graphGadget()
+	
+	nodes = script.selection()
+	if not nodes :
+		nodes = Gaffer.StandardSet( graph.getRoot().children( Gaffer.Node.staticTypeId() ) )
+	
+	with Gaffer.UndoContext( script ) :
+		graph.getLayout().layoutNodes( graph, nodes )
 	
 ## A function suitable as the command for an Edit/Select All menu item. It must
 # be invoked from a menu that has a ScriptWindow in its ancestry.
