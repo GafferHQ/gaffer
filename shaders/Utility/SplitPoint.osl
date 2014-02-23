@@ -34,15 +34,15 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-shader splitColor
+shader SplitPoint
 (
-	color c = 0,
-	output float r = 0,
-	output float g = 0,
-	output float b = 0
+	point p = 0,
+	output float x = 0,
+	output float y = 0,
+	output float z = 0
 )
 {
-	r = c[0];
-	g = c[1];
-	b = c[2];
+	x = p[0];
+	y = p[1];
+	z = p[2];
 }

@@ -58,23 +58,23 @@ class OSLObjectTest( GafferOSLTest.OSLTestCase ) :
 		# shading network to swap x and y
 		
 		inPoint = GafferOSL.OSLShader()
-		inPoint.loadShader( "objectProcessing/InPoint" )
+		inPoint.loadShader( "ObjectProcessing/InPoint" )
 		
 		splitPoint = GafferOSL.OSLShader()
-		splitPoint.loadShader( "utility/splitPoint" )
+		splitPoint.loadShader( "Utility/SplitPoint" )
 		splitPoint["parameters"]["p"].setInput( inPoint["out"]["value"] )
 		
 		buildPoint = GafferOSL.OSLShader()
-		buildPoint.loadShader( "utility/buildPoint" )
+		buildPoint.loadShader( "Utility/BuildPoint" )
 		buildPoint["parameters"]["x"].setInput( splitPoint["out"]["y"] )
 		buildPoint["parameters"]["y"].setInput( splitPoint["out"]["x"] )
 		
 		outPoint = GafferOSL.OSLShader()
-		outPoint.loadShader( "objectProcessing/OutPoint" )
+		outPoint.loadShader( "ObjectProcessing/OutPoint" )
 		outPoint["parameters"]["value"].setInput( buildPoint["out"]["p"] )
 		
 		primVarShader = GafferOSL.OSLShader()
-		primVarShader.loadShader( "objectProcessing/OutObject" )
+		primVarShader.loadShader( "ObjectProcessing/OutObject" )
 		primVarShader["parameters"]["in0"].setInput( outPoint["out"]["primitiveVariable"] )
 		
 		o["shader"].setInput( primVarShader["out"] )
@@ -101,10 +101,10 @@ class OSLObjectTest( GafferOSLTest.OSLTestCase ) :
 		object = GafferOSL.OSLObject()
 		shader = GafferOSL.OSLShader()
 	
-		shader.loadShader( "objectProcessing/OutPoint" )
+		shader.loadShader( "ObjectProcessing/OutPoint" )
 		self.assertFalse( object["shader"].acceptsInput( shader["out"] ) )
 
-		shader.loadShader( "objectProcessing/OutObject" )
+		shader.loadShader( "ObjectProcessing/OutObject" )
 		self.assertTrue( object["shader"].acceptsInput( shader["out"] ) )
 
 	def testAcceptsNone( self ) :
@@ -122,12 +122,12 @@ class OSLObjectTest( GafferOSLTest.OSLTestCase ) :
 	def testPrimitiveVariableWithZeroValue( self ) :
 	
 		outPoint = GafferOSL.OSLShader()
-		outPoint.loadShader( "objectProcessing/OutPoint" )
+		outPoint.loadShader( "ObjectProcessing/OutPoint" )
 		outPoint["parameters"]["name"].setValue( "velocity" )
 		outPoint["parameters"]["value"].setValue( IECore.V3f( 0 ) )
 		
 		primVarShader = GafferOSL.OSLShader()
-		primVarShader.loadShader( "objectProcessing/OutObject" )
+		primVarShader.loadShader( "ObjectProcessing/OutObject" )
 		primVarShader["parameters"]["in0"].setInput( outPoint["out"]["primitiveVariable"] )
 		
 		p = GafferScene.Plane()

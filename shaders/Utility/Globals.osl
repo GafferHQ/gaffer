@@ -34,13 +34,20 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-shader buildPoint
+shader Globals
 (
-	float x = 0,
-	float y = 0,
-	float z = 0,
-	output point p = 0
+	output point globalP = 0,
+	output normal globalN = 0,
+	output normal globalNg = 0,
+	output float globalU = 0,
+	output float globalV = 0,
+	output float globalTime = 0
 )
 {
-	p = point( x, y, z );
+	globalP = P;
+	globalN = N;
+	globalNg = Ng;
+	globalU = u;
+	globalV = v;
+	globalTime = time;
 }

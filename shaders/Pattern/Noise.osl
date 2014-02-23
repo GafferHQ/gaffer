@@ -34,11 +34,33 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-shader vectorToColor
+shader Noise
 (
-	vector vec = 0,
-	output color c = 0
+	string type = "uperlin",
+	float scale = 1,
+	int dimensions = 3,
+	point p = 0,
+	float t = 0,
+	output float n = 0
 )
 {
-	c = color( vec );
+	point pp = isconnected( p ) ? p : P;
+	pp /= scale;
+
+	if( dimensions == 1 )
+	{
+		n = noise( type, pp[0] );
+	}
+	else if( dimensions == 2 )
+	{
+		n = noise( type, pp[0], pp[1] );
+	}
+	else if( dimensions == 3 )
+	{
+		n = noise( type, pp );
+	}
+	else
+	{
+		n = noise( type, pp, t );
+	}
 }

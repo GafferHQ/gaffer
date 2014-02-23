@@ -34,15 +34,13 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-shader splitPoint
+shader BuildColor
 (
-	point p = 0,
-	output float x = 0,
-	output float y = 0,
-	output float z = 0
+	float r = 0,
+	float g = 0,
+	float b = 0,
+	output color c = 0
 )
 {
-	x = p[0];
-	y = p[1];
-	z = p[2];
+	c = color( r, g, b );
 }

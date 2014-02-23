@@ -34,12 +34,13 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-shader vectorAdd
+shader BuildPoint
 (
-	vector a = 0,
-	vector b = 0,
-	output vector out = 0
+	float x = 0,
+	float y = 0,
+	float z = 0,
+	output point p = 0
 )
 {
-	out = a + b;
+	p = point( x, y, z );
 }

@@ -34,12 +34,11 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-shader vectorMultiply
+shader VectorToColor
 (
-	vector a = 0,
-	float b = 0,
-	output vector out = 0
+	vector vec = 0,
+	output color c = 0
 )
 {
-	out = a * b;
+	c = color( vec );
 }

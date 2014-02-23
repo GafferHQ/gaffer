@@ -34,10 +34,15 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-surface constant
+shader SplitColor
 (
-	color Cs = 1
+	color c = 0,
+	output float r = 0,
+	output float g = 0,
+	output float b = 0
 )
 {
-	Ci = Cs * emission();
+	r = c[0];
+	g = c[1];
+	b = c[2];
 }
