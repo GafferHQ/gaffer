@@ -34,51 +34,16 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFEROSL_IMAGEPROCESSING_H
-#define GAFFEROSL_IMAGEPROCESSING_H
+surface debugClosureWithInternalValue(
 
-float inChannel( string channelName, float defaultValue )
+	color value = 1
+
+)
 {
-	float result = defaultValue;
-	getattribute( channelName, result );
-	return result;
+	Ci = debug( "f", "type", "float", "value", value ) +
+	     debug( "p", "type", "point", "value", value ) +
+	     debug( "v", "type", "vector", "value", value ) +
+	     debug( "n", "type", "normal", "value", value ) +
+	     debug( "c", "type", "color", "value", value )
+	;
 }
-
-closure color outChannel( string channelName, float channelValue )
-{
-	// we store the value as an internal attribute of the closure, rather
-	// than as an external weight, so that values of 0 are not optimised
-	// away by OSL.
-	return debug( channelName, "type", "float", "value", color( channelValue ) );
-}
-
-color inLayer( string layerName, color defaultValue )
-{
-	string redName = "R";
-	string greenName = "G";
-	string blueName = "B";
-	if( layerName != "" )
-	{
-		redName = concat( layerName, ".", redName );
-		greenName = concat( layerName, ".", greenName );
-		blueName = concat( layerName, ".", blueName );
-	}
-	return color( inChannel( redName, defaultValue[0] ), inChannel( greenName, defaultValue[1] ), inChannel( blueName, defaultValue[2] ) );
-}
-
-closure color outLayer( string layerName, color layerColor )
-{
-	string redName = "R";
-	string greenName = "G";
-	string blueName = "B";
-	if( layerName != "" )
-	{
-		redName = concat( layerName, ".", redName );
-		greenName = concat( layerName, ".", greenName );
-		blueName = concat( layerName, ".", blueName );
-	}
-	
-	return outChannel( redName, layerColor[0] ) + outChannel( greenName, layerColor[1] ) + outChannel( blueName, layerColor[2] );
-}
-
-#endif // GAFFEROSL_IMAGEPROCESSING_H

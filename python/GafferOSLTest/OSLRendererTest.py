@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2013, John Haddon. All rights reserved.
+#  Copyright (c) 2013-2014, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -245,6 +245,62 @@ class OSLRendererTest( GafferOSLTest.OSLTestCase ) :
 					self.assertEqual( shading[n][i][0], points["P"][i][0] )
 					self.assertEqual( shading[n][i][1], points["P"][i][1] )
 					self.assertEqual( shading[n][i][2], points["P"][i][2] )
+
+	def testDebugClosureWithInternalValue( self ) :
+	
+		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/debugClosureWithInternalValue.osl" )
+
+		r = GafferOSL.OSLRenderer()
+		with IECore.WorldBlock( r ) :
+		
+			r.shader( "surface", shader, { "value" : IECore.Color3f( 1, 0.5, 0.25 ) } )
+			points = self.rectanglePoints()
+			shading = r.shadingEngine().shade( self.rectanglePoints() )
+
+			self.assertTrue( isinstance( shading["f"], IECore.FloatVectorData ) )
+			self.assertTrue( isinstance( shading["p"], IECore.V3fVectorData ) )
+			self.assertTrue( isinstance( shading["v"], IECore.V3fVectorData ) )
+			self.assertTrue( isinstance( shading["n"], IECore.V3fVectorData ) )
+			self.assertTrue( isinstance( shading["c"], IECore.Color3fVectorData ) )
 			
+			self.assertEqual( shading["p"].getInterpretation(), IECore.GeometricData.Interpretation.Point )
+			self.assertEqual( shading["v"].getInterpretation(), IECore.GeometricData.Interpretation.Vector )
+			self.assertEqual( shading["n"].getInterpretation(), IECore.GeometricData.Interpretation.Normal )
+			
+			for i in range( 0, len( points["P"] ) ) :
+				self.assertEqual( shading["f"][i], 1 )
+				self.assertEqual( shading["p"][i], IECore.V3f( 1, 0.5, 0.25 ) )
+				self.assertEqual( shading["v"][i], IECore.V3f( 1, 0.5, 0.25 ) )
+				self.assertEqual( shading["n"][i], IECore.V3f( 1, 0.5, 0.25 ) )
+				self.assertEqual( shading["c"][i], IECore.Color3f( 1, 0.5, 0.25 ) )
+
+	def testDebugClosureWithZeroValue( self ) :
+	
+		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/debugClosureWithInternalValue.osl" )
+
+		r = GafferOSL.OSLRenderer()
+		with IECore.WorldBlock( r ) :
+		
+			r.shader( "surface", shader, { "value" : IECore.Color3f( 0 ) } )
+			points = self.rectanglePoints()
+			shading = r.shadingEngine().shade( self.rectanglePoints() )
+
+			self.assertTrue( isinstance( shading["f"], IECore.FloatVectorData ) )
+			self.assertTrue( isinstance( shading["p"], IECore.V3fVectorData ) )
+			self.assertTrue( isinstance( shading["v"], IECore.V3fVectorData ) )
+			self.assertTrue( isinstance( shading["n"], IECore.V3fVectorData ) )
+			self.assertTrue( isinstance( shading["c"], IECore.Color3fVectorData ) )
+			
+			self.assertEqual( shading["p"].getInterpretation(), IECore.GeometricData.Interpretation.Point )
+			self.assertEqual( shading["v"].getInterpretation(), IECore.GeometricData.Interpretation.Vector )
+			self.assertEqual( shading["n"].getInterpretation(), IECore.GeometricData.Interpretation.Normal )
+			
+			for i in range( 0, len( points["P"] ) ) :
+				self.assertEqual( shading["f"][i], 0 )
+				self.assertEqual( shading["p"][i], IECore.V3f( 0 ) )
+				self.assertEqual( shading["v"][i], IECore.V3f( 0 ) )
+				self.assertEqual( shading["n"][i], IECore.V3f( 0 ) )
+				self.assertEqual( shading["c"][i], IECore.Color3f( 0 ) )
+						
 if __name__ == "__main__":
 	unittest.main()

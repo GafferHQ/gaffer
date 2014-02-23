@@ -74,27 +74,27 @@ normal inNormal( string name, normal defaultValue )
 
 closure color outFloat( string name, float value )
 {
-	return value * debug( name, "type", "float" );
+	return debug( name, "type", "float", "value", color( value ) );
 }
 
 closure color outColor( string name, color value )
 {
-	return value * debug( name, "type", "color" );
+	return debug( name, "type", "color", "value", color( value ) );
 }
 
 closure color outPoint( string name, point value )
 {
-	return color( value ) * debug( name, "type", "point" );
+	return debug( name, "type", "point", "value", color( value ) );
 }
 
 closure color outVector( string name, vector value )
 {
-	return color( value ) * debug( name, "type", "vector" );
+	return debug( name, "type", "vector", "value", color( value ) );
 }
 
 closure color outNormal( string name, normal value )
 {
-	return color( value ) * debug( name, "type", "normal" );
+	return debug( name, "type", "normal", "value", color( value ) );
 }
 
 #endif // GAFFEROSL_OBJECTPROCESSING_H

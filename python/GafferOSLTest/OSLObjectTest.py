@@ -119,5 +119,31 @@ class OSLObjectTest( GafferOSLTest.OSLTestCase ) :
 		
 		self.assertTrue( object["shader"].acceptsInput( switch["out"] ) )	
 
+	def testPrimitiveVariableWithZeroValue( self ) :
+	
+		outPoint = GafferOSL.OSLShader()
+		outPoint.loadShader( "objectProcessing/OutPoint" )
+		outPoint["parameters"]["name"].setValue( "velocity" )
+		outPoint["parameters"]["value"].setValue( IECore.V3f( 0 ) )
+		
+		primVarShader = GafferOSL.OSLShader()
+		primVarShader.loadShader( "surface/Sum" )
+		primVarShader["parameters"]["in0"].setInput( outPoint["out"]["primitiveVariable"] )
+		
+		p = GafferScene.Plane()
+		p["dimensions"].setValue( IECore.V2f( 1, 2 ) )
+		p["divisions"].setValue( IECore.V2i( 10 ) )
+		
+		filter = GafferScene.PathFilter()
+		filter["paths"].setValue( IECore.StringVectorData( [ "/plane" ] ) )
+		
+		o = GafferOSL.OSLObject()
+		o["in"].setInput( p["out"] )
+		o["shader"].setInput( primVarShader["out"] )
+		o["filter"].setInput( filter["match"] )
+		
+		for v in o["out"].object( "/plane" )["velocity"].data :
+			self.assertEqual( v, IECore.V3f( 0 ) )
+		
 if __name__ == "__main__":
 	unittest.main()

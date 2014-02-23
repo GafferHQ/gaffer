@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2013, John Haddon. All rights reserved.
+#  Copyright (c) 2013-2014, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,6 +35,8 @@
 ##########################################################################
 
 import os
+
+import IECore
 
 import Gaffer
 import GafferTest
@@ -157,6 +159,31 @@ class OSLImageTest( GafferOSLTest.OSLTestCase ) :
 		switch = GafferScene.ShaderSwitch()
 		
 		self.assertTrue( image["shader"].acceptsInput( switch["out"] ) )
+	
+	def testChannelWithZeroValue( self ) :
+			
+		outR = GafferOSL.OSLShader()
+		outR.loadShader( "imageProcessing/OutChannel" )
+		outR["parameters"]["channelName"].setValue( "R" )
+		outR["parameters"]["channelValue"].setValue( 0 )
+
+		imageShader = GafferOSL.OSLShader()
+		imageShader.loadShader( "surface/Sum" )
+		imageShader["parameters"]["in0"].setInput( outR["out"]["channel"] )
+		
+		reader = GafferImage.ImageReader()
+		reader["fileName"].setValue( os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/rgb.100x100.exr" ) )
+		
+		image = GafferOSL.OSLImage()
+		image["in"].setInput( reader["out"] )
+		image["shader"].setInput( imageShader["out"] )
+						
+		inputImage = reader["out"].image()
+		outputImage = image["out"].image()
+
+		self.assertEqual( outputImage["R"].data, IECore.FloatVectorData( [ 0 ] * inputImage["R"].data.size() ) )
+		self.assertEqual( outputImage["G"].data, inputImage["G"].data )
+		self.assertEqual( outputImage["B"].data, inputImage["B"].data )
 		
 if __name__ == "__main__":
 	unittest.main()
