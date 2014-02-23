@@ -72,7 +72,7 @@ class OSLImageTest( GafferOSLTest.OSLTestCase ) :
 		outRGB["parameters"]["layerColor"].setInput( buildColor["out"]["c"] )
 		
 		imageShader = GafferOSL.OSLShader()
-		imageShader.loadShader( "surface/Sum" )
+		imageShader.loadShader( "imageProcessing/OutImage" )
 		imageShader["parameters"]["in0"].setInput( outRGB["out"]["layer"] )
 		
 		reader = GafferImage.ImageReader()
@@ -145,7 +145,7 @@ class OSLImageTest( GafferOSLTest.OSLTestCase ) :
 		shader.loadShader( "objectProcessing/OutPoint" )
 		self.assertFalse( image["shader"].acceptsInput( shader["out"] ) )
 
-		shader.loadShader( "surface/Sum" )
+		shader.loadShader( "imageProcessing/OutImage" )
 		self.assertTrue( image["shader"].acceptsInput( shader["out"] ) )
 
 	def testAcceptsNone( self ) :
@@ -168,7 +168,7 @@ class OSLImageTest( GafferOSLTest.OSLTestCase ) :
 		outR["parameters"]["channelValue"].setValue( 0 )
 
 		imageShader = GafferOSL.OSLShader()
-		imageShader.loadShader( "surface/Sum" )
+		imageShader.loadShader( "imageProcessing/OutImage" )
 		imageShader["parameters"]["in0"].setInput( outR["out"]["channel"] )
 		
 		reader = GafferImage.ImageReader()

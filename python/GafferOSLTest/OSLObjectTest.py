@@ -74,7 +74,7 @@ class OSLObjectTest( GafferOSLTest.OSLTestCase ) :
 		outPoint["parameters"]["value"].setInput( buildPoint["out"]["p"] )
 		
 		primVarShader = GafferOSL.OSLShader()
-		primVarShader.loadShader( "surface/Sum" )
+		primVarShader.loadShader( "objectProcessing/OutObject" )
 		primVarShader["parameters"]["in0"].setInput( outPoint["out"]["primitiveVariable"] )
 		
 		o["shader"].setInput( primVarShader["out"] )
@@ -104,7 +104,7 @@ class OSLObjectTest( GafferOSLTest.OSLTestCase ) :
 		shader.loadShader( "objectProcessing/OutPoint" )
 		self.assertFalse( object["shader"].acceptsInput( shader["out"] ) )
 
-		shader.loadShader( "surface/Sum" )
+		shader.loadShader( "objectProcessing/OutObject" )
 		self.assertTrue( object["shader"].acceptsInput( shader["out"] ) )
 
 	def testAcceptsNone( self ) :
@@ -127,7 +127,7 @@ class OSLObjectTest( GafferOSLTest.OSLTestCase ) :
 		outPoint["parameters"]["value"].setValue( IECore.V3f( 0 ) )
 		
 		primVarShader = GafferOSL.OSLShader()
-		primVarShader.loadShader( "surface/Sum" )
+		primVarShader.loadShader( "objectProcessing/OutObject" )
 		primVarShader["parameters"]["in0"].setInput( outPoint["out"]["primitiveVariable"] )
 		
 		p = GafferScene.Plane()
