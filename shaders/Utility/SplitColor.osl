@@ -34,33 +34,15 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-shader noise
+shader SplitColor
 (
-	string type = "uperlin",
-	float scale = 1,
-	int dimensions = 3,
-	point p = 0,
-	float t = 0,
-	output float n = 0
+	color c = 0,
+	output float r = 0,
+	output float g = 0,
+	output float b = 0
 )
 {
-	point pp = isconnected( p ) ? p : P;
-	pp /= scale;
-
-	if( dimensions == 1 )
-	{
-		n = noise( type, pp[0] );
-	}
-	else if( dimensions == 2 )
-	{
-		n = noise( type, pp[0], pp[1] );
-	}
-	else if( dimensions == 3 )
-	{
-		n = noise( type, pp );
-	}
-	else
-	{
-		n = noise( type, pp, t );
-	}
+	r = c[0];
+	g = c[1];
+	b = c[2];
 }

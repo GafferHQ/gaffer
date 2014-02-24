@@ -39,6 +39,7 @@ import os
 import IECore
 
 import Gaffer
+import GafferTest
 import GafferScene
 import GafferOSL
 import GafferOSLTest
@@ -158,10 +159,10 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 	def testNoConnectionToParametersPlug( self ) :
 	
 		splitPoint = GafferOSL.OSLShader()
-		splitPoint.loadShader( "utility/splitPoint" )
+		splitPoint.loadShader( "Utility/SplitPoint" )
 		
 		globals = GafferOSL.OSLShader()
-		globals.loadShader( "utility/globals" )
+		globals.loadShader( "Utility/Globals" )
 		
 		splitPoint["parameters"]["p"].setInput( globals["out"]["globalP"] )
 		
@@ -221,10 +222,10 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 	def testOutputPlugAffectsHash( self ) :
 	
 		globals = GafferOSL.OSLShader()
-		globals.loadShader( "utility/globals" )
+		globals.loadShader( "Utility/Globals" )
 		
 		buildColor = GafferOSL.OSLShader()
-		buildColor.loadShader( "utility/buildColor" )
+		buildColor.loadShader( "Utility/BuildColor" )
 		
 		buildColor["parameters"]["r"].setInput( globals["out"]["globalU"] )
 		h1 = buildColor.stateHash()
@@ -237,10 +238,10 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 	def testCantConnectVectorToColor( self ) :
 	
 		globals = GafferOSL.OSLShader()
-		globals.loadShader( "utility/globals" )
+		globals.loadShader( "Utility/Globals" )
 		
 		constant = GafferOSL.OSLShader()
-		constant.loadShader( "surface/constant" )
+		constant.loadShader( "Surface/Constant" )
 		
 		self.assertFalse( constant["parameters"]["Cs"].acceptsInput( globals["out"]["globalP"] ) )
 	
@@ -274,10 +275,31 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		inputClosure.loadShader( inputClosureShader )
 		
 		outputColor = GafferOSL.OSLShader()
-		outputColor.loadShader( "utility/vectorToColor" )
+		outputColor.loadShader( "Utility/VectorToColor" )
 		
 		self.assertTrue( inputClosure["parameters"]["i"].acceptsInput( outputClosure["out"]["c"] ) )
 		self.assertFalse( inputClosure["parameters"]["i"].acceptsInput( outputColor["out"]["c"] ) )
+	
+	def testOutputClosureDirtying( self ) :
+	
+		outputClosureShader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/outputClosure.osl" )
+		outputClosure = GafferOSL.OSLShader()
+		outputClosure.loadShader( outputClosureShader )
+		
+		cs = GafferTest.CapturingSlot( outputClosure.plugDirtiedSignal() )
+		
+		outputClosure["parameters"]["e"]["r"].setValue( 10 )
+		
+		self.assertEqual(
+			set( [ x[0].relativeName( x[0].node() ) for x in cs ] ),
+			set( [
+				"parameters.e.r",
+				"parameters.e",
+				"parameters",
+				"out.c",
+				"out",
+			] )
+		)
 		
 if __name__ == "__main__":
 	unittest.main()

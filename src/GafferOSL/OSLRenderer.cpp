@@ -128,6 +128,14 @@ TypeDesc typeDescFromData( const Data *data, const void *&basePointer )
 		case IntVectorDataTypeId :
 			basePointer = static_cast<const IntVectorData *>( data )->baseReadable();
 			return TypeDesc( TypeDesc::INT, static_cast<const IntVectorData *>( data )->readable().size() );
+		case V3fVectorDataTypeId :
+			basePointer = static_cast<const V3fVectorData *>( data )->baseReadable();
+			return TypeDesc(
+				TypeDesc::FLOAT,
+				TypeDesc::VEC3,
+				vecSemanticsFromGeometricInterpretation( static_cast<const V3fVectorData *>( data )->getInterpretation() ),
+				static_cast<const V3fVectorData *>( data )->readable().size()
+			);
 		case Color3fVectorDataTypeId :
 			basePointer = static_cast<const Color3fVectorData *>( data )->baseReadable();
 			return TypeDesc( TypeDesc::FLOAT, TypeDesc::VEC3, TypeDesc::COLOR, static_cast<const IntVectorData *>( data )->readable().size() );
@@ -381,7 +389,12 @@ struct OSLRenderer::EmissionParameters
 struct OSLRenderer::DebugParameters
 {
 	ustring name;
+	static ustring typeAttrKey;
+	static ustring valueAttrKey;
 };
+
+ustring OSLRenderer::DebugParameters::typeAttrKey( "type" );
+ustring OSLRenderer::DebugParameters::valueAttrKey( "value" );
 
 OSLRenderer::OSLRenderer()
 	:	m_shadingSystem( ShadingSystem::create( new OSLRenderer::RendererServices ), ShadingSystem::destroy )
@@ -405,7 +418,8 @@ OSLRenderer::OSLRenderer()
 			DebugClosureId,
 			{
 				CLOSURE_STRING_PARAM( DebugParameters, name ),
-				CLOSURE_STRING_KEYPARAM( "type" ),
+				CLOSURE_STRING_KEYPARAM( OSLRenderer::DebugParameters::typeAttrKey.c_str() ),
+				CLOSURE_COLOR_KEYPARAM( OSLRenderer::DebugParameters::valueAttrKey.c_str() ),
 				CLOSURE_FINISH_PARAM( DebugParameters )
 			}
 		},
@@ -771,6 +785,19 @@ class OSLRenderer::ShadingResults
 
 	private :
 
+		const ClosureComponent::Attr *attr( const ClosureComponent *closure, ustring key )
+		{
+			const ClosureComponent::Attr *a = closure->attrs();
+			for( int i = 0; i < closure->nattrs; ++i, ++a )
+			{
+				if( a->key == key )
+				{
+					return a;
+				}
+			}
+			return NULL;
+		}
+
 		void addResult( size_t pointIndex, const ClosureColor *closure, const Color3f &weight )
 		{
 			if( closure )
@@ -829,9 +856,9 @@ class OSLRenderer::ShadingResults
 				DebugResult result;
 				result.name = parameters->name;
 				result.type = TypeDesc::TypeColor;
-				if( closure->nattrs )
+				if( const ClosureComponent::Attr *typeAttr = attr( closure, DebugParameters::typeAttrKey ) )
 				{
-					result.type = TypeDesc( closure->attrs()[0].str().c_str() );
+					result.type = TypeDesc( typeAttr->str().c_str() );
 				}
 				result.type.arraylen = m_ci->size();					
 				DataPtr data = dataFromTypeDesc( result.type, result.basePointer );
@@ -844,12 +871,18 @@ class OSLRenderer::ShadingResults
 				it = m_debugResults.insert( it, result );
 			}
 			
+			Color3f value = weight;
+			if( const ClosureComponent::Attr *valueAttr = attr( closure, DebugParameters::valueAttrKey ) )
+			{
+				value *= valueAttr->color();
+			}
+			
 			char *dst = static_cast<char *>( it->basePointer );
 			dst += pointIndex * it->type.elementsize();
 			ShadingSystem::convert_value(
 				dst,
 				it->type,
-				&weight,
+				&value,
 				it->type.aggregate == TypeDesc::SCALAR ? TypeDesc::TypeFloat : TypeDesc::TypeColor
 			);
 		}

@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2013, John Haddon. All rights reserved.
+#  Copyright (c) 2013-2014, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -57,23 +57,27 @@ class OSLObjectTest( GafferOSLTest.OSLTestCase ) :
 		
 		# shading network to swap x and y
 		
-		globals = GafferOSL.OSLShader()
-		globals.loadShader( "utility/globals" )
+		inPoint = GafferOSL.OSLShader()
+		inPoint.loadShader( "ObjectProcessing/InPoint" )
 		
 		splitPoint = GafferOSL.OSLShader()
-		splitPoint.loadShader( "utility/splitPoint" )
-		splitPoint["parameters"]["p"].setInput( globals["out"]["globalP"] )
+		splitPoint.loadShader( "Utility/SplitPoint" )
+		splitPoint["parameters"]["p"].setInput( inPoint["out"]["value"] )
 		
-		buildColor = GafferOSL.OSLShader()
-		buildColor.loadShader( "utility/buildColor" )
-		buildColor["parameters"]["r"].setInput( splitPoint["out"]["y"] )
-		buildColor["parameters"]["g"].setInput( splitPoint["out"]["x"] )
+		buildPoint = GafferOSL.OSLShader()
+		buildPoint.loadShader( "Utility/BuildPoint" )
+		buildPoint["parameters"]["x"].setInput( splitPoint["out"]["y"] )
+		buildPoint["parameters"]["y"].setInput( splitPoint["out"]["x"] )
 		
-		constant = GafferOSL.OSLShader()
-		constant.loadShader( "surface/constant" )
-		constant["parameters"]["Cs"].setInput( buildColor["out"]["c"] )
+		outPoint = GafferOSL.OSLShader()
+		outPoint.loadShader( "ObjectProcessing/OutPoint" )
+		outPoint["parameters"]["value"].setInput( buildPoint["out"]["p"] )
 		
-		o["shader"].setInput( constant["out"] )
+		primVarShader = GafferOSL.OSLShader()
+		primVarShader.loadShader( "ObjectProcessing/OutObject" )
+		primVarShader["parameters"]["in0"].setInput( outPoint["out"]["primitiveVariable"] )
+		
+		o["shader"].setInput( primVarShader["out"] )
 		
 		self.assertScenesEqual( p["out"], o["out"] )
 		
@@ -91,6 +95,55 @@ class OSLObjectTest( GafferOSLTest.OSLTestCase ) :
 		self.assertEqual( boundIn.max.x, boundOut.max.y )
 		self.assertEqual( boundIn.min.y, boundOut.min.x )
 		self.assertEqual( boundIn.max.y, boundOut.max.x )
+	
+	def testOnlyAcceptsSurfaceShaders( self ) :
+	
+		object = GafferOSL.OSLObject()
+		shader = GafferOSL.OSLShader()
+	
+		shader.loadShader( "ObjectProcessing/OutPoint" )
+		self.assertFalse( object["shader"].acceptsInput( shader["out"] ) )
+
+		shader.loadShader( "ObjectProcessing/OutObject" )
+		self.assertTrue( object["shader"].acceptsInput( shader["out"] ) )
+
+	def testAcceptsNone( self ) :
+	
+		object = GafferOSL.OSLObject()
+		self.assertTrue( object["shader"].acceptsInput( None ) )
+	
+	def testAcceptsShaderSwitch( self ) :
+	
+		object = GafferOSL.OSLObject()
+		switch = GafferScene.ShaderSwitch()
+		
+		self.assertTrue( object["shader"].acceptsInput( switch["out"] ) )	
+
+	def testPrimitiveVariableWithZeroValue( self ) :
+	
+		outPoint = GafferOSL.OSLShader()
+		outPoint.loadShader( "ObjectProcessing/OutPoint" )
+		outPoint["parameters"]["name"].setValue( "velocity" )
+		outPoint["parameters"]["value"].setValue( IECore.V3f( 0 ) )
+		
+		primVarShader = GafferOSL.OSLShader()
+		primVarShader.loadShader( "ObjectProcessing/OutObject" )
+		primVarShader["parameters"]["in0"].setInput( outPoint["out"]["primitiveVariable"] )
+		
+		p = GafferScene.Plane()
+		p["dimensions"].setValue( IECore.V2f( 1, 2 ) )
+		p["divisions"].setValue( IECore.V2i( 10 ) )
+		
+		filter = GafferScene.PathFilter()
+		filter["paths"].setValue( IECore.StringVectorData( [ "/plane" ] ) )
+		
+		o = GafferOSL.OSLObject()
+		o["in"].setInput( p["out"] )
+		o["shader"].setInput( primVarShader["out"] )
+		o["filter"].setInput( filter["match"] )
+		
+		for v in o["out"].object( "/plane" )["velocity"].data :
+			self.assertEqual( v, IECore.V3f( 0 ) )
 		
 if __name__ == "__main__":
 	unittest.main()

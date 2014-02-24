@@ -34,6 +34,10 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
+#include "Gaffer/Box.h"
+
+#include "GafferScene/ShaderSwitch.h"
+
 #include "GafferOSL/OSLShader.h"
 #include "GafferOSL/OSLImage.h"
 #include "GafferOSL/OSLObject.h"
@@ -90,9 +94,31 @@ bool OSLObject::acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inpu
 		return false;
 	}
 	
+	if( !inputPlug )
+	{
+		return true;
+	}
+	
 	if( plug == shaderPlug() )
 	{
-		return runTimeCast<const OSLShader>( inputPlug->source<Plug>()->node() );
+		const Node *sourceNode = inputPlug->source<Plug>()->node();
+		if( const OSLShader *shader = runTimeCast<const OSLShader>( sourceNode ) )
+		{
+			return shader->typePlug()->getValue() == "osl:surface";
+		}
+		else
+		{
+			// as for the GafferScene::ShaderAssignment, we accept Box and ShaderSwitch
+			// inputs as an indirect means of later getting a connection to a Shader.
+			if(
+				runTimeCast<const Gaffer::Box>( sourceNode ) ||
+				runTimeCast<const ShaderSwitch>( sourceNode )
+			)
+			{
+				return true;
+			}
+		}
+		return false;
 	}
 	
 	return true;
@@ -145,7 +171,9 @@ IECore::ConstObjectPtr OSLObject::computeProcessedObject( const ScenePath &path,
 		return inputObject;
 	}
 
-	OSLRenderer::ConstShadingEnginePtr shadingEngine = OSLImage::shadingEngine( shaderPlug() );
+	ConstOSLShaderPtr shader = runTimeCast<const OSLShader>( shaderPlug()->source<Plug>()->node() );
+	OSLRenderer::ConstShadingEnginePtr shadingEngine = shader ? shader->shadingEngine() : NULL;
+	
 	if( !shadingEngine )
 	{
 		return inputObject;	
@@ -164,16 +192,14 @@ IECore::ConstObjectPtr OSLObject::computeProcessedObject( const ScenePath &path,
 
 	PrimitivePtr outputPrimitive = inputPrimitive->copy();
 
-	ConstCompoundDataPtr shadedPoints = shadingEngine->shade( shadingPoints );
-	const std::vector<Color3f> &ci = shadedPoints->member<Color3fVectorData>( "Ci" )->readable();
-	
-	V3fVectorDataPtr p = new V3fVectorData;
-	p->writable().reserve( ci.size() );
-	std::copy( ci.begin(), ci.end(), back_inserter( p->writable() ) );
-	
-	outputPrimitive->variables["P"] = PrimitiveVariable( PrimitiveVariable::Vertex, p );
-
-	/// \todo Allow shaders to write arbitrary primitive variables.
+	CompoundDataPtr shadedPoints = shadingEngine->shade( shadingPoints );
+	for( CompoundDataMap::const_iterator it = shadedPoints->readable().begin(), eIt = shadedPoints->readable().end(); it != eIt; ++it )
+	{
+		if( it->first != "Ci" )
+		{
+			outputPrimitive->variables[it->first] = PrimitiveVariable( PrimitiveVariable::Vertex, it->second );
+		}
+	}
 			
 	return outputPrimitive;
 }

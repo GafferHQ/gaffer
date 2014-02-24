@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2013, John Haddon. All rights reserved.
+#  Copyright (c) 2013-2014, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -36,9 +36,12 @@
 
 import os
 
+import IECore
+
 import Gaffer
 import GafferTest
 import GafferImage
+import GafferScene
 import GafferOSL
 import GafferOSLTest
 
@@ -47,26 +50,30 @@ class OSLImageTest( GafferOSLTest.OSLTestCase ) :
 	def test( self ) :
 	
 		getRed = GafferOSL.OSLShader()
-		getRed.loadShader( "imageProcessing/getChannel" )
+		getRed.loadShader( "ImageProcessing/InChannel" )
 		getRed["parameters"]["channelName"].setValue( "R" )
 		
 		getGreen = GafferOSL.OSLShader()
-		getGreen.loadShader( "imageProcessing/getChannel" )
+		getGreen.loadShader( "ImageProcessing/InChannel" )
 		getGreen["parameters"]["channelName"].setValue( "G" )
 		
 		getBlue = GafferOSL.OSLShader()
-		getBlue.loadShader( "imageProcessing/getChannel" )
+		getBlue.loadShader( "ImageProcessing/InChannel" )
 		getBlue["parameters"]["channelName"].setValue( "B" )
 		
 		buildColor = GafferOSL.OSLShader()
-		buildColor.loadShader( "utility/buildColor" )
+		buildColor.loadShader( "Utility/BuildColor" )
 		buildColor["parameters"]["r"].setInput( getBlue["out"]["channelValue"] )
 		buildColor["parameters"]["g"].setInput( getGreen["out"]["channelValue"] )
 		buildColor["parameters"]["b"].setInput( getRed["out"]["channelValue"] )
 		
-		constant = GafferOSL.OSLShader()
-		constant.loadShader( "surface/constant" )
-		constant["parameters"]["Cs"].setInput( buildColor["out"]["c"] )
+		outRGB = GafferOSL.OSLShader()
+		outRGB.loadShader( "ImageProcessing/OutLayer" )
+		outRGB["parameters"]["layerColor"].setInput( buildColor["out"]["c"] )
+		
+		imageShader = GafferOSL.OSLShader()
+		imageShader.loadShader( "ImageProcessing/OutImage" )
+		imageShader["parameters"]["in0"].setInput( outRGB["out"]["layer"] )
 		
 		reader = GafferImage.ImageReader()
 		reader["fileName"].setValue( os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/rgb.100x100.exr" ) )
@@ -82,17 +89,18 @@ class OSLImageTest( GafferOSLTest.OSLTestCase ) :
 		# that should all change when we hook up a shader
 		
 		cs = GafferTest.CapturingSlot( image.plugDirtiedSignal() )
-		image["shader"].setInput( constant["out"] )
-		
-		self.assertEqual( len( cs ), 4 )
+		image["shader"].setInput( imageShader["out"] )
+				
+		self.assertEqual( len( cs ), 5 )
 		self.assertTrue( cs[0][0].isSame( image["shader"] ) )
 		self.assertTrue( cs[1][0].isSame( image["__shading"] ) )
-		self.assertTrue( cs[2][0].isSame( image["out"]["channelData"] ) )
+		self.assertTrue( cs[2][0].isSame( image["out"]["channelNames"] ) )
 		self.assertTrue( cs[3][0].isSame( image["out"] ) )
+		self.assertTrue( cs[4][0].isSame( image["out"]["channelData"] ) )
 		
 		inputImage = reader["out"].image()
 		outputImage = image["out"].image()
-		
+
 		self.assertNotEqual( inputImage, outputImage )
 		self.assertEqual( outputImage["R"].data, inputImage["B"].data )
 		self.assertEqual( outputImage["G"].data, inputImage["G"].data )
@@ -104,21 +112,23 @@ class OSLImageTest( GafferOSLTest.OSLTestCase ) :
 		
 		getGreen["parameters"]["channelName"].setValue( "R" )
 		
-		self.assertEqual( len( cs ), 4 )
+		self.assertEqual( len( cs ), 5 )
 		self.assertTrue( cs[0][0].isSame( image["shader"] ) )
 		self.assertTrue( cs[1][0].isSame( image["__shading"] ) )
-		self.assertTrue( cs[2][0].isSame( image["out"]["channelData"] ) )
+		self.assertTrue( cs[2][0].isSame( image["out"]["channelNames"] ) )
 		self.assertTrue( cs[3][0].isSame( image["out"] ) )
+		self.assertTrue( cs[4][0].isSame( image["out"]["channelData"] ) )
 		
 		del cs[:]
 	
 		buildColor["parameters"]["r"].setInput( getRed["out"]["channelValue"] )
 		
-		self.assertEqual( len( cs ), 4 )
+		self.assertEqual( len( cs ), 5 )
 		self.assertTrue( cs[0][0].isSame( image["shader"] ) )
 		self.assertTrue( cs[1][0].isSame( image["__shading"] ) )
-		self.assertTrue( cs[2][0].isSame( image["out"]["channelData"] ) )
+		self.assertTrue( cs[2][0].isSame( image["out"]["channelNames"] ) )
 		self.assertTrue( cs[3][0].isSame( image["out"] ) )
+		self.assertTrue( cs[4][0].isSame( image["out"]["channelData"] ) )
 
 		inputImage = reader["out"].image()
 		outputImage = image["out"].image()
@@ -126,6 +136,54 @@ class OSLImageTest( GafferOSLTest.OSLTestCase ) :
 		self.assertEqual( outputImage["R"].data, inputImage["R"].data )
 		self.assertEqual( outputImage["G"].data, inputImage["R"].data )
 		self.assertEqual( outputImage["B"].data, inputImage["R"].data )
+
+	def testOnlyAcceptsSurfaceShaders( self ) :
+	
+		image = GafferOSL.OSLImage()
+		shader = GafferOSL.OSLShader()
+	
+		shader.loadShader( "ObjectProcessing/OutPoint" )
+		self.assertFalse( image["shader"].acceptsInput( shader["out"] ) )
+
+		shader.loadShader( "ImageProcessing/OutImage" )
+		self.assertTrue( image["shader"].acceptsInput( shader["out"] ) )
+
+	def testAcceptsNone( self ) :
+	
+		image = GafferOSL.OSLImage()
+		self.assertTrue( image["shader"].acceptsInput( None ) )
+	
+	def testAcceptsShaderSwitch( self ) :
+	
+		image = GafferOSL.OSLImage()
+		switch = GafferScene.ShaderSwitch()
+		
+		self.assertTrue( image["shader"].acceptsInput( switch["out"] ) )
+	
+	def testChannelWithZeroValue( self ) :
+			
+		outR = GafferOSL.OSLShader()
+		outR.loadShader( "ImageProcessing/OutChannel" )
+		outR["parameters"]["channelName"].setValue( "R" )
+		outR["parameters"]["channelValue"].setValue( 0 )
+
+		imageShader = GafferOSL.OSLShader()
+		imageShader.loadShader( "ImageProcessing/OutImage" )
+		imageShader["parameters"]["in0"].setInput( outR["out"]["channel"] )
+		
+		reader = GafferImage.ImageReader()
+		reader["fileName"].setValue( os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/rgb.100x100.exr" ) )
+		
+		image = GafferOSL.OSLImage()
+		image["in"].setInput( reader["out"] )
+		image["shader"].setInput( imageShader["out"] )
+						
+		inputImage = reader["out"].image()
+		outputImage = image["out"].image()
+
+		self.assertEqual( outputImage["R"].data, IECore.FloatVectorData( [ 0 ] * inputImage["R"].data.size() ) )
+		self.assertEqual( outputImage["G"].data, inputImage["G"].data )
+		self.assertEqual( outputImage["B"].data, inputImage["B"].data )
 		
 if __name__ == "__main__":
 	unittest.main()

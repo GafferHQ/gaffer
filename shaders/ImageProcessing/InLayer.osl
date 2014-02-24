@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2013, John Haddon. All rights reserved.
+//  Copyright (c) 2014, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,41 +34,14 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFEROSL_OSLSHADER_H
-#define GAFFEROSL_OSLSHADER_H
+#include "GafferOSL/ImageProcessing.h"
 
-#include "GafferScene/Shader.h"
-
-#include "GafferOSL/TypeIds.h"
-#include "GafferOSL/OSLRenderer.h"
-
-namespace GafferOSL
+shader InLayer
+(
+	string layerName = "",
+	color defaultColor = 0,
+	output color layerColor = 0
+)
 {
-
-class OSLShader : public GafferScene::Shader
-{
-
-	public :
-
-		OSLShader( const std::string &name=defaultName<OSLShader>() );
-		virtual ~OSLShader();
-
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferOSL::OSLShader, OSLShaderTypeId, GafferScene::Shader );
-		
-		/// \undoable.
-		/// \todo Make this method virtual and define it on the Shader base class.
-		void loadShader( const std::string &shaderName, bool keepExistingValues=false );
-
-		OSLRenderer::ConstShadingEnginePtr shadingEngine() const;
-
-	protected :
-	
-		virtual bool acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const;
-							
-};
-
-IE_CORE_DECLAREPTR( OSLShader )
-
-} // namespace GafferOSL
-
-#endif // GAFFEROSL_OSLSHADER_H
+	layerColor = inLayer( layerName, defaultColor );
+}

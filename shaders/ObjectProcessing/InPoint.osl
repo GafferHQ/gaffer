@@ -34,13 +34,14 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-shader buildColor
+#include "GafferOSL/ObjectProcessing.h"
+
+shader InPoint
 (
-	float r = 0,
-	float g = 0,
-	float b = 0,
-	output color c = 0
+	string name = "P",
+	point defaultValue = 0,
+	output point value = 0
 )
 {
-	c = color( r, g, b );
+	value = inPoint( name, defaultValue );
 }

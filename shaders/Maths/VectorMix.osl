@@ -34,20 +34,13 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-shader globals
+shader VectorMix
 (
-	output point globalP = 0,
-	output normal globalN = 0,
-	output normal globalNg = 0,
-	output float globalU = 0,
-	output float globalV = 0,
-	output float globalTime = 0
+	vector a = 0,
+	vector b = 0,
+	float m = 0,
+	output vector out = 0
 )
 {
-	globalP = P;
-	globalN = N;
-	globalNg = Ng;
-	globalU = u;
-	globalV = v;
-	globalTime = time;
+	out = mix( a, b, m );
 }

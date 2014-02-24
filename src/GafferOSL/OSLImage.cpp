@@ -34,15 +34,12 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "tbb/mutex.h"
-
 #include "IECore/CompoundData.h"
-#include "IECore/AttributeBlock.h"
-#include "IECore/LRUCache.h"
 
 #include "Gaffer/Context.h"
+#include "Gaffer/Box.h"
 
-#include "GafferImage/ChannelMaskPlug.h"
+#include "GafferScene/ShaderSwitch.h"
 
 #include "GafferOSL/OSLImage.h"
 #include "GafferOSL/OSLShader.h"
@@ -54,107 +51,6 @@ using namespace IECore;
 using namespace Gaffer;
 using namespace GafferImage;
 using namespace GafferOSL;
-
-//////////////////////////////////////////////////////////////////////////
-// LRUCache of ShadingEngines
-//////////////////////////////////////////////////////////////////////////
-
-namespace GafferOSL
-{
-
-namespace Detail
-{
-
-struct ShadingEngineCacheKey
-{
-	
-	ShadingEngineCacheKey( const OSLShader *s )
-		:	shader( s ), hash( s->stateHash() )
-	{
-	}
-
-	bool operator == ( const ShadingEngineCacheKey &other ) const
-	{
-		return hash == other.hash;
-	}
-	
-	bool operator != ( const ShadingEngineCacheKey &other ) const
-	{
-		return hash != other.hash;
-	}
-
-	bool operator < ( const ShadingEngineCacheKey &other ) const
-	{
-		return hash < other.hash;
-	}
-	
-	mutable const OSLShader *shader;	
-	MurmurHash hash;
-
-};
-
-static OSLRenderer::ConstShadingEnginePtr getter( const ShadingEngineCacheKey &key, size_t &cost )
-{
-	cost = 1;
-	
-	ConstObjectVectorPtr state = key.shader->state();
-	key.shader = NULL; // there's no guarantee the node would even exist after this call, so zero it out to avoid temptation
-	
-	if( !state->members().size() )
-	{
-		return NULL;
-	}
-	
-	static OSLRendererPtr g_renderer;	
-	static tbb::mutex g_rendererMutex;
-
-	tbb::mutex::scoped_lock lock( g_rendererMutex );
-		
-	if( !g_renderer )
-	{
-		g_renderer = new OSLRenderer;
-		if( const char *searchPath = getenv( "OSL_SHADER_PATHS" ) )
-		{
-			g_renderer->setOption( "osl:searchpath:shader", new StringData( searchPath ) );
-		}
-		g_renderer->worldBegin();
-	}
-	
-	IECore::AttributeBlock attributeBlock( g_renderer );
-
-	for( ObjectVector::MemberContainer::const_iterator it = state->members().begin(), eIt = state->members().end(); it != eIt; it++ )
-	{
-		const StateRenderable *s = runTimeCast<const StateRenderable>( it->get() );
-		if( s )
-		{
-			s->render( g_renderer );
-		}
-	}
-		
-	return g_renderer->shadingEngine();
-}
-
-typedef LRUCache<ShadingEngineCacheKey, OSLRenderer::ConstShadingEnginePtr> ShadingEngineCache;
-static ShadingEngineCache g_shadingEngineCache( getter, 10000 );
-
-} // namespace Detail
-
-OSLRenderer::ConstShadingEnginePtr OSLImage::shadingEngine( const Gaffer::Plug *shaderPlug )
-{
-	const OSLShader *shader = runTimeCast<const OSLShader>( shaderPlug->source<Plug>()->node() );
-	if( !shader )
-	{
-		return NULL;
-	}
-
-	return Detail::g_shadingEngineCache.get( Detail::ShadingEngineCacheKey( shader ) );
-}
-
-} // namespace GafferOSL
-
-//////////////////////////////////////////////////////////////////////////
-// OSLImage
-//////////////////////////////////////////////////////////////////////////
 
 IE_CORE_DEFINERUNTIMETYPED( OSLImage );
 
@@ -168,6 +64,11 @@ OSLImage::OSLImage( const std::string &name )
 	addChild( new Plug( "shader" ) );
 	
 	addChild( new Gaffer::ObjectPlug( "__shading", Gaffer::Plug::Out, new CompoundData() ) );
+
+	// we disable caching for the channel data plug, because our compute
+	// simply references data direct from the shading plug, which will itself
+	// be cached. we don't want to count the memory usage for that twice.
+	outPlug()->channelDataPlug()->setFlags( Plug::Cacheable, false );
 }
 
 OSLImage::~OSLImage()
@@ -183,7 +84,17 @@ const Gaffer::Plug *OSLImage::shaderPlug() const
 {
 	return getChild<Plug>( g_firstPlugIndex );
 }
+		
+Gaffer::ObjectPlug *OSLImage::shadingPlug()
+{
+	return getChild<ObjectPlug>( g_firstPlugIndex + 1 );
+}
 
+const Gaffer::ObjectPlug *OSLImage::shadingPlug() const
+{
+	return getChild<ObjectPlug>( g_firstPlugIndex + 1 );
+}
+		
 void OSLImage::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	ImageProcessor::affects( input, outputs );
@@ -194,6 +105,7 @@ void OSLImage::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outpu
 	}
 	else if( input == shadingPlug() )
 	{
+		outputs.push_back( outPlug()->channelNamesPlug() );
 		outputs.push_back( outPlug()->channelDataPlug()	);
 	}
 }
@@ -205,11 +117,33 @@ bool OSLImage::acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *input
 		return false;
 	}
 	
-	if( plug == shaderPlug() )
+	if( !inputPlug )
 	{
-		return runTimeCast<const OSLShader>( inputPlug->source<Plug>()->node() );
+		return true;
 	}
 	
+	if( plug == shaderPlug() )
+	{
+		const Node *sourceNode = inputPlug->source<Plug>()->node();
+		if( const OSLShader *shader = runTimeCast<const OSLShader>( sourceNode ) )
+		{
+			return shader->typePlug()->getValue() == "osl:surface";
+		}
+		else
+		{
+			// as for the GafferScene::ShaderAssignment, we accept Box and ShaderSwitch
+			// inputs as an indirect means of later getting a connection to a Shader.
+			if(
+				runTimeCast<const Gaffer::Box>( sourceNode ) ||
+				runTimeCast<const GafferScene::ShaderSwitch>( sourceNode )
+			)
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+		
 	return true;
 }
 
@@ -235,28 +169,6 @@ void OSLImage::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *con
 	}
 }
 
-void OSLImage::hashFormat( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
-{
-	h = inPlug()->formatPlug()->hash();
-}
-
-void OSLImage::hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
-{
-	h = inPlug()->dataWindowPlug()->hash();
-}
-
-void OSLImage::hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
-{
-	h = inPlug()->channelNamesPlug()->hash();
-}
-
-void OSLImage::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
-{
-	ImageProcessor::hashChannelData( output, context, h );
-	h.append( context->get<std::string>( ImagePlug::channelNameContextName ) );
-	shadingPlug()->hash( h );
-}
-
 void OSLImage::compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const
 {
 	if( output == shadingPlug() )
@@ -268,9 +180,19 @@ void OSLImage::compute( Gaffer::ValuePlug *output, const Gaffer::Context *contex
 	ImageProcessor::compute( output, context );
 }
 
+void OSLImage::hashFormat( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	h = inPlug()->formatPlug()->hash();
+}
+
 GafferImage::Format OSLImage::computeFormat( const Gaffer::Context *context, const GafferImage::ImagePlug *parent ) const
 {
 	return inPlug()->formatPlug()->getValue();
+}
+
+void OSLImage::hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	h = inPlug()->dataWindowPlug()->hash();
 }
 
 Imath::Box2i OSLImage::computeDataWindow( const Gaffer::Context *context, const GafferImage::ImagePlug *parent ) const
@@ -278,48 +200,62 @@ Imath::Box2i OSLImage::computeDataWindow( const Gaffer::Context *context, const 
 	return inPlug()->dataWindowPlug()->getValue();
 }
 
+void OSLImage::hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	ImageProcessor::hashChannelNames( output, context, h );
+	inPlug()->channelNamesPlug()->hash( h );
+	
+	const Box2i dataWindow = inPlug()->dataWindowPlug()->getValue();
+	if( !dataWindow.isEmpty() )
+	{
+		ContextPtr c = new Context( *context );
+		c->set( ImagePlug::tileOriginContextName, ImagePlug::tileOrigin( dataWindow.min ) );
+		Context::Scope s( c );
+		shadingPlug()->hash( h );	
+	}
+}
+
 IECore::ConstStringVectorDataPtr OSLImage::computeChannelNames( const Gaffer::Context *context, const GafferImage::ImagePlug *parent ) const
 {
-	return inPlug()->channelNamesPlug()->getValue();
+	ConstStringVectorDataPtr channelNamesData = inPlug()->channelNamesPlug()->getValue();
+
+	set<string> result( channelNamesData->readable().begin(), channelNamesData->readable().end() );
+	
+	const Box2i dataWindow = inPlug()->dataWindowPlug()->getValue();
+	if( !dataWindow.isEmpty() )
+	{
+		ContextPtr c = new Context( *context );
+		c->set( ImagePlug::tileOriginContextName, ImagePlug::tileOrigin( dataWindow.min ) );
+		Context::Scope s( c );
+	
+		ConstCompoundDataPtr shading = runTimeCast<const CompoundData>( shadingPlug()->getValue() );
+		for( CompoundDataMap::const_iterator it = shading->readable().begin(), eIt = shading->readable().end(); it != eIt; ++it )
+		{
+			result.insert( it->first );
+		}
+	}
+	
+	return new StringVectorData( vector<string>( result.begin(), result.end() ) );
+}
+
+void OSLImage::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	ImageProcessor::hashChannelData( output, context, h );
+	h.append( context->get<std::string>( ImagePlug::channelNameContextName ) );
+	shadingPlug()->hash( h );
 }
 
 IECore::ConstFloatVectorDataPtr OSLImage::computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const GafferImage::ImagePlug *parent ) const
 {	
-	int channelIndex = ChannelMaskPlug::channelIndex( channelName );
-	if( channelIndex > 2 )
-	{
-		/// \todo Better mapping between arbitrary shading results and channels. Pass-through of
-		/// channels without a shading result.
-		return inPlug()->channelDataPlug()->getValue();	
-	}
-	
 	ConstCompoundDataPtr shadedPoints = runTimeCast<const CompoundData>( shadingPlug()->getValue() );
-	if( !shadedPoints || !shadedPoints->readable().size() )
+	ConstFloatVectorDataPtr result = shadedPoints->member<FloatVectorData>( channelName );
+	
+	if( !result )
 	{
-		return inPlug()->channelDataPlug()->getValue();
+		result = inPlug()->channelDataPlug()->getValue();	
 	}
-	
-	const std::vector<Color3f> &ci = shadedPoints->member<Color3fVectorData>( "Ci" )->readable();
-	
-	FloatVectorDataPtr resultData = new FloatVectorData;
-	std::vector<float> &result = resultData->writable();
-	result.reserve( ci.size() );
-	for( size_t i = 0, e = ci.size(); i < e; ++i )
-	{
-		result.push_back( ci[i][channelIndex] );
-	}
-	
-	return resultData;
-}
 
-Gaffer::ObjectPlug *OSLImage::shadingPlug()
-{
-	return getChild<ObjectPlug>( g_firstPlugIndex + 1 );
-}
-
-const Gaffer::ObjectPlug *OSLImage::shadingPlug() const
-{
-	return getChild<ObjectPlug>( g_firstPlugIndex + 1 );
+	return result;
 }
 
 void OSLImage::hashShading( const Gaffer::Context *context, IECore::MurmurHash &h ) const
@@ -334,7 +270,7 @@ void OSLImage::hashShading( const Gaffer::Context *context, IECore::MurmurHash &
 	{
 		h.append( inPlug()->channelDataHash( *it, tileOrigin ) );
 	}
-	
+
 	const OSLShader *shader = runTimeCast<const OSLShader>( shaderPlug()->source<Plug>()->node() );
 	if( shader )
 	{
@@ -344,7 +280,12 @@ void OSLImage::hashShading( const Gaffer::Context *context, IECore::MurmurHash &
 
 IECore::ConstCompoundDataPtr OSLImage::computeShading( const Gaffer::Context *context ) const
 {
-	OSLRenderer::ConstShadingEnginePtr shadingEngine = OSLImage::shadingEngine( shaderPlug() );
+	OSLRenderer::ConstShadingEnginePtr shadingEngine;
+	if( const OSLShader *shader = runTimeCast<const OSLShader>( shaderPlug()->source<Plug>()->node() ) )
+	{
+		shadingEngine = shader->shadingEngine();
+	}
+	
 	if( !shadingEngine )
 	{
 		return static_cast<const CompoundData *>( shadingPlug()->defaultValue() );	
@@ -352,9 +293,9 @@ IECore::ConstCompoundDataPtr OSLImage::computeShading( const Gaffer::Context *co
 			
 	const V2i tileOrigin = context->get<V2i>( ImagePlug::tileOriginContextName );
 	const Format format = inPlug()->formatPlug()->getValue();
-		
-	CompoundDataPtr shadingPoints = new CompoundData();
 	
+	CompoundDataPtr shadingPoints = new CompoundData();
+
 	V3fVectorDataPtr pData = new V3fVectorData;
 	FloatVectorDataPtr uData = new FloatVectorData;
 	FloatVectorDataPtr vData = new FloatVectorData;
@@ -399,5 +340,18 @@ IECore::ConstCompoundDataPtr OSLImage::computeShading( const Gaffer::Context *co
 		shadingPoints->writable()[*it] = constPointerCast<FloatVectorData>( inPlug()->channelData( *it, tileOrigin ) );
 	}
 	
-	return shadingEngine->shade( shadingPoints );
+	CompoundDataPtr result = shadingEngine->shade( shadingPoints );
+	
+	// remove results that aren't suitable to become channels
+	for( CompoundDataMap::iterator it = result->writable().begin(); it != result->writable().end();  )
+	{
+		CompoundDataMap::iterator nextIt = it; nextIt++;
+		if( !runTimeCast<FloatVectorData>( it->second ) )
+		{
+			result->writable().erase( it );		
+		}
+		it = nextIt;
+	}
+	
+	return result;
 }

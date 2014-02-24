@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2013, John Haddon. All rights reserved.
+#  Copyright (c) 2013-2014, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -50,7 +50,10 @@ GafferOSL.OSLObject,
 """Executes OSL shaders to perform object processing.""",
 
 "shader",
-"The shader to be executed - connect the output from an OSL network here.",
+{
+	"description" : "The shader to be executed - connect the output from an OSL network here.",
+	"nodeGadget:nodulePosition" : "left",
+}
 
 )
 

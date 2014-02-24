@@ -34,15 +34,14 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-shader splitColor
+#include "GafferOSL/ObjectProcessing.h"
+
+shader InNormal
 (
-	color c = 0,
-	output float r = 0,
-	output float g = 0,
-	output float b = 0
+	string name = "s",
+	normal defaultValue = 0,
+	output normal value = 0
 )
 {
-	r = c[0];
-	g = c[1];
-	b = c[2];
+	value = inNormal( name, defaultValue );
 }

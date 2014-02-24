@@ -992,7 +992,8 @@ libraries = {
 			"LIBS" : [ "GafferBindings", "GafferScene", "GafferImage", "GafferOSL" ],
 		},
 		"requiredOptions" : [ "OSL_SRC_DIR" ],
-		"oslFiles" : glob.glob( "shaders/*/*.osl" ),
+		"oslHeaders" : glob.glob( "shaders/*/*.h" ),
+		"oslShaders" : glob.glob( "shaders/*/*.osl" ),
 	},
 
 	"GafferOSLUI" : {
@@ -1183,14 +1184,22 @@ for libraryName, libraryDef in libraries.items() :
 		additionalFileInstall = env.InstallAs( "$BUILD_DIR/" + additionalFile, additionalFile )
 		env.Alias( "build", additionalFileInstall )
 	
+	# osl headers
+	
+	for oslHeader in libraryDef.get( "oslHeaders", [] ) :
+		oslHeaderInstall = env.InstallAs( "$BUILD_DIR/" + oslHeader, oslHeader )
+		env.Alias( "oslHeaders", oslHeaderInstall )
+		env.Alias( "build", oslHeaderInstall )
+	
 	# osl shaders
 	
-	for oslFile in libraryDef.get( "oslFiles", [] ) :
-		oslFileInstall = env.InstallAs( "$BUILD_DIR/" + oslFile, oslFile )
-		env.Alias( "build", additionalFileInstall )
-		compiledFile = depEnv.Command( os.path.splitext( str( oslFileInstall[0] ) )[0] + ".oso", oslFileInstall, "oslc -o $TARGET $SOURCE" )
+	for oslShader in libraryDef.get( "oslShaders", [] ) :
+		oslShaderInstall = env.InstallAs( "$BUILD_DIR/" + oslShader, oslShader )
+		env.Alias( "build", oslShader )
+		compiledFile = depEnv.Command( os.path.splitext( str( oslShaderInstall[0] ) )[0] + ".oso", oslShader, "oslc -o $TARGET $SOURCE" )
+		env.Depends( compiledFile, "oslHeaders" )
 		env.Alias( "build", compiledFile )
-			
+	
 	# class stubs
 	
 	def buildClassStub( target, source, env ) :

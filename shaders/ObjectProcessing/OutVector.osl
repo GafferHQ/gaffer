@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2013, John Haddon. All rights reserved.
+//  Copyright (c) 2014, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,12 +34,14 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-shader vectorMultiply
+#include "GafferOSL/ObjectProcessing.h"
+
+shader OutVector
 (
-	vector a = 0,
-	float b = 0,
-	output vector out = 0
+	string name = "v",
+	vector value = 0,
+	output closure color primitiveVariable = 0
 )
 {
-	out = a * b;
+	primitiveVariable = outVector( name, value );
 }

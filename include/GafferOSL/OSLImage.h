@@ -40,7 +40,6 @@
 #include "GafferImage/ImageProcessor.h"
 
 #include "GafferOSL/TypeIds.h"
-#include "GafferOSL/OSLRenderer.h"
 
 namespace GafferOSL
 {
@@ -59,9 +58,6 @@ class OSLImage : public GafferImage::ImageProcessor
 		const Gaffer::Plug *shaderPlug() const;
 
 		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
-
-		/// Exposed for access by OSLObject.
-		static OSLRenderer::ConstShadingEnginePtr shadingEngine( const Gaffer::Plug *shaderPlug );
 	
 	protected :
 	
@@ -91,7 +87,7 @@ class OSLImage : public GafferImage::ImageProcessor
 		/// caching once there and once in the shadingPlug.
 		Gaffer::ObjectPlug *shadingPlug();
 		const Gaffer::ObjectPlug *shadingPlug() const;
-	
+		
 		void hashShading( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		IECore::ConstCompoundDataPtr computeShading( const Gaffer::Context *context ) const;
 

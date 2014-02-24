@@ -34,10 +34,12 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-surface constant
+shader VectorMultiply
 (
-	color Cs = 1
+	vector a = 0,
+	float b = 0,
+	output vector out = 0
 )
 {
-	Ci = Cs * emission();
+	out = a * b;
 }

@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2013, John Haddon. All rights reserved.
+//  Copyright (c) 2014, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,16 +34,14 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-// although this does nothing more than a straightforward getattribute()
-// call, it's useful to have a shader named getChannel, in order to provide
-// user's with a clearer workflow.
-shader getChannel
+#include "GafferOSL/ObjectProcessing.h"
+
+shader OutPoint
 (
-	string channelName = "R",
-	float defaultValue = 0,
-	output float channelValue = 0
+	string name = "P",
+	point value = 0,
+	output closure color primitiveVariable = 0
 )
 {
-	channelValue = defaultValue;
-	getattribute( channelName, channelValue );
+	primitiveVariable = outPoint( name, value );
 }

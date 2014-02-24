@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2013, John Haddon. All rights reserved.
+//  Copyright (c) 2014, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,13 +34,51 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-shader vectorMix
-(
-	vector a = 0,
-	vector b = 0,
-	float m = 0,
-	output vector out = 0
-)
+#ifndef GAFFEROSL_IMAGEPROCESSING_H
+#define GAFFEROSL_IMAGEPROCESSING_H
+
+float inChannel( string channelName, float defaultValue )
 {
-	out = mix( a, b, m );
+	float result = defaultValue;
+	getattribute( channelName, result );
+	return result;
 }
+
+closure color outChannel( string channelName, float channelValue )
+{
+	// we store the value as an internal attribute of the closure, rather
+	// than as an external weight, so that values of 0 are not optimised
+	// away by OSL.
+	return debug( channelName, "type", "float", "value", color( channelValue ) );
+}
+
+color inLayer( string layerName, color defaultValue )
+{
+	string redName = "R";
+	string greenName = "G";
+	string blueName = "B";
+	if( layerName != "" )
+	{
+		redName = concat( layerName, ".", redName );
+		greenName = concat( layerName, ".", greenName );
+		blueName = concat( layerName, ".", blueName );
+	}
+	return color( inChannel( redName, defaultValue[0] ), inChannel( greenName, defaultValue[1] ), inChannel( blueName, defaultValue[2] ) );
+}
+
+closure color outLayer( string layerName, color layerColor )
+{
+	string redName = "R";
+	string greenName = "G";
+	string blueName = "B";
+	if( layerName != "" )
+	{
+		redName = concat( layerName, ".", redName );
+		greenName = concat( layerName, ".", greenName );
+		blueName = concat( layerName, ".", blueName );
+	}
+	
+	return outChannel( redName, layerColor[0] ) + outChannel( greenName, layerColor[1] ) + outChannel( blueName, layerColor[2] );
+}
+
+#endif // GAFFEROSL_IMAGEPROCESSING_H

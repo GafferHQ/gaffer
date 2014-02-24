@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2013, John Haddon. All rights reserved.
+//  Copyright (c) 2014, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,41 +34,67 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFEROSL_OSLSHADER_H
-#define GAFFEROSL_OSLSHADER_H
+#ifndef GAFFEROSL_OBJECTPROCESSING_H
+#define GAFFEROSL_OBJECTPROCESSING_H
 
-#include "GafferScene/Shader.h"
-
-#include "GafferOSL/TypeIds.h"
-#include "GafferOSL/OSLRenderer.h"
-
-namespace GafferOSL
+float inFloat( string name, float defaultValue )
 {
+	float result = defaultValue;
+	getattribute( name, result );
+	return result;
+}
 
-class OSLShader : public GafferScene::Shader
+color inColor( string name, color defaultValue )
 {
+	color result = defaultValue;
+	getattribute( name, result );
+	return result;
+}
 
-	public :
+point inPoint( string name, point defaultValue )
+{
+	point result = defaultValue;
+	getattribute( name, result );
+	return result;
+}
 
-		OSLShader( const std::string &name=defaultName<OSLShader>() );
-		virtual ~OSLShader();
+vector inVector( string name, vector defaultValue )
+{
+	vector result = defaultValue;
+	getattribute( name, result );
+	return result;
+}
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferOSL::OSLShader, OSLShaderTypeId, GafferScene::Shader );
-		
-		/// \undoable.
-		/// \todo Make this method virtual and define it on the Shader base class.
-		void loadShader( const std::string &shaderName, bool keepExistingValues=false );
+normal inNormal( string name, normal defaultValue )
+{
+	normal result = defaultValue;
+	getattribute( name, result );
+	return result;
+}
 
-		OSLRenderer::ConstShadingEnginePtr shadingEngine() const;
+closure color outFloat( string name, float value )
+{
+	return debug( name, "type", "float", "value", color( value ) );
+}
 
-	protected :
-	
-		virtual bool acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const;
-							
-};
+closure color outColor( string name, color value )
+{
+	return debug( name, "type", "color", "value", color( value ) );
+}
 
-IE_CORE_DECLAREPTR( OSLShader )
+closure color outPoint( string name, point value )
+{
+	return debug( name, "type", "point", "value", color( value ) );
+}
 
-} // namespace GafferOSL
+closure color outVector( string name, vector value )
+{
+	return debug( name, "type", "vector", "value", color( value ) );
+}
 
-#endif // GAFFEROSL_OSLSHADER_H
+closure color outNormal( string name, normal value )
+{
+	return debug( name, "type", "normal", "value", color( value ) );
+}
+
+#endif // GAFFEROSL_OBJECTPROCESSING_H
