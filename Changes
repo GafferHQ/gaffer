@@ -1,3 +1,48 @@
+# 0.91.0
+
+#### Apps
+
+- Fixed gui startup error in ocio.py.
+
+#### Core
+
+- Fixed copy/paste problems where inappropriate values would be copied for plugs with inputs, where the input was not in the selection being copied (#740).
+
+#### UI
+
+- Added a first implementation of an automatic node layout algorithm. This is available via the Edit/Arrange menu item (#638).
+- Fixed image viewer data window display in the presence of an offset display window.
+- Fixed TextGadget vertical bound. It was slightly different depending on the text contents, causing different nodes to appear with slightly different heights.
+- Moved OSLObject and OSLImage shader inputs to the left of the node.
+
+#### Scene
+
+- Fixed AlembicSource refresh failure (#737).
+- Fixed errors when AlembicSource filename is "".
+
+#### RenderMan
+
+- Added support for multiple types in RSL "coshaderType" annotation (#621).
+
+#### OSL
+
+- Added support for arbitrary image channels to the OSLImage node. The InChannel and InLayer shaders should be used to fetch channels and layers from the input image, and the OutChannel and OutLayer shaders may be used to write values to the output channels and layers. The Out* shaders should be plugged into an OutImage shader which is then plugged into the OSLImage node.
+- Added support for arbitrary primitive variables to the OSLObject node. The InFloat, InColor, InNormal, InPoint and InVector shaders provide access to vertex primitive variables on the input primitive, and the corresponding Out* shaders
+can be used to write values to the output primitive variables. The Out* shaders should be pluggined into an OutObject shader which is then plugged in to the OSLObject node.
+- Added V3fVectorData support to OSLRenderer user data queries.
+- Fixed dirty propagation through OSLShader closure outputs.
+- Improved OSL processor shader input acceptance.
+	- Only accepts OSLShader nodes if they hold a surface shader, as other shader types can't be used directly.
+	- Also accepts Box and ShaderSwitch connections so that shaders can be connected indirectly.
+- Revised shader naming convention to UpperCamelCase. The names of existing shaders have therefore changed.
+
+#### API
+
+- Moved OSLImage::shadingEngine() method to OSLShader::shadingEngine().
+- Removed FormatPlugSerialiser from the public interface - it was not intended to be subclassed.
+- Removed FormatBindings namespace and moved formatRepr() into the GafferImageBindings namespace.
+- Switched formatRepr() signature to take a reference rather than a pointer.
+
 # 0.90.0
 
 #### Scene
