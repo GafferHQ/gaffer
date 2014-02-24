@@ -156,6 +156,29 @@ class ValuePlugTest( GafferTest.TestCase ) :
 
 		self.assertEqual( len( cs ), 1 )
 	
+	def testCopyPasteDoesntRetainComputedValues( self ) :
+	
+		s = Gaffer.ScriptNode()
+		
+		s["add1"] = GafferTest.AddNode()
+		s["add2"] = GafferTest.AddNode()
+		
+		s["add1"]["op1"].setValue( 2 )
+		s["add1"]["op2"].setValue( 3 )
+		s["add2"]["op1"].setInput( s["add1"]["sum"] )
+		s["add2"]["op2"].setValue( 0 )
+		
+		self.assertEqual( s["add2"]["sum"].getValue(), 5 )
+		
+		ss = s.serialise( filter = Gaffer.StandardSet( [ s["add2"] ] ) )
+		
+		s = Gaffer.ScriptNode()
+		s.execute( ss )
+		
+		self.assertTrue( s["add2"]["op1"].getInput() is None )
+		self.assertEqual( s["add2"]["op1"].getValue(), 0 )
+		self.assertEqual( s["add2"]["sum"].getValue(), 0 )
+	
 	def setUp( self ) :
 	
 		self.__originalCacheMemoryLimit = Gaffer.ValuePlug.getCacheMemoryLimit()

@@ -263,5 +263,45 @@ class CustomAttributesTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( p["enabled"].getValue(), True )
 		self.assertEqual( p["value"].getValue(), False )
 
+	def testDisconnectDoesntRetainFilterValue( self ) :
+
+		s = Gaffer.ScriptNode()
+		
+		s["p"] = GafferScene.Plane()
+		s["f"] = GafferScene.PathFilter()
+		s["a"] = GafferScene.CustomAttributes()
+		s["a"]["attributes"].addMember( "user:test", IECore.IntData( 10 ) )
+		
+		self.assertTrue( "user:test" in s["a"]["out"].attributes( "/plane" ) )
+
+		s["a"]["filter"].setInput( s["f"]["match"] )
+		self.assertFalse( "user:test" in s["a"]["out"].attributes( "/plane" ) )
+
+		s["a"]["filter"].setInput( None )
+		self.assertTrue( "user:test" in s["a"]["out"].attributes( "/plane" ) )
+
+	def testCopyPasteDoesntRetainFilterValue( self ) :
+	
+		s = Gaffer.ScriptNode()
+		
+		s["p"] = GafferScene.Plane()
+		s["f"] = GafferScene.PathFilter()
+		s["a"] = GafferScene.CustomAttributes()
+		s["a"]["attributes"].addMember( "user:test", IECore.IntData( 10 ) )
+		
+		self.assertTrue( "user:test" in s["a"]["out"].attributes( "/plane" ) )
+
+		s["a"]["filter"].setInput( s["f"]["match"] )
+
+		self.assertFalse( "user:test" in s["a"]["out"].attributes( "/plane" ) )
+
+		ss = s.serialise( filter = Gaffer.StandardSet( [ s["p"], s["a"] ] ) )
+		
+		s = Gaffer.ScriptNode()
+		s.execute( ss )
+		
+		self.assertTrue( "f" not in s )
+		self.assertTrue( "user:test" in s["a"]["out"].attributes( "/plane" ) )
+
 if __name__ == "__main__":
 	unittest.main()
