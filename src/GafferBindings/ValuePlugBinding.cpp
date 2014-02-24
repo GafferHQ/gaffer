@@ -130,7 +130,7 @@ std::string ValuePlugSerialiser::postConstructor( const Gaffer::GraphComponent *
 	// which make setting the value inappropriate.
 	if( plug->direction() == Plug::In && plug->getFlags( Plug::Serialisable ) && !plug->children().size() )
 	{
-		if( !serialisation.identifier( plug->getInput<Plug>() ).size() )
+		if( !plug->getInput<Plug>() )
 		{
 			object pythonPlug( PlugPtr( const_cast<Plug *>( plug ) ) );
 			if( PyObject_HasAttrString( pythonPlug.ptr(), "getValue" ) )

@@ -39,84 +39,71 @@
 
 #include "IECore/RunTimeTyped.h"
 #include "IECorePython/RunTimeTypedBinding.h"
+
+#include "GafferBindings/Serialisation.h"
+#include "GafferBindings/ValuePlugBinding.h"
+
 #include "GafferImage/FormatPlug.h"
 #include "GafferImageBindings/FormatBinding.h"
 #include "GafferImageBindings/FormatPlugBinding.h"
 
+using namespace std;
 using namespace boost::python;
 using namespace Gaffer;
 using namespace GafferBindings;
 using namespace GafferImage;
 using namespace GafferImageBindings;
 
-std::string FormatPlugSerialiser::constructor( const Gaffer::GraphComponent *graphComponent ) const
+namespace
 {
-	object o( GraphComponentPtr( const_cast<GraphComponent *>( graphComponent ) ) );
-	std::string r = extract<std::string>( o.attr( "__repr__" )() );
-	return r;
-}
 
-void FormatPlugSerialiser::moduleDependencies( const Gaffer::GraphComponent *graphComponent, std::set<std::string> &modules ) const
+class FormatPlugSerialiser : public GafferBindings::ValuePlugSerialiser
 {
-	PlugSerialiser::moduleDependencies( graphComponent, modules );
-
-	const ValuePlug *valuePlug = static_cast<const ValuePlug *> ( graphComponent );
-	object pythonPlug( ValuePlugPtr( const_cast<ValuePlug *>( valuePlug ) ) );
-	if( PyObject_HasAttrString( pythonPlug.ptr(), "defaultValue" ) )
-	{
-		object pythonDefaultValue = pythonPlug.attr( "defaultValue" )();
-		std::string module = Serialisation::modulePath( pythonDefaultValue );
-		if( module.size() )
-		{
-			modules.insert( module );
-		}
-		modules.insert( "IECore" );
-	}
-}
-
-std::string FormatPlugSerialiser::postConstructor( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const
-{
-	const Plug *plug = static_cast<const Plug *>( graphComponent );
 	
-	if( plug->direction() == Plug::In && plug->getFlags( Plug::Serialisable ) )
-	{
-		if( !serialisation.identifier( plug->getInput<Plug>() ).size() )
+	public :
+	
+		virtual void moduleDependencies( const Gaffer::GraphComponent *graphComponent, std::set<std::string> &modules ) const
 		{
-			object pythonPlug( PlugPtr( const_cast<Plug *>( plug ) ) );
-			
-			if( PyObject_HasAttrString( pythonPlug.ptr(), "getValue" ) )
-			{
-				object pythonValue = pythonPlug.attr( "getValue" )();
-				std::string value = extract<std::string>( pythonValue.attr( "__repr__" )() );
-				
-				if ( plug->node()->typeId() == static_cast<IECore::TypeId>(ScriptNodeTypeId) )
-				{
-					// If this is the default format plug then write out all of the formats.
-					std::stringstream addformats;
-					std::vector< std::string > names;
-					GafferImage::Format::formatNames( names );
-					
-					for ( std::vector< std::string >::iterator it( names.begin() ); it != names.end(); it++)
-					{
-						Format f( Format::getFormat(*it) );
-						std::string frepr( GafferImageBindings::FormatBindings::formatRepr( &f ) );
-						
-						addformats << "GafferImage.Format.registerFormat( " << frepr << ", \"" << *it << "\" )" << std::endl;
-					}
-					
-					// Set the default format plug value by calling setDefaultFormat(). This ensures that the plug is created on the context.
-					// If we only call setValue() here then any format knob that references the default format which is viewed before the
-					// defaultFormat is set will complain of empty display windows when drawing their output. This is becuase an empty Format()
-					// will be returned from the context().get() call within the getValue() method of the FormatPlug if the defaultFormat plug
-					// doesn't exist on the context.
-					return addformats.str() + identifier + ".setValue( " + value + " )\n";
-				}
-				return identifier + ".setValue( " + value + " )\n";
-			}
+			ValuePlugSerialiser::moduleDependencies( graphComponent, modules );
+			modules.insert( "IECore" );
 		}
-	}
-	return "";
-}
+
+		virtual std::string constructor( const Gaffer::GraphComponent *graphComponent ) const
+		{
+			object o( GraphComponentPtr( const_cast<GraphComponent *>( graphComponent ) ) );
+			std::string r = extract<std::string>( o.attr( "__repr__" )() );
+			return r;
+		}
+
+		virtual std::string postConstructor( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const
+		{
+			std::string result;
+			
+			const Plug *plug = static_cast<const Plug *>( graphComponent );
+			if( plug->node()->typeId() == static_cast<IECore::TypeId>(ScriptNodeTypeId) )
+			{
+				// If this is the default format plug then write out all of the formats.
+				/// \todo Why do we do this? Unfortunately it's very hard to tell because
+				/// there are no unit tests for it. Why don't we allow the config files to
+				/// just recreate the formats next time?
+				vector<string> names;
+				GafferImage::Format::formatNames( names );
+				for( vector<string>::const_iterator it = names.begin(), eIt = names.end(); it != eIt; ++it )
+				{
+					result +=
+						"GafferImage.Format.registerFormat( " +
+						formatRepr( Format::getFormat( *it ) ) +
+						", \"" + *it + "\" )\n";
+				}
+			}
+		
+			result += ValuePlugSerialiser::postConstructor( graphComponent, identifier, serialisation );
+			return result;
+		}
+
+};
+
+} // namespace
 
 void GafferImageBindings::bindFormatPlug()
 {

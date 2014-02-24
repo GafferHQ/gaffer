@@ -37,22 +37,10 @@
 #ifndef GAFFERBINDINGS_FORMATPLUGBINDING_H
 #define GAFFERBINDINGS_FORMATPLUGBINDING_H
 
-#include "GafferBindings/Serialisation.h"
-#include "GafferBindings/PlugBinding.h"
-
 namespace GafferImageBindings
 {
 
 void bindFormatPlug();
-
-class FormatPlugSerialiser : public GafferBindings::PlugSerialiser
-{
-	public :
-		virtual void moduleDependencies( const Gaffer::GraphComponent *graphComponent, std::set<std::string> &modules ) const;
-		virtual std::string postConstructor( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const GafferBindings::Serialisation &serialisation ) const;
-		virtual std::string constructor( const Gaffer::GraphComponent *graphComponent ) const;
-
-};
 
 } // namespace GafferBindings
 

@@ -34,8 +34,8 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERBINDINGS_FORMATBINDING_H
-#define GAFFERBINDINGS_FORMATBINDING_H
+#ifndef GAFFERIMAGEBINDINGS_FORMATBINDING_H
+#define GAFFERIMAGEBINDINGS_FORMATBINDING_H
 
 #include "GafferImage/Format.h"
 
@@ -44,13 +44,8 @@ namespace GafferImageBindings
 
 void bindFormat();
 
-namespace FormatBindings
-{
-
-std::string formatRepr( const GafferImage::Format *format );
-
-}; // namespace FormatBindings
+std::string formatRepr( const GafferImage::Format &format );
 
 }; // namespace GafferImageBindings
 
-#endif // GAFFERBINDINGS_FORMATBINDING_H
+#endif // GAFFERIMAGEBINDINGS_FORMATBINDING_H
