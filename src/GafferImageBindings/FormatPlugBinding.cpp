@@ -90,10 +90,9 @@ class FormatPlugSerialiser : public GafferBindings::ValuePlugSerialiser
 				GafferImage::Format::formatNames( names );
 				for( vector<string>::const_iterator it = names.begin(), eIt = names.end(); it != eIt; ++it )
 				{
-					Format f = Format::getFormat( *it );
 					result +=
 						"GafferImage.Format.registerFormat( " +
-						GafferImageBindings::FormatBindings::formatRepr( &f ) +
+						formatRepr( Format::getFormat( *it ) ) +
 						", \"" + *it + "\" )\n";
 				}
 			}

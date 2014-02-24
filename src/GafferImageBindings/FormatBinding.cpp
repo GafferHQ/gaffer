@@ -32,12 +32,10 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 #include "boost/python.hpp"
 #include "boost/format.hpp"
 
 #include "GafferBindings/SignalBinding.h"
-#include "GafferBindings/Serialisation.h"
 #include "GafferImageBindings/FormatBinding.h"
 
 using namespace boost::python;
@@ -46,31 +44,8 @@ using namespace Gaffer;
 using namespace GafferBindings;
 using namespace GafferImage;
 
-namespace GafferImageBindings
+namespace
 {
-
-namespace FormatBindings
-{
-
-std::string formatRepr( const GafferImage::Format *format )
-{
-	if ( format->getDisplayWindow().isEmpty() )
-	{
-		return std::string( "GafferImage.Format()" );
-	}
-	else
-	{
-		Imath::Box2i box( format->getDisplayWindow() );
-		return std::string(
-			boost::str( boost::format(
-				"GafferImage.Format( IECore.Box2i( IECore.V2i( %d, %d ), IECore.V2i( %d, %d ) ), %.3f )" )
-				% box.min.x % box.min.y % box.max.x % box.max.y %format->getPixelAspect()
-			)
-		);
-	}
-}
-
-} // namespace FormatBindings
 
 struct UnaryFormatSlotCaller
 {
@@ -88,12 +63,12 @@ struct UnaryFormatSlotCaller
 	}
 };
 
-static boost::python::str defaultFormatContextName()
+boost::python::str defaultFormatContextName()
 {
 	return boost::python::str( Format::defaultFormatContextName.string() );
 }
 
-static boost::python::list formatNamesList()
+boost::python::list formatNamesList()
 {
 	std::vector<std::string> names;
 	Format::formatNames( names );
@@ -103,6 +78,29 @@ static boost::python::list formatNamesList()
 		result.append( *it );
 	}
 	return result;
+}
+
+} // namespace
+
+namespace GafferImageBindings
+{
+
+std::string formatRepr( const GafferImage::Format &format )
+{
+	if ( format.getDisplayWindow().isEmpty() )
+	{
+		return std::string( "GafferImage.Format()" );
+	}
+	else
+	{
+		Imath::Box2i box( format.getDisplayWindow() );
+		return std::string(
+			boost::str( boost::format(
+				"GafferImage.Format( IECore.Box2i( IECore.V2i( %d, %d ), IECore.V2i( %d, %d ) ), %.3f )" )
+				% box.min.x % box.min.y % box.max.x % box.max.y % format.getPixelAspect()
+			)
+		);
+	}
 }
 
 void bindFormat()
@@ -151,7 +149,7 @@ void bindFormat()
 		.def( "formatName", &Format::formatName ).staticmethod( "formatName" )
 		.def( "formatNames", &formatNamesList ).staticmethod( "formatNames" )
 		.def( "__eq__", &Format::operator== )
-		.def( "__repr__", &GafferImageBindings::FormatBindings::formatRepr )
+		.def( "__repr__", &formatRepr )
 		.def( "defaultFormatContextName", &defaultFormatContextName ).staticmethod( "defaultFormatContextName" )
 	;
 	
@@ -160,5 +158,4 @@ void bindFormat()
 	
 }
 
-
-} // namespace IECorePython
+} // namespace GafferImageBindings
