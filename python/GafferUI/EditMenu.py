@@ -135,6 +135,8 @@ def paste( menu ) :
 
 		nodeGraph.graphGadget().getLayout().positionNodes( nodeGraph.graphGadget(), script.selection(), fallbackPosition )
 	
+		nodeGraph.frame( script.selection(), extend = True )
+	
 ## A function suitable as the command for an Edit/Delete menu item. It must
 # be invoked from a menu that has a ScriptWindow in its ancestry.
 def delete( menu ) :

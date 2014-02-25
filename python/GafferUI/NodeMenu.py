@@ -145,6 +145,8 @@ class NodeMenu :
 			script.selection().clear()
 			script.selection().add( node )
 
+			nodeGraph.frame( [ node ], extend = True )
+
 		return f
 
 	## Utility function to append menu items to definition. One item will
