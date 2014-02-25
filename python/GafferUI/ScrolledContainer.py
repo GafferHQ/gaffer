@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2014, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -121,6 +121,10 @@ class ScrolledContainer( GafferUI.ContainerWidget ) :
 	
 		p = self._qtWidget().verticalScrollBarPolicy()
 		return self.__policiesToModes[p[1]]
+
+	def _revealDescendant( self, descendant ) :
+
+		self._qtWidget().ensureWidgetVisible( descendant._qtWidget() )
 
 # Private implementation - a QScrollArea derived class which is a bit more
 # forceful aboout claiming size - it always asks for enough to completely show

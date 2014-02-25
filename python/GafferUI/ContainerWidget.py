@@ -64,7 +64,15 @@ class ContainerWidget( GafferUI.Widget ) :
 	def removeChild( self, child ) :
 	
 		raise NotImplementedError
-		
+	
+	## Should be implemented by derived classes where necessary, to
+	# ensure the descendant Widget is visible within the area of this
+	# Widget. For instance, a scrolling container should scroll to show
+	# the widget. This method is used by Widget.reveal().
+	def _revealDescendant( self, descendant ) :
+	
+		pass
+	
 	def __enter__( self ) :
 	
 		GafferUI.Widget._pushParent( self )

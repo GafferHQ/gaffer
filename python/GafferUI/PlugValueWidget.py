@@ -398,7 +398,15 @@ class PlugValueWidget( GafferUI.Widget ) :
 	
 	def __editInput( self ) :
 	
-		GafferUI.NodeEditor.acquire( self.getPlug().getInput().node() )
+		nodeEditor = GafferUI.NodeEditor.acquire( self.getPlug().getInput().node() )
+		if nodeEditor is None :
+			return
+			
+		plugValueWidget = nodeEditor.nodeUI().plugValueWidget( self.getPlug().getInput() )
+		if plugValueWidget is None :
+			return
+		
+		plugValueWidget.reveal()
 
 	def __removeInput( self ) :
 	
