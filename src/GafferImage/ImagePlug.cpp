@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2012-2014, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -302,7 +302,7 @@ IECore::MurmurHash ImagePlug::channelDataHash( const std::string &channelName, c
 
 IECore::ImagePrimitivePtr ImagePlug::image() const
 {
-	Box2i format = formatPlug()->getValue().getDisplayWindow();
+	Format format = formatPlug()->getValue();
 	Box2i dataWindow = dataWindowPlug()->getValue();
 	Box2i newDataWindow( Imath::V2i(0) );
 	
@@ -312,10 +312,10 @@ IECore::ImagePrimitivePtr ImagePlug::image() const
 	}
 	else
 	{
-		newDataWindow = Box2i( V2i( dataWindow.min.x, format.max.y - dataWindow.max.y ), V2i( dataWindow.max.x, format.max.y - dataWindow.min.y ) );
+		newDataWindow = format.yDownToFormatSpace( dataWindow );
 	}
 	
-	ImagePrimitivePtr result = new ImagePrimitive( newDataWindow, format );
+	ImagePrimitivePtr result = new ImagePrimitive( newDataWindow, format.getDisplayWindow() );
 
 	ConstStringVectorDataPtr channelNamesData = channelNamesPlug()->getValue();
 	const vector<string> &channelNames = channelNamesData->readable();
