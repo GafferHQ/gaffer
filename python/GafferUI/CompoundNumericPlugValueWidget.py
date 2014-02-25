@@ -81,7 +81,15 @@ class CompoundNumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 		for w in self.__row :
 			if isinstance( w, GafferUI.PlugValueWidget ) :
 				w.setReadOnly( readOnly )
-				
+	
+	def childPlugValueWidget( self, childPlug, lazy=True ) :
+	
+		for i, p in enumerate( self.getPlug().children() ) :
+			if p.isSame( childPlug ) :
+				return self.__row[i]
+		
+		return None
+			
 	def _updateFromPlug( self ) :
 
 		pass
