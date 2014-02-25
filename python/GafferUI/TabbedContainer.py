@@ -199,6 +199,19 @@ class TabbedContainer( GafferUI.ContainerWidget ) :
 	def currentChangedSignal( self ) :
 	
 		return self.__currentChangedSignal
+	
+	def _revealDescendant( self, descendant ) :
+	
+		child = None
+		while descendant is not None :
+			parent = descendant.parent()
+			if parent is self :
+				child = descendant
+				break
+			descendant = parent
+			
+		if child is not None :
+			self.setCurrent( child )
 		
 	def __currentChanged( self, index ) :
 		

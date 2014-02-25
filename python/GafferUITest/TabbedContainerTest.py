@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011-2013, John Haddon. All rights reserved.
-#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012-2014, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -235,6 +235,28 @@ class TabbedContainerTest( GafferUITest.TestCase ) :
 
 		self.assertEqual( t.getLabel( one ), "One" )
 		self.assertEqual( t.getLabel( two ), "Two" )
+	
+	def testReveal( self ) :
+	
+		with GafferUI.TabbedContainer() as t1 :
+			with GafferUI.TabbedContainer() as t2 :
+				with GafferUI.ListContainer() as c1 :
+					l1 = GafferUI.Label( "l1" )
+				with GafferUI.ListContainer() as c2 :
+					l2 = GafferUI.Label( "l2" )
+			with GafferUI.TabbedContainer() as t3 :
+				with GafferUI.ListContainer() as c3 :
+					l3 = GafferUI.Label( "l3" )
+				with GafferUI.ListContainer() as c4 :
+					l4 = GafferUI.Label( "l4" )
+		
+		l1.reveal()
+		self.assertTrue( t1.getCurrent() is t2 )
+		self.assertTrue( t2.getCurrent() is c1 )
+		
+		l3.reveal()
+		self.assertTrue( t1.getCurrent() is t3 )
+		self.assertTrue( t3.getCurrent() is c3 )
 		
 	def tearDown( self ) :
 	

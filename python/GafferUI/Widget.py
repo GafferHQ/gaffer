@@ -217,6 +217,20 @@ class Widget( object ) :
 			
 		return self.__qtWidget.isVisibleTo( relativeTo )
 
+	## Even when Widget.visible() is True, the Widget may not /actually/
+	# be visible to the user - for instance it may not be in the current
+	# tab in its group, or it may have been scrolled to one side. This
+	# method takes care of everything necessary to make sure this is not
+	# the case, and the Widget is directly visible to the user.
+	def reveal( self ) :
+	
+		widget = self
+		while widget is not None :
+			widget.setVisible( True )
+			if widget is not self :
+				widget._revealDescendant( self )
+			widget = widget.ancestor( GafferUI.ContainerWidget )
+
 	## Sets whether or not this Widget is enabled - when
 	# not enabled Widgets are typically greyed out and signals
 	# will not be emitted for them. Disabling a Widget disables
