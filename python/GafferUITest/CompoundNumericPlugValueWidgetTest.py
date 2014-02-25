@@ -59,6 +59,18 @@ class CompoundNumericPlugValueWidgetTest( unittest.TestCase ) :
 		self.assertTrue( w._row()[0].getPlug().isSame( n["v2"][0] ) )
 		self.assertTrue( w._row()[1].getPlug().isSame( n["v2"][1] ) )
 		self.assertTrue( w._row()[2].getPlug().isSame( n["v2"][2] ) )
+	
+	def testChildPlugValueWidget( self ) :
+	
+		n = Gaffer.Node()
+		n["v1"] = Gaffer.V3fPlug()
+		n["v2"] = Gaffer.V3fPlug()
+		
+		w = GafferUI.CompoundNumericPlugValueWidget( n["v1"] )
+		
+		for i in range( 0, 3 ) :
+			self.assertTrue( w.childPlugValueWidget( n["v1"][i] ).getPlug().isSame( n["v1"][i] ) )
+			self.assertTrue( w.childPlugValueWidget( n["v2"][i] ) is None )
 		
 if __name__ == "__main__":
 	unittest.main()
