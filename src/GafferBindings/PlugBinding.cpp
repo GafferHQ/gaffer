@@ -133,31 +133,60 @@ std::string PlugSerialiser::directionRepr( Plug::Direction direction )
 
 std::string PlugSerialiser::flagsRepr( unsigned flags )
 {
-	if( flags == Plug::Default )
-	{
-		return "Gaffer.Plug.Flags.Default";
-	}
-	else if( flags == Plug::None )
-	{
-		return "Gaffer.Plug.Flags.None";	
-	}
-	
 	static const Plug::Flags values[] = { Plug::Dynamic, Plug::Serialisable, Plug::AcceptsInputs, Plug::PerformsSubstitutions, Plug::Cacheable, Plug::ReadOnly, Plug::None };
 	static const char *names[] = { "Dynamic", "Serialisable", "AcceptsInputs", "PerformsSubstitutions", "Cacheable", "ReadOnly", 0 };
 	
-	std::string result;
+	int defaultButOffCount = 0;
+	std::string defaultButOff;
+	std::string nonDefaultButOn;
 	for( int i=0; names[i]; i++ )
 	{
+		std::string *s = NULL;
 		if( flags & values[i] )
 		{
-			if( result.size() )
+			if( !(values[i] & Plug::Default) )
 			{
-				result += " | ";
+				s = &nonDefaultButOn;
 			}
-			result += std::string( "Gaffer.Plug.Flags." ) + names[i];
+		}
+		else
+		{
+			if( values[i] & Plug::Default )
+			{
+				s = &defaultButOff;
+				defaultButOffCount += 1;
+			}
+		}
+		
+		if( s )
+		{
+			if( s->size() )
+			{
+				*s += " | ";
+			}
+			*s += std::string( "Gaffer.Plug.Flags." ) + names[i];
 		}
 	}
-	
+
+	std::string result = "Gaffer.Plug.Flags.Default";
+	if( nonDefaultButOn.size() )
+	{
+		result += " | " + nonDefaultButOn;
+		if( defaultButOffCount )
+		{
+			result = "( " + result + " )";
+		}
+	}
+
+	if( defaultButOffCount > 1 )
+	{
+		result += " & ~( " + defaultButOff + " )";
+	}
+	else if( defaultButOffCount == 1 )
+	{
+		result += " & ~" + defaultButOff;
+	}
+		
 	return result;
 }
 

@@ -473,7 +473,35 @@ class PlugTest( unittest.TestCase ) :
 		self.assertEqual( p1.getName(), p2.getName() )
 		self.assertEqual( p1.direction(), p2.direction() )
 		self.assertEqual( p1.getFlags(), p2.getFlags() )
+	
+	def testAllFlagPermutationsRepr( self ) :
+
+		for i in range( 0, int( Gaffer.Plug.Flags.All ) + 1 ) :
+
+			p1 = Gaffer.Plug(
+				flags = Gaffer.Plug.Flags( i )
+			)
+
+			p2 = eval( repr( p1 ) )
+
+			self.assertEqual( p1.getFlags(), p2.getFlags() )
+
+	def testFlagReprAlwaysIncludesDefault( self ) :
+		
+		# we always need to serialise the flags by adding and removing things
+		# from the default flags, so that if we add new default flags in the future,
+		# they will default to on when loaded from file.
+		
+		for i in range( 0, int( Gaffer.Plug.Flags.All ) + 1 ) :
 			
+			if i == Gaffer.Plug.Flags.Default :
+				continue
+				
+			p = Gaffer.Plug(
+				flags = Gaffer.Plug.Flags( i )
+			)
+			self.assertTrue( "Gaffer.Plug.Flags.Default" in repr( p ) )
+					
 if __name__ == "__main__":
 	unittest.main()
 	
