@@ -238,6 +238,22 @@ class CompoundDataPlugTest( unittest.TestCase ) :
 		self.assertEqual( p.getName(), p2.getName() )
 		self.assertEqual( p.direction(), p2.direction() )
 		self.assertEqual( p.getFlags(), p2.getFlags() )
+	
+	def testDefaultValues( self ) :
+	
+		p = Gaffer.CompoundDataPlug()
+		
+		m = p.addMember( "a", IECore.IntData( 10 ) )
+		self.assertTrue( m["value"].defaultValue(), 10 )
+		self.assertTrue( m["value"].getValue(), 10 )
+		
+		m = p.addMember( "b", IECore.FloatData( 20 ) )
+		self.assertTrue( m["value"].defaultValue(), 20 )
+		self.assertTrue( m["value"].getValue(), 20 )
+		
+		m = p.addMember( "c", IECore.StringData( "abc" ) )
+		self.assertTrue( m["value"].defaultValue(), "abc" )
+		self.assertTrue( m["value"].getValue(), "abc" )
 				
 if __name__ == "__main__":
 	unittest.main()

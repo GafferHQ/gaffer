@@ -89,6 +89,7 @@ from SceneSwitchTest import SceneSwitchTest
 from ShaderSwitchTest import ShaderSwitchTest
 from ParentConstraintTest import ParentConstraintTest
 from ParentTest import ParentTest
+from StandardAttributesTest import StandardAttributesTest
 
 if __name__ == "__main__":
 	import unittest

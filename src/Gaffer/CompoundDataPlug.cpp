@@ -139,9 +139,9 @@ PlugPtr CompoundDataPlug::createCounterpart( const std::string &name, Direction 
 	return result;
 }
 
-CompoundDataPlug::MemberPlug *CompoundDataPlug::addMember( const std::string &name, const IECore::Data *value, const std::string &plugName, unsigned plugFlags )
+CompoundDataPlug::MemberPlug *CompoundDataPlug::addMember( const std::string &name, const IECore::Data *defaultValue, const std::string &plugName, unsigned plugFlags )
 {	
-	return addMember( name, createPlugFromData( "value", direction(), plugFlags, value ), plugName );
+	return addMember( name, createPlugFromData( "value", direction(), plugFlags, defaultValue ), plugName );
 }
 
 CompoundDataPlug::MemberPlug *CompoundDataPlug::addMember( const std::string &name, ValuePlug *valuePlug, const std::string &plugName )
@@ -157,12 +157,11 @@ CompoundDataPlug::MemberPlug *CompoundDataPlug::addMember( const std::string &na
 	
 	addChild( plug );
 	return plug;
-
 }
 		
-CompoundDataPlug::MemberPlug *CompoundDataPlug::addOptionalMember( const std::string &name, const IECore::Data *value, const std::string &plugName, unsigned plugFlags, bool enabled )
+CompoundDataPlug::MemberPlug *CompoundDataPlug::addOptionalMember( const std::string &name, const IECore::Data *defaultValue, const std::string &plugName, unsigned plugFlags, bool enabled )
 {
-	MemberPlug *plug = addMember( name, value, plugName, plugFlags );
+	MemberPlug *plug = addMember( name, defaultValue, plugName, plugFlags );
 	BoolPlugPtr e = new BoolPlug( "enabled", direction(), enabled, plugFlags );
 	plug->addChild( e );
 	return plug;
@@ -247,12 +246,11 @@ ValuePlugPtr CompoundDataPlug::createPlugFromData( const std::string &name, Plug
 			FloatPlugPtr valuePlug = new FloatPlug(
 				name,
 				direction,
-				0,
+				static_cast<const FloatData *>( value )->readable(),
 				Imath::limits<float>::min(),
 				Imath::limits<float>::max(),
 				flags
 			);
-			valuePlug->setValue( static_cast<const FloatData *>( value )->readable() );
 			return valuePlug;
 		}
 		case IntDataTypeId :
@@ -260,12 +258,11 @@ ValuePlugPtr CompoundDataPlug::createPlugFromData( const std::string &name, Plug
 			IntPlugPtr valuePlug = new IntPlug(
 				name,
 				direction,
-				0,
+				static_cast<const IntData *>( value )->readable(),
 				Imath::limits<int>::min(),
 				Imath::limits<int>::max(),
 				flags
 			);
-			valuePlug->setValue( static_cast<const IntData *>( value )->readable() );
 			return valuePlug;
 		}
 		case StringDataTypeId :
@@ -273,10 +270,9 @@ ValuePlugPtr CompoundDataPlug::createPlugFromData( const std::string &name, Plug
 			StringPlugPtr valuePlug = new StringPlug(
 				name,
 				direction,
-				"",
+				static_cast<const StringData *>( value )->readable(),
 				flags
 			);
-			valuePlug->setValue( static_cast<const StringData *>( value )->readable() );
 			return valuePlug;
 		}
 		case BoolDataTypeId :
@@ -284,10 +280,9 @@ ValuePlugPtr CompoundDataPlug::createPlugFromData( const std::string &name, Plug
 			BoolPlugPtr valuePlug = new BoolPlug(
 				name,
 				direction,
-				false,
+				static_cast<const BoolData *>( value )->readable(),
 				flags
 			);
-			valuePlug->setValue( static_cast<const BoolData *>( value )->readable() );
 			return valuePlug;
 		}
 		case V2iDataTypeId :
@@ -351,13 +346,12 @@ ValuePlugPtr CompoundDataPlug::compoundNumericValuePlug( const std::string &name
 	typename PlugType::Ptr result = new PlugType(
 		name,
 		direction,
-		ValueType( 0 ),
+		value->readable(),
 		ValueType( Imath::limits<BaseType>::min() ),
 		ValueType( Imath::limits<BaseType>::max() ),
 		flags
 	);
 	
-	result->setValue( value->readable() );
 	return result;
 }
 
@@ -367,10 +361,10 @@ ValuePlugPtr CompoundDataPlug::typedObjectValuePlug( const std::string &name, Pl
 	typename TypedObjectPlug<T>::Ptr result = new TypedObjectPlug<T>(
 		name,
 		direction,
-		new T(),
+		value,
 		flags	
 	);
-	result->setValue( value );
+
 	return result;
 }
 
