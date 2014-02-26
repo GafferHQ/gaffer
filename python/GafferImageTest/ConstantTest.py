@@ -109,5 +109,17 @@ class ConstantTest( unittest.TestCase ) :
 		h2 = c["out"]["channelNames"].hash()
 	
 		self.assertEqual( h1, h2 )
+		
+	def testSerialisationWithZeroAlpha( self ) :
+	
+		s = Gaffer.ScriptNode()
+		s["c"] = GafferImage.Constant()
+		s["c"]["color"].setValue( IECore.Color4f( 0, 1, 0, 0 ) )
+		
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+		
+		self.assertEqual( s2["c"]["color"].getValue(), IECore.Color4f( 0, 1, 0, 0 ) )
+		
 if __name__ == "__main__":
 	unittest.main()

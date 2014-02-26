@@ -85,14 +85,14 @@ class CompoundDataPlug : public Gaffer::CompoundPlug
 		typedef Gaffer::FilteredChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::Invalid, MemberPlug> > MemberPlugIterator;
 		IE_CORE_DECLAREPTR( MemberPlug )
 
-		/// Adds a CompoundPlug to represent a CompoundData member with the specified name and value.
+		/// Adds a CompoundPlug to represent a CompoundData member with the specified name and default value.
 		/// \todo Consider replacing all these add*Member() methods with convenience constructors on MemberPlug,
 		/// and a simple addChild( new MemberPlug( ... ) ).
-		MemberPlug *addMember( const std::string &name, const IECore::Data *value, const std::string &plugName = "member1", unsigned plugFlags = Plug::Default | Plug::Dynamic );
+		MemberPlug *addMember( const std::string &name, const IECore::Data *defaultValue, const std::string &plugName = "member1", unsigned plugFlags = Plug::Default | Plug::Dynamic );
 		MemberPlug *addMember( const std::string &name, ValuePlug *valuePlug, const std::string &plugName = "member1" );
 		/// As above, but adds an additional BoolPlug to allow the user to control whether or not
 		/// this particular member is enabled.
-		MemberPlug *addOptionalMember( const std::string &name, const IECore::Data *value, const std::string &plugName = "member1", unsigned plugFlags = Plug::Default | Plug::Dynamic, bool enabled = false );
+		MemberPlug *addOptionalMember( const std::string &name, const IECore::Data *defaultValue, const std::string &plugName = "member1", unsigned plugFlags = Plug::Default | Plug::Dynamic, bool enabled = false );
 		MemberPlug *addOptionalMember( const std::string &name, ValuePlug *valuePlug, const std::string &plugName = "member1", bool enabled = false );
 		void addMembers( const IECore::CompoundData *parameters );
 		
