@@ -58,9 +58,7 @@ Constant::Constant( const std::string &name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new FormatPlug( "format" ) );
-	addChild( new Color4fPlug( "color" ) );
-	
-	colorPlug()->getChild(3)->setValue( 1.f );
+	addChild( new Color4fPlug( "color", Plug::In, Color4f( 0, 0, 0, 1 ) ) );
 }
 
 Constant::~Constant()
