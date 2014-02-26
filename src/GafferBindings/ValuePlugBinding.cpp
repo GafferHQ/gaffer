@@ -136,6 +136,16 @@ std::string ValuePlugSerialiser::postConstructor( const Gaffer::GraphComponent *
 			if( PyObject_HasAttrString( pythonPlug.ptr(), "getValue" ) )
 			{
 				object pythonValue = pythonPlug.attr( "getValue" )();
+				
+				if( PyObject_HasAttrString( pythonPlug.ptr(), "defaultValue" ) )
+				{
+					object pythonDefaultValue = pythonPlug.attr( "defaultValue" )();
+					if( pythonValue == pythonDefaultValue )
+					{
+						return "";
+					}
+				}
+				
 				std::string value = extract<std::string>( pythonValue.attr( "__repr__" )() );
 				return identifier + ".setValue( " + value + " )\n";
 			}
