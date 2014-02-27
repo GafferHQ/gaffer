@@ -84,7 +84,6 @@ class MessageWidget( GafferUI.Widget ) :
 			self.__text = GafferUI.MultiLineTextWidget( editable=False )
 			self.__textChangedConnection = self.__text.textChangedSignal().connect( Gaffer.WeakMethod( self.__textChanged ) )
 	
-		self.__messageLevel = IECore.Msg.Level.Info
 		self.__messageHandler = _MessageHandler( self )
 		self.__processingEvents = False
 	
@@ -110,36 +109,6 @@ class MessageWidget( GafferUI.Widget ) :
 	
 		return self.__messageHandler._forwarder
 	
-	## Sets an IECore.MessageHandler.Level specifying which
-	# type of messages will be visible to the user - levels above
-	# that specified will be invisible. Note that the invisible
-	# messages are still stored, so they can be made visible at a later
-	# time by a suitable call to setMessageLevel(). This can be useful
-	# for revealing debug messages only after a warning or error has
-	# alerted the user to a problem.
-	def setMessageLevel( self, messageLevel ) :
-	
-		assert( isinstance( messageLevel, IECore.MessageHandler.Level ) )
-		
-		if messageLevel == self.__messageLevel :
-			return
-		
-		self.__messageLevel = messageLevel
-
-		document = self.__text._qtWidget().document()
-		block = document.begin()
-		while block != document.end() :
-			self.__applyBlockVisibility( block )
-			block = block.next()
-			
-		# we seem to have to kick the text widget to redisplay
-		# after changing block visibilities.
-		self.__text._qtWidget().update()
-		
-	def getMessageLevel( self ) :
-	
-		return self.__messageLevel
-	
 	## May be called to append a message manually.
 	# \note Because these are not real messages, they are not
 	# passed to the forwardingMessageHandler().
@@ -158,30 +127,7 @@ class MessageWidget( GafferUI.Widget ) :
 		)
 		
 		with Gaffer.BlockedConnection( self.__textChangedConnection ) :
-			
-			# get the last block in the document. we will iterate
-			# forwards from here to visit all the blocks we add
-			# in the appendHtml call below.
-			document = self.__text._qtWidget().document()
-			block = self.__text._qtWidget().document().lastBlock()
-			
 			self.__text._qtWidget().appendHtml( formatted )
-			
-			if block != document.begin() :
-				# if the document only had one block to start with,
-				# then the first block will be the first block of our
-				# message, otherwise the next block will be.
-				block = block.next()
-			
-			# iterate over the new blocks, marking them to describe
-			# their message level, and setting their visibility
-			# appropriately.
-			while block != document.end() :
-				# we store the message level in the user state flag for
-				# the block.
-				block.setUserState( int( level ) )
-				self.__applyBlockVisibility( block )
-				block = block.next()
 
 		# Update the gui so messages are output as they occur, rather than all getting queued
 		# up till the end. We have to be careful to avoid recursion when doing this - another
@@ -237,11 +183,8 @@ class MessageWidget( GafferUI.Widget ) :
 			
 	def __buttonClicked( self, button ) :
 		
-		# make sure messages of this level are being displayed
-		if button.__level > self.__messageLevel :
-			self.setMessageLevel( button.__level )
-		
-		# scroll to the next one
+		## \todo Decide how we allow this to be achieved directly using the public
+		# interface of MultiLineTextWidget.
 		toFind = IECore.Msg.levelAsString( button.__level ) + " : "
 		if not self.__text._qtWidget().find( toFind ) :
 			self.__text._qtWidget().moveCursor( QtGui.QTextCursor.Start )
@@ -256,10 +199,6 @@ class MessageWidget( GafferUI.Widget ) :
 		t = self.__text.getText()
 		for level, button in self.__levelButtons.items() :
 			button.setVisible( IECore.Msg.levelAsString( button.__level ) + " : " in t )
-
-	def __applyBlockVisibility( self, block ) :
-	
-		block.setVisible( block.userState() <= self.__messageLevel )
 
 class _MessageHandler( IECore.MessageHandler ) :
 
