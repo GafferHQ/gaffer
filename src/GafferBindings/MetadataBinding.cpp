@@ -46,6 +46,7 @@
 #include "Gaffer/Metadata.h"
 
 #include "GafferBindings/MetadataBinding.h"
+#include "GafferBindings/SignalBinding.h"
 
 using namespace boost::python;
 using namespace IECore;
@@ -223,7 +224,7 @@ static void registerPlugDescription( object nodeTypeId, const char *plugPath, ob
 
 void bindMetadata()
 {	
-	class_<Metadata>( "Metadata", no_init )
+	scope s = class_<Metadata>( "Metadata", no_init )
 		
 		.def( "registerNodeValue", &registerNodeValue )
 		.staticmethod( "registerNodeValue" )
@@ -271,7 +272,15 @@ void bindMetadata()
 		)
 		.staticmethod( "plugDescription" )
 	
+		.def( "nodeValueChangedSignal", &Metadata::nodeValueChangedSignal, return_value_policy<reference_existing_object>() )
+		.staticmethod( "nodeValueChangedSignal" )
+	
+		.def( "plugValueChangedSignal", &Metadata::plugValueChangedSignal, return_value_policy<reference_existing_object>() )
+		.staticmethod( "plugValueChangedSignal" )
 	;
+
+	SignalBinder<Metadata::NodeValueChangedSignal>::bind( "NodeValueChangedSignal" );
+	SignalBinder<Metadata::PlugValueChangedSignal>::bind( "PlugValueChangedSignal" );
 
 }
 

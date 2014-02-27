@@ -80,6 +80,7 @@ void Metadata::registerNodeValue( IECore::TypeId nodeTypeId, IECore::InternedStr
 {
 	Detail::NodeMetadata &nodeMetadata = Detail::nodeMetadataMap()[nodeTypeId];
 	nodeMetadata.nodeValues[key] = value;
+	nodeValueChangedSignal()( nodeTypeId, key );
 }
 
 IECore::ConstDataPtr Metadata::nodeValueInternal( const Node *node, IECore::InternedString key, bool inherit )
@@ -129,7 +130,8 @@ void Metadata::registerPlugValue( IECore::TypeId nodeTypeId, const MatchPattern 
 {
 	Detail::NodeMetadata &nodeMetadata = Detail::nodeMetadataMap()[nodeTypeId];
 	Detail::NodeMetadata::PlugValues &plugValues = nodeMetadata.plugPathsToValues[plugPath];
-	plugValues[key] = value; 
+	plugValues[key] = value;
+	plugValueChangedSignal()( nodeTypeId, plugPath, key );
 }
 
 IECore::ConstDataPtr Metadata::plugValueInternal( const Plug *plug, IECore::InternedString key, bool inherit )
@@ -183,6 +185,18 @@ std::string Metadata::plugDescription( const Plug *plug, bool inherit )
 		return d->readable();
 	}
 	return "";
+}
+
+Metadata::NodeValueChangedSignal &Metadata::nodeValueChangedSignal()
+{
+	static NodeValueChangedSignal s;
+	return s;
+}
+
+Metadata::PlugValueChangedSignal &Metadata::plugValueChangedSignal()
+{
+	static PlugValueChangedSignal s;
+	return s;
 }
 
 } // namespace Gaffer

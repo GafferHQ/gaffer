@@ -59,6 +59,9 @@ class Metadata
 
 	public :
 
+		typedef boost::signal<void ( IECore::TypeId nodeTypeId, IECore::InternedString key )> NodeValueChangedSignal;
+		typedef boost::signal<void ( IECore::TypeId nodeTypeId, const MatchPattern &plugPath, IECore::InternedString key )> PlugValueChangedSignal;
+
 		typedef boost::function<IECore::ConstDataPtr ( const Node *node )> NodeValueFunction;
 		typedef boost::function<IECore::ConstDataPtr ( const Plug *plug )> PlugValueFunction;
 
@@ -93,6 +96,18 @@ class Metadata
 		static void registerPlugDescription( IECore::TypeId nodeTypeId, const MatchPattern &plugPath, PlugValueFunction description );
 		/// Utility function calling plugValue( plug, "description", inherit )
 		static std::string plugDescription( const Plug *plug, bool inherit = true );
+	
+		/// @name Signals
+		/// These are emitted when the Metadata has been changed with one
+		/// of the register*() methods. If dynamic metadata is registered
+		/// with a NodeValueFunction or PlugValueFunction then it is the
+		/// responsibility of the registrant to manually emit the signals
+		/// when necessary.
+		////////////////////////////////////////////////////////////////////
+		//@{
+		static NodeValueChangedSignal &nodeValueChangedSignal();
+		static PlugValueChangedSignal &plugValueChangedSignal();
+		//@}
 	
 	private :
 	
