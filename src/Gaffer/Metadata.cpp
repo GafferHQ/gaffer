@@ -54,7 +54,7 @@ struct NodeMetadata
 
 	typedef map<InternedString, Metadata::NodeValueFunction> NodeValues;
 	typedef map<InternedString, Metadata::PlugValueFunction> PlugValues;
-	typedef map<boost::regex, PlugValues> PlugPathsToValues;
+	typedef map<MatchPattern, PlugValues> PlugPathsToValues;
 
 	NodeValues nodeValues;
 	PlugPathsToValues plugPathsToValues;
@@ -120,12 +120,12 @@ std::string Metadata::nodeDescription( const Node *node, bool inherit )
 	return "";
 }
 
-void Metadata::registerPlugValue( IECore::TypeId nodeTypeId, const boost::regex &plugPath, IECore::InternedString key, IECore::ConstDataPtr value )
+void Metadata::registerPlugValue( IECore::TypeId nodeTypeId, const MatchPattern &plugPath, IECore::InternedString key, IECore::ConstDataPtr value )
 {
 	registerPlugValue( nodeTypeId, plugPath, key, boost::lambda::constant( value ) );
 }
 
-void Metadata::registerPlugValue( IECore::TypeId nodeTypeId, const boost::regex &plugPath, IECore::InternedString key, PlugValueFunction value )
+void Metadata::registerPlugValue( IECore::TypeId nodeTypeId, const MatchPattern &plugPath, IECore::InternedString key, PlugValueFunction value )
 {
 	Detail::NodeMetadata &nodeMetadata = Detail::nodeMetadataMap()[nodeTypeId];
 	Detail::NodeMetadata::PlugValues &plugValues = nodeMetadata.plugPathsToValues[plugPath];
@@ -151,7 +151,7 @@ IECore::ConstDataPtr Metadata::plugValueInternal( const Plug *plug, IECore::Inte
 			Detail::NodeMetadata::PlugPathsToValues::const_iterator it, eIt;
 			for( it = nIt->second.plugPathsToValues.begin(), eIt = nIt->second.plugPathsToValues.end(); it != eIt; ++it )
 			{
-				if( boost::regex_match( plugPath, it->first ) )
+				if( match( plugPath, it->first ) )
 				{
 					Detail::NodeMetadata::PlugValues::const_iterator vIt = it->second.find( key );
 					if( vIt != it->second.end() )
@@ -166,12 +166,12 @@ IECore::ConstDataPtr Metadata::plugValueInternal( const Plug *plug, IECore::Inte
 	return NULL;
 }
 
-void Metadata::registerPlugDescription( IECore::TypeId nodeTypeId, const boost::regex &plugPath, const std::string &description )
+void Metadata::registerPlugDescription( IECore::TypeId nodeTypeId, const MatchPattern &plugPath, const std::string &description )
 {
 	registerPlugValue( nodeTypeId, plugPath, "description", ConstDataPtr( new StringData( description ) ) );
 }
 
-void Metadata::registerPlugDescription( IECore::TypeId nodeTypeId, const boost::regex &plugPath, PlugValueFunction description )
+void Metadata::registerPlugDescription( IECore::TypeId nodeTypeId, const MatchPattern &plugPath, PlugValueFunction description )
 {
 	registerPlugValue( nodeTypeId, plugPath, "description", description );	
 }

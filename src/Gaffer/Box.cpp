@@ -461,7 +461,7 @@ int registerMetadata()
 	const char *keys[] = { "description", "nodeGadget:nodulePosition", NULL };
 	for( const char **key = keys; *key; key++ )
 	{
-		Metadata::registerPlugValue( Box::staticTypeId(), boost::regex( ".*" ), *key, boost::bind( boxPlugMetadata, ::_1, *key ) );
+		Metadata::registerPlugValue( Box::staticTypeId(), "*", *key, boost::bind( boxPlugMetadata, ::_1, *key ) );
 	}
 	return 0;
 }
