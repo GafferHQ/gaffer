@@ -1,3 +1,9 @@
+# 0.91.1
+
+#### UI
+
+- Reverted message filtering in MessageWidget. It was causing crashes in Maya.
+
 # 0.91.0
 
 #### Apps
