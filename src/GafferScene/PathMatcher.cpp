@@ -35,94 +35,12 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
+#include "Gaffer/StringAlgo.h"
+
 #include "GafferScene/PathMatcher.h"
 
 using namespace std;
 using namespace GafferScene;
-
-//////////////////////////////////////////////////////////////////////////
-// Supporting code
-//////////////////////////////////////////////////////////////////////////
-
-namespace GafferScene
-{
-
-namespace Detail
-{
-
-// wildcard matching function - basically fnmatch with a lot less gumph.
-inline bool wildcardMatch( const char *s, const char *pattern )
-{
-	char c;
-	while( true )
-	{
-		switch( c = *pattern++ )
-		{
-			case '\0' :
-			
-				return *s == c;
-			
-			case '*' :
-			
-				if( *pattern == '\0' )
-				{
-					// optimisation for when pattern
-					// ends with '*'.
-					return true;
-				}
-				
-				// general case - recurse.
-				while( *s != '\0' )
-				{
-					if( wildcardMatch( s, pattern ) )
-					{
-						return true;
-					}
-					s++;
-				}
-				return false;
-				
-			default :
-		
-				if( c != *s++ )
-				{
-					return false;
-				} 
-		}
-	}
-}
-
-// we use this comparison for the multimap of child nodes - it's equivalent
-// to std::less<string> except that it treats strings as equal if they
-// have identical prefixes followed by a wildcard character in at least
-// one. this allows us to use multimap::equal_range to find all the children
-// that might match a given string.
-struct Less
-{
-	
-	bool operator() ( const std::string &s1, const std::string &s2 ) const
-	{
-		register const char *c1 = s1.c_str();
-		register const char *c2 = s2.c_str();
-		
-		while( *c1 == *c2 && *c1 )
-		{
-			c1++; c2++;
-		}
-		
-		if( *c1 == '*' || *c2 == '*' )
-		{
-			return false;
-		}
-		
-		return *c1 < *c2;
-	}
-	
-};
-
-} // namespace Detail
-
-} // namespace GafferScene
 
 //////////////////////////////////////////////////////////////////////////
 // Node implementation
@@ -131,7 +49,7 @@ struct Less
 struct PathMatcher::Node
 {
 	
-	typedef std::multimap<std::string, Node *, Detail::Less> ChildMap;
+	typedef std::multimap<std::string, Node *, Gaffer::MatchPatternLess> ChildMap;
 	typedef ChildMap::iterator ChildMapIterator;
 	typedef ChildMap::const_iterator ConstChildMapIterator;
 	typedef std::pair<ChildMapIterator, ChildMapIterator> ChildMapRange;
@@ -363,7 +281,7 @@ void PathMatcher::matchWalk( Node *node, const NameIterator &start, const NameIt
 		NameIterator newStart = start; newStart++;
 		for( Node::ChildMapIterator it = range.first; it != range.second; it++ )
 		{
-			if( Detail::wildcardMatch( start->c_str(), it->first.c_str() ) )
+			if( Gaffer::match( start->c_str(), it->first.c_str() ) )
 			{
 				matchWalk( it->second, newStart, end, result );
 				// if we've found every kind of match then we can terminate early,
