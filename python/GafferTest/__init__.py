@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2014, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -132,6 +132,7 @@ from ArrayPlugTest import ArrayPlugTest
 from SerialisationTest import SerialisationTest
 from SwitchTest import SwitchTest
 from MetadataTest import MetadataTest
+from StringAlgoTest import StringAlgoTest
 
 if __name__ == "__main__":
 	import unittest
