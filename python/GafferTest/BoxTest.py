@@ -625,7 +625,22 @@ class BoxTest( unittest.TestCase ) :
 		
 		op1.setValue( 1 )
 		self.assertEqual( b["n"]["sum"].getValue(), 1 )
+	
+	def testMetadataSignalling( self ) :
+	
+		s = Gaffer.ScriptNode()
+		s["r"] = Gaffer.Random()
+	
+		b = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["r"] ] ) )
+		p = b.promotePlug( b["r"]["floatRange"] )
 		
+		cs = GafferTest.CapturingSlot( Gaffer.Metadata.plugValueChangedSignal() )
+		
+		b.setPlugMetadata( p, "description", "hello" )
+		
+		self.assertEqual( len( cs ), 1 )
+		self.assertEqual( cs[0], ( Gaffer.Box.staticTypeId(), p.relativeName( b ), "description" ) )
+	
 if __name__ == "__main__":
 	unittest.main()
 	

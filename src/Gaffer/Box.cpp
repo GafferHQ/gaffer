@@ -303,6 +303,14 @@ void Box::setPlugMetadata( const Plug *plug, IECore::InternedString key, IECore:
 		data = it->second;
 	}
 	data->writable()[key] = IECore::constPointerCast<IECore::Data>( value );
+	if( plug->parent<GraphComponent>() )
+	{
+		// signal that the metadata has changed. it's possible that the plug doesn't have
+		// a parent if it is in the process of being added in the create() method, but if
+		// that's the case we don't need to signal anyway, as nothing has access to the plug
+		// yet.
+		Metadata::plugValueChangedSignal()( staticTypeId(), plug->relativeName( this ), key );
+	}
 }
 
 void Box::exportForReference( const std::string &fileName ) const
