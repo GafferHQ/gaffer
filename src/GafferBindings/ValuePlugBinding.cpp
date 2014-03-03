@@ -150,10 +150,33 @@ std::string ValuePlugSerialiser::postConstructor( const Gaffer::GraphComponent *
 
 bool ValuePlugSerialiser::valueNeedsSerialisation( const Gaffer::ValuePlug *plug, const Serialisation &serialisation ) const
 {
-	return
-		plug->direction() == Plug::In &&
-		plug->getFlags( Plug::Serialisable ) &&
-		!plug->getInput<Plug>();
+	if(
+		plug->direction() != Plug::In ||
+		!plug->getFlags( Plug::Serialisable ) ||
+		plug->getInput<Plug>()
+	)
+	{
+		return false;
+	}
+	
+	if( const ValuePlug *parent = plug->parent<ValuePlug>() )
+	{
+		const Serialiser *parentSerialiser = Serialisation::acquireSerialiser( parent );
+		if( parentSerialiser )
+		{
+			if( const ValuePlugSerialiser *v = dynamic_cast<const ValuePlugSerialiser *>( parentSerialiser ) )
+			{
+				if( v->valueNeedsSerialisation( parent, serialisation ) )
+				{
+					// the parent will be serialising the value,
+					// so we don't need to.
+					return false;
+				}
+			}
+		}
+	}
+	
+	return true;
 }
 
 void GafferBindings::bindValuePlug()

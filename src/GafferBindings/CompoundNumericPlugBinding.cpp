@@ -107,6 +107,27 @@ class CompoundNumericPlugSerialiser : public CompoundPlugSerialiser
 			return maskedCompoundNumericPlugRepr( static_cast<const T *>( graphComponent ), Plug::All & ~Plug::ReadOnly );
 		}
 
+	protected :
+	
+		// Ideally we'll serialise the value as a single getValue() call for this plug,
+		// but we can't do that if any of the children have input connections.
+		virtual bool valueNeedsSerialisation( const Gaffer::ValuePlug *plug, const Serialisation &serialisation ) const
+		{
+			if( !ValuePlugSerialiser::valueNeedsSerialisation( plug, serialisation ) )
+			{
+				return false;
+			}
+			
+			for( PlugIterator it( plug ); it != it.end(); ++it )
+			{
+				if( (*it)->getInput<Plug>() )
+				{
+					return false;
+				}
+			}
+			return true;
+		}
+		
 };
 
 template<typename T>
