@@ -52,7 +52,8 @@ def __noduleCreator( plug ) :
 
 GafferUI.Nodule.registerNodule( GafferImage.ImageNode.staticTypeId(), fnmatch.translate( "*" ), __noduleCreator )
 GafferUI.PlugValueWidget.registerType( GafferImage.ImagePlug.staticTypeId(), None )
-GafferUI.PlugValueWidget.registerCreator( GafferImage.ImageNode.staticTypeId(), "enabled", None )
+
+Gaffer.Metadata.registerPlugValue( GafferImage.ImageNode.staticTypeId(), "enabled", "nodeUI:section", "Node" )
 
 # ImageStats
 GafferUI.PlugValueWidget.registerCreator( GafferImage.ImageStats.staticTypeId(), "channels", GafferImageUI.ChannelMaskPlugValueWidget, inputImagePlug = "in" )
