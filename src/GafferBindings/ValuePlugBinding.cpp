@@ -124,34 +124,36 @@ std::string ValuePlugSerialiser::constructor( const Gaffer::GraphComponent *grap
 
 std::string ValuePlugSerialiser::postConstructor( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const
 {
-	const Plug *plug = static_cast<const Plug *>( graphComponent );
-	// output a setValue() call if the plug is serialisable and has no input.
-	// we don't do this for non-leaf plugs, since some children may have connections
-	// which make setting the value inappropriate.
-	if( plug->direction() == Plug::In && plug->getFlags( Plug::Serialisable ) && !plug->children().size() )
+	const ValuePlug *plug = static_cast<const ValuePlug *>( graphComponent );
+	if( valueNeedsSerialisation( plug, serialisation ) )
 	{
-		if( !plug->getInput<Plug>() )
+		object pythonPlug( ValuePlugPtr( const_cast<ValuePlug *>( plug ) ) );
+		if( PyObject_HasAttrString( pythonPlug.ptr(), "getValue" ) )
 		{
-			object pythonPlug( PlugPtr( const_cast<Plug *>( plug ) ) );
-			if( PyObject_HasAttrString( pythonPlug.ptr(), "getValue" ) )
+			object pythonValue = pythonPlug.attr( "getValue" )();
+			
+			if( PyObject_HasAttrString( pythonPlug.ptr(), "defaultValue" ) )
 			{
-				object pythonValue = pythonPlug.attr( "getValue" )();
-				
-				if( PyObject_HasAttrString( pythonPlug.ptr(), "defaultValue" ) )
+				object pythonDefaultValue = pythonPlug.attr( "defaultValue" )();
+				if( pythonValue == pythonDefaultValue )
 				{
-					object pythonDefaultValue = pythonPlug.attr( "defaultValue" )();
-					if( pythonValue == pythonDefaultValue )
-					{
-						return "";
-					}
+					return "";
 				}
-				
-				std::string value = extract<std::string>( pythonValue.attr( "__repr__" )() );
-				return identifier + ".setValue( " + value + " )\n";
 			}
+			
+			std::string value = extract<std::string>( pythonValue.attr( "__repr__" )() );
+			return identifier + ".setValue( " + value + " )\n";
 		}
 	}
 	return "";
+}
+
+bool ValuePlugSerialiser::valueNeedsSerialisation( const Gaffer::ValuePlug *plug, const Serialisation &serialisation ) const
+{
+	return
+		plug->direction() == Plug::In &&
+		plug->getFlags( Plug::Serialisable ) &&
+		!plug->getInput<Plug>();
 }
 
 void GafferBindings::bindValuePlug()

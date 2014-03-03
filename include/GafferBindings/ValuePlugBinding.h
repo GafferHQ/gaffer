@@ -55,6 +55,12 @@ class ValuePlugSerialiser : public PlugSerialiser
 		virtual std::string constructor( const Gaffer::GraphComponent *graphComponent ) const;
 		virtual std::string postConstructor( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const;
 
+	protected :
+	
+		/// May be implemented by derived classes to control whether or not a setValue() call is emitted by postConstructor().
+		/// The default implementation returns true only for input plugs without an incoming connection.
+		virtual bool valueNeedsSerialisation( const Gaffer::ValuePlug *plug, const Serialisation &serialisation ) const;
+	
 };
 
 } // namespace GafferBindings
