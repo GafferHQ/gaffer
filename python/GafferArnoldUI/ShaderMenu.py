@@ -66,7 +66,7 @@ def appendShaders( menuDefinition, prefix="/Arnold" ) :
 				menuPath,
 				{
 					"command" : GafferUI.NodeMenu.nodeCreatorWrapper( IECore.curry( __shaderCreator, shaderName, nodeType ) ),
-					"searchText" : 'ai' + displayName,
+					"searchText" : "ai" + displayName.replace( " ", "" ),
 				}
 			)
 
