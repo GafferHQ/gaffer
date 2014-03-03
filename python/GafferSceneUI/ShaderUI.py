@@ -116,7 +116,8 @@ GafferUI.PlugValueWidget.registerCreator( GafferScene.Shader.staticTypeId(), "na
 GafferUI.PlugValueWidget.registerCreator( GafferScene.Shader.staticTypeId(), "parameters", GafferUI.CompoundPlugValueWidget, collapsed=None )
 GafferUI.PlugValueWidget.registerCreator( GafferScene.Shader.staticTypeId(), "out", None )
 GafferUI.PlugValueWidget.registerCreator( GafferScene.Shader.staticTypeId(), "type", None )
-GafferUI.PlugValueWidget.registerCreator( GafferScene.Shader.staticTypeId(), "enabled", None )
+
+GafferUI.Metadata.registerPlugValue( GafferScene.Shader.staticTypeId(), "enabled", "nodeUI:section", "Node" )
 
 ##########################################################################
 # NodeGadgets and Nodules
