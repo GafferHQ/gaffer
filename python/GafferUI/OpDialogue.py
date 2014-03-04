@@ -68,6 +68,19 @@ class OpDialogue( GafferUI.Dialogue ) :
 	# CloseByDefault : deprecated - the same as DisplayResult
 	PostExecuteBehaviour = IECore.Enum.create( "FromUserData", "None", "Close", "DisplayResult", "DisplayResultAndClose", "NoneByDefault", "CloseByDefault" )
 
+	## Defines which button has the focus when the op is displayed for editing.
+	#
+	# FromUserData : Gets the default button from ["UI"]["defaultButton"] userData, which
+	#	should contain a string value specifying one of the other Enum values. If no userData is found,
+	#	it defaults to OK.
+	#
+	# None : Neither button has the focus.
+	#
+	# OK : The OK button has the focus.
+	#
+	# Cancel : The cancel button has the focus.
+	DefaultButton = IECore.Enum.create( "FromUserData", "None", "OK", "Cancel" )
+
 	# If executeInBackground is True, then the Op will be executed on another
 	# thread, allowing the UI to remain responsive during execution. This is
 	# the preferred method of operation, but it is currently not the default
@@ -79,6 +92,7 @@ class OpDialogue( GafferUI.Dialogue ) :
 		sizeMode=GafferUI.Window.SizeMode.Manual,
 		postExecuteBehaviour = PostExecuteBehaviour.FromUserData,
 		executeInBackground = False,
+		defaultButton = DefaultButton.FromUserData,
 		**kw
 	) :
 
@@ -122,6 +136,7 @@ class OpDialogue( GafferUI.Dialogue ) :
 						
 		self.__postExecuteBehaviour = postExecuteBehaviour
 		self.__executeInBackground = executeInBackground
+		self.__defaultButton = defaultButton
 		
 		# make a frame to contain our main ui element. this will
 		# contain different elements depending on our state.
@@ -222,7 +237,7 @@ class OpDialogue( GafferUI.Dialogue ) :
 		
 		self.__frame.setChild( self.__parameterEditingUI )
 
-		self.__forwardButton._qtWidget().setFocus()
+		self.__focusDefaultButton()
 		
 		self.__state = self.__State.ParameterEditing
 	
@@ -360,3 +375,24 @@ class OpDialogue( GafferUI.Dialogue ) :
 		self.__backButton._qtWidget().setFocus()
 
 		self.__state = self.__State.ResultDisplay
+
+	def __focusDefaultButton( self ) :
+
+		defaultButton = self.__defaultButton
+		if defaultButton == self.DefaultButton.FromUserData :
+			defaultButton = self.DefaultButton.OK
+			d = None
+			with IECore.IgnoredExceptions( KeyError ) :
+				d = self.__node.getParameterised()[0].userData()["UI"]["defaultButton"]
+			if d is not None :
+				for v in self.DefaultButton.values() :
+					if str( v ).lower() == d.value.lower() :
+						defaultButton = v
+						break
+		
+		if defaultButton == self.DefaultButton.None :
+			self._qtWidget().setFocus()
+		elif defaultButton == self.DefaultButton.Cancel :
+			self.__backButton._qtWidget().setFocus()
+		else :
+			self.__forwardButton._qtWidget().setFocus()
