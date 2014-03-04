@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2012, John Haddon. All rights reserved.
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2013-2014, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -66,6 +66,7 @@ def appendShaders( menuDefinition, prefix="/Arnold" ) :
 				menuPath,
 				{
 					"command" : GafferUI.NodeMenu.nodeCreatorWrapper( IECore.curry( __shaderCreator, shaderName, nodeType ) ),
+					"searchText" : "ai" + displayName.replace( " ", "" ),
 				}
 			)
 
