@@ -77,7 +77,7 @@ class MessageWidgetTest( GafferUITest.TestCase ) :
 			msg( IECore.Msg.Level.Error )
 			assertCounts( 1, 1, 1, 3 )
 
-			w.textWidget().setText( "" )
+			w.clear()
 			assertCounts( 0, 0, 0, 0 )
 
 	def testForwarding( self ) :

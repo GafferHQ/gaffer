@@ -237,7 +237,7 @@ class OpDialogue( GafferUI.Dialogue ) :
 		self.__progressLabel.setText( "<h3>Processing...</h3>" )
 		self.__backButton.setEnabled( False )
 		self.__forwardButton.setEnabled( False )
-		self.__messageWidget.textWidget().setText( "" )
+		self.__messageWidget.clear()
 		self.__messageCollapsible.setCollapsed( True )
 		
 		self.__state = self.__State.Execution

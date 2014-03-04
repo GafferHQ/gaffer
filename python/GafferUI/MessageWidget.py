@@ -88,13 +88,6 @@ class MessageWidget( GafferUI.Widget ) :
 		self.__messageHandler = _MessageHandler( self )
 		self.__processingEvents = False
 	
-	## Returns the MultiLineTextWidget used internally for displaying the messages.
-	# This can be manipulated directly to clear the output or to interleave the messages
-	# with text from another source.
-	def textWidget( self ) :
-	
-		return self.__text
-	
 	## Returns a MessageHandler which will output to this Widget.
 	## \threading It is safe to use the handler on threads other than the main thread.
 	def messageHandler( self ) :
@@ -234,6 +227,11 @@ class MessageWidget( GafferUI.Widget ) :
 					self.messageCount( IECore.Msg.Level.Error ),
 				]
 			)
+	
+	## Clears all the displayed messages.
+	def clear( self ) :
+	
+		self.__text.setText( "" )
 			
 	def __buttonClicked( self, button ) :
 		
