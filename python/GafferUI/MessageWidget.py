@@ -149,25 +149,6 @@ class MessageWidget( GafferUI.Widget ) :
 				finally :
 					self.__processingEvents = False
 	
-	## May be called to append a message describing an exception. By default the currently handled exception is displayed
-	# but another exception can be displayed by specifying exceptionInfo in the same format as returned by sys.exc_info().
-	# \note Because these are not real messages, they are not
-	# passed to the forwardingMessageHandler().
-	# \deprecated.
-	def appendException( self, exceptionInfo=None ) :
-	
-		if exceptionInfo is None :
-			exceptionInfo = sys.exc_info()
-	
-		if exceptionInfo[0] is None :
-			return
-
-		self.appendMessage(
-			IECore.Msg.Level.Error,
-			str( exceptionInfo[1] ),
-			"".join( traceback.format_exception( *exceptionInfo ) )
-		)
-	
 	## Returns the number of messages being displayed, optionally
 	# restricted to the specified level.
 	def messageCount( self, level = None ) :
