@@ -64,10 +64,6 @@ class ComputeNodeTest( GafferTest.TestCase ) :
 		n1["op2"].setValue( 3 )
 		self.assertEqual( len( setPlugs ), 2 )
 		self.assertEqual( setPlugs[1][0].fullName(), "AddNode.op2" )
-		# the dirty callback shouldn't have been triggered this time,
-		# as the plug was already dirty.
-		## \todo Reintroduce me
-		#self.assertEqual( len( dirtiedPlugs ), 1 )
 		
 		del dirtiedPlugs[:]
 		del setPlugs[:]
