@@ -64,22 +64,32 @@ class NodeGadgetWrapper : public GadgetWrapper<WrappedType>
 				
 		virtual GafferUI::NodulePtr nodule( Gaffer::ConstPlugPtr plug )
 		{
-			IECorePython::ScopedGILLock gilLock;
-			boost::python::override f = this->get_override( "nodule" );
-			if( f )
+			if( this->isSubclassed() )
 			{
-				return f( IECore::constPointerCast<Gaffer::Plug>( plug ) );
+				IECorePython::ScopedGILLock gilLock;
+				boost::python::object f = this->methodOverride( "nodule" );
+				if( f )
+				{
+					return boost::python::extract<GafferUI::NodulePtr>(
+						f( IECore::constPointerCast<Gaffer::Plug>( plug ) )
+					);
+				}
 			}
 			return WrappedType::nodule( plug );
 		}
 		
 		virtual Imath::V3f noduleTangent( const GafferUI::Nodule *nodule )
 		{
-			IECorePython::ScopedGILLock gilLock;
-			boost::python::override f = this->get_override( "noduleTangent" );
-			if( f )
+			if( this->isSubclassed() )
 			{
-				return f( GafferUI::NodulePtr( const_cast<GafferUI::Nodule *>( nodule ) ) );
+				IECorePython::ScopedGILLock gilLock;
+				boost::python::object f = this->methodOverride( "noduleTangent" );
+				if( f )
+				{
+					return boost::python::extract<Imath::V3f>(
+						f( GafferUI::NodulePtr( const_cast<GafferUI::Nodule *>( nodule ) ) )
+					);
+				}
 			}
 			return WrappedType::noduleTangent( nodule );
 		}

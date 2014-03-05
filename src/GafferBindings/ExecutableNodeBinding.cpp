@@ -108,7 +108,7 @@ class ExecutableNodeWrapper : public NodeWrapper< ExecutableNode >
 			{
 				contextList.append( *cIt );
 			}
-			override exec = this->get_override( "execute" );
+			object exec = this->methodOverride( "execute" );
 			if( exec )
 			{
 				exec( contextList );
@@ -122,13 +122,15 @@ class ExecutableNodeWrapper : public NodeWrapper< ExecutableNode >
 		virtual void executionRequirements( const Context *context, Executable::Tasks &requirements ) const
 		{
 			ScopedGILLock gilLock;
-			override req = this->get_override( "executionRequirements" );
+			object req = this->methodOverride( "executionRequirements" );
 			if( !req )
 			{
 				throw Exception( "executionRequirements() python method not defined" );
 			}
 
-			list requirementList = req( ContextPtr(const_cast<Context*>(context)) );
+			list requirementList = extract<boost::python::list>(
+				req( ContextPtr(const_cast<Context*>(context)) )
+			);
 			
 			Executable::Tasks tasks;
 			
@@ -143,10 +145,12 @@ class ExecutableNodeWrapper : public NodeWrapper< ExecutableNode >
 		virtual IECore::MurmurHash executionHash( const Context *context ) const
 		{
 			ScopedGILLock gilLock;
-			override h = this->get_override( "executionHash" );
+			object h = this->methodOverride( "executionHash" );
 			if( h )
 			{
-				return h( ContextPtr(const_cast<Context*>(context)) );
+				return extract<IECore::MurmurHash>(
+					h( ContextPtr(const_cast<Context*>(context)) )
+				);
 			}
 			else
 			{
