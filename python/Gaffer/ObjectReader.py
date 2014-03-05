@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2013-2014, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -41,30 +41,21 @@ import IECore
 
 import Gaffer
 
+##\ todo: Remove this class once SceneReader is capable of loading
+# single Object scenes using IECore.Reader internally.
 class ObjectReader( Gaffer.ComputeNode ) :
 
 	def __init__( self, name="ObjectReader" ) :
 	
 		Gaffer.ComputeNode.__init__( self, name )
 		
-		fileNamePlug = Gaffer.StringPlug( "fileName", Gaffer.Plug.Direction.In )
-		self.addChild( fileNamePlug )
-		self.__plugSetConnection = self.plugSetSignal().connect( Gaffer.WeakMethod( self.__plugSet ) )
-		
-		self.addChild( Gaffer.CompoundPlug( "parameters" ) )
-		
-		resultPlug = Gaffer.ObjectPlug( "out", Gaffer.Plug.Direction.Out, IECore.NullObject.defaultNullObject() )
-		self.addChild( resultPlug )
-				
-		self.__reader = None
-		self.__exposedParameters = IECore.CompoundParameter()
-		self.__parameterHandler = Gaffer.CompoundParameterHandler( self.__exposedParameters )
- 		self.__parameterHandler.setupPlug( self )
-
+		self.addChild( Gaffer.StringPlug( "fileName", Gaffer.Plug.Direction.In ) )
+		self.addChild( Gaffer.ObjectPlug( "out", Gaffer.Plug.Direction.Out, IECore.NullObject.defaultNullObject() ) )
+	
 	def affects( self, input ) :
 		
 		outputs = []
-		if self["parameters"].isAncestorOf( input ) or input.isSame( self["fileName"] ) :
+		if input.isSame( self["fileName"] ) :
 			outputs.append( self["out"] )
 
 		return outputs
@@ -74,51 +65,15 @@ class ObjectReader( Gaffer.ComputeNode ) :
 		assert( output.isSame( self["out"] ) )
 
 		self["fileName"].hash( h )
-		self["parameters"].hash( h )
 		
 	def compute( self, plug, context ) :
 	
 		assert( plug.isSame( self["out"] ) )
 		
-		result = None
-		if self.__reader is not None :
-			self.__parameterHandler.setParameterValue()
-			result = self.__reader.read()
+		reader = None
+		with IECore.IgnoredExceptions( RuntimeError ) :
+			reader = IECore.Reader.create( self["fileName"].getValue() )
 		
-		plug.setValue( result if result is not None else plug.defaultValue() )
-	
-	def parameterHandler( self ) :
-	
-		return self.__parameterHandler
-		
-	def __plugSet( self, plug ) :
-	
-		if plug.isSame( self["fileName"] ) :
-			self.__ensureReader()
-			
-	def __ensureReader( self ) :
-			
-		fileName = self["fileName"].getValue()
-		if fileName :
-			
-			if self.__reader is not None and self.__reader.canRead( fileName ) :
-				self.__reader["fileName"].setTypedValue( fileName )
-			else :
-				self.__reader = None
-				self.__exposedParameters.clearParameters()
-				with IECore.IgnoredExceptions( RuntimeError ) :
-					self.__reader = IECore.Reader.create( fileName )
-					
-				if self.__reader is not None :
-					for parameter in self.__reader.parameters().values() :
-						if parameter.name != "fileName" :
-							self.__exposedParameters.addParameter( parameter )
-				self.__parameterHandler.setupPlug( self )
-				self["parameters"].setFlags( Gaffer.Plug.Flags.Dynamic, False )
-		else :
-		
-			self.__reader = None
-			self.__exposedParameters.clearParameters()
-			self.__parameterHandler.setupPlug( self )
+		plug.setValue( reader.read() if reader else plug.defaultValue() )
 
 IECore.registerRunTimeTyped( ObjectReader, typeName = "Gaffer::ObjectReader" )
