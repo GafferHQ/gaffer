@@ -206,6 +206,7 @@ class LayoutEngine
 				m_graph[v].position = graphGadget->getNodePosition( node );
 				m_graph[v].bound = Box2f( V2f( bb.min.x, bb.min.y ), V2f( bb.max.x, bb.max.y ) );
 				m_graph[v].pinned = false;
+				m_graph[v].collisionGroup = 0;
 				m_nodesToVertices[node] = v;
 			}
 
@@ -317,6 +318,7 @@ class LayoutEngine
 			Vertex &group = m_graph[groupDescriptor];
 			group.node = NULL;
 			group.pinned = false;
+			group.collisionGroup = 0;
 			group.position = bound.center();
 			group.bound = Box2f( bound.min - group.position, bound.max - group.position );
 						
@@ -393,6 +395,44 @@ class LayoutEngine
 			group.position = center;
 		}
 
+		/// Collision avoidance in solve() is only performed between nodes
+		/// in the same group. A negative number may be assigned to disable
+		/// all collisions involving a particular node.
+		void assignCollisionGroup( const Gaffer::Node *node, int group )
+		{
+			NodesToVertices::const_iterator it = m_nodesToVertices.find( node );
+			if( it == m_nodesToVertices.end() )
+			{
+				return;
+			}
+			
+			m_graph[it->second].collisionGroup = group;
+		}
+		
+		void assignCollisionGroup( const Gaffer::Set *nodes, int group )
+		{
+			for( size_t i = 0, e = nodes->size(); i != e; ++i )
+			{
+				if( const Gaffer::Node *node = runTimeCast<const Node>( nodes->member( i ) ) )
+				{
+					assignCollisionGroup( node, group );
+				}
+			}
+		}
+		
+		void assignCollisionGroup( IECore::TypeId nodeType, int group )
+		{
+			VertexIteratorRange v = vertices( m_graph );
+			for( VertexIterator it = v.first; it != v.second; ++it )
+			{
+				Vertex &v = m_graph[*it];
+				if( v.node && v.node->isInstanceOf( nodeType ) )
+				{
+					v.collisionGroup = group;
+				}
+			}
+		}
+		
 		void addConnectionDirectionConstraints()
 		{
 			
@@ -524,8 +564,10 @@ class LayoutEngine
 			V2f position;
 			// Node bound in local space.
 			Box2f bound;
-			// True if node is not to be moved
+			// True if node is not to be moved.
 			bool pinned;
+			// Provides finer control over collision avoidance.
+			int collisionGroup;
 			
 			// State variables for use in solve().
 			V2f previousPosition;
@@ -678,6 +720,15 @@ class LayoutEngine
 					
 					Vertex &vertex1 = m_graph[vertexDescriptors[bound1Index]];
 					Vertex &vertex2 = m_graph[vertexDescriptors[bound2Index]];
+					
+					if(
+						vertex1.collisionGroup < 0 ||
+						vertex2.collisionGroup < 0 ||
+						vertex1.collisionGroup != vertex2.collisionGroup
+					)
+					{
+						continue;
+					}
 					
 					const Box2f &bound1 = *it;
 					const Box2f &bound2 = **bIt;
@@ -916,6 +967,8 @@ void StandardGraphLayout::positionNode( GraphGadget *graph, Gaffer::Node *node, 
 	StandardSetPtr s = new StandardSet();
 	s->add( node );
 	layout.pinNodes( s, true /* invert */ );
+
+	layout.assignCollisionGroup( (IECore::TypeId)Gaffer::BackdropTypeId, -1 ); // disable collisions with backdrops
 
 	layout.addConnectionDirectionConstraints();
 	

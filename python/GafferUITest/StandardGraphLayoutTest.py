@@ -689,6 +689,19 @@ class StandardGraphLayoutTest( GafferUITest.TestCase ) :
 				
 				# oh dear, we have an intersection - report it in a helpful way
 				self.assertFalse( nodes[index].getName() + " intersects " + nodes[intersectIndex].getName() )
+	
+	def testCanPositionNodeWithinBackdrop( self ) :
+	
+		s = Gaffer.ScriptNode()
+		s["b"] = Gaffer.Backdrop()
+		s["n"] = Gaffer.Node()
+		
+		g = GafferUI.GraphGadget( s )
+		backdropBound = g.nodeGadget( s["b"] ).transformedBound( g )
+		fallbackPosition = IECore.V2f( backdropBound.center().x, backdropBound.center().y )
+		
+		g.getLayout().positionNode( g, s["n"], fallbackPosition )
+		self.assertEqual( g.getNodePosition( s["n"] ), fallbackPosition )
 		
 if __name__ == "__main__":
 	unittest.main()
