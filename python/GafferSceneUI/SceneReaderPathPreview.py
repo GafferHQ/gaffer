@@ -50,10 +50,28 @@ class SceneReaderPathPreview( GafferUI.PathPreviewWidget ) :
 		GafferUI.PathPreviewWidget.__init__( self, column, path )
 
 		self.__script = Gaffer.ScriptNode( "scenePreview" )
-		self.__script["reader"] = GafferScene.SceneReader()
-
+		
+		# for reading IECore.SceneInterface files (scc, lscc)
+		self.__script["SceneReader"] = GafferScene.SceneReader()
+		
+		# for reading Alembic files (abc)
+		self.__script["AlembicSource"] = GafferScene.AlembicSource()
+		
+		# for reading more generic single object files (cob, ptc, pdc, etc)
+		## \todo: can we unify all file input to SceneReader by creating a SceneInterface that makes
+		# single object scenes using Reader ops behind the scenes?
+		self.__script["ObjectReader"] = Gaffer.ObjectReader()
+		self.__script["ObjectToScene"] = GafferScene.ObjectToScene( "ObjectToScene" )
+		self.__script["ObjectToScene"]["object"].setInput( self.__script["ObjectReader"]["out"] )
+		
+		# display points and curves GL style rather than disks and ribbons
+		self.__script["OpenGLAttributes"] = GafferScene.OpenGLAttributes( "OpenGLAttributes" )
+		self.__script["OpenGLAttributes"]["attributes"]["pointsPrimitiveUseGLPoints"]["value"].setValue( 'forAll' )
+		self.__script["OpenGLAttributes"]["attributes"]["pointsPrimitiveUseGLPoints"]["enabled"].setValue( True )
+		self.__script["OpenGLAttributes"]["attributes"]["curvesPrimitiveUseGLLines"]["enabled"].setValue( True )
+		
 		self.__script["camera"] = _Camera()
-		self.__script["camera"]["in"].setInput( self.__script["reader"]["out"] )
+		self.__script["camera"]["in"].setInput( self.__script["OpenGLAttributes"]["out"] )
 		
 		column.append( GafferUI.Viewer( self.__script ) )
 		column.append( GafferUI.Timeline( self.__script ) )
@@ -66,28 +84,58 @@ class SceneReaderPathPreview( GafferUI.PathPreviewWidget ) :
 
 		if not isinstance( self.getPath(), Gaffer.FileSystemPath ) or not self.getPath().isLeaf() :
 			return False
-					
-		return str( self.getPath() ).split( "." )[-1] in GafferScene.SceneReader.supportedExtensions()
-
+		
+		ext = str( self.getPath() ).split( "." )[-1]
+		
+		supported = set( [ "abc" ] )
+		supported.update( GafferScene.SceneReader.supportedExtensions() )
+		supported.update( IECore.Reader.supportedExtensions() )
+		# no reason to preview a single image as a 3D scene
+		supported.difference_update( IECore.Reader.supportedExtensions( IECore.TypeId.ImageReader ) )
+		
+		return ext in supported
+	
 	def _updateFromPath( self ) :
 		
+		self.__script["SceneReader"]["fileName"].setValue( "" )
+		self.__script["AlembicSource"]["fileName"].setValue( "" )
+		self.__script["ObjectReader"]["fileName"].setValue( "" )
+		
 		if not self.isValid() :
-			self.__script["reader"]["fileName"].setValue( "" )
 			return
-			
+		
 		fileName = str( self.getPath() )
-		self.__script["reader"]["fileName"].setValue( fileName )
+		ext = fileName.split( "." )[-1]
 		
-		scene = IECore.SharedSceneInterfaces.get( fileName )
-		if hasattr( scene, "numBoundSamples" ) :
-			numSamples = scene.numBoundSamples()
-			if numSamples > 1 :
-				startFrame = int( round( scene.boundSampleTime( 0 ) * 24.0 ) )
-				endFrame = int( round( scene.boundSampleTime( numSamples - 1 ) * 24.0 ) )
-				self.__script["frameRange"]["start"].setValue( startFrame )
-				self.__script["frameRange"]["end"].setValue( endFrame )
-				GafferUI.Playback.acquire( self.__script.context() ).setFrameRange( startFrame, endFrame )
+		outPlug = None
 		
+		if ext in GafferScene.SceneReader.supportedExtensions() :
+			
+			self.__script["SceneReader"]["fileName"].setValue( fileName )
+			outPlug = self.__script["SceneReader"]["out"]
+						
+			scene = IECore.SharedSceneInterfaces.get( fileName )
+			if hasattr( scene, "numBoundSamples" ) :
+				numSamples = scene.numBoundSamples()
+				if numSamples > 1 :
+					startFrame = int( round( scene.boundSampleTime( 0 ) * 24.0 ) )
+					endFrame = int( round( scene.boundSampleTime( numSamples - 1 ) * 24.0 ) )
+					self.__script["frameRange"]["start"].setValue( startFrame )
+					self.__script["frameRange"]["end"].setValue( endFrame )
+					GafferUI.Playback.acquire( self.__script.context() ).setFrameRange( startFrame, endFrame )
+		
+		elif ext in IECore.Reader.supportedExtensions() :
+			
+			self.__script["ObjectReader"]["fileName"].setValue( fileName )
+			outPlug = self.__script["ObjectToScene"]["out"]
+		
+		elif ext == "abc" :
+			
+			self.__script["AlembicSource"]["fileName"].setValue( fileName )
+			outPlug = self.__script["AlembicSource"]["out"]
+		
+		self.__script["OpenGLAttributes"]["in"].setInput( outPlug )
+
 GafferUI.PathPreviewWidget.registerType( "Scene", SceneReaderPathPreview )
 
 class _Camera( Gaffer.Node ) :
