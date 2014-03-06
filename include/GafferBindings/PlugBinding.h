@@ -58,6 +58,27 @@ class PlugWrapper : public GraphComponentWrapper<WrappedType>
 		{
 		}		
 
+		virtual bool isInstanceOf( IECore::TypeId typeId ) const
+		{
+			// Optimise for common queries we know should fail.
+			// The standard wrapper implementation of isInstanceOf()
+			// would have to enter Python only to discover this inevitable
+			// failure as it doesn't have knowledge of the relationships
+			// among types. Entering Python is incredibly costly for such
+			// a simple operation, and we perform these operations often,
+			// so this optimisation is well worth it.
+			if(
+				typeId == (IECore::TypeId)Gaffer::ScriptNodeTypeId ||
+				typeId == (IECore::TypeId)Gaffer::NodeTypeId ||
+				typeId == (IECore::TypeId)Gaffer::DependencyNodeTypeId ||
+				typeId == (IECore::TypeId)Gaffer::ComputeNodeTypeId
+			)
+			{
+				return false;
+			}
+			return GraphComponentWrapper<WrappedType>::isInstanceOf( typeId );
+		}
+
 		virtual bool acceptsInput( const Gaffer::Plug *input ) const
 		{
 			IECorePython::ScopedGILLock gilLock;
