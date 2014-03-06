@@ -145,7 +145,7 @@ from CompoundPathPreview import CompoundPathPreview
 from DeferredPathPreview import DeferredPathPreview
 from HeaderPathPreview import HeaderPathPreview
 from InfoPathPreview import InfoPathPreview
-from ReaderPathPreview import ReaderPathPreview
+from ImageReaderPathPreview import ImageReaderPathPreview
 from FileIndexedIOPathPreview import FileIndexedIOPathPreview
 from DataPathPreview import DataPathPreview
 from OpPathPreview import OpPathPreview
