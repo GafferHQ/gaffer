@@ -98,7 +98,8 @@ parent['ObjectReader']['fileName'] = result
 		self.__script["camera"] = _Camera()
 		self.__script["camera"]["in"].setInput( self.__script["OpenGLAttributes"]["out"] )
 		
-		column.append( GafferUI.Viewer( self.__script ) )
+		self.__viewer = GafferUI.Viewer( self.__script )
+		column.append( self.__viewer )
 		self.__timeline = GafferUI.Timeline( self.__script )
 		column.append( self.__timeline )
 		
@@ -199,6 +200,10 @@ parent['ObjectReader']['fileName'] = result
 			self.__script["frameRange"]["start"].setValue( startFrame )
 			self.__script["frameRange"]["end"].setValue( endFrame )
 			GafferUI.Playback.acquire( self.__script.context() ).setFrameRange( startFrame, endFrame )
+
+		# focus the viewer
+		with self.__script.context() :
+			self.__viewer.viewGadgetWidget().getViewportGadget().frame( self.__script["OpenGLAttributes"]["out"].bound( "/" ) )
 
 GafferUI.PathPreviewWidget.registerType( "Scene", SceneReaderPathPreview )
 
