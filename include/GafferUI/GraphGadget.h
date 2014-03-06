@@ -210,8 +210,8 @@ class GraphGadget : public ContainerGadget
 		struct NodeGadgetEntry
 		{
 			NodeGadget *gadget;
-			boost::signals::connection inputChangedConnection;
-			boost::signals::connection plugSetConnection;
+			boost::signals::scoped_connection inputChangedConnection;
+			boost::signals::scoped_connection plugSetConnection;
 		};
 		typedef std::map<const Gaffer::Node *, NodeGadgetEntry> NodeGadgetMap;
 		NodeGadgetMap m_nodeGadgets;
