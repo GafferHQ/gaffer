@@ -117,10 +117,10 @@ class StandardSetTest( unittest.TestCase ) :
 		s.add( n1 )
 		s.add( n2 )
 		
-		self.failUnless( s[0] is n1 )
-		self.failUnless( s[1] is n2 )
-		self.failUnless( s[-1] is n2 )
-		self.failUnless( s[-2] is n1 )
+		self.failUnless( s[0].isSame( n1 ) )
+		self.failUnless( s[1].isSame( n2 ) )
+		self.failUnless( s[-1].isSame( n2 ) )
+		self.failUnless( s[-2].isSame( n1 ) )
 		
 		self.assertRaises( IndexError, s.__getitem__, 2 )
 		self.assertRaises( IndexError, s.__getitem__, -3 )
@@ -254,7 +254,7 @@ class StandardSetTest( unittest.TestCase ) :
 		
 		i = 0
 		for m in s :
-			self.failUnless( m is members[i] )
+			self.failUnless( m.isSame( members[i] ) )
 			i += 1
 		
 	def testRemoveReferenceCounting( self ) :

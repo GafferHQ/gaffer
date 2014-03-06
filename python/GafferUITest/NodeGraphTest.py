@@ -540,7 +540,7 @@ class NodeGraphTest( GafferUITest.TestCase ) :
 		
 		g = GafferUI.GraphGadget( s )
 		
-		self.assertTrue( g.getRoot() is s )
+		self.assertTrue( g.getRoot().isSame( s ) )
 		self.assertTrue( g.getFilter() is None )
 		self.assertTrue( g.nodeGadget( s["n1"] ) )
 		

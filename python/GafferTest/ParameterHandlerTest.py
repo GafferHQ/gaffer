@@ -146,7 +146,7 @@ class ParameterHandlerTest( unittest.TestCase ) :
 		h.setupPlug( n )
 		
 		self.assertEqual( h.plug().getName(), "i" )
-		self.failUnless( h.plug().parent() is n )
+		self.failUnless( h.plug().parent().isSame( n ) )
 		
 	def testCompoundParameterHandler( self ) :
 		

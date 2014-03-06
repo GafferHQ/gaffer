@@ -52,7 +52,7 @@ class ChildSetTest( unittest.TestCase ) :
 		
 		self.assertEqual( len( s ), 1 )
 		self.failUnless( s.contains( g1 ) )
-		self.failUnless( s[0] is g1 )
+		self.failUnless( s[0].isSame( g1 ) )
 		
 		p.removeChild( g1 )
 		self.assertEqual( len( s ), 0 )
