@@ -325,23 +325,28 @@ class NodeGraph( GafferUI.EditorWidget ) :
 			
 		# pad it a little bit so
 		# it sits nicer in the frame
-		bound.min -= IECore.V3f( 5, 5, 0 )
-		bound.max += IECore.V3f( 5, 5, 0 )
+		bound.min -= IECore.V3f( 1, 1, 0 )
+		bound.max += IECore.V3f( 1, 1, 0 )
 		
-		# add in the original framing if we were asked to extend rather than reset the frame
 		if extend :
+			# we're extending the existing framing, which we assume the
+			# user was happy with other than it not showing the nodes in question.
+			# so we just take the union of the existing frame and the one for the nodes.
 			cb = self.__currentFrame()
 			bound.extendBy( IECore.Box3f( IECore.V3f( cb.min.x, cb.min.y, 0 ), IECore.V3f( cb.max.x, cb.max.y, 0 ) ) )
-			
-		# now adjust the bounds so that we don't zoom in further than we want to
-		boundSize = bound.size()
-		widgetSize = IECore.V3f( self._qtWidget().width(), self._qtWidget().height(), 0 )
-		pixelsPerUnit = widgetSize / boundSize
-		adjustedPixelsPerUnit = min( pixelsPerUnit.x, pixelsPerUnit.y, 10 )
-		newBoundSize = widgetSize / adjustedPixelsPerUnit
-		boundCenter = bound.center()
-		bound.min = boundCenter - newBoundSize / 2.0
-		bound.max = boundCenter + newBoundSize / 2.0
+		else :
+			# we're reframing from scratch, so the frame for the nodes is all we need.
+			# we do however want to make sure that we don't zoom in too far if the node
+			# bounds are small, as having a single node filling the screen is of little use -
+			# it's better to see some context around it.
+			boundSize = bound.size()
+			widgetSize = IECore.V3f( self._qtWidget().width(), self._qtWidget().height(), 0 )
+			pixelsPerUnit = widgetSize / boundSize
+			adjustedPixelsPerUnit = min( pixelsPerUnit.x, pixelsPerUnit.y, 10 )
+			newBoundSize = widgetSize / adjustedPixelsPerUnit
+			boundCenter = bound.center()
+			bound.min = boundCenter - newBoundSize / 2.0
+			bound.max = boundCenter + newBoundSize / 2.0
 			
 		self.__gadgetWidget.getViewportGadget().frame( bound )
 	
