@@ -212,9 +212,24 @@ IECore::ConstFloatVectorDataPtr Reformat::computeChannelData( const std::string 
 	out.resize( ImagePlug::tileSize() * ImagePlug::tileSize() );
 
 	// Create some useful variables...
-	Imath::V2i formatOffset( formatPlug()->getValue().getDisplayWindow().min );	
-	Imath::Box2i tile( tileOrigin-formatOffset, Imath::V2i( tileOrigin.x - formatOffset.x + ImagePlug::tileSize() - 1, tileOrigin.y - formatOffset.y + ImagePlug::tileSize() - 1 ) );
 	Imath::V2f scaleFactor( scale() );
+	Imath::Box2i inputDisplayWindow( inPlug()->formatPlug()->getValue().getDisplayWindow() );
+
+	Imath::V2d inFormatOffset( inPlug()->formatPlug()->getValue().getDisplayWindow().min );
+	Imath::V2d outFormatOffset( formatPlug()->getValue().getDisplayWindow().min );
+
+	Imath::Box2i outTile( tileOrigin, Imath::V2i( tileOrigin.x + ImagePlug::tileSize() - 1, tileOrigin.y + ImagePlug::tileSize() - 1 ) );
+
+	Imath::Box2f inTile(
+		Imath::V2f(
+			double( outTile.min.x - outFormatOffset.x ) / scaleFactor.x + inFormatOffset.x,
+			double( outTile.min.y - outFormatOffset.y ) / scaleFactor.y + inFormatOffset.y
+		),
+		Imath::V2f(
+			double( outTile.max.x - outFormatOffset.x + 1. ) / scaleFactor.x + inFormatOffset.x - 1.,
+			double( outTile.max.y - outFormatOffset.y + 1. ) / scaleFactor.y + inFormatOffset.y - 1.
+		)
+	);
 
 	// Create our filter.
 	FilterPtr f = Filter::create( filterPlug()->getValue(), 1.f / scaleFactor.y );
@@ -225,15 +240,17 @@ IECore::ConstFloatVectorDataPtr Reformat::computeChannelData( const std::string 
 	{
 		Imath::V2d scaleFactorD( scale() );
 		Imath::Box2i sampleBox(
-			Imath::V2i( IECore::fastFloatFloor( tile.min.x / scaleFactorD.x ), IECore::fastFloatCeil( tile.min.y / scaleFactorD.y ) ),
-			Imath::V2i( IECore::fastFloatFloor( tile.max.x / scaleFactorD.x ), IECore::fastFloatCeil( tile.max.y / scaleFactorD.y ) )
+			Imath::V2i( IECore::fastFloatFloor( inTile.min.x ), IECore::fastFloatCeil( inTile.min.y ) ),
+			Imath::V2i( IECore::fastFloatFloor( inTile.max.x ), IECore::fastFloatCeil( inTile.max.y ) )
 		);
+
 		Sampler sampler( inPlug(), channelName, sampleBox, f, Sampler::Clamp );
-		for ( int y = tile.min.y, ty = 0; y <= tile.max.y; ++y, ++ty )
+		for ( int y = outTile.min.y, ty = 0; y <= outTile.max.y; ++y, ++ty )
 		{
-			for ( int x = tile.min.x, tx = 0; x <= tile.max.x; ++x, ++tx )
+			for ( int x = outTile.min.x, tx = 0; x <= outTile.max.x; ++x, ++tx )
 			{
-				out[ tx + ImagePlug::tileSize() * ty ] = sampler.sample( (x+.5f)/scaleFactor.x, (y+.5f)/scaleFactor.y ); 
+				float value = sampler.sample( float( ( x + .5f - outFormatOffset.x ) / scaleFactor.x + inFormatOffset.x ), float( ( y + .5f - outFormatOffset.y ) / scaleFactor.y + inFormatOffset.y ) ); 
+				out[ tx + ImagePlug::tileSize() * ty ] = value;
 			}
 		}
 		return outDataPtr;
@@ -242,12 +259,12 @@ IECore::ConstFloatVectorDataPtr Reformat::computeChannelData( const std::string 
 	// Get the dimensions of our filter and create a box that we can use to define the bounds of our input.
 	int fHeight = f->width();
 	
-	int sampleMinY = f->tap( (tile.min.y+.5) / scaleFactor.y );
-	int sampleMaxY = f->tap( (tile.max.y+.5) / scaleFactor.y );
+	int sampleMinY = f->tap( inTile.min.y );
+	int sampleMaxY = f->tap( inTile.max.y );
 		
 	f->setScale( 1.f / scaleFactor.x );
-	int sampleMinX = f->tap( (tile.min.x+.5) / scaleFactor.x );
-	int sampleMaxX = f->tap( (tile.max.x+.5) / scaleFactor.x );
+	int sampleMinX = f->tap( inTile.min.x );
+	int sampleMaxX = f->tap( inTile.max.x );
 	
 	int fWidth = f->width();
 
@@ -258,7 +275,7 @@ IECore::ConstFloatVectorDataPtr Reformat::computeChannelData( const std::string 
 
 	int sampleBoxWidth = sampleBox.size().x + 1;
 	int sampleBoxHeight = sampleBox.size().y + 1;
-	
+
 	// Create a temporary buffer that we can write the result of the first pass to.
 	// We extend the buffer vertically as we will need additional information in the
 	// vertical squash (the second pass) to properly convolve the filter.
@@ -284,7 +301,7 @@ IECore::ConstFloatVectorDataPtr Reformat::computeChannelData( const std::string 
 	int contributionIdx = 0;
 	for ( int i = 0; i < ImagePlug::tileSize(); ++i, contributionIdx += fWidth )
 	{
-		float center = (tile.min.x + i + 0.5) / scaleFactor.x;
+		float center = ( outTile.min.x + i + 0.5 - outFormatOffset.x ) / scaleFactor.x + inFormatOffset.x;
 		int tap = f->tap( center );
 		
 		int n = 0;	
@@ -335,7 +352,7 @@ IECore::ConstFloatVectorDataPtr Reformat::computeChannelData( const std::string 
 	f->setScale( 1.f / scaleFactor.y );
 	for ( int i = 0, contributionIdx = 0; i < ImagePlug::tileSize(); ++i, contributionIdx += fHeight )
 	{
-		float center = (tile.min.y + i + 0.5) / scaleFactor.y - sampleBox.min.y;
+		float center = ( outTile.min.y - outFormatOffset.y + i + 0.5 ) / scaleFactor.y - sampleBox.min.y + inFormatOffset.y;
 		int tap = f->tap( center );
 		
 		int n = 0;	
@@ -372,7 +389,7 @@ IECore::ConstFloatVectorDataPtr Reformat::computeChannelData( const std::string 
 					continue;
 				}
 
-				intensity += buffer[k + ImagePlug::tileSize() * contributor.pixel] * contributor.weight;
+				intensity += buffer[ k + ImagePlug::tileSize() * contributor.pixel ] * contributor.weight;
 			}
 
 			out[k + ImagePlug::tileSize() * i] = intensity / weightedSum[i];
