@@ -89,7 +89,10 @@ def _qtImport( name, lazy=False ) :
 # now import our actual functionality
 ##########################################################################
 
-import IECore
+# Import modules that must be imported before _GafferUI, using __import__
+# to avoid polluting the GafferUI namespace.
+__import__( "IECore" )
+__import__( "Gaffer" )
 
 from _GafferUI import *
 
