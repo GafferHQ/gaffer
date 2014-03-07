@@ -35,6 +35,16 @@
 #  
 ##########################################################################
 
+# Work around a bug which causes segfaults if uuid is imported after
+# PyQt. See here for details :
+#
+# https://bugs.gentoo.org/show_bug.cgi?id=317557
+# http://www.riverbankcomputing.com/pipermail/pyqt/2010-December/028773.html
+#
+# Using __import__ rather than import so that we don't pollute the GafferUI
+# namespace.
+__import__( "uuid" )
+
 ##########################################################################
 # Function to import a module from the qt bindings. This must be used
 # rather than importing the module directly. This allows us to support
