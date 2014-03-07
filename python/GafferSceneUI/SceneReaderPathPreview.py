@@ -61,6 +61,31 @@ class SceneReaderPathPreview( GafferUI.PathPreviewWidget ) :
 		## \todo: can we unify all file input to SceneReader by creating a SceneInterface that makes
 		# single object scenes using Reader ops behind the scenes?
 		self.__script["ObjectReader"] = Gaffer.ObjectReader()
+		self.__script["ObjectReader"].addChild( Gaffer.StringPlug( "fileNameForExpression", defaultValue = "", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+		self.__script["ObjectReader"]["fileNameForExpression"].setFlags( Gaffer.Plug.Flags.PerformsSubstitutions, False )
+		self.__script["ObjectReaderExpression"] = Gaffer.Expression( "Expression" )
+		## \todo: This essentially hardcodes 24 fps and 1 samplePerFrame. Those should be exposed in some way.
+		self.__script["ObjectReaderExpression"]["expression"].setValue(
+'''
+import IECore
+
+fileName = parent['ObjectReader']['fileNameForExpression']
+
+try :
+	sequence = IECore.FileSequence( fileName )
+	calc = IECore.OversamplesCalculator()
+	if isinstance( sequence.frameList, IECore.FrameRange ) and sequence.frameList.step == 1 :
+		calc.setTicksPerSecond( 24 )
+	
+	result = sequence.fileNameForFrame( calc.framesToTicks( context['frame'] ) )
+
+except :
+	result = fileName
+
+parent['ObjectReader']['fileName'] = result
+'''
+		)
+		self.__script["ObjectReader"]["fileName"].setInput( self.__script["ObjectReaderExpression"]["out"] )
 		self.__script["ObjectToScene"] = GafferScene.ObjectToScene( "ObjectToScene" )
 		self.__script["ObjectToScene"]["object"].setInput( self.__script["ObjectReader"]["out"] )
 		
@@ -74,18 +99,29 @@ class SceneReaderPathPreview( GafferUI.PathPreviewWidget ) :
 		self.__script["camera"]["in"].setInput( self.__script["OpenGLAttributes"]["out"] )
 		
 		column.append( GafferUI.Viewer( self.__script ) )
-		column.append( GafferUI.Timeline( self.__script ) )
+		self.__timeline = GafferUI.Timeline( self.__script )
+		column.append( self.__timeline )
 		
 		self.__script.selection().add( self.__script["camera"] )
 
 		self._updateFromPath()
 	
 	def isValid( self ) :
-
-		if not isinstance( self.getPath(), Gaffer.FileSystemPath ) or not self.getPath().isLeaf() :
+		
+		path = self.getPath()
+		if not isinstance( path, ( Gaffer.FileSystemPath, Gaffer.SequencePath ) ) or not path.isLeaf() :
 			return False
 		
-		ext = str( self.getPath() ).split( "." )[-1]
+		if isinstance( path, Gaffer.SequencePath ) :
+			
+			try :
+				sequence = IECore.FileSequence( str(path) )
+				ext = sequence.getSuffix().strip( "." )
+			except :
+				return False
+		
+		else :
+			ext = str(path).split( "." )[-1]
 		
 		supported = set( [ "abc" ] )
 		supported.update( GafferScene.SceneReader.supportedExtensions() )
@@ -99,13 +135,36 @@ class SceneReaderPathPreview( GafferUI.PathPreviewWidget ) :
 		
 		self.__script["SceneReader"]["fileName"].setValue( "" )
 		self.__script["AlembicSource"]["fileName"].setValue( "" )
-		self.__script["ObjectReader"]["fileName"].setValue( "" )
+		self.__script['ObjectReader']['fileNameForExpression'].setValue( "" )
 		
 		if not self.isValid() :
 			return
 		
-		fileName = str( self.getPath() )
-		ext = fileName.split( "." )[-1]
+		path = self.getPath()
+		
+		if isinstance( path, Gaffer.SequencePath ) :
+			
+			try :
+				sequence = IECore.FileSequence( str(path) )
+				fileName = str(sequence)
+				ext = sequence.getSuffix().strip( "." )
+				
+				calc = IECore.OversamplesCalculator()
+				if isinstance( sequence.frameList, IECore.FrameRange ) and sequence.frameList.step == 1 :
+					calc.setTicksPerSecond( 24 )
+				
+				frames = sequence.frameList.asList()
+				startFrame = int( calc.ticksToFrames( min(frames) ) )
+				endFrame = int( calc.ticksToFrames( max(frames) ) )
+			
+			except :
+				return
+		
+		else :
+			fileName = str(path)
+			ext = str(path).split( "." )[-1]
+			startFrame = None
+			endFrame = None
 		
 		outPlug = None
 		
@@ -120,21 +179,26 @@ class SceneReaderPathPreview( GafferUI.PathPreviewWidget ) :
 				if numSamples > 1 :
 					startFrame = int( round( scene.boundSampleTime( 0 ) * 24.0 ) )
 					endFrame = int( round( scene.boundSampleTime( numSamples - 1 ) * 24.0 ) )
-					self.__script["frameRange"]["start"].setValue( startFrame )
-					self.__script["frameRange"]["end"].setValue( endFrame )
-					GafferUI.Playback.acquire( self.__script.context() ).setFrameRange( startFrame, endFrame )
 		
 		elif ext in IECore.Reader.supportedExtensions() :
 			
-			self.__script["ObjectReader"]["fileName"].setValue( fileName )
+			self.__script['ObjectReader']['fileNameForExpression'].setValue( fileName )
 			outPlug = self.__script["ObjectToScene"]["out"]
 		
 		elif ext == "abc" :
 			
 			self.__script["AlembicSource"]["fileName"].setValue( fileName )
 			outPlug = self.__script["AlembicSource"]["out"]
+			## \todo: determine the frame range from the abc file
 		
 		self.__script["OpenGLAttributes"]["in"].setInput( outPlug )
+		
+		# update the timeline
+		if startFrame is not None and endFrame is not None :
+			self.__script.context().setFrame( startFrame )
+			self.__script["frameRange"]["start"].setValue( startFrame )
+			self.__script["frameRange"]["end"].setValue( endFrame )
+			GafferUI.Playback.acquire( self.__script.context() ).setFrameRange( startFrame, endFrame )
 
 GafferUI.PathPreviewWidget.registerType( "Scene", SceneReaderPathPreview )
 
