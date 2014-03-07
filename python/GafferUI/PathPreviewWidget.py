@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012-2014, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -96,16 +96,20 @@ class PathPreviewWidget( GafferUI.Widget ) :
 	@classmethod
 	def types( cls ) :
 	
-		return cls.__namesToCreators.keys()
+		return [ x[0] for x in cls.__namesToCreators ]
 		
 	@classmethod
 	def create( cls, name, path ) :
 	
-		return cls.__namesToCreators[name]( path )
+		for creatorName, creator in cls.__namesToCreators :
+			if name == creatorName :
+				return creator( path )
+		
+		return None
 
 	@classmethod
 	def registerType( cls, name, creator ) :
 	
-		cls.__namesToCreators[name] = creator
+		cls.__namesToCreators.append( ( name, creator ) )
 
-	__namesToCreators = {}
+	__namesToCreators = []

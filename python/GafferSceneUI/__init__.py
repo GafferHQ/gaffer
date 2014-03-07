@@ -49,7 +49,6 @@ import RenderUI
 import DisplaysUI
 import OptionsUI
 import OpenGLAttributesUI
-from AlembicPathPreview import AlembicPathPreview
 import SceneContextVariablesUI
 import SceneWriterUI
 import StandardOptionsUI
@@ -72,4 +71,9 @@ import ShaderSwitchUI
 import ShaderAssignmentUI
 import ParentConstraintUI
 import ParentUI
+
+# then all the PathPreviewWidgets. note that the order
+# of import controls the order of display.
+
+from AlembicPathPreview import AlembicPathPreview
 from SceneReaderPathPreview import SceneReaderPathPreview
