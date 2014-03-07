@@ -121,6 +121,7 @@ class ImageViewGadget : public GafferUI::Gadget
 				m_dragSelecting( false ),
 				m_drawSelection( false ),
 				m_channelToView( channelToView ),
+				m_hasAlpha( false ),
 				m_imageStats( imageStats ),
 				m_imageSampler( imageSampler )
 		{
@@ -174,6 +175,10 @@ class ImageViewGadget : public GafferUI::Gadget
 			m_colorUiElements[2].position = V2i( 385, 19 );
 			m_colorUiElements[3].name = "Mean"; // The mean color within a selection.
 			m_colorUiElements[3].position = V2i( 635, 19 );
+			
+			std::vector< std::string > channelNames;	
+			m_image->channelNames( channelNames );
+			m_hasAlpha = std::find( channelNames.begin(), channelNames.end(), "A" ) != channelNames.end();
 		}
 
 		virtual ~ImageViewGadget()
@@ -803,13 +808,19 @@ class ImageViewGadget : public GafferUI::Gadget
 					Box2f swatchBox( m_colorUiElements[i].swatchBox );
 					swatchBox.min += origin;
 					swatchBox.max += origin;
+					
+					Color4f color( *m_colorUiElements[i].color );
+					if( !m_hasAlpha )
+					{
+						color[3] = 1.;
+					}
 
 					glColor( Color4f( 0.f, 0.f, 0.f, 1.f ) );
 					style->renderSolidRectangle( swatchBox );
 					glColor( Color4f( 1.f ) );
 					style->renderSolidRectangle( Box2f( swatchBox.min, swatchBox.min + ( swatchBox.size() / V2f( 2. ) ) ) );
 					style->renderSolidRectangle( Box2f( swatchBox.min + ( swatchBox.size() / V2f( 2. ) ), swatchBox.max ) );
-					glColor( *m_colorUiElements[i].color );
+					glColor( color );
 					style->renderSolidRectangle( swatchBox );
 					glColor( Color4f( .29804, .29804, .29804, .90 ) );
 					style->renderRectangle( swatchBox );
@@ -880,6 +891,7 @@ class ImageViewGadget : public GafferUI::Gadget
 		bool m_dragSelecting;
 		bool m_drawSelection;
 		int &m_channelToView;
+		bool m_hasAlpha;
 
 		Imath::Box3f m_sampleWindow;
 		GafferImage::ImageStatsPtr m_imageStats;
