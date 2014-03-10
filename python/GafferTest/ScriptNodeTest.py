@@ -296,6 +296,8 @@ class ScriptNodeTest( unittest.TestCase ) :
 			def acceptsChild( self, child ) :
 			
 				return isinstance( child, GafferTest.AddNode )
+		
+		IECore.registerRunTimeTyped( MyScriptNode )
 				
 		n = MyScriptNode( "s" )
 		
@@ -304,6 +306,7 @@ class ScriptNodeTest( unittest.TestCase ) :
 		
 		n.addChild( c1 )
 		self.failUnless( c1.parent() is n )
+		self.failUnless( c1.scriptNode() is n )
 	
 		self.assertRaises( RuntimeError, n.addChild, c2 )
 		self.failUnless( c2.parent() is None )

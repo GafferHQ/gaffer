@@ -78,6 +78,17 @@ class ScriptNodeWrapper : public NodeWrapper<ScriptNode>
 		{
 		}
 
+		virtual bool isInstanceOf( IECore::TypeId typeId ) const
+		{
+			if( typeId == (IECore::TypeId)Gaffer::ScriptNodeTypeId )
+			{
+				// Correct for the slightly overzealous (but hugely beneficial)
+				// optimisation in NodeWrapper::isInstanceOf().
+				return true;
+			}
+			return NodeWrapper<ScriptNode>::isInstanceOf( typeId );
+		}
+		
 		virtual void execute( const std::string &pythonScript, Node *parent = 0 )
 		{
 			IECorePython::ScopedGILLock gilLock;
