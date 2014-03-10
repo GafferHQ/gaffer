@@ -36,6 +36,8 @@
 
 from __future__ import with_statement
 
+import re
+
 import IECore
 
 import Gaffer
@@ -67,11 +69,7 @@ class DisplaysPlugValueWidget( GafferUI.CompoundPlugValueWidget ) :
 		self.__footerWidget.append( GafferUI.Spacer( IECore.V2i( 1 ), maximumSize = IECore.V2i( 100000, 1 ) ), expand = True )
 				
 		return self.__footerWidget
-	
-	def _childPlugWidget( self, childPlug ) :
 		
-		return _ChildPlugWidget( childPlug )
-			
 	def __addMenuDefinition( self ) :
 	
 		node = self.getPlug().node()
@@ -122,6 +120,10 @@ class _ChildPlugWidget( GafferUI.PlugValueWidget ) :
 		parameterList.setVisible( False )
 		column.append( parameterList )
 
+	def hasLabel( self ) :
+	
+		return True
+	
 	def __collapseButtonClicked( self, button ) :
 	
 		column = button.parent().parent()
@@ -135,3 +137,9 @@ class _ChildPlugWidget( GafferUI.PlugValueWidget ) :
 		pass
 		
 GafferUI.PlugValueWidget.registerCreator( GafferScene.Displays.staticTypeId(), "displays", DisplaysPlugValueWidget )
+## \todo This regex is an interesting case to be considered during the string matching unification for #707. Once that
+# is done, intuitively we want to use a "displays.*" glob expression, but because the "*" will match anything
+# at all, including ".", it will match the children of what we want too. We might want to prevent wildcards from
+# matching "." when we come to use them in this context.
+GafferUI.PlugValueWidget.registerCreator( GafferScene.Displays.staticTypeId(), re.compile( "displays\.[^\.]+$" ), _ChildPlugWidget )
+
