@@ -34,6 +34,8 @@
 #  
 ##########################################################################
 
+import fnmatch
+
 import IECore
 
 import Gaffer
@@ -60,34 +62,7 @@ class SceneReaderPathPreview( GafferUI.PathPreviewWidget ) :
 		# for reading more generic single object files (cob, ptc, pdc, etc)
 		## \todo: can we unify all file input to SceneReader by creating a SceneInterface that makes
 		# single object scenes using Reader ops behind the scenes?
-		self.__script["ObjectReader"] = Gaffer.ObjectReader()
-		self.__script["ObjectReader"].addChild( Gaffer.StringPlug( "fileNameForExpression", defaultValue = "", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
-		self.__script["ObjectReader"]["fileNameForExpression"].setFlags( Gaffer.Plug.Flags.PerformsSubstitutions, False )
-		self.__script["ObjectReaderExpression"] = Gaffer.Expression( "Expression" )
-		## \todo: This essentially hardcodes 24 fps and 1 samplePerFrame. Those should be exposed in some way.
-		self.__script["ObjectReaderExpression"]["expression"].setValue(
-'''
-import IECore
-
-fileName = parent['ObjectReader']['fileNameForExpression']
-
-try :
-	sequence = IECore.FileSequence( fileName )
-	calc = IECore.OversamplesCalculator()
-	if isinstance( sequence.frameList, IECore.FrameRange ) and sequence.frameList.step == 1 :
-		calc.setTicksPerSecond( 24 )
-	
-	result = sequence.fileNameForFrame( calc.framesToTicks( context['frame'] ) )
-
-except :
-	result = fileName
-
-parent['ObjectReader']['fileName'] = result
-'''
-		)
-		self.__script["ObjectReader"]["fileName"].setInput( self.__script["ObjectReaderExpression"]["out"] )
-		self.__script["ObjectToScene"] = GafferScene.ObjectToScene( "ObjectToScene" )
-		self.__script["ObjectToScene"]["object"].setInput( self.__script["ObjectReader"]["out"] )
+		self.__script["ObjectPreview"] = _ObjectPreview()
 		
 		# display points and curves GL style rather than disks and ribbons
 		self.__script["OpenGLAttributes"] = GafferScene.OpenGLAttributes( "OpenGLAttributes" )
@@ -136,7 +111,7 @@ parent['ObjectReader']['fileName'] = result
 		
 		self.__script["SceneReader"]["fileName"].setValue( "" )
 		self.__script["AlembicSource"]["fileName"].setValue( "" )
-		self.__script['ObjectReader']['fileNameForExpression'].setValue( "" )
+		self.__script["ObjectPreview"]["fileName"].setValue( "" )
 		
 		if not self.isValid() :
 			return
@@ -183,8 +158,8 @@ parent['ObjectReader']['fileName'] = result
 		
 		elif ext in IECore.Reader.supportedExtensions() :
 			
-			self.__script['ObjectReader']['fileNameForExpression'].setValue( fileName )
-			outPlug = self.__script["ObjectToScene"]["out"]
+			self.__script["ObjectPreview"]["fileName"].setValue( fileName )
+			outPlug = self.__script["ObjectPreview"]["out"]
 		
 		elif ext == "abc" :
 			
@@ -292,3 +267,59 @@ def __fixedWidthNumericPlugValueWidget( plug ) :
 GafferUI.PlugValueWidget.registerCreator( _Camera.staticTypeId(), "depth", __fixedWidthNumericPlugValueWidget )
 GafferUI.PlugValueWidget.registerCreator( _Camera.staticTypeId(), "angle", __fixedWidthNumericPlugValueWidget )
 GafferUI.PlugValueWidget.registerCreator( _Camera.staticTypeId(), "elevation", __fixedWidthNumericPlugValueWidget )
+
+# Utility node for previewing single objects from a file or
+# sequence (cob, ptc, pdc, etc), as though they were a scene
+class _ObjectPreview( Gaffer.Node ) :
+	
+	def __init__( self, name = "_ObjectPreview" ) :
+		
+		Gaffer.Node.__init__( self, name )
+		
+		self["fileName"] = Gaffer.StringPlug( defaultValue = "" )
+		self["fileName"].setFlags( Gaffer.Plug.Flags.PerformsSubstitutions, False )
+		self["frameRate"] = Gaffer.FloatPlug( defaultValue = 24.0 )
+		self["samplesPerFrame"] = Gaffer.IntPlug( defaultValue = 1, minValue = 1 )
+		
+		# single object scenes using Reader ops behind the scenes?
+		self["ObjectReader"] = Gaffer.ObjectReader()
+		self["ObjectReaderExpression"] = Gaffer.Expression( "Expression" )
+		self["ObjectReaderExpression"]["expression"].setValue(
+'''
+import IECore
+
+fileName = parent['fileName']
+
+try :
+	sequence = IECore.FileSequence( fileName )
+	calc = IECore.OversamplesCalculator( frameRate = parent["frameRate"], samplesPerFrame = parent["samplesPerFrame"] )
+	if isinstance( sequence.frameList, IECore.FrameRange ) and sequence.frameList.step == 1 :
+		calc.setTicksPerSecond( 24 )
+	
+	result = sequence.fileNameForFrame( calc.framesToTicks( context['frame'] ) )
+
+except :
+	result = fileName
+
+parent['ObjectReader']['fileName'] = result
+'''
+		)
+		self["ObjectReader"]["fileName"].setInput( self["ObjectReaderExpression"]["out"] )
+		self["ObjectToScene"] = GafferScene.ObjectToScene( "ObjectToScene" )
+		self["ObjectToScene"]["object"].setInput( self["ObjectReader"]["out"] )
+		
+		self["out"] = GafferScene.ScenePlug( direction = Gaffer.Plug.Direction.Out )
+		self["out"].setInput( self["ObjectToScene"]["out"] )
+
+IECore.registerRunTimeTyped( _ObjectPreview )
+
+def __noduleCreator( plug ) :
+	
+	if isinstance( plug, GafferScene.ScenePlug ) :
+		return GafferUI.StandardNodule( plug )
+	
+	return None
+
+GafferUI.PlugValueWidget.registerCreator( _ObjectPreview.staticTypeId(), "out", None )
+GafferUI.PlugValueWidget.registerCreator( _ObjectPreview.staticTypeId(), "user", None )
+GafferUI.Nodule.registerNodule( _ObjectPreview.staticTypeId(), fnmatch.translate( "*" ), __noduleCreator )
