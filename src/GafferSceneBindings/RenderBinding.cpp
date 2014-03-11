@@ -63,13 +63,13 @@ class ExecutableRenderWrapper : public NodeWrapper<ExecutableRender>
 
 		virtual IECore::RendererPtr createRenderer() const
 		{
-			IECorePython::ScopedGILLock gilLock;
-			if( PyObject_HasAttrString( GraphComponentWrapper<ExecutableRender>::m_pyObject, "_createRenderer" ) )
+			if( this->isSubclassed() )
 			{
-				boost::python::override f = this->get_override( "_createRenderer" );
+				IECorePython::ScopedGILLock gilLock;
+				boost::python::object f = this->methodOverride( "_createRenderer" );
 				if( f )
 				{
-					return f();
+					return extract<IECore::RendererPtr>( f() );
 				}
 			}
 			throw IECore::Exception( "No _createRenderer method defined in Python." );
@@ -77,10 +77,10 @@ class ExecutableRenderWrapper : public NodeWrapper<ExecutableRender>
 		
 		virtual void outputWorldProcedural( const ScenePlug *scene, IECore::Renderer *renderer ) const
 		{
-			IECorePython::ScopedGILLock gilLock;
-			if( PyObject_HasAttrString( GraphComponentWrapper<ExecutableRender>::m_pyObject, "_outputWorldProcedural" ) )
+			if( this->isSubclassed() )
 			{
-				boost::python::override f = this->get_override( "_outputWorldProcedural" );
+				IECorePython::ScopedGILLock gilLock;
+				boost::python::object f = this->methodOverride( "_outputWorldProcedural" );
 				if( f )
 				{
 					f( ScenePlugPtr( const_cast<ScenePlug *>( scene ) ), IECore::RendererPtr( renderer ) );
@@ -92,13 +92,13 @@ class ExecutableRenderWrapper : public NodeWrapper<ExecutableRender>
 		
 		virtual std::string command() const
 		{
-			IECorePython::ScopedGILLock gilLock;
-			if( PyObject_HasAttrString( GraphComponentWrapper<ExecutableRender>::m_pyObject, "_command" ) )
+			if( this->isSubclassed() )
 			{
-				boost::python::override f = this->get_override( "_command" );
+				IECorePython::ScopedGILLock gilLock;
+				boost::python::object f = this->methodOverride( "_command" );
 				if( f )
 				{
-					return f();
+					return extract<std::string>( f() );
 				}
 			}
 			return ExecutableRender::command();

@@ -247,8 +247,6 @@ class Gadget : public Gaffer::GraphComponent
 		
 	private :
 		
-		Gadget();
-		
 		void styleChanged();
 		
 		ConstStylePtr m_style;

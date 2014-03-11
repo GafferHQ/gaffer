@@ -94,7 +94,7 @@ class NodeGadgetTest( GafferUITest.TestCase ) :
 		def creator( node ) :
 		
 			result = GafferUI.StandardNodeGadget( node )
-			result.origin = "lovinglyHandCraftedInCreator"
+			result.getContents().setText( "lovinglyHandCraftedInCreator" )
 			
 			return result
 		
@@ -103,7 +103,7 @@ class NodeGadgetTest( GafferUITest.TestCase ) :
 		n = MyNode()
 		g = GafferUI.NodeGadget.create( n )
 		self.failUnless( g.node() is n )
-		self.assertEqual( g.origin, "lovinglyHandCraftedInCreator" )
+		self.assertEqual( g.getContents().getText(), "lovinglyHandCraftedInCreator" )
 	
 if __name__ == "__main__":
 	unittest.main()

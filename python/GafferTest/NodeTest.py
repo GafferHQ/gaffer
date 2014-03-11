@@ -206,14 +206,21 @@ class NodeTest( GafferTest.TestCase ) :
 		self.assertEqual( n1["in"].acceptsInput( n2["out"] ), True )
 		self.assertEqual( n1["in"].acceptsInput( n3["sum"] ), False )
 		
+		n1["in"].setInput( n2["out"] )
+		self.assertRaises( RuntimeError, n1["in"].setInput, n3["sum"] )
+		
 		# check that we can't use a pass-through connection as
 		# a loophole.
+		
+		n1["in"].setInput( None )
 		
 		# this particular connection makes no sense but breaks
 		# no rules - we're just using it to test the loophole.
 		n2["out"].setInput( n3["sum"] )
 		
 		self.assertEqual( n1["in"].acceptsInput( n2["out"] ), False )
+
+		self.assertRaises( RuntimeError, n1["in"].setInput, n2["out"] )
 		
 	def testPlugFlagsChangedSignal( self ) :
 	

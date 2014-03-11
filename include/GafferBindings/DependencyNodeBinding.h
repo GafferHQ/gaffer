@@ -75,13 +75,14 @@ class DependencyNodeWrapper : public NodeWrapper<WrappedType>
 		
 		virtual void affects( const Gaffer::Plug *input, Gaffer::DependencyNode::AffectedPlugsContainer &outputs ) const
 		{
-			IECorePython::ScopedGILLock gilLock;
-			if( PyObject_HasAttrString( GraphComponentWrapper<WrappedType>::m_pyObject, "affects" ) )
+			if( this->isSubclassed() )
 			{
-				boost::python::override f = this->get_override( "affects" );
+				IECorePython::ScopedGILLock gilLock;
+				boost::python::object f = this->methodOverride( "affects" );
 				if( f )
 				{
-					boost::python::list pythonOutputs = f( Gaffer::PlugPtr( const_cast<Gaffer::Plug *>( input ) ) );
+					boost::python::object r = f( Gaffer::PlugPtr( const_cast<Gaffer::Plug *>( input ) ) );
+					boost::python::list pythonOutputs = boost::python::extract<boost::python::list>( r );
 					boost::python::container_utils::extend_container( outputs, pythonOutputs );
 					return;
 				}
@@ -91,17 +92,16 @@ class DependencyNodeWrapper : public NodeWrapper<WrappedType>
 		
 		virtual Gaffer::BoolPlug *enabledPlug()
 		{
-			IECorePython::ScopedGILLock gilLock;
-			if ( PyObject_HasAttrString( GraphComponentWrapper<WrappedType>::m_pyObject, "enabledPlug" ) )
+			if( this->isSubclassed() )
 			{
-				boost::python::override f = this->get_override( "enabledPlug" );
-				if ( f )
+				IECorePython::ScopedGILLock gilLock;
+				boost::python::object f = this->methodOverride( "enabledPlug" );
+				if( f )
 				{
-					Gaffer::BoolPlugPtr value = f();
+					Gaffer::BoolPlugPtr value = boost::python::extract<Gaffer::BoolPlugPtr>( f() );
 					return value.get();
 				}
 			}
-			
 			return WrappedType::enabledPlug();
 		}
 		
@@ -113,17 +113,18 @@ class DependencyNodeWrapper : public NodeWrapper<WrappedType>
 		
 		virtual Gaffer::Plug *correspondingInput( const Gaffer::Plug *output )
 		{
-			IECorePython::ScopedGILLock gilLock;
-			if ( PyObject_HasAttrString( GraphComponentWrapper<WrappedType>::m_pyObject, "correspondingInput" ) )
+			if( this->isSubclassed() )
 			{
-				boost::python::override f = this->get_override( "correspondingInput" );
-				if ( f )
+				IECorePython::ScopedGILLock gilLock;
+				boost::python::object f = this->methodOverride( "correspondingInput" );
+				if( f )
 				{
-					Gaffer::PlugPtr value = f( Gaffer::PlugPtr( const_cast<Gaffer::Plug *>( output ) ) );
+					Gaffer::PlugPtr value = boost::python::extract<Gaffer::PlugPtr>(
+						f( Gaffer::PlugPtr( const_cast<Gaffer::Plug *>( output ) ) )
+					);
 					return value.get();
 				}
-			}
-			
+			}			
 			return WrappedType::correspondingInput( output );
 		}
 		

@@ -39,7 +39,6 @@
 #define GAFFERBINDINGS_GRAPHCOMPONENTBINDING_H
 
 #include "IECorePython/RunTimeTypedBinding.h"
-#include "IECorePython/Wrapper.h"
 
 #include "Gaffer/GraphComponent.h"
 
@@ -47,36 +46,34 @@ namespace GafferBindings
 {
 
 template<typename WrappedType>
-class GraphComponentWrapper : public WrappedType, public IECorePython::Wrapper<WrappedType>
+class GraphComponentWrapper : public IECorePython::RunTimeTypedWrapper<WrappedType>
 {
 
 	public :
 	
 		GraphComponentWrapper( PyObject *self, const std::string &name=Gaffer::GraphComponent::defaultName<WrappedType>() )
-			:	WrappedType( name ), IECorePython::Wrapper<WrappedType>( self, this )
+			:	IECorePython::RunTimeTypedWrapper<WrappedType>( self, name )
 		{
 		}
 
 		template<typename Arg1, typename Arg2>
 		GraphComponentWrapper( PyObject *self, Arg1 arg1, Arg2 arg2 )
-			:	WrappedType( arg1, arg2 ), IECorePython::Wrapper<WrappedType>( self, this )
+			:	IECorePython::RunTimeTypedWrapper<WrappedType>( self, arg1, arg2 )
 		{
 		}
 		
 		template<typename Arg1, typename Arg2, typename Arg3>
 		GraphComponentWrapper( PyObject *self, Arg1 arg1, Arg2 arg2, Arg3 arg3 )
-			:	WrappedType( arg1, arg2, arg3 ), IECorePython::Wrapper<WrappedType>( self, this )
+			:	IECorePython::RunTimeTypedWrapper<WrappedType>( self, arg1, arg2, arg3 )
 		{
 		}
 
-		IECOREPYTHON_RUNTIMETYPEDWRAPPERFNS( WrappedType )
-
 		virtual bool acceptsChild( const Gaffer::GraphComponent *potentialChild ) const
 		{
-			IECorePython::ScopedGILLock gilLock;
-			if( PyObject_HasAttrString( IECorePython::Wrapper<WrappedType>::m_pyObject, "acceptsChild" ) )
+			if( this->isSubclassed() )
 			{
-				boost::python::override f = this->get_override( "acceptsChild" );
+				IECorePython::ScopedGILLock gilLock;
+				boost::python::object f = this->methodOverride( "acceptsChild" );
 				if( f )
 				{
 					return f( Gaffer::GraphComponentPtr( const_cast<Gaffer::GraphComponent *>( potentialChild ) ) );
@@ -87,10 +84,10 @@ class GraphComponentWrapper : public WrappedType, public IECorePython::Wrapper<W
 	
 		virtual bool acceptsParent( const Gaffer::GraphComponent *potentialParent ) const
 		{
-			IECorePython::ScopedGILLock gilLock;
-			if( PyObject_HasAttrString( IECorePython::Wrapper<WrappedType>::m_pyObject, "acceptsParent" ) )
+			if( this->isSubclassed() )
 			{
-				boost::python::override f = this->get_override( "acceptsParent" );
+				IECorePython::ScopedGILLock gilLock;
+				boost::python::object f = this->methodOverride( "acceptsParent" );
 				if( f )
 				{
 					return f( Gaffer::GraphComponentPtr( const_cast<Gaffer::GraphComponent *>( potentialParent ) ) );

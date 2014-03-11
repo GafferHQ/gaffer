@@ -1315,12 +1315,10 @@ NodeGadget *GraphGadget::addNodeGadget( Gaffer::Node *node )
 	
 	addChild( nodeGadget );
 	
-	NodeGadgetEntry nodeGadgetEntry;
+	NodeGadgetEntry &nodeGadgetEntry = m_nodeGadgets[node];
 	nodeGadgetEntry.inputChangedConnection = node->plugInputChangedSignal().connect( boost::bind( &GraphGadget::inputChanged, this, ::_1 ) );
 	nodeGadgetEntry.plugSetConnection = node->plugSetSignal().connect( boost::bind( &GraphGadget::plugSet, this, ::_1 ) );	
 	nodeGadgetEntry.gadget = nodeGadget.get();
-	
-	m_nodeGadgets[node] = nodeGadgetEntry;
 	
 	// highlight to reflect selection status
 	if( m_scriptNode && m_scriptNode->selection()->contains( node ) )
@@ -1345,11 +1343,7 @@ void GraphGadget::removeNodeGadget( const Gaffer::Node *node )
 	if( it!=m_nodeGadgets.end() )
 	{
 		removeChild( it->second.gadget );
-		it->second.inputChangedConnection.disconnect();
-		it->second.plugSetConnection.disconnect();
-		
 		m_nodeGadgets.erase( it );
-		
 		removeConnectionGadgets( node );
 	}
 }

@@ -101,10 +101,10 @@ class NodeWrapper : public GraphComponentWrapper<T>
 		
 		virtual bool acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const
 		{
-			IECorePython::ScopedGILLock gilLock;
-			if( PyObject_HasAttrString( GraphComponentWrapper<T>::m_pyObject, "acceptsInput" ) )
+			if( this->isSubclassed() )
 			{
-				boost::python::override f = this->get_override( "acceptsInput" );
+				IECorePython::ScopedGILLock gilLock;
+				boost::python::object f = this->methodOverride( "acceptsInput" );
 				if( f )
 				{
 					return f( Gaffer::PlugPtr( const_cast<Gaffer::Plug *>( plug ) ), Gaffer::PlugPtr( const_cast<Gaffer::Plug *>( inputPlug ) ) );

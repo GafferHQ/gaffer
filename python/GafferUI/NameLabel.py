@@ -68,7 +68,7 @@ class NameLabel( GafferUI.Label ) :
 
 	def setGraphComponent( self, graphComponent ) :
 		
-		if graphComponent is not None :
+		if graphComponent is not None and self.__graphComponent is not False :
 			if graphComponent.isSame( self.__graphComponent ) :
 				return
 		elif self.__graphComponent is None :

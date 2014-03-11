@@ -64,46 +64,58 @@ class GadgetWrapper : public GafferBindings::GraphComponentWrapper<WrappedType>
 		
 		virtual void setHighlighted( bool highlighted )
 		{
-			IECorePython::ScopedGILLock gilLock;
-			boost::python::override f = this->get_override( "setHighlighted" );
-			if( f )
+			if( this->isSubclassed() )
 			{
-				f( highlighted );
-				return;
+				IECorePython::ScopedGILLock gilLock;
+				boost::python::object f = this->methodOverride( "setHighlighted" );
+				if( f )
+				{
+					f( highlighted );
+					return;
+				}
 			}
 			WrappedType::setHighlighted( highlighted );
 		}
 
 		virtual Imath::Box3f bound() const
 		{
-			IECorePython::ScopedGILLock gilLock;
-			boost::python::override f = this->get_override( "bound" );
-			if( f )
+			if( this->isSubclassed() )
 			{
-				return f();
+				IECorePython::ScopedGILLock gilLock;
+				boost::python::object f = this->methodOverride( "bound" );
+				if( f )
+				{
+					return boost::python::extract<Imath::Box3f>( f() );
+				}
 			}
 			return WrappedType::bound();
 		}
 	
 		virtual std::string getToolTip( const IECore::LineSegment3f &line ) const
 		{
-			IECorePython::ScopedGILLock gilLock;
-			boost::python::override f = this->get_override( "getToolTip" );
-			if( f )
+			if( this->isSubclassed() )
 			{
-				return f( line );
+				IECorePython::ScopedGILLock gilLock;
+				boost::python::object f = this->methodOverride( "getToolTip" );
+				if( f )
+				{
+					return boost::python::extract<std::string>( f( line ) );
+				}
 			}
 			return WrappedType::getToolTip( line );
 		}
 		
 		virtual void doRender( const GafferUI::Style *style ) const
 		{
-			IECorePython::ScopedGILLock gilLock;
-			boost::python::override f = this->get_override( "doRender" );
-			if( f )
+			if( this->isSubclassed() )
 			{
-				f( style );
-				return;
+				IECorePython::ScopedGILLock gilLock;
+				boost::python::object f = this->methodOverride( "doRender" );
+				if( f )
+				{
+					f( style );
+					return;
+				}
 			}
 			WrappedType::doRender( style );
 		}

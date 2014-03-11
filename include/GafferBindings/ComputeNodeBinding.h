@@ -66,10 +66,10 @@ class ComputeNodeWrapper : public DependencyNodeWrapper<WrappedType>
 		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 		{
 			WrappedType::hash( output, context, h );
-			IECorePython::ScopedGILLock gilLock;
-			if( PyObject_HasAttrString( GraphComponentWrapper<WrappedType>::m_pyObject, "hash" ) )
+			if( this->isSubclassed() )
 			{
-				boost::python::override f = this->get_override( "hash" );
+				IECorePython::ScopedGILLock gilLock;
+				boost::python::object f = this->methodOverride( "hash" );
 				if( f )
 				{
 					boost::python::object pythonHash( h );
@@ -85,10 +85,10 @@ class ComputeNodeWrapper : public DependencyNodeWrapper<WrappedType>
 
 		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const
 		{
-			IECorePython::ScopedGILLock gilLock;
-			if( PyObject_HasAttrString( GraphComponentWrapper<WrappedType>::m_pyObject, "compute" ) )
+			if( this->isSubclassed() )
 			{
-				boost::python::override f = this->get_override( "compute" );
+				IECorePython::ScopedGILLock gilLock;
+				boost::python::object f = this->methodOverride( "compute" );
 				if( f )
 				{
 					f( Gaffer::ValuePlugPtr( output ), Gaffer::ContextPtr( const_cast<Gaffer::Context *>( context ) ) );

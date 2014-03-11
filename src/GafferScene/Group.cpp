@@ -480,8 +480,26 @@ IECore::ConstCompoundObjectPtr Group::computeGlobals( const Gaffer::Context *con
 				const InternedString &inputPath = it->first;
 				size_t secondSlashPos = inputPath.string().find( '/', 1 );
 				const std::string inputName( inputPath.string(), 1, secondSlashPos - 1 );
-				const InternedString &outputName = forwardMapping->member<InternedStringData>( inputName, true /* throw if missing */ )->readable();
-				std::string outputPath = std::string( "/" ) + groupName + "/" + outputName.string();
+				const InternedStringData *outputName = forwardMapping->member<InternedStringData>( inputName );
+				if( !outputName )
+				{
+					// Getting here indicates either a bug in computeMapping() or an inconsistency in one
+					// of our inputs whereby a forward declaration has been made with a name which isn't
+					// in childNames( "/" ). The second case can occur in practice when an input is being
+					// connected or disconnected - because our inputs are CompoundPlugs, part way through
+					// the setInput() process the child connections for globalsPlug() and childNamesPlug()
+					// will not correspond, leading us here. This problem occurs in InteractiveRenderManRenderTest
+					// when the scene is being updated from a plugDirtiedSignal() which is emitted when one
+					// child plug has been disconnected, but before the other one has. The real solution to
+					// this would be to properly batch up dirty signals so that only a single signal is
+					// emitted for the parent after all signals for the children have been emitted. Then we
+					// would only ever be called in a consistent connection state.
+					/// \todo Implement improved batching for dirty signalling and remove this workaround,
+					/// reverting to a call to forwardMapping->member<InternedStringData>( inputName, true ),
+					/// which will throw when an error is detected.
+					continue;
+				}
+				std::string outputPath = std::string( "/" ) + groupName + "/" + outputName->readable().string();
 				if( secondSlashPos != string::npos )
 				{
 					outputPath += inputPath.string().substr( secondSlashPos );
