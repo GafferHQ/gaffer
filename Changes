@@ -5,6 +5,9 @@
 - Made Plug flags serialisation more future proof (#684).
 - Removed redundant serialisation of default values. This reduced file sizes by 25% and load times by nearly 20% for a large production script. Note that changing the default value for a plug or shader parameter now represents a backwards compatibility break with old scripts.
 - Optimised python bindings, giving speedups in many areas, including file loading and shader generation.
+- Removed parameter mapping from ObjectReader
+- Fixed threading bugs in ObjectReader.
+- Fixed bugs preventing expressions being used with filenames in ObjectReader.
 
 #### UI
 
@@ -16,6 +19,7 @@
 - Added workaround for PyQt/uuid crashes (#775).
 - Added filtering so that DirNameParameter file browsers will only show directories and not files (#774).
 - Fixes image viewer colour swatches when the image doesn't contain an alpha channel.
+- Improved scene preview support to include .abc, .cob, and .pdc files (any files for which Cortex has a Reader implementation).
 
 #### Scene
 
@@ -41,6 +45,7 @@
 - Adopted new Python wrapping mechanism from Cortex.
 - Fixed pollution of GafferUI namespace with IECore module.
 - Added DirNameParameterValueWidget.
+- PathPreviewWidget now respects registration order.
 
 #### Build
 
