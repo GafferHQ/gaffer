@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2014, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -140,21 +140,11 @@ from PathFilterWidget import PathFilterWidget
 from CompoundPathFilterWidget import CompoundPathFilterWidget
 from InfoPathFilterWidget import InfoPathFilterWidget
 from BusyWidget import BusyWidget
-from PathPreviewWidget import PathPreviewWidget
-from CompoundPathPreview import CompoundPathPreview
-from DeferredPathPreview import DeferredPathPreview
-from HeaderPathPreview import HeaderPathPreview
-from InfoPathPreview import InfoPathPreview
-from ReaderPathPreview import ReaderPathPreview
-from FileIndexedIOPathPreview import FileIndexedIOPathPreview
-from DataPathPreview import DataPathPreview
-from OpPathPreview import OpPathPreview
 from NumericSlider import NumericSlider
 from ColorChooser import ColorChooser
 from ColorChooserDialogue import ColorChooserDialogue
 from MessageWidget import MessageWidget
 from NotificationMessageHandler import NotificationMessageHandler
-from AttributeCachePathPreview import AttributeCachePathPreview
 from MenuButton import MenuButton
 from PopupWindow import PopupWindow
 from ConfirmationDialogue import ConfirmationDialogue
@@ -163,6 +153,20 @@ from Divider import Divider
 import _Pointer
 from SplineWidget import SplineWidget
 from Bookmarks import Bookmarks
+
+# then all the PathPreviewWidgets. note that the order
+# of import controls the order of display.
+
+from PathPreviewWidget import PathPreviewWidget
+from CompoundPathPreview import CompoundPathPreview
+from DeferredPathPreview import DeferredPathPreview
+from InfoPathPreview import InfoPathPreview
+from HeaderPathPreview import HeaderPathPreview
+from FileIndexedIOPathPreview import FileIndexedIOPathPreview
+from DataPathPreview import DataPathPreview
+from AttributeCachePathPreview import AttributeCachePathPreview
+from ImageReaderPathPreview import ImageReaderPathPreview
+from OpPathPreview import OpPathPreview
 
 # then stuff specific to graph uis
 

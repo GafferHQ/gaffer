@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012-2014, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -41,7 +41,7 @@ import IECore
 import Gaffer
 import GafferUI
 
-class ReaderPathPreview( GafferUI.DeferredPathPreview ) :
+class ImageReaderPathPreview( GafferUI.DeferredPathPreview ) :
 
 	def __init__( self, path ) :
 	
@@ -67,13 +67,13 @@ class ReaderPathPreview( GafferUI.DeferredPathPreview ) :
 		if not ext :
 			return False
 			
-		return ext[1:].lower() in IECore.Reader.supportedExtensions()
+		return ext[1:].lower() in IECore.Reader.supportedExtensions( IECore.TypeId.ImageReader )
 		
 	def _load( self ) :
 	
 		reader = None
 		with IECore.IgnoredExceptions( RuntimeError ) :
-			reader = IECore.Reader.create( str( self.getPath() ) )
+			reader = IECore.ImageReader.create( str( self.getPath() ) )
 	
 		if reader is None :
 			return None
@@ -104,4 +104,4 @@ class ReaderPathPreview( GafferUI.DeferredPathPreview ) :
 		self.__gadgetWidget.getViewportGadget().setCamera( camera )
 		self.__gadgetWidget.getViewportGadget().frame( o.bound(), IECore.V3f( 0, 0, -1 ) )
 
-GafferUI.PathPreviewWidget.registerType( "Preview", ReaderPathPreview )
+GafferUI.PathPreviewWidget.registerType( "Preview", ImageReaderPathPreview )
