@@ -75,8 +75,7 @@ class SceneReaderPathPreview( GafferUI.PathPreviewWidget ) :
 		
 		self.__viewer = GafferUI.Viewer( self.__script )
 		column.append( self.__viewer )
-		self.__timeline = GafferUI.Timeline( self.__script )
-		column.append( self.__timeline )
+		column.append( GafferUI.Timeline( self.__script ) )
 		
 		self.__script.selection().add( self.__script["camera"] )
 
@@ -92,7 +91,7 @@ class SceneReaderPathPreview( GafferUI.PathPreviewWidget ) :
 			
 			try :
 				sequence = IECore.FileSequence( str(path) )
-				ext = sequence.getSuffix().strip( "." )
+				ext = sequence.fileName.split( "." )[-1]
 			except :
 				return False
 		
@@ -122,19 +121,18 @@ class SceneReaderPathPreview( GafferUI.PathPreviewWidget ) :
 			
 			try :
 				sequence = IECore.FileSequence( str(path) )
-				fileName = str(sequence)
-				ext = sequence.getSuffix().strip( "." )
-				
-				calc = IECore.OversamplesCalculator()
-				if isinstance( sequence.frameList, IECore.FrameRange ) and sequence.frameList.step == 1 :
-					calc.setTicksPerSecond( 24 )
-				
-				frames = sequence.frameList.asList()
-				startFrame = int( calc.ticksToFrames( min(frames) ) )
-				endFrame = int( calc.ticksToFrames( max(frames) ) )
-			
 			except :
 				return
+
+			fileName = str(sequence)
+			ext = sequence.fileName.split( "." )[-1]
+			calc = IECore.OversamplesCalculator()
+			if isinstance( sequence.frameList, IECore.FrameRange ) and sequence.frameList.step == 1 :
+				calc.setTicksPerSecond( 24 )
+			
+			frames = sequence.frameList.asList()
+			startFrame = int( calc.ticksToFrames( min(frames) ) )
+			endFrame = int( calc.ticksToFrames( max(frames) ) )
 		
 		else :
 			fileName = str(path)
@@ -312,14 +310,3 @@ parent['ObjectReader']['fileName'] = result
 		self["out"].setInput( self["ObjectToScene"]["out"] )
 
 IECore.registerRunTimeTyped( _ObjectPreview )
-
-def __noduleCreator( plug ) :
-	
-	if isinstance( plug, GafferScene.ScenePlug ) :
-		return GafferUI.StandardNodule( plug )
-	
-	return None
-
-GafferUI.PlugValueWidget.registerCreator( _ObjectPreview.staticTypeId(), "out", None )
-GafferUI.PlugValueWidget.registerCreator( _ObjectPreview.staticTypeId(), "user", None )
-GafferUI.Nodule.registerNodule( _ObjectPreview.staticTypeId(), fnmatch.translate( "*" ), __noduleCreator )
