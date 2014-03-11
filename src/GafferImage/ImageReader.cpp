@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2012-2014, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -210,11 +210,10 @@ Imath::Box2i ImageReader::computeDataWindow( const Gaffer::Context *context, con
 	std::string fileName = fileNamePlug()->getValue();
 	const ImageSpec *spec = imageCache()->imagespec( ustring( fileName.c_str() ) );
 
-	const int yOffset = ( spec->full_y + spec->full_height ) - spec->y;	
-	return Box2i(
-		V2i( spec->x, yOffset - spec->height ),
-		V2i( spec->x + spec->width - 1, yOffset - 1 )
-	);
+	Format format( Imath::Box2i( Imath::V2i( spec->full_x, spec->full_y ), Imath::V2i( spec->full_width + spec->full_x - 1, spec->full_height + spec->full_y - 1 ) ) );
+	Imath::Box2i dataWindow( Imath::V2i( spec->x, spec->y ), Imath::V2i( spec->width + spec->x - 1, spec->height + spec->y - 1 ) );
+
+	return format.yDownToFormatSpace( dataWindow );
 }
 
 IECore::ConstStringVectorDataPtr ImageReader::computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const
@@ -239,21 +238,23 @@ IECore::ConstFloatVectorDataPtr ImageReader::computeChannelData( const std::stri
 			return parent->channelDataPlug()->defaultValue();
 		}
 	}
-	
-	const int yOffset = ( spec->full_y + spec->full_height ) - tileOrigin.y - ImagePlug::tileSize();	
+
+	Format format( Imath::Box2i( Imath::V2i( spec->full_x, spec->full_y ), Imath::V2i( spec->full_width + spec->full_x - 1, spec->full_height + spec->full_y - 1 ) ) );
+	const int newY = format.formatToYDownSpace( tileOrigin.y + ImagePlug::tileSize() - 1 );
+
 	std::vector<float> channelData( ImagePlug::tileSize() * ImagePlug::tileSize() );
 	size_t channelIndex = channelIt - spec->channelnames.begin();
 	imageCache()->get_pixels(
 		uFileName,
 		0, 0, // subimage, miplevel
 		tileOrigin.x, tileOrigin.x + ImagePlug::tileSize(),
-		yOffset, yOffset + ImagePlug::tileSize(), 
+		newY, newY + ImagePlug::tileSize(),
 		0, 1,
 		channelIndex, channelIndex + 1,
 		TypeDesc::FLOAT,
 		&(channelData[0])
 	);
-	
+
 	// Create the output data buffer.
 	FloatVectorDataPtr resultData = new FloatVectorData;
 	vector<float> &result = resultData->writable();	
