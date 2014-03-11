@@ -110,7 +110,7 @@ class ReformatTest( unittest.TestCase ) :
 		reformatFormat = reformat["out"]["format"].getValue()
 		
 		# Check the data and display windows.
-		self.assertEqual( reformatDataWindow, IECore.Box2i( IECore.V2i( -66, -83 ), IECore.V2i( 365, 333 )  ) )
+		self.assertEqual( reformatDataWindow, IECore.Box2i( IECore.V2i( -66, -97 ), IECore.V2i( 365, 319 ) ) )
 		self.assertEqual( reformatFormat, f )
 
 		# Check the image data.
@@ -121,7 +121,13 @@ class ReformatTest( unittest.TestCase ) :
 		reformatOutput = reformat["out"].image()
 		reformatOutput.blindData().clear()
 		
-		self.assertEqual( reformatOutput, expectedOutput )
+		op = IECore.ImageDiffOp()
+		res = op(
+			imageA = expectedOutput,
+			imageB = reformatOutput
+		)
+
+		self.assertFalse( res.value )
 			
 	# Test that when the input and output format are the same that the hash is passed through.
 	def testHashPassThrough( self ) :

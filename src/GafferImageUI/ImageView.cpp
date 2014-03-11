@@ -117,7 +117,7 @@ class ImageViewGadget : public GafferUI::Gadget
 				m_image( image->copy() ),
 				m_texture( 0 ),
 				m_mousePos( mousePos ),
-				m_sampleColor( 0.f),
+				m_sampleColor( 0.f ),
 				m_dragSelecting( false ),
 				m_drawSelection( false ),
 				m_channelToView( channelToView ),
@@ -125,24 +125,19 @@ class ImageViewGadget : public GafferUI::Gadget
 				m_imageStats( imageStats ),
 				m_imageSampler( imageSampler )
 		{
-			V3f dataMin( m_dataWindow.min.x, m_dataWindow.min.y, 0.f );
-			V3f dataMax( 1.f + m_dataWindow.max.x, 1.f + m_dataWindow.max.y, 0.f );
-
+			V2f displayWindowCenter( ( m_displayWindow.min + m_displayWindow.max + V2f( 1 ) ) / Imath::V2f( 2. ) );
+			V2f dataWindowCenter( ( m_dataWindow.min + m_dataWindow.max + V2f( 1 ) ) / Imath::V2f( 2. ) );
+			V2f offset( dataWindowCenter.x - displayWindowCenter.x, displayWindowCenter.y - dataWindowCenter.y );
 			
-			V3f dispMin( m_displayWindow.min.x, m_displayWindow.min.y, 0.f );
-			V3f dispMax( 1.f + m_displayWindow.max.x, 1.f + m_displayWindow.max.y, 0.f );
-			V3f dispCenter = ( dispMin + dispMax ) / 2.f;
-
-			const int yOffset = ( m_displayWindow.min.y + m_displayWindow.size().y + 1 ) - m_dataWindow.min.y;
 			m_dataBound = Box3f(
 				V3f(
-					dataMin.x - dispCenter.x,
-					( yOffset - ( m_dataWindow.size().y + 1 ) ) - dispCenter.y,
+					offset.x - ( m_dataWindow.size().x + 1 ) / 2.,
+					offset.y - ( m_dataWindow.size().y + 1 ) / 2.,
 					0.f
 				),
 				V3f(
-					dataMax.x - dispCenter.x,
-					( yOffset ) - dispCenter.y,
+					offset.x + ( m_dataWindow.size().x + 1 ) / 2.,
+					offset.y + ( m_dataWindow.size().y + 1 ) / 2.,
 					0.f
 				)
 			);
@@ -722,8 +717,9 @@ class ImageViewGadget : public GafferUI::Gadget
 				color = Color4f( .2f, .2f, .2f, 1.f );
 				glColor( color );
 
-				const int newY = m_displayWindow.max.y - m_dataWindow.max.y;
-				drawWindow( dataRasterBox, V2f( m_dataWindow.min.x, newY ), V2f( m_dataWindow.max.x + 1, m_dataWindow.size().y + newY + 1 ), style );
+				Format format( m_displayWindow );
+				Box2i dataWindow( format.yDownToFormatSpace( m_dataWindow ) );
+				drawWindow( dataRasterBox, dataWindow.min, dataWindow.max + V2i( 1 ), style );
 			}
 
 			/// Draw the selection window.
