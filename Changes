@@ -1,3 +1,51 @@
+# 0.92.0
+
+#### Core
+
+- Made Plug flags serialisation more future proof (#684).
+- Removed redundant serialisation of default values. This reduced file sizes by 25% and load times by nearly 20% for a large production script. Note that changing the default value for a plug or shader parameter now represents a backwards compatibility break with old scripts.
+- Optimised python bindings, giving speedups in many areas, including file loading and shader generation.
+
+#### UI
+
+- Improved plug "Edit Input..." menu item. It now ensures that the input plug widget is directly visible on screen, whereas before it could only show the node editor for the input node.
+- Prevented nodes from being created offscreen (#640).
+- Exposed "enabled" plugs in a new Node Editor "Node" tab (#759).
+- Fixed MessageWidget crashes encountered in Maya.
+- Fixed bug preventing positioning of new nodes within backdrops (#769).
+- Added workaround for PyQt/uuid crashes (#775).
+- Added filtering so that DirNameParameter file browsers will only show directories and not files (#774).
+- Fixes image viewer colour swatches when the image doesn't contain an alpha channel.
+
+#### Scene
+
+- Options and Attributes nodes now have sensible default values for their plugs.
+
+#### Image
+
+- Fixed bugs associated with negative display window origins.
+- Fixed crash when creating ImageWriters with another image node selected (#681 #255).
+
+#### Arnold
+
+- Arnold shader names are now prefixed with "ai" within the node search menu, to aid finding them amongst the other nodes.
+
+#### API
+
+- Added Widget.reveal() method (#503).
+- Added extend argument to NodeGraph.frame(). The default value of false behaves exactly as before - the specified set of nodes are framed in the viewport. A value of true still causes the nodes to be included in the framing, but in addition to the original contents of the frame.
+- Properly implemented CompoundNumericPlugValueWidget.childPlugValueWidget().
+- Removed MessageWidget.textWidget() method. The internal text widget should now be considered private. The currently displayed messages may be cleared using the new MessageWidget.clear() method.
+- Removed deprecated MessageWidget.appendException() method.
+- Added control over the default button to the OpDialogue. This controls whether the OK or Cancel button is focussed by default when displaying the Op. The default value is as before, focussing the OK button, but the value can be controlled either by user data in the Op or by passing an alternative argument to the OpDialogue constructor.
+- Adopted new Python wrapping mechanism from Cortex.
+- Fixed pollution of GafferUI namespace with IECore module.
+- Added DirNameParameterValueWidget.
+
+#### Build
+
+- Requires Cortex 8.2.0.
+
 # 0.91.0
 
 #### Apps
