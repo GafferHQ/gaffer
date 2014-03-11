@@ -243,6 +243,16 @@ class FileSystemMode( BrowserEditor.Mode ) :
 		
 		BrowserEditor.Mode.__init__( self, browser )
 
+	def connect( self ) :
+		
+		currentPath = self.browser().pathChooser().getPath()
+		
+		BrowserEditor.Mode.connect( self )
+		
+		if isinstance( currentPath, ( Gaffer.FileSystemPath, Gaffer.SequencePath ) ) :
+			dirPath = currentPath.parent() if currentPath.isLeaf() else currentPath
+			self.browser().pathChooser().getPath().setFromPath( Gaffer.FileSystemPath( str(dirPath) ) )
+	
 	def _initialPath( self ) :
 	
 		return Gaffer.FileSystemPath(
@@ -265,7 +275,13 @@ class FileSequenceMode( BrowserEditor.Mode ) :
 	
 	def connect( self ) :
 		
+		currentPath = self.browser().pathChooser().getPath()
+		
 		BrowserEditor.Mode.connect( self )
+		
+		if isinstance( currentPath, ( Gaffer.FileSystemPath, Gaffer.SequencePath ) ) :
+			dirPath = currentPath.parent() if currentPath.isLeaf() else currentPath
+			self.browser().pathChooser().getPath().setFromPath( Gaffer.SequencePath( str(dirPath) ) )
 		
 		# we want to share our bookmarks with the non-sequence filesystem paths
 		self.browser().pathChooser().setBookmarks(
