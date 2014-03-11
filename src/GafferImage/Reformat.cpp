@@ -213,8 +213,6 @@ IECore::ConstFloatVectorDataPtr Reformat::computeChannelData( const std::string 
 
 	// Create some useful variables...
 	Imath::V2f scaleFactor( scale() );
-	Imath::Box2i inputDisplayWindow( inPlug()->formatPlug()->getValue().getDisplayWindow() );
-
 	Imath::V2d inFormatOffset( inPlug()->formatPlug()->getValue().getDisplayWindow().min );
 	Imath::V2d outFormatOffset( formatPlug()->getValue().getDisplayWindow().min );
 
