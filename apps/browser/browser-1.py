@@ -72,14 +72,14 @@ class browser( Gaffer.Application ) :
 	
 		self.root()["scripts"]["script1"] = Gaffer.ScriptNode()
 		
-		with GafferUI.Window( "Gaffer Browser" ) as window :
+		with GafferUI.Window( "Gaffer Browser" ) as self.__window :
 			browser = GafferUI.BrowserEditor( self.root()["scripts"]["script1"] )
 		
 		if args["initialPath"].value :
 			initialPath = os.path.abspath( args["initialPath"].value )
 			browser.pathChooser().getPath().setFromString( initialPath )
 					
-		window.setVisible( True )
+		self.__window.setVisible( True )
 		
 		GafferUI.EventLoop.mainEventLoop().start()		
 				
