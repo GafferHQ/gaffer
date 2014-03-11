@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2013-2014, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -74,10 +74,18 @@ class ImageWriterTest( unittest.TestCase ) :
 			self.failUnless( "B" in channelNames )
 			self.failUnless( not "A" in channelNames )
 		
+	def testAcceptsInput( self ) :
+		
+		w = GafferImage.ImageWriter()
+		p = GafferImage.ImagePlug( direction = Gaffer.Plug.Direction.Out )		
+		
+		self.failIf( w['requirements']['requirement0'].acceptsInput( p ) )
+		self.failUnless( w["in"].acceptsInput( p ) )
+	
 	def testTiffWrite( self ) :
 		self.__testExtension( "tif" )
 
-	# Outputting RGBA images with JPG doens't work but it should... this is a known issue and needs fixing.
+	# Outputting RGBA images with JPG doesn't work but it should... this is a known issue and needs fixing.
 	def testJpgWrite( self ) :
 		self.__testExtension( "jpg" )
 
