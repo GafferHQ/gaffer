@@ -99,6 +99,10 @@ class ImageReaderTest( unittest.TestCase ) :
 		self.assertEqual( f.getDisplayWindow(), IECore.Box2i( IECore.V2i( -5, -5 ), IECore.V2i( 20, 20 ) ) )
 		self.assertEqual( d, IECore.Box2i( IECore.V2i( 2, -14 ), IECore.V2i( 35, 19 ) ) )
 
+		expectedImage = IECore.Reader.create( self.negativeDisplayWindowFileName ).read()
+		expectedImage.blindData().clear()
+		self.assertEqual( expectedImage, n["out"].image() )
+
 	def testNegativeDataWindow( self ) :
 		
 		n = GafferImage.ImageReader()
