@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2013-2014, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -41,31 +41,42 @@ import IECore
 import Gaffer
 import GafferUI
 
-class UserPlugValueWidget( GafferUI.CompoundPlugValueWidget ) :
+class UserPlugValueWidget( GafferUI.PlugValueWidget ) :
 
-	def __init__( self, plug, collapsed=None, label=None, editable=True, **kw ) :
+	def __init__( self, plug, editable=True, **kw ) :
 
-		GafferUI.CompoundPlugValueWidget.__init__( self, plug, collapsed, label, **kw )
+		self.__column = GafferUI.ListContainer()
+		
+		GafferUI.PlugValueWidget.__init__( self, self.__column, plug, **kw )
 
-		self.__editable = editable
-		self.__footerWidget = None
+		with self.__column :
+			self.__layout = GafferUI.PlugLayout( plug )
+			if editable :
+				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal ) :
+					GafferUI.Spacer( IECore.V2i( GafferUI.PlugWidget.labelWidth(), 1 ) )
+					GafferUI.MenuButton( image="plus.png", hasFrame=False, menu=GafferUI.Menu( self.__addMenuDefinition() ) )
+					GafferUI.Spacer( IECore.V2i( 1 ), IECore.V2i( 999999, 1 ), parenting = { "expand" : True } )
 
-	def _footerWidget( self ) :
+	def hasLabel( self ) :
+	
+		return True
 
-		if not self.__editable :
-			return None
+	def setReadOnly( self, readOnly ) :
+	
+		if readOnly == self.getReadOnly() :
+			return
+	
+		GafferUI.PlugValueWidget.setReadOnly( self, readOnly )
+		
+		self.__layout.setReadOnly( readOnly )
 
-		if self.__footerWidget is not None :
-			return self.__footerWidget
+	def childPlugValueWidget( self, childPlug, lazy=True ) :
 
-		self.__footerWidget = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal )
-		self.__footerWidget.append( GafferUI.Spacer( IECore.V2i( GafferUI.PlugWidget.labelWidth(), 1 ) ) )
-		self.__footerWidget.append(
-			GafferUI.MenuButton( image="plus.png", hasFrame=False, menu=GafferUI.Menu( self.__addMenuDefinition() ) )
-		)
-		self.__footerWidget.append( GafferUI.Spacer( IECore.V2i( 1 ), IECore.V2i( 999999, 1 ) ), expand = True )
-
-		return self.__footerWidget
+		return self.__layout.plugValueWidget( childPlug, lazy )
+		
+	def _updateFromPlug( self ) :
+	
+		pass
 
 	def __addMenuDefinition( self ) :
 

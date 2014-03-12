@@ -49,6 +49,7 @@ class PlugLayout( GafferUI.Widget ) :
 		GafferUI.Widget.__init__( self, self.__mainContainer, **kw )
 		
 		self.__parent = parent
+		self.__readOnly = False
 		
 		# we need to connect to the childAdded/childRemoved signals on
 		# the parent so we can update the ui when plugs are added and removed.
@@ -62,6 +63,19 @@ class PlugLayout( GafferUI.Widget ) :
 				
 		self.__plugsToWidgets = {} # mapping from child plug to widget
 
+	def getReadOnly( self ) :
+	
+		return self.__readOnly
+
+	def setReadOnly( self, readOnly ) :
+ 	
+ 		if readOnly == self.getReadOnly() :
+ 			return
+ 	
+ 		self.__readOnly = readOnly
+ 		for widget in self.__plugsToWidgets.values() :
+			self.__applyReadOnly( widget )
+			
 	## Returns a PlugValueWidget representing the specified child plug.
 	# Because the layout is built lazily on demand, this might return None due
 	# to the user not having opened up the ui - in this case lazy=False may
@@ -125,7 +139,9 @@ class PlugLayout( GafferUI.Widget ) :
 				# widget here if we're in a vertical orientation.
 				QWIDGETSIZE_MAX = 16777215 # qt #define not exposed by PyQt or PySide
 				result.labelPlugValueWidget().label()._qtWidget().setFixedWidth( QWIDGETSIZE_MAX )
-							
+		
+		self.__applyReadOnly( result )
+						
  		return result
 	
 	def __visibilityChanged( self, widget ) :
@@ -155,3 +171,16 @@ class PlugLayout( GafferUI.Widget ) :
 		self.__childrenChangedPending = False
 		
 		return False # removes the callback
+
+	def __applyReadOnly( self, widget ) :
+	
+		if widget is None :
+			return
+		
+		if isinstance( widget, GafferUI.PlugValueWidget ) :
+			widget.setReadOnly( self.getReadOnly() )
+		elif isinstance(  widget, GafferUI.PlugWidget ) :
+			widget.labelPlugValueWidget().setReadOnly( self.getReadOnly() )
+			widget.plugValueWidget().setReadOnly( self.getReadOnly() )
+		else :
+			widget.plugValueWidget().setReadOnly( self.getReadOnly() )
