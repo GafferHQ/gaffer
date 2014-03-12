@@ -34,18 +34,29 @@
 #  
 ##########################################################################
 
-import IECore
-
 import Gaffer
 import GafferUI
+import GafferUITest
 
-class StandardNodeToolbar( GafferUI.NodeToolbar ) :
+class PlugLayoutTest( GafferUITest.TestCase ) :
 
-	def __init__( self, node, **kw ) :
+	def testRenamingPlugs( self ) :
 	
-		self.__row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
+		n = Gaffer.Node()
+		n["a"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		
-		GafferUI.NodeToolbar.__init__( self, node, self.__row, **kw )
+		ui = GafferUI.PlugLayout( n )
 		
-		self.__row.append( GafferUI.Spacer( IECore.V2i( 1, 1 ) ), expand = True )
-		self.__row.append( GafferUI.PlugLayout( node, orientation = GafferUI.ListContainer.Orientation.Horizontal ) )
+		w = ui.plugValueWidget( n["a"], lazy=False )
+		self.assertTrue( w is not None )
+		self.assertTrue( w.getPlug().isSame( n["a"] ) )
+		
+		n["a"].setName( "b" )
+		
+		w2 = ui.plugValueWidget( n["b"], lazy=False )
+		self.assertTrue( w2 is not None )
+		self.assertTrue( w2 is w )
+		self.assertTrue( w2.getPlug().isSame( n["b"] ) )
+		
+if __name__ == "__main__":
+	unittest.main()

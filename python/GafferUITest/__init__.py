@@ -98,6 +98,7 @@ from BoxUITest import BoxUITest
 from ConnectionGadgetTest import ConnectionGadgetTest
 from MessageWidgetTest import MessageWidgetTest
 from ModuleTest import ModuleTest
+from PlugLayoutTest import PlugLayoutTest
 
 if __name__ == "__main__":
 	unittest.main()
