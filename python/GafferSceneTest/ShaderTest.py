@@ -74,6 +74,27 @@ class ShaderTest( unittest.TestCase ) :
 		
 		self.assertEqual( len( s.state() ), 0 )
 		self.assertNotEqual( s.stateHash(), h )
+	
+	def testNodeNameBlindData( self ) :
+	
+		s = GafferSceneTest.TestShader( "node1" )
+		
+		h1 = s.stateHash()
+		s1 = s.state()
+		
+		cs = GafferTest.CapturingSlot( s.plugDirtiedSignal() )
+		
+		s.setName( "node2" )
+				
+		self.assertTrue( s["out"] in [ x[0] for x in cs ] )
+		
+		self.assertNotEqual( s.stateHash(), h1 )
+		
+		s2 = s.state()
+		self.assertNotEqual( s2, s1 )
+		
+		self.assertEqual( s1[0].blindData()["gaffer:nodeName"], IECore.StringData( "node1" ) )
+		self.assertEqual( s2[0].blindData()["gaffer:nodeName"], IECore.StringData( "node2" ) )
 		
 if __name__ == "__main__":
 	unittest.main()

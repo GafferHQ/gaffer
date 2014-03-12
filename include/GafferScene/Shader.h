@@ -149,6 +149,17 @@ class Shader : public Gaffer::DependencyNode
 
 	private :
 	
+		void nameChanged();
+		
+		// We want to use the node name when computing the shader, so that we
+		// can generate more useful shader handles. It's illegal to use anything
+		// other than plugs to affect computation though, so we use nameChanged()
+		// to transfer the value onto this private plug, thus ensuring that
+		// dirtiness is signalled appropriately and we have access to the name
+		// when computing.
+		Gaffer::StringPlug *nodeNamePlug();
+		const Gaffer::StringPlug *nodeNamePlug() const;
+	
 		static size_t g_firstPlugIndex;
 		
 };
