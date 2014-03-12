@@ -60,7 +60,11 @@ class PlugLayout( GafferUI.Widget ) :
 		# building plug uis can be very expensive, and often we're initially hidden in a non-current tab
 		# or a collapsed section. so we defer our building until we become visible to avoid unnecessary overhead.
 		self.__visibilityChangedConnection = self.visibilityChangedSignal().connect( Gaffer.WeakMethod( self.__visibilityChanged ) )
-				
+		
+		# since our layout is driven by metadata, we must respond dynamically
+		# to changes in that metadata.
+		self.__metadataChangedConnection = Gaffer.Metadata.plugValueChangedSignal().connect( Gaffer.WeakMethod( self.__plugMetadataChanged ) )
+		
 		self.__plugsToWidgets = {} # mapping from child plug to widget
 
 	def getReadOnly( self ) :
@@ -184,3 +188,12 @@ class PlugLayout( GafferUI.Widget ) :
 			widget.plugValueWidget().setReadOnly( self.getReadOnly() )
 		else :
 			widget.plugValueWidget().setReadOnly( self.getReadOnly() )
+
+	def __plugMetadataChanged( self, nodeTypeId, plugPath, key ) :
+	
+		node = self.__parent if isinstance( self.__parent, Gaffer.Node ) else self.__parent.node()
+		if not node.isInstanceOf( node.typeId() ) :
+			return
+
+		if key == "divider" :
+			self.__update()
