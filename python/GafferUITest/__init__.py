@@ -89,6 +89,7 @@ from SliderTest import SliderTest
 from NumericPlugValueWidgetTest import NumericPlugValueWidgetTest
 from CompoundNumericPlugValueWidgetTest import CompoundNumericPlugValueWidgetTest
 from NameLabelTest import NameLabelTest
+from NameWidgetTest import NameWidgetTest
 from GLWidgetTest import GLWidgetTest
 from BookmarksTest import BookmarksTest
 from SectionedCompoundDataPlugValueWidgetTest import SectionedCompoundDataPlugValueWidgetTest

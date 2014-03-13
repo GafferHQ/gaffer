@@ -1,7 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,52 +34,42 @@
 #  
 ##########################################################################
 
-from __future__ import with_statement
-
 import Gaffer
 import GafferUI
+import GafferUITest
 
-QtCore = GafferUI._qtImport( "QtCore" )
-QtGui = GafferUI._qtImport( "QtGui" )
+class NameWidgetTest( GafferUITest.TestCase ) :
 
-class NameWidget( GafferUI.TextWidget ) :
-
-	def __init__( self, graphComponent, **kw ) :
+	def test( self ) :
 	
-		GafferUI.TextWidget.__init__( self, **kw )
-
-		self._qtWidget().setValidator( QtGui.QRegExpValidator( QtCore.QRegExp( "[A-Za-z_]+[A-Za-z_0-9]*" ), self._qtWidget() ) )
-
-		self.__graphComponent = None
-		self.setGraphComponent( graphComponent )
-
-		self.__editingFinishedConnection = self.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__setName ) )
-
-	def setGraphComponent( self, graphComponent ) :
-	
-		if self.__graphComponent == graphComponent :
-			return
+		n = Gaffer.Node()
+		w = GafferUI.NameWidget( n )
 		
-		self.__graphComponent = graphComponent
-		if self.__graphComponent is not None :
-			self.__nameChangedConnection = self.__graphComponent.nameChangedSignal().connect( Gaffer.WeakMethod( self.__setText ) )
-		else :
-			self.__nameChangedConnection = None
+		self.assertEqual( w.getText(), n.getName() )
+		
+		n.setName( "somethingElse" )
+		self.assertEqual( w.getText(), "somethingElse" )
+	
+	def testConstructWithoutGraphComponent( self ) :
+	
+		w = GafferUI.NameWidget( None )
+		self.assertEqual( w.getText(), "" )
 			
-		self.__setText()
+		n = Gaffer.Node()
+		w.setGraphComponent( n )
 		
-	def getGraphComponent( self ) :
+		self.assertEqual( w.getText(), n.getName() )		
 	
-		return self.__graphComponent
+	def testSetGraphComponentToNone( self ) :
 	
-	def __setName( self, *unwantedArgs ) :
+		n = Gaffer.Node()
+		w = GafferUI.NameWidget( n )
+		self.assertEqual( w.getText(), n.getName() )
 		
-		if self.__graphComponent is None :
-			return
-		
-		with Gaffer.UndoContext( self.__graphComponent.ancestor( Gaffer.ScriptNode().staticTypeId() ) ) :
-			self.setText( self.__graphComponent.setName( self.getText() ) )
-
-	def __setText( self, *unwantedArgs ) :
+		w.setGraphComponent( None )
+		self.assertEqual( w.getText(), "" )
+		self.assertTrue( w.getGraphComponent() is None )
 	
-		self.setText( self.__graphComponent.getName() if self.__graphComponent is not None else "" )
+if __name__ == "__main__":
+	unittest.main()
+	
