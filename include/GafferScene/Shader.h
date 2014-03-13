@@ -136,6 +136,8 @@ class Shader : public Gaffer::DependencyNode
 				
 				typedef std::map<const Shader *, ShaderAndHash> ShaderMap;
 				ShaderMap m_shaders;
+				
+				unsigned int m_handleCount;
 						
 		};
 		

@@ -253,7 +253,7 @@ void Shader::nameChanged()
 //////////////////////////////////////////////////////////////////////////
 
 Shader::NetworkBuilder::NetworkBuilder( const Shader *rootNode )
-	:	m_rootNode( rootNode )
+	:	m_rootNode( rootNode ), m_handleCount( 0 )
 {
 }
 
@@ -353,7 +353,14 @@ const std::string &Shader::NetworkBuilder::shaderHandle( const Shader *shaderNod
 	if( !handleData )
 	{
 		s->setType( "shader" );
-		handleData = new IECore::StringData( boost::lexical_cast<std::string>( s ) );
+		// the handle includes the node name so as to help with debugging, but also
+		// includes an integer unique to this shader group, as two shaders could have
+		// the same name if they don't have the same parent - because one is inside a
+		// Box for instance.
+		handleData = new IECore::StringData(
+			 boost::lexical_cast<std::string>( ++m_handleCount ) + "_" +
+			 s->blindData()->member<IECore::StringData>( "gaffer:nodeName" )->readable()
+		);
 		s->parameters()["__handle"] = handleData;
 	}
 	return handleData->readable();

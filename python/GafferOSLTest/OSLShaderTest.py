@@ -300,6 +300,66 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 				"out",
 			] )
 		)
+	
+	def testRepeatability( self ) :
+	
+		s1 = self.compileShader( os.path.dirname( __file__ ) + "/shaders/outputTypes.osl" )
+		s2 = self.compileShader( os.path.dirname( __file__ ) + "/shaders/types.osl" )
+
+		sn1 = GafferOSL.OSLShader()
+		sn1.loadShader( s1 )
 		
+		sn2 = GafferOSL.OSLShader()
+		sn2.loadShader( s2 )
+		
+		sn2["parameters"]["i"].setInput( sn1["out"]["i"] )
+		
+		self.assertEqual( sn2.stateHash(), sn2.stateHash() )
+		self.assertEqual( sn2.state(), sn2.state() )
+	
+	def testHandlesAreHumanReadable( self ) :
+	
+		s1 = self.compileShader( os.path.dirname( __file__ ) + "/shaders/outputTypes.osl" )
+		s2 = self.compileShader( os.path.dirname( __file__ ) + "/shaders/types.osl" )
+
+		sn1 = GafferOSL.OSLShader( "Shader1" )
+		sn1.loadShader( s1 )
+		
+		sn2 = GafferOSL.OSLShader( "Shader2" )
+		sn2.loadShader( s2 )
+		
+		sn2["parameters"]["i"].setInput( sn1["out"]["i"] )
+		
+		state = sn2.state()
+		self.assertTrue( "Shader1" in state[0].parameters["__handle"].value )
+	
+	def testHandlesAreUniqueEvenIfNodeNamesArent( self ) :
+	
+		s1 = self.compileShader( os.path.dirname( __file__ ) + "/shaders/outputTypes.osl" )
+		s2 = self.compileShader( os.path.dirname( __file__ ) + "/shaders/types.osl" )
+
+		script = Gaffer.ScriptNode()
+	
+		script["in1"] = GafferOSL.OSLShader()
+		script["in1"].loadShader( s1 )
+		
+		script["in2"] = GafferOSL.OSLShader()
+		script["in2"].loadShader( s1 )
+		
+		script["shader"] = GafferOSL.OSLShader()
+		script["shader"].loadShader( s2 )
+		
+		script["shader"]["parameters"]["i"].setInput( script["in1"]["out"]["i"] )
+		script["shader"]["parameters"]["f"].setInput( script["in2"]["out"]["f"] )
+		
+		box = Gaffer.Box.create( script, Gaffer.StandardSet( [ script["in1"] ] ) )
+		
+		# because the nodes have different parents, we can give them the same name.
+		box["in1"].setName( "notUnique" )
+		script["in2"].setName( "notUnique" )
+		
+		state = script["shader"].state()
+		self.assertNotEqual( state[0].parameters["__handle"], state[1].parameters["__handle"] )
+	
 if __name__ == "__main__":
 	unittest.main()
