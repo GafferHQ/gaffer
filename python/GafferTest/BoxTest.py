@@ -641,6 +641,27 @@ class BoxTest( unittest.TestCase ) :
 		self.assertEqual( len( cs ), 1 )
 		self.assertEqual( cs[0], ( Gaffer.Box.staticTypeId(), p.relativeName( b ), "description" ) )
 	
+	def testNodeMetadata( self ) :
+	
+		s = Gaffer.ScriptNode()
+	
+		s["b"] = Gaffer.Box()
+		self.assertEqual( s["b"].getNodeMetadata( "description" ), None )
+		
+		cs = GafferTest.CapturingSlot( Gaffer.Metadata.nodeValueChangedSignal() )
+		
+		s["b"].setNodeMetadata( "description", "aaa" )
+		self.assertEqual( s["b"].getNodeMetadata( "description" ), IECore.StringData( "aaa" ) )
+		self.assertEqual( Gaffer.Metadata.nodeValue( s["b"], "description" ), "aaa" )
+
+		self.assertEqual( len( cs ), 1 )
+		self.assertEqual( cs[0], ( Gaffer.Box.staticTypeId(), "description" ) )
+		
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+		
+		self.assertEqual( s2["b"].getNodeMetadata( "description" ), IECore.StringData( "aaa" ) )
+		
 if __name__ == "__main__":
 	unittest.main()
 	

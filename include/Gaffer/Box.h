@@ -91,6 +91,8 @@ class Box : public Node
 		/// make sense to register a fixed set of metadata as with other
 		/// node types. Instead, each instance stores its own metadata, which
 		/// can be queried and set with these methods.
+		const IECore::Data *getNodeMetadata( IECore::InternedString key ) const;
+		void setNodeMetadata( IECore::InternedString key, IECore::ConstDataPtr value );
 		const IECore::Data *getPlugMetadata( const Plug *plug, IECore::InternedString key ) const;
 		void setPlugMetadata( const Plug *plug, IECore::InternedString key, IECore::ConstDataPtr value );
 
@@ -107,8 +109,9 @@ class Box : public Node
 
 		bool validatePromotability( const Plug *descendantPlug, bool throwExceptions, bool checkNode = true ) const;
 		
-		typedef std::map<ConstPlugPtr, IECore::CompoundDataPtr> PlugMetadataMap;
+		IECore::CompoundDataPtr m_nodeMetadata;
 		
+		typedef std::map<ConstPlugPtr, IECore::CompoundDataPtr> PlugMetadataMap;
 		PlugMetadataMap m_plugMetadata;
 
 		friend class GafferBindings::BoxSerialiser;

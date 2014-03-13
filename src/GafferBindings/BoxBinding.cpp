@@ -79,6 +79,28 @@ class BoxSerialiser : public NodeSerialiser
 		std::string result = NodeSerialiser::postHierarchy( graphComponent, identifier, serialisation );
 		
 		const Box *box = static_cast<const Box *>( graphComponent );
+		
+		if( const IECore::CompoundData *nodeMetadata = box->m_nodeMetadata )
+		{
+			const IECore::CompoundDataMap &metadata = nodeMetadata->readable();
+			for( IECore::CompoundDataMap::const_iterator it = metadata.begin(), eIt = metadata.end(); it != eIt; ++it )
+			{
+				if( !it->second )
+				{
+					continue;
+				}
+				
+				object pythonValue( it->second );
+				std::string stringValue = extract<std::string>( pythonValue.attr( "__repr__" )() );
+				result += boost::str(
+					boost::format( "%s.setNodeMetadata( \"%s\", %s )\n" ) %
+						identifier %
+						it->first %
+						stringValue
+				);
+			}
+		}
+		
 		for( RecursivePlugIterator pIt( box ); pIt != pIt.end(); ++pIt )
 		{
 			Box::PlugMetadataMap::const_iterator mIt = box->m_plugMetadata.find( *pIt );
@@ -115,6 +137,12 @@ static PlugPtr promotePlug( Box &b, Plug *descendantPlug )
 	return b.promotePlug( descendantPlug );
 }
 
+static IECore::DataPtr getNodeMetadata( Box &b, const char *key )
+{
+	const IECore::Data *d = b.getNodeMetadata( key );
+	return d ? d->copy() : NULL;
+}
+
 static IECore::DataPtr getPlugMetadata( Box &b, const Plug *plug, const char *key )
 {
 	const IECore::Data *d = b.getPlugMetadata( plug, key );
@@ -132,6 +160,8 @@ void bindBox()
 		.def( "plugIsPromoted", &Box::plugIsPromoted )
 		.def( "unpromotePlug", &Box::unpromotePlug )
 		.def( "exportForReference", &Box::exportForReference )
+		.def( "getNodeMetadata", &getNodeMetadata )
+		.def( "setNodeMetadata", &Box::setNodeMetadata )
 		.def( "getPlugMetadata", &getPlugMetadata )
 		.def( "setPlugMetadata", &Box::setPlugMetadata )
 		.def( "create", &Box::create )

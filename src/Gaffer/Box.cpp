@@ -279,6 +279,25 @@ bool Box::validatePromotability( const Plug *descendantPlug, bool throwException
 	return true;
 }
 
+const IECore::Data *Box::getNodeMetadata( IECore::InternedString key ) const
+{
+	if( !m_nodeMetadata )
+	{
+		return NULL;
+	}
+	return m_nodeMetadata->member<IECore::Data>( key );
+}
+
+void Box::setNodeMetadata( IECore::InternedString key, IECore::ConstDataPtr value )
+{
+	if( !m_nodeMetadata )
+	{
+		m_nodeMetadata = new IECore::CompoundData;
+	}
+	m_nodeMetadata->writable()[key] = IECore::constPointerCast<IECore::Data>( value );
+	Metadata::nodeValueChangedSignal()( staticTypeId(), key );
+}
+
 const IECore::Data *Box::getPlugMetadata( const Plug *plug, IECore::InternedString key ) const
 {
 	PlugMetadataMap::const_iterator it = m_plugMetadata.find( plug );
@@ -450,6 +469,12 @@ BoxPtr Box::create( Node *parent, const Set *childNodes )
 namespace // anonymous
 {
 
+IECore::ConstDataPtr boxNodeMetadata( const Node *node, IECore::InternedString key )
+{
+	const Box *box = static_cast<const Box *>( node );
+	return box->getNodeMetadata( key );
+}
+
 IECore::ConstDataPtr boxPlugMetadata( const Plug *plug, IECore::InternedString key )
 {
 	const Box *box = static_cast<const Box *>( plug->node() );
@@ -466,8 +491,15 @@ int registerMetadata()
 {
 	/// \todo Perhaps if Metadata::registerPlugValue() allowed match strings for keys
 	/// as well as plugs, we wouldn't need to loop over an explicit list of keys.
-	const char *keys[] = { "description", "nodeGadget:nodulePosition", NULL };
-	for( const char **key = keys; *key; key++ )
+	const char *nodeKeys[] = { "description" };
+	const char *plugKeys[] = { "description", "nodeGadget:nodulePosition", NULL };
+	
+	for( const char **key = nodeKeys; *key; key++ )
+	{
+		Metadata::registerNodeValue( Box::staticTypeId(), *key, boost::bind( boxNodeMetadata, ::_1, *key ) );
+	}
+	
+	for( const char **key = plugKeys; *key; key++ )
 	{
 		Metadata::registerPlugValue( Box::staticTypeId(), "*", *key, boost::bind( boxPlugMetadata, ::_1, *key ) );
 	}
