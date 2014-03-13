@@ -185,6 +185,17 @@ class MetadataTest( GafferTest.TestCase ) :
 		self.assertEqual( len( ps ), 2 )
 		self.assertEqual( len( ns ), 0 )
 		self.assertEqual( ps[1], ( GafferTest.AddNode.staticTypeId(), "op1", "k" ) )
+	
+	def testSignalsDontExposeInternedStrings( self ) :
+	
+		cs = GafferTest.CapturingSlot( Gaffer.Metadata.nodeValueChangedSignal() )
+		Gaffer.Metadata.registerNodeValue( GafferTest.AddNode, "k", "aaa" )
+		self.assertTrue( type( cs[0][1] ) is str )
+		
+		cs = GafferTest.CapturingSlot( Gaffer.Metadata.plugValueChangedSignal() )
+		Gaffer.Metadata.registerPlugValue( GafferTest.AddNode, "op1", "k", "bbb" )
+		self.assertTrue( type( cs[0][1] ) is str )
+		self.assertTrue( type( cs[0][2] ) is str )
 		
 if __name__ == "__main__":
 	unittest.main()

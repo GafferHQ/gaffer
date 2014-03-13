@@ -222,6 +222,23 @@ static void registerPlugDescription( object nodeTypeId, const char *plugPath, ob
 	Metadata::registerPlugDescription( objectToTypeId( nodeTypeId ), plugPath, objectToPlugValueFunction( description ) );
 }
 
+struct ValueChangedSlotCaller
+{
+
+	boost::signals::detail::unusable operator()( boost::python::object slot, IECore::TypeId nodeTypeId, IECore::InternedString key )
+	{
+		slot( nodeTypeId, key.c_str() );
+		return boost::signals::detail::unusable();
+	}
+
+	boost::signals::detail::unusable operator()( boost::python::object slot, IECore::TypeId nodeTypeId, const MatchPattern &plugPath, IECore::InternedString key )
+	{
+		slot( nodeTypeId, plugPath.c_str(), key.c_str() );
+		return boost::signals::detail::unusable();
+	}
+	
+};
+
 void bindMetadata()
 {	
 	scope s = class_<Metadata>( "Metadata", no_init )
@@ -279,8 +296,8 @@ void bindMetadata()
 		.staticmethod( "plugValueChangedSignal" )
 	;
 
-	SignalBinder<Metadata::NodeValueChangedSignal>::bind( "NodeValueChangedSignal" );
-	SignalBinder<Metadata::PlugValueChangedSignal>::bind( "PlugValueChangedSignal" );
+	SignalBinder<Metadata::NodeValueChangedSignal, DefaultSignalCaller<Metadata::NodeValueChangedSignal>, ValueChangedSlotCaller>::bind( "NodeValueChangedSignal" );
+	SignalBinder<Metadata::PlugValueChangedSignal, DefaultSignalCaller<Metadata::NodeValueChangedSignal>, ValueChangedSlotCaller>::bind( "PlugValueChangedSignal" );
 
 }
 
