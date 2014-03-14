@@ -249,6 +249,14 @@ class PathListingWidget( GafferUI.Widget ) :
 		
 		return self.__columns
 	
+	def setHeaderVisible( self, visible ) :
+	
+		self._qtWidget().header().setVisible( visible )
+	
+	def getHeaderVisible( self ) :
+	
+		return not self._qtWidget().header().isHidden()
+	
 	## Returns a list of all currently selected paths. Note that a list is returned
 	# even when in single selection mode.
 	def getSelectedPaths( self ) :
