@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2014, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -173,6 +173,17 @@ class PathListingWidget( GafferUI.Widget ) :
 		index = self.__indexForPath( path )
 		if index.isValid() :
 			self._qtWidget().scrollTo( index, self._qtWidget().EnsureVisible )	
+	
+	## Returns the path being displayed at the specified
+	# position within the widget. May return None if no
+	# exists at that position.
+	def pathAt( self, position ) :
+	
+		index = self._qtWidget().indexAt( QtCore.QPoint( position.x, position.y ) )
+		if not index.isValid() :
+			return None
+			
+		return self.__pathForIndex( index )
 	
 	## \deprecated Use setPathExpanded() instead.
 	def setPathCollapsed( self, path, collapsed ) :
