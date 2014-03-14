@@ -72,6 +72,22 @@ class BoxUITest( GafferUITest.TestCase ) :
 		
 		self.assertEqual( boxGadget.noduleTangent( boxGadget.nodule( box["in"] ) ), IECore.V3f( -1, 0, 0 ) ) 
 		self.assertEqual( boxGadget.noduleTangent( boxGadget.nodule( box["out"] ) ), IECore.V3f( 1, 0, 0 ) )
+	
+	def testRenamingPlugs( self ) :
+	
+		box = Gaffer.Box()
+		box["user"]["a"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		
+		ui = GafferUI.NodeUI.create( box )
+		
+		w = ui.plugValueWidget( box["user"]["a"], lazy=False )
+		self.assertTrue( w is not None )
+		
+		box["user"]["a"].setName( "b" )
+		
+		w2 = ui.plugValueWidget( box["user"]["b"], lazy=False )
+		self.assertTrue( w2 is not None )
+		self.assertTrue( w2 is w )
 		
 if __name__ == "__main__":
 	unittest.main()
