@@ -36,6 +36,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/lexical_cast.hpp"
+#include "boost/bind.hpp"
 
 #include "Gaffer/TypedPlug.h"
 #include "Gaffer/NumericPlug.h"
@@ -59,6 +60,9 @@ Shader::Shader( const std::string &name )
 	addChild( new StringPlug( "type" ) );
 	addChild( new CompoundPlug( "parameters", Plug::In, Plug::Default & ~Plug::AcceptsInputs ) );
 	addChild( new BoolPlug( "enabled", Gaffer::Plug::In, true ) );
+	addChild( new StringPlug( "__nodeName", Gaffer::Plug::In, name, Plug::Default & ~(Plug::Serialisable | Plug::AcceptsInputs | Plug::PerformsSubstitutions ) ) );
+	
+	nameChangedSignal().connect( boost::bind( &Shader::nameChanged, this ) );
 }
 
 Shader::~Shader()
@@ -116,7 +120,17 @@ const Gaffer::BoolPlug *Shader::enabledPlug() const
 {
 	return getChild<BoolPlug>( g_firstPlugIndex + 3 );
 }
-	
+
+Gaffer::StringPlug *Shader::nodeNamePlug()
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 4 );
+}
+
+const Gaffer::StringPlug *Shader::nodeNamePlug() const
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 4 );
+}
+
 IECore::MurmurHash Shader::stateHash() const
 {
 	NetworkBuilder networkBuilder( this );
@@ -138,7 +152,13 @@ void Shader::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs
 {
 	DependencyNode::affects( input, outputs );
 		
-	if( parametersPlug()->isAncestorOf( input ) || input == enabledPlug() )
+	if(
+		parametersPlug()->isAncestorOf( input ) ||
+		input == enabledPlug() ||
+		input == nodeNamePlug() ||
+		input == namePlug() ||
+		input == typePlug()
+	)
 	{
 		const Plug *out = outPlug();
 		if( out )
@@ -223,12 +243,17 @@ IECore::DataPtr Shader::parameterValue( const Gaffer::Plug *parameterPlug, Netwo
 	return NULL;
 }
 
+void Shader::nameChanged()
+{
+	nodeNamePlug()->setValue( getName() );
+}
+
 //////////////////////////////////////////////////////////////////////////
 // NetworkBuilder implementation
 //////////////////////////////////////////////////////////////////////////
 
 Shader::NetworkBuilder::NetworkBuilder( const Shader *rootNode )
-	:	m_rootNode( rootNode )
+	:	m_rootNode( rootNode ), m_handleCount( 0 )
 {
 }
 
@@ -276,6 +301,8 @@ IECore::MurmurHash Shader::NetworkBuilder::shaderHash( const Shader *shaderNode 
 		}
 	}
 	
+	shaderNode->nodeNamePlug()->hash( shaderAndHash.hash );
+	
 	return shaderAndHash.hash;
 }
 
@@ -307,6 +334,8 @@ IECore::Shader *Shader::NetworkBuilder::shader( const Shader *shaderNode )
 		}
 	}
 
+	shaderAndHash.shader->blindData()->writable()["gaffer:nodeName"] = new IECore::StringData( shaderNode->nodeNamePlug()->getValue() );
+
 	m_state->members().push_back( shaderAndHash.shader );
 	return shaderAndHash.shader;
 }
@@ -324,7 +353,14 @@ const std::string &Shader::NetworkBuilder::shaderHandle( const Shader *shaderNod
 	if( !handleData )
 	{
 		s->setType( "shader" );
-		handleData = new IECore::StringData( boost::lexical_cast<std::string>( s ) );
+		// the handle includes the node name so as to help with debugging, but also
+		// includes an integer unique to this shader group, as two shaders could have
+		// the same name if they don't have the same parent - because one is inside a
+		// Box for instance.
+		handleData = new IECore::StringData(
+			 boost::lexical_cast<std::string>( ++m_handleCount ) + "_" +
+			 s->blindData()->member<IECore::StringData>( "gaffer:nodeName" )->readable()
+		);
 		s->parameters()["__handle"] = handleData;
 	}
 	return handleData->readable();

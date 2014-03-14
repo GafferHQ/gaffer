@@ -232,7 +232,7 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 		elif isinstance( value, ( IECore.Box3f, IECore.Box3d ) ) :
 			return self.__formatBox( value )
 		elif isinstance( value, IECore.ObjectVector ) and key.startswith( "attr:" ) and key.endswith( ":shader" ) :
-			return value[-1].name
+			return self.__formatShader( value )
 		else :
 			return str( value )
 	
@@ -267,4 +267,13 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 
 		return ( "%.4f" % value ).rstrip( '0' ).rstrip( '.' )
 
+	def __formatShader( self, value ) :
+	
+		shaderName = value[-1].name
+		nodeName = value[-1].blindData().get( "gaffer:nodeName", None )
+		if nodeName is not None and nodeName.value != shaderName :
+			return "%s (%s)" % ( nodeName.value, shaderName )
+		else :
+			return shaderName
+		
 GafferUI.EditorWidget.registerType( "SceneInspector", SceneInspector )

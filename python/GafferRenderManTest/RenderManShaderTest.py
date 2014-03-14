@@ -1489,6 +1489,64 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 		
 		promotedIndex.setValue( 1 )
 		self.assertEqual( box["shaderNode"].state()[0].parameters["floatParameter"].value, 1 )
-				
+
+	def testRepeatability( self ) :
+	
+		s1 = self.compileShader( os.path.dirname( __file__ ) + "/shaders/coshader.sl" )
+		s2 = self.compileShader( os.path.dirname( __file__ ) + "/shaders/coshaderParameter.sl" )
+		
+		sn1 = GafferRenderMan.RenderManShader()
+		sn2 = GafferRenderMan.RenderManShader()
+		sn1.loadShader( s1 )
+		sn2.loadShader( s2 )
+		
+		sn2["parameters"]["coshaderParameter"].setInput( sn1["out"] )
+		
+		self.assertEqual( sn2.stateHash(), sn2.stateHash() )
+		self.assertEqual( sn2.state(), sn2.state() )
+
+	def testHandlesAreHumanReadable( self ) :
+	
+		s1 = self.compileShader( os.path.dirname( __file__ ) + "/shaders/coshader.sl" )
+		s2 = self.compileShader( os.path.dirname( __file__ ) + "/shaders/coshaderParameter.sl" )
+
+		sn1 = GafferRenderMan.RenderManShader( "Shader1" )
+		sn2 = GafferRenderMan.RenderManShader( "Shader2" )
+		sn1.loadShader( s1 )
+		sn2.loadShader( s2 )
+		
+		sn2["parameters"]["coshaderParameter"].setInput( sn1["out"] )
+		
+		state = sn2.state()
+		self.assertTrue( "Shader1" in state[0].parameters["__handle"].value )
+
+	def testHandlesAreUniqueEvenIfNodeNamesArent( self ) :
+	
+		s1 = self.compileShader( os.path.dirname( __file__ ) + "/shaders/coshader.sl" )
+		s2 = self.compileShader( os.path.dirname( __file__ ) + "/shaders/coshaderArrayParameters.sl" )
+
+		script = Gaffer.ScriptNode()
+	
+		script["in1"] = GafferRenderMan.RenderManShader()
+		script["in1"].loadShader( s1 )
+		
+		script["in2"] = GafferRenderMan.RenderManShader()
+		script["in2"].loadShader( s1 )
+		
+		script["shader"] = GafferRenderMan.RenderManShader()
+		script["shader"].loadShader( s2 )
+		
+		script["shader"]["parameters"]["fixedShaderArray"][0].setInput( script["in1"]["out"] )
+		script["shader"]["parameters"]["fixedShaderArray"][1].setInput( script["in2"]["out"] )
+		
+		box = Gaffer.Box.create( script, Gaffer.StandardSet( [ script["in1"] ] ) )
+		
+		# because the nodes have different parents, we can give them the same name.
+		box["in1"].setName( "notUnique" )
+		script["in2"].setName( "notUnique" )
+		
+		state = script["shader"].state()
+		self.assertNotEqual( state[0].parameters["__handle"], state[1].parameters["__handle"] )
+		
 if __name__ == "__main__":
 	unittest.main()
