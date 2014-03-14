@@ -47,13 +47,15 @@ class SplitContainer( GafferUI.ContainerWidget ) :
 	
 	Orientation = IECore.Enum.create( "Vertical", "Horizontal" )
 	
-	def __init__( self, orientation=Orientation.Vertical, **kw ) :
+	def __init__( self, orientation=Orientation.Vertical, borderWidth=0, **kw ) :
 		
 		GafferUI.ContainerWidget.__init__( self, _Splitter(), **kw )
 		
 		self.__widgets = []
 		self.__handleWidgets = {}
 		self.__sizeAnimation = None
+
+		self._qtWidget().setContentsMargins( borderWidth, borderWidth, borderWidth, borderWidth )
 				
 		self.setOrientation( orientation )
 	
