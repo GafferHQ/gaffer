@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2013-2014, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -59,6 +59,9 @@ def appendDefinitions( menuDefinition, prefix="" ) :
 
 	menuDefinition.append( prefix + "/Arrange", { "command" : arrange, "shortCut" : "Ctrl+L" } )
 	menuDefinition.append( prefix + "/ArrangeDivider", { "divider" : True } )
+	
+	menuDefinition.append( prefix + "/Unplug", { "command" : unplug, "shortCut" : "Ctrl+U", "active" : __selectionAvailable } )
+	menuDefinition.append( prefix + "/UnplugDivider", { "divider" : True } )
 
 	menuDefinition.append( prefix + "/Select All", { "command" : selectAll, "shortCut" : "Ctrl+A" } )
 	menuDefinition.append( prefix + "/Select None", { "command" : selectNone, "shortCut" : "Shift+Ctrl+A", "active" : __selectionAvailable } )
@@ -179,7 +182,16 @@ def arrange( menu ) :
 	
 	with Gaffer.UndoContext( script ) :
 		graph.getLayout().layoutNodes( graph, nodes )
+
+def unplug( menu ) :
 	
+	script, parent = __scriptAndParent( menu )
+	
+	with Gaffer.UndoContext( script ) :
+		
+		GafferUI.EditMenu.cut( menu )
+		GafferUI.EditMenu.paste( menu )
+
 ## A function suitable as the command for an Edit/Select All menu item. It must
 # be invoked from a menu that has a ScriptWindow in its ancestry.
 def selectAll( menu ) :
