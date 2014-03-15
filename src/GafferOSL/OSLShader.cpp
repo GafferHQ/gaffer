@@ -565,4 +565,119 @@ void OSLShader::loadShader( const std::string &shaderName, bool keepExistingValu
 	
 	namePlug()->setValue( shaderName );
 	typePlug()->setValue( "osl:" + query.shadertype() );
+	
+	m_metadata = NULL;
+}
+
+//////////////////////////////////////////////////////////////////////////
+// Metadata loading code
+//////////////////////////////////////////////////////////////////////////
+
+static IECore::DataPtr convertMetadata( const OSLQuery::Parameter &metadata )
+{
+	if( metadata.type == TypeDesc::FLOAT )
+	{
+		return new IECore::FloatData( metadata.fdefault[0] );
+	}
+	else if( metadata.type == TypeDesc::INT )
+	{
+		return new IECore::IntData( metadata.idefault[0] );
+	}
+	else if( metadata.type == TypeDesc::STRING )
+	{
+		return new IECore::StringData( metadata.sdefault[0] );
+	}
+
+	return NULL;
+}
+
+static IECore::CompoundDataPtr convertMetadata( const std::vector<OSLQuery::Parameter> &metadata )
+{
+	CompoundDataPtr result = new CompoundData;
+	for( std::vector<OSLQuery::Parameter>::const_iterator it = metadata.begin(), eIt = metadata.end(); it != eIt; ++it )
+	{
+		DataPtr data = convertMetadata( *it );
+		if( data )
+		{
+			result->writable()[it->name] = data;
+		}
+	}
+	return result;
+}
+
+static IECore::ConstCompoundDataPtr metadataGetter( const std::string &key, size_t &cost )
+{
+	cost = 1;
+	if( !key.size() )
+	{
+		return NULL;
+	}
+	
+	const char *searchPath = getenv( "OSL_SHADER_PATHS" );
+	OSLQuery query;
+	if( !query.open( key, searchPath ? searchPath : "" ) )
+	{
+		throw Exception( query.error() );
+	}
+	
+	CompoundDataPtr metadata = new CompoundData;
+	metadata->writable()["shader"] = convertMetadata( query.metadata() );
+	
+	CompoundDataPtr parameterMetadata = new CompoundData;
+	metadata->writable()["parameter"] = parameterMetadata;
+	for( size_t i = 0; i < query.nparams(); ++i )
+	{
+		const OSLQuery::Parameter *parameter = query.getparam( i );
+		if( parameter->metadata.size() )
+		{
+			parameterMetadata->writable()[parameter->name] = convertMetadata( parameter->metadata );
+		}
+	}
+	
+	return metadata;
+}
+
+typedef LRUCache<std::string, IECore::ConstCompoundDataPtr> MetadataCache;
+MetadataCache g_metadataCache( metadataGetter, 10000 );
+
+const IECore::CompoundData *OSLShader::metadata() const
+{
+	if( m_metadata )
+	{
+		return m_metadata;
+	}
+	
+	m_metadata = g_metadataCache.get( namePlug()->getValue() );
+	return m_metadata;
+}
+
+const IECore::Data *OSLShader::shaderMetadata( const IECore::InternedString &key ) const
+{
+	const IECore::CompoundData *m = metadata();
+	if( !m )
+	{
+		return NULL;
+	}
+	return m->member<IECore::CompoundData>( "shader" )->member<IECore::Data>( key );
+}
+
+const IECore::Data *OSLShader::parameterMetadata( const Gaffer::Plug *plug, const IECore::InternedString &key ) const
+{
+	const IECore::CompoundData *m = metadata();
+	if( !m )
+	{
+		return NULL;
+	}
+	
+	if( plug->parent<Plug>() != parametersPlug() )
+	{
+		return NULL;
+	}
+	
+	const IECore::CompoundData *p = m->member<IECore::CompoundData>( "parameter" )->member<IECore::CompoundData>( plug->getName() );
+	if( !p )
+	{
+		return NULL;
+	}
+	return p->member<IECore::Data>( key );
 }

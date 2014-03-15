@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2013, John Haddon. All rights reserved.
+//  Copyright (c) 2014, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,55 +34,24 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFEROSL_OSLSHADER_H
-#define GAFFEROSL_OSLSHADER_H
-
-#include "GafferScene/Shader.h"
-
-#include "GafferOSL/TypeIds.h"
-#include "GafferOSL/OSLRenderer.h"
-
-namespace GafferOSL
+surface metadata
+[[
+	string stringValue = "s",
+	int intValue = 1,
+	float floatValue = 0.5
+]]
+(
+	string a = "" [[
+		string aStringValue = "s",
+		int aIntValue = 1,
+		float aFloatValue = 0.5
+	]],
+	string b = "" [[
+		string bStringValue = "st",
+		int bIntValue = 2,
+		float bFloatValue = 0.75
+	]]
+)
 {
-
-class OSLShader : public GafferScene::Shader
-{
-
-	public :
-
-		OSLShader( const std::string &name=defaultName<OSLShader>() );
-		virtual ~OSLShader();
-
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferOSL::OSLShader, OSLShaderTypeId, GafferScene::Shader );
-		
-		/// \undoable.
-		/// \todo Make this method virtual and define it on the Shader base class.
-		void loadShader( const std::string &shaderName, bool keepExistingValues=false );
-
-		OSLRenderer::ConstShadingEnginePtr shadingEngine() const;
-
-		/// Returns an OSL metadata item from the shader.
-		const IECore::Data *shaderMetadata( const IECore::InternedString &name ) const;
-		/// Returns an OSL metadata item from the specified shader parameter.
-		const IECore::Data *parameterMetadata( const Gaffer::Plug *plug, const IECore::InternedString &name ) const;
-
-	protected :
-	
-		virtual bool acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const;
-	
-	private :
-
-		// Shader metadata is stored in a "shader" member of the result and
-		// parameter metadata is stored indexed by name inside a
-		// "parameter" member of the result.
-		const IECore::CompoundData *metadata() const;
-
-		mutable IECore::ConstCompoundDataPtr m_metadata;
-
-};
-
-IE_CORE_DECLAREPTR( OSLShader )
-
-} // namespace GafferOSL
-
-#endif // GAFFEROSL_OSLSHADER_H
+	Ci = emission();
+}

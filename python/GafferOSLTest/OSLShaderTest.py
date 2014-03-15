@@ -35,6 +35,7 @@
 ##########################################################################
 
 import os
+import unittest
 
 import IECore
 
@@ -361,5 +362,55 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		state = script["shader"].state()
 		self.assertNotEqual( state[0].parameters["__handle"], state[1].parameters["__handle"] )
 	
+	# As best as I can tell, OSL doesn't actually implement the shader level metadata
+	# that it describes in the language spec.
+	@unittest.expectedFailure
+	def testShaderMetadata( self ) :
+	
+		s = self.compileShader( os.path.dirname( __file__ ) + "/shaders/metadata.osl" )
+		n = GafferOSL.OSLShader()
+		n.loadShader( s )
+				
+		self.assertEqual( n.shaderMetadata( "stringValue" ), IECore.StringData( "s" ) )
+		self.assertEqual( n.shaderMetadata( "intValue" ), IECore.IntData( 1 ) )
+		self.assertEqual( n.shaderMetadata( "floatValue" ), IECore.FloatData( 0.5 ) )
+
+	def testParameterMetadata( self ) :
+	
+		s = self.compileShader( os.path.dirname( __file__ ) + "/shaders/metadata.osl" )
+		n = GafferOSL.OSLShader()
+		n.loadShader( s )
+				
+		self.assertEqual( n.parameterMetadata( n["parameters"]["a"], "aStringValue" ), IECore.StringData( "s" ) )
+		self.assertEqual( n.parameterMetadata( n["parameters"]["a"], "aIntValue" ), IECore.IntData( 1 ) )
+		self.assertEqual( n.parameterMetadata( n["parameters"]["a"], "aFloatValue" ), IECore.FloatData( 0.5 ) )
+		
+		self.assertEqual( n.parameterMetadata( n["parameters"]["b"], "bStringValue" ), IECore.StringData( "st" ) )
+		self.assertEqual( n.parameterMetadata( n["parameters"]["b"], "bIntValue" ), IECore.IntData( 2 ) )
+		self.assertEqual( n.parameterMetadata( n["parameters"]["b"], "bFloatValue" ), IECore.FloatData( 0.75 ) )
+	
+	def testMetadaReuse( self ) :
+	
+		s = self.compileShader( os.path.dirname( __file__ ) + "/shaders/metadata.osl" )
+		
+		n1 = GafferOSL.OSLShader()
+		n1.loadShader( s )
+		
+		n2 = GafferOSL.OSLShader()
+		n2.loadShader( s )
+		
+		# we don't want every shader to have its own copy of metadata when it could be shared
+		self.assertTrue(
+			n1.parameterMetadata( n1["parameters"]["a"], "aStringValue", _copy = False ).isSame(
+				n2.parameterMetadata( n2["parameters"]["a"], "aStringValue", _copy = False )
+			)
+		)
+	
+		# but because there is no const in python, we want to make sure that the casual
+		# caller doesn't have the opportunity to really break things, so unless requested
+		# copies are returned from the query.
+		n1.parameterMetadata( n1["parameters"]["a"], "aStringValue" ).value = "editingSharedConstDataIsABadIdea"
+		self.assertEqual( n1.parameterMetadata( n1["parameters"]["a"], "aStringValue" ), IECore.StringData( "s" ) )
+				
 if __name__ == "__main__":
 	unittest.main()
