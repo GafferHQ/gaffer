@@ -59,10 +59,7 @@ using namespace GafferOSL;
 // LRUCache of ShadingEngines
 //////////////////////////////////////////////////////////////////////////
 
-namespace GafferOSL
-{
-
-namespace Detail
+namespace
 {
 
 struct ShadingEngineCacheKey
@@ -93,7 +90,7 @@ struct ShadingEngineCacheKey
 
 };
 
-static OSLRenderer::ConstShadingEnginePtr getter( const ShadingEngineCacheKey &key, size_t &cost )
+OSLRenderer::ConstShadingEnginePtr getter( const ShadingEngineCacheKey &key, size_t &cost )
 {
 	cost = 1;
 	
@@ -135,11 +132,9 @@ static OSLRenderer::ConstShadingEnginePtr getter( const ShadingEngineCacheKey &k
 }
 
 typedef LRUCache<ShadingEngineCacheKey, OSLRenderer::ConstShadingEnginePtr> ShadingEngineCache;
-static ShadingEngineCache g_shadingEngineCache( getter, 10000 );
+ShadingEngineCache g_shadingEngineCache( getter, 10000 );
 
-} // namespace Detail
-
-} // namespace GafferOSL
+} // namespace
 
 //////////////////////////////////////////////////////////////////////////
 // OSLShader
@@ -158,7 +153,7 @@ OSLShader::~OSLShader()
 
 OSLRenderer::ConstShadingEnginePtr OSLShader::shadingEngine() const
 {
-	return Detail::g_shadingEngineCache.get( Detail::ShadingEngineCacheKey( this ) );
+	return g_shadingEngineCache.get( ShadingEngineCacheKey( this ) );
 }
 
 bool OSLShader::acceptsInput( const Plug *plug, const Plug *inputPlug ) const
