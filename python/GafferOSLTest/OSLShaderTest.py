@@ -411,6 +411,14 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		# copies are returned from the query.
 		n1.parameterMetadata( n1["parameters"]["a"], "aStringValue" ).value = "editingSharedConstDataIsABadIdea"
 		self.assertEqual( n1.parameterMetadata( n1["parameters"]["a"], "aStringValue" ), IECore.StringData( "s" ) )
-				
+
+	def testAcceptsNoneInput( self ) :
+	
+		s = self.compileShader( os.path.dirname( __file__ ) + "/shaders/types.osl" )
+		n = GafferOSL.OSLShader()
+		n.loadShader( s )
+		
+		self.assertTrue( n["parameters"]["i"].acceptsInput( None ) )
+		
 if __name__ == "__main__":
 	unittest.main()

@@ -164,6 +164,11 @@ bool OSLShader::acceptsInput( const Plug *plug, const Plug *inputPlug ) const
 		return false;
 	}
 	
+	if( !inputPlug )
+	{
+		return true;
+	}
+	
 	if( parametersPlug()->isAncestorOf( plug ) )
 	{
 		const Plug *sourcePlug = inputPlug->source<Plug>();
