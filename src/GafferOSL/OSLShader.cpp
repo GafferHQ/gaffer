@@ -113,6 +113,7 @@ OSLRenderer::ConstShadingEnginePtr getter( const ShadingEngineCacheKey &key, siz
 		if( const char *searchPath = getenv( "OSL_SHADER_PATHS" ) )
 		{
 			g_renderer->setOption( "osl:searchpath:shader", new StringData( searchPath ) );
+			g_renderer->setOption( "osl:lockgeom", new IntData( 1 ) );
 		}
 		g_renderer->worldBegin();
 	}
