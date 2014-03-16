@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2013, John Haddon. All rights reserved.
+#  Copyright (c) 2013-2014, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -43,5 +43,7 @@ def __setupEnvironment() :
 	os.environ["OSL_SHADER_PATHS"] = os.path.expandvars( "$HOME/gaffer/shaders:$GAFFER_ROOT/shaders" ) + p
 	
 __setupEnvironment()
+
+__import__( "GafferScene" )
 
 from _GafferOSL import *

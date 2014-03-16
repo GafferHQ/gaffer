@@ -1,7 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2012-2014, John Haddon. All rights reserved.
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2014, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,11 +34,19 @@
 #  
 ##########################################################################
 
-__import__( "Gaffer" )
-__import__( "GafferImage" )
+import GafferTest
 
-from _GafferScene import *
-
-from ScenePath import ScenePath
-from ScriptProcedural import ScriptProcedural
-from AlembicPath import AlembicPath
+class ModuleTest( GafferTest.TestCase ) :
+			
+	def testNamespacePollution( self ) :
+	
+		import GafferScene
+		
+		self.assertRaises( AttributeError, getattr, GafferScene, "IECore" )
+		self.assertRaises( AttributeError, getattr, GafferScene, "Gaffer" )
+		self.assertRaises( AttributeError, getattr, GafferScene, "GafferScene" )
+		self.assertRaises( AttributeError, getattr, GafferScene, "GafferImage" )
+		
+if __name__ == "__main__":
+	unittest.main()
+	
