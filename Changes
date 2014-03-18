@@ -1,3 +1,10 @@
+# 0.92.1
+
+#### Scene
+
+- Improved shader assignment reporting in SceneInspector (#335)
+- Improved shader handle generation
+
 # 0.92.0
 
 #### Core
