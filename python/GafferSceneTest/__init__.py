@@ -90,6 +90,7 @@ from ShaderSwitchTest import ShaderSwitchTest
 from ParentConstraintTest import ParentConstraintTest
 from ParentTest import ParentTest
 from StandardAttributesTest import StandardAttributesTest
+from PrimitiveVariablesTest import PrimitiveVariablesTest
 
 if __name__ == "__main__":
 	import unittest

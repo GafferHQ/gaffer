@@ -109,6 +109,7 @@ enum TypeId
 	ShaderSwitchTypeId = 110564,
 	ParentConstraintTypeId = 110565,
 	ParentTypeId = 110566,
+	PrimitiveVariablesTypeId = 110567,
 	
 	LastTypeId = 110650
 };
