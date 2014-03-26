@@ -71,6 +71,13 @@ struct MatchPatternLess
 
 };
 
+/// Returns the numeric suffix from the end of s, if one exists, and -1 if
+/// one doesn't. If stem is specified then it will be filled with the contents
+/// of s preceding the suffix, or the whole of s if no suffix exists.
+int numericSuffix( const std::string &s, std::string *stem = NULL );
+/// As above, but returns defaultSuffix in the case that no suffix exists.
+int numericSuffix( const std::string &s, int defaultSuffix, std::string *stem = NULL );
+
 } // namespace Gaffer
 
 #include "Gaffer/StringAlgo.inl"

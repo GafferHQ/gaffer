@@ -45,6 +45,7 @@
 #include "IECore/Exception.h"
 
 #include "Gaffer/GraphComponent.h"
+#include "Gaffer/StringAlgo.h"
 #include "Gaffer/Action.h"
 
 using namespace Gaffer;
@@ -99,16 +100,8 @@ const IECore::InternedString &GraphComponent::setName( const IECore::InternedStr
 		{
 			// split name into a prefix and a numeric suffix. if no suffix
 			// exists then it defaults to 1.
-			std::string prefix = newName.value();
-			int suffix = 1;
-
-			static boost::regex g_prefixSuffixRegex( "^(.*[^0-9]+)([0-9]+)$" );
-			boost::cmatch match;
-			if( regex_match( newName.value().c_str(), match, g_prefixSuffixRegex ) )
-			{
-				prefix = match[1];
-				suffix = boost::lexical_cast<int>( match[2] );
-			}
+			std::string prefix;
+			int suffix = numericSuffix( newName.value(), 1, &prefix );
 
 			// iterate over all the siblings to find the minimum value for the suffix which
 			// will be greater than any existing suffix.
