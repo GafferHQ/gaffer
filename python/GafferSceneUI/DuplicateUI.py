@@ -1,7 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2012, John Haddon. All rights reserved.
-#  Copyright (c) 2012-2014, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2014, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,47 +34,47 @@
 #  
 ##########################################################################
 
-from _GafferSceneUI import *
+import Gaffer
+import GafferUI
 
-from SceneHierarchy import SceneHierarchy
-from SceneInspector import SceneInspector
-from FilterPlugValueWidget import FilterPlugValueWidget
-import SceneNodeUI
-import SceneProcessorUI
-import FilteredSceneProcessorUI
-import PruneUI
-import SubTreeUI
-import RenderUI
-import DisplaysUI
-import OptionsUI
-import OpenGLAttributesUI
-import SceneContextVariablesUI
-import SceneWriterUI
-import StandardOptionsUI
-import StandardAttributesUI
-import ShaderUI
-import OpenGLShaderUI
-import ObjectSourceUI
-import TransformUI
-import AttributesUI
-import LightUI
-import InteractiveRenderUI
-import SphereUI
-import MapProjectionUI
-import MapOffsetUI
-import CustomAttributesUI
-import CustomOptionsUI
-import SceneViewToolbar
-import SceneSwitchUI
-import ShaderSwitchUI
-import ShaderAssignmentUI
-import ParentConstraintUI
-import ParentUI
-import PrimitiveVariablesUI
-import DuplicateUI
+import GafferScene
 
-# then all the PathPreviewWidgets. note that the order
-# of import controls the order of display.
+##########################################################################
+# Metadata
+##########################################################################
 
-from AlembicPathPreview import AlembicPathPreview
-from SceneReaderPathPreview import SceneReaderPathPreview
+Gaffer.Metadata.registerNodeDescription(
+
+GafferScene.Duplicate,
+
+"""Duplicates elements of a scene.""",
+
+"target",
+"The element to be duplicated.",
+
+"copies",
+"""The number of copies to be made.""",
+
+"transform",
+"""The transform to be applied to the copies.""",
+
+)
+
+##########################################################################
+# Widgets and nodules
+##########################################################################
+
+# we hide the parent (which comes from the base class) because the value for it is
+# computed from the target plug automatically.
+GafferUI.PlugValueWidget.registerCreator( GafferScene.Duplicate.staticTypeId(), "parent", None )
+
+GafferUI.PlugValueWidget.registerCreator(
+	GafferScene.Duplicate.staticTypeId(),
+	"target",
+	lambda plug : GafferUI.PathPlugValueWidget(
+		plug,
+		path = GafferScene.ScenePath( plug.node()["in"], plug.node().scriptNode().context(), "/" ),
+	),
+)
+
+GafferUI.PlugValueWidget.registerCreator( GafferScene.Duplicate.staticTypeId(), "transform", GafferUI.TransformPlugValueWidget, collapsed=None )

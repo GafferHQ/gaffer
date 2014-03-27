@@ -87,6 +87,7 @@
 #include "GafferSceneBindings/ParentBinding.h"
 #include "GafferSceneBindings/SceneReaderBinding.h"
 #include "GafferSceneBindings/PrimitiveVariablesBinding.h"
+#include "GafferSceneBindings/DuplicateBinding.h"
 
 using namespace boost::python;
 using namespace GafferScene;
@@ -160,5 +161,6 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	bindParent();
 	bindSceneReader();
 	bindPrimitiveVariables();
+	bindDuplicate();
 	
 }
