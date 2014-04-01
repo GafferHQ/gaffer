@@ -91,6 +91,7 @@ from ParentConstraintTest import ParentConstraintTest
 from ParentTest import ParentTest
 from StandardAttributesTest import StandardAttributesTest
 from PrimitiveVariablesTest import PrimitiveVariablesTest
+from DuplicateTest import DuplicateTest
 
 if __name__ == "__main__":
 	import unittest

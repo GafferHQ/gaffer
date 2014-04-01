@@ -35,10 +35,8 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/regex.hpp"
-#include "boost/lexical_cast.hpp"
-
 #include "Gaffer/Context.h"
+#include "Gaffer/StringAlgo.h"
 
 #include "GafferScene/BranchCreator.h"
 
@@ -409,7 +407,6 @@ IECore::ConstCompoundDataPtr BranchCreator::computeMapping( const Gaffer::Contex
 		childNames.push_back( *it );
 	}
 	
-	boost::regex namePrefixSuffixRegex( "^(.*[^0-9]+)([0-9]+)$" );
 	boost::format namePrefixSuffixFormatter( "%s%d" );
 
 	for( vector<InternedString>::const_iterator it = branchChildNames.begin(); it != branchChildNames.end(); ++it )
@@ -418,15 +415,8 @@ IECore::ConstCompoundDataPtr BranchCreator::computeMapping( const Gaffer::Contex
 		if( allNames.find( name ) != allNames.end() )
 		{
 			// uniqueify the name
-			string prefix = name;
-			int suffix = 1;
-			
-			boost::cmatch match;
-			if( regex_match( name.value().c_str(), match, namePrefixSuffixRegex ) )
-			{
-				prefix = match[1];
-				suffix = boost::lexical_cast<int>( match[2] );
-			}
+			string prefix;
+			int suffix = numericSuffix( name, 1, &prefix );
 			
 			do
 			{
