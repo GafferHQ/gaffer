@@ -1,7 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2012, John Haddon. All rights reserved.
-#  Copyright (c) 2012-2014, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2014, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,46 +34,39 @@
 #  
 ##########################################################################
 
-from _GafferSceneUI import *
+import IECore
 
-from SceneHierarchy import SceneHierarchy
-from SceneInspector import SceneInspector
-from FilterPlugValueWidget import FilterPlugValueWidget
-import SceneNodeUI
-import SceneProcessorUI
-import FilteredSceneProcessorUI
-import PruneUI
-import SubTreeUI
-import RenderUI
-import DisplaysUI
-import OptionsUI
-import OpenGLAttributesUI
-import SceneContextVariablesUI
-import SceneWriterUI
-import StandardOptionsUI
-import StandardAttributesUI
-import ShaderUI
-import OpenGLShaderUI
-import ObjectSourceUI
-import TransformUI
-import AttributesUI
-import LightUI
-import InteractiveRenderUI
-import SphereUI
-import MapProjectionUI
-import MapOffsetUI
-import CustomAttributesUI
-import CustomOptionsUI
-import SceneViewToolbar
-import SceneSwitchUI
-import ShaderSwitchUI
-import ShaderAssignmentUI
-import ParentConstraintUI
-import ParentUI
-import PrimitiveVariablesUI
+import Gaffer
+import GafferScene
+import GafferSceneTest
 
-# then all the PathPreviewWidgets. note that the order
-# of import controls the order of display.
-
-from AlembicPathPreview import AlembicPathPreview
-from SceneReaderPathPreview import SceneReaderPathPreview
+class PrimitiveVariablesTest( GafferSceneTest.SceneTestCase ) :
+		
+	def test( self ) :
+	
+		s = GafferScene.Sphere()
+		p = GafferScene.PrimitiveVariables()
+		p["in"].setInput( s["out"] )
+		
+		self.assertScenesEqual( s["out"], p["out"] )
+		self.assertSceneHashesEqual( s["out"], p["out"] )
+		
+		p["primitiveVariables"].addMember( "a", IECore.IntData( 10 ) )
+		
+		self.assertScenesEqual( s["out"], p["out"], childPlugNamesToIgnore=( "object", ) )
+		self.assertSceneHashesEqual( s["out"], p["out"], childPlugNamesToIgnore=( "object", ) )
+		
+		self.assertNotEqual( s["out"].objectHash( "/sphere" ), p["out"].objectHash( "/sphere" ) )
+		self.assertNotEqual( s["out"].object( "/sphere" ), p["out"].object( "/sphere" ) )
+		
+		o1 = s["out"].object( "/sphere" )
+		o2 = p["out"].object( "/sphere" )
+		
+		self.assertEqual( set( o1.keys() + [ "a" ] ), set( o2.keys() ) )
+		self.assertEqual( o2["a"], IECore.PrimitiveVariable( IECore.PrimitiveVariable.Interpolation.Constant, IECore.IntData( 10 ) ) )
+		
+		del o2["a"]
+		self.assertEqual( o1, o2 )
+		
+if __name__ == "__main__":
+	unittest.main()

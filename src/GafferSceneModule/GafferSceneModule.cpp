@@ -86,6 +86,7 @@
 #include "GafferSceneBindings/TransformBinding.h"
 #include "GafferSceneBindings/ParentBinding.h"
 #include "GafferSceneBindings/SceneReaderBinding.h"
+#include "GafferSceneBindings/PrimitiveVariablesBinding.h"
 
 using namespace boost::python;
 using namespace GafferScene;
@@ -103,8 +104,6 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	GafferBindings::DependencyNodeClass<FilteredSceneProcessor>();
 	GafferBindings::DependencyNodeClass<SceneElementProcessor>();
 	GafferBindings::DependencyNodeClass<AttributeCache>();
-	GafferBindings::DependencyNodeClass<PrimitiveVariableProcessor>();
-	GafferBindings::DependencyNodeClass<DeletePrimitiveVariables>();
 	GafferBindings::DependencyNodeClass<MeshType>();
 	GafferBindings::DependencyNodeClass<Group>();
 	GafferBindings::DependencyNodeClass<ObjectSource>();
@@ -160,5 +159,6 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	bindTransform();
 	bindParent();
 	bindSceneReader();
+	bindPrimitiveVariables();
 	
 }
