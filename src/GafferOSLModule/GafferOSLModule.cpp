@@ -66,11 +66,47 @@ class OSLShaderSerialiser : public GafferBindings::NodeSerialiser
 
 };
 
+static IECore::DataPtr shaderMetadata( const OSLShader &s, const char *key, bool copy = true )
+{
+	if( const IECore::Data *m = s.shaderMetadata( key ) )
+	{
+		if( copy )
+		{
+			return m->copy();
+		}
+		else
+		{
+			return const_cast<IECore::Data *>( m );
+		}
+	}
+	
+	return NULL;
+}
+
+static IECore::DataPtr parameterMetadata( const OSLShader &s, const Gaffer::Plug *plug, const char *key, bool copy = true )
+{
+	if( const IECore::Data *m = s.parameterMetadata( plug, key ) )
+	{
+		if( copy )
+		{
+			return m->copy();
+		}
+		else
+		{
+			return const_cast<IECore::Data *>( m );
+		}
+	}
+	
+	return NULL;
+}
+
 BOOST_PYTHON_MODULE( _GafferOSL )
 {
 	
 	GafferBindings::DependencyNodeClass<OSLShader>()
 		.def( "loadShader", &OSLShader::loadShader, ( arg_( "shaderName" ), arg_( "keepExistingValues" ) = false ) )
+		.def( "shaderMetadata", &shaderMetadata, ( boost::python::arg_( "_copy" ) = true ) )
+		.def( "parameterMetadata", &parameterMetadata, ( boost::python::arg_( "plug" ), boost::python::arg_( "_copy" ) = true ) )
 	;
 		
 	Serialisation::registerSerialiser( OSLShader::staticTypeId(), new OSLShaderSerialiser() );

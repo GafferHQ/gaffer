@@ -92,6 +92,7 @@ from ParentTest import ParentTest
 from StandardAttributesTest import StandardAttributesTest
 from PrimitiveVariablesTest import PrimitiveVariablesTest
 from DuplicateTest import DuplicateTest
+from ModuleTest import ModuleTest
 
 if __name__ == "__main__":
 	import unittest
