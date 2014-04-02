@@ -298,6 +298,7 @@ class PathListingWidget( GafferUI.Widget ) :
 				selectionModel.select( indexToSelect, selectionModel.Select | selectionModel.Rows )
 				if scrollToFirst :
 					self._qtWidget().scrollTo( indexToSelect, self._qtWidget().EnsureVisible )
+					selectionModel.setCurrentIndex( indexToSelect, selectionModel.Current )
 					scrollToFirst = False
 				if expandNonLeaf and not path.isLeaf() :
 					self._qtWidget().setExpanded( indexToSelect, True )
