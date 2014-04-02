@@ -102,7 +102,17 @@ class PlugLayout( GafferUI.Widget ) :
 		# get the plugs we want to represent
 		plugs = self.__parent.children( Gaffer.Plug.staticTypeId() )
 		plugs = [ plug for plug in plugs if not plug.getName().startswith( "__" ) ]
-				
+		
+		# reorder them based on metadata
+		plugsAndIndices = [ list( x ) for x in enumerate( plugs ) ]
+		for plugAndIndex in plugsAndIndices :
+			index = Gaffer.Metadata.plugValue( plugAndIndex[1], "layout:index" )
+			if index is not None :
+				plugAndIndex[0] = index
+		
+		plugsAndIndices.sort( key = lambda x : x[0] )
+		plugs = [ x[1] for x in plugsAndIndices ]
+		
 		# ditch widgets we don't need any more
 		plugsSet = set( plugs )
 		self.__plugsToWidgets = dict(
@@ -195,5 +205,5 @@ class PlugLayout( GafferUI.Widget ) :
 		if not node.isInstanceOf( node.typeId() ) :
 			return
 
-		if key == "divider" :
+		if key in ( "divider", "layout:index" ) :
 			self.__update()
