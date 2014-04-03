@@ -64,6 +64,12 @@ const IECore::ImagePrimitive *Pointer::get()
 
 void Pointer::setFromFile( const std::string &name )
 {
+	if( !name.size() )
+	{
+		set( NULL );
+		return;
+	}
+
 	static IECore::CachedReaderPtr g_reader;
 	if( !g_reader )
 	{
