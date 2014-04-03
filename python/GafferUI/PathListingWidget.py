@@ -175,11 +175,16 @@ class PathListingWidget( GafferUI.Widget ) :
 			self._qtWidget().scrollTo( index, self._qtWidget().EnsureVisible )	
 	
 	## Returns the path being displayed at the specified
-	# position within the widget. May return None if no
+	# position within the widget. May return None if no path
 	# exists at that position.
 	def pathAt( self, position ) :
 	
-		index = self._qtWidget().indexAt( QtCore.QPoint( position.x, position.y ) )
+		position = self._qtWidget().viewport().mapFrom(
+			self._qtWidget(),
+			QtCore.QPoint( position.x, position.y )
+		)
+				
+		index = self._qtWidget().indexAt( position )
 		if not index.isValid() :
 			return None
 			
