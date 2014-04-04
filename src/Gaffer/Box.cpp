@@ -492,7 +492,7 @@ int registerMetadata()
 	/// \todo Perhaps if Metadata::registerPlugValue() allowed match strings for keys
 	/// as well as plugs, we wouldn't need to loop over an explicit list of keys.
 	const char *nodeKeys[] = { "description" };
-	const char *plugKeys[] = { "description", "divider", "nodeGadget:nodulePosition", NULL };
+	const char *plugKeys[] = { "description", "divider", "layout:index", "nodeGadget:nodulePosition", NULL };
 	
 	for( const char **key = nodeKeys; *key; key++ )
 	{

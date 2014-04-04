@@ -253,12 +253,7 @@ class BoxEditor( GafferUI.NodeSetEditor ) :
 			# Plugs tab
 			with GafferUI.SplitContainer( orientation=GafferUI.SplitContainer.Orientation.Horizontal, borderWidth = 8, parenting = { "label" : "Plugs" } ) :
 				
-				self.__plugListing = GafferUI.PathListingWidget(
-					Gaffer.DictPath( {}, "/" ),
-					columns = ( GafferUI.PathListingWidget.defaultNameColumn, ),
-					displayMode = GafferUI.PathListingWidget.DisplayMode.Tree,
-				)
-				self.__plugListing.setHeaderVisible( False )
+				self.__plugListing = _PlugListing()
 				self.__plugListingSelectionChangedConnection = self.__plugListing.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__plugListingSelectionChanged ) )
 				
 				with GafferUI.GridContainer( spacing = 4, borderWidth = 8 ) as self.__plugEditor :
@@ -355,12 +350,12 @@ class BoxEditor( GafferUI.NodeSetEditor ) :
 		self.__box = box
 		self.__nodeNameWidget.setGraphComponent( self.__box )
 		self.__nodeTab.setEnabled( self.__box is not None )
-		
+				
+		self.__plugListing.setPlugParent( self.__box["user"] if self.__box is not None else None )
+
 		if self.__box is None or not len( self.__box["user"] ) :
-			self.__plugListing.setPath( Gaffer.DictPath( {}, "/" ) )
 			self.__setSelectedPlugInternal( None, lazy )
 		else :
-			self.__plugListing.setPath( _PlugPath( self.__box["user"], "/" ) )
 			self.__setSelectedPlugInternal( self.__box["user"][0], lazy )
 			
 		for connection in self.__nodeMetadataConnections :
@@ -384,9 +379,190 @@ class BoxEditor( GafferUI.NodeSetEditor ) :
 			else :
 				self.setSelectedPlug( None )
 		else :
-			self.setSelectedPlug( paths[0].info().get( "plugPath:plug", None ) )
-
+			self.setSelectedPlug( paths[0].info()["dict:value"].plug )
+	
 GafferUI.EditorWidget.registerType( "BoxEditor", BoxEditor )
+
+# _PlugListing. This is used to list the plugs in the BoxEditor.
+##########################################################################
+
+class _PlugListing( GafferUI.PathListingWidget ) :
+
+	# Class used to represent a plug and its index within the listing.
+	class Entry( object ) :
+	
+		__slots__ = ( "plug", "index" )
+		
+		def __init__( self, plug, index ) :
+		
+			self.plug = plug
+			self.index = index
+
+	def __init__( self ) :
+			
+		GafferUI.PathListingWidget.__init__(
+			self,
+			Gaffer.DictPath( {}, "/" ),
+			# listing displays the plug name and automatically sorts based on plug index
+			columns = ( GafferUI.PathListingWidget.Column( "dict:value", "Name", lambda x : x.plug.getName(), lambda x : x.index ), ),
+			displayMode = GafferUI.PathListingWidget.DisplayMode.Tree,
+		)
+		
+		self.__parent = None # the parent of the plugs we're listing
+
+		self.setDragPointer( "" )
+
+		self.setHeaderVisible( False )
+		self.__dragEnterConnection = self.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ) )
+		self.__dragMoveConnection = self.dragMoveSignal().connect( Gaffer.WeakMethod( self.__dragMove ) )
+		self.__dropConnection = self.dropSignal().connect( Gaffer.WeakMethod( self.__drop ) )
+		
+		self.__metadataPlugValueChangedConnection = Gaffer.Metadata.plugValueChangedSignal().connect( Gaffer.WeakMethod( self.__plugMetadataChanged ) )
+		
+	def setPlugParent( self, parent ) :
+	
+		self.__parent = parent
+		
+		self.__childAddedConnection = None
+		self.__childRemovedConnection = None
+		self.__childNameChangedConnections = {}
+
+		if self.__parent is not None :			
+			self.__childAddedConnection = self.__parent.childAddedSignal().connect( Gaffer.WeakMethod( self.__childAddedOrRemoved ) )
+			self.__childRemovedConnection = self.__parent.childRemovedSignal().connect( Gaffer.WeakMethod( self.__childAddedOrRemoved ) )
+			for child in self.__parent.children() :
+				self.__updateChildNameChangedConnection( child )
+		
+		self.__updatePath()
+		
+	def getPlugParent( self ) :
+	
+		return self.__parent
+
+	def __updatePath( self ) :
+	
+		if self.__parent is None :
+			# we have nothing to show - early out.
+			self.setPath( Gaffer.DictPath( {}, "/" ) )
+			return
+	
+		# build a DictPath to represent our child plugs.
+	
+		plugsAndIndices = [ list( x ) for x in enumerate( self.__parent.children() ) ]
+		for plugAndIndex in plugsAndIndices :
+			index = Gaffer.Metadata.plugValue( plugAndIndex[1], "layout:index" )
+			if index is not None :
+				plugAndIndex[0] = index
+		
+		d = {}
+		for index, plug in plugsAndIndices :
+			d[plug.getName()] = self.Entry( plug, index )
+			
+		self.setPath( Gaffer.DictPath( d, "/" ) )
+
+	def __childAddedOrRemoved( self, parent, child ) :
+	
+		assert( parent.isSame( self.__parent ) )
+		
+		self.__updatePath()
+		self.__updateChildNameChangedConnection( child ) 
+	
+	def __childNameChanged( self, child ) :
+	
+		self.__updatePath()
+		
+	def __updateChildNameChangedConnection( self, child ) :
+       
+		if self.__parent.isSame( child.parent() ) :
+			if child not in self.__childNameChangedConnections :
+				self.__childNameChangedConnections[child] = child.nameChangedSignal().connect( Gaffer.WeakMethod( self.__childNameChanged ) )
+		else :
+			if child in self.__childNameChangedConnections :
+				del self.__childNameChangedConnections[child]
+
+	def __dragValid( self, event ) :
+	
+		if event.sourceWidget is not self :
+			return False
+		if not isinstance( event.data, IECore.StringVectorData ) :
+			return False
+				
+		return True
+
+	def __dragEnter( self, listing, event ) :
+	
+		# accept the drag if it originates with us,
+		# so __dragMove and __drop can implement
+		# drag and drop reordering of plugs.
+		if not self.__dragValid( event ) :
+			return False
+		
+		return True
+
+	def __dragMove( self, listing, event ) :
+	
+		if not self.__dragValid( event ) :
+			return False
+		
+		# figure out which index we're moving,
+		# and to where.
+		
+		d = self.getPath().dict()
+		
+		oldIndex = d[event.data[0][1:]].index
+		targetPath = self.pathAt( event.line.p0 )
+		if targetPath is not None :
+			newIndex = d[targetPath[0]].index
+		else :
+			if event.line.p0.y < 1 :
+				newIndex = 0
+			else :
+				newIndex = len( d ) - 1
+		
+		if newIndex == oldIndex :
+			return True
+		
+		# edit our plug dictionary in place to apply the
+		# new ordering.
+		
+		for entry in self.getPath().dict().values() :
+			if entry.index > oldIndex and entry.index <= newIndex :
+				entry.index -= 1
+			elif entry.index == oldIndex :
+				entry.index = newIndex
+			elif entry.index >= newIndex and entry.index < oldIndex :
+				entry.index += 1
+		
+		# let the listing know we've been monkeying behind the scenes.
+		
+		self.getPath().pathChangedSignal()( self.getPath() )
+				
+		return True
+		
+	def __drop( self, listing, event ) :
+	
+		if not self.__dragValid( event ) :
+			return False
+		
+		# flush the changed indices into the metadata for the node,
+		# so that they actual PlugLayout will be updated to reflect
+		# the new ordering.
+		
+		for entry in self.getPath().dict().values() :
+			self.__parent.node().setPlugMetadata( entry.plug, "layout:index", entry.index )
+		
+		return True
+
+	def __plugMetadataChanged( self, nodeTypeId, plugPath, key ) :
+	
+		if self.__parent is None :
+			return
+			
+		if not self.__parent.node().isInstanceOf( nodeTypeId ) :
+			return
+		
+		if key == "layout:index" :
+			self.__updatePath()
 
 # _MetadataConnection. This maintains connections between a widget and
 # a metadata value, to allow users to edit metadata.
@@ -505,88 +681,3 @@ class _MetadataConnection() :
 			
 __nodeMetadataChangedConnection = Gaffer.Metadata.nodeValueChangedSignal().connect( _MetadataConnection._nodeMetadataChanged )
 __plugMetadataChangedConnection = Gaffer.Metadata.plugValueChangedSignal().connect( _MetadataConnection._plugMetadataChanged )
-
-# _PlugPath. Utility class for use in the BoxEditor.
-#
-# \todo This really shouldn't need to exist - we should be able to use
-# a GraphComponentPath limited to a depth of 1. Currently we don't have
-# the necessary signals on GraphComponents to emit the changed signal
-# at all appropriate times in that class though. Fortunately we do have
-# sufficient signals to do this for a single level deep path, which is
-# what we implement here.
-##########################################################################
-
-class _PlugPath( Gaffer.Path ) :
-
-	def __init__( self, parent, path = None, root = "/", filter = None ) :
-	
-		Gaffer.Path.__init__( self, path, root, filter )
-		
-		self.__parent = parent
-	
-		self.__childAddedConnection = self.__parent.childAddedSignal().connect( Gaffer.WeakMethod( self.__childAdded ) )
-		self.__childRemovedConnection = self.__parent.childRemovedSignal().connect( Gaffer.WeakMethod( self.__childRemoved ) )
-		
-		self.__childNameChangedConnections = {}
-		for child in self.__parent.children() :
-			self.__updateChildNameChangedConnection( child )
-	
-	def isLeaf( self ) :
-	
-		return len( self ) > 0
-
-	def info( self ) :
-	
-		result = Gaffer.Path.info( self )
-		if self.isLeaf() :
-			result["plugPath:plug"] = self.__parent[self[0]]
-
-		return result
-
-	def copy( self ) :
-			
-		return _PlugPath( self.__parent, self[:], self.root(), self.getFilter() )
-
-	def _children( self ) :
-	
-		if self.isLeaf() :
-			return []
-			
-		result = []
-		for p in self.__parent.children( Gaffer.Plug.staticTypeId() ) :
-			result.append(
-				_PlugPath(
-					self.__parent,
-					self[:] + [ p.getName() ],
-					self.root(),
-					self.getFilter()
-				)
-			)
-			
-		return result
-
-	def __childAdded( self, parent, child ) :
-	
-		assert( parent.isSame( self.__parent ) )
-		self.__updateChildNameChangedConnection( child )
-		self._emitPathChanged()
-
-	def __childRemoved( self, parent, child ) :
-	
-		assert( parent.isSame( self.__parent ) )
-		self.__updateChildNameChangedConnection( child )
-		self._emitPathChanged()
-	
-	def __childNameChanged( self, child ) :
-		
-		self._emitPathChanged()
-		
-	def __updateChildNameChangedConnection( self, child ) :
-	
-		if self.__parent.isSame( child.parent() ) :
-			if child not in self.__childNameChangedConnections :
-				self.__childNameChangedConnections[child] = child.nameChangedSignal().connect( Gaffer.WeakMethod( self.__childNameChanged ) )
-		else :
-			if child in self.__childNameChangedConnections :
-				del self.__childNameChangedConnections[child]
-
