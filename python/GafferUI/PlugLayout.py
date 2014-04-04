@@ -55,7 +55,6 @@ class PlugLayout( GafferUI.Widget ) :
 		# the parent so we can update the ui when plugs are added and removed.
 		self.__childAddedConnection = parent.childAddedSignal().connect( Gaffer.WeakMethod( self.__childAddedOrRemoved ) )
  		self.__childRemovedConnection = parent.childRemovedSignal().connect( Gaffer.WeakMethod( self.__childAddedOrRemoved ) )
- 		self.__childrenChangedPending = False
 		
 		# building plug uis can be very expensive, and often we're initially hidden in a non-current tab
 		# or a collapsed section. so we defer our building until we become visible to avoid unnecessary overhead.
@@ -65,8 +64,14 @@ class PlugLayout( GafferUI.Widget ) :
 		# to changes in that metadata.
 		self.__metadataChangedConnection = Gaffer.Metadata.plugValueChangedSignal().connect( Gaffer.WeakMethod( self.__plugMetadataChanged ) )
 		
-		self.__plugsToWidgets = {} # mapping from child plug to widget
+		# frequently events that trigger a ui update come in batches, so we
+		# only perform the update on idle events to avoid unnecessary
+		# repeated updates. this variable tracks whether or not such an update is
+		# scheduled.
+		self.__updatePending = False
 
+		self.__plugsToWidgets = {} # mapping from child plug to widget
+		
 	def getReadOnly( self ) :
 	
 		return self.__readOnly
@@ -167,22 +172,27 @@ class PlugLayout( GafferUI.Widget ) :
 	
 	def __childAddedOrRemoved( self, *unusedArgs ) :
 	
+		if not self.visible() :
+			return
+
 		# typically many children are added and removed at once. we don't
 		# want to be rebuilding the ui for each individual event, so we
 		# add an idle callback to do the rebuild once the
 		# upheaval is over.
+		self.__scheduleUpdate()
 	
-		if not self.__childrenChangedPending :
-			GafferUI.EventLoop.addIdleCallback( self.__childrenChanged )
-			self.__childrenChangedPending = True
-			
-	def __childrenChanged( self ) :
-		
-		if not self.visible() :
+	def __scheduleUpdate( self ) :
+	
+		if self.__updatePending :
 			return
 	
+		GafferUI.EventLoop.addIdleCallback( self.__idleUpdate )
+		self.__updatePending = True
+	
+	def __idleUpdate( self ) :
+			
 		self.__update()	
-		self.__childrenChangedPending = False
+		self.__updatePending = False
 		
 		return False # removes the callback
 
@@ -201,9 +211,14 @@ class PlugLayout( GafferUI.Widget ) :
 
 	def __plugMetadataChanged( self, nodeTypeId, plugPath, key ) :
 	
+		if not self.visible() :
+			return
+	
 		node = self.__parent if isinstance( self.__parent, Gaffer.Node ) else self.__parent.node()
 		if not node.isInstanceOf( node.typeId() ) :
 			return
 
 		if key in ( "divider", "layout:index" ) :
-			self.__update()
+			# we often see sequences of several metadata changes - so
+			# we schedule an update on idle to batch them into one ui update.
+			self.__scheduleUpdate()
