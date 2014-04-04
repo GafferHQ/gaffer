@@ -114,7 +114,6 @@ class PathListingWidget( GafferUI.Widget ) :
 		self._qtWidget().setEditTriggers( QtGui.QTreeView.NoEditTriggers )
 		self._qtWidget().activated.connect( Gaffer.WeakMethod( self.__activated ) )
 		self._qtWidget().header().setMovable( False )
-		self._qtWidget().setSortingEnabled( True )
 		self._qtWidget().header().setSortIndicator( 0, QtCore.Qt.AscendingOrder )
 		
 		self._qtWidget().expansionChanged.connect( Gaffer.WeakMethod( self.__expansionChanged ) )
@@ -367,6 +366,11 @@ class PathListingWidget( GafferUI.Widget ) :
 					recurse = self.__displayMode != self.DisplayMode.List,
 				)
 			)
+
+			# it's not sufficient to set this once during construction - Qt
+			# needs reminding every time we change the model that we would like
+			# it to be sorted.
+			self._qtWidget().setSortingEnabled( True )
 
 			if expandedPaths is not None :
 				self.setExpandedPaths( expandedPaths )
