@@ -213,9 +213,9 @@ class BoxEditor( GafferUI.NodeSetEditor ) :
 
 	def __init__( self, scriptNode, **kw ) :
 	
-		self.__tabbedContainer = GafferUI.TabbedContainer()
+		self.__frame = GafferUI.Frame( borderWidth = 4, borderStyle = GafferUI.Frame.BorderStyle.None )
 	
-		GafferUI.NodeSetEditor.__init__( self, self.__tabbedContainer, scriptNode, **kw )
+		GafferUI.NodeSetEditor.__init__( self, self.__frame, scriptNode, **kw )
 		
 		# Build the UI. Initially this isn't connected up to any node - we'll
 		# perform the connections in _updateFromSet().
@@ -224,6 +224,9 @@ class BoxEditor( GafferUI.NodeSetEditor ) :
 		self.__nodeMetadataConnections = []
 		self.__plugMetadataConnections = []
 		
+		with self.__frame :
+			self.__tabbedContainer = GafferUI.TabbedContainer()
+
 		with self.__tabbedContainer :
 		
 			# Node tab
@@ -382,6 +385,10 @@ class BoxEditor( GafferUI.NodeSetEditor ) :
 				self.setSelectedPlug( None )
 		else :
 			self.setSelectedPlug( paths[0].info()["dict:value"].plug )
+	
+	def __repr__( self ) :
+	
+		return "GafferUI.BoxEditor( scriptNode )"
 	
 GafferUI.EditorWidget.registerType( "BoxEditor", BoxEditor )
 

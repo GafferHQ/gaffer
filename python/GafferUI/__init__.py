@@ -256,7 +256,7 @@ import ObjectReaderUI
 import ObjectWriterUI
 import RandomUI
 import ExpressionUI
-import BoxUI
+from BoxUI import BoxEditor
 import ReferenceUI
 import BackdropUI
 
