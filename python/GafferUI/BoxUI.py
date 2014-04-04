@@ -251,7 +251,7 @@ class BoxEditor( GafferUI.NodeSetEditor ) :
 				self.__nodeMetadataConnections.append( _MetadataConnection( description, None, "description" ) )
 			
 			# Plugs tab
-			with GafferUI.SplitContainer( orientation=GafferUI.SplitContainer.Orientation.Horizontal, borderWidth = 8, parenting = { "label" : "Plugs" } ) :
+			with GafferUI.SplitContainer( orientation=GafferUI.SplitContainer.Orientation.Horizontal, borderWidth = 8, parenting = { "label" : "Plugs" } ) as plugSplitContainer :
 				
 				self.__plugListing = _PlugListing()
 				self.__plugListingSelectionChangedConnection = self.__plugListing.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__plugListingSelectionChanged ) )
@@ -294,7 +294,9 @@ class BoxEditor( GafferUI.NodeSetEditor ) :
 						}
 					)
 					self.__plugMetadataConnections.append( _MetadataConnection( divider, None, "divider" ) )
-
+			
+			plugSplitContainer.setSizes( [ 0.3, 0.7 ] )
+			
 		# initialise our selection to nothing
 				
 		self.__box = None
