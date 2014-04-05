@@ -185,7 +185,7 @@ class NodeGraph( GafferUI.EditorWidget ) :
 	
 	## Ensures that the specified node has a visible NodeGraph viewing
 	# it, and returns that editor.
-	## \todo Consider how this relates to the todo items in NodeEditor.acquire().
+	## \todo Consider how this relates to the todo items in NodeSetEditor.acquire().
 	@classmethod
 	def acquire( cls, rootNode ) :
 	

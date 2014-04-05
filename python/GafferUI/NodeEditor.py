@@ -35,8 +35,6 @@
 #  
 ##########################################################################
 
-import weakref
-
 import IECore
 
 import Gaffer
@@ -76,52 +74,6 @@ class NodeEditor( GafferUI.NodeSetEditor ) :
 	def getReadOnly( self ) :
 	
 		return self.__readOnly
-	
-	## Ensures that the specified node has a visible NodeEditor editing it, creating
-	# one if necessary.
-	## \todo User preferences for whether these are made floating, embedded, whether
-	# they are reused etc. This class should provide the behaviour, but the code for
-	# linking it to preferences should be in a startup file.
-	## \todo Consider how this relates to draggable editor tabs and editor floating
-	# once we implement that in CompoundEditor - I suspect that acquire will become a method
-	# on CompoundEditor instead at this point.
-	@classmethod
-	def acquire( cls, node ) :
-	
-		if isinstance( node, Gaffer.ScriptNode ) :
-			script = node
-		else :
-			script = node.scriptNode()
-		
-		scriptWindow = GafferUI.ScriptWindow.acquire( script )
-		
-		for editor in scriptWindow.getLayout().editors( type = GafferUI.NodeEditor ) :
-			if node.isSame( editor._lastAddedNode() ) :
-				tabbedContainer = editor.ancestor( GafferUI.TabbedContainer )
-				if tabbedContainer is not None :
-					tabbedContainer.setCurrent( editor )
-				return editor
-		
-		childWindows = scriptWindow.childWindows()
-		for window in childWindows :
-			if hasattr( window, "nodeEditor" ) :
-				if node in window.nodeEditor.getNodeSet() :
-					window.setVisible( True )
-					return window.nodeEditor
-				
-		window = GafferUI.Window( "Node Editor", borderWidth = 8 )
-		window.nodeEditor = GafferUI.NodeEditor( script )
-		window.nodeEditor.setNodeSet( Gaffer.StandardSet( [ node ] ) )
-		window.setChild( window.nodeEditor )
-		
-		window.__closedConnection = window.closedSignal().connect( IECore.curry( cls.__deleteWindow, weakref.ref( window ) ) )
-		window.__nodeParentChangedConnection = node.parentChangedSignal().connect( IECore.curry( cls.__deleteWindow, weakref.ref( window ) ) )
-				
-		scriptWindow.addChildWindow( window )
-		
-		window.setVisible( True )
-
-		return window.nodeEditor
 						
 	def __repr__( self ) :
 
@@ -162,14 +114,5 @@ class NodeEditor( GafferUI.NodeSetEditor ) :
 	def _titleFormat( self ) :
 	
 		return GafferUI.NodeSetEditor._titleFormat( self, _maxNodes = 1, _reverseNodes = True, _ellipsis = False )
-		
-	@staticmethod
-	def __deleteWindow( windowWeakRef, *unusedArgs ) :
-	
-		window = windowWeakRef()
-		if window is None :
-			return
-			
-		window.parent().removeChild( window )
 				
 GafferUI.EditorWidget.registerType( "NodeEditor", NodeEditor )
