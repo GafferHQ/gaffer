@@ -244,7 +244,7 @@ class BoxEditor( GafferUI.NodeSetEditor ) :
 				self.__nodeMetadataConnections.append( _MetadataConnection( description, None, "description" ) )
 			
 			# Plugs tab
-			with GafferUI.SplitContainer( orientation=GafferUI.SplitContainer.Orientation.Horizontal, borderWidth = 8, parenting = { "label" : "Plugs" } ) as plugSplitContainer :
+			with GafferUI.SplitContainer( orientation=GafferUI.SplitContainer.Orientation.Horizontal, borderWidth = 8, parenting = { "label" : "Plugs" } ) as self.__plugTab :
 				
 				self.__plugListing = _PlugListing()
 				self.__plugListingSelectionChangedConnection = self.__plugListing.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__plugListingSelectionChanged ) )
@@ -288,7 +288,7 @@ class BoxEditor( GafferUI.NodeSetEditor ) :
 					)
 					self.__plugMetadataConnections.append( _MetadataConnection( divider, None, "divider" ) )
 			
-			plugSplitContainer.setSizes( [ 0.3, 0.7 ] )
+			self.__plugTab.setSizes( [ 0.3, 0.7 ] )
 			
 		# initialise our selection to nothing
 				
@@ -308,7 +308,17 @@ class BoxEditor( GafferUI.NodeSetEditor ) :
 	def getSelectedPlug( self ) :
 	
 		return self.__selectedPlug	
+	
+	## Returns the widget layout responsible for editing the node as a whole.
+	def nodeEditor( self ) :
+	
+		return self.__nodeTab
 		
+	## Returns the widget layout responsible for editing individual plugs.
+	def plugEditor( self ) :
+	
+		return self.__plugTab
+	
 	def _updateFromSet( self ) :
 	
 		self.__updateFromSetInternal()
@@ -382,6 +392,31 @@ class BoxEditor( GafferUI.NodeSetEditor ) :
 		return "GafferUI.BoxEditor( scriptNode )"
 	
 GafferUI.EditorWidget.registerType( "BoxEditor", BoxEditor )
+
+# menu item for editing plug uis. we implement this separately
+# to __plugPopupMenu above, as perhaps one day we'll allow editable
+# uis for user plugs on all nodes.
+
+def __editPlugUI( node, plug ) :
+
+	editor = GafferUI.BoxEditor.acquire( node )
+	editor.setSelectedPlug( plug )
+	editor.plugEditor().reveal()
+
+def __boxEditorPlugPopupMenu( menuDefinition, plugValueWidget ) :
+		
+	plug = plugValueWidget.getPlug()
+	node = plug.node()
+	if node is None or not isinstance( node, Gaffer.Box ) :
+		return
+	
+	if not plug.parent().isSame( node["user"] ) :
+		return
+		
+	menuDefinition.append( "/EditUIDivider", { "divider" : True } )
+	menuDefinition.append( "/Edit UI...", { "command" : IECore.curry( __editPlugUI, node, plug ), "active" : not plugValueWidget.getReadOnly() } )
+					
+__boxEditorPlugPopupMenuConnection = GafferUI.PlugValueWidget.popupMenuSignal().connect( __boxEditorPlugPopupMenu )
 
 # _PlugListing. This is used to list the plugs in the BoxEditor.
 ##########################################################################
