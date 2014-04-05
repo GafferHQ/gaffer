@@ -121,17 +121,7 @@ class BoxNodeUI( GafferUI.StandardNodeUI ) :
 		
 	def __showUIEditor( self ) :
 	
-		if self.__uiEditor is None :
-			## \todo Close when deleted, only one per node, title matching node name etc, etc. 
-			# Maybe we need an EditorWindow class? or a CompoundEditor.acquire() method??
-			#	- I think maybe the latter.
-			with GafferUI.Window( "Box Editor", borderWidth = 4 ) as self.__uiEditor :
-				editor = BoxEditor( self.node().scriptNode() )
-				editor.setNodeSet( Gaffer.StandardSet( [ self.node() ] ) )
-				
-			self.ancestor( GafferUI.Window ).addChildWindow( self.__uiEditor )
-		
-		self.__uiEditor.setVisible( True )
+		BoxEditor.acquire( self.node() )
 	
 GafferUI.NodeUI.registerNodeUI( Gaffer.Box.staticTypeId(), BoxNodeUI )
 
