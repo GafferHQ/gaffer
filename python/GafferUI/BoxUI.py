@@ -366,6 +366,7 @@ class BoxEditor( GafferUI.NodeSetEditor ) :
 			if (
 				previousSelection is not None and
 				self.__box is not None and
+				previousSelection.parent() is not None and
 				previousSelection.parent().isSame( self.__box["user"] )
 			) :
 				listing.setSelectedPaths(
@@ -415,6 +416,7 @@ class _PlugListing( GafferUI.PathListingWidget ) :
 		self.__dragEnterConnection = self.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ) )
 		self.__dragMoveConnection = self.dragMoveSignal().connect( Gaffer.WeakMethod( self.__dragMove ) )
 		self.__dropConnection = self.dropSignal().connect( Gaffer.WeakMethod( self.__drop ) )
+		self.__keyPressConnection = self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
 		
 		self.__metadataPlugValueChangedConnection = Gaffer.Metadata.plugValueChangedSignal().connect( Gaffer.WeakMethod( self.__plugMetadataChanged ) )
 		
@@ -562,6 +564,23 @@ class _PlugListing( GafferUI.PathListingWidget ) :
 		
 		if key == "layout:index" :
 			self.__updatePath()
+
+	def __keyPress( self, widget, event ) :
+	
+		assert( widget is self )
+		
+		if event.key == "Backspace" or event.key == "Delete" :
+		
+			selectedPaths = self.getSelectedPaths()
+			if len( selectedPaths ) :
+				with Gaffer.UndoContext( self.__parent.ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
+					for path in selectedPaths :
+						plug = path.info()["dict:value"].plug
+						self.__parent.removeChild( plug )
+			
+			return True
+				
+		return False
 
 # _MetadataConnection. This maintains connections between a widget and
 # a metadata value, to allow users to edit metadata.
