@@ -45,7 +45,7 @@ class UserPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plug, editable=True, **kw ) :
 
-		self.__column = GafferUI.ListContainer()
+		self.__column = GafferUI.ListContainer( spacing = 6 )
 		
 		GafferUI.PlugValueWidget.__init__( self, self.__column, plug, **kw )
 
@@ -54,7 +54,8 @@ class UserPlugValueWidget( GafferUI.PlugValueWidget ) :
 			if editable :
 				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal ) :
 					GafferUI.Spacer( IECore.V2i( GafferUI.PlugWidget.labelWidth(), 1 ) )
-					GafferUI.MenuButton( image="plus.png", hasFrame=False, menu=GafferUI.Menu( self.__addMenuDefinition() ) )
+					addButton = GafferUI.MenuButton( image="plus.png", hasFrame=False, menu=GafferUI.Menu( self.__addMenuDefinition() ) )
+					addButton.setToolTip( "Click to add plugs" )
 					GafferUI.Spacer( IECore.V2i( 1 ), IECore.V2i( 999999, 1 ), parenting = { "expand" : True } )
 
 	def hasLabel( self ) :
@@ -115,3 +116,22 @@ class UserPlugValueWidget( GafferUI.PlugValueWidget ) :
 			self.getPlug().addChild( plug )
 
 GafferUI.PlugValueWidget.registerCreator( Gaffer.Node.staticTypeId(), "user", UserPlugValueWidget )
+
+##########################################################################
+# Plug menu
+##########################################################################
+
+def __deletePlug( plug ) :
+
+	with Gaffer.UndoContext( plug.ancestor( Gaffer.ScriptNode().staticTypeId() ) ) :
+		plug.parent().removeChild( plug )
+
+def __plugPopupMenu( menuDefinition, plugValueWidget ) :
+
+	plug = plugValueWidget.getPlug()
+	node = plug.node()
+	if plug.parent().isSame( node["user"] ) :
+		menuDefinition.append( "/DeleteDivider", { "divider" : True } )
+		menuDefinition.append( "/Delete", { "command" : IECore.curry( __deletePlug, plug ), "active" : not plugValueWidget.getReadOnly() } )
+
+__plugPopupMenuConnection = GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugPopupMenu )
