@@ -45,6 +45,7 @@
 #include "Gaffer/CompoundPlug.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/Metadata.h"
+#include "Gaffer/Action.h"
 
 using namespace Gaffer;
 
@@ -290,6 +291,24 @@ const IECore::Data *Box::getNodeMetadata( IECore::InternedString key ) const
 
 void Box::setNodeMetadata( IECore::InternedString key, IECore::ConstDataPtr value )
 {
+	const IECore::Data *currentValue = getNodeMetadata( key );
+	if(
+		( !currentValue && !value ) ||
+		( currentValue && value && currentValue->isEqualTo( value ) )
+	)
+	{
+		return;
+	}
+
+	Action::enact(
+		this,
+		boost::bind( &Box::setNodeMetadataInternal, BoxPtr( this ), key, value ),
+		boost::bind( &Box::setNodeMetadataInternal, BoxPtr( this ), key, IECore::ConstDataPtr( currentValue ) )
+	);
+}
+
+void Box::setNodeMetadataInternal( IECore::InternedString key, IECore::ConstDataPtr value )
+{
 	if( !m_nodeMetadata )
 	{
 		m_nodeMetadata = new IECore::CompoundData;
@@ -309,6 +328,24 @@ const IECore::Data *Box::getPlugMetadata( const Plug *plug, IECore::InternedStri
 }
 
 void Box::setPlugMetadata( const Plug *plug, IECore::InternedString key, IECore::ConstDataPtr value )
+{
+	const IECore::Data *currentValue = getPlugMetadata( plug, key );
+	if(
+		( !currentValue && !value ) ||
+		( currentValue && value && currentValue->isEqualTo( value ) )
+	)
+	{
+		return;
+	}
+
+	Action::enact(
+		this,
+		boost::bind( &Box::setPlugMetadataInternal, BoxPtr( this ), ConstPlugPtr( plug ), key, value ),
+		boost::bind( &Box::setPlugMetadataInternal, BoxPtr( this ), ConstPlugPtr( plug ), key, IECore::ConstDataPtr( currentValue ) )
+	);
+}
+
+void Box::setPlugMetadataInternal( const Plug *plug, IECore::InternedString key, IECore::ConstDataPtr value )
 {
 	IECore::CompoundDataPtr data;
 	PlugMetadataMap::const_iterator it = m_plugMetadata.find( plug );

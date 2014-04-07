@@ -92,8 +92,10 @@ class Box : public Node
 		/// node types. Instead, each instance stores its own metadata, which
 		/// can be queried and set with these methods.
 		const IECore::Data *getNodeMetadata( IECore::InternedString key ) const;
+		/// \undoable
 		void setNodeMetadata( IECore::InternedString key, IECore::ConstDataPtr value );
 		const IECore::Data *getPlugMetadata( const Plug *plug, IECore::InternedString key ) const;
+		/// \undoable
 		void setPlugMetadata( const Plug *plug, IECore::InternedString key, IECore::ConstDataPtr value );
 
 		/// Exports the contents of the Box so that it can be referenced
@@ -108,6 +110,9 @@ class Box : public Node
 	private :
 
 		bool validatePromotability( const Plug *descendantPlug, bool throwExceptions, bool checkNode = true ) const;
+		
+		void setNodeMetadataInternal( IECore::InternedString key, IECore::ConstDataPtr value );
+		void setPlugMetadataInternal( const Plug *plug, IECore::InternedString key, IECore::ConstDataPtr value );
 		
 		IECore::CompoundDataPtr m_nodeMetadata;
 		
