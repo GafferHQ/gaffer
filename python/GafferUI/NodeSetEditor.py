@@ -139,12 +139,14 @@ class NodeSetEditor( GafferUI.EditorWidget ) :
 				if node in window.getChild().getNodeSet() :
 					window.setVisible( True )
 					return window.getChild()
-				
-		window = _EditorWindow( scriptWindow, cls( script ) )
-		window.getChild().setNodeSet( Gaffer.StandardSet( [ node ] ) )						
+		
+		editor = cls( script )
+		editor.setNodeSet( Gaffer.StandardSet( [ node ] ) )						
+		
+		window = _EditorWindow( scriptWindow, editor )
 		window.setVisible( True )
 
-		return window.getChild()
+		return editor
 
 	def _lastAddedNode( self ) :
 	
