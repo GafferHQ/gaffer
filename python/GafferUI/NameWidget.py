@@ -51,15 +51,22 @@ class NameWidget( GafferUI.TextWidget ) :
 
 		self._qtWidget().setValidator( QtGui.QRegExpValidator( QtCore.QRegExp( "[A-Za-z_]+[A-Za-z_0-9]*" ), self._qtWidget() ) )
 
+		self.__graphComponent = None
 		self.setGraphComponent( graphComponent )
 
 		self.__editingFinishedConnection = self.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__setName ) )
 
 	def setGraphComponent( self, graphComponent ) :
 	
-		self.__graphComponent = graphComponent	
-		self.__nameChangedConnection = self.__graphComponent.nameChangedSignal().connect( Gaffer.WeakMethod( self.__setText ) )
+		if self.__graphComponent == graphComponent :
+			return
 		
+		self.__graphComponent = graphComponent
+		if self.__graphComponent is not None :
+			self.__nameChangedConnection = self.__graphComponent.nameChangedSignal().connect( Gaffer.WeakMethod( self.__setText ) )
+		else :
+			self.__nameChangedConnection = None
+			
 		self.__setText()
 		
 	def getGraphComponent( self ) :
@@ -68,9 +75,12 @@ class NameWidget( GafferUI.TextWidget ) :
 	
 	def __setName( self, *unwantedArgs ) :
 		
+		if self.__graphComponent is None :
+			return
+		
 		with Gaffer.UndoContext( self.__graphComponent.ancestor( Gaffer.ScriptNode().staticTypeId() ) ) :
 			self.setText( self.__graphComponent.setName( self.getText() ) )
 
 	def __setText( self, *unwantedArgs ) :
 	
-		self.setText( self.__graphComponent.getName() )
+		self.setText( self.__graphComponent.getName() if self.__graphComponent is not None else "" )

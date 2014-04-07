@@ -89,6 +89,7 @@ from SliderTest import SliderTest
 from NumericPlugValueWidgetTest import NumericPlugValueWidgetTest
 from CompoundNumericPlugValueWidgetTest import CompoundNumericPlugValueWidgetTest
 from NameLabelTest import NameLabelTest
+from NameWidgetTest import NameWidgetTest
 from GLWidgetTest import GLWidgetTest
 from BookmarksTest import BookmarksTest
 from SectionedCompoundDataPlugValueWidgetTest import SectionedCompoundDataPlugValueWidgetTest
@@ -98,6 +99,7 @@ from BoxUITest import BoxUITest
 from ConnectionGadgetTest import ConnectionGadgetTest
 from MessageWidgetTest import MessageWidgetTest
 from ModuleTest import ModuleTest
+from PlugLayoutTest import PlugLayoutTest
 
 if __name__ == "__main__":
 	unittest.main()

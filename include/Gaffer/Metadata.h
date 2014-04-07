@@ -37,11 +37,12 @@
 #ifndef GAFFER_METADATA_H
 #define GAFFER_METADATA_H
 
-#include "boost/regex.hpp"
 #include "boost/function.hpp"
 
 #include "IECore/InternedString.h"
 #include "IECore/Data.h"
+
+#include "Gaffer/StringAlgo.h"
 
 namespace Gaffer
 {
@@ -57,6 +58,9 @@ class Metadata
 {
 
 	public :
+
+		typedef boost::signal<void ( IECore::TypeId nodeTypeId, IECore::InternedString key )> NodeValueChangedSignal;
+		typedef boost::signal<void ( IECore::TypeId nodeTypeId, const MatchPattern &plugPath, IECore::InternedString key )> PlugValueChangedSignal;
 
 		typedef boost::function<IECore::ConstDataPtr ( const Node *node )> NodeValueFunction;
 		typedef boost::function<IECore::ConstDataPtr ( const Plug *plug )> PlugValueFunction;
@@ -78,20 +82,32 @@ class Metadata
 		static std::string nodeDescription( const Node *node, bool inherit = true );
 		
 		/// Registers a static metadata value for plugs with the specified path on the specified node type.
-		static void registerPlugValue( IECore::TypeId nodeTypeId, const boost::regex &plugPath, IECore::InternedString key, IECore::ConstDataPtr value );
+		static void registerPlugValue( IECore::TypeId nodeTypeId, const MatchPattern &plugPath, IECore::InternedString key, IECore::ConstDataPtr value );
 		/// Registers a dynamic metadata value for the specified plug. Each time the data is retrieved, the
 		/// PlugValueFunction will be called to compute it.
-		static void registerPlugValue( IECore::TypeId nodeTypeId, const boost::regex &plugPath, IECore::InternedString key, PlugValueFunction value );
+		static void registerPlugValue( IECore::TypeId nodeTypeId, const MatchPattern &plugPath, IECore::InternedString key, PlugValueFunction value );
 		/// Retrieves a previously registered value, returning NULL if none exists. If inherit is true
 		/// then the search falls through to the base classes of the node if the node itself doesn't have a value.
 		template<typename T>
 		static typename T::ConstPtr plugValue( const Plug *plug, IECore::InternedString key, bool inherit = true );
 	
 		/// Utility function calling registerPlugValue( nodeTypeId, plugPath, "description", description )
-		static void registerPlugDescription( IECore::TypeId nodeTypeId, const boost::regex &plugPath, const std::string &description );
-		static void registerPlugDescription( IECore::TypeId nodeTypeId, const boost::regex &plugPath, PlugValueFunction description );
+		static void registerPlugDescription( IECore::TypeId nodeTypeId, const MatchPattern &plugPath, const std::string &description );
+		static void registerPlugDescription( IECore::TypeId nodeTypeId, const MatchPattern &plugPath, PlugValueFunction description );
 		/// Utility function calling plugValue( plug, "description", inherit )
 		static std::string plugDescription( const Plug *plug, bool inherit = true );
+	
+		/// @name Signals
+		/// These are emitted when the Metadata has been changed with one
+		/// of the register*() methods. If dynamic metadata is registered
+		/// with a NodeValueFunction or PlugValueFunction then it is the
+		/// responsibility of the registrant to manually emit the signals
+		/// when necessary.
+		////////////////////////////////////////////////////////////////////
+		//@{
+		static NodeValueChangedSignal &nodeValueChangedSignal();
+		static PlugValueChangedSignal &plugValueChangedSignal();
+		//@}
 	
 	private :
 	

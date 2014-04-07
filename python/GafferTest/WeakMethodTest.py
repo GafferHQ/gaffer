@@ -70,6 +70,23 @@ class WeakMethodTest( unittest.TestCase ) :
 		except ReferenceError, e :
 			self.failUnless( "f()" in str( e ) )
 	
+	def testFallbackResult( self ) :
+	
+		class A() :
+		
+			def f( self ) :
+			
+				return 10
+				
+		a = A()
+		wm = Gaffer.WeakMethod( a.f, fallbackResult = 20 )
+		
+		self.assertEqual( wm(), 10 )
+		
+		del a
+		
+		self.assertEqual( wm(), 20 )
+	
 if __name__ == "__main__":
 	unittest.main()
 	

@@ -178,6 +178,7 @@ from PathPlugValueWidget import PathPlugValueWidget
 from VectorDataPlugValueWidget import VectorDataPlugValueWidget
 from PathVectorDataPlugValueWidget import PathVectorDataPlugValueWidget
 from PlugWidget import PlugWidget
+from PlugLayout import PlugLayout
 from EditorWidget import EditorWidget
 from ScriptEditor import ScriptEditor
 from GadgetWidget import GadgetWidget
@@ -255,7 +256,7 @@ import ObjectReaderUI
 import ObjectWriterUI
 import RandomUI
 import ExpressionUI
-import BoxUI
+from BoxUI import BoxEditor
 import ReferenceUI
 import BackdropUI
 

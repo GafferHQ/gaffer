@@ -110,6 +110,44 @@ class NodeSetEditor( GafferUI.EditorWidget ) :
 				
 		return result
 		
+	## Ensures that the specified node has a visible editor of this class type editing
+	# it, creating one if necessary.
+	## \todo User preferences for whether these are made floating, embedded, whether
+	# they are reused etc. This class should provide the behaviour, but the code for
+	# linking it to preferences should be in a startup file.
+	## \todo Consider how this relates to draggable editor tabs and editor floating
+	# once we implement that in CompoundEditor - perhaps acquire will become a method
+	# on CompoundEditor instead at this point.
+	@classmethod
+	def acquire( cls, node ) :
+	
+		if isinstance( node, Gaffer.ScriptNode ) :
+			script = node
+		else :
+			script = node.scriptNode()
+		
+		scriptWindow = GafferUI.ScriptWindow.acquire( script )
+		
+		for editor in scriptWindow.getLayout().editors( type = cls ) :
+			if node.isSame( editor._lastAddedNode() ) :
+				editor.reveal()
+				return editor
+		
+		childWindows = scriptWindow.childWindows()
+		for window in childWindows :
+			if isinstance( window, _EditorWindow ) :
+				if isinstance( window.getChild(), cls ) and node in window.getChild().getNodeSet() :
+					window.setVisible( True )
+					return window.getChild()
+		
+		editor = cls( script )
+		editor.setNodeSet( Gaffer.StandardSet( [ node ] ) )						
+		
+		window = _EditorWindow( scriptWindow, editor )
+		window.setVisible( True )
+
+		return editor
+
 	def _lastAddedNode( self ) :
 	
 		if len( self.__nodeSet ) :
@@ -217,3 +255,34 @@ class NodeSetEditor( GafferUI.EditorWidget ) :
 		if self.__updateScheduled :
 			self.__updateScheduled = False
 			self._updateFromSet()
+
+class _EditorWindow( GafferUI.Window ) :
+
+	def __init__( self, parentWindow, editor, **kw ) :
+	
+		GafferUI.Window.__init__( self, borderWidth = 8, **kw )
+		
+		self.setChild( editor )
+
+		self.__titleChangedConnection = editor.titleChangedSignal().connect( Gaffer.WeakMethod( self.__updateTitle ) )
+		self.__nodeSetMemberRemovedConnection = editor.getNodeSet().memberRemovedSignal().connect( Gaffer.WeakMethod( self.__nodeSetMemberRemoved ) )
+		self.__closedConnection = self.closedSignal().connect( Gaffer.WeakMethod( self.__closed ) )
+
+		parentWindow.addChildWindow( self )
+
+		self.__updateTitle()
+
+	def __updateTitle( self, *unused ) :
+	
+		self.setTitle( self.getChild().getTitle() )
+
+	def __nodeSetMemberRemoved( self, set, node ) :
+	
+		if not len( set ) :
+			self.parent().removeChild( self )
+
+	def __closed( self, window ) :
+	
+		assert( window is self )
+		
+		self.parent().removeChild( self )

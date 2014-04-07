@@ -168,6 +168,25 @@ class PathListingWidgetTest( unittest.TestCase ) :
 		# once it has processed things, the expansion should be exactly as it was.
 		self.assertEqual( w.getPathExpanded( p1 ), True )
 
+	def testHeaderVisibility( self ) :
+	
+		with GafferUI.ListContainer() as c :
+			w = GafferUI.PathListingWidget( Gaffer.DictPath( {}, "/" ) )
+
+		self.assertTrue( w.getHeaderVisible() )
+		
+		w.setHeaderVisible( False )
+		self.assertFalse( w.getHeaderVisible() )
+
+		w.setHeaderVisible( True )
+		self.assertTrue( w.getHeaderVisible() )
+
+		c.setVisible( False )
+		self.assertTrue( w.getHeaderVisible() )
+
+		w.setHeaderVisible( False )
+		self.assertFalse( w.getHeaderVisible() )
+
 if __name__ == "__main__":
 	unittest.main()
 	

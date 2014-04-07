@@ -1,7 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,44 +34,42 @@
 #  
 ##########################################################################
 
-import weakref
-import new
+import Gaffer
+import GafferUI
+import GafferUITest
 
-## Implements an object similar to weakref.proxy, except that
-# it can work with bound methods.
-class WeakMethod( object ) :
+class NameWidgetTest( GafferUITest.TestCase ) :
 
-	def __init__( self, boundMethod, **kw ) :
+	def test( self ) :
 	
-		self.__method = boundMethod.im_func
-		self.__self = weakref.ref( boundMethod.im_self )
-		self.__kw = kw
-	
-	## Calls the method if the instance it refers to is still alive,
-	# and returns the result.
-	#
-	# If the instance is not alive, then returns "fallbackResult" if
-	# it was passed to the constructor as a keyword argument, and throws
-	# ReferenceError otherwise.
-	def __call__( self, *args, **kwArgs ) :
-	
-		s = self.instance()
-		if s is None :
-			if "fallbackResult" in self.__kw :
-				return self.__kw["fallbackResult"]
-			else :
-				raise ReferenceError( "Instance referenced by WeakMethod %s() no longer exists" % self.__method.__name__ )
+		n = Gaffer.Node()
+		w = GafferUI.NameWidget( n )
 		
-		m = new.instancemethod( self.__method, s, s.__class__ )
-		return m( *args, **kwArgs )
+		self.assertEqual( w.getText(), n.getName() )
+		
+		n.setName( "somethingElse" )
+		self.assertEqual( w.getText(), "somethingElse" )
 	
-	## Returns the function that implements the method.	
-	def method( self ) :
+	def testConstructWithoutGraphComponent( self ) :
 	
-		return self.__method
+		w = GafferUI.NameWidget( None )
+		self.assertEqual( w.getText(), "" )
+			
+		n = Gaffer.Node()
+		w.setGraphComponent( n )
+		
+		self.assertEqual( w.getText(), n.getName() )		
 	
-	## Returns the instance the method is bound to, or None if
-	# it has expired.
-	def instance( self ) :
+	def testSetGraphComponentToNone( self ) :
 	
-		return self.__self()
+		n = Gaffer.Node()
+		w = GafferUI.NameWidget( n )
+		self.assertEqual( w.getText(), n.getName() )
+		
+		w.setGraphComponent( None )
+		self.assertEqual( w.getText(), "" )
+		self.assertTrue( w.getGraphComponent() is None )
+	
+if __name__ == "__main__":
+	unittest.main()
+	

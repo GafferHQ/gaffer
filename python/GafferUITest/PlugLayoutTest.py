@@ -1,7 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,44 +34,29 @@
 #  
 ##########################################################################
 
-import weakref
-import new
+import Gaffer
+import GafferUI
+import GafferUITest
 
-## Implements an object similar to weakref.proxy, except that
-# it can work with bound methods.
-class WeakMethod( object ) :
+class PlugLayoutTest( GafferUITest.TestCase ) :
 
-	def __init__( self, boundMethod, **kw ) :
+	def testRenamingPlugs( self ) :
 	
-		self.__method = boundMethod.im_func
-		self.__self = weakref.ref( boundMethod.im_self )
-		self.__kw = kw
-	
-	## Calls the method if the instance it refers to is still alive,
-	# and returns the result.
-	#
-	# If the instance is not alive, then returns "fallbackResult" if
-	# it was passed to the constructor as a keyword argument, and throws
-	# ReferenceError otherwise.
-	def __call__( self, *args, **kwArgs ) :
-	
-		s = self.instance()
-		if s is None :
-			if "fallbackResult" in self.__kw :
-				return self.__kw["fallbackResult"]
-			else :
-				raise ReferenceError( "Instance referenced by WeakMethod %s() no longer exists" % self.__method.__name__ )
+		n = Gaffer.Node()
+		n["a"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		
-		m = new.instancemethod( self.__method, s, s.__class__ )
-		return m( *args, **kwArgs )
-	
-	## Returns the function that implements the method.	
-	def method( self ) :
-	
-		return self.__method
-	
-	## Returns the instance the method is bound to, or None if
-	# it has expired.
-	def instance( self ) :
-	
-		return self.__self()
+		ui = GafferUI.PlugLayout( n )
+		
+		w = ui.plugValueWidget( n["a"], lazy=False )
+		self.assertTrue( w is not None )
+		self.assertTrue( w.getPlug().isSame( n["a"] ) )
+		
+		n["a"].setName( "b" )
+		
+		w2 = ui.plugValueWidget( n["b"], lazy=False )
+		self.assertTrue( w2 is not None )
+		self.assertTrue( w2 is w )
+		self.assertTrue( w2.getPlug().isSame( n["b"] ) )
+		
+if __name__ == "__main__":
+	unittest.main()

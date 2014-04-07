@@ -45,6 +45,7 @@
 #include "Gaffer/CompoundPlug.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/Metadata.h"
+#include "Gaffer/Action.h"
 
 using namespace Gaffer;
 
@@ -279,6 +280,43 @@ bool Box::validatePromotability( const Plug *descendantPlug, bool throwException
 	return true;
 }
 
+const IECore::Data *Box::getNodeMetadata( IECore::InternedString key ) const
+{
+	if( !m_nodeMetadata )
+	{
+		return NULL;
+	}
+	return m_nodeMetadata->member<IECore::Data>( key );
+}
+
+void Box::setNodeMetadata( IECore::InternedString key, IECore::ConstDataPtr value )
+{
+	const IECore::Data *currentValue = getNodeMetadata( key );
+	if(
+		( !currentValue && !value ) ||
+		( currentValue && value && currentValue->isEqualTo( value ) )
+	)
+	{
+		return;
+	}
+
+	Action::enact(
+		this,
+		boost::bind( &Box::setNodeMetadataInternal, BoxPtr( this ), key, value ),
+		boost::bind( &Box::setNodeMetadataInternal, BoxPtr( this ), key, IECore::ConstDataPtr( currentValue ) )
+	);
+}
+
+void Box::setNodeMetadataInternal( IECore::InternedString key, IECore::ConstDataPtr value )
+{
+	if( !m_nodeMetadata )
+	{
+		m_nodeMetadata = new IECore::CompoundData;
+	}
+	m_nodeMetadata->writable()[key] = IECore::constPointerCast<IECore::Data>( value );
+	Metadata::nodeValueChangedSignal()( staticTypeId(), key );
+}
+
 const IECore::Data *Box::getPlugMetadata( const Plug *plug, IECore::InternedString key ) const
 {
 	PlugMetadataMap::const_iterator it = m_plugMetadata.find( plug );
@@ -290,6 +328,24 @@ const IECore::Data *Box::getPlugMetadata( const Plug *plug, IECore::InternedStri
 }
 
 void Box::setPlugMetadata( const Plug *plug, IECore::InternedString key, IECore::ConstDataPtr value )
+{
+	const IECore::Data *currentValue = getPlugMetadata( plug, key );
+	if(
+		( !currentValue && !value ) ||
+		( currentValue && value && currentValue->isEqualTo( value ) )
+	)
+	{
+		return;
+	}
+
+	Action::enact(
+		this,
+		boost::bind( &Box::setPlugMetadataInternal, BoxPtr( this ), ConstPlugPtr( plug ), key, value ),
+		boost::bind( &Box::setPlugMetadataInternal, BoxPtr( this ), ConstPlugPtr( plug ), key, IECore::ConstDataPtr( currentValue ) )
+	);
+}
+
+void Box::setPlugMetadataInternal( const Plug *plug, IECore::InternedString key, IECore::ConstDataPtr value )
 {
 	IECore::CompoundDataPtr data;
 	PlugMetadataMap::const_iterator it = m_plugMetadata.find( plug );
@@ -303,6 +359,14 @@ void Box::setPlugMetadata( const Plug *plug, IECore::InternedString key, IECore:
 		data = it->second;
 	}
 	data->writable()[key] = IECore::constPointerCast<IECore::Data>( value );
+	if( plug->parent<GraphComponent>() )
+	{
+		// signal that the metadata has changed. it's possible that the plug doesn't have
+		// a parent if it is in the process of being added in the create() method, but if
+		// that's the case we don't need to signal anyway, as nothing has access to the plug
+		// yet.
+		Metadata::plugValueChangedSignal()( staticTypeId(), plug->relativeName( this ), key );
+	}
 }
 
 void Box::exportForReference( const std::string &fileName ) const
@@ -442,6 +506,12 @@ BoxPtr Box::create( Node *parent, const Set *childNodes )
 namespace // anonymous
 {
 
+IECore::ConstDataPtr boxNodeMetadata( const Node *node, IECore::InternedString key )
+{
+	const Box *box = static_cast<const Box *>( node );
+	return box->getNodeMetadata( key );
+}
+
 IECore::ConstDataPtr boxPlugMetadata( const Plug *plug, IECore::InternedString key )
 {
 	const Box *box = static_cast<const Box *>( plug->node() );
@@ -458,10 +528,17 @@ int registerMetadata()
 {
 	/// \todo Perhaps if Metadata::registerPlugValue() allowed match strings for keys
 	/// as well as plugs, we wouldn't need to loop over an explicit list of keys.
-	const char *keys[] = { "description", "nodeGadget:nodulePosition", NULL };
-	for( const char **key = keys; *key; key++ )
+	const char *nodeKeys[] = { "description" };
+	const char *plugKeys[] = { "description", "divider", "layout:index", "nodeGadget:nodulePosition", NULL };
+	
+	for( const char **key = nodeKeys; *key; key++ )
 	{
-		Metadata::registerPlugValue( Box::staticTypeId(), boost::regex( ".*" ), *key, boost::bind( boxPlugMetadata, ::_1, *key ) );
+		Metadata::registerNodeValue( Box::staticTypeId(), *key, boost::bind( boxNodeMetadata, ::_1, *key ) );
+	}
+	
+	for( const char **key = plugKeys; *key; key++ )
+	{
+		Metadata::registerPlugValue( Box::staticTypeId(), "*", *key, boost::bind( boxPlugMetadata, ::_1, *key ) );
 	}
 	return 0;
 }

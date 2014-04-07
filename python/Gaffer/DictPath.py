@@ -49,6 +49,13 @@ class DictPath( Gaffer.Path ) :
 		self.__dictTypes = dictTypes
 		self.__dict = dict
 	
+	## Returns the dictionary that this path represents. If this
+	# is modified, then it is the responsibility of the modifying
+	# code to emit pathChangedSignal().
+	def dict( self ) :
+	
+		return self.__dict
+	
 	def isValid( self ) :
 	
 		try :

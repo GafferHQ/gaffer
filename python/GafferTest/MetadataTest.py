@@ -151,6 +151,51 @@ class MetadataTest( GafferTest.TestCase ) :
 
 		Gaffer.Metadata.registerPlugValue( self.DerivedAddNode, "op1", "iKey", "Derived class plug value" )
 		self.assertEqual( Gaffer.Metadata.plugValue( derivedAdd["op1"], "iKey", inherit=False ), "Derived class plug value" )
+	
+	def testNodeSignals( self ) :
+	
+		ns = GafferTest.CapturingSlot( Gaffer.Metadata.nodeValueChangedSignal() )
+		ps = GafferTest.CapturingSlot( Gaffer.Metadata.plugValueChangedSignal() )
+		
+		Gaffer.Metadata.registerNodeValue( GafferTest.AddNode, "k", "something" )
+		
+		self.assertEqual( len( ps ), 0 )
+		self.assertEqual( len( ns ), 1 )
+		self.assertEqual( ns[0], ( GafferTest.AddNode.staticTypeId(), "k" ) )
+		
+		Gaffer.Metadata.registerNodeValue( GafferTest.AddNode, "k", "somethingElse" )
+
+		self.assertEqual( len( ps ), 0 )
+		self.assertEqual( len( ns ), 2 )
+		self.assertEqual( ns[1], ( GafferTest.AddNode.staticTypeId(), "k" ) )
+		
+	def testPlugSignals( self ) :
+		
+		ns = GafferTest.CapturingSlot( Gaffer.Metadata.nodeValueChangedSignal() )
+		ps = GafferTest.CapturingSlot( Gaffer.Metadata.plugValueChangedSignal() )
+		
+		Gaffer.Metadata.registerPlugValue( GafferTest.AddNode, "op1", "k", "something" )
+		
+		self.assertEqual( len( ps ), 1 )
+		self.assertEqual( len( ns ), 0 )
+		self.assertEqual( ps[0], ( GafferTest.AddNode.staticTypeId(), "op1", "k" ) )
+		
+		Gaffer.Metadata.registerPlugValue( GafferTest.AddNode, "op1", "k", "somethingElse" )
+
+		self.assertEqual( len( ps ), 2 )
+		self.assertEqual( len( ns ), 0 )
+		self.assertEqual( ps[1], ( GafferTest.AddNode.staticTypeId(), "op1", "k" ) )
+	
+	def testSignalsDontExposeInternedStrings( self ) :
+	
+		cs = GafferTest.CapturingSlot( Gaffer.Metadata.nodeValueChangedSignal() )
+		Gaffer.Metadata.registerNodeValue( GafferTest.AddNode, "k", "aaa" )
+		self.assertTrue( type( cs[0][1] ) is str )
+		
+		cs = GafferTest.CapturingSlot( Gaffer.Metadata.plugValueChangedSignal() )
+		Gaffer.Metadata.registerPlugValue( GafferTest.AddNode, "op1", "k", "bbb" )
+		self.assertTrue( type( cs[0][1] ) is str )
+		self.assertTrue( type( cs[0][2] ) is str )
 		
 if __name__ == "__main__":
 	unittest.main()

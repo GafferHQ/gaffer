@@ -46,6 +46,7 @@
 #include "Gaffer/Metadata.h"
 
 #include "GafferBindings/MetadataBinding.h"
+#include "GafferBindings/SignalBinding.h"
 
 using namespace boost::python;
 using namespace IECore;
@@ -150,45 +151,6 @@ static Metadata::PlugValueFunction objectToPlugValueFunction( object o )
 	}
 }
 
-/// \todo I think we need some sort of standard string
-/// matching behaviour throughout Gaffer. In various places
-/// in Python we're accepting either a regex or a string we
-/// translate with fnmatch.translate(), and in C++ PathMatcher
-/// uses glob style matching and various registries use regexes.
-/// Ideally I think we'd settle on a glob style behaviour everywhere
-/// and have some simple utility class to make it easy to use.
-static boost::regex objectToRegex( object o )
-{
-	extract<std::string> stringExtractor( o );
-	if( stringExtractor.check() )
-	{
-		std::string glob = stringExtractor();
-		std::string regex;
-		for( const char *c = glob.c_str(); *c; ++c )
-		{
-			switch( *c )
-			{
-				case '*' :
-					regex += ".*";
-					break;
-				case '?' :
-					regex += ".";
-					break;
-				case '.' :
-					regex += "\\.";
-					break;
-				default :
-					regex += *c;
-			}
-		}	
-		return boost::regex( regex );
-	}
-
-	PyErr_SetString( PyExc_TypeError, "Expected a string" );
-	throw_error_already_set();
-	return boost::regex(); // we can't get here but we need to keep the compiler happy
-}
-
 static void registerNodeValue( object nodeTypeId, IECore::InternedString key, object &value )
 {
 	Metadata::registerNodeValue( objectToTypeId( nodeTypeId ), key, objectToNodeValueFunction( value ) );
@@ -214,7 +176,7 @@ static object registerNodeDescription( tuple args, dict kw )
 
 	for( size_t i = 2, e = len( args ); i < e; i += 2 )
 	{
-		boost::regex plugPath = objectToRegex( args[i] );
+		MatchPattern plugPath = extract<MatchPattern>( args[i] )();
 		extract<dict> dictExtractor( args[i+1] );
 		if( dictExtractor.check() )
 		{
@@ -237,9 +199,9 @@ static object registerNodeDescription( tuple args, dict kw )
 	return object(); // none
 }
 
-static void registerPlugValue( object nodeTypeId, object &plugPath, IECore::InternedString key, object &value )
+static void registerPlugValue( object nodeTypeId, const char *plugPath, IECore::InternedString key, object &value )
 {
-	Metadata::registerPlugValue( objectToTypeId( nodeTypeId ), objectToRegex( plugPath ), key, objectToPlugValueFunction( value ) );
+	Metadata::registerPlugValue( objectToTypeId( nodeTypeId ), plugPath, key, objectToPlugValueFunction( value ) );
 }
 
 static object plugValue( const Plug *plug, const char *key, bool inherit )
@@ -255,14 +217,31 @@ static object plugValue( const Plug *plug, const char *key, bool inherit )
 	}
 }
 
-static void registerPlugDescription( object nodeTypeId, object &plugPath, object &description )
+static void registerPlugDescription( object nodeTypeId, const char *plugPath, object &description )
 {
-	Metadata::registerPlugDescription( objectToTypeId( nodeTypeId ), objectToRegex( plugPath ), objectToPlugValueFunction( description ) );
+	Metadata::registerPlugDescription( objectToTypeId( nodeTypeId ), plugPath, objectToPlugValueFunction( description ) );
 }
+
+struct ValueChangedSlotCaller
+{
+
+	boost::signals::detail::unusable operator()( boost::python::object slot, IECore::TypeId nodeTypeId, IECore::InternedString key )
+	{
+		slot( nodeTypeId, key.c_str() );
+		return boost::signals::detail::unusable();
+	}
+
+	boost::signals::detail::unusable operator()( boost::python::object slot, IECore::TypeId nodeTypeId, const MatchPattern &plugPath, IECore::InternedString key )
+	{
+		slot( nodeTypeId, plugPath.c_str(), key.c_str() );
+		return boost::signals::detail::unusable();
+	}
+	
+};
 
 void bindMetadata()
 {	
-	class_<Metadata>( "Metadata", no_init )
+	scope s = class_<Metadata>( "Metadata", no_init )
 		
 		.def( "registerNodeValue", &registerNodeValue )
 		.staticmethod( "registerNodeValue" )
@@ -310,7 +289,15 @@ void bindMetadata()
 		)
 		.staticmethod( "plugDescription" )
 	
+		.def( "nodeValueChangedSignal", &Metadata::nodeValueChangedSignal, return_value_policy<reference_existing_object>() )
+		.staticmethod( "nodeValueChangedSignal" )
+	
+		.def( "plugValueChangedSignal", &Metadata::plugValueChangedSignal, return_value_policy<reference_existing_object>() )
+		.staticmethod( "plugValueChangedSignal" )
 	;
+
+	SignalBinder<Metadata::NodeValueChangedSignal, DefaultSignalCaller<Metadata::NodeValueChangedSignal>, ValueChangedSlotCaller>::bind( "NodeValueChangedSignal" );
+	SignalBinder<Metadata::PlugValueChangedSignal, DefaultSignalCaller<Metadata::NodeValueChangedSignal>, ValueChangedSlotCaller>::bind( "PlugValueChangedSignal" );
 
 }
 

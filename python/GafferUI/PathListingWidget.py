@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2014, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -114,7 +114,6 @@ class PathListingWidget( GafferUI.Widget ) :
 		self._qtWidget().setEditTriggers( QtGui.QTreeView.NoEditTriggers )
 		self._qtWidget().activated.connect( Gaffer.WeakMethod( self.__activated ) )
 		self._qtWidget().header().setMovable( False )
-		self._qtWidget().setSortingEnabled( True )
 		self._qtWidget().header().setSortIndicator( 0, QtCore.Qt.AscendingOrder )
 		
 		self._qtWidget().expansionChanged.connect( Gaffer.WeakMethod( self.__expansionChanged ) )
@@ -173,6 +172,22 @@ class PathListingWidget( GafferUI.Widget ) :
 		index = self.__indexForPath( path )
 		if index.isValid() :
 			self._qtWidget().scrollTo( index, self._qtWidget().EnsureVisible )	
+	
+	## Returns the path being displayed at the specified
+	# position within the widget. May return None if no path
+	# exists at that position.
+	def pathAt( self, position ) :
+	
+		position = self._qtWidget().viewport().mapFrom(
+			self._qtWidget(),
+			QtCore.QPoint( position.x, position.y )
+		)
+				
+		index = self._qtWidget().indexAt( position )
+		if not index.isValid() :
+			return None
+			
+		return self.__pathForIndex( index )
 	
 	## \deprecated Use setPathExpanded() instead.
 	def setPathCollapsed( self, path, collapsed ) :
@@ -249,6 +264,14 @@ class PathListingWidget( GafferUI.Widget ) :
 		
 		return self.__columns
 	
+	def setHeaderVisible( self, visible ) :
+	
+		self._qtWidget().header().setVisible( visible )
+	
+	def getHeaderVisible( self ) :
+	
+		return not self._qtWidget().header().isHidden()
+	
 	## Returns a list of all currently selected paths. Note that a list is returned
 	# even when in single selection mode.
 	def getSelectedPaths( self ) :
@@ -279,6 +302,7 @@ class PathListingWidget( GafferUI.Widget ) :
 				selectionModel.select( indexToSelect, selectionModel.Select | selectionModel.Rows )
 				if scrollToFirst :
 					self._qtWidget().scrollTo( indexToSelect, self._qtWidget().EnsureVisible )
+					selectionModel.setCurrentIndex( indexToSelect, selectionModel.Current )
 					scrollToFirst = False
 				if expandNonLeaf and not path.isLeaf() :
 					self._qtWidget().setExpanded( indexToSelect, True )
@@ -342,6 +366,11 @@ class PathListingWidget( GafferUI.Widget ) :
 					recurse = self.__displayMode != self.DisplayMode.List,
 				)
 			)
+
+			# it's not sufficient to set this once during construction - Qt
+			# needs reminding every time we change the model that we would like
+			# it to be sorted.
+			self._qtWidget().setSortingEnabled( True )
 
 			if expandedPaths is not None :
 				self.setExpandedPaths( expandedPaths )
