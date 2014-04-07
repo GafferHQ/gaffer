@@ -136,7 +136,7 @@ class NodeSetEditor( GafferUI.EditorWidget ) :
 		childWindows = scriptWindow.childWindows()
 		for window in childWindows :
 			if isinstance( window, _EditorWindow ) :
-				if node in window.getChild().getNodeSet() :
+				if isinstance( window.getChild(), cls ) and node in window.getChild().getNodeSet() :
 					window.setVisible( True )
 					return window.getChild()
 		
