@@ -42,16 +42,26 @@ import new
 # it can work with bound methods.
 class WeakMethod( object ) :
 
-	def __init__( self, boundMethod ) :
+	def __init__( self, boundMethod, **kw ) :
 	
 		self.__method = boundMethod.im_func
 		self.__self = weakref.ref( boundMethod.im_self )
-		
+		self.__kw = kw
+	
+	## Calls the method if the instance it refers to is still alive,
+	# and returns the result.
+	#
+	# If the instance is not alive, then returns "fallbackResult" if
+	# it was passed to the constructor as a keyword argument, and throws
+	# ReferenceError otherwise.
 	def __call__( self, *args, **kwArgs ) :
 	
 		s = self.instance()
 		if s is None :
-			raise ReferenceError( "Instance referenced by WeakMethod %s() no longer exists" % self.__method.__name__ )
+			if "fallbackResult" in self.__kw :
+				return self.__kw["fallbackResult"]
+			else :
+				raise ReferenceError( "Instance referenced by WeakMethod %s() no longer exists" % self.__method.__name__ )
 		
 		m = new.instancemethod( self.__method, s, s.__class__ )
 		return m( *args, **kwArgs )
