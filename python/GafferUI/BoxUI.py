@@ -321,6 +321,8 @@ class BoxEditor( GafferUI.NodeSetEditor ) :
 	
 	def _updateFromSet( self ) :
 	
+		GafferUI.NodeSetEditor._updateFromSet( self )
+	
 		self.__updateFromSetInternal()
 	
 	def __setSelectedPlugInternal( self, plug, lazy=True ) :
