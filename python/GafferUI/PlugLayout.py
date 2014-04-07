@@ -186,7 +186,7 @@ class PlugLayout( GafferUI.Widget ) :
 		if self.__updatePending :
 			return
 	
-		GafferUI.EventLoop.addIdleCallback( self.__idleUpdate )
+		GafferUI.EventLoop.addIdleCallback( Gaffer.WeakMethod( self.__idleUpdate, fallbackResult=False ) )
 		self.__updatePending = True
 	
 	def __idleUpdate( self ) :
