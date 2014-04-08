@@ -123,7 +123,7 @@ class Serialisation
 		
 		std::set<std::string> m_modules;
 		
-		void walk( const Gaffer::GraphComponent *parent, const std::string &parentIdentifier );
+		void walk( const Gaffer::GraphComponent *parent, const std::string &parentIdentifier, const Serialiser *parentSerialiser );
 		
 		typedef std::map<IECore::TypeId, SerialiserPtr> SerialiserMap;
 		static SerialiserMap &serialiserMap();
