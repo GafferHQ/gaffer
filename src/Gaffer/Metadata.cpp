@@ -42,11 +42,9 @@
 
 using namespace std;
 using namespace IECore;
+using namespace Gaffer;
 
-namespace Gaffer
-{
-
-namespace Detail
+namespace
 {
 
 struct NodeMetadata
@@ -63,13 +61,13 @@ struct NodeMetadata
 
 typedef std::map<IECore::TypeId, NodeMetadata> NodeMetadataMap;
 
-static NodeMetadataMap &nodeMetadataMap()
+NodeMetadataMap &nodeMetadataMap()
 {
 	static NodeMetadataMap m;
 	return m;
 }
 
-} // namespace Detail
+} // namespace
 
 void Metadata::registerNodeValue( IECore::TypeId nodeTypeId, IECore::InternedString key, IECore::ConstDataPtr value )
 {
@@ -78,7 +76,7 @@ void Metadata::registerNodeValue( IECore::TypeId nodeTypeId, IECore::InternedStr
 
 void Metadata::registerNodeValue( IECore::TypeId nodeTypeId, IECore::InternedString key, NodeValueFunction value )
 {
-	Detail::NodeMetadata &nodeMetadata = Detail::nodeMetadataMap()[nodeTypeId];
+	NodeMetadata &nodeMetadata = nodeMetadataMap()[nodeTypeId];
 	nodeMetadata.nodeValues[key] = value;
 	nodeValueChangedSignal()( nodeTypeId, key );
 }
@@ -88,10 +86,10 @@ IECore::ConstDataPtr Metadata::nodeValueInternal( const Node *node, IECore::Inte
 	IECore::TypeId typeId = node->typeId();
 	while( typeId != InvalidTypeId )
 	{
-		Detail::NodeMetadataMap::const_iterator nIt = Detail::nodeMetadataMap().find( typeId );
-		if( nIt != Detail::nodeMetadataMap().end() )
+		NodeMetadataMap::const_iterator nIt = nodeMetadataMap().find( typeId );
+		if( nIt != nodeMetadataMap().end() )
 		{
-			Detail::NodeMetadata::NodeValues::const_iterator vIt = nIt->second.nodeValues.find( key );
+			NodeMetadata::NodeValues::const_iterator vIt = nIt->second.nodeValues.find( key );
 			if( vIt != nIt->second.nodeValues.end() )
 			{
 				return vIt->second( node );
@@ -128,8 +126,8 @@ void Metadata::registerPlugValue( IECore::TypeId nodeTypeId, const MatchPattern 
 
 void Metadata::registerPlugValue( IECore::TypeId nodeTypeId, const MatchPattern &plugPath, IECore::InternedString key, PlugValueFunction value )
 {
-	Detail::NodeMetadata &nodeMetadata = Detail::nodeMetadataMap()[nodeTypeId];
-	Detail::NodeMetadata::PlugValues &plugValues = nodeMetadata.plugPathsToValues[plugPath];
+	NodeMetadata &nodeMetadata = nodeMetadataMap()[nodeTypeId];
+	NodeMetadata::PlugValues &plugValues = nodeMetadata.plugPathsToValues[plugPath];
 	plugValues[key] = value;
 	plugValueChangedSignal()( nodeTypeId, plugPath, key );
 }
@@ -147,15 +145,15 @@ IECore::ConstDataPtr Metadata::plugValueInternal( const Plug *plug, IECore::Inte
 	IECore::TypeId typeId = node->typeId();
 	while( typeId != InvalidTypeId )
 	{
-		Detail::NodeMetadataMap::const_iterator nIt = Detail::nodeMetadataMap().find( typeId );
-		if( nIt != Detail::nodeMetadataMap().end() )
+		NodeMetadataMap::const_iterator nIt = nodeMetadataMap().find( typeId );
+		if( nIt != nodeMetadataMap().end() )
 		{
-			Detail::NodeMetadata::PlugPathsToValues::const_iterator it, eIt;
+			NodeMetadata::PlugPathsToValues::const_iterator it, eIt;
 			for( it = nIt->second.plugPathsToValues.begin(), eIt = nIt->second.plugPathsToValues.end(); it != eIt; ++it )
 			{
 				if( match( plugPath, it->first ) )
 				{
-					Detail::NodeMetadata::PlugValues::const_iterator vIt = it->second.find( key );
+					NodeMetadata::PlugValues::const_iterator vIt = it->second.find( key );
 					if( vIt != it->second.end() )
 					{
 						return vIt->second( plug );
@@ -198,5 +196,3 @@ Metadata::PlugValueChangedSignal &Metadata::plugValueChangedSignal()
 	static PlugValueChangedSignal s;
 	return s;
 }
-
-} // namespace Gaffer
