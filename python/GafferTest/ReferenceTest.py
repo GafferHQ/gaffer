@@ -258,6 +258,42 @@ class ReferenceTest( unittest.TestCase ) :
 		
 		self.assertTrue( "myCustomPlug" in s2["r"] )
 		self.assertTrue( "__invisiblePlugThatShouldntGetExported" not in s2["r"] )
+	
+	def testPlugMetadata( self ) :
+	
+		s = Gaffer.ScriptNode()
+		s["n1"] = GafferTest.AddNode()
+		
+		b = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["n1"] ] ) )
+		p = b.promotePlug( b["n1"]["op1"] )
+		
+		Gaffer.Metadata.registerPlugValue( p, "description", "ppp" )
+		
+		b.exportForReference( "/tmp/test.grf" )
+		
+		s2 = Gaffer.ScriptNode()
+		s2["r"] = Gaffer.Reference()
+		s2["r"].load( "/tmp/test.grf" )
+		
+		self.assertEqual( Gaffer.Metadata.plugValue( s2["r"].descendant( p.relativeName( b ) ), "description" ), "ppp" )
+	
+	def testMetadataIsntResaved( self ) :
+	
+		s = Gaffer.ScriptNode()
+		s["n1"] = GafferTest.AddNode()
+		
+		b = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["n1"] ] ) )
+		p = b.promotePlug( b["n1"]["op1"] )
+		
+		Gaffer.Metadata.registerPlugValue( p, "description", "ppp" )
+		
+		b.exportForReference( "/tmp/test.grf" )
+		
+		s2 = Gaffer.ScriptNode()
+		s2["r"] = Gaffer.Reference()
+		s2["r"].load( "/tmp/test.grf" )
+		
+		self.assertTrue( "Metadata" not in s2.serialise() )
 		
 	def tearDown( self ) :
 	
