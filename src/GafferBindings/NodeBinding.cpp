@@ -50,6 +50,7 @@
 #include "GafferBindings/SignalBinding.h"
 #include "GafferBindings/RawConstructor.h"
 #include "GafferBindings/CatchingSlotCaller.h"
+#include "GafferBindings/MetadataBinding.h"
 
 using namespace boost::python;
 using namespace GafferBindings;
@@ -91,6 +92,18 @@ struct BinaryPlugSlotCaller
 static ScriptNodePtr scriptNode( Node &node )
 {
 	return node.scriptNode();
+}
+
+void NodeSerialiser::moduleDependencies( const Gaffer::GraphComponent *graphComponent, std::set<std::string> &modules ) const
+{
+	Serialiser::moduleDependencies( graphComponent, modules );
+	modules.insert( "IECore" ); // for the metadata calls
+}
+
+std::string NodeSerialiser::postHierarchy( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const
+{
+	return Serialiser::postHierarchy( graphComponent, identifier, serialisation ) +
+		metadataSerialisation( static_cast<const Gaffer::Node *>( graphComponent ), identifier );
 }
 
 bool NodeSerialiser::childNeedsSerialisation( const Gaffer::GraphComponent *child ) const

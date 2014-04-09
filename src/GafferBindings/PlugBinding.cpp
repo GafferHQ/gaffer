@@ -44,6 +44,7 @@
 #include "Gaffer/Node.h"
 
 #include "GafferBindings/PlugBinding.h"
+#include "GafferBindings/MetadataBinding.h"
 
 using namespace boost::python;
 using namespace GafferBindings;
@@ -110,10 +111,10 @@ std::string PlugSerialiser::postHierarchy( const Gaffer::GraphComponent *graphCo
 		{
 			result += identifier + ".setFlags( Gaffer.Plug.Flags.ReadOnly, True )\n";
 		}
-		if( result.size() )
-		{
-			return result;
-		}
+		
+		result += metadataSerialisation( plug, identifier );
+		
+		return result;
 	}
 	return "";
 }

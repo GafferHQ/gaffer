@@ -196,6 +196,162 @@ class MetadataTest( GafferTest.TestCase ) :
 		Gaffer.Metadata.registerPlugValue( GafferTest.AddNode, "op1", "k", "bbb" )
 		self.assertTrue( type( cs[0][1] ) is str )
 		self.assertTrue( type( cs[0][2] ) is str )
+	
+	def testInstanceMetadata( self ) :
+	
+		Gaffer.Metadata.registerNodeValue( GafferTest.AddNode.staticTypeId(), "imt", "globalNodeValue" )
+		Gaffer.Metadata.registerPlugValue( GafferTest.AddNode.staticTypeId(), "op1", "imt", "globalPlugValue" )
+		
+		n = GafferTest.AddNode()
+		
+		self.assertEqual( Gaffer.Metadata.nodeValue( n, "imt" ), "globalNodeValue" )
+		self.assertEqual( Gaffer.Metadata.plugValue( n["op1"], "imt" ), "globalPlugValue" )
+		
+		Gaffer.Metadata.registerNodeValue( n, "imt", "instanceNodeValue" )
+		Gaffer.Metadata.registerPlugValue( n["op1"], "imt", "instancePlugValue" )
+		
+		self.assertEqual( Gaffer.Metadata.nodeValue( n, "imt" ), "instanceNodeValue" )
+		self.assertEqual( Gaffer.Metadata.plugValue( n["op1"], "imt" ), "instancePlugValue" )
+		
+		Gaffer.Metadata.registerNodeValue( n, "imt", None )
+		Gaffer.Metadata.registerPlugValue( n["op1"], "imt", None )
+		
+		self.assertEqual( Gaffer.Metadata.nodeValue( n, "imt" ), "globalNodeValue" )
+		self.assertEqual( Gaffer.Metadata.plugValue( n["op1"], "imt" ), "globalPlugValue" )
+	
+	def testInstanceMetadataUndo( self ) :
+	
+		s = Gaffer.ScriptNode()
+		s["n"] = GafferTest.AddNode()
+		
+		self.assertEqual( Gaffer.Metadata.nodeValue( s["n"], "undoTest" ), None )
+		self.assertEqual( Gaffer.Metadata.plugValue( s["n"]["op1"], "undoTest" ), None )
+		
+		with Gaffer.UndoContext( s ) :
+			Gaffer.Metadata.registerNodeValue( s["n"], "undoTest", "instanceNodeValue" )
+			Gaffer.Metadata.registerPlugValue( s["n"]["op1"], "undoTest", "instancePlugValue" )
+		
+		self.assertEqual( Gaffer.Metadata.nodeValue( s["n"], "undoTest" ), "instanceNodeValue" )
+		self.assertEqual( Gaffer.Metadata.plugValue( s["n"]["op1"], "undoTest" ), "instancePlugValue" )
+		
+		with Gaffer.UndoContext( s ) :
+			Gaffer.Metadata.registerNodeValue( s["n"], "undoTest", "instanceNodeValue2" )
+			Gaffer.Metadata.registerPlugValue( s["n"]["op1"], "undoTest", "instancePlugValue2" )
+		
+		self.assertEqual( Gaffer.Metadata.nodeValue( s["n"], "undoTest" ), "instanceNodeValue2" )
+		self.assertEqual( Gaffer.Metadata.plugValue( s["n"]["op1"], "undoTest" ), "instancePlugValue2" )
+		
+		s.undo()
+		
+		self.assertEqual( Gaffer.Metadata.nodeValue( s["n"], "undoTest" ), "instanceNodeValue" )
+		self.assertEqual( Gaffer.Metadata.plugValue( s["n"]["op1"], "undoTest" ), "instancePlugValue" )
+
+		s.undo()
+
+		self.assertEqual( Gaffer.Metadata.nodeValue( s["n"], "undoTest" ), None )
+		self.assertEqual( Gaffer.Metadata.plugValue( s["n"]["op1"], "undoTest" ), None )
+
+		s.redo()
+		
+		self.assertEqual( Gaffer.Metadata.nodeValue( s["n"], "undoTest" ), "instanceNodeValue" )
+		self.assertEqual( Gaffer.Metadata.plugValue( s["n"]["op1"], "undoTest" ), "instancePlugValue" )
+		
+		s.redo()
+		
+		self.assertEqual( Gaffer.Metadata.nodeValue( s["n"], "undoTest" ), "instanceNodeValue2" )
+		self.assertEqual( Gaffer.Metadata.plugValue( s["n"]["op1"], "undoTest" ), "instancePlugValue2" )
+	
+	def testInstanceMetadataSignals( self ) :
+	
+		n = GafferTest.AddNode()
+		
+		ncs = GafferTest.CapturingSlot( Gaffer.Metadata.nodeValueChangedSignal() )
+		pcs = GafferTest.CapturingSlot( Gaffer.Metadata.plugValueChangedSignal() )
+		
+		Gaffer.Metadata.registerNodeValue( n, "signalTest", 1 )
+		Gaffer.Metadata.registerPlugValue( n["op1"], "signalTest", 1 )
+		
+		self.assertEqual( len( ncs ), 1 )
+		self.assertEqual( len( pcs ), 1 )
+		self.assertEqual( ncs[0], ( GafferTest.AddNode.staticTypeId(), "signalTest" ) )
+		self.assertEqual( pcs[0], ( GafferTest.AddNode.staticTypeId(), "op1", "signalTest" ) )
+		
+		Gaffer.Metadata.registerNodeValue( n, "signalTest", 1 )
+		Gaffer.Metadata.registerPlugValue( n["op1"], "signalTest", 1 )
+
+		self.assertEqual( len( ncs ), 1 )
+		self.assertEqual( len( pcs ), 1 )
+	
+		Gaffer.Metadata.registerNodeValue( n, "signalTest", 2 )
+		Gaffer.Metadata.registerPlugValue( n["op1"], "signalTest", 2 )
+		
+		self.assertEqual( len( ncs ), 2 )
+		self.assertEqual( len( pcs ), 2 )
+		self.assertEqual( ncs[1], ( GafferTest.AddNode.staticTypeId(), "signalTest" ) )
+		self.assertEqual( pcs[1], ( GafferTest.AddNode.staticTypeId(), "op1", "signalTest" ) )
+	
+	def testSerialisation( self ) :
+	
+		s = Gaffer.ScriptNode()
+		
+		s["n"] = GafferTest.AddNode()
+		
+		Gaffer.Metadata.registerNodeValue( s["n"], "serialisationTest", 1 )
+		Gaffer.Metadata.registerPlugValue( s["n"]["op1"], "serialisationTest", 2 )
+		
+		s2 = Gaffer.ScriptNode()		
+		s2.execute( s.serialise() )
+		
+		self.assertEqual( Gaffer.Metadata.nodeValue( s2["n"], "serialisationTest" ), 1 )
+		self.assertEqual( Gaffer.Metadata.plugValue( s2["n"]["op1"], "serialisationTest" ), 2 )
+	
+	def testRegisteredValues( self ) :
+	
+		n = GafferTest.AddNode()
+		
+		self.assertTrue( "r" not in Gaffer.Metadata.registeredNodeValues( n ) )
+		self.assertTrue( "rp" not in Gaffer.Metadata.registeredPlugValues( n["op1"] ) )
+		self.assertTrue( "ri" not in Gaffer.Metadata.registeredNodeValues( n ) )
+		self.assertTrue( "rpi" not in Gaffer.Metadata.registeredPlugValues( n["op1"] ) )
+		
+		Gaffer.Metadata.registerNodeValue( n.staticTypeId(), "r", 10 )
+		Gaffer.Metadata.registerPlugValue( n.staticTypeId(), "op1", "rp", 20 )
+		
+		self.assertTrue( "r" in Gaffer.Metadata.registeredNodeValues( n ) )
+		self.assertTrue( "rp" in Gaffer.Metadata.registeredPlugValues( n["op1"] ) )
+		self.assertTrue( "ri" not in Gaffer.Metadata.registeredNodeValues( n ) )
+		self.assertTrue( "rpi" not in Gaffer.Metadata.registeredPlugValues( n["op1"] ) )
+		
+		Gaffer.Metadata.registerNodeValue( n, "ri", 10 )
+		Gaffer.Metadata.registerPlugValue( n["op1"], "rpi", 20 )
+		
+		self.assertTrue( "r" in Gaffer.Metadata.registeredNodeValues( n ) )
+		self.assertTrue( "rp" in Gaffer.Metadata.registeredPlugValues( n["op1"] ) )
+		self.assertTrue( "ri" in Gaffer.Metadata.registeredNodeValues( n ) )
+		self.assertTrue( "rpi" in Gaffer.Metadata.registeredPlugValues( n["op1"] ) )
+		
+		self.assertTrue( "r" not in Gaffer.Metadata.registeredNodeValues( n, instanceOnly=True ) )
+		self.assertTrue( "rp" not in Gaffer.Metadata.registeredPlugValues( n["op1"], instanceOnly=True ) )
+		self.assertTrue( "ri" in Gaffer.Metadata.registeredNodeValues( n ) )
+		self.assertTrue( "rpi" in Gaffer.Metadata.registeredPlugValues( n["op1"] ) )
+	
+	def testInstanceDestruction( self ) :
+	
+		for i in range( 0, 1000 ) :
+			p = Gaffer.Plug()
+			n = Gaffer.Node()
+			self.assertEqual( Gaffer.Metadata.plugValue( p, "destructionTest" ), None )
+			self.assertEqual( Gaffer.Metadata.nodeValue( n, "destructionTest" ), None )
+			Gaffer.Metadata.registerPlugValue( p, "destructionTest", 10 )
+			Gaffer.Metadata.registerNodeValue( n, "destructionTest", 20 )
+			self.assertEqual( Gaffer.Metadata.plugValue( p, "destructionTest" ), 10 )
+			self.assertEqual( Gaffer.Metadata.nodeValue( n, "destructionTest" ), 20 )
+			del p
+			del n
+	
+	def testThreading( self ) :
+	
+		GafferTest.testMetadataThreading()
 		
 if __name__ == "__main__":
 	unittest.main()

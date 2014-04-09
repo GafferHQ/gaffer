@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,24 +34,14 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_METADATA_INL
-#define GAFFER_METADATA_INL
+#ifndef GAFFERTEST_METADATATEST_H
+#define GAFFERTEST_METADATATEST_H
 
-namespace Gaffer
+namespace GafferTest
 {
 
-template<typename T>
-typename T::ConstPtr Metadata::nodeValue( const Node *node, IECore::InternedString key, bool inherit, bool instanceOnly )
-{
-	return IECore::runTimeCast<const T>( nodeValueInternal( node, key, inherit, instanceOnly ) );
-}
+void testMetadataThreading();
 
-template<typename T>
-typename T::ConstPtr Metadata::plugValue( const Plug *plug, IECore::InternedString key, bool inherit, bool instanceOnly )
-{
-	return IECore::runTimeCast<const T>( plugValueInternal( plug, key, inherit, instanceOnly ) );
-}
+} // namespace GafferTest
 
-} // namespace Gaffer
-
-#endif // GAFFER_METADATA_INL
+#endif // GAFFERTEST_METADATATEST_H

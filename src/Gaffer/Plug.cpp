@@ -39,6 +39,7 @@
 #include "Gaffer/DependencyNode.h"
 #include "Gaffer/Action.h"
 #include "Gaffer/ScriptNode.h"
+#include "Gaffer/Metadata.h"
 
 #include "IECore/Exception.h"
 
@@ -66,6 +67,7 @@ Plug::~Plug()
 		(*it)->setInputInternal( 0, true );
 		it = next;
 	}
+	Metadata::clearInstanceMetadata( this );
 }
 
 bool Plug::acceptsChild( const GraphComponent *potentialChild ) const

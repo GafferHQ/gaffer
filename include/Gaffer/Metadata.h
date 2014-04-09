@@ -70,10 +70,19 @@ class Metadata
 		/// Registers a dynamic metadata value for the specified node type. Each time the data is retrieved, the
 		/// NodeValueFunction will be called to compute it.
 		static void registerNodeValue( IECore::TypeId nodeTypeId, IECore::InternedString key, NodeValueFunction value );
+		/// Registers a metadata value specific to a single instance - this will take precedence over any
+		/// values registered above. Instance values are preserved across script save/load and cut/paste.
+		/// \undoable
+		static void registerNodeValue( Node *node, IECore::InternedString key, IECore::ConstDataPtr value );
+		
+		/// Fills the keys vector with keys for all values registered for the specified node. If instanceOnly is true,
+		/// then only the values registered for that exact instance are returned.
+		static void registeredNodeValues( const Node *node, std::vector<IECore::InternedString> &keys, bool inherit = true, bool instanceOnly = false );
+		
 		/// Retrieves a previously registered value, returning NULL if none exists. If inherit is true
 		/// then the search falls through to the base classes of the node if the node itself doesn't have a value.
 		template<typename T>
-		static typename T::ConstPtr nodeValue( const Node *node, IECore::InternedString key, bool inherit = true );
+		static typename T::ConstPtr nodeValue( const Node *node, IECore::InternedString key, bool inherit = true, bool instanceOnly = false );
 		
 		/// Utility method calling registerNodeValue( nodeTypeId, "description", description ).
 		static void registerNodeDescription( IECore::TypeId nodeTypeId, const std::string &description );
@@ -86,10 +95,19 @@ class Metadata
 		/// Registers a dynamic metadata value for the specified plug. Each time the data is retrieved, the
 		/// PlugValueFunction will be called to compute it.
 		static void registerPlugValue( IECore::TypeId nodeTypeId, const MatchPattern &plugPath, IECore::InternedString key, PlugValueFunction value );
+		/// Registers a metadata value specific to a single instance - this will take precedence over any
+		/// values registered above. Instance values are preserved across script save/load and cut/paste.
+		/// \undoable
+		static void registerPlugValue( Plug *plug, IECore::InternedString key, IECore::ConstDataPtr value );
+		
+		/// Fills the keys vector with keys for all values registered for the specified plug. If instanceOnly is true,
+		/// then only the values registered for that exact instance are returned.
+		static void registeredPlugValues( const Plug *plug, std::vector<IECore::InternedString> &keys, bool inherit = true, bool instanceOnly = false );
+		
 		/// Retrieves a previously registered value, returning NULL if none exists. If inherit is true
 		/// then the search falls through to the base classes of the node if the node itself doesn't have a value.
 		template<typename T>
-		static typename T::ConstPtr plugValue( const Plug *plug, IECore::InternedString key, bool inherit = true );
+		static typename T::ConstPtr plugValue( const Plug *plug, IECore::InternedString key, bool inherit = true, bool instanceOnly = false );
 	
 		/// Utility function calling registerPlugValue( nodeTypeId, plugPath, "description", description )
 		static void registerPlugDescription( IECore::TypeId nodeTypeId, const MatchPattern &plugPath, const std::string &description );
@@ -111,8 +129,19 @@ class Metadata
 	
 	private :
 	
-		static IECore::ConstDataPtr nodeValueInternal( const Node *node, IECore::InternedString key, bool inherit );
-		static IECore::ConstDataPtr plugValueInternal( const Plug *plug, IECore::InternedString key, bool inherit );
+		/// Per-instance Metadata is stored as a mapping from GraphComponent * to the
+		/// metadata values, and needs to be removed when the instance dies. Currently
+		/// there is no callback when a RefCounted object passes away, so we must rely
+		/// on the destructors for Node and Plug to call clearInstanceMetadata() for us.
+		/// \todo This situation isn't particularly satisfactory - if we introduced
+		/// weak pointers and destruction callbacks for RefCounted objects then we could
+		/// tidy this up.
+		friend class Node;
+		friend class Plug;
+		static void clearInstanceMetadata( const GraphComponent *graphComponent );
+	
+		static IECore::ConstDataPtr nodeValueInternal( const Node *node, IECore::InternedString key, bool inherit, bool instanceOnly );
+		static IECore::ConstDataPtr plugValueInternal( const Plug *plug, IECore::InternedString key, bool inherit, bool instanceOnly );
 
 };
 

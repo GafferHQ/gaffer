@@ -40,6 +40,7 @@
 #include "GafferTest/MultiplyNode.h"
 #include "GafferTest/RecursiveChildIteratorTest.h"
 #include "GafferTest/FilteredRecursiveChildIteratorTest.h"
+#include "GafferTest/MetadataTest.h"
 
 using namespace boost::python;
 using namespace GafferTest;
@@ -51,5 +52,6 @@ BOOST_PYTHON_MODULE( _GafferTest )
 
 	def( "testRecursiveChildIterator", &testRecursiveChildIterator );
 	def( "testFilteredRecursiveChildIterator", &testFilteredRecursiveChildIterator );
+	def( "testMetadataThreading", &testMetadataThreading );
 
 }

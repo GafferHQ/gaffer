@@ -38,6 +38,7 @@
 #include "Gaffer/Node.h"
 #include "Gaffer/CompoundPlug.h"
 #include "Gaffer/ScriptNode.h"
+#include "Gaffer/Metadata.h"
 
 using namespace Gaffer;
 
@@ -54,6 +55,7 @@ Node::Node( const std::string &name )
 
 Node::~Node()
 {
+	Metadata::clearInstanceMetadata( this );
 }
 		
 Node::UnaryPlugSignal &Node::plugSetSignal()
