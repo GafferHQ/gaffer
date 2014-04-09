@@ -294,7 +294,22 @@ class ReferenceTest( unittest.TestCase ) :
 		s2["r"].load( "/tmp/test.grf" )
 		
 		self.assertTrue( "Metadata" not in s2.serialise() )
+	
+	def testSinglePlugWithMetadata( self ) :
+	
+		s = Gaffer.ScriptNode()
+		s["b"] = Gaffer.Box()
+		s["b"]["user"]["p"] = Gaffer.Plug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		
+		Gaffer.Metadata.registerPlugValue( s["b"]["user"]["p"], "description", "ddd" )
+		
+		s["b"].exportForReference( "/tmp/test.grf" )
+		
+		s["r"] = Gaffer.Reference()
+		s["r"].load( "/tmp/test.grf" )
+		
+		self.assertEqual( Gaffer.Metadata.plugValue( s["r"]["user"]["p"], "description" ), "ddd" )
+	
 	def tearDown( self ) :
 	
 		for f in (
