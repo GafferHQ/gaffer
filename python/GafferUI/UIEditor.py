@@ -298,7 +298,7 @@ class _PlugListing( GafferUI.PathListingWidget ) :
 		self.setHeaderVisible( False )
 		self.__dragEnterConnection = self.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ) )
 		self.__dragMoveConnection = self.dragMoveSignal().connect( Gaffer.WeakMethod( self.__dragMove ) )
-		self.__dropConnection = self.dropSignal().connect( Gaffer.WeakMethod( self.__drop ) )
+		self.__dragEndConnection = self.dragEndSignal().connect( Gaffer.WeakMethod( self.__dragEnd ) )
 		self.__keyPressConnection = self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
 		
 		self.__metadataPlugValueChangedConnection = Gaffer.Metadata.plugValueChangedSignal().connect( Gaffer.WeakMethod( self.__plugMetadataChanged ) )
@@ -423,8 +423,8 @@ class _PlugListing( GafferUI.PathListingWidget ) :
 				
 		return True
 		
-	def __drop( self, listing, event ) :
-	
+	def __dragEnd( self, listing, event ) :
+		
 		if not self.__dragValid( event ) :
 			return False
 		
