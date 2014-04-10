@@ -245,11 +245,7 @@ void CompoundPlug::childAddedOrRemoved()
 	// change its value, so we emit the appropriate signal. this is
 	// mostly of use for the SplinePlug, as points are added by adding
 	// plugs and removed by removing them.
-	Node *n = node();
-	if( n )
-	{
-		n->plugSetSignal()( this );
-	}
+	emitPlugSet();
 }
 
 void CompoundPlug::plugInputChanged( Plug *plug )

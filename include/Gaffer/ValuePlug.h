@@ -138,6 +138,13 @@ class ValuePlug : public Plug
 		/// Returns true if a computation is currently being performed on this thread -
 		/// if we are inside Node::compute().
 		bool inCompute() const;
+
+		/// Emits the appropriate Node::plugSetSignal() for this plug and all its
+		/// ancestors, then does the same for its output plugs. This is called
+		/// automatically by setObjectValue() where appropriate, and typically shouldn't
+		/// need to be called manually. It is exposed so that CompoundPlug can
+		/// simulate the behaviour of a plug being set when a child is added or removed.
+		void emitPlugSet();
 						
 	private :
 	
@@ -147,7 +154,6 @@ class ValuePlug : public Plug
 		class SetValueAction;
 	
 		void setValueInternal( IECore::ConstObjectPtr value, bool propagateDirtiness );
-		void emitPlugSet();
 		
 		/// For holding the value of input plugs with no input connections.
 		IECore::ConstObjectPtr m_staticValue;
