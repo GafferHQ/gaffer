@@ -196,11 +196,11 @@ class ReferenceTest( unittest.TestCase ) :
 		s2["r"] = Gaffer.Reference()
 		s2["r"].load( "/tmp/test.grf" )
 		
-		s2["r"]["mySpecialPlug"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s2["r"]["__mySpecialPlug"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		
 		s2["r"].load( "/tmp/test.grf" )
 		
-		self.assertTrue( "mySpecialPlug" in s2["r"] )
+		self.assertTrue( "__mySpecialPlug" in s2["r"] )
 	
 	def testLoadScriptWithReference( self ) :
 	
@@ -310,6 +310,23 @@ class ReferenceTest( unittest.TestCase ) :
 		
 		self.assertEqual( Gaffer.Metadata.plugValue( s["r"]["user"]["p"], "description" ), "ddd" )
 	
+	def testReloadWithUnconnectedPlugs( self ) :
+	
+		s = Gaffer.ScriptNode()
+		s["b"] = Gaffer.Box()
+		s["b"]["user"]["p"] = Gaffer.Plug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["b"].exportForReference( "/tmp/test.grf" )
+		
+		s["r"] = Gaffer.Reference()
+		s["r"].load( "/tmp/test.grf" )
+		
+		self.assertEqual( s["r"]["user"].keys(), [ "p" ] )
+		
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+		
+		self.assertEqual( s2["r"]["user"].keys(), [ "p" ] )
+			
 	def tearDown( self ) :
 	
 		for f in (

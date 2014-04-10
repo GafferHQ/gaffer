@@ -34,6 +34,8 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
+#include "boost/algorithm/string/predicate.hpp"
+
 #include "IECore/Exception.h"
 
 #include "Gaffer/Reference.h"
@@ -57,7 +59,6 @@ Reference::Reference( const std::string &name )
 Reference::~Reference()
 {
 }
-
 
 StringPlug *Reference::fileNamePlug()
 {
@@ -185,24 +186,21 @@ void Reference::load( const std::string &fileName )
 
 bool Reference::isReferencePlug( const Plug *plug ) const
 {
-	// we consider a plug to be a reference plug if it has connections to nodes within the reference.
-	if( plug->direction() == Plug::In )
+	// assume plugs starting with __ are for gaffer's
+	// internal use, so would never come directly from a
+	// reference - this lines up with the export code
+	// in Box::exportForReference(), where such plugs
+	// are excluded from the export.
+	if( boost::starts_with( plug->getName().c_str(), "__" ) )
 	{
-		for( Plug::OutputContainer::const_iterator it = plug->outputs().begin(), eIt = plug->outputs().end(); it != eIt; ++it )
-		{
-			if( this->isAncestorOf( *it ) )
-			{
-				return true;
-			}
-		}
+		return false;
 	}
-	else
+	// we know these two don't come from a reference,
+	// because they're made during construction.
+	if( plug == fileNamePlug() || plug == userPlug() )
 	{
-		const Plug *input = plug->getInput<Plug>();
-		if( input && this->isAncestorOf( input ) )
-		{
-			return true;
-		}
+		return false;
 	}
-	return false;
+	// everything else must be from a reference then.
+	return true;	
 }
