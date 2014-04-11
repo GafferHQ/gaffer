@@ -37,6 +37,7 @@
 #include "boost/algorithm/string/predicate.hpp"
 
 #include "IECore/Exception.h"
+#include "IECore/MessageHandler.h"
 
 #include "Gaffer/Reference.h"
 #include "Gaffer/ScriptNode.h"
@@ -119,9 +120,7 @@ void Reference::load( const std::string &fileName )
 	script->executeFile( fileName, this );
 	fileNamePlug()->setValue( fileName );
 
-	// sort out any conflicts between the old and new plugs, preferring to reuse
-	// the old ones wherever possible so that the node remains identical from the
-	// outside and old connections and values are preserved.
+	// transfer connections and values from the old plugs onto the corresponding new ones.
 	
 	for( std::map<std::string, Plug *>::const_iterator it = previousPlugs.begin(), eIt = previousPlugs.end(); it != eIt; ++it )
 	{
@@ -129,45 +128,47 @@ void Reference::load( const std::string &fileName )
 		Plug *newPlug = descendant<Plug>( it->first );
 		if( newPlug )
 		{
-			if( oldPlug->direction() == newPlug->direction() && oldPlug->typeId() == newPlug->typeId() )
+			try
 			{
-				// assume plugs are compatible and we can reuse the old one in place of the new one.
-				/// \todo really we need a better way of guaranteeing compatibility that takes into account
-				/// default values and the like.
-				if( newPlug->direction() == Plug::In )
+				if( newPlug->direction() == Plug::In && oldPlug->direction() == Plug::In )
 				{
-					for( Plug::OutputContainer::const_iterator oIt = newPlug->outputs().begin(), oeIt = newPlug->outputs().end(); oIt != oeIt;  )
+					if( Plug *oldInput = oldPlug->getInput<Plug>() )
+					{
+						newPlug->setInput( oldInput );
+					}
+					else
+					{
+						ValuePlug *oldValuePlug = runTimeCast<ValuePlug>( oldPlug );
+						ValuePlug *newValuePlug = runTimeCast<ValuePlug>( newPlug );
+						if( oldValuePlug && newValuePlug )
+						{
+							newValuePlug->setFrom( oldValuePlug );
+						}
+					}
+				}
+				else if( newPlug->direction() == Plug::Out && oldPlug->direction() == Plug::Out )
+				{
+					for( Plug::OutputContainer::const_iterator oIt = oldPlug->outputs().begin(), oeIt = oldPlug->outputs().end(); oIt != oeIt;  )
 					{
 						Plug *outputPlug = *oIt;
 						++oIt; // increment now because the setInput() call invalidates our iterator.
-						outputPlug->setInput( oldPlug );
+						outputPlug->setInput( newPlug );
 					}
 				}
-				else
-				{
-					Plug *newInput = newPlug->getInput<Plug>();
-					if( newInput )
-					{
-						oldPlug->setInput( newInput );
-					}
-				}
-				InternedString name = newPlug->getName();
-				newPlug->parent<GraphComponent>()->removeChild( newPlug );
-				oldPlug->setName( name );
 			}
-			else
+			catch( const std::exception &e )
 			{
-				// plugs are incompatible - erase the old one and keep the new one.
-				it->second->parent<GraphComponent>()->removeChild( oldPlug );		
+				msg(
+					Msg::Warning,
+					boost::str( boost::format( "Loading \"%s\" onto \"%s\"" ) % fileName % getName().c_str() ),
+					e.what()
+				);
 			}
-		}
-		else
-		{
-			// no corresponding new plug - remove the old one because it was
-			// removed in the referenced file.
-			it->second->parent<GraphComponent>()->removeChild( oldPlug );	
+			
 		}
 		
+		// remove the old plug now we're done with it.
+		oldPlug->parent<GraphComponent>()->removeChild( oldPlug );	
 	}
 	
 	// make the loaded plugs non-dynamic, because we don't want them

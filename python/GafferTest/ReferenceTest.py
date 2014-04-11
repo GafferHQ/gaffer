@@ -150,34 +150,6 @@ class ReferenceTest( unittest.TestCase ) :
 		self.assertTrue( s2["r"]["in"].getInput().isSame( s2["n1"]["sum"] ) )
 		self.assertTrue( s2["n3"]["op1"].getInput().isSame( s2["r"]["out"] ) )
 
-	def testReloadPreservesPlugIdentities( self ) :
-	
-		# when reloading a reference, we'd prefer to reuse the old external output plugs rather than
-		# replace them with new ones - this makes life much easier for observers of those plugs.
-		
-		s = Gaffer.ScriptNode()
-
-		s["n1"] = GafferTest.AddNode()
-		s["n2"] = GafferTest.AddNode()
-		s["n3"] = GafferTest.AddNode()
-		s["n2"]["op1"].setInput( s["n1"]["sum"] )
-		s["n3"]["op1"].setInput( s["n2"]["sum"] )
-		b = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["n2"] ] ) )
-		
-		b.exportForReference( "/tmp/test.grf" )
-
-		s2 = Gaffer.ScriptNode()
-		s2["r"] = Gaffer.Reference()
-		s2["r"].load( "/tmp/test.grf" )
-		
-		inPlug = s2["r"]["in"]
-		outPlug = s2["r"]["out"]
-		
-		s2["r"].load( "/tmp/test.grf" )
-		
-		self.assertTrue( inPlug.isSame( s2["r"]["in"] ) )
-		self.assertTrue( outPlug.isSame( s2["r"]["out"] ) )
-
 	def testReloadDoesntRemoveCustomPlugs( self ) :
 	
 		# plugs unrelated to referencing shouldn't disappear when a reference is
@@ -326,7 +298,26 @@ class ReferenceTest( unittest.TestCase ) :
 		s2.execute( s.serialise() )
 		
 		self.assertEqual( s2["r"]["user"].keys(), [ "p" ] )
-			
+	
+	def testReloadRefreshesMetadata( self ) :
+	
+		s = Gaffer.ScriptNode()
+		s["b"] = Gaffer.Box()
+		s["b"]["user"]["p"] = Gaffer.Plug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["b"].exportForReference( "/tmp/test.grf" )
+
+		s["r"] = Gaffer.Reference()
+		s["r"].load( "/tmp/test.grf" )
+		
+		self.assertEqual( Gaffer.Metadata.plugValue( s["r"]["user"]["p"], "test" ), None )
+		
+		Gaffer.Metadata.registerPlugValue( s["b"]["user"]["p"], "test", 10 )
+		s["b"].exportForReference( "/tmp/test.grf" )
+
+		s["r"].load( "/tmp/test.grf" )
+
+		self.assertEqual( Gaffer.Metadata.plugValue( s["r"]["user"]["p"], "test" ), 10 )		
+				
 	def tearDown( self ) :
 	
 		for f in (
