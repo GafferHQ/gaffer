@@ -49,7 +49,7 @@ layouts.registerEditor( "SceneInspector" )
 layouts.registerEditor( "ScriptEditor" )
 layouts.registerEditor( "Browser" )
 layouts.registerEditor( "Timeline" )
-layouts.registerEditor( "BoxEditor" )
+layouts.registerEditor( "UIEditor" )
 
 # register some predefined layouts
 

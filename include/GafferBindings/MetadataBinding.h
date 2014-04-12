@@ -37,10 +37,15 @@
 #ifndef GAFFERBINDINGS_METADATABINDING_H
 #define GAFFERBINDINGS_METADATABINDING_H
 
+#include "Gaffer/Node.h"
+
 namespace GafferBindings
 {
 
 void bindMetadata();
+
+std::string metadataSerialisation( const Gaffer::Node *node, const std::string &identifier );
+std::string metadataSerialisation( const Gaffer::Plug *plug, const std::string &identifier );
 
 } // namespace GafferBindings
 

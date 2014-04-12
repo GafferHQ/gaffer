@@ -156,9 +156,9 @@ static void registerNodeValue( object nodeTypeId, IECore::InternedString key, ob
 	Metadata::registerNodeValue( objectToTypeId( nodeTypeId ), key, objectToNodeValueFunction( value ) );
 }
 
-static object nodeValue( const Node *node, const char *key, bool inherit )
+static object nodeValue( const Node *node, const char *key, bool inherit, bool instanceOnly )
 {
-	ConstDataPtr d = Metadata::nodeValue<Data>( node, key, inherit );
+	ConstDataPtr d = Metadata::nodeValue<Data>( node, key, inherit, instanceOnly );
 	if( d )
 	{
 		return despatchTypedData<SimpleTypedDataGetter, TypeTraits::IsSimpleTypedData>( constPointerCast<Data>( d ) );
@@ -204,9 +204,9 @@ static void registerPlugValue( object nodeTypeId, const char *plugPath, IECore::
 	Metadata::registerPlugValue( objectToTypeId( nodeTypeId ), plugPath, key, objectToPlugValueFunction( value ) );
 }
 
-static object plugValue( const Plug *plug, const char *key, bool inherit )
+static object plugValue( const Plug *plug, const char *key, bool inherit, bool instanceOnly )
 {
-	ConstDataPtr d = Metadata::plugValue<Data>( plug, key, inherit );
+	ConstDataPtr d = Metadata::plugValue<Data>( plug, key, inherit, instanceOnly );
 	if( d )
 	{
 		return despatchTypedData<SimpleTypedDataGetter, TypeTraits::IsSimpleTypedData>( constPointerCast<Data>( d ) );
@@ -239,18 +239,54 @@ struct ValueChangedSlotCaller
 	
 };
 
+static list keysToList( const std::vector<InternedString> &keys )
+{
+	list result;
+	for( std::vector<InternedString>::const_iterator it = keys.begin(); it != keys.end(); ++it )
+	{
+		result.append( it->c_str() );
+	}
+	
+	return result;
+}
+
+static list registeredNodeValues( const Node *node, bool inherit, bool instanceOnly )
+{
+	std::vector<InternedString> keys;
+	Metadata::registeredNodeValues( node, keys, inherit, instanceOnly );
+	return keysToList( keys );
+}
+
+static list registeredPlugValues( const Plug *plug, bool inherit, bool instanceOnly )
+{
+	std::vector<InternedString> keys;
+	Metadata::registeredPlugValues( plug, keys, inherit, instanceOnly );
+	return keysToList( keys );
+}
+
 void bindMetadata()
 {	
 	scope s = class_<Metadata>( "Metadata", no_init )
 		
 		.def( "registerNodeValue", &registerNodeValue )
+		.def( "registerNodeValue", (void (*)( Node *, InternedString key, ConstDataPtr value ))&Metadata::registerNodeValue )
 		.staticmethod( "registerNodeValue" )
 		
+		.def( "registeredNodeValues", &registeredNodeValues,
+			(
+				boost::python::arg( "node" ),
+				boost::python::arg( "inherit" ) = true,
+				boost::python::arg( "instanceOnly" ) = false
+			)
+		)
+		.staticmethod( "registeredNodeValues" )
+
 		.def( "nodeValue", &nodeValue,
 			(
 				boost::python::arg( "node" ),
 				boost::python::arg( "key" ),
-				boost::python::arg( "inherit" ) = true
+				boost::python::arg( "inherit" ) = true,
+				boost::python::arg( "instanceOnly" ) = false
 			)
 		)
 		.staticmethod( "nodeValue" )
@@ -267,13 +303,24 @@ void bindMetadata()
 		.staticmethod( "nodeDescription" )
 		
 		.def( "registerPlugValue", &registerPlugValue )
+		.def( "registerPlugValue", (void (*)( Plug *, InternedString key, ConstDataPtr value ))&Metadata::registerPlugValue )
 		.staticmethod( "registerPlugValue" )
+		
+		.def( "registeredPlugValues", &registeredPlugValues,
+			(
+				boost::python::arg( "plug" ),
+				boost::python::arg( "inherit" ) = true,
+				boost::python::arg( "instanceOnly" ) = false
+			)
+		)
+		.staticmethod( "registeredPlugValues" )
 		
 		.def( "plugValue", &plugValue,
 			(
 				boost::python::arg( "plug" ),
 				boost::python::arg( "key" ),
-				boost::python::arg( "inherit" ) = true
+				boost::python::arg( "inherit" ) = true,
+				boost::python::arg( "instanceOnly" ) = false
 			)
 		)
 		.staticmethod( "plugValue" )
@@ -288,7 +335,7 @@ void bindMetadata()
 			)
 		)
 		.staticmethod( "plugDescription" )
-	
+				
 		.def( "nodeValueChangedSignal", &Metadata::nodeValueChangedSignal, return_value_policy<reference_existing_object>() )
 		.staticmethod( "nodeValueChangedSignal" )
 	
@@ -299,6 +346,52 @@ void bindMetadata()
 	SignalBinder<Metadata::NodeValueChangedSignal, DefaultSignalCaller<Metadata::NodeValueChangedSignal>, ValueChangedSlotCaller>::bind( "NodeValueChangedSignal" );
 	SignalBinder<Metadata::PlugValueChangedSignal, DefaultSignalCaller<Metadata::NodeValueChangedSignal>, ValueChangedSlotCaller>::bind( "PlugValueChangedSignal" );
 
+}
+
+std::string metadataSerialisation( const Gaffer::Node *node, const std::string &identifier )
+{
+	std::vector<InternedString> keys;
+	Metadata::registeredNodeValues( node, keys, false, true );
+	
+	std::string result;
+	for( std::vector<InternedString>::const_iterator it = keys.begin(), eIt = keys.end(); it != eIt; ++it )
+	{
+		const Data *value = Metadata::nodeValue<Data>( node, *it );
+		object pythonValue( DataPtr( const_cast<Data *>( value ) ) );
+		std::string stringValue = extract<std::string>( pythonValue.attr( "__repr__" )() );
+				
+		result += boost::str(
+			boost::format( "Gaffer.Metadata.registerNodeValue( %s, \"%s\", %s )\n" ) %
+				identifier %
+				*it %
+				stringValue
+		);
+	}
+	
+	return result;
+}
+
+std::string metadataSerialisation( const Plug *plug, const std::string &identifier )
+{
+	std::vector<InternedString> keys;
+	Metadata::registeredPlugValues( plug, keys, false, true );
+	
+	std::string result;
+	for( std::vector<InternedString>::const_iterator it = keys.begin(), eIt = keys.end(); it != eIt; ++it )
+	{
+		const Data *value = Metadata::plugValue<Data>( plug, *it );
+		object pythonValue( DataPtr( const_cast<Data *>( value ) ) );
+		std::string stringValue = extract<std::string>( pythonValue.attr( "__repr__" )() );
+				
+		result += boost::str(
+			boost::format( "Gaffer.Metadata.registerPlugValue( %s, \"%s\", %s )\n" ) %
+				identifier %
+				*it %
+				stringValue
+		);
+	}
+	
+	return result;
 }
 
 } // namespace GafferBindings

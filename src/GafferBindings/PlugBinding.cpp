@@ -42,8 +42,10 @@
 
 #include "Gaffer/Plug.h"
 #include "Gaffer/Node.h"
+#include "Gaffer/Reference.h"
 
 #include "GafferBindings/PlugBinding.h"
+#include "GafferBindings/MetadataBinding.h"
 
 using namespace boost::python;
 using namespace GafferBindings;
@@ -90,6 +92,12 @@ static NodePtr node( Plug &p )
 	return p.node();
 }
 
+void PlugSerialiser::moduleDependencies( const Gaffer::GraphComponent *graphComponent, std::set<std::string> &modules ) const
+{
+	Serialiser::moduleDependencies( graphComponent, modules );
+	modules.insert( "IECore" ); // for the metadata calls
+}
+
 std::string PlugSerialiser::constructor( const Gaffer::GraphComponent *graphComponent ) const
 {
 	return maskedRepr( static_cast<const Plug *>( graphComponent ), Plug::All & ~Plug::ReadOnly );
@@ -110,10 +118,16 @@ std::string PlugSerialiser::postHierarchy( const Gaffer::GraphComponent *graphCo
 		{
 			result += identifier + ".setFlags( Gaffer.Plug.Flags.ReadOnly, True )\n";
 		}
-		if( result.size() )
+		
+		if( !plug->ancestor<Reference>() )
 		{
-			return result;
+			/// \todo Perhaps we need some sort of plug flag the Reference node can
+			/// set to influence the metadata serialisation, so that the PlugBinding
+			/// doesn't need to know about References at all?
+			result += metadataSerialisation( plug, identifier );
 		}
+		
+		return result;
 	}
 	return "";
 }

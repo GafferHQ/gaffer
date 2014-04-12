@@ -69,11 +69,13 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 
 		self.__scenePlugs = []
 		self.__plugDirtiedConnections = []
+		self.__parentChangedConnections = []
 		for node in self.getNodeSet()[-2:] :
 			outputScenePlugs = [ p for p in node.children( GafferScene.ScenePlug.staticTypeId() ) if p.direction() == Gaffer.Plug.Direction.Out ]
 			if len( outputScenePlugs ) :
 				self.__scenePlugs.append( outputScenePlugs[0] )
 				self.__plugDirtiedConnections.append( node.plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__plugDirtied ) ) )
+				self.__parentChangedConnections.append( outputScenePlugs[0].parentChangedSignal().connect( Gaffer.WeakMethod( self.__plugParentChanged ) ) )
 
 		self.__update()
 				
@@ -93,6 +95,13 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 		if isinstance( plug, GafferScene.ScenePlug ) and plug.direction() == Gaffer.Plug.Direction.Out :
 			self.__pendingUpdate = True
 			GafferUI.EventLoop.addIdleCallback( self.__update )
+
+	def __plugParentChanged( self, plug, oldParent ) :
+	
+		# if a plug has been removed or moved to another node, then
+		# we need to stop viewing it - _updateFromSet() will find the
+		# next suitable plug from the current node set.
+		self._updateFromSet()
 
 	def __update( self ) :
 

@@ -384,6 +384,21 @@ class CompoundPlugTest( unittest.TestCase ) :
 		self.assertEqual( c2["b"].direction(), Gaffer.Plug.Direction.In )
 		self.assertEqual( c2["c"].direction(), Gaffer.Plug.Direction.In )
 	
+	def testChildAdditionEmitsPlugSet( self ) :
+	
+		n = Gaffer.Node()
+	
+		n["c"] = Gaffer.CompoundPlug()
+		n["c"]["d"] = Gaffer.CompoundPlug()
+		
+		cs = GafferTest.CapturingSlot( n.plugSetSignal() )
+		
+		n["c"]["d"]["e"] = Gaffer.IntPlug()
+		
+		self.assertEqual( len( cs ), 2 )
+		self.assertEqual( cs[0][0], n["c"]["d"] )
+		self.assertEqual( cs[1][0], n["c"] )
+			
 if __name__ == "__main__":
 	unittest.main()
 	

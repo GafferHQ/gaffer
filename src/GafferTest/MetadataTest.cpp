@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,24 +34,51 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_METADATA_INL
-#define GAFFER_METADATA_INL
+// we undefine NDEBUG so we can use assert() for our test cases.
+/// \todo We might like to define our own assert which throws an
+/// exception which is designed to be caught by the python test
+/// runner and reported nicely.
+#undef NDEBUG
 
-namespace Gaffer
+#include "tbb/tbb.h"
+
+#include "Gaffer/Node.h"
+#include "Gaffer/Metadata.h"
+
+#include "GafferTest/MetadataTest.h"
+
+using namespace tbb;
+using namespace IECore;
+using namespace Gaffer;
+
+struct TestThreading
 {
 
-template<typename T>
-typename T::ConstPtr Metadata::nodeValue( const Node *node, IECore::InternedString key, bool inherit, bool instanceOnly )
+	void operator()( const blocked_range<size_t> &r ) const
+	{
+		for( size_t i=r.begin(); i!=r.end(); ++i )
+		{
+			NodePtr n = new Node();
+			PlugPtr p = new Plug();
+			
+			assert( Metadata::nodeValue<Data>( n.get(), "threadingTest" ) == NULL );
+			assert( Metadata::plugValue<Data>( p.get(), "threadingTest" ) == NULL );
+			
+			Metadata::registerNodeValue( n, "threadingTest", new IECore::IntData( 1 ) );
+			Metadata::registerPlugValue( p, "threadingTest", new IECore::IntData( 2 ) );
+			
+			assert( Metadata::nodeValue<IntData>( n.get(), "threadingTest" )->readable() == 1 );
+			assert( Metadata::plugValue<IntData>( p.get(), "threadingTest" )->readable() == 2 );
+		}
+	}
+
+};
+
+void GafferTest::testMetadataThreading()
 {
-	return IECore::runTimeCast<const T>( nodeValueInternal( node, key, inherit, instanceOnly ) );
+	// this test simulates many different scripts being loaded
+	// concurrently in separate threads, with each script registering
+	// per-instance metadata for its members.
+	TestThreading t;
+	parallel_for( blocked_range<size_t>( 0, 10000 ), t );
 }
-
-template<typename T>
-typename T::ConstPtr Metadata::plugValue( const Plug *plug, IECore::InternedString key, bool inherit, bool instanceOnly )
-{
-	return IECore::runTimeCast<const T>( plugValueInternal( plug, key, inherit, instanceOnly ) );
-}
-
-} // namespace Gaffer
-
-#endif // GAFFER_METADATA_INL

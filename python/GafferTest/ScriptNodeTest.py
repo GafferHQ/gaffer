@@ -1040,6 +1040,23 @@ a = A()"""
 		self.assertEqual( len( s["variables"] ), 1 )
 		self.assertEqual( s["variables"][0]["value"].getValue(), 10 )
 	
+	def testLoadCustomVariablesWithDefaultValues( self ) :
+	
+		s = Gaffer.ScriptNode()
+		
+		p = s["variables"].addMember( "test", IECore.IntData( 10 ) )
+		self.assertEqual( s.context().get( "test" ), 10 )
+	
+		s["fileName"].setValue( "/tmp/test.gfr" )
+		s.save()
+		
+		s2 = Gaffer.ScriptNode()
+		s2["fileName"].setValue( "/tmp/test.gfr" )
+		s2.load()
+		
+		self.assertEqual( s2["variables"][p.getName()]["value"].getValue(), 10 )
+		self.assertEqual( s2.context().get( "test" ), 10 )
+		
 	def testCurrentActionStage( self ) :
 	
 		s = Gaffer.ScriptNode()

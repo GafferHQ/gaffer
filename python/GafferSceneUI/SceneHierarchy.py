@@ -74,9 +74,11 @@ class SceneHierarchy( GafferUI.NodeSetEditor ) :
 
 		# first of all decide what plug we're viewing.
 		self.__plug = None
+		self.__plugParentChangedConnection = None
 		node = self._lastAddedNode()
 		if node and "out" in node and isinstance( node["out"], GafferScene.ScenePlug ) :
 			self.__plug = node["out"]
+			self.__plugParentChangedConnection = self.__plug.parentChangedSignal().connect( Gaffer.WeakMethod( self.__plugParentChanged ) )
 		
 		# call base class update - this will trigger a call to _titleFormat(),
 		# hence the need for already figuring out the plug.
@@ -118,6 +120,12 @@ class SceneHierarchy( GafferUI.NodeSetEditor ) :
 			_reverseNodes = True,
 			_ellipsis = False
 		)
+	
+	def __plugParentChanged( self, plug, oldParent ) :
+	
+		# the plug we were viewing has been deleted or moved - find
+		# another one to view.
+		self._updateFromSet()
 	
 	def __setPathListingPath( self ) :
 	

@@ -228,6 +228,7 @@ from NodeFinderDialogue import NodeFinderDialogue
 from ConnectionPlugValueWidget import ConnectionPlugValueWidget
 import View3DToolbar
 from Playback import Playback
+from UIEditor import UIEditor
 
 # then stuff specific to parameterised objects
 
@@ -256,7 +257,7 @@ import ObjectReaderUI
 import ObjectWriterUI
 import RandomUI
 import ExpressionUI
-from BoxUI import BoxEditor
+import BoxUI
 import ReferenceUI
 import BackdropUI
 
