@@ -1,3 +1,42 @@
+# 0.93.0
+
+#### Core
+
+- Added the ability to specify Metadata overrides to specify instances of Plugs and Nodes.
+
+#### UI
+
+- Added UI Editor. This allows the user plug layout for any node to be edited - plugs can be reordered, dividers added and help strings specified. In particular this allows the creation of custom UIs for Boxes, which can then be exported and loaded by References.
+- Fixed initial unsortedness of PathListingWidgets.
+
+#### Scene
+
+- Added PrimitiveVariables node. This allows arbitrary primitive variables with constant interpolation to be added to objects.
+- Added Duplicate node. This allows arbitrary numbers of duplicates of subhierarchies to be created, each with their own transform.
+
+#### OSL
+
+- Specifying lockgeom=1 by default for all OSL shading engines. This means that primitive variables (user data in OSL parlance) are not automatically mapped to shader inputs unless those inputs have explicitly set lockgeom=0 in the source (which is rare). This almost doubles the speed of a simple image noising operation.
+- Fixed OSLShader::acceptsInput( NULL ) crash.
+
+#### API
+
+- Added PlugLayout class, which creates node editor UIs driven by Metadata. This will replace all existing plug layouts over time.
+- Added StringAlgo.h, containing various string utilities, including wildcard matching (#707).
+- Added metadata accessors to OSLShader.
+- Fixed module import order and namespace pollution issues.
+- Replaced Metadata regexes with new string matching code.
+- Added Metadata signals emitted on registration of values.
+- Made NameWidget accept None for the the GraphComponent.
+- Added borderWidth argument to SplitContainer constructor.
+- Added PathListingWidget setHeaderVisible()/getHeaderVisible() methods.
+- Added PathListingWidget.pathAt() method.
+- Fixed bug in GafferUI::Pointer::setFromFile( "" )
+- Added a DictPath.dict() accessor.
+- Moved NodeEditor.acquire() to NodeSetEditor.acquire(). This allows it to be used to acquire an editor of any type.
+- Added fallbackResult to WeakMethod.
+- Fixed CompoundPlug plugSetSignal() emission when children change.
+
 # 0.92.1
 
 #### Scene
