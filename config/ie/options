@@ -235,7 +235,7 @@ while boostVersionSuffix.endswith( "_0" ) :
 
 OIIO_LIB_SUFFIX = "-%s" % oiioVersion
 OCIO_LIB_SUFFIX = "-%s" % ocioVersion
-OSL_LIB_SUFFIX = "-1.4.1"
+OSL_LIB_SUFFIX = "-%s" % oslVersion
 
 BOOST_LIB_SUFFIX = "-" + compiler + compilerVersionSplit[0] + compilerVersionSplit[1] + boostVersionSuffix
 
