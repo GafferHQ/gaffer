@@ -19,7 +19,7 @@ Gaffer is a fairly large project, and as such has a fairly complex build process
 
 Gaffer also depends on a number of 3rd party libraries and python modules, many of which are not entirely straightforward to build. The Gaffer build process itself can build all the dependencies automatically though, and this is the approach that we recommend.
 
-First off, you'll need to download the https://drive.google.com/file/d/0B72ea0GVGhwlWHJTb3FCRUJkS2c/edit?usp=sharing[source code for the 3rd party dependencies]. The tarball contains everything you'll need, including some important tweaks to some of the packages. Untarring the download should give a directory containing all the source - we'll refer to this directory as `<DEPENDENCIES_SRC_DIR>`, so you can substitute in the actual location you use.
+First off, you'll need to download the https://drive.google.com/file/d/0B72ea0GVGhwleUtsSEpldy1xVDg/edit?usp=sharing[source code for the 3rd party dependencies]. The tarball contains everything you'll need, including some important tweaks to some of the packages. Untarring the download should give a directory containing all the source - we'll refer to this directory as `<DEPENDENCIES_SRC_DIR>`, so you can substitute in the actual location you use.
 
 Next, get yourself a clone of the Gaffer source and change into that directory :
 
