@@ -455,6 +455,12 @@ options.Add(
 	"",
 )
 
+options.Add(
+	"OSL_LIB_SUFFIX",
+	"The suffix used when locating the OpenShadingLanguage libraries.",
+	"",
+)
+
 # general variables
 
 options.Add(
@@ -853,6 +859,18 @@ if basePythonEnv["PLATFORM"]=="darwin" :
 	basePythonEnv.Append( SHLINKFLAGS = "-single_module" )
 
 ###############################################################################################
+# An environment for running commands with access to the applications we've built
+###############################################################################################
+
+commandEnv = env.Clone()
+commandEnv["ENV"]["PATH"] = commandEnv.subst( "$BUILD_DIR/bin:" ) + commandEnv["ENV"]["PATH"]
+
+if commandEnv["PLATFORM"]=="darwin" :
+	commandEnv["ENV"]["DYLD_LIBRARY_PATH"] = commandEnv.subst( "$BUILD_DIR/lib" )
+else :
+	commandEnv["ENV"]["LD_LIBRARY_PATH"] = commandEnv.subst( "$BUILD_DIR/lib" )
+
+###############################################################################################
 # Definitions for the libraries we wish to build
 ###############################################################################################
 
@@ -985,7 +1003,7 @@ libraries = {
 	"GafferOSL" : {
 		"envAppends" : {
 			"CPPPATH" : [ "$BUILD_DIR/include/OSL" ],
-			"LIBS" : [ "Gaffer", "GafferScene", "GafferImage", "OpenImageIO$OIIO_LIB_SUFFIX", "oslquery", "oslexec" ],
+			"LIBS" : [ "Gaffer", "GafferScene", "GafferImage", "OpenImageIO$OIIO_LIB_SUFFIX", "oslquery$OSL_LIB_SUFFIX", "oslexec$OSL_LIB_SUFFIX" ],
 		},
 		"pythonEnvAppends" : {
 			"CPPPATH" : [ "$BUILD_DIR/include/OSL" ],
@@ -1196,7 +1214,7 @@ for libraryName, libraryDef in libraries.items() :
 	for oslShader in libraryDef.get( "oslShaders", [] ) :
 		oslShaderInstall = env.InstallAs( "$BUILD_DIR/" + oslShader, oslShader )
 		env.Alias( "build", oslShader )
-		compiledFile = depEnv.Command( os.path.splitext( str( oslShaderInstall[0] ) )[0] + ".oso", oslShader, "oslc -o $TARGET $SOURCE" )
+		compiledFile = commandEnv.Command( os.path.splitext( str( oslShaderInstall[0] ) )[0] + ".oso", oslShader, "oslc -I./shaders -o $TARGET $SOURCE" )
 		env.Depends( compiledFile, "oslHeaders" )
 		env.Alias( "build", compiledFile )
 	
