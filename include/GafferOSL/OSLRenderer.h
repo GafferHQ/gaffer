@@ -37,7 +37,7 @@
 
 #include <stack>
 
-#include "oslexec.h"
+#include "OSL/oslexec.h"
 
 #include "IECore/Renderer.h"
 #include "IECore/Shader.h"

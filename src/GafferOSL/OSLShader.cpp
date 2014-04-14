@@ -36,7 +36,7 @@
 
 #include "tbb/mutex.h"
 
-#include "oslquery.h"
+#include "OSL/oslquery.h"
 
 #include "IECore/MessageHandler.h"
 #include "IECore/AttributeBlock.h"
@@ -266,19 +266,21 @@ static Plug *loadStringParameter( const OSLQuery::Parameter *parameter, Gaffer::
 template<typename PlugType>
 static Plug *loadNumericParameter( const OSLQuery::Parameter *parameter, Gaffer::CompoundPlug *parent )
 {
-	typename PlugType::ValueType defaultValue( 0 );
+	typedef typename PlugType::ValueType ValueType;
+	
+	ValueType defaultValue( 0 );
 	if( parameter->idefault.size() )
 	{
-		defaultValue = parameter->idefault[0];
+		defaultValue = ValueType( parameter->idefault[0] );
 	}
 	else if( parameter->fdefault.size() )
 	{
-		defaultValue = parameter->fdefault[0];
+		defaultValue = ValueType( parameter->fdefault[0] );
 	}
 
 	/// \todo Get from metadata
-	typename PlugType::ValueType minValue( Imath::limits<float>::min() );
-	typename PlugType::ValueType maxValue( Imath::limits<float>::max() );
+	ValueType minValue( Imath::limits<ValueType>::min() );
+	ValueType maxValue( Imath::limits<ValueType>::max() );
 
 	const string name = plugName( parameter );
 	PlugType *existingPlug = parent->getChild<PlugType>( name );
@@ -304,25 +306,28 @@ static Plug *loadNumericParameter( const OSLQuery::Parameter *parameter, Gaffer:
 template <typename PlugType>
 static Plug *loadCompoundNumericParameter( const OSLQuery::Parameter *parameter, Gaffer::CompoundPlug *parent )
 {	
-	typename PlugType::ValueType defaultValue( 0 );
+	typedef typename PlugType::ValueType ValueType;
+	typedef typename ValueType::BaseType BaseType;
+	
+	ValueType defaultValue( 0 );
 	if( parameter->idefault.size() )
 	{
 		for( size_t i = 0; i < PlugType::ValueType::dimensions(); ++i )
 		{
-			defaultValue[i] = parameter->idefault[i];	
+			defaultValue[i] = BaseType( parameter->idefault[i] );
 		}
 	}
 	else if( parameter->fdefault.size() )
 	{
 		for( size_t i = 0; i < PlugType::ValueType::dimensions(); ++i )
 		{
-			defaultValue[i] = parameter->fdefault[i];	
+			defaultValue[i] = BaseType( parameter->fdefault[i] );
 		}
 	}
 	
 	/// \todo Get from metadata
-	typename PlugType::ValueType minValue( Imath::limits<float>::min() );
-	typename PlugType::ValueType maxValue( Imath::limits<float>::max() );
+	ValueType minValue( Imath::limits<BaseType>::min() );
+	ValueType maxValue( Imath::limits<BaseType>::max() );
 	
 	const string name = plugName( parameter );
 	PlugType *existingPlug = parent->getChild<PlugType>( name );
