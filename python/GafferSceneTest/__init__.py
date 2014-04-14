@@ -93,6 +93,7 @@ from StandardAttributesTest import StandardAttributesTest
 from PrimitiveVariablesTest import PrimitiveVariablesTest
 from DuplicateTest import DuplicateTest
 from ModuleTest import ModuleTest
+from GridTest import GridTest
 
 if __name__ == "__main__":
 	import unittest

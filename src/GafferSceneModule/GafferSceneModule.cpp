@@ -88,6 +88,7 @@
 #include "GafferSceneBindings/SceneReaderBinding.h"
 #include "GafferSceneBindings/PrimitiveVariablesBinding.h"
 #include "GafferSceneBindings/DuplicateBinding.h"
+#include "GafferSceneBindings/GridBinding.h"
 
 using namespace boost::python;
 using namespace GafferScene;
@@ -162,5 +163,6 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	bindSceneReader();
 	bindPrimitiveVariables();
 	bindDuplicate();
+	bindGrid();
 	
 }

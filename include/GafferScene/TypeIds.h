@@ -111,6 +111,7 @@ enum TypeId
 	ParentTypeId = 110566,
 	PrimitiveVariablesTypeId = 110567,
 	DuplicateTypeId = 110568,
+	GridTypeId = 110569,
 	
 	LastTypeId = 110650
 };
