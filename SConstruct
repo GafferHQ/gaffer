@@ -298,7 +298,7 @@ options.Add(
 options.Add(
 	"CORTEX_SRC_DIR",
 	"The location of the boost source to be used if BUILD_DEPENDENCY_CORTEX is specified.",
-	"$DEPENDENCIES_SRC_DIR/cortex-8.0.0",
+	"$DEPENDENCIES_SRC_DIR/cortex-8.4.0",
 )
 
 options.Add(
@@ -560,6 +560,9 @@ depEnv["ENV"].update(
 if depEnv["PLATFORM"]=="darwin" :
 	depEnv["ENV"]["DYLD_LIBRARY_PATH"] = depEnv.subst( "/System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/ImageIO.framework/Resources:$BUILD_DIR/lib" )
 	depEnv["ENV"]["DYLD_FALLBACK_FRAMEWORK_PATH"] = depEnv.subst( "$BUILD_DIR/lib" )
+	# we add this to the main env because we need it for building gaffer,
+	# but we don't need it for our dependencies.
+	del depEnv["ENV"]["MACOSX_DEPLOYMENT_TARGET"]
 else :
 	depEnv["ENV"]["LD_LIBRARY_PATH"] = depEnv.subst( "$BUILD_DIR/lib" )
 
@@ -653,9 +656,8 @@ if depEnv["BUILD_DEPENDENCY_OIIO"] :
 		runCommand( "cd $OIIO_SRC_DIR && cp -r dist/linux64/* $BUILD_DIR" )
 
 if depEnv["BUILD_DEPENDENCY_LLVM"] :
-	# removing MACOSX_DEPLOYMENT_TARGET because it causes rpath link error
 	# need to put matching clang src code in $LLVM_SRC_DIR/tools/clang
-	runCommand( "cd $LLVM_SRC_DIR && ./configure --prefix=$BUILD_DIR --enable-shared --enable-optimized --enable-assertions=no && env MACOSX_DEPLOYMENT_TARGET="" REQUIRES_RTTI=1 make VERBOSE=1 -j 4 && make install" )
+	runCommand( "cd $LLVM_SRC_DIR && ./configure --prefix=$BUILD_DIR --enable-shared --enable-optimized --enable-assertions=no && env REQUIRES_RTTI=1 make VERBOSE=1 -j 4 && make install" )
 
 if depEnv["BUILD_DEPENDENCY_OSL"] :
 	runCommand(
@@ -735,9 +737,6 @@ if depEnv["BUILD_DEPENDENCY_PYQT"] :
 	runCommand( "cd $SIP_SRC_DIR && python configure.py -d $BUILD_DIR/python && make clean && make && make install" )
 	runCommand( "cd $PYQT_SRC_DIR && python configure.py -d $BUILD_DIR/python  --confirm-license && make && make install" )
 
-# having MACOS_DEPLOYMENT_TARGET set breaks the pyside build for some reason
-if "MACOSX_DEPLOYMENT_TARGET" in depEnv["ENV"] :
-	del depEnv["ENV"]["MACOSX_DEPLOYMENT_TARGET"]
 if depEnv["BUILD_DEPENDENCY_PYSIDE"] :
 	if depEnv["PLATFORM"]=="darwin" :
 		runCommand(
