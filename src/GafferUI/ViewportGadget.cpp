@@ -130,6 +130,11 @@ const Imath::V2i &ViewportGadget::getViewport() const
 
 void ViewportGadget::setViewport( const Imath::V2i &viewport )
 {
+	if( viewport == m_cameraController.getResolution() )
+	{
+		return;
+	}
+
 	CameraController::ScreenWindowAdjustment adjustment = CameraController::ScaleScreenWindow;
 	if( const StringData *projection = getCamera()->parametersData()->member<StringData>( "projection" ) )
 	{
@@ -140,6 +145,13 @@ void ViewportGadget::setViewport( const Imath::V2i &viewport )
 	}
 	
 	m_cameraController.setResolution( viewport, adjustment );
+	
+	m_viewportChangedSignal( this );
+}
+
+ViewportGadget::UnarySignal &ViewportGadget::viewportChangedSignal()
+{
+	return m_viewportChangedSignal;
 }
 
 const IECore::Camera *ViewportGadget::getCamera() const
@@ -149,7 +161,18 @@ const IECore::Camera *ViewportGadget::getCamera() const
 
 void ViewportGadget::setCamera( const IECore::Camera *camera )
 {
+	if( m_cameraController.getCamera()->isEqualTo( camera ) )
+	{
+		return;
+	}
+	
 	m_cameraController.setCamera( camera->copy() );
+	m_cameraChangedSignal( this );
+}
+
+ViewportGadget::UnarySignal &ViewportGadget::cameraChangedSignal()
+{
+	return m_cameraChangedSignal;
 }
 
 bool ViewportGadget::getCameraEditable() const
@@ -165,6 +188,7 @@ void ViewportGadget::setCameraEditable( bool editable )
 void ViewportGadget::frame( const Imath::Box3f &box )
 {
 	m_cameraController.frame( box );
+	m_cameraChangedSignal( this );
  	renderRequestSignal()( this );
 }
 
@@ -172,6 +196,7 @@ void ViewportGadget::frame( const Imath::Box3f &box, const Imath::V3f &viewDirec
 	const Imath::V3f &upVector )
 {
  	m_cameraController.frame( box, viewDirection, upVector );
+	m_cameraChangedSignal( this );
 	renderRequestSignal()( this );
 }
 
@@ -490,6 +515,7 @@ bool ViewportGadget::dragMove( GadgetPtr gadget, const DragDropEvent &event )
 		if( getCameraEditable() )
 		{
 			m_cameraController.motionUpdate( V2i( (int)event.line.p1.x, (int)event.line.p1.y ) );
+			m_cameraChangedSignal( this );
 			renderRequestSignal()( this );
 		}
 		return true;
@@ -600,6 +626,7 @@ void ViewportGadget::trackDragIdle()
 	// visual representation of the drag.
 	dragMove( this, m_dragTrackingEvent );
 	
+	m_cameraChangedSignal( this );
 	renderRequestSignal()( this );
 }
 
@@ -692,6 +719,7 @@ bool ViewportGadget::dragEnd( GadgetPtr gadget, const DragDropEvent &event )
 		if( getCameraEditable() )
 		{
 			m_cameraController.motionEnd( V2i( (int)event.line.p1.x, (int)event.line.p1.y ) );
+			m_cameraChangedSignal( this );
 			renderRequestSignal()( this );
 		}
 		return true;
@@ -729,7 +757,8 @@ bool ViewportGadget::wheel( GadgetPtr gadget, const ButtonEvent &event )
 	m_cameraController.motionUpdate( position );
 	m_cameraController.motionEnd( position );
 
- 	renderRequestSignal()( this );
+	m_cameraChangedSignal( this );
+	renderRequestSignal()( this );
 	
 	return true;
 }
