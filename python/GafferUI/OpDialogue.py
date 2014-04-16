@@ -311,9 +311,15 @@ class OpDialogue( GafferUI.Dialogue ) :
 		self.__forwardButtonClickedConnection = self.__forwardButton.clickedSignal().connect( Gaffer.WeakMethod( self.__initiateParameterEditing ) )
 		
 		self.__messageWidget.messageHandler().handle(
+			IECore.Msg.Level.Debug,
+			"Python Traceback",
+			"".join( traceback.format_exception( *exceptionInfo ) )
+		)
+		
+		self.__messageWidget.messageHandler().handle(
 			IECore.Msg.Level.Error,
 			str( exceptionInfo[1] ),
-			"".join( traceback.format_exception( *exceptionInfo ) )
+			""
 		)
 		
 		self.__frame.setChild( self.__progressUI )
