@@ -896,18 +896,41 @@ class _Delegate( QtGui.QStyledItemDelegate ) :
 		cls.__typesToCreators[typeId] = creator
 
 	__typesToCreators = {}
+
+# A delegate to ensure that numeric editing is performed by our NumericWidget
+# class, complete with cursor increments and virtual sliders, rather than the
+# built in qt one.
+class _NumericDelegate( _Delegate ) :
+
+	def __init__( self ) :
 	
-_Delegate.registerType( IECore.HalfVectorData.staticTypeId(), _Delegate )
-_Delegate.registerType( IECore.FloatVectorData.staticTypeId(), _Delegate )
-_Delegate.registerType( IECore.DoubleVectorData.staticTypeId(), _Delegate )
-_Delegate.registerType( IECore.IntVectorData.staticTypeId(), _Delegate )
-_Delegate.registerType( IECore.UIntVectorData.staticTypeId(), _Delegate )
-_Delegate.registerType( IECore.Int64VectorData.staticTypeId(), _Delegate )
-_Delegate.registerType( IECore.UInt64VectorData.staticTypeId(), _Delegate )
-_Delegate.registerType( IECore.FloatVectorData.staticTypeId(), _Delegate )
-_Delegate.registerType( IECore.Color3fVectorData.staticTypeId(), _Delegate )
-_Delegate.registerType( IECore.Color4fVectorData.staticTypeId(), _Delegate )
-_Delegate.registerType( IECore.V3fVectorData.staticTypeId(), _Delegate )
+		_Delegate.__init__( self )
+	
+	def createEditor( self, parent, option, index ) :
+		
+		self.__widget = GafferUI.NumericWidget( GafferUI._Variant.fromVariant( index.data() ) )
+		self.__widget._qtWidget().setParent( parent )
+		return self.__widget._qtWidget()
+	
+	def setEditorData( self, editor, index ) :
+	
+		GafferUI.Widget._owner( editor ).setValue( GafferUI._Variant.fromVariant( index.data() ) )
+	
+	def setModelData( self, editor, model, index ) :
+		
+		model.setData( index, GafferUI._Variant.toVariant( GafferUI.Widget._owner( editor ).getValue() ), QtCore.Qt.EditRole )
+	
+_Delegate.registerType( IECore.HalfVectorData.staticTypeId(), _NumericDelegate )
+_Delegate.registerType( IECore.FloatVectorData.staticTypeId(), _NumericDelegate )
+_Delegate.registerType( IECore.DoubleVectorData.staticTypeId(), _NumericDelegate )
+_Delegate.registerType( IECore.IntVectorData.staticTypeId(), _NumericDelegate )
+_Delegate.registerType( IECore.UIntVectorData.staticTypeId(), _NumericDelegate )
+_Delegate.registerType( IECore.Int64VectorData.staticTypeId(), _NumericDelegate )
+_Delegate.registerType( IECore.UInt64VectorData.staticTypeId(), _NumericDelegate )
+_Delegate.registerType( IECore.FloatVectorData.staticTypeId(), _NumericDelegate )
+_Delegate.registerType( IECore.Color3fVectorData.staticTypeId(), _NumericDelegate )
+_Delegate.registerType( IECore.Color4fVectorData.staticTypeId(), _NumericDelegate )
+_Delegate.registerType( IECore.V3fVectorData.staticTypeId(), _NumericDelegate )
 
 class _BoolDelegate( _Delegate ) :
 
