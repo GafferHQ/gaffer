@@ -51,5 +51,7 @@ void GafferUIBindings::bindSpacerGadget()
 	IECorePython::RunTimeTypedClass<SpacerGadget>()
 		.def( init<const Imath::Box3f &>() )
 		.GAFFERUIBINDINGS_DEFGADGETWRAPPERFNS( SpacerGadget )
+		.def( "setSize", &SpacerGadget::setSize )
+		.def( "getSize", &SpacerGadget::getSize, return_value_policy<copy_const_reference>() )
 	;
 }
