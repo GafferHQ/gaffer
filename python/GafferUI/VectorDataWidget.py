@@ -896,18 +896,41 @@ class _Delegate( QtGui.QStyledItemDelegate ) :
 		cls.__typesToCreators[typeId] = creator
 
 	__typesToCreators = {}
+
+# A delegate to ensure that numeric editing is performed by our NumericWidget
+# class, complete with cursor increments and virtual sliders, rather than the
+# built in qt one.
+class _NumericDelegate( _Delegate ) :
+
+	def __init__( self ) :
 	
-_Delegate.registerType( IECore.HalfVectorData.staticTypeId(), _Delegate )
-_Delegate.registerType( IECore.FloatVectorData.staticTypeId(), _Delegate )
-_Delegate.registerType( IECore.DoubleVectorData.staticTypeId(), _Delegate )
-_Delegate.registerType( IECore.IntVectorData.staticTypeId(), _Delegate )
-_Delegate.registerType( IECore.UIntVectorData.staticTypeId(), _Delegate )
-_Delegate.registerType( IECore.Int64VectorData.staticTypeId(), _Delegate )
-_Delegate.registerType( IECore.UInt64VectorData.staticTypeId(), _Delegate )
-_Delegate.registerType( IECore.FloatVectorData.staticTypeId(), _Delegate )
-_Delegate.registerType( IECore.Color3fVectorData.staticTypeId(), _Delegate )
-_Delegate.registerType( IECore.Color4fVectorData.staticTypeId(), _Delegate )
-_Delegate.registerType( IECore.V3fVectorData.staticTypeId(), _Delegate )
+		_Delegate.__init__( self )
+	
+	def createEditor( self, parent, option, index ) :
+		
+		self.__widget = GafferUI.NumericWidget( GafferUI._Variant.fromVariant( index.data() ) )
+		self.__widget._qtWidget().setParent( parent )
+		return self.__widget._qtWidget()
+	
+	def setEditorData( self, editor, index ) :
+	
+		GafferUI.Widget._owner( editor ).setValue( GafferUI._Variant.fromVariant( index.data() ) )
+	
+	def setModelData( self, editor, model, index ) :
+		
+		model.setData( index, GafferUI._Variant.toVariant( GafferUI.Widget._owner( editor ).getValue() ), QtCore.Qt.EditRole )
+	
+_Delegate.registerType( IECore.HalfVectorData.staticTypeId(), _NumericDelegate )
+_Delegate.registerType( IECore.FloatVectorData.staticTypeId(), _NumericDelegate )
+_Delegate.registerType( IECore.DoubleVectorData.staticTypeId(), _NumericDelegate )
+_Delegate.registerType( IECore.IntVectorData.staticTypeId(), _NumericDelegate )
+_Delegate.registerType( IECore.UIntVectorData.staticTypeId(), _NumericDelegate )
+_Delegate.registerType( IECore.Int64VectorData.staticTypeId(), _NumericDelegate )
+_Delegate.registerType( IECore.UInt64VectorData.staticTypeId(), _NumericDelegate )
+_Delegate.registerType( IECore.FloatVectorData.staticTypeId(), _NumericDelegate )
+_Delegate.registerType( IECore.Color3fVectorData.staticTypeId(), _NumericDelegate )
+_Delegate.registerType( IECore.Color4fVectorData.staticTypeId(), _NumericDelegate )
+_Delegate.registerType( IECore.V3fVectorData.staticTypeId(), _NumericDelegate )
 
 class _BoolDelegate( _Delegate ) :
 
@@ -916,10 +939,18 @@ class _BoolDelegate( _Delegate ) :
 		_Delegate.__init__( self )
 				
 	def paint( self, painter, option, index ) :
+				
+		# in PyQt, option is passed to us correctly as a QStyleOptionViewItemV4,
+		# but in PySide it is merely a QStyleOptionViewItem and we must "cast" it.
+		option = QtGui.QStyleOptionViewItemV4( option )		
 		
+		# in PyQt, we can access the widget with option.widget, but in PySide it
+		# is always None for some reason, so we jump through some hoops to get the
+		# widget via our parent.
+		widget = QtCore.QObject.parent( self.parent() )
+
 		# draw the background
-		
-		widget = option.widget	
+
 		widget.style().drawControl( QtGui.QStyle.CE_ItemViewItem, option, painter, widget )
 			
 		# draw the checkbox.
@@ -928,7 +959,7 @@ class _BoolDelegate( _Delegate ) :
 		styleOption.state = option.state
 		styleOption.state |= QtGui.QStyle.State_Enabled
 		
-		if index.model().data( index, QtCore.Qt.DisplayRole ).toBool() :
+		if self.__toBool( index ) :
 			styleOption.state |= QtGui.QStyle.State_On
 		else :
 			styleOption.state |= QtGui.QStyle.State_Off
@@ -947,14 +978,15 @@ class _BoolDelegate( _Delegate ) :
 			return True
 		elif event.type()==QtCore.QEvent.MouseButtonPress :
 			# eat event so row isn't selected
-			rect = self.__checkBoxRect( option.widget, option.rect )
+			widget = QtCore.QObject.parent( self.parent() )
+			rect = self.__checkBoxRect( widget, option.rect )
 			if event.button() == QtCore.Qt.LeftButton and rect.contains( event.pos() ) :
-				checked = index.model().data( index, QtCore.Qt.DisplayRole ).toBool()
+				checked = self.__toBool( index )
 				model.setData( index, not checked, QtCore.Qt.EditRole )
 				return True
 		elif event.type()==QtCore.QEvent.KeyPress :
 			if event.key() in ( QtCore.Qt.Key_Return, QtCore.Qt.Key_Enter ) :
-				checked = index.model().data( index, QtCore.Qt.DisplayRole ).toBool()
+				checked = self.__toBool( index )
 				model.setData( index, not checked, QtCore.Qt.EditRole )
 				return True
 
@@ -969,6 +1001,10 @@ class _BoolDelegate( _Delegate ) :
 			viewItemRect.center() - ( QtCore.QPoint( r.width(), r.height() ) / 2 ),
 			r.size()
 		)
+		
+	def __toBool( self, index ) :
+	
+		return GafferUI._Variant.fromVariant( index.model().data( index, QtCore.Qt.DisplayRole ) )
 
 _Delegate.registerType( IECore.BoolVectorData.staticTypeId(), _BoolDelegate )
 
