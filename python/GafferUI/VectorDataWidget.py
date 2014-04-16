@@ -916,10 +916,18 @@ class _BoolDelegate( _Delegate ) :
 		_Delegate.__init__( self )
 				
 	def paint( self, painter, option, index ) :
+				
+		# in PyQt, option is passed to us correctly as a QStyleOptionViewItemV4,
+		# but in PySide it is merely a QStyleOptionViewItem and we must "cast" it.
+		option = QtGui.QStyleOptionViewItemV4( option )		
 		
+		# in PyQt, we can access the widget with option.widget, but in PySide it
+		# is always None for some reason, so we jump through some hoops to get the
+		# widget via our parent.
+		widget = QtCore.QObject.parent( self.parent() )
+
 		# draw the background
-		
-		widget = option.widget	
+
 		widget.style().drawControl( QtGui.QStyle.CE_ItemViewItem, option, painter, widget )
 			
 		# draw the checkbox.
@@ -928,7 +936,7 @@ class _BoolDelegate( _Delegate ) :
 		styleOption.state = option.state
 		styleOption.state |= QtGui.QStyle.State_Enabled
 		
-		if index.model().data( index, QtCore.Qt.DisplayRole ).toBool() :
+		if self.__toBool( index ) :
 			styleOption.state |= QtGui.QStyle.State_On
 		else :
 			styleOption.state |= QtGui.QStyle.State_Off
@@ -947,14 +955,15 @@ class _BoolDelegate( _Delegate ) :
 			return True
 		elif event.type()==QtCore.QEvent.MouseButtonPress :
 			# eat event so row isn't selected
-			rect = self.__checkBoxRect( option.widget, option.rect )
+			widget = QtCore.QObject.parent( self.parent() )
+			rect = self.__checkBoxRect( widget, option.rect )
 			if event.button() == QtCore.Qt.LeftButton and rect.contains( event.pos() ) :
-				checked = index.model().data( index, QtCore.Qt.DisplayRole ).toBool()
+				checked = self.__toBool( index )
 				model.setData( index, not checked, QtCore.Qt.EditRole )
 				return True
 		elif event.type()==QtCore.QEvent.KeyPress :
 			if event.key() in ( QtCore.Qt.Key_Return, QtCore.Qt.Key_Enter ) :
-				checked = index.model().data( index, QtCore.Qt.DisplayRole ).toBool()
+				checked = self.__toBool( index )
 				model.setData( index, not checked, QtCore.Qt.EditRole )
 				return True
 
@@ -969,6 +978,10 @@ class _BoolDelegate( _Delegate ) :
 			viewItemRect.center() - ( QtCore.QPoint( r.width(), r.height() ) / 2 ),
 			r.size()
 		)
+		
+	def __toBool( self, index ) :
+	
+		return GafferUI._Variant.fromVariant( index.model().data( index, QtCore.Qt.DisplayRole ) )
 
 _Delegate.registerType( IECore.BoolVectorData.staticTypeId(), _BoolDelegate )
 
