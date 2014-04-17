@@ -173,6 +173,41 @@ class BookmarksTest( GafferUITest.TestCase ) :
 		
 		self.assertEqual( b.getDefault(), "/somewhere/else" )
 		self.assertEqual( b.names(), [] )
+	
+	def testAcquireTargetTypes( self ) :
+	
+		a = Gaffer.Application()
+		
+		b = GafferUI.Bookmarks.acquire( a )
+		b.setDefault( "/a/default/path" )
+		
+		b = GafferUI.Bookmarks.acquire( a.root() )
+		self.assertEqual( b.getDefault(), "/a/default/path" )
+		
+		a.root()["scripts"]["one"] = Gaffer.ScriptNode()
+		
+		b = GafferUI.Bookmarks.acquire( a.root()["scripts"]["one"] )
+		self.assertEqual( b.getDefault(), "/a/default/path" )
+		
+		s = GafferUI.ScriptWindow( a.root()["scripts"]["one"] )
+		
+		b = GafferUI.Bookmarks.acquire( s )
+		self.assertEqual( b.getDefault(), "/a/default/path" )
+		
+		s.setLayout( GafferUI.CompoundEditor( a.root()["scripts"]["one"] ) )
+
+		b = GafferUI.Bookmarks.acquire( s.getLayout() )
+		self.assertEqual( b.getDefault(), "/a/default/path" )
+		
+		w = GafferUI.Window()
+		w.setChild( GafferUI.Button() )
+		s.addChildWindow( w )
+		
+		b = GafferUI.Bookmarks.acquire( w )
+		self.assertEqual( b.getDefault(), "/a/default/path" )
+		
+		b = GafferUI.Bookmarks.acquire( w.getChild() )
+		self.assertEqual( b.getDefault(), "/a/default/path" )
 		
 if __name__ == "__main__":
 	unittest.main()

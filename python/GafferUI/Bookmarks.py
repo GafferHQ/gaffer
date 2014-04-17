@@ -54,21 +54,53 @@ class Bookmarks :
 		self.__pathType = pathType
 		self.__category = category
 		
-	## Acquires a set of bookmarks for the specified application. Bookmarks are
+	## Acquires a set of bookmarks for the specified target. Bookmarks are
 	# grouped according to the type of path they can be applied to and to an
 	# arbitrary category. The None category is special - bookmarks added to this
 	# category are available in all categories with the same path type.
+	#
+	# Bookmarks are stored on a per-application basis but target can be any
+	# of the following :
+	#
+	#  - An instance of Gaffer.Application
+	#  - An instance of Gaffer.ApplicationRoot
+	#  - An instance of Gaffer.GraphComponent. In this case, the bookmarks
+	#     of the ApplicationRoot ancestor of target are returned, with None
+	#     being returned in the absence of such an ancestor.
+	#   - An of instance of GafferUI.Widget. In this case, an instance of
+	#     of EditorWidget or ScriptWindow will be sought, and the application
+	#     determined using the attached script. This too may return None if
+	#     no application can be found.
+	#
 	@classmethod
-	def acquire( cls, applicationOrApplicationRoot, pathType=Gaffer.FileSystemPath, category=None ) :
+	def acquire( cls, target, pathType=Gaffer.FileSystemPath, category=None ) :
 	
-		if isinstance( applicationOrApplicationRoot, Gaffer.Application ) :
-			applicationRoot = applicationOrApplicationRoot.root()
+		if isinstance( target, Gaffer.Application ) :
+			applicationRoot = target.root()
+		elif isinstance( target, Gaffer.ApplicationRoot ) :
+			applicationRoot = target
+		elif isinstance( target, Gaffer.GraphComponent ) :
+			applicationRoot = target.ancestor( Gaffer.ApplicationRoot.staticTypeId() )
 		else :
-			assert( isinstance( applicationOrApplicationRoot, Gaffer.ApplicationRoot ) )
-			applicationRoot = applicationOrApplicationRoot
-	
+			assert( isinstance( target, GafferUI.Widget ) )
+			scriptWidget = None
+			if isinstance( target, ( GafferUI.EditorWidget, GafferUI.ScriptWindow ) ) :
+				scriptWidget = target
+			else :
+				scriptWidget = target.ancestor( GafferUI.EditorWidget )
+				if scriptWidget is None :
+					scriptWidget = target.ancestor( GafferUI.ScriptWindow )
+			
+			if scriptWidget is not None :
+				applicationRoot = scriptWidget.scriptNode().ancestor( Gaffer.ApplicationRoot.staticTypeId() )
+			else :
+				applicationRoot = None
+				
+		if applicationRoot is None :
+			return None
+			
 		return Bookmarks( applicationRoot, pathType, category )
-		
+			
 	## Adds a bookmark. If persistent is True, then the bookmark
 	# will be saved in the application preferences and restored
 	# when the application next runs. The path passed may either
