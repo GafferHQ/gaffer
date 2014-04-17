@@ -105,8 +105,17 @@ def __open( currentScript, fileName ) :
 		newWindow = GafferUI.ScriptWindow.acquire( script )
 		## \todo We probably want a way of querying and setting geometry in the public API
 		newWindow._qtWidget().restoreGeometry( currentWindow._qtWidget().saveGeometry() )
+		currentWindow.setVisible( False )
 		
-		application["scripts"].removeChild( currentScript )
+		# We must defer the removal of the old script because otherwise we trigger a crash bug
+		# in PySide - I think this is because the menu item that invokes us is a child of
+		# currentWindow, and that will get deleted immediately when the script is removed.
+		GafferUI.EventLoop.addIdleCallback( IECore.curry( __removeScript, application, currentScript ) )
+
+def __removeScript( application, script ) :
+
+	application["scripts"].removeChild( script )
+	return False # remove idle callback
 
 ## A function suitable as the submenu callable for a File/OpenRecent menu item. It must be invoked
 # from a menu which has a ScriptWindow in its ancestry.
