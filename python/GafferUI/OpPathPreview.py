@@ -44,8 +44,14 @@ class OpPathPreview( GafferUI.DeferredPathPreview ) :
 	def __init__( self, path ) :
 	
 		self.__column = GafferUI.ListContainer( borderWidth = 8 )
-		
+
 		GafferUI.DeferredPathPreview.__init__( self, self.__column, path )
+
+		with self.__column :
+			# we'll replace this with the op in _deferredUpdate()
+			GafferUI.Spacer( IECore.V2i( 1 ) )
+			button = GafferUI.Button( "Launch" )
+			self.__executeClickedConnection = button.clickedSignal().connect( self.__executeClicked )
 		
 		self._updateFromPath()
 	
@@ -71,18 +77,10 @@ class OpPathPreview( GafferUI.DeferredPathPreview ) :
 		return node
 		
 	def _deferredUpdate( self, node ) :
-	
-		del self.__column[:]
 		
 		self.__node = node
-		
-		with self.__column :
-		
-			GafferUI.NodeUI.create( self.__node )
+		self.__column[0] = GafferUI.NodeUI.create( self.__node )
 			
-			button = GafferUI.Button( "Launch" )
-			self.__executeClickedConnection = button.clickedSignal().connect( self.__executeClicked )
-
 	def __executeClicked( self, button ) :
 		
 		# Create a copy of our node/op. We do this
