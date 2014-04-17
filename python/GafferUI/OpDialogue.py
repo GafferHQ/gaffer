@@ -93,6 +93,7 @@ class OpDialogue( GafferUI.Dialogue ) :
 		postExecuteBehaviour = PostExecuteBehaviour.FromUserData,
 		executeInBackground = False,
 		defaultButton = DefaultButton.FromUserData,
+		executeImmediately = False,
 		**kw
 	) :
 
@@ -154,8 +155,6 @@ class OpDialogue( GafferUI.Dialogue ) :
 		
 		with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing = 4 ) as self.__progressUI :
 			
-			center = { "horizontalAlignment" : GafferUI.HorizontalAlignment.Center }
-			
 			GafferUI.Spacer( IECore.V2i( 1 ), parenting = { "expand" : True } )
 			
 			self.__progressIconFrame = GafferUI.Frame(
@@ -172,7 +171,7 @@ class OpDialogue( GafferUI.Dialogue ) :
 				}
 			)
 			
-			GafferUI.Spacer( IECore.V2i( 1 ), expand=True )
+			GafferUI.Spacer( IECore.V2i( 250, 1 ), expand=True )
 			
 			with GafferUI.Collapsible( "Details", collapsed = True ) as self.__messageCollapsible :
 			
@@ -186,7 +185,10 @@ class OpDialogue( GafferUI.Dialogue ) :
 		
 		self.__opExecutedSignal = Gaffer.Signal1()
 		
-		self.__initiateParameterEditing()
+		if executeImmediately :
+			self.__initiateExecution()
+		else :
+			self.__initiateParameterEditing()
 					
 	## A signal called when the user has pressed the execute button
 	# and the Op has been successfully executed. This is passed the
@@ -251,7 +253,8 @@ class OpDialogue( GafferUI.Dialogue ) :
 		self.__progressIconFrame.setChild( GafferUI.BusyWidget() )
 		self.__progressLabel.setText( "<h3>Processing...</h3>" )
 		self.__backButton.setEnabled( False )
-		self.__forwardButton.setEnabled( False )
+		self.__backButton.setText( "Cancel" )
+		self.__forwardButton.setVisible( False )
 		self.__messageWidget.clear()
 		self.__messageCollapsible.setCollapsed( True )
 		
@@ -302,10 +305,12 @@ class OpDialogue( GafferUI.Dialogue ) :
 
 		self.__messageCollapsible.setCollapsed( False )
 	
+		self.__backButton.setVisible( True )
 		self.__backButton.setText( "Cancel" )
 		self.__backButton.setEnabled( True )
 		self.__backButtonClickedConnection = self.__backButton.clickedSignal().connect( Gaffer.WeakMethod( self.__close ) )
 	
+		self.__forwardButton.setVisible( True )
 		self.__forwardButton.setText( "Retry" )
 		self.__forwardButton.setEnabled( True )
 		self.__forwardButtonClickedConnection = self.__forwardButton.clickedSignal().connect( Gaffer.WeakMethod( self.__initiateParameterEditing ) )
@@ -367,10 +372,12 @@ class OpDialogue( GafferUI.Dialogue ) :
 
 		self.__backButton.setText( "Close" )
 		self.__backButton.setEnabled( True )
+		self.__backButton.setVisible( True )
 		self.__backButtonClickedConnection = self.__backButton.clickedSignal().connect( Gaffer.WeakMethod( self.__close ) )
 		
 		self.__forwardButton.setText( "Again!" )
 		self.__forwardButton.setEnabled( True )
+		self.__forwardButton.setVisible( True )
 		self.__forwardButtonClickedConnection = self.__forwardButton.clickedSignal().connect( Gaffer.WeakMethod( self.__initiateParameterEditing ) )
 		
 		if self.__postExecuteBehaviour in ( self.PostExecuteBehaviour.DisplayResultAndClose, self.PostExecuteBehaviour.Close ) :
