@@ -331,7 +331,7 @@ class OpMode( BrowserEditor.Mode ) :
 			return
 			
 		op = selectedPaths[0].classLoader().load( str( selectedPaths[0] )[1:] )()
-		opDialogue = GafferUI.OpDialogue( op )
+		opDialogue = GafferUI.OpDialogue( op, executeInBackground = True )
 		pathListing.ancestor( GafferUI.Window ).addChildWindow( opDialogue )
 		opDialogue.setVisible( True )
 
