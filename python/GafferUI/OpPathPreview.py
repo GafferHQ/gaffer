@@ -72,37 +72,32 @@ class OpPathPreview( GafferUI.DeferredPathPreview ) :
 		
 	def _load( self ) :
 		
-		node = Gaffer.OpHolder()
-		node.setOp( "/".join( self.getPath()[:] ), max( self.getPath().info()["classLoader:versions"] ) )
-		return node
+		return self.getPath().load()()
 		
-	def _deferredUpdate( self, node ) :
+	def _deferredUpdate( self, op ) :
 		
-		self.__node = node
+		self.__node = Gaffer.ParameterisedHolderNode()
+		self.__node.setParameterised( op )
+
 		self.__column[0] = GafferUI.NodeUI.create( self.__node )
-			
+		
 	def __executeClicked( self, button ) :
 		
-		# Create a copy of our node/op. We do this
-		# using script serialisation because we need
-		# to be able to copy ClassParameter and
-		# ClassVectorParameter loaded classes and :
-		#
-		# - Parameter::setValue() doesn't do that.
-		# - ParameterParser does do that, but raises
-		#   exceptions for invalid parameter values,
-		#   and we would rather retain invalid values
-		#   and report them later in the OpDialogue.
+		# Create a copy of our op
 		
-		script = Gaffer.ScriptNode()
-		script["node"] = self.__node
-		scriptCopy = Gaffer.ScriptNode()
-		scriptCopy.execute( script.serialise() )
+		self.__node.setParameterisedValues()
+		op = self.__node.getParameterised()[0]
+		opCopy = self.getPath().load()()
+		IECore.ParameterAlgo.copyClasses(
+			op.parameters(),
+			opCopy.parameters(),
+		)
+		opCopy.parameters().setValue( op.parameters().getValue().copy() )
 		
 		# Launch an OpDialogue, executing the copy in the background
 
 		dialogue = GafferUI.OpDialogue(
-			scriptCopy["node"],
+			opCopy,
 			executeInBackground = True,
 			executeImmediately = True
 		)
