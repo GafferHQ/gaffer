@@ -68,20 +68,19 @@ NodeGadget::~NodeGadget()
 NodeGadgetPtr NodeGadget::create( Gaffer::NodePtr node )
 {
 	const CreatorMap &cr = creators();
-	CreatorMap::const_iterator it = cr.find( node->typeId() );
-	if( it==cr.end() )
+	
+	IECore::TypeId typeId = node->typeId();
+	while( typeId != IECore::InvalidTypeId )
 	{
-		const std::vector<IECore::TypeId> &baseTypes = IECore::RunTimeTyped::baseTypeIds( node->typeId() );
-		for( std::vector<IECore::TypeId>::const_iterator tIt=baseTypes.begin(); tIt!=baseTypes.end(); tIt++ )
+		const CreatorMap::const_iterator it = cr.find( typeId );
+		if( it != cr.end() )
 		{
-			if( ( it = cr.find( *tIt ) )!=cr.end() )
-			{
-				break;
-			}
+			return it->second( node );
 		}
+		typeId = IECore::RunTimeTyped::baseTypeId( typeId );
 	}
 	
-	return it->second( node );
+	return NULL;
 }
 
 void NodeGadget::registerNodeGadget( IECore::TypeId nodeType, NodeGadgetCreator creator )
