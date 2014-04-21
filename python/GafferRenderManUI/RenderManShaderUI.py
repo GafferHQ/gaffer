@@ -341,7 +341,7 @@ def __fileNameCreator( plug, annotations ) :
 		),
 		pathChooserDialogueKeywords = {
 			"bookmarks" : GafferUI.Bookmarks.acquire(
-				plug.ancestor( Gaffer.ApplicationRoot.staticTypeId() ),
+				plug,
 				pathType = Gaffer.FileSystemPath,
 				category = bookmarksCategory,
 			),

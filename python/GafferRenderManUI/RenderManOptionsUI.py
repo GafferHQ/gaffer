@@ -189,10 +189,7 @@ GafferUI.PlugValueWidget.registerCreator(
 	lambda plug : GafferUI.PathPlugValueWidget( plug,
 		path = Gaffer.FileSystemPath( "/", filter = Gaffer.FileSystemPath.createStandardFilter( extensions = ( "htm", "html", "txt", "stats" ) ) ),
 		pathChooserDialogueKeywords = {
-			"bookmarks" : GafferUI.Bookmarks.acquire(
-				plug.ancestor( Gaffer.ApplicationRoot.staticTypeId() ),
-				category = "statistics",
-			),
+			"bookmarks" : GafferUI.Bookmarks.acquire( plug, category = "statistics" ),
 			"leaf" : True,
 		},
 	)

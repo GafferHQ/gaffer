@@ -69,10 +69,7 @@ GafferUI.PlugValueWidget.registerCreator(
 	lambda plug : GafferUI.PathPlugValueWidget( plug,
 		path = Gaffer.FileSystemPath( "/", filter = Gaffer.FileSystemPath.createStandardFilter() ),
 		pathChooserDialogueKeywords = {
-			"bookmarks" : GafferUI.Bookmarks.acquire(
-				plug.ancestor( Gaffer.ApplicationRoot.staticTypeId() ),
-				category = "image",
-			),
+			"bookmarks" : GafferUI.Bookmarks.acquire( plug, category = "image" ),
 			"leaf" : True,
 		},
 	)
@@ -86,10 +83,7 @@ GafferUI.PlugValueWidget.registerCreator(
 	lambda plug : GafferUI.PathPlugValueWidget( plug,
 		path = Gaffer.FileSystemPath( "/", filter = Gaffer.FileSystemPath.createStandardFilter() ),
 		pathChooserDialogueKeywords = {
-			"bookmarks" : GafferUI.Bookmarks.acquire(
-				plug.ancestor( Gaffer.ApplicationRoot.staticTypeId() ),
-				category = "image",
-			),
+			"bookmarks" : GafferUI.Bookmarks.acquire( plug, category = "image" ),
 			"leaf" : True,
 		},
 	)
