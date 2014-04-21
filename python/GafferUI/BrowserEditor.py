@@ -138,7 +138,7 @@ class BrowserEditor( GafferUI.EditorWidget ) :
 			# classes can still modify the bookmarks if they know better.
 			self.browser().pathChooser().setBookmarks(
 				GafferUI.Bookmarks.acquire(
-					self.browser().scriptNode().ancestor( Gaffer.ApplicationRoot.staticTypeId() ),
+					self.browser().scriptNode(),
 					pathType = self.__directoryPath.__class__
 				)
 			)
@@ -279,7 +279,7 @@ class FileSequenceMode( BrowserEditor.Mode ) :
 		# we want to share our bookmarks with the non-sequence filesystem paths
 		self.browser().pathChooser().setBookmarks(
 			GafferUI.Bookmarks.acquire(
-				self.browser().scriptNode().ancestor( Gaffer.ApplicationRoot.staticTypeId() ),
+				self.browser().scriptNode(),
 				pathType = Gaffer.FileSystemPath
 			)
 		)
