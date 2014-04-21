@@ -35,6 +35,8 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
+#include "IECorePython/ScopedGILRelease.h"
+
 #include "GafferBindings/DependencyNodeBinding.h"
 
 #include "GafferTest/MultiplyNode.h"
@@ -45,6 +47,12 @@
 using namespace boost::python;
 using namespace GafferTest;
 
+static void testMetadataThreadingWrapper()
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	testMetadataThreading();
+}
+
 BOOST_PYTHON_MODULE( _GafferTest )
 {
 	
@@ -52,6 +60,6 @@ BOOST_PYTHON_MODULE( _GafferTest )
 
 	def( "testRecursiveChildIterator", &testRecursiveChildIterator );
 	def( "testFilteredRecursiveChildIterator", &testFilteredRecursiveChildIterator );
-	def( "testMetadataThreading", &testMetadataThreading );
+	def( "testMetadataThreading", &testMetadataThreadingWrapper );
 
 }
