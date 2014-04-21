@@ -78,7 +78,7 @@ class NodeGadgetWrapper : public GadgetWrapper<WrappedType>
 			return WrappedType::nodule( plug );
 		}
 		
-		virtual Imath::V3f noduleTangent( const GafferUI::Nodule *nodule )
+		virtual Imath::V3f noduleTangent( const GafferUI::Nodule *nodule ) const
 		{
 			if( this->isSubclassed() )
 			{
