@@ -63,7 +63,7 @@ using namespace GafferImage;
 
 typedef LRUCache<int, DisplayDriverServerPtr> DisplayDriverServerCache;
 
-static DisplayDriverServerPtr cacheGetter( int key, size_t cost )
+static DisplayDriverServerPtr cacheGetter( int key, size_t &cost )
 {
 	cost = 1;
 	return new DisplayDriverServer( key );

@@ -53,7 +53,7 @@ using namespace GafferUI;
 
 IE_CORE_DEFINERUNTIMETYPED( ImageGadget );
 
-static Box3f boundGetter( const std::string &fileName, size_t cost )
+static Box3f boundGetter( const std::string &fileName, size_t &cost )
 {
 	const char *s = getenv( "GAFFERUI_IMAGE_PATHS" );
 	IECore::SearchPath sp( s ? s : "", ":" );
