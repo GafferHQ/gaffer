@@ -67,13 +67,24 @@ class Bookmarks :
 	#  - An instance of Gaffer.GraphComponent. In this case, the bookmarks
 	#     of the ApplicationRoot ancestor of target are returned, with None
 	#     being returned in the absence of such an ancestor.
-	#   - An of instance of GafferUI.Widget. In this case, an instance of
+	#  - An of instance of GafferUI.Widget. In this case, an instance of
 	#     of EditorWidget or ScriptWindow will be sought, and the application
 	#     determined using the attached script. This too may return None if
 	#     no application can be found.
+	#  - A tuple or list, containing potential targets in the above form. Each
+	#     is tried in turn until bookmarks are found - this is useful when both
+	#     a GraphComponent and a Widget are available, but it is not known that
+	#     they each have a suitable ancestor for bookmark acquisition.
 	#
 	@classmethod
 	def acquire( cls, target, pathType=Gaffer.FileSystemPath, category=None ) :
+	
+		if isinstance( target, ( tuple, list ) ) :
+			for t in target :
+				result = cls.acquire( t, pathType, category )
+				if result is not None :
+					return result
+			return None
 	
 		if isinstance( target, Gaffer.Application ) :
 			applicationRoot = target.root()

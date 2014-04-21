@@ -209,5 +209,16 @@ class BookmarksTest( GafferUITest.TestCase ) :
 		b = GafferUI.Bookmarks.acquire( w.getChild() )
 		self.assertEqual( b.getDefault(), "/a/default/path" )
 		
+		w2 = GafferUI.Window() # not attached to a script at all
+		w2.setChild( GafferUI.Button() )
+		
+		b = GafferUI.Bookmarks.acquire( ( w2.getChild(), a ) )
+		self.assertEqual( b.getDefault(), "/a/default/path" )
+
+		g = Gaffer.GraphComponent() # not attached to a script at all
+
+		b = GafferUI.Bookmarks.acquire( ( g, w.getChild() ) )
+		self.assertEqual( b.getDefault(), "/a/default/path" )
+		
 if __name__ == "__main__":
 	unittest.main()
