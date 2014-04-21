@@ -161,7 +161,7 @@ void StandardNodule::renderLabel( const Style *style ) const
 	Box3f labelBound = style->textBound( Style::LabelText, label );
 	V2f anchor( labelBound.min.x - 1.0f, labelBound.center().y );
 	
-	if( theta > 90.0f )
+	if( theta > 90.0f || theta < -90.0f )
 	{
 		theta = theta - 180.0f;
 		anchor.x = labelBound.max.x + 1.0f;
