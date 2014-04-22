@@ -177,6 +177,12 @@ class OpDialogue( GafferUI.Dialogue ) :
 			
 				self.__messageWidget = GafferUI.MessageWidget()
 				
+				# connect to the collapsible state change so we can increase the window
+				# size when the details pane is first shown.
+				self.__messageCollapsibleStateChangedConnection = self.__messageCollapsible.stateChangedSignal().connect(
+					Gaffer.WeakMethod( self.__messageCollapsibleStateChanged )
+				)
+				
 		# add buttons. our buttons mean different things depending on our current state,
 		# but they equate roughly to going forwards or going backwards.
 		
@@ -184,6 +190,7 @@ class OpDialogue( GafferUI.Dialogue ) :
 		self.__forwardButton = self._addButton( "Forward" )
 		
 		self.__opExecutedSignal = Gaffer.Signal1()
+		self.__haveResizedToFitParameters = False
 		
 		if executeImmediately :
 			self.__initiateExecution()
@@ -242,6 +249,13 @@ class OpDialogue( GafferUI.Dialogue ) :
 		self.__focusDefaultButton()
 		
 		self.__state = self.__State.ParameterEditing
+		
+		# when we first display our parameters, we want to ensure that the window
+		# is big enough to fit them nicely. we don't do this the next time we show
+		# the parameters, because the user may have deliberately resized the window.
+		if not self.__haveResizedToFitParameters :
+			self.resizeToFitChild( shrink = False )
+			self.__haveResizedToFitParameters = True
 	
 	def __close( self, *unused ) :
 	
@@ -409,3 +423,14 @@ class OpDialogue( GafferUI.Dialogue ) :
 			self.__backButton._qtWidget().setFocus()
 		else :
 			self.__forwardButton._qtWidget().setFocus()
+
+	def __messageCollapsibleStateChanged( self, collapsible ) :
+	
+		if not collapsible.getCollapsed() :
+			# make the window bigger to better fit the messages, but don't make
+			# it any smaller than it currently is.
+			self.resizeToFitChild( shrink = False )
+			# remove our connection - we only want to resize the first time we
+			# show the messages. after this we assume that if the window is smaller
+			# it is because the user has made it so, and wishes it to remain so.
+			self.__messageCollapsibleStateChangedConnection = None
