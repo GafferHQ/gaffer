@@ -206,6 +206,7 @@ class ViewportGadget : public IndividualContainer
 		bool m_dragTracking;
 		boost::signals::connection m_dragTrackingIdleConnection;
 		DragDropEvent m_dragTrackingEvent;
+		float m_dragTrackingThreshold;
 		Imath::V2f m_dragTrackingVelocity;
 		double m_dragTrackingTime;
 		
