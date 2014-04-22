@@ -276,7 +276,10 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 					editor = self.__addChild( splitContainer, c )
 					if "pinned" in children and isinstance( editor, GafferUI.NodeSetEditor ) and children["pinned"][i] :
 						editor.setNodeSet( Gaffer.StandardSet() )
-				splitContainer[0].setCurrent( splitContainer[0][children["currentTab"]] )
+				
+				if "currentTab" in children :
+					splitContainer[0].setCurrent( splitContainer[0][children["currentTab"]] )
+
 				splitContainer[0].setTabsVisible( children.get( "tabsVisible", True ) )
 				
 				# this is a shame-faced hack to make sure the timeline in the default layout can't be compressed
