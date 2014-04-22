@@ -222,9 +222,21 @@ class Window( GafferUI.ContainerWidget ) :
 	
 		return self.__sizeMode
 		
-	def resizeToFitChild( self ) :
+	## Resizes the window to fit the requirements of the current child.
+	# The shrink or expand arguments may be set to False to prevent the
+	# window becoming smaller or larger than its current size if that is
+	# not desired.
+	def resizeToFitChild( self, shrink=True, expand=True ) :
 	
-		self._qtWidget().setGeometry( QtCore.QRect( self._qtWidget().geometry().topLeft(), self._qtWidget().sizeHint() ) )
+		s = self._qtWidget().size()
+		sizeHint = self._qtWidget().sizeHint()
+	
+		if expand :
+			s = s.expandedTo( sizeHint )
+		if shrink :
+			s = s.boundedTo( sizeHint )
+	
+		self._qtWidget().resize( s )
 
 	def setPosition( self, position ) :
 	
