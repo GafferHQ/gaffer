@@ -112,6 +112,9 @@ class LinearContainer : public ContainerGadget
 
 IE_CORE_DECLAREPTR( LinearContainer );
 
+typedef Gaffer::FilteredChildIterator<Gaffer::TypePredicate<LinearContainer> > LinearContainerIterator;
+typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::TypePredicate<LinearContainer> > RecursiveLinearContainerIterator;
+
 } // namespace GafferUI
 
 #endif // GAFFERUI_LINEARCONTAINER_H

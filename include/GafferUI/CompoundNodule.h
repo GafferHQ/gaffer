@@ -98,6 +98,9 @@ class CompoundNodule : public Nodule
 
 IE_CORE_DECLAREPTR( CompoundNodule );
 
+typedef Gaffer::FilteredChildIterator<Gaffer::TypePredicate<CompoundNodule> > CompoundNoduleIterator;
+typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::TypePredicate<CompoundNodule> > RecursiveCompoundNoduleIterator;
+
 } // namespace GafferUI
 
 #endif // GAFFERUI_COMPOUNDNODULE_H

@@ -89,6 +89,9 @@ class PlugGadget : public ContainerGadget
 
 IE_CORE_DECLAREPTR( PlugGadget )
 
+typedef Gaffer::FilteredChildIterator<Gaffer::TypePredicate<PlugGadget> > PlugGadgetIterator;
+typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::TypePredicate<PlugGadget> > RecursivePlugGadgetIterator;
+
 } // namespace GafferUI
 
 #include "GafferUI/PlugGadget.inl"

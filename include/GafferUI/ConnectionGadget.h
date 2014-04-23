@@ -138,6 +138,9 @@ class ConnectionGadget : public Gadget
 		
 };
 
+typedef Gaffer::FilteredChildIterator<Gaffer::TypePredicate<ConnectionGadget> > ConnectionGadgetIterator;
+typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::TypePredicate<ConnectionGadget> > RecursiveConnectionGadgetIterator;
+
 } // namespace GafferUI
 
 #endif // GAFFERUI_CONNECTIONGADGET_H

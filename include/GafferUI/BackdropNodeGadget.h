@@ -101,6 +101,9 @@ class BackdropNodeGadget : public NodeGadget
 
 IE_CORE_DECLAREPTR( BackdropNodeGadget );
 
+typedef Gaffer::FilteredChildIterator<Gaffer::TypePredicate<BackdropNodeGadget> > BackdropNodeGadgetIterator;
+typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::TypePredicate<BackdropNodeGadget> > RecursiveBackdropNodeGadgetIterator;
+
 } // namespace GafferUI
 
 #endif // GAFFERUI_BACKDROPNODEGADGET_H

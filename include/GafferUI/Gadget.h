@@ -43,6 +43,8 @@
 #include "IECoreGL/GL.h"
 
 #include "Gaffer/GraphComponent.h"
+#include "Gaffer/FilteredChildIterator.h"
+#include "Gaffer/FilteredRecursiveChildIterator.h"
 
 #include "GafferUI/TypeIds.h"
 #include "GafferUI/ButtonEvent.h"
@@ -287,6 +289,9 @@ class Gadget : public Gaffer::GraphComponent
 		friend void GafferUIBindings::bindGadget();
 
 };
+
+typedef Gaffer::FilteredChildIterator<Gaffer::TypePredicate<Gadget> > GadgetIterator;
+typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::TypePredicate<Gadget> > RecursiveGadgetIterator;
 
 } // namespace GafferUI
 

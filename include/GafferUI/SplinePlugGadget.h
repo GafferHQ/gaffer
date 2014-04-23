@@ -98,6 +98,11 @@ class SplinePlugGadget : public Gadget
 				
 };
 
+IE_CORE_DECLAREPTR( SplinePlugGadget )
+
+typedef Gaffer::FilteredChildIterator<Gaffer::TypePredicate<SplinePlugGadget> > SplinePlugGadgetIterator;
+typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::TypePredicate<SplinePlugGadget> > RecursiveSplinePlugGadgetIterator;
+
 } // namespace GafferUI
 
 #endif // GAFFERUI_SPLINEPLUGGADGET_H

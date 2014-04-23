@@ -68,6 +68,9 @@ class Frame : public IndividualContainer
 
 IE_CORE_DECLAREPTR( Frame );
 
+typedef Gaffer::FilteredChildIterator<Gaffer::TypePredicate<Frame> > FrameIterator;
+typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::TypePredicate<Frame> > RecursiveFrameIterator;
+
 } // namespace GafferUI
 
 #endif // GAFFERUI_FRAME_H

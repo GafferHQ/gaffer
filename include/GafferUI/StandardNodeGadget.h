@@ -130,6 +130,11 @@ class StandardNodeGadget : public NodeGadget
 		
 };
 
+IE_CORE_DECLAREPTR( StandardNodeGadget )
+
+typedef Gaffer::FilteredChildIterator<Gaffer::TypePredicate<StandardNodeGadget> > StandardNodeGadgetIterator;
+typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::TypePredicate<StandardNodeGadget> > RecursiveStandardNodeGadgetIterator;
+
 } // namespace GafferUI
 
 #endif // GAFFERUI_STANDARDNODEGADGET_H
