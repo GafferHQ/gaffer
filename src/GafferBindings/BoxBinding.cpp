@@ -71,9 +71,9 @@ class BoxSerialiser : public NodeSerialiser
 	
 };
 
-static PlugPtr promotePlug( Box &b, Plug *descendantPlug )
+static PlugPtr promotePlug( Box &b, Plug *descendantPlug, bool asUserPlug )
 {
-	return b.promotePlug( descendantPlug );
+	return b.promotePlug( descendantPlug, asUserPlug );
 }
 
 static IECore::DataPtr getNodeMetadata( Box &b, const char *key )
@@ -94,8 +94,8 @@ void bindBox()
 	IE_CORE_DECLAREPTR( BoxWrapper );
 	
 	NodeClass<Box, BoxWrapperPtr>()
-		.def( "canPromotePlug", &Box::canPromotePlug )
-		.def( "promotePlug", &promotePlug )
+		.def( "canPromotePlug", &Box::canPromotePlug, ( arg( "descendantPlug" ), arg( "asUserPlug" ) = true ) )
+		.def( "promotePlug", &promotePlug, ( arg( "descendantPlug" ), arg( "asUserPlug" ) = true ) )
 		.def( "plugIsPromoted", &Box::plugIsPromoted )
 		.def( "unpromotePlug", &Box::unpromotePlug )
 		.def( "exportForReference", &Box::exportForReference )

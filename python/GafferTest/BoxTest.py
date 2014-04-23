@@ -297,7 +297,6 @@ class BoxTest( unittest.TestCase ) :
 		b = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["n1"] ] ) )
 
 		self.assertTrue( b.canPromotePlug( b["n1"]["op1"] ) )
-		self.assertFalse( b.canPromotePlug( b["n1"]["sum"] ) )
 		self.assertFalse( b.canPromotePlug( s["n2"]["op1"] ) )
 
 		self.assertFalse( b.plugIsPromoted( b["n1"]["op1"] ) )
@@ -739,7 +738,33 @@ class BoxTest( unittest.TestCase ) :
 
 		self.assertEqual( b.getNodeMetadata( "description" ), IECore.StringData( "t" ) )
 		self.assertEqual( b.getPlugMetadata( p, "description" ), IECore.StringData( "tt" ) )				
+	
+	def testPromoteOutputPlug( self ) :
+	
+		b = Gaffer.Box()
+		b["n"] = GafferTest.AddNode()
+		
+		self.assertFalse( b.canPromotePlug( b["n"]["sum"] ) )
+		self.assertTrue( b.canPromotePlug( b["n"]["sum"], asUserPlug=False ) )
+		
+		sum = b.promotePlug( b["n"]["sum"], asUserPlug=False )
+		self.assertTrue( b.isAncestorOf( sum ) )
+		self.assertTrue( sum.direction() == Gaffer.Plug.Direction.Out )
+		self.assertEqual( sum.getInput(), b["n"]["sum"] )
+		self.assertTrue( b.plugIsPromoted( b["n"]["sum"] ) )
+		self.assertFalse( b.canPromotePlug( b["n"]["sum"], asUserPlug=False ) )
+		self.assertRaises( RuntimeError, b.promotePlug, b["n"]["sum"], asUserPlug=False )
+		
+		b["n"]["op1"].setValue( 10 )
+		b["n"]["op2"].setValue( 12 )
+		
+		self.assertEqual( sum.getValue(), 22 )
+		
+		b.unpromotePlug( b["n"]["sum"] )
+		self.assertFalse( b.plugIsPromoted( b["n"]["sum"] ) )
+		self.assertTrue( sum.parent() is None )
+		self.assertFalse( b.canPromotePlug( b["n"]["sum"] ) )
+		self.assertTrue( b.canPromotePlug( b["n"]["sum"], asUserPlug=False ) )
 		
 if __name__ == "__main__":
 	unittest.main()
-	
