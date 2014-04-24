@@ -204,7 +204,7 @@ void Box::unpromotePlug( Plug *promotedDescendantPlug )
 	}
 }
 
-bool Box::validatePromotability( const Plug *descendantPlug, bool asUserPlug, bool throwExceptions, bool checkNode ) const
+bool Box::validatePromotability( const Plug *descendantPlug, bool asUserPlug, bool throwExceptions, bool childPlug ) const
 {
 	if( !descendantPlug )
 	{
@@ -252,7 +252,11 @@ bool Box::validatePromotability( const Plug *descendantPlug, bool asUserPlug, bo
 			}
 		}
 
-		if( !descendantPlug->getFlags( Plug::Serialisable ) )
+		// the plug must be serialisable, as we need its input to be saved,
+		// but we only need to check this for the topmost plug and not for
+		// children, because a CompoundPlug::setInput() call will also restore
+		// child inputs.
+		if( !childPlug && !descendantPlug->getFlags( Plug::Serialisable ) )
 		{
 			if( !throwExceptions )
 			{
@@ -321,8 +325,11 @@ bool Box::validatePromotability( const Plug *descendantPlug, bool asUserPlug, bo
 	}
 
 
-	if( checkNode )
+	if( !childPlug )
 	{
+		// check that the node holding the plug is actually in the box!
+		// we only do this when childPlug==false, because when it is true,
+		// we'll have already checked in an earlier call.
 		const Node *descendantNode = descendantPlug->node();
 		if( !descendantNode || descendantNode->parent<Node>() != this )
 		{
@@ -344,8 +351,7 @@ bool Box::validatePromotability( const Plug *descendantPlug, bool asUserPlug, bo
 	// check all the children of this plug too
 	for( RecursivePlugIterator it( descendantPlug ); it != it.end(); ++it )
 	{
-		// no need to check the node, because we've already done that ourselves
-		if( !validatePromotability( it->get(), asUserPlug, throwExceptions, false ) )
+		if( !validatePromotability( it->get(), asUserPlug, throwExceptions, /* childPlug = */ true ) )
 		{
 			return false;
 		}

@@ -110,7 +110,7 @@ class Box : public Node
 
 	private :
 
-		bool validatePromotability( const Plug *descendantPlug, bool asUserPlug, bool throwExceptions, bool checkNode = true ) const;
+		bool validatePromotability( const Plug *descendantPlug, bool asUserPlug, bool throwExceptions, bool childPlug = false ) const;
 				
 };
 
