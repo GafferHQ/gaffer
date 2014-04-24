@@ -93,7 +93,7 @@ BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( frameOverloads, frame, 2, 3 );
 
 void GafferUIBindings::bindViewportGadget()
 {
-	scope s = IECorePython::RunTimeTypedClass<ViewportGadget>()
+	scope s = GadgetClass<ViewportGadget>()
 		.def( init<>() )
 		.def( init<GadgetPtr>() )
 		.def( "getViewport", &ViewportGadget::getViewport, return_value_policy<copy_const_reference>() )
@@ -111,7 +111,6 @@ void GafferUIBindings::bindViewportGadget()
 		.def( "gadgetsAt", &gadgetsAt )
 		.def( "rasterToGadgetSpace", &ViewportGadget::rasterToGadgetSpace, ( arg_( "rasterPosition" ), arg_( "gadget" ) = GadgetPtr() ) )
 		.def( "gadgetToRasterSpace", &ViewportGadget::gadgetToRasterSpace, ( arg_( "gadgetPosition" ), arg_( "gadget" ) = GadgetPtr() ) )
-		.GAFFERUIBINDINGS_DEFGADGETWRAPPERFNS( ViewportGadget )
 	;
 	
 	SignalBinder<ViewportGadget::UnarySignal, DefaultSignalCaller<ViewportGadget::UnarySignal>, UnarySlotCaller>::bind( "UnarySignal" );

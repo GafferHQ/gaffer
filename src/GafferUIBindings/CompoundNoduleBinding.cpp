@@ -37,13 +37,12 @@
 
 #include "boost/python.hpp"
 
-#include "IECorePython/RunTimeTypedBinding.h"
-
 #include "Gaffer/CompoundPlug.h"
+
+#include "GafferUI/CompoundNodule.h"
 
 #include "GafferUIBindings/CompoundNoduleBinding.h"
 #include "GafferUIBindings/GadgetBinding.h"
-#include "GafferUI/CompoundNodule.h"
 
 using namespace boost::python;
 using namespace GafferUIBindings;
@@ -51,8 +50,7 @@ using namespace GafferUI;
 
 void GafferUIBindings::bindCompoundNodule()
 {
-	IECorePython::RunTimeTypedClass<CompoundNodule>()
+	GadgetClass<CompoundNodule>()
 		.def( init<Gaffer::CompoundPlugPtr, LinearContainer::Orientation, float, LinearContainer::Direction>( ( arg( "plug" ), arg( "orientation" )=LinearContainer::X, arg( "spacing" ) = 0.0f, arg( "direction" )=LinearContainer::InvalidDirection ) ) )
-		.GAFFERUIBINDINGS_DEFGADGETWRAPPERFNS( CompoundNodule )
 	;
 }

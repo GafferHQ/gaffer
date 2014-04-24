@@ -37,13 +37,10 @@
 
 #include "boost/python.hpp"
 
-#include "GafferUIBindings/LinearContainerBinding.h"
-#include "GafferUIBindings/GadgetBinding.h"
 #include "GafferUI/LinearContainer.h"
 
-#include "Gaffer/Node.h"
-
-#include "IECorePython/RunTimeTypedBinding.h"
+#include "GafferUIBindings/LinearContainerBinding.h"
+#include "GafferUIBindings/GadgetBinding.h"
 
 using namespace boost::python;
 using namespace GafferUIBindings;
@@ -52,7 +49,7 @@ using namespace GafferUI;
 void GafferUIBindings::bindLinearContainer()
 {
 	/// \todo It would be nice if we could make this behave a lot like the ListContainer
-	IECorePython::RunTimeTypedClass<LinearContainer> c;
+	GadgetClass<LinearContainer> c;
 		c.def( "setOrientation", &LinearContainer::setOrientation )
 		.def( "getOrientation", &LinearContainer::getOrientation )
 		.def( "setAlignment", &LinearContainer::setAlignment )
@@ -61,7 +58,6 @@ void GafferUIBindings::bindLinearContainer()
 		.def( "getSpacing", &LinearContainer::getSpacing )
 		.def( "setDirection", &LinearContainer::setDirection )
 		.def( "getDirection", &LinearContainer::getDirection )
-		.GAFFERUIBINDINGS_DEFGADGETWRAPPERFNS( LinearContainer )
 	;
 	
 	scope s = c;

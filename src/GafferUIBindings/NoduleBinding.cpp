@@ -43,8 +43,6 @@
 
 #include "Gaffer/Plug.h"
 
-#include "IECorePython/RunTimeTypedBinding.h"
-
 using namespace boost::python;
 using namespace GafferUIBindings;
 using namespace GafferUI;
@@ -81,8 +79,7 @@ static void registerNodule2( IECore::TypeId nodeType, const std::string &plugPat
 
 void GafferUIBindings::bindNodule()
 {
-	IECorePython::RunTimeTypedClass<Nodule>()
-		.GAFFERUIBINDINGS_DEFGADGETWRAPPERFNS( Nodule )
+	GadgetClass<Nodule>()
 		.def( "plug", (Gaffer::PlugPtr (Nodule::*)())&Nodule::plug )
 		.def( "create", &Nodule::create ).staticmethod( "create" )
 		.def( "registerNodule", &registerNodule1 )

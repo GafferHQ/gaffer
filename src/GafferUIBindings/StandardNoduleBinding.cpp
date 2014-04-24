@@ -50,9 +50,8 @@ using namespace GafferUI;
 
 void GafferUIBindings::bindStandardNodule()
 {
-	IECorePython::RunTimeTypedClass<StandardNodule>()
+	GadgetClass<StandardNodule>()
 		.def( init<Gaffer::PlugPtr>() )
-		.GAFFERUIBINDINGS_DEFGADGETWRAPPERFNS( StandardNodule )
 		.def( "setLabelVisible", &StandardNodule::setLabelVisible )
 		.def( "getLabelVisible", &StandardNodule::getLabelVisible )
 	;

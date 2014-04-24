@@ -36,11 +36,10 @@
 
 #include "boost/python.hpp"
 
-#include "GafferUIBindings/ImageGadgetBinding.h"
-#include "GafferUIBindings/GadgetBinding.h"
 #include "GafferUI/ImageGadget.h"
 
-#include "IECorePython/RunTimeTypedBinding.h"
+#include "GafferUIBindings/ImageGadgetBinding.h"
+#include "GafferUIBindings/GadgetBinding.h"
 
 using namespace boost::python;
 using namespace GafferUIBindings;
@@ -48,9 +47,8 @@ using namespace GafferUI;
 
 void GafferUIBindings::bindImageGadget()
 {
-	IECorePython::RunTimeTypedClass<ImageGadget>()
+	GadgetClass<ImageGadget>()
 		.def( init<const std::string &>() )
 		.def( init<IECore::ConstImagePrimitivePtr>() )
-		.GAFFERUIBINDINGS_DEFGADGETWRAPPERFNS( ImageGadget )
 	;
 }

@@ -40,7 +40,6 @@
 
 #include "IECoreGL/State.h"
 
-#include "IECorePython/RunTimeTypedBinding.h"
 #include "IECorePython/ScopedGILRelease.h"
 
 #include "GafferBindings/SignalBinding.h"
@@ -99,8 +98,7 @@ static object getSelection( RenderableGadget &g )
 
 void GafferUIBindings::bindRenderableGadget()
 {
-	IECorePython::RunTimeTypedClass<RenderableGadget>()
-		.GAFFERUIBINDINGS_DEFGADGETWRAPPERFNS( RenderableGadget )
+	GadgetClass<RenderableGadget>()
 		.def( "__init__", make_constructor( construct, default_call_policies(), ( boost::python::arg( "renderable" ) = IECore::VisibleRenderablePtr() ) ) )
 		.def( "setRenderable", &setRenderable )
 		.def( "getRenderable", (IECore::VisibleRenderablePtr (RenderableGadget::*)())&RenderableGadget::getRenderable )

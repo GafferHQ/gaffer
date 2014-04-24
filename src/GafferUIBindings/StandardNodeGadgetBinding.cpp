@@ -37,7 +37,6 @@
 
 #include "boost/python.hpp"
 
-#include "IECorePython/RunTimeTypedBinding.h"
 #include "IECorePython/Wrapper.h"
 
 #include "Gaffer/Plug.h"
@@ -73,7 +72,7 @@ static GadgetPtr getContents( StandardNodeGadget &g )
 
 void GafferUIBindings::bindStandardNodeGadget()
 {
-	IECorePython::RunTimeTypedClass<StandardNodeGadget, StandardNodeGadgetWrapperPtr>()
+	GadgetClass<StandardNodeGadget, StandardNodeGadgetWrapperPtr>()
 		.def( init<Gaffer::NodePtr, LinearContainer::Orientation>( ( arg( "node" ), arg( "orientation" )=LinearContainer::X ) ) )
 		.GAFFERUIBINDINGS_DEFNODEGADGETWRAPPERFNS( StandardNodeGadget )
 		.def( "setContents", &StandardNodeGadget::setContents )

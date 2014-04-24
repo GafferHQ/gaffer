@@ -37,11 +37,10 @@
 
 #include "boost/python.hpp"
 
-#include "GafferUIBindings/ContainerGadgetBinding.h"
-#include "GafferUIBindings/GadgetBinding.h"
 #include "GafferUI/ContainerGadget.h"
 
-#include "IECorePython/RunTimeTypedBinding.h"
+#include "GafferUIBindings/ContainerGadgetBinding.h"
+#include "GafferUIBindings/GadgetBinding.h"
 
 using namespace boost::python;
 using namespace GafferUIBindings;
@@ -49,8 +48,7 @@ using namespace GafferUI;
 
 void GafferUIBindings::bindContainerGadget()
 {
-	IECorePython::RunTimeTypedClass<ContainerGadget>()
-		.GAFFERUIBINDINGS_DEFGADGETWRAPPERFNS( ContainerGadget )
+	GadgetClass<ContainerGadget>()
 		.def( "setPadding", &ContainerGadget::setPadding )
 		.def( "getPadding", &ContainerGadget::getPadding, return_value_policy<copy_const_reference>() )
 	;

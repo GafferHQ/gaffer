@@ -99,8 +99,7 @@ class NodeGadgetWrapper : public GadgetWrapper<WrappedType>
 /// This must be used in /every/ NodeGadget binding. See the lengthy comments in
 /// IECorePython/ParameterBinding.h for an explanation.
 #define GAFFERUIBINDINGS_DEFNODEGADGETWRAPPERFNS( CLASSNAME )\
-	GAFFERUIBINDINGS_DEFGADGETWRAPPERFNS( CLASSNAME )\
-	.def( "nodule", &nodule<CLASSNAME> )\
+	def( "nodule", &nodule<CLASSNAME> )\
 	.def( "noduleTangent", &noduleTangent<CLASSNAME> )
 
 template<typename T>

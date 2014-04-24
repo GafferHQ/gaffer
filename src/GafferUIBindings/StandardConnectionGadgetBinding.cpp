@@ -36,8 +36,6 @@
 
 #include "boost/python.hpp"
 
-#include "IECorePython/RunTimeTypedBinding.h"
-
 #include "GafferUI/Nodule.h"
 #include "GafferUI/StandardConnectionGadget.h"
 
@@ -49,8 +47,7 @@ using namespace GafferUI;
 
 void GafferUIBindings::bindStandardConnectionGadget()
 {
-	IECorePython::RunTimeTypedClass<StandardConnectionGadget>()
+	GadgetClass<StandardConnectionGadget>()
 		.def( init<NodulePtr, NodulePtr>() )
-		.GAFFERUIBINDINGS_DEFGADGETWRAPPERFNS( StandardConnectionGadget )
 	;
 }

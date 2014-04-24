@@ -45,6 +45,15 @@
 namespace GafferBindings
 {
 
+template<typename T, typename Ptr=IECore::IntrusivePtr<T> >
+class GraphComponentClass : public IECorePython::RunTimeTypedClass<T, Ptr>
+{
+	public :
+	
+		GraphComponentClass( const char *docString = 0 );
+		
+};
+
 template<typename WrappedType>
 class GraphComponentWrapper : public IECorePython::RunTimeTypedWrapper<WrappedType>
 {
@@ -97,27 +106,11 @@ class GraphComponentWrapper : public IECorePython::RunTimeTypedWrapper<WrappedTy
 		}
 
 };
-
-/// This must be used in /every/ GraphComponent binding. See the lengthy comments in
-/// IECorePython/ParameterBinding.h for an explanation.
-#define GAFFERBINDINGS_DEFGRAPHCOMPONENTWRAPPERFNS( CLASSNAME )\
-	def( "acceptsChild", &GafferBindings::acceptsChild<CLASSNAME> )\
-	.def( "acceptsParent", &GafferBindings::acceptsParent<CLASSNAME> )
-
-template<typename T>
-static bool acceptsChild( const T &p, const Gaffer::GraphComponent *potentialChild )
-{
-	return p.T::acceptsChild( potentialChild );
-}
-
-template<typename T>
-static bool acceptsParent( const T &p, const Gaffer::GraphComponent *potentialParent )
-{
-	return p.T::acceptsParent( potentialParent );
-}
 	
 void bindGraphComponent();
 
 } // namespace GafferBindings
+
+#include "GafferBindings/GraphComponentBinding.inl"
 
 #endif // GAFFERBINDINGS_GRAPHCOMPONENTBINDING_H

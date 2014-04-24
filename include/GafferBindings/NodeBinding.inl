@@ -58,22 +58,13 @@ void defNodeConstructor( NodeClass<T, Ptr> &cls, typename boost::enable_if<boost
 	// nothing to bind for abstract classes
 }
 
-// bindings for node wrapper functions
-
-template<typename T, typename Ptr>
-void defNodeWrapperFunctions( NodeClass<T, Ptr> &cls )
-{
-	cls.GAFFERBINDINGS_DEFGRAPHCOMPONENTWRAPPERFNS( T );
-}
-
 } // namespace Detail
 
 template<typename T, typename Ptr>
 NodeClass<T, Ptr>::NodeClass( const char *docString )
-	:	IECorePython::RunTimeTypedClass<T, Ptr>( docString )
+	:	GraphComponentClass<T, Ptr>( docString )
 {
 	Detail::defNodeConstructor( *this );
-	Detail::defNodeWrapperFunctions( *this );
 }
 
 } // namespace GafferBindings

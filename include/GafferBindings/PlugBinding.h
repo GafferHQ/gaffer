@@ -127,9 +127,11 @@ class PlugWrapper : public GraphComponentWrapper<WrappedType>
 
 /// This must be used in /every/ plug binding. See the lengthy comments in
 /// IECorePython/ParameterBinding.h for an explanation.
+/// \todo Make a PlugClass in the same way we have a NodeClass, and use
+/// that for all the bindings - then nobody will have to remember to
+/// use this macro because it will be done automatically.
 #define GAFFERBINDINGS_DEFPLUGWRAPPERFNS( CLASSNAME )\
-	GAFFERBINDINGS_DEFGRAPHCOMPONENTWRAPPERFNS( CLASSNAME ) \
-	.def( "acceptsInput", &acceptsInput<CLASSNAME> )\
+	def( "acceptsInput", &acceptsInput<CLASSNAME> )\
 	.def( "setInput", &setInput<CLASSNAME> )\
 	.def( "createCounterpart", &createCounterpart<CLASSNAME> )
 

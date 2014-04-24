@@ -41,17 +41,14 @@
 #include "GafferUIBindings/GadgetBinding.h"
 #include "GafferUI/SplinePlugGadget.h"
 
-#include "IECorePython/RunTimeTypedBinding.h"
-
 using namespace boost::python;
 using namespace GafferUIBindings;
 using namespace GafferUI;
 
 void GafferUIBindings::bindSplinePlugGadget()
 {
-	IECorePython::RunTimeTypedClass<SplinePlugGadget>()
+	GadgetClass<SplinePlugGadget>()
 		.def( init<>() )
-		.GAFFERUIBINDINGS_DEFGADGETWRAPPERFNS( SplinePlugGadget )
 		.def( "splines", (Gaffer::StandardSetPtr (SplinePlugGadget::*)())&SplinePlugGadget::splines )
 		.def( "selection", (Gaffer::StandardSetPtr (SplinePlugGadget::*)())&SplinePlugGadget::selection )
 	;

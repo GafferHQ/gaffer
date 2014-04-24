@@ -37,14 +37,13 @@
 
 #include "boost/python.hpp"
 
-#include "GafferUIBindings/ConnectionGadgetBinding.h"
-#include "GafferUIBindings/GadgetBinding.h"
-#include "GafferUI/ConnectionGadget.h"
-#include "GafferUI/Nodule.h"
-
 #include "Gaffer/Node.h"
 
-#include "IECorePython/RunTimeTypedBinding.h"
+#include "GafferUI/Nodule.h"
+#include "GafferUI/ConnectionGadget.h"
+
+#include "GafferUIBindings/ConnectionGadgetBinding.h"
+#include "GafferUIBindings/GadgetBinding.h"
 
 using namespace boost::python;
 using namespace GafferUIBindings;
@@ -92,8 +91,7 @@ static void registerConnectionGadget2( IECore::TypeId nodeType, const std::strin
 
 void GafferUIBindings::bindConnectionGadget()
 {
-	IECorePython::RunTimeTypedClass<ConnectionGadget>()
-		.GAFFERUIBINDINGS_DEFGADGETWRAPPERFNS( ConnectionGadget )
+	GadgetClass<ConnectionGadget>()
 		.def( "srcNodule", &srcNodule )
 		.def( "dstNodule", &dstNodule )
 		.def( "setNodules", &ConnectionGadget::setNodules )

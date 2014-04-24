@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
-//  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,22 +34,37 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef GAFFERBINDINGS_GRAPHCOMPONENTBINDING_INL
+#define GAFFERBINDINGS_GRAPHCOMPONENTBINDING_INL
 
-#include "GafferUI/TextGadget.h"
-
-#include "GafferUIBindings/TextGadgetBinding.h"
-#include "GafferUIBindings/GadgetBinding.h"
-
-using namespace boost::python;
-using namespace GafferUIBindings;
-using namespace GafferUI;
-
-void GafferUIBindings::bindTextGadget()
+namespace GafferBindings
 {
-	GadgetClass<TextGadget>()
-		.def( init<const std::string &>() )
-		.def( "getText", &TextGadget::getText, return_value_policy<copy_const_reference>() )
-		.def( "setText", &TextGadget::setText )
-	;
+
+namespace Detail
+{
+
+template<typename T>
+static bool acceptsChild( const T &p, const Gaffer::GraphComponent *potentialChild )
+{
+	return p.T::acceptsChild( potentialChild );
 }
+
+template<typename T>
+static bool acceptsParent( const T &p, const Gaffer::GraphComponent *potentialParent )
+{
+	return p.T::acceptsParent( potentialParent );
+}
+
+} // namespace Detail
+
+template<typename T, typename Ptr>
+GraphComponentClass<T, Ptr>::GraphComponentClass( const char *docString )
+	:	IECorePython::RunTimeTypedClass<T, Ptr>( docString )
+{
+	def( "acceptsChild", &Detail::acceptsChild<T> );
+	def( "acceptsParent", &Detail::acceptsParent<T> );
+}
+
+} // namespace GafferBindings
+
+#endif // GAFFERBINDINGS_NODEBINDING_INL

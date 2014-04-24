@@ -53,7 +53,7 @@ namespace GafferBindings
 void bindNode();
 
 template<typename T, typename Ptr=IECore::IntrusivePtr<T> >
-class NodeClass : public IECorePython::RunTimeTypedClass<T, Ptr>
+class NodeClass : public GraphComponentClass<T, Ptr>
 {
 	public :
 	
