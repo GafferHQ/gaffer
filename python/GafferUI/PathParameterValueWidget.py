@@ -48,7 +48,7 @@ class PathParameterValueWidget( GafferUI.ParameterValueWidget ) :
 		self.__pathWidget = GafferUI.PathPlugValueWidget(
 			parameterHandler.plug(),
 			self._path(),
-			pathChooserDialogueKeywords = self._pathChooserDialogueKeywords( parameterHandler ),
+			pathChooserDialogueKeywords = Gaffer.WeakMethod( self._pathChooserDialogueKeywords ),
 		)
 					
 		GafferUI.ParameterValueWidget.__init__(
@@ -68,22 +68,24 @@ class PathParameterValueWidget( GafferUI.ParameterValueWidget ) :
 		
 		return Gaffer.FileSystemPath.createStandardFilter()
 		
-	def _pathChooserDialogueKeywords( self, parameterHandler ) :
+	def _pathChooserDialogueKeywords( self ) :
 	
 		result = {}
 
-		applicationRoot = parameterHandler.plug().ancestor( Gaffer.ApplicationRoot.staticTypeId() )
-		if applicationRoot is not None :
-			bookmarksCategory = None
-			with IECore.IgnoredExceptions( KeyError ) :
-				bookmarksCategory = parameterHandler.parameter().userData()["UI"]["bookmarksCategory"].value
-			result["bookmarks"] = GafferUI.Bookmarks.acquire(
-				applicationRoot,
-				# deliberately using FileSystemPath directly rather than using _path().__class__
-				# so that file sequences share the same set of bookmarks as files.
-				pathType = Gaffer.FileSystemPath,
-				category = bookmarksCategory,
-			)
+		bookmarksCategory = None
+		with IECore.IgnoredExceptions( KeyError ) :
+			bookmarksCategory = self.parameter().userData()["UI"]["bookmarksCategory"].value
+		result["bookmarks"] = GafferUI.Bookmarks.acquire(
+			# sometimes parameter widgets are used with nodes which are parented to an application,
+			# but where the window isn't. and sometimes they're used with nodes with no application,
+			# but where the window does belong to an application. so we hedge our bets and use both
+			# the widget and the plug to try to find bookmarks for the application.
+			( self, self.plug() ),
+			# deliberately using FileSystemPath directly rather than using _path().__class__
+			# so that file sequences share the same set of bookmarks as files.
+			pathType = Gaffer.FileSystemPath,
+			category = bookmarksCategory,
+		)
 
 		return result
 
