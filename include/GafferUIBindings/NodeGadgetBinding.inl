@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,47 +34,37 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
-#include "boost/python/suite/indexing/container_utils.hpp"
+#ifndef GAFFERUIBINDINGS_NODEGADGETBINDING_INL
+#define GAFFERUIBINDINGS_NODEGADGETBINDING_INL
 
-#include "GafferUI/BackdropNodeGadget.h"
-#include "GafferUI/GraphGadget.h"
-#include "GafferUI/Nodule.h"
-
-#include "GafferUIBindings/NodeGadgetBinding.h"
-#include "GafferUIBindings/BackdropNodeGadgetBinding.h"
-
-using namespace boost::python;
-using namespace Gaffer;
-using namespace GafferUI;
-using namespace GafferUIBindings;
-
-static void frame( BackdropNodeGadget &b, object nodes )
+namespace GafferUIBindings
 {
-	std::vector<Node *> n;
-	boost::python::container_utils::extend_container( n, nodes );
-	b.frame( n );
+
+namespace Detail
+{
+
+template<typename T>
+GafferUI::NodulePtr nodule( T &p, Gaffer::ConstPlugPtr plug )
+{
+	return p.T::nodule( plug );
 }
 
-static list framed( BackdropNodeGadget &b )
+template<typename T>
+Imath::V3f noduleTangent( T &p, const GafferUI::Nodule *nodule )
 {
-	std::vector<Node *> n;
-	b.framed( n );
-	
-	list result;
-	for( std::vector<Node *>::const_iterator it = n.begin(), eIt = n.end(); it != eIt; ++it )
-	{
-		result.append( NodePtr( *it ) );
-	}
-	
-	return result;
+	return p.T::noduleTangent( nodule );
 }
 
-void GafferUIBindings::bindBackdropNodeGadget()
+} // namespace Detail
+
+template<typename T, typename Ptr>
+NodeGadgetClass<T, Ptr>::NodeGadgetClass( const char *docString )
+	:	GadgetClass<T, Ptr>( docString )
 {
-	NodeGadgetClass<BackdropNodeGadget>()
-		.def( init<Gaffer::NodePtr>() )
-		.def( "frame", &frame )
-		.def( "framed", &framed )
-	;
+	def( "nodule", &Detail::nodule<T> );
+	def( "noduleTangent", &Detail::noduleTangent<T> );
 }
+
+} // namespace GafferUIBindings
+
+#endif // GAFFERUIBINDINGS_NODEGADGETBINDING_INL
