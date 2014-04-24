@@ -35,6 +35,8 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
+#include "Gaffer/Box.h"
+
 #include "GafferScene/FilteredSceneProcessor.h"
 
 using namespace IECore;
@@ -75,11 +77,11 @@ bool FilteredSceneProcessor::acceptsInput( const Gaffer::Plug *plug, const Gaffe
 	
 	if( plug == filterPlug() )
 	{
-		const Node *n = inputPlug->source<Plug>()->node();	
-		if( !n || !n->isInstanceOf( Filter::staticTypeId() ) )
-		{
-			return false;
-		}
+		// we only want to accept inputs from Filter nodes, but we accept
+		// them from Boxes too, because the intermediate plugs there can
+		// be used to later connect a filter in from the outside.
+		const Node *n = inputPlug->source<Plug>()->node();
+		return runTimeCast<const Filter>( n ) || runTimeCast<const Box>( n );
 	}
 	return true;
 }
