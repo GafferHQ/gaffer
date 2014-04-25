@@ -69,8 +69,7 @@ def __noduleCreator( plug ) :
 	return None
 
 GafferUI.Nodule.registerNodule( GafferScene.SceneNode.staticTypeId(), fnmatch.translate( "*" ), __noduleCreator )
-GafferUI.PlugValueWidget.registerCreator( GafferScene.SceneNode.staticTypeId(), "in", None )
-GafferUI.PlugValueWidget.registerCreator( GafferScene.SceneNode.staticTypeId(), "out", None )
+GafferUI.PlugValueWidget.registerType( GafferScene.ScenePlug.staticTypeId(), None )
 
 Gaffer.Metadata.registerPlugValue( GafferScene.SceneNode.staticTypeId(), "enabled", "nodeUI:section", "Node" )
 
