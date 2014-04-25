@@ -122,6 +122,12 @@ class Bookmarks :
 
 		assert( isinstance( path, basestring ) or ( callable( path ) and not persistent ) )
 
+		# backwards compatibility with old mechanism for storing recents -
+		# convert to new form.
+		if name.startswith( "Recent/" ) :
+			self.addRecent( path )
+			return
+
 		s = self.__storage( self.__category )
 		try :
 			# find existing bookmark
@@ -139,26 +145,6 @@ class Bookmarks :
 		if persistent :
 			self.__save()
 	
-	## Adds a recently visited location to the bookmarks.
-	# Recent locations are prefixed with "Recent/", are always
-	# persistent, and are recycled so only the latest few are available.
-	def addRecent( self, path ) :
-	
-		assert( isinstance( path, basestring ) )
-	
-		name = "Recent/" + path.rpartition( "/" )[-1]
-	
-		names = [ n for n in self.names() if n.startswith( "Recent/" ) ]
-		if name in names :
-			self.remove( name )
-			names.remove( name )
-		
-		while len( names ) > 5 :
-			self.remove( names[0] )
-			del names[0]
-		
-		self.add( name, path, persistent=True )
-		
 	## Removes a bookmark previously stored with add().
 	def remove( self, name ) :
 
@@ -215,6 +201,60 @@ class Bookmarks :
 				
 		raise KeyError( name )
 
+	## Adds a recently visited location to the bookmarks.
+	# Recent locations are always persistent, and are recycled
+	# so only the latest few are available. Recent bookmarks are
+	# not returned by names() or get(), but are instead accessed
+	# with recents().
+	def addRecent( self, path ) :
+		
+		assert( isinstance( path, basestring ) )
+		
+		name = "__recent:" + path
+		
+		# first remove any recent items that match this one,
+		# and remove old items to make room for the new one
+		# if necessary. we only do this for the category storage
+		# because we don't want to flush recents from the general
+		# storage if a particular category is used heavily.
+		
+		names = [ x.name for x in self.__storage( self.__category ) if x.name.startswith( "__recent:" ) ]
+		if name in names :
+			self.remove( name )
+			names.remove( name )
+		
+		while len( names ) > 5 :
+			self.remove( names[0] )
+			del names[0]
+		
+		# now add on the new bookmark
+		
+		self.add( name, path, persistent=True )
+
+	## Removes a recently visited location from the bookmarks.
+	def removeRecent( self, path ) :
+	
+		self.remove( "__recent:" + path )
+
+	## Returns a list of strings specifying the location of
+	# the bookmarks added with addRecent().
+	def recents( self ) :
+	
+		u = set()
+		result = []
+		
+		for s in [
+			self.__storage( None ),
+			self.__storage( self.__category ),
+		] :
+			for b in s :
+				if b.name.startswith( "__recent:" ) :
+					if b.path not in u :
+						result.append( b.path )
+						u.add( b.path )
+						
+		return result
+
 	## Sets a default location which can be used when no
 	# information has been provided as to where to start
 	# browsing. Default locations are not persistent.
@@ -262,5 +302,8 @@ class Bookmarks :
 						( Gaffer.Serialisation.classPath( key[0] ).rpartition( "." )[0], repr( key[1] ) )
 					)
 					acquired = True
-				f.write( "bookmarks.add( %s, %s, persistent=True )\n" % ( repr( b.name ), repr( b.path ) ) )
+				if b.name.startswith( "__recent:" ) :
+					f.write( "bookmarks.addRecent( %s )\n" % repr( b.path ) )
+				else :
+					f.write( "bookmarks.add( %s, %s, persistent=True )\n" % ( repr( b.name ), repr( b.path ) ) )
 	

@@ -118,26 +118,31 @@ class BookmarksTest( GafferUITest.TestCase ) :
 		
 		b.addRecent( "/a" )
 		
-		self.assertEqual( b.names(), [ "Recent/a" ] )
+		self.assertEqual( b.names(), [] )
+		self.assertEqual( b.recents(), [ "/a" ] )
 		
 		b.addRecent( "/b" )
 		b.addRecent( "/c" )
 
-		self.assertEqual( b.names(), [ "Recent/a", "Recent/b", "Recent/c" ] )
+		self.assertEqual( b.names(), [] )
+		self.assertEqual( b.recents(), [ "/a", "/b", "/c" ] )
 		
 		b.addRecent( "/a" )
 				
-		self.assertEqual( b.names(), [ "Recent/b", "Recent/c", "Recent/a" ] )
+		self.assertEqual( b.names(), [] )
+		self.assertEqual( b.recents(), [ "/b", "/c", "/a" ] )
 		
 		b.addRecent( "/d" )
 		b.addRecent( "/e" )
 		b.addRecent( "/f" )
 		
-		self.assertEqual( b.names(), [ "Recent/b", "Recent/c", "Recent/a", "Recent/d", "Recent/e", "Recent/f" ] )
+		self.assertEqual( b.names(), [] )
+		self.assertEqual( b.recents(), [ "/b", "/c", "/a", "/d", "/e", "/f" ] )
 
 		b.addRecent( "/g" )
 
-		self.assertEqual( b.names(), [ "Recent/c", "Recent/a", "Recent/d", "Recent/e", "Recent/f", "Recent/g" ] )
+		self.assertEqual( b.names(), [] )
+		self.assertEqual( b.recents(), [ "/c", "/a", "/d", "/e", "/f", "/g" ] )
 	
 	def testDynamic( self ) :
 	
@@ -219,6 +224,49 @@ class BookmarksTest( GafferUITest.TestCase ) :
 
 		b = GafferUI.Bookmarks.acquire( ( g, w.getChild() ) )
 		self.assertEqual( b.getDefault(), "/a/default/path" )
+	
+	def testCategoryRecentsDontRecycleGeneralRecents( self ) :
+	
+		a = Gaffer.ApplicationRoot( "testApp" )
+
+		bg = GafferUI.Bookmarks.acquire( a, Gaffer.FileSystemPath, category=None )
+		bc = GafferUI.Bookmarks.acquire( a, Gaffer.FileSystemPath, category="test" )
 		
+		bg.addRecent( "/a" )
+		bc.addRecent( "/a" )
+		
+		self.assertEqual( bg.recents(), [ "/a" ] )
+		self.assertEqual( bc.recents(), [ "/a" ] )
+
+		for i in range( 0, 1000 ) :
+			bc.addRecent( "/%d" % i )
+			
+		self.assertEqual( bg.recents(), [ "/a" ] )
+
+	def testRemoveRecents( self ) :
+	
+		a = Gaffer.ApplicationRoot( "testApp" )
+
+		b = GafferUI.Bookmarks.acquire( a, Gaffer.FileSystemPath, category=None )
+		self.assertEqual( b.recents(), [] )
+		
+		b.addRecent( "/a" )
+		self.assertEqual( b.recents(), [ "/a" ] )
+
+		b.removeRecent( "/a" )
+		self.assertEqual( b.recents(), [] )
+
+	def testRecentsUseFullPaths( self ) :
+	
+		a = Gaffer.ApplicationRoot( "testApp" )
+
+		b = GafferUI.Bookmarks.acquire( a, Gaffer.FileSystemPath, category=None )
+		self.assertEqual( b.recents(), [] )
+		
+		b.addRecent( "/a/b" )
+		b.addRecent( "/b/b" )
+
+		self.assertEqual( b.recents(), [ "/a/b", "/b/b" ] )
+
 if __name__ == "__main__":
 	unittest.main()
