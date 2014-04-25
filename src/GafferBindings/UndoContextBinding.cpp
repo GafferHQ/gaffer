@@ -50,7 +50,7 @@ namespace GafferBindings
 
 void bindUndoContext()
 {	
-	scope s = class_<UndoContext>( "_UndoContext", init<ScriptNodePtr>() )
+	scope s = class_<UndoContext, boost::noncopyable>( "_UndoContext", init<ScriptNodePtr>() )
 		.def( init<ScriptNodePtr, UndoContext::State>() )
 		.def( init<ScriptNodePtr, UndoContext::State, const std::string &>() )
 	;

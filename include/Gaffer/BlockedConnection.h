@@ -38,13 +38,14 @@
 #define GAFFER_BLOCKEDCONNECTION_H
 
 #include "boost/signals.hpp"
+#include "boost/noncopyable.hpp"
 
 namespace Gaffer
 {
 
 /// The BlockedConnection class allows connections to be blocked and unblocked
 /// in an exception-safe manner.
-class BlockedConnection
+class BlockedConnection : boost::noncopyable
 {
 
 	public :
