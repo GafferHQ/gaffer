@@ -50,7 +50,7 @@ class OpenGLShaderTest( GafferSceneTest.SceneTestCase ) :
 	def test( self ) :
 				
 		s = GafferScene.OpenGLShader()
-		s.loadShader( "texture" )
+		s.loadShader( "Texture" )
 		
 		self.assertEqual( len( s["parameters"] ), 3 )
 		self.assertTrue( isinstance( s["parameters"]["mult"], Gaffer.FloatPlug ) )
@@ -68,7 +68,7 @@ class OpenGLShaderTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( len( ss ), 1 )
 		self.failUnless( isinstance( ss[0], IECore.Shader ) )
 		
-		self.assertEqual( ss[0].name, "texture" )
+		self.assertEqual( ss[0].name, "Texture" )
 		self.assertEqual( ss[0].type, "gl:surface" )
 		self.assertEqual( ss[0].parameters["mult"], IECore.FloatData( 0.5 ) )
 		self.assertEqual( ss[0].parameters["tint"].value, IECore.Color4f( 1, 0.5, 0.25, 1 ) )
@@ -80,7 +80,7 @@ class OpenGLShaderTest( GafferSceneTest.SceneTestCase ) :
 	def testDirtyPropagation( self ) :
 	
 		s = GafferScene.OpenGLShader()
-		s.loadShader( "texture" )
+		s.loadShader( "Texture" )
 		
 		i = GafferImage.Constant()
 		s["parameters"]["texture"].setInput( i["out"] )
@@ -94,7 +94,7 @@ class OpenGLShaderTest( GafferSceneTest.SceneTestCase ) :
 	def testHash( self ) :
 	
 		s = GafferScene.OpenGLShader()
-		s.loadShader( "texture" )
+		s.loadShader( "Texture" )
 		
 		h1 = s.stateHash()
 		
