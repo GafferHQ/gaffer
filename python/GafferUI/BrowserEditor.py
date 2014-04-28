@@ -99,11 +99,12 @@ class BrowserEditor( GafferUI.EditorWidget ) :
 		
 	class Mode( object ) :
 	
-		def __init__( self, browser ) :
+		def __init__( self, browser, splitPosition = 0.5 ) :
 		
 			self.__browser = weakref.ref( browser ) # avoid circular references
 			self.__directoryPath = None
 			self.__displayMode = None
+			self.__splitPosition = splitPosition
 			
 			# create the op matcher on a separate thread, as it may take a while to trawl
 			# through all the available ops.
@@ -143,13 +144,21 @@ class BrowserEditor( GafferUI.EditorWidget ) :
 			)
 			
 			self.__contextMenuConnection = self.browser().pathChooser().pathListingWidget().contextMenuSignal().connect( Gaffer.WeakMethod( self.__contextMenu ) )
-						
+			
+			splitContainer = self.browser().pathChooser().pathListingWidget().ancestor( GafferUI.SplitContainer )
+			splitContainer.setSizes( ( self.__splitPosition, 1.0 - self.__splitPosition ) )
+			
 		def disconnect( self ) :
 	
 			self.__directoryPath[:] = self.browser().pathChooser().directoryPathWidget().getPath()[:]
 			self.__displayMode = self.browser().pathChooser().pathListingWidget().getDisplayMode()
 	
 			self.__contextMenuConnection = None
+			
+			# store current split position so we can restore it in connect()
+			splitContainer = self.browser().pathChooser().pathListingWidget().ancestor( GafferUI.SplitContainer )
+			sizes = splitContainer.getSizes()
+			self.__splitPosition = float( sizes[0] ) / sum( sizes )
 	
 		## Must be implemented by derived classes to return the initial directory path to be viewed.
 		def _initialPath( self ) :
@@ -293,7 +302,7 @@ class OpMode( BrowserEditor.Mode ) :
 
 	def __init__( self, browser, classLoader=None ) :
 	
-		BrowserEditor.Mode.__init__( self, browser )
+		BrowserEditor.Mode.__init__( self, browser, splitPosition = 0.333 )
 		
 		if classLoader is not None :
 			self.__classLoader = classLoader
