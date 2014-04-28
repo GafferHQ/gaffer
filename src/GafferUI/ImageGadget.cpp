@@ -105,21 +105,25 @@ ImageGadget::~ImageGadget()
 {
 }
 
+IECoreGL::TextureLoader *ImageGadget::textureLoader()
+{
+	static TextureLoaderPtr loader = NULL;
+	if( !loader )
+	{
+		const char *s = getenv( "GAFFERUI_IMAGE_PATHS" );
+		IECore::SearchPath sp( s ? s : "", ":" );
+		loader = new TextureLoader( sp );
+	}
+	return loader.get();
+}
+
 void ImageGadget::doRender( const Style *style ) const
 {
 
 	if( const StringData *filename = runTimeCast<const StringData>( m_imageOrTextureOrFileName.get() ) )
 	{
 		// load texture from file
-		static TextureLoaderPtr g_textureLoader = 0;
-		if( !g_textureLoader )
-		{
-			const char *s = getenv( "GAFFERUI_IMAGE_PATHS" );
-			IECore::SearchPath sp( s ? s : "", ":" );
-			g_textureLoader = new TextureLoader( sp );
-		}
-
-		m_imageOrTextureOrFileName = g_textureLoader->load( filename->readable() );
+		m_imageOrTextureOrFileName = textureLoader()->load( filename->readable() );
 	}
 	else if( const ImagePrimitive *image = runTimeCast<const ImagePrimitive>( m_imageOrTextureOrFileName.get() ) )
 	{

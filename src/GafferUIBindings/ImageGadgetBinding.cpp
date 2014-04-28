@@ -42,13 +42,16 @@
 #include "GafferUIBindings/GadgetBinding.h"
 
 using namespace boost::python;
-using namespace GafferUIBindings;
+using namespace IECorePython;
 using namespace GafferUI;
+using namespace GafferUIBindings;
 
 void GafferUIBindings::bindImageGadget()
 {
 	GadgetClass<ImageGadget>()
 		.def( init<const std::string &>() )
 		.def( init<IECore::ConstImagePrimitivePtr>() )
+		.def( "textureLoader", &ImageGadget::textureLoader, return_value_policy<CastToIntrusivePtr>() )
+		.staticmethod( "textureLoader" )
 	;
 }

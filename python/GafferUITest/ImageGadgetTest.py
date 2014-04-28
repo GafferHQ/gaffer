@@ -62,5 +62,16 @@ class ImageGadgetTest( GafferUITest.TestCase ) :
 
 		self.assertRaises( Exception, GafferUI.ImageGadget, "iDonNotExist" )
 
+	def testTextureLoader( self ) :
+
+		# must access an attribute from IECoreGL to force import
+		# before calling textureLoader(), because it is imported
+		# lazily by GafferUI.
+		import IECoreGL
+		IECoreGL.TextureLoader
+
+		l = GafferUI.ImageGadget.textureLoader()
+		self.assertTrue( isinstance( l, IECoreGL.TextureLoader ) )
+
 if __name__ == "__main__":
 	unittest.main()
