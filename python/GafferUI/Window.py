@@ -63,6 +63,11 @@ class Window( GafferUI.ContainerWidget ) :
 		self.__qtLayout.setContentsMargins( borderWidth, borderWidth, borderWidth, borderWidth )
 		self.__qtLayout.setSizeConstraint( QtGui.QLayout.SetMinAndMaxSize )
 		
+		# The initial size of a widget in qt "depends on the user's platform and screen geometry".
+		# In other words, it is useless. We use this flag to determine whether or not our size is
+		# this meaningless initial size, or whether it has been set appropriately. This is needed in
+		# resizeToFitChild().
+		self.__sizeValid = False
 		
 		if len( self.__caughtKeys() ):
 			# set up a key press handler, so we can catch various key presses and stop them being handled by the
@@ -222,9 +227,21 @@ class Window( GafferUI.ContainerWidget ) :
 	
 		return self.__sizeMode
 		
-	def resizeToFitChild( self ) :
+	## Resizes the window to fit the requirements of the current child.
+	# The shrink or expand arguments may be set to False to prevent the
+	# window becoming smaller or larger than its current size if that is
+	# not desired.
+	def resizeToFitChild( self, shrink=True, expand=True ) :
 	
-		self._qtWidget().setGeometry( QtCore.QRect( self._qtWidget().geometry().topLeft(), self._qtWidget().sizeHint() ) )
+		s = self._qtWidget().size()
+		sizeHint = self._qtWidget().sizeHint()
+	
+		if expand or not self.__sizeValid :
+			s = s.expandedTo( sizeHint )
+		if shrink or not self.__sizeValid :
+			s = s.boundedTo( sizeHint )
+	
+		self._qtWidget().resize( s )
 
 	def setPosition( self, position ) :
 	
@@ -336,6 +353,9 @@ class _WindowEventFilter( QtCore.QObject ) :
 			if widget.getSizeMode() == widget.SizeMode.Automatic :
 				widget.resizeToFitChild()
 				return True
+		elif type==QtCore.QEvent.Resize :
+			widget = GafferUI.Widget._owner( qObject )
+			widget._Window__sizeValid = True
 			
 		return False
 

@@ -44,8 +44,14 @@ class OpPathPreview( GafferUI.DeferredPathPreview ) :
 	def __init__( self, path ) :
 	
 		self.__column = GafferUI.ListContainer( borderWidth = 8 )
-		
+
 		GafferUI.DeferredPathPreview.__init__( self, self.__column, path )
+
+		with self.__column :
+			# we'll replace this with the op in _deferredUpdate()
+			GafferUI.Spacer( IECore.V2i( 1 ) )
+			button = GafferUI.Button( "Launch" )
+			self.__executeClickedConnection = button.clickedSignal().connect( self.__executeClicked )
 		
 		self._updateFromPath()
 	
@@ -67,25 +73,35 @@ class OpPathPreview( GafferUI.DeferredPathPreview ) :
 	def _load( self ) :
 		
 		return self.getPath().load()()
-	
+		
 	def _deferredUpdate( self, op ) :
-	
-		del self.__column[:]
 		
 		self.__node = Gaffer.ParameterisedHolderNode()
 		self.__node.setParameterised( op )
-		
-		with self.__column :
-		
-			GafferUI.NodeUI.create( self.__node )
-			
-			button = GafferUI.Button( "Execute" )
-			self.__executeClickedConnection = button.clickedSignal().connect( self.__executeClicked )
 
+		self.__column[0] = GafferUI.NodeUI.create( self.__node )
+		
 	def __executeClicked( self, button ) :
-	
-		with GafferUI.ErrorDialogue.ExceptionHandler( parentWindow=self.ancestor( GafferUI.Window ) ) :
-			self.__node.setParameterisedValues()
-			self.__node.getParameterised()[0]()
+		
+		# Create a copy of our op
+		
+		self.__node.setParameterisedValues()
+		op = self.__node.getParameterised()[0]
+		opCopy = self.getPath().load()()
+		IECore.ParameterAlgo.copyClasses(
+			op.parameters(),
+			opCopy.parameters(),
+		)
+		opCopy.parameters().setValue( op.parameters().getValue().copy() )
+		
+		# Launch an OpDialogue, executing the copy in the background
+
+		dialogue = GafferUI.OpDialogue(
+			opCopy,
+			executeInBackground = True,
+			executeImmediately = True
+		)
+		self.ancestor( GafferUI.Window ).addChildWindow( dialogue )
+		dialogue.setVisible( True )
 		
 GafferUI.PathPreviewWidget.registerType( "Op", OpPathPreview )

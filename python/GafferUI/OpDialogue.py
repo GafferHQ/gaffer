@@ -93,6 +93,7 @@ class OpDialogue( GafferUI.Dialogue ) :
 		postExecuteBehaviour = PostExecuteBehaviour.FromUserData,
 		executeInBackground = False,
 		defaultButton = DefaultButton.FromUserData,
+		executeImmediately = False,
 		**kw
 	) :
 
@@ -154,8 +155,6 @@ class OpDialogue( GafferUI.Dialogue ) :
 		
 		with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing = 4 ) as self.__progressUI :
 			
-			center = { "horizontalAlignment" : GafferUI.HorizontalAlignment.Center }
-			
 			GafferUI.Spacer( IECore.V2i( 1 ), parenting = { "expand" : True } )
 			
 			self.__progressIconFrame = GafferUI.Frame(
@@ -172,11 +171,17 @@ class OpDialogue( GafferUI.Dialogue ) :
 				}
 			)
 			
-			GafferUI.Spacer( IECore.V2i( 1 ), expand=True )
+			GafferUI.Spacer( IECore.V2i( 250, 1 ), expand=True )
 			
 			with GafferUI.Collapsible( "Details", collapsed = True ) as self.__messageCollapsible :
 			
 				self.__messageWidget = GafferUI.MessageWidget()
+				
+				# connect to the collapsible state change so we can increase the window
+				# size when the details pane is first shown.
+				self.__messageCollapsibleStateChangedConnection = self.__messageCollapsible.stateChangedSignal().connect(
+					Gaffer.WeakMethod( self.__messageCollapsibleStateChanged )
+				)
 				
 		# add buttons. our buttons mean different things depending on our current state,
 		# but they equate roughly to going forwards or going backwards.
@@ -185,8 +190,12 @@ class OpDialogue( GafferUI.Dialogue ) :
 		self.__forwardButton = self._addButton( "Forward" )
 		
 		self.__opExecutedSignal = Gaffer.Signal1()
+		self.__haveResizedToFitParameters = False
 		
-		self.__initiateParameterEditing()
+		if executeImmediately :
+			self.__initiateExecution()
+		else :
+			self.__initiateParameterEditing()
 					
 	## A signal called when the user has pressed the execute button
 	# and the Op has been successfully executed. This is passed the
@@ -240,6 +249,13 @@ class OpDialogue( GafferUI.Dialogue ) :
 		self.__focusDefaultButton()
 		
 		self.__state = self.__State.ParameterEditing
+		
+		# when we first display our parameters, we want to ensure that the window
+		# is big enough to fit them nicely. we don't do this the next time we show
+		# the parameters, because the user may have deliberately resized the window.
+		if not self.__haveResizedToFitParameters :
+			self.resizeToFitChild( shrink = False )
+			self.__haveResizedToFitParameters = True
 	
 	def __close( self, *unused ) :
 	
@@ -251,7 +267,8 @@ class OpDialogue( GafferUI.Dialogue ) :
 		self.__progressIconFrame.setChild( GafferUI.BusyWidget() )
 		self.__progressLabel.setText( "<h3>Processing...</h3>" )
 		self.__backButton.setEnabled( False )
-		self.__forwardButton.setEnabled( False )
+		self.__backButton.setText( "Cancel" )
+		self.__forwardButton.setVisible( False )
 		self.__messageWidget.clear()
 		self.__messageCollapsible.setCollapsed( True )
 		
@@ -302,10 +319,12 @@ class OpDialogue( GafferUI.Dialogue ) :
 
 		self.__messageCollapsible.setCollapsed( False )
 	
+		self.__backButton.setVisible( True )
 		self.__backButton.setText( "Cancel" )
 		self.__backButton.setEnabled( True )
 		self.__backButtonClickedConnection = self.__backButton.clickedSignal().connect( Gaffer.WeakMethod( self.__close ) )
 	
+		self.__forwardButton.setVisible( True )
 		self.__forwardButton.setText( "Retry" )
 		self.__forwardButton.setEnabled( True )
 		self.__forwardButtonClickedConnection = self.__forwardButton.clickedSignal().connect( Gaffer.WeakMethod( self.__initiateParameterEditing ) )
@@ -367,10 +386,12 @@ class OpDialogue( GafferUI.Dialogue ) :
 
 		self.__backButton.setText( "Close" )
 		self.__backButton.setEnabled( True )
+		self.__backButton.setVisible( True )
 		self.__backButtonClickedConnection = self.__backButton.clickedSignal().connect( Gaffer.WeakMethod( self.__close ) )
 		
 		self.__forwardButton.setText( "Again!" )
 		self.__forwardButton.setEnabled( True )
+		self.__forwardButton.setVisible( True )
 		self.__forwardButtonClickedConnection = self.__forwardButton.clickedSignal().connect( Gaffer.WeakMethod( self.__initiateParameterEditing ) )
 		
 		if self.__postExecuteBehaviour in ( self.PostExecuteBehaviour.DisplayResultAndClose, self.PostExecuteBehaviour.Close ) :
@@ -402,3 +423,14 @@ class OpDialogue( GafferUI.Dialogue ) :
 			self.__backButton._qtWidget().setFocus()
 		else :
 			self.__forwardButton._qtWidget().setFocus()
+
+	def __messageCollapsibleStateChanged( self, collapsible ) :
+	
+		if not collapsible.getCollapsed() :
+			# make the window bigger to better fit the messages, but don't make
+			# it any smaller than it currently is.
+			self.resizeToFitChild( shrink = False )
+			# remove our connection - we only want to resize the first time we
+			# show the messages. after this we assume that if the window is smaller
+			# it is because the user has made it so, and wishes it to remain so.
+			self.__messageCollapsibleStateChangedConnection = None
