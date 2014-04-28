@@ -45,6 +45,10 @@ import GafferUI
 ## Supported userData entries :
 #
 # ["UI"]["sizeEditable"]
+#
+# Supported child parameter userData entries :
+#
+# ["UI"]["editable"]
 class CompoundVectorParameterValueWidget( GafferUI.CompoundParameterValueWidget ) :
 
 	def __init__( self, parameterHandler, collapsible=None, **kw ) :
@@ -71,10 +75,18 @@ class _PlugValueWidget( GafferUI.CompoundParameterValueWidget._PlugValueWidget )
 		with IECore.IgnoredExceptions( KeyError ) :
 			sizeEditable = self._parameterHandler().parameter().userData()["UI"]["sizeEditable"].value
 		
+		columnEditability = []
+		for parameter in self._parameter().values() :
+			columnEditable = True
+			with IECore.IgnoredExceptions( KeyError ) :
+				columnEditable = parameter.userData()["UI"]["editable"].value
+			columnEditability.append( columnEditable )
+		
 		self.__vectorDataWidget = GafferUI.VectorDataWidget(
 			header = header,
 			columnToolTips = columnToolTips,
-			sizeEditable = sizeEditable
+			sizeEditable = sizeEditable,
+			columnEditability = columnEditability
 		)
 
 		self.__dataChangedConnection = self.__vectorDataWidget.dataChangedSignal().connect( Gaffer.WeakMethod( self.__dataChanged ) )
