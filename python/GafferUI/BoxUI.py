@@ -148,7 +148,7 @@ def __plugValueWidgetCreator( plug ) :
 		
 GafferUI.PlugValueWidget.registerCreator( Gaffer.Box.staticTypeId(), "user.*" , __plugValueWidgetCreator )
 
-# Plug menu
+# PlugValueWidget menu
 ##########################################################################
 
 def __promoteToBox( box, plug ) :
@@ -194,3 +194,33 @@ def __plugPopupMenu( menuDefinition, plugValueWidget ) :
 		} )
 			
 __plugPopupMenuConnection = GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugPopupMenu )
+
+# NodeGraph plug context menu
+##########################################################################
+
+def __renamePlug( nodeGraph, plug ) :
+
+	d = GafferUI.TextInputDialogue( initialText = plug.getName(), title = "Enter name", confirmLabel = "Rename" )
+	name = d.waitForText( parentWindow = nodeGraph.ancestor( GafferUI.Window ) )
+
+	if not name :
+		return
+
+	with Gaffer.UndoContext( plug.ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
+		plug.setName( name )
+
+def __deletePlug( plug ) :
+
+	with Gaffer.UndoContext( plug.ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
+		plug.parent().removeChild( plug )
+
+def __nodeGraphPlugContextMenu( nodeGraph, plug, menuDefinition ) :
+
+	if not isinstance( plug.node(), Gaffer.Box ) :
+		return
+
+	menuDefinition.append( "/Rename...", { "command" : IECore.curry( __renamePlug, nodeGraph, plug ) } )
+	menuDefinition.append( "/DeleteDivider", { "divider" : True } )
+	menuDefinition.append( "/Delete", { "command" : IECore.curry( __deletePlug, plug ) } )
+
+__nodeGraphPlugContextMenuConnection = GafferUI.NodeGraph.plugContextMenuSignal().connect( __nodeGraphPlugContextMenu )
