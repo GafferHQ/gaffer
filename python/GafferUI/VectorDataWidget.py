@@ -62,6 +62,9 @@ class VectorDataWidget( GafferUI.Widget ) :
 	#
 	# sizeEditable specifies whether or not items may be added and removed
 	# from the data (assuming it is editable).
+	#
+	# columnEditability may be specified as a list of booleans, providing per-column
+	# editability.
 	def __init__(
 		self,
 		data=None,
@@ -71,6 +74,7 @@ class VectorDataWidget( GafferUI.Widget ) :
 		minimumVisibleRows=8,
 		columnToolTips=None,
 		sizeEditable=True,
+		columnEditability=None,
 		**kw
 	) :
 	
@@ -160,6 +164,7 @@ class VectorDataWidget( GafferUI.Widget ) :
 			self.__headerOverride = None
 		
 		self.__columnToolTips = columnToolTips
+		self.__columnEditability = columnEditability
 		
 		self.__propagatingDataChangesToSelection = False
 		
@@ -186,7 +191,7 @@ class VectorDataWidget( GafferUI.Widget ) :
 		if data is not None :
 			if not isinstance( data, list ) :
 				data = [ data ]
-			self.__model = _Model( data, self.__tableView, self.getEditable(), self.__headerOverride, self.__columnToolTips )
+			self.__model = _Model( data, self.__tableView, self.getEditable(), self.__headerOverride, self.__columnToolTips, self.__columnEditability )
 			self.__model.dataChanged.connect( Gaffer.WeakMethod( self.__modelDataChanged ) )
 			self.__model.rowsInserted.connect( Gaffer.WeakMethod( self.__emitDataChangedSignal ) )
 			self.__model.rowsRemoved.connect( Gaffer.WeakMethod( self.__emitDataChangedSignal ) )
@@ -630,7 +635,7 @@ class _Model( QtCore.QAbstractTableModel ) :
 
 	__addValueText = "Add..."
 
-	def __init__( self, data, parent=None, editable=True, header=None, columnToolTips=None ) :
+	def __init__( self, data, parent=None, editable=True, header=None, columnToolTips=None, columnEditability=None ) :
 	
 		QtCore.QAbstractTableModel.__init__( self, parent )
 				
@@ -638,6 +643,7 @@ class _Model( QtCore.QAbstractTableModel ) :
 		self.__editable = editable
 		self.__header = header
 		self.__columnToolTips = columnToolTips
+		self.__columnEditability = columnEditability
 
 		self.__columns = []
 		self.__accessors = []
@@ -718,7 +724,8 @@ class _Model( QtCore.QAbstractTableModel ) :
 		)
 			
 		if self.__editable :
-			result |= QtCore.Qt.ItemIsEditable
+			if self.__columnEditability is None or self.__columnEditability[index.column()] :
+				result |= QtCore.Qt.ItemIsEditable
 		
 		return result
 		
@@ -972,7 +979,10 @@ class _BoolDelegate( _Delegate ) :
 		return None
 
 	def editorEvent( self, event, model, option, index ) :
-				
+		
+		if not ( index.flags() & QtCore.Qt.ItemIsEditable ) :
+			return False
+			
 		if event.type()==QtCore.QEvent.MouseButtonDblClick :
 			# eat event so an editor doesn't get created
 			return True
