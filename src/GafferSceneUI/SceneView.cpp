@@ -133,6 +133,7 @@ SceneView::SceneView( const std::string &name )
 	m_selectionChangedConnection = m_renderableGadget->selectionChangedSignal().connect( boost::bind( &SceneView::selectionChanged, this, ::_1 ) );
 	viewportGadget()->keyPressSignal().connect( boost::bind( &SceneView::keyPress, this, ::_1, ::_2 ) );
 
+	m_renderableGadget->baseState()->add( const_cast<IECoreGL::State *>( baseState() ) );
 	baseStateChangedSignal().connect( boost::bind( &SceneView::baseStateChanged, this ) );
 	
 	//////////////////////////////////////////////////////////////////////////
