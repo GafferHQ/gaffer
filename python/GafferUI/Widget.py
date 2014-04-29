@@ -2033,27 +2033,38 @@ class _EventFilter( QtCore.QObject ) :
 		
 	def __endDrag( self, qObject, qEvent ) :
 		
+		# Reset self.__dragDropEvent to None before emitting
+		# dropSignal or dragEndSignal, because slots connected
+		# to those signals could do anything at all - including
+		# popping up modal dialogues which then want to start new
+		# drags.
+		
+		dragDropEvent = self.__dragDropEvent
+		self.__dragDropEvent = None
+		
+		# Emit dropSignal() on the destination.
+		
 		cursorPos = IECore.V2i( qEvent.globalPos().x(), qEvent.globalPos().y() )
 
-		dst = self.__dragDropEvent.destinationWidget
+		dst = dragDropEvent.destinationWidget
 		if dst is not None and dst._dropSignal :
 		
-			self.__dragDropEvent.line = self.__positionToLine( cursorPos - dst.bound().min )
-			self.__dragDropEvent.dropResult = dst._dropSignal( dst, self.__dragDropEvent )
+			dragDropEvent.line = self.__positionToLine( cursorPos - dst.bound().min )
+			dragDropEvent.dropResult = dst._dropSignal( dst, dragDropEvent )
 		
-		src = self.__dragDropEvent.sourceWidget
+		# Emit dragEndSignal() on source.
+		
+		src = dragDropEvent.sourceWidget
 		if src._dragEndSignal :
 			
-			self.__dragDropEvent.line = self.__positionToLine( cursorPos - src.bound().min )
+			dragDropEvent.line = self.__positionToLine( cursorPos - src.bound().min )
 			
 			src._dragEndSignal(
 				src,
-				self.__dragDropEvent
+				dragDropEvent
 			)
-			
-		self.__dragDropEvent = None
-			
-		return True	
+		
+		return True
 
 	def __positionToLine( self, pos ) :
 	
