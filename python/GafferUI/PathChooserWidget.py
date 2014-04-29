@@ -329,7 +329,7 @@ class PathChooserWidget( GafferUI.Widget ) :
 		recents = self.__bookmarks.recents()
 		if recents :
 			m.append( "/RecentDivider", { "divider" : True } )
-			for i, bookmark in enumerate( recents ) :
+			for i, bookmark in enumerate( reversed( recents ) ) :
 				testPath.setFromString( bookmark )
 				m.append(
 					"/Recent/%d" % i,
