@@ -65,11 +65,11 @@ Grid::Grid( const std::string &name )
 	
 	addChild( new Color3fPlug( "gridColor", Plug::In, Color3f( 0.1 ) ) );
 	addChild( new Color3fPlug( "centerColor", Plug::In, Color3f( 0.5 ) ) );
-	addChild( new Color3fPlug( "borderColor", Plug::In, Color3f( 0.25 ) ) );
+	addChild( new Color3fPlug( "borderColor", Plug::In, Color3f( 0.15 ) ) );
 
-	addChild( new FloatPlug( "gridPixelWidth", Plug::In, 1.0f, 0.0f ) );
-	addChild( new FloatPlug( "centerPixelWidth", Plug::In, 2.0f, 0.0f ) );
-	addChild( new FloatPlug( "borderPixelWidth", Plug::In, 2.0f, 0.0f ) );
+	addChild( new FloatPlug( "gridPixelWidth", Plug::In, 0.25f, 0.01f ) );
+	addChild( new FloatPlug( "centerPixelWidth", Plug::In, 1.0f, 0.01f ) );
+	addChild( new FloatPlug( "borderPixelWidth", Plug::In, 1.0f, 0.01f ) );
 	
 }
 
@@ -290,6 +290,7 @@ IECore::ConstCompoundObjectPtr Grid::computeAttributes( const SceneNode::ScenePa
 		CompoundObjectPtr result = new CompoundObject;
 		
 		result->members()["gl:curvesPrimitive:useGLLines"] = new BoolData( true );
+		result->members()["gl:smoothing:lines"] = new BoolData( true );
 		
 		ShaderPtr shader = new Shader( "Constant", "gl:surface" );
 		shader->parameters()["Cs"] = new Color3fData( Color3f( 1 ) );
