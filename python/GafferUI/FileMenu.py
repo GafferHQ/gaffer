@@ -311,7 +311,7 @@ def __selectionAvailable( menu ) :
 def __pathAndBookmarks( scriptWindow ) :
 
 	bookmarks = GafferUI.Bookmarks.acquire(
-		scriptWindow.scriptNode().ancestor( Gaffer.ApplicationRoot.staticTypeId() ),
+		scriptWindow,
 		pathType = Gaffer.FileSystemPath,
 		category = "script",
 	)

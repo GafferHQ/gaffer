@@ -45,6 +45,12 @@ import GafferUI
 # with additional features for editing the strings as paths
 class PathVectorDataWidget( GafferUI.VectorDataWidget ) :
 
+	## The pathChooserDialogueKeywords are passed to the PathChooserDialogue
+	# that is opened when the user wishes to browse for a new path - they can
+	# be specified to customise the path chooser appropriately. They may be
+	# passed either as a dictionary, or as a callable which returns a dictionary -
+	# in the latter case the callable will be evaluated just prior to opening
+	# the dialogue each time.
 	def __init__( self, data=None, editable=True, header=False, showIndices=True, path=None, pathChooserDialogueKeywords={}, **kw ) :
 	
 		GafferUI.VectorDataWidget.__init__( self, data=data, editable=editable, header=header, showIndices=showIndices, **kw )
@@ -75,12 +81,16 @@ class PathVectorDataWidget( GafferUI.VectorDataWidget ) :
 	
 	def _createRows( self ) :
 	
+		pathChooserDialogueKeywords = self.__pathChooserDialogueKeywords
+		if callable( pathChooserDialogueKeywords ) :
+			pathChooserDialogueKeywords = pathChooserDialogueKeywords()
+		
 		path = self.__path.copy()
-		bookmarks = self.__pathChooserDialogueKeywords.get( "bookmarks", None )
+		bookmarks = pathChooserDialogueKeywords.get( "bookmarks", None )
 		if bookmarks is not None :
 			path.setFromString( bookmarks.getDefault() )
 		
-		dialogue = GafferUI.PathChooserDialogue( path, allowMultipleSelection=True, **self.__pathChooserDialogueKeywords )
+		dialogue = GafferUI.PathChooserDialogue( path, allowMultipleSelection=True, **pathChooserDialogueKeywords )
 		paths = dialogue.waitForPaths( parentWindow = self.ancestor( GafferUI.Window ) )
 		if not paths :
 			return None
@@ -91,15 +101,19 @@ class PathVectorDataWidget( GafferUI.VectorDataWidget ) :
 		
 		data = self.getData()[0]
 		
+		pathChooserDialogueKeywords = self.__pathChooserDialogueKeywords
+		if callable( pathChooserDialogueKeywords ) :
+			pathChooserDialogueKeywords = pathChooserDialogueKeywords()
+		
 		path = self.__path.copy()
 		if index < len( data ) and len( data[index] ) :
 			path.setFromString( data[index] )
 		else :
-			bookmarks = self.__pathChooserDialogueKeywords.get( "bookmarks", None )
+			bookmarks = pathChooserDialogueKeywords.get( "bookmarks", None )
 			if bookmarks is not None :
 				path.setFromString( bookmarks.getDefault() )
 		
-		dialogue = GafferUI.PathChooserDialogue( path, **self.__pathChooserDialogueKeywords )
+		dialogue = GafferUI.PathChooserDialogue( path, **pathChooserDialogueKeywords )
 		path = dialogue.waitForPath( parentWindow = self.ancestor( GafferUI.Window ) )
 		
 		if path is not None :

@@ -67,6 +67,9 @@ class PathChooserWidget( GafferUI.Widget ) :
 					menu = GafferUI.Menu( Gaffer.WeakMethod( self.__bookmarksMenuDefinition ) ),
 				)
 				self.__bookmarksButton.setToolTip( "Bookmarks" )
+				self.__bookmarksButtonDragEnterConnection = self.__bookmarksButton.dragEnterSignal().connect( Gaffer.WeakMethod( self.__bookmarksButtonDragEnter ) )
+				self.__bookmarksButtonDragLeaveConnection = self.__bookmarksButton.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__bookmarksButtonDragLeave ) )
+				self.__bookmarksButtonDropConnection = self.__bookmarksButton.dropSignal().connect( Gaffer.WeakMethod( self.__bookmarksButtonDrop ) )
 			
 				reloadButton = GafferUI.Button( image = "refresh.png", hasFrame=False )
 				reloadButton.setToolTip( "Refresh view" )
@@ -311,40 +314,40 @@ class PathChooserWidget( GafferUI.Widget ) :
 	
 		m = IECore.MenuDefinition()
 
-		items = []
-		recentItems = []
 		unbookmarkableLocations = set()
 		testPath = self.__dirPath.copy()
 		for name in self.__bookmarks.names() :
 			bookmark = self.__bookmarks.get( name, forWidget=self )
 			testPath.setFromString( bookmark )
-			item = (
+			m.append(
 				"/" + name,
 				{
-					"command" : IECore.curry( self.__dirPath.setFromString, bookmark ),
+					"command" : IECore.curry( self.__path.setFromString, bookmark ),
 					"active" : testPath.isValid(),
 					"description" : bookmark,
 				}
 			)
-			if not name.startswith( "Recent/" ) :
-				items.append( item )
-				unbookmarkableLocations.add( bookmark )
-			else :
-				recentItems.append( item )
+			unbookmarkableLocations.add( bookmark )
 		
-		for item in items :
-			m.append( *item )
-
-		if len( recentItems ) :
+		recents = self.__bookmarks.recents()
+		if recents :
 			m.append( "/RecentDivider", { "divider" : True } )
-			for item in recentItems :
-				m.append( *item )
+			for i, bookmark in enumerate( reversed( recents ) ) :
+				testPath.setFromString( bookmark )
+				m.append(
+					"/Recent/%d" % i,
+					{
+						"command" : IECore.curry( self.__path.setFromString, bookmark ),
+						"active" : testPath.isValid(),
+						"description" : bookmark,
+						"label" : bookmark,
+					}
+				)
 
 		m.append( "/SaveDeleteDivider", { "divider" : True } )
 		
 		for name in self.__bookmarks.names( persistent=True ) :
-			if not name.startswith( "Recent/" ) :
-				m.append( "/Delete/" + name, { "command" : IECore.curry( self.__bookmarks.remove, name ) } )
+			m.append( "/Delete/" + name, { "command" : IECore.curry( self.__bookmarks.remove, name ) } )
 		
 		m.append( "/Add Bookmark...", {
 			"command" : Gaffer.WeakMethod( self.__saveBookmark ),
@@ -352,12 +355,56 @@ class PathChooserWidget( GafferUI.Widget ) :
 		} )
 		
 		return m
+	
+	def __bookmarksButtonDropPath( self, event ) :
+	
+		string = None
+		if isinstance( event.data, IECore.StringData ) :
+			string = event.data.value
+		elif isinstance( event.data, IECore.StringVectorData ) and len( event.data ) == 1 :
+			string = event.data[0]
 		
-	def __saveBookmark( self ) :
+		if string is None :
+			return None
 		
-		name = self.__dirPath[-1] if len( self.__dirPath ) else "Root"
+		for name in self.__bookmarks.names() :
+			if string == self.__bookmarks.get( name ) :
+				return None
+
+		testPath = self.__path.copy()
+		testPath.setFromString( string )
+		if not testPath.isValid() :
+			return None
+	
+		return testPath
+	
+	def __bookmarksButtonDragEnter( self, button, event ) :
+	
+		if self.__bookmarksButtonDropPath( event ) is None :
+			return False
+		
+		button.setHighlighted( True )
+		return True
+		
+	def __bookmarksButtonDragLeave( self, button, event ) :
+	
+		button.setHighlighted( False )
+		return True
+		
+	def __bookmarksButtonDrop( self, button, event ) :
+		
+		GafferUI.Pointer.set( None )
+		self.__saveBookmark( self.__bookmarksButtonDropPath( event ) )
+		button.setHighlighted( False )
+		
+	def __saveBookmark( self, path = None ) :
+		
+		if path is None :
+			path = self.__dirPath
+		
+		name = path[-1] if len( path ) else "Root"
 		d = GafferUI.TextInputDialogue( initialText=name, title="Save Bookmark", confirmLabel="Save" )
 		name = d.waitForText( parentWindow = self.ancestor( GafferUI.Window ) )
 		
 		if name is not None :
-			self.__bookmarks.add( name, str( self.__dirPath ), persistent=True )
+			self.__bookmarks.add( name, str( path ), persistent=True )

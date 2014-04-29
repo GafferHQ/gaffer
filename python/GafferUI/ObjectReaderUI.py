@@ -57,10 +57,7 @@ GafferUI.PlugValueWidget.registerCreator(
 			),
 		),
 		pathChooserDialogueKeywords = {
-			"bookmarks" : GafferUI.Bookmarks.acquire(
-				plug.ancestor( Gaffer.ApplicationRoot.staticTypeId() ),
-				category = "cortex",
-			),
+			"bookmarks" : GafferUI.Bookmarks.acquire( plug, category = "cortex" ),
 			"leaf" : True,
 		},
 	),

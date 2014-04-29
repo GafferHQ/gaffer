@@ -48,6 +48,13 @@ class PathPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	## path should be an instance of Gaffer.Path, optionally with
 	# filters applied. It will be updated with the contents of the plug.
+	#
+	# The pathChooserDialogueKeywords are passed to the PathChooserDialogue
+	# that is opened when the user wishes to browse for a new path - they can
+	# be specified to customise the path chooser appropriately. They may be
+	# passed either as a dictionary, or as a callable which returns a dictionary -
+	# in the latter case the callable will be evaluated just prior to opening
+	# the dialogue each time.
 	def __init__( self, plug, path=None, pathChooserDialogueKeywords={}, **kw ) :
 	
 		self.__row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
@@ -118,15 +125,20 @@ class PathPlugValueWidget( GafferUI.PlugValueWidget ) :
 		# make a copy so we're not updating the main path as users browse
 		pathCopy = self.__path.copy()
 		
+		# get the keywords for the dialogue constructor
+		pathChooserDialogueKeywords = self.__pathChooserDialogueKeywords
+		if callable( pathChooserDialogueKeywords ) :
+			pathChooserDialogueKeywords = pathChooserDialogueKeywords()
+		
 		if pathCopy.isEmpty() :
 			# choose a sensible starting location if the path is empty.
-			bookmarks = self.__pathChooserDialogueKeywords.get( "bookmarks", None )
+			bookmarks = pathChooserDialogueKeywords.get( "bookmarks", None )
 			if bookmarks is not None :
 				pathCopy.setFromString( bookmarks.getDefault() )
 			else :
 				pathCopy.setFromString( "/" )
 		
-		dialogue = GafferUI.PathChooserDialogue( pathCopy, **self.__pathChooserDialogueKeywords )
+		dialogue = GafferUI.PathChooserDialogue( pathCopy, **pathChooserDialogueKeywords )
 		chosenPath = dialogue.waitForPath( parentWindow = self.ancestor( GafferUI.Window ) )
 		
 		if chosenPath is not None :

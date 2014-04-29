@@ -102,10 +102,7 @@ GafferUI.PlugValueWidget.registerCreator(
 	lambda plug : GafferUI.PathPlugValueWidget( plug,
 		path = Gaffer.FileSystemPath( "/", filter = Gaffer.FileSystemPath.createStandardFilter( extensions = IECore.SceneInterface.supportedExtensions() ) ),
 		pathChooserDialogueKeywords = {
-			"bookmarks" : GafferUI.Bookmarks.acquire(
-				plug.ancestor( Gaffer.ApplicationRoot.staticTypeId() ),
-				category = "sceneCache",
-			),
+			"bookmarks" : GafferUI.Bookmarks.acquire( plug, category = "sceneCache" ),
 			"leaf" : True,
 		},
 	)
@@ -119,10 +116,7 @@ GafferUI.PlugValueWidget.registerCreator(
 	lambda plug : GafferUI.PathPlugValueWidget( plug,
 		path = Gaffer.FileSystemPath( "/", filter = Gaffer.FileSystemPath.createStandardFilter( extensions = [ "abc" ] ) ),
 		pathChooserDialogueKeywords = {
-			"bookmarks" : GafferUI.Bookmarks.acquire(
-				plug.ancestor( Gaffer.ApplicationRoot.staticTypeId() ),
-				category = "sceneCache",
-			),
+			"bookmarks" : GafferUI.Bookmarks.acquire( plug, category = "sceneCache" ),
 			"leaf" : True,
 		},
 	)

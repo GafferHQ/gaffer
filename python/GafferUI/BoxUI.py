@@ -101,7 +101,7 @@ class BoxNodeUI( GafferUI.StandardNodeUI ) :
 		
 	def __exportForReferencing( self ) :
 	
-		bookmarks = GafferUI.Bookmarks.acquire( self.node().ancestor( Gaffer.ApplicationRoot.staticTypeId() ), category="reference" )
+		bookmarks = GafferUI.Bookmarks.acquire( self.node(), category="reference" )
 
 		path = Gaffer.FileSystemPath( bookmarks.getDefault( self ) )
 		path.setFilter( Gaffer.FileSystemPath.createStandardFilter( [ "grf" ] ) )
