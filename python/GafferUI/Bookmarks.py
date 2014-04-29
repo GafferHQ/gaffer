@@ -102,6 +102,18 @@ class Bookmarks :
 				if scriptWidget is None :
 					scriptWidget = target.ancestor( GafferUI.ScriptWindow )
 			
+			if scriptWidget is None :
+				# needed to find bookmarks for floating op windows
+				# in the browser app. ideally we'd have a more general
+				# mechanism for finding scriptWidget in the closest
+				# descendant-of-an-ancestor.
+				window = target
+				while window is not None :
+					window = window.ancestor( GafferUI.Window )
+					if isinstance( window.getChild(), GafferUI.EditorWidget ) :
+						scriptWidget = window.getChild()
+						break
+			
 			if scriptWidget is not None :
 				applicationRoot = scriptWidget.scriptNode().ancestor( Gaffer.ApplicationRoot.staticTypeId() )
 			else :
