@@ -41,8 +41,8 @@ import IECore
 import Gaffer
 import GafferUI
 
-## The VectorDataWidget provides a list view for IECore.StringVectorData,
-# with additional features for editing the strings as paths
+## The PathVectorDataWidget provides a list view for IECore.StringVectorData,
+# with additional features for editing the strings as paths.
 class PathVectorDataWidget( GafferUI.VectorDataWidget ) :
 
 	## The pathChooserDialogueKeywords are passed to the PathChooserDialogue
