@@ -56,10 +56,10 @@ class StringPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self._addPopupMenu( self.__textWidget )
 
-		self.__keyPressConnection = self.__textWidget.keyPressSignal().connect( Gaffer.WeakMethod( self._keyPress ) )
-		self.__editingFinishedConnection = self.__textWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self._textChanged ) )
+		self.__keyPressConnection = self.__textWidget.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
+		self.__editingFinishedConnection = self.__textWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__textChanged ) )
 		if continuousUpdate :
-			self.__textChangedConnection = self.__textWidget.textChangedSignal().connect( Gaffer.WeakMethod( self._textChanged ) )
+			self.__textChangedConnection = self.__textWidget.textChangedSignal().connect( Gaffer.WeakMethod( self.__textChanged ) )
 			
 		self._updateFromPlug()
 
@@ -80,7 +80,7 @@ class StringPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self.__textWidget.setEditable( self._editable() )
 
-	def _keyPress( self, widget, event ) :
+	def __keyPress( self, widget, event ) :
 	
 		assert( widget is self.__textWidget )
 	
@@ -94,7 +94,7 @@ class StringPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		return False
 		
-	def _textChanged( self, textWidget ) :
+	def __textChanged( self, textWidget ) :
 			
 		assert( textWidget is self.__textWidget )
 	
