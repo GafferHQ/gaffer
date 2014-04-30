@@ -71,7 +71,7 @@ def quit( menu ) :
 			confirmLabel = "Discard and Quit"
 		)
 		
-		if not dialogue.waitForConfirmation() :
+		if not dialogue.waitForConfirmation( parentWindow=scriptWindow ) :
 			return
 	
 	for script in application["scripts"].children() :
