@@ -37,11 +37,10 @@
 
 #include "boost/python.hpp"
 
-#include "GafferUIBindings/TextGadgetBinding.h"
-#include "GafferUIBindings/GadgetBinding.h"
 #include "GafferUI/TextGadget.h"
 
-#include "IECorePython/RunTimeTypedBinding.h"
+#include "GafferUIBindings/TextGadgetBinding.h"
+#include "GafferUIBindings/GadgetBinding.h"
 
 using namespace boost::python;
 using namespace GafferUIBindings;
@@ -49,9 +48,8 @@ using namespace GafferUI;
 
 void GafferUIBindings::bindTextGadget()
 {
-	IECorePython::RunTimeTypedClass<TextGadget>()
+	GadgetClass<TextGadget>()
 		.def( init<const std::string &>() )
-		.GAFFERUIBINDINGS_DEFGADGETWRAPPERFNS( TextGadget )
 		.def( "getText", &TextGadget::getText, return_value_policy<copy_const_reference>() )
 		.def( "setText", &TextGadget::setText )
 	;

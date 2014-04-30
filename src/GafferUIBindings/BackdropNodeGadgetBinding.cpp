@@ -37,8 +37,6 @@
 #include "boost/python.hpp"
 #include "boost/python/suite/indexing/container_utils.hpp"
 
-#include "IECorePython/RunTimeTypedBinding.h"
-
 #include "GafferUI/BackdropNodeGadget.h"
 #include "GafferUI/GraphGadget.h"
 #include "GafferUI/Nodule.h"
@@ -74,9 +72,8 @@ static list framed( BackdropNodeGadget &b )
 
 void GafferUIBindings::bindBackdropNodeGadget()
 {
-	IECorePython::RunTimeTypedClass<BackdropNodeGadget>()
+	NodeGadgetClass<BackdropNodeGadget>()
 		.def( init<Gaffer::NodePtr>() )
-		.GAFFERUIBINDINGS_DEFNODEGADGETWRAPPERFNS( BackdropNodeGadget )
 		.def( "frame", &frame )
 		.def( "framed", &framed )
 	;

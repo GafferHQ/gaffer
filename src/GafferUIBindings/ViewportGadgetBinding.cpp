@@ -38,21 +38,27 @@
 
 #include "IECorePython/RunTimeTypedBinding.h"
 
+#include "GafferBindings/SignalBinding.h"
+
 #include "GafferUI/ViewportGadget.h"
 
 #include "GafferUIBindings/GadgetBinding.h"
 #include "GafferUIBindings/ViewportGadgetBinding.h"
 
 using namespace boost::python;
+using namespace GafferBindings;
 using namespace GafferUI;
 using namespace GafferUIBindings;
 
-static IECore::CameraPtr getCamera( const ViewportGadget &v )
+namespace
+{
+
+IECore::CameraPtr getCamera( const ViewportGadget &v )
 {
 	return v.getCamera()->copy();
 }
 
-static list gadgetsAt( ViewportGadget &v, const Imath::V2f &position )
+list gadgetsAt( ViewportGadget &v, const Imath::V2f &position )
 {
 	std::vector<GadgetPtr> gadgets;
 	v.gadgetsAt( position, gadgets );
@@ -65,17 +71,37 @@ static list gadgetsAt( ViewportGadget &v, const Imath::V2f &position )
 	return result;
 }
 
+struct UnarySlotCaller
+{
+	boost::signals::detail::unusable operator()( boost::python::object slot, ViewportGadgetPtr g )
+	{
+		try
+		{
+			slot( g );
+		}
+		catch( const error_already_set &e )
+		{
+			PyErr_PrintEx( 0 ); // clears the error status
+		}
+		return boost::signals::detail::unusable();
+	}
+};
+
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( frameOverloads, frame, 2, 3 );
+
+} // namespace
 
 void GafferUIBindings::bindViewportGadget()
 {
-	IECorePython::RunTimeTypedClass<ViewportGadget>()
+	scope s = GadgetClass<ViewportGadget>()
 		.def( init<>() )
 		.def( init<GadgetPtr>() )
 		.def( "getViewport", &ViewportGadget::getViewport, return_value_policy<copy_const_reference>() )
 		.def( "setViewport", &ViewportGadget::setViewport )
+		.def( "viewportChangedSignal", &ViewportGadget::viewportChangedSignal, return_internal_reference<1>() )
 		.def( "getCamera", &getCamera )
 		.def( "setCamera", &ViewportGadget::setCamera )
+		.def( "cameraChangedSignal", &ViewportGadget::cameraChangedSignal, return_internal_reference<1>() )
 		.def( "getCameraEditable", &ViewportGadget::getCameraEditable )
 		.def( "setCameraEditable", &ViewportGadget::setCameraEditable )
 		.def( "frame", (void (ViewportGadget::*)( const Imath::Box3f & ))&ViewportGadget::frame )
@@ -85,6 +111,8 @@ void GafferUIBindings::bindViewportGadget()
 		.def( "gadgetsAt", &gadgetsAt )
 		.def( "rasterToGadgetSpace", &ViewportGadget::rasterToGadgetSpace, ( arg_( "rasterPosition" ), arg_( "gadget" ) = GadgetPtr() ) )
 		.def( "gadgetToRasterSpace", &ViewportGadget::gadgetToRasterSpace, ( arg_( "gadgetPosition" ), arg_( "gadget" ) = GadgetPtr() ) )
-		.GAFFERUIBINDINGS_DEFGADGETWRAPPERFNS( ViewportGadget )
 	;
+	
+	SignalBinder<ViewportGadget::UnarySignal, DefaultSignalCaller<ViewportGadget::UnarySignal>, UnarySlotCaller>::bind( "UnarySignal" );
+
 }

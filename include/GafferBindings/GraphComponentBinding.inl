@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
-//  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,42 +34,37 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUI_FRAME_H
-#define GAFFERUI_FRAME_H
+#ifndef GAFFERBINDINGS_GRAPHCOMPONENTBINDING_INL
+#define GAFFERBINDINGS_GRAPHCOMPONENTBINDING_INL
 
-#include "GafferUI/IndividualContainer.h"
-
-namespace GafferUI
+namespace GafferBindings
 {
 
-/// The Frame class draws a frame around its child.
-class Frame : public IndividualContainer
+namespace Detail
 {
 
-	public :
+template<typename T>
+static bool acceptsChild( const T &p, const Gaffer::GraphComponent *potentialChild )
+{
+	return p.T::acceptsChild( potentialChild );
+}
 
-		Frame( GadgetPtr child );
-		virtual ~Frame();
+template<typename T>
+static bool acceptsParent( const T &p, const Gaffer::GraphComponent *potentialParent )
+{
+	return p.T::acceptsParent( potentialParent );
+}
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::Frame, FrameTypeId, IndividualContainer );
+} // namespace Detail
 
-		virtual Imath::Box3f bound() const;
-	
-	protected :
-	
-		virtual void doRender( const Style *style ) const;
-	
-	private :
-	
-		float m_border;
-							
-};
+template<typename T, typename Ptr>
+GraphComponentClass<T, Ptr>::GraphComponentClass( const char *docString )
+	:	IECorePython::RunTimeTypedClass<T, Ptr>( docString )
+{
+	def( "acceptsChild", &Detail::acceptsChild<T> );
+	def( "acceptsParent", &Detail::acceptsParent<T> );
+}
 
-IE_CORE_DECLAREPTR( Frame );
+} // namespace GafferBindings
 
-typedef Gaffer::FilteredChildIterator<Gaffer::TypePredicate<Frame> > FrameIterator;
-typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::TypePredicate<Frame> > RecursiveFrameIterator;
-
-} // namespace GafferUI
-
-#endif // GAFFERUI_FRAME_H
+#endif // GAFFERBINDINGS_NODEBINDING_INL

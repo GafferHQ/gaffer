@@ -94,6 +94,9 @@ class StandardConnectionGadget : public ConnectionGadget
 		
 };
 
+typedef Gaffer::FilteredChildIterator<Gaffer::TypePredicate<StandardConnectionGadget> > StandardConnectionGadgetIterator;
+typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::TypePredicate<StandardConnectionGadget> > RecursiveStandardConnectionGadgetIterator;
+
 } // namespace GafferUI
 
 #endif // GAFFERUI_STANDARDCONNECTIONGADGET_H

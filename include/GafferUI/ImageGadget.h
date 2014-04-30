@@ -86,6 +86,9 @@ class ImageGadget : public Gadget
 
 IE_CORE_DECLAREPTR( ImageGadget )
 
+typedef Gaffer::FilteredChildIterator<Gaffer::TypePredicate<ImageGadget> > ImageGadgetIterator;
+typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::TypePredicate<ImageGadget> > RecursiveImageGadgetIterator;
+
 } // namespace GafferUI
 
 #endif // GAFFERUI_IMAGEGADGET_H

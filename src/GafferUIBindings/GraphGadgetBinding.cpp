@@ -37,8 +37,6 @@
 
 #include "boost/python.hpp"
 
-#include "IECorePython/RunTimeTypedBinding.h"
-
 #include "Gaffer/Node.h"
 
 #include "GafferBindings/SignalBinding.h"
@@ -145,9 +143,8 @@ static ConnectionGadgetPtr connectionGadgetAt( GraphGadget &g, const IECore::Lin
 
 void GafferUIBindings::bindGraphGadget()
 {
-	scope s = IECorePython::RunTimeTypedClass<GraphGadget>()
+	scope s = GadgetClass<GraphGadget>()
 		.def( init<Gaffer::NodePtr, Gaffer::SetPtr>( ( arg_( "root" ), arg_( "filter" ) = object() ) ) )
-		.GAFFERUIBINDINGS_DEFGADGETWRAPPERFNS( GraphGadget )
 		.def( "getRoot", &getRoot )
 		.def( "setRoot", &GraphGadget::setRoot, ( arg_( "root" ), arg_( "filter" ) = object() ) )
 		.def( "rootChangedSignal", &GraphGadget::rootChangedSignal, return_internal_reference<1>() )

@@ -241,6 +241,9 @@ class GraphGadget : public ContainerGadget
 
 IE_CORE_DECLAREPTR( GraphGadget );
 
+typedef Gaffer::FilteredChildIterator<Gaffer::TypePredicate<GraphGadget> > GraphGadgetIterator;
+typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::TypePredicate<GraphGadget> > RecursiveGraphGadgetIterator;
+
 } // namespace GafferUI
 
 #endif // GAFFERUI_GRAPHGADGET_H

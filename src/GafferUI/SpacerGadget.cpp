@@ -58,6 +58,21 @@ Imath::Box3f SpacerGadget::bound() const
 	return m_bound;
 }
 
+const Imath::Box3f &SpacerGadget::getSize() const
+{
+	return m_bound;
+}
+
+void SpacerGadget::setSize( const Imath::Box3f &size )
+{
+	if( m_bound == size )
+	{
+		return;
+	}
+	m_bound = size;
+	renderRequestSignal()( this );
+}
+
 bool SpacerGadget::acceptsChild( const GraphComponent *potentialChild ) const
 {
 	return false;

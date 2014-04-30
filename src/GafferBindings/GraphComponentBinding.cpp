@@ -235,7 +235,7 @@ void GafferBindings::bindGraphComponent()
 	typedef GraphComponentWrapper<GraphComponent> Wrapper;
 	IE_CORE_DECLAREPTR( Wrapper );
 
-	scope s = IECorePython::RunTimeTypedClass<GraphComponent, WrapperPtr>()
+	scope s = GraphComponentClass<GraphComponent, WrapperPtr>()
 		.def( init<>() )
 		.def( init<const std::string &>() )
 		.def( "setName", &setName )
@@ -243,7 +243,6 @@ void GafferBindings::bindGraphComponent()
 		.def( "fullName", &GraphComponent::fullName )
 		.def( "relativeName", &GraphComponent::relativeName )
 		.def( "nameChangedSignal", &GraphComponent::nameChangedSignal, return_internal_reference<1>() )
-		.GAFFERBINDINGS_DEFGRAPHCOMPONENTWRAPPERFNS( GraphComponent )
 		.def( "addChild", &GraphComponent::addChild )
 		.def( "removeChild", &GraphComponent::removeChild )
 		.def( "clearChildren", &GraphComponent::clearChildren )

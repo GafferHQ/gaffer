@@ -45,6 +45,15 @@
 namespace GafferUIBindings
 {
 
+template<typename T, typename Ptr=IECore::IntrusivePtr<T> >
+class NodeGadgetClass : public GadgetClass<T, Ptr>
+{
+	public :
+	
+		NodeGadgetClass( const char *docString = 0 );
+		
+};
+
 template<typename WrappedType>
 class NodeGadgetWrapper : public GadgetWrapper<WrappedType>
 {
@@ -96,27 +105,10 @@ class NodeGadgetWrapper : public GadgetWrapper<WrappedType>
 
 };
 
-/// This must be used in /every/ NodeGadget binding. See the lengthy comments in
-/// IECorePython/ParameterBinding.h for an explanation.
-#define GAFFERUIBINDINGS_DEFNODEGADGETWRAPPERFNS( CLASSNAME )\
-	GAFFERUIBINDINGS_DEFGADGETWRAPPERFNS( CLASSNAME )\
-	.def( "nodule", &nodule<CLASSNAME> )\
-	.def( "noduleTangent", &noduleTangent<CLASSNAME> )
-
-template<typename T>
-GafferUI::NodulePtr nodule( T &p, Gaffer::ConstPlugPtr plug )
-{
-	return p.T::nodule( plug );
-}
-
-template<typename T>
-Imath::V3f noduleTangent( T &p, const GafferUI::Nodule *nodule )
-{
-	return p.T::noduleTangent( nodule );
-}
-
 void bindNodeGadget();
 
 } // namespace GafferUIBindings
+
+#include "GafferUIBindings/NodeGadgetBinding.inl"
 
 #endif // GAFFERUIBINDINGS_NODEGADGETBINDING_H

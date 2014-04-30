@@ -36,8 +36,6 @@
 
 #include "boost/python.hpp"
 
-#include "IECorePython/RunTimeTypedBinding.h"
-
 #include "GafferUI/SpacerGadget.h"
 
 #include "GafferUIBindings/GadgetBinding.h"
@@ -48,8 +46,9 @@ using namespace GafferUI;
 
 void GafferUIBindings::bindSpacerGadget()
 {
-	IECorePython::RunTimeTypedClass<SpacerGadget>()
+	GadgetClass<SpacerGadget>()
 		.def( init<const Imath::Box3f &>() )
-		.GAFFERUIBINDINGS_DEFGADGETWRAPPERFNS( SpacerGadget )
+		.def( "setSize", &SpacerGadget::setSize )
+		.def( "getSize", &SpacerGadget::getSize, return_value_policy<copy_const_reference>() )
 	;
 }

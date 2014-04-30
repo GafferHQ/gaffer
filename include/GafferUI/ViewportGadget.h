@@ -55,6 +55,8 @@ class ViewportGadget : public IndividualContainer
 
 	public :
 
+		typedef boost::signal<void (ViewportGadget *)> UnarySignal;
+
 		ViewportGadget( GadgetPtr child=0 );
 		virtual ~ViewportGadget();
 
@@ -67,10 +69,16 @@ class ViewportGadget : public IndividualContainer
 
 		const Imath::V2i &getViewport() const;
 		void setViewport( const Imath::V2i &viewport );
+		/// A signal emitted when the viewport is changed by
+		/// a call to setViewport().
+		UnarySignal &viewportChangedSignal();
 		
 		const IECore::Camera *getCamera() const;
 		/// A copy is taken.
 		void setCamera( const IECore::Camera *camera );
+		/// A signal emitted when the camera is changed, either by
+		/// a setCamera() call or through user interaction.
+		UnarySignal &cameraChangedSignal();
 
 		/// If the camera is editable, the user can move it around
 		/// using Alt+drag. The camera is editable by default.
@@ -198,8 +206,12 @@ class ViewportGadget : public IndividualContainer
 		bool m_dragTracking;
 		boost::signals::connection m_dragTrackingIdleConnection;
 		DragDropEvent m_dragTrackingEvent;
+		float m_dragTrackingThreshold;
 		Imath::V2f m_dragTrackingVelocity;
 		double m_dragTrackingTime;
+		
+		UnarySignal m_viewportChangedSignal;
+		UnarySignal m_cameraChangedSignal;
 						
 };
 

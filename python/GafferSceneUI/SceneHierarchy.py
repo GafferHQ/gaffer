@@ -76,9 +76,11 @@ class SceneHierarchy( GafferUI.NodeSetEditor ) :
 		self.__plug = None
 		self.__plugParentChangedConnection = None
 		node = self._lastAddedNode()
-		if node and "out" in node and isinstance( node["out"], GafferScene.ScenePlug ) :
-			self.__plug = node["out"]
-			self.__plugParentChangedConnection = self.__plug.parentChangedSignal().connect( Gaffer.WeakMethod( self.__plugParentChanged ) )
+		if node is not None :
+			outputScenePlugs = [ p for p in node.children( GafferScene.ScenePlug.staticTypeId() ) if p.direction() == Gaffer.Plug.Direction.Out ]
+			if len( outputScenePlugs ) :
+				self.__plug = outputScenePlugs[0]
+				self.__plugParentChangedConnection = self.__plug.parentChangedSignal().connect( Gaffer.WeakMethod( self.__plugParentChanged ) )
 		
 		# call base class update - this will trigger a call to _titleFormat(),
 		# hence the need for already figuring out the plug.

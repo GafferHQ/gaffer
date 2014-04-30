@@ -100,6 +100,7 @@ from ConnectionGadgetTest import ConnectionGadgetTest
 from MessageWidgetTest import MessageWidgetTest
 from ModuleTest import ModuleTest
 from PlugLayoutTest import PlugLayoutTest
+from ViewportGadgetTest import ViewportGadgetTest
 
 if __name__ == "__main__":
 	unittest.main()

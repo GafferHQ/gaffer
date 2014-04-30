@@ -46,6 +46,15 @@
 namespace GafferUIBindings
 {
 
+template<typename T, typename Ptr=IECore::IntrusivePtr<T> >
+class GadgetClass : public GafferBindings::GraphComponentClass<T, Ptr>
+{
+	public :
+	
+		GadgetClass( const char *docString = 0 );
+		
+};
+
 template<typename WrappedType>
 class GadgetWrapper : public GafferBindings::GraphComponentWrapper<WrappedType>
 {
@@ -122,34 +131,10 @@ class GadgetWrapper : public GafferBindings::GraphComponentWrapper<WrappedType>
 
 };
 
-/// This must be used in /every/ Gadget binding. See the lengthy comments in
-/// IECorePython/ParameterBinding.h for an explanation.
-#define GAFFERUIBINDINGS_DEFGADGETWRAPPERFNS( CLASSNAME )\
-	GAFFERBINDINGS_DEFGRAPHCOMPONENTWRAPPERFNS( CLASSNAME ) \
-	.def( "setHighlighted", &setHighlighted<CLASSNAME> )\
-	.def( "bound", &bound<CLASSNAME> )\
-	.def( "getToolTip", &getToolTip<CLASSNAME> )\
-
-template<typename T>
-static void setHighlighted( T &p, bool highlighted )
-{
-	p.T::setHighlighted( highlighted );
-}
-
-template<typename T>
-static Imath::Box3f bound( const T &p )
-{
-	return p.T::bound();
-}
-
-template<typename T>
-static std::string getToolTip( const T &p, const IECore::LineSegment3f &line )
-{
-	return p.T::getToolTip( line );
-}
-
 void bindGadget();
 
 } // namespace GafferUIBindings
+
+#include "GafferUIBindings/GadgetBinding.inl"
 
 #endif // GAFFERUIBINDINGS_GADGETBINDING_H

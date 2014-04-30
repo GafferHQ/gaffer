@@ -37,11 +37,10 @@
 
 #include "boost/python.hpp"
 
-#include "GafferUIBindings/IndividualContainerBinding.h"
-#include "GafferUIBindings/GadgetBinding.h"
 #include "GafferUI/IndividualContainer.h"
 
-#include "IECorePython/RunTimeTypedBinding.h"
+#include "GafferUIBindings/IndividualContainerBinding.h"
+#include "GafferUIBindings/GadgetBinding.h"
 
 using namespace boost::python;
 using namespace GafferUIBindings;
@@ -54,10 +53,9 @@ static GadgetPtr getChild( IndividualContainer &c )
 
 void GafferUIBindings::bindIndividualContainer()
 {
-	IECorePython::RunTimeTypedClass<IndividualContainer>()
+	GadgetClass<IndividualContainer>()
 		.def( init<>() )
 		.def( init<GadgetPtr>() )
-		.GAFFERUIBINDINGS_DEFGADGETWRAPPERFNS( IndividualContainer )
 		.def( "setChild", &IndividualContainer::setChild )
 		.def( "getChild", &getChild )
 	;

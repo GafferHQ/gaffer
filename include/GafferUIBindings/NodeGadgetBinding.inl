@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
-//  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,42 +34,37 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUI_FRAME_H
-#define GAFFERUI_FRAME_H
+#ifndef GAFFERUIBINDINGS_NODEGADGETBINDING_INL
+#define GAFFERUIBINDINGS_NODEGADGETBINDING_INL
 
-#include "GafferUI/IndividualContainer.h"
-
-namespace GafferUI
+namespace GafferUIBindings
 {
 
-/// The Frame class draws a frame around its child.
-class Frame : public IndividualContainer
+namespace Detail
 {
 
-	public :
+template<typename T>
+GafferUI::NodulePtr nodule( T &p, Gaffer::ConstPlugPtr plug )
+{
+	return p.T::nodule( plug );
+}
 
-		Frame( GadgetPtr child );
-		virtual ~Frame();
+template<typename T>
+Imath::V3f noduleTangent( T &p, const GafferUI::Nodule *nodule )
+{
+	return p.T::noduleTangent( nodule );
+}
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::Frame, FrameTypeId, IndividualContainer );
+} // namespace Detail
 
-		virtual Imath::Box3f bound() const;
-	
-	protected :
-	
-		virtual void doRender( const Style *style ) const;
-	
-	private :
-	
-		float m_border;
-							
-};
+template<typename T, typename Ptr>
+NodeGadgetClass<T, Ptr>::NodeGadgetClass( const char *docString )
+	:	GadgetClass<T, Ptr>( docString )
+{
+	def( "nodule", &Detail::nodule<T> );
+	def( "noduleTangent", &Detail::noduleTangent<T> );
+}
 
-IE_CORE_DECLAREPTR( Frame );
+} // namespace GafferUIBindings
 
-typedef Gaffer::FilteredChildIterator<Gaffer::TypePredicate<Frame> > FrameIterator;
-typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::TypePredicate<Frame> > RecursiveFrameIterator;
-
-} // namespace GafferUI
-
-#endif // GAFFERUI_FRAME_H
+#endif // GAFFERUIBINDINGS_NODEGADGETBINDING_INL

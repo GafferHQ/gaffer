@@ -36,11 +36,10 @@
 
 #include "boost/python.hpp"
 
-#include "GafferUIBindings/FrameBinding.h"
-#include "GafferUIBindings/GadgetBinding.h"
 #include "GafferUI/Frame.h"
 
-#include "IECorePython/RunTimeTypedBinding.h"
+#include "GafferUIBindings/FrameBinding.h"
+#include "GafferUIBindings/GadgetBinding.h"
 
 using namespace boost::python;
 using namespace GafferUIBindings;
@@ -49,8 +48,7 @@ using namespace GafferUI;
 void GafferUIBindings::bindFrame()
 {
 	// disabled because it clashes with the qt python frame
-	/*IECorePython::RunTimeTypedClass<Frame>()
+	/*GadgetClass<Frame>()
 		.def( init<GadgetPtr>() )
-		.GAFFERUIBINDINGS_DEFGADGETWRAPPERFNS( Frame )
 	;*/
 }

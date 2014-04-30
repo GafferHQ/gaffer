@@ -37,15 +37,13 @@
 
 #include "boost/python.hpp"
 
-#include "GafferUIBindings/GadgetBinding.h"
-#include "GafferUI/Gadget.h"
-#include "GafferUI/Style.h"
-
 #include "GafferBindings/SignalBinding.h"
 #include "GafferBindings/CatchingSlotCaller.h"
 
-#include "IECorePython/RunTimeTypedBinding.h"
-#include "IECorePython/Wrapper.h"
+#include "GafferUI/Gadget.h"
+#include "GafferUI/Style.h"
+
+#include "GafferUIBindings/GadgetBinding.h"
 
 using namespace boost::python;
 using namespace GafferUIBindings;
@@ -79,10 +77,9 @@ void GafferUIBindings::bindGadget()
 	typedef GadgetWrapper<Gadget> Wrapper;
 	IE_CORE_DECLAREPTR( Wrapper );
 
-	scope s = IECorePython::RunTimeTypedClass<Gadget, WrapperPtr>()
+	scope s = GadgetClass<Gadget, WrapperPtr>()
 		.def( init<>() )
 		.def( init<const std::string &>() )
-		.GAFFERUIBINDINGS_DEFGADGETWRAPPERFNS( Gadget )
 		.def( "setStyle", &Gadget::setStyle )
 		.def( "getStyle", &getStyle )
 		.def( "style", &style )

@@ -54,6 +54,9 @@ class SpacerGadget : public Gadget
 
 		virtual Imath::Box3f bound() const;
 
+		const Imath::Box3f &getSize() const;
+		void setSize( const Imath::Box3f &size );
+
 		/// Rejects all children.
 		virtual bool acceptsChild( const GraphComponent *potentialChild ) const;
 			
@@ -68,6 +71,9 @@ class SpacerGadget : public Gadget
 };
 
 IE_CORE_DECLAREPTR( SpacerGadget )
+
+typedef Gaffer::FilteredChildIterator<Gaffer::TypePredicate<SpacerGadget> > SpacerGadgetIterator;
+typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::TypePredicate<SpacerGadget> > RecursiveSpacerGadgetIterator;
 
 } // namespace GafferUI
 

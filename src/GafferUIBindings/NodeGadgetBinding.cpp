@@ -37,9 +37,6 @@
 
 #include "boost/python.hpp"
 
-#include "IECorePython/RunTimeTypedBinding.h"
-#include "IECorePython/Wrapper.h"
-
 #include "Gaffer/Plug.h"
 
 #include "GafferUI/NodeGadget.h"
@@ -87,8 +84,7 @@ void GafferUIBindings::bindNodeGadget()
 	typedef NodeGadgetWrapper<NodeGadget> Wrapper;
 	IE_CORE_DECLAREPTR( Wrapper );
 
-	IECorePython::RunTimeTypedClass<NodeGadget, WrapperPtr>()
-		.GAFFERUIBINDINGS_DEFNODEGADGETWRAPPERFNS( NodeGadget )
+	NodeGadgetClass<NodeGadget, WrapperPtr>()
 		.def( "node", &node )
 		.def( "create", &NodeGadget::create ).staticmethod( "create" )
 		.def( "registerNodeGadget", &registerNodeGadget ).staticmethod( "registerNodeGadget" )

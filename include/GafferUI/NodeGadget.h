@@ -103,6 +103,9 @@ class NodeGadget : public IndividualContainer
 
 IE_CORE_DECLAREPTR( NodeGadget );
 
+typedef Gaffer::FilteredChildIterator<Gaffer::TypePredicate<NodeGadget> > NodeGadgetIterator;
+typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::TypePredicate<NodeGadget> > RecursiveNodeGadgetIterator;
+
 } // namespace GafferUI
 
 #endif // GAFFERUI_NODEGADGET_H

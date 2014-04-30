@@ -115,6 +115,23 @@ class ImagePlugTest( GafferTest.TestCase ) :
 		self.assertTrue( isinstance( s["n"]["p"], GafferImage.ImagePlug ) )
 		self.assertEqual( s["n"]["p"].getFlags(), Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 
+	def testBoxPromotion( self ) :
+	
+		b = Gaffer.Box()
+		b["n"] = GafferImage.Grade()
+		
+		self.assertTrue( b.canPromotePlug( b["n"]["in"], asUserPlug=False ) )
+		self.assertTrue( b.canPromotePlug( b["n"]["out"], asUserPlug=False ) )
+		
+		i = b.promotePlug( b["n"]["in"], asUserPlug=False )
+		o = b.promotePlug( b["n"]["out"], asUserPlug=False )
+		
+		self.assertEqual( b["n"]["in"].getInput(), i )
+		self.assertEqual( o.getInput(), b["n"]["out"] )
+		
+		self.assertTrue( b.plugIsPromoted( b["n"]["in"] ) )
+		self.assertTrue( b.plugIsPromoted( b["n"]["out"] ) )
+
 	def testTypeNamePrefixes( self ) :
 	
 		self.assertTypeNamesArePrefixed( GafferImage )

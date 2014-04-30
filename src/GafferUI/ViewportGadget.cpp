@@ -130,6 +130,11 @@ const Imath::V2i &ViewportGadget::getViewport() const
 
 void ViewportGadget::setViewport( const Imath::V2i &viewport )
 {
+	if( viewport == m_cameraController.getResolution() )
+	{
+		return;
+	}
+
 	CameraController::ScreenWindowAdjustment adjustment = CameraController::ScaleScreenWindow;
 	if( const StringData *projection = getCamera()->parametersData()->member<StringData>( "projection" ) )
 	{
@@ -140,6 +145,13 @@ void ViewportGadget::setViewport( const Imath::V2i &viewport )
 	}
 	
 	m_cameraController.setResolution( viewport, adjustment );
+	
+	m_viewportChangedSignal( this );
+}
+
+ViewportGadget::UnarySignal &ViewportGadget::viewportChangedSignal()
+{
+	return m_viewportChangedSignal;
 }
 
 const IECore::Camera *ViewportGadget::getCamera() const
@@ -149,7 +161,18 @@ const IECore::Camera *ViewportGadget::getCamera() const
 
 void ViewportGadget::setCamera( const IECore::Camera *camera )
 {
+	if( m_cameraController.getCamera()->isEqualTo( camera ) )
+	{
+		return;
+	}
+	
 	m_cameraController.setCamera( camera->copy() );
+	m_cameraChangedSignal( this );
+}
+
+ViewportGadget::UnarySignal &ViewportGadget::cameraChangedSignal()
+{
+	return m_cameraChangedSignal;
 }
 
 bool ViewportGadget::getCameraEditable() const
@@ -165,6 +188,7 @@ void ViewportGadget::setCameraEditable( bool editable )
 void ViewportGadget::frame( const Imath::Box3f &box )
 {
 	m_cameraController.frame( box );
+	m_cameraChangedSignal( this );
  	renderRequestSignal()( this );
 }
 
@@ -172,6 +196,7 @@ void ViewportGadget::frame( const Imath::Box3f &box, const Imath::V3f &viewDirec
 	const Imath::V3f &upVector )
 {
  	m_cameraController.frame( box, viewDirection, upVector );
+	m_cameraChangedSignal( this );
 	renderRequestSignal()( this );
 }
 
@@ -389,6 +414,8 @@ bool ViewportGadget::mouseMove( GadgetPtr gadget, const ButtonEvent &event )
 
 IECore::RunTimeTypedPtr ViewportGadget::dragBegin( GadgetPtr gadget, const DragDropEvent &event )
 {
+	m_dragTrackingThreshold = limits<float>::max();
+
 	if ( !(event.modifiers == ModifiableEvent::Alt) && m_lastButtonPressGadget )
 	{
 		// see if a child gadget would like to start a drag
@@ -490,6 +517,7 @@ bool ViewportGadget::dragMove( GadgetPtr gadget, const DragDropEvent &event )
 		if( getCameraEditable() )
 		{
 			m_cameraController.motionUpdate( V2i( (int)event.line.p1.x, (int)event.line.p1.y ) );
+			m_cameraChangedSignal( this );
 			renderRequestSignal()( this );
 		}
 		return true;
@@ -539,6 +567,18 @@ static double currentTime()
 
 void ViewportGadget::trackDrag( const DragDropEvent &event )
 {
+	// early out if tracking is off for any reason.
+	
+	if( !getDragTracking() || !getCameraEditable() )
+	{
+		m_dragTrackingIdleConnection.disconnect();
+		return;
+	}
+	
+	// we automatically scroll to track drags when the mouse is
+	// near the edge of our viewport. figure out an inset box within
+	// which we _don't_ perform tracking - if the mouse leaves this then
+	// we'll track it.
 	
 	const V2i viewport = getViewport();
 	const float borderWidth = std::min( std::min( viewport.x, viewport.y ) / 8.0f, 60.0f );  
@@ -548,41 +588,50 @@ void ViewportGadget::trackDrag( const DragDropEvent &event )
 		V3f( viewport.x - borderWidth, viewport.y - borderWidth, 1000.0f )
 	);
 	
-	if( viewportBox.intersects( event.line.p0 ) || !getDragTracking() || !getCameraEditable() )
+	// figure out the offset, if any, of the mouse outside this central box.
+	
+	V2f offset( 0.0f );
+	if( !viewportBox.intersects( event.line.p0 ) )
 	{
-		m_dragTrackingIdleConnection.disconnect();
+		const V3f offset3 = event.line.p0 - closestPointOnBox( event.line.p0, viewportBox );
+		offset = V2f( offset3.x, offset3.y );
 	}
-	else
+	
+	const float offsetLength = clamp( offset.length(), 0.0f, borderWidth );
+	
+	// update our tracking threshold. the mouse has to go past this offset before
+	// tracking starts. this allows us to avoid tracking too early when a drag is
+	// started inside the tracking area, but the user is dragging back into the
+	// center of frame.
+
+	m_dragTrackingThreshold = std::min( offsetLength, m_dragTrackingThreshold );
+	
+	// figure out our drag velocity. we ramp up the speed of the scrolling from 0
+	// to a maximum at the edge of the viewport, and clamp it so it doesn't get any
+	// faster outside of the viewport. although getting even faster when the mouse
+	// is outside the viewport might be nice, it results in an inconsistent
+	// experience where a viewport edge is at the edge of the screen and the mouse
+	// can't go any further.
+
+	m_dragTrackingVelocity = -offset.normalized() * borderWidth * lerpfactor( offsetLength, m_dragTrackingThreshold, borderWidth );
+	
+	// we don't actually do the scrolling in this function - instead we ensure that
+	// trackDragIdle will be called to apply the scrolling on idle events.
+	// this allows the scrolling to happen even when the mouse isn't moving.
+	
+	if( m_dragTrackingVelocity.length() > 0.0001 )
 	{
 		m_dragTrackingEvent = event;
-		
-		// we don't actually do the scrolling in this function - instead we
-		// just calculate the appropriate velocity and then ensure that 
-		// trackDragIdle will be called to apply the scrolling on idle events.
-		// this allows the scrolling to happen even when the mouse isn't moving.
-		
-		const V3f direction = closestPointOnBox( event.line.p0, viewportBox ) - event.line.p0;
-		m_dragTrackingVelocity = V2f( direction.x, direction.y );
-		if( m_dragTrackingVelocity.length() > borderWidth )
-		{
-			// we ramp up the speed of the scrolling from 0 to
-			// a maximum at the edge of the viewport, and clamp
-			// it so it doesn't get any faster outside of the viewport.
-			// although getting even faster when the mouse is outside
-			// the viewport might be nice, it results in an inconsistent
-			// experience where a viewport edge is at the edge of the screen
-			// and the mouse can't go any further.
-			m_dragTrackingVelocity = m_dragTrackingVelocity.normalized() * borderWidth;
-		}
-		
 		if( !m_dragTrackingIdleConnection.connected() )
 		{
 			m_dragTrackingTime = currentTime();
 			m_dragTrackingIdleConnection = idleSignal().connect( boost::bind( &ViewportGadget::trackDragIdle, this ) );
 		}
 	}
-	
-	
+	else
+	{
+		m_dragTrackingIdleConnection.disconnect();
+	}
 }
 
 void ViewportGadget::trackDragIdle()
@@ -600,6 +649,7 @@ void ViewportGadget::trackDragIdle()
 	// visual representation of the drag.
 	dragMove( this, m_dragTrackingEvent );
 	
+	m_cameraChangedSignal( this );
 	renderRequestSignal()( this );
 }
 
@@ -692,6 +742,7 @@ bool ViewportGadget::dragEnd( GadgetPtr gadget, const DragDropEvent &event )
 		if( getCameraEditable() )
 		{
 			m_cameraController.motionEnd( V2i( (int)event.line.p1.x, (int)event.line.p1.y ) );
+			m_cameraChangedSignal( this );
 			renderRequestSignal()( this );
 		}
 		return true;
@@ -729,7 +780,8 @@ bool ViewportGadget::wheel( GadgetPtr gadget, const ButtonEvent &event )
 	m_cameraController.motionUpdate( position );
 	m_cameraController.motionEnd( position );
 
- 	renderRequestSignal()( this );
+	m_cameraChangedSignal( this );
+	renderRequestSignal()( this );
 	
 	return true;
 }

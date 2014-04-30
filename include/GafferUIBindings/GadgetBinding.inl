@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
-//  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,42 +34,44 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUI_FRAME_H
-#define GAFFERUI_FRAME_H
+#ifndef GAFFERUIBINDINGS_GADGETBINDING_INL
+#define GAFFERUIBINDINGS_GADGETBINDING_INL
 
-#include "GafferUI/IndividualContainer.h"
-
-namespace GafferUI
+namespace GafferUIBindings
 {
 
-/// The Frame class draws a frame around its child.
-class Frame : public IndividualContainer
+namespace Detail
 {
 
-	public :
+template<typename T>
+static void setHighlighted( T &p, bool highlighted )
+{
+	p.T::setHighlighted( highlighted );
+}
 
-		Frame( GadgetPtr child );
-		virtual ~Frame();
+template<typename T>
+static Imath::Box3f bound( const T &p )
+{
+	return p.T::bound();
+}
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::Frame, FrameTypeId, IndividualContainer );
+template<typename T>
+static std::string getToolTip( const T &p, const IECore::LineSegment3f &line )
+{
+	return p.T::getToolTip( line );
+}
 
-		virtual Imath::Box3f bound() const;
-	
-	protected :
-	
-		virtual void doRender( const Style *style ) const;
-	
-	private :
-	
-		float m_border;
-							
-};
+} // namespace Detail
 
-IE_CORE_DECLAREPTR( Frame );
+template<typename T, typename Ptr>
+GadgetClass<T, Ptr>::GadgetClass( const char *docString )
+	:	GafferBindings::GraphComponentClass<T, Ptr>( docString )
+{
+	def( "setHighlighted", &Detail::setHighlighted<T> );
+	def( "bound", &Detail::bound<T> );
+	def( "getToolTip", &Detail::getToolTip<T> );
+}
 
-typedef Gaffer::FilteredChildIterator<Gaffer::TypePredicate<Frame> > FrameIterator;
-typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::TypePredicate<Frame> > RecursiveFrameIterator;
+} // namespace GafferUIBindings
 
-} // namespace GafferUI
-
-#endif // GAFFERUI_FRAME_H
+#endif // GAFFERUIBINDINGS_GADGETBINDING_INL

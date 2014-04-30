@@ -148,6 +148,9 @@ class RenderableGadget : public Gadget
 		
 };
 
+typedef Gaffer::FilteredChildIterator<Gaffer::TypePredicate<RenderableGadget> > RenderableGadgetIterator;
+typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::TypePredicate<RenderableGadget> > RecursiveRenderableGadgetIterator;
+
 } // namespace GafferUI
 
 #endif // GAFFERUI_RenderableGadget_H

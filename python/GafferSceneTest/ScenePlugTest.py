@@ -163,6 +163,23 @@ class ScenePlugTest( unittest.TestCase ) :
 		self.assertEqual( p["out"].childNamesHash( "/plane" ), p["out"].childNamesHash( IECore.InternedStringVectorData( [ "plane" ] ) ) )
 		
 		self.assertRaises( TypeError, p["out"].boundHash, 10 )
+	
+	def testBoxPromotion( self ) :
+	
+		b = Gaffer.Box()
+		b["n"] = GafferScene.StandardAttributes()
+		
+		self.assertTrue( b.canPromotePlug( b["n"]["in"], asUserPlug=False ) )
+		self.assertTrue( b.canPromotePlug( b["n"]["out"], asUserPlug=False ) )
+		
+		i = b.promotePlug( b["n"]["in"], asUserPlug=False )
+		o = b.promotePlug( b["n"]["out"], asUserPlug=False )
+		
+		self.assertEqual( b["n"]["in"].getInput(), i )
+		self.assertEqual( o.getInput(), b["n"]["out"] )
+		
+		self.assertTrue( b.plugIsPromoted( b["n"]["in"] ) )
+		self.assertTrue( b.plugIsPromoted( b["n"]["out"] ) )
 		
 if __name__ == "__main__":
 	unittest.main()
