@@ -101,7 +101,7 @@ class ScriptWindow( GafferUI.Window ) :
 			"The file %s has unsaved changes. Do you want to discard them?" % f,
 			confirmLabel = "Discard"
 		)
-		return dialogue.waitForConfirmation()
+		return dialogue.waitForConfirmation( parentWindow=self )
 
 	def __closed( self, widget ) :
 		
