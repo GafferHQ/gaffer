@@ -110,7 +110,7 @@ class Bookmarks :
 				window = target
 				while window is not None :
 					window = window.ancestor( GafferUI.Window )
-					if isinstance( window.getChild(), GafferUI.EditorWidget ) :
+					if window is not None and isinstance( window.getChild(), GafferUI.EditorWidget ) :
 						scriptWidget = window.getChild()
 						break
 			
