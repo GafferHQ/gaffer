@@ -58,7 +58,7 @@ class NumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__lastChangedReason = None
 		self.__mergeGroupId = 0
 
-		self.__keyPressConnection = self.__numericWidget.keyPressSignal().connect( Gaffer.WeakMethod( self._keyPress ) )
+		self.__keyPressConnection = self.__numericWidget.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
 		self.__valueChangedConnection = self.__numericWidget.valueChangedSignal().connect( Gaffer.WeakMethod( self.__valueChanged ) )
 						
 		self._updateFromPlug()
@@ -101,7 +101,7 @@ class NumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 					
 		self.__numericWidget.setEditable( self._editable() )
 	
-	def _keyPress( self, widget, event ) :
+	def __keyPress( self, widget, event ) :
 	
 		assert( widget is self.__numericWidget )
 	
