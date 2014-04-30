@@ -72,6 +72,7 @@ class GridTest( GafferSceneTest.SceneTestCase ) :
 		a = g["out"].attributes( "/grid" )
 		self.assertEqual( a["shader"], IECore.Shader( "Constant", "gl:surface", { "Cs" : IECore.Color3f( 1 ) } ) )
 		
+		g["centerPixelWidth"].setValue( 2 )
 		a2 = g["out"].attributes( "/grid/centerLines" )
 		self.assertEqual( a2, IECore.CompoundObject( { "gl:curvesPrimitive:glLineWidth" : IECore.FloatData( 2 ) } ) )
 		
