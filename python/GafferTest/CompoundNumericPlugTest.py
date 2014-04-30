@@ -353,7 +353,7 @@ class CompoundNumericPlugTest( unittest.TestCase ) :
 		s["n"]["p"].setValue( IECore.V3f( 1, 2, 3 ) )
 		
 		ss = s.serialise( filter = Gaffer.StandardSet( [ s["n"] ] ) )
-		self.assertEqual( ss.count( "setValue" ), 3 )
+		self.assertEqual( ss.count( "setValue" ), 1 )
 	
 	def testUndoMerging( self ) :
 	
@@ -392,6 +392,30 @@ class CompoundNumericPlugTest( unittest.TestCase ) :
 		self.assertEqual( s["n"]["p"].getValue(), IECore.V3f( 0 ) )
 		self.assertFalse( s.undoAvailable() )
 	
+	def testSerialisationVerbosity( self ) :
+	
+		s = Gaffer.ScriptNode()
+		s["n"] = GafferTest.CompoundNumericNode()
+		
+		s["n"]["p"].setValue( IECore.V3f( 9, 10, 11 ) )
+		
+		ss = s.serialise()
+		self.assertTrue( '["p"].setValue' in ss )
+		self.assertFalse( '["x"].setValue' in ss )
+		self.assertFalse( '["y"].setValue' in ss )
+		self.assertFalse( '["z"].setValue' in ss )
+	
+	def testDifferingChildPlugFlags( self ) :
+	
+		s = Gaffer.ScriptNode()
+		s["n"] = GafferTest.CompoundNumericNode()
+		s["n"]["p"]["x"].setFlags( Gaffer.Plug.Flags.ReadOnly, True )
+		
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+		
+		self.assertTrue( s2["n"]["p"]["x"].getFlags( Gaffer.Plug.Flags.ReadOnly ) )
+		
 if __name__ == "__main__":
 	unittest.main()
 	

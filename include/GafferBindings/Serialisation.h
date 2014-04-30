@@ -110,6 +110,10 @@ class Serialisation
 		IE_CORE_DECLAREPTR( Serialiser );
 		
 		static void registerSerialiser( IECore::TypeId targetType, SerialiserPtr serialiser );
+		/// Returns a Serialiser suitable for serialisation of the specified object. Note that
+		/// Serialisers do not have state, so this method may return the same Serialiser from
+		/// different calls even when the objects are different.
+		static const Serialiser *acquireSerialiser( const Gaffer::GraphComponent *graphComponent );
 	
 	private :	
 		
@@ -127,7 +131,6 @@ class Serialisation
 		
 		typedef std::map<IECore::TypeId, SerialiserPtr> SerialiserMap;
 		static SerialiserMap &serialiserMap();
-		static const Serialiser *serialiser( const Gaffer::GraphComponent *graphComponent );
 				
 };
 

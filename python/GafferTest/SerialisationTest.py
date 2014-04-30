@@ -95,15 +95,18 @@ class SerialisationTest( GafferTest.TestCase ) :
 					return child.getFlags( Gaffer.Plug.Flags.Dynamic )
 						
 				return False
-				
-		Gaffer.Serialisation.registerSerialiser( self.SerialisationTestNode.staticTypeId(), CustomSerialiser() )
+		
+		customSerialiser = CustomSerialiser()
+		Gaffer.Serialisation.registerSerialiser( self.SerialisationTestNode.staticTypeId(), customSerialiser )
 		
 		s = Gaffer.ScriptNode()
 		s["n"] = self.SerialisationTestNode( "a", initArgument=20 )
 		s["n"]["childNodeNeedingSerialisation"]["op1"].setValue( 101 )
 		s["n"]["childNodeNotNeedingSerialisation"]["op1"].setValue( 101 )
 		s["n"]["dynamicPlug"] = Gaffer.FloatPlug( defaultValue = 10, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
-				
+		
+		self.assertTrue( Gaffer.Serialisation.acquireSerialiser( s["n"] ).isSame( customSerialiser ) )
+		
 		s2 = Gaffer.ScriptNode()
 		s2.execute( s.serialise() )
 						

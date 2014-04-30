@@ -69,6 +69,11 @@ bool CompoundPlugSerialiser::childNeedsConstruction( const Gaffer::GraphComponen
 	return childPlug->getFlags( Plug::Dynamic | Plug::Serialisable );
 }
 
+bool CompoundPlugSerialiser::valueNeedsSerialisation( const Gaffer::ValuePlug *plug, const Serialisation &serialisation ) const
+{
+	return false;
+}
+
 void GafferBindings::bindCompoundPlug()
 {
 	IECorePython::RunTimeTypedClass<CompoundPlug, CompoundPlugWrapperPtr>()

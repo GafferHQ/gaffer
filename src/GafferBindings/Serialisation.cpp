@@ -62,7 +62,7 @@ Serialisation::Serialisation( const Gaffer::GraphComponent *parent, const std::s
 	:	m_parent( parent ), m_parentName( parentName ), m_filter( filter )
 {
 	IECorePython::ScopedGILLock gilLock;	
-	walk( parent, parentName, serialiser( parent ) );
+	walk( parent, parentName, acquireSerialiser( parent ) );
 }
 
 std::string Serialisation::result() const
@@ -161,7 +161,7 @@ void Serialisation::walk( const Gaffer::GraphComponent *parent, const std::strin
 			continue;
 		}
 		
-		const Serialiser *childSerialiser = serialiser( child );
+		const Serialiser *childSerialiser = acquireSerialiser( child );
 		childSerialiser->moduleDependencies( child, m_modules );
 
 		std::string childConstructor;
@@ -213,7 +213,7 @@ std::string Serialisation::identifier( const Gaffer::GraphComponent *graphCompon
 			{
 				return "";
 			}
-			const Serialiser *parentSerialiser = serialiser( parent );
+			const Serialiser *parentSerialiser = acquireSerialiser( parent );
 			if( parentSerialiser->childNeedsConstruction( graphComponent ) )
 			{
 				return "__children[\"" + graphComponent->getName().string() + "\"]" + result;
@@ -235,17 +235,7 @@ void Serialisation::registerSerialiser( IECore::TypeId targetType, SerialiserPtr
 	serialiserMap()[targetType] = serialiser;
 }
 
-Serialisation::SerialiserMap &Serialisation::serialiserMap()
-{
-	static SerialiserMap m;
-	if( !m.size() )
-	{
-		m[GraphComponent::staticTypeId()] = new Serialiser();
-	}
-	return m;
-}
-
-const Serialisation::Serialiser *Serialisation::serialiser( const GraphComponent *graphComponent )
+const Serialisation::Serialiser *Serialisation::acquireSerialiser( const GraphComponent *graphComponent )
 {
 	const SerialiserMap &m = serialiserMap();
 	IECore::TypeId t = graphComponent->typeId();
@@ -257,11 +247,20 @@ const Serialisation::Serialiser *Serialisation::serialiser( const GraphComponent
 			return it->second.get();
 		}
 		t = IECore::RunTimeTyped::baseTypeId( t );
-		
 	}
 	
-	assert( 0 );
-	return 0;
+	assert( NULL );
+	return NULL;
+}
+
+Serialisation::SerialiserMap &Serialisation::serialiserMap()
+{
+	static SerialiserMap m;
+	if( !m.size() )
+	{
+		m[GraphComponent::staticTypeId()] = new Serialiser();
+	}
+	return m;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -460,6 +459,8 @@ void GafferBindings::bindSerialisation()
 		.staticmethod( "classPath" )
 		.def( "registerSerialiser", &Serialisation::registerSerialiser )
 		.staticmethod( "registerSerialiser" )
+		.def( "acquireSerialiser", &Serialisation::acquireSerialiser, return_value_policy<reference_existing_object>() )
+		.staticmethod( "acquireSerialiser" )
 	;
 	
 	IECorePython::RefCountedClass<Serialisation::Serialiser, IECore::RefCounted, SerialiserWrapperPtr>( "Serialiser" )
