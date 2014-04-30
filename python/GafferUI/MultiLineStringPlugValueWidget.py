@@ -86,6 +86,9 @@ class MultiLineStringPlugValueWidget( GafferUI.PlugValueWidget ) :
 		
 	def __setPlugValue( self, *unused ) :
 		
+		if not self._editable() :
+			return
+		
 		text = self.__textWidget.getText()
 		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
 			self.getPlug().setValue( text )
