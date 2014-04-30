@@ -43,9 +43,6 @@ import GafferUI
 ## User docs :
 #
 # Return commits any changes onto the plug.
-#
-# \todo Right click menu for cut and paste
-# \todo Stop editing for non editable plugs.
 class StringPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plug, continuousUpdate=False, **kw ) :
@@ -76,7 +73,14 @@ class StringPlugValueWidget( GafferUI.PlugValueWidget ) :
 	
 		if self.getPlug() is not None :
 			with self.getContext() :
-				self.__textWidget.setText( self.getPlug().getValue() )
+				value = self.getPlug().getValue()
+				if value != self.__textWidget.getText() :
+					# Setting the text moves the cursor to the end,
+					# even if the new text is the same. We must avoid
+					# calling setText() in this situation, otherwise the
+					# cursor is always moving to the end whenever a key is
+					# pressed in continuousUpdate mode.
+					self.__textWidget.setText( value )
 
 		self.__textWidget.setEditable( self._editable() )
 
