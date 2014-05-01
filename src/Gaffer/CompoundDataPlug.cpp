@@ -175,11 +175,16 @@ CompoundDataPlug::MemberPlug *CompoundDataPlug::addOptionalMember( const std::st
 	return plug;
 }
 
-void CompoundDataPlug::addMembers( const IECore::CompoundData *parameters )
+void CompoundDataPlug::addMembers( const IECore::CompoundData *parameters, bool useNameAsPlugName )
 {
+	std::string plugName = "member1";
 	for( CompoundDataMap::const_iterator it = parameters->readable().begin(); it!=parameters->readable().end(); it++ )
 	{
-		addMember( it->first, it->second );
+		if( useNameAsPlugName )
+		{
+			plugName = it->first;
+		}
+		addMember( it->first, it->second, plugName );
 	}
 }
 

@@ -114,6 +114,16 @@ static tuple memberDataAndNameWrapper( CompoundDataPlug &p, const CompoundDataPl
 	return make_tuple( d, name );
 }
 
+static void fillCompoundData( const CompoundDataPlug &p, IECore::CompoundData *d )
+{
+	p.fillCompoundData( d->writable() );
+}
+
+static void fillCompoundObject( const CompoundDataPlug &p, IECore::CompoundObject *o )
+{
+	p.fillCompoundObject( o->members() );
+}
+
 class MemberPlugSerialiser : public CompoundPlugSerialiser
 {
 
@@ -151,8 +161,10 @@ void GafferBindings::bindCompoundDataPlug()
 		.def( "addMember", &addMemberWrapper2, ( arg_( "name" ), arg_( "valuePlug" ), arg_( "plugName" ) = "member1" ) )
 		.def( "addOptionalMember", &addOptionalMemberWrapper, ( arg_( "name" ), arg_( "defaultValue" ), arg_( "plugName" ) = "member1", arg_( "plugFlags" ) = Plug::Default | Plug::Dynamic, arg_( "enabled" ) = false ) )
 		.def( "addOptionalMember", &addOptionalMemberWrapper2, ( arg_( "name" ), arg_( "valuePlug" ), arg_( "plugName" ) = "member1", arg_( "enabled" ) = false ) )
-		.def( "addMembers", &CompoundDataPlug::addMembers )
+		.def( "addMembers", &CompoundDataPlug::addMembers, ( arg_( "members" ), arg_( "useNameAsPlugName" ) = false ) )
 		.def( "memberDataAndName", &memberDataAndNameWrapper )
+		.def( "fillCompoundData", &fillCompoundData )
+		.def( "fillCompoundObject", &fillCompoundObject )
 	;
 	
 	IECorePython::RunTimeTypedClass<CompoundDataPlug::MemberPlug>()
