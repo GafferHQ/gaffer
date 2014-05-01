@@ -46,30 +46,40 @@ import GafferUI
 import GafferScene
 import GafferSceneUI
 
-## \todo Decide how/where we show the display label.
-class DisplaysPlugValueWidget( GafferUI.CompoundPlugValueWidget ) :
+##########################################################################
+# Custom PlugValueWidgets for listing displays
+##########################################################################
+
+class DisplaysPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plug ) :
 	
-		GafferUI.CompoundPlugValueWidget.__init__( self, plug, collapsed = None )
+		column = GafferUI.ListContainer( spacing = 6 )
+		GafferUI.PlugValueWidget.__init__( self, column, plug )
 
-		self.__footerWidget = None
-
-	def _footerWidget( self ) :
+		with column :
 	
-		if self.__footerWidget is not None :
-			return self.__footerWidget
+			# this will take care of laying out our list of displays, as
+			# each display is represented as a child plug of the main plug.
+			GafferUI.PlugLayout( plug )
+
+			# now we just need a little footer with a button for adding new displays
+			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
 		
-		self.__footerWidget = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
-		
-		addButton = GafferUI.MenuButton(
-			image="plus.png", hasFrame=False, menu = GafferUI.Menu( Gaffer.WeakMethod( self.__addMenuDefinition ) )
-		)
-		self.__footerWidget.append( addButton )
-		self.__footerWidget.append( GafferUI.Spacer( IECore.V2i( 1 ), maximumSize = IECore.V2i( 100000, 1 ) ), expand = True )
+				GafferUI.MenuButton(
+					image="plus.png", hasFrame=False, menu = GafferUI.Menu( Gaffer.WeakMethod( self.__addMenuDefinition ) )
+				)
 				
-		return self.__footerWidget
-		
+				GafferUI.Spacer( IECore.V2i( 1 ), maximumSize = IECore.V2i( 100000, 1 ), parenting = { "expand" : True } )
+	
+	def hasLabel( self ) :
+	
+		return True
+	
+	def _updateFromPlug( self ) :
+	
+		pass
+	
 	def __addMenuDefinition( self ) :
 	
 		node = self.getPlug().node()
@@ -97,6 +107,7 @@ class DisplaysPlugValueWidget( GafferUI.CompoundPlugValueWidget ) :
 	
 		return m
 
+# A widget for representing an individual display.
 class _ChildPlugWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, childPlug ) :
@@ -104,42 +115,108 @@ class _ChildPlugWidget( GafferUI.PlugValueWidget ) :
 		column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing=4 )
 		GafferUI.PlugValueWidget.__init__( self, column, childPlug )
 		
-		row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing=4 )
-		column.append( row )
+		with column :
+		
+			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing=4 ) as header :
+			
+				collapseButton = GafferUI.Button( image = "collapsibleArrowRight.png", hasFrame=False )
+				collapseButton.__clickedConnection = collapseButton.clickedSignal().connect( Gaffer.WeakMethod( self.__collapseButtonClicked ) )
+				
+				GafferUI.PlugValueWidget.create( childPlug["active"] )
+				self.__label = GafferUI.Label( childPlug["label"].getValue() )
+		
+				GafferUI.Spacer( IECore.V2i( 1 ), maximumSize = IECore.V2i( 100000, 1 ), parenting = { "expand" : True } )
+		
+				self.__deleteButton = GafferUI.Button( image = "delete.png", hasFrame=False )
+				self.__deleteButton.__clickedConnection = self.__deleteButton.clickedSignal().connect( Gaffer.WeakMethod( self.__deleteButtonClicked ) )
+				self.__deleteButton.setVisible( False )
+				
+			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing= 4 ) as self.__detailsColumn :
+			
+				GafferUI.PlugWidget( childPlug["label"] )
+				GafferUI.PlugWidget( childPlug["name"] )
+				GafferUI.PlugWidget( childPlug["type"] )
+				GafferUI.PlugWidget( childPlug["data"] )
+				GafferUI.CompoundDataPlugValueWidget( childPlug["parameters"], collapsed=None )
+				
+				GafferUI.Divider( GafferUI.Divider.Orientation.Horizontal )
+				
+			self.__detailsColumn.setVisible( False )
 
-		collapseButton = GafferUI.Button( image = "collapsibleArrowRight.png", hasFrame=False )
-		collapseButton.__clickedConnection = collapseButton.clickedSignal().connect( Gaffer.WeakMethod( self.__collapseButtonClicked ) )
-		row.append( collapseButton )
-		
-		row.append( GafferUI.PlugValueWidget.create( childPlug["active"] ) )
-		row.append( GafferUI.PlugValueWidget.create( childPlug["name"] ) )
-		row.append( GafferUI.PlugValueWidget.create( childPlug["type"] ) )
-		row.append( GafferUI.PlugValueWidget.create( childPlug["data"] ) )
-		
-		parameterList = GafferUI.CompoundDataPlugValueWidget( childPlug["parameters"], collapsed=None )
-		parameterList.setVisible( False )
-		column.append( parameterList )
+			self.__enterConnection = header.enterSignal().connect( Gaffer.WeakMethod( self.__enter ) )
+			self.__leaveConnection = header.leaveSignal().connect( Gaffer.WeakMethod( self.__leave ) )
 
 	def hasLabel( self ) :
 	
 		return True
 	
+	def _updateFromPlug( self ) :
+		
+		with self.getContext() :
+		
+			enabled = self.getPlug()["active"].getValue()
+			self.__label.setEnabled( enabled )
+			self.__detailsColumn.setEnabled( enabled )
+			
+			self.__label.setText( self.getPlug()["label"].getValue() )
+
+	def __enter( self, widget ) :
+	
+		self.__deleteButton.setVisible( True )
+		
+	def __leave( self, widget ) :
+	
+		self.__deleteButton.setVisible( False )
+
 	def __collapseButtonClicked( self, button ) :
 	
-		column = button.parent().parent()
-		parameterList = column[1]
-		visible = not parameterList.getVisible()
-		parameterList.setVisible( visible )
+		visible = not self.__detailsColumn.getVisible()
+		self.__detailsColumn.setVisible( visible )
 		button.setImage( "collapsibleArrowDown.png" if visible else "collapsibleArrowRight.png" )
 
-	def _updateFromPlug( self ) :
+	def __deleteButtonClicked( self, button ) :
 	
-		pass
+		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
+			self.getPlug().parent().removeChild( self.getPlug() )
 		
 GafferUI.PlugValueWidget.registerCreator( GafferScene.Displays.staticTypeId(), "displays", DisplaysPlugValueWidget )
+
 ## \todo This regex is an interesting case to be considered during the string matching unification for #707. Once that
 # is done, intuitively we want to use a "displays.*" glob expression, but because the "*" will match anything
 # at all, including ".", it will match the children of what we want too. We might want to prevent wildcards from
 # matching "." when we come to use them in this context.
 GafferUI.PlugValueWidget.registerCreator( GafferScene.Displays.staticTypeId(), re.compile( "displays\.[^\.]+$" ), _ChildPlugWidget )
 
+##########################################################################
+# Simple PlugValueWidget registrations for child plugs of displays
+##########################################################################
+
+GafferUI.PlugValueWidget.registerCreator(
+	GafferScene.Displays.staticTypeId(),
+	"displays.*.active",
+	GafferUI.BoolPlugValueWidget,
+	displayMode = GafferUI.BoolWidget.DisplayMode.Switch,
+)
+
+GafferUI.PlugValueWidget.registerCreator(
+	GafferScene.Displays.staticTypeId(),
+	re.compile( "displays.*.parameters.quantize" ),
+	GafferUI.EnumPlugValueWidget,
+	labelsAndValues = [
+		( "8 bit", IECore.IntVectorData( [ 0, 255, 0, 255 ] ) ),
+		( "16 bit", IECore.IntVectorData( [ 0, 65535, 0, 65535 ] ) ),
+		( "Float", IECore.IntVectorData( [ 0, 0, 0, 0 ] ) ),
+	]
+)
+
+GafferUI.PlugValueWidget.registerCreator(
+	GafferScene.Displays.staticTypeId(),
+	"displays.*.name",
+	lambda plug : GafferUI.PathPlugValueWidget( plug,
+		path = Gaffer.FileSystemPath( "/", filter = Gaffer.FileSystemPath.createStandardFilter() ),
+		pathChooserDialogueKeywords = {
+			"bookmarks" : GafferUI.Bookmarks.acquire( plug, category = "image" ),
+			"leaf" : True,
+		},
+	)
+)

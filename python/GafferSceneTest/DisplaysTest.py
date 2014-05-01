@@ -117,6 +117,13 @@ class DisplaysTest( GafferSceneTest.SceneTestCase ) :
 		displays["in"].setInput( p["out"] )
 		
 		self.assertSceneHashesEqual( p["out"], displays["out"], childPlugNames = ( "transform", "bound", "attributes", "object", "childNames" ) )
-					
+	
+	def testParametersHaveUsefulNames( self ) :
+	
+		displays = GafferScene.Displays()
+		displays.addDisplay( "test", IECore.Display( "name", "type", "data", { "paramA" : 1, "paramB" : 2 } ) )
+		
+		self.assertEqual( set( displays["displays"][0]["parameters"].keys() ), set( [ "paramA", "paramB" ] ) )
+		
 if __name__ == "__main__":
 	unittest.main()

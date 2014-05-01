@@ -94,7 +94,8 @@ class CompoundDataPlug : public Gaffer::CompoundPlug
 		/// this particular member is enabled.
 		MemberPlug *addOptionalMember( const std::string &name, const IECore::Data *defaultValue, const std::string &plugName = "member1", unsigned plugFlags = Plug::Default | Plug::Dynamic, bool enabled = false );
 		MemberPlug *addOptionalMember( const std::string &name, ValuePlug *valuePlug, const std::string &plugName = "member1", bool enabled = false );
-		void addMembers( const IECore::CompoundData *parameters );
+		/// Adds each member from the specified CompoundData.
+		void addMembers( const IECore::CompoundData *members, bool useNameAsPlugName = false );
 		
 		/// Returns the value for the member specified by the child parameterPlug, and fills name with the
 		/// name for the member. If the user has disabled the member or the name is the empty string, then

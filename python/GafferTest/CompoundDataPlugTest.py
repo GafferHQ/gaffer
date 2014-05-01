@@ -254,6 +254,31 @@ class CompoundDataPlugTest( unittest.TestCase ) :
 		m = p.addMember( "c", IECore.StringData( "abc" ) )
 		self.assertTrue( m["value"].defaultValue(), "abc" )
 		self.assertTrue( m["value"].getValue(), "abc" )
+	
+	def testAddMembers( self ) :
+	
+		p = Gaffer.CompoundDataPlug()
+		
+		p.addMembers( IECore.CompoundData( { "one" : 1, "two" : 2 } ) )
+		self.assertEqual( len( p ), 2 )
+		self.assertEqual( p[0].getName(), "member1" )
+		self.assertEqual( p[1].getName(), "member2" )
+		
+		c = IECore.CompoundData()
+		p.fillCompoundData( c )
+		self.assertEqual( c, IECore.CompoundData( { "one" : 1, "two" : 2 } ) )
+	
+	def testAddMembersWithSpecificNames( self ) :
+	
+		p = Gaffer.CompoundDataPlug()
+		p.addMembers( IECore.CompoundData( { "one" : 1 } ), useNameAsPlugName=True )
+		
+		self.assertEqual( len( p ), 1 )
+		self.assertEqual( p[0].getName(), "one" )
+
+		o = IECore.CompoundObject()
+		p.fillCompoundObject( o )
+		self.assertEqual( o, IECore.CompoundObject( { "one" : IECore.IntData( 1 ) } ) )
 				
 if __name__ == "__main__":
 	unittest.main()
