@@ -143,3 +143,13 @@ GafferUI.PlugValueWidget.registerCreator( GafferScene.Displays.staticTypeId(), "
 # matching "." when we come to use them in this context.
 GafferUI.PlugValueWidget.registerCreator( GafferScene.Displays.staticTypeId(), re.compile( "displays\.[^\.]+$" ), _ChildPlugWidget )
 
+GafferUI.PlugValueWidget.registerCreator(
+	GafferScene.Displays.staticTypeId(),
+	re.compile( "displays.*.parameters.quantize" ),
+	GafferUI.EnumPlugValueWidget,
+	labelsAndValues = [
+		( "8 bit", IECore.IntVectorData( [ 0, 255, 0, 255 ] ) ),
+		( "16 bit", IECore.IntVectorData( [ 0, 65535, 0, 65535 ] ) ),
+		( "Float", IECore.IntVectorData( [ 0, 0, 0, 0 ] ) ),
+	]
+)
