@@ -144,7 +144,7 @@ Gaffer::CompoundPlug *Displays::addDisplay( const std::string &label, const IECo
 	
 	CompoundDataPlugPtr parametersPlug = new CompoundDataPlug( "parameters" );
 	parametersPlug->setFlags( Plug::Dynamic, true );
-	parametersPlug->addMembers( const_cast<Display *>( display )->parametersData() );
+	parametersPlug->addMembers( const_cast<Display *>( display )->parametersData(), /* useNameAsPlugName = */ true );
 	displayPlug->addChild( parametersPlug );
 	
 	displaysPlug()->addChild( displayPlug );
