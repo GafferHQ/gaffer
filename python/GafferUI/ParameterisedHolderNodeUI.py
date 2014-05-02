@@ -164,7 +164,8 @@ def __nodeSummary( node ) :
 	
 	node.parameterHandler().setParameterValue()
 	parameterValues = IECore.ParameterParser().serialise( parameterised.parameters() )
-	parameterValues = " ".join( [ pipes.quote( x ) for x in parameterValues ] )
+	# pipes.quote() has a bug in some python versions where it doesn't quote empty strings.
+	parameterValues = " ".join( [ pipes.quote( x ) if x else "''" for x in parameterValues ] )
 	
 	return "Command line equivalent : \n\ngaffer op %s -version %d -arguments %s" % (
 		parameterised.path,
