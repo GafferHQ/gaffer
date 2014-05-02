@@ -85,7 +85,7 @@ if [[ -z $CORTEX_POINTDISTRIBUTION_TILESET ]] ; then
 	export CORTEX_POINTDISTRIBUTION_TILESET=$GAFFER_ROOT/resources/cortex/tileset_2048.dat
 fi
 
-export GAFFER_APP_PATHS=$GAFFER_ROOT/apps${GAFFER_APP_PATHS:+:}${GAFFER_APP_PATHS:-}
+export GAFFER_APP_PATHS=~/gaffer/apps:$GAFFER_ROOT/apps${GAFFER_APP_PATHS:+:}${GAFFER_APP_PATHS:-}
 export GAFFER_STARTUP_PATHS=~/gaffer/startup:$GAFFER_ROOT/startup${GAFFER_STARTUP_PATHS:+:}${GAFFER_STARTUP_PATHS:-}
 
 export GAFFERUI_IMAGE_PATHS=$GAFFER_ROOT/graphics${GAFFERUI_IMAGE_PATHS:+:}${GAFFERUI_IMAGE_PATHS:-}
@@ -128,7 +128,7 @@ export PATH=$GAFFER_ROOT/bin:$PATH
 ##########################################################################
 
 if [[ -n $GAFFER_DEBUG ]] ; then 
-	exec gdb --args $GAFFER_ROOT/bin/python $GAFFER_ROOT/bin/gaffer.py $@
+	exec gdb --args $GAFFER_ROOT/bin/python $GAFFER_ROOT/bin/gaffer.py "$@"
 else
-	exec $GAFFER_ROOT/bin/python $GAFFER_ROOT/bin/gaffer.py $@
+	exec $GAFFER_ROOT/bin/python $GAFFER_ROOT/bin/gaffer.py "$@"
 fi

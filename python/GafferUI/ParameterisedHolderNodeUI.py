@@ -37,6 +37,7 @@
 
 from __future__ import with_statement
 
+import pipes
 import fnmatch
 
 import IECore
@@ -58,8 +59,7 @@ class ParameterisedHolderNodeUI( GafferUI.NodeUI ) :
 				GafferUI.Spacer( IECore.V2i( 10 ), expand=True )
 				toolButton = GafferUI.ToolParameterValueWidget( self.node().parameterHandler() )
 				toolButton.plugValueWidget().setReadOnly( readOnly )
-				infoIcon = GafferUI.Image( "info.png" )
-				infoIcon.setToolTip( self.node().getParameterised()[0].description )
+				_InfoButton( node )
 				
 			with GafferUI.ScrolledContainer( horizontalMode=GafferUI.ScrolledContainer.ScrollMode.Never, borderWidth=4 ) :
 				self.__parameterValueWidget = GafferUI.CompoundParameterValueWidget( self.node().parameterHandler(), collapsible = False )
@@ -78,6 +78,52 @@ class ParameterisedHolderNodeUI( GafferUI.NodeUI ) :
 GafferUI.NodeUI.registerNodeUI( Gaffer.ParameterisedHolderNode.staticTypeId(), ParameterisedHolderNodeUI )
 GafferUI.NodeUI.registerNodeUI( Gaffer.ParameterisedHolderComputeNode.staticTypeId(), ParameterisedHolderNodeUI )
 GafferUI.NodeUI.registerNodeUI( Gaffer.ParameterisedHolderDependencyNode.staticTypeId(), ParameterisedHolderNodeUI )
+
+##########################################################################
+# Info button
+##########################################################################
+
+## \todo We might want to think about using this for all NodeUIs, since it
+# relies only on Metadata which should be available for all node types.
+class _InfoButton( GafferUI.Button ) :
+
+	def __init__( self, node ) :
+	
+		GafferUI.Button.__init__( self, image="info.png", hasFrame=False )
+		
+		self.__node = node
+		self.__window = None
+		self.__clickedConnection = self.clickedSignal().connect( Gaffer.WeakMethod( self.__clicked ) )
+
+	def getToolTip( self ) :
+	
+		result = GafferUI.Button.getToolTip( self )
+		if result :
+			return result
+		
+		result = IECore.StringUtil.wrap( self.__infoText(), 75 )
+		return result
+		
+	def __infoText( self ) :
+	
+		result = Gaffer.Metadata.nodeDescription( self.__node )
+		summary = Gaffer.Metadata.nodeValue( self.__node, "summary" )
+		if summary :
+			if result :
+				result += "\n\n"
+			result += summary
+
+		return result
+		
+	def __clicked( self, button ) :
+	
+		if self.__window is None :
+			with GafferUI.Window( "Info", borderWidth=8 ) as self.__window :
+				GafferUI.MultiLineTextWidget( editable = False )
+			self.ancestor( GafferUI.Window ).addChildWindow( self.__window )
+		
+		self.__window.getChild().setText( self.__infoText() )
+		self.__window.reveal()
 
 ##########################################################################
 # Nodules
@@ -102,6 +148,31 @@ GafferUI.Nodule.registerNodule( Gaffer.ParameterisedHolderDependencyNode.staticT
 # Metadata
 ##########################################################################
 
+def __nodeDescription( node ) :
+
+	parameterised = node.getParameterised()[0]
+	if parameterised is None :
+		return ""
+	
+	return parameterised.description
+
+def __nodeSummary( node ) :
+
+	parameterised = node.getParameterised()[0]
+	if not isinstance( parameterised, IECore.Op ) :
+		return ""
+	
+	node.parameterHandler().setParameterValue()
+	parameterValues = IECore.ParameterParser().serialise( parameterised.parameters() )
+	# pipes.quote() has a bug in some python versions where it doesn't quote empty strings.
+	parameterValues = " ".join( [ pipes.quote( x ) if x else "''" for x in parameterValues ] )
+	
+	return "Command line equivalent : \n\ngaffer op %s -version %d -arguments %s" % (
+		parameterised.path,
+		parameterised.version,
+		parameterValues,
+	)
+
 def __plugDescription( plug ) :
 
 	## \todo There should really be a method to map from plug to parameter.
@@ -115,6 +186,12 @@ def __plugDescription( plug ) :
 	
 	return parameter.description
 
-Gaffer.Metadata.registerPlugDescription( Gaffer.ParameterisedHolderNode, "parameters.*", __plugDescription )
-Gaffer.Metadata.registerPlugDescription( Gaffer.ParameterisedHolderComputeNode, "parameters.*", __plugDescription )
-Gaffer.Metadata.registerPlugDescription( Gaffer.ParameterisedHolderDependencyNode, "parameters.*", __plugDescription )
+for nodeType in (
+	Gaffer.ParameterisedHolderNode,
+	Gaffer.ParameterisedHolderComputeNode,
+	Gaffer.ParameterisedHolderDependencyNode,
+) :
+	
+	Gaffer.Metadata.registerNodeDescription( nodeType, __nodeDescription )
+	Gaffer.Metadata.registerNodeValue( nodeType, "summary", __nodeSummary )
+	Gaffer.Metadata.registerPlugDescription( nodeType, "parameters.*", __plugDescription )
