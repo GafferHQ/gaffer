@@ -653,6 +653,11 @@ class _Model( QtCore.QAbstractTableModel ) :
 			for i in range( 0, accessor.numColumns() ) :
 				self.__columns.append( IECore.Struct( accessor=accessor, relativeColumnIndex=i ) )
 			self.__accessors.append( accessor )
+		
+		if self.__columnToolTips is not None :
+			assert( len( self.__columns ) == len( self.__columnToolTips ) )
+		if self.__columnEditability is not None :
+			assert( len( self.__columns ) == len( self.__columnEditability ) )
 							
 	## Methods specific to this model first
 	
