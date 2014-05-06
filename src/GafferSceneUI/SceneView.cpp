@@ -508,6 +508,15 @@ void SceneView::updateLookThrough()
 				{
 					camera = constCamera->copy();
 					camera->setTransform( new MatrixTransform( scene->fullTransform( cameraPath ) ) );
+					
+					// if the camera has an existing screen window, remove it.
+					// if we didn't, it would conflict with the resolution we set
+					// below, yielding squashed/stretched images.
+					/// \todo Properly specify how cameras are represented in Gaffer
+					/// (the Cortex representation is very renderer-centric, with no
+					/// real world parameters like film back) so that this isn't necessary,
+					/// and add nice overlays for resolution gate etc.
+					camera->parameters().erase( "screenWindow" );
 				}
 			}
 			catch( ... )
