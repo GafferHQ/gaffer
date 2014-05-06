@@ -69,17 +69,6 @@ class PathVectorDataWidget( GafferUI.VectorDataWidget ) :
 			assert( isinstance( data, ( IECore.StringVectorData, type( None ) ) ) )
 		
 		GafferUI.VectorDataWidget.setData( self, data )
-
-	def _contextMenuDefinition( self, selectedIndices ) :
-	
-		m = GafferUI.VectorDataWidget._contextMenuDefinition( self, selectedIndices )
-		
-		if self.getEditable() and len( selectedIndices ) :
-		
-			m.prepend( "/PathDivider", { "divider" : True } )
-			m.prepend( "/Choose path...", { "command" : IECore.curry( Gaffer.WeakMethod( self.__editPath ), selectedIndices[0] ) } )
-			
-		return m
 	
 	def _createRows( self ) :
 	
@@ -109,32 +98,6 @@ class PathVectorDataWidget( GafferUI.VectorDataWidget ) :
 	
 		return _Editor( self.__path.copy() )
 		
-	def __editPath( self, index ) :
-		
-		data = self.getData()[0]
-		
-		pathChooserDialogueKeywords = self._pathChooserDialogueKeywords()
-		
-		path = self.__path.copy()
-		if index < len( data ) and len( data[index] ) :
-			path.setFromString( data[index] )
-		else :
-			bookmarks = pathChooserDialogueKeywords.get( "bookmarks", None )
-			if bookmarks is not None :
-				path.setFromString( bookmarks.getDefault() )
-		
-		dialogue = GafferUI.PathChooserDialogue( path, **pathChooserDialogueKeywords )
-		path = dialogue.waitForPath( parentWindow = self.ancestor( GafferUI.Window ) )
-		
-		if path is not None :
-			
-			if index < len( data ) :
-				data[index] = str( path )
-			else :
-				data.append( str( path ) )
-				
-			self.dataChangedSignal()( self )
-
 class _Editor( GafferUI.ListContainer ) :
 
 	def __init__( self, path ) :
