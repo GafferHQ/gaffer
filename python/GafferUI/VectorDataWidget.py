@@ -157,6 +157,7 @@ class VectorDataWidget( GafferUI.Widget ) :
 		# final setup
 		
 		self.__dataChangedSignal = GafferUI.WidgetSignal()
+		self.__editSignal = Gaffer.Signal3()
 		
 		if isinstance( header, list ) :
 			self.__headerOverride = header
@@ -294,6 +295,19 @@ class VectorDataWidget( GafferUI.Widget ) :
 	def dataChangedSignal( self ) :
 	
 		return self.__dataChangedSignal
+	
+	## A signal emitted when the user clicks to edit a cell.
+	# Slots should accept ( vectorDataWidget, columnIndex, rowIndex )
+	# arguments and return a Widget which will be used to perform the
+	# editing. The Widget must have setValue()/getValue() methods which
+	# accept the appropriate type for the column being edited - these will
+	# be used to transfer values to and from the Widget. By default, the Enter
+	# and Escape keys will be intercepted to complete editing, but the Widget
+	# may also be hidden to signify that editing has been completed by some
+	# other means.
+	def editSignal( self ) :
+	
+		return self.__editSignal
 	
 	## Returns a definition for the popup menu - this is called each time
 	# the menu is displayed to allow menus to be built dynamically. May be
@@ -883,14 +897,80 @@ class _Delegate( QtGui.QStyledItemDelegate ) :
 	def __init__( self ) :
 			
 		QtGui.QStyledItemDelegate.__init__( self )
+		
+		# The closeEditor signal is used to tell the view that editing is complete,
+		# at which point it will destroy the QWidget used for editing.
+		# It is emitted from QtGui.QAbstractItemDelegate.eventFilter() and also from
+		# our own eventFilter() to stop editing. We connect to it here so that we can
+		# drop our reference to self.__editor (a GafferUI.Widget) when editing finishes -
+		# otherwise it would live on but with its Qt half already destroyed, which would
+		# likely give rise to errors.
+		self.closeEditor.connect( self.__closeEditor )
+		
+	# Qt methods we override
+	########################
+	
+	def createEditor( self, parent, option, index ) :
+		
+		# see if editSignal() has been connected up to provide a custom editor.
+		vectorDataWidget = GafferUI.Widget._owner( parent ).ancestor( VectorDataWidget )
+		self.__editor = vectorDataWidget.editSignal()( vectorDataWidget, index.column(), index.row() )
+		
+		# if it hasn't, then see if a derived class can provide a custom editor.
+		if self.__editor is None :
+			self.__editor = self._createEditorInternal( index )
+		
+		# set up the custom editor if we have one, otherwise
+		# fall through to the base class which will provide a default
+		# editor.
+		if self.__editor is not None :
+			self.__editor._qtWidget().setParent( parent )
+			return self.__editor._qtWidget()
+		else :
+			return QtGui.QStyledItemDelegate.createEditor( self, parent, option, index )
+	
+	def setEditorData( self, editor, index ) :
+	
+		if self.__editor is not None :
+			self.__editor.setValue( GafferUI._Variant.fromVariant( index.data() ) )
+		else :
+			QtGui.QStyledItemDelegate.setEditorData( self, editor, index )
+		
+ 	def setModelData( self, editor, model, index ) :
+ 		
+ 		if self.__editor is not None :
+ 			model.setData( index, GafferUI._Variant.toVariant( self.__editor.getValue() ), QtCore.Qt.EditRole )
+		else :
+			QtGui.QStyledItemDelegate.setModelData( self, editor, model, index )
+
+ 	def eventFilter( self, object, event ) :
+ 	
+ 		if QtGui.QStyledItemDelegate.eventFilter( self, object, event ) :
+ 			return True
+ 			
+ 		if event.type() == event.Hide and self.__editor is not None :
+ 			# custom editors may hide themselves to indicate that editing
+ 			# is complete. when this happens we are responsible for carrying
+ 			# out this completion.
+ 			self.commitData.emit( self.__editor._qtWidget() )
+ 			self.closeEditor.emit( self.__editor._qtWidget(), self.NoHint )
+ 		
+ 		return False
+		
+	# Methods we define for our own purposes
+	########################################
 			
 	def canStretch( self ) :
 	
 		return False
-	
-	# Factory methods
-	#################################
 
+	# Called by createEditor() if editSignal() doesn't provide a custom widget.
+	# Derived classes may override this to return a GafferUI.Widget to be used
+	# for editing if they wish to override the default behaviour.
+	def _createEditorInternal( self, index ) :
+	
+		return None
+		
 	@classmethod
 	def create( cls, data ) :
 	
@@ -909,6 +989,12 @@ class _Delegate( QtGui.QStyledItemDelegate ) :
 
 	__typesToCreators = {}
 
+	def __closeEditor( self ) :
+	
+		# the QWidget for the editor is being destroyed - also destroy
+		# the GafferUI.Widget that wrapped it.
+		self.__editor = None
+
 # A delegate to ensure that numeric editing is performed by our NumericWidget
 # class, complete with cursor increments and virtual sliders, rather than the
 # built in qt one.
@@ -918,19 +1004,9 @@ class _NumericDelegate( _Delegate ) :
 	
 		_Delegate.__init__( self )
 	
-	def createEditor( self, parent, option, index ) :
+	def _createEditorInternal( self, index ) :
 		
-		self.__widget = GafferUI.NumericWidget( GafferUI._Variant.fromVariant( index.data() ) )
-		self.__widget._qtWidget().setParent( parent )
-		return self.__widget._qtWidget()
-	
-	def setEditorData( self, editor, index ) :
-	
-		GafferUI.Widget._owner( editor ).setValue( GafferUI._Variant.fromVariant( index.data() ) )
-	
-	def setModelData( self, editor, model, index ) :
-		
-		model.setData( index, GafferUI._Variant.toVariant( GafferUI.Widget._owner( editor ).getValue() ), QtCore.Qt.EditRole )
+		return GafferUI.NumericWidget( GafferUI._Variant.fromVariant( index.data() ) )
 	
 _Delegate.registerType( IECore.HalfVectorData.staticTypeId(), _NumericDelegate )
 _Delegate.registerType( IECore.FloatVectorData.staticTypeId(), _NumericDelegate )
