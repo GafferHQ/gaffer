@@ -57,6 +57,8 @@ struct DefaultSignalCaller;
 /// with a static member function, rather than just as a free function is that free functions
 /// don't allow default template arguments, and default template arguments greatly simplify
 /// the most common uses of this class.
+/// \todo This should be called SignalClass and should operate like all the other *Class bindings,
+/// performing the binding in the constructor.
 template<typename Signal, typename SignalCaller=DefaultSignalCaller<Signal>, typename SlotCaller=DefaultSlotCaller<Signal> >
 struct SignalBinder
 {
