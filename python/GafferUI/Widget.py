@@ -515,6 +515,20 @@ class Widget( object ) :
 		if self._parentChangedSignal is None :
 			self._parentChangedSignal = GafferUI.WidgetSignal()
 		return self._parentChangedSignal
+	
+	## A signal emitted whenever the keyboard focus moves from one Widget
+	# to another. The signature for slots is ( oldWidget, newWidget ).
+	## \todo Add methods for setting and querying the focus. TextWidget
+	# and MultiLineTextWidget provide their own methods for this but these
+	# don't apply generally so they should be replaced. Currently I'm favouring
+	# simple setFocus( widget ) and getFocus() class methods on the Widget class - 
+	# since there can be only one focussed widget at a time it doesn't really make
+	# sense for it to be a property of each widget.
+	@classmethod
+	def focusChangedSignal( cls ) :
+	
+		cls.__ensureFocusChangedConnection()
+		return cls.__focusChangedSignal
 		
 	## Returns the tooltip to be displayed. This may be overriden
 	# by derived classes to provide sensible default behaviour, but
@@ -730,6 +744,28 @@ class Widget( object ) :
 		else :
 			self._qtWidget().setMouseTracking( True )
 
+
+	__focusChangedSignal = Gaffer.Signal2()
+	__focusChangedConnected = False
+	@classmethod
+	def __ensureFocusChangedConnection( cls ) :
+	
+		if not cls.__focusChangedConnected :
+			QtGui.QApplication.instance().focusChanged.connect( cls.__focusChanged )
+			cls.__focusChangedConnected = True
+	
+	@classmethod
+	def __focusChanged( cls, oldWidget, newWidget ) :
+	
+		cls.__focusChangedSignal( cls._owner( oldWidget ), cls._owner( newWidget ) )
+
+		if cls.__focusChangedSignal.empty() :
+			# if nothing's connected to the signal currently, then disconnect, because
+			# we don't want the overhead of dealing with focus changes when no-one is
+			# interested.
+			QtGui.QApplication.instance().focusChanged.disconnect( cls.__focusChanged )
+			cls.__focusChangedConnected = False
+		
 	def _repolish( self, qtWidget=None ) :
 	
 		if qtWidget is None :
