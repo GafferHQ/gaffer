@@ -54,10 +54,8 @@
 #include "GafferScene/ObjectToScene.h"
 #include "GafferScene/Camera.h"
 #include "GafferScene/GlobalsProcessor.h"
-#include "GafferScene/Options.h"
 #include "GafferScene/Shader.h"
 #include "GafferScene/AlembicSource.h"
-#include "GafferScene/StandardOptions.h"
 #include "GafferScene/SubTree.h"
 #include "GafferScene/SceneWriter.h"
 #include "GafferScene/SceneReader.h"
@@ -70,7 +68,6 @@
 #include "GafferScene/Text.h"
 #include "GafferScene/MapProjection.h"
 #include "GafferScene/MapOffset.h"
-#include "GafferScene/CustomOptions.h"
 
 #include "GafferSceneBindings/ScenePlugBinding.h"
 #include "GafferSceneBindings/DisplaysBinding.h"
@@ -89,6 +86,7 @@
 #include "GafferSceneBindings/PrimitiveVariablesBinding.h"
 #include "GafferSceneBindings/DuplicateBinding.h"
 #include "GafferSceneBindings/GridBinding.h"
+#include "GafferSceneBindings/OptionsBinding.h"
 
 using namespace boost::python;
 using namespace GafferScene;
@@ -126,11 +124,9 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	bindPathMatcherData();
 	bindSceneProcedural();
 	bindShader();
-	
-	GafferBindings::DependencyNodeClass<Options>();	
+	bindOptions();
 	
 	GafferBindings::DependencyNodeClass<AlembicSource>();
-	GafferBindings::DependencyNodeClass<StandardOptions>();
 	GafferBindings::DependencyNodeClass<SubTree>();
 	GafferBindings::DependencyNodeClass<Light>();
 	GafferBindings::DependencyNodeClass<Prune>();
@@ -138,7 +134,6 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	GafferBindings::DependencyNodeClass<Text>();
 	GafferBindings::DependencyNodeClass<MapProjection>();
 	GafferBindings::DependencyNodeClass<MapOffset>();
-	GafferBindings::DependencyNodeClass<CustomOptions>();
 	
 	GafferBindings::NodeClass<OpenGLShader>()
 		.def( "loadShader", &OpenGLShader::loadShader )
