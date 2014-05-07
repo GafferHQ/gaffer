@@ -112,6 +112,7 @@ enum TypeId
 	PrimitiveVariablesTypeId = 110567,
 	DuplicateTypeId = 110568,
 	GridTypeId = 110569,
+	SetTypeId = 110570,
 	
 	LastTypeId = 110650
 };

@@ -87,6 +87,7 @@
 #include "GafferSceneBindings/DuplicateBinding.h"
 #include "GafferSceneBindings/GridBinding.h"
 #include "GafferSceneBindings/OptionsBinding.h"
+#include "GafferSceneBindings/SetBinding.h"
 
 using namespace boost::python;
 using namespace GafferScene;
@@ -159,5 +160,6 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	bindPrimitiveVariables();
 	bindDuplicate();
 	bindGrid();
+	bindSet();
 	
 }
