@@ -290,6 +290,50 @@ class VectorDataWidget( GafferUI.Widget ) :
 	
 		return self.__dragPointer
 	
+	## Returns a tuple of ( columnIndex, rowIndex ) for the
+	# index at the specified position in local space. Note that because
+	# compound types like V3fVectorData are represented as more than one
+	# column, this index is not suitable for indexing directly into the
+	# data returned by getData().
+	def indexAt( self, position ) :
+	
+		index = self.__tableView.indexAt( QtCore.QPoint( position[0], position[1] ) )
+		return ( index.column(), index.row() )
+	
+	## Maps from the index of a column to a tuple of ( dataIndex, componentIndex )
+	# which can be used to index into the data as follows :
+	#
+	#    getData()[dataIndex][rowIndex][componentIndex]
+	#
+	# Where the data in a column is not of a compound type, the returned
+	# componentIndex will be -1.
+	def columnToDataIndex( self, columnIndex ) :
+	
+		c = 0
+		for dataIndex, accessor in enumerate( self.__model.vectorDataAccessors() ) :
+			nc = accessor.numColumns()
+			if c + nc > columnIndex :
+				if nc == 1 :
+					return ( dataIndex, -1 )
+				else :
+					return ( dataIndex, columnIndex - c )
+			c += nc
+			
+		raise IndexError( columnIndex )
+		
+	## Performs the reverse of columnToDataIndex.
+	def dataToColumnIndex( self, dataIndex, componentIndex ) :
+	
+		accessors = self.__model.vectorDataAccessors()
+		if dataIndex < 0 or dataIndex >= len( accessors ) :
+			raise IndexError( dataIndex )
+			
+		columnIndex = 0
+		for d in range( 0, dataIndex ) :
+			columnIndex += accessors[d].numColumns()
+			
+		return columnIndex + max( 0, componentIndex )
+	
 	## Returns a signal which is emitted whenever the data is edited.
 	# The signal is /not/ emitted when setData() is called.
 	def dataChangedSignal( self ) :
