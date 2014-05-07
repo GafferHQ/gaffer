@@ -49,6 +49,13 @@ import GafferUI
 # Supported child parameter userData entries :
 #
 # ["UI"]["editable"]
+# ["UI"]["elementPresets"] ObjectVector containing presets of the following form :
+#
+#	IECore.CompoundData(
+#		{  "label" : StringData() , "value" : Data() }
+#	)
+#
+# ["UI"]["elementPresetsOnly"] BoolData.
 class CompoundVectorParameterValueWidget( GafferUI.CompoundParameterValueWidget ) :
 
 	def __init__( self, parameterHandler, collapsible=None, **kw ) :
@@ -89,6 +96,7 @@ class _PlugValueWidget( GafferUI.CompoundParameterValueWidget._PlugValueWidget )
 			columnEditability = columnEditability
 		)
 
+		self.__editConnection = self.__vectorDataWidget.editSignal().connect( Gaffer.WeakMethod( self.__edit ) )
 		self.__dataChangedConnection = self.__vectorDataWidget.dataChangedSignal().connect( Gaffer.WeakMethod( self.__dataChanged ) )
 
 		self._updateFromPlug()
@@ -128,7 +136,21 @@ class _PlugValueWidget( GafferUI.CompoundParameterValueWidget._PlugValueWidget )
 			with IECore.IgnoredExceptions( KeyError ) :
 				columnVisible = childParameter.userData()["UI"]["visible"].value
 			self.__vectorDataWidget.setColumnVisible( columnIndex, columnVisible )
-				
+	
+	def __edit( self, vectorDataWidget, column, row ) :
+	
+		dataIndex, componentIndex = vectorDataWidget.columnToDataIndex( column )
+		childParameter = self._parameter().values()[dataIndex]
+		
+		presetsOnly = False
+		with IECore.IgnoredExceptions( KeyError ) :
+			presetsOnly = childParameter.userData()["UI"]["elementPresetsOnly"].value
+		
+		if not presetsOnly :
+			return None
+
+		return _PresetEditor( childParameter )
+		
 	def __dataChanged( self, vectorDataWidget ) :
 	
 		data = vectorDataWidget.getData()
@@ -138,3 +160,51 @@ class _PlugValueWidget( GafferUI.CompoundParameterValueWidget._PlugValueWidget )
 				p.setValue( d )
 				
 GafferUI.ParameterValueWidget.registerType( IECore.CompoundVectorParameter.staticTypeId(), CompoundVectorParameterValueWidget )
+
+# Deriving from ListContainer and not adding any children, so that we're
+# entirely see-through, allowing the underlying cell value to remain visible.
+class _PresetEditor( GafferUI.ListContainer ) :
+
+	def __init__( self, parameter ) :
+	
+		GafferUI.ListContainer.__init__( self )
+		
+		self.__parameter = parameter
+		self.__menu = None
+		
+	def setValue( self, value ) :
+		
+		self.__value = value
+		
+		# show the menu on the first setValue() call, as
+		# in the constructor we don't yet have a parent or
+		# a position on screen.
+		self.__showMenu()
+		
+	def getValue( self ) :
+	
+		return self.__value
+
+	def __showMenu( self ) :
+		
+		if self.__menu is not None :
+			return
+	
+		m = IECore.MenuDefinition()
+		for preset in self.__parameter.userData()["UI"]["elementPresets"] :
+			m.append(
+				"/" + preset["label"].value,
+				{
+					"command" : IECore.curry( Gaffer.WeakMethod( self.__setPreset ), preset["value"].value ),
+				},
+			)
+		
+		self.__menu = GafferUI.Menu( m )
+		
+		bound = self.bound()
+		self.__menu.popup( parent = self, position = IECore.V2i( bound.min.x, bound.max.y ) )
+
+	def __setPreset( self, presetValue ) :
+	
+		self.setValue( presetValue )
+		self.setVisible( False ) # finish editing
