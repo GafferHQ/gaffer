@@ -203,6 +203,10 @@ class _PresetEditor( GafferUI.ListContainer ) :
 		
 		bound = self.bound()
 		self.__menu.popup( parent = self, position = IECore.V2i( bound.min.x, bound.max.y ) )
+		
+		# necessary because the qt edit action tries to give us the focus, and we don't want it -
+		# we want the menu to have it so it can be navigated with the cursor keys.
+		self._qtWidget().setFocusProxy( self.__menu._qtWidget() )
 
 	def __setPreset( self, presetValue ) :
 	
