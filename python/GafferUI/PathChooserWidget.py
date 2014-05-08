@@ -84,7 +84,10 @@ class PathChooserWidget( GafferUI.Widget ) :
 				self.__dirPathWidget = GafferUI.PathWidget( tmpPath )
 			
 			# directory listing and preview widget
-			with GafferUI.SplitContainer( GafferUI.SplitContainer.Orientation.Horizontal, expand=True ) as splitContainer :
+			with GafferUI.SplitContainer(
+				GafferUI.SplitContainer.Orientation.Horizontal,
+				parenting = { "expand" : True }
+			) as splitContainer :
 			
 				self.__directoryListing = GafferUI.PathListingWidget( tmpPath, allowMultipleSelection=allowMultipleSelection )
 				self.__displayModeChangedConnection = self.__directoryListing.displayModeChangedSignal().connect( Gaffer.WeakMethod( self.__displayModeChanged ) )

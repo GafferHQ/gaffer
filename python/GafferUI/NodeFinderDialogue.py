@@ -54,21 +54,29 @@ class NodeFinderDialogue( GafferUI.Dialogue ) :
 		
 			GafferUI.Label(
 				"Find",
-				index = ( 0, 0 ),
-				alignment = ( GafferUI.HorizontalAlignment.Right, GafferUI.VerticalAlignment.Center )
+				parenting = {
+					"index" : ( 0, 0 ),
+					"alignment" : ( GafferUI.HorizontalAlignment.Right, GafferUI.VerticalAlignment.Center ),
+				}
 			)
 		
-			self.__matchString = GafferUI.MultiSelectionMenu( allowMultipleSelection = False, allowEmptySelection = False, index = ( 1, 0 ) )
-							
+			self.__matchString = GafferUI.MultiSelectionMenu(
+				allowMultipleSelection = False,
+				allowEmptySelection = False,
+				parenting = { "index" : ( 1, 0 ) }
+			)
+			
 			# match text row
 			
 			GafferUI.Label(
 				"Matching",
-				index = ( 0, 2 ),
-				alignment = ( GafferUI.HorizontalAlignment.Right, GafferUI.VerticalAlignment.Center )
+				parenting = {
+					"index" : ( 0, 2 ),
+					"alignment" : ( GafferUI.HorizontalAlignment.Right, GafferUI.VerticalAlignment.Center ),
+				}
 			)
 			
-			self.__matchPattern =  GafferUI.TextWidget( index = ( 1, 2 ) )
+			self.__matchPattern =  GafferUI.TextWidget( parenting = { "index" : ( 1, 2 ) } )
 			self.__matchPattern.setToolTip( "Use * to match any text and ? to match any single character.\nDrag a node here to get the text for selecting similar nodes." )
 			
 			self.__dragEnterConnection = self.__matchPattern.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ) )

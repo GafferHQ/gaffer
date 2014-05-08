@@ -141,36 +141,42 @@ class SavePresetDialogue( PresetDialogue ) :
 				
 				GafferUI.Label(
 					"<h3>Location</h3>",
-					index = ( 0, 0 ),
-					alignment = (
-						GafferUI.Label.HorizontalAlignment.Right,
-						GafferUI.Label.VerticalAlignment.None,
-					),
+					parenting = {
+						"index" : ( 0, 0 ),
+						"alignment" : (
+							GafferUI.Label.HorizontalAlignment.Right,
+							GafferUI.Label.VerticalAlignment.None,
+						),
+					}
 				)
-				self._locationMenu( writable=True, index = ( 1, 0 ) )
+				self._locationMenu( writable=True, parenting = { "index" : ( 1, 0 ) } )
 				
 				GafferUI.Label(
 					"<h3>Name</h3>",
-					index = ( 0, 1 ),
-					alignment = (
-						GafferUI.Label.HorizontalAlignment.Right,
-						GafferUI.Label.VerticalAlignment.None,
-					),
+					parenting = {
+						"index" : ( 0, 1 ),
+						"alignment" : (
+							GafferUI.Label.HorizontalAlignment.Right,
+							GafferUI.Label.VerticalAlignment.None,
+						),
+					}
 				)
-				self.__presetNameWidget = GafferUI.TextWidget( "Enter a name!", index = ( 1, 1 ) )
+				self.__presetNameWidget = GafferUI.TextWidget( "Enter a name!", parenting = { "index" : ( 1, 1 ) } )
 				self.__presetNameWidget.setSelection( None, None ) # select all
 				self.__presetNameChangedConnection = self.__presetNameWidget.textChangedSignal().connect( Gaffer.WeakMethod( self.__updateSaveButton ) )
 						
 				GafferUI.Label(
 					"<h3>Description</h3>",
-					index = ( 0, 2 ),
-					alignment = (
-						GafferUI.Label.HorizontalAlignment.Right,
-						GafferUI.Label.VerticalAlignment.Top,
-					),
+					parenting = {
+						"index" : ( 0, 2 ),
+						"alignment" : (
+							GafferUI.Label.HorizontalAlignment.Right,
+							GafferUI.Label.VerticalAlignment.Top,
+						),
+					}
 				)
 				
-				self.__presetDescriptionWidget = GafferUI.MultiLineTextWidget( index = ( 1, 2 ), )
+				self.__presetDescriptionWidget = GafferUI.MultiLineTextWidget( parenting = { "index" : ( 1, 2 ) } )
 				self.__presetDescriptionChangedConnection = self.__presetDescriptionWidget.textChangedSignal().connect( Gaffer.WeakMethod( self.__updateSaveButton ) )
 		
 			with GafferUI.Collapsible( "Parameters To Save", collapsed=True ) as cl :

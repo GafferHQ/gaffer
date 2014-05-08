@@ -350,8 +350,8 @@ class GridContainerTest( GafferUITest.TestCase ) :
 	
 		with GafferUI.GridContainer() as g :
 		
-			b = GafferUI.Button( "hi", index = ( 1, 2 ) )
-			t = GafferUI.TextWidget( "hi", index = ( 0, 0 ) )
+			b = GafferUI.Button( "hi", parenting = { "index" : ( 1, 2 ) } )
+			t = GafferUI.TextWidget( "hi", parenting = { "index" : ( 0, 0 ) } )
 	
 		self.failUnless( b.parent() is g )	
 		self.failUnless( t.parent() is g )

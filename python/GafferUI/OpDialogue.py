@@ -171,7 +171,7 @@ class OpDialogue( GafferUI.Dialogue ) :
 				}
 			)
 			
-			GafferUI.Spacer( IECore.V2i( 250, 1 ), expand=True )
+			GafferUI.Spacer( IECore.V2i( 250, 1 ), parenting = { "expand"  : True } )
 			
 			with GafferUI.Collapsible( "Details", collapsed = True ) as self.__messageCollapsible :
 			

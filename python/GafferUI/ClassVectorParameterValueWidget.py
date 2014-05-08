@@ -292,7 +292,7 @@ class _ChildParameterUI( GafferUI.CompoundPlugValueWidget ) :
 				GafferUI.ParameterValueWidget.create( self.__parameterHandler.childParameterHandler( parameter ) )
 			
 			# prevent things expanding in an unwanted way
-			GafferUI.Spacer( IECore.V2i( 1 ), IECore.V2i( 999999, 1 ), expand = True )
+			GafferUI.Spacer( IECore.V2i( 1 ), IECore.V2i( 999999, 1 ), parenting = { "expand" : True } )
 
 		return result
 	
@@ -340,4 +340,3 @@ class _ChildParameterUI( GafferUI.CompoundPlugValueWidget ) :
 		labelPlug = self.__parameterHandler.plug()["label"]
 		if plug.isSame( labelPlug ) :
 			self.__label.setText( labelPlug.getValue() )
-	

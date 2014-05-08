@@ -71,7 +71,7 @@ class Timeline( GafferUI.EditorWidget ) :
 				value = self.getContext().getFrame(),
 				min = float( scriptNode["frameRange"]["start"].getValue() ),
 				max = float( scriptNode["frameRange"]["end"].getValue() ),
-				expand = 1
+				parenting = { "expand" : True },
 			)
 			self.__slider.setPositionIncrement( 0 ) # disable so the slider doesn't mask our global frame increment shortcut
 			self.__sliderValueChangedConnection = self.__slider.valueChangedSignal().connect( Gaffer.WeakMethod( self.__valueChanged ) )

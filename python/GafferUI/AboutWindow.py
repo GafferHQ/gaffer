@@ -54,7 +54,12 @@ class AboutWindow( GafferUI.Window ) :
 		
 			with GafferUI.TabbedContainer() :
 				
-				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing=10, borderWidth=10, label="Gaffer" ) :
+				with GafferUI.ListContainer(
+					GafferUI.ListContainer.Orientation.Vertical,
+					spacing=10,
+					borderWidth=10,
+					parenting = { "label"  : "Gaffer" },
+				) :
 					
 					GafferUI.Spacer(
 						IECore.V2i( 1 ),
@@ -88,7 +93,12 @@ class AboutWindow( GafferUI.Window ) :
 						parenting = { "horizontalAlignment" : GafferUI.Label.HorizontalAlignment.Center },
 					)
 					
-				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing=10, borderWidth=10, label="License" ) :
+				with GafferUI.ListContainer(
+					GafferUI.ListContainer.Orientation.Vertical,
+					spacing=10,
+					borderWidth=10,
+					parenting = { "label"  : "License" },
+				) :
 					
 					license = "".join( open( os.path.expandvars( about.license() ) ).readlines() )
 					with GafferUI.ScrolledContainer(
@@ -101,7 +111,12 @@ class AboutWindow( GafferUI.Window ) :
 				dependencies = about.dependencies()
 				if dependencies :
 					
-					with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing=10, borderWidth=10, label="Dependencies" ) :
+					with GafferUI.ListContainer(
+						GafferUI.ListContainer.Orientation.Vertical,
+						spacing=10,
+						borderWidth=10,
+						parenting = { "label" : "Dependencies" },
+					) :
 		
 						with GafferUI.ScrolledContainer(
 							horizontalMode=GafferUI.ScrolledContainer.ScrollMode.Never,

@@ -52,7 +52,7 @@ class _RandomColorPlugValueWidget( GafferUI.PlugValueWidget ) :
 		with self.__grid :
 			for x in range( 0, 10 ) :
 				for y in range( 0, 3 ) :
-					GafferUI.ColorSwatch( index = ( x, y ) )	
+					GafferUI.ColorSwatch( parenting = { "index" : ( x, y ) } )
 		
 		self._updateFromPlug()
 		
