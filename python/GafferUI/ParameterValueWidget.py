@@ -145,7 +145,12 @@ __plugPopupMenuConnection = GafferUI.PlugValueWidget.popupMenuSignal().connect( 
 def __parameterPopupMenu( menuDefinition, parameterValueWidget ) :
 
 	parameterHandler = parameterValueWidget.parameterHandler()
-
+	
+	if isinstance( parameterHandler.parameter(), IECore.CompoundVectorParameter ) :
+		# the default value and overall presets don't currently work very well
+		# for CompoundVectorParameters.
+		return
+	
 	# replace plug default item with parameter default item. they
 	# differ in that the parameter default applies to all children
 	# of things like V3iParameters rather than just a single one.
