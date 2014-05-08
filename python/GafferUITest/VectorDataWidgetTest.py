@@ -38,6 +38,7 @@ import unittest
 
 import IECore
 
+import GafferTest
 import GafferUI
 import GafferUITest
 
@@ -78,7 +79,41 @@ class VectorDataWidgetTest( GafferUITest.TestCase ) :
 		self.assertEqual( w.dataToColumnIndex( 4, 2 ), 8 )
 
 		self.assertRaises( IndexError, w.dataToColumnIndex, 5, 0 )
-				
+	
+	def testColumnEditability( self ) :
+	
+		data = [
+			IECore.FloatVectorData( range( 0, 3 ) ),
+			IECore.Color3fVectorData( [ IECore.Color3f( x ) for x in range( 0, 3 ) ] ),
+			IECore.StringVectorData( [ str( x ) for x in range( 0, 3 ) ] ),
+		]
+		
+		w = GafferUI.VectorDataWidget( data )
+		
+		for i in range( 0, 5 ) :
+			self.assertEqual( w.getColumnEditable( i ), True )
+			
+		self.assertRaises( IndexError, w.getColumnEditable, 5 )
+		self.assertRaises( IndexError, w.getColumnEditable, -1 )
+		
+		w.setColumnEditable( 1, False )
+		self.assertEqual( w.getColumnEditable( 1 ), False )
+		
+		data[0][0] += 1.0
+		w.setData( data )
+		
+		for i in range( 0, 5 ) :
+			self.assertEqual( w.getColumnEditable( i ), i != 1 )
+		
+		cs = GafferTest.CapturingSlot( w.dataChangedSignal() )
+		self.assertEqual( len( cs ), 0 )
+		
+		w.setColumnEditable( 0, False )
+		w.setColumnEditable( 1, True )
+		
+		# changing editability shouldn't emit dataChangedSignal.
+		self.assertEqual( len( cs ), 0 )
+		
 if __name__ == "__main__":
 	unittest.main()
 	

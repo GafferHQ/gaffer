@@ -282,6 +282,33 @@ class VectorDataWidget( GafferUI.Widget ) :
 	
 		return not self.__tableView.isColumnHidden( columnIndex )
 	
+	def setColumnEditable( self, columnIndex, editable ) :
+	
+		if columnIndex < 0 or not self.__model or columnIndex >= self.__model.columnCount() :
+			raise IndexError
+	
+		if self.__columnEditability is None :
+			if editable :
+				return
+			else :
+				self.__columnEditability = [ True ] * self.__model.columnCount()
+	
+		if self.__columnEditability[columnIndex] == editable :
+			return
+			
+		self.__columnEditability[columnIndex] = editable
+		self.setData( self.getData() ) # update the model
+		
+	def getColumnEditable( self, columnIndex ) :
+	
+		if columnIndex < 0 or not self.__model or columnIndex >= self.__model.columnCount() :
+			raise IndexError
+			
+		if self.__columnEditability is None :
+			return True
+			
+		return self.__columnEditability[columnIndex]
+	
 	def setDragPointer( self, dragPointer ) :
 	
 		self.__dragPointer = dragPointer
@@ -740,14 +767,14 @@ class _Model( QtCore.QAbstractTableModel ) :
 	
 	## Then overrides for methods inherited from QAbstractModel
 	
-	def rowCount( self, parent ) :
+	def rowCount( self, parent = QtCore.QModelIndex() ) :
 	
 		if parent.isValid() :
 			return 0
 		
 		return len( self.__data[0] )
 		
-	def columnCount( self, parent ) :
+	def columnCount( self, parent = QtCore.QModelIndex() ) :
 	
 		if parent.isValid() :
 			return 0
