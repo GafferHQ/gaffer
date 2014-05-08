@@ -78,7 +78,8 @@ class OpPathPreview( GafferUI.DeferredPathPreview ) :
 		
 		self.__node = Gaffer.ParameterisedHolderNode()
 		self.__node.setParameterised( op )
-
+		GafferUI.ParameterPresets.autoLoad( self.__node )
+		
 		self.__column[0] = GafferUI.NodeUI.create( self.__node )
 		
 	def __executeClicked( self, button ) :
