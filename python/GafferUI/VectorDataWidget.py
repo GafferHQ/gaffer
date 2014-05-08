@@ -327,6 +327,12 @@ class VectorDataWidget( GafferUI.Widget ) :
 		index = self.__tableView.indexAt( QtCore.QPoint( position[0], position[1] ) )
 		return ( index.column(), index.row() )
 	
+	## Returns a list of ( columnIndex, rowIndex ) for the currently
+	# selected cells.
+	def selectedIndices( self ) :
+	
+		return [ ( x.column(), x.row() ) for x in self.__tableView.selectedIndexes() ]
+	
 	## Maps from the index of a column to a tuple of ( dataIndex, componentIndex )
 	# which can be used to index into the data as follows :
 	#
@@ -382,8 +388,10 @@ class VectorDataWidget( GafferUI.Widget ) :
 	
 	## Returns a definition for the popup menu - this is called each time
 	# the menu is displayed to allow menus to be built dynamically. May be
-	# overridden in derived classes to modify the menu. 
-	def _contextMenuDefinition( self, selectedIndices ) :
+	# overridden in derived classes to modify the menu.
+	## \todo We should remove this as part of implementing #217, and just
+	# let everything hook onto contextMenuSignal() instead.
+	def _contextMenuDefinition( self, selectedRows ) :
 	
 		m = IECore.MenuDefinition()
 		
@@ -393,7 +401,7 @@ class VectorDataWidget( GafferUI.Widget ) :
 		if self.getEditable() and self.getSizeEditable() :
 
 			m.append( "/divider", { "divider" : True } )
-			m.append( "/Remove Selected Rows", { "command" : IECore.curry( Gaffer.WeakMethod( self.__removeIndices ), selectedIndices ) } )
+			m.append( "/Remove Selected Rows", { "command" : IECore.curry( Gaffer.WeakMethod( self.__removeRows ), selectedRows ) } )
 		
 		return m
 	
@@ -439,7 +447,7 @@ class VectorDataWidget( GafferUI.Widget ) :
 	def __contextMenu( self, pos ) :		
 		
 		# build the menu and pop it up
-		m = self._contextMenuDefinition( self.__selectedIndices() )
+		m = self._contextMenuDefinition( self.__selectedRows() )
 		self.__popupMenu = GafferUI.Menu( m )
 		self.__popupMenu.popup( self )
 			
@@ -451,26 +459,26 @@ class VectorDataWidget( GafferUI.Widget ) :
 	
 		self.__tableView.clearSelection()
 	
-	def __selectedIndices( self ) :
+	def __selectedRows( self ) :
 	
-		selectedIndices = [ x.row() for x in self.__tableView.selectedIndexes() ]
-		selectedIndices = list( set( selectedIndices ) ) # remove duplicates
-		selectedIndices.sort()
+		selectedRows = [ x.row() for x in self.__tableView.selectedIndexes() ]
+		selectedRows = list( set( selectedRows ) ) # remove duplicates
+		selectedRows.sort()
 		
-		return selectedIndices
+		return selectedRows
 	
 	def __removeSelection( self, button ) :
 	
-		self.__removeIndices( self.__selectedIndices() )
+		self.__removeRows( self.__selectedRows() )
 	
-	def __removeIndices( self, indices ) :
+	def __removeRows( self, rows ) :
 			
 		data = self.getData()
 			
 		# delete the rows from data
-		for i in range( len( indices )-1, -1, -1 ) :
+		for i in range( len( rows )-1, -1, -1 ) :
 			for d in data :
-				del d[indices[i]]
+				del d[rows[i]]
 		
 		# tell the world
 		self.setData( data )
@@ -607,11 +615,11 @@ class VectorDataWidget( GafferUI.Widget ) :
 	def __dragBegin( self, widget, event ) :
 
 		self.__borrowedButtonPress = None
-		selectedIndices = self.__selectedIndices()
-		if len( selectedIndices ) :		
+		selectedRows = self.__selectedRows()
+		if len( selectedRows ) :		
 			data = self.getData()[0]
 			result = IECore.Object.create( data.typeId() )
-			for i in selectedIndices :
+			for i in selectedRows :
 				result.append( data[i] )
 			GafferUI.Pointer.setFromFile( self.__dragPointer )
 			return result
