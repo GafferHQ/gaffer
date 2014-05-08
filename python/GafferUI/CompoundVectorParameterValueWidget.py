@@ -82,18 +82,10 @@ class _PlugValueWidget( GafferUI.CompoundParameterValueWidget._PlugValueWidget )
 		with IECore.IgnoredExceptions( KeyError ) :
 			sizeEditable = self._parameterHandler().parameter().userData()["UI"]["sizeEditable"].value
 		
-		columnEditability = []
-		for parameter in self._parameter().values() :
-			columnEditable = True
-			with IECore.IgnoredExceptions( KeyError ) :
-				columnEditable = parameter.userData()["UI"]["editable"].value
-			columnEditability.append( columnEditable )
-		
 		self.__vectorDataWidget = GafferUI.VectorDataWidget(
 			header = header,
 			columnToolTips = columnToolTips,
 			sizeEditable = sizeEditable,
-			columnEditability = columnEditability
 		)
 
 		self.__editConnection = self.__vectorDataWidget.editSignal().connect( Gaffer.WeakMethod( self.__edit ) )
@@ -132,11 +124,17 @@ class _PlugValueWidget( GafferUI.CompoundParameterValueWidget._PlugValueWidget )
 		self.__vectorDataWidget.setEditable( self._editable() )
 		
 		for columnIndex, childParameter in enumerate( self._parameter().values() ) :
+			
 			columnVisible = True
 			with IECore.IgnoredExceptions( KeyError ) :
 				columnVisible = childParameter.userData()["UI"]["visible"].value
 			self.__vectorDataWidget.setColumnVisible( columnIndex, columnVisible )
 	
+			columnEditable = True
+			with IECore.IgnoredExceptions( KeyError ) :
+				columnEditable = childParameter.userData()["UI"]["editable"].value
+			self.__vectorDataWidget.setColumnEditable( columnIndex, columnEditable )
+
 	def __edit( self, vectorDataWidget, column, row ) :
 	
 		dataIndex, componentIndex = vectorDataWidget.columnToDataIndex( column )
