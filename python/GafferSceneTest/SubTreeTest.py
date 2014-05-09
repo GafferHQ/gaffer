@@ -74,19 +74,19 @@ class SubTreeTest( GafferSceneTest.SceneTestCase ) :
 		self.assertScenesEqual( s["out"], a["out"], scenePlug2PathPrefix = "/pCube1" )
 		self.assertTrue( a["out"].object( "/pCube1/pCubeShape1", _copy = False ).isSame( s["out"].object( "/pCubeShape1", _copy = False ) ) )
 
-	def testForwardDeclarations( self ) :
+	def testSets( self ) :
 	
 		l = GafferSceneTest.TestLight()
 		g = GafferScene.Group()
 		g["in"].setInput( l["out"] )
 		
-		self.assertForwardDeclarationsValid( g["out"] )
+		self.assertSetsValid( g["out"] )
 		
 		s = GafferScene.SubTree()
 		s["in"].setInput( g["out"] )
 		s["root"].setValue( "/group" )
 		
-		self.assertForwardDeclarationsValid( s["out"] )
+		self.assertSetsValid( s["out"] )
 
 	def testRootHashesEqual( self ) :
 		
@@ -150,7 +150,7 @@ class SubTreeTest( GafferSceneTest.SceneTestCase ) :
 		g["in2"].setInput( lg3["out"] )
 		g["in3"].setInput( lg4["out"] )
 
-		self.assertForwardDeclarationsValid( g["out"] )
+		self.assertSetsValid( g["out"] )
 
 		# /light
 
@@ -158,21 +158,21 @@ class SubTreeTest( GafferSceneTest.SceneTestCase ) :
 		s["in"].setInput( g["out"] )
 		s["root"].setValue( "/group/lightGroup1" )
 
-		forwardDeclarations = s["out"]["globals"].getValue()["gaffer:forwardDeclarations"]
-		self.assertEqual( forwardDeclarations.keys(), [ "/light" ] )
+		lightSet = s["out"]["globals"].getValue()["gaffer:sets"]["__lights"]
+		self.assertEqual( lightSet.value.paths(), [ "/light" ] )
 
-		self.assertForwardDeclarationsValid( s["out"] )
+		self.assertSetsValid( s["out"] )
 
 		# with includeRoot == True
 		
 		s["includeRoot"].setValue( True )
 		
-		forwardDeclarations = s["out"]["globals"].getValue()["gaffer:forwardDeclarations"]
-		self.assertEqual( forwardDeclarations.keys(), [ "/lightGroup1/light" ] )
+		lightSet = s["out"]["globals"].getValue()["gaffer:sets"]["__lights"]
+		self.assertEqual( lightSet.value.paths(), [ "/lightGroup1/light" ] )
 
-		self.assertForwardDeclarationsValid( s["out"] )
+		self.assertSetsValid( s["out"] )
 
-	def testForwardDeclarationPassThroughWhenNoRoot( self ) :
+	def testSetsPassThroughWhenNoRoot( self ) :
 
 		l = GafferSceneTest.TestLight()
 		g = GafferScene.Group()
@@ -181,28 +181,28 @@ class SubTreeTest( GafferSceneTest.SceneTestCase ) :
 		s = GafferScene.SubTree()
 		s["in"].setInput( g["out"] )
 
-		forwardDeclarations = s["out"]["globals"].getValue()["gaffer:forwardDeclarations"]
-		self.assertEqual( forwardDeclarations.keys(), [ "/group/light" ] )
-		self.assertForwardDeclarationsValid( s["out"] )
+		lightSet = s["out"]["globals"].getValue()["gaffer:sets"]["__lights"]
+		self.assertEqual( lightSet.value.paths(), [ "/group/light" ] )
+		self.assertSetsValid( s["out"] )
 
 		s["root"].setValue( "/" )
-		forwardDeclarations = s["out"]["globals"].getValue()["gaffer:forwardDeclarations"]
-		self.assertEqual( forwardDeclarations.keys(), [ "/group/light" ] )
-		self.assertForwardDeclarationsValid( s["out"] )
+		lightSet = s["out"]["globals"].getValue()["gaffer:sets"]["__lights"]
+		self.assertEqual( lightSet.value.paths(), [ "/group/light" ] )
+		self.assertSetsValid( s["out"] )
 
 		# with includeRoot == True
 		
 		s["includeRoot"].setValue( True )
 		
 		s["root"].setValue( "" )
-		forwardDeclarations = s["out"]["globals"].getValue()["gaffer:forwardDeclarations"]
-		self.assertEqual( forwardDeclarations.keys(), [ "/group/light" ] )
-		self.assertForwardDeclarationsValid( s["out"] )
+		lightSet = s["out"]["globals"].getValue()["gaffer:sets"]["__lights"]
+		self.assertEqual( lightSet.value.paths(), [ "/group/light" ] )
+		self.assertSetsValid( s["out"] )
 
 		s["root"].setValue( "/" )
-		forwardDeclarations = s["out"]["globals"].getValue()["gaffer:forwardDeclarations"]
-		self.assertEqual( forwardDeclarations.keys(), [ "/group/light" ] )
-		self.assertForwardDeclarationsValid( s["out"] )
+		lightSet = s["out"]["globals"].getValue()["gaffer:sets"]["__lights"]
+		self.assertEqual( lightSet.value.paths(), [ "/group/light" ] )
+		self.assertSetsValid( s["out"] )
 		
 	def testAffects( self ) :
 	
@@ -266,22 +266,22 @@ class SubTreeTest( GafferSceneTest.SceneTestCase ) :
 		self.assertSceneHashesEqual( a["out"], s["out"] )
 		self.assertTrue( a["out"].object( "/pCube1/pCubeShape1", _copy = False ).isSame( s["out"].object( "/pCube1/pCubeShape1", _copy = False ) ) )
 
-	def testForwardDeclarationsWithIncludeRoot( self ) :
+	def testSetsWithIncludeRoot( self ) :
 	
 		l = GafferSceneTest.TestLight()
 		g = GafferScene.Group()
 		g["in"].setInput( l["out"] )
 		
-		self.assertForwardDeclarationsValid( g["out"] )
+		self.assertSetsValid( g["out"] )
 		
 		s = GafferScene.SubTree()
 		s["in"].setInput( g["out"] )
 		s["root"].setValue( "/group" )
 		s["includeRoot"].setValue( True )
 		
-		forwardDeclarations = s["out"]["globals"].getValue()["gaffer:forwardDeclarations"]
-		self.assertEqual( forwardDeclarations.keys(), [ "/group/light" ] )
-		self.assertForwardDeclarationsValid( s["out"] )
+		lightSet = s["out"]["globals"].getValue()["gaffer:sets"]["__lights"]
+		self.assertEqual( lightSet.value.paths(), [ "/group/light" ] )
+		self.assertSetsValid( s["out"] )
 			
 if __name__ == "__main__":
 	unittest.main()

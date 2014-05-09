@@ -61,17 +61,15 @@ class LightTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( l["out"].transform( "/light" ), IECore.M44f() )
 		self.assertEqual( l["out"].childNames( "/light" ), IECore.InternedStringVectorData() )
 	
-		forwardDeclarations = l["out"]["globals"].getValue()["gaffer:forwardDeclarations"]
+		lightSet = l["out"]["globals"].getValue()["gaffer:sets"]["__lights"]
 		self.assertEqual(
-			forwardDeclarations,
-			IECore.CompoundData( {
-				"/light" : {
-					"type" : IECore.IntData( IECore.TypeId.Light ),
-				},
-			} )
+			lightSet,
+			GafferScene.PathMatcherData(
+				GafferScene.PathMatcher( [ "/light" ] )
+			)
 		)
 	
-	def testGroupMaintainsForwardDeclarations( self ) :
+	def testGroupMaintainsLightSet( self ) :
 	
 		l = GafferSceneTest.TestLight()
 		g = GafferScene.Group()
@@ -79,14 +77,12 @@ class LightTest( GafferSceneTest.SceneTestCase ) :
 		
 		self.assertSceneValid( g["out"] )
 	
-		forwardDeclarations = g["out"]["globals"].getValue()["gaffer:forwardDeclarations"]
+		lightSet = g["out"]["globals"].getValue()["gaffer:sets"]["__lights"]
 		self.assertEqual(
-			forwardDeclarations,
-			IECore.CompoundData( {
-				"/group/light" : {
-					"type" : IECore.IntData( IECore.TypeId.Light ),
-				},
-			} )
+			lightSet,
+			GafferScene.PathMatcherData(
+				GafferScene.PathMatcher( [ "/group/light" ] )
+			)
 		)
 
 	def testDirtyPropagation( self ) :

@@ -55,7 +55,6 @@ class SetTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( g.keys(), [ "gaffer:sets" ] )
 		self.assertEqual( g["gaffer:sets"].keys(), [ "set" ] )
 		self.assertEqual( set( g["gaffer:sets"]["set"].value.paths() ), set( [ "/one", "/plane" ] ) )
-		self.assertSceneValid( s["out"] )
 		
 		s["name"].setValue( "shinyThings" )
 
@@ -63,7 +62,6 @@ class SetTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( g.keys(), [ "gaffer:sets" ] )
 		self.assertEqual( g["gaffer:sets"].keys(), [ "shinyThings" ] )
 		self.assertEqual( set( g["gaffer:sets"]["shinyThings"].value.paths() ), set( [ "/one", "/plane" ] ) )
-		self.assertSceneValid( s["out"] )
 		
 		s["paths"].setValue( IECore.StringVectorData( [ "/two", "/sphere" ] ) )
 
@@ -71,7 +69,6 @@ class SetTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( g.keys(), [ "gaffer:sets" ] )
 		self.assertEqual( g["gaffer:sets"].keys(), [ "shinyThings" ] )
 		self.assertEqual( set( g["gaffer:sets"]["shinyThings"].value.paths() ), set( [ "/two", "/sphere" ] ) )
-		self.assertSceneValid( s["out"] )
 		
 if __name__ == "__main__":
 	unittest.main()

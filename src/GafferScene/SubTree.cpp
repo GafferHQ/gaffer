@@ -42,8 +42,10 @@
 #include "Gaffer/Context.h"
 
 #include "GafferScene/SubTree.h"
+#include "GafferScene/PathMatcherData.h"
 
 using namespace std;
+using namespace IECore;
 using namespace Gaffer;
 using namespace GafferScene;
 
@@ -218,41 +220,55 @@ void SubTree::hashGlobals( const Gaffer::Context *context, const ScenePlug *pare
 
 IECore::ConstCompoundObjectPtr SubTree::computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	IECore::CompoundObjectPtr result = inPlug()->globalsPlug()->getValue()->copy();
-
-	const IECore::CompoundData *inputForwardDeclarations = result->member<IECore::CompoundData>( "gaffer:forwardDeclarations" );
-	if( inputForwardDeclarations )
+	ConstCompoundObjectPtr inputGlobals = inPlug()->globalsPlug()->getValue();
+	const CompoundData *inputSets = inputGlobals->member<CompoundData>( "gaffer:sets" );
+	if( !inputSets )
 	{
-		std::string root = rootPlug()->getValue();
-		if( !root.size() || root[root.size()-1] != '/' )
-		{
-			root += "/";
-		}
-
-		size_t prefixSize = root.size() - 1; // number of characters to remove from front of each declaration
-		if( includeRootPlug()->getValue() && prefixSize )
-		{
-			size_t lastSlashButOne = root.rfind( "/", prefixSize-1 );
-			if( lastSlashButOne != string::npos )
-			{
-				prefixSize = lastSlashButOne;
-			}
-		}
-
-		IECore::CompoundDataPtr forwardDeclarations = new IECore::CompoundData;
-		for( IECore::CompoundDataMap::const_iterator it = inputForwardDeclarations->readable().begin(), eIt = inputForwardDeclarations->readable().end(); it != eIt; it++ )
-		{
-			const IECore::InternedString &inputPath = it->first;
-			if( inputPath.string().compare( 0, root.size(), root ) == 0 )
-			{
-				std::string outputPath( inputPath, prefixSize );
-				forwardDeclarations->writable()[outputPath] = it->second;
-			}
-		}
-		result->members()["gaffer:forwardDeclarations"] = forwardDeclarations;
+		return inputGlobals;
 	}
 
-	return result;
+	CompoundObjectPtr outputGlobals = inputGlobals->copy();
+	CompoundDataPtr outputSets = new CompoundData;
+	outputGlobals->members()["gaffer:sets"] = outputSets;
+	
+	std::string root = rootPlug()->getValue();
+	if( !root.size() || root[root.size()-1] != '/' )
+	{
+		root += "/";
+	}
+	
+	size_t prefixSize = root.size() - 1; // number of characters to remove from front of each declaration
+	if( includeRootPlug()->getValue() && prefixSize )
+	{
+		size_t lastSlashButOne = root.rfind( "/", prefixSize-1 );
+		if( lastSlashButOne != string::npos )
+		{
+			prefixSize = lastSlashButOne;
+		}
+	}
+	
+	for( CompoundDataMap::const_iterator it = inputSets->readable().begin(), eIt = inputSets->readable().end(); it != eIt; ++it )
+	{
+		/// \todo This could be more efficient if PathMatcher exposed the internal nodes,
+		/// and allowed sharing between matchers. Then we could just pick the subtree within
+		/// the matcher that we wanted.
+		const PathMatcher &inputSet = static_cast<const PathMatcherData *>( it->second.get() )->readable();
+		PathMatcher &outputSet = outputSets->member<PathMatcherData>( it->first, /* throwExceptions = */ false, /* createIfMissing = */ true )->writable();
+	
+		vector<string> inputPaths;
+		inputSet.paths( inputPaths );
+		for( vector<string>::const_iterator pIt = inputPaths.begin(), peIt = inputPaths.end(); pIt != peIt; ++pIt )
+		{
+			const string &inputPath = *pIt;
+			if( inputPath.compare( 0, root.size(), root ) == 0 )
+			{
+				std::string outputPath( inputPath, prefixSize );
+				outputSet.addPath( outputPath );
+			}
+		}
+	}
+	
+	return outputGlobals;
 }
 
 SceneNode::ScenePath SubTree::sourcePath( const ScenePath &outputPath, bool &createRoot ) const

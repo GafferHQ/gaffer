@@ -85,16 +85,24 @@ class SceneTestCase( GafferTest.TestCase ) :
 		# then walk the scene to check the bounds
 		walkScene( IECore.InternedStringVectorData() )
 
-		self.assertForwardDeclarationsValid( scenePlug )
+		self.assertSetsValid( scenePlug )
+	
+	def assertPathExists( self, scenePlug, path ) :
 		
-	def assertForwardDeclarationsValid( self, scenePlug ) :
+		if isinstance( path, str ) :
+			path = path.strip( "/" ).split( "/" )
+		
+		for i in range( 0, len( path ) ) :
+			self.assertTrue( path[i] in scenePlug.childNames( "/" + "/".join( path[:i] ) ) )
+		
+	def assertSetsValid( self, scenePlug ) :
 	
 		globals = scenePlug["globals"].getValue()
-		if "gaffer:forwardDeclarations" in globals :
-			for path, declaration in globals["gaffer:forwardDeclarations"].items() :
-				object = scenePlug.object( path )
-				self.assertTrue( object.isInstanceOf( IECore.TypeId( declaration["type"].value ) ) )
-
+		if "gaffer:sets" in globals :
+			for s in globals["gaffer:sets"].values() :
+				for path in s.value.paths() :
+					self.assertPathExists( scenePlug, path )
+	
 	def __childPlugNames( self, childPlugNames, childPlugNamesToIgnore ) :
 	
 		if childPlugNames is None :

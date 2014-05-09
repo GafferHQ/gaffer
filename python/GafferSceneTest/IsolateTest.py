@@ -203,7 +203,7 @@ class IsolateTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( isolate["out"].bound( "/group" ), sphere1.bound() )
 		self.assertEqual( isolate["out"].bound( "/group/sphere1" ), sphere1.bound() )
 
-	def testForwardDeclarations( self ) :
+	def testSets( self ) :
 	
 		light1 = GafferSceneTest.TestLight()
 		light2 = GafferSceneTest.TestLight()
@@ -212,28 +212,28 @@ class IsolateTest( GafferSceneTest.SceneTestCase ) :
 		group["in"].setInput( light1["out"] )
 		group["in1"].setInput( light2["out"] )
 	
-		fd = group["out"]["globals"].getValue()["gaffer:forwardDeclarations"]
-		self.assertEqual( set( fd.keys() ), set( [ "/group/light", "/group/light1" ] ) )
+		lightSet = group["out"]["globals"].getValue()["gaffer:sets"]["__lights"]
+		self.assertEqual( set( lightSet.value.paths() ), set( [ "/group/light", "/group/light1" ] ) )
 	
 		isolate = GafferScene.Isolate()
 		isolate["in"].setInput( group["out"] )
 		
-		fd = isolate["out"]["globals"].getValue()["gaffer:forwardDeclarations"]
-		self.assertEqual( set( fd.keys() ), set( [ "/group/light", "/group/light1" ] ) )
+		lightSet = isolate["out"]["globals"].getValue()["gaffer:sets"]["__lights"]
+		self.assertEqual( set( lightSet.value.paths() ), set( [ "/group/light", "/group/light1" ] ) )
 		
 		filter = GafferScene.PathFilter()
 		isolate["filter"].setInput( filter["match"] )
 		
-		fd = isolate["out"]["globals"].getValue()["gaffer:forwardDeclarations"]
-		self.assertEqual( set( fd.keys() ), set( [] ) )
+		lightSet = isolate["out"]["globals"].getValue()["gaffer:sets"]["__lights"]
+		self.assertEqual( set( lightSet.value.paths() ), set( [] ) )
 		
 		filter["paths"].setValue( IECore.StringVectorData( [ "/group/light" ] ) )
-		fd = isolate["out"]["globals"].getValue()["gaffer:forwardDeclarations"]
-		self.assertEqual( set( fd.keys() ), set( [ "/group/light" ] ) )
+		lightSet = isolate["out"]["globals"].getValue()["gaffer:sets"]["__lights"]
+		self.assertEqual( set( lightSet.value.paths() ), set( [ "/group/light" ] ) )
 		
 		filter["paths"].setValue( IECore.StringVectorData( [ "/group/light*" ] ) )
-		fd = isolate["out"]["globals"].getValue()["gaffer:forwardDeclarations"]
-		self.assertEqual( set( fd.keys() ), set( [ "/group/light", "/group/light1" ] ) )
+		lightSet = isolate["out"]["globals"].getValue()["gaffer:sets"]["__lights"]
+		self.assertEqual( set( lightSet.value.paths() ), set( [ "/group/light", "/group/light1" ] ) )
 
 if __name__ == "__main__":
 	unittest.main()
