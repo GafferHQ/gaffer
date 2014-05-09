@@ -97,19 +97,8 @@ class PresetDialogue( GafferUI.Dialogue ) :
 		return [ p.info()["dict:value"] for p in selection ]	
 	
 	def __searchPaths( self, owned, writable ) :
-	
-		parameterised = self._parameterHandler.plug().node().getParameterised()
-		searchPathEnvVar = parameterised[3]
-		if not searchPathEnvVar :
-			# we need to guess based on type
-			if isinstance( parameterised[0], IECore.Op ) :
-				searchPathEnvVar = "IECORE_OP_PATHS"
-			elif isinstance( parameterised[0], IECore.ParameterisedProcedural ) :
-				searchPathEnvVar = "IECORE_PROCEDURAL_PATHS"
-			else :
-				raise Exception( "Unable to determine save location for presets" )		
 		
-		searchPathEnvVar = searchPathEnvVar.replace( "_PATHS", "_PRESET_PATHS" )
+		searchPathEnvVar = _searchPathEnvVar( self._parameterHandler.plug().node() )
 		paths = os.environ[searchPathEnvVar].split( ":" )
 		
 		existingPaths = []
@@ -132,6 +121,8 @@ class PresetDialogue( GafferUI.Dialogue ) :
 		
 class SavePresetDialogue( PresetDialogue ) :
 
+	__defaultName = "Enter a name!"
+
 	def __init__( self, parameterHandler ) :
 	
 		PresetDialogue.__init__( self, "Save Preset", parameterHandler )
@@ -141,36 +132,45 @@ class SavePresetDialogue( PresetDialogue ) :
 				
 				GafferUI.Label(
 					"<h3>Location</h3>",
-					index = ( 0, 0 ),
-					alignment = (
-						GafferUI.Label.HorizontalAlignment.Right,
-						GafferUI.Label.VerticalAlignment.None,
-					),
+					parenting = {
+						"index" : ( 0, 0 ),
+						"alignment" : (
+							GafferUI.Label.HorizontalAlignment.Right,
+							GafferUI.Label.VerticalAlignment.None,
+						),
+					}
 				)
-				self._locationMenu( writable=True, index = ( 1, 0 ) )
+				self._locationMenu( writable=True, parenting = { "index" : ( slice( 1, 3 ), 0 ) } )
 				
 				GafferUI.Label(
 					"<h3>Name</h3>",
-					index = ( 0, 1 ),
-					alignment = (
-						GafferUI.Label.HorizontalAlignment.Right,
-						GafferUI.Label.VerticalAlignment.None,
-					),
+					parenting = {
+						"index" : ( 0, 1 ),
+						"alignment" : (
+							GafferUI.Label.HorizontalAlignment.Right,
+							GafferUI.Label.VerticalAlignment.None,
+						),
+					}
 				)
-				self.__presetNameWidget = GafferUI.TextWidget( "Enter a name!", index = ( 1, 1 ) )
+				self.__presetNameWidget = GafferUI.TextWidget( self.__defaultName, parenting = { "index" : ( 1, 1 ) } )
 				self.__presetNameWidget.setSelection( None, None ) # select all
-				self.__presetNameChangedConnection = self.__presetNameWidget.textChangedSignal().connect( Gaffer.WeakMethod( self.__updateSaveButton ) )
-						
+				self.__presetNameChangedConnection = self.__presetNameWidget.textChangedSignal().connect( Gaffer.WeakMethod( self.__presetNameChanged ) )
+				
+				self.__loadAutomaticallyWidget = GafferUI.BoolWidget( "Load automatically", parenting = { "index" : ( 2, 1 ) } )
+				self.__loadAutomaticallyChangedConnection = self.__loadAutomaticallyWidget.stateChangedSignal().connect( Gaffer.WeakMethod( self.__loadAutomaticallyChanged ) )
+				
 				GafferUI.Label(
 					"<h3>Description</h3>",
-					index = ( 0, 2 ),
-					alignment = (
-						GafferUI.Label.HorizontalAlignment.Right,
-						GafferUI.Label.VerticalAlignment.Top,
-					),
+					parenting = {
+						"index" : ( 0, 2 ),
+						"alignment" : (
+							GafferUI.Label.HorizontalAlignment.Right,
+							GafferUI.Label.VerticalAlignment.Top,
+						),
+					}
 				)
 				
-				self.__presetDescriptionWidget = GafferUI.MultiLineTextWidget( index = ( 1, 2 ), )
+				self.__presetDescriptionWidget = GafferUI.MultiLineTextWidget( parenting = { "index" : ( slice( 1, 3 ), 2 ) } )
 				self.__presetDescriptionChangedConnection = self.__presetDescriptionWidget.textChangedSignal().connect( Gaffer.WeakMethod( self.__updateSaveButton ) )
 		
 			with GafferUI.Collapsible( "Parameters To Save", collapsed=True ) as cl :
@@ -287,6 +287,31 @@ class SavePresetDialogue( PresetDialogue ) :
 
 		self.__haveSelectedParameters = bool( self.__selectedParameters() )
 		self.__updateSaveButton()
+	
+	def __presetNameChanged( self, nameWidget ) :
+	
+		if nameWidget.getText() == _autoLoadName :
+			self.__loadAutomaticallyWidget.setState( True )
+		
+		self.__updateSaveButton()
+		
+		return True
+	
+	def __loadAutomaticallyChanged( self, boolWidget ) :
+	
+		if boolWidget.getState() :
+			self.__presetDescriptionWidget.setText( _autoLoadDescription )
+			self.__presetNameWidget.setText( _autoLoadName )
+		else :
+			self.__presetDescriptionWidget.setText( "" )
+			self.__presetNameWidget.setText( self.__defaultName )
+			self.__presetNameWidget.setSelection( None, None ) # select all
+			self.__presetNameWidget.grabFocus()
+	
+		self.__presetNameWidget.setEnabled( not boolWidget.getState() )
+		self.__presetDescriptionWidget.setEnabled( not boolWidget.getState() )
+	
+		return True
 		
 class LoadPresetDialogue( PresetDialogue ) :
 
@@ -397,7 +422,49 @@ class DeletePresetsDialogue( PresetDialogue ) :
 			shutil.rmtree( location + "/" + preset.path )
 			
 		self._updatePresetListing()
+
+## Applies the default "Load Automatically" preset to the specified ParameterisedHolder node.
+def autoLoad( parameterisedHolder ) :
 	
+	searchPaths = os.environ.get( _searchPathEnvVar( parameterisedHolder ), "" )
+	searchPaths = IECore.SearchPath( searchPaths, ":" )
+	presetLoader = IECore.ClassLoader( searchPaths )
+	
+	parameterised = parameterisedHolder.getParameterised()[0]
+	presetName = parameterised.typeName() + "/" + _autoLoadName
+		
+	if presetName not in presetLoader.classNames() :
+		return
+
+	preset = presetLoader.load( presetName )()
+	with parameterisedHolder.parameterModificationContext() :
+		preset( parameterised, parameterised.parameters() )
+
+##########################################################################
+# Private utility methods.
+##########################################################################
+
+_autoLoadName = "uiAutoLoad"
+_autoLoadDescription = """This preset is loaded automatically - it can be used to set up the default user interface with the most commonly used settings."""
+		
+def _searchPathEnvVar( parameterisedHolder ) :
+
+	parameterised = parameterisedHolder.getParameterised()
+	
+	searchPathEnvVar = parameterised[3]
+	if not searchPathEnvVar :
+		# we need to guess based on type
+		if isinstance( parameterised[0], IECore.Op ) :
+			searchPathEnvVar = "IECORE_OP_PATHS"
+		elif isinstance( parameterised[0], IECore.ParameterisedProcedural ) :
+			searchPathEnvVar = "IECORE_PROCEDURAL_PATHS"
+		else :
+			raise Exception( "Unable to determine search paths for presets" )
+	
+	searchPathEnvVar = searchPathEnvVar.replace( "_PATHS", "_PRESET_PATHS" )
+
+	return searchPathEnvVar
+
 ##########################################################################
 # Plumbing to make the dialogues available from parameter menus.
 ##########################################################################

@@ -82,7 +82,7 @@ class __FileNamePlugValueWidget( GafferUI.PlugValueWidget ) :
 		
 			self.__label = GafferUI.Label( "" )
 			
-			GafferUI.Spacer( IECore.V2i( 1, 30 ), expand = True )
+			GafferUI.Spacer( IECore.V2i( 1, 30 ), parenting = { "expand" : True } )
 		
 			loadButton = GafferUI.Button( image = "pathChooser.png", hasFrame=False )
 			loadButton.setToolTip( "Load" )

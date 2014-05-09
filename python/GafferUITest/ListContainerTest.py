@@ -296,8 +296,8 @@ class ListContainerTest( GafferUITest.TestCase ) :
 		c = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical )
 		with c :
 			ca = TestWidget( "a" )
-			cb = TestWidget( "b", expand=True )
-			cc = TestWidget( "c", expand=True )
+			cb = TestWidget( "b", parenting = { "expand" : True } )
+			cc = TestWidget( "c", parenting = { "expand" : True } )
 		
 		self.assertEqual( c.getExpand( ca ), False )
 		self.assertEqual( c.getExpand( cb ), True )

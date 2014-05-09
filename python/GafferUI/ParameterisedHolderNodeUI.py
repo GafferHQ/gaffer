@@ -56,7 +56,7 @@ class ParameterisedHolderNodeUI( GafferUI.NodeUI ) :
 		with column :
 		
 			with GafferUI.ListContainer( orientation = GafferUI.ListContainer.Orientation.Horizontal ) :
-				GafferUI.Spacer( IECore.V2i( 10 ), expand=True )
+				GafferUI.Spacer( IECore.V2i( 10 ), parenting = { "expand"  : True } )
 				toolButton = GafferUI.ToolParameterValueWidget( self.node().parameterHandler() )
 				toolButton.plugValueWidget().setReadOnly( readOnly )
 				_InfoButton( node )

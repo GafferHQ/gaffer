@@ -161,15 +161,30 @@ class op( Gaffer.Application ) :
 		IECore.ParameterParser().parse( list( args["arguments"] ), op.parameters() )
 		
 		if args["gui"].value :
+		
 			import GafferUI # delay import to improve startup times for non-gui case
+			
+			# build a script to host the op.
+			
 			self.root()["scripts"]["script1"] = Gaffer.ScriptNode()
 			self.root()["scripts"]["script1"]["op"] = Gaffer.ParameterisedHolderNode()
 			self.root()["scripts"]["script1"]["op"].setParameterised( op )
+			
+			# apply the autoload preset, if and only if no preset and no parameter
+			# values were specified via the command line.
+			
+			if not args["preset"].value and not args["arguments"] :
+				GafferUI.ParameterPresets.autoLoad( self.root()["scripts"]["script1"]["op"] )
+			
+			# create a ui to display everything.
+			
 			self.__dialogue = GafferUI.OpDialogue( self.root()["scripts"]["script1"]["op"], executeInBackground=True )
 			self.__dialogueClosedConnection = self.__dialogue.closedSignal().connect( self.__dialogueClosed )
 			self.__dialogue.setVisible( True )
 			GafferUI.EventLoop.mainEventLoop().start()
+			
 		else :
+			
 			op()
 			
 		return 0
