@@ -77,7 +77,7 @@ class SceneProcedural : public IECore::Renderer::Procedural
 		IE_CORE_DECLAREMEMBERPTR( SceneProcedural );
 
 		/// A copy of context is taken.
-		SceneProcedural( ConstScenePlugPtr scenePlug, const Gaffer::Context *context, const ScenePlug::ScenePath &scenePath=ScenePlug::ScenePath(), const IECore::PathMatcherData *pathsToExpand=0, size_t minimumExpansionDepth=0 );
+		SceneProcedural( ConstScenePlugPtr scenePlug, const Gaffer::Context *context, const ScenePlug::ScenePath &scenePath=ScenePlug::ScenePath(), const PathMatcherData *pathsToExpand=0, size_t minimumExpansionDepth=0 );
 		virtual ~SceneProcedural();
 		
 		virtual IECore::MurmurHash hash() const;
@@ -95,7 +95,7 @@ class SceneProcedural : public IECore::Renderer::Procedural
 		Gaffer::ContextPtr m_context;
 		ScenePlug::ScenePath m_scenePath;
 		
-		IECore::PathMatcherDataPtr m_pathsToExpand;
+		PathMatcherDataPtr m_pathsToExpand;
 		size_t m_minimumExpansionDepth;
 		
 		struct Options

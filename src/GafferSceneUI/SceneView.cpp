@@ -396,7 +396,7 @@ void SceneView::collapseSelection()
 	
 	set<string> pathsToSelect;
 	vector<const string *> pathsToDeselect;
-	IECore::PathMatcherData *expandedData = expandedPaths();
+	PathMatcherData *expandedData = expandedPaths();
 	PathMatcher &expanded = expandedData->writable();
 	
 	for( RenderableGadget::Selection::const_iterator it = selection.begin(), eIt = selection.end(); it != eIt; it++ )
@@ -443,18 +443,18 @@ void SceneView::transferSelectionToContext()
 	getContext()->set( "ui:scene:selectedPaths", s.get() );
 }
 
-IECore::PathMatcherData *SceneView::expandedPaths()
+GafferScene::PathMatcherData *SceneView::expandedPaths()
 {
-	const IECore::PathMatcherData *m = getContext()->get<IECore::PathMatcherData>( "ui:scene:expandedPaths", 0 );
+	const PathMatcherData *m = getContext()->get<PathMatcherData>( "ui:scene:expandedPaths", 0 );
 	if( !m )
 	{
-		PathMatcherDataPtr rootOnly = new IECore::PathMatcherData;
+		PathMatcherDataPtr rootOnly = new PathMatcherData;
 		rootOnly->writable().addPath( "/" );
 		BlockedConnection blockedConnection( contextChangedConnection() );
 		getContext()->set( "ui:scene:expandedPaths", rootOnly.get() );
-		m = getContext()->get<IECore::PathMatcherData>( "ui:scene:expandedPaths", 0 );
+		m = getContext()->get<PathMatcherData>( "ui:scene:expandedPaths", 0 );
 	}
-	return const_cast<IECore::PathMatcherData *>( m );
+	return const_cast<PathMatcherData *>( m );
 }
 
 void SceneView::baseStateChanged()

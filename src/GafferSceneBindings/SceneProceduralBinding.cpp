@@ -49,7 +49,7 @@ using namespace boost::python;
 using namespace Gaffer;
 using namespace GafferScene;
 
-static SceneProceduralPtr construct( ScenePlugPtr scenePlug, Gaffer::ContextPtr context, object scenePath, IECore::PathMatcherDataPtr pathsToExpand, size_t minimumExpansionDepth )
+static SceneProceduralPtr construct( ScenePlugPtr scenePlug, Gaffer::ContextPtr context, object scenePath, PathMatcherDataPtr pathsToExpand, size_t minimumExpansionDepth )
 {
 	ScenePlug::ScenePath p;
 	GafferSceneBindings::objectToScenePath( scenePath, p );
@@ -68,7 +68,7 @@ void GafferSceneBindings::bindSceneProcedural()
 					boost::python::arg( "scenePlug" ),
 					boost::python::arg( "context" ),
 					boost::python::arg( "scenePath" ),
-					boost::python::arg( "pathsToExpand" ) = IECore::PathMatcherDataPtr( 0 ),
+					boost::python::arg( "pathsToExpand" ) = PathMatcherDataPtr(),
 					boost::python::arg( "minimumExpansionDepth" ) = 0
 				)
 			)
