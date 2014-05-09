@@ -49,6 +49,13 @@ import GafferUI
 # Supported child parameter userData entries :
 #
 # ["UI"]["editable"]
+# ["UI"]["elementPresets"] ObjectVector containing presets of the following form :
+#
+#	IECore.CompoundData(
+#		{  "label" : StringData() , "value" : Data() }
+#	)
+#
+# ["UI"]["elementPresetsOnly"] BoolData.
 class CompoundVectorParameterValueWidget( GafferUI.CompoundParameterValueWidget ) :
 
 	def __init__( self, parameterHandler, collapsible=None, **kw ) :
@@ -75,20 +82,13 @@ class _PlugValueWidget( GafferUI.CompoundParameterValueWidget._PlugValueWidget )
 		with IECore.IgnoredExceptions( KeyError ) :
 			sizeEditable = self._parameterHandler().parameter().userData()["UI"]["sizeEditable"].value
 		
-		columnEditability = []
-		for parameter in self._parameter().values() :
-			columnEditable = True
-			with IECore.IgnoredExceptions( KeyError ) :
-				columnEditable = parameter.userData()["UI"]["editable"].value
-			columnEditability.append( columnEditable )
-		
-		self.__vectorDataWidget = GafferUI.VectorDataWidget(
+		self.__vectorDataWidget = _VectorDataWidget(
 			header = header,
 			columnToolTips = columnToolTips,
 			sizeEditable = sizeEditable,
-			columnEditability = columnEditability
 		)
 
+		self.__editConnection = self.__vectorDataWidget.editSignal().connect( Gaffer.WeakMethod( self.__edit ) )
 		self.__dataChangedConnection = self.__vectorDataWidget.dataChangedSignal().connect( Gaffer.WeakMethod( self.__dataChanged ) )
 
 		self._updateFromPlug()
@@ -124,11 +124,31 @@ class _PlugValueWidget( GafferUI.CompoundParameterValueWidget._PlugValueWidget )
 		self.__vectorDataWidget.setEditable( self._editable() )
 		
 		for columnIndex, childParameter in enumerate( self._parameter().values() ) :
+			
 			columnVisible = True
 			with IECore.IgnoredExceptions( KeyError ) :
 				columnVisible = childParameter.userData()["UI"]["visible"].value
 			self.__vectorDataWidget.setColumnVisible( columnIndex, columnVisible )
-				
+	
+			columnEditable = True
+			with IECore.IgnoredExceptions( KeyError ) :
+				columnEditable = childParameter.userData()["UI"]["editable"].value
+			self.__vectorDataWidget.setColumnEditable( columnIndex, columnEditable )
+
+	def __edit( self, vectorDataWidget, column, row ) :
+	
+		dataIndex, componentIndex = vectorDataWidget.columnToDataIndex( column )
+		childParameter = self._parameter().values()[dataIndex]
+		
+		presetsOnly = False
+		with IECore.IgnoredExceptions( KeyError ) :
+			presetsOnly = childParameter.userData()["UI"]["elementPresetsOnly"].value
+		
+		if not presetsOnly :
+			return None
+
+		return _PresetEditor( childParameter )
+		
 	def __dataChanged( self, vectorDataWidget ) :
 	
 		data = vectorDataWidget.getData()
@@ -138,3 +158,139 @@ class _PlugValueWidget( GafferUI.CompoundParameterValueWidget._PlugValueWidget )
 				p.setValue( d )
 				
 GafferUI.ParameterValueWidget.registerType( IECore.CompoundVectorParameter.staticTypeId(), CompoundVectorParameterValueWidget )
+
+# Deriving from ListContainer and not adding any children, so that we're
+# entirely see-through, allowing the underlying cell value to remain visible.
+class _PresetEditor( GafferUI.ListContainer ) :
+
+	def __init__( self, parameter ) :
+	
+		GafferUI.ListContainer.__init__( self )
+		
+		self.__parameter = parameter
+		self.__menu = None
+		
+	def setValue( self, value ) :
+		
+		self.__value = value
+		
+		# show the menu on the first setValue() call, as
+		# in the constructor we don't yet have a parent or
+		# a position on screen.
+		self.__showMenu()
+		
+	def getValue( self ) :
+	
+		return self.__value
+
+	def __showMenu( self ) :
+		
+		if self.__menu is not None :
+			return
+	
+		m = IECore.MenuDefinition()
+		for preset in self.__parameter.userData()["UI"]["elementPresets"] :
+			m.append(
+				"/" + preset["label"].value,
+				{
+					"command" : IECore.curry( Gaffer.WeakMethod( self.__setPreset ), preset["value"].value ),
+				},
+			)
+		
+		self.__menu = GafferUI.Menu( m )
+		
+		bound = self.bound()
+		self.__menu.popup( parent = self, position = IECore.V2i( bound.min.x, bound.max.y ) )
+		
+		# necessary because the qt edit action tries to give us the focus, and we don't want it -
+		# we want the menu to have it so it can be navigated with the cursor keys.
+		self._qtWidget().setFocusProxy( self.__menu._qtWidget() )
+
+	def __setPreset( self, presetValue ) :
+	
+		self.setValue( presetValue )
+		self.setVisible( False ) # finish editing
+
+class _VectorDataWidget( GafferUI.VectorDataWidget ) :
+
+	def __init__( self, header, columnToolTips, sizeEditable ) :
+	
+		GafferUI.VectorDataWidget.__init__(
+			self,
+			header = header,
+			columnToolTips = columnToolTips,
+			sizeEditable = sizeEditable,
+		)
+
+	# Reimplemented to tie the ParameterValueWidget.popupMenuSignal()
+	# into the menu creation process.
+	## \todo I feel that we should be able to unify everything much better, perhaps
+	# to the point where everything is driven directly by Widget.contextMenuSignal().
+	# See issue #217.
+	def _contextMenuDefinition( self, selectedRows ) :
+
+		m = GafferUI.VectorDataWidget._contextMenuDefinition( self, selectedRows )
+		GafferUI.ParameterValueWidget.popupMenuSignal()( m, self.ancestor( GafferUI.ParameterValueWidget ) )
+		return m
+
+##########################################################################
+# Parameter popup menu for per-element presets
+##########################################################################
+
+def __applyPreset( columnParameterHandler, indices, elementValue ) :
+
+	value = columnParameterHandler.parameter().getValue()
+	for index in indices :
+		value[index] = elementValue
+		
+	with Gaffer.UndoContext( columnParameterHandler.plug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
+		columnParameterHandler.setPlugValue()
+
+def __parameterPopupMenu( menuDefinition, parameterValueWidget ) :
+
+	if not isinstance( parameterValueWidget, CompoundVectorParameterValueWidget ) :
+		return
+	
+	vectorDataWidget = parameterValueWidget.plugValueWidget()._headerWidget()
+	if not vectorDataWidget.getEditable() :
+		return
+		
+	selectedIndices = vectorDataWidget.selectedIndices()
+	if not selectedIndices :
+		return
+
+	column = selectedIndices[0][0]
+	for index in selectedIndices :
+		if index[0] != column :
+			# not all in the same column
+			return
+	
+	parameter = parameterValueWidget.parameter()
+	columnParameter = parameter.values()[vectorDataWidget.columnToDataIndex( column )[0]]
+
+	with IECore.IgnoredExceptions( KeyError ) :
+		if columnParameter.userData()["UI"]["editable"].value == False :
+			return
+	
+	presets = None
+	with IECore.IgnoredExceptions( KeyError ) :
+		presets = columnParameter.userData()["UI"]["elementPresets"]
+	
+	if presets is None :
+		return
+	
+	menuDefinition.prepend( "/PresetsDivider", { "divider" : True } )
+	for preset in reversed( presets ) :
+		menuDefinition.prepend(
+			"/Apply Preset To Selection/" + preset["label"].value,
+			{
+				"command" : IECore.curry(
+					__applyPreset,
+					parameterValueWidget.parameterHandler().childParameterHandler( columnParameter ),
+					[ index[1] for index in selectedIndices ],
+					preset["value"].value,
+				)
+			},
+		)
+	
+__parameterPopupMenuConnection = GafferUI.ParameterValueWidget.popupMenuSignal().connect( __parameterPopupMenu )

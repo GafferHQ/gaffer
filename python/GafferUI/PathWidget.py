@@ -180,7 +180,7 @@ class PathWidget( GafferUI.TextWidget ) :
 			i += 1
 			
 		self.__popupMenu = GafferUI.Menu( md )
-		self.__popupMenu.popup( position = self.__popupPosition( 0 ), forcePosition=True, grabFocus=False )
+		self.__popupMenu.popup( parent = self, position = self.__popupPosition( 0 ), forcePosition=True, grabFocus=False )
 			
 	def __popupListing( self, textIndex ) :
 	
@@ -201,9 +201,9 @@ class PathWidget( GafferUI.TextWidget ) :
 						command = IECore.curry( Gaffer.WeakMethod( self.__replacePathEntry ), len( dirPath ), o )
 					)
 				)
-				
+			
 			self.__popupMenu = GafferUI.Menu( md )
-			self.__popupMenu.popup( position = self.__popupPosition( textIndex ), forcePosition=True, grabFocus=False )
+			self.__popupMenu.popup( parent = self, position = self.__popupPosition( textIndex ), forcePosition=True, grabFocus=False )
 		
 	def __replacePathEntry( self, position, newEntry ) :
 	

@@ -157,6 +157,7 @@ class VectorDataWidget( GafferUI.Widget ) :
 		# final setup
 		
 		self.__dataChangedSignal = GafferUI.WidgetSignal()
+		self.__editSignal = Gaffer.Signal3()
 		
 		if isinstance( header, list ) :
 			self.__headerOverride = header
@@ -281,6 +282,33 @@ class VectorDataWidget( GafferUI.Widget ) :
 	
 		return not self.__tableView.isColumnHidden( columnIndex )
 	
+	def setColumnEditable( self, columnIndex, editable ) :
+	
+		if columnIndex < 0 or not self.__model or columnIndex >= self.__model.columnCount() :
+			raise IndexError
+	
+		if self.__columnEditability is None :
+			if editable :
+				return
+			else :
+				self.__columnEditability = [ True ] * self.__model.columnCount()
+	
+		if self.__columnEditability[columnIndex] == editable :
+			return
+			
+		self.__columnEditability[columnIndex] = editable
+		self.setData( self.getData() ) # update the model
+		
+	def getColumnEditable( self, columnIndex ) :
+	
+		if columnIndex < 0 or not self.__model or columnIndex >= self.__model.columnCount() :
+			raise IndexError
+			
+		if self.__columnEditability is None :
+			return True
+			
+		return self.__columnEditability[columnIndex]
+	
 	def setDragPointer( self, dragPointer ) :
 	
 		self.__dragPointer = dragPointer
@@ -289,16 +317,81 @@ class VectorDataWidget( GafferUI.Widget ) :
 	
 		return self.__dragPointer
 	
+	## Returns a tuple of ( columnIndex, rowIndex ) for the
+	# index at the specified position in local space. Note that because
+	# compound types like V3fVectorData are represented as more than one
+	# column, this index is not suitable for indexing directly into the
+	# data returned by getData().
+	def indexAt( self, position ) :
+	
+		index = self.__tableView.indexAt( QtCore.QPoint( position[0], position[1] ) )
+		return ( index.column(), index.row() )
+	
+	## Returns a list of ( columnIndex, rowIndex ) for the currently
+	# selected cells.
+	def selectedIndices( self ) :
+	
+		return [ ( x.column(), x.row() ) for x in self.__tableView.selectedIndexes() ]
+	
+	## Maps from the index of a column to a tuple of ( dataIndex, componentIndex )
+	# which can be used to index into the data as follows :
+	#
+	#    getData()[dataIndex][rowIndex][componentIndex]
+	#
+	# Where the data in a column is not of a compound type, the returned
+	# componentIndex will be -1.
+	def columnToDataIndex( self, columnIndex ) :
+	
+		c = 0
+		for dataIndex, accessor in enumerate( self.__model.vectorDataAccessors() ) :
+			nc = accessor.numColumns()
+			if c + nc > columnIndex :
+				if nc == 1 :
+					return ( dataIndex, -1 )
+				else :
+					return ( dataIndex, columnIndex - c )
+			c += nc
+			
+		raise IndexError( columnIndex )
+		
+	## Performs the reverse of columnToDataIndex.
+	def dataToColumnIndex( self, dataIndex, componentIndex ) :
+	
+		accessors = self.__model.vectorDataAccessors()
+		if dataIndex < 0 or dataIndex >= len( accessors ) :
+			raise IndexError( dataIndex )
+			
+		columnIndex = 0
+		for d in range( 0, dataIndex ) :
+			columnIndex += accessors[d].numColumns()
+			
+		return columnIndex + max( 0, componentIndex )
+	
 	## Returns a signal which is emitted whenever the data is edited.
 	# The signal is /not/ emitted when setData() is called.
 	def dataChangedSignal( self ) :
 	
 		return self.__dataChangedSignal
 	
+	## A signal emitted when the user clicks to edit a cell.
+	# Slots should accept ( vectorDataWidget, columnIndex, rowIndex )
+	# arguments and return a Widget which will be used to perform the
+	# editing. The Widget must have setValue()/getValue() methods which
+	# accept the appropriate type for the column being edited - these will
+	# be used to transfer values to and from the Widget. By default, the Enter
+	# and Escape keys will be intercepted to complete editing, but the Widget
+	# may also be hidden to signify that editing has been completed by some
+	# other means.
+	def editSignal( self ) :
+	
+		return self.__editSignal
+	
 	## Returns a definition for the popup menu - this is called each time
 	# the menu is displayed to allow menus to be built dynamically. May be
-	# overridden in derived classes to modify the menu. 
-	def _contextMenuDefinition( self, selectedIndices ) :
+	# overridden in derived classes to modify the menu.
+	## \todo We should remove this as part of implementing #217, and just
+	# let everything hook onto contextMenuSignal() instead.
+	def _contextMenuDefinition( self, selectedRows ) :
 	
 		m = IECore.MenuDefinition()
 		
@@ -308,7 +401,7 @@ class VectorDataWidget( GafferUI.Widget ) :
 		if self.getEditable() and self.getSizeEditable() :
 
 			m.append( "/divider", { "divider" : True } )
-			m.append( "/Remove Selected Rows", { "command" : IECore.curry( Gaffer.WeakMethod( self.__removeIndices ), selectedIndices ) } )
+			m.append( "/Remove Selected Rows", { "command" : IECore.curry( Gaffer.WeakMethod( self.__removeRows ), selectedRows ) } )
 		
 		return m
 	
@@ -354,7 +447,7 @@ class VectorDataWidget( GafferUI.Widget ) :
 	def __contextMenu( self, pos ) :		
 		
 		# build the menu and pop it up
-		m = self._contextMenuDefinition( self.__selectedIndices() )
+		m = self._contextMenuDefinition( self.__selectedRows() )
 		self.__popupMenu = GafferUI.Menu( m )
 		self.__popupMenu.popup( self )
 			
@@ -366,26 +459,26 @@ class VectorDataWidget( GafferUI.Widget ) :
 	
 		self.__tableView.clearSelection()
 	
-	def __selectedIndices( self ) :
+	def __selectedRows( self ) :
 	
-		selectedIndices = [ x.row() for x in self.__tableView.selectedIndexes() ]
-		selectedIndices = list( set( selectedIndices ) ) # remove duplicates
-		selectedIndices.sort()
+		selectedRows = [ x.row() for x in self.__tableView.selectedIndexes() ]
+		selectedRows = list( set( selectedRows ) ) # remove duplicates
+		selectedRows.sort()
 		
-		return selectedIndices
+		return selectedRows
 	
 	def __removeSelection( self, button ) :
 	
-		self.__removeIndices( self.__selectedIndices() )
+		self.__removeRows( self.__selectedRows() )
 	
-	def __removeIndices( self, indices ) :
+	def __removeRows( self, rows ) :
 			
 		data = self.getData()
 			
 		# delete the rows from data
-		for i in range( len( indices )-1, -1, -1 ) :
+		for i in range( len( rows )-1, -1, -1 ) :
 			for d in data :
-				del d[indices[i]]
+				del d[rows[i]]
 		
 		# tell the world
 		self.setData( data )
@@ -522,11 +615,11 @@ class VectorDataWidget( GafferUI.Widget ) :
 	def __dragBegin( self, widget, event ) :
 
 		self.__borrowedButtonPress = None
-		selectedIndices = self.__selectedIndices()
-		if len( selectedIndices ) :		
+		selectedRows = self.__selectedRows()
+		if len( selectedRows ) :		
 			data = self.getData()[0]
 			result = IECore.Object.create( data.typeId() )
-			for i in selectedIndices :
+			for i in selectedRows :
 				result.append( data[i] )
 			GafferUI.Pointer.setFromFile( self.__dragPointer )
 			return result
@@ -653,6 +746,11 @@ class _Model( QtCore.QAbstractTableModel ) :
 			for i in range( 0, accessor.numColumns() ) :
 				self.__columns.append( IECore.Struct( accessor=accessor, relativeColumnIndex=i ) )
 			self.__accessors.append( accessor )
+		
+		if self.__columnToolTips is not None :
+			assert( len( self.__columns ) == len( self.__columnToolTips ) )
+		if self.__columnEditability is not None :
+			assert( len( self.__columns ) == len( self.__columnEditability ) )
 							
 	## Methods specific to this model first
 	
@@ -677,14 +775,14 @@ class _Model( QtCore.QAbstractTableModel ) :
 	
 	## Then overrides for methods inherited from QAbstractModel
 	
-	def rowCount( self, parent ) :
+	def rowCount( self, parent = QtCore.QModelIndex() ) :
 	
 		if parent.isValid() :
 			return 0
 		
 		return len( self.__data[0] )
 		
-	def columnCount( self, parent ) :
+	def columnCount( self, parent = QtCore.QModelIndex() ) :
 	
 		if parent.isValid() :
 			return 0
@@ -878,14 +976,80 @@ class _Delegate( QtGui.QStyledItemDelegate ) :
 	def __init__( self ) :
 			
 		QtGui.QStyledItemDelegate.__init__( self )
+		
+		# The closeEditor signal is used to tell the view that editing is complete,
+		# at which point it will destroy the QWidget used for editing.
+		# It is emitted from QtGui.QAbstractItemDelegate.eventFilter() and also from
+		# our own eventFilter() to stop editing. We connect to it here so that we can
+		# drop our reference to self.__editor (a GafferUI.Widget) when editing finishes -
+		# otherwise it would live on but with its Qt half already destroyed, which would
+		# likely give rise to errors.
+		self.closeEditor.connect( self.__closeEditor )
+		
+	# Qt methods we override
+	########################
+	
+	def createEditor( self, parent, option, index ) :
+		
+		# see if editSignal() has been connected up to provide a custom editor.
+		vectorDataWidget = GafferUI.Widget._owner( parent ).ancestor( VectorDataWidget )
+		self.__editor = vectorDataWidget.editSignal()( vectorDataWidget, index.column(), index.row() )
+		
+		# if it hasn't, then see if a derived class can provide a custom editor.
+		if self.__editor is None :
+			self.__editor = self._createEditorInternal( index )
+		
+		# set up the custom editor if we have one, otherwise
+		# fall through to the base class which will provide a default
+		# editor.
+		if self.__editor is not None :
+			self.__editor._qtWidget().setParent( parent )
+			return self.__editor._qtWidget()
+		else :
+			return QtGui.QStyledItemDelegate.createEditor( self, parent, option, index )
+	
+	def setEditorData( self, editor, index ) :
+	
+		if self.__editor is not None :
+			self.__editor.setValue( GafferUI._Variant.fromVariant( index.data() ) )
+		else :
+			QtGui.QStyledItemDelegate.setEditorData( self, editor, index )
+		
+ 	def setModelData( self, editor, model, index ) :
+ 		
+ 		if self.__editor is not None :
+ 			model.setData( index, GafferUI._Variant.toVariant( self.__editor.getValue() ), QtCore.Qt.EditRole )
+		else :
+			QtGui.QStyledItemDelegate.setModelData( self, editor, model, index )
+
+ 	def eventFilter( self, object, event ) :
+ 	
+ 		if QtGui.QStyledItemDelegate.eventFilter( self, object, event ) :
+ 			return True
+ 			
+ 		if event.type() == event.Hide and self.__editor is not None :
+ 			# custom editors may hide themselves to indicate that editing
+ 			# is complete. when this happens we are responsible for carrying
+ 			# out this completion.
+ 			self.commitData.emit( self.__editor._qtWidget() )
+ 			self.closeEditor.emit( self.__editor._qtWidget(), self.NoHint )
+ 		
+ 		return False
+		
+	# Methods we define for our own purposes
+	########################################
 			
 	def canStretch( self ) :
 	
 		return False
-	
-	# Factory methods
-	#################################
 
+	# Called by createEditor() if editSignal() doesn't provide a custom widget.
+	# Derived classes may override this to return a GafferUI.Widget to be used
+	# for editing if they wish to override the default behaviour.
+	def _createEditorInternal( self, index ) :
+	
+		return None
+		
 	@classmethod
 	def create( cls, data ) :
 	
@@ -904,6 +1068,12 @@ class _Delegate( QtGui.QStyledItemDelegate ) :
 
 	__typesToCreators = {}
 
+	def __closeEditor( self ) :
+	
+		# the QWidget for the editor is being destroyed - also destroy
+		# the GafferUI.Widget that wrapped it.
+		self.__editor = None
+
 # A delegate to ensure that numeric editing is performed by our NumericWidget
 # class, complete with cursor increments and virtual sliders, rather than the
 # built in qt one.
@@ -913,19 +1083,9 @@ class _NumericDelegate( _Delegate ) :
 	
 		_Delegate.__init__( self )
 	
-	def createEditor( self, parent, option, index ) :
+	def _createEditorInternal( self, index ) :
 		
-		self.__widget = GafferUI.NumericWidget( GafferUI._Variant.fromVariant( index.data() ) )
-		self.__widget._qtWidget().setParent( parent )
-		return self.__widget._qtWidget()
-	
-	def setEditorData( self, editor, index ) :
-	
-		GafferUI.Widget._owner( editor ).setValue( GafferUI._Variant.fromVariant( index.data() ) )
-	
-	def setModelData( self, editor, model, index ) :
-		
-		model.setData( index, GafferUI._Variant.toVariant( GafferUI.Widget._owner( editor ).getValue() ), QtCore.Qt.EditRole )
+		return GafferUI.NumericWidget( GafferUI._Variant.fromVariant( index.data() ) )
 	
 _Delegate.registerType( IECore.HalfVectorData.staticTypeId(), _NumericDelegate )
 _Delegate.registerType( IECore.FloatVectorData.staticTypeId(), _NumericDelegate )
