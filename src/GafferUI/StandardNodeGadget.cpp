@@ -149,7 +149,7 @@ StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node, LinearContainer::O
 	row->addChild( rightNoduleContainer );
 	column->addChild( bottomNoduleContainer );
 	
-	setChild( column );
+	addChild( column );
 	setContents( new NameGadget( node ) );
 	
 	// nodules for all current plugs
@@ -193,9 +193,18 @@ StandardNodeGadget::~StandardNodeGadget()
 {
 }
 
+bool StandardNodeGadget::acceptsChild( const Gaffer::GraphComponent *potentialChild ) const
+{
+	if( !NodeGadget::acceptsChild( potentialChild ) )
+	{
+		return false;
+	}
+	return children().size()==0;
+}
+
 Imath::Box3f StandardNodeGadget::bound() const
 {
-	Box3f b = IndividualContainer::bound();
+	Box3f b = NodeGadget::bound();
 
 	// cheat a little - shave a bit off to make it possible to
 	// select the node by having the drag region cover only the
@@ -337,7 +346,7 @@ NodulePtr StandardNodeGadget::addNodule( Gaffer::PlugPtr plug )
 
 LinearContainer *StandardNodeGadget::noduleContainer( Edge edge )
 {
-	Gadget *column = getChild<Gadget>();
+	Gadget *column = getChild<Gadget>( 0 );
 	
 	if( edge == TopEdge )
 	{
@@ -366,7 +375,7 @@ const LinearContainer *StandardNodeGadget::noduleContainer( Edge edge ) const
 
 IndividualContainer *StandardNodeGadget::contentsContainer()
 {
-	return getChild<Gadget>() // column
+	return getChild<Gadget>( 0 ) // column
 		->getChild<Gadget>( 1 ) // row
 		->getChild<Gadget>( 1 ) // contentsColumn
 		->getChild<IndividualContainer>( 1 );
