@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2013-2014, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -33,20 +33,19 @@
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //  
 //////////////////////////////////////////////////////////////////////////
-
-#ifndef GAFFERSCENE_REFORMAT_H
-#define GAFFERSCENE_REFORMAT_H
+#ifndef GAFFERIMAGE_REFORMAT_H
+#define GAFFERIMAGE_REFORMAT_H
 
 #include "GafferImage/ImageProcessor.h"
 #include "GafferImage/FilterPlug.h"
+#include "GafferImage/Scale.h"
 
 namespace GafferImage
 {
 
-
 /// Reformats the input image to a new resolution using a resampling filter.
+/// This node is simply a wrapper for a Scale node which implements all of the functionality.
 /// \todo: Add support for changing the pixelAspect of the image.
-/// \todo Reimplement in terms of a network of simpler atomic operations.
 class Reformat : public ImageProcessor
 {
 
@@ -57,7 +56,6 @@ class Reformat : public ImageProcessor
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::Reformat, ReformatTypeId, ImageProcessor );
 	
-		/// Plug accessors.	
 		GafferImage::FormatPlug *formatPlug();
 		const GafferImage::FormatPlug *formatPlug() const;
 		GafferImage::FilterPlug *filterPlug();
@@ -65,27 +63,34 @@ class Reformat : public ImageProcessor
 
 		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
 		virtual bool enabled() const;
-				
+
 	protected :
 		
-		virtual void hashFormat( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual void hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual void hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual void hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		// Accessor for the internal Scale node.
+		GafferImage::Scale *scaleNode();
+		const GafferImage::Scale *scaleNode() const;
 		
+		// Accessors for the internal outputs to the scale node.
+		Gaffer::V2fPlug *scalePlug();
+		const Gaffer::V2fPlug *scalePlug() const;
+		Gaffer::V2fPlug *originPlug();
+		const Gaffer::V2fPlug *originPlug() const;
+
+		// Returns the X and Y scale factors of the output image.
+		Imath::V2f scale() const;
+
+		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const;
+		
+		virtual void hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const {};
+		virtual void hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual void hashFormat( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual void hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+
 		virtual GafferImage::Format computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const;
 		virtual Imath::Box2i computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const;
 		virtual IECore::ConstStringVectorDataPtr computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const;
-
-		/// Reformats the input plug with a filter by doing a 2-pass squash/stretch.
-		/// We reformat the image by doing two passes over the input in first the horizontal and then vertical directions.
-		/// On each pass we use the chosen filter to create a (row or column) buffer of pixels their weighted contributeion to each pixel on the row or column.
-		/// Using this column/row buffer we iterate over the input and sum the contributing pixels. The result is normalized by the sum of weights.
-		/// This process is repeated once for the vertical and horizontal passes and the final result is written into the output buffer.
 		virtual IECore::ConstFloatVectorDataPtr computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const;
-		
-		// Computes the output scale factor from the input and output formats.
-		Imath::V2d scale() const;
 
 	private :
 
@@ -97,4 +102,4 @@ IE_CORE_DECLAREPTR( Reformat )
 
 } // namespace GafferImage
 
-#endif // GAFFERSCENE_REFORMAT_H
+#endif // GAFFERIMAGE_REFORMAT_H
