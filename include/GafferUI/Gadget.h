@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011-2013, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2014, John Haddon. All rights reserved.
 //  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -69,8 +69,6 @@ IE_CORE_FORWARDDECLARE( Style );
 /// Gadgets are zoomable UI elements. They draw themselves using OpenGL, and provide an interface for
 /// handling events. To present a Gadget in the user interface, it should be placed in the viewport of
 /// a GadgetWidget.
-/// \todo I'm not sure I like having the transform on the Gadget - perhaps ContainerGadget
-/// should have a virtual childTransform() method instead?
 class Gadget : public Gaffer::GraphComponent
 {
 
@@ -89,8 +87,8 @@ class Gadget : public Gaffer::GraphComponent
 		/// @name Parent-child relationships
 		////////////////////////////////////////////////////////////////////
 		//@{
-		/// By default Gadgets do not accept children. Derive from ContainerGadget
-		/// if you wish to accept children.
+		/// Gadgets accept any number of other Gadgets as children. Derived classes
+		/// may further restrict this if they wish, but they must not accept non-Gadget children.
 		virtual bool acceptsChild( const Gaffer::GraphComponent *potentialChild ) const;
 		/// Gadgets only accept other Gadgets as parent.
 		virtual bool acceptsParent( const Gaffer::GraphComponent *potentialParent ) const;		
@@ -152,8 +150,10 @@ class Gadget : public Gaffer::GraphComponent
 		/// but it must be passed by Gadget implementations when rendering child
 		/// Gadgets in doRender().
 		void render( const Style *currentStyle = 0 ) const;
-		/// The bounding box of the Gadget before transformation.
-		virtual Imath::Box3f bound() const = 0;
+		/// The bounding box of the Gadget before transformation. The default
+		/// implementation returns the union of the transformed bounding boxes
+		/// of all the children.
+		virtual Imath::Box3f bound() const;
 		/// The bounding box transformed by the result of getTransform().
 		Imath::Box3f transformedBound() const;
 		/// The bounding box transformed by the result of fullTransform( ancestor ).
@@ -241,15 +241,18 @@ class Gadget : public Gaffer::GraphComponent
 		
 	protected :
 	
-		/// The subclass specific part of render(). This must be implemented
-		/// appropriately by all subclasses. The public render() method
+		/// The subclass specific part of render(). The public render() method
 		/// sets the GL state up with the name attribute and transform for
 		/// this Gadget, makes sure the style is bound and then calls doRender().
-		virtual void doRender( const Style *style ) const = 0;
+		/// The default implementation just renders all the child Gadgets.
+		virtual void doRender( const Style *style ) const;
 		
 	private :
 		
 		void styleChanged();
+		void childAdded( GraphComponent *parent, GraphComponent *child );
+		void childRemoved( GraphComponent *parent, GraphComponent *child );
+		void childRenderRequest( Gadget *child );
 		
 		ConstStylePtr m_style;
 		
