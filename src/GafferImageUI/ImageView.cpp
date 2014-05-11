@@ -1104,8 +1104,8 @@ void ImageView::update()
 	ConstImagePrimitivePtr image = preprocessedInPlug<ImagePlug>()->image();
 
 	Detail::ImageViewGadgetPtr imageViewGadget = new Detail::ImageViewGadget( image, imageStatsNode(), imageSamplerNode(), m_channelToView, m_mousePos, m_sampleColor, m_minColor, m_maxColor, m_averageColor );
-	bool hadChild = viewportGadget()->getChild<Gadget>();
-	viewportGadget()->setChild( imageViewGadget );
+	bool hadChild = viewportGadget()->getPrimaryChild();
+	viewportGadget()->setPrimaryChild( imageViewGadget );
 	if( !hadChild )
 	{
 		viewportGadget()->frame( imageViewGadget->bound() );

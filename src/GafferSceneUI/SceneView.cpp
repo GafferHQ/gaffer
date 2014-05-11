@@ -128,7 +128,7 @@ SceneView::SceneView( const std::string &name )
 
 	// set up our gadgets
 
-	viewportGadget()->setChild( m_renderableGadget );
+	viewportGadget()->setPrimaryChild( m_renderableGadget );
 
 	m_selectionChangedConnection = m_renderableGadget->selectionChangedSignal().connect( boost::bind( &SceneView::selectionChanged, this, ::_1 ) );
 	viewportGadget()->keyPressSignal().connect( boost::bind( &SceneView::keyPress, this, ::_1, ::_2 ) );

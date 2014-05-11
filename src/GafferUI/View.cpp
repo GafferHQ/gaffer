@@ -140,7 +140,7 @@ bool View::keyPress( GadgetPtr gadget, const KeyEvent &keyEvent )
 
 Imath::Box3f View::framingBound() const
 {
-	if( const Gadget *c = viewportGadget()->getChild<Gadget>() )
+	if( const Gadget *c = viewportGadget()->getPrimaryChild() )
 	{
 		return c->bound();
 	}

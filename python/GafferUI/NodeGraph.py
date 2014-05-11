@@ -57,7 +57,7 @@ class NodeGraph( GafferUI.EditorWidget ) :
 		graphGadget = GafferUI.GraphGadget( self.scriptNode() )
 		self.__rootChangedConnection = graphGadget.rootChangedSignal().connect( Gaffer.WeakMethod( self.__rootChanged ) )
 		
-		self.__gadgetWidget.getViewportGadget().setChild( graphGadget )
+		self.__gadgetWidget.getViewportGadget().setPrimaryChild( graphGadget )
 		self.__gadgetWidget.getViewportGadget().setDragTracking( True )
 		self.__frame( scriptNode.selection() )		
 
@@ -76,10 +76,10 @@ class NodeGraph( GafferUI.EditorWidget ) :
 
 	## Returns the internal Gadget used to draw the graph. This may be
 	# modified directly to set up appropriate filters etc. This is just
-	# a convenience method returning graphGadgetWidget().getViewportGadget().getChild().
+	# a convenience method returning graphGadgetWidget().getViewportGadget().getPrimaryChild().
 	def graphGadget( self ) :
 	
-		return self.graphGadgetWidget().getViewportGadget().getChild()
+		return self.graphGadgetWidget().getViewportGadget().getPrimaryChild()
 
 	## Frames the specified nodes in the viewport. If extend is True
 	# then the current framing will be extended to include the specified
@@ -273,7 +273,7 @@ class NodeGraph( GafferUI.EditorWidget ) :
 	def __nodeGadgetAt( self, position ) :
 	
 		viewport = self.__gadgetWidget.getViewportGadget()
-		line = viewport.rasterToGadgetSpace( IECore.V2f( position.x, position.y ) )
+		line = viewport.rasterToGadgetSpace( IECore.V2f( position.x, position.y ), gadget = self.graphGadget() )
 		return self.graphGadget().nodeGadgetAt( line )
 	
 	def __keyPress( self, widget, event ) :

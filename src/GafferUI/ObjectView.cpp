@@ -57,7 +57,7 @@ ObjectView::ObjectView( const std::string &name )
 	:	View3D( name, new ObjectPlug( "in", Plug::In, NullObject::defaultNullObject() ) ),
 		m_renderableGadget( new RenderableGadget )
 {
-	viewportGadget()->setChild( m_renderableGadget );
+	viewportGadget()->setPrimaryChild( m_renderableGadget );
 
 	baseStateChangedSignal().connect( boost::bind( &ObjectView::baseStateChanged, this ) );
 }
