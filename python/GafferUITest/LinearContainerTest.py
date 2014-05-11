@@ -211,6 +211,33 @@ class LinearContainerTest( GafferUITest.TestCase ) :
 		
 		c.setDirection( GafferUI.LinearContainer.Direction.Decreasing )
 		self.assertEqual( c.bound(), IECore.Box3f( IECore.V3f( -1, -3, 0 ), IECore.V3f( 1, 3, 0 ) ) )
+	
+	def testChildVisibility( self ) :
+	
+		g1 = GafferUI.SpacerGadget( IECore.Box3f( IECore.V3f( 0 ), IECore.V3f( 1, 1, 0 ) ) )
+		g2 = GafferUI.SpacerGadget( IECore.Box3f( IECore.V3f( 0 ), IECore.V3f( 2, 1, 0 ) ) )
+		g3 = GafferUI.SpacerGadget( IECore.Box3f( IECore.V3f( 0 ), IECore.V3f( 5, 1, 0 ) ) )
+		
+		c = GafferUI.LinearContainer( spacing = 1 )
+		c.addChild( g1 )
+		
+		self.assertEqual( c.bound(), IECore.Box3f( IECore.V3f( -0.5, -0.5, 0 ), IECore.V3f( 0.5, 0.5, 0 ) ) )
+		
+		c.addChild( g2 )
+		self.assertEqual( c.bound(), IECore.Box3f( IECore.V3f( -2, -0.5, 0 ), IECore.V3f( 2, 0.5, 0 ) ) )
+		
+		g2.setVisible( False )
+		# should be as if the child didn't exist
+		self.assertEqual( c.bound(), IECore.Box3f( IECore.V3f( -0.5, -0.5, 0 ), IECore.V3f( 0.5, 0.5, 0 ) ) )
+		
+		g2.setVisible( True )
+		self.assertEqual( c.bound(), IECore.Box3f( IECore.V3f( -2, -0.5, 0 ), IECore.V3f( 2, 0.5, 0 ) ) )
+		
+		c.addChild( g3 )
+		self.assertEqual( c.bound(), IECore.Box3f( IECore.V3f( -5, -0.5, 0 ), IECore.V3f( 5, 0.5, 0 ) ) )
+		
+		g1.setVisible( False )
+		self.assertEqual( c.bound(), IECore.Box3f( IECore.V3f( -4, -0.5, 0 ), IECore.V3f( 4, 0.5, 0 ) ) )
 		
 if __name__ == "__main__":
 	unittest.main()

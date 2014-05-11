@@ -56,7 +56,7 @@ using namespace std;
 IE_CORE_DEFINERUNTIMETYPED( Gadget );
 
 Gadget::Gadget( const std::string &name )
-	:	GraphComponent( name ), m_style( 0 ), m_highlighted( false ), m_toolTip( "" )
+	:	GraphComponent( name ), m_style( 0 ), m_visible( true ), m_highlighted( false ), m_toolTip( "" )
 {
 	std::string n = "__Gaffer::Gadget::" + boost::lexical_cast<std::string>( (size_t)this );
 	m_glName = IECoreGL::NameStateComponent::glNameFromName( n, true );
@@ -124,6 +124,35 @@ const Style *Gadget::style() const
 		g = g->parent<Gadget>();
 	}
 	return Style::getDefaultStyle().get();
+}
+
+void Gadget::setVisible( bool visible )
+{
+	if( visible == m_visible )
+	{
+		return;
+	}
+	m_visible = visible;
+	renderRequestSignal()( this );
+}
+
+bool Gadget::getVisible() const
+{
+	return m_visible;
+}
+
+bool Gadget::visible( Gadget *relativeTo )
+{
+	Gadget *g = this;
+	while( g && g != relativeTo )
+	{
+		if( !g->getVisible() )
+		{
+			return false;
+		}
+		g = g->parent<Gadget>();
+	}
+	return true;
 }
 
 void Gadget::setHighlighted( bool highlighted )
@@ -205,6 +234,10 @@ void Gadget::doRender( const Style *style ) const
 	{
 		// cast is safe because of the guarantees acceptsChild() gives us
 		const Gadget *c = static_cast<const Gadget *>( it->get() );
+		if( !c->getVisible() )
+		{
+			continue;
+		}
 		c->render( style );
 	}
 }
@@ -216,6 +249,10 @@ Imath::Box3f Gadget::bound() const
 	{
 		// cast is safe because of the guarantees acceptsChild() gives us
 		const Gadget *c = static_cast<const Gadget *>( it->get() );
+		if( !c->getVisible() )
+		{
+			continue;
+		}
 		Imath::Box3f b = c->bound();
 		b = Imath::transform( b, c->getTransform() );
 		result.extendBy( b );

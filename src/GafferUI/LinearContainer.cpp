@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2014, John Haddon. All rights reserved.
 //  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -176,7 +176,13 @@ void LinearContainer::calculateChildTransforms() const
 	vector<Box3f> bounds;
 	for( ChildContainer::const_iterator it=children().begin(); it!=children().end(); it++ )
 	{
-		Box3f b = static_cast<const Gadget *>(it->get())->bound();
+		const Gadget *child = static_cast<const Gadget *>( it->get() );
+		if( !child->getVisible() )
+		{
+			continue;
+		}
+		
+		Box3f b = child->bound();
 		if( !b.isEmpty() )
 		{
 			for( int a=0; a<3; a++ )
@@ -193,13 +199,19 @@ void LinearContainer::calculateChildTransforms() const
 		}
 		bounds.push_back( b );
 	}
-	size[axis] += (children().size() - 1) * m_spacing;
+	size[axis] += (bounds.size() - 1) * m_spacing;
 
 	float offset = size[axis] / 2.0f  * ( m_direction==Increasing ? -1.0f : 1.0f );
 	
 	int i = 0;
 	for( ChildContainer::const_iterator it=children().begin(); it!=children().end(); it++ )
 	{
+		Gadget *child = static_cast<Gadget *>( it->get() );
+		if( !child->getVisible() )
+		{
+			continue;
+		}
+		
 		const Box3f &b = bounds[i++];
 		
 		V3f childOffset( 0 );
@@ -232,8 +244,7 @@ void LinearContainer::calculateChildTransforms() const
 		offset += m_spacing * ( m_direction==Increasing ? 1.0f : -1.0f );
 		
 		M44f m; m.translate( childOffset );
-		static_cast<Gadget *>(it->get())->setTransform( m );
-				
+		child->setTransform( m );
 	}
 	
 	m_clean = true;

@@ -165,6 +165,75 @@ class GadgetTest( GafferUITest.TestCase ) :
 		g.setHighlighted( True )
 		self.assertEqual( len( cs ), 1 )
 		self.assertTrue( cs[0][0].isSame( g ) )
+	
+	def testVisibility( self ) :
+	
+		g1 = GafferUI.Gadget()
+		self.assertEqual( g1.getVisible(), True )
+		self.assertEqual( g1.visible(), True )
+		
+		g1.setVisible( False )
+		self.assertEqual( g1.getVisible(), False )
+		self.assertEqual( g1.visible(), False )
+		
+		g2 = GafferUI.Gadget()
+		g1.addChild( g2 )
+		
+		self.assertEqual( g2.getVisible(), True )
+		self.assertEqual( g2.visible(), False )
+		
+		g1.setVisible( True )
+		self.assertEqual( g2.visible(), True )
+		
+		g3 = GafferUI.Gadget()
+		g2.addChild( g3 )
+		
+		self.assertEqual( g3.getVisible(), True )
+		self.assertEqual( g3.visible(), True )
+		
+		g1.setVisible( False )
+		self.assertEqual( g3.getVisible(), True )
+		self.assertEqual( g3.visible(), False )
+		self.assertEqual( g3.visible( relativeTo = g2 ), True )
+		self.assertEqual( g3.visible( relativeTo = g1 ), True )
+	
+	def testVisibilitySignals( self ) :
+	
+		g = GafferUI.Gadget()
+		cs = GafferTest.CapturingSlot( g.renderRequestSignal() )
+		self.assertEqual( len( cs ), 0 )
+		
+		g.setVisible( True )
+		self.assertEqual( len( cs ), 0 )
+
+		g.setVisible( False )
+		self.assertEqual( len( cs ), 1 )
+		self.assertEqual( cs[0][0], g )
+		
+		g.setVisible( False )
+		self.assertEqual( len( cs ), 1 )
+		self.assertEqual( cs[0][0], g )
+		
+		g.setVisible( True )
+		self.assertEqual( len( cs ), 2 )
+		self.assertEqual( cs[1][0], g )
+	
+	def testBoundIgnoresHiddenChildren( self ) :
+	
+		g = GafferUI.Gadget()
+		t = GafferUI.TextGadget( "text" )
+		g.addChild( t )
+		
+		b = t.bound()
+		self.assertEqual( g.bound(), b )
+		
+		t.setVisible( False )
+		# we still want to know what the bound would be for t,
+		# even when it's hidden.
+		self.assertEqual( t.bound(), b )
+		# but we don't want it taken into account when computing
+		# the parent bound.
+		self.assertEqual( g.bound(), IECore.Box3f() )
 		
 if __name__ == "__main__":
 	unittest.main()

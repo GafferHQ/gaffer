@@ -113,10 +113,19 @@ class Gadget : public Gaffer::GraphComponent
 		//@}
 
 		/// @name State
-		/// \todo Add setEnabled()/getEnabled() and setVisible()/getVisible()
-		/// methods matching those we have on the Widget class.
+		/// \todo Add setEnabled()/getEnabled() methods matching those we
+		/// have on the Widget class.
 		////////////////////////////////////////////////////////////////////
 		//@{
+		/// Sets the visibility status for this Gadget. Note that even if this
+		/// Gadget has getVisible() == true, it will not be visible on screen
+		/// unless the same is true for all its ancestors.
+		void setVisible( bool visible );
+		/// Returns the visibility status for this Gadget.
+		bool getVisible() const;
+		/// Returns true if this Gadget and all its parents up to the specified
+		/// ancestor are visible.
+		bool visible( Gadget *relativeTo = NULL );
 		/// Sets whether or not this Gadget should be rendered in a highlighted
 		/// state. This status is not inherited by child Gadgets. Note that highlighted
 		/// drawing has not yet been implemented for all Gadget types. Derived
@@ -244,7 +253,7 @@ class Gadget : public Gaffer::GraphComponent
 		/// The subclass specific part of render(). The public render() method
 		/// sets the GL state up with the name attribute and transform for
 		/// this Gadget, makes sure the style is bound and then calls doRender().
-		/// The default implementation just renders all the child Gadgets.
+		/// The default implementation just renders all the visible child Gadgets.
 		virtual void doRender( const Style *style ) const;
 		
 	private :
@@ -256,6 +265,7 @@ class Gadget : public Gaffer::GraphComponent
 		
 		ConstStylePtr m_style;
 		
+		bool m_visible;
 		bool m_highlighted;
 		
 		Imath::M44f m_transform;
