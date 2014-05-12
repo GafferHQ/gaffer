@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2013-2014, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -26,8 +26,8 @@
 #  PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
 #  CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
 #  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-#  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES LOSS OF USE, DATA, OR
+#  PROFITS OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
 #  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 #  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 #  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
@@ -59,10 +59,41 @@ class ImageTransformTest( unittest.TestCase ) :
 		c["image:channelName"] = "R"
 		c["image:tileOrigin"] = IECore.V2i( 0 )
 		with c :
-			h1 = t["out"].hash();	
-			h2 = r["out"].hash();	
+			h1 = t["out"].hash()	
+			h2 = r["out"].hash()	
 			self.assertEqual( h1, h2 )	
-		
+
+	def testTilesWithSameInputTiles( self ) :
+
+		# This particular transform (along with many others) has output tiles
+		# which share the exact same set of input tiles affecting their result.
+		# This revealed a bug in ImageTransform::hashChannelData() whereby the
+		# tile origin wasn't being hashed in to break the hashes for these output
+		# tiles apart.
+
+		r = GafferImage.ImageReader()
+		r["fileName"].setValue( os.path.join( self.path, "rgb.100x100.exr" ) )
+
+		t = GafferImage.ImageTransform()
+		t["in"].setInput( r["out"] )
+		t["transform"]["rotate"].setValue( 1. )
+		t["transform"]["scale"].setValue( IECore.V2f( 1.5, 1. ) )
+		imageToTest = t["out"].image()
+		imageToTest.blindData().clear()
+
+		r2 = GafferImage.ImageReader()
+		r2["fileName"].setValue( os.path.join( self.path, "knownTransformBug.exr" ) )
+		expectedImage = r2['out'].image()
+		expectedImage.blindData().clear()
+
+		op = IECore.ImageDiffOp()
+		res = op(
+			imageA = imageToTest,
+			imageB = expectedImage
+		)
+
+		self.assertFalse( res.value )
+
 	def testScaleHash( self ) :
 		
 		r = GafferImage.ImageReader()
@@ -71,9 +102,9 @@ class ImageTransformTest( unittest.TestCase ) :
 		t = GafferImage.ImageTransform()
 		t["in"].setInput( r["out"] )
 
-		h1 = t["__scaledFormat"].hash();	
-		t["transform"]["scale"].setValue( IECore.V2f( 2., 2. ) );	
-		h2 = t["__scaledFormat"].hash();	
+		h1 = t["__scaledFormat"].hash()
+		t["transform"]["scale"].setValue( IECore.V2f( 2., 2. ) )
+		h2 = t["__scaledFormat"].hash()
 		self.assertNotEqual( h1, h2 )	
 		
 	def testDirtyPropagation( self ) :
@@ -85,7 +116,7 @@ class ImageTransformTest( unittest.TestCase ) :
 		t["in"].setInput( r["out"] )
 		
 		cs = GafferTest.CapturingSlot( t.plugDirtiedSignal() )
-		t["transform"]["scale"].setValue( IECore.V2f( 2., 2. ) );	
+		t["transform"]["scale"].setValue( IECore.V2f( 2., 2. ) )	
 		
 		dirtiedPlugs = set( [ x[0].relativeName( x[0].node() ) for x in cs ] )
 		self.assertEqual( len( dirtiedPlugs ), 8 )
@@ -105,7 +136,7 @@ class ImageTransformTest( unittest.TestCase ) :
 
 		t = GafferImage.ImageTransform()
 		t["in"].setInput( r["out"] )
-		t["transform"]["translate"].setValue( IECore.V2f( 2., 2. ) );	
+		t["transform"]["translate"].setValue( IECore.V2f( 2., 2. ) )	
 		
 		c = Gaffer.Context()
 		c["image:channelName"] = "R"
@@ -128,7 +159,7 @@ class ImageTransformTest( unittest.TestCase ) :
 		with c :
 			self.assertEqual( r["out"].hash(), t["out"].hash() )
 		
-			t["transform"]["translate"].setValue( IECore.V2f( 20., 20.5 ) );	
+			t["transform"]["translate"].setValue( IECore.V2f( 20., 20.5 ) )	
 			self.assertNotEqual( r["out"].hash(), t["out"].hash() )
 	
 	def testDisabled( self ) :
@@ -144,8 +175,8 @@ class ImageTransformTest( unittest.TestCase ) :
 		c["image:tileOrigin"] = IECore.V2i( 0 )
 		with c:
 			cs = GafferTest.CapturingSlot( t.plugDirtiedSignal() )
-			t["transform"]["translate"].setValue( IECore.V2f( 2., 2. ) );	
-			t["transform"]["rotate"].setValue( 90 );	
+			t["transform"]["translate"].setValue( IECore.V2f( 2., 2. ) )	
+			t["transform"]["rotate"].setValue( 90 )	
 			t["enabled"].setValue( True )
 			self.assertNotEqual( r["out"].hash(), t["out"].hash() )
 		
