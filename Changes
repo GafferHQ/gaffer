@@ -1,3 +1,94 @@
+# 0.94.0
+
+#### Apps
+
+- Increased default size of browser app (#795).
+- Added bookmarks support to Op windows in the browser app (#787).
+- Fixed position of quit confirmation dialogue (#751).
+- Fixed parsing of command line arguments with spaces.
+
+#### UI
+
+- Fixed PySide incompatibility in VectorDataWidget.
+- Improved VectorDataWidget numeric editing (#637).
+- Simplified OpDialogue exception reporting (#806).
+- Fixed "Open Recent..." crash bug in PySide builds (#548).
+- Used OpDialogue to improve progress/error reports in OpPathPreview (#792).
+- Enabled background mode for OpDialogue launched from BrowserEditor.
+- Fixed OpPathPreview UI glitch.
+- Fixed "KeyError: 'currentTab'" error when loading custom layouts.
+- Added more sensible initial widget sizes to BrowserEditor. The sizes are also saved and restored when modes are switched.
+- Improved Bookmarks
+    - Identifies recent items by full paths, so multiple recent items with the same basename may coexist.
+    - Prevents heavy usage of one bookmarks category from removing the recent items for the general (no category) bookmarks.
+    - Improves bookmarks UI in PathChooserWidget to display full paths of recent items.
+	- Most recent items are now displayed at the top.
+	- Added creation of bookmarks by dragging on to bookmarks icon.
+- Fixed cursor bug in StringPlugValueWidget continuous update mode (#796).
+- Fixed bug in non-editable MultiLineStringPlugValueWidgets.
+- Fixed upside down nodule labels.
+- Fixed overzealous Viewport drag tracking (#550).
+- Improved SceneHierarchy to view any output ScenePlug, regardless of name. This improves compatibility with Boxes, where the user can make an output plug with any name they want.
+- Added right click menu for Box plugs in NodeGraph. This allows the renaming and deletion of promoted nodules.
+- Added dropdown menu for Displays node quantize parameters.
+- Improved Displays node UI (#15).
+- Added command-line representation of Op values in the UI (#793).
+- Added workaround for squash/stretch in viewport camera look-through (#826).
+-  Added custom editor to PathVectorDataWidget. This enables tab completion, nice dropdown menus and a browser for PathVectorDataParameters.
+- Added indexing methods to VectorDataWidget.
+- Added presetsOnly dropdown menus to CompoundVectorParameterValueWidget (#470).
+- Added an auto-load preset for ops (#804).
+- Added filtering by image type for ImageReader and ImageWriter file dialogues.
+
+#### Core
+
+- Combined setValue() serialisation for CompoundNumericPlugs (#761).
+- Fixed Box plug promotion to support ImagePlugs and ScenePlugs.
+
+#### Scene
+
+- Renamed GLSL shaders to UpperCamelCase. This matches the naming convention we use for OSL shaders.
+- Added a Grid node.
+- Fixed FilteredSceneProcessor to allow Box promotion of Filter plug.
+
+#### Image
+
+- Fixed a bug in ImageTransform that could result in corrupted output.
+
+#### API
+
+- Added GraphComponentClass and GadgetClass to improve bindings.
+- Added NodeGadgetClass to improve bindings of NodeGadgets.
+- Added immediate execution mode to OpDialogue.
+- Fixed NodeGadget::noduleTangent() binding.
+- Fixed potential bug in NodeGadget::create().
+- Fixed LRUCache getter cost calculations.
+- Fixed Metadata test hang.
+- Improved Window.resizeToFitChild() behaviour. If called on an as-yet unshown window, it would move the window to the top left corner of the screen. Now the window will still be opened in a sensible place. Added additional shrink and expand arguments to further control the resize behaviour.
+- Added support for fixed size CompoundVectorParameterValueWidget. The ["UI"]["sizeEditable"] user data entry can be given a BoolData value of False, which will cause the +/- buttons to be hidden in the UI, enforcing a fixed length on the data in the vector parameters.
+- Added per-column editability to CompoundVectorParameterValueWidget. This uses a ["UI"]["editable"] user data entry in each child parameter, where a BoolData value of False will make the column for that parameter read-only (#766).
+- Made Bookmarks.acquire() support passing Widgets and GraphComponents.
+- Added support for callable dialogue keywords in PathPlugValueWidget.
+- Fixed drag/drop to allow modal dialogue creation in dropSignal().
+- Added public Serialisation::acquireSerialiser() method.
+- Added ValuePlugSerialiser::valueNeedsSerialisation() method. This can be reimplemented by derived classes to provide more control over the serialisation of values.
+- Privatised numeric and string PlugValueWidget implementations.
+- Added ViewportGadget viewportChangedSignal() and cameraChangedSignal().
+- Added SpacerGadget size accessors.
+- Added iterator typedefs for all GafferUI::Gadget subclasses.
+- Improved Box plug promotion API.
+- Made BlockedConnection and UndoContext non-copyable.
+- Added useNameAsPlugName argument to CompoundDataPlug::addMembers(). Also added python bindings for CompoundDataPlug::fillCompoundData() and CompoundDataPlug::fillCompoundObject().
+- Gave Displays node parameter plugs more useful names.
+- Added VectorDataWidget.editSignal(). This allows custom Widgets to be provided to edit the values held in the table cells.
+- Added Widget.focusChangedSignal().
+- Added VectorDataWidget setColumnEditable/getColumnEditable methods.
+- Added right click preset menu for CompoundVectorParameterValueWidget. This also adds the ability for any custom parameter menu to operate with CompoundVectorParameters, whereas before they couldn't.
+
+#### Build
+
+- Now using Coverity static analysis - this resulted in a number of bugs being found and fixed in this version.
+
 # 0.93.0
 
 #### Core
