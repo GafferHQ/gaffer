@@ -1,7 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2012, John Haddon. All rights reserved.
-#  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,13 +34,7 @@
 #  
 ##########################################################################
 
-from _GafferImageUI import *
+import GafferUI
+import GafferImage
 
-import DisplayUI
-from FormatPlugValueWidget import FormatPlugValueWidget
-from FilterPlugValueWidget import FilterPlugValueWidget
-from ChannelMaskPlugValueWidget import ChannelMaskPlugValueWidget
-
-import ImageViewToolbar
-import ImageTransformUI
-import NodeUIs # Put this at the bottom or we get ordering issues!
+GafferUI.PlugValueWidget.registerCreator( GafferImage.ImageTransform.staticTypeId(), "transform", GafferUI.CompoundPlugValueWidget, collapsed=None )
