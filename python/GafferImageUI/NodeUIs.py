@@ -67,7 +67,13 @@ GafferUI.PlugValueWidget.registerCreator(
 	GafferImage.ImageReader.staticTypeId(),
 	"fileName",
 	lambda plug : GafferUI.PathPlugValueWidget( plug,
-		path = Gaffer.FileSystemPath( "/", filter = Gaffer.FileSystemPath.createStandardFilter() ),
+		path = Gaffer.FileSystemPath(
+			"/",
+			filter = Gaffer.FileSystemPath.createStandardFilter(
+				extensions = GafferImage.ImageReader.supportedExtensions(),
+				extensionsLabel = "Show only image files",
+			)
+		),
 		pathChooserDialogueKeywords = {
 			"bookmarks" : GafferUI.Bookmarks.acquire( plug, category = "image" ),
 			"leaf" : True,
@@ -81,7 +87,13 @@ GafferUI.PlugValueWidget.registerCreator(
 	GafferImage.ImageWriter.staticTypeId(),
 	"fileName",
 	lambda plug : GafferUI.PathPlugValueWidget( plug,
-		path = Gaffer.FileSystemPath( "/", filter = Gaffer.FileSystemPath.createStandardFilter() ),
+		path = Gaffer.FileSystemPath(
+			"/",
+			filter = Gaffer.FileSystemPath.createStandardFilter(
+				extensions = GafferImage.ImageReader.supportedExtensions(),
+				extensionsLabel = "Show only image files",
+			)
+		),
 		pathChooserDialogueKeywords = {
 			"bookmarks" : GafferUI.Bookmarks.acquire( plug, category = "image" ),
 			"leaf" : True,
