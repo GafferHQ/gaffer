@@ -74,3 +74,6 @@ GafferUI.PlugValueWidget.registerCreator(
 		( "Paused", GafferScene.InteractiveRender.State.Paused ),
 	),
 )
+
+GafferUI.Nodule.registerNodule( GafferScene.InteractiveRender.staticTypeId(), fnmatch.translate( "*" ), lambda plug : None )
+GafferUI.Nodule.registerNodule( GafferScene.InteractiveRender.staticTypeId(), "in", GafferUI.StandardNodule )

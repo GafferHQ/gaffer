@@ -39,7 +39,6 @@
 #include "GafferBindings/NodeBinding.h"
 #include "GafferBindings/ExecutableBinding.h"
 
-#include "GafferScene/Render.h"
 #include "GafferScene/OpenGLRender.h"
 #include "GafferScene/InteractiveRender.h"
 
@@ -115,8 +114,6 @@ static ContextPtr interactiveRenderGetContext( InteractiveRender &r )
 
 void GafferSceneBindings::bindRender()
 {
-
-	NodeClass<Render>();
 	
 	NodeClass<ExecutableRender, ExecutableRenderWrapperPtr> executableRender;
 	ExecutableBinding<NodeClass<ExecutableRender, ExecutableRenderWrapperPtr>, ExecutableRender>::bind( executableRender );

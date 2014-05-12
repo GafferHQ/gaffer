@@ -1,7 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2012, John Haddon. All rights reserved.
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -37,30 +36,8 @@
 
 import fnmatch
 
-import Gaffer
-import GafferScene
 import GafferUI
+import GafferScene
 
-##########################################################################
-# Metadata
-##########################################################################
-
-Gaffer.Metadata.registerNodeDescription(
-
-GafferScene.Render,
-
-"""A base class for nodes which can render scenes.""",
-
-"in",
-"The scene to be rendered.",
-
-)
-
-##########################################################################
-# Widgets and nodules
-##########################################################################
-
-GafferUI.PlugValueWidget.registerCreator( GafferScene.Render.staticTypeId(), "in", None )
-
-GafferUI.Nodule.registerNodule( GafferScene.Render.staticTypeId(), fnmatch.translate( "*" ), lambda plug : None )
-GafferUI.Nodule.registerNodule( GafferScene.Render.staticTypeId(), "in", GafferUI.StandardNodule )
+GafferUI.Nodule.registerNodule( GafferScene.ExecutableRender.staticTypeId(), fnmatch.translate( "*" ), lambda plug : None )
+GafferUI.Nodule.registerNodule( GafferScene.ExecutableRender.staticTypeId(), "in", GafferUI.StandardNodule )

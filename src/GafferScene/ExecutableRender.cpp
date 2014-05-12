@@ -37,15 +37,13 @@
 #include "IECore/SimpleTypedData.h"
 #include "IECore/WorldBlock.h"
 
-#include "IECoreGL/IECoreGL.h"
-#include "IECoreGL/Renderer.h"
-
 #include "Gaffer/Context.h"
 #include "Gaffer/ApplicationRoot.h"
 
 #include "GafferScene/ScenePlug.h"
 #include "GafferScene/SceneProcedural.h"
 #include "GafferScene/ExecutableRender.h"
+#include "GafferScene/RendererAlgo.h"
 
 using namespace IECore;
 using namespace Gaffer;
@@ -53,13 +51,27 @@ using namespace GafferScene;
 
 IE_CORE_DEFINERUNTIMETYPED( ExecutableRender );
 
+size_t ExecutableRender::g_firstPlugIndex = 0;
+
 ExecutableRender::ExecutableRender( const std::string &name )
-	:	Render( name ), Executable( this )
+	:	ExecutableNode( name )
 {
+	storeIndexOfNextChild( g_firstPlugIndex );
+	addChild( new ScenePlug( "in" ) );
 }
 
 ExecutableRender::~ExecutableRender()
 {
+}
+
+ScenePlug *ExecutableRender::inPlug()
+{
+	return getChild<ScenePlug>( g_firstPlugIndex );
+}
+
+const ScenePlug *ExecutableRender::inPlug() const
+{
+	return getChild<ScenePlug>( g_firstPlugIndex );
 }
 
 void ExecutableRender::executionRequirements( const Gaffer::Context *context, Tasks &requirements ) const
