@@ -231,6 +231,10 @@ void Implementation::hashChannelData( const GafferImage::ImagePlug *output, cons
 	Sampler sampler( inPlug(), channelName, tile, filter );
 	sampler.hash( h );
 	
+	// Hash in the origin of the output tile. Multiple output tiles may share the exact same set of input
+	// tiles, but will reference different parts of them depending on the tile origin.
+	h.append( tileOrigin );
+
 	// Hash the filter type that we are using.	
 	filterPlug()->hash( h );
 	

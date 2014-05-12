@@ -63,8 +63,13 @@ class ImageTransformTest( unittest.TestCase ) :
 			h2 = r["out"].hash()	
 			self.assertEqual( h1, h2 )	
 
-	def testKnownFailure( self ) :
-		'''Highlights a bug that has been introduced since a previous version (tested against 0.83.0).'''
+	def testTilesWithSameInputTiles( self ) :
+
+		# This particular transform (along with many others) has output tiles
+		# which share the exact same set of input tiles affecting their result.
+		# This revealed a bug in ImageTransform::hashChannelData() whereby the
+		# tile origin wasn't being hashed in to break the hashes for these output
+		# tiles apart.
 
 		r = GafferImage.ImageReader()
 		r["fileName"].setValue( os.path.join( self.path, "rgb.100x100.exr" ) )
