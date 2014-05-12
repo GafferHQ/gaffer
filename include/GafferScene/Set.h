@@ -44,7 +44,7 @@
 namespace GafferScene
 {
 
-/// This node defines sets of object locations as PathMatcherData,
+/// This node defines sets of scene locations as PathMatcherData,
 /// placing them in the scene globals. It is not to be confused with the Gaffer::Set
 /// class which is for an entirely different purpose.
 class Set : public GlobalsProcessor
