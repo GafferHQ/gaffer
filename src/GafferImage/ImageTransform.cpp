@@ -239,17 +239,7 @@ void Implementation::hashChannelData( const GafferImage::ImagePlug *output, cons
 	filterPlug()->hash( h );
 	
 	// Finally we hash the transformation.
-
-	///\ todo: Ideally we should only hash the offset of the transform from the data window so that when translated by ImagePlug::tileSize()
-	/// we can reuse the cache. However this involves changing the ImageProcessor so that it hashes each tile relative to it's data window
-	/// rather than it's absolute coordinates. When this is implemented, uncomment the line below and delete the line that hashes translatePlug(). 
-	// h.append( Imath::V2f( t.x - floor( t.x ), t.y - floor( t.y ) ) );
-	
-	transformPlug()->translatePlug()->hash( h );
-	
-	transformPlug()->scalePlug()->hash( h );
-	transformPlug()->pivotPlug()->hash( h );
-	transformPlug()->rotatePlug()->hash( h );
+	transformPlug()->hash( h );
 }
 
 Imath::Box2i Implementation::computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const
