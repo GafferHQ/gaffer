@@ -60,6 +60,16 @@ class ExecutableNode : public Node
 		/// It's used in Executable nodes to describe the requirements and in Despatchers
 		/// to represent what they are supposed to execute.
 		/// The comparison and hash methods can be used for building sets of unique Tasks.
+		/// \todo I think hash(), == and < are badly broken. I don't see any reason
+		/// why hash() shouldn't just be returning node->executionHash( context ), because
+		/// after all that is already defined to uniquely identify the task. Then I think
+		/// operator == and operator < should be defined in terms of the hash as well.
+		/// We might also want to consider making Tasks immutable, because any code using
+		/// sets/hashes to identify unique tasks is vulnerable to hashes changing - in fact
+		/// we have test cases checking that Tasks can be stored in python sets so immutability
+		/// of the hash is essential for that to make sense. Perhaps hash should just be a
+		/// member variable initialised at construction, and then all member variables should
+		/// be made const.
 		class Task
 		{
 			public :
