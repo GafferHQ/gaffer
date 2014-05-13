@@ -124,10 +124,11 @@ void ExecutableRender::execute( const Contexts &contexts ) const
 				systemCommand += "&";
 			}
 			
-			/// \todo bms20131119: Note ktmp is unchecked, and as such invokes an error when 
-			/// compiling with stock ubuntu 12.04.  This needs investigation
-			int ktmp = system( systemCommand.c_str() );
-			(void) ktmp;
+			int result = system( systemCommand.c_str() );
+			if( result )
+			{
+				throw Exception( "System command failed" );
+			}
 		}
 	}
 }
