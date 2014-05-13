@@ -80,7 +80,8 @@ class StandardNodeUI( GafferUI.NodeUI ) :
 		self.__buildPlugWidgets()
 
 		# ScriptNode has an execute method but that is for something else.
-		## \todo We need to base this on the new Executable class.
+		## \todo This shouldn't need to be here at all - instead we should just define
+		# a custom UI for the ExecutableNode in another file.
 		if hasattr( node, "execute" ) and not isinstance( node, Gaffer.ScriptNode ) :
 			defaultColumn = self.__sectionColumn( self.__defaultSectionName )
 			defaultColumn.append( GafferUI.ExecuteUI.ExecuteButton( self.node() ) )
