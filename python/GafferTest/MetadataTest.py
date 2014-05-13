@@ -305,6 +305,29 @@ class MetadataTest( GafferTest.TestCase ) :
 		self.assertEqual( Gaffer.Metadata.nodeValue( s2["n"], "serialisationTest" ), 1 )
 		self.assertEqual( Gaffer.Metadata.plugValue( s2["n"]["op1"], "serialisationTest" ), 2 )
 	
+	def testStringSerialisationWithNewlinesAndQuotes( self ) :
+	
+		trickyStrings = [
+			"Paragraph 1\n\nParagraph 2",
+			"'Quote'",
+			"Apostrophe's",
+			'"Double quote"',
+		]
+	
+		script = Gaffer.ScriptNode()
+		
+		script["n"] = Gaffer.Node()
+		for s in trickyStrings :
+			p = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+			script["n"]["user"].addChild( p )
+			Gaffer.Metadata.registerPlugValue( p, "description", s )
+		
+		script2 = Gaffer.ScriptNode()
+		script2.execute( script.serialise() )
+		
+		for p, s in zip( script2["n"]["user"].children(), trickyStrings ) :
+			self.assertEqual( Gaffer.Metadata.plugDescription( p ), s )
+		
 	def testRegisteredValues( self ) :
 	
 		n = GafferTest.AddNode()
