@@ -44,17 +44,16 @@
 #include "boost/signals.hpp"
 #include "IECore/RunTimeTyped.h"
 #include "Gaffer/TypeIds.h"
-#include "Gaffer/Executable.h"
+#include "Gaffer/ExecutableNode.h"
 
 namespace Gaffer
 {
 
-IE_CORE_FORWARDDECLARE( Node )
 IE_CORE_FORWARDDECLARE( Despatcher )
 IE_CORE_FORWARDDECLARE( CompoundPlug )
 
 /// Pure virtual class that specifies the interface for objects that
-/// know how to run Executable nodes. They are also used after
+/// know how to run ExecutableNodes. They are also used after
 /// construction of Execution nodes to add custom plugs that 
 /// can tweak how they operate, for example, farm parameters.
 class Despatcher : public IECore::RunTimeTyped
@@ -67,7 +66,7 @@ class Despatcher : public IECore::RunTimeTyped
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::Despatcher, DespatcherTypeId, IECore::RunTimeTyped );
 
-		typedef boost::signal<void (const Despatcher *, const std::vector< NodePtr > &)> DespatchSignal;
+		typedef boost::signal<void (const Despatcher *, const std::vector<ExecutableNodePtr> &)> DespatchSignal;
 
 		/// @name Despatch signals
 		/// These signals are emitted on despatch events for any registered
@@ -80,7 +79,7 @@ class Despatcher : public IECore::RunTimeTyped
 		static DespatchSignal &postDespatchSignal();
 
 		/// Triggers the preDespatch signal and calls doDespatch() function.
-		void despatch( const std::vector< NodePtr > &nodes ) const;
+		void despatch( const std::vector<ExecutableNodePtr> &nodes ) const;
 
 		/// Registration function for despatchers.
 		static void registerDespatcher( std::string name, DespatcherPtr despatcher );
@@ -93,23 +92,23 @@ class Despatcher : public IECore::RunTimeTyped
 
 	protected :
 
-		friend class Executable;
+		friend class ExecutableNode;
 
-		/// Despatches the execution of the given array of Executable nodes (and possibly their requirements).
-		virtual void doDespatch( const std::vector< NodePtr > &nodes ) const = 0;
+		/// Despatches the execution of the given array of ExecutableNodes (and possibly their requirements).
+		virtual void doDespatch( const std::vector<ExecutableNodePtr> &nodes ) const = 0;
 
-		/// This function is called to add custom Despatcher plugs during Executable node construction.
+		/// This function is called to add custom Despatcher plugs during ExecutableNode construction.
 		static void addAllPlugs( CompoundPlug *despatcherPlug );
 
-		/// Function called by addAllPlugs. Despatchers have a chance to create custom plugs on Executable nodes.
+		/// Function called by addAllPlugs. Despatchers have a chance to create custom plugs on ExecutableNodes.
 		/// The function must accept situations where the node already has the plugs (nodes loaded from a scene).
 		virtual void addPlugs( CompoundPlug *despatcherPlug ) const = 0;
 
-		/// Representation of a Executable task plus it's requirements as other tasks.
+		/// Representation of a ExecutableNode task plus it's requirements as other tasks.
 		struct TaskDescription 
 		{
-			Executable::Task task;
-			std::set<Executable::Task> requirements;
+			ExecutableNode::Task task;
+			std::set<ExecutableNode::Task> requirements;
 		};
 
 		/// Utility function that recursivelly collects all nodes and their execution requirements and flattens into 
@@ -117,7 +116,7 @@ class Despatcher : public IECore::RunTimeTyped
 		/// returns default hash), this function will consider a separate task for each unique set of requirements. For all the other nodes
 		/// they will be grouped by executionHash and their final requirements will be the union of all the requirements under that same
 		/// hash.
-		static void uniqueTasks( const Executable::Tasks &tasks, std::vector< TaskDescription > &uniqueTasks );
+		static void uniqueTasks( const ExecutableNode::Tasks &tasks, std::vector< TaskDescription > &uniqueTasks );
 
 	private :
 
@@ -125,7 +124,7 @@ class Despatcher : public IECore::RunTimeTyped
 		static DespatcherMap g_despatchers;
 
 		typedef std::map< IECore::MurmurHash, std::vector< size_t > > TaskSet;
-		static const Executable::Task &uniqueTask( const Executable::Task &task, std::vector< Despatcher::TaskDescription > &uniqueTasks, TaskSet &seenTasks );
+		static const ExecutableNode::Task &uniqueTask( const ExecutableNode::Task &task, std::vector< Despatcher::TaskDescription > &uniqueTasks, TaskSet &seenTasks );
 
 		static DespatchSignal g_preDespatchSignal;
 		static DespatchSignal g_postDespatchSignal;

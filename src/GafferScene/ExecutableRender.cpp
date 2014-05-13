@@ -74,11 +74,6 @@ const ScenePlug *ExecutableRender::inPlug() const
 	return getChild<ScenePlug>( g_firstPlugIndex );
 }
 
-void ExecutableRender::executionRequirements( const Gaffer::Context *context, Tasks &requirements ) const
-{
-	Executable::defaultRequirements( this, context, requirements );
-}
-
 IECore::MurmurHash ExecutableRender::executionHash( const Gaffer::Context *context ) const
 {
 	/// \todo How do we cheaply hash something representing the whole scene?

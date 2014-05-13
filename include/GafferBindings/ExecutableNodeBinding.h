@@ -37,11 +37,100 @@
 #ifndef GAFFERBINDINGS_EXECUTABLENODEBINDING_H
 #define GAFFERBINDINGS_EXECUTABLENODEBINDING_H
 
+#include "IECorePython/ScopedGILLock.h"
+
+#include "Gaffer/ExecutableNode.h"
+
+#include "GafferBindings/NodeBinding.h"
+
 namespace GafferBindings
 {
 
 void bindExecutableNode();
 
+template<typename T, typename Ptr=IECore::IntrusivePtr<T> >
+class ExecutableNodeClass : public NodeClass<T, Ptr>
+{
+	public :
+	
+		ExecutableNodeClass( const char *docString = NULL );
+		
+};
+
+template<typename WrappedType>
+class ExecutableNodeWrapper : public NodeWrapper<WrappedType>
+{
+	public :
+
+		ExecutableNodeWrapper( PyObject *self, const std::string &name )
+			:	NodeWrapper<WrappedType>( self, name )
+		{
+		}
+
+		virtual void executionRequirements( const Gaffer::Context *context, Gaffer::ExecutableNode::Tasks &requirements ) const
+		{
+			IECorePython::ScopedGILLock gilLock;
+			if( this->isSubclassed() )
+			{
+				boost::python::object req = this->methodOverride( "executionRequirements" );
+				if( req )
+				{
+					boost::python::list requirementList = boost::python::extract<boost::python::list>(
+						req( Gaffer::ContextPtr( const_cast<Gaffer::Context *>( context ) ) )
+					);
+						
+					size_t len = boost::python::len( requirementList );
+					requirements.reserve( len );
+					for( size_t i = 0; i < len; i++ )
+					{
+						requirements.push_back( boost::python::extract<Gaffer::ExecutableNode::Task>( requirementList[i] ) );
+					}
+					return;
+				}
+			}
+			WrappedType::executionRequirements( context, requirements );			
+		}
+
+		virtual IECore::MurmurHash executionHash( const Gaffer::Context *context ) const
+		{
+			IECorePython::ScopedGILLock gilLock;
+			if( this->isSubclassed() )
+			{
+				boost::python::object h = this->methodOverride( "executionHash" );
+				if( h )
+				{
+					return boost::python::extract<IECore::MurmurHash>(
+						h( Gaffer::ContextPtr( const_cast<Gaffer::Context *>( context ) ) )
+					);
+				}
+			}
+			return WrappedType::executionHash( context );
+		}
+		
+		virtual void execute( const Gaffer::ExecutableNode::Contexts &contexts ) const
+		{
+			IECorePython::ScopedGILLock gilLock;
+			if( this->isSubclassed() )
+			{
+				boost::python::object exec = this->methodOverride( "execute" );
+				if( exec )
+				{
+					boost::python::list contextList;
+					for( Gaffer::ExecutableNode::Contexts::const_iterator cIt = contexts.begin(); cIt != contexts.end(); cIt++ )
+					{
+						contextList.append( *cIt );
+					}
+					exec( contextList );
+					return;
+				}
+			}
+			WrappedType::execute( contexts );
+		}
+		
+};
+
 } // namespace GafferBindings
+
+#include "GafferBindings/ExecutableNodeBinding.inl"
 
 #endif // GAFFERBINDINGS_EXECUTABLENODEBINDING_H

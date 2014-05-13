@@ -47,7 +47,7 @@ using namespace Gaffer;
 IE_CORE_DEFINERUNTIMETYPED( ExecutableOpHolder )
 
 ExecutableOpHolder::ExecutableOpHolder( const std::string &name )
-	:	ParameterisedHolderNode( name ), Executable( this )
+	:	ParameterisedHolderExecutableNode( name )
 {
 }
 
@@ -58,12 +58,12 @@ void ExecutableOpHolder::setParameterised( IECore::RunTimeTypedPtr parameterised
 	{
 		throw IECore::Exception( "Parameterised object is not an IECore::Op" );
 	}
-	ParameterisedHolderNode::setParameterised( parameterised, keepExistingValues );
+	ParameterisedHolderExecutableNode::setParameterised( parameterised, keepExistingValues );
 }
 
 void ExecutableOpHolder::setOp( const std::string &className, int classVersion, bool keepExistingValues )
 {
-	ParameterisedHolderNode::setParameterised( className, classVersion, "IECORE_OP_PATHS", keepExistingValues );
+	ParameterisedHolderExecutableNode::setParameterised( className, classVersion, "IECORE_OP_PATHS", keepExistingValues );
 }
 
 IECore::OpPtr ExecutableOpHolder::getOp( std::string *className, int *classVersion )
@@ -74,20 +74,6 @@ IECore::OpPtr ExecutableOpHolder::getOp( std::string *className, int *classVersi
 IECore::ConstOpPtr ExecutableOpHolder::getOp( std::string *className, int *classVersion ) const
 {
 	return IECore::runTimeCast<IECore::Op>( getParameterised( className, classVersion ) );
-}
-
-bool ExecutableOpHolder::acceptsInput( const Plug *plug, const Plug *inputPlug ) const
-{
-	if ( !Executable::acceptsRequirementsInput( plug, inputPlug ) )
-	{
-		return false;
-	}
-	return ParameterisedHolderNode::acceptsInput( plug, inputPlug );
-}
-
-void ExecutableOpHolder::executionRequirements( const Context *context, Executable::Tasks &requirements ) const
-{
-	Executable::defaultRequirements( this, context, requirements );
 }
 
 IECore::MurmurHash ExecutableOpHolder::executionHash( const Context *context ) const

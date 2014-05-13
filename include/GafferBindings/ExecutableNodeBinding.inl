@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,29 +34,52 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERBINDINGS_EXECUTABLE_H
-#define GAFFERBINDINGS_EXECUTABLE_H
+#ifndef GAFFERBINDINGS_EXECUTABLENODEBINDING_INL
+#define GAFFERBINDINGS_EXECUTABLENODEBINDING_INL
 
-#include "Gaffer/Context.h"
+#include "boost/python/suite/indexing/container_utils.hpp"
+
+#include "IECorePython/ScopedGILRelease.h"
 
 namespace GafferBindings
 {
 
-template< typename PythonClass, typename NodeClass >
-class ExecutableBinding
+namespace Detail
 {
-	public :
 
-		static void bind( PythonClass &c );
+template<typename T>
+boost::python::list executionRequirements( T &n, Gaffer::Context *context )
+{
+	Gaffer::ExecutableNode::Tasks tasks;
+	n.executionRequirements( context, tasks );
+	boost::python::list result;
+	for( Gaffer::ExecutableNode::Tasks::const_iterator tIt = tasks.begin(); tIt != tasks.end(); ++tIt )
+	{
+		result.append( *tIt );
+	}
+	return result;
+}
 
-	private :
+template<typename T>
+void execute( T &n, const boost::python::list &contextsList )
+{
+	Gaffer::ExecutableNode::Contexts contexts;
+	boost::python::container_utils::extend_container( contexts, contextsList );
+	IECorePython::ScopedGILRelease gilRelease;
+	n.execute( contexts );
+}
 
-		static boost::python::list executionRequirements( NodeClass &n, Gaffer::ContextPtr context );
-		static void execute( NodeClass &n, const boost::python::list &contextList );
-};
+} // namespace Detail
+
+template<typename T, typename Ptr>
+ExecutableNodeClass<T, Ptr>::ExecutableNodeClass( const char *docString )
+	:	NodeClass<T, Ptr>( docString )
+{
+	def( "executionRequirements", &Detail::executionRequirements<T> );
+	def( "executionHash", &T::executionHash );
+	def( "execute", &Detail::execute<T> );	
+}
 
 } // namespace GafferBindings
 
-#include "GafferBindings/ExecutableBinding.inl"
-
-#endif // GAFFERBINDINGS_EXECUTABLE_H
+#endif // GAFFERBINDINGS_EXECUTABLENODEBINDING_INL

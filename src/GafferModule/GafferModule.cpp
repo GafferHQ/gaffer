@@ -98,6 +98,7 @@ BOOST_PYTHON_MODULE( _Gaffer )
 	bindNode();
 	bindDependencyNode();
 	bindComputeNode();
+	bindExecutableNode();
 	bindPlug();
 	bindValuePlug();
 	bindNumericPlug();
@@ -127,7 +128,6 @@ BOOST_PYTHON_MODULE( _Gaffer )
 	bindRandom();
 	bindBox();
 	bindAction();
-	bindExecutableNode();
 	bindDespatcher();
 	bindExecutableOpHolder();
 	bindReference();

@@ -64,7 +64,6 @@ class ExecutableRender : public Gaffer::ExecutableNode
 		ScenePlug *inPlug();
 		const ScenePlug *inPlug() const;
 
-		virtual void executionRequirements( const Gaffer::Context *context, Tasks &requirements ) const;
 		virtual IECore::MurmurHash executionHash( const Gaffer::Context *context ) const;
 		/// Implemented to perform the render.
 		virtual void execute( const Contexts &contexts ) const;

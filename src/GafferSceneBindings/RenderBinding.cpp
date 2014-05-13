@@ -36,8 +36,7 @@
 
 #include "boost/python.hpp"
 
-#include "GafferBindings/NodeBinding.h"
-#include "GafferBindings/ExecutableBinding.h"
+#include "GafferBindings/ExecutableNodeBinding.h"
 
 #include "GafferScene/OpenGLRender.h"
 #include "GafferScene/InteractiveRender.h"
@@ -50,13 +49,13 @@ using namespace Gaffer;
 using namespace GafferBindings;
 using namespace GafferScene;
 
-class ExecutableRenderWrapper : public NodeWrapper<ExecutableRender>
+class ExecutableRenderWrapper : public ExecutableNodeWrapper<ExecutableRender>
 {
 
 	public :
 	
 		ExecutableRenderWrapper( PyObject *self, const std::string &name )
-			:	NodeWrapper<ExecutableRender>( self, name )
+			:	ExecutableNodeWrapper<ExecutableRender>( self, name )
 		{
 		}
 
@@ -115,8 +114,7 @@ static ContextPtr interactiveRenderGetContext( InteractiveRender &r )
 void GafferSceneBindings::bindRender()
 {
 	
-	NodeClass<ExecutableRender, ExecutableRenderWrapperPtr> executableRender;
-	ExecutableBinding<NodeClass<ExecutableRender, ExecutableRenderWrapperPtr>, ExecutableRender>::bind( executableRender );
+	GafferBindings::ExecutableNodeClass<ExecutableRender, ExecutableRenderWrapperPtr>();
 	
 	GafferBindings::NodeClass<OpenGLRender>();
 	

@@ -59,14 +59,12 @@ class ExecutableOpHolderTest( unittest.TestCase ) :
 	
 		n = Gaffer.ExecutableOpHolder()
 		self.assertEqual( n.typeName(), "Gaffer::ExecutableOpHolder" )
-		self.failUnless( n.isInstanceOf( Gaffer.ParameterisedHolderNode.staticTypeId() ) )
+		self.failUnless( n.isInstanceOf( Gaffer.ParameterisedHolderExecutableNode.staticTypeId() ) )
 		self.failUnless( n.isInstanceOf( Gaffer.Node.staticTypeId() ) )
 
 	def testIsExecutable( self ) :
 
-		self.assertTrue( Gaffer.ExecutableNode.isExecutable( Gaffer.ExecutableOpHolder ) )
-		n = Gaffer.ExecutableOpHolder()
-		self.assertTrue( Gaffer.ExecutableNode.isExecutable( n ) )
+		self.assertTrue( isinstance( Gaffer.ExecutableOpHolder(), Gaffer.ExecutableNode ) )
 
 	def testExecutablePlugs( self ) :
 

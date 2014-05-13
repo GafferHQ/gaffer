@@ -153,16 +153,6 @@ const GafferImage::ChannelMaskPlug *ImageWriter::channelsPlug() const
 	return getChild<ChannelMaskPlug>( g_firstPlugIndex+3 );
 }
 
-bool ImageWriter::acceptsInput( const Plug *plug, const Plug *inputPlug ) const
-{
-	return ExecutableNode::acceptsRequirementsInput( plug, inputPlug );
-}
-
-void ImageWriter::executionRequirements( const Context *context, Tasks &requirements ) const
-{
-	Executable::defaultRequirements( this, context, requirements );
-}
-		
 IECore::MurmurHash ImageWriter::executionHash( const Context *context ) const
 {
 	IECore::MurmurHash h = fileNamePlug()->hash();

@@ -34,18 +34,146 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
+#include "Gaffer/Context.h"
+#include "Gaffer/ArrayPlug.h"
+#include "Gaffer/Despatcher.h"
 #include "Gaffer/ExecutableNode.h"
 
 using namespace IECore;
 using namespace Gaffer;
 
+//////////////////////////////////////////////////////////////////////////
+// Task implementation
+//////////////////////////////////////////////////////////////////////////
+
+ExecutableNode::Task::Task() : node(0), context(0)
+{
+}
+
+ExecutableNode::Task::Task( const Task &t ) : node(t.node), context(t.context)
+{
+}
+
+ExecutableNode::Task::Task( ExecutableNodePtr n, ContextPtr c ) : node(n), context(c)
+{
+}
+
+MurmurHash ExecutableNode::Task::hash() const
+{
+	MurmurHash h;
+	const Node *nodePtr = node.get();
+	h.append( (const char *)nodePtr, sizeof(Node*) );
+	h.append( context->hash() );
+	return h;
+}
+
+bool ExecutableNode::Task::operator == ( const Task &rhs ) const
+{
+	return (node.get() == rhs.node.get()) && (*context == *rhs.context);
+}
+
+bool ExecutableNode::Task::operator < ( const Task &rhs ) const
+{
+	if ( node.get() < rhs.node.get() )
+	{
+		return -1;
+	}
+	if ( node.get() > rhs.node.get() )
+	{
+		return 1;
+	}
+	if ( *context == *rhs.context )
+	{
+		return 0;
+	}
+	return ( context.get() < rhs.context.get() ? -1 : 1 );
+}
+
+//////////////////////////////////////////////////////////////////////////
+// ExecutableNode implementation
+//////////////////////////////////////////////////////////////////////////
+
 IE_CORE_DEFINERUNTIMETYPED( ExecutableNode )
 
+size_t ExecutableNode::g_firstPlugIndex;
+
 ExecutableNode::ExecutableNode( const std::string &name )
-	:	Node( name ), Executable( this )
+	:	Node( name )
 {
+	storeIndexOfNextChild( g_firstPlugIndex );
+	addChild( new ArrayPlug( "requirements", Plug::In, new Plug( "requirement0" ) ) );
+	addChild( new Plug( "requirement", Plug::Out ) );
+
+	CompoundPlugPtr despatcherPlug = new CompoundPlug( "despatcherParameters", Plug::In );
+	addChild( despatcherPlug );
+	
+	Despatcher::addAllPlugs( despatcherPlug );
 }
 
 ExecutableNode::~ExecutableNode()
 {
 }
+
+ArrayPlug *ExecutableNode::requirementsPlug()
+{
+	return getChild<ArrayPlug>( g_firstPlugIndex );
+}
+
+const ArrayPlug *ExecutableNode::requirementsPlug() const
+{
+	return getChild<ArrayPlug>( g_firstPlugIndex );
+}
+
+Plug *ExecutableNode::requirementPlug()
+{
+	return getChild<Plug>( g_firstPlugIndex + 1 );
+}
+
+const Plug *ExecutableNode::requirementPlug() const
+{
+	return getChild<Plug>( g_firstPlugIndex + 1 );
+}
+
+void ExecutableNode::executionRequirements( const Context *context, Tasks &requirements ) const
+{
+	for( PlugIterator cIt( requirementsPlug() ); cIt != cIt.end(); ++cIt )
+	{
+		Plug *p = (*cIt)->source<Plug>();
+		if( p != *cIt )
+		{
+			if( ExecutableNode *n = runTimeCast<ExecutableNode>( p->node() ) )
+			{
+				/// \todo Can we not just reuse the context? Maybe we need to make
+				/// the context in Task const?
+				requirements.push_back( Task( n, new Context( *context ) ) );
+			}
+		}
+	}
+}
+
+IECore::MurmurHash ExecutableNode::executionHash( const Context *context ) const
+{
+	return MurmurHash();
+}
+
+void ExecutableNode::execute( const Contexts &contexts ) const
+{
+}
+
+bool ExecutableNode::acceptsInput( const Plug *plug, const Plug *inputPlug ) const
+{
+	if( !Node::acceptsInput( plug, inputPlug ) )
+	{
+		return false;
+	}
+
+	if( plug->parent<ArrayPlug>() == requirementsPlug() )
+	{
+		const Plug *sourcePlug = inputPlug->source<Plug>();
+		const ExecutableNode *sourceNode = runTimeCast<const ExecutableNode>( sourcePlug->node() );
+		return sourceNode && sourcePlug == sourceNode->requirementPlug();
+	}
+
+	return true;
+}
+

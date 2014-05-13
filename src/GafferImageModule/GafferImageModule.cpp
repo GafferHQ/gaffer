@@ -40,7 +40,7 @@
 #include "IECorePython/ScopedGILRelease.h"
 
 #include "GafferBindings/DependencyNodeBinding.h"
-#include "GafferBindings/ExecutableBinding.h"
+#include "GafferBindings/ExecutableNodeBinding.h"
 
 #include "GafferImage/ImageNode.h"
 #include "GafferImage/Display.h"
@@ -142,7 +142,6 @@ BOOST_PYTHON_MODULE( _GafferImage )
 	GafferImageBindings::bindFormatData();
 	GafferImageBindings::bindImageReader();
 	
-	GafferBindings::NodeClass<ImageWriter> imageWriter;
-	GafferBindings::ExecutableBinding< GafferBindings::NodeClass<ImageWriter>, ImageWriter>::bind( imageWriter );
+	GafferBindings::ExecutableNodeClass<ImageWriter>();
 }
 

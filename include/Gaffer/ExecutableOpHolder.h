@@ -37,7 +37,6 @@
 #ifndef GAFFER_EXECUTABLEOPHOLDER_H
 #define GAFFER_EXECUTABLEOPHOLDER_H
 
-#include "Gaffer/Executable.h"
 #include "Gaffer/ParameterisedHolder.h"
 
 namespace IECore
@@ -53,12 +52,12 @@ namespace Gaffer
 IE_CORE_FORWARDDECLARE( ParameterHandler )
 
 /// Node for Ops that can be executed on their own in the farm or in a separate process.
-class ExecutableOpHolder : public ParameterisedHolderNode, public Executable
+class ExecutableOpHolder : public ParameterisedHolderExecutableNode
 {
 
 	public :
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::ExecutableOpHolder, ExecutableOpHolderTypeId, ParameterisedHolderNode );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::ExecutableOpHolder, ExecutableOpHolderTypeId, ParameterisedHolderExecutableNode );
 
 		ExecutableOpHolder( const std::string &name=defaultName<ExecutableOpHolder>() );
 			
@@ -70,13 +69,9 @@ class ExecutableOpHolder : public ParameterisedHolderNode, public Executable
 		IECore::OpPtr getOp( std::string *className = 0, int *classVersion = 0 );
 		IECore::ConstOpPtr getOp( std::string *className = 0, int *classVersion = 0 ) const;
 	
-		virtual void executionRequirements( const Context *context, Tasks &requirements ) const;
 		virtual IECore::MurmurHash executionHash( const Context *context ) const;
 		virtual void execute( const Contexts &contexts ) const;
 		
-	protected :
-
-		virtual bool acceptsInput( const Plug *plug, const Plug *inputPlug ) const;
 };
 
 IE_CORE_DECLAREPTR( ExecutableOpHolder )

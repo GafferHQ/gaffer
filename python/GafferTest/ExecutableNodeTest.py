@@ -55,10 +55,6 @@ class ExecutableNodeTest( unittest.TestCase ) :
 			
 			self.executionCount += 1
 
-		def executionRequirements( self, context ) :
-
-			return self._defaultRequirements( context )
-
 		def executionHash( self, context ) :
 
 			h = IECore.MurmurHash()
@@ -69,25 +65,10 @@ class ExecutableNodeTest( unittest.TestCase ) :
 
 			return h
 
-		def acceptsInput( self, plug, inputPlug ) :
-
-			return Gaffer.ExecutableNode._acceptsRequirementsInput( plug, inputPlug )
-
 	def testIsExecutable( self ) :
 
-		c = Gaffer.Context()
-		self.assertFalse( Gaffer.ExecutableNode.isExecutable( Gaffer.Despatcher ) )
-		self.assertFalse( Gaffer.ExecutableNode.isExecutable( Gaffer.Node ) )
-		self.assertFalse( Gaffer.ExecutableNode.isExecutable( c ) )
-
-		self.assertTrue( Gaffer.ExecutableNode.isExecutable( Gaffer.ExecutableNode ) )
-		n = Gaffer.ExecutableNode()
-		self.assertTrue( Gaffer.ExecutableNode.isExecutable( n ) )
-
-		n = ExecutableNodeTest.MyNode(False)
-
-		self.assertTrue( Gaffer.ExecutableNode.isExecutable( ExecutableNodeTest.MyNode ) )
-		self.assertTrue( Gaffer.ExecutableNode.isExecutable( n ) )
+		self.assertTrue( issubclass( self.MyNode, Gaffer.ExecutableNode ) )
+		self.assertTrue( isinstance( self.MyNode( True ), Gaffer.ExecutableNode ) )
 
 	def testExecutionHash( self ) :
 
@@ -171,7 +152,7 @@ class ExecutableNodeTest( unittest.TestCase ) :
 		c = Gaffer.Context()
 
 		t = Gaffer.ExecutableNode.Task()
-		n = Gaffer.OpHolder()
+		n = Gaffer.ExecutableOpHolder()
 		t.node = n
 		t.context = c
 		
@@ -189,7 +170,7 @@ class ExecutableNodeTest( unittest.TestCase ) :
 	def testTaskComparison( self ) :
 
 		c = Gaffer.Context()
-		n = Gaffer.OpHolder()
+		n = Gaffer.ExecutableOpHolder()
 		t1 = Gaffer.ExecutableNode.Task( n, c )
 		t2 = Gaffer.ExecutableNode.Task()
 		t2.node = n
@@ -197,7 +178,7 @@ class ExecutableNodeTest( unittest.TestCase ) :
 		c2 = Gaffer.Context()
 		c2["a"] = 2
 		t3 = Gaffer.ExecutableNode.Task( n, c2 )
-		n2 = Gaffer.OpHolder()
+		n2 = Gaffer.ExecutableOpHolder()
 		t4 = Gaffer.ExecutableNode.Task( n2, c2 )
 
 		self.assertEqual( t1, t1 )
@@ -211,14 +192,14 @@ class ExecutableNodeTest( unittest.TestCase ) :
 	def testTaskSet( self ) :
 
 		c = Gaffer.Context()
-		n = Gaffer.OpHolder()
+		n = Gaffer.ExecutableOpHolder()
 		t1 = Gaffer.ExecutableNode.Task( n, c )
 		t2 = Gaffer.ExecutableNode.Task( n, c )
 		self.assertEqual( t1, t2 )
 		c2 = Gaffer.Context()
 		c2["a"] = 2
 		t3 = Gaffer.ExecutableNode.Task( n, c2 )
-		n2 = Gaffer.OpHolder()
+		n2 = Gaffer.ExecutableOpHolder()
 		t4 = Gaffer.ExecutableNode.Task( n2, c2 )
 		t5 = Gaffer.ExecutableNode.Task( n2, c )
 
