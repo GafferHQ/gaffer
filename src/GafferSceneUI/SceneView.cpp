@@ -396,7 +396,7 @@ void SceneView::collapseSelection()
 	
 	set<string> pathsToSelect;
 	vector<const string *> pathsToDeselect;
-	PathMatcherData *expandedData = expandedPaths();
+	GafferScene::PathMatcherData *expandedData = expandedPaths();
 	PathMatcher &expanded = expandedData->writable();
 	
 	for( RenderableGadget::Selection::const_iterator it = selection.begin(), eIt = selection.end(); it != eIt; it++ )
@@ -445,16 +445,16 @@ void SceneView::transferSelectionToContext()
 
 GafferScene::PathMatcherData *SceneView::expandedPaths()
 {
-	const PathMatcherData *m = getContext()->get<PathMatcherData>( "ui:scene:expandedPaths", 0 );
+	const GafferScene::PathMatcherData *m = getContext()->get<GafferScene::PathMatcherData>( "ui:scene:expandedPaths", 0 );
 	if( !m )
 	{
-		PathMatcherDataPtr rootOnly = new PathMatcherData;
+		GafferScene::PathMatcherDataPtr rootOnly = new GafferScene::PathMatcherData;
 		rootOnly->writable().addPath( "/" );
 		BlockedConnection blockedConnection( contextChangedConnection() );
 		getContext()->set( "ui:scene:expandedPaths", rootOnly.get() );
-		m = getContext()->get<PathMatcherData>( "ui:scene:expandedPaths", 0 );
+		m = getContext()->get<GafferScene::PathMatcherData>( "ui:scene:expandedPaths", 0 );
 	}
-	return const_cast<PathMatcherData *>( m );
+	return const_cast<GafferScene::PathMatcherData *>( m );
 }
 
 void SceneView::baseStateChanged()
