@@ -112,6 +112,24 @@ void SceneReader::hashBound( const ScenePath &path, const Gaffer::Context *conte
 	}
 }
 
+Imath::Box3f SceneReader::computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+{
+	ConstSceneInterfacePtr s = scene( path );
+	if( !s )
+	{
+		return Box3f();
+	}
+	
+	Box3d b = s->readBound( context->getFrame() / g_frameRate );
+	
+	if( b.isEmpty() )
+	{
+		return Box3f();
+	}
+	
+	return Box3f( b.min, b.max );
+}
+
 void SceneReader::hashTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
 	FileSource::hashTransform( path, context, parent, h );
@@ -127,6 +145,24 @@ void SceneReader::hashTransform( const ScenePath &path, const Gaffer::Context *c
 	{
 		h.append( context->getFrame() );
 	}
+}
+
+Imath::M44f SceneReader::computeTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+{
+	ConstSceneInterfacePtr s = scene( path );
+	if( !s )
+	{
+		return M44f();
+	}
+		
+	M44d t = s->readTransformAsMatrix( context->getFrame() / g_frameRate );
+	
+	return M44f(
+		t[0][0], t[0][1], t[0][2], t[0][3],
+		t[1][0], t[1][1], t[1][2], t[1][3],
+		t[2][0], t[2][1], t[2][2], t[2][3],
+		t[3][0], t[3][1], t[3][2], t[3][3]
+	);
 }
 
 void SceneReader::hashAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
@@ -173,66 +209,6 @@ void SceneReader::hashAttributes( const ScenePath &path, const Gaffer::Context *
 	{
 		h.append( context->getFrame() );
 	}
-}
-
-void SceneReader::hashObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
-{
-	ConstSceneInterfacePtr s = scene( path );
-	if( !s || !s->hasObject() )
-	{
-		// no object
-		h = parent->objectPlug()->defaultValue()->hash();
-		return;
-	}
-
-	FileSource::hashObject( path, context, parent, h );
-	const SampledSceneInterface *ss = runTimeCast<const SampledSceneInterface>( s.get() );
-	if( !ss || ss->numObjectSamples() > 1 )
-	{
-		h.append( context->getFrame() );
-	}
-}
-
-void SceneReader::hashChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
-{
-	FileSource::hashChildNames( path, context, parent, h );
-	tagsPlug()->hash( h );
-}
-
-Imath::Box3f SceneReader::computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
-{
-	ConstSceneInterfacePtr s = scene( path );
-	if( !s )
-	{
-		return Box3f();
-	}
-	
-	Box3d b = s->readBound( context->getFrame() / g_frameRate );
-	
-	if( b.isEmpty() )
-	{
-		return Box3f();
-	}
-	
-	return Box3f( b.min, b.max );
-}
-
-Imath::M44f SceneReader::computeTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
-{
-	ConstSceneInterfacePtr s = scene( path );
-	if( !s )
-	{
-		return M44f();
-	}
-		
-	M44d t = s->readTransformAsMatrix( context->getFrame() / g_frameRate );
-	
-	return M44f(
-		t[0][0], t[0][1], t[0][2], t[0][3],
-		t[1][0], t[1][1], t[1][2], t[1][3],
-		t[2][0], t[2][1], t[2][2], t[2][3],
-		t[3][0], t[3][1], t[3][2], t[3][3]
-	);
 }
 
 IECore::ConstCompoundObjectPtr SceneReader::computeAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
@@ -283,6 +259,24 @@ IECore::ConstCompoundObjectPtr SceneReader::computeAttributes( const ScenePath &
 	return result;
 }
 
+void SceneReader::hashObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	ConstSceneInterfacePtr s = scene( path );
+	if( !s || !s->hasObject() )
+	{
+		// no object
+		h = parent->objectPlug()->defaultValue()->hash();
+		return;
+	}
+
+	FileSource::hashObject( path, context, parent, h );
+	const SampledSceneInterface *ss = runTimeCast<const SampledSceneInterface>( s.get() );
+	if( !ss || ss->numObjectSamples() > 1 )
+	{
+		h.append( context->getFrame() );
+	}
+}
+
 IECore::ConstObjectPtr SceneReader::computeObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	ConstSceneInterfacePtr s = scene( path );
@@ -292,6 +286,12 @@ IECore::ConstObjectPtr SceneReader::computeObject( const ScenePath &path, const 
 	}
 	
 	return s->readObject( context->getFrame() / g_frameRate );
+}
+
+void SceneReader::hashChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	FileSource::hashChildNames( path, context, parent, h );
+	tagsPlug()->hash( h );
 }
 
 IECore::ConstInternedStringVectorDataPtr SceneReader::computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
