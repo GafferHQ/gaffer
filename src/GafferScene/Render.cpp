@@ -49,7 +49,9 @@
 #include "GafferScene/Render.h"
 #include "GafferScene/ScenePlug.h"
 #include "GafferScene/SceneProcedural.h"
+#include "GafferScene/PathMatcherData.h"
 
+using namespace std;
 using namespace Imath;
 using namespace IECore;
 using namespace Gaffer;
@@ -159,29 +161,24 @@ void Render::outputCamera( const ScenePlug *scene, const IECore::CompoundObject 
 
 void Render::outputLights( const ScenePlug *scene, const IECore::CompoundObject *globals, IECore::Renderer *renderer ) const
 {
-	const CompoundData *forwardDeclarations = globals->member<CompoundData>( "gaffer:forwardDeclarations" );
-	if( !forwardDeclarations )
+	const CompoundData *sets = globals->member<CompoundData>( "gaffer:sets" );
+	if( !sets )
+	{
+		return;
+	}
+	
+	const PathMatcherData *lightSet = sets->member<PathMatcherData>( "__lights" );
+	if( !lightSet )
 	{
 		return;
 	}
 
-	CompoundDataMap::const_iterator it, eIt;
-	for( it = forwardDeclarations->readable().begin(), eIt = forwardDeclarations->readable().end(); it != eIt; it++ )
+	vector<string> paths;
+	lightSet->readable().paths( paths );
+	for( vector<string>::const_iterator it = paths.begin(), eIt = paths.end(); it != eIt; ++it )
 	{
-		const CompoundData *declaration = runTimeCast<const CompoundData>( it->second.get() );
-		if( !declaration )
-		{
-			continue;
-		}
-		
-		const IECore::TypeId type = (IECore::TypeId)declaration->member<IntData>( "type", true )->readable();
-		if( type != IECore::LightTypeId )
-		{
-			continue;
-		}
-		
 		ScenePlug::ScenePath path;
-		ScenePlug::stringToPath( it->first.string(), path );
+		ScenePlug::stringToPath( *it, path );
 		
 		IECore::ConstLightPtr constLight = runTimeCast<const IECore::Light>( scene->object( path ) );
 		if( !constLight )
@@ -199,12 +196,12 @@ void Render::outputLights( const ScenePlug *scene, const IECore::CompoundObject 
 		M44f transform = scene->fullTransform( path );
 		
 		LightPtr light = constLight->copy();
-		light->setHandle( it->first.string() );
+		light->setHandle( *it );
 		
 		{
 			AttributeBlock attributeBlock( renderer );
 		
-			renderer->setAttribute( "name", new StringData( it->first ) );
+			renderer->setAttribute( "name", new StringData( *it ) );
 		
 			CompoundObject::ObjectMap::const_iterator aIt, aeIt;
 			for( aIt = attributes->members().begin(), aeIt = attributes->members().end(); aIt != aeIt; aIt++ )

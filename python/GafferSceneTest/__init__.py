@@ -94,6 +94,7 @@ from PrimitiveVariablesTest import PrimitiveVariablesTest
 from DuplicateTest import DuplicateTest
 from ModuleTest import ModuleTest
 from GridTest import GridTest
+from SetTest import SetTest
 
 if __name__ == "__main__":
 	import unittest

@@ -51,11 +51,41 @@ using namespace GafferScene;
 namespace GafferSceneBindings
 {
 
+// we don't actually wrap the existing init, but rather reimplement it
+// here using clear() and addPath(), so that we can support a mixture
+// of strings and InternedStringVectorData.
+static void initWrapper( PathMatcher &m, boost::python::object paths )
+{
+	m.clear();
+	for( size_t i = 0, e = len( paths ); i < e; ++i )
+	{
+		object path = paths[i];
+		extract<const char *> stringExtractor( path );
+		if( stringExtractor.check() )
+		{
+			m.addPath( stringExtractor() );
+		}
+		else
+		{
+			IECore::ConstInternedStringVectorDataPtr d = extract<IECore::ConstInternedStringVectorDataPtr>( path );
+			m.addPath( d->readable() );
+		}
+	}
+}
+
 static PathMatcher *constructFromObject( boost::python::object oPaths )
 {
-	std::vector<std::string> paths;
-	container_utils::extend_container( paths, oPaths );
-	return new PathMatcher( paths.begin(), paths.end() );
+	PathMatcher *result = new PathMatcher;
+	try
+	{
+		initWrapper( *result, oPaths );
+	}
+	catch( ... )
+	{
+		delete result;
+		throw;
+	}
+	return result;
 }
 
 static PathMatcher *constructFromVectorData( IECore::ConstStringVectorDataPtr paths )
@@ -63,11 +93,19 @@ static PathMatcher *constructFromVectorData( IECore::ConstStringVectorDataPtr pa
 	return new PathMatcher( paths->readable().begin(), paths->readable().end() );
 }
 
-static void initWrapper( PathMatcher &m, boost::python::object oPaths )
+static bool addPathInternedStringVectorData( PathMatcher &p, const IECore::InternedStringVectorData *d )
 {
-	std::vector<std::string> paths;
-	container_utils::extend_container( paths, oPaths );
-	return m.init( paths.begin(), paths.end() );
+	return p.addPath( d->readable() );
+}
+
+static bool removePathInternedStringVectorData( PathMatcher &p, const IECore::InternedStringVectorData *d )
+{
+	return p.removePath( d->readable() );
+}
+
+static unsigned matchInternedStringVectorData( const PathMatcher &p, const IECore::InternedStringVectorData *d )
+{
+	return p.match( d->readable() );
 }
 
 static list paths( const PathMatcher &p )
@@ -89,11 +127,14 @@ void bindPathMatcher()
 		.def( "__init__", make_constructor( constructFromVectorData ) )
 		.def( init<const PathMatcher &>() )
 		.def( "init", &initWrapper )
-		.def( "addPath", &PathMatcher::addPath )
-		.def( "removePath", &PathMatcher::removePath )
+		.def( "addPath", (bool (PathMatcher::*)( const std::string & ))&PathMatcher::addPath )
+		.def( "addPath", &addPathInternedStringVectorData )
+		.def( "removePath", (bool (PathMatcher::*)( const std::string & ))&PathMatcher::removePath )
+		.def( "removePath", &removePathInternedStringVectorData )
 		.def( "clear", &PathMatcher::clear )
 		.def( "paths", &paths )
 		.def( "match", (unsigned (PathMatcher ::*)( const std::string & ) const)&PathMatcher::match )
+		.def( "match", &matchInternedStringVectorData )
 		.def( self == self )
 		.def( self != self )
 	;

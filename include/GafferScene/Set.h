@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,45 +34,56 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef GAFFERSCENE_SET_H
+#define GAFFERSCENE_SET_H
 
-#include "IECorePython/RefCountedBinding.h"
+#include "Gaffer/TypedObjectPlug.h"
 
-#include "Gaffer/Context.h"
+#include "GafferScene/GlobalsProcessor.h"
 
-#include "GafferScene/SceneProcedural.h"
-
-#include "GafferSceneBindings/ScenePlugBinding.h"
-#include "GafferSceneBindings/SceneProceduralBinding.h"
-
-using namespace boost::python;
-using namespace Gaffer;
-using namespace GafferScene;
-
-static SceneProceduralPtr construct( ScenePlugPtr scenePlug, Gaffer::ContextPtr context, object scenePath, PathMatcherDataPtr pathsToExpand, size_t minimumExpansionDepth )
-{
-	ScenePlug::ScenePath p;
-	GafferSceneBindings::objectToScenePath( scenePath, p );
-	return new SceneProcedural( scenePlug, context, p, pathsToExpand, minimumExpansionDepth );
-}
-
-void GafferSceneBindings::bindSceneProcedural()
+namespace GafferScene
 {
 
-	IECorePython::RefCountedClass<SceneProcedural, IECore::Renderer::Procedural>( "SceneProcedural" )
-		.def( "__init__", make_constructor(
+/// This node defines sets of scene locations as PathMatcherData,
+/// placing them in the scene globals. It is not to be confused with the Gaffer::Set
+/// class which is for an entirely different purpose.
+class Set : public GlobalsProcessor
+{
+
+	public :
+
+		Set( const std::string &name=defaultName<Set>() );
+		virtual ~Set();
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::Set, SetTypeId, GlobalsProcessor );
+
+		Gaffer::StringPlug *namePlug();
+		const Gaffer::StringPlug *namePlug() const;
+
+		Gaffer::StringVectorDataPlug *pathsPlug();
+		const Gaffer::StringVectorDataPlug *pathsPlug() const;
+				
+		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
 		
-				construct,
-				default_call_policies(),
-				(	
-					boost::python::arg( "scenePlug" ),
-					boost::python::arg( "context" ),
-					boost::python::arg( "scenePath" ),
-					boost::python::arg( "pathsToExpand" ) = PathMatcherDataPtr(),
-					boost::python::arg( "minimumExpansionDepth" ) = 0
-				)
-			)
-		)
-	;
+	protected :
+
+		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const;
+
+		virtual void hashProcessedGlobals( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual IECore::ConstCompoundObjectPtr computeProcessedGlobals( const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputGlobals ) const;
+
+	private :
+
+		Gaffer::ObjectPlug *pathMatcherPlug();
+		const Gaffer::ObjectPlug *pathMatcherPlug() const;
 	
-}
+		static size_t g_firstPlugIndex;
+		
+};
+
+IE_CORE_DECLAREPTR( Set );
+
+} // namespace GafferScene
+
+#endif // GAFFERSCENE_SET_H

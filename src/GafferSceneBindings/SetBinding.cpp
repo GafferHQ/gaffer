@@ -36,43 +36,15 @@
 
 #include "boost/python.hpp"
 
-#include "IECorePython/RefCountedBinding.h"
+#include "GafferBindings/DependencyNodeBinding.h"
 
-#include "Gaffer/Context.h"
+#include "GafferScene/Set.h"
 
-#include "GafferScene/SceneProcedural.h"
+#include "GafferSceneBindings/SetBinding.h"
 
-#include "GafferSceneBindings/ScenePlugBinding.h"
-#include "GafferSceneBindings/SceneProceduralBinding.h"
-
-using namespace boost::python;
-using namespace Gaffer;
 using namespace GafferScene;
 
-static SceneProceduralPtr construct( ScenePlugPtr scenePlug, Gaffer::ContextPtr context, object scenePath, PathMatcherDataPtr pathsToExpand, size_t minimumExpansionDepth )
+void GafferSceneBindings::bindSet()
 {
-	ScenePlug::ScenePath p;
-	GafferSceneBindings::objectToScenePath( scenePath, p );
-	return new SceneProcedural( scenePlug, context, p, pathsToExpand, minimumExpansionDepth );
-}
-
-void GafferSceneBindings::bindSceneProcedural()
-{
-
-	IECorePython::RefCountedClass<SceneProcedural, IECore::Renderer::Procedural>( "SceneProcedural" )
-		.def( "__init__", make_constructor(
-		
-				construct,
-				default_call_policies(),
-				(	
-					boost::python::arg( "scenePlug" ),
-					boost::python::arg( "context" ),
-					boost::python::arg( "scenePath" ),
-					boost::python::arg( "pathsToExpand" ) = PathMatcherDataPtr(),
-					boost::python::arg( "minimumExpansionDepth" ) = 0
-				)
-			)
-		)
-	;
-	
+	GafferBindings::DependencyNodeClass<Set>();
 }

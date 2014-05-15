@@ -547,7 +547,7 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 			pass
 		IECore.RefCounted.collectGarbage()
 	
-	def testForwardDeclarationsWithRenaming( self ) :
+	def testSetsWithRenaming( self ) :
 	
 		l1 = GafferSceneTest.TestLight()
 		l2 = GafferSceneTest.TestLight()
@@ -556,20 +556,28 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 		g["in"].setInput( l1["out"] )
 		g["in1"].setInput( l2["out"] )
 		
-		forwardDeclarations = g["out"]["globals"].getValue()["gaffer:forwardDeclarations"]
-		self.assertEqual( len( forwardDeclarations ), 2 )		
-		self.assertTrue( "/group/light" in forwardDeclarations )
-		self.assertTrue( "/group/light1" in forwardDeclarations )
+		lightSet = g["out"]["globals"].getValue()["gaffer:sets"]["__lights"]
+		self.assertEqual(
+			set( lightSet.value.paths() ),
+			set( [
+				"/group/light",
+				"/group/light1",
+			] )
+		)
 		
 		self.assertSceneValid( g["out"] )
 		
 		g2 = GafferScene.Group()
 		g2["in"].setInput( g["out"] )
 		
-		forwardDeclarations = g2["out"]["globals"].getValue()["gaffer:forwardDeclarations"]
-		self.assertEqual( len( forwardDeclarations ), 2 )		
-		self.assertTrue( "/group/group/light" in forwardDeclarations )
-		self.assertTrue( "/group/group/light1" in forwardDeclarations )
+		lightSet = g2["out"]["globals"].getValue()["gaffer:sets"]["__lights"]
+		self.assertEqual(
+			set( lightSet.value.paths() ),
+			set( [
+				"/group/group/light",
+				"/group/group/light1",
+			] )
+		)
 	
 	def testDisabled( self ) :
 	
@@ -589,7 +597,7 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( g["out"].childNames( "/" ), IECore.InternedStringVectorData( [ "plane" ] ) )
 		self.assertScenesEqual( g["out"], p1["out"] )		
 
-	def testForwardDeclarationsWithDiamondInput( self ) :
+	def testSetsWithDiamondInput( self ) :
 
 		#	l
 		#	| \
@@ -615,12 +623,15 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 		g["in"].setInput( lg1["out"] )
 		g["in1"].setInput( lg2["out"] )
 
-		forwardDeclarations = g["out"]["globals"].getValue()["gaffer:forwardDeclarations"]
-
-		self.assertEqual( len( forwardDeclarations ), 2 )
-		self.assertEqual( forwardDeclarations["/group/lightGroup1/light"]["type"].value, IECore.Light.staticTypeId() )
-		self.assertEqual( forwardDeclarations["/group/lightGroup2/light"]["type"].value, IECore.Light.staticTypeId() )
-	
+		lightSet = g["out"]["globals"].getValue()["gaffer:sets"]["__lights"]
+		self.assertEqual(
+			set( lightSet.value.paths() ),
+			set( [
+				"/group/lightGroup1/light",
+				"/group/lightGroup2/light",
+			] )
+		)
+		
 	def testMakeConnectionAndUndo( self ) :
 	
 		s = Gaffer.ScriptNode()
@@ -665,6 +676,38 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 		
 		s2 = Gaffer.ScriptNode()
 		s2.execute( ss )
+	
+	def testDifferentSetsInEachInput( self ) :
+	
+		p1 = GafferScene.Plane()
+		s1 = GafferScene.Set()
+		s1["name"].setValue( "s1" )
+		s1["paths"].setValue( IECore.StringVectorData( [ "/plane" ] ) )
+		s1["in"].setInput( p1["out"] )
+		
+		p2 = GafferScene.Plane()
+		s2 = GafferScene.Set()
+		s2["name"].setValue( "s2" )
+		s2["paths"].setValue( IECore.StringVectorData( [ "/plane" ] ) )
+		s2["in"].setInput( p2["out"] )
+		
+		g = GafferScene.Group()
+		g["in"].setInput( s1["out"] )
+		g["in1"].setInput( s2["out"] )
+		
+		sets = g["out"]["globals"].getValue()["gaffer:sets"]
+		
+		self.assertEqual(
+			sets,
+			IECore.CompoundData( {
+				"s1" : GafferScene.PathMatcherData(
+					GafferScene.PathMatcher( [ "/group/plane" ] )
+				),
+				"s2" : GafferScene.PathMatcherData(
+					GafferScene.PathMatcher( [ "/group/plane1" ] )
+				),
+			} )
+		)
 		
 	def setUp( self ) :
 	

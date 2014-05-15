@@ -49,6 +49,7 @@
 #include "Gaffer/BlockedConnection.h"
 
 #include "GafferScene/Group.h"
+#include "GafferScene/PathMatcherData.h"
 
 using namespace std;
 using namespace Imath;
@@ -267,7 +268,7 @@ void Group::hashGlobals( const Gaffer::Context *context, const ScenePlug *parent
 {
 	SceneProcessor::hashGlobals( context, parent, h );
 		
-	// all input globals affect the output, as does the mapping, because we use it to compute the forwardDeclarations
+	// all input globals affect the output, as does the mapping, because we use it to compute the sets
 	for( vector<ScenePlugPtr>::const_iterator it = m_inPlugs.inputs().begin(), eIt = m_inPlugs.inputs().end(); it!=eIt; it++ )
 	{
 		(*it)->globalsPlug()->hash( h );
@@ -464,22 +465,35 @@ IECore::ConstCompoundObjectPtr Group::computeGlobals( const Gaffer::Context *con
 	ConstCompoundObjectPtr mapping = staticPointerCast<const CompoundObject>( mappingPlug()->getValue() );
 	const ObjectVector *forwardMappings = mapping->member<ObjectVector>( "__GroupForwardMappings", true /* throw if missing */ );
 
-	IECore::CompoundDataPtr forwardDeclarations = new IECore::CompoundData;
+	CompoundDataPtr outputSets = new CompoundData;
+	result->members()["gaffer:sets"] = outputSets;
+
 	for( size_t i = 0, e = m_inPlugs.inputs().size(); i < e; i++ )
 	{
-		const CompoundData *forwardMapping = static_cast<const IECore::CompoundData *>( forwardMappings->members()[i].get() );
 		ConstCompoundObjectPtr inputGlobals = m_inPlugs.inputs()[i]->globalsPlug()->getValue();
-		const CompoundData *inputForwardDeclarations = inputGlobals->member<CompoundData>( "gaffer:forwardDeclarations" );
-		if( inputForwardDeclarations )
+		const CompoundData *inputSets = inputGlobals->member<CompoundData>( "gaffer:sets", /* throwExceptions = */ false );
+		if( !inputSets )
 		{
-			for( CompoundDataMap::const_iterator it = inputForwardDeclarations->readable().begin(), eIt = inputForwardDeclarations->readable().end(); it != eIt; it++ )
+			continue;
+		}
+
+		const CompoundData *forwardMapping = static_cast<const IECore::CompoundData *>( forwardMappings->members()[i].get() );
+		
+		for( CompoundDataMap::const_iterator it = inputSets->readable().begin(), eIt = inputSets->readable().end(); it != eIt; it++ )
+		{
+			const PathMatcher &inputSet = static_cast<const PathMatcherData *>( it->second.get() )->readable();
+			PathMatcher &outputSet = outputSets->member<PathMatcherData>( it->first, /* throwExceptions = */ false, /* createIfMissing = */ true )->writable();
+			
+			/// \todo If PathMatcher allowed access to the internal nodes, and allowed them to be shared between
+			/// matchers, we could be much more efficient here by making a new matcher which referenced the contents
+			/// of the input matchers.
+			vector<string> inputPaths;
+			inputSet.paths( inputPaths );
+			for( vector<string>::const_iterator pIt = inputPaths.begin(), peIt = inputPaths.end(); pIt != peIt; ++pIt )
 			{
-				/// \todo This would all be much nicer if the forward declarations data structure
-				/// used ScenePlug::ScenePaths or something similar - then we could ditch all the
-				/// string munging.
-				const InternedString &inputPath = it->first;
-				size_t secondSlashPos = inputPath.string().find( '/', 1 );
-				const std::string inputName( inputPath.string(), 1, secondSlashPos - 1 );
+				const string &inputPath = *pIt;
+				const size_t secondSlashPos = inputPath.find( '/', 1 );
+				const std::string inputName( inputPath, 1, secondSlashPos - 1 );
 				const InternedStringData *outputName = forwardMapping->member<InternedStringData>( inputName );
 				if( !outputName )
 				{
@@ -499,16 +513,17 @@ IECore::ConstCompoundObjectPtr Group::computeGlobals( const Gaffer::Context *con
 					/// which will throw when an error is detected.
 					continue;
 				}
+			
 				std::string outputPath = std::string( "/" ) + groupName + "/" + outputName->readable().string();
 				if( secondSlashPos != string::npos )
 				{
-					outputPath += inputPath.string().substr( secondSlashPos );
+					outputPath += inputPath.substr( secondSlashPos );
 				}
-				forwardDeclarations->writable()[outputPath] = it->second;
+				
+				outputSet.addPath( outputPath );
 			}
 		}
 	}
-	result->members()["gaffer:forwardDeclarations"] = forwardDeclarations;
 	
 	return result;
 }

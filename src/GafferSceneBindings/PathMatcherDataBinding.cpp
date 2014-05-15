@@ -41,7 +41,6 @@
 #include "GafferScene/PathMatcherData.h"
 
 using namespace boost::python;
-using namespace IECore;
 using namespace GafferScene;
 
 namespace GafferSceneBindings

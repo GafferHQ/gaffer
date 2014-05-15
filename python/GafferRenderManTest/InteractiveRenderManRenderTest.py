@@ -110,7 +110,7 @@ class InteractiveRenderManRenderTest( unittest.TestCase ) :
 		
 		s["r"]["state"].setValue( s["r"].State.Running )
 		
-		time.sleep( 1 )
+		time.sleep( 2 )
 				
 		c = self.__colorAtUV(
 			IECore.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
@@ -247,7 +247,7 @@ class InteractiveRenderManRenderTest( unittest.TestCase ) :
 		
 		s["r"]["state"].setValue( s["r"].State.Running )
 		
-		time.sleep( 1 )
+		time.sleep( 2 )
 				
 		c = self.__colorAtUV(
 			IECore.ImageDisplayDriver.storedImage( "myLovelyPlane" ),

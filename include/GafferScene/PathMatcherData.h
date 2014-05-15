@@ -42,10 +42,16 @@
 namespace IECore
 {
 
-/// \todo Is it possible to declare this in GafferScene rather than IECore? I think it may be,
-/// but might require changes in TypedData.h.
 IECORE_DECLARE_TYPEDDATA( PathMatcherData, GafferScene::PathMatcher, void, SharedDataHolder )
 
 } // namespace IECore
+
+namespace GafferScene
+{
+
+typedef IECore::PathMatcherData PathMatcherData;
+IE_CORE_DECLAREPTR( PathMatcherData );
+
+} // namespace GafferScene
 
 #endif // IECORE_PATHMATCHERDATA_H

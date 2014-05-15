@@ -1,7 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2012, John Haddon. All rights reserved.
-#  Copyright (c) 2012-2014, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,49 +34,41 @@
 #  
 ##########################################################################
 
-from _GafferSceneUI import *
+import unittest
 
-from SceneHierarchy import SceneHierarchy
-from SceneInspector import SceneInspector
-from FilterPlugValueWidget import FilterPlugValueWidget
-import SceneNodeUI
-import SceneReaderUI
-import SceneProcessorUI
-import FilteredSceneProcessorUI
-import PruneUI
-import SubTreeUI
-import RenderUI
-import DisplaysUI
-import OptionsUI
-import OpenGLAttributesUI
-import SceneContextVariablesUI
-import SceneWriterUI
-import StandardOptionsUI
-import StandardAttributesUI
-import ShaderUI
-import OpenGLShaderUI
-import ObjectSourceUI
-import TransformUI
-import AttributesUI
-import LightUI
-import InteractiveRenderUI
-import SphereUI
-import MapProjectionUI
-import MapOffsetUI
-import CustomAttributesUI
-import CustomOptionsUI
-import SceneViewToolbar
-import SceneSwitchUI
-import ShaderSwitchUI
-import ShaderAssignmentUI
-import ParentConstraintUI
-import ParentUI
-import PrimitiveVariablesUI
-import DuplicateUI
-import GridUI
+import IECore
 
-# then all the PathPreviewWidgets. note that the order
-# of import controls the order of display.
+import Gaffer
+import GafferScene
+import GafferSceneTest
 
-from AlembicPathPreview import AlembicPathPreview
-from SceneReaderPathPreview import SceneReaderPathPreview
+class SetTest( GafferSceneTest.SceneTestCase ) :
+		
+	def test( self ) :
+	
+		p = GafferScene.Plane()
+		s = GafferScene.Set()
+		s["in"].setInput( p["out"] )
+		
+		s["paths"].setValue( IECore.StringVectorData( [ "/one", "/plane" ] ) )
+		g = s["out"]["globals"].getValue()
+		self.assertEqual( g.keys(), [ "gaffer:sets" ] )
+		self.assertEqual( g["gaffer:sets"].keys(), [ "set" ] )
+		self.assertEqual( set( g["gaffer:sets"]["set"].value.paths() ), set( [ "/one", "/plane" ] ) )
+		
+		s["name"].setValue( "shinyThings" )
+
+		g = s["out"]["globals"].getValue()
+		self.assertEqual( g.keys(), [ "gaffer:sets" ] )
+		self.assertEqual( g["gaffer:sets"].keys(), [ "shinyThings" ] )
+		self.assertEqual( set( g["gaffer:sets"]["shinyThings"].value.paths() ), set( [ "/one", "/plane" ] ) )
+		
+		s["paths"].setValue( IECore.StringVectorData( [ "/two", "/sphere" ] ) )
+
+		g = s["out"]["globals"].getValue()
+		self.assertEqual( g.keys(), [ "gaffer:sets" ] )
+		self.assertEqual( g["gaffer:sets"].keys(), [ "shinyThings" ] )
+		self.assertEqual( set( g["gaffer:sets"]["shinyThings"].value.paths() ), set( [ "/two", "/sphere" ] ) )
+		
+if __name__ == "__main__":
+	unittest.main()

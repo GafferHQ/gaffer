@@ -37,6 +37,7 @@
 #include "Gaffer/Context.h"
 
 #include "GafferScene/Light.h"
+#include "GafferScene/PathMatcherData.h"
 
 using namespace Gaffer;
 using namespace GafferScene;
@@ -90,16 +91,16 @@ IECore::ConstCompoundObjectPtr Light::computeGlobals( const Gaffer::Context *con
 {
 	IECore::CompoundObjectPtr result = new IECore::CompoundObject;
 	
-	/// \todo Maybe this forwardDeclarations thing needs promoting to being a specific child
-	/// of ScenePlug? Maybe it would also be nice to have a data structure dedicated to storing
-	/// values along the hierarchy of a bunch of paths - PathMatcher is almost doing this internally
-	/// and the internal data structure could perhaps be extracted and generalised for the purpose.
-	IECore::CompoundDataPtr forwardDeclarations = new IECore::CompoundData;
-	IECore::CompoundDataPtr forwardDeclaration = new IECore::CompoundData;
-	forwardDeclaration->writable()["type"] = new IECore::IntData( IECore::LightTypeId );
-	forwardDeclarations->writable()[ "/" + namePlug()->getValue() ] = forwardDeclaration;
+	IECore::CompoundDataPtr sets = result->member<IECore::CompoundData>(
+		"gaffer:sets",
+		/* throwExceptions = */ false,
+		/* createIfMissing = */ true
+	);
 	
-	result->members()["gaffer:forwardDeclarations"] = forwardDeclarations;
+	PathMatcherDataPtr lightSet = new PathMatcherData;
+	lightSet->writable().addPath( "/" + namePlug()->getValue() );
+	
+	sets->writable()["__lights"] = lightSet;
 	
 	return result;
 }

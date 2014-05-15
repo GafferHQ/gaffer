@@ -34,11 +34,10 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/tokenizer.hpp"
-
 #include "Gaffer/Context.h"
 
 #include "GafferScene/Prune.h"
+#include "GafferScene/PathMatcherData.h"
 
 using namespace std;
 using namespace IECore;
@@ -211,37 +210,44 @@ IECore::ConstInternedStringVectorDataPtr Prune::computeChildNames( const ScenePa
 }
 
 IECore::ConstCompoundObjectPtr Prune::computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const
-{
-	typedef boost::tokenizer<boost::char_separator<char> > Tokenizer;
-
+{	
 	ConstCompoundObjectPtr inputGlobals = inPlug()->globalsPlug()->getValue();
-	const CompoundData *inputForwardDeclarations = inputGlobals->member<CompoundData>( "gaffer:forwardDeclarations" );
-	if( !inputForwardDeclarations )
+	const CompoundData *inputSets = inputGlobals->member<CompoundData>( "gaffer:sets" );
+	if( !inputSets )
 	{
 		return inputGlobals;
 	}
+
+	CompoundObjectPtr outputGlobals = inputGlobals->copy();
+	CompoundDataPtr outputSets = new CompoundData;
+	outputGlobals->members()["gaffer:sets"] = outputSets;
 	
 	ContextPtr tmpContext = new Context( *Context::current() );
 	Context::Scope scopedContext( tmpContext );
-
-	CompoundDataPtr outputForwardDeclarations = new CompoundData;
 	ScenePath path;
-	for( CompoundDataMap::const_iterator it = inputForwardDeclarations->readable().begin(), eIt = inputForwardDeclarations->readable().end(); it != eIt; it++ )
+
+	for( CompoundDataMap::const_iterator it = inputSets->readable().begin(), eIt = inputSets->readable().end(); it != eIt; ++it )
 	{
-		path.clear();
-		Tokenizer pathTokenizer( it->first.string(), boost::char_separator<char>( "/" ) );	
-		for( Tokenizer::const_iterator tIt = pathTokenizer.begin(), etIt = pathTokenizer.end(); tIt != etIt; tIt++ )
+		/// \todo This could be more efficient if PathMatcher exposed the internal nodes,
+		/// and allowed sharing between matchers. Then we could do a really lightweight copy
+		/// and just trim out the nodes we didn't want.
+		const PathMatcher &inputSet = static_cast<const PathMatcherData *>( it->second.get() )->readable();
+		PathMatcher &outputSet = outputSets->member<PathMatcherData>( it->first, /* throwExceptions = */ false, /* createIfMissing = */ true )->writable();
+		
+		vector<string> inputPaths;
+		inputSet.paths( inputPaths );
+		for( vector<string>::const_iterator pIt = inputPaths.begin(), peIt = inputPaths.end(); pIt != peIt; ++pIt )
 		{
-			path.push_back( *tIt );
-		}
-		tmpContext->set( ScenePlug::scenePathContextName, path );
-		if( !(filterPlug()->getValue() & ( Filter::ExactMatch | Filter::AncestorMatch ) ) )
-		{
-			outputForwardDeclarations->writable()[it->first] = it->second;
+			path.clear();
+			ScenePlug::stringToPath( *pIt, path );
+			
+			tmpContext->set( ScenePlug::scenePathContextName, path );
+			if( !(filterPlug()->getValue() & ( Filter::ExactMatch | Filter::AncestorMatch ) ) )
+			{
+				outputSet.addPath( *pIt );
+			}
 		}
 	}
 	
-	CompoundObjectPtr outputGlobals = inputGlobals->copy();
-	outputGlobals->members()["gaffer:forwardDeclarations"] = outputForwardDeclarations;
 	return outputGlobals;
 }
