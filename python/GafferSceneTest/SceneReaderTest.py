@@ -278,6 +278,57 @@ class SceneReaderTest( GafferSceneTest.SceneTestCase ) :
 		e = GafferScene.SceneReader.supportedExtensions()
 		self.assertTrue( "scc" in e )
 		self.assertTrue( "lscc" in e )
+	
+	def testTagsAsSets( self ) :
+	
+		s = IECore.SceneCache( "/tmp/test.scc", IECore.IndexedIO.OpenMode.Write )
+		
+		sphereGroup = s.createChild( "sphereGroup" )
+		sphereGroup.writeTags( [ "chrome" ] )
+		sphere = sphereGroup.createChild( "sphere" )
+		sphere.writeObject( IECore.SpherePrimitive(), 0 )
+		
+		planeGroup = s.createChild( "planeGroup" )
+		plane = planeGroup.createChild( "plane" )
+		plane.writeTags( [ "wood", "something" ] )
+		plane.writeObject( IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ), 0 )
+		
+		del s, sphereGroup, sphere, planeGroup, plane
+		
+		s = GafferScene.SceneReader()
+		s["fileName"].setValue( "/tmp/test.scc" )
+		s["refreshCount"].setValue( self.uniqueInt( "/tmp/test.scc" ) ) # account for our changing of file contents between tests
+		
+		sets = s["out"]["globals"].getValue()["gaffer:sets"]
+		self.assertEqual( sets.keys(), [] )
+		
+		s["sets"].setValue( "chrome" )
+		sets = s["out"]["globals"].getValue()["gaffer:sets"]
+		self.assertEqual( len( sets ), 1 )
+		self.assertEqual( sets.keys(), [ "chrome" ] )
+		self.assertEqual( sets["chrome"].value.paths(), [ "/sphereGroup" ] )
+		
+		s["sets"].setValue( "wood" )
+		sets = s["out"]["globals"].getValue()["gaffer:sets"]
+		self.assertEqual( len( sets ), 1 )
+		self.assertEqual( sets.keys(), [ "wood" ] )
+		self.assertEqual( sets["wood"].value.paths(), [ "/planeGroup/plane" ] )
+		
+		s["sets"].setValue( "*e*" )
+		sets = s["out"]["globals"].getValue()["gaffer:sets"]
+		# we can't simply assert that we have only "something" and "chrome" because the pesky
+		# SceneCache inserts tags of its own behind our backs, and our wildcards might match them.
+		self.assertTrue( set( sets.keys() ).issuperset( set( [ "something", "chrome" ] ) ) )
+		self.assertTrue( "wood" not in sets )
+		self.assertEqual( sets["chrome"].value.paths(), [ "/sphereGroup" ] )
+		self.assertEqual( sets["something"].value.paths(), [ "/planeGroup/plane" ] )
+		
+		s["sets"].setValue( "wood *e*" )
+		sets = s["out"]["globals"].getValue()["gaffer:sets"]
+		self.assertTrue( set( sets.keys() ).issuperset( set( [ "wood", "something", "chrome" ] ) ) )
+		self.assertEqual( sets["chrome"].value.paths(), [ "/sphereGroup" ] )
+		self.assertEqual( sets["wood"].value.paths(), [ "/planeGroup/plane" ] )
+		self.assertEqual( sets["something"].value.paths(), [ "/planeGroup/plane" ] )
 		
 	def tearDown( self ) :
 	
