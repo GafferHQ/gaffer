@@ -476,7 +476,7 @@ __children["StandardAttributes"] = GafferScene.StandardAttributes( "StandardAttr
 parent.addChild( __children["StandardAttributes"] )
 __children["StandardAttributes"]["enabled"].setValue( True )
 __children["StandardAttributes"]["filter"].setValue( 2 )
-__children["StandardAttributes"]["attributes"]["visibility"]["name"].setValue( 'gaffer:visibility' )
+__children["StandardAttributes"]["attributes"]["visibility"]["name"].setValue( 'scene:visible' )
 __children["StandardAttributes"]["attributes"]["visibility"]["value"].setValue( True )
 __children["StandardAttributes"]["attributes"]["visibility"]["enabled"].setValue( False )
 __children["StandardAttributes"]["attributes"]["transformBlur"]["name"].setValue( 'gaffer:transformBlur' )

@@ -163,7 +163,7 @@ void outputLights( const ScenePlug *scene, const IECore::CompoundObject *globals
 		}
 		
 		ConstCompoundObjectPtr attributes = scene->fullAttributes( path );
-		const BoolData *visibilityData = attributes->member<BoolData>( "gaffer:visibility" );
+		const BoolData *visibilityData = attributes->member<BoolData>( "scene:visible" );
 		if( visibilityData && !visibilityData->readable() )
 		{
 			continue;
