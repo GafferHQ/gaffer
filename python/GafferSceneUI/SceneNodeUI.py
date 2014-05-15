@@ -93,20 +93,6 @@ GafferUI.PlugValueWidget.registerCreator(
 
 ## \todo Once it's possible to register Widgets to go on the right of a PlugWidget, place the refresh button there.
 
-# SceneReader
-
-GafferUI.PlugValueWidget.registerCreator(
-	GafferScene.SceneReader.staticTypeId(),
-	"fileName",
-	lambda plug : GafferUI.PathPlugValueWidget( plug,
-		path = Gaffer.FileSystemPath( "/", filter = Gaffer.FileSystemPath.createStandardFilter( extensions = IECore.SceneInterface.supportedExtensions() ) ),
-		pathChooserDialogueKeywords = {
-			"bookmarks" : GafferUI.Bookmarks.acquire( plug, category = "sceneCache" ),
-			"leaf" : True,
-		},
-	)
-)
-
 # AlembicSource
 
 GafferUI.PlugValueWidget.registerCreator(

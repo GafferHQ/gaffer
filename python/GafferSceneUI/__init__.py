@@ -41,6 +41,7 @@ from SceneHierarchy import SceneHierarchy
 from SceneInspector import SceneInspector
 from FilterPlugValueWidget import FilterPlugValueWidget
 import SceneNodeUI
+import SceneReaderUI
 import SceneProcessorUI
 import FilteredSceneProcessorUI
 import PruneUI
