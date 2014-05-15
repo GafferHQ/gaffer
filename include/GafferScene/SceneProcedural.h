@@ -69,6 +69,9 @@ namespace GafferScene
 ///   - the PathMatcher
 ///   - the minimumExpansionDepth
 ///   - the drawing of cameras and lights
+///
+/// \todo There is useful functionality in here for calculating bounds and outputting things
+/// to Renderers that should probably be moved to RendererAlgo.h and/or SceneAlgo.h.
 class SceneProcedural : public IECore::Renderer::Procedural
 {
 

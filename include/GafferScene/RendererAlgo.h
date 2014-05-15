@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,29 +34,41 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERBINDINGS_EXECUTABLE_H
-#define GAFFERBINDINGS_EXECUTABLE_H
+#ifndef GAFFERSCENE_RENDERERALGO_H
+#define GAFFERSCENE_RENDERERALGO_H
 
-#include "Gaffer/Context.h"
+#include "IECore/Renderer.h"
+#include "IECore/CompoundObject.h"
+#include "IECore/Transform.h"
 
-namespace GafferBindings
+#include "GafferScene/ScenePlug.h"
+
+namespace GafferScene
 {
 
-template< typename PythonClass, typename NodeClass >
-class ExecutableBinding
-{
-	public :
+/// Outputs an entire scene, using a SceneProcedural for the main body of the world.
+/// Individual parts of a scene may be output more specifically using the methods below.
+void outputScene( const ScenePlug *scene, IECore::Renderer *renderer );
 
-		static void bind( PythonClass &c );
+/// Outputs the renderer options specified by the globals.
+void outputOptions( const IECore::CompoundObject *globals, IECore::Renderer *renderer );
 
-	private :
+/// Outputs the camera specified by the globals.
+void outputCamera( const ScenePlug *scene, const IECore::CompoundObject *globals, IECore::Renderer *renderer );
 
-		static boost::python::list executionRequirements( NodeClass &n, Gaffer::ContextPtr context );
-		static void execute( NodeClass &n, const boost::python::list &contextList );
-};
+/// Outputs the lights from the scene.
+void outputLights( const ScenePlug *scene, const IECore::CompoundObject *globals, IECore::Renderer *renderer );
 
-} // namespace GafferBindings
+/// Creates the directories necessary to receive the Displays in globals.
+void createDisplayDirectories( const IECore::CompoundObject *globals );
 
-#include "GafferBindings/ExecutableBinding.inl"
+/// Calculates the shutter specified by the globals.
+Imath::V2f shutter( const IECore::CompoundObject *globals );
 
-#endif // GAFFERBINDINGS_EXECUTABLE_H
+/// Calculates the full transform for the specified location in the scene, sampling motion according to the attributes at that
+/// location if motionBlur is true.
+IECore::TransformPtr transform( const ScenePlug *scene, const ScenePlug::ScenePath &path, const Imath::V2f &shutter, bool motionBlur );
+
+} // namespace GafferScene
+
+#endif // GAFFERSCENE_RENDERERALGO_H

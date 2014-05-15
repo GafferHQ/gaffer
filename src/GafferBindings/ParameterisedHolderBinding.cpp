@@ -47,6 +47,7 @@
 #include "GafferBindings/ParameterisedHolderBinding.h"
 #include "GafferBindings/DependencyNodeBinding.h"
 #include "GafferBindings/ComputeNodeBinding.h"
+#include "GafferBindings/ExecutableNodeBinding.h"
 #include "GafferBindings/Serialisation.h"
 
 using namespace boost::python;
@@ -56,10 +57,12 @@ using namespace Gaffer;
 typedef ParameterisedHolderWrapper<NodeWrapper<ParameterisedHolderNode> > ParameterisedHolderNodeWrapper;
 typedef ParameterisedHolderWrapper<DependencyNodeWrapper<ParameterisedHolderDependencyNode> > ParameterisedHolderDependencyNodeWrapper;
 typedef ParameterisedHolderWrapper<ComputeNodeWrapper<ParameterisedHolderComputeNode> > ParameterisedHolderComputeNodeWrapper;
+typedef ParameterisedHolderWrapper<ExecutableNodeWrapper<ParameterisedHolderExecutableNode> > ParameterisedHolderExecutableNodeWrapper;
 
 IE_CORE_DECLAREPTR( ParameterisedHolderNodeWrapper )
 IE_CORE_DECLAREPTR( ParameterisedHolderDependencyNodeWrapper )
 IE_CORE_DECLAREPTR( ParameterisedHolderComputeNodeWrapper )
+IE_CORE_DECLAREPTR( ParameterisedHolderExecutableNodeWrapper )
 
 template<typename T>
 class ParameterisedHolderSerialiser : public NodeSerialiser
@@ -90,9 +93,11 @@ void GafferBindings::bindParameterisedHolder()
 	ParameterisedHolderClass<NodeClass<ParameterisedHolderNode, ParameterisedHolderNodeWrapperPtr> >();
 	ParameterisedHolderClass<DependencyNodeClass<ParameterisedHolderDependencyNode, ParameterisedHolderDependencyNodeWrapperPtr> >();
 	ParameterisedHolderClass<DependencyNodeClass<ParameterisedHolderComputeNode, ParameterisedHolderComputeNodeWrapperPtr> >();
+	ParameterisedHolderClass<ExecutableNodeClass<ParameterisedHolderExecutableNode, ParameterisedHolderExecutableNodeWrapperPtr> >();
 
 	Serialisation::registerSerialiser( ParameterisedHolderNode::staticTypeId(), new ParameterisedHolderSerialiser<ParameterisedHolderNode>() );
 	Serialisation::registerSerialiser( ParameterisedHolderDependencyNode::staticTypeId(), new ParameterisedHolderSerialiser<ParameterisedHolderDependencyNode>() );
 	Serialisation::registerSerialiser( ParameterisedHolderComputeNode::staticTypeId(), new ParameterisedHolderSerialiser<ParameterisedHolderComputeNode>() );
+	Serialisation::registerSerialiser( ParameterisedHolderExecutableNode::staticTypeId(), new ParameterisedHolderSerialiser<ParameterisedHolderExecutableNode>() );
 
 }

@@ -34,10 +34,8 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/Node.h"
 #include "Gaffer/CompoundPlug.h"
 #include "Gaffer/Context.h"
-#include "Gaffer/Executable.h"
 #include "Gaffer/Despatcher.h"
 
 using namespace IECore;
@@ -47,7 +45,6 @@ Despatcher::DespatcherMap Despatcher::g_despatchers;
 Despatcher::DespatchSignal Despatcher::g_preDespatchSignal;
 Despatcher::DespatchSignal Despatcher::g_postDespatchSignal;
 
-
 Despatcher::Despatcher()
 {
 }
@@ -56,7 +53,7 @@ Despatcher::~Despatcher()
 {
 }
 
-void Despatcher::despatch( const std::vector< NodePtr > &nodes ) const
+void Despatcher::despatch( const std::vector<ExecutableNodePtr> &nodes ) const
 {
 	preDespatchSignal()( this, nodes );
 
@@ -115,31 +112,24 @@ const Despatcher *Despatcher::despatcher( std::string type )
 /// Returns the input Task if it was never seen before, or the previous Task that is equivalent to this one.
 /// It also populates flattenedTasks with unique tasks seen so far.
 /// It uses seenTasks object as a temporary buffer.
-const Executable::Task &Despatcher::uniqueTask( const Executable::Task &task, std::vector< Despatcher::TaskDescription > &uniqueTasks, TaskSet &seenTasks )
-{
-	const Executable *executableNode = dynamic_cast<const Executable*>(task.node.get());
-
-	if ( !executableNode )
-	{
-		throw Exception( "Non Executable node found!" );
-	}
-	
-	Executable::Tasks requirements;
-	executableNode->executionRequirements( task.context, requirements );
+const ExecutableNode::Task &Despatcher::uniqueTask( const ExecutableNode::Task &task, std::vector< Despatcher::TaskDescription > &uniqueTasks, TaskSet &seenTasks )
+{	
+	ExecutableNode::Tasks requirements;
+	task.node->executionRequirements( task.context, requirements );
 
 	TaskDescription	taskDesc;
 	taskDesc.task = task;
 
 	// first we recurse on the requirements, so we know that the first tasks to be added will be the ones without requirements and 
 	// the final result should be a list of tasks that does not break requirement order.
-	for ( Executable::Tasks::iterator rIt = requirements.begin(); rIt != requirements.end(); rIt++ )
+	for( ExecutableNode::Tasks::iterator rIt = requirements.begin(); rIt != requirements.end(); rIt++ )
 	{
 		// override the current requirements in case they are duplicates already added to 'seenTasks'
 		taskDesc.requirements.insert( uniqueTask( *rIt, uniqueTasks, seenTasks ) );
 	}
 
 	IECore::MurmurHash noHash;
-	IECore::MurmurHash hash = executableNode->executionHash( task.context );
+	IECore::MurmurHash hash = task.node->executionHash( task.context );
 
 	std::pair< TaskSet::iterator,bool > tit = seenTasks.insert( TaskSet::value_type( hash, std::vector< size_t >() ) );
 	if ( tit.second )
@@ -186,12 +176,12 @@ const Executable::Task &Despatcher::uniqueTask( const Executable::Task &task, st
 	return task;
 }
 
-void Despatcher::uniqueTasks( const Executable::Tasks &tasks, std::vector< Despatcher::TaskDescription > &uniqueTasks )
+void Despatcher::uniqueTasks( const ExecutableNode::Tasks &tasks, std::vector< Despatcher::TaskDescription > &uniqueTasks )
 {
 	TaskSet seenTasks;
 	
 	uniqueTasks.clear();
-	for ( Executable::Tasks::const_iterator tit = tasks.begin(); tit != tasks.end(); tit++ )
+	for( ExecutableNode::Tasks::const_iterator tit = tasks.begin(); tit != tasks.end(); ++tit )
 	{
 		uniqueTask( *tit, uniqueTasks, seenTasks );
 	}

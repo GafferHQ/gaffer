@@ -271,6 +271,7 @@ namespace Gaffer
 IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( Gaffer::ParameterisedHolderNode, ParameterisedHolderNodeTypeId )
 IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( Gaffer::ParameterisedHolderDependencyNode, ParameterisedHolderDependencyNodeTypeId )
 IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( Gaffer::ParameterisedHolderComputeNode, ParameterisedHolderComputeNodeTypeId )
+IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( Gaffer::ParameterisedHolderExecutableNode, ParameterisedHolderExecutableNodeTypeId )
 
 }
 
@@ -278,3 +279,4 @@ IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( Gaffer::ParameterisedHolderCom
 template class ParameterisedHolder<Node>;
 template class ParameterisedHolder<DependencyNode>;
 template class ParameterisedHolder<ComputeNode>;
+template class ParameterisedHolder<ExecutableNode>;

@@ -37,29 +37,92 @@
 #ifndef GAFFER_EXECUTABLENODE_H
 #define GAFFER_EXECUTABLENODE_H
 
-#include "Gaffer/Executable.h"
 #include "Gaffer/Node.h"
 
 namespace Gaffer
 {
 
-/// Base class for Executable Nodes. 
-/// This class is particularly useful for the python bindings, as the base class for python Executable nodes.
-/// The python bindings for this class adds a static function bool isExecutable() that can be used to detect 
-/// Executable instances and/or classes.
-class ExecutableNode : public Node, public Executable
+IE_CORE_FORWARDDECLARE( Context )
+IE_CORE_FORWARDDECLARE( ExecutableNode )
+IE_CORE_FORWARDDECLARE( ArrayPlug )
+
+/// A base class for nodes with external side effects such as the creation of files,
+/// rendering, etc. ExecutableNodes can be chained together with other Executable nodes
+/// to define a required execution order. Typically Executable nodes should be executed
+/// by Despatcher classes that can query the required execution order and schedule it
+/// appropriately.
+class ExecutableNode : public Node
 {
 
 	public :
 
+		/// A Task defines the execution of an Executable node in a specific Context.
+		/// It's used in Executable nodes to describe the requirements and in Despatchers
+		/// to represent what they are supposed to execute.
+		/// The comparison and hash methods can be used for building sets of unique Tasks.
+		/// \todo I think hash(), == and < are badly broken. I don't see any reason
+		/// why hash() shouldn't just be returning node->executionHash( context ), because
+		/// after all that is already defined to uniquely identify the task. Then I think
+		/// operator == and operator < should be defined in terms of the hash as well.
+		/// We might also want to consider making Tasks immutable, because any code using
+		/// sets/hashes to identify unique tasks is vulnerable to hashes changing - in fact
+		/// we have test cases checking that Tasks can be stored in python sets so immutability
+		/// of the hash is essential for that to make sense. Perhaps hash should just be a
+		/// member variable initialised at construction, and then all member variables should
+		/// be made const.
+		class Task
+		{
+			public :
+
+				Task();
+				Task( const Task &t );
+				Task( ExecutableNodePtr n, ContextPtr c );
+				IECore::MurmurHash hash() const;
+				bool operator == ( const Task &rhs ) const;
+				bool operator < ( const Task &rhs ) const;
+
+				ExecutableNodePtr node;
+				ContextPtr context;
+		};
+
+		typedef std::vector<Task> Tasks;
+		typedef std::vector<ConstContextPtr> Contexts;
+
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::ExecutableNode, ExecutableNodeTypeId, Node );
 
 		ExecutableNode( const std::string &name=defaultName<ExecutableNode>() );
-	
 		virtual ~ExecutableNode();
-};
 
-IE_CORE_DECLAREPTR( ExecutableNode )
+		ArrayPlug *requirementsPlug();
+		const ArrayPlug *requirementsPlug() const;
+
+		Plug *requirementPlug();
+		const Plug *requirementPlug() const;
+
+		/// Fills requirements with all tasks that must be completed before execute()
+		/// can be called. The default implementation declares requirements defined
+		/// by the inputs to the requirementsPlug().
+		virtual void executionRequirements( const Context *context, Tasks &requirements ) const;
+
+		/// Returns a hash that uniquely represents the side effects (files created etc) of
+		/// calling execute with the given context. If the node returns the default hash it
+		/// means this node does not compute anything.
+		virtual IECore::MurmurHash executionHash( const Context *context ) const = 0;
+
+		/// Executes this node for all the specified contexts in sequence.
+		virtual void execute( const Contexts &contexts ) const = 0;
+		
+	protected :
+	
+		/// Implemented to deny inputs to requirementsPlug() which do not come from
+		/// the requirementPlug() of another ExecutableNode.
+		virtual bool acceptsInput( const Plug *plug, const Plug *inputPlug ) const;
+
+	private :
+	
+		static size_t g_firstPlugIndex;
+
+};
 
 } // namespace Gaffer
 

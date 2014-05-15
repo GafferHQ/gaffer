@@ -62,20 +62,20 @@ class DespatcherWrap : public Despatcher, public Wrapper<Despatcher>
 		{
 			ScopedGILLock gilLock;
 			size_t len = boost::python::len( nodeList );
-			std::vector< NodePtr > nodes;
+			std::vector<ExecutableNodePtr> nodes;
 			nodes.reserve( len );
 			for ( size_t i = 0; i < len; i++ )
 			{
-				nodes.push_back( extract< NodePtr >( nodeList[i] ) );
+				nodes.push_back( extract<ExecutableNodePtr>( nodeList[i] ) );
 			}
 			Despatcher::despatch(nodes);
 		}
 
-		void doDespatch( const std::vector< NodePtr > &nodes ) const
+		void doDespatch( const std::vector<ExecutableNodePtr> &nodes ) const
 		{
 			ScopedGILLock gilLock;
 			list nodeList;
-			for ( std::vector< NodePtr >::const_iterator nIt = nodes.begin(); nIt != nodes.end(); nIt++ )
+			for ( std::vector<ExecutableNodePtr>::const_iterator nIt = nodes.begin(); nIt != nodes.end(); nIt++ )
 			{
 				nodeList.append( *nIt );
 			}
@@ -115,13 +115,13 @@ class DespatcherWrap : public Despatcher, public Wrapper<Despatcher>
 
 		static list uniqueTasks( list taskList )
 		{
-			Executable::Tasks tasks;
+			ExecutableNode::Tasks tasks;
 			
 			size_t len = boost::python::len( taskList );
 			tasks.reserve( len );
 			for ( size_t i = 0; i < len; i++ )
 			{
-				tasks.push_back( extract< Executable::Task >( taskList[i] ) );
+				tasks.push_back( extract< ExecutableNode::Task >( taskList[i] ) );
 			}
 
 			std::vector< Despatcher::TaskDescription > uniqueTasks;
@@ -131,7 +131,7 @@ class DespatcherWrap : public Despatcher, public Wrapper<Despatcher>
 			for( std::vector< TaskDescription >::const_iterator fIt = uniqueTasks.begin(); fIt != uniqueTasks.end(); fIt++ )
 			{
 				list requirements;
-				for ( std::set<Executable::Task>::const_iterator rIt = fIt->requirements.begin(); rIt != fIt->requirements.end(); rIt++ )
+				for ( std::set<ExecutableNode::Task>::const_iterator rIt = fIt->requirements.begin(); rIt != fIt->requirements.end(); rIt++ )
 				{
 					requirements.append( *rIt );
 				}
@@ -156,12 +156,12 @@ class DespatcherWrap : public Despatcher, public Wrapper<Despatcher>
 
 struct DespatchSlotCaller
 {
-	boost::signals::detail::unusable operator()( boost::python::object slot, const Despatcher *d, const std::vector< NodePtr > &nodes )
+	boost::signals::detail::unusable operator()( boost::python::object slot, const Despatcher *d, const std::vector<ExecutableNodePtr> &nodes )
 	{
 		try
 		{
 			list nodeList;
-			for ( std::vector< NodePtr >::const_iterator nIt = nodes.begin(); nIt != nodes.end(); nIt++ )
+			for( std::vector<ExecutableNodePtr>::const_iterator nIt = nodes.begin(); nIt != nodes.end(); nIt++ )
 			{
 				nodeList.append( *nIt );
 			}

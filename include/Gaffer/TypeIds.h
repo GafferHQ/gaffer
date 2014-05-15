@@ -116,6 +116,7 @@ enum TypeId
 	BackdropTypeId = 110069,
 	SwitchComputeNodeTypeId = 110070,
 	SwitchDependencyNodeTypeId = 110071,
+	ParameterisedHolderExecutableNodeTypeId = 110072,
 	LastTypeId = 110200,
 	
 };

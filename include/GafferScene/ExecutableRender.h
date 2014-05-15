@@ -37,16 +37,20 @@
 #ifndef GAFFERSCENE_EXECUTABLERENDER_H
 #define GAFFERSCENE_EXECUTABLERENDER_H
 
-#include "Gaffer/Executable.h"
+#include "IECore/Renderer.h"
 
-#include "GafferScene/Render.h"
+#include "Gaffer/ExecutableNode.h"
+
+#include "GafferScene/TypeIds.h"
 
 namespace GafferScene
 {
 
-/// Base class for Executable nodes which perform a render of some sort
+IE_CORE_FORWARDDECLARE( ScenePlug )
+
+/// Base class for executable nodes which perform a render of some sort
 /// in the execute() method.
-class ExecutableRender : public Render, public Gaffer::Executable
+class ExecutableRender : public Gaffer::ExecutableNode
 {
 
 	public :
@@ -54,9 +58,12 @@ class ExecutableRender : public Render, public Gaffer::Executable
 		ExecutableRender( const std::string &name=defaultName<ExecutableRender>() );
 		virtual ~ExecutableRender();
 		
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::ExecutableRender, ExecutableRenderTypeId, Render );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::ExecutableRender, ExecutableRenderTypeId, Gaffer::ExecutableNode );
 		
-		virtual void executionRequirements( const Gaffer::Context *context, Tasks &requirements ) const;
+		/// The scene to be rendered.
+		ScenePlug *inPlug();
+		const ScenePlug *inPlug() const;
+
 		virtual IECore::MurmurHash executionHash( const Gaffer::Context *context ) const;
 		/// Implemented to perform the render.
 		virtual void execute( const Contexts &contexts ) const;
@@ -76,6 +83,11 @@ class ExecutableRender : public Render, public Gaffer::Executable
 		/// This can be useful for nodes which wish to render in two stages by creating a scene file
 		/// with the createRenderer() and then rendering it with a command.
 		virtual std::string command() const; 
+
+	private :
+	
+		static size_t g_firstPlugIndex;
+
 };
 
 IE_CORE_DECLAREPTR( ExecutableRender );

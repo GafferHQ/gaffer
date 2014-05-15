@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,46 +34,52 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python/list.hpp"
+#ifndef GAFFERBINDINGS_EXECUTABLENODEBINDING_INL
+#define GAFFERBINDINGS_EXECUTABLENODEBINDING_INL
+
+#include "boost/python/suite/indexing/container_utils.hpp"
+
 #include "IECorePython/ScopedGILRelease.h"
-#include "Gaffer/Executable.h"
 
 namespace GafferBindings
 {
 
-template< typename PythonClass, typename NodeClass >
-void ExecutableBinding<PythonClass,NodeClass>::bind( PythonClass &c )
+namespace Detail
 {
-	c.def( "executionRequirements", &ExecutableBinding<PythonClass,NodeClass>::executionRequirements )
-	 .def( "executionHash", &NodeClass::executionHash )
-	 .def( "execute", &ExecutableBinding<PythonClass,NodeClass>::execute );
-}
 
-template< typename PythonClass, typename NodeClass >
-boost::python::list ExecutableBinding<PythonClass,NodeClass>::executionRequirements( NodeClass &n, Gaffer::ContextPtr context )
+template<typename T>
+boost::python::list executionRequirements( T &n, Gaffer::Context *context )
 {
-	Gaffer::Executable::Tasks tasks;
+	Gaffer::ExecutableNode::Tasks tasks;
 	n.executionRequirements( context, tasks );
 	boost::python::list result;
-	for ( Gaffer::Executable::Tasks::const_iterator tIt = tasks.begin(); tIt != tasks.end(); tIt++ )
+	for( Gaffer::ExecutableNode::Tasks::const_iterator tIt = tasks.begin(); tIt != tasks.end(); ++tIt )
 	{
 		result.append( *tIt );
 	}
 	return result;
 }
 
-template< typename PythonClass, typename NodeClass >
-void ExecutableBinding<PythonClass,NodeClass>::execute( NodeClass &n, const boost::python::list &contextList )
+template<typename T>
+void execute( T &n, const boost::python::list &contextsList )
 {
-	Gaffer::Executable::Contexts contexts;
-	size_t len = boost::python::len(contextList);
-	contexts.reserve( len );
-	for ( size_t i = 0; i < len; i++ )
-	{
-		contexts.push_back( boost::python::extract<Gaffer::ConstContextPtr>( contextList[i] ) );
-	}
+	Gaffer::ExecutableNode::Contexts contexts;
+	boost::python::container_utils::extend_container( contexts, contextsList );
 	IECorePython::ScopedGILRelease gilRelease;
 	n.execute( contexts );
 }
 
+} // namespace Detail
+
+template<typename T, typename Ptr>
+ExecutableNodeClass<T, Ptr>::ExecutableNodeClass( const char *docString )
+	:	NodeClass<T, Ptr>( docString )
+{
+	def( "executionRequirements", &Detail::executionRequirements<T> );
+	def( "executionHash", &T::executionHash );
+	def( "execute", &Detail::execute<T> );	
+}
+
 } // namespace GafferBindings
+
+#endif // GAFFERBINDINGS_EXECUTABLENODEBINDING_INL

@@ -46,7 +46,6 @@ import SceneProcessorUI
 import FilteredSceneProcessorUI
 import PruneUI
 import SubTreeUI
-import RenderUI
 import DisplaysUI
 import OptionsUI
 import OpenGLAttributesUI
@@ -61,6 +60,7 @@ import TransformUI
 import AttributesUI
 import LightUI
 import InteractiveRenderUI
+import ExecutableRenderUI
 import SphereUI
 import MapProjectionUI
 import MapOffsetUI

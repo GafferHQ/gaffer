@@ -89,7 +89,7 @@ enum TypeId
 	MeshTypeTypeId = 110544,
 	FilteredSceneProcessorTypeId = 110545,
 	PruneTypeId = 110546,
-	RenderTypeId = 110547,
+	RenderTypeId = 110547, // obsolete - available for reuse
 	ExecutableRenderTypeId = 110548,
 	OpenGLRenderTypeId = 110549,
 	InteractiveRenderTypeId = 110550,

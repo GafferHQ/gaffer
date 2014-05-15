@@ -46,14 +46,14 @@
 #include "Gaffer/CompoundParameterHandler.h"
 
 #include "GafferBindings/ParameterisedHolderBinding.h"
-#include "GafferBindings/ExecutableBinding.h"
+#include "GafferBindings/ExecutableNodeBinding.h"
 #include "GafferBindings/ExecutableOpHolderBinding.h"
 
 using namespace boost::python;
 using namespace GafferBindings;
 using namespace Gaffer;
 
-typedef ParameterisedHolderWrapper< NodeWrapper<ExecutableOpHolder> > ExecutableOpHolderWrapper;
+typedef ParameterisedHolderWrapper< ExecutableNodeWrapper<ExecutableOpHolder> > ExecutableOpHolderWrapper;
 IE_CORE_DECLAREPTR( ExecutableOpHolderWrapper );
 
 static IECore::OpPtr getOp( ExecutableOpHolder &n )
@@ -63,10 +63,7 @@ static IECore::OpPtr getOp( ExecutableOpHolder &n )
 
 void GafferBindings::bindExecutableOpHolder()
 {
-	typedef NodeClass<ExecutableOpHolder, ExecutableOpHolderWrapperPtr> PythonType;
-	
-	PythonType executableOp;
-	executableOp
+	ExecutableNodeClass<ExecutableOpHolder, ExecutableOpHolderWrapperPtr>()
 		.def(
 			"setOp",
 			&ExecutableOpHolder::setOp,
@@ -78,6 +75,4 @@ void GafferBindings::bindExecutableOpHolder()
 		)
 		.def( "getOp", &getOp )
 	;
-
-	ExecutableBinding<PythonType, ExecutableOpHolder>::bind( executableOp );
 }

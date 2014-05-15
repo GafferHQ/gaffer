@@ -75,22 +75,10 @@ class ImageWriter : public Gaffer::ExecutableNode
 		
 		Gaffer::IntPlug *writeModePlug();
 		const Gaffer::IntPlug *writeModePlug() const;
-
-		// Implemented to specify the requirements which must be satisfied
-		// before it is allowed to call execute() with the given context.
-		virtual void executionRequirements( const Gaffer::Context *context, Executable::Tasks &requirements ) const;
 		
-		/// Implemented to set a hash that uniquely represents the
-		/// side effects (files created etc) of calling execute with the given context.
-		/// If the node returns the default hash it means this node does not compute anything.
 		virtual IECore::MurmurHash executionHash( const Gaffer::Context *context ) const;
-		
-		/// Implemented to execute in all the specified contexts in sequence.
-		virtual void execute( const Executable::Contexts &contexts ) const;
-	
-	protected :
 
-		virtual bool acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const;
+		virtual void execute( const Contexts &contexts ) const;
 
 	private :
 		

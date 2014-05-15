@@ -37,15 +37,13 @@
 #include "IECore/SimpleTypedData.h"
 #include "IECore/WorldBlock.h"
 
-#include "IECoreGL/IECoreGL.h"
-#include "IECoreGL/Renderer.h"
-
 #include "Gaffer/Context.h"
 #include "Gaffer/ApplicationRoot.h"
 
 #include "GafferScene/ScenePlug.h"
 #include "GafferScene/SceneProcedural.h"
 #include "GafferScene/ExecutableRender.h"
+#include "GafferScene/RendererAlgo.h"
 
 using namespace IECore;
 using namespace Gaffer;
@@ -53,18 +51,27 @@ using namespace GafferScene;
 
 IE_CORE_DEFINERUNTIMETYPED( ExecutableRender );
 
+size_t ExecutableRender::g_firstPlugIndex = 0;
+
 ExecutableRender::ExecutableRender( const std::string &name )
-	:	Render( name ), Executable( this )
+	:	ExecutableNode( name )
 {
+	storeIndexOfNextChild( g_firstPlugIndex );
+	addChild( new ScenePlug( "in" ) );
 }
 
 ExecutableRender::~ExecutableRender()
 {
 }
 
-void ExecutableRender::executionRequirements( const Gaffer::Context *context, Tasks &requirements ) const
+ScenePlug *ExecutableRender::inPlug()
 {
-	Executable::defaultRequirements( this, context, requirements );
+	return getChild<ScenePlug>( g_firstPlugIndex );
+}
+
+const ScenePlug *ExecutableRender::inPlug() const
+{
+	return getChild<ScenePlug>( g_firstPlugIndex );
 }
 
 IECore::MurmurHash ExecutableRender::executionHash( const Gaffer::Context *context ) const
@@ -117,10 +124,11 @@ void ExecutableRender::execute( const Contexts &contexts ) const
 				systemCommand += "&";
 			}
 			
-			/// \todo bms20131119: Note ktmp is unchecked, and as such invokes an error when 
-			/// compiling with stock ubuntu 12.04.  This needs investigation
-			int ktmp = system( systemCommand.c_str() );
-			(void) ktmp;
+			int result = system( systemCommand.c_str() );
+			if( result )
+			{
+				throw Exception( "System command failed" );
+			}
 		}
 	}
 }
