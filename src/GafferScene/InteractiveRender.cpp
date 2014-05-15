@@ -227,7 +227,7 @@ void InteractiveRender::updateShaders( const ScenePlug::ScenePath &path )
 		}
 		
 		CompoundDataMap parameters;
-		parameters["scopename"] = new StringData( name );
+		parameters["exactscopename"] = new StringData( name );
 		m_renderer->editBegin( "attribute", parameters );
 		
 			for( ObjectVector::MemberContainer::const_iterator it = shader->members().begin(), eIt = shader->members().end(); it != eIt; it++ )
