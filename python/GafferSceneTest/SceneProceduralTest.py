@@ -70,15 +70,15 @@ class SceneProceduralTest( unittest.TestCase ) :
 		# This test actually exposed a crash bug in IECoreGL, but it's important
 		# that Gaffer isn't susceptible to triggering that bug.
 	
-		mc = GafferScene.SceneReader()
-		mc["fileName"].setValue( "iDontExist" )
+		badNode = GafferScene.Text()
+		badNode["font"].setValue( "iDontExist" )
 		
 		renderer = IECoreGL.Renderer()
 		renderer.setOption( "gl:mode", IECore.StringData( "deferred" ) )
 
 		with IECore.WorldBlock( renderer ) :
 		
-			procedural = GafferScene.SceneProcedural( mc["out"], Gaffer.Context(), "/" )
+			procedural = GafferScene.SceneProcedural( badNode["out"], Gaffer.Context(), "/" )
 			self.__WrappingProcedural( procedural ).render( renderer )
 	
 	def testPythonComputationErrors( self ) :
