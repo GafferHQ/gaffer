@@ -94,10 +94,10 @@ class PathFilterTest( unittest.TestCase ) :
 		)
 					
 		f = GafferScene.PathFilter()
-		f["paths"].setValue( IECore.StringVectorData( paths ) )
+		f["paths"].setValue( IECore.StringVectorData( [ "/" + "/".join( [ str( x ) for x in p ] ) for p in paths ] ) )
 		with Gaffer.Context() as c :
 			for path in paths :
-				c["scene:path"] = IECore.InternedStringVectorData( path[1:].split( "/" ) )
+				c["scene:path"] = path
 				self.assertTrue( f["match"].getValue() & f.Result.ExactMatch )
 	
 	def testInputsAccepted( self ) :

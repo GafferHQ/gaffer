@@ -60,13 +60,14 @@ class PathMatcherTest( unittest.TestCase ) :
 		]
 		
 		paths = []
-		def buildWalk( parent="", depth=1 ) :
+		def buildWalk( parent=IECore.InternedStringVectorData(), depth=1 ) :
 			
 			if depth > random.randint( *depthRange ) :
 				return
 				
 			for i in range( 0, random.randint( *numChildrenRange ) ) :
-				path = parent + "/" + random.choice( adjectives ) + random.choice( nouns ) + str( i )
+				path = parent.copy()
+				path.append( random.choice( adjectives ) + random.choice( nouns ) + str( i ) )
 				paths.append( path )
 				buildWalk( path, depth + 1 )
 						
@@ -517,5 +518,40 @@ class PathMatcherTest( unittest.TestCase ) :
 		
 			self.assertEqual( m.match( path ), int( result ) )
 	
+	def testInternedStringVectorData( self ) :
+		
+		paths = [
+			IECore.InternedStringVectorData( [ "a", "b", "c" ] ),
+			IECore.InternedStringVectorData( [ "w", "*" ] ),
+			IECore.InternedStringVectorData( [ "e", "...", "f" ] ),
+		]
+		
+		m = GafferScene.PathMatcher( paths )
+		
+		self.assertEqual( set( m.paths() ), set( [ "/a/b/c", "/w/*", "/e/.../f" ] ) )
+	
+		r = GafferScene.Filter.Result
+
+		for path, result in [
+			( "/a/b/c", r.ExactMatch ),
+			( "/a/b", r.DescendantMatch ),
+			( "/a/b/c/d", r.AncestorMatch ),
+			( "/b/d", r.NoMatch ),
+			( "/w/w", r.ExactMatch ),
+			( "/e/f", r.ExactMatch | r.DescendantMatch ),
+			( "/e/a/f", r.ExactMatch | r.DescendantMatch ),
+		] :
+		
+			self.assertEqual(
+				m.match( IECore.InternedStringVectorData( path[1:].split( "/" ) ) ),
+				int( result ),
+			)
+			
+		m.removePath( paths[0] )
+		self.assertEqual( m.match( paths[0] ), r.NoMatch )
+		
+		m.addPath( paths[0] )
+		self.assertEqual( m.match( paths[0] ), r.ExactMatch )
+		
 if __name__ == "__main__":
 	unittest.main()

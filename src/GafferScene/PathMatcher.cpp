@@ -49,8 +49,9 @@ using namespace GafferScene;
 struct PathMatcher::Node
 {
 	
-	typedef std::multimap<std::string, Node *, Gaffer::MatchPatternLess> ChildMap;
+	typedef std::multimap<IECore::InternedString, Node *, Gaffer::MatchPatternLess> ChildMap;
 	typedef ChildMap::iterator ChildMapIterator;
+	typedef ChildMap::value_type ChildMapValue;
 	typedef ChildMap::const_iterator ConstChildMapIterator;
 	typedef std::pair<ChildMapIterator, ChildMapIterator> ChildMapRange;
 	typedef std::pair<ConstChildMapIterator, ConstChildMapIterator> ConstChildMapRange;
@@ -66,7 +67,7 @@ struct PathMatcher::Node
 		ChildMapIterator hint = children.begin();
 		for( ConstChildMapIterator it = other.children.begin(), eIt = other.children.end(); it != eIt; it++ )
 		{
-			hint = children.insert( hint, pair<string, Node *>( it->first, new Node( *(it->second) ) ) );
+			hint = children.insert( hint, ChildMapValue( it->first, new Node( *(it->second) ) ) );
 		}
 	}
 
@@ -80,7 +81,7 @@ struct PathMatcher::Node
 		delete ellipsis;
 	}
 	
-	ChildMapIterator childIterator( const std::string &name )
+	ChildMapIterator childIterator( const IECore::InternedString &name )
 	{
 		ChildMapRange range = children.equal_range( name );
 		while( range.first != range.second )
@@ -94,7 +95,7 @@ struct PathMatcher::Node
 		return children.end();
 	}
 	
-	ConstChildMapIterator childIterator( const std::string &name ) const
+	ConstChildMapIterator childIterator( const IECore::InternedString &name ) const
 	{
 		ConstChildMapRange range = children.equal_range( name );
 		while( range.first != range.second )
@@ -109,7 +110,7 @@ struct PathMatcher::Node
 	}
 	
 	// returns the child exactly matching name.
-	Node *child( const std::string &name )
+	Node *child( const IECore::InternedString &name )
 	{
 		ChildMapIterator it = childIterator( name );
 		if( it != children.end() )
@@ -121,12 +122,12 @@ struct PathMatcher::Node
 	
 	// returns the range of children which /may/ match name
 	// when wildcards are taken into account.
-	ChildMapRange childRange( const std::string &name )
+	ChildMapRange childRange( const IECore::InternedString &name )
 	{
 		return children.equal_range( name );
 	}
 	
-	ConstChildMapRange childRange( const std::string &name ) const
+	ConstChildMapRange childRange( const IECore::InternedString &name ) const
 	{
 		return children.equal_range( name );
 	}
@@ -188,6 +189,8 @@ struct PathMatcher::Node
 //////////////////////////////////////////////////////////////////////////
 // PathMatcher implementation
 //////////////////////////////////////////////////////////////////////////
+
+static IECore::InternedString g_ellipsis( "..." );
 
 PathMatcher::PathMatcher()
 {
@@ -318,13 +321,24 @@ void PathMatcher::matchWalk( Node *node, const NameIterator &start, const NameIt
 
 bool PathMatcher::addPath( const std::string &path )
 {
+	Tokenizer tokenizer( path, boost::char_separator<char>( "/" ) );
+	return addPath( tokenizer.begin(), tokenizer.end() );
+}
+
+bool PathMatcher::addPath( const std::vector<IECore::InternedString> &path )
+{
+	return addPath( path.begin(), path.end() );
+}
+
+template<typename NameIterator>
+bool PathMatcher::addPath( const NameIterator &start, const NameIterator &end )
+{
 	Node *node = m_root.get();
-	Tokenizer tokenizer( path, boost::char_separator<char>( "/" ) );	
-	Tokenizer::iterator it, eIt;
-	for( it = tokenizer.begin(), eIt = tokenizer.end(); it != eIt; it++ )
+	for( NameIterator it = start; it != end; ++it )
 	{
 		Node *nextNode = 0;
-		if( *it == "..." )
+		const IECore::InternedString name( *it );
+		if( name == g_ellipsis )
 		{
 			nextNode = node->ellipsis;
 			if( !nextNode )
@@ -335,11 +349,11 @@ bool PathMatcher::addPath( const std::string &path )
 		}
 		else
 		{
-			nextNode = node->child( *it );
+			nextNode = node->child( name );
 			if( !nextNode )
 			{
 				nextNode = new Node;
-				node->children.insert( pair<string, Node *>( *it, nextNode ) );
+				node->children.insert( Node::ChildMapValue( name, nextNode ) );
 			}
 		}
 		node = nextNode;
@@ -358,7 +372,15 @@ bool PathMatcher::removePath( const std::string &path )
 	return result;
 }
 
-void PathMatcher::removeWalk( Node *node, const TokenIterator &start, const TokenIterator &end, bool &removed )
+bool PathMatcher::removePath( const std::vector<IECore::InternedString> &path )
+{
+	bool result = false;
+	removeWalk( m_root.get(), path.begin(), path.end(), result );
+	return result;
+}
+
+template<typename NameIterator>
+void PathMatcher::removeWalk( Node *node, const NameIterator &start, const NameIterator &end, bool &removed )
 {
 	if( start == end )
 	{
@@ -371,15 +393,16 @@ void PathMatcher::removeWalk( Node *node, const TokenIterator &start, const Toke
 		return;
 	}
 
+	const IECore::InternedString name( *start );
 	Node::ChildMapIterator childIt = node->children.end();
 	Node *childNode = 0;
-	if( *start == "..." )
+	if( name == g_ellipsis )
 	{
 		childNode = node->ellipsis;
 	}
 	else
 	{
-		childIt = node->childIterator( *start );
+		childIt = node->childIterator( name );
 		if( childIt != node->children.end() )
 		{
 			childNode = childIt->second;
@@ -391,7 +414,7 @@ void PathMatcher::removeWalk( Node *node, const TokenIterator &start, const Toke
 		return;
 	}	
 	
-	TokenIterator childStart = start; childStart++;
+	NameIterator childStart = start; childStart++;
 	removeWalk( childNode, childStart, end, removed );
 	if( !childNode->terminator && !childNode->ellipsis && !childNode->children.size() )
 	{

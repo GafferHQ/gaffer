@@ -74,9 +74,11 @@ class PathMatcher
 		/// Returns true if the path was added, false if
 		/// it was already there.
 		bool addPath( const std::string &path );
+		bool addPath( const std::vector<IECore::InternedString> &path );
 		/// Returns true if the path was removed, false if
 		/// it was not there.
 		bool removePath( const std::string &path );
+		bool removePath( const std::vector<IECore::InternedString> &path );
 	
 		void clear();
 		
@@ -95,10 +97,12 @@ class PathMatcher
 	private :
 
 		typedef boost::tokenizer<boost::char_separator<char> > Tokenizer;
-		typedef Tokenizer::iterator TokenIterator;
 		struct Node;
 		
-		void removeWalk( Node *node, const TokenIterator &start, const TokenIterator &end, bool &removed );
+		template<typename NameIterator>
+		bool addPath( const NameIterator &start, const NameIterator &end );
+		template<typename NameIterator>
+		void removeWalk( Node *node, const NameIterator &start, const NameIterator &end, bool &removed );
 		void pathsWalk( Node *node, const std::string &path, std::vector<std::string> &paths ) const;
 
 		template<typename NameIterator>
