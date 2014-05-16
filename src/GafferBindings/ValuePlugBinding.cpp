@@ -44,6 +44,7 @@
 
 #include "Gaffer/ValuePlug.h"
 #include "Gaffer/Node.h"
+#include "Gaffer/Reference.h"
 
 #include "GafferBindings/ValuePlugBinding.h"
 #include "GafferBindings/PlugBinding.h"
@@ -132,7 +133,22 @@ std::string ValuePlugSerialiser::postConstructor( const Gaffer::GraphComponent *
 		{
 			object pythonValue = pythonPlug.attr( "getValue" )();
 			
-			if( PyObject_HasAttrString( pythonPlug.ptr(), "defaultValue" ) )
+			bool omitDefaultValue = true;
+			if( IECore::runTimeCast<const Reference>( plug->node() ) )
+			{
+				// We always emit setValue() calls for plugs held directly on
+				// Reference nodes, even if they are at the default value.
+				// This is because the user may have exported the
+				// reference with the plug at a non-default value, but then
+				// set the value back to the default in a file that references
+				// it back in.
+				/// \todo Consider whether or not we might like to have a plug flag
+				/// to control this behaviour, so that ValuePlugSerialiser doesn't
+				/// need explicit knowledge of Reference Nodes.
+				omitDefaultValue = false;
+			}
+			
+			if( omitDefaultValue && PyObject_HasAttrString( pythonPlug.ptr(), "defaultValue" ) )
 			{
 				object pythonDefaultValue = pythonPlug.attr( "defaultValue" )();
 				if( pythonValue == pythonDefaultValue )
