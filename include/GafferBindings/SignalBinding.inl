@@ -40,6 +40,8 @@
 
 #include "boost/version.hpp"
 
+#include "IECorePython/ScopedGILRelease.h"
+
 #include "GafferBindings/ConnectionBinding.h"
 
 namespace GafferBindings
@@ -53,6 +55,7 @@ struct DefaultSignalCallerBase<0, Signal>
 {
 	static typename Signal::result_type call( Signal &s )
 	{
+		IECorePython::ScopedGILRelease gilRelease;
 		return s();
 	}
 };
@@ -66,6 +69,7 @@ struct DefaultSignalCallerBase<1, Signal>
 	static typename Signal::result_type call( Signal &s, typename Signal::arg1_type a1 )
 #endif
 	{
+		IECorePython::ScopedGILRelease gilRelease;
 		return s( a1 );
 	}
 };
@@ -79,6 +83,7 @@ struct DefaultSignalCallerBase<2, Signal>
 	static typename Signal::result_type call( Signal &s, typename Signal::arg1_type a1, typename Signal::arg2_type a2 )
 #endif
 	{
+		IECorePython::ScopedGILRelease gilRelease;
 		return s( a1, a2 );
 	}
 };
@@ -92,6 +97,7 @@ struct DefaultSignalCallerBase<3, Signal>
 	static typename Signal::result_type call( Signal &s, typename Signal::arg1_type a1, typename Signal::arg2_type a2, typename Signal::arg3_type a3 )
 #endif
 	{
+		IECorePython::ScopedGILRelease gilRelease;
 		return s( a1, a2, a3 );
 	}
 };
