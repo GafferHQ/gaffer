@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2012-2013, John Haddon. All rights reserved.
+#  Copyright (c) 2012-2014, John Haddon. All rights reserved.
 #  Copyright (c) 2013-2014, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -95,6 +95,7 @@ from DuplicateTest import DuplicateTest
 from ModuleTest import ModuleTest
 from GridTest import GridTest
 from SetTest import SetTest
+from FreezeTransformTest import FreezeTransformTest
 
 if __name__ == "__main__":
 	import unittest
