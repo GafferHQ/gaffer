@@ -93,8 +93,7 @@ void Isolate::hashBound( const ScenePath &path, const Gaffer::Context *context, 
 {
 	if( adjustBoundsPlug()->getValue() )
 	{
-		Filter::Result match = (Filter::Result)filterPlug()->getValue();
-		if( match == Filter::DescendantMatch )
+		if( filterValue() == Filter::DescendantMatch )
 		{
 			h = hashOfTransformedChildBounds( path, outPlug() );
 			return;
@@ -122,13 +121,12 @@ void Isolate::hashObject( const ScenePath &path, const Gaffer::Context *context,
 
 void Isolate::hashChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	Filter::Result match = (Filter::Result)filterPlug()->getValue();
-	if( match == Filter::DescendantMatch )
+	if( filterValue() == Filter::DescendantMatch )
 	{
 		// we might be computing new childnames for this level.
 		FilteredSceneProcessor::hashChildNames( path, context, parent, h );
 		inPlug()->childNamesPlug()->hash( h );
-		filterPlug()->hash( h );
+		filterHash( h );
 	}
 	else
 	{
@@ -141,15 +139,14 @@ void Isolate::hashGlobals( const Gaffer::Context *context, const ScenePlug *pare
 {
 	FilteredSceneProcessor::hashGlobals( context, parent, h );
 	inPlug()->globalsPlug()->hash( h );
-	filterPlug()->hash( h );
+	filterHash( h );
 }
 
 Imath::Box3f Isolate::computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	if( adjustBoundsPlug()->getValue() )
 	{
-		Filter::Result match = (Filter::Result)filterPlug()->getValue();
-		if( match == Filter::DescendantMatch )
+		if( filterValue() == Filter::DescendantMatch )
 		{
 			return unionOfTransformedChildBounds( path, outPlug() );
 		}
@@ -175,8 +172,7 @@ IECore::ConstObjectPtr Isolate::computeObject( const ScenePath &path, const Gaff
 
 IECore::ConstInternedStringVectorDataPtr Isolate::computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	Filter::Result match = (Filter::Result)filterPlug()->getValue();
-	if( match == Filter::DescendantMatch )
+	if( filterValue() == Filter::DescendantMatch )
 	{
 		// we may need to delete one or more of our children
 		ConstInternedStringVectorDataPtr inputChildNamesData = inPlug()->childNamesPlug()->getValue();
@@ -194,7 +190,7 @@ IECore::ConstInternedStringVectorDataPtr Isolate::computeChildNames( const Scene
 		{
 			childPath[path.size()] = *it;
 			tmpContext->set( ScenePlug::scenePathContextName, childPath );
-			if( filterPlug()->getValue() != Filter::NoMatch )
+			if( filterValue() != Filter::NoMatch )
 			{
 				outputChildNames.push_back( *it );
 			}
@@ -240,9 +236,9 @@ IECore::ConstCompoundObjectPtr Isolate::computeGlobals( const Gaffer::Context *c
 		{
 			path.clear();
 			ScenePlug::stringToPath( *pIt, path );
-			
+
 			tmpContext->set( ScenePlug::scenePathContextName, path );
-			if( filterPlug()->getValue() != Filter::NoMatch )
+			if( filterValue() != Filter::NoMatch )
 			{
 				outputSet.addPath( *pIt );
 			}

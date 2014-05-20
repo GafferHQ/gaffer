@@ -98,10 +98,10 @@ void SceneElementProcessor::hashBound( const ScenePath &path, const Gaffer::Cont
 
 void SceneElementProcessor::hashTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	unsigned match = Filter::NoMatch;
+	Filter::Result match = Filter::NoMatch;
 	if( processesTransform() )
 	{
-		match = filterPlug()->getValue();
+		match = filterValue();
 	}
 
 	if( match & Filter::ExactMatch )
@@ -119,10 +119,10 @@ void SceneElementProcessor::hashTransform( const ScenePath &path, const Gaffer::
 
 void SceneElementProcessor::hashAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	unsigned match = Filter::NoMatch;
+	Filter::Result match = Filter::NoMatch;
 	if( processesAttributes() )
 	{
-		match = filterPlug()->getValue();
+		match = filterValue();
 	}
 
 	if( match & Filter::ExactMatch )
@@ -140,10 +140,10 @@ void SceneElementProcessor::hashAttributes( const ScenePath &path, const Gaffer:
 
 void SceneElementProcessor::hashObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	unsigned match = Filter::NoMatch;
+	Filter::Result match = Filter::NoMatch;
 	if( processesObject() )
 	{
-		match = filterPlug()->getValue();
+		match = filterValue();
 	}
 
 	if( match & Filter::ExactMatch )
@@ -184,7 +184,7 @@ Imath::Box3f SceneElementProcessor::computeBound( const ScenePath &path, const G
 
 Imath::M44f SceneElementProcessor::computeTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	if( filterPlug()->getValue() & Filter::ExactMatch )
+	if( filterValue() & Filter::ExactMatch )
 	{
 		return computeProcessedTransform( path, context, inPlug()->transformPlug()->getValue() );
 	}
@@ -196,7 +196,7 @@ Imath::M44f SceneElementProcessor::computeTransform( const ScenePath &path, cons
 
 IECore::ConstCompoundObjectPtr SceneElementProcessor::computeAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	if( filterPlug()->getValue() & Filter::ExactMatch )
+	if( filterValue() & Filter::ExactMatch )
 	{
 		return computeProcessedAttributes( path, context, inPlug()->attributesPlug()->getValue() );
 	}
@@ -208,7 +208,7 @@ IECore::ConstCompoundObjectPtr SceneElementProcessor::computeAttributes( const S
 
 IECore::ConstObjectPtr SceneElementProcessor::computeObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	if( filterPlug()->getValue() & Filter::ExactMatch )
+	if( filterValue() & Filter::ExactMatch )
 	{
 		return computeProcessedObject( path, context, inPlug()->objectPlug()->getValue() );
 	}
@@ -292,7 +292,7 @@ SceneElementProcessor::BoundMethod SceneElementProcessor::boundMethod() const
 	
 	if( pBound || pTransform )
 	{
-		unsigned f = filterPlug()->getValue();
+		const Filter::Result f = filterValue();
 		if( f & Filter::ExactMatch )
 		{
 			if( pBound )

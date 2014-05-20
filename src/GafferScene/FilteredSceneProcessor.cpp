@@ -85,3 +85,13 @@ bool FilteredSceneProcessor::acceptsInput( const Gaffer::Plug *plug, const Gaffe
 	}
 	return true;
 }
+
+Filter::Result FilteredSceneProcessor::filterValue() const
+{
+	return (Filter::Result)filterPlug()->getValue();
+}
+
+void FilteredSceneProcessor::filterHash( IECore::MurmurHash &h ) const
+{
+	filterPlug()->hash( h );
+}

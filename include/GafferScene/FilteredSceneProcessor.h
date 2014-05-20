@@ -64,6 +64,12 @@ class FilteredSceneProcessor : public SceneProcessor
 		/// Implemented to prevent non-Filter nodes being connected to the filter plug.
 		virtual bool acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const;
 
+		/// Convenience method for returning the result of filterPlug()->getValue()
+		/// cast to the appropriate result type.
+		Filter::Result filterValue() const;
+		/// Convenience method for appending filterPlug() to a hash.
+		void filterHash( IECore::MurmurHash &h ) const;
+
 		static size_t g_firstPlugIndex;
 	
 };

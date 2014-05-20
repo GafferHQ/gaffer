@@ -93,8 +93,7 @@ void Prune::hashBound( const ScenePath &path, const Gaffer::Context *context, co
 {
 	if( adjustBoundsPlug()->getValue() )
 	{
-		unsigned match = filterPlug()->getValue();
-		if( match & Filter::DescendantMatch )
+		if( filterValue() & Filter::DescendantMatch )
 		{
 			h = hashOfTransformedChildBounds( path, outPlug() );
 			return;
@@ -122,13 +121,12 @@ void Prune::hashObject( const ScenePath &path, const Gaffer::Context *context, c
 
 void Prune::hashChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	unsigned match = filterPlug()->getValue();
-	if( match & Filter::DescendantMatch )
+	if( filterValue() & Filter::DescendantMatch )
 	{
 		// we might be computing new childnames for this level.
 		FilteredSceneProcessor::hashChildNames( path, context, parent, h );
 		inPlug()->childNamesPlug()->hash( h );
-		filterPlug()->hash( h );
+		filterHash( h );
 	}
 	else
 	{
@@ -141,15 +139,14 @@ void Prune::hashGlobals( const Gaffer::Context *context, const ScenePlug *parent
 {
 	FilteredSceneProcessor::hashGlobals( context, parent, h );
 	inPlug()->globalsPlug()->hash( h );
-	filterPlug()->hash( h );
+	filterHash( h );
 }
 
 Imath::Box3f Prune::computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	if( adjustBoundsPlug()->getValue() )
 	{
-		unsigned match = filterPlug()->getValue();
-		if( match & Filter::DescendantMatch )
+		if( filterValue() & Filter::DescendantMatch )
 		{
 			return unionOfTransformedChildBounds( path, outPlug() );
 		}
@@ -175,8 +172,7 @@ IECore::ConstObjectPtr Prune::computeObject( const ScenePath &path, const Gaffer
 
 IECore::ConstInternedStringVectorDataPtr Prune::computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	unsigned match = filterPlug()->getValue();
-	if( match & Filter::DescendantMatch )
+	if( filterValue() & Filter::DescendantMatch )
 	{
 		// we may need to delete one or more of our children
 		ConstInternedStringVectorDataPtr inputChildNamesData = inPlug()->childNamesPlug()->getValue();
@@ -194,7 +190,7 @@ IECore::ConstInternedStringVectorDataPtr Prune::computeChildNames( const ScenePa
 		{
 			childPath[path.size()] = *it;
 			tmpContext->set( ScenePlug::scenePathContextName, childPath );
-			if( !(filterPlug()->getValue() & Filter::ExactMatch) )
+			if( !(filterValue() & Filter::ExactMatch) )
 			{
 				outputChildNames.push_back( *it );
 			}
@@ -242,7 +238,7 @@ IECore::ConstCompoundObjectPtr Prune::computeGlobals( const Gaffer::Context *con
 			ScenePlug::stringToPath( *pIt, path );
 			
 			tmpContext->set( ScenePlug::scenePathContextName, path );
-			if( !(filterPlug()->getValue() & ( Filter::ExactMatch | Filter::AncestorMatch ) ) )
+			if( !(filterValue() & ( Filter::ExactMatch | Filter::AncestorMatch ) ) )
 			{
 				outputSet.addPath( *pIt );
 			}
