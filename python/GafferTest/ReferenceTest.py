@@ -317,7 +317,44 @@ class ReferenceTest( unittest.TestCase ) :
 		s["r"].load( "/tmp/test.grf" )
 
 		self.assertEqual( Gaffer.Metadata.plugValue( s["r"]["user"]["p"], "test" ), 10 )		
-				
+	
+	def testDefaultValueClashes( self ) :
+	
+		# export a reference where a promoted plug is not at
+		# its default value.
+	
+		s = Gaffer.ScriptNode()
+		s["b"] = Gaffer.Box()
+		s["b"]["n"] = GafferTest.AddNode()
+		p = s["b"].promotePlug( s["b"]["n"]["op1"] )
+		p.setValue( p.defaultValue() + 10 )
+		
+		s["b"].exportForReference( "/tmp/test.grf" )
+		
+		# reference it in to a new script, set the value back to
+		# its default, and save the script.
+		
+		s2 = Gaffer.ScriptNode()
+		s2["r"] = Gaffer.Reference()
+		s2["r"].load( "/tmp/test.grf" )
+		
+		p2 = s2["r"].descendant( p.relativeName( s["b"] ) )
+		self.assertEqual( p2.getValue(), p2.defaultValue() + 10 )
+		p2.setToDefault()
+		self.assertEqual( p2.getValue(), p2.defaultValue() )
+		
+		s2["fileName"].setValue( "/tmp/test.gfr" )
+		s2.save()
+		
+		# load the script, and check that the value is at the default.
+		
+		s3 = Gaffer.ScriptNode()
+		s3["fileName"].setValue( "/tmp/test.gfr" )
+		s3.load()
+
+		p3 = s3["r"].descendant( p.relativeName( s["b"] ) )
+		self.assertEqual( p3.getValue(), p3.defaultValue() )
+		
 	def tearDown( self ) :
 	
 		for f in (
