@@ -34,46 +34,24 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "tbb/tbb.h"
+#ifndef GAFFERTEST_ASSERT_H
+#define GAFFERTEST_ASSERT_H
 
-#include "Gaffer/Node.h"
-#include "Gaffer/Metadata.h"
+#include "boost/format.hpp"
 
-#include "GafferTest/Assert.h"
-#include "GafferTest/MetadataTest.h"
+#include "IECore/Exception.h"
 
-using namespace tbb;
-using namespace IECore;
-using namespace Gaffer;
-
-struct TestThreading
+namespace GafferTest
 {
 
-	void operator()( const blocked_range<size_t> &r ) const
-	{
-		for( size_t i=r.begin(); i!=r.end(); ++i )
-		{
-			NodePtr n = new Node();
-			PlugPtr p = new Plug();
-			
-			GAFFERTEST_ASSERT( Metadata::nodeValue<Data>( n.get(), "threadingTest" ) == NULL );
-			GAFFERTEST_ASSERT( Metadata::plugValue<Data>( p.get(), "threadingTest" ) == NULL );
-			
-			Metadata::registerNodeValue( n, "threadingTest", new IECore::IntData( 1 ) );
-			Metadata::registerPlugValue( p, "threadingTest", new IECore::IntData( 2 ) );
-			
-			GAFFERTEST_ASSERT( Metadata::nodeValue<IntData>( n.get(), "threadingTest" )->readable() == 1 );
-			GAFFERTEST_ASSERT( Metadata::plugValue<IntData>( p.get(), "threadingTest" )->readable() == 2 );
-		}
+#define GAFFERTEST_ASSERT( x ) \
+	if( !( x ) ) \
+	{ \
+		throw IECore::Exception( boost::str( \
+			boost::format( "Failed assertion \"%s\" : %s line %d" ) % #x % __FILE__ % __LINE__ \
+		) ); \
 	}
 
-};
+} // namespace GafferTest
 
-void GafferTest::testMetadataThreading()
-{
-	// this test simulates many different scripts being loaded
-	// concurrently in separate threads, with each script registering
-	// per-instance metadata for its members.
-	TestThreading t;
-	parallel_for( blocked_range<size_t>( 0, 10000 ), t );
-}
+#endif // GAFFERTEST_ASSERT_H

@@ -34,16 +34,9 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-// we undefine NDEBUG so we can use assert() for our test cases.
-/// \todo We might like to define our own assert which throws an
-/// exception which is designed to be caught by the python test
-/// runner and reported nicely.
-#undef NDEBUG
-
-#include <iostream>
-
 #include "Gaffer/RecursiveChildIterator.h"
 
+#include "GafferTest/Assert.h"
 #include "GafferTest/RecursiveChildIteratorTest.h"
 
 using namespace Gaffer;
@@ -75,25 +68,25 @@ void GafferTest::testRecursiveChildIterator()
 	RecursiveChildIterator it1( a );
 	RecursiveChildIterator it2( a );
 	
-	assert( *it1 == b );
-	assert( *it2 == b );
-	assert( it1 == it2 );
+	GAFFERTEST_ASSERT( *it1 == b );
+	GAFFERTEST_ASSERT( *it2 == b );
+	GAFFERTEST_ASSERT( it1 == it2 );
 	
 	it1++;
-	assert( *it1 == c );
-	assert( *it2 == b );
-	assert( it1 != it2 );
+	GAFFERTEST_ASSERT( *it1 == c );
+	GAFFERTEST_ASSERT( *it2 == b );
+	GAFFERTEST_ASSERT( it1 != it2 );
 	
 	it2++;
-	assert( *it1 == c );
-	assert( *it2 == c );
-	assert( it1 == it2 );
+	GAFFERTEST_ASSERT( *it1 == c );
+	GAFFERTEST_ASSERT( *it2 == c );
+	GAFFERTEST_ASSERT( it1 == it2 );
 	
 	it1++;
 	it2 = it1;
-	assert( *it1 == d );
-	assert( *it2 == d );
-	assert( it1 == it2 );
+	GAFFERTEST_ASSERT( *it1 == d );
+	GAFFERTEST_ASSERT( *it2 == d );
+	GAFFERTEST_ASSERT( it1 == it2 );
 		
 	std::vector<GraphComponentPtr> visited;
 	for( RecursiveChildIterator it( a ); it != it.end(); ++it )
@@ -101,13 +94,13 @@ void GafferTest::testRecursiveChildIterator()
 		visited.push_back( *it );
 	}	
 	
-	assert( visited.size() == 6 );
-	assert( visited[0] == b );
-	assert( visited[1] == c );
-	assert( visited[2] == d );
-	assert( visited[3] == e );
-	assert( visited[4] == g );
-	assert( visited[5] == f );
+	GAFFERTEST_ASSERT( visited.size() == 6 );
+	GAFFERTEST_ASSERT( visited[0] == b );
+	GAFFERTEST_ASSERT( visited[1] == c );
+	GAFFERTEST_ASSERT( visited[2] == d );
+	GAFFERTEST_ASSERT( visited[3] == e );
+	GAFFERTEST_ASSERT( visited[4] == g );
+	GAFFERTEST_ASSERT( visited[5] == f );
 	
 	// test pruning
 	
@@ -121,12 +114,12 @@ void GafferTest::testRecursiveChildIterator()
 		visited.push_back( *it );
 	}
 	
-	assert( visited.size() == 5 );
-	assert( visited[0] == b );
-	assert( visited[1] == c );
-	assert( visited[2] == d );
-	assert( visited[3] == e );
-	assert( visited[4] == f );
+	GAFFERTEST_ASSERT( visited.size() == 5 );
+	GAFFERTEST_ASSERT( visited[0] == b );
+	GAFFERTEST_ASSERT( visited[1] == c );
+	GAFFERTEST_ASSERT( visited[2] == d );
+	GAFFERTEST_ASSERT( visited[3] == e );
+	GAFFERTEST_ASSERT( visited[4] == f );
 	
 	visited.clear();
 	for( RecursiveChildIterator it( a ); it != it.end(); ++it )
@@ -138,9 +131,9 @@ void GafferTest::testRecursiveChildIterator()
 		visited.push_back( *it );
 	}
 	
-	assert( visited.size() == 3 );
-	assert( visited[0] == b );
-	assert( visited[1] == c );
-	assert( visited[2] == d );
+	GAFFERTEST_ASSERT( visited.size() == 3 );
+	GAFFERTEST_ASSERT( visited[0] == b );
+	GAFFERTEST_ASSERT( visited[1] == c );
+	GAFFERTEST_ASSERT( visited[2] == d );
 	
 }

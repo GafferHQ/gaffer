@@ -34,18 +34,11 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-// we undefine NDEBUG so we can use assert() for our test cases.
-/// \todo We might like to define our own assert which throws an
-/// exception which is designed to be caught by the python test
-/// runner and reported nicely.
-#undef NDEBUG
-
-#include <iostream>
-
 #include "Gaffer/Node.h"
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/CompoundPlug.h"
 
+#include "GafferTest/Assert.h"
 #include "GafferTest/FilteredRecursiveChildIteratorTest.h"
 
 using namespace Gaffer;
@@ -83,10 +76,10 @@ void GafferTest::testFilteredRecursiveChildIterator()
 		nodes.push_back( *it );
 	}
 		
-	assert( nodes.size() == 3 );
-	assert( nodes[0] == b );
-	assert( nodes[1] == d );
-	assert( nodes[2] == e );
+	GAFFERTEST_ASSERT( nodes.size() == 3 );
+	GAFFERTEST_ASSERT( nodes[0] == b );
+	GAFFERTEST_ASSERT( nodes[1] == d );
+	GAFFERTEST_ASSERT( nodes[2] == e );
 	
 	// This demonstrates the use of both the main predicate and also the
 	// recursion predicate in the FilteredRecursiveChildIterator. The main
@@ -101,15 +94,15 @@ void GafferTest::testFilteredRecursiveChildIterator()
 		plugs.push_back( *it );
 	}
 		
-	assert( plugs.size() == 8 ); // there's also the user plug per node
-	assert( plugs[0] == a->userPlug() );
-	assert( plugs[1] == b->userPlug() );
-	assert( plugs[2] == c );
-	assert( plugs[3] == d->userPlug() );
-	assert( plugs[4] == e->userPlug() );
-	assert( plugs[5] == f );
-	assert( plugs[6] == g );
-	assert( plugs[7] == h );
+	GAFFERTEST_ASSERT( plugs.size() == 8 ); // there's also the user plug per node
+	GAFFERTEST_ASSERT( plugs[0] == a->userPlug() );
+	GAFFERTEST_ASSERT( plugs[1] == b->userPlug() );
+	GAFFERTEST_ASSERT( plugs[2] == c );
+	GAFFERTEST_ASSERT( plugs[3] == d->userPlug() );
+	GAFFERTEST_ASSERT( plugs[4] == e->userPlug() );
+	GAFFERTEST_ASSERT( plugs[5] == f );
+	GAFFERTEST_ASSERT( plugs[6] == g );
+	GAFFERTEST_ASSERT( plugs[7] == h );
 		
 	typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, FloatPlug>, TypePredicate<GraphComponent> > DeepRecursiveFloatPlugIterator;
 	plugs.clear();
@@ -118,10 +111,10 @@ void GafferTest::testFilteredRecursiveChildIterator()
 		plugs.push_back( *it );
 	}
 	
-	assert( plugs.size() == 3 );
-	assert( plugs[0] == c );
-	assert( plugs[1] == g );
-	assert( plugs[2] == h );
+	GAFFERTEST_ASSERT( plugs.size() == 3 );
+	GAFFERTEST_ASSERT( plugs[0] == c );
+	GAFFERTEST_ASSERT( plugs[1] == g );
+	GAFFERTEST_ASSERT( plugs[2] == h );
 	
 	typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, FloatPlug>, TypePredicate<GraphComponent> > DeepRecursiveOutputFloatPlugIterator;
 	plugs.clear();
@@ -130,8 +123,8 @@ void GafferTest::testFilteredRecursiveChildIterator()
 		plugs.push_back( *it );
 	}
 	
-	assert( plugs.size() == 1 );
-	assert( plugs[0] == h );
+	GAFFERTEST_ASSERT( plugs.size() == 1 );
+	GAFFERTEST_ASSERT( plugs[0] == h );
 
 	// This demonstrates the use of a more restrictive recursion predicate
 	// which only allows recursion into plugs - this allows us to avoid
@@ -144,26 +137,26 @@ void GafferTest::testFilteredRecursiveChildIterator()
 	{
 		plugs.push_back( *it );
 	}
-	assert( plugs.size() == 1 ); // there's also the user plug per node
-	assert( plugs[0] == a->userPlug() );
+	GAFFERTEST_ASSERT( plugs.size() == 1 ); // there's also the user plug per node
+	GAFFERTEST_ASSERT( plugs[0] == a->userPlug() );
 	
 	plugs.clear();
 	for( ShallowRecursivePlugIterator it( b ); it != it.end(); it++ )
 	{
 		plugs.push_back( *it );
 	}
-	assert( plugs.size() == 2 ); // there's also the user plug per node
-	assert( plugs[0] == b->userPlug() );
-	assert( plugs[1] == c );
+	GAFFERTEST_ASSERT( plugs.size() == 2 ); // there's also the user plug per node
+	GAFFERTEST_ASSERT( plugs[0] == b->userPlug() );
+	GAFFERTEST_ASSERT( plugs[1] == c );
 	
 	plugs.clear();
 	for( ShallowRecursivePlugIterator it( e ); it != it.end(); it++ )
 	{
 		plugs.push_back( *it );
 	}
-	assert( plugs.size() == 4 );
-	assert( plugs[0] == e->userPlug() );
-	assert( plugs[1] == f );
-	assert( plugs[2] == g );
-	assert( plugs[3] == h );
+	GAFFERTEST_ASSERT( plugs.size() == 4 );
+	GAFFERTEST_ASSERT( plugs[0] == e->userPlug() );
+	GAFFERTEST_ASSERT( plugs[1] == f );
+	GAFFERTEST_ASSERT( plugs[2] == g );
+	GAFFERTEST_ASSERT( plugs[3] == h );
 }
