@@ -286,6 +286,112 @@ class InteractiveRenderManRenderTest( unittest.TestCase ) :
 		)
 		self.assertEqual( c, IECore.Color3f( 0.5 ) )
 	
+	def testScopesDontLeak( self ) :
+	
+		s = Gaffer.ScriptNode()
+		
+		s["p"] = GafferScene.Plane()
+		s["p"]["transform"]["translate"].setValue( IECore.V3f( -0.6, -0.1, 0 ) )
+		
+		s["p1"] = GafferScene.Plane()
+		s["p1"]["transform"]["translate"].setValue( IECore.V3f( 0.6, 0.1, 0 ) )
+		
+		s["c"] = GafferScene.Camera()
+		s["c"]["transform"]["translate"]["z"].setValue( 2 )
+		
+		s["l"] = GafferRenderMan.RenderManLight()
+		s["l"].loadShader( "ambientlight" )
+		
+		s["g"] = GafferScene.Group()
+		s["g"]["in"].setInput( s["p"]["out"] )
+		s["g"]["in1"].setInput( s["p1"]["out"] )
+		s["g"]["in2"].setInput( s["c"]["out"] )
+		s["g"]["in3"].setInput( s["l"]["out"] )
+		
+		s["s"] = GafferRenderMan.RenderManShader()
+		s["s"].loadShader( "checker" )
+		s["s"]["parameters"]["blackcolor"].setValue( IECore.Color3f( 1, 0, 0 ) )
+		s["s"]["parameters"]["Ka"].setValue( 1 )
+		s["s"]["parameters"]["frequency"].setValue( 1 )
+		
+		s["f"] = GafferScene.PathFilter()
+		s["f"]["paths"].setValue( IECore.StringVectorData( [ "/group/plane" ] ) )
+		
+		s["a"] = GafferScene.ShaderAssignment()
+		s["a"]["in"].setInput( s["g"]["out"] )
+		s["a"]["shader"].setInput( s["s"]["out"] )
+		s["a"]["filter"].setInput( s["f"]["match"] )
+		
+		s["d"] = GafferScene.Displays()
+		s["d"].addDisplay(
+			"beauty",
+			IECore.Display(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"quantize" : IECore.FloatVectorData( [ 0, 0, 0, 0 ] ),
+					"driverType" : "ImageDisplayDriver",
+					"handle" : "myLovelyPlanes",
+				}
+			)
+		)
+		s["d"]["in"].setInput( s["a"]["out"] )
+		
+		s["o"] = GafferScene.StandardOptions()
+		s["o"]["options"]["renderCamera"]["value"].setValue( "/group/camera" )
+		s["o"]["options"]["renderCamera"]["enabled"].setValue( True )
+		s["o"]["options"]["renderResolution"]["value"].setValue( IECore.V2i( 512 ) )
+		s["o"]["options"]["renderResolution"]["enabled"].setValue( True )
+		s["o"]["in"].setInput( s["d"]["out"] )
+		
+		s["r"] = GafferRenderMan.InteractiveRenderManRender()
+		s["r"]["in"].setInput( s["o"]["out"] )
+		
+		# start a render, give it time to finish, and check the output.
+		# we should have a red plane on the left, and a facing ratio
+		# shaded plane on the right, because we attached no shader to the
+		# second plane.
+		
+		s["r"]["state"].setValue( s["r"].State.Running )
+		
+		time.sleep( 2 )
+				
+		c = self.__colorAtUV(
+			IECore.ImageDisplayDriver.storedImage( "myLovelyPlanes" ),
+			IECore.V2f( 0.25, 0.5 ),
+		)
+		self.assertEqual( c, IECore.Color3f( 1, 0, 0 ) )
+		
+		c1 = self.__colorAtUV(
+			IECore.ImageDisplayDriver.storedImage( "myLovelyPlanes" ),
+			IECore.V2f( 0.75, 0.5 ),
+		)
+		self.assertTrue( c1[0] > 0.9 )
+		self.assertEqual( c1[0], c1[1] )
+		self.assertEqual( c1[0], c1[2] )
+		
+		# adjust a shader parameter, wait, and check that the plane
+		# on the left changed. check that the plane on the right didn't
+		# change at all.
+		
+		s["s"]["parameters"]["blackcolor"].setValue( IECore.Color3f( 0, 1, 0 ) )
+		time.sleep( 2 )
+		
+		c = self.__colorAtUV(
+			IECore.ImageDisplayDriver.storedImage( "myLovelyPlanes" ),
+			IECore.V2f( 0.25, 0.5 ),
+		)
+		self.assertEqual( c, IECore.Color3f( 0, 1, 0 ) )
+		
+		c1 = self.__colorAtUV(
+			IECore.ImageDisplayDriver.storedImage( "myLovelyPlanes" ),
+			IECore.V2f( 0.75, 0.5 ),
+		)
+		self.assertTrue( c1[0] > 0.9 )
+		self.assertEqual( c1[0], c1[1] )
+		self.assertEqual( c1[0], c1[2] )
+		
 	def testContext( self ):
 		
 		s = Gaffer.ScriptNode()
