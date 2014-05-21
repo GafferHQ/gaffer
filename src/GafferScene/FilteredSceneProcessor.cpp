@@ -68,6 +68,25 @@ const Gaffer::IntPlug *FilteredSceneProcessor::filterPlug() const
 	return getChild<IntPlug>( g_firstPlugIndex );
 }
 
+void FilteredSceneProcessor::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
+{
+	SceneProcessor::affects( input, outputs );
+	
+	const ScenePlug *scenePlug = input->parent<ScenePlug>();
+	if( scenePlug && scenePlug == inPlug() )
+	{
+		const Filter *filter = runTimeCast<const Filter>( filterPlug()->source<Plug>()->node() );
+		if( filter && filter->sceneAffectsMatch( scenePlug, static_cast<const ValuePlug *>( input ) ) )
+		{
+			if( input != scenePlug->globalsPlug() )
+			{
+				throw Exception( "Filters may not currently depend on parts of the scene other than the globals." );
+			}
+			outputs.push_back( filterPlug() );
+		}
+	}
+}
+
 bool FilteredSceneProcessor::acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const
 {
 	if( !SceneProcessor::acceptsInput( plug, inputPlug ) )
@@ -88,10 +107,12 @@ bool FilteredSceneProcessor::acceptsInput( const Gaffer::Plug *plug, const Gaffe
 
 Filter::Result FilteredSceneProcessor::filterValue() const
 {
+	Filter::SceneScope scope( inPlug() );
 	return (Filter::Result)filterPlug()->getValue();
 }
 
 void FilteredSceneProcessor::filterHash( IECore::MurmurHash &h ) const
 {
+	Filter::SceneScope scope( inPlug() );
 	filterPlug()->hash( h );
 }

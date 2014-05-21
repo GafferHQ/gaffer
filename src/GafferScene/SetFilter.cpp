@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,84 +34,96 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/ArrayPlug.h"
+#include "Gaffer/Context.h"
 
-#include "GafferScene/UnionFilter.h"
+#include "GafferScene/ScenePlug.h"
+#include "GafferScene/PathMatcherData.h"
+#include "GafferScene/SetFilter.h"
 
-using namespace Gaffer;
 using namespace GafferScene;
+using namespace Gaffer;
+using namespace IECore;
+using namespace std;
 
-IE_CORE_DEFINERUNTIMETYPED( UnionFilter );
+IE_CORE_DEFINERUNTIMETYPED( SetFilter );
 
-size_t UnionFilter::g_firstPlugIndex = 0;
+size_t SetFilter::g_firstPlugIndex = 0;
 
-UnionFilter::UnionFilter( const std::string &name )
+SetFilter::SetFilter( const std::string &name )
 	:	Filter( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
-	addChild( new ArrayPlug(
-		"in",
-		Plug::In,
-		matchPlug()->createCounterpart( "in", Plug::In )
-	) );
+	
+	addChild( new StringPlug( "set" ) );	
 }
 
-UnionFilter::~UnionFilter()
+SetFilter::~SetFilter()
 {
 }
 
-Gaffer::ArrayPlug *UnionFilter::inPlug()
+Gaffer::StringPlug *SetFilter::setPlug()
 {
-	return getChild<Gaffer::ArrayPlug>( g_firstPlugIndex );
+	return getChild<StringPlug>( g_firstPlugIndex );
 }
 
-const Gaffer::ArrayPlug *UnionFilter::inPlug() const
+const Gaffer::StringPlug *SetFilter::setPlug() const
 {
-	return getChild<Gaffer::ArrayPlug>( g_firstPlugIndex );
+	return getChild<StringPlug>( g_firstPlugIndex );
 }
 
-void UnionFilter::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
+void SetFilter::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	Filter::affects( input, outputs );
 	
-	if( input->parent<ArrayPlug>() == inPlug() )
+	if( input == setPlug() )
 	{
 		outputs.push_back( matchPlug() );
 	}
 }
 
-bool UnionFilter::acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const
+bool SetFilter::sceneAffectsMatch( const ScenePlug *scene, const Gaffer::ValuePlug *child ) const
 {
-	if( !Filter::acceptsInput( plug, inputPlug ) )
+	if( Filter::sceneAffectsMatch( scene, child ) )
 	{
-		return false;
+		return true;
 	}
-		
-	if( plug->parent<ArrayPlug>() == inPlug() && inputPlug )
-	{
-		const Plug *sourcePlug = inputPlug->source<Plug>();
-		const Node* sourceNode = sourcePlug->node();
-		return sourceNode && sourceNode->isInstanceOf( Filter::staticTypeId() );
-	}
-
-	return true;
+	
+	return child == scene->globalsPlug();
 }
 
-void UnionFilter::hashMatch( const ScenePlug *scene, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void SetFilter::hashMatch( const ScenePlug *scene, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	for( InputIntPlugIterator it( inPlug() ); it != it.end(); ++it )
+	if( !scene )
 	{
-		(*it)->hash( h );
+		return;
 	}
+
+	scene->globalsPlug()->hash( h );
+	setPlug()->hash( h );
+	const ScenePlug::ScenePath &path = context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName );
+	h.append( &(path[0]), path.size() );
 }
 
-unsigned UnionFilter::computeMatch( const ScenePlug *scene, const Gaffer::Context *context ) const
+unsigned SetFilter::computeMatch( const ScenePlug *scene, const Gaffer::Context *context ) const
 {
-	unsigned result = NoMatch;
-	for( InputIntPlugIterator it( inPlug() ); it != it.end(); ++it )
+	if( !scene )
 	{
-		result |= (*it)->getValue();
+		return NoMatch;
 	}
-	return result;
-}
+	
+	ConstCompoundObjectPtr globals = scene->globalsPlug()->getValue();
+	const CompoundData *sets = globals->member<CompoundData>( "gaffer:sets" );
+	if( !sets )
+	{
+		return NoMatch;
+	}
 
+	const PathMatcherData *set = sets->member<PathMatcherData>( setPlug()->getValue() );
+	if( !set )
+	{
+		return NoMatch;
+	}
+	
+	const ScenePlug::ScenePath &path = context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName );
+	return set->readable().match( path );
+}

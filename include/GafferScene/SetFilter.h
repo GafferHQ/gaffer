@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,36 +34,48 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef GAFFERSCENE_SETFILTER_H
+#define GAFFERSCENE_SETFILTER_H
 
-#include "GafferBindings/DependencyNodeBinding.h"
+#include "Gaffer/TypedObjectPlug.h"
 
 #include "GafferScene/Filter.h"
-#include "GafferScene/PathFilter.h"
-#include "GafferScene/UnionFilter.h"
-#include "GafferScene/SetFilter.h"
+#include "GafferScene/PathMatcher.h"
 
-#include "GafferSceneBindings/FilterBinding.h"
-
-using namespace boost::python;
-using namespace GafferScene;
-
-void GafferSceneBindings::bindFilter()
+namespace GafferScene
 {
-	
-	{
-		scope s = GafferBindings::DependencyNodeClass<Filter>();
-	
-		enum_<Filter::Result>( "Result" )
-			.value( "NoMatch", Filter::NoMatch )
-			.value( "DescendantMatch", Filter::DescendantMatch )
-			.value( "ExactMatch", Filter::ExactMatch )
-			.value( "AncestorMatch", Filter::AncestorMatch )
-			.value( "EveryMatch", Filter::EveryMatch )
-		;
-	}
+
+/// \todo Investigate whether or not caching is actually beneficial for this node
+class SetFilter : public Filter
+{
+
+	public :
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::SetFilter, SetFilterTypeId, Filter );
+
+		SetFilter( const std::string &name=defaultName<SetFilter>() );
+		virtual ~SetFilter();
+		
+		Gaffer::StringPlug *setPlug();
+		const Gaffer::StringPlug *setPlug() const;
 				
-	GafferBindings::DependencyNodeClass<PathFilter>();
-	GafferBindings::DependencyNodeClass<UnionFilter>();
-	GafferBindings::DependencyNodeClass<SetFilter>();
-}
+		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
+		
+		virtual bool sceneAffectsMatch( const ScenePlug *scene, const Gaffer::ValuePlug *child ) const;
+
+	protected :
+
+		virtual void hashMatch( const ScenePlug *scene, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual unsigned computeMatch( const ScenePlug *scene, const Gaffer::Context *context ) const;
+
+	private :
+	
+		static size_t g_firstPlugIndex;
+
+};
+
+IE_CORE_DECLAREPTR( SetFilter )
+
+} // namespace GafferScene
+
+#endif // GAFFERSCENE_SETFILTER_H

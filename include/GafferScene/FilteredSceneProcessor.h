@@ -58,7 +58,9 @@ class FilteredSceneProcessor : public SceneProcessor
 		
 		Gaffer::IntPlug *filterPlug();
 		const Gaffer::IntPlug *filterPlug() const;
-						
+		
+		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
+
 	protected :
 
 		/// Implemented to prevent non-Filter nodes being connected to the filter plug.

@@ -69,9 +69,9 @@ class UnionFilter : public Filter
 
 		virtual bool acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const;
 
-		virtual void hashMatch( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual unsigned computeMatch( const Gaffer::Context *context ) const;
-	
+		virtual void hashMatch( const ScenePlug *scene, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual unsigned computeMatch( const ScenePlug *scene, const Gaffer::Context *context ) const;
+
 		static size_t g_firstPlugIndex;
 
 };

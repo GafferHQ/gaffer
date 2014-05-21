@@ -45,6 +45,11 @@
 namespace GafferScene
 {
 
+IE_CORE_FORWARDDECLARE( ScenePlug )
+
+/// A base class for nodes which are used to limit the scope
+/// of an operation to specific parts of the scene. Used in
+/// conjunction with the FilteredSceneProcessor class.
 class Filter : public Gaffer::ComputeNode
 {
 
@@ -66,7 +71,17 @@ class Filter : public Gaffer::ComputeNode
 		
 		Gaffer::IntPlug *matchPlug();
 		const Gaffer::IntPlug *matchPlug() const;
-				
+		
+		virtual bool sceneAffectsMatch( const ScenePlug *scene, const Gaffer::ValuePlug *child ) const;
+		
+		struct SceneScope : boost::noncopyable
+		{
+		
+			SceneScope( const ScenePlug *scene );
+			~SceneScope();
+			
+		};
+		
 	protected :
 		
 		/// Implemented to call hashMatch() below when computing the hash for matchPlug().
@@ -75,8 +90,8 @@ class Filter : public Gaffer::ComputeNode
 		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const;
 		
 		/// Must be implemented by derived classes.
-		virtual void hashMatch( const Gaffer::Context *context, IECore::MurmurHash &h ) const = 0;
-		virtual unsigned computeMatch( const Gaffer::Context *context ) const = 0;
+		virtual void hashMatch( const ScenePlug *scene, const Gaffer::Context *context, IECore::MurmurHash &h ) const = 0;
+		virtual unsigned computeMatch( const ScenePlug *scene, const Gaffer::Context *context ) const = 0;
 
 	private :
 	

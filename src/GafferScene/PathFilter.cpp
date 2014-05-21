@@ -120,7 +120,7 @@ void PathFilter::compute( Gaffer::ValuePlug *output, const Gaffer::Context *cont
 	Filter::compute( output, context );
 }
 
-void PathFilter::hashMatch( const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void PathFilter::hashMatch( const ScenePlug *scene, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	typedef IECore::TypedData<ScenePlug::ScenePath> ScenePathData;
 	const ScenePathData *pathData = context->get<ScenePathData>( ScenePlug::scenePathContextName, 0 );
@@ -132,7 +132,7 @@ void PathFilter::hashMatch( const Gaffer::Context *context, IECore::MurmurHash &
 	pathMatcherPlug()->hash( h );
 }
 
-unsigned PathFilter::computeMatch( const Gaffer::Context *context ) const
+unsigned PathFilter::computeMatch( const ScenePlug *scene, const Gaffer::Context *context ) const
 {
 	typedef IECore::TypedData<ScenePlug::ScenePath> ScenePathData;
 	const ScenePathData *pathData = context->get<ScenePathData>( ScenePlug::scenePathContextName, 0 );

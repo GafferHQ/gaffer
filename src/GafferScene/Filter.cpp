@@ -34,10 +34,49 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
+#include <stack>
+
+#include "tbb/enumerable_thread_specific.h"
+
 #include "GafferScene/Filter.h"
 
 using namespace GafferScene;
 using namespace Gaffer;
+
+//////////////////////////////////////////////////////////////////////////
+// Filter::SceneScope implementation
+//////////////////////////////////////////////////////////////////////////
+
+typedef std::stack<const ScenePlug *> SceneStack;
+typedef tbb::enumerable_thread_specific<SceneStack> ThreadSpecificSceneStack;
+
+static ThreadSpecificSceneStack g_threadStacks;
+
+Filter::SceneScope::SceneScope( const ScenePlug *scene )
+{
+	SceneStack &stack = g_threadStacks.local();
+	stack.push( scene );
+}
+
+Filter::SceneScope::~SceneScope()
+{
+	SceneStack &stack = g_threadStacks.local();
+	stack.pop();
+}
+
+static const ScenePlug *currentScene()
+{
+	SceneStack &stack = g_threadStacks.local();
+	if( stack.empty() )
+	{
+		return NULL;
+	}
+	return stack.top();
+}
+
+//////////////////////////////////////////////////////////////////////////
+// Filter implementation
+//////////////////////////////////////////////////////////////////////////
 
 IE_CORE_DEFINERUNTIMETYPED( Filter );
 
@@ -64,12 +103,17 @@ const Gaffer::IntPlug *Filter::matchPlug() const
 	return getChild<Gaffer::IntPlug>( g_firstPlugIndex );
 }
 
+bool Filter::sceneAffectsMatch( const ScenePlug *scene, const Gaffer::ValuePlug *child ) const
+{
+	return false;
+}
+
 void Filter::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	ComputeNode::hash( output, context, h );
 	if( output == matchPlug() )
 	{
-		hashMatch( context, h );
+		hashMatch( currentScene(), context, h );
 	}
 }
 			
@@ -77,6 +121,6 @@ void Filter::compute( ValuePlug *output, const Context *context ) const
 {
 	if( output == matchPlug() )
 	{
-		static_cast<IntPlug *>( output )->setValue( computeMatch( context ) );
+		static_cast<IntPlug *>( output )->setValue( computeMatch( currentScene(), context ) );
 	}
 }
