@@ -113,7 +113,7 @@ class Context : public IECore::RefCounted
 		
 		/// The Scope class is used to push and pop the current context on
 		/// the calling thread.
-		class Scope
+		class Scope : boost::noncopyable
 		{
 			
 			public :

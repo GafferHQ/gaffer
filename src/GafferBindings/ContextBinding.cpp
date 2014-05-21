@@ -161,7 +161,7 @@ void bindContext()
 
 	SignalBinder<Context::ChangedSignal, DefaultSignalCaller<Context::ChangedSignal>, ChangedSlotCaller>::bind( "ChangedSignal" );
 	
-	class_<Context::Scope>( "_Scope", init<Context *>() )
+	class_<Context::Scope, boost::noncopyable>( "_Scope", init<Context *>() )
 	;
 
 }
