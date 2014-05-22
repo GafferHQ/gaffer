@@ -258,6 +258,27 @@ class RenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 	
 		self.assertDefaultNamesAreCorrect( GafferRenderMan )
 		self.assertDefaultNamesAreCorrect( GafferRenderManTest )
+	
+	def testCropWindow( self ) :
+	
+		s = Gaffer.ScriptNode()
+		s["fileName"].setValue( "/tmp/test.gfr" )
+		
+		s["p"] = GafferScene.Plane()
+		
+		s["o"] = GafferScene.StandardOptions()
+		s["o"]["options"]["renderCropWindow"]["enabled"].setValue( True )
+		s["o"]["options"]["renderCropWindow"]["value"].setValue( IECore.Box2f( IECore.V2f( 0, 0.5 ), IECore.V2f( 1, 1 ) ) )
+		s["o"]["in"].setInput( s["p"]["out"] )
+		
+		s["r"] = GafferRenderMan.RenderManRender()
+		s["r"]["ribFileName"].setValue( "/tmp/test.rib" )
+		s["r"]["in"].setInput( s["o"]["out"] )
+
+		s["r"].execute( [ s.context() ] )
+		
+		rib = "\n".join( file( "/tmp/test.rib" ).readlines() )
+		self.assertTrue( "CropWindow 0 1 0.5 1" in rib )
 		
 	def setUp( self ) :
 	
