@@ -155,5 +155,37 @@ class SetFilterTest( GafferSceneTest.SceneTestCase ) :
 		self.assertTrue( "doubleSided" not in a2["out"].attributes( "/group" ) )
 		self.assertTrue( "doubleSided" in a2["out"].attributes( "/group/plane" ) )
 
+	def testIsolate( self ) :
+	
+		p1 = GafferScene.Plane()
+		p2 = GafferScene.Plane()
+		g = GafferScene.Group()
+		g["in"].setInput( p1["out"] )
+		g["in1"].setInput( p2["out"] )
+		
+		s1 = GafferScene.Set()
+		s1["name"].setValue( "set1" )
+		s1["paths"].setValue( IECore.StringVectorData( [ "/group/plane" ] ) )
+		s1["in"].setInput( g["out"] )
+		
+		s2 = GafferScene.Set()
+		s2["name"].setValue( "set2" )
+		s2["paths"].setValue( IECore.StringVectorData( [ "/group", "/group/plane1" ] ) )
+		s2["in"].setInput( s1["out"] )
+
+		f = GafferScene.SetFilter()
+		f["set"].setValue( "set1" )
+
+		i = GafferScene.Isolate()
+		i["in"].setInput( s2["out"] )
+		i["filter"].setInput( f["match"] )
+		
+		self.assertSceneValid( i["out"] )
+		self.assertEqual( i["out"].childNames( "/group" ), IECore.InternedStringVectorData( [ "plane" ] ) )
+		
+		sets = i["out"]["globals"].getValue()["gaffer:sets"]
+		self.assertEqual( sets["set1"].value.paths(), [ "/group/plane" ] )
+		self.assertEqual( sets["set2"].value.paths(), [ "/group" ] )
+
 if __name__ == "__main__":
 	unittest.main()

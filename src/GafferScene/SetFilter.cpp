@@ -98,10 +98,27 @@ void SetFilter::hashMatch( const ScenePlug *scene, const Gaffer::Context *contex
 		return;
 	}
 
+	/// \todo It would be preferable to throw an exception if the scene path isn't
+	/// available, as we really do require it for computing a match. Currently we
+	/// can't do that because the Isolate and Prune must include the filter hash when
+	/// hashing their globals, because they will use the filter to remap sets when
+	/// computing those globals. In this case, we're lucky that the hash (minus the scene path)
+	/// of the SetFilter is sufficient to uniquely identify the remapping that will occur - filters
+	/// which access scene data using the path would not have a valid hash in this scenario,
+	/// which is the reason we don't yet have AttributeFilter etc. If we had a hierarchyHash for
+	/// the scene then we would be able to use that in these situations and have a broader range
+	/// of filters. If we manage that, then we should go back to throwing an exception here if
+	/// the context doesn't contain a path. We should then do the same in the PathFilter.
+	typedef IECore::TypedData<ScenePlug::ScenePath> ScenePathData;
+	const ScenePathData *pathData = context->get<ScenePathData>( ScenePlug::scenePathContextName, 0 );
+	if( pathData )
+	{
+		const ScenePlug::ScenePath &path = pathData->readable();
+		h.append( &(path[0]), path.size() );
+	}
+
 	scene->globalsPlug()->hash( h );
 	setPlug()->hash( h );
-	const ScenePlug::ScenePath &path = context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName );
-	h.append( &(path[0]), path.size() );
 }
 
 unsigned SetFilter::computeMatch( const ScenePlug *scene, const Gaffer::Context *context ) const
