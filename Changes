@@ -1,3 +1,34 @@
+# 0.95.0
+
+#### UI
+
+- Improved SceneReader UI with right click menu for toggling tags on and off in the tags and sets plugs.
+
+#### Core
+
+- Fixed bug with references containing non-default plug values (#844).
+
+#### Scene
+
+- Added preliminary support for sets (#92).
+	- Added a Set node. This allows users to manage sets of named locations (with optional wildcards) as part of their graph flow.
+	- Replaced "gaffer:forwardDeclarations" globals entry with a private set named "__lights".
+	- Updated hierarchy modifying nodes to also modify sets to keep them in sync with the hierarchy.
+	- Implemented loading of tags as sets in SceneReader.
+	- An upcoming release will contain a SetFilter for actually making the sets useful.
+- Added a FreezeTransform node (#822).
+
+#### RenderMan
+
+- Fixes IPR bug where shaders could leak onto the wrong objects.
+
+#### API
+
+- Typedefed PathMatcherData into GafferScene namespace.
+- Optimised PathMatcher (the underlying data structure for sets).
+- Replaced GafferScene::Render base class with RendererAlgo.h header.
+- Simplified Executable nodes and tidied up implementation, in preparation for actually integrating Despatchers properly.
+
 # 0.94.0
 
 #### Apps
