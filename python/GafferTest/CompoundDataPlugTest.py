@@ -279,7 +279,20 @@ class CompoundDataPlugTest( unittest.TestCase ) :
 		o = IECore.CompoundObject()
 		p.fillCompoundObject( o )
 		self.assertEqual( o, IECore.CompoundObject( { "one" : IECore.IntData( 1 ) } ) )
-				
+	
+	def testBoxTypes( self ) :
+	
+		p = Gaffer.CompoundDataPlug()
+		
+		for name, value in [
+			( "b2f", IECore.Box2fData( IECore.Box2f( IECore.V2f( 0, 1 ), IECore.V2f( 1, 2 ) ) ) ),
+			( "b2i", IECore.Box2iData( IECore.Box2i( IECore.V2i( -1, 10 ), IECore.V2i( 11, 20 ) ) ) ),
+			( "b3f", IECore.Box3fData( IECore.Box3f( IECore.V3f( 0, 1, 2 ), IECore.V3f( 3, 4, 5 ) ) ) ),
+			( "b3i", IECore.Box3iData( IECore.Box3i( IECore.V3i( 0, 1, 2 ), IECore.V3i( 3, 4, 5 ) ) ) ),
+		] :
+			m = p.addMember( name, value )
+			self.assertEqual( p.memberDataAndName( m ), ( value, name ) )
+			
 if __name__ == "__main__":
 	unittest.main()
 	
