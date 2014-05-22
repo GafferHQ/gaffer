@@ -66,9 +66,19 @@ class SetFilterTest( GafferSceneTest.SceneTestCase ) :
 		a["attributes"]["doubleSided"]["enabled"].setValue( True )
 		a["filter"].setInput( f["match"] )
 		
+		self.assertSceneValid( a["out"] )
+		
 		self.assertTrue( "doubleSided" in a["out"].attributes( "/group/plane" ) )
 		self.assertTrue( "doubleSided" not in a["out"].attributes( "/group/plane1" ) )
 		self.assertTrue( "doubleSided" not in a["out"].attributes( "/group" ) )
+		
+		s["paths"].setValue( IECore.StringVectorData( [ "/group" ] ) )
+		
+		self.assertSceneValid( a["out"] )
+
+		self.assertTrue( "doubleSided" not in a["out"].attributes( "/group/plane" ) )
+		self.assertTrue( "doubleSided" not in a["out"].attributes( "/group/plane1" ) )
+		self.assertTrue( "doubleSided" in a["out"].attributes( "/group" ) )
 		
 	def testAffects( self ) :
 	
@@ -106,6 +116,44 @@ class SetFilterTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertTrue( a["out"]["globals"] in set( [ c[0] for c in cs ] ) )
 		self.assertTrue( a["out"]["attributes"] in set( [ c[0] for c in cs ] ) )
+
+	def testMultipleStreams( self ) :
+	
+		p1 = GafferScene.Plane()
+		g1 = GafferScene.Group()
+		g1["in"].setInput( p1["out"] )
+		s1 = GafferScene.Set()
+		s1["in"].setInput( g1["out"] )
+		s1["paths"].setValue( IECore.StringVectorData( [ "/group" ] ) )
+		
+		p2 = GafferScene.Plane()
+		g2 = GafferScene.Group()
+		g2["in"].setInput( p2["out"] )
+		s2 = GafferScene.Set()
+		s2["in"].setInput( g2["out"] )
+		s2["paths"].setValue( IECore.StringVectorData( [ "/group/plane" ] ) )
+		
+		f = GafferScene.SetFilter()
+		f["set"].setValue( "set" )
+		
+		a1 = GafferScene.StandardAttributes()
+		a1["in"].setInput( s1["out"] )
+		a1["attributes"]["doubleSided"]["enabled"].setValue( True )
+		a1["filter"].setInput( f["match"] )
+		
+		a2 = GafferScene.StandardAttributes()
+		a2["in"].setInput( s2["out"] )
+		a2["attributes"]["doubleSided"]["enabled"].setValue( True )
+		a2["filter"].setInput( f["match"] )
+
+		self.assertSceneValid( a1["out"] )
+		self.assertSceneValid( a2["out"] )
+		
+		self.assertTrue( "doubleSided" in a1["out"].attributes( "/group" ) )
+		self.assertTrue( "doubleSided" not in a1["out"].attributes( "/group/plane" ) )
+		
+		self.assertTrue( "doubleSided" not in a2["out"].attributes( "/group" ) )
+		self.assertTrue( "doubleSided" in a2["out"].attributes( "/group/plane" ) )
 
 if __name__ == "__main__":
 	unittest.main()
