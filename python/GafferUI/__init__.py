@@ -196,6 +196,7 @@ import LayoutMenu
 import EditMenu
 from Frame import Frame
 from CompoundNumericPlugValueWidget import CompoundNumericPlugValueWidget
+from BoxPlugValueWidget import BoxPlugValueWidget
 from NodeUI import NodeUI
 from StandardNodeUI import StandardNodeUI
 from NodeToolbar import NodeToolbar
