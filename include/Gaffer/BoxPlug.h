@@ -70,11 +70,11 @@ class BoxPlug : public CompoundPlug
 		virtual bool acceptsChild( const GraphComponent *potentialChild ) const;
 		virtual PlugPtr createCounterpart( const std::string &name, Direction direction ) const;
 
-		ChildType *min();
-		const ChildType *min() const;	
+		ChildType *minPlug();
+		const ChildType *minPlug() const;
 	
-		ChildType *max();
-		const ChildType *max() const;	
+		ChildType *maxPlug();
+		const ChildType *maxPlug() const;
 
 		T defaultValue() const;
 		
