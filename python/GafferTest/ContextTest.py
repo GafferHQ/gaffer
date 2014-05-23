@@ -41,6 +41,7 @@ import weakref
 import IECore
 
 import Gaffer
+import GafferTest
 
 class ContextTest( unittest.TestCase ) :
 
@@ -269,6 +270,10 @@ class ContextTest( unittest.TestCase ) :
 		self.assertEqual( set( c.names() ), set( [ "frame", "a" ] ) )
 		
 		self.assertEqual( cc.names(), cc.keys() )
+	
+	def testManyContexts( self ) :
+	
+		GafferTest.testManyContexts()
 		
 if __name__ == "__main__":
 	unittest.main()

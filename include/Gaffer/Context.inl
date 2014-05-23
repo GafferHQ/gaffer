@@ -37,6 +37,8 @@
 #ifndef GAFFER_CONTEXT_INL
 #define GAFFER_CONTEXT_INL
 
+#include "boost/format.hpp"
+
 #include "IECore/SimpleTypedData.h"
 
 namespace Gaffer
@@ -113,7 +115,7 @@ struct Context::Accessor<T, typename boost::enable_if<boost::is_base_of<IECore::
 template<typename T>
 void Context::set( const IECore::InternedString &name, const T &value )
 {
-	IECore::DataPtr &d = m_data->writable()[name];
+	IECore::DataPtr &d = m_map[name];
 	if( Accessor<T>().set( d, value ) )
 	{
 		if( m_changedSignal )
@@ -126,8 +128,8 @@ void Context::set( const IECore::InternedString &name, const T &value )
 template<typename T>
 typename Context::Accessor<T>::ResultType Context::get( const IECore::InternedString &name ) const
 {
-	IECore::CompoundDataMap::const_iterator it = m_data->readable().find( name );
-	if( it == m_data->readable().end() )
+	Map::const_iterator it = m_map.find( name );
+	if( it == m_map.end() )
 	{
 		throw IECore::Exception( boost::str( boost::format( "Context has no entry named \"%s\"" ) % name.value() ) );
 	}
@@ -137,8 +139,8 @@ typename Context::Accessor<T>::ResultType Context::get( const IECore::InternedSt
 template<typename T>
 typename Context::Accessor<T>::ResultType Context::get( const IECore::InternedString &name, typename Accessor<T>::ResultType defaultValue ) const
 {
-	IECore::CompoundDataMap::const_iterator it = m_data->readable().find( name );
-	if( it == m_data->readable().end() )
+	Map::const_iterator it = m_map.find( name );
+	if( it == m_map.end() )
 	{
 		return defaultValue;
 	}

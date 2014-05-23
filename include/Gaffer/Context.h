@@ -37,10 +37,11 @@
 #ifndef GAFFER_CONTEXT_H
 #define GAFFER_CONTEXT_H
 
-#include "IECore/CompoundData.h"
-#include "IECore/InternedString.h"
-
+#include "boost/container/flat_map.hpp"
 #include "boost/signals.hpp"
+
+#include "IECore/InternedString.h"
+#include "IECore/Data.h"
 
 namespace Gaffer
 {
@@ -132,7 +133,9 @@ class Context : public IECore::RefCounted
 
 		void substituteInternal( const std::string &s, std::string &result, const int recursionDepth ) const;
 	
-		IECore::CompoundDataPtr m_data;
+		typedef boost::container::flat_map<IECore::InternedString, IECore::DataPtr> Map;
+		
+		Map m_map;
 		ChangedSignal *m_changedSignal;
 
 };
