@@ -70,5 +70,21 @@ class StandardAttributesTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( s2["a"]["attributes"]["visibility"]["value"].getValue(), False )
 		self.assertEqual( s2["a"]["attributes"]["visibility"]["value"].defaultValue(), True )
 		
+	def testVisibilityBackwardCompatibility( self ) :
+		
+		s = Gaffer.ScriptNode()
+		s["a"] = GafferScene.StandardAttributes()
+		s["a"]["attributes"]["visibility"]["enabled"].setValue( True )
+		s["a"]["attributes"]["visibility"]["value"].setValue( False )
+		
+		before = s["a"]["out"].attributes( "/yeah" )
+		
+		s["a"]["attributes"]["visibility"]["name"].setValue( "gaffer:visibility" )
+		
+		after = s["a"]["out"].attributes( "/yeah" )
+		
+		self.assertEqual( before, after )
+		
+		
 if __name__ == "__main__":
 	unittest.main()

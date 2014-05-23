@@ -51,7 +51,12 @@ class StandardAttributes : public Attributes
 		virtual ~StandardAttributes();
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::StandardAttributes, StandardAttributesTypeId, Attributes );
-				
+	
+	private:
+	
+		void plugSet( Gaffer::PlugPtr plug );
+		boost::signals::connection m_plugSetConnection;
+
 };
 
 IE_CORE_DECLAREPTR( StandardAttributes )

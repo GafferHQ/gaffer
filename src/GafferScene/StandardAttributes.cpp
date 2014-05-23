@@ -34,7 +34,11 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
+#include "boost/bind.hpp"
+
 #include "GafferScene/StandardAttributes.h"
+
+#include "Gaffer/BlockedConnection.h"
 
 using namespace GafferScene;
 
@@ -56,6 +60,22 @@ StandardAttributes::StandardAttributes( const std::string &name )
 	attributes->addOptionalMember( "gaffer:deformationBlur", new IECore::BoolData( true ), "deformationBlur", Gaffer::Plug::Default, false );
 	attributes->addOptionalMember( "gaffer:deformationBlurSegments", new Gaffer::IntPlug( "value", Gaffer::Plug::In, 1, 1 ), "deformationBlurSegments", false );
 	
+	m_plugSetConnection = plugSetSignal().connect( boost::bind( &StandardAttributes::plugSet, this, ::_1 ) );
+	
+}
+
+void StandardAttributes::plugSet( Gaffer::PlugPtr plug )
+{
+	// backward compatibility for gaffer:visibility --> scene:visible rename
+	if( plug->getName() == "name" )
+	{
+		Gaffer::PlugPtr parent = plug->parent<Gaffer::Plug>();
+		if( parent && parent->getName() == "visibility" )
+		{
+			Gaffer::BlockedConnection connectionBlocker( m_plugSetConnection );
+			IECore::runTimeCast< Gaffer::StringPlug >( plug )->setValue( "scene:visible" );
+		}
+	}
 }
 
 StandardAttributes::~StandardAttributes()
