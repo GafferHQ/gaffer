@@ -274,6 +274,34 @@ class ContextTest( unittest.TestCase ) :
 	def testManyContexts( self ) :
 	
 		GafferTest.testManyContexts()
+
+	def testGetWithAndWithoutCopying( self ) :
+	
+		c = Gaffer.Context()
+		c["test"] = IECore.IntVectorData( [ 1, 2 ] )
+		
+		# we should be getting a copy each time by default
+		self.assertFalse( c["test"].isSame( c["test"] ) )
+		# meaning that if we modify the returned value, no harm is done
+		c["test"].append( 10 )
+		self.assertEqual( c["test"], IECore.IntVectorData( [ 1, 2 ] ) )
+		
+		# if we ask nicely, we can get a reference to the internal
+		# value without any copying.
+		self.assertTrue( c.get( "test", _copy=False ).isSame( c.get( "test", _copy=False ) ) )
+		# but then if we modify the returned value, we are changing the
+		# context itself too. this should be avoided - we're just doing it
+		# here to test that we are indeed referencing the internal value.
+		c.get( "test", _copy=False ).append( 10 )
+		self.assertEqual( c["test"], IECore.IntVectorData( [ 1, 2, 10 ] ) )
+	
+	def testGetWithDefaultAndCopyArgs( self ) :
+	
+		c = Gaffer.Context()
+		c["test"] = IECore.IntVectorData( [ 1, 2 ] )
+		
+		self.assertTrue( c.get( "test", 10, _copy=False ).isSame( c.get( "test", 20, _copy=False ) ) )
+		self.assertTrue( c.get( "test", defaultValue=10, _copy=False ).isSame( c.get( "test", defaultValue=20, _copy=False ) ) )
 		
 if __name__ == "__main__":
 	unittest.main()

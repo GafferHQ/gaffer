@@ -65,7 +65,14 @@ struct SimpleTypedDataGetter
 	}
 };
 
-object get( Context &c, const IECore::InternedString &name )
+// In the C++ API, get() returns "const Data *". Because python has no idea of constness,
+// by default we return a copy from the bindings because we don't want the unwitting Python
+// scripter to accidentally modify the internals of a Context. We do however expose the
+// option to get the original object returned using an "_copy = False" keyword argument,
+// in the same way as we do for the TypedObjectPlug::getValue() binding. This is mainly of
+// use in the unit tests, but may also have the odd application where performance is critical.
+// As a general rule, you should be wary of using this parameter.
+object get( Context &c, const IECore::InternedString &name, bool copy )
 {
 	ConstDataPtr d = c.get<Data>( name );
 	try
@@ -74,13 +81,13 @@ object get( Context &c, const IECore::InternedString &name )
 	}
 	catch( const InvalidArgumentException &e )
 	{
-		return object( DataPtr( d->copy() ) );
+		return object( copy ? d->copy() : constPointerCast<Data>( d ) );
 	}
 }
 
-object getWithDefault( Context &c, const IECore::InternedString &name, object defaultValue )
+object getWithDefault( Context &c, const IECore::InternedString &name, object defaultValue, bool copy )
 {
-	ConstDataPtr d = c.get<Data>( name, 0 );
+	ConstDataPtr d = c.get<Data>( name, NULL );
 	if( !d )
 	{
 		return defaultValue;
@@ -92,8 +99,13 @@ object getWithDefault( Context &c, const IECore::InternedString &name, object de
 	}
 	catch( const InvalidArgumentException &e )
 	{
-		return object( DataPtr( d->copy() ) );
+		return object( copy ? d->copy() : constPointerCast<Data>( d ) );
 	}
+}
+
+object getItem( Context &c, const IECore::InternedString &name )
+{
+	return get( c, name, /* copy = */ true );
 }
 
 list names( const Context &context )
@@ -148,9 +160,9 @@ void GafferBindings::bindContext()
 		.def( "__setitem__", &Context::set<std::string> )
 		.def( "__setitem__", &Context::set<Imath::V2i> )
 		.def( "__setitem__", &Context::set<Data *> )
-		.def( "get", &get )
-		.def( "get", &getWithDefault )
-		.def( "__getitem__", &get )
+		.def( "get", &get, arg( "_copy" ) = true )
+		.def( "get", &getWithDefault, ( arg( "defaultValue" ), arg( "_copy" ) = true ) )
+		.def( "__getitem__", &getItem )
 		.def( "names", &names )
 		.def( "keys", &names )
 		.def( "changedSignal", &Context::changedSignal, return_internal_reference<1>() )
