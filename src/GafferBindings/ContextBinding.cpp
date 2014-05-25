@@ -51,7 +51,7 @@ using namespace GafferBindings;
 using namespace Gaffer;
 using namespace IECore;
 
-namespace GafferBindings
+namespace
 {
 
 struct SimpleTypedDataGetter
@@ -65,7 +65,7 @@ struct SimpleTypedDataGetter
 	}
 };
 
-static object get( Context &c, const IECore::InternedString &name )
+object get( Context &c, const IECore::InternedString &name )
 {
 	ConstDataPtr d = c.get<Data>( name );
 	try
@@ -78,7 +78,7 @@ static object get( Context &c, const IECore::InternedString &name )
 	}
 }
 
-static object getWithDefault( Context &c, const IECore::InternedString &name, object defaultValue )
+object getWithDefault( Context &c, const IECore::InternedString &name, object defaultValue )
 {
 	ConstDataPtr d = c.get<Data>( name, 0 );
 	if( !d )
@@ -96,7 +96,7 @@ static object getWithDefault( Context &c, const IECore::InternedString &name, ob
 	}
 }
 
-static list names( const Context &context )
+list names( const Context &context )
 {
 	std::vector<IECore::InternedString> names;
 	context.names( names );
@@ -125,12 +125,14 @@ struct ChangedSlotCaller
 	}
 };
 
-static ContextPtr current()
+ContextPtr current()
 {
 	return const_cast<Context *>( Context::current() );
 }
 
-void bindContext()
+} // namespace
+
+void GafferBindings::bindContext()
 {	
 	scope s = IECorePython::RefCountedClass<Context, IECore::RefCounted>( "Context" )
 		.def( init<>() )
@@ -165,5 +167,3 @@ void bindContext()
 	;
 
 }
-
-} // namespace GafferBindings
