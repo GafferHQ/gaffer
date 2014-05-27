@@ -148,7 +148,7 @@ void GafferBindings::bindContext()
 {	
 	scope s = IECorePython::RefCountedClass<Context, IECore::RefCounted>( "Context" )
 		.def( init<>() )
-		.def( init<Context>() )
+		.def( init<const Context &>() )
 		.def( "setFrame", &Context::setFrame )
 		.def( "getFrame", &Context::getFrame )
 		.def( "set", &Context::set<float> )
