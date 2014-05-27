@@ -185,7 +185,7 @@ IECore::ConstInternedStringVectorDataPtr Isolate::computeChildNames( const Scene
 		InternedStringVectorDataPtr outputChildNamesData = new InternedStringVectorData;
 		vector<InternedString> &outputChildNames = outputChildNamesData->writable();
 		
-		ContextPtr tmpContext = new Context( *Context::current() );
+		ContextPtr tmpContext = new Context( *context, Context::Borrowed );
 		Context::Scope scopedContext( tmpContext );
 
 		ScenePath childPath = path;
@@ -222,7 +222,7 @@ IECore::ConstCompoundObjectPtr Isolate::computeGlobals( const Gaffer::Context *c
 	CompoundDataPtr outputSets = new CompoundData;
 	outputGlobals->members()["gaffer:sets"] = outputSets;
 
-	ContextPtr tmpContext = new Context( *Context::current() );
+	ContextPtr tmpContext = new Context( *context, Context::Borrowed );
 	Context::Scope scopedContext( tmpContext );
 	ScenePath path;
 

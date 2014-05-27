@@ -205,7 +205,7 @@ const Gaffer::CompoundObjectPlug *ScenePlug::globalsPlug() const
 
 Imath::Box3f ScenePlug::bound( const ScenePath &scenePath ) const
 {
-	ContextPtr tmpContext = new Context( *Context::current() );
+	ContextPtr tmpContext = new Context( *Context::current(), Context::Borrowed );
 	tmpContext->set( scenePathContextName, scenePath );
 	Context::Scope scopedContext( tmpContext );	
 	return boundPlug()->getValue();
@@ -213,7 +213,7 @@ Imath::Box3f ScenePlug::bound( const ScenePath &scenePath ) const
 
 Imath::M44f ScenePlug::transform( const ScenePath &scenePath ) const
 {
-	ContextPtr tmpContext = new Context( *Context::current() );
+	ContextPtr tmpContext = new Context( *Context::current(), Context::Borrowed );
 	tmpContext->set( scenePathContextName, scenePath );
 	Context::Scope scopedContext( tmpContext );
 	return transformPlug()->getValue();
@@ -221,7 +221,7 @@ Imath::M44f ScenePlug::transform( const ScenePath &scenePath ) const
 
 Imath::M44f ScenePlug::fullTransform( const ScenePath &scenePath ) const
 {
-	ContextPtr tmpContext = new Context( *Context::current() );
+	ContextPtr tmpContext = new Context( *Context::current(), Context::Borrowed );
 	Context::Scope scopedContext( tmpContext );
 	
 	Imath::M44f result;
@@ -238,7 +238,7 @@ Imath::M44f ScenePlug::fullTransform( const ScenePath &scenePath ) const
 
 IECore::ConstCompoundObjectPtr ScenePlug::attributes( const ScenePath &scenePath ) const
 {
-	ContextPtr tmpContext = new Context( *Context::current() );
+	ContextPtr tmpContext = new Context( *Context::current(), Context::Borrowed );
 	tmpContext->set( scenePathContextName, scenePath );
 	Context::Scope scopedContext( tmpContext );
 	return attributesPlug()->getValue();
@@ -246,7 +246,7 @@ IECore::ConstCompoundObjectPtr ScenePlug::attributes( const ScenePath &scenePath
 
 IECore::CompoundObjectPtr ScenePlug::fullAttributes( const ScenePath &scenePath ) const
 {
-	ContextPtr tmpContext = new Context( *Context::current() );
+	ContextPtr tmpContext = new Context( *Context::current(), Context::Borrowed );
 	Context::Scope scopedContext( tmpContext );
 
 	IECore::CompoundObjectPtr result = new IECore::CompoundObject;
@@ -272,7 +272,7 @@ IECore::CompoundObjectPtr ScenePlug::fullAttributes( const ScenePath &scenePath 
 
 IECore::ConstObjectPtr ScenePlug::object( const ScenePath &scenePath ) const
 {
-	ContextPtr tmpContext = new Context( *Context::current() );
+	ContextPtr tmpContext = new Context( *Context::current(), Context::Borrowed );
 	tmpContext->set( scenePathContextName, scenePath );
 	Context::Scope scopedContext( tmpContext );
 	return objectPlug()->getValue();
@@ -280,7 +280,7 @@ IECore::ConstObjectPtr ScenePlug::object( const ScenePath &scenePath ) const
 
 IECore::ConstInternedStringVectorDataPtr ScenePlug::childNames( const ScenePath &scenePath ) const
 {
-	ContextPtr tmpContext = new Context( *Context::current() );
+	ContextPtr tmpContext = new Context( *Context::current(), Context::Borrowed );
 	tmpContext->set( scenePathContextName, scenePath );
 	Context::Scope scopedContext( tmpContext );
 	return childNamesPlug()->getValue();
@@ -288,7 +288,7 @@ IECore::ConstInternedStringVectorDataPtr ScenePlug::childNames( const ScenePath 
 
 IECore::MurmurHash ScenePlug::boundHash( const ScenePath &scenePath ) const
 {
-	ContextPtr tmpContext = new Context( *Context::current() );
+	ContextPtr tmpContext = new Context( *Context::current(), Context::Borrowed );
 	tmpContext->set( scenePathContextName, scenePath );
 	Context::Scope scopedContext( tmpContext );
 	return boundPlug()->hash();
@@ -296,7 +296,7 @@ IECore::MurmurHash ScenePlug::boundHash( const ScenePath &scenePath ) const
 
 IECore::MurmurHash ScenePlug::transformHash( const ScenePath &scenePath ) const
 {
-	ContextPtr tmpContext = new Context( *Context::current() );
+	ContextPtr tmpContext = new Context( *Context::current(), Context::Borrowed );
 	tmpContext->set( scenePathContextName, scenePath );
 	Context::Scope scopedContext( tmpContext );
 	return transformPlug()->hash();
@@ -304,7 +304,7 @@ IECore::MurmurHash ScenePlug::transformHash( const ScenePath &scenePath ) const
 
 IECore::MurmurHash ScenePlug::fullTransformHash( const ScenePath &scenePath ) const
 {
-	ContextPtr tmpContext = new Context( *Context::current() );
+	ContextPtr tmpContext = new Context( *Context::current(), Context::Borrowed );
 	Context::Scope scopedContext( tmpContext );
 	
 	IECore::MurmurHash result;
@@ -321,7 +321,7 @@ IECore::MurmurHash ScenePlug::fullTransformHash( const ScenePath &scenePath ) co
 
 IECore::MurmurHash ScenePlug::attributesHash( const ScenePath &scenePath ) const
 {
-	ContextPtr tmpContext = new Context( *Context::current() );
+	ContextPtr tmpContext = new Context( *Context::current(), Context::Borrowed );
 	tmpContext->set( scenePathContextName, scenePath );
 	Context::Scope scopedContext( tmpContext );
 	return attributesPlug()->hash();
@@ -329,7 +329,7 @@ IECore::MurmurHash ScenePlug::attributesHash( const ScenePath &scenePath ) const
 
 IECore::MurmurHash ScenePlug::fullAttributesHash( const ScenePath &scenePath ) const
 {
-	ContextPtr tmpContext = new Context( *Context::current() );
+	ContextPtr tmpContext = new Context( *Context::current(), Context::Borrowed );
 	Context::Scope scopedContext( tmpContext );
 	
 	IECore::MurmurHash result;
@@ -346,7 +346,7 @@ IECore::MurmurHash ScenePlug::fullAttributesHash( const ScenePath &scenePath ) c
 
 IECore::MurmurHash ScenePlug::objectHash( const ScenePath &scenePath ) const
 {
-	ContextPtr tmpContext = new Context( *Context::current() );
+	ContextPtr tmpContext = new Context( *Context::current(), Context::Borrowed );
 	tmpContext->set( scenePathContextName, scenePath );
 	Context::Scope scopedContext( tmpContext );
 	return objectPlug()->hash();
@@ -355,7 +355,7 @@ IECore::MurmurHash ScenePlug::objectHash( const ScenePath &scenePath ) const
 
 IECore::MurmurHash ScenePlug::childNamesHash( const ScenePath &scenePath ) const
 {
-	ContextPtr tmpContext = new Context( *Context::current() );
+	ContextPtr tmpContext = new Context( *Context::current(), Context::Borrowed );
 	tmpContext->set( scenePathContextName, scenePath );
 	Context::Scope scopedContext( tmpContext );
 	return childNamesPlug()->hash();

@@ -252,7 +252,7 @@ IECore::TransformPtr transform( const ScenePlug *scene, const ScenePlug::ScenePa
 	}
 
 	MatrixMotionTransformPtr result = new MatrixMotionTransform();
-	ContextPtr transformContext = new Context( *Context::current() );
+	ContextPtr transformContext = new Context( *Context::current(), Context::Borrowed );
 	Context::Scope scopedContext( transformContext );
 	for( int i = 0; i < numSamples; i++ )
 	{

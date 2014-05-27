@@ -319,7 +319,7 @@ void ImageStats::compute( ValuePlug *output, const Context *context ) const
 	int channelIndex = GafferImage::ChannelMaskPlug::channelIndex( channelName );
 
 	// Set up the execution context.
-	ContextPtr tmpContext = new Context( *context );
+	ContextPtr tmpContext = new Context( *context, Context::Borrowed );
 	tmpContext->set( ImagePlug::channelNameContextName, channelName );
 	Context::Scope scopedContext( tmpContext );
 

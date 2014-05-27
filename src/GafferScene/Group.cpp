@@ -152,7 +152,7 @@ void Group::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *contex
 
 	if( output == mappingPlug() )
 	{
-		ContextPtr tmpContext = new Context( *Context::current() );
+		ContextPtr tmpContext = new Context( *context, Context::Borrowed );
 		tmpContext->set( ScenePlug::scenePathContextName, ScenePath() );
 		Context::Scope scopedContext( tmpContext );
 		for( vector<ScenePlugPtr>::const_iterator it = m_inPlugs.inputs().begin(), eIt = m_inPlugs.inputs().end(); it!=eIt; it++ )
@@ -176,7 +176,7 @@ void Group::hashBound( const ScenePath &path, const Gaffer::Context *context, co
 	else if( path.size() == 1 ) // "/group"
 	{
 		SceneProcessor::hashBound( path, context, parent, h );
-		ContextPtr tmpContext = new Context( *Context::current() );
+		ContextPtr tmpContext = new Context( *context, Context::Borrowed );
 		tmpContext->set( ScenePlug::scenePathContextName, ScenePath() );
 		Context::Scope scopedContext( tmpContext );
 		for( vector<ScenePlugPtr>::const_iterator it = m_inPlugs.inputs().begin(), eIt = m_inPlugs.inputs().end(); it!=eIt; it++ )
