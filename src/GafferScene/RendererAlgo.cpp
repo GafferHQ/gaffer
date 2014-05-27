@@ -115,12 +115,18 @@ void outputCamera( const ScenePlug *scene, const IECore::CompoundObject *globals
 		camera = new IECore::Camera();
 	}
 	
-	// apply the resolution
+	// apply the resolution and crop window
 	
 	const V2iData *resolutionData = globals->member<V2iData>( "render:resolution" );
 	if( resolutionData )
 	{
 		camera->parameters()["resolution"] = resolutionData->copy();
+	}
+	
+	const Box2fData *cropWindowData = globals->member<Box2fData>( "render:cropWindow" );
+	if( cropWindowData )
+	{
+		camera->parameters()["cropWindow"] = cropWindowData->copy();
 	}
 	
 	camera->addStandardParameters();

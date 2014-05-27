@@ -43,6 +43,7 @@
 #include "Gaffer/TypedObjectPlug.h"
 #include "Gaffer/CompoundDataPlug.h"
 #include "Gaffer/SplinePlug.h"
+#include "Gaffer/BoxPlug.h"
 
 using namespace Imath;
 using namespace IECore;
@@ -314,6 +315,22 @@ ValuePlugPtr CompoundDataPlug::createPlugFromData( const std::string &name, Plug
 		{
 			return compoundNumericValuePlug( name, direction, flags, static_cast<const Color4fData *>( value ) );
 		}
+		case Box2fDataTypeId :
+		{
+			return boxValuePlug( name, direction, flags, static_cast<const Box2fData *>( value ) );
+		}
+		case Box2iDataTypeId :
+		{
+			return boxValuePlug( name, direction, flags, static_cast<const Box2iData *>( value ) );
+		}
+		case Box3fDataTypeId :
+		{
+			return boxValuePlug( name, direction, flags, static_cast<const Box3fData *>( value ) );
+		}
+		case Box3iDataTypeId :
+		{
+			return boxValuePlug( name, direction, flags, static_cast<const Box3iData *>( value ) );
+		}
 		case FloatVectorDataTypeId :
 		{
 			return typedObjectValuePlug( name, direction, flags, static_cast<const FloatVectorData *>( value ) );
@@ -339,6 +356,17 @@ ValuePlugPtr CompoundDataPlug::createPlugFromData( const std::string &name, Plug
 				boost::str( boost::format( "Data for \"%s\" has unsupported value data type \"%s\"" ) % name % value->typeName() )
 			);
 	}
+}
+
+template<typename T>
+ValuePlugPtr CompoundDataPlug::boxValuePlug( const std::string &name, Plug::Direction direction, unsigned flags, const T *value )
+{
+	return new BoxPlug<typename T::ValueType>(
+		name,
+		direction,
+		value->readable(),
+		flags
+	);
 }
 
 template<typename T>
@@ -397,6 +425,14 @@ IECore::DataPtr CompoundDataPlug::extractDataFromPlug( const ValuePlug *plug )
 			return new Color3fData( static_cast<const Color3fPlug *>( plug )->getValue() );
 		case Color4fPlugTypeId :
 			return new Color4fData( static_cast<const Color4fPlug *>( plug )->getValue() );
+		case Box2fPlugTypeId :
+			return new Box2fData( static_cast<const Box2fPlug *>( plug )->getValue() );
+		case Box2iPlugTypeId :
+			return new Box2iData( static_cast<const Box2iPlug *>( plug )->getValue() );
+		case Box3fPlugTypeId :
+			return new Box3fData( static_cast<const Box3fPlug *>( plug )->getValue() );
+		case Box3iPlugTypeId :
+			return new Box3iData( static_cast<const Box3iPlug *>( plug )->getValue() );
 		case FloatVectorDataPlugTypeId :
 			return static_cast<const FloatVectorDataPlug *>( plug )->getValue()->copy();
 		case IntVectorDataPlugTypeId :

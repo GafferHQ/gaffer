@@ -38,6 +38,12 @@ import Gaffer
 import GafferUI
 import GafferScene
 
+## \todo This is getting used in a few places now - maybe put it in one
+# place? Maybe a static method on NumericWidget?
+def __floatToString( f ) :
+
+	return ( "%.4f" % f ).rstrip( '0' ).rstrip( '.' )
+
 def __cameraSummary( plug ) :
 
 	info = []
@@ -46,6 +52,9 @@ def __cameraSummary( plug ) :
 	if plug["renderResolution"]["enabled"].getValue() :
 		resolution = plug["renderResolution"]["value"].getValue()
 		info.append( "%dx%d" % ( resolution[0], resolution[1] ) )
+	if plug["renderCropWindow"]["enabled"].getValue() :
+		crop = plug["renderCropWindow"]["value"].getValue()
+		info.append( "Crop %s,%s-%s,%s" % tuple( __floatToString( x ) for x in ( crop.min.x, crop.min.y, crop.max.x, crop.max.y ) ) )
 
 	return ", ".join( info )
 	
@@ -76,6 +85,7 @@ GafferUI.PlugValueWidget.registerCreator(
 			"namesAndLabels" : (
 				( "render:camera", "Camera" ),
 				( "render:resolution", "Resolution" ),
+				( "render:cropWindow", "Crop Window" ),
 			),
 		},
 		

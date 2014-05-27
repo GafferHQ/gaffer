@@ -116,6 +116,9 @@ class CompoundDataPlug : public Gaffer::CompoundPlug
 	private :
 	
 		template<typename T>
+		static ValuePlugPtr boxValuePlug( const std::string &name, Plug::Direction direction, unsigned flags, const T *value );
+
+		template<typename T>
 		static ValuePlugPtr compoundNumericValuePlug( const std::string &name, Plug::Direction direction, unsigned flags, const T *value );
 
 		template<typename T>

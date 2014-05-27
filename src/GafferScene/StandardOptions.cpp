@@ -51,7 +51,8 @@ StandardOptions::StandardOptions( const std::string &name )
 	
 	options->addOptionalMember( "render:camera", new IECore::StringData(), "renderCamera", Plug::Default, false );
 	options->addOptionalMember( "render:resolution", new IECore::V2iData( Imath::V2i( 1024, 778 ) ), "renderResolution", Plug::Default, false );
-	
+	options->addOptionalMember( "render:cropWindow", new IECore::Box2fData( Imath::Box2f( Imath::V2f( 0 ), Imath::V2f( 1 ) ) ), "renderCropWindow", Plug::Default, false );
+
 	// motion blur
 	
 	options->addOptionalMember( "render:cameraBlur", new IECore::BoolData( false ), "cameraBlur", Gaffer::Plug::Default, false );

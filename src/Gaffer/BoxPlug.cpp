@@ -91,25 +91,25 @@ PlugPtr BoxPlug<T>::createCounterpart( const std::string &name, Direction direct
 }
 
 template<typename T>
-typename BoxPlug<T>::ChildType *BoxPlug<T>::min()
+typename BoxPlug<T>::ChildType *BoxPlug<T>::minPlug()
 {
 	return getChild<ChildType>( 0 );
 }
 
 template<typename T>
-const typename BoxPlug<T>::ChildType *BoxPlug<T>::min() const
+const typename BoxPlug<T>::ChildType *BoxPlug<T>::minPlug() const
 {
 	return getChild<ChildType>( 0 );
 }
 
 template<typename T>
-typename BoxPlug<T>::ChildType *BoxPlug<T>::max()
+typename BoxPlug<T>::ChildType *BoxPlug<T>::maxPlug()
 {
 	return getChild<ChildType>( 1 );
 }
 
 template<typename T>
-const typename BoxPlug<T>::ChildType *BoxPlug<T>::max() const
+const typename BoxPlug<T>::ChildType *BoxPlug<T>::maxPlug() const
 {
 	return getChild<ChildType>( 1 );
 }
@@ -117,20 +117,20 @@ const typename BoxPlug<T>::ChildType *BoxPlug<T>::max() const
 template<typename T>
 T BoxPlug<T>::defaultValue() const
 {
-	return T( this->min()->defaultValue(), this->max()->defaultValue() );
+	return T( this->minPlug()->defaultValue(), this->maxPlug()->defaultValue() );
 }
 
 template<typename T>
 void BoxPlug<T>::setValue( const T &value )
 {
-	this->min()->setValue( value.min );
-	this->max()->setValue( value.max );	
+	this->minPlug()->setValue( value.min );
+	this->maxPlug()->setValue( value.max );
 }
 
 template<typename T>
 T BoxPlug<T>::getValue() const
 {
-	return T( this->min()->getValue(), this->max()->getValue() );
+	return T( this->minPlug()->getValue(), this->maxPlug()->getValue() );
 }
 
 // specialisations

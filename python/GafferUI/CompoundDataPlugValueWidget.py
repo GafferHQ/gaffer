@@ -118,23 +118,32 @@ class _MemberPlugValueWidget( GafferUI.PlugValueWidget ) :
 			nameWidget = GafferUI.LabelPlugValueWidget( 
 				childPlug,
 				horizontalAlignment = GafferUI.Label.HorizontalAlignment.Right,
-				verticalAlignment = GafferUI.Label.VerticalAlignment.Top,
+				verticalAlignment = GafferUI.Label.VerticalAlignment.Center,
 			)
 			if label is not None :
 				nameWidget.label().setText( label )
 			nameWidget.label()._qtWidget().setFixedWidth( GafferUI.PlugWidget.labelWidth() )
+			# cheat to get the height of the label to match the height of a line edit
+			# so the label and plug widgets align nicely. ideally we'd get the stylesheet
+			# sorted for the QLabel so that that happened naturally, but QLabel sizing appears
+			# somewhat unpredictable (and is sensitive to HTML in the text as well), making this
+			# a tricky task.
+			nameWidget.label()._qtWidget().setFixedHeight( 20 )
 		else :
 			nameWidget = GafferUI.StringPlugValueWidget( childPlug["name"] )
 			nameWidget.textWidget()._qtWidget().setFixedWidth( GafferUI.PlugWidget.labelWidth() )
 			
-		self.__row.append( nameWidget )
+		self.__row.append( nameWidget,
+			verticalAlignment = GafferUI.Label.VerticalAlignment.Top
+		)
 		
 		if "enabled" in childPlug :
 			self.__row.append(
 				GafferUI.BoolPlugValueWidget(
 					childPlug["enabled"],
 					displayMode = GafferUI.BoolWidget.DisplayMode.Switch
-				)
+				),
+				verticalAlignment = GafferUI.Label.VerticalAlignment.Top,
 			)
 		
 		self.__row.append( GafferUI.PlugValueWidget.create( childPlug["value"] ), expand = True )
