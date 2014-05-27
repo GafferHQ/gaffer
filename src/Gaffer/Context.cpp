@@ -61,24 +61,26 @@ Context::Context()
 }
 
 Context::Context( const Context &other, Ownership ownership )
-	:	m_changedSignal( NULL )
+	:	m_map( other.m_map ), m_changedSignal( NULL )
 {
-	m_map.reserve( other.m_map.size() );
-	for( Map::const_iterator it = other.m_map.begin(), eIt = other.m_map.end(); it != eIt; ++it )
+	// We used the (shallow) Map copy constructor in our initialiser above
+	// because it offers a big performance win over iterating and inserting copies
+	// ourselves. Now we need to go in and tweak our copies based on the ownership.
+	
+	for( Map::iterator it = m_map.begin(), eIt = m_map.end(); it != eIt; ++it )
 	{
-		Map::iterator cIt = m_map.insert( m_map.end(), *it );
-		cIt->second.ownership = ownership;
+		it->second.ownership = ownership;
 		switch( ownership )
 		{
 			case Copied :
 				{
-					DataPtr valueCopy = cIt->second.data->copy();
-					cIt->second.data = valueCopy.get();
-					cIt->second.data->addRef();
+					DataPtr valueCopy = it->second.data->copy();
+					it->second.data = valueCopy.get();
+					it->second.data->addRef();
 					break;
 				}
 			case Shared :
-				cIt->second.data->addRef();
+				it->second.data->addRef();
 				break;
 			case Borrowed :
 				// no need to do anything
