@@ -37,28 +37,66 @@
 #ifndef GAFFER_CONTEXT_H
 #define GAFFER_CONTEXT_H
 
-#include "IECore/CompoundData.h"
-#include "IECore/InternedString.h"
-
+#include "boost/container/flat_map.hpp"
 #include "boost/signals.hpp"
+
+#include "IECore/InternedString.h"
+#include "IECore/Data.h"
 
 namespace Gaffer
 {
 
-/// This class defines the context in which a computation is performed. The most basic element
-/// common to all Contexts is the frame number, but a context may hold entirely arbitrary
-/// information useful to specific types of computation. Contexts are made current using the
-/// nested Scope class - any computation triggered by ValuePlug::getValue() calls will be
-/// made with respect to the current Context. Each thread maintains a stack of contexts,
-/// allowing computations in different contexts to be performed in parallel, and allowing
-/// contexts to be changed temporarily for a specific computation.
+/// This class provides a dictionary of IECore::Data objects to define the context in which a
+/// computation is performed. The most basic entry common to all Contexts is the frame number,
+/// but a context may also hold entirely arbitrary entries useful to specific types of
+/// computation.
+///
+/// Contexts are made current using the nested Scope class - any computation triggered by
+/// ValuePlug::getValue() calls will be made with respect to the current Context. Each thread
+/// maintains a stack of contexts, allowing computations in different contexts to be performed
+/// in parallel, and allowing contexts to be changed temporarily for a specific computation.
 class Context : public IECore::RefCounted
 {
 
 	public :
 
+		/// Since there are costs associated with constructing,
+		/// copying and reference counting the Data values that make
+		/// up a Context, various ownership options are provided which
+		/// trade performance for additional constraints on client code.
+		enum Ownership
+		{
+			/// The Context takes its own copy of a value to be held
+			/// internally. This requires no additional constraints on the
+			/// part of client code, but has the worst performance.
+			Copied,
+			/// The Context shares the value with others, incrementing
+			/// the reference count to ensure it remains alive for as
+			/// long as the Context needs it. Because the Context
+			/// doesn't have sole ownership of the value, other code
+			/// could change the value without its knowledge. It is the
+			/// responsibility of client code to either ensure that this does
+			/// not happen, or to manually emit changedSignal() as
+			/// necessary when it does. This avoids the overhead of copying
+			/// values when setting them.
+			Shared,
+			/// The Context simply references an existing value, and doesn't
+			/// even increment its reference count. In addition to the constraints
+			/// for shared ownership, it is also the responsibility
+			/// of client code to ensure that the value remains alive for the
+			/// lifetime of the Context. This is significantly faster than
+			/// either of the previous options.
+			Borrowed
+		};
+
 		Context();
-		Context( const Context &other );
+		/// Copy constructor. The ownership argument determines whether the
+		/// new context copies, shares or borrows the values from the original.
+		/// When constructing a temporary context within a compute() method,
+		/// using Borrowed provides the best performance, and because the original
+		/// context is const and outlives the temporary context, the constraints
+		/// required of client code are met with little effort.
+		Context( const Context &other, Ownership ownership = Copied );
 		~Context();
 		
 		IE_CORE_DECLAREMEMBERPTR( Context )
@@ -113,7 +151,7 @@ class Context : public IECore::RefCounted
 		
 		/// The Scope class is used to push and pop the current context on
 		/// the calling thread.
-		class Scope
+		class Scope : boost::noncopyable
 		{
 			
 			public :
@@ -132,7 +170,21 @@ class Context : public IECore::RefCounted
 
 		void substituteInternal( const std::string &s, std::string &result, const int recursionDepth ) const;
 	
-		IECore::CompoundDataPtr m_data;
+		// Storage for each entry.
+		struct Storage
+		{
+			Storage() : data( NULL ), ownership( Copied ) {}
+			// We reference the data with a raw pointer to avoid the compulsory
+			// overhead of an intrusive pointer.
+			const IECore::Data *data;
+			// And use this ownership flag to tell us when we need to do explicit
+			// reference count management.
+			Ownership ownership;
+		};
+	
+		typedef boost::container::flat_map<IECore::InternedString, Storage> Map;
+		
+		Map m_map;
 		ChangedSignal *m_changedSignal;
 
 };

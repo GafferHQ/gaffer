@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,32 +34,48 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECorePython/ScopedGILRelease.h"
+#include "boost/lexical_cast.hpp"
 
-#include "GafferBindings/DependencyNodeBinding.h"
+#include "IECore/Timer.h"
 
-#include "GafferTest/MultiplyNode.h"
-#include "GafferTest/RecursiveChildIteratorTest.h"
-#include "GafferTest/FilteredRecursiveChildIteratorTest.h"
-#include "GafferTest/MetadataTest.h"
+#include "Gaffer/Context.h"
+
+#include "GafferTest/Assert.h"
 #include "GafferTest/ContextTest.h"
 
-using namespace boost::python;
-using namespace GafferTest;
+using namespace std;
+using namespace boost;
+using namespace IECore;
+using namespace Gaffer;
 
-static void testMetadataThreadingWrapper()
+// A test useful for assessing the performance
+// of the Context class.
+void GafferTest::testManyContexts()
 {
-	IECorePython::ScopedGILRelease gilRelease;
-	testMetadataThreading();
-}
+	// our typical context doesn't have a huge number of keys - we'll
+	// use a working set of 20 for this test.
 
-BOOST_PYTHON_MODULE( _GafferTest )
-{
+	ContextPtr base = new Context();
+	const int numKeys = 20;
+	vector<InternedString> keys;
+	for( int i = 0; i < numKeys; ++i )
+	{
+		InternedString key = string( "testKey" ) + lexical_cast<string>( i );
+		keys.push_back( key );
+		base->set( key, i );
+	}
 	
-	GafferBindings::DependencyNodeClass<MultiplyNode>();
-
-	def( "testRecursiveChildIterator", &testRecursiveChildIterator );
-	def( "testFilteredRecursiveChildIterator", &testFilteredRecursiveChildIterator );
-	def( "testMetadataThreading", &testMetadataThreadingWrapper );
-	def( "testManyContexts", &testManyContexts );
+	// then typically we create new temporary contexts based on that one,
+	// change a value or two, and then continue.
+			
+	Timer t;
+	for( int i = 0; i < 100000; ++i )
+	{
+		ContextPtr tmp = new Context( *base, Context::Borrowed );
+		tmp->set( keys[i%numKeys], i );
+		GAFFERTEST_ASSERT( tmp->get<int>( keys[i%numKeys] ) == i );
+	}
+	
+	// uncomment to get timing information
+	//std::cerr << t.stop() << std::endl;
 }

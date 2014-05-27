@@ -51,7 +51,7 @@ using namespace GafferBindings;
 using namespace Gaffer;
 using namespace IECore;
 
-namespace GafferBindings
+namespace
 {
 
 struct SimpleTypedDataGetter
@@ -65,7 +65,14 @@ struct SimpleTypedDataGetter
 	}
 };
 
-static object get( Context &c, const IECore::InternedString &name )
+// In the C++ API, get() returns "const Data *". Because python has no idea of constness,
+// by default we return a copy from the bindings because we don't want the unwitting Python
+// scripter to accidentally modify the internals of a Context. We do however expose the
+// option to get the original object returned using an "_copy = False" keyword argument,
+// in the same way as we do for the TypedObjectPlug::getValue() binding. This is mainly of
+// use in the unit tests, but may also have the odd application where performance is critical.
+// As a general rule, you should be wary of using this parameter.
+object get( Context &c, const IECore::InternedString &name, bool copy )
 {
 	ConstDataPtr d = c.get<Data>( name );
 	try
@@ -74,13 +81,13 @@ static object get( Context &c, const IECore::InternedString &name )
 	}
 	catch( const InvalidArgumentException &e )
 	{
-		return object( DataPtr( d->copy() ) );
+		return object( copy ? d->copy() : constPointerCast<Data>( d ) );
 	}
 }
 
-static object getWithDefault( Context &c, const IECore::InternedString &name, object defaultValue )
+object getWithDefault( Context &c, const IECore::InternedString &name, object defaultValue, bool copy )
 {
-	ConstDataPtr d = c.get<Data>( name, 0 );
+	ConstDataPtr d = c.get<Data>( name, NULL );
 	if( !d )
 	{
 		return defaultValue;
@@ -92,11 +99,16 @@ static object getWithDefault( Context &c, const IECore::InternedString &name, ob
 	}
 	catch( const InvalidArgumentException &e )
 	{
-		return object( DataPtr( d->copy() ) );
+		return object( copy ? d->copy() : constPointerCast<Data>( d ) );
 	}
 }
 
-static list names( const Context &context )
+object getItem( Context &c, const IECore::InternedString &name )
+{
+	return get( c, name, /* copy = */ true );
+}
+
+list names( const Context &context )
 {
 	std::vector<IECore::InternedString> names;
 	context.names( names );
@@ -125,16 +137,28 @@ struct ChangedSlotCaller
 	}
 };
 
-static ContextPtr current()
+ContextPtr current()
 {
 	return const_cast<Context *>( Context::current() );
 }
 
-void bindContext()
+} // namespace
+
+void GafferBindings::bindContext()
 {	
-	scope s = IECorePython::RefCountedClass<Context, IECore::RefCounted>( "Context" )
+	
+	IECorePython::RefCountedClass<Context, IECore::RefCounted> contextClass( "Context" );
+	scope s = contextClass;
+
+	enum_<Context::Ownership>( "Ownership" )
+		.value( "Copied", Context::Copied )
+		.value( "Shared", Context::Shared )
+		.value( "Borrowed", Context::Borrowed )
+	;
+	
+	contextClass
 		.def( init<>() )
-		.def( init<Context>() )
+		.def( init<const Context &, Context::Ownership>( ( arg( "other" ), arg( "ownership" ) = Context::Copied ) ) )
 		.def( "setFrame", &Context::setFrame )
 		.def( "getFrame", &Context::getFrame )
 		.def( "set", &Context::set<float> )
@@ -146,9 +170,9 @@ void bindContext()
 		.def( "__setitem__", &Context::set<std::string> )
 		.def( "__setitem__", &Context::set<Imath::V2i> )
 		.def( "__setitem__", &Context::set<Data *> )
-		.def( "get", &get )
-		.def( "get", &getWithDefault )
-		.def( "__getitem__", &get )
+		.def( "get", &get, arg( "_copy" ) = true )
+		.def( "get", &getWithDefault, ( arg( "defaultValue" ), arg( "_copy" ) = true ) )
+		.def( "__getitem__", &getItem )
 		.def( "names", &names )
 		.def( "keys", &names )
 		.def( "changedSignal", &Context::changedSignal, return_internal_reference<1>() )
@@ -161,9 +185,7 @@ void bindContext()
 
 	SignalBinder<Context::ChangedSignal, DefaultSignalCaller<Context::ChangedSignal>, ChangedSlotCaller>::bind( "ChangedSignal" );
 	
-	class_<Context::Scope>( "_Scope", init<Context *>() )
+	class_<Context::Scope, boost::noncopyable>( "_Scope", init<Context *>() )
 	;
 
 }
-
-} // namespace GafferBindings

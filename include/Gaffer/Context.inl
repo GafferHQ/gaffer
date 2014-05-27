@@ -37,6 +37,8 @@
 #ifndef GAFFER_CONTEXT_INL
 #define GAFFER_CONTEXT_INL
 
+#include "boost/format.hpp"
+
 #include "IECore/SimpleTypedData.h"
 
 namespace Gaffer
@@ -48,9 +50,9 @@ struct Context::Accessor
 	typedef const T &ResultType;
 	
 	/// Returns true if the value has changed
-	bool set( IECore::DataPtr &data, const T &value )
+	bool set( Storage &storage, const T &value )
 	{
-		IECore::TypedData<T> *d = IECore::runTimeCast<IECore::TypedData<T> >( data.get() );
+		const IECore::TypedData<T> *d = IECore::runTimeCast<const IECore::TypedData<T> >( storage.data );
 		if( d )
 		{
 			if( d->readable() == value )
@@ -58,27 +60,39 @@ struct Context::Accessor
 				// no change so early out
 				return false;
 			}
-			else
+			else if( storage.ownership == Copied )
 			{
-				// update in place to avoid allocations
-				d->writable() = value;
+				// update in place to avoid allocations. the cast is ok
+				// because we created the value for our own use in the first
+				// place. storage.data is const to remind us not to mess
+				// with values we receive as Shared or Borrowed, but since this
+				// is Copied, we're free to do as we please.
+				const_cast<IECore::TypedData<T> *>( d )->writable() = value;
 				return true;
 			}			
 		}
-		else
+		
+		// data wasn't of the right type or we didn't have sole ownership.
+		// remove the old value and replace it with a new one.
+		if( storage.data && storage.ownership != Borrowed )
 		{
-			data = new IECore::TypedData<T>( value );
-			return true;
+			storage.data->removeRef();
 		}
+		
+		storage.data = new IECore::TypedData<T>( value );
+		storage.data->addRef();
+		storage.ownership = Copied;
+		
+		return true;
 	}
 	
-	ResultType get( const IECore::ConstDataPtr &data )
+	ResultType get( const IECore::Data *data )
 	{
 		if( !data->isInstanceOf( IECore::TypedData<T>::staticTypeId() ) )
 		{
 			throw IECore::Exception( boost::str( boost::format( "Context entry is not of type \"%s\"" ) % IECore::TypedData<T>::staticTypeName() ) );
 		}
-		return static_cast<const IECore::TypedData<T> *>( data.get() )->readable();
+		return static_cast<const IECore::TypedData<T> *>( data )->readable();
 	}
 };
 
@@ -88,33 +102,42 @@ struct Context::Accessor<T, typename boost::enable_if<boost::is_base_of<IECore::
 	typedef typename boost::remove_pointer<T>::type ValueType;
 	typedef const ValueType *ResultType;
 	
-	bool set( IECore::DataPtr &data, const T &value )
+	bool set( Storage &storage, const T &value )
 	{
-		const ValueType *d = IECore::runTimeCast<const ValueType>( data.get() );
+		const ValueType *d = IECore::runTimeCast<const ValueType>( storage.data );
 		if( d && d->isEqualTo( value ) )
 		{
 			return false;
 		}
 		
-		data = value->copy();
+		if( storage.data && storage.ownership != Borrowed )
+		{
+			storage.data->removeRef();
+		}
+		
+		IECore::DataPtr valueCopy = value->copy();
+		storage.data = valueCopy.get();
+		storage.data->addRef();
+		storage.ownership = Copied;
+		
 		return true;
 	}
 	
-	ResultType get( const IECore::DataPtr &data )
+	ResultType get( const IECore::Data *data )
 	{
 		if( !data->isInstanceOf( T::staticTypeId() ) )
 		{
 			throw IECore::Exception( boost::str( boost::format( "Context entry is not of type \"%s\"" ) % T::staticTypeName() ) );
 		}
-		return static_cast<const T *>( data.get() );	
+		return static_cast<const T *>( data );
 	}
 };
 
 template<typename T>
 void Context::set( const IECore::InternedString &name, const T &value )
 {
-	IECore::DataPtr &d = m_data->writable()[name];
-	if( Accessor<T>().set( d, value ) )
+	Storage &s = m_map[name];
+	if( Accessor<T>().set( s, value ) )
 	{
 		if( m_changedSignal )
 		{
@@ -126,23 +149,23 @@ void Context::set( const IECore::InternedString &name, const T &value )
 template<typename T>
 typename Context::Accessor<T>::ResultType Context::get( const IECore::InternedString &name ) const
 {
-	IECore::CompoundDataMap::const_iterator it = m_data->readable().find( name );
-	if( it == m_data->readable().end() )
+	Map::const_iterator it = m_map.find( name );
+	if( it == m_map.end() )
 	{
 		throw IECore::Exception( boost::str( boost::format( "Context has no entry named \"%s\"" ) % name.value() ) );
 	}
-	return Accessor<T>().get( it->second );
+	return Accessor<T>().get( it->second.data );
 }
 
 template<typename T>
 typename Context::Accessor<T>::ResultType Context::get( const IECore::InternedString &name, typename Accessor<T>::ResultType defaultValue ) const
 {
-	IECore::CompoundDataMap::const_iterator it = m_data->readable().find( name );
-	if( it == m_data->readable().end() )
+	Map::const_iterator it = m_map.find( name );
+	if( it == m_map.end() )
 	{
 		return defaultValue;
 	}
-	return Accessor<T>().get( it->second );
+	return Accessor<T>().get( it->second.data );
 }
 		
 } // namespace Gaffer

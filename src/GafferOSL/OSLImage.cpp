@@ -208,7 +208,7 @@ void OSLImage::hashChannelNames( const GafferImage::ImagePlug *output, const Gaf
 	const Box2i dataWindow = inPlug()->dataWindowPlug()->getValue();
 	if( !dataWindow.isEmpty() )
 	{
-		ContextPtr c = new Context( *context );
+		ContextPtr c = new Context( *context, Context::Borrowed );
 		c->set( ImagePlug::tileOriginContextName, ImagePlug::tileOrigin( dataWindow.min ) );
 		Context::Scope s( c );
 		shadingPlug()->hash( h );	
@@ -224,7 +224,7 @@ IECore::ConstStringVectorDataPtr OSLImage::computeChannelNames( const Gaffer::Co
 	const Box2i dataWindow = inPlug()->dataWindowPlug()->getValue();
 	if( !dataWindow.isEmpty() )
 	{
-		ContextPtr c = new Context( *context );
+		ContextPtr c = new Context( *context, Context::Borrowed );
 		c->set( ImagePlug::tileOriginContextName, ImagePlug::tileOrigin( dataWindow.min ) );
 		Context::Scope s( c );
 	

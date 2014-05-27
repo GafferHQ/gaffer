@@ -343,7 +343,7 @@ Gaffer::ContextPtr Instancer::instanceContext( const Gaffer::Context *parentCont
 		return 0;
 	}
 	
-	ContextPtr result = new Context( *parentContext );
+	ContextPtr result = new Context( *parentContext, Context::Borrowed );
 
 	InternedStringVectorDataPtr instancePath = new InternedStringVectorData;
 	instancePath->writable().insert( instancePath->writable().end(), branchPath.begin() + 2, branchPath.end() );

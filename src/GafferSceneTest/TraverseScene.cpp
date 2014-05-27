@@ -65,7 +65,7 @@ class SceneTraversalTask : public tbb::task
 		virtual task *execute()
 		{				
 			
-			ContextPtr context = new Context( *m_context );
+			ContextPtr context = new Context( *m_context, Context::Borrowed );
 			context->set( ScenePlug::scenePathContextName, m_scenePath );
 			Context::Scope scopedContext( context );
 			

@@ -34,17 +34,12 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-// we undefine NDEBUG so we can use assert() for our test cases.
-/// \todo We might like to define our own assert which throws an
-/// exception which is designed to be caught by the python test
-/// runner and reported nicely.
-#undef NDEBUG
-
 #include "tbb/tbb.h"
 
 #include "Gaffer/Node.h"
 #include "Gaffer/Metadata.h"
 
+#include "GafferTest/Assert.h"
 #include "GafferTest/MetadataTest.h"
 
 using namespace tbb;
@@ -61,14 +56,14 @@ struct TestThreading
 			NodePtr n = new Node();
 			PlugPtr p = new Plug();
 			
-			assert( Metadata::nodeValue<Data>( n.get(), "threadingTest" ) == NULL );
-			assert( Metadata::plugValue<Data>( p.get(), "threadingTest" ) == NULL );
+			GAFFERTEST_ASSERT( Metadata::nodeValue<Data>( n.get(), "threadingTest" ) == NULL );
+			GAFFERTEST_ASSERT( Metadata::plugValue<Data>( p.get(), "threadingTest" ) == NULL );
 			
 			Metadata::registerNodeValue( n, "threadingTest", new IECore::IntData( 1 ) );
 			Metadata::registerPlugValue( p, "threadingTest", new IECore::IntData( 2 ) );
 			
-			assert( Metadata::nodeValue<IntData>( n.get(), "threadingTest" )->readable() == 1 );
-			assert( Metadata::plugValue<IntData>( p.get(), "threadingTest" )->readable() == 2 );
+			GAFFERTEST_ASSERT( Metadata::nodeValue<IntData>( n.get(), "threadingTest" )->readable() == 1 );
+			GAFFERTEST_ASSERT( Metadata::plugValue<IntData>( p.get(), "threadingTest" )->readable() == 2 );
 		}
 	}
 

@@ -283,7 +283,7 @@ IECore::ConstFloatVectorDataPtr ImagePlug::channelData( const std::string &chann
 		return channelDataPlug()->defaultValue();
 	}
 	
-	ContextPtr tmpContext = new Context( *Context::current() );
+	ContextPtr tmpContext = new Context( *Context::current(), Context::Borrowed );
 	tmpContext->set( ImagePlug::channelNameContextName, channelName );
 	tmpContext->set( ImagePlug::tileOriginContextName, tile );
 	Context::Scope scopedContext( tmpContext );
@@ -293,7 +293,7 @@ IECore::ConstFloatVectorDataPtr ImagePlug::channelData( const std::string &chann
 
 IECore::MurmurHash ImagePlug::channelDataHash( const std::string &channelName, const Imath::V2i &tile ) const
 {
-	ContextPtr tmpContext = new Context( *Context::current() );
+	ContextPtr tmpContext = new Context( *Context::current(), Context::Borrowed );
 	tmpContext->set( ImagePlug::channelNameContextName, channelName );
 	tmpContext->set( ImagePlug::tileOriginContextName, tile );
 	Context::Scope scopedContext( tmpContext );
@@ -349,7 +349,7 @@ IECore::MurmurHash ImagePlug::imageHash() const
 	V2i minTileOrigin = tileOrigin( dataWindow.min );
 	V2i maxTileOrigin = tileOrigin( dataWindow.max );
 
-	ContextPtr context = new Context( *Context::current() );
+	ContextPtr context = new Context( *Context::current(), Context::Borrowed );
 	for( vector<string>::const_iterator it = channelNames.begin(), eIt = channelNames.end(); it!=eIt; it++ )
 	{
 		for( int tileOriginY = minTileOrigin.y; tileOriginY<=maxTileOrigin.y; tileOriginY += tileSize() )

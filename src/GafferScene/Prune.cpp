@@ -185,7 +185,7 @@ IECore::ConstInternedStringVectorDataPtr Prune::computeChildNames( const ScenePa
 		InternedStringVectorDataPtr outputChildNamesData = new InternedStringVectorData;
 		vector<InternedString> &outputChildNames = outputChildNamesData->writable();
 		
-		ContextPtr tmpContext = new Context( *Context::current() );
+		ContextPtr tmpContext = new Context( *context, Context::Borrowed );
 		Context::Scope scopedContext( tmpContext );
 
 		ScenePath childPath = path;
@@ -222,7 +222,7 @@ IECore::ConstCompoundObjectPtr Prune::computeGlobals( const Gaffer::Context *con
 	CompoundDataPtr outputSets = new CompoundData;
 	outputGlobals->members()["gaffer:sets"] = outputSets;
 	
-	ContextPtr tmpContext = new Context( *Context::current() );
+	ContextPtr tmpContext = new Context( *context, Context::Borrowed );
 	Context::Scope scopedContext( tmpContext );
 	ScenePath path;
 

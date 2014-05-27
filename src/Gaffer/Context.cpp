@@ -55,25 +55,56 @@ using namespace IECore;
 static InternedString g_frame( "frame" );
 
 Context::Context()
-	:	m_data( new CompoundData() ), m_changedSignal( 0 )
+	:	m_changedSignal( NULL )
 {
 	set( g_frame, 1.0f );
 }
 
-Context::Context( const Context &other )
-	:	m_data( other.m_data->copy() ), m_changedSignal( 0 )
+Context::Context( const Context &other, Ownership ownership )
+	:	m_map( other.m_map ), m_changedSignal( NULL )
 {
+	// We used the (shallow) Map copy constructor in our initialiser above
+	// because it offers a big performance win over iterating and inserting copies
+	// ourselves. Now we need to go in and tweak our copies based on the ownership.
+	
+	for( Map::iterator it = m_map.begin(), eIt = m_map.end(); it != eIt; ++it )
+	{
+		it->second.ownership = ownership;
+		switch( ownership )
+		{
+			case Copied :
+				{
+					DataPtr valueCopy = it->second.data->copy();
+					it->second.data = valueCopy.get();
+					it->second.data->addRef();
+					break;
+				}
+			case Shared :
+				it->second.data->addRef();
+				break;
+			case Borrowed :
+				// no need to do anything
+				break;
+		}
+	}
 }
 
 Context::~Context()
 {
+	for( Map::const_iterator it = m_map.begin(), eIt = m_map.end(); it != eIt; ++it )
+	{
+		if( it->second.ownership != Borrowed )
+		{
+			it->second.data->removeRef();
+		}
+	}
+	
 	delete m_changedSignal;
 }
 
 void Context::names( std::vector<IECore::InternedString> &names ) const
 {
-	const CompoundDataMap &m = m_data->readable();
-	for( CompoundDataMap::const_iterator it = m.begin(), eIt = m.end(); it != eIt; it++ )
+	for( Map::const_iterator it = m_map.begin(), eIt = m_map.end(); it != eIt; it++ )
 	{
 		names.push_back( it->first );
 	}
@@ -106,17 +137,36 @@ Context::ChangedSignal &Context::changedSignal()
 
 IECore::MurmurHash Context::hash() const
 {
-	return ((Object *)( m_data.get() ))->hash();
+	IECore::MurmurHash result;
+	for( Map::const_iterator it = m_map.begin(), eIt = m_map.end(); it != eIt; it++ )
+	{
+		result.append( it->first );
+		it->second.data->hash( result );
+	}
+	return result;
 }
 
 bool Context::operator == ( const Context &other ) const
 {
-	return m_data->isEqualTo( other.m_data.get() );
+	if( m_map.size() != other.m_map.size() )
+	{
+		return false;
+	}
+	Map::const_iterator otherIt = other.m_map.begin();
+	for( Map::const_iterator it = m_map.begin(), eIt = m_map.end(); it != eIt; ++it, ++otherIt )
+	{
+		if( it->first != otherIt->first || !( it->second.data->isEqualTo( otherIt->second.data ) ) )
+		{
+			return false;
+		}
+	}
+	
+	return true;
 }
 
 bool Context::operator != ( const Context &other ) const
 {
-	return m_data->isNotEqualTo( other.m_data.get() );
+	return !( *this == other );
 }
 
 std::string Context::substitute( const std::string &s ) const
@@ -177,7 +227,7 @@ void Context::substituteInternal( const std::string &s, std::string &result, con
 				}
 			}
 			
-			const IECore::Data *d = get<IECore::Data>( variableName, 0 );
+			const IECore::Data *d = get<IECore::Data>( variableName, NULL );
 			if( d )
 			{
 				switch( d->typeId() )

@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,32 +34,24 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECorePython/ScopedGILRelease.h"
+#ifndef GAFFERTEST_ASSERT_H
+#define GAFFERTEST_ASSERT_H
 
-#include "GafferBindings/DependencyNodeBinding.h"
+#include "boost/format.hpp"
 
-#include "GafferTest/MultiplyNode.h"
-#include "GafferTest/RecursiveChildIteratorTest.h"
-#include "GafferTest/FilteredRecursiveChildIteratorTest.h"
-#include "GafferTest/MetadataTest.h"
-#include "GafferTest/ContextTest.h"
+#include "IECore/Exception.h"
 
-using namespace boost::python;
-using namespace GafferTest;
-
-static void testMetadataThreadingWrapper()
+namespace GafferTest
 {
-	IECorePython::ScopedGILRelease gilRelease;
-	testMetadataThreading();
-}
 
-BOOST_PYTHON_MODULE( _GafferTest )
-{
-	
-	GafferBindings::DependencyNodeClass<MultiplyNode>();
+#define GAFFERTEST_ASSERT( x ) \
+	if( !( x ) ) \
+	{ \
+		throw IECore::Exception( boost::str( \
+			boost::format( "Failed assertion \"%s\" : %s line %d" ) % #x % __FILE__ % __LINE__ \
+		) ); \
+	}
 
-	def( "testRecursiveChildIterator", &testRecursiveChildIterator );
-	def( "testFilteredRecursiveChildIterator", &testFilteredRecursiveChildIterator );
-	def( "testMetadataThreading", &testMetadataThreadingWrapper );
-	def( "testManyContexts", &testManyContexts );
-}
+} // namespace GafferTest
+
+#endif // GAFFERTEST_ASSERT_H

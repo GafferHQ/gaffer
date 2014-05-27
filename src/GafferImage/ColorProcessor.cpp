@@ -129,7 +129,7 @@ void ColorProcessor::compute( Gaffer::ValuePlug *output, const Gaffer::Context *
 	{
 		FloatVectorDataPtr r, g, b;
 		{
-			ContextPtr tmpContext = new Context( *Context::current() );
+			ContextPtr tmpContext = new Context( *context, Context::Borrowed );
 			Context::Scope scopedContext( tmpContext );
 			tmpContext->set( ImagePlug::channelNameContextName, string( "R" ) );
 			r = inPlug()->channelDataPlug()->getValue()->copy();
@@ -217,7 +217,7 @@ bool ColorProcessor::affectsColorData( const Gaffer::Plug *input ) const
 
 void ColorProcessor::hashColorData( const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	ContextPtr tmpContext = new Context( *Context::current() );
+	ContextPtr tmpContext = new Context( *context, Context::Borrowed );
 	Context::Scope scopedContext( tmpContext );
 	tmpContext->set( ImagePlug::channelNameContextName, string( "R" ) );
 	inPlug()->channelDataPlug()->hash( h );
