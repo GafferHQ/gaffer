@@ -75,7 +75,7 @@ GafferUI.PlugValueWidget.registerCreator(
 			"label" : "Attributes",
 			"summary" : __attributesSummary,
 			"namesAndLabels" : (
-				( "gaffer:visibility", "Visibility" ),
+				( "scene:visible", "Visibility" ),
 				( "doubleSided", "Double Sided" ),
 			),
 		},

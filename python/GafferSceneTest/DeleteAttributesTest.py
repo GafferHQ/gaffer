@@ -58,7 +58,7 @@ class DeleteAttributesTest( GafferSceneTest.SceneTestCase ) :
 		
 		self.assertScenesEqual( a["out"], d["out"] )
 		self.assertSceneHashesEqual( a["out"], d["out"] )
-		self.failUnless( "gaffer:visibility" in d["out"].attributes( "/plane" ) )
+		self.failUnless( "scene:visible" in d["out"].attributes( "/plane" ) )
 		self.failUnless( "doubleSided" in d["out"].attributes( "/plane" ) )
 	
 		d["names"].setValue( "doubleSided" )
@@ -66,7 +66,7 @@ class DeleteAttributesTest( GafferSceneTest.SceneTestCase ) :
 		self.assertSceneHashesNotEqual( a["out"], d["out"], childPlugNames = ( "attributes", ) )		
 		self.assertSceneHashesEqual( a["out"], d["out"], childPlugNames = ( "object", "bound", "transform", "globals", "childNames" ) )		
 	
-		self.failUnless( "gaffer:visibility" in d["out"].attributes( "/plane" ) )
+		self.failUnless( "scene:visible" in d["out"].attributes( "/plane" ) )
 		self.failIf( "doubleSided" in d["out"].attributes( "/plane" ) )
 						
 if __name__ == "__main__":
