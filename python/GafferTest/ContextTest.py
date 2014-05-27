@@ -302,6 +302,121 @@ class ContextTest( unittest.TestCase ) :
 		
 		self.assertTrue( c.get( "test", 10, _copy=False ).isSame( c.get( "test", 20, _copy=False ) ) )
 		self.assertTrue( c.get( "test", defaultValue=10, _copy=False ).isSame( c.get( "test", defaultValue=20, _copy=False ) ) )
+	
+	def testCopyWithSharedOwnership( self ) :
+	
+		c1 = Gaffer.Context()
+
+		c1["testInt"] = 10
+		c1["testIntVector"] = IECore.IntVectorData( [ 10 ] )
+		
+		self.assertEqual( c1["testInt"], 10 )
+		self.assertEqual( c1["testIntVector"], IECore.IntVectorData( [ 10 ] ) )
+
+		r = c1.get( "testIntVector", _copy=False ).refCount()
+		
+		c2 = Gaffer.Context( c1, ownership = Gaffer.Context.Ownership.Shared )
+
+		self.assertEqual( c2["testInt"], 10 )
+		self.assertEqual( c2["testIntVector"], IECore.IntVectorData( [ 10 ] ) )
+		
+		c1["testInt"] = 20
+		self.assertEqual( c1["testInt"], 20 )
+		# c2 has changed too! with slightly improved performance comes
+		# great responsibility!
+		self.assertEqual( c2["testInt"], 20 )
+		
+		# both contexts reference the same object, but c2 at least owns
+		# a reference to its values, and can be used after c1 has been
+		# deleted.
+		self.assertTrue( c2.get( "testIntVector", _copy=False ).isSame( c1.get( "testIntVector", _copy=False ) ) )
+		self.assertEqual( c2.get( "testIntVector", _copy=False ).refCount(), r + 1 )
+		
+		del c1
+		
+		self.assertEqual( c2["testInt"], 20 )
+		self.assertEqual( c2["testIntVector"], IECore.IntVectorData( [ 10 ] ) )
+		self.assertEqual( c2.get( "testIntVector", _copy=False ).refCount(), r )
+		
+	def testCopyWithBorrowedOwnership( self ) :
+	
+		c1 = Gaffer.Context()
+
+		c1["testInt"] = 10
+		c1["testIntVector"] = IECore.IntVectorData( [ 10 ] )
+		
+		self.assertEqual( c1["testInt"], 10 )
+		self.assertEqual( c1["testIntVector"], IECore.IntVectorData( [ 10 ] ) )
+
+		r = c1.get( "testIntVector", _copy=False ).refCount()
+		
+		c2 = Gaffer.Context( c1, ownership = Gaffer.Context.Ownership.Borrowed )
+
+		self.assertEqual( c2["testInt"], 10 )
+		self.assertEqual( c2["testIntVector"], IECore.IntVectorData( [ 10 ] ) )
+		
+		c1["testInt"] = 20
+		self.assertEqual( c1["testInt"], 20 )
+		# c2 has changed too! with slightly improved performance comes
+		# great responsibility!
+		self.assertEqual( c2["testInt"], 20 )
+		
+		# check that c2 doesn't own a reference
+		self.assertTrue( c2.get( "testIntVector", _copy=False ).isSame( c1.get( "testIntVector", _copy=False ) ) )
+		self.assertEqual( c2.get( "testIntVector", _copy=False ).refCount(), r )
+		
+		# make sure we delete c2 before we delete c1
+		del c2
+		
+		# check that we're ok to access c1 after deleting c2
+		self.assertEqual( c1["testInt"], 20 )
+		self.assertEqual( c1["testIntVector"], IECore.IntVectorData( [ 10 ] ) )
+	
+	def testSetOnBorrowedContextsDoesntAffectOriginal( self ) :
+	
+		c1 = Gaffer.Context()
+
+		c1["testInt"] = 10
+		c1["testIntVector"] = IECore.IntVectorData( [ 10 ] )
+
+		c2 = Gaffer.Context( c1, ownership = Gaffer.Context.Ownership.Borrowed )
+		c2["testInt"] = 20
+		c2["testIntVector"] = IECore.IntVectorData( [ 20 ] )
+		
+		self.assertEqual( c1["testInt"], 10 )
+		self.assertEqual( c1["testIntVector"], IECore.IntVectorData( [ 10 ] ) )
+
+		self.assertEqual( c2["testInt"], 20 )
+		self.assertEqual( c2["testIntVector"], IECore.IntVectorData( [ 20 ] ) )
+
+	def testSetOnSharedContextsDoesntAffectOriginal( self ) :
+	
+		c1 = Gaffer.Context()
+
+		c1["testInt"] = 10
+		c1["testIntVector"] = IECore.IntVectorData( [ 10 ] )
+
+		c2 = Gaffer.Context( c1, ownership = Gaffer.Context.Ownership.Shared )
+		c2["testInt"] = 20
+		c2["testIntVector"] = IECore.IntVectorData( [ 20 ] )
+		
+		self.assertEqual( c1["testInt"], 10 )
+		self.assertEqual( c1["testIntVector"], IECore.IntVectorData( [ 10 ] ) )
+
+		self.assertEqual( c2["testInt"], 20 )
+		self.assertEqual( c2["testIntVector"], IECore.IntVectorData( [ 20 ] ) )
+	
+	def testSetOnSharedContextsReleasesReference( self ) :
+	
+		c1 = Gaffer.Context()
+		c1["testIntVector"] = IECore.IntVectorData( [ 10 ] )
+
+		r = c1.get( "testIntVector", _copy=False ).refCount()
+
+		c2 = Gaffer.Context( c1, ownership = Gaffer.Context.Ownership.Shared )
+		c2["testIntVector"] = IECore.IntVectorData( [ 20 ] )
+		
+		self.assertEqual( c1.get( "testIntVector", _copy=False ).refCount(), r )
 		
 if __name__ == "__main__":
 	unittest.main()

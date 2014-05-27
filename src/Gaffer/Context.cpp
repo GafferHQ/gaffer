@@ -60,18 +60,43 @@ Context::Context()
 	set( g_frame, 1.0f );
 }
 
-Context::Context( const Context &other )
+Context::Context( const Context &other, Ownership ownership )
 	:	m_changedSignal( NULL )
 {
 	m_map.reserve( other.m_map.size() );
 	for( Map::const_iterator it = other.m_map.begin(), eIt = other.m_map.end(); it != eIt; ++it )
 	{
-		m_map.insert( m_map.end(), Map::value_type( it->first, it->second->copy() ) );
+		Map::iterator cIt = m_map.insert( m_map.end(), *it );
+		cIt->second.ownership = ownership;
+		switch( ownership )
+		{
+			case Copied :
+				{
+					DataPtr valueCopy = cIt->second.data->copy();
+					cIt->second.data = valueCopy.get();
+					cIt->second.data->addRef();
+					break;
+				}
+			case Shared :
+				cIt->second.data->addRef();
+				break;
+			case Borrowed :
+				// no need to do anything
+				break;
+		}
 	}
 }
 
 Context::~Context()
 {
+	for( Map::const_iterator it = m_map.begin(), eIt = m_map.end(); it != eIt; ++it )
+	{
+		if( it->second.ownership != Borrowed )
+		{
+			it->second.data->removeRef();
+		}
+	}
+	
 	delete m_changedSignal;
 }
 
@@ -114,7 +139,7 @@ IECore::MurmurHash Context::hash() const
 	for( Map::const_iterator it = m_map.begin(), eIt = m_map.end(); it != eIt; it++ )
 	{
 		result.append( it->first );
-		it->second->hash( result );
+		it->second.data->hash( result );
 	}
 	return result;
 }
@@ -128,7 +153,7 @@ bool Context::operator == ( const Context &other ) const
 	Map::const_iterator otherIt = other.m_map.begin();
 	for( Map::const_iterator it = m_map.begin(), eIt = m_map.end(); it != eIt; ++it, ++otherIt )
 	{
-		if( it->first != otherIt->first || !( it->second->isEqualTo( otherIt->second.get() ) ) )
+		if( it->first != otherIt->first || !( it->second.data->isEqualTo( otherIt->second.data ) ) )
 		{
 			return false;
 		}
@@ -200,7 +225,7 @@ void Context::substituteInternal( const std::string &s, std::string &result, con
 				}
 			}
 			
-			const IECore::Data *d = get<IECore::Data>( variableName, 0 );
+			const IECore::Data *d = get<IECore::Data>( variableName, NULL );
 			if( d )
 			{
 				switch( d->typeId() )

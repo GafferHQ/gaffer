@@ -71,7 +71,7 @@ void GafferTest::testManyContexts()
 	Timer t;
 	for( int i = 0; i < 100000; ++i )
 	{
-		ContextPtr tmp = new Context( *base );
+		ContextPtr tmp = new Context( *base, Context::Borrowed );
 		tmp->set( keys[i%numKeys], i );
 		GAFFERTEST_ASSERT( tmp->get<int>( keys[i%numKeys] ) == i );
 	}

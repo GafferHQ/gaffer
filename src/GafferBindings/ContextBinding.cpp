@@ -146,9 +146,19 @@ ContextPtr current()
 
 void GafferBindings::bindContext()
 {	
-	scope s = IECorePython::RefCountedClass<Context, IECore::RefCounted>( "Context" )
+	
+	IECorePython::RefCountedClass<Context, IECore::RefCounted> contextClass( "Context" );
+	scope s = contextClass;
+
+	enum_<Context::Ownership>( "Ownership" )
+		.value( "Copied", Context::Copied )
+		.value( "Shared", Context::Shared )
+		.value( "Borrowed", Context::Borrowed )
+	;
+	
+	contextClass
 		.def( init<>() )
-		.def( init<const Context &>() )
+		.def( init<const Context &, Context::Ownership>( ( arg( "other" ), arg( "ownership" ) = Context::Copied ) ) )
 		.def( "setFrame", &Context::setFrame )
 		.def( "getFrame", &Context::getFrame )
 		.def( "set", &Context::set<float> )
