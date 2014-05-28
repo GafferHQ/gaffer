@@ -64,6 +64,7 @@ class UnionFilter : public Filter
 		const Gaffer::ArrayPlug *inPlug() const;
 						
 		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
+		virtual bool sceneAffectsMatch( const ScenePlug *scene, const Gaffer::ValuePlug *child ) const;
 
 	protected :
 
