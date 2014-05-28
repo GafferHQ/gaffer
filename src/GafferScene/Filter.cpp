@@ -34,52 +34,16 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include <stack>
-
-#include "tbb/enumerable_thread_specific.h"
+#include "Gaffer/Context.h"
 
 #include "GafferScene/Filter.h"
 
 using namespace GafferScene;
 using namespace Gaffer;
 
-//////////////////////////////////////////////////////////////////////////
-// Filter::SceneScope implementation
-//////////////////////////////////////////////////////////////////////////
-
-typedef std::stack<const ScenePlug *> SceneStack;
-typedef tbb::enumerable_thread_specific<SceneStack> ThreadSpecificSceneStack;
-
-static ThreadSpecificSceneStack g_threadStacks;
-
-Filter::SceneScope::SceneScope( const ScenePlug *scene )
-{
-	SceneStack &stack = g_threadStacks.local();
-	stack.push( scene );
-}
-
-Filter::SceneScope::~SceneScope()
-{
-	SceneStack &stack = g_threadStacks.local();
-	stack.pop();
-}
-
-static const ScenePlug *currentScene()
-{
-	SceneStack &stack = g_threadStacks.local();
-	if( stack.empty() )
-	{
-		return NULL;
-	}
-	return stack.top();
-}
-
-//////////////////////////////////////////////////////////////////////////
-// Filter implementation
-//////////////////////////////////////////////////////////////////////////
-
 IE_CORE_DEFINERUNTIMETYPED( Filter );
 
+const IECore::InternedString Filter::inputSceneContextName( "scene:filter:inputScene" );
 size_t Filter::g_firstPlugIndex = 0;
 
 Filter::Filter( const std::string &name )
@@ -113,7 +77,8 @@ void Filter::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *conte
 	ComputeNode::hash( output, context, h );
 	if( output == matchPlug() )
 	{
-		hashMatch( currentScene(), context, h );
+		const ScenePlug *inputScene = (const ScenePlug *)( context->get<uint64_t>( inputSceneContextName, 0 ) );
+		hashMatch( inputScene, context, h );
 	}
 }
 			
@@ -121,6 +86,7 @@ void Filter::compute( ValuePlug *output, const Context *context ) const
 {
 	if( output == matchPlug() )
 	{
-		static_cast<IntPlug *>( output )->setValue( computeMatch( currentScene(), context ) );
+		const ScenePlug *inputScene = (const ScenePlug *)( context->get<uint64_t>( inputSceneContextName, 0 ) );
+		static_cast<IntPlug *>( output )->setValue( computeMatch( inputScene, context ) );
 	}
 }

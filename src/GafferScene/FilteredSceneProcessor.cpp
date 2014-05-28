@@ -37,6 +37,8 @@
 
 #include "Gaffer/Box.h"
 
+#include "Gaffer/Context.h"
+
 #include "GafferScene/FilteredSceneProcessor.h"
 
 using namespace IECore;
@@ -119,14 +121,23 @@ bool FilteredSceneProcessor::acceptsInput( const Gaffer::Plug *plug, const Gaffe
 	return true;
 }
 
+Gaffer::ContextPtr FilteredSceneProcessor::filterContext( const Gaffer::Context *context ) const
+{
+	Context *result = new Context( *context, Context::Borrowed );
+	result->set( Filter::inputSceneContextName, (uint64_t)inPlug() );
+	return result;
+}
+
 void FilteredSceneProcessor::filterHash( IECore::MurmurHash &h ) const
 {
-	Filter::SceneScope scope( inPlug() );
+	ContextPtr c = filterContext( Context::current() );
+	Context::Scope s( c.get() );
 	filterPlug()->hash( h );
 }
 
 Filter::Result FilteredSceneProcessor::filterValue() const
 {
-	Filter::SceneScope scope( inPlug() );
+	ContextPtr c = filterContext( Context::current() );
+	Context::Scope s( c.get() );
 	return (Filter::Result)filterPlug()->getValue();
 }

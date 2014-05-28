@@ -74,13 +74,7 @@ class Filter : public Gaffer::ComputeNode
 		
 		virtual bool sceneAffectsMatch( const ScenePlug *scene, const Gaffer::ValuePlug *child ) const;
 		
-		struct SceneScope : boost::noncopyable
-		{
-		
-			SceneScope( const ScenePlug *scene );
-			~SceneScope();
-			
-		};
+		static const IECore::InternedString inputSceneContextName;
 		
 	protected :
 		

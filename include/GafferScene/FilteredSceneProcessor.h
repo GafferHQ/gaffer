@@ -66,6 +66,9 @@ class FilteredSceneProcessor : public SceneProcessor
 		/// Implemented to prevent non-Filter nodes being connected to the filter plug.
 		virtual bool acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const;
 
+		/// Convenience method returning a temporary context suitable for passing
+		/// the input scene to the filter.
+		Gaffer::ContextPtr filterContext( const Gaffer::Context *context ) const;
 		/// Convenience method for appending filterPlug() to a hash. Use this in
 		/// preference to direct access to filterPlug(), because it also performs
 		//// the setup necessary for passing the input scene to the filter.
