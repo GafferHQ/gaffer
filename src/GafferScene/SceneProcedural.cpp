@@ -178,7 +178,7 @@ void SceneProcedural::render( RendererPtr renderer ) const
 		// get all the attributes, and early out if we're not visibile
 	
 		ConstCompoundObjectPtr attributes = m_scenePlug->attributesPlug()->getValue();
-		const BoolData *visibilityData = attributes->member<BoolData>( "gaffer:visibility" );
+		const BoolData *visibilityData = attributes->member<BoolData>( "scene:visible" );
 		if( visibilityData && !visibilityData->readable() )
 		{
 			return;
