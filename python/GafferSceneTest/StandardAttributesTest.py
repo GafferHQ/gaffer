@@ -34,6 +34,10 @@
 #  
 ##########################################################################
 
+import os
+
+import IECore
+
 import Gaffer
 import GafferScene
 import GafferSceneTest
@@ -73,18 +77,10 @@ class StandardAttributesTest( GafferSceneTest.SceneTestCase ) :
 	def testVisibilityBackwardCompatibility( self ) :
 		
 		s = Gaffer.ScriptNode()
-		s["a"] = GafferScene.StandardAttributes()
-		s["a"]["attributes"]["visibility"]["enabled"].setValue( True )
-		s["a"]["attributes"]["visibility"]["value"].setValue( False )
+		s["fileName"].setValue( os.path.dirname( __file__ ) + "/scripts/standardAttributesBeforeVisibilityRename.gfr" )
+		s.load()
 		
-		before = s["a"]["out"].attributes( "/yeah" )
-		
-		s["a"]["attributes"]["visibility"]["name"].setValue( "gaffer:visibility" )
-		
-		after = s["a"]["out"].attributes( "/yeah" )
-		
-		self.assertEqual( before, after )
-		
-		
+		self.assertEqual( s["attributes"]["out"].attributes( "/plane" )["scene:visible"], IECore.BoolData( False ) )
+
 if __name__ == "__main__":
 	unittest.main()

@@ -54,8 +54,7 @@ class StandardAttributes : public Attributes
 	
 	private:
 	
-		void plugSet( Gaffer::PlugPtr plug );
-		boost::signals::connection m_plugSetConnection;
+		void plugSet( Gaffer::Plug *plug );
 
 };
 
