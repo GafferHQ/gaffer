@@ -244,6 +244,18 @@ StandardSetPtr selection( ScriptNode &s )
 	return s.selection();
 }
 
+void undo( ScriptNode &s )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	s.undo();
+}
+
+void redo( ScriptNode &s )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	s.redo();
+}
+
 void deleteNodes( ScriptNode &s, Node *parent, const Set *filter, bool reconnect )
 {
 	IECorePython::ScopedGILRelease r;
@@ -317,9 +329,9 @@ void GafferBindings::bindScriptNode()
 		.def( "applicationRoot", &applicationRoot )
 		.def( "selection", &selection )
 		.def( "undoAvailable", &ScriptNode::undoAvailable )
-		.def( "undo", &ScriptNode::undo )
+		.def( "undo", &undo )
 		.def( "redoAvailable", &ScriptNode::redoAvailable )
-		.def( "redo", &ScriptNode::redo )
+		.def( "redo", &redo )
 		.def( "currentActionStage", &ScriptNode::currentActionStage )
 		.def( "actionSignal", &ScriptNode::actionSignal, return_internal_reference<1>() )
 		.def( "undoAddedSignal", &ScriptNode::undoAddedSignal, return_internal_reference<1>() )
