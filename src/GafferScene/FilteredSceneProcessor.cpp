@@ -128,16 +128,16 @@ Gaffer::ContextPtr FilteredSceneProcessor::filterContext( const Gaffer::Context 
 	return result;
 }
 
-void FilteredSceneProcessor::filterHash( IECore::MurmurHash &h ) const
+void FilteredSceneProcessor::filterHash( const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	ContextPtr c = filterContext( Context::current() );
+	ContextPtr c = filterContext( context );
 	Context::Scope s( c.get() );
 	filterPlug()->hash( h );
 }
 
-Filter::Result FilteredSceneProcessor::filterValue() const
+Filter::Result FilteredSceneProcessor::filterValue( const Gaffer::Context *context ) const
 {
-	ContextPtr c = filterContext( Context::current() );
+	ContextPtr c = filterContext( context );
 	Context::Scope s( c.get() );
 	return (Filter::Result)filterPlug()->getValue();
 }

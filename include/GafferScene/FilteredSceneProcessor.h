@@ -72,12 +72,12 @@ class FilteredSceneProcessor : public SceneProcessor
 		/// Convenience method for appending filterPlug() to a hash. Use this in
 		/// preference to direct access to filterPlug(), because it also performs
 		//// the setup necessary for passing the input scene to the filter.
-		void filterHash( IECore::MurmurHash &h ) const;
+		void filterHash( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		/// Convenience method for returning the result of filterPlug()->getValue()
 		/// cast to the appropriate result type. Use this in preference to direct
 		/// access to filterPlug(), because it also performs the setup necessary for
 		/// passing the input scene to the filter.
-		Filter::Result filterValue() const;
+		Filter::Result filterValue( const Gaffer::Context *context ) const;
 
 		static size_t g_firstPlugIndex;
 	

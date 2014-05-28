@@ -122,7 +122,7 @@ class SceneElementProcessor : public FilteredSceneProcessor
 			Union = 2
 		};
 		
-		BoundMethod boundMethod() const;
+		BoundMethod boundMethod( const Gaffer::Context *context ) const;
 		
 		static size_t g_firstPlugIndex;
 	
