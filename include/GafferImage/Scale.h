@@ -62,6 +62,8 @@ class Scale : public ImageProcessor
 		const Gaffer::V2fPlug *scalePlug() const;
 		Gaffer::V2fPlug *originPlug();
 		const Gaffer::V2fPlug *originPlug() const;
+		Gaffer::BoolPlug *scaleFormatPlug();
+		const Gaffer::BoolPlug *scaleFormatPlug() const;
 
 		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
 		virtual bool enabled() const;
@@ -85,6 +87,8 @@ class Scale : public ImageProcessor
 		virtual IECore::ConstFloatVectorDataPtr computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const;
 		
 	private :
+
+		Imath::Box2i computeScaledBox( Imath::Box2i box ) const;
 
 		static size_t g_firstPlugIndex;
 		

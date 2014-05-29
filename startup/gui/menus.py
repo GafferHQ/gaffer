@@ -216,6 +216,7 @@ nodeMenu.append( "/Image/Color/OpenColorIO", GafferImage.OpenColorIO, searchText
 nodeMenu.append( "/Image/Merge/Merge", GafferImage.Merge )
 nodeMenu.append( "/Image/Merge/Switch", GafferImage.ImageSwitch, searchText = "ImageSwitch" )
 nodeMenu.append( "/Image/Transform/Reformat", GafferImage.Reformat )
+nodeMenu.append( "/Image/Transform/Scale", GafferImage.Scale, searchText = "ImageScale" )
 nodeMenu.append( "/Image/Transform/Transform", GafferImage.ImageTransform, searchText = "ImageTransform" )
 nodeMenu.append( "/Image/Channels/RemoveChannels", GafferImage.RemoveChannels )
 nodeMenu.append( "/Image/Context/Time Warp", GafferImage.ImageTimeWarp, searchText = "ImageTimeWarp" )

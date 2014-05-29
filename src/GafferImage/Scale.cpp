@@ -53,6 +53,7 @@ Scale::Scale( const std::string &name )
 	addChild( new FilterPlug( "filter" ) );
 	addChild( new V2fPlug( "scale", Gaffer::Plug::In, Imath::V2f( 1. ) ) );
 	addChild( new V2fPlug( "origin", Gaffer::Plug::In, Imath::V2f( 0. ) ) );
+	addChild( new BoolPlug( "scaleFormat", Gaffer::Plug::In, false ) );
 }
 
 Scale::~Scale()
@@ -89,6 +90,16 @@ const Gaffer::V2fPlug *Scale::originPlug() const
 	return getChild<V2fPlug>( g_firstPlugIndex+2 );
 }
 
+Gaffer::BoolPlug *Scale::scaleFormatPlug()
+{
+	return getChild<BoolPlug>( g_firstPlugIndex+3 );
+}
+
+const Gaffer::BoolPlug *Scale::scaleFormatPlug() const
+{
+	return getChild<BoolPlug>( g_firstPlugIndex+3 );
+}
+
 void Scale::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	ImageProcessor::affects( input, outputs );
@@ -101,6 +112,10 @@ void Scale::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs 
 	else if( input == filterPlug() || input == inPlug()->channelDataPlug() )
 	{
 		outputs.push_back( outPlug()->channelDataPlug() );
+	}
+	if( input == scaleFormatPlug() )
+	{
+		outputs.push_back( outPlug()->formatPlug() );
 	}
 }
 
@@ -117,7 +132,17 @@ bool Scale::enabled() const
 
 void Scale::hashFormat( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	h = inPlug()->formatPlug()->hash();
+	bool scaleDisplay = scaleFormatPlug()->getValue();
+	if( !scaleDisplay )
+	{
+		h = inPlug()->formatPlug()->hash();
+		return;
+	}
+	
+	ImageProcessor::hashFormat( output, context, h );
+	h.append( inPlug()->formatPlug()->hash() );
+	h.append( scalePlug()->hash() );
+	h.append( originPlug()->hash() );
 }
 
 void Scale::hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
@@ -145,8 +170,42 @@ void Scale::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer:
 	h.append( originPlug()->hash() );
 }
 
+Imath::Box2i Scale::computeScaledBox( Imath::Box2i box ) const
+{
+	Imath::V2d scale( scalePlug()->getValue() );
+	Imath::V2d scaleOrigin( originPlug()->getValue() );
+	Imath::Box2i displayWindow( inPlug()->formatPlug()->getValue().getDisplayWindow() );
+
+	scaleOrigin -= displayWindow.min;
+	box.min -= displayWindow.min;
+	box.max -= displayWindow.min;
+	
+	Imath::Box2i scaledBox(
+		Imath::V2i(
+			IECore::fastFloatFloor( ( float( box.min.x ) - scaleOrigin.x ) * scale.x + scaleOrigin.x ),
+			IECore::fastFloatFloor( ( float( box.min.y ) - scaleOrigin.y ) * scale.y + scaleOrigin.y )
+		),
+		Imath::V2i(
+			IECore::fastFloatCeil( ( float( box.max.x ) - scaleOrigin.x + 1. ) * scale.x + scaleOrigin.x ) - 1,
+			IECore::fastFloatCeil( ( float( box.max.y ) - scaleOrigin.y + 1. ) * scale.y + scaleOrigin.y ) - 1
+		)
+	);
+
+	scaledBox.min += displayWindow.min;
+	scaledBox.max += displayWindow.min;
+
+	return scaledBox;
+}
+
 GafferImage::Format Scale::computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
+	bool scaleDisplay = scaleFormatPlug()->getValue();
+	if( scaleDisplay )
+	{
+		Imath::Box2i displayWindow = inPlug()->formatPlug()->getValue().getDisplayWindow();
+		return GafferImage::Format( computeScaledBox( displayWindow ) );
+	}
+	
 	return inPlug()->formatPlug()->getValue();
 }
 
@@ -157,30 +216,8 @@ IECore::ConstStringVectorDataPtr Scale::computeChannelNames( const Gaffer::Conte
 
 Imath::Box2i Scale::computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
-	Imath::V2d scale( scalePlug()->getValue() );
-	Imath::V2d scaleOrigin( originPlug()->getValue() );
 	Imath::Box2i dataWindow( inPlug()->dataWindowPlug()->getValue() );
-	Imath::Box2i displayWindow( inPlug()->formatPlug()->getValue().getDisplayWindow() );
-
-	scaleOrigin -= displayWindow.min;
-	dataWindow.min -= displayWindow.min;
-	dataWindow.max -= displayWindow.min;
-	
-	Imath::Box2i outDataWindow(
-		Imath::V2i(
-			IECore::fastFloatFloor( ( float( dataWindow.min.x ) - scaleOrigin.x ) * scale.x + scaleOrigin.x ),
-			IECore::fastFloatFloor( ( float( dataWindow.min.y ) - scaleOrigin.y ) * scale.y + scaleOrigin.y )
-		),
-		Imath::V2i(
-			IECore::fastFloatCeil( ( float( dataWindow.max.x ) - scaleOrigin.x + 1. ) * scale.x + scaleOrigin.x ) - 1,
-			IECore::fastFloatCeil( ( float( dataWindow.max.y ) - scaleOrigin.y + 1. ) * scale.y + scaleOrigin.y ) - 1
-		)
-	);
-
-	outDataWindow.min += displayWindow.min;
-	outDataWindow.max += displayWindow.min;
-
-	return outDataWindow;
+	return computeScaledBox( dataWindow );
 }
 
 struct Contribution
