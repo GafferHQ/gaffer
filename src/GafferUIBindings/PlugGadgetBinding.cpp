@@ -36,6 +36,9 @@
 
 #include "boost/python.hpp"
 
+#include "Gaffer/Plug.h"
+#include "Gaffer/Context.h"
+
 #include "GafferUIBindings/GadgetBinding.h"
 #include "GafferUIBindings/PlugGadgetBinding.h"
 #include "GafferUI/PlugGadget.h"

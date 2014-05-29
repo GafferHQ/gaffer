@@ -39,10 +39,16 @@
 
 #include "IECore/Renderer.h"
 
-#include "Gaffer/Context.h"
 #include "Gaffer/Node.h"
 
 #include "GafferScene/ScenePlug.h"
+
+namespace Gaffer
+{
+
+IE_CORE_FORWARDDECLARE( Context )
+
+} // namespace Gaffer
 
 namespace GafferScene
 {

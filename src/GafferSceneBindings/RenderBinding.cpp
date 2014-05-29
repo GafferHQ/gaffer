@@ -36,6 +36,8 @@
 
 #include "boost/python.hpp"
 
+#include "Gaffer/Context.h"
+
 #include "GafferBindings/ExecutableNodeBinding.h"
 
 #include "GafferScene/OpenGLRender.h"

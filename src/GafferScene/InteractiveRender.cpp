@@ -36,6 +36,7 @@
 
 #include "boost/bind.hpp"
 
+#include "Gaffer/Context.h"
 #include "Gaffer/ScriptNode.h"
 
 #include "GafferScene/InteractiveRender.h"

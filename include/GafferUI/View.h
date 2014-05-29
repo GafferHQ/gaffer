@@ -41,10 +41,16 @@
 #include "boost/regex.hpp"
 
 #include "Gaffer/Node.h"
-#include "Gaffer/Context.h"
 
 #include "GafferUI/ViewportGadget.h"
 #include "GafferUIBindings/ViewBinding.h" // to enable friend declaration for updateViewFromPlug().
+
+namespace Gaffer
+{
+
+IE_CORE_FORWARDDECLARE( Context )
+
+} // namespace Gaffer
 
 namespace GafferUI
 {

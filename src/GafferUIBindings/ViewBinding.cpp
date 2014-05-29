@@ -40,6 +40,7 @@
 #include "IECorePython/ScopedGILRelease.h"
 
 #include "Gaffer/Plug.h"
+#include "Gaffer/Context.h"
 
 #include "GafferBindings/NodeBinding.h"
 

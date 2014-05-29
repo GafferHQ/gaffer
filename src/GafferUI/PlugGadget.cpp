@@ -37,7 +37,7 @@
 #include "boost/bind.hpp"
 #include "boost/bind/placeholders.hpp"
 
-#include "Gaffer/Node.h"
+#include "Gaffer/Context.h"
 #include "Gaffer/ScriptNode.h"
 
 #include "GafferUI/PlugGadget.h"
