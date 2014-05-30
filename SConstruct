@@ -510,12 +510,14 @@ if env["PLATFORM"] == "darwin" :
 	
 elif env["PLATFORM"] == "posix" :
 	
-	## We really want to not have the -Wno-strict-aliasing flag, but it's necessary to stop boost
-	# python warnings that don't seem to be prevented by including boost via -isystem even. Better to
-	# be able to have -Werror but be missing one warning than to have no -Werror.
-	## \todo This is probably only necessary for specific gcc versions where -isystem doesn't
-	# fully work. Reenable when we encounter versions that work correctly.
-	env.Append( CXXFLAGS = [ "-Wno-strict-aliasing" ] )
+	# gcc 4.1.2 in conjunction with boost::flat_map produces crashes when
+	# using the -fstrict-aliasing optimisation (which defaults to on with -O2),
+	# so we turn the optimisation off here, only for that specific gcc version.
+	if "g++" in os.path.basename( env["CXX"] ) :
+		gccVersion = subprocess.Popen( [ env["CXX"], "-dumpversion" ], env=env["ENV"], stdout=subprocess.PIPE ).stdout.read().strip()
+		if gccVersion == "4.1.2" :
+			env.Append( CXXFLAGS = [ "-fno-strict-aliasing" ] )
+	
 	env["GAFFER_PLATFORM"] = "linux"
 	
 if env["BUILD_CACHEDIR"] != "" :
@@ -809,12 +811,9 @@ baseLibEnv.Append(
 )
 
 # include 3rd party headers with -isystem rather than -I.
-# this should turns off warnings from those headers, allowing us to
+# this should turn off warnings from those headers, allowing us to
 # build with -Werror. there are so many warnings from boost
-# in particular that this would be otherwise impossible - note that
-# we're still having to turn off strict aliasing warnings in the
-# default CXXFLAGS because somehow they creep out of boost python
-# and past the defences.
+# in particular that this would be otherwise impossible.
 for path in [
 		"$BUILD_DIR/include",
 		"$BUILD_DIR/include/python$PYTHON_VERSION",
