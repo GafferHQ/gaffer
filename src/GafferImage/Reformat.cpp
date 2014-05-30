@@ -36,7 +36,6 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "GafferImage/Reformat.h"
-#include "GafferImage/Scale.h"
 #include "GafferImage/Sampler.h"
 
 using namespace Gaffer;
@@ -65,10 +64,20 @@ Reformat::Reformat( const std::string &name )
 	scale->originPlug()->setInput( originPlug() );
 	scale->scalePlug()->setInput( scalePlug() );
 	scale->scaleFormatPlug()->setValue( false );
+	
+	addChild( new V2iPlug( "__offset", Gaffer::Plug::Out ) );
+
+	GafferImage::Position *position = new GafferImage::Position( std::string( boost::str( boost::format( "__%sPosition" )  % name  ) ) );
+	position->inPlug()->setInput( scale->outPlug() );
+	position->offsetPlug()->setInput( offsetPlug() );
+	position->enabledPlug()->setInput( enabledPlug() );
+	
 	addChild( scale );
+	addChild( position );
 
 	outPlug()->formatPlug()->setInput( formatPlug() );
-	outPlug()->channelNamesPlug()->setInput( scale->outPlug()->channelNamesPlug() );
+	outPlug()->channelNamesPlug()->setInput( position->outPlug()->channelNamesPlug() );
+	outPlug()->channelDataPlug()->setInput( position->outPlug()->channelDataPlug() );
 }
 
 Reformat::~Reformat()
@@ -115,14 +124,34 @@ const Gaffer::V2fPlug *Reformat::originPlug() const
 	return getChild<V2fPlug>( g_firstPlugIndex+3 );
 }
 
+Gaffer::V2iPlug *Reformat::offsetPlug()
+{
+	return getChild<V2iPlug>( g_firstPlugIndex+4 );
+}
+
+const Gaffer::V2iPlug *Reformat::offsetPlug() const
+{
+	return getChild<V2iPlug>( g_firstPlugIndex+4 );
+}
+
 GafferImage::Scale *Reformat::scaleNode()
 {
-	return getChild<Scale>( g_firstPlugIndex + 4 );
+	return getChild<Scale>( g_firstPlugIndex + 5 );
 }
 
 const GafferImage::Scale *Reformat::scaleNode() const
 {
-	return getChild<Scale>( g_firstPlugIndex + 4 );
+	return getChild<Scale>( g_firstPlugIndex + 5 );
+}
+
+GafferImage::Position *Reformat::positionNode()
+{
+	return getChild<Position>( g_firstPlugIndex + 6 );
+}
+
+const GafferImage::Position *Reformat::positionNode() const
+{
+	return getChild<Position>( g_firstPlugIndex + 6 );
 }
 
 void Reformat::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
@@ -135,12 +164,10 @@ void Reformat::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outpu
 		outputs.push_back( scalePlug()->getChild(1) );
 		outputs.push_back( originPlug()->getChild(0) );
 		outputs.push_back( originPlug()->getChild(1) );
-		return;
 	}
-
-	if( input == formatPlug() || input == inPlug()->formatPlug() || input == inPlug()->dataWindowPlug() )
+	else if( input == formatPlug() || input == inPlug()->formatPlug() )
 	{
-		outputs.push_back( outPlug()->dataWindowPlug() );
+		outputs.push_back( offsetPlug() );
 	}
 }
 
@@ -180,6 +207,18 @@ void Reformat::compute( ValuePlug *output, const Context *context ) const
 		static_cast<FloatPlug *>( output )->setValue( scale().y );
 		return;
 	}
+	else if( output == offsetPlug()->getChild( 0 ) )
+	{
+		int offset = formatPlug()->getValue().getDisplayWindow().min.x - inPlug()->formatPlug()->getValue().getDisplayWindow().min.x;
+		static_cast<IntPlug *>( output )->setValue( offset );
+		return;
+	}
+	else if( output == offsetPlug()->getChild( 1 ) )
+	{
+		int offset = formatPlug()->getValue().getDisplayWindow().min.y - inPlug()->formatPlug()->getValue().getDisplayWindow().min.y;
+		static_cast<IntPlug *>( output )->setValue( offset );
+		return;
+	}
 
 	ImageProcessor::compute( output, context );
 }
@@ -209,20 +248,19 @@ void Reformat::hash( const ValuePlug *output, const Context *context, IECore::Mu
 		h.append( inPlug()->formatPlug()->getValue().getDisplayWindow().min.y );
 		h.append( inPlug()->formatPlug()->getValue().getPixelAspect() );
 	}
+	else if( output == offsetPlug()->getChild( 0 ) )
+	{
+		h.append( inPlug()->formatPlug()->getValue().getDisplayWindow().min.x - formatPlug()->getValue().getDisplayWindow().min.x );
+	}
+	else if( output == offsetPlug()->getChild( 1 ) )
+	{
+		h.append( inPlug()->formatPlug()->getValue().getDisplayWindow().min.y - formatPlug()->getValue().getDisplayWindow().min.y );
+	}
 }
 
 void Reformat::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	Imath::V2i formatOffset( inPlug()->formatPlug()->getValue().getDisplayWindow().min - formatPlug()->getValue().getDisplayWindow().min );
-	if( formatOffset == Imath::V2i(0) )
-	{
-		h = scaleNode()->outPlug()->channelDataPlug()->hash();
-	}
-	else
-	{
-		h = scaleNode()->outPlug()->channelDataPlug()->hash();
-		h.append( formatOffset );
-	}
+	h = positionNode()->outPlug()->channelDataPlug()->hash();
 }
 
 void Reformat::hashFormat( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
@@ -232,16 +270,7 @@ void Reformat::hashFormat( const GafferImage::ImagePlug *output, const Gaffer::C
 
 void Reformat::hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	Imath::V2i formatOffset( inPlug()->formatPlug()->getValue().getDisplayWindow().min - formatPlug()->getValue().getDisplayWindow().min );
-	if( formatOffset == Imath::V2i(0) )
-	{
-		h = scaleNode()->outPlug()->dataWindowPlug()->hash();
-	}
-	else
-	{
-		h = scaleNode()->outPlug()->dataWindowPlug()->hash();
-		h.append( formatOffset );
-	}
+	h = positionNode()->outPlug()->dataWindowPlug()->hash();
 }
 
 Imath::V2f Reformat::scale() const
@@ -274,32 +303,7 @@ IECore::ConstStringVectorDataPtr Reformat::computeChannelNames( const Gaffer::Co
 
 IECore::ConstFloatVectorDataPtr Reformat::computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const
 {
-	// Here we need to shift all of the scaled image data by the offset between the input and output formats.
-	// This is required because the tiles are all aligned with a grid that has it's origin at 0x0 and not at the format's origin.
-	// If there is no offset between the two formats then the channel data hash just copies the result from the Scale node.
-
-	// Allocate our output tile.
-	FloatVectorDataPtr outData = new FloatVectorData;
-	std::vector<float> &result = outData->writable();
-	result.resize( ImagePlug::tileSize() * ImagePlug::tileSize() );
-
-	// Get the offset that we have to shift the data by.
-	Imath::V2i formatOffset( inPlug()->formatPlug()->getValue().getDisplayWindow().min - formatPlug()->getValue().getDisplayWindow().min );
-
-	// Get the sample area.
-	Imath::Box2i sampleArea( tileOrigin + formatOffset, tileOrigin + formatOffset + Imath::V2i( ImagePlug::tileSize() - 1 ) );
-	
-	Sampler sampler( scaleNode()->outPlug(), channelName, sampleArea );
-
-	float *ptr = &result[0];
-	for( int y = sampleArea.min.y; y <= sampleArea.max.y; ++y )
-	{
-		for( int x = sampleArea.min.x; x <= sampleArea.max.x; ++x )
-		{
-			*ptr++ = sampler.sample( x, y );
-		}
-	}
-
-	return outData;
+	// We should never get here because the output plug is connected to the internal position node.
+	return inPlug()->channelDataPlug()->getValue();
 }
 

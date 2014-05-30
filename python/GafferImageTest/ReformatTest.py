@@ -70,11 +70,12 @@ class ReformatTest( unittest.TestCase ) :
 		reformat["in"].setInput( read["out"] )
 		
 		cs = GafferTest.CapturingSlot( reformat.plugDirtiedSignal() )
-		reformat["format"].setValue( GafferImage.Format( 150, 125, 1. ) )
+		reformat["format"].setValue( GafferImage.Format( IECore.Box2i( IECore.V2i( -5, 5 ), IECore.V2i( 144, 129 ) ), 1. ) )
 		
 		# Test the dirty signals when the formats have the same origins.	
 		dirtiedPlugs = set( [ x[0].relativeName( x[0].node() ) for x in cs ] )
-		self.assertEqual( len( dirtiedPlugs ), 9 )
+
+		self.assertEqual( len( dirtiedPlugs ), 10 )
 		self.assertTrue( "format" in dirtiedPlugs )
 		self.assertTrue( "__origin" in dirtiedPlugs )
 		self.assertTrue( "__origin.x" in dirtiedPlugs )
@@ -82,22 +83,9 @@ class ReformatTest( unittest.TestCase ) :
 		self.assertTrue( "__scale" in dirtiedPlugs )
 		self.assertTrue( "__scale.x" in dirtiedPlugs )
 		self.assertTrue( "__scale.y" in dirtiedPlugs )
-		self.assertTrue( "out" in dirtiedPlugs )
-
-		# Test the dirty signals when the formats have offset origins.
-		cs = GafferTest.CapturingSlot( reformat.plugDirtiedSignal() )
-		reformat["format"].setValue( GafferImage.Format( IECore.Box2i( IECore.V2i( -5, 5 ), IECore.V2i( 144, 129 ) ), 1. ) )
-
-		dirtiedPlugs = set( [ x[0].relativeName( x[0].node() ) for x in cs ] )
-		self.assertEqual( len( dirtiedPlugs ), 9 )
-		self.assertTrue( "format" in dirtiedPlugs )
 		self.assertTrue( "__origin" in dirtiedPlugs )
 		self.assertTrue( "__origin.x" in dirtiedPlugs )
 		self.assertTrue( "__origin.y" in dirtiedPlugs )
-		self.assertTrue( "__scale" in dirtiedPlugs )
-		self.assertTrue( "__scale.x" in dirtiedPlugs )
-		self.assertTrue( "__scale.y" in dirtiedPlugs )
-		self.assertTrue( "out" in dirtiedPlugs )
 
 	# Test a reformat on an image with a data window that is different to the display window.
 	def testDataWindow( self ) :

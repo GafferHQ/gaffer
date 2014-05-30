@@ -39,6 +39,7 @@
 #include "GafferImage/ImageProcessor.h"
 #include "GafferImage/FilterPlug.h"
 #include "GafferImage/Scale.h"
+#include "GafferImage/Position.h"
 
 namespace GafferImage
 {
@@ -70,11 +71,19 @@ class Reformat : public ImageProcessor
 		GafferImage::Scale *scaleNode();
 		const GafferImage::Scale *scaleNode() const;
 		
+		// Accessor for the internal Position node.
+		GafferImage::Position *positionNode();
+		const GafferImage::Position *positionNode() const;
+		
 		// Accessors for the internal outputs to the scale node.
 		Gaffer::V2fPlug *scalePlug();
 		const Gaffer::V2fPlug *scalePlug() const;
 		Gaffer::V2fPlug *originPlug();
 		const Gaffer::V2fPlug *originPlug() const;
+		
+		// Accessors for the internal outputs to the position node.
+		Gaffer::V2iPlug *offsetPlug();
+		const Gaffer::V2iPlug *offsetPlug() const;
 
 		// Returns the X and Y scale factors of the output image.
 		Imath::V2f scale() const;
