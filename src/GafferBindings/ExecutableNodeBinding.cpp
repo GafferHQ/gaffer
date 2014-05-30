@@ -54,16 +54,8 @@ using namespace Gaffer;
 
 static unsigned long taskHash( const ExecutableNode::Task &t )
 {
-	// we convert the hash to a long by doing XOR operator between each long that fits the hash.
-	IECore::MurmurHash h;
-	h = t.hash();
-	unsigned long *u = (unsigned long*)&h;
-	unsigned long v = u[0];
-	for ( unsigned int i = 1; i < sizeof(h)/sizeof(long); i++ )
-	{
-		v ^= u[i];
-	}
-	return v;
+	const IECore::MurmurHash h = t.hash();
+	return tbb::tbb_hasher( h.toString() );
 }
 
 static ContextPtr taskContext( const ExecutableNode::Task &t )
