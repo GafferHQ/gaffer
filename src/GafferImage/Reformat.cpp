@@ -64,6 +64,7 @@ Reformat::Reformat( const std::string &name )
 	scale->enabledPlug()->setInput( enabledPlug() );
 	scale->originPlug()->setInput( originPlug() );
 	scale->scalePlug()->setInput( scalePlug() );
+	scale->scaleFormatPlug()->setValue( false );
 	addChild( scale );
 
 	outPlug()->formatPlug()->setInput( formatPlug() );

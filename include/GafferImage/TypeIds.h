@@ -88,6 +88,7 @@ enum TypeId
 	ImageSwitchTypeId = 110792,
 	ImageSamplerTypeId = 110793,
 	ScaleTypeId = 110794,
+	PositionTypeId = 110795,
 
 	LastTypeId = 110849
 };
