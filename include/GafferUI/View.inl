@@ -88,6 +88,12 @@ View::ViewDescription<T>::ViewDescription( IECore::TypeId plugType )
 }
 
 template<typename T>
+View::ViewDescription<T>::ViewDescription( const IECore::TypeId nodeType, const std::string &plugPathRegex )
+{
+	View::registerView( nodeType, plugPathRegex, &creator );
+}
+
+template<typename T>
 ViewPtr View::ViewDescription<T>::creator( Gaffer::PlugPtr input )
 {
 	ViewPtr result = new T();
