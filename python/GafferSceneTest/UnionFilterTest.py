@@ -127,6 +127,44 @@ class UnionFilterTest( GafferSceneTest.SceneTestCase ) :
 		
 		u = GafferScene.UnionFilter()
 		self.assertFalse( u["in"][0].acceptsInput( n["match"] ) )
+	
+	def testSceneAffects( self ) :
+	
+		p = GafferScene.Plane()
+		s = GafferScene.Set()
+		s["in"].setInput( p["out"] )
 		
+		a = GafferScene.StandardAttributes()
+		a["in"].setInput( s["out"] )
+		
+		f = GafferScene.UnionFilter()
+		a["filter"].setInput( f["match"] )
+		
+		pf = GafferScene.PathFilter()
+		f["in"][0].setInput( pf["match"] )
+		
+		# PathFilter isn't sensitive to scene changes, so we shouldn't get
+		# any dirtiness signalled for the attributes.
+		
+		cs = GafferTest.CapturingSlot( a.plugDirtiedSignal() )
+
+		s["paths"].setValue( IECore.StringVectorData( [ "/p*" ] ) )
+		
+		self.assertTrue( a["out"]["globals"] in set( [ c[0] for c in cs ] ) )
+		self.assertTrue( a["out"]["attributes"] not in set( [ c[0] for c in cs ] ) )
+
+		# Add on a SetFilter though, and we should get dirtiness signalled for
+		# the attributes.
+		
+		sf = GafferScene.SetFilter()
+		f["in"][1].setInput( sf["match"] )
+		
+		cs = GafferTest.CapturingSlot( a.plugDirtiedSignal() )
+
+		s["paths"].setValue( IECore.StringVectorData( [ "/pla*" ] ) )
+
+		self.assertTrue( a["out"]["globals"] in set( [ c[0] for c in cs ] ) )
+		self.assertTrue( a["out"]["attributes"] in set( [ c[0] for c in cs ] ) )
+
 if __name__ == "__main__":
 	unittest.main()

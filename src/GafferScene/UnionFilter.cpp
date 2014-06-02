@@ -80,6 +80,19 @@ void UnionFilter::affects( const Gaffer::Plug *input, AffectedPlugsContainer &ou
 	}
 }
 
+bool UnionFilter::sceneAffectsMatch( const ScenePlug *scene, const Gaffer::ValuePlug *child ) const
+{
+	for( InputIntPlugIterator it( inPlug() ); it != it.end(); ++it )
+	{
+		const Filter *filter = IECore::runTimeCast<const Filter>( (*it)->source<Plug>()->node() );
+		if( filter && filter != this && filter->sceneAffectsMatch( scene, child ) )
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
 bool UnionFilter::acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const
 {
 	if( !Filter::acceptsInput( plug, inputPlug ) )
@@ -97,7 +110,7 @@ bool UnionFilter::acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *in
 	return true;
 }
 
-void UnionFilter::hashMatch( const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void UnionFilter::hashMatch( const ScenePlug *scene, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	for( InputIntPlugIterator it( inPlug() ); it != it.end(); ++it )
 	{
@@ -105,7 +118,7 @@ void UnionFilter::hashMatch( const Gaffer::Context *context, IECore::MurmurHash 
 	}
 }
 
-unsigned UnionFilter::computeMatch( const Gaffer::Context *context ) const
+unsigned UnionFilter::computeMatch( const ScenePlug *scene, const Gaffer::Context *context ) const
 {
 	unsigned result = NoMatch;
 	for( InputIntPlugIterator it( inPlug() ); it != it.end(); ++it )

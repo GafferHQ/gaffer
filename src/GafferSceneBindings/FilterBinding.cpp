@@ -41,6 +41,7 @@
 #include "GafferScene/Filter.h"
 #include "GafferScene/PathFilter.h"
 #include "GafferScene/UnionFilter.h"
+#include "GafferScene/SetFilter.h"
 
 #include "GafferSceneBindings/FilterBinding.h"
 
@@ -64,5 +65,5 @@ void GafferSceneBindings::bindFilter()
 				
 	GafferBindings::DependencyNodeClass<PathFilter>();
 	GafferBindings::DependencyNodeClass<UnionFilter>();
-	
+	GafferBindings::DependencyNodeClass<SetFilter>();
 }

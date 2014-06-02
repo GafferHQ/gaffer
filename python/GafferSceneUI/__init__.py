@@ -75,6 +75,7 @@ import ParentUI
 import PrimitiveVariablesUI
 import DuplicateUI
 import GridUI
+import SetFilterUI
 
 # then all the PathPreviewWidgets. note that the order
 # of import controls the order of display.

@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,58 +34,39 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_FILTER_H
-#define GAFFERSCENE_FILTER_H
+#ifndef GAFFERSCENE_SETFILTER_H
+#define GAFFERSCENE_SETFILTER_H
 
-#include "Gaffer/ComputeNode.h"
-#include "Gaffer/NumericPlug.h"
+#include "Gaffer/TypedObjectPlug.h"
 
-#include "GafferScene/TypeIds.h"
+#include "GafferScene/Filter.h"
+#include "GafferScene/PathMatcher.h"
 
 namespace GafferScene
 {
 
-IE_CORE_FORWARDDECLARE( ScenePlug )
-
-/// A base class for nodes which are used to limit the scope
-/// of an operation to specific parts of the scene. Used in
-/// conjunction with the FilteredSceneProcessor class.
-class Filter : public Gaffer::ComputeNode
+/// \todo Investigate whether or not caching is actually beneficial for this node
+class SetFilter : public Filter
 {
 
 	public :
 
-		enum Result
-		{
-			NoMatch = 0,
-			DescendantMatch = 1,
-			ExactMatch = 2,
-			AncestorMatch = 4,
-			EveryMatch = DescendantMatch | ExactMatch | AncestorMatch
-		};
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::SetFilter, SetFilterTypeId, Filter );
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::Filter, FilterTypeId, Gaffer::ComputeNode );
-
-		Filter( const std::string &name=defaultName<Filter>() );
-		virtual ~Filter();
+		SetFilter( const std::string &name=defaultName<SetFilter>() );
+		virtual ~SetFilter();
 		
-		Gaffer::IntPlug *matchPlug();
-		const Gaffer::IntPlug *matchPlug() const;
+		Gaffer::StringPlug *setPlug();
+		const Gaffer::StringPlug *setPlug() const;
+				
+		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
 		
 		virtual bool sceneAffectsMatch( const ScenePlug *scene, const Gaffer::ValuePlug *child ) const;
-		
-		static const IECore::InternedString inputSceneContextName;
-		
+
 	protected :
-		
-		/// Implemented to call hashMatch() below when computing the hash for matchPlug().
-		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		/// Implemented to call computeMatch() below when computing the value of matchPlug().
-		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const;
-		
-		/// Must be implemented by derived classes.
-		virtual void hashMatch( const ScenePlug *scene, const Gaffer::Context *context, IECore::MurmurHash &h ) const = 0;
-		virtual unsigned computeMatch( const ScenePlug *scene, const Gaffer::Context *context ) const = 0;
+
+		virtual void hashMatch( const ScenePlug *scene, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual unsigned computeMatch( const ScenePlug *scene, const Gaffer::Context *context ) const;
 
 	private :
 	
@@ -93,8 +74,8 @@ class Filter : public Gaffer::ComputeNode
 
 };
 
-IE_CORE_DECLAREPTR( Filter )
+IE_CORE_DECLAREPTR( SetFilter )
 
 } // namespace GafferScene
 
-#endif // GAFFERSCENE_FILTER_H
+#endif // GAFFERSCENE_SETFILTER_H

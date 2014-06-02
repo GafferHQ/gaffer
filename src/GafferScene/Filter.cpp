@@ -34,6 +34,8 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
+#include "Gaffer/Context.h"
+
 #include "GafferScene/Filter.h"
 
 using namespace GafferScene;
@@ -41,6 +43,7 @@ using namespace Gaffer;
 
 IE_CORE_DEFINERUNTIMETYPED( Filter );
 
+const IECore::InternedString Filter::inputSceneContextName( "scene:filter:inputScene" );
 size_t Filter::g_firstPlugIndex = 0;
 
 Filter::Filter( const std::string &name )
@@ -64,12 +67,18 @@ const Gaffer::IntPlug *Filter::matchPlug() const
 	return getChild<Gaffer::IntPlug>( g_firstPlugIndex );
 }
 
+bool Filter::sceneAffectsMatch( const ScenePlug *scene, const Gaffer::ValuePlug *child ) const
+{
+	return false;
+}
+
 void Filter::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	ComputeNode::hash( output, context, h );
 	if( output == matchPlug() )
 	{
-		hashMatch( context, h );
+		const ScenePlug *inputScene = (const ScenePlug *)( context->get<uint64_t>( inputSceneContextName, 0 ) );
+		hashMatch( inputScene, context, h );
 	}
 }
 			
@@ -77,6 +86,7 @@ void Filter::compute( ValuePlug *output, const Context *context ) const
 {
 	if( output == matchPlug() )
 	{
-		static_cast<IntPlug *>( output )->setValue( computeMatch( context ) );
+		const ScenePlug *inputScene = (const ScenePlug *)( context->get<uint64_t>( inputSceneContextName, 0 ) );
+		static_cast<IntPlug *>( output )->setValue( computeMatch( inputScene, context ) );
 	}
 }

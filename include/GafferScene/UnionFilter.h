@@ -64,14 +64,15 @@ class UnionFilter : public Filter
 		const Gaffer::ArrayPlug *inPlug() const;
 						
 		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
+		virtual bool sceneAffectsMatch( const ScenePlug *scene, const Gaffer::ValuePlug *child ) const;
 
 	protected :
 
 		virtual bool acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const;
 
-		virtual void hashMatch( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual unsigned computeMatch( const Gaffer::Context *context ) const;
-	
+		virtual void hashMatch( const ScenePlug *scene, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual unsigned computeMatch( const ScenePlug *scene, const Gaffer::Context *context ) const;
+
 		static size_t g_firstPlugIndex;
 
 };

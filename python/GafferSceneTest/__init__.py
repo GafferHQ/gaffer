@@ -96,6 +96,7 @@ from ModuleTest import ModuleTest
 from GridTest import GridTest
 from SetTest import SetTest
 from FreezeTransformTest import FreezeTransformTest
+from SetFilterTest import SetFilterTest
 
 if __name__ == "__main__":
 	import unittest

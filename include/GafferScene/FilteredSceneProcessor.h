@@ -58,11 +58,28 @@ class FilteredSceneProcessor : public SceneProcessor
 		
 		Gaffer::IntPlug *filterPlug();
 		const Gaffer::IntPlug *filterPlug() const;
-						
+		
+		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
+
 	protected :
 
 		/// Implemented to prevent non-Filter nodes being connected to the filter plug.
 		virtual bool acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const;
+
+		/// Convenience method which creates a temporary context for use in
+		/// passing the input scene to the filter. Such a context must be current
+		/// before calling filterPlug()->hash() or filterPlug()->getValue().
+		Gaffer::ContextPtr filterContext( const Gaffer::Context *context ) const;
+		/// Convenience method for appending filterPlug() to a hash. This simply
+		/// calls filterPlug()->hash() after making filterContext() current. Note that
+		/// if you need to make multiple queries, it is more efficient to call filterContext()
+		/// yourself once and then query the filter directly multiple times.
+		void filterHash( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		/// Convenience method for returning the result of filterPlug()->getValue()
+		/// cast to the appropriate result type, using a context created with filterContext().
+		/// Note that if you need to make multiple queries, it is more efficient to call
+		/// filterContext() yourself once and then query the filter directly multiple times.
+		Filter::Result filterValue( const Gaffer::Context *context ) const;
 
 		static size_t g_firstPlugIndex;
 	
