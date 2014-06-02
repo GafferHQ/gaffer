@@ -51,7 +51,13 @@ class test( Gaffer.Application ) :
 					name = "testCase",
 					description = "The name of a specific test case to run. If unspecified then all test cases are run.",
 					defaultValue = "",
-				)
+				),
+				
+				IECore.IntParameter(
+					name = "repeat",
+					description = "The number of times to repeat the tests.",
+					defaultValue = 1,
+				),
 			]
 		
 		)
@@ -85,10 +91,12 @@ class test( Gaffer.Application ) :
 				moduleTestSuite = unittest.defaultTestLoader.loadTestsFromModule( module )
 				testSuite.addTest( moduleTestSuite )
 			
-
-		testRunner = unittest.TextTestRunner( verbosity=2 )
-		testResult = testRunner.run( testSuite )
-		
-		return 0 if testResult.wasSuccessful() else 1
+		for i in range( 0, args["repeat"].value ) :
+			testRunner = unittest.TextTestRunner( verbosity=2 )
+			testResult = testRunner.run( testSuite )
+			if not testResult.wasSuccessful() :
+				return 1
+			
+		return 0
 
 IECore.registerRunTimeTyped( test )
