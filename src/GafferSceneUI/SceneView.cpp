@@ -132,7 +132,7 @@ class SceneView::Grid
 			
 			view->viewportGadget()->setChild( "__grid", m_gadget );
 			
-			view->plugSetSignal().connect( boost::bind( &Grid::plugSet, this, ::_1 ) );
+			view->plugDirtiedSignal().connect( boost::bind( &Grid::plugDirtied, this, ::_1 ) );
 			
 			update();
 		}
@@ -159,7 +159,7 @@ class SceneView::Grid
 		
 	private :
 		
-		void plugSet( Gaffer::Plug *plug )
+		void plugDirtied( Gaffer::Plug *plug )
 		{
 			if( plug == this->plug() )
 			{
