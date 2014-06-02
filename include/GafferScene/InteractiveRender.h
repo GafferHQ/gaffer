@@ -97,16 +97,19 @@ class InteractiveRender : public Gaffer::Node
 
 	private :
 
-		void plugInputChanged( const Gaffer::Plug *plug );
 		void plugDirtied( const Gaffer::Plug *plug );
 		void parentChanged( Gaffer::GraphComponent *child, Gaffer::GraphComponent *oldParent );
 		
-		void start();
 		void update();
 		void updateLights();
-		void updateShaders( const ScenePlug::ScenePath &path = ScenePlug::ScenePath() );
-	
+		void updateShaders();
+		void updateShadersWalk( const ScenePlug::ScenePath &path );
+		
 		IECore::RendererPtr m_renderer;
+		ConstScenePlugPtr m_scene;
+		State m_state;
+		bool m_lightsDirty;
+		bool m_shadersDirty;
 		
 		Gaffer::ContextPtr m_context;
 		

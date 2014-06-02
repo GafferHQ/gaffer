@@ -56,8 +56,9 @@
 
 using namespace boost::python;
 using namespace Gaffer;
+using namespace GafferBindings;
 
-namespace GafferBindings
+namespace
 {
 
 /// The ScriptNodeWrapper class implements the scripting
@@ -228,27 +229,38 @@ struct ScriptEvaluatedSlotCaller
 	}
 };
 
-static ContextPtr context( ScriptNode &s )
+ContextPtr context( ScriptNode &s )
 {
 	return s.context();
 }
 
-static ApplicationRootPtr applicationRoot( ScriptNode &s )
+ApplicationRootPtr applicationRoot( ScriptNode &s )
 {
 	return s.applicationRoot();
 }
 
-static StandardSetPtr selection( ScriptNode &s )
+StandardSetPtr selection( ScriptNode &s )
 {
 	return s.selection();
 }
 
-static void deleteNodes( ScriptNode &s, Node *parent, const Set *filter, bool reconnect )
+void undo( ScriptNode &s )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	s.undo();
+}
+
+void redo( ScriptNode &s )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	s.redo();
+}
+
+void deleteNodes( ScriptNode &s, Node *parent, const Set *filter, bool reconnect )
 {
 	IECorePython::ScopedGILRelease r;
 	s.deleteNodes( parent, filter, reconnect );
 }
-
 
 class ScriptNodeSerialiser : public NodeSerialiser
 {
@@ -309,15 +321,17 @@ struct UndoAddedSlotCaller
 
 };
 
-void bindScriptNode()
+} // namespace
+
+void GafferBindings::bindScriptNode()
 {
 	scope s = NodeClass<ScriptNode, ScriptNodeWrapperPtr>()
 		.def( "applicationRoot", &applicationRoot )
 		.def( "selection", &selection )
 		.def( "undoAvailable", &ScriptNode::undoAvailable )
-		.def( "undo", &ScriptNode::undo )
+		.def( "undo", &undo )
 		.def( "redoAvailable", &ScriptNode::redoAvailable )
-		.def( "redo", &ScriptNode::redo )
+		.def( "redo", &redo )
 		.def( "currentActionStage", &ScriptNode::currentActionStage )
 		.def( "actionSignal", &ScriptNode::actionSignal, return_internal_reference<1>() )
 		.def( "undoAddedSignal", &ScriptNode::undoAddedSignal, return_internal_reference<1>() )
@@ -346,5 +360,3 @@ void bindScriptNode()
 	Serialisation::registerSerialiser( ScriptNode::staticTypeId(), new ScriptNodeSerialiser );
 	
 }
-
-} // namespace GafferBindings

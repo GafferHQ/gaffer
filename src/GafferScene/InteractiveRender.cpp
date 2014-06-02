@@ -53,7 +53,7 @@ IE_CORE_DEFINERUNTIMETYPED( InteractiveRender );
 size_t InteractiveRender::g_firstPlugIndex = 0;
 
 InteractiveRender::InteractiveRender( const std::string &name )
-	:	Node( name )
+	:	Node( name ), m_lightsDirty( true ), m_shadersDirty( true )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new ScenePlug( "in" ) );
@@ -61,7 +61,6 @@ InteractiveRender::InteractiveRender( const std::string &name )
 	addChild( new BoolPlug( "updateLights", Plug::In, true ) );
 	addChild( new BoolPlug( "updateShaders", Plug::In, true ) );
 
-	plugInputChangedSignal().connect( boost::bind( &InteractiveRender::plugInputChanged, this, ::_1 ) );
 	plugDirtiedSignal().connect( boost::bind( &InteractiveRender::plugDirtied, this, ::_1 ) );
 	parentChangedSignal().connect( boost::bind( &InteractiveRender::parentChanged, this, ::_1, ::_2 ) );
 	
@@ -112,66 +111,31 @@ const Gaffer::BoolPlug *InteractiveRender::updateShadersPlug() const
 	return getChild<BoolPlug>( g_firstPlugIndex + 3 );
 }
 
-void InteractiveRender::plugInputChanged( const Gaffer::Plug *plug )
-{
-	if( plug == inPlug() )
-	{
-		if( plug->getInput<Plug>() )
-		{
-			const State s = (State)statePlug()->getValue();
-			if( s != Stopped )
-			{
-				start();
-			}
-		}
-		else
-		{
-			m_renderer = 0;
-		}
-	}
-}
-
 void InteractiveRender::plugDirtied( const Gaffer::Plug *plug )
 {
-	if( plug == statePlug() )
+	if(
+		plug == inPlug()->transformPlug() ||
+		plug == inPlug()->objectPlug()
+	)
 	{
-		const State s = (State)statePlug()->getValue();
-		if( s == Stopped )
-		{
-			m_renderer = 0;
-		}
-		else
-		{
-			if( inPlug()->getInput<Plug>() )
-			{
-				// running or paused
-				if( !m_renderer )
-				{
-					// going from stopped to running or paused
-					start();
-				}
-				else if( s == Running )
-				{
-					// going from paused to running
-					update();
-				}
-			}
-		}
+		// just store the fact that something needs
+		// updating. we'll do the actual update when
+		// the dirty signal is emitted for the parent plug.
+		m_lightsDirty = true;
 	}
-	else if( plug == inPlug() )
+	else if( plug == inPlug()->attributesPlug() )
 	{
-		if( m_renderer && statePlug()->getValue() == Running )
-		{
-			update();	
-		}
+		// as above.
+		m_shadersDirty = true;
 	}
-	else if( plug == updateLightsPlug() && updateLightsPlug()->getValue() && m_renderer )
+	else if(
+		plug == inPlug() ||
+		plug == updateLightsPlug() ||
+		plug == updateShadersPlug() ||
+		plug == statePlug()
+	)
 	{
-		updateLights();
-	}
-	else if( plug == updateShadersPlug() && updateShadersPlug()->getValue() && m_renderer )
-	{
-		updateShaders();
+		update();
 	}
 }
 
@@ -188,45 +152,95 @@ void InteractiveRender::parentChanged( GraphComponent *child, GraphComponent *ol
 	}
 }
 
-void InteractiveRender::start()
-{
-	m_renderer = createRenderer();
-	m_renderer->setOption( "editable", new BoolData( true ) );
-	
-	Context::Scope scopedContext( m_context );
-	
-	outputScene( inPlug(), m_renderer.get() );
-}
-
 void InteractiveRender::update()
 {
-	/// \todo Only update lights if objects/transforms have been dirtied,
-	/// and only update shaders if attributes have been dirtied.
-	if( updateLightsPlug()->getValue() )
+	Context::Scope scopedContext( m_context );
+
+	const State requiredState = (State)statePlug()->getValue();
+	ConstScenePlugPtr requiredScene = inPlug()->getInput<ScenePlug>();
+	
+	// Stop the current render if it's not what we want,
+	// and early-out if we don't want another one.
+	
+	if( !requiredScene || requiredScene != m_scene || requiredState == Stopped )
+	{
+		// stop the current render
+		m_renderer = NULL;
+		m_scene = NULL;
+		m_state = Stopped;
+		m_shadersDirty = m_lightsDirty = true;
+		if( !requiredScene || requiredState == Stopped )
+		{
+			return;
+		}
+	}
+	
+	// If we've got this far, we know we want to be running or paused.
+	// Start a render if we don't have one.
+	
+	if( !m_renderer )
+	{
+		m_renderer = createRenderer();
+		m_renderer->setOption( "editable", new BoolData( true ) );
+		outputScene( requiredScene, m_renderer.get() );
+		m_scene = requiredScene;
+		m_state = Running;
+		m_lightsDirty = m_shadersDirty = false;
+	}
+	
+	// Make sure the paused/running state is as we want.
+	
+	if( requiredState != m_state )
+	{
+		if( requiredState == Paused )
+		{
+			m_renderer->editBegin( "suspendrendering", CompoundDataMap() );
+		}
+		else
+		{
+			m_renderer->editEnd();
+		}
+		m_state = requiredState;
+	}
+	
+	// If we're not paused, then send any edits we need.
+	
+	if( m_state == Running )
 	{
 		updateLights();
-	}
-	if( updateShadersPlug()->getValue() )
-	{
 		updateShaders();
 	}
 }
 
 void InteractiveRender::updateLights()
 {
-	Context::Scope scopedContext( m_context );
+	if( !m_lightsDirty || !updateLightsPlug()->getValue() )
+	{
+		return;
+	}
 	
 	ConstCompoundObjectPtr globals = inPlug()->globalsPlug()->getValue();
 	m_renderer->editBegin( "light", CompoundDataMap() );
 		outputLights( inPlug(), globals, m_renderer );
 	m_renderer->editEnd();
+	
+	m_lightsDirty = false;
 }
 
-void InteractiveRender::updateShaders( const ScenePlug::ScenePath &path )
+void InteractiveRender::updateShaders()
 {
-
-	Context::Scope scopedContext( m_context );
+	if( !m_shadersDirty || !updateShadersPlug()->getValue() )
+	{
+		return;
+	}
 	
+	updateShadersWalk( ScenePlug::ScenePath() );
+	
+	m_shadersDirty = false;
+}
+
+void InteractiveRender::updateShadersWalk( const ScenePlug::ScenePath &path )
+{
 	/// \todo Keep a track of the hashes of the shaders at each path,
 	/// and use it to only update the shaders when they've changed.	
 	ConstCompoundObjectPtr attributes = inPlug()->attributes( path );
@@ -261,7 +275,7 @@ void InteractiveRender::updateShaders( const ScenePlug::ScenePath &path )
 	for( vector<InternedString>::const_iterator it=childNames->readable().begin(); it!=childNames->readable().end(); it++ )
 	{
 		childPath[path.size()] = *it;
-		updateShaders( childPath );
+		updateShadersWalk( childPath );
 	}
 }
 
