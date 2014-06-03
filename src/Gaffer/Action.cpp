@@ -60,7 +60,7 @@ Action::~Action()
 
 void Action::enact( ActionPtr action )
 {
-	ScriptNodePtr s = IECore::runTimeCast<ScriptNode>( action->subject() );
+	ScriptNode *s = IECore::runTimeCast<ScriptNode>( action->subject() );
 	if( !s )
 	{
 		s = action->subject()->ancestor<ScriptNode>();
