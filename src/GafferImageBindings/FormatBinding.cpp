@@ -35,6 +35,8 @@
 #include "boost/python.hpp"
 #include "boost/format.hpp"
 
+#include "Gaffer/ScriptNode.h"
+
 #include "GafferBindings/SignalBinding.h"
 #include "GafferImageBindings/FormatBinding.h"
 

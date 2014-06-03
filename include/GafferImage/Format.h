@@ -37,9 +37,19 @@
 #ifndef GAFFERIMAGE_FORMAT_H
 #define GAFFERIMAGE_FORMAT_H
 
+#include "boost/signals.hpp"
+
 #include "OpenEXR/ImathBox.h"
 
-#include "Gaffer/ScriptNode.h"
+#include "IECore/InternedString.h"
+
+namespace Gaffer
+{
+
+class ScriptNode;
+class Plug;
+
+} // namespace Gaffer
 
 namespace GafferImage
 {
