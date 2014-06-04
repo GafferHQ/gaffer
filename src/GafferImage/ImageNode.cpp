@@ -36,6 +36,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "Gaffer/Context.h"
+#include "Gaffer/ScriptNode.h"
 
 #include "GafferImage/ImageNode.h"
 

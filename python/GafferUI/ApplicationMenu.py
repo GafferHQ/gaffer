@@ -74,8 +74,17 @@ def quit( menu ) :
 		if not dialogue.waitForConfirmation( parentWindow=scriptWindow ) :
 			return
 	
+	# Defer the actual removal of scripts till an idle event - removing all
+	# the scripts will result in the removal of the window our menu item is
+	# parented to, which would cause a crash as it's deleted away from over us.
+	GafferUI.EventLoop.addIdleCallback( IECore.curry( __removeAllScripts, application ) )
+
+def __removeAllScripts( application ) :
+	
 	for script in application["scripts"].children() :
 		application["scripts"].removeChild( script )
+		
+	return False # remove idle callback
 
 __aboutWindow = None
 def about( menu ) :

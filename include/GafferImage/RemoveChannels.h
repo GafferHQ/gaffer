@@ -37,6 +37,8 @@
 #ifndef GAFFERIMAGE_REMOVECHANNELS_H
 #define GAFFERIMAGE_REMOVECHANNELS_H
 
+#include "Gaffer/NumericPlug.h"
+
 #include "GafferImage/ImageProcessor.h"
 #include "GafferImage/ChannelMaskPlug.h"
 

@@ -60,7 +60,7 @@ Action::~Action()
 
 void Action::enact( ActionPtr action )
 {
-	ScriptNodePtr s = IECore::runTimeCast<ScriptNode>( action->subject() );
+	ScriptNode *s = IECore::runTimeCast<ScriptNode>( action->subject() );
 	if( !s )
 	{
 		s = action->subject()->ancestor<ScriptNode>();
@@ -117,8 +117,25 @@ class SimpleAction : public Action
 	public :
 	
 		SimpleAction( const GraphComponentPtr subject, const Function &doFn, const Function &undoFn )
-			:	m_subject( subject ), m_doFn( doFn ), m_undoFn( undoFn )
+			:	m_subject( subject.get() ), m_doFn( doFn ), m_undoFn( undoFn )
 		{
+			// In the documentation for Action::enact(), we promise that we'll keep
+			// the subject alive for as long as the Functions are in use. If the subject
+			// is a ScriptNode, that is taken care of for us, as the ScriptNode has ownership
+			// of the SimpleAction. If the subject is not a ScriptNode, we must increment
+			// the reference count and decrement it again in our destructor.
+			if( !m_subject->isInstanceOf( Gaffer::ScriptNode::staticTypeId() ) )
+			{
+				m_subject->addRef();
+			}
+		}
+
+		virtual ~SimpleAction()
+		{
+			if( !m_subject->isInstanceOf( Gaffer::ScriptNode::staticTypeId() ) )
+			{
+				m_subject->removeRef();
+			}
 		}
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::SimpleAction, SimpleActionTypeId, Action );
@@ -127,7 +144,7 @@ class SimpleAction : public Action
 
 		virtual GraphComponent *subject() const
 		{
-			return m_subject.get();
+			return m_subject;
 		}
 
 		void doAction()
@@ -153,7 +170,7 @@ class SimpleAction : public Action
 		
 	private :
 	
-		GraphComponentPtr m_subject;
+		GraphComponent *m_subject;
 		Function m_doFn;
 		Function m_undoFn;
 

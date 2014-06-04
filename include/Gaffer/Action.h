@@ -58,6 +58,12 @@ IE_CORE_FORWARDDECLARE( Action );
 /// is active and an undoable method is called. Because Actions are
 /// essentially an implementation detail of the undo system, subclasses
 /// shouldn't be exposed in the public headers.
+///
+/// Because Actions are held in the undo queue in the ScriptNode, it's
+/// essential that they do not themselves hold an intrusive pointer pointing
+/// back to the ScriptNode - this would result in a circular reference,
+/// preventing the ScriptNode from being deleted appropriately. It is essential
+/// that great care is taken with this when implementing subclasses.
 class Action : public IECore::RunTimeTyped
 {
 
@@ -84,7 +90,12 @@ class Action : public IECore::RunTimeTyped
 		/// passed will form the implementation of doAction() and
 		/// undoAction(). Typically the callables would be constructed
 		/// by using boost::bind with private member functions of the class
-		/// implementing the undoable method.
+		/// implementing the undoable method. Note that the Functions
+		/// will be stored in the ScriptNode's undo queue, so must not include
+		/// intrusive pointers back to the ScriptNode, as this would result in a
+		/// circular reference. It is guaranteed that the subject will
+		/// remain alive for as long as the Functions are in use by the undo
+		/// system, so it is sufficient to bind only raw pointers to the subject.
 		static void enact( GraphComponentPtr subject, const Function &doFn, const Function &undoFn );
 
 	protected :

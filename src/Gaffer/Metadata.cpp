@@ -148,8 +148,10 @@ void registerInstanceValue( GraphComponent *instance, IECore::InternedString key
 	
 	Action::enact(
 		instance,
-		boost::bind( &registerInstanceValueAction, GraphComponentPtr( instance ), key, value ),
-		boost::bind( &registerInstanceValueAction, GraphComponentPtr( instance ), key, ConstDataPtr( currentValue ) )
+		// ok to bind raw pointers to instance, because enact() guarantees
+		// the lifetime of the subject.
+		boost::bind( &registerInstanceValueAction, instance, key, value ),
+		boost::bind( &registerInstanceValueAction, instance, key, ConstDataPtr( currentValue ) )
 	);
 }
 

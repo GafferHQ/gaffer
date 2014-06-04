@@ -1103,6 +1103,52 @@ a = A()"""
 		self.assertEqual( actionStages[-1], Gaffer.Action.Stage.Undo )
 		
 		self.assertEqual( s.currentActionStage(), Gaffer.Action.Stage.Invalid )
+	
+	def testUndoListDoesntCreateReferenceCycles( self ) :
+	
+		s = Gaffer.ScriptNode()
+		c = s.refCount()
+		
+		s["n"] = Gaffer.Node()
+		s["n"]["p"] = Gaffer.IntPlug()
+		
+		with Gaffer.UndoContext( s ) :
+			s.setName( "somethingElse" )
+			self.assertEqual( s.getName(), "somethingElse" )
+		self.assertEqual( s.refCount(), c )
+
+		with Gaffer.UndoContext( s ) :
+			s["n"].setName( "n2" )
+			self.assertEqual( s["n2"].getName(), "n2" )
+		self.assertEqual( s.refCount(), c )
+		
+		with Gaffer.UndoContext( s ) :
+			Gaffer.Metadata.registerNodeValue( s, "test", 10 )
+			Gaffer.Metadata.registerNodeValue( s["n2"], "test", 10 )
+			Gaffer.Metadata.registerPlugValue( s["n2"]["p"], "test", 10 )
+		self.assertEqual( s.refCount(), c )
+
+		with Gaffer.UndoContext( s ) :
+			s["n3"] = Gaffer.Node()
+			n4 = Gaffer.Node( "n4" )
+			s.addChild( n4 )
+		self.assertEqual( s.refCount(), c )
+			
+		with Gaffer.UndoContext( s ) :
+			s["n3"].addChild( s["n2"]["p"] )
+		self.assertEqual( s.refCount(), c )
+		
+		with Gaffer.UndoContext( s ) :
+			s.addChild( s["n3"]["p"] )
+		self.assertEqual( s.refCount(), c )
+
+		with Gaffer.UndoContext( s ) :
+			s["n3"].addChild( s["p"] )
+		self.assertEqual( s.refCount(), c )
+		
+		with Gaffer.UndoContext( s ) :
+			s.removeChild( s["n2"] )
+		self.assertEqual( s.refCount(), c )
 		
 	def tearDown( self ) :
 	

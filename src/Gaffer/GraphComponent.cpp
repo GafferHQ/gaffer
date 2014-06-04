@@ -134,8 +134,10 @@ const IECore::InternedString &GraphComponent::setName( const IECore::InternedStr
 	
 	Action::enact(
 		this,
-		boost::bind( &GraphComponent::setNameInternal, GraphComponentPtr( this ), newName ),
-		boost::bind( &GraphComponent::setNameInternal, GraphComponentPtr( this ), m_name )		
+		// ok to bind raw pointers to this, because enact() guarantees
+		// the lifetime of the subject.
+		boost::bind( &GraphComponent::setNameInternal, this, newName ),
+		boost::bind( &GraphComponent::setNameInternal, this, m_name )
 	);
 	
 	return m_name;
@@ -201,23 +203,35 @@ void GraphComponent::addChild( GraphComponentPtr child )
 	if( refCount() )
 	{
 		// someone is pointing to us, so we may have a ScriptNode ancestor and we should do things
-		// in an undoable way.
+		// in an undoable way. figure out what our undo function should be - it varies based on what
+		// the previous parent was.
+		Action::Function undoFn;
 		if( child->m_parent )
 		{
-			Action::enact(
-				this,
-				boost::bind( &GraphComponent::addChildInternal, GraphComponentPtr( this ), child ),
-				boost::bind( &GraphComponent::addChildInternal, GraphComponentPtr( child->m_parent ), child )		
-			);
+			if( child->m_parent->isInstanceOf( (IECore::TypeId)ScriptNodeTypeId ) )
+			{
+				// use raw pointer to avoid circular reference between script and undo queue
+				undoFn = boost::bind( &GraphComponent::addChildInternal, child->m_parent, child );
+			}
+			else
+			{
+				// use smart pointer to ensure parent remains alive, even if something unscrupulous
+				// messes it with non-undoable actions that aren't stored in the undo queue.
+				undoFn = boost::bind( &GraphComponent::addChildInternal, GraphComponentPtr( child->m_parent ), child );
+			}
 		}
 		else
 		{
-			Action::enact(
-				this,
-				boost::bind( &GraphComponent::addChildInternal, GraphComponentPtr( this ), child ),
-				boost::bind( &GraphComponent::removeChildInternal, GraphComponentPtr( this ), child, true )	
-			);
+			// no previous parent.
+			undoFn = boost::bind( &GraphComponent::removeChildInternal, this, child, true );
 		}
+		
+		Action::enact(
+			this,
+			// ok to use raw pointer for this - lifetime of subject guaranteed.
+			boost::bind( &GraphComponent::addChildInternal, this, child ),
+			undoFn
+		);
 	}
 	else
 	{
@@ -305,8 +319,10 @@ void GraphComponent::removeChild( GraphComponentPtr child )
 		// in an undoable way.
 		Action::enact(
 			this,
-			boost::bind( &GraphComponent::removeChildInternal, GraphComponentPtr( this ), child, true ),
-			boost::bind( &GraphComponent::addChildInternal, GraphComponentPtr( this ), child )		
+			// ok to bind raw pointers to this, because enact() guarantees
+			// the lifetime of the subject.
+			boost::bind( &GraphComponent::removeChildInternal, this, child, true ),
+			boost::bind( &GraphComponent::addChildInternal, this, child )
 		);
 	}
 	else

@@ -79,12 +79,21 @@ class MenuTest( GafferUITest.TestCase ) :
 		)
 
 		menu = GafferUI.Menu( definition )
+		menu._buildFully()
 		
 		w = weakref.ref( menu )
 		del menu
 		
+		wd = weakref.ref( definition )
+		del definition
+
+		wf = weakref.ref( f )
+		del f
+
 		self.assertEqual( w(), None )
-		
+		self.assertEqual( wd(), None )
+		self.assertEqual( wf(), None )
+
 	def testAutomaticParenting( self ) :
 	
 		with GafferUI.ListContainer() as l :

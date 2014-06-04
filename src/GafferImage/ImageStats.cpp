@@ -39,6 +39,7 @@
 #include "Gaffer/TypedPlug.h"
 #include "Gaffer/BoxPlug.h"
 #include "Gaffer/Context.h"
+#include "Gaffer/ScriptNode.h"
 
 #include "GafferImage/ImageStats.h"
 #include "GafferImage/Sampler.h"

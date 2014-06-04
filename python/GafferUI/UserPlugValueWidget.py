@@ -123,7 +123,7 @@ GafferUI.PlugValueWidget.registerCreator( Gaffer.Node.staticTypeId(), "user", Us
 
 def __deletePlug( plug ) :
 
-	with Gaffer.UndoContext( plug.ancestor( Gaffer.ScriptNode().staticTypeId() ) ) :
+	with Gaffer.UndoContext( plug.ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
 		plug.parent().removeChild( plug )
 
 def __plugPopupMenu( menuDefinition, plugValueWidget ) :

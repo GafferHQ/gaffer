@@ -76,6 +76,7 @@ class Viewer( GafferUI.NodeSetEditor ) :
 		self.__gadgetWidget.addOverlay( toolbarColumn )
 		
 		self.__views = []
+		self.__viewToolbars = {} # indexed by View instance
 		self.__currentView = None
 
 		self._updateFromSet()
@@ -117,7 +118,7 @@ class Viewer( GafferUI.NodeSetEditor ) :
 						if self.__currentView is not None:
 							self.__currentView.__updateRequestConnection = self.__currentView.updateRequestSignal().connect( Gaffer.WeakMethod( self.__updateRequest ) )
 							self.__currentView.__pendingUpdate = True
-							self.__currentView.__toolbar = GafferUI.NodeToolbar.create( self.__currentView )
+							self.__viewToolbars[self.__currentView] = GafferUI.NodeToolbar.create( self.__currentView )
 							self.__views.append( self.__currentView )
 					# if we succeeded in getting a suitable view, then
 					# don't bother checking the other plugs
@@ -127,7 +128,7 @@ class Viewer( GafferUI.NodeSetEditor ) :
 		if self.__currentView is not None :	
 			self.__gadgetWidget.setViewportGadget( self.__currentView.viewportGadget() )
 			self.__nodeToolbarFrame.setChild( GafferUI.NodeToolbar.create( node ) )
-			self.__toolbarFrame.setChild( self.__currentView.__toolbar )
+			self.__toolbarFrame.setChild( self.__viewToolbars[self.__currentView] )
 			if self.__currentView.__pendingUpdate :
 				self.__update()
 		else :
