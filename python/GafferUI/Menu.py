@@ -54,13 +54,13 @@ class Menu( GafferUI.Widget ) :
 	
 		GafferUI.Widget.__init__( self, _Menu( _qtParent ), **kw )
 		
-		self.__definition = definition
 		self.__searchable = searchable
 		
 		self.__title = title
 		# this property is used by the stylesheet
 		self._qtWidget().setProperty( "gafferHasTitle", GafferUI._Variant.toVariant( title is not None ) )
 		
+		self._qtWidget().__definition = definition
 		self._qtWidget().aboutToShow.connect( Gaffer.WeakMethod( self.__show ) )
 		
 		if searchable :
@@ -122,15 +122,18 @@ class Menu( GafferUI.Widget ) :
 		
 		return []
 		
-	def __commandWrapper( self, qtAction, command, active, toggled ) :
+	def __actionTriggered( self, qtActionWeakRef, toggled ) :
 	
-		if not self.__evaluateItemValue( active ) :
+		qtAction = qtActionWeakRef()
+		item = qtAction.__item
+		
+		if not self.__evaluateItemValue( item.active ) :
 			return
 		
 		args = []
 		kw = {}
 		
-		commandArgs = self.__argNames( command )
+		commandArgs = self.__argNames( item.command )
 		
 		if "menu" in commandArgs :
 			kw["menu"] = self
@@ -145,20 +148,20 @@ class Menu( GafferUI.Widget ) :
 			# status.
 			args.append( toggled )
 		
-		command( *args, **kw )
+		item.command( *args, **kw )
 	
 	def __show( self ) :
 		
 		# we rebuild each menu every time it's shown, to support the use of callable items to provide
 		# dynamic submenus and item states.
-		self.__build( self._qtWidget(), self.__definition )
+		self.__build( self._qtWidget() )
 		
 		if self.__searchable :
 			# Searchable menus need to initialize a search structure so they can be searched without
 			# expanding each submenu. The definition is fully expanded, so dynamic submenus that
 			# exist will be expanded and searched.
 			self.__searchStructure = {}
-			self.__initSearch( self.__definition )
+			self.__initSearch( self._qtWidget().__definition )
 			
 			# Searchable menus require an extra submenu to display the search results. 
 			searchWidget = QtGui.QWidgetAction( self._qtWidget() )
@@ -200,14 +203,18 @@ class Menu( GafferUI.Widget ) :
 		# the items should be active or not - those which pass a callable for item.active
 		# may change status all the time, and we have no way of knowing. So we pass
 		# activeOverride=True so that all menu items are active while they're not on screen.
-		# We early-out in __commandWrapper if we later find out that a keyboard shortcut
+		# We early-out in __actionTriggered if we later find out that a keyboard shortcut
 		# has triggered an item which is currently inactive (although we told qt it was
 		# active). See also hideEvent below().
 
-		self.__build( self._qtWidget(), self.__definition, activeOverride=True, recurse=True )
+		self.__build( self._qtWidget(), activeOverride=True, recurse=True )
 
-	def __build( self, qtMenu, definition, activeOverride=None, recurse=False ) :
+	def __build( self, qtMenu, activeOverride=None, recurse=False ) :
 		
+		if isinstance( qtMenu, weakref.ref ) :
+			qtMenu = qtMenu()
+		
+		definition = qtMenu.__definition
 		if callable( definition ) :
 			if "menu" in self.__argNames( definition ) :
 				definition = definition( self )
@@ -232,10 +239,10 @@ class Menu( GafferUI.Widget ) :
 					subMenu = _Menu( qtMenu, name )
 					qtMenu.addMenu( subMenu )
 					
-					subMenuDefinition = definition.reRooted( "/" + name + "/" )					
-					subMenu.aboutToShow.connect( IECore.curry( Gaffer.WeakMethod( self.__build ), subMenu, subMenuDefinition ) )
+					subMenu.__definition = definition.reRooted( "/" + name + "/" )
+					subMenu.aboutToShow.connect( IECore.curry( Gaffer.WeakMethod( self.__build ), weakref.ref( subMenu ) ) )
 					if recurse :
-						self.__build( subMenu, subMenuDefinition, activeOverride, recurse )
+						self.__build( subMenu, activeOverride, recurse )
 					
 				else :
 				
@@ -244,9 +251,10 @@ class Menu( GafferUI.Widget ) :
 						subMenu = _Menu( qtMenu, name )
 						qtMenu.addMenu( subMenu )
 					
-						subMenu.aboutToShow.connect( IECore.curry( Gaffer.WeakMethod( self.__build ), subMenu, item.subMenu ) )
+						subMenu.__definition = item.subMenu
+						subMenu.aboutToShow.connect( IECore.curry( Gaffer.WeakMethod( self.__build ), weakref.ref( subMenu ) ) )
 						if recurse :
-							self.__build( subMenu, item.subMenu, activeOverride, recurse )
+							self.__build( subMenu, activeOverride, recurse )
 							
 					else :
 						
@@ -283,6 +291,7 @@ class Menu( GafferUI.Widget ) :
 			label = item.label
 		
 		qtAction = QtGui.QAction( label, parent )
+		qtAction.__item = item
 		
 		if item.checkBox is not None :
 			qtAction.setCheckable( True )
@@ -302,7 +311,7 @@ class Menu( GafferUI.Widget ) :
 			if self.__searchable :
 				signal.connect( IECore.curry( Gaffer.WeakMethod( self.__menuActionTriggered ), qtAction ) )
 
-			signal.connect( IECore.curry( Gaffer.WeakMethod( self.__commandWrapper ), qtAction, item.command, item.active ) )
+			signal.connect( IECore.curry( Gaffer.WeakMethod( self.__actionTriggered ), weakref.ref( qtAction ) ) )
 		
 		active = item.active if activeOverride is None else activeOverride
 		active = self.__evaluateItemValue( active )
