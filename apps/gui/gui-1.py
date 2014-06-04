@@ -36,6 +36,7 @@
 ##########################################################################
 
 import os
+import gc
 
 import IECore
 
@@ -88,6 +89,7 @@ class gui( Gaffer.Application ) :
 				scriptNode.load()
 				self.root()["scripts"].addChild( scriptNode )
 				GafferUI.FileMenu.addRecentFile( self, fileName )
+				del scriptNode
 		else :
 			self.root()["scripts"]["script1"] = Gaffer.ScriptNode()
 		
@@ -97,7 +99,8 @@ class gui( Gaffer.Application ) :
 			primaryWindow.setFullScreen( True )
 			
 		GafferUI.EventLoop.mainEventLoop().start()		
-				
+		
+		self.__checkClean()
 		return 0
 
 	def __setupClipboardSync( self ) :
@@ -145,6 +148,22 @@ class gui( Gaffer.Application ) :
 		if text :
 			with Gaffer.BlockedConnection( self.__clipboardContentsChangedConnection ) :
 				self.root().setClipboardContents( IECore.StringData( text ) )
+
+	def __checkClean( self ) :
+	
+		scriptNodes = []
+		for o in gc.get_objects() :
+			if isinstance( o, Gaffer.ScriptNode ) :
+				scriptNodes.append( o )
+		
+		if scriptNodes :
+			IECore.msg(
+				IECore.Msg.Level.Warning,
+				"Gaffer shutdown", "%d remaining ScriptNode%s detected. Debugging with gc.get_objects() and gc.get_referrers() is recommended." % (
+					len( scriptNodes ),
+					"s" if len( scriptNodes ) > 1 else "",
+				)
+			)
 
 IECore.registerRunTimeTyped( gui )
 
