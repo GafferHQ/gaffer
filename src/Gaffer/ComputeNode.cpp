@@ -54,8 +54,24 @@ ComputeNode::~ComputeNode()
 
 void ComputeNode::hash( const ValuePlug *output, const Context *context, IECore::MurmurHash &h ) const
 {
+	// Hash in the TypeId for this node - this does two things.
+	// Firstly, it breaks apart hashes for nodes which use identical
+	// inputs to produce an output (think of a mult vs an add both taking
+	// a pair of input plugs (op1,op2) for a trivial example). Secondly,
+	// it breaks apart ComputeNode hashes and IECore::Object hashes, because
+	// IECore::Object hashes always start by appending the Object::typeId(),
+	// which is guaranteed to be different to any ComputeNode::typeId().
 	h.append( typeId() );
-	h.append( output->relativeName( this ) );
+	// Append on the name of the output relative to the node. This
+	// breaks apart hashes for different output plugs. We do our own
+	// traversal rather than call output->relativeName() because
+	// relativeName() allocates memory and is therefore too costly.
+	const GraphComponent *g = output;
+	while( g && g != this )
+	{
+		h.append( g->getName() );
+		g = g->parent<GraphComponent>();
+	}
 }
 
 void ComputeNode::compute( ValuePlug *output, const Context *context ) const
