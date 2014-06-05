@@ -90,13 +90,16 @@ __aboutWindow = None
 def about( menu ) :
 
 	global __aboutWindow
-	if __aboutWindow is None :
-		
-		__aboutWindow = GafferUI.AboutWindow( Gaffer.About )
+	
+	if __aboutWindow is not None and __aboutWindow() :
+		window = __aboutWindow()
+	else :
+		window = GafferUI.AboutWindow( Gaffer.About )
+		__aboutWindow = weakref.ref( window )
 		
 	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
-	scriptWindow.addChildWindow( __aboutWindow )
-	__aboutWindow.setVisible( True )
+	scriptWindow.addChildWindow( window )
+	window.setVisible( True )
 
 __preferencesWindows = weakref.WeakKeyDictionary()
 def preferences( menu ) :
@@ -106,8 +109,9 @@ def preferences( menu ) :
 
 	global __preferencesWindows
 	window = __preferencesWindows.get( application, None )
-	if window is None :
-	
+	if window is not None and window() :
+		window = window()
+	else :
 		window = GafferUI.Dialogue( "Preferences" )
 		closeButton = window._addButton( "Close" )
 		window.__closeButtonConnection = closeButton.clickedSignal().connect( __closePreferences )
@@ -117,7 +121,7 @@ def preferences( menu ) :
 		nodeUI = GafferUI.NodeUI.create( application["preferences"] )
 		window._setWidget( nodeUI )
 	
-		__preferencesWindows[application] = window
+		__preferencesWindows[application] = weakref.ref( window )
 		
 		scriptWindow.addChildWindow( window )
 		
