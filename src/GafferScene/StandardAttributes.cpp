@@ -83,7 +83,11 @@ void StandardAttributes::plugSet( Gaffer::Plug *plug )
 		/// we'll never disconnect the signal and will always have this overhead. If we
 		/// implemented error tolerant script loading (#746) _and_ made the plug read only,
 		/// then we could remove this code entirely, as the setValue() call would fail.
-		static_cast<Gaffer::StringPlug *>( plug )->setValue( "scene:visible" );
+		
+		/// We're resetting the value at the source in case this node has an incoming
+		/// connection. If we directly set the plug in this case, it'll throw an exception,
+		/// which prevents some old scripts loading.
+		plug->source<Gaffer::StringPlug>()->setValue( "scene:visible" );
 	}
 }
 
