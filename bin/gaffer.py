@@ -37,6 +37,7 @@
 ##########################################################################
 
 import os
+import gc
 import sys
 import ctypes
 import signal
@@ -75,6 +76,54 @@ def loadApp( appName ) :
 		sys.stderr.write( "\n" + applicationText )
 		sys.exit( 1 )
 
+def checkCleanExit() :
+
+	# Get the Gaffer and GafferUI modules, but only if the app actually
+	# imported them. We don't want to force their importation because it's
+	# just a waste of time if they weren't used.
+	Gaffer = sys.modules.get( "Gaffer" )
+	GafferUI = sys.modules.get( "GafferUI" )
+
+	if Gaffer is None and GafferUI is None :
+		return
+	
+	# Check for things that shouldn't exist at shutdown, and
+	# warn of anything we find.
+	scriptNodes = []
+	widgets = []
+	for o in gc.get_objects() :
+		if Gaffer is not None and isinstance( o, Gaffer.ScriptNode ) :
+			scriptNodes.append( o )
+		elif GafferUI is not None and isinstance( o, GafferUI.Widget ) :
+			widgets.append( o )
+	
+	if scriptNodes :
+		IECore.msg(
+			IECore.Msg.Level.Warning,
+			"Gaffer shutdown", "%d remaining ScriptNode%s detected. Debugging with gc.get_objects() and gc.get_referrers() is recommended." % (
+				len( scriptNodes ),
+				"s" if len( scriptNodes ) > 1 else "",
+			)
+		)
+	
+	if widgets :
+		
+		count = {}
+		for widget in widgets :
+			widgetType = widget.__class__.__name__
+			count[widgetType] = count.get( widgetType, 0 ) + 1
+		
+		summaries = [ "%s (%d)" % ( k, count[k] ) for k in sorted( count.keys() ) ]
+		
+		IECore.msg(
+			IECore.Msg.Level.Warning,
+			"Gaffer shutdown", "%d remaining Widget%s detected : \n\n%s" % (
+				len( widgets ),
+				"s" if len( widgets ) > 1 else "",
+				"\t" + "\n\t".join( summaries )
+			)
+		)
+
 args = sys.argv[1:]
 if args and args[0] in ( "-help", "-h", "--help", "-H" ) :
 	if len( args ) > 1 :
@@ -106,4 +155,9 @@ else :
 	IECore.ParameterParser().parse( appArgs, app.parameters() )
 	
 	result = app.run()
+	
+	del app
+	checkCleanExit()
+	
 	sys.exit( result )
+
