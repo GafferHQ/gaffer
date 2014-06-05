@@ -87,6 +87,18 @@ def checkCleanExit() :
 	if Gaffer is None and GafferUI is None :
 		return
 	
+	# Clean up any garbage left behind by Cortex's wrapper mechanism - because
+	# the Gaffer.Application itself is derived from IECore.Parameterised, which
+	# as far as I can tell is wrapped unnecessarily, we must call this to allow
+	# the application to be deleted at all. Note that we're deliberately not also
+	# calling gc.collect() - our intention here isn't to clean up on shutdown, but
+	# to highlight problems caused by things not cleaning up after themselves during
+	# execution. We aim to eliminate all circular references from our code, to avoid
+	# garbage collection overhead and to avoid problems caused by referencing Qt widgets
+	# which were long since destroyed in C++.
+	## \todo Reevaluate the need for this call after Cortex 9 development.
+	IECore.RefCounted.collectGarbage()
+	
 	# Check for things that shouldn't exist at shutdown, and
 	# warn of anything we find.
 	scriptNodes = []
