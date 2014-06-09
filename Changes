@@ -1,3 +1,35 @@
+#### Core
+
+- Added support for Box data to CompoundDataPlug.
+- Optimised the Context class considerably, particularly for temporary Contexts created during computation. A synthetic test which does nothing but create temporary Contexts shows a reduction in runtime of 97%, resulting in a 30% reduction in total runtime for a more real-world test using the Instancer node (#427).
+- Fixed Context copy construction doubling in Python bindings.
+- Fixed circular references within the undo system, which caused memory leaks where scripts were not destroyed at the appropriate time (#397).
+- Optimised ComputeNode::hash(). This yields ~14% reduction in runtime for a simple Reformat benchmark.
+
+#### UI
+
+- Fixed PyQt circular references within GafferUI.Menu (#397).
+- Fixed crash caused by File->Quit menu item.
+- Improved UI for BoxPlugs.
+
+#### Scene
+
+- Added crop window to StandardOptions node (#688).
+- Renamed gaffer:visibility attribute to scene:visible, to support the standard attribute with that name in Cortex scene caches.
+- Added a SetFilter node (#92).
+- Fixed deadlock removing input from running InteractiveRender node, or undoing or redoing such an operation.
+- Added pausing for interactive renders (#646).
+
+#### API
+
+- Renamed BoxPlug min() and max() methods to minPlug() and maxPlug().
+- Made Context::Scope noncopyable.
+- Added GAFFERTEST_ASSERT macro. This should be used by test cases implemented in C++, and throws an exception which can be caught and reported by the Python unit test runner.
+- Added _copy argument to Context::get() bindings.
+- Added optimised Context copy constructor, primarily for use in constructing temporary Contexts. See class documentation for details.
+- Added checks for zombie ScriptNodes and Widgets at app shutdown. This can catch many common programming errors.
+- Added BoxPlugValueWidget class.
+
 # 0.95.0
 
 #### UI
