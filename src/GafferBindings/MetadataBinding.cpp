@@ -52,7 +52,7 @@ using namespace boost::python;
 using namespace IECore;
 using namespace Gaffer;
 
-namespace GafferBindings
+namespace
 {
 
 struct PythonNodeValueFunction
@@ -111,7 +111,7 @@ struct SimpleTypedDataGetter
 /// already in https://gist.github.com/johnhaddon/7943557 but
 /// I'm unsure if we want this behaviour everywhere or not - erring
 /// on the side of caution for now.
-static IECore::TypeId objectToTypeId( object o )
+IECore::TypeId objectToTypeId( object o )
 {
 	extract<IECore::TypeId> typeIdExtractor( o );
 	if( typeIdExtractor.check() )
@@ -125,7 +125,7 @@ static IECore::TypeId objectToTypeId( object o )
 	}
 }
 
-static Metadata::NodeValueFunction objectToNodeValueFunction( object o )
+Metadata::NodeValueFunction objectToNodeValueFunction( object o )
 {
 	extract<IECore::DataPtr> dataExtractor( o );
 	if( dataExtractor.check() )
@@ -138,7 +138,7 @@ static Metadata::NodeValueFunction objectToNodeValueFunction( object o )
 	}
 }
 
-static Metadata::PlugValueFunction objectToPlugValueFunction( object o )
+Metadata::PlugValueFunction objectToPlugValueFunction( object o )
 {
 	extract<IECore::DataPtr> dataExtractor( o );
 	if( dataExtractor.check() )
@@ -151,12 +151,12 @@ static Metadata::PlugValueFunction objectToPlugValueFunction( object o )
 	}
 }
 
-static void registerNodeValue( object nodeTypeId, IECore::InternedString key, object &value )
+void registerNodeValue( object nodeTypeId, IECore::InternedString key, object &value )
 {
 	Metadata::registerNodeValue( objectToTypeId( nodeTypeId ), key, objectToNodeValueFunction( value ) );
 }
 
-static object nodeValue( const Node *node, const char *key, bool inherit, bool instanceOnly )
+object nodeValue( const Node *node, const char *key, bool inherit, bool instanceOnly )
 {
 	ConstDataPtr d = Metadata::nodeValue<Data>( node, key, inherit, instanceOnly );
 	if( d )
@@ -169,7 +169,7 @@ static object nodeValue( const Node *node, const char *key, bool inherit, bool i
 	}
 }
 
-static object registerNodeDescription( tuple args, dict kw )
+object registerNodeDescription( tuple args, dict kw )
 {
 	IECore::TypeId nodeTypeId = objectToTypeId( args[0] );
 	Metadata::registerNodeDescription( nodeTypeId, objectToNodeValueFunction( args[1] ) );
@@ -199,12 +199,12 @@ static object registerNodeDescription( tuple args, dict kw )
 	return object(); // none
 }
 
-static void registerPlugValue( object nodeTypeId, const char *plugPath, IECore::InternedString key, object &value )
+void registerPlugValue( object nodeTypeId, const char *plugPath, IECore::InternedString key, object &value )
 {
 	Metadata::registerPlugValue( objectToTypeId( nodeTypeId ), plugPath, key, objectToPlugValueFunction( value ) );
 }
 
-static object plugValue( const Plug *plug, const char *key, bool inherit, bool instanceOnly )
+object plugValue( const Plug *plug, const char *key, bool inherit, bool instanceOnly )
 {
 	ConstDataPtr d = Metadata::plugValue<Data>( plug, key, inherit, instanceOnly );
 	if( d )
@@ -217,7 +217,7 @@ static object plugValue( const Plug *plug, const char *key, bool inherit, bool i
 	}
 }
 
-static void registerPlugDescription( object nodeTypeId, const char *plugPath, object &description )
+void registerPlugDescription( object nodeTypeId, const char *plugPath, object &description )
 {
 	Metadata::registerPlugDescription( objectToTypeId( nodeTypeId ), plugPath, objectToPlugValueFunction( description ) );
 }
@@ -239,7 +239,7 @@ struct ValueChangedSlotCaller
 	
 };
 
-static list keysToList( const std::vector<InternedString> &keys )
+list keysToList( const std::vector<InternedString> &keys )
 {
 	list result;
 	for( std::vector<InternedString>::const_iterator it = keys.begin(); it != keys.end(); ++it )
@@ -250,19 +250,24 @@ static list keysToList( const std::vector<InternedString> &keys )
 	return result;
 }
 
-static list registeredNodeValues( const Node *node, bool inherit, bool instanceOnly )
+list registeredNodeValues( const Node *node, bool inherit, bool instanceOnly )
 {
 	std::vector<InternedString> keys;
 	Metadata::registeredNodeValues( node, keys, inherit, instanceOnly );
 	return keysToList( keys );
 }
 
-static list registeredPlugValues( const Plug *plug, bool inherit, bool instanceOnly )
+list registeredPlugValues( const Plug *plug, bool inherit, bool instanceOnly )
 {
 	std::vector<InternedString> keys;
 	Metadata::registeredPlugValues( plug, keys, inherit, instanceOnly );
 	return keysToList( keys );
 }
+
+} // namespace
+
+namespace GafferBindings
+{
 
 void bindMetadata()
 {	
