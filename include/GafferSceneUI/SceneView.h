@@ -72,6 +72,9 @@ class SceneView : public GafferUI::View3D
 		Gaffer::StringPlug *lookThroughCameraPlug();
 		const Gaffer::StringPlug *lookThroughCameraPlug() const;
 		
+		Gaffer::CompoundPlug *gridPlug();
+		const Gaffer::CompoundPlug *gridPlug() const;
+		
 		void expandSelection( size_t depth = 1 );
 		void collapseSelection();
 		
@@ -104,6 +107,9 @@ class SceneView : public GafferUI::View3D
 		
 		GafferUI::RenderableGadgetPtr m_renderableGadget;
 	
+		class Grid;
+		boost::shared_ptr<Grid> m_grid;
+		
 		static size_t g_firstPlugIndex;
 		static ViewDescription<SceneView> g_viewDescription;
 	

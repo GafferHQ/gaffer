@@ -101,7 +101,7 @@ class NodeMenu :
 			nodeGraph = menu.ancestor( GafferUI.NodeGraph )
 			assert( nodeGraph is not None )
 			gadgetWidget = nodeGraph.graphGadgetWidget()
-			graphGadget = gadgetWidget.getViewportGadget().getChild()
+			graphGadget = nodeGraph.graphGadget()
 
 			script = nodeGraph.scriptNode()
 

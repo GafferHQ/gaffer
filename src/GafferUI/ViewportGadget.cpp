@@ -60,13 +60,15 @@ using namespace GafferUI;
 
 IE_CORE_DEFINERUNTIMETYPED( ViewportGadget );
 
-ViewportGadget::ViewportGadget( GadgetPtr child )
-	: IndividualContainer( child ),
+ViewportGadget::ViewportGadget( GadgetPtr primaryChild )
+	: Gadget(),
 	  m_cameraController( new IECore::Camera ),
 	  m_cameraInMotion( false ),
 	  m_cameraEditable( true ),
 	  m_dragTracking( false )
 {
+
+	setPrimaryChild( primaryChild );
 
 	childRemovedSignal().connect( boost::bind( &ViewportGadget::childRemoved, this, ::_1, ::_2 ) );
 
@@ -97,7 +99,7 @@ bool ViewportGadget::acceptsParent( const Gaffer::GraphComponent *potentialParen
 
 std::string ViewportGadget::getToolTip( const IECore::LineSegment3f &line ) const
 {
-	std::string result = IndividualContainer::getToolTip( line );
+	std::string result = Gadget::getToolTip( line );
 	if( result.size() )
 	{
 		return result;
@@ -110,7 +112,7 @@ std::string ViewportGadget::getToolTip( const IECore::LineSegment3f &line ) cons
 		GadgetPtr gadget = *it;
 		while( gadget && gadget != this )
 		{
-			IECore::LineSegment3f lineInGadgetSpace = rasterToGadgetSpace( V2f( line.p0.x, line.p0.y) );
+			IECore::LineSegment3f lineInGadgetSpace = rasterToGadgetSpace( V2f( line.p0.x, line.p0.y), gadget );
 			result = gadget->getToolTip( lineInGadgetSpace );
 			if( result.size() )
 			{
@@ -121,6 +123,31 @@ std::string ViewportGadget::getToolTip( const IECore::LineSegment3f &line ) cons
 	}
 
 	return result;
+}
+
+void ViewportGadget::setPrimaryChild( GadgetPtr gadget )
+{
+	if( gadget )
+	{
+		setChild( "__primary", gadget );
+	}
+	else
+	{
+		if( Gadget *existingChild = getChild<Gadget>( "__primary" ) )
+		{
+			removeChild( existingChild );
+		}
+	}
+}
+
+Gadget *ViewportGadget::getPrimaryChild()
+{
+	return getChild<Gadget>( "__primary" );
+}
+
+const Gadget *ViewportGadget::getPrimaryChild() const
+{
+	return getChild<Gadget>( "__primary" );
 }
 
 const Imath::V2i &ViewportGadget::getViewport() const
@@ -212,17 +239,12 @@ bool ViewportGadget::getDragTracking() const
 
 void ViewportGadget::gadgetsAt( const Imath::V2f &rasterPosition, std::vector<GadgetPtr> &gadgets ) const
 {
-	if( !getChild<Gadget>() )
-	{
-		return;
-	}
-
 	std::vector<HitRecord> selection;
 	{
 		SelectionScope selectionScope( this, rasterPosition, selection, IECoreGL::Selector::IDRender );
 		const Style *s = style();
 		s->bind();
-		IndividualContainer::doRender( s );
+		Gadget::doRender( s );
 	}
 		
 	for( std::vector<HitRecord>::const_iterator it = selection.begin(); it!= selection.end(); it++ )
@@ -236,17 +258,15 @@ void ViewportGadget::gadgetsAt( const Imath::V2f &rasterPosition, std::vector<Ga
 	
 	if( !gadgets.size() )
 	{
-		gadgets.push_back( const_cast<Gadget *>( getChild<Gadget>() ) );
+		if( const Gadget *g = getPrimaryChild() )
+		{
+			gadgets.push_back( const_cast<Gadget *>( g ) );
+		}
 	}
 }
 
 IECore::LineSegment3f ViewportGadget::rasterToGadgetSpace( const Imath::V2f &position, const Gadget *gadget ) const
 {
-	if( !gadget )
-	{
-		gadget = getChild<Gadget>();
-	}
-
 	LineSegment3f result;
 	/// \todo The CameraController::unproject() method should be const.
 	const_cast<IECore::CameraController &>( m_cameraController ).unproject( V2i( (int)position.x, (int)position.y ), result.p0, result.p1 );
@@ -261,11 +281,6 @@ IECore::LineSegment3f ViewportGadget::rasterToGadgetSpace( const Imath::V2f &pos
 
 Imath::V2f ViewportGadget::gadgetToRasterSpace( const Imath::V3f &gadgetPosition, const Gadget *gadget ) const
 {
-	if( !gadget )
-	{
-		gadget = getChild<Gadget>();
-	}
-	
 	M44f gadgetTransform = gadget->fullTransform();
 	V3f worldSpacePosition = gadgetPosition * gadgetTransform;
 	return m_cameraController.project( worldSpacePosition );
@@ -283,13 +298,22 @@ void ViewportGadget::doRender( const Style *style ) const
  	IECoreGL::CameraPtr camera = staticPointerCast<IECoreGL::Camera>( converter->convert() );
  	camera->render( 0 );
 
-	IndividualContainer::doRender( style );
+	Gadget::doRender( style );
 }
 
 void ViewportGadget::childRemoved( GraphComponent *parent, GraphComponent *child )
 {
-	m_lastButtonPressGadget = 0;
-	m_gadgetUnderMouse = 0;
+	const Gadget *childGadget = static_cast<const Gadget *>( child );
+
+	if( childGadget == m_lastButtonPressGadget || childGadget->isAncestorOf( m_lastButtonPressGadget ) )
+	{
+		m_lastButtonPressGadget = NULL;
+	}
+	
+	if( childGadget == m_gadgetUnderMouse || childGadget->isAncestorOf( m_gadgetUnderMouse ) )
+	{
+		m_gadgetUnderMouse = NULL;
+	}
 }
 
 bool ViewportGadget::buttonPress( GadgetPtr gadget, const ButtonEvent &event )
@@ -789,7 +813,7 @@ bool ViewportGadget::wheel( GadgetPtr gadget, const ButtonEvent &event )
 bool ViewportGadget::keyPress( GadgetPtr gadget, const KeyEvent &event )
 {
 	/// \todo We might want some sort of focus model to say who gets the keypress.
-	if( Gadget *child = getChild<Gadget>() )
+	if( Gadget *child = getPrimaryChild() )
 	{
 		return child->keyPressSignal()( child, event );
 	}
@@ -799,7 +823,7 @@ bool ViewportGadget::keyPress( GadgetPtr gadget, const KeyEvent &event )
 
 bool ViewportGadget::keyRelease( GadgetPtr gadget, const KeyEvent &event )
 {
-	if( Gadget *child = getChild<Gadget>() )
+	if( Gadget *child = getPrimaryChild() )
 	{
 		return child->keyReleaseSignal()( child, event );
 	}

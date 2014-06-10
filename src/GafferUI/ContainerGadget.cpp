@@ -37,11 +37,6 @@
 
 #include "GafferUI/ContainerGadget.h"
 
-#include "OpenEXR/ImathBoxAlgo.h"
-
-#include "boost/bind.hpp"
-#include "boost/bind/placeholders.hpp"
-
 using namespace Imath;
 using namespace GafferUI;
 
@@ -50,35 +45,19 @@ IE_CORE_DEFINERUNTIMETYPED( ContainerGadget );
 ContainerGadget::ContainerGadget( const std::string &name )
 	:	Gadget( name ), m_padding( Box3f( V3f( 0 ), V3f( 0 ) ) )
 {
-	childAddedSignal().connect( boost::bind( &ContainerGadget::childAdded, this, ::_1, ::_2 ) );
-	childRemovedSignal().connect( boost::bind( &ContainerGadget::childRemoved, this, ::_1, ::_2 )  );
 }
 
 ContainerGadget::~ContainerGadget()
 {
 }
 
-bool ContainerGadget::acceptsChild( const Gaffer::GraphComponent *potentialChild ) const
-{
-	return potentialChild->isInstanceOf( Gadget::staticTypeId() );
-}
-
 Imath::Box3f ContainerGadget::bound() const
 {
-	Imath::Box3f result;
-	for( ChildContainer::const_iterator it=children().begin(); it!=children().end(); it++ )
-	{
-		// cast is safe because of the guarantees acceptsChild() gives us
-		const Gadget *c = static_cast<const Gadget *>( it->get() );
-		Imath::Box3f b = c->bound();
-		b = Imath::transform( b, c->getTransform() );
-		result.extendBy( b );
-	}
+	Imath::Box3f result = Gadget::bound();
 	result.min += m_padding.min;
 	result.max += m_padding.max;
 	return result;
 }
-
 
 void ContainerGadget::setPadding( const Imath::Box3f &padding )
 {
@@ -93,33 +72,4 @@ void ContainerGadget::setPadding( const Imath::Box3f &padding )
 const Imath::Box3f &ContainerGadget::getPadding() const
 {
 	return m_padding;
-}
-		
-void ContainerGadget::doRender( const Style *style ) const
-{
-	for( ChildContainer::const_iterator it=children().begin(); it!=children().end(); it++ )
-	{
-		// cast is safe because of the guarantees acceptsChild() gives us
-		const Gadget *c = static_cast<const Gadget *>( it->get() );
-		c->render( style );
-	}
-}
-
-void ContainerGadget::childAdded( GraphComponent *parent, GraphComponent *child )
-{
-	assert( parent==this );
-	static_cast<Gadget *>( child )->renderRequestSignal().connect( boost::bind( &ContainerGadget::childRenderRequest, this, ::_1 ) );
-	renderRequestSignal()( this );
-}
-
-void ContainerGadget::childRemoved( GraphComponent *parent, GraphComponent *child )
-{
-	assert( parent==this );
-	static_cast<Gadget *>( child )->renderRequestSignal().disconnect( &ContainerGadget::childRenderRequest );
-	renderRequestSignal()( this );
-}
-
-void ContainerGadget::childRenderRequest( Gadget *child )
-{
-	renderRequestSignal()( this );
 }

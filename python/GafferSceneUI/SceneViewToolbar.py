@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2014, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -132,3 +133,38 @@ Gaffer.Metadata.registerPlugDescription( GafferSceneUI.SceneView, "lookThrough.c
 	"to choose another camera."
 )
 
+##########################################################################
+# Grid
+##########################################################################
+
+class _GridPlugValueWidget( GafferUI.PlugValueWidget ) :
+
+	def __init__( self, plug, **kw ) :
+	
+		menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) )
+		menuButton = GafferUI.MenuButton( menu=menu, image = "grid.png", hasFrame=False )
+	
+		GafferUI.PlugValueWidget.__init__( self, menuButton, plug, **kw )
+	
+	def hasLabel( self ) :
+	
+		return True
+		
+	def _updateFromPlug( self ) :
+	
+		pass
+		
+	def __menuDefinition( self ) :
+		
+		m = IECore.MenuDefinition()
+		m.append(
+			"/Show Grid",
+			{
+				"checkBox" : self.getPlug()["visible"].getValue(),
+				"command" : lambda checked : self.getPlug()["visible"].setValue( checked ),
+			}
+		)
+		
+		return m
+		
+GafferUI.PlugValueWidget.registerCreator( GafferSceneUI.SceneView.staticTypeId(), "grid", _GridPlugValueWidget )

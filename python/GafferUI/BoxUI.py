@@ -52,7 +52,7 @@ def nodeMenuCreateCommand( menu ) :
 	assert( nodeGraph is not None )
 	
 	script = nodeGraph.scriptNode()
-	graphGadget = nodeGraph.graphGadgetWidget().getViewportGadget().getChild()
+	graphGadget = nodeGraph.graphGadget()
 	
 	return Gaffer.Box.create( graphGadget.getRoot(), script.selection() )
 

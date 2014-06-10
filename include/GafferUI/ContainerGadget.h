@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2014, John Haddon. All rights reserved.
 //  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -43,6 +43,13 @@
 namespace GafferUI
 {
 
+/// Provides a useful base class for gadgets which are intended
+/// primarily to provide layouts of child Gadgets. Note that any
+/// Gadget can have children though.
+/// \todo Consider a virtual method which is called to compute
+/// the transforms for children when they have been dirtied. This would
+/// simplify derived classes and provide greater justification for the
+/// existence of this base class.
 class ContainerGadget : public Gadget
 {
 
@@ -52,13 +59,6 @@ class ContainerGadget : public Gadget
 		virtual ~ContainerGadget();
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::ContainerGadget, ContainerGadgetTypeId, Gadget );
-
-		/// ContainerGadgets accept any number of other Gadgets as children. Derived classes
-		/// may further restrict this if they wish, but they must not accept non-Gadget children.
-		virtual bool acceptsChild( const Gaffer::GraphComponent *potentialChild ) const;
-		/// Returns the union of the transformed bounding boxes of all children.
-		virtual Imath::Box3f bound() const;
-		//@}
 		
 		/// The padding is a region added around the contents of the children.
 		/// It is specified as the final bounding box when the child bounding
@@ -66,17 +66,12 @@ class ContainerGadget : public Gadget
 		/// and padding.max is added to bound.max. 
 		void setPadding( const Imath::Box3f &padding );
 		const Imath::Box3f &getPadding() const;
-		
-	protected :
-	
-		/// Implemented to render all the children.
-		virtual void doRender( const Style *style ) const;
+
+		/// Applies the padding to the default union-of-children
+		/// bounding box.
+		virtual Imath::Box3f bound() const;
 		
 	private :
-	
-		void childAdded( GraphComponent *parent, GraphComponent *child );
-		void childRemoved( GraphComponent *parent, GraphComponent *child );
-		void childRenderRequest( Gadget *child );
 		
 		Imath::Box3f m_padding;
 		

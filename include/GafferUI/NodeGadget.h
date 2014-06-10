@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2014, John Haddon. All rights reserved.
 //  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -49,14 +49,14 @@ IE_CORE_FORWARDDECLARE( Nodule )
 IE_CORE_FORWARDDECLARE( NodeGadget )
 
 /// A base class for representing nodes within a GraphGadget.
-class NodeGadget : public IndividualContainer
+class NodeGadget : public Gadget
 {
 
 	public :
 
 		virtual ~NodeGadget();
 		
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::NodeGadget, NodeGadgetTypeId, ContainerGadget );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::NodeGadget, NodeGadgetTypeId, Gadget );
 		
 		Gaffer::Node *node();
 		const Gaffer::Node *node() const;

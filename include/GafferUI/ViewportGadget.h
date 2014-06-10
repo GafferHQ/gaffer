@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2012-2014, John Haddon. All rights reserved.
 //  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -48,24 +48,40 @@
 namespace GafferUI
 {
 
-/// \todo I'm not sure this should derive from IndividualContainer - the bound and
-/// padding don't apply in any sensible way.
-class ViewportGadget : public IndividualContainer
+/// Provides a viewport through which to view and interact with Gadgets - typically this
+/// will be the top level Gadget in any hierarchy. The ViewportGadget is typically hosted
+/// within a Widget UI via a GadgetWidget, and forwards all event signals it receives to
+/// its child gadgets, transforming the event from the 2d space of the widget to the 3d
+/// space of the gadget as it goes. The framing of the child gadgets is specified using a
+/// Camera, which may be specified both programatically and through user interaction.
+class ViewportGadget : public Gadget
 {
 
 	public :
 
 		typedef boost::signal<void (ViewportGadget *)> UnarySignal;
 
-		ViewportGadget( GadgetPtr child=0 );
+		ViewportGadget( GadgetPtr primaryChild = NULL );
 		virtual ~ViewportGadget();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::ViewportGadget, ViewportGadgetTypeId, IndividualContainer );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::ViewportGadget, ViewportGadgetTypeId, Gadget );
 
 		/// Accepts no parents - the ViewportGadget must always be the topmost Gadget.
 		virtual bool acceptsParent( const Gaffer::GraphComponent *potentialParent ) const;
-
 		virtual std::string getToolTip( const IECore::LineSegment3f &position ) const;
+
+		/// Typically mouse event signals are emitted for the gadget under
+		/// the mouse, but in the case that there is no such gadget, they
+		/// are emitted on the primary child. The primary child is currently
+		/// also the only gadget to have key press/release signals emitted on
+		/// it.
+		/// \todo It might be nice in future to remove this concept and to have
+		/// all children treated equally - at present we need the concept so that
+		/// the node graph and viewer can use clicks in empty space to perform selection,
+		/// but there may be other ways of achieving that.
+		void setPrimaryChild( GadgetPtr gadget );
+		Gadget *getPrimaryChild();
+		const Gadget *getPrimaryChild() const;
 
 		const Imath::V2i &getViewport() const;
 		void setViewport( const Imath::V2i &viewport );
@@ -101,8 +117,8 @@ class ViewportGadget : public IndividualContainer
 		/// to use V3fs?
 		void gadgetsAt( const Imath::V2f &rasterPosition, std::vector<GadgetPtr> &gadgets ) const;
 		
-		IECore::LineSegment3f rasterToGadgetSpace( const Imath::V2f &rasterPosition, const Gadget *gadget = 0 ) const;
-		Imath::V2f gadgetToRasterSpace( const Imath::V3f &gadgetPosition, const Gadget *gadget = 0 ) const;
+		IECore::LineSegment3f rasterToGadgetSpace( const Imath::V2f &rasterPosition, const Gadget *gadget ) const;
+		Imath::V2f gadgetToRasterSpace( const Imath::V3f &gadgetPosition, const Gadget *gadget ) const;
 		
 		/// The SelectionScope class can be used by child Gadgets to perform
 		/// OpenGL selection from event signal callbacks.

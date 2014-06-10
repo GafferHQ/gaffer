@@ -52,10 +52,12 @@
 #include "GafferScene/StandardOptions.h"
 #include "GafferScene/StandardAttributes.h"
 #include "GafferScene/PathFilter.h"
+#include "GafferScene/Grid.h"
 
 #include "GafferSceneUI/SceneView.h"
 
 using namespace std;
+using namespace Imath;
 using namespace IECore;
 using namespace Gaffer;
 using namespace GafferUI;
@@ -100,6 +102,88 @@ class WrappingProcedural : public IECore::ParameterisedProcedural
 IE_CORE_DECLAREPTR( WrappingProcedural );
 
 //////////////////////////////////////////////////////////////////////////
+// SceneView::Grid implementation
+//////////////////////////////////////////////////////////////////////////
+
+class SceneView::Grid
+{
+	
+	public :
+	
+		Grid( SceneView *view )
+			:	m_view( view ), m_node( new GafferScene::Grid ), m_gadget( new RenderableGadget )
+		{
+			m_node->transformPlug()->rotatePlug()->setValue( V3f( 90, 0, 0 ) );
+
+			CompoundPlugPtr plug = new CompoundPlug( "grid" );
+			view->addChild( plug );
+			
+			plug->addChild( new BoolPlug( "visible", Plug::In, true ) );
+			
+			PlugPtr dimensionsPlug(
+				m_node->dimensionsPlug()->createCounterpart(
+					m_node->dimensionsPlug()->getName(),
+					Plug::In
+				)
+			);
+			plug->addChild( dimensionsPlug );
+			
+			m_node->dimensionsPlug()->setInput( dimensionsPlug );
+			
+			view->viewportGadget()->setChild( "__grid", m_gadget );
+			
+			view->plugDirtiedSignal().connect( boost::bind( &Grid::plugDirtied, this, ::_1 ) );
+			
+			update();
+		}
+		
+		Gaffer::CompoundPlug *plug()
+		{
+			return m_view->getChild<Gaffer::CompoundPlug>( "grid" );
+		}
+		
+		const Gaffer::CompoundPlug *plug() const
+		{
+			return m_view->getChild<Gaffer::CompoundPlug>( "grid" );
+		}
+		
+		Gadget *gadget()
+		{
+			return m_gadget;
+		}
+		
+		const Gadget *gadget() const
+		{
+			return m_gadget;
+		}
+		
+	private :
+		
+		void plugDirtied( Gaffer::Plug *plug )
+		{
+			if( plug == this->plug() )
+			{
+				update();
+			}
+		}
+		
+		void update()
+		{
+			m_gadget->setRenderable(
+				new WrappingProcedural(
+					new SceneProcedural( m_node->outPlug(), m_view->getContext() )
+				)
+			);
+			m_gadget->setVisible( plug()->getChild<BoolPlug>( "visible" )->getValue() );
+		}
+
+		SceneView *m_view;
+		GafferScene::GridPtr m_node;
+		GafferUI::RenderableGadgetPtr m_gadget;
+
+};
+
+//////////////////////////////////////////////////////////////////////////
 // SceneView implementation
 //////////////////////////////////////////////////////////////////////////
 
@@ -128,13 +212,15 @@ SceneView::SceneView( const std::string &name )
 
 	// set up our gadgets
 
-	viewportGadget()->setChild( m_renderableGadget );
-
+	viewportGadget()->setPrimaryChild( m_renderableGadget );
+	
 	m_selectionChangedConnection = m_renderableGadget->selectionChangedSignal().connect( boost::bind( &SceneView::selectionChanged, this, ::_1 ) );
 	viewportGadget()->keyPressSignal().connect( boost::bind( &SceneView::keyPress, this, ::_1, ::_2 ) );
 
 	m_renderableGadget->baseState()->add( const_cast<IECoreGL::State *>( baseState() ) );
 	baseStateChangedSignal().connect( boost::bind( &SceneView::baseStateChanged, this ) );
+
+	m_grid = boost::shared_ptr<Grid>( new Grid( this ) );
 	
 	//////////////////////////////////////////////////////////////////////////
 	// add a preprocessor which monkeys with the scene before it is displayed.
@@ -221,6 +307,16 @@ const Gaffer::StringPlug *SceneView::lookThroughCameraPlug() const
 	return lookThroughPlug()->getChild<StringPlug>( 1 );
 }
 
+Gaffer::CompoundPlug *SceneView::gridPlug()
+{
+	return m_grid->plug();
+}
+
+const Gaffer::CompoundPlug *SceneView::gridPlug() const
+{
+	return m_grid->plug();
+}
+
 GafferScene::PathFilter *SceneView::hideFilter()
 {
 	return getPreprocessor<Node>()->getChild<PathFilter>( "hideFilter" );
@@ -273,7 +369,7 @@ void SceneView::update()
 	m_renderableGadget->setRenderable( wp );
 	if( !hadRenderable )
 	{
-		viewportGadget()->frame( m_renderableGadget->bound() );
+		viewportGadget()->frame( framingBound() );
 	}
 
 	updateLookThrough();
@@ -286,7 +382,14 @@ Imath::Box3f SceneView::framingBound() const
 	{
 		return b;
 	}
-	return View3D::framingBound();
+	
+	b = View3D::framingBound();
+	if( m_grid->gadget()->getVisible() )
+	{
+		b.extendBy( m_grid->gadget()->bound() );
+	}
+	
+	return b;
 }
 
 void SceneView::selectionChanged( GafferUI::RenderableGadgetPtr renderableGadget )

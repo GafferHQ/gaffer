@@ -99,7 +99,7 @@ BackdropNodeGadget::~BackdropNodeGadget()
 
 std::string BackdropNodeGadget::getToolTip( const IECore::LineSegment3f &line ) const
 {
-	std::string result = IndividualContainer::getToolTip( line );
+	std::string result = Gadget::getToolTip( line );
 	if( result.size() )
 	{
 		return result;

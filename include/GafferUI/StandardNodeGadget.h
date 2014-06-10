@@ -75,7 +75,8 @@ class StandardNodeGadget : public NodeGadget
 		void setLabelsVisibleOnHover( bool labelsVisible );
 		bool getLabelsVisibleOnHover() const;
 		
-		Imath::Box3f bound() const;
+		virtual bool acceptsChild( const Gaffer::GraphComponent *potentialChild ) const;
+		virtual Imath::Box3f bound() const;
 
 	protected :
 			

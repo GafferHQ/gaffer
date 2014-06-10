@@ -53,6 +53,11 @@ using namespace GafferUIBindings;
 namespace
 {
 
+GadgetPtr getPrimaryChild( ViewportGadget &v )
+{
+	return v.getPrimaryChild();
+}
+
 IECore::CameraPtr getCamera( const ViewportGadget &v )
 {
 	return v.getCamera()->copy();
@@ -96,6 +101,8 @@ void GafferUIBindings::bindViewportGadget()
 	scope s = GadgetClass<ViewportGadget>()
 		.def( init<>() )
 		.def( init<GadgetPtr>() )
+		.def( "setPrimaryChild", &ViewportGadget::setPrimaryChild )
+		.def( "getPrimaryChild", &getPrimaryChild )
 		.def( "getViewport", &ViewportGadget::getViewport, return_value_policy<copy_const_reference>() )
 		.def( "setViewport", &ViewportGadget::setViewport )
 		.def( "viewportChangedSignal", &ViewportGadget::viewportChangedSignal, return_internal_reference<1>() )
@@ -109,8 +116,8 @@ void GafferUIBindings::bindViewportGadget()
 		.def( "setDragTracking", &ViewportGadget::setDragTracking )
 		.def( "getDragTracking", &ViewportGadget::getDragTracking )
 		.def( "gadgetsAt", &gadgetsAt )
-		.def( "rasterToGadgetSpace", &ViewportGadget::rasterToGadgetSpace, ( arg_( "rasterPosition" ), arg_( "gadget" ) = GadgetPtr() ) )
-		.def( "gadgetToRasterSpace", &ViewportGadget::gadgetToRasterSpace, ( arg_( "gadgetPosition" ), arg_( "gadget" ) = GadgetPtr() ) )
+		.def( "rasterToGadgetSpace", &ViewportGadget::rasterToGadgetSpace, ( arg_( "rasterPosition" ), arg_( "gadget" ) ) )
+		.def( "gadgetToRasterSpace", &ViewportGadget::gadgetToRasterSpace, ( arg_( "gadgetPosition" ), arg_( "gadget" ) ) )
 	;
 	
 	SignalBinder<ViewportGadget::UnarySignal, DefaultSignalCaller<ViewportGadget::UnarySignal>, UnarySlotCaller>::bind( "UnarySignal" );
