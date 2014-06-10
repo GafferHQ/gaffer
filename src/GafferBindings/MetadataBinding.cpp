@@ -106,25 +106,6 @@ struct SimpleTypedDataGetter
 	}
 };
 
-/// \todo Consider implementing this as an automatic conversion
-/// for any bound TypeId argument anywhere. This is implemented
-/// already in https://gist.github.com/johnhaddon/7943557 but
-/// I'm unsure if we want this behaviour everywhere or not - erring
-/// on the side of caution for now.
-IECore::TypeId objectToTypeId( object o )
-{
-	extract<IECore::TypeId> typeIdExtractor( o );
-	if( typeIdExtractor.check() )
-	{
-		return typeIdExtractor();
-	}
-	else
-	{
-		object t = o.attr( "staticTypeId" )();
-		return extract<IECore::TypeId>( t );
-	}
-}
-
 Metadata::NodeValueFunction objectToNodeValueFunction( object o )
 {
 	extract<IECore::DataPtr> dataExtractor( o );
@@ -151,9 +132,9 @@ Metadata::PlugValueFunction objectToPlugValueFunction( object o )
 	}
 }
 
-void registerNodeValue( object nodeTypeId, IECore::InternedString key, object &value )
+void registerNodeValue( IECore::TypeId nodeTypeId, IECore::InternedString key, object &value )
 {
-	Metadata::registerNodeValue( objectToTypeId( nodeTypeId ), key, objectToNodeValueFunction( value ) );
+	Metadata::registerNodeValue( nodeTypeId, key, objectToNodeValueFunction( value ) );
 }
 
 object nodeValue( const Node *node, const char *key, bool inherit, bool instanceOnly )
@@ -171,7 +152,7 @@ object nodeValue( const Node *node, const char *key, bool inherit, bool instance
 
 object registerNodeDescription( tuple args, dict kw )
 {
-	IECore::TypeId nodeTypeId = objectToTypeId( args[0] );
+	IECore::TypeId nodeTypeId = extract<IECore::TypeId>( args[0] );
 	Metadata::registerNodeDescription( nodeTypeId, objectToNodeValueFunction( args[1] ) );
 
 	for( size_t i = 2, e = len( args ); i < e; i += 2 )
@@ -199,9 +180,9 @@ object registerNodeDescription( tuple args, dict kw )
 	return object(); // none
 }
 
-void registerPlugValue( object nodeTypeId, const char *plugPath, IECore::InternedString key, object &value )
+void registerPlugValue( IECore::TypeId nodeTypeId, const char *plugPath, IECore::InternedString key, object &value )
 {
-	Metadata::registerPlugValue( objectToTypeId( nodeTypeId ), plugPath, key, objectToPlugValueFunction( value ) );
+	Metadata::registerPlugValue( nodeTypeId, plugPath, key, objectToPlugValueFunction( value ) );
 }
 
 object plugValue( const Plug *plug, const char *key, bool inherit, bool instanceOnly )
@@ -217,9 +198,9 @@ object plugValue( const Plug *plug, const char *key, bool inherit, bool instance
 	}
 }
 
-void registerPlugDescription( object nodeTypeId, const char *plugPath, object &description )
+void registerPlugDescription( IECore::TypeId nodeTypeId, const char *plugPath, object &description )
 {
-	Metadata::registerPlugDescription( objectToTypeId( nodeTypeId ), plugPath, objectToPlugValueFunction( description ) );
+	Metadata::registerPlugDescription( nodeTypeId, plugPath, objectToPlugValueFunction( description ) );
 }
 
 struct ValueChangedSlotCaller
