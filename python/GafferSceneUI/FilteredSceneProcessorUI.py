@@ -64,9 +64,9 @@ GafferScene.FilteredSceneProcessor,
 ##########################################################################
 
 GafferUI.PlugValueWidget.registerCreator(
-	GafferScene.FilteredSceneProcessor.staticTypeId(),
+	GafferScene.FilteredSceneProcessor,
 	"filter",
 	GafferSceneUI.FilterPlugValueWidget,
 )
 
-GafferUI.Nodule.registerNodule( GafferScene.FilteredSceneProcessor.staticTypeId(), "filter", GafferUI.StandardNodule )
+GafferUI.Nodule.registerNodule( GafferScene.FilteredSceneProcessor, "filter", GafferUI.StandardNodule )

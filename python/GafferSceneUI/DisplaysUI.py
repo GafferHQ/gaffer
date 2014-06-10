@@ -176,30 +176,30 @@ class _ChildPlugWidget( GafferUI.PlugValueWidget ) :
 
 	def __deleteButtonClicked( self, button ) :
 	
-		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
+		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
 			self.getPlug().parent().removeChild( self.getPlug() )
 		
-GafferUI.PlugValueWidget.registerCreator( GafferScene.Displays.staticTypeId(), "displays", DisplaysPlugValueWidget )
+GafferUI.PlugValueWidget.registerCreator( GafferScene.Displays, "displays", DisplaysPlugValueWidget )
 
 ## \todo This regex is an interesting case to be considered during the string matching unification for #707. Once that
 # is done, intuitively we want to use a "displays.*" glob expression, but because the "*" will match anything
 # at all, including ".", it will match the children of what we want too. We might want to prevent wildcards from
 # matching "." when we come to use them in this context.
-GafferUI.PlugValueWidget.registerCreator( GafferScene.Displays.staticTypeId(), re.compile( "displays\.[^\.]+$" ), _ChildPlugWidget )
+GafferUI.PlugValueWidget.registerCreator( GafferScene.Displays, re.compile( "displays\.[^\.]+$" ), _ChildPlugWidget )
 
 ##########################################################################
 # Simple PlugValueWidget registrations for child plugs of displays
 ##########################################################################
 
 GafferUI.PlugValueWidget.registerCreator(
-	GafferScene.Displays.staticTypeId(),
+	GafferScene.Displays,
 	"displays.*.active",
 	GafferUI.BoolPlugValueWidget,
 	displayMode = GafferUI.BoolWidget.DisplayMode.Switch,
 )
 
 GafferUI.PlugValueWidget.registerCreator(
-	GafferScene.Displays.staticTypeId(),
+	GafferScene.Displays,
 	re.compile( "displays.*.parameters.quantize" ),
 	GafferUI.EnumPlugValueWidget,
 	labelsAndValues = [
@@ -210,7 +210,7 @@ GafferUI.PlugValueWidget.registerCreator(
 )
 
 GafferUI.PlugValueWidget.registerCreator(
-	GafferScene.Displays.staticTypeId(),
+	GafferScene.Displays,
 	"displays.*.name",
 	lambda plug : GafferUI.PathPlugValueWidget( plug,
 		path = Gaffer.FileSystemPath( "/", filter = Gaffer.FileSystemPath.createStandardFilter() ),

@@ -52,7 +52,7 @@ def appendDefinitions( menuDefinition, prefix ) :
 def quit( menu ) :
 
 	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
-	application = scriptWindow.scriptNode().ancestor( Gaffer.ApplicationRoot.staticTypeId() )
+	application = scriptWindow.scriptNode().ancestor( Gaffer.ApplicationRoot )
 
 	unsavedNames = []
 	for script in application["scripts"].children() :
@@ -102,7 +102,7 @@ __preferencesWindows = weakref.WeakKeyDictionary()
 def preferences( menu ) :
 	
 	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
-	application = scriptWindow.scriptNode().ancestor( Gaffer.ApplicationRoot.staticTypeId() )
+	application = scriptWindow.scriptNode().ancestor( Gaffer.ApplicationRoot )
 
 	global __preferencesWindows
 	window = __preferencesWindows.get( application, None )
@@ -130,7 +130,7 @@ def __closePreferences( button ) :
 def __savePreferences( button ) :
 
 	scriptWindow = button.ancestor( GafferUI.ScriptWindow )
-	application = scriptWindow.scriptNode().ancestor( Gaffer.ApplicationRoot.staticTypeId() )
+	application = scriptWindow.scriptNode().ancestor( Gaffer.ApplicationRoot )
 	application.savePreferences()
 	button.ancestor( type=GafferUI.Window ).setVisible( False )
 	

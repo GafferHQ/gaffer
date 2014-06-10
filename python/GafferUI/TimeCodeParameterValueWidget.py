@@ -47,4 +47,4 @@ class TimeCodeParameterValueWidget( GafferUI.ParameterValueWidget ) :
 		
 		GafferUI.ParameterValueWidget.__init__( self, plugValueWidget, parameterHandler, **kw )
 			
-GafferUI.ParameterValueWidget.registerType( IECore.TimeCodeParameter.staticTypeId(), TimeCodeParameterValueWidget )
+GafferUI.ParameterValueWidget.registerType( IECore.TimeCodeParameter, TimeCodeParameterValueWidget )

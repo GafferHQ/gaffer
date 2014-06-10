@@ -91,7 +91,7 @@ class Bookmarks :
 		elif isinstance( target, Gaffer.ApplicationRoot ) :
 			applicationRoot = target
 		elif isinstance( target, Gaffer.GraphComponent ) :
-			applicationRoot = target.ancestor( Gaffer.ApplicationRoot.staticTypeId() )
+			applicationRoot = target.ancestor( Gaffer.ApplicationRoot )
 		else :
 			assert( isinstance( target, GafferUI.Widget ) )
 			scriptWidget = None
@@ -115,7 +115,7 @@ class Bookmarks :
 						break
 			
 			if scriptWidget is not None :
-				applicationRoot = scriptWidget.scriptNode().ancestor( Gaffer.ApplicationRoot.staticTypeId() )
+				applicationRoot = scriptWidget.scriptNode().ancestor( Gaffer.ApplicationRoot )
 			else :
 				applicationRoot = None
 				

@@ -89,7 +89,7 @@ class BoxPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		pass
 
-GafferUI.PlugValueWidget.registerType( Gaffer.Box2fPlug.staticTypeId(), BoxPlugValueWidget )
-GafferUI.PlugValueWidget.registerType( Gaffer.Box3fPlug.staticTypeId(), BoxPlugValueWidget )
-GafferUI.PlugValueWidget.registerType( Gaffer.Box2iPlug.staticTypeId(), BoxPlugValueWidget )
-GafferUI.PlugValueWidget.registerType( Gaffer.Box3iPlug.staticTypeId(), BoxPlugValueWidget )
+GafferUI.PlugValueWidget.registerType( Gaffer.Box2fPlug, BoxPlugValueWidget )
+GafferUI.PlugValueWidget.registerType( Gaffer.Box3fPlug, BoxPlugValueWidget )
+GafferUI.PlugValueWidget.registerType( Gaffer.Box2iPlug, BoxPlugValueWidget )
+GafferUI.PlugValueWidget.registerType( Gaffer.Box3iPlug, BoxPlugValueWidget )

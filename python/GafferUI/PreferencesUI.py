@@ -38,4 +38,4 @@ import Gaffer
 import GafferUI
 
 # we don't want the user plug to be visible on the preferences node
-GafferUI.NodeUI.registerNodeUI( Gaffer.Preferences.staticTypeId(), lambda node : GafferUI.StandardNodeUI( node, displayMode = GafferUI.StandardNodeUI.DisplayMode.Simplified ) )
+GafferUI.NodeUI.registerNodeUI( Gaffer.Preferences, lambda node : GafferUI.StandardNodeUI( node, displayMode = GafferUI.StandardNodeUI.DisplayMode.Simplified ) )

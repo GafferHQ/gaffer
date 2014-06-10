@@ -44,7 +44,7 @@ import GafferUI
 # NodeUI registration
 ##########################################################################
 				
-GafferUI.NodeUI.registerNodeUI( Gaffer.Expression.staticTypeId(), lambda node : GafferUI.StandardNodeUI( node, displayMode = GafferUI.StandardNodeUI.DisplayMode.Simplified ) )
+GafferUI.NodeUI.registerNodeUI( Gaffer.Expression, lambda node : GafferUI.StandardNodeUI( node, displayMode = GafferUI.StandardNodeUI.DisplayMode.Simplified ) )
 
 # PlugValueWidget popup menu for creating expressions
 ##########################################################################
@@ -52,7 +52,7 @@ GafferUI.NodeUI.registerNodeUI( Gaffer.Expression.staticTypeId(), lambda node : 
 def __createExpression( plug ) :
 
 	node = plug.node()
-	parentNode = node.ancestor( Gaffer.Node.staticTypeId() )
+	parentNode = node.ancestor( Gaffer.Node )
 
 	with Gaffer.UndoContext( node.scriptNode() ) :
 	
@@ -136,7 +136,7 @@ class _ExpressionPlugValueWidget( GafferUI.MultiLineStringPlugValueWidget ) :
 ##########################################################################
 
 GafferUI.PlugValueWidget.registerCreator(
-	Gaffer.Expression.staticTypeId(),
+	Gaffer.Expression,
 	"engine",
 	GafferUI.EnumPlugValueWidget,
 	labelsAndValues = [
@@ -145,19 +145,19 @@ GafferUI.PlugValueWidget.registerCreator(
 )
 
 GafferUI.PlugValueWidget.registerCreator(
-	Gaffer.Expression.staticTypeId(),
+	Gaffer.Expression,
 	"expression",
 	_ExpressionPlugValueWidget,
 )
 
 GafferUI.PlugValueWidget.registerCreator(
-	Gaffer.Expression.staticTypeId(),
+	Gaffer.Expression,
 	"in",
 	None
 )
 
 GafferUI.PlugValueWidget.registerCreator(
-	Gaffer.Expression.staticTypeId(),
+	Gaffer.Expression,
 	"out",
 	None
 )
@@ -165,4 +165,4 @@ GafferUI.PlugValueWidget.registerCreator(
 # Nodule deregistrations
 ##########################################################################
 
-GafferUI.Nodule.registerNodule( Gaffer.Expression.staticTypeId(), fnmatch.translate( "*" ), lambda plug : None )
+GafferUI.Nodule.registerNodule( Gaffer.Expression, fnmatch.translate( "*" ), lambda plug : None )

@@ -60,7 +60,7 @@ class SectionedCompoundDataPlugValueWidgetTest( GafferUITest.TestCase ) :
 		
 		GafferUI.PlugValueWidget.registerCreator(
 	
-			SectionedTestNode.staticTypeId(),
+			SectionedTestNode,
 			"p",
 			GafferUI.SectionedCompoundDataPlugValueWidget,
 			sections = (

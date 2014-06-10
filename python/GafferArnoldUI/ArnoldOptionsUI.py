@@ -93,7 +93,7 @@ def __errorColorsSummary( plug ) :
 
 GafferUI.PlugValueWidget.registerCreator(
 	
-	GafferArnold.ArnoldOptions.staticTypeId(),
+	GafferArnold.ArnoldOptions,
 	"options",
 	GafferUI.SectionedCompoundDataPlugValueWidget,
 	sections = (

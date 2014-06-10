@@ -131,9 +131,9 @@ def __previousAvailable( menu ) :
 
 Gaffer.Metadata.registerPlugValue( Gaffer.Node, "despatcherParameters", "nodeUI:section", "Despatcher" )
 
-GafferUI.PlugValueWidget.registerCreator( Gaffer.Node.staticTypeId(), "despatcherParameters", GafferUI.CompoundPlugValueWidget, collapsed = None )
-GafferUI.PlugValueWidget.registerCreator( Gaffer.Node.staticTypeId(), "requirements", None )
-GafferUI.PlugValueWidget.registerCreator( Gaffer.Node.staticTypeId(), "requirement", None )
+GafferUI.PlugValueWidget.registerCreator( Gaffer.Node, "despatcherParameters", GafferUI.CompoundPlugValueWidget, collapsed = None )
+GafferUI.PlugValueWidget.registerCreator( Gaffer.Node, "requirements", None )
+GafferUI.PlugValueWidget.registerCreator( Gaffer.Node, "requirement", None )
 
-GafferUI.Nodule.registerNodule( Gaffer.Node.staticTypeId(), "despatcherParameters", lambda plug : None )
-GafferUI.Nodule.registerNodule( Gaffer.Node.staticTypeId(), "requirements", lambda plug : GafferUI.CompoundNodule( plug, spacing = 0.4 ) )
+GafferUI.Nodule.registerNodule( Gaffer.Node, "despatcherParameters", lambda plug : None )
+GafferUI.Nodule.registerNodule( Gaffer.Node, "requirements", lambda plug : GafferUI.CompoundNodule( plug, spacing = 0.4 ) )

@@ -61,6 +61,6 @@ GafferOSL.OSLObject,
 # Nodules
 ##########################################################################
 
-GafferUI.Nodule.registerNodule( GafferOSL.OSLObject.staticTypeId(), "shader", GafferUI.StandardNodule )
+GafferUI.Nodule.registerNodule( GafferOSL.OSLObject, "shader", GafferUI.StandardNodule )
 
 

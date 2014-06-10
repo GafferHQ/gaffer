@@ -39,5 +39,5 @@ import fnmatch
 import GafferUI
 import GafferScene
 
-GafferUI.Nodule.registerNodule( GafferScene.ExecutableRender.staticTypeId(), fnmatch.translate( "*" ), lambda plug : None )
-GafferUI.Nodule.registerNodule( GafferScene.ExecutableRender.staticTypeId(), "in", GafferUI.StandardNodule )
+GafferUI.Nodule.registerNodule( GafferScene.ExecutableRender, fnmatch.translate( "*" ), lambda plug : None )
+GafferUI.Nodule.registerNodule( GafferScene.ExecutableRender, "in", GafferUI.StandardNodule )

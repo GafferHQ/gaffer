@@ -66,5 +66,5 @@ class IncrementingPlugValueWidget( GafferUI.PlugValueWidget ) :
 	
 		undoState = Gaffer.UndoContext.State.Enabled if self.__undoable else Gaffer.UndoContext.State.Disabled
 				
-		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode.staticTypeId() ), undoState ) :
+		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode ), undoState ) :
 			self.getPlug().setValue( self.getPlug().getValue() + self.__increment )

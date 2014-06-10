@@ -55,4 +55,4 @@ python.""",
 
 
 
-GafferUI.PlugValueWidget.registerCreator( GafferScene.Options.staticTypeId(), "options", GafferUI.CompoundDataPlugValueWidget, collapsed=None )
+GafferUI.PlugValueWidget.registerCreator( GafferScene.Options, "options", GafferUI.CompoundDataPlugValueWidget, collapsed=None )

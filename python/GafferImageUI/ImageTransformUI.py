@@ -37,4 +37,4 @@
 import GafferUI
 import GafferImage
 
-GafferUI.PlugValueWidget.registerCreator( GafferImage.ImageTransform.staticTypeId(), "transform", GafferUI.CompoundPlugValueWidget, collapsed=None )
+GafferUI.PlugValueWidget.registerCreator( GafferImage.ImageTransform, "transform", GafferUI.CompoundPlugValueWidget, collapsed=None )

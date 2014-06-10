@@ -78,8 +78,8 @@ class BoolPlugValueWidget( GafferUI.PlugValueWidget ) :
 	
 	def __setPlugValue( self ) :
 			
-		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
+		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
 						
 			self.getPlug().setValue( self.__boolWidget.getState() )
 	
-GafferUI.PlugValueWidget.registerType( Gaffer.BoolPlug.staticTypeId(), BoolPlugValueWidget )
+GafferUI.PlugValueWidget.registerType( Gaffer.BoolPlug, BoolPlugValueWidget )

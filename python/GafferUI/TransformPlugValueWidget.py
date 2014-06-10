@@ -66,4 +66,4 @@ class TransformPlugValueWidget( GafferUI.CompoundPlugValueWidget ) :
 		return ", ".join( info )
 					
 
-GafferUI.PlugValueWidget.registerType( Gaffer.TransformPlug.staticTypeId(), TransformPlugValueWidget )
+GafferUI.PlugValueWidget.registerType( Gaffer.TransformPlug, TransformPlugValueWidget )

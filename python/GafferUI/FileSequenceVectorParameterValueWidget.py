@@ -55,4 +55,4 @@ class FileSequenceVectorParameterValueWidget( GafferUI.PathVectorParameterValueW
 	
 		return Gaffer.SequencePath( os.getcwd(), filter = self._filter() )
 			
-GafferUI.ParameterValueWidget.registerType( IECore.FileSequenceVectorParameter.staticTypeId(), FileSequenceVectorParameterValueWidget )
+GafferUI.ParameterValueWidget.registerType( IECore.FileSequenceVectorParameter, FileSequenceVectorParameterValueWidget )

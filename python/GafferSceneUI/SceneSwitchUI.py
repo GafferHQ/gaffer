@@ -37,4 +37,4 @@
 import GafferUI
 import GafferScene
 
-GafferUI.PlugValueWidget.registerCreator( GafferScene.SceneSwitch.staticTypeId(), "in[0-9]*", None )
+GafferUI.PlugValueWidget.registerCreator( GafferScene.SceneSwitch, "in[0-9]*", None )

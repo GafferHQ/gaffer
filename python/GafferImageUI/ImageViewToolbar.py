@@ -100,7 +100,7 @@ class _TogglePlugValueWidget( GafferUI.PlugValueWidget ) :
 ## Clipping, exposure and gamma
 
 GafferUI.PlugValueWidget.registerCreator(
-	GafferImageUI.ImageView.staticTypeId(),
+	GafferImageUI.ImageView,
 	"clipping",
 	_TogglePlugValueWidget,
 	imagePrefix ="clipping",
@@ -114,7 +114,7 @@ Gaffer.Metadata.registerPlugDescription( GafferImageUI.ImageView, "clipping",
 )
 
 GafferUI.PlugValueWidget.registerCreator(
-	GafferImageUI.ImageView.staticTypeId(),
+	GafferImageUI.ImageView,
 	"exposure",
 	_TogglePlugValueWidget,
 	imagePrefix ="exposure",
@@ -126,7 +126,7 @@ Gaffer.Metadata.registerPlugDescription( GafferImageUI.ImageView, "exposure",
 )
 
 GafferUI.PlugValueWidget.registerCreator(
-	GafferImageUI.ImageView.staticTypeId(),
+	GafferImageUI.ImageView,
 	"gamma",
 	_TogglePlugValueWidget,
 	imagePrefix ="gamma",
@@ -156,7 +156,7 @@ def __displayTransformPlugValueWidgetCreator( plug ) :
 	return widget
 
 GafferUI.PlugValueWidget.registerCreator(
-	GafferImageUI.ImageView.staticTypeId(),
+	GafferImageUI.ImageView,
 	"displayTransform",
 	__displayTransformPlugValueWidgetCreator
 )

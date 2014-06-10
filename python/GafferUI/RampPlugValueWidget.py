@@ -116,7 +116,7 @@ class RampPlugValueWidget( GafferUI.PlugValueWidget ) :
 		
 		plug = self.getPlug()
 		with Gaffer.UndoContext(
-			plug.ancestor( Gaffer.ScriptNode.staticTypeId() ),
+			plug.ancestor( Gaffer.ScriptNode ),
 			mergeGroup = "RampPlugValudWidget%d%d" % ( id( self, ), self.__positionsMergeGroupId )
 		) :
 		
@@ -137,7 +137,7 @@ class RampPlugValueWidget( GafferUI.PlugValueWidget ) :
 	
 	def __indexRemoved( self, slider, index ) :
 	
-		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
+		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
 			self.getPlug().removePoint( index )			
 	
 	def __selectedIndexChanged( self, slider ) :

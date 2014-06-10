@@ -100,5 +100,5 @@ class ClassParameterHandler( Gaffer.CompoundParameterHandler ) :
 			
 		return self.parameter().getClass( False )
 						
-Gaffer.ParameterHandler.registerParameterHandler( IECore.ClassParameter.staticTypeId(), ClassParameterHandler )
+Gaffer.ParameterHandler.registerParameterHandler( IECore.ClassParameter, ClassParameterHandler )
 		

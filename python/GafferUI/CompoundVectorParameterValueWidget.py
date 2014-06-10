@@ -153,11 +153,11 @@ class _PlugValueWidget( GafferUI.CompoundParameterValueWidget._PlugValueWidget )
 	
 		data = vectorDataWidget.getData()
 		
-		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
+		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
 			for d, p in zip( data, self._parameterHandler().plug().children() ) :
 				p.setValue( d )
 				
-GafferUI.ParameterValueWidget.registerType( IECore.CompoundVectorParameter.staticTypeId(), CompoundVectorParameterValueWidget )
+GafferUI.ParameterValueWidget.registerType( IECore.CompoundVectorParameter, CompoundVectorParameterValueWidget )
 
 # Deriving from ListContainer and not adding any children, so that we're
 # entirely see-through, allowing the underlying cell value to remain visible.
@@ -243,7 +243,7 @@ def __applyPreset( columnParameterHandler, indices, elementValue ) :
 	for index in indices :
 		value[index] = elementValue
 		
-	with Gaffer.UndoContext( columnParameterHandler.plug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
+	with Gaffer.UndoContext( columnParameterHandler.plug().ancestor( Gaffer.ScriptNode ) ) :
 		columnParameterHandler.setPlugValue()
 
 def __parameterPopupMenu( menuDefinition, parameterValueWidget ) :

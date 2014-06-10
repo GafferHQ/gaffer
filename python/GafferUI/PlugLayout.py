@@ -105,7 +105,7 @@ class PlugLayout( GafferUI.Widget ) :
 	def __update( self ) :
 	
 		# get the plugs we want to represent
-		plugs = self.__parent.children( Gaffer.Plug.staticTypeId() )
+		plugs = self.__parent.children( Gaffer.Plug )
 		plugs = [ plug for plug in plugs if not plug.getName().startswith( "__" ) ]
 		
 		# reorder them based on metadata

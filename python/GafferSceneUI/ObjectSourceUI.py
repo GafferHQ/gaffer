@@ -55,4 +55,4 @@ GafferScene.ObjectSource,
 
 )
 
-GafferUI.PlugValueWidget.registerCreator( GafferScene.ObjectSource.staticTypeId(), "transform", GafferUI.TransformPlugValueWidget, collapsed=None )
+GafferUI.PlugValueWidget.registerCreator( GafferScene.ObjectSource, "transform", GafferUI.TransformPlugValueWidget, collapsed=None )

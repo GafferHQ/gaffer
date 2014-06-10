@@ -241,13 +241,13 @@ class _Camera( Gaffer.Node ) :
 			
 IECore.registerRunTimeTyped( _Camera )
 
-GafferUI.NodeToolbar.registerCreator( _Camera.staticTypeId(), GafferUI.StandardNodeToolbar )
-GafferUI.PlugValueWidget.registerCreator( _Camera.staticTypeId(), "in", None )
-GafferUI.PlugValueWidget.registerCreator( _Camera.staticTypeId(), "out", None )
-GafferUI.PlugValueWidget.registerCreator( _Camera.staticTypeId(), "user", None )
+GafferUI.NodeToolbar.registerCreator( _Camera, GafferUI.StandardNodeToolbar )
+GafferUI.PlugValueWidget.registerCreator( _Camera, "in", None )
+GafferUI.PlugValueWidget.registerCreator( _Camera, "out", None )
+GafferUI.PlugValueWidget.registerCreator( _Camera, "user", None )
 
 GafferUI.PlugValueWidget.registerCreator(
-	_Camera.staticTypeId(),
+	_Camera,
 	"lookAt",
 	lambda plug : GafferUI.PathPlugValueWidget(
 		plug,
@@ -262,9 +262,9 @@ def __fixedWidthNumericPlugValueWidget( plug ) :
 	
 	return result
 
-GafferUI.PlugValueWidget.registerCreator( _Camera.staticTypeId(), "depth", __fixedWidthNumericPlugValueWidget )
-GafferUI.PlugValueWidget.registerCreator( _Camera.staticTypeId(), "angle", __fixedWidthNumericPlugValueWidget )
-GafferUI.PlugValueWidget.registerCreator( _Camera.staticTypeId(), "elevation", __fixedWidthNumericPlugValueWidget )
+GafferUI.PlugValueWidget.registerCreator( _Camera, "depth", __fixedWidthNumericPlugValueWidget )
+GafferUI.PlugValueWidget.registerCreator( _Camera, "angle", __fixedWidthNumericPlugValueWidget )
+GafferUI.PlugValueWidget.registerCreator( _Camera, "elevation", __fixedWidthNumericPlugValueWidget )
 
 # Utility node for previewing single objects from a file or
 # sequence (cob, ptc, pdc, etc), as though they were a scene

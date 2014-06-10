@@ -115,7 +115,7 @@ class UserPlugValueWidget( GafferUI.PlugValueWidget ) :
 			plug = plugType( name, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 			self.getPlug().addChild( plug )
 
-GafferUI.PlugValueWidget.registerCreator( Gaffer.Node.staticTypeId(), "user", UserPlugValueWidget )
+GafferUI.PlugValueWidget.registerCreator( Gaffer.Node, "user", UserPlugValueWidget )
 
 ##########################################################################
 # Plug menu
@@ -123,7 +123,7 @@ GafferUI.PlugValueWidget.registerCreator( Gaffer.Node.staticTypeId(), "user", Us
 
 def __deletePlug( plug ) :
 
-	with Gaffer.UndoContext( plug.ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
+	with Gaffer.UndoContext( plug.ancestor( Gaffer.ScriptNode ) ) :
 		plug.parent().removeChild( plug )
 
 def __plugPopupMenu( menuDefinition, plugValueWidget ) :

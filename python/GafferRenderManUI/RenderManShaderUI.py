@@ -86,7 +86,7 @@ def __parameterNoduleCreator( plug ) :
 
 	return None
 
-GafferUI.Nodule.registerNodule( GafferRenderMan.RenderManShader.staticTypeId(), fnmatch.translate( "parameters.*" ), __parameterNoduleCreator )
+GafferUI.Nodule.registerNodule( GafferRenderMan.RenderManShader, fnmatch.translate( "parameters.*" ), __parameterNoduleCreator )
 
 ##########################################################################
 # NodeUI - we implement a custom NodeUI so we can enable/disable
@@ -187,8 +187,8 @@ class RenderManShaderUI( GafferUI.StandardNodeUI ) :
 					if plugWidget is not None :
 						plugWidget.labelPlugValueWidget().setReadOnly( not active )
 				
-GafferUI.NodeUI.registerNodeUI( GafferRenderMan.RenderManShader.staticTypeId(), RenderManShaderUI )
-GafferUI.NodeUI.registerNodeUI( GafferRenderMan.RenderManLight.staticTypeId(), RenderManShaderUI )
+GafferUI.NodeUI.registerNodeUI( GafferRenderMan.RenderManShader, RenderManShaderUI )
+GafferUI.NodeUI.registerNodeUI( GafferRenderMan.RenderManLight, RenderManShaderUI )
 
 ##########################################################################
 # PlugValueWidget for the "parameters" compound. This is defined in order
@@ -250,8 +250,8 @@ def __parametersPlugValueWidgetCreator( plug ) :
 
 	return GafferUI.SectionedCompoundPlugValueWidget( plug, sections )
 
-GafferUI.PlugValueWidget.registerCreator( GafferRenderMan.RenderManShader.staticTypeId(), "parameters", __parametersPlugValueWidgetCreator )
-GafferUI.PlugValueWidget.registerCreator( GafferRenderMan.RenderManLight.staticTypeId(), "parameters", __parametersPlugValueWidgetCreator )
+GafferUI.PlugValueWidget.registerCreator( GafferRenderMan.RenderManShader, "parameters", __parametersPlugValueWidgetCreator )
+GafferUI.PlugValueWidget.registerCreator( GafferRenderMan.RenderManLight, "parameters", __parametersPlugValueWidgetCreator )
 
 ##########################################################################
 # PlugValueWidgets for the individual parameter plugs. We use annotations
@@ -403,8 +403,8 @@ def __plugValueWidgetCreator( plug ) :
 	
 	return result
 
-GafferUI.PlugValueWidget.registerCreator( GafferRenderMan.RenderManShader.staticTypeId(), "parameters.*", __plugValueWidgetCreator )
-GafferUI.PlugValueWidget.registerCreator( GafferRenderMan.RenderManLight.staticTypeId(), "parameters.*", __plugValueWidgetCreator )
+GafferUI.PlugValueWidget.registerCreator( GafferRenderMan.RenderManShader, "parameters.*", __plugValueWidgetCreator )
+GafferUI.PlugValueWidget.registerCreator( GafferRenderMan.RenderManLight, "parameters.*", __plugValueWidgetCreator )
 
 ##########################################################################
 # Metadata registrations

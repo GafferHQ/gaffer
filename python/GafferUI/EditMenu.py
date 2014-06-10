@@ -175,7 +175,7 @@ def arrange( menu ) :
 	
 	nodes = script.selection()
 	if not nodes :
-		nodes = Gaffer.StandardSet( graph.getRoot().children( Gaffer.Node.staticTypeId() ) )
+		nodes = Gaffer.StandardSet( graph.getRoot().children( Gaffer.Node ) )
 	
 	with Gaffer.UndoContext( script ) :
 		graph.getLayout().layoutNodes( graph, nodes )
@@ -185,7 +185,7 @@ def arrange( menu ) :
 def selectAll( menu ) :
 
 	script, parent = __scriptAndParent( menu )
-	for c in parent.children( Gaffer.Node.staticTypeId() ) :
+	for c in parent.children( Gaffer.Node ) :
 		script.selection().add( c )
 			
 ## A function suitable as the command for an Edit/Select None menu item. It must
@@ -267,7 +267,7 @@ def __selectionAvailable( menu ) :
 def __pasteAvailable( menu ) :
 
 	scriptNode = menu.ancestor( GafferUI.ScriptWindow ).scriptNode()
-	root = scriptNode.ancestor( Gaffer.ApplicationRoot.staticTypeId() )
+	root = scriptNode.ancestor( Gaffer.ApplicationRoot )
 	return isinstance( root.getClipboardContents(), IECore.StringData )
 
 def __nodeGraph( menu, focussedOnly=True ) :

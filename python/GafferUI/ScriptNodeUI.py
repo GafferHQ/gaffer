@@ -39,25 +39,25 @@ import Gaffer
 import GafferUI
 
 GafferUI.PlugValueWidget.registerCreator(
-	Gaffer.ScriptNode.staticTypeId(),
+	Gaffer.ScriptNode,
 	"unsavedChanges",
 	None
 )
 
 GafferUI.PlugValueWidget.registerCreator(
-	Gaffer.ScriptNode.staticTypeId(),
+	Gaffer.ScriptNode,
 	"frameRange",
 	GafferUI.CompoundNumericPlugValueWidget
 )
 
 GafferUI.PlugValueWidget.registerCreator(
-	Gaffer.ScriptNode.staticTypeId(),
+	Gaffer.ScriptNode,
 	"variables",
 	lambda plug : GafferUI.CompoundDataPlugValueWidget( plug, collapsed=None ),
 )
 
 Gaffer.Metadata.registerPlugValue( 
-	Gaffer.ScriptNode.staticTypeId(),
+	Gaffer.ScriptNode,
 	"variables",
 	"nodeUI:section",
 	"Variables",

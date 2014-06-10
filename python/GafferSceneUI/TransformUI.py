@@ -54,7 +54,7 @@ GafferScene.Transform,
 )
 
 GafferUI.PlugValueWidget.registerCreator(
-	GafferScene.Transform.staticTypeId(),
+	GafferScene.Transform,
 	"space",
 	GafferUI.EnumPlugValueWidget,
 	labelsAndValues = (
@@ -63,4 +63,4 @@ GafferUI.PlugValueWidget.registerCreator(
 	)
 )
 
-GafferUI.PlugValueWidget.registerCreator( GafferScene.Transform.staticTypeId(), "transform", GafferUI.TransformPlugValueWidget, collapsed=None )
+GafferUI.PlugValueWidget.registerCreator( GafferScene.Transform, "transform", GafferUI.TransformPlugValueWidget, collapsed=None )

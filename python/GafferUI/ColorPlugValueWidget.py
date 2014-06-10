@@ -78,8 +78,8 @@ class ColorPlugValueWidget( GafferUI.CompoundNumericPlugValueWidget ) :
 			
 			return False
 					
-GafferUI.PlugValueWidget.registerType( Gaffer.Color3fPlug.staticTypeId(), ColorPlugValueWidget )
-GafferUI.PlugValueWidget.registerType( Gaffer.Color4fPlug.staticTypeId(), ColorPlugValueWidget )
+GafferUI.PlugValueWidget.registerType( Gaffer.Color3fPlug, ColorPlugValueWidget )
+GafferUI.PlugValueWidget.registerType( Gaffer.Color4fPlug, ColorPlugValueWidget )
 
 ## \todo Consider if this is something that might be useful elsewhere, if
 # there are other such things, and what a Behaviour base class for them

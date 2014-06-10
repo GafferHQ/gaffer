@@ -313,4 +313,4 @@ class CompoundPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		return value.value
 
-GafferUI.PlugValueWidget.registerType( Gaffer.CompoundPlug.staticTypeId(), CompoundPlugValueWidget )
+GafferUI.PlugValueWidget.registerType( Gaffer.CompoundPlug, CompoundPlugValueWidget )

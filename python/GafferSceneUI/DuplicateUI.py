@@ -66,10 +66,10 @@ GafferScene.Duplicate,
 
 # we hide the parent (which comes from the base class) because the value for it is
 # computed from the target plug automatically.
-GafferUI.PlugValueWidget.registerCreator( GafferScene.Duplicate.staticTypeId(), "parent", None )
+GafferUI.PlugValueWidget.registerCreator( GafferScene.Duplicate, "parent", None )
 
 GafferUI.PlugValueWidget.registerCreator(
-	GafferScene.Duplicate.staticTypeId(),
+	GafferScene.Duplicate,
 	"target",
 	lambda plug : GafferUI.PathPlugValueWidget(
 		plug,
@@ -77,4 +77,4 @@ GafferUI.PlugValueWidget.registerCreator(
 	),
 )
 
-GafferUI.PlugValueWidget.registerCreator( GafferScene.Duplicate.staticTypeId(), "transform", GafferUI.TransformPlugValueWidget, collapsed=None )
+GafferUI.PlugValueWidget.registerCreator( GafferScene.Duplicate, "transform", GafferUI.TransformPlugValueWidget, collapsed=None )

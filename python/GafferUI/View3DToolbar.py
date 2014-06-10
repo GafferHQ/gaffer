@@ -78,4 +78,4 @@ class _BaseStatePlugValueWidget( GafferUI.PlugValueWidget ) :
 	
 		plug.setValue( not plug.getValue() )
 		
-GafferUI.PlugValueWidget.registerCreator( GafferUI.View3D.staticTypeId(), "baseState", _BaseStatePlugValueWidget )
+GafferUI.PlugValueWidget.registerCreator( GafferUI.View3D, "baseState", _BaseStatePlugValueWidget )

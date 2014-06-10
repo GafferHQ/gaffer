@@ -55,4 +55,4 @@ GafferScene.Grid,
 
 )
 
-GafferUI.PlugValueWidget.registerCreator( GafferScene.Grid.staticTypeId(), "transform", GafferUI.TransformPlugValueWidget, collapsed=None )
+GafferUI.PlugValueWidget.registerCreator( GafferScene.Grid, "transform", GafferUI.TransformPlugValueWidget, collapsed=None )

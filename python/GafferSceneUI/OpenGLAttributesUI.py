@@ -88,7 +88,7 @@ def __curvesPrimitivesSummary( plug ) :
 		
 GafferUI.PlugValueWidget.registerCreator(
 	
-	GafferScene.OpenGLAttributes.staticTypeId(),
+	GafferScene.OpenGLAttributes,
 	"attributes",
 	GafferUI.SectionedCompoundDataPlugValueWidget,
 	sections = (
@@ -141,7 +141,7 @@ GafferUI.PlugValueWidget.registerCreator(
 )
 
 GafferUI.PlugValueWidget.registerCreator(
-	GafferScene.OpenGLAttributes.staticTypeId(),
+	GafferScene.OpenGLAttributes,
 	"attributes.pointsPrimitiveUseGLPoints.value",
 	GafferUI.EnumPlugValueWidget,
 	labelsAndValues = (

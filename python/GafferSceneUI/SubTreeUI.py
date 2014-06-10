@@ -60,7 +60,7 @@ GafferScene.SubTree,
 ##########################################################################
 
 GafferUI.PlugValueWidget.registerCreator(
-	GafferScene.SubTree.staticTypeId(),
+	GafferScene.SubTree,
 	"root",
 	lambda plug : GafferUI.PathPlugValueWidget(
 		plug,

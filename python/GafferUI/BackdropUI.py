@@ -87,9 +87,9 @@ Gaffer.Backdrop,
 ##########################################################################
 
 GafferUI.PlugValueWidget.registerCreator(
-	Gaffer.Backdrop.staticTypeId(), "title", GafferUI.StringPlugValueWidget, continuousUpdate=True
+	Gaffer.Backdrop, "title", GafferUI.StringPlugValueWidget, continuousUpdate=True
 )
 
 GafferUI.PlugValueWidget.registerCreator(
-	Gaffer.Backdrop.staticTypeId(), "description", GafferUI.MultiLineStringPlugValueWidget, continuousUpdate=True
+	Gaffer.Backdrop, "description", GafferUI.MultiLineStringPlugValueWidget, continuousUpdate=True
 )

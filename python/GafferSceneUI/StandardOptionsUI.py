@@ -74,7 +74,7 @@ def __motionBlurSummary( plug ) :
 
 GafferUI.PlugValueWidget.registerCreator(
 	
-	GafferScene.StandardOptions.staticTypeId(),
+	GafferScene.StandardOptions,
 	"options",
 	GafferUI.SectionedCompoundDataPlugValueWidget,
 	sections = (
@@ -105,7 +105,7 @@ GafferUI.PlugValueWidget.registerCreator(
 )
 
 GafferUI.PlugValueWidget.registerCreator(
-	GafferScene.StandardOptions.staticTypeId(),
+	GafferScene.StandardOptions,
 	"options.renderCamera.value",
 	lambda plug : GafferUI.PathPlugValueWidget(
 		plug,

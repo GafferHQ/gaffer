@@ -155,4 +155,4 @@ class _PlugValueWidget( GafferUI.CompoundParameterValueWidget._PlugValueWidget )
 		with self.getPlug().node().parameterModificationContext() :
 			self._parameter().setClass( className, classVersion )
 
-GafferUI.ParameterValueWidget.registerType( IECore.ClassParameter.staticTypeId(), ClassParameterValueWidget )
+GafferUI.ParameterValueWidget.registerType( IECore.ClassParameter, ClassParameterValueWidget )

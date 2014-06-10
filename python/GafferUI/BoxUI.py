@@ -122,13 +122,13 @@ class BoxNodeUI( GafferUI.StandardNodeUI ) :
 	
 		GafferUI.UIEditor.acquire( self.node() )
 	
-GafferUI.NodeUI.registerNodeUI( Gaffer.Box.staticTypeId(), BoxNodeUI )
+GafferUI.NodeUI.registerNodeUI( Gaffer.Box, BoxNodeUI )
 
 # PlugValueWidget registrations
 ##########################################################################
 
-GafferUI.PlugValueWidget.registerCreator( Gaffer.Box.staticTypeId(), re.compile( "in[0-9]*" ), None )
-GafferUI.PlugValueWidget.registerCreator( Gaffer.Box.staticTypeId(), re.compile( "out[0-9]*" ), None )
+GafferUI.PlugValueWidget.registerCreator( Gaffer.Box, re.compile( "in[0-9]*" ), None )
+GafferUI.PlugValueWidget.registerCreator( Gaffer.Box, re.compile( "out[0-9]*" ), None )
 
 def __plugValueWidgetCreator( plug ) :
 
@@ -146,19 +146,19 @@ def __plugValueWidgetCreator( plug ) :
 			
 	return GafferUI.PlugValueWidget.create( plug, useTypeOnly=True )
 		
-GafferUI.PlugValueWidget.registerCreator( Gaffer.Box.staticTypeId(), "user.*" , __plugValueWidgetCreator )
+GafferUI.PlugValueWidget.registerCreator( Gaffer.Box, "user.*" , __plugValueWidgetCreator )
 
 # PlugValueWidget menu
 ##########################################################################
 
 def __promoteToBox( box, plug ) :
 
-	with Gaffer.UndoContext( box.ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
+	with Gaffer.UndoContext( box.ancestor( Gaffer.ScriptNode ) ) :
 		box.promotePlug( plug )
 
 def __unpromoteFromBox( box, plug ) :
 
-	with Gaffer.UndoContext( box.ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
+	with Gaffer.UndoContext( box.ancestor( Gaffer.ScriptNode ) ) :
 		box.unpromotePlug( plug )
 
 def __plugPopupMenu( menuDefinition, plugValueWidget ) :
@@ -168,7 +168,7 @@ def __plugPopupMenu( menuDefinition, plugValueWidget ) :
 	if node is None :
 		return
 
-	box = node.ancestor( Gaffer.Box.staticTypeId() )
+	box = node.ancestor( Gaffer.Box )
 	if box is None :
 		return
 
@@ -206,12 +206,12 @@ def __renamePlug( nodeGraph, plug ) :
 	if not name :
 		return
 
-	with Gaffer.UndoContext( plug.ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
+	with Gaffer.UndoContext( plug.ancestor( Gaffer.ScriptNode ) ) :
 		plug.setName( name )
 
 def __deletePlug( plug ) :
 
-	with Gaffer.UndoContext( plug.ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
+	with Gaffer.UndoContext( plug.ancestor( Gaffer.ScriptNode ) ) :
 		plug.parent().removeChild( plug )
 
 def __nodeGraphPlugContextMenu( nodeGraph, plug, menuDefinition ) :

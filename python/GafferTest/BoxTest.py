@@ -485,7 +485,7 @@ class BoxTest( unittest.TestCase ) :
 		b = DerivedBox()
 		b["c"] = Gaffer.Node()
 		
-		a = b["c"].ancestor( DerivedBox.staticTypeId() )
+		a = b["c"].ancestor( DerivedBox )
 		self.assertTrue( a.isSame( b ) )
 		
 		# check that adding the node to a script and getting

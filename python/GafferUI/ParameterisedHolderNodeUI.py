@@ -75,9 +75,9 @@ class ParameterisedHolderNodeUI( GafferUI.NodeUI ) :
 	
 		self.__parameterValueWidget.plugValueWidget().setReadOnly( readOnly )
 				
-GafferUI.NodeUI.registerNodeUI( Gaffer.ParameterisedHolderNode.staticTypeId(), ParameterisedHolderNodeUI )
-GafferUI.NodeUI.registerNodeUI( Gaffer.ParameterisedHolderComputeNode.staticTypeId(), ParameterisedHolderNodeUI )
-GafferUI.NodeUI.registerNodeUI( Gaffer.ParameterisedHolderDependencyNode.staticTypeId(), ParameterisedHolderNodeUI )
+GafferUI.NodeUI.registerNodeUI( Gaffer.ParameterisedHolderNode, ParameterisedHolderNodeUI )
+GafferUI.NodeUI.registerNodeUI( Gaffer.ParameterisedHolderComputeNode, ParameterisedHolderNodeUI )
+GafferUI.NodeUI.registerNodeUI( Gaffer.ParameterisedHolderDependencyNode, ParameterisedHolderNodeUI )
 
 ##########################################################################
 # Info button
@@ -136,13 +136,13 @@ def __parameterNoduleCreator( plug ) :
 	else :
 		return None
 
-GafferUI.Nodule.registerNodule( Gaffer.ParameterisedHolderNode.staticTypeId(), "parameters", GafferUI.CompoundNodule )
-GafferUI.Nodule.registerNodule( Gaffer.ParameterisedHolderComputeNode.staticTypeId(), "parameters", GafferUI.CompoundNodule )
-GafferUI.Nodule.registerNodule( Gaffer.ParameterisedHolderDependencyNode.staticTypeId(), "parameters", GafferUI.CompoundNodule )
+GafferUI.Nodule.registerNodule( Gaffer.ParameterisedHolderNode, "parameters", GafferUI.CompoundNodule )
+GafferUI.Nodule.registerNodule( Gaffer.ParameterisedHolderComputeNode, "parameters", GafferUI.CompoundNodule )
+GafferUI.Nodule.registerNodule( Gaffer.ParameterisedHolderDependencyNode, "parameters", GafferUI.CompoundNodule )
 
-GafferUI.Nodule.registerNodule( Gaffer.ParameterisedHolderNode.staticTypeId(), fnmatch.translate( "parameters.*" ), __parameterNoduleCreator )
-GafferUI.Nodule.registerNodule( Gaffer.ParameterisedHolderComputeNode.staticTypeId(), fnmatch.translate( "parameters.*" ), __parameterNoduleCreator )
-GafferUI.Nodule.registerNodule( Gaffer.ParameterisedHolderDependencyNode.staticTypeId(), fnmatch.translate( "parameters.*" ), __parameterNoduleCreator )
+GafferUI.Nodule.registerNodule( Gaffer.ParameterisedHolderNode, fnmatch.translate( "parameters.*" ), __parameterNoduleCreator )
+GafferUI.Nodule.registerNodule( Gaffer.ParameterisedHolderComputeNode, fnmatch.translate( "parameters.*" ), __parameterNoduleCreator )
+GafferUI.Nodule.registerNodule( Gaffer.ParameterisedHolderDependencyNode, fnmatch.translate( "parameters.*" ), __parameterNoduleCreator )
 
 ##########################################################################
 # Metadata

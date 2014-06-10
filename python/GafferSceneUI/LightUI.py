@@ -50,4 +50,4 @@ GafferScene.Light,
 
 )
 
-GafferUI.PlugValueWidget.registerCreator( GafferScene.Light.staticTypeId(), "parameters", GafferUI.CompoundPlugValueWidget, collapsed=None )
+GafferUI.PlugValueWidget.registerCreator( GafferScene.Light, "parameters", GafferUI.CompoundPlugValueWidget, collapsed=None )

@@ -81,7 +81,7 @@ class PlugValueWidgetTest( unittest.TestCase ) :
 		w = GafferUI.PlugValueWidget.create( n["p"] )
 		self.assertTrue( isinstance( w, GafferUI.CompoundPlugValueWidget ) )
 		
-		GafferUI.PlugValueWidget.registerType( ValueWidgetTestPlug.staticTypeId(), None )
+		GafferUI.PlugValueWidget.registerType( ValueWidgetTestPlug, None )
 		
 		w = GafferUI.PlugValueWidget.create( n["p"] )
 		self.assertEqual( w, None )

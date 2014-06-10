@@ -52,7 +52,7 @@ class PresetsOnlyParameterValueWidget( GafferUI.ParameterValueWidget ) :
 			**kw
 		)
 
-GafferUI.ParameterValueWidget.registerType( IECore.Parameter.staticTypeId(), PresetsOnlyParameterValueWidget, "presets" )
+GafferUI.ParameterValueWidget.registerType( IECore.Parameter, PresetsOnlyParameterValueWidget, "presets" )
 		
 # The actual ui is more easily implemented as a PlugValueWidget, because
 # we get _addPopupMenu() and the machinery for updating on plug changes for free.

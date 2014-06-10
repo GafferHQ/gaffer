@@ -129,7 +129,7 @@ class NumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 	
 	def __setPlugValue( self, mergeGroup="" ) :
 				
-		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode.staticTypeId() ), mergeGroup=mergeGroup ) :
+		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode ), mergeGroup=mergeGroup ) :
 
 			with Gaffer.BlockedConnection( self._plugConnections() ) :
 				try :
@@ -157,5 +157,5 @@ class NumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 			charWidth = len( str( self.getPlug().maxValue() ) )
 		self.__numericWidget.setFixedCharacterWidth( charWidth )
 	
-GafferUI.PlugValueWidget.registerType( Gaffer.FloatPlug.staticTypeId(), NumericPlugValueWidget )
-GafferUI.PlugValueWidget.registerType( Gaffer.IntPlug.staticTypeId(), NumericPlugValueWidget )
+GafferUI.PlugValueWidget.registerType( Gaffer.FloatPlug, NumericPlugValueWidget )
+GafferUI.PlugValueWidget.registerType( Gaffer.IntPlug, NumericPlugValueWidget )

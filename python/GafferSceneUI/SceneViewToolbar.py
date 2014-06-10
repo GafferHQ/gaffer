@@ -79,7 +79,7 @@ class _ExpansionPlugValueWidget( GafferUI.PlugValueWidget ) :
 	
 		self.getPlug().setValue( 0 if self.getPlug().getValue() else 999 )
 		
-GafferUI.PlugValueWidget.registerCreator( GafferSceneUI.SceneView.staticTypeId(), "minimumExpansionDepth", _ExpansionPlugValueWidget )
+GafferUI.PlugValueWidget.registerCreator( GafferSceneUI.SceneView, "minimumExpansionDepth", _ExpansionPlugValueWidget )
 
 Gaffer.Metadata.registerPlugValue( GafferSceneUI.SceneView, "minimumExpansionDepth", "divider", True )
 
@@ -113,7 +113,7 @@ class _LookThroughPlugValueWidget( GafferUI.PlugValueWidget ) :
 			self.__cameraWidget.setEnabled( self.getPlug()["enabled"].getValue() )
 
 GafferUI.PlugValueWidget.registerCreator(
-	GafferSceneUI.SceneView.staticTypeId(),
+	GafferSceneUI.SceneView,
 	"lookThrough",
 	_LookThroughPlugValueWidget,
 )

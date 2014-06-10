@@ -94,7 +94,7 @@ def __raytracingSummary( plug ) :
 		
 GafferUI.PlugValueWidget.registerCreator(
 	
-	GafferRenderMan.RenderManAttributes.staticTypeId(),
+	GafferRenderMan.RenderManAttributes,
 	"attributes",
 	GafferUI.SectionedCompoundDataPlugValueWidget,
 	sections = (
@@ -146,7 +146,7 @@ GafferUI.PlugValueWidget.registerCreator(
 )
 
 GafferUI.PlugValueWidget.registerCreator(
-	GafferRenderMan.RenderManAttributes.staticTypeId(),
+	GafferRenderMan.RenderManAttributes,
 	"attributes.cameraHitMode.value",
 	GafferUI.EnumPlugValueWidget,
 	labelsAndValues = (
@@ -156,7 +156,7 @@ GafferUI.PlugValueWidget.registerCreator(
 )
 
 GafferUI.PlugValueWidget.registerCreator(
-	GafferRenderMan.RenderManAttributes.staticTypeId(),
+	GafferRenderMan.RenderManAttributes,
 	"attributes.transmissionHitMode.value",
 	GafferUI.EnumPlugValueWidget,
 	labelsAndValues = (
@@ -166,7 +166,7 @@ GafferUI.PlugValueWidget.registerCreator(
 )
 
 GafferUI.PlugValueWidget.registerCreator(
-	GafferRenderMan.RenderManAttributes.staticTypeId(),
+	GafferRenderMan.RenderManAttributes,
 	"attributes.diffuseHitMode.value",
 	GafferUI.EnumPlugValueWidget,
 	labelsAndValues = (
@@ -176,7 +176,7 @@ GafferUI.PlugValueWidget.registerCreator(
 )
 
 GafferUI.PlugValueWidget.registerCreator(
-	GafferRenderMan.RenderManAttributes.staticTypeId(),
+	GafferRenderMan.RenderManAttributes,
 	"attributes.specularHitMode.value",
 	GafferUI.EnumPlugValueWidget,
 	labelsAndValues = (
@@ -186,7 +186,7 @@ GafferUI.PlugValueWidget.registerCreator(
 )
 
 GafferUI.PlugValueWidget.registerCreator(
-	GafferRenderMan.RenderManAttributes.staticTypeId(),
+	GafferRenderMan.RenderManAttributes,
 	"attributes.photonHitMode.value",
 	GafferUI.EnumPlugValueWidget,
 	labelsAndValues = (

@@ -49,5 +49,5 @@ class FilterPlugValueWidget( GafferUI.EnumPlugValueWidget ) :
 		GafferUI.EnumPlugValueWidget.__init__( self, plug, values, **kw )
 	
 		
-GafferUI.PlugValueWidget.registerType( GafferImage.FilterPlug.staticTypeId(), FilterPlugValueWidget )
+GafferUI.PlugValueWidget.registerType( GafferImage.FilterPlug, FilterPlugValueWidget )
 

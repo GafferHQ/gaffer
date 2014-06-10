@@ -63,7 +63,7 @@ GafferScene.SceneReader,
 ##########################################################################
 
 GafferUI.PlugValueWidget.registerCreator(
-	GafferScene.SceneReader.staticTypeId(),
+	GafferScene.SceneReader,
 	"fileName",
 	lambda plug : GafferUI.PathPlugValueWidget( plug,
 		path = Gaffer.FileSystemPath( "/", filter = Gaffer.FileSystemPath.createStandardFilter( extensions = IECore.SceneInterface.supportedExtensions() ) ),
@@ -86,7 +86,7 @@ def __toggleTag( plug, tag, checked ) :
 	else :
 		tags.remove( tag )
 		
-	with Gaffer.UndoContext( plug.ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
+	with Gaffer.UndoContext( plug.ancestor( Gaffer.ScriptNode ) ) :
 		plug.setValue( " ".join( tags ) )
 
 def __tagsPopupMenu( menuDefinition, plugValueWidget ) :

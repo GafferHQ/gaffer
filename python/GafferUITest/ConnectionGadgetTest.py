@@ -69,7 +69,7 @@ class ConnectionGadgetTest( GafferUITest.TestCase ) :
 			
 			return result
 		
-		GafferUI.ConnectionGadget.registerConnectionGadget( MyPlug.staticTypeId(), creator )
+		GafferUI.ConnectionGadget.registerConnectionGadget( MyPlug, creator )
 
 		n1 = Gaffer.Node()
 		n1["out"] = Gaffer.Plug( direction = Gaffer.Plug.Direction.Out )
@@ -105,7 +105,7 @@ class ConnectionGadgetTest( GafferUITest.TestCase ) :
 			
 			return result
 		
-		GafferUI.ConnectionGadget.registerConnectionGadget( GafferTest.AddNode.staticTypeId(), "op2", creator )
+		GafferUI.ConnectionGadget.registerConnectionGadget( GafferTest.AddNode, "op2", creator )
 		
 		n1 = GafferTest.AddNode()
 		n2 = GafferTest.AddNode()

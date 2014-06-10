@@ -79,12 +79,12 @@ class VectorDataPlugValueWidget( GafferUI.PlugValueWidget ) :
 		
 		assert( widget is self.__dataWidget )
 					
-		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
+		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
 						
 			self.getPlug().setValue( self.__dataWidget.getData()[0] )
 	
-GafferUI.PlugValueWidget.registerType( Gaffer.BoolVectorDataPlug.staticTypeId(), VectorDataPlugValueWidget )
-GafferUI.PlugValueWidget.registerType( Gaffer.IntVectorDataPlug.staticTypeId(), VectorDataPlugValueWidget )
-GafferUI.PlugValueWidget.registerType( Gaffer.FloatVectorDataPlug.staticTypeId(), VectorDataPlugValueWidget )
-GafferUI.PlugValueWidget.registerType( Gaffer.StringVectorDataPlug.staticTypeId(), VectorDataPlugValueWidget )
-GafferUI.PlugValueWidget.registerType( Gaffer.V3fVectorDataPlug.staticTypeId(), VectorDataPlugValueWidget )
+GafferUI.PlugValueWidget.registerType( Gaffer.BoolVectorDataPlug, VectorDataPlugValueWidget )
+GafferUI.PlugValueWidget.registerType( Gaffer.IntVectorDataPlug, VectorDataPlugValueWidget )
+GafferUI.PlugValueWidget.registerType( Gaffer.FloatVectorDataPlug, VectorDataPlugValueWidget )
+GafferUI.PlugValueWidget.registerType( Gaffer.StringVectorDataPlug, VectorDataPlugValueWidget )
+GafferUI.PlugValueWidget.registerType( Gaffer.V3fVectorDataPlug, VectorDataPlugValueWidget )

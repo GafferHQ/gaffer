@@ -118,4 +118,4 @@ class ConnectionPlugValueWidget( GafferUI.PlugValueWidget ) :
 		else :
 			return "<b><i>None</i></b>"
 
-GafferUI.PlugValueWidget.registerType( Gaffer.Plug.staticTypeId(), ConnectionPlugValueWidget )
+GafferUI.PlugValueWidget.registerType( Gaffer.Plug, ConnectionPlugValueWidget )

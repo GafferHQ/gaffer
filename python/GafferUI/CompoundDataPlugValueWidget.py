@@ -197,5 +197,5 @@ class _MemberPlugValueWidget( GafferUI.PlugValueWidget ) :
 				
 			self.__row[-1].setEnabled( enabled )
 						
-GafferUI.PlugValueWidget.registerType( Gaffer.CompoundDataPlug.staticTypeId(), CompoundDataPlugValueWidget )
-GafferUI.PlugValueWidget.registerType( Gaffer.CompoundDataPlug.MemberPlug.staticTypeId(), _MemberPlugValueWidget )
+GafferUI.PlugValueWidget.registerType( Gaffer.CompoundDataPlug, CompoundDataPlugValueWidget )
+GafferUI.PlugValueWidget.registerType( Gaffer.CompoundDataPlug.MemberPlug, _MemberPlugValueWidget )

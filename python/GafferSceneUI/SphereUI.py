@@ -73,7 +73,7 @@ GafferScene.Sphere,
 ##########################################################################
 
 GafferUI.PlugValueWidget.registerCreator(
-	GafferScene.Sphere.staticTypeId(),
+	GafferScene.Sphere,
 	"type",
 	GafferUI.EnumPlugValueWidget,
 	labelsAndValues = (

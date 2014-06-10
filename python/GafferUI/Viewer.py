@@ -101,7 +101,7 @@ class Viewer( GafferUI.NodeSetEditor ) :
 		
 		node = self._lastAddedNode()
 		if node :	
-			for plug in node.children( Gaffer.Plug.staticTypeId() ) :
+			for plug in node.children( Gaffer.Plug ) :
 				if plug.direction() == Gaffer.Plug.Direction.Out and not plug.getName().startswith( "__" ) :
 					# try to reuse an existing view
 					for view in self.__views :
@@ -180,6 +180,6 @@ GafferUI.EditorWidget.registerType( "Viewer", Viewer )
 # PlugValueWidget and Toolbar registrations
 ##########################################################################
 
-GafferUI.NodeToolbar.registerCreator( GafferUI.View.staticTypeId(), GafferUI.StandardNodeToolbar )
-GafferUI.PlugValueWidget.registerCreator( GafferUI.View.staticTypeId(), "in", None )
-GafferUI.PlugValueWidget.registerCreator( GafferUI.View.staticTypeId(), "user", None )
+GafferUI.NodeToolbar.registerCreator( GafferUI.View, GafferUI.StandardNodeToolbar )
+GafferUI.PlugValueWidget.registerCreator( GafferUI.View, "in", None )
+GafferUI.PlugValueWidget.registerCreator( GafferUI.View, "user", None )

@@ -51,7 +51,7 @@ class DateTimeParameterValueWidget( GafferUI.ParameterValueWidget ) :
 		
 		GafferUI.ParameterValueWidget.__init__( self, _DateTimePlugValueWidget( parameterHandler.plug() ), parameterHandler, **kw )
 			
-GafferUI.ParameterValueWidget.registerType( IECore.DateTimeParameter.staticTypeId(), DateTimeParameterValueWidget )
+GafferUI.ParameterValueWidget.registerType( IECore.DateTimeParameter, DateTimeParameterValueWidget )
 
 class _DateTimePlugValueWidget( GafferUI.PlugValueWidget ) :
 
@@ -107,5 +107,5 @@ class _DateTimePlugValueWidget( GafferUI.PlugValueWidget ) :
 			delimited[17:19],
 		)
 		
-		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
+		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
 			self.getPlug().setValue( undelimited )

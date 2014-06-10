@@ -65,8 +65,8 @@ GafferUI.PlugValueWidget.registerCreator(
 	),
 )
 
-GafferUI.PlugValueWidget.registerCreator( Gaffer.ObjectWriter.staticTypeId(), "parameters", __createParameterWidget )
-GafferUI.PlugValueWidget.registerCreator( Gaffer.ObjectWriter.staticTypeId(), "in", None )
+GafferUI.PlugValueWidget.registerCreator( Gaffer.ObjectWriter, "parameters", __createParameterWidget )
+GafferUI.PlugValueWidget.registerCreator( Gaffer.ObjectWriter, "in", None )
 
-GafferUI.Nodule.registerNodule( Gaffer.ObjectWriter.staticTypeId(), fnmatch.translate( "*" ), lambda plug : None )
-GafferUI.Nodule.registerNodule( Gaffer.ObjectWriter.staticTypeId(), "in", GafferUI.StandardNodule )
+GafferUI.Nodule.registerNodule( Gaffer.ObjectWriter, fnmatch.translate( "*" ), lambda plug : None )
+GafferUI.Nodule.registerNodule( Gaffer.ObjectWriter, "in", GafferUI.StandardNodule )

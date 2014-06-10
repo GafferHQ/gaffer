@@ -66,7 +66,7 @@ def __motionBlurSummary( plug ) :
 	
 GafferUI.PlugValueWidget.registerCreator(
 	
-	GafferScene.StandardAttributes.staticTypeId(),
+	GafferScene.StandardAttributes,
 	"attributes",
 	GafferUI.SectionedCompoundDataPlugValueWidget,
 	sections = (

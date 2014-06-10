@@ -213,7 +213,7 @@ class _PlugValueWidget( GafferUI.CompoundParameterValueWidget._PlugValueWidget )
 		# and reorder things automatically.
 		self._CompoundPlugValueWidget__updateChildPlugUIs()
 		
-GafferUI.ParameterValueWidget.registerType( IECore.ClassVectorParameter.staticTypeId(), ClassVectorParameterValueWidget )
+GafferUI.ParameterValueWidget.registerType( IECore.ClassVectorParameter, ClassVectorParameterValueWidget )
 
 class _ChildParameterUI( GafferUI.CompoundPlugValueWidget ) :
 

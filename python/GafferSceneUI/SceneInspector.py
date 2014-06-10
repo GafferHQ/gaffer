@@ -71,7 +71,7 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 		self.__plugDirtiedConnections = []
 		self.__parentChangedConnections = []
 		for node in self.getNodeSet()[-2:] :
-			outputScenePlugs = [ p for p in node.children( GafferScene.ScenePlug.staticTypeId() ) if p.direction() == Gaffer.Plug.Direction.Out ]
+			outputScenePlugs = [ p for p in node.children( GafferScene.ScenePlug ) if p.direction() == Gaffer.Plug.Direction.Out ]
 			if len( outputScenePlugs ) :
 				self.__scenePlugs.append( outputScenePlugs[0] )
 				self.__plugDirtiedConnections.append( node.plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__plugDirtied ) ) )
@@ -152,7 +152,7 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 		# basic info
 		
 		result = {}
-		result["node"] = plug.node().relativeName( plug.ancestor( Gaffer.ScriptNode.staticTypeId() ) )
+		result["node"] = plug.node().relativeName( plug.ancestor( Gaffer.ScriptNode ) )
 		result["path"] = path
 		result["bound"] = plug.bound( path )
 		

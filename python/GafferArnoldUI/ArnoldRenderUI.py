@@ -39,7 +39,7 @@ import GafferUI
 import GafferArnold
 
 GafferUI.PlugValueWidget.registerCreator(
-	GafferArnold.ArnoldRender.staticTypeId(),
+	GafferArnold.ArnoldRender,
 	"mode",
 	GafferUI.EnumPlugValueWidget,
 	labelsAndValues = (
@@ -50,7 +50,7 @@ GafferUI.PlugValueWidget.registerCreator(
 )
 
 GafferUI.PlugValueWidget.registerCreator(
-	GafferArnold.ArnoldRender.staticTypeId(),
+	GafferArnold.ArnoldRender,
 	"fileName",
 	lambda plug : GafferUI.PathPlugValueWidget( plug,
 		path = Gaffer.FileSystemPath( "/", filter = Gaffer.FileSystemPath.createStandardFilter() ),
@@ -62,7 +62,7 @@ GafferUI.PlugValueWidget.registerCreator(
 )
 
 GafferUI.PlugValueWidget.registerCreator(
-	GafferArnold.ArnoldRender.staticTypeId(),
+	GafferArnold.ArnoldRender,
 	"verbosity",
 	GafferUI.EnumPlugValueWidget,
 	labelsAndValues = (

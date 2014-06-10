@@ -73,7 +73,7 @@ def __subdivisionSummary( plug ) :
 
 GafferUI.PlugValueWidget.registerCreator(
 	
-	GafferArnold.ArnoldAttributes.staticTypeId(),
+	GafferArnold.ArnoldAttributes,
 	"attributes",
 	GafferUI.SectionedCompoundDataPlugValueWidget,
 	sections = (
@@ -103,7 +103,7 @@ GafferUI.PlugValueWidget.registerCreator(
 )
 
 GafferUI.PlugValueWidget.registerCreator(
-	GafferArnold.ArnoldAttributes.staticTypeId(),
+	GafferArnold.ArnoldAttributes,
 	"attributes.subdivAdaptiveMetric.value",
 	GafferUI.EnumPlugValueWidget,
 	labelsAndValues = (

@@ -77,7 +77,7 @@ class SceneHierarchy( GafferUI.NodeSetEditor ) :
 		self.__plugParentChangedConnection = None
 		node = self._lastAddedNode()
 		if node is not None :
-			outputScenePlugs = [ p for p in node.children( GafferScene.ScenePlug.staticTypeId() ) if p.direction() == Gaffer.Plug.Direction.Out ]
+			outputScenePlugs = [ p for p in node.children( GafferScene.ScenePlug ) if p.direction() == Gaffer.Plug.Direction.Out ]
 			if len( outputScenePlugs ) :
 				self.__plug = outputScenePlugs[0]
 				self.__plugParentChangedConnection = self.__plug.parentChangedSignal().connect( Gaffer.WeakMethod( self.__plugParentChanged ) )

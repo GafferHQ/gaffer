@@ -451,10 +451,10 @@ a = A()"""
 		s["n"] = Gaffer.Node()
 		s["n1"] = Gaffer.Node()
 		s["n2"] = Gaffer.Node()
-		self.assertEqual( len( s.children( Gaffer.Node.staticTypeId() ) ), 3 )
+		self.assertEqual( len( s.children( Gaffer.Node ) ), 3 )
 		
 		s.deleteNodes()
-		self.assertEqual( len( s.children( Gaffer.Node.staticTypeId() ) ), 0 )
+		self.assertEqual( len( s.children( Gaffer.Node ) ), 0 )
 	
 	def testDeleteManyNodes( self ) :
 	
@@ -464,7 +464,7 @@ a = A()"""
 		
 		s.deleteNodes()
 
-		self.assertEqual( len( s.children( Gaffer.Node.staticTypeId() ) ), 0 )
+		self.assertEqual( len( s.children( Gaffer.Node ) ), 0 )
 	
 	def testDeleteNodesDoesntRemovePlugs( self ) :
 		
@@ -479,10 +479,10 @@ a = A()"""
 		s["n"] = Gaffer.Node()
 		s["n1"] = Gaffer.Node()
 		s["n2"] = Gaffer.Node()
-		self.assertEqual( len( s.children( Gaffer.Node.staticTypeId() ) ), 3 )
+		self.assertEqual( len( s.children( Gaffer.Node ) ), 3 )
 		
 		s.deleteNodes( filter = Gaffer.StandardSet( [ s["n1"] ] ) )
-		self.assertEqual( len( s.children( Gaffer.Node.staticTypeId() ) ), 2 )
+		self.assertEqual( len( s.children( Gaffer.Node ) ), 2 )
 		self.failUnless( "n" in s )
 		self.failUnless( "n1" not in s )
 		self.failUnless( "n2" in s )

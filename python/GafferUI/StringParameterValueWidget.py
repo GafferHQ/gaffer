@@ -63,4 +63,4 @@ class StringParameterValueWidget( GafferUI.ParameterValueWidget ) :
 		
 		GafferUI.ParameterValueWidget.__init__( self, plugValueWidget, parameterHandler, **kw )
 			
-GafferUI.ParameterValueWidget.registerType( IECore.StringParameter.staticTypeId(), StringParameterValueWidget )
+GafferUI.ParameterValueWidget.registerType( IECore.StringParameter, StringParameterValueWidget )

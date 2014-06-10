@@ -112,7 +112,7 @@ class PathPlugValueWidget( GafferUI.PlugValueWidget ) :
 		if not self._editable() :
 			return
 								
-		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
+		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
 			self.getPlug().setValue( str( self.__path ) )
 		
 		# now we've transferred the text changes to the global undo queue, we remove them
