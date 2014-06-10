@@ -275,15 +275,25 @@ class PlugValueWidget( GafferUI.Widget ) :
 	# opportunity to further customise the type of Widget used for specific
 	# plug instances based on the node type and plug name.
 	@classmethod
-	def registerType( cls, plugTypeId, creator ) :
+	def registerType( cls, plugClassOrTypeId, creator ) :
+	
+		if isinstance( plugClassOrTypeId, IECore.TypeId ) :
+			plugTypeId = plugClassOrTypeId
+		else :
+			plugTypeId = plugClassOrTypeId.staticTypeId()
 	
 		cls.__plugTypesToCreators[plugTypeId] = creator
 		
 	## Registers a function to create a PlugWidget. None may be passed as creator, to
 	# disable the creation of uis for specific plugs.
 	@classmethod
-	def registerCreator( cls, nodeTypeId, plugPath, creator, **creatorKeywordArgs ) :
+	def registerCreator( cls, nodeClassOrTypeId, plugPath, creator, **creatorKeywordArgs ) :
 	
+		if isinstance( nodeClassOrTypeId, IECore.TypeId ) :
+			nodeTypeId = nodeClassOrTypeId
+		else :
+			nodeTypeId = nodeClassOrTypeId.staticTypeId()
+
 		if isinstance( plugPath, basestring ) :
 			plugPath = re.compile( fnmatch.translate( plugPath ) )
 		else :
