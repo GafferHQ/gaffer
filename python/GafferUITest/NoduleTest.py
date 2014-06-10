@@ -77,7 +77,7 @@ class NoduleTest( GafferUITest.TestCase ) :
 		self.failUnless( isinstance( ni, GafferUI.StandardNodule ) )
 		self.failUnless( isinstance( nc, GafferUI.StandardNodule ) )
 		
-		GafferUI.Nodule.registerNodule( NoduleTestNode.staticTypeId(), "c", GafferUI.CompoundNodule )
+		GafferUI.Nodule.registerNodule( NoduleTestNode, "c", GafferUI.CompoundNodule )
 
 		nc = GafferUI.Nodule.create( n["c"] )
 		self.failUnless( isinstance( nc, GafferUI.CompoundNodule ) )
@@ -143,7 +143,7 @@ class NoduleTest( GafferUITest.TestCase ) :
 			n.setName( "r" )
 			return n
 			
-		GafferUI.Nodule.registerNodule( RegexNoduleTestNode.staticTypeId(), fnmatch.translate( "r[0-9]" ), rCreator )
+		GafferUI.Nodule.registerNodule( RegexNoduleTestNode, fnmatch.translate( "r[0-9]" ), rCreator )
 		
 		self.assertEqual( GafferUI.Nodule.create( node["r1"] ).getName(), "r" )
 		self.assertEqual( GafferUI.Nodule.create( node["r2"] ).getName(), "r" )
@@ -152,7 +152,7 @@ class NoduleTest( GafferUITest.TestCase ) :
 		
 			return None
 			
-		GafferUI.Nodule.registerNodule( RegexNoduleTestNode.staticTypeId(), fnmatch.translate( "d*" ), dCreator )
+		GafferUI.Nodule.registerNodule( RegexNoduleTestNode, fnmatch.translate( "d*" ), dCreator )
 			
 		self.failUnless( GafferUI.Nodule.create( node["da"] ) is None )
 		self.failUnless( GafferUI.Nodule.create( node["db"] ) is None )

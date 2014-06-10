@@ -71,8 +71,13 @@ class NodeToolbar( GafferUI.Widget ) :
 	__creators = {}
 	## Registers a subclass of NodeToolbar to be used with a specific node type.
 	@classmethod
-	def registerCreator( cls, nodeTypeId, toolbarCreator ) :
+	def registerCreator( cls, nodeClassOrTypeId, toolbarCreator ) :
 	
 		assert( callable( toolbarCreator ) )
 	
+		if isinstance( nodeClassOrTypeId, IECore.TypeId ) :
+			nodeTypeId = nodeClassOrTypeId
+		else :
+			nodeTypeId = nodeClassOrTypeId.staticTypeId()
+			
 		cls.__creators[nodeTypeId] = toolbarCreator

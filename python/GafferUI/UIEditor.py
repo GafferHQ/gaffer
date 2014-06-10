@@ -432,7 +432,7 @@ class _PlugListing( GafferUI.PathListingWidget ) :
 		# so that they actual PlugLayout will be updated to reflect
 		# the new ordering.
 		
-		with Gaffer.UndoContext( self.getPlugParent().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
+		with Gaffer.UndoContext( self.getPlugParent().ancestor( Gaffer.ScriptNode ) ) :
 			for entry in self.getPath().dict().values() :
 				Gaffer.Metadata.registerPlugValue( entry.plug, "layout:index", entry.index )
 
@@ -457,7 +457,7 @@ class _PlugListing( GafferUI.PathListingWidget ) :
 		
 			selectedPaths = self.getSelectedPaths()
 			if len( selectedPaths ) :
-				with Gaffer.UndoContext( self.__parent.ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
+				with Gaffer.UndoContext( self.__parent.ancestor( Gaffer.ScriptNode ) ) :
 					for path in selectedPaths :
 						plug = path.info()["dict:value"].plug
 						self.__parent.removeChild( plug )
@@ -524,7 +524,7 @@ class _MetadataConnection() :
 		
 		# transfer it to the metadata
 		
-		with Gaffer.UndoContext( self.getTarget().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
+		with Gaffer.UndoContext( self.getTarget().ancestor( Gaffer.ScriptNode ) ) :
 			if isinstance( self.__target, Gaffer.Plug ) :
 				Gaffer.Metadata.registerPlugValue( self.__target, self.__key, value )
 			else :

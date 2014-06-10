@@ -65,7 +65,7 @@ the render to reflect changes to the node graph.""",
 
 ## \todo Make a custom UI with play/pause/stop/restart buttons.
 GafferUI.PlugValueWidget.registerCreator(
-	GafferScene.InteractiveRender.staticTypeId(),
+	GafferScene.InteractiveRender,
 	"state",
 	GafferUI.EnumPlugValueWidget,
 	labelsAndValues = (
@@ -75,5 +75,5 @@ GafferUI.PlugValueWidget.registerCreator(
 	),
 )
 
-GafferUI.Nodule.registerNodule( GafferScene.InteractiveRender.staticTypeId(), fnmatch.translate( "*" ), lambda plug : None )
-GafferUI.Nodule.registerNodule( GafferScene.InteractiveRender.staticTypeId(), "in", GafferUI.StandardNodule )
+GafferUI.Nodule.registerNodule( GafferScene.InteractiveRender, fnmatch.translate( "*" ), lambda plug : None )
+GafferUI.Nodule.registerNodule( GafferScene.InteractiveRender, "in", GafferUI.StandardNodule )

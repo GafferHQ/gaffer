@@ -179,7 +179,7 @@ class StandardNodeUI( GafferUI.NodeUI ) :
 		# where there are some notes as to how this might be fixed.
 		self.__plugValueWidgets = {} 
 		
-		for plug in self.node().children( Gaffer.Plug.staticTypeId() ) :
+		for plug in self.node().children( Gaffer.Plug ) :
 
 			if plug.getName().startswith( "__" ) :
 				continue
@@ -218,4 +218,4 @@ class StandardNodeUI( GafferUI.NodeUI ) :
 
 		plug.setValue( self.__tabbedContainer.index( current ) )
 
-GafferUI.NodeUI.registerNodeUI( Gaffer.Node.staticTypeId(), StandardNodeUI )
+GafferUI.NodeUI.registerNodeUI( Gaffer.Node, StandardNodeUI )

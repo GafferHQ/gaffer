@@ -52,7 +52,7 @@ def __parameterNoduleCreator( plug ) :
 		
 	return GafferUI.StandardNodule( plug )
 
-GafferUI.Nodule.registerNodule( GafferArnold.ArnoldShader.staticTypeId(), fnmatch.translate( "parameters.*" ), __parameterNoduleCreator )
+GafferUI.Nodule.registerNodule( GafferArnold.ArnoldShader, fnmatch.translate( "parameters.*" ), __parameterNoduleCreator )
 
 __plugValueWidgetCreators = {}
 
@@ -94,5 +94,5 @@ def __plugValueWidgetCreator( plug ) :
 
 	return GafferUI.PlugValueWidget.create( plug, useTypeOnly=True )
 	
-GafferUI.PlugValueWidget.registerCreator( GafferArnold.ArnoldShader.staticTypeId(), "parameters.*", __plugValueWidgetCreator )
-GafferUI.PlugValueWidget.registerCreator( GafferArnold.ArnoldLight.staticTypeId(), "parameters.*", __plugValueWidgetCreator )
+GafferUI.PlugValueWidget.registerCreator( GafferArnold.ArnoldShader, "parameters.*", __plugValueWidgetCreator )
+GafferUI.PlugValueWidget.registerCreator( GafferArnold.ArnoldLight, "parameters.*", __plugValueWidgetCreator )

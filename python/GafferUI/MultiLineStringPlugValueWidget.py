@@ -90,5 +90,5 @@ class MultiLineStringPlugValueWidget( GafferUI.PlugValueWidget ) :
 			return
 		
 		text = self.__textWidget.getText()
-		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
+		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
 			self.getPlug().setValue( text )

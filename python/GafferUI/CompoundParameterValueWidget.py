@@ -131,4 +131,4 @@ class _PlugValueWidget( GafferUI.CompoundPlugValueWidget ) :
 # derived classes.
 CompoundParameterValueWidget._PlugValueWidget = _PlugValueWidget
 
-GafferUI.ParameterValueWidget.registerType( IECore.CompoundParameter.staticTypeId(), CompoundParameterValueWidget )
+GafferUI.ParameterValueWidget.registerType( IECore.CompoundParameter, CompoundParameterValueWidget )

@@ -97,7 +97,7 @@ class SerialisationTest( GafferTest.TestCase ) :
 				return False
 		
 		customSerialiser = CustomSerialiser()
-		Gaffer.Serialisation.registerSerialiser( self.SerialisationTestNode.staticTypeId(), customSerialiser )
+		Gaffer.Serialisation.registerSerialiser( self.SerialisationTestNode, customSerialiser )
 		
 		s = Gaffer.ScriptNode()
 		s["n"] = self.SerialisationTestNode( "a", initArgument=20 )

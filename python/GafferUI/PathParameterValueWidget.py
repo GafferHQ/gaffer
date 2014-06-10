@@ -89,4 +89,4 @@ class PathParameterValueWidget( GafferUI.ParameterValueWidget ) :
 
 		return result
 
-GafferUI.ParameterValueWidget.registerType( IECore.PathParameter.staticTypeId(), PathParameterValueWidget )
+GafferUI.ParameterValueWidget.registerType( IECore.PathParameter, PathParameterValueWidget )

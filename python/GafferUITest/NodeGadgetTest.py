@@ -98,7 +98,7 @@ class NodeGadgetTest( GafferUITest.TestCase ) :
 			
 			return result
 		
-		GafferUI.NodeGadget.registerNodeGadget( MyNode.staticTypeId(), creator )
+		GafferUI.NodeGadget.registerNodeGadget( MyNode, creator )
 		
 		n = MyNode()
 		g = GafferUI.NodeGadget.create( n )

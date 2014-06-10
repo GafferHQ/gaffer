@@ -39,7 +39,7 @@ import GafferUI
 import GafferScene
 
 GafferUI.PlugValueWidget.registerCreator(
-	GafferScene.SceneWriter.staticTypeId(),
+	GafferScene.SceneWriter,
 	"fileName",
 	lambda plug : GafferUI.PathPlugValueWidget( plug,
 		path = Gaffer.FileSystemPath( "/", filter = Gaffer.FileSystemPath.createStandardFilter() ),

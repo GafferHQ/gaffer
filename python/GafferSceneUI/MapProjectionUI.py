@@ -39,7 +39,7 @@ import GafferUI
 import GafferScene
 
 GafferUI.PlugValueWidget.registerCreator(
-	GafferScene.MapProjection.staticTypeId(),
+	GafferScene.MapProjection,
 	"camera",
 	lambda plug : GafferUI.PathPlugValueWidget(
 		plug,

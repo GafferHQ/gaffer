@@ -49,4 +49,4 @@ class FileSequenceParameterValueWidget( GafferUI.PathParameterValueWidget ) :
 	
 		return Gaffer.SequencePath( "/", filter = self._filter() )
 	
-GafferUI.ParameterValueWidget.registerType( IECore.FileSequenceParameter.staticTypeId(), FileSequenceParameterValueWidget )
+GafferUI.ParameterValueWidget.registerType( IECore.FileSequenceParameter, FileSequenceParameterValueWidget )

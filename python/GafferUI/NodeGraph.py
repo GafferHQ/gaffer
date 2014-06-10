@@ -253,7 +253,7 @@ class NodeGraph( GafferUI.EditorWidget ) :
 				else :
 					nodeGadget = gadgets[0]
 					if not isinstance( nodeGadget, GafferUI.NodeGadget ) :
-						nodeGadget = nodeGadget.ancestor( GafferUI.NodeGadget.staticTypeId() )
+						nodeGadget = nodeGadget.ancestor( GafferUI.NodeGadget )
 					if nodeGadget is not None :
 						self.nodeContextMenuSignal()( self, nodeGadget.node(), overrideMenuDefinition )
 						overrideMenuTitle = nodeGadget.node().getName()
@@ -419,7 +419,7 @@ class NodeGraph( GafferUI.EditorWidget ) :
 				IECore.Box3f( IECore.V3f( frame.min.x, frame.min.y, 0 ), IECore.V3f( frame.max.x, frame.max.y, 0 ) )
 			)
 		else :
-			self.__frame( self.graphGadget().getRoot().children( Gaffer.Node.staticTypeId() ) )
+			self.__frame( self.graphGadget().getRoot().children( Gaffer.Node ) )
 		
 		# do what we need to do to keep our title up to date.
 		
@@ -452,7 +452,7 @@ class NodeGraph( GafferUI.EditorWidget ) :
 	@classmethod
 	def __setNodeInputConnectionsVisible( cls, graphGadget, node, value ) :
 
-		with Gaffer.UndoContext( node.ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
+		with Gaffer.UndoContext( node.ancestor( Gaffer.ScriptNode ) ) :
 			graphGadget.setNodeInputConnectionsMinimised( node, not value )
 
 	@classmethod
@@ -463,13 +463,13 @@ class NodeGraph( GafferUI.EditorWidget ) :
 	@classmethod
 	def __setNodeOutputConnectionsVisible( cls, graphGadget, node, value ) :
 
-		with Gaffer.UndoContext( node.ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
+		with Gaffer.UndoContext( node.ancestor( Gaffer.ScriptNode ) ) :
 			graphGadget.setNodeOutputConnectionsMinimised( node, not value )
 
 	@classmethod
 	def __setEnabled( cls, node, value ) :
 
-		with Gaffer.UndoContext( node.ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
+		with Gaffer.UndoContext( node.ancestor( Gaffer.ScriptNode ) ) :
 			node.enabledPlug().setValue( value )
 
 GafferUI.EditorWidget.registerType( "NodeGraph", NodeGraph )

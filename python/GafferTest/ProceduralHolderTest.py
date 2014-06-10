@@ -48,7 +48,7 @@ class ProceduralHolderTest( unittest.TestCase ) :
 	
 		n = Gaffer.ProceduralHolder()
 		self.assertEqual( n.typeName(), "Gaffer::ProceduralHolder" )
-		self.failUnless( n.isInstanceOf( Gaffer.ParameterisedHolderComputeNode.staticTypeId() ) )
+		self.failUnless( n.isInstanceOf( Gaffer.ParameterisedHolderComputeNode ) )
 		self.failUnless( n.isInstanceOf( Gaffer.ComputeNode.staticTypeId() ) )
 		self.failUnless( n.isInstanceOf( Gaffer.DependencyNode.staticTypeId() ) )
 		

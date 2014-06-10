@@ -63,7 +63,7 @@ class ViewTest( GafferUITest.TestCase ) :
 				
 				self["in"].setInput( viewedPlug )
 				
-		GafferUI.View.registerView( GafferTest.SphereNode.staticTypeId(), "out", MyView )
+		GafferUI.View.registerView( GafferTest.SphereNode, "out", MyView )
 				
 		view = GafferUI.View.create( sphere["out"] )
 		self.assertTrue( isinstance( view, MyView ) )

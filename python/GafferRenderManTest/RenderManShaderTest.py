@@ -1481,7 +1481,7 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 				
 		self.assertEqual( script["shaderNode"].state()[0].parameters["floatParameter"].value, 0 )
 		
-		box = Gaffer.Box.create( script, Gaffer.StandardSet( script.children( Gaffer.Node.staticTypeId() ) ) )
+		box = Gaffer.Box.create( script, Gaffer.StandardSet( script.children( Gaffer.Node ) ) )
 		self.assertEqual( box["shaderNode"].state()[0].parameters["floatParameter"].value, 0 )
 		
 		promotedIndex = box.promotePlug( box["switch"]["index"] )

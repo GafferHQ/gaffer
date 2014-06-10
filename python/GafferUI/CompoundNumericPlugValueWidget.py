@@ -133,12 +133,12 @@ class CompoundNumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __gang( self ) :
 	
-		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
+		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
 			self.getPlug().gang()
 		
 	def __ungang( self ) :
 	
-		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
+		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
 			self.getPlug().ungang()
 
 	@staticmethod
@@ -172,7 +172,7 @@ class CompoundNumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 __popupMenuConnection = GafferUI.PlugValueWidget.popupMenuSignal().connect( CompoundNumericPlugValueWidget._popupMenu )			
 	
-GafferUI.PlugValueWidget.registerType( Gaffer.V2fPlug.staticTypeId(), CompoundNumericPlugValueWidget )
-GafferUI.PlugValueWidget.registerType( Gaffer.V3fPlug.staticTypeId(), CompoundNumericPlugValueWidget )
-GafferUI.PlugValueWidget.registerType( Gaffer.V2iPlug.staticTypeId(), CompoundNumericPlugValueWidget )
-GafferUI.PlugValueWidget.registerType( Gaffer.V3iPlug.staticTypeId(), CompoundNumericPlugValueWidget )
+GafferUI.PlugValueWidget.registerType( Gaffer.V2fPlug, CompoundNumericPlugValueWidget )
+GafferUI.PlugValueWidget.registerType( Gaffer.V3fPlug, CompoundNumericPlugValueWidget )
+GafferUI.PlugValueWidget.registerType( Gaffer.V2iPlug, CompoundNumericPlugValueWidget )
+GafferUI.PlugValueWidget.registerType( Gaffer.V3iPlug, CompoundNumericPlugValueWidget )

@@ -58,5 +58,5 @@ GafferScene.Parent,
 # Widgets and nodules
 ##########################################################################
 
-GafferUI.PlugValueWidget.registerCreator( GafferScene.Parent.staticTypeId(), "child", None )
+GafferUI.PlugValueWidget.registerCreator( GafferScene.Parent, "child", None )
 

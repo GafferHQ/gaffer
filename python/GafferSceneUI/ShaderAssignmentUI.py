@@ -54,4 +54,4 @@ GafferScene.ShaderAssignment,
 
 )
 
-GafferUI.Nodule.registerNodule( GafferScene.ShaderAssignment.staticTypeId(), "shader", GafferUI.StandardNodule )
+GafferUI.Nodule.registerNodule( GafferScene.ShaderAssignment, "shader", GafferUI.StandardNodule )

@@ -61,5 +61,5 @@ GafferScene.ParentConstraint,
 # Widgets and nodules
 ##########################################################################
 
-GafferUI.PlugValueWidget.registerCreator( GafferScene.ParentConstraint.staticTypeId(), "relativeTransform", GafferUI.TransformPlugValueWidget, collapsed=None )
+GafferUI.PlugValueWidget.registerCreator( GafferScene.ParentConstraint, "relativeTransform", GafferUI.TransformPlugValueWidget, collapsed=None )
 

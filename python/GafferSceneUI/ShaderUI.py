@@ -108,16 +108,16 @@ class __ShaderNamePlugValueWidget( GafferUI.PlugValueWidget ) :
 		node = self.getPlug().node()
 		node.shaderLoader().clear()
 		
-		with Gaffer.UndoContext( node.ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
+		with Gaffer.UndoContext( node.ancestor( Gaffer.ScriptNode ) ) :
 			node.loadShader( node["name"].getValue(), keepExistingValues = True )
 
-GafferUI.PlugValueWidget.registerCreator( GafferScene.Shader.staticTypeId(), "name", __ShaderNamePlugValueWidget )
+GafferUI.PlugValueWidget.registerCreator( GafferScene.Shader, "name", __ShaderNamePlugValueWidget )
 
-GafferUI.PlugValueWidget.registerCreator( GafferScene.Shader.staticTypeId(), "parameters", GafferUI.CompoundPlugValueWidget, collapsed=None )
-GafferUI.PlugValueWidget.registerCreator( GafferScene.Shader.staticTypeId(), "out", None )
-GafferUI.PlugValueWidget.registerCreator( GafferScene.Shader.staticTypeId(), "type", None )
+GafferUI.PlugValueWidget.registerCreator( GafferScene.Shader, "parameters", GafferUI.CompoundPlugValueWidget, collapsed=None )
+GafferUI.PlugValueWidget.registerCreator( GafferScene.Shader, "out", None )
+GafferUI.PlugValueWidget.registerCreator( GafferScene.Shader, "type", None )
 
-GafferUI.Metadata.registerPlugValue( GafferScene.Shader.staticTypeId(), "enabled", "nodeUI:section", "Node" )
+GafferUI.Metadata.registerPlugValue( GafferScene.Shader, "enabled", "nodeUI:section", "Node" )
 
 ##########################################################################
 # NodeGadgets and Nodules
@@ -127,16 +127,16 @@ def __nodeGadgetCreator( node ) :
 
 	return GafferUI.StandardNodeGadget( node, GafferUI.LinearContainer.Orientation.Y )
 
-GafferUI.NodeGadget.registerNodeGadget( GafferScene.Shader.staticTypeId(), __nodeGadgetCreator )
+GafferUI.NodeGadget.registerNodeGadget( GafferScene.Shader, __nodeGadgetCreator )
 
 def __parametersNoduleCreator( plug ) :
 
 	return GafferUI.CompoundNodule( plug, GafferUI.LinearContainer.Orientation.Y, spacing = 0.2 )
 
-GafferUI.Nodule.registerNodule( GafferScene.Shader.staticTypeId(), "parameters", __parametersNoduleCreator )
-GafferUI.Nodule.registerNodule( GafferScene.Shader.staticTypeId(), "name", lambda plug : None )
-GafferUI.Nodule.registerNodule( GafferScene.Shader.staticTypeId(), "type", lambda plug : None )
-GafferUI.Nodule.registerNodule( GafferScene.Shader.staticTypeId(), "enabled", lambda plug : None )
+GafferUI.Nodule.registerNodule( GafferScene.Shader, "parameters", __parametersNoduleCreator )
+GafferUI.Nodule.registerNodule( GafferScene.Shader, "name", lambda plug : None )
+GafferUI.Nodule.registerNodule( GafferScene.Shader, "type", lambda plug : None )
+GafferUI.Nodule.registerNodule( GafferScene.Shader, "enabled", lambda plug : None )
 
 # we leave it to the derived class uis to register creators for the parameters.* plugs, because only the derived classes know whether
 # or not networkability makes sense in each case.

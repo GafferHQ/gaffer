@@ -108,4 +108,4 @@ class PathVectorParameterValueWidget( GafferUI.ParameterValueWidget ) :
 		
 		return result
 		
-GafferUI.ParameterValueWidget.registerType( IECore.PathVectorParameter.staticTypeId(), PathVectorParameterValueWidget )
+GafferUI.ParameterValueWidget.registerType( IECore.PathVectorParameter, PathVectorParameterValueWidget )

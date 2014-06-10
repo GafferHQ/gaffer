@@ -87,7 +87,7 @@ class FilterPlugValueWidget( GafferUI.PlugValueWidget ) :
 		else :
 			self.__menuButton.setText(
 				filterNode.relativeName(
-					filterNode.commonAncestor( thisNode, Gaffer.Node.staticTypeId() ),
+					filterNode.commonAncestor( thisNode, Gaffer.Node ),
 				)
 			)
 			

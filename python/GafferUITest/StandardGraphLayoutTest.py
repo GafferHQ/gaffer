@@ -81,7 +81,7 @@ class StandardGraphLayoutTest( GafferUITest.TestCase ) :
 	
 		GafferUITest.TestCase.setUp( self )
 		
-		GafferUI.Nodule.registerNodule( GafferTest.AddNode.staticTypeId(), "enabled", lambda plug : None )
+		GafferUI.Nodule.registerNodule( GafferTest.AddNode, "enabled", lambda plug : None )
 
 	def testConnectNode( self ) :
 	
@@ -104,7 +104,7 @@ class StandardGraphLayoutTest( GafferUITest.TestCase ) :
 		g.getLayout().connectNode( g, s["compound"], Gaffer.StandardSet( [ s["add2"] ] ) )
 		self.assertEqual( s["compound"]["p"]["f"].getInput(), None )
 		
-		GafferUI.Nodule.registerNodule( GafferTest.CompoundPlugNode.staticTypeId(), "p", GafferUI.CompoundNodule )
+		GafferUI.Nodule.registerNodule( GafferTest.CompoundPlugNode, "p", GafferUI.CompoundNodule )
 		
 		s["compound2"] = GafferTest.CompoundPlugNode()
 		g.getLayout().connectNode( g, s["compound2"], Gaffer.StandardSet( [ s["add2"] ] ) )
@@ -118,7 +118,7 @@ class StandardGraphLayoutTest( GafferUITest.TestCase ) :
 		g.getLayout().connectNode( g, s["add3"], Gaffer.StandardSet( [ s["compound2"] ] ) )
 		self.assertEqual( s["add3"]["op1"].getInput(), None )
 		
-		GafferUI.Nodule.registerNodule( GafferTest.CompoundPlugNode.staticTypeId(), "o", GafferUI.CompoundNodule )
+		GafferUI.Nodule.registerNodule( GafferTest.CompoundPlugNode, "o", GafferUI.CompoundNodule )
 		
 		s["compound3"] = GafferTest.CompoundPlugNode()
 		
@@ -665,7 +665,7 @@ class StandardGraphLayoutTest( GafferUITest.TestCase ) :
 	
 		nodes = []
 		bounds = IECore.Box2fVectorData()
-		for node in graphGadget.getRoot().children( Gaffer.Node.staticTypeId() ) :
+		for node in graphGadget.getRoot().children( Gaffer.Node ) :
 		
 			nodeGadget = graphGadget.nodeGadget( node )
 			if nodeGadget is None :

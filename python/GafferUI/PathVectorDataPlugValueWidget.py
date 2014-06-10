@@ -66,6 +66,6 @@ class PathVectorDataPlugValueWidget( GafferUI.PlugValueWidget ) :
 		
 		assert( widget is self.__dataWidget )
 					
-		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
+		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
 						
 			self.getPlug().setValue( self.__dataWidget.getData()[0] )

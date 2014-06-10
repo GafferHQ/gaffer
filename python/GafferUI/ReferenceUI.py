@@ -124,12 +124,12 @@ class __FileNamePlugValueWidget( GafferUI.PlugValueWidget ) :
 		with Gaffer.UndoContext( self.getPlug().node().scriptNode() ) :
 			self.getPlug().node().load( self.getPlug().getValue() )
 			
-GafferUI.PlugValueWidget.registerCreator( Gaffer.Reference.staticTypeId(), "fileName", __FileNamePlugValueWidget )
+GafferUI.PlugValueWidget.registerCreator( Gaffer.Reference, "fileName", __FileNamePlugValueWidget )
 Gaffer.Metadata.registerPlugValue( Gaffer.Reference, "fileName", "nodeUI:section", "header" )
 
-GafferUI.PlugValueWidget.registerCreator( Gaffer.Reference.staticTypeId(), re.compile( "in[0-9]*" ), None )
-GafferUI.PlugValueWidget.registerCreator( Gaffer.Reference.staticTypeId(), re.compile( "out[0-9]*" ), None )
-GafferUI.PlugValueWidget.registerCreator( Gaffer.Reference.staticTypeId(), "user", GafferUI.UserPlugValueWidget, editable=False )
+GafferUI.PlugValueWidget.registerCreator( Gaffer.Reference, re.compile( "in[0-9]*" ), None )
+GafferUI.PlugValueWidget.registerCreator( Gaffer.Reference, re.compile( "out[0-9]*" ), None )
+GafferUI.PlugValueWidget.registerCreator( Gaffer.Reference, "user", GafferUI.UserPlugValueWidget, editable=False )
 
 ##########################################################################
 # Utilities
@@ -160,7 +160,7 @@ def _waitForFileName( initialFileName="", parentWindow=None ) :
 # Nodules
 ##########################################################################
 
-GafferUI.Nodule.registerNodule( Gaffer.Reference.staticTypeId(), "fileName", lambda plug : None )
+GafferUI.Nodule.registerNodule( Gaffer.Reference, "fileName", lambda plug : None )
 
 ##########################################################################
 # Metadata

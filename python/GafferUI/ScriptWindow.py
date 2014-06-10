@@ -55,7 +55,7 @@ class ScriptWindow( GafferUI.Window ) :
 		menuDefinition = self.menuDefinition( script.applicationRoot() ) if script.applicationRoot() else IECore.MenuDefinition()
 		self.__listContainer.append( GafferUI.MenuBar( menuDefinition ) )
 		
-		applicationRoot = self.__script.ancestor( Gaffer.ApplicationRoot.staticTypeId() )
+		applicationRoot = self.__script.ancestor( Gaffer.ApplicationRoot )
 		layouts = GafferUI.Layouts.acquire( applicationRoot ) if applicationRoot is not None else None
 		if layouts is not None and "Default" in layouts.names() :
 			self.setLayout( layouts.create( "Default", script ) )

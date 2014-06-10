@@ -39,7 +39,7 @@ import GafferUI
 import GafferRenderMan
 
 GafferUI.PlugValueWidget.registerCreator(
-	GafferRenderMan.RenderManRender.staticTypeId(),
+	GafferRenderMan.RenderManRender,
 	"mode",
 	GafferUI.EnumPlugValueWidget,
 	labelsAndValues = (
@@ -49,7 +49,7 @@ GafferUI.PlugValueWidget.registerCreator(
 )
 
 GafferUI.PlugValueWidget.registerCreator(
-	GafferRenderMan.RenderManRender.staticTypeId(),
+	GafferRenderMan.RenderManRender,
 	"ribFileName",
 	lambda plug : GafferUI.PathPlugValueWidget( plug,
 		path = Gaffer.FileSystemPath( "/", filter = Gaffer.FileSystemPath.createStandardFilter() ),

@@ -65,7 +65,7 @@ def appendDefinitions( menuDefinition, prefix="" ) :
 def new( menu ) :
 
 	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
-	application = scriptWindow.scriptNode().ancestor( Gaffer.ApplicationRoot.staticTypeId() )
+	application = scriptWindow.scriptNode().ancestor( Gaffer.ApplicationRoot )
 
 	newScript = Gaffer.ScriptNode( "script" )
 	application["scripts"].addChild( newScript )
@@ -87,7 +87,7 @@ def open( menu ) :
 	
 def __open( currentScript, fileName ) :
 
-	application = currentScript.ancestor( Gaffer.ApplicationRoot.staticTypeId() )
+	application = currentScript.ancestor( Gaffer.ApplicationRoot )
 		
 	script = Gaffer.ScriptNode()
 	script["fileName"].setValue( fileName )
@@ -123,7 +123,7 @@ def openRecent( menu ) :
 
 	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
 	currentScript = scriptWindow.scriptNode()
-	applicationRoot = currentScript.ancestor( Gaffer.ApplicationRoot.staticTypeId() )
+	applicationRoot = currentScript.ancestor( Gaffer.ApplicationRoot )
 	
 	recentFiles = []
 	with IECore.IgnoredExceptions( AttributeError ) :
@@ -208,7 +208,7 @@ def saveAs( menu ) :
 	with GafferUI.ErrorDialogue.ExceptionHandler( title = "Error Saving File", parentWindow = scriptWindow ) :
 		script.save()
 	
-	application = script.ancestor( Gaffer.ApplicationRoot.staticTypeId() )
+	application = script.ancestor( Gaffer.ApplicationRoot )
 	addRecentFile( application, path )
 
 ## A function suitable as the command for a File/Revert To Saved menu item. It must be invoked from a menu which

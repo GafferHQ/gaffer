@@ -52,7 +52,7 @@ def __outPlugNoduleCreator( plug ) :
 	else :
 		return GafferUI.StandardNodule( plug )
 		
-GafferUI.Nodule.registerNodule( GafferOSL.OSLShader.staticTypeId(), "out", __outPlugNoduleCreator )
+GafferUI.Nodule.registerNodule( GafferOSL.OSLShader, "out", __outPlugNoduleCreator )
 
 ##########################################################################
 # Metadata

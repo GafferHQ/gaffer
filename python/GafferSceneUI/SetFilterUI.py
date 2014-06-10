@@ -59,7 +59,7 @@ GafferScene.SetFilter,
 # Nodules
 ##########################################################################
 
-GafferUI.Nodule.registerNodule( GafferScene.SetFilter.staticTypeId(), "set", lambda plug : None )
+GafferUI.Nodule.registerNodule( GafferScene.SetFilter, "set", lambda plug : None )
 
 ##########################################################################
 # Right click menu for sets
@@ -67,7 +67,7 @@ GafferUI.Nodule.registerNodule( GafferScene.SetFilter.staticTypeId(), "set", lam
 
 def __applySet( plug, setName ) :
 
-	with Gaffer.UndoContext( plug.ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
+	with Gaffer.UndoContext( plug.ancestor( Gaffer.ScriptNode ) ) :
 		plug.setValue( setName )
 
 def __setsPopupMenu( menuDefinition, plugValueWidget ) :

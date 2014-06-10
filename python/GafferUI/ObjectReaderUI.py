@@ -41,11 +41,11 @@ import IECore
 import Gaffer
 import GafferUI
 
-GafferUI.Nodule.registerNodule( Gaffer.ObjectReader.staticTypeId(), fnmatch.translate( "*" ), lambda plug : None )
-GafferUI.Nodule.registerNodule( Gaffer.ObjectReader.staticTypeId(), "out", GafferUI.StandardNodule )
+GafferUI.Nodule.registerNodule( Gaffer.ObjectReader, fnmatch.translate( "*" ), lambda plug : None )
+GafferUI.Nodule.registerNodule( Gaffer.ObjectReader, "out", GafferUI.StandardNodule )
 
 GafferUI.PlugValueWidget.registerCreator(
-	Gaffer.ObjectReader.staticTypeId(),
+	Gaffer.ObjectReader,
 	"fileName",
 	lambda plug : GafferUI.PathPlugValueWidget(
 		plug,
@@ -67,5 +67,5 @@ def __createParameterWidget( plug ) :
 
 	return GafferUI.CompoundParameterValueWidget( plug.node().parameterHandler(), collapsible=False )
 
-GafferUI.PlugValueWidget.registerCreator( Gaffer.ObjectReader.staticTypeId(), "parameters", __createParameterWidget )
-GafferUI.PlugValueWidget.registerCreator( Gaffer.ObjectReader.staticTypeId(), "out", None )
+GafferUI.PlugValueWidget.registerCreator( Gaffer.ObjectReader, "parameters", __createParameterWidget )
+GafferUI.PlugValueWidget.registerCreator( Gaffer.ObjectReader, "out", None )

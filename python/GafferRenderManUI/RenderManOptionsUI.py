@@ -97,7 +97,7 @@ def __searchPathsSummary( plug ) :
 
 GafferUI.PlugValueWidget.registerCreator(
 	
-	GafferRenderMan.RenderManOptions.staticTypeId(),
+	GafferRenderMan.RenderManOptions,
 	"options",
 	GafferUI.SectionedCompoundDataPlugValueWidget,
 	sections = (
@@ -150,7 +150,7 @@ GafferUI.PlugValueWidget.registerCreator(
 )
 
 GafferUI.PlugValueWidget.registerCreator(
-	GafferRenderMan.RenderManOptions.staticTypeId(),
+	GafferRenderMan.RenderManOptions,
 	"options.hider.value",
 	GafferUI.EnumPlugValueWidget,
 	labelsAndValues = (
@@ -160,7 +160,7 @@ GafferUI.PlugValueWidget.registerCreator(
 )
 
 GafferUI.PlugValueWidget.registerCreator(
-	GafferRenderMan.RenderManOptions.staticTypeId(),
+	GafferRenderMan.RenderManOptions,
 	"options.hiderDepthFilter.value",
 	GafferUI.EnumPlugValueWidget,
 	labelsAndValues = (
@@ -172,7 +172,7 @@ GafferUI.PlugValueWidget.registerCreator(
 )
 
 GafferUI.PlugValueWidget.registerCreator(
-	GafferRenderMan.RenderManOptions.staticTypeId(),
+	GafferRenderMan.RenderManOptions,
 	"options.statisticsLevel.value",
 	GafferUI.EnumPlugValueWidget,
 	labelsAndValues = (
@@ -184,7 +184,7 @@ GafferUI.PlugValueWidget.registerCreator(
 )
 
 GafferUI.PlugValueWidget.registerCreator(
-	GafferRenderMan.RenderManOptions.staticTypeId(),
+	GafferRenderMan.RenderManOptions,
 	"options.statisticsFileName.value",
 	lambda plug : GafferUI.PathPlugValueWidget( plug,
 		path = Gaffer.FileSystemPath( "/", filter = Gaffer.FileSystemPath.createStandardFilter( extensions = ( "htm", "html", "txt", "stats" ) ) ),

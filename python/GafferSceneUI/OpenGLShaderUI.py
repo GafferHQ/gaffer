@@ -56,7 +56,7 @@ def __parameterNoduleCreator( plug ) :
 
 	return None
 
-GafferUI.Nodule.registerNodule( GafferScene.OpenGLShader.staticTypeId(), fnmatch.translate( "parameters.*" ), __parameterNoduleCreator )
+GafferUI.Nodule.registerNodule( GafferScene.OpenGLShader, fnmatch.translate( "parameters.*" ), __parameterNoduleCreator )
 
 ##########################################################################
 # Shader menu

@@ -74,7 +74,7 @@ class EnumPlugValueWidget( GafferUI.PlugValueWidget ) :
 	
 	def __selectionChanged( self, selectionMenu ) :
 	
-		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
+		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
 			name = selectionMenu.getSelection()[0]
 			self.getPlug().setValue( self.__labelsAndValues[ selectionMenu.index(name) ][1] )
 		

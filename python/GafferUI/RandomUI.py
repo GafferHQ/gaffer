@@ -67,8 +67,8 @@ class _RandomColorPlugValueWidget( GafferUI.PlugValueWidget ) :
 				self.__grid[x,y].setColor( node.randomColor( seed ) )
 				seed += 1
 				
-GafferUI.PlugValueWidget.registerCreator( Gaffer.Random.staticTypeId(), "outColor", _RandomColorPlugValueWidget )
-GafferUI.PlugValueWidget.registerCreator( Gaffer.Random.staticTypeId(), "outFloat", None )
+GafferUI.PlugValueWidget.registerCreator( Gaffer.Random, "outColor", _RandomColorPlugValueWidget )
+GafferUI.PlugValueWidget.registerCreator( Gaffer.Random, "outFloat", None )
 
 # PlugValueWidget popup menu
 ##########################################################################
@@ -76,7 +76,7 @@ GafferUI.PlugValueWidget.registerCreator( Gaffer.Random.staticTypeId(), "outFloa
 def __createRandom( plug ) :
 
 	node = plug.node()
-	parentNode = node.ancestor( Gaffer.Node.staticTypeId() )
+	parentNode = node.ancestor( Gaffer.Node )
 
 	with Gaffer.UndoContext( node.scriptNode() ) :
 	

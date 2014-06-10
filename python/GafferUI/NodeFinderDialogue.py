@@ -187,7 +187,7 @@ class NodeFinderDialogue( GafferUI.Dialogue ) :
 		regex = re.compile( fnmatch.translate( self.__matchPattern.getText() ) )
 
 		newSelection = Gaffer.StandardSet()
-		for node in self.__scope.children( Gaffer.Node.staticTypeId() ) :
+		for node in self.__scope.children( Gaffer.Node ) :
 			if regex.match( extractor( node ) ) :
 				newSelection.add( node )
 

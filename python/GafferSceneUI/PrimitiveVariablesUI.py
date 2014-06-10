@@ -53,4 +53,4 @@ python.""",
 
 )
 
-GafferUI.PlugValueWidget.registerCreator( GafferScene.PrimitiveVariables.staticTypeId(), "primitiveVariables", GafferUI.CompoundDataPlugValueWidget, collapsed=None )
+GafferUI.PlugValueWidget.registerCreator( GafferScene.PrimitiveVariables, "primitiveVariables", GafferUI.CompoundDataPlugValueWidget, collapsed=None )

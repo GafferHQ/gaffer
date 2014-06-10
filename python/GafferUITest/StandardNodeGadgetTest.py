@@ -85,7 +85,7 @@ class StandardNodeGadgetTest( GafferUITest.TestCase ) :
 			else :
 				return GafferUI.StandardNodule( plug )
 			
-		GafferUI.Nodule.registerNodule( DeeplyNestedNode.staticTypeId(), ".*", noduleCreator )
+		GafferUI.Nodule.registerNodule( DeeplyNestedNode, ".*", noduleCreator )
 		
 		g = GafferUI.StandardNodeGadget( n )
 		

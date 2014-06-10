@@ -105,7 +105,7 @@ class ParameterHandlerTest( unittest.TestCase ) :
 							
 				self.__plug.setValue( self.__parameter.getNumericValue() / 10 )
 						
-		Gaffer.ParameterHandler.registerParameterHandler( CustomParameter.staticTypeId(), CustomHandler )
+		Gaffer.ParameterHandler.registerParameterHandler( CustomParameter, CustomHandler )
 		
 		p = IECore.Parameterised( "" )
 		p.parameters().addParameter(

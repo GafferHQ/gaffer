@@ -99,5 +99,5 @@ class ClassVectorParameterHandler( Gaffer.CompoundParameterHandler ) :
 		compoundPlug["__classNames"].setValue( IECore.StringVectorData( [ c[2] for c in classes ] ) )
 		compoundPlug["__classVersions"].setValue( IECore.IntVectorData( [ c[3] for c in classes ] ) )
 								
-Gaffer.ParameterHandler.registerParameterHandler( IECore.ClassVectorParameter.staticTypeId(), ClassVectorParameterHandler )
+Gaffer.ParameterHandler.registerParameterHandler( IECore.ClassVectorParameter, ClassVectorParameterHandler )
 		

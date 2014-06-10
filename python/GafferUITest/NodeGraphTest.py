@@ -54,7 +54,7 @@ class NestedPlugTestNode( Gaffer.Node ) :
 		Gaffer.Node.__init__( self )
 	
 IECore.registerRunTimeTyped( NestedPlugTestNode )
-GafferUI.Nodule.registerNodule( NestedPlugTestNode.staticTypeId(), "c", GafferUI.CompoundNodule )
+GafferUI.Nodule.registerNodule( NestedPlugTestNode, "c", GafferUI.CompoundNodule )
 
 class NodeGraphTest( GafferUITest.TestCase ) :
 
@@ -865,7 +865,7 @@ class NodeGraphTest( GafferUITest.TestCase ) :
 				
 		IECore.registerRunTimeTyped( InvisibleNode )
 		
-		GafferUI.NodeGadget.registerNodeGadget( InvisibleNode.staticTypeId(), lambda node : None )
+		GafferUI.NodeGadget.registerNodeGadget( InvisibleNode, lambda node : None )
 		
 		script = Gaffer.ScriptNode()
 		g = GafferUI.GraphGadget( script )

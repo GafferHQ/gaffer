@@ -52,7 +52,7 @@ class FormatPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__formatRemovedConnection = GafferImage.Format.formatRemovedSignal().connect( Gaffer.WeakMethod( self.__formatRemoved ) )
 		
 		# Get the script node that holds the default format.
-		self.__scriptNode = plug.ancestor( Gaffer.ScriptNode.staticTypeId() )
+		self.__scriptNode = plug.ancestor( Gaffer.ScriptNode )
 		
 		# Is this the default format plug?
 		self.__isDefaultFormatPlug = self.__scriptNode.isSame( plug.node() )
@@ -133,5 +133,5 @@ class FormatPlugValueWidget( GafferUI.PlugValueWidget ) :
 	def __len__( self ) :
 		return len( self.__multiSelectionMenu )
 														
-GafferUI.PlugValueWidget.registerType( GafferImage.FormatPlug.staticTypeId(), FormatPlugValueWidget )
+GafferUI.PlugValueWidget.registerType( GafferImage.FormatPlug, FormatPlugValueWidget )
 

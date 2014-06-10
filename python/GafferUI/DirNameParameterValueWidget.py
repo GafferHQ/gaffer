@@ -63,4 +63,4 @@ class DirNameParameterValueWidget( GafferUI.PathParameterValueWidget ) :
 		)
 		return result
 	
-GafferUI.ParameterValueWidget.registerType( IECore.DirNameParameter.staticTypeId(), DirNameParameterValueWidget )
+GafferUI.ParameterValueWidget.registerType( IECore.DirNameParameter, DirNameParameterValueWidget )

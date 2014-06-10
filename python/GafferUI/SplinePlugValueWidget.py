@@ -91,7 +91,7 @@ class SplinePlugValueWidget( GafferUI.PlugValueWidget ) :
 				## \todo This could perhaps be improved if it derived from a PlugValueDialogue
 				# base class shared with the _ColorPlugValueDialogue.
 				window = GafferUI.Window(
-					title = self.getPlug().relativeName( self.getPlug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ),
+					title = self.getPlug().relativeName( self.getPlug().ancestor( Gaffer.ScriptNode ) ),
 					borderWidth = 8,
 				)	
 				window.setChild( GafferUI.RampPlugValueWidget( self.getPlug() ) )
@@ -101,5 +101,5 @@ class SplinePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 			self.__editorWindow().setVisible( True )
 				
-GafferUI.PlugValueWidget.registerType( Gaffer.SplineffPlug.staticTypeId(), SplinePlugValueWidget )
-GafferUI.PlugValueWidget.registerType( Gaffer.SplinefColor3fPlug.staticTypeId(), SplinePlugValueWidget )
+GafferUI.PlugValueWidget.registerType( Gaffer.SplineffPlug, SplinePlugValueWidget )
+GafferUI.PlugValueWidget.registerType( Gaffer.SplinefColor3fPlug, SplinePlugValueWidget )

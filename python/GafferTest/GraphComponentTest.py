@@ -290,8 +290,8 @@ class GraphComponentTest( GafferTest.TestCase ) :
 		n = GafferTest.AddNode()
 		s["node"] = n
 		
-		self.assert_( n.ancestor( Gaffer.ScriptNode.staticTypeId() ).isSame( s ) )
-		self.assert_( n.ancestor( Gaffer.ApplicationRoot.staticTypeId() ).isSame( a ) )
+		self.assert_( n.ancestor( Gaffer.ScriptNode ).isSame( s ) )
+		self.assert_( n.ancestor( Gaffer.ApplicationRoot ).isSame( a ) )
 		
 	def testCommonAncestor( self ) :
 	
@@ -302,8 +302,8 @@ class GraphComponentTest( GafferTest.TestCase ) :
 		s["n1"] = Gaffer.Node()
 		s["n2"] = Gaffer.Node()
 		
-		self.assert_( s["n1"].commonAncestor( s["n2"], Gaffer.ScriptNode.staticTypeId() ).isSame( s ) )
-		self.assert_( s["n2"].commonAncestor( s["n1"], Gaffer.ScriptNode.staticTypeId() ).isSame( s ) )
+		self.assert_( s["n1"].commonAncestor( s["n2"], Gaffer.ScriptNode ).isSame( s ) )
+		self.assert_( s["n2"].commonAncestor( s["n1"], Gaffer.ScriptNode ).isSame( s ) )
 	
 	def testRenameThenRemove( self ) :
 	
@@ -555,10 +555,10 @@ class GraphComponentTest( GafferTest.TestCase ) :
 		g["c"] = Gaffer.Node()
 		
 		self.assertEqual( len( g.children() ), 4 )
-		self.assertEqual( len( g.children( Gaffer.GraphComponent.staticTypeId() ) ), 4 )
-		self.assertEqual( len( g.children( Gaffer.Plug.staticTypeId() ) ), 3 )
-		self.assertEqual( len( g.children( Gaffer.Node.staticTypeId() ) ), 1 )
-		self.assertEqual( len( g.children( Gaffer.IntPlug.staticTypeId() ) ), 1 )
+		self.assertEqual( len( g.children( Gaffer.GraphComponent ) ), 4 )
+		self.assertEqual( len( g.children( Gaffer.Plug ) ), 3 )
+		self.assertEqual( len( g.children( Gaffer.Node ) ), 1 )
+		self.assertEqual( len( g.children( Gaffer.IntPlug ) ), 1 )
 	
 	def testRemoveMany( self ) :
 	

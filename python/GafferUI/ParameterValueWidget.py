@@ -111,8 +111,13 @@ class ParameterValueWidget( GafferUI.Widget ) :
 		return None
 		
 	@classmethod
-	def registerType( cls, parameterTypeId, creator, uiTypeHint = None ) :
+	def registerType( cls, parameterClassOrTypeId, creator, uiTypeHint = None ) :
 	
+		if isinstance( parameterClassOrTypeId, IECore.TypeId ) :
+			parameterTypeId = parameterClassOrTypeId
+		else :
+			parameterTypeId = parameterClassOrTypeId.staticTypeId()
+
 		cls.__typesToCreators[(parameterTypeId, uiTypeHint)] = creator
 
 	__typesToCreators = {}

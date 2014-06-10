@@ -37,16 +37,16 @@
 import GafferUI
 import GafferScene
 
-GafferUI.Nodule.registerNodule( GafferScene.ShaderSwitch.staticTypeId(), "enabled", lambda plug : None )
-GafferUI.Nodule.registerNodule( GafferScene.ShaderSwitch.staticTypeId(), "index", lambda plug : None )
+GafferUI.Nodule.registerNodule( GafferScene.ShaderSwitch, "enabled", lambda plug : None )
+GafferUI.Nodule.registerNodule( GafferScene.ShaderSwitch, "index", lambda plug : None )
 
-GafferUI.PlugValueWidget.registerCreator( GafferScene.ShaderSwitch.staticTypeId(), "enabled", None )
-GafferUI.PlugValueWidget.registerCreator( GafferScene.ShaderSwitch.staticTypeId(), "in", None )
-GafferUI.PlugValueWidget.registerCreator( GafferScene.ShaderSwitch.staticTypeId(), "in[0-9]*", None )
-GafferUI.PlugValueWidget.registerCreator( GafferScene.ShaderSwitch.staticTypeId(), "out", None )
+GafferUI.PlugValueWidget.registerCreator( GafferScene.ShaderSwitch, "enabled", None )
+GafferUI.PlugValueWidget.registerCreator( GafferScene.ShaderSwitch, "in", None )
+GafferUI.PlugValueWidget.registerCreator( GafferScene.ShaderSwitch, "in[0-9]*", None )
+GafferUI.PlugValueWidget.registerCreator( GafferScene.ShaderSwitch, "out", None )
 
 def __nodeGadgetCreator( node ) :
 
 	return GafferUI.StandardNodeGadget( node, GafferUI.LinearContainer.Orientation.Y )
 
-GafferUI.NodeGadget.registerNodeGadget( GafferScene.ShaderSwitch.staticTypeId(), __nodeGadgetCreator )
+GafferUI.NodeGadget.registerNodeGadget( GafferScene.ShaderSwitch, __nodeGadgetCreator )
