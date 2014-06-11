@@ -57,8 +57,9 @@ compiler = getOption( "COMPILER", None )
 compilerVersion = getOption( "COMPILER_VERSION", None )
 targetApp = getOption( "APP", None )
 targetAppVersion = None
-oiioVersion = "1.1.10"
+oiioVersion = "1.3.12"
 ocioVersion = "1.0.7"
+oslVersion = "1.4.1"
 
 if targetApp :
 	
@@ -110,8 +111,7 @@ try :
 except :
 	pass
 
-# we don't want to bother building with osl support
-OSL_SRC_DIR = ""
+OSL_SRC_DIR = "needsToBeDefinedToEnableBuild"
 
 ##########################################################################
 # set where we'll put things
@@ -142,6 +142,7 @@ LOCATE_DEPENDENCY_SYSTEMPATH = [
 
 	os.path.join( IEEnv.Environment.rootPath(), "apps", "OpenColorIO", ocioVersion, IEEnv.platform(), compiler, compilerVersion, "include" ),
 	os.path.join( IEEnv.Environment.rootPath(), "apps", "OpenImageIO", oiioVersion, IEEnv.platform(), compiler, compilerVersion, "include" ),
+	os.path.join( IEEnv.Environment.rootPath(), "apps", "OpenShadingLanguage", oslVersion, IEEnv.platform(), compiler, compilerVersion, "include" ),
 	os.path.join( IEEnv.Environment.rootPath(), "tools", "include", IEEnv.platform(), "glew", targetAppReg.get( "glew", cortexReg["glewVersion"] ) ),
 	os.path.join( IEEnv.Environment.rootPath(), "tools", "include", IEEnv.platform(), "OpenEXR", targetAppReg.get( "OpenEXRVersion", cortexReg["OpenEXRVersion"] ) ),
 	os.path.join( IEEnv.Environment.rootPath(), "tools", "include", IEEnv.platform(), "OpenEXR", targetAppReg.get( "OpenEXRVersion", cortexReg["OpenEXRVersion"] ), "OpenEXR" ),
@@ -234,6 +235,7 @@ while boostVersionSuffix.endswith( "_0" ) :
 
 OIIO_LIB_SUFFIX = "-%s" % oiioVersion
 OCIO_LIB_SUFFIX = "-%s" % ocioVersion
+OSL_LIB_SUFFIX = "-%s" % oslVersion
 
 BOOST_LIB_SUFFIX = "-" + compiler + compilerVersionSplit[0] + compilerVersionSplit[1] + boostVersionSuffix
 
