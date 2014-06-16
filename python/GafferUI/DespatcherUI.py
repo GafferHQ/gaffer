@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2012, John Haddon. All rights reserved.
-#  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012-2014, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -129,11 +129,11 @@ def __previousAvailable( menu ) :
 # Metadata, PlugValueWidgets and Nodules
 ##########################################################################
 
-Gaffer.Metadata.registerPlugValue( Gaffer.Node, "despatcherParameters", "nodeUI:section", "Despatcher" )
+Gaffer.Metadata.registerPlugValue( Gaffer.Node, "despatcher", "nodeUI:section", "Despatcher" )
 
-GafferUI.PlugValueWidget.registerCreator( Gaffer.Node, "despatcherParameters", GafferUI.CompoundPlugValueWidget, collapsed = None )
+GafferUI.PlugValueWidget.registerCreator( Gaffer.Node, "despatcher", GafferUI.CompoundPlugValueWidget, collapsed = None )
 GafferUI.PlugValueWidget.registerCreator( Gaffer.Node, "requirements", None )
 GafferUI.PlugValueWidget.registerCreator( Gaffer.Node, "requirement", None )
 
-GafferUI.Nodule.registerNodule( Gaffer.Node, "despatcherParameters", lambda plug : None )
+GafferUI.Nodule.registerNodule( Gaffer.Node, "despatcher", lambda plug : None )
 GafferUI.Nodule.registerNodule( Gaffer.Node, "requirements", lambda plug : GafferUI.CompoundNodule( plug, spacing = 0.4 ) )
