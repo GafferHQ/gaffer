@@ -37,24 +37,21 @@
 #ifndef GAFFER_FILTEREDCHILDITERATOR_H
 #define GAFFER_FILTEREDCHILDITERATOR_H
 
-#include "Gaffer/GraphComponent.h"
-
-#include "IECore/RunTimeTyped.h"
-
 #include "boost/iterator/filter_iterator.hpp"
+
+#include "Gaffer/GraphComponent.h"
 
 namespace Gaffer
 {
 
-/// \todo Perhaps this predicate class belongs in cortex?
 template<typename T>
 struct TypePredicate
 {
 	typedef T ChildType;
 
-	bool operator()( IECore::RunTimeTypedPtr x )
+	bool operator()( const GraphComponentPtr &g ) const
 	{
-		return IECore::runTimeCast<T>( x );
+		return IECore::runTimeCast<T>( g.get() );
 	}
 };
 

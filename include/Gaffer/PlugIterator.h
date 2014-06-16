@@ -41,8 +41,6 @@
 #include "Gaffer/FilteredChildIterator.h"
 #include "Gaffer/FilteredRecursiveChildIterator.h"
 
-#include "boost/iterator/filter_iterator.hpp"
-
 namespace Gaffer
 {
 
@@ -51,9 +49,9 @@ struct PlugPredicate
 {
 	typedef T ChildType;
 
-	bool operator()( GraphComponentPtr g )
+	bool operator()( const GraphComponentPtr &g ) const
 	{
-		typename T::Ptr p = IECore::runTimeCast<T>( g );
+		const T *p = IECore::runTimeCast<T>( g.get() );
 		if( !p )
 		{
 			return false;
