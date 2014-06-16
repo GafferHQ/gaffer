@@ -304,13 +304,17 @@ IECore::ConstInternedStringVectorDataPtr Instancer::computeBranchChildNames( con
 			return outPlug()->childNamesPlug()->defaultValue();
 		}
 		
-		InternedStringVectorDataPtr result = new InternedStringVectorData();
-		for( size_t i=0; i<p->readable().size(); i++ )
+		const size_t s = p->readable().size();
+		InternedStringVectorDataPtr resultData = new InternedStringVectorData();
+		vector<InternedString> &result = resultData->writable();
+		result.resize( s );
+		
+		for( size_t i = 0; i < s ; ++i )
 		{
-			result->writable().push_back( InternedString( i ) );
+			result[i] = InternedString( i );
 		}
 		
-		return result;
+		return resultData;
 	}
 	else
 	{
