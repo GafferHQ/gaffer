@@ -85,11 +85,11 @@ class Despatcher : public IECore::RunTimeTyped
 		/////////////////////////////////////////////////////////////////
 		//@{
 		/// Register a named Despatcher instance.
-		static void registerDespatcher( std::string name, DespatcherPtr despatcher );
+		static void registerDespatcher( const std::string &name, DespatcherPtr despatcher );
 		/// Fills the vector with the names of all the registered Despatchers.
 		static void despatcherNames( std::vector<std::string> &names );
 		/// Returns a registered Despatcher by name.
-		static const Despatcher *despatcher( std::string name );
+		static const Despatcher *despatcher( const std::string &name );
 		//@}
 
 	protected :

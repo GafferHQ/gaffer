@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2013-2014, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -94,17 +94,17 @@ void Despatcher::despatcherNames( std::vector<std::string> &names )
 	}
 }
 
-void Despatcher::registerDespatcher( std::string name, DespatcherPtr despatcher )
+void Despatcher::registerDespatcher( const std::string &name, DespatcherPtr despatcher )
 {
 	g_despatchers[name] = despatcher;
 }
 
-const Despatcher *Despatcher::despatcher( std::string type )
+const Despatcher *Despatcher::despatcher( const std::string &name )
 {
-	DespatcherMap::const_iterator cit = g_despatchers.find( type );
+	DespatcherMap::const_iterator cit = g_despatchers.find( name );
 	if ( cit == g_despatchers.end() )
 	{
-		throw Exception( (boost::format( "No despatcher %s found!") % type ).str() );
+		throw Exception( "\"" + name + "\" is not a registered Despatcher." );
 	}
 	return cit->second.get();
 }
@@ -112,7 +112,7 @@ const Despatcher *Despatcher::despatcher( std::string type )
 /// Returns the input Task if it was never seen before, or the previous Task that is equivalent to this one.
 /// It also populates flattenedTasks with unique tasks seen so far.
 /// It uses seenTasks object as a temporary buffer.
-const ExecutableNode::Task &Despatcher::uniqueTask( const ExecutableNode::Task &task, std::vector< Despatcher::TaskDescription > &uniqueTasks, TaskSet &seenTasks )
+const ExecutableNode::Task &Despatcher::uniqueTask( const ExecutableNode::Task &task, TaskDescriptions &uniqueTasks, TaskSet &seenTasks )
 {	
 	ExecutableNode::Tasks requirements;
 	task.node->executionRequirements( task.context, requirements );
@@ -176,7 +176,7 @@ const ExecutableNode::Task &Despatcher::uniqueTask( const ExecutableNode::Task &
 	return task;
 }
 
-void Despatcher::uniqueTasks( const ExecutableNode::Tasks &tasks, std::vector< Despatcher::TaskDescription > &uniqueTasks )
+void Despatcher::uniqueTasks( const ExecutableNode::Tasks &tasks, TaskDescriptions &uniqueTasks )
 {
 	TaskSet seenTasks;
 	
