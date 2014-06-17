@@ -42,17 +42,28 @@
 #include "GafferScene/PathFilter.h"
 #include "GafferScene/UnionFilter.h"
 #include "GafferScene/SetFilter.h"
+#include "GafferScene/ScenePlug.h"
 
 #include "GafferSceneBindings/FilterBinding.h"
 
 using namespace boost::python;
 using namespace GafferScene;
 
+static ScenePlugPtr getInputScene( const Gaffer::Context *context )
+{
+	return const_cast<ScenePlug *>( Filter::getInputScene( context ) );
+}
+
 void GafferSceneBindings::bindFilter()
 {
 	
 	{
-		scope s = GafferBindings::DependencyNodeClass<Filter>();
+		scope s = GafferBindings::DependencyNodeClass<Filter>()
+			.def( "setInputScene", &Filter::setInputScene )
+			.staticmethod( "setInputScene" )
+			.def( "getInputScene", &getInputScene )
+			.staticmethod( "getInputScene" )
+		;
 	
 		enum_<Filter::Result>( "Result" )
 			.value( "NoMatch", Filter::NoMatch )

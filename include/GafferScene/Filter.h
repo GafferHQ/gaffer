@@ -74,7 +74,14 @@ class Filter : public Gaffer::ComputeNode
 		
 		virtual bool sceneAffectsMatch( const ScenePlug *scene, const Gaffer::ValuePlug *child ) const;
 		
-		static const IECore::InternedString inputSceneContextName;
+		/// Because a single filter may be used with many different input scenes,
+		/// Filters require the input scene to be specified by a variable in the
+		/// Context. This method should be used to set the input scene before
+		/// querying the filter. It is the responsibility of the caller to ensure
+		/// that the scene plug remains alive for as long as the context is in use.
+		static void setInputScene( Gaffer::Context *context, const ScenePlug *scenePlug );
+		/// Returns an input scene previously stored with setInputScene().
+		static const ScenePlug *getInputScene( const Gaffer::Context *context );
 		
 	protected :
 		
@@ -89,6 +96,8 @@ class Filter : public Gaffer::ComputeNode
 
 	private :
 	
+		static const IECore::InternedString g_inputSceneContextName;
+
 		static size_t g_firstPlugIndex;
 
 };

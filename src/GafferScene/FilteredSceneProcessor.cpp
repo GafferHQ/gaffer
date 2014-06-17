@@ -124,7 +124,7 @@ bool FilteredSceneProcessor::acceptsInput( const Gaffer::Plug *plug, const Gaffe
 Gaffer::ContextPtr FilteredSceneProcessor::filterContext( const Gaffer::Context *context ) const
 {
 	Context *result = new Context( *context, Context::Borrowed );
-	result->set( Filter::inputSceneContextName, (uint64_t)inPlug() );
+	Filter::setInputScene( result, inPlug() );
 	return result;
 }
 
