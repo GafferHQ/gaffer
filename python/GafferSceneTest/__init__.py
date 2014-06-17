@@ -98,6 +98,7 @@ from SetTest import SetTest
 from FreezeTransformTest import FreezeTransformTest
 from SetFilterTest import SetFilterTest
 from FilterTest import FilterTest
+from SceneAlgoTest import SceneAlgoTest
 
 if __name__ == "__main__":
 	import unittest
