@@ -44,17 +44,17 @@ import GafferUI
 
 class ExecuteButton( GafferUI.Button ) :
 
-	def __init__( self, node ) :
+	def __init__( self, plug ) :
 	
 		GafferUI.Button.__init__( self, "Execute" )
 	
-		self.__node = node
+		self.__plug = plug
 		self.__clickedConnection = self.clickedSignal().connect( Gaffer.WeakMethod( self.__clicked ) )
 	 
 	def __clicked( self, button ) :
 	
-		_execute( [ self.__node ] )
-				
+		_execute( [ self.__plug.node() ] )
+
 def appendMenuDefinitions( menuDefinition, prefix="" ) :
 
 	menuDefinition.append( prefix + "/Execute Selected", { "command" : executeSelected, "shortCut" : "Ctrl+E", "active" : __selectionAvailable } )

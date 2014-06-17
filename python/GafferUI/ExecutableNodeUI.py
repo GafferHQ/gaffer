@@ -34,12 +34,16 @@
 #  
 ##########################################################################
 
-import fnmatch
-
 import Gaffer
 import GafferUI
 
+##########################################################################
+# Metadata, PlugValueWidgets and Nodules
+##########################################################################
+
+Gaffer.Metadata.registerPlugValue( Gaffer.ExecutableNode, "requirement", "nodeUI:section", "header" )
+
 GafferUI.PlugValueWidget.registerCreator( Gaffer.ExecutableNode, "requirements", None )
-GafferUI.PlugValueWidget.registerCreator( Gaffer.ExecutableNode, "requirement", None )
+GafferUI.PlugValueWidget.registerCreator( Gaffer.ExecutableNode, "requirement", GafferUI.DespatcherUI.ExecuteButton )
 
 GafferUI.Nodule.registerNodule( Gaffer.ExecutableNode, "requirements", lambda plug : GafferUI.CompoundNodule( plug, spacing = 0.4 ) )

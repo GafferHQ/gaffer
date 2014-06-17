@@ -1,7 +1,7 @@
 ##########################################################################
 #
 #  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2014, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -78,15 +78,7 @@ class StandardNodeUI( GafferUI.NodeUI ) :
 			self.__mainColumn.append( self.__tabbedContainer )
 
 		self.__buildPlugWidgets()
-
-		# ScriptNode has an execute method but that is for something else.
-		## \todo This shouldn't need to be here at all - instead we should just define
-		# a custom UI for the ExecutableNode in another file.
-		if hasattr( node, "execute" ) and not isinstance( node, Gaffer.ScriptNode ) :
-			defaultColumn = self.__sectionColumn( self.__defaultSectionName )
-			defaultColumn.append( GafferUI.ExecuteUI.ExecuteButton( self.node() ) )
-			defaultColumn.append( GafferUI.Spacer( IECore.V2i( 1 ) ), expand = True )
-
+		
 		if self.__displayMode == self.DisplayMode.Tabbed :
 			if self.__currentTabPlugName in node :
 				tabIndex = min( node[self.__currentTabPlugName].getValue(), len( self.__tabbedContainer ) - 1 )
