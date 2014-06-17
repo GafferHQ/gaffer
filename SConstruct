@@ -158,7 +158,7 @@ options.Add(
 options.Add(
 	"TBB_SRC_DIR",
 	"The location of the tbb source to be used if BUILD_DEPENDENCY_TBB is specified.",
-	"$DEPENDENCIES_SRC_DIR/tbb41_20130613oss",
+	"$DEPENDENCIES_SRC_DIR/tbb42_20140601oss",
 )
 
 options.Add(

@@ -51,7 +51,6 @@ BUILD_CACHEDIR = os.path.expanduser( "~/dev/buildCache" )
 INSTALL_DIR = os.path.expanduser( "~/dev/install/gaffer-${GAFFER_MAJOR_VERSION}.${GAFFER_MINOR_VERSION}.${GAFFER_PATCH_VERSION}-${PLATFORM}" )
 DEPENDENCIES_SRC_DIR = os.path.expanduser( "~/dev/gafferDependencies" )
 PYTHON_SRC_DIR = "$DEPENDENCIES_SRC_DIR/Python-2.7.2"
-TBB_SRC_DIR = "$DEPENDENCIES_SRC_DIR/tbb22_004oss"
 JPEG_SRC_DIR = "$DEPENDENCIES_SRC_DIR/jpeg-8c"
 TIFF_SRC_DIR = "$DEPENDENCIES_SRC_DIR/tiff-3.8.2"
 PNG_SRC_DIR = "$DEPENDENCIES_SRC_DIR/libpng-1.5.4"
