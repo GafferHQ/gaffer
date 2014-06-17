@@ -107,8 +107,22 @@ void Instancer::hashBranchBound( const ScenePath &parentPath, const ScenePath &b
 	
 		BranchCreator::hashBranchBound( parentPath, branchPath, context, h );
 	
-		/// \todo This is a massive cop-out. See if we can improve it.
-		h.append( computeBranchBound( parentPath, branchPath, context ) );
+		ConstV3fVectorDataPtr p = sourcePoints( parentPath );
+		if( p )
+		{
+			ScenePath branchChildPath( branchPath );
+			if( branchChildPath.size() == 0 )
+			{
+				branchChildPath.push_back( namePlug()->getValue() );
+			}
+			branchChildPath.push_back( InternedString() ); // where we'll place the instance index
+			for( size_t i=0; i<p->readable().size(); i++ )
+			{
+				branchChildPath[branchChildPath.size()-1] = InternedString( i );
+				hashBranchBound( parentPath, branchChildPath, context, h );
+				hashBranchTransform( parentPath, branchChildPath, context, h );
+			}
+		}
 	}
 	else
 	{
