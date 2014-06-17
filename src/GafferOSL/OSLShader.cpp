@@ -65,6 +65,11 @@ namespace
 struct ShadingEngineCacheKey
 {
 	
+	ShadingEngineCacheKey()
+		:	shader( NULL )
+	{
+	}
+	
 	ShadingEngineCacheKey( const OSLShader *s )
 		:	shader( s ), hash( s->stateHash() )
 	{
@@ -89,6 +94,11 @@ struct ShadingEngineCacheKey
 	MurmurHash hash;
 
 };
+
+inline size_t tbb_hasher( const ShadingEngineCacheKey &cacheKey )
+{
+	return tbb_hasher( cacheKey.hash );
+}
 
 OSLRenderer::ConstShadingEnginePtr getter( const ShadingEngineCacheKey &key, size_t &cost )
 {
