@@ -1,7 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2012, John Haddon. All rights reserved.
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,26 +34,42 @@
 #  
 ##########################################################################
 
+import unittest
+
 import IECore
 
-import GafferUI
-import GafferSceneUI
+import GafferScene
+import GafferSceneTest
 
-## \todo Make this behaviour a part of the preferences.
-def __nodeDoubleClick( nodeGraph, node ) :
+class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
+			
+	def test( self ) :
 
-	GafferUI.NodeEditor.acquire( node )
+		sphere = GafferScene.Sphere()
+		plane = GafferScene.Plane()
+		group = GafferScene.Group()
+		group["in"].setInput( sphere["out"] )
+		group["in1"].setInput( plane["out"] )
 
-__nodeDoubleClickConnection = GafferUI.NodeGraph.nodeDoubleClickSignal().connect( __nodeDoubleClick )
+		plane2 = GafferScene.Plane()
+		plane2["divisions"].setValue( IECore.V2i( 99, 99 ) ) # 10000 instances
 
-def __nodeContextMenu( nodeGraph, node, menuDefinition ) :
+		instancer = GafferScene.Instancer()
+		instancer["in"].setInput( plane2["out"] )
+		instancer["parent"].setValue( "/plane" )
+		instancer["instance"].setInput( group["out"] )
+		
+		filter = GafferScene.PathFilter()
+		filter["paths"].setValue( IECore.StringVectorData( [ "/plane/instances/*1/group/plane" ] ) )
+		
+		matchingPaths = GafferScene.PathMatcher()
+		GafferScene.matchingPaths( filter, instancer["out"], matchingPaths )
+		
+		self.assertEqual( len( matchingPaths.paths() ), 1000 )
+		self.assertEqual( matchingPaths.match( "/plane/instances/1/group/plane" ), GafferScene.Filter.Result.ExactMatch )
+		self.assertEqual( matchingPaths.match( "/plane/instances/1121/group/plane" ), GafferScene.Filter.Result.ExactMatch )
+		self.assertEqual( matchingPaths.match( "/plane/instances/1121/group/sphere" ), GafferScene.Filter.Result.NoMatch )
 
-	menuDefinition.append( "/Edit...", { "command" : IECore.curry( GafferUI.NodeEditor.acquire, node ) } )
+if __name__ == "__main__":
+	unittest.main()
 	
-	GafferUI.NodeGraph.appendEnabledPlugMenuDefinitions( nodeGraph, node, menuDefinition )
-	GafferUI.NodeGraph.appendConnectionVisibilityMenuDefinitions( nodeGraph, node, menuDefinition )
-	GafferUI.ExecuteUI.appendNodeContextMenuDefinitions( nodeGraph, node, menuDefinition )
-	GafferUI.BoxUI.appendNodeContextMenuDefinitions( nodeGraph, node, menuDefinition )
-	GafferSceneUI.FilteredSceneProcessorUI.appendNodeContextMenuDefinitions( nodeGraph, node, menuDefinition )
-
-__nodeContextMenuConnection = GafferUI.NodeGraph.nodeContextMenuSignal().connect( __nodeContextMenu )

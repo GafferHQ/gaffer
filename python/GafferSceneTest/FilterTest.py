@@ -1,7 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2012, John Haddon. All rights reserved.
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,26 +34,23 @@
 #  
 ##########################################################################
 
-import IECore
+import unittest
 
-import GafferUI
-import GafferSceneUI
+import Gaffer
+import GafferScene
+import GafferSceneTest
 
-## \todo Make this behaviour a part of the preferences.
-def __nodeDoubleClick( nodeGraph, node ) :
+class FilterTest( GafferSceneTest.SceneTestCase ) :
 
-	GafferUI.NodeEditor.acquire( node )
-
-__nodeDoubleClickConnection = GafferUI.NodeGraph.nodeDoubleClickSignal().connect( __nodeDoubleClick )
-
-def __nodeContextMenu( nodeGraph, node, menuDefinition ) :
-
-	menuDefinition.append( "/Edit...", { "command" : IECore.curry( GafferUI.NodeEditor.acquire, node ) } )
+	def testInputScene( self ) :
 	
-	GafferUI.NodeGraph.appendEnabledPlugMenuDefinitions( nodeGraph, node, menuDefinition )
-	GafferUI.NodeGraph.appendConnectionVisibilityMenuDefinitions( nodeGraph, node, menuDefinition )
-	GafferUI.ExecuteUI.appendNodeContextMenuDefinitions( nodeGraph, node, menuDefinition )
-	GafferUI.BoxUI.appendNodeContextMenuDefinitions( nodeGraph, node, menuDefinition )
-	GafferSceneUI.FilteredSceneProcessorUI.appendNodeContextMenuDefinitions( nodeGraph, node, menuDefinition )
-
-__nodeContextMenuConnection = GafferUI.NodeGraph.nodeContextMenuSignal().connect( __nodeContextMenu )
+		c = Gaffer.Context()
+		
+		self.assertEqual( GafferScene.Filter.getInputScene( c ), None )
+		
+		p = GafferScene.Plane()
+		GafferScene.Filter.setInputScene( c, p["out"] )
+		self.assertEqual( GafferScene.Filter.getInputScene( c ), p["out"] )
+		
+if __name__ == "__main__":
+	unittest.main()

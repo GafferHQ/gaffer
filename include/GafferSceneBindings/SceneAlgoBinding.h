@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,47 +34,14 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef GAFFERSCENEBINDINGS_SCENEALGOBINDING_H
+#define GAFFERSCENEBINDINGS_SCENEALGOBINDING_H
 
-#include "GafferBindings/DependencyNodeBinding.h"
-
-#include "GafferScene/Filter.h"
-#include "GafferScene/PathFilter.h"
-#include "GafferScene/UnionFilter.h"
-#include "GafferScene/SetFilter.h"
-#include "GafferScene/ScenePlug.h"
-
-#include "GafferSceneBindings/FilterBinding.h"
-
-using namespace boost::python;
-using namespace GafferScene;
-
-static ScenePlugPtr getInputScene( const Gaffer::Context *context )
+namespace GafferSceneBindings
 {
-	return const_cast<ScenePlug *>( Filter::getInputScene( context ) );
-}
 
-void GafferSceneBindings::bindFilter()
-{
-	
-	{
-		scope s = GafferBindings::DependencyNodeClass<Filter>()
-			.def( "setInputScene", &Filter::setInputScene )
-			.staticmethod( "setInputScene" )
-			.def( "getInputScene", &getInputScene )
-			.staticmethod( "getInputScene" )
-		;
-	
-		enum_<Filter::Result>( "Result" )
-			.value( "NoMatch", Filter::NoMatch )
-			.value( "DescendantMatch", Filter::DescendantMatch )
-			.value( "ExactMatch", Filter::ExactMatch )
-			.value( "AncestorMatch", Filter::AncestorMatch )
-			.value( "EveryMatch", Filter::EveryMatch )
-		;
-	}
-				
-	GafferBindings::DependencyNodeClass<PathFilter>();
-	GafferBindings::DependencyNodeClass<UnionFilter>();
-	GafferBindings::DependencyNodeClass<SetFilter>();
-}
+void bindSceneAlgo();
+
+} // namespace GafferSceneBindings
+
+#endif // GAFFERSCENEBINDINGS_SCENEALGOBINDING_H

@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,47 +34,24 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef GAFFERSCENE_SCENEALGO_H
+#define GAFFERSCENE_SCENEALGO_H
 
-#include "GafferBindings/DependencyNodeBinding.h"
+#include "Gaffer/NumericPlug.h"
 
-#include "GafferScene/Filter.h"
-#include "GafferScene/PathFilter.h"
-#include "GafferScene/UnionFilter.h"
-#include "GafferScene/SetFilter.h"
-#include "GafferScene/ScenePlug.h"
-
-#include "GafferSceneBindings/FilterBinding.h"
-
-using namespace boost::python;
-using namespace GafferScene;
-
-static ScenePlugPtr getInputScene( const Gaffer::Context *context )
+namespace GafferScene
 {
-	return const_cast<ScenePlug *>( Filter::getInputScene( context ) );
-}
 
-void GafferSceneBindings::bindFilter()
-{
-	
-	{
-		scope s = GafferBindings::DependencyNodeClass<Filter>()
-			.def( "setInputScene", &Filter::setInputScene )
-			.staticmethod( "setInputScene" )
-			.def( "getInputScene", &getInputScene )
-			.staticmethod( "getInputScene" )
-		;
-	
-		enum_<Filter::Result>( "Result" )
-			.value( "NoMatch", Filter::NoMatch )
-			.value( "DescendantMatch", Filter::DescendantMatch )
-			.value( "ExactMatch", Filter::ExactMatch )
-			.value( "AncestorMatch", Filter::AncestorMatch )
-			.value( "EveryMatch", Filter::EveryMatch )
-		;
-	}
-				
-	GafferBindings::DependencyNodeClass<PathFilter>();
-	GafferBindings::DependencyNodeClass<UnionFilter>();
-	GafferBindings::DependencyNodeClass<SetFilter>();
-}
+class ScenePlug;
+class Filter;
+class PathMatcher;
+
+/// Finds all the paths in the scene that are matched by the filter, and adds them into the PathMatcher.
+void matchingPaths( const Filter *filter, const ScenePlug *scene, PathMatcher &paths );
+/// As above, but specifying the filter as a plug - typically Filter::matchPlug() or
+/// FilteredSceneProcessor::filterPlug() would be passed.
+void matchingPaths( const Gaffer::IntPlug *filterPlug, const ScenePlug *scene, PathMatcher &paths );
+
+} // namespace GafferScene
+
+#endif // GAFFERSCENE_SCENEALGO_H

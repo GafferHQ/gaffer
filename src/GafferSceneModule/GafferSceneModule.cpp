@@ -89,6 +89,7 @@
 #include "GafferSceneBindings/OptionsBinding.h"
 #include "GafferSceneBindings/SetBinding.h"
 #include "GafferSceneBindings/FreezeTransformBinding.h"
+#include "GafferSceneBindings/SceneAlgoBinding.h"
 
 using namespace boost::python;
 using namespace GafferScene;
@@ -163,5 +164,6 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	bindGrid();
 	bindSet();
 	bindFreezeTransform();
+	bindSceneAlgo();
 	
 }

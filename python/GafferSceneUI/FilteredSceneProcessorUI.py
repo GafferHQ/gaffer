@@ -34,6 +34,8 @@
 #  
 ##########################################################################
 
+import IECore
+
 import Gaffer
 import GafferUI
 
@@ -70,3 +72,22 @@ GafferUI.PlugValueWidget.registerCreator(
 )
 
 GafferUI.Nodule.registerNodule( GafferScene.FilteredSceneProcessor, "filter", GafferUI.StandardNodule )
+
+##########################################################################
+# NodeGraph context menu
+##########################################################################
+
+def __selectAffected( node, context ) :
+
+	with context :
+		pathMatcher = GafferScene.PathMatcher()
+		GafferScene.matchingPaths( node["filter"], node["in"], pathMatcher )
+		context["ui:scene:selectedPaths"] = IECore.StringVectorData( pathMatcher.paths() )
+		
+def appendNodeContextMenuDefinitions( nodeGraph, node, menuDefinition ) :
+
+	if not isinstance( node, GafferScene.FilteredSceneProcessor ) :
+		return
+
+	menuDefinition.append( "/FilteredSceneProcessorDivider", { "divider" : True } )
+	menuDefinition.append( "/Select Affected Objects", { "command" : IECore.curry( __selectAffected, node, nodeGraph.getContext() ) } )
