@@ -129,8 +129,8 @@ def __previousAvailable( menu ) :
 # Metadata, PlugValueWidgets and Nodules
 ##########################################################################
 
-Gaffer.Metadata.registerPlugValue( Gaffer.Node, "despatcher", "nodeUI:section", "Despatcher" )
+Gaffer.Metadata.registerPlugValue( Gaffer.ExecutableNode, "despatcher", "nodeUI:section", "Despatcher" )
 
-GafferUI.PlugValueWidget.registerCreator( Gaffer.Node, "despatcher", GafferUI.CompoundPlugValueWidget, collapsed = None )
+GafferUI.PlugValueWidget.registerCreator( Gaffer.ExecutableNode, "despatcher", GafferUI.CompoundPlugValueWidget, collapsed = None )
 
-GafferUI.Nodule.registerNodule( Gaffer.Node, "despatcher", lambda plug : None )
+GafferUI.Nodule.registerNodule( Gaffer.ExecutableNode, "despatcher", lambda plug : None )
