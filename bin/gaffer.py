@@ -37,7 +37,6 @@
 ##########################################################################
 
 import os
-import gc
 import sys
 import ctypes
 import signal
@@ -98,6 +97,12 @@ def checkCleanExit() :
 	# which were long since destroyed in C++.
 	## \todo Reevaluate the need for this call after Cortex 9 development.
 	IECore.RefCounted.collectGarbage()
+	# Importing here rather than at the top of the file prevents false
+	# positives being reported in gc.get_objects() below. I have no idea why,
+	# but if not imported here, get_objects() will report objects which have
+	# nothing referring to them and which should be dead, even with an
+	# explicit call to gc.collect() beforehand.
+	import gc
 	
 	# Check for things that shouldn't exist at shutdown, and
 	# warn of anything we find.
