@@ -54,7 +54,13 @@ ArrayPlug::ArrayPlug( const std::string &name, Direction direction, PlugPtr elem
 	
 	if( element )
 	{
-		element->setFlags( Gaffer::Plug::Dynamic, true );
+		// If we're dynamic ourselves, then serialisations will include a constructor
+		// for us, but it will have element==None. In this case we make sure the first
+		// element is dynamic, so that it too will have a constructor written out (and then
+		// we'll capture it in childAdded()). But if we're not dynamic, we expect to be
+		// passed the element again upon reconstruction, so we don't need a constructor
+		// to be serialised for the element, and therefore we must set it to be non-dynamic.
+		element->setFlags( Gaffer::Plug::Dynamic, getFlags( Gaffer::Plug::Dynamic ) );
 		addChild( element );
 	}
 	else
