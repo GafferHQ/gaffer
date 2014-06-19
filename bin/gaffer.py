@@ -117,7 +117,7 @@ def checkCleanExit() :
 	if scriptNodes :
 		IECore.msg(
 			IECore.Msg.Level.Warning,
-			"Gaffer shutdown", "%d remaining ScriptNode%s detected. Debugging with gc.get_objects() and gc.get_referrers() is recommended." % (
+			"Gaffer shutdown", "%d remaining ScriptNode%s detected. Debugging with objgraph is recommended." % (
 				len( scriptNodes ),
 				"s" if len( scriptNodes ) > 1 else "",
 			)
@@ -134,7 +134,7 @@ def checkCleanExit() :
 		
 		IECore.msg(
 			IECore.Msg.Level.Warning,
-			"Gaffer shutdown", "%d remaining Widget%s detected : \n\n%s" % (
+			"Gaffer shutdown", "%d remaining Widget%s detected : \n\n%s\n\nDebugging with objgraph is recommended." % (
 				len( widgets ),
 				"s" if len( widgets ) > 1 else "",
 				"\t" + "\n\t".join( summaries )
