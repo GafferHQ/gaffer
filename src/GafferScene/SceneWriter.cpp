@@ -104,7 +104,8 @@ void SceneWriter::execute( const Contexts &contexts ) const
 	
 	for ( Contexts::const_iterator it = contexts.begin(), eIt = contexts.end(); it != eIt; it++ )
 	{
-		ContextPtr context = new Context( *it->get() );
+		ContextPtr context = new Context( *it->get(), Context::Borrowed );
+		Context::Scope scopedContext( context );
 		double time = context->getFrame() / g_frameRate;
 		writeLocation( scene, ScenePlug::ScenePath(), context, output.get(), time );
 	}
@@ -113,8 +114,6 @@ void SceneWriter::execute( const Contexts &contexts ) const
 void SceneWriter::writeLocation( const GafferScene::ScenePlug *scene, const ScenePlug::ScenePath &scenePath, Context *context, IECore::SceneInterface *output, double time ) const
 {
 	context->set( ScenePlug::scenePathContextName, scenePath );
-	
-	Context::Scope scopedContext( context );
 	
 	ConstCompoundObjectPtr attributes = scene->attributesPlug()->getValue();
 	for( CompoundObject::ObjectMap::const_iterator it = attributes->members().begin(), eIt = attributes->members().end(); it != eIt; it++ )
