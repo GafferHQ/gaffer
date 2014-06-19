@@ -158,6 +158,7 @@ if "DELIGHT" in os.environ :
 # Scene nodes
 
 nodeMenu.append( "/Scene/Source/Reader", GafferScene.SceneReader, searchText = "SceneReader" )
+nodeMenu.append( "/Scene/Source/Writer", GafferScene.SceneWriter, searchText = "SceneWriter" )
 nodeMenu.append( "/Scene/Source/Alembic", GafferScene.AlembicSource, searchText = "AlembicSource" )
 nodeMenu.append( "/Scene/Source/Object To Scene", GafferScene.ObjectToScene, searchText = "ObjectToScene" )
 nodeMenu.append( "/Scene/Source/Camera", GafferScene.Camera )

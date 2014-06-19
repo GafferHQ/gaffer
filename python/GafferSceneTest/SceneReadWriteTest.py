@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2013-2014, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -135,7 +135,7 @@ class SceneReadWriteTest( GafferSceneTest.SceneTestCase ) :
 		writer["in"].setInput( g["out"] )
 		writer["fileName"].setValue( self.__testFile )
 		
-		writer.execute()
+		writer.execute( [ script.context() ] )
 		
 		sc = IECore.SceneCache( self.__testFile, IECore.IndexedIO.OpenMode.Read )
 		
@@ -178,14 +178,13 @@ class SceneReadWriteTest( GafferSceneTest.SceneTestCase ) :
 		
 		reader = GafferScene.SceneReader()
 		reader["fileName"].setValue( "/tmp/fromPython.scc" )
-		self.assertSceneValid( reader["out"] )
 		
 		script = Gaffer.ScriptNode()
 		writer = GafferScene.SceneWriter()
 		script["writer"] = writer
 		writer["in"].setInput( reader["out"] )
 		writer["fileName"].setValue( self.__testFile )
-		writer.execute()
+		writer.execute( [ script.context() ] )
 		os.remove( "/tmp/fromPython.scc" )
 		
 		testCacheFile( self.__testFile )

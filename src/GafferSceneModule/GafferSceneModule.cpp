@@ -38,6 +38,7 @@
 #include "boost/python.hpp"
 
 #include "GafferBindings/ComputeNodeBinding.h"
+#include "GafferBindings/ExecutableNodeBinding.h"
 
 #include "GafferScene/SceneNode.h"
 #include "GafferScene/FileSource.h"
@@ -118,9 +119,8 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	GafferBindings::DependencyNodeClass<ObjectToScene>();
 	GafferBindings::DependencyNodeClass<Camera>();
 	GafferBindings::DependencyNodeClass<GlobalsProcessor>();
-	GafferBindings::NodeClass<SceneWriter>()
-		.def( "execute", &SceneWriter::execute )
-	;
+	
+	GafferBindings::ExecutableNodeClass<SceneWriter>();
 
 	bindDisplays();
 	bindPathMatcher();

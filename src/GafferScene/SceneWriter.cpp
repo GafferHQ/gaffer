@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2013, Image Engine Design inc. All rights reserved.
+//  Copyright (c) 2013-2014, Image Engine Design inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,13 +34,12 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferScene/SceneWriter.h"
-#include "GafferScene/SceneReader.h"
-#include "Gaffer/Context.h"
-#include "Gaffer/ScriptNode.h"
-
 #include "IECore/SceneInterface.h"
 #include "IECore/Transform.h"
+
+#include "Gaffer/ScriptNode.h"
+
+#include "GafferScene/SceneWriter.h"
 
 using namespace std;
 using namespace IECore;
@@ -55,7 +54,7 @@ const double SceneWriter::g_frameRate( 24 );
 size_t SceneWriter::g_firstPlugIndex = 0;
 
 SceneWriter::SceneWriter( const std::string &name )
-	:	Node( name )
+	: ExecutableNode( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new ScenePlug( "in", Plug::In ) );
@@ -86,48 +85,63 @@ const StringPlug *SceneWriter::fileNamePlug() const
 	return getChild<StringPlug>( g_firstPlugIndex + 1 );
 }
 
-void SceneWriter::writeLocation( GafferScene::ScenePlug *scenePlug, const ScenePlug::ScenePath &scenePath, IECore::SceneInterface *output )
+IECore::MurmurHash SceneWriter::executionHash( const Gaffer::Context *context ) const
 {
-	ContextPtr context = new Context;
-	
-	ScriptNodePtr script = ancestor<ScriptNode>();
-	
-	if( !script )
+	/// \todo How do we cheaply hash something representing the whole scene?
+	/// Do we just hash the identity of the input node?
+	return IECore::MurmurHash();
+}
+
+void SceneWriter::execute( const Contexts &contexts ) const
+{
+	const ScenePlug *scene = inPlug()->getInput<ScenePlug>();
+	if( !scene )
 	{
-		throw Exception( "SceneWrite::writeLocation: couldn't find parent script node!" );
+		throw IECore::Exception( "No input scene" );
 	}
 	
+	SceneInterfacePtr output = SceneInterface::create( fileNamePlug()->getValue(), IndexedIO::Write );
+	
+	for ( Contexts::const_iterator it = contexts.begin(), eIt = contexts.end(); it != eIt; it++ )
+	{
+		ContextPtr context = new Context( *it->get() );
+		double time = context->getFrame() / g_frameRate;
+		writeLocation( scene, ScenePlug::ScenePath(), context, output.get(), time );
+	}
+}
+
+void SceneWriter::writeLocation( const GafferScene::ScenePlug *scene, const ScenePlug::ScenePath &scenePath, Context *context, IECore::SceneInterface *output, double time ) const
+{
 	context->set( ScenePlug::scenePathContextName, scenePath );
-	context->setFrame( script->context()->getFrame() );
 	
 	Context::Scope scopedContext( context );
 	
-	ConstCompoundObjectPtr attributes = scenePlug->attributesPlug()->getValue();
+	ConstCompoundObjectPtr attributes = scene->attributesPlug()->getValue();
 	for( CompoundObject::ObjectMap::const_iterator it = attributes->members().begin(), eIt = attributes->members().end(); it != eIt; it++ )
 	{
-		output->writeAttribute( it->first, it->second.get(), script->context()->getFrame() / g_frameRate );
+		output->writeAttribute( it->first, it->second.get(), time );
 	}
 	
 	if( scenePath.empty() )
 	{
-		ConstCompoundObjectPtr globals = scenePlug->globalsPlug()->getValue();
-		output->writeAttribute( "gaffer:globals", globals, script->context()->getFrame() / g_frameRate );
+		ConstCompoundObjectPtr globals = scene->globalsPlug()->getValue();
+		output->writeAttribute( "gaffer:globals", globals, time );
 	}
 	
-	ConstObjectPtr object = scenePlug->objectPlug()->getValue();
+	ConstObjectPtr object = scene->objectPlug()->getValue();
 	
 	if( object->typeId() != IECore::NullObjectTypeId && scenePath.size() > 0 )
 	{
-		output->writeObject( object, script->context()->getFrame() / g_frameRate );
+		output->writeObject( object, time );
 	}
 	
-	Imath::Box3f b = scenePlug->boundPlug()->getValue();
+	Imath::Box3f b = scene->boundPlug()->getValue();
 	
-	output->writeBound( Imath::Box3d( Imath::V3f( b.min ), Imath::V3f( b.max ) ), script->context()->getFrame() / g_frameRate );
+	output->writeBound( Imath::Box3d( Imath::V3f( b.min ), Imath::V3f( b.max ) ), time );
 	
 	if( scenePath.size() )
 	{
-		Imath::M44f t = scenePlug->transformPlug()->getValue();
+		Imath::M44f t = scene->transformPlug()->getValue();
 		Imath::M44d transform(
 			t[0][0], t[0][1], t[0][2], t[0][3],
 			t[1][0], t[1][1], t[1][2], t[1][3],
@@ -135,10 +149,10 @@ void SceneWriter::writeLocation( GafferScene::ScenePlug *scenePlug, const SceneP
 			t[3][0], t[3][1], t[3][2], t[3][3]
 		);
 
-		output->writeTransform( new IECore::M44dData( transform ), script->context()->getFrame() / g_frameRate );
+		output->writeTransform( new IECore::M44dData( transform ), time );
 	}
 	
-	ConstInternedStringVectorDataPtr childNames = scenePlug->childNamesPlug()->getValue();
+	ConstInternedStringVectorDataPtr childNames = scene->childNamesPlug()->getValue();
 	
 	ScenePlug::ScenePath childScenePath = scenePath;
 	childScenePath.push_back( InternedString() );
@@ -148,17 +162,6 @@ void SceneWriter::writeLocation( GafferScene::ScenePlug *scenePlug, const SceneP
 		
 		SceneInterfacePtr outputChild = output->createChild( *it );
 		
-		writeLocation( scenePlug, childScenePath, outputChild );
-	}	
-	
-}
-
-
-void SceneWriter::execute()
-{
-	ScenePlug* scenePlug = inPlug();
-
-	SceneInterfacePtr output = SceneInterface::create( fileNamePlug()->getValue(), IndexedIO::Write );
-	
-	writeLocation( scenePlug, ScenePlug::ScenePath(), output.get() );
+		writeLocation( scene, childScenePath, context, outputChild, time );
+	}
 }
