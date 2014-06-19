@@ -292,18 +292,26 @@ IECore::MurmurHash Shader::NetworkBuilder::shaderHash( const Shader *shaderNode 
 	shaderNode->namePlug()->hash( shaderAndHash.hash );
 	shaderNode->typePlug()->hash( shaderAndHash.hash );
 	
-	for( RecursiveInputPlugIterator it( shaderNode->parametersPlug() ); it!=it.end(); ++it )
-	{
-		if( (*it)->typeId() != CompoundPlug::staticTypeId() )
-		{
-			shaderNode->parameterHash( *it, *this, shaderAndHash.hash );
-			it.prune();
-		}
-	}
+	parameterHashWalk( shaderNode, shaderNode->parametersPlug(), shaderAndHash.hash );
 	
 	shaderNode->nodeNamePlug()->hash( shaderAndHash.hash );
 	
 	return shaderAndHash.hash;
+}
+
+void Shader::NetworkBuilder::parameterHashWalk( const Shader *shaderNode, const Gaffer::Plug *parameterPlug, IECore::MurmurHash &h )
+{
+	for( InputPlugIterator it( parameterPlug ); it != it.end(); ++it )
+	{
+		if( (*it)->typeId() == CompoundPlug::staticTypeId() )
+		{
+			parameterHashWalk( shaderNode, it->get(), h );
+		}
+		else
+		{
+			shaderNode->parameterHash( it->get(), *this, h );
+		}
+	}
 }
 
 IECore::Shader *Shader::NetworkBuilder::shader( const Shader *shaderNode )
@@ -321,23 +329,41 @@ IECore::Shader *Shader::NetworkBuilder::shader( const Shader *shaderNode )
 	}
 	
 	shaderAndHash.shader = new IECore::Shader( shaderNode->namePlug()->getValue(), shaderNode->typePlug()->getValue() );
-	for( RecursiveInputPlugIterator it( shaderNode->parametersPlug() ); it!=it.end(); it++ )
-	{
-		if( (*it)->typeId() != CompoundPlug::staticTypeId() )
-		{
-			IECore::DataPtr value = shaderNode->parameterValue( *it, *this );
-			if( value )
-			{
-				shaderAndHash.shader->parameters()[(*it)->relativeName( shaderNode->parametersPlug() )] = value;
-			}
-			it.prune();
-		}
-	}
-
+	
+	parameterValueWalk( shaderNode, shaderNode->parametersPlug(), "", shaderAndHash.shader->parameters() );
+	
 	shaderAndHash.shader->blindData()->writable()["gaffer:nodeName"] = new IECore::StringData( shaderNode->nodeNamePlug()->getValue() );
 
 	m_state->members().push_back( shaderAndHash.shader );
 	return shaderAndHash.shader;
+}
+
+void Shader::NetworkBuilder::parameterValueWalk( const Shader *shaderNode, const Gaffer::Plug *parameterPlug, const std::string &parameterName, IECore::CompoundDataMap &values )
+{
+	for( InputPlugIterator it( parameterPlug ); it != it.end(); ++it )
+	{
+		std::string childParameterName;
+		if( parameterName.size() )
+		{
+			childParameterName = parameterName + "." + (*it)->getName().string();
+		}
+		else
+		{
+			childParameterName = (*it)->getName().string();
+		}
+		
+		if( (*it)->typeId() == CompoundPlug::staticTypeId() )
+		{
+			parameterValueWalk( shaderNode, it->get(), childParameterName, values );
+		}
+		else
+		{
+			if( IECore::DataPtr value = shaderNode->parameterValue( it->get(), *this ) )
+			{
+				values[childParameterName] = value;
+			}
+		}
+	}
 }
 
 const std::string &Shader::NetworkBuilder::shaderHandle( const Shader *shaderNode )
