@@ -75,6 +75,72 @@ def loadApp( appName ) :
 		sys.stderr.write( "\n" + applicationText )
 		sys.exit( 1 )
 
+def checkCleanExit() :
+
+	# Get the Gaffer and GafferUI modules, but only if the app actually
+	# imported them. We don't want to force their importation because it's
+	# just a waste of time if they weren't used.
+	Gaffer = sys.modules.get( "Gaffer" )
+	GafferUI = sys.modules.get( "GafferUI" )
+
+	if Gaffer is None and GafferUI is None :
+		return
+	
+	# Clean up any garbage left behind by Cortex's wrapper mechanism - because
+	# the Gaffer.Application itself is derived from IECore.Parameterised, which
+	# as far as I can tell is wrapped unnecessarily, we must call this to allow
+	# the application to be deleted at all. Note that we're deliberately not also
+	# calling gc.collect() - our intention here isn't to clean up on shutdown, but
+	# to highlight problems caused by things not cleaning up after themselves during
+	# execution. We aim to eliminate all circular references from our code, to avoid
+	# garbage collection overhead and to avoid problems caused by referencing Qt widgets
+	# which were long since destroyed in C++.
+	## \todo Reevaluate the need for this call after Cortex 9 development.
+	IECore.RefCounted.collectGarbage()
+	# Importing here rather than at the top of the file prevents false
+	# positives being reported in gc.get_objects() below. I have no idea why,
+	# but if not imported here, get_objects() will report objects which have
+	# nothing referring to them and which should be dead, even with an
+	# explicit call to gc.collect() beforehand.
+	import gc
+	
+	# Check for things that shouldn't exist at shutdown, and
+	# warn of anything we find.
+	scriptNodes = []
+	widgets = []
+	for o in gc.get_objects() :
+		if Gaffer is not None and isinstance( o, Gaffer.ScriptNode ) :
+			scriptNodes.append( o )
+		elif GafferUI is not None and isinstance( o, GafferUI.Widget ) :
+			widgets.append( o )
+	
+	if scriptNodes :
+		IECore.msg(
+			IECore.Msg.Level.Warning,
+			"Gaffer shutdown", "%d remaining ScriptNode%s detected. Debugging with objgraph is recommended." % (
+				len( scriptNodes ),
+				"s" if len( scriptNodes ) > 1 else "",
+			)
+		)
+	
+	if widgets :
+		
+		count = {}
+		for widget in widgets :
+			widgetType = widget.__class__.__name__
+			count[widgetType] = count.get( widgetType, 0 ) + 1
+		
+		summaries = [ "%s (%d)" % ( k, count[k] ) for k in sorted( count.keys() ) ]
+		
+		IECore.msg(
+			IECore.Msg.Level.Warning,
+			"Gaffer shutdown", "%d remaining Widget%s detected : \n\n%s\n\nDebugging with objgraph is recommended." % (
+				len( widgets ),
+				"s" if len( widgets ) > 1 else "",
+				"\t" + "\n\t".join( summaries )
+			)
+		)
+
 args = sys.argv[1:]
 if args and args[0] in ( "-help", "-h", "--help", "-H" ) :
 	if len( args ) > 1 :
@@ -106,4 +172,9 @@ else :
 	IECore.ParameterParser().parse( appArgs, app.parameters() )
 	
 	result = app.run()
+	
+	del app
+	checkCleanExit()
+	
 	sys.exit( result )
+

@@ -116,7 +116,7 @@ class Viewer( GafferUI.NodeSetEditor ) :
 					if self.__currentView is None :
 						self.__currentView = GafferUI.View.create( plug )
 						if self.__currentView is not None:
-							self.__currentView.__updateRequestConnection = self.__currentView.updateRequestSignal().connect( Gaffer.WeakMethod( self.__updateRequest ) )
+							self.__currentView.__updateRequestConnection = self.__currentView.updateRequestSignal().connect( Gaffer.WeakMethod( self.__updateRequest, fallbackResult=None ) )
 							self.__currentView.__pendingUpdate = True
 							self.__viewToolbars[self.__currentView] = GafferUI.NodeToolbar.create( self.__currentView )
 							self.__views.append( self.__currentView )

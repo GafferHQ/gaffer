@@ -71,21 +71,15 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 	# filtered by type.
 	def editors( self, type = GafferUI.EditorWidget ) :
 	
-		result = []
 		def __recurse( w ) :
 			assert( isinstance( w, GafferUI.SplitContainer ) )
 			if len( w ) > 1 :
 				# it's split
-				__recurse( w[0] )
-				__recurse( w[1] )
+				return __recurse( w[0] ) + __recurse( w[1] )
 			else :
-				for e in w[0][:] :
-					if isinstance( e, type ) :
-						result.append( e )
-				
-		__recurse( self.__splitContainer )
+				return [ e for e in w[0] if isinstance( e, type ) ]
 		
-		return result
+		return __recurse( self.__splitContainer )
 	
 	## Adds an editor to the layout, trying to place it in the same place
 	# as editors of the same type.

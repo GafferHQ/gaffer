@@ -76,6 +76,27 @@ class CompoundEditorTest( GafferUITest.TestCase ) :
 		self.assertTrue( cs[0][0] is c )
 		self.assertTrue( cs[0][1] is n )
 		
+	def testEditorsLifetime( self ) :
+	
+		s = Gaffer.ScriptNode()
+		c = GafferUI.CompoundEditor( s )
+		
+		n = GafferUI.NodeEditor( s )
+		c.addEditor( n )
+		
+		wc = weakref.ref( c )
+		wn = weakref.ref( n )
+		
+		e = c.editors()
+		self.assertTrue( e[0] is n )
+		
+		del e
+		del c
+		del n
+		
+		self.assertEqual( wc(), None )
+		self.assertEqual( wn(), None )
+		
 if __name__ == "__main__":
 	unittest.main()
 	
