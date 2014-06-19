@@ -49,9 +49,17 @@ using namespace Gaffer;
 using namespace GafferBindings;
 using namespace GafferScene;
 
-static IECore::ObjectVectorPtr state( const Shader &s )
+static IECore::ObjectVectorPtr state( const Shader &s, bool copy=true )
 {
-	return s.state()->copy();
+	IECore::ConstObjectVectorPtr o = s.state();
+	if( copy )
+	{
+		return o->copy();
+	}
+	else
+	{
+		return IECore::constPointerCast<IECore::ObjectVector>( o );
+	}
 }
 
 void GafferSceneBindings::bindShader()
@@ -60,7 +68,7 @@ void GafferSceneBindings::bindShader()
 	GafferBindings::DependencyNodeClass<Shader>()
 		.def( "stateHash", (IECore::MurmurHash (Shader::*)() const )&Shader::stateHash )
 		.def( "stateHash", (void (Shader::*)( IECore::MurmurHash &h ) const )&Shader::stateHash )
-		.def( "state", &state )
+		.def( "state", &state, ( boost::python::arg_( "_copy" ) = true ) )
 	;
 
 	GafferBindings::DependencyNodeClass<ShaderSwitch>();
