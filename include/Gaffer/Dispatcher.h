@@ -34,8 +34,8 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_DESPATCHER_H
-#define GAFFER_DESPATCHER_H
+#ifndef GAFFER_DISPATCHER_H
+#define GAFFER_DISPATCHER_H
 
 #include <string>
 #include <vector>
@@ -49,68 +49,68 @@
 namespace Gaffer
 {
 
-IE_CORE_FORWARDDECLARE( Despatcher )
+IE_CORE_FORWARDDECLARE( Dispatcher )
 IE_CORE_FORWARDDECLARE( CompoundPlug )
 
 /// Abstract base class which defines an interface for scheduling the execution
-/// of Context specific Tasks from ExecutableNodes. Despatchers can also modify
+/// of Context specific Tasks from ExecutableNodes. Dispatchers can also modify
 /// ExecutableNodes during construction, adding plugs which affect Task execution.
-class Despatcher : public IECore::RunTimeTyped
+class Dispatcher : public IECore::RunTimeTyped
 {
 	public :
 
-		Despatcher();
+		Dispatcher();
 
-		virtual ~Despatcher();
+		virtual ~Dispatcher();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::Despatcher, DespatcherTypeId, IECore::RunTimeTyped );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::Dispatcher, DispatcherTypeId, IECore::RunTimeTyped );
 
-		typedef boost::signal<void (const Despatcher *, const std::vector<ExecutableNodePtr> &)> DespatchSignal;
+		typedef boost::signal<void (const Dispatcher *, const std::vector<ExecutableNodePtr> &)> DispatchSignal;
 		
-		//! @name Despatch Signals
-		/// These signals are emitted on despatch events for any registered Despatcher instance.
+		//! @name Dispatch Signals
+		/// These signals are emitted on dispatch events for any registered Dispatcher instance.
 		////////////////////////////////////////////////////////////////////////////////////////
 		//@{
-		/// Called when any despatcher is about to despatch nodes.
-		static DespatchSignal &preDespatchSignal();
-		/// Called after any despatcher has finished despatching nodes.
-		static DespatchSignal &postDespatchSignal();
+		/// Called when any dispatcher is about to dispatch nodes.
+		static DispatchSignal &preDispatchSignal();
+		/// Called after any dispatcher has finished dispatching nodes.
+		static DispatchSignal &postDispatchSignal();
 		//@}
 		
-		/// Calls doDespatch, taking care to trigger the despatch signals at the appropriate times.
-		void despatch( const std::vector<ExecutableNodePtr> &nodes ) const;
+		/// Calls doDispatch, taking care to trigger the dispatch signals at the appropriate times.
+		void dispatch( const std::vector<ExecutableNodePtr> &nodes ) const;
 
 		//! @name Registration
-		/// Utility functions for registering and retrieving Despatchers.
+		/// Utility functions for registering and retrieving Dispatchers.
 		/////////////////////////////////////////////////////////////////
 		//@{
-		/// Register a named Despatcher instance.
-		static void registerDespatcher( const std::string &name, DespatcherPtr despatcher );
-		/// Fills the vector with the names of all the registered Despatchers.
-		static void despatcherNames( std::vector<std::string> &names );
-		/// Returns a registered Despatcher by name.
-		static const Despatcher *despatcher( const std::string &name );
+		/// Register a named Dispatcher instance.
+		static void registerDispatcher( const std::string &name, DispatcherPtr dispatcher );
+		/// Fills the vector with the names of all the registered Dispatchers.
+		static void dispatcherNames( std::vector<std::string> &names );
+		/// Returns a registered Dispatcher by name.
+		static const Dispatcher *dispatcher( const std::string &name );
 		//@}
 
 	protected :
 
 		friend class ExecutableNode;
 
-		/// Derived classes should implement doDespatch to despatch the execution of the given
+		/// Derived classes should implement doDispatch to dispatch the execution of the given
 		/// ExecutableNodes, taking care to respect each set of ExecutableNode requirements,
 		/// executing required Tasks as well when necessary.
-		virtual void doDespatch( const std::vector<ExecutableNodePtr> &nodes ) const = 0;
+		virtual void doDispatch( const std::vector<ExecutableNodePtr> &nodes ) const = 0;
 		
 		//! @name ExecutableNode Customization
-		/// Despatchers are able to create custom plugs on ExecutableNodes when they are constructed.
+		/// Dispatchers are able to create custom plugs on ExecutableNodes when they are constructed.
 		/////////////////////////////////////////////////////////////////////////////////////////////
 		//@{
-		/// Adds the custom plugs from all registered Despatchers to the given CompoundPlug.
-		static void addAllPlugs( CompoundPlug *despatcherPlug );
-		/// Called by addAllPlugs for each Despatcher instance. Derived classes must implement
+		/// Adds the custom plugs from all registered Dispatchers to the given CompoundPlug.
+		static void addAllPlugs( CompoundPlug *dispatcherPlug );
+		/// Called by addAllPlugs for each Dispatcher instance. Derived classes must implement
 		/// addPlugs in a way that gracefully accepts situations where the plugs already exist.
-		/// (i.e. nodes loaded from a script may already have the necessary despatcher plugs).
-		virtual void addPlugs( CompoundPlug *despatcherPlug ) const = 0;
+		/// (i.e. nodes loaded from a script may already have the necessary dispatcher plugs).
+		virtual void addPlugs( CompoundPlug *dispatcherPlug ) const = 0;
 		//@}
 		
 		/// Representation of a Task and its requirements.
@@ -120,7 +120,7 @@ class Despatcher : public IECore::RunTimeTyped
 			std::set<ExecutableNode::Task> requirements;
 		};
 		
-		typedef std::vector< Despatcher::TaskDescription > TaskDescriptions;
+		typedef std::vector< Dispatcher::TaskDescription > TaskDescriptions;
 		
 		/// Utility function that recursively collects all nodes and their execution requirements,
 		/// flattening them into a list of unique TaskDescriptions. For nodes that return a default
@@ -131,16 +131,16 @@ class Despatcher : public IECore::RunTimeTyped
 
 	private :
 
-		typedef std::map< std::string, DespatcherPtr > DespatcherMap;
+		typedef std::map< std::string, DispatcherPtr > DispatcherMap;
 		typedef std::map< IECore::MurmurHash, std::vector< size_t > > TaskSet;
 		
 		static const ExecutableNode::Task &uniqueTask( const ExecutableNode::Task &task, TaskDescriptions &uniqueTasks, TaskSet &seenTasks );
 		
-		static DespatcherMap g_despatchers;
-		static DespatchSignal g_preDespatchSignal;
-		static DespatchSignal g_postDespatchSignal;
+		static DispatcherMap g_dispatchers;
+		static DispatchSignal g_preDispatchSignal;
+		static DispatchSignal g_postDispatchSignal;
 };
 
 } // namespace Gaffer
 
-#endif // GAFFER_DESPATCHER_H
+#endif // GAFFER_DISPATCHER_H

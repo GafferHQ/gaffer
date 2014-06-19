@@ -36,7 +36,7 @@
 
 #include "Gaffer/Context.h"
 #include "Gaffer/ArrayPlug.h"
-#include "Gaffer/Despatcher.h"
+#include "Gaffer/Dispatcher.h"
 #include "Gaffer/ExecutableNode.h"
 
 using namespace IECore;
@@ -104,10 +104,10 @@ ExecutableNode::ExecutableNode( const std::string &name )
 	addChild( new ArrayPlug( "requirements", Plug::In, new Plug( "requirement0" ) ) );
 	addChild( new Plug( "requirement", Plug::Out ) );
 
-	CompoundPlugPtr despatcherPlug = new CompoundPlug( "despatcher", Plug::In );
-	addChild( despatcherPlug );
+	CompoundPlugPtr dispatcherPlug = new CompoundPlug( "dispatcher", Plug::In );
+	addChild( dispatcherPlug );
 	
-	Despatcher::addAllPlugs( despatcherPlug );
+	Dispatcher::addAllPlugs( dispatcherPlug );
 }
 
 ExecutableNode::~ExecutableNode()

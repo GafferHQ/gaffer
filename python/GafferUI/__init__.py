@@ -217,7 +217,7 @@ from LabelPlugValueWidget import LabelPlugValueWidget
 from CompoundDataPlugValueWidget import CompoundDataPlugValueWidget
 from SectionedCompoundDataPlugValueWidget import SectionedCompoundDataPlugValueWidget
 import ScriptNodeUI
-import DespatcherUI
+import DispatcherUI
 import ExecutableNodeUI
 from TransformPlugValueWidget import TransformPlugValueWidget
 from IncrementingPlugValueWidget import IncrementingPlugValueWidget

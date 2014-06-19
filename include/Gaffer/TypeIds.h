@@ -101,7 +101,7 @@ enum TypeId
 	InternedStringVectorDataPlugTypeId = 110054,
 	ExecutableNodeTypeId = 110055,
 	ExecutableOpHolderTypeId = 110056,
-	DespatcherTypeId = 110057,
+	DispatcherTypeId = 110057,
 	Transform2DPlugTypeId = 110058,
 	ReferenceTypeId = 110059,
 	ComputeNodeTypeId = 110060,

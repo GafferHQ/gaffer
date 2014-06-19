@@ -56,68 +56,68 @@ class TestOp (IECore.Op) :
 		self.executionOrder.append( self )
 		return IECore.IntData( self.counter )
 
-class DespatcherTest( unittest.TestCase ) :
+class DispatcherTest( unittest.TestCase ) :
 
-	class MyDespatcher( Gaffer.Despatcher ) :
+	class MyDispatcher( Gaffer.Dispatcher ) :
 
 		def __init__( self ) :
 
-			Gaffer.Despatcher.__init__( self )
+			Gaffer.Dispatcher.__init__( self )
 			self.log = list()
 
-		def _doDespatch( self, nodes ) :
+		def _doDispatch( self, nodes ) :
 
 			c = Gaffer.Context()
 			c['time'] = 1.0
 			taskList = map( lambda n: Gaffer.ExecutableNode.Task(n,c), nodes )
-			allTasksAndRequirements = Gaffer.Despatcher._uniqueTasks( taskList )
+			allTasksAndRequirements = Gaffer.Dispatcher._uniqueTasks( taskList )
 			del self.log[:]
 			for (task,requirements) in allTasksAndRequirements :
 				task.node.execute( [ task.context ] )
 
-		def _addPlugs( self, despatcherPlug ) :
+		def _addPlugs( self, dispatcherPlug ) :
 
-			despatcherPlug["testDespatcherPlug"] = Gaffer.IntPlug(
+			dispatcherPlug["testDispatcherPlug"] = Gaffer.IntPlug(
 				direction = Gaffer.Plug.Direction.In,
 				flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic
 			)
 
 	def setUp( self ) :
 
-		if not "testDespatcher" in Gaffer.Despatcher.despatcherNames():
-			IECore.registerRunTimeTyped( DespatcherTest.MyDespatcher )
-			despatcher = DespatcherTest.MyDespatcher()
-			Gaffer.Despatcher._registerDespatcher( "testDespatcher", despatcher )
+		if not "testDispatcher" in Gaffer.Dispatcher.dispatcherNames():
+			IECore.registerRunTimeTyped( DispatcherTest.MyDispatcher )
+			dispatcher = DispatcherTest.MyDispatcher()
+			Gaffer.Dispatcher._registerDispatcher( "testDispatcher", dispatcher )
 
 	def testDerivedClass( self ) :
 
-		despatcher = DespatcherTest.MyDespatcher()
+		dispatcher = DispatcherTest.MyDispatcher()
 
-		op1 = TestOp("1", despatcher.log)
+		op1 = TestOp("1", dispatcher.log)
 		n1 = Gaffer.ExecutableOpHolder()
 		n1.setParameterised( op1 )
 
-		despatcher.despatch( [ n1 ] )
+		dispatcher.dispatch( [ n1 ] )
 
 		self.assertEqual( op1.counter, 1 )
 
-	def testLocalDespatcher( self ) :
+	def testLocalDispatcher( self ) :
 
 		log = list()
 		op1 = TestOp("1", log)
 		n1 = Gaffer.ExecutableOpHolder()
 		n1.setParameterised( op1 )
 
-		Gaffer.Despatcher.despatcher('local').despatch( [ n1 ] )
+		Gaffer.Dispatcher.dispatcher('local').dispatch( [ n1 ] )
 
 		self.assertEqual( op1.counter, 1 )
 
-	def testDespatcherRegistration( self ) :
+	def testDispatcherRegistration( self ) :
 
-		self.failUnless( "testDespatcher" in Gaffer.Despatcher.despatcherNames() )
-		self.failUnless( Gaffer.Despatcher.despatcher( 'testDespatcher' ).isInstanceOf( DespatcherTest.MyDespatcher.staticTypeId() ) )
+		self.failUnless( "testDispatcher" in Gaffer.Dispatcher.dispatcherNames() )
+		self.failUnless( Gaffer.Dispatcher.dispatcher( 'testDispatcher' ).isInstanceOf( DispatcherTest.MyDispatcher.staticTypeId() ) )
 
-	def testDespatcherSignals( self ) :
+	def testDispatcherSignals( self ) :
 
 		class CapturingSlot2( list ) :
 	
@@ -130,53 +130,53 @@ class DespatcherTest( unittest.TestCase ) :
 			def __slot( self, d, nodes ) :
 				self.append( (d,nodes) )
 	
-		preCs = CapturingSlot2( Gaffer.Despatcher.preDespatchSignal() )
+		preCs = CapturingSlot2( Gaffer.Dispatcher.preDispatchSignal() )
 		self.assertEqual( len( preCs ), 0 )
-		postCs = GafferTest.CapturingSlot( Gaffer.Despatcher.postDespatchSignal() )
+		postCs = GafferTest.CapturingSlot( Gaffer.Dispatcher.postDispatchSignal() )
 		self.assertEqual( len( postCs ), 0 )
 
 		log = list()
 		op1 = TestOp("1", log)
 		n1 = Gaffer.ExecutableOpHolder()
 		n1.setParameterised( op1 )
-		despatcher = Gaffer.Despatcher.despatcher('local')
-		despatcher.despatch( [ n1 ] )
+		dispatcher = Gaffer.Dispatcher.dispatcher('local')
+		dispatcher.dispatch( [ n1 ] )
 		
 		self.assertEqual( len( preCs ), 1 )
-		self.failUnless( preCs[0][0].isSame( despatcher ) )
+		self.failUnless( preCs[0][0].isSame( dispatcher ) )
 		self.assertEqual( preCs[0][1], [ n1 ] )
 
 		self.assertEqual( len( postCs ), 1 )
-		self.failUnless( postCs[0][0].isSame( despatcher ) )
+		self.failUnless( postCs[0][0].isSame( dispatcher ) )
 		self.assertEqual( postCs[0][1], [ n1 ] )
 
 	def testPlugs( self ) :
 
 		n = Gaffer.ExecutableOpHolder()
-		n['despatcher'].direction()
-		n['despatcher']['testDespatcherPlug'].direction()
-		self.assertEqual( n['despatcher']['testDespatcherPlug'].direction(), Gaffer.Plug.Direction.In )
+		n['dispatcher'].direction()
+		n['dispatcher']['testDispatcherPlug'].direction()
+		self.assertEqual( n['dispatcher']['testDispatcherPlug'].direction(), Gaffer.Plug.Direction.In )
 
-	def testDespatch( self ) :
+	def testDispatch( self ) :
 
-		despatcher = Gaffer.Despatcher.despatcher( "testDespatcher" )
+		dispatcher = Gaffer.Dispatcher.dispatcher( "testDispatcher" )
 
 		# Create a tree of dependencies for execution:
 		# n1 requires:
 		# - n2 requires:
 		#    -n2a
 		#    -n2b
-		op1 = TestOp("1", despatcher.log)
+		op1 = TestOp("1", dispatcher.log)
 		n1 = Gaffer.ExecutableOpHolder()
 		n1.setParameterised( op1 )
 		n2 = Gaffer.ExecutableOpHolder()
-		op2 = TestOp("2", despatcher.log)
+		op2 = TestOp("2", dispatcher.log)
 		n2.setParameterised( op2 )
 		n2a = Gaffer.ExecutableOpHolder()
-		op2a = TestOp("2a", despatcher.log)
+		op2a = TestOp("2a", dispatcher.log)
 		n2a.setParameterised( op2a )
 		n2b = Gaffer.ExecutableOpHolder()
-		op2b = TestOp("2b", despatcher.log)
+		op2b = TestOp("2b", dispatcher.log)
 		n2b.setParameterised( op2b )
 
 		r1 = Gaffer.Plug( name = "r1" )
@@ -192,44 +192,44 @@ class DespatcherTest( unittest.TestCase ) :
 		r2.setInput( n2b['requirement'] )
 
 		# Executing n1 should trigger execution of all of them
-		despatcher.despatch( [ n1 ] )
+		dispatcher.dispatch( [ n1 ] )
 		self.assertEqual( op1.counter, 1 )
 		self.assertEqual( op2.counter, 1 )
 		self.assertEqual( op2a.counter, 1 )
 		self.assertEqual( op2b.counter, 1 )
-		self.assertTrue( despatcher.log == [ op2a, op2b, op2, op1 ] or despatcher.log == [ op2b, op2a, op2, op1 ] )
+		self.assertTrue( dispatcher.log == [ op2a, op2b, op2, op1 ] or dispatcher.log == [ op2b, op2a, op2, op1 ] )
 
 		# Executing n1 and anything else, should be the same as just n1
-		despatcher.despatch( [ n2b, n1 ] )
+		dispatcher.dispatch( [ n2b, n1 ] )
 		self.assertEqual( op1.counter, 2 )
 		self.assertEqual( op2.counter, 2 )
 		self.assertEqual( op2a.counter, 2 )
 		self.assertEqual( op2b.counter, 2 )
-		self.assertTrue( despatcher.log == [ op2a, op2b, op2, op1 ] or despatcher.log == [ op2b, op2a, op2, op1 ] )
+		self.assertTrue( dispatcher.log == [ op2a, op2b, op2, op1 ] or dispatcher.log == [ op2b, op2a, op2, op1 ] )
 
 		# Executing all nodes should be the same as just n1
-		despatcher.despatch( [ n2, n2b, n1, n2a ] )
+		dispatcher.dispatch( [ n2, n2b, n1, n2a ] )
 		self.assertEqual( op1.counter, 3 )
 		self.assertEqual( op2.counter, 3 )
 		self.assertEqual( op2a.counter, 3 )
 		self.assertEqual( op2b.counter, 3 )
-		self.assertTrue( despatcher.log == [ op2a, op2b, op2, op1 ] or despatcher.log == [ op2b, op2a, op2, op1 ] )
+		self.assertTrue( dispatcher.log == [ op2a, op2b, op2, op1 ] or dispatcher.log == [ op2b, op2a, op2, op1 ] )
 
 		# Executing a sub-branch (n2) should only trigger execution in that branch
-		despatcher.despatch( [ n2 ] )
+		dispatcher.dispatch( [ n2 ] )
 		self.assertEqual( op1.counter, 3 )
 		self.assertEqual( op2.counter, 4 )
 		self.assertEqual( op2a.counter, 4 )
 		self.assertEqual( op2b.counter, 4 )
-		self.assertTrue( despatcher.log == [ op2a, op2b, op2 ] or despatcher.log == [ op2b, op2a, op2 ] )
+		self.assertTrue( dispatcher.log == [ op2a, op2b, op2 ] or dispatcher.log == [ op2b, op2a, op2 ] )
 
 		# Executing a leaf node, should not trigger other executions.		
-		despatcher.despatch( [ n2b ] )
+		dispatcher.dispatch( [ n2b ] )
 		self.assertEqual( op1.counter, 3 )
 		self.assertEqual( op2.counter, 4 )
 		self.assertEqual( op2a.counter, 4 )
 		self.assertEqual( op2b.counter, 5 )
-		self.assertTrue( despatcher.log == [ op2b ] )
+		self.assertTrue( dispatcher.log == [ op2b ] )
 
 if __name__ == "__main__":
 	unittest.main()

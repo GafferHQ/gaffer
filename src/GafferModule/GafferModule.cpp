@@ -77,7 +77,7 @@
 #include "GafferBindings/ActionBinding.h"
 #include "GafferBindings/ExecutableOpHolderBinding.h"
 #include "GafferBindings/ExecutableNodeBinding.h"
-#include "GafferBindings/DespatcherBinding.h"
+#include "GafferBindings/DispatcherBinding.h"
 #include "GafferBindings/ReferenceBinding.h"
 #include "GafferBindings/BehaviourBinding.h"
 #include "GafferBindings/ArrayPlugBinding.h"
@@ -128,7 +128,7 @@ BOOST_PYTHON_MODULE( _Gaffer )
 	bindRandom();
 	bindBox();
 	bindAction();
-	bindDespatcher();
+	bindDispatcher();
 	bindExecutableOpHolder();
 	bindReference();
 	bindArrayPlug();

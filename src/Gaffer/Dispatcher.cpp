@@ -36,75 +36,75 @@
 
 #include "Gaffer/CompoundPlug.h"
 #include "Gaffer/Context.h"
-#include "Gaffer/Despatcher.h"
+#include "Gaffer/Dispatcher.h"
 
 using namespace IECore;
 using namespace Gaffer;
 
-Despatcher::DespatcherMap Despatcher::g_despatchers;
-Despatcher::DespatchSignal Despatcher::g_preDespatchSignal;
-Despatcher::DespatchSignal Despatcher::g_postDespatchSignal;
+Dispatcher::DispatcherMap Dispatcher::g_dispatchers;
+Dispatcher::DispatchSignal Dispatcher::g_preDispatchSignal;
+Dispatcher::DispatchSignal Dispatcher::g_postDispatchSignal;
 
-Despatcher::Despatcher()
+Dispatcher::Dispatcher()
 {
 }
 
-Despatcher::~Despatcher()
+Dispatcher::~Dispatcher()
 {
 }
 
-void Despatcher::despatch( const std::vector<ExecutableNodePtr> &nodes ) const
+void Dispatcher::dispatch( const std::vector<ExecutableNodePtr> &nodes ) const
 {
-	preDespatchSignal()( this, nodes );
+	preDispatchSignal()( this, nodes );
 
-	doDespatch( nodes );
+	doDispatch( nodes );
 
-	postDespatchSignal()( this, nodes );
+	postDispatchSignal()( this, nodes );
 }
 
 /*
  * Static functions
  */
 
-Despatcher::DespatchSignal &Despatcher::preDespatchSignal()
+Dispatcher::DispatchSignal &Dispatcher::preDispatchSignal()
 {
-	return g_preDespatchSignal;	
+	return g_preDispatchSignal;	
 }
 
-Despatcher::DespatchSignal &Despatcher::postDespatchSignal()
+Dispatcher::DispatchSignal &Dispatcher::postDispatchSignal()
 {
-	return g_postDespatchSignal;	
+	return g_postDispatchSignal;	
 }
 
-void Despatcher::addAllPlugs( CompoundPlug *despatcherPlug )
+void Dispatcher::addAllPlugs( CompoundPlug *dispatcherPlug )
 {
-	for ( DespatcherMap::const_iterator cit = g_despatchers.begin(); cit != g_despatchers.end(); cit++ )
+	for ( DispatcherMap::const_iterator cit = g_dispatchers.begin(); cit != g_dispatchers.end(); cit++ )
 	{
-		cit->second->addPlugs( despatcherPlug );
+		cit->second->addPlugs( dispatcherPlug );
 	}
 }
 
-void Despatcher::despatcherNames( std::vector<std::string> &names )
+void Dispatcher::dispatcherNames( std::vector<std::string> &names )
 {
 	names.clear();
-	names.reserve( g_despatchers.size() );
-	for ( DespatcherMap::const_iterator cit = g_despatchers.begin(); cit != g_despatchers.end(); cit++ )
+	names.reserve( g_dispatchers.size() );
+	for ( DispatcherMap::const_iterator cit = g_dispatchers.begin(); cit != g_dispatchers.end(); cit++ )
 	{
 		names.push_back( cit->first );
 	}
 }
 
-void Despatcher::registerDespatcher( const std::string &name, DespatcherPtr despatcher )
+void Dispatcher::registerDispatcher( const std::string &name, DispatcherPtr dispatcher )
 {
-	g_despatchers[name] = despatcher;
+	g_dispatchers[name] = dispatcher;
 }
 
-const Despatcher *Despatcher::despatcher( const std::string &name )
+const Dispatcher *Dispatcher::dispatcher( const std::string &name )
 {
-	DespatcherMap::const_iterator cit = g_despatchers.find( name );
-	if ( cit == g_despatchers.end() )
+	DispatcherMap::const_iterator cit = g_dispatchers.find( name );
+	if ( cit == g_dispatchers.end() )
 	{
-		throw Exception( "\"" + name + "\" is not a registered Despatcher." );
+		throw Exception( "\"" + name + "\" is not a registered Dispatcher." );
 	}
 	return cit->second.get();
 }
@@ -112,7 +112,7 @@ const Despatcher *Despatcher::despatcher( const std::string &name )
 /// Returns the input Task if it was never seen before, or the previous Task that is equivalent to this one.
 /// It also populates flattenedTasks with unique tasks seen so far.
 /// It uses seenTasks object as a temporary buffer.
-const ExecutableNode::Task &Despatcher::uniqueTask( const ExecutableNode::Task &task, TaskDescriptions &uniqueTasks, TaskSet &seenTasks )
+const ExecutableNode::Task &Dispatcher::uniqueTask( const ExecutableNode::Task &task, TaskDescriptions &uniqueTasks, TaskSet &seenTasks )
 {	
 	ExecutableNode::Tasks requirements;
 	task.node->executionRequirements( task.context, requirements );
@@ -176,7 +176,7 @@ const ExecutableNode::Task &Despatcher::uniqueTask( const ExecutableNode::Task &
 	return task;
 }
 
-void Despatcher::uniqueTasks( const ExecutableNode::Tasks &tasks, TaskDescriptions &uniqueTasks )
+void Dispatcher::uniqueTasks( const ExecutableNode::Tasks &tasks, TaskDescriptions &uniqueTasks )
 {
 	TaskSet seenTasks;
 	

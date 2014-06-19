@@ -119,7 +119,7 @@ from BoxTest import BoxTest
 from OutputRedirectionTest import OutputRedirectionTest
 from ExecutableNodeTest import ExecutableNodeTest
 from ExecutableOpHolderTest import ExecutableOpHolderTest
-from DespatcherTest import DespatcherTest
+from DispatcherTest import DispatcherTest
 from RecursiveChildIteratorTest import RecursiveChildIteratorTest
 from FilteredRecursiveChildIteratorTest import FilteredRecursiveChildIteratorTest
 from ReferenceTest import ReferenceTest
