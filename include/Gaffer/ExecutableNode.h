@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2013-2014, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -46,20 +46,18 @@ IE_CORE_FORWARDDECLARE( Context )
 IE_CORE_FORWARDDECLARE( ExecutableNode )
 IE_CORE_FORWARDDECLARE( ArrayPlug )
 
-/// A base class for nodes with external side effects such as the creation of files,
-/// rendering, etc. ExecutableNodes can be chained together with other Executable nodes
-/// to define a required execution order. Typically Executable nodes should be executed
-/// by Despatcher classes that can query the required execution order and schedule it
-/// appropriately.
+/// A base class for nodes with external side effects such as the creation of files, rendering, etc.
+/// ExecutableNodes can be chained together with other ExecutableNodes to define a required execution
+/// order. Typically ExecutableNodes should be executed by Despatcher classes that can query the
+/// required execution order and schedule Tasks appropriately.
 class ExecutableNode : public Node
 {
 
 	public :
 
-		/// A Task defines the execution of an Executable node in a specific Context.
-		/// It's used in Executable nodes to describe the requirements and in Despatchers
-		/// to represent what they are supposed to execute.
-		/// The comparison and hash methods can be used for building sets of unique Tasks.
+		/// A Task defines the execution of an ExecutableNode given a specific Context.
+		/// Tasks are used to describe requirements between ExecutableNodes, and by
+		/// Despatchers to schedule context specific execution.
 		/// \todo I think hash(), == and < are badly broken. I don't see any reason
 		/// why hash() shouldn't just be returning node->executionHash( context ), because
 		/// after all that is already defined to uniquely identify the task. Then I think
@@ -92,23 +90,25 @@ class ExecutableNode : public Node
 
 		ExecutableNode( const std::string &name=defaultName<ExecutableNode>() );
 		virtual ~ExecutableNode();
-
+		
+		/// Array of ExecutableNodes which must be executed before this node can execute successfully.
 		ArrayPlug *requirementsPlug();
 		const ArrayPlug *requirementsPlug() const;
-
+		
+		/// Output plug used by other ExecutableNodes to declare this node as a requirement.
 		Plug *requirementPlug();
 		const Plug *requirementPlug() const;
-
-		/// Fills requirements with all tasks that must be completed before execute()
-		/// can be called. The default implementation declares requirements defined
-		/// by the inputs to the requirementsPlug().
+		
+		/// Fills requirements with all Tasks that must be completed before execute
+		/// can be called with the given context. The default implementation collects
+		/// the Tasks defined by the inputs of the requirementsPlug().
 		virtual void executionRequirements( const Context *context, Tasks &requirements ) const;
-
-		/// Returns a hash that uniquely represents the side effects (files created etc) of
-		/// calling execute with the given context. If the node returns the default hash it
-		/// means this node does not compute anything.
+		
+		/// Returns a hash that uniquely represents the side effects (e.g. files created)
+		/// of calling execute with the given context. Nodes that return the default hash
+		/// do not cause any side effects.
 		virtual IECore::MurmurHash executionHash( const Context *context ) const = 0;
-
+		
 		/// Executes this node for all the specified contexts in sequence.
 		virtual void execute( const Contexts &contexts ) const = 0;
 		

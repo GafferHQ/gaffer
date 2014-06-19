@@ -60,7 +60,6 @@ import TransformUI
 import AttributesUI
 import LightUI
 import InteractiveRenderUI
-import ExecutableRenderUI
 import SphereUI
 import MapProjectionUI
 import MapOffsetUI

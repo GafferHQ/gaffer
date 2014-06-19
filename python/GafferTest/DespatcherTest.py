@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2013-2014, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -153,9 +153,9 @@ class DespatcherTest( unittest.TestCase ) :
 	def testPlugs( self ) :
 
 		n = Gaffer.ExecutableOpHolder()
-		n['despatcherParameters'].direction()
-		n['despatcherParameters']['testDespatcherPlug'].direction()
-		self.assertEqual( n['despatcherParameters']['testDespatcherPlug'].direction(), Gaffer.Plug.Direction.In )
+		n['despatcher'].direction()
+		n['despatcher']['testDespatcherPlug'].direction()
+		self.assertEqual( n['despatcher']['testDespatcherPlug'].direction(), Gaffer.Plug.Direction.In )
 
 	def testDespatch( self ) :
 

@@ -34,10 +34,13 @@
 #  
 ##########################################################################
 
-import fnmatch
-
+import Gaffer
 import GafferUI
-import GafferScene
 
-GafferUI.Nodule.registerNodule( GafferScene.ExecutableRender, fnmatch.translate( "*" ), lambda plug : None )
-GafferUI.Nodule.registerNodule( GafferScene.ExecutableRender, "in", GafferUI.StandardNodule )
+##########################################################################
+# Metadata, PlugValueWidgets and Nodules
+##########################################################################
+
+GafferUI.PlugValueWidget.registerCreator( Gaffer.ExecutableNode, "requirements", None )
+
+GafferUI.Nodule.registerNodule( Gaffer.ExecutableNode, "requirements", lambda plug : GafferUI.CompoundNodule( plug, spacing = 0.4 ) )

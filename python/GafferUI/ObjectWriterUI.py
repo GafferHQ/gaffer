@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012-2014, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -68,5 +68,5 @@ GafferUI.PlugValueWidget.registerCreator(
 GafferUI.PlugValueWidget.registerCreator( Gaffer.ObjectWriter, "parameters", __createParameterWidget )
 GafferUI.PlugValueWidget.registerCreator( Gaffer.ObjectWriter, "in", None )
 
-GafferUI.Nodule.registerNodule( Gaffer.ObjectWriter, fnmatch.translate( "*" ), lambda plug : None )
-GafferUI.Nodule.registerNodule( Gaffer.ObjectWriter, "in", GafferUI.StandardNodule )
+GafferUI.Nodule.registerNodule( Gaffer.ObjectWriter, fnmatch.translate( "parameter*" ), lambda plug : None )
+GafferUI.Nodule.registerNodule( Gaffer.ObjectWriter, "fileName", lambda plug : None )

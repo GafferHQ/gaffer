@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2012, John Haddon. All rights reserved.
-#  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012-2014, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -42,19 +42,10 @@ import IECore
 import Gaffer
 import GafferUI
 
-class ExecuteButton( GafferUI.Button ) :
+##########################################################################
+# Public functions
+##########################################################################
 
-	def __init__( self, node ) :
-	
-		GafferUI.Button.__init__( self, "Execute" )
-	
-		self.__node = node
-		self.__clickedConnection = self.clickedSignal().connect( Gaffer.WeakMethod( self.__clicked ) )
-	 
-	def __clicked( self, button ) :
-	
-		_execute( [ self.__node ] )
-				
 def appendMenuDefinitions( menuDefinition, prefix="" ) :
 
 	menuDefinition.append( prefix + "/Execute Selected", { "command" : executeSelected, "shortCut" : "Ctrl+E", "active" : __selectionAvailable } )
@@ -79,6 +70,52 @@ def repeatPrevious( menu ) :
 	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
 	script = scriptWindow.scriptNode()
 	_execute( __previous( script ) )
+
+##################################################################################
+# PlugValueWidget for execution - this forms the header for the ExecutableNode ui.
+##################################################################################
+
+class __RequirementPlugValueWidget( GafferUI.PlugValueWidget ) :
+
+	def __init__( self, plug, **kw ) :
+		
+		row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal )
+		
+		GafferUI.PlugValueWidget.__init__( self, row, plug, **kw )
+		
+		with row :
+			
+			executeButton = GafferUI.Button( "Execute" )
+			executeButton.setToolTip( "Execute" )
+			self.__executeClickedConnection = executeButton.clickedSignal().connect( Gaffer.WeakMethod( self.__executeClicked ) )
+	
+	def hasLabel( self ) :
+		
+		return True
+	
+	def _updateFromPlug( self ) :
+		
+		pass
+	
+	def __executeClicked( self, button ) :
+	
+		_execute( [ self.getPlug().node() ] )
+
+##########################################################################
+# Metadata, PlugValueWidgets and Nodules
+##########################################################################
+
+Gaffer.Metadata.registerPlugValue( Gaffer.ExecutableNode, "requirement", "nodeUI:section", "header" )
+Gaffer.Metadata.registerPlugValue( Gaffer.ExecutableNode, "despatcher", "nodeUI:section", "Despatcher" )
+
+GafferUI.PlugValueWidget.registerCreator( Gaffer.ExecutableNode, "requirement", __RequirementPlugValueWidget )
+GafferUI.PlugValueWidget.registerCreator( Gaffer.ExecutableNode, "despatcher", GafferUI.CompoundPlugValueWidget, collapsed = None )
+
+GafferUI.Nodule.registerNodule( Gaffer.ExecutableNode, "despatcher", lambda plug : None )
+
+##########################################################################
+# Implementation Details
+##########################################################################
 
 def _execute( nodes ) :
 
@@ -124,16 +161,3 @@ def __previousAvailable( menu ) :
 	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
 	script = scriptWindow.scriptNode()
 	return bool( __previous( script ) )
-
-##########################################################################
-# Metadata, PlugValueWidgets and Nodules
-##########################################################################
-
-Gaffer.Metadata.registerPlugValue( Gaffer.Node, "despatcherParameters", "nodeUI:section", "Despatcher" )
-
-GafferUI.PlugValueWidget.registerCreator( Gaffer.Node, "despatcherParameters", GafferUI.CompoundPlugValueWidget, collapsed = None )
-GafferUI.PlugValueWidget.registerCreator( Gaffer.Node, "requirements", None )
-GafferUI.PlugValueWidget.registerCreator( Gaffer.Node, "requirement", None )
-
-GafferUI.Nodule.registerNodule( Gaffer.Node, "despatcherParameters", lambda plug : None )
-GafferUI.Nodule.registerNodule( Gaffer.Node, "requirements", lambda plug : GafferUI.CompoundNodule( plug, spacing = 0.4 ) )
