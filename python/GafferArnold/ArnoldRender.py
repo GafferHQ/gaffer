@@ -124,7 +124,7 @@ class ArnoldRender( GafferScene.ExecutableRender ) :
 		if mode == "render" :
 			return "kick -dp -dw -v %d '%s'" % ( self["verbosity"].getValue(), self.__fileName() )
 		elif mode == "expand" :
-			return "kick -v %d -resaveop '%s' '%s'" % ( self["verbosity"].getValue(), self.__fileName(), self.__fileName() )
+			return "kick -v %d -forceexpand -resave '%s' '%s'" % ( self["verbosity"].getValue(), self.__fileName(), self.__fileName() )
 		
 		return ""
 		
