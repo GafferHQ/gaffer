@@ -34,8 +34,8 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERBINDINGS_DISPATCHER_H
-#define GAFFERBINDINGS_DISPATCHER_H
+#ifndef GAFFERBINDINGS_DISPATCHERBINDING_H
+#define GAFFERBINDINGS_DISPATCHERBINDING_H
 
 namespace GafferBindings
 {
@@ -44,4 +44,4 @@ void bindDispatcher();
 
 } // namespace GafferBindings
 
-#endif // GAFFERBINDINGS_DISPATCHER_H
+#endif // GAFFERBINDINGS_DISPATCHERBINDING_H

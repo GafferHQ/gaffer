@@ -45,7 +45,10 @@ Dispatcher::DispatcherMap Dispatcher::g_dispatchers;
 Dispatcher::DispatchSignal Dispatcher::g_preDispatchSignal;
 Dispatcher::DispatchSignal Dispatcher::g_postDispatchSignal;
 
-Dispatcher::Dispatcher()
+IE_CORE_DEFINERUNTIMETYPED( Dispatcher )
+
+Dispatcher::Dispatcher( const std::string &name )
+	: Node( name )
 {
 }
 

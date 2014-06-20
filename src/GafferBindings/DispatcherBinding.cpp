@@ -35,14 +35,14 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/python.hpp"
-#include "IECorePython/RunTimeTypedBinding.h"
-#include "IECorePython/Wrapper.h"
-#include "GafferBindings/DispatcherBinding.h"
-#include "GafferBindings/SignalBinding.h"
-#include "Gaffer/Node.h"
+
 #include "Gaffer/Context.h"
 #include "Gaffer/Dispatcher.h"
 #include "Gaffer/CompoundPlug.h"
+
+#include "GafferBindings/DispatcherBinding.h"
+#include "GafferBindings/NodeBinding.h"
+#include "GafferBindings/SignalBinding.h"
 
 using namespace boost::python;
 using namespace IECore;
@@ -50,11 +50,19 @@ using namespace IECorePython;
 using namespace Gaffer;
 using namespace GafferBindings;
 
-class DispatcherWrap : public Dispatcher, public Wrapper<Dispatcher>
+namespace
+{
+
+class DispatcherWrapper : public NodeWrapper<Dispatcher>
 {
 	public :
 
-		DispatcherWrap( PyObject *self ) : Dispatcher(), Wrapper<Dispatcher>( self, this )
+		DispatcherWrapper( PyObject *self, const std::string &name )
+			: NodeWrapper<Dispatcher>( self, name )
+		{
+		}
+
+		virtual ~DispatcherWrapper()
 		{
 		}
 
@@ -79,10 +87,11 @@ class DispatcherWrap : public Dispatcher, public Wrapper<Dispatcher>
 			{
 				nodeList.append( *nIt );
 			}
-			override d = this->get_override( "_doDispatch" );
-			if( d )
+			
+			boost::python::object f = this->methodOverride( "_doDispatch" );
+			if( f )
 			{
-				d( nodeList );
+				f( nodeList );
 			}
 			else
 			{
@@ -93,11 +102,11 @@ class DispatcherWrap : public Dispatcher, public Wrapper<Dispatcher>
 		void addPlugs( CompoundPlug *dispatcherPlug ) const
 		{
 			ScopedGILLock gilLock;
-			override b = this->get_override( "_addPlugs" );
-			if( b )
+			boost::python::object f = this->methodOverride( "_addPlugs" );
+			if( f )
 			{
 				CompoundPlugPtr tmpPointer = dispatcherPlug;
-				b( tmpPointer );
+				f( tmpPointer );
 			}
 		}
 
@@ -151,7 +160,6 @@ class DispatcherWrap : public Dispatcher, public Wrapper<Dispatcher>
 			return const_cast< Dispatcher *>(d);
 		}
 
-		IECOREPYTHON_RUNTIMETYPEDWRAPPERFNS( Dispatcher );
 };
 
 struct DispatchSlotCaller
@@ -176,17 +184,18 @@ struct DispatchSlotCaller
 	}
 };
 
-IE_CORE_DECLAREPTR( DispatcherWrap );
+IE_CORE_DECLAREPTR( DispatcherWrapper )
+
+} // namespace
 
 void GafferBindings::bindDispatcher()
 {
-	IECorePython::RunTimeTypedClass<Dispatcher, DispatcherWrapPtr>()
-		.def( init<>() )
-		.def( "dispatch", &DispatcherWrap::dispatch )
-		.def( "dispatcher", &DispatcherWrap::dispatcher ).staticmethod( "dispatcher" )
-		.def( "dispatcherNames", &DispatcherWrap::dispatcherNames ).staticmethod( "dispatcherNames" )
-		.def( "_registerDispatcher", &DispatcherWrap::registerDispatcher ).staticmethod( "_registerDispatcher" )
-		.def( "_uniqueTasks", &DispatcherWrap::uniqueTasks ).staticmethod( "_uniqueTasks" )
+	scope s = NodeClass<Dispatcher, DispatcherWrapperPtr>()
+		.def( "dispatch", &DispatcherWrapper::dispatch )
+		.def( "dispatcher", &DispatcherWrapper::dispatcher ).staticmethod( "dispatcher" )
+		.def( "dispatcherNames", &DispatcherWrapper::dispatcherNames ).staticmethod( "dispatcherNames" )
+		.def( "registerDispatcher", &DispatcherWrapper::registerDispatcher ).staticmethod( "registerDispatcher" )
+		.def( "_uniqueTasks", &DispatcherWrapper::uniqueTasks ).staticmethod( "_uniqueTasks" )
 		.def( "preDispatchSignal", &Dispatcher::preDispatchSignal, return_value_policy<reference_existing_object>() ).staticmethod( "preDispatchSignal" )
 		.def( "postDispatchSignal", &Dispatcher::postDispatchSignal, return_value_policy<reference_existing_object>() ).staticmethod( "postDispatchSignal" )
 	;

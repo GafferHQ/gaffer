@@ -41,9 +41,9 @@ class LocalDispatcher( Gaffer.Dispatcher ) :
 
 	__dispatcher = None
 
-	def __init__( self ) :
+	def __init__( self, name = "LocalDispatcher" ) :
 
-		Gaffer.Dispatcher.__init__( self )
+		Gaffer.Dispatcher.__init__( self, name )
 
 	def _doDispatch( self, nodes ) :
 
@@ -79,4 +79,4 @@ class LocalDispatcher( Gaffer.Dispatcher ) :
 
 IECore.registerRunTimeTyped( LocalDispatcher, typeName = "Gaffer::LocalDispatcher" )
 
-Gaffer.Dispatcher._registerDispatcher( "local", LocalDispatcher._singleton() )
+Gaffer.Dispatcher.registerDispatcher( "local", LocalDispatcher._singleton() )

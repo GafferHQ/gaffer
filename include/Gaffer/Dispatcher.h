@@ -55,15 +55,14 @@ IE_CORE_FORWARDDECLARE( CompoundPlug )
 /// Abstract base class which defines an interface for scheduling the execution
 /// of Context specific Tasks from ExecutableNodes. Dispatchers can also modify
 /// ExecutableNodes during construction, adding plugs which affect Task execution.
-class Dispatcher : public IECore::RunTimeTyped
+class Dispatcher : public Node
 {
 	public :
 
-		Dispatcher();
-
+		Dispatcher( const std::string &name=defaultName<Dispatcher>() );
 		virtual ~Dispatcher();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::Dispatcher, DispatcherTypeId, IECore::RunTimeTyped );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::Dispatcher, DispatcherTypeId, Node );
 
 		typedef boost::signal<void (const Dispatcher *, const std::vector<ExecutableNodePtr> &)> DispatchSignal;
 		

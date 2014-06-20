@@ -87,7 +87,7 @@ class DispatcherTest( unittest.TestCase ) :
 		if not "testDispatcher" in Gaffer.Dispatcher.dispatcherNames():
 			IECore.registerRunTimeTyped( DispatcherTest.MyDispatcher )
 			dispatcher = DispatcherTest.MyDispatcher()
-			Gaffer.Dispatcher._registerDispatcher( "testDispatcher", dispatcher )
+			Gaffer.Dispatcher.registerDispatcher( "testDispatcher", dispatcher )
 
 	def testDerivedClass( self ) :
 
