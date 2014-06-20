@@ -64,7 +64,7 @@ class LocalDispatcher( Gaffer.Dispatcher ) :
 
 			task.node.execute( [ task.context ] )
 
-	def _addPlugs( self, dispatcherPlug ) :
+	def _doSetupPlugs( self, parentPlug ) :
 
 		pass
 

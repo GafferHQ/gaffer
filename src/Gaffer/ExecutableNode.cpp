@@ -107,7 +107,7 @@ ExecutableNode::ExecutableNode( const std::string &name )
 	CompoundPlugPtr dispatcherPlug = new CompoundPlug( "dispatcher", Plug::In );
 	addChild( dispatcherPlug );
 	
-	Dispatcher::addAllPlugs( dispatcherPlug );
+	Dispatcher::setupPlugs( dispatcherPlug );
 }
 
 ExecutableNode::~ExecutableNode()

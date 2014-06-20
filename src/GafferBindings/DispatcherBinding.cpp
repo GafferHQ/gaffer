@@ -99,13 +99,13 @@ class DispatcherWrapper : public NodeWrapper<Dispatcher>
 			}
 		}
 
-		void addPlugs( CompoundPlug *dispatcherPlug ) const
+		void doSetupPlugs( CompoundPlug *parentPlug ) const
 		{
 			ScopedGILLock gilLock;
-			boost::python::object f = this->methodOverride( "_addPlugs" );
+			boost::python::object f = this->methodOverride( "_doSetupPlugs" );
 			if( f )
 			{
-				CompoundPlugPtr tmpPointer = dispatcherPlug;
+				CompoundPlugPtr tmpPointer = parentPlug;
 				f( tmpPointer );
 			}
 		}

@@ -105,11 +105,18 @@ class Dispatcher : public Node
 		/////////////////////////////////////////////////////////////////////////////////////////////
 		//@{
 		/// Adds the custom plugs from all registered Dispatchers to the given CompoundPlug.
-		static void addAllPlugs( CompoundPlug *dispatcherPlug );
-		/// Called by addAllPlugs for each Dispatcher instance. Derived classes must implement
-		/// addPlugs in a way that gracefully accepts situations where the plugs already exist.
-		/// (i.e. nodes loaded from a script may already have the necessary dispatcher plugs).
-		virtual void addPlugs( CompoundPlug *dispatcherPlug ) const = 0;
+		static void setupPlugs( CompoundPlug *parentPlug );
+		/// Called by setupPlugs for each Dispatcher instance. It is recommended that each registered
+		/// instance store its plugs contained within a dedicated CompoundPlug, named according to the
+		/// registration name. Derived classes must implement doSetupPlugs in a way that gracefully
+		/// accepts situations where the plugs already exist (i.e. nodes loaded from a script may
+		/// already have the necessary dispatcher plugs). One way to avoid this issue is to always
+		/// create non-dynamic plugs. Since setupPlugs is called from the ExecutableNode constructor,
+		/// the non-dynamic plugs will always be created according to the current definition, and will
+		/// not be serialized into scripts. Note that this suggestion requires the error tolerant script
+		/// loading from issue #746. The downside of using non-dynamic plugs is that loading a script
+		/// before all Dispatchers have been registered could result in lost settings.
+		virtual void doSetupPlugs( CompoundPlug *parentPlug ) const = 0;
 		//@}
 		
 		/// Representation of a Task and its requirements.

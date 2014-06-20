@@ -79,11 +79,11 @@ Dispatcher::DispatchSignal &Dispatcher::postDispatchSignal()
 	return g_postDispatchSignal;	
 }
 
-void Dispatcher::addAllPlugs( CompoundPlug *dispatcherPlug )
+void Dispatcher::setupPlugs( CompoundPlug *parentPlug )
 {
 	for ( DispatcherMap::const_iterator cit = g_dispatchers.begin(); cit != g_dispatchers.end(); cit++ )
 	{
-		cit->second->addPlugs( dispatcherPlug );
+		cit->second->doSetupPlugs( parentPlug );
 	}
 }
 

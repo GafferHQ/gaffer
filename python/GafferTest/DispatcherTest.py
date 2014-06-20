@@ -75,9 +75,9 @@ class DispatcherTest( unittest.TestCase ) :
 			for (task,requirements) in allTasksAndRequirements :
 				task.node.execute( [ task.context ] )
 
-		def _addPlugs( self, dispatcherPlug ) :
+		def _doSetupPlugs( self, parentPlug ) :
 
-			dispatcherPlug["testDispatcherPlug"] = Gaffer.IntPlug(
+			parentPlug["testDispatcherPlug"] = Gaffer.IntPlug(
 				direction = Gaffer.Plug.Direction.In,
 				flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic
 			)
