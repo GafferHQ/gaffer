@@ -202,7 +202,7 @@ class MultiSelectionMenu( GafferUI.Button ) :
 			m.append(
 				menuPath,
 				{
-					"command" : IECore.curry( self.__selectClicked, label ),
+					"command" : IECore.curry( Gaffer.WeakMethod( self.__selectClicked ), label ),
 					"active" : label in self.__enabledLabels,
 					"checkBox" : ( ( self.__allowMultipleSelection ) or ( not self.__allowMultipleSelection and self.__allowEmptySelection ) ) and label in self.__selectedLabels 
 				}
