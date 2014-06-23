@@ -42,6 +42,8 @@ import IECore
 import Gaffer
 import GafferUI
 
+QtCore = GafferUI._qtImport( "QtCore" )
+
 ##########################################################################
 # Public functions
 ##########################################################################
@@ -57,19 +59,100 @@ def appendNodeContextMenuDefinitions( nodeGraph, node, menuDefinition ) :
 		return
 		
 	menuDefinition.append( "/ExecuteDivider", { "divider" : True } )
-	menuDefinition.append( "/Execute", { "command" : IECore.curry( _execute, [ node ] ) } )
+	menuDefinition.append( "/Execute", { "command" : IECore.curry( _showDispatcherWindow, [ node ] ) } )
 	
 def executeSelected( menu ) :
 
 	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
 	script = scriptWindow.scriptNode()
-	_execute( __selectedNodes( script ) )
+	_showDispatcherWindow( __selectedNodes( script ) )
 
 def repeatPrevious( menu ) :
 
 	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
 	script = scriptWindow.scriptNode()
 	_execute( __previous( script ) )
+
+##################################################################################
+# Dispatcher Window 
+##################################################################################
+
+class _DispatcherWindow( GafferUI.Window ) :
+	
+	def __init__( self, dispatcher, **kw ) :
+		
+		GafferUI.Window.__init__( self, **kw )
+		
+		self.__dispatcher = dispatcher
+		self.__nodes = []
+		
+		with self :
+			
+			with GafferUI.ListContainer( orientation = GafferUI.ListContainer.Orientation.Vertical, spacing = 2, borderWidth = 4 ) :
+				
+				GafferUI.NodeUI.create( dispatcher )
+				self.__dispatchButton = GafferUI.Button( "Dispatch" )
+				self.__dispatchClickedConnection = self.__dispatchButton.clickedSignal().connect( Gaffer.WeakMethod( self.__dispatchClicked ) )
+		
+		self.__updateTitle()
+		
+		_DispatcherWindow.__instances.append( weakref.ref( self ) )
+	
+	def setVisible( self, visible ) :
+		
+		GafferUI.Window.setVisible( self, visible )
+		
+		if visible :
+			self.__dispatchButton._qtWidget().setFocus( QtCore.Qt.OtherFocusReason )
+	
+	def dispatcher( self ) :
+	
+		return self.__dispatcher
+	
+	def setNodesToDispatch( self, nodes ) :
+		
+		self.__nodes = nodes
+		self.__updateTitle()
+	
+	def __updateTitle( self ) :
+		
+		title = IECore.CamelCase.toSpaced( self.__dispatcher.getName() )
+		if len(self.__nodes) :
+			title += ": " + ", ".join( [ x.getName() for x in self.__nodes ] )
+		
+		self.setTitle( title )
+	
+	def __dispatchClicked( self, button ) :
+		
+		self.__dispatcher.dispatch( self.__nodes )
+		## \todo: update _executeUILastExecuted
+		self.close()
+	
+	__instances = [] # weak references to all instances - used by acquire()
+	
+	## Returns the DispatcherWindow for the specified dispatcher, creating one if necessary.
+	@staticmethod
+	def acquire( dispatcher ) :
+		
+		for w in _DispatcherWindow.__instances :
+			
+			window = w()
+			if window is not None and window.dispatcher().isSame( dispatcher ) :
+				return window
+		
+		return _DispatcherWindow( dispatcher )
+	
+	__currentDispatcherName = "local"
+	
+	@staticmethod
+	def currentDispatcher() :
+		
+		return Gaffer.Dispatcher.dispatcher( _DispatcherWindow.__currentDispatcherName )
+	
+	@staticmethod
+	def setCurrentDispatcherName( name ) :
+		
+		_DispatcherWindow.__currentDispatcherName = name
 
 ##################################################################################
 # PlugValueWidget for execution - this forms the header for the ExecutableNode ui.
@@ -98,8 +181,8 @@ class __RequirementPlugValueWidget( GafferUI.PlugValueWidget ) :
 		pass
 	
 	def __executeClicked( self, button ) :
-	
-		_execute( [ self.getPlug().node() ] )
+		
+		_showDispatcherWindow( [ self.getPlug().node() ] )
 
 ##########################################################################
 # Metadata, PlugValueWidgets and Nodules
@@ -108,6 +191,7 @@ class __RequirementPlugValueWidget( GafferUI.PlugValueWidget ) :
 Gaffer.Metadata.registerPlugValue( Gaffer.ExecutableNode, "requirement", "nodeUI:section", "header" )
 Gaffer.Metadata.registerPlugValue( Gaffer.ExecutableNode, "dispatcher", "nodeUI:section", "Dispatcher" )
 
+GafferUI.PlugValueWidget.registerCreator( Gaffer.Dispatcher, "user", None )
 GafferUI.PlugValueWidget.registerCreator( Gaffer.ExecutableNode, "requirement", __RequirementPlugValueWidget )
 GafferUI.PlugValueWidget.registerCreator( Gaffer.ExecutableNode, "dispatcher", GafferUI.CompoundPlugValueWidget, collapsed = None )
 
@@ -122,9 +206,20 @@ def _execute( nodes ) :
 	script = nodes[0].scriptNode()
 	script._executeUILastExecuted = []
 	
-	for node in nodes :
-		node.execute( [ script.context() ] )
-		script._executeUILastExecuted.append( weakref.ref( node ) )
+	_DispatcherWindow.currentDispatcher().dispatch( nodes )
+	script._executeUILastExecuted = [ weakref.ref( node ) for node in nodes ]
+
+def _showDispatcherWindow( nodes ) :
+	
+	dispatcher = _DispatcherWindow.currentDispatcher()
+	
+	window = _DispatcherWindow.acquire( dispatcher )
+	window.setNodesToDispatch( nodes )
+	
+	scriptWindow = GafferUI.ScriptWindow.acquire( nodes[0].scriptNode() )
+	scriptWindow.addChildWindow( window )
+	
+	window.setVisible( True )
 
 def __selectedNodes( script ) :
 
