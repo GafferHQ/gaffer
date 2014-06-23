@@ -39,8 +39,6 @@ import IECore
 
 class LocalDispatcher( Gaffer.Dispatcher ) :
 
-	__dispatcher = None
-
 	def __init__( self, name = "LocalDispatcher" ) :
 
 		Gaffer.Dispatcher.__init__( self, name )
@@ -68,15 +66,6 @@ class LocalDispatcher( Gaffer.Dispatcher ) :
 
 		pass
 
-	@staticmethod
-	def _singleton():
-
-		if LocalDispatcher.__dispatcher is None :
-
-			LocalDispatcher.__dispatcher = LocalDispatcher()
-
-		return LocalDispatcher.__dispatcher
-
 IECore.registerRunTimeTyped( LocalDispatcher, typeName = "Gaffer::LocalDispatcher" )
 
-Gaffer.Dispatcher.registerDispatcher( "local", LocalDispatcher._singleton() )
+Gaffer.Dispatcher.registerDispatcher( "local", LocalDispatcher() )
