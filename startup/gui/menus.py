@@ -54,7 +54,7 @@ GafferUI.ApplicationMenu.appendDefinitions( scriptWindowMenu, prefix="/Gaffer" )
 GafferUI.FileMenu.appendDefinitions( scriptWindowMenu, prefix="/File" )
 GafferUI.EditMenu.appendDefinitions( scriptWindowMenu, prefix="/Edit" )
 GafferUI.LayoutMenu.appendDefinitions( scriptWindowMenu, name="/Layout" )
-GafferUI.DespatcherUI.appendMenuDefinitions( scriptWindowMenu, prefix="/Execute" )
+GafferUI.DispatcherUI.appendMenuDefinitions( scriptWindowMenu, prefix="/Execute" )
 
 # Add help menu
 def launchGoogleGroup( menu ):

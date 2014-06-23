@@ -89,7 +89,7 @@ void ExecutableRender::execute( const Contexts &contexts ) const
 		throw IECore::Exception( "No input scene" );
 	}
 
-	/// \todo This doesn't belong here. It'll be the responsibility of the Despatchers
+	/// \todo This doesn't belong here. It'll be the responsibility of the Dispatchers
 	/// to save the script if necessary, and to save it to an alternate location than
 	/// the current one.
 	scriptNode()->save();
@@ -118,7 +118,7 @@ void ExecutableRender::execute( const Contexts &contexts ) const
 			if( applicationRoot && applicationRoot->getName() == "gui" )
 			{
 				/// \todo We need this weird background execution behaviour because we
-				/// don't want to block the ui while rendering, but really the LocalDespatcher
+				/// don't want to block the ui while rendering, but really the LocalDispatcher
 				/// should be responsible for launching a separate process to do the execution
 				/// from anyway.
 				systemCommand += "&";

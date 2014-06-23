@@ -106,12 +106,12 @@ class __RequirementPlugValueWidget( GafferUI.PlugValueWidget ) :
 ##########################################################################
 
 Gaffer.Metadata.registerPlugValue( Gaffer.ExecutableNode, "requirement", "nodeUI:section", "header" )
-Gaffer.Metadata.registerPlugValue( Gaffer.ExecutableNode, "despatcher", "nodeUI:section", "Despatcher" )
+Gaffer.Metadata.registerPlugValue( Gaffer.ExecutableNode, "dispatcher", "nodeUI:section", "Dispatcher" )
 
 GafferUI.PlugValueWidget.registerCreator( Gaffer.ExecutableNode, "requirement", __RequirementPlugValueWidget )
-GafferUI.PlugValueWidget.registerCreator( Gaffer.ExecutableNode, "despatcher", GafferUI.CompoundPlugValueWidget, collapsed = None )
+GafferUI.PlugValueWidget.registerCreator( Gaffer.ExecutableNode, "dispatcher", GafferUI.CompoundPlugValueWidget, collapsed = None )
 
-GafferUI.Nodule.registerNodule( Gaffer.ExecutableNode, "despatcher", lambda plug : None )
+GafferUI.Nodule.registerNodule( Gaffer.ExecutableNode, "dispatcher", lambda plug : None )
 
 ##########################################################################
 # Implementation Details

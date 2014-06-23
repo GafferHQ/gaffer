@@ -48,7 +48,7 @@ IE_CORE_FORWARDDECLARE( ArrayPlug )
 
 /// A base class for nodes with external side effects such as the creation of files, rendering, etc.
 /// ExecutableNodes can be chained together with other ExecutableNodes to define a required execution
-/// order. Typically ExecutableNodes should be executed by Despatcher classes that can query the
+/// order. Typically ExecutableNodes should be executed by Dispatcher classes that can query the
 /// required execution order and schedule Tasks appropriately.
 class ExecutableNode : public Node
 {
@@ -57,7 +57,7 @@ class ExecutableNode : public Node
 
 		/// A Task defines the execution of an ExecutableNode given a specific Context.
 		/// Tasks are used to describe requirements between ExecutableNodes, and by
-		/// Despatchers to schedule context specific execution.
+		/// Dispatchers to schedule context specific execution.
 		/// \todo I think hash(), == and < are badly broken. I don't see any reason
 		/// why hash() shouldn't just be returning node->executionHash( context ), because
 		/// after all that is already defined to uniquely identify the task. Then I think

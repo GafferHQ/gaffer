@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2013-2014, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,14 +35,14 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/python.hpp"
-#include "IECorePython/RunTimeTypedBinding.h"
-#include "IECorePython/Wrapper.h"
-#include "GafferBindings/DespatcherBinding.h"
-#include "GafferBindings/SignalBinding.h"
-#include "Gaffer/Node.h"
+
 #include "Gaffer/Context.h"
-#include "Gaffer/Despatcher.h"
+#include "Gaffer/Dispatcher.h"
 #include "Gaffer/CompoundPlug.h"
+
+#include "GafferBindings/DispatcherBinding.h"
+#include "GafferBindings/NodeBinding.h"
+#include "GafferBindings/SignalBinding.h"
 
 using namespace boost::python;
 using namespace IECore;
@@ -50,15 +50,23 @@ using namespace IECorePython;
 using namespace Gaffer;
 using namespace GafferBindings;
 
-class DespatcherWrap : public Despatcher, public Wrapper<Despatcher>
+namespace
+{
+
+class DispatcherWrapper : public NodeWrapper<Dispatcher>
 {
 	public :
 
-		DespatcherWrap( PyObject *self ) : Despatcher(), Wrapper<Despatcher>( self, this )
+		DispatcherWrapper( PyObject *self, const std::string &name )
+			: NodeWrapper<Dispatcher>( self, name )
 		{
 		}
 
-		void despatch( list nodeList ) const
+		virtual ~DispatcherWrapper()
+		{
+		}
+
+		void dispatch( list nodeList ) const
 		{
 			ScopedGILLock gilLock;
 			size_t len = boost::python::len( nodeList );
@@ -68,10 +76,10 @@ class DespatcherWrap : public Despatcher, public Wrapper<Despatcher>
 			{
 				nodes.push_back( extract<ExecutableNodePtr>( nodeList[i] ) );
 			}
-			Despatcher::despatch(nodes);
+			Dispatcher::dispatch( nodes );
 		}
 
-		void doDespatch( const std::vector<ExecutableNodePtr> &nodes ) const
+		void doDispatch( const std::vector<ExecutableNodePtr> &nodes ) const
 		{
 			ScopedGILLock gilLock;
 			list nodeList;
@@ -79,32 +87,33 @@ class DespatcherWrap : public Despatcher, public Wrapper<Despatcher>
 			{
 				nodeList.append( *nIt );
 			}
-			override d = this->get_override( "_doDespatch" );
-			if( d )
+			
+			boost::python::object f = this->methodOverride( "_doDispatch" );
+			if( f )
 			{
-				d( nodeList );
+				f( nodeList );
 			}
 			else
 			{
-				throw Exception( "doDespatch() python method not defined" );
+				throw Exception( "doDispatch() python method not defined" );
 			}
 		}
 
-		void addPlugs( CompoundPlug *despatcherPlug ) const
+		void doSetupPlugs( CompoundPlug *parentPlug ) const
 		{
 			ScopedGILLock gilLock;
-			override b = this->get_override( "_addPlugs" );
-			if( b )
+			boost::python::object f = this->methodOverride( "_doSetupPlugs" );
+			if( f )
 			{
-				CompoundPlugPtr tmpPointer = despatcherPlug;
-				b( tmpPointer );
+				CompoundPlugPtr tmpPointer = parentPlug;
+				f( tmpPointer );
 			}
 		}
 
-		static list despatcherNames()
+		static list dispatcherNames()
 		{
 			std::vector<std::string> names;
-			Despatcher::despatcherNames( names );
+			Dispatcher::dispatcherNames( names );
 			list result;
 			for ( std::vector<std::string>::const_iterator nIt = names.begin(); nIt != names.end(); nIt++ )
 			{
@@ -124,8 +133,8 @@ class DespatcherWrap : public Despatcher, public Wrapper<Despatcher>
 				tasks.push_back( extract< ExecutableNode::Task >( taskList[i] ) );
 			}
 
-			std::vector< Despatcher::TaskDescription > uniqueTasks;
-			Despatcher::uniqueTasks( tasks, uniqueTasks );
+			std::vector< Dispatcher::TaskDescription > uniqueTasks;
+			Dispatcher::uniqueTasks( tasks, uniqueTasks );
 			
 			list result;
 			for( std::vector< TaskDescription >::const_iterator fIt = uniqueTasks.begin(); fIt != uniqueTasks.end(); fIt++ )
@@ -140,23 +149,22 @@ class DespatcherWrap : public Despatcher, public Wrapper<Despatcher>
 			return result;
 		}
 
-		static void registerDespatcher( std::string name, Despatcher *despatcher )
+		static void registerDispatcher( std::string name, Dispatcher *dispatcher )
 		{
-			Despatcher::registerDespatcher( name, despatcher );
+			Dispatcher::registerDispatcher( name, dispatcher );
 		}
 
-		static DespatcherPtr despatcher( std::string name )
+		static DispatcherPtr dispatcher( std::string name )
 		{
-			const Despatcher *d = Despatcher::despatcher( name );
-			return const_cast< Despatcher *>(d);
+			const Dispatcher *d = Dispatcher::dispatcher( name );
+			return const_cast< Dispatcher *>(d);
 		}
 
-		IECOREPYTHON_RUNTIMETYPEDWRAPPERFNS( Despatcher );
 };
 
-struct DespatchSlotCaller
+struct DispatchSlotCaller
 {
-	boost::signals::detail::unusable operator()( boost::python::object slot, const Despatcher *d, const std::vector<ExecutableNodePtr> &nodes )
+	boost::signals::detail::unusable operator()( boost::python::object slot, const Dispatcher *d, const std::vector<ExecutableNodePtr> &nodes )
 	{
 		try
 		{
@@ -165,7 +173,7 @@ struct DespatchSlotCaller
 			{
 				nodeList.append( *nIt );
 			}
-			DespatcherPtr dd = const_cast<Despatcher*>(d);
+			DispatcherPtr dd = const_cast<Dispatcher*>(d);
 			slot( dd, nodeList );
 		}
 		catch( const error_already_set &e )
@@ -176,20 +184,21 @@ struct DespatchSlotCaller
 	}
 };
 
-IE_CORE_DECLAREPTR( DespatcherWrap );
+IE_CORE_DECLAREPTR( DispatcherWrapper )
 
-void GafferBindings::bindDespatcher()
+} // namespace
+
+void GafferBindings::bindDispatcher()
 {
-	IECorePython::RunTimeTypedClass<Despatcher, DespatcherWrapPtr>()
-		.def( init<>() )
-		.def( "despatch", &DespatcherWrap::despatch )
-		.def( "despatcher", &DespatcherWrap::despatcher ).staticmethod( "despatcher" )
-		.def( "despatcherNames", &DespatcherWrap::despatcherNames ).staticmethod( "despatcherNames" )
-		.def( "_registerDespatcher", &DespatcherWrap::registerDespatcher ).staticmethod( "_registerDespatcher" )
-		.def( "_uniqueTasks", &DespatcherWrap::uniqueTasks ).staticmethod( "_uniqueTasks" )
-		.def( "preDespatchSignal", &Despatcher::preDespatchSignal, return_value_policy<reference_existing_object>() ).staticmethod( "preDespatchSignal" )
-		.def( "postDespatchSignal", &Despatcher::postDespatchSignal, return_value_policy<reference_existing_object>() ).staticmethod( "postDespatchSignal" )
+	scope s = NodeClass<Dispatcher, DispatcherWrapperPtr>()
+		.def( "dispatch", &DispatcherWrapper::dispatch )
+		.def( "dispatcher", &DispatcherWrapper::dispatcher ).staticmethod( "dispatcher" )
+		.def( "dispatcherNames", &DispatcherWrapper::dispatcherNames ).staticmethod( "dispatcherNames" )
+		.def( "registerDispatcher", &DispatcherWrapper::registerDispatcher ).staticmethod( "registerDispatcher" )
+		.def( "_uniqueTasks", &DispatcherWrapper::uniqueTasks ).staticmethod( "_uniqueTasks" )
+		.def( "preDispatchSignal", &Dispatcher::preDispatchSignal, return_value_policy<reference_existing_object>() ).staticmethod( "preDispatchSignal" )
+		.def( "postDispatchSignal", &Dispatcher::postDispatchSignal, return_value_policy<reference_existing_object>() ).staticmethod( "postDispatchSignal" )
 	;
 
-	SignalBinder<Despatcher::DespatchSignal, DefaultSignalCaller<Despatcher::DespatchSignal>, DespatchSlotCaller >::bind( "DespatchSignal" );
+	SignalBinder<Dispatcher::DispatchSignal, DefaultSignalCaller<Dispatcher::DispatchSignal>, DispatchSlotCaller >::bind( "DispatchSignal" );
 }

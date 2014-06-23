@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2013-2014, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,14 +34,14 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERBINDINGS_DESPATCHER_H
-#define GAFFERBINDINGS_DESPATCHER_H
+#ifndef GAFFERBINDINGS_DISPATCHERBINDING_H
+#define GAFFERBINDINGS_DISPATCHERBINDING_H
 
 namespace GafferBindings
 {
 
-void bindDespatcher();
+void bindDispatcher();
 
 } // namespace GafferBindings
 
-#endif // GAFFERBINDINGS_DESPATCHER_H
+#endif // GAFFERBINDINGS_DISPATCHERBINDING_H

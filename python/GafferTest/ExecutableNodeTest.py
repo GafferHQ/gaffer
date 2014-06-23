@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2013-2014, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -87,7 +87,7 @@ class ExecutableNodeTest( unittest.TestCase ) :
 		taskList.append( Gaffer.ExecutableNode.Task( n, c3 ) )
 
 		# since the hash is the same, no matter the context, it should return one single task
-		self.assertEqual( Gaffer.Despatcher._uniqueTasks( taskList ), [ ( Gaffer.ExecutableNode.Task( n, c1 ), [] ) ] )
+		self.assertEqual( Gaffer.Dispatcher._uniqueTasks( taskList ), [ ( Gaffer.ExecutableNode.Task( n, c1 ), [] ) ] )
 
 		n2 = ExecutableNodeTest.MyNode(True)
 
@@ -97,7 +97,7 @@ class ExecutableNodeTest( unittest.TestCase ) :
 		taskList.append( Gaffer.ExecutableNode.Task( n2, c3 ) )
 
 		# since the hash includes the 'time' each Task is considered diferent
-		self.assertEqual( Gaffer.Despatcher._uniqueTasks( taskList ), [ ( Gaffer.ExecutableNode.Task( n2, c1 ), [] ), ( Gaffer.ExecutableNode.Task( n2, c2 ), [] ), ( Gaffer.ExecutableNode.Task( n2, c3 ), [] ) ] )
+		self.assertEqual( Gaffer.Dispatcher._uniqueTasks( taskList ), [ ( Gaffer.ExecutableNode.Task( n2, c1 ), [] ), ( Gaffer.ExecutableNode.Task( n2, c2 ), [] ), ( Gaffer.ExecutableNode.Task( n2, c3 ), [] ) ] )
 
 	def testExecutionRequirements( self ) :
 		"""Test the function executionRequirements and Executable::defaultRequirements """
@@ -120,11 +120,11 @@ class ExecutableNodeTest( unittest.TestCase ) :
 		# if we ask for executing n2 we should get n followed by n2
 		l = list()
 		l.append( Gaffer.ExecutableNode.Task( n2, c1 ) )
-		Gaffer.Despatcher._uniqueTasks( l )
+		Gaffer.Dispatcher._uniqueTasks( l )
 		( Gaffer.ExecutableNode.Task( n, c1 ), [] )
 		( Gaffer.ExecutableNode.Task( n2, c1 ), [ Gaffer.ExecutableNode.Task( n, c1 ) ] )
 
-		self.assertEqual( Gaffer.Despatcher._uniqueTasks( [ Gaffer.ExecutableNode.Task( n2, c1 ) ] ), [ ( Gaffer.ExecutableNode.Task( n, c1 ), [] ), ( Gaffer.ExecutableNode.Task( n2, c1 ), [ Gaffer.ExecutableNode.Task( n, c1 ) ] ) ] )
+		self.assertEqual( Gaffer.Dispatcher._uniqueTasks( [ Gaffer.ExecutableNode.Task( n2, c1 ) ] ), [ ( Gaffer.ExecutableNode.Task( n, c1 ), [] ), ( Gaffer.ExecutableNode.Task( n2, c1 ), [ Gaffer.ExecutableNode.Task( n, c1 ) ] ) ] )
 
 	def testExecute( self ):
 
@@ -137,12 +137,12 @@ class ExecutableNodeTest( unittest.TestCase ) :
 		n2['requirements'].addChild( r1 )
 		r1.setInput( n['requirement'] )
 
-		despatcher = Gaffer.Despatcher.despatcher("local")
+		dispatcher = Gaffer.Dispatcher.dispatcher("local")
 
 		self.assertEqual( n2.executionCount, 0 )
 		self.assertEqual( n.executionCount, 0 )
 
-		despatcher.despatch( [ n2 ] )
+		dispatcher.dispatch( [ n2 ] )
 
 		self.assertEqual( n2.executionCount, 1 )
 		self.assertEqual( n.executionCount, 1 )

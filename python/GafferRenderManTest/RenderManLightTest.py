@@ -99,7 +99,7 @@ class RenderManLightTest( unittest.TestCase ) :
 		
 		## \todo This fails because ExecutableRender::execute() doesn't wait for the
 		# subprocess to complete as it should. We need to make it wait, but we can't
-		# do that until we're using the LocalDespatcher in gui applications.
+		# do that until we're using the LocalDispatcher in gui applications.
 		s["r"].execute( [ Gaffer.Context.current() ] )
 		
 		i = IECore.EXRImageReader( "/tmp/testRenderManLight.exr" ).read()

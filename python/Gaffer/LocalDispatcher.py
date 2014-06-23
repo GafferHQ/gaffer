@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2013-2014, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -37,15 +37,15 @@
 import Gaffer
 import IECore
 
-class LocalDespatcher( Gaffer.Despatcher ) :
+class LocalDispatcher( Gaffer.Dispatcher ) :
 
-	__despatcher = None
+	__dispatcher = None
 
-	def __init__( self ) :
+	def __init__( self, name = "LocalDispatcher" ) :
 
-		Gaffer.Despatcher.__init__( self )
+		Gaffer.Dispatcher.__init__( self, name )
 
-	def _doDespatch( self, nodes ) :
+	def _doDispatch( self, nodes ) :
 
 		if not nodes :
 			return
@@ -58,25 +58,25 @@ class LocalDespatcher( Gaffer.Despatcher ) :
 
 		taskList = map( lambda n: Gaffer.ExecutableNode.Task(n,c), nodes )
 
-		allTasksAndRequirements = Gaffer.Despatcher._uniqueTasks( taskList )
+		allTasksAndRequirements = Gaffer.Dispatcher._uniqueTasks( taskList )
 
 		for (task,requirements) in allTasksAndRequirements :
 
 			task.node.execute( [ task.context ] )
 
-	def _addPlugs( self, despatcherPlug ) :
+	def _doSetupPlugs( self, parentPlug ) :
 
 		pass
 
 	@staticmethod
 	def _singleton():
 
-		if LocalDespatcher.__despatcher is None :
+		if LocalDispatcher.__dispatcher is None :
 
-			LocalDespatcher.__despatcher = LocalDespatcher()
+			LocalDispatcher.__dispatcher = LocalDispatcher()
 
-		return LocalDespatcher.__despatcher
+		return LocalDispatcher.__dispatcher
 
-IECore.registerRunTimeTyped( LocalDespatcher, typeName = "Gaffer::LocalDespatcher" )
+IECore.registerRunTimeTyped( LocalDispatcher, typeName = "Gaffer::LocalDispatcher" )
 
-Gaffer.Despatcher._registerDespatcher( "local", LocalDespatcher._singleton() )
+Gaffer.Dispatcher.registerDispatcher( "local", LocalDispatcher._singleton() )
