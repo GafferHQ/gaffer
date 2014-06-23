@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2013, Image Engine Design inc. All rights reserved.
+#  Copyright (c) 2013-2014, Image Engine Design inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -49,3 +49,5 @@ GafferUI.PlugValueWidget.registerCreator(
 		},
 	),
 )
+
+GafferUI.Nodule.registerNodule( GafferScene.SceneWriter, "fileName", lambda plug: None )

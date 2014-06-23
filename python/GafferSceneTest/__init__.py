@@ -65,7 +65,6 @@ from SceneContextVariablesTest import SceneContextVariablesTest
 from SubTreeTest import SubTreeTest
 from OpenGLAttributesTest import OpenGLAttributesTest
 from StandardOptionsTest import StandardOptionsTest
-from SceneReadWriteTest import SceneReadWriteTest
 from ScenePathTest import ScenePathTest
 from PathMatcherDataTest import PathMatcherDataTest
 from LightTest import LightTest
@@ -82,6 +81,7 @@ from MapProjectionTest import MapProjectionTest
 from MapOffsetTest import MapOffsetTest
 from PointConstraintTest import PointConstraintTest
 from SceneReaderTest import SceneReaderTest
+from SceneWriterTest import SceneWriterTest
 from IsolateTest import IsolateTest
 from DeleteAttributesTest import DeleteAttributesTest
 from UnionFilterTest import UnionFilterTest

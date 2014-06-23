@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2013, Image Engine Design inc. All rights reserved.
+//  Copyright (c) 2013-2014, Image Engine Design inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -37,17 +37,19 @@
 #ifndef GAFFERSCENE_SCENEWRITER_H
 #define GAFFERSCENE_SCENEWRITER_H
 
-#include "Gaffer/Node.h"
+#include "IECore/SceneInterface.h"
+
+#include "Gaffer/Context.h"
+#include "Gaffer/ExecutableNode.h"
 #include "Gaffer/TypedPlug.h"
+
 #include "GafferScene/TypeIds.h"
 #include "GafferScene/ScenePlug.h"
-
-#include "IECore/SceneInterface.h"
 
 namespace GafferScene
 {
 
-class SceneWriter : public Gaffer::Node
+class SceneWriter : public Gaffer::ExecutableNode
 {
 
 	public :
@@ -55,7 +57,7 @@ class SceneWriter : public Gaffer::Node
 		SceneWriter( const std::string &name=defaultName<SceneWriter>() );
 		virtual ~SceneWriter();
 		
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::SceneWriter, SceneWriterTypeId, Node );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::SceneWriter, SceneWriterTypeId, Gaffer::ExecutableNode );
 		
 		Gaffer::StringPlug *fileNamePlug();
 		const Gaffer::StringPlug *fileNamePlug() const;
@@ -63,11 +65,13 @@ class SceneWriter : public Gaffer::Node
 		ScenePlug *inPlug();
 		const ScenePlug *inPlug() const;
 		
-		void execute();
+		virtual IECore::MurmurHash executionHash( const Gaffer::Context *context ) const;
+		
+		virtual void execute( const Contexts &contexts ) const;
 		
 	private :
 	
-		void writeLocation( GafferScene::ScenePlug *scenePlug, const ScenePlug::ScenePath &scenePath, IECore::SceneInterface *output );
+		void writeLocation( const GafferScene::ScenePlug *scene, const ScenePlug::ScenePath &scenePath, Gaffer::Context *context, IECore::SceneInterface *output, double time ) const;
 		
 		static size_t g_firstPlugIndex;
 		
