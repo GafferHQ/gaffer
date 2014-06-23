@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012-2014, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -157,9 +157,9 @@ if "DELIGHT" in os.environ :
 
 # Scene nodes
 
-nodeMenu.append( "/Scene/Source/Reader", GafferScene.SceneReader, searchText = "SceneReader" )
-nodeMenu.append( "/Scene/Source/Writer", GafferScene.SceneWriter, searchText = "SceneWriter" )
-nodeMenu.append( "/Scene/Source/Alembic", GafferScene.AlembicSource, searchText = "AlembicSource" )
+nodeMenu.append( "/Scene/File/Reader", GafferScene.SceneReader, searchText = "SceneReader" )
+nodeMenu.append( "/Scene/File/Writer", GafferScene.SceneWriter, searchText = "SceneWriter" )
+nodeMenu.append( "/Scene/File/Alembic", GafferScene.AlembicSource, searchText = "AlembicSource" )
 nodeMenu.append( "/Scene/Source/Object To Scene", GafferScene.ObjectToScene, searchText = "ObjectToScene" )
 nodeMenu.append( "/Scene/Source/Camera", GafferScene.Camera )
 nodeMenu.append( "/Scene/Source/Grid", GafferScene.Grid )
@@ -167,14 +167,14 @@ nodeMenu.append( "/Scene/Source/Primitive/Cube", GafferScene.Cube )
 nodeMenu.append( "/Scene/Source/Primitive/Plane", GafferScene.Plane )
 nodeMenu.append( "/Scene/Source/Primitive/Sphere", GafferScene.Sphere )
 nodeMenu.append( "/Scene/Source/Primitive/Text", GafferScene.Text )
-nodeMenu.append( "/Scene/Object/Generators/Seeds", GafferScene.Seeds )
-nodeMenu.append( "/Scene/Object/Generators/Instancer", GafferScene.Instancer )
-nodeMenu.append( "/Scene/Object/Modifiers/Attribute Cache", GafferScene.AttributeCache, searchText = "AttributeCache" )
-nodeMenu.append( "/Scene/Object/Modifiers/Primitive Variables", GafferScene.PrimitiveVariables, searchText = "PrimitiveVariables" )
-nodeMenu.append( "/Scene/Object/Modifiers/Delete Primitive Variables", GafferScene.DeletePrimitiveVariables, searchText = "DeletePrimitiveVariables" )
-nodeMenu.append( "/Scene/Object/Modifiers/Mesh Type", GafferScene.MeshType, searchText = "MeshType"  )
-nodeMenu.append( "/Scene/Object/Modifiers/Map Projection", GafferScene.MapProjection, searchText = "MapProjection"  )
-nodeMenu.append( "/Scene/Object/Modifiers/Map Offset", GafferScene.MapOffset, searchText = "MapOffset"  )
+nodeMenu.append( "/Scene/Source/Seeds", GafferScene.Seeds )
+nodeMenu.append( "/Scene/Source/Instancer", GafferScene.Instancer )
+nodeMenu.append( "/Scene/Object/Attribute Cache", GafferScene.AttributeCache, searchText = "AttributeCache" )
+nodeMenu.append( "/Scene/Object/Primitive Variables", GafferScene.PrimitiveVariables, searchText = "PrimitiveVariables" )
+nodeMenu.append( "/Scene/Object/Delete Primitive Variables", GafferScene.DeletePrimitiveVariables, searchText = "DeletePrimitiveVariables" )
+nodeMenu.append( "/Scene/Object/Mesh Type", GafferScene.MeshType, searchText = "MeshType"  )
+nodeMenu.append( "/Scene/Object/Map Projection", GafferScene.MapProjection, searchText = "MapProjection"  )
+nodeMenu.append( "/Scene/Object/Map Offset", GafferScene.MapOffset, searchText = "MapOffset"  )
 nodeMenu.append( "/Scene/Attributes/Shader Assignment", GafferScene.ShaderAssignment, searchText = "ShaderAssignment" )
 nodeMenu.append( "/Scene/Attributes/Shader Switch", GafferScene.ShaderSwitch, searchText = "ShaderSwitch" )
 nodeMenu.append( "/Scene/Attributes/Standard Attributes", GafferScene.StandardAttributes, searchText = "StandardAttributes" )
