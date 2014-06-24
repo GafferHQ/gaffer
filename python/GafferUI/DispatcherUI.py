@@ -36,6 +36,7 @@
 ##########################################################################
 
 import fnmatch
+import threading
 import weakref
 
 import IECore
@@ -125,9 +126,13 @@ class _DispatcherWindow( GafferUI.Window ) :
 	
 	def __dispatchClicked( self, button ) :
 		
+		threading.Thread( target = self.__dispatch ).start()
+		self.close()
+	
+	def __dispatch( self ) :
+		
 		self.__dispatcher.dispatch( self.__nodes )
 		## \todo: update _executeUILastExecuted
-		self.close()
 	
 	__instances = [] # weak references to all instances - used by acquire()
 	
