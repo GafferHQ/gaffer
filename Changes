@@ -1,3 +1,59 @@
+# 0.97.0
+
+This release is focussed mainly on optimisation and bug fixes, with significant speedups being provided by moving to a new caching implementation provided by Cortex 9. Behind the scenes it also contains progress towards exposing Dispatcher functionality at the user level.
+
+#### Core
+
+- Optimised FilteredChildIterator and PlugIterator. This alone gives more than a 5% speedup in a simple Instancer benchmark.
+- Fixed serialisation of non-dynamic ArrayPlugs. This bug caused the appearance of duplicate requirements plugs on executable nodes (#580).
+
+#### UI
+
+- Added a grid to the 3D viewer.
+- Added NodeGraph menu item for selecting objects affected by a node - accessed by right clicking on a filtered scene node.
+- Fixed several causes of zombie widgets which could cause errors at shutdown.
+- Moved the Execute button for ExecutableNodes to a prominent position in the header of the NodeEditor.
+- Added SceneWriter to the node menu. Also reorganised the Scene menu to include a File submenu, and simplified the Object menu by moving generators into the Source submenu.
+
+#### Scene
+
+- Optimised Shader network computation - reducing runtime by 35% for typical production networks.
+
+#### Arnold
+
+- Fixed ArnoldRender "Generate expanded .ass" mode. It was using a "-resaveop" command line flag removed from kick in Arnold version 4.0.10.0.
+
+#### API
+
+- Added ability for Gadgets to have child Gadgets. Previously only ContainerGadgets could have children.
+- Rederived NodeGadget from Gadget rather than IndividualContainer. This allows more flexibility in NodeGadget implementations, and also better hides the implementation details.
+- Added methods for controlling Gadget visibility.
+- Rederived ViewportGadget from Gadget rather than IndividualContainer. This allows viewports to have multiple child gadgets, which paves the way for more complex views and interactive manipulators.
+- Made UI registration methods accept classes in place of TypeIds.
+- Added public GafferScene::Filter methods for specifying input scene via Context.
+- Added SceneAlgo.h with methods for querying all objects matching a filter.
+- Continued refactoring the Executable framework, in preparation for exposing it to users
+	- Americanized spelling.
+	- Renamed ExecuteUI to DispatcherUI.
+	- Renamed ExecutableNode "dispatcherParameters" plug to simply "dispatcher".
+	- Rederived SceneWriter from ExecutableNode.
+	- Rederived Dispatcher from Node, to allow settings to be specified via plugs.
+	- Renamed Dispatcher::addAllPlugs() to Dispatcher::setupPlugs().
+	- Renamed Dispatcher::addPlugs() to Dispatcher::doSetupPlugs.
+- Added shutdown checks for zombie widgets and scripts.
+- Fixed "base class not created yet" GafferRenderMan import error.
+- Added _copy parameter to Shader::state() python binding.
+
+#### Documentation
+
+- Improved formatting of Doxygen documentation - a brief description of each class is now shown above the detailed member documentation.
+
+#### Build
+
+- Requires Cortex 9.0.0-a1.
+- Recent Cortex LRUCache improvements offer significant performance gains.
+- Updated default TBB version to 4.2.
+
 # 0.96.0
 
 #### Core
