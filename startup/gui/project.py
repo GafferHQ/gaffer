@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2013-2014, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -74,6 +74,10 @@ def __projectBookmark( forWidget, location ) :
 		return p
 	else :
 		return os.getcwd()
+
+localDispatcher = Gaffer.Dispatcher.dispatcher( "local" )
+localDispatcher["jobName"].setValue( "${script:name}" )
+localDispatcher["jobDirectory"].setValue( "${project:rootDirectory}/dispatcher" )
 
 GafferUI.Bookmarks.acquire( application ).add( "Project", IECore.curry( __projectBookmark, location="${project:rootDirectory}" ) )
 GafferUI.Bookmarks.acquire( application, category="script" ).setDefault( IECore.curry( __projectBookmark, location="${project:rootDirectory}/scripts" ) )
