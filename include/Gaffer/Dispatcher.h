@@ -41,9 +41,12 @@
 #include <vector>
 #include <map>
 #include <set>
+
 #include "boost/signals.hpp"
+
 #include "IECore/RunTimeTyped.h"
-#include "Gaffer/TypeIds.h"
+
+#include "Gaffer/TypedPlug.h"
 #include "Gaffer/ExecutableNode.h"
 
 namespace Gaffer
@@ -79,6 +82,21 @@ class Dispatcher : public Node
 		/// Calls doDispatch, taking care to trigger the dispatch signals at the appropriate times.
 		void dispatch( const std::vector<ExecutableNodePtr> &nodes ) const;
 
+		//! @name Dispatcher Jobs
+		/// Utility functions which derived classes may use when dispatching jobs.
+		//////////////////////////////////////////////////////////////////////////
+		//@{
+		/// Returns the name of the next job to dispatch.
+		StringPlug *jobNamePlug();
+		const StringPlug *jobNamePlug() const;
+		/// Returns the plug which specifies the directory used by dispatchers to store temporary
+		/// files on a per-job basis.
+		StringPlug *jobDirectoryPlug();
+		const StringPlug *jobDirectoryPlug() const;
+		/// Returns the directory specified by jobDirectoryPlug + jobNamePlug, creating it when necessary.
+		const std::string jobDirectory( const Context *context ) const;
+		//@}
+		
 		//! @name Registration
 		/// Utility functions for registering and retrieving Dispatchers.
 		/////////////////////////////////////////////////////////////////
@@ -142,6 +160,7 @@ class Dispatcher : public Node
 		
 		static const ExecutableNode::Task &uniqueTask( const ExecutableNode::Task &task, TaskDescriptions &uniqueTasks, TaskSet &seenTasks );
 		
+		static size_t g_firstPlugIndex;
 		static DispatcherMap g_dispatchers;
 		static DispatchSignal g_preDispatchSignal;
 		static DispatchSignal g_postDispatchSignal;

@@ -192,6 +192,7 @@ void GafferBindings::bindDispatcher()
 {
 	scope s = NodeClass<Dispatcher, DispatcherWrapperPtr>()
 		.def( "dispatch", &DispatcherWrapper::dispatch )
+		.def( "jobDirectory", &Dispatcher::jobDirectory )
 		.def( "dispatcher", &DispatcherWrapper::dispatcher ).staticmethod( "dispatcher" )
 		.def( "dispatcherNames", &DispatcherWrapper::dispatcherNames ).staticmethod( "dispatcherNames" )
 		.def( "registerDispatcher", &DispatcherWrapper::registerDispatcher ).staticmethod( "registerDispatcher" )
