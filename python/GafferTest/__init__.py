@@ -120,6 +120,8 @@ from OutputRedirectionTest import OutputRedirectionTest
 from ExecutableNodeTest import ExecutableNodeTest
 from ExecutableOpHolderTest import ExecutableOpHolderTest
 from DispatcherTest import DispatcherTest
+from TextWriter import TextWriter
+from LocalDispatcherTest import LocalDispatcherTest
 from RecursiveChildIteratorTest import RecursiveChildIteratorTest
 from FilteredRecursiveChildIteratorTest import FilteredRecursiveChildIteratorTest
 from ReferenceTest import ReferenceTest

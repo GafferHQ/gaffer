@@ -34,6 +34,10 @@
 #  
 ##########################################################################
 
+import os
+import errno
+import subprocess
+
 import Gaffer
 import IECore
 
@@ -42,29 +46,79 @@ class LocalDispatcher( Gaffer.Dispatcher ) :
 	def __init__( self, name = "LocalDispatcher" ) :
 
 		Gaffer.Dispatcher.__init__( self, name )
-
+	
+	def jobDirectory( self, context ) :
+		
+		jobDirectory = Gaffer.Dispatcher.jobDirectory( self, context )
+		result = os.path.join( jobDirectory, "%06d" % self.__nextJobId( jobDirectory ) )
+		
+		while True :
+			try :
+				os.makedirs( result )
+				break
+			except OSError, e :
+				if e.errno == errno.EEXIST :
+					result = os.path.join( jobDirectory, "%06d" % self.__nextJobId( jobDirectory ) )
+					continue
+				else :
+					raise e
+		
+		return result
+	
 	def _doDispatch( self, nodes ) :
-
-		if not nodes :
-			return
-
+		
 		script = nodes[0].scriptNode()
 		if script is None :
-			c = Gaffer.Context()
-		else :
-			c = script.context()
-
-		taskList = map( lambda n: Gaffer.ExecutableNode.Task(n,c), nodes )
-
+			IECore.msg( IECore.MessageHandler.Level.Error, self.getName(), "Can only dispatch nodes which are part of a script." )
+			return
+		
+		context = Gaffer.Context() if script is None else script.context()
+		
+		with context :
+			scriptFileName = script["fileName"].getValue()
+			jobName = context.substitute( self["jobName"].getValue() )
+			jobDirectory = self.jobDirectory( context )
+		
+		messageContext = "%s : Job %s %s" % ( self.getName(), jobName, os.path.basename( jobDirectory ) )
+		tmpScript = os.path.join( jobDirectory, os.path.basename( scriptFileName ) if scriptFileName else "untitled.gfr" )
+		script.serialiseToFile( tmpScript )
+		
+		taskList = map( lambda node: Gaffer.ExecutableNode.Task( node, context ), nodes )
 		allTasksAndRequirements = Gaffer.Dispatcher._uniqueTasks( taskList )
-
-		for (task,requirements) in allTasksAndRequirements :
-
-			task.node.execute( [ task.context ] )
-
+		
+		for ( task, requirements ) in allTasksAndRequirements :
+			
+			frames = str(int(task.context.getFrame()))
+			
+			cmd = [
+				"gaffer", "execute",
+				"-script", tmpScript,
+				"-nodes", task.node.relativeName( script ),
+				"-frames", frames,
+				"-context",
+			]
+			
+			for entry in context.keys() :
+				if entry != "frame" :
+					cmd.extend( [ "-" + entry, repr(context[entry]) ] )
+			
+			IECore.msg( IECore.MessageHandler.Level.Info, messageContext, " ".join( cmd ) )
+			result = subprocess.call( cmd )
+			if result :
+				IECore.msg( IECore.MessageHandler.Level.Error, messageContext, "Failed to execute " + task.node.getName() + " on frames " + frames )
+				return
+		
+		IECore.msg( IECore.MessageHandler.Level.Info, messageContext, "Completed all tasks." )
+	
 	def _doSetupPlugs( self, parentPlug ) :
 
 		pass
+	
+	def __nextJobId( self, directory ) :
+		
+		previousJobs = IECore.ls( directory, minSequenceSize = 1 )
+		nextJob = max( previousJobs[0].frameList.asList() ) + 1 if previousJobs else 0
+		return nextJob
 
 IECore.registerRunTimeTyped( LocalDispatcher, typeName = "Gaffer::LocalDispatcher" )
 
