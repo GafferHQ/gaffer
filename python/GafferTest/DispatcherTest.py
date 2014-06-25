@@ -56,7 +56,7 @@ class TestOp (IECore.Op) :
 		self.executionOrder.append( self )
 		return IECore.IntData( self.counter )
 
-class DispatcherTest( unittest.TestCase ) :
+class DispatcherTest( GafferTest.TestCase ) :
 
 	class MyDispatcher( Gaffer.Dispatcher ) :
 

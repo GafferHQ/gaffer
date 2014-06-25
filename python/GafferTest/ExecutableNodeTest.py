@@ -41,7 +41,7 @@ import IECore
 import Gaffer
 import GafferTest
 
-class ExecutableNodeTest( unittest.TestCase ) :
+class ExecutableNodeTest( GafferTest.TestCase ) :
 
 	class MyNode( Gaffer.ExecutableNode ) :
 

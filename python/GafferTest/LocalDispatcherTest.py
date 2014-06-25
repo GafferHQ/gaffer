@@ -44,7 +44,7 @@ import IECore
 import Gaffer
 import GafferTest
 
-class LocalDispatcherTest( unittest.TestCase ) :
+class LocalDispatcherTest( GafferTest.TestCase ) :
 	
 	def setUp( self ) :
 		

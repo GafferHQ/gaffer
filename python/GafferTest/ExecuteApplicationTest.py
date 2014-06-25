@@ -44,7 +44,7 @@ import IECore
 import Gaffer
 import GafferTest
 
-class ExecuteApplicationTest( unittest.TestCase ) :
+class ExecuteApplicationTest( GafferTest.TestCase ) :
 
 	__scriptFileName = "/tmp/executeScript.gfr"
 	__outputFileSeq = IECore.FileSequence( "/tmp/sphere.####.cob" )
