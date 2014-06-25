@@ -44,8 +44,10 @@
 
 #include "boost/signals.hpp"
 
+#include "IECore/FrameList.h"
 #include "IECore/RunTimeTyped.h"
 
+#include "Gaffer/NumericPlug.h"
 #include "Gaffer/TypedPlug.h"
 #include "Gaffer/ExecutableNode.h"
 
@@ -82,7 +84,26 @@ class Dispatcher : public Node
 		
 		/// Calls doDispatch, taking care to trigger the dispatch signals at the appropriate times.
 		void dispatch( const std::vector<ExecutableNodePtr> &nodes ) const;
-
+		
+		enum FramesMode
+		{
+			CurrentFrame,
+			ScriptRange,
+			CustomRange
+		};
+		
+		//! @name Frame range
+		/// Dispatchers define a frame range for execution. 
+		///////////////////////////////////////////////////
+		//@{
+		/// Returns a FramesMode for getting the active frame range.
+		IntPlug *framesModePlug();
+		const IntPlug *framesModePlug() const;
+		/// Returns frame range to be used when framesModePlug is set to CustomRange.
+		StringPlug *frameRangePlug();
+		const StringPlug *frameRangePlug() const;
+		//@}
+		
 		//! @name Dispatcher Jobs
 		/// Utility functions which derived classes may use when dispatching jobs.
 		//////////////////////////////////////////////////////////////////////////
@@ -159,6 +180,7 @@ class Dispatcher : public Node
 		typedef std::map< std::string, DispatcherPtr > DispatcherMap;
 		typedef std::map< IECore::MurmurHash, std::vector< size_t > > TaskSet;
 		
+		IECore::FrameListPtr frameRange( const ScriptNode *script, const Context *context ) const;
 		static const ExecutableNode::Task &uniqueTask( const ExecutableNode::Task &task, TaskDescriptions &uniqueTasks, TaskSet &seenTasks );
 		
 		static size_t g_firstPlugIndex;

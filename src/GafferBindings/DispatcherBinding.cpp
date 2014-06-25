@@ -207,6 +207,12 @@ void GafferBindings::bindDispatcher()
 		.def( "preDispatchSignal", &Dispatcher::preDispatchSignal, return_value_policy<reference_existing_object>() ).staticmethod( "preDispatchSignal" )
 		.def( "postDispatchSignal", &Dispatcher::postDispatchSignal, return_value_policy<reference_existing_object>() ).staticmethod( "postDispatchSignal" )
 	;
-
+	
+	enum_<Dispatcher::FramesMode>( "FramesMode" )
+		.value( "CurrentFrame", Dispatcher::CurrentFrame )
+		.value( "ScriptRange", Dispatcher::ScriptRange )
+		.value( "CustomRange", Dispatcher::CustomRange )
+	;
+	
 	SignalBinder<Dispatcher::DispatchSignal, DefaultSignalCaller<Dispatcher::DispatchSignal>, DispatchSlotCaller >::bind( "DispatchSignal" );
 }

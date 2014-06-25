@@ -191,12 +191,48 @@ class __RequirementPlugValueWidget( GafferUI.PlugValueWidget ) :
 		
 		_showDispatcherWindow( [ self.getPlug().node() ] )
 
+
+#################################
+# PlugValueWidget for framesMode
+#################################
+
+class __FramesModePlugValueWidget( GafferUI.EnumPlugValueWidget ) :
+
+	def __init__( self, plug ) :
+		
+		GafferUI.EnumPlugValueWidget.__init__(
+			self, plug,
+			labelsAndValues = (
+				( "CurrentFrame", Gaffer.Dispatcher.FramesMode.CurrentFrame ),
+				( "ScriptRange", Gaffer.Dispatcher.FramesMode.ScriptRange ),
+				( "CustomRange", Gaffer.Dispatcher.FramesMode.CustomRange ),
+			)
+		)
+	
+	def _updateFromPlug( self ) :
+		
+		GafferUI.EnumPlugValueWidget._updateFromPlug( self )
+		
+		if self.getPlug() is None :
+			return
+		
+		with self.getContext() :
+			framesMode = self.getPlug().getValue()
+		
+		nodeUI = self.ancestor( GafferUI.NodeUI )
+		if nodeUI :
+			frameRangeWidget = nodeUI.plugValueWidget( self.getPlug().node()["frameRange"], lazy = False )
+			if frameRangeWidget :
+				frameRangeWidget.setEnabled( framesMode == Gaffer.Dispatcher.FramesMode.CustomRange )
+
 ##########################################################################
 # Metadata, PlugValueWidgets and Nodules
 ##########################################################################
 
 Gaffer.Metadata.registerPlugValue( Gaffer.ExecutableNode, "requirement", "nodeUI:section", "header" )
 Gaffer.Metadata.registerPlugValue( Gaffer.ExecutableNode, "dispatcher", "nodeUI:section", "Dispatcher" )
+Gaffer.Metadata.registerPlugDescription( Gaffer.Dispatcher, "framesMode", "Determines the active frame range for dispatching." )
+Gaffer.Metadata.registerPlugDescription( Gaffer.Dispatcher, "frameRange", "The frame range to be used when framesMode is set to CustomRange." )
 Gaffer.Metadata.registerPlugDescription( Gaffer.Dispatcher, "jobDirectory", "A directory to store temporary files used by the dispatcher." )
 
 GafferUI.PlugValueWidget.registerCreator(
@@ -211,6 +247,7 @@ GafferUI.PlugValueWidget.registerCreator(
 )
 
 GafferUI.PlugValueWidget.registerCreator( Gaffer.Dispatcher, "user", None )
+GafferUI.PlugValueWidget.registerCreator( Gaffer.Dispatcher, "framesMode", __FramesModePlugValueWidget )
 GafferUI.PlugValueWidget.registerCreator( Gaffer.ExecutableNode, "requirement", __RequirementPlugValueWidget )
 GafferUI.PlugValueWidget.registerCreator( Gaffer.ExecutableNode, "dispatcher", GafferUI.CompoundPlugValueWidget, collapsed = None )
 

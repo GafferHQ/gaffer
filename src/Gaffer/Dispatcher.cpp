@@ -36,6 +36,9 @@
 
 #include "boost/filesystem.hpp"
 
+#include "IECore/FrameRange.h"
+#include "IECore/MessageHandler.h"
+
 #include "Gaffer/CompoundPlug.h"
 #include "Gaffer/Context.h"
 #include "Gaffer/Dispatcher.h"
@@ -56,6 +59,8 @@ Dispatcher::Dispatcher( const std::string &name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	
+	addChild( new IntPlug( "framesMode", Plug::In, CurrentFrame, CurrentFrame, CustomRange, Plug::Default & ~Plug::Serialisable ) );
+	addChild( new StringPlug( "frameRange", Plug::In, "", Plug::Default & ~Plug::Serialisable ) );
 	addChild( new StringPlug( "jobName", Plug::In, "", Plug::Default & ~Plug::Serialisable ) );
 	addChild( new StringPlug( "jobDirectory", Plug::In, "", Plug::Default & ~Plug::Serialisable ) );
 }
@@ -85,11 +90,20 @@ void Dispatcher::dispatch( const std::vector<ExecutableNodePtr> &nodes ) const
 	
 	const Context *context = Context::current();
 	
+	std::vector<FrameList::Frame> frames;
+	FrameListPtr frameList = frameRange( script, context );
+	frameList->asList( frames );
+	
 	size_t i = 0;
-	ExecutableNode::Tasks tasks( nodes.size(), ExecutableNode::Task( NULL, new Context( *context, Context::Borrowed ) ) );
-	for ( std::vector<ExecutableNodePtr>::const_iterator nIt = nodes.begin(); nIt != nodes.end(); ++nIt, ++i )
+	ExecutableNode::Tasks tasks;
+	tasks.reserve( nodes.size() * frames.size() );
+	for ( std::vector<FrameList::Frame>::const_iterator fIt = frames.begin(); fIt != frames.end(); ++fIt )
 	{
-		tasks[i].node = *nIt;
+		for ( std::vector<ExecutableNodePtr>::const_iterator nIt = nodes.begin(); nIt != nodes.end(); ++nIt, ++i )
+		{
+			tasks.push_back( ExecutableNode::Task( *nIt, new Context( *context, Context::Borrowed ) ) );
+			tasks.rbegin()->context->setFrame( *fIt );
+		}
 	}
 	
 	TaskDescriptions taskDescriptions;
@@ -103,24 +117,44 @@ void Dispatcher::dispatch( const std::vector<ExecutableNodePtr> &nodes ) const
 	postDispatchSignal()( this, nodes );
 }
 
+IntPlug *Dispatcher::framesModePlug()
+{
+	return getChild<IntPlug>( g_firstPlugIndex );
+}
+
+const IntPlug *Dispatcher::framesModePlug() const
+{
+	return getChild<IntPlug>( g_firstPlugIndex );
+}
+
+StringPlug *Dispatcher::frameRangePlug()
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 1 );
+}
+
+const StringPlug *Dispatcher::frameRangePlug() const
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 1 );
+}
+
 StringPlug *Dispatcher::jobNamePlug()
 {
-	return getChild<StringPlug>( g_firstPlugIndex );
+	return getChild<StringPlug>( g_firstPlugIndex + 2 );
 }
 
 const StringPlug *Dispatcher::jobNamePlug() const
 {
-	return getChild<StringPlug>( g_firstPlugIndex );
+	return getChild<StringPlug>( g_firstPlugIndex + 2 );
 }
 
 StringPlug *Dispatcher::jobDirectoryPlug()
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 1 );
+	return getChild<StringPlug>( g_firstPlugIndex + 3 );
 }
 
 const StringPlug *Dispatcher::jobDirectoryPlug() const
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 1 );
+	return getChild<StringPlug>( g_firstPlugIndex + 3 );
 }
 
 const std::string Dispatcher::jobDirectory( const Context *context ) const
@@ -260,5 +294,30 @@ void Dispatcher::uniqueTasks( const ExecutableNode::Tasks &tasks, TaskDescriptio
 	for( ExecutableNode::Tasks::const_iterator tit = tasks.begin(); tit != tasks.end(); ++tit )
 	{
 		uniqueTask( *tit, uniqueTasks, seenTasks );
+	}
+}
+
+FrameListPtr Dispatcher::frameRange( const ScriptNode *script, const Context *context ) const
+{
+	FramesMode mode = (FramesMode)framesModePlug()->getValue();
+	if ( mode == CurrentFrame )
+	{
+		FrameList::Frame frame = (FrameList::Frame)context->getFrame();
+		return new FrameRange( frame, frame );
+	}
+	else if ( mode == ScriptRange )
+	{
+		return new FrameRange( script->frameStartPlug()->getValue(), script->frameEndPlug()->getValue() );
+	}
+	
+	// must be CustomRange
+	
+	try
+	{
+		return FrameList::parse( context->substitute( frameRangePlug()->getValue() ) );
+	}
+	catch ( IECore::Exception &e )
+	{
+		throw IECore::Exception( "Dispatcher: Custom Frame Range is not a valid IECore::FrameList" );
 	}
 }

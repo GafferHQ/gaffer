@@ -46,13 +46,16 @@ class TestOp (IECore.Op) :
 	def __init__( self, name, executionOrder ) :
 
 		IECore.Op.__init__( self, "Test op", IECore.IntParameter( "result", "", 0 ) )
+		self.parameters().addParameter( IECore.StringParameter( "frames", "a frame range", "${frame}" ) )
 		self.counter = 0
+		self.frames = []
 		self.name = name
 		self.executionOrder = executionOrder
 
 	def doOperation( self, args ) :
 
 		self.counter += 1
+		self.frames.append( Gaffer.Context.current().getFrame() )
 		self.executionOrder.append( self )
 		return IECore.IntData( self.counter )
 
@@ -247,6 +250,74 @@ class DispatcherTest( GafferTest.TestCase ) :
 		self.assertEqual( op2a.counter, 4 )
 		self.assertEqual( op2b.counter, 5 )
 		self.assertTrue( dispatcher.log == [ op2b ] )
+	
+	def testDispatchDifferentFrame( self ) :
+		
+		dispatcher = DispatcherTest.MyDispatcher()
+		dispatcher["framesMode"].setValue( Gaffer.Dispatcher.FramesMode.CurrentFrame )
+		
+		s = Gaffer.ScriptNode()
+		op1 = TestOp("1", dispatcher.log)
+		s["n1"] = Gaffer.ExecutableOpHolder()
+		s["n1"].setParameterised( op1 )
+		
+		context = Gaffer.Context( s.context() )
+		context.setFrame( s.context().getFrame() + 10 )
+		
+		with context :
+			dispatcher.dispatch( [ s["n1"] ] )
+		
+		self.assertEqual( op1.counter, 1 )
+		self.assertEqual( op1.frames, [ context.getFrame() ] )
+	
+	def testDispatchScriptRange( self ) :
+		
+		dispatcher = DispatcherTest.MyDispatcher()
+		dispatcher["framesMode"].setValue( Gaffer.Dispatcher.FramesMode.ScriptRange )
+		
+		s = Gaffer.ScriptNode()
+		op1 = TestOp("1", dispatcher.log)
+		s["n1"] = Gaffer.ExecutableOpHolder()
+		s["n1"].setParameterised( op1 )
+		
+		dispatcher.dispatch( [ s["n1"] ] )
+		
+		frames = IECore.FrameRange( s["frameRange"]["start"].getValue(), s["frameRange"]["end"].getValue() ).asList()
+		self.assertEqual( op1.counter, len(frames) )
+		self.assertEqual( op1.frames, frames )
+	
+	def testDispatchCustomRange( self ) :
+		
+		dispatcher = DispatcherTest.MyDispatcher()
+		dispatcher["framesMode"].setValue( Gaffer.Dispatcher.FramesMode.CustomRange )
+		frameList = IECore.FrameList.parse( "2-6x2" )
+		dispatcher["frameRange"].setValue( str(frameList) )
+		
+		s = Gaffer.ScriptNode()
+		op1 = TestOp("1", dispatcher.log)
+		s["n1"] = Gaffer.ExecutableOpHolder()
+		s["n1"].setParameterised( op1 )
+		
+		dispatcher.dispatch( [ s["n1"] ] )
+		
+		frames = frameList.asList()
+		self.assertEqual( op1.counter, len(frames) )
+		self.assertEqual( op1.frames, frames )
+	
+	def testDispatchBadCustomRange( self ) :
+		
+		dispatcher = DispatcherTest.MyDispatcher()
+		dispatcher["framesMode"].setValue( Gaffer.Dispatcher.FramesMode.CustomRange )
+		dispatcher["frameRange"].setValue( "notAFrameRange" )
+		
+		s = Gaffer.ScriptNode()
+		op1 = TestOp("1", dispatcher.log)
+		s["n1"] = Gaffer.ExecutableOpHolder()
+		s["n1"].setParameterised( op1 )
+		
+		self.assertRaises( RuntimeError, IECore.curry( dispatcher.dispatch, [ s["n1"] ] ) )
+		self.assertEqual( op1.counter, 0 )
+		self.assertEqual( op1.frames, [] )
 
 if __name__ == "__main__":
 	unittest.main()
