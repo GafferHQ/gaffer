@@ -131,7 +131,8 @@ class _DispatcherWindow( GafferUI.Window ) :
 	
 	def __dispatch( self ) :
 		
-		self.__dispatcher.dispatch( self.__nodes )
+		with self.parent().scriptNode().context() :
+			self.__dispatcher.dispatch( self.__nodes )
 		## \todo: update _executeUILastExecuted
 	
 	__instances = [] # weak references to all instances - used by acquire()
@@ -225,7 +226,9 @@ def _execute( nodes ) :
 	script = nodes[0].scriptNode()
 	script._executeUILastExecuted = []
 	
-	_DispatcherWindow.currentDispatcher().dispatch( nodes )
+	with script.context() :
+		_DispatcherWindow.currentDispatcher().dispatch( nodes )
+	
 	script._executeUILastExecuted = [ weakref.ref( node ) for node in nodes ]
 
 def _showDispatcherWindow( nodes ) :
