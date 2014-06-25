@@ -42,7 +42,7 @@ import IECore
 import Gaffer
 import GafferTest
 
-class ReferenceTest( unittest.TestCase ) :
+class ReferenceTest( GafferTest.TestCase ) :
 			
 	def testLoad( self ) :
 	

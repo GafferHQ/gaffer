@@ -42,7 +42,7 @@ import IECore
 import Gaffer
 import GafferTest
 
-class TypedObjectPlugTest( unittest.TestCase ) :
+class TypedObjectPlugTest( GafferTest.TestCase ) :
 
 	def testSerialisation( self ) :
 	

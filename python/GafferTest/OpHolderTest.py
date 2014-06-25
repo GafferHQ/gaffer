@@ -42,7 +42,7 @@ import IECore
 import Gaffer
 import GafferTest
 
-class OpHolderTest( unittest.TestCase ) :
+class OpHolderTest( GafferTest.TestCase ) :
 
 	def testType( self ) :
 	

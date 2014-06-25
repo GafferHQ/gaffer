@@ -34,6 +34,7 @@
 #  
 ##########################################################################
 
+import sys
 import unittest
 import inspect
 import types
@@ -44,6 +45,23 @@ import Gaffer
 
 ## A useful base class for creating test cases for nodes.
 class TestCase( unittest.TestCase ) :
+
+	def tearDown( self ) :
+	
+		# Clear any previous exceptions, as they can be holding
+		# references to resources we would like to die. This is
+		# important for both the UI tests where we wish to check
+		# that all widgets have been destroyed, and also for the
+		# shutdown tests that are run when the test application
+		# exits.
+	
+		if "_ExpectedFailure" in str( sys.exc_info()[0] ) :
+			# the expected failure exception in the unittest module
+			# unhelpfully also hangs on to exceptions, so we remove
+			# that before calling exc_clear().
+			sys.exc_info()[1].exc_info = ( None, None, None )
+		
+		sys.exc_clear()
 
 	## Attempts to ensure that the hashes for a node
 	# are reasonable by jiggling around input values

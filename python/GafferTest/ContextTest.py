@@ -43,7 +43,7 @@ import IECore
 import Gaffer
 import GafferTest
 
-class ContextTest( unittest.TestCase ) :
+class ContextTest( GafferTest.TestCase ) :
 
 	def testFrameAccess( self ) :
 	

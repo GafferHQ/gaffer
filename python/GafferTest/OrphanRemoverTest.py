@@ -41,7 +41,7 @@ import IECore
 import Gaffer
 import GafferTest
 
-class OrphanRemoverTest( unittest.TestCase ) :
+class OrphanRemoverTest( GafferTest.TestCase ) :
 		
 	def test( self ) :
 	

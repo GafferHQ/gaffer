@@ -161,7 +161,7 @@ class _GridPlugValueWidget( GafferUI.PlugValueWidget ) :
 			"/Show Grid",
 			{
 				"checkBox" : self.getPlug()["visible"].getValue(),
-				"command" : lambda checked : self.getPlug()["visible"].setValue( checked ),
+				"command" : self.getPlug()["visible"].setValue,
 			}
 		)
 		

@@ -42,7 +42,7 @@ import IECore
 import Gaffer
 import GafferTest
 
-class ArrayPlugTest( unittest.TestCase ) :
+class ArrayPlugTest( GafferTest.TestCase ) :
 		
 	def test( self ) :
 

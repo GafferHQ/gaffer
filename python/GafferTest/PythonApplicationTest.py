@@ -38,7 +38,9 @@ import os
 import subprocess
 import unittest
 
-class PythonApplicationTest( unittest.TestCase ) :
+import GafferTest
+
+class PythonApplicationTest( GafferTest.TestCase ) :
 
 	def testVariableScope( self ) :
 	

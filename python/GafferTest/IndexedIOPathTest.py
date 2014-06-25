@@ -40,8 +40,9 @@ import os
 import IECore
 
 import Gaffer
+import GafferTest
 
-class IndexedIOPathTest( unittest.TestCase ) :
+class IndexedIOPathTest( GafferTest.TestCase ) :
 
 	__fileName = "/tmp/test.fio"
 

@@ -40,8 +40,9 @@ import unittest
 import IECore
 
 import Gaffer
+import GafferTest
 
-class PathTest( unittest.TestCase ) :
+class PathTest( GafferTest.TestCase ) :
 
 	class TestPath( Gaffer.Path ) :
 		

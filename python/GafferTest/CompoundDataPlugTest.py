@@ -42,7 +42,7 @@ import IECore
 import Gaffer
 import GafferTest
 
-class CompoundDataPlugTest( unittest.TestCase ) :
+class CompoundDataPlugTest( GafferTest.TestCase ) :
 
 	def test( self ) :
 

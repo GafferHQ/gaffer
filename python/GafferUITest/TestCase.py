@@ -45,22 +45,15 @@ class TestCase( GafferTest.TestCase ) :
 		
 	def tearDown( self ) :
 	
+		GafferTest.TestCase.tearDown( self )
+	
 		# Here we check that there are no Widget instances knocking
 		# around after each test has run. this provides good coverage
 		# for the Widget lifetime problems that are all too easy to
-		# create. First we clear any previous exception, as it can be
-		# holding references to widgets that were active when the exception
-		# was thrown (and unittest.TestCase will be reporting an error
-		# anyway).
-	
-		if "_ExpectedFailure" in str( sys.exc_info()[0] ) :
-			# the expected failure exception in the unittest module
-			# unhelpfully also hangs on to exceptions, so we remove
-			# that before calling exc_clear().
-			sys.exc_info()[1].exc_info = ( None, None, None )
+		# create. Our base class has already taken care of clearing
+		# any exceptions which might be inadvertently holding
+		# references to widget instances.
 		
-		sys.exc_clear()
-				
 		widgetInstances = self.__widgetInstances()
 		self.assertEqual( widgetInstances, [] )
 	

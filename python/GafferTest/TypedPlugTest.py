@@ -40,8 +40,9 @@ import unittest
 import IECore
 
 import Gaffer
+import GafferTest
 
-class TypedPlugTest( unittest.TestCase ) :
+class TypedPlugTest( GafferTest.TestCase ) :
 
 	def testConstructor( self ) :
 	

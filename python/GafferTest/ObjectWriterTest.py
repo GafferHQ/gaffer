@@ -41,8 +41,9 @@ import unittest
 import IECore
 
 import Gaffer
+import GafferTest
 
-class ObjectWriterTest( unittest.TestCase ) :
+class ObjectWriterTest( GafferTest.TestCase ) :
 
 	__exrFileName = "/tmp/checker.exr"
 	__tifFileName = "/tmp/checker.tif"

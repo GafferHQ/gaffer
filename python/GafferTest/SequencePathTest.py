@@ -39,8 +39,9 @@ import unittest
 import IECore
 
 import Gaffer
+import GafferTest
 
-class SequencePathTest( unittest.TestCase ) :
+class SequencePathTest( GafferTest.TestCase ) :
 	
 	def __dictPath( self ) :
 	

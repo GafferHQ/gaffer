@@ -39,8 +39,9 @@ import unittest
 import IECore
 
 import Gaffer
+import GafferTest
 
-class GraphComponentPathTest( unittest.TestCase ) :
+class GraphComponentPathTest( GafferTest.TestCase ) :
 
 	def testRelative( self ) :
 	

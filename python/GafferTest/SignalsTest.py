@@ -44,8 +44,9 @@ import gc
 import IECore
 
 import Gaffer
+import GafferTest
 
-class SignalsTest( unittest.TestCase ) :
+class SignalsTest( GafferTest.TestCase ) :
 
 	def test( self ) :
 	

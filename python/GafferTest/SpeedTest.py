@@ -41,7 +41,7 @@ import IECore
 import Gaffer
 import GafferTest
 
-class SpeedTest( unittest.TestCase ) :
+class SpeedTest( GafferTest.TestCase ) :
 
 	# original (r335):
 	#

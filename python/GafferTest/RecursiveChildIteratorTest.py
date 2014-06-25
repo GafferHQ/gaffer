@@ -38,7 +38,7 @@ import unittest
 
 import GafferTest
 
-class RecursiveChildIteratorTest( unittest.TestCase ) :
+class RecursiveChildIteratorTest( GafferTest.TestCase ) :
 
 	def test( self ) :
 	

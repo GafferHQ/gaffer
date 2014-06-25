@@ -39,8 +39,9 @@ import unittest
 import IECore
 
 import Gaffer
+import GafferTest
 
-class DictPathTest( unittest.TestCase ) :
+class DictPathTest( GafferTest.TestCase ) :
 
 	def test( self ) :
 	

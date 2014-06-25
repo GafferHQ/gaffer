@@ -42,8 +42,9 @@ import gc
 import IECore
 
 import Gaffer
+import GafferTest
 
-class StandardSetTest( unittest.TestCase ) :
+class StandardSetTest( GafferTest.TestCase ) :
 
 	def testRunTimeTyped( self ) :
 	

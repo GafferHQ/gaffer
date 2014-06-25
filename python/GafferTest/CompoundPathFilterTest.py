@@ -37,8 +37,9 @@
 import unittest
 
 import Gaffer
+import GafferTest
 
-class CompoundPathFilterTest( unittest.TestCase ) :
+class CompoundPathFilterTest( GafferTest.TestCase ) :
 
 	def test( self ) :
 	

@@ -39,8 +39,9 @@ import unittest
 import IECore
 
 import Gaffer
+import GafferTest
 
-class ParameterPathTest( unittest.TestCase ) :
+class ParameterPathTest( GafferTest.TestCase ) :
 
 	def __parameters( self ) :
 	
