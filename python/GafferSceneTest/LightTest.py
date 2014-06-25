@@ -97,5 +97,13 @@ class LightTest( GafferSceneTest.SceneTestCase ) :
 		self.assertTrue( "out.object" in dirtiedNames )
 		self.assertTrue( "out" in dirtiedNames )
 
+	def testDisabled( self ) :
+	
+		l = GafferSceneTest.TestLight()
+		self.assertTrue( "gaffer:sets" in l["out"]["globals"].getValue() )
+		
+		l["enabled"].setValue( False )
+		self.assertFalse( "gaffer:sets" in l["out"]["globals"].getValue() )
+		
 if __name__ == "__main__":
 	unittest.main()

@@ -56,8 +56,12 @@ void outputOptions( const IECore::CompoundObject *globals, IECore::Renderer *ren
 /// Outputs the camera specified by the globals.
 void outputCamera( const ScenePlug *scene, const IECore::CompoundObject *globals, IECore::Renderer *renderer );
 
-/// Outputs the lights from the scene.
+/// Outputs all the visible lights from the scene.
 void outputLights( const ScenePlug *scene, const IECore::CompoundObject *globals, IECore::Renderer *renderer );
+
+/// Outputs a single light from the scene. Returns true for success, and false if no light was found or if it
+/// was invisible.
+bool outputLight( const ScenePlug *scene, const ScenePlug::ScenePath &path, IECore::Renderer *renderer );
 
 /// Creates the directories necessary to receive the Displays in globals.
 void createDisplayDirectories( const IECore::CompoundObject *globals );

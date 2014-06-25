@@ -105,9 +105,14 @@ class InteractiveRender : public Gaffer::Node
 		void updateShaders();
 		void updateShadersWalk( const ScenePlug::ScenePath &path );
 		
+		void outputLightsInternal( const IECore::CompoundObject *globals, bool editing );
+		
+		typedef std::set<std::string> LightHandles;
+		
 		IECore::RendererPtr m_renderer;
 		ConstScenePlugPtr m_scene;
 		State m_state;
+		LightHandles m_lightHandles;
 		bool m_lightsDirty;
 		bool m_shadersDirty;
 		

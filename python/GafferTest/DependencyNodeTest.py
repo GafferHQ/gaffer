@@ -254,8 +254,8 @@ class DependencyNodeTest( GafferTest.TestCase ) :
 				
 		self.assertEqual( len( cs ), 3 )
 		self.assertTrue( cs[0][0].isSame( a2["op1"] ) )
-		self.assertTrue( cs[1][0].isSame( a2["sum"] ) )
-		self.assertTrue( cs[2][0].isSame( a2["op2"] ) )
+		self.assertTrue( cs[1][0].isSame( a2["op2"] ) )
+		self.assertTrue( cs[2][0].isSame( a2["sum"] ) )
 	
 	def testSettingValueAlsoSignalsDirtiness( self ) :
 	
@@ -300,6 +300,25 @@ class DependencyNodeTest( GafferTest.TestCase ) :
 		
 		for t in threads :
 			t.join()
+	
+	def testParentDirtinessSignalledAfterAllChildren( self ) :
+	
+		n = Gaffer.DependencyNode()
+		n["i"] = Gaffer.FloatPlug()
+		n["o"] = Gaffer.V3fPlug( direction = Gaffer.Plug.Direction.Out )
+		
+		for c in n["o"].children() :
+			c.setInput( n["i"] )
+		
+		cs = GafferTest.CapturingSlot( n.plugDirtiedSignal() )
+		n["i"].setValue( 10 )
+		
+		self.assertEqual( len( cs ), 5 )
+		self.assertTrue( cs[0][0].isSame( n["i"] ) )
+		self.assertTrue( cs[1][0].isSame( n["o"]["x"] ) )
+		self.assertTrue( cs[2][0].isSame( n["o"]["y"] ) )
+		self.assertTrue( cs[3][0].isSame( n["o"]["z"] ) )
+		self.assertTrue( cs[4][0].isSame( n["o"] ) )
 		
 if __name__ == "__main__":
 	unittest.main()

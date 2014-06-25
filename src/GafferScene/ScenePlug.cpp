@@ -371,11 +371,34 @@ void ScenePlug::stringToPath( const std::string &s, ScenePlug::ScenePath &path )
 	}
 }
 
+void ScenePlug::pathToString( const ScenePlug::ScenePath &path, std::string &s )
+{
+	if( !path.size() )
+	{
+		s = "/";
+	}
+	else
+	{
+		s.clear();
+		for( ScenePlug::ScenePath::const_iterator it = path.begin(), eIt = path.end(); it != eIt; it++ )
+		{
+			s += "/" + it->string();
+		}
+	}
+}
+
 std::ostream &operator << ( std::ostream &o, const ScenePlug::ScenePath &path )
 {
-	for( ScenePlug::ScenePath::const_iterator it = path.begin(); it != path.end(); ++it )
+	if( !path.size() )
 	{
-		o << "/" << *it;
+		o << "/";
+	}
+	else
+	{
+		for( ScenePlug::ScenePath::const_iterator it = path.begin(); it != path.end(); ++it )
+		{
+			o << "/" << *it;
+		}
 	}
 	return o;
 }

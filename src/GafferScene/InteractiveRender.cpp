@@ -36,11 +36,15 @@
 
 #include "boost/bind.hpp"
 
+#include "IECore/WorldBlock.h"
+
 #include "Gaffer/Context.h"
 #include "Gaffer/ScriptNode.h"
 
 #include "GafferScene/InteractiveRender.h"
 #include "GafferScene/RendererAlgo.h"
+#include "GafferScene/PathMatcherData.h"
+#include "GafferScene/SceneProcedural.h"
 
 using namespace std;
 using namespace Imath;
@@ -115,7 +119,8 @@ void InteractiveRender::plugDirtied( const Gaffer::Plug *plug )
 {
 	if(
 		plug == inPlug()->transformPlug() ||
-		plug == inPlug()->objectPlug()
+		plug == inPlug()->objectPlug() ||
+		plug == inPlug()->globalsPlug()
 	)
 	{
 		// just store the fact that something needs
@@ -127,6 +132,7 @@ void InteractiveRender::plugDirtied( const Gaffer::Plug *plug )
 	{
 		// as above.
 		m_shadersDirty = true;
+		m_lightsDirty = true;
 	}
 	else if(
 		plug == inPlug() ||
@@ -168,6 +174,7 @@ void InteractiveRender::update()
 		m_renderer = NULL;
 		m_scene = NULL;
 		m_state = Stopped;
+		m_lightHandles.clear();
 		m_shadersDirty = m_lightsDirty = true;
 		if( !requiredScene || requiredState == Stopped )
 		{
@@ -182,7 +189,19 @@ void InteractiveRender::update()
 	{
 		m_renderer = createRenderer();
 		m_renderer->setOption( "editable", new BoolData( true ) );
-		outputScene( requiredScene, m_renderer.get() );
+		
+		ConstCompoundObjectPtr globals = inPlug()->globalsPlug()->getValue();
+		outputOptions( globals, m_renderer );
+		outputCamera( inPlug(), globals, m_renderer );
+		{
+			WorldBlock world( m_renderer );
+		
+			outputLightsInternal( globals, /* editing = */ false );
+
+			SceneProceduralPtr proc = new SceneProcedural( inPlug(), Context::current() );
+			m_renderer->procedural( proc );
+		}
+		
 		m_scene = requiredScene;
 		m_state = Running;
 		m_lightsDirty = m_shadersDirty = false;
@@ -218,13 +237,80 @@ void InteractiveRender::updateLights()
 	{
 		return;
 	}
-	
-	ConstCompoundObjectPtr globals = inPlug()->globalsPlug()->getValue();
-	m_renderer->editBegin( "light", CompoundDataMap() );
-		outputLights( inPlug(), globals, m_renderer );
-	m_renderer->editEnd();
-	
+	IECore::ConstCompoundObjectPtr globals = inPlug()->globalsPlug()->getValue();
+	outputLightsInternal( globals.get(), /* editing = */ true );
 	m_lightsDirty = false;
+}
+
+void InteractiveRender::outputLightsInternal( const IECore::CompoundObject *globals, bool editing )
+{
+	// Get the paths to all the lights
+	const PathMatcherData *lightSet = NULL;
+	if( const CompoundData *sets = globals->member<CompoundData>( "gaffer:sets" ) )
+	{
+		lightSet = sets->member<PathMatcherData>( "__lights" );
+	}
+	
+	std::vector<std::string> lightPaths;
+	if( lightSet )
+	{
+		lightSet->readable().paths( lightPaths );
+	}
+	
+	// Create or update lights in the renderer as necessary
+	
+	for( vector<string>::const_iterator it = lightPaths.begin(), eIt = lightPaths.end(); it != eIt; ++it )
+	{
+		ScenePlug::ScenePath path;
+		ScenePlug::stringToPath( *it, path );
+		
+		if( !editing )
+		{
+			// defining the scene for the first time
+			if( outputLight( inPlug(), path, m_renderer ) )
+			{
+				m_lightHandles.insert( *it );
+			}
+		}
+		else
+		{
+			if( m_lightHandles.find( *it ) != m_lightHandles.end() )
+			{
+				// we've already output this light - update it
+				m_renderer->editBegin( "light", CompoundDataMap() );
+					const bool visible = outputLight( inPlug(), path, m_renderer );
+				m_renderer->editEnd();
+				// we may have turned it off before, and need to turn
+				// it back on, or it may have been hidden and we need
+				// to turn it off.
+				m_renderer->editBegin( "attribute", CompoundDataMap() );
+					m_renderer->illuminate( *it, visible );
+				m_renderer->editEnd();
+			}
+			else
+			{
+				// we've not seen this light before - create a new one
+				m_renderer->editBegin( "attribute", CompoundDataMap() );
+					if( outputLight( inPlug(), path, m_renderer ) )
+					{
+						m_lightHandles.insert( *it );
+					}
+				m_renderer->editEnd();
+			}
+		}
+	}
+	
+	// Turn off any lights we don't want any more
+	
+	for( LightHandles::const_iterator it = m_lightHandles.begin(), eIt = m_lightHandles.end(); it != eIt; ++it )
+	{
+		if( !lightSet || !(lightSet->readable().match( *it ) & Filter::ExactMatch) )
+		{
+			m_renderer->editBegin( "attribute", CompoundDataMap() );
+				m_renderer->illuminate( *it, false );
+			m_renderer->editEnd();
+		}
+	}
 }
 
 void InteractiveRender::updateShaders()
@@ -247,11 +333,8 @@ void InteractiveRender::updateShadersWalk( const ScenePlug::ScenePath &path )
 	ConstObjectVectorPtr shader = attributes->member<ObjectVector>( "shader" );
 	if( shader )
 	{
-		std::string name = "";
-		for( ScenePlug::ScenePath::const_iterator it = path.begin(), eIt = path.end(); it != eIt; it++ )
-		{
-			name += "/" + it->string();
-		}
+		std::string name;
+		ScenePlug::pathToString( path, name );
 		
 		CompoundDataMap parameters;
 		parameters["exactscopename"] = new StringData( name );

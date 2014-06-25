@@ -408,6 +408,254 @@ class InteractiveRenderManRenderTest( unittest.TestCase ) :
 		s.removeChild( r )
 		
 		self.failIf( r.getContext().isSame( s.context() ) )
+
+	def testAddLight( self ) :
+	
+		s = Gaffer.ScriptNode()
 		
+		s["l"] = GafferRenderMan.RenderManLight()
+		s["l"].loadShader( "pointlight" )
+		s["l"]["parameters"]["lightcolor"].setValue( IECore.Color3f( 1, 0, 0 ) )
+		s["l"]["transform"]["translate"]["z"].setValue( 1 )
+		
+		s["p"] = GafferScene.Plane()
+		
+		s["c"] = GafferScene.Camera()
+		s["c"]["transform"]["translate"]["z"].setValue( 1 )
+		
+		s["g"] = GafferScene.Group()
+		s["g"]["in"].setInput( s["l"]["out"] )
+		s["g"]["in1"].setInput( s["p"]["out"] )
+		s["g"]["in2"].setInput( s["c"]["out"] )
+		
+		s["s"] = GafferRenderMan.RenderManShader()
+		s["s"].loadShader( "matte" )
+		s["a"] = GafferScene.ShaderAssignment()
+		s["a"]["in"].setInput( s["g"]["out"] )
+		s["a"]["shader"].setInput( s["s"]["out"] )
+		
+		s["d"] = GafferScene.Displays()
+		s["d"].addDisplay(
+			"beauty",
+			IECore.Display(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"quantize" : IECore.FloatVectorData( [ 0, 0, 0, 0 ] ),
+					"driverType" : "ImageDisplayDriver",
+					"handle" : "myLovelyPlane",
+				}
+			)
+		)
+		s["d"]["in"].setInput( s["a"]["out"] )
+		
+		s["o"] = GafferScene.StandardOptions()
+		s["o"]["options"]["renderCamera"]["value"].setValue( "/group/camera" )
+		s["o"]["options"]["renderCamera"]["enabled"].setValue( True )
+		s["o"]["in"].setInput( s["d"]["out"] )
+		
+		s["r"] = GafferRenderMan.InteractiveRenderManRender()
+		s["r"]["in"].setInput( s["o"]["out"] )
+		
+		# start a render, give it time to finish, and check the output
+		
+		s["r"]["state"].setValue( s["r"].State.Running )
+		
+		time.sleep( 2 )
+		
+		c = self.__colorAtUV(
+			IECore.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
+			IECore.V2f( 0.5 ),
+		)
+		self.assertEqual( c / c[0], IECore.Color3f( 1, 0, 0 ) )
+		
+		# add a light
+		
+		s["l2"] = GafferRenderMan.RenderManLight()
+		s["l2"].loadShader( "pointlight" )
+		s["l2"]["parameters"]["lightcolor"].setValue( IECore.Color3f( 0, 1, 0 ) )
+		s["l2"]["transform"]["translate"]["z"].setValue( 1 )
+		
+		s["g"]["in3"].setInput( s["l2"]["out"] )
+		
+		# give it time to update, and check the output
+		
+		time.sleep( 1 )
+ 		
+		c = self.__colorAtUV(
+			IECore.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
+			IECore.V2f( 0.5 ),
+		)
+		self.assertEqual( c / c[0], IECore.Color3f( 1, 1, 0 ) )
+		
+	def testRemoveLight( self ) :
+	
+		s = Gaffer.ScriptNode()
+		
+		s["l"] = GafferRenderMan.RenderManLight()
+		s["l"].loadShader( "pointlight" )
+		s["l"]["transform"]["translate"]["z"].setValue( 1 )
+		
+		s["p"] = GafferScene.Plane()
+		
+		s["c"] = GafferScene.Camera()
+		s["c"]["transform"]["translate"]["z"].setValue( 1 )
+		
+		s["g"] = GafferScene.Group()
+		s["g"]["in"].setInput( s["l"]["out"] )
+		s["g"]["in1"].setInput( s["p"]["out"] )
+		s["g"]["in2"].setInput( s["c"]["out"] )
+		
+		s["s"] = GafferRenderMan.RenderManShader()
+		s["s"].loadShader( "matte" )
+		s["a"] = GafferScene.ShaderAssignment()
+		s["a"]["in"].setInput( s["g"]["out"] )
+		s["a"]["shader"].setInput( s["s"]["out"] )
+		
+		s["d"] = GafferScene.Displays()
+		s["d"].addDisplay(
+			"beauty",
+			IECore.Display(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"quantize" : IECore.FloatVectorData( [ 0, 0, 0, 0 ] ),
+					"driverType" : "ImageDisplayDriver",
+					"handle" : "myLovelyPlane",
+				}
+			)
+		)
+		s["d"]["in"].setInput( s["a"]["out"] )
+		
+		s["o"] = GafferScene.StandardOptions()
+		s["o"]["options"]["renderCamera"]["value"].setValue( "/group/camera" )
+		s["o"]["options"]["renderCamera"]["enabled"].setValue( True )
+		s["o"]["in"].setInput( s["d"]["out"] )
+		
+		s["r"] = GafferRenderMan.InteractiveRenderManRender()
+		s["r"]["in"].setInput( s["o"]["out"] )
+		
+		# start a render, give it time to finish, and check the output
+		
+		s["r"]["state"].setValue( s["r"].State.Running )
+		
+		time.sleep( 2 )
+		
+		c = self.__colorAtUV(
+			IECore.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
+			IECore.V2f( 0.5 ),
+		)
+		self.assertNotEqual( c[0], 0.0 )
+		
+		# remove the light by disabling it
+		
+		s["l"]["enabled"].setValue( False )
+		time.sleep( 2 )
+ 		
+		c = self.__colorAtUV(
+			IECore.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
+			IECore.V2f( 0.5 ),
+		)
+		self.assertEqual( c[0], 0.0 )
+
+		# enable it again
+		
+		s["l"]["enabled"].setValue( True )
+		time.sleep( 2 )
+ 		
+		c = self.__colorAtUV(
+			IECore.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
+			IECore.V2f( 0.5 ),
+		)
+		self.assertNotEqual( c[0], 0.0 )
+	
+	def testHideLight( self ) :
+	
+		s = Gaffer.ScriptNode()
+		
+		s["l"] = GafferRenderMan.RenderManLight()
+		s["l"].loadShader( "pointlight" )
+		s["l"]["transform"]["translate"]["z"].setValue( 1 )
+		
+		s["v"] = GafferScene.StandardAttributes()
+		s["v"]["attributes"]["visibility"]["enabled"].setValue( True )
+		s["v"]["in"].setInput( s["l"]["out"] )
+		
+		s["p"] = GafferScene.Plane()
+		
+		s["c"] = GafferScene.Camera()
+		s["c"]["transform"]["translate"]["z"].setValue( 1 )
+		
+		s["g"] = GafferScene.Group()
+		s["g"]["in"].setInput( s["v"]["out"] )
+		s["g"]["in1"].setInput( s["p"]["out"] )
+		s["g"]["in2"].setInput( s["c"]["out"] )
+		
+		s["s"] = GafferRenderMan.RenderManShader()
+		s["s"].loadShader( "matte" )
+		s["a"] = GafferScene.ShaderAssignment()
+		s["a"]["in"].setInput( s["g"]["out"] )
+		s["a"]["shader"].setInput( s["s"]["out"] )
+		
+		s["d"] = GafferScene.Displays()
+		s["d"].addDisplay(
+			"beauty",
+			IECore.Display(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"quantize" : IECore.FloatVectorData( [ 0, 0, 0, 0 ] ),
+					"driverType" : "ImageDisplayDriver",
+					"handle" : "myLovelyPlane",
+				}
+			)
+		)
+		s["d"]["in"].setInput( s["a"]["out"] )
+		
+		s["o"] = GafferScene.StandardOptions()
+		s["o"]["options"]["renderCamera"]["value"].setValue( "/group/camera" )
+		s["o"]["options"]["renderCamera"]["enabled"].setValue( True )
+		s["o"]["in"].setInput( s["d"]["out"] )
+		
+		s["r"] = GafferRenderMan.InteractiveRenderManRender()
+		s["r"]["in"].setInput( s["o"]["out"] )
+		
+		# start a render, give it time to finish, and check the output
+		
+		s["r"]["state"].setValue( s["r"].State.Running )
+		
+		time.sleep( 2 )
+		
+		c = self.__colorAtUV(
+			IECore.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
+			IECore.V2f( 0.5 ),
+		)
+		self.assertNotEqual( c[0], 0.0 )
+		
+		# remove the light by hiding it
+		
+		s["v"]["attributes"]["visibility"]["value"].setValue( False )
+		time.sleep( 2 )
+ 		
+		c = self.__colorAtUV(
+			IECore.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
+			IECore.V2f( 0.5 ),
+		)
+		self.assertEqual( c[0], 0.0 )
+		
+		# put the light back by showing it
+		
+		s["v"]["attributes"]["visibility"]["value"].setValue( True )
+		time.sleep( 2 )
+ 		
+		c = self.__colorAtUV(
+			IECore.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
+			IECore.V2f( 0.5 ),
+		)
+		self.assertNotEqual( c[0], 0.0 )
+
 if __name__ == "__main__":
 	unittest.main()
