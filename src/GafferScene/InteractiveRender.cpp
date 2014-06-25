@@ -247,11 +247,8 @@ void InteractiveRender::updateShadersWalk( const ScenePlug::ScenePath &path )
 	ConstObjectVectorPtr shader = attributes->member<ObjectVector>( "shader" );
 	if( shader )
 	{
-		std::string name = "";
-		for( ScenePlug::ScenePath::const_iterator it = path.begin(), eIt = path.end(); it != eIt; it++ )
-		{
-			name += "/" + it->string();
-		}
+		std::string name;
+		ScenePlug::pathToString( path, name );
 		
 		CompoundDataMap parameters;
 		parameters["exactscopename"] = new StringData( name );
