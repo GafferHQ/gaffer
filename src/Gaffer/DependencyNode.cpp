@@ -38,7 +38,7 @@
 #include "tbb/enumerable_thread_specific.h"
 
 #include "boost/multi_index_container.hpp"
-#include "boost/multi_index/random_access_index.hpp"
+#include "boost/multi_index/sequenced_index.hpp"
 #include "boost/multi_index/ordered_index.hpp"
 
 #include "Gaffer/DependencyNode.h"
@@ -95,10 +95,12 @@ const Plug *DependencyNode::correspondingInput( const Plug *output ) const
 typedef boost::multi_index::multi_index_container<
 	Plug *,
 	boost::multi_index::indexed_by<
-		boost::multi_index::ordered_unique<boost::multi_index::identity<Plug *> >,
-		boost::multi_index::random_access<>
+		boost::multi_index::sequenced<>,
+		boost::multi_index::ordered_unique<boost::multi_index::identity<Plug *> >
 	>
 > DirtyPlugsContainer;
+
+typedef DirtyPlugsContainer::iterator DirtyPlugsIterator;
 
 static tbb::enumerable_thread_specific<DirtyPlugsContainer> g_dirtyPlugsContainers;
 		
@@ -136,9 +138,19 @@ void DependencyNode::propagateDirtiness( Plug *plugToDirty )
 	Plug *p = plugToDirty;
 	while( p )
 	{
-		dirtyPlugs.insert( p );
+		// push the plug onto the back of the list of dirty plugs
+		std::pair<DirtyPlugsIterator, bool> i = dirtyPlugs.push_back( p );
+		if( !i.second )
+		{
+			// if that failed, it's because it's elsewhere in the
+			// list already. move it to the back - this ensures that
+			// dirtiness is only signalled for a plug after it has been
+			// signalled for all dirty plugs it depends on, and all dirty
+			// plugs it is a parent of.
+			dirtyPlugs.relocate( dirtyPlugs.end(), i.first );
+		}
 		p = p->parent<Plug>();
-	}	
+	}
 	
 	// we only propagate dirtiness along leaf level plugs, because
 	// they are the only plugs which can be the target of the affects(),
@@ -173,9 +185,9 @@ void DependencyNode::propagateDirtiness( Plug *plugToDirty )
 	
 	if( emit )
 	{
-		for( size_t i = 0, e = dirtyPlugs.size(); i < e; ++i )
+		for( DirtyPlugsIterator it = dirtyPlugs.begin(), eIt = dirtyPlugs.end(); it != eIt; ++it )
 		{
-			Plug *plug = dirtyPlugs.get<1>()[i];
+			Plug *plug = *it;
 			Node *node = plug->node();
 			if( node )
 			{
