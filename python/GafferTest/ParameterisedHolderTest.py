@@ -44,8 +44,9 @@ import datetime
 import IECore
 
 import Gaffer
+import GafferTest
 
-class ParameterisedHolderTest( unittest.TestCase ) :
+class ParameterisedHolderTest( GafferTest.TestCase ) :
 
 	## Different installations of cortex might have different version numbers
 	# for the classes we're trying to load as part of the tests. This function

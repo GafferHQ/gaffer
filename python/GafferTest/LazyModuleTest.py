@@ -39,8 +39,9 @@ import types
 import unittest
 
 import Gaffer
+import GafferTest
 
-class LazyModuleTest( unittest.TestCase ) :
+class LazyModuleTest( GafferTest.TestCase ) :
 
 	def test( self ) :
 		

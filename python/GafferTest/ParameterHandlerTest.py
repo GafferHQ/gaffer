@@ -42,8 +42,9 @@ import unittest
 import IECore
 
 import Gaffer
+import GafferTest
 
-class ParameterHandlerTest( unittest.TestCase ) :
+class ParameterHandlerTest( GafferTest.TestCase ) :
 
 	def testFactory( self ) :
 

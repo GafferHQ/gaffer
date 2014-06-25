@@ -42,7 +42,7 @@ import IECore
 import Gaffer
 import GafferTest
 
-class NumericPlugTest( unittest.TestCase ) :
+class NumericPlugTest( GafferTest.TestCase ) :
 
 	def testConstructor( self ) :
 	

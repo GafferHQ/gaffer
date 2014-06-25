@@ -43,7 +43,7 @@ import IECore
 import Gaffer
 import GafferTest
 
-class UndoTest( unittest.TestCase ) :
+class UndoTest( GafferTest.TestCase ) :
 
 	def testSetName( self ) :
 	

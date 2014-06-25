@@ -53,7 +53,7 @@ class TestOp (IECore.Op) :
 		self.counter += 1
 		return IECore.IntData( self.counter )
 
-class ExecutableOpHolderTest( unittest.TestCase ) :
+class ExecutableOpHolderTest( GafferTest.TestCase ) :
 
 	def testType( self ) :
 	

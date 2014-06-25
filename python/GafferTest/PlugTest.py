@@ -44,7 +44,7 @@ import IECore
 import Gaffer
 import GafferTest
 
-class PlugTest( unittest.TestCase ) :
+class PlugTest( GafferTest.TestCase ) :
 
 	def testParenting( self ) :
 	

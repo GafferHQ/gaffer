@@ -40,7 +40,7 @@ import unittest
 import Gaffer
 import GafferTest
 
-class ExpressionTest( unittest.TestCase ) :
+class ExpressionTest( GafferTest.TestCase ) :
 
 	def test( self ) :
 	

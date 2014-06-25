@@ -41,8 +41,9 @@ import os
 import IECore
 
 import Gaffer
+import GafferTest
 
-class AboutTest( unittest.TestCase ) :
+class AboutTest( GafferTest.TestCase ) :
 
 	def test( self ) :
 	

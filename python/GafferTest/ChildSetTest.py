@@ -37,8 +37,9 @@
 import unittest
 
 import Gaffer
+import GafferTest
 
-class ChildSetTest( unittest.TestCase ) :
+class ChildSetTest( GafferTest.TestCase ) :
 
 	def test( self ) :
 	

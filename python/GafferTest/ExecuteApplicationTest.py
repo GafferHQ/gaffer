@@ -42,7 +42,7 @@ import unittest
 import Gaffer
 import GafferTest
 
-class ExecuteApplicationTest( unittest.TestCase ) :
+class ExecuteApplicationTest( GafferTest.TestCase ) :
 
 	__scriptFileName = "/tmp/executeScript.gfr"
 	__outputFileName = "/tmp/sphere.cob"

@@ -38,8 +38,9 @@ import unittest
 import weakref
 
 import Gaffer
+import GafferTest
 
-class WeakMethodTest( unittest.TestCase ) :
+class WeakMethodTest( GafferTest.TestCase ) :
 
 	def test( self ) :
 	

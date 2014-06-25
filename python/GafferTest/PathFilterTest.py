@@ -41,8 +41,9 @@ import glob
 import IECore
 
 import Gaffer
+import GafferTest
 
-class PathFilterTest( unittest.TestCase ) :
+class PathFilterTest( GafferTest.TestCase ) :
 
 	def test( self ) :
 	

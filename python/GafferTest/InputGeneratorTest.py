@@ -42,7 +42,7 @@ import IECore
 import Gaffer
 import GafferTest
 
-class InputGeneratorTest( unittest.TestCase ) :
+class InputGeneratorTest( GafferTest.TestCase ) :
 		
 	def test( self ) :
 

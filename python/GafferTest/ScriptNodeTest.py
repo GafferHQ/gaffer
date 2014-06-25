@@ -47,7 +47,7 @@ import IECore
 import Gaffer
 import GafferTest
 
-class ScriptNodeTest( unittest.TestCase ) :
+class ScriptNodeTest( GafferTest.TestCase ) :
 
 	def setUp( self ) :
 	

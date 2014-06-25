@@ -40,8 +40,9 @@ import unittest
 import IECore
 
 import Gaffer
+import GafferTest
 
-class SplinePlugTest( unittest.TestCase ) :
+class SplinePlugTest( GafferTest.TestCase ) :
 
 	def testConstructor( self ) :
 	

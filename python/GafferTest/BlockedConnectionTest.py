@@ -37,8 +37,9 @@
 import unittest
 
 import Gaffer
+import GafferTest
 
-class BlockedConnectionTest( unittest.TestCase ) :
+class BlockedConnectionTest( GafferTest.TestCase ) :
 
 	def test( self ) :
 	

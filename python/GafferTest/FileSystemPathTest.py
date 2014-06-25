@@ -44,8 +44,9 @@ import os
 import IECore
 
 import Gaffer
+import GafferTest
 
-class FileSystemPathTest( unittest.TestCase ) :
+class FileSystemPathTest( GafferTest.TestCase ) :
 
 	__dir = "/tmp/gafferFileSystemPathTest"
 	

@@ -39,8 +39,9 @@ import unittest
 import IECore
 
 import Gaffer
+import GafferTest
 
-class BoxPlugTest( unittest.TestCase ) :
+class BoxPlugTest( GafferTest.TestCase ) :
 
 	def testRunTimeTyped( self ) :
 	

@@ -40,8 +40,9 @@ import threading
 import time
 
 import Gaffer
+import GafferTest
 
-class OutputRedirectionTest( unittest.TestCase ) :
+class OutputRedirectionTest( GafferTest.TestCase ) :
 
 	def testRedirection( self ) :
 	

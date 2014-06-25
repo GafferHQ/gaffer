@@ -39,8 +39,9 @@ import unittest
 
 import IECore
 import Gaffer
+import GafferTest
 
-class ApplicationRootTest( unittest.TestCase ) :
+class ApplicationRootTest( GafferTest.TestCase ) :
 
 	__defaultPreferencesFile = os.path.expanduser( "~/gaffer/startup/testApp/preferences.py" )
 	__preferencesFile = "/tmp/testPreferences.py"

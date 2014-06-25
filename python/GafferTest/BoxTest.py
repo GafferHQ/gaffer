@@ -41,7 +41,7 @@ import IECore
 import Gaffer
 import GafferTest
 
-class BoxTest( unittest.TestCase ) :
+class BoxTest( GafferTest.TestCase ) :
 		
 	def testSerialisation( self ) :
 	

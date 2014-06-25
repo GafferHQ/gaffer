@@ -40,8 +40,9 @@ import unittest
 import IECore
 
 import Gaffer
+import GafferTest
 
-class ClassLoaderPathTest( unittest.TestCase ) :
+class ClassLoaderPathTest( GafferTest.TestCase ) :
 
 	def test( self ) :
 		

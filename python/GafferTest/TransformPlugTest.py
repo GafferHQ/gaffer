@@ -39,8 +39,9 @@ import unittest
 
 import IECore
 import Gaffer
+import GafferTest
 
-class TransformPlugTest( unittest.TestCase ) :
+class TransformPlugTest( GafferTest.TestCase ) :
 
 	def testMatrix( self ) :
 	

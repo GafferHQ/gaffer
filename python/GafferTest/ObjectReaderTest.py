@@ -43,7 +43,7 @@ import IECore
 import Gaffer
 import GafferTest
 
-class ObjectReaderTest( unittest.TestCase ) :
+class ObjectReaderTest( GafferTest.TestCase ) :
 
 	def test( self ) :
 	

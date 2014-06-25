@@ -40,7 +40,7 @@ import unittest
 import Gaffer
 import GafferTest
 
-class NodeBindingTest( unittest.TestCase ) :
+class NodeBindingTest( GafferTest.TestCase ) :
 
 	def testConstruction( self ) :
 	

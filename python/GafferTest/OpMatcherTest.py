@@ -42,7 +42,7 @@ import IECore
 import Gaffer
 import GafferTest
 
-class OpMatcherTest( unittest.TestCase ) :
+class OpMatcherTest( GafferTest.TestCase ) :
 
 	__sequence = IECore.FileSequence( "/tmp/a.#.exr 1-10" )
 
