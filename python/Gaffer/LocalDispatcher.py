@@ -72,12 +72,10 @@ class LocalDispatcher( Gaffer.Dispatcher ) :
 			IECore.msg( IECore.MessageHandler.Level.Error, self.getName(), "Can only dispatch nodes which are part of a script." )
 			return
 		
-		context = Gaffer.Context() if script is None else script.context()
-		
-		with context :
-			scriptFileName = script["fileName"].getValue()
-			jobName = context.substitute( self["jobName"].getValue() )
-			jobDirectory = self.jobDirectory( context )
+		context = script.context()
+		scriptFileName = script["fileName"].getValue()
+		jobName = context.substitute( self["jobName"].getValue() )
+		jobDirectory = self.jobDirectory( context )
 		
 		messageContext = "%s : Job %s %s" % ( self.getName(), jobName, os.path.basename( jobDirectory ) )
 		tmpScript = os.path.join( jobDirectory, os.path.basename( scriptFileName ) if scriptFileName else "untitled.gfr" )
@@ -98,9 +96,9 @@ class LocalDispatcher( Gaffer.Dispatcher ) :
 				"-context",
 			]
 			
-			for entry in context.keys() :
+			for entry in task.context.keys() :
 				if entry != "frame" :
-					cmd.extend( [ "-" + entry, repr(context[entry]) ] )
+					cmd.extend( [ "-" + entry, repr(task.context[entry]) ] )
 			
 			IECore.msg( IECore.MessageHandler.Level.Info, messageContext, " ".join( cmd ) )
 			result = subprocess.call( cmd )

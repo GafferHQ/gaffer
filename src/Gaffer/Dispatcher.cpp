@@ -100,7 +100,6 @@ const StringPlug *Dispatcher::jobDirectoryPlug() const
 
 const std::string Dispatcher::jobDirectory( const Context *context ) const
 {
-	Context::Scope scope( context );
 	std::string jobDir = context->substitute( jobDirectoryPlug()->getValue() );
 	
 	boost::filesystem::path path( jobDir );
