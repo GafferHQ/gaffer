@@ -137,7 +137,7 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 	def testContextVariation( self ) :
 		
 		s = Gaffer.ScriptNode()
-		context = s.context()
+		context = Gaffer.Context( s.context() )
 		context["script:name"] = "notTheRealScriptName"
 		context["textWriter:replace"] = IECore.StringVectorData( [ " ", "\n" ] )
 		
@@ -148,7 +148,8 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		fileName = context.substitute( s["n1"]["fileName"].getValue() )
 		self.assertFalse( os.path.isfile( fileName ) )
 		
-		Gaffer.Dispatcher.dispatcher( "local" ).dispatch( [ s["n1"] ] )
+		with context :
+			Gaffer.Dispatcher.dispatcher( "local" ).dispatch( [ s["n1"] ] )
 		
 		self.assertTrue( os.path.isfile( fileName ) )
 		self.assertTrue( os.path.basename( fileName ).startswith( context["script:name"] ) )

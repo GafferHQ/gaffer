@@ -72,7 +72,7 @@ class LocalDispatcher( Gaffer.Dispatcher ) :
 			IECore.msg( IECore.MessageHandler.Level.Error, self.getName(), "Can only dispatch nodes which are part of a script." )
 			return
 		
-		context = script.context()
+		context = Gaffer.Context.current()
 		scriptFileName = script["fileName"].getValue()
 		jobName = context.substitute( self["jobName"].getValue() )
 		jobDirectory = self.jobDirectory( context )
@@ -93,12 +93,15 @@ class LocalDispatcher( Gaffer.Dispatcher ) :
 				"-script", tmpScript,
 				"-nodes", task.node.relativeName( script ),
 				"-frames", frames,
-				"-context",
 			]
 			
+			contextArgs = []
 			for entry in task.context.keys() :
-				if entry != "frame" :
-					cmd.extend( [ "-" + entry, repr(task.context[entry]) ] )
+				if entry != "frame" and ( entry not in script.context().keys() or task.context[entry] != script.context()[entry] ) :
+					contextArgs.extend( [ "-" + entry, repr(task.context[entry]) ] )
+			
+			if contextArgs :
+				cmd.extend( [ "-context" ] + contextArgs )
 			
 			IECore.msg( IECore.MessageHandler.Level.Info, messageContext, " ".join( cmd ) )
 			result = subprocess.call( cmd )
