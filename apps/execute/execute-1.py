@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011-2012, John Haddon. All rights reserved.
+#  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -72,6 +73,18 @@ class execute( Gaffer.Application ) :
 					allowEmptyList = False,
 				),
 				
+				IECore.StringVectorParameter(
+					name = "context",
+					description = "The context used during execution. Note that the frames "
+						"parameter will be used to vary the context frame entry.",
+					defaultValue = IECore.StringVectorData( [] ),
+					userData = {
+						"parser" : {
+							"acceptFlags" : IECore.BoolData( True ),
+						},
+					},
+				),
+				
 			]
 			
 		)
@@ -108,7 +121,15 @@ class execute( Gaffer.Application ) :
 				IECore.msg( IECore.Msg.Level.Error, "gaffer execute", "Script has no executable nodes" )
 				return 1
 		
+		if len(args["context"]) % 2 :
+			IECore.msg( IECore.Msg.Level.Error, "gaffer execute", "Context parameter must have matching entry/value pairs" )
+			return 1
+		
 		context = Gaffer.Context( scriptNode.context() )
+		for i in range( 0, len(args["context"]), 2 ) :
+			entry = args["context"][i].lstrip( "-" )
+			context[entry] = eval( args["context"][i+1] )
+		
 		for frame in self.parameters()["frames"].getFrameListValue().asList() :
 			context.setFrame( frame )
 			for node in nodes :
