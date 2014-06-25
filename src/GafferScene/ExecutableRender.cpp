@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2013-2014, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -88,12 +88,7 @@ void ExecutableRender::execute( const Contexts &contexts ) const
 	{
 		throw IECore::Exception( "No input scene" );
 	}
-
-	/// \todo This doesn't belong here. It'll be the responsibility of the Dispatchers
-	/// to save the script if necessary, and to save it to an alternate location than
-	/// the current one.
-	scriptNode()->save();
-
+	
 	for( Contexts::const_iterator it = contexts.begin(), eIt = contexts.end(); it != eIt; it++ )
 	{
 		Context::Scope scopedContext( it->get() );

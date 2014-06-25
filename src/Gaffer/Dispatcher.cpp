@@ -34,13 +34,17 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
+#include "boost/filesystem.hpp"
+
 #include "Gaffer/CompoundPlug.h"
 #include "Gaffer/Context.h"
 #include "Gaffer/Dispatcher.h"
+#include "Gaffer/ScriptNode.h"
 
 using namespace IECore;
 using namespace Gaffer;
 
+size_t Dispatcher::g_firstPlugIndex = 0;
 Dispatcher::DispatcherMap Dispatcher::g_dispatchers;
 Dispatcher::DispatchSignal Dispatcher::g_preDispatchSignal;
 Dispatcher::DispatchSignal Dispatcher::g_postDispatchSignal;
@@ -50,6 +54,10 @@ IE_CORE_DEFINERUNTIMETYPED( Dispatcher )
 Dispatcher::Dispatcher( const std::string &name )
 	: Node( name )
 {
+	storeIndexOfNextChild( g_firstPlugIndex );
+	
+	addChild( new StringPlug( "jobName", Plug::In, "", Plug::Default & ~Plug::Serialisable ) );
+	addChild( new StringPlug( "jobDirectory", Plug::In, "", Plug::Default & ~Plug::Serialisable ) );
 }
 
 Dispatcher::~Dispatcher()
@@ -58,11 +66,51 @@ Dispatcher::~Dispatcher()
 
 void Dispatcher::dispatch( const std::vector<ExecutableNodePtr> &nodes ) const
 {
+	if ( nodes.empty() )
+	{
+		throw IECore::Exception( getName().string() + ": Must specify at least one node to dispatch." );
+	}
+	
 	preDispatchSignal()( this, nodes );
-
+	
 	doDispatch( nodes );
-
+	
 	postDispatchSignal()( this, nodes );
+}
+
+StringPlug *Dispatcher::jobNamePlug()
+{
+	return getChild<StringPlug>( g_firstPlugIndex );
+}
+
+const StringPlug *Dispatcher::jobNamePlug() const
+{
+	return getChild<StringPlug>( g_firstPlugIndex );
+}
+
+StringPlug *Dispatcher::jobDirectoryPlug()
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 1 );
+}
+
+const StringPlug *Dispatcher::jobDirectoryPlug() const
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 1 );
+}
+
+const std::string Dispatcher::jobDirectory( const Context *context ) const
+{
+	std::string jobDir = context->substitute( jobDirectoryPlug()->getValue() );
+	
+	boost::filesystem::path path( jobDir );
+	path /= context->substitute( jobNamePlug()->getValue() );
+	if ( path == "" )
+	{
+		return boost::filesystem::current_path().string();
+	}
+	
+	boost::filesystem::create_directories( path );
+	return path.string();
 }
 
 /*

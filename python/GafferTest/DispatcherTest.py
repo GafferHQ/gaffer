@@ -56,7 +56,7 @@ class TestOp (IECore.Op) :
 		self.executionOrder.append( self )
 		return IECore.IntData( self.counter )
 
-class DispatcherTest( unittest.TestCase ) :
+class DispatcherTest( GafferTest.TestCase ) :
 
 	class MyDispatcher( Gaffer.Dispatcher ) :
 
@@ -101,17 +101,6 @@ class DispatcherTest( unittest.TestCase ) :
 
 		self.assertEqual( op1.counter, 1 )
 
-	def testLocalDispatcher( self ) :
-
-		log = list()
-		op1 = TestOp("1", log)
-		n1 = Gaffer.ExecutableOpHolder()
-		n1.setParameterised( op1 )
-
-		Gaffer.Dispatcher.dispatcher('local').dispatch( [ n1 ] )
-
-		self.assertEqual( op1.counter, 1 )
-
 	def testDispatcherRegistration( self ) :
 
 		self.failUnless( "testDispatcher" in Gaffer.Dispatcher.dispatcherNames() )
@@ -139,7 +128,7 @@ class DispatcherTest( unittest.TestCase ) :
 		op1 = TestOp("1", log)
 		n1 = Gaffer.ExecutableOpHolder()
 		n1.setParameterised( op1 )
-		dispatcher = Gaffer.Dispatcher.dispatcher('local')
+		dispatcher = DispatcherTest.MyDispatcher()
 		dispatcher.dispatch( [ n1 ] )
 		
 		self.assertEqual( len( preCs ), 1 )
