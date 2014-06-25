@@ -159,47 +159,58 @@ void outputLights( const ScenePlug *scene, const IECore::CompoundObject *globals
 	lightSet->readable().paths( paths );
 	for( vector<string>::const_iterator it = paths.begin(), eIt = paths.end(); it != eIt; ++it )
 	{
+		/// \todo We should be able to get paths out of the PathMatcher in
+		/// the first place, rather than have to convert from strings.
 		ScenePlug::ScenePath path;
 		ScenePlug::stringToPath( *it, path );
-		
-		IECore::ConstLightPtr constLight = runTimeCast<const IECore::Light>( scene->object( path ) );
-		if( !constLight )
-		{
-			continue;
-		}
-		
-		ConstCompoundObjectPtr attributes = scene->fullAttributes( path );
-		const BoolData *visibilityData = attributes->member<BoolData>( "scene:visible" );
-		if( visibilityData && !visibilityData->readable() )
-		{
-			continue;
-		}
-		
-		M44f transform = scene->fullTransform( path );
-		
-		LightPtr light = constLight->copy();
-		light->setHandle( *it );
-		
-		{
-			AttributeBlock attributeBlock( renderer );
-		
-			renderer->setAttribute( "name", new StringData( *it ) );
-		
-			CompoundObject::ObjectMap::const_iterator aIt, aeIt;
-			for( aIt = attributes->members().begin(), aeIt = attributes->members().end(); aIt != aeIt; aIt++ )
-			{
-				if( const Data *attribute = runTimeCast<const Data>( aIt->second.get() ) )
-				{
-					renderer->setAttribute( aIt->first.string(), attribute );
-				}
-			}
-		
-			renderer->concatTransform( transform );
-			light->render( renderer );
-		}
-		
-		renderer->illuminate( light->getHandle(), true );
+		outputLight( scene, path, renderer );
 	}
+}
+
+bool outputLight( const ScenePlug *scene, const ScenePlug::ScenePath &path, IECore::Renderer *renderer )
+{
+	IECore::ConstLightPtr constLight = runTimeCast<const IECore::Light>( scene->object( path ) );
+	if( !constLight )
+	{
+		return false;
+	}
+	
+	ConstCompoundObjectPtr attributes = scene->fullAttributes( path );
+	const BoolData *visibilityData = attributes->member<BoolData>( "scene:visible" );
+	if( visibilityData && !visibilityData->readable() )
+	{
+		return false;
+	}
+	
+	M44f transform = scene->fullTransform( path );
+	
+	std::string lightHandle;
+	ScenePlug::pathToString( path, lightHandle );
+	
+	LightPtr light = constLight->copy();
+	light->setHandle( lightHandle );
+	
+	{
+		AttributeBlock attributeBlock( renderer );
+	
+		renderer->setAttribute( "name", new StringData( lightHandle ) );
+	
+		CompoundObject::ObjectMap::const_iterator aIt, aeIt;
+		for( aIt = attributes->members().begin(), aeIt = attributes->members().end(); aIt != aeIt; aIt++ )
+		{
+			if( const Data *attribute = runTimeCast<const Data>( aIt->second.get() ) )
+			{
+				renderer->setAttribute( aIt->first.string(), attribute );
+			}
+		}
+	
+		renderer->concatTransform( transform );
+		light->render( renderer );
+	}
+	
+	renderer->illuminate( lightHandle, true );
+
+	return true;
 }
 
 void createDisplayDirectories( const IECore::CompoundObject *globals )
