@@ -79,19 +79,26 @@ class DispatcherWrapper : public NodeWrapper<Dispatcher>
 			Dispatcher::dispatch( nodes );
 		}
 
-		void doDispatch( const std::vector<ExecutableNodePtr> &nodes ) const
+		void doDispatch( const TaskDescriptions &taskDescriptions ) const
 		{
 			ScopedGILLock gilLock;
-			list nodeList;
-			for ( std::vector<ExecutableNodePtr>::const_iterator nIt = nodes.begin(); nIt != nodes.end(); nIt++ )
+			
+			list taskList;
+			for ( TaskDescriptions::const_iterator tIt = taskDescriptions.begin(); tIt != taskDescriptions.end(); ++tIt )
 			{
-				nodeList.append( *nIt );
+				list requirements;
+				for ( std::set<ExecutableNode::Task>::const_iterator rIt = tIt->requirements.begin(); rIt != tIt->requirements.end(); ++rIt )
+				{
+					requirements.append( *rIt );
+				}
+				
+				taskList.append( make_tuple( tIt->task, requirements ) );
 			}
 			
 			boost::python::object f = this->methodOverride( "_doDispatch" );
 			if( f )
 			{
-				f( nodeList );
+				f( taskList );
 			}
 			else
 			{

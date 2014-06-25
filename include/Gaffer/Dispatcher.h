@@ -113,10 +113,19 @@ class Dispatcher : public Node
 
 		friend class ExecutableNode;
 
-		/// Derived classes should implement doDispatch to dispatch the execution of the given
-		/// ExecutableNodes, taking care to respect each set of ExecutableNode requirements,
+		/// Representation of a Task and its requirements.
+		struct TaskDescription 
+		{
+			ExecutableNode::Task task;
+			std::set<ExecutableNode::Task> requirements;
+		};
+		
+		typedef std::vector< Dispatcher::TaskDescription > TaskDescriptions;
+		
+		/// Derived classes should implement doDispatch to dispatch the execution of
+		/// the given TaskDescriptions, taking care to respect each set of requirements,
 		/// executing required Tasks as well when necessary.
-		virtual void doDispatch( const std::vector<ExecutableNodePtr> &nodes ) const = 0;
+		virtual void doDispatch( const TaskDescriptions &taskDescriptions ) const = 0;
 		
 		//! @name ExecutableNode Customization
 		/// Dispatchers are able to create custom plugs on ExecutableNodes when they are constructed.
@@ -136,15 +145,6 @@ class Dispatcher : public Node
 		/// before all Dispatchers have been registered could result in lost settings.
 		virtual void doSetupPlugs( CompoundPlug *parentPlug ) const = 0;
 		//@}
-		
-		/// Representation of a Task and its requirements.
-		struct TaskDescription 
-		{
-			ExecutableNode::Task task;
-			std::set<ExecutableNode::Task> requirements;
-		};
-		
-		typedef std::vector< Dispatcher::TaskDescription > TaskDescriptions;
 		
 		/// Utility function that recursively collects all nodes and their execution requirements,
 		/// flattening them into a list of unique TaskDescriptions. For nodes that return a default

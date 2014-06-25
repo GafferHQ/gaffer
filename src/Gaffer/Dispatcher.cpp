@@ -73,7 +73,22 @@ void Dispatcher::dispatch( const std::vector<ExecutableNodePtr> &nodes ) const
 	
 	preDispatchSignal()( this, nodes );
 	
-	doDispatch( nodes );
+	const Context *context = Context::current();
+	
+	size_t i = 0;
+	ExecutableNode::Tasks tasks( nodes.size(), ExecutableNode::Task( NULL, new Context( *context, Context::Borrowed ) ) );
+	for ( std::vector<ExecutableNodePtr>::const_iterator nIt = nodes.begin(); nIt != nodes.end(); ++nIt, ++i )
+	{
+		tasks[i].node = *nIt;
+	}
+	
+	TaskDescriptions taskDescriptions;
+	uniqueTasks( tasks, taskDescriptions );
+	
+	if ( !taskDescriptions.empty() )
+	{
+		doDispatch( taskDescriptions );
+	}
 	
 	postDispatchSignal()( this, nodes );
 }

@@ -65,9 +65,9 @@ class LocalDispatcher( Gaffer.Dispatcher ) :
 		
 		return result
 	
-	def _doDispatch( self, nodes ) :
+	def _doDispatch( self, taskDescriptions ) :
 		
-		script = nodes[0].scriptNode()
+		script = taskDescriptions[0][0].node.scriptNode()
 		if script is None :
 			IECore.msg( IECore.MessageHandler.Level.Error, self.getName(), "Can only dispatch nodes which are part of a script." )
 			return
@@ -81,10 +81,7 @@ class LocalDispatcher( Gaffer.Dispatcher ) :
 		tmpScript = os.path.join( jobDirectory, os.path.basename( scriptFileName ) if scriptFileName else "untitled.gfr" )
 		script.serialiseToFile( tmpScript )
 		
-		taskList = map( lambda node: Gaffer.ExecutableNode.Task( node, context ), nodes )
-		allTasksAndRequirements = Gaffer.Dispatcher._uniqueTasks( taskList )
-		
-		for ( task, requirements ) in allTasksAndRequirements :
+		for ( task, requirements ) in taskDescriptions :
 			
 			frames = str(int(task.context.getFrame()))
 			

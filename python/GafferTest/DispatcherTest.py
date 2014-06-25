@@ -65,14 +65,10 @@ class DispatcherTest( GafferTest.TestCase ) :
 			Gaffer.Dispatcher.__init__( self )
 			self.log = list()
 
-		def _doDispatch( self, nodes ) :
+		def _doDispatch( self, taskDescriptions ) :
 
-			c = Gaffer.Context()
-			c['time'] = 1.0
-			taskList = map( lambda n: Gaffer.ExecutableNode.Task(n,c), nodes )
-			allTasksAndRequirements = Gaffer.Dispatcher._uniqueTasks( taskList )
 			del self.log[:]
-			for (task,requirements) in allTasksAndRequirements :
+			for (task,requirements) in taskDescriptions :
 				task.node.execute( [ task.context ] )
 
 		def _doSetupPlugs( self, parentPlug ) :
