@@ -195,7 +195,49 @@ class ImageWriterTest( unittest.TestCase ) :
 			i.blindData().clear()
 
 			self.assertEqual( i.displayWindow, format.getDisplayWindow() )
-
+	
+	def testExecutionHash( self ) :
+		
+		c = Gaffer.Context()
+		c.setFrame( 1 )
+		c2 = Gaffer.Context()
+		c2.setFrame( 2 )
+		
+		writer = GafferImage.ImageWriter()
+		
+		# empty file produces no effect
+		self.assertEqual( writer["fileName"].getValue(), "" )
+		self.assertEqual( writer.executionHash( c ), IECore.MurmurHash() )
+		
+		# no input image produces no effect
+		writer["fileName"].setValue( "/tmp/test.exr" )
+		self.assertEqual( writer.executionHash( c ), IECore.MurmurHash() )
+		
+		# now theres a file and an image, we get some output
+		constant = GafferImage.Constant()
+		writer["in"].setInput( constant["out"] )
+		self.assertNotEqual( writer.executionHash( c ), IECore.MurmurHash() )
+		
+		# output doesn't vary by time yet
+		self.assertEqual( writer.executionHash( c ), writer.executionHash( c2 ) )
+		
+		# now it does vary
+		writer["fileName"].setValue( "/tmp/test.#.exr" )
+		self.assertNotEqual( writer.executionHash( c ), writer.executionHash( c2 ) )
+		
+		# also varies by input image
+		current = writer.executionHash( c )
+		constant['format'].setValue( GafferImage.Format( IECore.Box2i( IECore.V2i( -5 ), IECore.V2i( 5 ) ), 1. ) )
+		self.assertNotEqual( writer.executionHash( c ), current )
+		
+		# other plugs matter too
+		current = writer.executionHash( c )
+		writer["writeMode"].setValue( 1 ) # tile mode
+		self.assertNotEqual( writer.executionHash( c ), current )
+		current = writer.executionHash( c )
+		writer["channels"].setValue( IECore.StringVectorData( [ "R" ] ) )
+		self.assertNotEqual( writer.executionHash( c ), current )
+	
 	def tearDown( self ) :
 	
 		files = [
