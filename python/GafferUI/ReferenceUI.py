@@ -54,12 +54,11 @@ def nodeMenuCreateCommand( menu ) :
 
 	nodeGraph = menu.ancestor( GafferUI.NodeGraph )
 	assert( nodeGraph is not None )
-	graphGadget = nodeGraph.graphGadgetWidget().getViewportGadget().getChild()
 	
 	fileName = _waitForFileName( parentWindow = menu.ancestor( GafferUI.Window ) )
 
 	node = Gaffer.Reference()
-	graphGadget.getRoot().addChild( node )
+	nodeGraph.graphGadget().getRoot().addChild( node )
 	
 	if fileName :
 		node.load( fileName )
