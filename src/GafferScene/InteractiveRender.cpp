@@ -57,13 +57,14 @@ IE_CORE_DEFINERUNTIMETYPED( InteractiveRender );
 size_t InteractiveRender::g_firstPlugIndex = 0;
 
 InteractiveRender::InteractiveRender( const std::string &name )
-	:	Node( name ), m_lightsDirty( true ), m_shadersDirty( true )
+	:	Node( name ), m_lightsDirty( true ), m_shadersDirty( true ), m_cameraDirty( true )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new ScenePlug( "in" ) );
 	addChild( new IntPlug( "state", Plug::In, Stopped, Stopped, Paused, Plug::Default & ~Plug::Serialisable ) );
 	addChild( new BoolPlug( "updateLights", Plug::In, true ) );
 	addChild( new BoolPlug( "updateShaders", Plug::In, true ) );
+	addChild( new BoolPlug( "updateCamera", Plug::In, true ) );
 
 	plugDirtiedSignal().connect( boost::bind( &InteractiveRender::plugDirtied, this, ::_1 ) );
 	parentChangedSignal().connect( boost::bind( &InteractiveRender::parentChanged, this, ::_1, ::_2 ) );
@@ -115,6 +116,16 @@ const Gaffer::BoolPlug *InteractiveRender::updateShadersPlug() const
 	return getChild<BoolPlug>( g_firstPlugIndex + 3 );
 }
 
+Gaffer::BoolPlug *InteractiveRender::updateCameraPlug()
+{
+	return getChild<BoolPlug>( g_firstPlugIndex + 4 );
+}
+
+const Gaffer::BoolPlug *InteractiveRender::updateCameraPlug() const
+{
+	return getChild<BoolPlug>( g_firstPlugIndex + 4 );
+}
+
 void InteractiveRender::plugDirtied( const Gaffer::Plug *plug )
 {
 	if(
@@ -127,6 +138,7 @@ void InteractiveRender::plugDirtied( const Gaffer::Plug *plug )
 		// updating. we'll do the actual update when
 		// the dirty signal is emitted for the parent plug.
 		m_lightsDirty = true;
+		m_cameraDirty = true;
 	}
 	else if( plug == inPlug()->attributesPlug() )
 	{
@@ -138,6 +150,7 @@ void InteractiveRender::plugDirtied( const Gaffer::Plug *plug )
 		plug == inPlug() ||
 		plug == updateLightsPlug() ||
 		plug == updateShadersPlug() ||
+		plug == updateCameraPlug() ||
 		plug == statePlug()
 	)
 	{
@@ -175,7 +188,7 @@ void InteractiveRender::update()
 		m_scene = NULL;
 		m_state = Stopped;
 		m_lightHandles.clear();
-		m_shadersDirty = m_lightsDirty = true;
+		m_shadersDirty = m_lightsDirty = m_cameraDirty = true;
 		if( !requiredScene || requiredState == Stopped )
 		{
 			return;
@@ -204,7 +217,7 @@ void InteractiveRender::update()
 		
 		m_scene = requiredScene;
 		m_state = Running;
-		m_lightsDirty = m_shadersDirty = false;
+		m_lightsDirty = m_shadersDirty = m_cameraDirty = false;
 	}
 	
 	// Make sure the paused/running state is as we want.
@@ -228,6 +241,7 @@ void InteractiveRender::update()
 	{
 		updateLights();
 		updateShaders();
+		updateCamera();
 	}
 }
 
@@ -360,6 +374,19 @@ void InteractiveRender::updateShadersWalk( const ScenePlug::ScenePath &path )
 		childPath[path.size()] = *it;
 		updateShadersWalk( childPath );
 	}
+}
+
+void InteractiveRender::updateCamera()
+{
+	if( !m_cameraDirty || !updateCameraPlug()->getValue() )
+	{
+		return;
+	}
+	IECore::ConstCompoundObjectPtr globals = inPlug()->globalsPlug()->getValue();
+	m_renderer->editBegin( "option", CompoundDataMap() );
+		outputCamera( inPlug(), globals.get(), m_renderer );
+	m_renderer->editEnd();
+	m_cameraDirty = false;
 }
 
 Gaffer::Context *InteractiveRender::getContext()
