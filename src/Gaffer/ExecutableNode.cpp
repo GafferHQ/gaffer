@@ -46,47 +46,42 @@ using namespace Gaffer;
 // Task implementation
 //////////////////////////////////////////////////////////////////////////
 
-ExecutableNode::Task::Task() : node(0), context(0)
+ExecutableNode::Task::Task() : m_node( 0 ), m_context( 0 ), m_hash()
 {
 }
 
-ExecutableNode::Task::Task( const Task &t ) : node(t.node), context(t.context)
+ExecutableNode::Task::Task( const Task &t ) : m_node( t.m_node ), m_context( t.m_context ), m_hash( t.m_hash )
 {
 }
 
-ExecutableNode::Task::Task( ExecutableNodePtr n, ContextPtr c ) : node(n), context(c)
+ExecutableNode::Task::Task( ExecutableNodePtr n, ContextPtr c ) : m_node( n ), m_context( c )
 {
+	m_hash = m_node->executionHash( m_context );
 }
 
-MurmurHash ExecutableNode::Task::hash() const
+const ExecutableNode *ExecutableNode::Task::node() const
 {
-	MurmurHash h;
-	const Node *nodePtr = node.get();
-	h.append( (const char *)nodePtr, sizeof(Node*) );
-	h.append( context->hash() );
-	return h;
+	return m_node;
+}
+
+const Context *ExecutableNode::Task::context() const
+{
+	return m_context;
+}
+
+const MurmurHash ExecutableNode::Task::hash() const
+{
+	return m_hash;
 }
 
 bool ExecutableNode::Task::operator == ( const Task &rhs ) const
 {
-	return (node.get() == rhs.node.get()) && (*context == *rhs.context);
+	return ( m_hash == rhs.m_hash );
 }
 
 bool ExecutableNode::Task::operator < ( const Task &rhs ) const
 {
-	if ( node.get() < rhs.node.get() )
-	{
-		return -1;
-	}
-	if ( node.get() > rhs.node.get() )
-	{
-		return 1;
-	}
-	if ( *context == *rhs.context )
-	{
-		return 0;
-	}
-	return ( context.get() < rhs.context.get() ? -1 : 1 );
+	return ( m_hash < rhs.m_hash );
 }
 
 //////////////////////////////////////////////////////////////////////////

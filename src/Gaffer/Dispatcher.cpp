@@ -101,8 +101,9 @@ void Dispatcher::dispatch( const std::vector<ExecutableNodePtr> &nodes ) const
 	{
 		for ( std::vector<ExecutableNodePtr>::const_iterator nIt = nodes.begin(); nIt != nodes.end(); ++nIt, ++i )
 		{
-			tasks.push_back( ExecutableNode::Task( *nIt, new Context( *context, Context::Borrowed ) ) );
-			tasks.rbegin()->context->setFrame( *fIt );
+			ContextPtr frameContext = new Context( *context, Context::Borrowed );
+			frameContext->setFrame( *fIt );
+			tasks.push_back( ExecutableNode::Task( *nIt, frameContext ) );
 		}
 	}
 	
@@ -225,7 +226,7 @@ const Dispatcher *Dispatcher::dispatcher( const std::string &name )
 const ExecutableNode::Task &Dispatcher::uniqueTask( const ExecutableNode::Task &task, TaskDescriptions &uniqueTasks, TaskSet &seenTasks )
 {	
 	ExecutableNode::Tasks requirements;
-	task.node->executionRequirements( task.context, requirements );
+	task.node()->executionRequirements( task.context(), requirements );
 
 	TaskDescription	taskDesc;
 	taskDesc.task = task;
@@ -239,7 +240,7 @@ const ExecutableNode::Task &Dispatcher::uniqueTask( const ExecutableNode::Task &
 	}
 
 	IECore::MurmurHash noHash;
-	IECore::MurmurHash hash = task.node->executionHash( task.context );
+	const IECore::MurmurHash hash = task.hash();
 
 	std::pair< TaskSet::iterator,bool > tit = seenTasks.insert( TaskSet::value_type( hash, std::vector< size_t >() ) );
 	if ( tit.second )
@@ -258,7 +259,7 @@ const ExecutableNode::Task &Dispatcher::uniqueTask( const ExecutableNode::Task &
 		for ( dIt = taskIndices.begin(); dIt != taskIndices.end(); dIt++ )
 		{
 			TaskDescription &seenTask = uniqueTasks[ *dIt ];
-			if ( seenTask.task.node.get() == task.node.get() )
+			if ( seenTask.task.node() == task.node() )
 			{
 				// same node... does it compute anything?
 				if ( hash == noHash )

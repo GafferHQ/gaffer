@@ -67,7 +67,7 @@ class LocalDispatcher( Gaffer.Dispatcher ) :
 	
 	def _doDispatch( self, taskDescriptions ) :
 		
-		script = taskDescriptions[0][0].node.scriptNode()
+		script = taskDescriptions[0][0].node().scriptNode()
 		context = Gaffer.Context.current()
 		scriptFileName = script["fileName"].getValue()
 		jobName = context.substitute( self["jobName"].getValue() )
@@ -79,19 +79,20 @@ class LocalDispatcher( Gaffer.Dispatcher ) :
 		
 		for ( task, requirements ) in taskDescriptions :
 			
-			frames = str(int(task.context.getFrame()))
+			taskContext = task.context()
+			frames = str(int(taskContext.getFrame()))
 			
 			cmd = [
 				"gaffer", "execute",
 				"-script", tmpScript,
-				"-nodes", task.node.relativeName( script ),
+				"-nodes", task.node().relativeName( script ),
 				"-frames", frames,
 			]
 			
 			contextArgs = []
-			for entry in task.context.keys() :
-				if entry != "frame" and ( entry not in script.context().keys() or task.context[entry] != script.context()[entry] ) :
-					contextArgs.extend( [ "-" + entry, repr(task.context[entry]) ] )
+			for entry in taskContext.keys() :
+				if entry != "frame" and ( entry not in script.context().keys() or taskContext[entry] != script.context()[entry] ) :
+					contextArgs.extend( [ "-" + entry, repr(taskContext[entry]) ] )
 			
 			if contextArgs :
 				cmd.extend( [ "-context" ] + contextArgs )
@@ -99,7 +100,7 @@ class LocalDispatcher( Gaffer.Dispatcher ) :
 			IECore.msg( IECore.MessageHandler.Level.Info, messageContext, " ".join( cmd ) )
 			result = subprocess.call( cmd )
 			if result :
-				IECore.msg( IECore.MessageHandler.Level.Error, messageContext, "Failed to execute " + task.node.getName() + " on frames " + frames )
+				IECore.msg( IECore.MessageHandler.Level.Error, messageContext, "Failed to execute " + task.node().getName() + " on frames " + frames )
 				return
 		
 		IECore.msg( IECore.MessageHandler.Level.Info, messageContext, "Completed all tasks." )
