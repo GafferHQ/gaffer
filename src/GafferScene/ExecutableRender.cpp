@@ -76,9 +76,32 @@ const ScenePlug *ExecutableRender::inPlug() const
 
 IECore::MurmurHash ExecutableRender::executionHash( const Gaffer::Context *context ) const
 {
-	/// \todo How do we cheaply hash something representing the whole scene?
-	/// Do we just hash the identity of the input node?
-	return IECore::MurmurHash();
+	const ScenePlug *scenePlug = inPlug()->source<ScenePlug>();
+	if ( scenePlug == inPlug() )
+	{
+		return IECore::MurmurHash();
+	}
+	
+	Context::Scope scope( context );
+	IECore::MurmurHash h = ExecutableNode::executionHash( context );
+	/// \todo hash the actual scene when we have a hierarchyHash
+	h.append( (size_t)(scenePlug->node()) );
+	
+	std::vector<IECore::InternedString> names;
+	context->names( names );
+	for ( std::vector<IECore::InternedString>::const_iterator it = names.begin(); it != names.end(); ++it )
+	{
+		if ( it->string().compare( 0, 3, "ui:" ) )
+		{
+			h.append( *it );
+			if ( const IECore::Data *data = context->get<const IECore::Data>( *it ) )
+			{
+				data->hash( h );
+			}
+		}
+	}
+	
+	return h;
 }
 
 void ExecutableRender::execute( const Contexts &contexts ) const
