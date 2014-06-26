@@ -71,6 +71,16 @@ void Dispatcher::dispatch( const std::vector<ExecutableNodePtr> &nodes ) const
 		throw IECore::Exception( getName().string() + ": Must specify at least one node to dispatch." );
 	}
 	
+	const ScriptNode *script = (*nodes.begin())->scriptNode();
+	for ( std::vector<ExecutableNodePtr>::const_iterator nIt = nodes.begin(); nIt != nodes.end(); ++nIt )
+	{
+		const ScriptNode *currentScript = (*nIt)->scriptNode();
+		if ( !currentScript || currentScript != script )
+		{
+			throw IECore::Exception( getName().string() + ": Dispatched nodes must all belong to the same ScriptNode." );
+		}
+	}
+	
 	preDispatchSignal()( this, nodes );
 	
 	const Context *context = Context::current();

@@ -56,8 +56,9 @@ IE_CORE_FORWARDDECLARE( Dispatcher )
 IE_CORE_FORWARDDECLARE( CompoundPlug )
 
 /// Abstract base class which defines an interface for scheduling the execution
-/// of Context specific Tasks from ExecutableNodes. Dispatchers can also modify
-/// ExecutableNodes during construction, adding plugs which affect Task execution.
+/// of Context specific Tasks from ExecutableNodes which exist within a ScriptNode.
+/// Dispatchers can also modify ExecutableNodes during construction, adding
+/// plugs which affect Task execution.
 class Dispatcher : public Node
 {
 	public :

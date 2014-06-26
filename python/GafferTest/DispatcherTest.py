@@ -88,14 +88,44 @@ class DispatcherTest( GafferTest.TestCase ) :
 	def testDerivedClass( self ) :
 
 		dispatcher = DispatcherTest.MyDispatcher()
+		
+		s = Gaffer.ScriptNode()
+		op1 = TestOp("1", dispatcher.log)
+		s["n1"] = Gaffer.ExecutableOpHolder()
+		s["n1"].setParameterised( op1 )
 
+		dispatcher.dispatch( [ s["n1"] ] )
+
+		self.assertEqual( op1.counter, 1 )
+
+	def testNoScript( self ) :
+		
+		dispatcher = DispatcherTest.MyDispatcher()
+		
 		op1 = TestOp("1", dispatcher.log)
 		n1 = Gaffer.ExecutableOpHolder()
 		n1.setParameterised( op1 )
+		
+		self.assertRaises( RuntimeError, IECore.curry( dispatcher.dispatch, [ n1 ] ) )
+		self.assertEqual( op1.counter, 0 )
 
-		dispatcher.dispatch( [ n1 ] )
-
-		self.assertEqual( op1.counter, 1 )
+	def testDifferentScripts( self ) :
+		
+		dispatcher = DispatcherTest.MyDispatcher()
+		
+		op1 = TestOp("1", dispatcher.log)
+		s = Gaffer.ScriptNode()
+		s["n1"] = Gaffer.ExecutableOpHolder()
+		s["n1"].setParameterised( op1 )
+		
+		op2 = TestOp("2", dispatcher.log)
+		s2 = Gaffer.ScriptNode()
+		s2["n2"] = Gaffer.ExecutableOpHolder()
+		s2["n2"].setParameterised( op2 )
+		
+		self.assertRaises( RuntimeError, IECore.curry( dispatcher.dispatch, [ s["n1"], s2["n2"] ] ) )
+		self.assertEqual( op1.counter, 0 )
+		self.assertEqual( op2.counter, 0 )
 
 	def testDispatcherRegistration( self ) :
 
@@ -122,18 +152,19 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 		log = list()
 		op1 = TestOp("1", log)
-		n1 = Gaffer.ExecutableOpHolder()
-		n1.setParameterised( op1 )
+		s = Gaffer.ScriptNode()
+		s["n1"] = Gaffer.ExecutableOpHolder()
+		s["n1"].setParameterised( op1 )
 		dispatcher = DispatcherTest.MyDispatcher()
-		dispatcher.dispatch( [ n1 ] )
+		dispatcher.dispatch( [ s["n1"] ] )
 		
 		self.assertEqual( len( preCs ), 1 )
 		self.failUnless( preCs[0][0].isSame( dispatcher ) )
-		self.assertEqual( preCs[0][1], [ n1 ] )
+		self.assertEqual( preCs[0][1], [ s["n1"] ] )
 
 		self.assertEqual( len( postCs ), 1 )
 		self.failUnless( postCs[0][0].isSame( dispatcher ) )
-		self.assertEqual( postCs[0][1], [ n1 ] )
+		self.assertEqual( postCs[0][1], [ s["n1"] ] )
 
 	def testPlugs( self ) :
 
@@ -152,32 +183,33 @@ class DispatcherTest( GafferTest.TestCase ) :
 		#    -n2a
 		#    -n2b
 		op1 = TestOp("1", dispatcher.log)
-		n1 = Gaffer.ExecutableOpHolder()
-		n1.setParameterised( op1 )
-		n2 = Gaffer.ExecutableOpHolder()
+		s = Gaffer.ScriptNode()
+		s["n1"] = Gaffer.ExecutableOpHolder()
+		s["n1"].setParameterised( op1 )
+		s["n2"] = Gaffer.ExecutableOpHolder()
 		op2 = TestOp("2", dispatcher.log)
-		n2.setParameterised( op2 )
-		n2a = Gaffer.ExecutableOpHolder()
+		s["n2"].setParameterised( op2 )
+		s["n2a"] = Gaffer.ExecutableOpHolder()
 		op2a = TestOp("2a", dispatcher.log)
-		n2a.setParameterised( op2a )
-		n2b = Gaffer.ExecutableOpHolder()
+		s["n2a"].setParameterised( op2a )
+		s["n2b"] = Gaffer.ExecutableOpHolder()
 		op2b = TestOp("2b", dispatcher.log)
-		n2b.setParameterised( op2b )
+		s["n2b"].setParameterised( op2b )
 
 		r1 = Gaffer.Plug( name = "r1" )
-		n1['requirements'].addChild( r1 )
-		r1.setInput( n2['requirement'] )
+		s["n1"]['requirements'].addChild( r1 )
+		r1.setInput( s["n2"]['requirement'] )
 
 		r1 = Gaffer.Plug( name = "r1" )
-		n2['requirements'].addChild( r1 )
-		r1.setInput( n2a['requirement'] )
+		s["n2"]['requirements'].addChild( r1 )
+		r1.setInput( s["n2a"]['requirement'] )
 		
 		r2 = Gaffer.Plug( name = "r2" )
-		n2['requirements'].addChild( r2 )
-		r2.setInput( n2b['requirement'] )
+		s["n2"]['requirements'].addChild( r2 )
+		r2.setInput( s["n2b"]['requirement'] )
 
 		# Executing n1 should trigger execution of all of them
-		dispatcher.dispatch( [ n1 ] )
+		dispatcher.dispatch( [ s["n1"] ] )
 		self.assertEqual( op1.counter, 1 )
 		self.assertEqual( op2.counter, 1 )
 		self.assertEqual( op2a.counter, 1 )
@@ -185,7 +217,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		self.assertTrue( dispatcher.log == [ op2a, op2b, op2, op1 ] or dispatcher.log == [ op2b, op2a, op2, op1 ] )
 
 		# Executing n1 and anything else, should be the same as just n1
-		dispatcher.dispatch( [ n2b, n1 ] )
+		dispatcher.dispatch( [ s["n2b"], s["n1"] ] )
 		self.assertEqual( op1.counter, 2 )
 		self.assertEqual( op2.counter, 2 )
 		self.assertEqual( op2a.counter, 2 )
@@ -193,7 +225,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		self.assertTrue( dispatcher.log == [ op2a, op2b, op2, op1 ] or dispatcher.log == [ op2b, op2a, op2, op1 ] )
 
 		# Executing all nodes should be the same as just n1
-		dispatcher.dispatch( [ n2, n2b, n1, n2a ] )
+		dispatcher.dispatch( [ s["n2"], s["n2b"], s["n1"], s["n2a"] ] )
 		self.assertEqual( op1.counter, 3 )
 		self.assertEqual( op2.counter, 3 )
 		self.assertEqual( op2a.counter, 3 )
@@ -201,7 +233,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		self.assertTrue( dispatcher.log == [ op2a, op2b, op2, op1 ] or dispatcher.log == [ op2b, op2a, op2, op1 ] )
 
 		# Executing a sub-branch (n2) should only trigger execution in that branch
-		dispatcher.dispatch( [ n2 ] )
+		dispatcher.dispatch( [ s["n2"] ] )
 		self.assertEqual( op1.counter, 3 )
 		self.assertEqual( op2.counter, 4 )
 		self.assertEqual( op2a.counter, 4 )
@@ -209,7 +241,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		self.assertTrue( dispatcher.log == [ op2a, op2b, op2 ] or dispatcher.log == [ op2b, op2a, op2 ] )
 
 		# Executing a leaf node, should not trigger other executions.		
-		dispatcher.dispatch( [ n2b ] )
+		dispatcher.dispatch( [ s["n2b"] ] )
 		self.assertEqual( op1.counter, 3 )
 		self.assertEqual( op2.counter, 4 )
 		self.assertEqual( op2a.counter, 4 )

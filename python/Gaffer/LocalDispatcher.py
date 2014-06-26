@@ -68,10 +68,6 @@ class LocalDispatcher( Gaffer.Dispatcher ) :
 	def _doDispatch( self, taskDescriptions ) :
 		
 		script = taskDescriptions[0][0].node.scriptNode()
-		if script is None :
-			IECore.msg( IECore.MessageHandler.Level.Error, self.getName(), "Can only dispatch nodes which are part of a script." )
-			return
-		
 		context = Gaffer.Context.current()
 		scriptFileName = script["fileName"].getValue()
 		jobName = context.substitute( self["jobName"].getValue() )
