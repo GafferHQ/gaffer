@@ -57,13 +57,15 @@ class ExecutableNodeTest( GafferTest.TestCase ) :
 
 		def executionHash( self, context ) :
 
-			h = IECore.MurmurHash()
-
-			if self.__withHash :
-
-				h.append( context['time'] )
-
+			if not self.__withHash :
+				return IECore.MurmurHash()
+			
+			h = Gaffer.ExecutableNode.executionHash( self, context )
+			h.append( self.typeId() )
+			h.append( context['time'] )
 			return h
+		
+	IECore.registerRunTimeTyped( MyNode )
 
 	def testIsExecutable( self ) :
 
@@ -79,19 +81,36 @@ class ExecutableNodeTest( GafferTest.TestCase ) :
 		c3 = Gaffer.Context()
 		c3['time'] = 3.0
 
+		# hashes that don't use the context are equivalent
 		n = ExecutableNodeTest.MyNode(False)
-
-		taskList = list()
-		taskList.append( Gaffer.ExecutableNode.Task( n, c1 ) )
-		taskList.append( Gaffer.ExecutableNode.Task( n, c2 ) )
-		taskList.append( Gaffer.ExecutableNode.Task( n, c3 ) )
-
+		self.assertEqual( n.executionHash( c1 ), n.executionHash( c1 ) )
+		self.assertEqual( n.executionHash( c1 ), n.executionHash( c2 ) )
+		self.assertEqual( n.executionHash( c1 ), n.executionHash( c3 ) )
+		
+		# hashes that do use the context differ
 		n2 = ExecutableNodeTest.MyNode(True)
-
-		taskList = list()
-		taskList.append( Gaffer.ExecutableNode.Task( n2, c1 ) )
-		taskList.append( Gaffer.ExecutableNode.Task( n2, c2 ) )
-		taskList.append( Gaffer.ExecutableNode.Task( n2, c3 ) )
+		self.assertEqual( n2.executionHash( c1 ), n2.executionHash( c1 ) )
+		self.assertNotEqual( n2.executionHash( c1 ), n2.executionHash( c2 ) )
+		self.assertNotEqual( n2.executionHash( c1 ), n2.executionHash( c3 ) )
+		
+		# hashes match across the same node type
+		n3 = ExecutableNodeTest.MyNode(True)
+		self.assertEqual( n2.executionHash( c1 ), n3.executionHash( c1 ) )
+		self.assertEqual( n2.executionHash( c2 ), n3.executionHash( c2 ) )
+		self.assertEqual( n2.executionHash( c3 ), n3.executionHash( c3 ) )
+		
+		# hashes differ across different node types
+		class MyNode2( ExecutableNodeTest.MyNode ) :
+			def __init__( self ) :
+				ExecutableNodeTest.MyNode.__init__( self, True )
+		
+		IECore.registerRunTimeTyped( MyNode2 )
+		
+		n4 = MyNode2()
+		
+		self.assertNotEqual( n4.executionHash( c1 ), n3.executionHash( c1 ) )
+		self.assertNotEqual( n4.executionHash( c2 ), n3.executionHash( c2 ) )
+		self.assertNotEqual( n4.executionHash( c3 ), n3.executionHash( c3 ) )
 
 	def testExecutionRequirements( self ) :
 		"""Test the function executionRequirements and Executable::defaultRequirements """

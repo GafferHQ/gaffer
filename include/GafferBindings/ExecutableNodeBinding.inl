@@ -61,6 +61,12 @@ boost::python::list executionRequirements( T &n, Gaffer::Context *context )
 }
 
 template<typename T>
+IECore::MurmurHash executionHash( T &n, const Gaffer::Context *context )
+{
+	return n.T::executionHash( context );
+}
+
+template<typename T>
 void execute( T &n, const boost::python::list &contextsList )
 {
 	Gaffer::ExecutableNode::Contexts contexts;
@@ -76,7 +82,7 @@ ExecutableNodeClass<T, Ptr>::ExecutableNodeClass( const char *docString )
 	:	NodeClass<T, Ptr>( docString )
 {
 	def( "executionRequirements", &Detail::executionRequirements<T> );
-	def( "executionHash", &T::executionHash );
+	def( "executionHash", &Detail::executionHash<T> );
 	def( "execute", &Detail::execute<T> );	
 }
 

@@ -105,8 +105,9 @@ class ExecutableNode : public Node
 		virtual void executionRequirements( const Context *context, Tasks &requirements ) const;
 		
 		/// Returns a hash that uniquely represents the side effects (e.g. files created)
-		/// of calling execute with the given context. Nodes that return the default hash
-		/// do not cause any side effects.
+		/// of calling execute with the given context. Derived nodes should call the base
+		/// implementation and append to the returned hash. Nodes can indicate that they
+		/// don't cause side effects for the given context by returning a default hash.
 		virtual IECore::MurmurHash executionHash( const Context *context ) const = 0;
 		
 		/// Executes this node for all the specified contexts in sequence.
