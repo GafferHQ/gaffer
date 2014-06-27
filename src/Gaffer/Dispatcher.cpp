@@ -59,10 +59,10 @@ Dispatcher::Dispatcher( const std::string &name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	
-	addChild( new IntPlug( "framesMode", Plug::In, CurrentFrame, CurrentFrame, CustomRange, Plug::Default & ~Plug::Serialisable ) );
-	addChild( new StringPlug( "frameRange", Plug::In, "", Plug::Default & ~Plug::Serialisable ) );
-	addChild( new StringPlug( "jobName", Plug::In, "", Plug::Default & ~Plug::Serialisable ) );
-	addChild( new StringPlug( "jobDirectory", Plug::In, "", Plug::Default & ~Plug::Serialisable ) );
+	addChild( new IntPlug( "framesMode", Plug::In, CurrentFrame, CurrentFrame ) );
+	addChild( new StringPlug( "frameRange", Plug::In, "" ) );
+	addChild( new StringPlug( "jobName", Plug::In, "" ) );
+	addChild( new StringPlug( "jobDirectory", Plug::In, "" ) );
 }
 
 Dispatcher::~Dispatcher()
