@@ -196,6 +196,7 @@ class __RequirementPlugValueWidget( GafferUI.PlugValueWidget ) :
 # PlugValueWidget for framesMode
 #################################
 
+## \todo: This can be removed once we have enums and activators driven by metadata.
 class __FramesModePlugValueWidget( GafferUI.EnumPlugValueWidget ) :
 
 	def __init__( self, plug ) :
