@@ -213,7 +213,7 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		
 		contexts = []
 		for frame in frameList.asList() :
-			contexts.append( Gaffer.Context( s.context(), Gaffer.Context.Ownership.Borrowed ) )
+			contexts.append( Gaffer.Context( s.context() ) )
 			contexts[-1].setFrame( frame )
 		
 		# No files should exist yet
@@ -285,7 +285,7 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		
 		contexts = []
 		for frame in frameList.asList() :
-			contexts.append( Gaffer.Context( s.context(), Gaffer.Context.Ownership.Borrowed ) )
+			contexts.append( Gaffer.Context( s.context() ) )
 			contexts[-1].setFrame( frame )
 		
 		# No files should exist yet
