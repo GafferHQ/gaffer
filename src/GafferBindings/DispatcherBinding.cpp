@@ -129,33 +129,6 @@ class DispatcherWrapper : public NodeWrapper<Dispatcher>
 			return result;
 		}
 
-		static list uniqueTasks( list taskList )
-		{
-			ExecutableNode::Tasks tasks;
-			
-			size_t len = boost::python::len( taskList );
-			tasks.reserve( len );
-			for ( size_t i = 0; i < len; i++ )
-			{
-				tasks.push_back( extract< ExecutableNode::Task >( taskList[i] ) );
-			}
-
-			std::vector< Dispatcher::TaskDescription > uniqueTasks;
-			Dispatcher::uniqueTasks( tasks, uniqueTasks );
-			
-			list result;
-			for( std::vector< TaskDescription >::const_iterator fIt = uniqueTasks.begin(); fIt != uniqueTasks.end(); fIt++ )
-			{
-				list requirements;
-				for ( std::set<ExecutableNode::Task>::const_iterator rIt = fIt->requirements.begin(); rIt != fIt->requirements.end(); rIt++ )
-				{
-					requirements.append( *rIt );
-				}
-				result.append( make_tuple( fIt->task, requirements ) );
-			}
-			return result;
-		}
-
 		static void registerDispatcher( std::string name, Dispatcher *dispatcher )
 		{
 			Dispatcher::registerDispatcher( name, dispatcher );
@@ -203,7 +176,6 @@ void GafferBindings::bindDispatcher()
 		.def( "dispatcher", &DispatcherWrapper::dispatcher ).staticmethod( "dispatcher" )
 		.def( "dispatcherNames", &DispatcherWrapper::dispatcherNames ).staticmethod( "dispatcherNames" )
 		.def( "registerDispatcher", &DispatcherWrapper::registerDispatcher ).staticmethod( "registerDispatcher" )
-		.def( "_uniqueTasks", &DispatcherWrapper::uniqueTasks ).staticmethod( "_uniqueTasks" )
 		.def( "preDispatchSignal", &Dispatcher::preDispatchSignal, return_value_policy<reference_existing_object>() ).staticmethod( "preDispatchSignal" )
 		.def( "postDispatchSignal", &Dispatcher::postDispatchSignal, return_value_policy<reference_existing_object>() ).staticmethod( "postDispatchSignal" )
 	;

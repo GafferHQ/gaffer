@@ -167,20 +167,19 @@ class Dispatcher : public Node
 		/// before all Dispatchers have been registered could result in lost settings.
 		virtual void doSetupPlugs( CompoundPlug *parentPlug ) const = 0;
 		//@}
-		
-		/// Utility function that recursively collects all nodes and their execution requirements,
-		/// flattening them into a list of unique TaskDescriptions. For nodes that return a default
-		/// hash, this function will create a separate Task for each unique set of requirements.
-		/// For all other nodes, Tasks will be grouped by executionHash, and the requirements will be
-		/// a union of the requirements from all equivalent Tasks.
-		static void uniqueTasks( const ExecutableNode::Tasks &tasks, TaskDescriptions &uniqueTasks );
-
+	
 	private :
 
 		typedef std::map< std::string, DispatcherPtr > DispatcherMap;
 		typedef std::map< IECore::MurmurHash, std::vector< size_t > > TaskSet;
 		
 		IECore::FrameListPtr frameRange( const ScriptNode *script, const Context *context ) const;
+		// Utility function that recursively collects all nodes and their execution requirements,
+		// flattening them into a list of unique TaskDescriptions. For nodes that return a default
+		// hash, this function will create a separate Task for each unique set of requirements.
+		// For all other nodes, Tasks will be grouped by executionHash, and the requirements will be
+		// a union of the requirements from all equivalent Tasks.
+		static void uniqueTasks( const ExecutableNode::Tasks &tasks, TaskDescriptions &uniqueTasks );
 		static const ExecutableNode::Task &uniqueTask( const ExecutableNode::Task &task, TaskDescriptions &uniqueTasks, TaskSet &seenTasks );
 		
 		static size_t g_firstPlugIndex;
