@@ -50,6 +50,7 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		
 		localDispatcher = Gaffer.Dispatcher.dispatcher( "local" )
 		localDispatcher["jobDirectory"].setValue( "/tmp/dispatcherTest" )
+		localDispatcher["framesMode"].setValue( Gaffer.Dispatcher.FramesMode.CurrentFrame )
 	
 	def testDispatcherRegistration( self ) :
 		
@@ -133,6 +134,184 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		# Executing a leaf node, should not trigger other executions.		
 		dispatcher.dispatch( [ s["n2b"] ] )
 		verify( [ s.context() ], nodes = [ "n2b" ] )
+	
+	def testDispatchDifferentFrame( self ) :
+		
+		s = Gaffer.ScriptNode()
+		s["n1"] = GafferTest.TextWriter()
+		s["n1"]["fileName"].setValue( "/tmp/dispatcherTest/n1_####.txt" )
+		s["n1"]["text"].setValue( "n1 on ${frame}" )
+		
+		context = Gaffer.Context( s.context() )
+		context.setFrame( s.context().getFrame() + 10 )
+		
+		with context :
+			Gaffer.Dispatcher.dispatcher( "local" ).dispatch( [ s["n1"] ] )
+		
+		fileName = context.substitute( s["n1"]["fileName"].getValue() )
+		self.assertTrue( os.path.isfile( fileName ) )
+		with file( fileName, "r" ) as f :
+			text = f.read()
+		self.assertEqual( text, "%s on %d" % ( s["n1"].getName(), context.getFrame() ) )
+	
+	def testDispatchScriptRange( self ) :
+		
+		dispatcher = Gaffer.Dispatcher.dispatcher( "local" )
+		dispatcher["framesMode"].setValue( Gaffer.Dispatcher.FramesMode.ScriptRange )
+		frameList = IECore.FrameList.parse( "5-7" )
+		
+		def createWriter( text ) :
+			node = GafferTest.TextWriter()
+			node["fileName"].setValue( "/tmp/dispatcherTest/%s_####.txt" % text )
+			node["text"].setValue( text + " on ${frame}" )
+			return node
+		
+		# Create a tree of dependencies for execution:
+		# n1 requires:
+		# - n2 requires:
+		#    -n2a
+		#    -n2b
+		s = Gaffer.ScriptNode()
+		s["frameRange"]["start"].setValue( 5 )
+		s["frameRange"]["end"].setValue( 7 )
+		s["n1"] = createWriter( "n1" )
+		s["n2"] = createWriter( "n2" )
+		s["n2a"] = createWriter( "n2a" )
+		s["n2b"] = createWriter( "n2b" )
+		s["n1"]['requirements'][0].setInput( s["n2"]['requirement'] )
+		s["n2"]['requirements'][0].setInput( s["n2a"]['requirement'] )
+		s["n2"]['requirements'][1].setInput( s["n2b"]['requirement'] )
+		
+		def verify( contexts, nodes = [ "n1", "n2", "n2a", "n2b" ], exist = True ) :
+			
+			for context in contexts :
+				
+				modTimes = {}
+				
+				for node in s.children( Gaffer.Node ) :
+					
+					fileName = context.substitute( node["fileName"].getValue() )
+					self.assertEqual( os.path.isfile( fileName ), exist )
+					if exist :
+						sequences = IECore.ls( os.path.dirname( fileName ), minSequenceSize = 1 )
+						sequence = [ x for x in sequences if x.fileName.startswith( node.getName() ) ][0]
+						self.assertEqual( sequence.frameList, frameList )
+						modTimes[node.getName()] = os.stat( fileName )[stat.ST_MTIME]
+						with file( fileName, "r" ) as f :
+							text = f.read()
+						self.assertEqual( text, "%s on %d" % ( node.getName(), context.getFrame() ) )
+				
+				if exist :
+					if "n1" in nodes :
+						self.assertGreater( modTimes["n1"], modTimes["n2"] )
+					
+					if "n2" in nodes :
+						self.assertGreater( modTimes["n2"], modTimes["n2a"] )
+						self.assertGreater( modTimes["n2"], modTimes["n2b"] )
+					elif "n2b" in nodes :
+						self.assertLess( modTimes["n2"], modTimes["n2b"] )
+		
+		contexts = []
+		for frame in frameList.asList() :
+			contexts.append( Gaffer.Context( s.context() ) )
+			contexts[-1].setFrame( frame )
+		
+		# No files should exist yet
+		verify( contexts, exist = False )
+		
+		# Executing n1 should trigger execution of all of them
+		dispatcher.dispatch( [ s["n1"] ] )
+		verify( contexts )
+		
+		# Executing a leaf node, should not trigger other executions.		
+		dispatcher.dispatch( [ s["n2b"] ] )
+		verify( contexts, nodes = [ "n2b" ] )
+	
+	def testDispatchCustomRange( self ) :
+		
+		dispatcher = Gaffer.Dispatcher.dispatcher( "local" )
+		dispatcher["framesMode"].setValue( Gaffer.Dispatcher.FramesMode.CustomRange )
+		frameList = IECore.FrameList.parse( "2-6x2" )
+		dispatcher["frameRange"].setValue( str(frameList) )
+		
+		def createWriter( text ) :
+			node = GafferTest.TextWriter()
+			node["fileName"].setValue( "/tmp/dispatcherTest/%s_####.txt" % text )
+			node["text"].setValue( text + " on ${frame}" )
+			return node
+		
+		# Create a tree of dependencies for execution:
+		# n1 requires:
+		# - n2 requires:
+		#    -n2a
+		#    -n2b
+		s = Gaffer.ScriptNode()
+		s["n1"] = createWriter( "n1" )
+		s["n2"] = createWriter( "n2" )
+		s["n2a"] = createWriter( "n2a" )
+		s["n2b"] = createWriter( "n2b" )
+		s["n1"]['requirements'][0].setInput( s["n2"]['requirement'] )
+		s["n2"]['requirements'][0].setInput( s["n2a"]['requirement'] )
+		s["n2"]['requirements'][1].setInput( s["n2b"]['requirement'] )
+		
+		def verify( contexts, nodes = [ "n1", "n2", "n2a", "n2b" ], exist = True ) :
+			
+			for context in contexts :
+				
+				modTimes = {}
+				
+				for node in s.children( Gaffer.Node ) :
+					
+					fileName = context.substitute( node["fileName"].getValue() )
+					self.assertEqual( os.path.isfile( fileName ), exist )
+					if exist :
+						sequences = IECore.ls( os.path.dirname( fileName ), minSequenceSize = 1 )
+						sequence = [ x for x in sequences if x.fileName.startswith( node.getName() ) ][0]
+						self.assertEqual( sequence.frameList, frameList )
+						modTimes[node.getName()] = os.stat( fileName )[stat.ST_MTIME]
+						with file( fileName, "r" ) as f :
+							text = f.read()
+						self.assertEqual( text, "%s on %d" % ( node.getName(), context.getFrame() ) )
+				
+				if exist :
+					if "n1" in nodes :
+						self.assertGreater( modTimes["n1"], modTimes["n2"] )
+					
+					if "n2" in nodes :
+						self.assertGreater( modTimes["n2"], modTimes["n2a"] )
+						self.assertGreater( modTimes["n2"], modTimes["n2b"] )
+					elif "n2b" in nodes :
+						self.assertLess( modTimes["n2"], modTimes["n2b"] )
+		
+		contexts = []
+		for frame in frameList.asList() :
+			contexts.append( Gaffer.Context( s.context() ) )
+			contexts[-1].setFrame( frame )
+		
+		# No files should exist yet
+		verify( contexts, exist = False )
+		
+		# Executing n1 should trigger execution of all of them
+		dispatcher.dispatch( [ s["n1"] ] )
+		verify( contexts )
+		
+		# Executing a leaf node, should not trigger other executions.		
+		dispatcher.dispatch( [ s["n2b"] ] )
+		verify( contexts, nodes = [ "n2b" ] )
+	
+	def testDispatchBadCustomRange( self ) :
+		
+		dispatcher = Gaffer.Dispatcher.dispatcher( "local" )
+		dispatcher["framesMode"].setValue( Gaffer.Dispatcher.FramesMode.CustomRange )
+		dispatcher["frameRange"].setValue( "notAFrameRange" )
+		
+		s = Gaffer.ScriptNode()
+		s["n1"] = GafferTest.TextWriter()
+		s["n1"]["fileName"].setValue( "/tmp/dispatcherTest/n1_####.txt" )
+		s["n1"]["text"].setValue( "n1 on ${frame}" )
+		
+		self.assertRaises( RuntimeError, dispatcher.dispatch, [ s["n1"] ] )
+		self.assertFalse( os.path.isfile( s.context().substitute( s["n1"]["fileName"].getValue() ) ) )
 	
 	def testContextVariation( self ) :
 		

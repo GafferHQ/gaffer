@@ -66,10 +66,8 @@ class TextWriter( Gaffer.ExecutableNode ) :
 		h = IECore.MurmurHash()
 		h.append( context.getFrame() )
 		h.append( context.get( "textWriter:replace", IECore.StringVectorData() ) )
-		
-		with context :
-			h.append( context.substitute( self["fileName"].getValue() ) )
-			h.append( context.substitute( self["text"].getValue() ) )
+		h.append( context.substitute( self["fileName"].getValue() ) )
+		h.append( context.substitute( self["text"].getValue() ) )
 		
 		return h
 

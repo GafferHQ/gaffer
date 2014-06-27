@@ -79,19 +79,26 @@ class DispatcherWrapper : public NodeWrapper<Dispatcher>
 			Dispatcher::dispatch( nodes );
 		}
 
-		void doDispatch( const std::vector<ExecutableNodePtr> &nodes ) const
+		void doDispatch( const TaskDescriptions &taskDescriptions ) const
 		{
 			ScopedGILLock gilLock;
-			list nodeList;
-			for ( std::vector<ExecutableNodePtr>::const_iterator nIt = nodes.begin(); nIt != nodes.end(); nIt++ )
+			
+			list taskList;
+			for ( TaskDescriptions::const_iterator tIt = taskDescriptions.begin(); tIt != taskDescriptions.end(); ++tIt )
 			{
-				nodeList.append( *nIt );
+				list requirements;
+				for ( std::set<ExecutableNode::Task>::const_iterator rIt = tIt->requirements.begin(); rIt != tIt->requirements.end(); ++rIt )
+				{
+					requirements.append( *rIt );
+				}
+				
+				taskList.append( make_tuple( tIt->task, requirements ) );
 			}
 			
 			boost::python::object f = this->methodOverride( "_doDispatch" );
 			if( f )
 			{
-				f( nodeList );
+				f( taskList );
 			}
 			else
 			{
@@ -118,33 +125,6 @@ class DispatcherWrapper : public NodeWrapper<Dispatcher>
 			for ( std::vector<std::string>::const_iterator nIt = names.begin(); nIt != names.end(); nIt++ )
 			{
 				result.append( *nIt );
-			}
-			return result;
-		}
-
-		static list uniqueTasks( list taskList )
-		{
-			ExecutableNode::Tasks tasks;
-			
-			size_t len = boost::python::len( taskList );
-			tasks.reserve( len );
-			for ( size_t i = 0; i < len; i++ )
-			{
-				tasks.push_back( extract< ExecutableNode::Task >( taskList[i] ) );
-			}
-
-			std::vector< Dispatcher::TaskDescription > uniqueTasks;
-			Dispatcher::uniqueTasks( tasks, uniqueTasks );
-			
-			list result;
-			for( std::vector< TaskDescription >::const_iterator fIt = uniqueTasks.begin(); fIt != uniqueTasks.end(); fIt++ )
-			{
-				list requirements;
-				for ( std::set<ExecutableNode::Task>::const_iterator rIt = fIt->requirements.begin(); rIt != fIt->requirements.end(); rIt++ )
-				{
-					requirements.append( *rIt );
-				}
-				result.append( make_tuple( fIt->task, requirements ) );
 			}
 			return result;
 		}
@@ -196,10 +176,15 @@ void GafferBindings::bindDispatcher()
 		.def( "dispatcher", &DispatcherWrapper::dispatcher ).staticmethod( "dispatcher" )
 		.def( "dispatcherNames", &DispatcherWrapper::dispatcherNames ).staticmethod( "dispatcherNames" )
 		.def( "registerDispatcher", &DispatcherWrapper::registerDispatcher ).staticmethod( "registerDispatcher" )
-		.def( "_uniqueTasks", &DispatcherWrapper::uniqueTasks ).staticmethod( "_uniqueTasks" )
 		.def( "preDispatchSignal", &Dispatcher::preDispatchSignal, return_value_policy<reference_existing_object>() ).staticmethod( "preDispatchSignal" )
 		.def( "postDispatchSignal", &Dispatcher::postDispatchSignal, return_value_policy<reference_existing_object>() ).staticmethod( "postDispatchSignal" )
 	;
-
+	
+	enum_<Dispatcher::FramesMode>( "FramesMode" )
+		.value( "CurrentFrame", Dispatcher::CurrentFrame )
+		.value( "ScriptRange", Dispatcher::ScriptRange )
+		.value( "CustomRange", Dispatcher::CustomRange )
+	;
+	
 	SignalBinder<Dispatcher::DispatchSignal, DefaultSignalCaller<Dispatcher::DispatchSignal>, DispatchSlotCaller >::bind( "DispatchSignal" );
 }

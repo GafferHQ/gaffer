@@ -44,8 +44,10 @@
 
 #include "boost/signals.hpp"
 
+#include "IECore/FrameList.h"
 #include "IECore/RunTimeTyped.h"
 
+#include "Gaffer/NumericPlug.h"
 #include "Gaffer/TypedPlug.h"
 #include "Gaffer/ExecutableNode.h"
 
@@ -56,8 +58,9 @@ IE_CORE_FORWARDDECLARE( Dispatcher )
 IE_CORE_FORWARDDECLARE( CompoundPlug )
 
 /// Abstract base class which defines an interface for scheduling the execution
-/// of Context specific Tasks from ExecutableNodes. Dispatchers can also modify
-/// ExecutableNodes during construction, adding plugs which affect Task execution.
+/// of Context specific Tasks from ExecutableNodes which exist within a ScriptNode.
+/// Dispatchers can also modify ExecutableNodes during construction, adding
+/// plugs which affect Task execution.
 class Dispatcher : public Node
 {
 	public :
@@ -81,7 +84,26 @@ class Dispatcher : public Node
 		
 		/// Calls doDispatch, taking care to trigger the dispatch signals at the appropriate times.
 		void dispatch( const std::vector<ExecutableNodePtr> &nodes ) const;
-
+		
+		enum FramesMode
+		{
+			CurrentFrame,
+			ScriptRange,
+			CustomRange
+		};
+		
+		//! @name Frame range
+		/// Dispatchers define a frame range for execution. 
+		///////////////////////////////////////////////////
+		//@{
+		/// Returns a FramesMode for getting the active frame range.
+		IntPlug *framesModePlug();
+		const IntPlug *framesModePlug() const;
+		/// Returns frame range to be used when framesModePlug is set to CustomRange.
+		StringPlug *frameRangePlug();
+		const StringPlug *frameRangePlug() const;
+		//@}
+		
 		//! @name Dispatcher Jobs
 		/// Utility functions which derived classes may use when dispatching jobs.
 		//////////////////////////////////////////////////////////////////////////
@@ -113,10 +135,19 @@ class Dispatcher : public Node
 
 		friend class ExecutableNode;
 
-		/// Derived classes should implement doDispatch to dispatch the execution of the given
-		/// ExecutableNodes, taking care to respect each set of ExecutableNode requirements,
+		/// Representation of a Task and its requirements.
+		struct TaskDescription 
+		{
+			ExecutableNode::Task task;
+			std::set<ExecutableNode::Task> requirements;
+		};
+		
+		typedef std::vector< Dispatcher::TaskDescription > TaskDescriptions;
+		
+		/// Derived classes should implement doDispatch to dispatch the execution of
+		/// the given TaskDescriptions, taking care to respect each set of requirements,
 		/// executing required Tasks as well when necessary.
-		virtual void doDispatch( const std::vector<ExecutableNodePtr> &nodes ) const = 0;
+		virtual void doDispatch( const TaskDescriptions &taskDescriptions ) const = 0;
 		
 		//! @name ExecutableNode Customization
 		/// Dispatchers are able to create custom plugs on ExecutableNodes when they are constructed.
@@ -136,28 +167,19 @@ class Dispatcher : public Node
 		/// before all Dispatchers have been registered could result in lost settings.
 		virtual void doSetupPlugs( CompoundPlug *parentPlug ) const = 0;
 		//@}
-		
-		/// Representation of a Task and its requirements.
-		struct TaskDescription 
-		{
-			ExecutableNode::Task task;
-			std::set<ExecutableNode::Task> requirements;
-		};
-		
-		typedef std::vector< Dispatcher::TaskDescription > TaskDescriptions;
-		
-		/// Utility function that recursively collects all nodes and their execution requirements,
-		/// flattening them into a list of unique TaskDescriptions. For nodes that return a default
-		/// hash, this function will create a separate Task for each unique set of requirements.
-		/// For all other nodes, Tasks will be grouped by executionHash, and the requirements will be
-		/// a union of the requirements from all equivalent Tasks.
-		static void uniqueTasks( const ExecutableNode::Tasks &tasks, TaskDescriptions &uniqueTasks );
-
+	
 	private :
 
 		typedef std::map< std::string, DispatcherPtr > DispatcherMap;
 		typedef std::map< IECore::MurmurHash, std::vector< size_t > > TaskSet;
 		
+		IECore::FrameListPtr frameRange( const ScriptNode *script, const Context *context ) const;
+		// Utility function that recursively collects all nodes and their execution requirements,
+		// flattening them into a list of unique TaskDescriptions. For nodes that return a default
+		// hash, this function will create a separate Task for each unique set of requirements.
+		// For all other nodes, Tasks will be grouped by executionHash, and the requirements will be
+		// a union of the requirements from all equivalent Tasks.
+		static void uniqueTasks( const ExecutableNode::Tasks &tasks, TaskDescriptions &uniqueTasks );
 		static const ExecutableNode::Task &uniqueTask( const ExecutableNode::Task &task, TaskDescriptions &uniqueTasks, TaskSet &seenTasks );
 		
 		static size_t g_firstPlugIndex;

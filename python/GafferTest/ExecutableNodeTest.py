@@ -86,18 +86,12 @@ class ExecutableNodeTest( GafferTest.TestCase ) :
 		taskList.append( Gaffer.ExecutableNode.Task( n, c2 ) )
 		taskList.append( Gaffer.ExecutableNode.Task( n, c3 ) )
 
-		# since the hash is the same, no matter the context, it should return one single task
-		self.assertEqual( Gaffer.Dispatcher._uniqueTasks( taskList ), [ ( Gaffer.ExecutableNode.Task( n, c1 ), [] ) ] )
-
 		n2 = ExecutableNodeTest.MyNode(True)
 
 		taskList = list()
 		taskList.append( Gaffer.ExecutableNode.Task( n2, c1 ) )
 		taskList.append( Gaffer.ExecutableNode.Task( n2, c2 ) )
 		taskList.append( Gaffer.ExecutableNode.Task( n2, c3 ) )
-
-		# since the hash includes the 'time' each Task is considered diferent
-		self.assertEqual( Gaffer.Dispatcher._uniqueTasks( taskList ), [ ( Gaffer.ExecutableNode.Task( n2, c1 ), [] ), ( Gaffer.ExecutableNode.Task( n2, c2 ), [] ), ( Gaffer.ExecutableNode.Task( n2, c3 ), [] ) ] )
 
 	def testExecutionRequirements( self ) :
 		"""Test the function executionRequirements and Executable::defaultRequirements """
@@ -116,15 +110,6 @@ class ExecutableNodeTest( GafferTest.TestCase ) :
 		self.assertEqual( n.executionRequirements(c1), [] )
 		self.assertEqual( n2.executionRequirements(c1), [ Gaffer.ExecutableNode.Task( n, c1 ) ] )
 		self.assertEqual( n2.executionRequirements(c2), [ Gaffer.ExecutableNode.Task( n, c2 ) ] )
-
-		# if we ask for executing n2 we should get n followed by n2
-		l = list()
-		l.append( Gaffer.ExecutableNode.Task( n2, c1 ) )
-		Gaffer.Dispatcher._uniqueTasks( l )
-		( Gaffer.ExecutableNode.Task( n, c1 ), [] )
-		( Gaffer.ExecutableNode.Task( n2, c1 ), [ Gaffer.ExecutableNode.Task( n, c1 ) ] )
-
-		self.assertEqual( Gaffer.Dispatcher._uniqueTasks( [ Gaffer.ExecutableNode.Task( n2, c1 ) ] ), [ ( Gaffer.ExecutableNode.Task( n, c1 ), [] ), ( Gaffer.ExecutableNode.Task( n2, c1 ), [ Gaffer.ExecutableNode.Task( n, c1 ) ] ) ] )
 	
 	def testTaskConstructors( self ) :
 	
