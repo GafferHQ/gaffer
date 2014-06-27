@@ -46,7 +46,7 @@ class TestOp (IECore.Op) :
 	def __init__( self, name, executionOrder ) :
 
 		IECore.Op.__init__( self, "Test op", IECore.IntParameter( "result", "", 0 ) )
-		self.parameters().addParameter( IECore.StringParameter( "frames", "a frame range", "${frame}" ) )
+		self.parameters().addParameter( IECore.StringParameter( "currentFrame", "testing context substitution", "${frame}" ) )
 		self.counter = 0
 		self.frames = []
 		self.name = name
@@ -55,6 +55,7 @@ class TestOp (IECore.Op) :
 	def doOperation( self, args ) :
 
 		self.counter += 1
+		## \todo: remove this dependancy on Gaffer when ExecutableOpHolder is correctly substituting parameter values
 		self.frames.append( Gaffer.Context.current().getFrame() )
 		self.executionOrder.append( self )
 		return IECore.IntData( self.counter )
