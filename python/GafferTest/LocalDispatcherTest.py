@@ -310,7 +310,7 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		s["n1"]["fileName"].setValue( "/tmp/dispatcherTest/n1_####.txt" )
 		s["n1"]["text"].setValue( "n1 on ${frame}" )
 		
-		self.assertRaises( RuntimeError, IECore.curry( dispatcher.dispatch, [ s["n1"] ] ) )
+		self.assertRaises( RuntimeError, dispatcher.dispatch, [ s["n1"] ] )
 		self.assertFalse( os.path.isfile( s.context().substitute( s["n1"]["fileName"].getValue() ) ) )
 	
 	def testContextVariation( self ) :

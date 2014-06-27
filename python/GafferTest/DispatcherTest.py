@@ -109,7 +109,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		n1 = Gaffer.ExecutableOpHolder()
 		n1.setParameterised( op1 )
 		
-		self.assertRaises( RuntimeError, IECore.curry( dispatcher.dispatch, [ n1 ] ) )
+		self.assertRaises( RuntimeError, dispatcher.dispatch, [ n1 ] )
 		self.assertEqual( op1.counter, 0 )
 
 	def testDifferentScripts( self ) :
@@ -126,7 +126,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		s2["n2"] = Gaffer.ExecutableOpHolder()
 		s2["n2"].setParameterised( op2 )
 		
-		self.assertRaises( RuntimeError, IECore.curry( dispatcher.dispatch, [ s["n1"], s2["n2"] ] ) )
+		self.assertRaises( RuntimeError, dispatcher.dispatch, [ s["n1"], s2["n2"] ] )
 		self.assertEqual( op1.counter, 0 )
 		self.assertEqual( op2.counter, 0 )
 
@@ -315,7 +315,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		s["n1"] = Gaffer.ExecutableOpHolder()
 		s["n1"].setParameterised( op1 )
 		
-		self.assertRaises( RuntimeError, IECore.curry( dispatcher.dispatch, [ s["n1"] ] ) )
+		self.assertRaises( RuntimeError, dispatcher.dispatch, [ s["n1"] ] )
 		self.assertEqual( op1.counter, 0 )
 		self.assertEqual( op1.frames, [] )
 
