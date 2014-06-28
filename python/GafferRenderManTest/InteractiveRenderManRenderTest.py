@@ -40,6 +40,7 @@ import time
 import IECore
 
 import Gaffer
+import GafferImage
 import GafferScene
 import GafferRenderMan
 
@@ -656,6 +657,69 @@ class InteractiveRenderManRenderTest( unittest.TestCase ) :
 			IECore.V2f( 0.5 ),
 		)
 		self.assertNotEqual( c[0], 0.0 )
+
+	def testRenderingDuringScriptDeletion( self ) :
+	
+		s = Gaffer.ScriptNode()
+	
+		s["p"] = GafferScene.Plane()
+		s["c"] = GafferScene.Camera()
+		s["c"]["transform"]["translate"]["z"].setValue( 1 )
+		
+		s["g"] = GafferScene.Group()
+		s["g"]["in"].setInput( s["p"]["out"] )
+		s["g"]["in1"].setInput( s["c"]["out"] )
+		
+		s["d"] = GafferScene.Displays()
+		s["d"].addDisplay(
+			"beauty",
+			IECore.Display(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"driverType" : "ClientDisplayDriver",
+					"displayHost" : "localhost",
+					"displayPort" : "1559",
+					"remoteDisplayType" : "GafferImage::GafferDisplayDriver",
+					"quantize" : IECore.IntVectorData( [ 0, 0, 0, 0 ] ),
+				}
+			)
+		)
+
+		s["d"]["in"].setInput( s["g"]["out"] )
+		
+		s["m"] = GafferImage.Display()
+		
+		# connect a python function to the Display node image and data
+		# received signals. this emulates what the UI does.
+		def __displayCallback( plug ) :
+			pass
+		
+		c = (
+			s["m"].imageReceivedSignal().connect( __displayCallback ),
+			s["m"].dataReceivedSignal().connect( __displayCallback ),
+		)
+		
+		s["o"] = GafferScene.StandardOptions()
+		s["o"]["in"].setInput( s["d"]["out"] )
+		s["o"]["options"]["renderCamera"]["enabled"].setValue( True )
+		s["o"]["options"]["renderCamera"]["value"].setValue( "/group/plane" )
+		
+		s["r"] = GafferRenderMan.InteractiveRenderManRender()
+		s["r"]["in"].setInput( s["o"]["out"] )
+		
+		s["r"]["state"].setValue( s["r"].State.Running )
+
+		time.sleep( 1 )
+		
+		# delete the script while the render is still progressing. when
+		# this occurs, deletion of the render node will be triggered, which
+		# will in turn stop the render. this may flush data to the display,
+		# in which case it will emit its data and image received signals
+		# on a separate thread. if we're still holding the gil on the main
+		# thread when this happens, we'll get a deadlock.
+		del s
 
 if __name__ == "__main__":
 	unittest.main()
