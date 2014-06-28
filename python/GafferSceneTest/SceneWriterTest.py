@@ -124,6 +124,52 @@ class SceneWriterTest( GafferSceneTest.SceneTestCase ) :
 		
 		testCacheFile( self.__testFile )
 
+	def testExecutionHash( self ) :
+				
+		c = Gaffer.Context()
+		c.setFrame( 1 )
+		c2 = Gaffer.Context()
+		c2.setFrame( 2 )
+		
+		writer = GafferScene.SceneWriter()
+		
+		# empty file produces no effect
+		self.assertEqual( writer["fileName"].getValue(), "" )
+		self.assertEqual( writer.executionHash( c ), IECore.MurmurHash() )
+		
+		# no input scene produces no effect
+		writer["fileName"].setValue( "/tmp/test.exr" )
+		self.assertEqual( writer.executionHash( c ), IECore.MurmurHash() )
+		
+		# now theres a file and a scene, we get some output
+		plane = GafferScene.Plane()
+		writer["in"].setInput( plane["out"] )
+		self.assertNotEqual( writer.executionHash( c ), IECore.MurmurHash() )
+		
+		# output varies by time
+		self.assertNotEqual( writer.executionHash( c ), writer.executionHash( c2 ) )
+		
+		# output varies by new Context entries
+		current = writer.executionHash( c )
+		c["renderDirectory"] = "/tmp/sceneWriterTest"
+		self.assertNotEqual( writer.executionHash( c ), current )
+		
+		# output varies by changed Context entries
+		current = writer.executionHash( c )
+		c["renderDirectory"] = "/tmp/sceneWriterTest2"
+		self.assertNotEqual( writer.executionHash( c ), current )
+		
+		# output doesn't vary by ui Context entries
+		current = writer.executionHash( c )
+		c["ui:something"] = "alterTheUI"
+		self.assertEqual( writer.executionHash( c ), current )
+		
+		# also varies by input node
+		current = writer.executionHash( c )
+		cube = GafferScene.Cube()
+		writer["in"].setInput( cube["out"] )
+		self.assertNotEqual( writer.executionHash( c ), current )
+	
 	def tearDown( self ) :
 		
 		if os.path.exists( self.__testFile ) :
