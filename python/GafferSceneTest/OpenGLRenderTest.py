@@ -128,7 +128,51 @@ class OpenGLRenderTest( unittest.TestCase ) :
 		
 		self.assertTrue( os.path.exists( "/tmp/openGLRenderTest" ) )
 		self.assertTrue( os.path.exists( "/tmp/openGLRenderTest/test.0001.exr" ) )
+	
+	def testExecutionHash( self ) :
 				
+		c = Gaffer.Context()
+		c.setFrame( 1 )
+		c2 = Gaffer.Context()
+		c2.setFrame( 2 )
+		
+		s = Gaffer.ScriptNode()
+		s["plane"] = GafferScene.Plane()
+		s["displays"] = GafferScene.Displays()
+		s["displays"]["in"].setInput( s["plane"]["out"] )
+		s["displays"].addDisplay( "beauty", IECore.Display( "$renderDirectory/test.####.exr", "exr", "rgba", {} ) )
+		s["render"] = GafferScene.OpenGLRender()
+		
+		# no input scene produces no effect
+		self.assertEqual( s["render"].executionHash( c ), IECore.MurmurHash() )
+		
+		# now theres an scene to render, we get some output
+		s["render"]["in"].setInput( s["displays"]["out"] )
+		self.assertNotEqual( s["render"].executionHash( c ), IECore.MurmurHash() )
+		
+		# output varies by time
+		self.assertNotEqual( s["render"].executionHash( c ), s["render"].executionHash( c2 ) )
+		
+		# output varies by new Context entries
+		current = s["render"].executionHash( c )
+		c["renderDirectory"] = "/tmp/openGLRenderTest"
+		self.assertNotEqual( s["render"].executionHash( c ), current )
+		
+		# output varies by changed Context entries
+		current = s["render"].executionHash( c )
+		c["renderDirectory"] = "/tmp/openGLRenderTest2"
+		self.assertNotEqual( s["render"].executionHash( c ), current )
+		
+		# output doesn't vary by ui Context entries
+		current = s["render"].executionHash( c )
+		c["ui:something"] = "alterTheUI"
+		self.assertEqual( s["render"].executionHash( c ), current )
+		
+		# also varies by input node
+		current = s["render"].executionHash( c )
+		s["render"]["in"].setInput( s["plane"]["out"] )
+		self.assertNotEqual( s["render"].executionHash( c ), current )
+	
 	def setUp( self ) :
 			
 		for f in (

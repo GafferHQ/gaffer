@@ -87,9 +87,32 @@ const StringPlug *SceneWriter::fileNamePlug() const
 
 IECore::MurmurHash SceneWriter::executionHash( const Gaffer::Context *context ) const
 {
-	/// \todo How do we cheaply hash something representing the whole scene?
-	/// Do we just hash the identity of the input node?
-	return IECore::MurmurHash();
+	Context::Scope scope( context );
+	const ScenePlug *scenePlug = inPlug()->source<ScenePlug>();
+	if ( ( fileNamePlug()->getValue() == "" ) || ( scenePlug == inPlug() ) )
+	{
+		return IECore::MurmurHash();
+	}
+	
+	IECore::MurmurHash h = ExecutableNode::executionHash( context );
+	/// \todo hash the actual scene when we have a hierarchyHash
+	h.append( (uint64_t)scenePlug );
+	
+	std::vector<IECore::InternedString> names;
+	context->names( names );
+	for ( std::vector<IECore::InternedString>::const_iterator it = names.begin(); it != names.end(); ++it )
+	{
+		if ( it->string().compare( 0, 3, "ui:" ) )
+		{
+			h.append( *it );
+			if ( const IECore::Data *data = context->get<const IECore::Data>( *it ) )
+			{
+				data->hash( h );
+			}
+		}
+	}
+	
+	return h;
 }
 
 void SceneWriter::execute( const Contexts &contexts ) const

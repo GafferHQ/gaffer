@@ -90,7 +90,7 @@ class ExecutableNodeWrapper : public NodeWrapper<WrappedType>
 			}
 			WrappedType::executionRequirements( context, requirements );			
 		}
-
+		
 		virtual IECore::MurmurHash executionHash( const Gaffer::Context *context ) const
 		{
 			IECorePython::ScopedGILLock gilLock;

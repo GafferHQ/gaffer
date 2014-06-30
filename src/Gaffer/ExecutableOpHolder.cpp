@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2013-2014, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -36,6 +36,8 @@
 
 #include "IECore/Op.h"
 #include "IECore/MurmurHash.h"
+#include "IECore/SimpleTypedParameter.h"
+
 #include "Gaffer/Context.h"
 #include "Gaffer/ExecutableOpHolder.h"
 #include "Gaffer/CompoundParameterHandler.h"
@@ -78,18 +80,24 @@ IECore::ConstOpPtr ExecutableOpHolder::getOp( std::string *className, int *class
 
 IECore::MurmurHash ExecutableOpHolder::executionHash( const Context *context ) const
 {
-	IECore::MurmurHash h;
 	std::string className;
 	int classVersion;
-	getParameterised( &className, &classVersion );
+	if ( !getOp( &className, &classVersion ) )
+	{
+		return IECore::MurmurHash();
+	}
+	
+	IECore::MurmurHash h = ExecutableNode::executionHash( context );
 	h.append( className );
 	h.append( classVersion );
+	
 	Context::Scope scope( context );
 	const ValuePlug *parametersPlug = getChild<ValuePlug>( "parameters" );
 	if( parametersPlug )
 	{
 		parametersPlug->hash( h );
 	}
+	
 	return h;
 }
 
@@ -101,6 +109,26 @@ void ExecutableOpHolder::execute( const Contexts &contexts ) const
 		// and passing it explicitly in the operate call. Than multi-thread this loop.
 		Context::Scope scope( *cit );
 		constPointerCast<CompoundParameterHandler>( parameterHandler() )->setParameterValue();
-		constPointerCast<Op>( getOp() )->operate();
+		Op *op = constPointerCast<Op>( getOp() );
+		/// \todo: Remove this once scoping the context takes care of it for us
+		substitute( op->parameters(), *cit );
+		op->operate();
+	}
+}
+
+void ExecutableOpHolder::substitute( Parameter *parameter, const Context *context ) const
+{
+	if ( const CompoundParameter *compound = runTimeCast<const CompoundParameter>( parameter ) )
+	{
+		const CompoundParameter::ParameterVector &children = compound->orderedParameters();
+		for ( CompoundParameter::ParameterVector::const_iterator it = children.begin(); it != children.end(); ++it )
+		{
+			substitute( const_cast<Parameter*>( it->get() ), context );
+		}
+	}
+	
+	if ( StringParameter *stringParm = runTimeCast<StringParameter>( parameter ) )
+	{
+		stringParm->setTypedValue( context->substitute( stringParm->getTypedValue() ) );
 	}
 }

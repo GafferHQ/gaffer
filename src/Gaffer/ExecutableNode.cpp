@@ -148,7 +148,9 @@ void ExecutableNode::executionRequirements( const Context *context, Tasks &requi
 
 IECore::MurmurHash ExecutableNode::executionHash( const Context *context ) const
 {
-	return MurmurHash();
+	IECore::MurmurHash h;
+	h.append( typeId() );
+	return h;
 }
 
 void ExecutableNode::execute( const Contexts &contexts ) const

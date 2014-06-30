@@ -71,6 +71,10 @@ class ExecutableOpHolder : public ParameterisedHolderExecutableNode
 	
 		virtual IECore::MurmurHash executionHash( const Context *context ) const;
 		virtual void execute( const Contexts &contexts ) const;
+	
+	private :
+		
+		void substitute( IECore::Parameter *parameter, const Context *context ) const;
 		
 };
 

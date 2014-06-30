@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2013-2014, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -134,6 +134,35 @@ class ObjectWriterTest( GafferTest.TestCase ) :
 		for f in self.__exrSequence.fileNames() :
 			self.failUnless( os.path.exists( f ) )
 		
+	def testExecutionHash( self ) :
+				
+		c = Gaffer.Context()
+		c.setFrame( 1 )
+		c2 = Gaffer.Context()
+		c2.setFrame( 2 )
+		
+		s = Gaffer.ScriptNode()
+		s["n"] = Gaffer.ObjectWriter()
+		
+		# no file produces no effect
+		self.assertEqual( s["n"].executionHash( c ), IECore.MurmurHash() )
+		
+		# no input object produces no effect
+		s["n"]["fileName"].setValue( self.__exrFileName )
+		self.assertEqual( s["n"].executionHash( c ), IECore.MurmurHash() )
+		
+		# now theres a file and object, we get some output
+		s["sphere"] = GafferTest.SphereNode()
+		s["n"]["in"].setInput( s["sphere"]["out"] )
+		self.assertNotEqual( s["n"].executionHash( c ), IECore.MurmurHash() )
+		
+		# output doesn't vary by time
+		self.assertEqual( s["n"].executionHash( c ), s["n"].executionHash( c2 ) )
+		
+		# output varies by time since the file name does
+		s["n"]["fileName"].setValue( self.__exrSequence.fileName )
+		self.assertNotEqual( s["n"].executionHash( c ), s["n"].executionHash( c2 ) )
+	
 	def tearDown( self ) :
 		
 		for f in [
