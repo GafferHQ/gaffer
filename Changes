@@ -1,3 +1,55 @@
+# 0.98.0
+
+This release makes dispatchers available via the UI for the first time. Dispatchers allow many tasks (such as rib generation, rendering and compositing) to be processed for a series of frames, with dependencies between the tasks determining the execution order. It also adds support for adding and removing lights during IPR renders, and the usual  small fixes and improvements.
+
+#### Apps
+
+- Added context parameter to the execute app. This takes a series of key/value pairs that allow additional context variables to be specified.
+- Fixed shutdown warning when running `gaffer test GafferTest`.
+- Added repeat parameter to test app.
+
+#### UI
+
+- Integrated Dispatchers into the UI with a Dispatcher window, which can be launched in any of the following ways :
+	- The /Execute/ExecuteSelected menu item (Ctrl+E)
+	- The Execute button the NodeEditor
+	- The right click node menu in the NodeGraph.
+- Fixed several shutdown warnings.
+- Fixed bug in Reference node menu item.
+
+#### Core
+
+- Added jobName and jobDirectory plugs to Dispatcher. These control the creation of a location for storing temporary files needed for the dispatch.
+- Added Frame Range options to Dispatcher.
+- Improved LocalDispatcher to dispatch tasks in a subprocess (#866).
+- Fixed ExecutableOpHolder hash computation.
+- Implemented variable substitutions for ExecutableOpHolder.
+- Fixed ObjectWriter hash computation (#878).
+
+#### Scene
+
+- Implemented light add/remove/hide/show for IPR (#874).
+- Stopped ExecutableRender saving the script when it executes (#310). This is now done automatically by the dispatchers, which save a copy into the job directory.
+- Fixed ExecutableRender hash computation.
+- Fixed SceneWriter hash computation.
+
+#### Image
+
+- Fixed ImageWriter hash computation.
+
+#### API
+
+- Added ScenePlug::pathToString() method.
+- Added outputLight() method to RendererAlgo.h.
+- Fixed bug in DependencyNode dirty propagation order. This ensures that dirtiness is only signalled for a plug after it has been signalled for all the plugs it depends on and all its children.
+- Derived all Gaffer unit tests from GafferTest.TestCase.
+- Simplified Dispatcher implementations by providing doDispatch with the unique task list.
+- Made Dispatcher::uniqueTasks() private.
+- Dispatchers now require that all nodes belong to the same ScriptNode.
+- Fixed ExecutableNode::Task comparison functions and member access (#865).
+- Improved Plug bindings with a new PlugClass helper class.
+- ExecutableNode::executionHash() must now call the base class implementation first - see documentation for details.
+
 # 0.97.0
 
 This release is focussed mainly on optimisation and bug fixes, with significant speedups being provided by moving to a new caching implementation provided by Cortex 9. Behind the scenes it also contains progress towards exposing Dispatcher functionality at the user level.
