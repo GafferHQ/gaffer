@@ -96,7 +96,7 @@ IECore::MurmurHash SceneWriter::executionHash( const Gaffer::Context *context ) 
 	
 	IECore::MurmurHash h = ExecutableNode::executionHash( context );
 	/// \todo hash the actual scene when we have a hierarchyHash
-	h.append( (size_t)(scenePlug->node()) );
+	h.append( (size_t)scenePlug );
 	
 	std::vector<IECore::InternedString> names;
 	context->names( names );
