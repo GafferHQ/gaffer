@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2013-2014, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -68,7 +68,21 @@ class ObjectWriter( Gaffer.ExecutableNode ) :
 	def parameterHandler( self ) :
 	
 		return self.__parameterHandler
+	
+	def executionHash( self, context ) :
 		
+		with context :
+			if not self["fileName"].getValue() or isinstance( self["in"].getValue(), IECore.NullObject ) :
+				return IECore.MurmurHash()
+			
+			h = Gaffer.ExecutableNode.executionHash( self, context )
+			h.append( self["fileName"].hash() )
+			h.append( self["in"].hash() )
+			if "parameters" in self.keys() :
+				h.append( self["parameters"].hash() )
+			
+			return h
+	
 	def execute( self, contexts ) :
 	
 		for context in contexts :
