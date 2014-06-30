@@ -146,7 +146,7 @@ class MemberPlugSerialiser : public CompoundPlugSerialiser
 void GafferBindings::bindCompoundDataPlug()
 {
 
-	scope s = IECorePython::RunTimeTypedClass<CompoundDataPlug>()
+	scope s = PlugClass<CompoundDataPlug>()
 		.def( "__init__", make_constructor( compoundDataPlugConstructor, default_call_policies(),  
 				(
 					arg( "name" ) = GraphComponent::defaultName<CompoundDataPlug>(),
@@ -156,7 +156,6 @@ void GafferBindings::bindCompoundDataPlug()
 				)
 			)	
 		)
-		.GAFFERBINDINGS_DEFPLUGWRAPPERFNS( CompoundDataPlug )
 		.def( "addMember", &addMemberWrapper, ( arg_( "name" ), arg_( "defaultValue" ), arg_( "plugName" ) = "member1", arg_( "plugFlags" ) = Plug::Default | Plug::Dynamic ) )
 		.def( "addMember", &addMemberWrapper2, ( arg_( "name" ), arg_( "valuePlug" ), arg_( "plugName" ) = "member1" ) )
 		.def( "addOptionalMember", &addOptionalMemberWrapper, ( arg_( "name" ), arg_( "defaultValue" ), arg_( "plugName" ) = "member1", arg_( "plugFlags" ) = Plug::Default | Plug::Dynamic, arg_( "enabled" ) = false ) )
@@ -167,7 +166,7 @@ void GafferBindings::bindCompoundDataPlug()
 		.def( "fillCompoundObject", &fillCompoundObject )
 	;
 	
-	IECorePython::RunTimeTypedClass<CompoundDataPlug::MemberPlug>()
+	PlugClass<CompoundDataPlug::MemberPlug>()
 		.def( init<const char *, Plug::Direction, unsigned>(
 				(
 					boost::python::arg_( "name" )=GraphComponent::defaultName<CompoundDataPlug::MemberPlug>(),
@@ -176,7 +175,6 @@ void GafferBindings::bindCompoundDataPlug()
 				)
 			)
 		)
-		.GAFFERBINDINGS_DEFPLUGWRAPPERFNS( CompoundDataPlug::MemberPlug )
 		.def( "__repr__", memberPlugRepr )
 	;
 

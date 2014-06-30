@@ -172,7 +172,7 @@ IECore::MurmurHash attributesHashWrapper( const ScenePlug &plug, object scenePat
 void GafferSceneBindings::bindScenePlug()
 {
 
-	IECorePython::RunTimeTypedClass<ScenePlug>()
+	PlugClass<ScenePlug>()
 		.def( init<const std::string &, Plug::Direction, unsigned>(
 				(
 					arg( "name" ) = Gaffer::GraphComponent::defaultName<ScenePlug>(),
