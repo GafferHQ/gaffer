@@ -154,8 +154,6 @@ class EngineWrapper : public Expression::Engine, public IECorePython::Wrapper<Ex
 		
 };
 
-IE_CORE_DECLAREPTR( EngineWrapper )
-
 struct ExpressionEngineCreator
 {
 	ExpressionEngineCreator( object fn )
@@ -198,7 +196,7 @@ void GafferBindings::bindExpression()
 	
 	scope s = DependencyNodeClass<Expression>();
 	
-	IECorePython::RefCountedClass<Expression::Engine, IECore::RefCounted, EngineWrapperPtr>( "Engine" )
+	IECorePython::RefCountedClass<Expression::Engine, IECore::RefCounted, EngineWrapper>( "Engine" )
 		.def( init<>() )
 		.def( "registerEngine", &registerEngine ).staticmethod( "registerEngine" )
 		.def( "registeredEngines", &registeredEnginesWrapper ).staticmethod( "registeredEngines" )

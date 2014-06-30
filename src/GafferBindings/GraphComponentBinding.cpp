@@ -233,9 +233,8 @@ struct BinarySlotCaller
 void GafferBindings::bindGraphComponent()
 {
 	typedef GraphComponentWrapper<GraphComponent> Wrapper;
-	IE_CORE_DECLAREPTR( Wrapper );
 
-	scope s = GraphComponentClass<GraphComponent, WrapperPtr>()
+	scope s = GraphComponentClass<GraphComponent, Wrapper>()
 		.def( init<>() )
 		.def( init<const std::string &>() )
 		.def( "setName", &setName )

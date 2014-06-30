@@ -127,9 +127,8 @@ bool NodeSerialiser::childNeedsConstruction( const Gaffer::GraphComponent *child
 void GafferBindings::bindNode()
 {
 	typedef NodeWrapper<Node> Wrapper;
-	IE_CORE_DECLAREPTR( Wrapper );
 
-	scope s = NodeClass<Node, WrapperPtr>()
+	scope s = NodeClass<Node, Wrapper>()
 		.def( "scriptNode", &scriptNode )
 		.def( "plugSetSignal", &Node::plugSetSignal, return_internal_reference<1>() )
 		.def( "plugInputChangedSignal", &Node::plugInputChangedSignal, return_internal_reference<1>() )

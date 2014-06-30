@@ -136,8 +136,6 @@ class CompoundParameterHandlerWrapper : public CompoundParameterHandler, public 
 
 };
 
-IE_CORE_DECLAREPTR( CompoundParameterHandlerWrapper )
-
 static void compoundParameterHandlerRestore( CompoundParameterHandler &ph, GraphComponent *plugParent )
 {
 	return ph.CompoundParameterHandler::restore( plugParent );
@@ -161,7 +159,7 @@ static void compoundParameterHandlerSetPlugValue( CompoundParameterHandler &ph )
 void GafferBindings::bindCompoundParameterHandler()
 {
 	
-	IECorePython::RefCountedClass<CompoundParameterHandler, ParameterHandler, CompoundParameterHandlerWrapperPtr>( "CompoundParameterHandler" )
+	IECorePython::RefCountedClass<CompoundParameterHandler, ParameterHandler, CompoundParameterHandlerWrapper>( "CompoundParameterHandler" )
 		.def( init<IECore::CompoundParameterPtr>() )
 		.def( "restore", &compoundParameterHandlerRestore, ( arg( "plugParent" ) ) )
 		.def( "setupPlug", &compoundParameterHandlerSetupPlug, ( arg( "plugParent" ), arg( "direction" )=Plug::In ) )

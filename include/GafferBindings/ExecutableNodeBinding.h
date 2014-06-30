@@ -48,8 +48,8 @@ namespace GafferBindings
 
 void bindExecutableNode();
 
-template<typename T, typename Ptr=IECore::IntrusivePtr<T> >
-class ExecutableNodeClass : public NodeClass<T, Ptr>
+template<typename T, typename TWrapper=T>
+class ExecutableNodeClass : public NodeClass<T, TWrapper>
 {
 	public :
 	

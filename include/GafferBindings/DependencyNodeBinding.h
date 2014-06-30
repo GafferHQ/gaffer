@@ -54,8 +54,8 @@ namespace GafferBindings
 
 void bindDependencyNode();
 
-template<typename T, typename Ptr=IECore::IntrusivePtr<T> >
-class DependencyNodeClass : public NodeClass<T, Ptr>
+template<typename T, typename TWrapper=T>
+class DependencyNodeClass : public NodeClass<T, TWrapper>
 {
 	public :
 	

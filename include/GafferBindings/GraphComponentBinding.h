@@ -45,8 +45,8 @@
 namespace GafferBindings
 {
 
-template<typename T, typename Ptr=IECore::IntrusivePtr<T> >
-class GraphComponentClass : public IECorePython::RunTimeTypedClass<T, Ptr>
+template<typename T, typename TWrapper=T>
+class GraphComponentClass : public IECorePython::RunTimeTypedClass<T, TWrapper>
 {
 	public :
 	

@@ -46,7 +46,6 @@ using namespace Gaffer;
 void GafferBindings::bindComputeNode()
 {
 	typedef ComputeNodeWrapper<ComputeNode> Wrapper;
-	IE_CORE_DECLAREPTR( Wrapper );
 
-	DependencyNodeClass<ComputeNode, WrapperPtr>();	
+	DependencyNodeClass<ComputeNode, Wrapper>();
 }

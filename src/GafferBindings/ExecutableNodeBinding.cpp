@@ -86,9 +86,8 @@ static ExecutableNodePtr taskNode( const ExecutableNode::Task &t )
 void GafferBindings::bindExecutableNode()
 {
 	typedef ExecutableNodeWrapper<ExecutableNode> Wrapper;
-	IE_CORE_DECLAREPTR( Wrapper );
 	
-	scope s = ExecutableNodeClass<ExecutableNode, WrapperPtr>();
+	scope s = ExecutableNodeClass<ExecutableNode, Wrapper>();
 
 	class_<ExecutableNode::Task>( "Task" )
 		.def( init<>() )

@@ -62,8 +62,6 @@ class ImageViewWrapper : public NodeWrapper<ImageView>
 
 };
 
-IE_CORE_DECLAREPTR( ImageViewWrapper );
-
 struct DisplayTransformCreator
 {
 	DisplayTransformCreator( object fn )
@@ -105,7 +103,7 @@ static boost::python::list registeredDisplayTransforms()
 void GafferImageUIBindings::bindImageView()
 {
 
-	GafferBindings::NodeClass<ImageView, ImageViewWrapperPtr>()
+	GafferBindings::NodeClass<ImageView, ImageViewWrapper>()
 		.def( init<const std::string &>() )
 		.def( "_insertConverter", &ImageView::insertConverter )
 		.def( "registerDisplayTransform", &registerDisplayTransform )

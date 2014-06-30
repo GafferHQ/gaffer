@@ -45,8 +45,8 @@
 namespace GafferUIBindings
 {
 
-template<typename T, typename Ptr=IECore::IntrusivePtr<T> >
-class NodeGadgetClass : public GadgetClass<T, Ptr>
+template<typename T, typename TWrapper=T>
+class NodeGadgetClass : public GadgetClass<T, TWrapper>
 {
 	public :
 	

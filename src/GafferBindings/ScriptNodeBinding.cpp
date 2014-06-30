@@ -210,8 +210,6 @@ class ScriptNodeWrapper : public NodeWrapper<ScriptNode>
 				
 };
 
-IE_CORE_DECLAREPTR( ScriptNodeWrapper )
-
 struct ScriptEvaluatedSlotCaller
 {
 	boost::signals::detail::unusable operator()( boost::python::object slot, ScriptNodePtr node, const std::string script, PyObject *result )
@@ -325,7 +323,7 @@ struct UndoAddedSlotCaller
 
 void GafferBindings::bindScriptNode()
 {
-	scope s = NodeClass<ScriptNode, ScriptNodeWrapperPtr>()
+	scope s = NodeClass<ScriptNode, ScriptNodeWrapper>()
 		.def( "applicationRoot", &applicationRoot )
 		.def( "selection", &selection )
 		.def( "undoAvailable", &ScriptNode::undoAvailable )

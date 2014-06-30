@@ -50,8 +50,8 @@ namespace GafferBindings
 
 void bindPlug();
 
-template<typename T, typename Ptr=IECore::IntrusivePtr<T> >
-class PlugClass : public GraphComponentClass<T, Ptr>
+template<typename T, typename TWrapper=T>
+class PlugClass : public GraphComponentClass<T, TWrapper>
 {
 	public :
 	

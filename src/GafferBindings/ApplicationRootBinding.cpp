@@ -99,8 +99,6 @@ class ApplicationRootWrapper : public ApplicationRoot, public IECorePython::Wrap
 
 };
 
-IE_CORE_DECLAREPTR( ApplicationRootWrapper )
-
 static IECore::ObjectPtr getClipboardContents( ApplicationRoot &a )
 {
 	IECore::ConstObjectPtr o = a.getClipboardContents();
@@ -129,7 +127,7 @@ struct ClipboardSlotCaller
 
 void GafferBindings::bindApplicationRoot()
 {
-	scope s = IECorePython::RunTimeTypedClass<ApplicationRoot, ApplicationRootWrapperPtr>()
+	scope s = IECorePython::RunTimeTypedClass<ApplicationRoot, ApplicationRootWrapper>()
 		.def( init<>() )
 		.def( init<const std::string &>() )
 		.def( "getClipboardContents", &getClipboardContents )

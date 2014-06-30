@@ -128,8 +128,7 @@ void GafferUIBindings::bindView()
 	GafferBindings::NodeClass<View3D>();
 	
 	typedef GafferBindings::NodeWrapper<ObjectView> ObjectViewWrapper;
-	IE_CORE_DECLAREPTR( ObjectViewWrapper );
 	
-	GafferBindings::NodeClass<ObjectView, ObjectViewWrapperPtr>();
+	GafferBindings::NodeClass<ObjectView, ObjectViewWrapper>();
 	
 }
