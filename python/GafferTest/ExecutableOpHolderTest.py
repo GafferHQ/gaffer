@@ -46,11 +46,14 @@ class TestOp (IECore.Op) :
 	def __init__( self ) :
 
 		IECore.Op.__init__( self, "Test op", IECore.IntParameter( "result", "", 0 ) )
+		self.parameters().addParameter( IECore.StringParameter( "stringParm", "testing context substitution", "" ) )
 		self.counter = 0
+		self.stringValue = ""
 
 	def doOperation( self, args ) :
 
 		self.counter += 1
+		self.stringValue = args["stringParm"]
 		return IECore.IntData( self.counter )
 
 class ExecutableOpHolderTest( GafferTest.TestCase ) :
@@ -150,7 +153,41 @@ class ExecutableOpHolderTest( GafferTest.TestCase ) :
 		s2.execute( s.serialise() )
 		
 		self.assertEqual( s["n"]["parameters"].keys(), s2["n"]["parameters"].keys() )
-			
+	
+	def testExecutionHash( self ) :
+		
+		c = Gaffer.Context()
+		c.setFrame( 1 )
+		c2 = Gaffer.Context()
+		c2.setFrame( 2 )
+		
+		n = Gaffer.ExecutableOpHolder()
+		op = TestOp()
+		
+		# output doesn't vary until we set an op
+		self.assertEqual( n.executionHash( c ), IECore.MurmurHash() )
+		
+		# output varies if any op is set
+		n.setParameterised( op )
+		self.assertNotEqual( n.executionHash( c ), IECore.MurmurHash() )
+		
+		# output doesn't vary by time unless ${frame} is used by the parameters
+		self.assertEqual( n.executionHash( c ), n.executionHash( c2 ) )
+		
+		# output varies by time because ${frame} is used by the parameters
+		n["parameters"]["stringParm"].setValue( "${frame}" )
+		self.assertNotEqual( n.executionHash( c ), n.executionHash( c2 ) )
+		
+		# output varies any context entry used by the parameters
+		n["parameters"]["stringParm"].setValue( "${test}" )
+		self.assertEqual( n.executionHash( c ), n.executionHash( c2 ) )
+		c["test"] = "a"
+		self.assertNotEqual( n.executionHash( c ), n.executionHash( c2 ) )
+		c2["test"] = "b"
+		self.assertNotEqual( n.executionHash( c ), n.executionHash( c2 ) )
+		c2["test"] = "a"
+		self.assertEqual( n.executionHash( c ), n.executionHash( c2 ) )
+
 if __name__ == "__main__":
 	unittest.main()
 	

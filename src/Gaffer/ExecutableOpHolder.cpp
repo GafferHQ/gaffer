@@ -78,18 +78,24 @@ IECore::ConstOpPtr ExecutableOpHolder::getOp( std::string *className, int *class
 
 IECore::MurmurHash ExecutableOpHolder::executionHash( const Context *context ) const
 {
-	IECore::MurmurHash h;
 	std::string className;
 	int classVersion;
-	getParameterised( &className, &classVersion );
+	if ( !getOp( &className, &classVersion ) )
+	{
+		return IECore::MurmurHash();
+	}
+	
+	IECore::MurmurHash h = ExecutableNode::executionHash( context );
 	h.append( className );
 	h.append( classVersion );
+	
 	Context::Scope scope( context );
 	const ValuePlug *parametersPlug = getChild<ValuePlug>( "parameters" );
 	if( parametersPlug )
 	{
 		parametersPlug->hash( h );
 	}
+	
 	return h;
 }
 
