@@ -75,7 +75,7 @@ def __projectBookmark( forWidget, location ) :
 	else :
 		return os.getcwd()
 
-localDispatcher = Gaffer.Dispatcher.dispatcher( "local" )
+localDispatcher = Gaffer.Dispatcher.dispatcher( "Local" )
 localDispatcher["jobName"].setValue( "${script:name}" )
 localDispatcher["jobDirectory"].setValue( "${project:rootDirectory}/dispatcher" )
 

@@ -85,7 +85,7 @@ class _DispatcherWindow( GafferUI.Window ) :
 		
 		GafferUI.Window.__init__( self, **kw )
 		
-		self.__dispatcher = Gaffer.Dispatcher.dispatcher( "local" )
+		self.__dispatcher = Gaffer.Dispatcher.dispatcher( "Local" )
 		self.__nodes = []
 		
 		with self :
@@ -95,7 +95,7 @@ class _DispatcherWindow( GafferUI.Window ) :
 				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
 					GafferUI.Label( "Dispatcher" )
 					dispatchersMenu = GafferUI.MultiSelectionMenu( allowMultipleSelection = False, allowEmptySelection = False )
-					dispatchersMenu.append( [ IECore.CamelCase.toSpaced( x ) for x in Gaffer.Dispatcher.dispatcherNames() ] )
+					dispatchersMenu.append( Gaffer.Dispatcher.dispatcherNames() )
 					dispatchersMenu.setSelection( [ "Local" ] )
 					self.__dispatchersMenuSelectionChangedConnection = dispatchersMenu.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__dispatcherChanged ) )
 				
@@ -147,7 +147,7 @@ class _DispatcherWindow( GafferUI.Window ) :
 	
 	def __dispatcherChanged( self, menu ) :
 		
-		self.__dispatcher = Gaffer.Dispatcher.dispatcher( IECore.CamelCase.fromSpaced( menu.getSelection()[0], IECore.CamelCase.Caps.AllExceptFirst ) )
+		self.__dispatcher = Gaffer.Dispatcher.dispatcher( menu.getSelection()[0] )
 		self.__update()
 
 ##################################################################################

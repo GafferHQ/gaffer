@@ -48,18 +48,18 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 	
 	def setUp( self ) :
 		
-		localDispatcher = Gaffer.Dispatcher.dispatcher( "local" )
+		localDispatcher = Gaffer.Dispatcher.dispatcher( "Local" )
 		localDispatcher["jobDirectory"].setValue( "/tmp/dispatcherTest" )
 		localDispatcher["framesMode"].setValue( Gaffer.Dispatcher.FramesMode.CurrentFrame )
 	
 	def testDispatcherRegistration( self ) :
 		
-		self.failUnless( "local" in Gaffer.Dispatcher.dispatcherNames() )
-		self.failUnless( Gaffer.Dispatcher.dispatcher( "local" ).isInstanceOf( Gaffer.LocalDispatcher.staticTypeId() ) )
+		self.failUnless( "Local" in Gaffer.Dispatcher.dispatcherNames() )
+		self.failUnless( Gaffer.Dispatcher.dispatcher( "Local" ).isInstanceOf( Gaffer.LocalDispatcher.staticTypeId() ) )
 	
 	def testDispatch( self ) :
 		
-		dispatcher = Gaffer.Dispatcher.dispatcher( "local" )
+		dispatcher = Gaffer.Dispatcher.dispatcher( "Local" )
 		
 		def createWriter( text ) :
 			node = GafferTest.TextWriter()
@@ -146,7 +146,7 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		context.setFrame( s.context().getFrame() + 10 )
 		
 		with context :
-			Gaffer.Dispatcher.dispatcher( "local" ).dispatch( [ s["n1"] ] )
+			Gaffer.Dispatcher.dispatcher( "Local" ).dispatch( [ s["n1"] ] )
 		
 		fileName = context.substitute( s["n1"]["fileName"].getValue() )
 		self.assertTrue( os.path.isfile( fileName ) )
@@ -156,7 +156,7 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 	
 	def testDispatchScriptRange( self ) :
 		
-		dispatcher = Gaffer.Dispatcher.dispatcher( "local" )
+		dispatcher = Gaffer.Dispatcher.dispatcher( "Local" )
 		dispatcher["framesMode"].setValue( Gaffer.Dispatcher.FramesMode.ScriptRange )
 		frameList = IECore.FrameList.parse( "5-7" )
 		
@@ -229,7 +229,7 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 	
 	def testDispatchCustomRange( self ) :
 		
-		dispatcher = Gaffer.Dispatcher.dispatcher( "local" )
+		dispatcher = Gaffer.Dispatcher.dispatcher( "Local" )
 		dispatcher["framesMode"].setValue( Gaffer.Dispatcher.FramesMode.CustomRange )
 		frameList = IECore.FrameList.parse( "2-6x2" )
 		dispatcher["frameRange"].setValue( str(frameList) )
@@ -301,7 +301,7 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 	
 	def testDispatchBadCustomRange( self ) :
 		
-		dispatcher = Gaffer.Dispatcher.dispatcher( "local" )
+		dispatcher = Gaffer.Dispatcher.dispatcher( "Local" )
 		dispatcher["framesMode"].setValue( Gaffer.Dispatcher.FramesMode.CustomRange )
 		dispatcher["frameRange"].setValue( "notAFrameRange" )
 		
@@ -328,7 +328,7 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		self.assertFalse( os.path.isfile( fileName ) )
 		
 		with context :
-			Gaffer.Dispatcher.dispatcher( "local" ).dispatch( [ s["n1"] ] )
+			Gaffer.Dispatcher.dispatcher( "Local" ).dispatch( [ s["n1"] ] )
 		
 		self.assertTrue( os.path.isfile( fileName ) )
 		self.assertTrue( os.path.basename( fileName ).startswith( context["script:name"] ) )
@@ -361,7 +361,7 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		s["n1"]["fileName"].setValue( "/tmp/dispatcherTest/n1_####.txt" )
 		s["n1"]["text"].setValue( "n1 on ${frame}" )
 		
-		dispatcher = Gaffer.Dispatcher.dispatcher( "local" )
+		dispatcher = Gaffer.Dispatcher.dispatcher( "Local" )
 		dispatcher.dispatch( [ s["n1"] ] )
 		
 		self.assertEqual( len( preCs ), 1 )
