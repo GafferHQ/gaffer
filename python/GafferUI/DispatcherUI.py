@@ -81,24 +81,29 @@ def repeatPrevious( menu ) :
 
 class _DispatcherWindow( GafferUI.Window ) :
 	
-	def __init__( self, dispatcher, **kw ) :
+	def __init__( self, **kw ) :
 		
 		GafferUI.Window.__init__( self, **kw )
 		
-		self.__dispatcher = dispatcher
+		self.__dispatcher = Gaffer.Dispatcher.dispatcher( "Local" )
 		self.__nodes = []
 		
 		with self :
 			
 			with GafferUI.ListContainer( orientation = GafferUI.ListContainer.Orientation.Vertical, spacing = 2, borderWidth = 4 ) :
 				
-				GafferUI.NodeUI.create( dispatcher )
+				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
+					GafferUI.Label( "Dispatcher" )
+					dispatchersMenu = GafferUI.MultiSelectionMenu( allowMultipleSelection = False, allowEmptySelection = False )
+					dispatchersMenu.append( Gaffer.Dispatcher.dispatcherNames() )
+					dispatchersMenu.setSelection( [ "Local" ] )
+					self.__dispatchersMenuSelectionChangedConnection = dispatchersMenu.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__dispatcherChanged ) )
+				
+				self.__frame = GafferUI.Frame( borderStyle=GafferUI.Frame.BorderStyle.None, borderWidth=0 )
 				self.__dispatchButton = GafferUI.Button( "Dispatch" )
 				self.__dispatchClickedConnection = self.__dispatchButton.clickedSignal().connect( Gaffer.WeakMethod( self.__dispatchClicked ) )
 		
-		self.__updateTitle()
-		
-		_DispatcherWindow.__instances.append( weakref.ref( self ) )
+		self.__update()
 	
 	def setVisible( self, visible ) :
 		
@@ -116,9 +121,14 @@ class _DispatcherWindow( GafferUI.Window ) :
 		self.__nodes = nodes
 		self.__updateTitle()
 	
+	def __update( self ) :
+		
+		self.__frame.setChild( GafferUI.NodeUI.create( self.__dispatcher ) )
+		self.__updateTitle()
+	
 	def __updateTitle( self ) :
 		
-		title = IECore.CamelCase.toSpaced( self.__dispatcher.getName() )
+		title = "Dispatching"
 		if len(self.__nodes) :
 			title += ": " + ", ".join( [ x.getName() for x in self.__nodes ] )
 		
@@ -135,31 +145,10 @@ class _DispatcherWindow( GafferUI.Window ) :
 			self.__dispatcher.dispatch( self.__nodes )
 		## \todo: update _executeUILastExecuted
 	
-	__instances = [] # weak references to all instances - used by acquire()
-	
-	## Returns the DispatcherWindow for the specified dispatcher, creating one if necessary.
-	@staticmethod
-	def acquire( dispatcher ) :
+	def __dispatcherChanged( self, menu ) :
 		
-		for w in _DispatcherWindow.__instances :
-			
-			window = w()
-			if window is not None and window.dispatcher().isSame( dispatcher ) :
-				return window
-		
-		return _DispatcherWindow( dispatcher )
-	
-	__currentDispatcherName = "local"
-	
-	@staticmethod
-	def currentDispatcher() :
-		
-		return Gaffer.Dispatcher.dispatcher( _DispatcherWindow.__currentDispatcherName )
-	
-	@staticmethod
-	def setCurrentDispatcherName( name ) :
-		
-		_DispatcherWindow.__currentDispatcherName = name
+		self.__dispatcher = Gaffer.Dispatcher.dispatcher( menu.getSelection()[0] )
+		self.__update()
 
 ##################################################################################
 # PlugValueWidget for execution - this forms the header for the ExecutableNode ui.
@@ -265,20 +254,30 @@ def _execute( nodes ) :
 	script._executeUILastExecuted = []
 	
 	with script.context() :
-		_DispatcherWindow.currentDispatcher().dispatch( nodes )
+		__dispatcherWindow( script ).dispatcher().dispatch( nodes )
 	
 	script._executeUILastExecuted = [ weakref.ref( node ) for node in nodes ]
 
-def _showDispatcherWindow( nodes ) :
+__dispatcherWindowInstance = None
+def __dispatcherWindow( script ) :
 	
-	dispatcher = _DispatcherWindow.currentDispatcher()
+	global __dispatcherWindowInstance
 	
-	window = _DispatcherWindow.acquire( dispatcher )
-	window.setNodesToDispatch( nodes )
+	if __dispatcherWindowInstance is not None and __dispatcherWindowInstance() :
+		window = __dispatcherWindowInstance()
+	else :
+		window = _DispatcherWindow()
+		__dispatcherWindowInstance = weakref.ref( window )
 	
-	scriptWindow = GafferUI.ScriptWindow.acquire( nodes[0].scriptNode() )
+	scriptWindow = GafferUI.ScriptWindow.acquire( script )
 	scriptWindow.addChildWindow( window )
 	
+	return window
+
+def _showDispatcherWindow( nodes ) :
+	
+	window = __dispatcherWindow( nodes[0].scriptNode() )
+	window.setNodesToDispatch( nodes )
 	window.setVisible( True )
 
 def __selectedNodes( script ) :
