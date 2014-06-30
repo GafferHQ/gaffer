@@ -152,8 +152,8 @@ class ObjectWriterTest( GafferTest.TestCase ) :
 		self.assertEqual( s["n"].executionHash( c ), IECore.MurmurHash() )
 		
 		# now theres a file and object, we get some output
-		checker = IECore.Reader.create( os.path.dirname( __file__ ) + "/images/checker.exr" ).read()
-		s["n"]["in"].setValue( checker )
+		s["sphere"] = GafferTest.SphereNode()
+		s["n"]["in"].setInput( s["sphere"]["out"] )
 		self.assertNotEqual( s["n"].executionHash( c ), IECore.MurmurHash() )
 		
 		# output doesn't vary by time

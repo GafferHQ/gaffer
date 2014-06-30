@@ -72,7 +72,7 @@ class ObjectWriter( Gaffer.ExecutableNode ) :
 	def executionHash( self, context ) :
 		
 		with context :
-			if not self["fileName"].getValue() or isinstance( self["in"].getValue(), IECore.NullObject ) :
+			if not self["fileName"].getValue() or self["in"].source() == self["in"] :
 				return IECore.MurmurHash()
 			
 			h = Gaffer.ExecutableNode.executionHash( self, context )
