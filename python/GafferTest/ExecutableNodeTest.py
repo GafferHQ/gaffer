@@ -61,8 +61,7 @@ class ExecutableNodeTest( GafferTest.TestCase ) :
 				return IECore.MurmurHash()
 			
 			h = Gaffer.ExecutableNode.executionHash( self, context )
-			h.append( self.typeId() )
-			h.append( context['time'] )
+			h.append( context.getFrame() )
 			return h
 		
 	IECore.registerRunTimeTyped( MyNode )
@@ -75,11 +74,11 @@ class ExecutableNodeTest( GafferTest.TestCase ) :
 	def testExecutionHash( self ) :
 
 		c1 = Gaffer.Context()
-		c1['time'] = 1.0
+		c1.setFrame( 1 )
 		c2 = Gaffer.Context()
-		c2['time'] = 2.0
+		c2.setFrame( 2 )
 		c3 = Gaffer.Context()
-		c3['time'] = 3.0
+		c3.setFrame( 3.0 )
 
 		# hashes that don't use the context are equivalent
 		n = ExecutableNodeTest.MyNode(False)
@@ -116,9 +115,9 @@ class ExecutableNodeTest( GafferTest.TestCase ) :
 		"""Test the function executionRequirements and Executable::defaultRequirements """
 
 		c1 = Gaffer.Context()
-		c1['time'] = 1.0
+		c1.setFrame( 1 )
 		c2 = Gaffer.Context()
-		c2['time'] = 2.0
+		c2.setFrame( 2 )
 
 		n = ExecutableNodeTest.MyNode(True)
 		n2 = ExecutableNodeTest.MyNode(True)
@@ -197,12 +196,12 @@ class ExecutableNodeTest( GafferTest.TestCase ) :
 		
 		# MyNode.executionHash() depends on the context time, so tasks will vary
 		my = ExecutableNodeTest.MyNode( True )
-		c["time"] = 1.0
+		c.setFrame( 1 )
 		t1 = Gaffer.ExecutableNode.Task( my, c )
 		t2 = Gaffer.ExecutableNode.Task( my, c )
 		self.assertEqual( t1, t2 )
 		c2 = Gaffer.Context()
-		c2["time"] = 2.0
+		c2.setFrame( 2 )
 		t3 = Gaffer.ExecutableNode.Task( my, c2 )
 		self.assertNotEqual( t1, t3 )
 		my2 = ExecutableNodeTest.MyNode( True )
