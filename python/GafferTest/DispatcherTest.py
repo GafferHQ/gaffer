@@ -55,8 +55,7 @@ class TestOp (IECore.Op) :
 	def doOperation( self, args ) :
 
 		self.counter += 1
-		## \todo: remove this dependancy on Gaffer when ExecutableOpHolder is correctly substituting parameter values
-		self.frames.append( Gaffer.Context.current().getFrame() )
+		self.frames.append( int(args["currentFrame"].value) )
 		self.executionOrder.append( self )
 		return IECore.IntData( self.counter )
 

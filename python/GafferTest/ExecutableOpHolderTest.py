@@ -53,7 +53,7 @@ class TestOp (IECore.Op) :
 	def doOperation( self, args ) :
 
 		self.counter += 1
-		self.stringValue = args["stringParm"]
+		self.stringValue = args["stringParm"].value
 		return IECore.IntData( self.counter )
 
 class ExecutableOpHolderTest( GafferTest.TestCase ) :
@@ -107,6 +107,36 @@ class ExecutableOpHolderTest( GafferTest.TestCase ) :
 		n.execute( [ Gaffer.Context() ] )
 		self.assertEqual( op.counter, 1 )
 
+	def testContextSubstitutions( self ) :
+	
+		n = Gaffer.ExecutableOpHolder()
+		op = TestOp()
+		n.setParameterised( op )
+		self.assertEqual( op.counter, 0 )
+		self.assertEqual( op.stringValue, "" )
+		
+		c = Gaffer.Context()
+		c.setFrame( 1 )
+		n.execute( [ c ] )
+		self.assertEqual( op.counter, 1 )
+		self.assertEqual( op.stringValue, "" )
+		
+		n["parameters"]["stringParm"].setValue( "${frame}" )
+		n.execute( [ c ] )
+		self.assertEqual( op.counter, 2 )
+		self.assertEqual( op.stringValue, "1" )
+		
+		# variable outside the context (and environment) get removed
+		n["parameters"]["stringParm"].setValue( "${test}" )
+		n.execute( [ c ] )
+		self.assertEqual( op.counter, 3 )
+		self.assertEqual( op.stringValue, "" )
+		
+		c["test"] = "passed"
+		n.execute( [ c ] )
+		self.assertEqual( op.counter, 4 )
+		self.assertEqual( op.stringValue, "passed" )
+	
 	def testRequirements( self ) :
 
 		n1 = Gaffer.ExecutableOpHolder()
