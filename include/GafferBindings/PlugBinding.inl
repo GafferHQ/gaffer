@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,60 +34,47 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef GAFFERBINDINGS_PLUGBINDING_INL
+#define GAFFERBINDINGS_PLUGBINDING_INL
 
-#include "IECorePython/RunTimeTypedBinding.h"
-#include "IECorePython/IECoreBinding.h"
 #include "IECorePython/ScopedGILRelease.h"
 
-#include "Gaffer/TypedPlug.h"
-#include "Gaffer/Node.h"
+namespace GafferBindings
+{
 
-#include "GafferBindings/TypedPlugBinding.h"
-#include "GafferBindings/PlugBinding.h"
-
-using namespace boost::python;
-using namespace GafferBindings;
-using namespace Gaffer;
+namespace Detail
+{
 
 template<typename T>
-static void setValue( T *plug, const typename T::ValueType value )
+static bool acceptsInput( const T &p, const Gaffer::Plug *input )
 {
-	// we use a GIL release here to prevent a lock in the case where this triggers a graph
-	// evaluation which decides to go back into python on another thread:
+	return p.T::acceptsInput( input );
+}
+
+template<typename T>
+static void setInput( T &p, Gaffer::PlugPtr input )
+{
 	IECorePython::ScopedGILRelease r;
-	plug->setValue( value );
+	p.T::setInput( input );
 }
-
 
 template<typename T>
-static void bind()
+static Gaffer::PlugPtr createCounterpart( T &p, const std::string &name, Gaffer::Plug::Direction direction )
 {
-	typedef typename T::ValueType V;
-	
-	PlugClass<T>()
-		.def( init<const std::string &, Plug::Direction, const V &, unsigned>(
-				(
-					boost::python::arg_( "name" )=GraphComponent::defaultName<T>(),
-					boost::python::arg_( "direction" )=Plug::In,
-					boost::python::arg_( "defaultValue" )=V(),
-					boost::python::arg_( "flags" )=Plug::Default
-				)
-			)
-		)
-		.def( "defaultValue", &T::defaultValue, return_value_policy<copy_const_reference>() )
-		.def( "setValue", &setValue<T> )
-		.def( "getValue", &T::getValue )
-	;
-	
+	return p.T::createCounterpart( name, direction );
 }
 
-void GafferBindings::bindTypedPlug()
+} // namespace Detail
+
+template<typename T, typename Ptr>
+PlugClass<T, Ptr>::PlugClass( const char *docString )
+	:	GraphComponentClass<T, Ptr>( docString )
 {
-	bind<BoolPlug>();
-	bind<StringPlug>();
-	bind<M33fPlug>();
-	bind<M44fPlug>();	
-	bind<AtomicBox3fPlug>();	
-	bind<AtomicBox2iPlug>();
+	def( "acceptsInput", &Detail::acceptsInput<T> );
+	def( "setInput", &Detail::setInput<T> );
+	def( "createCounterpart", &Detail::createCounterpart<T> );
 }
+
+} // namespace GafferBindings
+
+#endif // GAFFERBINDINGS_PLUGBINDING_INL

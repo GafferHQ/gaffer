@@ -120,7 +120,7 @@ static void bind()
 {
 	typedef typename T::ValueType V;
 	
-	IECorePython::RunTimeTypedClass<T>()
+	PlugClass<T>()
 		.def( init<const char *, Plug::Direction, typename T::ValueType, typename T::ValueType, typename T::ValueType, unsigned>(
 				(
 					boost::python::arg_( "name" )=GraphComponent::defaultName<T>(),
@@ -132,7 +132,6 @@ static void bind()
 				)
 			)
 		)
-		.GAFFERBINDINGS_DEFPLUGWRAPPERFNS( T )
 		.def( "defaultValue", &T::defaultValue )
 		.def( "hasMinValue", &T::hasMinValue )
 		.def( "hasMaxValue", &T::hasMaxValue )

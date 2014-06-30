@@ -76,7 +76,7 @@ bool CompoundPlugSerialiser::valueNeedsSerialisation( const Gaffer::ValuePlug *p
 
 void GafferBindings::bindCompoundPlug()
 {
-	IECorePython::RunTimeTypedClass<CompoundPlug, CompoundPlugWrapperPtr>()
+	PlugClass<CompoundPlug, CompoundPlugWrapperPtr>()
 		.def(	init< const std::string &, Plug::Direction, unsigned >
 				(
 					(
@@ -86,7 +86,6 @@ void GafferBindings::bindCompoundPlug()
 					)
 				)	
 		)
-		.GAFFERBINDINGS_DEFPLUGWRAPPERFNS( CompoundPlug )
 	;
 	
 	Serialisation::registerSerialiser( Gaffer::CompoundPlug::staticTypeId(), new CompoundPlugSerialiser );

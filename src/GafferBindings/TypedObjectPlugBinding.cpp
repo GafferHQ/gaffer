@@ -127,7 +127,7 @@ static void bind()
 {
 	typedef typename T::ValuePtr V;
 	
-	scope s = IECorePython::RunTimeTypedClass<T>()
+	scope s = PlugClass<T>()
 		.def( "__init__", make_constructor( construct<T>, default_call_policies(), 
 				(
 					boost::python::arg_( "name" )=GraphComponent::defaultName<T>(),
@@ -137,7 +137,6 @@ static void bind()
 				)
 			)
 		)
-		.GAFFERBINDINGS_DEFPLUGWRAPPERFNS( T )
 		.def( "defaultValue", &defaultValue<T> )
 		.def( "setValue", setValue<T>, ( boost::python::arg_( "value" ), boost::python::arg_( "_copy" ) = true ) )
 		.def( "getValue", getValue<T>, ( boost::python::arg_( "_copy" ) = true ) )
