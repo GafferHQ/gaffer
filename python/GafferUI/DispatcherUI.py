@@ -92,8 +92,8 @@ class _DispatcherWindow( GafferUI.Window ) :
 			
 			with GafferUI.ListContainer( orientation = GafferUI.ListContainer.Orientation.Vertical, spacing = 2, borderWidth = 4 ) :
 				
-				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal ) :
-					GafferUI.Label( "Current Dispatcher" )
+				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
+					GafferUI.Label( "Dispatcher" )
 					dispatchersMenu = GafferUI.MultiSelectionMenu( allowMultipleSelection = False, allowEmptySelection = False )
 					dispatchersMenu.append( [ IECore.CamelCase.toSpaced( x ) for x in Gaffer.Dispatcher.dispatcherNames() ] )
 					dispatchersMenu.setSelection( [ "Local" ] )
