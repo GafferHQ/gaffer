@@ -115,30 +115,24 @@ class ExecutableNodeTest( GafferTest.TestCase ) :
 	
 		c = Gaffer.Context()
 
-		t = Gaffer.ExecutableNode.Task()
 		n = Gaffer.ExecutableOpHolder()
-		t.node = n
-		t.context = c
-		
+		t = Gaffer.ExecutableNode.Task( n, c )
 		t2 = Gaffer.ExecutableNode.Task( n, c )
-
 		t3 = Gaffer.ExecutableNode.Task( t2 )
 
-		self.assertEqual( t.node, n )
-		self.assertEqual( t.context, c )
-		self.assertEqual( t2.node, n )
-		self.assertEqual( t2.context, c )
-		self.assertEqual( t3.node, n )
-		self.assertEqual( t3.context, c )
+		self.assertEqual( t.node(), n )
+		self.assertEqual( t.context(), c )
+		self.assertEqual( t2.node(), n )
+		self.assertEqual( t2.context(), c )
+		self.assertEqual( t3.node(), n )
+		self.assertEqual( t3.context(), c )
 
 	def testTaskComparison( self ) :
 
 		c = Gaffer.Context()
 		n = Gaffer.ExecutableOpHolder()
 		t1 = Gaffer.ExecutableNode.Task( n, c )
-		t2 = Gaffer.ExecutableNode.Task()
-		t2.node = n
-		t2.context = c
+		t2 = Gaffer.ExecutableNode.Task( n, c )
 		c2 = Gaffer.Context()
 		c2["a"] = 2
 		t3 = Gaffer.ExecutableNode.Task( n, c2 )
@@ -155,6 +149,7 @@ class ExecutableNodeTest( GafferTest.TestCase ) :
 
 	def testTaskSet( self ) :
 
+		# an empty ExecutableOpHolder doesn't actually compute anything, so all tasks are the same
 		c = Gaffer.Context()
 		n = Gaffer.ExecutableOpHolder()
 		t1 = Gaffer.ExecutableNode.Task( n, c )
@@ -163,18 +158,52 @@ class ExecutableNodeTest( GafferTest.TestCase ) :
 		c2 = Gaffer.Context()
 		c2["a"] = 2
 		t3 = Gaffer.ExecutableNode.Task( n, c2 )
+		self.assertEqual( t1, t3 )
 		n2 = Gaffer.ExecutableOpHolder()
 		t4 = Gaffer.ExecutableNode.Task( n2, c2 )
+		self.assertEqual( t1, t4 )
 		t5 = Gaffer.ExecutableNode.Task( n2, c )
-
+		self.assertEqual( t1, t5 )
+		
 		s = set( [ t1, t2, t3, t4, t4, t4, t1, t2, t4, t3, t2 ] )
-		self.assertEqual( len(s), 3 )
-		self.assertEqual( s, set( [ t1, t3, t4 ] ) )
+		# there should only be 1 task because they all have identical results
+		self.assertEqual( len(s), 1 )
+		self.assertEqual( s, set( [ t1 ] ) )
 		self.assertTrue( t1 in s )
 		self.assertTrue( t2 in s )
 		self.assertTrue( t3 in s )
 		self.assertTrue( t4 in s )
-		self.assertFalse( t5 in s )
+		# even t5 is in there, because it's really the same task
+		self.assertTrue( t5 in s )
+		
+		# MyNode.executionHash() depends on the context time, so tasks will vary
+		my = ExecutableNodeTest.MyNode( True )
+		c["time"] = 1.0
+		t1 = Gaffer.ExecutableNode.Task( my, c )
+		t2 = Gaffer.ExecutableNode.Task( my, c )
+		self.assertEqual( t1, t2 )
+		c2 = Gaffer.Context()
+		c2["time"] = 2.0
+		t3 = Gaffer.ExecutableNode.Task( my, c2 )
+		self.assertNotEqual( t1, t3 )
+		my2 = ExecutableNodeTest.MyNode( True )
+		t4 = Gaffer.ExecutableNode.Task( my2, c2 )
+		self.assertNotEqual( t1, t4 )
+		self.assertEqual( t3, t4 )
+		t5 = Gaffer.ExecutableNode.Task( my2, c )
+		self.assertEqual( t1, t5 )
+		self.assertNotEqual( t3, t5 )
+
+		s = set( [ t1, t2, t3, t4, t4, t4, t1, t2, t4, t3, t2 ] )
+		# t1 and t3 are the only distinct tasks
+		self.assertEqual( len(s), 2 )
+		self.assertEqual( s, set( [ t1, t3 ] ) )
+		# but they still all have equivalent tasks in the set
+		self.assertTrue( t1 in s )
+		self.assertTrue( t2 in s )
+		self.assertTrue( t3 in s )
+		self.assertTrue( t4 in s )
+		self.assertTrue( t5 in s )
 
 if __name__ == "__main__":
 	unittest.main()

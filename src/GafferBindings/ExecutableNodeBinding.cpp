@@ -58,24 +58,29 @@ static unsigned long taskHash( const ExecutableNode::Task &t )
 	return tbb::tbb_hasher( h.toString() );
 }
 
-static ContextPtr taskContext( const ExecutableNode::Task &t )
+static ContextPtr taskContext( const ExecutableNode::Task &t, bool copy = true )
 {
-	return t.context;
+	if ( ConstContextPtr context = t.context() )
+	{
+		if ( copy )
+		{
+			return new Context( *context );
+		}
+	
+		return IECore::constPointerCast<Context>( context );
+	}
+	
+	return 0;
 }
 
-static void setTaskContext( ExecutableNode::Task &t, ContextPtr c )
+static ExecutableNodePtr taskNode( const ExecutableNode::Task &t )
 {
-	t.context = c;
-}
-
-static NodePtr taskNode( const ExecutableNode::Task &t )
-{
-	return t.node;
-}
-
-static void setTaskNode( ExecutableNode::Task &t, ExecutableNodePtr n )
-{
-	t.node = n;
+	if ( ConstExecutableNodePtr node = t.node() )
+	{
+		return IECore::constPointerCast<ExecutableNode>( node );
+	}
+	
+	return 0;
 }
 
 void GafferBindings::bindExecutableNode()
@@ -89,8 +94,8 @@ void GafferBindings::bindExecutableNode()
 		.def( init<>() )
 		.def( init<ExecutableNode::Task>() )
 		.def( init<Gaffer::ExecutableNodePtr,Gaffer::ContextPtr>() )
-		.add_property("node", &taskNode, &setTaskNode )
-		.add_property("context", &taskContext, &setTaskContext )
+		.def( "node", &taskNode )
+		.def( "context", &taskContext, ( boost::python::arg_( "_copy" ) = true ) )
 		.def("__eq__", &ExecutableNode::Task::operator== )
 		.def("__hash__", &taskHash )
 	;

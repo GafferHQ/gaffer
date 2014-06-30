@@ -57,17 +57,11 @@ class ExecutableNode : public Node
 
 		/// A Task defines the execution of an ExecutableNode given a specific Context.
 		/// Tasks are used to describe requirements between ExecutableNodes, and by
-		/// Dispatchers to schedule context specific execution.
-		/// \todo I think hash(), == and < are badly broken. I don't see any reason
-		/// why hash() shouldn't just be returning node->executionHash( context ), because
-		/// after all that is already defined to uniquely identify the task. Then I think
-		/// operator == and operator < should be defined in terms of the hash as well.
-		/// We might also want to consider making Tasks immutable, because any code using
-		/// sets/hashes to identify unique tasks is vulnerable to hashes changing - in fact
-		/// we have test cases checking that Tasks can be stored in python sets so immutability
-		/// of the hash is essential for that to make sense. Perhaps hash should just be a
-		/// member variable initialised at construction, and then all member variables should
-		/// be made const.
+		/// Dispatchers to schedule context specific execution. Tasks are immutable,
+		/// and their hash is computed at construction, matching the executionHash()
+		/// of the given node and context. The hash is used to define the comparison
+		/// operators, and any changes made to the node after construction invalidates
+		/// the Task. Changing the Context is acceptible, as the Task has its own copy.
 		class Task
 		{
 			public :
@@ -75,12 +69,18 @@ class ExecutableNode : public Node
 				Task();
 				Task( const Task &t );
 				Task( ExecutableNodePtr n, ContextPtr c );
-				IECore::MurmurHash hash() const;
+				const ExecutableNode *node() const;
+				const Context *context() const;
+				const IECore::MurmurHash hash() const;
 				bool operator == ( const Task &rhs ) const;
 				bool operator < ( const Task &rhs ) const;
-
-				ExecutableNodePtr node;
-				ContextPtr context;
+			
+			private :
+				
+				ConstExecutableNodePtr m_node;
+				ConstContextPtr m_context;
+				IECore::MurmurHash m_hash;
+		
 		};
 
 		typedef std::vector<Task> Tasks;
