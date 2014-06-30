@@ -57,7 +57,11 @@ class ExecutableNode : public Node
 
 		/// A Task defines the execution of an ExecutableNode given a specific Context.
 		/// Tasks are used to describe requirements between ExecutableNodes, and by
-		/// Dispatchers to schedule context specific execution.
+		/// Dispatchers to schedule context specific execution. Tasks are immutable,
+		/// and their hash is computed at construction, matching the executionHash()
+		/// of the given node and context. The hash is used to define the comparison
+		/// operators, and any changes made to the node after construction invalidates
+		/// the Task. Changing the Context is acceptible, as the Task has its own copy.
 		class Task
 		{
 			public :

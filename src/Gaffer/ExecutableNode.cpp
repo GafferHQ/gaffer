@@ -54,7 +54,7 @@ ExecutableNode::Task::Task( const Task &t ) : m_node( t.m_node ), m_context( t.m
 {
 }
 
-ExecutableNode::Task::Task( ExecutableNodePtr n, ContextPtr c ) : m_node( n ), m_context( c )
+ExecutableNode::Task::Task( ExecutableNodePtr n, ContextPtr c ) : m_node( n ), m_context( new Context( *c ) )
 {
 	m_hash = m_node->executionHash( m_context );
 }
