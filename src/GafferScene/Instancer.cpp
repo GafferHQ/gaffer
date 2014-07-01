@@ -155,12 +155,19 @@ Imath::Box3f Instancer::computeBranchBound( const ScenePath &parentPath, const S
 				branchChildPath.push_back( namePlug()->getValue() );
 			}
 			branchChildPath.push_back( InternedString() ); // where we'll place the instance index
+			
+			ContextPtr ic = new Context( *context, Context::Borrowed );
+			Context::Scope scopedContext( ic.get() );
+			
 			for( size_t i=0; i<p->readable().size(); i++ )
 			{
 				branchChildPath[branchChildPath.size()-1] = InternedString( i );
-				Box3f branchChildBound = computeBranchBound( parentPath, branchChildPath, context );
-				branchChildBound = transform( branchChildBound, computeBranchTransform( parentPath, branchChildPath, context ) );
-				result.extendBy( branchChildBound );			
+				fillInstanceContext( ic.get(), branchChildPath, i );
+				
+				const ScenePlug *ip = instancePlug();
+				Box3f branchChildBound = ip->boundPlug()->getValue();
+				branchChildBound = transform( branchChildBound, instanceTransform( p.get(), i ) );
+				result.extendBy( branchChildBound );
 			}
 		}
 
@@ -176,15 +183,17 @@ Imath::Box3f Instancer::computeBranchBound( const ScenePath &parentPath, const S
 
 void Instancer::hashBranchTransform( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	if( branchPath.size() <= 2 )
+	if( branchPath.size() < 2 )
 	{
-		// "/", "/name" or "/name/instanceNumber"
+		// "/" or  "/name"
 		BranchCreator::hashBranchTransform( parentPath, branchPath, context, h );
-		if( branchPath.size() == 2 )
-		{
-			h.append( inPlug()->objectHash( parentPath ) );
-			h.append( instanceIndex( branchPath ) );
-		}
+	}
+	else if( branchPath.size() == 2 )
+	{
+		// "/name/instanceNumber"
+		BranchCreator::hashBranchTransform( parentPath, branchPath, context, h );
+		h.append( inPlug()->objectHash( parentPath ) );
+		h.append( instanceIndex( branchPath ) );
 	}
 	else
 	{
@@ -196,22 +205,17 @@ void Instancer::hashBranchTransform( const ScenePath &parentPath, const ScenePat
 
 Imath::M44f Instancer::computeBranchTransform( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const
 {
-	if( branchPath.size() <= 2 )
+	if( branchPath.size() < 2 )
 	{
-		// "/", "/name" or "/name/instanceNumber"
-		M44f result;
-		if( branchPath.size() == 2 )
-		{
-			int index = instanceIndex( branchPath );
-			ConstV3fVectorDataPtr p = sourcePoints( parentPath );
-			if( p && (size_t)index < p->readable().size() )
-			{
-				M44f t;
-				t.translate( p->readable()[index] );
-				result *= t;
-			}
-		}
-		return result;
+		// "/" or "/name"
+		return M44f();
+	}
+	else if( branchPath.size() == 2 )
+	{
+		// "/name/instanceNumber"
+		int index = instanceIndex( branchPath );
+		ConstV3fVectorDataPtr p = sourcePoints( parentPath );
+		return instanceTransform( p.get(), index );
 	}
 	else
 	{
@@ -388,4 +392,11 @@ void Instancer::fillInstanceContext( Gaffer::Context *instanceContext, const Sce
 	instanceContext->set( ScenePlug::scenePathContextName, instancePath );
 	
 	instanceContext->set( "instancer:id", instanceId );
+}
+
+Imath::M44f Instancer::instanceTransform( const IECore::V3fVectorData *p, int instanceId ) const
+{
+	M44f result;
+	result.translate( p->readable()[instanceId] );
+	return result;
 }

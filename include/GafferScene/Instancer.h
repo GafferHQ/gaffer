@@ -87,6 +87,7 @@ class Instancer : public BranchCreator
 		// Fills an existing context with the fields needed for evaluating instancePlug()
 		void fillInstanceContext( Gaffer::Context *instanceContext, const ScenePath &branchPath ) const;
 		void fillInstanceContext( Gaffer::Context *instanceContext, const ScenePath &branchPath, int instanceId ) const;
+		Imath::M44f instanceTransform( const IECore::V3fVectorData *p, int instanceId ) const;
 		
 		static size_t g_firstPlugIndex;
 		
