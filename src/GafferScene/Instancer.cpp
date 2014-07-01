@@ -110,17 +110,25 @@ void Instancer::hashBranchBound( const ScenePath &parentPath, const ScenePath &b
 		ConstV3fVectorDataPtr p = sourcePoints( parentPath );
 		if( p )
 		{
+			p->hash( h );
+
 			ScenePath branchChildPath( branchPath );
 			if( branchChildPath.size() == 0 )
 			{
 				branchChildPath.push_back( namePlug()->getValue() );
 			}
 			branchChildPath.push_back( InternedString() ); // where we'll place the instance index
+			
+			ContextPtr ic = new Context( *context, Context::Borrowed );
+			Context::Scope scopedContext( ic.get() );
+			
 			for( size_t i=0; i<p->readable().size(); i++ )
 			{
 				branchChildPath[branchChildPath.size()-1] = InternedString( i );
-				hashBranchBound( parentPath, branchChildPath, context, h );
-				hashBranchTransform( parentPath, branchChildPath, context, h );
+				fillInstanceContext( ic.get(), branchChildPath );
+				instancePlug()->boundPlug()->hash( h );
+				// no need to hash transform of instance because we know all
+				// root transforms are identity.
 			}
 		}
 	}
@@ -356,18 +364,21 @@ int Instancer::instanceIndex( const ScenePath &branchPath ) const
 
 Gaffer::ContextPtr Instancer::instanceContext( const Gaffer::Context *parentContext, const ScenePath &branchPath ) const
 {
-	if( branchPath.size() < 2 )
-	{
-		return 0;
-	}
+	assert( branchPath.size >= 2 );
 	
 	ContextPtr result = new Context( *parentContext, Context::Borrowed );
+	fillInstanceContext( result.get(), branchPath );
+	
+	return result;
+}
+
+void Instancer::fillInstanceContext( Gaffer::Context *instanceContext, const ScenePath &branchPath ) const
+{
+	assert( branchPath.size >= 2 );
 
 	ScenePath instancePath;
 	instancePath.insert( instancePath.end(), branchPath.begin() + 2, branchPath.end() );
-	result->set( ScenePlug::scenePathContextName, instancePath );
+	instanceContext->set( ScenePlug::scenePathContextName, instancePath );
 	
-	result->set( "instancer:id", instanceIndex( branchPath ) );
-	
-	return result;
+	instanceContext->set( "instancer:id", instanceIndex( branchPath ) );
 }

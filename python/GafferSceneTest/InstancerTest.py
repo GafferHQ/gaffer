@@ -208,6 +208,28 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		
 		self.assertScenesEqual( instancer["out"], plane["out"] )
 		self.assertSceneHashesEqual( instancer["out"], plane["out"] )
+	
+	def testSeedsAffectBound( self ) :
+	
+		plane = GafferScene.Plane()
+		sphere = GafferScene.Sphere()
+		
+		instancer = GafferScene.Instancer()
+		instancer["in"].setInput( plane["out"] )
+		instancer["instance"].setInput( sphere["out"] )
+		
+		instancer["parent"].setValue( "/plane" )
+		
+		h1 = instancer["out"].boundHash( "/plane/instances" )
+		b1 = instancer["out"].bound( "/plane/instances" )
+		
+		plane["dimensions"].setValue( plane["dimensions"].getValue() * 2 )
+		
+		h2 = instancer["out"].boundHash( "/plane/instances" )
+		b2 = instancer["out"].bound( "/plane/instances" )
+		
+		self.assertNotEqual( h1, h2 )
+		self.assertNotEqual( b1, b2 )
 		
 if __name__ == "__main__":
 	unittest.main()
