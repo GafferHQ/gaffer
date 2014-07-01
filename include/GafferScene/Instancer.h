@@ -86,6 +86,7 @@ class Instancer : public BranchCreator
 		Gaffer::ContextPtr instanceContext( const Gaffer::Context *parentContext, const ScenePath &branchPath ) const;
 		// Fills an existing context with the fields needed for evaluating instancePlug()
 		void fillInstanceContext( Gaffer::Context *instanceContext, const ScenePath &branchPath ) const;
+		void fillInstanceContext( Gaffer::Context *instanceContext, const ScenePath &branchPath, int instanceId ) const;
 		
 		static size_t g_firstPlugIndex;
 		

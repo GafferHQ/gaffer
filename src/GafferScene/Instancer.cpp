@@ -125,7 +125,7 @@ void Instancer::hashBranchBound( const ScenePath &parentPath, const ScenePath &b
 			for( size_t i=0; i<p->readable().size(); i++ )
 			{
 				branchChildPath[branchChildPath.size()-1] = InternedString( i );
-				fillInstanceContext( ic.get(), branchChildPath );
+				fillInstanceContext( ic.get(), branchChildPath, i );
 				instancePlug()->boundPlug()->hash( h );
 				// no need to hash transform of instance because we know all
 				// root transforms are identity.
@@ -364,7 +364,7 @@ int Instancer::instanceIndex( const ScenePath &branchPath ) const
 
 Gaffer::ContextPtr Instancer::instanceContext( const Gaffer::Context *parentContext, const ScenePath &branchPath ) const
 {
-	assert( branchPath.size >= 2 );
+	assert( branchPath.size() >= 2 );
 	
 	ContextPtr result = new Context( *parentContext, Context::Borrowed );
 	fillInstanceContext( result.get(), branchPath );
@@ -374,11 +374,18 @@ Gaffer::ContextPtr Instancer::instanceContext( const Gaffer::Context *parentCont
 
 void Instancer::fillInstanceContext( Gaffer::Context *instanceContext, const ScenePath &branchPath ) const
 {
-	assert( branchPath.size >= 2 );
+	assert( branchPath.size() >= 2 );
+
+	fillInstanceContext( instanceContext, branchPath, instanceIndex( branchPath ) );
+}
+
+void Instancer::fillInstanceContext( Gaffer::Context *instanceContext, const ScenePath &branchPath, int instanceId ) const
+{
+	assert( branchPath.size() >= 2 );
 
 	ScenePath instancePath;
 	instancePath.insert( instancePath.end(), branchPath.begin() + 2, branchPath.end() );
 	instanceContext->set( ScenePlug::scenePathContextName, instancePath );
 	
-	instanceContext->set( "instancer:id", instanceIndex( branchPath ) );
+	instanceContext->set( "instancer:id", instanceId );
 }
