@@ -35,6 +35,9 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
+#include "tbb/parallel_reduce.h"
+#include "tbb/blocked_range.h"
+
 #include "boost/lexical_cast.hpp"
 
 #include "IECore/VectorTypedData.h"
@@ -44,6 +47,7 @@
 #include "GafferScene/Instancer.h"
 
 using namespace std;
+using namespace tbb;
 using namespace Imath;
 using namespace IECore;
 using namespace Gaffer;
@@ -99,6 +103,56 @@ void Instancer::affects( const Plug *input, AffectedPlugsContainer &outputs ) co
 	}
 }
 
+struct Instancer::BoundHash
+{
+	
+	BoundHash( const Instancer *instancer, const ScenePath &branchPath, const Context *c )
+		:	m_instancer( instancer ), m_branchPath( branchPath ), m_context( c ), m_hash()
+	{
+	}
+	
+	BoundHash( const BoundHash &rhs, split )
+		:	m_instancer( rhs.m_instancer ), m_branchPath( rhs.m_branchPath ), m_context( rhs.m_context ), m_hash()
+	{
+	}
+	
+	void operator() ( const blocked_range<size_t> &r )
+	{
+		ContextPtr ic = new Context( *m_context, Context::Borrowed );
+		Context::Scope scopedContext( ic.get() );
+		
+		ScenePath branchChildPath( m_branchPath );
+		branchChildPath.push_back( InternedString() ); // where we'll place the instance index
+	
+		for( size_t i=r.begin(); i!=r.end(); ++i )
+		{
+			branchChildPath[branchChildPath.size()-1] = InternedString( i );
+			m_instancer->fillInstanceContext( ic.get(), branchChildPath, i );
+			m_instancer->instancePlug()->boundPlug()->hash( m_hash );
+			// no need to hash transform of instance because we know all
+			// root transforms are identity.
+		}
+	}
+
+	void join( const BoundHash &rhs )
+	{
+		m_hash.append( rhs.m_hash );
+	}
+
+	const MurmurHash &result()
+	{
+		return m_hash;
+	}
+
+	private :
+	
+		const Instancer *m_instancer;
+		const ScenePath &m_branchPath;
+		const Context *m_context;
+		MurmurHash m_hash;
+	
+};
+
 void Instancer::hashBranchBound( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	if( branchPath.size() <= 1 )
@@ -117,19 +171,14 @@ void Instancer::hashBranchBound( const ScenePath &parentPath, const ScenePath &b
 			{
 				branchChildPath.push_back( namePlug()->getValue() );
 			}
-			branchChildPath.push_back( InternedString() ); // where we'll place the instance index
+
+			BoundHash hasher( this, branchChildPath, context );
+			parallel_deterministic_reduce(
+				blocked_range<size_t>( 0, p->readable().size(), 100 ),
+				hasher
+			);
 			
-			ContextPtr ic = new Context( *context, Context::Borrowed );
-			Context::Scope scopedContext( ic.get() );
-			
-			for( size_t i=0; i<p->readable().size(); i++ )
-			{
-				branchChildPath[branchChildPath.size()-1] = InternedString( i );
-				fillInstanceContext( ic.get(), branchChildPath, i );
-				instancePlug()->boundPlug()->hash( h );
-				// no need to hash transform of instance because we know all
-				// root transforms are identity.
-			}
+			h.append( hasher.result() );
 		}
 	}
 	else

@@ -80,6 +80,8 @@ class Instancer : public BranchCreator
 		
 	private :
 	
+		struct BoundHash;
+	
 		IECore::ConstV3fVectorDataPtr sourcePoints( const ScenePath &parentPath ) const;
 		int instanceIndex( const ScenePath &branchPath ) const;
 		// Makes a new context suitable for use when evaluating instancePlug()

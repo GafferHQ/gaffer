@@ -230,6 +230,21 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		
 		self.assertNotEqual( h1, h2 )
 		self.assertNotEqual( b1, b2 )
+
+	def testBoundHashIsStable( self ) :
 		
+		plane = GafferScene.Plane()
+		sphere = GafferScene.Sphere()
+		
+		instancer = GafferScene.Instancer()
+		instancer["in"].setInput( plane["out"] )
+		instancer["instance"].setInput( sphere["out"] )
+		
+		instancer["parent"].setValue( "/plane" )
+		
+		h = instancer["out"].boundHash( "/plane/instances" )
+		for i in range( 0, 100 ) :
+			self.assertEqual( instancer["out"].boundHash( "/plane/instances" ), h )
+			
 if __name__ == "__main__":
 	unittest.main()
