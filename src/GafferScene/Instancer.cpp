@@ -363,9 +363,9 @@ Gaffer::ContextPtr Instancer::instanceContext( const Gaffer::Context *parentCont
 	
 	ContextPtr result = new Context( *parentContext, Context::Borrowed );
 
-	InternedStringVectorDataPtr instancePath = new InternedStringVectorData;
-	instancePath->writable().insert( instancePath->writable().end(), branchPath.begin() + 2, branchPath.end() );
-	result->set( ScenePlug::scenePathContextName, instancePath.get() );
+	ScenePath instancePath;
+	instancePath.insert( instancePath.end(), branchPath.begin() + 2, branchPath.end() );
+	result->set( ScenePlug::scenePathContextName, instancePath );
 	
 	result->set( "instancer:id", instanceIndex( branchPath ) );
 	
