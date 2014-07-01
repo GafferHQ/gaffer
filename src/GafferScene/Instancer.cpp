@@ -189,6 +189,58 @@ void Instancer::hashBranchBound( const ScenePath &parentPath, const ScenePath &b
 	}	
 }
 
+struct Instancer::BoundUnion
+{
+	
+	BoundUnion( const Instancer *instancer, const ScenePath &branchPath, const Context *c, const V3fVectorData *p )
+		:	m_instancer( instancer ), m_branchPath( branchPath ), m_context( c ), m_p( p ), m_union()
+	{
+	}
+	
+	BoundUnion( const BoundUnion &rhs, split )
+		:	m_instancer( rhs.m_instancer ), m_branchPath( rhs.m_branchPath ), m_context( rhs.m_context ), m_p( rhs.m_p ), m_union()
+	{
+	}
+	
+	void operator() ( const blocked_range<size_t> &r )
+	{
+		ContextPtr ic = new Context( *m_context, Context::Borrowed );
+		Context::Scope scopedContext( ic.get() );
+		
+		ScenePath branchChildPath( m_branchPath );
+		branchChildPath.push_back( InternedString() ); // where we'll place the instance index
+	
+		for( size_t i=r.begin(); i!=r.end(); ++i )
+		{
+			branchChildPath[branchChildPath.size()-1] = InternedString( i );
+			m_instancer->fillInstanceContext( ic.get(), branchChildPath, i );
+			
+			Box3f branchChildBound = m_instancer->instancePlug()->boundPlug()->getValue();
+			branchChildBound = transform( branchChildBound, m_instancer->instanceTransform( m_p, i ) );
+			m_union.extendBy( branchChildBound );
+		}
+	}
+
+	void join( const BoundUnion &rhs )
+	{
+		m_union.extendBy( rhs.m_union );
+	}
+
+	const Box3f &result()
+	{
+		return m_union;
+	}
+
+	private :
+	
+		const Instancer *m_instancer;
+		const ScenePath &m_branchPath;
+		const Context *m_context;
+		const V3fVectorData *m_p;
+		Box3f m_union;
+	
+};
+
 Imath::Box3f Instancer::computeBranchBound( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const
 {
 	if( branchPath.size() <= 1 )
@@ -203,21 +255,14 @@ Imath::Box3f Instancer::computeBranchBound( const ScenePath &parentPath, const S
 			{
 				branchChildPath.push_back( namePlug()->getValue() );
 			}
-			branchChildPath.push_back( InternedString() ); // where we'll place the instance index
 			
-			ContextPtr ic = new Context( *context, Context::Borrowed );
-			Context::Scope scopedContext( ic.get() );
+			BoundUnion unioner( this, branchChildPath, context, p.get() );
+			parallel_reduce(
+				blocked_range<size_t>( 0, p->readable().size() ),
+				unioner
+			);
 			
-			for( size_t i=0; i<p->readable().size(); i++ )
-			{
-				branchChildPath[branchChildPath.size()-1] = InternedString( i );
-				fillInstanceContext( ic.get(), branchChildPath, i );
-				
-				const ScenePlug *ip = instancePlug();
-				Box3f branchChildBound = ip->boundPlug()->getValue();
-				branchChildBound = transform( branchChildBound, instanceTransform( p.get(), i ) );
-				result.extendBy( branchChildBound );
-			}
+			result = unioner.result();
 		}
 
 		return result;
