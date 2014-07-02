@@ -35,29 +35,61 @@
 #  
 ##########################################################################
 
+import collections
+
 import IECore
 
 import Gaffer
 import GafferScene
 import GafferUI
 
-## \todo Make the label column fixed width.
 ## \todo Have links to show you where in the hierarchy an attribute was set
 ## and to take you to the node that set it.
 class SceneInspector( GafferUI.NodeSetEditor ) :
 
 	def __init__( self, scriptNode, **kw ) :
-	
-		column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, borderWidth = 8 )
 		
-		GafferUI.NodeSetEditor.__init__( self, column, scriptNode, **kw )
+		mainColumn = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, borderWidth = 8 )
 		
-		with column :
-			with GafferUI.ScrolledContainer() :
-				self.__textWidget = GafferUI.Label()
+		GafferUI.NodeSetEditor.__init__( self, mainColumn, scriptNode, **kw )
+		
+		self.__sections = []
+
+		columns = {}
+		with mainColumn :
+			columns[None] = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing = 8 )
+			tabbedContainer = GafferUI.TabbedContainer()
+			
+		for registration in self.__sectionRegistrations :
+			section = registration.section()
+			column = columns.get( registration.tab )
+			if column is None :
+				with tabbedContainer :
+					with GafferUI.ScrolledContainer( horizontalMode = GafferUI.ScrolledContainer.ScrollMode.Never, parenting = { "label" : registration.tab } ) :
+						column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, borderWidth = 4, spacing = 8 )
+						columns[registration.tab] = column
+			column.append( section )
+			self.__sections.append( section )
+		
+		for tab, column in columns.items() :
+			if tab is not None :
+				column.append( GafferUI.Spacer( IECore.V2i( 0 ) ), expand = True )
 		
 		self.__pendingUpdate = False
 		self._updateFromSet()
+
+	## Simple struct to specify the target of an inspection.
+	Target = collections.namedtuple( "SceneAndPath", [ "scene", "path" ] )
+	
+	@classmethod
+	def registerSection( cls, section, tab ) :
+	
+		assert( issubclass( section, cls.Section ) )
+	
+		cls.__sectionRegistrations.append( cls.__SectionRegistration( section = section, tab = tab ) )
+	
+	__SectionRegistration = collections.namedtuple( "SectionRegistration", [ "section", "tab" ] )
+	__sectionRegistrations = []
 				
 	def __repr__( self ) :
 
@@ -106,141 +138,100 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 	def __update( self ) :
 
 		self.__pendingUpdate = False
-
-		selectedPaths = self.getContext().get( "ui:scene:selectedPaths", [] )
-
-		self.__textWidget.setText( "" )
 		
-		numCombinations = len( self.__scenePlugs ) * len( selectedPaths )
-		if numCombinations == 0 or numCombinations > 2 :
-			return
-		
-		inspections = []
-		with self.getContext() :
-			for scenePlug in self.__scenePlugs :
-				for path in selectedPaths :
-					inspections.append( self.__inspect( scenePlug, path ) )
-				
-		html = "<table cellpadding=4 cellspacing=0 style='table-layout: fixed;'>"
-
-		rows = []
-		self.__appendDiffRow( rows, "Node", inspections, "node" )
-		self.__appendDiffRow( rows, "Path", inspections, "path" )
-		self.__appendDiffRow( rows, "Transform", inspections, "transform" )
-		self.__appendDiffRow( rows, "Bound", inspections, "bound" )
-		
-		for keyPrefix, heading in [ ( "attr:", "Attributes" ), ( "object:", "Object" ) ] :
+		assert( len( self.__scenePlugs ) <= 2 )
+		paths = self.getContext().get( "ui:scene:selectedPaths", [] )
+		paths = paths[:2] if len( self.__scenePlugs ) < 2 else paths[:1]
+		if not paths :
+			paths = [ "/" ]
 			
-			keys = set()
-			for inspection in inspections :
-				keys |= set( [ k for k in inspection.keys() if k.startswith( keyPrefix ) ] )
-			if len( keys ) :
-				self.__appendRow( rows, "<h3>" + heading + "</h3>" )
-				for key in sorted( list( keys ) ) :
-					self.__appendDiffRow( rows, key[len( keyPrefix ):], inspections, key )
+		targets = []
+		for scene in self.__scenePlugs :
+			for path in paths :
+				targets.append( self.Target( scene, path ) )
 		
-		html += "\n".join( rows )
-		
-		html += "</table>"
-						
-		self.__textWidget.setText( html )
-	
+		with self.getContext() :
+			for section in self.__sections :
+				section.update( targets )
+			
 		return False # remove idle callback
 
-	def __inspect( self, plug, path ) :
-	
-		# basic info
-		
-		result = {}
-		result["node"] = plug.node().relativeName( plug.ancestor( Gaffer.ScriptNode ) )
-		result["path"] = path
-		result["bound"] = plug.bound( path )
-		
-		# transform
-		
-		transform = plug.transform( path )
-		if transform != IECore.M44f() :
-			result["transform"] = transform
-		
-		# attributes
-		
-		pathParts = path.strip( "/" ).split( "/" )
-		for i in range( 0, len( pathParts ) + 1 ) :
-			path = "/" + "/".join( pathParts[:i] )
-			attributes = plug.attributes( path )
-			if attributes :
-				for k, v in attributes.items() :
-					result["attr:" + k] = v
-		
-		# object
-		
-		object = plug.object( path )
-		if not isinstance( object, IECore.NullObject ) :
-			
-			result["object:Type"] = object.typeName()
-			
-			if isinstance( object, IECore.Primitive ) :
-				
-				result["object:Primitive Variables"] = " ".join( sorted( object.keys() ) )
-				for interpName, interpValue in IECore.PrimitiveVariable.Interpolation.names.items() :
-					if interpValue not in ( IECore.PrimitiveVariable.Interpolation.Invalid, IECore.PrimitiveVariable.Interpolation.Constant ) :
-						result["object:Num " + interpName] = object.variableSize( interpValue )
-				
-				if isinstance( object, IECore.MeshPrimitive ) :
-				
-					result["object:Interpolation"] = object.interpolation
-						
-			elif isinstance( object, IECore.Camera ) :
-				parameters = object.parameters()
-				for key in sorted( parameters.keys() ) :
-					result["object:"+key] = self.__formatValue( parameters[key] )
-		
-		return result
-	
-	def __appendRow( self, rows, label, value="" ) :
-		
-		backgroundColor = "#454545" if len( rows ) % 2 else "#4c4c4c"
-		
-		row = "<tr>"
-		row += "<td align=right bgcolor=%s><b>%s</b></td>" % ( backgroundColor, label )
-		row += "<td bgcolor=%s>%s</td>" % ( backgroundColor, value )
-		row += "</tr>"
-	
-		rows.append( row )
-	
-	def __appendDiffRow( self, rows, label, inspections, key ) :
-							
-		if len( inspections ) == 1 :
-			if key in inspections[0] :
-				self.__appendRow( rows, label, self.__formatValue( inspections[0][key], key ) )
-		elif key in inspections[0] and key in inspections[1] and inspections[0][key] == inspections[1][key] :
-			self.__appendRow( rows, label, self.__formatValue( inspections[0][key], key ) )
-		else :
-	
-			diff = "<table>"
-			
-			if key in inspections[0] :
-				diff += "<tr>"
-				diff += "<td bgcolor=#623131>%s</td>" % self.__formatValue( inspections[0][key], key )
-				diff += "</tr>"
-				
-			if key in inspections[1] :
-				diff += "<tr>"
-				diff += "<td bgcolor=#285b38>%s</td>" % self.__formatValue( inspections[1][key], key )
-				diff += "</tr>"
-				
-			diff += "</table>"
+GafferUI.EditorWidget.registerType( "SceneInspector", SceneInspector )
 
-			self.__appendRow( rows, label, diff )
+##########################################################################
+# Diff
+##########################################################################
+
+## Base class for widgets which want to display a diff view for a pair
+# of values. It maintains two frames, one for each value, and in update()
+# it displays one or both of the frames, with background colours appropriate
+# to the relationship between the two values.
+class Diff( GafferUI.Widget ) :
+
+	def __init__( self, orientation=GafferUI.ListContainer.Orientation.Vertical, **kw ) :
 	
-	# key is used as a formatting hint, it is not actually output in the format.
-	def __formatValue( self, value, key = "" ) :
+		self.__column = GafferUI.ListContainer( orientation )
+		GafferUI.Widget.__init__( self, self.__column, **kw )
+
+		with self.__column :
+			for i in range( 0, 2 ) :
+				GafferUI.Frame(
+					borderWidth = 4,
+					borderStyle = GafferUI.Frame.BorderStyle.None,
+					parenting = { "expand" : True }
+				)
+		
+		## \todo Should we provide frame types via methods on the
+		# Frame class? Are DiffA/DiffB types for a frame a bit too
+		# specialised?
+		self.__column[1]._qtWidget().setObjectName( "gafferDiffB" )
+	
+	def frame( self, index ) :
+	
+		return self.__column[index]
+	
+	## Updates the UI to reflect the relationship between the values.
+	# If they are equal or if there is only one, then only the first
+	# frame is shown, with a default background colour. If there are
+	# two and they differ, then both frames are shown, with red and
+	# green backgrounds respectively. Derived classes are expected to
+	# override this method to additionally edit widgets inside the
+	# frames to display the actual values.
+	def update( self, values ) :
+	
+		assert( len( values ) <= 2 )
+		
+		different = len( values ) > 1 and values[0] != values[1]
+				
+		self.frame( 0 ).setVisible( len( values ) > 0 and values[0] is not None )
+		self.frame( 1 ).setVisible( len( values ) > 1 and values[1] is not None and different )
+		
+		self.frame( 0 )._qtWidget().setObjectName( "gafferDiffA" if different else "" )
+		self.frame( 0 )._repolish()
+
+class TextDiff( Diff ) :
+
+	def __init__( self, orientation=GafferUI.ListContainer.Orientation.Vertical, **kw ) :
+	
+		Diff.__init__( self, orientation, **kw )
+	
+		self.frame( 0 ).setChild( GafferUI.Label() )
+		self.frame( 1 ).setChild( GafferUI.Label() )
+		
+	def update( self, values ) :
+	
+		Diff.update( self, values )
+		
+		for i, value in enumerate( values ) :
+			self.frame( i ).getChild().setText( self.__formatValue( value ) )
+
+	def __formatValue( self, value ) :
 	
 		if isinstance( value, ( IECore.M44f, IECore.M44d ) ) :
 			return self.__formatMatrix( value )
 		elif isinstance( value, ( IECore.Box3f, IECore.Box3d ) ) :
 			return self.__formatBox( value )
-		elif isinstance( value, IECore.ObjectVector ) and key.startswith( "attr:" ) and key.endswith( ":shader" ) :
+		elif isinstance( value, IECore.ObjectVector ) :
 			return self.__formatShader( value )
 		else :
 			return str( value )
@@ -284,5 +275,240 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 			return "%s (%s)" % ( nodeName.value, shaderName )
 		else :
 			return shaderName
+
+##########################################################################
+# Row
+##########################################################################
+
+## A class to simplify the process of making a row containing a label
+# and some content, and for colouring rows alternately.
+class Row( GafferUI.Widget ) :
+
+	def __init__( self, label, content, alternate = False, **kw ) :
+	
+		self.__frame = GafferUI.Frame( borderWidth = 4 )
+	
+		GafferUI.Widget.__init__( self, self.__frame, **kw )
+
+		with self.__frame :
+			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) as self.__row :
+				label = GafferUI.Label(
+					label,
+					horizontalAlignment = GafferUI.Label.HorizontalAlignment.Right,
+					verticalAlignment = GafferUI.Label.VerticalAlignment.Top
+				)
+				label._qtWidget().setFixedWidth( 150 )
+				self.__row.append( content )
+				GafferUI.Spacer( IECore.V2i( 0 ), parenting = { "expand" : True } )
 		
-GafferUI.EditorWidget.registerType( "SceneInspector", SceneInspector )
+		self.setAlternate( alternate )
+		
+	def setContent( self, content ) :
+	
+		self.__row[1] = content
+		
+	def getContent( self ) :
+	
+		return self.__row[1]
+
+	def setAlternate( self, alternate ) :
+
+		self.__frame._qtWidget().setObjectName( "gafferLighter" if alternate else "" )
+	
+	def getAlternate( self ) :
+	
+		return self.__frame._qtWidget.objectName() == "gafferLighter"
+
+##########################################################################
+# Section
+##########################################################################
+
+## Base class for widgets which make up a section of the SceneInspector.
+class Section( GafferUI.Widget ) :
+
+	def __init__( self, collapsed = False, label = None, **kw ) :
+	
+		self.__mainColumn = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing = 0 )
+		self.__collapsible = None
+		if collapsed is not None :
+			self.__collapsible = GafferUI.Collapsible( label=label, collapsed=collapsed )
+			self.__collapsible.setChild( self.__mainColumn )
+		
+		GafferUI.Widget.__init__( self, self.__collapsible if self.__collapsible is not None else self.__mainColumn, **kw )
+	
+		self.__numRows = 0
+	
+	def update( self, targets ) :
+	
+		raise NotImplementedError
+
+	def _mainColumn( self ) :
+	
+		return self.__mainColumn
+
+# export classes for use in custom sections
+SceneInspector.Row = Row
+SceneInspector.Diff = Diff
+SceneInspector.TextDiff = TextDiff
+SceneInspector.Section = Section
+
+##########################################################################
+# Private section implementations
+##########################################################################
+
+class __NodeSection( Section ) :
+
+	def __init__( self ) :
+					
+		Section.__init__( self, collapsed = None )
+
+		with self._mainColumn() :
+			self.__row = Row( "Node Name", TextDiff() )
+
+	def update( self, targets ) :
+		
+		values = []
+		for target in targets :
+			node = target.scene.node()
+			values.append( node.relativeName( node.ancestor( Gaffer.ScriptNode ) ) )
+		
+		self.__row.getContent().update( values )
+
+SceneInspector.registerSection( __NodeSection, tab = None )
+
+class __PathSection( Section ) :
+
+	def __init__( self ) :
+		
+		Section.__init__( self, collapsed = None )
+
+		with self._mainColumn() :
+			self.__row = Row( "Location", TextDiff() )
+			
+	def update( self, targets ) :
+			
+		self.__row.getContent().update( [ target.path for target in targets ] )
+
+SceneInspector.registerSection( __PathSection, tab = "Selection" )
+
+class __TransformSection( Section ) :
+
+	def __init__( self ) :
+	
+		Section.__init__( self, collapsed = True, label = "Transform" )
+		
+		with self._mainColumn() :
+			self.__localMatrixRow = Row( "Local", TextDiff( orientation = GafferUI.ListContainer.Orientation.Horizontal ) )
+			self.__worldMatrixRow = Row( "World", TextDiff( orientation = GafferUI.ListContainer.Orientation.Horizontal ), alternate = True )
+		
+	def update( self, targets ) :
+	
+		self.__localMatrixRow.getContent().update( [ target.scene.transform( target.path ) for target in targets ] )
+		self.__worldMatrixRow.getContent().update( [ target.scene.fullTransform( target.path ) for target in targets ] )
+		
+SceneInspector.registerSection( __TransformSection, tab = "Selection" )
+
+class __BoundSection( Section ) :
+
+	def __init__( self ) :
+	
+		Section.__init__( self, collapsed = True, label = "Bounding box" )
+		
+		with self._mainColumn() :
+			self.__localBoundRow = Row( "Local", TextDiff( orientation = GafferUI.ListContainer.Orientation.Horizontal ) )
+			self.__worldBoundRow = Row( "World", TextDiff( orientation = GafferUI.ListContainer.Orientation.Horizontal ), alternate = True )
+	
+	def update( self, targets ) :
+	
+		localBounds = []
+		worldBounds = []
+		for target in targets :
+			bound = target.scene.bound( target.path )
+			transform = target.scene.fullTransform( target.path )
+			localBounds.append( bound )
+			worldBounds.append( bound.transform( transform ) )
+			
+		self.__localBoundRow.getContent().update( localBounds )
+		self.__worldBoundRow.getContent().update( worldBounds )
+		
+SceneInspector.registerSection( __BoundSection, tab = "Selection" )
+
+class __AttributesSection( Section ) :
+
+	def __init__( self ) :
+	
+		Section.__init__( self, collapsed = True, label = "Attributes" )
+	
+		self.__rows = {} # mapping from attribute name to row
+		
+	def update( self, targets ) :
+	
+		attributes = []
+		for target in targets :
+			attributes.append( target.scene.fullAttributes( target.path ) )
+		
+		rows = []
+		attributeNames = sorted( set( reduce( lambda k, a : k + a.keys(), attributes, [] ) ) )
+		for attributeName in attributeNames :
+			
+			row = self.__rows.get( attributeName )
+			if row is None :
+				row = Row( attributeName, TextDiff() )
+				self.__rows[attributeName] = row
+			
+			values = [ a.get( attributeName ) for a in attributes ]
+			row.getContent().update( values )
+			
+			row.setAlternate( len( rows ) % 2 )
+			
+			rows.append( row )
+		
+		self._mainColumn()[:] = rows
+		
+SceneInspector.registerSection( __AttributesSection, tab = "Selection" )
+
+class __ObjectSection( Section ) :
+
+	def __init__( self ) :
+	
+		Section.__init__( self, collapsed = True, label = "Object" )
+	
+		with self._mainColumn() :
+			self.__typeRow = Row( "Type", TextDiff() )
+			self.__uniformRow = Row( "Uniform", TextDiff(), alternate = True )
+			self.__vertexRow = Row( "Vertex", TextDiff() )
+			self.__varyingRow = Row( "Varying", TextDiff(), alternate = True )
+			self.__faceVaryingRow = Row( "FaceVarying", TextDiff() )
+			self.__variablesRow = Row( "Variables", TextDiff(), alternate = True )
+			
+	def update( self, targets ) :
+	
+		objects = []
+		for target in targets :
+			objects.append( target.scene.object( target.path ) )
+		
+		self.__typeRow.getContent().update(
+			[ object.typeName() if not isinstance( object, IECore.NullObject ) else None for object in objects ]
+		)
+		
+		self.__uniformRow.getContent().update(
+			[ object.variableSize( IECore.PrimitiveVariable.Interpolation.Uniform ) if isinstance( object, IECore.Primitive ) else None for object in objects ]		
+		)
+		
+		self.__vertexRow.getContent().update(
+			[ object.variableSize( IECore.PrimitiveVariable.Interpolation.Vertex ) if isinstance( object, IECore.Primitive ) else None for object in objects ]		
+		)
+		
+		self.__varyingRow.getContent().update(
+			[ object.variableSize( IECore.PrimitiveVariable.Interpolation.Varying ) if isinstance( object, IECore.Primitive ) else None for object in objects ]		
+		)
+		
+		self.__faceVaryingRow.getContent().update(
+			[ object.variableSize( IECore.PrimitiveVariable.Interpolation.FaceVarying ) if isinstance( object, IECore.Primitive ) else None for object in objects ]		
+		)
+		
+		self.__variablesRow.getContent().update(
+			[ " ".join( sorted( object.keys() ) ) if isinstance( object, IECore.Primitive ) else None for object in objects ]
+		)
+		
+SceneInspector.registerSection( __ObjectSection, tab = "Selection" )

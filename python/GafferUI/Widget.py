@@ -1641,6 +1641,26 @@ class Widget( object ) :
 		
 		}
 
+		/* frame variants */
+		
+		QFrame#gafferDiffA {
+		
+			background: solid rgba( 181, 30, 0, 60 );
+			
+		}
+		
+		QFrame#gafferDiffB {
+		
+			background: solid rgba( 34, 159, 0, 60 );
+			
+		}
+
+		QFrame#gafferLighter {
+		
+			background: solid rgba( 255, 255, 255, 10 );
+			
+		}
+		
 		"""
 		
 	).substitute( {
