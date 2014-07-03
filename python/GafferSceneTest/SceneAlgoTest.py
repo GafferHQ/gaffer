@@ -70,6 +70,24 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( matchingPaths.match( "/plane/instances/1121/group/plane" ), GafferScene.Filter.Result.ExactMatch )
 		self.assertEqual( matchingPaths.match( "/plane/instances/1121/group/sphere" ), GafferScene.Filter.Result.NoMatch )
 
+	def testExists( self ) :
+	
+		sphere = GafferScene.Sphere()
+		plane = GafferScene.Plane()
+		group = GafferScene.Group()
+		group["in"].setInput( sphere["out"] )
+		group["in1"].setInput( plane["out"] )
+
+		self.assertTrue( GafferScene.exists( group["out"], "/" ) )
+		self.assertTrue( GafferScene.exists( group["out"], "/group" ) )
+		self.assertTrue( GafferScene.exists( group["out"], "/group/sphere" ) )
+		self.assertTrue( GafferScene.exists( group["out"], "/group/plane" ) )
+
+		self.assertFalse( GafferScene.exists( group["out"], "/a" ) )
+		self.assertFalse( GafferScene.exists( group["out"], "/group2" ) )
+		self.assertFalse( GafferScene.exists( group["out"], "/group/sphere2" ) )
+		self.assertFalse( GafferScene.exists( group["out"], "/group/plane/child" ) )
+		
 if __name__ == "__main__":
 	unittest.main()
 	

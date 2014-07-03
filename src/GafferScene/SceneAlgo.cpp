@@ -49,6 +49,27 @@ using namespace IECore;
 using namespace Gaffer;
 using namespace GafferScene;
 
+bool GafferScene::exists( const ScenePlug *scene, const ScenePlug::ScenePath &path )
+{
+	ContextPtr context = new Context( *Context::current(), Context::Borrowed );
+	Context::Scope scopedContext( context );
+
+	ScenePlug::ScenePath p; p.reserve( path.size() );
+	for( ScenePlug::ScenePath::const_iterator it = path.begin(), eIt = path.end(); it != eIt; ++it )
+	{
+		context->set( ScenePlug::scenePathContextName, p );
+		ConstInternedStringVectorDataPtr childNamesData = scene->childNamesPlug()->getValue();
+		const vector<InternedString> &childNames = childNamesData->readable();
+		if( find( childNames.begin(), childNames.end(), *it ) == childNames.end() )
+		{
+			return false;
+		}
+		p.push_back( *it );
+	}
+
+	return true;
+}
+
 namespace
 {
 

@@ -51,6 +51,7 @@ namespace GafferSceneBindings
 
 void bindSceneAlgo()
 {
+	def( "exists", exists );
 	def( "matchingPaths", (void (*)( const GafferScene::Filter *, const GafferScene::ScenePlug *, GafferScene::PathMatcher & ))&matchingPaths );
 	def( "matchingPaths", (void (*)( const Gaffer::IntPlug *, const GafferScene::ScenePlug *, GafferScene::PathMatcher & ))&matchingPaths );
 }

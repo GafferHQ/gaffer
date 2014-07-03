@@ -39,12 +39,18 @@
 
 #include "Gaffer/NumericPlug.h"
 
+#include "GafferScene/ScenePlug.h"
+
 namespace GafferScene
 {
 
-class ScenePlug;
 class Filter;
 class PathMatcher;
+
+/// Returns true if the specified location exists within the scene, and false otherwise.
+/// This operates by traversing the path from the root, ensuring that each location includes
+/// the next path element within its child names.
+bool exists( const ScenePlug *scene, const ScenePlug::ScenePath &path );
 
 /// Finds all the paths in the scene that are matched by the filter, and adds them into the PathMatcher.
 void matchingPaths( const Filter *filter, const ScenePlug *scene, PathMatcher &paths );
