@@ -49,6 +49,7 @@
 #include "GafferScene/RendererAlgo.h"
 #include "GafferScene/SceneProcedural.h"
 #include "GafferScene/PathMatcherData.h"
+#include "GafferScene/SceneAlgo.h"
 
 using namespace std;
 using namespace Imath;
@@ -99,15 +100,21 @@ void outputCamera( const ScenePlug *scene, const IECore::CompoundObject *globals
 	{
 		ScenePlug::ScenePath cameraPath;
 		ScenePlug::stringToPath( cameraPathData->readable(), cameraPath );
+		if( !exists( scene, cameraPath ) )
+		{
+			throw IECore::Exception( "Camera \"" + cameraPathData->readable() + "\" does not exist" );
+		}
 		
 		IECore::ConstCameraPtr constCamera = runTimeCast<const IECore::Camera>( scene->object( cameraPath ) );
-		if( constCamera )
+		if( !constCamera )
 		{
-			camera = constCamera->copy();
-			const BoolData *cameraBlurData = globals->member<BoolData>( "render:cameraBlur" );
-			const bool cameraBlur = cameraBlurData ? cameraBlurData->readable() : false;
-			camera->setTransform( transform( scene, cameraPath, shutter( globals ), cameraBlur ) );
+			throw IECore::Exception( "Location \"" + cameraPathData->readable() + "\" is not a camera" );
 		}
+		
+		camera = constCamera->copy();
+		const BoolData *cameraBlurData = globals->member<BoolData>( "render:cameraBlur" );
+		const bool cameraBlur = cameraBlurData ? cameraBlurData->readable() : false;
+		camera->setTransform( transform( scene, cameraPath, shutter( globals ), cameraBlur ) );
 	}
 	
 	if( !camera )
