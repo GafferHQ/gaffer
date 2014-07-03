@@ -53,124 +53,98 @@ using namespace GafferBindings;
 using namespace GafferScene;
 using namespace GafferSceneBindings;
 
-// as a convenience we overload the ScenePlug accessors to accept either strings
-// or InternedStringVectorData for paths when calling from python. we deliberately
-// don't do the same in c++ to force people to use the faster form (vector of interned strings).
-void GafferSceneBindings::objectToScenePath(  boost::python::object o, GafferScene::ScenePlug::ScenePath &path )
+namespace
 {
-	extract<IECore::InternedStringVectorDataPtr> dataExtractor( o );
-	if( dataExtractor.check() )
+
+// ScenePlug::ScenePath is just a typedef for std::vector<InternedString>,
+// which doesn't exist in Python. So we register a conversion from
+// InternedStringVectorData which contains just such a vector.
+/// \todo We could instead do this in the Cortex bindings for all
+/// VectorTypedData types.
+struct ScenePathFromInternedStringVectorData
+{
+
+	ScenePathFromInternedStringVectorData()
 	{
-		IECore::ConstInternedStringVectorDataPtr p = dataExtractor();
-		path = p->readable();
-		return;
+		boost::python::converter::registry::push_back(
+			&convertible,
+			NULL,
+			boost::python::type_id<ScenePlug::ScenePath>()
+		);
+	}
+
+	static void *convertible( PyObject *obj )
+	{
+		extract<IECore::InternedStringVectorData *> dataExtractor( obj );
+		if( dataExtractor.check() )
+		{
+			IECore::InternedStringVectorData *data = dataExtractor();
+			return &(data->writable());
+		}
+		
+		return NULL;
+	}
+
+};
+
+// As a convenience we also accept strings in place of ScenePaths when
+// calling from python. We deliberately don't do the same in c++ to force
+// people to use the faster form.
+struct ScenePathFromString
+{
+
+	ScenePathFromString()
+	{
+		boost::python::converter::registry::push_back(
+			&convertible,
+			&construct,
+			boost::python::type_id<ScenePlug::ScenePath>()
+		);
+	}
+
+	static void *convertible( PyObject *obj )
+	{
+		if( PyString_Check( obj ) )
+		{
+			return obj;
+		}
+		return NULL;
 	}
 	
-	extract<std::string> stringExtractor( o );
-	if( stringExtractor.check() )
-	{
-		std::string s = stringExtractor();
+	static void construct( PyObject *obj, boost::python::converter::rvalue_from_python_stage1_data *data )
+	{        
+		void *storage = (( converter::rvalue_from_python_storage<ScenePlug::ScenePath>* ) data )->storage.bytes;
+		ScenePlug::ScenePath *path = new( storage ) ScenePlug::ScenePath();
+		data->convertible = storage;
+		
+		std::string s = extract<std::string>( obj );
 		typedef boost::tokenizer<boost::char_separator<char> > Tokenizer;
 		Tokenizer t( s, boost::char_separator<char>( "/" ) );
 		for( Tokenizer::const_iterator it = t.begin(), eIt = t.end(); it != eIt; it++ )
 		{
-			path.push_back( *it );
+			path->push_back( *it );
 		}
-		return;
 	}
-	
-	PyErr_SetString( PyExc_TypeError, "Path must be string or IECore.InternedStringVectorData." );
-	throw_error_already_set();
-}
 
-namespace
-{
+};
 
-Imath::Box3f boundWrapper( const ScenePlug &plug, object scenePath )
+IECore::ObjectPtr objectWrapper( const ScenePlug &plug, const ScenePlug::ScenePath &scenePath, bool copy=true )
 {
-	ScenePlug::ScenePath p;
-	objectToScenePath( scenePath, p );
-	return plug.bound( p );
-}
-
-Imath::M44f transformWrapper( const ScenePlug &plug, object scenePath )
-{
-	ScenePlug::ScenePath p;
-	objectToScenePath( scenePath, p );
-	return plug.transform( p );
-}
-
-Imath::M44f fullTransformWrapper( const ScenePlug &plug, object scenePath )
-{
-	ScenePlug::ScenePath p;
-	objectToScenePath( scenePath, p );
-	return plug.fullTransform( p );
-}
-
-IECore::ObjectPtr objectWrapper( const ScenePlug &plug, object scenePath, bool copy=true )
-{
-	ScenePlug::ScenePath p;
-	objectToScenePath( scenePath, p );
-	IECore::ConstObjectPtr o = plug.object( p );
+	IECore::ConstObjectPtr o = plug.object( scenePath );
 	return copy ? o->copy() : IECore::constPointerCast<IECore::Object>( o );
 }
 
-IECore::InternedStringVectorDataPtr childNamesWrapper( const ScenePlug &plug, object scenePath, bool copy=true )
+IECore::InternedStringVectorDataPtr childNamesWrapper( const ScenePlug &plug, const ScenePlug::ScenePath &scenePath, bool copy=true )
 {
-	ScenePlug::ScenePath p;
-	objectToScenePath( scenePath, p );
-	IECore::ConstInternedStringVectorDataPtr n = plug.childNames( p );
+	IECore::ConstInternedStringVectorDataPtr n = plug.childNames( scenePath );
 	return copy ? n->copy() : IECore::constPointerCast<IECore::InternedStringVectorData>( n );
 }
 
-IECore::CompoundObjectPtr attributesWrapper( const ScenePlug &plug, object scenePath, bool copy=true )
+IECore::CompoundObjectPtr attributesWrapper( const ScenePlug &plug, const ScenePlug::ScenePath &scenePath, bool copy=true )
 {
-	ScenePlug::ScenePath p;
-	objectToScenePath( scenePath, p );IECore::ConstCompoundObjectPtr a = plug.attributes( p );
+	IECore::ConstCompoundObjectPtr a = plug.attributes( scenePath );
 	return copy ? a->copy() : IECore::constPointerCast<IECore::CompoundObject>( a );
 }
-
-IECore::CompoundObjectPtr fullAttributesWrapper( const ScenePlug &plug, object scenePath )
-{
-	ScenePlug::ScenePath p;
-	objectToScenePath( scenePath, p );
-	return plug.fullAttributes( p );
-}
-
-IECore::MurmurHash boundHashWrapper( const ScenePlug &plug, object scenePath )
-{
-	ScenePlug::ScenePath p;
-	objectToScenePath( scenePath, p );
-	return plug.boundHash( p );
-}
-
-IECore::MurmurHash transformHashWrapper( const ScenePlug &plug, object scenePath )
-{
-	ScenePlug::ScenePath p;
-	objectToScenePath( scenePath, p );
-	return plug.transformHash( p );
-}
-
-IECore::MurmurHash objectHashWrapper( const ScenePlug &plug, object scenePath )
-{
-	ScenePlug::ScenePath p;
-	objectToScenePath( scenePath, p );
-	return plug.objectHash( p );
-}
-
-IECore::MurmurHash childNamesHashWrapper( const ScenePlug &plug, object scenePath )
-{
-	ScenePlug::ScenePath p;
-	objectToScenePath( scenePath, p );
-	return plug.childNamesHash( p );
-}
-
-IECore::MurmurHash attributesHashWrapper( const ScenePlug &plug, object scenePath )
-{
-	ScenePlug::ScenePath p;
-	objectToScenePath( scenePath, p );
-	return plug.attributesHash( p );
-} 
 
 } // namespace
 
@@ -187,19 +161,22 @@ void GafferSceneBindings::bindScenePlug()
 			)
 		)
 		// value accessors
-		.def( "bound", &boundWrapper )
-		.def( "transform", &transformWrapper )
-		.def( "fullTransform", &fullTransformWrapper )
+		.def( "bound", &ScenePlug::bound )
+		.def( "transform", &ScenePlug::transform )
+		.def( "fullTransform", &ScenePlug::fullTransform )
 		.def( "object", &objectWrapper, ( boost::python::arg_( "_copy" ) = true ) )
 		.def( "childNames", &childNamesWrapper, ( boost::python::arg_( "_copy" ) = true ) )
 		.def( "attributes", &attributesWrapper, ( boost::python::arg_( "_copy" ) = true ) )
-		.def( "fullAttributes", &fullAttributesWrapper )
+		.def( "fullAttributes", &ScenePlug::fullAttributes )
 		// hash accessors
-		.def( "boundHash", &boundHashWrapper )
-		.def( "transformHash", &transformHashWrapper )
-		.def( "objectHash", &objectHashWrapper )
-		.def( "childNamesHash", &childNamesHashWrapper )
-		.def( "attributesHash", &attributesHashWrapper )
+		.def( "boundHash", &ScenePlug::boundHash )
+		.def( "transformHash", &ScenePlug::transformHash )
+		.def( "objectHash", &ScenePlug::objectHash )
+		.def( "childNamesHash", &ScenePlug::childNamesHash )
+		.def( "attributesHash", &ScenePlug::attributesHash )
 	;
+
+	ScenePathFromInternedStringVectorData();
+	ScenePathFromString();
 	
 }
