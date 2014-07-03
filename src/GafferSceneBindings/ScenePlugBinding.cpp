@@ -83,6 +83,9 @@ void GafferSceneBindings::objectToScenePath(  boost::python::object o, GafferSce
 	throw_error_already_set();
 }
 
+namespace
+{
+
 Imath::Box3f boundWrapper( const ScenePlug &plug, object scenePath )
 {
 	ScenePlug::ScenePath p;
@@ -104,7 +107,7 @@ Imath::M44f fullTransformWrapper( const ScenePlug &plug, object scenePath )
 	return plug.fullTransform( p );
 }
 
-static IECore::ObjectPtr objectWrapper( const ScenePlug &plug, object scenePath, bool copy=true )
+IECore::ObjectPtr objectWrapper( const ScenePlug &plug, object scenePath, bool copy=true )
 {
 	ScenePlug::ScenePath p;
 	objectToScenePath( scenePath, p );
@@ -112,7 +115,7 @@ static IECore::ObjectPtr objectWrapper( const ScenePlug &plug, object scenePath,
 	return copy ? o->copy() : IECore::constPointerCast<IECore::Object>( o );
 }
 
-static IECore::InternedStringVectorDataPtr childNamesWrapper( const ScenePlug &plug, object scenePath, bool copy=true )
+IECore::InternedStringVectorDataPtr childNamesWrapper( const ScenePlug &plug, object scenePath, bool copy=true )
 {
 	ScenePlug::ScenePath p;
 	objectToScenePath( scenePath, p );
@@ -120,14 +123,14 @@ static IECore::InternedStringVectorDataPtr childNamesWrapper( const ScenePlug &p
 	return copy ? n->copy() : IECore::constPointerCast<IECore::InternedStringVectorData>( n );
 }
 
-static IECore::CompoundObjectPtr attributesWrapper( const ScenePlug &plug, object scenePath, bool copy=true )
+IECore::CompoundObjectPtr attributesWrapper( const ScenePlug &plug, object scenePath, bool copy=true )
 {
 	ScenePlug::ScenePath p;
 	objectToScenePath( scenePath, p );IECore::ConstCompoundObjectPtr a = plug.attributes( p );
 	return copy ? a->copy() : IECore::constPointerCast<IECore::CompoundObject>( a );
 }
 
-static IECore::CompoundObjectPtr fullAttributesWrapper( const ScenePlug &plug, object scenePath )
+IECore::CompoundObjectPtr fullAttributesWrapper( const ScenePlug &plug, object scenePath )
 {
 	ScenePlug::ScenePath p;
 	objectToScenePath( scenePath, p );
@@ -168,6 +171,8 @@ IECore::MurmurHash attributesHashWrapper( const ScenePlug &plug, object scenePat
 	objectToScenePath( scenePath, p );
 	return plug.attributesHash( p );
 } 
+
+} // namespace
 
 void GafferSceneBindings::bindScenePlug()
 {
