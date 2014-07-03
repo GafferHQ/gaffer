@@ -37,6 +37,7 @@
 #include "boost/bind.hpp"
 
 #include "IECore/WorldBlock.h"
+#include "IECore/EditBlock.h"
 
 #include "Gaffer/Context.h"
 #include "Gaffer/ScriptNode.h"
@@ -291,25 +292,27 @@ void InteractiveRender::outputLightsInternal( const IECore::CompoundObject *glob
 			if( m_lightHandles.find( *it ) != m_lightHandles.end() )
 			{
 				// we've already output this light - update it
-				m_renderer->editBegin( "light", CompoundDataMap() );
-					const bool visible = outputLight( inPlug(), path, m_renderer );
-				m_renderer->editEnd();
+				bool visible = false;
+				{
+					EditBlock edit( m_renderer, "light", CompoundDataMap() );
+					visible = outputLight( inPlug(), path, m_renderer );
+				}
 				// we may have turned it off before, and need to turn
 				// it back on, or it may have been hidden and we need
 				// to turn it off.
-				m_renderer->editBegin( "attribute", CompoundDataMap() );
+				{
+					EditBlock edit( m_renderer, "attribute", CompoundDataMap() );
 					m_renderer->illuminate( *it, visible );
-				m_renderer->editEnd();
+				}
 			}
 			else
 			{
 				// we've not seen this light before - create a new one
-				m_renderer->editBegin( "attribute", CompoundDataMap() );
-					if( outputLight( inPlug(), path, m_renderer ) )
-					{
-						m_lightHandles.insert( *it );
-					}
-				m_renderer->editEnd();
+				EditBlock edit( m_renderer, "attribute", CompoundDataMap() );
+				if( outputLight( inPlug(), path, m_renderer ) )
+				{
+					m_lightHandles.insert( *it );
+				}
 			}
 		}
 	}
@@ -320,9 +323,8 @@ void InteractiveRender::outputLightsInternal( const IECore::CompoundObject *glob
 	{
 		if( !lightSet || !(lightSet->readable().match( *it ) & Filter::ExactMatch) )
 		{
-			m_renderer->editBegin( "attribute", CompoundDataMap() );
-				m_renderer->illuminate( *it, false );
-			m_renderer->editEnd();
+			EditBlock edit( m_renderer, "attribute", CompoundDataMap() );
+			m_renderer->illuminate( *it, false );
 		}
 	}
 }
@@ -352,7 +354,8 @@ void InteractiveRender::updateShadersWalk( const ScenePlug::ScenePath &path )
 		
 		CompoundDataMap parameters;
 		parameters["exactscopename"] = new StringData( name );
-		m_renderer->editBegin( "attribute", parameters );
+		{
+			EditBlock edit( m_renderer, "attribute", parameters );
 		
 			for( ObjectVector::MemberContainer::const_iterator it = shader->members().begin(), eIt = shader->members().end(); it != eIt; it++ )
 			{
@@ -362,8 +365,7 @@ void InteractiveRender::updateShadersWalk( const ScenePlug::ScenePath &path )
 					s->render( m_renderer );
 				}
 			}
-
-		m_renderer->editEnd();
+		}
 	}
 	
 	ConstInternedStringVectorDataPtr childNames = inPlug()->childNames( path );
@@ -383,9 +385,10 @@ void InteractiveRender::updateCamera()
 		return;
 	}
 	IECore::ConstCompoundObjectPtr globals = inPlug()->globalsPlug()->getValue();
-	m_renderer->editBegin( "option", CompoundDataMap() );
+	{
+		EditBlock edit( m_renderer, "option", CompoundDataMap() );
 		outputCamera( inPlug(), globals.get(), m_renderer );
-	m_renderer->editEnd();
+	}
 	m_cameraDirty = false;
 }
 
