@@ -38,6 +38,7 @@
 
 #include "IECore/WorldBlock.h"
 #include "IECore/EditBlock.h"
+#include "IECore/MessageHandler.h"
 
 #include "Gaffer/Context.h"
 #include "Gaffer/ScriptNode.h"
@@ -155,7 +156,20 @@ void InteractiveRender::plugDirtied( const Gaffer::Plug *plug )
 		plug == statePlug()
 	)
 	{
-		update();
+		try
+		{
+			update();
+		}
+		catch( const std::exception &e )
+		{
+			// Since we're inside an emission of plugDirtiedSignal(),
+			// it's of no use to anyone to go throwing an exception.
+			// instead we'll just report it as a message.
+			/// \todo When we have Node::errorSignal(), we should
+			/// emit that, and the UI will be able to show the error
+			/// more appropriately.
+			IECore::msg( IECore::Msg::Error, "InteractiveRender::update", e.what() );
+		}
 	}
 }
 
