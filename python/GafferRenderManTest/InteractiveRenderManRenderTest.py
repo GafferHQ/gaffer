@@ -721,5 +721,78 @@ class InteractiveRenderManRenderTest( unittest.TestCase ) :
 		# thread when this happens, we'll get a deadlock.
 		del s
 
+	def testMoveCamera( self ) :
+	
+		s = Gaffer.ScriptNode()
+		
+		s["p"] = GafferScene.Plane()
+		
+		s["c"] = GafferScene.Camera()
+		s["c"]["transform"]["translate"]["z"].setValue( 1 )
+		
+		s["g"] = GafferScene.Group()
+		s["g"]["in"].setInput( s["p"]["out"] )
+		s["g"]["in1"].setInput( s["c"]["out"] )
+		
+		s["d"] = GafferScene.Displays()
+		s["d"].addDisplay(
+			"beauty",
+			IECore.Display(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"quantize" : IECore.FloatVectorData( [ 0, 0, 0, 0 ] ),
+					"driverType" : "ImageDisplayDriver",
+					"handle" : "myLovelyPlane",
+				}
+			)
+		)
+		s["d"]["in"].setInput( s["g"]["out"] )
+		
+		s["o"] = GafferScene.StandardOptions()
+		s["o"]["options"]["renderCamera"]["value"].setValue( "/group/camera" )
+		s["o"]["options"]["renderCamera"]["enabled"].setValue( True )
+		s["o"]["in"].setInput( s["d"]["out"] )
+		
+		s["r"] = GafferRenderMan.InteractiveRenderManRender()
+		s["r"]["in"].setInput( s["o"]["out"] )
+		
+		# start a render, give it time to finish, and check the output
+		
+		s["r"]["state"].setValue( s["r"].State.Running )
+		
+		time.sleep( 2 )
+		
+		c = self.__colorAtUV(
+			IECore.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
+			IECore.V2f( 0.5 ),
+		)
+		self.assertAlmostEqual( c[1], 1, delta = 0.001 )
+
+		# move the camera so it can't see the plane, and check the output
+		
+		s["c"]["transform"]["translate"]["x"].setValue( 2 )
+
+		time.sleep( 2 )
+		
+		c = self.__colorAtUV(
+			IECore.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
+			IECore.V2f( 0.5 ),
+		)
+		self.assertAlmostEqual( c[0], 0 )
+		
+		# move the camera back and recheck
+		
+		s["c"]["transform"]["translate"]["x"].setValue( 0 )
+
+		time.sleep( 2 )
+		
+		c = self.__colorAtUV(
+			IECore.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
+			IECore.V2f( 0.5 ),
+		)
+		self.assertAlmostEqual( c[1], 1, delta = 0.001 )
+		
 if __name__ == "__main__":
 	unittest.main()
