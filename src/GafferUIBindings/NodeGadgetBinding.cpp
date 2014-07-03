@@ -82,9 +82,8 @@ static Gaffer::NodePtr node( NodeGadget &nodeGadget )
 void GafferUIBindings::bindNodeGadget()
 {
 	typedef NodeGadgetWrapper<NodeGadget> Wrapper;
-	IE_CORE_DECLAREPTR( Wrapper );
 
-	NodeGadgetClass<NodeGadget, WrapperPtr>()
+	NodeGadgetClass<NodeGadget, Wrapper>()
 		.def( "node", &node )
 		.def( "create", &NodeGadget::create ).staticmethod( "create" )
 		.def( "registerNodeGadget", &registerNodeGadget ).staticmethod( "registerNodeGadget" )

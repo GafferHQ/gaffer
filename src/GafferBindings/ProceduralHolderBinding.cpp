@@ -54,7 +54,6 @@ using namespace GafferBindings;
 using namespace Gaffer;
 
 typedef ParameterisedHolderWrapper<DependencyNodeWrapper<ProceduralHolder> > ProceduralHolderWrapper;
-IE_CORE_DECLAREPTR( ProceduralHolderWrapper );
 
 static IECore::ParameterisedProceduralPtr getProcedural( ProceduralHolder &n )
 {
@@ -64,7 +63,7 @@ static IECore::ParameterisedProceduralPtr getProcedural( ProceduralHolder &n )
 void GafferBindings::bindProceduralHolder()
 {
 	
-	GafferBindings::DependencyNodeClass<ProceduralHolder, ProceduralHolderWrapperPtr>()
+	GafferBindings::DependencyNodeClass<ProceduralHolder, ProceduralHolderWrapper>()
 		.def( "setProcedural", &ProceduralHolder::setProcedural )
 		.def( "getProcedural", &getProcedural )
 	;

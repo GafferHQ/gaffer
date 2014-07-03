@@ -46,8 +46,8 @@
 namespace GafferUIBindings
 {
 
-template<typename T, typename Ptr=IECore::IntrusivePtr<T> >
-class GadgetClass : public GafferBindings::GraphComponentClass<T, Ptr>
+template<typename T, typename TWrapper=T>
+class GadgetClass : public GafferBindings::GraphComponentClass<T, TWrapper>
 {
 	public :
 	

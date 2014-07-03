@@ -61,8 +61,6 @@ class StandardNodeGadgetWrapper : public NodeGadgetWrapper<StandardNodeGadget>
 						
 };
 
-IE_CORE_DECLAREPTR( StandardNodeGadgetWrapper );
-
 static GadgetPtr getContents( StandardNodeGadget &g )
 {
 	return g.getContents();
@@ -70,7 +68,7 @@ static GadgetPtr getContents( StandardNodeGadget &g )
 
 void GafferUIBindings::bindStandardNodeGadget()
 {
-	NodeGadgetClass<StandardNodeGadget, StandardNodeGadgetWrapperPtr>()
+	NodeGadgetClass<StandardNodeGadget, StandardNodeGadgetWrapper>()
 		.def( init<Gaffer::NodePtr, LinearContainer::Orientation>( ( arg( "node" ), arg( "orientation" )=LinearContainer::X ) ) )
 		.def( "setContents", &StandardNodeGadget::setContents )
 		.def( "getContents", &getContents )

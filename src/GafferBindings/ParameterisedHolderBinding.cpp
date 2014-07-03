@@ -59,11 +59,6 @@ typedef ParameterisedHolderWrapper<DependencyNodeWrapper<ParameterisedHolderDepe
 typedef ParameterisedHolderWrapper<ComputeNodeWrapper<ParameterisedHolderComputeNode> > ParameterisedHolderComputeNodeWrapper;
 typedef ParameterisedHolderWrapper<ExecutableNodeWrapper<ParameterisedHolderExecutableNode> > ParameterisedHolderExecutableNodeWrapper;
 
-IE_CORE_DECLAREPTR( ParameterisedHolderNodeWrapper )
-IE_CORE_DECLAREPTR( ParameterisedHolderDependencyNodeWrapper )
-IE_CORE_DECLAREPTR( ParameterisedHolderComputeNodeWrapper )
-IE_CORE_DECLAREPTR( ParameterisedHolderExecutableNodeWrapper )
-
 template<typename T>
 class ParameterisedHolderSerialiser : public NodeSerialiser
 {
@@ -90,10 +85,10 @@ class ParameterisedHolderSerialiser : public NodeSerialiser
 void GafferBindings::bindParameterisedHolder()
 {
 
-	ParameterisedHolderClass<NodeClass<ParameterisedHolderNode, ParameterisedHolderNodeWrapperPtr> >();
-	ParameterisedHolderClass<DependencyNodeClass<ParameterisedHolderDependencyNode, ParameterisedHolderDependencyNodeWrapperPtr> >();
-	ParameterisedHolderClass<DependencyNodeClass<ParameterisedHolderComputeNode, ParameterisedHolderComputeNodeWrapperPtr> >();
-	ParameterisedHolderClass<ExecutableNodeClass<ParameterisedHolderExecutableNode, ParameterisedHolderExecutableNodeWrapperPtr> >();
+	ParameterisedHolderClass<NodeClass<ParameterisedHolderNode, ParameterisedHolderNodeWrapper> >();
+	ParameterisedHolderClass<DependencyNodeClass<ParameterisedHolderDependencyNode, ParameterisedHolderDependencyNodeWrapper> >();
+	ParameterisedHolderClass<DependencyNodeClass<ParameterisedHolderComputeNode, ParameterisedHolderComputeNodeWrapper> >();
+	ParameterisedHolderClass<ExecutableNodeClass<ParameterisedHolderExecutableNode, ParameterisedHolderExecutableNodeWrapper> >();
 
 	Serialisation::registerSerialiser( ParameterisedHolderNode::staticTypeId(), new ParameterisedHolderSerialiser<ParameterisedHolderNode>() );
 	Serialisation::registerSerialiser( ParameterisedHolderDependencyNode::staticTypeId(), new ParameterisedHolderSerialiser<ParameterisedHolderDependencyNode>() );

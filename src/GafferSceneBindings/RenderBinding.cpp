@@ -106,8 +106,6 @@ class ExecutableRenderWrapper : public ExecutableNodeWrapper<ExecutableRender>
 
 };
 
-IE_CORE_DECLAREPTR( ExecutableRenderWrapper )
-
 static ContextPtr interactiveRenderGetContext( InteractiveRender &r )
 {
 	return r.getContext();
@@ -116,7 +114,7 @@ static ContextPtr interactiveRenderGetContext( InteractiveRender &r )
 void GafferSceneBindings::bindRender()
 {
 	
-	GafferBindings::ExecutableNodeClass<ExecutableRender, ExecutableRenderWrapperPtr>();
+	GafferBindings::ExecutableNodeClass<ExecutableRender, ExecutableRenderWrapper>();
 	
 	GafferBindings::NodeClass<OpenGLRender>();
 	

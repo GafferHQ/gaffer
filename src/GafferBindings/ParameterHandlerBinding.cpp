@@ -117,8 +117,6 @@ class ParameterHandlerWrapper : public ParameterHandler, public IECorePython::Wr
 
 };
 
-IE_CORE_DECLAREPTR( ParameterHandlerWrapper )
-
 struct ParameterHandlerCreator
 {
 	ParameterHandlerCreator( object fn )
@@ -147,7 +145,7 @@ static void registerParameterHandler( IECore::TypeId parameterType, object creat
 void GafferBindings::bindParameterHandler()
 {
 	
-	IECorePython::RefCountedClass<ParameterHandler, IECore::RefCounted, ParameterHandlerWrapperPtr>( "ParameterHandler" )
+	IECorePython::RefCountedClass<ParameterHandler, IECore::RefCounted, ParameterHandlerWrapper>( "ParameterHandler" )
 		.def( init<>() )
 		.def( "parameter", (IECore::ParameterPtr (ParameterHandler::*)())&ParameterHandler::parameter )
 		.def( "restore", &ParameterHandler::restore, ( arg( "plugParent" ) ) )

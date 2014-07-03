@@ -52,8 +52,8 @@ namespace GafferBindings
 
 void bindNode();
 
-template<typename T, typename Ptr=IECore::IntrusivePtr<T> >
-class NodeClass : public GraphComponentClass<T, Ptr>
+template<typename T, typename TWrapper=T>
+class NodeClass : public GraphComponentClass<T, TWrapper>
 {
 	public :
 	

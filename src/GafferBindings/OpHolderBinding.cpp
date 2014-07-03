@@ -54,7 +54,6 @@ using namespace GafferBindings;
 using namespace Gaffer;
 
 typedef ParameterisedHolderWrapper<DependencyNodeWrapper<OpHolder> > OpHolderWrapper;
-IE_CORE_DECLAREPTR( OpHolderWrapper );
 
 static IECore::OpPtr getOp( OpHolder &n )
 {
@@ -64,7 +63,7 @@ static IECore::OpPtr getOp( OpHolder &n )
 void GafferBindings::bindOpHolder()
 {
 	
-	DependencyNodeClass<OpHolder, OpHolderWrapperPtr>()
+	DependencyNodeClass<OpHolder, OpHolderWrapper>()
 		.def(
 			"setOp",
 			&OpHolder::setOp,

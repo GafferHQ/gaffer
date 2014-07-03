@@ -63,9 +63,9 @@ static std::string getToolTip( const T &p, const IECore::LineSegment3f &line )
 
 } // namespace Detail
 
-template<typename T, typename Ptr>
-GadgetClass<T, Ptr>::GadgetClass( const char *docString )
-	:	GafferBindings::GraphComponentClass<T, Ptr>( docString )
+template<typename T, typename TWrapper>
+GadgetClass<T, TWrapper>::GadgetClass( const char *docString )
+	:	GafferBindings::GraphComponentClass<T, TWrapper>( docString )
 {
 	def( "setHighlighted", &Detail::setHighlighted<T> );
 	def( "bound", &Detail::bound<T> );

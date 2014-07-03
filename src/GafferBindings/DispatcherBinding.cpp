@@ -164,13 +164,11 @@ struct DispatchSlotCaller
 	}
 };
 
-IE_CORE_DECLAREPTR( DispatcherWrapper )
-
 } // namespace
 
 void GafferBindings::bindDispatcher()
 {
-	scope s = NodeClass<Dispatcher, DispatcherWrapperPtr>()
+	scope s = NodeClass<Dispatcher, DispatcherWrapper>()
 		.def( "dispatch", &DispatcherWrapper::dispatch )
 		.def( "jobDirectory", &Dispatcher::jobDirectory )
 		.def( "dispatcher", &DispatcherWrapper::dispatcher ).staticmethod( "dispatcher" )

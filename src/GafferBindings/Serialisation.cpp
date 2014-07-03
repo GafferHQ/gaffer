@@ -422,8 +422,6 @@ class SerialiserWrapper : public Serialisation::Serialiser, public IECorePython:
 		
 };
 
-IE_CORE_DECLAREPTR( SerialiserWrapper )
-
 static object moduleDependencies( Serialisation::Serialiser &serialiser, const Gaffer::GraphComponent *graphComponent )
 {
 	std::set<std::string> modules;
@@ -463,7 +461,7 @@ void GafferBindings::bindSerialisation()
 		.staticmethod( "acquireSerialiser" )
 	;
 	
-	IECorePython::RefCountedClass<Serialisation::Serialiser, IECore::RefCounted, SerialiserWrapperPtr>( "Serialiser" )
+	IECorePython::RefCountedClass<Serialisation::Serialiser, IECore::RefCounted, SerialiserWrapper>( "Serialiser" )
 		.def( init<>() )
 		.def( "moduleDependencies", &moduleDependencies )
 		.def( "constructor", &Serialisation::Serialiser::constructor )

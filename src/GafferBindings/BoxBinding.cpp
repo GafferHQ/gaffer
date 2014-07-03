@@ -91,9 +91,8 @@ static IECore::DataPtr getPlugMetadata( Box &b, const Plug *plug, const char *ke
 void bindBox()
 {
 	typedef NodeWrapper<Box> BoxWrapper;
-	IE_CORE_DECLAREPTR( BoxWrapper );
 	
-	NodeClass<Box, BoxWrapperPtr>()
+	NodeClass<Box, BoxWrapper>()
 		.def( "canPromotePlug", &Box::canPromotePlug, ( arg( "descendantPlug" ), arg( "asUserPlug" ) = true ) )
 		.def( "promotePlug", &promotePlug, ( arg( "descendantPlug" ), arg( "asUserPlug" ) = true ) )
 		.def( "plugIsPromoted", &Box::plugIsPromoted )

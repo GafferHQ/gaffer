@@ -217,9 +217,8 @@ static PlugPtr source( Plug &p )
 void GafferBindings::bindPlug()
 {
 	typedef PlugWrapper<Plug> Wrapper;
-	IE_CORE_DECLAREPTR( Wrapper );
 	
-	PlugClass<Plug, WrapperPtr> c;
+	PlugClass<Plug, Wrapper> c;
 	{
 		scope s( c );
 		enum_<Plug::Direction>( "Direction" )

@@ -75,9 +75,8 @@ BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( renderOverloads, render, 0, 1 );
 void GafferUIBindings::bindGadget()
 {
 	typedef GadgetWrapper<Gadget> Wrapper;
-	IE_CORE_DECLAREPTR( Wrapper );
 
-	scope s = GadgetClass<Gadget, WrapperPtr>()
+	scope s = GadgetClass<Gadget, Wrapper>()
 		.def( init<>() )
 		.def( init<const std::string &>() )
 		.def( "setStyle", &Gadget::setStyle )
