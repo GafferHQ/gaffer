@@ -352,13 +352,13 @@ options.Add(
 options.Add(
 	"SHIBOKEN_SRC_DIR",
 	"The location of QT.",
-	"$DEPENDENCIES_SRC_DIR/shiboken-1.2.0",
+	"$DEPENDENCIES_SRC_DIR/shiboken-1.2.2",
 )
 
 options.Add(
 	"PYSIDE_SRC_DIR",
 	"The location of QT.",
-	"$DEPENDENCIES_SRC_DIR/pyside-qt4.8+1.2.0",
+	"$DEPENDENCIES_SRC_DIR/pyside-qt4.8+1.2.2",
 )
 
 options.Add(
