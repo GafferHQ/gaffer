@@ -37,6 +37,8 @@
 #include "boost/bind.hpp"
 
 #include "IECore/WorldBlock.h"
+#include "IECore/EditBlock.h"
+#include "IECore/MessageHandler.h"
 
 #include "Gaffer/Context.h"
 #include "Gaffer/ScriptNode.h"
@@ -57,13 +59,14 @@ IE_CORE_DEFINERUNTIMETYPED( InteractiveRender );
 size_t InteractiveRender::g_firstPlugIndex = 0;
 
 InteractiveRender::InteractiveRender( const std::string &name )
-	:	Node( name ), m_lightsDirty( true ), m_shadersDirty( true )
+	:	Node( name ), m_lightsDirty( true ), m_shadersDirty( true ), m_cameraDirty( true )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new ScenePlug( "in" ) );
 	addChild( new IntPlug( "state", Plug::In, Stopped, Stopped, Paused, Plug::Default & ~Plug::Serialisable ) );
 	addChild( new BoolPlug( "updateLights", Plug::In, true ) );
 	addChild( new BoolPlug( "updateShaders", Plug::In, true ) );
+	addChild( new BoolPlug( "updateCamera", Plug::In, true ) );
 
 	plugDirtiedSignal().connect( boost::bind( &InteractiveRender::plugDirtied, this, ::_1 ) );
 	parentChangedSignal().connect( boost::bind( &InteractiveRender::parentChanged, this, ::_1, ::_2 ) );
@@ -115,6 +118,16 @@ const Gaffer::BoolPlug *InteractiveRender::updateShadersPlug() const
 	return getChild<BoolPlug>( g_firstPlugIndex + 3 );
 }
 
+Gaffer::BoolPlug *InteractiveRender::updateCameraPlug()
+{
+	return getChild<BoolPlug>( g_firstPlugIndex + 4 );
+}
+
+const Gaffer::BoolPlug *InteractiveRender::updateCameraPlug() const
+{
+	return getChild<BoolPlug>( g_firstPlugIndex + 4 );
+}
+
 void InteractiveRender::plugDirtied( const Gaffer::Plug *plug )
 {
 	if(
@@ -127,6 +140,7 @@ void InteractiveRender::plugDirtied( const Gaffer::Plug *plug )
 		// updating. we'll do the actual update when
 		// the dirty signal is emitted for the parent plug.
 		m_lightsDirty = true;
+		m_cameraDirty = true;
 	}
 	else if( plug == inPlug()->attributesPlug() )
 	{
@@ -138,10 +152,24 @@ void InteractiveRender::plugDirtied( const Gaffer::Plug *plug )
 		plug == inPlug() ||
 		plug == updateLightsPlug() ||
 		plug == updateShadersPlug() ||
+		plug == updateCameraPlug() ||
 		plug == statePlug()
 	)
 	{
-		update();
+		try
+		{
+			update();
+		}
+		catch( const std::exception &e )
+		{
+			// Since we're inside an emission of plugDirtiedSignal(),
+			// it's of no use to anyone to go throwing an exception.
+			// instead we'll just report it as a message.
+			/// \todo When we have Node::errorSignal(), we should
+			/// emit that, and the UI will be able to show the error
+			/// more appropriately.
+			IECore::msg( IECore::Msg::Error, "InteractiveRender::update", e.what() );
+		}
 	}
 }
 
@@ -175,7 +203,7 @@ void InteractiveRender::update()
 		m_scene = NULL;
 		m_state = Stopped;
 		m_lightHandles.clear();
-		m_shadersDirty = m_lightsDirty = true;
+		m_shadersDirty = m_lightsDirty = m_cameraDirty = true;
 		if( !requiredScene || requiredState == Stopped )
 		{
 			return;
@@ -204,7 +232,7 @@ void InteractiveRender::update()
 		
 		m_scene = requiredScene;
 		m_state = Running;
-		m_lightsDirty = m_shadersDirty = false;
+		m_lightsDirty = m_shadersDirty = m_cameraDirty = false;
 	}
 	
 	// Make sure the paused/running state is as we want.
@@ -228,6 +256,7 @@ void InteractiveRender::update()
 	{
 		updateLights();
 		updateShaders();
+		updateCamera();
 	}
 }
 
@@ -277,25 +306,27 @@ void InteractiveRender::outputLightsInternal( const IECore::CompoundObject *glob
 			if( m_lightHandles.find( *it ) != m_lightHandles.end() )
 			{
 				// we've already output this light - update it
-				m_renderer->editBegin( "light", CompoundDataMap() );
-					const bool visible = outputLight( inPlug(), path, m_renderer );
-				m_renderer->editEnd();
+				bool visible = false;
+				{
+					EditBlock edit( m_renderer, "light", CompoundDataMap() );
+					visible = outputLight( inPlug(), path, m_renderer );
+				}
 				// we may have turned it off before, and need to turn
 				// it back on, or it may have been hidden and we need
 				// to turn it off.
-				m_renderer->editBegin( "attribute", CompoundDataMap() );
+				{
+					EditBlock edit( m_renderer, "attribute", CompoundDataMap() );
 					m_renderer->illuminate( *it, visible );
-				m_renderer->editEnd();
+				}
 			}
 			else
 			{
 				// we've not seen this light before - create a new one
-				m_renderer->editBegin( "attribute", CompoundDataMap() );
-					if( outputLight( inPlug(), path, m_renderer ) )
-					{
-						m_lightHandles.insert( *it );
-					}
-				m_renderer->editEnd();
+				EditBlock edit( m_renderer, "attribute", CompoundDataMap() );
+				if( outputLight( inPlug(), path, m_renderer ) )
+				{
+					m_lightHandles.insert( *it );
+				}
 			}
 		}
 	}
@@ -306,9 +337,8 @@ void InteractiveRender::outputLightsInternal( const IECore::CompoundObject *glob
 	{
 		if( !lightSet || !(lightSet->readable().match( *it ) & Filter::ExactMatch) )
 		{
-			m_renderer->editBegin( "attribute", CompoundDataMap() );
-				m_renderer->illuminate( *it, false );
-			m_renderer->editEnd();
+			EditBlock edit( m_renderer, "attribute", CompoundDataMap() );
+			m_renderer->illuminate( *it, false );
 		}
 	}
 }
@@ -338,7 +368,8 @@ void InteractiveRender::updateShadersWalk( const ScenePlug::ScenePath &path )
 		
 		CompoundDataMap parameters;
 		parameters["exactscopename"] = new StringData( name );
-		m_renderer->editBegin( "attribute", parameters );
+		{
+			EditBlock edit( m_renderer, "attribute", parameters );
 		
 			for( ObjectVector::MemberContainer::const_iterator it = shader->members().begin(), eIt = shader->members().end(); it != eIt; it++ )
 			{
@@ -348,8 +379,7 @@ void InteractiveRender::updateShadersWalk( const ScenePlug::ScenePath &path )
 					s->render( m_renderer );
 				}
 			}
-
-		m_renderer->editEnd();
+		}
 	}
 	
 	ConstInternedStringVectorDataPtr childNames = inPlug()->childNames( path );
@@ -360,6 +390,20 @@ void InteractiveRender::updateShadersWalk( const ScenePlug::ScenePath &path )
 		childPath[path.size()] = *it;
 		updateShadersWalk( childPath );
 	}
+}
+
+void InteractiveRender::updateCamera()
+{
+	if( !m_cameraDirty || !updateCameraPlug()->getValue() )
+	{
+		return;
+	}
+	IECore::ConstCompoundObjectPtr globals = inPlug()->globalsPlug()->getValue();
+	{
+		EditBlock edit( m_renderer, "option", CompoundDataMap() );
+		outputCamera( inPlug(), globals.get(), m_renderer );
+	}
+	m_cameraDirty = false;
 }
 
 Gaffer::Context *InteractiveRender::getContext()

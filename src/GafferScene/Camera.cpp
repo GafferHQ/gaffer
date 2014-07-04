@@ -39,6 +39,7 @@
 #include "IECore/Transform.h"
 
 #include "GafferScene/Camera.h"
+#include "GafferScene/PathMatcherData.h"
 
 using namespace Gaffer;
 using namespace GafferScene;
@@ -103,6 +104,30 @@ void Camera::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
 	{
 		outputs.push_back( sourcePlug() );
 	}
+}
+
+void Camera::hashGlobals( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	ObjectSource::hashGlobals( context, parent, h );
+	namePlug()->hash( h );
+}
+
+IECore::ConstCompoundObjectPtr Camera::computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const
+{
+	IECore::CompoundObjectPtr result = new IECore::CompoundObject;
+	
+	IECore::CompoundDataPtr sets = result->member<IECore::CompoundData>(
+		"gaffer:sets",
+		/* throwExceptions = */ false,
+		/* createIfMissing = */ true
+	);
+	
+	PathMatcherDataPtr cameraSet = new PathMatcherData;
+	cameraSet->writable().addPath( "/" + namePlug()->getValue() );
+	
+	sets->writable()["__cameras"] = cameraSet;
+	
+	return result;
 }
 
 void Camera::hashSource( const Gaffer::Context *context, IECore::MurmurHash &h ) const

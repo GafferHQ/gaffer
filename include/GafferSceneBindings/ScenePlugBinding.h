@@ -45,8 +45,6 @@
 namespace GafferSceneBindings
 {
 
-void objectToScenePath( boost::python::object o, GafferScene::ScenePlug::ScenePath &path );
-
 void bindScenePlug();
 
 } // namespace GafferSceneBindings

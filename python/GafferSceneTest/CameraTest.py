@@ -113,5 +113,27 @@ class CameraTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( c.correspondingInput( c["projection"] ), None )
 		self.assertEqual( c.correspondingInput( c["fieldOfView"] ), None )
 
+	def testCameraSet( self ) :
+	
+		c = GafferScene.Camera()
+		
+		cameraSet = c["out"]["globals"].getValue()["gaffer:sets"]["__cameras"]
+		self.assertEqual(
+			cameraSet,
+			GafferScene.PathMatcherData(
+				GafferScene.PathMatcher( [ "/camera" ] )
+			)
+		)
+		
+		c["name"].setValue( "renderCam" )
+		
+		cameraSet = c["out"]["globals"].getValue()["gaffer:sets"]["__cameras"]
+		self.assertEqual(
+			cameraSet,
+			GafferScene.PathMatcherData(
+				GafferScene.PathMatcher( [ "/renderCam" ] )
+			)
+		)
+
 if __name__ == "__main__":
 	unittest.main()

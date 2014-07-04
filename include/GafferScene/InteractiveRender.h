@@ -85,6 +85,9 @@ class InteractiveRender : public Gaffer::Node
 		Gaffer::BoolPlug *updateShadersPlug();
 		const Gaffer::BoolPlug *updateShadersPlug() const;
 		
+		Gaffer::BoolPlug *updateCameraPlug();
+		const Gaffer::BoolPlug *updateCameraPlug() const;
+		
 		/// The Context in which the InteractiveRender should operate.
 		Gaffer::Context *getContext();
 		const Gaffer::Context *getContext() const;
@@ -104,6 +107,7 @@ class InteractiveRender : public Gaffer::Node
 		void updateLights();
 		void updateShaders();
 		void updateShadersWalk( const ScenePlug::ScenePath &path );
+		void updateCamera();
 		
 		void outputLightsInternal( const IECore::CompoundObject *globals, bool editing );
 		
@@ -115,6 +119,7 @@ class InteractiveRender : public Gaffer::Node
 		LightHandles m_lightHandles;
 		bool m_lightsDirty;
 		bool m_shadersDirty;
+		bool m_cameraDirty;
 		
 		Gaffer::ContextPtr m_context;
 		

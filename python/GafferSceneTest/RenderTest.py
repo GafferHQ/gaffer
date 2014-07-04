@@ -166,6 +166,49 @@ class RenderTest( GafferSceneTest.SceneTestCase ) :
 		w = s["r"].world()
 		self.assertEqual( w.children()[0].state()[0].attributes["name"].value, "/group/light" )
 		self.assertEqual( w.children()[0].state()[1].handle, "/group/light" )
-					
+	
+	def testInvalidCameraReporting( self ) :
+	
+		s = Gaffer.ScriptNode()
+		s["c"] = GafferScene.Camera()
+		s["s"] = GafferScene.Sphere()
+		s["g"] = GafferScene.Group()
+		s["g"]["in"].setInput( s["c"]["out"] )
+		s["g"]["in1"].setInput( s["s"]["out"] )
+		
+		s["o"] = GafferScene.StandardOptions()
+		s["o"]["in"].setInput( s["g"]["out"] )
+		s["o"]["options"]["renderCamera"]["enabled"].setValue( True )
+		
+		s["r"] = GafferSceneTest.TestRender()
+		s["r"]["in"].setInput( s["o"]["out"] )
+
+		s["o"]["options"]["renderCamera"]["value"].setValue( "/group/invalid" )
+		with self.assertRaises( RuntimeError ) as a :
+			# CapturingRenderer outputs some spurious errors which
+			# we suppress by capturing them.
+			with IECore.CapturingMessageHandler() :
+				s["r"].execute( [ s.context() ] )
+		
+		self.assertTrue( "/group/invalid" in str( a.exception ) )
+
+		s["o"]["options"]["renderCamera"]["value"].setValue( "/group/invalid" )
+		with self.assertRaises( RuntimeError ) as a :
+			# CapturingRenderer outputs some spurious errors which
+			# we suppress by capturing them.
+			with IECore.CapturingMessageHandler() :
+				s["r"].execute( [ s.context() ] )
+		
+		self.assertTrue( "/group/invalid" in str( a.exception ) )
+		self.assertTrue( "does not exist" in str( a.exception ) )
+
+		s["o"]["options"]["renderCamera"]["value"].setValue( "/group/sphere" )
+		with self.assertRaises( RuntimeError ) as a :
+			with IECore.CapturingMessageHandler() :
+				s["r"].execute( [ s.context() ] )
+				
+		self.assertTrue( "/group/sphere" in str( a.exception ) )
+		self.assertTrue( "is not a camera" in str( a.exception ) )
+		
 if __name__ == "__main__":
 	unittest.main()
