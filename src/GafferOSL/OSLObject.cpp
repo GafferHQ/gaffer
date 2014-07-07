@@ -80,9 +80,9 @@ void OSLObject::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outp
 	if( input == shaderPlug() )
 	{
 		outputs.push_back( outPlug()->objectPlug() );		
-		/// \todo Technically the objectPlug() affects the boundPlug(),
-		/// but affects isn't currently called for output plugs - see
-		/// corresponding todo in OSLImage.
+	}
+	else if( input == outPlug()->objectPlug() )
+	{
 		outputs.push_back( outPlug()->boundPlug() );
 	}
 }

@@ -35,7 +35,9 @@
 ##########################################################################
 
 import IECore
+
 import Gaffer
+import GafferTest
 import GafferScene
 import GafferOSL
 import GafferOSLTest
@@ -144,6 +146,19 @@ class OSLObjectTest( GafferOSLTest.OSLTestCase ) :
 		
 		for v in o["out"].object( "/plane" )["velocity"].data :
 			self.assertEqual( v, IECore.V3f( 0 ) )
+	
+	def testShaderAffectsBoundAndObject( self ) :
+	
+		o = GafferOSL.OSLObject()
+		s = GafferOSL.OSLShader()
+		s.loadShader( "ObjectProcessing/OutObject" )
+		
+		cs = GafferTest.CapturingSlot( o.plugDirtiedSignal() )
+		
+		o["shader"].setInput( s["out"] )
+		
+		self.assertTrue( o["out"]["object"] in set( x[0] for x in cs ) )
+		self.assertTrue( o["out"]["bound"] in set( x[0] for x in cs ) )
 		
 if __name__ == "__main__":
 	unittest.main()
