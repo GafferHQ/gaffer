@@ -109,17 +109,18 @@ class ScriptEditor( GafferUI.EditorWidget ) :
 		with Gaffer.OutputRedirection( stdOut = Gaffer.WeakMethod( self.__redirectOutput ), stdErr = Gaffer.WeakMethod( self.__redirectOutput ) ) :
 			with _MessageHandler( self.__outputWidget ) :
 				with Gaffer.UndoContext( self.scriptNode() ) :
-					try :
-						if len( parsed.body ) == 1 and isinstance( parsed.body[0], ast.Expr ) :
-							result = eval( toExecute, self.__executionDict, self.__executionDict )
-							if result is not None :
-								self.__outputWidget.appendText( str( result ) )
-						else :
-							exec( toExecute, self.__executionDict, self.__executionDict )
-						if not haveSelection :
-							widget.setText( "" )
-					except Exception, e :
-						self.__outputWidget.appendHTML( self.__exceptionToHTML() )
+					with self.getContext() :
+						try :
+							if len( parsed.body ) == 1 and isinstance( parsed.body[0], ast.Expr ) :
+								result = eval( toExecute, self.__executionDict, self.__executionDict )
+								if result is not None :
+									self.__outputWidget.appendText( str( result ) )
+							else :
+								exec( toExecute, self.__executionDict, self.__executionDict )
+							if not haveSelection :
+								widget.setText( "" )
+						except Exception, e :
+							self.__outputWidget.appendHTML( self.__exceptionToHTML() )
 
 		return True
 
