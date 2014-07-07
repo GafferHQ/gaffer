@@ -80,10 +80,18 @@ class Instancer : public BranchCreator
 		
 	private :
 	
+		struct BoundHash;
+		struct BoundUnion;
+		
 		IECore::ConstV3fVectorDataPtr sourcePoints( const ScenePath &parentPath ) const;
 		int instanceIndex( const ScenePath &branchPath ) const;
+		// Makes a new context suitable for use when evaluating instancePlug()
 		Gaffer::ContextPtr instanceContext( const Gaffer::Context *parentContext, const ScenePath &branchPath ) const;
-
+		// Fills an existing context with the fields needed for evaluating instancePlug()
+		void fillInstanceContext( Gaffer::Context *instanceContext, const ScenePath &branchPath ) const;
+		void fillInstanceContext( Gaffer::Context *instanceContext, const ScenePath &branchPath, int instanceId ) const;
+		Imath::M44f instanceTransform( const IECore::V3fVectorData *p, int instanceId ) const;
+		
 		static size_t g_firstPlugIndex;
 		
 };
