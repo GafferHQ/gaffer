@@ -110,6 +110,11 @@ bool FilteredSceneProcessor::acceptsInput( const Gaffer::Plug *plug, const Gaffe
 		return false;
 	}
 	
+	if( !inputPlug )
+	{
+		return true;
+	}
+	
 	if( plug == filterPlug() )
 	{
 		// we only want to accept inputs from Filter nodes, but we accept
