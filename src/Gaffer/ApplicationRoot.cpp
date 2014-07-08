@@ -86,7 +86,7 @@ const IECore::Object *ApplicationRoot::getClipboardContents() const
 	return m_clipboardContents.get();
 }
 
-void ApplicationRoot::setClipboardContents( IECore::ConstObjectPtr clip )
+void ApplicationRoot::setClipboardContents( const IECore::Object *clip )
 {
 	if( !m_clipboardContents || m_clipboardContents->isNotEqualTo( clip ) )
 	{
