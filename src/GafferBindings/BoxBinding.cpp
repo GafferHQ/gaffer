@@ -76,18 +76,6 @@ static PlugPtr promotePlug( Box &b, Plug *descendantPlug, bool asUserPlug )
 	return b.promotePlug( descendantPlug, asUserPlug );
 }
 
-static IECore::DataPtr getNodeMetadata( Box &b, const char *key )
-{
-	const IECore::Data *d = b.getNodeMetadata( key );
-	return d ? d->copy() : NULL;
-}
-
-static IECore::DataPtr getPlugMetadata( Box &b, const Plug *plug, const char *key )
-{
-	const IECore::Data *d = b.getPlugMetadata( plug, key );
-	return d ? d->copy() : NULL;
-}
-
 void bindBox()
 {
 	typedef NodeWrapper<Box> BoxWrapper;
@@ -98,10 +86,6 @@ void bindBox()
 		.def( "plugIsPromoted", &Box::plugIsPromoted )
 		.def( "unpromotePlug", &Box::unpromotePlug )
 		.def( "exportForReference", &Box::exportForReference )
-		.def( "getNodeMetadata", &getNodeMetadata )
-		.def( "setNodeMetadata", &Box::setNodeMetadata )
-		.def( "getPlugMetadata", &getPlugMetadata )
-		.def( "setPlugMetadata", &Box::setPlugMetadata )
 		.def( "create", &Box::create )
 		.staticmethod( "create" )
 	;

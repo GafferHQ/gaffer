@@ -360,26 +360,6 @@ bool Box::validatePromotability( const Plug *descendantPlug, bool asUserPlug, bo
 	return true;
 }
 
-const IECore::Data *Box::getNodeMetadata( IECore::InternedString key ) const
-{
-	return Metadata::nodeValue<IECore::Data>( this, key, false, true );
-}
-
-void Box::setNodeMetadata( IECore::InternedString key, IECore::ConstDataPtr value )
-{
-	Metadata::registerNodeValue( this, key, value );
-}
-
-const IECore::Data *Box::getPlugMetadata( const Plug *plug, IECore::InternedString key ) const
-{
-	return Metadata::plugValue<IECore::Data>( plug, key, false, true );
-}
-
-void Box::setPlugMetadata( const Plug *plug, IECore::InternedString key, IECore::ConstDataPtr value )
-{
-	Metadata::registerPlugValue( const_cast<Plug *>( plug ), key, value );
-}
-
 void Box::exportForReference( const std::string &fileName ) const
 {
 	const ScriptNode *script = scriptNode();
@@ -457,7 +437,7 @@ BoxPtr Box::create( Node *parent, const Set *childNodes )
 						PlugPtr intermediateInput = plug->createCounterpart( "in", Plug::In );
 						// we want intermediate inputs to appear on the same side of the node as the
 						// equivalent internal plug, so we copy the relevant metadata over.
-						result->setPlugMetadata( intermediateInput, "nodeGadget:nodulePosition", Metadata::plugValue<IECore::Data>( plug, "nodeGadget:nodulePosition" ) );
+						Metadata::registerPlugValue( intermediateInput.get(), "nodeGadget:nodulePosition", Metadata::plugValue<IECore::Data>( plug, "nodeGadget:nodulePosition" ) );
 						intermediateInput->setFlags( Plug::Dynamic, true );
 						result->addChild( intermediateInput );
 						intermediateInput->setInput( input );
@@ -485,7 +465,7 @@ BoxPtr Box::create( Node *parent, const Set *childNodes )
 							if( mapIt == plugMap.end() )
 							{
 								PlugPtr intermediateOutput = plug->createCounterpart( "out", Plug::Out );
-								result->setPlugMetadata( intermediateOutput, "nodeGadget:nodulePosition", Metadata::plugValue<IECore::Data>( plug, "nodeGadget:nodulePosition" ) );
+								Metadata::registerPlugValue( intermediateOutput.get(), "nodeGadget:nodulePosition", Metadata::plugValue<IECore::Data>( plug, "nodeGadget:nodulePosition" ) );
 								intermediateOutput->setFlags( Plug::Dynamic, true );
 								result->addChild( intermediateOutput );
 								intermediateOutput->setInput( plug );

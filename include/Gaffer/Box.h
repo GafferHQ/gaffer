@@ -90,15 +90,6 @@ class Box : public Node
 		/// \undoable
 		void unpromotePlug( Plug *promotedDescandantPlug );
 
-		/// \deprecated Use Metadata methods instead.
-		const IECore::Data *getNodeMetadata( IECore::InternedString key ) const;
-		/// \deprecated Use Metadata methods instead.
-		void setNodeMetadata( IECore::InternedString key, IECore::ConstDataPtr value );
-		/// \deprecated Use Metadata methods instead.
-		const IECore::Data *getPlugMetadata( const Plug *plug, IECore::InternedString key ) const;
-		/// \deprecated Use Metadata methods instead.
-		void setPlugMetadata( const Plug *plug, IECore::InternedString key, IECore::ConstDataPtr value );
-
 		/// Exports the contents of the Box so that it can be referenced
 		/// by a Reference node.
 		void exportForReference( const std::string &fileName ) const;
