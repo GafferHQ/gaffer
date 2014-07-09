@@ -56,17 +56,17 @@ ExecutableNode::Task::Task( const Task &t ) : m_node( t.m_node ), m_context( t.m
 
 ExecutableNode::Task::Task( ExecutableNodePtr n, ContextPtr c ) : m_node( n ), m_context( new Context( *c ) )
 {
-	m_hash = m_node->executionHash( m_context );
+	m_hash = m_node->executionHash( m_context.get() );
 }
 
 const ExecutableNode *ExecutableNode::Task::node() const
 {
-	return m_node;
+	return m_node.get();
 }
 
 const Context *ExecutableNode::Task::context() const
 {
-	return m_context;
+	return m_context.get();
 }
 
 const MurmurHash ExecutableNode::Task::hash() const
@@ -102,7 +102,7 @@ ExecutableNode::ExecutableNode( const std::string &name )
 	CompoundPlugPtr dispatcherPlug = new CompoundPlug( "dispatcher", Plug::In );
 	addChild( dispatcherPlug );
 	
-	Dispatcher::setupPlugs( dispatcherPlug );
+	Dispatcher::setupPlugs( dispatcherPlug.get() );
 }
 
 ExecutableNode::~ExecutableNode()

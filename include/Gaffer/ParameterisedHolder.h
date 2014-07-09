@@ -108,7 +108,7 @@ class ParameterisedHolder : public BaseType
 		
 	private :
 	
-		void plugSet( PlugPtr plug );
+		void plugSet( Plug *plug );
 		
 		friend class ParameterModificationContext;
 	

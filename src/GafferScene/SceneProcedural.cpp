@@ -66,7 +66,7 @@ SceneProcedural::SceneProcedural( ConstScenePlugPtr scenePlug, const Gaffer::Con
 
 	// options
 	
-	Context::Scope scopedContext( m_context );
+	Context::Scope scopedContext( m_context.get() );
 	ConstCompoundObjectPtr globals = m_scenePlug->globalsPlug()->getValue();
 	
 	const BoolData *transformBlurData = globals->member<BoolData>( "render:transformBlur" );
@@ -116,7 +116,7 @@ Imath::Box3f SceneProcedural::bound() const
 	try
 	{
 		ContextPtr timeContext = new Context( *m_context, Context::Borrowed );
-		Context::Scope scopedTimeContext( timeContext );
+		Context::Scope scopedTimeContext( timeContext.get() );
 		
 		/// \todo This doesn't take account of the unfortunate fact that our children may have differing
 		/// numbers of segments than ourselves. To get an accurate bound we would need to know the different sample
@@ -167,9 +167,9 @@ Imath::Box3f SceneProcedural::bound() const
 	return Box3f();
 }
 
-void SceneProcedural::render( RendererPtr renderer ) const
+void SceneProcedural::render( Renderer *renderer ) const
 {	
-	Context::Scope scopedContext( m_context );
+	Context::Scope scopedContext( m_context.get() );
 	
 	/// \todo See above.
 	try
@@ -202,7 +202,7 @@ void SceneProcedural::render( RendererPtr renderer ) const
 		motionTimes( ( m_options.transformBlur && m_attributes.transformBlur ) ? m_attributes.transformBlurSegments : 0, transformTimes );
 		{
 			ContextPtr timeContext = new Context( *m_context, Context::Borrowed );
-			Context::Scope scopedTimeContext( timeContext );
+			Context::Scope scopedTimeContext( timeContext.get() );
 			
 			MotionBlock motionBlock( renderer, transformTimes, transformTimes.size() > 1 );
 			
@@ -244,7 +244,7 @@ void SceneProcedural::render( RendererPtr renderer ) const
 		motionTimes( ( m_options.deformationBlur && m_attributes.deformationBlur ) ? m_attributes.deformationBlurSegments : 0, deformationTimes );
 		{
 			ContextPtr timeContext = new Context( *m_context, Context::Borrowed );
-			Context::Scope scopedTimeContext( timeContext );
+			Context::Scope scopedTimeContext( timeContext.get() );
 		
 			unsigned timeIndex = 0;
 			for( std::set<float>::const_iterator it = deformationTimes.begin(), eIt = deformationTimes.end(); it != eIt; it++, timeIndex++ )
@@ -272,7 +272,7 @@ void SceneProcedural::render( RendererPtr renderer ) const
 					/// means of visualising the cameras.
 					if( renderer->isInstanceOf( "IECoreGL::Renderer" ) )
 					{
-						drawCamera( camera, renderer.get() );
+						drawCamera( camera, renderer );
 					}
 					break; // no motion blur for these chappies.
 				}
@@ -281,7 +281,7 @@ void SceneProcedural::render( RendererPtr renderer ) const
 					/// \todo This doesn't belong here.
 					if( renderer->isInstanceOf( "IECoreGL::Renderer" ) )
 					{
-						drawLight( light, renderer.get() );
+						drawLight( light, renderer );
 					}
 					break; // no motion blur for these chappies.
 				}
@@ -314,7 +314,7 @@ void SceneProcedural::render( RendererPtr renderer ) const
 				renderer->setAttribute( "gl:primitive:solid", new BoolData( false ) );
 				renderer->setAttribute( "gl:curvesPrimitive:useGLLines", new BoolData( true ) );
 				Box3f b = m_scenePlug->boundPlug()->getValue();
-				CurvesPrimitive::createBox( b )->render( renderer );	
+				CurvesPrimitive::createBox( b )->render( renderer );
 			}
 			else
 			{
@@ -343,7 +343,7 @@ IECore::MurmurHash SceneProcedural::hash() const
 
 void SceneProcedural::updateAttributes( bool full )
 {
-	Context::Scope scopedContext( m_context );
+	Context::Scope scopedContext( m_context.get() );
 	ConstCompoundObjectPtr attributes;
 	if( full )
 	{

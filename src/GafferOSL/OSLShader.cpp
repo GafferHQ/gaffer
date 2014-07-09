@@ -135,7 +135,7 @@ OSLRenderer::ConstShadingEnginePtr getter( const ShadingEngineCacheKey &key, siz
 		const StateRenderable *s = runTimeCast<const StateRenderable>( it->get() );
 		if( s )
 		{
-			s->render( g_renderer );
+			s->render( g_renderer.get() );
 		}
 	}
 		
@@ -270,7 +270,7 @@ static Plug *loadStringParameter( const OSLQuery::Parameter *parameter, Gaffer::
 	
 	parent->setChild( name, plug );
 	
-	return plug;
+	return plug.get();
 }
 
 template<typename PlugType>
@@ -310,7 +310,7 @@ static Plug *loadNumericParameter( const OSLQuery::Parameter *parameter, Gaffer:
 	
 	parent->setChild( name, plug );
 	
-	return plug;
+	return plug.get();
 }
 
 template <typename PlugType>
@@ -366,7 +366,7 @@ static Plug *loadCompoundNumericParameter( const OSLQuery::Parameter *parameter,
 	}
 	
 	parent->setChild( name, plug );
-	return plug;
+	return plug.get();
 }
 
 static Plug *loadClosureParameter( const OSLQuery::Parameter *parameter, Gaffer::CompoundPlug *parent )
@@ -384,7 +384,7 @@ static Plug *loadClosureParameter( const OSLQuery::Parameter *parameter, Gaffer:
 	
 	parent->setChild( name, plug );
 	
-	return plug;
+	return plug.get();
 }
 
 // forward declaration so loadStructParameter() can call it.
@@ -665,11 +665,11 @@ const IECore::CompoundData *OSLShader::metadata() const
 {
 	if( m_metadata )
 	{
-		return m_metadata;
+		return m_metadata.get();
 	}
 	
 	m_metadata = g_metadataCache.get( namePlug()->getValue() );
-	return m_metadata;
+	return m_metadata.get();
 }
 
 const IECore::Data *OSLShader::shaderMetadata( const IECore::InternedString &key ) const

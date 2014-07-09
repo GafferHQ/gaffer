@@ -121,7 +121,7 @@ void ArrayPlug::childAdded()
 		// addressed if and when we replace all InputGenerator use with ArrayPlugs.
 		if( m_minSize != m_maxSize )
 		{
-			m_inputGenerator = InputGeneratorPtr( new InputGenerator( this, IECore::staticPointerCast<Plug>( children()[0] ), m_minSize, m_maxSize ) );
+			m_inputGenerator = InputGeneratorPtr( new InputGenerator( this, boost::static_pointer_cast<Plug>( children()[0] ), m_minSize, m_maxSize ) );
 		}
 	}
 }
@@ -130,7 +130,7 @@ void ArrayPlug::parentChanged()
 {
 	if( node() && !m_inputGenerator && children().size() )
 	{
-		m_inputGenerator = InputGeneratorPtr( new InputGenerator( this, IECore::staticPointerCast<Plug>( children()[0] ), m_minSize, m_maxSize ) );		
+		m_inputGenerator = InputGeneratorPtr( new InputGenerator( this, boost::static_pointer_cast<Plug>( children()[0] ), m_minSize, m_maxSize ) );
 	}
 	parentChangedSignal().disconnect( boost::bind( &ArrayPlug::parentChanged, this ) );
 }

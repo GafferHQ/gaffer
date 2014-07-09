@@ -79,7 +79,7 @@ Nodule::NamedCreatorMap &Nodule::namedCreators()
 
 NodulePtr Nodule::create( Gaffer::PlugPtr plug )
 {
-	Gaffer::ConstNodePtr node = plug->node();
+	const Gaffer::Node *node = plug->node();
 	if( node )
 	{
 		std::string plugPath = plug->relativeName( node );

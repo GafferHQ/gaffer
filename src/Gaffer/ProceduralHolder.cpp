@@ -124,7 +124,7 @@ void ProceduralHolder::compute( ValuePlug *output, const Context *context ) cons
 {
 	if( output==getChild<ObjectPlug>( "output" ) )
 	{	
-		constPointerCast<CompoundParameterHandler>( parameterHandler() )->setParameterValue();
+		boost::const_pointer_cast<CompoundParameterHandler>( parameterHandler() )->setParameterValue();
 		static_cast<ObjectPlug *>( output )->setValue( getProcedural() );
 		return;
 	}

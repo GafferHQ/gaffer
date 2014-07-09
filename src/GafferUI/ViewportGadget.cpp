@@ -109,7 +109,7 @@ std::string ViewportGadget::getToolTip( const IECore::LineSegment3f &line ) cons
 	gadgetsAt( V2f( line.p0.x, line.p0.y ), gadgets );
 	for( std::vector<GadgetPtr>::const_iterator it = gadgets.begin(), eIt = gadgets.end(); it != eIt; it++ )
 	{
-		GadgetPtr gadget = *it;
+		Gadget *gadget = it->get();
 		while( gadget && gadget != this )
 		{
 			IECore::LineSegment3f lineInGadgetSpace = rasterToGadgetSpace( V2f( line.p0.x, line.p0.y), gadget );
@@ -295,7 +295,7 @@ void ViewportGadget::doRender( const Style *style ) const
  	IECoreGL::ToGLConverterPtr converter = new IECoreGL::ToGLCameraConverter(
  		const_cast<CameraController &>( m_cameraController ).getCamera()
  	);
- 	IECoreGL::CameraPtr camera = staticPointerCast<IECoreGL::Camera>( converter->convert() );
+	IECoreGL::CameraPtr camera = boost::static_pointer_cast<IECoreGL::Camera>( converter->convert() );
  	camera->render( 0 );
 
 	Gadget::doRender( style );
@@ -305,12 +305,12 @@ void ViewportGadget::childRemoved( GraphComponent *parent, GraphComponent *child
 {
 	const Gadget *childGadget = static_cast<const Gadget *>( child );
 
-	if( childGadget == m_lastButtonPressGadget || childGadget->isAncestorOf( m_lastButtonPressGadget ) )
+	if( childGadget == m_lastButtonPressGadget || childGadget->isAncestorOf( m_lastButtonPressGadget.get() ) )
 	{
 		m_lastButtonPressGadget = NULL;
 	}
 	
-	if( childGadget == m_gadgetUnderMouse || childGadget->isAncestorOf( m_gadgetUnderMouse ) )
+	if( childGadget == m_gadgetUnderMouse || childGadget->isAncestorOf( m_gadgetUnderMouse.get() ) )
 	{
 		m_gadgetUnderMouse = NULL;
 	}
@@ -370,17 +370,17 @@ void ViewportGadget::emitEnterLeaveEvents( GadgetPtr newGadgetUnderMouse, Gadget
 	GadgetPtr lowestUnchanged = this;
 	if( oldGadgetUnderMouse && newGadgetUnderMouse )
 	{
-		if( oldGadgetUnderMouse->isAncestorOf( newGadgetUnderMouse ) )
+		if( oldGadgetUnderMouse->isAncestorOf( newGadgetUnderMouse.get() ) )
 		{
 			lowestUnchanged = oldGadgetUnderMouse;		
 		}
-		else if( newGadgetUnderMouse->isAncestorOf( oldGadgetUnderMouse ) )
+		else if( newGadgetUnderMouse->isAncestorOf( oldGadgetUnderMouse.get() ) )
 		{
 			lowestUnchanged = newGadgetUnderMouse;
 		}
 		else
 		{
-			lowestUnchanged = oldGadgetUnderMouse->commonAncestor<Gadget>( newGadgetUnderMouse );
+			lowestUnchanged = oldGadgetUnderMouse->commonAncestor<Gadget>( newGadgetUnderMouse.get() );
 		}
 	}
 		
@@ -390,7 +390,7 @@ void ViewportGadget::emitEnterLeaveEvents( GadgetPtr newGadgetUnderMouse, Gadget
 		GadgetPtr leaveTarget = oldGadgetUnderMouse;
 		while( leaveTarget != lowestUnchanged )
 		{
-			dispatchEvent( leaveTarget, &Gadget::leaveSignal, event );
+			dispatchEvent( leaveTarget.get(), &Gadget::leaveSignal, event );
 			leaveTarget = leaveTarget->parent<Gadget>();
 		}
 	}	
@@ -703,7 +703,7 @@ GadgetPtr ViewportGadget::updatedDragDestination( std::vector<GadgetPtr> &gadget
 	// there's nothing under the mouse that wants the drag. if the event source
 	// is a gadget, and we're the owner of that gadget, then there's some more
 	// things to try, but otherwise we should get out now.
-	if( !event.sourceGadget || !this->isAncestorOf( event.sourceGadget ) )
+	if( !event.sourceGadget || !this->isAncestorOf( event.sourceGadget.get() ) )
 	{
 		return 0;
 	}
@@ -866,8 +866,8 @@ typename Signal::result_type ViewportGadget::dispatchEvent( GadgetPtr gadget, Si
 {
 	Event transformedEvent( event );
 	eventToGadgetSpace( transformedEvent, gadget.get() );
-	Signal &s = (gadget->*signalGetter)();
-	return s( gadget, transformedEvent );
+	Signal &s = (gadget.get()->*signalGetter)();
+	return s( gadget.get(), transformedEvent );
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -928,7 +928,7 @@ void ViewportGadget::SelectionScope::begin( const ViewportGadget *viewportGadget
 	IECoreGL::ToGLConverterPtr converter = new IECoreGL::ToGLCameraConverter(
  		const_cast<CameraController &>( viewportGadget->m_cameraController ).getCamera()
  	);
- 	IECoreGL::CameraPtr camera = staticPointerCast<IECoreGL::Camera>( converter->convert() );
+	IECoreGL::CameraPtr camera = boost::static_pointer_cast<IECoreGL::Camera>( converter->convert() );
  	/// \todo It would be better to base this on whether we have a depth buffer or not, but
  	/// we don't have access to that information right now.
  	m_depthSort = camera->isInstanceOf( IECoreGL::PerspectiveCamera::staticTypeId() );

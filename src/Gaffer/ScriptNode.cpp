@@ -153,7 +153,7 @@ class ScriptNode::CompoundAction : public Gaffer::Action
 			
 			for( size_t i = 0, e = m_actions.size(); i < e; ++i )
 			{
-				if( !m_actions[i]->canMerge( compoundAction->m_actions[i] ) )
+				if( !m_actions[i]->canMerge( compoundAction->m_actions[i].get() ) )
 				{
 					return false;
 				}
@@ -167,7 +167,7 @@ class ScriptNode::CompoundAction : public Gaffer::Action
 			const CompoundAction *compoundAction = static_cast<const CompoundAction *>( other );
 			for( size_t i = 0, e = m_actions.size(); i < e; ++i )
 			{
-				m_actions[i]->merge( compoundAction->m_actions[i] );
+				m_actions[i]->merge( compoundAction->m_actions[i].get() );
 			}
 		}
 
@@ -257,7 +257,7 @@ StandardSet *ScriptNode::selection()
 
 const StandardSet *ScriptNode::selection() const
 {
-	return m_selection;
+	return m_selection.get();
 }
 
 void ScriptNode::pushUndoState( UndoContext::State state, const std::string &mergeGroup )
@@ -301,9 +301,9 @@ void ScriptNode::popUndoState()
 			if( !m_undoList.empty() )
 			{
 				CompoundAction *lastAction = m_undoList.rbegin()->get();
-				if( lastAction->canMerge( m_actionAccumulator ) )
+				if( lastAction->canMerge( m_actionAccumulator.get() ) )
 				{
-					lastAction->merge( m_actionAccumulator );
+					lastAction->merge( m_actionAccumulator.get() );
 					merged = true;
 				}
 			}
@@ -471,9 +471,9 @@ void ScriptNode::deleteNodes( Node *parent, const Set *filter, bool reconnect )
 			DependencyNode *dependencyNode = IECore::runTimeCast<DependencyNode>( node );
 			if( reconnect && dependencyNode && dependencyNode->enabledPlug() )
 			{
-				for ( OutputPlugIterator it( node ); it != it.end(); ++it )
+				for( OutputPlugIterator it( node ); it != it.end(); ++it )
 				{
-					Plug *inPlug = dependencyNode->correspondingInput( *it );
+					Plug *inPlug = dependencyNode->correspondingInput( it->get() );
 					if ( !inPlug )
 					{
 						continue;

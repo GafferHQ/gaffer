@@ -56,12 +56,12 @@ FilterProcessor::~FilterProcessor()
 
 const GafferImage::ImagePlug *FilterProcessor::inPlug( int index ) const
 {
-	return m_inputs.inputs()[index];
+	return m_inputs.inputs()[index].get();
 }
 
 GafferImage::ImagePlug *FilterProcessor::inPlug( int index )
 {
-	return m_inputs.inputs()[index];
+	return m_inputs.inputs()[index].get();
 }
 
 void FilterProcessor::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const

@@ -74,7 +74,7 @@ Gaffer::PlugPtr TimeCodeParameterHandler::setupPlug( GraphComponent *plugParent,
 		plugParent->setChild( m_parameter->name(), m_plug );
 	}
 
-	setupPlugFlags( m_plug );
+	setupPlugFlags( m_plug.get() );
 
 	IntPlugPtr hoursPlug = m_plug->getChild<IntPlug>( "hours" );
 	if( !hoursPlug || hoursPlug->direction() != direction )

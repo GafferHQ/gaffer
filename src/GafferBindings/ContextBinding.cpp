@@ -77,11 +77,11 @@ object get( Context &c, const IECore::InternedString &name, bool copy )
 	ConstDataPtr d = c.get<Data>( name );
 	try
 	{
-		return despatchTypedData<SimpleTypedDataGetter, TypeTraits::IsSimpleTypedData>( constPointerCast<Data>( d ) );
+		return despatchTypedData<SimpleTypedDataGetter, TypeTraits::IsSimpleTypedData>( const_cast<Data *>( d.get() ) );
 	}
 	catch( const InvalidArgumentException &e )
 	{
-		return object( copy ? d->copy() : constPointerCast<Data>( d ) );
+		return object( copy ? d->copy() : boost::const_pointer_cast<Data>( d ) );
 	}
 }
 
@@ -95,11 +95,11 @@ object getWithDefault( Context &c, const IECore::InternedString &name, object de
 	
 	try
 	{
-		return despatchTypedData<SimpleTypedDataGetter, TypeTraits::IsSimpleTypedData>( constPointerCast<Data>( d ) );
+		return despatchTypedData<SimpleTypedDataGetter, TypeTraits::IsSimpleTypedData>( const_cast<Data *>( d.get() ) );
 	}
 	catch( const InvalidArgumentException &e )
 	{
-		return object( copy ? d->copy() : constPointerCast<Data>( d ) );
+		return object( copy ? d->copy() : boost::const_pointer_cast<Data>( d ) );
 	}
 }
 
@@ -127,7 +127,7 @@ struct ChangedSlotCaller
 	{
 		try
 		{
-			slot( IECore::constPointerCast<Context>( context ), name.value() );
+			slot( boost::const_pointer_cast<Context>( context ), name.value() );
 		}
 		catch( const error_already_set &e )
 		{

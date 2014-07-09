@@ -125,7 +125,7 @@ const Gaffer::Plug *RenderManShader::correspondingInput( const Gaffer::Plug *out
 void RenderManShader::loadShader( const std::string &shaderName, bool keepExistingValues )
 {
 	IECore::ConstShaderPtr shader = runTimeCast<const IECore::Shader>( shaderLoader()->read( shaderName + ".sdl" ) );
-	loadShaderParameters( shader, parametersPlug(), keepExistingValues );
+	loadShaderParameters( shader.get(), parametersPlug(), keepExistingValues );
 	namePlug()->setValue( shaderName );
 	typePlug()->setValue( "ri:" + shader->getType() );
 }
@@ -364,7 +364,7 @@ static void loadCoshaderArrayParameter( Gaffer::CompoundPlug *parametersPlug, co
 	const size_t maxSize = defaultValue->readable().size() ? defaultValue->readable().size() : Imath::limits<size_t>::max();
 	
 	PlugPtr existingPlug = parametersPlug->getChild<Plug>( name );
-	ArrayPlug *existingArrayPlug = runTimeCast<ArrayPlug>( existingPlug );
+	ArrayPlug *existingArrayPlug = runTimeCast<ArrayPlug>( existingPlug.get() );
 	if( existingArrayPlug && existingArrayPlug->minSize() == minSize && existingArrayPlug->maxSize() == maxSize )
 	{
 		return;
@@ -794,10 +794,10 @@ void RenderManShader::loadShaderParameters( const IECore::Shader *shader, Gaffer
 				switch( values->typeId() )
 				{
 					case FloatVectorDataTypeId  :
-						loadSplineParameter<SplineffPlug>( parametersPlug, plugName, positions, values );
+						loadSplineParameter<SplineffPlug>( parametersPlug, plugName, positions.get(), values.get() );
 						break;
 					case Color3fVectorDataTypeId :
-						loadSplineParameter<SplinefColor3fPlug>( parametersPlug, plugName, positions, values );
+						loadSplineParameter<SplinefColor3fPlug>( parametersPlug, plugName, positions.get(), values.get() );
 						break;
 					default :
 						msg(

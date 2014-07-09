@@ -122,9 +122,9 @@ void BranchCreator::compute( Gaffer::ValuePlug *output, const Gaffer::Context *c
 
 void BranchCreator::hashBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	ConstCompoundDataPtr mapping = staticPointerCast<const CompoundData>( mappingPlug()->getValue() );
+	ConstCompoundDataPtr mapping = boost::static_pointer_cast<const CompoundData>( mappingPlug()->getValue() );
 	ScenePath parentPath, branchPath;
-	Filter::Result parentMatch = parentAndBranchPaths( mapping, path, parentPath, branchPath );
+	Filter::Result parentMatch = parentAndBranchPaths( mapping.get(), path, parentPath, branchPath );
 	
 	if( parentMatch == Filter::AncestorMatch )
 	{
@@ -144,9 +144,9 @@ void BranchCreator::hashBound( const ScenePath &path, const Gaffer::Context *con
 
 Imath::Box3f BranchCreator::computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	ConstCompoundDataPtr mapping = staticPointerCast<const CompoundData>( mappingPlug()->getValue() );
+	ConstCompoundDataPtr mapping = boost::static_pointer_cast<const CompoundData>( mappingPlug()->getValue() );
 	ScenePath parentPath, branchPath;
-	Filter::Result parentMatch = parentAndBranchPaths( mapping, path, parentPath, branchPath );
+	Filter::Result parentMatch = parentAndBranchPaths( mapping.get(), path, parentPath, branchPath );
 
 	if( parentMatch == Filter::AncestorMatch )
 	{
@@ -166,9 +166,9 @@ Imath::Box3f BranchCreator::computeBound( const ScenePath &path, const Gaffer::C
 
 void BranchCreator::hashTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	ConstCompoundDataPtr mapping = staticPointerCast<const CompoundData>( mappingPlug()->getValue() );
+	ConstCompoundDataPtr mapping = boost::static_pointer_cast<const CompoundData>( mappingPlug()->getValue() );
 	ScenePath parentPath, branchPath;
-	Filter::Result parentMatch = parentAndBranchPaths( mapping, path, parentPath, branchPath );
+	Filter::Result parentMatch = parentAndBranchPaths( mapping.get(), path, parentPath, branchPath );
 	
 	if( parentMatch == Filter::AncestorMatch )
 	{
@@ -182,9 +182,9 @@ void BranchCreator::hashTransform( const ScenePath &path, const Gaffer::Context 
 
 Imath::M44f BranchCreator::computeTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	ConstCompoundDataPtr mapping = staticPointerCast<const CompoundData>( mappingPlug()->getValue() );
+	ConstCompoundDataPtr mapping = boost::static_pointer_cast<const CompoundData>( mappingPlug()->getValue() );
 	ScenePath parentPath, branchPath;
-	Filter::Result parentMatch = parentAndBranchPaths( mapping, path, parentPath, branchPath );
+	Filter::Result parentMatch = parentAndBranchPaths( mapping.get(), path, parentPath, branchPath );
 
 	if( parentMatch == Filter::AncestorMatch )
 	{
@@ -198,9 +198,9 @@ Imath::M44f BranchCreator::computeTransform( const ScenePath &path, const Gaffer
 
 void BranchCreator::hashAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	ConstCompoundDataPtr mapping = staticPointerCast<const CompoundData>( mappingPlug()->getValue() );
+	ConstCompoundDataPtr mapping = boost::static_pointer_cast<const CompoundData>( mappingPlug()->getValue() );
 	ScenePath parentPath, branchPath;
-	Filter::Result parentMatch = parentAndBranchPaths( mapping, path, parentPath, branchPath );
+	Filter::Result parentMatch = parentAndBranchPaths( mapping.get(), path, parentPath, branchPath );
 	
 	if( parentMatch == Filter::AncestorMatch )
 	{
@@ -214,9 +214,9 @@ void BranchCreator::hashAttributes( const ScenePath &path, const Gaffer::Context
 
 IECore::ConstCompoundObjectPtr BranchCreator::computeAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	ConstCompoundDataPtr mapping = staticPointerCast<const CompoundData>( mappingPlug()->getValue() );
+	ConstCompoundDataPtr mapping = boost::static_pointer_cast<const CompoundData>( mappingPlug()->getValue() );
 	ScenePath parentPath, branchPath;
-	Filter::Result parentMatch = parentAndBranchPaths( mapping, path, parentPath, branchPath );
+	Filter::Result parentMatch = parentAndBranchPaths( mapping.get(), path, parentPath, branchPath );
 
 	if( parentMatch == Filter::AncestorMatch )
 	{
@@ -230,9 +230,9 @@ IECore::ConstCompoundObjectPtr BranchCreator::computeAttributes( const ScenePath
 
 void BranchCreator::hashObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	ConstCompoundDataPtr mapping = staticPointerCast<const CompoundData>( mappingPlug()->getValue() );
+	ConstCompoundDataPtr mapping = boost::static_pointer_cast<const CompoundData>( mappingPlug()->getValue() );
 	ScenePath parentPath, branchPath;
-	Filter::Result parentMatch = parentAndBranchPaths( mapping, path, parentPath, branchPath );
+	Filter::Result parentMatch = parentAndBranchPaths( mapping.get(), path, parentPath, branchPath );
 	
 	if( parentMatch == Filter::AncestorMatch )
 	{
@@ -246,9 +246,9 @@ void BranchCreator::hashObject( const ScenePath &path, const Gaffer::Context *co
 
 IECore::ConstObjectPtr BranchCreator::computeObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	ConstCompoundDataPtr mapping = staticPointerCast<const CompoundData>( mappingPlug()->getValue() );
+	ConstCompoundDataPtr mapping = boost::static_pointer_cast<const CompoundData>( mappingPlug()->getValue() );
 	ScenePath parentPath, branchPath;
-	Filter::Result parentMatch = parentAndBranchPaths( mapping, path, parentPath, branchPath );
+	Filter::Result parentMatch = parentAndBranchPaths( mapping.get(), path, parentPath, branchPath );
 
 	if( parentMatch == Filter::AncestorMatch )
 	{
@@ -262,9 +262,9 @@ IECore::ConstObjectPtr BranchCreator::computeObject( const ScenePath &path, cons
 
 void BranchCreator::hashChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	ConstCompoundDataPtr mapping = staticPointerCast<const CompoundData>( mappingPlug()->getValue() );
+	ConstCompoundDataPtr mapping = boost::static_pointer_cast<const CompoundData>( mappingPlug()->getValue() );
 	ScenePath parentPath, branchPath;
-	Filter::Result parentMatch = parentAndBranchPaths( mapping, path, parentPath, branchPath );
+	Filter::Result parentMatch = parentAndBranchPaths( mapping.get(), path, parentPath, branchPath );
 	
 	if( parentMatch == Filter::AncestorMatch )
 	{
@@ -282,9 +282,9 @@ void BranchCreator::hashChildNames( const ScenePath &path, const Gaffer::Context
 
 IECore::ConstInternedStringVectorDataPtr BranchCreator::computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	ConstCompoundDataPtr mapping = staticPointerCast<const CompoundData>( mappingPlug()->getValue() );
+	ConstCompoundDataPtr mapping = boost::static_pointer_cast<const CompoundData>( mappingPlug()->getValue() );
 	ScenePath parentPath, branchPath;
-	Filter::Result parentMatch = parentAndBranchPaths( mapping, path, parentPath, branchPath );
+	Filter::Result parentMatch = parentAndBranchPaths( mapping.get(), path, parentPath, branchPath );
 
 	if( parentMatch == Filter::AncestorMatch )
 	{

@@ -290,7 +290,7 @@ class ImageViewGadget : public GafferUI::Gadget
 			setup->addUniformParameter( "texture", texture );
 
 			const IECore::IntDataPtr channelToViewData( new IECore::IntData( channelToView ) );
-			setup->addUniformParameter( "channelToView", IECore::staticPointerCast<const IECore::Data>( channelToViewData ) );
+			setup->addUniformParameter( "channelToView", boost::static_pointer_cast<const IECore::Data>( channelToViewData ) );
 			IECoreGL::Shader::Setup::ScopedBinding b( *setup );
 
 			glColor3f( 1.0f, 1.0f, 1.0f );
@@ -614,7 +614,7 @@ class ImageViewGadget : public GafferUI::Gadget
 			if( !m_texture )
 			{
 				// convert image to texture
-				ToGLTextureConverterPtr converter = new ToGLTextureConverter( staticPointerCast<const ImagePrimitive>( m_image ), true );
+				ToGLTextureConverterPtr converter = new ToGLTextureConverter( boost::static_pointer_cast<const ImagePrimitive>( m_image ), true );
 				m_texture = IECore::runTimeCast<IECoreGL::Texture>( converter->convert() );
 
 				{

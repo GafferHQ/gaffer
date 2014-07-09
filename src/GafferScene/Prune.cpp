@@ -122,7 +122,7 @@ void Prune::hashObject( const ScenePath &path, const Gaffer::Context *context, c
 void Prune::hashChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
 	ContextPtr tmpContext = filterContext( context );
-	Context::Scope scopedContext( tmpContext );
+	Context::Scope scopedContext( tmpContext.get() );
 
 	if( filterPlug()->getValue() & Filter::DescendantMatch )
 	{
@@ -176,7 +176,7 @@ IECore::ConstObjectPtr Prune::computeObject( const ScenePath &path, const Gaffer
 IECore::ConstInternedStringVectorDataPtr Prune::computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	ContextPtr tmpContext = filterContext( context );
-	Context::Scope scopedContext( tmpContext );
+	Context::Scope scopedContext( tmpContext.get() );
 
 	if( filterPlug()->getValue() & Filter::DescendantMatch )
 	{
@@ -222,7 +222,7 @@ IECore::ConstCompoundObjectPtr Prune::computeGlobals( const Gaffer::Context *con
 	outputGlobals->members()["gaffer:sets"] = outputSets;
 	
 	ContextPtr tmpContext = filterContext( context );
-	Context::Scope scopedContext( tmpContext );
+	Context::Scope scopedContext( tmpContext.get() );
 	ScenePath path;
 
 	for( CompoundDataMap::const_iterator it = inputSets->readable().begin(), eIt = inputSets->readable().end(); it != eIt; ++it )

@@ -80,7 +80,7 @@ Gaffer::PlugPtr CompoundNumericParameterHandler<T>::setupPlug( GraphComponent *p
 		plugParent->setChild( m_parameter->name(), m_plug );
 	}
 
-	setupPlugFlags( m_plug );
+	setupPlugFlags( m_plug.get() );
 	
 	return m_plug;
 }

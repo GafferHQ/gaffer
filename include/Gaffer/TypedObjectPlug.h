@@ -58,8 +58,8 @@ class TypedObjectPlug : public ValuePlug
 	public :
 
 		typedef T ValueType;
-		typedef IECore::IntrusivePtr<T> ValuePtr;
-		typedef IECore::IntrusivePtr<const T> ConstValuePtr;
+		typedef typename ValueType::Ptr ValuePtr;
+		typedef typename ValueType::ConstPtr ConstValuePtr;
 
 		IECORE_RUNTIMETYPED_DECLARETEMPLATE( TypedObjectPlug<T>, ValuePlug );
 

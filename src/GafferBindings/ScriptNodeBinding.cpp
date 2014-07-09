@@ -290,7 +290,7 @@ struct ActionSlotCaller
 	{
 		try
 		{
-			slot( script, IECore::constPointerCast<Action>( action ), stage );
+			slot( script, boost::const_pointer_cast<Action>( action ), stage );
 		}
 		catch( const error_already_set &e )
 		{

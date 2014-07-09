@@ -197,7 +197,7 @@ Gaffer::Plug *ParameterHandler::setupPlug( const AtParamEntry *parameter, Gaffer
 		);
 	}
 	
-	return plug;
+	return plug.get();
 }
 
 void ParameterHandler::setupPlugs( const AtNodeEntry *nodeEntry, Gaffer::GraphComponent *plugsParent, Gaffer::Plug::Direction direction )

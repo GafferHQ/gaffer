@@ -188,7 +188,7 @@ void InteractiveRender::parentChanged( GraphComponent *child, GraphComponent *ol
 
 void InteractiveRender::update()
 {
-	Context::Scope scopedContext( m_context );
+	Context::Scope scopedContext( m_context.get() );
 
 	const State requiredState = (State)statePlug()->getValue();
 	ConstScenePlugPtr requiredScene = inPlug()->getInput<ScenePlug>();
@@ -219,12 +219,12 @@ void InteractiveRender::update()
 		m_renderer->setOption( "editable", new BoolData( true ) );
 		
 		ConstCompoundObjectPtr globals = inPlug()->globalsPlug()->getValue();
-		outputOptions( globals, m_renderer );
-		outputCamera( inPlug(), globals, m_renderer );
+		outputOptions( globals.get(), m_renderer.get() );
+		outputCamera( inPlug(), globals.get(), m_renderer.get() );
 		{
 			WorldBlock world( m_renderer );
 		
-			outputLightsInternal( globals, /* editing = */ false );
+			outputLightsInternal( globals.get(), /* editing = */ false );
 
 			SceneProceduralPtr proc = new SceneProcedural( inPlug(), Context::current() );
 			m_renderer->procedural( proc );
@@ -296,7 +296,7 @@ void InteractiveRender::outputLightsInternal( const IECore::CompoundObject *glob
 		if( !editing )
 		{
 			// defining the scene for the first time
-			if( outputLight( inPlug(), path, m_renderer ) )
+			if( outputLight( inPlug(), path, m_renderer.get() ) )
 			{
 				m_lightHandles.insert( *it );
 			}
@@ -308,22 +308,22 @@ void InteractiveRender::outputLightsInternal( const IECore::CompoundObject *glob
 				// we've already output this light - update it
 				bool visible = false;
 				{
-					EditBlock edit( m_renderer, "light", CompoundDataMap() );
-					visible = outputLight( inPlug(), path, m_renderer );
+					EditBlock edit( m_renderer.get(), "light", CompoundDataMap() );
+					visible = outputLight( inPlug(), path, m_renderer.get() );
 				}
 				// we may have turned it off before, and need to turn
 				// it back on, or it may have been hidden and we need
 				// to turn it off.
 				{
-					EditBlock edit( m_renderer, "attribute", CompoundDataMap() );
+					EditBlock edit( m_renderer.get(), "attribute", CompoundDataMap() );
 					m_renderer->illuminate( *it, visible );
 				}
 			}
 			else
 			{
 				// we've not seen this light before - create a new one
-				EditBlock edit( m_renderer, "attribute", CompoundDataMap() );
-				if( outputLight( inPlug(), path, m_renderer ) )
+				EditBlock edit( m_renderer.get(), "attribute", CompoundDataMap() );
+				if( outputLight( inPlug(), path, m_renderer.get() ) )
 				{
 					m_lightHandles.insert( *it );
 				}
@@ -337,7 +337,7 @@ void InteractiveRender::outputLightsInternal( const IECore::CompoundObject *glob
 	{
 		if( !lightSet || !(lightSet->readable().match( *it ) & Filter::ExactMatch) )
 		{
-			EditBlock edit( m_renderer, "attribute", CompoundDataMap() );
+			EditBlock edit( m_renderer.get(), "attribute", CompoundDataMap() );
 			m_renderer->illuminate( *it, false );
 		}
 	}
@@ -369,14 +369,14 @@ void InteractiveRender::updateShadersWalk( const ScenePlug::ScenePath &path )
 		CompoundDataMap parameters;
 		parameters["exactscopename"] = new StringData( name );
 		{
-			EditBlock edit( m_renderer, "attribute", parameters );
+			EditBlock edit( m_renderer.get(), "attribute", parameters );
 		
 			for( ObjectVector::MemberContainer::const_iterator it = shader->members().begin(), eIt = shader->members().end(); it != eIt; it++ )
 			{
 				const StateRenderable *s = runTimeCast<const StateRenderable>( it->get() );
 				if( s )
 				{
-					s->render( m_renderer );
+					s->render( m_renderer.get() );
 				}
 			}
 		}
@@ -400,8 +400,8 @@ void InteractiveRender::updateCamera()
 	}
 	IECore::ConstCompoundObjectPtr globals = inPlug()->globalsPlug()->getValue();
 	{
-		EditBlock edit( m_renderer, "option", CompoundDataMap() );
-		outputCamera( inPlug(), globals.get(), m_renderer );
+		EditBlock edit( m_renderer.get(), "option", CompoundDataMap() );
+		outputCamera( inPlug(), globals.get(), m_renderer.get() );
 	}
 	m_cameraDirty = false;
 }

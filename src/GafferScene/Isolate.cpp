@@ -122,7 +122,7 @@ void Isolate::hashObject( const ScenePath &path, const Gaffer::Context *context,
 void Isolate::hashChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
 	ContextPtr tmpContext = filterContext( context );
-	Context::Scope scopedContext( tmpContext );
+	Context::Scope scopedContext( tmpContext.get() );
 
 	if( filterPlug()->getValue() == Filter::DescendantMatch )
 	{
@@ -176,7 +176,7 @@ IECore::ConstObjectPtr Isolate::computeObject( const ScenePath &path, const Gaff
 IECore::ConstInternedStringVectorDataPtr Isolate::computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	ContextPtr tmpContext = filterContext( context );
-	Context::Scope scopedContext( tmpContext );
+	Context::Scope scopedContext( tmpContext.get() );
 
 	if( filterPlug()->getValue() == Filter::DescendantMatch )
 	{
@@ -222,7 +222,7 @@ IECore::ConstCompoundObjectPtr Isolate::computeGlobals( const Gaffer::Context *c
 	outputGlobals->members()["gaffer:sets"] = outputSets;
 
 	ContextPtr tmpContext = filterContext( context );
-	Context::Scope scopedContext( tmpContext );
+	Context::Scope scopedContext( tmpContext.get() );
 	ScenePath path;
 
 	for( CompoundDataMap::const_iterator it = inputSets->readable().begin(), eIt = inputSets->readable().end(); it != eIt; ++it )

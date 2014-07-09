@@ -108,7 +108,7 @@ ImageGadget::~ImageGadget()
 void ImageGadget::doRender( const Style *style ) const
 {
 	
-	if( m_imageOrTextureOrFileName->isInstanceOf( IECore::StringDataTypeId ) )
+	if( const StringData *filename = runTimeCast<const StringData>( m_imageOrTextureOrFileName.get() ) )
 	{
 		// load texture from file
 		static TextureLoaderPtr g_textureLoader = 0;
@@ -119,20 +119,20 @@ void ImageGadget::doRender( const Style *style ) const
 			g_textureLoader = new TextureLoader( sp );
 		}
 		
-		m_imageOrTextureOrFileName = g_textureLoader->load( staticPointerCast<const StringData>( m_imageOrTextureOrFileName )->readable() );
+		m_imageOrTextureOrFileName = g_textureLoader->load( filename->readable() );
 	}
-	else if( m_imageOrTextureOrFileName->isInstanceOf( IECore::ImagePrimitiveTypeId ) )
+	else if( const ImagePrimitive *image = runTimeCast<const ImagePrimitive>( m_imageOrTextureOrFileName.get() ) )
 	{
 		// convert image to texture
-		ToGLTextureConverterPtr converter = new ToGLTextureConverter( staticPointerCast<const ImagePrimitive>( m_imageOrTextureOrFileName ) );
+		ToGLTextureConverterPtr converter = new ToGLTextureConverter( image );
 		m_imageOrTextureOrFileName = converter->convert();
 	}
 	
 	// render texture
-	if( m_imageOrTextureOrFileName->isInstanceOf( IECoreGL::Texture::staticTypeId() ) )
+	if( const Texture *texture = runTimeCast<const Texture>( m_imageOrTextureOrFileName.get() ) )
 	{
 		Box2f b( V2f( m_bound.min.x, m_bound.min.y ), V2f( m_bound.max.x, m_bound.max.y ) );
-		style->renderImage( b, (const Texture *)m_imageOrTextureOrFileName.get() );
+		style->renderImage( b, texture );
 	}
 	
 }

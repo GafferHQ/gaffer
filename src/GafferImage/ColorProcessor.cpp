@@ -130,7 +130,7 @@ void ColorProcessor::compute( Gaffer::ValuePlug *output, const Gaffer::Context *
 		FloatVectorDataPtr r, g, b;
 		{
 			ContextPtr tmpContext = new Context( *context, Context::Borrowed );
-			Context::Scope scopedContext( tmpContext );
+			Context::Scope scopedContext( tmpContext.get() );
 			tmpContext->set( ImagePlug::channelNameContextName, string( "R" ) );
 			r = inPlug()->channelDataPlug()->getValue()->copy();
 			tmpContext->set( ImagePlug::channelNameContextName, string( "G" ) );
@@ -192,18 +192,18 @@ void ColorProcessor::hashChannelData( const GafferImage::ImagePlug *output, cons
 
 IECore::ConstFloatVectorDataPtr ColorProcessor::computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const
 {
-	ConstObjectVectorPtr colorData = staticPointerCast<const ObjectVector>( colorDataPlug()->getValue() );
+	ConstObjectVectorPtr colorData = boost::static_pointer_cast<const ObjectVector>( colorDataPlug()->getValue() );
 	if( channelName == "R" )
 	{
-		return staticPointerCast<const FloatVectorData>( colorData->members()[0] );
+		return boost::static_pointer_cast<const FloatVectorData>( colorData->members()[0] );
 	}
 	else if( channelName == "G" )
 	{
-		return staticPointerCast<const FloatVectorData>( colorData->members()[1] );
+		return boost::static_pointer_cast<const FloatVectorData>( colorData->members()[1] );
 	}
 	else if( channelName == "B" )
 	{
-		return staticPointerCast<const FloatVectorData>( colorData->members()[2] );
+		return boost::static_pointer_cast<const FloatVectorData>( colorData->members()[2] );
 	}
 	// We're not allowed to return NULL, but we should never get here because channelEnabled()
 	// should be preventing it.
@@ -218,7 +218,7 @@ bool ColorProcessor::affectsColorData( const Gaffer::Plug *input ) const
 void ColorProcessor::hashColorData( const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	ContextPtr tmpContext = new Context( *context, Context::Borrowed );
-	Context::Scope scopedContext( tmpContext );
+	Context::Scope scopedContext( tmpContext.get() );
 	tmpContext->set( ImagePlug::channelNameContextName, string( "R" ) );
 	inPlug()->channelDataPlug()->hash( h );
 	tmpContext->set( ImagePlug::channelNameContextName, string( "G" ) );

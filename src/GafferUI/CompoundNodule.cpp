@@ -65,7 +65,7 @@ CompoundNodule::CompoundNodule( Gaffer::CompoundPlugPtr plug, LinearContainer::O
 	plug->childAddedSignal().connect( boost::bind( &CompoundNodule::childAdded, this, ::_1,  ::_2 ) );
 	plug->childRemovedSignal().connect( boost::bind( &CompoundNodule::childRemoved, this, ::_1,  ::_2 ) );
 
-	for( Gaffer::PlugIterator it( plug ); it!=it.end(); it++ )
+	for( Gaffer::PlugIterator it( plug.get() ); it!=it.end(); it++ )
 	{
 		NodulePtr nodule = Nodule::create( *it );
 		if( nodule )
@@ -98,7 +98,7 @@ bool CompoundNodule::acceptsChild( const Gaffer::GraphComponent *potentialChild 
 
 Nodule *CompoundNodule::nodule( const Gaffer::Plug *plug )
 {
-	for( NoduleIterator it( m_row ); it!=it.end(); it++ )
+	for( NoduleIterator it( m_row.get() ); it!=it.end(); it++ )
 	{
 		if( (*it)->plug() == plug )
 		{
@@ -137,7 +137,7 @@ void CompoundNodule::childRemoved( Gaffer::GraphComponent *parent, Gaffer::Graph
 		return;
 	}
 	
-	for( NoduleIterator it( m_row ); it!=it.end(); it++ )
+	for( NoduleIterator it( m_row.get() ); it!=it.end(); it++ )
 	{
 		if( (*it)->plug() == plug )
 		{

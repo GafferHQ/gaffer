@@ -214,7 +214,7 @@ void Gadget::render( const Style *currentStyle ) const
 			if( m_style )
 			{
 				m_style->bind();
-				currentStyle = m_style;
+				currentStyle = m_style.get();
 			}
 		}
 

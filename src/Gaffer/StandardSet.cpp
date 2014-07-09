@@ -56,7 +56,7 @@ StandardSet::MemberAcceptanceSignal &StandardSet::memberAcceptanceSignal()
 
 bool StandardSet::add( MemberPtr member )
 {
-	if( !m_memberAcceptanceSignal( this, member ) )
+	if( !m_memberAcceptanceSignal( this, member.get() ) )
 	{
 		throw IECore::Exception( "Member is not eligible for inclusion in StandardSet." );
 	}
@@ -64,7 +64,7 @@ bool StandardSet::add( MemberPtr member )
 	bool result = m_members.insert( member ).second;
 	if( result )
 	{
-		memberAddedSignal()( this, member );
+		memberAddedSignal()( this, member.get() );
 	}
 	return result;
 }
@@ -132,7 +132,7 @@ Set::Member *StandardSet::member( size_t index )
 
 const Set::Member *StandardSet::member( size_t index ) const
 {
-	return m_members.get<1>()[index];
+	return m_members.get<1>()[index].get();
 }
 		
 size_t StandardSet::size() const

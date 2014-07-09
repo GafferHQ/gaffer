@@ -95,7 +95,7 @@ class ParameterHandler : public IECore::RefCounted
 		{
 				ParameterHandlerDescription() { ParameterHandler::registerParameterHandler( ParameterType::staticTypeId(), &creator ); };
 			private :
-				static ParameterHandlerPtr creator( IECore::ParameterPtr parameter ) { return new HandlerType( IECore::staticPointerCast<ParameterType>( parameter ) ); };
+				static ParameterHandlerPtr creator( IECore::ParameterPtr parameter ) { return new HandlerType( boost::static_pointer_cast<ParameterType>( parameter ) ); };
 		};
 		
 	private :

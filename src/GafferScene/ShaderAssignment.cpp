@@ -150,7 +150,7 @@ IECore::ConstCompoundObjectPtr ShaderAssignment::computeProcessedAttributes( con
 		// returned, will also be treated as const and cached. for that reason the
 		// temporary const_cast needed to put it into the result is justified -
 		// we never change the object and nor can anyone after it is returned.
-		ObjectVectorPtr state = constPointerCast<ObjectVector>( shader->state() );
+		ObjectVectorPtr state = boost::const_pointer_cast<ObjectVector>( shader->state() );
 		if( state->members().size() )
 		{
 			result->members()["shader"] = state;

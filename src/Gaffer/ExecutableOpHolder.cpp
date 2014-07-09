@@ -107,11 +107,11 @@ void ExecutableOpHolder::execute( const Contexts &contexts ) const
 	{
 		// \todo Implement a way to get the CompoundObject for a given context without modifying the Op's parameter
 		// and passing it explicitly in the operate call. Than multi-thread this loop.
-		Context::Scope scope( *cit );
-		constPointerCast<CompoundParameterHandler>( parameterHandler() )->setParameterValue();
-		Op *op = constPointerCast<Op>( getOp() );
+		Context::Scope scope( cit->get() );
+		const_cast<CompoundParameterHandler *>( parameterHandler().get() )->setParameterValue();
+		Op *op = const_cast<Op *>( getOp().get() );
 		/// \todo: Remove this once scoping the context takes care of it for us
-		substitute( op->parameters(), *cit );
+		substitute( op->parameters(), cit->get() );
 		op->operate();
 	}
 }

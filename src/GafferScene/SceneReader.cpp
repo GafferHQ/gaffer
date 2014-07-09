@@ -259,7 +259,7 @@ IECore::ConstCompoundObjectPtr SceneReader::computeAttributes( const ScenePath &
 		
 		// the const cast is ok, because we're only using it to put the object into a CompoundObject that will
 		// be treated as forever const after being returned from this function.
-		result->members()[ std::string( *it ) ] = constPointerCast<Object>( s->readAttribute( *it, context->getFrame() / g_frameRate ) );
+		result->members()[ std::string( *it ) ] = boost::const_pointer_cast<Object>( s->readAttribute( *it, context->getFrame() / g_frameRate ) );
 	}
 
 	// read tags and turn them into attributes of the form "user:tag:tagName"
@@ -433,7 +433,7 @@ static void loadSetsWalk( const SceneInterface *s, const vector<InternedString> 
 	{
 		ConstSceneInterfacePtr child = s->child( *it );
 		childPath[path.size()] = *it;
-		loadSetsWalk( child, tags, sets, childPath );
+		loadSetsWalk( child.get(), tags, sets, childPath );
 	}
 }
 
@@ -490,7 +490,7 @@ IECore::ConstCompoundObjectPtr SceneReader::computeGlobals( const Gaffer::Contex
 		pathMatchers.push_back( &(d->writable()) );
 	}
 
-	loadSetsWalk( s, tagsToLoadAsSets, pathMatchers, vector<InternedString>() );
+	loadSetsWalk( s.get(), tagsToLoadAsSets, pathMatchers, vector<InternedString>() );
 
 	return result;
 }

@@ -77,7 +77,7 @@ Plug *Box::promotePlug( Plug *descendantPlug, bool asUserPlug )
 	// so we need to do that ourselves.
 	if( externalPlug->typeId() == Gaffer::CompoundPlug::staticTypeId() )
 	{
-		for( RecursivePlugIterator it( externalPlug ); it != it.end(); ++it )
+		for( RecursivePlugIterator it( externalPlug.get() ); it != it.end(); ++it )
 		{
 			(*it)->setFlags( Plug::Dynamic, true );
 			if( (*it)->typeId() != Gaffer::CompoundPlug::staticTypeId() )
@@ -89,7 +89,7 @@ Plug *Box::promotePlug( Plug *descendantPlug, bool asUserPlug )
 
 	if( externalPlug->direction() == Plug::In )
 	{
-		if( ValuePlug *externalValuePlug = IECore::runTimeCast<ValuePlug>( externalPlug ) )
+		if( ValuePlug *externalValuePlug = IECore::runTimeCast<ValuePlug>( externalPlug.get() ) )
 		{
 			externalValuePlug->setFrom( static_cast<ValuePlug *>( descendantPlug ) );
 		}

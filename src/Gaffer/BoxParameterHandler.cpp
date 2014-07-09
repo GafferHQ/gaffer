@@ -80,7 +80,7 @@ Gaffer::PlugPtr BoxParameterHandler<T>::setupPlug( GraphComponent *plugParent, P
 		plugParent->setChild( m_parameter->name(), m_plug );
 	}
 
-	setupPlugFlags( m_plug );
+	setupPlugFlags( m_plug.get() );
 	
 	return m_plug;
 }

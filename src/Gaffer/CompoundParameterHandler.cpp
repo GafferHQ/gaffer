@@ -82,7 +82,7 @@ void CompoundParameterHandler::restore( GraphComponent *plugParent )
 		ParameterHandlerPtr h = handler( *it, true );
 		if( h )
 		{
-			h->restore( compoundPlug );
+			h->restore( compoundPlug.get() );
 		}
 	}
 	
@@ -103,7 +103,7 @@ Gaffer::PlugPtr CompoundParameterHandler::setupPlug( GraphComponent *plugParent,
 		plugParent->setChild( name, m_plug );
 	}
 
-	setupPlugFlags( m_plug );
+	setupPlugFlags( m_plug.get() );
 	
 	// remove any child plugs we don't need
 	
@@ -137,7 +137,7 @@ Gaffer::PlugPtr CompoundParameterHandler::setupPlug( GraphComponent *plugParent,
 		ParameterHandlerPtr h = handler( *it, true );
 		if( h )
 		{
-			h->setupPlug( m_plug, direction );
+			h->setupPlug( m_plug.get(), direction );
 		}
 	}
 	

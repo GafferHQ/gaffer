@@ -101,7 +101,7 @@ class CopyTiles
 					{
 						context->set( ImagePlug::channelNameContextName, *it );
 						context->set( ImagePlug::tileOriginContextName, V2i( tileOriginX, tileOriginY ) );
-						Context::Scope scope( context );
+						Context::Scope scope( context.get() );
 						Box2i tileBound( V2i( tileOriginX, tileOriginY ), V2i( tileOriginX + m_tileSize - 1, tileOriginY + m_tileSize - 1 ) );
 						Box2i b = boxIntersection( tileBound, operationWindow );
 
@@ -286,7 +286,7 @@ IECore::ConstFloatVectorDataPtr ImagePlug::channelData( const std::string &chann
 	ContextPtr tmpContext = new Context( *Context::current(), Context::Borrowed );
 	tmpContext->set( ImagePlug::channelNameContextName, channelName );
 	tmpContext->set( ImagePlug::tileOriginContextName, tile );
-	Context::Scope scopedContext( tmpContext );
+	Context::Scope scopedContext( tmpContext.get() );
 	
 	return channelDataPlug()->getValue();
 }
@@ -296,7 +296,7 @@ IECore::MurmurHash ImagePlug::channelDataHash( const std::string &channelName, c
 	ContextPtr tmpContext = new Context( *Context::current(), Context::Borrowed );
 	tmpContext->set( ImagePlug::channelNameContextName, channelName );
 	tmpContext->set( ImagePlug::tileOriginContextName, tile );
-	Context::Scope scopedContext( tmpContext );
+	Context::Scope scopedContext( tmpContext.get() );
 	return channelDataPlug()->hash();
 }
 
@@ -360,7 +360,7 @@ IECore::MurmurHash ImagePlug::imageHash() const
 				{
 					context->set( ImagePlug::channelNameContextName, *it );
 					context->set( ImagePlug::tileOriginContextName, V2i( tileOriginX, tileOriginY ) );
-					Context::Scope scope( context );
+					Context::Scope scope( context.get() );
 					channelDataPlug()->hash( result );
 				}
 			}

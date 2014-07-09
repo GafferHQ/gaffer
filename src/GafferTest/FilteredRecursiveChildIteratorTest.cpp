@@ -71,7 +71,7 @@ void GafferTest::testFilteredRecursiveChildIterator()
 	//       - h
 
 	std::vector<NodePtr> nodes;
-	for( RecursiveNodeIterator it( a ); it != it.end(); it++ )
+	for( RecursiveNodeIterator it( a.get() ); it != it.end(); it++ )
 	{
 		nodes.push_back( *it );
 	}
@@ -89,7 +89,7 @@ void GafferTest::testFilteredRecursiveChildIterator()
 
 	typedef FilteredRecursiveChildIterator<PlugPredicate<>, TypePredicate<GraphComponent> > DeepRecursivePlugIterator;
 	std::vector<PlugPtr> plugs;
-	for( DeepRecursivePlugIterator it( a ); it != it.end(); it++ )
+	for( DeepRecursivePlugIterator it( a.get() ); it != it.end(); it++ )
 	{
 		plugs.push_back( *it );
 	}
@@ -106,7 +106,7 @@ void GafferTest::testFilteredRecursiveChildIterator()
 		
 	typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, FloatPlug>, TypePredicate<GraphComponent> > DeepRecursiveFloatPlugIterator;
 	plugs.clear();
-	for( DeepRecursiveFloatPlugIterator it( a ); it != it.end(); it++ )
+	for( DeepRecursiveFloatPlugIterator it( a.get() ); it != it.end(); it++ )
 	{
 		plugs.push_back( *it );
 	}
@@ -118,7 +118,7 @@ void GafferTest::testFilteredRecursiveChildIterator()
 	
 	typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, FloatPlug>, TypePredicate<GraphComponent> > DeepRecursiveOutputFloatPlugIterator;
 	plugs.clear();
-	for( DeepRecursiveOutputFloatPlugIterator it( a ); it != it.end(); it++ )
+	for( DeepRecursiveOutputFloatPlugIterator it( a.get() ); it != it.end(); it++ )
 	{
 		plugs.push_back( *it );
 	}
@@ -133,7 +133,7 @@ void GafferTest::testFilteredRecursiveChildIterator()
 
 	typedef FilteredRecursiveChildIterator<PlugPredicate<>, PlugPredicate<> > ShallowRecursivePlugIterator;
 	plugs.clear();
-	for( ShallowRecursivePlugIterator it( a ); it != it.end(); it++ )
+	for( ShallowRecursivePlugIterator it( a.get() ); it != it.end(); it++ )
 	{
 		plugs.push_back( *it );
 	}
@@ -141,7 +141,7 @@ void GafferTest::testFilteredRecursiveChildIterator()
 	GAFFERTEST_ASSERT( plugs[0] == a->userPlug() );
 	
 	plugs.clear();
-	for( ShallowRecursivePlugIterator it( b ); it != it.end(); it++ )
+	for( ShallowRecursivePlugIterator it( b.get() ); it != it.end(); it++ )
 	{
 		plugs.push_back( *it );
 	}
@@ -150,7 +150,7 @@ void GafferTest::testFilteredRecursiveChildIterator()
 	GAFFERTEST_ASSERT( plugs[1] == c );
 	
 	plugs.clear();
-	for( ShallowRecursivePlugIterator it( e ); it != it.end(); it++ )
+	for( ShallowRecursivePlugIterator it( e.get() ); it != it.end(); it++ )
 	{
 		plugs.push_back( *it );
 	}

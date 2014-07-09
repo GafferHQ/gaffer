@@ -198,7 +198,7 @@ void GraphComponent::addChild( GraphComponentPtr child )
 		return;
 	}
 	
-	throwIfChildRejected( child );
+	throwIfChildRejected( child.get() );
 
 	if( refCount() )
 	{
@@ -250,7 +250,7 @@ void GraphComponent::setChild( const IECore::InternedString &name, GraphComponen
 		return;
 	}
 	
-	throwIfChildRejected( child );
+	throwIfChildRejected( child.get() );
 
 	if( existingChild )
 	{

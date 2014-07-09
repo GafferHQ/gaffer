@@ -131,19 +131,19 @@ struct ScenePathFromString
 IECore::ObjectPtr objectWrapper( const ScenePlug &plug, const ScenePlug::ScenePath &scenePath, bool copy=true )
 {
 	IECore::ConstObjectPtr o = plug.object( scenePath );
-	return copy ? o->copy() : IECore::constPointerCast<IECore::Object>( o );
+	return copy ? o->copy() : boost::const_pointer_cast<IECore::Object>( o );
 }
 
 IECore::InternedStringVectorDataPtr childNamesWrapper( const ScenePlug &plug, const ScenePlug::ScenePath &scenePath, bool copy=true )
 {
 	IECore::ConstInternedStringVectorDataPtr n = plug.childNames( scenePath );
-	return copy ? n->copy() : IECore::constPointerCast<IECore::InternedStringVectorData>( n );
+	return copy ? n->copy() : boost::const_pointer_cast<IECore::InternedStringVectorData>( n );
 }
 
 IECore::CompoundObjectPtr attributesWrapper( const ScenePlug &plug, const ScenePlug::ScenePath &scenePath, bool copy=true )
 {
 	IECore::ConstCompoundObjectPtr a = plug.attributes( scenePath );
-	return copy ? a->copy() : IECore::constPointerCast<IECore::CompoundObject>( a );
+	return copy ? a->copy() : boost::const_pointer_cast<IECore::CompoundObject>( a );
 }
 
 } // namespace

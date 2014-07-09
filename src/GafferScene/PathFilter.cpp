@@ -138,7 +138,7 @@ unsigned PathFilter::computeMatch( const ScenePlug *scene, const Gaffer::Context
 	const ScenePathData *pathData = context->get<ScenePathData>( ScenePlug::scenePathContextName, 0 );
 	if( pathData )
 	{
-		ConstPathMatcherDataPtr pathMatcher = staticPointerCast<const PathMatcherData>( pathMatcherPlug()->getValue() );
+		ConstPathMatcherDataPtr pathMatcher = boost::static_pointer_cast<const PathMatcherData>( pathMatcherPlug()->getValue() );
 		return pathMatcher->readable().match( pathData->readable() );
 	}
 	return NoMatch;

@@ -270,7 +270,7 @@ std::string StandardConnectionGadget::getToolTip( const IECore::LineSegment3f &l
 		return result;
 	}
 	
-	const Gaffer::Plug *dstPlug = dstNodule()->plug();
+	const Gaffer::Plug *dstPlug = dstNodule()->plug().get();
 	const Gaffer::Plug *srcPlug = dstPlug->getInput<Gaffer::Plug>();
 	const Gaffer::GraphComponent *ancestor = srcPlug->commonAncestor<Gaffer::GraphComponent>( dstPlug );
 

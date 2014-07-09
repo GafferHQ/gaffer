@@ -456,7 +456,7 @@ void ValuePlug::setObjectValue( IECore::ConstObjectPtr value )
 			throw IECore::Exception( boost::str( boost::format( "Cannot set value for read only plug \"%s\"" ) % fullName() ) );
 		}
 	
-		if( value->isNotEqualTo( m_staticValue ) )
+		if( value->isNotEqualTo( m_staticValue.get() ) )
 		{
 			Action::enact( new SetValueAction( this, value ) );
 		}
@@ -509,7 +509,7 @@ void ValuePlug::emitPlugSet()
 	std::vector<PlugPtr> o( outputs().begin(), outputs().end() );
 	for( std::vector<PlugPtr>::const_iterator it=o.begin(), eIt=o.end(); it!=eIt; ++it )
 	{
-		if( ValuePlug *output = IECore::runTimeCast<ValuePlug>( *it ) )
+		if( ValuePlug *output = IECore::runTimeCast<ValuePlug>( it->get() ) )
 		{
 			output->emitPlugSet();
 		}

@@ -216,7 +216,7 @@ class LayoutEngine
 			{
 				for( RecursiveInputPlugIterator pIt( it->first ); pIt != pIt.end(); ++pIt )
 				{
-					ConnectionGadget *connection = graphGadget->connectionGadget( *pIt );
+					ConnectionGadget *connection = graphGadget->connectionGadget( pIt->get() );
 					if( !connection || connection->getMinimised() )
 					{
 						continue;
@@ -966,7 +966,7 @@ void StandardGraphLayout::positionNode( GraphGadget *graph, Gaffer::Node *node, 
 
 	StandardSetPtr s = new StandardSet();
 	s->add( node );
-	layout.pinNodes( s, true /* invert */ );
+	layout.pinNodes( s.get(), true /* invert */ );
 
 	layout.assignCollisionGroup( (IECore::TypeId)Gaffer::BackdropTypeId, -1 ); // disable collisions with backdrops
 
@@ -1128,7 +1128,7 @@ size_t StandardGraphLayout::outputPlugs( NodeGadget *nodeGadget, std::vector<Gaf
 {
 	for( RecursiveOutputPlugIterator it( nodeGadget->node() ); it != it.end(); it++ )
 	{
-		if( nodeGadget->nodule( *it ) )
+		if( nodeGadget->nodule( it->get() ) )
 		{
 			plugs.push_back( it->get() );
 		}
@@ -1159,7 +1159,7 @@ size_t StandardGraphLayout::unconnectedInputPlugs( NodeGadget *nodeGadget, std::
 	plugs.clear();
 	for( RecursiveInputPlugIterator it( nodeGadget->node() ); it != it.end(); it++ )
 	{
-		if( (*it)->getInput<Plug>() == 0 and nodeGadget->nodule( *it ) )
+		if( (*it)->getInput<Plug>() == 0 and nodeGadget->nodule( it->get() ) )
 		{
 			plugs.push_back( it->get() );
 		}
@@ -1180,7 +1180,7 @@ Gaffer::Plug *StandardGraphLayout::correspondingOutput( const Gaffer::Plug *inpu
 		
 	for( RecursiveOutputPlugIterator it( dependencyNode ); it != it.end(); ++it )
 	{
-		if( dependencyNode->correspondingInput( *it ) == input )
+		if( dependencyNode->correspondingInput( it->get() ) == input )
 		{
 			return it->get();
 		}

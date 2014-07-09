@@ -85,12 +85,12 @@ void View::setContext( Gaffer::ContextPtr context )
 
 ViewportGadget *View::viewportGadget()
 {
-	return m_viewportGadget;
+	return m_viewportGadget.get();
 }
 
 const ViewportGadget *View::viewportGadget() const
 {
-	return m_viewportGadget;
+	return m_viewportGadget.get();
 }
 
 View::UnarySignal &View::updateRequestSignal()

@@ -311,7 +311,7 @@ const Context *Context::current()
 	ContextStack &stack = g_threadContexts.local();
 	if( !stack.size() )
 	{
-		return g_defaultContext;
+		return g_defaultContext.get();
 	}
 	return stack.top();
 }

@@ -72,7 +72,7 @@ static size_t addFromSequence( StandardSet &s, boost::python::object o )
 
 static size_t removeFromSequence( StandardSet &s, boost::python::object o )
 {
-	std::vector<Set::MemberPtr> members;
+	std::vector<Set::Member *> members;
 	boost::python::container_utils::extend_container( members, o );
 	return s.remove( members.begin(), members.end() );
 }
@@ -83,7 +83,7 @@ struct MemberAcceptanceSlotCaller
 	{
 		try
 		{
-			return slot( IECore::constPointerCast<Set>( s ), IECore::constPointerCast<IECore::RunTimeTyped>( m ) );
+			return slot( boost::const_pointer_cast<Set>( s ), boost::const_pointer_cast<IECore::RunTimeTyped>( m ) );
 		}
 		catch( const boost::python::error_already_set &e )
 		{

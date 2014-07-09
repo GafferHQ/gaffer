@@ -132,7 +132,7 @@ bool ConnectionGadget::getMinimised() const
 
 ConnectionGadgetPtr ConnectionGadget::create( NodulePtr srcNodule, NodulePtr dstNodule )
 {
-	const Gaffer::Plug *plug = dstNodule->plug();
+	const Gaffer::Plug *plug = dstNodule->plug().get();
 
 	if( const Gaffer::Node *node = plug->node() )
 	{

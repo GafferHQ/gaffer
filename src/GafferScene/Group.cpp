@@ -154,7 +154,7 @@ void Group::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *contex
 	{
 		ContextPtr tmpContext = new Context( *context, Context::Borrowed );
 		tmpContext->set( ScenePlug::scenePathContextName, ScenePath() );
-		Context::Scope scopedContext( tmpContext );
+		Context::Scope scopedContext( tmpContext.get() );
 		for( vector<ScenePlugPtr>::const_iterator it = m_inPlugs.inputs().begin(), eIt = m_inPlugs.inputs().end(); it!=eIt; it++ )
 		{
 			(*it)->childNamesPlug()->hash( h );
@@ -178,7 +178,7 @@ void Group::hashBound( const ScenePath &path, const Gaffer::Context *context, co
 		SceneProcessor::hashBound( path, context, parent, h );
 		ContextPtr tmpContext = new Context( *context, Context::Borrowed );
 		tmpContext->set( ScenePlug::scenePathContextName, ScenePath() );
-		Context::Scope scopedContext( tmpContext );
+		Context::Scope scopedContext( tmpContext.get() );
 		for( vector<ScenePlugPtr>::const_iterator it = m_inPlugs.inputs().begin(), eIt = m_inPlugs.inputs().end(); it!=eIt; it++ )
 		{
 			(*it)->boundPlug()->hash( h );
@@ -445,7 +445,7 @@ IECore::ConstInternedStringVectorDataPtr Group::computeChildNames( const ScenePa
 	}
 	else if( path.size() == 1 )
 	{
-		ConstCompoundObjectPtr mapping = staticPointerCast<const CompoundObject>( mappingPlug()->getValue() );
+		ConstCompoundObjectPtr mapping = boost::static_pointer_cast<const CompoundObject>( mappingPlug()->getValue() );
 		return mapping->member<InternedStringVectorData>( "__GroupChildNames" );
 	}
 	else
@@ -462,7 +462,7 @@ IECore::ConstCompoundObjectPtr Group::computeGlobals( const Gaffer::Context *con
 	
 	std::string groupName = namePlug()->getValue();
 
-	ConstCompoundObjectPtr mapping = staticPointerCast<const CompoundObject>( mappingPlug()->getValue() );
+	ConstCompoundObjectPtr mapping = boost::static_pointer_cast<const CompoundObject>( mappingPlug()->getValue() );
 	const ObjectVector *forwardMappings = mapping->member<ObjectVector>( "__GroupForwardMappings", true /* throw if missing */ );
 
 	CompoundDataPtr outputSets = new CompoundData;
@@ -532,7 +532,7 @@ SceneNode::ScenePath Group::sourcePath( const ScenePath &outputPath, const std::
 {		
 	const InternedString mappedChildName = outputPath[1];
 	
-	ConstCompoundObjectPtr mapping = staticPointerCast<const CompoundObject>( mappingPlug()->getValue() );
+	ConstCompoundObjectPtr mapping = boost::static_pointer_cast<const CompoundObject>( mappingPlug()->getValue() );
 	const CompoundObject *entry = mapping->member<CompoundObject>( mappedChildName );
 	if( !entry )
 	{

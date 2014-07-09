@@ -67,7 +67,7 @@ class SceneTraversalTask : public tbb::task
 			
 			ContextPtr context = new Context( *m_context, Context::Borrowed );
 			context->set( ScenePlug::scenePathContextName, m_scenePath );
-			Context::Scope scopedContext( context );
+			Context::Scope scopedContext( context.get() );
 			
 			m_scenePlug->transformPlug()->getValue();
 			m_scenePlug->boundPlug()->getValue();

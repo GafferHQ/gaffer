@@ -72,7 +72,7 @@ void OpHolder::setParameterised( IECore::RunTimeTypedPtr parameterised, bool kee
 		throw IECore::Exception( "Result plug is not derived from ValuePlug" );
 	}
 	
-	plugDirtiedSignal()( resultPlug );
+	plugDirtiedSignal()( resultPlug.get() );
 }
 
 void OpHolder::setOp( const std::string &className, int classVersion, bool keepExistingValues )
@@ -126,8 +126,8 @@ void OpHolder::compute( ValuePlug *output, const Context *context ) const
 {
 	if( output->getName()=="result" )
 	{	
-		constPointerCast<CompoundParameterHandler>( parameterHandler() )->setParameterValue();
-		constPointerCast<Op>( getOp() )->operate();
+		boost::const_pointer_cast<CompoundParameterHandler>( parameterHandler() )->setParameterValue();
+		boost::const_pointer_cast<Op>( getOp() )->operate();
 		m_resultParameterHandler->setPlugValue();
 		return;
 	}

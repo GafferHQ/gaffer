@@ -117,16 +117,16 @@ void ExecutableRender::execute( const Contexts &contexts ) const
 		Context::Scope scopedContext( it->get() );
 		ConstCompoundObjectPtr globals = scene->globalsPlug()->getValue();
 
-		createDisplayDirectories( globals );
+		createDisplayDirectories( globals.get() );
 
 		IECore::RendererPtr renderer = createRenderer();		
-		outputOptions( globals, renderer );
-		outputCamera( scene, globals, renderer );
+		outputOptions( globals.get(), renderer.get() );
+		outputCamera( scene, globals.get(), renderer.get() );
 		{
 			WorldBlock world( renderer );
 
-			outputLights( scene, globals, renderer ); 
-			outputWorldProcedural( scene, renderer );
+			outputLights( scene, globals.get(), renderer.get() );
+			outputWorldProcedural( scene, renderer.get() );
 		}
 		
 		std::string systemCommand = command();

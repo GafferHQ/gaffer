@@ -156,7 +156,14 @@ void ImagePrimitiveSource<BaseType>::compute( Gaffer::ValuePlug *output, const G
 	{
 		IECore::ConstImagePrimitivePtr image = computeImagePrimitive( context );
 		Gaffer::ObjectPlug *plug = static_cast<Gaffer::ObjectPlug *>( output );
-		plug->setValue( image ? image : plug->defaultValue() );
+		if( image )
+		{
+			plug->setValue( image );
+		}
+		else
+		{
+			plug->setValue( plug->defaultValue() );
+		}
 		return;
 	}
 	
