@@ -185,7 +185,7 @@ const Imath::M44f &Gadget::getTransform() const
 	return m_transform;
 }
 
-Imath::M44f Gadget::fullTransform( ConstGadgetPtr ancestor ) const
+Imath::M44f Gadget::fullTransform( const Gadget *ancestor ) const
 {
 	M44f result;
 	const Gadget *g = this;
@@ -266,7 +266,7 @@ Imath::Box3f Gadget::transformedBound() const
 	return transform( b, getTransform() );
 }
 
-Imath::Box3f Gadget::transformedBound( ConstGadgetPtr ancestor ) const
+Imath::Box3f Gadget::transformedBound( const Gadget *ancestor ) const
 {
 	Box3f b = bound();
 	return transform( b, fullTransform( ancestor ) );

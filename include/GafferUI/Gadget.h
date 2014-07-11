@@ -146,7 +146,7 @@ class Gadget : public Gaffer::GraphComponent
 		/// Returns the full transform of this Gadget relative to the
 		/// specified ancestor. If ancestor is not specified then the
 		/// transform from the root of the hierarchy is returned.
-		Imath::M44f fullTransform( ConstGadgetPtr ancestor = 0 ) const;
+		Imath::M44f fullTransform( const Gadget *ancestor = 0 ) const;
 		//@}
 
 		/// @name Display
@@ -166,7 +166,7 @@ class Gadget : public Gaffer::GraphComponent
 		/// The bounding box transformed by the result of getTransform().
 		Imath::Box3f transformedBound() const;
 		/// The bounding box transformed by the result of fullTransform( ancestor ).
-		Imath::Box3f transformedBound( ConstGadgetPtr ancestor ) const;
+		Imath::Box3f transformedBound( const Gadget *ancestor ) const;
 		typedef boost::signal<void ( Gadget * )> RenderRequestSignal;
 		RenderRequestSignal &renderRequestSignal();
 		//@}
