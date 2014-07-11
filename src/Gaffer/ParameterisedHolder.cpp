@@ -181,7 +181,7 @@ void ParameterisedHolder<BaseType>::plugSet( Plug *plug )
 	ParameterHandler *parameterHandler = m_parameterHandler.get();
 	for( std::vector<Plug *>::const_reverse_iterator it = plugHierarchy.rbegin(), eIt = plugHierarchy.rend(); it != eIt; it++ )
 	{
-		IECore::CompoundParameter *compoundParameter = IECore::runTimeCast<IECore::CompoundParameter>( parameterHandler->parameter().get() );
+		IECore::CompoundParameter *compoundParameter = IECore::runTimeCast<IECore::CompoundParameter>( parameterHandler->parameter() );
 		if( !compoundParameter )
 		{
 			return;
@@ -190,7 +190,7 @@ void ParameterisedHolder<BaseType>::plugSet( Plug *plug )
 		CompoundParameterHandler *compoundParameterHandler = static_cast<CompoundParameterHandler *>( parameterHandler );
 		
 		IECore::Parameter *childParameter = compoundParameter->parameter<IECore::Parameter>( (*it)->getName() );
-		parameterHandler = compoundParameterHandler->childParameterHandler( childParameter ).get();
+		parameterHandler = compoundParameterHandler->childParameterHandler( childParameter );
 		IECore::RunTimeTyped *childParameterProvider = compoundParameterHandler->childParameterProvider( childParameter );
 		if( childParameterProvider )
 		{
@@ -201,7 +201,7 @@ void ParameterisedHolder<BaseType>::plugSet( Plug *plug )
 	if( parameterHandler )
 	{
 		BlockedConnection connectionBlocker( m_plugSetConnection );
-		parameterChanged( parameterProvider, parameterHandler->parameter().get() );
+		parameterChanged( parameterProvider, parameterHandler->parameter() );
 	}
 }
 

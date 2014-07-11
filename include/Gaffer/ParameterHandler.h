@@ -60,14 +60,14 @@ class ParameterHandler : public IECore::RefCounted
 
 		virtual ~ParameterHandler();
 		
-		virtual IECore::ParameterPtr parameter() = 0;
-		virtual IECore::ConstParameterPtr parameter() const = 0;
+		virtual IECore::Parameter *parameter() = 0;
+		virtual const IECore::Parameter *parameter() const = 0;
 
 		virtual void restore( GraphComponent *plugParent ) = 0;
-		virtual Gaffer::PlugPtr setupPlug( GraphComponent *plugParent, Plug::Direction direction=Plug::In ) = 0;
+		virtual Gaffer::Plug *setupPlug( GraphComponent *plugParent, Plug::Direction direction=Plug::In ) = 0;
 
-		virtual Gaffer::PlugPtr plug() = 0;
-		virtual Gaffer::ConstPlugPtr plug() const = 0;
+		virtual Gaffer::Plug *plug() = 0;
+		virtual const Gaffer::Plug *plug() const = 0;
 		
 		virtual void setParameterValue() = 0;
 		virtual void setPlugValue() = 0;

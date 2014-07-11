@@ -78,7 +78,7 @@ class CompoundParameterHandlerWrapper : public CompoundParameterHandler, public 
 			}
 		}
 
-		virtual PlugPtr setupPlug( GraphComponent *plugParent, Plug::Direction direction )
+		virtual Plug *setupPlug( GraphComponent *plugParent, Plug::Direction direction )
 		{
 			IECorePython::ScopedGILLock gilLock;
 			override o = this->get_override( "setupPlug" );
@@ -165,7 +165,11 @@ void GafferBindings::bindCompoundParameterHandler()
 		.def( "setupPlug", &compoundParameterHandlerSetupPlug, ( arg( "plugParent" ), arg( "direction" )=Plug::In ) )
 		.def( "setParameterValue", &compoundParameterHandlerSetParameterValue )
 		.def( "setPlugValue", &compoundParameterHandlerSetPlugValue )
-		.def( "childParameterHandler", (ParameterHandlerPtr (CompoundParameterHandler::*)( IECore::ParameterPtr ))&CompoundParameterHandler::childParameterHandler )
+		.def(
+			"childParameterHandler",
+			(ParameterHandler *(CompoundParameterHandler::*)( IECore::Parameter * ))&CompoundParameterHandler::childParameterHandler,
+			return_value_policy<IECorePython::CastToIntrusivePtr>()
+		)
 	;
 		
 }

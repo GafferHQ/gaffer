@@ -56,14 +56,14 @@ CompoundParameterHandler::~CompoundParameterHandler()
 {
 }
 
-IECore::ParameterPtr CompoundParameterHandler::parameter()
+IECore::Parameter *CompoundParameterHandler::parameter()
 {
-	return m_parameter;
+	return m_parameter.get();
 }
 
-IECore::ConstParameterPtr CompoundParameterHandler::parameter() const
+const IECore::Parameter *CompoundParameterHandler::parameter() const
 {
-	return m_parameter;
+	return m_parameter.get();
 }
 
 void CompoundParameterHandler::restore( GraphComponent *plugParent )
@@ -79,7 +79,7 @@ void CompoundParameterHandler::restore( GraphComponent *plugParent )
 	const CompoundParameter::ParameterVector &children = m_parameter->orderedParameters();
 	for( CompoundParameter::ParameterVector::const_iterator it = children.begin(); it!=children.end(); it++ )
 	{
-		ParameterHandlerPtr h = handler( *it, true );
+		ParameterHandler *h = handler( it->get(), true );
 		if( h )
 		{
 			h->restore( compoundPlug.get() );
@@ -88,7 +88,7 @@ void CompoundParameterHandler::restore( GraphComponent *plugParent )
 	
 }
 
-Gaffer::PlugPtr CompoundParameterHandler::setupPlug( GraphComponent *plugParent, Plug::Direction direction )
+Gaffer::Plug *CompoundParameterHandler::setupPlug( GraphComponent *plugParent, Plug::Direction direction )
 {
 	// decide what name our compound plug should have
 	
@@ -134,7 +134,7 @@ Gaffer::PlugPtr CompoundParameterHandler::setupPlug( GraphComponent *plugParent,
 	const CompoundParameter::ParameterVector &children = m_parameter->orderedParameters();
 	for( CompoundParameter::ParameterVector::const_iterator it = children.begin(); it!=children.end(); it++ )
 	{
-		ParameterHandlerPtr h = handler( *it, true );
+		ParameterHandler *h = handler( it->get(), true );
 		if( h )
 		{
 			h->setupPlug( m_plug.get(), direction );
@@ -153,17 +153,17 @@ Gaffer::PlugPtr CompoundParameterHandler::setupPlug( GraphComponent *plugParent,
 		it = nextIt;
 	}
 	
-	return m_plug;
+	return m_plug.get();
 }
 
-Gaffer::PlugPtr CompoundParameterHandler::plug()
+Gaffer::Plug *CompoundParameterHandler::plug()
 {
-	return m_plug;
+	return m_plug.get();
 }
 
-Gaffer::ConstPlugPtr CompoundParameterHandler::plug() const
+const Gaffer::Plug *CompoundParameterHandler::plug() const
 {
-	return m_plug;
+	return m_plug.get();
 }
 
 void CompoundParameterHandler::setParameterValue()
@@ -171,7 +171,7 @@ void CompoundParameterHandler::setParameterValue()
 	const CompoundParameter::ParameterVector &children = m_parameter->orderedParameters();
 	for( CompoundParameter::ParameterVector::const_iterator it = children.begin(); it!=children.end(); it++ )
 	{
-		ParameterHandlerPtr h = handler( *it );
+		ParameterHandler *h = handler( it->get() );
 		if( h )
 		{
 			h->setParameterValue();
@@ -184,7 +184,7 @@ void CompoundParameterHandler::setPlugValue()
 	const CompoundParameter::ParameterVector &children = m_parameter->orderedParameters();
 	for( CompoundParameter::ParameterVector::const_iterator it = children.begin(); it!=children.end(); it++ )
 	{
-		ParameterHandlerPtr h = handler( *it );
+		ParameterHandler *h = handler( it->get() );
 		if( h && !h->plug()->getFlags( Plug::ReadOnly ) )
 		{
 			h->setPlugValue();
@@ -205,12 +205,12 @@ std::string CompoundParameterHandler::plugName() const
 	return result;
 }
 
-ParameterHandlerPtr CompoundParameterHandler::childParameterHandler( IECore::ParameterPtr childParameter )
+ParameterHandler *CompoundParameterHandler::childParameterHandler( IECore::Parameter *childParameter )
 {
 	return handler( childParameter );
 }
 
-ConstParameterHandlerPtr CompoundParameterHandler::childParameterHandler( IECore::ParameterPtr childParameter ) const
+const ParameterHandler *CompoundParameterHandler::childParameterHandler( IECore::Parameter *childParameter ) const
 {
 	// cast is ok, as when passing createIfMissing==false to handler() we don't modify any member data
 	return const_cast<CompoundParameterHandler *>( this )->handler( childParameter );
@@ -221,12 +221,12 @@ IECore::RunTimeTyped *CompoundParameterHandler::childParameterProvider( IECore::
 	return 0;
 }
 
-ParameterHandlerPtr CompoundParameterHandler::handler( const ParameterPtr child, bool createIfMissing )
+ParameterHandler *CompoundParameterHandler::handler( Parameter *child, bool createIfMissing )
 {
 	HandlerMap::const_iterator it = m_handlers.find( child );
 	if( it!=m_handlers.end() )
 	{
-		return it->second;
+		return it->second.get();
 	}
 	
 	ParameterHandlerPtr h = 0;
@@ -244,5 +244,5 @@ ParameterHandlerPtr CompoundParameterHandler::handler( const ParameterPtr child,
 	}
 	
 	m_handlers[child] = h;
-	return h;
+	return h.get();
 }

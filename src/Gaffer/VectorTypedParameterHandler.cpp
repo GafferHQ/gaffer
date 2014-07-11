@@ -56,15 +56,15 @@ VectorTypedParameterHandler<ParameterType>::~VectorTypedParameterHandler()
 }
 
 template<typename ParameterType>
-IECore::ParameterPtr VectorTypedParameterHandler<ParameterType>::parameter()
+IECore::Parameter *VectorTypedParameterHandler<ParameterType>::parameter()
 {
-	return m_parameter;
+	return m_parameter.get();
 }
 
 template<typename ParameterType>
-IECore::ConstParameterPtr VectorTypedParameterHandler<ParameterType>::parameter() const
+const IECore::Parameter *VectorTypedParameterHandler<ParameterType>::parameter() const
 {
-	return m_parameter;
+	return m_parameter.get();
 }
 
 template<typename ParameterType>
@@ -73,7 +73,7 @@ void VectorTypedParameterHandler<ParameterType>::restore( GraphComponent *plugPa
 }
 
 template<typename ParameterType>
-Gaffer::PlugPtr VectorTypedParameterHandler<ParameterType>::setupPlug( GraphComponent *plugParent, Plug::Direction direction )
+Gaffer::Plug *VectorTypedParameterHandler<ParameterType>::setupPlug( GraphComponent *plugParent, Plug::Direction direction )
 {
 	m_plug = plugParent->getChild<PlugType>( m_parameter->name() );
 	if( !m_plug || m_plug->direction()!=direction )
@@ -84,19 +84,19 @@ Gaffer::PlugPtr VectorTypedParameterHandler<ParameterType>::setupPlug( GraphComp
 	
 	setupPlugFlags( m_plug.get() );
 	
-	return m_plug;
+	return m_plug.get();
 }
 
 template<typename ParameterType>
-Gaffer::PlugPtr VectorTypedParameterHandler<ParameterType>::plug()
+Gaffer::Plug *VectorTypedParameterHandler<ParameterType>::plug()
 {
-	return m_plug;
+	return m_plug.get();
 }
 
 template<typename ParameterType>
-Gaffer::ConstPlugPtr VectorTypedParameterHandler<ParameterType>::plug() const
+const Gaffer::Plug *VectorTypedParameterHandler<ParameterType>::plug() const
 {
-	return m_plug;
+	return m_plug.get();
 }
 		
 template<typename ParameterType>

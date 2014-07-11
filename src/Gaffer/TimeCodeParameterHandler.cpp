@@ -51,21 +51,21 @@ TimeCodeParameterHandler::~TimeCodeParameterHandler()
 {
 }
 
-IECore::ParameterPtr TimeCodeParameterHandler::parameter()
+IECore::Parameter *TimeCodeParameterHandler::parameter()
 {
-	return m_parameter;
+	return m_parameter.get();
 }
 
-IECore::ConstParameterPtr TimeCodeParameterHandler::parameter() const
+const IECore::Parameter *TimeCodeParameterHandler::parameter() const
 {
-	return m_parameter;
+	return m_parameter.get();
 }
 
 void TimeCodeParameterHandler::restore( GraphComponent *plugParent )
 {
 }
 
-Gaffer::PlugPtr TimeCodeParameterHandler::setupPlug( GraphComponent *plugParent, Plug::Direction direction )
+Gaffer::Plug *TimeCodeParameterHandler::setupPlug( GraphComponent *plugParent, Plug::Direction direction )
 {
 	m_plug = plugParent->getChild<CompoundPlug>( m_parameter->name() );
 	if( !m_plug || m_plug->direction()!=direction )
@@ -104,17 +104,17 @@ Gaffer::PlugPtr TimeCodeParameterHandler::setupPlug( GraphComponent *plugParent,
 		m_plug->setChild( "frame", framePlug );
 	}
 	
-	return m_plug;
+	return m_plug.get();
 }
 
-Gaffer::PlugPtr TimeCodeParameterHandler::plug()
+Gaffer::Plug *TimeCodeParameterHandler::plug()
 {
-	return m_plug;
+	return m_plug.get();
 }
 
-Gaffer::ConstPlugPtr TimeCodeParameterHandler::plug() const
+const Gaffer::Plug *TimeCodeParameterHandler::plug() const
 {
-	return m_plug;
+	return m_plug.get();
 }
 		
 void TimeCodeParameterHandler::setParameterValue()

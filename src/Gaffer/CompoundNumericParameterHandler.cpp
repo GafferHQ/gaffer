@@ -54,15 +54,15 @@ CompoundNumericParameterHandler<T>::~CompoundNumericParameterHandler()
 }
 
 template<typename T>
-IECore::ParameterPtr CompoundNumericParameterHandler<T>::parameter()
+IECore::Parameter *CompoundNumericParameterHandler<T>::parameter()
 {
-	return m_parameter;
+	return m_parameter.get();
 }
 
 template<typename T>
-IECore::ConstParameterPtr CompoundNumericParameterHandler<T>::parameter() const
+const IECore::Parameter *CompoundNumericParameterHandler<T>::parameter() const
 {
-	return m_parameter;
+	return m_parameter.get();
 }
 
 template<typename T>
@@ -71,7 +71,7 @@ void CompoundNumericParameterHandler<T>::restore( GraphComponent *plugParent )
 }
 
 template<typename T>
-Gaffer::PlugPtr CompoundNumericParameterHandler<T>::setupPlug( GraphComponent *plugParent, Plug::Direction direction )
+Gaffer::Plug *CompoundNumericParameterHandler<T>::setupPlug( GraphComponent *plugParent, Plug::Direction direction )
 {
 	m_plug = plugParent->getChild<PlugType>( m_parameter->name() );
 	if( !m_plug || m_plug->direction()!=direction )
@@ -82,19 +82,19 @@ Gaffer::PlugPtr CompoundNumericParameterHandler<T>::setupPlug( GraphComponent *p
 
 	setupPlugFlags( m_plug.get() );
 	
-	return m_plug;
+	return m_plug.get();
 }
 
 template<typename T>
-Gaffer::PlugPtr CompoundNumericParameterHandler<T>::plug()
+Gaffer::Plug *CompoundNumericParameterHandler<T>::plug()
 {
-	return m_plug;
+	return m_plug.get();
 }
 
 template<typename T>
-Gaffer::ConstPlugPtr CompoundNumericParameterHandler<T>::plug() const
+const Gaffer::Plug *CompoundNumericParameterHandler<T>::plug() const
 {
-	return m_plug;
+	return m_plug.get();
 }
 		
 template<typename T>
