@@ -976,8 +976,8 @@ void GraphGadget::updateDragReconnectCandidate( const DragDropEvent &event )
 	}
 	
 	// we don't want to reconnect the selected node to itself
-	Gaffer::Plug *srcPlug = m_dragReconnectCandidate->srcNodule()->plug().get();
-	Gaffer::Plug *dstPlug = m_dragReconnectCandidate->dstNodule()->plug().get();
+	Gaffer::Plug *srcPlug = m_dragReconnectCandidate->srcNodule()->plug();
+	Gaffer::Plug *dstPlug = m_dragReconnectCandidate->dstNodule()->plug();
 	if ( srcPlug->node() == node || dstPlug->node() == node )
 	{
 		m_dragReconnectCandidate = 0;
@@ -1086,8 +1086,8 @@ bool GraphGadget::dragEnd( GadgetPtr gadget, const DragDropEvent &event )
 		{
 			if ( m_dragReconnectDstNodule || m_dragReconnectSrcNodule )
 			{
-				Gaffer::Plug *srcPlug = m_dragReconnectCandidate->srcNodule()->plug().get();
-				Gaffer::Plug *dstPlug = m_dragReconnectCandidate->dstNodule()->plug().get();
+				Gaffer::Plug *srcPlug = m_dragReconnectCandidate->srcNodule()->plug();
+				Gaffer::Plug *dstPlug = m_dragReconnectCandidate->dstNodule()->plug();
 				
 				Gaffer::UndoContext undoContext( m_scriptNode );
 				

@@ -62,8 +62,8 @@ class Nodule : public Gadget
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::Nodule, NoduleTypeId, Gadget );
 		virtual ~Nodule();
 		
-		Gaffer::PlugPtr plug();
-		Gaffer::ConstPlugPtr plug() const;
+		Gaffer::Plug *plug();
+		const Gaffer::Plug *plug() const;
 
 		/// Creates a Nodule for the specified plug.
 		static NodulePtr create( Gaffer::PlugPtr plug );

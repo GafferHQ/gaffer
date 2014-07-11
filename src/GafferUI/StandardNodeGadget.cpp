@@ -548,7 +548,7 @@ bool StandardNodeGadget::noduleIsCompatible( const Nodule *nodule, const DragDro
 		return 0;
 	}
 
-	const Plug *nodulePlug = nodule->plug().get();
+	const Plug *nodulePlug = nodule->plug();
 	if( dropPlug->direction() == Plug::Out )
 	{
 		return nodulePlug->direction() == Plug::In && nodulePlug->acceptsInput( dropPlug );
