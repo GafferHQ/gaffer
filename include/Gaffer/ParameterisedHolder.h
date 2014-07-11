@@ -70,12 +70,12 @@ class ParameterisedHolder : public BaseType
 		/// first.
 		virtual void setParameterised( IECore::RunTimeTypedPtr parameterised, bool keepExistingValues=false );
 		void setParameterised( const std::string &className, int classVersion, const std::string &searchPathEnvVar, bool keepExistingValues=false );
-		IECore::RunTimeTypedPtr getParameterised( std::string *className = 0, int *classVersion = 0, std::string *searchPathEnvVar = 0 ) const;
+		IECore::RunTimeTyped *getParameterised( std::string *className = 0, int *classVersion = 0, std::string *searchPathEnvVar = 0 ) const;
 		/// Convenience method to return dynamic_cast<const IECore::ParameterisedInterface *>( getParameterised().get() )
 		IECore::ParameterisedInterface *parameterisedInterface( std::string *className = 0, int *classVersion = 0, std::string *searchPathEnvVar = 0 );
 
-		CompoundParameterHandlerPtr parameterHandler();
-		ConstCompoundParameterHandlerPtr parameterHandler() const;
+		CompoundParameterHandler *parameterHandler();
+		const CompoundParameterHandler *parameterHandler() const;
 		
 		/// \todo Do we need this now we have parameterHandler()? Do we keep this so that
 		/// we're consistent with the interface provided in IECoreMaya?

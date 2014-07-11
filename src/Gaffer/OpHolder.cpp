@@ -80,12 +80,12 @@ void OpHolder::setOp( const std::string &className, int classVersion, bool keepE
 	ParameterisedHolderComputeNode::setParameterised( className, classVersion, "IECORE_OP_PATHS", keepExistingValues );
 }
 
-IECore::OpPtr OpHolder::getOp( std::string *className, int *classVersion )
+IECore::Op *OpHolder::getOp( std::string *className, int *classVersion )
 {
 	return IECore::runTimeCast<IECore::Op>( getParameterised( className, classVersion ) );
 }
 
-IECore::ConstOpPtr OpHolder::getOp( std::string *className, int *classVersion ) const
+const IECore::Op *OpHolder::getOp( std::string *className, int *classVersion ) const
 {
 	return IECore::runTimeCast<IECore::Op>( getParameterised( className, classVersion ) );
 }
@@ -126,8 +126,8 @@ void OpHolder::compute( ValuePlug *output, const Context *context ) const
 {
 	if( output->getName()=="result" )
 	{	
-		boost::const_pointer_cast<CompoundParameterHandler>( parameterHandler() )->setParameterValue();
-		boost::const_pointer_cast<Op>( getOp() )->operate();
+		const_cast<CompoundParameterHandler *>( parameterHandler() )->setParameterValue();
+		const_cast<Op *>( getOp() )->operate();
 		m_resultParameterHandler->setPlugValue();
 		return;
 	}

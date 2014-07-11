@@ -80,12 +80,12 @@ void ProceduralHolder::setProcedural( const std::string &className, int classVer
 	ParameterisedHolderComputeNode::setParameterised( className, classVersion, "IECORE_PROCEDURAL_PATHS" );
 }
 
-IECore::ParameterisedProceduralPtr ProceduralHolder::getProcedural( std::string *className, int *classVersion )
+IECore::ParameterisedProcedural *ProceduralHolder::getProcedural( std::string *className, int *classVersion )
 {
 	return IECore::runTimeCast<IECore::ParameterisedProcedural>( getParameterised( className, classVersion ) );
 }
 
-IECore::ConstParameterisedProceduralPtr ProceduralHolder::getProcedural( std::string *className, int *classVersion ) const
+const IECore::ParameterisedProcedural *ProceduralHolder::getProcedural( std::string *className, int *classVersion ) const
 {
 	return IECore::runTimeCast<IECore::ParameterisedProcedural>( getParameterised( className, classVersion ) );
 }
@@ -124,7 +124,7 @@ void ProceduralHolder::compute( ValuePlug *output, const Context *context ) cons
 {
 	if( output==getChild<ObjectPlug>( "output" ) )
 	{	
-		boost::const_pointer_cast<CompoundParameterHandler>( parameterHandler() )->setParameterValue();
+		const_cast<CompoundParameterHandler *>( parameterHandler() )->setParameterValue();
 		static_cast<ObjectPlug *>( output )->setValue( getProcedural() );
 		return;
 	}
