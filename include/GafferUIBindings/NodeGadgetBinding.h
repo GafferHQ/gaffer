@@ -87,6 +87,12 @@ class NodeGadgetWrapper : public GadgetWrapper<WrappedType>
 			return WrappedType::nodule( plug );
 		}
 		
+		virtual const GafferUI::Nodule *nodule( const Gaffer::Plug *plug ) const
+		{
+			// naughty cast is better than repeating the above logic.
+			return const_cast<NodeGadgetWrapper *>( this )->nodule( plug );
+		}
+		
 		virtual Imath::V3f noduleTangent( const GafferUI::Nodule *nodule ) const
 		{
 			if( this->isSubclassed() )
