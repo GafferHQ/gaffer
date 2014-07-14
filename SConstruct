@@ -586,17 +586,6 @@ if depEnv["BUILD_DEPENDENCY_PYTHON"] :
 pythonVersion = subprocess.Popen( [ "python", "--version" ], env=depEnv["ENV"], stderr=subprocess.PIPE ).stderr.read().strip()
 pythonVersion = pythonVersion.split()[1].rpartition( "." )[0]
 
-pythonLinkFlags = ""
-try :
-	pythonLinkFlags = subprocess.Popen( [ "python-config", "--ldflags" ], env=depEnv["ENV"], stdout=subprocess.PIPE ).stdout.read().strip()
-except OSError :
-	# this should only occur when building gaffer without an integrated python build, and on linux
-	# at least, it's ok to ignore the warning. basically this is just here for ie's funky setup.
-	sys.stderr.write( "WARNING : unable to determine python link flags\n" )
-
-pythonLinkFlags = pythonLinkFlags.replace( "Python.framework/Versions/" + pythonVersion + "/Python", "" )
-depEnv["PYTHON_LINK_FLAGS"] = pythonLinkFlags
-env["PYTHON_LINK_FLAGS"] = pythonLinkFlags
 depEnv["PYTHON_VERSION"] = pythonVersion
 env["PYTHON_VERSION"] = pythonVersion
 
@@ -844,17 +833,20 @@ basePythonEnv.Append(
 	],
 	
 )
-	
-basePythonEnv.Append(
-
-	CPPFLAGS = os.popen( basePythonEnv.subst( "$BUILD_DIR/bin/python$PYTHON_VERSION-config --includes" ) ).read().split(),
-
-	SHLINKFLAGS = "$PYTHON_LINK_FLAGS",
-
-)
 
 if basePythonEnv["PLATFORM"]=="darwin" :
-	basePythonEnv.Append( SHLINKFLAGS = "-single_module" )
+
+	basePythonEnv.Append(
+		CPPPATH = [ "$BUILD_DIR/lib/Python.framework/Versions/$PYTHON_VERSION/include/python$PYTHON_VERSION" ],
+		LIBPATH = [ "$BUILD_DIR/lib/Python.framework/Versions/$PYTHON_VERSION/lib/python$PYTHON_VERSION/config" ],
+		LIBS = [ "python$PYTHON_VERSION" ],
+	)
+
+else :
+
+	basePythonEnv.Append(
+		CPPPATH = [ "$BUILD_DIR/include/python$PYTHON_VERSION" ]
+	)
 
 ###############################################################################################
 # An environment for running commands with access to the applications we've built
