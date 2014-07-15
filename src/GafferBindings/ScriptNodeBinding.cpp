@@ -39,6 +39,8 @@
 
 #include <fstream>
 
+#include "IECore/MessageHandler.h"
+
 #include "IECorePython/Wrapper.h"
 #include "IECorePython/RunTimeTypedBinding.h"
 #include "IECorePython/ScopedGILLock.h"
@@ -53,8 +55,28 @@
 #include "GafferBindings/ScriptNodeBinding.h"
 #include "GafferBindings/SignalBinding.h"
 #include "GafferBindings/NodeBinding.h"
+#include "GafferBindings/ExceptionAlgo.h"
 
-using namespace boost::python;
+extern "C"
+{
+// essential to include this last, since it defines macros which
+// clash with other headers.
+#include "Python-ast.h"
+};
+
+namespace boost {
+namespace python {
+
+// Specialisation to allow use of handle<PyCodeObject>
+template<>
+struct base_type_traits<PyCodeObject>
+{
+	typedef PyObject type;
+};
+
+} // namespace python
+} // namespace boost
+
 using namespace Gaffer;
 using namespace GafferBindings;
 
@@ -90,25 +112,34 @@ class ScriptNodeWrapper : public NodeWrapper<ScriptNode>
 			return NodeWrapper<ScriptNode>::isInstanceOf( typeId );
 		}
 		
-		virtual void execute( const std::string &pythonScript, Node *parent = 0 )
+		virtual void execute( const std::string &pythonScript, Node *parent = 0, bool continueOnError = false )
 		{
 			IECorePython::ScopedGILLock gilLock;
-			object e = executionDict( parent );
-			exec( pythonScript.c_str(), e, e );
+			boost::python::object e = executionDict( parent );
+
+			if( !continueOnError )
+			{
+				exec( pythonScript.c_str(), e, e );
+			}
+			else
+			{
+				tolerantExec( pythonScript.c_str(), e, e );
+			}
+			
 			scriptExecutedSignal()( this, pythonScript );
 		}
 
-		void executeFile( const std::string &pythonFile, Node *parent = 0 )
+		void executeFile( const std::string &pythonFile, Node *parent = 0, bool continueOnError = false )
 		{
 			const std::string pythonScript = readFile( pythonFile );
-			execute( pythonScript, parent );
+			execute( pythonScript, parent, continueOnError );
 		}
 		
 		virtual PyObject *evaluate( const std::string &pythonExpression, Node *parent = 0 )
 		{
 			IECorePython::ScopedGILLock gilLock;
-			object e = executionDict( parent );
-			object result = eval( pythonExpression.c_str(), e, e );
+			boost::python::object e = executionDict( parent );
+			boost::python::object result = eval( pythonExpression.c_str(), e, e );
 			scriptEvaluatedSignal()( this, pythonExpression, result.ptr() );
 			
 			// make a reference to keep the result alive - the caller then
@@ -141,14 +172,14 @@ class ScriptNodeWrapper : public NodeWrapper<ScriptNode>
 			}		
 		}
 		
-		virtual void load()
+		virtual void load( bool continueOnError = false )
 		{
 			const std::string s = readFile( fileNamePlug()->getValue() );
 			
 			deleteNodes();
 			variablesPlug()->clearChildren();
 
-			execute( s );
+			execute( s, NULL, continueOnError );
 			
 			UndoContext undoDisabled( this, UndoContext::Disabled );
 			unsavedChangesPlug()->setValue( false );
@@ -192,22 +223,79 @@ class ScriptNodeWrapper : public NodeWrapper<ScriptNode>
 		// and globals dictionary and have things work as intended. see
 		// ScriptNodeTest.testClassScope() for an example, and 
 		// http://bugs.python.org/issue991196 for an explanation.
-		object executionDict( Node *parent )
+		boost::python::object executionDict( Node *parent )
 		{
-			dict result;
+			boost::python::dict result;
 				
-			object builtIn = import( "__builtin__" );
+			boost::python::object builtIn = boost::python::import( "__builtin__" );
 			result["__builtins__"] = builtIn;
 			
-			object gafferModule = import( "Gaffer" );
+			boost::python::object gafferModule = boost::python::import( "Gaffer" );
 			result["Gaffer"] = gafferModule;
 			
-			result["script"] = object( ScriptNodePtr( this ) );
-			result["parent"] = object( NodePtr( parent ? parent : this ) );
+			result["script"] = boost::python::object( ScriptNodePtr( this ) );
+			result["parent"] = boost::python::object( NodePtr( parent ? parent : this ) );
 
 			return result;
 		}
+		
+		// Execute the script one top level statement at a time,
+		// reporting errors that occur, but otherwise continuing
+		// with execution.
+		/////////////////////////////////////////////////////////
+		void tolerantExec( const char *pythonScript, boost::python::object globals, boost::python::object locals )
+		{
+			// The python parsing framework uses an arena to simplify memory allocation,
+			// which is handy for us, since we're going to manipulate the AST a little.
+			boost::shared_ptr<PyArena> arena( PyArena_New(), PyArena_Free );
+			
+			// Parse the whole script, getting an abstract syntax tree for a
+			// module which would execute everything.
+			mod_ty mod = PyParser_ASTFromString(
+				pythonScript,
+				"<string>",
+				Py_file_input,
+				NULL,
+				arena.get()
+			);
+			
+			assert( mod->kind == Module_kind );
+			
+			// Loop over the top-level statements in the module body,
+			// executing one at a time.
+			int numStatements = asdl_seq_LEN( mod->v.Module.body );
+			for( int i=0; i<numStatements; ++i )
+			{
+				// Make a new module containing just this one statement.
+				asdl_seq *newBody = asdl_seq_new( 1, arena.get() );
+				asdl_seq_SET( newBody, 0, asdl_seq_GET( mod->v.Module.body, i ) );
+				mod_ty newModule = Module(
+					newBody,
+					arena.get()
+				);
 				
+				// Compile it.
+				boost::python::handle<PyCodeObject> code( PyAST_Compile( newModule, "<string>", NULL, arena.get() ) );
+			
+				// And execute it.
+				boost::python::handle<> v( boost::python::allow_null(
+					PyEval_EvalCode(
+						code.get(),
+						globals.ptr(),
+						locals.ptr()
+					)
+				) );
+
+				// Report any errors.
+				if( v == NULL)
+				{
+					int lineNumber = 0;
+					std::string message = formatPythonException( /* withTraceback = */ false, &lineNumber );
+					IECore::msg( IECore::Msg::Error, boost::str( boost::format( "Line %d" ) % lineNumber ), message );
+				}
+			}
+		}
+		
 };
 
 struct ScriptEvaluatedSlotCaller
@@ -216,10 +304,10 @@ struct ScriptEvaluatedSlotCaller
 	{
 		try
 		{
-			boost::python::object o( handle<>( borrowed( result ) ) );
+			boost::python::object o( boost::python::handle<>( boost::python::borrowed( result ) ) );
 			slot( node, script, o );
 		}
-		catch( const error_already_set &e )
+		catch( const boost::python::error_already_set &e )
 		{
 			PyErr_PrintEx( 0 ); // clears error status
 		}
@@ -292,7 +380,7 @@ struct ActionSlotCaller
 		{
 			slot( script, boost::const_pointer_cast<Action>( action ), stage );
 		}
-		catch( const error_already_set &e )
+		catch( const boost::python::error_already_set &e )
 		{
 			PyErr_PrintEx( 0 ); // clears the error status
 		}
@@ -310,7 +398,7 @@ struct UndoAddedSlotCaller
 		{
 			slot( script );
 		}
-		catch( const error_already_set &e )
+		catch( const boost::python::error_already_set &e )
 		{
 			PyErr_PrintEx( 0 ); // clears the error status
 		}
@@ -323,7 +411,7 @@ struct UndoAddedSlotCaller
 
 void GafferBindings::bindScriptNode()
 {
-	scope s = NodeClass<ScriptNode, ScriptNodeWrapper>()
+	boost::python::scope s = NodeClass<ScriptNode, ScriptNodeWrapper>()
 		.def( "applicationRoot", &applicationRoot )
 		.def( "selection", &selection )
 		.def( "undoAvailable", &ScriptNode::undoAvailable )
@@ -331,21 +419,21 @@ void GafferBindings::bindScriptNode()
 		.def( "redoAvailable", &ScriptNode::redoAvailable )
 		.def( "redo", &redo )
 		.def( "currentActionStage", &ScriptNode::currentActionStage )
-		.def( "actionSignal", &ScriptNode::actionSignal, return_internal_reference<1>() )
-		.def( "undoAddedSignal", &ScriptNode::undoAddedSignal, return_internal_reference<1>() )
-		.def( "copy", &ScriptNode::copy, ( arg_( "parent" ) = object(), arg_( "filter" ) = object() ) )
-		.def( "cut", &ScriptNode::cut, ( arg_( "parent" ) = object(), arg_( "filter" ) = object() ) )
-		.def( "paste", &ScriptNode::paste, ( arg_( "parent" ) = object() ) )
-		.def( "deleteNodes", &deleteNodes, ( arg_( "parent" ) = object(), arg_( "filter" ) = object(), arg_( "reconnect" ) = true ) )
-		.def( "execute", &ScriptNode::execute, ( arg_( "parent" ) = object() ) )
-		.def( "executeFile", &ScriptNode::executeFile, ( arg_( "fileName" ), arg_( "parent" ) = object() ) )
-		.def( "evaluate", &ScriptNode::evaluate, ( arg_( "parent" ) = object() ) )
-		.def( "scriptExecutedSignal", &ScriptNode::scriptExecutedSignal, return_internal_reference<1>() )
-		.def( "scriptEvaluatedSignal", &ScriptNode::scriptEvaluatedSignal, return_internal_reference<1>() )
-		.def( "serialise", &ScriptNode::serialise, ( arg_( "parent" ) = object(), arg_( "filter" ) = object() ) )
-		.def( "serialiseToFile", &ScriptNode::serialiseToFile, ( arg_( "fileName" ), arg_( "parent" ) = object(), arg_( "filter" ) = object() ) )
+		.def( "actionSignal", &ScriptNode::actionSignal, boost::python::return_internal_reference<1>() )
+		.def( "undoAddedSignal", &ScriptNode::undoAddedSignal, boost::python::return_internal_reference<1>() )
+		.def( "copy", &ScriptNode::copy, ( boost::python::arg( "parent" ) = boost::python::object(), boost::python::arg( "filter" ) = boost::python::object() ) )
+		.def( "cut", &ScriptNode::cut, ( boost::python::arg( "parent" ) = boost::python::object(), boost::python::arg( "filter" ) = boost::python::object() ) )
+		.def( "paste", &ScriptNode::paste, ( boost::python::arg( "parent" ) = boost::python::object() ) )
+		.def( "deleteNodes", &deleteNodes, ( boost::python::arg( "parent" ) = boost::python::object(), boost::python::arg( "filter" ) = boost::python::object(), boost::python::arg( "reconnect" ) = true ) )
+		.def( "execute", &ScriptNode::execute, ( boost::python::arg( "parent" ) = boost::python::object(), boost::python::arg( "continueOnError" ) = false ) )
+		.def( "executeFile", &ScriptNode::executeFile, ( boost::python::arg( "fileName" ), boost::python::arg( "parent" ) = boost::python::object(), boost::python::arg( "continueOnError" ) = false ) )
+		.def( "evaluate", &ScriptNode::evaluate, ( boost::python::arg( "parent" ) = boost::python::object() ) )
+		.def( "scriptExecutedSignal", &ScriptNode::scriptExecutedSignal, boost::python::return_internal_reference<1>() )
+		.def( "scriptEvaluatedSignal", &ScriptNode::scriptEvaluatedSignal, boost::python::return_internal_reference<1>() )
+		.def( "serialise", &ScriptNode::serialise, ( boost::python::arg( "parent" ) = boost::python::object(), boost::python::arg( "filter" ) = boost::python::object() ) )
+		.def( "serialiseToFile", &ScriptNode::serialiseToFile, ( boost::python::arg( "fileName" ), boost::python::arg( "parent" ) = boost::python::object(), boost::python::arg( "filter" ) = boost::python::object() ) )
 		.def( "save", &ScriptNode::save )
-		.def( "load", &ScriptNode::load )
+		.def( "load", &ScriptNode::load, ( boost::python::arg( "continueOnError" ) = false ) )
 		.def( "context", &context )
 	;
 	

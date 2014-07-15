@@ -151,24 +151,24 @@ class ScriptNode : public Node
 		void deleteNodes( Node *parent = 0, const Set *filter = 0, bool reconnect = true );
 		//@}
 		
-		//! @name Script evaluation
+		//! @name Script evaluation and execution.
 		/// These methods allow the execution of python scripts in the
 		/// context of the ScriptNode. The methods are only available on
 		/// ScriptNode objects created from Python - they will throw Exceptions
 		/// on nodes created from C++. This allows the ScriptNode class to be
 		/// used in the C++ library without introducing dependencies on Python.
-		/// Exceptions are also thrown if execution fails for any reason.
 		////////////////////////////////////////////////////////////////////
 		//@{
 		typedef boost::signal<void ( ScriptNodePtr, const std::string )> ScriptExecutedSignal;
 		typedef boost::signal<void ( ScriptNodePtr, const std::string, PyObject * )> ScriptEvaluatedSignal;
-		/// Runs the specified python script.
-		/// \todo I think we'll need a version of this that takes a python callable.
-		/// We might expose that here or just introduce it in the binding layer for
-		/// use from the python side only.
-		virtual void execute( const std::string &pythonScript, Node *parent = 0 );
+		/// Runs the specified python script. If continueOnError is true, then
+		/// errors are reported via IECore::MessageHandler rather than as exceptions, and
+		/// execution continues at the point after the error. This allows scripts to be loaded as
+		/// best as possible even when certain nodes/plugs/shaders may be missing or
+		/// may have been renamed.
+		virtual void execute( const std::string &pythonScript, Node *parent = 0, bool continueOnError = false );
 		/// As above, but loads the python script from the specified file.
-		virtual void executeFile( const std::string &pythonFile, Node *parent = 0 );
+		virtual void executeFile( const std::string &pythonFile, Node *parent = 0, bool continueOnError = false );
 		/// This signal is emitted following successful execution of a script.
 		ScriptExecutedSignal &scriptExecutedSignal();
 		/// Evaluates the specified python expression. The caller owns a reference to
@@ -206,7 +206,8 @@ class ScriptNode : public Node
 		BoolPlug *unsavedChangesPlug();
 		const BoolPlug *unsavedChangesPlug() const;
 		/// Loads the script specified in the filename plug.
-		virtual void load();
+		/// See execute() for a description of the continueOnError argument.
+		virtual void load( bool continueOnError = false );
 		/// Saves the script to the file specified by the filename plug.
 		virtual void save() const;
 		//@}

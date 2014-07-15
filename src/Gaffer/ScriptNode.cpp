@@ -530,12 +530,12 @@ const BoolPlug *ScriptNode::unsavedChangesPlug() const
 	return getChild<BoolPlug>( g_firstPlugIndex + 1 );
 }
 		
-void ScriptNode::execute( const std::string &pythonScript, Node *parent )
+void ScriptNode::execute( const std::string &pythonScript, Node *parent, bool continueOnError )
 {
 	throw IECore::Exception( "Cannot execute scripts on a ScriptNode not created in Python." );
 }
 
-void ScriptNode::executeFile( const std::string &pythonFile, Node *parent )
+void ScriptNode::executeFile( const std::string &pythonFile, Node *parent, bool continueOnError )
 {
 	throw IECore::Exception( "Cannot execute files on a ScriptNode not created in Python." );
 }
@@ -565,7 +565,7 @@ void ScriptNode::serialiseToFile( const std::string &fileName, const Node *paren
 	throw IECore::Exception( "Cannot serialise scripts on a ScriptNode not created in Python." );	
 }
 
-void ScriptNode::load()
+void ScriptNode::load( bool continueOnError)
 {
 	throw IECore::Exception( "Cannot load scripts on a ScriptNode not created in Python." );
 }
