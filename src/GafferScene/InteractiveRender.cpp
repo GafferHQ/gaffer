@@ -39,6 +39,7 @@
 #include "IECore/WorldBlock.h"
 #include "IECore/EditBlock.h"
 #include "IECore/MessageHandler.h"
+#include "IECore/SceneInterface.h"
 
 #include "Gaffer/Context.h"
 #include "Gaffer/ScriptNode.h"
@@ -360,6 +361,14 @@ void InteractiveRender::updateShadersWalk( const ScenePlug::ScenePath &path )
 	/// \todo Keep a track of the hashes of the shaders at each path,
 	/// and use it to only update the shaders when they've changed.	
 	ConstCompoundObjectPtr attributes = inPlug()->attributes( path );
+	
+	// terminate recursion for invisible locations
+	ConstBoolDataPtr visibility = attributes->member<BoolData>( SceneInterface::visibilityName );
+	if( visibility && ( !visibility->readable() ) )
+	{
+		return;
+	}
+	
 	ConstObjectVectorPtr shader = attributes->member<ObjectVector>( "shader" );
 	if( shader )
 	{
