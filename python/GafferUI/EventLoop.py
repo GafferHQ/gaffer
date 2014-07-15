@@ -198,9 +198,14 @@ class EventLoop() :
 	## Widgets may only be manipulated on the thread where mainEventLoop() is running. It
 	# is common to want to perform some background processing on a secondary thread, and
 	# to update the UI during processing or upon completion. This function can be used from
-	# such a secondary thread to queue a callable to be called on the main thread.
+	# such a secondary thread to queue a callable to be called on the main thread. If called
+	# from the main thread, the callable is called immediately.
 	@classmethod
 	def executeOnUIThread( cls, callable, waitForResult=False ) :
+		
+		if QtCore.QThread.currentThread() == cls.__qtApplication.thread() :
+			# Already on the UI thread - just do it.
+			return callable()
 		
 		resultCondition = threading.Condition() if waitForResult else None
 		

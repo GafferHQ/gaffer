@@ -161,7 +161,22 @@ class EventLoopTest( GafferUITest.TestCase ) :
 		self.assertEqual( len( mh.messages ), 1 )
 		self.assertEqual( mh.messages[0].level, IECore.Msg.Level.Error )
 		self.failUnless( "I am a very naughty boy" in mh.messages[0].message )
-				
+
+	def testExecuteOnUITheadFromUIThread( self ) :
+	
+		# if we're on the ui thread already when we call executeOnUIThread(),
+		# then our function should be called immediately.
+		
+		self.__executed = False
+		def f() :
+			self.__executed = True
+			return 10
+		
+		r = GafferUI.EventLoop.executeOnUIThread( f )
+		
+		self.assertEqual( r, 10 )
+		self.assertEqual( self.__executed, True )
+		
 	def setUp( self ) :
 	
 		self.__uiThreadFunctionCalled = False
