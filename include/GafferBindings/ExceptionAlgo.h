@@ -34,8 +34,8 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERBINDINGS_TRANSLATEPYTHONEXCEPTION_H
-#define GAFFERBINDINGS_TRANSLATEPYTHONEXCEPTION_H
+#ifndef GAFFERBINDINGS_EXCEPTIONALGO_H
+#define GAFFERBINDINGS_EXCEPTIONALGO_H
 
 namespace GafferBindings
 {
@@ -48,4 +48,4 @@ void translatePythonException();
 
 } // namespace GafferBindings
 
-#endif // GAFFERBINDINGS_TRANSLATEPYTHONEXCEPTION_H
+#endif // GAFFERBINDINGS_EXCEPTIONALGO_H

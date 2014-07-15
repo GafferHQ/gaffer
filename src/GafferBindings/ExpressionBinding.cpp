@@ -44,7 +44,7 @@
 #include "Gaffer/Expression.h"
 #include "GafferBindings/DependencyNodeBinding.h"
 #include "GafferBindings/ExpressionBinding.h"
-#include "GafferBindings/TranslatePythonException.h"
+#include "GafferBindings/ExceptionAlgo.h"
 
 using namespace boost::python;
 using namespace GafferBindings;
