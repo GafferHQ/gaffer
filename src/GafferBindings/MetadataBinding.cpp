@@ -142,7 +142,7 @@ object nodeValue( const Node *node, const char *key, bool inherit, bool instance
 	ConstDataPtr d = Metadata::nodeValue<Data>( node, key, inherit, instanceOnly );
 	if( d )
 	{
-		return despatchTypedData<SimpleTypedDataGetter, TypeTraits::IsSimpleTypedData>( constPointerCast<Data>( d ) );
+		return despatchTypedData<SimpleTypedDataGetter, TypeTraits::IsSimpleTypedData>( const_cast<Data *>( d.get() ) );
 	}
 	else
 	{
@@ -190,7 +190,7 @@ object plugValue( const Plug *plug, const char *key, bool inherit, bool instance
 	ConstDataPtr d = Metadata::plugValue<Data>( plug, key, inherit, instanceOnly );
 	if( d )
 	{
-		return despatchTypedData<SimpleTypedDataGetter, TypeTraits::IsSimpleTypedData>( constPointerCast<Data>( d ) );
+		return despatchTypedData<SimpleTypedDataGetter, TypeTraits::IsSimpleTypedData>( const_cast<Data *>( d.get() ) );
 	}
 	else
 	{
@@ -342,8 +342,8 @@ std::string metadataSerialisation( const Gaffer::Node *node, const std::string &
 	std::string result;
 	for( std::vector<InternedString>::const_iterator it = keys.begin(), eIt = keys.end(); it != eIt; ++it )
 	{
-		const Data *value = Metadata::nodeValue<Data>( node, *it );
-		object pythonValue( DataPtr( const_cast<Data *>( value ) ) );
+		ConstDataPtr value = Metadata::nodeValue<Data>( node, *it );
+		object pythonValue( boost::const_pointer_cast<Data>( value ) );
 		std::string stringValue = extract<std::string>( pythonValue.attr( "__repr__" )() );
 				
 		result += boost::str(
@@ -365,8 +365,8 @@ std::string metadataSerialisation( const Plug *plug, const std::string &identifi
 	std::string result;
 	for( std::vector<InternedString>::const_iterator it = keys.begin(), eIt = keys.end(); it != eIt; ++it )
 	{
-		const Data *value = Metadata::plugValue<Data>( plug, *it );
-		object pythonValue( DataPtr( const_cast<Data *>( value ) ) );
+		ConstDataPtr value = Metadata::plugValue<Data>( plug, *it );
+		object pythonValue( boost::const_pointer_cast<Data>( value ) );
 		std::string stringValue = extract<std::string>( pythonValue.attr( "__repr__" )() );
 				
 		result += boost::str(

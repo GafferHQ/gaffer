@@ -71,7 +71,7 @@ class NodeGadgetWrapper : public GadgetWrapper<WrappedType>
 		{
 		}
 				
-		virtual GafferUI::NodulePtr nodule( Gaffer::ConstPlugPtr plug )
+		virtual GafferUI::Nodule *nodule( const Gaffer::Plug *plug )
 		{
 			if( this->isSubclassed() )
 			{
@@ -79,12 +79,18 @@ class NodeGadgetWrapper : public GadgetWrapper<WrappedType>
 				boost::python::object f = this->methodOverride( "nodule" );
 				if( f )
 				{
-					return boost::python::extract<GafferUI::NodulePtr>(
-						f( IECore::constPointerCast<Gaffer::Plug>( plug ) )
+					return boost::python::extract<GafferUI::Nodule *>(
+						f( Gaffer::PlugPtr( const_cast<Gaffer::Plug *>( plug ) ) )
 					);
 				}
 			}
 			return WrappedType::nodule( plug );
+		}
+		
+		virtual const GafferUI::Nodule *nodule( const Gaffer::Plug *plug ) const
+		{
+			// naughty cast is better than repeating the above logic.
+			return const_cast<NodeGadgetWrapper *>( this )->nodule( plug );
 		}
 		
 		virtual Imath::V3f noduleTangent( const GafferUI::Nodule *nodule ) const

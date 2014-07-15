@@ -46,7 +46,7 @@ namespace Detail
 // bindings for node wrapper functions
 
 template<typename T>
-static boost::python::list affects( const T &n, Gaffer::ConstValuePlugPtr p )
+static boost::python::list affects( const T &n, const Gaffer::Plug *p )
 {
 	Gaffer::DependencyNode::AffectedPlugsContainer a;
 	n.T::affects( p, a );
@@ -59,7 +59,7 @@ static boost::python::list affects( const T &n, Gaffer::ConstValuePlugPtr p )
 }
 
 template<typename T>
-static Gaffer::BoolPlugPtr enabledPlug( T &n )
+static Gaffer::BoolPlug::Ptr enabledPlug( T &n )
 {
 	return n.T::enabledPlug();
 }
@@ -70,21 +70,15 @@ static Gaffer::PlugPtr correspondingInput( T &n, const Gaffer::Plug *output )
 	return n.T::correspondingInput( output );
 }
 
-template<typename T, typename Ptr>
-void defDependencyNodeWrapperFunctions( NodeClass<T, Ptr> &cls )
-{
-	cls.def( "affects", &affects<T> );
-	cls.def( "enabledPlug", &enabledPlug<T> );
-	cls.def( "correspondingInput", &correspondingInput<T> );
-}
-
 } // namespace Detail
 
 template<typename T, typename Ptr>
 DependencyNodeClass<T, Ptr>::DependencyNodeClass( const char *docString )
 	:	NodeClass<T, Ptr>( docString )
 {
-	Detail::defDependencyNodeWrapperFunctions( *this );
+	def( "affects", &Detail::affects<T> );
+	def( "enabledPlug", &Detail::enabledPlug<T> );
+	def( "correspondingInput", &Detail::correspondingInput<T> );
 }
 
 } // namespace GafferBindings

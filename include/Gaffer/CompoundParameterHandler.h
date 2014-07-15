@@ -57,17 +57,17 @@ class CompoundParameterHandler : public ParameterHandler
 		CompoundParameterHandler( IECore::CompoundParameterPtr parameter );
 		virtual ~CompoundParameterHandler();
 				
-		virtual IECore::ParameterPtr parameter();
-		virtual IECore::ConstParameterPtr parameter() const;
+		virtual IECore::Parameter *parameter();
+		virtual const IECore::Parameter *parameter() const;
 		virtual void restore( GraphComponent *plugParent );
-		virtual Gaffer::PlugPtr setupPlug( GraphComponent *plugParent, Plug::Direction direction=Plug::In );
-		virtual Gaffer::PlugPtr plug();
-		virtual Gaffer::ConstPlugPtr plug() const;
+		virtual Gaffer::Plug *setupPlug( GraphComponent *plugParent, Plug::Direction direction=Plug::In );
+		virtual Gaffer::Plug *plug();
+		virtual const Gaffer::Plug *plug() const;
 		virtual void setParameterValue();
 		virtual void setPlugValue();
 		
-		ParameterHandlerPtr childParameterHandler( IECore::ParameterPtr childParameter );
-		ConstParameterHandlerPtr childParameterHandler( IECore::ParameterPtr childParameter ) const;
+		ParameterHandler *childParameterHandler( IECore::Parameter *childParameter );
+		const ParameterHandler *childParameterHandler( IECore::Parameter *childParameter ) const;
 		
 		/// Some CompoundParameter types (ClassParameter and ClassVectorParameter) hold
 		/// instances of Parameterised classes that provide the child parameters
@@ -82,7 +82,7 @@ class CompoundParameterHandler : public ParameterHandler
 		IECore::CompoundParameterPtr m_parameter;
 		CompoundPlugPtr m_plug;
 	
-		ParameterHandlerPtr handler( const IECore::ParameterPtr child, bool createIfMissing = false );
+		ParameterHandler *handler( IECore::Parameter *child, bool createIfMissing = false );
 		typedef std::map<IECore::ParameterPtr, ParameterHandlerPtr> HandlerMap;
 		HandlerMap m_handlers;
 	

@@ -124,7 +124,11 @@ class ParameterisedHolderClass : public BaseType
 			
 			def( "getParameterised", &getParameterised );
 		
-			def( "parameterHandler", (Gaffer::CompoundParameterHandlerPtr (BaseType::wrapped_type::*)())&BaseType::wrapped_type::parameterHandler );
+			def(
+				"parameterHandler",
+				(Gaffer::CompoundParameterHandler *(BaseType::wrapped_type::*)())&BaseType::wrapped_type::parameterHandler,
+				boost::python::return_value_policy<IECorePython::CastToIntrusivePtr>()
+			);
 		
 			def( "parameterModificationContext", &parameterModificationContext, boost::python::return_value_policy<boost::python::manage_new_object>() );
 			

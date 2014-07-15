@@ -175,9 +175,9 @@ IECore::ConstCompoundObjectPtr CompoundObjectSource::computeGlobals( const Gaffe
 	return outPlug()->globalsPlug()->defaultValue();
 }
 
-const IECore::CompoundObject *CompoundObjectSource::entryForPath( const ScenePath &path ) const
+IECore::ConstCompoundObjectPtr CompoundObjectSource::entryForPath( const ScenePath &path ) const
 {
-	const CompoundObject *result = runTimeCast<const CompoundObject>( inPlug()->getValue() );
+	ConstCompoundObjectPtr result = runTimeCast<const CompoundObject>( inPlug()->getValue() );
 	if( !result )
 	{
 		throw Exception( "Input plug has no value" );

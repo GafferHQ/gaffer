@@ -62,12 +62,12 @@ namespace GafferScene
 void outputScene( const ScenePlug *scene, IECore::Renderer *renderer )
 {
 	ConstCompoundObjectPtr globals = scene->globalsPlug()->getValue();
-	outputOptions( globals, renderer );
-	outputCamera( scene, globals, renderer );
+	outputOptions( globals.get(), renderer );
+	outputCamera( scene, globals.get(), renderer );
 	{
 		WorldBlock world( renderer );
 		
-		outputLights( scene, globals, renderer ); 
+		outputLights( scene, globals.get(), renderer );
 
 		SceneProceduralPtr proc = new SceneProcedural( scene, Context::current() );
 		renderer->procedural( proc );
@@ -277,7 +277,7 @@ IECore::TransformPtr transform( const ScenePlug *scene, const ScenePlug::ScenePa
 
 	MatrixMotionTransformPtr result = new MatrixMotionTransform();
 	ContextPtr transformContext = new Context( *Context::current(), Context::Borrowed );
-	Context::Scope scopedContext( transformContext );
+	Context::Scope scopedContext( transformContext.get() );
 	for( int i = 0; i < numSamples; i++ )
 	{
 		float frame = lerp( shutter[0], shutter[1], (float)i / std::max( 1, numSamples - 1 ) );

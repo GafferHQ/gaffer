@@ -184,7 +184,7 @@ void Instancer::hashBranchBound( const ScenePath &parentPath, const ScenePath &b
 	else
 	{
 		ContextPtr ic = instanceContext( context, branchPath );
-		Context::Scope scopedContext( ic );
+		Context::Scope scopedContext( ic.get() );
 		h = instancePlug()->boundPlug()->hash();
 	}	
 }
@@ -270,7 +270,7 @@ Imath::Box3f Instancer::computeBranchBound( const ScenePath &parentPath, const S
 	else
 	{
 		ContextPtr ic = instanceContext( context, branchPath );
-		Context::Scope scopedContext( ic );
+		Context::Scope scopedContext( ic.get() );
 		return instancePlug()->boundPlug()->getValue();
 	}
 }
@@ -292,7 +292,7 @@ void Instancer::hashBranchTransform( const ScenePath &parentPath, const ScenePat
 	else
 	{
 		ContextPtr ic = instanceContext( context, branchPath );
-		Context::Scope scopedContext( ic );
+		Context::Scope scopedContext( ic.get() );
 		h = instancePlug()->transformPlug()->hash();
 	}
 }
@@ -314,7 +314,7 @@ Imath::M44f Instancer::computeBranchTransform( const ScenePath &parentPath, cons
 	else
 	{
 		ContextPtr ic = instanceContext( context, branchPath );
-		Context::Scope scopedContext( ic );
+		Context::Scope scopedContext( ic.get() );
 		return instancePlug()->transformPlug()->getValue();
 	}
 }
@@ -329,7 +329,7 @@ void Instancer::hashBranchAttributes( const ScenePath &parentPath, const ScenePa
 	else
 	{
 		ContextPtr ic = instanceContext( context, branchPath );
-		Context::Scope scopedContext( ic );
+		Context::Scope scopedContext( ic.get() );
 		h = instancePlug()->attributesPlug()->hash();
 	}	
 }
@@ -344,7 +344,7 @@ IECore::ConstCompoundObjectPtr Instancer::computeBranchAttributes( const ScenePa
 	else
 	{
 		ContextPtr ic = instanceContext( context, branchPath );
-		Context::Scope scopedContext( ic );
+		Context::Scope scopedContext( ic.get() );
 		return instancePlug()->attributesPlug()->getValue();
 	}
 }
@@ -359,7 +359,7 @@ void Instancer::hashBranchObject( const ScenePath &parentPath, const ScenePath &
 	else
 	{
 		ContextPtr ic = instanceContext( context, branchPath );
-		Context::Scope scopedContext( ic );
+		Context::Scope scopedContext( ic.get() );
 		h = instancePlug()->objectPlug()->hash();
 	}
 }
@@ -374,7 +374,7 @@ IECore::ConstObjectPtr Instancer::computeBranchObject( const ScenePath &parentPa
 	else
 	{
 		ContextPtr ic = instanceContext( context, branchPath );
-		Context::Scope scopedContext( ic );
+		Context::Scope scopedContext( ic.get() );
 		return instancePlug()->objectPlug()->getValue();
 	}
 }
@@ -397,7 +397,7 @@ void Instancer::hashBranchChildNames( const ScenePath &parentPath, const ScenePa
 	{
 		// "/name/..."
 		ContextPtr ic = instanceContext( context, branchPath );
-		Context::Scope scopedContext( ic );
+		Context::Scope scopedContext( ic.get() );
 		h = instancePlug()->childNamesPlug()->hash();
 	}
 }
@@ -439,7 +439,7 @@ IECore::ConstInternedStringVectorDataPtr Instancer::computeBranchChildNames( con
 	else
 	{
 		ContextPtr ic = instanceContext( context, branchPath );
-		Context::Scope scopedContext( ic );
+		Context::Scope scopedContext( ic.get() );
 		return instancePlug()->childNamesPlug()->getValue();
 	}
 }

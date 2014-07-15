@@ -100,7 +100,7 @@ void ContextVariables<BaseType>::processContext( Context *context ) const
 	std::string name;
 	for( CompoundDataPlug::MemberPlugIterator it( variablesPlug() ); it != it.end(); it++ )
 	{
-		IECore::DataPtr data = variablesPlug()->memberDataAndName( *it, name );
+		IECore::DataPtr data = variablesPlug()->memberDataAndName( it->get(), name );
 		if( data )
 		{
 			context->set( name, data.get() );

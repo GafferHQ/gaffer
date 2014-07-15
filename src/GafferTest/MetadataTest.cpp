@@ -59,8 +59,8 @@ struct TestThreading
 			GAFFERTEST_ASSERT( Metadata::nodeValue<Data>( n.get(), "threadingTest" ) == NULL );
 			GAFFERTEST_ASSERT( Metadata::plugValue<Data>( p.get(), "threadingTest" ) == NULL );
 			
-			Metadata::registerNodeValue( n, "threadingTest", new IECore::IntData( 1 ) );
-			Metadata::registerPlugValue( p, "threadingTest", new IECore::IntData( 2 ) );
+			Metadata::registerNodeValue( n.get(), "threadingTest", new IECore::IntData( 1 ) );
+			Metadata::registerPlugValue( p.get(), "threadingTest", new IECore::IntData( 2 ) );
 			
 			GAFFERTEST_ASSERT( Metadata::nodeValue<IntData>( n.get(), "threadingTest" )->readable() == 1 );
 			GAFFERTEST_ASSERT( Metadata::plugValue<IntData>( p.get(), "threadingTest" )->readable() == 2 );

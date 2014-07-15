@@ -50,6 +50,9 @@ using namespace GafferUIBindings;
 using namespace GafferBindings;
 using namespace GafferUI;
 
+namespace
+{
+
 struct RenderRequestSlotCaller
 {
 	boost::signals::detail::unusable operator()( boost::python::object slot, GadgetPtr g )
@@ -59,18 +62,101 @@ struct RenderRequestSlotCaller
 	}
 };
 
-static StylePtr getStyle( Gadget &g )
+struct ButtonSlotCaller
+{
+	bool operator()( boost::python::object slot, GadgetPtr g, const ButtonEvent &event )
+	{
+		try
+		{
+			return boost::python::extract<bool>( slot( g, event ) )();
+		}
+		catch( const boost::python::error_already_set &e )
+		{
+			PyErr_PrintEx( 0 ); // also clears the python error status
+			return false;
+		}
+	}
+};
+
+struct EnterLeaveSlotCaller
+{
+	boost::signals::detail::unusable operator()( boost::python::object slot, GadgetPtr g, const ButtonEvent &event )
+	{
+		try
+		{
+			slot( g, event );
+			return boost::signals::detail::unusable();
+		}
+		catch( const boost::python::error_already_set &e )
+		{
+			PyErr_PrintEx( 0 ); // also clears the python error status
+			return boost::signals::detail::unusable();
+		}
+	}
+};
+
+struct DragBeginSlotCaller
+{
+	IECore::RunTimeTypedPtr operator()( boost::python::object slot, GadgetPtr g, const DragDropEvent &event )
+	{
+		try
+		{
+			return boost::python::extract<IECore::RunTimeTypedPtr>( slot( g, event ) )();
+		}
+		catch( const boost::python::error_already_set &e )
+		{
+			PyErr_PrintEx( 0 ); // also clears the python error status
+			return NULL;
+		}
+	}
+};
+
+struct DragDropSlotCaller
+{
+	bool operator()( boost::python::object slot, GadgetPtr g, const DragDropEvent &event )
+	{
+		try
+		{
+			return boost::python::extract<bool>( slot( g, event ) )();
+		}
+		catch( const boost::python::error_already_set &e )
+		{
+			PyErr_PrintEx( 0 ); // also clears the python error status
+			return false;
+		}
+	}
+};
+
+struct KeySlotCaller
+{
+	bool operator()( boost::python::object slot, GadgetPtr g, const KeyEvent &event )
+	{
+		try
+		{
+			return boost::python::extract<bool>( slot( g, event ) )();
+		}
+		catch( const boost::python::error_already_set &e )
+		{
+			PyErr_PrintEx( 0 ); // also clears the python error status
+			return false;
+		}
+	}
+};
+
+StylePtr getStyle( Gadget &g )
 {
 	return const_cast<Style *>( g.getStyle() );
 }
 
-static StylePtr style( Gadget &g )
+StylePtr style( Gadget &g )
 {
 	return const_cast<Style *>( g.style() );
 }
 
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( fullTransformOverloads, fullTransform, 0, 1 );
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( renderOverloads, render, 0, 1 );
+
+} // namespace
 
 void GafferUIBindings::bindGadget()
 {
@@ -90,7 +176,7 @@ void GafferUIBindings::bindGadget()
 		.def( "setTransform", &Gadget::setTransform )
 		.def( "fullTransform", &Gadget::fullTransform, fullTransformOverloads() )
 		.def( "transformedBound", (Imath::Box3f (Gadget::*)() const)&Gadget::transformedBound )
-		.def( "transformedBound", (Imath::Box3f (Gadget::*)( ConstGadgetPtr ) const)&Gadget::transformedBound )
+		.def( "transformedBound", (Imath::Box3f (Gadget::*)( const Gadget * ) const)&Gadget::transformedBound )
 		.def( "render", &Gadget::render, renderOverloads() )
 		.def( "renderRequestSignal", &Gadget::renderRequestSignal, return_internal_reference<1>() )
 		.def( "setToolTip", &Gadget::setToolTip )
@@ -117,11 +203,11 @@ void GafferUIBindings::bindGadget()
 	;
 	
 	SignalBinder<Gadget::RenderRequestSignal, DefaultSignalCaller<Gadget::RenderRequestSignal>, RenderRequestSlotCaller>::bind( "RenderRequestSignal" );	
-	SignalBinder<Gadget::ButtonSignal, DefaultSignalCaller<Gadget::ButtonSignal>, CatchingSlotCaller<Gadget::ButtonSignal> >::bind( "ButtonSignal" );
-	SignalBinder<Gadget::KeySignal, DefaultSignalCaller<Gadget::KeySignal>, CatchingSlotCaller<Gadget::KeySignal> >::bind( "KeySignal" );
-	SignalBinder<Gadget::DragBeginSignal, DefaultSignalCaller<Gadget::DragBeginSignal>, CatchingSlotCaller<Gadget::DragBeginSignal> >::bind( "DragBeginSignal" );
-	SignalBinder<Gadget::DragDropSignal, DefaultSignalCaller<Gadget::DragDropSignal>, CatchingSlotCaller<Gadget::DragDropSignal> >::bind( "DragDropSignal" );
-	SignalBinder<Gadget::EnterLeaveSignal, DefaultSignalCaller<Gadget::EnterLeaveSignal>, CatchingSlotCaller<Gadget::EnterLeaveSignal> >::bind( "EnterLeaveSignal" );	
-	SignalBinder<Gadget::IdleSignal>::bind( "IdleSignal" );	
+	SignalBinder<Gadget::ButtonSignal, DefaultSignalCaller<Gadget::ButtonSignal>, ButtonSlotCaller>::bind( "ButtonSignal" );
+	SignalBinder<Gadget::KeySignal, DefaultSignalCaller<Gadget::KeySignal>, KeySlotCaller>::bind( "KeySignal" );
+	SignalBinder<Gadget::DragBeginSignal, DefaultSignalCaller<Gadget::DragBeginSignal>, DragBeginSlotCaller>::bind( "DragBeginSignal" );
+	SignalBinder<Gadget::DragDropSignal, DefaultSignalCaller<Gadget::DragDropSignal>, DragDropSlotCaller>::bind( "DragDropSignal" );
+	SignalBinder<Gadget::EnterLeaveSignal, DefaultSignalCaller<Gadget::EnterLeaveSignal>, EnterLeaveSlotCaller>::bind( "EnterLeaveSignal" );
+	SignalBinder<Gadget::IdleSignal>::bind( "IdleSignal" );
 
 }

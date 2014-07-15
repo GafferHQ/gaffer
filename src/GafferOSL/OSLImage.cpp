@@ -210,7 +210,7 @@ void OSLImage::hashChannelNames( const GafferImage::ImagePlug *output, const Gaf
 	{
 		ContextPtr c = new Context( *context, Context::Borrowed );
 		c->set( ImagePlug::tileOriginContextName, ImagePlug::tileOrigin( dataWindow.min ) );
-		Context::Scope s( c );
+		Context::Scope s( c.get() );
 		shadingPlug()->hash( h );	
 	}
 }
@@ -226,7 +226,7 @@ IECore::ConstStringVectorDataPtr OSLImage::computeChannelNames( const Gaffer::Co
 	{
 		ContextPtr c = new Context( *context, Context::Borrowed );
 		c->set( ImagePlug::tileOriginContextName, ImagePlug::tileOrigin( dataWindow.min ) );
-		Context::Scope s( c );
+		Context::Scope s( c.get() );
 	
 		ConstCompoundDataPtr shading = runTimeCast<const CompoundData>( shadingPlug()->getValue() );
 		for( CompoundDataMap::const_iterator it = shading->readable().begin(), eIt = shading->readable().end(); it != eIt; ++it )
@@ -337,10 +337,10 @@ IECore::ConstCompoundDataPtr OSLImage::computeShading( const Gaffer::Context *co
 	const vector<string> &channelNames = channelNamesData->readable();
 	for( vector<string>::const_iterator it = channelNames.begin(), eIt = channelNames.end(); it != eIt; ++it )
 	{
-		shadingPoints->writable()[*it] = constPointerCast<FloatVectorData>( inPlug()->channelData( *it, tileOrigin ) );
+		shadingPoints->writable()[*it] = boost::const_pointer_cast<FloatVectorData>( inPlug()->channelData( *it, tileOrigin ) );
 	}
 	
-	CompoundDataPtr result = shadingEngine->shade( shadingPoints );
+	CompoundDataPtr result = shadingEngine->shade( shadingPoints.get() );
 	
 	// remove results that aren't suitable to become channels
 	for( CompoundDataMap::iterator it = result->writable().begin(); it != result->writable().end();  )

@@ -178,7 +178,7 @@ void SplinePlugGadget::pointAdded( GraphComponentPtr spline, GraphComponentPtr p
 
 void SplinePlugGadget::pointRemoved( GraphComponentPtr spline, GraphComponentPtr pointPlug )
 {
-	m_selection->remove( pointPlug );
+	m_selection->remove( pointPlug.get() );
 	renderRequestSignal()( this );
 }
 
@@ -194,7 +194,7 @@ bool SplinePlugGadget::selectionAcceptance( ConstStandardSetPtr selection, IECor
 	{
 		return false;
 	}
-	return m_splines->contains( pp );
+	return m_splines->contains( pp.get() );
 }
 
 void SplinePlugGadget::splineRemoved( SetPtr splineStandardSet, IECore::RunTimeTypedPtr splinePlug )
@@ -310,11 +310,11 @@ bool SplinePlugGadget::buttonPress( GadgetPtr, const ButtonEvent &event )
 					PlugPtr pointPlug = spline->pointPlug( i );
 					if( d < 0.25f ) /// \todo This ain't right
 					{
-						if( m_selection->contains( pointPlug ) )
+						if( m_selection->contains( pointPlug.get() ) )
 						{
 							if( shiftHeld )
 							{
-								m_selection->remove( pointPlug );
+								m_selection->remove( pointPlug.get() );
 							}
 						}
 						else

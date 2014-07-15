@@ -133,7 +133,7 @@ void Switch<BaseType>::affects( const Plug *input, DependencyNode::AffectedPlugs
 			{
 				if( !(*it)->children().size() )
 				{
-					outputs.push_back( *it );
+					outputs.push_back( it->get() );
 				}
 			}
 		}
@@ -323,7 +323,7 @@ const Plug *Switch<BaseType>::oppositePlug( const Plug *plug, size_t inputIndex 
 	const Plug *oppositeAncestorPlug = NULL;
 	if( plug->direction() == Plug::Out )
 	{
-		oppositeAncestorPlug = m_inputGenerator->inputs()[inputIndex];
+		oppositeAncestorPlug = m_inputGenerator->inputs()[inputIndex].get();
 	}
 	else
 	{

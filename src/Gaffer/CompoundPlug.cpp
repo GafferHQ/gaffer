@@ -89,10 +89,9 @@ bool CompoundPlug::acceptsInput( const Plug *input ) const
 		{
 			return false;
 		}
-		ChildContainer::const_iterator it1, it2;
-		for( it1 = children().begin(), it2 = p->children().begin(); it1!=children().end(); it1++, it2++ )
+		for( PlugIterator it1( this ), it2( p ); it1!=it1.end(); ++it1, ++it2 )
 		{
-			if( !IECore::staticPointerCast<Plug>( *it1 )->acceptsInput( IECore::staticPointerCast<Plug>( *it2 ) ) )
+			if( !( *it1 )->acceptsInput( it2->get() ) )
 			{
 				return false;
 			}
@@ -113,7 +112,7 @@ void CompoundPlug::setInput( PlugPtr input )
 	// the children, but need to do the check first.
 	/// \todo I think there's a case for not having CompoundPlug at all,
 	/// and having Plug have all its functionality.
-	if( input && !acceptsInput( input ) )
+	if( input && !acceptsInput( input.get() ) )
 	{
 		std::string what = boost::str(
 			boost::format( "Plug \"%s\" rejects input \"%s\"." )
@@ -132,18 +131,16 @@ void CompoundPlug::setInput( PlugPtr input )
 	
 		if( !input )
 		{
-			for( ChildContainer::const_iterator it = children().begin(); it!=children().end(); it++ )
+			for( PlugIterator it( this ); it!=it.end(); ++it )
 			{
-				IECore::staticPointerCast<Plug>( *it )->setInput( 0 );			
+				(*it)->setInput( NULL );
 			}
 		}
 		else
 		{
-			CompoundPlugPtr p = IECore::staticPointerCast<CompoundPlug>( input );
-			ChildContainer::const_iterator it1, it2;
-			for( it1 = children().begin(), it2 = p->children().begin(); it1!=children().end(); it1++, it2++ )
+			for( PlugIterator it1( this ), it2( input.get() ); it1!=it1.end(); ++it1, ++it2 )
 			{
-				IECore::staticPointerCast<Plug>( *it1 )->setInput( IECore::staticPointerCast<Plug>( *it2 ) );
+				(*it1)->setInput( *it2 );
 			}
 		}
 	}
@@ -265,10 +262,10 @@ void CompoundPlug::updateInputFromChildInputs( Plug *checkFirst )
 
 	if( !checkFirst )
 	{
-		checkFirst = IECore::staticPointerCast<Plug>( *( children().begin() ) );
+		checkFirst = static_cast<Plug *>( children().front().get() );
 	}
 
-	PlugPtr input = checkFirst->getInput<Plug>();	
+	Plug *input = checkFirst->getInput<Plug>();
 	if( !input || !input->ancestor<CompoundPlug>() )
 	{
 		// calling ValuePlug::setInput explicitly rather than setInput
@@ -278,7 +275,7 @@ void CompoundPlug::updateInputFromChildInputs( Plug *checkFirst )
 		return;
 	}
 	
-	CompoundPlugPtr commonParent = input->ancestor<CompoundPlug>();
+	CompoundPlug *commonParent = input->ancestor<CompoundPlug>();
 	if( !acceptsInput( commonParent ) )
 	{
 		// if we're never going to accept the candidate input anyway, then
@@ -288,10 +285,9 @@ void CompoundPlug::updateInputFromChildInputs( Plug *checkFirst )
 		return;
 	}
 
-	ChildContainer::const_iterator it;
-	for( it = children().begin(); it!=children().end(); it++ )
+	for( PlugIterator it( this ); it!=it.end(); ++it )
 	{
-		input = IECore::staticPointerCast<Plug>(*it)->getInput<Plug>();
+		input = (*it)->getInput<Plug>();
 		if( !input || input->ancestor<CompoundPlug>()!=commonParent )
 		{
 			ValuePlug::setInput( 0 );

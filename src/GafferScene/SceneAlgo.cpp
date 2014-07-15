@@ -52,7 +52,7 @@ using namespace GafferScene;
 bool GafferScene::exists( const ScenePlug *scene, const ScenePlug::ScenePath &path )
 {
 	ContextPtr context = new Context( *Context::current(), Context::Borrowed );
-	Context::Scope scopedContext( context );
+	Context::Scope scopedContext( context.get() );
 
 	ScenePlug::ScenePath p; p.reserve( path.size() );
 	for( ScenePlug::ScenePath::const_iterator it = path.begin(), eIt = path.end(); it != eIt; ++it )
@@ -103,7 +103,7 @@ class MatchingPathsTask : public tbb::task
 			
 			ContextPtr context = new Context( *m_context, Context::Borrowed );
 			context->set( ScenePlug::scenePathContextName, m_path );
-			Context::Scope scopedContext( context );
+			Context::Scope scopedContext( context.get() );
 			
 			const Filter::Result match = (Filter::Result)m_filter->getValue();
 			if( match & Filter::ExactMatch )
@@ -166,7 +166,7 @@ void GafferScene::matchingPaths( const Filter *filter, const ScenePlug *scene, P
 void GafferScene::matchingPaths( const Gaffer::IntPlug *filterPlug, const ScenePlug *scene, PathMatcher &paths )
 {
 	ContextPtr context = new Context( *Context::current(), Context::Borrowed );
-	Filter::setInputScene( context, scene );
+	Filter::setInputScene( context.get(), scene );
 	MatchingPathsTask::PathMatcherMutex mutex;
 	MatchingPathsTask *task = new( tbb::task::allocate_root() ) MatchingPathsTask( filterPlug, scene, context.get(), mutex, paths );
 	tbb::task::spawn_root_and_wait( *task );	

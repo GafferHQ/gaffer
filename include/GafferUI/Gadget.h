@@ -146,7 +146,7 @@ class Gadget : public Gaffer::GraphComponent
 		/// Returns the full transform of this Gadget relative to the
 		/// specified ancestor. If ancestor is not specified then the
 		/// transform from the root of the hierarchy is returned.
-		Imath::M44f fullTransform( ConstGadgetPtr ancestor = 0 ) const;
+		Imath::M44f fullTransform( const Gadget *ancestor = 0 ) const;
 		//@}
 
 		/// @name Display
@@ -166,7 +166,7 @@ class Gadget : public Gaffer::GraphComponent
 		/// The bounding box transformed by the result of getTransform().
 		Imath::Box3f transformedBound() const;
 		/// The bounding box transformed by the result of fullTransform( ancestor ).
-		Imath::Box3f transformedBound( ConstGadgetPtr ancestor ) const;
+		Imath::Box3f transformedBound( const Gadget *ancestor ) const;
 		typedef boost::signal<void ( Gadget * )> RenderRequestSignal;
 		RenderRequestSignal &renderRequestSignal();
 		//@}
@@ -193,7 +193,7 @@ class Gadget : public Gaffer::GraphComponent
 		////////////////////////////////////////////////////////////////////
 		//@{
 		/// A signal used to represent button related events.
-		typedef boost::signal<bool ( GadgetPtr, const ButtonEvent &event ), EventSignalCombiner<bool> > ButtonSignal; 
+		typedef boost::signal<bool ( Gadget *, const ButtonEvent &event ), EventSignalCombiner<bool> > ButtonSignal;
 		/// The signal triggered by a button press event.
 		ButtonSignal &buttonPressSignal();
 		/// The signal triggered by a button release event.
@@ -203,7 +203,7 @@ class Gadget : public Gaffer::GraphComponent
 		/// The signal triggered by the mouse wheel.
 		ButtonSignal &wheelSignal();
 		
-		typedef boost::signal<void ( GadgetPtr, const ButtonEvent &event )> EnterLeaveSignal; 
+		typedef boost::signal<void ( Gadget *, const ButtonEvent &event )> EnterLeaveSignal;
 		/// The signal triggered when the mouse enters the Gadget.
 		EnterLeaveSignal &enterSignal();
 		/// The signal triggered when the mouse leaves the Gadget.
@@ -211,8 +211,8 @@ class Gadget : public Gaffer::GraphComponent
 		/// A signal emitted whenever the mouse moves within a Gadget.
 		ButtonSignal &mouseMoveSignal();
 		
-		typedef boost::signal<IECore::RunTimeTypedPtr ( GadgetPtr, const DragDropEvent &event ), EventSignalCombiner<IECore::RunTimeTypedPtr> > DragBeginSignal; 
-		typedef boost::signal<bool ( GadgetPtr, const DragDropEvent &event ), EventSignalCombiner<bool> > DragDropSignal; 
+		typedef boost::signal<IECore::RunTimeTypedPtr ( Gadget *, const DragDropEvent &event ), EventSignalCombiner<IECore::RunTimeTypedPtr> > DragBeginSignal;
+		typedef boost::signal<bool ( Gadget *, const DragDropEvent &event ), EventSignalCombiner<bool> > DragDropSignal;
 		
 		/// This signal is emitted if a previous buttonPressSignal() returned true, and the
 		/// user has subsequently moved the mouse with the button down. To initiate a drag
@@ -235,7 +235,7 @@ class Gadget : public Gaffer::GraphComponent
 		
 		/// A signal used to represent key related events.
 		/// \todo We need some sort of focus model to say who gets the events.
-		typedef boost::signal<bool ( GadgetPtr, const KeyEvent &key ), EventSignalCombiner<bool> > KeySignal;
+		typedef boost::signal<bool ( Gadget *, const KeyEvent &key ), EventSignalCombiner<bool> > KeySignal;
 		/// The signal triggered by a key press event.
 		KeySignal &keyPressSignal();
 		/// The signal triggered by a key release event.

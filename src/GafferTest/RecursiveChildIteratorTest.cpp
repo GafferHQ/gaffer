@@ -65,8 +65,8 @@ void GafferTest::testRecursiveChildIterator()
 	//   - d - e - g
 	//       - f
 
-	RecursiveChildIterator it1( a );
-	RecursiveChildIterator it2( a );
+	RecursiveChildIterator it1( a.get() );
+	RecursiveChildIterator it2( a.get() );
 	
 	GAFFERTEST_ASSERT( *it1 == b );
 	GAFFERTEST_ASSERT( *it2 == b );
@@ -89,7 +89,7 @@ void GafferTest::testRecursiveChildIterator()
 	GAFFERTEST_ASSERT( it1 == it2 );
 		
 	std::vector<GraphComponentPtr> visited;
-	for( RecursiveChildIterator it( a ); it != it.end(); ++it )
+	for( RecursiveChildIterator it( a.get() ); it != it.end(); ++it )
 	{
 		visited.push_back( *it );
 	}	
@@ -105,7 +105,7 @@ void GafferTest::testRecursiveChildIterator()
 	// test pruning
 	
 	visited.clear();
-	for( RecursiveChildIterator it( a ); it != it.end(); ++it )
+	for( RecursiveChildIterator it( a.get() ); it != it.end(); ++it )
 	{
 		if( *it == e || *it == b )
 		{
@@ -122,7 +122,7 @@ void GafferTest::testRecursiveChildIterator()
 	GAFFERTEST_ASSERT( visited[4] == f );
 	
 	visited.clear();
-	for( RecursiveChildIterator it( a ); it != it.end(); ++it )
+	for( RecursiveChildIterator it( a.get() ); it != it.end(); ++it )
 	{
 		if( *it == b || *it == d )
 		{

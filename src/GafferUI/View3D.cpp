@@ -106,7 +106,7 @@ View3D::View3D( const std::string &name, Gaffer::PlugPtr inPlug )
 	matrix.rotate( IECore::degreesToRadians( V3f( -25, 45, 0 ) ) );
 	camera->setTransform( new IECore::MatrixTransform( matrix ) );
 	
-	viewportGadget()->setCamera( camera );
+	viewportGadget()->setCamera( camera.get() );
 }
 
 View3D::~View3D()

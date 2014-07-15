@@ -87,7 +87,7 @@ void PrimitiveVariables::hashProcessedObject( const ScenePath &path, const Gaffe
 
 IECore::ConstObjectPtr PrimitiveVariables::computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const
 {
-	const Primitive *inputPrimitive = runTimeCast<const Primitive>( inputObject );
+	const Primitive *inputPrimitive = runTimeCast<const Primitive>( inputObject.get() );
 	if( !inputPrimitive )
 	{
 		return inputObject;
@@ -104,7 +104,7 @@ IECore::ConstObjectPtr PrimitiveVariables::computeProcessedObject( const ScenePa
 	std::string name;
 	for( CompoundDataPlug::MemberPlugIterator it( p ); it != it.end(); ++it )
 	{
-		IECore::DataPtr d = p->memberDataAndName( *it, name );
+		IECore::DataPtr d = p->memberDataAndName( it->get(), name );
 		if( d )
 		{
 			result->variables[name] = PrimitiveVariable( PrimitiveVariable::Constant, d );

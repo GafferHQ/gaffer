@@ -528,17 +528,14 @@ class BoxTest( GafferTest.TestCase ) :
 	
 		b = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["a2"] ] ) )
 	
-		self.assertEqual( b.getPlugMetadata( b["in"], "description" ), None )
 		self.assertEqual( Gaffer.Metadata.plugValue( b["in"], "description" ), None )
 		
-		b.setPlugMetadata( b["in"], "description", "hello" )
-		self.assertEqual( b.getPlugMetadata( b["in"], "description" ), IECore.StringData( "hello" ) )
+		Gaffer.Metadata.registerPlugValue( b["in"], "description", "hello" )
 		self.assertEqual( Gaffer.Metadata.plugValue( b["in"], "description" ), "hello" )
 	
 		s2 = Gaffer.ScriptNode()
 		s2.execute( s.serialise() )
 		
-		self.assertEqual( s2["Box"].getPlugMetadata( s2["Box"]["in"], "description" ), IECore.StringData( "hello" ) )
 		self.assertEqual( Gaffer.Metadata.plugValue( s2["Box"]["in"], "description" ), "hello" )
 	
 	def testCantPromoteReadOnlyPlug( self ) :
@@ -635,7 +632,7 @@ class BoxTest( GafferTest.TestCase ) :
 		
 		cs = GafferTest.CapturingSlot( Gaffer.Metadata.plugValueChangedSignal() )
 		
-		b.setPlugMetadata( p, "description", "hello" )
+		Gaffer.Metadata.registerPlugValue( p, "description", "hello" )
 		
 		self.assertEqual( len( cs ), 1 )
 		self.assertEqual( cs[0], ( Gaffer.Box.staticTypeId(), p.relativeName( b ), "description" ) )
@@ -645,12 +642,11 @@ class BoxTest( GafferTest.TestCase ) :
 		s = Gaffer.ScriptNode()
 	
 		s["b"] = Gaffer.Box()
-		self.assertEqual( s["b"].getNodeMetadata( "description" ), None )
+		self.assertEqual( Gaffer.Metadata.nodeValue( s["b"], "description" ), None )
 		
 		cs = GafferTest.CapturingSlot( Gaffer.Metadata.nodeValueChangedSignal() )
 		
-		s["b"].setNodeMetadata( "description", "aaa" )
-		self.assertEqual( s["b"].getNodeMetadata( "description" ), IECore.StringData( "aaa" ) )
+		Gaffer.Metadata.registerNodeValue( s["b"], "description", "aaa" )
 		self.assertEqual( Gaffer.Metadata.nodeValue( s["b"], "description" ), "aaa" )
 
 		self.assertEqual( len( cs ), 1 )
@@ -659,7 +655,7 @@ class BoxTest( GafferTest.TestCase ) :
 		s2 = Gaffer.ScriptNode()
 		s2.execute( s.serialise() )
 		
-		self.assertEqual( s2["b"].getNodeMetadata( "description" ), IECore.StringData( "aaa" ) )
+		self.assertEqual( Gaffer.Metadata.nodeValue( s["b"], "description" ), "aaa" )
 
 	def testMetadataSignallingIgnoresIdenticalValues( self ) :
 	
@@ -672,22 +668,22 @@ class BoxTest( GafferTest.TestCase ) :
 		ncs = GafferTest.CapturingSlot( Gaffer.Metadata.nodeValueChangedSignal() )
 		pcs = GafferTest.CapturingSlot( Gaffer.Metadata.plugValueChangedSignal() )
 		
-		b.setNodeMetadata( "description", "t" )
-		b.setPlugMetadata( p, "description", "tt" )
+		Gaffer.Metadata.registerNodeValue( b, "description", "t" )
+		Gaffer.Metadata.registerPlugValue( p, "description", "tt" )
 		
 		self.assertEqual( len( ncs ), 1 )
 		self.assertEqual( len( pcs ), 1 )
 		self.assertEqual( ncs[0], ( Gaffer.Box.staticTypeId(), "description" ) )
 		self.assertEqual( pcs[0], ( Gaffer.Box.staticTypeId(), p.relativeName( b ), "description" ) )
 	
-		b.setNodeMetadata( "description", "t" )
-		b.setPlugMetadata( p, "description", "tt" )
+		Gaffer.Metadata.registerNodeValue( b, "description", "t" )
+		Gaffer.Metadata.registerPlugValue( p, "description", "tt" )
 		
 		self.assertEqual( len( ncs ), 1 )
 		self.assertEqual( len( pcs ), 1 )
 		
-		b.setNodeMetadata( "description", "d" )
-		b.setPlugMetadata( p, "description", "dd" )
+		Gaffer.Metadata.registerNodeValue( b, "description", "d" )
+		Gaffer.Metadata.registerPlugValue( p, "description", "dd" )
 		
 		self.assertEqual( len( ncs ), 2 )
 		self.assertEqual( len( pcs ), 2 )
@@ -702,42 +698,42 @@ class BoxTest( GafferTest.TestCase ) :
 		b = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["n"] ] ) )
 		p = b.promotePlug( b["n"]["op1"] )
 		
-		self.assertEqual( b.getNodeMetadata( "description" ), None )
-		self.assertEqual( b.getPlugMetadata( p, "description" ), None )
+		self.assertEqual( Gaffer.Metadata.nodeValue( b, "description" ), None )
+		self.assertEqual( Gaffer.Metadata.plugValue( p, "description" ), None )
 		
 		with Gaffer.UndoContext( s ) :
-			b.setNodeMetadata( "description", "d" )
-			b.setPlugMetadata( p, "description", "dd" )
+			Gaffer.Metadata.registerNodeValue( b, "description", "d" )
+			Gaffer.Metadata.registerPlugValue( p, "description", "dd" )
 			
-		self.assertEqual( b.getNodeMetadata( "description" ), IECore.StringData( "d" ) )
-		self.assertEqual( b.getPlugMetadata( p, "description" ), IECore.StringData( "dd" ) )
+		self.assertEqual( Gaffer.Metadata.nodeValue( b, "description" ), "d" )
+		self.assertEqual( Gaffer.Metadata.plugValue( p, "description" ), "dd" )
 		
 		with Gaffer.UndoContext( s ) :
-			b.setNodeMetadata( "description", "t" )
-			b.setPlugMetadata( p, "description", "tt" )
+			Gaffer.Metadata.registerNodeValue( b, "description", "t" )
+			Gaffer.Metadata.registerPlugValue( p, "description", "tt" )
 		
-		self.assertEqual( b.getNodeMetadata( "description" ), IECore.StringData( "t" ) )
-		self.assertEqual( b.getPlugMetadata( p, "description" ), IECore.StringData( "tt" ) )
-		
-		s.undo()
-		
-		self.assertEqual( b.getNodeMetadata( "description" ), IECore.StringData( "d" ) )
-		self.assertEqual( b.getPlugMetadata( p, "description" ), IECore.StringData( "dd" ) )
+		self.assertEqual( Gaffer.Metadata.nodeValue( b, "description" ), "t" )
+		self.assertEqual( Gaffer.Metadata.plugValue( p, "description" ), "tt" )
 		
 		s.undo()
 		
-		self.assertEqual( b.getNodeMetadata( "description" ), None )
-		self.assertEqual( b.getPlugMetadata( p, "description" ), None )
+		self.assertEqual( Gaffer.Metadata.nodeValue( b, "description" ), "d" )
+		self.assertEqual( Gaffer.Metadata.plugValue( p, "description" ), "dd" )
+		
+		s.undo()
+		
+		self.assertEqual( Gaffer.Metadata.nodeValue( b, "description" ), None )
+		self.assertEqual( Gaffer.Metadata.plugValue( p, "description" ), None )
 		
 		s.redo()
 		
-		self.assertEqual( b.getNodeMetadata( "description" ), IECore.StringData( "d" ) )
-		self.assertEqual( b.getPlugMetadata( p, "description" ), IECore.StringData( "dd" ) )
+		self.assertEqual( Gaffer.Metadata.nodeValue( b, "description" ), "d" )
+		self.assertEqual( Gaffer.Metadata.plugValue( p, "description" ), "dd" )
 		
 		s.redo()
 
-		self.assertEqual( b.getNodeMetadata( "description" ), IECore.StringData( "t" ) )
-		self.assertEqual( b.getPlugMetadata( p, "description" ), IECore.StringData( "tt" ) )				
+		self.assertEqual( Gaffer.Metadata.nodeValue( b, "description" ), "t" )
+		self.assertEqual( Gaffer.Metadata.plugValue( p, "description" ), "tt" )
 	
 	def testPromoteOutputPlug( self ) :
 	

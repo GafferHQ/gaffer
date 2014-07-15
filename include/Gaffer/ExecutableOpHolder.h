@@ -66,8 +66,8 @@ class ExecutableOpHolder : public ParameterisedHolderExecutableNode
 		/// Convenience function which calls setParameterised( className, classVersion, "IECORE_OP_PATHS", keepExistingValues )
 		void setOp( const std::string &className, int classVersion, bool keepExistingValues=false );
 		/// Convenience function which returns runTimeCast<Op>( getParameterised() );
-		IECore::OpPtr getOp( std::string *className = 0, int *classVersion = 0 );
-		IECore::ConstOpPtr getOp( std::string *className = 0, int *classVersion = 0 ) const;
+		IECore::Op *getOp( std::string *className = 0, int *classVersion = 0 );
+		const IECore::Op *getOp( std::string *className = 0, int *classVersion = 0 ) const;
 	
 		virtual IECore::MurmurHash executionHash( const Context *context ) const;
 		virtual void execute( const Contexts &contexts ) const;

@@ -128,9 +128,9 @@ void SceneWriter::execute( const Contexts &contexts ) const
 	for ( Contexts::const_iterator it = contexts.begin(), eIt = contexts.end(); it != eIt; it++ )
 	{
 		ContextPtr context = new Context( *it->get(), Context::Borrowed );
-		Context::Scope scopedContext( context );
+		Context::Scope scopedContext( context.get() );
 		double time = context->getFrame() / g_frameRate;
-		writeLocation( scene, ScenePlug::ScenePath(), context, output.get(), time );
+		writeLocation( scene, ScenePlug::ScenePath(), context.get(), output.get(), time );
 	}
 }
 
@@ -147,14 +147,14 @@ void SceneWriter::writeLocation( const GafferScene::ScenePlug *scene, const Scen
 	if( scenePath.empty() )
 	{
 		ConstCompoundObjectPtr globals = scene->globalsPlug()->getValue();
-		output->writeAttribute( "gaffer:globals", globals, time );
+		output->writeAttribute( "gaffer:globals", globals.get(), time );
 	}
 	
 	ConstObjectPtr object = scene->objectPlug()->getValue();
 	
 	if( object->typeId() != IECore::NullObjectTypeId && scenePath.size() > 0 )
 	{
-		output->writeObject( object, time );
+		output->writeObject( object.get(), time );
 	}
 	
 	Imath::Box3f b = scene->boundPlug()->getValue();
@@ -184,6 +184,6 @@ void SceneWriter::writeLocation( const GafferScene::ScenePlug *scene, const Scen
 		
 		SceneInterfacePtr outputChild = output->createChild( *it );
 		
-		writeLocation( scene, childScenePath, context, outputChild, time );
+		writeLocation( scene, childScenePath, context, outputChild.get(), time );
 	}
 }

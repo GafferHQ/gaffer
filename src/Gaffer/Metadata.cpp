@@ -121,7 +121,7 @@ void registerInstanceValueAction( const GraphComponent *instance, InternedString
 	{
 		return;
 	}
-	m->writable()[key] = IECore::constPointerCast<IECore::Data>( value );
+	m->writable()[key] = boost::const_pointer_cast<IECore::Data>( value );
 	if( const Node *node = runTimeCast<const Node>( instance ) )
 	{
 		Metadata::nodeValueChangedSignal()( node->typeId(), key );
@@ -140,7 +140,7 @@ void registerInstanceValue( GraphComponent *instance, IECore::InternedString key
 	const IECore::Data *currentValue = instanceValue( instance, key );
 	if(
 		( !currentValue && !value ) ||
-		( currentValue && value && currentValue->isEqualTo( value ) )
+		( currentValue && value && currentValue->isEqualTo( value.get() ) )
 	)
 	{
 		return;

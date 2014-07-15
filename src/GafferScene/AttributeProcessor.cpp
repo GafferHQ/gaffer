@@ -143,7 +143,7 @@ IECore::ConstCompoundObjectPtr AttributeProcessor::computeProcessedAttributes( c
 					// cast is ok - result is const immediately on
 					// returning from this function, and attribute will
 					// therefore not be modified.
-					constPointerCast<Object>( attribute )
+					boost::const_pointer_cast<Object>( attribute )
 				)
 			);
 		}

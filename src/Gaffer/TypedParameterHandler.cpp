@@ -57,15 +57,15 @@ TypedParameterHandler<T>::~TypedParameterHandler()
 }
 
 template<typename T>
-IECore::ParameterPtr TypedParameterHandler<T>::parameter()
+IECore::Parameter *TypedParameterHandler<T>::parameter()
 {
-	return m_parameter;
+	return m_parameter.get();
 }
 
 template<typename T>
-IECore::ConstParameterPtr TypedParameterHandler<T>::parameter() const
+const IECore::Parameter *TypedParameterHandler<T>::parameter() const
 {
-	return m_parameter;
+	return m_parameter.get();
 }
 
 template<typename T>
@@ -74,7 +74,7 @@ void TypedParameterHandler<T>::restore( GraphComponent *plugParent )
 }
 
 template<typename T>
-Gaffer::PlugPtr TypedParameterHandler<T>::setupPlug( GraphComponent *plugParent, Plug::Direction direction )
+Gaffer::Plug *TypedParameterHandler<T>::setupPlug( GraphComponent *plugParent, Plug::Direction direction )
 {
 	m_plug = plugParent->getChild<PlugType>( m_parameter->name() );
 	if( !m_plug || m_plug->direction()!=direction )
@@ -91,21 +91,21 @@ Gaffer::PlugPtr TypedParameterHandler<T>::setupPlug( GraphComponent *plugParent,
 		plugParent->setChild( m_parameter->name(), m_plug );
 	}
 
-	setupPlugFlags( m_plug );
+	setupPlugFlags( m_plug.get() );
 	
-	return m_plug;
+	return m_plug.get();
 }
 
 template<typename T>
-Gaffer::PlugPtr TypedParameterHandler<T>::plug()
+Gaffer::Plug *TypedParameterHandler<T>::plug()
 {
-	return m_plug;
+	return m_plug.get();
 }
 
 template<typename T>
-Gaffer::ConstPlugPtr TypedParameterHandler<T>::plug() const
+const Gaffer::Plug *TypedParameterHandler<T>::plug() const
 {
-	return m_plug;
+	return m_plug.get();
 }
 		
 template<typename T>

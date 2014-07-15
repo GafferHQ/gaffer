@@ -142,7 +142,7 @@ PlugPtr CompoundDataPlug::createCounterpart( const std::string &name, Direction 
 
 CompoundDataPlug::MemberPlug *CompoundDataPlug::addMember( const std::string &name, const IECore::Data *defaultValue, const std::string &plugName, unsigned plugFlags )
 {	
-	return addMember( name, createPlugFromData( "value", direction(), plugFlags, defaultValue ), plugName );
+	return addMember( name, createPlugFromData( "value", direction(), plugFlags, defaultValue ).get(), plugName );
 }
 
 CompoundDataPlug::MemberPlug *CompoundDataPlug::addMember( const std::string &name, ValuePlug *valuePlug, const std::string &plugName )
@@ -157,7 +157,7 @@ CompoundDataPlug::MemberPlug *CompoundDataPlug::addMember( const std::string &na
 	plug->addChild( valuePlug );
 	
 	addChild( plug );
-	return plug;
+	return plug.get();
 }
 		
 CompoundDataPlug::MemberPlug *CompoundDataPlug::addOptionalMember( const std::string &name, const IECore::Data *defaultValue, const std::string &plugName, unsigned plugFlags, bool enabled )
@@ -185,7 +185,7 @@ void CompoundDataPlug::addMembers( const IECore::CompoundData *parameters, bool 
 		{
 			plugName = it->first;
 		}
-		addMember( it->first, it->second, plugName );
+		addMember( it->first, it->second.get(), plugName );
 	}
 }
 
@@ -194,7 +194,7 @@ void CompoundDataPlug::fillCompoundData( IECore::CompoundDataMap &compoundDataMa
 	std::string name;
 	for( MemberPlugIterator it( this ); it != it.end(); it++ )
 	{
-		IECore::DataPtr data = memberDataAndName( *it, name );
+		IECore::DataPtr data = memberDataAndName( it->get(), name );
 		if( data )
 		{
 			compoundDataMap[name] = data;
@@ -207,7 +207,7 @@ void CompoundDataPlug::fillCompoundObject( IECore::CompoundObject::ObjectMap &co
 	std::string name;
 	for( MemberPlugIterator it( this ); it != it.end(); it++ )
 	{
-		IECore::DataPtr data = memberDataAndName( *it, name );
+		IECore::DataPtr data = memberDataAndName( it->get(), name );
 		if( data )
 		{
 			compoundObjectMap[name] = data;

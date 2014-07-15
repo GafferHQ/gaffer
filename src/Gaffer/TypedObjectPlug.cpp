@@ -82,7 +82,7 @@ PlugPtr TypedObjectPlug<T>::createCounterpart( const std::string &name, Directio
 template<class T>
 const typename TypedObjectPlug<T>::ValueType *TypedObjectPlug<T>::defaultValue() const
 {
-	return m_defaultValue;
+	return m_defaultValue.get();
 }
 		
 template<class T>
@@ -94,7 +94,7 @@ void TypedObjectPlug<T>::setValue( ConstValuePtr value )
 template<class T>
 typename TypedObjectPlug<T>::ConstValuePtr TypedObjectPlug<T>::getValue() const
 {
-	return IECore::staticPointerCast<const ValueType>( getObjectValue() );
+	return boost::static_pointer_cast<const ValueType>( getObjectValue() );
 }
 
 template<class T>

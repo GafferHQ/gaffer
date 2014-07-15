@@ -154,7 +154,7 @@ StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node, LinearContainer::O
 	
 	// nodules for all current plugs
 	
-	for( Gaffer::PlugIterator it( node ); it!=it.end(); it++ )
+	for( Gaffer::PlugIterator it( node.get() ); it!=it.end(); it++ )
 	{
 		addNodule( *it );
 	}
@@ -165,7 +165,7 @@ StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node, LinearContainer::O
 	node->childAddedSignal().connect( boost::bind( &StandardNodeGadget::childAdded, this, ::_1,  ::_2 ) );
 	node->childRemovedSignal().connect( boost::bind( &StandardNodeGadget::childRemoved, this, ::_1,  ::_2 ) );
 	
-	if( DependencyNode *dependencyNode = IECore::runTimeCast<DependencyNode>( node ) )
+	if( DependencyNode *dependencyNode = IECore::runTimeCast<DependencyNode>( node.get() ) )
 	{
 		const Gaffer::BoolPlug *enabledPlug = dependencyNode->enabledPlug();
 		if( enabledPlug )
@@ -542,7 +542,7 @@ Nodule *StandardNodeGadget::closestCompatibleNodule( const DragDropEvent &event 
 
 bool StandardNodeGadget::noduleIsCompatible( const Nodule *nodule, const DragDropEvent &event )
 {
-	const Plug *dropPlug = IECore::runTimeCast<Gaffer::Plug>( event.data );
+	const Plug *dropPlug = IECore::runTimeCast<Gaffer::Plug>( event.data.get() );
 	if( !dropPlug || dropPlug->node() == node() )
 	{
 		return 0;

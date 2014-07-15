@@ -44,7 +44,7 @@ namespace Detail
 {
 
 template<typename T>
-GafferUI::NodulePtr nodule( T &p, Gaffer::ConstPlugPtr plug )
+GafferUI::NodulePtr nodule( T &p, const Gaffer::Plug *plug )
 {
 	return p.T::nodule( plug );
 }

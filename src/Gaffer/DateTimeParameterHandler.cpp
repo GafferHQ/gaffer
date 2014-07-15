@@ -51,21 +51,21 @@ DateTimeParameterHandler::~DateTimeParameterHandler()
 {
 }
 
-IECore::ParameterPtr DateTimeParameterHandler::parameter()
+IECore::Parameter *DateTimeParameterHandler::parameter()
 {
-	return m_parameter;
+	return m_parameter.get();
 }
 
-IECore::ConstParameterPtr DateTimeParameterHandler::parameter() const
+const IECore::Parameter *DateTimeParameterHandler::parameter() const
 {
-	return m_parameter;
+	return m_parameter.get();
 }
 
 void DateTimeParameterHandler::restore( GraphComponent *plugParent )
 {
 }
 
-Gaffer::PlugPtr DateTimeParameterHandler::setupPlug( GraphComponent *plugParent, Plug::Direction direction )
+Gaffer::Plug *DateTimeParameterHandler::setupPlug( GraphComponent *plugParent, Plug::Direction direction )
 {
 	m_plug = plugParent->getChild<StringPlug>( m_parameter->name() );
 	if( !m_plug || m_plug->direction()!=direction )
@@ -74,21 +74,21 @@ Gaffer::PlugPtr DateTimeParameterHandler::setupPlug( GraphComponent *plugParent,
 		plugParent->setChild( m_parameter->name(), m_plug );
 	}
 
-	setupPlugFlags( m_plug );
+	setupPlugFlags( m_plug.get() );
 	
-	return m_plug;
+	return m_plug.get();
 }
 
-Gaffer::PlugPtr DateTimeParameterHandler::plug()
+Gaffer::Plug *DateTimeParameterHandler::plug()
 {
-	return m_plug;
+	return m_plug.get();
 }
 
-Gaffer::ConstPlugPtr DateTimeParameterHandler::plug() const
+const Gaffer::Plug *DateTimeParameterHandler::plug() const
 {
-	return m_plug;
+	return m_plug.get();
 }
-		
+
 void DateTimeParameterHandler::setParameterValue()
 {
 	m_parameter->setTypedValue( boost::posix_time::from_iso_string( m_plug->getValue() ) );

@@ -95,8 +95,8 @@ class OSLImageTest( GafferOSLTest.OSLTestCase ) :
 		self.assertTrue( cs[0][0].isSame( image["shader"] ) )
 		self.assertTrue( cs[1][0].isSame( image["__shading"] ) )
 		self.assertTrue( cs[2][0].isSame( image["out"]["channelNames"] ) )
-		self.assertTrue( cs[3][0].isSame( image["out"] ) )
-		self.assertTrue( cs[4][0].isSame( image["out"]["channelData"] ) )
+		self.assertTrue( cs[3][0].isSame( image["out"]["channelData"] ) )
+		self.assertTrue( cs[4][0].isSame( image["out"] ) )
 		
 		inputImage = reader["out"].image()
 		outputImage = image["out"].image()
@@ -116,8 +116,8 @@ class OSLImageTest( GafferOSLTest.OSLTestCase ) :
 		self.assertTrue( cs[0][0].isSame( image["shader"] ) )
 		self.assertTrue( cs[1][0].isSame( image["__shading"] ) )
 		self.assertTrue( cs[2][0].isSame( image["out"]["channelNames"] ) )
-		self.assertTrue( cs[3][0].isSame( image["out"] ) )
-		self.assertTrue( cs[4][0].isSame( image["out"]["channelData"] ) )
+		self.assertTrue( cs[3][0].isSame( image["out"]["channelData"] ) )
+		self.assertTrue( cs[4][0].isSame( image["out"] ) )
 		
 		del cs[:]
 	
@@ -127,8 +127,8 @@ class OSLImageTest( GafferOSLTest.OSLTestCase ) :
 		self.assertTrue( cs[0][0].isSame( image["shader"] ) )
 		self.assertTrue( cs[1][0].isSame( image["__shading"] ) )
 		self.assertTrue( cs[2][0].isSame( image["out"]["channelNames"] ) )
-		self.assertTrue( cs[3][0].isSame( image["out"] ) )
-		self.assertTrue( cs[4][0].isSame( image["out"]["channelData"] ) )
+		self.assertTrue( cs[3][0].isSame( image["out"]["channelData"] ) )
+		self.assertTrue( cs[4][0].isSame( image["out"] ) )
 
 		inputImage = reader["out"].image()
 		outputImage = image["out"].image()

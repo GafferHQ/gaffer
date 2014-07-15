@@ -90,7 +90,7 @@ class WrappingProcedural : public IECore::ParameterisedProcedural
 
 		virtual void doRender( RendererPtr renderer, ConstCompoundObjectPtr args ) const
 		{
-			m_sceneProcedural->render( renderer );
+			m_sceneProcedural->render( renderer.get() );
 		}
 
 	private :
@@ -149,12 +149,12 @@ class SceneView::Grid
 		
 		Gadget *gadget()
 		{
-			return m_gadget;
+			return m_gadget.get();
 		}
 		
 		const Gadget *gadget() const
 		{
-			return m_gadget;
+			return m_gadget.get();
 		}
 		
 	private :
@@ -564,7 +564,7 @@ void SceneView::baseStateChanged()
 {
 	/// \todo This isn't transferring the override state properly. Probably an IECoreGL problem.
 	m_renderableGadget->baseState()->add( const_cast<IECoreGL::State *>( baseState() ) );
-	m_renderableGadget->renderRequestSignal()( m_renderableGadget );
+	m_renderableGadget->renderRequestSignal()( m_renderableGadget.get() );
 }
 
 void SceneView::plugSet( Gaffer::Plug *plug )
@@ -641,7 +641,7 @@ void SceneView::updateLookThrough()
 	if( camera )
 	{
 		camera->parameters()["resolution"] = new V2iData( viewportGadget()->getViewport() );
-		viewportGadget()->setCamera( camera );
+		viewportGadget()->setCamera( camera.get() );
 		viewportGadget()->setCameraEditable( false );
 		
 		StringVectorDataPtr invisiblePaths = new StringVectorData();

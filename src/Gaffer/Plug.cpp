@@ -171,7 +171,7 @@ void Plug::setInput( PlugPtr input )
 	{
 		return;
 	}
-	if( input && !acceptsInput( input ) )
+	if( input && !acceptsInput( input.get() ) )
 	{
 		std::string what = boost::str(
 			boost::format( "Plug \"%s\" rejects input \"%s\"." )

@@ -55,14 +55,14 @@ Nodule::~Nodule()
 {
 }
 
-Gaffer::PlugPtr Nodule::plug()
+Gaffer::Plug *Nodule::plug()
 {
-	return m_plug;
+	return m_plug.get();
 }
 
-Gaffer::ConstPlugPtr Nodule::plug() const
+const Gaffer::Plug *Nodule::plug() const
 {
-	return m_plug;
+	return m_plug.get();
 }
 
 Nodule::CreatorMap &Nodule::creators()
@@ -79,7 +79,7 @@ Nodule::NamedCreatorMap &Nodule::namedCreators()
 
 NodulePtr Nodule::create( Gaffer::PlugPtr plug )
 {
-	Gaffer::ConstNodePtr node = plug->node();
+	const Gaffer::Node *node = plug->node();
 	if( node )
 	{
 		std::string plugPath = plug->relativeName( node );

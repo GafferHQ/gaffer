@@ -54,15 +54,15 @@ BoxParameterHandler<T>::~BoxParameterHandler()
 }
 
 template<typename T>
-IECore::ParameterPtr BoxParameterHandler<T>::parameter()
+IECore::Parameter *BoxParameterHandler<T>::parameter()
 {
-	return m_parameter;
+	return m_parameter.get();
 }
 
 template<typename T>
-IECore::ConstParameterPtr BoxParameterHandler<T>::parameter() const
+const IECore::Parameter *BoxParameterHandler<T>::parameter() const
 {
-	return m_parameter;
+	return m_parameter.get();
 }
 
 template<typename T>
@@ -71,7 +71,7 @@ void BoxParameterHandler<T>::restore( GraphComponent *plugParent )
 }
 
 template<typename T>
-Gaffer::PlugPtr BoxParameterHandler<T>::setupPlug( GraphComponent *plugParent, Plug::Direction direction )
+Gaffer::Plug *BoxParameterHandler<T>::setupPlug( GraphComponent *plugParent, Plug::Direction direction )
 {
 	m_plug = plugParent->getChild<PlugType>( m_parameter->name() );
 	if( !m_plug || m_plug->direction()!=direction )
@@ -80,21 +80,21 @@ Gaffer::PlugPtr BoxParameterHandler<T>::setupPlug( GraphComponent *plugParent, P
 		plugParent->setChild( m_parameter->name(), m_plug );
 	}
 
-	setupPlugFlags( m_plug );
+	setupPlugFlags( m_plug.get() );
 	
-	return m_plug;
+	return m_plug.get();
 }
 
 template<typename T>
-Gaffer::PlugPtr BoxParameterHandler<T>::plug()
+Gaffer::Plug *BoxParameterHandler<T>::plug()
 {
-	return m_plug;
+	return m_plug.get();
 }
 
 template<typename T>
-Gaffer::ConstPlugPtr BoxParameterHandler<T>::plug() const
+const Gaffer::Plug *BoxParameterHandler<T>::plug() const
 {
-	return m_plug;
+	return m_plug.get();
 }
 		
 template<typename T>

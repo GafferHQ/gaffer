@@ -52,21 +52,21 @@ ObjectParameterHandler::~ObjectParameterHandler()
 {
 }
 
-IECore::ParameterPtr ObjectParameterHandler::parameter()
+IECore::Parameter *ObjectParameterHandler::parameter()
 {
-	return m_parameter;
+	return m_parameter.get();
 }
 
-IECore::ConstParameterPtr ObjectParameterHandler::parameter() const
+const IECore::Parameter *ObjectParameterHandler::parameter() const
 {
-	return m_parameter;
+	return m_parameter.get();
 }
 
 void ObjectParameterHandler::restore( GraphComponent *plugParent )
 {
 }
 
-Gaffer::PlugPtr ObjectParameterHandler::setupPlug( GraphComponent *plugParent, Plug::Direction direction )
+Gaffer::Plug *ObjectParameterHandler::setupPlug( GraphComponent *plugParent, Plug::Direction direction )
 {
 	m_plug = plugParent->getChild<ObjectPlug>( m_parameter->name() );
 	if( !m_plug || m_plug->direction()!=direction )
@@ -75,19 +75,19 @@ Gaffer::PlugPtr ObjectParameterHandler::setupPlug( GraphComponent *plugParent, P
 		plugParent->setChild( m_parameter->name(), m_plug );
 	}
 
-	setupPlugFlags( m_plug );
+	setupPlugFlags( m_plug.get() );
 	
-	return m_plug;
+	return m_plug.get();
 }
 
-Gaffer::PlugPtr ObjectParameterHandler::plug()
+Gaffer::Plug *ObjectParameterHandler::plug()
 {
-	return m_plug;
+	return m_plug.get();
 }
 
-Gaffer::ConstPlugPtr ObjectParameterHandler::plug() const
+const Gaffer::Plug *ObjectParameterHandler::plug() const
 {
-	return m_plug;
+	return m_plug.get();
 }
 		
 void ObjectParameterHandler::setParameterValue()

@@ -89,7 +89,7 @@ static IECore::ObjectPtr getValue( typename T::Ptr p, bool copy=true )
 		}
 		else
 		{
-			return IECore::constPointerCast<IECore::Object>( v );
+			return boost::const_pointer_cast<IECore::Object>( v );
 		}
 	}
 	return 0;

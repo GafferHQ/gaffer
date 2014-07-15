@@ -105,7 +105,7 @@ void ParameterisedHolder<BaseType>::setParameterised( const std::string &classNa
 }
 
 template<typename BaseType>
-IECore::RunTimeTypedPtr ParameterisedHolder<BaseType>::getParameterised( std::string *className, int *classVersion, std::string *searchPathEnvVar ) const
+IECore::RunTimeTyped *ParameterisedHolder<BaseType>::getParameterised( std::string *className, int *classVersion, std::string *searchPathEnvVar ) const
 {
 	Node *node = const_cast<Node *>( static_cast<const Node *>( this ) );
 	if( className )
@@ -120,26 +120,26 @@ IECore::RunTimeTypedPtr ParameterisedHolder<BaseType>::getParameterised( std::st
 	{
 		*searchPathEnvVar = node->getChild<StringPlug>( "__searchPathEnvVar" )->getValue();
 	}
-	return m_parameterised;
+	return m_parameterised.get();
 }
 
 template<typename BaseType>
 IECore::ParameterisedInterface *ParameterisedHolder<BaseType>::parameterisedInterface( std::string *className, int *classVersion, std::string *searchPathEnvVar )
 {
-	return dynamic_cast<IECore::ParameterisedInterface *>( getParameterised( className, classVersion, searchPathEnvVar ).get() );
+	return dynamic_cast<IECore::ParameterisedInterface *>( getParameterised( className, classVersion, searchPathEnvVar ) );
 }
 
 
 template<typename BaseType>
-CompoundParameterHandlerPtr ParameterisedHolder<BaseType>::parameterHandler()
+CompoundParameterHandler *ParameterisedHolder<BaseType>::parameterHandler()
 {
-	return m_parameterHandler;
+	return m_parameterHandler.get();
 }
 
 template<typename BaseType>
-ConstCompoundParameterHandlerPtr ParameterisedHolder<BaseType>::parameterHandler() const
+const CompoundParameterHandler *ParameterisedHolder<BaseType>::parameterHandler() const
 {
-	return m_parameterHandler;
+	return m_parameterHandler.get();
 }
 
 template<typename BaseType>
@@ -163,7 +163,7 @@ void ParameterisedHolder<BaseType>::parameterChanged( IECore::RunTimeTyped *para
 }
 
 template<typename BaseType>
-void ParameterisedHolder<BaseType>::plugSet( PlugPtr plug )
+void ParameterisedHolder<BaseType>::plugSet( Plug *plug )
 {
 	if( !m_parameterHandler || !m_parameterHandler->plug()->isAncestorOf( plug ) )
 	{
@@ -178,7 +178,7 @@ void ParameterisedHolder<BaseType>::plugSet( PlugPtr plug )
 	}
 	
 	IECore::RunTimeTyped *parameterProvider = getParameterised();
-	ParameterHandler *parameterHandler = m_parameterHandler;
+	ParameterHandler *parameterHandler = m_parameterHandler.get();
 	for( std::vector<Plug *>::const_reverse_iterator it = plugHierarchy.rbegin(), eIt = plugHierarchy.rend(); it != eIt; it++ )
 	{
 		IECore::CompoundParameter *compoundParameter = IECore::runTimeCast<IECore::CompoundParameter>( parameterHandler->parameter() );
@@ -230,7 +230,7 @@ ParameterisedHolder<BaseType>::ParameterModificationContext::~ParameterModificat
 		try
 		{
 			BlockedConnection connectionBlocker( m_parameterisedHolder->m_plugSetConnection );
-			m_parameterisedHolder->m_parameterHandler->setupPlug( m_parameterisedHolder );
+			m_parameterisedHolder->m_parameterHandler->setupPlug( m_parameterisedHolder.get() );
 			m_parameterisedHolder->m_parameterHandler->setPlugValue();
 		}
 		catch( const std::exception &e )

@@ -59,8 +59,8 @@ class InputGenerator : public Behaviour
 {
 	public :
 
-		typedef IECore::IntrusivePtr< PlugClass > PlugClassPtr;
-		typedef IECore::IntrusivePtr< const PlugClass > ConstPlugClassPtr;	
+		typedef typename PlugClass::Ptr PlugClassPtr;
+		typedef typename PlugClass::ConstPtr ConstPlugClassPtr;
 
 		/// The constructor initializes the InputGenerator and creates the minimum number of inputs requested.
 		/// It connects up the ancestor Node's signals to internal slots that manage the list of inputs that it holds.

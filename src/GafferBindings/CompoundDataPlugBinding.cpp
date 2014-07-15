@@ -89,7 +89,7 @@ static CompoundDataPlugPtr compoundDataPlugConstructor( const char *name, Plug::
 
 static Gaffer::CompoundDataPlug::MemberPlugPtr addMemberWrapper( CompoundDataPlug &p, const std::string &name, IECore::DataPtr value, const std::string &plugName, unsigned plugFlags )
 {
-	return p.addMember( name, value, plugName, plugFlags );
+	return p.addMember( name, value.get(), plugName, plugFlags );
 }
 
 static Gaffer::CompoundDataPlug::MemberPlugPtr addMemberWrapper2( CompoundDataPlug &p, const std::string &name, ValuePlug *valuePlug, const std::string &plugName )
@@ -99,7 +99,7 @@ static Gaffer::CompoundDataPlug::MemberPlugPtr addMemberWrapper2( CompoundDataPl
 
 static Gaffer::CompoundDataPlug::MemberPlugPtr addOptionalMemberWrapper( CompoundDataPlug &p, const std::string &name, IECore::DataPtr value, const std::string plugName, unsigned plugFlags, bool enabled )
 {
-	return p.addOptionalMember( name, value, plugName, plugFlags, enabled );
+	return p.addOptionalMember( name, value.get(), plugName, plugFlags, enabled );
 }
 
 static Gaffer::CompoundDataPlug::MemberPlugPtr addOptionalMemberWrapper2( CompoundDataPlug &p, const std::string &name, ValuePlug *valuePlug, const std::string &plugName, bool enabled )
@@ -111,7 +111,7 @@ static tuple memberDataAndNameWrapper( CompoundDataPlug &p, const CompoundDataPl
 {
 	std::string name;
 	IECore::DataPtr d = p.memberDataAndName( member, name );
-	return make_tuple( d, name );
+	return boost::python::make_tuple( d, name );
 }
 
 static void fillCompoundData( const CompoundDataPlug &p, IECore::CompoundData *d )

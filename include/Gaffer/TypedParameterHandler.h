@@ -58,12 +58,12 @@ class TypedParameterHandler : public ParameterHandler
 		TypedParameterHandler( typename ParameterType::Ptr parameter );
 		virtual ~TypedParameterHandler();
 				
-		virtual IECore::ParameterPtr parameter();
-		virtual IECore::ConstParameterPtr parameter() const;
+		virtual IECore::Parameter *parameter();
+		virtual const IECore::Parameter *parameter() const;
 		virtual void restore( GraphComponent *plugParent );
-		virtual Gaffer::PlugPtr setupPlug( GraphComponent *plugParent, Plug::Direction direction=Plug::In );
-		virtual Gaffer::PlugPtr plug();
-		virtual Gaffer::ConstPlugPtr plug() const;
+		virtual Gaffer::Plug *setupPlug( GraphComponent *plugParent, Plug::Direction direction=Plug::In );
+		virtual Gaffer::Plug *plug();
+		virtual const Gaffer::Plug *plug() const;
 		virtual void setParameterValue();
 		virtual void setPlugValue();
 				

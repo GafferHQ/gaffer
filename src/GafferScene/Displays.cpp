@@ -149,7 +149,7 @@ Gaffer::CompoundPlug *Displays::addDisplay( const std::string &label, const IECo
 	
 	displaysPlug()->addChild( displayPlug );
 	
-	return displayPlug;
+	return displayPlug.get();
 }
 
 void Displays::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
@@ -180,7 +180,7 @@ IECore::ConstCompoundObjectPtr Displays::computeProcessedGlobals( const Gaffer::
 	// add our displays to the result
 	for( InputCompoundPlugIterator it( dsp ); it != it.end(); it++ )
 	{
-		const CompoundPlug *displayPlug = *it;
+		const CompoundPlug *displayPlug = it->get();
 		if( displayPlug->getChild<BoolPlug>( "active" )->getValue() )
 		{
 			std::string name = displayPlug->getChild<StringPlug>( "name" )->getValue();

@@ -262,7 +262,7 @@ bool StandardNodule::dragEnter( GadgetPtr gadget, const DragDropEvent &event )
 
 		// show the labels of all compatible nodules on this node, if it doesn't
 		// look like the previous drag destination would have done so.
-		Nodule *prevDestination = IECore::runTimeCast<Nodule>( event.destinationGadget );
+		Nodule *prevDestination = IECore::runTimeCast<Nodule>( event.destinationGadget.get() );
 		if( !prevDestination || prevDestination->plug()->node() != plug()->node() )
 		{
 			setCompatibleLabelsVisible( event, true );
@@ -289,14 +289,14 @@ bool StandardNodule::dragLeave( GadgetPtr gadget, const DragDropEvent &event )
 		setHighlighted( false );
 		// if the new drag destination isn't one that would warrant having the labels
 		// showing, then hide them.
-		if( Nodule *newDestination = IECore::runTimeCast<Nodule>( event.destinationGadget ) )
+		if( Nodule *newDestination = IECore::runTimeCast<Nodule>( event.destinationGadget.get() ) )
 		{
 			if( newDestination->plug()->node() != plug()->node() )
 			{
 				setCompatibleLabelsVisible( event, false );
 			}
 		}
-		else if( NodeGadget *newDestination = IECore::runTimeCast<NodeGadget>( event.destinationGadget ) )
+		else if( NodeGadget *newDestination = IECore::runTimeCast<NodeGadget>( event.destinationGadget.get() ) )
 		{
 			if( newDestination->node() != plug()->node() )
 			{
@@ -377,7 +377,7 @@ void StandardNodule::connection( const DragDropEvent &event, Gaffer::PlugPtr &in
 				output = thisPlug;
 			}
 						
-			if( input->acceptsInput( output ) )
+			if( input->acceptsInput( output.get() ) )
 			{
 				// success
 				return;

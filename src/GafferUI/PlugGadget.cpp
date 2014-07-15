@@ -90,7 +90,7 @@ void PlugGadget::setContext( Gaffer::ContextPtr context )
 
 Gaffer::Context *PlugGadget::getContext()
 {
-	return m_context;
+	return m_context.get();
 }
 
 void PlugGadget::updateFromPlug()
@@ -121,7 +121,7 @@ void PlugGadget::contextChanged( const Gaffer::Context *context, const IECore::I
 
 void PlugGadget::updateContextConnection()
 {
-	Context *context = m_context;
+	Context *context = m_context.get();
 	if( !m_plug->getInput<Plug>() )
 	{
 		// we only want to be notified of context changes if the plug has an incoming

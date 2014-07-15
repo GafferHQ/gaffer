@@ -67,7 +67,7 @@ static ContextPtr taskContext( const ExecutableNode::Task &t, bool copy = true )
 			return new Context( *context );
 		}
 	
-		return IECore::constPointerCast<Context>( context );
+		return boost::const_pointer_cast<Context>( context );
 	}
 	
 	return 0;
@@ -77,7 +77,7 @@ static ExecutableNodePtr taskNode( const ExecutableNode::Task &t )
 {
 	if ( ConstExecutableNodePtr node = t.node() )
 	{
-		return IECore::constPointerCast<ExecutableNode>( node );
+		return boost::const_pointer_cast<ExecutableNode>( node );
 	}
 	
 	return 0;

@@ -149,7 +149,7 @@ void RenderableGadget::setRenderable( IECore::ConstVisibleRenderablePtr renderab
 			renderer->setOption( "gl:mode", new IECore::StringData( "deferred" ) );
 			{
 				IECore::WorldBlock world( renderer );
-				m_renderable->render( renderer );
+				m_renderable->render( renderer.get() );
 			}	
 			m_scene = renderer->scene();
 			m_scene->setCamera( 0 );	
@@ -233,7 +233,7 @@ Imath::Box3f RenderableGadget::selectionBound() const
 {
 	if( m_scene )
 	{
-		return selectionBound( m_scene->root() );
+		return selectionBound( m_scene->root().get() );
 	}
 	return Box3f();
 }
@@ -410,7 +410,7 @@ void RenderableGadget::applySelection( IECoreGL::Group *group )
 		{
 			return;
 		}
-		group = m_scene->root();
+		group = m_scene->root().get();
 	}
 	
 	IECoreGL::State *state = group->getState();

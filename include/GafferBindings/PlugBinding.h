@@ -112,7 +112,7 @@ class PlugWrapper : public GraphComponentWrapper<WrappedType>
 				boost::python::object f = this->methodOverride( "setInput" );
 				if( f )
 				{
-					f( IECore::constPointerCast<Gaffer::Plug>( input ) );
+					f( boost::const_pointer_cast<Gaffer::Plug>( input ) );
 					return;
 				}
 			}

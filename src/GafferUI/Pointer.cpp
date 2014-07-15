@@ -48,7 +48,7 @@ void Pointer::set( IECore::ConstImagePrimitivePtr image )
 	{
 		return;
 	}
-	if( image && g_image && image->isEqualTo( g_image ) )
+	if( image && g_image && image->isEqualTo( g_image.get() ) )
 	{
 		return;
 	}

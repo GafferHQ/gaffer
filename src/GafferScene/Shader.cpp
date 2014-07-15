@@ -325,7 +325,7 @@ IECore::Shader *Shader::NetworkBuilder::shader( const Shader *shaderNode )
 	ShaderAndHash &shaderAndHash = m_shaders[shaderNode];
 	if( shaderAndHash.shader )
 	{
-		return shaderAndHash.shader;
+		return shaderAndHash.shader.get();
 	}
 	
 	shaderAndHash.shader = new IECore::Shader( shaderNode->namePlug()->getValue(), shaderNode->typePlug()->getValue() );
@@ -335,7 +335,7 @@ IECore::Shader *Shader::NetworkBuilder::shader( const Shader *shaderNode )
 	shaderAndHash.shader->blindData()->writable()["gaffer:nodeName"] = new IECore::StringData( shaderNode->nodeNamePlug()->getValue() );
 
 	m_state->members().push_back( shaderAndHash.shader );
-	return shaderAndHash.shader;
+	return shaderAndHash.shader.get();
 }
 
 void Shader::NetworkBuilder::parameterValueWalk( const Shader *shaderNode, const Gaffer::Plug *parameterPlug, const std::string &parameterName, IECore::CompoundDataMap &values )

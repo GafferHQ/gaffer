@@ -58,7 +58,7 @@ static IECore::ObjectVectorPtr state( const Shader &s, bool copy=true )
 	}
 	else
 	{
-		return IECore::constPointerCast<IECore::ObjectVector>( o );
+		return boost::const_pointer_cast<IECore::ObjectVector>( o );
 	}
 }
 

@@ -186,13 +186,13 @@ IECore::ConstObjectPtr OSLObject::computeProcessedObject( const ScenePath &path,
 		{
 			// cast is ok - we're only using it to be able to reference the data from the shadingPoints,
 			// but nothing will modify the data itself.
-			shadingPoints->writable()[it->first] = constPointerCast<Data>( it->second.data );
+			shadingPoints->writable()[it->first] = boost::const_pointer_cast<Data>( it->second.data );
 		}
 	}
 
 	PrimitivePtr outputPrimitive = inputPrimitive->copy();
 
-	CompoundDataPtr shadedPoints = shadingEngine->shade( shadingPoints );
+	CompoundDataPtr shadedPoints = shadingEngine->shade( shadingPoints.get() );
 	for( CompoundDataMap::const_iterator it = shadedPoints->readable().begin(), eIt = shadedPoints->readable().end(); it != eIt; ++it )
 	{
 		if( it->first != "Ci" )

@@ -173,12 +173,12 @@ GraphGadget::RootChangedSignal &GraphGadget::rootChangedSignal()
 
 Gaffer::Set *GraphGadget::getFilter()
 {
-	return m_filter;
+	return m_filter.get();
 }
 
 const Gaffer::Set *GraphGadget::getFilter() const
 {
-	return m_filter;
+	return m_filter.get();
 }
 
 void GraphGadget::setFilter( Gaffer::SetPtr filter )
@@ -396,12 +396,12 @@ void GraphGadget::setLayout( GraphLayoutPtr layout )
 
 GraphLayout *GraphGadget::getLayout()
 {
-	return m_layout;
+	return m_layout.get();
 }
 
 const GraphLayout *GraphGadget::getLayout() const
 {
-	return m_layout;
+	return m_layout.get();
 }
 
 NodeGadget *GraphGadget::nodeGadgetAt( const IECore::LineSegment3f &lineInGadgetSpace ) const
@@ -419,7 +419,7 @@ NodeGadget *GraphGadget::nodeGadgetAt( const IECore::LineSegment3f &lineInGadget
 		return 0;
 	}
 	
-	NodeGadget *nodeGadget = runTimeCast<NodeGadget>( gadgetsUnderMouse[0] );
+	NodeGadget *nodeGadget = runTimeCast<NodeGadget>( gadgetsUnderMouse[0].get() );
 	if( !nodeGadget )
 	{
 		nodeGadget = gadgetsUnderMouse[0]->ancestor<NodeGadget>();
@@ -440,7 +440,7 @@ ConnectionGadget *GraphGadget::connectionGadgetAt( const IECore::LineSegment3f &
 		return 0;
 	}
 	
-	ConnectionGadget *connectionGadget = runTimeCast<ConnectionGadget>( gadgetsUnderMouse[0] );
+	ConnectionGadget *connectionGadget = runTimeCast<ConnectionGadget>( gadgetsUnderMouse[0].get() );
 	if ( !connectionGadget )
 	{
 		connectionGadget = gadgetsUnderMouse[0]->ancestor<ConnectionGadget>();
@@ -482,7 +482,7 @@ ConnectionGadget *GraphGadget::reconnectionGadgetAt( NodeGadget *gadget, const I
 		GadgetPtr gadget = Gadget::select( it->name.value() );
 		if ( gadget )
 		{
-			return runTimeCast<ConnectionGadget>( gadget );
+			return runTimeCast<ConnectionGadget>( gadget.get() );
 		}
 	}
 	
@@ -740,7 +740,7 @@ bool GraphGadget::buttonPress( GadgetPtr gadget, const ButtonEvent &event )
 			return true;
 		}
 				
-		NodeGadget *nodeGadget = runTimeCast<NodeGadget>( gadgetsUnderMouse[0] );
+		NodeGadget *nodeGadget = runTimeCast<NodeGadget>( gadgetsUnderMouse[0].get() );
 		if( !nodeGadget )
 		{
 			nodeGadget = gadgetsUnderMouse[0]->ancestor<NodeGadget>();
@@ -748,7 +748,7 @@ bool GraphGadget::buttonPress( GadgetPtr gadget, const ButtonEvent &event )
 				
 		if( nodeGadget )
 		{				
-			Gaffer::NodePtr node = nodeGadget->node();
+			Gaffer::Node *node = nodeGadget->node();
 			bool shiftHeld = event.modifiers && ButtonEvent::Shift;
 			bool nodeSelected = m_scriptNode->selection()->contains( node );
 
@@ -1282,7 +1282,7 @@ void GraphGadget::updateGraph()
 	}
 		
 	// now make sure we have gadgets for all the nodes we're meant to display
-	for( Gaffer::NodeIterator it( m_root ); it != it.end(); it++ )
+	for( Gaffer::NodeIterator it( m_root.get() ); it != it.end(); it++ )
 	{
 		if( !m_filter || m_filter->contains( it->get() ) )
 		{
@@ -1295,7 +1295,7 @@ void GraphGadget::updateGraph()
 	
 	// and that we have gadgets for each connection
 	
-	for( Gaffer::NodeIterator it( m_root ); it != it.end(); it++ )
+	for( Gaffer::NodeIterator it( m_root.get() ); it != it.end(); it++ )
 	{
 		if( !m_filter || m_filter->contains( it->get() ) )
 		{
@@ -1334,7 +1334,7 @@ NodeGadget *GraphGadget::addNodeGadget( Gaffer::Node *node )
 	
 	updateNodeGadgetTransform( nodeGadget.get() );
 	
-	return nodeGadget;
+	return nodeGadget.get();
 }
 
 void GraphGadget::removeNodeGadget( const Gaffer::Node *node )
@@ -1398,7 +1398,7 @@ void GraphGadget::addConnectionGadgets( Gaffer::GraphComponent *plugParent )
 		else
 		{
 			// reconnect any old output connections which may have been dangling
-			Nodule *srcNodule = nodeGadget->nodule( *pIt );
+			Nodule *srcNodule = nodeGadget->nodule( pIt->get() );
 			if( srcNodule )
 			{
 				for( Gaffer::Plug::OutputContainer::const_iterator oIt( (*pIt)->outputs().begin() ); oIt!= (*pIt)->outputs().end(); oIt++ )

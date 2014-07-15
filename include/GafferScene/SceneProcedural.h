@@ -85,7 +85,7 @@ class SceneProcedural : public IECore::Renderer::Procedural
 		
 		virtual IECore::MurmurHash hash() const;
 		virtual Imath::Box3f bound() const;
-		virtual void render( IECore::RendererPtr renderer ) const;
+		virtual void render( IECore::Renderer *renderer ) const;
 				
 	protected :
 		

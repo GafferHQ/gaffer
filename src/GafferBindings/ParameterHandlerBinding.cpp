@@ -59,14 +59,14 @@ class ParameterHandlerWrapper : public ParameterHandler, public IECorePython::Wr
 		{
 		}
 
-		virtual IECore::ParameterPtr parameter()
+		virtual IECore::Parameter *parameter()
 		{
 			IECorePython::ScopedGILLock gilLock;
 			override o = this->get_override( "parameter" );
 			return o();
 		}
 		
-		virtual IECore::ConstParameterPtr parameter() const
+		virtual const IECore::Parameter *parameter() const
 		{
 			IECorePython::ScopedGILLock gilLock;
 			override o = this->get_override( "parameter" );
@@ -80,21 +80,21 @@ class ParameterHandlerWrapper : public ParameterHandler, public IECorePython::Wr
 			/// python-based parameter handlers in other packages.
 		}
 		
-		virtual PlugPtr setupPlug( GraphComponent *plugParent, Plug::Direction direction )
+		virtual Plug *setupPlug( GraphComponent *plugParent, Plug::Direction direction )
 		{
 			IECorePython::ScopedGILLock gilLock;
 			override o = this->get_override( "setupPlug" );
 			return o( GraphComponentPtr( plugParent ), direction );
 		}
 		
-		virtual PlugPtr plug()
+		virtual Plug *plug()
 		{
 			IECorePython::ScopedGILLock gilLock;
 			override o = this->get_override( "plug" );
 			return o();
 		}
 		
-		virtual ConstPlugPtr plug() const
+		virtual const Plug *plug() const
 		{
 			IECorePython::ScopedGILLock gilLock;
 			override o = this->get_override( "plug" );
@@ -147,10 +147,23 @@ void GafferBindings::bindParameterHandler()
 	
 	IECorePython::RefCountedClass<ParameterHandler, IECore::RefCounted, ParameterHandlerWrapper>( "ParameterHandler" )
 		.def( init<>() )
-		.def( "parameter", (IECore::ParameterPtr (ParameterHandler::*)())&ParameterHandler::parameter )
+		.def(
+			"parameter",
+			(IECore::Parameter *(ParameterHandler::*)())&ParameterHandler::parameter,
+			return_value_policy<IECorePython::CastToIntrusivePtr>()
+		)
 		.def( "restore", &ParameterHandler::restore, ( arg( "plugParent" ) ) )
-		.def( "setupPlug", &ParameterHandler::setupPlug, ( arg( "plugParent" ), arg( "direction" )=Plug::In ) )
-		.def( "plug", (PlugPtr (ParameterHandler::*)())&ParameterHandler::plug )
+		.def(
+			"setupPlug",
+			&ParameterHandler::setupPlug,
+			( arg( "plugParent" ), arg( "direction" )=Plug::In ),
+			return_value_policy<IECorePython::CastToIntrusivePtr>()
+		)
+		.def(
+			"plug",
+			(Plug *(ParameterHandler::*)())&ParameterHandler::plug,
+			return_value_policy<IECorePython::CastToIntrusivePtr>()
+		)
 		.def( "setParameterValue", &ParameterHandler::setParameterValue )
 		.def( "setPlugValue", &ParameterHandler::setPlugValue )
 		.def( "create", &ParameterHandler::create ).staticmethod( "create" )

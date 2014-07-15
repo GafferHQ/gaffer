@@ -206,7 +206,7 @@ IECore::ConstObjectPtr AttributeCache::computeProcessedObject( const ScenePath &
 			IECore::DataPtr value = IECore::runTimeCast<IECore::Data>( cache->read( frame, cacheObjectName, *it ) );
 			if( value )
 			{
-				IECore::PrimitiveVariable::Interpolation interpolation = result->inferInterpolation( value );
+				IECore::PrimitiveVariable::Interpolation interpolation = result->inferInterpolation( value.get() );
 				if( interpolation != IECore::PrimitiveVariable::Invalid )
 				{
 					result->variables[name] = IECore::PrimitiveVariable( interpolation, value );

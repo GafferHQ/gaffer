@@ -98,8 +98,7 @@ class DependencyNodeWrapper : public NodeWrapper<WrappedType>
 				boost::python::object f = this->methodOverride( "enabledPlug" );
 				if( f )
 				{
-					Gaffer::BoolPlugPtr value = boost::python::extract<Gaffer::BoolPlugPtr>( f() );
-					return value.get();
+					return boost::python::extract<Gaffer::BoolPlug *>( f() );
 				}
 			}
 			return WrappedType::enabledPlug();

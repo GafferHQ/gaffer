@@ -85,7 +85,7 @@ InputGenerator<PlugClass>::InputGenerator( Gaffer::GraphComponent *parent, PlugC
 }
 
 template< typename PlugClass >
-typename std::vector< IECore::IntrusivePtr< PlugClass > >::const_iterator InputGenerator<PlugClass>::endIterator() const
+typename std::vector<typename PlugClass::Ptr>::const_iterator InputGenerator<PlugClass>::endIterator() const
 {
 	return m_inputs.end();
 }
@@ -203,7 +203,7 @@ void InputGenerator<PlugClass>::inputChanged( Gaffer::Plug *plug )
 		{
 			if( m_inputs[i]->template getInput<Plug>() == 0 && m_inputs[i-1]->template getInput<Plug>() == 0 )
 			{
-				toRemove.push_back( m_inputs[i] );
+				toRemove.push_back( m_inputs[i].get() );
 			}
 			else
 			{

@@ -80,7 +80,11 @@ static void registerNodule2( IECore::TypeId nodeType, const std::string &plugPat
 void GafferUIBindings::bindNodule()
 {
 	GadgetClass<Nodule>()
-		.def( "plug", (Gaffer::PlugPtr (Nodule::*)())&Nodule::plug )
+		.def(
+			"plug",
+			(Gaffer::Plug *(Nodule::*)())&Nodule::plug,
+			return_value_policy<IECorePython::CastToIntrusivePtr>()
+		)
 		.def( "create", &Nodule::create ).staticmethod( "create" )
 		.def( "registerNodule", &registerNodule1 )
 		.def( "registerNodule", &registerNodule2 ).staticmethod( "registerNodule" )
