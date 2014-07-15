@@ -40,11 +40,16 @@
 namespace GafferBindings
 {
 
+/// Formats the current python exception using the traceback module,
+/// and returns it in the form of a string. If lineNumber is provided, it
+/// will be filled with the number of the line where the error occurred.
+std::string formatPythonException( bool withStacktrace = true, int *lineNumber = NULL );
+
 /// Can be called to translate the current python exception into
 /// an IECore::Exception. Typically this would be called after catching
 /// boost::python::error_already_set.
 /// \todo Maybe this should be moved to IECorePython?
-void translatePythonException();
+void translatePythonException( bool withStacktrace = true );
 
 } // namespace GafferBindings
 
