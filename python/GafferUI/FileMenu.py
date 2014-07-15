@@ -91,7 +91,10 @@ def __open( currentScript, fileName ) :
 		
 	script = Gaffer.ScriptNode()
 	script["fileName"].setValue( fileName )
-	script.load()
+	
+	messageWidget = GafferUI.MessageWidget()
+	with messageWidget.messageHandler() :
+		script.load( continueOnError = True )
 
 	application["scripts"].addChild( script )
 	
@@ -112,6 +115,13 @@ def __open( currentScript, fileName ) :
 		# currentWindow, and that will get deleted immediately when the script is removed.
 		GafferUI.EventLoop.addIdleCallback( IECore.curry( __removeScript, application, currentScript ) )
 
+	if sum( [ messageWidget.messageCount( level ) for level in ( IECore.Msg.Level.Error, IECore.Msg.Level.Warning ) ] ) :
+		dialogue = GafferUI.Dialogue( "Errors Occurred During Loading" )
+		## \todo These dialogue methods should be available publicly.
+		dialogue._setWidget( messageWidget )
+		dialogue._addButton( "Oy vey" )
+		dialogue.waitForButton( parentWindow=GafferUI.ScriptWindow.acquire( currentScript ) )
+		
 def __removeScript( application, script ) :
 
 	application["scripts"].removeChild( script )
