@@ -189,6 +189,8 @@ class OpDialogue( GafferUI.Dialogue ) :
 		self.__backButton = self._addButton( "Back" )
 		self.__forwardButton = self._addButton( "Forward" )
 		
+		self.__preExecuteSignal = GafferUI.WidgetSignal()
+		self.__postExecuteSignal = Gaffer.Signal2()
 		self.__opExecutedSignal = Gaffer.Signal1()
 		self.__haveResizedToFitParameters = False
 		
@@ -196,10 +198,25 @@ class OpDialogue( GafferUI.Dialogue ) :
 			self.__initiateExecution()
 		else :
 			self.__initiateParameterEditing()
-					
+	
+	## Signal emitted before executing the Op.
+	# Slots should have the signature `bool slot( opDialogue )`,
+	# and may return True to cancel execution, or False to
+	# allow it to continue.
+	def preExecuteSignal( self ) :
+	
+		return self.__preExecuteSignal
+		
+	## Signal emitted after executing the Op.
+	# Slots should have the signature `slot( opDialogue, result )`.
+	def postExecuteSignal( self ) :
+	
+		return self.__postExecuteSignal
+		
 	## A signal called when the user has pressed the execute button
 	# and the Op has been successfully executed. This is passed the
 	# result of the execution.
+	## \deprecated Use postExecuteSignal() instead.
 	def opExecutedSignal( self ) :
 	
 		return self.__opExecutedSignal
@@ -264,6 +281,9 @@ class OpDialogue( GafferUI.Dialogue ) :
 				
 	def __initiateExecution( self, *unused ) :
 		
+		if self.preExecuteSignal()( self ) :
+			return
+		
 		self.__progressIconFrame.setChild( GafferUI.BusyWidget() )
 		self.__progressLabel.setText( "<h3>Processing...</h3>" )
 		self.__backButton.setEnabled( False )
@@ -307,7 +327,8 @@ class OpDialogue( GafferUI.Dialogue ) :
 			self.__initiateResultDisplay( result )
 
  			self.opExecutedSignal()( result )
- 			
+			self.postExecuteSignal()( self, result )
+			
 		else :
 		
 			self.__initiateErrorDisplay( result )
