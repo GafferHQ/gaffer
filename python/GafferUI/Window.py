@@ -294,8 +294,20 @@ class Window( GafferUI.ContainerWidget ) :
 			return True
 		else :
 			return False
+		
+	## Subclasses may override this to deny the closing of a window triggered
+	# either by user action or by a call to close(). Simply return False to
+	# prevent the closing.
+	def _acceptsClose( self ) :
+
+		return True
+		
+	## A signal emitted when the window has been closed successfully, either through
+	# user action or a call to close()
+	def closedSignal( self ) :
 	
-	
+		return self.__closedSignal
+
 	__caughtKeysSet = None
 	@classmethod
 	def __caughtKeys( cls ):
@@ -312,23 +324,9 @@ class Window( GafferUI.ContainerWidget ) :
 		
 		return cls.__caughtKeysSet
 	
-	
 	def __keyPress( self, widget, event ):
 		
 		return event.key in self.__caughtKeys()
-	
-	## Subclasses may override this to deny the closing of a window triggered
-	# either by user action or by a call to close(). Simply return False to
-	# prevent the closing.
-	def _acceptsClose( self ) :
-
-		return True
-		
-	## A signal emitted when the window has been closed successfully, either through
-	# user action or a call to close()
-	def closedSignal( self ) :
-	
-		return self.__closedSignal
 
 class _WindowEventFilter( QtCore.QObject ) :
 
