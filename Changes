@@ -1,3 +1,9 @@
+# 0.96.1
+
+#### Scene
+
+- Changed SceneProcedural to fix IPR shader edit bug
+
 # 0.96.0
 
 #### Core
