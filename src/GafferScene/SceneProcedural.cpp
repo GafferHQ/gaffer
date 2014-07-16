@@ -323,7 +323,6 @@ void SceneProcedural::render( RendererPtr renderer ) const
 				for( vector<InternedString>::const_iterator it=childNames->readable().begin(); it!=childNames->readable().end(); it++ )
 				{
 					childScenePath[m_scenePath.size()] = *it;
-					renderer->setAttribute( "name", new StringData( *it ) );
 					renderer->procedural( new SceneProcedural( *this, childScenePath ) );
 				}
 			}	
