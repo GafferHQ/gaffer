@@ -61,7 +61,6 @@ class RenderManLightTest( unittest.TestCase ) :
 	def testRender( self ) :
 	
 		s = Gaffer.ScriptNode()
-		s["fileName"].setValue( "/tmp/testRenderManLight.gfr" )
 		
 		s["l"] = GafferRenderMan.RenderManLight()
 		s["l"].loadShader( "pointlight" )
@@ -97,9 +96,13 @@ class RenderManLightTest( unittest.TestCase ) :
 		s["r"]["ribFileName"].setValue( "/tmp/testRenderManLight.rib" )
 		s["r"]["in"].setInput( s["o"]["out"] )
 		
-		## \todo This fails because ExecutableRender::execute() doesn't wait for the
-		# subprocess to complete as it should. We need to make it wait, but we can't
-		# do that until we're using the LocalDispatcher in gui applications.
+		# must save the script for the procedural to load it
+		# in the render process. if we were using a dispatcher,
+		# that would have saved the script for us, but we're
+		# calling execute() directly so it is our responsibility.
+		s["fileName"].setValue( "/tmp/testRenderManLight.gfr" )
+		s.save()
+		
 		s["r"].execute( [ Gaffer.Context.current() ] )
 		
 		i = IECore.EXRImageReader( "/tmp/testRenderManLight.exr" ).read()
