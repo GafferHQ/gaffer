@@ -35,6 +35,7 @@
 #  
 ##########################################################################
 
+import difflib
 import collections
 
 import IECore
@@ -222,59 +223,135 @@ class TextDiff( Diff ) :
 	
 		Diff.update( self, values )
 		
-		for i, value in enumerate( values ) :
-			self.frame( i ).getChild().setText( self.__formatValue( value ) )
-
-	def __formatValue( self, value ) :
-	
-		if isinstance( value, ( IECore.M44f, IECore.M44d ) ) :
-			return self.__formatMatrix( value )
-		elif isinstance( value, ( IECore.Box3f, IECore.Box3d ) ) :
-			return self.__formatBox( value )
-		elif isinstance( value, IECore.ObjectVector ) :
-			return self.__formatShader( value )
+		formattedValues = self.__formatValues( values )
+		for i, value in enumerate( formattedValues ) :
+			self.frame( i ).getChild().setText( self.__htmlHeader + value + self.__htmlFooter )
+		
+	def __formatValues( self, values ) :
+		
+		if len( values ) == 0 :
+			return []
+		elif len( values ) == 2 and type( values[0] ) != type( values[1] ) :
+			# different types - format each separately
+			return self.__formatValues( [ values[0] ] ) + self.__formatValues( [ values[1] ] )
+		elif isinstance( values[0], ( IECore.M44f, IECore.M44d ) ) :
+			return self.__formatMatrices( values )
+		elif isinstance( values[0], ( IECore.Box3f, IECore.Box3d ) ) :
+			return self.__formatBoxes( values )
+		elif isinstance( values[0], IECore.ObjectVector ) :
+			return self.__formatShaders( values )
+		elif isinstance( values[0], float ) :
+			return self.__formatFloats( values )
 		else :
-			return str( value )
-	
-	def __formatMatrix( self, matrix ) :
+			return self.__formatStrings( [ str( v ) for v in values ] )
+				
+	def __formatMatrices( self, matrices ) :
 		
-		result = "<table cellpadding=3>"
+		# it'd be nice to control cellspacing in the stylesheet, but qt doesn't seem to support it
+		result = [ "<table cellspacing=2>" ] * len( matrices )
 		for i in range( 0, 4 ) :
-			result += "<tr>"
+			result = [ r + "<tr>" for r in result ]
 			for j in range( 0, 4 ) :
-				result += "<td>" + self.__formatFloat( matrix[i,j] ) + "</td>"
-			result += "</tr>"
-		result += "</table>"
+				cells = self.__formatFloatsAsTableCells( [ m[i,j] for m in matrices ] )
+				for resultIndex, cell in enumerate( cells ) :
+					result[resultIndex] += cell
+			result = [ r + "</tr>" for r in result ]
+		result = [ r + "</table>" for r in result ]
 		
 		return result
 		
-	def __formatBox( self, box ) :
+	def __formatBoxes( self, boxes ) :
 		
-		if box.isEmpty() :
-			return "Empty"
-			
-		result = "<table cellpadding=3>"
-		for v in ( box.min, box.max ) :
-			result += "<tr>"
+		if len( boxes ) == 2 and ( boxes[0].isEmpty() or boxes[1].isEmpty() ) :
+			# We can't diff empty boxes against non-empty, because they're formatted differently.
+			return [ self.__formatBoxes( [ b ] )[0] if not b.isEmpty() else "Empty" for b in boxes ]
+		
+		# it'd be nice to control cellspacing in the stylesheet, but qt doesn't seem to support it
+		result = [ "<table cellspacing=2>" ] * len( boxes )
+		for field in ( "min", "max" ) :
+			result = [ r + "<tr>" for r in result ]
 			for i in range( 0, 3 ) :
-				result += "<td>" + self.__formatFloat( v[i] ) + "</td>"
-			result += "</tr>"
-		result += "</table>"
+				cells = self.__formatFloatsAsTableCells( [ getattr( b, field )[i] for b in boxes ] )
+				for resultIndex, cell in enumerate( cells ) :
+					result[resultIndex] += cell
+			result = [ r + "</tr>" for r in result ]
+		result = [ r + "</table>" for r in result ]
 		
 		return result
+
+	def __formatFloats( self, values ) :
+
+		return self.__formatStrings( [ self.__formatFloat( v ) for v in values ] )
+	
+	def __formatFloatsAsTableCells( self, values ) :
+	
+		different = len( values ) == 2 and values[0] != values[1]
+		if not different :
+			return [ "<td>" + self.__formatFloat( v ) + "</td>" for v in values ]
+		else :
+			# need to use internal span to prevent the class getting applied to not only the td
+			# but also the internal text, doubling up on the effect.
+			return [
+				"<td class=diffA><span class=>" + self.__formatFloat( values[0] ) + "</span></td>",
+				"<td class=diffB><span class=>" + self.__formatFloat( values[1] ) + "</span></td>",
+			]
+					
+	def __formatShaders( self, values ) :
+	
+		formattedValues = []
+		for value in values :
+			shaderName = value[-1].name
+			nodeName = value[-1].blindData().get( "gaffer:nodeName", None )
+			if nodeName is not None and nodeName.value != shaderName :
+				formattedValues.append( "%s (%s)" % ( nodeName.value, shaderName ) )
+			else :
+				formattedValues.append( shaderName )
+				
+		return self.__formatStrings( formattedValues )
+
+	def __formatStrings( self, strings ) :
+	
+		if len( strings ) == 1 :
+			return strings
+
+		a = strings[0]
+		b = strings[1]
+
+		aFormatted = ""
+		bFormatted = ""
+		for op, a1, a2, b1, b2 in difflib.SequenceMatcher( None, a, b ).get_opcodes() :
+
+			if op == "equal" :
+				aFormatted += a[a1:a2]
+				bFormatted += b[b1:b2]
+			elif op == "replace" :
+				aFormatted += '<span class="diffA">' + a[a1:a2] + "</span>"
+				bFormatted += '<span class="diffB">' + b[b1:b2] + "</span>"
+			elif op == "delete" :
+				aFormatted += '<span class="diffA">' + a[a1:a2] + "</span>"
+			elif op == "insert" :
+				bFormatted += '<span class="diffB">' + b[b1:b2] + "</span>"
+
+		return [ aFormatted, bFormatted ]
 
 	def __formatFloat( self, value ) :
-
+	
+		if value == 0.0 :
+			# this makes sure -0 is returned as 0
+			return "0"
+			
 		return ( "%.4f" % value ).rstrip( '0' ).rstrip( '.' )
 
-	def __formatShader( self, value ) :
+	__htmlHeader = (
+		"<html><head><style type=text/css>"
+		".diffA { background-color:rgba( 255, 77, 3, 75 ); }"
+		".diffB { background-color:rgba( 167, 214, 6, 75 ); }"
+		"td { padding:3px; }"
+		"</style></head>"
+		"<body>"
+	)
 	
-		shaderName = value[-1].name
-		nodeName = value[-1].blindData().get( "gaffer:nodeName", None )
-		if nodeName is not None and nodeName.value != shaderName :
-			return "%s (%s)" % ( nodeName.value, shaderName )
-		else :
-			return shaderName
+	__htmlFooter = "</body></html>"
 
 ##########################################################################
 # Row
