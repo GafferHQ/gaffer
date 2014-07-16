@@ -199,6 +199,12 @@ class OpDialogue( GafferUI.Dialogue ) :
 		else :
 			self.__initiateParameterEditing()
 	
+	## Returns the ParameterisedHolder used to store the Op.
+	# This may be used to edit parameter values.
+	def parameterisedHolder( self ) :
+	
+		return self.__node
+	
 	## Signal emitted before executing the Op.
 	# Slots should have the signature `bool slot( opDialogue )`,
 	# and may return True to cancel execution, or False to
