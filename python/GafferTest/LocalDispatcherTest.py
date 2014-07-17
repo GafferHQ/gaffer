@@ -51,6 +51,7 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		localDispatcher = Gaffer.Dispatcher.dispatcher( "Local" )
 		localDispatcher["jobDirectory"].setValue( "/tmp/dispatcherTest" )
 		localDispatcher["framesMode"].setValue( Gaffer.Dispatcher.FramesMode.CurrentFrame )
+		localDispatcher["executeInBackground"].setValue( False )
 	
 	def testDispatcherRegistration( self ) :
 		
@@ -371,6 +372,34 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		self.assertEqual( len( postCs ), 1 )
 		self.failUnless( postCs[0][0].isSame( dispatcher ) )
 		self.assertEqual( postCs[0][1], [ s["n1"] ] )
+	
+	def testExecuteInBackground( self ) :
+		
+		preCs = GafferTest.CapturingSlot( Gaffer.LocalDispatcher.preDispatchSignal() )
+		self.assertEqual( len( preCs ), 0 )
+		postCs = GafferTest.CapturingSlot( Gaffer.LocalDispatcher.postDispatchSignal() )
+		self.assertEqual( len( postCs ), 0 )
+		
+		s = Gaffer.ScriptNode()
+		s["n1"] = GafferTest.TextWriter()
+		s["n1"]["fileName"].setValue( "/tmp/dispatcherTest/n1_####.txt" )
+		s["n1"]["text"].setValue( "n1 on ${frame}" )
+		
+		dispatcher = Gaffer.Dispatcher.dispatcher( "Local" )
+		dispatcher["executeInBackground"].setValue( True )
+		dispatcher.dispatch( [ s["n1"] ] )
+		
+		# the dispatching started and finished
+		self.assertEqual( len( preCs ), 1 )
+		self.assertEqual( len( postCs ), 1 )
+		
+		# but the execution hasn't finished yet
+		self.assertFalse( os.path.isfile( s.context().substitute( s["n1"]["fileName"].getValue() ) ) )
+		
+		# wait long enough to finish execution
+		import time; time.sleep( 2 )
+		
+		self.assertTrue( os.path.isfile( s.context().substitute( s["n1"]["fileName"].getValue() ) ) )
 	
 	def testBadJobDirectory( self ) :
 		

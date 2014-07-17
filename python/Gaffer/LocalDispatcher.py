@@ -37,6 +37,7 @@
 import os
 import errno
 import subprocess
+import threading
 
 import Gaffer
 import IECore
@@ -46,6 +47,9 @@ class LocalDispatcher( Gaffer.Dispatcher ) :
 	def __init__( self, name = "LocalDispatcher" ) :
 
 		Gaffer.Dispatcher.__init__( self, name )
+		
+		backgroundPlug = Gaffer.BoolPlug( "executeInBackground", defaultValue = True )
+		self.addChild( backgroundPlug )
 	
 	def jobDirectory( self, context ) :
 		
@@ -72,10 +76,19 @@ class LocalDispatcher( Gaffer.Dispatcher ) :
 		scriptFileName = script["fileName"].getValue()
 		jobName = context.substitute( self["jobName"].getValue() )
 		jobDirectory = self.jobDirectory( context )
-		
-		messageContext = "%s : Job %s %s" % ( self.getName(), jobName, os.path.basename( jobDirectory ) )
+		messageTitle = "%s : Job %s %s" % ( self.getName(), jobName, os.path.basename( jobDirectory ) )
 		tmpScript = os.path.join( jobDirectory, os.path.basename( scriptFileName ) if scriptFileName else "untitled.gfr" )
+		
 		script.serialiseToFile( tmpScript )
+		
+		if self["executeInBackground"].getValue() :
+			threading.Thread( target = IECore.curry( self.__dispatch, taskDescriptions, tmpScript, messageTitle ) ).start()
+		else :
+			self.__dispatch( taskDescriptions, tmpScript, messageTitle )
+	
+	def __dispatch( self, taskDescriptions, scriptFile, messageTitle ) :
+		
+		script = taskDescriptions[0][0].node().scriptNode()
 		
 		for ( task, requirements ) in taskDescriptions :
 			
@@ -84,7 +97,7 @@ class LocalDispatcher( Gaffer.Dispatcher ) :
 			
 			cmd = [
 				"gaffer", "execute",
-				"-script", tmpScript,
+				"-script", scriptFile,
 				"-nodes", task.node().relativeName( script ),
 				"-frames", frames,
 			]
@@ -97,13 +110,13 @@ class LocalDispatcher( Gaffer.Dispatcher ) :
 			if contextArgs :
 				cmd.extend( [ "-context" ] + contextArgs )
 			
-			IECore.msg( IECore.MessageHandler.Level.Info, messageContext, " ".join( cmd ) )
+			IECore.msg( IECore.MessageHandler.Level.Info, messageTitle, " ".join( cmd ) )
 			result = subprocess.call( cmd )
 			if result :
-				IECore.msg( IECore.MessageHandler.Level.Error, messageContext, "Failed to execute " + task.node().getName() + " on frames " + frames )
+				IECore.msg( IECore.MessageHandler.Level.Error, messageTitle, "Failed to execute " + task.node().getName() + " on frames " + frames )
 				return
 		
-		IECore.msg( IECore.MessageHandler.Level.Info, messageContext, "Completed all tasks." )
+		IECore.msg( IECore.MessageHandler.Level.Info, messageTitle, "Completed all tasks." )
 	
 	def _doSetupPlugs( self, parentPlug ) :
 
