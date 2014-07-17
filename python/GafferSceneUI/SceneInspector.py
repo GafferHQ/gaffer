@@ -234,9 +234,13 @@ class TextDiff( Diff ) :
 		elif len( values ) == 2 and type( values[0] ) != type( values[1] ) :
 			# different types - format each separately
 			return self.__formatValues( [ values[0] ] ) + self.__formatValues( [ values[1] ] )
+		elif isinstance( values[0], IECore.Data ) and hasattr( values[0], "value" ) :
+			return self.__formatValues( [ v.value for v in values ] )
+		elif isinstance( values[0], ( IECore.V3f, IECore.V2f ) ) :
+			return self.__formatVectors( values )
 		elif isinstance( values[0], ( IECore.M44f, IECore.M44d ) ) :
 			return self.__formatMatrices( values )
-		elif isinstance( values[0], ( IECore.Box3f, IECore.Box3d ) ) :
+		elif isinstance( values[0], ( IECore.Box3f, IECore.Box3d, IECore.Box2f, IECore.Box2d ) ) :
 			return self.__formatBoxes( values )
 		elif isinstance( values[0], IECore.ObjectVector ) :
 			return self.__formatShaders( values )
@@ -244,7 +248,19 @@ class TextDiff( Diff ) :
 			return self.__formatFloats( values )
 		else :
 			return self.__formatStrings( [ str( v ) for v in values ] )
-				
+	
+	def __formatVectors( self, vectors ) :
+	
+		# it'd be nice to control cellspacing in the stylesheet, but qt doesn't seem to support it
+		result = [ "<table cellspacing=2><tr>" ] * len( vectors )
+		for i in range( 0, vectors[0].dimensions() ) :
+			cells = self.__formatFloatsAsTableCells( [ v[i] for v in vectors ] )
+			for resultIndex, cell in enumerate( cells ) :
+					result[resultIndex] += cell
+		result = [ r + "</tr></table>" for r in result ]
+		
+		return result
+		
 	def __formatMatrices( self, matrices ) :
 		
 		# it'd be nice to control cellspacing in the stylesheet, but qt doesn't seem to support it
@@ -270,7 +286,7 @@ class TextDiff( Diff ) :
 		result = [ "<table cellspacing=2>" ] * len( boxes )
 		for field in ( "min", "max" ) :
 			result = [ r + "<tr>" for r in result ]
-			for i in range( 0, 3 ) :
+			for i in range( 0, boxes[0].min.dimensions() ) :
 				cells = self.__formatFloatsAsTableCells( [ getattr( b, field )[i] for b in boxes ] )
 				for resultIndex, cell in enumerate( cells ) :
 					result[resultIndex] += cell
