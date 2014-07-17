@@ -589,3 +589,41 @@ class __ObjectSection( Section ) :
 		)
 		
 SceneInspector.registerSection( __ObjectSection, tab = "Selection" )
+
+class __OptionsSection( Section ) :
+
+	def __init__( self ) :
+	
+		Section.__init__( self, collapsed = True, label = "Options" )
+	
+		self.__rows = {} # mapping from option name to row
+		
+	def update( self, targets ) :
+	
+		options = []
+		for target in targets :
+			options.append( target.scene["globals"].getValue() )
+		
+		rows = []
+		optionNames = sorted( set( reduce( lambda k, o : k + o.keys(), options, [] ) ) )
+		for optionName in optionNames :
+			
+			if optionName == "gaffer:sets" :
+				# this will be displayed by a specialised section
+				continue
+			
+			row = self.__rows.get( optionName )
+			if row is None :
+				row = Row( optionName, TextDiff() )
+				self.__rows[optionName] = row
+			
+			values = [ o.get( optionName ) for o in options ]
+			row.getContent().update( values )
+			
+			row.setAlternate( len( rows ) % 2 )
+			
+			rows.append( row )
+		
+		self._mainColumn()[:] = rows
+		
+SceneInspector.registerSection( __OptionsSection, tab = "Globals" )
