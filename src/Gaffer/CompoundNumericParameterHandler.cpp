@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2014, Image Engine Design Inc. All rights reserved.
 //  Copyright (c) 2011, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -71,7 +71,7 @@ void CompoundNumericParameterHandler<T>::restore( GraphComponent *plugParent )
 }
 
 template<typename T>
-Gaffer::Plug *CompoundNumericParameterHandler<T>::setupPlug( GraphComponent *plugParent, Plug::Direction direction )
+Gaffer::Plug *CompoundNumericParameterHandler<T>::setupPlug( GraphComponent *plugParent, Plug::Direction direction, unsigned flags )
 {
 	m_plug = plugParent->getChild<PlugType>( m_parameter->name() );
 	if( !m_plug || m_plug->direction()!=direction )
@@ -80,7 +80,7 @@ Gaffer::Plug *CompoundNumericParameterHandler<T>::setupPlug( GraphComponent *plu
 		plugParent->setChild( m_parameter->name(), m_plug );
 	}
 
-	setupPlugFlags( m_plug.get() );
+	setupPlugFlags( m_plug.get(), flags );
 	
 	return m_plug.get();
 }

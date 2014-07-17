@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2014, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -51,9 +51,9 @@ ParameterHandler::~ParameterHandler()
 {
 }
 
-void ParameterHandler::setupPlugFlags( Plug *plug )
+void ParameterHandler::setupPlugFlags( Plug *plug, unsigned flags )
 {
-	plug->setFlags( Plug::Dynamic, true );
+	plug->setFlags( flags );
 	
 	const CompoundObject *ud = parameter()->userData()->member<CompoundObject>( "gaffer" );
 	if( ud )

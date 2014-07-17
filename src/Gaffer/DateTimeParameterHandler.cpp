@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2012-2014, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -65,7 +65,7 @@ void DateTimeParameterHandler::restore( GraphComponent *plugParent )
 {
 }
 
-Gaffer::Plug *DateTimeParameterHandler::setupPlug( GraphComponent *plugParent, Plug::Direction direction )
+Gaffer::Plug *DateTimeParameterHandler::setupPlug( GraphComponent *plugParent, Plug::Direction direction, unsigned flags )
 {
 	m_plug = plugParent->getChild<StringPlug>( m_parameter->name() );
 	if( !m_plug || m_plug->direction()!=direction )
@@ -74,7 +74,7 @@ Gaffer::Plug *DateTimeParameterHandler::setupPlug( GraphComponent *plugParent, P
 		plugParent->setChild( m_parameter->name(), m_plug );
 	}
 
-	setupPlugFlags( m_plug.get() );
+	setupPlugFlags( m_plug.get(), flags );
 	
 	return m_plug.get();
 }

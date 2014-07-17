@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2014, Image Engine Design Inc. All rights reserved.
 //  Copyright (c) 2011, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -88,7 +88,7 @@ void CompoundParameterHandler::restore( GraphComponent *plugParent )
 	
 }
 
-Gaffer::Plug *CompoundParameterHandler::setupPlug( GraphComponent *plugParent, Plug::Direction direction )
+Gaffer::Plug *CompoundParameterHandler::setupPlug( GraphComponent *plugParent, Plug::Direction direction, unsigned flags )
 {
 	// decide what name our compound plug should have
 	
@@ -103,7 +103,7 @@ Gaffer::Plug *CompoundParameterHandler::setupPlug( GraphComponent *plugParent, P
 		plugParent->setChild( name, m_plug );
 	}
 
-	setupPlugFlags( m_plug.get() );
+	setupPlugFlags( m_plug.get(), flags );
 	
 	// remove any child plugs we don't need
 	
@@ -137,7 +137,7 @@ Gaffer::Plug *CompoundParameterHandler::setupPlug( GraphComponent *plugParent, P
 		ParameterHandler *h = handler( it->get(), true );
 		if( h )
 		{
-			h->setupPlug( m_plug.get(), direction );
+			h->setupPlug( m_plug.get(), direction, flags );
 		}
 	}
 	
