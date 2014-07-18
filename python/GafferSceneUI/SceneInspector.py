@@ -655,7 +655,7 @@ class __OptionsSection( Section ) :
 		optionNames = sorted( set( reduce( lambda k, o : k + o.keys(), options, [] ) ) )
 		for optionName in optionNames :
 			
-			if optionName == "gaffer:sets" :
+			if optionName == "gaffer:sets" or optionName.startswith( "display:" ) :
 				# this will be displayed by a specialised section
 				continue
 			
