@@ -218,6 +218,7 @@ from CompoundDataPlugValueWidget import CompoundDataPlugValueWidget
 from SectionedCompoundDataPlugValueWidget import SectionedCompoundDataPlugValueWidget
 import ScriptNodeUI
 import DispatcherUI
+import LocalDispatcherUI
 import ExecutableNodeUI
 from TransformPlugValueWidget import TransformPlugValueWidget
 from IncrementingPlugValueWidget import IncrementingPlugValueWidget
