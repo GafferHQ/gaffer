@@ -212,12 +212,14 @@ class Diff( GafferUI.Widget ) :
 
 class TextDiff( Diff ) :
 
-	def __init__( self, orientation=GafferUI.ListContainer.Orientation.Vertical, **kw ) :
+	def __init__( self, orientation=GafferUI.ListContainer.Orientation.Vertical, highlightDiffs=True, **kw ) :
 	
 		Diff.__init__( self, orientation, **kw )
 	
 		self.frame( 0 ).setChild( GafferUI.Label() )
 		self.frame( 1 ).setChild( GafferUI.Label() )
+		
+		self.__highlightDiffs = highlightDiffs
 		
 	def update( self, values ) :
 	
@@ -302,7 +304,7 @@ class TextDiff( Diff ) :
 	def __formatFloatsAsTableCells( self, values ) :
 	
 		different = len( values ) == 2 and values[0] != values[1]
-		if not different :
+		if not different or not self.__highlightDiffs :
 			return [ "<td>" + self.__formatFloat( v ) + "</td>" for v in values ]
 		else :
 			# need to use internal span to prevent the class getting applied to not only the td
@@ -332,6 +334,9 @@ class TextDiff( Diff ) :
 
 		a = strings[0]
 		b = strings[1]
+
+		if a == b or not self.__highlightDiffs :
+			return strings
 
 		aFormatted = ""
 		bFormatted = ""
@@ -456,7 +461,7 @@ class __NodeSection( Section ) :
 		Section.__init__( self, collapsed = None )
 
 		with self._mainColumn() :
-			self.__row = Row( "Node Name", TextDiff() )
+			self.__row = Row( "Node Name", TextDiff( highlightDiffs = False ) )
 
 	def update( self, targets ) :
 		
