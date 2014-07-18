@@ -477,7 +477,7 @@ SceneInspector.TextDiff = TextDiff
 SceneInspector.Section = Section
 
 ##########################################################################
-# Private section implementations
+# Node section
 ##########################################################################
 
 class __NodeSection( Section ) :
@@ -500,6 +500,10 @@ class __NodeSection( Section ) :
 
 SceneInspector.registerSection( __NodeSection, tab = None )
 
+##########################################################################
+# Path section
+##########################################################################
+
 class __PathSection( Section ) :
 
 	def __init__( self ) :
@@ -514,6 +518,10 @@ class __PathSection( Section ) :
 		self.__row.getContent().update( [ target.path for target in targets ] )
 
 SceneInspector.registerSection( __PathSection, tab = "Selection" )
+
+##########################################################################
+# Transform section
+##########################################################################
 
 class __TransformSection( Section ) :
 
@@ -531,6 +539,10 @@ class __TransformSection( Section ) :
 		self.__worldMatrixRow.getContent().update( [ target.scene.fullTransform( target.path ) for target in targets ] )
 		
 SceneInspector.registerSection( __TransformSection, tab = "Selection" )
+
+##########################################################################
+# Bound section
+##########################################################################
 
 class __BoundSection( Section ) :
 
@@ -556,6 +568,10 @@ class __BoundSection( Section ) :
 		self.__worldBoundRow.getContent().update( worldBounds )
 		
 SceneInspector.registerSection( __BoundSection, tab = "Selection" )
+
+##########################################################################
+# Attributes section
+##########################################################################
 
 class __AttributesSection( Section ) :
 
@@ -590,6 +606,10 @@ class __AttributesSection( Section ) :
 		self._mainColumn()[:] = rows
 		
 SceneInspector.registerSection( __AttributesSection, tab = "Selection" )
+
+##########################################################################
+# Object section
+##########################################################################
 
 class __ObjectSection( Section ) :
 
@@ -637,6 +657,10 @@ class __ObjectSection( Section ) :
 		
 SceneInspector.registerSection( __ObjectSection, tab = "Selection" )
 
+##########################################################################
+# Options section
+##########################################################################
+
 class __OptionsSection( Section ) :
 
 	def __init__( self ) :
@@ -674,3 +698,153 @@ class __OptionsSection( Section ) :
 		self._mainColumn()[:] = rows
 		
 SceneInspector.registerSection( __OptionsSection, tab = "Globals" )
+
+##########################################################################
+# Sets section
+##########################################################################
+
+class _SetWidget( GafferUI.Widget ) :
+ 
+ 	def __init__( self ) :
+ 	
+		self.__buttonRow = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 0 )
+ 	
+		GafferUI.Widget.__init__( self, self.__buttonRow )
+
+		self.__connections = []
+		with self.__buttonRow :
+			for i in range( 0, 3 ) :
+				# we set highlightOnOver to False, so we can manage the highlighting ourselves.
+				# this lets us get the highlighting right when it must span two buttons.
+				button = GafferUI.Button( image = "set.png", hasFrame=False, highlightOnOver=False )
+				self.__connections.append( button.enterSignal().connect( Gaffer.WeakMethod( self.__enter ) ) )
+				self.__connections.append( button.leaveSignal().connect( Gaffer.WeakMethod( self.__leave ) ) )
+				self.__connections.append( button.clickedSignal().connect( Gaffer.WeakMethod( self.__clicked ) ) )
+		
+	def update( self, scenesAndSets ) :
+		
+		self.__scenesAndSets = scenesAndSets
+		self.__setIntersection = None
+		
+		if len( scenesAndSets ) == 1 :
+			images = ( "set", None, None )
+		elif len( scenesAndSets ) == 2 :
+			if scenesAndSets[0].set is None or scenesAndSets[1].set is None :
+				images = (
+					"setA" if scenesAndSets[0].set is not None else "setMissing",
+					"setB" if scenesAndSets[1].set is not None else "setMissing",
+					None,
+				)
+			else :
+				# check for intersection
+				pathsA = set( scenesAndSets[0].set.value.paths() )
+				pathsB = set( scenesAndSets[1].set.value.paths() )
+				self.__setIntersection = pathsA.intersection( pathsB )
+				if self.__setIntersection :
+					if scenesAndSets[0].set != scenesAndSets[1].set :
+						images = ( "setIntersectionLeft", "setIntersectionCenter", "setIntersectionRight" )
+					else :
+						images = ( "set", None, None )
+				else :
+					images = ( "setA", "setB", None )
+		
+		for i, image in enumerate( images ) :
+			if image is not None :
+				self.__buttonRow[i].__image = image
+				self.__buttonRow[i].setImage( image + ".png" )
+			self.__buttonRow[i].setVisible( image is not None )
+		
+	def __enter( self, button ) :
+	
+		highlightSuffix = ""
+		if self.__setIntersection and self.__scenesAndSets[0].set != self.__scenesAndSets[1].set :
+			affectedButtons = self.__buttonRow[:]
+			highlightSuffix = ( "Left", "Center", "Right" )[ affectedButtons.index( button ) ]
+		else :
+			affectedButtons = [ button ]
+	
+		for button in affectedButtons :
+			button.setImage( button.__image + "Highlighted" + highlightSuffix + ".png" )
+			
+	def __leave( self, button ) :
+	
+		if self.__setIntersection and self.__scenesAndSets[0].set != self.__scenesAndSets[1].set :
+			affectedButtons = self.__buttonRow[:]
+		else :
+			affectedButtons = [ button ]
+			
+		for button in affectedButtons :
+			button.setImage( button.__image + ".png" )
+
+	def __clicked( self, button ) :
+	
+		buttonIndex = self.__buttonRow.index( button )
+
+		if len( self.__scenesAndSets ) == 1 or self.__scenesAndSets[0].set == self.__scenesAndSets[1].set :
+			toSelect = self.__scenesAndSets[0].set
+		elif self.__setIntersection :
+			if buttonIndex == 0 :
+				toSelect = self.__scenesAndSets[0].set
+			elif buttonIndex == 1 :
+				toSelect = self.__setIntersection
+			else :
+				toSelect = self.__scenesAndSets[1].set
+		else :
+			toSelect = self.__scenesAndSets[buttonIndex].set
+		
+		if toSelect is None :
+			toSelect = IECore.StringVectorData()
+		elif isinstance( toSelect, set ) :
+			toSelect = IECore.StringVectorData( toSelect )
+		elif isinstance( toSelect, GafferScene.PathMatcherData ) :
+			toSelect = IECore.StringVectorData( toSelect.value.paths() )
+		
+		print toSelect
+			
+		context = self.ancestor( SceneInspector ).getContext()
+		context["ui:scene:selectedPaths"] = toSelect
+
+_SceneAndSet = collections.namedtuple( "_SceneAndSet", [ "scene", "set" ] )
+
+class _SetsSection( Section ) :
+
+	def __init__( self ) :
+	
+		Section.__init__( self, collapsed = True, label = "Sets" )
+
+		self.__rows = {} # mapping from option name to row
+
+	def update( self, targets ) :
+	
+		if len( targets ) == 2 and targets[0].scene == targets[1].scene :
+			# since we're not sensitive to the path in the target, we
+			# only consider one if both targets have the same scene.
+			targets = targets[:1]
+		
+		targetSets = []
+		for target in targets :
+			globals = target.scene["globals"].getValue()
+			targetSets.append( globals.get( "gaffer:sets", {} ) )		
+		
+ 		rows = []
+		setNames = sorted( set( reduce( lambda k, s : k + s.keys(), targetSets, [] ) ) )
+ 		for setName in setNames :
+
+			row = self.__rows.get( setName )
+			if row is None :
+				rowLabel = setName
+				if rowLabel in ( "__lights", "__cameras" ) :
+					rowLabel = "<b>" + rowLabel[2:].capitalize() + "</b>"
+				row = Row( rowLabel, _SetWidget() )
+				self.__rows[setName] = row
+
+			scenesAndSets = [ _SceneAndSet( targets[i].scene, targetSets[i].get( setName ) ) for i in range( 0, len( targets ) ) ]
+		
+			row.getContent().update( scenesAndSets )
+			row.setAlternate( len( rows ) % 2 )
+ 			
+ 			rows.append( row )
+ 		
+ 		self._mainColumn()[:] = rows
+
+SceneInspector.registerSection( _SetsSection, tab = "Globals" )

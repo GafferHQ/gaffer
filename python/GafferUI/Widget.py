@@ -1049,8 +1049,9 @@ class Widget( object ) :
 		QPushButton#gafferWithoutFrame {
 			
 			border: 0px solid transparent;
-			border-radius: 3px;
+			border-radius: 0px;
 			padding: 0px;
+			margin: 0px;
 			background-color: none;
 			
 		}
