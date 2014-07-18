@@ -36,6 +36,7 @@
 ##########################################################################
 
 import difflib
+import itertools
 import collections
 
 import IECore
@@ -238,16 +239,16 @@ class TextDiff( Diff ) :
 			return self.__formatValues( [ values[0] ] ) + self.__formatValues( [ values[1] ] )
 		elif isinstance( values[0], IECore.Data ) and hasattr( values[0], "value" ) :
 			return self.__formatValues( [ v.value for v in values ] )
-		elif isinstance( values[0], ( IECore.V3f, IECore.V2f ) ) :
+		elif isinstance( values[0], ( IECore.V3f, IECore.V3i, IECore.V2f, IECore.V2i ) ) :
 			return self.__formatVectors( values )
 		elif isinstance( values[0], ( IECore.M44f, IECore.M44d ) ) :
 			return self.__formatMatrices( values )
-		elif isinstance( values[0], ( IECore.Box3f, IECore.Box3d, IECore.Box2f, IECore.Box2d ) ) :
+		elif isinstance( values[0], ( IECore.Box3f, IECore.Box3d, IECore.Box3i, IECore.Box2f, IECore.Box2d, IECore.Box2i ) ) :
 			return self.__formatBoxes( values )
 		elif isinstance( values[0], IECore.ObjectVector ) :
 			return self.__formatShaders( values )
-		elif isinstance( values[0], float ) :
-			return self.__formatFloats( values )
+		elif isinstance( values[0], ( float, int ) ) :
+			return self.__formatNumbers( values )
 		elif isinstance( values[0], basestring ) :
 			return self.__formatStrings( [ str( v ) for v in values ] )
 		else :
@@ -255,67 +256,69 @@ class TextDiff( Diff ) :
 			
 	def __formatVectors( self, vectors ) :
 	
-		# it'd be nice to control cellspacing in the stylesheet, but qt doesn't seem to support it
-		result = [ "<table cellspacing=2><tr>" ] * len( vectors )
-		for i in range( 0, vectors[0].dimensions() ) :
-			cells = self.__formatFloatsAsTableCells( [ v[i] for v in vectors ] )
-			for resultIndex, cell in enumerate( cells ) :
-					result[resultIndex] += cell
-		result = [ r + "</tr></table>" for r in result ]
-		
-		return result
-		
+		arrays = [ [ v ] for v in vectors ]
+		return self.__formatNumberArrays( arrays )
+
 	def __formatMatrices( self, matrices ) :
 		
-		# it'd be nice to control cellspacing in the stylesheet, but qt doesn't seem to support it
-		result = [ "<table cellspacing=2>" ] * len( matrices )
-		for i in range( 0, 4 ) :
-			result = [ r + "<tr>" for r in result ]
-			for j in range( 0, 4 ) :
-				cells = self.__formatFloatsAsTableCells( [ m[i,j] for m in matrices ] )
-				for resultIndex, cell in enumerate( cells ) :
-					result[resultIndex] += cell
-			result = [ r + "</tr>" for r in result ]
-		result = [ r + "</table>" for r in result ]
-		
-		return result
+		arrays = []
+		for matrix in matrices :
+			array = []
+			for i in range( 0, matrix.dimensions()[0] ) :
+				array.append( [ matrix[i,j] for j in range( 0, matrix.dimensions()[1] ) ] )
+			arrays.append( array )
+			
+		return self.__formatNumberArrays( arrays )
 		
 	def __formatBoxes( self, boxes ) :
 		
 		if len( boxes ) == 2 and ( boxes[0].isEmpty() or boxes[1].isEmpty() ) :
 			# We can't diff empty boxes against non-empty, because they're formatted differently.
 			return [ self.__formatBoxes( [ b ] )[0] if not b.isEmpty() else "Empty" for b in boxes ]
+
+		arrays = []
+		for box in boxes :
+			arrays.append( [ box.min, box.max ] )
+
+		return self.__formatNumberArrays( arrays )
+	
+	def __formatNumbers( self, values ) :
+
+		values = self.__numbersToAlignedStrings( values )
+		values = self.__highlightFromFirstDifference( values )
+		return [ "<pre>" + v + "</pre>" for v in values ]
 		
-		# it'd be nice to control cellspacing in the stylesheet, but qt doesn't seem to support it
-		result = [ "<table cellspacing=2>" ] * len( boxes )
-		for field in ( "min", "max" ) :
+	def __formatNumberArrays( self, values ) :
+	
+		# values is a list of 2d arrays of numbers.
+		# stack one atop the other, and then format all
+		# the values for each column together, so that they
+		# are aligned.
+	
+		rows = itertools.chain( *values )
+		columns = zip( *(row for row in rows) )
+		formattedColumns = [ self.__numbersToAlignedStrings( c ) for c in columns ]
+	
+		# transform back into a list of 2d arrays of
+		# formatted strings.
+		formattedRows = zip( *formattedColumns )
+		values = zip( *( [ iter( formattedRows ) ] * len( values[0] ) ) )
+		
+		# build the tables. it'd be nice to control cellspacing
+		# in the stylesheet, but qt doesn't seem to support that.
+		result = [ "<table cellspacing=2>" ] * len( values )
+		for row in range( 0, len( values[0] ) ) :
 			result = [ r + "<tr>" for r in result ]
-			for i in range( 0, boxes[0].min.dimensions() ) :
-				cells = self.__formatFloatsAsTableCells( [ getattr( b, field )[i] for b in boxes ] )
+			for column in range( 0, len( values[0][row] ) ) :
+				cellValues = self.__highlightFromFirstDifference( [ v[row][column] for v in values ] )
+				cells = [ "<td><pre>" + v + "</pre></td>" for v in cellValues ]
 				for resultIndex, cell in enumerate( cells ) :
 					result[resultIndex] += cell
 			result = [ r + "</tr>" for r in result ]
 		result = [ r + "</table>" for r in result ]
-		
+	
 		return result
-
-	def __formatFloats( self, values ) :
-
-		return self.__formatStrings( [ self.__formatFloat( v ) for v in values ] )
-	
-	def __formatFloatsAsTableCells( self, values ) :
-	
-		different = len( values ) == 2 and values[0] != values[1]
-		if not different or not self.__highlightDiffs :
-			return [ "<td>" + self.__formatFloat( v ) + "</td>" for v in values ]
-		else :
-			# need to use internal span to prevent the class getting applied to not only the td
-			# but also the internal text, doubling up on the effect.
-			return [
-				"<td class=diffA><span class=>" + self.__formatFloat( values[0] ) + "</span></td>",
-				"<td class=diffB><span class=>" + self.__formatFloat( values[1] ) + "</span></td>",
-			]
-					
+		
 	def __formatShaders( self, values ) :
 	
 		formattedValues = []
@@ -357,14 +360,35 @@ class TextDiff( Diff ) :
 
 		return [ aFormatted, bFormatted ]
 
-	def __formatFloat( self, value ) :
+	def __numbersToAlignedStrings( self, values ) :
 	
-		if value == 0.0 :
-			# this makes sure -0 is returned as 0
-			return "0"
-			
-		return ( "%.4f" % value ).rstrip( '0' ).rstrip( '.' )
+		if isinstance( values[0], int ) :
+			values = [ "%d" % v for v in values ]
+		else :
+			# the funky comparison with 0.0 converts -0.0 to 0.0
+			values = [ "%.4f" % ( v if v != 0.0 else 0.0 ) for v in values ]
 
+		if len( values ) > 1 :
+			maxLength = max( len( v ) for v in values )
+			values = [ v.rjust( maxLength ) for v in values ]
+			
+		return values
+	
+	def __highlightFromFirstDifference( self, values ) :
+	
+		if len( values ) < 2 or not self.__highlightDiffs :
+			return values
+	
+		# d is the index of the first differing digit, or -1 if there is no difference
+		d = next( ( i for i in xrange( 0, len( values[0] ) ) if values[0][i] != values[1][i] ), -1 )
+		if d < 0 :
+			return values
+			
+		return [
+			values[0][:d] + "<span class=diffA>" + values[0][d:] + "</span>",
+			values[1][:d] + "<span class=diffB>" + values[1][d:] + "</span>",
+		]
+		
 	__htmlHeader = (
 		"<html><head><style type=text/css>"
 		".diffA { background-color:rgba( 255, 77, 3, 75 ); }"
@@ -498,8 +522,8 @@ class __TransformSection( Section ) :
 		Section.__init__( self, collapsed = True, label = "Transform" )
 		
 		with self._mainColumn() :
-			self.__localMatrixRow = Row( "Local", TextDiff( orientation = GafferUI.ListContainer.Orientation.Horizontal ) )
-			self.__worldMatrixRow = Row( "World", TextDiff( orientation = GafferUI.ListContainer.Orientation.Horizontal ), alternate = True )
+			self.__localMatrixRow = Row( "Local", TextDiff() )
+			self.__worldMatrixRow = Row( "World", TextDiff(), alternate = True )
 		
 	def update( self, targets ) :
 	
@@ -515,8 +539,8 @@ class __BoundSection( Section ) :
 		Section.__init__( self, collapsed = True, label = "Bounding box" )
 		
 		with self._mainColumn() :
-			self.__localBoundRow = Row( "Local", TextDiff( orientation = GafferUI.ListContainer.Orientation.Horizontal ) )
-			self.__worldBoundRow = Row( "World", TextDiff( orientation = GafferUI.ListContainer.Orientation.Horizontal ), alternate = True )
+			self.__localBoundRow = Row( "Local", TextDiff() )
+			self.__worldBoundRow = Row( "World", TextDiff(), alternate = True )
 	
 	def update( self, targets ) :
 	
