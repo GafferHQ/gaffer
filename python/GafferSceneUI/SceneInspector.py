@@ -248,9 +248,11 @@ class TextDiff( Diff ) :
 			return self.__formatShaders( values )
 		elif isinstance( values[0], float ) :
 			return self.__formatFloats( values )
-		else :
+		elif isinstance( values[0], basestring ) :
 			return self.__formatStrings( [ str( v ) for v in values ] )
-	
+		else :
+			return [ str( v ) for v in values ]
+			
 	def __formatVectors( self, vectors ) :
 	
 		# it'd be nice to control cellspacing in the stylesheet, but qt doesn't seem to support it
