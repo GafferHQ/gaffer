@@ -78,6 +78,7 @@ def __projectBookmark( forWidget, location ) :
 localDispatcher = Gaffer.Dispatcher.dispatcher( "Local" )
 localDispatcher["jobName"].setValue( "${script:name}" )
 localDispatcher["jobDirectory"].setValue( "${project:rootDirectory}/dispatcher" )
+localDispatcher["executeInBackground"].setValue( True )
 
 GafferUI.Bookmarks.acquire( application ).add( "Project", IECore.curry( __projectBookmark, location="${project:rootDirectory}" ) )
 GafferUI.Bookmarks.acquire( application, category="script" ).setDefault( IECore.curry( __projectBookmark, location="${project:rootDirectory}/scripts" ) )

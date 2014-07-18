@@ -51,7 +51,6 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		localDispatcher = Gaffer.Dispatcher.dispatcher( "Local" )
 		localDispatcher["jobDirectory"].setValue( "/tmp/dispatcherTest" )
 		localDispatcher["framesMode"].setValue( Gaffer.Dispatcher.FramesMode.CurrentFrame )
-		localDispatcher["executeInBackground"].setValue( False )
 	
 	def testDispatcherRegistration( self ) :
 		

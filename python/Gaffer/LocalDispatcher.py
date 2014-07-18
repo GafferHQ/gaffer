@@ -48,7 +48,7 @@ class LocalDispatcher( Gaffer.Dispatcher ) :
 
 		Gaffer.Dispatcher.__init__( self, name )
 		
-		backgroundPlug = Gaffer.BoolPlug( "executeInBackground", defaultValue = True )
+		backgroundPlug = Gaffer.BoolPlug( "executeInBackground", defaultValue = False )
 		self.addChild( backgroundPlug )
 	
 	def jobDirectory( self, context ) :
