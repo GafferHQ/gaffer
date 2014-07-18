@@ -162,6 +162,7 @@ class View : public Gaffer::Node
 		struct ViewDescription
 		{
 			ViewDescription( IECore::TypeId plugType );
+			ViewDescription( IECore::TypeId nodeType, const std::string &plugPathRegex );
 			static ViewPtr creator( Gaffer::PlugPtr input );
 		};
 		
