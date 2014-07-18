@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2014, Image Engine Design Inc. All rights reserved.
 //  Copyright (c) 2011, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -74,7 +74,7 @@ void TypedParameterHandler<T>::restore( GraphComponent *plugParent )
 }
 
 template<typename T>
-Gaffer::Plug *TypedParameterHandler<T>::setupPlug( GraphComponent *plugParent, Plug::Direction direction )
+Gaffer::Plug *TypedParameterHandler<T>::setupPlug( GraphComponent *plugParent, Plug::Direction direction, unsigned flags )
 {
 	m_plug = plugParent->getChild<PlugType>( m_parameter->name() );
 	if( !m_plug || m_plug->direction()!=direction )
@@ -86,12 +86,12 @@ Gaffer::Plug *TypedParameterHandler<T>::setupPlug( GraphComponent *plugParent, P
 			// for the parameter. it's a bit naughty to have FileSequenceParameter-specific
 			// code in here, but i think it's preferable to deriving off a whle new
 			// ParameterHandler just to add this one line of code.
-			m_plug->setFlags( Plug::PerformsSubstitutions, false );
+			flags &= ~Plug::PerformsSubstitutions;
 		}
 		plugParent->setChild( m_parameter->name(), m_plug );
 	}
 
-	setupPlugFlags( m_plug.get() );
+	setupPlugFlags( m_plug.get(), flags );
 	
 	return m_plug.get();
 }

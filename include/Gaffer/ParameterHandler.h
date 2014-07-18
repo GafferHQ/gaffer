@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2014, Image Engine Design Inc. All rights reserved.
 //  Copyright (c) 2011, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -64,7 +64,9 @@ class ParameterHandler : public IECore::RefCounted
 		virtual const IECore::Parameter *parameter() const = 0;
 
 		virtual void restore( GraphComponent *plugParent ) = 0;
-		virtual Gaffer::Plug *setupPlug( GraphComponent *plugParent, Plug::Direction direction=Plug::In ) = 0;
+		/// Setup a plug to match the parameter. Derived classes may choose to reuse existing plugs where possible.
+		/// The flags argument provides the base set of flags for the plug, before parameter user data applies overrides.
+		virtual Gaffer::Plug *setupPlug( GraphComponent *plugParent, Plug::Direction direction=Plug::In, unsigned flags = Plug::Default | Plug::Dynamic ) = 0;
 
 		virtual Gaffer::Plug *plug() = 0;
 		virtual const Gaffer::Plug *plug() const = 0;
@@ -85,7 +87,7 @@ class ParameterHandler : public IECore::RefCounted
 		ParameterHandler();
 		
 		/// Should be called by derived classes in setupPlug().
-		void setupPlugFlags( Plug *plug );
+		void setupPlugFlags( Plug *plug, unsigned flags );
 		
 		/// Create a static instance of this to automatically register a derived class
 		/// with the factory mechanism. Derived class must have a constructor of the form

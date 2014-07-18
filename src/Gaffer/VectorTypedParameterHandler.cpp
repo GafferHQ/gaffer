@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2014, Image Engine Design Inc. All rights reserved.
 //  Copyright (c) 2011, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -73,7 +73,7 @@ void VectorTypedParameterHandler<ParameterType>::restore( GraphComponent *plugPa
 }
 
 template<typename ParameterType>
-Gaffer::Plug *VectorTypedParameterHandler<ParameterType>::setupPlug( GraphComponent *plugParent, Plug::Direction direction )
+Gaffer::Plug *VectorTypedParameterHandler<ParameterType>::setupPlug( GraphComponent *plugParent, Plug::Direction direction, unsigned flags )
 {
 	m_plug = plugParent->getChild<PlugType>( m_parameter->name() );
 	if( !m_plug || m_plug->direction()!=direction )
@@ -82,7 +82,7 @@ Gaffer::Plug *VectorTypedParameterHandler<ParameterType>::setupPlug( GraphCompon
 		plugParent->setChild( m_parameter->name(), m_plug );
 	}
 	
-	setupPlugFlags( m_plug.get() );
+	setupPlugFlags( m_plug.get(), flags );
 	
 	return m_plug.get();
 }

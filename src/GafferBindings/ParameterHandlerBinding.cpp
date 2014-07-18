@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2014, Image Engine Design Inc. All rights reserved.
 //  Copyright (c) 2011, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -80,11 +80,11 @@ class ParameterHandlerWrapper : public ParameterHandler, public IECorePython::Wr
 			/// python-based parameter handlers in other packages.
 		}
 		
-		virtual Plug *setupPlug( GraphComponent *plugParent, Plug::Direction direction )
+		virtual Plug *setupPlug( GraphComponent *plugParent, Plug::Direction direction, unsigned flags )
 		{
 			IECorePython::ScopedGILLock gilLock;
 			override o = this->get_override( "setupPlug" );
-			return o( GraphComponentPtr( plugParent ), direction );
+			return o( GraphComponentPtr( plugParent ), direction, flags );
 		}
 		
 		virtual Plug *plug()
@@ -156,7 +156,7 @@ void GafferBindings::bindParameterHandler()
 		.def(
 			"setupPlug",
 			&ParameterHandler::setupPlug,
-			( arg( "plugParent" ), arg( "direction" )=Plug::In ),
+			( arg( "plugParent" ), arg( "direction" )=Plug::In, arg( "flags" )=(Plug::Default | Plug::Dynamic) ),
 			return_value_policy<IECorePython::CastToIntrusivePtr>()
 		)
 		.def(

@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012-2014, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -59,9 +59,9 @@ class ClassVectorParameterHandler( Gaffer.CompoundParameterHandler ) :
 
 		Gaffer.CompoundParameterHandler.restore( self, plugParent )
 					
-	def setupPlug( self, plugParent, direction ) :
+	def setupPlug( self, plugParent, direction, flags ) :
 							
-		Gaffer.CompoundParameterHandler.setupPlug( self, plugParent, direction )
+		Gaffer.CompoundParameterHandler.setupPlug( self, plugParent, direction, flags )
 		
 		# add the class specification plugs now if they're not there.
 		compoundPlug = self.plug()

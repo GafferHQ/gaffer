@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2014, Image Engine Design Inc. All rights reserved.
 #  Copyright (c) 2011, John Haddon. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
@@ -80,7 +80,7 @@ class ParameterHandlerTest( GafferTest.TestCase ) :
 			
 				return self.__parameter
 			
-			def setupPlug( self, plugParent, direction ) :
+			def setupPlug( self, plugParent, direction, flags ) :
 				
 				self.__plug = plugParent.getChild( self.__parameter.name )
 				if not isinstance( self.__plug, Gaffer.IntPlug ) or self.__plug.direction() != direction :
@@ -91,7 +91,10 @@ class ParameterHandlerTest( GafferTest.TestCase ) :
 						self.__parameter.minValue,
 						self.__parameter.maxValue
 					)
-					
+				
+				## \todo: should ParameterHandler::setupPlugFlags be exposed so we can call it here?
+				self.__plug.setFlags( flags )
+				
 				plugParent[self.__parameter.name] = self.__plug
 			
 			def plug( self ) :
@@ -187,6 +190,25 @@ class ParameterHandlerTest( GafferTest.TestCase ) :
 		
 		h.setupPlug( n )
 		self.failUnless( h.plug().getFlags( Gaffer.Plug.Flags.ReadOnly ) )
+	
+	def testNonDefaultFlags( self ) :
+		
+		p = IECore.IntParameter( "i", "d", 10 )
+		
+		n = Gaffer.Node()
+		h = Gaffer.ParameterHandler.create( p )
+		
+		h.setupPlug( n )
+		self.assertTrue( h.plug().getFlags( Gaffer.Plug.Flags.Dynamic ) )
+		self.assertFalse( h.plug().getFlags( Gaffer.Plug.Flags.ReadOnly ) )
+		
+		h.setupPlug( n, flags = Gaffer.Plug.Flags.Default )
+		self.assertFalse( h.plug().getFlags( Gaffer.Plug.Flags.Dynamic ) )
+		self.assertFalse( h.plug().getFlags( Gaffer.Plug.Flags.ReadOnly ) )
+		
+		h.setupPlug( n, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.ReadOnly )
+		self.assertFalse( h.plug().getFlags( Gaffer.Plug.Flags.Dynamic ) )
+		self.assertTrue( h.plug().getFlags( Gaffer.Plug.Flags.ReadOnly ) )
 		
 if __name__ == "__main__":
 	unittest.main()

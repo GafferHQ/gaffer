@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2014, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -78,17 +78,17 @@ class CompoundParameterHandlerWrapper : public CompoundParameterHandler, public 
 			}
 		}
 
-		virtual Plug *setupPlug( GraphComponent *plugParent, Plug::Direction direction )
+		virtual Plug *setupPlug( GraphComponent *plugParent, Plug::Direction direction, unsigned flags )
 		{
 			IECorePython::ScopedGILLock gilLock;
 			override o = this->get_override( "setupPlug" );
 			if( o )
 			{
-				return o( GraphComponentPtr( plugParent ), direction );
+				return o( GraphComponentPtr( plugParent ), direction, flags );
 			}
 			else
 			{
-				return CompoundParameterHandler::setupPlug( plugParent, direction );
+				return CompoundParameterHandler::setupPlug( plugParent, direction, flags );
 			}
 		}
 				
@@ -141,9 +141,9 @@ static void compoundParameterHandlerRestore( CompoundParameterHandler &ph, Graph
 	return ph.CompoundParameterHandler::restore( plugParent );
 }
 
-static PlugPtr compoundParameterHandlerSetupPlug( CompoundParameterHandler &ph, GraphComponent *plugParent, Plug::Direction direction )
+static PlugPtr compoundParameterHandlerSetupPlug( CompoundParameterHandler &ph, GraphComponent *plugParent, Plug::Direction direction, unsigned flags )
 {
-	return ph.CompoundParameterHandler::setupPlug( plugParent, direction );
+	return ph.CompoundParameterHandler::setupPlug( plugParent, direction, flags );
 }
 
 static void compoundParameterHandlerSetParameterValue( CompoundParameterHandler &ph )
@@ -162,7 +162,7 @@ void GafferBindings::bindCompoundParameterHandler()
 	IECorePython::RefCountedClass<CompoundParameterHandler, ParameterHandler, CompoundParameterHandlerWrapper>( "CompoundParameterHandler" )
 		.def( init<IECore::CompoundParameterPtr>() )
 		.def( "restore", &compoundParameterHandlerRestore, ( arg( "plugParent" ) ) )
-		.def( "setupPlug", &compoundParameterHandlerSetupPlug, ( arg( "plugParent" ), arg( "direction" )=Plug::In ) )
+		.def( "setupPlug", &compoundParameterHandlerSetupPlug, ( arg( "plugParent" ), arg( "direction" )=Plug::In, arg( "flags" )=(Plug::Default | Plug::Dynamic) ) )
 		.def( "setParameterValue", &compoundParameterHandlerSetParameterValue )
 		.def( "setPlugValue", &compoundParameterHandlerSetPlugValue )
 		.def(
