@@ -102,7 +102,7 @@ void StandardStyle::bind( const Style *currentStyle ) const
 	{
 		if( selector->mode() == Selector::IDRender )
 		{
-			selector->loadIDShader( shader() );
+			selector->pushIDShader( shader() );
 		}
 	}
 }
