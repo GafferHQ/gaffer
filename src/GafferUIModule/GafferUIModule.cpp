@@ -71,6 +71,7 @@
 #include "GafferUIBindings/BackdropNodeGadgetBinding.h"
 #include "GafferUIBindings/SpacerGadgetBinding.h"
 #include "GafferUIBindings/StandardConnectionGadgetBinding.h"
+#include "GafferUIBindings/HandleBinding.h"
 
 using namespace GafferUIBindings;
 
@@ -111,5 +112,6 @@ BOOST_PYTHON_MODULE( _GafferUI )
 	bindBackdropNodeGadget();
 	bindSpacerGadget();
 	bindStandardConnectionGadget();
+	bindHandle();
 	
 }
