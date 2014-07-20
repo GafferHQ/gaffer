@@ -915,7 +915,7 @@ libraries = {
 	
 	"GafferSceneUI" : {
 		"envAppends" : {
-			"LIBS" : [ "Gaffer", "GafferUI", "GafferScene", "IECoreGL$CORTEX_LIB_SUFFIX" ],
+			"LIBS" : [ "Gaffer", "GafferUI", "GafferScene", "IECoreGL$CORTEX_LIB_SUFFIX", "GLEW$GLEW_LIB_SUFFIX" ],
 		},
 		"pythonEnvAppends" : {
 			"LIBS" : [ "GafferUI", "GafferSceneUI" ],
@@ -1083,7 +1083,7 @@ libraries = {
 }
 
 # Add on OpenGL libraries to definitions - these vary from platform to platform
-for library in ( "GafferUI", "GafferImageUI" ) :
+for library in ( "GafferUI", "GafferSceneUI", "GafferImageUI" ) :
 	if env["PLATFORM"] == "darwin" :
 		libraries[library]["envAppends"].setdefault( "FRAMEWORKS", [] ).append( "OpenGL" )
 	else :

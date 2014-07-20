@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2012-2013, John Haddon. All rights reserved.
+//  Copyright (c) 2012-2014, John Haddon. All rights reserved.
 //  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -75,6 +75,9 @@ class SceneView : public GafferUI::View3D
 		Gaffer::CompoundPlug *gridPlug();
 		const Gaffer::CompoundPlug *gridPlug() const;
 		
+		Gaffer::CompoundPlug *gnomonPlug();
+		const Gaffer::CompoundPlug *gnomonPlug() const;
+		
 		void expandSelection( size_t depth = 1 );
 		void collapseSelection();
 		
@@ -109,6 +112,8 @@ class SceneView : public GafferUI::View3D
 	
 		class Grid;
 		boost::shared_ptr<Grid> m_grid;
+		class Gnomon;
+		boost::shared_ptr<Gnomon> m_gnomon;
 		
 		static size_t g_firstPlugIndex;
 		static ViewDescription<SceneView> g_viewDescription;
