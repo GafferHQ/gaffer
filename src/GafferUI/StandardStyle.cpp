@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2014, John Haddon. All rights reserved.
 //  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -383,6 +383,56 @@ void StandardStyle::renderHorizontalRule( const Imath::V2f &center, float length
 		
 	glEnd();
 
+}
+
+void StandardStyle::renderTranslateHandle( int axis, State state ) const
+{
+	if( axis < 0 || axis > 2 )
+	{
+		throw Exception( "Invalid axis" );
+	}
+	
+	V3f v( 0.0f );
+	v[axis] = 1.0f;
+	
+	Color3f c( 0.0f );
+	if( state == HighlightedState )
+	{
+		c = getColor( HighlightColor );
+	}
+	else
+	{
+		switch( axis )
+		{
+			case 0 :
+				c = Color3f( 0.73, 0.17, 0.17 );
+				break;
+			case 1 :
+				c = Color3f( 0.2, 0.57, 0.2 );
+				break;
+			default :
+				c = Color3f( 0.2, 0.36, 0.74 );
+		}
+	}
+	
+	glUniform1i( g_bezierParameter, 0 );
+	glUniform1i( g_borderParameter, 0 );
+	glUniform1i( g_edgeAntiAliasingParameter, 0 );
+	glUniform1i( g_textureTypeParameter, 0 );
+	
+	PushAttrib pushAttrib( GL_ENABLE_BIT | GL_CURRENT_BIT | GL_LINE_BIT );
+	
+	glEnable( GL_LINE_SMOOTH );
+	glLineWidth( 2 );
+	glColor( c );
+	
+	glBegin( GL_LINES );
+	
+		glVertex( V3f( 0 ) );
+		glVertex( v );
+	
+	glEnd();
+	
 }
 
 void StandardStyle::renderImage( const Imath::Box2f &box, const IECoreGL::Texture *texture ) const

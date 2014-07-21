@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2012-2013, John Haddon. All rights reserved.
+//  Copyright (c) 2012-2014, John Haddon. All rights reserved.
 //  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -42,10 +42,14 @@
 #include "IECore/VectorTypedData.h"
 #include "IECore/MatrixTransform.h"
 
+#include "IECoreGL/GL.h"
 #include "IECoreGL/State.h"
+#include "IECoreGL/Camera.h"
 
 #include "Gaffer/Context.h"
 #include "Gaffer/BlockedConnection.h"
+
+#include "GafferUI/Style.h"
 
 #include "GafferScene/SceneProcedural.h"
 #include "GafferScene/PathMatcherData.h"
@@ -184,6 +188,247 @@ class SceneView::Grid
 };
 
 //////////////////////////////////////////////////////////////////////////
+// SceneView::Gnomon implementation
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+class GnomonPlane : public GafferUI::Gadget
+{
+
+	public :
+	
+		GnomonPlane()
+			:	Gadget(), m_hovering( false )
+		{
+			enterSignal().connect( boost::bind( &GnomonPlane::enter, this ) );
+			leaveSignal().connect( boost::bind( &GnomonPlane::leave, this ) );
+		}
+
+		Imath::Box3f bound() const
+		{
+			return Box3f( V3f( 0 ), V3f( 1, 1, 0 ) );
+		}
+		
+	protected :
+	
+		virtual void doRender( const Style *style ) const
+		{
+			if( m_hovering || IECoreGL::Selector::currentSelector() )
+			{
+				/// \todo Really the style should be choosing the colours.
+				glColor4f( 0.5f, 0.7f, 1.0f, 0.5f );
+				style->renderSolidRectangle( Box2f( V2f( 0 ), V2f( 1, 1 ) ) );
+			}
+		}
+
+	private :
+
+		void enter()
+		{
+			m_hovering = true;
+			renderRequestSignal()( this );
+		}
+		
+		void leave()
+		{
+			m_hovering = false;
+			renderRequestSignal()( this );
+		}
+	
+		bool m_hovering;
+
+};
+
+class GnomonGadget : public GafferUI::Gadget
+{
+
+	public :
+	
+		GnomonGadget()
+		{
+		}
+		
+	protected :
+
+		virtual void doRender( const Style *style ) const
+		{
+			const float pixelWidth = 30.0f;
+			const V2i viewport = ancestor<ViewportGadget>()->getViewport();
+	
+			// we want to draw our children with an orthographic projection
+			// from the same angle as the main camera, but transformed into
+			// the bottom left corner of the viewport.
+			//
+			// first we compose a new projection matrix with the orthographic
+			// projection and a post-projection transform that moves eveything
+			// into the corner.
+	
+			glMatrixMode( GL_PROJECTION );
+			glPushMatrix();
+			glLoadIdentity();
+			
+			// if we're drawing for selection, the selector will have its own
+			// post-projection matrix which needs taking into account as well.
+			if( IECoreGL::Selector *selector = IECoreGL::Selector::currentSelector() )
+			{
+				glMultMatrixd( selector->postProjectionMatrix().getValue() );
+			}
+			
+			// this is our post projection matrix, which scales down to the size we want and
+			// translates into the corner.
+			glTranslatef( -1.0f + pixelWidth / (float)viewport.x, -1.0f + pixelWidth / (float)viewport.y, 0.0f ),
+			glScalef( pixelWidth / (float)viewport.x, pixelWidth / (float)viewport.y, 1 );
+			
+			// this is our projection matrix - a simple orthographic projection.
+			glOrtho( -1, 1, -1, 1, 0, 10 );
+			
+			// now for our model-view matrix. this is the same as is used by the main
+			// view, but with the translation reset. this means when we draw our
+			// children at the origin, they will be centred within camera space.
+			
+			glMatrixMode( GL_MODELVIEW );
+			glPushMatrix();
+
+			M44f m = IECoreGL::Camera::matrix();
+			m[3][0] = 0;
+			m[3][1] = 0;
+			m[3][2] = -2;
+			
+			glMatrixMode( GL_MODELVIEW );
+			glLoadIdentity();
+			glMultMatrixf( m.getValue() );
+
+			// now we can render our axes and our children
+			
+			style->renderTranslateHandle( 0 );
+			style->renderTranslateHandle( 1 );
+			style->renderTranslateHandle( 2 );
+		
+			Gadget::doRender( style );
+			
+			// and pop the matrices back to their original values
+			
+			glMatrixMode( GL_PROJECTION );
+			glPopMatrix();
+			glMatrixMode( GL_MODELVIEW );
+			glPopMatrix();
+
+		}
+
+};
+
+} // namespace
+
+class SceneView::Gnomon
+{
+	
+	public :
+	
+		Gnomon( SceneView *view )
+			:	m_view( view ), m_gadget( new GnomonGadget() )
+		{
+			CompoundPlugPtr plug = new CompoundPlug( "gnomon" );
+			view->addChild( plug );
+			
+			plug->addChild( new BoolPlug( "visible", Plug::In, true ) );
+			
+			GadgetPtr xyPlane = new GnomonPlane();
+			GadgetPtr yzPlane = new GnomonPlane();
+			GadgetPtr xzPlane = new GnomonPlane();
+			
+			yzPlane->setTransform( M44f().rotate( V3f( 0, -M_PI / 2.0f, 0 ) ) );
+			xzPlane->setTransform( M44f().rotate( V3f( M_PI / 2.0f, 0, 0 ) ) );
+			
+			m_gadget->setChild( "xy", xyPlane );
+			m_gadget->setChild( "yz", yzPlane );
+			m_gadget->setChild( "xz", xzPlane );
+			
+			xyPlane->buttonPressSignal().connect( boost::bind( &Gnomon::buttonPress, this, ::_1, ::_2 ) );
+			yzPlane->buttonPressSignal().connect( boost::bind( &Gnomon::buttonPress, this, ::_1, ::_2 ) );
+			xzPlane->buttonPressSignal().connect( boost::bind( &Gnomon::buttonPress, this, ::_1, ::_2 ) );
+			
+			view->viewportGadget()->setChild( "__gnomon", m_gadget );
+
+			view->plugDirtiedSignal().connect( boost::bind( &Gnomon::plugDirtied, this, ::_1 ) );
+			
+			update();
+		}
+		
+		Gaffer::CompoundPlug *plug()
+		{
+			return m_view->getChild<Gaffer::CompoundPlug>( "gnomon" );
+		}
+		
+		const Gaffer::CompoundPlug *plug() const
+		{
+			return m_view->getChild<Gaffer::CompoundPlug>( "gnomon" );
+		}
+		
+		Gadget *gadget()
+		{
+			return m_gadget.get();
+		}
+		
+		const Gadget *gadget() const
+		{
+			return m_gadget.get();
+		}
+		
+	private :
+		
+		void plugDirtied( Gaffer::Plug *plug )
+		{
+			if( plug == this->plug() )
+			{
+				update();
+			}
+		}
+		
+		void update()
+		{
+			m_gadget->setVisible( plug()->getChild<BoolPlug>( "visible" )->getValue() );
+		}
+
+		bool buttonPress( Gadget *gadget, const ButtonEvent &event )
+		{
+			if( event.buttons != ButtonEvent::Left )
+			{
+				return false;
+			}
+
+			if( !m_view->viewportGadget()->getCameraEditable() )
+			{
+				return true;
+			}
+
+			V3f direction( 0, 0, -1 );
+			V3f upVector( 0, 1, 0 );
+			
+			if( gadget->getName() == "yz" )
+			{
+				direction = V3f( -1, 0, 0 );
+			}
+			else if( gadget->getName() == "xz" )
+			{
+				direction = V3f( 0, -1, 0 );
+				upVector = V3f( -1, 0, 0 );
+			}
+			
+			/// \todo We should probably have default persp/top/front/side cameras
+			/// in the SceneView, and then we could toggle between them here.
+			m_view->viewportGadget()->frame( m_view->framingBound(), direction, upVector );
+			
+			return true;
+		}
+	
+		SceneView *m_view;
+		GadgetPtr m_gadget;
+
+};
+
+//////////////////////////////////////////////////////////////////////////
 // SceneView implementation
 //////////////////////////////////////////////////////////////////////////
 
@@ -221,6 +466,7 @@ SceneView::SceneView( const std::string &name )
 	baseStateChangedSignal().connect( boost::bind( &SceneView::baseStateChanged, this ) );
 
 	m_grid = boost::shared_ptr<Grid>( new Grid( this ) );
+	m_gnomon = boost::shared_ptr<Gnomon>( new Gnomon( this ) );
 	
 	//////////////////////////////////////////////////////////////////////////
 	// add a preprocessor which monkeys with the scene before it is displayed.
@@ -315,6 +561,16 @@ Gaffer::CompoundPlug *SceneView::gridPlug()
 const Gaffer::CompoundPlug *SceneView::gridPlug() const
 {
 	return m_grid->plug();
+}
+
+Gaffer::CompoundPlug *SceneView::gnomonPlug()
+{
+	return m_gnomon->plug();
+}
+
+const Gaffer::CompoundPlug *SceneView::gnomonPlug() const
+{
+	return m_gnomon->plug();
 }
 
 GafferScene::PathFilter *SceneView::hideFilter()

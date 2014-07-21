@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2011-2014, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2014, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,48 +34,85 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUI_TYPEIDS_H
-#define GAFFERUI_TYPEIDS_H
+#include "boost/bind.hpp"
+#include "boost/bind/placeholders.hpp"
 
-namespace GafferUI
-{
+#include "GafferUI/Handle.h"
+#include "GafferUI/Style.h"
 
-enum TypeId
+using namespace Imath;
+using namespace GafferUI;
+
+IE_CORE_DEFINERUNTIMETYPED( Handle );
+
+Handle::Handle( Type type )
+	:	Gadget( defaultName<Handle>() ), m_type( type ), m_hovering( false )
 {
-	GadgetTypeId = 110251,
-	NodeGadgetTypeId = 110252,
-	GraphGadgetTypeId = 110253,
-	ContainerGadgetTypeId = 110254,
-	RenderableGadgetTypeId = 110255,
-	TextGadgetTypeId = 110256,
-	NameGadgetTypeId = 110257,
-	IndividualContainerTypeId = 110258,
-	FrameTypeId = 110259,
-	StyleTypeId = 110260,
-	StandardStyleTypeId = 110261,
-	NoduleTypeId = 110262,
-	LinearContainerTypeId = 110263,
-	ConnectionGadgetTypeId = 110264,
-	StandardNodeGadgetTypeId = 110265,
-	SplinePlugGadgetTypeId = 110266,
-	StandardNoduleTypeId = 110267,
-	CompoundNoduleTypeId = 110268,
-	ImageGadgetTypeId = 110269,
-	ViewportGadgetTypeId = 110270,
-	ViewTypeId = 110271,
-	View3DTypeId = 110272,
-	ObjectViewTypeId = 110273,
-	PlugGadgetTypeId = 110274,
-	GraphLayoutTypeId = 110275,
-	StandardGraphLayoutTypeId = 110276,
-	BackdropNodeGadgetTypeId = 110277,
-	SpacerGadgetTypeId = 110278,
-	StandardConnectionGadgetTypeId = 110279,
-	HandleTypeId = 110280,
+	enterSignal().connect( boost::bind( &Handle::enter, this ) );
+	leaveSignal().connect( boost::bind( &Handle::leave, this ) );
+}
+
+Handle::~Handle()
+{
+}
+
+void Handle::setType( Type type )
+{
+	if( type == m_type )
+	{
+		return;
+	}
 	
-	LastTypeId = 110500
-};
+	m_type = type;
+	renderRequestSignal()( this );
+}
 
-} // namespace GafferUI
+Handle::Type Handle::getType() const
+{
+	return m_type;
+}
 
-#endif // GAFFERUI_TYPEIDS_H
+Imath::Box3f Handle::bound() const
+{
+	switch( m_type )
+	{
+		case TranslateX :
+			return Box3f( V3f( 0 ), V3f( 1, 0, 0 ) );
+		case TranslateY :
+			return Box3f( V3f( 0 ), V3f( 0, 1, 0 ) );
+		case TranslateZ :
+			return Box3f( V3f( 0 ), V3f( 0, 0, 1 ) );
+	};
+	
+	return Box3f();
+}
+
+void Handle::doRender( const Style *style ) const
+{
+	Style::State state = getHighlighted() || m_hovering ? Style::HighlightedState : Style::NormalState;
+
+	switch( m_type )
+	{
+		case TranslateX :
+			style->renderTranslateHandle( 0, state );
+			break;
+		case TranslateY :
+			style->renderTranslateHandle( 1, state );
+			break;
+		case TranslateZ :
+			style->renderTranslateHandle( 2, state );
+			break;
+	}
+}
+
+void Handle::enter()
+{
+	m_hovering = true;
+	renderRequestSignal()( this );
+}
+
+void Handle::leave()
+{
+	m_hovering = false;
+	renderRequestSignal()( this );
+}

@@ -165,6 +165,15 @@ class _GridPlugValueWidget( GafferUI.PlugValueWidget ) :
 			}
 		)
 		
+		m.append(
+			"/Show Gnomon",
+			{
+				"checkBox" : self.getPlug().node()["gnomon"]["visible"].getValue(),
+				"command" : self.getPlug().node()["gnomon"]["visible"].setValue,
+			}
+		)
+		
 		return m
 		
 GafferUI.PlugValueWidget.registerCreator( GafferSceneUI.SceneView.staticTypeId(), "grid", _GridPlugValueWidget )
+GafferUI.PlugValueWidget.registerCreator( GafferSceneUI.SceneView.staticTypeId(), "gnomon", None )

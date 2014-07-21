@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
+//  Copyright (c) 2011-2014, John Haddon. All rights reserved.
 //  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
@@ -78,6 +78,8 @@ class StandardStyle : public Style
 		virtual void renderBackdrop( const Imath::Box2f &box, State state = NormalState ) const;
 		virtual void renderSelectionBox( const Imath::Box2f &box ) const;
 		virtual void renderHorizontalRule( const Imath::V2f &center, float length, State state = NormalState ) const;
+
+		virtual void renderTranslateHandle( int axis, State state = NormalState ) const;
 
 		virtual void renderImage( const Imath::Box2f &box, const IECoreGL::Texture *texture ) const;
 		virtual void renderLine( const IECore::LineSegment3f &line ) const;
