@@ -43,7 +43,15 @@ import Gaffer
 import GafferTest
 
 class ReferenceTest( GafferTest.TestCase ) :
-			
+	
+	def setUp( self ) :
+	
+		# stash the SphereNode so we can restore it in
+		# tearDown() - we're going to mischievously delete
+		# it from the GafferTest module to induce errors
+		# during testing.
+		self.__SphereNode = GafferTest.SphereNode
+	
 	def testLoad( self ) :
 	
 		s = Gaffer.ScriptNode()
@@ -354,8 +362,66 @@ class ReferenceTest( GafferTest.TestCase ) :
 
 		p3 = s3["r"].descendant( p.relativeName( s["b"] ) )
 		self.assertEqual( p3.getValue(), p3.defaultValue() )
+	
+	def testLoadThrowsExceptionsOnError( self ) :
+	
+		s = Gaffer.ScriptNode()
+		s["b"] = Gaffer.Box()
+		s["b"]["n"] = GafferTest.SphereNode()
+		
+		s["b"].exportForReference( "/tmp/test.grf" )
+		
+		del GafferTest.SphereNode # induce a failure during loading
+		
+		s2 = Gaffer.ScriptNode()
+		s2["r"] = Gaffer.Reference()
+		
+		self.assertRaises( Exception, s2["r"].load, "/tmp/test.grf" )
+	
+	def testErrorTolerantLoading( self ) :
+		
+		# make a box containing 2 nodes, and export it.
+		
+		s = Gaffer.ScriptNode()
+		s["b"] = Gaffer.Box()
+		s["b"]["s"] = GafferTest.SphereNode()
+		s["b"]["a"] = GafferTest.AddNode()
+		
+		s["b"].exportForReference( "/tmp/test.grf" )
+		
+		# import it into a script.
+		
+		s2 = Gaffer.ScriptNode()
+		s2["r"] = Gaffer.Reference()
+		s2["r"].load( "/tmp/test.grf" )
+		
+		self.assertTrue( "a" in s2["r"] )
+		self.assertTrue( isinstance( s2["r"]["a"], GafferTest.AddNode ) )
+		
+		# save that script, and then mysteriously
+		# disable GafferTest.SphereNode.
+		
+		s2["fileName"].setValue( "/tmp/test.gfr" )
+		s2.save()
+		
+		del GafferTest.SphereNode
+		
+		# load the script, and check that we could at least
+		# load in the other referenced node.
+		
+		s3 = Gaffer.ScriptNode()
+		s3["fileName"].setValue( "/tmp/test.gfr" )
+		with IECore.CapturingMessageHandler() as mh :
+			s3.load( continueOnError=True )
+
+		self.assertTrue( len( mh.messages ) )
+
+		self.assertTrue( "a" in s3["r"] )
+		self.assertTrue( isinstance( s3["r"]["a"], GafferTest.AddNode ) )
 		
 	def tearDown( self ) :
+	
+		GafferTest.SphereNode = self.__SphereNode
 	
 		for f in (
 			"/tmp/test.grf",

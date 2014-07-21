@@ -38,23 +38,50 @@
 
 #include "IECore/Exception.h"
 
-#include "GafferBindings/TranslatePythonException.h"
+#include "GafferBindings/ExceptionAlgo.h"
 
 using namespace boost::python;
 
 namespace GafferBindings
 {
 
-void translatePythonException()
+std::string formatPythonException( bool withStacktrace, int *lineNumber )
 {
-	PyObject *exception, *value, *traceback;
-	PyErr_Fetch( &exception, &value, &traceback );
-	handle<> exceptionHandle( exception ), valueHandle( value ), tracebackHandle( traceback );
+	PyObject *exceptionPyObject, *valuePyObject, *tracebackPyObject;
+	PyErr_Fetch( &exceptionPyObject, &valuePyObject, &tracebackPyObject );
+	PyErr_NormalizeException( &exceptionPyObject, &valuePyObject, &tracebackPyObject );
+	
+	object exception( ( handle<>( exceptionPyObject ) ) );
+	object value( ( handle<>( valuePyObject ) ) );
+	object traceback( ( handle<>( tracebackPyObject ) ) );
+	
 	object tracebackModule( import( "traceback" ) );
-	object formattedList = tracebackModule.attr( "format_exception" )( exceptionHandle, valueHandle, tracebackHandle );
+	
+	if( lineNumber )
+	{
+		*lineNumber = extract<int>( traceback.attr( "tb_lineno" ) );
+	}
+	
+	object formattedList;
+	if( withStacktrace )
+	{
+		formattedList = tracebackModule.attr( "format_exception" )( exception, value, traceback );
+	}
+	else
+	{
+		formattedList = tracebackModule.attr( "format_exception_only" )( exception, value );
+	}
+	
+	
 	object formatted = str( "" ).join( formattedList );
 	std::string s = extract<std::string>( formatted );
-	throw IECore::Exception( s );
+	
+	return s;
+}
+
+void translatePythonException( bool withStacktrace )
+{
+	throw IECore::Exception( formatPythonException( withStacktrace ) );
 }
 
 } // namespace GafferBindings
