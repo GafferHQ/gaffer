@@ -165,10 +165,11 @@ class ScriptNode : public Node
 		/// errors are reported via IECore::MessageHandler rather than as exceptions, and
 		/// execution continues at the point after the error. This allows scripts to be loaded as
 		/// best as possible even when certain nodes/plugs/shaders may be missing or
-		/// may have been renamed.
-		virtual void execute( const std::string &pythonScript, Node *parent = 0, bool continueOnError = false );
+		/// may have been renamed. A true return value indicates that one or more errors
+		/// were ignored.
+		virtual bool execute( const std::string &pythonScript, Node *parent = 0, bool continueOnError = false );
 		/// As above, but loads the python script from the specified file.
-		virtual void executeFile( const std::string &pythonFile, Node *parent = 0, bool continueOnError = false );
+		virtual bool executeFile( const std::string &pythonFile, Node *parent = 0, bool continueOnError = false );
 		/// This signal is emitted following successful execution of a script.
 		ScriptExecutedSignal &scriptExecutedSignal();
 		/// Evaluates the specified python expression. The caller owns a reference to
@@ -206,8 +207,9 @@ class ScriptNode : public Node
 		BoolPlug *unsavedChangesPlug();
 		const BoolPlug *unsavedChangesPlug() const;
 		/// Loads the script specified in the filename plug.
-		/// See execute() for a description of the continueOnError argument.
-		virtual void load( bool continueOnError = false );
+		/// See execute() for a description of the continueOnError argument
+		/// and the return value.
+		virtual bool load( bool continueOnError = false );
 		/// Saves the script to the file specified by the filename plug.
 		virtual void save() const;
 		//@}

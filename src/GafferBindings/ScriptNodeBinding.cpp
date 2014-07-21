@@ -112,27 +112,29 @@ class ScriptNodeWrapper : public NodeWrapper<ScriptNode>
 			return NodeWrapper<ScriptNode>::isInstanceOf( typeId );
 		}
 		
-		virtual void execute( const std::string &pythonScript, Node *parent = 0, bool continueOnError = false )
+		virtual bool execute( const std::string &pythonScript, Node *parent = 0, bool continueOnError = false )
 		{
 			IECorePython::ScopedGILLock gilLock;
 			boost::python::object e = executionDict( parent );
 
+			bool result = false;
 			if( !continueOnError )
 			{
 				exec( pythonScript.c_str(), e, e );
 			}
 			else
 			{
-				tolerantExec( pythonScript.c_str(), e, e );
+				result = tolerantExec( pythonScript.c_str(), e, e );
 			}
 			
 			scriptExecutedSignal()( this, pythonScript );
+			return result;
 		}
 
-		void executeFile( const std::string &pythonFile, Node *parent = 0, bool continueOnError = false )
+		bool executeFile( const std::string &pythonFile, Node *parent = 0, bool continueOnError = false )
 		{
 			const std::string pythonScript = readFile( pythonFile );
-			execute( pythonScript, parent, continueOnError );
+			return execute( pythonScript, parent, continueOnError );
 		}
 		
 		virtual PyObject *evaluate( const std::string &pythonExpression, Node *parent = 0 )
@@ -172,17 +174,19 @@ class ScriptNodeWrapper : public NodeWrapper<ScriptNode>
 			}		
 		}
 		
-		virtual void load( bool continueOnError = false )
+		virtual bool load( bool continueOnError = false )
 		{
 			const std::string s = readFile( fileNamePlug()->getValue() );
 			
 			deleteNodes();
 			variablesPlug()->clearChildren();
 
-			execute( s, NULL, continueOnError );
+			const bool result = execute( s, NULL, continueOnError );
 			
 			UndoContext undoDisabled( this, UndoContext::Disabled );
 			unsavedChangesPlug()->setValue( false );
+		
+			return result;
 		}
 		
 		virtual void save() const
@@ -243,7 +247,7 @@ class ScriptNodeWrapper : public NodeWrapper<ScriptNode>
 		// reporting errors that occur, but otherwise continuing
 		// with execution.
 		/////////////////////////////////////////////////////////
-		void tolerantExec( const char *pythonScript, boost::python::object globals, boost::python::object locals )
+		bool tolerantExec( const char *pythonScript, boost::python::object globals, boost::python::object locals )
 		{
 			// The python parsing framework uses an arena to simplify memory allocation,
 			// which is handy for us, since we're going to manipulate the AST a little.
@@ -263,6 +267,7 @@ class ScriptNodeWrapper : public NodeWrapper<ScriptNode>
 			
 			// Loop over the top-level statements in the module body,
 			// executing one at a time.
+			bool result = false;
 			int numStatements = asdl_seq_LEN( mod->v.Module.body );
 			for( int i=0; i<numStatements; ++i )
 			{
@@ -292,8 +297,11 @@ class ScriptNodeWrapper : public NodeWrapper<ScriptNode>
 					int lineNumber = 0;
 					std::string message = formatPythonException( /* withTraceback = */ false, &lineNumber );
 					IECore::msg( IECore::Msg::Error, boost::str( boost::format( "Line %d" ) % lineNumber ), message );
+					result = true;
 				}
 			}
+			
+			return result;
 		}
 		
 };

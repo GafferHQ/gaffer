@@ -1166,6 +1166,16 @@ a = A()"""
 		self.assertTrue( "Line 2" in c.messages[0].context )
 		self.assertTrue( "name 'iWillFail' is not defined" in c.messages[0].message )
 		
+	def testExecuteReturnValue( self ) :
+	
+		s = Gaffer.ScriptNode()
+		
+		self.assertEqual( s.execute( "a = 10" ), False )
+		self.assertEqual( s.execute( "a = 10", continueOnError=True ), False )
+		
+		with IECore.CapturingMessageHandler() : # suppress error reporting, to avoid confusing test output
+			self.assertEqual( s.execute( "a = iDontExist", continueOnError=True ), True )
+		
 	def tearDown( self ) :
 	
 		for f in (
