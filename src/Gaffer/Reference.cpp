@@ -115,9 +115,14 @@ void Reference::load( const std::string &fileName )
 		i--;
 	}
 	
-	// load the reference
+	// load the reference. we use continueOnError=true to get everything possible
+	// loaded, but if any errors do occur we throw an exception at the end of this
+	// function. this means that the caller is still notified of errors via the 
+	// exception mechanism, but we leave ourselves in the best state possible for
+	// the case where ScriptNode::load( continueOnError = true ) will ignore the
+	// exception that we throw.
 	
-	script->executeFile( fileName, this );
+	const bool errors = script->executeFile( fileName, this, /* continueOnError = */ true );
 	fileNamePlug()->setValue( fileName );
 
 	// transfer connections and values from the old plugs onto the corresponding new ones.
@@ -183,6 +188,10 @@ void Reference::load( const std::string &fileName )
 		}
 	}
 	
+	if( errors )
+	{
+		throw Exception( boost::str( boost::format( "Error loading reference \"%s\"" ) % fileName ) );
+	}
 }
 
 bool Reference::isReferencePlug( const Plug *plug ) const
