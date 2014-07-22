@@ -112,7 +112,7 @@ void Dispatcher::dispatch( const std::vector<ExecutableNodePtr> &nodes ) const
 	}
 	
 	TaskDescriptions taskDescriptions;
-	uniqueTasks( tasks, taskDescriptions );
+	uniqueTaskDescriptions( tasks, taskDescriptions );
 	
 	if ( !taskDescriptions.empty() )
 	{
@@ -224,81 +224,78 @@ const Dispatcher *Dispatcher::dispatcher( const std::string &name )
 	return cit->second.get();
 }
 
-/// Returns the input Task if it was never seen before, or the previous Task that is equivalent to this one.
-/// It also populates flattenedTasks with unique tasks seen so far.
-/// It uses seenTasks object as a temporary buffer.
-const ExecutableNode::Task &Dispatcher::uniqueTask( const ExecutableNode::Task &task, TaskDescriptions &uniqueTasks, TaskSet &seenTasks )
+// Returns the input Task if it was never seen before, or the previous Task that is equivalent to this one.
+// It uses the existingDescriptions object as a temporary buffer.
+const ExecutableNode::Task &Dispatcher::uniqueTaskDescription( const ExecutableNode::Task &task, TaskDescriptions &uniqueDescriptions, DescriptionIndexMap &existingDescriptions )
 {	
 	ExecutableNode::Tasks requirements;
 	task.node()->requirements( task.context(), requirements );
 
-	TaskDescription	taskDesc;
-	taskDesc.task = task;
+	TaskDescription	description;
+	description.task = task;
 
 	// first we recurse on the requirements, so we know that the first tasks to be added will be the ones without requirements and 
 	// the final result should be a list of tasks that does not break requirement order.
 	for( ExecutableNode::Tasks::iterator rIt = requirements.begin(); rIt != requirements.end(); rIt++ )
 	{
-		// override the current requirements in case they are duplicates already added to 'seenTasks'
-		taskDesc.requirements.insert( uniqueTask( *rIt, uniqueTasks, seenTasks ) );
+		// override the current requirements in case they are duplicates already added to existingDescriptions
+		description.requirements.insert( uniqueTaskDescription( *rIt, uniqueDescriptions, existingDescriptions ) );
 	}
 
 	IECore::MurmurHash noHash;
 	const IECore::MurmurHash hash = task.hash();
 
-	std::pair< TaskSet::iterator,bool > tit = seenTasks.insert( TaskSet::value_type( hash, std::vector< size_t >() ) );
+	std::pair< DescriptionIndexMap::iterator,bool > tit = existingDescriptions.insert( DescriptionIndexMap::value_type( hash, std::vector< size_t >() ) );
 	if ( tit.second )
 	{
 		// hash never seen, the current task is added "as is".
-		std::vector< size_t > &taskIndices = tit.first->second;
-		taskIndices.push_back( uniqueTasks.size() );
-		uniqueTasks.push_back( taskDesc );
+		std::vector< size_t > &indices = tit.first->second;
+		indices.push_back( uniqueDescriptions.size() );
+		uniqueDescriptions.push_back( description );
 	}
 	else
 	{
 		// same hash, find all TaskDescriptions with same node
-		std::vector< size_t > &taskIndices = tit.first->second;
-		std::vector< size_t >::const_iterator dIt;
-
-		for ( dIt = taskIndices.begin(); dIt != taskIndices.end(); dIt++ )
+		std::vector< size_t > &indices = tit.first->second;
+		for ( std::vector<size_t>::const_iterator dIt = indices.begin(); dIt != indices.end(); ++dIt )
 		{
-			TaskDescription &seenTask = uniqueTasks[ *dIt ];
-			if ( seenTask.task.node() == task.node() )
+			TaskDescription &currentDescription = uniqueDescriptions[ *dIt ];
+			if ( currentDescription.task.node() == task.node() )
 			{
 				// same node... does it compute anything?
 				if ( hash == noHash )
 				{
 					// the node doesn't compute anything, so we match it based on the requirements...
-					if ( seenTask.requirements == taskDesc.requirements )
+					if ( currentDescription.requirements == description.requirements )
 					{
 						// same node, same requirements, return previously registered empty task instead
-						return seenTask.task;
+						return currentDescription.task;
 					}
 				}
 				else	// Executable node that actually does something...
 				{
 					// if hash and node matches we want to compute the union of all the 
 					// requirements and return the previously registered task
-					seenTask.requirements.insert( taskDesc.requirements.begin(), taskDesc.requirements.end() );
-					return seenTask.task;
+					currentDescription.requirements.insert( description.requirements.begin(), description.requirements.end() );
+					return currentDescription.task;
 				}
 			}
 		}
 		// similar Task not in the list, task is added "as is"
-		taskIndices.push_back( uniqueTasks.size() );
-		uniqueTasks.push_back( taskDesc );
+		indices.push_back( uniqueDescriptions.size() );
+		uniqueDescriptions.push_back( description );
 	}
 	return task;
 }
 
-void Dispatcher::uniqueTasks( const ExecutableNode::Tasks &tasks, TaskDescriptions &uniqueTasks )
+void Dispatcher::uniqueTaskDescriptions( const ExecutableNode::Tasks &tasks, TaskDescriptions &uniqueDescriptions )
 {
-	TaskSet seenTasks;
+	DescriptionIndexMap existingDescriptions;
 	
-	uniqueTasks.clear();
+	uniqueDescriptions.clear();
 	for( ExecutableNode::Tasks::const_iterator tit = tasks.begin(); tit != tasks.end(); ++tit )
 	{
-		uniqueTask( *tit, uniqueTasks, seenTasks );
+		uniqueTaskDescription( *tit, uniqueDescriptions, existingDescriptions );
 	}
 }
 
