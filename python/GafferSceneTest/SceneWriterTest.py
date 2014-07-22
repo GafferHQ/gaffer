@@ -78,6 +78,34 @@ class SceneWriterTest( GafferSceneTest.SceneTestCase ) :
 		
 		self.assertEqual( t.readTransformAsMatrix( 0 ), IECore.M44d.createTranslated( IECore.V3d( 5, 0, 2 ) ) )
 		
+	def testWriteAnimation( self ) :
+		
+		script = Gaffer.ScriptNode()
+		script["sphere"] = GafferScene.Sphere()
+		script["group"] = GafferScene.Group()
+		script["group"]["in"].setInput( script["sphere"]["out"] )
+		script["xExpression"] = Gaffer.Expression()
+		script["xExpression"]["expression"].setValue( 'parent["group"]["transform"]["translate"]["x"] = context.getFrame()' )
+		script["zExpression"] = Gaffer.Expression()
+		script["zExpression"]["expression"].setValue( 'parent["group"]["transform"]["translate"]["z"] = context.getFrame() * 2' )
+		script["writer"] = GafferScene.SceneWriter()
+		script["writer"]["in"].setInput( script["group"]["out"] )
+		script["writer"]["fileName"].setValue( self.__testFile )
+		
+		contexts = [ Gaffer.Context(), Gaffer.Context(), Gaffer.Context() ]
+		contexts[0].setFrame( 1 )
+		contexts[1].setFrame( 1.5 )
+		contexts[2].setFrame( 2 )
+		script["writer"].execute( contexts )
+		
+		sc = IECore.SceneCache( self.__testFile, IECore.IndexedIO.OpenMode.Read )
+		t = sc.child( "group" )
+		
+		self.assertEqual( t.readTransformAsMatrix( 0 ), IECore.M44d.createTranslated( IECore.V3d( 1, 0, 2 ) ) )
+		self.assertEqual( t.readTransformAsMatrix( 1 / 24.0 ), IECore.M44d.createTranslated( IECore.V3d( 1, 0, 2 ) ) )
+		self.assertEqual( t.readTransformAsMatrix( 1.5 / 24.0 ), IECore.M44d.createTranslated( IECore.V3d( 1.5, 0, 3 ) ) )
+		self.assertEqual( t.readTransformAsMatrix( 2 / 24.0 ), IECore.M44d.createTranslated( IECore.V3d( 2, 0, 4 ) ) )
+		
 	def testSceneCacheRoundtrip( self ) :
 		
 		scene = IECore.SceneCache( "/tmp/fromPython.scc", IECore.IndexedIO.OpenMode.Write )

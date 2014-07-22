@@ -183,7 +183,7 @@ void SceneWriter::writeLocation( const GafferScene::ScenePlug *scene, const Scen
 	{
 		childScenePath[scenePath.size()] = *it;
 		
-		SceneInterfacePtr outputChild = output->createChild( *it );
+		SceneInterfacePtr outputChild = output->child( *it, SceneInterface::CreateIfMissing );
 		
 		writeLocation( scene, childScenePath, context, outputChild.get(), time );
 	}
