@@ -138,7 +138,7 @@ class SceneWriterTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( writer.executionHash( c ), IECore.MurmurHash() )
 		
 		# no input scene produces no effect
-		writer["fileName"].setValue( "/tmp/test.exr" )
+		writer["fileName"].setValue( "/tmp/test.scc" )
 		self.assertEqual( writer.executionHash( c ), IECore.MurmurHash() )
 		
 		# now theres a file and a scene, we get some output
@@ -148,6 +148,11 @@ class SceneWriterTest( GafferSceneTest.SceneTestCase ) :
 		
 		# output varies by time
 		self.assertNotEqual( writer.executionHash( c ), writer.executionHash( c2 ) )
+		
+		# output varies by file name
+		current = writer.executionHash( c )
+		writer["fileName"].setValue( "/tmp/test2.scc" )
+		self.assertNotEqual( writer.executionHash( c ), current )
 		
 		# output varies by new Context entries
 		current = writer.executionHash( c )

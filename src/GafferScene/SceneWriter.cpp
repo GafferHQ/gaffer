@@ -95,6 +95,7 @@ IECore::MurmurHash SceneWriter::executionHash( const Gaffer::Context *context ) 
 	}
 	
 	IECore::MurmurHash h = ExecutableNode::executionHash( context );
+	h.append( fileNamePlug()->hash() );
 	/// \todo hash the actual scene when we have a hierarchyHash
 	h.append( (uint64_t)scenePlug );
 	
