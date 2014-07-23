@@ -80,6 +80,8 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 		self.__visibilityChangedConnection = self.visibilityChangedSignal().connect( Gaffer.WeakMethod( self.__visibilityChanged ) )
 		
 		self.__pendingUpdate = False
+		self.__playback = None
+		
 		self._updateFromSet()
 
 	## Simple struct to specify the target of an inspection.
@@ -117,6 +119,10 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 				
 	def _updateFromContext( self, modifiedItems ) :
 	
+		if self.__playback is None or not self.__playback.context().isSame( self.getContext() ) :
+			self.__playback = GafferUI.Playback.acquire( self.getContext() )
+			self.__playbackStateChangedConnection = self.__playback.stateChangedSignal().connect( Gaffer.WeakMethod( self.__playbackStateChanged ) )
+
 		self.__scheduleUpdate()
 	
 	def _titleFormat( self ) :
@@ -141,11 +147,12 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 			return
 		
 		self.__pendingUpdate = True
-		if self.visible() :
+		if self.visible() and self.__playback.getState() == GafferUI.Playback.State.Stopped :
 			GafferUI.EventLoop.addIdleCallback( self.__update )
 		else :
 			# we'll do the update in self.__visibilityChanged when
-			# we next become visible.
+			# we next become visible, or in self.__playbackStateChanged
+			# when playback stops
 			pass
 			
 	def __update( self ) :
@@ -178,6 +185,13 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 		assert( widget is self )
 		
 		if self.__pendingUpdate and self.visible() :
+			self.__update()
+
+	def __playbackStateChanged( self, playback ) :
+	
+		assert( playback is self.__playback )
+		
+		if self.__pendingUpdate and self.visible() and playback.getState() == playback.State.Stopped :
 			self.__update()
 
 GafferUI.EditorWidget.registerType( "SceneInspector", SceneInspector )
