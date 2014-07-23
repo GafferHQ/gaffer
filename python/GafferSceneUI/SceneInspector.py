@@ -77,6 +77,8 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 			if tab is not None :
 				column.append( GafferUI.Spacer( IECore.V2i( 0 ) ), expand = True )
 		
+		self.__visibilityChangedConnection = self.visibilityChangedSignal().connect( Gaffer.WeakMethod( self.__visibilityChanged ) )
+		
 		self.__pendingUpdate = False
 		self._updateFromSet()
 
@@ -111,11 +113,11 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 				self.__plugDirtiedConnections.append( node.plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__plugDirtied ) ) )
 				self.__parentChangedConnections.append( outputScenePlugs[0].parentChangedSignal().connect( Gaffer.WeakMethod( self.__plugParentChanged ) ) )
 
-		self.__update()
+		self.__scheduleUpdate()
 				
 	def _updateFromContext( self, modifiedItems ) :
 	
-		self.__update()
+		self.__scheduleUpdate()
 	
 	def _titleFormat( self ) :
 	
@@ -123,13 +125,9 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 	
 	def __plugDirtied( self, plug ) :
 
-		if self.__pendingUpdate :
-			return
-			
 		if isinstance( plug, GafferScene.ScenePlug ) and plug.direction() == Gaffer.Plug.Direction.Out :
-			self.__pendingUpdate = True
-			GafferUI.EventLoop.addIdleCallback( self.__update )
-
+			self.__scheduleUpdate()
+		
 	def __plugParentChanged( self, plug, oldParent ) :
 	
 		# if a plug has been removed or moved to another node, then
@@ -137,6 +135,19 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 		# next suitable plug from the current node set.
 		self._updateFromSet()
 
+	def __scheduleUpdate( self ) :
+	
+		if self.__pendingUpdate :
+			return
+		
+		self.__pendingUpdate = True
+		if self.visible() :
+			GafferUI.EventLoop.addIdleCallback( self.__update )
+		else :
+			# we'll do the update in self.__visibilityChanged when
+			# we next become visible.
+			pass
+			
 	def __update( self ) :
 
 		self.__pendingUpdate = False
@@ -161,6 +172,13 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 				section.update( targets )
 			
 		return False # remove idle callback
+
+	def __visibilityChanged( self, widget ) :
+	
+		assert( widget is self )
+		
+		if self.__pendingUpdate and self.visible() :
+			self.__update()
 
 GafferUI.EditorWidget.registerType( "SceneInspector", SceneInspector )
 
