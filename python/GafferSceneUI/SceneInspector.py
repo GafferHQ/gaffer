@@ -257,14 +257,21 @@ class TextDiff( Diff ) :
 	
 		Diff.__init__( self, orientation, **kw )
 	
-		self.frame( 0 ).setChild( GafferUI.Label() )
-		self.frame( 1 ).setChild( GafferUI.Label() )
+		self.__connections = []
+		for i in range( 0, 2 ) :
+			label = GafferUI.Label()
+			self.__connections.append( label.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) ) )
+			self.__connections.append( label.dragBeginSignal().connect( Gaffer.WeakMethod( self.__dragBegin ) ) )
+			self.__connections.append( label.dragEndSignal().connect( Gaffer.WeakMethod( self.__dragEnd ) )	)
+			self.frame( i ).setChild( label )
 		
 		self.__highlightDiffs = highlightDiffs
 		
 	def update( self, values ) :
 	
 		Diff.update( self, values )
+		
+		self.__values = values
 		
 		formattedValues = self.__formatValues( values )
 		for i, value in enumerate( formattedValues ) :
@@ -428,6 +435,19 @@ class TextDiff( Diff ) :
 			values[0][:d] + "<span class=diffA>" + values[0][d:] + "</span>",
 			values[1][:d] + "<span class=diffB>" + values[1][d:] + "</span>",
 		]
+		
+	def __buttonPress( self, widget, event ) :
+	
+		return bool( event.buttons & event.Buttons.Left )
+	
+	def __dragBegin( self, widget, event ) :
+	
+		GafferUI.Pointer.setFromFile( "values.png" )
+		return self.__values[0] if self.frame( 0 ).isAncestorOf( widget ) else self.__values[1]
+		
+	def __dragEnd( self, widget, event ) :
+	
+		GafferUI.Pointer.set( None )
 		
 	__htmlHeader = (
 		"<html><head><style type=text/css>"
