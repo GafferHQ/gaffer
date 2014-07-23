@@ -799,8 +799,6 @@ class _SetWidget( GafferUI.Widget ) :
 		elif isinstance( toSelect, GafferScene.PathMatcherData ) :
 			toSelect = IECore.StringVectorData( toSelect.value.paths() )
 		
-		print toSelect
-			
 		context = self.ancestor( SceneInspector ).getContext()
 		context["ui:scene:selectedPaths"] = toSelect
 
