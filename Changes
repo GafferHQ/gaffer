@@ -1,3 +1,66 @@
+# 0.99.0
+
+#### Apps
+
+- Fixed potential startup error in gui viewer.py configuration file.
+
+#### Core
+
+- Added background execution mode to the LocalDispatcher.
+
+#### UI
+
+- Added a gnomon to the 3d viewer (#41).
+- Improved SceneInspector
+	- Reimplemented as a hierarchy with a registration mechanism for custom sections (#36, #821).
+	- Improved diff formatting (#894).
+	- Improved numeric formatting and alignment.
+	- Added options section (#197).
+- Implemented error tolerant loading for file menu operations. Errors are reported via a dialogue, and will no longer prevent loading of a script (#746).
+- Fixed ScriptEditor to execute code in the right context. Prior to this, any queries performed in the script editor were always evaluated at frame 1.
+- Dispatcher UI no longer forces background execution - this is now controlled by per-dispatcher settings.
+
+#### Scene
+
+- Improved IPR
+	- Fixed hang during shutdown with active IPR render (#855).
+	- Implemented camera edits for IPR rendering (#190).
+	- Prevented errors in other nodes from causing incomplete edits.
+	- Fixed UI errors caused by deleting camera during IPR (#898).
+	- Optimised updates by pruning invisible hierarchies.
+	- Fixed bug in shader edits at non-leaf locations.
+- Optimised Instancer, especially the computation of the bounding box for all the instances. This particular operation is now 18x faster on a 6 core machine, 7x faster on a 2 core machine.
+- Added an automatically created set for tracking all cameras in the scene.
+- Improved reporting of invalid cameras (#371).
+- Fixed FilteredSceneProcessor::acceptsInput() crash when inputPlug is null.
+
+#### API
+
+- Registered automatic from-python conversions for ScenePlug::ScenePath. This replaces the need to manually wrap any functions taking a ScenePath, making the bindings simpler.
+- Added exists() method to SceneAlgo. This can be used to query whether or not a particular location exists within a scene.
+- Replaced boost_intrusive_ptr with raw pointer where appropriate, to follow the convention laid out in Cortex.
+- Removed deprecated Box metadata methods. The standard Metadata API should be used instead.
+- Added missing wrapper for NodeGadget::nodule() overload.
+- Added OpDialogue preExecuteSignal() and postExecuteSignal().
+- Added OpDialogue parameterisedHolder() method.
+- Added a flags argument to ParameterHandler::setupPlug(). This allows clients to choose the default flags for their plugs, rather than being forced to have (Default | Dynamic) plugs.
+- Added ViewDescription constructor for 3 argument registerView.
+- Added Style::renderTranslateHandle() method.
+- Added GafferUI::Handle gadget.
+- Moved translatePythonException() to a new ExceptionAlgo.h header.
+- Added formatPythonException() function to ExceptionAlgo.h.
+- Added continueOnError argument to ScriptNode execution methods.
+- Added error return value to ScriptNode execution methods.
+- Improved EventLoop.executeOnUIThread() to execute immediately when used on main thread.
+
+#### Build
+
+- Requires Cortex-9.0.0a2
+- Updated default build to use PySide 1.2.2.
+- Stopped using python-config for build configuration. It was unreliable on Mac, and the hardcoded paths it returns prevented us from building with prebuilt binary dependencies.
+
+-------------------------------------------------------------------------------
+
 # 0.98.0
 
 This release makes dispatchers available via the UI for the first time. Dispatchers allow many tasks (such as rib generation, rendering and compositing) to be processed for a series of frames, with dependencies between the tasks determining the execution order. It also adds support for adding and removing lights during IPR renders, and the usual  small fixes and improvements.
