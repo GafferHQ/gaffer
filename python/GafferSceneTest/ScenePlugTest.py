@@ -180,6 +180,11 @@ class ScenePlugTest( unittest.TestCase ) :
 		
 		self.assertTrue( b.plugIsPromoted( b["n"]["in"] ) )
 		self.assertTrue( b.plugIsPromoted( b["n"]["out"] ) )
+	
+	def testNoneAsPath( self ) :
+	
+		p = GafferScene.Plane()
+		self.assertRaises( Exception, p["out"].transform, None )
 		
 if __name__ == "__main__":
 	unittest.main()
