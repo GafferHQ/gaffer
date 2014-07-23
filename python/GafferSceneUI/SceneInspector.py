@@ -123,8 +123,11 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 			self.__playback = GafferUI.Playback.acquire( self.getContext() )
 			self.__playbackStateChangedConnection = self.__playback.stateChangedSignal().connect( Gaffer.WeakMethod( self.__playbackStateChanged ) )
 
-		self.__scheduleUpdate()
-	
+		for item in modifiedItems :
+			if not item.startswith( "ui:" ) or item == "ui:scene:selectedPaths" :
+				self.__scheduleUpdate()
+				break
+				
 	def _titleFormat( self ) :
 	
 		return GafferUI.NodeSetEditor._titleFormat( self, _maxNodes = 2, _reverseNodes = True, _ellipsis = False )
