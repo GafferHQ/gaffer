@@ -77,7 +77,11 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 			if tab is not None :
 				column.append( GafferUI.Spacer( IECore.V2i( 0 ) ), expand = True )
 		
+		self.__visibilityChangedConnection = self.visibilityChangedSignal().connect( Gaffer.WeakMethod( self.__visibilityChanged ) )
+		
 		self.__pendingUpdate = False
+		self.__playback = None
+		
 		self._updateFromSet()
 
 	## Simple struct to specify the target of an inspection.
@@ -111,25 +115,28 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 				self.__plugDirtiedConnections.append( node.plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__plugDirtied ) ) )
 				self.__parentChangedConnections.append( outputScenePlugs[0].parentChangedSignal().connect( Gaffer.WeakMethod( self.__plugParentChanged ) ) )
 
-		self.__update()
+		self.__scheduleUpdate()
 				
 	def _updateFromContext( self, modifiedItems ) :
 	
-		self.__update()
-	
+		if self.__playback is None or not self.__playback.context().isSame( self.getContext() ) :
+			self.__playback = GafferUI.Playback.acquire( self.getContext() )
+			self.__playbackStateChangedConnection = self.__playback.stateChangedSignal().connect( Gaffer.WeakMethod( self.__playbackStateChanged ) )
+
+		for item in modifiedItems :
+			if not item.startswith( "ui:" ) or item == "ui:scene:selectedPaths" :
+				self.__scheduleUpdate()
+				break
+				
 	def _titleFormat( self ) :
 	
 		return GafferUI.NodeSetEditor._titleFormat( self, _maxNodes = 2, _reverseNodes = True, _ellipsis = False )
 	
 	def __plugDirtied( self, plug ) :
 
-		if self.__pendingUpdate :
-			return
-			
 		if isinstance( plug, GafferScene.ScenePlug ) and plug.direction() == Gaffer.Plug.Direction.Out :
-			self.__pendingUpdate = True
-			GafferUI.EventLoop.addIdleCallback( self.__update )
-
+			self.__scheduleUpdate()
+		
 	def __plugParentChanged( self, plug, oldParent ) :
 	
 		# if a plug has been removed or moved to another node, then
@@ -137,6 +144,20 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 		# next suitable plug from the current node set.
 		self._updateFromSet()
 
+	def __scheduleUpdate( self ) :
+	
+		if self.__pendingUpdate :
+			return
+		
+		self.__pendingUpdate = True
+		if self.visible() and self.__playback.getState() == GafferUI.Playback.State.Stopped :
+			GafferUI.EventLoop.addIdleCallback( self.__update )
+		else :
+			# we'll do the update in self.__visibilityChanged when
+			# we next become visible, or in self.__playbackStateChanged
+			# when playback stops
+			pass
+			
 	def __update( self ) :
 
 		self.__pendingUpdate = False
@@ -150,6 +171,10 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 		targets = []
 		for scene in self.__scenePlugs :
 			for path in paths :
+				if not GafferScene.exists( scene, path ) :
+					# selection may not be valid for both scenes,
+					# and we can't inspect invalid paths.
+					path = None
 				targets.append( self.Target( scene, path ) )
 		
 		with self.getContext() :
@@ -157,6 +182,20 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 				section.update( targets )
 			
 		return False # remove idle callback
+
+	def __visibilityChanged( self, widget ) :
+	
+		assert( widget is self )
+		
+		if self.__pendingUpdate and self.visible() :
+			self.__update()
+
+	def __playbackStateChanged( self, playback ) :
+	
+		assert( playback is self.__playback )
+		
+		if self.__pendingUpdate and self.visible() and playback.getState() == playback.State.Stopped :
+			self.__update()
 
 GafferUI.EditorWidget.registerType( "SceneInspector", SceneInspector )
 
@@ -186,6 +225,7 @@ class Diff( GafferUI.Widget ) :
 		## \todo Should we provide frame types via methods on the
 		# Frame class? Are DiffA/DiffB types for a frame a bit too
 		# specialised?
+		self.__column[0]._qtWidget().setObjectName( "gafferDiffA" )
 		self.__column[1]._qtWidget().setObjectName( "gafferDiffB" )
 	
 	def frame( self, index ) :
@@ -217,14 +257,21 @@ class TextDiff( Diff ) :
 	
 		Diff.__init__( self, orientation, **kw )
 	
-		self.frame( 0 ).setChild( GafferUI.Label() )
-		self.frame( 1 ).setChild( GafferUI.Label() )
+		self.__connections = []
+		for i in range( 0, 2 ) :
+			label = GafferUI.Label()
+			self.__connections.append( label.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) ) )
+			self.__connections.append( label.dragBeginSignal().connect( Gaffer.WeakMethod( self.__dragBegin ) ) )
+			self.__connections.append( label.dragEndSignal().connect( Gaffer.WeakMethod( self.__dragEnd ) )	)
+			self.frame( i ).setChild( label )
 		
 		self.__highlightDiffs = highlightDiffs
 		
 	def update( self, values ) :
 	
 		Diff.update( self, values )
+		
+		self.__values = values
 		
 		formattedValues = self.__formatValues( values )
 		for i, value in enumerate( formattedValues ) :
@@ -389,6 +436,19 @@ class TextDiff( Diff ) :
 			values[1][:d] + "<span class=diffB>" + values[1][d:] + "</span>",
 		]
 		
+	def __buttonPress( self, widget, event ) :
+	
+		return bool( event.buttons & event.Buttons.Left )
+	
+	def __dragBegin( self, widget, event ) :
+	
+		GafferUI.Pointer.setFromFile( "values.png" )
+		return self.__values[0] if self.frame( 0 ).isAncestorOf( widget ) else self.__values[1]
+		
+	def __dragEnd( self, widget, event ) :
+	
+		GafferUI.Pointer.set( None )
+		
 	__htmlHeader = (
 		"<html><head><style type=text/css>"
 		".diffA { background-color:rgba( 255, 77, 3, 75 ); }"
@@ -510,8 +570,12 @@ class __PathSection( Section ) :
 			self.__row = Row( "Location", TextDiff() )
 			
 	def update( self, targets ) :
-			
-		self.__row.getContent().update( [ target.path for target in targets ] )
+		
+		# using StringData rather than string for invalid paths disables
+		# per-character diffs (because the types are different).
+		values = [ target.path or IECore.StringData( "<i>Invalid</i>" ) for target in targets ]
+		
+		self.__row.getContent().update( values )
 
 SceneInspector.registerSection( __PathSection, tab = "Selection" )
 
@@ -526,9 +590,12 @@ class __TransformSection( Section ) :
 			self.__worldMatrixRow = Row( "World", TextDiff(), alternate = True )
 		
 	def update( self, targets ) :
-	
-		self.__localMatrixRow.getContent().update( [ target.scene.transform( target.path ) for target in targets ] )
-		self.__worldMatrixRow.getContent().update( [ target.scene.fullTransform( target.path ) for target in targets ] )
+		
+		localMatrices = [ target.scene.transform( target.path ) if target.path else None for target in targets ]
+		worldMatrices = [ target.scene.fullTransform( target.path ) if target.path else None for target in targets ]
+		
+		self.__localMatrixRow.getContent().update( localMatrices )
+		self.__worldMatrixRow.getContent().update( worldMatrices )
 		
 SceneInspector.registerSection( __TransformSection, tab = "Selection" )
 
@@ -547,11 +614,15 @@ class __BoundSection( Section ) :
 		localBounds = []
 		worldBounds = []
 		for target in targets :
-			bound = target.scene.bound( target.path )
-			transform = target.scene.fullTransform( target.path )
-			localBounds.append( bound )
-			worldBounds.append( bound.transform( transform ) )
-			
+			if target.path is not None :
+				bound = target.scene.bound( target.path )
+				transform = target.scene.fullTransform( target.path )
+				localBounds.append( bound )
+				worldBounds.append( bound.transform( transform ) )
+			else :
+				localBounds.append( None )
+				worldBounds.append( None )
+				
 		self.__localBoundRow.getContent().update( localBounds )
 		self.__worldBoundRow.getContent().update( worldBounds )
 		
@@ -567,9 +638,7 @@ class __AttributesSection( Section ) :
 		
 	def update( self, targets ) :
 	
-		attributes = []
-		for target in targets :
-			attributes.append( target.scene.fullAttributes( target.path ) )
+		attributes = [ target.scene.fullAttributes( target.path ) if target.path else {} for target in targets ]
 		
 		rows = []
 		attributeNames = sorted( set( reduce( lambda k, a : k + a.keys(), attributes, [] ) ) )
@@ -609,7 +678,10 @@ class __ObjectSection( Section ) :
 	
 		objects = []
 		for target in targets :
-			objects.append( target.scene.object( target.path ) )
+			if target.path is not None :
+				objects.append( target.scene.object( target.path ) )
+			else :
+				objects.append( IECore.NullObject.defaultNullObject() )
 		
 		self.__typeRow.getContent().update(
 			[ object.typeName() if not isinstance( object, IECore.NullObject ) else None for object in objects ]

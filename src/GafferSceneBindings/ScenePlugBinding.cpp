@@ -78,8 +78,10 @@ struct ScenePathFromInternedStringVectorData
 		extract<IECore::InternedStringVectorData *> dataExtractor( obj );
 		if( dataExtractor.check() )
 		{
-			IECore::InternedStringVectorData *data = dataExtractor();
-			return &(data->writable());
+			if( IECore::InternedStringVectorData *data = dataExtractor() )
+			{
+				return &(data->writable());
+			}
 		}
 		
 		return NULL;
