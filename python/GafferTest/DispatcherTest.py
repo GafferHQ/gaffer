@@ -168,7 +168,38 @@ class DispatcherTest( GafferTest.TestCase ) :
 		self.assertEqual( len( postCs ), 1 )
 		self.failUnless( postCs[0][0].isSame( dispatcher ) )
 		self.assertEqual( postCs[0][1], [ s["n1"] ] )
-
+	
+	def testCancelDispatch( self ) :
+		
+		def onlyRunOnce( dispatcher, nodes ) :
+			
+			if len(dispatcher.log) :
+				return True
+			
+			return False
+		
+		connection = Gaffer.Dispatcher.preDispatchSignal().connect( onlyRunOnce )
+		
+		dispatcher = DispatcherTest.MyDispatcher()
+		op1 = TestOp( "1", dispatcher.log )
+		s = Gaffer.ScriptNode()
+		s["n1"] = Gaffer.ExecutableOpHolder()
+		s["n1"].setParameterised( op1 )
+		
+		# never run
+		self.assertEqual( len(dispatcher.log), 0 )
+		self.assertEqual( op1.counter, 0 )
+		
+		# runs the first time
+		dispatcher.dispatch( [ s["n1"] ] )
+		self.assertEqual( len(dispatcher.log), 1 )
+		self.assertEqual( op1.counter, 1 )
+		
+		# never runs again
+		dispatcher.dispatch( [ s["n1"] ] )
+		self.assertEqual( len(dispatcher.log), 1 )
+		self.assertEqual( op1.counter, 1 )
+	
 	def testPlugs( self ) :
 
 		n = Gaffer.ExecutableOpHolder()

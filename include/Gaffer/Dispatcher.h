@@ -57,6 +57,32 @@ namespace Gaffer
 IE_CORE_FORWARDDECLARE( Dispatcher )
 IE_CORE_FORWARDDECLARE( CompoundPlug )
 
+namespace Detail
+{
+
+struct DispatchSignalCombiner
+{
+	typedef bool result_type;
+	
+	template<typename InputIterator>
+	bool operator()( InputIterator first, InputIterator last ) const
+	{
+		while ( first != last )
+		{
+			if( *first )
+			{
+				return true;
+			}
+			
+			++first;
+		}
+		
+		return false;
+	}
+};
+
+} // namespace Detail
+
 /// Abstract base class which defines an interface for scheduling the execution
 /// of Context specific Tasks from ExecutableNodes which exist within a ScriptNode.
 /// Dispatchers can also modify ExecutableNodes during construction, adding
@@ -70,13 +96,15 @@ class Dispatcher : public Node
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::Dispatcher, DispatcherTypeId, Node );
 
-		typedef boost::signal<void (const Dispatcher *, const std::vector<ExecutableNodePtr> &)> DispatchSignal;
+		typedef boost::signal<bool (const Dispatcher *, const std::vector<ExecutableNodePtr> &), Detail::DispatchSignalCombiner> DispatchSignal;
 		
 		//! @name Dispatch Signals
 		/// These signals are emitted on dispatch events for any registered Dispatcher instance.
 		////////////////////////////////////////////////////////////////////////////////////////
 		//@{
-		/// Called when any dispatcher is about to dispatch nodes.
+		/// Called when any dispatcher is about to dispatch nodes. Slots should have the
+		/// signature `bool slot( dispatcher, nodes )`, and may return True to cancel
+		/// the dispatch, or False to allow it to continue.
 		static DispatchSignal &preDispatchSignal();
 		/// Called after any dispatcher has finished dispatching nodes.
 		static DispatchSignal &postDispatchSignal();

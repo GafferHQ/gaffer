@@ -86,7 +86,11 @@ void Dispatcher::dispatch( const std::vector<ExecutableNodePtr> &nodes ) const
 		}
 	}
 	
-	preDispatchSignal()( this, nodes );
+	if ( preDispatchSignal()( this, nodes ) )
+	{
+		/// \todo: communicate the cancellation to the user
+		return;
+	}
 	
 	const Context *context = Context::current();
 	
