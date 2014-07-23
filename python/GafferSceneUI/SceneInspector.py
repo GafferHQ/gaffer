@@ -222,6 +222,7 @@ class Diff( GafferUI.Widget ) :
 		## \todo Should we provide frame types via methods on the
 		# Frame class? Are DiffA/DiffB types for a frame a bit too
 		# specialised?
+		self.__column[0]._qtWidget().setObjectName( "gafferDiffA" )
 		self.__column[1]._qtWidget().setObjectName( "gafferDiffB" )
 	
 	def frame( self, index ) :
