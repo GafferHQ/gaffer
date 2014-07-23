@@ -150,6 +150,10 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 		targets = []
 		for scene in self.__scenePlugs :
 			for path in paths :
+				if not GafferScene.exists( scene, path ) :
+					# selection may not be valid for both scenes,
+					# and we can't inspect invalid paths.
+					path = None
 				targets.append( self.Target( scene, path ) )
 		
 		with self.getContext() :
@@ -510,8 +514,12 @@ class __PathSection( Section ) :
 			self.__row = Row( "Location", TextDiff() )
 			
 	def update( self, targets ) :
-			
-		self.__row.getContent().update( [ target.path for target in targets ] )
+		
+		# using StringData rather than string for invalid paths disables
+		# per-character diffs (because the types are different).
+		values = [ target.path or IECore.StringData( "<i>Invalid</i>" ) for target in targets ]
+		
+		self.__row.getContent().update( values )
 
 SceneInspector.registerSection( __PathSection, tab = "Selection" )
 
@@ -526,9 +534,12 @@ class __TransformSection( Section ) :
 			self.__worldMatrixRow = Row( "World", TextDiff(), alternate = True )
 		
 	def update( self, targets ) :
-	
-		self.__localMatrixRow.getContent().update( [ target.scene.transform( target.path ) for target in targets ] )
-		self.__worldMatrixRow.getContent().update( [ target.scene.fullTransform( target.path ) for target in targets ] )
+		
+		localMatrices = [ target.scene.transform( target.path ) if target.path else None for target in targets ]
+		worldMatrices = [ target.scene.fullTransform( target.path ) if target.path else None for target in targets ]
+		
+		self.__localMatrixRow.getContent().update( localMatrices )
+		self.__worldMatrixRow.getContent().update( worldMatrices )
 		
 SceneInspector.registerSection( __TransformSection, tab = "Selection" )
 
@@ -547,11 +558,15 @@ class __BoundSection( Section ) :
 		localBounds = []
 		worldBounds = []
 		for target in targets :
-			bound = target.scene.bound( target.path )
-			transform = target.scene.fullTransform( target.path )
-			localBounds.append( bound )
-			worldBounds.append( bound.transform( transform ) )
-			
+			if target.path is not None :
+				bound = target.scene.bound( target.path )
+				transform = target.scene.fullTransform( target.path )
+				localBounds.append( bound )
+				worldBounds.append( bound.transform( transform ) )
+			else :
+				localBounds.append( None )
+				worldBounds.append( None )
+				
 		self.__localBoundRow.getContent().update( localBounds )
 		self.__worldBoundRow.getContent().update( worldBounds )
 		
@@ -567,9 +582,7 @@ class __AttributesSection( Section ) :
 		
 	def update( self, targets ) :
 	
-		attributes = []
-		for target in targets :
-			attributes.append( target.scene.fullAttributes( target.path ) )
+		attributes = [ target.scene.fullAttributes( target.path ) if target.path else {} for target in targets ]
 		
 		rows = []
 		attributeNames = sorted( set( reduce( lambda k, a : k + a.keys(), attributes, [] ) ) )
@@ -609,7 +622,10 @@ class __ObjectSection( Section ) :
 	
 		objects = []
 		for target in targets :
-			objects.append( target.scene.object( target.path ) )
+			if target.path is not None :
+				objects.append( target.scene.object( target.path ) )
+			else :
+				objects.append( IECore.NullObject.defaultNullObject() )
 		
 		self.__typeRow.getContent().update(
 			[ object.typeName() if not isinstance( object, IECore.NullObject ) else None for object in objects ]
