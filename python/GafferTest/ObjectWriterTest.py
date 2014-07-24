@@ -75,7 +75,8 @@ class ObjectWriterTest( GafferTest.TestCase ) :
 		# check that saving it works
 		
 		self.failIf( os.path.exists( self.__exrFileName ) )
-		node.execute( [ Gaffer.Context() ] )
+		with Gaffer.Context() :
+			node.execute()
 		self.failUnless( os.path.exists( self.__exrFileName ) )
 		
 		checker2 = IECore.Reader.create( self.__exrFileName ).read()
@@ -92,7 +93,8 @@ class ObjectWriterTest( GafferTest.TestCase ) :
 				
 		node["fileName"].setValue( self.__tifFileName )
 		
-		node.execute( [ Gaffer.Context() ] )
+		with Gaffer.Context() :
+			node.execute()
 		self.failUnless( os.path.exists( self.__tifFileName ) )
 		
 		self.failUnless( IECore.TIFFImageReader.canRead( self.__tifFileName ) )
@@ -127,9 +129,8 @@ class ObjectWriterTest( GafferTest.TestCase ) :
 		for i in self.__exrSequence.frameList.asList() :
 			context = Gaffer.Context()
 			context.setFrame( i )
-			contexts.append( context )
-
-		node.execute( contexts )
+			with context :
+				node.execute()
 		
 		for f in self.__exrSequence.fileNames() :
 			self.failUnless( os.path.exists( f ) )

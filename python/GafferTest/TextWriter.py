@@ -46,20 +46,18 @@ class TextWriter( Gaffer.ExecutableNode ) :
 		self.addChild( Gaffer.StringPlug( "fileName", Gaffer.Plug.Direction.In ) )
 		self.addChild( Gaffer.StringPlug( "text", Gaffer.Plug.Direction.In ) )
 	
-	def execute( self, contexts ):
+	def execute( self ) :
 		
-		for context in contexts :
-			
-			with context :
-				fileName = context.substitute( self["fileName"].getValue() )
-				text = context.substitute( self["text"].getValue() )
-			
-			replace = context.get( "textWriter:replace", IECore.StringVectorData() )
-			if replace and len(replace) == 2 :
-				text = text.replace( replace[0], replace[1] )
-			
-			with file( fileName, "w" ) as f :
-				f.write( text )
+		context = Gaffer.Context.current()
+		fileName = context.substitute( self["fileName"].getValue() )
+		text = context.substitute( self["text"].getValue() )
+		
+		replace = context.get( "textWriter:replace", IECore.StringVectorData() )
+		if replace and len(replace) == 2 :
+			text = text.replace( replace[0], replace[1] )
+		
+		with file( fileName, "w" ) as f :
+			f.write( text )
 	
 	def hash( self, context ) :
 		

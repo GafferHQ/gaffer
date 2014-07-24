@@ -104,7 +104,8 @@ class ExecutableOpHolderTest( GafferTest.TestCase ) :
 		n.setParameterised( op )
 		script = n.scriptNode()
 		self.assertEqual( op.counter, 0 )
-		n.execute( [ Gaffer.Context() ] )
+		with Gaffer.Context() :
+			n.execute()
 		self.assertEqual( op.counter, 1 )
 
 	def testContextSubstitutions( self ) :
@@ -117,23 +118,27 @@ class ExecutableOpHolderTest( GafferTest.TestCase ) :
 		
 		c = Gaffer.Context()
 		c.setFrame( 1 )
-		n.execute( [ c ] )
+		with c :
+			n.execute()
 		self.assertEqual( op.counter, 1 )
 		self.assertEqual( op.stringValue, "" )
 		
 		n["parameters"]["stringParm"].setValue( "${frame}" )
-		n.execute( [ c ] )
+		with c :
+			n.execute()
 		self.assertEqual( op.counter, 2 )
 		self.assertEqual( op.stringValue, "1" )
 		
 		# variable outside the context (and environment) get removed
 		n["parameters"]["stringParm"].setValue( "${test}" )
-		n.execute( [ c ] )
+		with c :
+			n.execute()
 		self.assertEqual( op.counter, 3 )
 		self.assertEqual( op.stringValue, "" )
 		
 		c["test"] = "passed"
-		n.execute( [ c ] )
+		with c :
+			n.execute()
 		self.assertEqual( op.counter, 4 )
 		self.assertEqual( op.stringValue, "passed" )
 	

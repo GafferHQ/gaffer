@@ -72,7 +72,8 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 			del self.log[:]
 			for (task,requirements) in taskDescriptions :
-				task.node().execute( [ task.context() ] )
+				with task.context() :
+					task.node().execute()
 
 		def _doSetupPlugs( self, parentPlug ) :
 

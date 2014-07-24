@@ -77,7 +77,7 @@ class RenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		s["fileName"].setValue( "/tmp/test.gfr" )
 		s.save()
 		
-		s["render"].execute( [ Gaffer.Context.current() ] )
+		s["render"].execute()
 		
 		self.assertTrue( os.path.exists( "/tmp/test.rib" ) )
 		
@@ -115,7 +115,7 @@ class RenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		s["fileName"].setValue( "/tmp/test.gfr" )
 		s.save()
 		
-		s["render"].execute( [ Gaffer.Context.current() ] )
+		s["render"].execute()
 		
 		self.assertTrue( os.path.exists( "/tmp/test.rib" ) )
 		
@@ -129,7 +129,7 @@ class RenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		s["options"]["options"]["cameraBlur"]["enabled"].setValue( True )
 		s["options"]["options"]["cameraBlur"]["value"].setValue( True )
 
-		s["render"].execute( [ Gaffer.Context.current() ] )
+		s["render"].execute()
 		
 		r = "".join( file( "/tmp/test.rib" ).readlines() )
 		self.failUnless( "MotionBegin" in r )
@@ -140,7 +140,7 @@ class RenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		s["attributes"]["attributes"]["transformBlur"]["enabled"].setValue( True )
 		s["attributes"]["attributes"]["transformBlur"]["value"].setValue( False )
 	
-		s["render"].execute( [ Gaffer.Context.current() ] )
+		s["render"].execute()
 		
 		r = "".join( file( "/tmp/test.rib" ).readlines() )
 		self.failIf( "MotionBegin" in r )	
@@ -152,7 +152,7 @@ class RenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		s["attributes"]["attributes"]["transformBlurSegments"]["enabled"].setValue( True )
 		s["attributes"]["attributes"]["transformBlurSegments"]["value"].setValue( 5 )
 		
-		s["render"].execute( [ Gaffer.Context.current() ] )
+		s["render"].execute()
 		
 		def motionTimes( ribFileName ) :
 		
@@ -171,13 +171,13 @@ class RenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		s["attributes"]["attributes"]["transformBlurSegments"]["enabled"].setValue( False )
 		s["options"]["options"]["shutter"]["enabled"].setValue( True )
 		
-		s["render"].execute( [ Gaffer.Context.current() ] )
+		s["render"].execute()
 		
 		self.assertEqual( motionTimes( "/tmp/test.rib" ), [ 0.75, 1.25 ] )
 		
 		s["options"]["options"]["shutter"]["value"].setValue( IECore.V2f( -0.1, 0.3 ) )
 		
-		s["render"].execute( [ Gaffer.Context.current() ] )
+		s["render"].execute()
 		
 		self.assertEqual( motionTimes( "/tmp/test.rib" ), [ 0.9, 1.3 ] )
 	
@@ -196,7 +196,7 @@ class RenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		s["fileName"].setValue( "/tmp/test.gfr" )
 		s.save()
 		
-		s["render"].execute( [ Gaffer.Context.current() ] )
+		s["render"].execute()
 		
 		self.assertTrue( os.path.exists( "/tmp/test.rib" ) )
 		
@@ -235,7 +235,8 @@ class RenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		
 		s["fileName"].setValue( "/tmp/test.gfr" )
 		
-		s["render"].execute( [ s.context() ] )
+		with s.context() :
+			s["render"].execute()
 		
 		self.assertTrue( os.path.exists( "/tmp/renderTests" ) )
 		self.assertTrue( os.path.exists( "/tmp/ribTests" ) )
@@ -243,7 +244,8 @@ class RenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 
 		# check that having the directories already exist is ok too
 		
-		s["render"].execute( [ s.context() ] )
+		with s.context() :
+			s["render"].execute()
 
 		self.assertTrue( os.path.exists( "/tmp/renderTests" ) )
 		self.assertTrue( os.path.exists( "/tmp/ribTests" ) )
@@ -275,7 +277,7 @@ class RenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		s["r"]["ribFileName"].setValue( "/tmp/test.rib" )
 		s["r"]["in"].setInput( s["o"]["out"] )
 
-		s["r"].execute( [ s.context() ] )
+		s["r"].execute()
 		
 		rib = "\n".join( file( "/tmp/test.rib" ).readlines() )
 		self.assertTrue( "CropWindow 0 1 0.5 1" in rib )

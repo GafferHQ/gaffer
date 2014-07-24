@@ -66,7 +66,7 @@ class ExecutableRender : public Gaffer::ExecutableNode
 
 		virtual IECore::MurmurHash hash( const Gaffer::Context *context ) const;
 		/// Implemented to perform the render.
-		virtual void execute( const Contexts &contexts ) const;
+		virtual void execute() const;
 
 	protected :
 	

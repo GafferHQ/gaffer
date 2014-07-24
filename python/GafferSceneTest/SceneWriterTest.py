@@ -70,7 +70,7 @@ class SceneWriterTest( GafferSceneTest.SceneTestCase ) :
 		writer["in"].setInput( g["out"] )
 		writer["fileName"].setValue( self.__testFile )
 		
-		writer.execute( [ script.context() ] )
+		writer.execute()
 		
 		sc = IECore.SceneCache( self.__testFile, IECore.IndexedIO.OpenMode.Read )
 		
@@ -92,11 +92,8 @@ class SceneWriterTest( GafferSceneTest.SceneTestCase ) :
 		script["writer"]["in"].setInput( script["group"]["out"] )
 		script["writer"]["fileName"].setValue( self.__testFile )
 		
-		contexts = [ Gaffer.Context(), Gaffer.Context(), Gaffer.Context() ]
-		contexts[0].setFrame( 1 )
-		contexts[1].setFrame( 1.5 )
-		contexts[2].setFrame( 2 )
-		script["writer"].execute( contexts )
+		with Gaffer.Context() :
+			script["writer"].executeSequence( [ 1, 1.5, 2 ] )
 		
 		sc = IECore.SceneCache( self.__testFile, IECore.IndexedIO.OpenMode.Read )
 		t = sc.child( "group" )
@@ -147,7 +144,7 @@ class SceneWriterTest( GafferSceneTest.SceneTestCase ) :
 		script["writer"] = writer
 		writer["in"].setInput( reader["out"] )
 		writer["fileName"].setValue( self.__testFile )
-		writer.execute( [ script.context() ] )
+		writer.execute()
 		os.remove( "/tmp/fromPython.scc" )
 		
 		testCacheFile( self.__testFile )

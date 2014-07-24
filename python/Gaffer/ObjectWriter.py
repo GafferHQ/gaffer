@@ -83,19 +83,16 @@ class ObjectWriter( Gaffer.ExecutableNode ) :
 			
 			return h
 	
-	def execute( self, contexts ) :
+	def execute( self ) :
 	
-		for context in contexts :
-			with context :
-			
-				self.__ensureWriter()
-
-				if self.__writer is None :
-					raise RuntimeError( "No Writer" )
-
-				self.__writer["object"].setValue( self["in"].getValue() )
-				self.__writer.write()
+		self.__ensureWriter()
 		
+		if self.__writer is None :
+			raise RuntimeError( "No Writer" )
+		
+		self.__writer["object"].setValue( self["in"].getValue() )
+		self.__writer.write()
+	
 	def __plugSet( self, plug ) :
 
 		if plug.isSame( self["fileName"] ) or plug.isSame( self["in"] ) :

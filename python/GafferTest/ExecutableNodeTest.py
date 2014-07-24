@@ -54,7 +54,7 @@ class ExecutableNodeTest( GafferTest.TestCase ) :
 			self.__withHash = withHash
 			self.executionCount = 0
 
-		def execute( self, contexts ):
+		def execute( self ) :
 			
 			self.executionCount += 1
 

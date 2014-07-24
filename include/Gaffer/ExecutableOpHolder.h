@@ -70,7 +70,7 @@ class ExecutableOpHolder : public ParameterisedHolderExecutableNode
 		const IECore::Op *getOp( std::string *className = 0, int *classVersion = 0 ) const;
 	
 		virtual IECore::MurmurHash hash( const Context *context ) const;
-		virtual void execute( const Contexts &contexts ) const;
+		virtual void execute() const;
 	
 	private :
 		

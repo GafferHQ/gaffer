@@ -101,19 +101,15 @@ IECore::MurmurHash ExecutableOpHolder::hash( const Context *context ) const
 	return h;
 }
 
-void ExecutableOpHolder::execute( const Contexts &contexts ) const
+void ExecutableOpHolder::execute() const
 {
-	for ( Contexts::const_iterator cit = contexts.begin(); cit != contexts.end(); cit++ )
-	{
-		// \todo Implement a way to get the CompoundObject for a given context without modifying the Op's parameter
-		// and passing it explicitly in the operate call. Than multi-thread this loop.
-		Context::Scope scope( cit->get() );
-		const_cast<CompoundParameterHandler *>( parameterHandler() )->setParameterValue();
-		Op *op = const_cast<Op *>( getOp() );
-		/// \todo: Remove this once scoping the context takes care of it for us
-		substitute( op->parameters(), cit->get() );
-		op->operate();
-	}
+	// \todo Implement a way to get the CompoundObject for a given context without modifying the Op's parameter
+	// and passing it explicitly in the operate call. Than multi-thread this loop.
+	const_cast<CompoundParameterHandler *>( parameterHandler() )->setParameterValue();
+	Op *op = const_cast<Op *>( getOp() );
+	/// \todo: Remove this once scoping the context takes care of it for us
+	substitute( op->parameters(), Context::current() );
+	op->operate();
 }
 
 void ExecutableOpHolder::substitute( Parameter *parameter, const Context *context ) const

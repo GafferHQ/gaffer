@@ -174,189 +174,182 @@ IECore::MurmurHash ImageWriter::hash( const Context *context ) const
 
 ///\todo: It seems that if a JPG is written with RGBA channels the output is wrong but it should be supported. Find out why and fix it.
 /// There is a test case in ImageWriterTest which checks the output of the jpg writer against an incorrect image and it will fail if it is equal to the writer output.
-void ImageWriter::execute( const Contexts &contexts ) const
+void ImageWriter::execute() const
 {
 	if( !inPlug()->getInput<ImagePlug>() )
 	{
 		throw IECore::Exception( "No input image." );
 	}
-
-	// Loop over the execution contexts...
-	for( Contexts::const_iterator it = contexts.begin(), eIt = contexts.end(); it != eIt; it++ )
+	
+	std::string fileName = fileNamePlug()->getValue();
+	fileName = Context::current()->substitute( fileName );
+	
+	boost::shared_ptr< ImageOutput > out( ImageOutput::create( fileName.c_str() ) );
+	if ( !out )
 	{
-		Context::Scope scopedContext( it->get() );
-		
-		std::string fileName = fileNamePlug()->getValue();
-		fileName = (*it)->substitute( fileName );
-		
-		boost::shared_ptr< ImageOutput > out( ImageOutput::create( fileName.c_str() ) );
-		if ( !out )
-		{
-			throw IECore::Exception( boost::str( boost::format( "Invalid filename: %s" ) % fileName ) );
-		}
-		
-		// Grab the intersection of the channels from the "channels" plug and the image input to see which channels we are to write out.
-		IECore::ConstStringVectorDataPtr channelNamesData = inPlug()->channelNamesPlug()->getValue();
-		std::vector<std::string> maskChannels = channelNamesData->readable();
-		channelsPlug()->maskChannels( maskChannels );
-		const int nChannels = maskChannels.size();
-		
-		// Get the image channel data.
-		IECore::ImagePrimitivePtr imagePtr( inPlug()->image() );
-		
-		// Get the image's display window.
-		const Imath::Box2i displayWindow( imagePtr->getDisplayWindow() );
-		const int displayWindowWidth = displayWindow.size().x+1;
-		const int displayWindowHeight = displayWindow.size().y+1;
-
-		// Get the image's data window and if it then set a flag.
-		bool imageIsBlack = false;
-		Imath::Box2i dataWindow( imagePtr->getDataWindow() );
-		if ( inPlug()->dataWindowPlug()->getValue().isEmpty() )
-		{
-			dataWindow = displayWindow;
-			imageIsBlack = true;
-		}
-
-		int dataWindowWidth = dataWindow.size().x+1;
-		int dataWindowHeight = dataWindow.size().y+1;
+		throw IECore::Exception( boost::str( boost::format( "Invalid filename: %s" ) % fileName ) );
+	}
 	
-		// Create the image header. 
-		ImageSpec spec( dataWindowWidth, dataWindowHeight, nChannels, TypeDesc::FLOAT );
-
-		// Add the channel names to the header whilst getting pointers to the channel data. 
-		std::vector<const float*> channelPtrs;
-		spec.channelnames.clear();
-		for ( std::vector<std::string>::iterator channelIt( maskChannels.begin() ); channelIt != maskChannels.end(); channelIt++ )
-		{
-			spec.channelnames.push_back( *channelIt );
-			IECore::FloatVectorDataPtr dataPtr = imagePtr->getChannel<float>( *channelIt );
-			channelPtrs.push_back( &(dataPtr->readable()[0]) );
-
-			// OIIO has a special attribute for the Alpha and Z channels. If we find some, we should tag them...
-			if ( *channelIt == "A" )
-			{
-				spec.alpha_channel = channelIt-maskChannels.begin();
-			} else if ( *channelIt == "Z" )
-			{
-				spec.z_channel = channelIt-maskChannels.begin();
-			}
-		}
+	// Grab the intersection of the channels from the "channels" plug and the image input to see which channels we are to write out.
+	IECore::ConstStringVectorDataPtr channelNamesData = inPlug()->channelNamesPlug()->getValue();
+	std::vector<std::string> maskChannels = channelNamesData->readable();
+	channelsPlug()->maskChannels( maskChannels );
+	const int nChannels = maskChannels.size();
+	
+	// Get the image channel data.
+	IECore::ImagePrimitivePtr imagePtr( inPlug()->image() );
+	
+	// Get the image's display window.
+	const Imath::Box2i displayWindow( imagePtr->getDisplayWindow() );
+	const int displayWindowWidth = displayWindow.size().x+1;
+	const int displayWindowHeight = displayWindow.size().y+1;
+	
+	// Get the image's data window and if it then set a flag.
+	bool imageIsBlack = false;
+	Imath::Box2i dataWindow( imagePtr->getDataWindow() );
+	if ( inPlug()->dataWindowPlug()->getValue().isEmpty() )
+	{
+		dataWindow = displayWindow;
+		imageIsBlack = true;
+	}
+	
+	int dataWindowWidth = dataWindow.size().x+1;
+	int dataWindowHeight = dataWindow.size().y+1;
+	
+	// Create the image header. 
+	ImageSpec spec( dataWindowWidth, dataWindowHeight, nChannels, TypeDesc::FLOAT );
+	
+	// Add the channel names to the header whilst getting pointers to the channel data. 
+	std::vector<const float*> channelPtrs;
+	spec.channelnames.clear();
+	for ( std::vector<std::string>::iterator channelIt( maskChannels.begin() ); channelIt != maskChannels.end(); channelIt++ )
+	{
+		spec.channelnames.push_back( *channelIt );
+		IECore::FloatVectorDataPtr dataPtr = imagePtr->getChannel<float>( *channelIt );
+		channelPtrs.push_back( &(dataPtr->readable()[0]) );
 		
-		// Specify the display window.
-		spec.full_x = displayWindow.min.x;
-		spec.full_y = displayWindow.min.y;
-		spec.full_width = displayWindowWidth;
-		spec.full_height = displayWindowHeight;
-		spec.x = dataWindow.min.x;
-		spec.y = dataWindow.min.y;
-	
-		if ( !out->open( fileName, spec ) )
+		// OIIO has a special attribute for the Alpha and Z channels. If we find some, we should tag them...
+		if ( *channelIt == "A" )
 		{
-			throw IECore::Exception( boost::str( boost::format( "Could not open \"%s\", error = %s" ) % fileName % out->geterror() ) );
+			spec.alpha_channel = channelIt-maskChannels.begin();
+		} else if ( *channelIt == "Z" )
+		{
+			spec.z_channel = channelIt-maskChannels.begin();
 		}
-
-		// Only allow tiled output if our file format supports it.	
-		int writeMode = writeModePlug()->getValue() & out->supports( "tile" );
+	}
 	
-		if ( writeMode == Scanline )
+	// Specify the display window.
+	spec.full_x = displayWindow.min.x;
+	spec.full_y = displayWindow.min.y;
+	spec.full_width = displayWindowWidth;
+	spec.full_height = displayWindowHeight;
+	spec.x = dataWindow.min.x;
+	spec.y = dataWindow.min.y;
+	
+	if ( !out->open( fileName, spec ) )
+	{
+		throw IECore::Exception( boost::str( boost::format( "Could not open \"%s\", error = %s" ) % fileName % out->geterror() ) );
+	}
+	
+	// Only allow tiled output if our file format supports it.	
+	int writeMode = writeModePlug()->getValue() & out->supports( "tile" );
+	
+	if ( writeMode == Scanline )
+	{
+		// Create a buffer for the scanline.
+		float scanline[ nChannels*dataWindowWidth ];
+		
+		if ( imageIsBlack )
 		{
-			// Create a buffer for the scanline.
-			float scanline[ nChannels*dataWindowWidth ];
-			
-			if ( imageIsBlack )
-			{
-				memset( scanline, 0, sizeof(float) * nChannels*dataWindowWidth );
+			memset( scanline, 0, sizeof(float) * nChannels*dataWindowWidth );
 
-				for ( int y = spec.y; y < spec.y + dataWindowHeight; ++y )
+			for ( int y = spec.y; y < spec.y + dataWindowHeight; ++y )
+			{
+				if ( !out->write_scanline( y, 0, TypeDesc::FLOAT, &scanline[0] ) )
 				{
-					if ( !out->write_scanline( y, 0, TypeDesc::FLOAT, &scanline[0] ) )
-					{
-						throw IECore::Exception( boost::str( boost::format( "Could not write scanline to \"%s\", error = %s" ) % fileName % out->geterror() ) );
-					}
-				}
-			}
-			else
-			{
-				// Interleave the channel data and write it by scanline to the file.	
-				for ( int y = spec.y; y < spec.y + dataWindowHeight; ++y )
-				{
-					for ( std::vector<const float *>::iterator channelDataIt( channelPtrs.begin() ); channelDataIt != channelPtrs.end(); channelDataIt++ )
-					{
-						float *outPtr = &scanline[0] + (channelDataIt - channelPtrs.begin()); // The pointer that we are writing to.
-						// The row that we are reading from is flipped (in the Y) as we use a different image space internally to OpenEXR and OpenImageIO.
-						const float *inRowPtr = (*channelDataIt) + ( y - spec.y ) * dataWindowWidth;
-						const int inc = channelPtrs.size();
-						for ( int x = 0; x < dataWindowWidth; ++x, outPtr += inc )
-						{
-							*outPtr = *inRowPtr++;
-						}
-					}
-
-					if ( !out->write_scanline( y, 0, TypeDesc::FLOAT, &scanline[0] ) )
-					{
-						throw IECore::Exception( boost::str( boost::format( "Could not write scanline to \"%s\", error = %s" ) % fileName % out->geterror() ) );
-					}
+					throw IECore::Exception( boost::str( boost::format( "Could not write scanline to \"%s\", error = %s" ) % fileName % out->geterror() ) );
 				}
 			}
 		}
-		// Tiled output
 		else
 		{
-			// Create a buffer for the tile.
-			const int tileSize = ImagePlug::tileSize();
-			float tile[ nChannels*tileSize*tileSize ];
-
-			if ( imageIsBlack )
+			// Interleave the channel data and write it by scanline to the file.	
+			for ( int y = spec.y; y < spec.y + dataWindowHeight; ++y )
 			{
-				memset( tile, 0,  sizeof(float) * nChannels*tileSize*tileSize );
-				for ( int tileY = 0; tileY < dataWindowHeight; tileY += tileSize )
+				for ( std::vector<const float *>::iterator channelDataIt( channelPtrs.begin() ); channelDataIt != channelPtrs.end(); channelDataIt++ )
 				{
-					for ( int tileX = 0; tileX < dataWindowWidth; tileX += tileSize )
+					float *outPtr = &scanline[0] + (channelDataIt - channelPtrs.begin()); // The pointer that we are writing to.
+					// The row that we are reading from is flipped (in the Y) as we use a different image space internally to OpenEXR and OpenImageIO.
+					const float *inRowPtr = (*channelDataIt) + ( y - spec.y ) * dataWindowWidth;
+					const int inc = channelPtrs.size();
+					for ( int x = 0; x < dataWindowWidth; ++x, outPtr += inc )
 					{
-						if ( !out->write_tile( tileX+dataWindow.min.x, tileY+spec.y, 0, TypeDesc::FLOAT, &tile[0] ) )
-						{
-							throw IECore::Exception( boost::str( boost::format( "Could not write tile to \"%s\", error = %s" ) % fileName % out->geterror() ) );
-						}
+						*outPtr = *inRowPtr++;
+					}
+				}
+				
+				if ( !out->write_scanline( y, 0, TypeDesc::FLOAT, &scanline[0] ) )
+				{
+					throw IECore::Exception( boost::str( boost::format( "Could not write scanline to \"%s\", error = %s" ) % fileName % out->geterror() ) );
+				}
+			}
+		}
+	}
+	// Tiled output
+	else
+	{
+		// Create a buffer for the tile.
+		const int tileSize = ImagePlug::tileSize();
+		float tile[ nChannels*tileSize*tileSize ];
+		
+		if ( imageIsBlack )
+		{
+			memset( tile, 0,  sizeof(float) * nChannels*tileSize*tileSize );
+			for ( int tileY = 0; tileY < dataWindowHeight; tileY += tileSize )
+			{
+				for ( int tileX = 0; tileX < dataWindowWidth; tileX += tileSize )
+				{
+					if ( !out->write_tile( tileX+dataWindow.min.x, tileY+spec.y, 0, TypeDesc::FLOAT, &tile[0] ) )
+					{
+						throw IECore::Exception( boost::str( boost::format( "Could not write tile to \"%s\", error = %s" ) % fileName % out->geterror() ) );
 					}
 				}
 			}
-			else
+		}
+		else
+		{
+			// Interleave the channel data and write it to the file tile-by-tile.
+			for ( int tileY = 0; tileY < dataWindowHeight; tileY += tileSize )
 			{
-				// Interleave the channel data and write it to the file tile-by-tile.
-				for ( int tileY = 0; tileY < dataWindowHeight; tileY += tileSize )
+				for ( int tileX = 0; tileX < dataWindowWidth; tileX += tileSize )
 				{
-					for ( int tileX = 0; tileX < dataWindowWidth; tileX += tileSize )
+					float *outPtr = &tile[0];	
+					
+					const int r = std::min( tileSize+tileX, dataWindowWidth );
+					const int t = std::min( tileSize+tileY, dataWindowHeight );
+					
+					for ( int y = 0; y < t; ++y )
 					{
-						float *outPtr = &tile[0];	
-
-						const int r = std::min( tileSize+tileX, dataWindowWidth );
-						const int t = std::min( tileSize+tileY, dataWindowHeight );
-
-						for ( int y = 0; y < t; ++y )
+						for ( std::vector<const float *>::iterator channelDataIt( channelPtrs.begin() ); channelDataIt != channelPtrs.end(); channelDataIt++ )
 						{
-							for ( std::vector<const float *>::iterator channelDataIt( channelPtrs.begin() ); channelDataIt != channelPtrs.end(); channelDataIt++ )
+							const int inc = channelPtrs.size();
+							const float *inRowPtr = (*channelDataIt) + ( tileY + t - y - 1 ) * dataWindowWidth;
+							for ( int x = 0; x < r; ++x, outPtr += inc )
 							{
-								const int inc = channelPtrs.size();
-								const float *inRowPtr = (*channelDataIt) + ( tileY + t - y - 1 ) * dataWindowWidth;
-								for ( int x = 0; x < r; ++x, outPtr += inc )
-								{
-									*outPtr = *inRowPtr+(tileX+x);
-								}
+								*outPtr = *inRowPtr+(tileX+x);
 							}
 						}
-
-						if ( !out->write_tile( tileX+dataWindow.min.x, tileY+spec.y, 0, TypeDesc::FLOAT, &tile[0] ) )
-						{
-							throw IECore::Exception( boost::str( boost::format( "Could not write tile to \"%s\", error = %s" ) % fileName % out->geterror() ) );
-						}
+					}
+					
+					if ( !out->write_tile( tileX+dataWindow.min.x, tileY+spec.y, 0, TypeDesc::FLOAT, &tile[0] ) )
+					{
+						throw IECore::Exception( boost::str( boost::format( "Could not write tile to \"%s\", error = %s" ) % fileName % out->geterror() ) );
 					}
 				}
 			}
-
 		}
-
-		out->close();
 	}
+	
+	out->close();
 }
 

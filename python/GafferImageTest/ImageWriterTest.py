@@ -63,8 +63,9 @@ class ImageWriterTest( unittest.TestCase ) :
 			w["in"].setInput( r["out"] )	
 			w["fileName"].setValue( testFile )
 			w["channels"].setValue( IECore.StringVectorData( ["R","B"] ) )
-			w.execute( [ Gaffer.Context() ] )
-				
+			with Gaffer.Context() :
+				w.execute()
+			
 			writerOutput = GafferImage.ImageReader()
 			writerOutput["fileName"].setValue( testFile )
 			
@@ -113,7 +114,8 @@ class ImageWriterTest( unittest.TestCase ) :
 		w["channels"].setValue( IECore.StringVectorData( g["out"]["channelNames"].getValue() ) )	
 		
 		# Try to execute. In older versions of the ImageWriter this would throw an exception.
-		w.execute( [ s.context() ] )
+		with s.context() :
+			w.execute()
 		self.failUnless( os.path.exists( testFile ) )
 		
 		# Check the output.
@@ -152,8 +154,9 @@ class ImageWriterTest( unittest.TestCase ) :
 			if ( w["writeMode"].getFlags() & Gaffer.Plug.Flags.ReadOnly ) == False :
 				w["writeMode"].setValue( mode )
 		
-			# Execute	
-			w.execute( [ Gaffer.Context() ] )
+			# Execute
+			with Gaffer.Context() :
+				w.execute()
 			self.failUnless( os.path.exists( testFile ) )
 
 			# Check the output.
@@ -189,7 +192,8 @@ class ImageWriterTest( unittest.TestCase ) :
 			w["fileName"].setValue( testFile )
 
 			# Execute
-			w.execute( [ Gaffer.Context() ] )
+			with Gaffer.Context() :
+				w.execute()
 			self.failUnless( os.path.exists( testFile ) )
 			i = IECore.Reader.create( testFile ).read()
 			i.blindData().clear()

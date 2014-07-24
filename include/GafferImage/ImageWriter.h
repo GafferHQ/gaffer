@@ -78,7 +78,7 @@ class ImageWriter : public Gaffer::ExecutableNode
 		
 		virtual IECore::MurmurHash hash( const Gaffer::Context *context ) const;
 
-		virtual void execute( const Contexts &contexts ) const;
+		virtual void execute() const;
 
 	private :
 		
