@@ -67,12 +67,25 @@ IECore::MurmurHash hash( T &n, const Gaffer::Context *context )
 }
 
 template<typename T>
-void execute( T &n, const boost::python::list &contextsList )
+void execute( T &n )
 {
-	Gaffer::ExecutableNode::Contexts contexts;
-	boost::python::container_utils::extend_container( contexts, contextsList );
 	IECorePython::ScopedGILRelease gilRelease;
-	n.execute( contexts );
+	n.T::execute();
+}
+
+template<typename T>
+void executeSequence( T &n, const boost::python::list &frameList )
+{
+	std::vector<float> frames;
+	boost::python::container_utils::extend_container( frames, frameList );
+	IECorePython::ScopedGILRelease gilRelease;
+	n.T::executeSequence( frames );
+}
+
+template<typename T>
+bool requiresSequenceExecution( T &n )
+{
+	return n.T::requiresSequenceExecution();
 }
 
 } // namespace Detail
@@ -84,6 +97,8 @@ ExecutableNodeClass<T, Ptr>::ExecutableNodeClass( const char *docString )
 	def( "requirements", &Detail::requirements<T> );
 	def( "hash", &Detail::hash<T> );
 	def( "execute", &Detail::execute<T> );	
+	def( "executeSequence", &Detail::executeSequence<T> );
+	def( "requiresSequenceExecution", &Detail::requiresSequenceExecution<T> );
 }
 
 } // namespace GafferBindings

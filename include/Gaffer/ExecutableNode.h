@@ -110,8 +110,18 @@ class ExecutableNode : public Node
 		/// don't cause side effects for the given context by returning a default hash.
 		virtual IECore::MurmurHash hash( const Context *context ) const = 0;
 		
-		/// Executes this node for all the specified contexts in sequence.
-		virtual void execute( const Contexts &contexts ) const = 0;
+		/// Executes this node using the current Context.
+		virtual void execute() const = 0;
+		
+		/// Executes this node by varying the current Context over the sequence of frames.
+		/// The default implementation modifies the current Context and calls execute()
+		/// for each frame. Derived classes which need more specialized behaviour should
+		/// re-implement executeSequence() along with requiresSequenceExecution().
+		virtual void executeSequence( const std::vector<float> &frames ) const;
+		
+		/// Returns true if the node must execute a sequence of frames all at once.
+		/// The default implementation returns false.
+		virtual bool requiresSequenceExecution() const;
 		
 	protected :
 	

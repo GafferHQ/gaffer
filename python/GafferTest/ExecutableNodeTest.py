@@ -45,9 +45,12 @@ class ExecutableNodeTest( GafferTest.TestCase ) :
 
 	class MyNode( Gaffer.ExecutableNode ) :
 
-		def __init__( self, withHash ) :
+		def __init__( self, withHash, requiresSequenceExecution = False ) :
 
 			Gaffer.ExecutableNode.__init__( self )
+			
+			self.__requiresSequenceExecution = requiresSequenceExecution
+			
 			self.__withHash = withHash
 			self.executionCount = 0
 
@@ -55,6 +58,14 @@ class ExecutableNodeTest( GafferTest.TestCase ) :
 			
 			self.executionCount += 1
 
+		def executeSequence( self, frames ) :
+			
+			if not self.__requiresSequenceExecution :
+				Gaffer.ExecutableNode.executeSequence( self, frames )
+				return
+			
+			self.executionCount += 1
+		
 		def hash( self, context ) :
 
 			if not self.__withHash :
@@ -64,6 +75,10 @@ class ExecutableNodeTest( GafferTest.TestCase ) :
 			h.append( context.getFrame() )
 			return h
 		
+		def requiresSequenceExecution( self ) :
+			
+			return self.__requiresSequenceExecution
+	
 	IECore.registerRunTimeTyped( MyNode )
 
 	def testIsExecutable( self ) :
@@ -110,7 +125,50 @@ class ExecutableNodeTest( GafferTest.TestCase ) :
 		self.assertNotEqual( n4.hash( c1 ), n3.hash( c1 ) )
 		self.assertNotEqual( n4.hash( c2 ), n3.hash( c2 ) )
 		self.assertNotEqual( n4.hash( c3 ), n3.hash( c3 ) )
-
+	
+	def testExecute( self ) :
+		
+		n = ExecutableNodeTest.MyNode(True)
+		self.assertEqual( n.executionCount, 0 )
+		
+		n.execute()
+		self.assertEqual( n.executionCount, 1 )
+		
+		n.execute()
+		self.assertEqual( n.executionCount, 2 )
+		
+		c = Gaffer.Context()
+		c.setFrame( Gaffer.Context.current().getFrame() + 1 )
+		with c :
+			n.execute()
+		self.assertEqual( n.executionCount, 3 )
+	
+	def testExecuteSequence( self ) :
+		
+		n = ExecutableNodeTest.MyNode(True)
+		self.assertEqual( n.executionCount, 0 )
+		
+		n.executeSequence( [ 1, 2, 3 ] )
+		self.assertEqual( n.executionCount, 3 )
+		
+		n.executeSequence( [ 1, 5, 10 ] )
+		self.assertEqual( n.executionCount, 6 )
+		
+		# requiring execution doesn't tally the count per frame
+		n2 = ExecutableNodeTest.MyNode( True, requiresSequenceExecution = True )
+		self.assertEqual( n2.executionCount, 0 )
+		
+		n2.executeSequence( [ 1, 2, 3 ] )
+		self.assertEqual( n2.executionCount, 1 )
+		
+		n2.executeSequence( [ 1, 5, 10 ] )
+		self.assertEqual( n2.executionCount, 2 )
+	
+	def testRequiresSequenceExecution( self ) :
+		
+		n = ExecutableNodeTest.MyNode(True)
+		self.assertEqual( n.requiresSequenceExecution(), False )
+	
 	def testRequirements( self ) :
 		"""Test the function requirements and Executable::defaultRequirements """
 

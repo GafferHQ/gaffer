@@ -153,8 +153,25 @@ IECore::MurmurHash ExecutableNode::hash( const Context *context ) const
 	return h;
 }
 
-void ExecutableNode::execute( const Contexts &contexts ) const
+void ExecutableNode::execute() const
 {
+}
+
+void ExecutableNode::executeSequence( const std::vector<float> &frames ) const
+{
+	ContextPtr context = new Context( *Context::current(), Context::Borrowed );
+	Context::Scope scopedContext( context.get() );
+	
+	for ( std::vector<float>::const_iterator it = frames.begin(); it != frames.end(); ++it )
+	{
+		context->setFrame( *it );
+		execute();
+	}
+}
+
+bool ExecutableNode::requiresSequenceExecution() const
+{
+	return false;
 }
 
 bool ExecutableNode::acceptsInput( const Plug *plug, const Plug *inputPlug ) const
