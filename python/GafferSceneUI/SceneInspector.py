@@ -464,37 +464,25 @@ class TextDiff( Diff ) :
 # Row
 ##########################################################################
 
-## A class to simplify the process of making a row containing a label
-# and some content, and for colouring rows alternately.
+## A class to simplify the process of making rows with alternating colours.
 class Row( GafferUI.Widget ) :
 
-	def __init__( self, label, content, alternate = False, **kw ) :
-	
+	def __init__( self, alternate = False, **kw ) :
+		
 		self.__frame = GafferUI.Frame( borderWidth = 4 )
 	
 		GafferUI.Widget.__init__( self, self.__frame, **kw )
 
-		with self.__frame :
-			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) as self.__row :
-				label = GafferUI.Label(
-					label,
-					horizontalAlignment = GafferUI.Label.HorizontalAlignment.Right,
-					verticalAlignment = GafferUI.Label.VerticalAlignment.Top
-				)
-				label._qtWidget().setFixedWidth( 150 )
-				self.__row.append( content )
-				GafferUI.Spacer( IECore.V2i( 0 ), parenting = { "expand" : True } )
+		self.__frame.setChild(
+			 GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
+		)
 		
 		self.setAlternate( alternate )
-		
-	def setContent( self, content ) :
 	
-		self.__row[1] = content
-		
-	def getContent( self ) :
+	def listContainer( self ) :
 	
-		return self.__row[1]
-
+		return self.__frame.getChild()
+		
 	def setAlternate( self, alternate ) :
 
 		self.__frame._qtWidget().setObjectName( "gafferLighter" if alternate else "" )
@@ -502,6 +490,33 @@ class Row( GafferUI.Widget ) :
 	def getAlternate( self ) :
 	
 		return self.__frame._qtWidget.objectName() == "gafferLighter"
+
+##########################################################################
+# Row
+##########################################################################
+
+## A row which displays a diff of some part of the scene.
+class DiffRow( Row ) :
+
+	def __init__( self, label, diff, alternate = False, **kw ) :
+	
+		assert( isinstance( diff, Diff ) )
+
+		Row.__init__( self, alternate, **kw )
+
+		label = GafferUI.Label(
+			label,
+			horizontalAlignment = GafferUI.Label.HorizontalAlignment.Right,
+			verticalAlignment = GafferUI.Label.VerticalAlignment.Top
+		)
+		label._qtWidget().setFixedWidth( 150 )
+		self.listContainer().append( label )
+		
+		self.listContainer().append( diff )
+		
+	def update( self, values ) :
+	
+		self.listContainer()[1].update( values )
 
 ##########################################################################
 # Section
@@ -531,9 +546,10 @@ class Section( GafferUI.Widget ) :
 		return self.__mainColumn
 
 # export classes for use in custom sections
-SceneInspector.Row = Row
 SceneInspector.Diff = Diff
 SceneInspector.TextDiff = TextDiff
+SceneInspector.Row = Row
+SceneInspector.DiffRow = DiffRow
 SceneInspector.Section = Section
 
 ##########################################################################
@@ -547,7 +563,7 @@ class __NodeSection( Section ) :
 		Section.__init__( self, collapsed = None )
 
 		with self._mainColumn() :
-			self.__row = Row( "Node Name", TextDiff( highlightDiffs = False ) )
+			self.__row = DiffRow( "Node Name", TextDiff( highlightDiffs = False ) )
 
 	def update( self, targets ) :
 		
@@ -556,7 +572,7 @@ class __NodeSection( Section ) :
 			node = target.scene.node()
 			values.append( node.relativeName( node.ancestor( Gaffer.ScriptNode ) ) )
 		
-		self.__row.getContent().update( values )
+		self.__row.update( values )
 
 SceneInspector.registerSection( __NodeSection, tab = None )
 
@@ -567,7 +583,7 @@ class __PathSection( Section ) :
 		Section.__init__( self, collapsed = None )
 
 		with self._mainColumn() :
-			self.__row = Row( "Location", TextDiff() )
+			self.__row = DiffRow( "Location", TextDiff() )
 			
 	def update( self, targets ) :
 		
@@ -575,7 +591,7 @@ class __PathSection( Section ) :
 		# per-character diffs (because the types are different).
 		values = [ target.path or IECore.StringData( "<i>Invalid</i>" ) for target in targets ]
 		
-		self.__row.getContent().update( values )
+		self.__row.update( values )
 
 SceneInspector.registerSection( __PathSection, tab = "Selection" )
 
@@ -586,16 +602,16 @@ class __TransformSection( Section ) :
 		Section.__init__( self, collapsed = True, label = "Transform" )
 		
 		with self._mainColumn() :
-			self.__localMatrixRow = Row( "Local", TextDiff() )
-			self.__worldMatrixRow = Row( "World", TextDiff(), alternate = True )
+			self.__localMatrixRow = DiffRow( "Local", TextDiff() )
+			self.__worldMatrixRow = DiffRow( "World", TextDiff(), alternate = True )
 		
 	def update( self, targets ) :
 		
 		localMatrices = [ target.scene.transform( target.path ) if target.path else None for target in targets ]
 		worldMatrices = [ target.scene.fullTransform( target.path ) if target.path else None for target in targets ]
 		
-		self.__localMatrixRow.getContent().update( localMatrices )
-		self.__worldMatrixRow.getContent().update( worldMatrices )
+		self.__localMatrixRow.update( localMatrices )
+		self.__worldMatrixRow.update( worldMatrices )
 		
 SceneInspector.registerSection( __TransformSection, tab = "Selection" )
 
@@ -606,8 +622,8 @@ class __BoundSection( Section ) :
 		Section.__init__( self, collapsed = True, label = "Bounding box" )
 		
 		with self._mainColumn() :
-			self.__localBoundRow = Row( "Local", TextDiff() )
-			self.__worldBoundRow = Row( "World", TextDiff(), alternate = True )
+			self.__localBoundRow = DiffRow( "Local", TextDiff() )
+			self.__worldBoundRow = DiffRow( "World", TextDiff(), alternate = True )
 	
 	def update( self, targets ) :
 	
@@ -623,8 +639,8 @@ class __BoundSection( Section ) :
 				localBounds.append( None )
 				worldBounds.append( None )
 				
-		self.__localBoundRow.getContent().update( localBounds )
-		self.__worldBoundRow.getContent().update( worldBounds )
+		self.__localBoundRow.update( localBounds )
+		self.__worldBoundRow.update( worldBounds )
 		
 SceneInspector.registerSection( __BoundSection, tab = "Selection" )
 
@@ -646,11 +662,11 @@ class __AttributesSection( Section ) :
 			
 			row = self.__rows.get( attributeName )
 			if row is None :
-				row = Row( attributeName, TextDiff() )
+				row = DiffRow( attributeName, TextDiff() )
 				self.__rows[attributeName] = row
 			
 			values = [ a.get( attributeName ) for a in attributes ]
-			row.getContent().update( values )
+			row.update( values )
 			
 			row.setAlternate( len( rows ) % 2 )
 			
@@ -667,12 +683,12 @@ class __ObjectSection( Section ) :
 		Section.__init__( self, collapsed = True, label = "Object" )
 	
 		with self._mainColumn() :
-			self.__typeRow = Row( "Type", TextDiff() )
-			self.__uniformRow = Row( "Uniform", TextDiff(), alternate = True )
-			self.__vertexRow = Row( "Vertex", TextDiff() )
-			self.__varyingRow = Row( "Varying", TextDiff(), alternate = True )
-			self.__faceVaryingRow = Row( "FaceVarying", TextDiff() )
-			self.__variablesRow = Row( "Variables", TextDiff(), alternate = True )
+			self.__typeRow = DiffRow( "Type", TextDiff() )
+			self.__uniformRow = DiffRow( "Uniform", TextDiff(), alternate = True )
+			self.__vertexRow = DiffRow( "Vertex", TextDiff() )
+			self.__varyingRow = DiffRow( "Varying", TextDiff(), alternate = True )
+			self.__faceVaryingRow = DiffRow( "FaceVarying", TextDiff() )
+			self.__variablesRow = DiffRow( "Variables", TextDiff(), alternate = True )
 			
 	def update( self, targets ) :
 	
@@ -683,27 +699,27 @@ class __ObjectSection( Section ) :
 			else :
 				objects.append( IECore.NullObject.defaultNullObject() )
 		
-		self.__typeRow.getContent().update(
+		self.__typeRow.update(
 			[ object.typeName() if not isinstance( object, IECore.NullObject ) else None for object in objects ]
 		)
 		
-		self.__uniformRow.getContent().update(
+		self.__uniformRow.update(
 			[ object.variableSize( IECore.PrimitiveVariable.Interpolation.Uniform ) if isinstance( object, IECore.Primitive ) else None for object in objects ]		
 		)
 		
-		self.__vertexRow.getContent().update(
+		self.__vertexRow.update(
 			[ object.variableSize( IECore.PrimitiveVariable.Interpolation.Vertex ) if isinstance( object, IECore.Primitive ) else None for object in objects ]		
 		)
 		
-		self.__varyingRow.getContent().update(
+		self.__varyingRow.update(
 			[ object.variableSize( IECore.PrimitiveVariable.Interpolation.Varying ) if isinstance( object, IECore.Primitive ) else None for object in objects ]		
 		)
 		
-		self.__faceVaryingRow.getContent().update(
+		self.__faceVaryingRow.update(
 			[ object.variableSize( IECore.PrimitiveVariable.Interpolation.FaceVarying ) if isinstance( object, IECore.Primitive ) else None for object in objects ]		
 		)
 		
-		self.__variablesRow.getContent().update(
+		self.__variablesRow.update(
 			[ " ".join( sorted( object.keys() ) ) if isinstance( object, IECore.Primitive ) else None for object in objects ]
 		)
 		
@@ -733,11 +749,11 @@ class __OptionsSection( Section ) :
 			
 			row = self.__rows.get( optionName )
 			if row is None :
-				row = Row( optionName, TextDiff() )
+				row = DiffRow( optionName, TextDiff() )
 				self.__rows[optionName] = row
 			
 			values = [ o.get( optionName ) for o in options ]
-			row.getContent().update( values )
+			row.update( values )
 			
 			row.setAlternate( len( rows ) % 2 )
 			
