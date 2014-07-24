@@ -48,10 +48,10 @@ namespace Detail
 {
 
 template<typename T>
-boost::python::list executionRequirements( T &n, Gaffer::Context *context )
+boost::python::list requirements( T &n, Gaffer::Context *context )
 {
 	Gaffer::ExecutableNode::Tasks tasks;
-	n.executionRequirements( context, tasks );
+	n.requirements( context, tasks );
 	boost::python::list result;
 	for( Gaffer::ExecutableNode::Tasks::const_iterator tIt = tasks.begin(); tIt != tasks.end(); ++tIt )
 	{
@@ -61,9 +61,9 @@ boost::python::list executionRequirements( T &n, Gaffer::Context *context )
 }
 
 template<typename T>
-IECore::MurmurHash executionHash( T &n, const Gaffer::Context *context )
+IECore::MurmurHash hash( T &n, const Gaffer::Context *context )
 {
-	return n.T::executionHash( context );
+	return n.T::hash( context );
 }
 
 template<typename T>
@@ -81,8 +81,8 @@ template<typename T, typename Ptr>
 ExecutableNodeClass<T, Ptr>::ExecutableNodeClass( const char *docString )
 	:	NodeClass<T, Ptr>( docString )
 {
-	def( "executionRequirements", &Detail::executionRequirements<T> );
-	def( "executionHash", &Detail::executionHash<T> );
+	def( "requirements", &Detail::requirements<T> );
+	def( "hash", &Detail::hash<T> );
 	def( "execute", &Detail::execute<T> );	
 }
 

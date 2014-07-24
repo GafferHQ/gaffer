@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2013-2014, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -129,7 +129,7 @@ class OpenGLRenderTest( unittest.TestCase ) :
 		self.assertTrue( os.path.exists( "/tmp/openGLRenderTest" ) )
 		self.assertTrue( os.path.exists( "/tmp/openGLRenderTest/test.0001.exr" ) )
 	
-	def testExecutionHash( self ) :
+	def testHash( self ) :
 				
 		c = Gaffer.Context()
 		c.setFrame( 1 )
@@ -144,34 +144,34 @@ class OpenGLRenderTest( unittest.TestCase ) :
 		s["render"] = GafferScene.OpenGLRender()
 		
 		# no input scene produces no effect
-		self.assertEqual( s["render"].executionHash( c ), IECore.MurmurHash() )
+		self.assertEqual( s["render"].hash( c ), IECore.MurmurHash() )
 		
 		# now theres an scene to render, we get some output
 		s["render"]["in"].setInput( s["displays"]["out"] )
-		self.assertNotEqual( s["render"].executionHash( c ), IECore.MurmurHash() )
+		self.assertNotEqual( s["render"].hash( c ), IECore.MurmurHash() )
 		
 		# output varies by time
-		self.assertNotEqual( s["render"].executionHash( c ), s["render"].executionHash( c2 ) )
+		self.assertNotEqual( s["render"].hash( c ), s["render"].hash( c2 ) )
 		
 		# output varies by new Context entries
-		current = s["render"].executionHash( c )
+		current = s["render"].hash( c )
 		c["renderDirectory"] = "/tmp/openGLRenderTest"
-		self.assertNotEqual( s["render"].executionHash( c ), current )
+		self.assertNotEqual( s["render"].hash( c ), current )
 		
 		# output varies by changed Context entries
-		current = s["render"].executionHash( c )
+		current = s["render"].hash( c )
 		c["renderDirectory"] = "/tmp/openGLRenderTest2"
-		self.assertNotEqual( s["render"].executionHash( c ), current )
+		self.assertNotEqual( s["render"].hash( c ), current )
 		
 		# output doesn't vary by ui Context entries
-		current = s["render"].executionHash( c )
+		current = s["render"].hash( c )
 		c["ui:something"] = "alterTheUI"
-		self.assertEqual( s["render"].executionHash( c ), current )
+		self.assertEqual( s["render"].hash( c ), current )
 		
 		# also varies by input node
-		current = s["render"].executionHash( c )
+		current = s["render"].hash( c )
 		s["render"]["in"].setInput( s["plane"]["out"] )
-		self.assertNotEqual( s["render"].executionHash( c ), current )
+		self.assertNotEqual( s["render"].hash( c ), current )
 	
 	def setUp( self ) :
 			

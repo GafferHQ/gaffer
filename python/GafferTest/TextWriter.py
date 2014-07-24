@@ -61,9 +61,9 @@ class TextWriter( Gaffer.ExecutableNode ) :
 			with file( fileName, "w" ) as f :
 				f.write( text )
 	
-	def executionHash( self, context ) :
+	def hash( self, context ) :
 		
-		h = Gaffer.ExecutableNode.executionHash( self, context )
+		h = Gaffer.ExecutableNode.hash( self, context )
 		h.append( context.getFrame() )
 		h.append( context.get( "textWriter:replace", IECore.StringVectorData() ) )
 		h.append( context.substitute( self["fileName"].getValue() ) )

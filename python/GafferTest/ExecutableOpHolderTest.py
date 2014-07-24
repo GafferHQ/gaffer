@@ -1,6 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2013-2014, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -87,8 +87,8 @@ class ExecutableOpHolderTest( GafferTest.TestCase ) :
 		opSpec = GafferTest.ParameterisedHolderTest.classSpecification( "primitive/renameVariables", "IECORE_OP_PATHS" )[:-1]
 		n.setOp( *opSpec )
 		c = Gaffer.Context()
-		h = n.executionHash(c)
-		self.assertEqual( n.executionHash(c), h )
+		h = n.hash(c)
+		self.assertEqual( n.hash(c), h )
 
 	def testSetParameterised( self ) :
 	
@@ -157,9 +157,9 @@ class ExecutableOpHolderTest( GafferTest.TestCase ) :
 		r2.setInput( n2b['requirement'] )
 
 		c = Gaffer.Context()
-		self.assertEqual( n2a.executionRequirements(c), [] )
-		self.assertEqual( n2b.executionRequirements(c), [] )
-		n2Requirements = n2.executionRequirements(c)
+		self.assertEqual( n2a.requirements(c), [] )
+		self.assertEqual( n2b.requirements(c), [] )
+		n2Requirements = n2.requirements(c)
 		self.assertEqual( n2Requirements[0].node(), n2a )
 		self.assertEqual( n2Requirements[0].context(), c )
 		self.assertEqual( n2Requirements[1].node(), n2b )
@@ -168,8 +168,8 @@ class ExecutableOpHolderTest( GafferTest.TestCase ) :
 		t2 = Gaffer.ExecutableNode.Task(n2b,c)
 		self.assertEqual( n2Requirements[0], t1 )
 		self.assertEqual( n2Requirements[1], t2 )
-		self.assertEqual( len(set(n2.executionRequirements(c)).difference([ t1, t2])), 0 )
-		self.assertEqual( n1.executionRequirements(c), [ Gaffer.ExecutableNode.Task(n2,c) ] )
+		self.assertEqual( len(set(n2.requirements(c)).difference([ t1, t2])), 0 )
+		self.assertEqual( n1.requirements(c), [ Gaffer.ExecutableNode.Task(n2,c) ] )
 	
 	def testSerialise( self ) :
 	
@@ -184,7 +184,7 @@ class ExecutableOpHolderTest( GafferTest.TestCase ) :
 		
 		self.assertEqual( s["n"]["parameters"].keys(), s2["n"]["parameters"].keys() )
 	
-	def testExecutionHash( self ) :
+	def testHash( self ) :
 		
 		c = Gaffer.Context()
 		c.setFrame( 1 )
@@ -195,28 +195,28 @@ class ExecutableOpHolderTest( GafferTest.TestCase ) :
 		op = TestOp()
 		
 		# output doesn't vary until we set an op
-		self.assertEqual( n.executionHash( c ), IECore.MurmurHash() )
+		self.assertEqual( n.hash( c ), IECore.MurmurHash() )
 		
 		# output varies if any op is set
 		n.setParameterised( op )
-		self.assertNotEqual( n.executionHash( c ), IECore.MurmurHash() )
+		self.assertNotEqual( n.hash( c ), IECore.MurmurHash() )
 		
 		# output doesn't vary by time unless ${frame} is used by the parameters
-		self.assertEqual( n.executionHash( c ), n.executionHash( c2 ) )
+		self.assertEqual( n.hash( c ), n.hash( c2 ) )
 		
 		# output varies by time because ${frame} is used by the parameters
 		n["parameters"]["stringParm"].setValue( "${frame}" )
-		self.assertNotEqual( n.executionHash( c ), n.executionHash( c2 ) )
+		self.assertNotEqual( n.hash( c ), n.hash( c2 ) )
 		
 		# output varies any context entry used by the parameters
 		n["parameters"]["stringParm"].setValue( "${test}" )
-		self.assertEqual( n.executionHash( c ), n.executionHash( c2 ) )
+		self.assertEqual( n.hash( c ), n.hash( c2 ) )
 		c["test"] = "a"
-		self.assertNotEqual( n.executionHash( c ), n.executionHash( c2 ) )
+		self.assertNotEqual( n.hash( c ), n.hash( c2 ) )
 		c2["test"] = "b"
-		self.assertNotEqual( n.executionHash( c ), n.executionHash( c2 ) )
+		self.assertNotEqual( n.hash( c ), n.hash( c2 ) )
 		c2["test"] = "a"
-		self.assertEqual( n.executionHash( c ), n.executionHash( c2 ) )
+		self.assertEqual( n.hash( c ), n.hash( c2 ) )
 
 if __name__ == "__main__":
 	unittest.main()

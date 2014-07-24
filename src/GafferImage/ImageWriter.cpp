@@ -153,7 +153,7 @@ const GafferImage::ChannelMaskPlug *ImageWriter::channelsPlug() const
 	return getChild<ChannelMaskPlug>( g_firstPlugIndex+3 );
 }
 
-IECore::MurmurHash ImageWriter::executionHash( const Context *context ) const
+IECore::MurmurHash ImageWriter::hash( const Context *context ) const
 {
 	Context::Scope scope( context );
 	if ( ( fileNamePlug()->getValue() == "" ) || inPlug()->source<ImagePlug>() == inPlug() )
@@ -161,7 +161,7 @@ IECore::MurmurHash ImageWriter::executionHash( const Context *context ) const
 		return IECore::MurmurHash();
 	}
 	
-	IECore::MurmurHash h = ExecutableNode::executionHash( context );
+	IECore::MurmurHash h = ExecutableNode::hash( context );
 	h.append( fileNamePlug()->hash() );
 	h.append( writeModePlug()->hash() );
 	h.append( channelsPlug()->hash() );

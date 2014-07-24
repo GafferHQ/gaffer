@@ -69,13 +69,13 @@ class ObjectWriter( Gaffer.ExecutableNode ) :
 	
 		return self.__parameterHandler
 	
-	def executionHash( self, context ) :
+	def hash( self, context ) :
 		
 		with context :
 			if not self["fileName"].getValue() or self["in"].source() == self["in"] :
 				return IECore.MurmurHash()
 			
-			h = Gaffer.ExecutableNode.executionHash( self, context )
+			h = Gaffer.ExecutableNode.hash( self, context )
 			h.append( self["fileName"].hash() )
 			h.append( self["in"].hash() )
 			if "parameters" in self.keys() :

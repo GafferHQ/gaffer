@@ -78,7 +78,7 @@ const IECore::Op *ExecutableOpHolder::getOp( std::string *className, int *classV
 	return IECore::runTimeCast<IECore::Op>( getParameterised( className, classVersion ) );
 }
 
-IECore::MurmurHash ExecutableOpHolder::executionHash( const Context *context ) const
+IECore::MurmurHash ExecutableOpHolder::hash( const Context *context ) const
 {
 	std::string className;
 	int classVersion;
@@ -87,7 +87,7 @@ IECore::MurmurHash ExecutableOpHolder::executionHash( const Context *context ) c
 		return IECore::MurmurHash();
 	}
 	
-	IECore::MurmurHash h = ExecutableNode::executionHash( context );
+	IECore::MurmurHash h = ExecutableNode::hash( context );
 	h.append( className );
 	h.append( classVersion );
 	

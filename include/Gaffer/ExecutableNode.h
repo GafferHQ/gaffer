@@ -58,7 +58,7 @@ class ExecutableNode : public Node
 		/// A Task defines the execution of an ExecutableNode given a specific Context.
 		/// Tasks are used to describe requirements between ExecutableNodes, and by
 		/// Dispatchers to schedule context specific execution. Tasks are immutable,
-		/// and their hash is computed at construction, matching the executionHash()
+		/// and their hash is computed at construction, matching the node's hash()
 		/// of the given node and context. The hash is used to define the comparison
 		/// operators, and any changes made to the node after construction invalidates
 		/// the Task. Changing the Context is acceptible, as the Task has its own copy.
@@ -102,13 +102,13 @@ class ExecutableNode : public Node
 		/// Fills requirements with all Tasks that must be completed before execute
 		/// can be called with the given context. The default implementation collects
 		/// the Tasks defined by the inputs of the requirementsPlug().
-		virtual void executionRequirements( const Context *context, Tasks &requirements ) const;
+		virtual void requirements( const Context *context, Tasks &requirements ) const;
 		
 		/// Returns a hash that uniquely represents the side effects (e.g. files created)
 		/// of calling execute with the given context. Derived nodes should call the base
 		/// implementation and append to the returned hash. Nodes can indicate that they
 		/// don't cause side effects for the given context by returning a default hash.
-		virtual IECore::MurmurHash executionHash( const Context *context ) const = 0;
+		virtual IECore::MurmurHash hash( const Context *context ) const = 0;
 		
 		/// Executes this node for all the specified contexts in sequence.
 		virtual void execute( const Contexts &contexts ) const = 0;

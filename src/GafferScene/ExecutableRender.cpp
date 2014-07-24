@@ -74,7 +74,7 @@ const ScenePlug *ExecutableRender::inPlug() const
 	return getChild<ScenePlug>( g_firstPlugIndex );
 }
 
-IECore::MurmurHash ExecutableRender::executionHash( const Gaffer::Context *context ) const
+IECore::MurmurHash ExecutableRender::hash( const Gaffer::Context *context ) const
 {
 	const ScenePlug *scenePlug = inPlug()->source<ScenePlug>();
 	if ( scenePlug == inPlug() )
@@ -83,7 +83,7 @@ IECore::MurmurHash ExecutableRender::executionHash( const Gaffer::Context *conte
 	}
 	
 	Context::Scope scope( context );
-	IECore::MurmurHash h = ExecutableNode::executionHash( context );
+	IECore::MurmurHash h = ExecutableNode::hash( context );
 	/// \todo hash the actual scene when we have a hierarchyHash
 	h.append( (uint64_t)scenePlug );
 	

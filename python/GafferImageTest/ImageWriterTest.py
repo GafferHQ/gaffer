@@ -196,7 +196,7 @@ class ImageWriterTest( unittest.TestCase ) :
 
 			self.assertEqual( i.displayWindow, format.getDisplayWindow() )
 	
-	def testExecutionHash( self ) :
+	def testHash( self ) :
 		
 		c = Gaffer.Context()
 		c.setFrame( 1 )
@@ -207,36 +207,36 @@ class ImageWriterTest( unittest.TestCase ) :
 		
 		# empty file produces no effect
 		self.assertEqual( writer["fileName"].getValue(), "" )
-		self.assertEqual( writer.executionHash( c ), IECore.MurmurHash() )
+		self.assertEqual( writer.hash( c ), IECore.MurmurHash() )
 		
 		# no input image produces no effect
 		writer["fileName"].setValue( "/tmp/test.exr" )
-		self.assertEqual( writer.executionHash( c ), IECore.MurmurHash() )
+		self.assertEqual( writer.hash( c ), IECore.MurmurHash() )
 		
 		# now theres a file and an image, we get some output
 		constant = GafferImage.Constant()
 		writer["in"].setInput( constant["out"] )
-		self.assertNotEqual( writer.executionHash( c ), IECore.MurmurHash() )
+		self.assertNotEqual( writer.hash( c ), IECore.MurmurHash() )
 		
 		# output doesn't vary by time yet
-		self.assertEqual( writer.executionHash( c ), writer.executionHash( c2 ) )
+		self.assertEqual( writer.hash( c ), writer.hash( c2 ) )
 		
 		# now it does vary
 		writer["fileName"].setValue( "/tmp/test.#.exr" )
-		self.assertNotEqual( writer.executionHash( c ), writer.executionHash( c2 ) )
+		self.assertNotEqual( writer.hash( c ), writer.hash( c2 ) )
 		
 		# also varies by input image
-		current = writer.executionHash( c )
+		current = writer.hash( c )
 		constant['format'].setValue( GafferImage.Format( IECore.Box2i( IECore.V2i( -5 ), IECore.V2i( 5 ) ), 1. ) )
-		self.assertNotEqual( writer.executionHash( c ), current )
+		self.assertNotEqual( writer.hash( c ), current )
 		
 		# other plugs matter too
-		current = writer.executionHash( c )
+		current = writer.hash( c )
 		writer["writeMode"].setValue( 1 ) # tile mode
-		self.assertNotEqual( writer.executionHash( c ), current )
-		current = writer.executionHash( c )
+		self.assertNotEqual( writer.hash( c ), current )
+		current = writer.hash( c )
 		writer["channels"].setValue( IECore.StringVectorData( [ "R" ] ) )
-		self.assertNotEqual( writer.executionHash( c ), current )
+		self.assertNotEqual( writer.hash( c ), current )
 	
 	def tearDown( self ) :
 	

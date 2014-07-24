@@ -230,7 +230,7 @@ const Dispatcher *Dispatcher::dispatcher( const std::string &name )
 const ExecutableNode::Task &Dispatcher::uniqueTask( const ExecutableNode::Task &task, TaskDescriptions &uniqueTasks, TaskSet &seenTasks )
 {	
 	ExecutableNode::Tasks requirements;
-	task.node()->executionRequirements( task.context(), requirements );
+	task.node()->requirements( task.context(), requirements );
 
 	TaskDescription	taskDesc;
 	taskDesc.task = task;

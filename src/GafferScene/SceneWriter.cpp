@@ -85,7 +85,7 @@ const StringPlug *SceneWriter::fileNamePlug() const
 	return getChild<StringPlug>( g_firstPlugIndex + 1 );
 }
 
-IECore::MurmurHash SceneWriter::executionHash( const Gaffer::Context *context ) const
+IECore::MurmurHash SceneWriter::hash( const Gaffer::Context *context ) const
 {
 	Context::Scope scope( context );
 	const ScenePlug *scenePlug = inPlug()->source<ScenePlug>();
@@ -94,7 +94,7 @@ IECore::MurmurHash SceneWriter::executionHash( const Gaffer::Context *context ) 
 		return IECore::MurmurHash();
 	}
 	
-	IECore::MurmurHash h = ExecutableNode::executionHash( context );
+	IECore::MurmurHash h = ExecutableNode::hash( context );
 	h.append( fileNamePlug()->hash() );
 	/// \todo hash the actual scene when we have a hierarchyHash
 	h.append( (uint64_t)scenePlug );

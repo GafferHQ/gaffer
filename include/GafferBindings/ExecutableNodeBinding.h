@@ -67,12 +67,12 @@ class ExecutableNodeWrapper : public NodeWrapper<WrappedType>
 		{
 		}
 
-		virtual void executionRequirements( const Gaffer::Context *context, Gaffer::ExecutableNode::Tasks &requirements ) const
+		virtual void requirements( const Gaffer::Context *context, Gaffer::ExecutableNode::Tasks &requirements ) const
 		{
 			IECorePython::ScopedGILLock gilLock;
 			if( this->isSubclassed() )
 			{
-				boost::python::object req = this->methodOverride( "executionRequirements" );
+				boost::python::object req = this->methodOverride( "requirements" );
 				if( req )
 				{
 					boost::python::list requirementList = boost::python::extract<boost::python::list>(
@@ -88,15 +88,15 @@ class ExecutableNodeWrapper : public NodeWrapper<WrappedType>
 					return;
 				}
 			}
-			WrappedType::executionRequirements( context, requirements );			
+			WrappedType::requirements( context, requirements );			
 		}
 		
-		virtual IECore::MurmurHash executionHash( const Gaffer::Context *context ) const
+		virtual IECore::MurmurHash hash( const Gaffer::Context *context ) const
 		{
 			IECorePython::ScopedGILLock gilLock;
 			if( this->isSubclassed() )
 			{
-				boost::python::object h = this->methodOverride( "executionHash" );
+				boost::python::object h = this->methodOverride( "hash" );
 				if( h )
 				{
 					return boost::python::extract<IECore::MurmurHash>(
@@ -104,7 +104,7 @@ class ExecutableNodeWrapper : public NodeWrapper<WrappedType>
 					);
 				}
 			}
-			return WrappedType::executionHash( context );
+			return WrappedType::hash( context );
 		}
 		
 		virtual void execute( const Gaffer::ExecutableNode::Contexts &contexts ) const

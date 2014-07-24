@@ -55,12 +55,12 @@ class ExecutableNodeTest( GafferTest.TestCase ) :
 			
 			self.executionCount += 1
 
-		def executionHash( self, context ) :
+		def hash( self, context ) :
 
 			if not self.__withHash :
 				return IECore.MurmurHash()
 			
-			h = Gaffer.ExecutableNode.executionHash( self, context )
+			h = Gaffer.ExecutableNode.hash( self, context )
 			h.append( context.getFrame() )
 			return h
 		
@@ -71,7 +71,7 @@ class ExecutableNodeTest( GafferTest.TestCase ) :
 		self.assertTrue( issubclass( self.MyNode, Gaffer.ExecutableNode ) )
 		self.assertTrue( isinstance( self.MyNode( True ), Gaffer.ExecutableNode ) )
 
-	def testExecutionHash( self ) :
+	def testHash( self ) :
 
 		c1 = Gaffer.Context()
 		c1.setFrame( 1 )
@@ -82,21 +82,21 @@ class ExecutableNodeTest( GafferTest.TestCase ) :
 
 		# hashes that don't use the context are equivalent
 		n = ExecutableNodeTest.MyNode(False)
-		self.assertEqual( n.executionHash( c1 ), n.executionHash( c1 ) )
-		self.assertEqual( n.executionHash( c1 ), n.executionHash( c2 ) )
-		self.assertEqual( n.executionHash( c1 ), n.executionHash( c3 ) )
+		self.assertEqual( n.hash( c1 ), n.hash( c1 ) )
+		self.assertEqual( n.hash( c1 ), n.hash( c2 ) )
+		self.assertEqual( n.hash( c1 ), n.hash( c3 ) )
 		
 		# hashes that do use the context differ
 		n2 = ExecutableNodeTest.MyNode(True)
-		self.assertEqual( n2.executionHash( c1 ), n2.executionHash( c1 ) )
-		self.assertNotEqual( n2.executionHash( c1 ), n2.executionHash( c2 ) )
-		self.assertNotEqual( n2.executionHash( c1 ), n2.executionHash( c3 ) )
+		self.assertEqual( n2.hash( c1 ), n2.hash( c1 ) )
+		self.assertNotEqual( n2.hash( c1 ), n2.hash( c2 ) )
+		self.assertNotEqual( n2.hash( c1 ), n2.hash( c3 ) )
 		
 		# hashes match across the same node type
 		n3 = ExecutableNodeTest.MyNode(True)
-		self.assertEqual( n2.executionHash( c1 ), n3.executionHash( c1 ) )
-		self.assertEqual( n2.executionHash( c2 ), n3.executionHash( c2 ) )
-		self.assertEqual( n2.executionHash( c3 ), n3.executionHash( c3 ) )
+		self.assertEqual( n2.hash( c1 ), n3.hash( c1 ) )
+		self.assertEqual( n2.hash( c2 ), n3.hash( c2 ) )
+		self.assertEqual( n2.hash( c3 ), n3.hash( c3 ) )
 		
 		# hashes differ across different node types
 		class MyNode2( ExecutableNodeTest.MyNode ) :
@@ -107,12 +107,12 @@ class ExecutableNodeTest( GafferTest.TestCase ) :
 		
 		n4 = MyNode2()
 		
-		self.assertNotEqual( n4.executionHash( c1 ), n3.executionHash( c1 ) )
-		self.assertNotEqual( n4.executionHash( c2 ), n3.executionHash( c2 ) )
-		self.assertNotEqual( n4.executionHash( c3 ), n3.executionHash( c3 ) )
+		self.assertNotEqual( n4.hash( c1 ), n3.hash( c1 ) )
+		self.assertNotEqual( n4.hash( c2 ), n3.hash( c2 ) )
+		self.assertNotEqual( n4.hash( c3 ), n3.hash( c3 ) )
 
-	def testExecutionRequirements( self ) :
-		"""Test the function executionRequirements and Executable::defaultRequirements """
+	def testRequirements( self ) :
+		"""Test the function requirements and Executable::defaultRequirements """
 
 		c1 = Gaffer.Context()
 		c1.setFrame( 1 )
@@ -125,9 +125,9 @@ class ExecutableNodeTest( GafferTest.TestCase ) :
 		# make n2 require n
 		n2["requirements"][0].setInput( n['requirement'] )
 
-		self.assertEqual( n.executionRequirements(c1), [] )
-		self.assertEqual( n2.executionRequirements(c1), [ Gaffer.ExecutableNode.Task( n, c1 ) ] )
-		self.assertEqual( n2.executionRequirements(c2), [ Gaffer.ExecutableNode.Task( n, c2 ) ] )
+		self.assertEqual( n.requirements(c1), [] )
+		self.assertEqual( n2.requirements(c1), [ Gaffer.ExecutableNode.Task( n, c1 ) ] )
+		self.assertEqual( n2.requirements(c2), [ Gaffer.ExecutableNode.Task( n, c2 ) ] )
 	
 	def testTaskConstructors( self ) :
 	
@@ -194,7 +194,7 @@ class ExecutableNodeTest( GafferTest.TestCase ) :
 		# even t5 is in there, because it's really the same task
 		self.assertTrue( t5 in s )
 		
-		# MyNode.executionHash() depends on the context time, so tasks will vary
+		# MyNode.hash() depends on the context time, so tasks will vary
 		my = ExecutableNodeTest.MyNode( True )
 		c.setFrame( 1 )
 		t1 = Gaffer.ExecutableNode.Task( my, c )
