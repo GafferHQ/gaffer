@@ -45,8 +45,6 @@ import Gaffer
 import GafferScene
 import GafferUI
 
-## \todo Have links to show you where in the hierarchy an attribute was set
-## and to take you to the node that set it.
 class SceneInspector( GafferUI.NodeSetEditor ) :
 
 	def __init__( self, scriptNode, **kw ) :
@@ -85,7 +83,7 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 		self._updateFromSet()
 
 	## Simple struct to specify the target of an inspection.
-	Target = collections.namedtuple( "SceneAndPath", [ "scene", "path" ] )
+	Target = collections.namedtuple( "Target", [ "scene", "path" ] )
 	
 	@classmethod
 	def registerSection( cls, section, tab ) :
@@ -467,9 +465,9 @@ class TextDiff( Diff ) :
 ## A class to simplify the process of making rows with alternating colours.
 class Row( GafferUI.Widget ) :
 
-	def __init__( self, alternate = False, **kw ) :
+	def __init__( self, borderWidth = 4, alternate = False, **kw ) :
 		
-		self.__frame = GafferUI.Frame( borderWidth = 4 )
+		self.__frame = GafferUI.Frame( borderWidth = borderWidth )
 	
 		GafferUI.Widget.__init__( self, self.__frame, **kw )
 
@@ -497,13 +495,98 @@ class Row( GafferUI.Widget ) :
 
 ## Abstract class for a callable which inspects a Target and returns
 # a value. Inspectors are key to allowing the UI to perform the same
-# query over multiple targets to generate tracebacks and inheritance
+# query over multiple targets to generate history and inheritance
 # queries.
 class Inspector( object ) :
 
-	def __call__( self, target ) :
+	## Should return True if the Inspector's results
+	# are based on attributes - this will enable inheritance
+	# queries for the inspector.
+	def inspectsAttributes( self ) :
+	
+		return False
+
+	## Must be implemented to inspect the target and return
+	# a value to be displayed. When inspectsAttributes()==True,
+	# this method must accept an ignoreInheritance keyword
+	# argument (defaulting to False).
+	def __call__( self, target, **kw ) :
 		
 		raise NotImplementedError
+
+##########################################################################
+# InheritanceDiagram
+##########################################################################
+
+class InheritanceDiagram( GafferUI.Widget ) :
+
+	def __init__( self, target, inspector, **kw ) :
+	
+		self.__column = GafferUI.ListContainer()
+	
+		GafferUI.Widget.__init__( self, self.__column, **kw )
+		
+		self.__target = target
+		self.__connections = []
+		
+		with self.__column :
+						
+			fullPath = target.path.split( "/" )[1:] if target.path != "/" else []
+			prevValue = None # local value from last iteration
+			prevDisplayedValue = None # the last value we displayed
+			fullValue = None # full value taking into account inheritance
+			for i in range( 0, len( fullPath ) + 1 ) :
+				
+				path = "/" + "/".join( fullPath[:i] )
+				value = inspector( SceneInspector.Target( target.scene, path ), ignoreInheritance=True )
+				fullValue = value if value is not None else fullValue
+				
+				atEitherEnd = ( i == 0 or i == len( fullPath ) )
+				
+				if value is not None or atEitherEnd or prevValue is not None or i == 1 :
+				
+					with Row( borderWidth = 0 ).listContainer() :
+						
+						if i == 0 :
+							GafferUI.Image( "railTop.png" )
+						elif i == len( fullPath ) :
+							GafferUI.Image( "railBottom.png" )
+						else :
+							if value == None :
+								GafferUI.Image( "railGap.png" )
+							else :
+								GafferUI.Image( "railMiddle.png" )
+						
+						if atEitherEnd or value is not None :
+							label = GafferUI.Label( path )
+							label.setToolTip( "Click to select \"%s\"" % path )
+							self.__connections.extend( [
+								label.enterSignal().connect( lambda gadget : gadget.setHighlighted( True ) ),
+								label.leaveSignal().connect( lambda gadget : gadget.setHighlighted( False ) ),
+								label.buttonPressSignal().connect( IECore.curry( Gaffer.WeakMethod( self.__labelButtonPress ) ) ),
+							] )
+						else :
+							GafferUI.Label( "..." )
+						
+						GafferUI.Spacer( IECore.V2i( 0 ), parenting = { "expand" : True } )
+
+						if atEitherEnd or value is not None :
+							d = TextDiff()
+							d.update( ( prevDisplayedValue, fullValue ) )
+							if prevDisplayedValue != fullValue :
+								d.frame( 0 ).setVisible( False )
+				
+					prevDisplayedValue = fullValue
+				
+				prevValue = value
+				
+		for i, row in enumerate( self.__column ) :
+			row.setAlternate( i % 2 )
+	
+	def __labelButtonPress( self, label, event ) :
+	
+		script = self.__target.scene.ancestor( Gaffer.ScriptNode )
+		script.context()["ui:scene:selectedPaths"] = IECore.StringVectorData( [ label.getText() ] )
 
 ##########################################################################
 # DiffRow
@@ -517,24 +600,73 @@ class DiffRow( Row ) :
 		assert( isinstance( diff, Diff ) )
 		assert( callable( inspector ) )
 
-		Row.__init__( self, alternate, **kw )
+		Row.__init__( self, alternate=alternate, **kw )
 
-		label = GafferUI.Label(
-			label,
-			horizontalAlignment = GafferUI.Label.HorizontalAlignment.Right,
-			verticalAlignment = GafferUI.Label.VerticalAlignment.Top
-		)
-		label._qtWidget().setFixedWidth( 150 )
-		self.listContainer().append( label )
+		with self.listContainer() :
+
+			label = GafferUI.Label(
+				label,
+				horizontalAlignment = GafferUI.Label.HorizontalAlignment.Right,
+				verticalAlignment = GafferUI.Label.VerticalAlignment.Top
+			)
+			label._qtWidget().setFixedWidth( 150 )
 		
-		self.listContainer().append( diff )
+			self.listContainer().append( diff )
+
+			if inspector.inspectsAttributes() :
+				
+				self.__menuButton = GafferUI.MenuButton(
+					image = "gear.png",
+					hasFrame=False,
+					menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) ),
+					parenting = { "verticalAlignment" : GafferUI.VerticalAlignment.Top }
+				)
+				self.__menuButton.setVisible( False )
+
+				GafferUI.Spacer( IECore.V2i( 1 ), parenting = { "expand" : True } )
+					
+				self.__enterConnection = self.enterSignal().connect( Gaffer.WeakMethod( self.__enter ) )
+				self.__leaveConnection = self.leaveSignal().connect( Gaffer.WeakMethod( self.__leave ) )
 
 		self.__inspector = inspector
 		
 	def update( self, targets ) :
 	
+		self.__targets = targets
 		self.listContainer()[1].update( [ self.__inspector( target ) for target in targets ] )
 
+	def __enter( self, widget ) :
+		
+		self.__menuButton.setVisible( True )
+		
+	def __leave( self, widget ) :
+	
+		self.__menuButton.setVisible( False )
+
+	def __menuDefinition( self ) :
+	
+		m = IECore.MenuDefinition()
+		
+		for targetName, target in zip( ( "A", "B" ), self.__targets ) :
+			if target.path is not None :
+				m.append( 
+					"/Show Inheritance" + ( "/For %s" % targetName if len( self.__targets ) > 1 else "" ),
+					{
+						"command" : IECore.curry( Gaffer.WeakMethod( self.__showInheritance ), target ),
+					}
+				)
+	
+		return m
+	
+	def __showInheritance( self, target ) :
+	
+		w = GafferUI.Window( "Inheritance", borderWidth = 8, sizeMode = GafferUI.Window.SizeMode.Fixed )
+		w.addChild( InheritanceDiagram( target, self.__inspector ) )
+		
+		self.ancestor( GafferUI.Window ).addChildWindow( w, removeOnClose = True )
+		w.setVisible( True )
+		w.resizeToFitChild()
+	
 ##########################################################################
 # Section
 ##########################################################################
@@ -569,6 +701,7 @@ SceneInspector.Row = Row
 SceneInspector.Inspector = Inspector
 SceneInspector.DiffRow = DiffRow
 SceneInspector.Section = Section
+SceneInspector.InheritanceDiagram = InheritanceDiagram
 
 ##########################################################################
 # Node section
@@ -733,15 +866,23 @@ class __AttributesSection( Section ) :
 		
 			self.__attributeName = attributeName
 	
-		def __call__( self, target ) :
+		def inspectsAttributes( self ) :
+		
+			return True
+	
+		def __call__( self, target, ignoreInheritance = False ) :
 		
 			if target.path is None :
 				return None
 			
-			## \todo Investigate caching the results of fullAttributes() so that
+			## \todo Investigate caching the results of these calls so that
 			# not every Inspector instance is making the same call - maybe the target
 			# could provide this service?
-			attributes = target.scene.fullAttributes( target.path )
+			if ignoreInheritance :
+				attributes = target.scene.attributes( target.path )
+			else :
+				attributes = target.scene.fullAttributes( target.path )
+				
 			return attributes.get( self.__attributeName )
 		
 SceneInspector.registerSection( __AttributesSection, tab = "Selection" )
