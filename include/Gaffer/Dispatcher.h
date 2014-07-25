@@ -51,6 +51,8 @@
 #include "Gaffer/TypedPlug.h"
 #include "Gaffer/ExecutableNode.h"
 
+#include "GafferBindings/DispatcherBinding.h" // to enable friend declaration for TaskDescription.
+
 namespace Gaffer
 {
 
@@ -164,10 +166,30 @@ class Dispatcher : public Node
 		friend class ExecutableNode;
 
 		/// Representation of a Task and its requirements.
-		struct TaskDescription 
+		class TaskDescription 
 		{
-			ExecutableNode::Task task;
-			std::set<ExecutableNode::Task> requirements;
+			public :
+				
+				TaskDescription( const ExecutableNode::Task &task );
+				TaskDescription( const TaskDescription &other );
+				
+				/// Used to sort TaskDescriptions by requirements
+				bool operator< ( const TaskDescription &other ) const;
+				
+				const ExecutableNode::Task &task() const;
+				
+				std::vector<float> &frames();
+				const std::vector<float> &frames() const;
+				
+				std::set<ExecutableNode::Task> &requirements();
+				const std::set<ExecutableNode::Task> &requirements() const;
+			
+			private :
+				
+				ExecutableNode::Task m_task;
+				std::vector<float> m_frames;
+				std::set<ExecutableNode::Task> m_requirements;
+		
 		};
 		
 		typedef std::list< Dispatcher::TaskDescription > TaskDescriptions;
@@ -208,14 +230,20 @@ class Dispatcher : public Node
 		// flattening them into a list of unique TaskDescriptions. For nodes that return a default
 		// hash, this function will create a separate Task for each unique set of requirements.
 		// For all other nodes, Tasks will be grouped by executionHash, and the requirements will be
-		// a union of the requirements from all equivalent Tasks.
+		// a union of the requirements from all equivalent Tasks. For nodes which require sequence
+		// execution, Tasks with otherwise identical Contexts will be grouped together as well.
 		static void uniqueTaskDescriptions( const ExecutableNode::Tasks &tasks, TaskDescriptions &uniqueDescriptions );
 		static const ExecutableNode::Task &uniqueTaskDescription( const ExecutableNode::Task &task, TaskDescriptions &uniqueDescriptions, DescriptionIteratorMap &existingDescriptions );
+		static void sortDescriptions( TaskDescriptions &descriptions );
+		
+		static IECore::MurmurHash hashWithoutFrame( const Context *context );
 		
 		static size_t g_firstPlugIndex;
 		static DispatcherMap g_dispatchers;
 		static DispatchSignal g_preDispatchSignal;
 		static DispatchSignal g_postDispatchSignal;
+		
+		friend void GafferBindings::bindDispatcher();
 };
 
 } // namespace Gaffer

@@ -34,6 +34,9 @@
 #  
 ##########################################################################
 
+import os
+import stat
+import shutil
 import unittest
 
 import IECore
@@ -71,10 +74,11 @@ class DispatcherTest( GafferTest.TestCase ) :
 		def _doDispatch( self, taskDescriptions ) :
 
 			del self.log[:]
-			for (task,requirements) in taskDescriptions :
+			for taskDescription in taskDescriptions :
+				task = taskDescription.task()
 				with task.context() :
-					task.node().execute()
-
+					task.node().executeSequence( taskDescription.frames() )
+		
 		def _doSetupPlugs( self, parentPlug ) :
 
 			parentPlug["testDispatcherPlug"] = Gaffer.IntPlug(
@@ -84,6 +88,8 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 	def setUp( self ) :
 
+		os.makedirs( "/tmp/dispatcherTest" )
+		
 		if not "testDispatcher" in Gaffer.Dispatcher.dispatcherNames():
 			IECore.registerRunTimeTyped( DispatcherTest.MyDispatcher )
 			dispatcher = DispatcherTest.MyDispatcher()
@@ -350,6 +356,88 @@ class DispatcherTest( GafferTest.TestCase ) :
 		self.assertRaises( RuntimeError, dispatcher.dispatch, [ s["n1"] ] )
 		self.assertEqual( op1.counter, 0 )
 		self.assertEqual( op1.frames, [] )
+	
+	def testDoesNotRequireSequenceExecution( self ) :
+		
+		dispatcher = DispatcherTest.MyDispatcher()
+		dispatcher["framesMode"].setValue( Gaffer.Dispatcher.FramesMode.CustomRange )
+		frameList = IECore.FrameList.parse( "2-6x2" )
+		dispatcher["frameRange"].setValue( str(frameList) )
+		fileName = "/tmp/dispatcherTest/result.txt"
+		
+		s = Gaffer.ScriptNode()
+		s["n1"] = GafferTest.TextWriter( mode = "a" )
+		s["n1"]["fileName"].setValue( fileName )
+		s["n1"]["text"].setValue( "n1 on ${frame};" )
+		s["n2"] = GafferTest.TextWriter( mode = "a" )
+		s["n2"]["fileName"].setValue( fileName )
+		s["n2"]["text"].setValue( "n2 on ${frame};" )
+		s["n3"] = GafferTest.TextWriter( mode = "a" )
+		s["n3"]["fileName"].setValue( fileName )
+		s["n3"]["text"].setValue( "n3 on ${frame};" )
+		s["n2"]['requirements'][0].setInput( s["n1"]['requirement'] )
+		s["n3"]['requirements'][0].setInput( s["n2"]['requirement'] )
+		
+		self.assertEqual( os.path.isfile( fileName ), False )
+		
+		dispatcher.dispatch( [ s["n3"] ] )
+		
+		self.assertEqual( os.path.isfile( fileName ), True )
+		
+		with file( fileName, "r" ) as f :
+			text = f.read()
+		
+		# all nodes on frame 1, followed by all nodes on frame 2, followed by all nodes on frame 3
+		expectedText = "n1 on 2;n2 on 2;n3 on 2;n1 on 4;n2 on 4;n3 on 4;n1 on 6;n2 on 6;n3 on 6;"
+		self.assertEqual( text, expectedText )
+	
+	def testRequiresSequenceExecution( self ) :
+		
+		dispatcher = DispatcherTest.MyDispatcher()
+		dispatcher["framesMode"].setValue( Gaffer.Dispatcher.FramesMode.CustomRange )
+		frameList = IECore.FrameList.parse( "2-6x2" )
+		dispatcher["frameRange"].setValue( str(frameList) )
+		fileName = "/tmp/dispatcherTest/result.txt"
+		
+		s = Gaffer.ScriptNode()
+		s["n1"] = GafferTest.TextWriter( mode = "a" )
+		s["n1"]["fileName"].setValue( fileName )
+		s["n1"]["text"].setValue( "n1 on ${frame};" )
+		s["n2"] = GafferTest.TextWriter( mode = "a", requiresSequenceExecution = True )
+		s["n2"]["fileName"].setValue( fileName )
+		s["n2"]["text"].setValue( "n2 on ${frame};" )
+		s["n3"] = GafferTest.TextWriter( mode = "a" )
+		s["n3"]["fileName"].setValue( fileName )
+		s["n3"]["text"].setValue( "n3 on ${frame};" )
+		s["n2"]['requirements'][0].setInput( s["n1"]['requirement'] )
+		s["n3"]['requirements'][0].setInput( s["n2"]['requirement'] )
+		
+		self.assertEqual( os.path.isfile( fileName ), False )
+		dispatcher.dispatch( [ s["n3"] ] )
+		self.assertEqual( os.path.isfile( fileName ), True )
+		with file( fileName, "r" ) as f :
+			text = f.read()
+		
+		# n1 on all frames, followed by the n2 sequence, followed by n3 on all frames
+		expectedText = "n1 on 2;n1 on 4;n1 on 6;n2 on 2;n2 on 4;n2 on 6;n3 on 2;n3 on 4;n3 on 6;"
+		self.assertEqual( text, expectedText )
+		
+		# make sure n2 gets frames in sorted order
+		dispatcher["frameRange"].setValue( "2,6,4" )
+		os.remove( fileName )
+		self.assertEqual( os.path.isfile( fileName ), False )
+		dispatcher.dispatch( [ s["n3"] ] )
+		self.assertEqual( os.path.isfile( fileName ), True )
+		with file( fileName, "r" ) as f :
+			text = f.read()
+		
+		# n1 in requested order, followed by the n2 sequence in sorted order, followed by n3 in the requested order
+		expectedText = "n1 on 2;n1 on 6;n1 on 4;n2 on 2;n2 on 4;n2 on 6;n3 on 2;n3 on 6;n3 on 4;"
+		self.assertEqual( text, expectedText )
+	
+	def tearDown( self ) :
+		
+		shutil.rmtree( "/tmp/dispatcherTest", ignore_errors = True )
 
 if __name__ == "__main__":
 	unittest.main()
