@@ -287,6 +287,38 @@ class WindowTest( GafferUITest.TestCase ) :
 		w.removeChild( wc1 )
 		self.assertEqual( w.childWindows(), [ wc2 ] )
 
+	def testRemoveChildWindowOnClose( self ) :
+	
+		# removeOnClose == False
+	
+		parent = GafferUI.Window()
+		child = GafferUI.Window()
+		
+		parent.addChildWindow( child )
+		parent.setVisible( True )
+		child.setVisible( True )
+		
+		child.close()
+		self.waitForIdle()
+		self.assertTrue( child in parent.childWindows() )
+
+		# removeOnClose == True
+
+		parent = GafferUI.Window()
+		child = GafferUI.Window()
+		
+		parent.addChildWindow( child, removeOnClose = True )
+		parent.setVisible( True )
+		child.setVisible( True )
+		
+		child.close()
+		self.waitForIdle()
+		self.assertFalse( child in parent.childWindows() )
+
+		w = weakref.ref( child )
+		del child
+		self.assertEqual( w(), None )
+
 if __name__ == "__main__":
 	unittest.main()
 	

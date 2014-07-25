@@ -266,9 +266,8 @@ class _EditorWindow( GafferUI.Window ) :
 
 		self.__titleChangedConnection = editor.titleChangedSignal().connect( Gaffer.WeakMethod( self.__updateTitle ) )
 		self.__nodeSetMemberRemovedConnection = editor.getNodeSet().memberRemovedSignal().connect( Gaffer.WeakMethod( self.__nodeSetMemberRemoved ) )
-		self.__closedConnection = self.closedSignal().connect( Gaffer.WeakMethod( self.__closed ) )
 
-		parentWindow.addChildWindow( self )
+		parentWindow.addChildWindow( self, removeOnClose=True )
 
 		self.__updateTitle()
 
@@ -280,9 +279,3 @@ class _EditorWindow( GafferUI.Window ) :
 	
 		if not len( set ) :
 			self.parent().removeChild( self )
-
-	def __closed( self, window ) :
-	
-		assert( window is self )
-		
-		self.parent().removeChild( self )

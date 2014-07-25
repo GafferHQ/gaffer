@@ -161,8 +161,10 @@ class Window( GafferUI.ContainerWidget ) :
 	# on top of the parent at all times. This is useful for
 	# preventing dialogues and the like from disappearing behind
 	# the main window. Note that the parent will keep the child
-	# window alive until it is removed using removeChild().
-	def addChildWindow( self, childWindow ) :
+	# window alive until it is removed using removeChild() -
+	# passing removeOnClose=True provides a convenient mechanism
+	# for removing it automatically when it is closed.
+	def addChildWindow( self, childWindow, removeOnClose=False ) :
 
 		assert( isinstance( childWindow, Window ) )
 		
@@ -194,6 +196,9 @@ class Window( GafferUI.ContainerWidget ) :
 		childWindowFlags = ( childWindow._qtWidget().windowFlags() & ~QtCore.Qt.WindowType_Mask ) | childWindowType		
 		childWindow._qtWidget().setParent( self._qtWidget(), childWindowFlags )
 		childWindow._applyVisibility()
+	
+		if removeOnClose :
+			childWindow.__removeOnCloseConnection = childWindow.closedSignal().connect( lambda w : w.parent().removeChild( w ) )
 	
 	## Returns a list of all the windows parented to this one.
 	def childWindows( self ) :
