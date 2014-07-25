@@ -87,6 +87,7 @@ class Button( GafferUI.Widget ) :
 		assert( isinstance( text, basestring ) )
 	
 		self._qtWidget().setText( text )
+		self.__updateMaximumWidth()
 		
 	def getText( self ) :
 	
@@ -110,7 +111,9 @@ class Button( GafferUI.Widget ) :
 	def setHasFrame( self, hasFrame ) :
 	
 		self._qtWidget().setObjectName( "gafferWithFrame" if hasFrame else "gafferWithoutFrame" )
-		
+		self.__updateMaximumWidth()
+		self._repolish()
+	
 	def getHasFrame( self ) :
 	
 		return self._qtWidget().objectName() == "gafferWithFrame"
@@ -145,7 +148,22 @@ class Button( GafferUI.Widget ) :
 		
 		self._qtWidget().setIcon( QtGui.QIcon( pixmap ) )
 		self._qtWidget().setIconSize( pixmap.size() )
+		
+		self.__updateMaximumWidth()
+		
+	def __updateMaximumWidth( self ) :
 	
+		# QPushButton::sizeHint() very unhelpfully hardcodes an extra padding of
+		# 4 pixels in width. When we're only displaying an image we really don't
+		# want that, so we combat it by making the maximum width match the image
+		# width.
+	
+		iconOnly = (not self.getHasFrame()) and self._qtWidget().icon() and (not self.getText())
+		QWIDGETSIZE_MAX = 16777215 # qt #define not exposed by PyQt or PySide
+		self._qtWidget().setMaximumWidth(
+			self._qtWidget().iconSize().width() if iconOnly else QWIDGETSIZE_MAX
+		)
+		
 	def __enter( self, widget ) :
 	
 		self.setHighlighted( True )
