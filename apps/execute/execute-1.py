@@ -99,7 +99,7 @@ class execute( Gaffer.Application ) :
 			
 		scriptNode = Gaffer.ScriptNode( os.path.splitext( os.path.basename( args["script"].value ) )[0] )
 		scriptNode["fileName"].setValue( os.path.abspath( args["script"].value ) )
-		scriptNode.load()
+		scriptNode.load( continueOnError=True )
 		self.root()["scripts"].addChild( scriptNode )
 		
 		nodes = []
