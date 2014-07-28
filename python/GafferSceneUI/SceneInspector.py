@@ -207,28 +207,37 @@ GafferUI.EditorWidget.registerType( "SceneInspector", SceneInspector )
 # to the relationship between the two values.
 class Diff( GafferUI.Widget ) :
 
-	def __init__( self, orientation=GafferUI.ListContainer.Orientation.Vertical, **kw ) :
+	def __init__( self, **kw ) :
 	
-		self.__column = GafferUI.ListContainer( orientation )
-		GafferUI.Widget.__init__( self, self.__column, **kw )
+		self.__grid = GafferUI.GridContainer()
+		GafferUI.Widget.__init__( self, self.__grid, **kw )
 
-		with self.__column :
+		with self.__grid :
 			for i in range( 0, 2 ) :
-				GafferUI.Frame(
+				frame = GafferUI.Frame(
 					borderWidth = 4,
 					borderStyle = GafferUI.Frame.BorderStyle.None,
-					parenting = { "expand" : True }
+					parenting = { "index" : ( 0, i ) }
 				)
-		
-		## \todo Should we provide frame types via methods on the
-		# Frame class? Are DiffA/DiffB types for a frame a bit too
-		# specialised?
-		self.__column[0]._qtWidget().setObjectName( "gafferDiffA" )
-		self.__column[1]._qtWidget().setObjectName( "gafferDiffB" )
+				## \todo Should we provide frame types via methods on the
+				# Frame class? Are DiffA/DiffB types for a frame a bit too
+				# specialised?
+				frame._qtWidget().setObjectName( "gafferDiffA" if i == 0 else "gafferDiffB" )
 	
 	def frame( self, index ) :
 	
-		return self.__column[index]
+		return self.__grid[0,index]
+
+	def setCornerWidget( self, index, widget ) :
+
+		self.__grid.addChild(
+			widget, index = ( 1, index ),
+			alignment = ( GafferUI.HorizontalAlignment.Left, GafferUI.VerticalAlignment.Top )
+		)
+
+	def getCornerWidget( self, index ) :
+	
+		return self.__grid[1,index]
 	
 	## Updates the UI to reflect the relationship between the values.
 	# If they are equal or if there is only one, then only the first
@@ -242,18 +251,26 @@ class Diff( GafferUI.Widget ) :
 		assert( len( values ) <= 2 )
 		
 		different = len( values ) > 1 and values[0] != values[1]
-				
-		self.frame( 0 ).setVisible( len( values ) > 0 and values[0] is not None )
-		self.frame( 1 ).setVisible( len( values ) > 1 and values[1] is not None and different )
+		
+		visibilities = [
+			len( values ) > 0 and values[0] is not None,
+			len( values ) > 1 and values[1] is not None and different
+		]
+		
+		for i in range( 0, 2 ) :
+			self.frame( i ).setVisible( visibilities[i] )
+			cornerWidget = self.getCornerWidget( i )
+			if cornerWidget is not None :
+				cornerWidget.setVisible( visibilities[i] )
 		
 		self.frame( 0 )._qtWidget().setObjectName( "gafferDiffA" if different else "" )
 		self.frame( 0 )._repolish()
 
 class TextDiff( Diff ) :
 
-	def __init__( self, orientation=GafferUI.ListContainer.Orientation.Vertical, highlightDiffs=True, **kw ) :
+	def __init__( self, highlightDiffs=True, **kw ) :
 	
-		Diff.__init__( self, orientation, **kw )
+		Diff.__init__( self, **kw )
 	
 		self.__connections = []
 		for i in range( 0, 2 ) :
