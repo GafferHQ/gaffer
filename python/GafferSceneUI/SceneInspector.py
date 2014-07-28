@@ -658,6 +658,9 @@ class DiffRow( Row ) :
 
 			if inspector.inspectsAttributes() :
 				
+				diff.setCornerWidget( 0, GafferUI.Label( "<sup>Inherited</sup>") )
+				diff.setCornerWidget( 1, GafferUI.Label( "<sup>Inherited</sup>") )
+				
 				self.__menuButton = GafferUI.MenuButton(
 					image = "gear.png",
 					hasFrame=False,
@@ -676,8 +679,15 @@ class DiffRow( Row ) :
 	def update( self, targets ) :
 	
 		self.__targets = targets
-		self.listContainer()[1].update( [ self.__inspector( target ) for target in targets ] )
+		values = [ self.__inspector( target ) for target in targets ]
+		self.listContainer()[1].update( values )
 
+		if self.__inspector.inspectsAttributes() :
+			localValues = [ self.__inspector( target, ignoreInheritance=True ) for target in targets ]
+			for i, value in enumerate( localValues ) :
+				if value is not None :
+					self.listContainer()[1].getCornerWidget( i ).setVisible( False )
+				
 	def __enter( self, widget ) :
 		
 		self.__menuButton.setVisible( True )
