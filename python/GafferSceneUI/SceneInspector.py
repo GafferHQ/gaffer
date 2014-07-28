@@ -453,9 +453,12 @@ class TextDiff( Diff ) :
 		
 	def __buttonPress( self, widget, event ) :
 	
-		return bool( event.buttons & event.Buttons.Left )
+		return event.buttons == event.Buttons.Left
 	
 	def __dragBegin( self, widget, event ) :
+	
+		if event.buttons != event.Buttons.Left :
+			return None
 	
 		GafferUI.Pointer.setFromFile( "values.png" )
 		return self.__values[0] if self.frame( 0 ).isAncestorOf( widget ) else self.__values[1]
@@ -661,53 +664,52 @@ class DiffRow( Row ) :
 				diff.setCornerWidget( 0, GafferUI.Label( "<sup>Inherited</sup>") )
 				diff.setCornerWidget( 1, GafferUI.Label( "<sup>Inherited</sup>") )
 				
-				self.__menuButton = GafferUI.MenuButton(
-					image = "gear.png",
-					hasFrame=False,
-					menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) ),
-					parenting = { "verticalAlignment" : GafferUI.VerticalAlignment.Top }
-				)
-				self.__menuButton.setVisible( False )
-
-				GafferUI.Spacer( IECore.V2i( 1 ), parenting = { "expand" : True } )
-					
-				self.__enterConnection = self.enterSignal().connect( Gaffer.WeakMethod( self.__enter ) )
-				self.__leaveConnection = self.leaveSignal().connect( Gaffer.WeakMethod( self.__leave ) )
-
+				self.__diffConnections = []
+				for i in range( 0, 2 ) :
+					self.__diffConnections.append(
+						diff.frame( i ).contextMenuSignal().connect( Gaffer.WeakMethod( self.__contextMenu ) )
+					)
+		
+			GafferUI.Spacer( IECore.V2i( 0 ), expand = True )
+		
 		self.__inspector = inspector
 		
 	def update( self, targets ) :
 	
 		self.__targets = targets
 		values = [ self.__inspector( target ) for target in targets ]
-		self.listContainer()[1].update( values )
+		self.__diff().update( values )
 
 		if self.__inspector.inspectsAttributes() :
 			localValues = [ self.__inspector( target, ignoreInheritance=True ) for target in targets ]
 			for i, value in enumerate( localValues ) :
 				if value is not None :
-					self.listContainer()[1].getCornerWidget( i ).setVisible( False )
-				
-	def __enter( self, widget ) :
-		
-		self.__menuButton.setVisible( True )
-		
-	def __leave( self, widget ) :
+					self.__diff().getCornerWidget( i ).setVisible( False )
 	
-		self.__menuButton.setVisible( False )
+	def __diff( self ) :
+	
+		return self.listContainer()[1]
+		
+	def __contextMenu( self, widget ) :
+	
+		self.__menu = GafferUI.Menu( IECore.curry( Gaffer.WeakMethod( self.__menuDefinition ), widget ) )
+		self.__menu.popup()
+		
+	def __menuDefinition( self, widget ) :
+	
+		if widget is self.__diff().frame( 0 ) :
+			target = self.__targets[0]
+		else :
+			target = self.__targets[1]
 
-	def __menuDefinition( self ) :
-	
 		m = IECore.MenuDefinition()
 		
-		for targetName, target in zip( ( "A", "B" ), self.__targets ) :
-			if target.path is not None :
-				m.append( 
-					"/Show Inheritance" + ( "/For %s" % targetName if len( self.__targets ) > 1 else "" ),
-					{
-						"command" : IECore.curry( Gaffer.WeakMethod( self.__showInheritance ), target ),
-					}
-				)
+		m.append(
+			"/Show Inheritance",
+			{
+				"command" : IECore.curry( Gaffer.WeakMethod( self.__showInheritance ), target ),
+			}
+		)
 	
 		return m
 	
