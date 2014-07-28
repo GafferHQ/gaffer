@@ -225,9 +225,8 @@ const Dispatcher *Dispatcher::dispatcher( const std::string &name )
 }
 
 // Returns the input Task if it was never seen before, or the previous Task that is equivalent to this one.
-// It uses the existingDescriptions object as a temporary buffer.
-const ExecutableNode::Task &Dispatcher::uniqueTaskDescription( const ExecutableNode::Task &task, TaskDescriptions &uniqueDescriptions, DescriptionIndexMap &existingDescriptions )
-{	
+const ExecutableNode::Task &Dispatcher::uniqueTaskDescription( const ExecutableNode::Task &task, TaskDescriptions &uniqueDescriptions, DescriptionIteratorMap &existingDescriptions )
+{
 	ExecutableNode::Tasks requirements;
 	task.node()->requirements( task.context(), requirements );
 
@@ -244,22 +243,15 @@ const ExecutableNode::Task &Dispatcher::uniqueTaskDescription( const ExecutableN
 
 	IECore::MurmurHash noHash;
 	const IECore::MurmurHash hash = task.hash();
-
-	std::pair< DescriptionIndexMap::iterator,bool > tit = existingDescriptions.insert( DescriptionIndexMap::value_type( hash, std::vector< size_t >() ) );
-	if ( tit.second )
-	{
-		// hash never seen, the current task is added "as is".
-		std::vector< size_t > &indices = tit.first->second;
-		indices.push_back( uniqueDescriptions.size() );
-		uniqueDescriptions.push_back( description );
-	}
-	else
+	
+	std::pair<DescriptionIteratorMap::iterator, bool> it = existingDescriptions.insert( DescriptionIteratorMap::value_type( hash, DescriptionIterators() ) );
+	DescriptionIterators &iterators = it.first->second;
+	if ( !it.second )
 	{
 		// same hash, find all TaskDescriptions with same node
-		std::vector< size_t > &indices = tit.first->second;
-		for ( std::vector<size_t>::const_iterator dIt = indices.begin(); dIt != indices.end(); ++dIt )
+		for ( DescriptionIterators::iterator dIt = iterators.begin(); dIt != iterators.end(); ++dIt )
 		{
-			TaskDescription &currentDescription = uniqueDescriptions[ *dIt ];
+			TaskDescription &currentDescription = **dIt;
 			if ( currentDescription.task.node() == task.node() )
 			{
 				// same node... does it compute anything?
@@ -281,16 +273,18 @@ const ExecutableNode::Task &Dispatcher::uniqueTaskDescription( const ExecutableN
 				}
 			}
 		}
-		// similar Task not in the list, task is added "as is"
-		indices.push_back( uniqueDescriptions.size() );
-		uniqueDescriptions.push_back( description );
 	}
+	
+	// no existing description matches this Task
+	uniqueDescriptions.push_back( description );
+	iterators.push_back( --uniqueDescriptions.end() );
+	
 	return task;
 }
 
 void Dispatcher::uniqueTaskDescriptions( const ExecutableNode::Tasks &tasks, TaskDescriptions &uniqueDescriptions )
 {
-	DescriptionIndexMap existingDescriptions;
+	DescriptionIteratorMap existingDescriptions;
 	
 	uniqueDescriptions.clear();
 	for( ExecutableNode::Tasks::const_iterator tit = tasks.begin(); tit != tasks.end(); ++tit )

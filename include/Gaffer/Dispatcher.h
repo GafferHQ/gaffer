@@ -170,7 +170,7 @@ class Dispatcher : public Node
 			std::set<ExecutableNode::Task> requirements;
 		};
 		
-		typedef std::vector< Dispatcher::TaskDescription > TaskDescriptions;
+		typedef std::list< Dispatcher::TaskDescription > TaskDescriptions;
 		
 		/// Derived classes should implement doDispatch to dispatch the execution of
 		/// the given TaskDescriptions, taking care to respect each set of requirements,
@@ -199,7 +199,9 @@ class Dispatcher : public Node
 	private :
 
 		typedef std::map< std::string, DispatcherPtr > DispatcherMap;
-		typedef std::map< IECore::MurmurHash, std::vector< size_t > > DescriptionIndexMap;
+		
+		typedef std::vector<TaskDescriptions::iterator> DescriptionIterators;
+		typedef std::map<IECore::MurmurHash, DescriptionIterators> DescriptionIteratorMap;
 		
 		IECore::FrameListPtr frameRange( const ScriptNode *script, const Context *context ) const;
 		// Utility function that recursively collects all nodes and their execution requirements,
@@ -208,7 +210,7 @@ class Dispatcher : public Node
 		// For all other nodes, Tasks will be grouped by executionHash, and the requirements will be
 		// a union of the requirements from all equivalent Tasks.
 		static void uniqueTaskDescriptions( const ExecutableNode::Tasks &tasks, TaskDescriptions &uniqueDescriptions );
-		static const ExecutableNode::Task &uniqueTaskDescription( const ExecutableNode::Task &task, TaskDescriptions &uniqueDescriptions, DescriptionIndexMap &existingDescriptions );
+		static const ExecutableNode::Task &uniqueTaskDescription( const ExecutableNode::Task &task, TaskDescriptions &uniqueDescriptions, DescriptionIteratorMap &existingDescriptions );
 		
 		static size_t g_firstPlugIndex;
 		static DispatcherMap g_dispatchers;
