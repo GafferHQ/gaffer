@@ -518,6 +518,37 @@ class Inspector( object ) :
 # InheritanceDiagram
 ##########################################################################
 
+QtGui = GafferUI._qtImport( "QtGui" )
+
+class _Rail( GafferUI.ListContainer ) :
+
+	Type = IECore.Enum.create( "Top", "Middle", "Gap", "Bottom" )
+
+	def __init__( self, type, **kw ) :
+	
+		GafferUI.ListContainer.__init__( self, **kw )
+		
+		with self :
+
+			if type != self.Type.Top :
+				image = GafferUI.Image( "railLine.png" )
+				## \todo Decide how we do this via the public API.
+				# Perhaps by putting the image in a Sizer? Or by
+				# adding stretch methods to the Image class?
+				image._qtWidget().setSizePolicy( QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Preferred )
+				image._qtWidget().setScaledContents( True )
+			else :
+				GafferUI.Spacer( IECore.V2i( 1 ) )
+			
+			GafferUI.Image( "rail" + str( type ) + ".png" )
+
+			if type != self.Type.Bottom :
+				image = GafferUI.Image( "railLine.png" )
+				image._qtWidget().setSizePolicy( QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Preferred )
+				image._qtWidget().setScaledContents( True )
+			else :
+				GafferUI.Spacer( IECore.V2i( 1 ) )
+		
 class InheritanceDiagram( GafferUI.Widget ) :
 
 	def __init__( self, target, inspector, **kw ) :
@@ -547,15 +578,10 @@ class InheritanceDiagram( GafferUI.Widget ) :
 				
 					with Row( borderWidth = 0 ).listContainer() :
 						
-						if i == 0 :
-							GafferUI.Image( "railTop.png" )
-						elif i == len( fullPath ) :
-							GafferUI.Image( "railBottom.png" )
+						if atEitherEnd :
+							_Rail( _Rail.Type.Top if i == 0 else _Rail.Type.Bottom )
 						else :
-							if value == None :
-								GafferUI.Image( "railGap.png" )
-							else :
-								GafferUI.Image( "railMiddle.png" )
+							_Rail( _Rail.Type.Middle if value is not None else _Rail.Type.Gap )
 						
 						if atEitherEnd or value is not None :
 							label = GafferUI.Label( path )
