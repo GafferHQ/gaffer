@@ -47,7 +47,9 @@ import GafferUI
 
 class SceneInspector( GafferUI.NodeSetEditor ) :
 
-	def __init__( self, scriptNode, **kw ) :
+	## A list of Section instances may be passed to create a custom inspector,
+	# otherwise all registered Sections will be used.
+	def __init__( self, scriptNode, sections = None, **kw ) :
 		
 		mainColumn = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, borderWidth = 8 )
 		
@@ -55,35 +57,64 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 		
 		self.__sections = []
 
-		columns = {}
-		with mainColumn :
-			columns[None] = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing = 8 )
-			tabbedContainer = GafferUI.TabbedContainer()
+		if sections is not None :
 			
-		for registration in self.__sectionRegistrations :
-			section = registration.section()
-			column = columns.get( registration.tab )
-			if column is None :
-				with tabbedContainer :
-					with GafferUI.ScrolledContainer( horizontalMode = GafferUI.ScrolledContainer.ScrollMode.Never, parenting = { "label" : registration.tab } ) :
-						column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, borderWidth = 4, spacing = 8 )
-						columns[registration.tab] = column
-			column.append( section )
-			self.__sections.append( section )
+			for section in sections :
+				mainColumn.append( section )
+				self.__sections.append( section )
+
+			mainColumn.append( GafferUI.Spacer( IECore.V2i( 0 ) ), expand = True )
+			
+		else :
 		
-		for tab, column in columns.items() :
-			if tab is not None :
-				column.append( GafferUI.Spacer( IECore.V2i( 0 ) ), expand = True )
+			columns = {}
+			with mainColumn :
+				columns[None] = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing = 8 )
+				tabbedContainer = GafferUI.TabbedContainer()
+			
+			for registration in self.__sectionRegistrations :
+				section = registration.section()
+				column = columns.get( registration.tab )
+				if column is None :
+					with tabbedContainer :
+						with GafferUI.ScrolledContainer( horizontalMode = GafferUI.ScrolledContainer.ScrollMode.Never, parenting = { "label" : registration.tab } ) :
+							column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, borderWidth = 4, spacing = 8 )
+							columns[registration.tab] = column
+				column.append( section )
+				self.__sections.append( section )
+		
+			for tab, column in columns.items() :
+				if tab is not None :
+					column.append( GafferUI.Spacer( IECore.V2i( 0 ) ), expand = True )
 		
 		self.__visibilityChangedConnection = self.visibilityChangedSignal().connect( Gaffer.WeakMethod( self.__visibilityChanged ) )
 		
 		self.__pendingUpdate = False
 		self.__playback = None
+		self.__targetPaths = None
 		
 		self._updateFromSet()
 
 	## Simple struct to specify the target of an inspection.
 	Target = collections.namedtuple( "Target", [ "scene", "path" ] )
+	
+	## May be used to "pin" target paths into the editor, rather than
+	# having it automatically follow the scene selection. A value of
+	# None causes selection to be followed again.
+	def setTargetPaths( self, paths ) :
+	
+		if paths == self.__targetPaths :
+			return
+	
+		assert( paths is None or len( paths ) == 1 or len( paths ) == 2 )
+		
+		self.__targetPaths = paths
+		self.__scheduleUpdate()
+	
+	## Returns the last value passed to setTargetPaths().
+	def getTargetPaths( self ) :
+	
+		return self.__targetPaths
 	
 	@classmethod
 	def registerSection( cls, section, tab ) :
@@ -122,7 +153,7 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 			self.__playbackStateChangedConnection = self.__playback.stateChangedSignal().connect( Gaffer.WeakMethod( self.__playbackStateChanged ) )
 
 		for item in modifiedItems :
-			if not item.startswith( "ui:" ) or item == "ui:scene:selectedPaths" :
+			if not item.startswith( "ui:" ) or ( item == "ui:scene:selectedPaths" and self.__targetPaths is None ) :
 				self.__scheduleUpdate()
 				break
 				
@@ -161,7 +192,11 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 		self.__pendingUpdate = False
 		
 		assert( len( self.__scenePlugs ) <= 2 )
-		paths = self.getContext().get( "ui:scene:selectedPaths", [] )
+		
+		if self.__targetPaths is not None :
+			paths = self.__targetPaths
+		else :
+			paths = self.getContext().get( "ui:scene:selectedPaths", [] )
 		paths = paths[:2] if len( self.__scenePlugs ) < 2 else paths[:1]
 		if not paths :
 			paths = [ "/" ]
@@ -504,6 +539,7 @@ class Row( GafferUI.Widget ) :
 	def setAlternate( self, alternate ) :
 
 		self.__frame._qtWidget().setObjectName( "gafferLighter" if alternate else "" )
+		self.__frame._repolish()
 	
 	def getAlternate( self ) :
 	
@@ -533,106 +569,6 @@ class Inspector( object ) :
 	def __call__( self, target, **kw ) :
 		
 		raise NotImplementedError
-
-##########################################################################
-# InheritanceDiagram
-##########################################################################
-
-QtGui = GafferUI._qtImport( "QtGui" )
-
-class _Rail( GafferUI.ListContainer ) :
-
-	Type = IECore.Enum.create( "Top", "Middle", "Gap", "Bottom" )
-
-	def __init__( self, type, **kw ) :
-	
-		GafferUI.ListContainer.__init__( self, **kw )
-		
-		with self :
-
-			if type != self.Type.Top :
-				image = GafferUI.Image( "railLine.png" )
-				## \todo Decide how we do this via the public API.
-				# Perhaps by putting the image in a Sizer? Or by
-				# adding stretch methods to the Image class?
-				image._qtWidget().setSizePolicy( QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Preferred )
-				image._qtWidget().setScaledContents( True )
-			else :
-				GafferUI.Spacer( IECore.V2i( 1 ) )
-			
-			GafferUI.Image( "rail" + str( type ) + ".png" )
-
-			if type != self.Type.Bottom :
-				image = GafferUI.Image( "railLine.png" )
-				image._qtWidget().setSizePolicy( QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Preferred )
-				image._qtWidget().setScaledContents( True )
-			else :
-				GafferUI.Spacer( IECore.V2i( 1 ) )
-		
-class InheritanceDiagram( GafferUI.Widget ) :
-
-	def __init__( self, target, inspector, **kw ) :
-	
-		self.__column = GafferUI.ListContainer()
-	
-		GafferUI.Widget.__init__( self, self.__column, **kw )
-		
-		self.__target = target
-		self.__connections = []
-		
-		with self.__column :
-						
-			fullPath = target.path.split( "/" )[1:] if target.path != "/" else []
-			prevValue = None # local value from last iteration
-			prevDisplayedValue = None # the last value we displayed
-			fullValue = None # full value taking into account inheritance
-			for i in range( 0, len( fullPath ) + 1 ) :
-				
-				path = "/" + "/".join( fullPath[:i] )
-				value = inspector( SceneInspector.Target( target.scene, path ), ignoreInheritance=True )
-				fullValue = value if value is not None else fullValue
-				
-				atEitherEnd = ( i == 0 or i == len( fullPath ) )
-				
-				if value is not None or atEitherEnd or prevValue is not None or i == 1 :
-				
-					with Row( borderWidth = 0 ).listContainer() :
-						
-						if atEitherEnd :
-							_Rail( _Rail.Type.Top if i == 0 else _Rail.Type.Bottom )
-						else :
-							_Rail( _Rail.Type.Middle if value is not None else _Rail.Type.Gap )
-						
-						if atEitherEnd or value is not None :
-							label = GafferUI.Label( path )
-							label.setToolTip( "Click to select \"%s\"" % path )
-							self.__connections.extend( [
-								label.enterSignal().connect( lambda gadget : gadget.setHighlighted( True ) ),
-								label.leaveSignal().connect( lambda gadget : gadget.setHighlighted( False ) ),
-								label.buttonPressSignal().connect( IECore.curry( Gaffer.WeakMethod( self.__labelButtonPress ) ) ),
-							] )
-						else :
-							GafferUI.Label( "..." )
-						
-						GafferUI.Spacer( IECore.V2i( 0 ), parenting = { "expand" : True } )
-
-						if atEitherEnd or value is not None :
-							d = TextDiff()
-							d.update( ( prevDisplayedValue, fullValue ) )
-							if prevDisplayedValue != fullValue :
-								d.frame( 0 ).setVisible( False )
-				
-					prevDisplayedValue = fullValue
-				
-				prevValue = value
-				
-		for i, row in enumerate( self.__column ) :
-			row.setAlternate( i % 2 )
-	
-	def __labelButtonPress( self, label, event ) :
-	
-		script = self.__target.scene.ancestor( Gaffer.ScriptNode )
-		script.context()["ui:scene:selectedPaths"] = IECore.StringVectorData( [ label.getText() ] )
 
 ##########################################################################
 # DiffRow
@@ -715,8 +651,13 @@ class DiffRow( Row ) :
 	
 	def __showInheritance( self, target ) :
 	
-		w = GafferUI.Window( "Inheritance", borderWidth = 8, sizeMode = GafferUI.Window.SizeMode.Fixed )
-		w.addChild( InheritanceDiagram( target, self.__inspector ) )
+		w = GafferUI.Window( "Inheritance", borderWidth = 8, sizeMode = GafferUI.Window.SizeMode.Manual )
+		
+		editor = SceneInspector( target.scene.ancestor( Gaffer.ScriptNode ), sections = [ _InheritanceSection( self.__inspector ) ] )
+		editor.setTargetPaths( [ target.path ] )
+		editor.setNodeSet( Gaffer.StandardSet( [ target.scene.node() ] ) )
+				
+		w.addChild( editor )
 		
 		self.ancestor( GafferUI.Window ).addChildWindow( w, removeOnClose = True )
 		w.setVisible( True )
@@ -756,7 +697,107 @@ SceneInspector.Row = Row
 SceneInspector.Inspector = Inspector
 SceneInspector.DiffRow = DiffRow
 SceneInspector.Section = Section
-SceneInspector.InheritanceDiagram = InheritanceDiagram
+
+##########################################################################
+# Inheritance section
+##########################################################################
+
+QtGui = GafferUI._qtImport( "QtGui" )
+
+class _Rail( GafferUI.ListContainer ) :
+
+	Type = IECore.Enum.create( "Top", "Middle", "Gap", "Bottom" )
+
+	def __init__( self, type, **kw ) :
+	
+		GafferUI.ListContainer.__init__( self, **kw )
+		
+		with self :
+
+			if type != self.Type.Top :
+				image = GafferUI.Image( "railLine.png" )
+				## \todo Decide how we do this via the public API.
+				# Perhaps by putting the image in a Sizer? Or by
+				# adding stretch methods to the Image class?
+				image._qtWidget().setSizePolicy( QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Preferred )
+				image._qtWidget().setScaledContents( True )
+			else :
+				GafferUI.Spacer( IECore.V2i( 1 ) )
+			
+			GafferUI.Image( "rail" + str( type ) + ".png" )
+
+			if type != self.Type.Bottom :
+				image = GafferUI.Image( "railLine.png" )
+				image._qtWidget().setSizePolicy( QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Preferred )
+				image._qtWidget().setScaledContents( True )
+			else :
+				GafferUI.Spacer( IECore.V2i( 1 ) )
+		
+class _InheritanceSection( Section ) :
+
+	def __init__( self, inspector, **kw ) :
+	
+		Section.__init__( self, collapsed = None, **kw )
+
+		self.__inspector = inspector
+
+	def update( self, targets ) :
+		
+		self.__target = targets[0]
+		self.__connections = []
+		
+		del self._mainColumn()[:]
+		
+		with self._mainColumn() :
+						
+			fullPath = self.__target.path.split( "/" )[1:] if self.__target.path != "/" else []
+			prevValue = None # local value from last iteration
+			prevDisplayedValue = None # the last value we displayed
+			fullValue = None # full value taking into account inheritance
+			for i in range( 0, len( fullPath ) + 1 ) :
+				
+				path = "/" + "/".join( fullPath[:i] )
+				value = self.__inspector( SceneInspector.Target( self.__target.scene, path ), ignoreInheritance=True )
+				fullValue = value if value is not None else fullValue
+				
+				atEitherEnd = ( i == 0 or i == len( fullPath ) )
+				
+				if value is not None or atEitherEnd or prevValue is not None or i == 1 :
+				
+					with Row( borderWidth = 0, alternate = len( self._mainColumn() ) % 2 ).listContainer() :
+						
+						if atEitherEnd :
+							_Rail( _Rail.Type.Top if i == 0 else _Rail.Type.Bottom )
+						else :
+							_Rail( _Rail.Type.Middle if value is not None else _Rail.Type.Gap )
+						
+						if atEitherEnd or value is not None :
+							label = GafferUI.Label( path )
+							label.setToolTip( "Click to select \"%s\"" % path )
+							self.__connections.extend( [
+								label.enterSignal().connect( lambda gadget : gadget.setHighlighted( True ) ),
+								label.leaveSignal().connect( lambda gadget : gadget.setHighlighted( False ) ),
+								label.buttonPressSignal().connect( IECore.curry( Gaffer.WeakMethod( self.__labelButtonPress ) ) ),
+							] )
+						else :
+							GafferUI.Label( "..." )
+						
+						GafferUI.Spacer( IECore.V2i( 0 ), parenting = { "expand" : True } )
+
+						if atEitherEnd or value is not None :
+							d = TextDiff()
+							d.update( ( prevDisplayedValue, fullValue ) )
+							if prevDisplayedValue != fullValue :
+								d.frame( 0 ).setVisible( False )
+				
+					prevDisplayedValue = fullValue
+				
+				prevValue = value
+		
+	def __labelButtonPress( self, label, event ) :
+	
+		script = self.__target.scene.ancestor( Gaffer.ScriptNode )
+		script.context()["ui:scene:selectedPaths"] = IECore.StringVectorData( [ label.getText() ] )
 
 ##########################################################################
 # Node section
