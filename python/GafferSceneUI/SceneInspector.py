@@ -90,9 +90,11 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 		self.__visibilityChangedConnection = self.visibilityChangedSignal().connect( Gaffer.WeakMethod( self.__visibilityChanged ) )
 		
 		self.__pendingUpdate = False
-		self.__playback = None
 		self.__targetPaths = None
 		
+		self.__playback = None
+		self.__acquirePlayback()
+
 		self._updateFromSet()
 
 	## Simple struct to specify the target of an inspection.
@@ -148,10 +150,8 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 				
 	def _updateFromContext( self, modifiedItems ) :
 	
-		if self.__playback is None or not self.__playback.context().isSame( self.getContext() ) :
-			self.__playback = GafferUI.Playback.acquire( self.getContext() )
-			self.__playbackStateChangedConnection = self.__playback.stateChangedSignal().connect( Gaffer.WeakMethod( self.__playbackStateChanged ) )
-
+		self.__acquirePlayback() # if context was set to different instance, we need a new playback instance
+		
 		for item in modifiedItems :
 			if not item.startswith( "ui:" ) or ( item == "ui:scene:selectedPaths" and self.__targetPaths is None ) :
 				self.__scheduleUpdate()
@@ -222,6 +222,12 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 		
 		if self.__pendingUpdate and self.visible() :
 			self.__update()
+
+	def __acquirePlayback( self ) :
+	
+		if self.__playback is None or not self.__playback.context().isSame( self.getContext() ) :
+			self.__playback = GafferUI.Playback.acquire( self.getContext() )
+			self.__playbackStateChangedConnection = self.__playback.stateChangedSignal().connect( Gaffer.WeakMethod( self.__playbackStateChanged ) )
 
 	def __playbackStateChanged( self, playback ) :
 	
