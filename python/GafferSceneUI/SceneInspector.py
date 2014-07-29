@@ -746,53 +746,55 @@ class _InheritanceSection( Section ) :
 		self.__target = targets[0]
 		self.__connections = []
 		
-		del self._mainColumn()[:]
+		rows = []
 		
-		with self._mainColumn() :
-						
-			fullPath = self.__target.path.split( "/" )[1:] if self.__target.path != "/" else []
-			prevValue = None # local value from last iteration
-			prevDisplayedValue = None # the last value we displayed
-			fullValue = None # full value taking into account inheritance
-			for i in range( 0, len( fullPath ) + 1 ) :
-				
-				path = "/" + "/".join( fullPath[:i] )
-				value = self.__inspector( SceneInspector.Target( self.__target.scene, path ), ignoreInheritance=True )
-				fullValue = value if value is not None else fullValue
-				
-				atEitherEnd = ( i == 0 or i == len( fullPath ) )
-				
-				if value is not None or atEitherEnd or prevValue is not None or i == 1 :
-				
-					with Row( borderWidth = 0, alternate = len( self._mainColumn() ) % 2 ).listContainer() :
-						
-						if atEitherEnd :
-							_Rail( _Rail.Type.Top if i == 0 else _Rail.Type.Bottom )
-						else :
-							_Rail( _Rail.Type.Middle if value is not None else _Rail.Type.Gap )
-						
-						if atEitherEnd or value is not None :
-							label = GafferUI.Label( path )
-							label.setToolTip( "Click to select \"%s\"" % path )
-							self.__connections.extend( [
-								label.enterSignal().connect( lambda gadget : gadget.setHighlighted( True ) ),
-								label.leaveSignal().connect( lambda gadget : gadget.setHighlighted( False ) ),
-								label.buttonPressSignal().connect( IECore.curry( Gaffer.WeakMethod( self.__labelButtonPress ) ) ),
-							] )
-						else :
-							GafferUI.Label( "..." )
-						
-						GafferUI.Spacer( IECore.V2i( 0 ), parenting = { "expand" : True } )
+		fullPath = self.__target.path.split( "/" )[1:] if self.__target.path != "/" else []
+		prevValue = None # local value from last iteration
+		prevDisplayedValue = None # the last value we displayed
+		fullValue = None # full value taking into account inheritance
+		for i in range( 0, len( fullPath ) + 1 ) :
+			
+			path = "/" + "/".join( fullPath[:i] )
+			value = self.__inspector( SceneInspector.Target( self.__target.scene, path ), ignoreInheritance=True )
+			fullValue = value if value is not None else fullValue
+			
+			atEitherEnd = ( i == 0 or i == len( fullPath ) )
+			
+			if value is not None or atEitherEnd or prevValue is not None or i == 1 :
+			
+				row = Row( borderWidth = 0, alternate = len( rows ) % 2 )
+				rows.append( row )
+				with row.listContainer() :
+					
+					if atEitherEnd :
+						_Rail( _Rail.Type.Top if i == 0 else _Rail.Type.Bottom )
+					else :
+						_Rail( _Rail.Type.Middle if value is not None else _Rail.Type.Gap )
+					
+					if atEitherEnd or value is not None :
+						label = GafferUI.Label( path )
+						label.setToolTip( "Click to select \"%s\"" % path )
+						self.__connections.extend( [
+							label.enterSignal().connect( lambda gadget : gadget.setHighlighted( True ) ),
+							label.leaveSignal().connect( lambda gadget : gadget.setHighlighted( False ) ),
+							label.buttonPressSignal().connect( IECore.curry( Gaffer.WeakMethod( self.__labelButtonPress ) ) ),
+						] )
+					else :
+						GafferUI.Label( "..." )
+					
+					GafferUI.Spacer( IECore.V2i( 0 ), parenting = { "expand" : True } )
 
-						if atEitherEnd or value is not None :
-							d = TextDiff()
-							d.update( ( prevDisplayedValue, fullValue ) )
-							if prevDisplayedValue != fullValue :
-								d.frame( 0 ).setVisible( False )
-				
-					prevDisplayedValue = fullValue
-				
-				prevValue = value
+					if atEitherEnd or value is not None :
+						d = TextDiff()
+						d.update( ( prevDisplayedValue, fullValue ) )
+						if prevDisplayedValue != fullValue :
+							d.frame( 0 ).setVisible( False )
+			
+				prevDisplayedValue = fullValue
+			
+			prevValue = value
+			
+		self._mainColumn()[:] = rows
 		
 	def __labelButtonPress( self, label, event ) :
 	
