@@ -75,18 +75,6 @@ class Pointer : public IECore::RefCounted
 
 		/// Registers a named pointer for use in setCurrent().
 		static void registerPointer( const std::string &name, ConstPointerPtr pointer );
-
-		/// Sets the image used to represent the mouse pointer.
-		/// Passing null resets the pointer to its default state.
-		static void set( IECore::ConstImagePrimitivePtr image );
-		/// Returns the image used to represent the mouse pointer.
-		static const IECore::ImagePrimitive *get();
-		
-		/// Convenience function to load an image file and call
-		/// set(). Images are loaded from the paths specified by
-		/// the GAFFERUI_IMAGE_PATHS environment variable. Passing
-		/// "" resets the pointer to its default state.
-		static void setFromFile( const std::string &name );
 		
 		/// A signal emitted whenever the pointer is changed.
 		typedef boost::signal<void ()> ChangedSignal; 

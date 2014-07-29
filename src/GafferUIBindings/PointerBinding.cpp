@@ -58,11 +58,6 @@ static PointerPtr getCurrent()
 	return const_cast<Pointer *>( Pointer::getCurrent() );
 }
 
-static IECore::ImagePrimitivePtr get()
-{
-	return const_cast<IECore::ImagePrimitive *>( Pointer::get() );
-}
-
 void GafferUIBindings::bindPointer()
 {
 	scope s = IECorePython::RefCountedClass<Pointer, IECore::RefCounted>( "Pointer" )
@@ -75,9 +70,6 @@ void GafferUIBindings::bindPointer()
 		.staticmethod( "setCurrent" )
 		.def( "getCurrent", &getCurrent )
 		.staticmethod( "getCurrent" )
-		.def( "set", &Pointer::set ).staticmethod( "set" )
-		.def( "get", &get ).staticmethod( "get" )
-		.def( "setFromFile", &Pointer::setFromFile ).staticmethod( "setFromFile" )
 		.def( "changedSignal", &Pointer::changedSignal, return_value_policy<reference_existing_object>() ).staticmethod( "changedSignal" )
 	;
 	

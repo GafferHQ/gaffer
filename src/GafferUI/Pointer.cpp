@@ -144,33 +144,6 @@ void Pointer::registerPointer( const std::string &name, ConstPointerPtr pointer 
 	registry()["contextMenu"] = new Pointer( "pointerContextMenu.png", Imath::V2i( 1 ) );
 }
 
-void Pointer::set( IECore::ConstImagePrimitivePtr image )
-{
-	if( image )
-	{
-		setCurrent( new Pointer( image.get() ) );
-	}
-	else
-	{
-		setCurrent( (Pointer *)NULL );
-	}
-}
-
-const IECore::ImagePrimitive *Pointer::get()
-{
-	return g_current ? g_current->image() : NULL;
-}
-
-void Pointer::setFromFile( const std::string &name )
-{
-	if( !name.size() )
-	{
-		set( NULL );
-		return;
-	}
-	setCurrent( new Pointer( name ) );
-}
-
 Pointer::ChangedSignal &Pointer::changedSignal()
 {
 	static ChangedSignal s;
