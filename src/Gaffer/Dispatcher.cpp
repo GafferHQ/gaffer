@@ -48,6 +48,7 @@ using namespace IECore;
 using namespace Gaffer;
 
 static InternedString g_frame( "frame" );
+static InternedString g_batchSize( "batchSize" );
 
 size_t Dispatcher::g_firstPlugIndex = 0;
 Dispatcher::DispatcherMap Dispatcher::g_dispatchers;
@@ -195,6 +196,15 @@ Dispatcher::DispatchSignal &Dispatcher::postDispatchSignal()
 
 void Dispatcher::setupPlugs( CompoundPlug *parentPlug )
 {
+	if ( const ExecutableNode *node = parentPlug->ancestor<const ExecutableNode>() )
+	{
+		/// \todo: this will always return true until we sort out issue #915
+		if ( !node->requiresSequenceExecution() )
+		{
+			parentPlug->addChild( new IntPlug( g_batchSize, Plug::In, 1 ) );
+		}
+	}
+	
 	for ( DispatcherMap::const_iterator cit = g_dispatchers.begin(); cit != g_dispatchers.end(); cit++ )
 	{
 		cit->second->doSetupPlugs( parentPlug );
@@ -279,7 +289,10 @@ const ExecutableNode::Task &Dispatcher::uniqueTaskDescription( const ExecutableN
 	}
 	
 	// collect all the Tasks that match except for the frame (for the nodes that require it)
-	if ( task.node()->requiresSequenceExecution() )
+	const CompoundPlug *dispatcherPlug = task.node()->dispatcherPlug();
+	const IntPlug *batchSizePlug = dispatcherPlug->getChild<const IntPlug>( g_batchSize );
+	size_t batchSize = ( batchSizePlug ) ? batchSizePlug->getValue() : 1;
+	if ( task.node()->requiresSequenceExecution() || batchSize > 1 )
 	{
 		for ( TaskDescriptions::iterator dIt = uniqueDescriptions.begin(); dIt != uniqueDescriptions.end(); ++dIt )
 		{
@@ -293,10 +306,13 @@ const ExecutableNode::Task &Dispatcher::uniqueTaskDescription( const ExecutableN
 				std::vector<float> &frames = currentDescription.frames();
 				if ( std::find( frames.begin(), currentDescription.frames().end(), frame ) == frames.end() )
 				{
-					frames.push_back( frame );
-					const std::set<ExecutableNode::Task> &requirements = description.requirements();
-					currentDescription.requirements().insert( requirements.begin(), requirements.end() );
-					return currentDescription.task();
+					if ( task.node()->requiresSequenceExecution() || ( frames.size() < batchSize ) )
+					{
+						frames.push_back( frame );
+						const std::set<ExecutableNode::Task> &requirements = description.requirements();
+						currentDescription.requirements().insert( requirements.begin(), requirements.end() );
+						return currentDescription.task();
+					}
 				}
 			}
 		}
