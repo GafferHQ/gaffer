@@ -177,14 +177,14 @@ class NameLabel( GafferUI.Label ) :
 	def __dragBegin( self, widget, event ) :
 	
 		if event.buttons & ( event.Buttons.Left | event.Buttons.Middle ) :
-			GafferUI.Pointer.setFromFile( "nodes.png" )
+			GafferUI.Pointer.setCurrent( "nodes" )
 			return self.getGraphComponent()
 		
 		return None
 
 	def __dragEnd( self, widget, event ) :
 	
-		GafferUI.Pointer.set( None )
+		GafferUI.Pointer.setCurrent( None )
 
 	@staticmethod
 	def __defaultFormatter( graphComponents ) :

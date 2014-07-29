@@ -142,7 +142,7 @@ class VectorDataWidget( GafferUI.Widget ) :
 			removeButton.dropSignal().connect( Gaffer.WeakMethod( self.__drop ) ),
 		]
 		
-		self.__dragPointer = "values.png"
+		self.__dragPointer = "values"
 		
 		# stuff for drag begin
 		
@@ -621,14 +621,14 @@ class VectorDataWidget( GafferUI.Widget ) :
 			result = IECore.Object.create( data.typeId() )
 			for i in selectedRows :
 				result.append( data[i] )
-			GafferUI.Pointer.setFromFile( self.__dragPointer )
+			GafferUI.Pointer.setCurrent( self.__dragPointer )
 			return result
 			
 		return None
 		
 	def __dragEnd( self, widget, event ) :
 	
-		GafferUI.Pointer.set( None )
+		GafferUI.Pointer.setCurrent( None )
 		
 	def __emitButtonPress( self, event ) :
 	

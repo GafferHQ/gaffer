@@ -508,12 +508,12 @@ class TextDiff( Diff ) :
 		if event.buttons != event.Buttons.Left :
 			return None
 	
-		GafferUI.Pointer.setFromFile( "values.png" )
+		GafferUI.Pointer.setCurrent( "values" )
 		return self.__values[0] if self.frame( 0 ).isAncestorOf( widget ) else self.__values[1]
 		
 	def __dragEnd( self, widget, event ) :
 	
-		GafferUI.Pointer.set( None )
+		GafferUI.Pointer.setCurrent( None )
 		
 	__htmlHeader = (
 		"<html><head><style type=text/css>"

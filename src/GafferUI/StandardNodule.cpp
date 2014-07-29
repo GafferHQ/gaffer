@@ -207,7 +207,7 @@ IECore::RunTimeTypedPtr StandardNodule::dragBegin( GadgetPtr gadget, const Butto
 	renderRequestSignal()( this );
 	if( event.buttons == ButtonEvent::Middle )
 	{
-		GafferUI::Pointer::setFromFile( "plug.png" );
+		GafferUI::Pointer::setCurrent( "plug" );
 	}
 	return plug();
 }
@@ -319,7 +319,7 @@ bool StandardNodule::dragLeave( GadgetPtr gadget, const DragDropEvent &event )
 
 bool StandardNodule::dragEnd( GadgetPtr gadget, const DragDropEvent &event )
 {
-	GafferUI::Pointer::set( NULL );
+	GafferUI::Pointer::setCurrent( "" );
 	m_draggingConnection = false;
 	setHighlighted( false );
 	return true;

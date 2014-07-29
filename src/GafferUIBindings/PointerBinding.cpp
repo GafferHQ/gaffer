@@ -36,6 +36,8 @@
 
 #include "boost/python.hpp"
 
+#include "IECorePython/RefCountedBinding.h"
+
 #include "GafferBindings/SignalBinding.h"
 
 #include "GafferUI/Pointer.h"
@@ -46,6 +48,16 @@ using namespace GafferBindings;
 using namespace GafferUI;
 using namespace GafferUIBindings;
 
+static IECore::ImagePrimitivePtr image( Pointer *pointer )
+{
+	return const_cast<IECore::ImagePrimitive *>( pointer->image() );
+}
+
+static PointerPtr getCurrent()
+{
+	return const_cast<Pointer *>( Pointer::getCurrent() );
+}
+
 static IECore::ImagePrimitivePtr get()
 {
 	return const_cast<IECore::ImagePrimitive *>( Pointer::get() );
@@ -53,7 +65,16 @@ static IECore::ImagePrimitivePtr get()
 
 void GafferUIBindings::bindPointer()
 {
-	scope s = class_<Pointer>( "Pointer" )
+	scope s = IECorePython::RefCountedClass<Pointer, IECore::RefCounted>( "Pointer" )
+		.def( init<const IECore::ImagePrimitive *, const Imath::V2i &>() )
+		.def( init<const std::string &, const Imath::V2i &>() )
+		.def( "image", &image )
+		.def( "hotspot", &Pointer::hotspot, return_value_policy<copy_const_reference>() )
+		.def( "setCurrent", (void (*)( ConstPointerPtr ))&Pointer::setCurrent )
+		.def( "setCurrent", (void (*)( const std::string & ))&Pointer::setCurrent )
+		.staticmethod( "setCurrent" )
+		.def( "getCurrent", &getCurrent )
+		.staticmethod( "getCurrent" )
 		.def( "set", &Pointer::set ).staticmethod( "set" )
 		.def( "get", &get ).staticmethod( "get" )
 		.def( "setFromFile", &Pointer::setFromFile ).staticmethod( "setFromFile" )

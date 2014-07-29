@@ -111,13 +111,13 @@ class ColorSwatchPlugValueWidget( GafferUI.PlugValueWidget ) :
 		
 	def __dragBegin( self, widget, event ) :
 	
-		GafferUI.Pointer.setFromFile( "rgba.png" )
+		GafferUI.Pointer.setCurrent( "rgba" )
 		
 		return self.__swatch.getColor()
 
 	def __dragEnd( self, widget, event ) :
 	
-		GafferUI.Pointer.set( None )
+		GafferUI.Pointer.setCurrent( None )
 		
 	def __buttonRelease( self, widget, event ) :
 				

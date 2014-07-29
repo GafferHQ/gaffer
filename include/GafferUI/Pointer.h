@@ -44,13 +44,38 @@
 namespace GafferUI
 {
 
+IE_CORE_FORWARDDECLARE( Pointer )
+
 /// The Pointer class allows the mouse pointer to be
 /// manipulated.
-class Pointer
+class Pointer : public IECore::RefCounted
 {
 	
 	public :
 	
+		IE_CORE_DECLAREMEMBERPTR( Pointer )
+
+		/// A copy of the image is taken.
+		Pointer( const IECore::ImagePrimitive *image, const Imath::V2i &hotspot = Imath::V2i( -1 ) );
+		/// Images are loaded from the paths specified by the
+		/// GAFFERUI_IMAGE_PATHS environment variable.
+		Pointer( const std::string &fileName, const Imath::V2i &hotspot = Imath::V2i( -1 ) );
+
+		const IECore::ImagePrimitive *image() const;
+		const Imath::V2i &hotspot() const;
+
+		/// Sets the current pointer. Passing null resets the
+		/// pointer to its default state.
+		static void setCurrent( ConstPointerPtr pointer );
+		/// Sets the current pointer to one registered using
+		/// registerPointer(). Passing the empty string resets
+		/// the pointer to its default state.
+		static void setCurrent( const std::string &name );
+		static const Pointer *getCurrent();
+
+		/// Registers a named pointer for use in setCurrent().
+		static void registerPointer( const std::string &name, ConstPointerPtr pointer );
+
 		/// Sets the image used to represent the mouse pointer.
 		/// Passing null resets the pointer to its default state.
 		static void set( IECore::ConstImagePrimitivePtr image );
@@ -66,6 +91,11 @@ class Pointer
 		/// A signal emitted whenever the pointer is changed.
 		typedef boost::signal<void ()> ChangedSignal; 
 		static ChangedSignal &changedSignal();
+
+	private :
+
+		IECore::ConstImagePrimitivePtr m_image;
+		Imath::V2i m_hotspot;
 		
 };
 

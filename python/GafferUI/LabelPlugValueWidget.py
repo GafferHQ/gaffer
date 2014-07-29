@@ -133,16 +133,16 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 		if ( shift and left ) or middle :
 			if not hasattr( self.getPlug(), "getValue" ) :
 				return None
-			GafferUI.Pointer.setFromFile( "values.png" )
+			GafferUI.Pointer.setCurrent( "values" )
 			with self.getContext() :
 				return self.getPlug().getValue()
 		elif left :
-			GafferUI.Pointer.setFromFile( "plug.png" )
+			GafferUI.Pointer.setCurrent( "plug" )
 			return self.getPlug()
 
 	def __dragEnd( self, widget, event ) :
 		
-		GafferUI.Pointer.set( None )
+		GafferUI.Pointer.setCurrent( None )
 	
 	def __labelDoubleClicked( self, label, event ) :
 	

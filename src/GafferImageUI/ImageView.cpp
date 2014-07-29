@@ -515,7 +515,7 @@ class ImageViewGadget : public GafferUI::Gadget
 
 		bool dragEnd( GadgetPtr gadget, const DragDropEvent &event )
 		{
-			Pointer::set( 0 );
+			Pointer::setCurrent( "" );
 			if( !m_dragSelecting )
 			{
 				return false;
@@ -535,7 +535,7 @@ class ImageViewGadget : public GafferUI::Gadget
 				return this;
 			}
 
-			Pointer::setFromFile( "rgba.png" );
+			Pointer::setCurrent( "rgba" );
 			return new Color4fData( m_sampleColor );
 		}
 	
