@@ -657,17 +657,9 @@ class DiffRow( Row ) :
 	
 	def __showInheritance( self, target ) :
 	
-		w = GafferUI.Window( "Inheritance", borderWidth = 8, sizeMode = GafferUI.Window.SizeMode.Manual )
-		
-		editor = SceneInspector( target.scene.ancestor( Gaffer.ScriptNode ), sections = [ _InheritanceSection( self.__inspector ) ] )
-		editor.setTargetPaths( [ target.path ] )
-		editor.setNodeSet( Gaffer.StandardSet( [ target.scene.node() ] ) )
-				
-		w.addChild( editor )
-		
+		w = _SectionWindow( "Inheritance", _InheritanceSection( self.__inspector ), target )
 		self.ancestor( GafferUI.Window ).addChildWindow( w, removeOnClose = True )
 		w.setVisible( True )
-		w.resizeToFitChild()
 	
 ##########################################################################
 # Section
@@ -703,6 +695,28 @@ SceneInspector.Row = Row
 SceneInspector.Inspector = Inspector
 SceneInspector.DiffRow = DiffRow
 SceneInspector.Section = Section
+
+##########################################################################
+# Section window
+##########################################################################
+
+class _SectionWindow( GafferUI.Window ) :
+
+	def __init__( self, title, section, target ) :
+	
+		GafferUI.Window.__init__( self, title, borderWidth = 4 )
+		
+		editor = SceneInspector( target.scene.ancestor( Gaffer.ScriptNode ), sections = [ section ] )
+		editor.setTargetPaths( [ target.path ] )
+		editor.setNodeSet( Gaffer.StandardSet( [ target.scene.node() ] ) )
+		
+		self.setChild( editor )
+
+		self.__nodeSetMemberRemovedConnection = editor.getNodeSet().memberRemovedSignal().connect( Gaffer.WeakMethod( self.__nodeSetMemberRemoved ) )
+
+	def __nodeSetMemberRemoved( self, set, node ) :
+	
+		self.parent().removeChild( self )
 
 ##########################################################################
 # Inheritance section
@@ -751,6 +765,9 @@ class _InheritanceSection( Section ) :
 		
 		self.__target = targets[0]
 		self.__connections = []
+		
+		if self.__target.path is None :
+			return
 		
 		rows = []
 		
