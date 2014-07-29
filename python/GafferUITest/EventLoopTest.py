@@ -176,6 +176,35 @@ class EventLoopTest( GafferUITest.TestCase ) :
 		
 		self.assertEqual( r, 10 )
 		self.assertEqual( self.__executed, True )
+
+	def testAddIdleCallbackFromIdleCallback( self ) :
+
+		self.__runOnceCalls = 0
+		self.__addRunOnceCalls = 0
+		
+		def runOnce() :
+		
+			self.__runOnceCalls += 1
+			return False # so we're removed immediately
+		
+		def addRunOnce() :
+			
+			self.__addRunOnceCalls += 1
+
+			if self.__addRunOnceCalls==2 :
+				GafferUI.EventLoop.mainEventLoop().stop()
+				return False
+			
+			GafferUI.EventLoop.mainEventLoop().addIdleCallback( runOnce )
+			
+			return True
+			
+		GafferUI.EventLoop.addIdleCallback( runOnce )
+		GafferUI.EventLoop.addIdleCallback( addRunOnce )
+		GafferUI.EventLoop.mainEventLoop().start()
+	
+		self.assertEqual( self.__runOnceCalls, 2 )
+		self.assertEqual( self.__addRunOnceCalls, 2 )
 		
 	def setUp( self ) :
 	
