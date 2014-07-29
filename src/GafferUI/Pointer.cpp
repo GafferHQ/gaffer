@@ -59,6 +59,7 @@ static Registry &registry()
 		r["rgba"] = new Pointer( "rgba.png", Imath::V2i( 12, 7 ) );
 		r["values"] = new Pointer( "values.png", Imath::V2i( 19, 14 ) );
 		r["paths"] = new Pointer( "paths.png", Imath::V2i( 8 ) );
+		r["contextMenu"] = new Pointer( "pointerContextMenu.png", Imath::V2i( 1 ) );
 	}
 	return r;
 }

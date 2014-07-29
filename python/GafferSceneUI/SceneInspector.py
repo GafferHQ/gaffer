@@ -615,9 +615,11 @@ class DiffRow( Row ) :
 				
 				self.__diffConnections = []
 				for i in range( 0, 2 ) :
-					self.__diffConnections.append(
+					self.__diffConnections.extend( [
+						diff.frame( i ).enterSignal().connect( Gaffer.WeakMethod( self.__enter ) ),
+						diff.frame( i ).leaveSignal().connect( Gaffer.WeakMethod( self.__leave ) ),
 						diff.frame( i ).contextMenuSignal().connect( Gaffer.WeakMethod( self.__contextMenu ) )
-					)
+					] )
 		
 			GafferUI.Spacer( IECore.V2i( 0 ), expand = True )
 		
@@ -642,9 +644,18 @@ class DiffRow( Row ) :
 	def __diff( self ) :
 	
 		return self.listContainer()[1]
+	
+	def __enter( self, widget ) :
+	
+		GafferUI.Pointer.setCurrent( "contextMenu" )
+	
+	def __leave( self, widget ) :
+	
+		GafferUI.Pointer.setCurrent( None )
 		
 	def __contextMenu( self, widget ) :
 	
+		GafferUI.Pointer.setCurrent( None )
 		self.__menu = GafferUI.Menu( IECore.curry( Gaffer.WeakMethod( self.__menuDefinition ), widget ) )
 		self.__menu.popup()
 		
