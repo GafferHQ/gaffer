@@ -129,6 +129,16 @@ const Plug *ExecutableNode::requirementPlug() const
 	return getChild<Plug>( g_firstPlugIndex + 1 );
 }
 
+CompoundPlug *ExecutableNode::dispatcherPlug()
+{
+	return getChild<CompoundPlug>( g_firstPlugIndex + 2 );
+}
+
+const CompoundPlug *ExecutableNode::dispatcherPlug() const
+{
+	return getChild<CompoundPlug>( g_firstPlugIndex + 2 );
+}
+
 void ExecutableNode::requirements( const Context *context, Tasks &requirements ) const
 {
 	for( PlugIterator cIt( requirementsPlug() ); cIt != cIt.end(); ++cIt )
