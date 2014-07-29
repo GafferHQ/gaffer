@@ -300,19 +300,19 @@ bool BackdropNodeGadget::mouseMove( Gadget *gadget, const ButtonEvent &event )
 	hoveredEdges( event, h, v );
 	if( h && v )
 	{
-		Pointer::setFromFile( h * v > 0 ? "moveDiagonallyUp.png" : "moveDiagonallyDown.png" );
+		Pointer::setCurrent( h * v > 0 ? "moveDiagonallyUp" : "moveDiagonallyDown" );
 	}
 	else if( h )
 	{
-		Pointer::setFromFile( "moveHorizontally.png" );	
+		Pointer::setCurrent( "moveHorizontally" );
 	}
 	else if( v )
 	{
-		Pointer::setFromFile( "moveVertically.png" );		
+		Pointer::setCurrent( "moveVertically" );
 	}
 	else
 	{
-		Pointer::set( 0 );	
+		Pointer::setCurrent( "" );
 	}
 	
 	bool newHovered = !(h || v);
@@ -381,13 +381,13 @@ bool BackdropNodeGadget::dragMove( Gadget *gadget, const DragDropEvent &event )
 
 bool BackdropNodeGadget::dragEnd( Gadget *gadget, const DragDropEvent &event )
 {
-	Pointer::set( 0 );
+	Pointer::setCurrent( "" );
 	return true;
 }
 
 void BackdropNodeGadget::leave( Gadget *gadget, const ButtonEvent &event )
 {
-	Pointer::set( 0 );
+	Pointer::setCurrent( "" );
 	m_hovered = false;
 	renderRequestSignal()( this );
 }

@@ -220,7 +220,7 @@ GafferScene.Cube,
 def __pathsPlugWidgetCreator( plug ) :
 
 	result = GafferUI.VectorDataPlugValueWidget( plug )
-	result.vectorDataWidget().setDragPointer( "objects.png" )
+	result.vectorDataWidget().setDragPointer( "objects" )
 	return result
 
 GafferUI.PlugValueWidget.registerCreator(

@@ -350,7 +350,7 @@ IECore::RunTimeTypedPtr RenderableGadget::dragBegin( GadgetPtr gadget, const Dra
 			// drag the selection somewhere
 			IECore::StringVectorDataPtr dragData = new IECore::StringVectorData();
 			dragData->writable().insert( dragData->writable().end(), m_selection.begin(), m_selection.end() );
-			Pointer::setFromFile( "objects.png" );
+			Pointer::setCurrent( "objects" );
 			return dragData;
 		}
 	}
@@ -371,7 +371,7 @@ bool RenderableGadget::dragMove( GadgetPtr gadget, const DragDropEvent &event )
 
 bool RenderableGadget::dragEnd( GadgetPtr gadget, const DragDropEvent &event )
 {
-	Pointer::set( 0 );
+	Pointer::setCurrent( "" );
 	if( !m_dragSelecting )
 	{
 		return false;

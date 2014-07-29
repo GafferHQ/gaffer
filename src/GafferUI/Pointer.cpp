@@ -40,36 +40,38 @@
 
 using namespace GafferUI;
 
-static IECore::ConstImagePrimitivePtr g_image;
+static ConstPointerPtr g_current;
 
-void Pointer::set( IECore::ConstImagePrimitivePtr image )
+typedef std::map<std::string, ConstPointerPtr> Registry;
+static Registry &registry()
 {
-	if( !image && !g_image )
+	static Registry r;
+	if( !r.size() )
 	{
-		return;
+		// register standard pointers
+		r["moveDiagonallyUp"] = new Pointer( "moveDiagonallyUp.png", Imath::V2i( 7 ) );
+		r["moveDiagonallyDown"] = new Pointer( "moveDiagonallyDown.png", Imath::V2i( 7 ) );
+		r["moveHorizontally"] = new Pointer( "moveHorizontally.png", Imath::V2i( 9, 5 ) );
+		r["moveVertically"] = new Pointer( "moveVertically.png", Imath::V2i( 5, 9 ) );
+		r["nodes"] = new Pointer( "nodes.png", Imath::V2i( 11, 8 ) );
+		r["objects"] = new Pointer( "objects.png", Imath::V2i( 18 ) );
+		r["plug"] = new Pointer( "plug.png", Imath::V2i( 9 ) );
+		r["rgba"] = new Pointer( "rgba.png", Imath::V2i( 12, 7 ) );
+		r["values"] = new Pointer( "values.png", Imath::V2i( 19, 14 ) );
+		r["paths"] = new Pointer( "paths.png", Imath::V2i( 8 ) );
+		r["contextMenu"] = new Pointer( "pointerContextMenu.png", Imath::V2i( 1 ) );
 	}
-	if( image && g_image && image->isEqualTo( g_image.get() ) )
-	{
-		return;
-	}
-	
-	g_image = image;
-	changedSignal()();
+	return r;
 }
 
-const IECore::ImagePrimitive *Pointer::get()
+Pointer::Pointer( const IECore::ImagePrimitive *image, const Imath::V2i &hotspot )
+	:	m_image( image->copy() ), m_hotspot( hotspot )
 {
-	return g_image.get();
 }
 
-void Pointer::setFromFile( const std::string &name )
+Pointer::Pointer( const std::string &fileName, const Imath::V2i &hotspot )
+	:	m_image( NULL ), m_hotspot( hotspot )
 {
-	if( !name.size() )
-	{
-		set( NULL );
-		return;
-	}
-
 	static IECore::CachedReaderPtr g_reader;
 	if( !g_reader )
 	{
@@ -78,15 +80,69 @@ void Pointer::setFromFile( const std::string &name )
 		g_reader = new IECore::CachedReader( IECore::SearchPath( sp, ":" ) );
 	}
 
-	IECore::ConstImagePrimitivePtr image = IECore::runTimeCast<const IECore::ImagePrimitive>( g_reader->read( name ) ); 
-	if( !image )
+	m_image = IECore::runTimeCast<const IECore::ImagePrimitive>( g_reader->read( fileName ) );
+	if( !m_image )
 	{
 		throw IECore::Exception( 
-			boost::str( boost::format( "File \"%s\" does not contain an image." ) % name )
+			boost::str( boost::format( "File \"%s\" does not contain an image." ) % fileName )
 		);
 	}
+}
+
+const IECore::ImagePrimitive *Pointer::image() const
+{
+	return m_image.get();
+}
+
+const Imath::V2i &Pointer::hotspot() const
+{
+	return m_hotspot;
+}
+
+void Pointer::setCurrent( ConstPointerPtr pointer )
+{
+	if( !pointer && !g_current )
+	{
+		return;
+	}
+	if( pointer && g_current &&
+	    pointer->image()->isEqualTo( g_current->image() ) &&
+	    pointer->hotspot() == g_current->hotspot()
+	)
+	{
+		return;
+	}
 	
-	set( image );
+	g_current = pointer;
+	changedSignal()();
+}
+
+void Pointer::setCurrent( const std::string &name )
+{
+	if( !name.size() )
+	{
+		Pointer::setCurrent( (Pointer *)NULL );
+		return;
+	}
+	
+	const Registry &r = registry();
+	Registry::const_iterator it = r.find( name );
+	if( it == r.end() )
+	{
+		throw IECore::Exception( boost::str( boost::format( "Pointer \"%s\" does not exist" ) % name ) );
+	}
+	
+	setCurrent( it->second );
+}
+
+const Pointer *Pointer::getCurrent()
+{
+	return g_current.get();
+}
+
+void Pointer::registerPointer( const std::string &name, ConstPointerPtr pointer )
+{
+	registry()["contextMenu"] = new Pointer( "pointerContextMenu.png", Imath::V2i( 1 ) );
 }
 
 Pointer::ChangedSignal &Pointer::changedSignal()

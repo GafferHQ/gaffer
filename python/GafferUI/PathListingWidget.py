@@ -146,7 +146,7 @@ class PathListingWidget( GafferUI.Widget ) :
 		self.__mouseMoveConnection = self.mouseMoveSignal().connect( Gaffer.WeakMethod( self.__mouseMove ) )
 		self.__dragBeginConnection = self.dragBeginSignal().connect( Gaffer.WeakMethod( self.__dragBegin ) )
 		self.__dragEndConnection = self.dragEndSignal().connect( Gaffer.WeakMethod( self.__dragEnd ) )
-		self.__dragPointer = "paths.png"
+		self.__dragPointer = "paths"
 		
 		self.__path = None
 		self.setPath( path )
@@ -512,7 +512,7 @@ class PathListingWidget( GafferUI.Widget ) :
 		self.__borrowedButtonPress = None
 		selectedPaths = self.getSelectedPaths()
 		if len( selectedPaths ) :	
-			GafferUI.Pointer.setFromFile( self.__dragPointer )	
+			GafferUI.Pointer.setCurrent( self.__dragPointer )
 			return IECore.StringVectorData(
 				[ str( p ) for p in selectedPaths ],
 			)
@@ -521,7 +521,7 @@ class PathListingWidget( GafferUI.Widget ) :
 		
 	def __dragEnd( self, widget, event ) :
 	
-		GafferUI.Pointer.set( None )
+		GafferUI.Pointer.setCurrent( None )
 		
 	def __emitButtonPress( self, event ) :
 	

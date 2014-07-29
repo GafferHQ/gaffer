@@ -111,13 +111,13 @@ class ColorSwatchPlugValueWidget( GafferUI.PlugValueWidget ) :
 		
 	def __dragBegin( self, widget, event ) :
 	
-		GafferUI.Pointer.setFromFile( "rgba.png" )
+		GafferUI.Pointer.setCurrent( "rgba" )
 		
 		return self.__swatch.getColor()
 
 	def __dragEnd( self, widget, event ) :
 	
-		GafferUI.Pointer.set( None )
+		GafferUI.Pointer.setCurrent( None )
 		
 	def __buttonRelease( self, widget, event ) :
 				
@@ -146,14 +146,13 @@ class _ColorPlugValueDialogue( GafferUI.ColorChooserDialogue ) :
 		self.__lastChangedReason = None
 		self.__mergeGroupId = 0
 		
-		self.__closedConnection = self.closedSignal().connect( Gaffer.WeakMethod( self.__destroy ) )
 		self.__colorChangedConnection = self.colorChooser().colorChangedSignal().connect( Gaffer.WeakMethod( self.__colorChanged ) )
 		self.__confirmClickedConnection = self.confirmButton.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ) )
 		self.__cancelClickedConnection = self.cancelButton.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ) )
 
 		self.setPlug( plug )
 
-		parentWindow.addChildWindow( self )
+		parentWindow.addChildWindow( self, removeOnClose = True )
 
 	def setPlug( self, plug ) :
 	

@@ -396,7 +396,7 @@ class PathChooserWidget( GafferUI.Widget ) :
 		
 	def __bookmarksButtonDrop( self, button, event ) :
 		
-		GafferUI.Pointer.set( None )
+		GafferUI.Pointer.setCurrent( None )
 		self.__saveBookmark( self.__bookmarksButtonDropPath( event ) )
 		button.setHighlighted( False )
 		

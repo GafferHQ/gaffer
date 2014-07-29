@@ -46,16 +46,16 @@ def __pointerChanged() :
 
 	global __cursorOverridden
 	
-	image = GafferUI.Pointer.get()
+	pointer = GafferUI.Pointer.getCurrent()
 	application = QtGui.QApplication.instance()
 		
-	if image is None :
+	if pointer is None :
 		if __cursorOverridden :
 			application.restoreOverrideCursor()
 			__cursorOverridden = False
 	else :
-		pixmap = GafferUI.Image._qtPixmapFromImagePrimitive( image )
-		cursor = QtGui.QCursor( pixmap )
+		pixmap = GafferUI.Image._qtPixmapFromImagePrimitive( pointer.image() )
+		cursor = QtGui.QCursor( pixmap, pointer.hotspot().x, pointer.hotspot().y )
 		if __cursorOverridden :
 			application.changeOverrideCursor( cursor )
 		else :

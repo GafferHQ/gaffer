@@ -242,21 +242,17 @@ class EventLoop() :
 	
 		GafferUI.Gadget.idleSignal()()
 	
-		toRemove = []
-		for c in EventLoop.__idleCallbacks :
+		for c in EventLoop.__idleCallbacks[:] : # slice takes copy, so we can remove during iteration
 			try :
 				if not c() :
-					toRemove.append( c )
+					EventLoop.__idleCallbacks.remove( c )
 			except Exception, e :
 				# if the callback throws then we remove it anyway, because
 				# we don't want to keep invoking the same error over and over.
-				toRemove.append( c )
+				EventLoop.__idleCallbacks.remove( c )
 				# report the error
 				IECore.msg( IECore.Msg.Level.Error, "EventLoop.__qtIdleCallback", "".join( traceback.format_exc( e ) ) )
 				
-		for c in toRemove :
-			EventLoop.removeIdleCallback( c )
-		
 		if len( EventLoop.__idleCallbacks )==0 and GafferUI.Gadget.idleSignal().empty() :
 			EventLoop.__idleTimer.stop()
 	
