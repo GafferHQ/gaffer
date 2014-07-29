@@ -210,6 +210,13 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 					path = None
 				targets.append( self.Target( scene, path ) )
 		
+		if next( (target.path for target in targets if target.path is not None), None ) is None :
+			# all target paths have become invalid - if we're
+			# in a popup window then close it.
+			window = self.ancestor( _SectionWindow )
+			if window is not None :
+				window.parent().removeChild( window )
+		
 		with self.getContext() :
 			for section in self.__sections :
 				section.update( targets )
