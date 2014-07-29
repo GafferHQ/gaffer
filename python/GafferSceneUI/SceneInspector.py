@@ -180,7 +180,7 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 		
 		self.__pendingUpdate = True
 		if self.visible() and self.__playback.getState() == GafferUI.Playback.State.Stopped :
-			GafferUI.EventLoop.addIdleCallback( self.__update )
+			GafferUI.EventLoop.addIdleCallback( Gaffer.WeakMethod( self.__update, fallbackResult = False ) )
 		else :
 			# we'll do the update in self.__visibilityChanged when
 			# we next become visible, or in self.__playbackStateChanged
