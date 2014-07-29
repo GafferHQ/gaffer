@@ -635,6 +635,10 @@ class DiffRow( Row ) :
 				if value is not None :
 					self.__diff().getCornerWidget( i ).setVisible( False )
 	
+	def __label( self ) :
+	
+		return self.listContainer()[0]
+	
 	def __diff( self ) :
 	
 		return self.listContainer()[1]
@@ -664,7 +668,12 @@ class DiffRow( Row ) :
 	
 	def __showInheritance( self, target ) :
 	
-		w = _SectionWindow( "Inheritance", _InheritanceSection( self.__inspector ), target )
+		w = _SectionWindow(
+			target.scene.node().getName() + " : " + self.__label().getText(),
+			_InheritanceSection( self.__inspector ),
+			target
+		)
+		
 		self.ancestor( GafferUI.Window ).addChildWindow( w, removeOnClose = True )
 		w.setVisible( True )
 	
