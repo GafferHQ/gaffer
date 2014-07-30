@@ -59,9 +59,9 @@ class ExecutableNode : public Node
 		/// Tasks are used to describe requirements between ExecutableNodes, and by
 		/// Dispatchers to schedule context specific execution. Tasks are immutable,
 		/// and their hash is computed at construction, matching the node's hash()
-		/// of the given node and context. The hash is used to define the comparison
-		/// operators, and any changes made to the node after construction invalidates
-		/// the Task. Changing the Context is acceptible, as the Task has its own copy.
+		/// for the given context. The hash is used to define the comparison operators,
+		/// and any changes made to the node after construction invalidates the Task.
+		/// Changing the Context is acceptible, as the Task has its own copy.
 		class Task
 		{
 			public :
@@ -119,10 +119,10 @@ class ExecutableNode : public Node
 		/// Executes this node using the current Context.
 		virtual void execute() const = 0;
 		
-		/// Executes this node by varying the current Context over the sequence of frames.
-		/// The default implementation modifies the current Context and calls execute()
-		/// for each frame. Derived classes which need more specialized behaviour should
-		/// re-implement executeSequence() along with requiresSequenceExecution().
+		/// Executes this node by copying the current Context and varying it over the sequence of frames.
+		/// The default implementation modifies the current Context and calls execute() for each frame.
+		/// Derived classes which need more specialized behaviour should re-implement executeSequence()
+		/// along with requiresSequenceExecution().
 		virtual void executeSequence( const std::vector<float> &frames ) const;
 		
 		/// Returns true if the node must execute a sequence of frames all at once.
