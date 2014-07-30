@@ -341,9 +341,7 @@ void Dispatcher::uniqueTaskDescriptions( const ExecutableNode::Tasks &tasks, Tas
 
 void Dispatcher::sortDescriptions( TaskDescriptions &descriptions )
 {
-	TaskDescriptions::iterator beginIt = --descriptions.end();
-	TaskDescriptions::iterator endIt = --descriptions.begin();
-	for ( TaskDescriptions::iterator rIt = beginIt; rIt != endIt; --rIt )
+	for ( TaskDescriptions::reverse_iterator rIt = descriptions.rbegin(); rIt != descriptions.rend(); ++rIt )
 	{
 		// sort the frames for nodes that require it
 		if ( rIt->task().node()->requiresSequenceExecution() )
@@ -353,17 +351,27 @@ void Dispatcher::sortDescriptions( TaskDescriptions &descriptions )
 		}
 		
 		// search through the descriptions that follow this one
-		TaskDescriptions::iterator it = rIt;
-		for ( ++it; it != descriptions.end(); ++it )
+		TaskDescriptions::iterator currentIt = --(rIt.base());
+		for ( TaskDescriptions::iterator it = rIt.base(); it != descriptions.end(); ++it )
 		{
 			// check if the current description needs to happen first
-			if ( ( it != rIt ) && ( *it < *rIt ) )
+			if ( ( it != currentIt ) && ( *it < *currentIt ) )
 			{
 				// back up so we can remove the current description
 				TaskDescriptions::iterator toRemove = it;
 				--it;
+				
 				// move the current description immediately before the description that requires it
-				descriptions.splice( rIt, descriptions, toRemove );
+				descriptions.splice( currentIt, descriptions, toRemove );
+				
+				// if we moved the first element after currentIt (rIt.base()) then we
+				// need to re-initialize rIt after the splice or we'll end up skipping
+				// elements. since we've decremented the iterator already, we can detect
+				// this scenario by comparing it to currentIt directly.
+				if ( it == currentIt )
+				{
+					rIt = TaskDescriptions::reverse_iterator( currentIt );
+				}
 			}
 		}
 	}
