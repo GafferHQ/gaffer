@@ -375,6 +375,78 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		self.assertTrue( os.path.exists( jobDir ) )
 		shutil.rmtree( jobDir )
 	
+	def testMixedForegroundAndBackground( self ) :
+		
+		preCs = GafferTest.CapturingSlot( Gaffer.LocalDispatcher.preDispatchSignal() )
+		self.assertEqual( len( preCs ), 0 )
+		postCs = GafferTest.CapturingSlot( Gaffer.LocalDispatcher.postDispatchSignal() )
+		self.assertEqual( len( postCs ), 0 )
+		
+		fileName = "/tmp/dispatcherTest/result.txt"
+		
+		def createWriter( text ) :
+			node = GafferTest.TextWriter()
+			node["mode"].setValue( "a" )
+			node["fileName"].setValue( fileName )
+			node["text"].setValue( text + " on ${frame};" )
+			return node
+		
+		s = Gaffer.ScriptNode()
+		# Create a tree of dependencies for execution:
+		# n1 requires:
+		# - n2 requires:
+		#    -n2a
+		#    -n2b
+		# - n3
+		s = Gaffer.ScriptNode()
+		s["n1"] = createWriter( "n1" )
+		s["n2"] = createWriter( "n2" )
+		# force the entire n2 tree to execute in the foreground
+		s["n2"]["dispatcher"]["local"]["executeInForeground"].setValue( True )
+		s["n2a"] = createWriter( "n2a" )
+		s["n2b"] = createWriter( "n2b" )
+		s["n3"] = createWriter( "n3" )
+		s["n1"]['requirements'][0].setInput( s["n2"]['requirement'] )
+		s["n1"]['requirements'][1].setInput( s["n3"]['requirement'] )
+		s["n2"]['requirements'][0].setInput( s["n2a"]['requirement'] )
+		s["n2"]['requirements'][1].setInput( s["n2b"]['requirement'] )
+		
+		dispatcher = Gaffer.Dispatcher.dispatcher( "Local" )
+		dispatcher["executeInBackground"].setValue( True )
+		dispatcher["framesMode"].setValue( Gaffer.Dispatcher.FramesMode.CustomRange )
+		frameList = IECore.FrameList.parse( "2-6x2" )
+		dispatcher["frameRange"].setValue( str(frameList) )
+		
+		dispatcher.dispatch( [ s["n1"] ] )
+		
+		# the dispatching started and finished
+		self.assertEqual( len( preCs ), 1 )
+		self.assertEqual( len( postCs ), 1 )
+		
+		# all the foreground execution has finished
+		self.assertEqual( os.path.isfile( fileName ), True )
+		with file( fileName, "r" ) as f :
+			text = f.read()
+		expectedText = ""
+		for frame in frameList.asList() :
+			context = Gaffer.Context( s.context() )
+			context.setFrame( frame )
+			expectedText += context.substitute( "n2a on ${frame};n2b on ${frame};n2 on ${frame};" )
+		self.assertEqual( text, expectedText )
+		
+		# wait long enough for background execution to finish
+		import time; time.sleep( 12 )
+		
+		self.assertEqual( os.path.isfile( fileName ), True )
+		with file( fileName, "r" ) as f :
+			text = f.read()
+		# don't reset the expectedText since we're still appending
+		for frame in frameList.asList() :
+			context = Gaffer.Context( s.context() )
+			context.setFrame( frame )
+			expectedText += context.substitute( "n3 on ${frame};n1 on ${frame};" )
+		self.assertEqual( text, expectedText )
+	
 	def tearDown( self ) :
 		
 		shutil.rmtree( "/tmp/dispatcherTest", ignore_errors = True )

@@ -69,9 +69,9 @@ class LocalDispatcher( Gaffer.Dispatcher ) :
 		
 		return result
 	
-	def _doDispatch( self, taskDescriptions ) :
+	def _doDispatch( self, batch ) :
 		
-		script = taskDescriptions[0].task().node().scriptNode()
+		script = batch.requirements()[0].node().scriptNode()
 		context = Gaffer.Context.current()
 		scriptFileName = script["fileName"].getValue()
 		jobName = context.substitute( self["jobName"].getValue() )
@@ -82,59 +82,86 @@ class LocalDispatcher( Gaffer.Dispatcher ) :
 		script.serialiseToFile( tmpScript )
 		
 		if self["executeInBackground"].getValue() :
-			threading.Thread( target = IECore.curry( self.__backgroundDispatch, taskDescriptions, tmpScript, messageTitle ) ).start()
+			self.__preBackgroundDispatch( batch, messageTitle )
+			threading.Thread( target = IECore.curry( self.__backgroundDispatch, batch, tmpScript, messageTitle ) ).start()
 		else :
-			self.__foregroundDispatch( taskDescriptions, messageTitle )
-			IECore.msg( IECore.MessageHandler.Level.Info, messageTitle, "Completed all tasks." )
+			self.__foregroundDispatch( batch, messageTitle )
+			IECore.msg( IECore.MessageHandler.Level.Info, messageTitle, "Dispatched all tasks." )
 	
-	def __foregroundDispatch( self, taskDescriptions, messageTitle ) :
+	def __foregroundDispatch( self, batch, messageTitle ) :
 		
-		script = taskDescriptions[0].task().node().scriptNode()
+		for currentBatch in batch.requirements() :
+			self.__foregroundDispatch( currentBatch, messageTitle )
 		
-		for taskDescription in taskDescriptions :
-			
-			task = taskDescription.task()
-			description = "executing %s on %s" % ( task.node().relativeName( script ), str(taskDescription.frames()) )
-			IECore.msg( IECore.MessageHandler.Level.Info, messageTitle, description )
-			with task.context() :
-				task.node().executeSequence( taskDescription.frames() )
+		if not batch.node() or batch.blindData().get( "dispatched" ) :
+			return
+		
+		script = batch.node().scriptNode()
+		
+		description = "executing %s on %s" % ( batch.node().relativeName( script ), str(batch.frames()) )
+		IECore.msg( IECore.MessageHandler.Level.Info, messageTitle, description )
+		
+		batch.execute()
+		
+		batch.blindData()["dispatched"] = IECore.BoolData( True )
 	
-	def __backgroundDispatch( self, taskDescriptions, scriptFile, messageTitle ) :
+	def __preBackgroundDispatch( self, batch, messageTitle ) :
 		
-		script = taskDescriptions[0].task().node().scriptNode()
+		if batch.node() and batch.node()["dispatcher"]["local"]["executeInForeground"].getValue() :
+			self.__foregroundDispatch( batch, messageTitle )
+		else :
+			for currentBatch in batch.requirements() :
+				self.__preBackgroundDispatch( currentBatch, messageTitle )
+	
+	def __backgroundDispatch( self, batch, scriptFile, messageTitle ) :
 		
-		for taskDescription in taskDescriptions :
-			
-			task = taskDescription.task()
-			taskContext = task.context()
-			frames = str( IECore.frameListFromList( [ int(x) for x in taskDescription.frames() ] ) )
-			
-			cmd = [
-				"gaffer", "execute",
-				"-script", scriptFile,
-				"-nodes", task.node().relativeName( script ),
-				"-frames", frames,
-			]
-			
-			contextArgs = []
-			for entry in taskContext.keys() :
-				if entry != "frame" and ( entry not in script.context().keys() or taskContext[entry] != script.context()[entry] ) :
-					contextArgs.extend( [ "-" + entry, repr(taskContext[entry]) ] )
-			
-			if contextArgs :
-				cmd.extend( [ "-context" ] + contextArgs )
-			
-			IECore.msg( IECore.MessageHandler.Level.Info, messageTitle, " ".join( cmd ) )
-			result = subprocess.call( cmd )
-			if result :
-				IECore.msg( IECore.MessageHandler.Level.Error, messageTitle, "Failed to execute " + task.node().getName() + " on frames " + frames )
-				return
+		if batch.blindData().get( "dispatched" ) :
+			return
 		
-		IECore.msg( IECore.MessageHandler.Level.Info, messageTitle, "Completed all tasks." )
+		for currentBatch in batch.requirements() :
+			self.__backgroundDispatch( currentBatch, scriptFile, messageTitle )
+		
+		if not batch.node() :
+			IECore.msg( IECore.MessageHandler.Level.Info, messageTitle, "Dispatched all tasks." )
+			return
+		
+		script = batch.node().scriptNode()
+		
+		taskContext = batch.context()
+		frames = str( IECore.frameListFromList( [ int(x) for x in batch.frames() ] ) )
+		
+		cmd = [
+			"gaffer", "execute",
+			"-script", scriptFile,
+			"-nodes", batch.node().relativeName( script ),
+			"-frames", frames,
+		]
+		
+		contextArgs = []
+		for entry in taskContext.keys() :
+			if entry != "frame" and ( entry not in script.context().keys() or taskContext[entry] != script.context()[entry] ) :
+				contextArgs.extend( [ "-" + entry, repr(taskContext[entry]) ] )
+		
+		if contextArgs :
+			cmd.extend( [ "-context" ] + contextArgs )
+		
+		IECore.msg( IECore.MessageHandler.Level.Info, messageTitle, " ".join( cmd ) )
+		result = subprocess.call( cmd )
+		if result :
+			IECore.msg( IECore.MessageHandler.Level.Error, messageTitle, "Failed to execute " + batch.node().getName() + " on frames " + frames )
+		
+		batch.blindData()["dispatched"] = IECore.BoolData( True )
 	
 	def _doSetupPlugs( self, parentPlug ) :
-
-		pass
+		
+		if "local" not in parentPlug :
+			localPlug = Gaffer.CompoundPlug( "local" )
+			parentPlug.addChild( localPlug )
+		
+		parentPlug["local"].clearChildren()
+		
+		foregroundPlug = Gaffer.BoolPlug( "executeInForeground", defaultValue = False )
+		parentPlug["local"].addChild( foregroundPlug )
 	
 	def __nextJobId( self, directory ) :
 		
