@@ -668,7 +668,52 @@ class GraphComponentTest( GafferTest.TestCase ) :
 		p.clearChildren()
 		
 		self.assertEqual( len( p ), 0 )
+	
+	def testParentChanging( self ) :
+	
+		class Child( Gaffer.GraphComponent ) :
 		
+			def __init__( self, name = "Child" ) :
+			
+				Gaffer.GraphComponent.__init__( self, name )
+			
+				self.parentChanges = []
+			
+			def _parentChanging( self, newParent ) :
+			
+				self.parentChanges.append( ( self.parent(), newParent ) )
+
+		p1 = Gaffer.GraphComponent()
+		p2 = Gaffer.GraphComponent()
+		
+		c = Child()
+		self.assertEqual( len( c.parentChanges ), 0 )
+		
+		p1.addChild( c )
+		self.assertEqual( len( c.parentChanges ), 1 )
+		self.assertEqual( c.parentChanges[-1], ( None, p1 ) )
+	
+		p1.removeChild( c )
+		self.assertEqual( len( c.parentChanges ), 2 )
+		self.assertEqual( c.parentChanges[-1], ( p1, None ) )
+	
+		p1.addChild( c )
+		self.assertEqual( len( c.parentChanges ), 3 )
+		self.assertEqual( c.parentChanges[-1], ( None, p1 ) )
+
+		p2.addChild( c )
+		self.assertEqual( len( c.parentChanges ), 4 )
+		self.assertEqual( c.parentChanges[-1], ( p1, p2 ) )
+	
+		# cause a parent change by destroying the parent.
+		# we need to remove all references to the parent to do
+		# this, including those stored in the parentChanges list.
+		del p2
+		del c.parentChanges[:]
+		
+		self.assertEqual( len( c.parentChanges ), 1 )
+		self.assertEqual( c.parentChanges[-1], ( None, None ) )
+	
 if __name__ == "__main__":
 	unittest.main()
 	
