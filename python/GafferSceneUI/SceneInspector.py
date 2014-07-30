@@ -35,6 +35,7 @@
 #  
 ##########################################################################
 
+import math
 import difflib
 import itertools
 import collections
@@ -914,28 +915,76 @@ class __TransformSection( Section ) :
 	
 		Section.__init__( self, collapsed = True, label = "Transform" )
 		
+		transforms = (
+			{ "label" : "Local", "accessor" : "transform" },
+			{ "label" : "World", "accessor" : "fullTransform" },
+		)
+		
+		components = (
+			{ "label" : "Translate", "component" : "t" },
+			{ "label" : "Rotate", "component" : "r" },
+			{ "label" : "Scale", "component" : "s" },
+			{ "label" : "Shear", "component" : "h" },
+		)
+		
 		with self._mainColumn() :
-			self.__localMatrixRow = DiffRow( "Local", TextDiff(), self.__Inspector( "transform" ) )
-			self.__worldMatrixRow = DiffRow( "World", TextDiff(), self.__Inspector( "fullTransform" ), alternate = True )
+			index = 0
+			for transform in transforms  :
+				
+				DiffRow(
+					transform["label"] + " Matrix", TextDiff(),
+					self.__Inspector( transform["accessor"] ),
+					alternate = index % 2,
+				)
+				index += 1
+				
+				for component in components :
+				
+					diff = TextDiff()
+					for i in range( 0, 2 ) :
+						diff.setCornerWidget( 0, GafferUI.Label( "<sup>From " + transform["label"] + " Matrix</sup>" ) )
+
+					DiffRow(
+						transform["label"] + " " + component["label"],
+						diff,
+						self.__Inspector( transform["accessor"], component["component"] ),
+						alternate = index % 2,
+					)
+					index += 1
 		
 	def update( self, targets ) :
 		
-		self.__localMatrixRow.update( targets )
-		self.__worldMatrixRow.update( targets )
-	
+		for row in self._mainColumn() :
+			if isinstance( row, DiffRow ) :
+				row.update( targets )
+				
 	class __Inspector( Inspector ) :
 	
-		def __init__( self, transform ) :
+		def __init__( self, accessor, component = None ) :
 	
-			self.__transform = transform
+			self.__accessor = accessor
+			self.__component = component
 		
 		def __call__( self, target ) :
 		
 			if target.path is None :
 				return None
 		
-			return getattr( target.scene, self.__transform )( target.path ) if target.path else None
-		
+			matrix = getattr( target.scene, self.__accessor )( target.path )
+			if self.__component is None :
+				return matrix
+			
+			try :
+				components = dict( zip( "shrt", matrix.extractSHRT() ) )
+			except :
+				# decomposition can fail if we have 0 scale.
+				return "Unavailable"
+			
+			if self.__component == "r" :
+				return components[self.__component] * 180.0 / math.pi
+			else :
+				return components[self.__component]
+				
 SceneInspector.registerSection( __TransformSection, tab = "Selection" )
 
 ##########################################################################
