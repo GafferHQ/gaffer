@@ -120,21 +120,8 @@ IECore::MurmurHash SceneWriter::hash( const Gaffer::Context *context ) const
 
 void SceneWriter::execute() const
 {
-	const ScenePlug *scene = inPlug()->getInput<ScenePlug>();
-	if( !scene )
-	{
-		throw IECore::Exception( "No input scene" );
-	}
-	
-	ContextPtr context = new Context( *Context::current(), Context::Borrowed );
-	Context::Scope scopedContext( context.get() );
-	
-	std::string fileName = context->substitute( fileNamePlug()->getValue() );
-	createDirectories( fileName );
-	SceneInterfacePtr output = SceneInterface::create( fileName, IndexedIO::Write );
-	
-	double time = Context::current()->getFrame() / g_frameRate;
-	writeLocation( scene, ScenePlug::ScenePath(), context.get(), output.get(), time );
+	std::vector<float> frame( 1, Context::current()->getFrame() );
+	executeSequence( frame );
 }
 
 void SceneWriter::executeSequence( const std::vector<float> &frames ) const
