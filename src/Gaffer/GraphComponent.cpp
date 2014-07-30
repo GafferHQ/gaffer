@@ -290,6 +290,7 @@ void GraphComponent::throwIfChildRejected( const GraphComponent *potentialChild 
 
 void GraphComponent::addChildInternal( GraphComponentPtr child )
 {
+	child->parentChanging( this );
 	GraphComponent *previousParent = child->m_parent;
 	if( previousParent )
 	{
@@ -298,7 +299,6 @@ void GraphComponent::addChildInternal( GraphComponentPtr child )
 		// changed signal with the new parent.
 		previousParent->removeChildInternal( child, false );
 	}
-	child->parentChanging( this );
 	m_children.push_back( child );
 	child->m_parent = this;
 	child->setName( child->m_name.value() ); // to force uniqueness

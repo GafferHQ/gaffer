@@ -105,6 +105,21 @@ class GraphComponentWrapper : public IECorePython::RunTimeTypedWrapper<WrappedTy
 			return WrappedType::acceptsParent( potentialParent );
 		}
 
+		virtual void parentChanging( Gaffer::GraphComponent *newParent )
+		{
+			if( this->isSubclassed() )
+			{
+				IECorePython::ScopedGILLock gilLock;
+				boost::python::object f = this->methodOverride( "_parentChanging" );
+				if( f )
+				{
+					f( Gaffer::GraphComponentPtr( newParent ) );
+					return;
+				}
+			}
+			return WrappedType::parentChanging( newParent );
+		}
+
 };
 	
 void bindGraphComponent();
