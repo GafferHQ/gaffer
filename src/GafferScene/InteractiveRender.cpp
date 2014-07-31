@@ -60,7 +60,7 @@ IE_CORE_DEFINERUNTIMETYPED( InteractiveRender );
 size_t InteractiveRender::g_firstPlugIndex = 0;
 
 InteractiveRender::InteractiveRender( const std::string &name )
-	:	Node( name ), m_lightsDirty( true ), m_shadersDirty( true ), m_cameraDirty( true )
+	:	Node( name ), m_lightsDirty( true ), m_shadersDirty( true ), m_cameraDirty( true ), m_coordinateSystemsDirty( true )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new ScenePlug( "in" ) );
@@ -68,6 +68,7 @@ InteractiveRender::InteractiveRender( const std::string &name )
 	addChild( new BoolPlug( "updateLights", Plug::In, true ) );
 	addChild( new BoolPlug( "updateShaders", Plug::In, true ) );
 	addChild( new BoolPlug( "updateCamera", Plug::In, true ) );
+	addChild( new BoolPlug( "updateCoordinateSystems", Plug::In, true ) );
 
 	plugDirtiedSignal().connect( boost::bind( &InteractiveRender::plugDirtied, this, ::_1 ) );
 	parentChangedSignal().connect( boost::bind( &InteractiveRender::parentChanged, this, ::_1, ::_2 ) );
@@ -129,17 +130,33 @@ const Gaffer::BoolPlug *InteractiveRender::updateCameraPlug() const
 	return getChild<BoolPlug>( g_firstPlugIndex + 4 );
 }
 
+Gaffer::BoolPlug *InteractiveRender::updateCoordinateSystemsPlug()
+{
+	return getChild<BoolPlug>( g_firstPlugIndex + 5 );
+}
+
+const Gaffer::BoolPlug *InteractiveRender::updateCoordinateSystemsPlug() const
+{
+	return getChild<BoolPlug>( g_firstPlugIndex + 5 );
+}
+
 void InteractiveRender::plugDirtied( const Gaffer::Plug *plug )
 {
 	if(
 		plug == inPlug()->transformPlug() ||
-		plug == inPlug()->objectPlug() ||
 		plug == inPlug()->globalsPlug()
 	)
 	{
 		// just store the fact that something needs
 		// updating. we'll do the actual update when
 		// the dirty signal is emitted for the parent plug.
+		m_lightsDirty = true;
+		m_cameraDirty = true;
+		m_coordinateSystemsDirty = true;
+	}
+	else if( plug == inPlug()->objectPlug() )
+	{
+		// as above.
 		m_lightsDirty = true;
 		m_cameraDirty = true;
 	}
@@ -154,6 +171,7 @@ void InteractiveRender::plugDirtied( const Gaffer::Plug *plug )
 		plug == updateLightsPlug() ||
 		plug == updateShadersPlug() ||
 		plug == updateCameraPlug() ||
+		plug == updateCoordinateSystemsPlug() ||
 		plug == statePlug()
 	)
 	{
@@ -225,6 +243,7 @@ void InteractiveRender::update()
 		{
 			WorldBlock world( m_renderer );
 		
+			outputCoordinateSystems( inPlug(), globals.get(), m_renderer.get() );
 			outputLightsInternal( globals.get(), /* editing = */ false );
 
 			SceneProceduralPtr proc = new SceneProcedural( inPlug(), Context::current() );
@@ -258,6 +277,7 @@ void InteractiveRender::update()
 		updateLights();
 		updateShaders();
 		updateCamera();
+		updateCoordinateSystems();
 	}
 }
 
@@ -413,6 +433,21 @@ void InteractiveRender::updateCamera()
 		outputCamera( inPlug(), globals.get(), m_renderer.get() );
 	}
 	m_cameraDirty = false;
+}
+
+void InteractiveRender::updateCoordinateSystems()
+{
+	if( !m_coordinateSystemsDirty || !updateCoordinateSystemsPlug()->getValue() )
+	{
+		return;
+	}
+	
+	IECore::ConstCompoundObjectPtr globals = inPlug()->globalsPlug()->getValue();
+	{
+		EditBlock edit( m_renderer.get(), "attribute", CompoundDataMap() );
+		outputCoordinateSystems( inPlug(), globals.get(), m_renderer.get() );
+	}
+	m_coordinateSystemsDirty = false;
 }
 
 Gaffer::Context *InteractiveRender::getContext()
