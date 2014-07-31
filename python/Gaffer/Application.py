@@ -99,17 +99,12 @@ class Application( IECore.Parameterised ) :
 	# for other applications. See the screengrab app for a good use case.
 	def _executeStartupFiles( self, applicationName ) :
 	
-		sp = os.environ.get( "GAFFER_STARTUP_PATHS", "" )
-		if not sp :
-			IECore.msg( IECore.Msg.Level.Warning, "Gaffer.Application.__executeStartupFiles", "GAFFER_STARTUP_PATHS environment variable not set" )
+		if "GAFFER_STARTUP_PATHS" not in os.environ :
+			IECore.msg( IECore.Msg.Level.Warning, "Gaffer.Application._executeStartupFiles", "GAFFER_STARTUP_PATHS environment variable not set" )
 			return
 	
-		sp = IECore.SearchPath( sp, ":" )
-		paths = [ os.path.join( p, applicationName ) for p in sp.paths ]
-		sp = IECore.SearchPath( ":".join( paths ), ":" )
-		
 		contextDict = {	"application" : self }	
-		IECore.loadConfig( sp, contextDict )
+		IECore.loadConfig( "GAFFER_STARTUP_PATHS", contextDict, subdirectory = applicationName )
 		
 	def __run( self, args ) :
 	
