@@ -41,6 +41,7 @@
 #include "IECore/Renderer.h"
 #include "IECore/Camera.h"
 #include "IECore/Light.h"
+#include "IECore/CoordinateSystem.h"
 
 #include "GafferScene/ScenePlug.h"
 #include "GafferScene/PathMatcherData.h"
@@ -68,7 +69,7 @@ namespace GafferScene
 ///
 ///   - the PathMatcher
 ///   - the minimumExpansionDepth
-///   - the drawing of cameras and lights
+///   - the drawing of cameras, lights and coordinate systems
 ///
 /// \todo There is useful functionality in here for calculating bounds and outputting things
 /// to Renderers that should probably be moved to RendererAlgo.h and/or SceneAlgo.h.
@@ -127,6 +128,7 @@ class SceneProcedural : public IECore::Renderer::Procedural
 	
 		void drawCamera( const IECore::Camera *camera, IECore::Renderer *renderer ) const;
 		void drawLight( const IECore::Light *light, IECore::Renderer *renderer ) const;
+		void drawCoordinateSystem( const IECore::CoordinateSystem *coordinateSystem, IECore::Renderer *renderer ) const;
 		
 };
 
