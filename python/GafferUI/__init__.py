@@ -267,3 +267,5 @@ import BackdropUI
 # backwards compatibility
 ## \todo Remove me
 Metadata = __import__( "Gaffer" ).Metadata
+
+__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferUI" )

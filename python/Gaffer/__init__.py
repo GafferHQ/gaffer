@@ -66,3 +66,4 @@ from ParameterPath import ParameterPath
 from OutputRedirection import OutputRedirection
 from LocalDispatcher import LocalDispatcher
 
+__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "Gaffer" )
