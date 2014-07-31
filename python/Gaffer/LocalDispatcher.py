@@ -82,11 +82,24 @@ class LocalDispatcher( Gaffer.Dispatcher ) :
 		script.serialiseToFile( tmpScript )
 		
 		if self["executeInBackground"].getValue() :
-			threading.Thread( target = IECore.curry( self.__dispatch, taskDescriptions, tmpScript, messageTitle ) ).start()
+			threading.Thread( target = IECore.curry( self.__backgroundDispatch, taskDescriptions, tmpScript, messageTitle ) ).start()
 		else :
-			self.__dispatch( taskDescriptions, tmpScript, messageTitle )
+			self.__foregroundDispatch( taskDescriptions, messageTitle )
+			IECore.msg( IECore.MessageHandler.Level.Info, messageTitle, "Completed all tasks." )
 	
-	def __dispatch( self, taskDescriptions, scriptFile, messageTitle ) :
+	def __foregroundDispatch( self, taskDescriptions, messageTitle ) :
+		
+		script = taskDescriptions[0].task().node().scriptNode()
+		
+		for taskDescription in taskDescriptions :
+			
+			task = taskDescription.task()
+			description = "executing %s on %s" % ( task.node().relativeName( script ), str(taskDescription.frames()) )
+			IECore.msg( IECore.MessageHandler.Level.Info, messageTitle, description )
+			with task.context() :
+				task.node().executeSequence( taskDescription.frames() )
+	
+	def __backgroundDispatch( self, taskDescriptions, scriptFile, messageTitle ) :
 		
 		script = taskDescriptions[0].task().node().scriptNode()
 		
