@@ -70,7 +70,7 @@ class SceneWriterTest( GafferSceneTest.SceneTestCase ) :
 		writer["in"].setInput( g["out"] )
 		writer["fileName"].setValue( self.__testFile )
 		
-		writer.execute( [ script.context() ] )
+		writer.execute()
 		
 		sc = IECore.SceneCache( self.__testFile, IECore.IndexedIO.OpenMode.Read )
 		
@@ -92,11 +92,8 @@ class SceneWriterTest( GafferSceneTest.SceneTestCase ) :
 		script["writer"]["in"].setInput( script["group"]["out"] )
 		script["writer"]["fileName"].setValue( self.__testFile )
 		
-		contexts = [ Gaffer.Context(), Gaffer.Context(), Gaffer.Context() ]
-		contexts[0].setFrame( 1 )
-		contexts[1].setFrame( 1.5 )
-		contexts[2].setFrame( 2 )
-		script["writer"].execute( contexts )
+		with Gaffer.Context() :
+			script["writer"].executeSequence( [ 1, 1.5, 2 ] )
 		
 		sc = IECore.SceneCache( self.__testFile, IECore.IndexedIO.OpenMode.Read )
 		t = sc.child( "group" )
@@ -147,12 +144,12 @@ class SceneWriterTest( GafferSceneTest.SceneTestCase ) :
 		script["writer"] = writer
 		writer["in"].setInput( reader["out"] )
 		writer["fileName"].setValue( self.__testFile )
-		writer.execute( [ script.context() ] )
+		writer.execute()
 		os.remove( "/tmp/fromPython.scc" )
 		
 		testCacheFile( self.__testFile )
 
-	def testExecutionHash( self ) :
+	def testHash( self ) :
 				
 		c = Gaffer.Context()
 		c.setFrame( 1 )
@@ -163,45 +160,45 @@ class SceneWriterTest( GafferSceneTest.SceneTestCase ) :
 		
 		# empty file produces no effect
 		self.assertEqual( writer["fileName"].getValue(), "" )
-		self.assertEqual( writer.executionHash( c ), IECore.MurmurHash() )
+		self.assertEqual( writer.hash( c ), IECore.MurmurHash() )
 		
 		# no input scene produces no effect
 		writer["fileName"].setValue( "/tmp/test.scc" )
-		self.assertEqual( writer.executionHash( c ), IECore.MurmurHash() )
+		self.assertEqual( writer.hash( c ), IECore.MurmurHash() )
 		
 		# now theres a file and a scene, we get some output
 		plane = GafferScene.Plane()
 		writer["in"].setInput( plane["out"] )
-		self.assertNotEqual( writer.executionHash( c ), IECore.MurmurHash() )
+		self.assertNotEqual( writer.hash( c ), IECore.MurmurHash() )
 		
 		# output varies by time
-		self.assertNotEqual( writer.executionHash( c ), writer.executionHash( c2 ) )
+		self.assertNotEqual( writer.hash( c ), writer.hash( c2 ) )
 		
 		# output varies by file name
-		current = writer.executionHash( c )
+		current = writer.hash( c )
 		writer["fileName"].setValue( "/tmp/test2.scc" )
-		self.assertNotEqual( writer.executionHash( c ), current )
+		self.assertNotEqual( writer.hash( c ), current )
 		
 		# output varies by new Context entries
-		current = writer.executionHash( c )
+		current = writer.hash( c )
 		c["renderDirectory"] = "/tmp/sceneWriterTest"
-		self.assertNotEqual( writer.executionHash( c ), current )
+		self.assertNotEqual( writer.hash( c ), current )
 		
 		# output varies by changed Context entries
-		current = writer.executionHash( c )
+		current = writer.hash( c )
 		c["renderDirectory"] = "/tmp/sceneWriterTest2"
-		self.assertNotEqual( writer.executionHash( c ), current )
+		self.assertNotEqual( writer.hash( c ), current )
 		
 		# output doesn't vary by ui Context entries
-		current = writer.executionHash( c )
+		current = writer.hash( c )
 		c["ui:something"] = "alterTheUI"
-		self.assertEqual( writer.executionHash( c ), current )
+		self.assertEqual( writer.hash( c ), current )
 		
 		# also varies by input node
-		current = writer.executionHash( c )
+		current = writer.hash( c )
 		cube = GafferScene.Cube()
 		writer["in"].setInput( cube["out"] )
-		self.assertNotEqual( writer.executionHash( c ), current )
+		self.assertNotEqual( writer.hash( c ), current )
 	
 	def tearDown( self ) :
 		

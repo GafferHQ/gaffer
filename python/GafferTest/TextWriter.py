@@ -39,36 +39,64 @@ import Gaffer
 
 class TextWriter( Gaffer.ExecutableNode ) :
 	
-	def __init__( self, name="TextWriter" ) :
+	def __init__( self, name="TextWriter", mode = "w", requiresSequenceExecution = False ) :
 		
 		Gaffer.ExecutableNode.__init__( self, name )
+		
+		self.__mode = mode
+		self.__requiresSequenceExecution = requiresSequenceExecution
 		
 		self.addChild( Gaffer.StringPlug( "fileName", Gaffer.Plug.Direction.In ) )
 		self.addChild( Gaffer.StringPlug( "text", Gaffer.Plug.Direction.In ) )
 	
-	def execute( self, contexts ):
+	def execute( self ) :
 		
-		for context in contexts :
-			
-			with context :
-				fileName = context.substitute( self["fileName"].getValue() )
-				text = context.substitute( self["text"].getValue() )
-			
-			replace = context.get( "textWriter:replace", IECore.StringVectorData() )
-			if replace and len(replace) == 2 :
-				text = text.replace( replace[0], replace[1] )
-			
-			with file( fileName, "w" ) as f :
-				f.write( text )
+		context = Gaffer.Context.current()
+		fileName = context.substitute( self["fileName"].getValue() )
+		text = self.__processText( context )
+		
+		with file( fileName, self.__mode ) as f :
+			f.write( text )
 	
-	def executionHash( self, context ) :
+	def executeSequence( self, frames ) :
 		
-		h = Gaffer.ExecutableNode.executionHash( self, context )
+		if not self.__requiresSequenceExecution :
+			Gaffer.ExecutableNode.executeSequence( self, frames )
+			return
+		
+		context = Gaffer.Context( Gaffer.Context.current() )
+		fileName = context.substitute( self["fileName"].getValue() )
+		
+		with file( fileName, self.__mode ) as f :
+			with context :
+				for frame in frames :
+					context.setFrame( frame )
+					text = self.__processText( context )
+					f.write( text )
+	
+	def hash( self, context ) :
+		
+		h = Gaffer.ExecutableNode.hash( self, context )
 		h.append( context.getFrame() )
 		h.append( context.get( "textWriter:replace", IECore.StringVectorData() ) )
 		h.append( context.substitute( self["fileName"].getValue() ) )
+		h.append( self.__mode )
 		h.append( context.substitute( self["text"].getValue() ) )
 		
 		return h
+	
+	def requiresSequenceExecution( self ) :
+		
+		return self.__requiresSequenceExecution
+	
+	def __processText( self, context ) :
+		
+		text = context.substitute( self["text"].getValue() )
+		
+		replace = context.get( "textWriter:replace", IECore.StringVectorData() )
+		if replace and len(replace) == 2 :
+			text = text.replace( replace[0], replace[1] )
+		
+		return text
 
 IECore.registerRunTimeTyped( TextWriter, typeName = "GafferTest::TextWriter" )

@@ -78,7 +78,7 @@ const IECore::Op *ExecutableOpHolder::getOp( std::string *className, int *classV
 	return IECore::runTimeCast<IECore::Op>( getParameterised( className, classVersion ) );
 }
 
-IECore::MurmurHash ExecutableOpHolder::executionHash( const Context *context ) const
+IECore::MurmurHash ExecutableOpHolder::hash( const Context *context ) const
 {
 	std::string className;
 	int classVersion;
@@ -87,7 +87,7 @@ IECore::MurmurHash ExecutableOpHolder::executionHash( const Context *context ) c
 		return IECore::MurmurHash();
 	}
 	
-	IECore::MurmurHash h = ExecutableNode::executionHash( context );
+	IECore::MurmurHash h = ExecutableNode::hash( context );
 	h.append( className );
 	h.append( classVersion );
 	
@@ -101,19 +101,15 @@ IECore::MurmurHash ExecutableOpHolder::executionHash( const Context *context ) c
 	return h;
 }
 
-void ExecutableOpHolder::execute( const Contexts &contexts ) const
+void ExecutableOpHolder::execute() const
 {
-	for ( Contexts::const_iterator cit = contexts.begin(); cit != contexts.end(); cit++ )
-	{
-		// \todo Implement a way to get the CompoundObject for a given context without modifying the Op's parameter
-		// and passing it explicitly in the operate call. Than multi-thread this loop.
-		Context::Scope scope( cit->get() );
-		const_cast<CompoundParameterHandler *>( parameterHandler() )->setParameterValue();
-		Op *op = const_cast<Op *>( getOp() );
-		/// \todo: Remove this once scoping the context takes care of it for us
-		substitute( op->parameters(), cit->get() );
-		op->operate();
-	}
+	// \todo Implement a way to get the CompoundObject for a given context without modifying the Op's parameter
+	// and passing it explicitly in the operate call, so clients can safely call execute() from multiple threads.
+	const_cast<CompoundParameterHandler *>( parameterHandler() )->setParameterValue();
+	Op *op = const_cast<Op *>( getOp() );
+	/// \todo: Remove this once scoping the context takes care of it for us
+	substitute( op->parameters(), Context::current() );
+	op->operate();
 }
 
 void ExecutableOpHolder::substitute( Parameter *parameter, const Context *context ) const

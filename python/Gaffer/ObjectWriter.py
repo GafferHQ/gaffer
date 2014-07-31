@@ -69,13 +69,13 @@ class ObjectWriter( Gaffer.ExecutableNode ) :
 	
 		return self.__parameterHandler
 	
-	def executionHash( self, context ) :
+	def hash( self, context ) :
 		
 		with context :
 			if not self["fileName"].getValue() or self["in"].source() == self["in"] :
 				return IECore.MurmurHash()
 			
-			h = Gaffer.ExecutableNode.executionHash( self, context )
+			h = Gaffer.ExecutableNode.hash( self, context )
 			h.append( self["fileName"].hash() )
 			h.append( self["in"].hash() )
 			if "parameters" in self.keys() :
@@ -83,19 +83,16 @@ class ObjectWriter( Gaffer.ExecutableNode ) :
 			
 			return h
 	
-	def execute( self, contexts ) :
+	def execute( self ) :
 	
-		for context in contexts :
-			with context :
-			
-				self.__ensureWriter()
-
-				if self.__writer is None :
-					raise RuntimeError( "No Writer" )
-
-				self.__writer["object"].setValue( self["in"].getValue() )
-				self.__writer.write()
+		self.__ensureWriter()
 		
+		if self.__writer is None :
+			raise RuntimeError( "No Writer" )
+		
+		self.__writer["object"].setValue( self["in"].getValue() )
+		self.__writer.write()
+	
 	def __plugSet( self, plug ) :
 
 		if plug.isSame( self["fileName"] ) or plug.isSame( self["in"] ) :

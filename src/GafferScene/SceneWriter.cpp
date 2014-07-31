@@ -34,6 +34,8 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
+#include "boost/filesystem.hpp"
+
 #include "IECore/SceneInterface.h"
 #include "IECore/Transform.h"
 
@@ -85,7 +87,7 @@ const StringPlug *SceneWriter::fileNamePlug() const
 	return getChild<StringPlug>( g_firstPlugIndex + 1 );
 }
 
-IECore::MurmurHash SceneWriter::executionHash( const Gaffer::Context *context ) const
+IECore::MurmurHash SceneWriter::hash( const Gaffer::Context *context ) const
 {
 	Context::Scope scope( context );
 	const ScenePlug *scenePlug = inPlug()->source<ScenePlug>();
@@ -94,7 +96,7 @@ IECore::MurmurHash SceneWriter::executionHash( const Gaffer::Context *context ) 
 		return IECore::MurmurHash();
 	}
 	
-	IECore::MurmurHash h = ExecutableNode::executionHash( context );
+	IECore::MurmurHash h = ExecutableNode::hash( context );
 	h.append( fileNamePlug()->hash() );
 	/// \todo hash the actual scene when we have a hierarchyHash
 	h.append( (uint64_t)scenePlug );
@@ -116,7 +118,13 @@ IECore::MurmurHash SceneWriter::executionHash( const Gaffer::Context *context ) 
 	return h;
 }
 
-void SceneWriter::execute( const Contexts &contexts ) const
+void SceneWriter::execute() const
+{
+	std::vector<float> frame( 1, Context::current()->getFrame() );
+	executeSequence( frame );
+}
+
+void SceneWriter::executeSequence( const std::vector<float> &frames ) const
 {
 	const ScenePlug *scene = inPlug()->getInput<ScenePlug>();
 	if( !scene )
@@ -124,15 +132,24 @@ void SceneWriter::execute( const Contexts &contexts ) const
 		throw IECore::Exception( "No input scene" );
 	}
 	
-	SceneInterfacePtr output = SceneInterface::create( fileNamePlug()->getValue(), IndexedIO::Write );
+	ContextPtr context = new Context( *Context::current(), Context::Borrowed );
+	Context::Scope scopedContext( context.get() );
 	
-	for ( Contexts::const_iterator it = contexts.begin(), eIt = contexts.end(); it != eIt; it++ )
+	std::string fileName = context->substitute( fileNamePlug()->getValue() );
+	createDirectories( fileName );
+	SceneInterfacePtr output = SceneInterface::create( fileName, IndexedIO::Write );
+	
+	for ( std::vector<float>::const_iterator it = frames.begin(); it != frames.end(); ++it )
 	{
-		ContextPtr context = new Context( *it->get(), Context::Borrowed );
-		Context::Scope scopedContext( context.get() );
-		double time = context->getFrame() / g_frameRate;
+		context->setFrame( *it );
+		double time = *it / g_frameRate;
 		writeLocation( scene, ScenePlug::ScenePath(), context.get(), output.get(), time );
 	}
+}
+
+bool SceneWriter::requiresSequenceExecution() const
+{
+	return true;
 }
 
 void SceneWriter::writeLocation( const GafferScene::ScenePlug *scene, const ScenePlug::ScenePath &scenePath, Context *context, IECore::SceneInterface *output, double time ) const
@@ -186,5 +203,15 @@ void SceneWriter::writeLocation( const GafferScene::ScenePlug *scene, const Scen
 		SceneInterfacePtr outputChild = output->child( *it, SceneInterface::CreateIfMissing );
 		
 		writeLocation( scene, childScenePath, context, outputChild.get(), time );
+	}
+}
+
+void SceneWriter::createDirectories( std::string &fileName ) const
+{
+	boost::filesystem::path filePath( fileName );
+	boost::filesystem::path directory = filePath.parent_path();
+	if( !directory.empty() )
+	{
+		boost::filesystem::create_directories( directory );
 	}
 }

@@ -67,12 +67,12 @@ class ExecutableNodeWrapper : public NodeWrapper<WrappedType>
 		{
 		}
 
-		virtual void executionRequirements( const Gaffer::Context *context, Gaffer::ExecutableNode::Tasks &requirements ) const
+		virtual void requirements( const Gaffer::Context *context, Gaffer::ExecutableNode::Tasks &requirements ) const
 		{
 			IECorePython::ScopedGILLock gilLock;
 			if( this->isSubclassed() )
 			{
-				boost::python::object req = this->methodOverride( "executionRequirements" );
+				boost::python::object req = this->methodOverride( "requirements" );
 				if( req )
 				{
 					boost::python::list requirementList = boost::python::extract<boost::python::list>(
@@ -88,15 +88,15 @@ class ExecutableNodeWrapper : public NodeWrapper<WrappedType>
 					return;
 				}
 			}
-			WrappedType::executionRequirements( context, requirements );			
+			WrappedType::requirements( context, requirements );			
 		}
 		
-		virtual IECore::MurmurHash executionHash( const Gaffer::Context *context ) const
+		virtual IECore::MurmurHash hash( const Gaffer::Context *context ) const
 		{
 			IECorePython::ScopedGILLock gilLock;
 			if( this->isSubclassed() )
 			{
-				boost::python::object h = this->methodOverride( "executionHash" );
+				boost::python::object h = this->methodOverride( "hash" );
 				if( h )
 				{
 					return boost::python::extract<IECore::MurmurHash>(
@@ -104,10 +104,10 @@ class ExecutableNodeWrapper : public NodeWrapper<WrappedType>
 					);
 				}
 			}
-			return WrappedType::executionHash( context );
+			return WrappedType::hash( context );
 		}
 		
-		virtual void execute( const Gaffer::ExecutableNode::Contexts &contexts ) const
+		virtual void execute() const
 		{
 			IECorePython::ScopedGILLock gilLock;
 			if( this->isSubclassed() )
@@ -115,16 +115,45 @@ class ExecutableNodeWrapper : public NodeWrapper<WrappedType>
 				boost::python::object exec = this->methodOverride( "execute" );
 				if( exec )
 				{
-					boost::python::list contextList;
-					for( Gaffer::ExecutableNode::Contexts::const_iterator cIt = contexts.begin(); cIt != contexts.end(); cIt++ )
-					{
-						contextList.append( *cIt );
-					}
-					exec( contextList );
+					exec();
 					return;
 				}
 			}
-			WrappedType::execute( contexts );
+			WrappedType::execute();
+		}
+		
+		virtual void executeSequence( const std::vector<float> &frames ) const
+		{
+			IECorePython::ScopedGILLock gilLock;
+			if( this->isSubclassed() )
+			{
+				boost::python::object execSeq = this->methodOverride( "executeSequence" );
+				if( execSeq )
+				{
+					boost::python::list frameList;
+					for( std::vector<float>::const_iterator it = frames.begin(); it != frames.end(); ++it )
+					{
+						frameList.append( *it );
+					}
+					execSeq( frameList );
+					return;
+				}
+			}
+			WrappedType::executeSequence( frames );
+		}
+		
+		virtual bool requiresSequenceExecution() const
+		{
+			IECorePython::ScopedGILLock gilLock;
+			if( this->isSubclassed() )
+			{
+				boost::python::object reqSecExec = this->methodOverride( "requiresSequenceExecution" );
+				if( reqSecExec )
+				{
+					return reqSecExec();
+				}
+			}
+			return WrappedType::requiresSequenceExecution();
 		}
 		
 };
