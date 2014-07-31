@@ -60,8 +60,8 @@ class ExecutableNode : public Node
 		/// Dispatchers to schedule context specific execution. Tasks are immutable,
 		/// and their hash is computed at construction, matching the node's hash()
 		/// for the given context. The hash is used to define the comparison operators,
-		/// and any changes made to the node after construction invalidates the Task.
-		/// Changing the Context is acceptible, as the Task has its own copy.
+		/// and any changes made to the node after construction invalidate the Task.
+		/// Changing the Context is acceptable, as the Task has its own copy.
 		class Task
 		{
 			public :

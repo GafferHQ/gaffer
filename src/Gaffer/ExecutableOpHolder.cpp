@@ -104,7 +104,7 @@ IECore::MurmurHash ExecutableOpHolder::hash( const Context *context ) const
 void ExecutableOpHolder::execute() const
 {
 	// \todo Implement a way to get the CompoundObject for a given context without modifying the Op's parameter
-	// and passing it explicitly in the operate call, so clients can safel call execute() from multiple threads.
+	// and passing it explicitly in the operate call, so clients can safely call execute() from multiple threads.
 	const_cast<CompoundParameterHandler *>( parameterHandler() )->setParameterValue();
 	Op *op = const_cast<Op *>( getOp() );
 	/// \todo: Remove this once scoping the context takes care of it for us
