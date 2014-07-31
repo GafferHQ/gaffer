@@ -47,6 +47,9 @@
 using namespace IECore;
 using namespace Gaffer;
 
+static InternedString g_frame( "frame" );
+static InternedString g_batchSize( "batchSize" );
+
 size_t Dispatcher::g_firstPlugIndex = 0;
 Dispatcher::DispatcherMap Dispatcher::g_dispatchers;
 Dispatcher::DispatchSignal Dispatcher::g_preDispatchSignal;
@@ -112,7 +115,7 @@ void Dispatcher::dispatch( const std::vector<ExecutableNodePtr> &nodes ) const
 	}
 	
 	TaskDescriptions taskDescriptions;
-	uniqueTasks( tasks, taskDescriptions );
+	uniqueTaskDescriptions( tasks, taskDescriptions );
 	
 	if ( !taskDescriptions.empty() )
 	{
@@ -193,6 +196,15 @@ Dispatcher::DispatchSignal &Dispatcher::postDispatchSignal()
 
 void Dispatcher::setupPlugs( CompoundPlug *parentPlug )
 {
+	if ( const ExecutableNode *node = parentPlug->ancestor<const ExecutableNode>() )
+	{
+		/// \todo: this will always return true until we sort out issue #915
+		if ( !node->requiresSequenceExecution() )
+		{
+			parentPlug->addChild( new IntPlug( g_batchSize, Plug::In, 1 ) );
+		}
+	}
+	
 	for ( DispatcherMap::const_iterator cit = g_dispatchers.begin(); cit != g_dispatchers.end(); cit++ )
 	{
 		cit->second->doSetupPlugs( parentPlug );
@@ -224,81 +236,144 @@ const Dispatcher *Dispatcher::dispatcher( const std::string &name )
 	return cit->second.get();
 }
 
-/// Returns the input Task if it was never seen before, or the previous Task that is equivalent to this one.
-/// It also populates flattenedTasks with unique tasks seen so far.
-/// It uses seenTasks object as a temporary buffer.
-const ExecutableNode::Task &Dispatcher::uniqueTask( const ExecutableNode::Task &task, TaskDescriptions &uniqueTasks, TaskSet &seenTasks )
-{	
+// Returns the input Task if it was never seen before, or the previous Task that is equivalent to this one.
+const ExecutableNode::Task &Dispatcher::uniqueTaskDescription( const ExecutableNode::Task &task, TaskDescriptions &uniqueDescriptions, DescriptionIteratorMap &existingDescriptions )
+{
 	ExecutableNode::Tasks requirements;
-	task.node()->executionRequirements( task.context(), requirements );
+	task.node()->requirements( task.context(), requirements );
 
-	TaskDescription	taskDesc;
-	taskDesc.task = task;
-
+	TaskDescription	description( task );
+	description.frames().push_back( task.context()->getFrame() );
+	
 	// first we recurse on the requirements, so we know that the first tasks to be added will be the ones without requirements and 
 	// the final result should be a list of tasks that does not break requirement order.
 	for( ExecutableNode::Tasks::iterator rIt = requirements.begin(); rIt != requirements.end(); rIt++ )
 	{
-		// override the current requirements in case they are duplicates already added to 'seenTasks'
-		taskDesc.requirements.insert( uniqueTask( *rIt, uniqueTasks, seenTasks ) );
+		// override the current requirements in case they are duplicates already added to existingDescriptions
+		description.requirements().insert( uniqueTaskDescription( *rIt, uniqueDescriptions, existingDescriptions ) );
 	}
 
 	IECore::MurmurHash noHash;
 	const IECore::MurmurHash hash = task.hash();
-
-	std::pair< TaskSet::iterator,bool > tit = seenTasks.insert( TaskSet::value_type( hash, std::vector< size_t >() ) );
-	if ( tit.second )
-	{
-		// hash never seen, the current task is added "as is".
-		std::vector< size_t > &taskIndices = tit.first->second;
-		taskIndices.push_back( uniqueTasks.size() );
-		uniqueTasks.push_back( taskDesc );
-	}
-	else
+	
+	std::pair<DescriptionIteratorMap::iterator, bool> it = existingDescriptions.insert( DescriptionIteratorMap::value_type( hash, DescriptionIterators() ) );
+	DescriptionIterators &iterators = it.first->second;
+	if ( !it.second )
 	{
 		// same hash, find all TaskDescriptions with same node
-		std::vector< size_t > &taskIndices = tit.first->second;
-		std::vector< size_t >::const_iterator dIt;
-
-		for ( dIt = taskIndices.begin(); dIt != taskIndices.end(); dIt++ )
+		for ( DescriptionIterators::iterator dIt = iterators.begin(); dIt != iterators.end(); ++dIt )
 		{
-			TaskDescription &seenTask = uniqueTasks[ *dIt ];
-			if ( seenTask.task.node() == task.node() )
+			TaskDescription &currentDescription = **dIt;
+			if ( currentDescription.task().node() == task.node() )
 			{
 				// same node... does it compute anything?
 				if ( hash == noHash )
 				{
 					// the node doesn't compute anything, so we match it based on the requirements...
-					if ( seenTask.requirements == taskDesc.requirements )
+					if ( currentDescription.requirements() == description.requirements() )
 					{
 						// same node, same requirements, return previously registered empty task instead
-						return seenTask.task;
+						return currentDescription.task();
 					}
 				}
 				else	// Executable node that actually does something...
 				{
 					// if hash and node matches we want to compute the union of all the 
 					// requirements and return the previously registered task
-					seenTask.requirements.insert( taskDesc.requirements.begin(), taskDesc.requirements.end() );
-					return seenTask.task;
+					const std::set<ExecutableNode::Task> &requirements = description.requirements();
+					currentDescription.requirements().insert( requirements.begin(), requirements.end() );
+					return currentDescription.task();
 				}
 			}
 		}
-		// similar Task not in the list, task is added "as is"
-		taskIndices.push_back( uniqueTasks.size() );
-		uniqueTasks.push_back( taskDesc );
 	}
+	
+	// collect all the Tasks that match except for the frame (for the nodes that require it)
+	const CompoundPlug *dispatcherPlug = task.node()->dispatcherPlug();
+	const IntPlug *batchSizePlug = dispatcherPlug->getChild<const IntPlug>( g_batchSize );
+	size_t batchSize = ( batchSizePlug ) ? batchSizePlug->getValue() : 1;
+	if ( task.node()->requiresSequenceExecution() || batchSize > 1 )
+	{
+		for ( TaskDescriptions::iterator dIt = uniqueDescriptions.begin(); dIt != uniqueDescriptions.end(); ++dIt )
+		{
+			TaskDescription &currentDescription = *dIt;
+			if (
+				( currentDescription.task().node() == task.node() ) &&
+				( hashWithoutFrame( currentDescription.task().context() ) == hashWithoutFrame( task.context() ) )
+			)
+			{
+				float frame = task.context()->getFrame();
+				std::vector<float> &frames = currentDescription.frames();
+				if ( std::find( frames.begin(), currentDescription.frames().end(), frame ) == frames.end() )
+				{
+					if ( task.node()->requiresSequenceExecution() || ( frames.size() < batchSize ) )
+					{
+						frames.push_back( frame );
+						const std::set<ExecutableNode::Task> &requirements = description.requirements();
+						currentDescription.requirements().insert( requirements.begin(), requirements.end() );
+						return currentDescription.task();
+					}
+				}
+			}
+		}
+	}
+	
+	// no existing description matches this Task
+	uniqueDescriptions.push_back( description );
+	iterators.push_back( --uniqueDescriptions.end() );
+	
 	return task;
 }
 
-void Dispatcher::uniqueTasks( const ExecutableNode::Tasks &tasks, TaskDescriptions &uniqueTasks )
+void Dispatcher::uniqueTaskDescriptions( const ExecutableNode::Tasks &tasks, TaskDescriptions &uniqueDescriptions )
 {
-	TaskSet seenTasks;
+	DescriptionIteratorMap existingDescriptions;
 	
-	uniqueTasks.clear();
+	uniqueDescriptions.clear();
 	for( ExecutableNode::Tasks::const_iterator tit = tasks.begin(); tit != tasks.end(); ++tit )
 	{
-		uniqueTask( *tit, uniqueTasks, seenTasks );
+		uniqueTaskDescription( *tit, uniqueDescriptions, existingDescriptions );
+	}
+	
+	// make sure all requirements are respected
+	sortDescriptions( uniqueDescriptions );
+}
+
+void Dispatcher::sortDescriptions( TaskDescriptions &descriptions )
+{
+	for ( TaskDescriptions::reverse_iterator rIt = descriptions.rbegin(); rIt != descriptions.rend(); ++rIt )
+	{
+		// sort the frames for nodes that require it
+		if ( rIt->task().node()->requiresSequenceExecution() )
+		{
+			std::vector<float> &frames = rIt->frames();
+			std::sort( frames.begin(), frames.end() );
+		}
+		
+		// search through the descriptions that follow this one
+		TaskDescriptions::iterator currentIt = --(rIt.base());
+		for ( TaskDescriptions::iterator it = rIt.base(); it != descriptions.end(); ++it )
+		{
+			// check if the current description needs to happen first
+			if ( ( it != currentIt ) && ( *it < *currentIt ) )
+			{
+				// back up so we can remove the current description
+				TaskDescriptions::iterator toRemove = it;
+				--it;
+				
+				// move the current description immediately before the description that requires it
+				descriptions.splice( currentIt, descriptions, toRemove );
+				
+				// if we moved the first element after currentIt (rIt.base()) then we
+				// need to re-initialize rIt after the splice or we'll end up skipping
+				// elements. since we've decremented the iterator already, we can detect
+				// this scenario by comparing it to currentIt directly.
+				if ( it == currentIt )
+				{
+					rIt = TaskDescriptions::reverse_iterator( currentIt );
+				}
+			}
+		}
 	}
 }
 
@@ -325,4 +400,91 @@ FrameListPtr Dispatcher::frameRange( const ScriptNode *script, const Context *co
 	{
 		throw IECore::Exception( "Dispatcher: Custom Frame Range is not a valid IECore::FrameList" );
 	}
+}
+
+IECore::MurmurHash Dispatcher::hashWithoutFrame( const Context *context )
+{
+	IECore::MurmurHash h;
+	
+	std::vector<IECore::InternedString> names;
+	context->names( names );
+	for ( std::vector<IECore::InternedString>::const_iterator it = names.begin(); it != names.end(); ++it )
+	{
+		// ignore the frame and the ui values
+		if ( ( *it != g_frame ) && it->string().compare( 0, 3, "ui:" ) )
+		{
+			h.append( *it );
+			if ( const IECore::Data *data = context->get<const IECore::Data>( *it ) )
+			{
+				data->hash( h );
+			}
+		}
+	}
+	
+	return h;
+}
+
+//////////////////////////////////////////////////////////////////////////
+// TaskDescription implementation
+//////////////////////////////////////////////////////////////////////////
+
+Dispatcher::TaskDescription::TaskDescription( const ExecutableNode::Task &task )
+	: m_task( task ), m_frames(), m_requirements()
+{
+}
+
+Dispatcher::TaskDescription::TaskDescription( const TaskDescription &other )
+	: m_task( other.m_task ), m_frames( other.m_frames ), m_requirements( other.m_requirements )
+{
+}
+
+const ExecutableNode::Task &Dispatcher::TaskDescription::task() const
+{
+	return m_task;
+}
+
+std::vector<float> &Dispatcher::TaskDescription::frames()
+{
+	return m_frames;
+}
+
+const std::vector<float> &Dispatcher::TaskDescription::frames() const
+{
+	return m_frames;
+}
+
+std::set<ExecutableNode::Task> &Dispatcher::TaskDescription::requirements()
+{
+	return m_requirements;
+}
+
+const std::set<ExecutableNode::Task> &Dispatcher::TaskDescription::requirements() const
+{
+	return m_requirements;
+}
+
+bool Dispatcher::TaskDescription::operator< ( const TaskDescription &other ) const
+{
+	const std::set<ExecutableNode::Task> &otherRequirements = other.requirements();
+	for ( std::set<ExecutableNode::Task>::const_iterator it = otherRequirements.begin(); it != otherRequirements.end(); ++it )
+	{
+		if ( m_task.node() == it->node() )
+		{
+			const std::vector<float> &otherFrames = other.frames();
+			for ( std::vector<float>::const_iterator fIt = otherFrames.begin(); fIt != otherFrames.end(); ++fIt )
+			{
+				if ( std::find( m_frames.begin(), m_frames.end(), *fIt ) != m_frames.end() )
+				{
+					// this is a requirement of other on this frame, so it must come first.
+					return true;
+				}
+			}
+			
+			// this is a requirement of other, but the frames don't overlap, so we'd rather preserve existing order.
+			return false;
+		}
+	}
+	
+	// other may be a requirement of this, or the nodes are unrelated, so we'd rather preserve existing order
+	return false;
 }

@@ -103,7 +103,7 @@ class RenderManLightTest( unittest.TestCase ) :
 		s["fileName"].setValue( "/tmp/testRenderManLight.gfr" )
 		s.save()
 		
-		s["r"].execute( [ Gaffer.Context.current() ] )
+		s["r"].execute()
 		
 		i = IECore.EXRImageReader( "/tmp/testRenderManLight.exr" ).read()
 		e = IECore.ImagePrimitiveEvaluator( i )

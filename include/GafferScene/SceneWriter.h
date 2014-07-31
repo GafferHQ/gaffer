@@ -65,12 +65,20 @@ class SceneWriter : public Gaffer::ExecutableNode
 		ScenePlug *inPlug();
 		const ScenePlug *inPlug() const;
 		
-		virtual IECore::MurmurHash executionHash( const Gaffer::Context *context ) const;
+		virtual IECore::MurmurHash hash( const Gaffer::Context *context ) const;
 		
-		virtual void execute( const Contexts &contexts ) const;
+		virtual void execute() const;
+		
+		/// Re-implemented to open the file for writing, then iterate through the
+		/// frames, modifying the current Context and calling writeLocation().
+		virtual void executeSequence( const std::vector<float> &frames ) const;
+		
+		/// Re-implemented to return true, since the entire file must be written at once.
+		virtual bool requiresSequenceExecution() const;
 		
 	private :
 	
+		void createDirectories( std::string &fileName ) const;
 		void writeLocation( const GafferScene::ScenePlug *scene, const ScenePlug::ScenePath &scenePath, Gaffer::Context *context, IECore::SceneInterface *output, double time ) const;
 		
 		static size_t g_firstPlugIndex;

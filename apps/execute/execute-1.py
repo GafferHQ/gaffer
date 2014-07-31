@@ -130,10 +130,11 @@ class execute( Gaffer.Application ) :
 			entry = args["context"][i].lstrip( "-" )
 			context[entry] = eval( args["context"][i+1] )
 		
-		for frame in self.parameters()["frames"].getFrameListValue().asList() :
-			context.setFrame( frame )
+		frames = self.parameters()["frames"].getFrameListValue().asList()
+		
+		with context :
 			for node in nodes :
-				node.execute( [ context ] )
+				node.executeSequence( frames )
 		
 		return 0
 

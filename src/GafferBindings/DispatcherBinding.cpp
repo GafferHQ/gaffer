@@ -83,22 +83,16 @@ class DispatcherWrapper : public NodeWrapper<Dispatcher>
 		{
 			ScopedGILLock gilLock;
 			
-			list taskList;
+			list taskDescriptionList;
 			for ( TaskDescriptions::const_iterator tIt = taskDescriptions.begin(); tIt != taskDescriptions.end(); ++tIt )
 			{
-				list requirements;
-				for ( std::set<ExecutableNode::Task>::const_iterator rIt = tIt->requirements.begin(); rIt != tIt->requirements.end(); ++rIt )
-				{
-					requirements.append( *rIt );
-				}
-				
-				taskList.append( make_tuple( tIt->task, requirements ) );
+				taskDescriptionList.append( *tIt );
 			}
 			
 			boost::python::object f = this->methodOverride( "_doDispatch" );
 			if( f )
 			{
-				f( taskList );
+				f( taskDescriptionList );
 			}
 			else
 			{
@@ -138,6 +132,31 @@ class DispatcherWrapper : public NodeWrapper<Dispatcher>
 		{
 			const Dispatcher *d = Dispatcher::dispatcher( name );
 			return const_cast< Dispatcher *>(d);
+		}
+		
+		static ExecutableNode::Task taskDescriptionTask( Dispatcher::TaskDescription &description )
+		{
+			return description.task();
+		}
+		
+		static boost::python::list taskDescriptionFrames( Dispatcher::TaskDescription &description )
+		{
+			boost::python::list result;
+			for ( std::vector<float>::const_iterator it = description.frames().begin(); it != description.frames().end(); ++it )
+			{
+				result.append( *it );
+			}
+			return result;
+		}
+		
+		static boost::python::list taskDescriptionRequirements( Dispatcher::TaskDescription &description )
+		{
+			boost::python::list result;
+			for ( std::set<ExecutableNode::Task>::const_iterator it = description.requirements().begin(); it != description.requirements().end(); ++it )
+			{
+				result.append( *it );
+			}
+			return result;
 		}
 
 };
@@ -184,5 +203,13 @@ void GafferBindings::bindDispatcher()
 		.value( "CustomRange", Dispatcher::CustomRange )
 	;
 	
-	SignalBinder<Dispatcher::DispatchSignal, DefaultSignalCaller<Dispatcher::DispatchSignal>, DispatchSlotCaller >::bind( "DispatchSignal" );
+	class_<Dispatcher::TaskDescription>( "_TaskDescription", no_init )
+		.def( init<const ExecutableNode::Task &>() )
+		.def( init<const Dispatcher::TaskDescription &>() )
+		.def( "task", &DispatcherWrapper::taskDescriptionTask )
+		.def( "frames", &DispatcherWrapper::taskDescriptionFrames )
+		.def( "requirements", &DispatcherWrapper::taskDescriptionRequirements )
+	;
+	
+	SignalBinder<Dispatcher::DispatchSignal, DefaultSignalCaller<Dispatcher::DispatchSignal>, DispatchSlotCaller >::bind( "DispatchSignal" );	
 }

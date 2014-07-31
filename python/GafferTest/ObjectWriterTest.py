@@ -75,7 +75,8 @@ class ObjectWriterTest( GafferTest.TestCase ) :
 		# check that saving it works
 		
 		self.failIf( os.path.exists( self.__exrFileName ) )
-		node.execute( [ Gaffer.Context() ] )
+		with Gaffer.Context() :
+			node.execute()
 		self.failUnless( os.path.exists( self.__exrFileName ) )
 		
 		checker2 = IECore.Reader.create( self.__exrFileName ).read()
@@ -92,7 +93,8 @@ class ObjectWriterTest( GafferTest.TestCase ) :
 				
 		node["fileName"].setValue( self.__tifFileName )
 		
-		node.execute( [ Gaffer.Context() ] )
+		with Gaffer.Context() :
+			node.execute()
 		self.failUnless( os.path.exists( self.__tifFileName ) )
 		
 		self.failUnless( IECore.TIFFImageReader.canRead( self.__tifFileName ) )
@@ -127,14 +129,13 @@ class ObjectWriterTest( GafferTest.TestCase ) :
 		for i in self.__exrSequence.frameList.asList() :
 			context = Gaffer.Context()
 			context.setFrame( i )
-			contexts.append( context )
-
-		node.execute( contexts )
+			with context :
+				node.execute()
 		
 		for f in self.__exrSequence.fileNames() :
 			self.failUnless( os.path.exists( f ) )
 		
-	def testExecutionHash( self ) :
+	def testHash( self ) :
 				
 		c = Gaffer.Context()
 		c.setFrame( 1 )
@@ -145,23 +146,23 @@ class ObjectWriterTest( GafferTest.TestCase ) :
 		s["n"] = Gaffer.ObjectWriter()
 		
 		# no file produces no effect
-		self.assertEqual( s["n"].executionHash( c ), IECore.MurmurHash() )
+		self.assertEqual( s["n"].hash( c ), IECore.MurmurHash() )
 		
 		# no input object produces no effect
 		s["n"]["fileName"].setValue( self.__exrFileName )
-		self.assertEqual( s["n"].executionHash( c ), IECore.MurmurHash() )
+		self.assertEqual( s["n"].hash( c ), IECore.MurmurHash() )
 		
 		# now theres a file and object, we get some output
 		s["sphere"] = GafferTest.SphereNode()
 		s["n"]["in"].setInput( s["sphere"]["out"] )
-		self.assertNotEqual( s["n"].executionHash( c ), IECore.MurmurHash() )
+		self.assertNotEqual( s["n"].hash( c ), IECore.MurmurHash() )
 		
 		# output doesn't vary by time
-		self.assertEqual( s["n"].executionHash( c ), s["n"].executionHash( c2 ) )
+		self.assertEqual( s["n"].hash( c ), s["n"].hash( c2 ) )
 		
 		# output varies by time since the file name does
 		s["n"]["fileName"].setValue( self.__exrSequence.fileName )
-		self.assertNotEqual( s["n"].executionHash( c ), s["n"].executionHash( c2 ) )
+		self.assertNotEqual( s["n"].hash( c ), s["n"].hash( c2 ) )
 	
 	def tearDown( self ) :
 		

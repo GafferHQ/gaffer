@@ -71,7 +71,7 @@ class LocalDispatcher( Gaffer.Dispatcher ) :
 	
 	def _doDispatch( self, taskDescriptions ) :
 		
-		script = taskDescriptions[0][0].node().scriptNode()
+		script = taskDescriptions[0].task().node().scriptNode()
 		context = Gaffer.Context.current()
 		scriptFileName = script["fileName"].getValue()
 		jobName = context.substitute( self["jobName"].getValue() )
@@ -88,12 +88,13 @@ class LocalDispatcher( Gaffer.Dispatcher ) :
 	
 	def __dispatch( self, taskDescriptions, scriptFile, messageTitle ) :
 		
-		script = taskDescriptions[0][0].node().scriptNode()
+		script = taskDescriptions[0].task().node().scriptNode()
 		
-		for ( task, requirements ) in taskDescriptions :
+		for taskDescription in taskDescriptions :
 			
+			task = taskDescription.task()
 			taskContext = task.context()
-			frames = str(int(taskContext.getFrame()))
+			frames = str( IECore.frameListFromList( [ int(x) for x in taskDescription.frames() ] ) )
 			
 			cmd = [
 				"gaffer", "execute",

@@ -74,7 +74,7 @@ const ScenePlug *ExecutableRender::inPlug() const
 	return getChild<ScenePlug>( g_firstPlugIndex );
 }
 
-IECore::MurmurHash ExecutableRender::executionHash( const Gaffer::Context *context ) const
+IECore::MurmurHash ExecutableRender::hash( const Gaffer::Context *context ) const
 {
 	const ScenePlug *scenePlug = inPlug()->source<ScenePlug>();
 	if ( scenePlug == inPlug() )
@@ -83,7 +83,7 @@ IECore::MurmurHash ExecutableRender::executionHash( const Gaffer::Context *conte
 	}
 	
 	Context::Scope scope( context );
-	IECore::MurmurHash h = ExecutableNode::executionHash( context );
+	IECore::MurmurHash h = ExecutableNode::hash( context );
 	/// \todo hash the actual scene when we have a hierarchyHash
 	h.append( (uint64_t)scenePlug );
 	
@@ -104,7 +104,7 @@ IECore::MurmurHash ExecutableRender::executionHash( const Gaffer::Context *conte
 	return h;
 }
 
-void ExecutableRender::execute( const Contexts &contexts ) const
+void ExecutableRender::execute() const
 {
 	const ScenePlug *scene = inPlug()->getInput<ScenePlug>();
 	if( !scene )
@@ -112,41 +112,37 @@ void ExecutableRender::execute( const Contexts &contexts ) const
 		throw IECore::Exception( "No input scene" );
 	}
 	
-	for( Contexts::const_iterator it = contexts.begin(), eIt = contexts.end(); it != eIt; it++ )
+	ConstCompoundObjectPtr globals = scene->globalsPlug()->getValue();
+	
+	createDisplayDirectories( globals.get() );
+	
+	IECore::RendererPtr renderer = createRenderer();		
+	outputOptions( globals.get(), renderer.get() );
+	outputCamera( scene, globals.get(), renderer.get() );
 	{
-		Context::Scope scopedContext( it->get() );
-		ConstCompoundObjectPtr globals = scene->globalsPlug()->getValue();
-
-		createDisplayDirectories( globals.get() );
-
-		IECore::RendererPtr renderer = createRenderer();		
-		outputOptions( globals.get(), renderer.get() );
-		outputCamera( scene, globals.get(), renderer.get() );
+		WorldBlock world( renderer );
+		
+		outputLights( scene, globals.get(), renderer.get() );
+		outputWorldProcedural( scene, renderer.get() );
+	}
+	
+	std::string systemCommand = command();
+	if( systemCommand.size() )
+	{
+		const ApplicationRoot *applicationRoot = scene->ancestor<ApplicationRoot>();
+		if( applicationRoot && applicationRoot->getName() == "gui" )
 		{
-			WorldBlock world( renderer );
-
-			outputLights( scene, globals.get(), renderer.get() );
-			outputWorldProcedural( scene, renderer.get() );
+			/// \todo We need this weird background execution behaviour because we
+			/// don't want to block the ui while rendering, but really the LocalDispatcher
+			/// should be responsible for launching a separate process to do the execution
+			/// from anyway.
+			systemCommand += "&";
 		}
 		
-		std::string systemCommand = command();
-		if( systemCommand.size() )
+		int result = system( systemCommand.c_str() );
+		if( result )
 		{
-			const ApplicationRoot *applicationRoot = scene->ancestor<ApplicationRoot>();
-			if( applicationRoot && applicationRoot->getName() == "gui" )
-			{
-				/// \todo We need this weird background execution behaviour because we
-				/// don't want to block the ui while rendering, but really the LocalDispatcher
-				/// should be responsible for launching a separate process to do the execution
-				/// from anyway.
-				systemCommand += "&";
-			}
-			
-			int result = system( systemCommand.c_str() );
-			if( result )
-			{
-				throw Exception( "System command failed" );
-			}
+			throw Exception( "System command failed" );
 		}
 	}
 }

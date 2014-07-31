@@ -104,7 +104,7 @@ class ArnoldRenderTest( GafferTest.TestCase ) :
 
 		s["fileName"].setValue( self.__scriptFileName )
 		
-		s["render"].execute( [ Gaffer.Context.current() ] )
+		s["render"].execute()
 			
 		self.failUnless( os.path.exists( "/tmp/test.tif" ) )		
 	
@@ -163,7 +163,7 @@ class ArnoldRenderTest( GafferTest.TestCase ) :
 		for i in range( 1, 4 ) :
 			c.setFrame( i )
 			with c :
-				s["render"].execute( [ Gaffer.Context.current() ] )
+				s["render"].execute()
 			
 		for i in range( 1, 4 ) :
 			self.failUnless( os.path.exists( "/tmp/test.%04d.tif" % i ) )		
@@ -209,7 +209,8 @@ class ArnoldRenderTest( GafferTest.TestCase ) :
 		
 		s["fileName"].setValue( "/tmp/test.gfr" )
 		
-		s["render"].execute( [ s.context() ] )
+		with s.context() :
+			s["render"].execute()
 		
 		self.assertTrue( os.path.exists( "/tmp/renderTests" ) )
 		self.assertTrue( os.path.exists( "/tmp/assTests" ) )
@@ -217,7 +218,8 @@ class ArnoldRenderTest( GafferTest.TestCase ) :
 
 		# check it can cope with everything already existing
 
-		s["render"].execute( [ s.context() ] )
+		with s.context() :
+			s["render"].execute()
 		
 		self.assertTrue( os.path.exists( "/tmp/renderTests" ) )
 		self.assertTrue( os.path.exists( "/tmp/assTests" ) )

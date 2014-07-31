@@ -58,10 +58,10 @@ class ExecutableNode : public Node
 		/// A Task defines the execution of an ExecutableNode given a specific Context.
 		/// Tasks are used to describe requirements between ExecutableNodes, and by
 		/// Dispatchers to schedule context specific execution. Tasks are immutable,
-		/// and their hash is computed at construction, matching the executionHash()
-		/// of the given node and context. The hash is used to define the comparison
-		/// operators, and any changes made to the node after construction invalidates
-		/// the Task. Changing the Context is acceptible, as the Task has its own copy.
+		/// and their hash is computed at construction, matching the node's hash()
+		/// for the given context. The hash is used to define the comparison operators,
+		/// and any changes made to the node after construction invalidates the Task.
+		/// Changing the Context is acceptible, as the Task has its own copy.
 		class Task
 		{
 			public :
@@ -99,19 +99,35 @@ class ExecutableNode : public Node
 		Plug *requirementPlug();
 		const Plug *requirementPlug() const;
 		
+		/// Compound plug used by Dispatchers to expose per-node dispatcher settings.
+		/// See the "ExecutableNode Customization" section of the Gaffer::Dispatcher
+		/// documentation for more details.
+		CompoundPlug *dispatcherPlug();
+		const CompoundPlug *dispatcherPlug() const;
+		
 		/// Fills requirements with all Tasks that must be completed before execute
 		/// can be called with the given context. The default implementation collects
 		/// the Tasks defined by the inputs of the requirementsPlug().
-		virtual void executionRequirements( const Context *context, Tasks &requirements ) const;
+		virtual void requirements( const Context *context, Tasks &requirements ) const;
 		
 		/// Returns a hash that uniquely represents the side effects (e.g. files created)
 		/// of calling execute with the given context. Derived nodes should call the base
 		/// implementation and append to the returned hash. Nodes can indicate that they
 		/// don't cause side effects for the given context by returning a default hash.
-		virtual IECore::MurmurHash executionHash( const Context *context ) const = 0;
+		virtual IECore::MurmurHash hash( const Context *context ) const = 0;
 		
-		/// Executes this node for all the specified contexts in sequence.
-		virtual void execute( const Contexts &contexts ) const = 0;
+		/// Executes this node using the current Context.
+		virtual void execute() const = 0;
+		
+		/// Executes this node by copying the current Context and varying it over the sequence of frames.
+		/// The default implementation modifies the current Context and calls execute() for each frame.
+		/// Derived classes which need more specialized behaviour should re-implement executeSequence()
+		/// along with requiresSequenceExecution().
+		virtual void executeSequence( const std::vector<float> &frames ) const;
+		
+		/// Returns true if the node must execute a sequence of frames all at once.
+		/// The default implementation returns false.
+		virtual bool requiresSequenceExecution() const;
 		
 	protected :
 	

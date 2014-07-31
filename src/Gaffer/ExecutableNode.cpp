@@ -56,7 +56,7 @@ ExecutableNode::Task::Task( const Task &t ) : m_node( t.m_node ), m_context( t.m
 
 ExecutableNode::Task::Task( ExecutableNodePtr n, ContextPtr c ) : m_node( n ), m_context( new Context( *c ) )
 {
-	m_hash = m_node->executionHash( m_context.get() );
+	m_hash = m_node->hash( m_context.get() );
 }
 
 const ExecutableNode *ExecutableNode::Task::node() const
@@ -129,7 +129,17 @@ const Plug *ExecutableNode::requirementPlug() const
 	return getChild<Plug>( g_firstPlugIndex + 1 );
 }
 
-void ExecutableNode::executionRequirements( const Context *context, Tasks &requirements ) const
+CompoundPlug *ExecutableNode::dispatcherPlug()
+{
+	return getChild<CompoundPlug>( g_firstPlugIndex + 2 );
+}
+
+const CompoundPlug *ExecutableNode::dispatcherPlug() const
+{
+	return getChild<CompoundPlug>( g_firstPlugIndex + 2 );
+}
+
+void ExecutableNode::requirements( const Context *context, Tasks &requirements ) const
 {
 	for( PlugIterator cIt( requirementsPlug() ); cIt != cIt.end(); ++cIt )
 	{
@@ -146,15 +156,32 @@ void ExecutableNode::executionRequirements( const Context *context, Tasks &requi
 	}
 }
 
-IECore::MurmurHash ExecutableNode::executionHash( const Context *context ) const
+IECore::MurmurHash ExecutableNode::hash( const Context *context ) const
 {
 	IECore::MurmurHash h;
 	h.append( typeId() );
 	return h;
 }
 
-void ExecutableNode::execute( const Contexts &contexts ) const
+void ExecutableNode::execute() const
 {
+}
+
+void ExecutableNode::executeSequence( const std::vector<float> &frames ) const
+{
+	ContextPtr context = new Context( *Context::current(), Context::Borrowed );
+	Context::Scope scopedContext( context.get() );
+	
+	for ( std::vector<float>::const_iterator it = frames.begin(); it != frames.end(); ++it )
+	{
+		context->setFrame( *it );
+		execute();
+	}
+}
+
+bool ExecutableNode::requiresSequenceExecution() const
+{
+	return false;
 }
 
 bool ExecutableNode::acceptsInput( const Plug *plug, const Plug *inputPlug ) const

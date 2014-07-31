@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2013-2014, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -64,9 +64,9 @@ class ExecutableRender : public Gaffer::ExecutableNode
 		ScenePlug *inPlug();
 		const ScenePlug *inPlug() const;
 
-		virtual IECore::MurmurHash executionHash( const Gaffer::Context *context ) const;
+		virtual IECore::MurmurHash hash( const Gaffer::Context *context ) const;
 		/// Implemented to perform the render.
-		virtual void execute( const Contexts &contexts ) const;
+		virtual void execute() const;
 
 	protected :
 	
