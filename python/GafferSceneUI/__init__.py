@@ -81,3 +81,5 @@ import SetFilterUI
 
 from AlembicPathPreview import AlembicPathPreview
 from SceneReaderPathPreview import SceneReaderPathPreview
+
+__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferSceneUI" )

@@ -43,3 +43,5 @@ from _GafferScene import *
 from ScenePath import ScenePath
 from ScriptProcedural import ScriptProcedural
 from AlembicPath import AlembicPath
+
+__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferScene" )
