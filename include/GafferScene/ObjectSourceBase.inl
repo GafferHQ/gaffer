@@ -39,6 +39,7 @@
 
 #include "IECore/NullObject.h"
 #include "IECore/Camera.h"
+#include "IECore/CoordinateSystem.h"
 
 #include "Gaffer/Context.h"
 
@@ -207,6 +208,10 @@ Imath::Box3f ObjectSourceBase<BaseType>::computeBound( const SceneNode::ScenePat
 	else if( object->isInstanceOf( IECore::Camera::staticTypeId() ) )
 	{
 		result = Imath::Box3f( Imath::V3f( -0.5, -0.5, 0 ), Imath::V3f( 0.5, 0.5, 2.0 ) );
+	}
+	else if( object->isInstanceOf( IECore::CoordinateSystem::staticTypeId() ) )
+	{
+		result = Imath::Box3f( Imath::V3f( 0 ), Imath::V3f( 1 ) );
 	}
 	else
 	{

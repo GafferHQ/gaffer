@@ -99,6 +99,7 @@ from FreezeTransformTest import FreezeTransformTest
 from SetFilterTest import SetFilterTest
 from FilterTest import FilterTest
 from SceneAlgoTest import SceneAlgoTest
+from CoordinateSystemTest import CoordinateSystemTest
 
 if __name__ == "__main__":
 	import unittest
