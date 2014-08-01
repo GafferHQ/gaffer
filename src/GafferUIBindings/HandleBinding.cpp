@@ -51,6 +51,7 @@ void GafferUIBindings::bindHandle()
 		.def( init<Handle::Type>() )
 		.def( "setType", &Handle::setType )
 		.def( "getType", &Handle::getType )
+		.def( "dragOffset", &Handle::dragOffset )
 	;
 
 	enum_<Handle::Type>( "Type" )

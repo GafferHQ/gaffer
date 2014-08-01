@@ -49,7 +49,7 @@ class Handle : public Gadget
 
 		enum Type
 		{
-			TranslateX,
+			TranslateX = 0,
 			TranslateY,
 			TranslateZ
 		};
@@ -62,6 +62,8 @@ class Handle : public Gadget
 		void setType( Type type );
 		Type getType() const;
 		
+		float dragOffset( const DragDropEvent &event ) const;
+		
 		virtual Imath::Box3f bound() const;
 
 	protected :
@@ -72,9 +74,25 @@ class Handle : public Gadget
 				
 		void enter();
 		void leave();
+		
+		bool buttonPress( const ButtonEvent &event );
+		IECore::RunTimeTypedPtr dragBegin( const DragDropEvent &event );
+		bool dragEnter( const DragDropEvent &event );
+
+		float absoluteDragOffset( const DragDropEvent &event ) const;
 
 		Type m_type;
 		bool m_hovering;
+	
+		// When a drag starts, we store the line of our
+		// handle here. We store it in world space so that
+		// dragOffset() returns consistent results even if
+		// our transform or the camera changes during the drag.
+		IECore::LineSegment3f m_dragHandleWorld;
+		// The initial offset at drag begin. We store this so
+		// that dragOffset() can return relative rather than
+		// absolute offsets.
+		float m_dragBeginOffset;
 	
 };
 
