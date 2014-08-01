@@ -1,3 +1,10 @@
+# 0.96.2
+
+#### UI
+
+- Added OpDialogue preExecuteSignal() and postExecuteSignal(). 
+- Added OpDialogue.parameterisedHolder() method.
+
 # 0.96.1
 
 #### Scene
