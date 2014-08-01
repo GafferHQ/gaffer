@@ -942,7 +942,7 @@ class __TransformSection( Section ) :
 				
 					diff = TextDiff()
 					for i in range( 0, 2 ) :
-						diff.setCornerWidget( 0, GafferUI.Label( "<sup>From " + transform["label"] + " Matrix</sup>" ) )
+						diff.setCornerWidget( i, GafferUI.Label( "<sup>From " + transform["label"] + " Matrix</sup>" ) )
 
 					DiffRow(
 						transform["label"] + " " + component["label"],
