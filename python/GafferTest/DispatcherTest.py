@@ -49,10 +49,10 @@ class TestOp (IECore.Op) :
 	def __init__( self, name, executionOrder ) :
 
 		IECore.Op.__init__( self, "Test op", IECore.IntParameter( "result", "", 0 ) )
+		self.parameters().addParameter( IECore.StringParameter( "name", "unique name to force different executions", name ) )
 		self.parameters().addParameter( IECore.StringParameter( "currentFrame", "testing context substitution", "${frame}" ) )
 		self.counter = 0
 		self.frames = []
-		self.name = name
 		self.executionOrder = executionOrder
 
 	def doOperation( self, args ) :
@@ -71,13 +71,22 @@ class DispatcherTest( GafferTest.TestCase ) :
 			Gaffer.Dispatcher.__init__( self )
 			self.log = list()
 
-		def _doDispatch( self, taskDescriptions ) :
+		def _doDispatch( self, batch ) :
 
 			del self.log[:]
-			for taskDescription in taskDescriptions :
-				task = taskDescription.task()
-				with task.context() :
-					task.node().executeSequence( taskDescription.frames() )
+			self.__dispatch( batch )
+		
+		def __dispatch( self, batch ) :
+			
+			for currentBatch in batch.requirements() :
+				self.__dispatch( currentBatch )
+			
+			if not batch.node() or batch.blindData().get( "dispatched" ) :
+				return
+			
+			batch.execute()
+			
+			batch.blindData()["dispatched"] = IECore.BoolData( True )
 		
 		def _doSetupPlugs( self, parentPlug ) :
 
@@ -288,6 +297,59 @@ class DispatcherTest( GafferTest.TestCase ) :
 		self.assertEqual( op2a.counter, 4 )
 		self.assertEqual( op2b.counter, 5 )
 		self.assertTrue( dispatcher.log == [ op2b ] )
+	
+	def testDispatchIdenticalTasks( self ) :
+
+		dispatcher = Gaffer.Dispatcher.dispatcher( "testDispatcher" )
+
+		# Create a tree of dependencies for execution:
+		# n1 requires:
+		# - n2 requires:
+		#    -n2a
+		#    -n2b
+		op1 = TestOp("1", dispatcher.log)
+		s = Gaffer.ScriptNode()
+		s["n1"] = Gaffer.ExecutableOpHolder()
+		s["n1"].setParameterised( op1 )
+		s["n2"] = Gaffer.ExecutableOpHolder()
+		s["n2"].setParameterised( op1 )
+		s["n2a"] = Gaffer.ExecutableOpHolder()
+		s["n2a"].setParameterised( op1 )
+		s["n2b"] = Gaffer.ExecutableOpHolder()
+		s["n2b"].setParameterised( op1 )
+		
+		r1 = Gaffer.Plug( name = "r1" )
+		s["n1"]['requirements'].addChild( r1 )
+		r1.setInput( s["n2"]['requirement'] )
+		
+		r1 = Gaffer.Plug( name = "r1" )
+		s["n2"]['requirements'].addChild( r1 )
+		r1.setInput( s["n2a"]['requirement'] )
+		
+		r2 = Gaffer.Plug( name = "r2" )
+		s["n2"]['requirements'].addChild( r2 )
+		r2.setInput( s["n2b"]['requirement'] )
+		
+		# Executing n1 should only execute once, because all tasks are identical
+		dispatcher.dispatch( [ s["n1"] ] )
+		self.assertEqual( op1.counter, 1 )
+		self.assertEqual( dispatcher.log, [ op1 ] )
+		
+		# Executing them all should still only execute one, because all tasks are identical
+		dispatcher.dispatch( [ s["n2"], s["n2b"], s["n1"], s["n2a"] ] )
+		self.assertEqual( op1.counter, 2 )
+		self.assertEqual( dispatcher.log, [ op1 ] )
+	
+	def testNoTask( self ) :
+		
+		s = Gaffer.ScriptNode()
+		s["n1"] = Gaffer.ExecutableOpHolder()
+		self.assertEqual( s["n1"].hash( s.context() ), IECore.MurmurHash() )
+		
+		# It doesn't execute, because the executionHash is null
+		dispatcher = Gaffer.Dispatcher.dispatcher( "testDispatcher" )
+		dispatcher.dispatch( [ s["n1"] ] )
+		self.assertEqual( dispatcher.log, [] )
 	
 	def testDispatchDifferentFrame( self ) :
 		

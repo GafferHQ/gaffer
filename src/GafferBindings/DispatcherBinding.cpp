@@ -79,20 +79,14 @@ class DispatcherWrapper : public NodeWrapper<Dispatcher>
 			Dispatcher::dispatch( nodes );
 		}
 
-		void doDispatch( const TaskDescriptions &taskDescriptions ) const
+		void doDispatch( const TaskBatch *batch ) const
 		{
 			ScopedGILLock gilLock;
-			
-			list taskDescriptionList;
-			for ( TaskDescriptions::const_iterator tIt = taskDescriptions.begin(); tIt != taskDescriptions.end(); ++tIt )
-			{
-				taskDescriptionList.append( *tIt );
-			}
 			
 			boost::python::object f = this->methodOverride( "_doDispatch" );
 			if( f )
 			{
-				f( taskDescriptionList );
+				f( boost::const_pointer_cast<Dispatcher::TaskBatch>( ConstTaskBatchPtr( batch ) ) );
 			}
 			else
 			{
@@ -134,29 +128,54 @@ class DispatcherWrapper : public NodeWrapper<Dispatcher>
 			return const_cast< Dispatcher *>(d);
 		}
 		
-		static ExecutableNode::Task taskDescriptionTask( Dispatcher::TaskDescription &description )
+		static ExecutableNodePtr taskBatchGetNode( const Dispatcher::TaskBatchPtr &batch )
 		{
-			return description.task();
+			if ( ConstExecutableNodePtr node = batch->node() )
+			{
+				return boost::const_pointer_cast<ExecutableNode>( node );
+			}
+
+			return 0;
 		}
 		
-		static boost::python::list taskDescriptionFrames( Dispatcher::TaskDescription &description )
+		static ContextPtr taskBatchGetContext( const Dispatcher::TaskBatchPtr &batch, bool copy = true )
+		{
+			if ( ConstContextPtr context = batch->context() )
+			{
+				if ( copy )
+				{
+					return new Context( *context );
+				}
+				
+				return boost::const_pointer_cast<Context>( context );
+			}
+			
+			return 0;
+		}
+		
+		static boost::python::list taskBatchGetFrames( const Dispatcher::TaskBatchPtr &batch )
 		{
 			boost::python::list result;
-			for ( std::vector<float>::const_iterator it = description.frames().begin(); it != description.frames().end(); ++it )
+			for ( std::vector<float>::const_iterator it = batch->frames().begin(); it != batch->frames().end(); ++it )
 			{
 				result.append( *it );
 			}
 			return result;
 		}
 		
-		static boost::python::list taskDescriptionRequirements( Dispatcher::TaskDescription &description )
+		static boost::python::list taskBatchGetRequirements( const Dispatcher::TaskBatchPtr &batch )
 		{
 			boost::python::list result;
-			for ( std::set<ExecutableNode::Task>::const_iterator it = description.requirements().begin(); it != description.requirements().end(); ++it )
+			for ( std::vector<TaskBatchPtr>::const_iterator it = batch->requirements().begin(); it != batch->requirements().end(); ++it )
 			{
 				result.append( *it );
 			}
 			return result;
+		}
+		
+		static CompoundDataPtr taskBatchGetBlindData( Dispatcher::TaskBatch &batch )
+		{
+			return batch.blindData();
 		}
 
 };
@@ -203,12 +222,13 @@ void GafferBindings::bindDispatcher()
 		.value( "CustomRange", Dispatcher::CustomRange )
 	;
 	
-	class_<Dispatcher::TaskDescription>( "_TaskDescription", no_init )
-		.def( init<const ExecutableNode::Task &>() )
-		.def( init<const Dispatcher::TaskDescription &>() )
-		.def( "task", &DispatcherWrapper::taskDescriptionTask )
-		.def( "frames", &DispatcherWrapper::taskDescriptionFrames )
-		.def( "requirements", &DispatcherWrapper::taskDescriptionRequirements )
+	RefCountedClass<Dispatcher::TaskBatch, RefCounted>( "_TaskBatch" )
+		.def( "execute", &Dispatcher::TaskBatch::execute )
+		.def( "node", &DispatcherWrapper::taskBatchGetNode )
+		.def( "context", &DispatcherWrapper::taskBatchGetContext, ( boost::python::arg_( "_copy" ) = true ) )
+		.def( "frames", &DispatcherWrapper::taskBatchGetFrames )
+		.def( "requirements", &DispatcherWrapper::taskBatchGetRequirements )
+		.def( "blindData", &DispatcherWrapper::taskBatchGetBlindData )
 	;
 	
 	SignalBinder<Dispatcher::DispatchSignal, DefaultSignalCaller<Dispatcher::DispatchSignal>, DispatchSlotCaller >::bind( "DispatchSignal" );	
