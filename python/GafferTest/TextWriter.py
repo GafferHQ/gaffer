@@ -39,14 +39,14 @@ import Gaffer
 
 class TextWriter( Gaffer.ExecutableNode ) :
 	
-	def __init__( self, name="TextWriter", mode = "w", requiresSequenceExecution = False ) :
+	def __init__( self, name="TextWriter", requiresSequenceExecution = False ) :
 		
 		Gaffer.ExecutableNode.__init__( self, name )
 		
-		self.__mode = mode
 		self.__requiresSequenceExecution = requiresSequenceExecution
 		
 		self.addChild( Gaffer.StringPlug( "fileName", Gaffer.Plug.Direction.In ) )
+		self.addChild( Gaffer.StringPlug( "mode", defaultValue = "w", direction = Gaffer.Plug.Direction.In ) )
 		self.addChild( Gaffer.StringPlug( "text", Gaffer.Plug.Direction.In ) )
 	
 	def execute( self ) :
@@ -54,8 +54,7 @@ class TextWriter( Gaffer.ExecutableNode ) :
 		context = Gaffer.Context.current()
 		fileName = context.substitute( self["fileName"].getValue() )
 		text = self.__processText( context )
-		
-		with file( fileName, self.__mode ) as f :
+		with file( fileName, self["mode"].getValue() ) as f :
 			f.write( text )
 	
 	def executeSequence( self, frames ) :
@@ -67,7 +66,7 @@ class TextWriter( Gaffer.ExecutableNode ) :
 		context = Gaffer.Context( Gaffer.Context.current() )
 		fileName = context.substitute( self["fileName"].getValue() )
 		
-		with file( fileName, self.__mode ) as f :
+		with file( fileName, self["mode"].getValue() ) as f :
 			with context :
 				for frame in frames :
 					context.setFrame( frame )
@@ -80,7 +79,7 @@ class TextWriter( Gaffer.ExecutableNode ) :
 		h.append( context.getFrame() )
 		h.append( context.get( "textWriter:replace", IECore.StringVectorData() ) )
 		h.append( context.substitute( self["fileName"].getValue() ) )
-		h.append( self.__mode )
+		h.append( self["mode"].getValue() )
 		h.append( context.substitute( self["text"].getValue() ) )
 		
 		return h
