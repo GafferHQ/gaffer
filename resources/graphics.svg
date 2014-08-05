@@ -51,14 +51,14 @@
      borderopacity="1"
      inkscape:pageopacity="1"
      inkscape:pageshadow="2"
-     inkscape:zoom="16"
-     inkscape:cx="467.33998"
-     inkscape:cy="898.56642"
+     inkscape:zoom="5.6568543"
+     inkscape:cx="345.4161"
+     inkscape:cy="823.71361"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
-     showgrid="false"
+     showgrid="true"
      inkscape:window-width="1377"
-     inkscape:window-height="860"
+     inkscape:window-height="856"
      inkscape:window-x="0"
      inkscape:window-y="0"
      inkscape:window-maximized="0"
@@ -2220,5 +2220,19 @@
          inkscape:connector-curvature="0"
          sodipodi:nodetypes="ccccccccc" />
     </g>
+    <rect
+       inkscape:label="#rect4077"
+       style="fill:#6d8f77;fill-opacity:0;fill-rule:evenodd;stroke:none"
+       id="forExport:railSingle"
+       width="20"
+       height="20"
+       x="300"
+       y="262.36218" />
+    <path
+       style="fill:#787878;fill-opacity:1;fill-rule:evenodd;stroke:#3c3c3c;stroke-width:1;stroke-linecap:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       d="m 310,277.36218 c -2.76142,0 -5,-2.23858 -5,-5 0,-2.76142 2.23858,-5 5,-5 2.67905,0 4.88204,2.11157 4.99775,4.89411 0.002,2.86731 -2.23633,5.10589 -4.99775,5.10589 z"
+       id="path3303"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="ssscs" />
   </g>
 </svg>
