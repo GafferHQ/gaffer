@@ -36,6 +36,7 @@
 
 import unittest
 import time
+import os
 
 import IECore
 
@@ -43,8 +44,9 @@ import Gaffer
 import GafferImage
 import GafferScene
 import GafferRenderMan
+import GafferRenderManTest
 
-class InteractiveRenderManRenderTest( unittest.TestCase ) :
+class InteractiveRenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 	
 	def __colorAtUV( self, image, uv ) :
 	
@@ -793,6 +795,103 @@ class InteractiveRenderManRenderTest( unittest.TestCase ) :
 			IECore.V2f( 0.5 ),
 		)
 		self.assertAlmostEqual( c[1], 1, delta = 0.001 )
+	
+	def testMoveCoordinateSystem( self ) :
+	
+		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/coordSysDot.sl" )
 		
+		s = Gaffer.ScriptNode()
+		
+		s["plane"] = GafferScene.Plane()
+		
+		s["shader"] = GafferRenderMan.RenderManShader()
+		s["shader"].loadShader( shader )
+		s["shader"]["parameters"]["coordSys"].setValue( "/group/coordinateSystem" )
+		
+		s["shaderAssignment"] = GafferScene.ShaderAssignment()
+		s["shaderAssignment"]["in"].setInput( s["plane"]["out"] )
+		s["shaderAssignment"]["shader"].setInput( s["shader"]["out"] )
+		
+		s["camera"] = GafferScene.Camera()
+		s["camera"]["transform"]["translate"]["z"].setValue( 1 )
+		
+		s["coordSys"] = GafferScene.CoordinateSystem()
+		
+		s["g"] = GafferScene.Group()
+		s["g"]["in"].setInput( s["shaderAssignment"]["out"] )
+		s["g"]["in1"].setInput( s["camera"]["out"] )
+		s["g"]["in2"].setInput( s["coordSys"]["out"] )
+		
+		s["d"] = GafferScene.Displays()
+		s["d"].addDisplay(
+			"beauty",
+			IECore.Display(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"quantize" : IECore.FloatVectorData( [ 0, 0, 0, 0 ] ),
+					"driverType" : "ImageDisplayDriver",
+					"handle" : "myLovelyPlane",
+				}
+			)
+		)
+		s["d"]["in"].setInput( s["g"]["out"] )
+		
+		s["o"] = GafferScene.StandardOptions()
+		s["o"]["options"]["renderCamera"]["value"].setValue( "/group/camera" )
+		s["o"]["options"]["renderCamera"]["enabled"].setValue( True )
+		s["o"]["in"].setInput( s["d"]["out"] )
+		
+		s["r"] = GafferRenderMan.InteractiveRenderManRender()
+		s["r"]["in"].setInput( s["o"]["out"] )
+		
+		# start a render, give it time to finish, and check the output
+		
+		s["r"]["state"].setValue( s["r"].State.Running )
+		
+		time.sleep( 2 )
+		
+		c = self.__colorAtUV(
+			IECore.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
+			IECore.V2f( 0.5 ),
+		)
+		self.assertAlmostEqual( c[1], 1, delta = 0.001 )
+
+		# move the coordinate system, and check the output
+		
+		s["coordSys"]["transform"]["translate"]["x"].setValue( 0.1 )
+
+		time.sleep( 2 )
+		
+		c = self.__colorAtUV(
+			IECore.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
+			IECore.V2f( 0.6, 0.5 ),
+		)
+		self.assertAlmostEqual( c[0], 1 )
+
+		c = self.__colorAtUV(
+			IECore.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
+			IECore.V2f( 0.6, 0.7 ),
+		)
+		self.assertAlmostEqual( c[0], 0 )
+		
+		# scale the coordinate system to cover everything, and check again
+		
+		s["coordSys"]["transform"]["scale"].setValue( IECore.V3f( 100 ) )
+
+		time.sleep( 2 )
+		
+		for p in [
+			IECore.V2f( 0.5 ),
+			IECore.V2f( 0.1 ),
+			IECore.V2f( 0.9 ),
+		] :
+			c = self.__colorAtUV(
+				IECore.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
+				p,
+			)
+			self.assertAlmostEqual( c[0], 1, delta = 0.001 )
+					
 if __name__ == "__main__":
 	unittest.main()
