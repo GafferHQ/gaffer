@@ -614,13 +614,13 @@ class DiffRow( Row ) :
 				diff.setCornerWidget( 0, GafferUI.Label( "<sup>Inherited</sup>") )
 				diff.setCornerWidget( 1, GafferUI.Label( "<sup>Inherited</sup>") )
 				
-				self.__diffConnections = []
-				for i in range( 0, 2 ) :
-					self.__diffConnections.extend( [
-						diff.frame( i ).enterSignal().connect( Gaffer.WeakMethod( self.__enter ) ),
-						diff.frame( i ).leaveSignal().connect( Gaffer.WeakMethod( self.__leave ) ),
-						diff.frame( i ).contextMenuSignal().connect( Gaffer.WeakMethod( self.__contextMenu ) )
-					] )
+			self.__diffConnections = []
+			for i in range( 0, 2 ) :
+				self.__diffConnections.extend( [
+					diff.frame( i ).enterSignal().connect( Gaffer.WeakMethod( self.__enter ) ),
+					diff.frame( i ).leaveSignal().connect( Gaffer.WeakMethod( self.__leave ) ),
+					diff.frame( i ).contextMenuSignal().connect( Gaffer.WeakMethod( self.__contextMenu ) )
+				] )
 		
 			GafferUI.Spacer( IECore.V2i( 0 ), expand = True )
 		
@@ -670,11 +670,20 @@ class DiffRow( Row ) :
 		m = IECore.MenuDefinition()
 		
 		m.append(
-			"/Show Inheritance",
+			"/Show History",
 			{
-				"command" : IECore.curry( Gaffer.WeakMethod( self.__showInheritance ), target ),
+				"command" : IECore.curry( Gaffer.WeakMethod( self.__showHistory ), target ),
 			}
 		)
+		
+		if self.__inspector.inspectsAttributes() :
+		
+			m.append(
+				"/Show Inheritance",
+				{
+					"command" : IECore.curry( Gaffer.WeakMethod( self.__showInheritance ), target ),
+				}
+			)
 	
 		return m
 	
@@ -683,6 +692,17 @@ class DiffRow( Row ) :
 		w = _SectionWindow(
 			target.scene.node().getName() + " : " + self.__label().getText(),
 			_InheritanceSection( self.__inspector ),
+			target
+		)
+		
+		self.ancestor( GafferUI.Window ).addChildWindow( w, removeOnClose = True )
+		w.setVisible( True )
+
+	def __showHistory( self, target ) :
+	
+		w = _SectionWindow(
+			target.scene.node().getName() + " : " + self.__label().getText(),
+			_HistorySection( self.__inspector ),
 			target
 		)
 		
@@ -754,7 +774,7 @@ QtGui = GafferUI._qtImport( "QtGui" )
 
 class _Rail( GafferUI.ListContainer ) :
 
-	Type = IECore.Enum.create( "Top", "Middle", "Gap", "Bottom" )
+	Type = IECore.Enum.create( "Top", "Middle", "Gap", "Bottom", "Single" )
 
 	def __init__( self, type, **kw ) :
 	
@@ -762,7 +782,7 @@ class _Rail( GafferUI.ListContainer ) :
 		
 		with self :
 
-			if type != self.Type.Top :
+			if type != self.Type.Top and type != self.Type.Single :
 				image = GafferUI.Image( "railLine.png" )
 				## \todo Decide how we do this via the public API.
 				# Perhaps by putting the image in a Sizer? Or by
@@ -774,7 +794,7 @@ class _Rail( GafferUI.ListContainer ) :
 			
 			GafferUI.Image( "rail" + str( type ) + ".png" )
 
-			if type != self.Type.Bottom :
+			if type != self.Type.Bottom and type != self.Type.Single :
 				image = GafferUI.Image( "railLine.png" )
 				image._qtWidget().setSizePolicy( QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Preferred )
 				image._qtWidget().setScaledContents( True )
@@ -851,6 +871,98 @@ class _InheritanceSection( Section ) :
 	
 		script = self.__target.scene.ancestor( Gaffer.ScriptNode )
 		script.context()["ui:scene:selectedPaths"] = IECore.StringVectorData( [ label.getText() ] )
+
+##########################################################################
+# History section
+##########################################################################
+
+class _HistorySection( Section ) :
+
+	__HistoryItem = collections.namedtuple( "__HistoryItem", [ "target", "value" ] )
+
+	def __init__( self, inspector, **kw ) :
+	
+		Section.__init__( self, collapsed = None, **kw )
+
+		self.__inspector = inspector
+
+	def update( self, targets ) :
+		
+		self.__target = targets[0]
+		self.__connections = []
+		
+		if self.__target.path is None :
+			return
+		
+		history = []
+		target = self.__target
+		while target is not None :
+			history.append( self.__HistoryItem( target, self.__inspector( target ) ) )
+			target = self.__sourceTarget( target )
+		history.reverse()
+		
+		rows = []
+		for i in range( 0, len( history ) ) :
+			
+			if i >= 2 and history[i].value == history[i-1].value and history[i].value == history[i-2].value :
+				if i != len( history ) - 1 :
+					# if the last line we output was a gap, and this one would be too, then
+					# just skip it.
+					continue
+			
+			row = Row( borderWidth = 0, alternate = len( rows ) % 2 )
+			rows.append( row )
+			
+			with row.listContainer() :
+			
+				if i == 0 :
+					_Rail( _Rail.Type.Top if len( history ) > 1 else _Rail.Type.Single )
+				elif i == len( history ) - 1 :
+					_Rail( _Rail.Type.Bottom )
+				else :
+					if history[i-1].value == history[i].value :
+						_Rail( _Rail.Type.Gap )
+					else :
+						_Rail( _Rail.Type.Middle )
+				
+				if i == 0 or i == ( len( history ) - 1 ) or history[i-1].value != history[i].value :
+					GafferUI.NameLabel( history[i].target.scene.node(), formatter = lambda l : ".".join( x.getName() for x in l ) )
+				else :
+					GafferUI.Label( "..." )
+					
+				GafferUI.Spacer( IECore.V2i( 0 ), parenting = { "expand" : True } )
+				
+				diff = TextDiff()
+				diff.update( [
+					history[i-1].value if i > 0 else None,
+					history[i].value
+				] )
+				
+				if i == 0 or history[i-1].value != history[i].value :
+					diff.frame( 0 if history[i].value is not None else 1 ).setVisible( False )
+					
+		self._mainColumn()[:] = rows
+	
+	def __sourceTarget( self, target ) :
+	
+		if isinstance( target.scene.node(), Gaffer.DependencyNode ) :
+		
+			sourceScene = target.scene.node().correspondingInput( target.scene )
+			if sourceScene is None :
+				return None
+				
+			sourceScene = sourceScene.source()
+			if sourceScene.node() == target.scene.node() :
+				return None
+			
+			if not GafferScene.exists( sourceScene, target.path ) :
+				return None
+			
+			return SceneInspector.Target( sourceScene, target.path )
+	
+		return None
+		
+SceneInspector.HistorySection = _HistorySection ## REMOVE ME!!
 
 ##########################################################################
 # Node section
