@@ -113,6 +113,7 @@ enum TypeId
 	DuplicateTypeId = 110568,
 	GridTypeId = 110569,
 	SetTypeId = 110570,
+	CoordinateSystemTypeId = 110571,
 	
 	LastTypeId = 110650
 };

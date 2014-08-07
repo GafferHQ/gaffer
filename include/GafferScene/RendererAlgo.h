@@ -63,6 +63,13 @@ void outputLights( const ScenePlug *scene, const IECore::CompoundObject *globals
 /// was invisible.
 bool outputLight( const ScenePlug *scene, const ScenePlug::ScenePath &path, IECore::Renderer *renderer );
 
+/// Outputs all the visible coordinate systems from the scene.
+void outputCoordinateSystems( const ScenePlug *scene, const IECore::CompoundObject *globals, IECore::Renderer *renderer );
+
+/// Outputs a single coordinate system from the scene. Returns true for success, and false if no coordinate system
+/// was found or if it was invisible.
+bool outputCoordinateSystem( const ScenePlug *scene, const ScenePlug::ScenePath &path, IECore::Renderer *renderer );
+
 /// Creates the directories necessary to receive the Displays in globals.
 void createDisplayDirectories( const IECore::CompoundObject *globals );
 

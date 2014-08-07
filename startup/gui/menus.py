@@ -162,6 +162,7 @@ nodeMenu.append( "/Scene/File/Writer", GafferScene.SceneWriter, searchText = "Sc
 nodeMenu.append( "/Scene/File/Alembic", GafferScene.AlembicSource, searchText = "AlembicSource" )
 nodeMenu.append( "/Scene/Source/Object To Scene", GafferScene.ObjectToScene, searchText = "ObjectToScene" )
 nodeMenu.append( "/Scene/Source/Camera", GafferScene.Camera )
+nodeMenu.append( "/Scene/Source/CoordinateSystem", GafferScene.CoordinateSystem )
 nodeMenu.append( "/Scene/Source/Grid", GafferScene.Grid )
 nodeMenu.append( "/Scene/Source/Primitive/Cube", GafferScene.Cube )
 nodeMenu.append( "/Scene/Source/Primitive/Plane", GafferScene.Plane )

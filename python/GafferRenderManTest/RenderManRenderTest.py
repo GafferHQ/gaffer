@@ -274,6 +274,7 @@ class RenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		s["o"]["in"].setInput( s["p"]["out"] )
 		
 		s["r"] = GafferRenderMan.RenderManRender()
+		s["r"]["mode"].setValue( "generate" )
 		s["r"]["ribFileName"].setValue( "/tmp/test.rib" )
 		s["r"]["in"].setInput( s["o"]["out"] )
 
@@ -325,6 +326,24 @@ class RenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		current = s["render"].hash( c )
 		s["render"]["in"].setInput( s["plane"]["out"] )
 		self.assertNotEqual( s["render"].hash( c ), current )
+
+	def testCoordinateSystem( self ) :
+	
+		s = Gaffer.ScriptNode()
+		s["fileName"].setValue( "/tmp/test.gfr" )
+		
+		s["c"] = GafferScene.CoordinateSystem()
+		s["c"]["name"].setValue( "myCoordSys" )
+		
+		s["r"] = GafferRenderMan.RenderManRender()
+		s["r"]["mode"].setValue( "generate" )
+		s["r"]["ribFileName"].setValue( "/tmp/test.rib" )
+		s["r"]["in"].setInput( s["c"]["out"] )
+
+		s["r"].execute()
+		
+		rib = "\n".join( file( "/tmp/test.rib" ).readlines() )
+		self.assertTrue( "CoordinateSystem \"/myCoordSys\"" in rib )
 	
 	def setUp( self ) :
 	

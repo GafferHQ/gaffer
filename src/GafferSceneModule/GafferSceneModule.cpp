@@ -91,6 +91,7 @@
 #include "GafferSceneBindings/SetBinding.h"
 #include "GafferSceneBindings/FreezeTransformBinding.h"
 #include "GafferSceneBindings/SceneAlgoBinding.h"
+#include "GafferSceneBindings/CoordinateSystemBinding.h"
 
 using namespace boost::python;
 using namespace GafferScene;
@@ -165,5 +166,6 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	bindSet();
 	bindFreezeTransform();
 	bindSceneAlgo();
+	bindCoordinateSystem();
 	
 }

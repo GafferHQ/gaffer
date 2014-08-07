@@ -43,6 +43,7 @@
 #include "IECore/StateRenderable.h"
 #include "IECore/AngleConversion.h"
 #include "IECore/MotionBlock.h"
+#include "IECore/CoordinateSystem.h"
 
 #include "Gaffer/Context.h"
 #include "Gaffer/ScriptNode.h"
@@ -285,6 +286,15 @@ void SceneProcedural::render( Renderer *renderer ) const
 					}
 					break; // no motion blur for these chappies.
 				}
+				else if( const CoordinateSystem *coordinateSystem = runTimeCast<const CoordinateSystem>( object.get() ) )
+				{
+					/// \todo This doesn't belong here.
+					if( renderer->isInstanceOf( "IECoreGL::Renderer" ) )
+					{
+						drawCoordinateSystem( coordinateSystem, renderer );
+					}
+					break; // no motion blur for these chappies.
+				}
 				else if( const VisibleRenderable* renderable = runTimeCast< const VisibleRenderable >( object.get() ) )
 				{
 					renderable->render( renderer );
@@ -501,6 +511,33 @@ void SceneProcedural::drawLight( const IECore::Light *light, IECore::Renderer *r
 	
 	IntVectorDataPtr vertIds = new IntVectorData;
 	vertIds->writable().resize( 12, 2 );
+	
+	CurvesPrimitivePtr c = new IECore::CurvesPrimitive( vertIds, CubicBasisf::linear(), false, pData );
+	c->render( renderer );
+}
+
+void SceneProcedural::drawCoordinateSystem( const IECore::CoordinateSystem *coordinateSystem, IECore::Renderer *renderer ) const
+{	
+	AttributeBlock attributeBlock( renderer );
+
+	renderer->setAttribute( "gl:primitive:wireframe", new BoolData( true ) );
+	renderer->setAttribute( "gl:primitive:solid", new BoolData( false ) );
+	renderer->setAttribute( "gl:curvesPrimitive:useGLLines", new BoolData( true ) );
+	renderer->setAttribute( "gl:primitive:wireframeColor", new Color4fData( Color4f( 0.06, 0.2, 0.56, 1 ) ) );
+	renderer->setAttribute( "gl:curvesPrimitive:glLineWidth", new FloatData( 2.0f ) );
+
+	IECore::V3fVectorDataPtr pData = new V3fVectorData;
+	vector<V3f> &p = pData->writable();
+	p.reserve( 6 );
+	p.push_back( V3f( 0 ) );
+	p.push_back( V3f( 1, 0, 0 ) );
+	p.push_back( V3f( 0 ) );
+	p.push_back( V3f( 0, 1, 0 ) );
+	p.push_back( V3f( 0 ) );
+	p.push_back( V3f( 0, 0, 1 ) );
+	
+	IntVectorDataPtr vertIds = new IntVectorData;
+	vertIds->writable().resize( 3, 2 );
 	
 	CurvesPrimitivePtr c = new IECore::CurvesPrimitive( vertIds, CubicBasisf::linear(), false, pData );
 	c->render( renderer );

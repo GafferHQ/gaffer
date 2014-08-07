@@ -43,6 +43,7 @@
 #include "IECore/Light.h"
 #include "IECore/AttributeBlock.h"
 #include "IECore/Display.h"
+#include "IECore/TransformBlock.h"
 
 #include "Gaffer/Context.h"
 
@@ -217,6 +218,64 @@ bool outputLight( const ScenePlug *scene, const ScenePlug::ScenePath &path, IECo
 	
 	renderer->illuminate( lightHandle, true );
 
+	return true;
+}
+
+void outputCoordinateSystems( const ScenePlug *scene, const IECore::CompoundObject *globals, IECore::Renderer *renderer )
+{
+	const CompoundData *sets = globals->member<CompoundData>( "gaffer:sets" );
+	if( !sets )
+	{
+		return;
+	}
+	
+	const PathMatcherData *coordinateSystemSet = sets->member<PathMatcherData>( "__coordinateSystems" );
+	if( !coordinateSystemSet )
+	{
+		return;
+	}
+
+	vector<string> paths;
+	coordinateSystemSet->readable().paths( paths );
+	for( vector<string>::const_iterator it = paths.begin(), eIt = paths.end(); it != eIt; ++it )
+	{
+		/// \todo We should be able to get paths out of the PathMatcher in
+		/// the first place, rather than have to convert from strings.
+		ScenePlug::ScenePath path;
+		ScenePlug::stringToPath( *it, path );
+		outputCoordinateSystem( scene, path, renderer );
+	}
+}
+
+bool outputCoordinateSystem( const ScenePlug *scene, const ScenePlug::ScenePath &path, IECore::Renderer *renderer )
+{
+	IECore::ConstCoordinateSystemPtr constCoordinateSystem = runTimeCast<const IECore::CoordinateSystem>( scene->object( path ) );
+	if( !constCoordinateSystem )
+	{
+		return false;
+	}
+	
+	ConstCompoundObjectPtr attributes = scene->fullAttributes( path );
+	const BoolData *visibilityData = attributes->member<BoolData>( "scene:visible" );
+	if( visibilityData && !visibilityData->readable() )
+	{
+		return false;
+	}
+	
+	const M44f transform = scene->fullTransform( path );
+	
+	std::string coordinateSystemName;
+	ScenePlug::pathToString( path, coordinateSystemName );
+	
+	CoordinateSystemPtr coordinateSystem = constCoordinateSystem->copy();
+	coordinateSystem->setName( coordinateSystemName );
+	
+	{
+		TransformBlock transformBlock( renderer );
+		renderer->concatTransform( transform );
+		coordinateSystem->render( renderer );
+	}
+	
 	return true;
 }
 
