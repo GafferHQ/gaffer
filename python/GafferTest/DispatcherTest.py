@@ -245,18 +245,9 @@ class DispatcherTest( GafferTest.TestCase ) :
 		s["n2b"] = Gaffer.ExecutableOpHolder()
 		op2b = TestOp("2b", dispatcher.log)
 		s["n2b"].setParameterised( op2b )
-
-		r1 = Gaffer.Plug( name = "r1" )
-		s["n1"]['requirements'].addChild( r1 )
-		r1.setInput( s["n2"]['requirement'] )
-
-		r1 = Gaffer.Plug( name = "r1" )
-		s["n2"]['requirements'].addChild( r1 )
-		r1.setInput( s["n2a"]['requirement'] )
-		
-		r2 = Gaffer.Plug( name = "r2" )
-		s["n2"]['requirements'].addChild( r2 )
-		r2.setInput( s["n2b"]['requirement'] )
+		s["n1"]['requirements'][0].setInput( s["n2"]['requirement'] )
+		s["n2"]['requirements'][0].setInput( s["n2a"]['requirement'] )
+		s["n2"]['requirements'][1].setInput( s["n2b"]['requirement'] )
 
 		# Executing n1 should trigger execution of all of them
 		dispatcher.dispatch( [ s["n1"] ] )
@@ -317,18 +308,9 @@ class DispatcherTest( GafferTest.TestCase ) :
 		s["n2a"].setParameterised( op1 )
 		s["n2b"] = Gaffer.ExecutableOpHolder()
 		s["n2b"].setParameterised( op1 )
-		
-		r1 = Gaffer.Plug( name = "r1" )
-		s["n1"]['requirements'].addChild( r1 )
-		r1.setInput( s["n2"]['requirement'] )
-		
-		r1 = Gaffer.Plug( name = "r1" )
-		s["n2"]['requirements'].addChild( r1 )
-		r1.setInput( s["n2a"]['requirement'] )
-		
-		r2 = Gaffer.Plug( name = "r2" )
-		s["n2"]['requirements'].addChild( r2 )
-		r2.setInput( s["n2b"]['requirement'] )
+		s["n1"]['requirements'][0].setInput( s["n2"]['requirement'] )
+		s["n2"]['requirements'][0].setInput( s["n2a"]['requirement'] )
+		s["n2"]['requirements'][1].setInput( s["n2b"]['requirement'] )
 		
 		# Executing n1 should only execute once, because all tasks are identical
 		dispatcher.dispatch( [ s["n1"] ] )
