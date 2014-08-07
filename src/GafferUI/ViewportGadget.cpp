@@ -286,6 +286,19 @@ Imath::V2f ViewportGadget::gadgetToRasterSpace( const Imath::V3f &gadgetPosition
 	return m_cameraController.project( worldSpacePosition );
 }
 
+IECore::LineSegment3f ViewportGadget::rasterToWorldSpace( const Imath::V2f &rasterPosition ) const
+{
+	LineSegment3f result;
+	/// \todo The CameraController::unproject() method should be const.
+	const_cast<IECore::CameraController &>( m_cameraController ).unproject( V2i( (int)rasterPosition.x, (int)rasterPosition.y ), result.p0, result.p1 );
+	return result;
+}
+
+Imath::V2f ViewportGadget::worldToRasterSpace( const Imath::V3f &worldPosition ) const
+{
+	return m_cameraController.project( worldPosition );
+}
+
 void ViewportGadget::doRender( const Style *style ) const
 {
 	glClearColor( 0.3f, 0.3f, 0.3f, 0.0f );

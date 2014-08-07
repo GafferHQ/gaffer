@@ -37,10 +37,14 @@
 #include "boost/bind.hpp"
 #include "boost/bind/placeholders.hpp"
 
+#include "IECore/NullObject.h"
+
 #include "GafferUI/Handle.h"
 #include "GafferUI/Style.h"
+#include "GafferUI/ViewportGadget.h"
 
 using namespace Imath;
+using namespace IECore;
 using namespace GafferUI;
 
 IE_CORE_DEFINERUNTIMETYPED( Handle );
@@ -50,6 +54,10 @@ Handle::Handle( Type type )
 {
 	enterSignal().connect( boost::bind( &Handle::enter, this ) );
 	leaveSignal().connect( boost::bind( &Handle::leave, this ) );
+
+	buttonPressSignal().connect( boost::bind( &Handle::buttonPress, this, ::_2 ) );
+	dragBeginSignal().connect( boost::bind( &Handle::dragBegin, this, ::_2 ) );
+	dragEnterSignal().connect( boost::bind( &Handle::dragEnter, this, ::_2 ) );
 }
 
 Handle::~Handle()
@@ -70,6 +78,11 @@ void Handle::setType( Type type )
 Handle::Type Handle::getType() const
 {
 	return m_type;
+}
+
+float Handle::dragOffset( const DragDropEvent &event ) const
+{
+	return absoluteDragOffset( event ) - m_dragBeginOffset;
 }
 
 Imath::Box3f Handle::bound() const
@@ -115,4 +128,69 @@ void Handle::leave()
 {
 	m_hovering = false;
 	renderRequestSignal()( this );
+}
+
+bool Handle::buttonPress( const ButtonEvent &event )
+{
+	return event.buttons == ButtonEvent::Left;
+}
+
+IECore::RunTimeTypedPtr Handle::dragBegin( const DragDropEvent &event )
+{
+	// store the line of our handle in world space.
+	V3f handle( 0.0f );
+	handle[m_type] = 1.0f;
+	
+	m_dragHandleWorld = LineSegment3f( 
+		V3f( 0 ) * fullTransform(),
+		handle * fullTransform()
+	);
+	
+	m_dragBeginOffset = absoluteDragOffset( event );
+	
+	return IECore::NullObject::defaultNullObject();
+}
+
+bool Handle::dragEnter( const DragDropEvent &event )
+{
+	return event.sourceGadget == this;
+}
+
+float Handle::absoluteDragOffset( const DragDropEvent &event ) const
+{
+	const ViewportGadget *viewport = ancestor<ViewportGadget>();
+
+	// Project the mouse position back into raster space.
+	const V2f rasterP = viewport->gadgetToRasterSpace( event.line.p0, this );
+	
+	// Project our stored world space handle into raster space too.	
+	const LineSegment2f rasterHandle(
+		viewport->worldToRasterSpace( m_dragHandleWorld.p0 ),
+		viewport->worldToRasterSpace( m_dragHandleWorld.p1 )
+	);
+	
+	// Find the closest point to the mouse on the handle in raster space.
+	// We use Imath::Line rather than IECore::LineSegment because we want
+	// to treat the handle as infinitely long. Unfortunately, there is no
+	// Line2f so we must convert to a Line3f.
+	const Line3f rasterHandle3(
+		V3f( rasterHandle.p0.x, rasterHandle.p0.y, 0 ),
+		V3f( rasterHandle.p1.x, rasterHandle.p1.y, 0 )
+	);
+	
+	const V3f rasterClosestPoint = rasterHandle3.closestPointTo( V3f( rasterP.x, rasterP.y, 0 ) );
+	
+	// Project the raster point back into the world, and find the point
+	// where it intersects the handle in 3d. Again, we convert to Line
+	// rather than LineSegment because we want to treat our handle as
+	// infinite.
+	
+	const LineSegment3f worldClosestLine = viewport->rasterToWorldSpace( V2f( rasterClosestPoint.x, rasterClosestPoint.y ) );
+	
+	const V3f worldClosestPoint =
+		Line3f( m_dragHandleWorld.p0, m_dragHandleWorld.p1 ).closestPointTo(
+			Line3f( worldClosestLine.p0, worldClosestLine.p1 )
+		);
+	
+	return worldClosestPoint[m_type];
 }

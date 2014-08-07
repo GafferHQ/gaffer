@@ -120,6 +120,9 @@ class ViewportGadget : public Gadget
 		IECore::LineSegment3f rasterToGadgetSpace( const Imath::V2f &rasterPosition, const Gadget *gadget ) const;
 		Imath::V2f gadgetToRasterSpace( const Imath::V3f &gadgetPosition, const Gadget *gadget ) const;
 		
+		IECore::LineSegment3f rasterToWorldSpace( const Imath::V2f &rasterPosition ) const;
+		Imath::V2f worldToRasterSpace( const Imath::V3f &worldPosition ) const;
+		
 		/// The SelectionScope class can be used by child Gadgets to perform
 		/// OpenGL selection from event signal callbacks.
 		class SelectionScope

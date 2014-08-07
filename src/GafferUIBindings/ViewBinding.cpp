@@ -54,16 +54,6 @@ using namespace Gaffer;
 using namespace GafferUI;
 using namespace GafferUIBindings;
 
-static ContextPtr getContext( View &v )
-{
-	return v.getContext();
-}
-
-static ViewportGadgetPtr viewportGadget( View &v )
-{
-	return v.viewportGadget();
-}
-
 void GafferUIBindings::updateView( View &v )
 {
 	// the release is essential, as the update will most
@@ -111,9 +101,9 @@ Gaffer::NodePtr GafferUIBindings::getPreprocessor( View &v )
 void GafferUIBindings::bindView()
 {
 	GafferBindings::NodeClass<View>()
-		.def( "getContext", &getContext )
+		.def( "getContext", (Context *(View::*)())&View::getContext, return_value_policy<IECorePython::CastToIntrusivePtr>() )
 		.def( "setContext", &View::setContext )
-		.def( "viewportGadget", &viewportGadget )
+		.def( "viewportGadget", (ViewportGadget *(View::*)())&View::viewportGadget, return_value_policy<IECorePython::CastToIntrusivePtr>() )
 		.def( "updateRequestSignal", &View::updateRequestSignal, return_internal_reference<1>() )
 		.def( "_setPreprocessor", &View::setPreprocessor )
 		.def( "_getPreprocessor", &getPreprocessor )
