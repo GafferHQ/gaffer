@@ -238,7 +238,7 @@ const Dispatcher *Dispatcher::dispatcher( const std::string &name )
 
 Dispatcher::TaskBatchPtr Dispatcher::batchTasks( const ExecutableNode::Tasks &tasks )
 {
-	TaskBatchPtr root = new TaskBatch( ExecutableNode::Task() );
+	TaskBatchPtr root = new TaskBatch;
 	
 	BatchMap currentBatches;
 	TaskToBatchMap tasksToBatches;
@@ -377,6 +377,12 @@ FrameListPtr Dispatcher::frameRange( const ScriptNode *script, const Context *co
 // TaskBatch implementation
 //////////////////////////////////////////////////////////////////////////
 
+Dispatcher::TaskBatch::TaskBatch()
+	: m_node(), m_context(), m_frames(), m_requirements()
+{
+	m_blindData = new CompoundData;
+}
+
 Dispatcher::TaskBatch::TaskBatch( const ExecutableNode::Task &task )
 	: m_node( task.node() ), m_context( task.context() ), m_frames(), m_requirements()
 {
@@ -384,10 +390,7 @@ Dispatcher::TaskBatch::TaskBatch( const ExecutableNode::Task &task )
 	
 	if ( task.hash() != MurmurHash() )
 	{
-		if ( const Context *context = task.context() )
-		{
-			m_frames.push_back( context->getFrame() );
-		}
+		m_frames.push_back( task.context()->getFrame() );
 	}
 }
 

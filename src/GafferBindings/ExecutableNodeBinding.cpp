@@ -89,8 +89,7 @@ void GafferBindings::bindExecutableNode()
 	
 	scope s = ExecutableNodeClass<ExecutableNode, Wrapper>();
 
-	class_<ExecutableNode::Task>( "Task" )
-		.def( init<>() )
+	class_<ExecutableNode::Task>( "Task", no_init )
 		.def( init<ExecutableNode::Task>() )
 		.def( init<Gaffer::ExecutableNodePtr,Gaffer::ContextPtr>() )
 		.def( "node", &taskNode )

@@ -175,6 +175,7 @@ class Dispatcher : public Node
 		{
 			public :
 				
+				TaskBatch();
 				TaskBatch( const ExecutableNode::Task &task );
 				TaskBatch( const TaskBatch &other );
 				
