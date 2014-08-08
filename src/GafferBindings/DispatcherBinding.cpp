@@ -36,6 +36,8 @@
 
 #include "boost/python.hpp"
 
+#include "IECorePython/ScopedGILRelease.h"
+
 #include "Gaffer/Context.h"
 #include "Gaffer/Dispatcher.h"
 #include "Gaffer/CompoundPlug.h"
@@ -128,6 +130,12 @@ class DispatcherWrapper : public NodeWrapper<Dispatcher>
 			return const_cast< Dispatcher *>(d);
 		}
 		
+		static void taskBatchExecute( const Dispatcher::TaskBatch &batch )
+		{
+			ScopedGILRelease gilRelease;
+			batch.execute();
+		}
+
 		static ExecutableNodePtr taskBatchGetNode( const Dispatcher::TaskBatchPtr &batch )
 		{
 			if ( ConstExecutableNodePtr node = batch->node() )
@@ -223,7 +231,7 @@ void GafferBindings::bindDispatcher()
 	;
 	
 	RefCountedClass<Dispatcher::TaskBatch, RefCounted>( "_TaskBatch" )
-		.def( "execute", &Dispatcher::TaskBatch::execute )
+		.def( "execute", &DispatcherWrapper::taskBatchExecute )
 		.def( "node", &DispatcherWrapper::taskBatchGetNode )
 		.def( "context", &DispatcherWrapper::taskBatchGetContext, ( boost::python::arg_( "_copy" ) = true ) )
 		.def( "frames", &DispatcherWrapper::taskBatchGetFrames )
