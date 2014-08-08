@@ -1,3 +1,56 @@
+# 0.100.0
+
+This release features significant improvements to Dispatcher and SceneInspector functionality, along with the usual bunch of small fixes and improvements.
+
+#### Apps
+
+- Changed shutdown warnings to debug messages.
+
+#### Core
+
+- Dispatcher improvements
+	- Dispatching can be cancelled via preDispatchSignal() (#929).
+	- Added batching (#870, #871).
+	- Optimised foreground execution in LocalDispatcher.
+	- Added per-node foreground execution overrides for LocalDispatcher (#927).
+- Added support for module level config files.
+
+#### UI
+
+- SceneInspector improvements
+	- Added history tracebacks (#834).
+	- Added attribute inheritance diagramming (#206).
+	- Added value drag/drop (#830).
+	- Improved transform section (#896).
+	- Optimised by deferring updates during playback.
+	- Optimised by deferring updates when not directly visible.
+	- Fixed errors where the selected path doesn't exist.
+
+#### Scene
+
+- Fixed SceneWriter::hash() to include file path.
+- Fixed SceneWriter when caching multiple time samples.
+- Added support for coordinate systems.
+
+#### API
+
+- Fixed Fixed python bindings crash when passing None for a scene path.
+- Added removeOnClose argument to Window.addChildWindow() method.
+- Fixed EventLoop bug where exection was thrown if an idle callback was removed and re-added during the same idle event.
+- Added hotspots to Pointer class.
+- Refactored ExecutableNode API
+	- Removed "execution" prefix from method names.
+	- ExecutableNodes now execute() using the current Context. Multi-context execution can be accomplished using executeSequence( frames ) assuming the client only needs to vary the frame of the current Context. requiresSequenceExecution() can be defined by nodes with special needs (SceneWriter for example), to alert clients that sequence execution is more appropriate.
+	- Dispatcher::doDispatch() is now passed a DAG of TaskBatch nodes, simplifying the task of implementing more complex dispatchers.
+- Fixed call sequence for GraphComponent::parentChanging(). When a child is being transferred from one parent to another, it is now called at a point where the child still has the original parent.
+- Added ViewportGadget raster<->world space conversion methods.
+- Added Handle::dragOffset() method.
+
+#### Build
+
+- Best used with 3delight version 11.0.96. This has bug fixes to support moving coordinate systems during IPR.
+- Requires Cortex 9.0.0-a3.
+
 # 0.99.0
 
 #### Apps
