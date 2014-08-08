@@ -69,9 +69,9 @@ class ExecutableNodeWrapper : public NodeWrapper<WrappedType>
 
 		virtual void requirements( const Gaffer::Context *context, Gaffer::ExecutableNode::Tasks &requirements ) const
 		{
-			IECorePython::ScopedGILLock gilLock;
 			if( this->isSubclassed() )
 			{
+				IECorePython::ScopedGILLock gilLock;
 				boost::python::object req = this->methodOverride( "requirements" );
 				if( req )
 				{
@@ -93,9 +93,9 @@ class ExecutableNodeWrapper : public NodeWrapper<WrappedType>
 		
 		virtual IECore::MurmurHash hash( const Gaffer::Context *context ) const
 		{
-			IECorePython::ScopedGILLock gilLock;
 			if( this->isSubclassed() )
 			{
+				IECorePython::ScopedGILLock gilLock;
 				boost::python::object h = this->methodOverride( "hash" );
 				if( h )
 				{
@@ -109,9 +109,9 @@ class ExecutableNodeWrapper : public NodeWrapper<WrappedType>
 		
 		virtual void execute() const
 		{
-			IECorePython::ScopedGILLock gilLock;
 			if( this->isSubclassed() )
 			{
+				IECorePython::ScopedGILLock gilLock;
 				boost::python::object exec = this->methodOverride( "execute" );
 				if( exec )
 				{
@@ -124,9 +124,9 @@ class ExecutableNodeWrapper : public NodeWrapper<WrappedType>
 		
 		virtual void executeSequence( const std::vector<float> &frames ) const
 		{
-			IECorePython::ScopedGILLock gilLock;
 			if( this->isSubclassed() )
 			{
+				IECorePython::ScopedGILLock gilLock;
 				boost::python::object execSeq = this->methodOverride( "executeSequence" );
 				if( execSeq )
 				{
@@ -144,9 +144,9 @@ class ExecutableNodeWrapper : public NodeWrapper<WrappedType>
 		
 		virtual bool requiresSequenceExecution() const
 		{
-			IECorePython::ScopedGILLock gilLock;
 			if( this->isSubclassed() )
 			{
+				IECorePython::ScopedGILLock gilLock;
 				boost::python::object reqSecExec = this->methodOverride( "requiresSequenceExecution" );
 				if( reqSecExec )
 				{
