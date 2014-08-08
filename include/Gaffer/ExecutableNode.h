@@ -65,8 +65,7 @@ class ExecutableNode : public Node
 		class Task
 		{
 			public :
-
-				Task();
+				
 				Task( const Task &t );
 				Task( ExecutableNodePtr n, ContextPtr c );
 				const ExecutableNode *node() const;

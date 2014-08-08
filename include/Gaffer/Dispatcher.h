@@ -44,6 +44,7 @@
 
 #include "boost/signals.hpp"
 
+#include "IECore/CompoundData.h"
 #include "IECore/FrameList.h"
 #include "IECore/RunTimeTyped.h"
 
@@ -51,7 +52,7 @@
 #include "Gaffer/TypedPlug.h"
 #include "Gaffer/ExecutableNode.h"
 
-#include "GafferBindings/DispatcherBinding.h" // to enable friend declaration for TaskDescription.
+#include "GafferBindings/DispatcherBinding.h" // to enable friend declaration for TaskBatch.
 
 namespace Gaffer
 {
@@ -164,40 +165,53 @@ class Dispatcher : public Node
 	protected :
 
 		friend class ExecutableNode;
-
+		
+		IE_CORE_FORWARDDECLARE( TaskBatch )
+		
+		typedef std::vector<TaskBatchPtr> TaskBatches;
+		
 		/// Representation of a Task and its requirements.
-		class TaskDescription 
+		class TaskBatch : public IECore::RefCounted
 		{
 			public :
 				
-				TaskDescription( const ExecutableNode::Task &task );
-				TaskDescription( const TaskDescription &other );
+				TaskBatch();
+				TaskBatch( const ExecutableNode::Task &task );
+				TaskBatch( const TaskBatch &other );
 				
-				/// Used to sort TaskDescriptions by requirements
-				bool operator< ( const TaskDescription &other ) const;
+				IE_CORE_DECLAREMEMBERPTR( TaskBatch );
 				
-				const ExecutableNode::Task &task() const;
+				void execute() const;
+				
+				const ExecutableNode *node() const;
+				const Context *context() const;
 				
 				std::vector<float> &frames();
 				const std::vector<float> &frames() const;
 				
-				std::set<ExecutableNode::Task> &requirements();
-				const std::set<ExecutableNode::Task> &requirements() const;
+				std::vector<TaskBatchPtr> &requirements();
+				const std::vector<TaskBatchPtr> &requirements() const;
+				
+				IECore::CompoundData *blindData();
+				const IECore::CompoundData *blindData() const;
 			
 			private :
 				
-				ExecutableNode::Task m_task;
+				ConstExecutableNodePtr m_node;
+				ConstContextPtr m_context;
+				IECore::CompoundDataPtr m_blindData;
 				std::vector<float> m_frames;
-				std::set<ExecutableNode::Task> m_requirements;
+				TaskBatches m_requirements;
 		
 		};
 		
-		typedef std::list< Dispatcher::TaskDescription > TaskDescriptions;
-		
 		/// Derived classes should implement doDispatch to dispatch the execution of
-		/// the given TaskDescriptions, taking care to respect each set of requirements,
-		/// executing required Tasks as well when necessary.
-		virtual void doDispatch( const TaskDescriptions &taskDescriptions ) const = 0;
+		/// the given TaskBatches, taking care to respect each set of requirements,
+		/// executing required Tasks as well when necessary. Note that it is possible
+		/// for an individual TaskBatch to appear multiple times within the graph of
+		/// TaskBatches. It is the responsibility of derived classes to track which
+		/// batches have been dispatched in order to prevent duplicate work.
+		virtual void doDispatch( const TaskBatch *batch ) const = 0;
 		
 		//! @name ExecutableNode Customization
 		/// Dispatchers are able to create custom plugs on ExecutableNodes when they are constructed.
@@ -222,21 +236,20 @@ class Dispatcher : public Node
 
 		typedef std::map< std::string, DispatcherPtr > DispatcherMap;
 		
-		typedef std::vector<TaskDescriptions::iterator> DescriptionIterators;
-		typedef std::map<IECore::MurmurHash, DescriptionIterators> DescriptionIteratorMap;
+		typedef std::map<IECore::MurmurHash, TaskBatchPtr> BatchMap;
+		typedef std::map<IECore::MurmurHash, TaskBatchPtr> TaskToBatchMap;
 		
 		IECore::FrameListPtr frameRange( const ScriptNode *script, const Context *context ) const;
-		// Utility function that recursively collects all nodes and their execution requirements,
-		// flattening them into a list of unique TaskDescriptions. For nodes that return a default
-		// hash, this function will create a separate Task for each unique set of requirements.
-		// For all other nodes, Tasks will be grouped by executionHash, and the requirements will be
-		// a union of the requirements from all equivalent Tasks. For nodes which require sequence
-		// execution, Tasks with otherwise identical Contexts will be grouped together as well.
-		static void uniqueTaskDescriptions( const ExecutableNode::Tasks &tasks, TaskDescriptions &uniqueDescriptions );
-		static const ExecutableNode::Task &uniqueTaskDescription( const ExecutableNode::Task &task, TaskDescriptions &uniqueDescriptions, DescriptionIteratorMap &existingDescriptions );
-		static void sortDescriptions( TaskDescriptions &descriptions );
 		
-		static IECore::MurmurHash hashWithoutFrame( const Context *context );
+		// Utility functions that recursively collect all nodes and their execution requirements,
+		// arranging them into a graph of TaskBatches. Tasks will be grouped by executionHash,
+		// and the requirements will be a union of the requirements from all equivalent Tasks.
+		// Tasks with otherwise identical Contexts also be grouped into batches of frames. Nodes
+		// which require sequence execution will be grouped together as well.
+		static TaskBatchPtr batchTasks( const ExecutableNode::Tasks &tasks );
+		static void batchTasksWalk( TaskBatchPtr parent, const ExecutableNode::Task &task, BatchMap &currentBatches, TaskToBatchMap &tasksToBatches );
+		static TaskBatchPtr acquireBatch( const ExecutableNode::Task &task, BatchMap &currentBatches, TaskToBatchMap &tasksToBatches );
+		static IECore::MurmurHash batchHash( const ExecutableNode::Task &task );
 		
 		static size_t g_firstPlugIndex;
 		static DispatcherMap g_dispatchers;

@@ -46,10 +46,6 @@ using namespace Gaffer;
 // Task implementation
 //////////////////////////////////////////////////////////////////////////
 
-ExecutableNode::Task::Task() : m_node( 0 ), m_context( 0 ), m_hash()
-{
-}
-
 ExecutableNode::Task::Task( const Task &t ) : m_node( t.m_node ), m_context( t.m_context ), m_hash( t.m_hash )
 {
 }

@@ -38,7 +38,6 @@
 #include "IECore/WorldBlock.h"
 
 #include "Gaffer/Context.h"
-#include "Gaffer/ApplicationRoot.h"
 
 #include "GafferScene/ScenePlug.h"
 #include "GafferScene/SceneProcedural.h"
@@ -130,16 +129,6 @@ void ExecutableRender::execute() const
 	std::string systemCommand = command();
 	if( systemCommand.size() )
 	{
-		const ApplicationRoot *applicationRoot = scene->ancestor<ApplicationRoot>();
-		if( applicationRoot && applicationRoot->getName() == "gui" )
-		{
-			/// \todo We need this weird background execution behaviour because we
-			/// don't want to block the ui while rendering, but really the LocalDispatcher
-			/// should be responsible for launching a separate process to do the execution
-			/// from anyway.
-			systemCommand += "&";
-		}
-		
 		int result = system( systemCommand.c_str() );
 		if( result )
 		{
