@@ -41,6 +41,7 @@ import subprocess
 import IECore
 
 import Gaffer
+import GafferImage
 import GafferScene
 import GafferRenderMan
 import GafferRenderManTest
@@ -345,6 +346,59 @@ class RenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		rib = "\n".join( file( "/tmp/test.rib" ).readlines() )
 		self.assertTrue( "CoordinateSystem \"/myCoordSys\"" in rib )
 	
+	def testRenderToDisplayViaForegroundDispatch( self ) :
+	
+		s = Gaffer.ScriptNode()
+		
+		s["sphere"] = GafferScene.Sphere()
+		
+		s["displays"] = GafferScene.Displays()
+		s["displays"].addDisplay(
+			"beauty",
+			IECore.Display(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"quantize" : IECore.FloatVectorData( [ 0, 0, 0, 0 ] ),
+					"driverType" : "ClientDisplayDriver",
+					"displayHost" : "localhost",
+					"displayPort" : "1559",
+					"remoteDisplayType" : "GafferImage::GafferDisplayDriver",
+					"handle" : "myLovelyPlane",
+				}
+			)
+		)
+		s["displays"]["in"].setInput( s["sphere"]["out"] )
+	
+		s["display"] = GafferImage.Display()
+		def __displayCallback( plug ) :
+			pass
+		
+		# connect a python function to the Display node image and data
+		# received signals. this emulates what the UI does.
+		c = (
+			s["display"].imageReceivedSignal().connect( __displayCallback ),
+			s["display"].dataReceivedSignal().connect( __displayCallback ),
+		)
+		
+		s["render"] = GafferRenderMan.RenderManRender()
+		s["render"]["ribFileName"].setValue( "/tmp/test.rib" )
+		s["render"]["in"].setInput( s["displays"]["out"] )
+		
+		s["fileName"].setValue( "/tmp/test.gfr" )
+		s.save()
+		
+		# dispatch the render on the foreground thread. if we don't manage
+		# the GIL appropriately, we'll get a deadlock when the Display signals
+		# above try to enter python on the background thread.
+		dispatcher = Gaffer.LocalDispatcher()
+		dispatcher["jobDirectory"].setValue( "/tmp/testJobDirectory" )
+		dispatcher["framesMode"].setValue( Gaffer.Dispatcher.FramesMode.CurrentFrame )
+		dispatcher["executeInBackground"].setValue( False )
+
+		dispatcher.dispatch( [ s["render"] ] )
+
 	def setUp( self ) :
 	
 		for f in (
