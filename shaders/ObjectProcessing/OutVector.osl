@@ -38,7 +38,7 @@
 
 shader OutVector
 (
-	string name = "v",
+	string name = "velocity",
 	vector value = 0,
 	output closure color primitiveVariable = 0
 )

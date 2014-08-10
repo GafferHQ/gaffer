@@ -38,7 +38,7 @@
 
 shader InVector
 (
-	string name = "s",
+	string name = "velocity",
 	vector defaultValue = 0,
 	output vector value = 0
 )

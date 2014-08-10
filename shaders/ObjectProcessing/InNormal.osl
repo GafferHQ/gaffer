@@ -38,7 +38,7 @@
 
 shader InNormal
 (
-	string name = "s",
+	string name = "N",
 	normal defaultValue = 0,
 	output normal value = 0
 )

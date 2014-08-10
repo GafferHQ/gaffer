@@ -38,7 +38,7 @@
 
 shader InColor
 (
-	string name = "s",
+	string name = "Cs",
 	color defaultValue = 0,
 	output color value = 0
 )

@@ -38,7 +38,7 @@
 
 shader OutNormal
 (
-	string name = "P",
+	string name = "N",
 	normal value = 0,
 	output closure color primitiveVariable = 0
 )
