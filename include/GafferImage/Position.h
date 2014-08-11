@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2013-2014, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2014, Luke Goddard. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -33,65 +34,36 @@
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //  
 //////////////////////////////////////////////////////////////////////////
-#ifndef GAFFERIMAGE_REFORMAT_H
-#define GAFFERIMAGE_REFORMAT_H
+#ifndef GAFFERIMAGE_POSITION_H
+#define GAFFERIMAGE_POSITION_H
 
 #include "GafferImage/ImageProcessor.h"
 #include "GafferImage/FilterPlug.h"
 #include "GafferImage/Scale.h"
-#include "GafferImage/Position.h"
 
 namespace GafferImage
 {
 
-/// Reformats the input image to a new resolution using a resampling filter.
-/// This node is simply a wrapper for a Scale node which implements all of the functionality.
-/// \todo: Add support for changing the pixelAspect of the image.
-class Reformat : public ImageProcessor
+/// Adjusts the position of the data window by an integer offset.
+class Position : public ImageProcessor
 {
 
 	public :
 
-		Reformat( const std::string &name=defaultName<Reformat>() );
-		virtual ~Reformat();
+		Position( const std::string &name=defaultName<Position>() );
+		virtual ~Position();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::Reformat, ReformatTypeId, ImageProcessor );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::Position, PositionTypeId, ImageProcessor );
 	
-		GafferImage::FormatPlug *formatPlug();
-		const GafferImage::FormatPlug *formatPlug() const;
-		GafferImage::FilterPlug *filterPlug();
-		const GafferImage::FilterPlug *filterPlug() const;
+		Gaffer::V2iPlug *offsetPlug();
+		const Gaffer::V2iPlug *offsetPlug() const;
 
 		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
 		virtual bool enabled() const;
 
 	protected :
 		
-		// Accessor for the internal Scale node.
-		GafferImage::Scale *scaleNode();
-		const GafferImage::Scale *scaleNode() const;
-		
-		// Accessor for the internal Position node.
-		GafferImage::Position *positionNode();
-		const GafferImage::Position *positionNode() const;
-		
-		// Accessors for the internal outputs to the scale node.
-		Gaffer::V2fPlug *scalePlug();
-		const Gaffer::V2fPlug *scalePlug() const;
-		Gaffer::V2fPlug *originPlug();
-		const Gaffer::V2fPlug *originPlug() const;
-		
-		// Accessors for the internal outputs to the position node.
-		Gaffer::V2iPlug *offsetPlug();
-		const Gaffer::V2iPlug *offsetPlug() const;
-
-		// Returns the X and Y scale factors of the output image.
-		Imath::V2f scale() const;
-
-		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const;
-		
-		virtual void hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const {};
+		virtual void hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual void hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual void hashFormat( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual void hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
@@ -107,8 +79,8 @@ class Reformat : public ImageProcessor
 		
 };
 
-IE_CORE_DECLAREPTR( Reformat )
+IE_CORE_DECLAREPTR( Position )
 
 } // namespace GafferImage
 
-#endif // GAFFERIMAGE_REFORMAT_H
+#endif // GAFFERIMAGE_POSITION_H

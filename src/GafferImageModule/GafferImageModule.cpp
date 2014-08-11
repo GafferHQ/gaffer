@@ -1,7 +1,8 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2013-2014, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2014, Luke Goddard. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -59,6 +60,8 @@
 #include "GafferImage/ImageTransform.h"
 #include "GafferImage/ImageStats.h"
 #include "GafferImage/ImageSampler.h"
+#include "GafferImage/Scale.h"
+#include "GafferImage/Position.h"
 
 #include "GafferImageBindings/FormatBinding.h"
 #include "GafferImageBindings/FormatPlugBinding.h"
@@ -130,6 +133,8 @@ BOOST_PYTHON_MODULE( _GafferImage )
 	GafferBindings::DependencyNodeClass<ImageTransform>();
 	GafferBindings::DependencyNodeClass<ImageStats>();
 	GafferBindings::DependencyNodeClass<ImageSampler>();
+	GafferBindings::DependencyNodeClass<Scale>();
+	GafferBindings::DependencyNodeClass<Position>();
 
 	GafferImageBindings::bindRemoveChannels();
 	GafferImageBindings::bindFormat();

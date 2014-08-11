@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2013-2014, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -87,6 +87,8 @@ enum TypeId
 	ImageContextVariablesTypeId = 110791,
 	ImageSwitchTypeId = 110792,
 	ImageSamplerTypeId = 110793,
+	ScaleTypeId = 110794,
+	PositionTypeId = 110795,
 
 	LastTypeId = 110849
 };
