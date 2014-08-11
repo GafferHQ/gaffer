@@ -98,16 +98,18 @@ def __open( currentScript, fileName ) :
 
 	application["scripts"].addChild( script )
 	
+	# maintain the geometry of the current window, as that is the user's preferred window size
+	currentWindow = GafferUI.ScriptWindow.acquire( currentScript )
+	newWindow = GafferUI.ScriptWindow.acquire( script )
+	## \todo We probably want a way of querying and setting geometry in the public API
+	newWindow._qtWidget().restoreGeometry( currentWindow._qtWidget().saveGeometry() )
+	
 	addRecentFile( application, fileName )
 
 	if not currentScript["fileName"].getValue() and not currentScript["unsavedChanges"].getValue() :
 		# the current script is empty - the user will think of the operation as loading
 		# the new script into the current window, rather than adding a new window. so make it
 		# look like that.
-		currentWindow = GafferUI.ScriptWindow.acquire( currentScript )
-		newWindow = GafferUI.ScriptWindow.acquire( script )
-		## \todo We probably want a way of querying and setting geometry in the public API
-		newWindow._qtWidget().restoreGeometry( currentWindow._qtWidget().saveGeometry() )
 		currentWindow.setVisible( False )
 		
 		# We must defer the removal of the old script because otherwise we trigger a crash bug
