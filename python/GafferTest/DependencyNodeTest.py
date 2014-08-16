@@ -319,6 +319,46 @@ class DependencyNodeTest( GafferTest.TestCase ) :
 		self.assertTrue( cs[2][0].isSame( n["o"]["y"] ) )
 		self.assertTrue( cs[3][0].isSame( n["o"]["z"] ) )
 		self.assertTrue( cs[4][0].isSame( n["o"] ) )
+	
+	def testEfficiency( self ) :
+	
+		class FanTest( Gaffer.DependencyNode ) :
+		
+			def __init__( self, name = "FanTest" ) :
+			
+				Gaffer.DependencyNode.__init__( self, name )
+			
+				self["in"] = Gaffer.CompoundPlug()
+				self["out"] = Gaffer.CompoundPlug( direction = Gaffer.Plug.Direction.Out )
+				
+				for i in range( 0, 10 ) :
+				
+					self["in"].addChild( Gaffer.IntPlug( "i%d" % i ) )
+					self["out"].addChild( Gaffer.IntPlug( "o%d" % i, direction = Gaffer.Plug.Direction.Out ) )
+			
+			def affects( self, input ) :
+			
+				result = Gaffer.DependencyNode.affects( self, input )
+				
+				if input.parent().isSame( self["in"] ) :
+					result.extend( self["out"].children() )
+				
+				return result
+				
+		f1 = FanTest( "f1" )
+		f2 = FanTest( "f2" )
+		f3 = FanTest( "f3" )
+		f4 = FanTest( "f4" )
+		f5 = FanTest( "f5" )
+		f6 = FanTest( "f6" )
+		
+		f2["in"].setInput( f1["out"] )
+		f3["in"].setInput( f2["out"] )
+		f4["in"].setInput( f3["out"] )
+		f5["in"].setInput( f4["out"] )
+		f6["in"].setInput( f5["out"] )
+				
+		f1["in"][0].setValue( 10 )
 		
 if __name__ == "__main__":
 	unittest.main()
