@@ -37,6 +37,9 @@
 
 #include "tbb/enumerable_thread_specific.h"
 
+#include "boost/graph/adjacency_list.hpp"
+#include "boost/graph/topological_sort.hpp"
+
 #include "boost/multi_index_container.hpp"
 #include "boost/multi_index/sequenced_index.hpp"
 #include "boost/multi_index/ordered_index.hpp"
@@ -46,6 +49,7 @@
 #include "Gaffer/CompoundPlug.h"
 #include "Gaffer/StandardSet.h"
 
+using namespace boost;
 using namespace Gaffer;
 
 IE_CORE_DEFINERUNTIMETYPED( DependencyNode );
@@ -92,108 +96,164 @@ const Plug *DependencyNode::correspondingInput( const Plug *output ) const
 // Dirty propagation
 //////////////////////////////////////////////////////////////////////////
 
-typedef boost::multi_index::multi_index_container<
-	Plug *,
-	boost::multi_index::indexed_by<
-		boost::multi_index::sequenced<>,
-		boost::multi_index::ordered_unique<boost::multi_index::identity<Plug *> >
-	>
-> DirtyPlugsContainer;
-
-typedef DirtyPlugsContainer::iterator DirtyPlugsIterator;
-
-static tbb::enumerable_thread_specific<DirtyPlugsContainer> g_dirtyPlugsContainers;
-		
-void DependencyNode::propagateDirtiness( Plug *plugToDirty )
+namespace
 {
-	// we're not able to signal anything if there's no node, so just early out
-	Node *node = plugToDirty->ancestor<Node>();
-	if( !node )
-	{
-		return;
-	}
+
+// We don't emit dirtiness immediately for each plug as we traverse the
+// dependency graph for two reasons :
+//
+// - we don't want to emit dirtiness for the same plug more than once
+// - we don't want to emit dirtiness while the graph may still be being
+//   rewired by slots connected to plugSetSignal() or plugInputChangedSignal()
+//
+// Instead we collect all the dirty plugs in this container as we traverse
+// the graph and only when the traversal is complete do we emit the plugDirtiedSignal().
+//
+// The container used is stored per-thread as although it's illegal to be
+// monkeying with a script from multiple threads, it's perfectly legal to
+// be monkeying with a different script in each thread.
+class DirtyPlugs
+{
+
+	public :
+			
+		void insert( Plug *plugToDirty )
+		{
+			insertInternal( plugToDirty );
+		}
+		
+		void emit()
+		{
+			std::vector<VertexDescriptor> sorted;
+			topological_sort( m_graph, std::back_inserter( sorted ) );
+			for( std::vector<VertexDescriptor>::const_reverse_iterator it = sorted.rbegin(), eIt = sorted.rend(); it != eIt; ++it )
+			{
+				Plug *plug = m_graph[*it];
+				Node *node = plug->node();
+				if( node )
+				{
+					node->plugDirtiedSignal()( plug );
+				}
+			}
+		}
+		
+		void clear()
+		{
+			m_graph.clear();
+			m_plugs.clear();
+		}
+		
+		bool empty() const
+		{
+			return m_plugs.empty();
+		}
 	
-	// we don't emit dirtiness immediately for each plug as we traverse the
-	// dependency graph for two reasons :
-	//
-	// - we don't want to emit dirtiness for the same plug more than once
-	// - we don't want to emit dirtiness while the graph may still be being
-	//   rewired by slots connected to plugSetSignal() or plugInputChangedSignal()
-	//
-	// instead we collect all the dirty plugs in a container as we traverse
-	// the graph and only when the traversal is complete do we emit the plugDirtiedSignal().
-	//
-	// the container used is stored per-thread as although it's illegal to be
-	// monkeying with a script from multiple threads, it's perfectly legal to
-	// be monkeying with a different script in each thread.
+	private :
 	
-	DirtyPlugsContainer &dirtyPlugs = g_dirtyPlugsContainers.local();
+		// We use this graph structure to keep track of the dirty propagation.
+		// Vertices in the graph represent plugs which have been dirtied, and
+		// edges represent the relationships that caused the dirtying - an
+		// edge from U to V indicates that V was dirtied by U. We do a topological
+		// sort on the graph to give us an appropriate order to emit the dirty
+		// signals in, so that dirtiness is only signalled for an affected plug
+		// after it has been signalled for all upstream dirty plugs.
+		typedef boost::adjacency_list<vecS, vecS, directedS, Plug *> Graph;
+		typedef Graph::vertex_descriptor VertexDescriptor;
+		
+		typedef std::map<const Plug *, VertexDescriptor> PlugMap;
+		
+		// Inserts a vertex representing plugToDirty into the graph, and
+		// then inserts all affected plugs. Note that we visit affected
+		// plugs for plugToDirty in the reverse order to which we wish to
+		// emit signals - this is because boost::topological_sort() outputs
+		// vertices in reverse order.
+		VertexDescriptor insertInternal( Plug *plugToDirty )
+		{
+			// If we've inserted this one before, then early out. There's
+			// no point repeating the propagation all over again, and our
+			// Graph isn't designed to have duplicate edges anyway.
+			PlugMap::const_iterator it = m_plugs.find( plugToDirty );
+			if( it != m_plugs.end() )
+			{
+				return it->second;
+			}
+		
+			// Insert a vertex for this plug.
+			VertexDescriptor result = add_vertex( m_graph );
+			m_graph[result] = plugToDirty;
+			m_plugs[plugToDirty] = result;
+
+			// Propagate dirtiness to output plugs and affected plugs.
+			// We only propagate dirtiness along leaf level plugs, because
+			// they are the only plugs which can be the target of the affects(),
+			// and compute() methods.
+			if( !plugToDirty->isInstanceOf( (IECore::TypeId)CompoundPlugTypeId ) )
+			{
+				for( Plug::OutputContainer::const_reverse_iterator it=plugToDirty->outputs().rbegin(), eIt=plugToDirty->outputs().rend(); it!=eIt; ++it )
+				{
+					VertexDescriptor outputVertex = insertInternal( const_cast<Plug *>( *it ) );
+					add_edge( result, outputVertex, m_graph );
+				}
+				
+				const DependencyNode *dependencyNode = plugToDirty->ancestor<DependencyNode>();
+				if( dependencyNode )
+				{
+					DependencyNode::AffectedPlugsContainer affected;
+					dependencyNode->affects( plugToDirty, affected );
+					for( DependencyNode::AffectedPlugsContainer::const_reverse_iterator it=affected.rbegin(); it!=affected.rend(); it++ )
+					{
+						if( ( *it )->isInstanceOf( (IECore::TypeId)Gaffer::CompoundPlugTypeId ) )
+						{
+							// DependencyNode::affects() implementations are only allowed to place leaf plugs in the outputs,
+							// so we helpfully report any mistakes.
+							clear();
+							throw IECore::Exception( "Non-leaf plug " + (*it)->fullName() + " cannot be returned by affects()" );
+						}
+						// cast is ok - AffectedPlugsContainer only holds const pointers so that
+						// affects() can be const to discourage implementations from having side effects.
+						VertexDescriptor affectedVertex = insertInternal( const_cast<Plug *>( *it ) );
+						add_edge( result, affectedVertex, m_graph );
+					}
+				}
+			}
+			
+			// Insert all ancestor plugs.
+			Plug *child = plugToDirty;
+			VertexDescriptor childVertex = result;
+			while( Plug *parent = child->parent<Plug>() )
+			{
+				VertexDescriptor parentVertex = insertInternal( parent );
+				add_edge( childVertex, parentVertex, m_graph );
+				
+				child = parent;
+				childVertex = parentVertex;
+			}
+		
+			return result;
+		}
+		
+		Graph m_graph;
+		PlugMap m_plugs;
+		
+};
+
+} // namespace
+
+static tbb::enumerable_thread_specific<DirtyPlugs> g_dirtyPlugs;
+
+void DependencyNode::propagateDirtiness( Plug *plugToDirty )
+{	
+	DirtyPlugs &dirtyPlugs = g_dirtyPlugs.local();
 	
-	// if the container is currently empty then we are at the start of a traversal,
+	// If the container is currently empty then we are at the start of a traversal,
 	// and will emit plugDirtiedSignal() and empty the container before returning
-	// from this function. if the container isn't empty then we are mid-traversal
+	// from this function. If the container isn't empty then we are mid-traversal
 	// and will just add to it.
 	const bool emit = dirtyPlugs.empty();
-
-	Plug *p = plugToDirty;
-	while( p )
-	{
-		// push the plug onto the back of the list of dirty plugs
-		std::pair<DirtyPlugsIterator, bool> i = dirtyPlugs.push_back( p );
-		if( !i.second )
-		{
-			// if that failed, it's because it's elsewhere in the
-			// list already. move it to the back - this ensures that
-			// dirtiness is only signalled for a plug after it has been
-			// signalled for all dirty plugs it depends on, and all dirty
-			// plugs it is a parent of.
-			dirtyPlugs.relocate( dirtyPlugs.end(), i.first );
-		}
-		p = p->parent<Plug>();
-	}
-	
-	// we only propagate dirtiness along leaf level plugs, because
-	// they are the only plugs which can be the target of the affects(),
-	// and compute() methods.
-	if( !plugToDirty->isInstanceOf( (IECore::TypeId)CompoundPlugTypeId ) )
-	{
-		DependencyNode *dependencyNode = IECore::runTimeCast<DependencyNode>( node );
-		if( dependencyNode )
-		{
-			AffectedPlugsContainer affected;
-			dependencyNode->affects( plugToDirty, affected );
-			for( AffectedPlugsContainer::const_iterator it=affected.begin(); it!=affected.end(); it++ )
-			{
-				if( ( *it )->isInstanceOf( (IECore::TypeId)Gaffer::CompoundPlugTypeId ) )
-				{
-					// DependencyNode::affects() implementations are only allowed to place leaf plugs in the outputs,
-					// so we helpfully report any mistakes.
-					dirtyPlugs.clear();
-					throw IECore::Exception( "Non-leaf plug " + (*it)->fullName() + " cannot be returned by affects()" );
-				}
-				// cast is ok - AffectedPlugsContainer only holds const pointers so that
-				// affects() can be const to discourage implementations from having side effects.
-				propagateDirtiness( const_cast<Plug *>( *it ) );
-			}
-		}
-	
-		for( Plug::OutputContainer::const_iterator it=plugToDirty->outputs().begin(), eIt=plugToDirty->outputs().end(); it!=eIt; ++it )
-		{
-			propagateDirtiness( *it );
-		}		
-	}
-	
+	dirtyPlugs.insert( plugToDirty );
 	if( emit )
 	{
-		for( DirtyPlugsIterator it = dirtyPlugs.begin(), eIt = dirtyPlugs.end(); it != eIt; ++it )
-		{
-			Plug *plug = *it;
-			Node *node = plug->node();
-			if( node )
-			{
-				node->plugDirtiedSignal()( plug );
-			}
-		}
+		dirtyPlugs.emit();
 		dirtyPlugs.clear();
 	}
 }
