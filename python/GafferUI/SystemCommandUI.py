@@ -1,7 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2014, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,36 +34,26 @@
 #  
 ##########################################################################
 
-from _Gaffer import *
-from About import About
-from Application import Application
-from WeakMethod import WeakMethod
-from Path import Path
-from FileSystemPath import FileSystemPath
-from PathFilter import PathFilter
-from BlockedConnection import BlockedConnection
-from FileNamePathFilter import FileNamePathFilter
-from UndoContext import UndoContext
-from ObjectReader import ObjectReader
-from ObjectWriter import ObjectWriter
-from Context import Context
-from CompoundPathFilter import CompoundPathFilter
-from InfoPathFilter import InfoPathFilter
-from LazyModule import lazyImport, LazyModule
-from LeafPathFilter import LeafPathFilter
-from DictPath import DictPath
-from IndexedIOPath import IndexedIOPath
-from ClassLoaderPath import ClassLoaderPath
-from PythonExpressionEngine import PythonExpressionEngine
-from SequencePath import SequencePath
-from OpMatcher import OpMatcher
-from AttributeCachePath import AttributeCachePath
-from ClassParameterHandler import ClassParameterHandler
-from ClassVectorParameterHandler import ClassVectorParameterHandler
-from GraphComponentPath import GraphComponentPath
-from ParameterPath import ParameterPath
-from OutputRedirection import OutputRedirection
-from LocalDispatcher import LocalDispatcher
-from SystemCommand import SystemCommand
+import Gaffer
+import GafferUI
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "Gaffer" )
+Gaffer.Metadata.registerNodeDescription(
+
+Gaffer.SystemCommand,
+
+"""Runs system commands via a shell""",
+
+"command",
+"The command to be run. This may reference values from substitutions with '{substitutionName}' syntax."
+
+"substitutions",
+"An arbitrary set of name/value pairs which can be referenced in command with '{substitutionsName}' syntax."
+
+"environmentVariables",
+"An arbitrary set of name/value pairs which will be set as environment variables when running the command."
+
+)
+
+GafferUI.Nodule.registerNodule( Gaffer.SystemCommand, "command", lambda plug : None )
+GafferUI.Nodule.registerNodule( Gaffer.SystemCommand, "substitutions", lambda plug : None )
+GafferUI.Nodule.registerNodule( Gaffer.SystemCommand, "environmentVariables", lambda plug : None )
