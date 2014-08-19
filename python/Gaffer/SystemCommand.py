@@ -78,4 +78,4 @@ class SystemCommand( Gaffer.ExecutableNode ) :
 		
 		return h
 
-IECore.registerRunTimeTyped( SystemCommand )
+IECore.registerRunTimeTyped( SystemCommand, typeName = "Gaffer::SystemCommand" )
