@@ -135,6 +135,7 @@ from SerialisationTest import SerialisationTest
 from SwitchTest import SwitchTest
 from MetadataTest import MetadataTest
 from StringAlgoTest import StringAlgoTest
+from SystemCommandTest import SystemCommandTest
 
 if __name__ == "__main__":
 	import unittest
