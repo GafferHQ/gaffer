@@ -1,6 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -37,6 +38,7 @@
 import unittest
 import urllib2
 import os
+import glob
 
 import IECore
 
@@ -55,8 +57,19 @@ class AboutTest( GafferTest.TestCase ) :
 			
 			if "source" in d :
 				self.assert_( urllib2.urlopen( d["source"] ) )
-			
-		
+
+# Image Engine internal builds don't package all the dependencies with
+# Gaffer, so the license tests above would fail. We try to detect such
+# builds and mark the test as being an expected failure, so as to cut
+# down on noise.
+packagedWithDependencies = False	
+for f in glob.glob( os.path.expandvars( "$GAFFER_ROOT/lib/*" ) ) :
+	if "Gaffer" not in os.path.basename( f ) :
+		packagedWithDependencies = True
+
+if not packagedWithDependencies :
+	AboutTest.test = unittest.expectedFailure( AboutTest.test )
+	
 if __name__ == "__main__":
 	unittest.main()
 	
