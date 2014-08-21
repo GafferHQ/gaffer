@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2013-2014, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -102,10 +102,10 @@ const Gaffer::CompoundPlug *Displays::displaysPlug() const
 	return getChild<CompoundPlug>( g_firstPlugIndex );
 }
 
-Gaffer::CompoundPlug *Displays::addDisplay( const std::string &label )
+Gaffer::CompoundPlug *Displays::addDisplay( const std::string &name )
 {
 	DisplayMap::nth_index<0>::type &index = displayMap().get<0>();
-	DisplayMap::const_iterator it = index.find( label );
+	DisplayMap::const_iterator it = index.find( name );
 	if( it == index.end() )
 	{
 		throw Exception( "Display not registered" );
@@ -113,24 +113,24 @@ Gaffer::CompoundPlug *Displays::addDisplay( const std::string &label )
 	return addDisplay( it->first, it->second.get() );
 }
 
-Gaffer::CompoundPlug *Displays::addDisplay( const std::string &label, const IECore::Display *display )
+Gaffer::CompoundPlug *Displays::addDisplay( const std::string &name, const IECore::Display *display )
 {
 	CompoundPlugPtr displayPlug = new CompoundPlug( "display1" );
 	displayPlug->setFlags( Plug::Dynamic, true );
 	
-	StringPlugPtr labelPlug = new StringPlug( "label" );
-	labelPlug->setValue( label );
-	labelPlug->setFlags( Plug::Dynamic, true );
-	displayPlug->addChild( labelPlug );
+	StringPlugPtr namePlug = new StringPlug( "name" );
+	namePlug->setValue( name );
+	namePlug->setFlags( Plug::Dynamic, true );
+	displayPlug->addChild( namePlug );
 	
 	BoolPlugPtr activePlug = new BoolPlug( "active", Plug::In, true );
 	activePlug->setFlags( Plug::Dynamic, true );
 	displayPlug->addChild( activePlug );
 	
-	StringPlugPtr namePlug = new StringPlug( "name" );
-	namePlug->setValue( display->getName() );
-	namePlug->setFlags( Plug::Dynamic, true );
-	displayPlug->addChild( namePlug );
+	StringPlugPtr fileNamePlug = new StringPlug( "fileName" );
+	fileNamePlug->setValue( display->getName() );
+	fileNamePlug->setFlags( Plug::Dynamic, true );
+	displayPlug->addChild( fileNamePlug );
 
 	StringPlugPtr typePlug = new StringPlug( "type" );
 	typePlug->setValue( display->getType() );
@@ -183,12 +183,13 @@ IECore::ConstCompoundObjectPtr Displays::computeProcessedGlobals( const Gaffer::
 		const CompoundPlug *displayPlug = it->get();
 		if( displayPlug->getChild<BoolPlug>( "active" )->getValue() )
 		{
-			std::string name = displayPlug->getChild<StringPlug>( "name" )->getValue();
-			std::string type = displayPlug->getChild<StringPlug>( "type" )->getValue();
-			std::string data = displayPlug->getChild<StringPlug>( "data" )->getValue();
-			if( name.size() && type.size() && data.size() )
+			const std::string name = displayPlug->getChild<StringPlug>( "name" )->getValue();
+			const std::string fileName = displayPlug->getChild<StringPlug>( "fileName" )->getValue();
+			const std::string type = displayPlug->getChild<StringPlug>( "type" )->getValue();
+			const std::string data = displayPlug->getChild<StringPlug>( "data" )->getValue();
+			if( name.size() && fileName.size() && type.size() && data.size() )
 			{
-				DisplayPtr d = new Display( name, type, data );
+				DisplayPtr d = new Display( fileName, type, data );
 				displayPlug->getChild<CompoundDataPlug>( "parameters" )->fillCompoundData( d->parameters() );
 				result->members()["display:" + name] = d;
 			}
@@ -198,12 +199,12 @@ IECore::ConstCompoundObjectPtr Displays::computeProcessedGlobals( const Gaffer::
 	return result;
 }
 
-void Displays::registerDisplay( const std::string &label, const IECore::Display *display )
+void Displays::registerDisplay( const std::string &name, const IECore::Display *display )
 {
-	NamedDisplay d( label, display->copy() );
+	NamedDisplay d( name, display->copy() );
 	
 	DisplayMap::nth_index<0>::type &index = displayMap().get<0>();
-	DisplayMap::const_iterator it = index.find( label );
+	DisplayMap::const_iterator it = index.find( name );
 	if( it == index.end() )
 	{
 		index.insert( d );
@@ -214,11 +215,11 @@ void Displays::registerDisplay( const std::string &label, const IECore::Display 
 	}
 }
 
-void Displays::registeredDisplays( std::vector<std::string> &labels )
+void Displays::registeredDisplays( std::vector<std::string> &names )
 {
 	const DisplayMap::nth_index<1>::type &index = displayMap().get<1>();
 	for( DisplayMap::nth_index<1>::type::const_iterator it=index.begin(); it!=index.end(); it++ )
 	{
-		labels.push_back( it->first );
+		names.push_back( it->first );
 	}
 }

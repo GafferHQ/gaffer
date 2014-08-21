@@ -72,15 +72,15 @@ class DisplaysTest( GafferSceneTest.SceneTestCase ) :
 		
 		g = displays["out"]["globals"].getValue()
 		self.assertEqual( len( g ), 2 )
-		self.assertEqual( g["display:beauty.exr"], IECore.Display( "beauty.exr", "exr", "rgba", { "test" : 10.0 } ) )
-		self.assertEqual( g["display:diffuse.exr"], IECore.Display( "diffuse.exr", "exr", "color aov_diffuse" ) )
+		self.assertEqual( g["display:beauty"], IECore.Display( "beauty.exr", "exr", "rgba", { "test" : 10.0 } ) )
+		self.assertEqual( g["display:diffuse"], IECore.Display( "diffuse.exr", "exr", "color aov_diffuse" ) )
 		
 		# check that we can turn 'em off as well
 		display["active"].setValue( False )
 		
 		g = displays["out"]["globals"].getValue()
 		self.assertEqual( len( g ), 1 )
-		self.assertEqual( g["display:diffuse.exr"], IECore.Display( "diffuse.exr", "exr", "color aov_diffuse" ) )
+		self.assertEqual( g["display:diffuse"], IECore.Display( "diffuse.exr", "exr", "color aov_diffuse" ) )
 			
 	def testSerialisation( self ) :
 	
@@ -96,7 +96,7 @@ class DisplaysTest( GafferSceneTest.SceneTestCase ) :
 		
 		g = s2["displaysNode"]["out"]["globals"].getValue()
 		self.assertEqual( len( g ), 1 )
-		self.assertEqual( g["display:beauty.exr"], IECore.Display( "beauty.exr", "exr", "rgba", { "test" : 10.0 } ) )
+		self.assertEqual( g["display:beauty"], IECore.Display( "beauty.exr", "exr", "rgba", { "test" : 10.0 } ) )
 		self.assertEqual( len( s2["displaysNode"]["displays"] ), 1 )
 		self.assertTrue( "displays1" not in s2["displaysNode"] )
 		

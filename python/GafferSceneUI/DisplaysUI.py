@@ -83,20 +83,20 @@ class DisplaysPlugValueWidget( GafferUI.PlugValueWidget ) :
 	def __addMenuDefinition( self ) :
 	
 		node = self.getPlug().node()
-		currentLabels = set( [ display["label"].getValue() for display in node["displays"].children() ] )
+		currentNames = set( [ display["name"].getValue() for display in node["displays"].children() ] )
 		
 		m = IECore.MenuDefinition()
 		
 		registeredDisplays = node.registeredDisplays()
-		for label in registeredDisplays :
-			menuPath = label
+		for name in registeredDisplays :
+			menuPath = name
 			if not menuPath.startswith( "/" ) :
 				menuPath = "/" + menuPath
 			m.append(
 				menuPath,
 				{
-					"command" : IECore.curry( node.addDisplay, label ),
-					"active" : label not in currentLabels
+					"command" : IECore.curry( node.addDisplay, name ),
+					"active" : name not in currentNames
 				}	
 			)
 
@@ -123,7 +123,7 @@ class _ChildPlugWidget( GafferUI.PlugValueWidget ) :
 				collapseButton.__clickedConnection = collapseButton.clickedSignal().connect( Gaffer.WeakMethod( self.__collapseButtonClicked ) )
 				
 				GafferUI.PlugValueWidget.create( childPlug["active"] )
-				self.__label = GafferUI.Label( childPlug["label"].getValue() )
+				self.__label = GafferUI.Label( childPlug["name"].getValue() )
 		
 				GafferUI.Spacer( IECore.V2i( 1 ), maximumSize = IECore.V2i( 100000, 1 ), parenting = { "expand" : True } )
 		
@@ -133,8 +133,8 @@ class _ChildPlugWidget( GafferUI.PlugValueWidget ) :
 				
 			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing= 4 ) as self.__detailsColumn :
 			
-				GafferUI.PlugWidget( childPlug["label"] )
 				GafferUI.PlugWidget( childPlug["name"] )
+				GafferUI.PlugWidget( childPlug["fileName"] )
 				GafferUI.PlugWidget( childPlug["type"] )
 				GafferUI.PlugWidget( childPlug["data"] )
 				GafferUI.CompoundDataPlugValueWidget( childPlug["parameters"], collapsed=None )
@@ -158,7 +158,7 @@ class _ChildPlugWidget( GafferUI.PlugValueWidget ) :
 			self.__label.setEnabled( enabled )
 			self.__detailsColumn.setEnabled( enabled )
 			
-			self.__label.setText( self.getPlug()["label"].getValue() )
+			self.__label.setText( self.getPlug()["name"].getValue() )
 
 	def __enter( self, widget ) :
 	

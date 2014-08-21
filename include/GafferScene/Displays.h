@@ -59,13 +59,13 @@ class Displays : public GlobalsProcessor
 		const Gaffer::CompoundPlug *displaysPlug() const;
 		
 		/// Add a display previously registered with registerDisplay().
-		Gaffer::CompoundPlug *addDisplay( const std::string &label );
-		Gaffer::CompoundPlug *addDisplay( const std::string &label, const IECore::Display *display );
+		Gaffer::CompoundPlug *addDisplay( const std::string &name );
+		Gaffer::CompoundPlug *addDisplay( const std::string &name, const IECore::Display *display );
 				
 		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
 		
-		static void registerDisplay( const std::string &label, const IECore::Display *display );
-		static void registeredDisplays( std::vector<std::string> &labels );
+		static void registerDisplay( const std::string &name, const IECore::Display *display );
+		static void registeredDisplays( std::vector<std::string> &names );
 
 	protected :
 

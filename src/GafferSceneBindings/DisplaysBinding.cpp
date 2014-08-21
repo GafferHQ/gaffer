@@ -49,22 +49,22 @@ using namespace Gaffer;
 using namespace GafferBindings;
 using namespace GafferScene;
 
-static Gaffer::CompoundPlugPtr addDisplayWrapper1( Displays &displays, const std::string &label )
+static Gaffer::CompoundPlugPtr addDisplayWrapper1( Displays &displays, const std::string &name )
 {
-	return displays.addDisplay( label );
+	return displays.addDisplay( name );
 }
 
-static Gaffer::CompoundPlugPtr addDisplayWrapper2( Displays &displays, const std::string &label, const IECore::Display *d )
+static Gaffer::CompoundPlugPtr addDisplayWrapper2( Displays &displays, const std::string &name, const IECore::Display *d )
 {
-	return displays.addDisplay( label, d );
+	return displays.addDisplay( name, d );
 }
 
 static tuple registeredDisplaysWrapper()
 {
-	vector<string> labels;
-	Displays::registeredDisplays( labels );
+	vector<string> names;
+	Displays::registeredDisplays( names );
 	boost::python::list l;
-	for( vector<string>::const_iterator it = labels.begin(); it!=labels.end(); it++ )
+	for( vector<string>::const_iterator it = names.begin(); it!=names.end(); it++ )
 	{
 		l.append( *it );
 	}
