@@ -589,6 +589,12 @@ class Inspector( object ) :
 	def __call__( self, target, **kw ) :
 		
 		raise NotImplementedError
+		
+	## May be implemented to return a list of "child" inspectors -
+	# this is used by the DiffColumn to obtain an inspector per row.
+	def children( self, target ) :
+	
+		return []
 
 ##########################################################################
 # DiffRow
@@ -714,7 +720,45 @@ class DiffRow( Row ) :
 		
 		self.ancestor( GafferUI.Window ).addChildWindow( w, removeOnClose = True )
 		w.setVisible( True )
+
+##########################################################################
+# DiffColumn
+##########################################################################
+
+## Class for displaying a column of DiffRows.
+class DiffColumn( GafferUI.ListContainer ) :
+
+	def __init__( self, inspector, **kw ) :
 	
+		GafferUI.ListContainer.__init__( self )
+		
+		assert( isinstance( inspector, Inspector ) )
+		
+		self.__inspector = inspector
+		self.__rows = {} # mapping from row name to row
+		
+	def update( self, targets ) :
+	
+		inspectors = {}
+		for target in targets :
+			inspectors.update( { i.name() : i for i in self.__inspector.children( target ) } )
+		
+		rowNames = sorted( inspectors.keys() )
+	
+		rows = []
+		for rowName in rowNames :
+			
+			row = self.__rows.get( rowName )
+			if row is None :
+				row = DiffRow( TextDiff(), inspectors[rowName] )
+				self.__rows[rowName] = row
+			
+			row.update( targets )
+			row.setAlternate( len( rows ) % 2 )
+			rows.append( row )
+		
+		self[:] = rows
+		
 ##########################################################################
 # Section
 ##########################################################################
@@ -748,6 +792,7 @@ SceneInspector.TextDiff = TextDiff
 SceneInspector.Row = Row
 SceneInspector.Inspector = Inspector
 SceneInspector.DiffRow = DiffRow
+SceneInspector.DiffColumn = DiffColumn
 SceneInspector.Section = Section
 
 ##########################################################################
@@ -1167,36 +1212,22 @@ class __AttributesSection( Section ) :
 	
 		Section.__init__( self, collapsed = True, label = "Attributes" )
 	
-		self.__rows = {} # mapping from attribute name to row
+		with self._mainColumn() :
+			self.__diffColumn = DiffColumn( self.__Inspector() )
 		
 	def update( self, targets ) :
 	
-		attributes = [ target.scene.fullAttributes( target.path ) if target.path else {} for target in targets ]
-		
-		rows = []
-		attributeNames = sorted( set( reduce( lambda k, a : k + a.keys(), attributes, [] ) ) )
-		for attributeName in attributeNames :
-			
-			row = self.__rows.get( attributeName )
-			if row is None :
-				row = DiffRow( TextDiff(), self.__Inspector( attributeName ) )
-				self.__rows[attributeName] = row
-			
-			row.update( targets )
-			row.setAlternate( len( rows ) % 2 )
-			rows.append( row )
-		
-		self._mainColumn()[:] = rows
+		self.__diffColumn.update( targets )
 	
 	class __Inspector( Inspector ) :
 	
-		def __init__( self, attributeName ) :
+		def __init__( self, attributeName = None ) :
 		
 			self.__attributeName = attributeName
 	
 		def name( self ) :
 		
-			return self.__attributeName
+			return self.__attributeName or ""
 	
 		def inspectsAttributes( self ) :
 		
@@ -1216,6 +1247,11 @@ class __AttributesSection( Section ) :
 				attributes = target.scene.fullAttributes( target.path )
 				
 			return attributes.get( self.__attributeName )
+		
+		def children( self, target ) :
+				
+			attributeNames = target.scene.fullAttributes( target.path ).keys() if target.path else []
+			return [ self.__class__( attributeName ) for attributeName in attributeNames ]
 		
 SceneInspector.registerSection( __AttributesSection, tab = "Selection" )
 
@@ -1297,57 +1333,43 @@ SceneInspector.registerSection( __ObjectSection, tab = "Selection" )
 # Options section
 ##########################################################################
 
-## \todo This has a lot in common with __AttributesSection, and __DisplaysSection will
-# also want to display a dictionary of items. Can we package this up usefully somewhere
-# to avoid duplication?
 class __OptionsSection( Section ) :
 
 	def __init__( self ) :
 	
 		Section.__init__( self, collapsed = True, label = "Options" )
-	
-		self.__rows = {} # mapping from option name to row
+			
+		with self._mainColumn() :
+			self.__diffColumn = DiffColumn( self.__Inspector() )
 		
 	def update( self, targets ) :
 	
-		options = []
-		for target in targets :
-			options.append( target.scene["globals"].getValue() )
-		
-		rows = []
-		optionNames = sorted( set( reduce( lambda k, o : k + o.keys(), options, [] ) ) )
-		for optionName in optionNames :
-			
-			if optionName == "gaffer:sets" or optionName.startswith( "display:" ) :
-				# this will be displayed by a specialised section
-				continue
-			
-			row = self.__rows.get( optionName )
-			if row is None :
-				row = DiffRow( TextDiff(), self.__Inspector( optionName ) )
-				self.__rows[optionName] = row
-			
-			row.update( targets )
-			row.setAlternate( len( rows ) % 2 )
-			rows.append( row )
-		
-		self._mainColumn()[:] = rows
+		self.__diffColumn.update( targets )
 	
 	class __Inspector( Inspector ) :
 	
-		def __init__( self, optionName ) :
+		def __init__( self, optionName = None ) :
 		
 			self.__optionName = optionName
-	
-	
+		
 		def name( self ) :
 		
-			return self.__optionName
+			return self.__optionName or ""
 	
 		def __call__( self, target ) :
 			
 			## \todo Investigate caching the globals on the target.
 			options = target.scene["globals"].getValue()
 			return options.get( self.__optionName )
+
+		def children( self, target ) :
+		
+			options = target.scene["globals"].getValue()
+			optionNames = []
+			for k in options.keys() :
+				if k != "gaffer:sets" and not k.startswith( "display:" ) :
+					optionNames.append( k )
+			
+			return [ self.__class__( optionName ) for optionName in optionNames ]
 
 SceneInspector.registerSection( __OptionsSection, tab = "Globals" )
