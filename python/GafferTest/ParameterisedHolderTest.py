@@ -407,12 +407,12 @@ class ParameterisedHolderTest( GafferTest.TestCase ) :
 	def testSerialisation( self ) :
 	
 		ph = Gaffer.ParameterisedHolderNode()
-		classSpec = self.classSpecification( "image/grade", "IECORE_OP_PATHS" )
+		classSpec = self.classSpecification( "files/sequenceRenumber", "IECORE_OP_PATHS" )
 		ph.setParameterised( *classSpec )
 			
 		s = Gaffer.ScriptNode()
 		s["n"] = ph
-		s["n"]["parameters"]["lift"].setValue( IECore.Color3f( 1, 0, 0 ) )
+		s["n"]["parameters"]["offset"].setValue( 21 )
 		
 		ss = s.serialise()
 		
@@ -423,8 +423,8 @@ class ParameterisedHolderTest( GafferTest.TestCase ) :
 		parameterised = s["n"].getParameterised()
 		
 		self.assertEqual( parameterised[1:], classSpec )
-		self.assertEqual( parameterised[0].typeName(), "Grade" )
-		self.assertEqual( s["n"]["parameters"]["lift"].getValue(), IECore.Color3f( 1, 0, 0 ) )
+		self.assertEqual( parameterised[0].typeName(), "SequenceRenumberOp" )
+		self.assertEqual( s["n"]["parameters"]["offset"].getValue(), 21 )
 	
 	def testKeepExistingValues( self ) :
 	
@@ -530,7 +530,7 @@ class ParameterisedHolderTest( GafferTest.TestCase ) :
 		p = ph.getParameterised()[0]
 		
 		seqLsClassSpec = self.classSpecification( "files/sequenceLs", "IECORE_OP_PATHS" )[:2]
-		gradeClassSpec = self.classSpecification( "image/grade", "IECORE_OP_PATHS" )[:2]
+		gradeClassSpec = self.classSpecification( "files/sequenceRenumber", "IECORE_OP_PATHS" )[:2]
 		classes = [
 			( "p0", ) + seqLsClassSpec,
 			( "p1", ) + gradeClassSpec,
@@ -560,7 +560,7 @@ class ParameterisedHolderTest( GafferTest.TestCase ) :
 		p = ph.getParameterised()[0]
 		
 		seqLsClassSpec = self.classSpecification( "files/sequenceLs", "IECORE_OP_PATHS" )[:2]
-		gradeClassSpec = self.classSpecification( "image/grade", "IECORE_OP_PATHS" )[:2]
+		gradeClassSpec = self.classSpecification( "files/sequenceRenumber", "IECORE_OP_PATHS" )[:2]
 		classes = [
 			( "p0", ) + gradeClassSpec,
 		]
@@ -568,14 +568,14 @@ class ParameterisedHolderTest( GafferTest.TestCase ) :
 		with ph.parameterModificationContext() :
 			p["classes"].setClasses( classes )
 		
-		ph["parameters"]["classes"]["p0"]["multiply"].setValue( IECore.Color3f( 0.5, 0.25, 0.125 ) )
+		ph["parameters"]["classes"]["p0"]["multiply"].setValue( 15 )
 		ph.setParameterisedValues()
 		
 		classes.append( ( "p1", ) + seqLsClassSpec )		
 		with ph.parameterModificationContext() :
 			p["classes"].setClasses( classes )
 			
-		self.assertEqual( ph["parameters"]["classes"]["p0"]["multiply"].getValue(), IECore.Color3f( 0.5, 0.25, 0.125 ) )	
+		self.assertEqual( ph["parameters"]["classes"]["p0"]["multiply"].getValue(), 15 )	
 	
 	def testClassVectorParameterSerialisation( self ) :
 	
@@ -584,7 +584,7 @@ class ParameterisedHolderTest( GafferTest.TestCase ) :
 		s["ph"].setParameterised( "classVectorParameter", 1, "GAFFERTEST_CLASS_PATHS" )
 		p = s["ph"].getParameterised()[0]
 		
-		gradeClassSpec = self.classSpecification( "image/grade", "IECORE_OP_PATHS" )[:2]
+		gradeClassSpec = self.classSpecification( "files/sequenceRenumber", "IECORE_OP_PATHS" )[:2]
 		classes = [
 			( "p0", ) + gradeClassSpec,
 		]
@@ -592,14 +592,14 @@ class ParameterisedHolderTest( GafferTest.TestCase ) :
 		with s["ph"].parameterModificationContext() :
 			p["classes"].setClasses( classes )
 		
-		s["ph"]["parameters"]["classes"]["p0"]["multiply"].setValue( IECore.Color3f( 0.5, 0.25, 0.125 ) )
+		s["ph"]["parameters"]["classes"]["p0"]["multiply"].setValue( 12 )
 
 		ss = s.serialise()
 		
 		s2 = Gaffer.ScriptNode()
 		s2.execute( ss )
 		
-		self.assertEqual( s2["ph"]["parameters"]["classes"]["p0"]["multiply"].getValue(), IECore.Color3f( 0.5, 0.25, 0.125 ) )
+		self.assertEqual( s2["ph"]["parameters"]["classes"]["p0"]["multiply"].getValue(), 12 )
 
 	def testTimeCodeParameter( self ) :
 		
