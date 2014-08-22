@@ -537,7 +537,11 @@ class DispatcherTest( GafferTest.TestCase ) :
 		# first 2 frames of n1, followed by all frames of n2, followed by last frame of n1, followed by the n3 sequence, followed by n4 on all frames
 		expectedText = "n1 on 2;n1 on 4;n2 on 2;n2 on 4;n2 on 6;n1 on 6;n3 on 2;n3 on 4;n3 on 6;n4 on 2;n4 on 4;n4 on 6;"
 		self.assertEqual( text, expectedText )
+	
+	def testDispatchThroughABox( self ) :
 		
+		pass
+	
 	def tearDown( self ) :
 		
 		shutil.rmtree( "/tmp/dispatcherTest", ignore_errors = True )

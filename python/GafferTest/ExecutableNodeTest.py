@@ -280,6 +280,65 @@ class ExecutableNodeTest( GafferTest.TestCase ) :
 		self.assertTrue( t3 in s )
 		self.assertTrue( t4 in s )
 		self.assertTrue( t5 in s )
+	
+	def testInputAcceptanceInsideBoxes( self ) :
+		
+		s = Gaffer.ScriptNode()
+		
+		s["a"] = GafferTest.TextWriter()
+		s["b"] = GafferTest.TextWriter()
+		s["n"] = Gaffer.Node()
+		s["n"]["requirement"] = Gaffer.Plug( direction = Gaffer.Plug.Direction.Out )
+		
+		# the ExecutableNode shouldn't accept inputs from any old node
+		
+		self.assertTrue( s["b"]["requirements"][0].acceptsInput( s["a"]["requirement"] ) )
+		self.assertFalse( s["b"]["requirements"][0].acceptsInput( s["n"]["requirement"] ) )
+		
+		# and that shouldn't change just because we happen to be inside a box
+		
+		b = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["a"], s["b"], s["n"] ] ) )
+		
+		self.assertTrue( b["b"]["requirements"][0].acceptsInput( b["a"]["requirement"] ) )
+		self.assertFalse( b["b"]["requirements"][0].acceptsInput( b["n"]["requirement"] ) )
+		
+	def testInputAcceptanceFromBoxes( self ) :
+		
+		s = Gaffer.ScriptNode()
+		
+		s["n"] = Gaffer.Node()
+		s["n"]["requirement"] = Gaffer.Plug( direction = Gaffer.Plug.Direction.Out )
+		s["a"] = GafferTest.TextWriter()
+		
+		s["b"] = Gaffer.Box()
+		s["b"]["a"] = GafferTest.TextWriter()
+		s["b"]["b"] = GafferTest.TextWriter()
+		s["b"]["n"] = Gaffer.Node()
+		s["b"]["n"]["requirement"] = Gaffer.Plug( direction = Gaffer.Plug.Direction.Out )
+		s["b"]["in"] = s["b"]["a"]["requirements"][0].createCounterpart( "in", Gaffer.Plug.Direction.In )
+		s["b"]["out"] = s["b"]["a"]["requirement"].createCounterpart( "out", Gaffer.Plug.Direction.Out )
+
+		# ExecutableNodes should accept connections speculatively from unconnected box inputs and outputs
+		
+		self.assertTrue( s["b"]["a"]["requirements"][0].acceptsInput( s["b"]["in"] ) )
+		self.assertTrue( s["a"]["requirements"][0].acceptsInput( s["b"]["out"] ) )
+		
+		# but should reject connections to connected box inputs and outputs if they're unsuitable.
+		
+		s["b"]["in"].setInput( s["n"]["requirement"] )
+		self.assertFalse( s["b"]["a"]["requirements"][0].acceptsInput( s["b"]["in"] ) )
+		
+		s["b"]["out"].setInput( s["b"]["n"]["requirement"] )
+		self.assertFalse( s["a"]["requirements"][0].acceptsInput( s["b"]["out"] ) )
+		
+		# and accept them again if they provide indirect access to an ExecutableNode
+		
+		s["c"] = GafferTest.TextWriter()
+		s["b"]["in"].setInput( s["c"]["requirement"] )
+		self.assertTrue( s["b"]["a"]["requirements"][0].acceptsInput( s["b"]["in"] ) )
+		
+		s["b"]["out"].setInput( s["b"]["b"]["requirement"] )
+		self.assertTrue( s["a"]["requirements"][0].acceptsInput( s["b"]["out"] ) )
 
 if __name__ == "__main__":
 	unittest.main()

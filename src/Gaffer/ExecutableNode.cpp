@@ -34,6 +34,7 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
+#include "Gaffer/Box.h"
 #include "Gaffer/Context.h"
 #include "Gaffer/ArrayPlug.h"
 #include "Gaffer/Dispatcher.h"
@@ -190,8 +191,16 @@ bool ExecutableNode::acceptsInput( const Plug *plug, const Plug *inputPlug ) con
 	if( plug->parent<ArrayPlug>() == requirementsPlug() )
 	{
 		const Plug *sourcePlug = inputPlug->source<Plug>();
-		const ExecutableNode *sourceNode = runTimeCast<const ExecutableNode>( sourcePlug->node() );
-		return sourceNode && sourcePlug == sourceNode->requirementPlug();
+		const Node *sourceNode = sourcePlug->node();
+		if ( const ExecutableNode *executable = runTimeCast<const ExecutableNode>( sourceNode ) )
+		{
+			return executable && sourcePlug == executable->requirementPlug();
+		}
+		
+		// we only really want to accept connections from ExecutableNodes, because we can't assign
+		// anything else, but we also accept the unconnected inputs and outputs of boxes, so you
+		// can wrap ExecutableNodes in boxes prior to connecting the other side.
+		return runTimeCast<const Box>( sourceNode );
 	}
 
 	return true;
