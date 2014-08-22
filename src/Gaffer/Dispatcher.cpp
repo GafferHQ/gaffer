@@ -96,17 +96,12 @@ void Dispatcher::dispatch( const std::vector<NodePtr> &nodes ) const
 		}
 		else if ( const Box *box = runTimeCast<const Box>( nIt->get() ) )
 		{
-			for ( RecursivePlugIterator plugIt( box ); plugIt != plugIt.end(); ++plugIt )
+			for ( RecursiveOutputPlugIterator plugIt( box ); plugIt != plugIt.end(); ++plugIt )
 			{
-				Plug *plug = plugIt->get();
-				if ( plug->direction() == Plug::Out )
+				Node *sourceNode = plugIt->get()->source<Plug>()->node();
+				if ( ExecutableNode *executable = runTimeCast<ExecutableNode>( sourceNode ) )
 				{
-					Plug *sourcePlug = plug->source<Plug>();
-					Node *sourceNode = sourcePlug->node();
-					if ( ExecutableNode *executable = runTimeCast<ExecutableNode>( sourceNode ) )
-					{
-						executables.push_back( executable );
-					}
+					executables.push_back( executable );
 				}
 			}
 		}
