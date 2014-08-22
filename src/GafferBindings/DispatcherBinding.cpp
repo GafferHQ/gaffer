@@ -72,11 +72,11 @@ class DispatcherWrapper : public NodeWrapper<Dispatcher>
 		{
 			ScopedGILLock gilLock;
 			size_t len = boost::python::len( nodeList );
-			std::vector<ExecutableNodePtr> nodes;
+			std::vector<NodePtr> nodes;
 			nodes.reserve( len );
 			for ( size_t i = 0; i < len; i++ )
 			{
-				nodes.push_back( extract<ExecutableNodePtr>( nodeList[i] ) );
+				nodes.push_back( extract<NodePtr>( nodeList[i] ) );
 			}
 			Dispatcher::dispatch( nodes );
 		}
