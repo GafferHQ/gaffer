@@ -114,7 +114,8 @@ class Dispatcher : public Node
 		//@}
 		
 		/// Calls doDispatch, taking care to trigger the dispatch signals at the appropriate times.
-		void dispatch( const std::vector<ExecutableNodePtr> &nodes ) const;
+		/// Note that this will throw unless all of the nodes are either ExecutableNodes or Boxes.
+		void dispatch( const std::vector<NodePtr> &nodes ) const;
 		
 		enum FramesMode
 		{

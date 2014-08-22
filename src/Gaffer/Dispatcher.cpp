@@ -39,6 +39,7 @@
 #include "IECore/FrameRange.h"
 #include "IECore/MessageHandler.h"
 
+#include "Gaffer/Box.h"
 #include "Gaffer/CompoundPlug.h"
 #include "Gaffer/Context.h"
 #include "Gaffer/Dispatcher.h"
@@ -72,24 +73,45 @@ Dispatcher::~Dispatcher()
 {
 }
 
-void Dispatcher::dispatch( const std::vector<ExecutableNodePtr> &nodes ) const
+void Dispatcher::dispatch( const std::vector<NodePtr> &nodes ) const
 {
 	if ( nodes.empty() )
 	{
 		throw IECore::Exception( getName().string() + ": Must specify at least one node to dispatch." );
 	}
 	
+	std::vector<ExecutableNodePtr> executables;
 	const ScriptNode *script = (*nodes.begin())->scriptNode();
-	for ( std::vector<ExecutableNodePtr>::const_iterator nIt = nodes.begin(); nIt != nodes.end(); ++nIt )
+	for ( std::vector<NodePtr>::const_iterator nIt = nodes.begin(); nIt != nodes.end(); ++nIt )
 	{
 		const ScriptNode *currentScript = (*nIt)->scriptNode();
 		if ( !currentScript || currentScript != script )
 		{
 			throw IECore::Exception( getName().string() + ": Dispatched nodes must all belong to the same ScriptNode." );
 		}
+		
+		if ( ExecutableNode *executable = runTimeCast<ExecutableNode>( nIt->get() ) )
+		{
+			executables.push_back( executable );
+		}
+		else if ( const Box *box = runTimeCast<const Box>( nIt->get() ) )
+		{
+			for ( RecursiveOutputPlugIterator plugIt( box ); plugIt != plugIt.end(); ++plugIt )
+			{
+				Node *sourceNode = plugIt->get()->source<Plug>()->node();
+				if ( ExecutableNode *executable = runTimeCast<ExecutableNode>( sourceNode ) )
+				{
+					executables.push_back( executable );
+				}
+			}
+		}
+		else
+		{
+			throw IECore::Exception( getName().string() + ": Dispatched nodes must be ExecutableNodes or Boxes containing ExecutableNodes." );
+		}
 	}
 	
-	if ( preDispatchSignal()( this, nodes ) )
+	if ( preDispatchSignal()( this, executables ) )
 	{
 		/// \todo: communicate the cancellation to the user
 		return;
@@ -103,10 +125,10 @@ void Dispatcher::dispatch( const std::vector<ExecutableNodePtr> &nodes ) const
 	
 	size_t i = 0;
 	ExecutableNode::Tasks tasks;
-	tasks.reserve( nodes.size() * frames.size() );
+	tasks.reserve( executables.size() * frames.size() );
 	for ( std::vector<FrameList::Frame>::const_iterator fIt = frames.begin(); fIt != frames.end(); ++fIt )
 	{
-		for ( std::vector<ExecutableNodePtr>::const_iterator nIt = nodes.begin(); nIt != nodes.end(); ++nIt, ++i )
+		for ( std::vector<ExecutableNodePtr>::const_iterator nIt = executables.begin(); nIt != executables.end(); ++nIt, ++i )
 		{
 			ContextPtr frameContext = new Context( *context, Context::Borrowed );
 			frameContext->setFrame( *fIt );
@@ -121,7 +143,7 @@ void Dispatcher::dispatch( const std::vector<ExecutableNodePtr> &nodes ) const
 		doDispatch( rootBatch.get() );
 	}
 	
-	postDispatchSignal()( this, nodes );
+	postDispatchSignal()( this, executables );
 }
 
 IntPlug *Dispatcher::framesModePlug()

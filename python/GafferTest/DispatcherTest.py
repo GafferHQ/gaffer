@@ -145,7 +145,16 @@ class DispatcherTest( GafferTest.TestCase ) :
 		self.assertRaises( RuntimeError, dispatcher.dispatch, [ s["n1"], s2["n2"] ] )
 		self.assertEqual( op1.counter, 0 )
 		self.assertEqual( op2.counter, 0 )
-
+	
+	def testNonExecutables( self ) :
+		
+		dispatcher = DispatcherTest.MyDispatcher()
+		
+		s = Gaffer.ScriptNode()
+		s["n1"] = Gaffer.Node()
+		
+		self.assertRaises( RuntimeError, dispatcher.dispatch, [ s["n1"] ] )
+	
 	def testDispatcherRegistration( self ) :
 
 		self.failUnless( "testDispatcher" in Gaffer.Dispatcher.dispatcherNames() )
@@ -537,7 +546,129 @@ class DispatcherTest( GafferTest.TestCase ) :
 		# first 2 frames of n1, followed by all frames of n2, followed by last frame of n1, followed by the n3 sequence, followed by n4 on all frames
 		expectedText = "n1 on 2;n1 on 4;n2 on 2;n2 on 4;n2 on 6;n1 on 6;n3 on 2;n3 on 4;n3 on 6;n4 on 2;n4 on 4;n4 on 6;"
 		self.assertEqual( text, expectedText )
+	
+	def testDispatchThroughABox( self ) :
 		
+		dispatcher = DispatcherTest.MyDispatcher()
+		dispatcher["framesMode"].setValue( Gaffer.Dispatcher.FramesMode.CustomRange )
+		frameList = IECore.FrameList.parse( "2-6x2" )
+		dispatcher["frameRange"].setValue( str(frameList) )
+		fileName = "/tmp/dispatcherTest/result.txt"
+		
+		s = Gaffer.ScriptNode()
+		s["n1"] = GafferTest.TextWriter()
+		s["n1"]["mode"].setValue( "a" )
+		s["n1"]["fileName"].setValue( fileName )
+		s["n1"]["text"].setValue( "n1 on ${frame};" )
+		s["b"] = Gaffer.Box()
+		s["b"]["n2"] = GafferTest.TextWriter()
+		s["b"]["n2"]["mode"].setValue( "a" )
+		s["b"]["n2"]["fileName"].setValue( fileName )
+		s["b"]["n2"]["text"].setValue( "n2 on ${frame};" )
+		s["b"]["n3"] = GafferTest.TextWriter( requiresSequenceExecution = True )
+		s["b"]["n3"]["mode"].setValue( "a" )
+		s["b"]["n3"]["fileName"].setValue( fileName )
+		s["b"]["n3"]["text"].setValue( "n3 on ${frame};" )
+		s["n4"] = GafferTest.TextWriter()
+		s["n4"]["mode"].setValue( "a" )
+		s["n4"]["fileName"].setValue( fileName )
+		s["n4"]["text"].setValue( "n4 on ${frame};" )
+		s["b"]["in"] = s["b"]["n3"]["requirements"][0].createCounterpart( "in", Gaffer.Plug.Direction.In )
+		s["b"]["n3"]["requirements"][0].setInput( s["b"]["in"] )
+		s["b"]["in"].setInput( s["n1"]['requirement'] )
+		s["b"]["n3"]["requirements"][1].setInput( s["b"]["n2"]['requirement'] )
+		s["b"]["out"] = s["b"]["n3"]['requirement'].createCounterpart( "out", Gaffer.Plug.Direction.Out )
+		s["b"]["out"].setInput( s["b"]["n3"]["requirement"] )
+		s["n4"]['requirements'][0].setInput( s["b"]['out'] )
+		
+		# dispatch an Executable that requires a Box
+		
+		self.assertEqual( os.path.isfile( fileName ), False )
+		dispatcher.dispatch( [ s["n4"] ] )
+		self.assertEqual( os.path.isfile( fileName ), True )
+		with file( fileName, "r" ) as f :
+			text = f.read()
+		
+		# all frames of n1 and n2 interleaved, followed by the n3 sequence, followed by n4 on all frames
+		expectedText = "n1 on 2;n2 on 2;n1 on 4;n2 on 4;n1 on 6;n2 on 6;n3 on 2;n3 on 4;n3 on 6;n4 on 2;n4 on 4;n4 on 6;"
+		self.assertEqual( text, expectedText )
+		
+		# dispatch the box directly
+		
+		os.remove( fileName )
+		self.assertEqual( os.path.isfile( fileName ), False )
+		dispatcher.dispatch( [ s["b"] ] )
+		self.assertEqual( os.path.isfile( fileName ), True )
+		with file( fileName, "r" ) as f :
+			text = f.read()
+		
+		# all frames of n1 and n2 interleaved, followed by the n3 sequence
+		expectedText = "n1 on 2;n2 on 2;n1 on 4;n2 on 4;n1 on 6;n2 on 6;n3 on 2;n3 on 4;n3 on 6;"
+		self.assertEqual( text, expectedText )
+		
+		# only the promoted requirement dispatches
+		
+		s["b"]["n3"]["requirements"][1].setInput( None )
+		
+		os.remove( fileName )
+		self.assertEqual( os.path.isfile( fileName ), False )
+		dispatcher.dispatch( [ s["b"] ] )
+		self.assertEqual( os.path.isfile( fileName ), True )
+		with file( fileName, "r" ) as f :
+			text = f.read()
+		
+		# all frames of n1, followed by the n3 sequence
+		expectedText = "n1 on 2;n1 on 4;n1 on 6;n3 on 2;n3 on 4;n3 on 6;"
+		self.assertEqual( text, expectedText )
+		
+		# promoting a requirement doesn't dispatch unless it's connected
+		
+		s["b"]["out2"] = s["b"]["n2"]['requirement'].createCounterpart( "out2", Gaffer.Plug.Direction.Out )
+		
+		os.remove( fileName )
+		self.assertEqual( os.path.isfile( fileName ), False )
+		dispatcher.dispatch( [ s["b"] ] )
+		self.assertEqual( os.path.isfile( fileName ), True )
+		with file( fileName, "r" ) as f :
+			text = f.read()
+		
+		# all frames of n1, followed by the n3 sequence
+		expectedText = "n1 on 2;n1 on 4;n1 on 6;n3 on 2;n3 on 4;n3 on 6;"
+		self.assertEqual( text, expectedText )
+		
+		# connecting it to a non-executable doesn't do anything either
+		
+		s["b"]["n5"] = Gaffer.Node()
+		s["b"]["n5"]["requirement"] = Gaffer.Plug( direction = Gaffer.Plug.Direction.Out )
+		s["b"]["out2"].setInput( s["b"]["n5"]["requirement"] )
+		
+		os.remove( fileName )
+		self.assertEqual( os.path.isfile( fileName ), False )
+		dispatcher.dispatch( [ s["b"] ] )
+		self.assertEqual( os.path.isfile( fileName ), True )
+		with file( fileName, "r" ) as f :
+			text = f.read()
+		
+		# all frames of n1, followed by the n3 sequence
+		expectedText = "n1 on 2;n1 on 4;n1 on 6;n3 on 2;n3 on 4;n3 on 6;"
+		self.assertEqual( text, expectedText )
+		
+		# multiple promoted requirements will dispatch
+		
+		s["b"]["out3"] = s["b"]["n2"]['requirement'].createCounterpart( "out3", Gaffer.Plug.Direction.Out )
+		s["b"]["out3"].setInput( s["b"]["n2"]["requirement"] )
+		
+		os.remove( fileName )
+		self.assertEqual( os.path.isfile( fileName ), False )
+		dispatcher.dispatch( [ s["b"] ] )
+		self.assertEqual( os.path.isfile( fileName ), True )
+		with file( fileName, "r" ) as f :
+			text = f.read()
+		
+		# all frames of n1, followed by the n3 sequence, followed by all frames of n2
+		expectedText = "n1 on 2;n1 on 4;n1 on 6;n3 on 2;n3 on 4;n3 on 6;n2 on 2;n2 on 4;n2 on 6;"
+		self.assertEqual( text, expectedText )
+	
 	def tearDown( self ) :
 		
 		shutil.rmtree( "/tmp/dispatcherTest", ignore_errors = True )
