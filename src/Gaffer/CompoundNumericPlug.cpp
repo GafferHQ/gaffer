@@ -206,7 +206,7 @@ bool CompoundNumericPlug<T>::isGanged() const
 {
 	for( size_t i = 1, e = children().size(); i < e; ++i )
 	{
-		if( const Plug *input = getChild( i )->getInput<Plug>() )
+		if( const Plug *input = getChild( i )->template getInput<Plug>() )
 		{
 			if( input->parent<Plug>() == this )
 			{

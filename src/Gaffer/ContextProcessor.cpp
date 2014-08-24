@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2014, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,37 +34,14 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERBINDINGS_GRAPHCOMPONENTBINDING_INL
-#define GAFFERBINDINGS_GRAPHCOMPONENTBINDING_INL
+#include "Gaffer/ContextProcessor.inl"
 
-namespace GafferBindings
+namespace Gaffer
 {
 
-namespace Detail
-{
+IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( Gaffer::ContextProcessorComputeNode, ContextProcessorComputeNodeTypeId )
 
-template<typename T>
-static bool acceptsChild( const T &p, const Gaffer::GraphComponent *potentialChild )
-{
-	return p.T::acceptsChild( potentialChild );
 }
 
-template<typename T>
-static bool acceptsParent( const T &p, const Gaffer::GraphComponent *potentialParent )
-{
-	return p.T::acceptsParent( potentialParent );
-}
-
-} // namespace Detail
-
-template<typename T, typename TWrapper>
-GraphComponentClass<T, TWrapper>::GraphComponentClass( const char *docString )
-	:	IECorePython::RunTimeTypedClass<T, TWrapper>( docString )
-{
-	this->def( "acceptsChild", &Detail::acceptsChild<T> );
-	this->def( "acceptsParent", &Detail::acceptsParent<T> );
-}
-
-} // namespace GafferBindings
-
-#endif // GAFFERBINDINGS_NODEBINDING_INL
+// explicit instantiation
+template class Gaffer::ContextProcessor<Gaffer::ComputeNode>;

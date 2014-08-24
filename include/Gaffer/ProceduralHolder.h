@@ -58,7 +58,7 @@ class ProceduralHolder : public ParameterisedHolderComputeNode
 
 		ProceduralHolder( const std::string &name=defaultName<ProceduralHolder>() );
 			
-		virtual void setParameterised( IECore::RunTimeTypedPtr parameterised );
+		virtual void setParameterised( IECore::RunTimeTypedPtr parameterised, bool keepExistingValues=false );
 		
 		/// Convenience function which calls setParameterised( className, classVersion, "IECORE_PROCEDURAL_PATHS" )
 		void setProcedural( const std::string &className, int classVersion );

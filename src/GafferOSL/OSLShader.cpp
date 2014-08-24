@@ -359,8 +359,8 @@ static Plug *loadCompoundNumericParameter( const OSLQuery::Parameter *parameter,
 		for( size_t i = 0, e = existingPlug->children().size(); i < e; ++i )
 		{
 			transferConnectionOrValue(
-				existingPlug->template GraphComponent::getChild<ChildType>( i ),
-				plug->template GraphComponent::getChild<ChildType>( i )
+				existingPlug->getChild( i ),
+				plug->getChild( i )
 			);
 		}
 	}

@@ -102,7 +102,7 @@ class ParameterisedHolderClass : public BaseType
 			:	BaseType( docString )
 		{
 		
-			def(
+			this->def(
 				"setParameterised",
 				(void (BaseType::wrapped_type::*)( IECore::RunTimeTypedPtr, bool ))&BaseType::wrapped_type::setParameterised,
 				(
@@ -111,7 +111,7 @@ class ParameterisedHolderClass : public BaseType
 				)
 			);
 			
-			def(
+			this->def(
 				"setParameterised",
 				(void (BaseType::wrapped_type::*)( const std::string &, int, const std::string &, bool ))&BaseType::wrapped_type::setParameterised,
 				(
@@ -122,17 +122,17 @@ class ParameterisedHolderClass : public BaseType
 				)
 			);
 			
-			def( "getParameterised", &getParameterised );
+			this->def( "getParameterised", &getParameterised );
 		
-			def(
+			this->def(
 				"parameterHandler",
 				(Gaffer::CompoundParameterHandler *(BaseType::wrapped_type::*)())&BaseType::wrapped_type::parameterHandler,
 				boost::python::return_value_policy<IECorePython::CastToIntrusivePtr>()
 			);
 		
-			def( "parameterModificationContext", &parameterModificationContext, boost::python::return_value_policy<boost::python::manage_new_object>() );
+			this->def( "parameterModificationContext", &parameterModificationContext, boost::python::return_value_policy<boost::python::manage_new_object>() );
 			
-			def( "setParameterisedValues", &BaseType::wrapped_type::setParameterisedValues );
+			this->def( "setParameterisedValues", &BaseType::wrapped_type::setParameterisedValues );
 	
 			boost::python::scope s = *this;
 			boost::python::class_<ParameterModificationContextWrapper>( "ParameterModificationContext", boost::python::init<typename BaseType::wrapped_type::Ptr>() )

@@ -67,9 +67,9 @@ template<typename T, typename TWrapper>
 GadgetClass<T, TWrapper>::GadgetClass( const char *docString )
 	:	GafferBindings::GraphComponentClass<T, TWrapper>( docString )
 {
-	def( "setHighlighted", &Detail::setHighlighted<T> );
-	def( "bound", &Detail::bound<T> );
-	def( "getToolTip", &Detail::getToolTip<T> );
+	this->def( "setHighlighted", &Detail::setHighlighted<T> );
+	this->def( "bound", &Detail::bound<T> );
+	this->def( "getToolTip", &Detail::getToolTip<T> );
 }
 
 } // namespace GafferUIBindings

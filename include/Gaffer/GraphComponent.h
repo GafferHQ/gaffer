@@ -51,7 +51,7 @@ namespace Gaffer
 IE_CORE_FORWARDDECLARE( GraphComponent )
 
 template<typename T>
-class TypePredicate;
+struct TypePredicate;
 
 template<typename Predicate>
 class FilteredChildIterator;

@@ -61,8 +61,8 @@ template<typename T, typename TWrapper>
 NodeGadgetClass<T, TWrapper>::NodeGadgetClass( const char *docString )
 	:	GadgetClass<T, TWrapper>( docString )
 {
-	def( "nodule", &Detail::nodule<T> );
-	def( "noduleTangent", &Detail::noduleTangent<T> );
+	this->def( "nodule", &Detail::nodule<T> );
+	this->def( "noduleTangent", &Detail::noduleTangent<T> );
 }
 
 } // namespace GafferUIBindings

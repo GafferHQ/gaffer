@@ -70,9 +70,9 @@ template<typename T, typename TWrapper>
 PlugClass<T, TWrapper>::PlugClass( const char *docString )
 	:	GraphComponentClass<T, TWrapper>( docString )
 {
-	def( "acceptsInput", &Detail::acceptsInput<T> );
-	def( "setInput", &Detail::setInput<T> );
-	def( "createCounterpart", &Detail::createCounterpart<T> );
+	this->def( "acceptsInput", &Detail::acceptsInput<T> );
+	this->def( "setInput", &Detail::setInput<T> );
+	this->def( "createCounterpart", &Detail::createCounterpart<T> );
 }
 
 } // namespace GafferBindings

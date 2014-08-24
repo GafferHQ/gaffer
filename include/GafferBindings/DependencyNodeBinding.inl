@@ -76,9 +76,9 @@ template<typename T, typename Ptr>
 DependencyNodeClass<T, Ptr>::DependencyNodeClass( const char *docString )
 	:	NodeClass<T, Ptr>( docString )
 {
-	def( "affects", &Detail::affects<T> );
-	def( "enabledPlug", &Detail::enabledPlug<T> );
-	def( "correspondingInput", &Detail::correspondingInput<T> );
+	this->def( "affects", &Detail::affects<T> );
+	this->def( "enabledPlug", &Detail::enabledPlug<T> );
+	this->def( "correspondingInput", &Detail::correspondingInput<T> );
 }
 
 } // namespace GafferBindings

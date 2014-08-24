@@ -201,25 +201,25 @@ const CompoundPlug *SplinePlug<T>::basisPlug() const
 template<typename T>
 M44fPlug *SplinePlug<T>::basisMatrixPlug()
 {
-	return basisPlug()->getChild<M44fPlug>( "matrix" );
+	return basisPlug()->template getChild<M44fPlug>( "matrix" );
 }
 
 template<typename T>
 const M44fPlug *SplinePlug<T>::basisMatrixPlug() const
 {
-	return basisPlug()->getChild<M44fPlug>( "matrix" );
+	return basisPlug()->template getChild<M44fPlug>( "matrix" );
 }
 
 template<typename T>
 IntPlug *SplinePlug<T>::basisStepPlug()
 {
-	return basisPlug()->getChild<IntPlug>( "step" );
+	return basisPlug()->template getChild<IntPlug>( "step" );
 }
 
 template<typename T>
 const IntPlug *SplinePlug<T>::basisStepPlug() const
 {
-	return basisPlug()->getChild<IntPlug>( "step" );
+	return basisPlug()->template getChild<IntPlug>( "step" );
 }
 
 template<typename T>
@@ -291,7 +291,7 @@ const CompoundPlug *SplinePlug<T>::pointPlug( unsigned pointIndex ) const
 template<typename T>
 typename SplinePlug<T>::XPlugType *SplinePlug<T>::pointXPlug( unsigned pointIndex )
 {
-	XPlugType *p = pointPlug( pointIndex )->getChild<XPlugType>( "x" );
+	XPlugType *p = pointPlug( pointIndex )->template getChild<XPlugType>( "x" );
 	if( !p )
 	{
 		throw IECore::Exception( "Child Plug for x point position has been removed." );
@@ -302,7 +302,7 @@ typename SplinePlug<T>::XPlugType *SplinePlug<T>::pointXPlug( unsigned pointInde
 template<typename T>
 const typename SplinePlug<T>::XPlugType *SplinePlug<T>::pointXPlug( unsigned pointIndex ) const
 {
-	const XPlugType *p = pointPlug( pointIndex )->getChild<XPlugType>( "x" );
+	const XPlugType *p = pointPlug( pointIndex )->template getChild<XPlugType>( "x" );
 	if( !p )
 	{
 		throw IECore::Exception( "Child Plug for x point position has been removed." );
@@ -313,7 +313,7 @@ const typename SplinePlug<T>::XPlugType *SplinePlug<T>::pointXPlug( unsigned poi
 template<typename T>
 typename SplinePlug<T>::YPlugType *SplinePlug<T>::pointYPlug( unsigned pointIndex )
 {
-	YPlugType *p = pointPlug( pointIndex )->getChild<YPlugType>( "y" );
+	YPlugType *p = pointPlug( pointIndex )->template getChild<YPlugType>( "y" );
 	if( !p )
 	{
 		throw IECore::Exception( "Child Plug for y point position has been removed." );
@@ -324,7 +324,7 @@ typename SplinePlug<T>::YPlugType *SplinePlug<T>::pointYPlug( unsigned pointInde
 template<typename T>
 const typename SplinePlug<T>::YPlugType *SplinePlug<T>::pointYPlug( unsigned pointIndex ) const
 {
-	const YPlugType *p = pointPlug( pointIndex )->getChild<YPlugType>( "y" );
+	const YPlugType *p = pointPlug( pointIndex )->template getChild<YPlugType>( "y" );
 	if( !p )
 	{
 		throw IECore::Exception( "Child Plug for y point position has been removed." );

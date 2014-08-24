@@ -94,11 +94,11 @@ template<typename T, typename Ptr>
 ExecutableNodeClass<T, Ptr>::ExecutableNodeClass( const char *docString )
 	:	NodeClass<T, Ptr>( docString )
 {
-	def( "requirements", &Detail::requirements<T> );
-	def( "hash", &Detail::hash<T> );
-	def( "execute", &Detail::execute<T> );	
-	def( "executeSequence", &Detail::executeSequence<T> );
-	def( "requiresSequenceExecution", &Detail::requiresSequenceExecution<T> );
+	this->def( "requirements", &Detail::requirements<T> );
+	this->def( "hash", &Detail::hash<T> );
+	this->def( "execute", &Detail::execute<T> );	
+	this->def( "executeSequence", &Detail::executeSequence<T> );
+	this->def( "requiresSequenceExecution", &Detail::requiresSequenceExecution<T> );
 }
 
 } // namespace GafferBindings

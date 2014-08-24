@@ -62,7 +62,7 @@ ProceduralHolder::ProceduralHolder( const std::string &name )
 
 }
 			
-void ProceduralHolder::setParameterised( IECore::RunTimeTypedPtr parameterised )
+void ProceduralHolder::setParameterised( IECore::RunTimeTypedPtr parameterised, bool keepExistingValues )
 {
 	ParameterisedProceduralPtr op = runTimeCast<ParameterisedProcedural>( parameterised );
 	if( !op )
@@ -70,7 +70,7 @@ void ProceduralHolder::setParameterised( IECore::RunTimeTypedPtr parameterised )
 		throw IECore::Exception( "Parameterised object is not an IECore::ParameterisedProcedural" );
 	}
 	
-	ParameterisedHolderComputeNode::setParameterised( parameterised );
+	ParameterisedHolderComputeNode::setParameterised( parameterised, keepExistingValues );
 	
 	plugDirtiedSignal()( getChild<ObjectPlug>( "output" ) );
 }
