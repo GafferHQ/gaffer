@@ -1477,6 +1477,9 @@ dependenciesManifest = [
 	"include/OpenEXR",
 	"include/python*",
 	"include/tbb",
+	"include/OSL",
+	"include/OpenImageIO",
+	"include/OpenColorIO",
 	
 	"renderMan",
 	"arnold",
