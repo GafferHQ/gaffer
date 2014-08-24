@@ -236,7 +236,6 @@ IECore::ConstFloatVectorDataPtr Reformat::computeChannelData( const std::string 
 	// at all and just integer sample instead...
 	if ( static_cast<GafferImage::TypeId>( f->typeId() ) == GafferImage::BoxFilterTypeId )
 	{
-		Imath::V2d scaleFactorD( scale() );
 		Imath::Box2i sampleBox(
 			Imath::V2i( IECore::fastFloatFloor( inTile.min.x ), IECore::fastFloatCeil( inTile.min.y ) ),
 			Imath::V2i( IECore::fastFloatFloor( inTile.max.x ), IECore::fastFloatCeil( inTile.max.y ) )

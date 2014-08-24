@@ -572,9 +572,6 @@ class ImageViewGadget : public GafferUI::Gadget
 
 		void drawWindow( Box2f &rasterWindow, const V2f &bottomLeftPoint, const V2f &topRightPoint, const Style *style ) const
 		{
-			V2f minPt( rasterToDisplaySpace( rasterWindow.min ) );
-			V2f maxPt( rasterToDisplaySpace( rasterWindow.max ) );
-				
 			std::string rasterWindowMinStr = std::string( boost::str( boost::format( "(%d, %d)" ) % fastFloatRound( bottomLeftPoint.x ) % fastFloatRound( bottomLeftPoint.y ) ) );
 			std::string rasterWindowMaxStr = std::string( boost::str( boost::format( "(%d, %d)" ) % fastFloatRound( topRightPoint.x ) % fastFloatRound( topRightPoint.y ) ) );
 				

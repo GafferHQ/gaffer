@@ -244,7 +244,6 @@ void Implementation::hashChannelData( const GafferImage::ImagePlug *output, cons
 
 Imath::Box2i Implementation::computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
-	Format inFormat( inPlug()->formatPlug()->getValue() );
 	Imath::Box2i inWindow( inPlug()->dataWindowPlug()->getValue() );
 	Imath::M33f t = computeAdjustedMatrix();
 	Imath::Box2i outWindow( transformBox( t, inWindow ) );
@@ -343,7 +342,6 @@ IECore::ConstFloatVectorDataPtr Implementation::computeChannelData( const std::s
 	// Work out the sample area that we require to compute this tile.
 
 	Imath::M33f t = computeAdjustedMatrix().inverse();
-	Imath::Box2i inWindow( inPlug()->dataWindowPlug()->getValue() );
 	Imath::Box2i sampleBox( transformBox( t, tile ) );
 	
 	GafferImage::FilterPtr filter = GafferImage::Filter::create( filterPlug()->getValue() );
