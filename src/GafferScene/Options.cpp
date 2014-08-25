@@ -35,8 +35,6 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECore/Options.h"
-
 #include "GafferScene/Options.h"
 
 using namespace std;
