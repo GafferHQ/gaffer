@@ -68,6 +68,33 @@ class DeleteAttributesTest( GafferSceneTest.SceneTestCase ) :
 	
 		self.failUnless( "scene:visible" in d["out"].attributes( "/plane" ) )
 		self.failIf( "doubleSided" in d["out"].attributes( "/plane" ) )
-						
+	
+	def testWildcards( self ) :
+	
+		p = GafferScene.Plane()
+		a = GafferScene.CustomAttributes()
+		a["in"].setInput( p["out"] )
+		
+		a["attributes"].addMember( "a1", 1 )
+		a["attributes"].addMember( "a2", 2 )
+		a["attributes"].addMember( "b1", 1 )
+		a["attributes"].addMember( "b2", 1 )
+		
+		d = GafferScene.DeleteAttributes()
+		d["in"].setInput( a["out"] )
+		self.assertEqual( set( d["out"].attributes( "/plane" ).keys() ), set( [ "a1", "a2", "b1", "b2" ] ) )
+		
+		d["names"].setValue( "a*" )
+		self.assertEqual( set( d["out"].attributes( "/plane" ).keys() ), set( [ "b1", "b2" ] ) )
+		
+		d["names"].setValue( "*1" )
+		self.assertEqual( set( d["out"].attributes( "/plane" ).keys() ), set( [ "a2", "b2" ] ) )
+
+		d["names"].setValue( "*1 b2" )
+		self.assertEqual( set( d["out"].attributes( "/plane" ).keys() ), set( [ "a2" ] ) )
+
+		d["names"].setValue( "b2 a*" )
+		self.assertEqual( set( d["out"].attributes( "/plane" ).keys() ), set( [ "b1" ] ) )
+		
 if __name__ == "__main__":
 	unittest.main()

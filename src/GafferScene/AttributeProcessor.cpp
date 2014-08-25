@@ -34,7 +34,7 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/tokenizer.hpp"
+#include "Gaffer/StringAlgo.h"
 
 #include "GafferScene/AttributeProcessor.h"
 
@@ -118,22 +118,18 @@ IECore::ConstCompoundObjectPtr AttributeProcessor::computeProcessedAttributes( c
 		return inputAttributes;
 	}
 		
-	/// \todo See todos about name matching in PrimitiveVariableProcessor.
-	typedef boost::tokenizer<boost::char_separator<char> > Tokenizer;
-	std::string namesValue = namesPlug()->getValue();
-	Tokenizer names( namesValue, boost::char_separator<char>( " " ) );
-		
-	bool invert = invertNamesPlug()->getValue();
+	const std::string names = namesPlug()->getValue();
+	const bool invert = invertNamesPlug()->getValue();
 
 	CompoundObjectPtr result = new CompoundObject;
 	for( CompoundObject::ObjectMap::const_iterator it = inputAttributes->members().begin(), eIt = inputAttributes->members().end(); it != eIt; ++it )
 	{
 		ConstObjectPtr attribute = it->second;
-		bool found = std::find( names.begin(), names.end(), it->first.string() ) != names.end();
-		if( found != invert )
+		if( matchMultiple( it->first, names ) != invert )
 		{
 			attribute = processAttribute( path, context, it->first, attribute.get() );
 		}
+		
 		if( attribute )
 		{
 			result->members().insert(
