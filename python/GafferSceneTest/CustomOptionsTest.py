@@ -64,7 +64,7 @@ class CustomOptionsTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( options["out"].bound( "/plane" ), IECore.Box3f( IECore.V3f( -0.5, -0.5, 0 ), IECore.V3f( 0.5, 0.5, 0 ) ) )
 		self.assertEqual( options["out"].childNames( "/plane" ), IECore.InternedStringVectorData() )
 		
-		# check that we have some displays
+		# check that we can make options
 		
 		options["options"].addMember( "test", IECore.IntData( 10 ) )
 		options["options"].addMember( "test2", IECore.StringData( "10" ) )
