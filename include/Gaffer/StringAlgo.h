@@ -57,6 +57,10 @@ typedef std::string MatchPattern;
 inline bool match( const std::string &s, const MatchPattern &pattern );
 inline bool match( const char *s, const char *pattern );
 
+/// As above, but considering multiple patterns, separated by spaces.
+inline bool matchMultiple( const std::string &s, const MatchPattern &patterns );
+inline bool matchMultiple( const char *s, const char *patterns );
+
 /// A comparison function for strings, equivalent to std::less<> except
 /// that strings are treated as equal if they have identical prefixes followed
 /// by a wildcard character in at least one. This allows searches to be performed

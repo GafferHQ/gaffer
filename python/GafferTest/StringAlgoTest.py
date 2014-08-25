@@ -49,9 +49,35 @@ class StringAlgoTest( GafferTest.TestCase ) :
 			( "cat", "dog", False ),
 			( "dogfish", "*fish", True ),
 			( "dogcollar", "*fish", False ),
+			( "dog collar", "dog collar", True ),
+			( "dog collar", "dog co*", True ),
+			( "dog collar", "dog *", True ),
+			( "dog collar", "dog*", True ),
 		] :
 		
 			self.assertEqual( Gaffer.match( s, p ), r )
+			if " " not in s :
+				self.assertEqual( Gaffer.matchMultiple( s, p ), r )
+				
+	def testMultiple( self ) :
+	
+		for s, p, r in [
+			( "", "", True ),
+			( "a", "b a", True ),
+			( "a", "c *", True ),
+			( "ab", "c a*", True ),
+			( "cat", "dog fish", False ),
+			( "cat", "cad cat", True ),
+			( "cat", "cad ", False ),
+			( "cat", "cat ", True ),
+			( "cat", "cadcat", False ),
+			( "dogfish", "cat *fish", True ),
+			( "dogcollar", "dog *fish", False ),
+			( "dogcollar", "dog collar", False ),
+			( "a1", "*1 b2", True ),
+		] :
+		
+			self.assertEqual( Gaffer.matchMultiple( s, p ), r )
 				
 if __name__ == "__main__":
 	unittest.main()
