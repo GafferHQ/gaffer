@@ -299,7 +299,9 @@ class Diff( GafferUI.Widget ) :
 	
 		assert( len( values ) <= 2 )
 		
-		different = len( values ) > 1 and values[0] != values[1]
+		# have to compare types before comparing values to avoid exceptions from
+		# poor VectorTypedData.__cmp__ implementation.
+		different = len( values ) > 1 and ( type( values[0] ) != type( values[1] ) or values[0] != values[1] )
 		
 		visibilities = [
 			len( values ) > 0 and values[0] is not None,
@@ -1373,3 +1375,105 @@ class __OptionsSection( Section ) :
 			return [ self.__class__( optionName ) for optionName in optionNames ]
 
 SceneInspector.registerSection( __OptionsSection, tab = "Globals" )
+
+##########################################################################
+# Displays section
+##########################################################################
+
+class _DisplayRow( Row ) :
+
+	def __init__( self, name, **kw ) :
+		
+		Row.__init__( self, **kw )
+	
+		with self.listContainer() :
+			with GafferUI.ListContainer() :
+			
+				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal ) :
+					collapseButton = GafferUI.Button( image = "collapsibleArrowRight.png", hasFrame=False )
+					collapseButton.__clickedConnection = collapseButton.clickedSignal().connect( Gaffer.WeakMethod( self.__collapseButtonClicked ) )
+					self.__label = TextDiff()
+					GafferUI.Spacer( IECore.V2i( 1 ), parenting = { "expand" : True } )
+	
+				self.__diffColumn = DiffColumn( self.__Inspector( name ) )
+				self.__diffColumn.setVisible( False )
+	
+		self.__name = name
+	
+	def update( self, targets ) :
+	
+		displays = [ target.scene["globals"].getValue().get( self.__name ) for target in targets ]
+		self.__label.update( [ self.__name[8:] if display else None for display in displays ] )
+		self.__diffColumn.update( targets )
+
+	def __collapseButtonClicked( self, button ) :
+			
+		visible = not self.__diffColumn.getVisible()
+		self.__diffColumn.setVisible( visible )
+		button.setImage( "collapsibleArrowDown.png" if visible else "collapsibleArrowRight.png" )
+
+	class __Inspector( Inspector ) :
+	
+		def __init__( self, displayName, parameterName = None ) :
+		
+			self.__displayName = displayName
+			self.__parameterName = parameterName
+			
+		def name( self ) :
+		
+			return self.__parameterName or ""
+	
+		def __call__( self, target ) :
+			
+			display = target.scene["globals"].getValue().get( self.__displayName )
+			if display is None :
+				return None
+			
+			if self.__parameterName == "fileName" :
+				return display.getName()
+			elif self.__parameterName == "type" :
+				return display.getType()
+			elif self.__parameterName == "data" :
+				return display.getData()
+			else :
+				return display.parameters().get( self.__parameterName )
+		
+		def children( self, target ) :
+		
+			display = target.scene["globals"].getValue().get( self.__displayName )
+			if display is None :
+				return []
+						
+			return [ self.__class__( self.__displayName, p ) for p in display.parameters().keys() + [ "fileName", "type", "data" ] ]
+		
+class __DisplaysSection( Section ) :
+
+	def __init__( self ) :
+	
+		Section.__init__( self, collapsed = True, label = "Displays" )
+	
+		self.__rows = {} # mapping from display name to row
+		
+	def update( self, targets ) :
+			
+		displayNames = set()
+		for target in targets :
+			g = target.scene["globals"].getValue()
+			displayNames.update( [ k for k in g.keys() if k.startswith( "display:" ) ] )
+				
+		rows = []
+		displayNames = sorted( displayNames )
+		for displayName in displayNames :
+		
+			row = self.__rows.get( displayName )
+			if row is None :
+				row = _DisplayRow( displayName )
+				self.__rows[displayName] = row
+		
+			row.update( targets )
+			row.setAlternate( len( rows ) % 2 )
+			rows.append( row )
+				
+		self._mainColumn()[:] = rows
+
+SceneInspector.registerSection( __DisplaysSection, tab = "Globals" )
