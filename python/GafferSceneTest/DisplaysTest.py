@@ -40,6 +40,7 @@ import unittest
 import IECore
 
 import Gaffer
+import GafferTest
 import GafferScene
 import GafferSceneTest
 
@@ -124,6 +125,14 @@ class DisplaysTest( GafferSceneTest.SceneTestCase ) :
 		displays.addDisplay( "test", IECore.Display( "name", "type", "data", { "paramA" : 1, "paramB" : 2 } ) )
 		
 		self.assertEqual( set( displays["displays"][0]["parameters"].keys() ), set( [ "paramA", "paramB" ] ) )
+	
+	def testDirtyPropagation( self ) :
+	
+		displays = GafferScene.Displays( "displays" )
+		cs = GafferTest.CapturingSlot( displays.plugDirtiedSignal() )
+		
+		displays.addDisplay( "test", IECore.Display( "name", "type", "data", { "paramA" : 1, "paramB" : 2 } ) )
+		self.assertTrue( "displays.out.globals" in set( e[0].fullName() for e in cs ) )
 		
 if __name__ == "__main__":
 	unittest.main()

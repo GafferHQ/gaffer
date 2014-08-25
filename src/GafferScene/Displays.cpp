@@ -138,7 +138,6 @@ Gaffer::CompoundPlug *Displays::addDisplay( const std::string &name, const IECor
 	displayPlug->addChild( typePlug );
 	
 	StringPlugPtr dataPlug = new StringPlug( "data" );
-	dataPlug->setValue( display->getData() );
 	dataPlug->setFlags( Plug::Dynamic, true );
 	displayPlug->addChild( dataPlug );
 	
@@ -148,6 +147,11 @@ Gaffer::CompoundPlug *Displays::addDisplay( const std::string &name, const IECor
 	displayPlug->addChild( parametersPlug );
 	
 	displaysPlug()->addChild( displayPlug );
+
+	// set one of the values _after_ adding the plug, otherwise
+	// affects() is not called and we have no opportunity to
+	// propagate dirtiness to our output globals.
+	dataPlug->setValue( display->getData() );
 	
 	return displayPlug.get();
 }
