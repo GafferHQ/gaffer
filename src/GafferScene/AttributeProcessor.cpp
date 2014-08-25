@@ -126,7 +126,6 @@ IECore::ConstCompoundObjectPtr AttributeProcessor::computeProcessedAttributes( c
 	bool invert = invertNamesPlug()->getValue();
 
 	CompoundObjectPtr result = new CompoundObject;
-	IECore::PrimitiveVariableMap::iterator next;
 	for( CompoundObject::ObjectMap::const_iterator it = inputAttributes->members().begin(), eIt = inputAttributes->members().end(); it != eIt; ++it )
 	{
 		ConstObjectPtr attribute = it->second;
