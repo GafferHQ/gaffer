@@ -385,7 +385,7 @@ class TextDiff( Diff ) :
 		
 	def __formatBoxes( self, boxes ) :
 		
-		if len( boxes ) == 2 and ( boxes[0].isEmpty() or boxes[1].isEmpty() ) :
+		if any( b.isEmpty() for b in boxes ) :
 			# We can't diff empty boxes against non-empty, because they're formatted differently.
 			return [ self.__formatBoxes( [ b ] )[0] if not b.isEmpty() else "Empty" for b in boxes ]
 
