@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,22 +34,45 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef GAFFERSCENE_DELETEOPTIONS_H
+#define GAFFERSCENE_DELETEOPTIONS_H
 
-#include "GafferBindings/DependencyNodeBinding.h"
+#include "GafferScene/GlobalsProcessor.h"
 
-#include "GafferScene/StandardOptions.h"
-#include "GafferScene/CustomOptions.h"
-#include "GafferScene/DeleteOptions.h"
-
-#include "GafferSceneBindings/OptionsBinding.h"
-
-using namespace GafferScene;
-
-void GafferSceneBindings::bindOptions()
+namespace GafferScene
 {
-	GafferBindings::DependencyNodeClass<Options>();
-	GafferBindings::DependencyNodeClass<StandardOptions>();
-	GafferBindings::DependencyNodeClass<CustomOptions>();
-	GafferBindings::DependencyNodeClass<DeleteOptions>();
-}
+
+class DeleteOptions : public GlobalsProcessor
+{
+
+	public :
+
+		DeleteOptions( const std::string &name=defaultName<DeleteOptions>() );
+		virtual ~DeleteOptions();
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::DeleteOptions, DeleteOptionsTypeId, GlobalsProcessor );
+		
+		Gaffer::StringPlug *namesPlug();
+		const Gaffer::StringPlug *namesPlug() const;
+		
+		Gaffer::BoolPlug *invertNamesPlug();
+		const Gaffer::BoolPlug *invertNamesPlug() const;
+		
+		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
+		
+	protected :
+
+		virtual void hashProcessedGlobals( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual IECore::ConstCompoundObjectPtr computeProcessedGlobals( const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputGlobals ) const;
+
+	private :
+	
+		static size_t g_firstPlugIndex;
+		
+};
+
+IE_CORE_DECLAREPTR( DeleteOptions );
+
+} // namespace GafferScene
+
+#endif // GAFFERSCENE_DELETEOPTIONS_H

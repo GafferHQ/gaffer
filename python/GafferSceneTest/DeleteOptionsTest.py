@@ -1,7 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2012, John Haddon. All rights reserved.
-#  Copyright (c) 2012-2014, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,52 +34,65 @@
 #  
 ##########################################################################
 
-from _GafferSceneUI import *
+import unittest
 
-from SceneHierarchy import SceneHierarchy
-from SceneInspector import SceneInspector
-from FilterPlugValueWidget import FilterPlugValueWidget
-import SceneNodeUI
-import SceneReaderUI
-import SceneProcessorUI
-import FilteredSceneProcessorUI
-import PruneUI
-import SubTreeUI
-import OutputsUI
-import OptionsUI
-import OpenGLAttributesUI
-import SceneContextVariablesUI
-import SceneWriterUI
-import StandardOptionsUI
-import StandardAttributesUI
-import ShaderUI
-import OpenGLShaderUI
-import ObjectSourceUI
-import TransformUI
-import AttributesUI
-import LightUI
-import InteractiveRenderUI
-import SphereUI
-import MapProjectionUI
-import MapOffsetUI
-import CustomAttributesUI
-import CustomOptionsUI
-import SceneViewToolbar
-import SceneSwitchUI
-import ShaderSwitchUI
-import ShaderAssignmentUI
-import ParentConstraintUI
-import ParentUI
-import PrimitiveVariablesUI
-import DuplicateUI
-import GridUI
-import SetFilterUI
-import DeleteOptionsUI
+import IECore
 
-# then all the PathPreviewWidgets. note that the order
-# of import controls the order of display.
+import Gaffer
+import GafferTest
+import GafferScene
+import GafferSceneTest
 
-from AlembicPathPreview import AlembicPathPreview
-from SceneReaderPathPreview import SceneReaderPathPreview
+class DeleteOptionsTest( GafferSceneTest.SceneTestCase ) :
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferSceneUI" )
+	def test( self ) :
+	
+		plane = GafferScene.Plane()
+	
+		options = GafferScene.CustomOptions()
+		options["in"].setInput( plane["out"] )
+		
+		deleteOptions = GafferScene.DeleteOptions()
+		deleteOptions["in"].setInput( options["out"] )
+		
+		# test that by default the scene is passed through
+		
+		self.assertScenesEqual( plane["out"], deleteOptions["out"] )
+		self.assertSceneHashesEqual( plane["out"], deleteOptions["out"] )
+		
+		# test that we can delete options
+		
+		options["options"].addMember( "test1", 1 )
+		options["options"].addMember( "test2", 2 )
+		options["options"].addMember( "test3", 3 )
+
+		deleteOptions["names"].setValue( "test1 test2" )
+		
+		g = deleteOptions["out"]["globals"].getValue()
+
+		self.assertEqual( g["test3"], IECore.IntData( 3 ) )
+		self.assertFalse( "test1" in g )
+		self.assertFalse( "test2" in g )
+
+		deleteOptions["names"].setValue( "test*" )
+		
+		g = deleteOptions["out"]["globals"].getValue()
+
+		self.assertFalse( "test1" in g )
+		self.assertFalse( "test2" in g )
+		self.assertFalse( "test3" in g )
+		
+		# test dirty propagation
+		
+		cs = GafferTest.CapturingSlot( deleteOptions.plugDirtiedSignal() )
+		
+		deleteOptions["names"].setValue( "" )
+		self.assertTrue( deleteOptions["out"]["globals"] in set( e[0] for e in cs ) )
+		
+		del cs[:]
+
+		deleteOptions["invertNames"].setValue( True )
+		self.assertTrue( deleteOptions["out"]["globals"] in set( e[0] for e in cs ) )
+		
+if __name__ == "__main__":
+	unittest.main()

@@ -53,6 +53,7 @@ from ObjectToSceneTest import ObjectToSceneTest
 from CameraTest import CameraTest
 from OutputsTest import OutputsTest
 from CustomOptionsTest import CustomOptionsTest
+from DeleteOptionsTest import DeleteOptionsTest
 from SceneNodeTest import SceneNodeTest
 from PathMatcherTest import PathMatcherTest
 from PathFilterTest import PathFilterTest
