@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,115 +34,105 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
+#include "boost/algorithm/string/predicate.hpp"
+
 #include "Gaffer/StringAlgo.h"
 
-#include "GafferScene/AttributeProcessor.h"
+#include "GafferScene/DeleteGlobals.h"
 
-using namespace IECore;
 using namespace Gaffer;
 using namespace GafferScene;
 
-IE_CORE_DEFINERUNTIMETYPED( AttributeProcessor );
+IE_CORE_DEFINERUNTIMETYPED( DeleteGlobals );
 
-size_t AttributeProcessor::g_firstPlugIndex = 0;
+size_t DeleteGlobals::g_firstPlugIndex = 0;
 
-AttributeProcessor::AttributeProcessor( const std::string &name )
-	:	SceneElementProcessor( name )
+DeleteGlobals::DeleteGlobals( const std::string &name )
+	:	GlobalsProcessor( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new StringPlug( "names" ) );
 	addChild( new BoolPlug( "invertNames" ) );
 }
 
-AttributeProcessor::~AttributeProcessor()
+DeleteGlobals::~DeleteGlobals()
 {
 }
 
-Gaffer::StringPlug *AttributeProcessor::namesPlug()
+Gaffer::StringPlug *DeleteGlobals::namesPlug()
 {
 	return getChild<StringPlug>( g_firstPlugIndex );
 }
 
-const Gaffer::StringPlug *AttributeProcessor::namesPlug() const
+const Gaffer::StringPlug *DeleteGlobals::namesPlug() const
 {
 	return getChild<StringPlug>( g_firstPlugIndex );
 }
-
-Gaffer::BoolPlug *AttributeProcessor::invertNamesPlug()
+		
+Gaffer::BoolPlug *DeleteGlobals::invertNamesPlug()
 {
 	return getChild<BoolPlug>( g_firstPlugIndex + 1 );
 }
 
-const Gaffer::BoolPlug *AttributeProcessor::invertNamesPlug() const
+const Gaffer::BoolPlug *DeleteGlobals::invertNamesPlug() const
 {
 	return getChild<BoolPlug>( g_firstPlugIndex + 1 );
 }
-
-void AttributeProcessor::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
+		
+void DeleteGlobals::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
 {
-	SceneElementProcessor::affects( input, outputs );
+	GlobalsProcessor::affects( input, outputs );
 	
 	if( input == namesPlug() || input == invertNamesPlug() )
 	{
-		outputs.push_back( outPlug()->attributesPlug() );
+		outputs.push_back( outPlug()->globalsPlug() );
 	}
 }
 
-bool AttributeProcessor::processesAttributes() const
+std::string DeleteGlobals::namePrefix() const
 {
-	bool invert = invertNamesPlug()->getValue();
-	if( invert )
-	{
-		// we don't know if we're modifying the attributes till we find out what
-		// names they have.
-		return true;
-	}
-	else
-	{
-		// if there are no names, then we know we're not modifying the attributes.
-		std::string names = namesPlug()->getValue();
-		return names.size();
-	}
+	return "";
 }
 
-void AttributeProcessor::hashProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void DeleteGlobals::hashProcessedGlobals( const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	namesPlug()->hash( h );
 	invertNamesPlug()->hash( h );
 }
 
-IECore::ConstCompoundObjectPtr AttributeProcessor::computeProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputAttributes ) const
+IECore::ConstCompoundObjectPtr DeleteGlobals::computeProcessedGlobals( const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputGlobals ) const
 {
-	if( inputAttributes->members().empty() )
+	if( inputGlobals->members().empty() )
 	{
-		return inputAttributes;
+		return inputGlobals;
 	}
-		
+	
 	const std::string names = namesPlug()->getValue();
 	const bool invert = invertNamesPlug()->getValue();
-
-	CompoundObjectPtr result = new CompoundObject;
-	for( CompoundObject::ObjectMap::const_iterator it = inputAttributes->members().begin(), eIt = inputAttributes->members().end(); it != eIt; ++it )
+	if( !invert && !names.size() )
 	{
-		ConstObjectPtr attribute = it->second;
-		if( matchMultiple( it->first, names ) != invert )
+		return inputGlobals;
+	}
+
+	const std::string prefix = namePrefix();
+
+	IECore::CompoundObjectPtr result = new IECore::CompoundObject;
+	for( IECore::CompoundObject::ObjectMap::const_iterator it = inputGlobals->members().begin(), eIt = inputGlobals->members().end(); it != eIt; ++it )
+	{
+		bool keep = true;
+		if( boost::starts_with( it->first.c_str(), prefix ) )
 		{
-			attribute = processAttribute( path, context, it->first, attribute.get() );
+			if( matchMultiple( it->first.c_str() + prefix.size(), names.c_str() ) != invert )
+			{
+				keep = false;
+			}
 		}
-		
-		if( attribute )
+		if( keep )
 		{
-			result->members().insert(
-				CompoundObject::ObjectMap::value_type(
-					it->first,
-					// cast is ok - result is const immediately on
-					// returning from this function, and attribute will
-					// therefore not be modified.
-					boost::const_pointer_cast<Object>( attribute )
-				)
-			);
+			result->members()[it->first] = it->second;
 		}
 	}
 	
 	return result;
 }
+

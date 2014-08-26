@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,22 +34,51 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef GAFFERSCENE_DELETEGLOBALS_H
+#define GAFFERSCENE_DELETEGLOBALS_H
 
-#include "GafferBindings/DependencyNodeBinding.h"
+#include "GafferScene/GlobalsProcessor.h"
 
-#include "GafferScene/StandardOptions.h"
-#include "GafferScene/CustomOptions.h"
-#include "GafferScene/DeleteOptions.h"
+#include "GafferSceneBindings/DeleteGlobalsBinding.h" // to enable friend declaration for bindDeleteGlobals().
 
-#include "GafferSceneBindings/OptionsBinding.h"
-
-using namespace GafferScene;
-
-void GafferSceneBindings::bindOptions()
+namespace GafferScene
 {
-	GafferBindings::DependencyNodeClass<Options>();
-	GafferBindings::DependencyNodeClass<StandardOptions>();
-	GafferBindings::DependencyNodeClass<CustomOptions>();
-	GafferBindings::DependencyNodeClass<DeleteOptions>();
-}
+
+class DeleteGlobals : public GlobalsProcessor
+{
+
+	public :
+
+		DeleteGlobals( const std::string &name=defaultName<DeleteGlobals>() );
+		virtual ~DeleteGlobals();
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::DeleteGlobals, DeleteGlobalsTypeId, GlobalsProcessor );
+		
+		Gaffer::StringPlug *namesPlug();
+		const Gaffer::StringPlug *namesPlug() const;
+		
+		Gaffer::BoolPlug *invertNamesPlug();
+		const Gaffer::BoolPlug *invertNamesPlug() const;
+		
+		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
+		
+	protected :
+
+		virtual std::string namePrefix() const;
+
+		virtual void hashProcessedGlobals( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual IECore::ConstCompoundObjectPtr computeProcessedGlobals( const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputGlobals ) const;
+
+	private :
+	
+		static size_t g_firstPlugIndex;
+
+		friend void GafferSceneBindings::bindDeleteGlobals();
+		
+};
+
+IE_CORE_DECLAREPTR( DeleteGlobals );
+
+} // namespace GafferScene
+
+#endif // GAFFERSCENE_DELETEGLOBALS_H

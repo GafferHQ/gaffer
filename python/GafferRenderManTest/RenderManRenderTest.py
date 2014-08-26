@@ -399,6 +399,28 @@ class RenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 
 		dispatcher.dispatch( [ s["render"] ] )
 
+	def testOptions( self ) :
+	
+		s = Gaffer.ScriptNode()
+		s["fileName"].setValue( "/tmp/test.gfr" )
+		
+		s["p"] = GafferScene.Plane()
+		
+		s["o"] = GafferRenderMan.RenderManOptions()
+		s["o"]["options"]["pixelSamples"]["enabled"].setValue( True )
+		s["o"]["options"]["pixelSamples"]["value"].setValue( IECore.V2i( 2, 3 ) )
+		s["o"]["in"].setInput( s["p"]["out"] )
+		
+		s["r"] = GafferRenderMan.RenderManRender()
+		s["r"]["mode"].setValue( "generate" )
+		s["r"]["ribFileName"].setValue( "/tmp/test.rib" )
+		s["r"]["in"].setInput( s["o"]["out"] )
+
+		s["r"].execute()
+		
+		rib = "\n".join( file( "/tmp/test.rib" ).readlines() )
+		self.assertTrue( "PixelSamples 2 3" in rib )
+
 	def setUp( self ) :
 	
 		for f in (

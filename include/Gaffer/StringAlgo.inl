@@ -41,14 +41,13 @@
 namespace Gaffer
 {
 
-inline bool match( const std::string &string, const std::string &pattern )
+namespace Detail
 {
-	return match( string.c_str(), pattern.c_str() );
-}
 
-inline bool match( const char *s, const char *pattern )
+inline bool matchInternal( const char * const ss, const char *pattern, bool multiple = false )
 {
 	char c;
+	const char *s = ss;
 	while( true )
 	{
 		switch( c = *pattern++ )
@@ -59,7 +58,7 @@ inline bool match( const char *s, const char *pattern )
 			
 			case '*' :
 			
-				if( *pattern == '\0' )
+				if( *pattern == '\0' || ( multiple && *pattern == ' ' ) )
 				{
 					// optimisation for when pattern
 					// ends with '*'.
@@ -69,7 +68,7 @@ inline bool match( const char *s, const char *pattern )
 				// general case - recurse.
 				while( *s != '\0' )
 				{
-					if( match( s, pattern ) )
+					if( matchInternal( s, pattern, multiple ) )
 					{
 						return true;
 					}
@@ -79,12 +78,61 @@ inline bool match( const char *s, const char *pattern )
 				
 			default :
 		
-				if( c != *s++ )
+				if( c == *s )
+				{
+					s++;
+				}
+				else if( !multiple )
 				{
 					return false;
-				} 
+				}
+				else
+				{
+					if( c == ' ' && *s == '\0' )
+					{
+						// space terminates sub-patterns, so we've
+						// found a match.
+						return true;
+					}
+					else
+					{
+						// no match in this pattern. reset to start
+						// of string, and advance to next pattern.
+						s = ss;
+						while( c != ' ' )
+						{
+							if( c == '\0' )
+							{
+								return false;
+							}
+							c = *pattern++;
+						}
+					}
+				}
 		}
 	}
+}
+
+} // namespace Detail
+
+inline bool match( const std::string &string, const std::string &pattern )
+{
+	return match( string.c_str(), pattern.c_str() );
+}
+
+inline bool match( const char *s, const char *pattern )
+{
+	return Detail::matchInternal( s, pattern );
+}
+
+inline bool matchMultiple( const std::string &s, const MatchPattern &patterns )
+{
+	return matchMultiple( s.c_str(), patterns.c_str() );
+}
+
+inline bool matchMultiple( const char *s, const char *patterns )
+{
+	return Detail::matchInternal( s, patterns, /* multiple = */ true );
 }
 
 inline bool MatchPatternLess::operator() ( const std::string &s1, const std::string &s2 ) const

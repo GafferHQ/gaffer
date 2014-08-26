@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,22 +34,23 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
-
-#include "GafferBindings/DependencyNodeBinding.h"
-
-#include "GafferScene/StandardOptions.h"
-#include "GafferScene/CustomOptions.h"
 #include "GafferScene/DeleteOptions.h"
 
-#include "GafferSceneBindings/OptionsBinding.h"
-
+using namespace Gaffer;
 using namespace GafferScene;
 
-void GafferSceneBindings::bindOptions()
+IE_CORE_DEFINERUNTIMETYPED( DeleteOptions );
+
+DeleteOptions::DeleteOptions( const std::string &name )
+	:	DeleteGlobals( name )
 {
-	GafferBindings::DependencyNodeClass<Options>();
-	GafferBindings::DependencyNodeClass<StandardOptions>();
-	GafferBindings::DependencyNodeClass<CustomOptions>();
-	GafferBindings::DependencyNodeClass<DeleteOptions>();
+}
+
+DeleteOptions::~DeleteOptions()
+{
+}
+
+std::string DeleteOptions::namePrefix() const
+{
+	return "option:";
 }

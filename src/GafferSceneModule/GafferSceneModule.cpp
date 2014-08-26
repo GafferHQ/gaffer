@@ -92,6 +92,7 @@
 #include "GafferSceneBindings/FreezeTransformBinding.h"
 #include "GafferSceneBindings/SceneAlgoBinding.h"
 #include "GafferSceneBindings/CoordinateSystemBinding.h"
+#include "GafferSceneBindings/DeleteGlobalsBinding.h"
 
 using namespace boost::python;
 using namespace GafferScene;
@@ -123,6 +124,7 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	
 	GafferBindings::ExecutableNodeClass<SceneWriter>();
 
+	bindDeleteGlobals();
 	bindOutputs();
 	bindPathMatcher();
 	bindPathMatcherData();

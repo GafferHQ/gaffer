@@ -35,7 +35,7 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/tokenizer.hpp"
+#include "Gaffer/StringAlgo.h"
 
 #include "GafferScene/PrimitiveVariableProcessor.h"
 
@@ -119,16 +119,8 @@ IECore::ConstObjectPtr PrimitiveVariableProcessor::computeProcessedObject( const
 	{
 		return inputObject;
 	}
-	/// \todo Support glob expressions. We could accelerate the regex conversion and compilation process
-	/// by storing them as member variables which we update on a plugSetSignal(). We'd have to either prevent
-	/// connections being made to namesPlug() or not use the acceleration when connections had been made.
-	/// Mind you, that's the sort of thing we're not allowed to do if we're ever going to run nodes in isolation
-	/// on some funky remote computation server. Maybe what we really need is a little LRUCache mapping from
-	/// the names string to the regexes. Yep. That's what we need. LRUCaches are going to be the way for nearly
-	/// everything like this I reckon.
-	typedef boost::tokenizer<boost::char_separator<char> > Tokenizer;
-	std::string namesValue = namesPlug()->getValue();
-	Tokenizer names( namesValue, boost::char_separator<char>( " " ) );
+
+	const std::string names = namesPlug()->getValue();
 		
 	bool invert = invertNamesPlug()->getValue();
 	IECore::PrimitivePtr result = inputGeometry->copy();
@@ -137,8 +129,7 @@ IECore::ConstObjectPtr PrimitiveVariableProcessor::computeProcessedObject( const
 	{
 		next = it;
 		next++;
-		bool found = std::find( names.begin(), names.end(), it->first ) != names.end();
-		if( found != invert )
+		if( matchMultiple( it->first, names ) != invert )
 		{
 			processPrimitiveVariable( path, context, inputGeometry, it->second );
 			if( it->second.interpolation == IECore::PrimitiveVariable::Invalid || !it->second.data )

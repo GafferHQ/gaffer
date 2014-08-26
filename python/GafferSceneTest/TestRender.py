@@ -49,6 +49,10 @@ class TestRender( GafferScene.ExecutableRender ) :
 		
 		self.__renderer = None
 	
+	def renderer( self ) :
+	
+		return self.__renderer
+	
 	def world( self ) :
 	
 		return self.__renderer.world()

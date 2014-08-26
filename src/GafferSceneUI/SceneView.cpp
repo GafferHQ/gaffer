@@ -849,7 +849,7 @@ void SceneView::updateLookThrough()
 		cameraPathString = lookThroughCameraPlug()->getValue();
 		if( cameraPathString.empty() )
 		{
-			if( const StringData *cameraPathData = globals->member<StringData>( "render:camera" ) )
+			if( const StringData *cameraPathData = globals->member<StringData>( "option:render:camera" ) )
 			{
 				cameraPathString = cameraPathData->readable();
 			}

@@ -40,6 +40,7 @@
 #include "GafferBindings/DependencyNodeBinding.h"
 
 #include "GafferScene/Outputs.h"
+#include "GafferScene/DeleteOutputs.h"
 
 #include "GafferSceneBindings/OutputsBinding.h"
 
@@ -79,4 +80,7 @@ void GafferSceneBindings::bindOutputs()
 		.def( "registerOutput", &Outputs::registerOutput ).staticmethod( "registerOutput" )
 		.def( "registeredOutputs", &registeredOutputsWrapper ).staticmethod( "registeredOutputs" )
 	;
+
+	DependencyNodeClass<DeleteOutputs>();
+
 }

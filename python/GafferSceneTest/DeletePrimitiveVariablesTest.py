@@ -63,6 +63,7 @@ class DeletePrimitiveVariablesTest( GafferSceneTest.SceneTestCase ) :
 		self.assertSceneHashesEqual( p["out"], d["out"], pathsToIgnore = ( "/plane" ) )		
 		self.failUnless( "s" not in d["out"].object( "/plane" ) )
 		self.failUnless( "t" not in d["out"].object( "/plane" ) )
+		self.assertTrue( "P" in d["out"].object( "/plane" ) )
 		
 	def testNonPrimitiveObject( self ) :
 	
@@ -83,6 +84,15 @@ class DeletePrimitiveVariablesTest( GafferSceneTest.SceneTestCase ) :
 		
 		d["enabled"].setValue( False )
 		self.assertTrue( "out" in [ x[0].getName() for x in cs ] )
+
+	def testWildcards( self ) :
+	
+		p = GafferScene.Plane()
+		d = GafferScene.DeletePrimitiveVariables()
+		d["in"].setInput( p["out"] )
+	
+		d["names"].setValue( "*" )
+		self.assertEqual( d["out"].object( "/plane" ).keys(), [] )
 		
 if __name__ == "__main__":
 	unittest.main()

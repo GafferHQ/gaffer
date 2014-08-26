@@ -34,51 +34,58 @@
 #  
 ##########################################################################
 
+import IECore
+
 import Gaffer
-import GafferTest
+import GafferUI
+import GafferScene
 
-class StringAlgoTest( GafferTest.TestCase ) :
+##########################################################################
+# Right click menu for names
+##########################################################################
 
-	def test( self ) :
-	
-		for s, p, r in [
-			( "", "", True ),
-			( "a", "a", True ),
-			( "a", "*", True ),
-			( "ab", "a*", True ),
-			( "cat", "dog", False ),
-			( "dogfish", "*fish", True ),
-			( "dogcollar", "*fish", False ),
-			( "dog collar", "dog collar", True ),
-			( "dog collar", "dog co*", True ),
-			( "dog collar", "dog *", True ),
-			( "dog collar", "dog*", True ),
-		] :
+def __toggleName( plug, name, active ) :
+
+	names = plug.getValue().split()
+	if active :
+		names.append( name )
+	else :
+		names.remove( name )
 		
-			self.assertEqual( Gaffer.match( s, p ), r )
-			if " " not in s :
-				self.assertEqual( Gaffer.matchMultiple( s, p ), r )
-				
-	def testMultiple( self ) :
+	with Gaffer.UndoContext( plug.ancestor( Gaffer.ScriptNode ) ) :
+		plug.setValue( " ".join( names ) )
 	
-		for s, p, r in [
-			( "", "", True ),
-			( "a", "b a", True ),
-			( "a", "c *", True ),
-			( "ab", "c a*", True ),
-			( "cat", "dog fish", False ),
-			( "cat", "cad cat", True ),
-			( "cat", "cad ", False ),
-			( "cat", "cat ", True ),
-			( "cat", "cadcat", False ),
-			( "dogfish", "cat *fish", True ),
-			( "dogcollar", "dog *fish", False ),
-			( "dogcollar", "dog collar", False ),
-			( "a1", "*1 b2", True ),
-		] :
-		
-			self.assertEqual( Gaffer.matchMultiple( s, p ), r )
-				
-if __name__ == "__main__":
-	unittest.main()
+def __namesPopupMenu( menuDefinition, plugValueWidget ) :
 
+	plug = plugValueWidget.getPlug()
+	node = plug.node()
+	if not isinstance( node, GafferScene.DeleteGlobals ) :
+		return
+
+	if plug != node["names"] :
+		return
+	
+	with plugValueWidget.getContext() :
+		globals = node["in"]["globals"].getValue()
+		currentNames = set( node["names"].getValue().split() )
+	
+	prefix = node._namePrefix()
+	names = [ n for n in globals.keys() if n.startswith( prefix ) ]
+	if not names :
+		return
+
+	menuDefinition.prepend( "/NamesDivider", { "divider" : True } )
+	
+	menuPrefix = "/" + node.typeName().rsplit( ":" )[-1].replace( "Delete", "" ) + "/"
+	for name in reversed( sorted( list( names ) ) ) :
+		nameWithoutPrefix = name[len(prefix):]
+		menuDefinition.prepend(
+			menuPrefix + nameWithoutPrefix,
+			{
+				"command" : IECore.curry( __toggleName, plug, nameWithoutPrefix ),
+				"active" : plug.settable() and not plugValueWidget.getReadOnly(),
+				"checkBox" : nameWithoutPrefix in currentNames,
+			}
+		)
+
+__namesPopupMenuConnection = GafferUI.PlugValueWidget.popupMenuSignal().connect( __namesPopupMenu )

@@ -114,6 +114,9 @@ enum TypeId
 	GridTypeId = 110569,
 	SetTypeId = 110570,
 	CoordinateSystemTypeId = 110571,
+	DeleteGlobalsTypeId = 110572,
+	DeleteOptionsTypeId = 110573,
+	DeleteOutputsTypeId = 110574,
 	
 	LastTypeId = 110650
 };

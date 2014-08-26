@@ -34,51 +34,43 @@
 #  
 ##########################################################################
 
+import unittest
+
+import IECore
+
 import Gaffer
 import GafferTest
+import GafferScene
+import GafferSceneTest
 
-class StringAlgoTest( GafferTest.TestCase ) :
+class DeleteOutputsTest( GafferSceneTest.SceneTestCase ) :
 
 	def test( self ) :
 	
-		for s, p, r in [
-			( "", "", True ),
-			( "a", "a", True ),
-			( "a", "*", True ),
-			( "ab", "a*", True ),
-			( "cat", "dog", False ),
-			( "dogfish", "*fish", True ),
-			( "dogcollar", "*fish", False ),
-			( "dog collar", "dog collar", True ),
-			( "dog collar", "dog co*", True ),
-			( "dog collar", "dog *", True ),
-			( "dog collar", "dog*", True ),
-		] :
-		
-			self.assertEqual( Gaffer.match( s, p ), r )
-			if " " not in s :
-				self.assertEqual( Gaffer.matchMultiple( s, p ), r )
-				
-	def testMultiple( self ) :
+		plane = GafferScene.Plane()
 	
-		for s, p, r in [
-			( "", "", True ),
-			( "a", "b a", True ),
-			( "a", "c *", True ),
-			( "ab", "c a*", True ),
-			( "cat", "dog fish", False ),
-			( "cat", "cad cat", True ),
-			( "cat", "cad ", False ),
-			( "cat", "cat ", True ),
-			( "cat", "cadcat", False ),
-			( "dogfish", "cat *fish", True ),
-			( "dogcollar", "dog *fish", False ),
-			( "dogcollar", "dog collar", False ),
-			( "a1", "*1 b2", True ),
-		] :
+		outputs = GafferScene.Outputs()
+		outputs["in"].setInput( plane["out"] )
 		
-			self.assertEqual( Gaffer.matchMultiple( s, p ), r )
-				
+		deleteOutputs = GafferScene.DeleteOutputs()
+		deleteOutputs["in"].setInput( outputs["out"] )
+		
+		# test that by default the scene is passed through
+		
+		self.assertScenesEqual( plane["out"], deleteOutputs["out"] )
+		self.assertSceneHashesEqual( plane["out"], deleteOutputs["out"] )
+		
+		# test that we can delete options
+		
+		outputs.addOutput( "test", IECore.Display( "fileName", "type", "data", {} ) )
+	
+		g = deleteOutputs["out"]["globals"].getValue()
+		self.assertTrue( "output:test" in g )
+		
+		deleteOutputs["names"].setValue( "test" )
+		
+		g = deleteOutputs["out"]["globals"].getValue()
+		self.assertFalse( "output:test" in g )
+	
 if __name__ == "__main__":
 	unittest.main()
-

@@ -64,15 +64,15 @@ class CustomOptionsTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( options["out"].bound( "/plane" ), IECore.Box3f( IECore.V3f( -0.5, -0.5, 0 ), IECore.V3f( 0.5, 0.5, 0 ) ) )
 		self.assertEqual( options["out"].childNames( "/plane" ), IECore.InternedStringVectorData() )
 		
-		# check that we have some displays
+		# check that we can make options
 		
 		options["options"].addMember( "test", IECore.IntData( 10 ) )
 		options["options"].addMember( "test2", IECore.StringData( "10" ) )
 		
 		g = options["out"]["globals"].getValue()
 		self.assertEqual( len( g ), 2 )
-		self.assertEqual( g["test"], IECore.IntData( 10 ) )
-		self.assertEqual( g["test2"], IECore.StringData( "10" ) )
+		self.assertEqual( g["option:test"], IECore.IntData( 10 ) )
+		self.assertEqual( g["option:test2"], IECore.StringData( "10" ) )
 	
 	def testSerialisation( self ) :
 	
@@ -88,8 +88,8 @@ class CustomOptionsTest( GafferSceneTest.SceneTestCase ) :
 		
 		g = s2["optionsNode"]["out"]["globals"].getValue()
 		self.assertEqual( len( g ), 2 )
-		self.assertEqual( g["test"], IECore.IntData( 10 ) )
-		self.assertEqual( g["test2"], IECore.StringData( "10" ) )
+		self.assertEqual( g["option:test"], IECore.IntData( 10 ) )
+		self.assertEqual( g["option:test2"], IECore.StringData( "10" ) )
 		self.assertTrue( "options1" not in s2["optionsNode"] )
 	
 	def testHashPassThrough( self ) :

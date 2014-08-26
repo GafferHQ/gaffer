@@ -34,51 +34,71 @@
 #  
 ##########################################################################
 
+import unittest
+
+import IECore
+
 import Gaffer
 import GafferTest
+import GafferScene
+import GafferSceneTest
 
-class StringAlgoTest( GafferTest.TestCase ) :
+class DeleteOptionsTest( GafferSceneTest.SceneTestCase ) :
 
 	def test( self ) :
 	
-		for s, p, r in [
-			( "", "", True ),
-			( "a", "a", True ),
-			( "a", "*", True ),
-			( "ab", "a*", True ),
-			( "cat", "dog", False ),
-			( "dogfish", "*fish", True ),
-			( "dogcollar", "*fish", False ),
-			( "dog collar", "dog collar", True ),
-			( "dog collar", "dog co*", True ),
-			( "dog collar", "dog *", True ),
-			( "dog collar", "dog*", True ),
-		] :
-		
-			self.assertEqual( Gaffer.match( s, p ), r )
-			if " " not in s :
-				self.assertEqual( Gaffer.matchMultiple( s, p ), r )
-				
-	def testMultiple( self ) :
+		plane = GafferScene.Plane()
 	
-		for s, p, r in [
-			( "", "", True ),
-			( "a", "b a", True ),
-			( "a", "c *", True ),
-			( "ab", "c a*", True ),
-			( "cat", "dog fish", False ),
-			( "cat", "cad cat", True ),
-			( "cat", "cad ", False ),
-			( "cat", "cat ", True ),
-			( "cat", "cadcat", False ),
-			( "dogfish", "cat *fish", True ),
-			( "dogcollar", "dog *fish", False ),
-			( "dogcollar", "dog collar", False ),
-			( "a1", "*1 b2", True ),
-		] :
+		options = GafferScene.CustomOptions()
+		options["in"].setInput( plane["out"] )
 		
-			self.assertEqual( Gaffer.matchMultiple( s, p ), r )
-				
+		deleteOptions = GafferScene.DeleteOptions()
+		deleteOptions["in"].setInput( options["out"] )
+		
+		# test that by default the scene is passed through
+		
+		self.assertScenesEqual( plane["out"], deleteOptions["out"] )
+		self.assertSceneHashesEqual( plane["out"], deleteOptions["out"] )
+		
+		# test that we can delete options
+		
+		options["options"].addMember( "test1", 1 )
+		options["options"].addMember( "test2", 2 )
+		options["options"].addMember( "test3", 3 )
+
+		g = deleteOptions["out"]["globals"].getValue()
+		
+		self.assertEqual( g["option:test1"], IECore.IntData( 1 ) )
+		self.assertEqual( g["option:test2"], IECore.IntData( 2 ) )
+		self.assertEqual( g["option:test3"], IECore.IntData( 3 ) )
+
+		deleteOptions["names"].setValue( "test1 test2" )
+		
+		g = deleteOptions["out"]["globals"].getValue()
+
+		self.assertEqual( g["option:test3"], IECore.IntData( 3 ) )
+		self.assertFalse( "option:test1" in g )
+		self.assertFalse( "option:test2" in g )
+
+		deleteOptions["names"].setValue( "test*" )
+		
+		g = deleteOptions["out"]["globals"].getValue()
+
+		self.assertFalse( "option:test1" in g )
+		self.assertFalse( "option:test2" in g )
+		self.assertFalse( "option:test3" in g )
+		
+		# test dirty propagation
+		
+		cs = GafferTest.CapturingSlot( deleteOptions.plugDirtiedSignal() )
+		
+		deleteOptions["names"].setValue( "" )
+		self.assertTrue( deleteOptions["out"]["globals"] in set( e[0] for e in cs ) )
+		
+		del cs[:]
+
+		deleteOptions["invertNames"].setValue( True )
+		self.assertTrue( deleteOptions["out"]["globals"] in set( e[0] for e in cs ) )
+		
 if __name__ == "__main__":
 	unittest.main()
-

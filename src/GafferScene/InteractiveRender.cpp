@@ -239,6 +239,7 @@ void InteractiveRender::update()
 		
 		ConstCompoundObjectPtr globals = inPlug()->globalsPlug()->getValue();
 		outputOptions( globals.get(), m_renderer.get() );
+		outputOutputs( globals.get(), m_renderer.get() );
 		outputCamera( inPlug(), globals.get(), m_renderer.get() );
 		{
 			WorldBlock world( m_renderer );

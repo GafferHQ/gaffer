@@ -62,10 +62,10 @@ class StandardOptionsTest( GafferSceneTest.SceneTestCase ) :
 		
 		o["options"]["renderResolution"]["value"].setValue( IECore.V2i( 10 ) )
 		o["options"]["renderResolution"]["enabled"].setValue( True )
-		self.assertEqual( o["out"]["globals"].getValue()["render:resolution"].value, IECore.V2i( 10 ) )
+		self.assertEqual( o["out"]["globals"].getValue()["option:render:resolution"].value, IECore.V2i( 10 ) )
 
 		o["options"]["renderResolution"]["value"].setValue( IECore.V2i( 20 ) )
-		self.assertEqual( o["out"]["globals"].getValue()["render:resolution"].value, IECore.V2i( 20 ) )
+		self.assertEqual( o["out"]["globals"].getValue()["option:render:resolution"].value, IECore.V2i( 20 ) )
 	
 	def testHashIncludesInputHash( self ) :
 	
