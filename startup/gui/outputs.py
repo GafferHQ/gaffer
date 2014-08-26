@@ -39,7 +39,7 @@ import IECore
 
 import GafferScene
 
-GafferScene.Displays.registerDisplay( 
+GafferScene.Outputs.registerOutput(
 	"Interactive/Beauty",
 	IECore.Display( 
 		"beauty",
@@ -55,7 +55,7 @@ GafferScene.Displays.registerDisplay(
 	)
 )
 
-GafferScene.Displays.registerDisplay( 
+GafferScene.Outputs.registerOutput(
 	"Batch/Beauty",
 	IECore.Display( 
 		"${project:rootDirectory}/renders/${script:name}/beauty/beauty.####.exr",

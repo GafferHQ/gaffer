@@ -1369,7 +1369,7 @@ class __OptionsSection( Section ) :
 			options = target.scene["globals"].getValue()
 			optionNames = []
 			for k in options.keys() :
-				if k != "gaffer:sets" and not k.startswith( "display:" ) :
+				if k != "gaffer:sets" and not k.startswith( "output:" ) :
 					optionNames.append( k )
 			
 			return [ self.__class__( optionName ) for optionName in optionNames ]
@@ -1377,10 +1377,10 @@ class __OptionsSection( Section ) :
 SceneInspector.registerSection( __OptionsSection, tab = "Globals" )
 
 ##########################################################################
-# Displays section
+# Outputs section
 ##########################################################################
 
-class _DisplayRow( Row ) :
+class _OutputRow( Row ) :
 
 	def __init__( self, name, **kw ) :
 		
@@ -1402,8 +1402,8 @@ class _DisplayRow( Row ) :
 	
 	def update( self, targets ) :
 	
-		displays = [ target.scene["globals"].getValue().get( self.__name ) for target in targets ]
-		self.__label.update( [ self.__name[8:] if display else None for display in displays ] )
+		outputs = [ target.scene["globals"].getValue().get( self.__name ) for target in targets ]
+		self.__label.update( [ self.__name[7:] if output else None for output in outputs ] )
 		self.__diffColumn.update( targets )
 
 	def __collapseButtonClicked( self, button ) :
@@ -1414,9 +1414,9 @@ class _DisplayRow( Row ) :
 
 	class __Inspector( Inspector ) :
 	
-		def __init__( self, displayName, parameterName = None ) :
+		def __init__( self, outputName, parameterName = None ) :
 		
-			self.__displayName = displayName
+			self.__outputName = outputName
 			self.__parameterName = parameterName
 			
 		def name( self ) :
@@ -1425,50 +1425,50 @@ class _DisplayRow( Row ) :
 	
 		def __call__( self, target ) :
 			
-			display = target.scene["globals"].getValue().get( self.__displayName )
-			if display is None :
+			output = target.scene["globals"].getValue().get( self.__outputName )
+			if output is None :
 				return None
 			
 			if self.__parameterName == "fileName" :
-				return display.getName()
+				return output.getName()
 			elif self.__parameterName == "type" :
-				return display.getType()
+				return output.getType()
 			elif self.__parameterName == "data" :
-				return display.getData()
+				return output.getData()
 			else :
-				return display.parameters().get( self.__parameterName )
+				return output.parameters().get( self.__parameterName )
 		
 		def children( self, target ) :
 		
-			display = target.scene["globals"].getValue().get( self.__displayName )
-			if display is None :
+			output = target.scene["globals"].getValue().get( self.__outputName )
+			if output is None :
 				return []
 						
-			return [ self.__class__( self.__displayName, p ) for p in display.parameters().keys() + [ "fileName", "type", "data" ] ]
+			return [ self.__class__( self.__outputName, p ) for p in output.parameters().keys() + [ "fileName", "type", "data" ] ]
 		
-class __DisplaysSection( Section ) :
+class __OutputsSection( Section ) :
 
 	def __init__( self ) :
 	
-		Section.__init__( self, collapsed = True, label = "Displays" )
+		Section.__init__( self, collapsed = True, label = "Outputs" )
 	
-		self.__rows = {} # mapping from display name to row
+		self.__rows = {} # mapping from output name to row
 		
 	def update( self, targets ) :
 			
-		displayNames = set()
+		outputNames = set()
 		for target in targets :
 			g = target.scene["globals"].getValue()
-			displayNames.update( [ k for k in g.keys() if k.startswith( "display:" ) ] )
+			outputNames.update( [ k for k in g.keys() if k.startswith( "output:" ) ] )
 				
 		rows = []
-		displayNames = sorted( displayNames )
-		for displayName in displayNames :
+		outputNames = sorted( outputNames )
+		for outputName in outputNames :
 		
-			row = self.__rows.get( displayName )
+			row = self.__rows.get( outputName )
 			if row is None :
-				row = _DisplayRow( displayName )
-				self.__rows[displayName] = row
+				row = _OutputRow( outputName )
+				self.__rows[outputName] = row
 		
 			row.update( targets )
 			row.setAlternate( len( rows ) % 2 )
@@ -1476,4 +1476,4 @@ class __DisplaysSection( Section ) :
 				
 		self._mainColumn()[:] = rows
 
-SceneInspector.registerSection( __DisplaysSection, tab = "Globals" )
+SceneInspector.registerSection( __OutputsSection, tab = "Globals" )

@@ -83,8 +83,8 @@ class RenderManLightTest( unittest.TestCase ) :
 		s["a"]["in"].setInput( s["g"]["out"] )
 		s["a"]["shader"].setInput( s["s"]["out"] )
 		
-		s["d"] = GafferScene.Displays()
-		s["d"].addDisplay( "beauty", IECore.Display( "/tmp/testRenderManLight.exr", "exr", "rgba", { "quantize" : IECore.FloatVectorData( [ 0, 0, 0, 0 ] ) } ) )
+		s["d"] = GafferScene.Outputs()
+		s["d"].addOutput( "beauty", IECore.Display( "/tmp/testRenderManLight.exr", "exr", "rgba", { "quantize" : IECore.FloatVectorData( [ 0, 0, 0, 0 ] ) } ) )
 		s["d"]["in"].setInput( s["a"]["out"] )
 		
 		s["o"] = GafferScene.StandardOptions()

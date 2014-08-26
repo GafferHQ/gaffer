@@ -57,8 +57,8 @@ class RenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		s["plane"] = GafferScene.Plane()
 		s["plane"]["transform"]["translate"].setValue( IECore.V3f( 0, 0, -5 ) )
 		
-		s["displays"] = GafferScene.Displays()
-		s["displays"].addDisplay(
+		s["outputs"] = GafferScene.Outputs()
+		s["outputs"].addOutput(
 			"beauty",
 			IECore.Display(
 				"/tmp/test.tif",
@@ -67,10 +67,10 @@ class RenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 				{}
 			)
 		)
-		s["displays"]["in"].setInput( s["plane"]["out"] )
+		s["outputs"]["in"].setInput( s["plane"]["out"] )
 		
 		s["render"] = GafferRenderMan.RenderManRender()
-		s["render"]["in"].setInput( s["displays"]["out"] )
+		s["render"]["in"].setInput( s["outputs"]["out"] )
 		s["render"]["mode"].setValue( "generate" )
 		
 		s["render"]["ribFileName"].setValue( "/tmp/test.rib" )
@@ -213,9 +213,9 @@ class RenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		
 		s["plane"] = GafferScene.Plane()
 		
-		s["displays"] = GafferScene.Displays()
-		s["displays"]["in"].setInput( s["plane"]["out"] )
-		s["displays"].addDisplay(
+		s["outputs"] = GafferScene.Outputs()
+		s["outputs"]["in"].setInput( s["plane"]["out"] )
+		s["outputs"].addOutput(
 			"beauty",
 			IECore.Display(
 				"$renderDirectory/test.####.exr",
@@ -226,7 +226,7 @@ class RenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		)
 		
 		s["render"] = GafferRenderMan.RenderManRender()
-		s["render"]["in"].setInput( s["displays"]["out"] )
+		s["render"]["in"].setInput( s["outputs"]["out"] )
 		s["render"]["ribFileName"].setValue( "$ribDirectory/test.####.rib" )
 		s["render"]["mode"].setValue( "generate" )
 		
@@ -293,16 +293,16 @@ class RenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		
 		s = Gaffer.ScriptNode()
 		s["plane"] = GafferScene.Plane()
-		s["displays"] = GafferScene.Displays()
-		s["displays"]["in"].setInput( s["plane"]["out"] )
-		s["displays"].addDisplay( "beauty", IECore.Display( "$renderDirectory/test.####.exr", "exr", "rgba", {} ) )
+		s["outputs"] = GafferScene.Outputs()
+		s["outputs"]["in"].setInput( s["plane"]["out"] )
+		s["outputs"].addOutput( "beauty", IECore.Display( "$renderDirectory/test.####.exr", "exr", "rgba", {} ) )
 		s["render"] = GafferRenderMan.RenderManRender()
 		
 		# no input scene produces no effect
 		self.assertEqual( s["render"].hash( c ), IECore.MurmurHash() )
 		
 		# now theres an scene to render, we get some output
-		s["render"]["in"].setInput( s["displays"]["out"] )
+		s["render"]["in"].setInput( s["outputs"]["out"] )
 		self.assertNotEqual( s["render"].hash( c ), IECore.MurmurHash() )
 		
 		# output varies by time
@@ -352,8 +352,8 @@ class RenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		
 		s["sphere"] = GafferScene.Sphere()
 		
-		s["displays"] = GafferScene.Displays()
-		s["displays"].addDisplay(
+		s["outputs"] = GafferScene.Outputs()
+		s["outputs"].addOutput(
 			"beauty",
 			IECore.Display(
 				"test",
@@ -369,7 +369,7 @@ class RenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 				}
 			)
 		)
-		s["displays"]["in"].setInput( s["sphere"]["out"] )
+		s["outputs"]["in"].setInput( s["sphere"]["out"] )
 	
 		s["display"] = GafferImage.Display()
 		def __displayCallback( plug ) :
@@ -384,7 +384,7 @@ class RenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		
 		s["render"] = GafferRenderMan.RenderManRender()
 		s["render"]["ribFileName"].setValue( "/tmp/test.rib" )
-		s["render"]["in"].setInput( s["displays"]["out"] )
+		s["render"]["in"].setInput( s["outputs"]["out"] )
 		
 		s["fileName"].setValue( "/tmp/test.gfr" )
 		s.save()

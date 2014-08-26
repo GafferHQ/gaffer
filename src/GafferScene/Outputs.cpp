@@ -40,11 +40,9 @@
 #include "boost/multi_index/ordered_index.hpp"
 #include "boost/multi_index/member.hpp"
 
-#include "IECore/Display.h"
-
 #include "Gaffer/CompoundDataPlug.h"
 
-#include "GafferScene/Displays.h"
+#include "GafferScene/Outputs.h"
 
 using namespace std;
 using namespace boost;
@@ -56,124 +54,129 @@ using namespace GafferScene;
 // Data structure for the registry
 //////////////////////////////////////////////////////////////////////////
 
-typedef std::pair<std::string, DisplayPtr> NamedDisplay;
+namespace
+{
+
+typedef std::pair<std::string, DisplayPtr> NamedOutput;
 typedef multi_index::multi_index_container<
-	NamedDisplay,
+	NamedOutput,
 	multi_index::indexed_by<
 		multi_index::ordered_unique<
-			multi_index::member<NamedDisplay, std::string, &NamedDisplay::first>
+			multi_index::member<NamedOutput, std::string, &NamedOutput::first>
 		>,
 		multi_index::sequenced<>
 	>
-> DisplayMap;
+> OutputMap;
 
-static DisplayMap &displayMap()
+OutputMap &outputMap()
 {
-	static DisplayMap m;
+	static OutputMap m;
 	return m;
 }
 
+} // namespace
+
 //////////////////////////////////////////////////////////////////////////
-// Displays implementation
+// Outputs implementation
 //////////////////////////////////////////////////////////////////////////
 
-IE_CORE_DEFINERUNTIMETYPED( Displays );
+IE_CORE_DEFINERUNTIMETYPED( Outputs );
 
-size_t Displays::g_firstPlugIndex = 0;
+size_t Outputs::g_firstPlugIndex = 0;
 
-Displays::Displays( const std::string &name )
+Outputs::Outputs( const std::string &name )
 	:	GlobalsProcessor( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
-	addChild( new CompoundPlug( "displays" ) );
+	addChild( new CompoundPlug( "outputs" ) );
 }
 
-Displays::~Displays()
+Outputs::~Outputs()
 {
 }
 
-Gaffer::CompoundPlug *Displays::displaysPlug()
-{
-	return getChild<CompoundPlug>( g_firstPlugIndex );
-}
-
-const Gaffer::CompoundPlug *Displays::displaysPlug() const
+Gaffer::CompoundPlug *Outputs::outputsPlug()
 {
 	return getChild<CompoundPlug>( g_firstPlugIndex );
 }
 
-Gaffer::CompoundPlug *Displays::addDisplay( const std::string &name )
+const Gaffer::CompoundPlug *Outputs::outputsPlug() const
 {
-	DisplayMap::nth_index<0>::type &index = displayMap().get<0>();
-	DisplayMap::const_iterator it = index.find( name );
+	return getChild<CompoundPlug>( g_firstPlugIndex );
+}
+
+Gaffer::CompoundPlug *Outputs::addOutput( const std::string &name )
+{
+	OutputMap::nth_index<0>::type &index = outputMap().get<0>();
+	OutputMap::const_iterator it = index.find( name );
 	if( it == index.end() )
 	{
-		throw Exception( "Display not registered" );
+		throw Exception( "Output not registered" );
 	}
-	return addDisplay( it->first, it->second.get() );
+	return addOutput( it->first, it->second.get() );
 }
 
-Gaffer::CompoundPlug *Displays::addDisplay( const std::string &name, const IECore::Display *display )
+Gaffer::CompoundPlug *Outputs::addOutput( const std::string &name, const IECore::Display *output )
 {
-	CompoundPlugPtr displayPlug = new CompoundPlug( "display1" );
-	displayPlug->setFlags( Plug::Dynamic, true );
+	CompoundPlugPtr outputPlug = new CompoundPlug( "output1" );
+	outputPlug->setFlags( Plug::Dynamic, true );
 	
 	StringPlugPtr namePlug = new StringPlug( "name" );
 	namePlug->setValue( name );
 	namePlug->setFlags( Plug::Dynamic, true );
-	displayPlug->addChild( namePlug );
+	outputPlug->addChild( namePlug );
 	
 	BoolPlugPtr activePlug = new BoolPlug( "active", Plug::In, true );
 	activePlug->setFlags( Plug::Dynamic, true );
-	displayPlug->addChild( activePlug );
+	outputPlug->addChild( activePlug );
 	
 	StringPlugPtr fileNamePlug = new StringPlug( "fileName" );
-	fileNamePlug->setValue( display->getName() );
+	fileNamePlug->setValue( output->getName() );
 	fileNamePlug->setFlags( Plug::Dynamic, true );
-	displayPlug->addChild( fileNamePlug );
+	outputPlug->addChild( fileNamePlug );
 
 	StringPlugPtr typePlug = new StringPlug( "type" );
-	typePlug->setValue( display->getType() );
+	typePlug->setValue( output->getType() );
 	typePlug->setFlags( Plug::Dynamic, true );
-	displayPlug->addChild( typePlug );
+	outputPlug->addChild( typePlug );
 	
 	StringPlugPtr dataPlug = new StringPlug( "data" );
 	dataPlug->setFlags( Plug::Dynamic, true );
-	displayPlug->addChild( dataPlug );
+	outputPlug->addChild( dataPlug );
 	
 	CompoundDataPlugPtr parametersPlug = new CompoundDataPlug( "parameters" );
 	parametersPlug->setFlags( Plug::Dynamic, true );
-	parametersPlug->addMembers( const_cast<Display *>( display )->parametersData(), /* useNameAsPlugName = */ true );
-	displayPlug->addChild( parametersPlug );
+	parametersPlug->addMembers( const_cast<Display *>( output )->parametersData(), /* useNameAsPlugName = */ true );
+	outputPlug->addChild( parametersPlug );
 	
-	displaysPlug()->addChild( displayPlug );
+	outputsPlug()->addChild( outputPlug );
 
 	// set one of the values _after_ adding the plug, otherwise
 	// affects() is not called and we have no opportunity to
 	// propagate dirtiness to our output globals.
-	dataPlug->setValue( display->getData() );
+	dataPlug->setValue( output->getData() );
 	
-	return displayPlug.get();
+	return outputPlug.get();
 }
 
-void Displays::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
+void Outputs::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	GlobalsProcessor::affects( input, outputs );
 	
-	if( displaysPlug()->isAncestorOf( input ) )
+	if( outputsPlug()->isAncestorOf( input ) )
 	{
 		outputs.push_back( outPlug()->globalsPlug() );
 	}
 }
 
-void Displays::hashProcessedGlobals( const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void Outputs::hashProcessedGlobals( const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	displaysPlug()->hash( h );
+	outputsPlug()->hash( h );
 }
 
-IECore::ConstCompoundObjectPtr Displays::computeProcessedGlobals( const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputGlobals ) const
+IECore::ConstCompoundObjectPtr Outputs::computeProcessedGlobals( const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputGlobals ) const
 {
-	const CompoundPlug *dsp = displaysPlug(); 
+	const CompoundPlug *dsp = outputsPlug(); 
 	if( !dsp->children().size() )
 	{
 		return inputGlobals;
@@ -181,35 +184,35 @@ IECore::ConstCompoundObjectPtr Displays::computeProcessedGlobals( const Gaffer::
 	
 	CompoundObjectPtr result = inputGlobals->copy();
 	
-	// add our displays to the result
+	// add our outputs to the result
 	for( InputCompoundPlugIterator it( dsp ); it != it.end(); it++ )
 	{
-		const CompoundPlug *displayPlug = it->get();
-		if( displayPlug->getChild<BoolPlug>( "active" )->getValue() )
+		const CompoundPlug *outputPlug = it->get();
+		if( outputPlug->getChild<BoolPlug>( "active" )->getValue() )
 		{
 			// backwards compatibility with old plug layout
-			const StringPlug *namePlug = displayPlug->getChild<StringPlug>( "label" );
+			const StringPlug *namePlug = outputPlug->getChild<StringPlug>( "label" );
 			if( !namePlug )
 			{
-				namePlug = displayPlug->getChild<StringPlug>( "name" );
+				namePlug = outputPlug->getChild<StringPlug>( "name" );
 			}
 			const std::string name = namePlug->getValue();
 			
-			const StringPlug *fileNamePlug = displayPlug->getChild<StringPlug>( "fileName" );
+			const StringPlug *fileNamePlug = outputPlug->getChild<StringPlug>( "fileName" );
 			if( !fileNamePlug )
 			{
 				// backwards compatibility with old plug layout
-				fileNamePlug = displayPlug->getChild<StringPlug>( "name" );
+				fileNamePlug = outputPlug->getChild<StringPlug>( "name" );
 			}
 			const std::string fileName = fileNamePlug->getValue();
 			
-			const std::string type = displayPlug->getChild<StringPlug>( "type" )->getValue();
-			const std::string data = displayPlug->getChild<StringPlug>( "data" )->getValue();
+			const std::string type = outputPlug->getChild<StringPlug>( "type" )->getValue();
+			const std::string data = outputPlug->getChild<StringPlug>( "data" )->getValue();
 			if( name.size() && fileName.size() && type.size() && data.size() )
 			{
 				DisplayPtr d = new Display( fileName, type, data );
-				displayPlug->getChild<CompoundDataPlug>( "parameters" )->fillCompoundData( d->parameters() );
-				result->members()["display:" + name] = d;
+				outputPlug->getChild<CompoundDataPlug>( "parameters" )->fillCompoundData( d->parameters() );
+				result->members()["output:" + name] = d;
 			}
 		}
 	}
@@ -217,12 +220,12 @@ IECore::ConstCompoundObjectPtr Displays::computeProcessedGlobals( const Gaffer::
 	return result;
 }
 
-void Displays::registerDisplay( const std::string &name, const IECore::Display *display )
+void Outputs::registerOutput( const std::string &name, const IECore::Display *output )
 {
-	NamedDisplay d( name, display->copy() );
+	NamedOutput d( name, output->copy() );
 	
-	DisplayMap::nth_index<0>::type &index = displayMap().get<0>();
-	DisplayMap::const_iterator it = index.find( name );
+	OutputMap::nth_index<0>::type &index = outputMap().get<0>();
+	OutputMap::const_iterator it = index.find( name );
 	if( it == index.end() )
 	{
 		index.insert( d );
@@ -233,10 +236,10 @@ void Displays::registerDisplay( const std::string &name, const IECore::Display *
 	}
 }
 
-void Displays::registeredDisplays( std::vector<std::string> &names )
+void Outputs::registeredOutputs( std::vector<std::string> &names )
 {
-	const DisplayMap::nth_index<1>::type &index = displayMap().get<1>();
-	for( DisplayMap::nth_index<1>::type::const_iterator it=index.begin(); it!=index.end(); it++ )
+	const OutputMap::nth_index<1>::type &index = outputMap().get<1>();
+	for( OutputMap::nth_index<1>::type::const_iterator it=index.begin(); it!=index.end(); it++ )
 	{
 		names.push_back( it->first );
 	}

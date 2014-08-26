@@ -51,7 +51,7 @@ from SphereTest import SphereTest
 from InstancerTest import InstancerTest
 from ObjectToSceneTest import ObjectToSceneTest
 from CameraTest import CameraTest
-from DisplaysTest import DisplaysTest
+from OutputsTest import OutputsTest
 from CustomOptionsTest import CustomOptionsTest
 from SceneNodeTest import SceneNodeTest
 from PathMatcherTest import PathMatcherTest

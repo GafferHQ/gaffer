@@ -46,7 +46,7 @@ import SceneProcessorUI
 import FilteredSceneProcessorUI
 import PruneUI
 import SubTreeUI
-import DisplaysUI
+import OutputsUI
 import OptionsUI
 import OpenGLAttributesUI
 import SceneContextVariablesUI
