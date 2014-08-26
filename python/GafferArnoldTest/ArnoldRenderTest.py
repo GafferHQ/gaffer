@@ -84,8 +84,8 @@ class ArnoldRenderTest( GafferTest.TestCase ) :
 
 		s["plane"] = GafferScene.Plane()
 		
-		s["displays"] = GafferScene.Displays()
-		s["displays"].addDisplay(
+		s["outputs"] = GafferScene.Outputs()
+		s["outputs"].addOutput(
 			"beauty",
 			IECore.Display(
 				"/tmp/test.tif",
@@ -94,10 +94,10 @@ class ArnoldRenderTest( GafferTest.TestCase ) :
 				{}
 			)
 		)
-		s["displays"]["in"].setInput( s["plane"]["out"] )
+		s["outputs"]["in"].setInput( s["plane"]["out"] )
 		
 		s["render"] = GafferArnold.ArnoldRender()
-		s["render"]["in"].setInput( s["displays"]["out"] )
+		s["render"]["in"].setInput( s["outputs"]["out"] )
 		
 		s["render"]["verbosity"].setValue( 1 )
 		s["render"]["fileName"].setValue( "/tmp/test.ass" )
@@ -138,8 +138,8 @@ class ArnoldRenderTest( GafferTest.TestCase ) :
 
 		s["plane"] = GafferScene.Plane()
 		
-		s["displays"] = GafferScene.Displays()
-		s["displays"].addDisplay(
+		s["outputs"] = GafferScene.Outputs()
+		s["outputs"].addOutput(
 			"beauty",
 			IECore.Display(
 				"/tmp/test.####.tif",
@@ -148,10 +148,10 @@ class ArnoldRenderTest( GafferTest.TestCase ) :
 				{}
 			)
 		)
-		s["displays"]["in"].setInput( s["plane"]["out"] )
+		s["outputs"]["in"].setInput( s["plane"]["out"] )
 		
 		s["render"] = GafferArnold.ArnoldRender()
-		s["render"]["in"].setInput( s["displays"]["out"] )
+		s["render"]["in"].setInput( s["outputs"]["out"] )
 		
 		s["render"]["verbosity"].setValue( 1 )
 		s["render"]["fileName"].setValue( "/tmp/test.####.ass" )
@@ -186,9 +186,9 @@ class ArnoldRenderTest( GafferTest.TestCase ) :
 		
 		s["plane"] = GafferScene.Plane()
 		
-		s["displays"] = GafferScene.Displays()
-		s["displays"]["in"].setInput( s["plane"]["out"] )
-		s["displays"].addDisplay(
+		s["outputs"] = GafferScene.Outputs()
+		s["outputs"]["in"].setInput( s["plane"]["out"] )
+		s["outputs"].addOutput(
 			"beauty",
 			IECore.Display(
 				"$renderDirectory/test.####.exr",
@@ -199,7 +199,7 @@ class ArnoldRenderTest( GafferTest.TestCase ) :
 		)
 		
 		s["render"] = GafferArnold.ArnoldRender()
-		s["render"]["in"].setInput( s["displays"]["out"] )
+		s["render"]["in"].setInput( s["outputs"]["out"] )
 		s["render"]["fileName"].setValue( "$assDirectory/test.####.ass" )
 		s["render"]["mode"].setValue( "generate" )
 		

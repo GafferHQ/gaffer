@@ -1,7 +1,6 @@
 ##########################################################################
 #  
-#  Copyright (c) 2012, John Haddon. All rights reserved.
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -39,30 +38,20 @@ import IECore
 
 import GafferScene
 
-GafferScene.Displays.registerDisplay( 
-	"Interactive/Beauty",
-	IECore.Display( 
-		"beauty",
-		"ieDisplay",
-		"rgba",
-		{
-			"driverType" : "ClientDisplayDriver",
-			"displayHost" : "localhost",
-			"displayPort" : "1559",
-			"remoteDisplayType" : "GafferImage::GafferDisplayDriver",
-			"quantize" : IECore.IntVectorData( [ 0, 0, 0, 0 ] ),
-		}
-	)
-)
+## A little wrapper sufficient to load old Displays nodes
+# and cause them to be turned into Outputs nodes on the
+# next save.
+class Displays( GafferScene.Outputs ) :
 
-GafferScene.Displays.registerDisplay( 
-	"Batch/Beauty",
-	IECore.Display( 
-		"${project:rootDirectory}/renders/${script:name}/beauty/beauty.####.exr",
-		"exr",
-		"rgba",
-		{
-			"quantize" : IECore.IntVectorData( [ 0, 0, 0, 0 ] ),
-		}
-	)
-)
+	def __init__( self, name = "Displays" ) :
+	
+		GafferScene.Outputs.__init__( self, name )
+		
+	def __getitem__( self, key ) :
+		
+		key = "outputs" if key == "displays" else key
+		return GafferScene.Outputs.__getitem__( self, key )
+
+IECore.registerRunTimeTyped( Displays, typeName = "GafferScene::Displays" )
+
+GafferScene.Displays = Displays

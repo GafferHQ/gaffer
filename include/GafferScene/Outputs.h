@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,14 +35,51 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENEBINDINGS_DISPLAYSBINDING_H
-#define GAFFERSCENEBINDINGS_DISPLAYSBINDING_H
+#ifndef GAFFERSCENE_OUTPUTS_H
+#define GAFFERSCENE_OUTPUTS_H
 
-namespace GafferSceneBindings
+#include "IECore/Display.h"
+
+#include "GafferScene/GlobalsProcessor.h"
+
+namespace GafferScene
 {
 
-void bindDisplays();
+class Outputs : public GlobalsProcessor
+{
 
-} // namespace GafferSceneBindings
+	public :
 
-#endif // GAFFERSCENEBINDINGS_DISPLAYSBINDING_H
+		Outputs( const std::string &name=defaultName<Outputs>() );
+		virtual ~Outputs();
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::Outputs, OutputsTypeId, GlobalsProcessor );
+		
+		Gaffer::CompoundPlug *outputsPlug();
+		const Gaffer::CompoundPlug *outputsPlug() const;
+		
+		/// Add an output previously registered with registerOutput().
+		Gaffer::CompoundPlug *addOutput( const std::string &name );
+		Gaffer::CompoundPlug *addOutput( const std::string &name, const IECore::Display *output );
+				
+		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
+		
+		static void registerOutput( const std::string &name, const IECore::Display *output );
+		static void registeredOutputs( std::vector<std::string> &names );
+
+	protected :
+
+		virtual void hashProcessedGlobals( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual IECore::ConstCompoundObjectPtr computeProcessedGlobals( const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputGlobals ) const;
+
+	private :
+	
+		static size_t g_firstPlugIndex;
+
+};
+
+IE_CORE_DECLAREPTR( Outputs )
+
+} // namespace GafferScene
+
+#endif // GAFFERSCENE_OUTPUTS_H

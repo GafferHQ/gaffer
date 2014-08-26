@@ -85,8 +85,8 @@ class InteractiveRenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		s["a"]["in"].setInput( s["g"]["out"] )
 		s["a"]["shader"].setInput( s["s"]["out"] )
 		
-		s["d"] = GafferScene.Displays()
-		s["d"].addDisplay(
+		s["d"] = GafferScene.Outputs()
+		s["d"].addOutput(
 			"beauty",
 			IECore.Display(
 				"test",
@@ -222,8 +222,8 @@ class InteractiveRenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		s["a"]["in"].setInput( s["g"]["out"] )
 		s["a"]["shader"].setInput( s["s"]["out"] )
 		
-		s["d"] = GafferScene.Displays()
-		s["d"].addDisplay(
+		s["d"] = GafferScene.Outputs()
+		s["d"].addOutput(
 			"beauty",
 			IECore.Display(
 				"test",
@@ -325,8 +325,8 @@ class InteractiveRenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		s["a"]["shader"].setInput( s["s"]["out"] )
 		s["a"]["filter"].setInput( s["f"]["match"] )
 		
-		s["d"] = GafferScene.Displays()
-		s["d"].addDisplay(
+		s["d"] = GafferScene.Outputs()
+		s["d"].addOutput(
 			"beauty",
 			IECore.Display(
 				"test",
@@ -437,8 +437,8 @@ class InteractiveRenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		s["a"]["in"].setInput( s["g"]["out"] )
 		s["a"]["shader"].setInput( s["s"]["out"] )
 		
-		s["d"] = GafferScene.Displays()
-		s["d"].addDisplay(
+		s["d"] = GafferScene.Outputs()
+		s["d"].addOutput(
 			"beauty",
 			IECore.Display(
 				"test",
@@ -516,8 +516,8 @@ class InteractiveRenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		s["a"]["in"].setInput( s["g"]["out"] )
 		s["a"]["shader"].setInput( s["s"]["out"] )
 		
-		s["d"] = GafferScene.Displays()
-		s["d"].addDisplay(
+		s["d"] = GafferScene.Outputs()
+		s["d"].addOutput(
 			"beauty",
 			IECore.Display(
 				"test",
@@ -602,8 +602,8 @@ class InteractiveRenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		s["a"]["in"].setInput( s["g"]["out"] )
 		s["a"]["shader"].setInput( s["s"]["out"] )
 		
-		s["d"] = GafferScene.Displays()
-		s["d"].addDisplay(
+		s["d"] = GafferScene.Outputs()
+		s["d"].addOutput(
 			"beauty",
 			IECore.Display(
 				"test",
@@ -672,8 +672,8 @@ class InteractiveRenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		s["g"]["in"].setInput( s["p"]["out"] )
 		s["g"]["in1"].setInput( s["c"]["out"] )
 		
-		s["d"] = GafferScene.Displays()
-		s["d"].addDisplay(
+		s["d"] = GafferScene.Outputs()
+		s["d"].addOutput(
 			"beauty",
 			IECore.Display(
 				"test",
@@ -736,8 +736,8 @@ class InteractiveRenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		s["g"]["in"].setInput( s["p"]["out"] )
 		s["g"]["in1"].setInput( s["c"]["out"] )
 		
-		s["d"] = GafferScene.Displays()
-		s["d"].addDisplay(
+		s["d"] = GafferScene.Outputs()
+		s["d"].addOutput(
 			"beauty",
 			IECore.Display(
 				"test",
@@ -822,8 +822,8 @@ class InteractiveRenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		s["g"]["in1"].setInput( s["camera"]["out"] )
 		s["g"]["in2"].setInput( s["coordSys"]["out"] )
 		
-		s["d"] = GafferScene.Displays()
-		s["d"].addDisplay(
+		s["d"] = GafferScene.Outputs()
+		s["d"].addOutput(
 			"beauty",
 			IECore.Display(
 				"test",

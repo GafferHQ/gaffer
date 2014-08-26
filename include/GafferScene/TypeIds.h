@@ -64,7 +64,7 @@ enum TypeId
 	ObjectToSceneTypeId = 110519,
 	CameraTypeId = 110520,
 	GlobalsProcessorTypeId = 110521,
-	DisplaysTypeId = 110522,
+	OutputsTypeId = 110522,
 	OptionsTypeId = 110523,
 	ShaderTypeId = 110524,
 	ShaderAssignmentTypeId = 110525,

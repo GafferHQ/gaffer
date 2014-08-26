@@ -71,7 +71,7 @@
 #include "GafferScene/MapOffset.h"
 
 #include "GafferSceneBindings/ScenePlugBinding.h"
-#include "GafferSceneBindings/DisplaysBinding.h"
+#include "GafferSceneBindings/OutputsBinding.h"
 #include "GafferSceneBindings/PathMatcherBinding.h"
 #include "GafferSceneBindings/SceneProceduralBinding.h"
 #include "GafferSceneBindings/PathMatcherDataBinding.h"
@@ -123,7 +123,7 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	
 	GafferBindings::ExecutableNodeClass<SceneWriter>();
 
-	bindDisplays();
+	bindOutputs();
 	bindPathMatcher();
 	bindPathMatcherData();
 	bindSceneProcedural();

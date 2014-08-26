@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
 //  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,51 +34,49 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_DISPLAYS_H
-#define GAFFERSCENE_DISPLAYS_H
+#include "boost/python.hpp"
+#include "boost/python/suite/indexing/container_utils.hpp"
 
-#include "IECore/Display.h"
+#include "GafferBindings/DependencyNodeBinding.h"
 
-#include "GafferScene/GlobalsProcessor.h"
+#include "GafferScene/Outputs.h"
 
-namespace GafferScene
+#include "GafferSceneBindings/OutputsBinding.h"
+
+using namespace std;
+using namespace boost::python;
+using namespace Gaffer;
+using namespace GafferBindings;
+using namespace GafferScene;
+
+static Gaffer::CompoundPlugPtr addOutputWrapper1( Outputs &outputs, const std::string &name )
 {
+	return outputs.addOutput( name );
+}
 
-class Displays : public GlobalsProcessor
+static Gaffer::CompoundPlugPtr addOutputWrapper2( Outputs &outputs, const std::string &name, const IECore::Display *d )
 {
+	return outputs.addOutput( name, d );
+}
 
-	public :
+static tuple registeredOutputsWrapper()
+{
+	vector<string> names;
+	Outputs::registeredOutputs( names );
+	boost::python::list l;
+	for( vector<string>::const_iterator it = names.begin(); it!=names.end(); it++ )
+	{
+		l.append( *it );
+	}
+	return boost::python::tuple( l );
+}
 
-		Displays( const std::string &name=defaultName<Displays>() );
-		virtual ~Displays();
-
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::Displays, DisplaysTypeId, GlobalsProcessor );
-		
-		Gaffer::CompoundPlug *displaysPlug();
-		const Gaffer::CompoundPlug *displaysPlug() const;
-		
-		/// Add a display previously registered with registerDisplay().
-		Gaffer::CompoundPlug *addDisplay( const std::string &label );
-		Gaffer::CompoundPlug *addDisplay( const std::string &label, const IECore::Display *display );
-				
-		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
-		
-		static void registerDisplay( const std::string &label, const IECore::Display *display );
-		static void registeredDisplays( std::vector<std::string> &labels );
-
-	protected :
-
-		virtual void hashProcessedGlobals( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual IECore::ConstCompoundObjectPtr computeProcessedGlobals( const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputGlobals ) const;
-
-	private :
-	
-		static size_t g_firstPlugIndex;
-
-};
-
-IE_CORE_DECLAREPTR( Displays )
-
-} // namespace GafferScene
-
-#endif // GAFFERSCENE_DISPLAYS_H
+void GafferSceneBindings::bindOutputs()
+{
+	DependencyNodeClass<Outputs>()
+		.def( "addOutput", &addOutputWrapper1 )
+		.def( "addOutput", &addOutputWrapper2 )
+		.def( "registerOutput", &Outputs::registerOutput ).staticmethod( "registerOutput" )
+		.def( "registeredOutputs", &registeredOutputsWrapper ).staticmethod( "registeredOutputs" )
+	;
+}
