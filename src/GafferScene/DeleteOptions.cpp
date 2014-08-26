@@ -34,10 +34,6 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/algorithm/string/predicate.hpp"
-
-#include "Gaffer/StringAlgo.h"
-
 #include "GafferScene/DeleteOptions.h"
 
 using namespace Gaffer;
@@ -45,87 +41,16 @@ using namespace GafferScene;
 
 IE_CORE_DEFINERUNTIMETYPED( DeleteOptions );
 
-size_t DeleteOptions::g_firstPlugIndex = 0;
-
 DeleteOptions::DeleteOptions( const std::string &name )
-	:	GlobalsProcessor( name )
+	:	DeleteGlobals( name )
 {
-	storeIndexOfNextChild( g_firstPlugIndex );
-	addChild( new StringPlug( "names" ) );
-	addChild( new BoolPlug( "invertNames" ) );
 }
 
 DeleteOptions::~DeleteOptions()
 {
 }
 
-Gaffer::StringPlug *DeleteOptions::namesPlug()
+std::string DeleteOptions::namePrefix() const
 {
-	return getChild<StringPlug>( g_firstPlugIndex );
+	return "option:";
 }
-
-const Gaffer::StringPlug *DeleteOptions::namesPlug() const
-{
-	return getChild<StringPlug>( g_firstPlugIndex );
-}
-		
-Gaffer::BoolPlug *DeleteOptions::invertNamesPlug()
-{
-	return getChild<BoolPlug>( g_firstPlugIndex + 1 );
-}
-
-const Gaffer::BoolPlug *DeleteOptions::invertNamesPlug() const
-{
-	return getChild<BoolPlug>( g_firstPlugIndex + 1 );
-}
-		
-void DeleteOptions::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
-{
-	GlobalsProcessor::affects( input, outputs );
-	
-	if( input == namesPlug() || input == invertNamesPlug() )
-	{
-		outputs.push_back( outPlug()->globalsPlug() );
-	}
-}
-
-void DeleteOptions::hashProcessedGlobals( const Gaffer::Context *context, IECore::MurmurHash &h ) const
-{
-	namesPlug()->hash( h );
-	invertNamesPlug()->hash( h );
-}
-
-IECore::ConstCompoundObjectPtr DeleteOptions::computeProcessedGlobals( const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputGlobals ) const
-{
-	if( inputGlobals->members().empty() )
-	{
-		return inputGlobals;
-	}
-	
-	const std::string names = namesPlug()->getValue();
-	const bool invert = invertNamesPlug()->getValue();
-	if( !invert && !names.size() )
-	{
-		return inputGlobals;
-	}
-
-	IECore::CompoundObjectPtr result = new IECore::CompoundObject;
-	for( IECore::CompoundObject::ObjectMap::const_iterator it = inputGlobals->members().begin(), eIt = inputGlobals->members().end(); it != eIt; ++it )
-	{
-		bool keep = true;
-		if( boost::starts_with( it->first.c_str(), "option:" ) )
-		{
-			if( matchMultiple( it->first.c_str() + 7, names.c_str() ) != invert )
-			{
-				keep = false;
-			}
-		}
-		if( keep )
-		{
-			result->members()[it->first] = it->second;
-		}
-	}
-	
-	return result;
-}
-

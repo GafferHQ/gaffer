@@ -34,32 +34,14 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_DELETEOPTIONS_H
-#define GAFFERSCENE_DELETEOPTIONS_H
+#ifndef GAFFERSCENEBINDINGS_DELETEGLOBALSBINDING_H
+#define GAFFERSCENEBINDINGS_DELETEGLOBALSBINDING_H
 
-#include "GafferScene/DeleteGlobals.h"
-
-namespace GafferScene
+namespace GafferSceneBindings
 {
 
-class DeleteOptions : public DeleteGlobals
-{
+void bindDeleteGlobals();
 
-	public :
+} // namespace GafferSceneBindings
 
-		DeleteOptions( const std::string &name=defaultName<DeleteOptions>() );
-		virtual ~DeleteOptions();
-
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::DeleteOptions, DeleteOptionsTypeId, DeleteGlobals );
-		
-	protected :
-
-		virtual std::string namePrefix() const;
-		
-};
-
-IE_CORE_DECLAREPTR( DeleteOptions );
-
-} // namespace GafferScene
-
-#endif // GAFFERSCENE_DELETEOPTIONS_H
+#endif // GAFFERSCENEBINDINGS_DELETEGLOBALSBINDING_H

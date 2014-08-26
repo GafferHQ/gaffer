@@ -75,6 +75,7 @@ import PrimitiveVariablesUI
 import DuplicateUI
 import GridUI
 import SetFilterUI
+import DeleteGlobalsUI
 import DeleteOptionsUI
 
 # then all the PathPreviewWidgets. note that the order

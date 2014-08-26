@@ -34,32 +34,19 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_DELETEOPTIONS_H
-#define GAFFERSCENE_DELETEOPTIONS_H
+#include "boost/python.hpp"
+
+#include "GafferBindings/DependencyNodeBinding.h"
 
 #include "GafferScene/DeleteGlobals.h"
 
-namespace GafferScene
+#include "GafferSceneBindings/DeleteGlobalsBinding.h"
+
+using namespace GafferScene;
+
+void GafferSceneBindings::bindDeleteGlobals()
 {
-
-class DeleteOptions : public DeleteGlobals
-{
-
-	public :
-
-		DeleteOptions( const std::string &name=defaultName<DeleteOptions>() );
-		virtual ~DeleteOptions();
-
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::DeleteOptions, DeleteOptionsTypeId, DeleteGlobals );
-		
-	protected :
-
-		virtual std::string namePrefix() const;
-		
-};
-
-IE_CORE_DECLAREPTR( DeleteOptions );
-
-} // namespace GafferScene
-
-#endif // GAFFERSCENE_DELETEOPTIONS_H
+	GafferBindings::DependencyNodeClass<DeleteGlobals>()
+		.def( "_namePrefix", &DeleteGlobals::namePrefix )
+	;
+}

@@ -34,23 +34,58 @@
 #  
 ##########################################################################
 
+import IECore
+
 import Gaffer
+import GafferUI
 import GafferScene
 
 ##########################################################################
-# Metadata
+# Right click menu for names
 ##########################################################################
 
-Gaffer.Metadata.registerNodeDescription(
+def __toggleName( plug, name, active ) :
 
-GafferScene.DeleteOptions,
+	names = plug.getValue().split()
+	if active :
+		names.append( name )
+	else :
+		names.remove( name )
+		
+	with Gaffer.UndoContext( plug.ancestor( Gaffer.ScriptNode ) ) :
+		plug.setValue( " ".join( names ) )
+	
+def __namesPopupMenu( menuDefinition, plugValueWidget ) :
 
-"""A node which removes options from the globals.""",
+	plug = plugValueWidget.getPlug()
+	node = plug.node()
+	if not isinstance( node, GafferScene.DeleteGlobals ) :
+		return
 
-"names",
-"The names of options to be removed.",
+	if plug != node["names"] :
+		return
+	
+	with plugValueWidget.getContext() :
+		globals = node["in"]["globals"].getValue()
+		currentNames = set( node["names"].getValue().split() )
+	
+	prefix = node._namePrefix()
+	names = [ n for n in globals.keys() if n.startswith( prefix ) ]
+	if not names :
+		return
 
-"invertNames",
-"When on, matching names are kept, and non-matching names are removed.",
+	menuDefinition.prepend( "/NamesDivider", { "divider" : True } )
+	
+	menuPrefix = "/" + node.typeName().rsplit( ":" )[-1].replace( "Delete", "" ) + "/"
+	for name in reversed( sorted( list( names ) ) ) :
+		nameWithoutPrefix = name[len(prefix):]
+		menuDefinition.prepend(
+			menuPrefix + nameWithoutPrefix,
+			{
+				"command" : IECore.curry( __toggleName, plug, nameWithoutPrefix ),
+				"active" : plug.settable() and not plugValueWidget.getReadOnly(),
+				"checkBox" : nameWithoutPrefix in currentNames,
+			}
+		)
 
-)
+__namesPopupMenuConnection = GafferUI.PlugValueWidget.popupMenuSignal().connect( __namesPopupMenu )

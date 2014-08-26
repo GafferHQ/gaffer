@@ -34,32 +34,51 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_DELETEOPTIONS_H
-#define GAFFERSCENE_DELETEOPTIONS_H
+#ifndef GAFFERSCENE_DELETEGLOBALS_H
+#define GAFFERSCENE_DELETEGLOBALS_H
 
-#include "GafferScene/DeleteGlobals.h"
+#include "GafferScene/GlobalsProcessor.h"
+
+#include "GafferSceneBindings/DeleteGlobalsBinding.h" // to enable friend declaration for bindDeleteGlobals().
 
 namespace GafferScene
 {
 
-class DeleteOptions : public DeleteGlobals
+class DeleteGlobals : public GlobalsProcessor
 {
 
 	public :
 
-		DeleteOptions( const std::string &name=defaultName<DeleteOptions>() );
-		virtual ~DeleteOptions();
+		DeleteGlobals( const std::string &name=defaultName<DeleteGlobals>() );
+		virtual ~DeleteGlobals();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::DeleteOptions, DeleteOptionsTypeId, DeleteGlobals );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::DeleteGlobals, DeleteGlobalsTypeId, GlobalsProcessor );
+		
+		Gaffer::StringPlug *namesPlug();
+		const Gaffer::StringPlug *namesPlug() const;
+		
+		Gaffer::BoolPlug *invertNamesPlug();
+		const Gaffer::BoolPlug *invertNamesPlug() const;
+		
+		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
 		
 	protected :
 
 		virtual std::string namePrefix() const;
+
+		virtual void hashProcessedGlobals( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual IECore::ConstCompoundObjectPtr computeProcessedGlobals( const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputGlobals ) const;
+
+	private :
+	
+		static size_t g_firstPlugIndex;
+
+		friend void GafferSceneBindings::bindDeleteGlobals();
 		
 };
 
-IE_CORE_DECLAREPTR( DeleteOptions );
+IE_CORE_DECLAREPTR( DeleteGlobals );
 
 } // namespace GafferScene
 
-#endif // GAFFERSCENE_DELETEOPTIONS_H
+#endif // GAFFERSCENE_DELETEGLOBALS_H
