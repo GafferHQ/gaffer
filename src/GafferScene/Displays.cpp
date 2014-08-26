@@ -187,8 +187,22 @@ IECore::ConstCompoundObjectPtr Displays::computeProcessedGlobals( const Gaffer::
 		const CompoundPlug *displayPlug = it->get();
 		if( displayPlug->getChild<BoolPlug>( "active" )->getValue() )
 		{
-			const std::string name = displayPlug->getChild<StringPlug>( "name" )->getValue();
-			const std::string fileName = displayPlug->getChild<StringPlug>( "fileName" )->getValue();
+			// backwards compatibility with old plug layout
+			const StringPlug *namePlug = displayPlug->getChild<StringPlug>( "label" );
+			if( !namePlug )
+			{
+				namePlug = displayPlug->getChild<StringPlug>( "name" );
+			}
+			const std::string name = namePlug->getValue();
+			
+			const StringPlug *fileNamePlug = displayPlug->getChild<StringPlug>( "fileName" );
+			if( !fileNamePlug )
+			{
+				// backwards compatibility with old plug layout
+				fileNamePlug = displayPlug->getChild<StringPlug>( "name" );
+			}
+			const std::string fileName = fileNamePlug->getValue();
+			
 			const std::string type = displayPlug->getChild<StringPlug>( "type" )->getValue();
 			const std::string data = displayPlug->getChild<StringPlug>( "data" )->getValue();
 			if( name.size() && fileName.size() && type.size() && data.size() )

@@ -123,7 +123,7 @@ class _ChildPlugWidget( GafferUI.PlugValueWidget ) :
 				collapseButton.__clickedConnection = collapseButton.clickedSignal().connect( Gaffer.WeakMethod( self.__collapseButtonClicked ) )
 				
 				GafferUI.PlugValueWidget.create( childPlug["active"] )
-				self.__label = GafferUI.Label( childPlug["name"].getValue() )
+				self.__label = GafferUI.Label( self.__namePlug().getValue() )
 		
 				GafferUI.Spacer( IECore.V2i( 1 ), maximumSize = IECore.V2i( 100000, 1 ), parenting = { "expand" : True } )
 		
@@ -133,8 +133,8 @@ class _ChildPlugWidget( GafferUI.PlugValueWidget ) :
 				
 			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing= 4 ) as self.__detailsColumn :
 			
-				GafferUI.PlugWidget( childPlug["name"] )
-				GafferUI.PlugWidget( childPlug["fileName"] )
+				GafferUI.PlugWidget( self.__namePlug() )
+				GafferUI.PlugWidget( self.__fileNamePlug() )
 				GafferUI.PlugWidget( childPlug["type"] )
 				GafferUI.PlugWidget( childPlug["data"] )
 				GafferUI.CompoundDataPlugValueWidget( childPlug["parameters"], collapsed=None )
@@ -158,7 +158,19 @@ class _ChildPlugWidget( GafferUI.PlugValueWidget ) :
 			self.__label.setEnabled( enabled )
 			self.__detailsColumn.setEnabled( enabled )
 			
-			self.__label.setText( self.getPlug()["name"].getValue() )
+			self.__label.setText( self.__namePlug().getValue() )
+
+	def __namePlug( self ) :
+	
+		plug = self.getPlug()
+		# backwards compatibility with old plug layout
+		return plug.getChild( "label" ) or plug.getChild( "name" )
+
+	def __fileNamePlug( self ) :
+	
+		plug = self.getPlug()
+		# backwards compatibility with old plug layout
+		return plug.getChild( "fileName" ) or plug.getChild( "name" )
 
 	def __enter( self, widget ) :
 	

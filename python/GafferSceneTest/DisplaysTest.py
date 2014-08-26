@@ -35,6 +35,7 @@
 #  
 ##########################################################################
 
+import os
 import unittest
 
 import IECore
@@ -133,6 +134,20 @@ class DisplaysTest( GafferSceneTest.SceneTestCase ) :
 		
 		displays.addDisplay( "test", IECore.Display( "name", "type", "data", { "paramA" : 1, "paramB" : 2 } ) )
 		self.assertTrue( "displays.out.globals" in set( e[0].fullName() for e in cs ) )
+	
+	def testBackwardsCompatibility( self ) :
+	
+		script = Gaffer.ScriptNode()
+		script["fileName"].setValue( os.path.dirname( __file__ ) + "/scripts/displaysBeforePlugRename.gfr" )
+		script.load()
+		
+		with script.context() :
+			g = script["Displays"]["out"]["globals"].getValue()
+			
+		self.assertTrue( "display:Batch/Beauty" in g )
+		self.assertTrue( "display:Interactive/Beauty" in g )
+		self.assertEqual( g["display:Interactive/Beauty"].getName(), "beauty" )
+		self.assertTrue( g["display:Batch/Beauty"].getName().endswith( "displaysBeforePlugRename/beauty/beauty.0001.exr" ) )
 		
 if __name__ == "__main__":
 	unittest.main()
