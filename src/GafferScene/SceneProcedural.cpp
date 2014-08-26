@@ -70,13 +70,13 @@ SceneProcedural::SceneProcedural( ConstScenePlugPtr scenePlug, const Gaffer::Con
 	Context::Scope scopedContext( m_context.get() );
 	ConstCompoundObjectPtr globals = m_scenePlug->globalsPlug()->getValue();
 	
-	const BoolData *transformBlurData = globals->member<BoolData>( "render:transformBlur" );
+	const BoolData *transformBlurData = globals->member<BoolData>( "option:render:transformBlur" );
 	m_options.transformBlur = transformBlurData ? transformBlurData->readable() : false;
 	
-	const BoolData *deformationBlurData = globals->member<BoolData>( "render:deformationBlur" );
+	const BoolData *deformationBlurData = globals->member<BoolData>( "option:render:deformationBlur" );
 	m_options.deformationBlur = deformationBlurData ? deformationBlurData->readable() : false;
 	
-	const V2fData *shutterData = globals->member<V2fData>( "render:shutter" );
+	const V2fData *shutterData = globals->member<V2fData>( "option:render:shutter" );
 	m_options.shutter = shutterData ? shutterData->readable() : V2f( -0.25, 0.25 );
 	m_options.shutter += V2f( m_context->getFrame() );
 	

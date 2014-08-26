@@ -84,6 +84,17 @@ void Options::hashProcessedGlobals( const Gaffer::Context *context, IECore::Murm
 IECore::ConstCompoundObjectPtr Options::computeProcessedGlobals( const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputGlobals ) const
 {
 	IECore::CompoundObjectPtr result = inputGlobals->copy();
-	optionsPlug()->fillCompoundObject( result->members() );
+	const CompoundDataPlug *p = optionsPlug();
+	
+	std::string name;
+	for( CompoundDataPlug::MemberPlugIterator it( p ); it != it.end(); ++it )
+	{
+		IECore::DataPtr d = p->memberDataAndName( it->get(), name );
+		if( d )
+		{
+			result->members()["option:" + name] = d;
+		}
+	}
+	
 	return result;
 }

@@ -212,6 +212,25 @@ class RenderTest( GafferSceneTest.SceneTestCase ) :
 				
 		self.assertTrue( "/group/sphere" in str( a.exception ) )
 		self.assertTrue( "is not a camera" in str( a.exception ) )
+
+	def testOptions( self ) :
+	
+		s = Gaffer.ScriptNode()
+		s["fileName"].setValue( "/tmp/test.gfr" )
+		
+		s["p"] = GafferScene.Plane()
+		s["o"] = GafferScene.CustomOptions()
+		s["o"]["options"].addMember( "user:test", IECore.IntData( 10 ) )
+	
+		s["r"] = GafferSceneTest.TestRender()
+		s["r"]["in"].setInput( s["o"]["out"] )
+		
+		# CapturingRenderer outputs some spurious errors which
+		# we suppress by capturing them.
+		with IECore.CapturingMessageHandler() :
+			s["r"].execute()
+		
+		self.assertEqual( s["r"].renderer().getOption( "user:test" ), IECore.IntData( 10 ) )
 		
 if __name__ == "__main__":
 	unittest.main()

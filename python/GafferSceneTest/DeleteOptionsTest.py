@@ -66,21 +66,27 @@ class DeleteOptionsTest( GafferSceneTest.SceneTestCase ) :
 		options["options"].addMember( "test2", 2 )
 		options["options"].addMember( "test3", 3 )
 
+		g = deleteOptions["out"]["globals"].getValue()
+		
+		self.assertEqual( g["option:test1"], IECore.IntData( 1 ) )
+		self.assertEqual( g["option:test2"], IECore.IntData( 2 ) )
+		self.assertEqual( g["option:test3"], IECore.IntData( 3 ) )
+
 		deleteOptions["names"].setValue( "test1 test2" )
 		
 		g = deleteOptions["out"]["globals"].getValue()
 
-		self.assertEqual( g["test3"], IECore.IntData( 3 ) )
-		self.assertFalse( "test1" in g )
-		self.assertFalse( "test2" in g )
+		self.assertEqual( g["option:test3"], IECore.IntData( 3 ) )
+		self.assertFalse( "option:test1" in g )
+		self.assertFalse( "option:test2" in g )
 
 		deleteOptions["names"].setValue( "test*" )
 		
 		g = deleteOptions["out"]["globals"].getValue()
 
-		self.assertFalse( "test1" in g )
-		self.assertFalse( "test2" in g )
-		self.assertFalse( "test3" in g )
+		self.assertFalse( "option:test1" in g )
+		self.assertFalse( "option:test2" in g )
+		self.assertFalse( "option:test3" in g )
 		
 		# test dirty propagation
 		

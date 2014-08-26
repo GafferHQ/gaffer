@@ -71,8 +71,8 @@ class CustomOptionsTest( GafferSceneTest.SceneTestCase ) :
 		
 		g = options["out"]["globals"].getValue()
 		self.assertEqual( len( g ), 2 )
-		self.assertEqual( g["test"], IECore.IntData( 10 ) )
-		self.assertEqual( g["test2"], IECore.StringData( "10" ) )
+		self.assertEqual( g["option:test"], IECore.IntData( 10 ) )
+		self.assertEqual( g["option:test2"], IECore.StringData( "10" ) )
 	
 	def testSerialisation( self ) :
 	
@@ -88,8 +88,8 @@ class CustomOptionsTest( GafferSceneTest.SceneTestCase ) :
 		
 		g = s2["optionsNode"]["out"]["globals"].getValue()
 		self.assertEqual( len( g ), 2 )
-		self.assertEqual( g["test"], IECore.IntData( 10 ) )
-		self.assertEqual( g["test2"], IECore.StringData( "10" ) )
+		self.assertEqual( g["option:test"], IECore.IntData( 10 ) )
+		self.assertEqual( g["option:test2"], IECore.StringData( "10" ) )
 		self.assertTrue( "options1" not in s2["optionsNode"] )
 	
 	def testHashPassThrough( self ) :

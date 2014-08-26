@@ -34,6 +34,8 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
+#include "boost/algorithm/string/predicate.hpp"
+
 #include "Gaffer/StringAlgo.h"
 
 #include "GafferScene/DeleteOptions.h"
@@ -110,7 +112,15 @@ IECore::ConstCompoundObjectPtr DeleteOptions::computeProcessedGlobals( const Gaf
 	IECore::CompoundObjectPtr result = new IECore::CompoundObject;
 	for( IECore::CompoundObject::ObjectMap::const_iterator it = inputGlobals->members().begin(), eIt = inputGlobals->members().end(); it != eIt; ++it )
 	{
-		if( matchMultiple( it->first, names ) == invert )
+		bool keep = true;
+		if( boost::starts_with( it->first.c_str(), "option:" ) )
+		{
+			if( matchMultiple( it->first.c_str() + 7, names.c_str() ) != invert )
+			{
+				keep = false;
+			}
+		}
+		if( keep )
 		{
 			result->members()[it->first] = it->second;
 		}

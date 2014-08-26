@@ -1356,7 +1356,7 @@ class __OptionsSection( Section ) :
 		
 		def name( self ) :
 		
-			return self.__optionName or ""
+			return self.__optionName[7:] if self.__optionName else ""
 	
 		def __call__( self, target ) :
 			
@@ -1366,11 +1366,8 @@ class __OptionsSection( Section ) :
 
 		def children( self, target ) :
 		
-			options = target.scene["globals"].getValue()
-			optionNames = []
-			for k in options.keys() :
-				if k != "gaffer:sets" and not k.startswith( "output:" ) :
-					optionNames.append( k )
+			globals = target.scene["globals"].getValue()
+			optionNames = [ k for k in globals.keys() if k.startswith( "option:" ) ]
 			
 			return [ self.__class__( optionName ) for optionName in optionNames ]
 

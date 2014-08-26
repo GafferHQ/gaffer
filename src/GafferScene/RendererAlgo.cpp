@@ -35,6 +35,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/filesystem.hpp"
+#include "boost/algorithm/string/predicate.hpp"
 
 #include "IECore/PreWorldRenderable.h"
 #include "IECore/Camera.h"
@@ -64,6 +65,7 @@ void outputScene( const ScenePlug *scene, IECore::Renderer *renderer )
 {
 	ConstCompoundObjectPtr globals = scene->globalsPlug()->getValue();
 	outputOptions( globals.get(), renderer );
+	outputOutputs( globals.get(), renderer );
 	outputCamera( scene, globals.get(), renderer );
 	{
 		WorldBlock world( renderer );
@@ -75,18 +77,42 @@ void outputScene( const ScenePlug *scene, IECore::Renderer *renderer )
 	}
 }
 
+void outputOutputs( const IECore::CompoundObject *globals, IECore::Renderer *renderer )
+{
+	CompoundObject::ObjectMap::const_iterator it, eIt;
+	for( it = globals->members().begin(), eIt = globals->members().end(); it != eIt; it++ )
+	{
+		if( !boost::starts_with( it->first.c_str(), "output:" ) )
+		{
+			continue;
+		}
+		if( const Display *d = runTimeCast<Display>( it->second.get() ) )
+		{
+			d->render( renderer );
+		}
+		else
+		{
+			throw IECore::Exception( "Global \"" + it->first.string() + "\" is not an IECore::Display" );
+		}
+	}
+}
+
 void outputOptions( const IECore::CompoundObject *globals, IECore::Renderer *renderer )
 {
 	CompoundObject::ObjectMap::const_iterator it, eIt;
 	for( it = globals->members().begin(), eIt = globals->members().end(); it != eIt; it++ )
 	{
-		if( const PreWorldRenderable *r = runTimeCast<PreWorldRenderable>( it->second.get() ) )
+		if( !boost::starts_with( it->first.c_str(), "option:" ) )
 		{
-			r->render( renderer );
+			continue;
 		}
-		else if( const Data *d = runTimeCast<Data>( it->second.get() ) )
+		if( const Data *d = runTimeCast<Data>( it->second.get() ) )
 		{
-			renderer->setOption( it->first, d );
+			renderer->setOption( it->first.c_str() + 7, d );
+		}
+		else
+		{
+			throw IECore::Exception( "Global \"" + it->first.string() + "\" is not IECore::Data" );		
 		}
 	}
 }
@@ -95,7 +121,7 @@ void outputCamera( const ScenePlug *scene, const IECore::CompoundObject *globals
 {
 	// get the camera from the scene
 	
-	const StringData *cameraPathData = globals->member<StringData>( "render:camera" );
+	const StringData *cameraPathData = globals->member<StringData>( "option:render:camera" );
 	IECore::CameraPtr camera = 0;
 	if( cameraPathData )
 	{
@@ -113,7 +139,7 @@ void outputCamera( const ScenePlug *scene, const IECore::CompoundObject *globals
 		}
 		
 		camera = constCamera->copy();
-		const BoolData *cameraBlurData = globals->member<BoolData>( "render:cameraBlur" );
+		const BoolData *cameraBlurData = globals->member<BoolData>( "option:render:cameraBlur" );
 		const bool cameraBlur = cameraBlurData ? cameraBlurData->readable() : false;
 		camera->setTransform( transform( scene, cameraPath, shutter( globals ), cameraBlur ) );
 	}
@@ -125,13 +151,13 @@ void outputCamera( const ScenePlug *scene, const IECore::CompoundObject *globals
 	
 	// apply the resolution and crop window
 	
-	const V2iData *resolutionData = globals->member<V2iData>( "render:resolution" );
+	const V2iData *resolutionData = globals->member<V2iData>( "option:render:resolution" );
 	if( resolutionData )
 	{
 		camera->parameters()["resolution"] = resolutionData->copy();
 	}
 	
-	const Box2fData *cropWindowData = globals->member<Box2fData>( "render:cropWindow" );
+	const Box2fData *cropWindowData = globals->member<Box2fData>( "option:render:cropWindow" );
 	if( cropWindowData )
 	{
 		camera->parameters()["cropWindow"] = cropWindowData->copy();
@@ -298,19 +324,19 @@ void createDisplayDirectories( const IECore::CompoundObject *globals )
 
 Imath::V2f shutter( const IECore::CompoundObject *globals )
 {
-	const BoolData *cameraBlurData = globals->member<BoolData>( "render:cameraBlur" );
+	const BoolData *cameraBlurData = globals->member<BoolData>( "option:render:cameraBlur" );
 	const bool cameraBlur = cameraBlurData ? cameraBlurData->readable() : false;
 	
-	const BoolData *transformBlurData = globals->member<BoolData>( "render:transformBlur" );
+	const BoolData *transformBlurData = globals->member<BoolData>( "option:render:transformBlur" );
 	const bool transformBlur = transformBlurData ? transformBlurData->readable() : false;
 	
-	const BoolData *deformationBlurData = globals->member<BoolData>( "render:deformationBlur" );
+	const BoolData *deformationBlurData = globals->member<BoolData>( "option:render:deformationBlur" );
 	const bool deformationBlur = deformationBlurData ? deformationBlurData->readable() : false;
 	
 	V2f shutter( Context::current()->getFrame() );
 	if( cameraBlur || transformBlur || deformationBlur )
 	{
-		const V2fData *shutterData = globals->member<V2fData>( "render:shutter" );
+		const V2fData *shutterData = globals->member<V2fData>( "option:render:shutter" );
 		const V2f relativeShutter = shutterData ? shutterData->readable() : V2f( -0.25, 0.25 );
 		shutter += relativeShutter;
 	}

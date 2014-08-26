@@ -50,6 +50,9 @@ namespace GafferScene
 /// Individual parts of a scene may be output more specifically using the methods below.
 void outputScene( const ScenePlug *scene, IECore::Renderer *renderer );
 
+/// Outputs the output declarations from the globals.
+void outputOutputs( const IECore::CompoundObject *globals, IECore::Renderer *renderer );
+
 /// Outputs the renderer options specified by the globals.
 void outputOptions( const IECore::CompoundObject *globals, IECore::Renderer *renderer );
 
