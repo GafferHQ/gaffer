@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,53 +34,23 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
-#include "boost/python/suite/indexing/container_utils.hpp"
-
-#include "GafferBindings/DependencyNodeBinding.h"
-
-#include "GafferScene/Outputs.h"
 #include "GafferScene/DeleteOutputs.h"
 
-#include "GafferSceneBindings/OutputsBinding.h"
-
-using namespace std;
-using namespace boost::python;
 using namespace Gaffer;
-using namespace GafferBindings;
 using namespace GafferScene;
 
-static Gaffer::CompoundPlugPtr addOutputWrapper1( Outputs &outputs, const std::string &name )
+IE_CORE_DEFINERUNTIMETYPED( DeleteOutputs );
+
+DeleteOutputs::DeleteOutputs( const std::string &name )
+	:	DeleteGlobals( name )
 {
-	return outputs.addOutput( name );
 }
 
-static Gaffer::CompoundPlugPtr addOutputWrapper2( Outputs &outputs, const std::string &name, const IECore::Display *d )
+DeleteOutputs::~DeleteOutputs()
 {
-	return outputs.addOutput( name, d );
 }
 
-static tuple registeredOutputsWrapper()
+std::string DeleteOutputs::namePrefix() const
 {
-	vector<string> names;
-	Outputs::registeredOutputs( names );
-	boost::python::list l;
-	for( vector<string>::const_iterator it = names.begin(); it!=names.end(); it++ )
-	{
-		l.append( *it );
-	}
-	return boost::python::tuple( l );
-}
-
-void GafferSceneBindings::bindOutputs()
-{
-	DependencyNodeClass<Outputs>()
-		.def( "addOutput", &addOutputWrapper1 )
-		.def( "addOutput", &addOutputWrapper2 )
-		.def( "registerOutput", &Outputs::registerOutput ).staticmethod( "registerOutput" )
-		.def( "registeredOutputs", &registeredOutputsWrapper ).staticmethod( "registeredOutputs" )
-	;
-
-	DependencyNodeClass<DeleteOutputs>();
-
+	return "output:";
 }

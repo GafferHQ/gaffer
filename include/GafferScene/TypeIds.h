@@ -116,6 +116,7 @@ enum TypeId
 	CoordinateSystemTypeId = 110571,
 	DeleteGlobalsTypeId = 110572,
 	DeleteOptionsTypeId = 110573,
+	DeleteOutputsTypeId = 110574,
 	
 	LastTypeId = 110650
 };

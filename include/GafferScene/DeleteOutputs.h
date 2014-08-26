@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,53 +34,32 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
-#include "boost/python/suite/indexing/container_utils.hpp"
+#ifndef GAFFERSCENE_DELETEOUTPUTS_H
+#define GAFFERSCENE_DELETEOUTPUTS_H
 
-#include "GafferBindings/DependencyNodeBinding.h"
+#include "GafferScene/DeleteGlobals.h"
 
-#include "GafferScene/Outputs.h"
-#include "GafferScene/DeleteOutputs.h"
-
-#include "GafferSceneBindings/OutputsBinding.h"
-
-using namespace std;
-using namespace boost::python;
-using namespace Gaffer;
-using namespace GafferBindings;
-using namespace GafferScene;
-
-static Gaffer::CompoundPlugPtr addOutputWrapper1( Outputs &outputs, const std::string &name )
+namespace GafferScene
 {
-	return outputs.addOutput( name );
-}
 
-static Gaffer::CompoundPlugPtr addOutputWrapper2( Outputs &outputs, const std::string &name, const IECore::Display *d )
+class DeleteOutputs : public DeleteGlobals
 {
-	return outputs.addOutput( name, d );
-}
 
-static tuple registeredOutputsWrapper()
-{
-	vector<string> names;
-	Outputs::registeredOutputs( names );
-	boost::python::list l;
-	for( vector<string>::const_iterator it = names.begin(); it!=names.end(); it++ )
-	{
-		l.append( *it );
-	}
-	return boost::python::tuple( l );
-}
+	public :
 
-void GafferSceneBindings::bindOutputs()
-{
-	DependencyNodeClass<Outputs>()
-		.def( "addOutput", &addOutputWrapper1 )
-		.def( "addOutput", &addOutputWrapper2 )
-		.def( "registerOutput", &Outputs::registerOutput ).staticmethod( "registerOutput" )
-		.def( "registeredOutputs", &registeredOutputsWrapper ).staticmethod( "registeredOutputs" )
-	;
+		DeleteOutputs( const std::string &name=defaultName<DeleteOutputs>() );
+		virtual ~DeleteOutputs();
 
-	DependencyNodeClass<DeleteOutputs>();
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::DeleteOutputs, DeleteOutputsTypeId, DeleteGlobals );
+				
+	protected :
 
-}
+		virtual std::string namePrefix() const;
+				
+};
+
+IE_CORE_DECLAREPTR( DeleteOutputs );
+
+} // namespace GafferScene
+
+#endif // GAFFERSCENE_DELETEOUTPUTS_H
