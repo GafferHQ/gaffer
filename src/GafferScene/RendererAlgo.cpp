@@ -70,6 +70,7 @@ void outputScene( const ScenePlug *scene, IECore::Renderer *renderer )
 	{
 		WorldBlock world( renderer );
 
+		outputCoordinateSystems( scene, globals.get(), renderer );
 		outputLights( scene, globals.get(), renderer );
 
 		SceneProceduralPtr proc = new SceneProcedural( scene, Context::current() );
