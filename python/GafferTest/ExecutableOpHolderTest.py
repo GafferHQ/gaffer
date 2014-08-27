@@ -1,25 +1,25 @@
 ##########################################################################
-#  
+#
 #  Copyright (c) 2013-2014, Image Engine Design Inc. All rights reserved.
-#  
+#
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
 #  met:
-#  
+#
 #      * Redistributions of source code must retain the above
 #        copyright notice, this list of conditions and the following
 #        disclaimer.
-#  
+#
 #      * Redistributions in binary form must reproduce the above
 #        copyright notice, this list of conditions and the following
 #        disclaimer in the documentation and/or other materials provided with
 #        the distribution.
-#  
+#
 #      * Neither the name of John Haddon nor the names of
 #        any other contributors to this software may be used to endorse or
 #        promote products derived from this software without specific prior
 #        written permission.
-#  
+#
 #  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 #  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 #  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -31,7 +31,7 @@
 #  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 #  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 #  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#  
+#
 ##########################################################################
 
 import unittest
@@ -59,7 +59,7 @@ class TestOp (IECore.Op) :
 class ExecutableOpHolderTest( GafferTest.TestCase ) :
 
 	def testType( self ) :
-	
+
 		n = Gaffer.ExecutableOpHolder()
 		self.assertEqual( n.typeName(), "Gaffer::ExecutableOpHolder" )
 		self.failUnless( n.isInstanceOf( Gaffer.ParameterisedHolderExecutableNode.staticTypeId() ) )
@@ -76,13 +76,13 @@ class ExecutableOpHolderTest( GafferTest.TestCase ) :
 		self.assertEqual( n['requirements'].direction(), Gaffer.Plug.Direction.In )
 
 	def testSetOp( self ) :
-	
+
 		n = Gaffer.ExecutableOpHolder()
 		opSpec = GafferTest.ParameterisedHolderTest.classSpecification( "primitive/renameVariables", "IECORE_OP_PATHS" )[:-1]
 		n.setOp( *opSpec )
 
 	def testExecutableMethods( self ) :
-		
+
 		n = Gaffer.ExecutableOpHolder()
 		opSpec = GafferTest.ParameterisedHolderTest.classSpecification( "primitive/renameVariables", "IECORE_OP_PATHS" )[:-1]
 		n.setOp( *opSpec )
@@ -91,14 +91,14 @@ class ExecutableOpHolderTest( GafferTest.TestCase ) :
 		self.assertEqual( n.hash(c), h )
 
 	def testSetParameterised( self ) :
-	
+
 		n = Gaffer.ExecutableOpHolder()
 		op = TestOp()
 		n.setParameterised( op )
 		self.assertEqual( op, n.getOp() )
 
 	def testExecute( self ) :
-	
+
 		n = Gaffer.ExecutableOpHolder()
 		op = TestOp()
 		n.setParameterised( op )
@@ -109,39 +109,39 @@ class ExecutableOpHolderTest( GafferTest.TestCase ) :
 		self.assertEqual( op.counter, 1 )
 
 	def testContextSubstitutions( self ) :
-	
+
 		n = Gaffer.ExecutableOpHolder()
 		op = TestOp()
 		n.setParameterised( op )
 		self.assertEqual( op.counter, 0 )
 		self.assertEqual( op.stringValue, "" )
-		
+
 		c = Gaffer.Context()
 		c.setFrame( 1 )
 		with c :
 			n.execute()
 		self.assertEqual( op.counter, 1 )
 		self.assertEqual( op.stringValue, "" )
-		
+
 		n["parameters"]["stringParm"].setValue( "${frame}" )
 		with c :
 			n.execute()
 		self.assertEqual( op.counter, 2 )
 		self.assertEqual( op.stringValue, "1" )
-		
+
 		# variable outside the context (and environment) get removed
 		n["parameters"]["stringParm"].setValue( "${test}" )
 		with c :
 			n.execute()
 		self.assertEqual( op.counter, 3 )
 		self.assertEqual( op.stringValue, "" )
-		
+
 		c["test"] = "passed"
 		with c :
 			n.execute()
 		self.assertEqual( op.counter, 4 )
 		self.assertEqual( op.stringValue, "passed" )
-	
+
 	def testRequirements( self ) :
 
 		n1 = Gaffer.ExecutableOpHolder()
@@ -156,7 +156,7 @@ class ExecutableOpHolderTest( GafferTest.TestCase ) :
 		r1 = Gaffer.Plug( name = "r1" )
 		n2['requirements'].addChild( r1 )
 		r1.setInput( n2a['requirement'] )
-		
+
 		r2 = Gaffer.Plug( name = "r2" )
 		n2['requirements'].addChild( r2 )
 		r2.setInput( n2b['requirement'] )
@@ -175,44 +175,44 @@ class ExecutableOpHolderTest( GafferTest.TestCase ) :
 		self.assertEqual( n2Requirements[1], t2 )
 		self.assertEqual( len(set(n2.requirements(c)).difference([ t1, t2])), 0 )
 		self.assertEqual( n1.requirements(c), [ Gaffer.ExecutableNode.Task(n2,c) ] )
-	
+
 	def testSerialise( self ) :
-	
+
 		s = Gaffer.ScriptNode()
 		s["n"] = Gaffer.ExecutableOpHolder()
-	
+
 		opSpec = GafferTest.ParameterisedHolderTest.classSpecification( "primitive/renameVariables", "IECORE_OP_PATHS" )[:-1]
 		s["n"].setOp( *opSpec )
-		
+
 		s2 = Gaffer.ScriptNode()
 		s2.execute( s.serialise() )
-		
+
 		self.assertEqual( s["n"]["parameters"].keys(), s2["n"]["parameters"].keys() )
-	
+
 	def testHash( self ) :
-		
+
 		c = Gaffer.Context()
 		c.setFrame( 1 )
 		c2 = Gaffer.Context()
 		c2.setFrame( 2 )
-		
+
 		n = Gaffer.ExecutableOpHolder()
 		op = TestOp()
-		
+
 		# output doesn't vary until we set an op
 		self.assertEqual( n.hash( c ), IECore.MurmurHash() )
-		
+
 		# output varies if any op is set
 		n.setParameterised( op )
 		self.assertNotEqual( n.hash( c ), IECore.MurmurHash() )
-		
+
 		# output doesn't vary by time unless ${frame} is used by the parameters
 		self.assertEqual( n.hash( c ), n.hash( c2 ) )
-		
+
 		# output varies by time because ${frame} is used by the parameters
 		n["parameters"]["stringParm"].setValue( "${frame}" )
 		self.assertNotEqual( n.hash( c ), n.hash( c2 ) )
-		
+
 		# output varies any context entry used by the parameters
 		n["parameters"]["stringParm"].setValue( "${test}" )
 		self.assertEqual( n.hash( c ), n.hash( c2 ) )
@@ -225,4 +225,4 @@ class ExecutableOpHolderTest( GafferTest.TestCase ) :
 
 if __name__ == "__main__":
 	unittest.main()
-	
+

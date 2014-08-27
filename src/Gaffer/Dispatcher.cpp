@@ -1,25 +1,25 @@
 //////////////////////////////////////////////////////////////////////////
-//  
+//
 //  Copyright (c) 2013-2014, Image Engine Design Inc. All rights reserved.
-//  
+//
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
 //  met:
-//  
+//
 //	  * Redistributions of source code must retain the above
 //		copyright notice, this list of conditions and the following
 //		disclaimer.
-//  
+//
 //	  * Redistributions in binary form must reproduce the above
 //		copyright notice, this list of conditions and the following
 //		disclaimer in the documentation and/or other materials provided with
 //		the distribution.
-//  
+//
 //	  * Neither the name of John Haddon nor the names of
 //		any other contributors to this software may be used to endorse or
 //		promote products derived from this software without specific prior
 //		written permission.
-//  
+//
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 //  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 //  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -31,7 +31,7 @@
 //  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 //  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//  
+//
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/filesystem.hpp"
@@ -62,7 +62,7 @@ Dispatcher::Dispatcher( const std::string &name )
 	: Node( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
-	
+
 	addChild( new IntPlug( "framesMode", Plug::In, CurrentFrame, CurrentFrame ) );
 	addChild( new StringPlug( "frameRange", Plug::In, "" ) );
 	addChild( new StringPlug( "jobName", Plug::In, "" ) );
@@ -79,7 +79,7 @@ void Dispatcher::dispatch( const std::vector<NodePtr> &nodes ) const
 	{
 		throw IECore::Exception( getName().string() + ": Must specify at least one node to dispatch." );
 	}
-	
+
 	std::vector<ExecutableNodePtr> executables;
 	const ScriptNode *script = (*nodes.begin())->scriptNode();
 	for ( std::vector<NodePtr>::const_iterator nIt = nodes.begin(); nIt != nodes.end(); ++nIt )
@@ -89,7 +89,7 @@ void Dispatcher::dispatch( const std::vector<NodePtr> &nodes ) const
 		{
 			throw IECore::Exception( getName().string() + ": Dispatched nodes must all belong to the same ScriptNode." );
 		}
-		
+
 		if ( ExecutableNode *executable = runTimeCast<ExecutableNode>( nIt->get() ) )
 		{
 			executables.push_back( executable );
@@ -110,19 +110,19 @@ void Dispatcher::dispatch( const std::vector<NodePtr> &nodes ) const
 			throw IECore::Exception( getName().string() + ": Dispatched nodes must be ExecutableNodes or Boxes containing ExecutableNodes." );
 		}
 	}
-	
+
 	if ( preDispatchSignal()( this, executables ) )
 	{
 		/// \todo: communicate the cancellation to the user
 		return;
 	}
-	
+
 	const Context *context = Context::current();
-	
+
 	std::vector<FrameList::Frame> frames;
 	FrameListPtr frameList = frameRange( script, context );
 	frameList->asList( frames );
-	
+
 	size_t i = 0;
 	ExecutableNode::Tasks tasks;
 	tasks.reserve( executables.size() * frames.size() );
@@ -135,14 +135,14 @@ void Dispatcher::dispatch( const std::vector<NodePtr> &nodes ) const
 			tasks.push_back( ExecutableNode::Task( *nIt, frameContext ) );
 		}
 	}
-	
+
 	TaskBatchPtr rootBatch = batchTasks( tasks );
-	
+
 	if ( !rootBatch->requirements().empty() )
 	{
 		doDispatch( rootBatch.get() );
 	}
-	
+
 	postDispatchSignal()( this, executables );
 }
 
@@ -189,14 +189,14 @@ const StringPlug *Dispatcher::jobDirectoryPlug() const
 const std::string Dispatcher::jobDirectory( const Context *context ) const
 {
 	std::string jobDir = context->substitute( jobDirectoryPlug()->getValue() );
-	
+
 	boost::filesystem::path path( jobDir );
 	path /= context->substitute( jobNamePlug()->getValue() );
 	if ( path == "" )
 	{
 		return boost::filesystem::current_path().string();
 	}
-	
+
 	boost::filesystem::create_directories( path );
 	return path.string();
 }
@@ -207,12 +207,12 @@ const std::string Dispatcher::jobDirectory( const Context *context ) const
 
 Dispatcher::DispatchSignal &Dispatcher::preDispatchSignal()
 {
-	return g_preDispatchSignal;	
+	return g_preDispatchSignal;
 }
 
 Dispatcher::DispatchSignal &Dispatcher::postDispatchSignal()
 {
-	return g_postDispatchSignal;	
+	return g_postDispatchSignal;
 }
 
 void Dispatcher::setupPlugs( CompoundPlug *parentPlug )
@@ -225,7 +225,7 @@ void Dispatcher::setupPlugs( CompoundPlug *parentPlug )
 			parentPlug->addChild( new IntPlug( g_batchSize, Plug::In, 1 ) );
 		}
 	}
-	
+
 	for ( DispatcherMap::const_iterator cit = g_dispatchers.begin(); cit != g_dispatchers.end(); cit++ )
 	{
 		cit->second->doSetupPlugs( parentPlug );
@@ -261,31 +261,31 @@ const Dispatcher *Dispatcher::dispatcher( const std::string &name )
 Dispatcher::TaskBatchPtr Dispatcher::batchTasks( const ExecutableNode::Tasks &tasks )
 {
 	TaskBatchPtr root = new TaskBatch;
-	
+
 	BatchMap currentBatches;
 	TaskToBatchMap tasksToBatches;
-	
+
 	for ( ExecutableNode::Tasks::const_iterator it = tasks.begin(); it != tasks.end(); ++it )
 	{
 		batchTasksWalk( root, *it, currentBatches, tasksToBatches );
 	}
-	
+
 	return root;
 }
 
 void Dispatcher::batchTasksWalk( Dispatcher::TaskBatchPtr parent, const ExecutableNode::Task &task, BatchMap &currentBatches, TaskToBatchMap &tasksToBatches )
 {
 	TaskBatchPtr batch = acquireBatch( task, currentBatches, tasksToBatches );
-	
+
 	TaskBatches &parentRequirements = parent->requirements();
 	if ( ( batch != parent ) && std::find( parentRequirements.begin(), parentRequirements.end(), batch ) == parentRequirements.end() )
 	{
 		parentRequirements.push_back( batch );
 	}
-	
+
 	ExecutableNode::Tasks taskRequirements;
 	task.node()->requirements( task.context(), taskRequirements );
-	
+
 	for ( ExecutableNode::Tasks::const_iterator it = taskRequirements.begin(); it != taskRequirements.end(); ++it )
 	{
 		batchTasksWalk( batch, *it, currentBatches, tasksToBatches );
@@ -300,18 +300,18 @@ Dispatcher::TaskBatchPtr Dispatcher::acquireBatch( const ExecutableNode::Task &t
 	{
 		return it->second;
 	}
-	
+
 	MurmurHash hash = batchHash( task );
 	BatchMap::iterator bIt = currentBatches.find( hash );
 	if ( bIt != currentBatches.end() )
 	{
 		TaskBatchPtr batch = bIt->second;
-		
+
 		std::vector<float> &frames = batch->frames();
 		const CompoundPlug *dispatcherPlug = task.node()->dispatcherPlug();
 		const IntPlug *batchSizePlug = dispatcherPlug->getChild<const IntPlug>( g_batchSize );
 		size_t batchSize = ( batchSizePlug ) ? batchSizePlug->getValue() : 1;
-		
+
 		if ( task.node()->requiresSequenceExecution() || ( frames.size() < batchSize ) )
 		{
 			if ( task.hash() != MurmurHash() )
@@ -329,12 +329,12 @@ Dispatcher::TaskBatchPtr Dispatcher::acquireBatch( const ExecutableNode::Task &t
 					}
 				}
 			}
-			
+
 			tasksToBatches[taskHash] = batch;
 			return batch;
 		}
 	}
-	
+
 	TaskBatchPtr batch = new TaskBatch( task );
 	currentBatches[hash] = batch;
 	tasksToBatches[taskHash] = batch;
@@ -345,12 +345,12 @@ IECore::MurmurHash Dispatcher::batchHash( const ExecutableNode::Task &task )
 {
 	MurmurHash result;
 	result.append( (uint64_t)task.node() );
-	
+
 	if ( task.hash() == MurmurHash() )
 	{
 		return result;
 	}
-	
+
 	const Context *context = task.context();
 	std::vector<IECore::InternedString> names;
 	context->names( names );
@@ -366,7 +366,7 @@ IECore::MurmurHash Dispatcher::batchHash( const ExecutableNode::Task &task )
 			}
 		}
 	}
-	
+
 	return result;
 }
 
@@ -382,9 +382,9 @@ FrameListPtr Dispatcher::frameRange( const ScriptNode *script, const Context *co
 	{
 		return new FrameRange( script->frameStartPlug()->getValue(), script->frameEndPlug()->getValue() );
 	}
-	
+
 	// must be CustomRange
-	
+
 	try
 	{
 		return FrameList::parse( context->substitute( frameRangePlug()->getValue() ) );
@@ -409,7 +409,7 @@ Dispatcher::TaskBatch::TaskBatch( const ExecutableNode::Task &task )
 	: m_node( task.node() ), m_context( task.context() ), m_frames(), m_requirements()
 {
 	m_blindData = new CompoundData;
-	
+
 	if ( task.hash() != MurmurHash() )
 	{
 		m_frames.push_back( task.context()->getFrame() );
@@ -427,7 +427,7 @@ void Dispatcher::TaskBatch::execute() const
 	{
 		return;
 	}
-	
+
 	Context::Scope scopedContext( m_context.get() );
 	m_node->executeSequence( m_frames );
 }

@@ -1,25 +1,25 @@
 //////////////////////////////////////////////////////////////////////////
-//  
+//
 //  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
-//  
+//
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
 //  met:
-//  
+//
 //      * Redistributions of source code must retain the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer.
-//  
+//
 //      * Redistributions in binary form must reproduce the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
-//  
+//
 //      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
-//  
+//
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 //  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 //  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -31,7 +31,7 @@
 //  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 //  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//  
+//
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/bind.hpp"
@@ -59,7 +59,7 @@ Switch<BaseType>::Switch( const std::string &name )
 	{
 		// if the base class doesn't provide an enabledPlug(),
 		// then we'll provide our own.
-		BaseType::addChild( new BoolPlug( "enabled", Gaffer::Plug::In, true ) );		
+		BaseType::addChild( new BoolPlug( "enabled", Gaffer::Plug::In, true ) );
 	}
 
 	if( Plug *in = BaseType::template getChild<Plug>( "in" ) )
@@ -74,7 +74,7 @@ Switch<BaseType>::Switch( const std::string &name )
 		// our BaseType doesn't provide an "in" plug - not to worry though, we'll make
 		// our InputGenerator when an "in" plug gets added following construction.
 	}
-	
+
 	BaseType::childAddedSignal().connect( boost::bind( &Switch::childAdded, this, ::_2 ) );
 	BaseType::plugSetSignal().connect( boost::bind( &Switch::plugSet, this, ::_1 ) );
 }
@@ -120,7 +120,7 @@ template<typename BaseType>
 void Switch<BaseType>::affects( const Plug *input, DependencyNode::AffectedPlugsContainer &outputs ) const
 {
 	BaseType::affects( input, outputs );
-	
+
 	if(
 		input == enabledPlug() ||
 		input == indexPlug()
@@ -203,7 +203,7 @@ bool Switch<BaseType>::acceptsInput( const Plug *plug, const Plug *inputPlug ) c
 			return false;
 		}
 	}
-	
+
 	if( plug->direction() == Plug::In )
 	{
 		if( const Plug *opposite = oppositePlug( plug ) )
@@ -214,13 +214,13 @@ bool Switch<BaseType>::acceptsInput( const Plug *plug, const Plug *inputPlug ) c
 			}
 		}
 	}
-	
+
 	return true;
 }
 
 template<typename BaseType>
 void Switch<BaseType>::hash( const ValuePlug *output, const Context *context, IECore::MurmurHash &h ) const
-{	
+{
 	hashInternal<BaseType>( output, context, h );
 }
 
@@ -298,7 +298,7 @@ const Plug *Switch<BaseType>::oppositePlug( const Plug *plug, size_t inputIndex 
 	// the node, and names will contain the names of the hierarchy
 	// between plug and ancestorPlug.
 	const Plug *ancestorPlug = NULL;
-	std::vector<IECore::InternedString> names;	
+	std::vector<IECore::InternedString> names;
 	while( plug )
 	{
 		const GraphComponent *plugParent = plug->parent<GraphComponent>();
@@ -313,12 +313,12 @@ const Plug *Switch<BaseType>::oppositePlug( const Plug *plug, size_t inputIndex 
 			plug = static_cast<const Plug *>( plugParent );
 		}
 	}
-	
+
 	if( !ancestorPlug )
 	{
 		return NULL;
 	}
-	
+
 	// now we can find the opposite for this ancestor plug.
 	const Plug *oppositeAncestorPlug = NULL;
 	if( plug->direction() == Plug::Out )
@@ -333,19 +333,19 @@ const Plug *Switch<BaseType>::oppositePlug( const Plug *plug, size_t inputIndex 
 			oppositeAncestorPlug = BaseType::template getChild<Plug>( "out" );
 		}
 	}
-	
+
 	if( !oppositeAncestorPlug )
 	{
 		return NULL;
 	}
-	
+
 	// and then find the opposite of plug by traversing down from the ancestor plug.
 	const Plug *result = oppositeAncestorPlug;
 	for( std::vector<IECore::InternedString>::const_iterator it = names.begin(), eIt = names.end(); it != eIt; ++it )
 	{
 		result = result->getChild<Plug>( *it );
 	}
-	
+
 	return result;
 }
 
@@ -361,7 +361,7 @@ void Switch<BaseType>::updateInternalConnection()
 		/// is constant.
 		return;
 	}
-	
+
 	Plug *out = BaseType::template getChild<Plug>( "out" );
 	if( out )
 	{

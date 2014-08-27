@@ -1,26 +1,26 @@
 //////////////////////////////////////////////////////////////////////////
-//  
+//
 //  Copyright (c) 2012, John Haddon. All rights reserved.
 //  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
-//  
+//
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
 //  met:
-//  
+//
 //      * Redistributions of source code must retain the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer.
-//  
+//
 //      * Redistributions in binary form must reproduce the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
-//  
+//
 //      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
-//  
+//
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 //  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 //  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -32,7 +32,7 @@
 //  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 //  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//  
+//
 //////////////////////////////////////////////////////////////////////////
 
 #ifndef GAFFER_COMPOUNDDATAPLUG_H
@@ -53,7 +53,7 @@ class CompoundDataPlug : public Gaffer::CompoundPlug
 {
 
 	public :
-		
+
 		CompoundDataPlug(
 			const std::string &name = defaultName<CompoundDataPlug>(),
 			Direction direction=In,
@@ -70,18 +70,18 @@ class CompoundDataPlug : public Gaffer::CompoundPlug
 		/// The plug type used to represent the data members.
 		class MemberPlug : public CompoundPlug
 		{
-	
+
 			public :
 
 				IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::CompoundDataPlug::MemberPlug, CompoundDataMemberPlugTypeId, Gaffer::CompoundPlug );
 
 				MemberPlug( const std::string &name=defaultName<MemberPlug>(), Direction direction=In, unsigned flags=Default );
-				
+
 				virtual bool acceptsChild( const Gaffer::GraphComponent *potentialChild ) const;
 				virtual PlugPtr createCounterpart( const std::string &name, Direction direction ) const;
-	
+
 		};
-		
+
 		typedef Gaffer::FilteredChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::Invalid, MemberPlug> > MemberPlugIterator;
 		IE_CORE_DECLAREPTR( MemberPlug )
 
@@ -96,7 +96,7 @@ class CompoundDataPlug : public Gaffer::CompoundPlug
 		MemberPlug *addOptionalMember( const std::string &name, ValuePlug *valuePlug, const std::string &plugName = "member1", bool enabled = false );
 		/// Adds each member from the specified CompoundData.
 		void addMembers( const IECore::CompoundData *members, bool useNameAsPlugName = false );
-		
+
 		/// Returns the value for the member specified by the child parameterPlug, and fills name with the
 		/// name for the member. If the user has disabled the member or the name is the empty string, then
 		/// 0 is returned.
@@ -114,7 +114,7 @@ class CompoundDataPlug : public Gaffer::CompoundPlug
 		static IECore::DataPtr extractDataFromPlug( const ValuePlug *plug );
 
 	private :
-	
+
 		template<typename T>
 		static ValuePlugPtr boxValuePlug( const std::string &name, Plug::Direction direction, unsigned flags, const T *value );
 

@@ -1,26 +1,26 @@
 //////////////////////////////////////////////////////////////////////////
-//  
+//
 //  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  Copyright (c) 2013, Luke Goddard. All rights reserved.
-//  
+//
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
 //  met:
-//  
+//
 //      * Redistributions of source code must retain the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer.
-//  
+//
 //      * Redistributions in binary form must reproduce the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
-//  
+//
 //      * Neither the name of Image Engine Design nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
-//  
+//
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 //  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 //  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -32,7 +32,7 @@
 //  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 //  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//  
+//
 //////////////////////////////////////////////////////////////////////////
 
 #include "GafferImage/Reformat.h"
@@ -94,7 +94,7 @@ void Reformat::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outpu
 	}
 	else if ( input == inPlug()->channelDataPlug() )
 	{
-		outputs.push_back( outPlug()->channelDataPlug() );	
+		outputs.push_back( outPlug()->channelDataPlug() );
 	}
 }
 
@@ -107,7 +107,7 @@ bool Reformat::enabled() const
 
 	Format inFormat( inPlug()->formatPlug()->getValue() );
 	Format outFormat( formatPlug()->getValue() );
-		
+
 	return inFormat != outFormat;
 }
 
@@ -124,11 +124,11 @@ void Reformat::hashDataWindow( const GafferImage::ImagePlug *output, const Gaffe
 	Format format = formatPlug()->getValue();
 	h.append( format.getDisplayWindow() );
 	h.append( format.getPixelAspect() );
-	
+
 	Format inFormat = inPlug()->formatPlug()->getValue();
 	h.append( inFormat.getDisplayWindow() );
 	h.append( inFormat.getPixelAspect() );
-	
+
 	inPlug()->dataWindowPlug()->hash( h );
 }
 
@@ -143,13 +143,13 @@ void Reformat::hashChannelData( const GafferImage::ImagePlug *output, const Gaff
 
 	inPlug()->channelDataPlug()->hash( h );
 	filterPlug()->hash( h );
-	
+
 	h.append( inPlug()->dataWindowPlug()->getValue() );
-	
+
 	Format format = formatPlug()->getValue();
 	h.append( format.getDisplayWindow() );
 	h.append( format.getPixelAspect() );
-	
+
 	Format inFormat = inPlug()->formatPlug()->getValue();
 	h.append( inFormat.getDisplayWindow() );
 	h.append( inFormat.getPixelAspect() );
@@ -163,7 +163,7 @@ Imath::Box2i Reformat::computeDataWindow( const Gaffer::Context *context, const 
 
 	Imath::V2d inFormatOffset( inPlug()->formatPlug()->getValue().getDisplayWindow().min );
 	Imath::V2d outFormatOffset( formatPlug()->getValue().getDisplayWindow().min );
-	
+
 	Imath::Box2i outDataWindow(
 		Imath::V2i(
 			IECore::fastFloatFloor( double( inDataWindow.min.x - inFormatOffset.x ) * s.x + outFormatOffset.x ),
@@ -231,7 +231,7 @@ IECore::ConstFloatVectorDataPtr Reformat::computeChannelData( const std::string 
 
 	// Create our filter.
 	FilterPtr f = Filter::create( filterPlug()->getValue(), 1.f / scaleFactor.y );
-	
+
 	// If we are filtering with a box filter then just don't bother filtering
 	// at all and just integer sample instead...
 	if ( static_cast<GafferImage::TypeId>( f->typeId() ) == GafferImage::BoxFilterTypeId )
@@ -246,7 +246,7 @@ IECore::ConstFloatVectorDataPtr Reformat::computeChannelData( const std::string 
 		{
 			for ( int x = outTile.min.x, tx = 0; x <= outTile.max.x; ++x, ++tx )
 			{
-				float value = sampler.sample( float( ( x + .5f - outFormatOffset.x ) / scaleFactor.x + inFormatOffset.x ), float( ( y + .5f - outFormatOffset.y ) / scaleFactor.y + inFormatOffset.y ) ); 
+				float value = sampler.sample( float( ( x + .5f - outFormatOffset.x ) / scaleFactor.x + inFormatOffset.x ), float( ( y + .5f - outFormatOffset.y ) / scaleFactor.y + inFormatOffset.y ) );
 				out[ tx + ImagePlug::tileSize() * ty ] = value;
 			}
 		}
@@ -255,14 +255,14 @@ IECore::ConstFloatVectorDataPtr Reformat::computeChannelData( const std::string 
 
 	// Get the dimensions of our filter and create a box that we can use to define the bounds of our input.
 	int fHeight = f->width();
-	
+
 	int sampleMinY = f->tap( inTile.min.y );
 	int sampleMaxY = f->tap( inTile.max.y );
-		
+
 	f->setScale( 1.f / scaleFactor.x );
 	int sampleMinX = f->tap( inTile.min.x );
 	int sampleMaxX = f->tap( inTile.max.x );
-	
+
 	int fWidth = f->width();
 
 	Imath::Box2i sampleBox(
@@ -277,15 +277,15 @@ IECore::ConstFloatVectorDataPtr Reformat::computeChannelData( const std::string 
 	// We extend the buffer vertically as we will need additional information in the
 	// vertical squash (the second pass) to properly convolve the filter.
 	float buffer[ ImagePlug::tileSize() * sampleBoxHeight ];
-	
+
 	// Create several buffers for each pixel in the output row (or column depending on the pass)
 	// into which we can place the indices for the pixels that are contribute to it's result and
 	// their weight.
-	
+
 	// A buffer that holds a list of pixel contributions and their weights for every pixel in the output buffer.
 	// As it gets reused for both passes we make it large enough to hold both so that we don't have to resize it later.
-	std::vector<Contribution> contribution( ImagePlug::tileSize() * ( sampleBoxHeight > sampleBoxWidth ? sampleBoxHeight : sampleBoxWidth ) ); 
-	
+	std::vector<Contribution> contribution( ImagePlug::tileSize() * ( sampleBoxHeight > sampleBoxWidth ? sampleBoxHeight : sampleBoxWidth ) );
+
 	// The total number of pixels that contribute towards each pixel in th resulting image.
 	std::vector<int> coverageTotal( ImagePlug::tileSize() );
 
@@ -300,8 +300,8 @@ IECore::ConstFloatVectorDataPtr Reformat::computeChannelData( const std::string 
 	{
 		float center = ( outTile.min.x + i + 0.5 - outFormatOffset.x ) / scaleFactor.x + inFormatOffset.x;
 		int tap = f->tap( center );
-		
-		int n = 0;	
+
+		int n = 0;
 		weightedSum[i] = 0.;
 		for ( int j = tap; j < tap+fWidth; ++j )
 		{
@@ -310,14 +310,14 @@ IECore::ConstFloatVectorDataPtr Reformat::computeChannelData( const std::string 
 			{
 				continue;
 			}
-			
-			contribution[contributionIdx+n].pixel = j; 
-			weightedSum[i] += contribution[contributionIdx+n].weight = weight; 
+
+			contribution[contributionIdx+n].pixel = j;
+			weightedSum[i] += contribution[contributionIdx+n].weight = weight;
 			n++;
 		}
 		coverageTotal[i] = n;
 	}
-	
+
 	// Now that we know the contribution of each pixel from the others on the row, compute the
 	// horizontally scaled buffer which we will use as input in the vertical scale pass.
 	Sampler sampler( inPlug(), channelName, sampleBox, f, Sampler::Clamp );
@@ -343,7 +343,7 @@ IECore::ConstFloatVectorDataPtr Reformat::computeChannelData( const std::string 
 			buffer[i + ImagePlug::tileSize() * k] = intensity / weightedSum[i];
 		}
 	}
-	
+
 	// Vertical Pass
 	// Build the column buffer of contributing pixels and their weights for each pixel in the column.
 	f->setScale( 1.f / scaleFactor.y );
@@ -351,8 +351,8 @@ IECore::ConstFloatVectorDataPtr Reformat::computeChannelData( const std::string 
 	{
 		float center = ( outTile.min.y - outFormatOffset.y + i + 0.5 ) / scaleFactor.y - sampleBox.min.y + inFormatOffset.y;
 		int tap = f->tap( center );
-		
-		int n = 0;	
+
+		int n = 0;
 		weightedSum[i] = 0.;
 		for ( int j = tap; j < tap+fHeight; ++j )
 		{
@@ -361,14 +361,14 @@ IECore::ConstFloatVectorDataPtr Reformat::computeChannelData( const std::string 
 			{
 				continue;
 			}
-			
-			contribution[contributionIdx+n].pixel = j; 
+
+			contribution[contributionIdx+n].pixel = j;
 			weightedSum[i] += contribution[contributionIdx+n].weight = weight;
 			n++;
 		}
 		coverageTotal[i] = n;
 	}
-	
+
 	// Use the column buffer of pixel contributions to scale the temporary buffer vertically.
 	// Write the result into the output buffer.
 	for ( int k = 0; k < ImagePlug::tileSize(); ++k )
@@ -392,7 +392,7 @@ IECore::ConstFloatVectorDataPtr Reformat::computeChannelData( const std::string 
 			out[k + ImagePlug::tileSize() * i] = intensity / weightedSum[i];
 		}
 	}
-   
+
 	return outDataPtr;
 }
 

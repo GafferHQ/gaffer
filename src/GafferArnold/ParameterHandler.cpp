@@ -1,25 +1,25 @@
 //////////////////////////////////////////////////////////////////////////
-//  
+//
 //  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
-//  
+//
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
 //  met:
-//  
+//
 //      * Redistributions of source code must retain the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer.
-//  
+//
 //      * Redistributions in binary form must reproduce the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
-//  
+//
 //      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
-//  
+//
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 //  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 //  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR43
@@ -32,7 +32,7 @@
 //  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 //  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//  
+//
 //////////////////////////////////////////////////////////////////////////
 
 #include "IECore/MessageHandler.h"
@@ -51,7 +51,7 @@ using namespace GafferArnold;
 Gaffer::Plug *ParameterHandler::setupPlug( const AtParamEntry *parameter, Gaffer::GraphComponent *plugParent, Gaffer::Plug::Direction direction )
 {
 	std::string name = AiParamGetName( parameter );
-		
+
 	PlugPtr plug = 0;
 	switch( AiParamGetType( parameter ) )
 	{
@@ -83,7 +83,7 @@ Gaffer::Plug *ParameterHandler::setupPlug( const AtParamEntry *parameter, Gaffer
 				AiParamGetDefault( parameter )->BOOL
 			);
 
-			break;	
+			break;
 
 		case AI_TYPE_RGB :
 
@@ -112,7 +112,7 @@ Gaffer::Plug *ParameterHandler::setupPlug( const AtParamEntry *parameter, Gaffer
 				)
 			);
 
-			break;	
+			break;
 
 		case AI_TYPE_POINT2 :
 
@@ -139,7 +139,7 @@ Gaffer::Plug *ParameterHandler::setupPlug( const AtParamEntry *parameter, Gaffer
 				)
 			);
 
-			break;	
+			break;
 
 		case AI_TYPE_VECTOR :
 
@@ -153,7 +153,7 @@ Gaffer::Plug *ParameterHandler::setupPlug( const AtParamEntry *parameter, Gaffer
 				)
 			);
 
-			break;	
+			break;
 
 		case AI_TYPE_ENUM :
 
@@ -165,8 +165,8 @@ Gaffer::Plug *ParameterHandler::setupPlug( const AtParamEntry *parameter, Gaffer
 					AiEnumGetString( e, AiParamGetDefault( parameter )->INT )
 				);
 
-			}			
-			break;	
+			}
+			break;
 
 		case AI_TYPE_STRING :
 
@@ -196,13 +196,13 @@ Gaffer::Plug *ParameterHandler::setupPlug( const AtParamEntry *parameter, Gaffer
 				AiParamGetTypeName( AiParamGetType( parameter ) )
 		);
 	}
-	
+
 	return plug.get();
 }
 
 void ParameterHandler::setupPlugs( const AtNodeEntry *nodeEntry, Gaffer::GraphComponent *plugsParent, Gaffer::Plug::Direction direction )
 {
-	AtParamIterator *it = AiNodeEntryGetParamIterator( nodeEntry );  	
+	AtParamIterator *it = AiNodeEntryGetParamIterator( nodeEntry );
 	while( const AtParamEntry *param = AiParamIteratorGetNext( it ) )
 	{
 		std::string name = AiParamGetName( param );

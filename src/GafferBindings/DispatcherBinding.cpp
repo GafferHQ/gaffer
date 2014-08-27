@@ -1,25 +1,25 @@
 //////////////////////////////////////////////////////////////////////////
-//  
+//
 //  Copyright (c) 2013-2014, Image Engine Design Inc. All rights reserved.
-//  
+//
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
 //  met:
-//  
+//
 //      * Redistributions of source code must retain the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer.
-//  
+//
 //      * Redistributions in binary form must reproduce the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
-//  
+//
 //      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
-//  
+//
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 //  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 //  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -31,7 +31,7 @@
 //  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 //  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//  
+//
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/python.hpp"
@@ -84,7 +84,7 @@ class DispatcherWrapper : public NodeWrapper<Dispatcher>
 		void doDispatch( const TaskBatch *batch ) const
 		{
 			ScopedGILLock gilLock;
-			
+
 			boost::python::object f = this->methodOverride( "_doDispatch" );
 			if( f )
 			{
@@ -129,7 +129,7 @@ class DispatcherWrapper : public NodeWrapper<Dispatcher>
 			const Dispatcher *d = Dispatcher::dispatcher( name );
 			return const_cast< Dispatcher *>(d);
 		}
-		
+
 		static void taskBatchExecute( const Dispatcher::TaskBatch &batch )
 		{
 			ScopedGILRelease gilRelease;
@@ -145,7 +145,7 @@ class DispatcherWrapper : public NodeWrapper<Dispatcher>
 
 			return 0;
 		}
-		
+
 		static ContextPtr taskBatchGetContext( const Dispatcher::TaskBatchPtr &batch, bool copy = true )
 		{
 			if ( ConstContextPtr context = batch->context() )
@@ -154,13 +154,13 @@ class DispatcherWrapper : public NodeWrapper<Dispatcher>
 				{
 					return new Context( *context );
 				}
-				
+
 				return boost::const_pointer_cast<Context>( context );
 			}
-			
+
 			return 0;
 		}
-		
+
 		static boost::python::list taskBatchGetFrames( const Dispatcher::TaskBatchPtr &batch )
 		{
 			boost::python::list result;
@@ -170,7 +170,7 @@ class DispatcherWrapper : public NodeWrapper<Dispatcher>
 			}
 			return result;
 		}
-		
+
 		static boost::python::list taskBatchGetRequirements( const Dispatcher::TaskBatchPtr &batch )
 		{
 			boost::python::list result;
@@ -180,7 +180,7 @@ class DispatcherWrapper : public NodeWrapper<Dispatcher>
 			}
 			return result;
 		}
-		
+
 		static CompoundDataPtr taskBatchGetBlindData( Dispatcher::TaskBatch &batch )
 		{
 			return batch.blindData();
@@ -223,13 +223,13 @@ void GafferBindings::bindDispatcher()
 		.def( "preDispatchSignal", &Dispatcher::preDispatchSignal, return_value_policy<reference_existing_object>() ).staticmethod( "preDispatchSignal" )
 		.def( "postDispatchSignal", &Dispatcher::postDispatchSignal, return_value_policy<reference_existing_object>() ).staticmethod( "postDispatchSignal" )
 	;
-	
+
 	enum_<Dispatcher::FramesMode>( "FramesMode" )
 		.value( "CurrentFrame", Dispatcher::CurrentFrame )
 		.value( "ScriptRange", Dispatcher::ScriptRange )
 		.value( "CustomRange", Dispatcher::CustomRange )
 	;
-	
+
 	RefCountedClass<Dispatcher::TaskBatch, RefCounted>( "_TaskBatch" )
 		.def( "execute", &DispatcherWrapper::taskBatchExecute )
 		.def( "node", &DispatcherWrapper::taskBatchGetNode )
@@ -238,6 +238,6 @@ void GafferBindings::bindDispatcher()
 		.def( "requirements", &DispatcherWrapper::taskBatchGetRequirements )
 		.def( "blindData", &DispatcherWrapper::taskBatchGetBlindData )
 	;
-	
-	SignalBinder<Dispatcher::DispatchSignal, DefaultSignalCaller<Dispatcher::DispatchSignal>, DispatchSlotCaller >::bind( "DispatchSignal" );	
+
+	SignalBinder<Dispatcher::DispatchSignal, DefaultSignalCaller<Dispatcher::DispatchSignal>, DispatchSlotCaller >::bind( "DispatchSignal" );
 }

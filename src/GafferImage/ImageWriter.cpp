@@ -1,25 +1,25 @@
 //////////////////////////////////////////////////////////////////////////
-//  
+//
 //  Copyright (c) 2013-2014, Image Engine Design Inc. All rights reserved.
-//  
+//
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
 //  met:
-//  
+//
 //      * Redistributions of source code must retain the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer.
-//  
+//
 //      * Redistributions in binary form must reproduce the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
-//  
+//
 //      * Neither the name of Image Engine Design nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
-//  
+//
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 //  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 //  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -31,7 +31,7 @@
 //  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 //  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//  
+//
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/bind.hpp"
@@ -74,7 +74,7 @@ ImageWriter::ImageWriter( const std::string &name )
 			Gaffer::Plug::Default & ~(Gaffer::Plug::Dynamic | Gaffer::Plug::ReadOnly)
 		)
 	);
-	
+
 	Node::plugSetSignal().connect( boost::bind( &GafferImage::ImageWriter::plugSet, this, ::_1 ) );
 }
 
@@ -95,7 +95,7 @@ void ImageWriter::plugSet( Gaffer::Plug *plug )
 		unsigned flags = writeModePlug()->getFlags();
 		if ( out->supports( "tiles" ) )
 		{
-			writeModePlug()->setFlags( flags & ~Gaffer::Plug::ReadOnly );	
+			writeModePlug()->setFlags( flags & ~Gaffer::Plug::ReadOnly );
 		}
 		else
 		{
@@ -160,7 +160,7 @@ IECore::MurmurHash ImageWriter::hash( const Context *context ) const
 	{
 		return IECore::MurmurHash();
 	}
-	
+
 	IECore::MurmurHash h = ExecutableNode::hash( context );
 	h.append( fileNamePlug()->hash() );
 	h.append( writeModePlug()->hash() );
@@ -180,30 +180,30 @@ void ImageWriter::execute() const
 	{
 		throw IECore::Exception( "No input image." );
 	}
-	
+
 	std::string fileName = fileNamePlug()->getValue();
 	fileName = Context::current()->substitute( fileName );
-	
+
 	boost::shared_ptr< ImageOutput > out( ImageOutput::create( fileName.c_str() ) );
 	if ( !out )
 	{
 		throw IECore::Exception( boost::str( boost::format( "Invalid filename: %s" ) % fileName ) );
 	}
-	
+
 	// Grab the intersection of the channels from the "channels" plug and the image input to see which channels we are to write out.
 	IECore::ConstStringVectorDataPtr channelNamesData = inPlug()->channelNamesPlug()->getValue();
 	std::vector<std::string> maskChannels = channelNamesData->readable();
 	channelsPlug()->maskChannels( maskChannels );
 	const int nChannels = maskChannels.size();
-	
+
 	// Get the image channel data.
 	IECore::ImagePrimitivePtr imagePtr( inPlug()->image() );
-	
+
 	// Get the image's display window.
 	const Imath::Box2i displayWindow( imagePtr->getDisplayWindow() );
 	const int displayWindowWidth = displayWindow.size().x+1;
 	const int displayWindowHeight = displayWindow.size().y+1;
-	
+
 	// Get the image's data window and if it then set a flag.
 	bool imageIsBlack = false;
 	Imath::Box2i dataWindow( imagePtr->getDataWindow() );
@@ -212,14 +212,14 @@ void ImageWriter::execute() const
 		dataWindow = displayWindow;
 		imageIsBlack = true;
 	}
-	
+
 	int dataWindowWidth = dataWindow.size().x+1;
 	int dataWindowHeight = dataWindow.size().y+1;
-	
-	// Create the image header. 
+
+	// Create the image header.
 	ImageSpec spec( dataWindowWidth, dataWindowHeight, nChannels, TypeDesc::FLOAT );
-	
-	// Add the channel names to the header whilst getting pointers to the channel data. 
+
+	// Add the channel names to the header whilst getting pointers to the channel data.
 	std::vector<const float*> channelPtrs;
 	spec.channelnames.clear();
 	for ( std::vector<std::string>::iterator channelIt( maskChannels.begin() ); channelIt != maskChannels.end(); channelIt++ )
@@ -227,7 +227,7 @@ void ImageWriter::execute() const
 		spec.channelnames.push_back( *channelIt );
 		IECore::FloatVectorDataPtr dataPtr = imagePtr->getChannel<float>( *channelIt );
 		channelPtrs.push_back( &(dataPtr->readable()[0]) );
-		
+
 		// OIIO has a special attribute for the Alpha and Z channels. If we find some, we should tag them...
 		if ( *channelIt == "A" )
 		{
@@ -237,7 +237,7 @@ void ImageWriter::execute() const
 			spec.z_channel = channelIt-maskChannels.begin();
 		}
 	}
-	
+
 	// Specify the display window.
 	spec.full_x = displayWindow.min.x;
 	spec.full_y = displayWindow.min.y;
@@ -245,20 +245,20 @@ void ImageWriter::execute() const
 	spec.full_height = displayWindowHeight;
 	spec.x = dataWindow.min.x;
 	spec.y = dataWindow.min.y;
-	
+
 	if ( !out->open( fileName, spec ) )
 	{
 		throw IECore::Exception( boost::str( boost::format( "Could not open \"%s\", error = %s" ) % fileName % out->geterror() ) );
 	}
-	
-	// Only allow tiled output if our file format supports it.	
+
+	// Only allow tiled output if our file format supports it.
 	int writeMode = writeModePlug()->getValue() & out->supports( "tile" );
-	
+
 	if ( writeMode == Scanline )
 	{
 		// Create a buffer for the scanline.
 		float scanline[ nChannels*dataWindowWidth ];
-		
+
 		if ( imageIsBlack )
 		{
 			memset( scanline, 0, sizeof(float) * nChannels*dataWindowWidth );
@@ -273,7 +273,7 @@ void ImageWriter::execute() const
 		}
 		else
 		{
-			// Interleave the channel data and write it by scanline to the file.	
+			// Interleave the channel data and write it by scanline to the file.
 			for ( int y = spec.y; y < spec.y + dataWindowHeight; ++y )
 			{
 				for ( std::vector<const float *>::iterator channelDataIt( channelPtrs.begin() ); channelDataIt != channelPtrs.end(); channelDataIt++ )
@@ -287,7 +287,7 @@ void ImageWriter::execute() const
 						*outPtr = *inRowPtr++;
 					}
 				}
-				
+
 				if ( !out->write_scanline( y, 0, TypeDesc::FLOAT, &scanline[0] ) )
 				{
 					throw IECore::Exception( boost::str( boost::format( "Could not write scanline to \"%s\", error = %s" ) % fileName % out->geterror() ) );
@@ -301,7 +301,7 @@ void ImageWriter::execute() const
 		// Create a buffer for the tile.
 		const int tileSize = ImagePlug::tileSize();
 		float tile[ nChannels*tileSize*tileSize ];
-		
+
 		if ( imageIsBlack )
 		{
 			memset( tile, 0,  sizeof(float) * nChannels*tileSize*tileSize );
@@ -323,11 +323,11 @@ void ImageWriter::execute() const
 			{
 				for ( int tileX = 0; tileX < dataWindowWidth; tileX += tileSize )
 				{
-					float *outPtr = &tile[0];	
-					
+					float *outPtr = &tile[0];
+
 					const int r = std::min( tileSize+tileX, dataWindowWidth );
 					const int t = std::min( tileSize+tileY, dataWindowHeight );
-					
+
 					for ( int y = 0; y < t; ++y )
 					{
 						for ( std::vector<const float *>::iterator channelDataIt( channelPtrs.begin() ); channelDataIt != channelPtrs.end(); channelDataIt++ )
@@ -340,7 +340,7 @@ void ImageWriter::execute() const
 							}
 						}
 					}
-					
+
 					if ( !out->write_tile( tileX+dataWindow.min.x, tileY+spec.y, 0, TypeDesc::FLOAT, &tile[0] ) )
 					{
 						throw IECore::Exception( boost::str( boost::format( "Could not write tile to \"%s\", error = %s" ) % fileName % out->geterror() ) );
@@ -349,7 +349,7 @@ void ImageWriter::execute() const
 			}
 		}
 	}
-	
+
 	out->close();
 }
 

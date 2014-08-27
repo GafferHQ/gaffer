@@ -1,25 +1,25 @@
 //////////////////////////////////////////////////////////////////////////
-//  
+//
 //  Copyright (c) 2012-2013, John Haddon. All rights reserved.
-//  
+//
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
 //  met:
-//  
+//
 //      * Redistributions of source code must retain the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer.
-//  
+//
 //      * Redistributions in binary form must reproduce the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
-//  
+//
 //      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
-//  
+//
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 //  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 //  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -31,7 +31,7 @@
 //  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 //  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//  
+//
 //////////////////////////////////////////////////////////////////////////
 
 #ifndef GAFFER_CONTEXT_H
@@ -98,14 +98,14 @@ class Context : public IECore::RefCounted
 		/// required of client code are met with little effort.
 		Context( const Context &other, Ownership ownership = Copied );
 		~Context();
-		
+
 		IE_CORE_DECLAREMEMBERPTR( Context )
-		
+
 		typedef boost::signal<void ( const Context *context, const IECore::InternedString & )> ChangedSignal;
-	
+
 		template<typename T, typename Enabler=void>
 		struct Accessor;
-		
+
 		/// Calling with simple types (e.g float) will automatically
 		/// create a TypedData<T> to store the value.
 		template<typename T>
@@ -120,10 +120,10 @@ class Context : public IECore::RefCounted
 		/// an Exception.
 		template<typename T>
 		typename Accessor<T>::ResultType get( const IECore::InternedString &name, typename Accessor<T>::ResultType defaultValue ) const;
-		
+
 		/// Fills the specified vector with the names of all items in the Context.
 		void names( std::vector<IECore::InternedString> &names ) const;
-		
+
 		/// Convenience method returning get<float>( "frame" ).
 		float getFrame() const;
 		/// Convenience method calling set<float>( "frame", frame ).
@@ -131,12 +131,12 @@ class Context : public IECore::RefCounted
 
 		/// A signal emitted when an element of the context is changed.
 		ChangedSignal &changedSignal();
-		
+
 		IECore::MurmurHash hash() const;
-		
+
 		bool operator == ( const Context &other ) const;
 		bool operator != ( const Context &other ) const;
-		
+
 		/// Performs variable substitution of $name, ${name} and ###
 		/// keys in input, using values from the context.
 		/// \todo I'm not entirely sure this belongs here. If we had
@@ -148,28 +148,28 @@ class Context : public IECore::RefCounted
 		/// which can be performed by the substitute() method. If it returns
 		/// false, it is guaranteed that substitute( input ) == input.
 		static bool hasSubstitutions( const std::string &input );
-		
+
 		/// The Scope class is used to push and pop the current context on
 		/// the calling thread.
 		class Scope : boost::noncopyable
 		{
-			
+
 			public :
-			
+
 				/// Constructing the Scope pushes the current context.
 				Scope( const Context *context );
-				/// Destruction of the Scope pops the previously pushed context. 
+				/// Destruction of the Scope pops the previously pushed context.
 				~Scope();
-		
+
 		};
-		
+
 		/// Returns the current context for the calling thread.
 		static const Context *current();
-		
+
 	private :
 
 		void substituteInternal( const std::string &s, std::string &result, const int recursionDepth ) const;
-	
+
 		// Storage for each entry.
 		struct Storage
 		{
@@ -181,9 +181,9 @@ class Context : public IECore::RefCounted
 			// reference count management.
 			Ownership ownership;
 		};
-	
+
 		typedef boost::container::flat_map<IECore::InternedString, Storage> Map;
-		
+
 		Map m_map;
 		ChangedSignal *m_changedSignal;
 

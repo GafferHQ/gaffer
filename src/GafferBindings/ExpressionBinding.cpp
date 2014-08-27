@@ -1,25 +1,25 @@
 //////////////////////////////////////////////////////////////////////////
-//  
+//
 //  Copyright (c) 2012, John Haddon. All rights reserved.
-//  
+//
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
 //  met:
-//  
+//
 //      * Redistributions of source code must retain the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer.
-//  
+//
 //      * Redistributions in binary form must reproduce the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
-//  
+//
 //      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
-//  
+//
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 //  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 //  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -31,7 +31,7 @@
 //  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 //  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//  
+//
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/python.hpp"
@@ -53,12 +53,12 @@ using namespace Gaffer;
 class EngineWrapper : public Expression::Engine, public IECorePython::Wrapper<Expression::Engine>
 {
 	public :
-	
+
 		EngineWrapper( PyObject *self )
 				:	Engine(), IECorePython::Wrapper<Expression::Engine>( self, this )
 		{
 		}
-		
+
 		virtual std::string outPlug()
 		{
 			IECorePython::ScopedGILLock gilLock;
@@ -80,7 +80,7 @@ class EngineWrapper : public Expression::Engine, public IECorePython::Wrapper<Ex
 			}
 			return "";
 		}
-		
+
 		virtual void inPlugs( std::vector<std::string> &plugs )
 		{
 			IECorePython::ScopedGILLock gilLock;
@@ -94,15 +94,15 @@ class EngineWrapper : public Expression::Engine, public IECorePython::Wrapper<Ex
 				}
 				else
 				{
-					msg( IECore::Msg::Error, "EngineWrapper::inPlugs", "inPlugs method not defined in python." );			
+					msg( IECore::Msg::Error, "EngineWrapper::inPlugs", "inPlugs method not defined in python." );
 				}
 			}
 			catch( const error_already_set &e )
 			{
 				translatePythonException();
-			}	
+			}
 		}
-		
+
 		virtual void contextNames( std::vector<std::string> &names )
 		{
 			IECorePython::ScopedGILLock gilLock;
@@ -116,15 +116,15 @@ class EngineWrapper : public Expression::Engine, public IECorePython::Wrapper<Ex
 				}
 				else
 				{
-					msg( IECore::Msg::Error, "EngineWrapper::contextNames", "contextNames method not defined in python." );			
+					msg( IECore::Msg::Error, "EngineWrapper::contextNames", "contextNames method not defined in python." );
 				}
 			}
 			catch( const error_already_set &e )
 			{
 				translatePythonException();
-			}	
+			}
 		}
-		
+
 		virtual void execute( const Context *context, const std::vector<const ValuePlug *> &proxyInputs, ValuePlug *proxyOutput )
 		{
 			IECorePython::ScopedGILLock gilLock;
@@ -138,20 +138,20 @@ class EngineWrapper : public Expression::Engine, public IECorePython::Wrapper<Ex
 					{
 						pythonProxyInputs.append( PlugPtr( const_cast<ValuePlug *>( *it ) ) );
 					}
-		
+
 					f( ContextPtr( const_cast<Context *>( context ) ), pythonProxyInputs, ValuePlugPtr( proxyOutput ) );
 				}
 				else
 				{
-					msg( IECore::Msg::Error, "EngineWrapper::execute", "execute method not defined in python." );			
+					msg( IECore::Msg::Error, "EngineWrapper::execute", "execute method not defined in python." );
 				}
 			}
 			catch( const error_already_set &e )
 			{
 				translatePythonException();
-			}	
+			}
 		}
-		
+
 };
 
 struct ExpressionEngineCreator
@@ -160,16 +160,16 @@ struct ExpressionEngineCreator
 		:	m_fn( fn )
 	{
 	}
-	
+
 	Expression::EnginePtr operator()( const std::string &expression )
 	{
 		IECorePython::ScopedGILLock gilLock;
 		Expression::EnginePtr result = extract<Expression::EnginePtr>( m_fn( expression ) );
 		return result;
 	}
-	
+
 	private :
-	
+
 		object m_fn;
 
 };
@@ -193,9 +193,9 @@ static tuple registeredEnginesWrapper()
 
 void GafferBindings::bindExpression()
 {
-	
+
 	scope s = DependencyNodeClass<Expression>();
-	
+
 	IECorePython::RefCountedClass<Expression::Engine, IECore::RefCounted, EngineWrapper>( "Engine" )
 		.def( init<>() )
 		.def( "registerEngine", &registerEngine ).staticmethod( "registerEngine" )

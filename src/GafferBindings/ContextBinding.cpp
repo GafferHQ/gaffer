@@ -1,25 +1,25 @@
 //////////////////////////////////////////////////////////////////////////
-//  
+//
 //  Copyright (c) 2012-2013, John Haddon. All rights reserved.
-//  
+//
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
 //  met:
-//  
+//
 //      * Redistributions of source code must retain the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer.
-//  
+//
 //      * Redistributions in binary form must reproduce the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
-//  
+//
 //      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
-//  
+//
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 //  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 //  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -31,7 +31,7 @@
 //  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 //  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//  
+//
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/python.hpp"
@@ -57,7 +57,7 @@ namespace
 struct SimpleTypedDataGetter
 {
 	typedef object ReturnType;
-	
+
 	template<typename T>
 	object operator()( typename T::Ptr data )
 	{
@@ -92,7 +92,7 @@ object getWithDefault( Context &c, const IECore::InternedString &name, object de
 	{
 		return defaultValue;
 	}
-	
+
 	try
 	{
 		return despatchTypedData<SimpleTypedDataGetter, TypeTraits::IsSimpleTypedData>( const_cast<Data *>( d.get() ) );
@@ -112,7 +112,7 @@ list names( const Context &context )
 {
 	std::vector<IECore::InternedString> names;
 	context.names( names );
-	
+
 	list result;
 	for( std::vector<IECore::InternedString>::const_iterator it = names.begin(), eIt = names.end(); it != eIt; it++ )
 	{
@@ -145,8 +145,8 @@ ContextPtr current()
 } // namespace
 
 void GafferBindings::bindContext()
-{	
-	
+{
+
 	IECorePython::RefCountedClass<Context, IECore::RefCounted> contextClass( "Context" );
 	scope s = contextClass;
 
@@ -155,7 +155,7 @@ void GafferBindings::bindContext()
 		.value( "Shared", Context::Shared )
 		.value( "Borrowed", Context::Borrowed )
 	;
-	
+
 	contextClass
 		.def( init<>() )
 		.def( init<const Context &, Context::Ownership>( ( arg( "other" ), arg( "ownership" ) = Context::Copied ) ) )
@@ -184,7 +184,7 @@ void GafferBindings::bindContext()
 		;
 
 	SignalBinder<Context::ChangedSignal, DefaultSignalCaller<Context::ChangedSignal>, ChangedSlotCaller>::bind( "ChangedSignal" );
-	
+
 	class_<Context::Scope, boost::noncopyable>( "_Scope", init<Context *>() )
 	;
 

@@ -1,26 +1,26 @@
 //////////////////////////////////////////////////////////////////////////
-//  
+//
 //  Copyright (c) 2012-2014, John Haddon. All rights reserved.
 //  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
-//  
+//
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
 //  met:
-//  
+//
 //      * Redistributions of source code must retain the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer.
-//  
+//
 //      * Redistributions in binary form must reproduce the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
-//  
+//
 //      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
-//  
+//
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 //  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 //  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -32,7 +32,7 @@
 //  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 //  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//  
+//
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/bind.hpp"
@@ -86,7 +86,7 @@ class WrappingProcedural : public IECore::ParameterisedProcedural
 		}
 
 	protected :
-	
+
 		virtual Imath::Box3f doBound( ConstCompoundObjectPtr args ) const
 		{
 			return m_sceneProcedural->bound();
@@ -98,7 +98,7 @@ class WrappingProcedural : public IECore::ParameterisedProcedural
 		}
 
 	private :
-	
+
 		SceneProceduralPtr m_sceneProcedural;
 
 };
@@ -111,9 +111,9 @@ IE_CORE_DECLAREPTR( WrappingProcedural );
 
 class SceneView::Grid
 {
-	
+
 	public :
-	
+
 		Grid( SceneView *view )
 			:	m_view( view ), m_node( new GafferScene::Grid ), m_gadget( new RenderableGadget )
 		{
@@ -121,9 +121,9 @@ class SceneView::Grid
 
 			CompoundPlugPtr plug = new CompoundPlug( "grid" );
 			view->addChild( plug );
-			
+
 			plug->addChild( new BoolPlug( "visible", Plug::In, true ) );
-			
+
 			PlugPtr dimensionsPlug(
 				m_node->dimensionsPlug()->createCounterpart(
 					m_node->dimensionsPlug()->getName(),
@@ -131,38 +131,38 @@ class SceneView::Grid
 				)
 			);
 			plug->addChild( dimensionsPlug );
-			
+
 			m_node->dimensionsPlug()->setInput( dimensionsPlug );
-			
+
 			view->viewportGadget()->setChild( "__grid", m_gadget );
-			
+
 			view->plugDirtiedSignal().connect( boost::bind( &Grid::plugDirtied, this, ::_1 ) );
-			
+
 			update();
 		}
-		
+
 		Gaffer::CompoundPlug *plug()
 		{
 			return m_view->getChild<Gaffer::CompoundPlug>( "grid" );
 		}
-		
+
 		const Gaffer::CompoundPlug *plug() const
 		{
 			return m_view->getChild<Gaffer::CompoundPlug>( "grid" );
 		}
-		
+
 		Gadget *gadget()
 		{
 			return m_gadget.get();
 		}
-		
+
 		const Gadget *gadget() const
 		{
 			return m_gadget.get();
 		}
-		
+
 	private :
-		
+
 		void plugDirtied( Gaffer::Plug *plug )
 		{
 			if( plug == this->plug() )
@@ -170,7 +170,7 @@ class SceneView::Grid
 				update();
 			}
 		}
-		
+
 		void update()
 		{
 			m_gadget->setRenderable(
@@ -198,7 +198,7 @@ class GnomonPlane : public GafferUI::Gadget
 {
 
 	public :
-	
+
 		GnomonPlane()
 			:	Gadget(), m_hovering( false )
 		{
@@ -210,9 +210,9 @@ class GnomonPlane : public GafferUI::Gadget
 		{
 			return Box3f( V3f( 0 ), V3f( 1, 1, 0 ) );
 		}
-		
+
 	protected :
-	
+
 		virtual void doRender( const Style *style ) const
 		{
 			if( m_hovering || IECoreGL::Selector::currentSelector() )
@@ -230,13 +230,13 @@ class GnomonPlane : public GafferUI::Gadget
 			m_hovering = true;
 			renderRequestSignal()( this );
 		}
-		
+
 		void leave()
 		{
 			m_hovering = false;
 			renderRequestSignal()( this );
 		}
-	
+
 		bool m_hovering;
 
 };
@@ -245,18 +245,18 @@ class GnomonGadget : public GafferUI::Gadget
 {
 
 	public :
-	
+
 		GnomonGadget()
 		{
 		}
-		
+
 	protected :
 
 		virtual void doRender( const Style *style ) const
 		{
 			const float pixelWidth = 30.0f;
 			const V2i viewport = ancestor<ViewportGadget>()->getViewport();
-	
+
 			// we want to draw our children with an orthographic projection
 			// from the same angle as the main camera, but transformed into
 			// the bottom left corner of the viewport.
@@ -264,30 +264,30 @@ class GnomonGadget : public GafferUI::Gadget
 			// first we compose a new projection matrix with the orthographic
 			// projection and a post-projection transform that moves eveything
 			// into the corner.
-	
+
 			glMatrixMode( GL_PROJECTION );
 			glPushMatrix();
 			glLoadIdentity();
-			
+
 			// if we're drawing for selection, the selector will have its own
 			// post-projection matrix which needs taking into account as well.
 			if( IECoreGL::Selector *selector = IECoreGL::Selector::currentSelector() )
 			{
 				glMultMatrixd( selector->postProjectionMatrix().getValue() );
 			}
-			
+
 			// this is our post projection matrix, which scales down to the size we want and
 			// translates into the corner.
 			glTranslatef( -1.0f + pixelWidth / (float)viewport.x, -1.0f + pixelWidth / (float)viewport.y, 0.0f ),
 			glScalef( pixelWidth / (float)viewport.x, pixelWidth / (float)viewport.y, 1 );
-			
+
 			// this is our projection matrix - a simple orthographic projection.
 			glOrtho( -1, 1, -1, 1, 0, 10 );
-			
+
 			// now for our model-view matrix. this is the same as is used by the main
 			// view, but with the translation reset. this means when we draw our
 			// children at the origin, they will be centred within camera space.
-			
+
 			glMatrixMode( GL_MODELVIEW );
 			glPushMatrix();
 
@@ -295,21 +295,21 @@ class GnomonGadget : public GafferUI::Gadget
 			m[3][0] = 0;
 			m[3][1] = 0;
 			m[3][2] = -2;
-			
+
 			glMatrixMode( GL_MODELVIEW );
 			glLoadIdentity();
 			glMultMatrixf( m.getValue() );
 
 			// now we can render our axes and our children
-			
+
 			style->renderTranslateHandle( 0 );
 			style->renderTranslateHandle( 1 );
 			style->renderTranslateHandle( 2 );
-		
+
 			Gadget::doRender( style );
-			
+
 			// and pop the matrices back to their original values
-			
+
 			glMatrixMode( GL_PROJECTION );
 			glPopMatrix();
 			glMatrixMode( GL_MODELVIEW );
@@ -323,61 +323,61 @@ class GnomonGadget : public GafferUI::Gadget
 
 class SceneView::Gnomon
 {
-	
+
 	public :
-	
+
 		Gnomon( SceneView *view )
 			:	m_view( view ), m_gadget( new GnomonGadget() )
 		{
 			CompoundPlugPtr plug = new CompoundPlug( "gnomon" );
 			view->addChild( plug );
-			
+
 			plug->addChild( new BoolPlug( "visible", Plug::In, true ) );
-			
+
 			GadgetPtr xyPlane = new GnomonPlane();
 			GadgetPtr yzPlane = new GnomonPlane();
 			GadgetPtr xzPlane = new GnomonPlane();
-			
+
 			yzPlane->setTransform( M44f().rotate( V3f( 0, -M_PI / 2.0f, 0 ) ) );
 			xzPlane->setTransform( M44f().rotate( V3f( M_PI / 2.0f, 0, 0 ) ) );
-			
+
 			m_gadget->setChild( "xy", xyPlane );
 			m_gadget->setChild( "yz", yzPlane );
 			m_gadget->setChild( "xz", xzPlane );
-			
+
 			xyPlane->buttonPressSignal().connect( boost::bind( &Gnomon::buttonPress, this, ::_1, ::_2 ) );
 			yzPlane->buttonPressSignal().connect( boost::bind( &Gnomon::buttonPress, this, ::_1, ::_2 ) );
 			xzPlane->buttonPressSignal().connect( boost::bind( &Gnomon::buttonPress, this, ::_1, ::_2 ) );
-			
+
 			view->viewportGadget()->setChild( "__gnomon", m_gadget );
 
 			view->plugDirtiedSignal().connect( boost::bind( &Gnomon::plugDirtied, this, ::_1 ) );
-			
+
 			update();
 		}
-		
+
 		Gaffer::CompoundPlug *plug()
 		{
 			return m_view->getChild<Gaffer::CompoundPlug>( "gnomon" );
 		}
-		
+
 		const Gaffer::CompoundPlug *plug() const
 		{
 			return m_view->getChild<Gaffer::CompoundPlug>( "gnomon" );
 		}
-		
+
 		Gadget *gadget()
 		{
 			return m_gadget.get();
 		}
-		
+
 		const Gadget *gadget() const
 		{
 			return m_gadget.get();
 		}
-		
+
 	private :
-		
+
 		void plugDirtied( Gaffer::Plug *plug )
 		{
 			if( plug == this->plug() )
@@ -385,7 +385,7 @@ class SceneView::Gnomon
 				update();
 			}
 		}
-		
+
 		void update()
 		{
 			m_gadget->setVisible( plug()->getChild<BoolPlug>( "visible" )->getValue() );
@@ -405,7 +405,7 @@ class SceneView::Gnomon
 
 			V3f direction( 0, 0, -1 );
 			V3f upVector( 0, 1, 0 );
-			
+
 			if( gadget->getName() == "yz" )
 			{
 				direction = V3f( -1, 0, 0 );
@@ -415,14 +415,14 @@ class SceneView::Gnomon
 				direction = V3f( 0, -1, 0 );
 				upVector = V3f( -1, 0, 0 );
 			}
-			
+
 			/// \todo We should probably have default persp/top/front/side cameras
 			/// in the SceneView, and then we could toggle between them here.
 			m_view->viewportGadget()->frame( m_view->framingBound(), direction, upVector );
-			
+
 			return true;
 		}
-	
+
 		SceneView *m_view;
 		GadgetPtr m_gadget;
 
@@ -443,7 +443,7 @@ SceneView::SceneView( const std::string &name )
 {
 
 	// add plugs and signal handling for them
-	
+
 	storeIndexOfNextChild( g_firstPlugIndex );
 
 	addChild( new IntPlug( "minimumExpansionDepth", Plug::In, 0, 0, Imath::limits<int>::max(), Plug::Default & ~Plug::AcceptsInputs ) );
@@ -452,13 +452,13 @@ SceneView::SceneView( const std::string &name )
 	lookThrough->addChild( new BoolPlug( "enabled", Plug::In, false, Plug::Default & ~Plug::AcceptsInputs ) );
 	lookThrough->addChild( new StringPlug( "camera", Plug::In, "", Plug::Default & ~Plug::AcceptsInputs ) );
 	addChild( lookThrough );
-	
+
 	plugSetSignal().connect( boost::bind( &SceneView::plugSet, this, ::_1 ) );
 
 	// set up our gadgets
 
 	viewportGadget()->setPrimaryChild( m_renderableGadget );
-	
+
 	m_selectionChangedConnection = m_renderableGadget->selectionChangedSignal().connect( boost::bind( &SceneView::selectionChanged, this, ::_1 ) );
 	viewportGadget()->keyPressSignal().connect( boost::bind( &SceneView::keyPress, this, ::_1, ::_2 ) );
 
@@ -467,7 +467,7 @@ SceneView::SceneView( const std::string &name )
 
 	m_grid = boost::shared_ptr<Grid>( new Grid( this ) );
 	m_gnomon = boost::shared_ptr<Gnomon>( new Gnomon( this ) );
-	
+
 	//////////////////////////////////////////////////////////////////////////
 	// add a preprocessor which monkeys with the scene before it is displayed.
 	//////////////////////////////////////////////////////////////////////////
@@ -475,24 +475,24 @@ SceneView::SceneView( const std::string &name )
 	NodePtr preprocessor = new Node();
 	ScenePlugPtr preprocessorInput = new ScenePlug( "in" );
 	preprocessor->addChild( preprocessorInput );
-	
+
 	// remove motion blur, because the opengl renderer doesn't support it.
-	
+
 	StandardOptionsPtr standardOptions = new StandardOptions( "disableBlur" );
 	standardOptions->optionsPlug()->getChild<CompoundPlug>( "transformBlur" )->getChild<BoolPlug>( "enabled" )->setValue( true );
 	standardOptions->optionsPlug()->getChild<CompoundPlug>( "transformBlur" )->getChild<BoolPlug>( "value" )->setValue( false );
 	standardOptions->optionsPlug()->getChild<CompoundPlug>( "deformationBlur" )->getChild<BoolPlug>( "enabled" )->setValue( true );
 	standardOptions->optionsPlug()->getChild<CompoundPlug>( "deformationBlur" )->getChild<BoolPlug>( "value" )->setValue( false );
-	
+
 	preprocessor->addChild( standardOptions );
 	standardOptions->inPlug()->setInput( preprocessorInput );
-	
+
 	// add a node for hiding things
-	
+
 	StandardAttributesPtr hide = new StandardAttributes( "hide" );
 	hide->attributesPlug()->getChild<CompoundPlug>( "visibility" )->getChild<BoolPlug>( "enabled" )->setValue( true );
 	hide->attributesPlug()->getChild<CompoundPlug>( "visibility" )->getChild<BoolPlug>( "value" )->setValue( false );
-	
+
 	preprocessor->addChild( hide );
 	hide->inPlug()->setInput( standardOptions->outPlug() );
 
@@ -505,7 +505,7 @@ SceneView::SceneView( const std::string &name )
 	ScenePlugPtr preprocessorOutput = new ScenePlug( "out", Plug::Out );
 	preprocessor->addChild( preprocessorOutput );
 	preprocessorOutput->setInput( hide->outPlug() );
-	
+
 	setPreprocessor( preprocessor );
 }
 
@@ -597,7 +597,7 @@ void SceneView::contextChanged( const IECore::InternedString &name )
 		m_renderableGadget->setSelection( sr );
 		return;
 	}
-	
+
 	if(
 		name.value().compare( 0, 3, "ui:" ) == 0 &&
 		name.value() != "ui:scene:expandedPaths"
@@ -607,7 +607,7 @@ void SceneView::contextChanged( const IECore::InternedString &name )
 		// affect our expansion, then early out.
 		return;
 	}
-	
+
 	// the context change might affect the scene itself, so we must
 	// schedule an update.
 	updateRequestSignal()( this );
@@ -620,7 +620,7 @@ void SceneView::update()
 		expandedPaths(), minimumExpansionDepthPlug()->getValue()
 	);
 	WrappingProceduralPtr wp = new WrappingProcedural( p );
-	
+
 	bool hadRenderable = m_renderableGadget->getRenderable();
 	m_renderableGadget->setRenderable( wp );
 	if( !hadRenderable )
@@ -638,13 +638,13 @@ Imath::Box3f SceneView::framingBound() const
 	{
 		return b;
 	}
-	
+
 	b = View3D::framingBound();
 	if( m_grid->gadget()->getVisible() )
 	{
 		b.extendBy( m_grid->gadget()->bound() );
 	}
-	
+
 	return b;
 }
 
@@ -663,10 +663,10 @@ bool SceneView::keyPress( GafferUI::GadgetPtr gadget, const GafferUI::KeyEvent &
 	}
 	else if( event.key == "Up" )
 	{
-		collapseSelection();	
+		collapseSelection();
 		return true;
 	}
-	
+
 	return false;
 }
 
@@ -680,13 +680,13 @@ void SceneView::expandSelection( size_t depth )
 	// must take a copy of the selection to iterate over, because we'll modify the
 	// selection inside expandWalk().
 	const std::vector<string> toExpand( selection.begin(), selection.end() );
-	
+
 	bool needUpdate = false;
 	for( std::vector<string>::const_iterator it = toExpand.begin(), eIt = toExpand.end(); it != eIt; ++it )
 	{
 		needUpdate |= expandWalk( *it, depth, expanded, selection );
 	}
-	
+
 	if( needUpdate )
 	{
 		// we were naughty and modified the expanded paths in place (to avoid
@@ -702,7 +702,7 @@ void SceneView::expandSelection( size_t depth )
 bool SceneView::expandWalk( const std::string &path, size_t depth, PathMatcher &expanded, RenderableGadget::Selection &selected )
 {
 	bool result = false;
-	
+
 	ScenePlug::ScenePath scenePath;
 	ScenePlug::stringToPath( path, scenePath );
 	ConstInternedStringVectorDataPtr childNamesData = preprocessedInPlug<ScenePlug>()->childNames( scenePath );
@@ -752,12 +752,12 @@ void SceneView::collapseSelection()
 	{
 		return;
 	}
-	
+
 	set<string> pathsToSelect;
 	vector<const string *> pathsToDeselect;
 	GafferScene::PathMatcherData *expandedData = expandedPaths();
 	PathMatcher &expanded = expandedData->writable();
-	
+
 	for( RenderableGadget::Selection::const_iterator it = selection.begin(), eIt = selection.end(); it != eIt; it++ )
 	{
 		if( !expanded.removePath( *it ) )
@@ -776,7 +776,7 @@ void SceneView::collapseSelection()
 			pathsToSelect.insert( parentPath );
 		}
 	}
-	
+
 	for( set<string>::const_iterator it = pathsToSelect.begin(), eIt = pathsToSelect.end(); it != eIt; it++ )
 	{
 		selection.insert( *it );
@@ -841,7 +841,7 @@ void SceneView::updateLookThrough()
 
 	const ScenePlug *scene = preprocessedInPlug<ScenePlug>();
 	ConstCompoundObjectPtr globals = scene->globalsPlug()->getValue();
-	
+
 	string cameraPathString;
 	IECore::CameraPtr camera;
 	if( lookThroughEnabledPlug()->getValue() )
@@ -854,12 +854,12 @@ void SceneView::updateLookThrough()
 				cameraPathString = cameraPathData->readable();
 			}
 		}
-		
+
 		if( !cameraPathString.empty() )
 		{
 			ScenePlug::ScenePath cameraPath;
 			ScenePlug::stringToPath( cameraPathString, cameraPath );
-			
+
 			try
 			{
 				ConstCameraPtr constCamera = runTimeCast<const IECore::Camera>( scene->object( cameraPath ) );
@@ -867,7 +867,7 @@ void SceneView::updateLookThrough()
 				{
 					camera = constCamera->copy();
 					camera->setTransform( new MatrixTransform( scene->fullTransform( cameraPath ) ) );
-					
+
 					// if the camera has an existing screen window, remove it.
 					// if we didn't, it would conflict with the resolution we set
 					// below, yielding squashed/stretched images.
@@ -885,7 +885,7 @@ void SceneView::updateLookThrough()
 				cameraPathString = "";
 			}
 		}
-		
+
 		if( !camera )
 		{
 			// we couldn't find a render camera to lock to, but we can lock to the current
@@ -893,13 +893,13 @@ void SceneView::updateLookThrough()
 			camera = viewportGadget()->getCamera()->copy();
 		}
 	}
-	
+
 	if( camera )
 	{
 		camera->parameters()["resolution"] = new V2iData( viewportGadget()->getViewport() );
 		viewportGadget()->setCamera( camera.get() );
 		viewportGadget()->setCameraEditable( false );
-		
+
 		StringVectorDataPtr invisiblePaths = new StringVectorData();
 		invisiblePaths->writable().push_back( cameraPathString );
 		hideFilter()->pathsPlug()->setValue( invisiblePaths );

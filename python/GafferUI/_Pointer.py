@@ -45,10 +45,10 @@ __cursorOverridden = False
 def __pointerChanged() :
 
 	global __cursorOverridden
-	
+
 	pointer = GafferUI.Pointer.getCurrent()
 	application = QtGui.QApplication.instance()
-		
+
 	if pointer is None :
 		if __cursorOverridden :
 			application.restoreOverrideCursor()

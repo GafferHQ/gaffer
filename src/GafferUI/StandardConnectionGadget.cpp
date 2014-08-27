@@ -1,26 +1,26 @@
 //////////////////////////////////////////////////////////////////////////
-//  
+//
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2011-2014, Image Engine Design Inc. All rights reserved.
-//  
+//
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
 //  met:
-//  
+//
 //      * Redistributions of source code must retain the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer.
-//  
+//
 //      * Redistributions in binary form must reproduce the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
-//  
+//
 //      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
-//  
+//
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 //  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 //  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -32,7 +32,7 @@
 //  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 //  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//  
+//
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/bind.hpp"
@@ -57,7 +57,7 @@ ConnectionGadget::ConnectionGadgetTypeDescription<StandardConnectionGadget> Stan
 
 StandardConnectionGadget::StandardConnectionGadget( GafferUI::NodulePtr srcNodule, GafferUI::NodulePtr dstNodule )
 	:	ConnectionGadget( srcNodule, dstNodule ), m_dragEnd( Gaffer::Plug::Invalid ), m_hovering( false )
-{	
+{
 	enterSignal().connect( boost::bind( &StandardConnectionGadget::enter, this, ::_1, ::_2 ) );
 	leaveSignal().connect( boost::bind( &StandardConnectionGadget::leave, this, ::_1, ::_2 ) );
 	buttonPressSignal().connect( boost::bind( &StandardConnectionGadget::buttonPress, this, ::_1,  ::_2 ) );
@@ -76,7 +76,7 @@ void StandardConnectionGadget::setNodules( GafferUI::NodulePtr srcNodule, Gaffer
 	ConnectionGadget::setNodules( srcNodule, dstNodule );
 	setPositionsFromNodules();
 }
-		
+
 void StandardConnectionGadget::setPositionsFromNodules()
 {
 	const Gadget *p = parent<Gadget>();
@@ -84,7 +84,7 @@ void StandardConnectionGadget::setPositionsFromNodules()
 	{
 		return;
 	}
-	
+
 	if( dstNodule() && m_dragEnd!=Gaffer::Plug::In )
 	{
 		Gadget *dstNodeGadget = dstNodule()->ancestor<NodeGadget>();
@@ -104,11 +104,11 @@ void StandardConnectionGadget::setPositionsFromNodules()
 		}
 		M44f m = dstNodule()->fullTransform( p );
 		m_dstPos = V3f( 0 ) * m;
-		
+
 		const NodeGadget *dstNoduleNodeGadget = dstNodule()->ancestor<NodeGadget>();
 		m_dstTangent = dstNoduleNodeGadget ? dstNoduleNodeGadget->noduleTangent( dstNodule() ) : V3f( 0, 1, 0 );
 	}
-	
+
 	if( srcNodule() && m_dragEnd!=Gaffer::Plug::Out )
 	{
 		Gadget *srcNodeGadget = srcNodule()->ancestor<NodeGadget>();
@@ -119,7 +119,7 @@ void StandardConnectionGadget::setPositionsFromNodules()
 		}
 		M44f m = srcNodule()->fullTransform( p );
 		m_srcPos = V3f( 0 ) * m;
-		
+
 		const NodeGadget *srcNoduleNodeGadget = srcNodule()->ancestor<NodeGadget>();
 		m_srcTangent = srcNoduleNodeGadget ? srcNoduleNodeGadget->noduleTangent( srcNodule() ) : V3f( 0, -1, 0 );
 	}
@@ -131,7 +131,7 @@ void StandardConnectionGadget::setPositionsFromNodules()
 		m_srcPos = m_dstPos + m_dstTangent * 1.5f;
 		m_srcTangent = -m_dstTangent;
 	}
-	
+
 }
 
 Imath::Box3f StandardConnectionGadget::bound() const
@@ -165,7 +165,7 @@ void StandardConnectionGadget::updateDragEndPoint( const Imath::V3f position, co
 void StandardConnectionGadget::doRender( const Style *style ) const
 {
 	const_cast<StandardConnectionGadget *>( this )->setPositionsFromNodules();
-	
+
 	Style::State state = m_hovering ? Style::HighlightedState : Style::NormalState;
 	if( state != Style::HighlightedState )
 	{
@@ -174,7 +174,7 @@ void StandardConnectionGadget::doRender( const Style *style ) const
 			state = Style::HighlightedState;
 		}
 	}
-	
+
 	V3f adjustedSrcPos = m_srcPos;
 	V3f adjustedSrcTangent = m_srcTangent;
 	if( getMinimised() && state != Style::HighlightedState )
@@ -182,7 +182,7 @@ void StandardConnectionGadget::doRender( const Style *style ) const
 		adjustedSrcPos = m_dstPos + m_dstTangent * 1.5f;
 		adjustedSrcTangent = -m_dstTangent;
 	}
-		
+
 	style->renderConnection( adjustedSrcPos, adjustedSrcTangent, m_dstPos, m_dstTangent, state );
 }
 
@@ -201,10 +201,10 @@ IECore::RunTimeTypedPtr StandardConnectionGadget::dragBegin( GadgetPtr gadget, c
 {
 	setPositionsFromNodules();
 	float length = ( m_srcPos - m_dstPos ).length();
-	
+
 	float dSrc = event.line.distanceTo( m_srcPos );
 	float dDst = event.line.distanceTo( m_dstPos );
-	
+
 	float dMin = min( dSrc, dDst );
 	if( dMin < length / 3.0f )
 	{
@@ -220,7 +220,7 @@ IECore::RunTimeTypedPtr StandardConnectionGadget::dragBegin( GadgetPtr gadget, c
 			return dstNodule()->plug()->getInput<Gaffer::Plug>();
 		}
 	}
-	
+
 	return 0;
 }
 
@@ -264,12 +264,12 @@ std::string StandardConnectionGadget::getToolTip( const IECore::LineSegment3f &l
 	{
 		return result;
 	}
-	
+
 	if( !dstNodule() )
 	{
 		return result;
 	}
-	
+
 	const Gaffer::Plug *dstPlug = dstNodule()->plug();
 	const Gaffer::Plug *srcPlug = dstPlug->getInput<Gaffer::Plug>();
 	const Gaffer::GraphComponent *ancestor = srcPlug->commonAncestor<Gaffer::GraphComponent>( dstPlug );
@@ -286,7 +286,7 @@ std::string StandardConnectionGadget::getToolTip( const IECore::LineSegment3f &l
 		srcName = srcPlug->fullName();
 		dstName = dstPlug->fullName();
 	}
-	
+
 	return srcName + " -> " + dstName;
 }
 
@@ -308,7 +308,7 @@ bool StandardConnectionGadget::nodeSelected( const Nodule *nodule ) const
 	{
 		return false;
 	}
-	
+
 	const Gaffer::Node *node = nodule->plug()->node();
 	if( !node )
 	{

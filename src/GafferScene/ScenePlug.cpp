@@ -1,26 +1,26 @@
 //////////////////////////////////////////////////////////////////////////
-//  
+//
 //  Copyright (c) 2012, John Haddon. All rights reserved.
 //  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
-//  
+//
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
 //  met:
-//  
+//
 //      * Redistributions of source code must retain the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer.
-//  
+//
 //      * Redistributions in binary form must reproduce the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
-//  
+//
 //      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
-//  
+//
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 //  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 //  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -32,7 +32,7 @@
 //  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 //  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//  
+//
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/tokenizer.hpp"
@@ -68,7 +68,7 @@ ScenePlug::ScenePlug( const std::string &name, Direction direction, unsigned fla
 			childFlags
 		)
 	);
-	
+
 	addChild(
 		new M44fPlug(
 			"transform",
@@ -77,7 +77,7 @@ ScenePlug::ScenePlug( const std::string &name, Direction direction, unsigned fla
 			childFlags
 		)
 	);
-	
+
 	addChild(
 		new CompoundObjectPlug(
 			"attributes",
@@ -86,7 +86,7 @@ ScenePlug::ScenePlug( const std::string &name, Direction direction, unsigned fla
 			childFlags
 		)
 	);
-	
+
 	addChild(
 		new ObjectPlug(
 			"object",
@@ -95,7 +95,7 @@ ScenePlug::ScenePlug( const std::string &name, Direction direction, unsigned fla
 			childFlags
 		)
 	);
-	
+
 	addChild(
 		new InternedStringVectorDataPlug(
 			"childNames",
@@ -104,16 +104,16 @@ ScenePlug::ScenePlug( const std::string &name, Direction direction, unsigned fla
 			childFlags
 		)
 	);
-	
+
 	addChild(
 		new CompoundObjectPlug(
-			"globals",	
+			"globals",
 			direction,
 			new IECore::CompoundObject(),
 			childFlags
 		)
 	);
-	
+
 }
 
 ScenePlug::~ScenePlug()
@@ -223,7 +223,7 @@ Imath::M44f ScenePlug::fullTransform( const ScenePath &scenePath ) const
 {
 	ContextPtr tmpContext = new Context( *Context::current(), Context::Borrowed );
 	Context::Scope scopedContext( tmpContext.get() );
-	
+
 	Imath::M44f result;
 	ScenePath path( scenePath );
 	while( path.size() )
@@ -232,7 +232,7 @@ Imath::M44f ScenePlug::fullTransform( const ScenePath &scenePath ) const
 		result = result * transformPlug()->getValue();
 		path.pop_back();
 	}
-	
+
 	return result;
 }
 
@@ -263,10 +263,10 @@ IECore::CompoundObjectPtr ScenePlug::fullAttributes( const ScenePath &scenePath 
 			{
 				resultMembers.insert( *it );
 			}
-		}		
+		}
 		path.pop_back();
 	}
-	
+
 	return result;
 }
 
@@ -306,7 +306,7 @@ IECore::MurmurHash ScenePlug::fullTransformHash( const ScenePath &scenePath ) co
 {
 	ContextPtr tmpContext = new Context( *Context::current(), Context::Borrowed );
 	Context::Scope scopedContext( tmpContext.get() );
-	
+
 	IECore::MurmurHash result;
 	ScenePath path( scenePath );
 	while( path.size() )
@@ -315,7 +315,7 @@ IECore::MurmurHash ScenePlug::fullTransformHash( const ScenePath &scenePath ) co
 		transformPlug()->hash( result );
 		path.pop_back();
 	}
-	
+
 	return result;
 }
 
@@ -331,7 +331,7 @@ IECore::MurmurHash ScenePlug::fullAttributesHash( const ScenePath &scenePath ) c
 {
 	ContextPtr tmpContext = new Context( *Context::current(), Context::Borrowed );
 	Context::Scope scopedContext( tmpContext.get() );
-	
+
 	IECore::MurmurHash result;
 	ScenePath path( scenePath );
 	while( path.size() )
@@ -340,7 +340,7 @@ IECore::MurmurHash ScenePlug::fullAttributesHash( const ScenePath &scenePath ) c
 		attributesPlug()->hash( result );
 		path.pop_back();
 	}
-	
+
 	return result;
 }
 
@@ -364,7 +364,7 @@ IECore::MurmurHash ScenePlug::childNamesHash( const ScenePath &scenePath ) const
 void ScenePlug::stringToPath( const std::string &s, ScenePlug::ScenePath &path )
 {
 	typedef boost::tokenizer<boost::char_separator<char> > Tokenizer;
-	Tokenizer tokenizer( s, boost::char_separator<char>( "/" ) );	
+	Tokenizer tokenizer( s, boost::char_separator<char>( "/" ) );
 	for( Tokenizer::const_iterator it = tokenizer.begin(), eIt = tokenizer.end(); it != eIt; it++ )
 	{
 		path.push_back( *it );

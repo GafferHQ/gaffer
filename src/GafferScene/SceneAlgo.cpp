@@ -1,25 +1,25 @@
 //////////////////////////////////////////////////////////////////////////
-//  
+//
 //  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
-//  
+//
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
 //  met:
-//  
+//
 //      * Redistributions of source code must retain the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer.
-//  
+//
 //      * Redistributions in binary form must reproduce the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
-//  
+//
 //      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
-//  
+//
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 //  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 //  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -31,7 +31,7 @@
 //  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 //  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//  
+//
 //////////////////////////////////////////////////////////////////////////
 
 #include "tbb/spin_mutex.h"
@@ -99,26 +99,26 @@ class MatchingPathsTask : public tbb::task
 		}
 
 		virtual task *execute()
-		{	
-			
+		{
+
 			ContextPtr context = new Context( *m_context, Context::Borrowed );
 			context->set( ScenePlug::scenePathContextName, m_path );
 			Context::Scope scopedContext( context.get() );
-			
+
 			const Filter::Result match = (Filter::Result)m_filter->getValue();
 			if( match & Filter::ExactMatch )
 			{
 				PathMatcherMutex::scoped_lock lock( m_pathMatcherMutex );
 				m_pathMatcher.addPath( m_path );
 			}
-			
+
 			if( match & Filter::DescendantMatch )
 			{
 				ConstInternedStringVectorDataPtr childNamesData = m_scene->childNamesPlug()->getValue();
 				const vector<InternedString> &childNames = childNamesData->readable();
-			
+
 				set_ref_count( 1 + childNames.size() );
-			
+
 				ScenePlug::ScenePath childPath = m_path;
 				childPath.push_back( InternedString() ); // space for the child name
 				for( vector<InternedString>::const_iterator it = childNames.begin(), eIt = childNames.end(); it != eIt; it++ )
@@ -129,12 +129,12 @@ class MatchingPathsTask : public tbb::task
 				}
 				wait_for_all();
 			}
-			
+
 			return NULL;
 		}
-		
+
 	protected :
-	
+
 		MatchingPathsTask( const MatchingPathsTask &other, const ScenePlug::ScenePath &path )
 			:	m_filter( other.m_filter ),
 				m_scene( other.m_scene ),
@@ -153,7 +153,7 @@ class MatchingPathsTask : public tbb::task
 		PathMatcherMutex &m_pathMatcherMutex;
 		PathMatcher &m_pathMatcher;
 		ScenePlug::ScenePath m_path;
-		
+
 };
 
 } // namespace
@@ -169,5 +169,5 @@ void GafferScene::matchingPaths( const Gaffer::IntPlug *filterPlug, const SceneP
 	Filter::setInputScene( context.get(), scene );
 	MatchingPathsTask::PathMatcherMutex mutex;
 	MatchingPathsTask *task = new( tbb::task::allocate_root() ) MatchingPathsTask( filterPlug, scene, context.get(), mutex, paths );
-	tbb::task::spawn_root_and_wait( *task );	
+	tbb::task::spawn_root_and_wait( *task );
 }

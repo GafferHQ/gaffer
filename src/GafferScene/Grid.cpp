@@ -1,25 +1,25 @@
 //////////////////////////////////////////////////////////////////////////
-//  
+//
 //  Copyright (c) 2014, John Haddon. All rights reserved.
-//  
+//
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
 //  met:
-//  
+//
 //      * Redistributions of source code must retain the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer.
-//  
+//
 //      * Redistributions in binary form must reproduce the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
-//  
+//
 //      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
-//  
+//
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 //  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 //  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -31,7 +31,7 @@
 //  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 //  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//  
+//
 //////////////////////////////////////////////////////////////////////////
 
 #include "IECore/CurvesPrimitive.h"
@@ -56,13 +56,13 @@ Grid::Grid( const std::string &name )
 	:	Source( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
-	
+
 	addChild( new StringPlug( "name", Plug::In, "grid" ) );
-	addChild( new Gaffer::TransformPlug( "transform" ) );	
-	
+	addChild( new Gaffer::TransformPlug( "transform" ) );
+
 	addChild( new V2fPlug( "dimensions", Plug::In, V2f( 10.0f ), V2f( 0.0f ) ) );
 	addChild( new FloatPlug( "spacing", Plug::In, 1.0f, 0.0f ) );
-	
+
 	addChild( new Color3fPlug( "gridColor", Plug::In, Color3f( 0.1 ) ) );
 	addChild( new Color3fPlug( "centerColor", Plug::In, Color3f( 0.5 ) ) );
 	addChild( new Color3fPlug( "borderColor", Plug::In, Color3f( 0.15 ) ) );
@@ -70,7 +70,7 @@ Grid::Grid( const std::string &name )
 	addChild( new FloatPlug( "gridPixelWidth", Plug::In, 0.25f, 0.01f ) );
 	addChild( new FloatPlug( "centerPixelWidth", Plug::In, 1.0f, 0.01f ) );
 	addChild( new FloatPlug( "borderPixelWidth", Plug::In, 1.0f, 0.01f ) );
-	
+
 }
 
 Grid::~Grid()
@@ -180,7 +180,7 @@ const Gaffer::FloatPlug *Grid::borderPixelWidthPlug() const
 void Grid::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	Source::affects( input, outputs );
-	
+
 	if( input == namePlug() )
 	{
 		outputs.push_back( outPlug()->childNamesPlug() );
@@ -201,7 +201,7 @@ void Grid::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
 		input->parent<Plug>() == borderColorPlug()
 	)
 	{
-		outputs.push_back( outPlug()->objectPlug() );	
+		outputs.push_back( outPlug()->objectPlug() );
 	}
 	else if(
 		input == gridPixelWidthPlug() ||
@@ -243,7 +243,7 @@ Imath::Box3f Grid::computeBound( const SceneNode::ScenePath &path, const Gaffer:
 void Grid::hashTransform( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
 	Source::hashTransform( path, context, parent, h );
-	
+
 	if( path.size() == 1 )
 	{
 		transformPlug()->hash( h );
@@ -288,14 +288,14 @@ IECore::ConstCompoundObjectPtr Grid::computeAttributes( const SceneNode::ScenePa
 	if( path.size() == 1 )
 	{
 		CompoundObjectPtr result = new CompoundObject;
-		
+
 		result->members()["gl:curvesPrimitive:useGLLines"] = new BoolData( true );
 		result->members()["gl:smoothing:lines"] = new BoolData( true );
-		
+
 		ShaderPtr shader = new Shader( "Constant", "gl:surface" );
 		shader->parameters()["Cs"] = new Color3fData( Color3f( 1 ) );
 		result->members()["shader"] = shader;
-		
+
 		return result;
 	}
 	else if( path.size() == 2 )
@@ -313,10 +313,10 @@ IECore::ConstCompoundObjectPtr Grid::computeAttributes( const SceneNode::ScenePa
 		{
 			pixelWidth = borderPixelWidthPlug()->getValue();
 		}
-		
+
 		CompoundObjectPtr result = new CompoundObject;
 		result->members()["gl:curvesPrimitive:glLineWidth"] = new FloatData( pixelWidth );
-		
+
 		return result;
 	}
 	return outPlug()->attributesPlug()->defaultValue();
@@ -355,14 +355,14 @@ IECore::ConstObjectPtr Grid::computeObject( const SceneNode::ScenePath &path, co
 	{
 		IntVectorDataPtr vertsPerCurveData = new IntVectorData;
 		vector<int> &vertsPerCurve = vertsPerCurveData->writable();
-		
+
 		V3fVectorDataPtr pData = new V3fVectorData;
 		pData->setInterpretation( GeometricData::Point );
 		vector<V3f> &p = pData->writable();
-		
+
 		bool periodic = false;
 		Color3f cs( 1 );
-		
+
 		const V2f halfDimensions = dimensionsPlug()->getValue() / 2.0f;
 		if( path.back() == g_gridLinesName )
 		{
@@ -409,7 +409,7 @@ IECore::ConstObjectPtr Grid::computeObject( const SceneNode::ScenePath &path, co
 			periodic = true;
 			cs = borderColorPlug()->getValue();
 		}
-		
+
 		CurvesPrimitivePtr result = new CurvesPrimitive( vertsPerCurveData, CubicBasisf::linear(), periodic, pData );
 		result->variables["Cs"] = PrimitiveVariable( PrimitiveVariable::Constant, new Color3fData( cs ) );
 		return result;
@@ -420,7 +420,7 @@ IECore::ConstObjectPtr Grid::computeObject( const SceneNode::ScenePath &path, co
 void Grid::hashChildNames( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
 	Source::hashChildNames( path, context, parent, h );
-	
+
 	if( path.size() == 0 )
 	{
 		namePlug()->hash( h );
@@ -445,7 +445,7 @@ IECore::ConstInternedStringVectorDataPtr Grid::computeChildNames( const SceneNod
 		}
 		return resultData;
 	}
-	
+
 	return outPlug()->childNamesPlug()->defaultValue();
 }
 

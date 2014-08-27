@@ -1,25 +1,25 @@
 //////////////////////////////////////////////////////////////////////////
-//  
+//
 //  Copyright (c) 2013-2014, Image Engine Design Inc. All rights reserved.
-//  
+//
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
 //  met:
-//  
+//
 //	  * Redistributions of source code must retain the above
 //		copyright notice, this list of conditions and the following
 //		disclaimer.
-//  
+//
 //	  * Redistributions in binary form must reproduce the above
 //		copyright notice, this list of conditions and the following
 //		disclaimer in the documentation and/or other materials provided with
 //		the distribution.
-//  
+//
 //	  * Neither the name of John Haddon nor the names of
 //		any other contributors to this software may be used to endorse or
 //		promote products derived from this software without specific prior
 //		written permission.
-//  
+//
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 //  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 //  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -31,7 +31,7 @@
 //  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 //  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//  
+//
 //////////////////////////////////////////////////////////////////////////
 
 #ifndef GAFFER_DISPATCHER_H
@@ -66,7 +66,7 @@ namespace Detail
 struct DispatchSignalCombiner
 {
 	typedef bool result_type;
-	
+
 	template<typename InputIterator>
 	bool operator()( InputIterator first, InputIterator last ) const
 	{
@@ -76,10 +76,10 @@ struct DispatchSignalCombiner
 			{
 				return true;
 			}
-			
+
 			++first;
 		}
-		
+
 		return false;
 	}
 };
@@ -100,7 +100,7 @@ class Dispatcher : public Node
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::Dispatcher, DispatcherTypeId, Node );
 
 		typedef boost::signal<bool (const Dispatcher *, const std::vector<ExecutableNodePtr> &), Detail::DispatchSignalCombiner> DispatchSignal;
-		
+
 		//! @name Dispatch Signals
 		/// These signals are emitted on dispatch events for any registered Dispatcher instance.
 		////////////////////////////////////////////////////////////////////////////////////////
@@ -112,20 +112,20 @@ class Dispatcher : public Node
 		/// Called after any dispatcher has finished dispatching nodes.
 		static DispatchSignal &postDispatchSignal();
 		//@}
-		
+
 		/// Calls doDispatch, taking care to trigger the dispatch signals at the appropriate times.
 		/// Note that this will throw unless all of the nodes are either ExecutableNodes or Boxes.
 		void dispatch( const std::vector<NodePtr> &nodes ) const;
-		
+
 		enum FramesMode
 		{
 			CurrentFrame,
 			ScriptRange,
 			CustomRange
 		};
-		
+
 		//! @name Frame range
-		/// Dispatchers define a frame range for execution. 
+		/// Dispatchers define a frame range for execution.
 		///////////////////////////////////////////////////
 		//@{
 		/// Returns a FramesMode for getting the active frame range.
@@ -135,7 +135,7 @@ class Dispatcher : public Node
 		StringPlug *frameRangePlug();
 		const StringPlug *frameRangePlug() const;
 		//@}
-		
+
 		//! @name Dispatcher Jobs
 		/// Utility functions which derived classes may use when dispatching jobs.
 		//////////////////////////////////////////////////////////////////////////
@@ -150,7 +150,7 @@ class Dispatcher : public Node
 		/// Returns the directory specified by jobDirectoryPlug + jobNamePlug, creating it when necessary.
 		const std::string jobDirectory( const Context *context ) const;
 		//@}
-		
+
 		//! @name Registration
 		/// Utility functions for registering and retrieving Dispatchers.
 		/////////////////////////////////////////////////////////////////
@@ -166,46 +166,46 @@ class Dispatcher : public Node
 	protected :
 
 		friend class ExecutableNode;
-		
+
 		IE_CORE_FORWARDDECLARE( TaskBatch )
-		
+
 		typedef std::vector<TaskBatchPtr> TaskBatches;
-		
+
 		/// Representation of a Task and its requirements.
 		class TaskBatch : public IECore::RefCounted
 		{
 			public :
-				
+
 				TaskBatch();
 				TaskBatch( const ExecutableNode::Task &task );
 				TaskBatch( const TaskBatch &other );
-				
+
 				IE_CORE_DECLAREMEMBERPTR( TaskBatch );
-				
+
 				void execute() const;
-				
+
 				const ExecutableNode *node() const;
 				const Context *context() const;
-				
+
 				std::vector<float> &frames();
 				const std::vector<float> &frames() const;
-				
+
 				std::vector<TaskBatchPtr> &requirements();
 				const std::vector<TaskBatchPtr> &requirements() const;
-				
+
 				IECore::CompoundData *blindData();
 				const IECore::CompoundData *blindData() const;
-			
+
 			private :
-				
+
 				ConstExecutableNodePtr m_node;
 				ConstContextPtr m_context;
 				IECore::CompoundDataPtr m_blindData;
 				std::vector<float> m_frames;
 				TaskBatches m_requirements;
-		
+
 		};
-		
+
 		/// Derived classes should implement doDispatch to dispatch the execution of
 		/// the given TaskBatches, taking care to respect each set of requirements,
 		/// executing required Tasks as well when necessary. Note that it is possible
@@ -213,7 +213,7 @@ class Dispatcher : public Node
 		/// TaskBatches. It is the responsibility of derived classes to track which
 		/// batches have been dispatched in order to prevent duplicate work.
 		virtual void doDispatch( const TaskBatch *batch ) const = 0;
-		
+
 		//! @name ExecutableNode Customization
 		/// Dispatchers are able to create custom plugs on ExecutableNodes when they are constructed.
 		/////////////////////////////////////////////////////////////////////////////////////////////
@@ -232,16 +232,16 @@ class Dispatcher : public Node
 		/// before all Dispatchers have been registered could result in lost settings.
 		virtual void doSetupPlugs( CompoundPlug *parentPlug ) const = 0;
 		//@}
-	
+
 	private :
 
 		typedef std::map< std::string, DispatcherPtr > DispatcherMap;
-		
+
 		typedef std::map<IECore::MurmurHash, TaskBatchPtr> BatchMap;
 		typedef std::map<IECore::MurmurHash, TaskBatchPtr> TaskToBatchMap;
-		
+
 		IECore::FrameListPtr frameRange( const ScriptNode *script, const Context *context ) const;
-		
+
 		// Utility functions that recursively collect all nodes and their execution requirements,
 		// arranging them into a graph of TaskBatches. Tasks will be grouped by executionHash,
 		// and the requirements will be a union of the requirements from all equivalent Tasks.
@@ -251,12 +251,12 @@ class Dispatcher : public Node
 		static void batchTasksWalk( TaskBatchPtr parent, const ExecutableNode::Task &task, BatchMap &currentBatches, TaskToBatchMap &tasksToBatches );
 		static TaskBatchPtr acquireBatch( const ExecutableNode::Task &task, BatchMap &currentBatches, TaskToBatchMap &tasksToBatches );
 		static IECore::MurmurHash batchHash( const ExecutableNode::Task &task );
-		
+
 		static size_t g_firstPlugIndex;
 		static DispatcherMap g_dispatchers;
 		static DispatchSignal g_preDispatchSignal;
 		static DispatchSignal g_postDispatchSignal;
-		
+
 		friend void GafferBindings::bindDispatcher();
 };
 

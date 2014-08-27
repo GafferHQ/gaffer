@@ -1,26 +1,26 @@
 //////////////////////////////////////////////////////////////////////////
-//  
+//
 //  Copyright (c) 2012, John Haddon. All rights reserved.
 //  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
-//  
+//
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
 //  met:
-//  
+//
 //      * Redistributions of source code must retain the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer.
-//  
+//
 //      * Redistributions in binary form must reproduce the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
-//  
+//
 //      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
-//  
+//
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 //  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 //  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -32,7 +32,7 @@
 //  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 //  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//  
+//
 //////////////////////////////////////////////////////////////////////////
 
 #ifndef GAFFERUI_VIEW_H
@@ -76,7 +76,7 @@ class View : public Gaffer::Node
 		T *inPlug();
 		template<typename T>
 		const T *inPlug() const;
-		
+
 		/// The Context in which the View should operate.
 		Gaffer::Context *getContext();
 		const Gaffer::Context *getContext() const;
@@ -89,7 +89,7 @@ class View : public Gaffer::Node
 		/// A signal the view may use when it needs to be updated due
 		/// to user action.
 		UnarySignal &updateRequestSignal();
-		
+
 		/// @name Factory
 		///////////////////////////////////////////////////////////////////
 		//@{
@@ -104,7 +104,7 @@ class View : public Gaffer::Node
 		/// those registered by plug type only.
 		static void registerView( const IECore::TypeId nodeType, const std::string &plugPathRegex, ViewCreator creator );
 		//@}
-		
+
 	protected :
 
 		/// The input plug is added to the View to form inPlug() - the derived
@@ -112,7 +112,7 @@ class View : public Gaffer::Node
 		/// to the View constructor. For instance, the SceneView will pass
 		/// a ScenePlug so that only scenes may be viewed.
 		View( const std::string &name, Gaffer::PlugPtr input );
-		
+
 		/// The View may want to perform preprocessing of the input before
 		/// displaying it, for instance by applying a LUT to an image. This
 		/// can be achieved by setting a preprocess node which is connected
@@ -131,13 +131,13 @@ class View : public Gaffer::Node
 		/// should be used when computing the contents to display.
 		template<typename T>
 		T *preprocessedInPlug();
-		
+
 		/// Called when the context changes. The default implementation triggers
 		/// updateRequestSignal(), but derived classes may reimplement the method
 		/// to perform more specific actions.
 		virtual void contextChanged( const IECore::InternedString &name );
 		/// Returns the connection used to trigger the call to contextChanged(). Derived
-		/// classes may block this temporarily if they want to prevent the triggering - 
+		/// classes may block this temporarily if they want to prevent the triggering -
 		/// this can be useful when modifying the context.
 		boost::signals::connection &contextChangedConnection();
 		/// Called when a plug on this node or on the preprocessor is dirtied. The
@@ -153,11 +153,11 @@ class View : public Gaffer::Node
 		/// do it itself.
 		/// \see View::updateRequestSignal().
 		virtual void update() = 0;
-		
+
 		/// May be overridden by derived classes to control the region that is framed
 		/// when "F" is pressed.
 		virtual Imath::Box3f framingBound() const;
-				
+
 		template<class T>
 		struct ViewDescription
 		{
@@ -165,9 +165,9 @@ class View : public Gaffer::Node
 			ViewDescription( IECore::TypeId nodeType, const std::string &plugPathRegex );
 			static ViewPtr creator( Gaffer::PlugPtr input );
 		};
-		
+
 	private :
-	
+
 		ViewportGadgetPtr m_viewportGadget;
 		Gaffer::ContextPtr m_context;
 		UnarySignal m_updateRequestSignal;
@@ -175,21 +175,21 @@ class View : public Gaffer::Node
 		boost::signals::scoped_connection m_preprocessorPlugDirtiedConnection;
 
 		bool keyPress( GadgetPtr gadget, const KeyEvent &keyEvent );
-		
+
 		typedef std::map<IECore::TypeId, ViewCreator> CreatorMap;
 		static CreatorMap &creators();
-	
+
 		typedef std::pair<boost::regex, ViewCreator> RegexAndCreator;
 		typedef std::vector<RegexAndCreator> RegexAndCreatorVector;
 		typedef std::map<IECore::TypeId, RegexAndCreatorVector> NamedCreatorMap;
 		static NamedCreatorMap &namedCreators();
-		
+
 		static size_t g_firstPlugIndex;
-		
+
 		friend void GafferUIBindings::bindView();
 		friend void GafferUIBindings::updateView( View & );
 		friend Gaffer::NodePtr GafferUIBindings::getPreprocessor( View & );
-					
+
 };
 
 } // namespace GafferUI

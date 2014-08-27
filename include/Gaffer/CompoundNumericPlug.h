@@ -1,26 +1,26 @@
 //////////////////////////////////////////////////////////////////////////
-//  
+//
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
-//  
+//
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
 //  met:
-//  
+//
 //      * Redistributions of source code must retain the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer.
-//  
+//
 //      * Redistributions in binary form must reproduce the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
-//  
+//
 //      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
-//  
+//
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 //  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 //  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -32,7 +32,7 @@
 //  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 //  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//  
+//
 //////////////////////////////////////////////////////////////////////////
 
 #ifndef GAFFER_COMPOUNDNUMERICPLUG_H
@@ -55,7 +55,7 @@ class CompoundNumericPlug : public CompoundPlug
 
 		typedef T ValueType;
 		typedef NumericPlug<typename T::BaseType> ChildType;
-		
+
 		IECORE_RUNTIMETYPED_DECLARETEMPLATE( CompoundNumericPlug<T>, CompoundPlug );
 
 		CompoundNumericPlug(
@@ -73,16 +73,16 @@ class CompoundNumericPlug : public CompoundPlug
 		virtual PlugPtr createCounterpart( const std::string &name, Direction direction ) const;
 
 		ChildType *getChild( size_t index );
-		const ChildType *getChild( size_t index ) const;	
+		const ChildType *getChild( size_t index ) const;
 
 		T defaultValue() const;
-		
+
 		bool hasMinValue() const;
 		bool hasMaxValue() const;
 
 		T minValue() const;
 		T maxValue() const;
-		
+
 		/// Calls setValue for each of the child plugs, passing the components
 		/// of value.
 		/// \undoable
@@ -90,7 +90,7 @@ class CompoundNumericPlug : public CompoundPlug
 		/// Returns the value, calling getValue() on each child plug to compute a component
 		/// of the result.
 		T getValue() const;
-		
+
 		/// @name Ganging
 		/// CompoundNumericPlugs may be ganged by connecting the child plugs
 		/// together so their values are driven by the first child. These
@@ -105,13 +105,13 @@ class CompoundNumericPlug : public CompoundPlug
 		/// \undoable
 		void ungang();
 		//@}
-		
+
 	private :
-	
+
 		IE_CORE_DECLARERUNTIMETYPEDDESCRIPTION( CompoundNumericPlug<T> );
 
 		static const char **childNames();
-	
+
 };
 
 typedef CompoundNumericPlug<Imath::V2f> V2fPlug;

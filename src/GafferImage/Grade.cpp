@@ -1,25 +1,25 @@
 //////////////////////////////////////////////////////////////////////////
-//  
+//
 //  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
-//  
+//
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
 //  met:
-//  
+//
 //      * Redistributions of source code must retain the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer.
-//  
+//
 //      * Redistributions in binary form must reproduce the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
-//  
+//
 //      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
-//  
+//
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 //  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 //  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -31,7 +31,7 @@
 //  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 //  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//  
+//
 //////////////////////////////////////////////////////////////////////////
 
 #include "Gaffer/Context.h"
@@ -157,29 +157,29 @@ const Gaffer::BoolPlug *Grade::whiteClampPlug() const
 	return getChild<BoolPlug>( g_firstPlugIndex+8 );
 }
 
-bool Grade::channelEnabled( const std::string &channel ) const 
+bool Grade::channelEnabled( const std::string &channel ) const
 {
 	if ( !ChannelDataProcessor::channelEnabled( channel ) )
 	{
 		return false;
 	}
-	
+
 	int channelIndex = GafferImage::ChannelMaskPlug::channelIndex( channel );
-	
+
 	// Never bother to process the alpha channel.
 	if ( channelIndex == 3 ) return false;
 
 	// And don't bother to process identity transforms or invalid gammas
 	float a, b, gamma;
 	parameters( channelIndex, a, b, gamma );
-	
+
 	if( gamma == 0.0f )
 	{
 		// this would result in division by zero,
 		// so it must disable processing.
 		return false;
 	}
-	
+
 	return gamma != 1.0f || a != 1.0f || b != 0.0f;
 }
 
@@ -187,7 +187,7 @@ void Grade::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs 
 {
 	ChannelDataProcessor::affects( input, outputs );
 
-	// Process the children of the compound plugs. 
+	// Process the children of the compound plugs.
 	for( unsigned int i = 0; i < 3; ++i )
 	{
 		if( input == blackPointPlug()->getChild(i) ||
@@ -199,7 +199,7 @@ void Grade::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs 
 				input == gammaPlug()->getChild(i)
 		  )
 		{
-			outputs.push_back( outPlug()->channelDataPlug() );	
+			outputs.push_back( outPlug()->channelDataPlug() );
 			return;
 		}
 	}
@@ -210,7 +210,7 @@ void Grade::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs 
 			input == whiteClampPlug()
 	  )
 	{
-		outputs.push_back( outPlug()->channelDataPlug() );	
+		outputs.push_back( outPlug()->channelDataPlug() );
 		return;
 	}
 
@@ -250,10 +250,10 @@ void Grade::processChannelData( const Gaffer::Context *context, const ImagePlug 
 	float A, B, gamma;
 	parameters( ChannelMaskPlug::channelIndex( channel ), A, B, gamma );
 	const float invGamma = 1. / gamma;
-	const bool whiteClamp = whiteClampPlug()->getValue();	
-	const bool blackClamp = blackClampPlug()->getValue();	
+	const bool whiteClamp = whiteClampPlug()->getValue();
+	const bool blackClamp = blackClampPlug()->getValue();
 
-	// Get some useful pointers.	
+	// Get some useful pointers.
 	float *outPtr = &(outData->writable()[0]);
 	const float *END = outPtr + dataWidth;
 
@@ -269,7 +269,7 @@ void Grade::processChannelData( const Gaffer::Context *context, const ImagePlug 
 		if ( whiteClamp && colour > 1.f ) colour = 1.f;
 
 		// Write back the result.
-		*outPtr++ = colour;	
+		*outPtr++ = colour;
 	}
 }
 

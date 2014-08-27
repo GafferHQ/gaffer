@@ -1,25 +1,25 @@
 //////////////////////////////////////////////////////////////////////////
-//  
+//
 //  Copyright (c) 2013, John Haddon. All rights reserved.
-//  
+//
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
 //  met:
-//  
+//
 //      * Redistributions of source code must retain the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer.
-//  
+//
 //      * Redistributions in binary form must reproduce the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
-//  
+//
 //      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
-//  
+//
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 //  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 //  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -31,7 +31,7 @@
 //  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 //  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//  
+//
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/algorithm/string/split.hpp"
@@ -99,7 +99,7 @@ TypeDesc typeDescFromData( const Data *data, const void *&basePointer )
 	switch( data->typeId() )
 	{
 		// simple data
-		
+
 		case FloatDataTypeId :
 			basePointer = static_cast<const FloatData *>( data )->baseReadable();
 			return TypeDesc::TypeFloat;
@@ -116,12 +116,12 @@ TypeDesc typeDescFromData( const Data *data, const void *&basePointer )
 		case Color3fDataTypeId :
 			basePointer = static_cast<const Color3fData *>( data )->baseReadable();
 			return TypeDesc::TypeColor;
-		case StringDataTypeId :					
+		case StringDataTypeId :
 			basePointer = &(static_cast<const StringData *>( data )->readable() );
 			return TypeDesc::TypeString;
-			
+
 		// vector data
-		
+
 		case FloatVectorDataTypeId :
 			basePointer = static_cast<const FloatVectorData *>( data )->baseReadable();
 			return TypeDesc( TypeDesc::FLOAT, static_cast<const FloatVectorData *>( data )->readable().size() );
@@ -139,7 +139,7 @@ TypeDesc typeDescFromData( const Data *data, const void *&basePointer )
 		case Color3fVectorDataTypeId :
 			basePointer = static_cast<const Color3fVectorData *>( data )->baseReadable();
 			return TypeDesc( TypeDesc::FLOAT, TypeDesc::VEC3, TypeDesc::COLOR, static_cast<const IntVectorData *>( data )->readable().size() );
-			
+
 		default :
 			return TypeDesc();
 	}
@@ -191,7 +191,7 @@ DataPtr dataFromTypeDesc( TypeDesc type, void *&basePointer )
 			}
 		}
 	}
-	
+
 	return NULL;
 }
 
@@ -201,9 +201,9 @@ DataPtr dataFromTypeDesc( TypeDesc type, void *&basePointer )
 
 class OSLRenderer::RenderState
 {
-	
+
 	public :
-		
+
 		RenderState( const IECore::CompoundData *shadingPoints )
 			:	m_pointIndex( 0 )
 		{
@@ -225,7 +225,7 @@ class OSLRenderer::RenderState
 					m_userData.push_back( userData );
 				}
 			}
-			
+
 			sort( m_userData.begin(), m_userData.end() );
 		}
 
@@ -236,53 +236,53 @@ class OSLRenderer::RenderState
 				m_userData.end(),
 				name
 			);
-			
+
 			if( it == m_userData.end() || it->name != name )
 			{
 				return false;
 			}
-			
+
 			const char *src = static_cast<const char *>( it->basePointer );
 			if( it->array )
 			{
 				src += m_pointIndex * it->typeDesc.elementsize();
 			}
-			
+
 			return ShadingSystem::convert_value( value, type, src, it->typeDesc );
 		}
-		
+
 		void incrementPointIndex()
 		{
 			m_pointIndex++;
 		}
 
 	private :
-			
+
 		size_t m_pointIndex;
-		
+
 		struct UserData
 		{
 			UserData()
 				:	basePointer( NULL ), array( false )
 			{
 			}
-		
+
 			ustring name;
 			const void *basePointer;
 			TypeDesc typeDesc;
 			bool array;
-			
+
 			bool operator < ( const UserData &rhs ) const
 			{
 				return name.c_str() < rhs.name.c_str();
 			}
-			
+
 			bool operator < ( const ustring &rhs ) const
 			{
 				return name.c_str() < rhs.c_str();
 			}
 		};
-		
+
 		vector<UserData> m_userData; // sorted on name for quick lookups
 
 };
@@ -295,11 +295,11 @@ class OSLRenderer::RendererServices : public OSL::RendererServices
 {
 
 	public :
-		
+
 		RendererServices()
 		{
 		}
-		
+
 		virtual bool get_matrix( OSL::Matrix44 &result, TransformationPtr xform, float time )
 		{
 			return false;
@@ -307,7 +307,7 @@ class OSLRenderer::RendererServices : public OSL::RendererServices
 
 		virtual bool get_matrix( OSL::Matrix44 &result, TransformationPtr xform )
 		{
-			return false;		
+			return false;
 		}
 
 		virtual bool get_matrix( OSL::Matrix44 &result, ustring from, float time )
@@ -404,7 +404,7 @@ OSLRenderer::OSLRenderer()
 		int id;
 		ClosureParam parameters[32];
 	};
-	
+
 	ClosureDefinition closureDefinitions[] = {
 		{
 			"emission",
@@ -426,7 +426,7 @@ OSLRenderer::OSLRenderer()
 		// end marker
 		{ NULL, 0, {} }
 	};
-	
+
 	for( int i = 0; closureDefinitions[i].name; ++i )
 	{
 		m_shadingSystem->register_closure(
@@ -463,11 +463,11 @@ void OSLRenderer::setOption( const std::string &name, IECore::ConstDataPtr value
 	}
 	else if( boost::starts_with( name, "user:" ) || name.find( ':' ) == string::npos )
 	{
-		msg( Msg::Warning, "OSLRenderer::setOption", boost::format( "Unsupported option \"%s\"" ) % name );		
+		msg( Msg::Warning, "OSLRenderer::setOption", boost::format( "Unsupported option \"%s\"" ) % name );
 	}
 	else
 	{
-		// option is for another renderer and can be ignored.	
+		// option is for another renderer and can be ignored.
 	}
 }
 
@@ -488,7 +488,7 @@ void OSLRenderer::worldBegin()
 {
 	if( m_stateStack.size() )
 	{
-		msg( Msg::Warning, "OSLRenderer::worldBegin", "Bad nesting" );				
+		msg( Msg::Warning, "OSLRenderer::worldBegin", "Bad nesting" );
 		return;
 	}
 	m_stateStack.push( State() );
@@ -498,7 +498,7 @@ void OSLRenderer::worldEnd()
 {
 	if( m_stateStack.size() != 1 )
 	{
-		msg( Msg::Warning, "OSLRenderer::worldEnd", "Bad nesting" );					
+		msg( Msg::Warning, "OSLRenderer::worldEnd", "Bad nesting" );
 		return;
 	}
 	m_stateStack.pop();
@@ -542,7 +542,7 @@ void OSLRenderer::attributeBegin()
 {
 	if( !m_stateStack.size() )
 	{
-		msg( Msg::Warning, "OSLRenderer::attributeBegin", "Not in world block" );					
+		msg( Msg::Warning, "OSLRenderer::attributeBegin", "Not in world block" );
 		return;
 	}
 	m_stateStack.push( State( m_stateStack.top() ) );
@@ -552,7 +552,7 @@ void OSLRenderer::attributeEnd()
 {
 	if( !m_stateStack.size() )
 	{
-		msg( Msg::Warning, "OSLRenderer::attributeEnd", "Bad nesting" );					
+		msg( Msg::Warning, "OSLRenderer::attributeEnd", "Bad nesting" );
 		return;
 	}
 	m_stateStack.pop();
@@ -579,8 +579,8 @@ void OSLRenderer::shader( const std::string &type, const std::string &name, cons
 	}
 	else if( type.find( "osl:" ) == 0 || type.find_first_of( ":" ) == string::npos )
 	{
-		msg( Msg::Warning, "OSLRenderer::shader", boost::format( "Unsupported shader type \"%s\"." ) % type );	
-	}	
+		msg( Msg::Warning, "OSLRenderer::shader", boost::format( "Unsupported shader type \"%s\"." ) % type );
+	}
 }
 
 void OSLRenderer::light( const std::string &name, const std::string &handle, const IECore::CompoundDataMap &parameters )
@@ -676,7 +676,7 @@ static void declareParameters( const CompoundDataMap &parameters, ShadingSystem 
 		{
 			continue;
 		}
-		
+
 		if( it->second->isInstanceOf( StringDataTypeId ) )
 		{
 			const std::string &value = static_cast<const StringData *>( it->second.get() )->readable();
@@ -686,7 +686,7 @@ static void declareParameters( const CompoundDataMap &parameters, ShadingSystem 
 				continue;
 			}
 		}
-		
+
 		const void *basePointer = 0;
 		const TypeDesc typeDesc = typeDescFromData( it->second.get(), basePointer );
 		if( basePointer )
@@ -718,15 +718,15 @@ static void declareConnections( const std::string &shaderHandle, const CompoundD
 				msg( Msg::Warning, "OSLRenderer", boost::format( "Parameter \"%s\" has unexpected value \"%s\" - expected value of the form \"link:sourceShader.sourceParameter" ) % it->first.string() % value );
 				continue;
 			}
-			
+
 			shadingSystem->ConnectShaders(
 				splitValue[0].c_str() + 5, splitValue[1].c_str(),
 				shaderHandle.c_str(), it->first.c_str()
 			);
 		}
-	}	
+	}
 }
-						
+
 OSLRenderer::ShadingEnginePtr OSLRenderer::shadingEngine() const
 {
 	const State &state = m_stateStack.top();
@@ -768,16 +768,16 @@ class OSLRenderer::ShadingResults
 			Color3fVectorDataPtr ciData = new Color3fVectorData();
 			m_ci = &ciData->writable();
 			m_ci->resize( numPoints, Color3f( 0.0f ) );
-	
+
 			CompoundDataPtr result = new CompoundData();
 			m_results->writable()["Ci"] = ciData;
 		}
-		
+
 		void addResult( size_t pointIndex, const ClosureColor *result )
 		{
 			addResult( pointIndex, result, Color3f( 1.0f ) );
 		}
-		
+
 		CompoundDataPtr results()
 		{
 			return m_results;
@@ -810,7 +810,7 @@ class OSLRenderer::ShadingResults
 						Color3f closureWeight = weight;
 #ifdef OSL_SUPPORTS_WEIGHTED_CLOSURE_COMPONENTS
 						closureWeight *= closureComponent->w;
-#endif						
+#endif
 						switch( closureComponent->id )
 						{
 							case EmissionClosureId :
@@ -836,12 +836,12 @@ class OSLRenderer::ShadingResults
 				}
 			}
 		}
-		
+
 		void addEmission( size_t pointIndex, const ClosureComponent *closure, const Color3f &weight )
 		{
 			(*m_ci)[pointIndex] += weight;
 		}
-		
+
 		void addDebug( size_t pointIndex, const ClosureComponent *closure, const Color3f &weight )
 		{
 			const DebugParameters *parameters = static_cast<const DebugParameters *>( closure->data() );
@@ -850,7 +850,7 @@ class OSLRenderer::ShadingResults
 				m_debugResults.end(),
 				parameters->name
 			);
-			
+
 			if( it == m_debugResults.end() || it->name != parameters->name )
 			{
 				DebugResult result;
@@ -860,7 +860,7 @@ class OSLRenderer::ShadingResults
 				{
 					result.type = TypeDesc( typeAttr->str().c_str() );
 				}
-				result.type.arraylen = m_ci->size();					
+				result.type.arraylen = m_ci->size();
 				DataPtr data = dataFromTypeDesc( result.type, result.basePointer );
 				if( !data )
 				{
@@ -870,13 +870,13 @@ class OSLRenderer::ShadingResults
 				m_results->writable()[result.name.c_str()] = data;
 				it = m_debugResults.insert( it, result );
 			}
-			
+
 			Color3f value = weight;
 			if( const ClosureComponent::Attr *valueAttr = attr( closure, DebugParameters::valueAttrKey ) )
 			{
 				value *= valueAttr->color();
 			}
-			
+
 			char *dst = static_cast<char *>( it->basePointer );
 			dst += pointIndex * it->type.elementsize();
 			ShadingSystem::convert_value(
@@ -895,26 +895,26 @@ class OSLRenderer::ShadingResults
 				:	basePointer( NULL )
 			{
 			}
-		
+
 			ustring name;
 			TypeDesc type;
 			void *basePointer;
-			
+
 			bool operator < ( const DebugResult &rhs ) const
 			{
 				return name.c_str() < rhs.name.c_str();
 			}
-			
+
 			bool operator < ( const ustring &rhs ) const
 			{
 				return name.c_str() < rhs.c_str();
 			}
 		};
-		
+
 		CompoundDataPtr m_results;
 		vector<Color3f> *m_ci;
 		vector<DebugResult> m_debugResults; // sorted on name for quick lookups
-		
+
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -959,7 +959,7 @@ static const T *varyingValue( const IECore::CompoundData *points, const char *na
 IECore::CompoundDataPtr OSLRenderer::ShadingEngine::shade( const IECore::CompoundData *points ) const
 {
 	// get the data for "P" - this determines the number of points to be shaded.
-	
+
 	size_t numPoints = 0;
 
 	const OSL::Vec3 *p = 0;
@@ -972,24 +972,24 @@ IECore::CompoundDataPtr OSLRenderer::ShadingEngine::shade( const IECore::Compoun
 	{
 		throw Exception( "No P data" );
 	}
-	
+
 	// create ShaderGlobals, and fill it with any uniform values that have
 	// been provided.
-	
+
 	ShaderGlobals shaderGlobals;
     memset( &shaderGlobals, 0, sizeof( ShaderGlobals ) );
-	
+
 	shaderGlobals.dPdx = uniformValue<V3f>( points, "dPdx" );
 	shaderGlobals.dPdy = uniformValue<V3f>( points, "dPdy" );
 	shaderGlobals.dPdz = uniformValue<V3f>( points, "dPdy" );
-	
+
 	shaderGlobals.I = uniformValue<V3f>( points, "I" );
 	shaderGlobals.dIdx = uniformValue<V3f>( points, "dIdx" );
 	shaderGlobals.dIdy = uniformValue<V3f>( points, "dIdy" );
-	
+
 	shaderGlobals.N = uniformValue<V3f>( points, "N" );
 	shaderGlobals.Ng = uniformValue<V3f>( points, "Ng" );
-	
+
 	shaderGlobals.u = uniformValue<float>( points, "u" );
 	shaderGlobals.dudx = uniformValue<float>( points, "dudx" );
 	shaderGlobals.dudy = uniformValue<float>( points, "dudy" );
@@ -1000,26 +1000,26 @@ IECore::CompoundDataPtr OSLRenderer::ShadingEngine::shade( const IECore::Compoun
 
 	shaderGlobals.dPdu = uniformValue<V3f>( points, "dPdu" );
 	shaderGlobals.dPdv = uniformValue<V3f>( points, "dPdv" );
-	
+
 	// add a RenderState to the ShaderGlobals. this will
 	// get passed to our RendererServices queries.
-	
+
 	RenderState renderState( points );
 	shaderGlobals.renderstate = &renderState;
-	
+
 	// get pointers to varying data, we'll use these to
 	// update the shaderGlobals as we iterate over our points.
-	
+
 	const float *u = varyingValue<float>( points, "u" );
 	const float *v = varyingValue<float>( points, "v" );
 	const V3f *n = varyingValue<V3f>( points, "N" );
-		
+
 	/// \todo Get the other globals - match the uniform list
-	
+
 	// allocate data for the result
-	
+
 	ShadingResults results( numPoints );
-	
+
 	// iterate over the input points, doing the shading as we go
 
 	ShadingContext *shadingContext = m_renderer->m_shadingSystem->get_context();
@@ -1038,15 +1038,15 @@ IECore::CompoundDataPtr OSLRenderer::ShadingEngine::shade( const IECore::Compoun
 		{
 			shaderGlobals.N = *n++;
 		}
-		
+
 		shaderGlobals.Ci = NULL;
-		
+
 		m_renderer->m_shadingSystem->execute( *shadingContext, *m_shadingState, shaderGlobals );
 		results.addResult( i, shaderGlobals.Ci );
 		renderState.incrementPointIndex();
 	}
-	
+
 	m_renderer->m_shadingSystem->release_context( shadingContext );
-	
+
 	return results.results();
 }

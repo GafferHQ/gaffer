@@ -1,26 +1,26 @@
 //////////////////////////////////////////////////////////////////////////
-//  
+//
 //  Copyright (c) 2011-2014, John Haddon. All rights reserved.
 //  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
-//  
+//
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
 //  met:
-//  
+//
 //      * Redistributions of source code must retain the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer.
-//  
+//
 //      * Redistributions in binary form must reproduce the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
-//  
+//
 //      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
-//  
+//
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 //  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 //  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -32,7 +32,7 @@
 //  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 //  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//  
+//
 //////////////////////////////////////////////////////////////////////////
 
 #ifndef GAFFERUI_GADGET_H
@@ -91,7 +91,7 @@ class Gadget : public Gaffer::GraphComponent
 		/// may further restrict this if they wish, but they must not accept non-Gadget children.
 		virtual bool acceptsChild( const Gaffer::GraphComponent *potentialChild ) const;
 		/// Gadgets only accept other Gadgets as parent.
-		virtual bool acceptsParent( const Gaffer::GraphComponent *potentialParent ) const;		
+		virtual bool acceptsParent( const Gaffer::GraphComponent *potentialParent ) const;
 		//@}
 
 		/// @name Style
@@ -170,7 +170,7 @@ class Gadget : public Gaffer::GraphComponent
 		typedef boost::signal<void ( Gadget * )> RenderRequestSignal;
 		RenderRequestSignal &renderRequestSignal();
 		//@}
-		
+
 		/// @name Tool tips
 		/// Gadgets may have tool tips - they are not responsible for displaying
 		/// them but instead just need to provide the text to be displayed.
@@ -185,7 +185,7 @@ class Gadget : public Gaffer::GraphComponent
 		/// and revert to default behaviour.
 		void setToolTip( const std::string &toolTip );
 		//@}
-		
+
 		/// @name Events
 		/// Events are specified as boost::signals. This allows anything to
 		/// react to an event rather than just the Gadget receiving it,
@@ -202,18 +202,18 @@ class Gadget : public Gaffer::GraphComponent
 		ButtonSignal &buttonDoubleClickSignal();
 		/// The signal triggered by the mouse wheel.
 		ButtonSignal &wheelSignal();
-		
+
 		typedef boost::signal<void ( Gadget *, const ButtonEvent &event )> EnterLeaveSignal;
 		/// The signal triggered when the mouse enters the Gadget.
 		EnterLeaveSignal &enterSignal();
 		/// The signal triggered when the mouse leaves the Gadget.
-		EnterLeaveSignal &leaveSignal();	
+		EnterLeaveSignal &leaveSignal();
 		/// A signal emitted whenever the mouse moves within a Gadget.
 		ButtonSignal &mouseMoveSignal();
-		
+
 		typedef boost::signal<IECore::RunTimeTypedPtr ( Gadget *, const DragDropEvent &event ), EventSignalCombiner<IECore::RunTimeTypedPtr> > DragBeginSignal;
 		typedef boost::signal<bool ( Gadget *, const DragDropEvent &event ), EventSignalCombiner<bool> > DragDropSignal;
-		
+
 		/// This signal is emitted if a previous buttonPressSignal() returned true, and the
 		/// user has subsequently moved the mouse with the button down. To initiate a drag
 		/// a Gadget must return an IECore::RunTimeTypedPtr representing the data being
@@ -232,7 +232,7 @@ class Gadget : public Gaffer::GraphComponent
 		/// dragEndSignal() is emitted on the Gadget which provided the source of the
 		/// drag.
 		DragDropSignal &dragEndSignal();
-		
+
 		/// A signal used to represent key related events.
 		/// \todo We need some sort of focus model to say who gets the events.
 		typedef boost::signal<bool ( Gadget *, const KeyEvent &key ), EventSignalCombiner<bool> > KeySignal;
@@ -240,45 +240,45 @@ class Gadget : public Gaffer::GraphComponent
 		KeySignal &keyPressSignal();
 		/// The signal triggered by a key release event.
 		KeySignal &keyReleaseSignal();
-		
+
 		/// A signal emitted when the host event loop is idle. Connections
 		/// to this should be limited in duration because idle events consume
 		/// CPU when the program would otherwise be inactive.
-		typedef boost::signal<void ()> IdleSignal; 
+		typedef boost::signal<void ()> IdleSignal;
 		static IdleSignal &idleSignal();
 		//@}
-		
+
 	protected :
-	
+
 		/// The subclass specific part of render(). The public render() method
 		/// sets the GL state up with the name attribute and transform for
 		/// this Gadget, makes sure the style is bound and then calls doRender().
 		/// The default implementation just renders all the visible child Gadgets.
 		virtual void doRender( const Style *style ) const;
-		
+
 	private :
-		
+
 		void styleChanged();
 		void childAdded( GraphComponent *parent, GraphComponent *child );
 		void childRemoved( GraphComponent *parent, GraphComponent *child );
 		void childRenderRequest( Gadget *child );
-		
+
 		ConstStylePtr m_style;
-		
+
 		bool m_visible;
 		bool m_highlighted;
-		
+
 		Imath::M44f m_transform;
-		
+
 		RenderRequestSignal m_renderRequestSignal;
-		
+
 		IECore::InternedString m_toolTip;
-			
+
 		ButtonSignal m_buttonPressSignal;
 		ButtonSignal m_buttonReleaseSignal;
 		ButtonSignal m_buttonDoubleClickSignal;
 		ButtonSignal m_wheelSignal;
-		
+
 		EnterLeaveSignal m_enterSignal;
 		EnterLeaveSignal m_leaveSignal;
 		ButtonSignal m_mouseMoveSignal;
@@ -292,7 +292,7 @@ class Gadget : public Gaffer::GraphComponent
 
 		KeySignal m_keyPressSignal;
 		KeySignal m_keyReleaseSignal;
-		
+
 		GLuint m_glName;
 
 		// used by the bindings to know when the idleSignal()

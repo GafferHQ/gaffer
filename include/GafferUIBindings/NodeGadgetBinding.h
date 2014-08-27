@@ -1,26 +1,26 @@
 //////////////////////////////////////////////////////////////////////////
-//  
+//
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
-//  
+//
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
 //  met:
-//  
+//
 //      * Redistributions of source code must retain the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer.
-//  
+//
 //      * Redistributions in binary form must reproduce the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
-//  
+//
 //      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
-//  
+//
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 //  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 //  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -32,7 +32,7 @@
 //  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 //  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//  
+//
 //////////////////////////////////////////////////////////////////////////
 
 #ifndef GAFFERUIBINDINGS_NODEGADGETBINDING_H
@@ -49,28 +49,28 @@ template<typename T, typename TWrapper=T>
 class NodeGadgetClass : public GadgetClass<T, TWrapper>
 {
 	public :
-	
+
 		NodeGadgetClass( const char *docString = 0 );
-		
+
 };
 
 template<typename WrappedType>
 class NodeGadgetWrapper : public GadgetWrapper<WrappedType>
 {
-	
+
 	public :
 
 		NodeGadgetWrapper( PyObject *self, Gaffer::NodePtr node )
 			:	GadgetWrapper<WrappedType>( self, node )
 		{
 		}
-		
+
 		template<typename Arg1, typename Arg2>
 		NodeGadgetWrapper( PyObject *self, Arg1 arg1, Arg2 arg2 )
 			:	GadgetWrapper<WrappedType>( self, arg1, arg2 )
 		{
 		}
-				
+
 		virtual GafferUI::Nodule *nodule( const Gaffer::Plug *plug )
 		{
 			if( this->isSubclassed() )
@@ -86,13 +86,13 @@ class NodeGadgetWrapper : public GadgetWrapper<WrappedType>
 			}
 			return WrappedType::nodule( plug );
 		}
-		
+
 		virtual const GafferUI::Nodule *nodule( const Gaffer::Plug *plug ) const
 		{
 			// naughty cast is better than repeating the above logic.
 			return const_cast<NodeGadgetWrapper *>( this )->nodule( plug );
 		}
-		
+
 		virtual Imath::V3f noduleTangent( const GafferUI::Nodule *nodule ) const
 		{
 			if( this->isSubclassed() )

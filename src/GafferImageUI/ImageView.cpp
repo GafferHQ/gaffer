@@ -1,26 +1,26 @@
 //////////////////////////////////////////////////////////////////////////
-//  
+//
 //  Copyright (c) 2012, John Haddon. All rights reserved.
 //  Copyright (c) 2013-2014, Image Engine Design Inc. All rights reserved.
-//  
+//
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
 //  met:
-//  
+//
 //      * Redistributions of source code must retain the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer.
-//  
+//
 //      * Redistributions in binary form must reproduce the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
-//  
+//
 //      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
-//  
+//
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 //  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 //  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -32,7 +32,7 @@
 //  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 //  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//  
+//
 //////////////////////////////////////////////////////////////////////////
 
 #include <math.h>
@@ -71,7 +71,7 @@
 
 #include "GafferImageUI/ImageView.h"
 
-using namespace boost;	
+using namespace boost;
 using namespace IECoreGL;
 using namespace IECore;
 using namespace Imath;
@@ -128,7 +128,7 @@ class ImageViewGadget : public GafferUI::Gadget
 			V2f displayWindowCenter( ( m_displayWindow.min + m_displayWindow.max + V2f( 1 ) ) / Imath::V2f( 2. ) );
 			V2f dataWindowCenter( ( m_dataWindow.min + m_dataWindow.max + V2f( 1 ) ) / Imath::V2f( 2. ) );
 			V2f offset( dataWindowCenter.x - displayWindowCenter.x, displayWindowCenter.y - dataWindowCenter.y );
-			
+
 			m_dataBound = Box3f(
 				V3f(
 					offset.x - ( m_dataWindow.size().x + 1 ) / 2.,
@@ -154,7 +154,7 @@ class ImageViewGadget : public GafferUI::Gadget
 			sampleColor = ImageViewGadget::sampleColor( mousePos );
 
 			// Create some useful structs that we will use to hold information needed
-			// to draw the UI elements that display the color readouts to the screen.	
+			// to draw the UI elements that display the color readouts to the screen.
 			m_colorUiElements.reserve(4);
 			m_colorUiElements.push_back( ColorUiElement( sampleColor ) );
 			m_colorUiElements.push_back( ColorUiElement( minColor ) );
@@ -170,8 +170,8 @@ class ImageViewGadget : public GafferUI::Gadget
 			m_colorUiElements[2].position = V2i( 385, 19 );
 			m_colorUiElements[3].name = "Mean"; // The mean color within a selection.
 			m_colorUiElements[3].position = V2i( 635, 19 );
-			
-			std::vector< std::string > channelNames;	
+
+			std::vector< std::string > channelNames;
 			m_image->channelNames( channelNames );
 			m_hasAlpha = std::find( channelNames.begin(), channelNames.end(), "A" ) != channelNames.end();
 		}
@@ -187,7 +187,7 @@ class ImageViewGadget : public GafferUI::Gadget
 			/// focus the viewer on an image.
 			return m_displayBound;
 		}
-		
+
 	protected :
 
 		static const char *vertexSource()
@@ -210,7 +210,7 @@ class ImageViewGadget : public GafferUI::Gadget
 			if( g_fragmentSource.empty() )
 			{
 				g_fragmentSource =
-				
+
 				"#include \"IECoreGL/FilterAlgo.h\"\n"
 				"#include \"IECoreGL/ColorAlgo.h\"\n"
 
@@ -254,12 +254,12 @@ class ImageViewGadget : public GafferUI::Gadget
 				"	ieCoreGLNameOut = ieCoreGLNameIn;\n"
 				"#endif\n"
 				"}";
-			
+
 				if( glslVersion() >= 330 )
 				{
 					// the __VERSION__ define is a workaround for the fact that cortex's source preprocessing doesn't
 					// define it correctly in the same way as the OpenGL shader preprocessing would.
-					g_fragmentSource = "#version 330 compatibility\n #define __VERSION__ 330\n\n" + g_fragmentSource;	
+					g_fragmentSource = "#version 330 compatibility\n #define __VERSION__ 330\n\n" + g_fragmentSource;
 				}
 			}
 			return g_fragmentSource;
@@ -302,7 +302,7 @@ class ImageViewGadget : public GafferUI::Gadget
 			glTexCoord2f( 1, 1 );
 			glVertex2f( box.max.x, box.max.y );
 			glTexCoord2f( 0, 1 );
-			glVertex2f( box.min.x, box.max.y );	
+			glVertex2f( box.min.x, box.max.y );
 			glTexCoord2f( 0, 0 );
 			glVertex2f( box.min.x, box.min.y );
 
@@ -425,7 +425,7 @@ class ImageViewGadget : public GafferUI::Gadget
 			V3f mouseGadgetPos( event.line.p0.x, event.line.p0.y, 0.f );
 			m_mousePos = gadgetToDisplaySpace( mouseGadgetPos );
 
-			/// Check to see if the user is clicking on one of the swatches...	
+			/// Check to see if the user is clicking on one of the swatches...
 			if ( ( event.modifiers & ModifiableEvent::Shift ) == false )
 			{
 				const ViewportGadget *viewportGadget = ancestor<ViewportGadget>();
@@ -470,19 +470,19 @@ class ImageViewGadget : public GafferUI::Gadget
 		bool dragMove( GadgetPtr gadget, const DragDropEvent &event )
 		{
 			m_lastDragPosition = event.line.p1;
-			
+
 			// Update the selection box.
 			if ( m_dragSelecting )
-			{				
+			{
 				m_drawSelection = m_colorUiElements[1].draw = m_colorUiElements[2].draw = m_colorUiElements[3].draw = true;
-				
+
 				Box3f selectionBox;
 				selectionBox.extendBy( m_dragStartPosition );
 				selectionBox.extendBy( m_lastDragPosition );
 				setSelectionArea( selectionBox );
 
 				/// Set the region of interest on our internal ImageStats node and
-				/// get the min, max and average value of the image.	
+				/// get the min, max and average value of the image.
 				const ViewportGadget *viewportGadget = ancestor<ViewportGadget>();
 				Box2f roif(
 					V2f( viewportGadget->gadgetToRasterSpace( m_sampleWindow.min, this ) ),
@@ -501,7 +501,7 @@ class ImageViewGadget : public GafferUI::Gadget
 					)
 				);
 				m_imageStats->regionOfInterestPlug()->setValue( roi );
-		
+
 				*m_colorUiElements[1].color = m_imageStats->minPlug()->getValue();
 				*m_colorUiElements[2].color = m_imageStats->maxPlug()->getValue();
 				*m_colorUiElements[3].color = m_imageStats->averagePlug()->getValue();
@@ -521,7 +521,7 @@ class ImageViewGadget : public GafferUI::Gadget
 				return false;
 			}
 			m_dragSelecting = false;
-			
+
 			renderRequestSignal()( this );
 			return true;
 		}
@@ -538,7 +538,7 @@ class ImageViewGadget : public GafferUI::Gadget
 			Pointer::setCurrent( "rgba" );
 			return new Color4fData( m_sampleColor );
 		}
-	
+
 		void setSelectionArea( Box3f selectionBox )
 		{
 			// Get the bounds of the selection.
@@ -558,7 +558,7 @@ class ImageViewGadget : public GafferUI::Gadget
 			selectionBox.min.y = floorf( selectionBox.min.y );
 			selectionBox.max.x = ceilf( selectionBox.max.x );
 			selectionBox.max.y = ceilf( selectionBox.max.y );
-			
+
 			// Save the box in gadget space.
 			m_sampleWindow = selectionBox;
 		}
@@ -574,18 +574,18 @@ class ImageViewGadget : public GafferUI::Gadget
 		{
 			std::string rasterWindowMinStr = std::string( boost::str( boost::format( "(%d, %d)" ) % fastFloatRound( bottomLeftPoint.x ) % fastFloatRound( bottomLeftPoint.y ) ) );
 			std::string rasterWindowMaxStr = std::string( boost::str( boost::format( "(%d, %d)" ) % fastFloatRound( topRightPoint.x ) % fastFloatRound( topRightPoint.y ) ) );
-				
+
 			// Draw the box around the data window.
 			style->renderRectangle( rasterWindow );
-			
-			glTranslatef( rasterWindow.max.x+5, rasterWindow.max.y-5, 0.f ); 
+
+			glTranslatef( rasterWindow.max.x+5, rasterWindow.max.y-5, 0.f );
 			glScalef( 10.f, -10.f, 1.f );
 			style->renderText( Style::LabelText, rasterWindowMaxStr );
-				
+
 			glLoadIdentity();
-			glTranslatef( rasterWindow.min.x+5, rasterWindow.min.y+10, 0.f ); 
+			glTranslatef( rasterWindow.min.x+5, rasterWindow.min.y+10, 0.f );
 			glScalef( 10.f, -10.f, 1.f );
-			
+
 			style->renderText( Style::LabelText, rasterWindowMinStr );
 			glLoadIdentity();
 		}
@@ -732,14 +732,14 @@ class ImageViewGadget : public GafferUI::Gadget
 				drawWindow( rasterBox, style );
 			}
 
-			// Draw the color information bar.	
+			// Draw the color information bar.
 			Imath::Box2f infoBarBox( infoBox() );
 			color = Color4f( 0.f, 0.f, 0.f, 1.f );
 			glColor( color );
 			style->renderSolidRectangle( infoBarBox );
 			glColor( Color4f( .29804, .29804, .29804, .90 ) );
 			style->renderRectangle( infoBarBox );
-			
+
 			// Draw the channel mask icon.
 			Imath::Box2f iconBox( V2f( 10.f, 5.f ) + infoBarBox.min, V2f( 20.f, 15.f ) + infoBarBox.min );
 			if( m_channelToView == All )
@@ -753,7 +753,7 @@ class ImageViewGadget : public GafferUI::Gadget
 				iconSlice.max.x += sliceWidth;
 				glColor( Color4f( 0., 1., 0., 1. ) );
 				style->renderSolidRectangle( iconSlice );
-				
+
 				iconSlice.min.x += sliceWidth;
 				iconSlice.max.x += sliceWidth;
 				glColor( Color4f( 0., 0., 1., 1. ) );
@@ -790,18 +790,18 @@ class ImageViewGadget : public GafferUI::Gadget
 			std::string mousePosStr = std::string( boost::str( boost::format( "XY: %d, %d" ) % fastFloatRound( m_mousePos.x - .5 ) % fastFloatRound( m_mousePos.y - .5 ) ) );
 			style->renderText( Style::LabelText, mousePosStr );
 			glLoadIdentity();
-			
+
 			for( unsigned int i = 0; i < m_colorUiElements.size(); ++i )
 			{
 				if( m_colorUiElements[i].draw )
 				{
 					V2f origin( m_colorUiElements[i].position + infoBarBox.min );
-					
+
 					// Render a little swatch of the color.
 					Box2f swatchBox( m_colorUiElements[i].swatchBox );
 					swatchBox.min += origin;
 					swatchBox.max += origin;
-					
+
 					Color4f color( *m_colorUiElements[i].color );
 					if( !m_hasAlpha )
 					{
@@ -817,7 +817,7 @@ class ImageViewGadget : public GafferUI::Gadget
 					style->renderSolidRectangle( swatchBox );
 					glColor( Color4f( .29804, .29804, .29804, .90 ) );
 					style->renderRectangle( swatchBox );
-					
+
 					// Render the text next to the swatch.
 					V2f textPos( swatchBox.max.x + 5.f, origin.y + 14.f );
 					glTranslatef( textPos.x, textPos.y, 0.f );
@@ -832,7 +832,7 @@ class ImageViewGadget : public GafferUI::Gadget
 								% (*m_colorUiElements[i].color)[3]
 								)
 							);
-					
+
 					if( m_colorUiElements[i].hsv )
 					{
 						const Color4f hsv = Imath::rgb2hsv( *m_colorUiElements[i].color );
@@ -840,7 +840,7 @@ class ImageViewGadget : public GafferUI::Gadget
 							boost::format( "  HSV: %.3f, %.3f, %.3f" ) % hsv[0] % hsv[1] % hsv[2]
 						);
 					}
-							
+
 					style->renderText( Style::LabelText, infoStr );
 					glLoadIdentity();
 				}
@@ -848,7 +848,7 @@ class ImageViewGadget : public GafferUI::Gadget
 		}
 
 	private :
-		
+
 		enum ChannelToView
 		{
 			All = 0,
@@ -915,7 +915,7 @@ ImageView::ImageView( const std::string &name )
 		m_maxColor( Imath::Color4f( 0.0f ) ),
 		m_averageColor( Imath::Color4f( 0.0f ) )
 {
-	
+
 	// build the preprocessor we use for applying colour
 	// transforms, and the stats node we use for displaying stats.
 
@@ -934,7 +934,7 @@ ImageView::ImageView( const std::string &name )
 	/// \todo This gives us nearest neighbour filtering which is what we want,
 	// but only because the Sampler class doesn't do Box sampling properly.
 	samplerNode->filterPlug()->setValue( "Box" );
-	
+
 	ClampPtr clampNode = new Clamp();
 	preprocessor->setChild(  "__clamp", clampNode );
 	clampNode->inPlug()->setInput( preprocessorInput );
@@ -943,7 +943,7 @@ ImageView::ImageView( const std::string &name )
 	clampNode->maxClampToEnabledPlug()->setValue( true );
 	clampNode->minClampToPlug()->setValue( Color4f( 1.0f, 1.0f, 1.0f, 0.0f ) );
 	clampNode->maxClampToPlug()->setValue( Color4f( 0.0f, 0.0f, 0.0f, 1.0f ) );
-	
+
 	BoolPlugPtr clippingPlug = new BoolPlug( "clipping" );
 	clippingPlug->setFlags( Plug::AcceptsInputs, false );
 	addChild( clippingPlug );
@@ -965,17 +965,17 @@ ImageView::ImageView( const std::string &name )
 	ImagePlugPtr preprocessorOutput = new ImagePlug( "out", Plug::Out );
 	preprocessor->addChild( preprocessorOutput );
 	preprocessorOutput->setInput( gradeNode->outPlug() );
-	
+
 	// tell the base class about all the preprocessing we want to do
-	
+
 	setPreprocessor( preprocessor );
-	
+
 	// connect up to some signals
-	
+
 	plugSetSignal().connect( boost::bind( &ImageView::plugSet, this, ::_1 ) );
 
 	// get our display transform right
-	
+
 	insertDisplayTransform();
 }
 
@@ -991,20 +991,20 @@ void ImageView::insertConverter( Gaffer::NodePtr converter )
 	{
 		throw IECore::Exception( "Converter has no ImagePlug named \"out\"" );
 	}
-	
+
 	PlugPtr newInput = converterInput->createCounterpart( "in", Plug::In );
 	setChild( "in", newInput );
-	
+
 	NodePtr preprocessor = getPreprocessor<Node>();
 	Plug::OutputContainer outputsToRestore = preprocessor->getChild<ImagePlug>( "in" )->outputs();
-	
+
 	PlugPtr newPreprocessorInput = converterInput->createCounterpart( "in", Plug::In );
 	preprocessor->setChild( "in", newPreprocessorInput );
 	newPreprocessorInput->setInput( newInput );
-	
+
 	preprocessor->setChild( "__converter", converter );
 	converterInput->setInput( newPreprocessorInput );
-		
+
 	for( Plug::OutputContainer::const_iterator it = outputsToRestore.begin(), eIt = outputsToRestore.end(); it != eIt; ++it )
 	{
 		(*it)->setInput( converterOutput );
@@ -1054,7 +1054,7 @@ const Gaffer::StringPlug *ImageView::displayTransformPlug() const
 {
 	return getChild<StringPlug>( "displayTransform" );
 }
-				
+
 GafferImage::ImageStats *ImageView::imageStatsNode()
 {
 	return getPreprocessor<Node>()->getChild<ImageStats>( "__imageStats" );
@@ -1133,7 +1133,7 @@ void ImageView::plugSet( Gaffer::Plug *plug )
 void ImageView::insertDisplayTransform()
 {
 	const std::string name = displayTransformPlug()->getValue();
-	
+
 	ImageProcessorPtr displayTransform;
 	DisplayTransformMap::const_iterator it = m_displayTransforms.find( name );
 	if( it != m_displayTransforms.end() )
@@ -1154,7 +1154,7 @@ void ImageView::insertDisplayTransform()
 			getPreprocessor<Node>()->addChild( displayTransform );
 		}
 	}
-	
+
 	if( displayTransform )
 	{
 		displayTransform->inPlug()->setInput( gradeNode()->outPlug() );
@@ -1164,7 +1164,7 @@ void ImageView::insertDisplayTransform()
 	{
 		getPreprocessor<Node>()->getChild<Plug>( "out" )->setInput( gradeNode()->outPlug() );
 	}
-}		
+}
 
 void ImageView::registerDisplayTransform( const std::string &name, DisplayTransformCreator creator )
 {

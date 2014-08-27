@@ -1,26 +1,26 @@
 ##########################################################################
-#  
+#
 #  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
-#  
+#
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
 #  met:
-#  
+#
 #      * Redistributions of source code must retain the above
 #        copyright notice, this list of conditions and the following
 #        disclaimer.
-#  
+#
 #      * Redistributions in binary form must reproduce the above
 #        copyright notice, this list of conditions and the following
 #        disclaimer in the documentation and/or other materials provided with
 #        the distribution.
-#  
+#
 #      * Neither the name of John Haddon nor the names of
 #        any other contributors to this software may be used to endorse or
 #        promote products derived from this software without specific prior
 #        written permission.
-#  
+#
 #  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 #  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 #  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -32,7 +32,7 @@
 #  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 #  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 #  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#  
+#
 ##########################################################################
 
 import re
@@ -48,33 +48,33 @@ import GafferUI
 # to the layouts for a specific application is provided by the
 # Layouts.acquire() method.
 class Layouts :
-	
+
 	## Typically acquire() should be used in preference
 	# to this constructor.
 	def __init__( self ) :
-	
+
 		self.__namedLayouts = {}
 		self.__registeredEditors = []
-	
+
 	## Acquires the set of layouts for the specified application.
 	@classmethod
 	def acquire( cls, applicationOrApplicationRoot ) :
-	
+
 		if isinstance( applicationOrApplicationRoot, Gaffer.Application ) :
 			applicationRoot = applicationOrApplicationRoot.root()
 		else :
 			assert( isinstance( applicationOrApplicationRoot, Gaffer.ApplicationRoot ) )
 			applicationRoot = applicationOrApplicationRoot
-	
+
 		try :
 			return applicationRoot.__layouts
 		except AttributeError :
 			pass
-		
+
 		applicationRoot.__layouts = Layouts()
 
 		return applicationRoot.__layouts
-		
+
 	## Serialises the passed Editor and stores it using the given name. This
 	# layout can then be recreated using the create() method below.
 	def add( self, name, editor ) :
@@ -143,17 +143,17 @@ class Layouts :
 	# editors to the user. This method is used from config files to define the subset
 	# of editors to use in the application.
 	def registerEditor( self, editorName ) :
-	
+
 		if editorName not in self.__registeredEditors :
 			self.__registeredEditors.append( editorName )
-	
-	## Deregisters a previously registered editor, this makes it unavailable to the 
+
+	## Deregisters a previously registered editor, this makes it unavailable to the
 	# user when creating new layouts.
 	def deregisterEditor( self, editorName ) :
-	
+
 		self.__registeredEditors.remove( editorName )
-	
+
 	## Returns the names of all currently registered editors.
 	def registeredEditors( self ) :
-	
+
 		return self.__registeredEditors

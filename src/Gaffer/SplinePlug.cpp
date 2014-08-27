@@ -1,26 +1,26 @@
 //////////////////////////////////////////////////////////////////////////
-//  
+//
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
-//  
+//
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
 //  met:
-//  
+//
 //      * Redistributions of source code must retain the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer.
-//  
+//
 //      * Redistributions in binary form must reproduce the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
-//  
+//
 //      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
-//  
+//
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 //  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 //  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -32,7 +32,7 @@
 //  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 //  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//  
+//
 //////////////////////////////////////////////////////////////////////////
 
 #include "Gaffer/SplinePlug.h"
@@ -79,7 +79,7 @@ bool SplinePlug<T>::acceptsChild( const GraphComponent *potentialChild ) const
 	{
 		return false;
 	}
-	
+
 	if( c->children().size()==0 )
 	{
 		// when we're getting loaded from a serialisation, the point plugs are
@@ -87,7 +87,7 @@ bool SplinePlug<T>::acceptsChild( const GraphComponent *potentialChild ) const
 		// make this concession.
 		return true;
 	}
-	
+
 	if( c->children().size()!=2 )
 	{
 		return false;
@@ -128,10 +128,10 @@ void SplinePlug<T>::setValue( const T &value )
 {
 	basisMatrixPlug()->setValue( value.basis.matrix );
 	basisStepPlug()->setValue( value.basis.step );
-	
+
 	const int multiplicity = endPointMultiplicity( value );
 	endPointMultiplicityPlug()->setValue( multiplicity );
-	
+
 	typename T::PointContainer::const_iterator it = value.points.begin();
 	typename T::PointContainer::const_iterator eIt = value.points.end();
 	if( multiplicity )
@@ -139,7 +139,7 @@ void SplinePlug<T>::setValue( const T &value )
 		advance( it, multiplicity - 1 );
 		advance( eIt, - (multiplicity - 1) );
 	}
-	
+
 	unsigned existingPoints = numPoints();
 	unsigned i = 0;
 	for( ; it!=eIt; ++it )
@@ -152,7 +152,7 @@ void SplinePlug<T>::setValue( const T &value )
 		pointYPlug( i )->setValue( it->second );
 		i++;
 	}
-	
+
 	// remove unneeded preexisting points
 	while( numPoints() > i )
 	{
@@ -166,13 +166,13 @@ T SplinePlug<T>::getValue() const
 	T result;
 	result.basis.matrix = basisMatrixPlug()->getValue();
 	result.basis.step = basisStepPlug()->getValue();
-	
+
 	unsigned n = numPoints();
 	for( unsigned i=0; i<n; i++ )
 	{
 		result.points.insert( typename T::PointContainer::value_type( pointXPlug( i )->getValue(), pointYPlug( i )->getValue() ) );
 	}
-	
+
 	const size_t multiplicity = endPointMultiplicityPlug()->getValue();
 	if( multiplicity && n )
 	{
@@ -182,7 +182,7 @@ T SplinePlug<T>::getValue() const
 			result.points.insert( *result.points.rbegin() );
 		}
 	}
-		
+
 	return result;
 }
 
@@ -194,7 +194,7 @@ CompoundPlug *SplinePlug<T>::basisPlug()
 
 template<typename T>
 const CompoundPlug *SplinePlug<T>::basisPlug() const
-{	
+{
 	return getChild<CompoundPlug>( "basis" );
 }
 
@@ -234,17 +234,17 @@ unsigned SplinePlug<T>::addPoint()
 	const unsigned n = numPoints();
 	CompoundPlugPtr p = new CompoundPlug( "p0", direction() );
 	p->setFlags( Plug::Dynamic, true );
-	
+
 	typename XPlugType::Ptr x = new XPlugType( "x", direction(), typename T::XType( 0 ) );
 	x->setFlags( Plug::Dynamic, true );
 	p->addChild( x );
-	
+
 	typename YPlugType::Ptr y = new YPlugType( "y", direction(), typename T::YType( 0 ) );
 	y->setFlags( Plug::Dynamic, true );
 	p->addChild( y );
-	
+
 	addChild( p );
-	
+
 	return n;
 }
 
@@ -262,10 +262,10 @@ void SplinePlug<T>::clearPoints()
 	{
 		return;
 	}
-	
+
 	do {
 		removePoint( --i );
-	} while( i!=0 ); 
+	} while( i!=0 );
 }
 
 template<typename T>
@@ -356,7 +356,7 @@ size_t SplinePlug<T>::endPointMultiplicity( const T &value ) const
 		}
 		startMultiplicity++;
 	}
-	
+
 	size_t endMultiplicity = 0;
 	for( typename T::PointContainer::const_reverse_iterator it=value.points.rbegin(); it!=value.points.rend(); ++it )
 	{
@@ -366,7 +366,7 @@ size_t SplinePlug<T>::endPointMultiplicity( const T &value ) const
 		}
 		endMultiplicity++;
 	}
-	
+
 	if( startMultiplicity == endMultiplicity )
 	{
 		return startMultiplicity;

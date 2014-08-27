@@ -1,25 +1,25 @@
 //////////////////////////////////////////////////////////////////////////
-//  
+//
 //  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
-//  
+//
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
 //  met:
-//  
+//
 //      * Redistributions of source code must retain the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer.
-//  
+//
 //      * Redistributions in binary form must reproduce the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
-//  
+//
 //      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
-//  
+//
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 //  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 //  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -31,7 +31,7 @@
 //  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 //  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//  
+//
 //////////////////////////////////////////////////////////////////////////
 
 #include "Gaffer/Context.h"
@@ -154,7 +154,7 @@ Imath::Box3f Prune::computeBound( const ScenePath &path, const Gaffer::Context *
 			return unionOfTransformedChildBounds( path, outPlug() );
 		}
 	}
-	
+
 	return inPlug()->boundPlug()->getValue();
 }
 
@@ -183,10 +183,10 @@ IECore::ConstInternedStringVectorDataPtr Prune::computeChildNames( const ScenePa
 		// we may need to delete one or more of our children
 		ConstInternedStringVectorDataPtr inputChildNamesData = inPlug()->childNamesPlug()->getValue();
 		const vector<InternedString> &inputChildNames = inputChildNamesData->readable();
-		
+
 		InternedStringVectorDataPtr outputChildNamesData = new InternedStringVectorData;
 		vector<InternedString> &outputChildNames = outputChildNamesData->writable();
-		
+
 		ScenePath childPath = path;
 		childPath.push_back( InternedString() ); // for the child name
 		for( vector<InternedString>::const_iterator it = inputChildNames.begin(), eIt = inputChildNames.end(); it != eIt; it++ )
@@ -198,7 +198,7 @@ IECore::ConstInternedStringVectorDataPtr Prune::computeChildNames( const ScenePa
 				outputChildNames.push_back( *it );
 			}
 		}
-		
+
 		return outputChildNamesData;
 	}
 	else
@@ -209,7 +209,7 @@ IECore::ConstInternedStringVectorDataPtr Prune::computeChildNames( const ScenePa
 }
 
 IECore::ConstCompoundObjectPtr Prune::computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const
-{	
+{
 	ConstCompoundObjectPtr inputGlobals = inPlug()->globalsPlug()->getValue();
 	const CompoundData *inputSets = inputGlobals->member<CompoundData>( "gaffer:sets" );
 	if( !inputSets )
@@ -220,7 +220,7 @@ IECore::ConstCompoundObjectPtr Prune::computeGlobals( const Gaffer::Context *con
 	CompoundObjectPtr outputGlobals = inputGlobals->copy();
 	CompoundDataPtr outputSets = new CompoundData;
 	outputGlobals->members()["gaffer:sets"] = outputSets;
-	
+
 	ContextPtr tmpContext = filterContext( context );
 	Context::Scope scopedContext( tmpContext.get() );
 	ScenePath path;
@@ -232,14 +232,14 @@ IECore::ConstCompoundObjectPtr Prune::computeGlobals( const Gaffer::Context *con
 		/// and just trim out the nodes we didn't want.
 		const PathMatcher &inputSet = static_cast<const PathMatcherData *>( it->second.get() )->readable();
 		PathMatcher &outputSet = outputSets->member<PathMatcherData>( it->first, /* throwExceptions = */ false, /* createIfMissing = */ true )->writable();
-		
+
 		vector<string> inputPaths;
 		inputSet.paths( inputPaths );
 		for( vector<string>::const_iterator pIt = inputPaths.begin(), peIt = inputPaths.end(); pIt != peIt; ++pIt )
 		{
 			path.clear();
 			ScenePlug::stringToPath( *pIt, path );
-			
+
 			tmpContext->set( ScenePlug::scenePathContextName, path );
 			if( !(filterPlug()->getValue() & ( Filter::ExactMatch | Filter::AncestorMatch ) ) )
 			{
@@ -247,6 +247,6 @@ IECore::ConstCompoundObjectPtr Prune::computeGlobals( const Gaffer::Context *con
 			}
 		}
 	}
-	
+
 	return outputGlobals;
 }

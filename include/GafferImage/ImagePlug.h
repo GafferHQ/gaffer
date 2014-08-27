@@ -1,26 +1,26 @@
 //////////////////////////////////////////////////////////////////////////
-//  
+//
 //  Copyright (c) 2012, John Haddon. All rights reserved.
 //  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
-//  
+//
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
 //  met:
-//  
+//
 //      * Redistributions of source code must retain the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer.
-//  
+//
 //      * Redistributions in binary form must reproduce the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
-//  
+//
 //      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
-//  
+//
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 //  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 //  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -32,7 +32,7 @@
 //  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 //  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//  
+//
 //////////////////////////////////////////////////////////////////////////
 
 #ifndef GAFFER_IMAGEPLUG_H
@@ -69,7 +69,7 @@ class ImagePlug : public Gaffer::CompoundPlug
 {
 
 	public :
-			
+
 		ImagePlug( const std::string &name=defaultName<ImagePlug>(), Direction direction=In, unsigned flags=Default );
 		virtual ~ImagePlug();
 
@@ -79,7 +79,7 @@ class ImagePlug : public Gaffer::CompoundPlug
 		virtual Gaffer::PlugPtr createCounterpart( const std::string &name, Direction direction ) const;
 		/// Only accepts ImagePlug inputs.
 		virtual bool acceptsInput( const Gaffer::Plug *input ) const;
-	
+
 		/// @name Child plugs
 		/// Different aspects of the image are passed through different
 		/// child plugs.
@@ -94,7 +94,7 @@ class ImagePlug : public Gaffer::CompoundPlug
 		Gaffer::FloatVectorDataPlug *channelDataPlug();
 		const Gaffer::FloatVectorDataPlug *channelDataPlug() const;
 		//@}
-		
+
 		/// The names used to specify the channel name and tile of
 		/// interest via a Context object. You should use these
 		/// variables rather than hardcoding string values - it is
@@ -102,7 +102,7 @@ class ImagePlug : public Gaffer::CompoundPlug
 		/// InternedStrings on every lookup.
 		static const IECore::InternedString channelNameContextName;
 		static const IECore::InternedString tileOriginContextName;
-		
+
 		/// @name Convenience accessors
 		/// These functions create temporary Contexts specifying image:channelName
 		/// and image:tileOrigin, and use them to return useful output.
@@ -122,12 +122,12 @@ class ImagePlug : public Gaffer::CompoundPlug
 		IECore::ImagePrimitivePtr image() const;
 		IECore::MurmurHash imageHash() const;
 		//@}
-		
+
 		static int tileSize() { return 64; };
 		static Imath::Box2i tileBound( const Imath::V2i &tileOrigin ) { return Imath::Box2i( tileOrigin * tileSize(), ( tileOrigin + Imath::V2i( 1 ) ) * tileSize() - Imath::V2i( 1 ) ); }
 		static const IECore::FloatVectorData *blackTile();
 		static const IECore::FloatVectorData *whiteTile();
-		
+
 		/// Returns the origin of the tile that contains the point.
 		inline static Imath::V2i tileOrigin( const Imath::V2i &point )
 		{
@@ -136,9 +136,9 @@ class ImagePlug : public Gaffer::CompoundPlug
 			tileOrigin.y = point.y < 0 && point.y % tileSize() != 0 ? ( point.y / tileSize() - 1 ) * tileSize() : ( point.y / tileSize() ) * tileSize();
 			return tileOrigin;
 		}
-	
+
 	private :
-		
+
 		static size_t g_firstPlugIndex;
 };
 

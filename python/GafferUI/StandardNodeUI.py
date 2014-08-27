@@ -78,7 +78,7 @@ class StandardNodeUI( GafferUI.NodeUI ) :
 			self.__mainColumn.append( self.__tabbedContainer )
 
 		self.__buildPlugWidgets()
-		
+
 		if self.__displayMode == self.DisplayMode.Tabbed :
 			if self.__currentTabPlugName in node :
 				tabIndex = min( node[self.__currentTabPlugName].getValue(), len( self.__tabbedContainer ) - 1 )
@@ -88,7 +88,7 @@ class StandardNodeUI( GafferUI.NodeUI ) :
 			self.__currentTabChangedConnection = self.__tabbedContainer.currentChangedSignal().connect( Gaffer.WeakMethod( self.__currentTabChanged ) )
 
 	def plugValueWidget( self, plug, lazy=True ) :
-	
+
 		hierarchy = []
 		while not plug.isSame( self.node() ) :
 			hierarchy.insert( 0, plug )
@@ -97,21 +97,21 @@ class StandardNodeUI( GafferUI.NodeUI ) :
 		plugValueWidget = self.__plugValueWidgets.get( hierarchy[0].getName(), None )
 		if plugValueWidget is None :
 			return None
-			
+
 		for i in range( 1, len( hierarchy ) ) :
 			plugValueWidget = plugValueWidget.childPlugValueWidget( hierarchy[i], lazy=lazy )
 			if plugValueWidget is None :
 				return None
-				
+
 		return plugValueWidget
-	
+
 	def setReadOnly( self, readOnly ) :
-	
+
 		if readOnly == self.getReadOnly() :
 			return
-			
+
 		GafferUI.NodeUI.setReadOnly( self, readOnly )
-		
+
 		for plugValueWidget in self.__plugValueWidgets.values() :
 			## \todo Consider how this might interoperate better
 			# with the activator expressions in the RenderManShaderUI.
@@ -123,11 +123,11 @@ class StandardNodeUI( GafferUI.NodeUI ) :
 			plugWidget = plugValueWidget.ancestor( GafferUI.PlugWidget )
 			if plugWidget is not None :
 				plugWidget.labelPlugValueWidget().setReadOnly( readOnly )
-	
+
 	## The header for the ui is a vertical ListContainer. Derived classes may
 	# access it using this method in order to add their own header items.
 	def _header( self ) :
-	
+
 		return self.__sectionColumns["header"]
 
 	## The main layout for the standard node ui is a tabbed container. Derived
@@ -142,7 +142,7 @@ class StandardNodeUI( GafferUI.NodeUI ) :
 		if sectionColumn is None :
 
 			sectionColumn = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing=4 )
-			
+
 			if self.__displayMode == self.DisplayMode.Bare :
 				sectionContainer = sectionColumn
 			else :
@@ -169,21 +169,21 @@ class StandardNodeUI( GafferUI.NodeUI ) :
 		# currently have the same problem in CompoundPlugValueWidget, where the problem is
 		# worse because the names are much more likely to change. See also StandardNodeToolbar,
 		# where there are some notes as to how this might be fixed.
-		self.__plugValueWidgets = {} 
-		
+		self.__plugValueWidgets = {}
+
 		for plug in self.node().children( Gaffer.Plug ) :
 
 			if plug.getName().startswith( "__" ) :
 				continue
-				
+
 			sectionName = Gaffer.Metadata.plugValue( plug, "nodeUI:section" ) or self.__defaultSectionName
 			if self.__displayMode != self.DisplayMode.Tabbed and sectionName != self.__defaultSectionName :
 				continue
-				
+
 			widget = GafferUI.PlugValueWidget.create( plug )
 			if widget is None :
 				continue
-				
+
 			self.__plugValueWidgets[plug.getName()] = widget
 
 			if isinstance( widget, GafferUI.PlugValueWidget ) and not widget.hasLabel() :

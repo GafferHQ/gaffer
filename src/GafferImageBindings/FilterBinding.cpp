@@ -55,13 +55,13 @@ namespace GafferImageBindings
 static boost::python::list filterList()
 {
 	std::vector<std::string> filters( Filter::filters() );
-	std::vector<std::string>::iterator it( filters.begin() );	
+	std::vector<std::string>::iterator it( filters.begin() );
 	boost::python::list result;
 	for( ; it != filters.end(); it++ )
 	{
 		result.append( *it );
 	}
-	
+
 	return result;
 }
 
@@ -96,13 +96,13 @@ void bindFilters()
 	bind.def( "setScale", &Filter::setScale );
 	bind.def( "tap", &Filter::tap );
 	bind.def( "weight", &weight );
-	
+
 	// Convenience methods for creating Filter classes.
 	bind.def( "filters", &filterList ).staticmethod("filters");
 	bind.def( "create", &create1 );
 	bind.def( "create", &create2 ).staticmethod( "create" );
 	bind.def( "defaultFilter", &defaultFilter ).staticmethod( "defaultFilter" );
-	
+
 	RunTimeTypedClass<SplineFilter>();
 	RunTimeTypedClass<BoxFilter>();
 	RunTimeTypedClass<BilinearFilter>();

@@ -1,25 +1,25 @@
 //////////////////////////////////////////////////////////////////////////
-//  
+//
 //  Copyright (c) 2014, John Haddon. All rights reserved.
-//  
+//
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
 //  met:
-//  
+//
 //      * Redistributions of source code must retain the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer.
-//  
+//
 //      * Redistributions in binary form must reproduce the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
-//  
+//
 //      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
-//  
+//
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 //  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 //  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -31,7 +31,7 @@
 //  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 //  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//  
+//
 //////////////////////////////////////////////////////////////////////////
 
 #include "IECore/TransformOp.h"
@@ -75,7 +75,7 @@ const Gaffer::M44fPlug *FreezeTransform::transformPlug() const
 void FreezeTransform::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	FilteredSceneProcessor::affects( input, outputs );
-	
+
 	if( input == inPlug()->transformPlug() )
 	{
 		outputs.push_back( transformPlug() );
@@ -94,12 +94,12 @@ void FreezeTransform::affects( const Gaffer::Plug *input, AffectedPlugsContainer
 void FreezeTransform::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	FilteredSceneProcessor::hash( output, context, h );
-	
+
 	if( output == transformPlug() )
 	{
 		const ScenePath &scenePath = context->get<ScenePath>( ScenePlug::scenePathContextName );
 		h.append( inPlug()->fullTransformHash( scenePath ) );
-		h.append( outPlug()->fullTransformHash( scenePath ) );		
+		h.append( outPlug()->fullTransformHash( scenePath ) );
 	}
 }
 
@@ -116,13 +116,13 @@ void FreezeTransform::compute( Gaffer::ValuePlug *output, const Gaffer::Context 
 		static_cast<M44fPlug *>( output )->setValue( transform );
 		return;
 	}
-	
+
 	FilteredSceneProcessor::compute( output, context );
 }
 
 void FreezeTransform::hashBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	const unsigned m = filterPlug()->getValue();	
+	const unsigned m = filterPlug()->getValue();
 	if( m & ( Filter::AncestorMatch | Filter::ExactMatch ) )
 	{
 		// if there's an ancestor match or an exact match here then we know
@@ -148,7 +148,7 @@ void FreezeTransform::hashBound( const ScenePath &path, const Gaffer::Context *c
 
 Imath::Box3f FreezeTransform::computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	const unsigned m = filterPlug()->getValue();	
+	const unsigned m = filterPlug()->getValue();
 	if( m & ( Filter::AncestorMatch | Filter::ExactMatch ) )
 	{
 		Box3f result = unionOfTransformedChildBounds( path, outPlug() );
@@ -231,9 +231,9 @@ IECore::ConstObjectPtr FreezeTransform::computeObject( const ScenePath &path, co
 			/// same for lights?
 			return inputObject;
 		}
-		
+
 		PrimitivePtr outputPrimitive = inputPrimitive->copy();
-		
+
 		/// \todo This is a pain - we need functionality in Cortex to just automatically apply
 		/// the transform to all appropriate primitive variables, without having to manually
 		/// list them. At the same time, we could add a PrimitiveAlgo.h file to Cortex, allowing
@@ -244,23 +244,23 @@ IECore::ConstObjectPtr FreezeTransform::computeObject( const ScenePath &path, co
 			if( despatchTraitsTest<TypeTraits::IsFloatVec3VectorTypedData>( it->second.data.get() ) )
 			{
 				primVarNames.push_back( it->first );
-			} 
+			}
 		}
-		
+
 		const M44f transform = transformPlug()->getValue();
-		
+
 		TransformOpPtr transformOp = new TransformOp;
 		transformOp->inputParameter()->setValue( outputPrimitive );
 		transformOp->copyParameter()->setTypedValue( false );
 		transformOp->matrixParameter()->setValue( new M44fData( transform ) );
 		transformOp->primVarsParameter()->setTypedValue( primVarNames );
 		transformOp->operate();
-		
+
 		return outputPrimitive;
 	}
 	else
 	{
-		return inPlug()->objectPlug()->getValue();	
+		return inPlug()->objectPlug()->getValue();
 	}
 }
 

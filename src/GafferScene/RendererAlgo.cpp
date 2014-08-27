@@ -1,25 +1,25 @@
 //////////////////////////////////////////////////////////////////////////
-//  
+//
 //  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
-//  
+//
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
 //  met:
-//  
+//
 //      * Redistributions of source code must retain the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer.
-//  
+//
 //      * Redistributions in binary form must reproduce the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
-//  
+//
 //      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
-//  
+//
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 //  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 //  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -31,7 +31,7 @@
 //  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 //  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//  
+//
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/filesystem.hpp"
@@ -69,7 +69,7 @@ void outputScene( const ScenePlug *scene, IECore::Renderer *renderer )
 	outputCamera( scene, globals.get(), renderer );
 	{
 		WorldBlock world( renderer );
-		
+
 		outputLights( scene, globals.get(), renderer );
 
 		SceneProceduralPtr proc = new SceneProcedural( scene, Context::current() );
@@ -112,7 +112,7 @@ void outputOptions( const IECore::CompoundObject *globals, IECore::Renderer *ren
 		}
 		else
 		{
-			throw IECore::Exception( "Global \"" + it->first.string() + "\" is not IECore::Data" );		
+			throw IECore::Exception( "Global \"" + it->first.string() + "\" is not IECore::Data" );
 		}
 	}
 }
@@ -120,7 +120,7 @@ void outputOptions( const IECore::CompoundObject *globals, IECore::Renderer *ren
 void outputCamera( const ScenePlug *scene, const IECore::CompoundObject *globals, IECore::Renderer *renderer )
 {
 	// get the camera from the scene
-	
+
 	const StringData *cameraPathData = globals->member<StringData>( "option:render:camera" );
 	IECore::CameraPtr camera = 0;
 	if( cameraPathData )
@@ -131,48 +131,48 @@ void outputCamera( const ScenePlug *scene, const IECore::CompoundObject *globals
 		{
 			throw IECore::Exception( "Camera \"" + cameraPathData->readable() + "\" does not exist" );
 		}
-		
+
 		IECore::ConstCameraPtr constCamera = runTimeCast<const IECore::Camera>( scene->object( cameraPath ) );
 		if( !constCamera )
 		{
 			throw IECore::Exception( "Location \"" + cameraPathData->readable() + "\" is not a camera" );
 		}
-		
+
 		camera = constCamera->copy();
 		const BoolData *cameraBlurData = globals->member<BoolData>( "option:render:cameraBlur" );
 		const bool cameraBlur = cameraBlurData ? cameraBlurData->readable() : false;
 		camera->setTransform( transform( scene, cameraPath, shutter( globals ), cameraBlur ) );
 	}
-	
+
 	if( !camera )
 	{
 		camera = new IECore::Camera();
 	}
-	
+
 	// apply the resolution and crop window
-	
+
 	const V2iData *resolutionData = globals->member<V2iData>( "option:render:resolution" );
 	if( resolutionData )
 	{
 		camera->parameters()["resolution"] = resolutionData->copy();
 	}
-	
+
 	const Box2fData *cropWindowData = globals->member<Box2fData>( "option:render:cropWindow" );
 	if( cropWindowData )
 	{
 		camera->parameters()["cropWindow"] = cropWindowData->copy();
 	}
-	
+
 	camera->addStandardParameters();
-	
+
 	// apply the shutter
-	
+
 	camera->parameters()["shutter"] = new V2fData( shutter( globals ) );
-	
+
 	// and output
-	
+
 	camera->render( renderer );
-	
+
 }
 
 void outputLights( const ScenePlug *scene, const IECore::CompoundObject *globals, IECore::Renderer *renderer )
@@ -182,7 +182,7 @@ void outputLights( const ScenePlug *scene, const IECore::CompoundObject *globals
 	{
 		return;
 	}
-	
+
 	const PathMatcherData *lightSet = sets->member<PathMatcherData>( "__lights" );
 	if( !lightSet )
 	{
@@ -208,27 +208,27 @@ bool outputLight( const ScenePlug *scene, const ScenePlug::ScenePath &path, IECo
 	{
 		return false;
 	}
-	
+
 	ConstCompoundObjectPtr attributes = scene->fullAttributes( path );
 	const BoolData *visibilityData = attributes->member<BoolData>( "scene:visible" );
 	if( visibilityData && !visibilityData->readable() )
 	{
 		return false;
 	}
-	
+
 	M44f transform = scene->fullTransform( path );
-	
+
 	std::string lightHandle;
 	ScenePlug::pathToString( path, lightHandle );
-	
+
 	LightPtr light = constLight->copy();
 	light->setHandle( lightHandle );
-	
+
 	{
 		AttributeBlock attributeBlock( renderer );
-	
+
 		renderer->setAttribute( "name", new StringData( lightHandle ) );
-	
+
 		CompoundObject::ObjectMap::const_iterator aIt, aeIt;
 		for( aIt = attributes->members().begin(), aeIt = attributes->members().end(); aIt != aeIt; aIt++ )
 		{
@@ -237,11 +237,11 @@ bool outputLight( const ScenePlug *scene, const ScenePlug::ScenePath &path, IECo
 				renderer->setAttribute( aIt->first.string(), attribute );
 			}
 		}
-	
+
 		renderer->concatTransform( transform );
 		light->render( renderer );
 	}
-	
+
 	renderer->illuminate( lightHandle, true );
 
 	return true;
@@ -254,7 +254,7 @@ void outputCoordinateSystems( const ScenePlug *scene, const IECore::CompoundObje
 	{
 		return;
 	}
-	
+
 	const PathMatcherData *coordinateSystemSet = sets->member<PathMatcherData>( "__coordinateSystems" );
 	if( !coordinateSystemSet )
 	{
@@ -280,28 +280,28 @@ bool outputCoordinateSystem( const ScenePlug *scene, const ScenePlug::ScenePath 
 	{
 		return false;
 	}
-	
+
 	ConstCompoundObjectPtr attributes = scene->fullAttributes( path );
 	const BoolData *visibilityData = attributes->member<BoolData>( "scene:visible" );
 	if( visibilityData && !visibilityData->readable() )
 	{
 		return false;
 	}
-	
+
 	const M44f transform = scene->fullTransform( path );
-	
+
 	std::string coordinateSystemName;
 	ScenePlug::pathToString( path, coordinateSystemName );
-	
+
 	CoordinateSystemPtr coordinateSystem = constCoordinateSystem->copy();
 	coordinateSystem->setName( coordinateSystemName );
-	
+
 	{
 		TransformBlock transformBlock( renderer );
 		renderer->concatTransform( transform );
 		coordinateSystem->render( renderer );
 	}
-	
+
 	return true;
 }
 
@@ -326,13 +326,13 @@ Imath::V2f shutter( const IECore::CompoundObject *globals )
 {
 	const BoolData *cameraBlurData = globals->member<BoolData>( "option:render:cameraBlur" );
 	const bool cameraBlur = cameraBlurData ? cameraBlurData->readable() : false;
-	
+
 	const BoolData *transformBlurData = globals->member<BoolData>( "option:render:transformBlur" );
 	const bool transformBlur = transformBlurData ? transformBlurData->readable() : false;
-	
+
 	const BoolData *deformationBlurData = globals->member<BoolData>( "option:render:deformationBlur" );
 	const bool deformationBlur = deformationBlurData ? deformationBlurData->readable() : false;
-	
+
 	V2f shutter( Context::current()->getFrame() );
 	if( cameraBlur || transformBlur || deformationBlur )
 	{
@@ -340,7 +340,7 @@ Imath::V2f shutter( const IECore::CompoundObject *globals )
 		const V2f relativeShutter = shutterData ? shutterData->readable() : V2f( -0.25, 0.25 );
 		shutter += relativeShutter;
 	}
-	
+
 	return shutter;
 }
 
@@ -352,7 +352,7 @@ IECore::TransformPtr transform( const ScenePlug *scene, const ScenePlug::ScenePa
 		ConstCompoundObjectPtr attributes = scene->fullAttributes( path );
 		const IntData *transformBlurSegmentsData = attributes->member<IntData>( "gaffer:transformBlurSegments" );
 		numSamples = transformBlurSegmentsData ? transformBlurSegmentsData->readable() + 1 : 2;
-		
+
 		const BoolData *transformBlurData = attributes->member<BoolData>( "gaffer:transformBlur" );
 		if( transformBlurData && !transformBlurData->readable() )
 		{

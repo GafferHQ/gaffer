@@ -1,26 +1,26 @@
 //////////////////////////////////////////////////////////////////////////
-//  
+//
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
-//  
+//
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
 //  met:
-//  
+//
 //      * Redistributions of source code must retain the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer.
-//  
+//
 //      * Redistributions in binary form must reproduce the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
-//  
+//
 //      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
-//  
+//
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 //  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 //  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -32,7 +32,7 @@
 //  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 //  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//  
+//
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/bind.hpp"
@@ -93,7 +93,7 @@ bool StandardNodule::getLabelVisible() const
 {
 	return m_labelVisible;
 }
-		
+
 Imath::Box3f StandardNodule::bound() const
 {
 	return Box3f( V3f( -0.5, -0.5, 0 ), V3f( 0.5, 0.5, 0 ) );
@@ -114,7 +114,7 @@ void StandardNodule::doRender( const Style *style ) const
 			style->renderConnection( V3f( 0 ), srcTangent, m_dragPosition, m_dragTangent, Style::HighlightedState );
 		}
 	}
-	
+
 	float radius = 0.5f;
 	Style::State state = Style::NormalState;
 	if( getHighlighted() )
@@ -124,7 +124,7 @@ void StandardNodule::doRender( const Style *style ) const
 	}
 
 	style->renderNodule( radius, state );
-	
+
 	if( m_labelVisible && !IECoreGL::Selector::currentSelector() )
 	{
 		renderLabel( style );
@@ -138,13 +138,13 @@ void StandardNodule::renderLabel( const Style *style ) const
 	{
 		return;
 	}
-	
+
 	const std::string &label = plug()->getName().string();
-	
+
 	// we rotate the label based on the angle the connection exits the node at.
 	V3f tangent = nodeGadget->noduleTangent( this );
 	float theta = IECore::radiansToDegrees( atan2f( tangent.y, tangent.x ) );
-	
+
 	// but we don't want the text to be vertical, so we bend it away from the
 	// vertical axis.
 	if( ( theta > 0.0f && theta < 90.0f ) || ( theta < 0.0f && theta >= -90.0f ) )
@@ -153,30 +153,30 @@ void StandardNodule::renderLabel( const Style *style ) const
 	}
 	else
 	{
-		theta = sign( theta ) * lerp( 135.0f, 180.0f, (fabs( theta ) - 90.0f) / 90.0f );	
+		theta = sign( theta ) * lerp( 135.0f, 180.0f, (fabs( theta ) - 90.0f) / 90.0f );
 	}
-	
+
 	// we also don't want the text to be upside down, so we correct the rotation
 	// if that would be the case.
 	Box3f labelBound = style->textBound( Style::LabelText, label );
 	V2f anchor( labelBound.min.x - 1.0f, labelBound.center().y );
-	
+
 	if( theta > 90.0f || theta < -90.0f )
 	{
 		theta = theta - 180.0f;
 		anchor.x = labelBound.max.x + 1.0f;
 	}
-	
+
 	// now we can actually do the rendering.
-	
+
 	if( getHighlighted() )
 	{
 		glScalef( 1.2, 1.2, 1.2 );
 	}
-	
+
 	glRotatef( theta, 0, 0, 1.0f );
 	glTranslatef( -anchor.x, -anchor.y, 0.0f );
-	
+
 	style->renderText( Style::LabelText, label );
 }
 
@@ -231,24 +231,24 @@ bool StandardNodule::dragEnter( GadgetPtr gadget, const DragDropEvent &event )
 		m_dragTangent = V3f( 0 );
 		return true;
 	}
-	
+
 	Gaffer::PlugPtr input, output;
 	connection( event, input, output );
 	if( input )
 	{
 		setHighlighted( true );
-		
+
 		// snap the drag endpoint to our centre, as another little visual indication
 		// that we're well up for being connected.
 		V3f centre = V3f( 0 ) * fullTransform();
 		centre = centre * event.sourceGadget->fullTransform().inverse();
-		
+
 		V3f tangent( 0 );
 		if( NodeGadget *nodeGadget = ancestor<NodeGadget>() )
 		{
 			tangent = nodeGadget->noduleTangent( this );
 		}
-		
+
 		if( StandardNodule *sourceNodule = IECore::runTimeCast<StandardNodule>( event.sourceGadget.get() ) )
 		{
 			sourceNodule->m_dragPosition = centre;
@@ -271,7 +271,7 @@ bool StandardNodule::dragEnter( GadgetPtr gadget, const DragDropEvent &event )
 		renderRequestSignal()( this );
 		return true;
 	}
-	
+
 	return false;
 }
 
@@ -312,7 +312,7 @@ bool StandardNodule::dragLeave( GadgetPtr gadget, const DragDropEvent &event )
 	{
 		m_draggingConnection = false;
 	}
-	
+
 	renderRequestSignal()( this );
 	return true;
 }
@@ -329,16 +329,16 @@ bool StandardNodule::drop( GadgetPtr gadget, const DragDropEvent &event )
 {
 	setHighlighted( false );
 	setCompatibleLabelsVisible( event, false );
-	
+
 	Gaffer::PlugPtr input, output;
 	connection( event, input, output );
-	
+
 	if( input )
-	{	
+	{
 		Gaffer::UndoContext undoEnabler( input->ancestor<Gaffer::ScriptNode>() );
 
 			input->setInput( output );
-			
+
 			ConnectionGadgetPtr connection = IECore::runTimeCast<ConnectionGadget>( event.sourceGadget );
 			if( connection && plug()->direction()==Gaffer::Plug::In )
 			{
@@ -351,7 +351,7 @@ bool StandardNodule::drop( GadgetPtr gadget, const DragDropEvent &event )
 					connection->dstNodule()->plug()->setInput( 0 );
 				}
 			}
-			
+
 		return true;
 	}
 
@@ -359,7 +359,7 @@ bool StandardNodule::drop( GadgetPtr gadget, const DragDropEvent &event )
 }
 
 void StandardNodule::connection( const DragDropEvent &event, Gaffer::PlugPtr &input, Gaffer::PlugPtr &output )
-{	
+{
 	Gaffer::PlugPtr dropPlug = IECore::runTimeCast<Gaffer::Plug>( event.data );
 	if( dropPlug )
 	{
@@ -376,7 +376,7 @@ void StandardNodule::connection( const DragDropEvent &event, Gaffer::PlugPtr &in
 				input = dropPlug;
 				output = thisPlug;
 			}
-						
+
 			if( input->acceptsInput( output.get() ) )
 			{
 				// success

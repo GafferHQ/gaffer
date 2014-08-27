@@ -1,26 +1,26 @@
 ##########################################################################
-#  
+#
 #  Copyright (c) 2012, John Haddon. All rights reserved.
 #  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
-#  
+#
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
 #  met:
-#  
+#
 #      * Redistributions of source code must retain the above
 #        copyright notice, this list of conditions and the following
 #        disclaimer.
-#  
+#
 #      * Redistributions in binary form must reproduce the above
 #        copyright notice, this list of conditions and the following
 #        disclaimer in the documentation and/or other materials provided with
 #        the distribution.
-#  
+#
 #      * Neither the name of John Haddon nor the names of
 #        any other contributors to this software may be used to endorse or
 #        promote products derived from this software without specific prior
 #        written permission.
-#  
+#
 #  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 #  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 #  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -32,7 +32,7 @@
 #  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 #  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 #  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#  
+#
 ##########################################################################
 
 import os
@@ -46,70 +46,70 @@ import GafferScene
 import GafferSceneTest
 
 class SubTreeTest( GafferSceneTest.SceneTestCase ) :
-		
+
 	def testPassThrough( self ) :
-	
+
 		a = GafferScene.AlembicSource()
-		a["fileName"].setValue( os.path.dirname( __file__ ) + "/alembicFiles/animatedCube.abc" )	
-		
+		a["fileName"].setValue( os.path.dirname( __file__ ) + "/alembicFiles/animatedCube.abc" )
+
 		s = GafferScene.SubTree()
 		s["in"].setInput( a["out"] )
-		
+
 		self.assertSceneValid( s["out"] )
 
 		self.assertScenesEqual( a["out"], s["out"] )
 		self.assertSceneHashesEqual( a["out"], s["out"] )
 		self.assertTrue( a["out"].object( "/pCube1/pCubeShape1", _copy = False ).isSame( s["out"].object( "/pCube1/pCubeShape1", _copy = False ) ) )
-		
+
 	def testSubTree( self ) :
-	
+
 		a = GafferScene.AlembicSource()
-		a["fileName"].setValue( os.path.dirname( __file__ ) + "/alembicFiles/animatedCube.abc" )	
-		
+		a["fileName"].setValue( os.path.dirname( __file__ ) + "/alembicFiles/animatedCube.abc" )
+
 		s = GafferScene.SubTree()
 		s["in"].setInput( a["out"] )
 		s["root"].setValue( "/pCube1" )
-				
+
 		self.assertSceneValid( s["out"] )
 		self.assertScenesEqual( s["out"], a["out"], scenePlug2PathPrefix = "/pCube1" )
 		self.assertTrue( a["out"].object( "/pCube1/pCubeShape1", _copy = False ).isSame( s["out"].object( "/pCubeShape1", _copy = False ) ) )
 
 	def testSets( self ) :
-	
+
 		l = GafferSceneTest.TestLight()
 		g = GafferScene.Group()
 		g["in"].setInput( l["out"] )
-		
+
 		self.assertSetsValid( g["out"] )
-		
+
 		s = GafferScene.SubTree()
 		s["in"].setInput( g["out"] )
 		s["root"].setValue( "/group" )
-		
+
 		self.assertSetsValid( s["out"] )
 
 	def testRootHashesEqual( self ) :
-		
+
 		a = GafferScene.AlembicSource()
-		a["fileName"].setValue( os.path.dirname( __file__ ) + "/alembicFiles/animatedCube.abc" )	
-		
+		a["fileName"].setValue( os.path.dirname( __file__ ) + "/alembicFiles/animatedCube.abc" )
+
 		s = GafferScene.SubTree()
 		s["in"].setInput( a["out"] )
-		
+
 		self.assertSceneValid( s["out"] )
 		self.assertPathHashesEqual( a["out"], "/", s["out"], "/" )
-	
+
 	def testDisabled( self ) :
-	
+
 		p = GafferScene.Plane()
 		g = GafferScene.Group()
 		g["in"].setInput( p["out"] )
-		
+
 		s = GafferScene.SubTree()
 		s["in"].setInput( g["out"] )
 		s["root"].setValue( "/group" )
 		s["enabled"].setValue( False )
-		
+
 		self.assertSceneValid( s["out"] )
 		self.assertScenesEqual( s["out"], g["out"] )
 		self.assertSceneHashesEqual( s["out"], g["out"] )
@@ -164,9 +164,9 @@ class SubTreeTest( GafferSceneTest.SceneTestCase ) :
 		self.assertSetsValid( s["out"] )
 
 		# with includeRoot == True
-		
+
 		s["includeRoot"].setValue( True )
-		
+
 		lightSet = s["out"]["globals"].getValue()["gaffer:sets"]["__lights"]
 		self.assertEqual( lightSet.value.paths(), [ "/lightGroup1/light" ] )
 
@@ -191,9 +191,9 @@ class SubTreeTest( GafferSceneTest.SceneTestCase ) :
 		self.assertSetsValid( s["out"] )
 
 		# with includeRoot == True
-		
+
 		s["includeRoot"].setValue( True )
-		
+
 		s["root"].setValue( "" )
 		lightSet = s["out"]["globals"].getValue()["gaffer:sets"]["__lights"]
 		self.assertEqual( lightSet.value.paths(), [ "/group/light" ] )
@@ -203,63 +203,63 @@ class SubTreeTest( GafferSceneTest.SceneTestCase ) :
 		lightSet = s["out"]["globals"].getValue()["gaffer:sets"]["__lights"]
 		self.assertEqual( lightSet.value.paths(), [ "/group/light" ] )
 		self.assertSetsValid( s["out"] )
-		
+
 	def testAffects( self ) :
-	
+
 		s = GafferScene.SubTree()
-		
+
 		for n in s["in"].keys() :
 			a = s.affects( s["in"][n] )
 			self.assertEqual( len( a ), 1 )
 			self.assertTrue( a[0].isSame( s["out"][n] ) )
 
 	def testIncludeRoot( self ) :
-	
+
 		a = GafferScene.AlembicSource()
-		a["fileName"].setValue( os.path.dirname( __file__ ) + "/alembicFiles/animatedCube.abc" )	
-		
+		a["fileName"].setValue( os.path.dirname( __file__ ) + "/alembicFiles/animatedCube.abc" )
+
 		s = GafferScene.SubTree()
 		s["in"].setInput( a["out"] )
 		s["root"].setValue( "/pCube1" )
 		s["includeRoot"].setValue( True )
-				
+
 		self.assertSceneValid( s["out"] )
-		
+
 		self.assertScenesEqual( s["out"], a["out"], pathsToIgnore = [ "/", ] )
 		self.assertEqual( s["out"].childNames( "/" ), IECore.InternedStringVectorData( [ "pCube1" ] ) )
-		self.assertEqual( s["out"].bound( "/" ), a["out"].bound( "/pCube1" ) )		
+		self.assertEqual( s["out"].bound( "/" ), a["out"].bound( "/pCube1" ) )
 
 		self.assertTrue( a["out"].object( "/pCube1/pCubeShape1", _copy = False ).isSame( s["out"].object( "/pCube1/pCubeShape1", _copy = False ) ) )
 
 	def testRootBoundWithTransformedChild( self ) :
-	
+
 		a = GafferScene.AlembicSource()
-		a["fileName"].setValue( os.path.dirname( __file__ ) + "/alembicFiles/animatedCube.abc" )	
-		
+		a["fileName"].setValue( os.path.dirname( __file__ ) + "/alembicFiles/animatedCube.abc" )
+
 		s = GafferScene.SubTree()
 		s["in"].setInput( a["out"] )
 		s["root"].setValue( "/pCube1" )
 		s["includeRoot"].setValue( True )
-				
+
 		with Gaffer.Context() as c :
-			
+
 			c.setFrame( 10 )
-			
+
 			expectedRootBound = a["out"].bound( "/pCube1" )
 			expectedRootBound = expectedRootBound.transform( a["out"].transform( "/pCube1" ) )
-			
-			self.assertEqual( s["out"].bound( "/" ), expectedRootBound )		
+
+			self.assertEqual( s["out"].bound( "/" ), expectedRootBound )
 
 	def testIncludeRootPassesThroughWhenNoRootSpecified( self ) :
-	
+
 		a = GafferScene.AlembicSource()
-		a["fileName"].setValue( os.path.dirname( __file__ ) + "/alembicFiles/animatedCube.abc" )	
-		
+		a["fileName"].setValue( os.path.dirname( __file__ ) + "/alembicFiles/animatedCube.abc" )
+
 		s = GafferScene.SubTree()
 		s["in"].setInput( a["out"] )
 		s["root"].setValue( "" )
 		s["includeRoot"].setValue( True )
-				
+
 		self.assertSceneValid( s["out"] )
 
 		self.assertScenesEqual( a["out"], s["out"] )
@@ -267,21 +267,21 @@ class SubTreeTest( GafferSceneTest.SceneTestCase ) :
 		self.assertTrue( a["out"].object( "/pCube1/pCubeShape1", _copy = False ).isSame( s["out"].object( "/pCube1/pCubeShape1", _copy = False ) ) )
 
 	def testSetsWithIncludeRoot( self ) :
-	
+
 		l = GafferSceneTest.TestLight()
 		g = GafferScene.Group()
 		g["in"].setInput( l["out"] )
-		
+
 		self.assertSetsValid( g["out"] )
-		
+
 		s = GafferScene.SubTree()
 		s["in"].setInput( g["out"] )
 		s["root"].setValue( "/group" )
 		s["includeRoot"].setValue( True )
-		
+
 		lightSet = s["out"]["globals"].getValue()["gaffer:sets"]["__lights"]
 		self.assertEqual( lightSet.value.paths(), [ "/group/light" ] )
 		self.assertSetsValid( s["out"] )
-			
+
 if __name__ == "__main__":
 	unittest.main()

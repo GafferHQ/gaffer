@@ -1,25 +1,25 @@
 ##########################################################################
-#  
+#
 #  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
-#  
+#
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
 #  met:
-#  
+#
 #      * Redistributions of source code must retain the above
 #        copyright notice, this list of conditions and the following
 #        disclaimer.
-#  
+#
 #      * Redistributions in binary form must reproduce the above
 #        copyright notice, this list of conditions and the following
 #        disclaimer in the documentation and/or other materials provided with
 #        the distribution.
-#  
+#
 #      * Neither the name of John Haddon nor the names of
 #        any other contributors to this software may be used to endorse or
 #        promote products derived from this software without specific prior
 #        written permission.
-#  
+#
 #  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 #  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 #  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -31,7 +31,7 @@
 #  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 #  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 #  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#  
+#
 ##########################################################################
 
 import re
@@ -52,14 +52,14 @@ QtGui = GafferUI._qtImport( "QtGui" )
 class MessageWidget( GafferUI.Widget ) :
 
 	def __init__( self, **kw ) :
-		
+
 		row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing=4 )
 		GafferUI.Widget.__init__( self, row, **kw )
-		
+
 		with row :
-		
+
 			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing=6 ) :
-				
+
 				buttonSpecs = [
 					( IECore.Msg.Level.Error, "Errors. These may chill you to your very core. Click to scroll to the next one (if you can stomach it)." ),
 					( IECore.Msg.Level.Warning, "Warnings. These may give you pause for thought. Click to scroll to the next thinking point." ),
@@ -78,31 +78,31 @@ class MessageWidget( GafferUI.Widget ) :
 					self.__buttonClickedConnections.append( button.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ) ) )
 					button.setVisible( False )
 					button.setToolTip( buttonSpec[1] )
-				
+
 				GafferUI.Spacer( IECore.V2i( 10 ) )
-			
+
 			self.__text = GafferUI.MultiLineTextWidget( editable=False )
-	
+
 		self.__messageLevel = IECore.Msg.Level.Info
 		self.__messageHandler = _MessageHandler( self )
 		self.__messages = []
 		self.__processingEvents = False
-	
+
 	## Returns a MessageHandler which will output to this Widget.
 	## \threading It is safe to use the handler on threads other than the main thread.
 	def messageHandler( self ) :
-	
+
 		return self.__messageHandler
-		
+
 	## It can be useful to forward messages captured by this widget
 	# on to other message handlers - for instance to perform centralised
 	# logging in addition to local display. This method returns a
 	# CompoundMessageHandler which can be used for such forwarding -
 	# simply add a handler with forwardingMessageHandler().addHandler().
 	def forwardingMessageHandler( self ) :
-	
+
 		return self.__messageHandler._forwarder
-	
+
 	## Sets an IECore.MessageHandler.Level specifying which
 	# type of messages will be visible to the user - levels above
 	# that specified will be invisible. Note that the invisible
@@ -111,31 +111,31 @@ class MessageWidget( GafferUI.Widget ) :
 	# for revealing debug messages only after a warning or error has
 	# alerted the user to a problem.
 	def setMessageLevel( self, messageLevel ) :
-	
+
 		assert( isinstance( messageLevel, IECore.MessageHandler.Level ) )
-		
+
 		if messageLevel == self.__messageLevel :
 			return
-		
+
 		self.__messageLevel = messageLevel
 		self.__text.setText( "" )
 		for message in self.__messages :
 			self.__appendMessageToText( *message )
-				
+
 	def getMessageLevel( self ) :
-	
+
 		return self.__messageLevel
-	
+
 	## May be called to append a message manually.
 	# \note Because these are not real messages, they are not
 	# passed to the forwardingMessageHandler().
 	# \deprecated.
 	def appendMessage( self, level, context, message ) :
-	
+
 		self.__levelButtons[level].setVisible( True )
 		self.__messages.append( ( level, context, message ) )
 		if self.__appendMessageToText( level, context, message ) :
-				
+
 			# Update the gui so messages are output as they occur, rather than all getting queued
 			# up till the end. We have to be careful to avoid recursion when doing this - another
 			# thread may be queuing up loads of messages using self.messageHandler(), and those
@@ -148,11 +148,11 @@ class MessageWidget( GafferUI.Widget ) :
 					QtGui.QApplication.instance().processEvents( QtCore.QEventLoop.ExcludeUserInputEvents )
 				finally :
 					self.__processingEvents = False
-	
+
 	## Returns the number of messages being displayed, optionally
 	# restricted to the specified level.
 	def messageCount( self, level = None ) :
-	
+
 		if level is not None :
 			return reduce( lambda x, y : x + ( 1 if y[0] == level else 0 ), self.__messages, 0 )
 		else :
@@ -164,21 +164,21 @@ class MessageWidget( GafferUI.Widget ) :
 					self.messageCount( IECore.Msg.Level.Error ),
 				]
 			)
-	
+
 	## Clears all the displayed messages.
 	def clear( self ) :
-	
+
 		self.__text.setText( "" )
 		self.__messages = []
 		for button in self.__levelButtons.values() :
 			button.setVisible( False )
-			
+
 	def __buttonClicked( self, button ) :
-		
+
 		# make sure messages of this level are being displayed
 		if button.__level > self.__messageLevel :
 			self.setMessageLevel( button.__level )
-		
+
 		# scroll to the next one
 		toFind = IECore.Msg.levelAsString( button.__level ) + " : "
 		if not self.__text._qtWidget().find( toFind ) :
@@ -186,39 +186,39 @@ class MessageWidget( GafferUI.Widget ) :
 			self.__text._qtWidget().find( toFind )
 
 	def __appendMessageToText( self, level, context, message ) :
-	
+
 		if level > self.__messageLevel :
 			return False
-	
-		formatted = "<h1 class='%s'>%s : %s </h1><span class='message'>%s</span><br>" % ( 
+
+		formatted = "<h1 class='%s'>%s : %s </h1><span class='message'>%s</span><br>" % (
 			IECore.Msg.levelAsString( level ),
 			IECore.Msg.levelAsString( level ),
 			context,
 			message.replace( "\n", "<br>" )
 		)
-							
+
 		self.__text.appendHTML( formatted )
-		
+
 		return True
 
 class _MessageHandler( IECore.MessageHandler ) :
 
 	def __init__( self, messageWidget ) :
-	
-		IECore.MessageHandler.__init__( self )	
-		
+
+		IECore.MessageHandler.__init__( self )
+
 		self._forwarder = IECore.CompoundMessageHandler()
-		
+
 		# using a weak reference because we're owned by the MessageWidget,
-		# so we mustn't have a reference back.	
+		# so we mustn't have a reference back.
 		self.__messageWidget = weakref.ref( messageWidget )
-		
+
 	def handle( self, level, context, msg ) :
-		
+
 		self._forwarder.handle( level, context, msg )
-		
+
 		w = self.__messageWidget()
-		
+
 		if w :
 			GafferUI.EventLoop.executeOnUIThread( IECore.curry( w.appendMessage, level, context, msg ) )
 		else :

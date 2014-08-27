@@ -1,26 +1,26 @@
 //////////////////////////////////////////////////////////////////////////
-//  
+//
 //  Copyright (c) 2011-2014, Image Engine Design Inc. All rights reserved.
 //  Copyright (c) 2011, John Haddon. All rights reserved.
-//  
+//
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
 //  met:
-//  
+//
 //      * Redistributions of source code must retain the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer.
-//  
+//
 //      * Redistributions in binary form must reproduce the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
-//  
+//
 //      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
-//  
+//
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 //  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 //  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -32,7 +32,7 @@
 //  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 //  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//  
+//
 //////////////////////////////////////////////////////////////////////////
 
 #ifndef GAFFER_PARAMETERHANDLER_H
@@ -59,7 +59,7 @@ class ParameterHandler : public IECore::RefCounted
 		IE_CORE_DECLAREMEMBERPTR( ParameterHandler );
 
 		virtual ~ParameterHandler();
-		
+
 		virtual IECore::Parameter *parameter() = 0;
 		virtual const IECore::Parameter *parameter() const = 0;
 
@@ -70,25 +70,25 @@ class ParameterHandler : public IECore::RefCounted
 
 		virtual Gaffer::Plug *plug() = 0;
 		virtual const Gaffer::Plug *plug() const = 0;
-		
+
 		virtual void setParameterValue() = 0;
 		virtual void setPlugValue() = 0;
-		
+
 		/// Returns a handler for the specified parameter.
 		static ParameterHandlerPtr create( IECore::ParameterPtr parameter );
 		/// A function for creating ParameterHandlers which will represent a Parameter with a plug on a given
 		/// parent.
-		typedef boost::function<ParameterHandlerPtr ( IECore::ParameterPtr )> Creator;	
+		typedef boost::function<ParameterHandlerPtr ( IECore::ParameterPtr )> Creator;
 		/// Registers a function which can return a ParameterHandler for a given Parameter type.
 		static void registerParameterHandler( IECore::TypeId parameterType, Creator creator );
-		
+
 	protected :
-		
+
 		ParameterHandler();
-		
+
 		/// Should be called by derived classes in setupPlug().
 		void setupPlugFlags( Plug *plug, unsigned flags );
-		
+
 		/// Create a static instance of this to automatically register a derived class
 		/// with the factory mechanism. Derived class must have a constructor of the form
 		/// Derived( ParameterType::Ptr parameter, GraphComponentPtr plugParent ).
@@ -99,12 +99,12 @@ class ParameterHandler : public IECore::RefCounted
 			private :
 				static ParameterHandlerPtr creator( IECore::ParameterPtr parameter ) { return new HandlerType( boost::static_pointer_cast<ParameterType>( parameter ) ); };
 		};
-		
+
 	private :
-	
+
 		typedef std::map<IECore::TypeId, Creator> CreatorMap;
 		static CreatorMap &creators();
-		
+
 };
 
 } // namespace Gaffer

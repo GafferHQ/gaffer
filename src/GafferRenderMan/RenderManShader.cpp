@@ -1,25 +1,25 @@
 //////////////////////////////////////////////////////////////////////////
-//  
+//
 //  Copyright (c) 2013-2014, Image Engine Design Inc. All rights reserved.
-//  
+//
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
 //  met:
-//  
+//
 //      * Redistributions of source code must retain the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer.
-//  
+//
 //      * Redistributions in binary form must reproduce the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
-//  
+//
 //      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
-//  
+//
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 //  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 //  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -31,7 +31,7 @@
 //  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 //  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//  
+//
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/lexical_cast.hpp"
@@ -99,26 +99,26 @@ const Gaffer::Plug *RenderManShader::correspondingInput( const Gaffer::Plug *out
 	{
 		return 0;
 	}
-	
+
 	const StringData *primaryInput = ann->member<StringData>( "primaryInput" );
 	if( !primaryInput )
 	{
 		return 0;
 	}
-	
+
 	const Plug *result = parametersPlug()->getChild<Plug>( primaryInput->readable() );
 	if( !result )
 	{
 		IECore::msg( IECore::Msg::Error, "RenderManShader::correspondingInput", boost::format( "Parameter \"%s\" does not exist" ) % primaryInput->readable() );
 		return 0;
 	}
-	
+
 	if( result->typeId() != Gaffer::Plug::staticTypeId() )
 	{
 		IECore::msg( IECore::Msg::Error, "RenderManShader::correspondingInput", boost::format( "Parameter \"%s\" is not of type shader" ) % primaryInput->readable() );
 		return 0;
 	}
-	
+
 	return result;
 }
 
@@ -136,16 +136,16 @@ bool RenderManShader::acceptsInput( const Plug *plug, const Plug *inputPlug ) co
 	{
 		return false;
 	}
-	
+
 	if( !inputPlug )
 	{
 		return true;
 	}
-	
+
 	if( parametersPlug()->isAncestorOf( plug ) )
 	{
 		const Plug *sourcePlug = inputPlug->source<Plug>();
-		
+
 		if( plug->typeId() == Plug::staticTypeId() )
 		{
 			// coshader parameter - source must be another
@@ -155,7 +155,7 @@ bool RenderManShader::acceptsInput( const Plug *plug, const Plug *inputPlug ) co
 			// box or switch is connected to something, so we can check
 			// that the indirect connection is to our liking.
 			const Node* sourceNode = sourcePlug->node();
-			
+
 			if(
 				runTimeCast<const Box>( sourceNode ) ||
 				runTimeCast<const ShaderSwitch>( sourceNode )
@@ -163,7 +163,7 @@ bool RenderManShader::acceptsInput( const Plug *plug, const Plug *inputPlug ) co
 			{
 				return true;
 			}
-			
+
 			const RenderManShader *inputShader = sourcePlug->parent<RenderManShader>();
 			if(
 				!inputShader ||
@@ -201,7 +201,7 @@ bool RenderManShader::acceptsInput( const Plug *plug, const Plug *inputPlug ) co
 			{
 				return false;
 			}
-			
+
 			// we accept a space (or comma) separated list of source types, so that a coshader
 			// can belong to multiple types.
 			typedef boost::tokenizer<boost::char_separator<char> > Tokenizer;
@@ -216,7 +216,7 @@ bool RenderManShader::acceptsInput( const Plug *plug, const Plug *inputPlug ) co
 			return !inputShader || sourcePlug != inputShader->outPlug();
 		}
 	}
-	
+
 	return true;
 }
 
@@ -274,7 +274,7 @@ IECore::DataPtr RenderManShader::parameterValue( const Gaffer::Plug *parameterPl
 		}
 		return value;
 	}
-	
+
 	return Shader::parameterValue( parameterPlug, network );
 }
 
@@ -285,7 +285,7 @@ const IECore::ConstCompoundDataPtr RenderManShader::annotations() const
 	{
 		return NULL;
 	}
-	
+
 	IECore::ConstShaderPtr shader = NULL;
 	try
 	{
@@ -296,7 +296,7 @@ const IECore::ConstCompoundDataPtr RenderManShader::annotations() const
 		IECore::msg( IECore::Msg::Error, "RenderManShader::annotations", e.what() );
 		return NULL;
 	}
-	
+
 	return shader->blindData()->member<CompoundData>( "ri:annotations" );
 }
 
@@ -324,7 +324,7 @@ static void loadParameter( Gaffer::CompoundPlug *parametersPlug, const std::stri
 	{
 		return;
 	}
-	
+
 	typename PlugType::Ptr plug = new PlugType( name, Plug::In, defaultValue, Plug::Default | Plug::Dynamic );
 	if( existingPlug )
 	{
@@ -337,7 +337,7 @@ static void loadParameter( Gaffer::CompoundPlug *parametersPlug, const std::stri
 			plug->setValue( existingPlug->getValue() );
 		}
 	}
-	
+
 	parametersPlug->setChild( name, plug );
 }
 
@@ -348,13 +348,13 @@ static void loadCoshaderParameter( Gaffer::CompoundPlug *parametersPlug, const s
 	{
 		return;
 	}
-	
+
 	PlugPtr plug = new Plug( name, Plug::In, Plug::Default | Plug::Dynamic );
 	if( existingPlug && existingPlug->getInput<Plug>() )
 	{
 		plug->setInput( existingPlug->getInput<Plug>() );
 	}
-	
+
 	parametersPlug->setChild( name, plug );
 }
 
@@ -362,7 +362,7 @@ static void loadCoshaderArrayParameter( Gaffer::CompoundPlug *parametersPlug, co
 {
 	const size_t minSize = std::max( defaultValue->readable().size(), (size_t)1 );
 	const size_t maxSize = defaultValue->readable().size() ? defaultValue->readable().size() : Imath::limits<size_t>::max();
-	
+
 	PlugPtr existingPlug = parametersPlug->getChild<Plug>( name );
 	ArrayPlug *existingArrayPlug = runTimeCast<ArrayPlug>( existingPlug.get() );
 	if( existingArrayPlug && existingArrayPlug->minSize() == minSize && existingArrayPlug->maxSize() == maxSize )
@@ -377,12 +377,12 @@ static void loadCoshaderArrayParameter( Gaffer::CompoundPlug *parametersPlug, co
 	}
 	else
 	{
-		elementName += "0";		
+		elementName += "0";
 	}
-	
+
 	ArrayPlugPtr plug = new ArrayPlug( name, Plug::In, new Plug( elementName ), minSize, maxSize, Plug::Default | Plug::Dynamic );
 	parametersPlug->setChild( name, plug );
-	
+
 	if( existingPlug )
 	{
 		for( size_t i = 0, e = std::min( existingPlug->children().size(), maxSize ); i < e; ++i )
@@ -401,35 +401,35 @@ static void loadCoshaderArrayParameter( Gaffer::CompoundPlug *parametersPlug, co
 
 template <typename PlugType>
 static void loadNumericParameter( Gaffer::CompoundPlug *parametersPlug, const std::string &name, typename PlugType::ValueType defaultValue, const CompoundData *annotations )
-{	
+{
 	typename PlugType::ValueType minValue( Imath::limits<typename PlugType::ValueType>::min() );
 	typename PlugType::ValueType maxValue( Imath::limits<typename PlugType::ValueType>::max() );
-	
+
 	const StringData *minValueData = annotations->member<StringData>( name + ".min" );
 	if( minValueData )
 	{
 		minValue = typename PlugType::ValueType( boost::lexical_cast<typename PlugType::ValueType>( minValueData->readable() ) );
 	}
-	
+
 	const StringData *maxValueData = annotations->member<StringData>( name + ".max" );
 	if( maxValueData )
 	{
 		maxValue = typename PlugType::ValueType( boost::lexical_cast<typename PlugType::ValueType>( maxValueData->readable() ) );
 	}
-	
+
 	PlugType *existingPlug = parametersPlug->getChild<PlugType>( name );
-	if(	
+	if(
 		existingPlug &&
 		existingPlug->defaultValue() == defaultValue &&
 		existingPlug->minValue() == minValue &&
-		existingPlug->maxValue() == maxValue 
+		existingPlug->maxValue() == maxValue
 	)
 	{
 		return;
 	}
-	
+
 	typename PlugType::Ptr plug = new PlugType( name, Plug::In, defaultValue, minValue, maxValue, Plug::Default | Plug::Dynamic );
-		
+
 	if( existingPlug )
 	{
 		if( existingPlug->template getInput<Plug>() )
@@ -441,7 +441,7 @@ static void loadNumericParameter( Gaffer::CompoundPlug *parametersPlug, const st
 			plug->setValue( existingPlug->getValue() );
 		}
 	}
-	
+
 	parametersPlug->setChild( name, plug );
 }
 
@@ -475,35 +475,35 @@ static void loadNumericParameter( Gaffer::CompoundPlug *parametersPlug, const st
 
 template <typename PlugType>
 static void loadCompoundNumericParameter( Gaffer::CompoundPlug *parametersPlug, const std::string &name, const typename PlugType::ValueType &defaultValue, const CompoundData *annotations )
-{	
+{
 	typename PlugType::ValueType minValue( Imath::limits<float>::min() );
 	typename PlugType::ValueType maxValue( Imath::limits<float>::max() );
-	
+
 	const StringData *minValueData = annotations->member<StringData>( name + ".min" );
 	if( minValueData )
 	{
 		minValue = typename PlugType::ValueType( boost::lexical_cast<float>( minValueData->readable() ) );
 	}
-	
+
 	const StringData *maxValueData = annotations->member<StringData>( name + ".max" );
 	if( maxValueData )
 	{
 		maxValue = typename PlugType::ValueType( boost::lexical_cast<float>( maxValueData->readable() ) );
 	}
-	
+
 	PlugType *existingPlug = parametersPlug->getChild<PlugType>( name );
 	if(
 		existingPlug &&
 		existingPlug->defaultValue() == defaultValue &&
 		existingPlug->minValue() == minValue &&
-		existingPlug->maxValue() == maxValue 
+		existingPlug->maxValue() == maxValue
 	)
 	{
 		return;
 	}
-	
+
 	typename PlugType::Ptr plug = new PlugType( name, Plug::In, defaultValue, minValue, maxValue, Plug::Default | Plug::Dynamic );
-		
+
 	if( existingPlug )
 	{
 		for( size_t i = 0, e = existingPlug->children().size(); i < e; i++ )
@@ -519,7 +519,7 @@ static void loadCompoundNumericParameter( Gaffer::CompoundPlug *parametersPlug, 
 			}
 		}
 	}
-	
+
 	parametersPlug->setChild( name, plug );
 }
 
@@ -533,7 +533,7 @@ static void loadArrayParameter( Gaffer::CompoundPlug *parametersPlug, const std:
 	{
 		return;
 	}
-	
+
 	typename PlugType::Ptr plug = new PlugType( name, Plug::In, typedDefaultValue, Plug::Default | Plug::Dynamic );
 	if( existingPlug )
 	{
@@ -546,34 +546,34 @@ static void loadArrayParameter( Gaffer::CompoundPlug *parametersPlug, const std:
 			plug->setValue( existingPlug->getValue() );
 		}
 	}
-	
+
 	parametersPlug->setChild( name, plug );
 
 }
 
 template<typename PlugType>
 static void loadSplineParameter( Gaffer::CompoundPlug *parametersPlug, const std::string &name, const FloatVectorData *defaultPositions, const Data *defaultValues )
-{	
+{
 	PlugType *existingPlug = parametersPlug->getChild<PlugType>( name );
 	if( existingPlug )
 	{
 		return;
 	}
-	
+
 	typedef typename PlugType::XPlugType::ValueType XValueType;
 	typedef typename PlugType::YPlugType::ValueType YValueType;
 	typedef std::vector<YValueType> YValueVector;
 	typedef TypedData<YValueVector> YValueData;
-	
+
 	typename PlugType::ValueType defaultValue;
-	
+
 	const YValueData *typedDefaultValues = static_cast<const YValueData *>( defaultValues );
 	size_t numPoints = std::min( defaultPositions->readable().size(), typedDefaultValues->readable().size() );
 	if( numPoints >= 4 )
 	{
 		for( size_t i = 0; i < numPoints; ++i )
 		{
-			defaultValue.points.insert( 
+			defaultValue.points.insert(
 				typename PlugType::ValueType::Point(
 					defaultPositions->readable()[i],
 					typedDefaultValues->readable()[i]
@@ -596,7 +596,7 @@ static void loadSplineParameter( Gaffer::CompoundPlug *parametersPlug, const std
 		defaultValue.points.insert( typename PlugType::ValueType::Point( XValueType( 1 ), YValueType( 1 ) ) );
 		defaultValue.points.insert( typename PlugType::ValueType::Point( XValueType( 1 ), YValueType( 1 ) ) );
 	}
-			
+
 	typename PlugType::Ptr plug = new PlugType( name, Plug::In, defaultValue, Plug::Default | Plug::Dynamic );
 	parametersPlug->setChild( name, plug );
 }
@@ -696,20 +696,20 @@ static IECore::Color3fVectorDataPtr parseColors( const std::string &value )
 }
 
 void RenderManShader::loadShaderParameters( const IECore::Shader *shader, Gaffer::CompoundPlug *parametersPlug, bool keepExistingValues )
-{	
+{
 	const CompoundData *typeHints = shader->blindData()->member<CompoundData>( "ri:parameterTypeHints", true );
-	
+
 	const StringVectorData *orderedParameterNamesData = shader->blindData()->member<StringVectorData>( "ri:orderedParameterNames", true );
 	const vector<string> &orderedParameterNames = orderedParameterNamesData->readable();
-	
+
 	const StringVectorData *outputParameterNamesData = shader->blindData()->member<StringVectorData>( "ri:outputParameterNames", true );
 	const vector<string> &outputParameterNames = outputParameterNamesData->readable();
-	
+
 	const CompoundData *annotations = shader->blindData()->member<CompoundData>( "ri:annotations", true );
-	
+
 	// if we're not preserving existing values then remove all existing parameter plugs - the various
 	// plug creators above know that if a plug exists then they should preserve its values.
-	
+
 	if( !keepExistingValues )
 	{
 		for( int i = parametersPlug->children().size() - 1; i >= 0; --i )
@@ -717,9 +717,9 @@ void RenderManShader::loadShaderParameters( const IECore::Shader *shader, Gaffer
 			parametersPlug->removeChild( parametersPlug->getChild<GraphComponent>( i ) );
 		}
 	}
-	
+
 	// make sure we have a plug to represent each parameter, reusing plugs wherever possible.
-	
+
 	set<string> validPlugNames;
 	for( vector<string>::const_iterator it = orderedParameterNames.begin(), eIt = orderedParameterNames.end(); it != eIt; it++ )
 	{
@@ -727,10 +727,10 @@ void RenderManShader::loadShaderParameters( const IECore::Shader *shader, Gaffer
 		{
 			continue;
 		}
-	
+
 		// splines are represented by two parameters matched by a naming convention, and we map
 		// those two parameters to a single SplinePlug.
-	
+
 		const bool endsWithValues = ends_with( *it, "Values" );
 		const bool endsWithPositions = ends_with( *it, "Positions" );
 		if( endsWithPositions || endsWithValues )
@@ -740,11 +740,11 @@ void RenderManShader::loadShaderParameters( const IECore::Shader *shader, Gaffer
 			{
 				continue;
 			}
-			
+
 			// must use a smart pointers here because we may assign the data the parser creates (and which we therefore own)
 			ConstFloatVectorDataPtr positions = shader->parametersData()->member<FloatVectorData>( plugName + "Positions" );
 			ConstDataPtr values = shader->parametersData()->member<Data>( plugName + "Values" );
-			
+
 			if( positions && values )
 			{
 				const StringData *defaultValuesAnnotation = annotations->member<StringData>( plugName + "Values.defaultValue" );
@@ -808,11 +808,11 @@ void RenderManShader::loadShaderParameters( const IECore::Shader *shader, Gaffer
 				validPlugNames.insert( plugName );
 				continue;
 			}
-			
+
 		}
-	
+
 		// the other parameter types map more simply to a single plug each.
-	
+
 		const StringData *typeHint = typeHints->member<StringData>( *it, false );
 		const Data *defaultValue = shader->parametersData()->member<Data>( *it );
 		switch( defaultValue->typeId() )
@@ -854,19 +854,19 @@ void RenderManShader::loadShaderParameters( const IECore::Shader *shader, Gaffer
 				break;
 			case V3fVectorDataTypeId :
 				loadArrayParameter<V3fVectorDataPlug>( parametersPlug, *it, defaultValue, annotations );
-				break;		
+				break;
 			default :
 				msg(
 					Msg::Warning, "RenderManShader::loadShaderParameters",
 					boost::format( "Parameter \"%s\" has unsupported type \"%s\"" ) % *it % defaultValue->typeName()
 				);
 		}
-		
+
 		validPlugNames.insert( *it );
 	}
-	
+
 	// remove any old plugs which it turned out we didn't need
-	
+
 	if( keepExistingValues )
 	{
 		for( int i = parametersPlug->children().size() - 1; i >= 0; --i )
@@ -878,7 +878,7 @@ void RenderManShader::loadShaderParameters( const IECore::Shader *shader, Gaffer
 			}
 		}
 	}
-	
+
 }
 
 

@@ -1,25 +1,25 @@
 //////////////////////////////////////////////////////////////////////////
-//  
+//
 //  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
-//  
+//
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
 //  met:
-//  
+//
 //      * Redistributions of source code must retain the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer.
-//  
+//
 //      * Redistributions in binary form must reproduce the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
-//  
+//
 //      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
-//  
+//
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 //  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 //  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -31,7 +31,7 @@
 //  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 //  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//  
+//
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/bind.hpp"
@@ -72,7 +72,7 @@ InteractiveRender::InteractiveRender( const std::string &name )
 
 	plugDirtiedSignal().connect( boost::bind( &InteractiveRender::plugDirtied, this, ::_1 ) );
 	parentChangedSignal().connect( boost::bind( &InteractiveRender::parentChanged, this, ::_1, ::_2 ) );
-	
+
 	setContext( new Context() );
 }
 
@@ -99,7 +99,7 @@ const Gaffer::IntPlug *InteractiveRender::statePlug() const
 {
 	return getChild<IntPlug>( g_firstPlugIndex + 1);
 }
-		
+
 Gaffer::BoolPlug *InteractiveRender::updateLightsPlug()
 {
 	return getChild<BoolPlug>( g_firstPlugIndex + 2 );
@@ -211,10 +211,10 @@ void InteractiveRender::update()
 
 	const State requiredState = (State)statePlug()->getValue();
 	ConstScenePlugPtr requiredScene = inPlug()->getInput<ScenePlug>();
-	
+
 	// Stop the current render if it's not what we want,
 	// and early-out if we don't want another one.
-	
+
 	if( !requiredScene || requiredScene != m_scene || requiredState == Stopped )
 	{
 		// stop the current render
@@ -228,36 +228,36 @@ void InteractiveRender::update()
 			return;
 		}
 	}
-	
+
 	// If we've got this far, we know we want to be running or paused.
 	// Start a render if we don't have one.
-	
+
 	if( !m_renderer )
 	{
 		m_renderer = createRenderer();
 		m_renderer->setOption( "editable", new BoolData( true ) );
-		
+
 		ConstCompoundObjectPtr globals = inPlug()->globalsPlug()->getValue();
 		outputOptions( globals.get(), m_renderer.get() );
 		outputOutputs( globals.get(), m_renderer.get() );
 		outputCamera( inPlug(), globals.get(), m_renderer.get() );
 		{
 			WorldBlock world( m_renderer );
-		
+
 			outputCoordinateSystems( inPlug(), globals.get(), m_renderer.get() );
 			outputLightsInternal( globals.get(), /* editing = */ false );
 
 			SceneProceduralPtr proc = new SceneProcedural( inPlug(), Context::current() );
 			m_renderer->procedural( proc );
 		}
-		
+
 		m_scene = requiredScene;
 		m_state = Running;
 		m_lightsDirty = m_shadersDirty = m_cameraDirty = false;
 	}
-	
+
 	// Make sure the paused/running state is as we want.
-	
+
 	if( requiredState != m_state )
 	{
 		if( requiredState == Paused )
@@ -270,9 +270,9 @@ void InteractiveRender::update()
 		}
 		m_state = requiredState;
 	}
-	
+
 	// If we're not paused, then send any edits we need.
-	
+
 	if( m_state == Running )
 	{
 		updateLights();
@@ -301,20 +301,20 @@ void InteractiveRender::outputLightsInternal( const IECore::CompoundObject *glob
 	{
 		lightSet = sets->member<PathMatcherData>( "__lights" );
 	}
-	
+
 	std::vector<std::string> lightPaths;
 	if( lightSet )
 	{
 		lightSet->readable().paths( lightPaths );
 	}
-	
+
 	// Create or update lights in the renderer as necessary
-	
+
 	for( vector<string>::const_iterator it = lightPaths.begin(), eIt = lightPaths.end(); it != eIt; ++it )
 	{
 		ScenePlug::ScenePath path;
 		ScenePlug::stringToPath( *it, path );
-		
+
 		if( !editing )
 		{
 			// defining the scene for the first time
@@ -352,9 +352,9 @@ void InteractiveRender::outputLightsInternal( const IECore::CompoundObject *glob
 			}
 		}
 	}
-	
+
 	// Turn off any lights we don't want any more
-	
+
 	for( LightHandles::const_iterator it = m_lightHandles.begin(), eIt = m_lightHandles.end(); it != eIt; ++it )
 	{
 		if( !lightSet || !(lightSet->readable().match( *it ) & Filter::ExactMatch) )
@@ -371,36 +371,36 @@ void InteractiveRender::updateShaders()
 	{
 		return;
 	}
-	
+
 	updateShadersWalk( ScenePlug::ScenePath() );
-	
+
 	m_shadersDirty = false;
 }
 
 void InteractiveRender::updateShadersWalk( const ScenePlug::ScenePath &path )
 {
 	/// \todo Keep a track of the hashes of the shaders at each path,
-	/// and use it to only update the shaders when they've changed.	
+	/// and use it to only update the shaders when they've changed.
 	ConstCompoundObjectPtr attributes = inPlug()->attributes( path );
-	
+
 	// terminate recursion for invisible locations
 	ConstBoolDataPtr visibility = attributes->member<BoolData>( SceneInterface::visibilityName );
 	if( visibility && ( !visibility->readable() ) )
 	{
 		return;
 	}
-	
+
 	ConstObjectVectorPtr shader = attributes->member<ObjectVector>( "shader" );
 	if( shader )
 	{
 		std::string name;
 		ScenePlug::pathToString( path, name );
-		
+
 		CompoundDataMap parameters;
 		parameters["exactscopename"] = new StringData( name );
 		{
 			EditBlock edit( m_renderer.get(), "attribute", parameters );
-		
+
 			for( ObjectVector::MemberContainer::const_iterator it = shader->members().begin(), eIt = shader->members().end(); it != eIt; it++ )
 			{
 				const StateRenderable *s = runTimeCast<const StateRenderable>( it->get() );
@@ -411,7 +411,7 @@ void InteractiveRender::updateShadersWalk( const ScenePlug::ScenePath &path )
 			}
 		}
 	}
-	
+
 	ConstInternedStringVectorDataPtr childNames = inPlug()->childNames( path );
 	ScenePlug::ScenePath childPath = path;
 	childPath.push_back( InternedString() ); // for the child name
@@ -442,7 +442,7 @@ void InteractiveRender::updateCoordinateSystems()
 	{
 		return;
 	}
-	
+
 	IECore::ConstCompoundObjectPtr globals = inPlug()->globalsPlug()->getValue();
 	{
 		EditBlock edit( m_renderer.get(), "attribute", CompoundDataMap() );

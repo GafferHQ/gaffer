@@ -1,25 +1,25 @@
 //////////////////////////////////////////////////////////////////////////
-//  
+//
 //  Copyright (c) 2013-2014, Image Engine Design inc. All rights reserved.
-//  
+//
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
 //  met:
-//  
+//
 //      * Redistributions of source code must retain the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer.
-//  
+//
 //      * Redistributions in binary form must reproduce the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
-//  
+//
 //      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
-//  
+//
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 //  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 //  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -31,7 +31,7 @@
 //  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 //  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//  
+//
 //////////////////////////////////////////////////////////////////////////
 
 #ifndef GAFFERSCENE_SCENEWRITER_H
@@ -56,33 +56,33 @@ class SceneWriter : public Gaffer::ExecutableNode
 
 		SceneWriter( const std::string &name=defaultName<SceneWriter>() );
 		virtual ~SceneWriter();
-		
+
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::SceneWriter, SceneWriterTypeId, Gaffer::ExecutableNode );
-		
+
 		Gaffer::StringPlug *fileNamePlug();
 		const Gaffer::StringPlug *fileNamePlug() const;
-		
+
 		ScenePlug *inPlug();
 		const ScenePlug *inPlug() const;
-		
+
 		virtual IECore::MurmurHash hash( const Gaffer::Context *context ) const;
-		
+
 		virtual void execute() const;
-		
+
 		/// Re-implemented to open the file for writing, then iterate through the
 		/// frames, modifying the current Context and calling writeLocation().
 		virtual void executeSequence( const std::vector<float> &frames ) const;
-		
+
 		/// Re-implemented to return true, since the entire file must be written at once.
 		virtual bool requiresSequenceExecution() const;
-		
+
 	private :
-	
+
 		void createDirectories( std::string &fileName ) const;
 		void writeLocation( const GafferScene::ScenePlug *scene, const ScenePlug::ScenePath &scenePath, Gaffer::Context *context, IECore::SceneInterface *output, double time ) const;
-		
+
 		static size_t g_firstPlugIndex;
-		
+
 		static const double g_frameRate;
 };
 

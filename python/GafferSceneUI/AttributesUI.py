@@ -44,7 +44,7 @@ Gaffer.Metadata.registerNodeDescription(
 
 GafferScene.Attributes,
 
-"""The base type for nodes that apply attributes to the scene. 
+"""The base type for nodes that apply attributes to the scene.
 """,
 
 "attributes",

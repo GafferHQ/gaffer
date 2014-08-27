@@ -1,26 +1,26 @@
 //////////////////////////////////////////////////////////////////////////
-//  
+//
 //  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 //  Copyright (c) 2012, John Haddon. All rights reserved.
-//  
+//
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
 //  met:
-//  
+//
 //      * Redistributions of source code must retain the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer.
-//  
+//
 //      * Redistributions in binary form must reproduce the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
-//  
+//
 //      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
-//  
+//
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 //  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 //  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -32,7 +32,7 @@
 //  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 //  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//  
+//
 //////////////////////////////////////////////////////////////////////////
 
 #include "Gaffer/CompoundPlug.h"
@@ -58,7 +58,7 @@ CompoundNodule::CompoundNodule( Gaffer::CompoundPlugPtr plug, LinearContainer::O
 	{
 		direction = orientation == LinearContainer::X ? LinearContainer::Increasing : LinearContainer::Decreasing;
 	}
-	
+
 	m_row = new LinearContainer( "row", orientation, LinearContainer::Centre, spacing, direction );
 	addChild( m_row );
 
@@ -73,7 +73,7 @@ CompoundNodule::CompoundNodule( Gaffer::CompoundPlugPtr plug, LinearContainer::O
 			m_row->addChild( nodule );
 		}
 	}
-	
+
 	m_row->renderRequestSignal().connect( boost::bind( &CompoundNodule::childRenderRequest, this, ::_1 ) );
 }
 
@@ -113,7 +113,7 @@ const Nodule *CompoundNodule::nodule( const Gaffer::Plug *plug ) const
 	// preferring the nasty casts over mainaining two nearly identical implementations
 	return const_cast<CompoundNodule *>( this )->nodule( plug );
 }
-		
+
 void CompoundNodule::childAdded( Gaffer::GraphComponent *parent, Gaffer::GraphComponent *child )
 {
 	Gaffer::Plug *plug = IECore::runTimeCast<Gaffer::Plug>( child );
@@ -121,7 +121,7 @@ void CompoundNodule::childAdded( Gaffer::GraphComponent *parent, Gaffer::GraphCo
 	{
 		return;
 	}
-	
+
 	NodulePtr nodule = Nodule::create( plug );
 	if( nodule )
 	{
@@ -136,7 +136,7 @@ void CompoundNodule::childRemoved( Gaffer::GraphComponent *parent, Gaffer::Graph
 	{
 		return;
 	}
-	
+
 	for( NoduleIterator it( m_row.get() ); it!=it.end(); it++ )
 	{
 		if( (*it)->plug() == plug )
@@ -144,7 +144,7 @@ void CompoundNodule::childRemoved( Gaffer::GraphComponent *parent, Gaffer::Graph
 			m_row->removeChild( *it );
 			break;
 		}
-	}	
+	}
 }
 
 void CompoundNodule::childRenderRequest( Gadget *child )

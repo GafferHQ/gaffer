@@ -44,7 +44,7 @@ QtGui = GafferUI._qtImport( "QtGui" )
 class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plug, horizontalAlignment=GafferUI.Label.HorizontalAlignment.Left, verticalAlignment=GafferUI.Label.VerticalAlignment.Center, **kw ) :
-		
+
 		GafferUI.PlugValueWidget.__init__( self, QtGui.QWidget(), plug, **kw )
 
 		layout = QtGui.QHBoxLayout()
@@ -58,34 +58,34 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 			verticalAlignment = verticalAlignment,
 		)
 		layout.addWidget( self.__label._qtWidget() )
-		
+
 		self.__editableLabel = None # we'll make this lazily as needed
-		
+
 		# connecting at group 0 so we're called before the slots
 		# connected by the NameLabel class.
 		self.__dragBeginConnection = self.__label.dragBeginSignal().connect( 0, Gaffer.WeakMethod( self.__dragBegin ) )
 		self.__dragEndConnection = self.__label.dragEndSignal().connect( 0, Gaffer.WeakMethod( self.__dragEnd ) )
-		
+
 		self._addPopupMenu( self.__label )
-		
+
 		self.setPlug( plug )
-		
+
 	def label( self ) :
-	
+
 		return self.__label
 
 	def setPlug( self, plug ) :
-	
+
 		GafferUI.PlugValueWidget.setPlug( self, plug )
-	
+
 		self.__label.setGraphComponent( plug )
 		if self.__editableLabel is not None :
 			self.__editableLabel.setGraphComponent( plug )
-		
+
 		label = Gaffer.Metadata.plugValue( plug, "label" ) if plug is not None else None
 		if label is not None :
 			self.__label.setText( label )
-		
+
 		# if the plug is a user plug, then set things up so it can be renamed
 		# by double clicking on the label. currently we only accept plugs immediately
 		# parented to the user plug, so as to avoid allowing the renaming of child
@@ -96,15 +96,15 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 			self.__labelDoubleClickConnection = None
 
 	def setHighlighted( self, highlighted ) :
-	
+
 		GafferUI.PlugValueWidget.setHighlighted( self, highlighted )
-		
+
 		self.__label.setHighlighted( highlighted )
-		
+
 	def getToolTip( self ) :
-	
+
 		result = GafferUI.PlugValueWidget.getToolTip( self )
-		
+
 		if self.getPlug() is not None :
 			result += "<ul>"
 			result += "<li>Left drag to connect</li>"
@@ -115,18 +115,18 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 		return result
 
 	def _updateFromPlug( self ) :
-	
+
 		self.__label.setEnabled(
 			self.getPlug() is not None and
 			not self.getPlug().getFlags( Gaffer.Plug.Flags.ReadOnly )
 		)
 
 	def __dragBegin( self, widget, event ) :
-		
+
 		# initiate a drag containing the value of the plug
 		# for shift-left drag or a middle drag. initiate a
 		# drag containing the plug for a straight left-drag.
-		
+
 		shift = event.modifiers & event.Modifiers.Shift
 		left = event.buttons == event.Buttons.Left
 		middle = event.buttons == event.Buttons.Middle
@@ -141,27 +141,27 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 			return self.getPlug()
 
 	def __dragEnd( self, widget, event ) :
-		
+
 		GafferUI.Pointer.setCurrent( None )
-	
+
 	def __labelDoubleClicked( self, label, event ) :
-	
+
 		assert( label is self.__label )
-		
+
 		if self.__editableLabel is None :
 			self.__editableLabel = GafferUI.NameWidget( self.getPlug() )
 			self.__editableLabel._qtWidget().setMinimumSize( self.label()._qtWidget().minimumSize() )
 			self.__editableLabel._qtWidget().setMaximumSize( self.label()._qtWidget().maximumSize() )
 			self.__labelEditingFinishedConnection = self.__editableLabel.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__labelEditingFinished ) )
 			self._qtWidget().layout().insertWidget( 0, self.__editableLabel._qtWidget() )
-		
+
 		self.__label.setVisible( False )
 		self.__editableLabel.setVisible( True )
 		self.__editableLabel.setSelection( 0, len( self.__editableLabel.getText() ) )
 		self.__editableLabel.grabFocus()
-	
+
 	def __labelEditingFinished( self, label ) :
-	
+
 		self.__label.setVisible( True )
 		self.__editableLabel.setVisible( False )
-	
+

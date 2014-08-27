@@ -1,26 +1,26 @@
 //////////////////////////////////////////////////////////////////////////
-//  
+//
 //  Copyright (c) 2011, John Haddon. All rights reserved.
 //  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
-//  
+//
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
 //  met:
-//  
+//
 //      * Redistributions of source code must retain the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer.
-//  
+//
 //      * Redistributions in binary form must reproduce the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
-//  
+//
 //      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
-//  
+//
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 //  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 //  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -32,7 +32,7 @@
 //  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 //  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//  
+//
 //////////////////////////////////////////////////////////////////////////
 
 #ifndef GAFFER_STANDARDSET_H
@@ -53,7 +53,7 @@ namespace Detail
 struct MemberAcceptanceCombiner
 {
 	typedef bool result_type;
-	
+
 	template<typename InputIterator>
 	bool operator()( InputIterator first, InputIterator last ) const
 	{
@@ -86,7 +86,7 @@ class StandardSet : public Gaffer::Set
 		virtual ~StandardSet();
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::StandardSet, StandardSetTypeId, Gaffer::Set );
-		
+
 		typedef boost::signal<bool ( const StandardSet *, const Member * ), Detail::MemberAcceptanceCombiner> MemberAcceptanceSignal;
 		/// This signal is emitted to determine whether or not a member is eligible
 		/// to be in the StandardSet. Members are only added if all slots of the signal
@@ -126,7 +126,7 @@ class StandardSet : public Gaffer::Set
 		/// Removes all members from the set.
 		void clear();
 		//@}
-		
+
 		/// @name Implementation of the Set interface
 		////////////////////////////////////////////////////////////////////
 		//@{
@@ -149,14 +149,14 @@ class StandardSet : public Gaffer::Set
 		> MemberContainer;
 
 		typedef const MemberContainer::nth_index<0>::type OrderedIndex;
-		typedef const MemberContainer::nth_index<1>::type SequencedIndex;		
-		
+		typedef const MemberContainer::nth_index<1>::type SequencedIndex;
+
 		MemberContainer m_members;
-		
+
 };
 
 IE_CORE_DECLAREPTR( StandardSet );
-	
+
 } // namespace Gaffer
 
 #include "Gaffer/StandardSet.inl"

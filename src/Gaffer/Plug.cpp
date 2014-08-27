@@ -1,26 +1,26 @@
 //////////////////////////////////////////////////////////////////////////
-//  
+//
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
-//  
+//
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
 //  met:
-//  
+//
 //      * Redistributions of source code must retain the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer.
-//  
+//
 //      * Redistributions in binary form must reproduce the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
-//  
+//
 //      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
-//  
+//
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 //  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 //  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -32,7 +32,7 @@
 //  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 //  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//  
+//
 //////////////////////////////////////////////////////////////////////////
 
 #include "Gaffer/Plug.h"
@@ -60,7 +60,7 @@ Plug::~Plug()
 {
 	setInputInternal( 0, false );
 	for( OutputContainer::iterator it=m_outputs.begin(); it!=m_outputs.end(); )
-	{	
+	{
 	 	// get the next iterator now, as the call to setInputInternal invalidates
 		// the current iterator.
 		OutputContainer::iterator next = it; next++;
@@ -115,14 +115,14 @@ void Plug::setFlags( unsigned flags )
 	{
 		return;
 	}
-	
+
 	if( (flags & ReadOnly) && direction() == Out )
 	{
 		throw IECore::Exception( "Output plug cannot be read only" );
 	}
-	
+
 	m_flags = flags;
-	
+
 	if( Node *n = node() )
 	{
 		n->plugFlagsChangedSignal()( this );
@@ -140,12 +140,12 @@ bool Plug::acceptsInput( const Plug *input ) const
 	{
 		return false;
 	}
-	
+
 	if( input == this )
 	{
 		return false;
 	}
-	
+
 	if( const Node *n = node() )
 	{
 		if( !n->acceptsInput( this, input ) )
@@ -153,7 +153,7 @@ bool Plug::acceptsInput( const Plug *input ) const
 			return false;
 		}
 	}
-	
+
 	for( OutputContainer::const_iterator it=m_outputs.begin(), eIt=m_outputs.end(); it!=eIt; ++it )
 	{
 		if( !(*it)->acceptsInput( input ) )
@@ -161,7 +161,7 @@ bool Plug::acceptsInput( const Plug *input ) const
 			return false;
 		}
 	}
-	
+
 	return true;
 }
 
@@ -183,11 +183,11 @@ void Plug::setInput( PlugPtr input )
 	if( refCount() )
 	{
 		// someone is referring to us, so we're definitely fully constructed and we may have a ScriptNode
-		// above us, so we should do things in a way compatible with the undo system.			
+		// above us, so we should do things in a way compatible with the undo system.
 		Action::enact(
 			this,
 			boost::bind( &Plug::setInputInternal, PlugPtr( this ), input, true ),
-			boost::bind( &Plug::setInputInternal, PlugPtr( this ), PlugPtr( m_input ), true )		
+			boost::bind( &Plug::setInputInternal, PlugPtr( this ), PlugPtr( m_input ), true )
 		);
 	}
 	else

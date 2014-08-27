@@ -1,26 +1,26 @@
 //////////////////////////////////////////////////////////////////////////
-//  
+//
 //  Copyright (c) 2012, John Haddon. All rights reserved.
 //  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
-//  
+//
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
 //  met:
-//  
+//
 //      * Redistributions of source code must retain the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer.
-//  
+//
 //      * Redistributions in binary form must reproduce the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
-//  
+//
 //      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
-//  
+//
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 //  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 //  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -32,7 +32,7 @@
 //  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 //  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//  
+//
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/bind.hpp"
@@ -56,11 +56,11 @@ View::View( const std::string &name, Gaffer::PlugPtr inPlug )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	setChild( "in", inPlug );
-	
+
 	setContext( new Context() );
-	
-	plugDirtiedSignal().connect( boost::bind( &View::plugDirtied, this, ::_1 ) );	
-	viewportGadget()->keyPressSignal().connect( boost::bind( &View::keyPress, this, ::_1, ::_2 ) );	
+
+	plugDirtiedSignal().connect( boost::bind( &View::plugDirtied, this, ::_1 ) );
+	viewportGadget()->keyPressSignal().connect( boost::bind( &View::keyPress, this, ::_1, ::_2 ) );
 }
 
 View::~View()
@@ -78,7 +78,7 @@ const Gaffer::Context *View::getContext() const
 }
 
 void View::setContext( Gaffer::ContextPtr context )
-{	
+{
 	m_context = context;
 	m_contextChangedConnection = m_context->changedSignal().connect( boost::bind( &View::contextChanged, this, ::_2 ) );
 }
@@ -134,7 +134,7 @@ bool View::keyPress( GadgetPtr gadget, const KeyEvent &keyEvent )
 			return true;
 		}
 	}
-	
+
 	return false;
 }
 
@@ -146,7 +146,7 @@ Imath::Box3f View::framingBound() const
 	}
 	return Imath::Box3f();
 }
-		
+
 View::CreatorMap &View::creators()
 {
 	static CreatorMap m;
@@ -160,7 +160,7 @@ View::NamedCreatorMap &View::namedCreators()
 }
 
 ViewPtr View::create( Gaffer::PlugPtr plug )
-{	
+{
 	const Gaffer::Node *node = plug->node();
 	if( node )
 	{
@@ -183,7 +183,7 @@ ViewPtr View::create( Gaffer::PlugPtr plug )
 			t = IECore::RunTimeTyped::baseTypeId( t );
 		}
 	}
-	
+
 	CreatorMap &m = creators();
 	IECore::TypeId t = plug->typeId();
 	while( t!=IECore::InvalidTypeId )
@@ -195,10 +195,10 @@ ViewPtr View::create( Gaffer::PlugPtr plug )
 		}
 		t = IECore::RunTimeTyped::baseTypeId( t );
 	}
-	
+
 	return 0;
 }
-		
+
 void View::registerView( IECore::TypeId plugType, ViewCreator creator )
 {
 	creators()[plugType] = creator;

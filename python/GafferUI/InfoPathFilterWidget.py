@@ -1,25 +1,25 @@
 ##########################################################################
-#  
+#
 #  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
-#  
+#
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
 #  met:
-#  
+#
 #      * Redistributions of source code must retain the above
 #        copyright notice, this list of conditions and the following
 #        disclaimer.
-#  
+#
 #      * Redistributions in binary form must reproduce the above
 #        copyright notice, this list of conditions and the following
 #        disclaimer in the documentation and/or other materials provided with
 #        the distribution.
-#  
+#
 #      * Neither the name of John Haddon nor the names of
 #        any other contributors to this software may be used to endorse or
 #        promote products derived from this software without specific prior
 #        written permission.
-#  
+#
 #  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 #  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 #  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -31,7 +31,7 @@
 #  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 #  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 #  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#  
+#
 ##########################################################################
 
 import re
@@ -46,50 +46,50 @@ import GafferUI
 class InfoPathFilterWidget( GafferUI.PathFilterWidget ) :
 
 	def __init__( self, pathFilter, **kw ) :
-	
+
 		self.__row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing=0, borderWidth=0 )
-		
+
 		GafferUI.PathFilterWidget.__init__( self, self.__row, pathFilter, **kw )
 		with self.__row :
-		
+
 			filterButton = GafferUI.Button( image="collapsibleArrowDown.png", hasFrame=False )
 			self.__filterButtonClickedConnection = filterButton.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ) )
-		
+
 			self.__filterText = GafferUI.TextWidget()
-			
+
 			if hasattr( self.__filterText._qtWidget(), "setPlaceholderText" ) :
 				# setPlaceHolderText appeared in qt 4.7, nuke (6.3 at time of writing) is stuck on 4.6.
 				self.__filterText._qtWidget().setPlaceholderText( "Filter..." )
-			
+
 			self.__filterEditingFinishedConnection = self.__filterText.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__filterEditingFinished ) )
 			self.__filterTextChangedConnection = self.__filterText.textChangedSignal().connect( Gaffer.WeakMethod( self.__filterTextChanged ) )
-	
+
 	def _updateFromPathFilter( self ) :
-	
+
 		# we only do one way synchronisation at present
 		pass
 
 	def __filterEditingFinished( self, textWidget ) :
-	
+
 		assert( textWidget is self.__filterText )
-		
+
 		self.__updateFilter()
-		
+
 	def __filterTextChanged( self, textWidget ) :
-	
+
 		assert( textWidget is self.__filterText )
-		
+
 		if self.__filterText.getText()=="" :
 			self.__updateFilter()
-	
+
 	def __updateFilter( self, newInfoKey=None ) :
-		
+
 		infoKey, matcher = self.pathFilter().getMatcher()
 		if newInfoKey is not None :
 			infoKey = newInfoKey
-		
+
 		t = self.__filterText.getText()
-		
+
 		if t=="" :
 			matcher = None
 		else :
@@ -98,30 +98,30 @@ class InfoPathFilterWidget( GafferUI.PathFilterWidget ) :
 			stringifier = str
 			if infoKey == "fileSystem:modificationTime" :
 				stringifier = time.ctime
-		
+
 			regex = re.compile( fnmatch.translate( t ) )
 			matcher = lambda v : regex.match( stringifier( v ) ) is not None
-			
+
 		self.pathFilter().setMatcher( infoKey, matcher )
-	
+
 	def __buttonClicked( self, button ) :
-	
+
 		## \todo Make this and the stringifier configurable
 		infoFields = (
 			( "name", "Name" ),
 			( "fileSystem:owner", "Owner" ),
 			( "fileSystem:modificationTime", "Modified" ),
 		)
-	
+
 		menuDefinition = IECore.MenuDefinition()
 		for key, label in infoFields :
 			menuDefinition.append( "/" + label, { "command" : IECore.curry( Gaffer.WeakMethod( self.__setInfoKey ), self.pathFilter(), key ), "checkBox" : key == self.pathFilter().getMatcher()[0] } )
-		
+
 		self.__menu = GafferUI.Menu( menuDefinition )
 		self.__menu.popup()
-		
+
 	def __setInfoKey( self, filter, infoKey, checked ) :
-	
+
 		self.__updateFilter( newInfoKey=infoKey )
-		
+
 GafferUI.PathFilterWidget.registerType( Gaffer.InfoPathFilter, InfoPathFilterWidget )

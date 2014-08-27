@@ -1,26 +1,26 @@
 //////////////////////////////////////////////////////////////////////////
-//  
+//
 //  Copyright (c) 2011-2014, John Haddon. All rights reserved.
 //  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
-//  
+//
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
 //  met:
-//  
+//
 //      * Redistributions of source code must retain the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer.
-//  
+//
 //      * Redistributions in binary form must reproduce the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
-//  
+//
 //      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
-//  
+//
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 //  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 //  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -32,7 +32,7 @@
 //  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 //  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//  
+//
 //////////////////////////////////////////////////////////////////////////
 
 #include "GafferUI/LinearContainer.h"
@@ -109,7 +109,7 @@ void LinearContainer::setSpacing( float spacing )
 {
 	if( spacing < 0.0f )
 	{
-		throw IECore::InvalidArgumentException( "Invalid spacing" );	
+		throw IECore::InvalidArgumentException( "Invalid spacing" );
 	}
 	if( spacing!=m_spacing )
 	{
@@ -142,7 +142,7 @@ LinearContainer::Direction LinearContainer::getDirection() const
 {
 	return m_direction;
 }
-				
+
 void LinearContainer::renderRequested( GadgetPtr gadget )
 {
 	/// \todo We don't need to recalculate the offsets every time a rerender is needed.
@@ -170,7 +170,7 @@ void LinearContainer::calculateChildTransforms() const
 	{
 		return;
 	}
-		
+
 	int axis = m_orientation - 1;
 	V3f size( 0 );
 	vector<Box3f> bounds;
@@ -181,7 +181,7 @@ void LinearContainer::calculateChildTransforms() const
 		{
 			continue;
 		}
-		
+
 		Box3f b = child->bound();
 		if( !b.isEmpty() )
 		{
@@ -202,7 +202,7 @@ void LinearContainer::calculateChildTransforms() const
 	size[axis] += (bounds.size() - 1) * m_spacing;
 
 	float offset = size[axis] / 2.0f  * ( m_direction==Increasing ? -1.0f : 1.0f );
-	
+
 	int i = 0;
 	for( ChildContainer::const_iterator it=children().begin(); it!=children().end(); it++ )
 	{
@@ -211,9 +211,9 @@ void LinearContainer::calculateChildTransforms() const
 		{
 			continue;
 		}
-		
+
 		const Box3f &b = bounds[i++];
-		
+
 		V3f childOffset( 0 );
 		if( !b.isEmpty() )
 		{
@@ -242,10 +242,10 @@ void LinearContainer::calculateChildTransforms() const
 			offset += b.size()[axis] * ( m_direction==Increasing ? 1.0f : -1.0f );
 		}
 		offset += m_spacing * ( m_direction==Increasing ? 1.0f : -1.0f );
-		
+
 		M44f m; m.translate( childOffset );
 		child->setTransform( m );
 	}
-	
+
 	m_clean = true;
 }

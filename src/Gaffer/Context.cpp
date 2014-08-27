@@ -1,26 +1,26 @@
 //////////////////////////////////////////////////////////////////////////
-//  
+//
 //  Copyright (c) 2012, John Haddon. All rights reserved.
 //  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
-//  
+//
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
 //  met:
-//  
+//
 //      * Redistributions of source code must retain the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer.
-//  
+//
 //      * Redistributions in binary form must reproduce the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
-//  
+//
 //      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
-//  
+//
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 //  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 //  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -32,7 +32,7 @@
 //  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 //  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//  
+//
 //////////////////////////////////////////////////////////////////////////
 
 #include <stack>
@@ -66,7 +66,7 @@ Context::Context( const Context &other, Ownership ownership )
 	// We used the (shallow) Map copy constructor in our initialiser above
 	// because it offers a big performance win over iterating and inserting copies
 	// ourselves. Now we need to go in and tweak our copies based on the ownership.
-	
+
 	for( Map::iterator it = m_map.begin(), eIt = m_map.end(); it != eIt; ++it )
 	{
 		it->second.ownership = ownership;
@@ -98,7 +98,7 @@ Context::~Context()
 			it->second.data->removeRef();
 		}
 	}
-	
+
 	delete m_changedSignal;
 }
 
@@ -160,7 +160,7 @@ bool Context::operator == ( const Context &other ) const
 			return false;
 		}
 	}
-	
+
 	return true;
 }
 
@@ -226,7 +226,7 @@ void Context::substituteInternal( const std::string &s, std::string &result, con
 					i++;
 				}
 			}
-			
+
 			const IECore::Data *d = get<IECore::Data>( variableName, NULL );
 			if( d )
 			{
@@ -244,7 +244,7 @@ void Context::substituteInternal( const std::string &s, std::string &result, con
 						result += boost::lexical_cast<std::string>(
 							static_cast<const IECore::IntData *>( d )->readable()
 						);
-						break;	
+						break;
 					default :
 						break;
 				}

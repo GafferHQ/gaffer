@@ -1,26 +1,26 @@
 //////////////////////////////////////////////////////////////////////////
-//  
+//
 //  Copyright (c) 2012, John Haddon. All rights reserved.
 //  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
-//  
+//
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
 //  met:
-//  
+//
 //      * Redistributions of source code must retain the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer.
-//  
+//
 //      * Redistributions in binary form must reproduce the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
-//  
+//
 //      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
-//  
+//
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 //  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 //  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -32,7 +32,7 @@
 //  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 //  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//  
+//
 //////////////////////////////////////////////////////////////////////////
 
 #ifndef GAFFERSCENE_IMAGENODE_H
@@ -56,21 +56,21 @@ class ImageNode : public Gaffer::ComputeNode
 		virtual ~ImageNode();
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::ImageNode, ImageNodeTypeId, Gaffer::ComputeNode );
-		
+
 		/// All ImageNodes have at least one output ImagePlug for passing on their result. More
 		/// may be added by derived classes if necessary.
 		ImagePlug *outPlug();
 		const ImagePlug *outPlug() const;
-		
+
 		/// The enabled plug provides a mechanism for turning the effect of a node on and off.
 		/// When disabled the node will just pass through the plug's default values.
 		virtual Gaffer::BoolPlug *enabledPlug();
 		virtual const Gaffer::BoolPlug *enabledPlug() const;
-		
+
 		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
-		
+
 	protected :
-		
+
 		/// The enabled() and channelEnabled( channel ) methods provide a means to disable the node
 		/// under particular circumstances such as when the input plugs produce no effect.
 		/// enabled() is called to query the nodes state when hashing and computing the image plug.
@@ -88,7 +88,7 @@ class ImageNode : public Gaffer::ComputeNode
 		virtual bool channelEnabled( const std::string &channel ) const { return true; };
 		/// The default implementation of enabled returns the value of the enabled plug.
 		virtual bool enabled() const;
-			
+
 		/// Implemented to call the hash*() methods below whenever output is part of an ImagePlug and the node is enabled.
 		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		/// Hash methods for the individual children of an image output - these must be implemented by derived classes.
@@ -110,12 +110,12 @@ class ImageNode : public Gaffer::ComputeNode
 		virtual Imath::Box2i computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const = 0;
 		virtual IECore::ConstStringVectorDataPtr computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const = 0;
 		virtual IECore::ConstFloatVectorDataPtr computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const = 0;
-		
+
 		/// Implemented to initialize the default format settings if they don't exist already.
 		void parentChanging( Gaffer::GraphComponent *newParent );
-		
+
 	private :
-		
+
 		static size_t g_firstPlugIndex;
 };
 

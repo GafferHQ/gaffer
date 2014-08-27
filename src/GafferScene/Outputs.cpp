@@ -1,26 +1,26 @@
 //////////////////////////////////////////////////////////////////////////
-//  
+//
 //  Copyright (c) 2012, John Haddon. All rights reserved.
 //  Copyright (c) 2013-2014, Image Engine Design Inc. All rights reserved.
-//  
+//
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
 //  met:
-//  
+//
 //      * Redistributions of source code must retain the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer.
-//  
+//
 //      * Redistributions in binary form must reproduce the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
-//  
+//
 //      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
-//  
+//
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 //  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 //  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -32,7 +32,7 @@
 //  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 //  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//  
+//
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/multi_index_container.hpp"
@@ -120,16 +120,16 @@ Gaffer::CompoundPlug *Outputs::addOutput( const std::string &name, const IECore:
 {
 	CompoundPlugPtr outputPlug = new CompoundPlug( "output1" );
 	outputPlug->setFlags( Plug::Dynamic, true );
-	
+
 	StringPlugPtr namePlug = new StringPlug( "name" );
 	namePlug->setValue( name );
 	namePlug->setFlags( Plug::Dynamic, true );
 	outputPlug->addChild( namePlug );
-	
+
 	BoolPlugPtr activePlug = new BoolPlug( "active", Plug::In, true );
 	activePlug->setFlags( Plug::Dynamic, true );
 	outputPlug->addChild( activePlug );
-	
+
 	StringPlugPtr fileNamePlug = new StringPlug( "fileName" );
 	fileNamePlug->setValue( output->getName() );
 	fileNamePlug->setFlags( Plug::Dynamic, true );
@@ -139,30 +139,30 @@ Gaffer::CompoundPlug *Outputs::addOutput( const std::string &name, const IECore:
 	typePlug->setValue( output->getType() );
 	typePlug->setFlags( Plug::Dynamic, true );
 	outputPlug->addChild( typePlug );
-	
+
 	StringPlugPtr dataPlug = new StringPlug( "data" );
 	dataPlug->setFlags( Plug::Dynamic, true );
 	outputPlug->addChild( dataPlug );
-	
+
 	CompoundDataPlugPtr parametersPlug = new CompoundDataPlug( "parameters" );
 	parametersPlug->setFlags( Plug::Dynamic, true );
 	parametersPlug->addMembers( const_cast<Display *>( output )->parametersData(), /* useNameAsPlugName = */ true );
 	outputPlug->addChild( parametersPlug );
-	
+
 	outputsPlug()->addChild( outputPlug );
 
 	// set one of the values _after_ adding the plug, otherwise
 	// affects() is not called and we have no opportunity to
 	// propagate dirtiness to our output globals.
 	dataPlug->setValue( output->getData() );
-	
+
 	return outputPlug.get();
 }
 
 void Outputs::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	GlobalsProcessor::affects( input, outputs );
-	
+
 	if( outputsPlug()->isAncestorOf( input ) )
 	{
 		outputs.push_back( outPlug()->globalsPlug() );
@@ -176,14 +176,14 @@ void Outputs::hashProcessedGlobals( const Gaffer::Context *context, IECore::Murm
 
 IECore::ConstCompoundObjectPtr Outputs::computeProcessedGlobals( const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputGlobals ) const
 {
-	const CompoundPlug *dsp = outputsPlug(); 
+	const CompoundPlug *dsp = outputsPlug();
 	if( !dsp->children().size() )
 	{
 		return inputGlobals;
 	}
-	
+
 	CompoundObjectPtr result = inputGlobals->copy();
-	
+
 	// add our outputs to the result
 	for( InputCompoundPlugIterator it( dsp ); it != it.end(); it++ )
 	{
@@ -197,7 +197,7 @@ IECore::ConstCompoundObjectPtr Outputs::computeProcessedGlobals( const Gaffer::C
 				namePlug = outputPlug->getChild<StringPlug>( "name" );
 			}
 			const std::string name = namePlug->getValue();
-			
+
 			const StringPlug *fileNamePlug = outputPlug->getChild<StringPlug>( "fileName" );
 			if( !fileNamePlug )
 			{
@@ -205,7 +205,7 @@ IECore::ConstCompoundObjectPtr Outputs::computeProcessedGlobals( const Gaffer::C
 				fileNamePlug = outputPlug->getChild<StringPlug>( "name" );
 			}
 			const std::string fileName = fileNamePlug->getValue();
-			
+
 			const std::string type = outputPlug->getChild<StringPlug>( "type" )->getValue();
 			const std::string data = outputPlug->getChild<StringPlug>( "data" )->getValue();
 			if( name.size() && fileName.size() && type.size() && data.size() )
@@ -216,14 +216,14 @@ IECore::ConstCompoundObjectPtr Outputs::computeProcessedGlobals( const Gaffer::C
 			}
 		}
 	}
-	
+
 	return result;
 }
 
 void Outputs::registerOutput( const std::string &name, const IECore::Display *output )
 {
 	NamedOutput d( name, output->copy() );
-	
+
 	OutputMap::nth_index<0>::type &index = outputMap().get<0>();
 	OutputMap::const_iterator it = index.find( name );
 	if( it == index.end() )

@@ -1,26 +1,26 @@
 //////////////////////////////////////////////////////////////////////////
-//  
+//
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
-//  
+//
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
 //  met:
-//  
+//
 //      * Redistributions of source code must retain the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer.
-//  
+//
 //      * Redistributions in binary form must reproduce the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
-//  
+//
 //      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
-//  
+//
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 //  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 //  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -32,7 +32,7 @@
 //  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 //  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//  
+//
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/python.hpp" // must be the first include
@@ -111,7 +111,7 @@ class ScriptNodeWrapper : public NodeWrapper<ScriptNode>
 			}
 			return NodeWrapper<ScriptNode>::isInstanceOf( typeId );
 		}
-		
+
 		virtual bool execute( const std::string &pythonScript, Node *parent = 0, bool continueOnError = false )
 		{
 			IECorePython::ScopedGILLock gilLock;
@@ -126,7 +126,7 @@ class ScriptNodeWrapper : public NodeWrapper<ScriptNode>
 			{
 				result = tolerantExec( pythonScript.c_str(), e, e );
 			}
-			
+
 			scriptExecutedSignal()( this, pythonScript );
 			return result;
 		}
@@ -136,14 +136,14 @@ class ScriptNodeWrapper : public NodeWrapper<ScriptNode>
 			const std::string pythonScript = readFile( pythonFile );
 			return execute( pythonScript, parent, continueOnError );
 		}
-		
+
 		virtual PyObject *evaluate( const std::string &pythonExpression, Node *parent = 0 )
 		{
 			IECorePython::ScopedGILLock gilLock;
 			boost::python::object e = executionDict( parent );
 			boost::python::object result = eval( pythonExpression.c_str(), e, e );
 			scriptEvaluatedSignal()( this, pythonExpression, result.ptr() );
-			
+
 			// make a reference to keep the result alive - the caller then
 			// assumes responsibility for dealing with this
 			Py_XINCREF( result.ptr() );
@@ -155,49 +155,49 @@ class ScriptNodeWrapper : public NodeWrapper<ScriptNode>
 			Serialisation serialisation( parent ? parent : this, "parent", filter );
 			return serialisation.result();
 		}
-		
+
 		virtual void serialiseToFile( const std::string &fileName, const Node *parent, const Set *filter ) const
 		{
 			std::string s = serialise( parent, filter );
-			
+
 			std::ofstream f( fileName.c_str() );
 			if( !f.good() )
 			{
 				throw IECore::IOException( "Unable to open file \"" + fileName + "\"" );
 			}
-			
+
 			f << s;
-			
+
 			if( !f.good() )
 			{
 				throw IECore::IOException( "Failed to write to \"" + fileName + "\"" );
-			}		
+			}
 		}
-		
+
 		virtual bool load( bool continueOnError = false )
 		{
 			const std::string s = readFile( fileNamePlug()->getValue() );
-			
+
 			deleteNodes();
 			variablesPlug()->clearChildren();
 
 			const bool result = execute( s, NULL, continueOnError );
-			
+
 			UndoContext undoDisabled( this, UndoContext::Disabled );
 			unsavedChangesPlug()->setValue( false );
-		
+
 			return result;
 		}
-		
+
 		virtual void save() const
 		{
 			serialiseToFile( fileNamePlug()->getValue(), 0, 0 );
 			UndoContext undoDisabled( const_cast<ScriptNodeWrapper *>( this ), UndoContext::Disabled );
 			const_cast<BoolPlug *>( unsavedChangesPlug() )->setValue( false );
 		}
-				
+
 	private :
-	
+
 		std::string readFile( const std::string &fileName )
 		{
 			std::ifstream f( fileName.c_str() );
@@ -205,7 +205,7 @@ class ScriptNodeWrapper : public NodeWrapper<ScriptNode>
 			{
 				throw IECore::IOException( "Unable to open file \"" + fileName + "\"" );
 			}
-			
+
 			std::string s;
 			while( !f.eof() )
 			{
@@ -218,31 +218,31 @@ class ScriptNodeWrapper : public NodeWrapper<ScriptNode>
 				std::getline( f, line );
 				s += line + "\n";
 			}
-		
+
 			return s;
 		}
-	
+
 		// the dict returned will form both the locals and the globals for the execute()
 		// and evaluate() methods. it's not possible to have a separate locals
 		// and globals dictionary and have things work as intended. see
-		// ScriptNodeTest.testClassScope() for an example, and 
+		// ScriptNodeTest.testClassScope() for an example, and
 		// http://bugs.python.org/issue991196 for an explanation.
 		boost::python::object executionDict( Node *parent )
 		{
 			boost::python::dict result;
-				
+
 			boost::python::object builtIn = boost::python::import( "__builtin__" );
 			result["__builtins__"] = builtIn;
-			
+
 			boost::python::object gafferModule = boost::python::import( "Gaffer" );
 			result["Gaffer"] = gafferModule;
-			
+
 			result["script"] = boost::python::object( ScriptNodePtr( this ) );
 			result["parent"] = boost::python::object( NodePtr( parent ? parent : this ) );
 
 			return result;
 		}
-		
+
 		// Execute the script one top level statement at a time,
 		// reporting errors that occur, but otherwise continuing
 		// with execution.
@@ -252,7 +252,7 @@ class ScriptNodeWrapper : public NodeWrapper<ScriptNode>
 			// The python parsing framework uses an arena to simplify memory allocation,
 			// which is handy for us, since we're going to manipulate the AST a little.
 			boost::shared_ptr<PyArena> arena( PyArena_New(), PyArena_Free );
-			
+
 			// Parse the whole script, getting an abstract syntax tree for a
 			// module which would execute everything.
 			mod_ty mod = PyParser_ASTFromString(
@@ -262,9 +262,9 @@ class ScriptNodeWrapper : public NodeWrapper<ScriptNode>
 				NULL,
 				arena.get()
 			);
-			
+
 			assert( mod->kind == Module_kind );
-			
+
 			// Loop over the top-level statements in the module body,
 			// executing one at a time.
 			bool result = false;
@@ -278,10 +278,10 @@ class ScriptNodeWrapper : public NodeWrapper<ScriptNode>
 					newBody,
 					arena.get()
 				);
-				
+
 				// Compile it.
 				boost::python::handle<PyCodeObject> code( PyAST_Compile( newModule, "<string>", NULL, arena.get() ) );
-			
+
 				// And execute it.
 				boost::python::handle<> v( boost::python::allow_null(
 					PyEval_EvalCode(
@@ -300,10 +300,10 @@ class ScriptNodeWrapper : public NodeWrapper<ScriptNode>
 					result = true;
 				}
 			}
-			
+
 			return result;
 		}
-		
+
 };
 
 struct ScriptEvaluatedSlotCaller
@@ -367,7 +367,7 @@ class ScriptNodeSerialiser : public NodeSerialiser
 		}
 		return NodeSerialiser::childNeedsSerialisation( child );
 	}
-	
+
 	virtual bool childNeedsConstruction( const Gaffer::GraphComponent *child ) const
 	{
 		if( child->isInstanceOf( Node::staticTypeId() ) )
@@ -375,8 +375,8 @@ class ScriptNodeSerialiser : public NodeSerialiser
 			return true;
 		}
 		return NodeSerialiser::childNeedsConstruction( child );
-	}	
-	
+	}
+
 };
 
 struct ActionSlotCaller
@@ -394,7 +394,7 @@ struct ActionSlotCaller
 		}
 		return boost::signals::detail::unusable();
 	}
-	
+
 };
 
 struct UndoAddedSlotCaller
@@ -444,13 +444,13 @@ void GafferBindings::bindScriptNode()
 		.def( "load", &ScriptNode::load, ( boost::python::arg( "continueOnError" ) = false ) )
 		.def( "context", &context )
 	;
-	
-	SignalBinder<ScriptNode::ActionSignal, DefaultSignalCaller<ScriptNode::ActionSignal>, ActionSlotCaller>::bind( "ActionSignal" );	
+
+	SignalBinder<ScriptNode::ActionSignal, DefaultSignalCaller<ScriptNode::ActionSignal>, ActionSlotCaller>::bind( "ActionSignal" );
 	SignalBinder<ScriptNode::UndoAddedSignal, DefaultSignalCaller<ScriptNode::UndoAddedSignal>, UndoAddedSlotCaller>::bind( "UndoAddedSignal" );
 
 	SignalBinder<ScriptNode::ScriptExecutedSignal>::bind( "ScriptExecutedSignal" );
-	SignalBinder<ScriptNode::ScriptEvaluatedSignal, DefaultSignalCaller<ScriptNode::ScriptEvaluatedSignal>, ScriptEvaluatedSlotCaller>::bind( "ScriptEvaluatedSignal" );	
+	SignalBinder<ScriptNode::ScriptEvaluatedSignal, DefaultSignalCaller<ScriptNode::ScriptEvaluatedSignal>, ScriptEvaluatedSlotCaller>::bind( "ScriptEvaluatedSignal" );
 
 	Serialisation::registerSerialiser( ScriptNode::staticTypeId(), new ScriptNodeSerialiser );
-	
+
 }

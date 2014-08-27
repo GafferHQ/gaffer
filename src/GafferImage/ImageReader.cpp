@@ -1,26 +1,26 @@
 //////////////////////////////////////////////////////////////////////////
-//  
+//
 //  Copyright (c) 2012, John Haddon. All rights reserved.
 //  Copyright (c) 2012-2014, Image Engine Design Inc. All rights reserved.
-//  
+//
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
 //  met:
-//  
+//
 //      * Redistributions of source code must retain the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer.
-//  
+//
 //      * Redistributions in binary form must reproduce the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
-//  
+//
 //      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
-//  
+//
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 //  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 //  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -32,7 +32,7 @@
 //  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 //  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//  
+//
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/tokenizer.hpp"
@@ -96,7 +96,7 @@ ImageReader::ImageReader( const std::string &name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new StringPlug( "fileName" ) );
-	
+
 	// disable caching on our outputs, as OIIO is already doing caching for us.
 	for( OutputPlugIterator it( outPlug() ); it!=it.end(); it++ )
 	{
@@ -132,7 +132,7 @@ size_t ImageReader::supportedExtensions( std::vector<std::string> &extensions )
 	{
 		return extensions.size();
 	}
-	
+
 	typedef boost::tokenizer<boost::char_separator<char> > Tokenizer;
 	Tokenizer formats( attr, boost::char_separator<char>( ";" ) );
 	for( Tokenizer::const_iterator fIt = formats.begin(), eFIt = formats.end(); fIt != eFIt; ++fIt )
@@ -145,7 +145,7 @@ size_t ImageReader::supportedExtensions( std::vector<std::string> &extensions )
 			std::copy( extTok.begin(), extTok.end(), std::back_inserter( extensions ) );
 		}
 	}
-	
+
 	return extensions.size();
 }
 
@@ -230,7 +230,7 @@ IECore::ConstFloatVectorDataPtr ImageReader::computeChannelData( const std::stri
 	std::string fileName = fileNamePlug()->getValue();
 	ustring uFileName( fileName.c_str() );
 	const ImageSpec *spec = imageCache()->imagespec( uFileName );
-	
+
 	vector<string>::const_iterator channelIt = find( spec->channelnames.begin(), spec->channelnames.end(), channelName );
 	if( channelIt == spec->channelnames.end() )
 	{
@@ -257,7 +257,7 @@ IECore::ConstFloatVectorDataPtr ImageReader::computeChannelData( const std::stri
 
 	// Create the output data buffer.
 	FloatVectorDataPtr resultData = new FloatVectorData;
-	vector<float> &result = resultData->writable();	
+	vector<float> &result = resultData->writable();
 	result.resize( ImagePlug::tileSize() * ImagePlug::tileSize() );
 
 	// Flip the tile in the Y axis to convert it to our internal image data representation.

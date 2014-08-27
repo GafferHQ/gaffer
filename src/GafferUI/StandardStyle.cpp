@@ -1,26 +1,26 @@
 //////////////////////////////////////////////////////////////////////////
-//  
+//
 //  Copyright (c) 2011-2014, John Haddon. All rights reserved.
 //  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
-//  
+//
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
 //  met:
-//  
+//
 //      * Redistributions of source code must retain the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer.
-//  
+//
 //      * Redistributions in binary form must reproduce the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
-//  
+//
 //      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
-//  
+//
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 //  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 //  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -32,7 +32,7 @@
 //  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 //  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//  
+//
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/tokenizer.hpp"
@@ -65,13 +65,13 @@ StandardStyle::StandardStyle()
 {
 	setFont( LabelText, FontLoader::defaultFontLoader()->load( "VeraBd.ttf" ) );
 	setFontScale( LabelText, 1.0f );
-	
+
 	setFont( BodyText, FontLoader::defaultFontLoader()->load( "Vera.ttf" ) );
 	setFontScale( BodyText, 1.0f );
 
 	setFont( HeadingText, FontLoader::defaultFontLoader()->load( "VeraBd.ttf" ) );
 	setFontScale( HeadingText, 2.0f );
-	
+
 	setColor( BackgroundColor, Color3f( 0.1 ) );
 	setColor( SunkenColor, Color3f( 0.1 ) );
 	setColor( RaisedColor, Color3f( 0.4 ) );
@@ -93,11 +93,11 @@ void StandardStyle::bind( const Style *currentStyle ) const
 		// style already bound it anyway.
 		return;
 	}
-	
+
 	glEnable( GL_BLEND );
 	glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
 	glUseProgram( shader()->program() );
-	
+
 	if( IECoreGL::Selector *selector = IECoreGL::Selector::currentSelector() )
 	{
 		if( selector->mode() == Selector::IDRender )
@@ -117,7 +117,7 @@ Imath::Box3f StandardStyle::characterBound( TextType textType ) const
 }
 
 Imath::Box3f StandardStyle::textBound( TextType textType, const std::string &text ) const
-{	
+{
 	Imath::Box2f b = m_fonts[textType]->coreFont()->bound( text );
 	return Imath::Box3f(
 		m_fontScales[textType] * Imath::V3f( b.min.x, b.min.y, 0 ),
@@ -150,21 +150,21 @@ void StandardStyle::renderText( TextType textType, const std::string &text, Stat
 
 		glScalef( m_fontScales[textType], m_fontScales[textType], m_fontScales[textType] );
 		m_fonts[textType]->renderSprites( text );
-	
+
 	glPopMatrix();
 }
 
 void StandardStyle::renderWrappedText( TextType textType, const std::string &text, const Imath::Box2f &bound, State state ) const
-{	
+{
 	IECoreGL::Font *glFont = m_fonts[textType].get();
 	const IECore::Font *coreFont = glFont->coreFont();
-	
+
 	const float spaceWidth = coreFont->bound().size().x * 0.25;
 	const float descent = coreFont->bound().min.y;
 	const float newlineHeight = coreFont->bound().size().y * 1.2;
-	
+
 	V2f cursor( bound.min.x, bound.max.y - coreFont->bound().size().y );
-	
+
 	typedef boost::tokenizer<boost::char_separator<char> > Tokenizer;
 	boost::char_separator<char> separator( "", " \n\t" );
 	Tokenizer tokenizer( text, separator );
@@ -182,7 +182,7 @@ void StandardStyle::renderWrappedText( TextType textType, const std::string &tex
 		}
 		else if( *it == "\t" )
 		{
-			cursor.x += spaceWidth	* 4;			
+			cursor.x += spaceWidth	* 4;
 		}
 		else
 		{
@@ -198,7 +198,7 @@ void StandardStyle::renderWrappedText( TextType textType, const std::string &tex
 					break;
 				}
 			}
-			
+
 			glPushMatrix();
 				glTranslatef( cursor.x, cursor.y, 0.0f );
 				renderText( textType, *it, state );
@@ -212,12 +212,12 @@ void StandardStyle::renderWrappedText( TextType textType, const std::string &tex
 
 void StandardStyle::renderFrame( const Imath::Box2f &frame, float borderWidth, State state ) const
 {
-	
+
 	Box2f b = frame;
 	V2f bw( borderWidth );
 	b.min -= bw;
 	b.max += bw;
-	
+
 	V2f cornerSizes = bw / b.size();
 	glUniform1i( g_bezierParameter, 0 );
 	glUniform1i( g_borderParameter, 1 );
@@ -226,9 +226,9 @@ void StandardStyle::renderFrame( const Imath::Box2f &frame, float borderWidth, S
 	glUniform1i( g_textureTypeParameter, 0 );
 
 	glColor( colorForState( RaisedColor, state ) );
-	
+
 	glBegin( GL_QUADS );
-		
+
 		glTexCoord2f( 0, 0 );
 		glVertex2f( b.min.x, b.min.y );
 		glTexCoord2f( 0, 1 );
@@ -239,11 +239,11 @@ void StandardStyle::renderFrame( const Imath::Box2f &frame, float borderWidth, S
 		glVertex2f( b.max.x, b.min.y );
 
 	glEnd();
-	
+
 }
 
 void StandardStyle::renderNodule( float radius, State state ) const
-{		
+{
 	glUniform1i( g_bezierParameter, 0 );
 	glUniform1i( g_borderParameter, 1 );
 	glUniform2f( g_borderRadiusParameter, 0.5f, 0.5f );
@@ -251,9 +251,9 @@ void StandardStyle::renderNodule( float radius, State state ) const
 	glUniform1i( g_textureTypeParameter, 0 );
 
 	glColor( colorForState( RaisedColor, state ) );
-	
+
 	glBegin( GL_QUADS );
-		
+
 		glTexCoord2f( 0, 0 );
 		glVertex2f( -radius, -radius );
 		glTexCoord2f( 0, 1 );
@@ -272,15 +272,15 @@ void StandardStyle::renderConnection( const Imath::V3f &srcPosition, const Imath
 	glUniform1i( g_borderParameter, 0 );
 	glUniform1i( g_edgeAntiAliasingParameter, 1 );
 	glUniform1i( g_textureTypeParameter, 0 );
-	
+
 	glColor( colorForState( ConnectionColor, state ) );
-	
+
 	V3f d = dstPosition - srcPosition;
-	
+
 	glUniform3fv( g_v0Parameter, 1, srcPosition.getValue() );
-	glUniform3fv( g_v1Parameter, 1, ( srcPosition + srcTangent * d.dot( srcTangent ) * 0.25f ).getValue() ); 
-	glUniform3fv( g_v2Parameter, 1, ( dstPosition - dstTangent * d.dot( dstTangent ) * 0.25f ).getValue() ); 
-	glUniform3fv( g_v3Parameter, 1, dstPosition.getValue() ); 
+	glUniform3fv( g_v1Parameter, 1, ( srcPosition + srcTangent * d.dot( srcTangent ) * 0.25f ).getValue() );
+	glUniform3fv( g_v2Parameter, 1, ( dstPosition - dstTangent * d.dot( dstTangent ) * 0.25f ).getValue() );
+	glUniform3fv( g_v3Parameter, 1, dstPosition.getValue() );
 
 
 	glCallList( connectionDisplayList() );
@@ -292,9 +292,9 @@ void StandardStyle::renderSolidRectangle( const Imath::Box2f &box ) const
 	glUniform1i( g_borderParameter, 0 );
 	glUniform1i( g_edgeAntiAliasingParameter, 0 );
 	glUniform1i( g_textureTypeParameter, 0 );
-	
+
 	glBegin( GL_QUADS );
-		
+
 		glVertex2f( box.min.x, box.min.y );
 		glVertex2f( box.min.x, box.max.y );
 		glVertex2f( box.max.x, box.max.y );
@@ -309,9 +309,9 @@ void StandardStyle::renderRectangle( const Imath::Box2f &box ) const
 	glUniform1i( g_borderParameter, 0 );
 	glUniform1i( g_edgeAntiAliasingParameter, 0 );
 	glUniform1i( g_textureTypeParameter, 0 );
-	
+
 	glBegin( GL_LINE_LOOP );
-		
+
 		glVertex2f( box.min.x, box.min.y );
 		glVertex2f( box.min.x, box.max.y );
 		glVertex2f( box.max.x, box.max.y );
@@ -342,7 +342,7 @@ void StandardStyle::renderSelectionBox( const Imath::Box2f &box ) const
 	glUniform2f( g_borderRadiusParameter, cornerSizes.x, cornerSizes.y );
 	glUniform1i( g_edgeAntiAliasingParameter, 0 );
 	glUniform1i( g_textureTypeParameter, 0 );
-	
+
 	Color4f c(
 		m_colors[HighlightColor][0],
 		m_colors[HighlightColor][1],
@@ -350,9 +350,9 @@ void StandardStyle::renderSelectionBox( const Imath::Box2f &box ) const
 		0.25f
 	);
 	glColor( c );
-	
+
 	glBegin( GL_QUADS );
-		
+
 		glTexCoord2f( 0, 0 );
 		glVertex2f( box.min.x, box.min.y );
 		glTexCoord2f( 0, 1 );
@@ -375,12 +375,12 @@ void StandardStyle::renderHorizontalRule( const Imath::V2f &center, float length
 	glUniform1i( g_borderParameter, 0 );
 	glUniform1i( g_edgeAntiAliasingParameter, 0 );
 	glUniform1i( g_textureTypeParameter, 0 );
-	
+
 	glBegin( GL_LINES );
-		
+
 		glVertex2f( center.x - length / 2.0f, center.y );
 		glVertex2f( center.x + length / 2.0f, center.y );
-		
+
 	glEnd();
 
 }
@@ -391,10 +391,10 @@ void StandardStyle::renderTranslateHandle( int axis, State state ) const
 	{
 		throw Exception( "Invalid axis" );
 	}
-	
+
 	V3f v( 0.0f );
 	v[axis] = 1.0f;
-	
+
 	Color3f c( 0.0f );
 	if( state == HighlightedState )
 	{
@@ -414,31 +414,31 @@ void StandardStyle::renderTranslateHandle( int axis, State state ) const
 				c = Color3f( 0.2, 0.36, 0.74 );
 		}
 	}
-	
+
 	glUniform1i( g_bezierParameter, 0 );
 	glUniform1i( g_borderParameter, 0 );
 	glUniform1i( g_edgeAntiAliasingParameter, 0 );
 	glUniform1i( g_textureTypeParameter, 0 );
-	
+
 	PushAttrib pushAttrib( GL_ENABLE_BIT | GL_CURRENT_BIT | GL_LINE_BIT );
-	
+
 	glEnable( GL_LINE_SMOOTH );
 	glLineWidth( 2 );
 	glColor( c );
-	
+
 	glBegin( GL_LINES );
-	
+
 		glVertex( V3f( 0 ) );
 		glVertex( v );
-	
+
 	glEnd();
-	
+
 }
 
 void StandardStyle::renderImage( const Imath::Box2f &box, const IECoreGL::Texture *texture ) const
 {
 	glPushAttrib( GL_COLOR_BUFFER_BIT );
-	
+
 	// As the image is already pre-multiplied we need to change our blend mode.
 	glEnable( GL_BLEND );
 	glBlendFunc( GL_ONE, GL_ONE_MINUS_SRC_ALPHA );
@@ -446,7 +446,7 @@ void StandardStyle::renderImage( const Imath::Box2f &box, const IECoreGL::Textur
 	glEnable( GL_TEXTURE_2D );
 	glActiveTexture( GL_TEXTURE0 );
 	texture->bind();
-	
+
 	glUniform1i( g_bezierParameter, 0 );
 	glUniform1i( g_borderParameter, 0 );
 	glUniform1i( g_edgeAntiAliasingParameter, 0 );
@@ -456,18 +456,18 @@ void StandardStyle::renderImage( const Imath::Box2f &box, const IECoreGL::Textur
 	glColor3f( 1.0f, 1.0f, 1.0f );
 
 	glBegin( GL_QUADS );
-		
+
 		glTexCoord2f( 1, 0 );
 		glVertex2f( box.max.x, box.min.y );
 		glTexCoord2f( 1, 1 );
 		glVertex2f( box.max.x, box.max.y );
 		glTexCoord2f( 0, 1 );
-		glVertex2f( box.min.x, box.max.y );	
+		glVertex2f( box.min.x, box.max.y );
 		glTexCoord2f( 0, 0 );
 		glVertex2f( box.min.x, box.min.y );
-		
+
 	glEnd();
-		
+
 	glPopAttrib();
 }
 
@@ -477,15 +477,15 @@ void StandardStyle::renderLine( const IECore::LineSegment3f &line ) const
 	glUniform1i( g_borderParameter, 0 );
 	glUniform1i( g_edgeAntiAliasingParameter, 1 );
 	glUniform1i( g_textureTypeParameter, 0 );
-	
+
 	glColor( getColor( BackgroundColor ) );
-		
+
 	V3f d = line.direction() / 3.0f;
 
 	glUniform3fv( g_v0Parameter, 1, line.p0.getValue() );
-	glUniform3fv( g_v1Parameter, 1, ( line.p0 + d ).getValue() ); 
-	glUniform3fv( g_v2Parameter, 1, ( line.p1 - d ).getValue() ); 
-	glUniform3fv( g_v3Parameter, 1, line.p1.getValue() ); 
+	glUniform3fv( g_v1Parameter, 1, ( line.p0 + d ).getValue() );
+	glUniform3fv( g_v2Parameter, 1, ( line.p1 - d ).getValue() );
+	glUniform3fv( g_v3Parameter, 1, line.p1.getValue() );
 
 	glCallList( connectionDisplayList() );
 }
@@ -496,7 +496,7 @@ void StandardStyle::setColor( Color c, Imath::Color3f v )
 	{
 		return;
 	}
-	
+
 	m_colors[c] = v;
 	changedSignal()( this );
 }
@@ -535,7 +535,7 @@ float StandardStyle::getFontScale( TextType textType ) const
 {
 	return m_fontScales[textType];
 }
-		
+
 unsigned int StandardStyle::connectionDisplayList()
 {
 	static unsigned int g_list;
@@ -543,11 +543,11 @@ unsigned int StandardStyle::connectionDisplayList()
 	if( !g_initialised )
 	{
 		g_list = glGenLists( 1 );
-		
+
 		glNewList( g_list, GL_COMPILE );
-		
+
 			glBegin( GL_TRIANGLE_STRIP );
-	
+
 				const int numSteps = 50;
 				for( int i=0; i<numSteps; i++ )
 				{
@@ -557,11 +557,11 @@ unsigned int StandardStyle::connectionDisplayList()
 					glTexCoord2f( 1, t );
 					glVertex3f( 0, 0, 0 );
 				}
-	
+
 			glEnd();
-		
+
 		glEndList();
-		
+
 		g_initialised = true;
 	}
 	return g_list;
@@ -574,7 +574,7 @@ Imath::Color3f StandardStyle::colorForState( Color c, State s ) const
 	{
 		result = m_colors[HighlightColor];
 	}
-	
+
 	return result;
 }
 
@@ -585,7 +585,7 @@ Imath::Color3f StandardStyle::colorForState( Color c, State s ) const
 static const std::string &vertexSource()
 {
 	static const std::string g_vertexSource =
-	
+
 		"uniform bool bezier;"
 		"uniform vec3 v0;"
 		"uniform vec3 v1;"
@@ -644,8 +644,8 @@ static const std::string &fragmentSource()
 	if( g_fragmentSource.empty() )
 	{
 
-		g_fragmentSource = 
-		
+		g_fragmentSource =
+
 		"#include \"IECoreGL/FilterAlgo.h\"\n"
 		"#include \"IECoreGL/ColorAlgo.h\"\n"
 
@@ -706,7 +706,7 @@ static const std::string &fragmentSource()
 		"	ieCoreGLNameOut = ieCoreGLNameIn;\n"
 		"#endif\n"
 		"}";
-	
+
 		if( glslVersion() >= 330 )
 		{
 			// the __VERSION__ define is a workaround for the fact that cortex's source preprocessing doesn't
@@ -714,7 +714,7 @@ static const std::string &fragmentSource()
 			g_fragmentSource = "#version 330 compatibility\n #define __VERSION__ 330\n\n" + g_fragmentSource;
 		}
 	}
-	
+
 	return g_fragmentSource;
 }
 
@@ -728,12 +728,12 @@ int StandardStyle::g_v0Parameter;
 int StandardStyle::g_v1Parameter;
 int StandardStyle::g_v2Parameter;
 int StandardStyle::g_v3Parameter;
-					
+
 IECoreGL::Shader *StandardStyle::shader()
 {
-	
+
 	static ShaderPtr g_shader = 0;
-	
+
 	if( !g_shader )
 	{
 		g_shader = ShaderLoader::defaultShaderLoader()->create( vertexSource(), "", fragmentSource() );
@@ -748,6 +748,6 @@ IECoreGL::Shader *StandardStyle::shader()
 		g_v2Parameter = g_shader->uniformParameter( "v2" )->location;
 		g_v3Parameter = g_shader->uniformParameter( "v3" )->location;
 	}
-	
+
 	return g_shader.get();
 }

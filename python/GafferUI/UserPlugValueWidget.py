@@ -46,7 +46,7 @@ class UserPlugValueWidget( GafferUI.PlugValueWidget ) :
 	def __init__( self, plug, editable=True, **kw ) :
 
 		self.__column = GafferUI.ListContainer( spacing = 6 )
-		
+
 		GafferUI.PlugValueWidget.__init__( self, self.__column, plug, **kw )
 
 		with self.__column :
@@ -59,24 +59,24 @@ class UserPlugValueWidget( GafferUI.PlugValueWidget ) :
 					GafferUI.Spacer( IECore.V2i( 1 ), IECore.V2i( 999999, 1 ), parenting = { "expand" : True } )
 
 	def hasLabel( self ) :
-	
+
 		return True
 
 	def setReadOnly( self, readOnly ) :
-	
+
 		if readOnly == self.getReadOnly() :
 			return
-	
+
 		GafferUI.PlugValueWidget.setReadOnly( self, readOnly )
-		
+
 		self.__layout.setReadOnly( readOnly )
 
 	def childPlugValueWidget( self, childPlug, lazy=True ) :
 
 		return self.__layout.plugValueWidget( childPlug, lazy )
-		
+
 	def _updateFromPlug( self ) :
-	
+
 		pass
 
 	def __addMenuDefinition( self ) :
@@ -96,7 +96,7 @@ class UserPlugValueWidget( GafferUI.PlugValueWidget ) :
 		result.append( "/Add/V2f", { "command" : IECore.curry( Gaffer.WeakMethod( self.__addPlug ), Gaffer.V2fPlug ) } )
 		result.append( "/Add/V3f", { "command" : IECore.curry( Gaffer.WeakMethod( self.__addPlug ), Gaffer.V3fPlug  ) } )
 		result.append( "/Add/VectorDivider", { "divider" : True } )
-		
+
 		result.append( "/Add/Color3f", { "command" : IECore.curry( Gaffer.WeakMethod( self.__addPlug ), Gaffer.Color3fPlug ) } )
 		result.append( "/Add/Color4f", { "command" : IECore.curry( Gaffer.WeakMethod( self.__addPlug ), Gaffer.Color4fPlug ) } )
 

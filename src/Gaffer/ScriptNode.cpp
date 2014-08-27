@@ -1,26 +1,26 @@
 //////////////////////////////////////////////////////////////////////////
-//  
+//
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
-//  
+//
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
 //  met:
-//  
+//
 //      * Redistributions of source code must retain the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer.
-//  
+//
 //      * Redistributions in binary form must reproduce the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
-//  
+//
 //      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
-//  
+//
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 //  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 //  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -32,7 +32,7 @@
 //  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 //  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//  
+//
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/bind.hpp"
@@ -76,24 +76,24 @@ class ScriptNode::CompoundAction : public Gaffer::Action
 {
 
 	public :
-	
+
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::ScriptNode::CompoundAction, CompoundActionTypeId, Gaffer::Action );
 
 		CompoundAction( ScriptNode *subject, const std::string &mergeGroup )
 			:	m_subject( subject ), m_mergeGroup( mergeGroup )
 		{
 		}
-		
+
 		void addAction( ActionPtr action )
 		{
 			m_actions.push_back( action );
 		}
-		
+
 		size_t numActions() const
 		{
 			return m_actions.size();
 		}
-		
+
 	protected :
 
 		friend class ScriptNode;
@@ -102,7 +102,7 @@ class ScriptNode::CompoundAction : public Gaffer::Action
 		{
 			return m_subject;
 		}
-		
+
 		virtual void doAction()
 		{
 			for( std::vector<ActionPtr>::const_iterator it = m_actions.begin(), eIt = m_actions.end(); it != eIt; ++it )
@@ -113,7 +113,7 @@ class ScriptNode::CompoundAction : public Gaffer::Action
 				m_subject->actionSignal()( m_subject, it->get(), Action::Redo );
 			}
 		}
-		
+
 		virtual void undoAction()
 		{
 			for( std::vector<ActionPtr>::const_reverse_iterator it = m_actions.rbegin(), eIt = m_actions.rend(); it != eIt; ++it )
@@ -122,35 +122,35 @@ class ScriptNode::CompoundAction : public Gaffer::Action
 				m_subject->actionSignal()( m_subject, it->get(), Action::Undo );
 			}
 		}
-		
+
 		virtual bool canMerge( const Action *other ) const
 		{
 			if( !Action::canMerge( other ) )
 			{
 				return false;
 			}
-			
+
 			if( !m_mergeGroup.size() )
 			{
 				return false;
 			}
-			
+
 			const CompoundAction *compoundAction = IECore::runTimeCast<const CompoundAction>( other );
 			if( !compoundAction )
 			{
 				return false;
 			}
-			
+
 			if( m_mergeGroup != compoundAction->m_mergeGroup )
 			{
 				return false;
 			}
-			
+
 			if( m_actions.size() != compoundAction->m_actions.size() )
 			{
 				return false;
 			}
-			
+
 			for( size_t i = 0, e = m_actions.size(); i < e; ++i )
 			{
 				if( !m_actions[i]->canMerge( compoundAction->m_actions[i].get() ) )
@@ -158,10 +158,10 @@ class ScriptNode::CompoundAction : public Gaffer::Action
 					return false;
 				}
 			}
-			
+
 			return true;
 		}
-		
+
 		virtual void merge( const Action *other )
 		{
 			const CompoundAction *compoundAction = static_cast<const CompoundAction *>( other );
@@ -178,7 +178,7 @@ class ScriptNode::CompoundAction : public Gaffer::Action
 		ScriptNode *m_subject;
 		std::string m_mergeGroup;
 		std::vector<ActionPtr> m_actions;
-		
+
 };
 
 IE_CORE_DEFINERUNTIMETYPED( ScriptNode::CompoundAction );
@@ -202,20 +202,20 @@ ScriptNode::ScriptNode( const std::string &name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 
-	addChild( new StringPlug( "fileName", Plug::In, "", Plug::Default & ~Plug::Serialisable ) );	
+	addChild( new StringPlug( "fileName", Plug::In, "", Plug::Default & ~Plug::Serialisable ) );
 	addChild( new BoolPlug( "unsavedChanges", Plug::In, false, Plug::Default & ~Plug::Serialisable ) );
-	
+
 	CompoundPlugPtr frameRangePlug = new CompoundPlug( "frameRange", Plug::In );
 	IntPlugPtr frameStartPlug = new IntPlug( "start", Plug::In, 1 );
 	IntPlugPtr frameEndPlug = new IntPlug( "end", Plug::In, 100 );
 	frameRangePlug->addChild( frameStartPlug );
 	frameRangePlug->addChild( frameEndPlug );
 	addChild( frameRangePlug );
-	
+
 	addChild( new CompoundDataPlug( "variables" ) );
-	
+
 	m_context->set( "script:name", std::string( "" ) );
-	
+
 	m_selection->memberAcceptanceSignal().connect( boost::bind( &ScriptNode::selectionSetAcceptor, this, ::_1, ::_2 ) );
 
 	plugSetSignal().connect( boost::bind( &ScriptNode::plugSet, this, ::_1 ) );
@@ -288,15 +288,15 @@ void ScriptNode::popUndoState()
 		IECore::msg( IECore::Msg::Warning, "ScriptNode::popUndoState", "Bad undo stack nesting detected" );
 		return;
 	}
-	
+
 	m_undoStateStack.pop();
-	
+
 	if( m_undoStateStack.size()==0 )
 	{
 		if( m_actionAccumulator->numActions() )
 		{
 			m_undoList.erase( m_undoIterator, m_undoList.end() );
-			
+
 			bool merged = false;
 			if( !m_undoList.empty() )
 			{
@@ -307,27 +307,27 @@ void ScriptNode::popUndoState()
 					merged = true;
 				}
 			}
-			
+
 			if( !merged )
 			{
-				m_undoList.insert( m_undoList.end(), m_actionAccumulator );		
+				m_undoList.insert( m_undoList.end(), m_actionAccumulator );
 			}
-			
+
 			m_undoIterator = m_undoList.end();
-			
+
 			if( !merged )
 			{
 				undoAddedSignal()( this );
 			}
-			
+
 			UndoContext undoDisabled( this, UndoContext::Disabled );
 			unsavedChangesPlug()->setValue( true );
 		}
 		m_actionAccumulator = 0;
 		m_currentActionStage = Action::Invalid;
 	}
-	
-}	
+
+}
 
 bool ScriptNode::undoAvailable() const
 {
@@ -340,9 +340,9 @@ void ScriptNode::undo()
 	{
 		throw IECore::Exception( "Undo not available" );
 	}
-	
+
 	m_currentActionStage = Action::Undo;
-	
+
 		m_undoIterator--;
 		(*m_undoIterator)->undoAction();
 
@@ -362,7 +362,7 @@ void ScriptNode::undo()
 	/// slots to have their turn - we might even want to extend this
 	/// behaviour to the c++ slots.
 	m_currentActionStage = Action::Invalid;
-	
+
 	UndoContext undoDisabled( this, UndoContext::Disabled );
 	unsavedChangesPlug()->setValue( true );
 }
@@ -378,14 +378,14 @@ void ScriptNode::redo()
 	{
 		throw IECore::Exception( "Redo not available" );
 	}
-	
+
 	m_currentActionStage = Action::Redo;
 
 		(*m_undoIterator)->doAction();
 		m_undoIterator++;
 
 	m_currentActionStage = Action::Invalid;
-	
+
 	UndoContext undoDisabled( this, UndoContext::Disabled );
 	unsavedChangesPlug()->setValue( true );
 }
@@ -412,7 +412,7 @@ void ScriptNode::copy( const Node *parent, const Set *filter )
 	{
 		throw( "ScriptNode has no ApplicationRoot" );
 	}
-	
+
 	std::string s = serialise( parent, filter );
 	app->setClipboardContents( new IECore::StringData( s ) );
 }
@@ -430,7 +430,7 @@ void ScriptNode::paste( Node *parent )
 	{
 		throw( "ScriptNode has no ApplicationRoot" );
 	}
-	
+
 	IECore::ConstStringDataPtr s = IECore::runTimeCast<const IECore::StringData>( app->getClipboardContents() );
 	if( s )
 	{
@@ -438,7 +438,7 @@ void ScriptNode::paste( Node *parent )
 		// set up something to catch all the newly created nodes
 		StandardSetPtr newNodes = new StandardSet;
 		parent->childAddedSignal().connect( boost::bind( (bool (StandardSet::*)( IECore::RunTimeTypedPtr ) )&StandardSet::add, newNodes.get(), ::_2 ) );
-			
+
 			// do the paste
 			execute( s->readable(), parent );
 
@@ -478,13 +478,13 @@ void ScriptNode::deleteNodes( Node *parent, const Set *filter, bool reconnect )
 					{
 						continue;
 					}
-					
+
 					Plug *srcPlug = inPlug->getInput<Plug>();
 					if ( !srcPlug )
 					{
 						continue;
 					}
-					
+
 					// record this plug's current outputs, and reconnect them. This is a copy of (*it)->outputs() rather
 					// than a reference, as reconnection can modify (*it)->outputs()...
 					Plug::OutputContainer outputs = (*it)->outputs();
@@ -503,7 +503,7 @@ void ScriptNode::deleteNodes( Node *parent, const Set *filter, bool reconnect )
 					}
 				}
 			}
-			
+
 			parent->removeChild( node );
 		}
 		i--;
@@ -529,7 +529,7 @@ const BoolPlug *ScriptNode::unsavedChangesPlug() const
 {
 	return getChild<BoolPlug>( g_firstPlugIndex + 1 );
 }
-		
+
 bool ScriptNode::execute( const std::string &pythonScript, Node *parent, bool continueOnError )
 {
 	throw IECore::Exception( "Cannot execute scripts on a ScriptNode not created in Python." );
@@ -562,7 +562,7 @@ std::string ScriptNode::serialise( const Node *parent, const Set *filter ) const
 
 void ScriptNode::serialiseToFile( const std::string &fileName, const Node *parent, const Set *filter ) const
 {
-	throw IECore::Exception( "Cannot serialise scripts on a ScriptNode not created in Python." );	
+	throw IECore::Exception( "Cannot serialise scripts on a ScriptNode not created in Python." );
 }
 
 bool ScriptNode::load( bool continueOnError)
@@ -624,7 +624,7 @@ void ScriptNode::plugSet( Plug *plug )
 	}
 	else if( plug == frameEndPlug() )
 	{
-		frameStartPlug()->setValue( std::min( frameStartPlug()->getValue(), frameEndPlug()->getValue() ) );	
+		frameStartPlug()->setValue( std::min( frameStartPlug()->getValue(), frameEndPlug()->getValue() ) );
 	}
 	else if( plug == variablesPlug() )
 	{

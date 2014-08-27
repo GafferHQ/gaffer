@@ -1,26 +1,26 @@
 ##########################################################################
-#  
+#
 #  Copyright (c) 2011, John Haddon. All rights reserved.
 #  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
-#  
+#
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
 #  met:
-#  
+#
 #      * Redistributions of source code must retain the above
 #        copyright notice, this list of conditions and the following
 #        disclaimer.
-#  
+#
 #      * Redistributions in binary form must reproduce the above
 #        copyright notice, this list of conditions and the following
 #        disclaimer in the documentation and/or other materials provided with
 #        the distribution.
-#  
+#
 #      * Neither the name of John Haddon nor the names of
 #        any other contributors to this software may be used to endorse or
 #        promote products derived from this software without specific prior
 #        written permission.
-#  
+#
 #  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 #  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 #  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -32,7 +32,7 @@
 #  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 #  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 #  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#  
+#
 ##########################################################################
 
 import fnmatch
@@ -44,7 +44,7 @@ from PathFilter import PathFilter
 class FileNamePathFilter( PathFilter ) :
 
 	## Matchers is a list of compiled regular expressions and/or
-	# shell style pattern strings. The latter will be compiled 
+	# shell style pattern strings. The latter will be compiled
 	# into regular expressions using fnmatch.translate().
 	# The resulting filter will pass through any path whose
 	# name matches one or more of the regular expressions. If filterLeafOnly
@@ -52,12 +52,12 @@ class FileNamePathFilter( PathFilter ) :
 	def __init__( self, matchers, leafOnly=True, userData={} ) :
 
 		assert( isinstance( matchers, ( list, tuple ) ) )
-	
+
 		PathFilter.__init__( self, userData )
-		
+
 		self.__matchers = []
 		for m in matchers :
-		
+
 			if isinstance( m, basestring ) :
 				self.__matchers.append( re.compile( fnmatch.translate( m ) ) )
 			else :
@@ -67,7 +67,7 @@ class FileNamePathFilter( PathFilter ) :
 		self.__leafOnly = leafOnly
 
 	def _filter( self, paths ) :
-		
+
 		result = []
 		for p in paths :
 			if len( p ) :

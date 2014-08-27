@@ -1,26 +1,26 @@
 //////////////////////////////////////////////////////////////////////////
-//  
+//
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2011-2014, Image Engine Design Inc. All rights reserved.
-//  
+//
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
 //  met:
-//  
+//
 //      * Redistributions of source code must retain the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer.
-//  
+//
 //      * Redistributions in binary form must reproduce the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
-//  
+//
 //      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
-//  
+//
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 //  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 //  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -32,7 +32,7 @@
 //  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 //  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//  
+//
 //////////////////////////////////////////////////////////////////////////
 
 #include "Gaffer/TimeWarp.h"
@@ -135,7 +135,7 @@ BOOST_PYTHON_MODULE( _Gaffer )
 	bindSerialisation();
 	bindMetadata();
 	bindStringAlgo();
-			
+
 	NodeClass<Backdrop>();
 
 	DependencyNodeClass<ContextProcessorComputeNode>();
@@ -145,10 +145,10 @@ BOOST_PYTHON_MODULE( _Gaffer )
 	DependencyNodeClass<SwitchComputeNode>();
 
 	object behavioursModule( borrowed( PyImport_AddModule( "Gaffer.Behaviours" ) ) );
-	scope().attr( "Behaviours" ) = behavioursModule;	
+	scope().attr( "Behaviours" ) = behavioursModule;
 
 	scope behavioursScope( behavioursModule );
-	
+
 	bindBehaviours();
 
 	// Various parts of gaffer create new threads from C++, and those
@@ -156,5 +156,5 @@ BOOST_PYTHON_MODULE( _Gaffer )
 	// We must prepare Python for this by calling PyEval_InitThreads().
 
 	PyEval_InitThreads();
-	
+
 }

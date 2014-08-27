@@ -1,25 +1,25 @@
 //////////////////////////////////////////////////////////////////////////
-//  
+//
 //  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
-//  
+//
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
 //  met:
-//  
+//
 //      * Redistributions of source code must retain the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer.
-//  
+//
 //      * Redistributions in binary form must reproduce the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
-//  
+//
 //      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
-//  
+//
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 //  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 //  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -31,7 +31,7 @@
 //  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 //  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//  
+//
 //////////////////////////////////////////////////////////////////////////
 
 #include "Gaffer/Node.h"
@@ -53,18 +53,18 @@ void GafferTest::testFilteredRecursiveChildIterator()
 	CompoundPlugPtr f = new CompoundPlug( "f" );
 	FloatPlugPtr g = new FloatPlug( "g" );
 	FloatPlugPtr h = new FloatPlug( "h", Plug::Out );
-	
+
 	a->addChild( b );
 	a->addChild( d );
 	a->addChild( e );
-	
+
 	b->addChild( c );
-	
+
 	e->addChild( f );
 	e->addChild( h );
-	
+
 	f->addChild( g );
-	
+
 	// a - b - c
 	//   - d
 	//   - e - f - g
@@ -75,12 +75,12 @@ void GafferTest::testFilteredRecursiveChildIterator()
 	{
 		nodes.push_back( *it );
 	}
-		
+
 	GAFFERTEST_ASSERT( nodes.size() == 3 );
 	GAFFERTEST_ASSERT( nodes[0] == b );
 	GAFFERTEST_ASSERT( nodes[1] == d );
 	GAFFERTEST_ASSERT( nodes[2] == e );
-	
+
 	// This demonstrates the use of both the main predicate and also the
 	// recursion predicate in the FilteredRecursiveChildIterator. The main
 	// predicate specifies that we will only visit plugs, but the recursion
@@ -93,7 +93,7 @@ void GafferTest::testFilteredRecursiveChildIterator()
 	{
 		plugs.push_back( *it );
 	}
-		
+
 	GAFFERTEST_ASSERT( plugs.size() == 8 ); // there's also the user plug per node
 	GAFFERTEST_ASSERT( plugs[0] == a->userPlug() );
 	GAFFERTEST_ASSERT( plugs[1] == b->userPlug() );
@@ -103,26 +103,26 @@ void GafferTest::testFilteredRecursiveChildIterator()
 	GAFFERTEST_ASSERT( plugs[5] == f );
 	GAFFERTEST_ASSERT( plugs[6] == g );
 	GAFFERTEST_ASSERT( plugs[7] == h );
-		
+
 	typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, FloatPlug>, TypePredicate<GraphComponent> > DeepRecursiveFloatPlugIterator;
 	plugs.clear();
 	for( DeepRecursiveFloatPlugIterator it( a.get() ); it != it.end(); it++ )
 	{
 		plugs.push_back( *it );
 	}
-	
+
 	GAFFERTEST_ASSERT( plugs.size() == 3 );
 	GAFFERTEST_ASSERT( plugs[0] == c );
 	GAFFERTEST_ASSERT( plugs[1] == g );
 	GAFFERTEST_ASSERT( plugs[2] == h );
-	
+
 	typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, FloatPlug>, TypePredicate<GraphComponent> > DeepRecursiveOutputFloatPlugIterator;
 	plugs.clear();
 	for( DeepRecursiveOutputFloatPlugIterator it( a.get() ); it != it.end(); it++ )
 	{
 		plugs.push_back( *it );
 	}
-	
+
 	GAFFERTEST_ASSERT( plugs.size() == 1 );
 	GAFFERTEST_ASSERT( plugs[0] == h );
 
@@ -139,7 +139,7 @@ void GafferTest::testFilteredRecursiveChildIterator()
 	}
 	GAFFERTEST_ASSERT( plugs.size() == 1 ); // there's also the user plug per node
 	GAFFERTEST_ASSERT( plugs[0] == a->userPlug() );
-	
+
 	plugs.clear();
 	for( ShallowRecursivePlugIterator it( b.get() ); it != it.end(); it++ )
 	{
@@ -148,7 +148,7 @@ void GafferTest::testFilteredRecursiveChildIterator()
 	GAFFERTEST_ASSERT( plugs.size() == 2 ); // there's also the user plug per node
 	GAFFERTEST_ASSERT( plugs[0] == b->userPlug() );
 	GAFFERTEST_ASSERT( plugs[1] == c );
-	
+
 	plugs.clear();
 	for( ShallowRecursivePlugIterator it( e.get() ); it != it.end(); it++ )
 	{

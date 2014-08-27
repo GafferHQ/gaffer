@@ -91,17 +91,17 @@ class NumericWidget( GafferUI.TextWidget ) :
 	# of changes to be merged into a single undoable event.
 	@classmethod
 	def changesShouldBeMerged( cls, firstReason, secondReason ) :
-	
+
 		if type( firstReason ) != type( secondReason ) :
 			return False
-	
+
 		return ( firstReason, secondReason ) in (
 			# drag
 			( cls.ValueChangedReason.DragBegin, cls.ValueChangedReason.DragMove ),
 			( cls.ValueChangedReason.DragMove, cls.ValueChangedReason.DragMove ),
 			( cls.ValueChangedReason.DragMove, cls.ValueChangedReason.DragEnd ),
 			# increment
-			( cls.ValueChangedReason.Increment, cls.ValueChangedReason.Increment ),			
+			( cls.ValueChangedReason.Increment, cls.ValueChangedReason.Increment ),
 		)
 
 	def __valueToText( self, value ) :

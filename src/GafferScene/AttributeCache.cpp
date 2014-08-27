@@ -1,26 +1,26 @@
 //////////////////////////////////////////////////////////////////////////
-//  
+//
 //  Copyright (c) 2012, John Haddon. All rights reserved.
 //  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
-//  
+//
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
 //  met:
-//  
+//
 //      * Redistributions of source code must retain the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer.
-//  
+//
 //      * Redistributions in binary form must reproduce the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
-//  
+//
 //      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
-//  
+//
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 //  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 //  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -32,7 +32,7 @@
 //  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 //  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//  
+//
 //////////////////////////////////////////////////////////////////////////
 
 #include "IECore/InterpolatedCache.h"
@@ -127,7 +127,7 @@ Imath::Box3f AttributeCache::computeProcessedBound( const ScenePath &path, const
 		// we assume it's ok to not have a bound - it's up to the author of the cache to make
 		// sure there is a valid bound if necessary.
 	}
-	
+
 	return inputBound;
 }
 
@@ -158,7 +158,7 @@ Imath::M44f AttributeCache::computeProcessedTransform( const ScenePath &path, co
 	{
 		// it's ok to not have a transform.
 	}
-	
+
 	return inputTransform;
 }
 
@@ -174,7 +174,7 @@ void AttributeCache::hashProcessedObject( const ScenePath &path, const Gaffer::C
 }
 
 IECore::ConstObjectPtr AttributeCache::computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const
-{	
+{
 	IECore::ConstPrimitivePtr inputGeometry = IECore::runTimeCast<const IECore::Primitive>( inputObject );
 	if( !inputGeometry )
 	{
@@ -196,7 +196,7 @@ IECore::ConstObjectPtr AttributeCache::computeProcessedObject( const ScenePath &
 		// it's ok to have no attributes
 		return inputGeometry;
 	}
-	
+
 	IECore::PrimitivePtr result = inputGeometry->copy();
 	for( std::vector<IECore::InterpolatedCache::AttributeHandle>::const_iterator it = attributeNames.begin(); it!=attributeNames.end(); it++ )
 	{

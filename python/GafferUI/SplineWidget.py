@@ -1,26 +1,26 @@
 ##########################################################################
-#  
+#
 #  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
-#  
+#
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
 #  met:
-#  
+#
 #      * Redistributions of source code must retain the above
 #        copyright notice, this list of conditions and the following
 #        disclaimer.
-#  
+#
 #      * Redistributions in binary form must reproduce the above
 #        copyright notice, this list of conditions and the following
 #        disclaimer in the documentation and/or other materials provided with
 #        the distribution.
-#  
+#
 #      * Neither the name of John Haddon nor the names of
 #        any other contributors to this software may be used to endorse or
 #        promote products derived from this software without specific prior
 #        written permission.
-#  
+#
 #  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 #  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 #  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -32,7 +32,7 @@
 #  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 #  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 #  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#  
+#
 ##########################################################################
 
 import sys
@@ -52,14 +52,14 @@ class SplineWidget( GafferUI.Widget ) :
 	DrawMode = IECore.Enum.create( "Invalid", "Ramp", "Splines" )
 
 	def __init__( self, spline=None, drawMode=DrawMode.Splines, **kw ) :
-	
+
 		# using QFrame rather than QWidget because it supports computing the contentsRect() based on
 		# the stylesheet.
 		GafferUI.Widget.__init__( self, QtGui.QFrame(), **kw )
-		
+
 		self._qtWidget().setSizePolicy( QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding )
 		self._qtWidget().setObjectName( "gafferSplineWidget" )
-				
+
 		self.setDrawMode( drawMode )
 
 		if spline==None :
@@ -72,7 +72,7 @@ class SplineWidget( GafferUI.Widget ) :
 					( 1, 1 ),
 				)
 			)
-			
+
 		self.setSpline( spline )
 
 		self.__displayTransformChangedConnection = GafferUI.DisplayTransform.changedSignal().connect( Gaffer.WeakMethod( self.__displayTransformChanged ) )
@@ -80,57 +80,57 @@ class SplineWidget( GafferUI.Widget ) :
 		self._qtWidget().paintEvent = Gaffer.WeakMethod( self.__paintEvent )
 
 	def setSpline( self, spline ) :
-	
+
 		try :
 			if spline==self.__spline :
 				return
 		except :
 			pass
-					
+
 		self.__spline = spline
 		self.__splinesToDraw = None
 		self.__gradientToDraw = None
 		self._qtWidget().update()
-		
+
 	def getSpline( self ) :
-	
+
 		return self.__spline
-		
+
 	def setDrawMode( self, drawMode ) :
-	
+
 		try :
 			if drawMode==self.__drawMode :
 				return
 		except :
 			pass
-			
+
 		self.__drawMode = drawMode
 		self._qtWidget().update()
-		
+
 	def getDrawMode( self ) :
-	
+
 		return self.__drawMode
 
 	def __paintEvent( self, event ) :
-	
+
 		painter = QtGui.QPainter( self._qtWidget() )
 		painter.setRenderHint( QtGui.QPainter.Antialiasing )
-		
+
 		o = QtGui.QStyleOption()
 		o.initFrom( self._qtWidget() )
-		self._qtWidget().style().drawPrimitive( QtGui.QStyle.PE_Widget, o, painter, self._qtWidget() )   	
+		self._qtWidget().style().drawPrimitive( QtGui.QStyle.PE_Widget, o, painter, self._qtWidget() )
 
 		if self.__drawMode == self.DrawMode.Ramp :
 			self.__paintRamp( painter )
 		elif self.__drawMode == self.DrawMode.Splines :
 			self.__paintSplines( painter )
-					
+
 	def __paintRamp( self, painter ) :
-	
-		if self.__gradientToDraw is None :		
+
+		if self.__gradientToDraw is None :
 			self.__gradientToDraw = QtGui.QLinearGradient( 0, 0, 1, 0 )
 			self.__gradientToDraw.setCoordinateMode( self.__gradientToDraw.ObjectBoundingMode )
-			
+
 			displayTransform = GafferUI.DisplayTransform.get()
 
 			numStops = 500
@@ -141,16 +141,16 @@ class SplineWidget( GafferUI.Widget ) :
 					c = IECore.Color3f( c, c, c )
 				else :
 					c = IECore.Color3f( c[0], c[1], c[2] )
-			
-				c = displayTransform( c )	
-				self.__gradientToDraw.setColorAt( t, self._qtColor( c ) )	
-		
+
+				c = displayTransform( c )
+				self.__gradientToDraw.setColorAt( t, self._qtColor( c ) )
+
 		brush = QtGui.QBrush( self.__gradientToDraw )
 		rect = self._qtWidget().contentsRect()
 		painter.fillRect( rect, brush )
-				
+
 	def __paintSplines( self, painter ) :
-	
+
 		# update the evaluation of our splines if necessary
 		numPoints = 50
 		if not self.__splinesToDraw :
@@ -187,15 +187,15 @@ class SplineWidget( GafferUI.Widget ) :
 					c = self.__spline( tt )
 					for j in range( 0, c.dimensions() ) :
 						if i == 0 :
-							self.__splinesToDraw[j].path.moveTo( t, c[j] )			
+							self.__splinesToDraw[j].path.moveTo( t, c[j] )
 						else :
 							self.__splinesToDraw[j].path.lineTo( t, c[j] )
-			
+
 			self.__splineBound = QtCore.QRectF()
 			for s in self.__splinesToDraw :
 				self.__splineBound = self.__splineBound.united( s.path.controlPointRect() )
-				
-		# draw the splines		
+
+		# draw the splines
 		rect = self._qtWidget().contentsRect()
 		transform = QtGui.QTransform()
 		if self.__splineBound.width() :
@@ -204,7 +204,7 @@ class SplineWidget( GafferUI.Widget ) :
 		if self.__splineBound.height() :
 			transform.translate( 0, rect.y() + rect.height() )
 			transform.scale( 1, -rect.height() / self.__splineBound.height() )
-			
+
 		painter.setTransform( transform )
 		for s in self.__splinesToDraw :
 			pen = QtGui.QPen( self._qtColor( s.color ) )
@@ -212,5 +212,5 @@ class SplineWidget( GafferUI.Widget ) :
 			painter.drawPath( s.path )
 
 	def __displayTransformChanged( self ) :
-	
+
 		self._qtWidget().update()
