@@ -52,6 +52,7 @@ def getOption( name, default ) :
 	return result	
 
 cortexMajorVersion = getOption( "CORTEX_MAJOR_VERSION", os.environ["CORTEX_MAJOR_VERSION"] )
+cortexVersion = getOption( "CORTEX_VERSION", os.environ["CORTEX_VERSION"] )
 cortexReg = IEEnv.registry["libraries"]["cortex"][cortexMajorVersion].get( IEEnv.platform(), IEEnv.registry["libraries"]["cortex"][cortexMajorVersion] )
 compiler = getOption( "COMPILER", None )
 compilerVersion = getOption( "COMPILER_VERSION", None )
@@ -156,20 +157,20 @@ if targetAppVersion :
 	LOCATE_DEPENDENCY_SYSTEMPATH = [ os.path.join( targetAppReg['location'], x ) for x in targetAppReg.get( 'includes', [] ) ] + LOCATE_DEPENDENCY_SYSTEMPATH
 
 LOCATE_DEPENDENCY_CPPPATH = [
-	os.path.join( IEEnv.Environment.rootPath(), "apps", "cortex", cortexMajorVersion, IEEnv.platform(), "base", "include" ),
+	os.path.join( IEEnv.Environment.rootPath(), "apps", "cortex", cortexVersion, IEEnv.platform(), "base", "include" ),
 ]
 
 if getOption( "RELEASE", "0" )=="0" :
 	
 	LOCATE_DEPENDENCY_CPPPATH.insert(
 		0,
-		os.path.join( os.path.expanduser( "~" ), "apps", "cortex", cortexMajorVersion, IEEnv.platform(), "base", "include" )
+		os.path.join( os.path.expanduser( "~" ), "apps", "cortex", cortexVersion, IEEnv.platform(), "base", "include" )
 	)
 	
 	if targetAppVersion :
 		LOCATE_DEPENDENCY_CPPPATH.insert(
 			0,
-			os.path.join( os.path.expanduser( "~" ), "apps", "cortex", cortexMajorVersion, IEEnv.platform(), targetApp, targetAppMajorVersion, "include" )
+			os.path.join( os.path.expanduser( "~" ), "apps", "cortex", cortexVersion, IEEnv.platform(), targetApp, targetAppMajorVersion, "include" )
 		)
 
 ##########################################################################
@@ -179,7 +180,7 @@ if getOption( "RELEASE", "0" )=="0" :
 LOCATE_DEPENDENCY_LIBPATH = [
 
 	os.path.join( IEEnv.Environment.rootPath(), "tools", "lib", IEEnv.platform(), compiler, compilerVersion ),
-	os.path.join( IEEnv.Environment.rootPath(), "apps", "cortex", cortexMajorVersion, IEEnv.platform(), "base", "lib", compiler, compilerVersion ),
+	os.path.join( IEEnv.Environment.rootPath(), "apps", "cortex", cortexVersion, IEEnv.platform(), "base", "lib", compiler, compilerVersion ),
 
 ]
 
@@ -194,7 +195,7 @@ if targetAppVersion :
 
 	LOCATE_DEPENDENCY_LIBPATH.insert(
 		0,
-		os.path.join( IEEnv.Environment.rootPath(), "apps", "cortex", cortexMajorVersion, IEEnv.platform(), targetApp, targetAppMajorVersion, "lib" ),
+		os.path.join( IEEnv.Environment.rootPath(), "apps", "cortex", cortexVersion, IEEnv.platform(), targetApp, targetAppMajorVersion, "lib" ),
 	)
 	
 	LOCATE_DEPENDENCY_LIBPATH.insert(
@@ -206,13 +207,13 @@ if getOption( "RELEASE", "0" )=="0" :
 
 	LOCATE_DEPENDENCY_LIBPATH.insert(
 		0,
-		os.path.join( os.path.expanduser( "~" ), "apps", "cortex", cortexMajorVersion, IEEnv.platform(), "base", "lib", compiler, compilerVersion ),
+		os.path.join( os.path.expanduser( "~" ), "apps", "cortex", cortexVersion, IEEnv.platform(), "base", "lib", compiler, compilerVersion ),
 	)
 	
 	if targetAppVersion :
 		LOCATE_DEPENDENCY_LIBPATH.insert(
 			0,
-			os.path.join( os.path.expanduser( "~" ), "apps", "cortex", cortexMajorVersion, IEEnv.platform(), targetApp, targetAppMajorVersion, "lib" ),
+			os.path.join( os.path.expanduser( "~" ), "apps", "cortex", cortexVersion, IEEnv.platform(), targetApp, targetAppMajorVersion, "lib" ),
 		)
 
 ##########################################################################
