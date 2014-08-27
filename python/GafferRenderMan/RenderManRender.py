@@ -75,8 +75,11 @@ class RenderManRender( GafferScene.ExecutableRender ) :
 				# raise if it fails. we reraise only in the latter case.
 				if not os.path.isdir( directory ) :
 					raise
-				
-		return IECoreRI.Renderer( fileName )
+		
+		renderer = IECoreRI.Renderer( fileName )
+		renderer.setOption( "ri:frame", int( Gaffer.Context.current().getFrame() ) )
+		
+		return renderer
 		
 	def _outputWorldProcedural( self, scenePlug, renderer ) :
 			
