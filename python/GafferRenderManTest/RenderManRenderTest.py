@@ -421,6 +421,24 @@ class RenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		rib = "\n".join( file( "/tmp/test.rib" ).readlines() )
 		self.assertTrue( "PixelSamples 2 3" in rib )
 
+	def testFrameBlock( self ) :
+	
+		s = Gaffer.ScriptNode()
+		
+		s["p"] = GafferScene.Plane()
+				
+		s["r"] = GafferRenderMan.RenderManRender()
+		s["r"]["mode"].setValue( "generate" )
+		s["r"]["ribFileName"].setValue( "/tmp/test.rib" )
+		s["r"]["in"].setInput( s["p"]["out"] )
+		
+		with Gaffer.Context( s.context() ) as context :
+			for i in range( 0, 10 ) :
+				context.setFrame( i )
+				s["r"].execute()
+				rib = "\n".join( file( "/tmp/test.rib" ).readlines() )
+				self.assertTrue( "FrameBegin %d" % i in rib )
+
 	def setUp( self ) :
 	
 		for f in (

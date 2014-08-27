@@ -115,16 +115,23 @@ void ExecutableRender::execute() const
 	
 	createDisplayDirectories( globals.get() );
 	
-	IECore::RendererPtr renderer = createRenderer();		
-	outputOptions( globals.get(), renderer.get() );
-	outputOutputs( globals.get(), renderer.get() );
-	outputCamera( scene, globals.get(), renderer.get() );
+	// Scoping the lifetime of the renderer so that
+	// the destructor is run before we run the system
+	// command. This can be essential for renderman
+	// renders, where the rib stream may not be flushed
+	// to disk before RiEnd is called.
 	{
-		WorldBlock world( renderer );
+		IECore::RendererPtr renderer = createRenderer();
+		outputOptions( globals.get(), renderer.get() );
+		outputOutputs( globals.get(), renderer.get() );
+		outputCamera( scene, globals.get(), renderer.get() );
+		{
+			WorldBlock world( renderer );
 		
-		outputCoordinateSystems( scene, globals.get(), renderer.get() );
-		outputLights( scene, globals.get(), renderer.get() );
-		outputWorldProcedural( scene, renderer.get() );
+			outputCoordinateSystems( scene, globals.get(), renderer.get() );
+			outputLights( scene, globals.get(), renderer.get() );
+			outputWorldProcedural( scene, renderer.get() );
+		}
 	}
 	
 	std::string systemCommand = command();
