@@ -1,26 +1,26 @@
 ##########################################################################
-#  
+#
 #  Copyright (c) 2012, John Haddon. All rights reserved.
 #  Copyright (c) 2012-2014, Image Engine Design Inc. All rights reserved.
-#  
+#
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
 #  met:
-#  
+#
 #      * Redistributions of source code must retain the above
 #        copyright notice, this list of conditions and the following
 #        disclaimer.
-#  
+#
 #      * Redistributions in binary form must reproduce the above
 #        copyright notice, this list of conditions and the following
 #        disclaimer in the documentation and/or other materials provided with
 #        the distribution.
-#  
+#
 #      * Neither the name of John Haddon nor the names of
 #        any other contributors to this software may be used to endorse or
 #        promote products derived from this software without specific prior
 #        written permission.
-#  
+#
 #  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 #  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 #  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -32,7 +32,7 @@
 #  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 #  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 #  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#  
+#
 ##########################################################################
 
 import fnmatch
@@ -55,13 +55,13 @@ def appendMenuDefinitions( menuDefinition, prefix="" ) :
 	menuDefinition.append( prefix + "/Repeat Previous", { "command" : repeatPrevious, "shortCut" : "Ctrl+R", "active" : __previousAvailable } )
 
 def appendNodeContextMenuDefinitions( nodeGraph, node, menuDefinition ) :
-	
+
 	if not hasattr( node, "execute" ) :
 		return
-		
+
 	menuDefinition.append( "/ExecuteDivider", { "divider" : True } )
 	menuDefinition.append( "/Execute", { "command" : IECore.curry( _showDispatcherWindow, [ node ] ) } )
-	
+
 def executeSelected( menu ) :
 
 	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
@@ -75,73 +75,73 @@ def repeatPrevious( menu ) :
 	_execute( __previous( script ) )
 
 ##################################################################################
-# Dispatcher Window 
+# Dispatcher Window
 ##################################################################################
 
 class _DispatcherWindow( GafferUI.Window ) :
-	
+
 	def __init__( self, **kw ) :
-		
+
 		GafferUI.Window.__init__( self, **kw )
-		
+
 		self.__dispatcher = Gaffer.Dispatcher.dispatcher( "Local" )
 		self.__nodes = []
-		
+
 		with self :
-			
+
 			with GafferUI.ListContainer( orientation = GafferUI.ListContainer.Orientation.Vertical, spacing = 2, borderWidth = 4 ) :
-				
+
 				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
 					GafferUI.Label( "Dispatcher" )
 					dispatchersMenu = GafferUI.MultiSelectionMenu( allowMultipleSelection = False, allowEmptySelection = False )
 					dispatchersMenu.append( Gaffer.Dispatcher.dispatcherNames() )
 					dispatchersMenu.setSelection( [ "Local" ] )
 					self.__dispatchersMenuSelectionChangedConnection = dispatchersMenu.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__dispatcherChanged ) )
-				
+
 				self.__frame = GafferUI.Frame( borderStyle=GafferUI.Frame.BorderStyle.None, borderWidth=0 )
 				self.__dispatchButton = GafferUI.Button( "Dispatch" )
 				self.__dispatchClickedConnection = self.__dispatchButton.clickedSignal().connect( Gaffer.WeakMethod( self.__dispatchClicked ) )
-		
+
 		self.__update()
-	
+
 	def setVisible( self, visible ) :
-		
+
 		GafferUI.Window.setVisible( self, visible )
-		
+
 		if visible :
 			self.__dispatchButton._qtWidget().setFocus( QtCore.Qt.OtherFocusReason )
-	
+
 	def dispatcher( self ) :
-	
+
 		return self.__dispatcher
-	
+
 	def setNodesToDispatch( self, nodes ) :
-		
+
 		self.__nodes = nodes
 		self.__updateTitle()
-	
+
 	def __update( self ) :
-		
+
 		self.__frame.setChild( GafferUI.NodeUI.create( self.__dispatcher ) )
 		self.__updateTitle()
-	
+
 	def __updateTitle( self ) :
-		
+
 		title = "Dispatching"
 		if len(self.__nodes) :
 			title += ": " + ", ".join( [ x.getName() for x in self.__nodes ] )
-		
+
 		self.setTitle( title )
-	
+
 	def __dispatchClicked( self, button ) :
-		
+
 		with self.parent().scriptNode().context() :
 			self.__dispatcher.dispatch( self.__nodes )
 		## \todo: update _executeUILastExecuted
 		self.close()
-	
+
 	def __dispatcherChanged( self, menu ) :
-		
+
 		self.__dispatcher = Gaffer.Dispatcher.dispatcher( menu.getSelection()[0] )
 		self.__update()
 
@@ -152,27 +152,27 @@ class _DispatcherWindow( GafferUI.Window ) :
 class __RequirementPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plug, **kw ) :
-		
+
 		row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal )
-		
+
 		GafferUI.PlugValueWidget.__init__( self, row, plug, **kw )
-		
+
 		with row :
-			
+
 			executeButton = GafferUI.Button( "Execute" )
 			executeButton.setToolTip( "Execute" )
 			self.__executeClickedConnection = executeButton.clickedSignal().connect( Gaffer.WeakMethod( self.__executeClicked ) )
-	
+
 	def hasLabel( self ) :
-		
+
 		return True
-	
+
 	def _updateFromPlug( self ) :
-		
+
 		pass
-	
+
 	def __executeClicked( self, button ) :
-		
+
 		_showDispatcherWindow( [ self.getPlug().node() ] )
 
 
@@ -184,7 +184,7 @@ class __RequirementPlugValueWidget( GafferUI.PlugValueWidget ) :
 class __FramesModePlugValueWidget( GafferUI.EnumPlugValueWidget ) :
 
 	def __init__( self, plug ) :
-		
+
 		GafferUI.EnumPlugValueWidget.__init__(
 			self, plug,
 			labelsAndValues = (
@@ -193,17 +193,17 @@ class __FramesModePlugValueWidget( GafferUI.EnumPlugValueWidget ) :
 				( "CustomRange", Gaffer.Dispatcher.FramesMode.CustomRange ),
 			)
 		)
-	
+
 	def _updateFromPlug( self ) :
-		
+
 		GafferUI.EnumPlugValueWidget._updateFromPlug( self )
-		
+
 		if self.getPlug() is None :
 			return
-		
+
 		with self.getContext() :
 			framesMode = self.getPlug().getValue()
-		
+
 		nodeUI = self.ancestor( GafferUI.NodeUI )
 		if nodeUI :
 			frameRangeWidget = nodeUI.plugValueWidget( self.getPlug().node()["frameRange"], lazy = False )
@@ -249,30 +249,30 @@ def _execute( nodes ) :
 
 	script = nodes[0].scriptNode()
 	script._executeUILastExecuted = []
-	
+
 	with script.context() :
 		__dispatcherWindow( script ).dispatcher().dispatch( nodes )
-	
+
 	script._executeUILastExecuted = [ weakref.ref( node ) for node in nodes ]
 
 __dispatcherWindowInstance = None
 def __dispatcherWindow( script ) :
-	
+
 	global __dispatcherWindowInstance
-	
+
 	if __dispatcherWindowInstance is not None and __dispatcherWindowInstance() :
 		window = __dispatcherWindowInstance()
 	else :
 		window = _DispatcherWindow()
 		__dispatcherWindowInstance = weakref.ref( window )
-	
+
 	scriptWindow = GafferUI.ScriptWindow.acquire( script )
 	scriptWindow.addChildWindow( window )
-	
+
 	return window
 
 def _showDispatcherWindow( nodes ) :
-	
+
 	window = __dispatcherWindow( nodes[0].scriptNode() )
 	window.setNodesToDispatch( nodes )
 	window.setVisible( True )
@@ -283,30 +283,30 @@ def __selectedNodes( script ) :
 	for n in script.selection() :
 		if hasattr( n, "execute" ) :
 			result.append( n )
-			
+
 	return result
-	
+
 def __selectionAvailable( menu ) :
 
 	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
 	script = scriptWindow.scriptNode()
 	return bool( __selectedNodes( script ) )
-	
+
 def __previous( script ) :
 
 	if not hasattr( script, "_executeUILastExecuted" ) :
 		return []
-	
-	result = []	
+
+	result = []
 	for w in script._executeUILastExecuted :
 		n = w()
 		if n is not None :
 			s = n.scriptNode()
 			if s is not None and s.isSame( script ) :
 				result.append( n )
-		
+
 	return result
-	
+
 def __previousAvailable( menu ) :
 
 	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )

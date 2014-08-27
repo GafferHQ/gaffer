@@ -1,25 +1,25 @@
 //////////////////////////////////////////////////////////////////////////
-//  
+//
 //  Copyright (c) 2013-2014, Image Engine Design Inc. All rights reserved.
-//  
+//
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
 //  met:
-//  
+//
 //      * Redistributions of source code must retain the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer.
-//  
+//
 //      * Redistributions in binary form must reproduce the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
-//  
+//
 //      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
-//  
+//
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 //  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 //  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -31,7 +31,7 @@
 //  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 //  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//  
+//
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/bind.hpp"
@@ -102,7 +102,7 @@ const Gaffer::StringPlug *SceneReader::setsPlug() const
 void SceneReader::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	FileSource::affects( input, outputs );
-	
+
 	if( input == tagsPlug() )
 	{
 		outputs.push_back( outPlug()->childNamesPlug() );
@@ -138,27 +138,27 @@ Imath::Box3f SceneReader::computeBound( const ScenePath &path, const Gaffer::Con
 	{
 		return Box3f();
 	}
-	
+
 	Box3d b = s->readBound( context->getFrame() / g_frameRate );
-	
+
 	if( b.isEmpty() )
 	{
 		return Box3f();
 	}
-	
+
 	return Box3f( b.min, b.max );
 }
 
 void SceneReader::hashTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
 	FileSource::hashTransform( path, context, parent, h );
-	
+
 	ConstSceneInterfacePtr s = scene( path );
 	if( !s )
 	{
 		return;
 	}
-	
+
 	const SampledSceneInterface *ss = runTimeCast<const SampledSceneInterface>( s.get() );
 	if( !ss || ss->numTransformSamples() > 1 )
 	{
@@ -173,9 +173,9 @@ Imath::M44f SceneReader::computeTransform( const ScenePath &path, const Gaffer::
 	{
 		return M44f();
 	}
-		
+
 	M44d t = s->readTransformAsMatrix( context->getFrame() / g_frameRate );
-	
+
 	return M44f(
 		t[0][0], t[0][1], t[0][2], t[0][3],
 		t[1][0], t[1][1], t[1][2], t[1][3],
@@ -192,12 +192,12 @@ void SceneReader::hashAttributes( const ScenePath &path, const Gaffer::Context *
 		h = parent->attributesPlug()->defaultValue()->Object::hash();
 		return;
 	}
-	
+
 	SceneInterface::NameList attributeNames;
 	s->attributeNames( attributeNames );
 	SceneInterface::NameList tagNames;
 	s->readTags( tagNames, IECore::SceneInterface::LocalTag );
-	
+
 	if( !attributeNames.size() && !tagNames.size() )
 	{
 		h = parent->attributesPlug()->defaultValue()->Object::hash();
@@ -223,7 +223,7 @@ void SceneReader::hashAttributes( const ScenePath &path, const Gaffer::Context *
 			}
 		}
 	}
-				
+
 	if( animated )
 	{
 		h.append( context->getFrame() );
@@ -237,14 +237,14 @@ IECore::ConstCompoundObjectPtr SceneReader::computeAttributes( const ScenePath &
 	{
 		return parent->attributesPlug()->defaultValue();
 	}
-	
+
 	// read attributes
-	
+
 	SceneInterface::NameList nameList;
 	s->attributeNames( nameList );
-	
+
 	CompoundObjectPtr result = new CompoundObject;
-	
+
 	for( SceneInterface::NameList::iterator it = nameList.begin(); it != nameList.end(); ++it )
 	{
 		// these internal attributes should be ignored:
@@ -256,14 +256,14 @@ IECore::ConstCompoundObjectPtr SceneReader::computeAttributes( const ScenePath &
 		{
 			continue;
 		}
-		
+
 		// the const cast is ok, because we're only using it to put the object into a CompoundObject that will
 		// be treated as forever const after being returned from this function.
 		result->members()[ std::string( *it ) ] = boost::const_pointer_cast<Object>( s->readAttribute( *it, context->getFrame() / g_frameRate ) );
 	}
 
 	// read tags and turn them into attributes of the form "user:tag:tagName"
-	
+
 	nameList.clear();
 	s->readTags( nameList, IECore::SceneInterface::LocalTag );
 	for( SceneInterface::NameList::const_iterator it = nameList.begin(); it != nameList.end(); ++it )
@@ -303,7 +303,7 @@ IECore::ConstObjectPtr SceneReader::computeObject( const ScenePath &path, const 
 	{
 		return parent->objectPlug()->defaultValue();
 	}
-	
+
 	return s->readObject( context->getFrame() / g_frameRate );
 }
 
@@ -322,21 +322,21 @@ IECore::ConstInternedStringVectorDataPtr SceneReader::computeChildNames( const S
 	}
 
 	// get the child names
-	
+
 	InternedStringVectorDataPtr resultData = new InternedStringVectorData;
 	vector<InternedString> &result = resultData->writable();
 	s->childNames( result );
-	
+
 	// filter out any which don't have the right tags
-	
+
 	std::string tagsString = tagsPlug()->getValue();
 	if( !tagsString.empty() )
 	{
 		Tokenizer tagsTokenizer( tagsString, boost::char_separator<char>( " " ) );
-		
+
 		vector<InternedString> tags;
 		std::copy( tagsTokenizer.begin(), tagsTokenizer.end(), back_inserter( tags ) );
-		
+
 		vector<InternedString>::iterator newResultEnd = result.begin();
 		SceneInterface::NameList childTags;
 		for( vector<InternedString>::const_iterator cIt = result.begin(), cEIt = result.end(); cIt != cEIt; ++cIt )
@@ -344,7 +344,7 @@ IECore::ConstInternedStringVectorDataPtr SceneReader::computeChildNames( const S
 			ConstSceneInterfacePtr child = s->child( *cIt );
 			childTags.clear();
 			child->readTags( childTags, IECore::SceneInterface::EveryTag );
-			
+
 			bool childMatches = false;
 			for( SceneInterface::NameList::const_iterator tIt = childTags.begin(), tEIt = childTags.end(); tIt != tEIt; ++tIt )
 			{
@@ -354,16 +354,16 @@ IECore::ConstInternedStringVectorDataPtr SceneReader::computeChildNames( const S
 					break;
 				}
 			}
-		
+
 			if( childMatches )
 			{
 				*newResultEnd++ = *cIt;
 			}
 		}
-		
+
 		result.erase( newResultEnd, result.end() );
 	}
-	
+
 	return resultData;
 }
 
@@ -385,7 +385,7 @@ static void loadSetsWalk( const SceneInterface *s, const vector<InternedString> 
 	// search isn't actually that big a win for a typical number of tags, simply because
 	// InternedString equality tests are so quick, but there's a very slight benefit, which
 	// should be more apparent should anyone create a very large number of tags at some point.
-	
+
 	vector<InternedString> sceneTags;
 	s->readTags( sceneTags, SceneInterface::LocalTag );
 
@@ -400,13 +400,13 @@ static void loadSetsWalk( const SceneInterface *s, const vector<InternedString> 
 			sets[t - tags.begin()]->addPath( path );
 		}
 	}
-	
+
 	// Figure out if we need to recurse by querying descendant tags to see if they include
 	// anything we're interested in.
-	
+
 	sceneTags.clear();
 	s->readTags( sceneTags, SceneInterface::DescendantTag );
-	
+
 	bool recurse = false;
 	for( vector<InternedString>::const_iterator it = sceneTags.begin(), eIt = sceneTags.end(); it != eIt; ++it )
 	{
@@ -417,14 +417,14 @@ static void loadSetsWalk( const SceneInterface *s, const vector<InternedString> 
 			break;
 		}
 	}
-	
+
 	if( !recurse )
 	{
 		return;
 	}
-	
+
 	// Recurse to the children.
-	
+
 	SceneInterface::NameList childNames;
 	s->childNames( childNames );
 	vector<InternedString> childPath( path );
@@ -444,17 +444,17 @@ IECore::ConstCompoundObjectPtr SceneReader::computeGlobals( const Gaffer::Contex
 	{
 		return parent->globalsPlug()->defaultValue();
 	}
-	
+
 	CompoundObjectPtr result = new CompoundObject;
-	
+
 	// figure out which tags we want to convert into sets
-	
+
 	vector<InternedString> allTags;
 	s->readTags( allTags, SceneInterface::LocalTag | SceneInterface::DescendantTag );
-	
+
 	const std::string setsString = setsPlug()->getValue();
 	Tokenizer setsTokenizer( setsString, boost::char_separator<char>( " " ) );
-	
+
 	vector<InternedString> tagsToLoadAsSets;
 	for( vector<InternedString>::const_iterator tIt = allTags.begin(), tEIt = allTags.end(); tIt != tEIt; ++tIt )
 	{
@@ -466,10 +466,10 @@ IECore::ConstCompoundObjectPtr SceneReader::computeGlobals( const Gaffer::Contex
 			}
 		}
 	}
-	
+
 	// sort so that we can use lower_bound() in loadSetsWalk().
 	sort( tagsToLoadAsSets.begin(), tagsToLoadAsSets.end() );
-	
+
 	// make sets for each of them, and then defer to loadSetsWalk()
 	// to do the work.
 
@@ -478,7 +478,7 @@ IECore::ConstCompoundObjectPtr SceneReader::computeGlobals( const Gaffer::Contex
 		/* throwExceptions = */ false,
 		/* createIfMissing = */ true
 	);
-	
+
 	vector<PathMatcher *> pathMatchers;
 	for( vector<InternedString>::const_iterator it = tagsToLoadAsSets.begin(), eIt = tagsToLoadAsSets.end(); it != eIt; ++it )
 	{
@@ -515,7 +515,7 @@ ConstSceneInterfacePtr SceneReader::scene( const ScenePath &path ) const
 	{
 		return NULL;
 	}
-	
+
 	LastScene &lastScene = m_lastScene.local();
 	if( lastScene.fileName == fileName )
 	{

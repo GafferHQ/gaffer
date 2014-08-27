@@ -1,26 +1,26 @@
 //////////////////////////////////////////////////////////////////////////
-//  
+//
 //  Copyright (c) 2012, John Haddon. All rights reserved.
 //  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
-//  
+//
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
 //  met:
-//  
+//
 //      * Redistributions of source code must retain the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer.
-//  
+//
 //      * Redistributions in binary form must reproduce the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
-//  
+//
 //      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
-//  
+//
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 //  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 //  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -32,7 +32,7 @@
 //  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 //  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//  
+//
 //////////////////////////////////////////////////////////////////////////
 
 #include "tbb/enumerable_thread_specific.h"
@@ -62,7 +62,7 @@ DependencyNode::DependencyNode( const std::string &name )
 DependencyNode::~DependencyNode()
 {
 }
-		
+
 void DependencyNode::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	if( input->isInstanceOf( CompoundPlug::staticTypeId() ) )
@@ -116,12 +116,12 @@ class DirtyPlugs
 {
 
 	public :
-			
+
 		void insert( Plug *plugToDirty )
 		{
 			insertInternal( plugToDirty );
 		}
-		
+
 		void emit()
 		{
 			std::vector<VertexDescriptor> sorted;
@@ -136,20 +136,20 @@ class DirtyPlugs
 				}
 			}
 		}
-		
+
 		void clear()
 		{
 			m_graph.clear();
 			m_plugs.clear();
 		}
-		
+
 		bool empty() const
 		{
 			return m_plugs.empty();
 		}
-	
+
 	private :
-	
+
 		// We use this graph structure to keep track of the dirty propagation.
 		// Vertices in the graph represent plugs which have been dirtied, and
 		// edges represent the relationships that caused the dirtying - an
@@ -159,9 +159,9 @@ class DirtyPlugs
 		// after it has been signalled for all upstream dirty plugs.
 		typedef boost::adjacency_list<vecS, vecS, directedS, Plug *> Graph;
 		typedef Graph::vertex_descriptor VertexDescriptor;
-		
+
 		typedef std::map<const Plug *, VertexDescriptor> PlugMap;
-		
+
 		// Inserts a vertex representing plugToDirty into the graph, and
 		// then inserts all affected plugs. Note that we visit affected
 		// plugs for plugToDirty in the reverse order to which we wish to
@@ -177,7 +177,7 @@ class DirtyPlugs
 			{
 				return it->second;
 			}
-		
+
 			// Insert a vertex for this plug.
 			VertexDescriptor result = add_vertex( m_graph );
 			m_graph[result] = plugToDirty;
@@ -194,7 +194,7 @@ class DirtyPlugs
 					VertexDescriptor outputVertex = insertInternal( const_cast<Plug *>( *it ) );
 					add_edge( result, outputVertex, m_graph );
 				}
-				
+
 				const DependencyNode *dependencyNode = plugToDirty->ancestor<DependencyNode>();
 				if( dependencyNode )
 				{
@@ -216,7 +216,7 @@ class DirtyPlugs
 					}
 				}
 			}
-			
+
 			// Insert all ancestor plugs.
 			Plug *child = plugToDirty;
 			VertexDescriptor childVertex = result;
@@ -224,17 +224,17 @@ class DirtyPlugs
 			{
 				VertexDescriptor parentVertex = insertInternal( parent );
 				add_edge( childVertex, parentVertex, m_graph );
-				
+
 				child = parent;
 				childVertex = parentVertex;
 			}
-		
+
 			return result;
 		}
-		
+
 		Graph m_graph;
 		PlugMap m_plugs;
-		
+
 };
 
 } // namespace
@@ -242,9 +242,9 @@ class DirtyPlugs
 static tbb::enumerable_thread_specific<DirtyPlugs> g_dirtyPlugs;
 
 void DependencyNode::propagateDirtiness( Plug *plugToDirty )
-{	
+{
 	DirtyPlugs &dirtyPlugs = g_dirtyPlugs.local();
-	
+
 	// If the container is currently empty then we are at the start of a traversal,
 	// and will emit plugDirtiedSignal() and empty the container before returning
 	// from this function. If the container isn't empty then we are mid-traversal

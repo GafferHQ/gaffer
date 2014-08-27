@@ -1,25 +1,25 @@
 //////////////////////////////////////////////////////////////////////////
-//  
+//
 //  Copyright (c) 2012-2013 Image Engine Design Inc. All rights reserved.
-//  
+//
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
 //  met:
-//  
+//
 //      * Redistributions of source code must retain the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer.
-//  
+//
 //      * Redistributions in binary form must reproduce the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
-//  
+//
 //      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
-//  
+//
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 //  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 //  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -31,7 +31,7 @@
 //  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 //  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//  
+//
 //////////////////////////////////////////////////////////////////////////
 
 #ifndef GAFFERIMAGE_FORMAT_H
@@ -58,13 +58,13 @@ class Format
 {
 
 	public :
-	
+
 		typedef boost::signal<void (const std::string&)> UnaryFormatSignal;
-		
+
 		inline Format();
 		inline explicit Format( const Imath::Box2i &displayWindow, double pixelAspect = 1. );
 		inline Format( int width, int height, double pixelAspect = 1. );
-		
+
 		inline const Imath::Box2i &getDisplayWindow() const;
 		inline void setDisplayWindow( const Imath::Box2i &window );
 
@@ -73,7 +73,7 @@ class Format
 
 		inline double getPixelAspect() const;
 		inline void setPixelAspect( double pixelAspect );
-		
+
 		inline bool operator == ( const Format &rhs ) const;
 		inline bool operator != ( const Format &rhs ) const;
 
@@ -100,7 +100,7 @@ class Format
 		inline Imath::V2i formatToYDownSpace( const Imath::V2i &yUp ) const;
 		inline Imath::Box2i formatToYDownSpace( const Imath::Box2i &yUp ) const;
 		//@}
-		
+
 		/// @name Default Format methods
 		/// These functions are used to create, set and get the formatPlug
 		/// which resides on the script node. When a GafferImage node is created
@@ -118,42 +118,42 @@ class Format
 		static void setDefaultFormat( Gaffer::ScriptNode *scriptNode, const Format &format );
 		static void setDefaultFormat( Gaffer::ScriptNode *scriptNode, const std::string &name );
 		static const Format getDefaultFormat( Gaffer::ScriptNode *scriptNode );
-		
+
 		/// Accessors and creators for the format list.
 		static const Format &registerFormat( const Format &format, const std::string &name );
 		static const Format &registerFormat( const Format &format );
-		
+
 		static void removeFormat( const Format &format );
 		static void removeFormat( const std::string &name );
 		static void removeAllFormats();
-		
+
 		static int formatCount();
 		static const Format &getFormat( const std::string &name );
 		static std::string formatName( const Format &format );
 		static void formatNames( std::vector< std::string > &names );
 		static void addFormatToContext( Gaffer::Plug *defaultFormatPlug );
-		
+
 		static UnaryFormatSignal &formatAddedSignal();
 		static UnaryFormatSignal &formatRemovedSignal();
 		//@}
-		
+
 		/// Called by the Node class to setup the format plug on the script node.
 		static void addDefaultFormatPlug( Gaffer::ScriptNode *scriptNode );
-		
+
 		static const IECore::InternedString defaultFormatContextName;
 		static const IECore::InternedString defaultFormatPlugName;
-		
+
 	private :
-		
+
 		typedef std::pair< std::string, Format > FormatEntry;
 		typedef std::map< std::string, Format > FormatMap;
-		
+
 		/// Method to return a static instance of the format mappings
 		inline static FormatMap &formatMap();
-		
+
 		/// Generates a name for a given format. The result is returned in place.
 		static void generateFormatName( std::string &name, const Format &format);
-		
+
 		Imath::Box2i m_displayWindow;
 		double m_pixelAspect;
 

@@ -1,25 +1,25 @@
 ##########################################################################
-#  
+#
 #  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
-#  
+#
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
 #  met:
-#  
+#
 #      * Redistributions of source code must retain the above
 #        copyright notice, this list of conditions and the following
 #        disclaimer.
-#  
+#
 #      * Redistributions in binary form must reproduce the above
 #        copyright notice, this list of conditions and the following
 #        disclaimer in the documentation and/or other materials provided with
 #        the distribution.
-#  
+#
 #      * Neither the name of John Haddon nor the names of
 #        any other contributors to this software may be used to endorse or
 #        promote products derived from this software without specific prior
 #        written permission.
-#  
+#
 #  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 #  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 #  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -31,7 +31,7 @@
 #  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 #  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 #  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#  
+#
 ##########################################################################
 
 import Gaffer
@@ -46,17 +46,17 @@ class MultiSelectionMenu( GafferUI.Button ) :
 		allowEmptySelection = True,
 		**kw
 	) :
-			
+
 		GafferUI.Button.__init__( self, **kw )
 
 		self.__menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) )
-		
+
 		self.__allowMultipleSelection = allowMultipleSelection
 		self.__allowEmptySelection = allowEmptySelection
 		self.__selectionChangedSignal = None
 
 		self.__menuLabels = []
-		self.__selectedLabels = [] 
+		self.__selectedLabels = []
 		self.__enabledLabels = []
 		self.__setDisplayName()
 
@@ -68,23 +68,23 @@ class MultiSelectionMenu( GafferUI.Button ) :
 			self.__selectionChangedSignal = GafferUI.WidgetSignal()
 		return self.__selectionChangedSignal
 
-	## Returns a list of the enabled labels.	
+	## Returns a list of the enabled labels.
 	def getEnabledItems( self ) :
 		self.__cleanUpList( self.__enabledLabels, self.__menuLabels ) # Ensure that the selected list is ordered properly.
 		return self.__enabledLabels
 
-	## Sets which items are enabled.	
+	## Sets which items are enabled.
 	def setEnabledItems( self, labels ) :
-		
+
 		input = self.__validateInput( labels )
-		self.__enabledLabels[:] = input	
+		self.__enabledLabels[:] = input
 
 	## Adds a list of items to the current selection.
 	def addSelection( self, labels ) :
 
 		# Remove items that are not in the menu and returns a list.
 		input = self.__validateInput( labels )
-		
+
 		if self.__allowMultipleSelection :
 			for label in labels :
 				if not label in self.__selectedLabels :
@@ -93,11 +93,11 @@ class MultiSelectionMenu( GafferUI.Button ) :
 		else :
 			if len( labels ) > 1 :
 				raise RuntimeError("Parameter must be single item or a list with one element.")
-	
+
 		# Remove all selected labels that are not in the menu, emit signals if necessary and update the button.
 		self.__validateState()
-	
-	## Returns a list of the selected labels.	
+
+	## Returns a list of the selected labels.
 	def getSelection( self ) :
 		self.__cleanUpList( self.__selectedLabels, self.__menuLabels ) # Ensure that the selected list is ordered properly.
 		return self.__selectedLabels
@@ -107,11 +107,11 @@ class MultiSelectionMenu( GafferUI.Button ) :
 	# If a single element is provided then it is appended to the current selection unless multiple selections
 	# are not enabled in which case the selection is replaced.
 	def setSelection( self, labels ) :
-		
+
 		input = self.__validateInput( labels )
 		if len( input ) == 0 and not self.__allowEmptySelection :
 			return
-				
+
 		if self.__allowMultipleSelection :
 			self.__selectedLabels[:] = input
 			self.__selectionChanged()
@@ -144,12 +144,12 @@ class MultiSelectionMenu( GafferUI.Button ) :
 		if label in self.__menuLabels :
 			self.__menuLabels.remove(label)
 			self.__validateState()
-	
+
 	def insert( self, index, label ) :
 		if not label in self.__menuLabels :
 			self.__menuLabels.insert( index, label )
 			self.__enabledLabels.insert( index, label )
-			
+
 	##############################################
 	# Private Methods
 	#############################################
@@ -160,11 +160,11 @@ class MultiSelectionMenu( GafferUI.Button ) :
 			validInput = [ labels ]
 		else :
 			validInput = list( labels )
-				
+
 		self.__cleanUpList( validInput, self.__menuLabels )
 		return validInput
 
-	## The slot which is called when an item is clicked on.	
+	## The slot which is called when an item is clicked on.
 	def __selectClicked( self, label, selected=None ) :
 		if self.__allowMultipleSelection :
 			if selected == True :
@@ -186,7 +186,7 @@ class MultiSelectionMenu( GafferUI.Button ) :
 				self.__selectionChanged()
 			else :
 				self.setSelection( label )
-		
+
 	## Updates the button's text and emits the selectionChangedSignal.
 	def __selectionChanged( self ) :
 		self.__setDisplayName()
@@ -204,7 +204,7 @@ class MultiSelectionMenu( GafferUI.Button ) :
 				{
 					"command" : IECore.curry( Gaffer.WeakMethod( self.__selectClicked ), label ),
 					"active" : label in self.__enabledLabels,
-					"checkBox" : ( ( self.__allowMultipleSelection ) or ( not self.__allowMultipleSelection and self.__allowEmptySelection ) ) and label in self.__selectedLabels 
+					"checkBox" : ( ( self.__allowMultipleSelection ) or ( not self.__allowMultipleSelection and self.__allowEmptySelection ) ) and label in self.__selectedLabels
 				}
 			)
 		return m
@@ -217,13 +217,13 @@ class MultiSelectionMenu( GafferUI.Button ) :
 		seen = set()
 		seen_add = seen.add
 		self.__menuLabels[:] = [ x for x in self.__menuLabels if x not in seen and not seen_add(x)]
-			
+
 		# Now we check that the enabled and selected lists are in order and without duplicates. If duplicates are
 		# found or their entry does not exist within self.__menuLabels then they are removed and the relevant signals emitted.
 		if self.__cleanUpList( self.__selectedLabels, self.__menuLabels ) :
 			self.__selectionChanged()
-		self.__cleanUpList( self.__enabledLabels , self.__menuLabels ) 
-		
+		self.__cleanUpList( self.__enabledLabels , self.__menuLabels )
+
 		# If we don't allow multiple selection then make sure that at least one item is selected!
 		if not self.__allowEmptySelection and len( self.__selectedLabels ) == 0 :
 			if len( self.__enabledLabels ) > 0 :
@@ -269,7 +269,7 @@ class MultiSelectionMenu( GafferUI.Button ) :
 			self.__menuLabels[index] = label
 			self.__enabledLabels.append( label )
 			self.__validateState()
-	
+
 	def __repr__( self ) :
 		return self.__menuLabels.__repr__()
 
@@ -291,7 +291,7 @@ class MultiSelectionMenu( GafferUI.Button ) :
 		self._qtWidget().setText(name)
 
 	def __clicked( self, button ) :
-		
+
 		b = self.bound()
 		self.__menu.popup(
 			parent = self,

@@ -1,26 +1,26 @@
 //////////////////////////////////////////////////////////////////////////
-//  
+//
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2012-2014, Image Engine Design Inc. All rights reserved.
-//  
+//
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
 //  met:
-//  
+//
 //      * Redistributions of source code must retain the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer.
-//  
+//
 //      * Redistributions in binary form must reproduce the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
-//  
+//
 //      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
-//  
+//
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 //  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 //  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -32,7 +32,7 @@
 //  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 //  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//  
+//
 //////////////////////////////////////////////////////////////////////////
 
 #ifndef GAFFERUI_CONNECTIONGADGET_H
@@ -52,7 +52,7 @@ IE_CORE_FORWARDDECLARE( ConnectionGadget )
 
 /// ConnectionGadgets are responsible for drawing the Connections between
 /// Nodules in the node graph, and for implementing the drag and drop of
-/// those connections. The ConnectionsGadget base class is an abstract class - 
+/// those connections. The ConnectionsGadget base class is an abstract class -
 /// see StandardConnectionGadget for a concrete implementation suitable for
 /// most purposes. ConnectionGadget provides a factory mechanism whereby
 /// different creation methods can be called for different plugs on different
@@ -67,10 +67,10 @@ class ConnectionGadget : public Gadget
 		virtual ~ConnectionGadget();
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::ConnectionGadget, ConnectionGadgetTypeId, Gadget );
-		
+
 		/// Accepts only GraphGadgets as parent.
-		virtual bool acceptsParent( const Gaffer::GraphComponent *potentialParent ) const;		
-		
+		virtual bool acceptsParent( const Gaffer::GraphComponent *potentialParent ) const;
+
 		/// Returns the Nodule representing the source plug in the connection.
 		/// Note that this may be 0 if the source plug belongs to a node which
 		/// has been hidden.
@@ -94,11 +94,11 @@ class ConnectionGadget : public Gadget
 		/// and tangent for the connection as the drag progresses within the destination.
 		/// Throws if this connection is not currently the source of a connection.
 		virtual void updateDragEndPoint( const Imath::V3f position, const Imath::V3f &tangent ) = 0;
-		
+
 		/// Creates a ConnectionGadget to represent the connection between the two
 		/// specified Nodules.
 		static ConnectionGadgetPtr create( NodulePtr srcNodule, NodulePtr dstNodule );
-		
+
 		typedef boost::function<ConnectionGadgetPtr ( NodulePtr, NodulePtr )> ConnectionGadgetCreator;
 		/// Registers a function which will return a ConnectionGadget instance for a
 		/// destination plug of a specific type.
@@ -121,12 +121,12 @@ class ConnectionGadget : public Gadget
 		};
 
 	private :
-				
+
 		NodulePtr m_srcNodule;
 		NodulePtr m_dstNodule;
-		
+
 		bool m_minimised;
-		
+
 		typedef std::map<IECore::TypeId, ConnectionGadgetCreator> CreatorMap;
 		static CreatorMap &creators();
 
@@ -135,7 +135,7 @@ class ConnectionGadget : public Gadget
 		typedef std::map<IECore::TypeId, RegexAndCreatorVector> NamedCreatorMap;
 		static NamedCreatorMap &namedCreators();
 
-		
+
 };
 
 typedef Gaffer::FilteredChildIterator<Gaffer::TypePredicate<ConnectionGadget> > ConnectionGadgetIterator;

@@ -93,21 +93,21 @@ class FilteredRecursiveChildIterator : public boost::iterator_adaptor<FilteredRe
 		{
 			return BaseIterator::base()!=( rhs );
 		}
-		
+
 		/// Calling prune() causes the next increment to skip any recursion
 		/// that it would normally perform.
 		void prune()
 		{
 			const_cast<RecursiveChildIterator &>( BaseIterator::base() ).prune();
 		}
-	
+
 		RecursiveChildIterator end()
 		{
 			return m_end;
 		}
-	
+
 	private :
-	
+
 		friend class boost::iterator_core_access;
 
 		typename BaseIterator::reference dereference() const
@@ -116,7 +116,7 @@ class FilteredRecursiveChildIterator : public boost::iterator_adaptor<FilteredRe
 			// a GraphComponentPtr and any other intrusive pointer should be the same.
 			return reinterpret_cast<typename BaseIterator::reference>( *BaseIterator::base() );
 		}
-    
+
 		void increment()
 		{
 			if( !m_recursionPredicate( *BaseIterator::base() ) )
@@ -142,7 +142,7 @@ class FilteredRecursiveChildIterator : public boost::iterator_adaptor<FilteredRe
 		Predicate m_predicate;
 		RecursionPredicate m_recursionPredicate;
 		RecursiveChildIterator m_end;
-		
+
 };
 
 } // namespace Gaffer

@@ -1,26 +1,26 @@
 //////////////////////////////////////////////////////////////////////////
-//  
+//
 //  Copyright (c) 2012, John Haddon. All rights reserved.
 //  Copyright (c) 2013-2014, Image Engine Design Inc. All rights reserved.
-//  
+//
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
 //  met:
-//  
+//
 //      * Redistributions of source code must retain the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer.
-//  
+//
 //      * Redistributions in binary form must reproduce the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
-//  
+//
 //      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
-//  
+//
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 //  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 //  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -32,7 +32,7 @@
 //  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 //  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//  
+//
 //////////////////////////////////////////////////////////////////////////
 
 #include <cassert>
@@ -120,48 +120,48 @@ class Constraint
 {
 
 	public :
-			
+
 		enum Type
 		{
 			EqualTo,
 			GreaterThanOrEqualTo,
 			LessThanOrEqualTo
 		};
-		
+
 		/// \todo Remove - it's only here so we can call m_constraints.resize()
 		/// to remove the collision constraints.
 		Constraint()
 		{
 		}
-		
+
 		// Enforces p - q ( ==, >=, <= ) d in direction v
 		Constraint( V2f *p, V2f *q, Type type, float d, const V2f &v, float w = 0.5 )
 			:	m_p( p ), m_q( q ), m_type( type ), m_d( d ), m_v( v ), m_w( w )
 		{
 		}
-		
+
 		void apply() const
 		{
 			const float p = m_v.dot( *m_p );
 			const float q = m_v.dot( *m_q );
 			const float separation = p - q;
-			
-			if( 
+
+			if(
 				( m_type == EqualTo && separation == m_d ) ||
 				( m_type == GreaterThanOrEqualTo && separation >= m_d ) ||
-				( m_type == LessThanOrEqualTo && separation <= m_d )	
+				( m_type == LessThanOrEqualTo && separation <= m_d )
 			)
 			{
 				return;
 			}
-			
+
 			const V2f r = m_v * (m_d - separation);
 			*m_p += r * m_w;
 			*m_q -= r * (1.0f - m_w);
 		}
-	
+
 	private :
-	
+
 		V2f *m_p;
 		V2f *m_q;
 		Type m_type;
@@ -184,7 +184,7 @@ class LayoutEngine
 				m_maxIterations( 10000 ),
 				m_constraintsIterations( 10 )
 		{
-			
+
 			// Convert the visible graph into our internal boost::graph format.
 			// Start by putting all the visible nodes in the graph as vertices.
 			// Build a map from node to vertex so we can use it to lookup nodes
@@ -229,7 +229,7 @@ class LayoutEngine
 					}
 
 					const Nodule *dstNodule = connection->dstNodule();
-			
+
 					NodesToVertices::const_iterator srcIt = m_nodesToVertices.find( srcNodule->plug()->node() );
 					if( srcIt == m_nodesToVertices.end() )
 					{
@@ -253,7 +253,7 @@ class LayoutEngine
 			}
 
 		}
-				
+
 		void pinNode( Node *node )
 		{
 			NodesToVertices::const_iterator it = m_nodesToVertices.find( node );
@@ -261,10 +261,10 @@ class LayoutEngine
 			{
 				return;
 			}
-			
+
 			m_graph[it->second].pinned = true;
 		}
-		
+
 		void pinNodes( const Gaffer::Set *nodes, bool invert = false )
 		{
 			for( NodesToVertices::const_iterator it = m_nodesToVertices.begin(), eIt = m_nodesToVertices.end(); it != eIt; ++it )
@@ -275,12 +275,12 @@ class LayoutEngine
 				}
 			}
 		}
-		
+
 		void groupNodes( const Gaffer::Set *nodes, const V2f &center )
 		{
 			// get vertex descriptors for the nodes we want to group.
 			// while we're doing that, compute their bounding box.
-			
+
 			Box2f bound;
 			vector<VertexDescriptor> childVertexDescriptors;
 			for( size_t i = 0, s = nodes->size(); i < s; ++ i )
@@ -290,7 +290,7 @@ class LayoutEngine
 				{
 					continue;
 				}
-				
+
 				NodesToVertices::iterator it = m_nodesToVertices.find( node );
 				if( it == m_nodesToVertices.end() )
 				{
@@ -298,19 +298,19 @@ class LayoutEngine
 				}
 
 				childVertexDescriptors.push_back( it->second );
-				
-				const Vertex &child = m_graph[it->second];			
+
+				const Vertex &child = m_graph[it->second];
 				bound.extendBy( child.bound.min + child.position );
 				bound.extendBy( child.bound.max + child.position );
 			}
-			
+
 			// early out if nothing to group
-			
+
 			if( childVertexDescriptors.empty() )
 			{
 				return;
 			}
-				
+
 			// make a new vertex to represent the group, and set its
 			// position and bounding box to enclose the children.
 
@@ -321,14 +321,14 @@ class LayoutEngine
 			group.collisionGroup = 0;
 			group.position = bound.center();
 			group.bound = Box2f( bound.min - group.position, bound.max - group.position );
-						
+
 			// remove and add edges as needed. edges internal to
 			// the group are removed, so that they won't clash with
 			// the constraints we use to keep the children in position
 			// relative to the group. edges connecting nodes inside the
 			// group to nodes outside the group are replaced with edges
 			// connecting the group itself to the external nodes.
-			
+
 			vector<EdgeDescriptor> edgesToRemove;
 			EdgeIteratorRange e = edges( m_graph );
 			for( EdgeIterator eIt = e.first; eIt != e.second; ++eIt )
@@ -342,7 +342,7 @@ class LayoutEngine
 					// edge is entirely outside group
 					continue;
 				}
-				
+
 				if( sInternal != tInternal )
 				{
 					// edge connects group to outside world, move
@@ -350,10 +350,10 @@ class LayoutEngine
 
 					VertexDescriptor newS = sInternal ? groupDescriptor : s;
 					VertexDescriptor newT = tInternal ? groupDescriptor : t;
-									
+
 					EdgeDescriptor newEdgeDescriptor = add_edge( newS, newT, m_graph ).first;
 					Edge &newEdge( m_graph[newEdgeDescriptor] );
-										
+
 					newEdge = m_graph[*eIt];
 					m_graph[newEdgeDescriptor] = m_graph[*eIt];
 					if( sInternal )
@@ -365,17 +365,17 @@ class LayoutEngine
 						newEdge.targetOffset = ( newEdge.targetOffset + m_graph[t].position ) - group.position;
 					}
 				}
-																
+
 				edgesToRemove.push_back( *eIt );
 			}
-			
+
 			for( vector<EdgeDescriptor>::iterator it = edgesToRemove.begin(), eIt = edgesToRemove.end(); it != eIt; ++it )
 			{
 				remove_edge( *it, m_graph );
 			}
-			
+
 			// add constraints to keep the children in the right positions relative to the group.
-			
+
 			for( vector<VertexDescriptor>::const_iterator it = childVertexDescriptors.begin(), eIt = childVertexDescriptors.end(); it != eIt; ++it )
 			{
 				Vertex &child = m_graph[*it];
@@ -391,7 +391,7 @@ class LayoutEngine
 					);
 				}
 			}
-			
+
 			group.position = center;
 		}
 
@@ -405,10 +405,10 @@ class LayoutEngine
 			{
 				return;
 			}
-			
+
 			m_graph[it->second].collisionGroup = group;
 		}
-		
+
 		void assignCollisionGroup( const Gaffer::Set *nodes, int group )
 		{
 			for( size_t i = 0, e = nodes->size(); i != e; ++i )
@@ -419,7 +419,7 @@ class LayoutEngine
 				}
 			}
 		}
-		
+
 		void assignCollisionGroup( IECore::TypeId nodeType, int group )
 		{
 			VertexIteratorRange v = vertices( m_graph );
@@ -432,41 +432,41 @@ class LayoutEngine
 				}
 			}
 		}
-		
+
 		void addConnectionDirectionConstraints()
 		{
-			
+
 			EdgeIteratorRange e = edges( m_graph );
 			for( EdgeIterator it = e.first; it != e.second; ++it )
 			{
 				Vertex &src = m_graph[source( *it, m_graph )];
 				Vertex &dst = m_graph[target( *it, m_graph )];
 				const Edge &edge = m_graph[*it];
-				
+
 				for( int d = 0; d < 2; ++d )
 				{
 					if( edge.idealDirection[d] == 0 )
 					{
 						continue;
 					}
-					
+
 					const float separation =
 						edge.sourceOffset[d] * edge.idealDirection[d] -
 						edge.targetOffset[d] * edge.idealDirection[d] +
 						m_edgeLength;
-					
+
 					addConstraint(
 						dst,
 						src,
 						Constraint::GreaterThanOrEqualTo,
 						separation,
 						d == 0 ? V2f( edge.idealDirection[d], 0 ) : V2f( 0, edge.idealDirection[d] )					);
-					
+
 				}
 			}
-		
+
 		}
-		
+
 		void addSiblingConstraints()
 		{
 			VertexIteratorRange v = vertices( m_graph );
@@ -476,16 +476,16 @@ class LayoutEngine
 				addSiblingConstraints( *it, Direction( 1, 0 ) );
 			}
 		}
-		
+
 		void clearConstraints()
 		{
 			m_constraints.clear();
 		}
-		
+
 		void solve( bool withCollisions )
 		{
 			VertexIteratorRange v = vertices( m_graph );
-			
+
 			size_t numConstraints = m_constraints.size();
 			for( int i = 0; i < m_maxIterations; ++i )
 			{
@@ -494,7 +494,7 @@ class LayoutEngine
 					Vertex &vt = m_graph[*it];
 					vt.previousPosition = vt.position;
 				}
-			
+
 				applySprings();
 				applyConstraints( m_constraintsIterations );
 
@@ -504,7 +504,7 @@ class LayoutEngine
 					applyConstraints( m_constraintsIterations );
 					m_constraints.resize( numConstraints );
 				}
-				
+
 				float maxMovement = 0;
 				for( VertexIterator it = v.first; it != v.second; ++it )
 				{
@@ -512,7 +512,7 @@ class LayoutEngine
 					maxMovement = max( maxMovement, fabs( vt.position.x - vt.previousPosition.x ) );
 					maxMovement = max( maxMovement, fabs( vt.position.y - vt.previousPosition.y ) );
 				}
-				
+
 				if( maxMovement < 0.0001 )
 				{
 					break;
@@ -532,9 +532,9 @@ class LayoutEngine
 				}
 			}
 		}
-		
+
 	private :
-		
+
 		// The tangents of connection endpoints are specified by NodeGadgets
 		// as arbitrary V3fs. We make the simplifying assumption that they
 		// are 2 dimensional, and that they are either horizontal, vertical,
@@ -568,7 +568,7 @@ class LayoutEngine
 			bool pinned;
 			// Provides finer control over collision avoidance.
 			int collisionGroup;
-			
+
 			// State variables for use in solve().
 			V2f previousPosition;
 			V2f force;
@@ -604,11 +604,11 @@ class LayoutEngine
 		typedef std::pair<EdgeIterator, EdgeIterator> EdgeIteratorRange;
 
 		typedef std::map<const Node *, VertexDescriptor> NodesToVertices;
-		
+
 		void addSiblingConstraints( VertexDescriptor vertex, const Direction &edgeDirection )
 		{
 			// find all the edges pointing in the specified direction.
-			
+
 			std::vector<EdgeDescriptor> edges;
 			InEdgeIteratorRange e = in_edges( vertex, m_graph );
 			for( InEdgeIterator it = e.first; it != e.second; ++it )
@@ -620,13 +620,13 @@ class LayoutEngine
 			}
 
 			// sort edges perpendicular to edge direction
-			
+
 			const int dimension = edgeDirection.x ? 1 : 0;
 			sort( edges.begin(), edges.end(), EdgeTargetOffsetLess( dimension, &m_graph ) );
-			
+
 			// make constraints among the siblings to keep them in order with
 			// respect to their connection order.
-			
+
 			Vertex *prev = NULL;
 			for( std::vector<EdgeDescriptor>::const_iterator it = edges.begin(); it != edges.end(); ++it )
 			{
@@ -637,7 +637,7 @@ class LayoutEngine
 						fabs( prev->bound.size()[dimension] ) +
 						fabs( curr->bound.size()[dimension] )
 					);
-				
+
 					addConstraint(
 						*curr,
 						*prev,
@@ -649,7 +649,7 @@ class LayoutEngine
 				prev = curr;
 			}
 		}
-		
+
 		// Adds a constraint between p and q, adjusting w based on their pinning status.
 		void addConstraint( Vertex &p, Vertex &q, Constraint::Type type, float d, const V2f &v, float w = 0.5f )
 		{
@@ -657,7 +657,7 @@ class LayoutEngine
 			{
 				return;
 			}
-						
+
 			if( p.pinned )
 			{
 				w = 0.0f;
@@ -666,7 +666,7 @@ class LayoutEngine
 			{
 				w = 1.0f;
 			}
-			
+
 			m_constraints.push_back(
 				Constraint(
 					&(p.position),
@@ -678,16 +678,16 @@ class LayoutEngine
 				)
 			);
 		}
-		
+
 		void addCollisionConstraints()
 		{
 			// build a tree for making fast bound intersection queries
-			
+
 			vector<VertexDescriptor> vertexDescriptors;
 			vector<Box2f> bounds;
-			
+
 			const V2f padding( m_nodeSeparation / 2.0f );
-			
+
 			VertexIteratorRange v = vertices( m_graph );
 			for( VertexIterator it = v.first; it != v.second; ++it )
 			{
@@ -697,11 +697,11 @@ class LayoutEngine
 				bounds.push_back( b );
 				vertexDescriptors.push_back( *it );
 			}
-		
+
 			Box2fTree tree( bounds.begin(), bounds.end() );
-			
+
 			// find colliding bounds, and add constraints to separate them
-			
+
 			typedef vector<Box2f>::const_iterator BoundIterator;
 			vector<BoundIterator> intersectingBounds;
 			for( BoundIterator it = bounds.begin(), eIt = bounds.end(); it != eIt; ++it )
@@ -717,10 +717,10 @@ class LayoutEngine
 						// we dealt with this collision already, when bound2Index was bound1Index
 						continue;
 					}
-					
+
 					Vertex &vertex1 = m_graph[vertexDescriptors[bound1Index]];
 					Vertex &vertex2 = m_graph[vertexDescriptors[bound2Index]];
-					
+
 					if(
 						vertex1.collisionGroup < 0 ||
 						vertex2.collisionGroup < 0 ||
@@ -729,13 +729,13 @@ class LayoutEngine
 					{
 						continue;
 					}
-					
+
 					const Box2f &bound1 = *it;
 					const Box2f &bound2 = **bIt;
-					
-					const int a = collisionSeparationAxis( vertexDescriptors[bound1Index], vertexDescriptors[bound2Index] );		
+
+					const int a = collisionSeparationAxis( vertexDescriptors[bound1Index], vertexDescriptors[bound2Index] );
 					const V2f v = a == 0 ? V2f( 1, 0 ) : V2f( 0, 1 );
-					
+
 					float separation = 0.5 * ( bound1.size()[a] + bound2.size()[a] );
 					Vertex *p = &vertex2;
 					Vertex *q = &vertex1;
@@ -744,7 +744,7 @@ class LayoutEngine
 						p = &vertex1;
 						q = &vertex2;
 					}
-				
+
 					addConstraint(
 						*p,
 						*q,
@@ -753,9 +753,9 @@ class LayoutEngine
 						v
 					);
 				}
-			}			
+			}
 		}
-		
+
 		int collisionSeparationAxis( VertexDescriptor vertex1, VertexDescriptor vertex2 )
 		{
 			bool foundHorizontalConnection = false;
@@ -787,10 +787,10 @@ class LayoutEngine
 					}
 				}
 			}
-			
+
 			return foundHorizontalConnection ? 1 : 0;
 		}
-		
+
 		void applyConstraints( size_t iterations )
 		{
 			for( size_t i = 0; i < iterations; ++i )
@@ -820,7 +820,7 @@ class LayoutEngine
 			{
 				m_graph[*it].force = V2f( 0.0f );
 			}
-			
+
 			EdgeIteratorRange e = edges( m_graph );
 			for( EdgeIterator it = e.first; it != e.second; ++it )
 			{
@@ -832,13 +832,13 @@ class LayoutEngine
 				}
 
 				Edge &edge = m_graph[*it];
-				
+
 				V2f srcPos = src.position + edge.sourceOffset;
 				V2f dstPos = dst.position + edge.targetOffset;
-				
+
 				V2f offset = dstPos - srcPos;
 				V2f desiredOffset = m_edgeLength * V2f( edge.idealDirection );
-				
+
 				float w = 0.5f;
 				if( src.pinned )
 				{
@@ -848,43 +848,43 @@ class LayoutEngine
 				{
 					w = 1.0f;
 				}
-				
+
 				V2f v = desiredOffset - offset;
 				src.force -= v * m_springStiffness * w;
 				dst.force += v * m_springStiffness * ( 1.0f - w );
 			}
-			
+
 			for( VertexIterator it = v.first; it != v.second; ++it )
 			{
 				m_graph[*it].position += m_graph[*it].force;
-			}		
+			}
 		}
-				
+
 		struct EdgeTargetOffsetLess
 		{
 			EdgeTargetOffsetLess( int dimension, Graph *graph )
 				:	m_dimension( dimension ), m_graph( graph )
 			{
 			}
-			
+
 			bool operator () ( EdgeDescriptor e1, EdgeDescriptor e2 ) const
 			{
 				const Edge &edge1 = (*m_graph)[e1];
 				const Edge &edge2 = (*m_graph)[e2];
 				return edge1.targetOffset[m_dimension] < edge2.targetOffset[m_dimension];
 			}
-			
+
 			private :
-			
+
 				int m_dimension;
 				Graph *m_graph;
-				
+
 		};
-				
+
 		GraphGadget *m_graphGadget;
 		Graph m_graph;
 		NodesToVertices m_nodesToVertices;
-		
+
 		std::vector<Constraint> m_constraints;
 
 		const float m_edgeLength;
@@ -892,7 +892,7 @@ class LayoutEngine
 		const float m_springStiffness;
 		const int m_maxIterations;
 		const int m_constraintsIterations;
-			
+
 };
 
 } // namespace
@@ -921,7 +921,7 @@ bool StandardGraphLayout::connectNodes( GraphGadget *graph, Gaffer::Set *nodes, 
 {
 	// find the nodes without existing inputs, and when one of them
 	// accepts connections from potentialInputs call it good.
-	
+
 	for( size_t i = 0, s = nodes->size(); i < s; ++i )
 	{
 		Node *node = IECore::runTimeCast<Node>( nodes->member( i ) );
@@ -934,7 +934,7 @@ bool StandardGraphLayout::connectNodes( GraphGadget *graph, Gaffer::Set *nodes, 
 		{
 			continue;
 		}
-		
+
 		bool hasInputs = false;
 		for( RecursiveInputPlugIterator it( node ); it != it.end(); ++it )
 		{
@@ -948,13 +948,13 @@ bool StandardGraphLayout::connectNodes( GraphGadget *graph, Gaffer::Set *nodes, 
 		{
 			continue;
 		}
-		
+
 		if( connectNodeInternal( graph, node, potentialInputs, nodes->size() == 1 /* only insert if there's only one node */ ) )
 		{
 			return true;
 		}
 	}
-	
+
 	return false;
 }
 
@@ -971,9 +971,9 @@ void StandardGraphLayout::positionNode( GraphGadget *graph, Gaffer::Node *node, 
 	layout.assignCollisionGroup( (IECore::TypeId)Gaffer::BackdropTypeId, -1 ); // disable collisions with backdrops
 
 	layout.addConnectionDirectionConstraints();
-	
+
 	layout.solve( true /* collision detection on */ );
-	layout.applyPositions();	
+	layout.applyPositions();
 }
 
 void StandardGraphLayout::positionNodes( GraphGadget *graph, Gaffer::Set *nodes, const Imath::V2f &fallbackPosition ) const
@@ -995,25 +995,25 @@ void StandardGraphLayout::layoutNodes( GraphGadget *graph, Gaffer::Set *nodes ) 
 	{
 		layout.pinNodes( nodes, true /* invert */ );
 	}
-	
+
 	// do a first round of layout without worrying about
 	// collisions between nodes.
-	
+
 	layout.addConnectionDirectionConstraints();
 	layout.addSiblingConstraints();
 	layout.solve( false );
-	
+
 	// do a second round of layout, now resolving collisions.
 	// we don't use the sibling constraints during this process
 	// because multiple sets of sibling constraints can conflict
 	// and produce unresolveable constraints that prevent the
 	// collisions detection from working. a better alternative
 	// might be to remove conflicting constraints before applying them.
-	
+
 	layout.clearConstraints();
 	layout.addConnectionDirectionConstraints();
 	layout.solve( true );
-	
+
 	layout.applyPositions();
 }
 
@@ -1021,23 +1021,23 @@ bool StandardGraphLayout::connectNodeInternal( GraphGadget *graph, Gaffer::Node 
 {
 	// we only want to connect plugs which are visible in the ui - otherwise
 	// things will get very confusing for the user.
-	
+
 	// get the gadget for the target node
 	NodeGadget *nodeGadget = graph->nodeGadget( node );
 	if( !nodeGadget )
 	{
 		return false;
 	}
-	
+
 	// get all visible output plugs we could potentially connect in to our node
 	vector<Plug *> outputPlugs;
 	if( !this->outputPlugs( graph, potentialInputs, outputPlugs ) )
 	{
 		return false;
 	}
-	
+
 	// iterate over the output plugs, connecting them in to the node if we can
-	
+
 	size_t numConnectionsMade = 0;
 	Plug *firstConnectionSrc = 0, *firstConnectionDst = 0;
 	vector<Plug *> inputPlugs;
@@ -1066,14 +1066,14 @@ bool StandardGraphLayout::connectNodeInternal( GraphGadget *graph, Gaffer::Node 
 
 	// if only one connection was made, then try to insert the node into
 	// the existing connections from the source.
-			
+
 	if( numConnectionsMade == 1 && insertIfPossible )
 	{
 		Plug *correspondingOutput = this->correspondingOutput( firstConnectionDst );
 		if( correspondingOutput )
 		{
 			bool allCompatible = true;
-			
+
 			// This is a copy of (*it)->outputs() rather than a reference, as reconnection can modify (*it)->outputs()...
 			Plug::OutputContainer outputs = firstConnectionSrc->outputs();
 			for( Plug::OutputContainer::const_iterator it = outputs.begin(); it != outputs.end(); ++it )
@@ -1088,14 +1088,14 @@ bool StandardGraphLayout::connectNodeInternal( GraphGadget *graph, Gaffer::Node 
 				{
 					continue;
 				}
-				
+
 				if( !(*it)->acceptsInput( correspondingOutput ) )
 				{
 					allCompatible = false;
 					break;
 				}
 			}
-			
+
 			if( allCompatible )
 			{
 				for( Plug::OutputContainer::const_iterator it = outputs.begin(); it != outputs.end(); ++it )
@@ -1110,7 +1110,7 @@ bool StandardGraphLayout::connectNodeInternal( GraphGadget *graph, Gaffer::Node 
 					{
 						continue;
 					}
-					
+
 					Plug *p = *it;
 					if( p != firstConnectionDst )
 					{
@@ -1133,7 +1133,7 @@ size_t StandardGraphLayout::outputPlugs( NodeGadget *nodeGadget, std::vector<Gaf
 			plugs.push_back( it->get() );
 		}
 	}
-	
+
 	return plugs.size();
 }
 
@@ -1177,7 +1177,7 @@ Gaffer::Plug *StandardGraphLayout::correspondingOutput( const Gaffer::Plug *inpu
 	{
 		return 0;
 	}
-		
+
 	for( RecursiveOutputPlugIterator it( dependencyNode ); it != it.end(); ++it )
 	{
 		if( dependencyNode->correspondingInput( it->get() ) == input )
@@ -1185,7 +1185,7 @@ Gaffer::Plug *StandardGraphLayout::correspondingOutput( const Gaffer::Plug *inpu
 			return it->get();
 		}
 	}
-	
+
 	return 0;
 }
 

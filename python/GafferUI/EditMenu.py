@@ -1,26 +1,26 @@
 ##########################################################################
-#  
+#
 #  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
-#  
+#
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
 #  met:
-#  
+#
 #      * Redistributions of source code must retain the above
 #        copyright notice, this list of conditions and the following
 #        disclaimer.
-#  
+#
 #      * Redistributions in binary form must reproduce the above
 #        copyright notice, this list of conditions and the following
 #        disclaimer in the documentation and/or other materials provided with
 #        the distribution.
-#  
+#
 #      * Neither the name of John Haddon nor the names of
 #        any other contributors to this software may be used to endorse or
 #        promote products derived from this software without specific prior
 #        written permission.
-#  
+#
 #  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 #  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 #  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -32,7 +32,7 @@
 #  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 #  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 #  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#  
+#
 ##########################################################################
 
 from __future__ import with_statement
@@ -47,7 +47,7 @@ def appendDefinitions( menuDefinition, prefix="" ) :
 	menuDefinition.append( prefix + "/Undo", { "command" : undo, "shortCut" : "Ctrl+Z", "active" : __undoAvailable } )
 	menuDefinition.append( prefix + "/Redo", { "command" : redo, "shortCut" : "Shift+Ctrl+Z", "active" : __redoAvailable } )
 	menuDefinition.append( prefix + "/UndoDivider", { "divider" : True } )
-	
+
 	menuDefinition.append( prefix + "/Cut", { "command" : cut, "shortCut" : "Ctrl+X", "active" : __selectionAvailable } )
 	menuDefinition.append( prefix + "/Copy", { "command" : copy, "shortCut" : "Ctrl+C", "active" : __selectionAvailable } )
 	menuDefinition.append( prefix + "/Paste", { "command" : paste, "shortCut" : "Ctrl+V", "active" : __pasteAvailable } )
@@ -76,7 +76,7 @@ def undo( menu ) :
 	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
 	script = scriptWindow.scriptNode()
 	script.undo()
-	
+
 ## A function suitable as the command for an Edit/Redo menu item. It must
 # be invoked from a menu that has a ScriptWindow in its ancestry.
 def redo( menu ) :
@@ -106,11 +106,11 @@ def paste( menu ) :
 
 	script, parent = __scriptAndParent( menu )
 	originalSelection = Gaffer.StandardSet( iter( script.selection() ) )
-	
+
 	with Gaffer.UndoContext( script ) :
-		
+
 		script.paste( parent )
-	
+
 		# try to get the new nodes connected to the original selection
 		nodeGraph = __nodeGraph( menu, focussedOnly=False )
 		if nodeGraph is None :
@@ -134,9 +134,9 @@ def paste( menu ) :
 		fallbackPosition = IECore.V2f( fallbackPosition.x, fallbackPosition.y )
 
 		nodeGraph.graphGadget().getLayout().positionNodes( nodeGraph.graphGadget(), script.selection(), fallbackPosition )
-	
+
 		nodeGraph.frame( script.selection(), extend = True )
-	
+
 ## A function suitable as the command for an Edit/Delete menu item. It must
 # be invoked from a menu that has a ScriptWindow in its ancestry.
 def delete( menu ) :
@@ -151,15 +151,15 @@ def find( menu ) :
 
 	script, parent = __scriptAndParent( menu )
 	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
-	
+
 	try :
 		findDialogue = scriptWindow.__findDialogue
 	except AttributeError :
 		findDialogue = GafferUI.NodeFinderDialogue( parent )
 		scriptWindow.addChildWindow( findDialogue )
 		scriptWindow.__findDialogue = findDialogue
-	
-	findDialogue.setScope( parent ) 
+
+	findDialogue.setScope( parent )
 	findDialogue.setVisible( True )
 
 ## A function suitable as the command for an Edit/Arrange menu item.  It must
@@ -170,16 +170,16 @@ def arrange( menu ) :
 	nodeGraph = __nodeGraph( menu, focussedOnly=False )
 	if not nodeGraph :
 		return
-	
+
 	graph = nodeGraph.graphGadget()
-	
+
 	nodes = script.selection()
 	if not nodes :
 		nodes = Gaffer.StandardSet( graph.getRoot().children( Gaffer.Node ) )
-	
+
 	with Gaffer.UndoContext( script ) :
 		graph.getLayout().layoutNodes( graph, nodes )
-	
+
 ## A function suitable as the command for an Edit/Select All menu item. It must
 # be invoked from a menu that has a ScriptWindow in its ancestry.
 def selectAll( menu ) :
@@ -187,15 +187,15 @@ def selectAll( menu ) :
 	script, parent = __scriptAndParent( menu )
 	for c in parent.children( Gaffer.Node ) :
 		script.selection().add( c )
-			
+
 ## A function suitable as the command for an Edit/Select None menu item. It must
 # be invoked from a menu that has a ScriptWindow in its ancestry.
 def selectNone( menu ) :
 
 	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
 	script = scriptWindow.scriptNode()
-	
-	script.selection().clear()				
+
+	script.selection().clear()
 
 ## The command function for the default "Edit/Select Connected/Inputs" menu item. It must
 # be invoked from a menu that has a ScriptWindow in its ancestry.
@@ -203,11 +203,11 @@ def selectInputs( menu ) :
 
 	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
 	script = scriptWindow.scriptNode()
-	
+
 	inputs = Gaffer.StandardSet()
 	for node in script.selection() :
 		__inputNodes( node, inputs )
-	
+
 	selection = script.selection()
 	selection.clear()
 	for node in inputs :
@@ -219,11 +219,11 @@ def selectAddInputs( menu ) :
 
 	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
 	script = scriptWindow.scriptNode()
-	
+
 	inputs = Gaffer.StandardSet()
 	for node in script.selection() :
 		__inputNodes( node, inputs )
-		
+
 	selection = script.selection()
 	for node in inputs :
 		selection.add( node )
@@ -234,11 +234,11 @@ def selectOutputs( menu ) :
 
 	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
 	script = scriptWindow.scriptNode()
-	
+
 	outputs = Gaffer.StandardSet()
 	for node in script.selection() :
 		__outputNodes( node, outputs )
-	
+
 	selection = script.selection()
 	selection.clear()
 	for node in outputs :
@@ -250,20 +250,20 @@ def selectAddOutputs( menu ) :
 
 	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
 	script = scriptWindow.scriptNode()
-	
+
 	outputs = Gaffer.StandardSet()
 	for node in script.selection() :
 		__outputNodes( node, outputs )
-	
+
 	selection = script.selection()
 	for node in outputs :
 		selection.add( node )
-				
+
 def __selectionAvailable( menu ) :
 
 	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
 	return True if scriptWindow.scriptNode().selection().size() else False
-	
+
 def __pasteAvailable( menu ) :
 
 	scriptNode = menu.ancestor( GafferUI.ScriptWindow ).scriptNode()
@@ -279,10 +279,10 @@ def __nodeGraph( menu, focussedOnly=True ) :
 	focusWidget = GafferUI.Widget._owner( scriptWindow._qtWidget().focusWidget() )
 	if focusWidget is not None :
 		nodeGraph = focusWidget.ancestor( GafferUI.NodeGraph )
-	
+
 	if nodeGraph is not None or focussedOnly :
 		return nodeGraph
-			
+
 	nodeGraphs = scriptWindow.getLayout().editors( GafferUI.NodeGraph )
 	return nodeGraphs[0] if nodeGraphs else None
 
@@ -290,29 +290,29 @@ def __scriptAndParent( menu ) :
 
 	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
 	script = scriptWindow.scriptNode()
-	
+
 	nodeGraph = __nodeGraph( menu )
 	if nodeGraph is not None :
 		parent = nodeGraph.graphGadget().getRoot()
 	else :
 		parent = script
-	
+
 	return script, parent
 
 def __undoAvailable( menu ) :
 
 	scriptNode = menu.ancestor( GafferUI.ScriptWindow ).scriptNode()
 	return scriptNode.undoAvailable()
-	
+
 def __redoAvailable( menu ) :
 
 	scriptNode = menu.ancestor( GafferUI.ScriptWindow ).scriptNode()
 	return scriptNode.redoAvailable()
 
 def __inputNodes( node, inputNodes ) :
-	
+
 	def __walkPlugs( parent ) :
-	
+
 		for plug in parent :
 			if isinstance( plug, Gaffer.Plug ) :
 				inputPlug = plug.getInput()
@@ -326,9 +326,9 @@ def __inputNodes( node, inputNodes ) :
 	__walkPlugs( node )
 
 def __outputNodes( node, outputNodes ) :
-	
+
 	def __walkPlugs( parent ) :
-	
+
 		for plug in parent :
 			if isinstance( plug, Gaffer.Plug ) :
 				outputPlugs = plug.outputs()

@@ -1,25 +1,25 @@
 //////////////////////////////////////////////////////////////////////////
-//  
+//
 //  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
-//  
+//
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
 //  met:
-//  
+//
 //      * Redistributions of source code must retain the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer.
-//  
+//
 //      * Redistributions in binary form must reproduce the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
-//  
+//
 //      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
-//  
+//
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 //  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 //  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -31,7 +31,7 @@
 //  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 //  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//  
+//
 //////////////////////////////////////////////////////////////////////////
 
 #include <map>
@@ -69,7 +69,7 @@ void Format::formatNames( std::vector< std::string > &names )
 {
 	names.clear();
 	names.reserve( formatMap().size() );
-	
+
 	FormatEntry entry;
 	BOOST_FOREACH( entry, formatMap() )
 	{
@@ -81,7 +81,7 @@ std::string Format::formatName( const Format &format )
 {
 	FormatMap::iterator it( formatMap().begin() );
 	FormatMap::iterator end( formatMap().end() );
-	
+
 	for (; it != end; ++it)
 	{
 		if ( format == (*it).second )
@@ -89,10 +89,10 @@ std::string Format::formatName( const Format &format )
 			return (*it).first;
 		}
 	}
-	
+
 	std::string name;
 	generateFormatName( name, format );
-	
+
 	return name;
 }
 
@@ -100,7 +100,7 @@ const Format &Format::registerFormat( const Format &format, const std::string &n
 {
 	FormatMap::iterator it( formatMap().begin() );
 	FormatMap::iterator end( formatMap().end() );
-	
+
 	for (; it != end; ++it)
 	{
 		if ( format == (*it).second )
@@ -108,10 +108,10 @@ const Format &Format::registerFormat( const Format &format, const std::string &n
 			return (*it).second;
 		}
 	}
-	
+
 	formatMap().insert( FormatEntry( name, format ) );
 	formatAddedSignal()( name );
-	
+
 	return format;
 }
 
@@ -157,13 +157,13 @@ Format::UnaryFormatSignal &Format::formatRemovedSignal()
 const Format &Format::getFormat( const std::string &name )
 {
 	FormatMap::iterator it( formatMap().find( name ) );
-	
+
 	if ( it == formatMap().end() )
 	{
 		std::string err( boost::str( boost::format( "Failed to find format %s" ) % name ) );
 		throw IECore::Exception( err );
 	}
-	
+
 	return (*it).second;
 }
 
@@ -215,7 +215,7 @@ void Format::addFormatToContext( Gaffer::Plug *defaultFormatPlug )
 		{
 			throw IECore::Exception("Plug is not a FormatPlug");
 		}
-		
+
 		Format f = p->getValue();
 		s->context()->set( defaultFormatContextName, f );
 	}
@@ -227,17 +227,17 @@ void Format::addDefaultFormatPlug( ScriptNode *scriptNode )
 	{
 		throw IECore::Exception("ScriptNode pointer is NULL");
 	}
-	
+
 	FormatPlug* plug( scriptNode->getChild<FormatPlug>( defaultFormatPlugName ) );
-	
+
 	Format initialFormatValue( 1920, 1080, 1. ); // The initial value that the default format will start with when gaffer is opened.
-	
+
 	// If the plug hasn't been created already then it is likely that this script wasn't loaded. We deduce this because the
 	// default format plug on the script node is dynamic and therefore if we loaded the script, it would have been created.
 	if (!plug)
 	{
 		registerFormat( initialFormatValue, "HD 1080p 1920x1080 1" );
-		
+
 		// Add a new plug to the script node to hold the default format and connect up the valueSet signal to our slot that will add the value to the context.
 		FormatPlug *defaultFormatPlug( new FormatPlug( defaultFormatPlugName, Gaffer::Plug::In, Format(), Gaffer::Plug::Dynamic | Gaffer::Plug::Default | Gaffer::Plug::Serialisable ) );
 		scriptNode->addChild( defaultFormatPlug );
@@ -262,7 +262,7 @@ void Format::addDefaultFormatPlug( ScriptNode *scriptNode )
 			{
 				registerFormat( defaultFormatValue );
 			}
-			
+
 			// Update the context directly to save us the overhead of calling the addFormatToContext() slot via the setValue signal...
 			scriptNode->context()->set( defaultFormatContextName, defaultFormatValue );
 			scriptNode->plugSetSignal().connect( boost::bind( &Format::addFormatToContext, ::_1 ) );
@@ -273,19 +273,19 @@ void Format::addDefaultFormatPlug( ScriptNode *scriptNode )
 void Format::setDefaultFormat( ScriptNode *scriptNode, const Format &format )
 {
 	registerFormat( format );
-	
+
 	if (!scriptNode)
 	{
 		throw IECore::Exception("ScriptNode *is NULL");
 	}
-	
+
 	FormatPlug* plug( scriptNode->getChild<FormatPlug>( defaultFormatPlugName ) );
 	if (!plug)
 	{
 		addDefaultFormatPlug( scriptNode );
 		plug = scriptNode->getChild<FormatPlug>( defaultFormatPlugName );
 	}
-	
+
 	plug->setValue( format );
 }
 
@@ -295,14 +295,14 @@ void Format::setDefaultFormat( ScriptNode *scriptNode, const std::string &name )
 	{
 		throw IECore::Exception("ScriptNode *is NULL");
 	}
-	
+
 	FormatPlug* plug( scriptNode->getChild<FormatPlug>( defaultFormatPlugName ) );
 	if (!plug)
 	{
 		addDefaultFormatPlug( scriptNode );
 		plug = scriptNode->getChild<FormatPlug>( defaultFormatPlugName );
 	}
-	
+
 	Format format( getFormat( name ) );
 	plug->setValue( format );
 }

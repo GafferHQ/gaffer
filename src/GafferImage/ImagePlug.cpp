@@ -1,26 +1,26 @@
 //////////////////////////////////////////////////////////////////////////
-//  
+//
 //  Copyright (c) 2012, John Haddon. All rights reserved.
 //  Copyright (c) 2012-2014, Image Engine Design Inc. All rights reserved.
-//  
+//
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
 //  met:
-//  
+//
 //      * Redistributions of source code must retain the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer.
-//  
+//
 //      * Redistributions in binary form must reproduce the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
-//  
+//
 //      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
-//  
+//
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 //  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 //  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -32,7 +32,7 @@
 //  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 //  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//  
+//
 //////////////////////////////////////////////////////////////////////////
 
 #include "tbb/tbb.h"
@@ -120,7 +120,7 @@ class CopyTiles
 				}
 			}
 		}
-		
+
 	private:
 		const vector<float *> &m_imageChannelData;
 		const vector<string> &m_channelNames;
@@ -146,13 +146,13 @@ ImagePlug::ImagePlug( const std::string &name, Direction direction, unsigned fla
 	:	CompoundPlug( name, direction, flags )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
-	
+
 	// we don't want the children to be serialised in any way - we always create
 	// them ourselves in this constructor so they aren't Dynamic, and we don't ever
 	// want to store their values because they are meaningless without an input
 	// connection, so they aren't Serialisable either.
 	unsigned childFlags = flags & ~(Dynamic | Serialisable);
-	
+
 	addChild(
 		new FormatPlug(
 			"format",
@@ -161,7 +161,7 @@ ImagePlug::ImagePlug( const std::string &name, Direction direction, unsigned fla
 			childFlags
 		)
 	);
-	
+
 	addChild(
 		new AtomicBox2iPlug(
 			"dataWindow",
@@ -170,13 +170,13 @@ ImagePlug::ImagePlug( const std::string &name, Direction direction, unsigned fla
 			childFlags
 		)
 	);
-	
+
 	IECore::StringVectorDataPtr channelStrVectorData( new IECore::StringVectorData() );
 	std::vector<std::string> &channelStrVector( channelStrVectorData->writable() );
 	channelStrVector.push_back("R");
 	channelStrVector.push_back("G");
 	channelStrVector.push_back("B");
-	
+
 	addChild(
 		new StringVectorDataPlug(
 			"channelNames",
@@ -185,7 +185,7 @@ ImagePlug::ImagePlug( const std::string &name, Direction direction, unsigned fla
 			childFlags
 		)
 	);
-	
+
 	addChild(
 		new FloatVectorDataPlug(
 			"channelData",
@@ -194,7 +194,7 @@ ImagePlug::ImagePlug( const std::string &name, Direction direction, unsigned fla
 			childFlags
 		)
 	);
-	
+
 }
 
 ImagePlug::~ImagePlug()
@@ -282,12 +282,12 @@ IECore::ConstFloatVectorDataPtr ImagePlug::channelData( const std::string &chann
 	{
 		return channelDataPlug()->defaultValue();
 	}
-	
+
 	ContextPtr tmpContext = new Context( *Context::current(), Context::Borrowed );
 	tmpContext->set( ImagePlug::channelNameContextName, channelName );
 	tmpContext->set( ImagePlug::tileOriginContextName, tile );
 	Context::Scope scopedContext( tmpContext.get() );
-	
+
 	return channelDataPlug()->getValue();
 }
 
@@ -305,7 +305,7 @@ IECore::ImagePrimitivePtr ImagePlug::image() const
 	Format format = formatPlug()->getValue();
 	Box2i dataWindow = dataWindowPlug()->getValue();
 	Box2i newDataWindow( Imath::V2i(0) );
-	
+
 	if( dataWindow.isEmpty() )
 	{
 		dataWindow = Box2i( Imath::V2i(0) );
@@ -314,12 +314,12 @@ IECore::ImagePrimitivePtr ImagePlug::image() const
 	{
 		newDataWindow = format.yDownToFormatSpace( dataWindow );
 	}
-	
+
 	ImagePrimitivePtr result = new ImagePrimitive( newDataWindow, format.getDisplayWindow() );
 
 	ConstStringVectorDataPtr channelNamesData = channelNamesPlug()->getValue();
 	const vector<string> &channelNames = channelNamesData->readable();
-	
+
 	vector<float *> imageChannelData;
 	for( vector<string>::const_iterator it = channelNames.begin(), eIt = channelNames.end(); it!=eIt; it++ )
 	{
@@ -329,10 +329,10 @@ IECore::ImagePrimitivePtr ImagePlug::image() const
 		result->variables[*it] = PrimitiveVariable( PrimitiveVariable::Vertex, cd );
 		imageChannelData.push_back( &(c[0]) );
 	}
-	
+
 	parallel_for( blocked_range2d<size_t>( 0, dataWindow.size().x+1, tileSize(), 0, dataWindow.size().y+1, tileSize() ),
 		      GafferImage::Detail::CopyTiles( imageChannelData, channelNames, channelDataPlug(), dataWindow, Context::current(), tileSize()) );
-	
+
 	return result;
 }
 
@@ -341,7 +341,7 @@ IECore::MurmurHash ImagePlug::imageHash() const
 	const Box2i dataWindow = dataWindowPlug()->getValue();
 	ConstStringVectorDataPtr channelNamesData = channelNamesPlug()->getValue();
 	const vector<string> &channelNames = channelNamesData->readable();
-	
+
 	MurmurHash result = formatPlug()->hash();
 	result.append( dataWindowPlug()->hash() );
 	result.append( channelNamesPlug()->hash() );
@@ -366,6 +366,6 @@ IECore::MurmurHash ImagePlug::imageHash() const
 			}
 		}
 	}
-	
+
 	return result;
 }

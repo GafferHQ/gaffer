@@ -1,25 +1,25 @@
 //////////////////////////////////////////////////////////////////////////
-//  
+//
 //  Copyright (c) 2014, John Haddon. All rights reserved.
-//  
+//
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
 //  met:
-//  
+//
 //      * Redistributions of source code must retain the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer.
-//  
+//
 //      * Redistributions in binary form must reproduce the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
-//  
+//
 //      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
-//  
+//
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 //  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 //  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -31,7 +31,7 @@
 //  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 //  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//  
+//
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/bind.hpp"
@@ -70,7 +70,7 @@ void Handle::setType( Type type )
 	{
 		return;
 	}
-	
+
 	m_type = type;
 	renderRequestSignal()( this );
 }
@@ -96,7 +96,7 @@ Imath::Box3f Handle::bound() const
 		case TranslateZ :
 			return Box3f( V3f( 0 ), V3f( 0, 0, 1 ) );
 	};
-	
+
 	return Box3f();
 }
 
@@ -140,14 +140,14 @@ IECore::RunTimeTypedPtr Handle::dragBegin( const DragDropEvent &event )
 	// store the line of our handle in world space.
 	V3f handle( 0.0f );
 	handle[m_type] = 1.0f;
-	
-	m_dragHandleWorld = LineSegment3f( 
+
+	m_dragHandleWorld = LineSegment3f(
 		V3f( 0 ) * fullTransform(),
 		handle * fullTransform()
 	);
-	
+
 	m_dragBeginOffset = absoluteDragOffset( event );
-	
+
 	return IECore::NullObject::defaultNullObject();
 }
 
@@ -162,13 +162,13 @@ float Handle::absoluteDragOffset( const DragDropEvent &event ) const
 
 	// Project the mouse position back into raster space.
 	const V2f rasterP = viewport->gadgetToRasterSpace( event.line.p0, this );
-	
-	// Project our stored world space handle into raster space too.	
+
+	// Project our stored world space handle into raster space too.
 	const LineSegment2f rasterHandle(
 		viewport->worldToRasterSpace( m_dragHandleWorld.p0 ),
 		viewport->worldToRasterSpace( m_dragHandleWorld.p1 )
 	);
-	
+
 	// Find the closest point to the mouse on the handle in raster space.
 	// We use Imath::Line rather than IECore::LineSegment because we want
 	// to treat the handle as infinitely long. Unfortunately, there is no
@@ -177,20 +177,20 @@ float Handle::absoluteDragOffset( const DragDropEvent &event ) const
 		V3f( rasterHandle.p0.x, rasterHandle.p0.y, 0 ),
 		V3f( rasterHandle.p1.x, rasterHandle.p1.y, 0 )
 	);
-	
+
 	const V3f rasterClosestPoint = rasterHandle3.closestPointTo( V3f( rasterP.x, rasterP.y, 0 ) );
-	
+
 	// Project the raster point back into the world, and find the point
 	// where it intersects the handle in 3d. Again, we convert to Line
 	// rather than LineSegment because we want to treat our handle as
 	// infinite.
-	
+
 	const LineSegment3f worldClosestLine = viewport->rasterToWorldSpace( V2f( rasterClosestPoint.x, rasterClosestPoint.y ) );
-	
+
 	const V3f worldClosestPoint =
 		Line3f( m_dragHandleWorld.p0, m_dragHandleWorld.p1 ).closestPointTo(
 			Line3f( worldClosestLine.p0, worldClosestLine.p1 )
 		);
-	
+
 	return worldClosestPoint[m_type];
 }

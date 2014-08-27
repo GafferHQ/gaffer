@@ -1,25 +1,25 @@
 ##########################################################################
-#  
+#
 #  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
-#  
+#
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
 #  met:
-#  
+#
 #      * Redistributions of source code must retain the above
 #        copyright notice, this list of conditions and the following
 #        disclaimer.
-#  
+#
 #      * Redistributions in binary form must reproduce the above
 #        copyright notice, this list of conditions and the following
 #        disclaimer in the documentation and/or other materials provided with
 #        the distribution.
-#  
+#
 #      * Neither the name of John Haddon nor the names of
 #        any other contributors to this software may be used to endorse or
 #        promote products derived from this software without specific prior
 #        written permission.
-#  
+#
 #  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 #  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 #  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -31,7 +31,7 @@
 #  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 #  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 #  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#  
+#
 ##########################################################################
 
 import fnmatch
@@ -54,7 +54,7 @@ def _shader( shaderNode ) :
 		shaderName = shaderNode["name"].getValue()
 	else :
 		shaderName = shaderNode["__shaderName"].getValue()
-		
+
 	try :
 		return GafferRenderMan.RenderManShader.shaderLoader().read( shaderName + ".sdl" )
 	except Exception, e :
@@ -105,12 +105,12 @@ class RenderManShaderUI( GafferUI.StandardNodeUI ) :
 		self.__updateActivations()
 
 	def setReadOnly( self, readOnly ) :
-		
+
 		if readOnly == self.getReadOnly() :
 			return
 
 		GafferUI.StandardNodeUI.setReadOnly( self, readOnly )
-		
+
 		if not readOnly :
 			self.__updateActivations()
 
@@ -178,7 +178,7 @@ class RenderManShaderUI( GafferUI.StandardNodeUI ) :
 			except Exception, e :
 				IECore.msg( IECore.Msg.Level.Error, "Parameter activator", "".join( traceback.format_exception_only( type( e ), e ) ) )
 				continue
-				
+
 			for plug in plugs :
 				plugValueWidget = self.plugValueWidget( plug, lazy=False )
 				if plugValueWidget is not None :
@@ -186,7 +186,7 @@ class RenderManShaderUI( GafferUI.StandardNodeUI ) :
 					plugWidget = plugValueWidget.ancestor( GafferUI.PlugWidget )
 					if plugWidget is not None :
 						plugWidget.labelPlugValueWidget().setReadOnly( not active )
-				
+
 GafferUI.NodeUI.registerNodeUI( GafferRenderMan.RenderManShader, RenderManShaderUI )
 GafferUI.NodeUI.registerNodeUI( GafferRenderMan.RenderManLight, RenderManShaderUI )
 
@@ -220,14 +220,14 @@ def __parametersPlugValueWidgetCreator( plug ) :
 		# we still want to present some sort of ui, even if we couldn't
 		# load the shader for some reason.
 		parameterNames = [ c.getName() for c in plug.children() ]
-	
+
 	sections = []
 	namesToSections = {}
 	for name in parameterNames :
 		sectionName = annotations.get( name + ".page", None )
 		sectionName = sectionName.value if sectionName is not None else ""
 		if sectionName not in namesToSections :
-			
+
 			if sectionName == "" :
 				collapsed = None
 			else :
@@ -236,7 +236,7 @@ def __parametersPlugValueWidgetCreator( plug ) :
 					collapsed = collapsed.value in ( "True", "true", "1" )
 				else :
 					collapsed = True
-				
+
 			section = {
 				"label" : sectionName,
 				"collapsed" : collapsed,
@@ -244,7 +244,7 @@ def __parametersPlugValueWidgetCreator( plug ) :
 			}
 			sections.append( section )
 			namesToSections[sectionName] = section
-		
+
 		section = namesToSections[sectionName]
 		section["names"].append( name )
 
@@ -278,11 +278,11 @@ def __numberCreator( plug, annotations ) :
 		return GafferUI.CompoundNumericPlugValueWidget( plug )
 	else :
 		return GafferUI.NumericPlugValueWidget( plug )
-	
+
 def __stringCreator( plug, annotations ) :
 
 	return GafferUI.StringPlugValueWidget( plug )
-	
+
 def __booleanCreator( plug, annotations ) :
 
 	return GafferUI.BoolPlugValueWidget( plug )
@@ -292,7 +292,7 @@ def __popupCreator( plug, annotations ) :
 	options = annotations.get( plug.getName() + ".options", None )
 	if options is None :
 		raise Exception( "No \"options\" annotation." )
-	
+
 	options = options.value.split( "|" )
 	labelsAndValues = [ ( x, __optionValue( plug, x ) ) for x in options ]
 	return GafferUI.EnumPlugValueWidget( plug, labelsAndValues )
@@ -302,7 +302,7 @@ def __mapperCreator( plug, annotations ) :
 	options = annotations.get( plug.getName() + ".options", None )
 	if options is None :
 		raise Exception( "No \"options\" annotation." )
-	
+
 	options = options.value.split( "|" )
 	labelsAndValues = []
 	for option in options :
@@ -310,7 +310,7 @@ def __mapperCreator( plug, annotations ) :
 		if len( tokens ) != 2 :
 			raise Exception( "Option \"%s\" is not of form name:value" % option )
 		labelsAndValues.append( ( tokens[0], __optionValue( plug, tokens[1] ) ) )
-	
+
 	return GafferUI.EnumPlugValueWidget( plug, labelsAndValues )
 
 def __fileNameCreator( plug, annotations ) :
@@ -329,7 +329,7 @@ def __fileNameCreator( plug, annotations ) :
 		# rather than to have any bookmarks made here pollute the bookmarks for
 		# other browsers.
 		bookmarksCategory = "texture"
-			
+
 	return GafferUI.PathPlugValueWidget(
 		plug,
 		path = Gaffer.FileSystemPath(
@@ -369,7 +369,7 @@ def __plugValueWidgetCreator( plug ) :
 
 	annotations = _shaderAnnotations( plug.node() )
 	parameterName = plug.getName()
-		
+
 	widgetType = annotations.get( parameterName + ".widget", None )
 	widgetCreator = None
 	if widgetType is not None :
@@ -381,7 +381,7 @@ def __plugValueWidgetCreator( plug ) :
 				"Shader parameter \"%s.%s\" has unsupported widget type \"%s\"" %
 					( plug.node()["name"].getValue(), parameterName, widgetType )
 			)
-			
+
 	if widgetCreator is not None :
 		try :
 			return widgetCreator( plug, annotations )
@@ -392,15 +392,15 @@ def __plugValueWidgetCreator( plug ) :
 				"Error creating UI for parameter \"%s.%s\" : \"%s\"" %
 					( plug.node()["name"].getValue(), parameterName, str( e ) )
 			)
-	
+
 	if plug.typeId() == Gaffer.ArrayPlug.staticTypeId() :
 		# coshader array
 		return None
-	
+
 	result = GafferUI.PlugValueWidget.create( plug, useTypeOnly=True )
 	if isinstance( result, GafferUI.VectorDataPlugValueWidget ) :
 		result.vectorDataWidget().setSizeEditable( plug.defaultValue().size() == 0 )
-	
+
 	return result
 
 GafferUI.PlugValueWidget.registerCreator( GafferRenderMan.RenderManShader, "parameters.*", __plugValueWidgetCreator )
@@ -417,11 +417,11 @@ def __nodeDescription( node ) :
 
 	description = _shaderAnnotations( node ).get( "help", None )
 	return description.value if description is not None else __defaultNodeDescription
-		
+
 def __plugDescription( plug ) :
 
 	annotations = _shaderAnnotations( plug.node() )
-	d = annotations.get( plug.getName() + ".help", None )	
+	d = annotations.get( plug.getName() + ".help", None )
 
 	return d.value if d is not None else ""
 
@@ -429,7 +429,7 @@ def __plugLabel( plug ) :
 
 	annotations = _shaderAnnotations( plug.node() )
 	d = annotations.get( plug.getName() + ".label", None )
-	
+
 	return d.value if d is not None else None
 
 def __plugDivider( plug ) :
@@ -438,8 +438,8 @@ def __plugDivider( plug ) :
 	d = annotations.get( plug.getName() + ".divider", None )
 	if d is None :
 		return False
-		
-	return d.value.lower() in ( "True", "true", "1" )	
+
+	return d.value.lower() in ( "True", "true", "1" )
 
 Gaffer.Metadata.registerNodeDescription( GafferRenderMan.RenderManShader, __nodeDescription )
 

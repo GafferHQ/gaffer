@@ -1,25 +1,25 @@
 ##########################################################################
-#  
+#
 #  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
-#  
+#
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
 #  met:
-#  
+#
 #      * Redistributions of source code must retain the above
 #        copyright notice, this list of conditions and the following
 #        disclaimer.
-#  
+#
 #      * Redistributions in binary form must reproduce the above
 #        copyright notice, this list of conditions and the following
 #        disclaimer in the documentation and/or other materials provided with
 #        the distribution.
-#  
+#
 #      * Neither the name of John Haddon nor the names of
 #        any other contributors to this software may be used to endorse or
 #        promote products derived from this software without specific prior
 #        written permission.
-#  
+#
 #  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 #  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 #  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -31,7 +31,7 @@
 #  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 #  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 #  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#  
+#
 ##########################################################################
 
 import Gaffer
@@ -41,17 +41,17 @@ import GafferRenderMan
 def __qualitySummary( plug ) :
 
 	info = []
-	
+
 	if plug["pixelSamples"]["enabled"].getValue() :
 		ps = plug["pixelSamples"]["value"].getValue()
 		info.append( "Pixel Samples %dx%d" % ( ps[0], ps[1] ) )
-		
+
 	return ", ".join( info )
 
 def __hiderSummary( plug ) :
 
 	info = []
-	
+
 	if plug["hider"]["enabled"].getValue() :
 		info.append( plug["hider"]["value"].getValue().capitalize() )
 	if plug["hiderDepthFilter"]["enabled"].getValue() :
@@ -64,7 +64,7 @@ def __hiderSummary( plug ) :
 		info.append( "Extreme MDOF " + ( "On" if plug["hiderExtremeMotionDOF"]["value"].getValue() else "Off" ) )
 	if plug["hiderProgressive"]["enabled"].getValue() :
 		info.append( "Progressive " + ( "On" if plug["hiderProgressive"]["value"].getValue() else "Off" ) )
-				
+
 	return ", ".join( info )
 
 def __statisticsSummary( plug ) :
@@ -78,11 +78,11 @@ def __statisticsSummary( plug ) :
 		info.append( "Progress " + ( "On" if plug["statisticsProgress"]["value"].getValue() else "Off" ) )
 
 	return ", ".join( info )
-		
+
 def __searchPathsSummary( plug ) :
 
 	info = []
-	
+
 	for childName, label in (
 		( "shaderSearchPath", "Shaders" ),
 		( "textureSearchPath", "Textures" ),
@@ -92,16 +92,16 @@ def __searchPathsSummary( plug ) :
 	) :
 		if plug[childName]["enabled"].getValue() :
 			info.append( label )
-		
+
 	return ", ".join( info )
 
 GafferUI.PlugValueWidget.registerCreator(
-	
+
 	GafferRenderMan.RenderManOptions,
 	"options",
 	GafferUI.SectionedCompoundDataPlugValueWidget,
 	sections = (
-		
+
 		{
 			"label" : "Quality",
 			"summary" : __qualitySummary,
@@ -109,7 +109,7 @@ GafferUI.PlugValueWidget.registerCreator(
 				( "ri:pixelSamples", "Pixel Samples" ),
 			),
 		},
-		
+
 		{
 			"label" : "Hider",
 			"summary" : __hiderSummary,
@@ -122,7 +122,7 @@ GafferUI.PlugValueWidget.registerCreator(
 				( "ri:hider:progressive", "Progressive" ),
 			),
 		},
-		
+
 		{
 			"label" : "Statistics",
 			"summary" : __statisticsSummary,
@@ -132,7 +132,7 @@ GafferUI.PlugValueWidget.registerCreator(
 				( "ri:statistics:progress", "Progress" ),
 			),
 		},
-		
+
 		{
 			"label" : "Search Paths",
 			"summary" : __searchPathsSummary,
@@ -144,9 +144,9 @@ GafferUI.PlugValueWidget.registerCreator(
 				( "ri:searchpath:procedural", "Procedurals" ),
 			),
 		},
-		
-	),	
-	
+
+	),
+
 )
 
 GafferUI.PlugValueWidget.registerCreator(

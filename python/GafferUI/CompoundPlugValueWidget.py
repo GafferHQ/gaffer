@@ -1,26 +1,26 @@
 ##########################################################################
-#  
+#
 #  Copyright (c) 2012, John Haddon. All rights reserved.
 #  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
-#  
+#
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
 #  met:
-#  
+#
 #      * Redistributions of source code must retain the above
 #        copyright notice, this list of conditions and the following
 #        disclaimer.
-#  
+#
 #      * Redistributions in binary form must reproduce the above
 #        copyright notice, this list of conditions and the following
 #        disclaimer in the documentation and/or other materials provided with
 #        the distribution.
-#  
+#
 #      * Neither the name of John Haddon nor the names of
 #        any other contributors to this software may be used to endorse or
 #        promote products derived from this software without specific prior
 #        written permission.
-#  
+#
 #  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 #  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 #  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -32,7 +32,7 @@
 #  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 #  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 #  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#  
+#
 ##########################################################################
 
 from __future__ import with_statement
@@ -50,7 +50,7 @@ class CompoundPlugValueWidget( GafferUI.PlugValueWidget ) :
 	#
 	#	True  : use Collapsible container which starts off collapsed
 	#	False : use Collapsible container which starts off opened
-	#	None  : don't use Collapsible container 
+	#	None  : don't use Collapsible container
 	#
 	# Note that the True/False values for collapsible just set the initial state -
 	# after this the current state is stored for the session on a per-node basis
@@ -62,7 +62,7 @@ class CompoundPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self.__column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing = 4 )
 		self.__label = label if label else IECore.CamelCase.toSpaced( plug.getName() )
-		
+
 		self.__collapsible = None
 		if collapsed is not None :
 			self.__collapsible = GafferUI.Collapsible(
@@ -75,7 +75,7 @@ class CompoundPlugValueWidget( GafferUI.PlugValueWidget ) :
 			# way of controlling size behaviours for all widgets in the public API.
 			self.__collapsible.getCornerWidget()._qtWidget().setSizePolicy( QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Fixed )
 			self.__collapseStateChangedConnection = self.__collapsible.stateChangedSignal().connect( Gaffer.WeakMethod( self.__collapseStateChanged ) )
-				
+
 		GafferUI.PlugValueWidget.__init__(
 			self,
 			self.__collapsible if self.__collapsible is not None else self.__column,
@@ -98,12 +98,12 @@ class CompoundPlugValueWidget( GafferUI.PlugValueWidget ) :
 			self.__visibilityChangedConnection = self.__column.visibilityChangedSignal().connect( Gaffer.WeakMethod( self.__visibilityChanged ) )
 		else :
 			self.__parentChangedConnection = self.parentChangedSignal().connect( Gaffer.WeakMethod( self.__parentChanged ) )
-				
+
 		self.__visibilityChangedConnection = self.__column.visibilityChangedSignal().connect( Gaffer.WeakMethod( self.__visibilityChanged ) )
-		
+
 		self.__childPlugUIs = {} # mapping from child plug name to PlugWidget
 
-		self.__summary = summary	
+		self.__summary = summary
 
 		CompoundPlugValueWidget._updateFromPlug( self )
 
@@ -112,10 +112,10 @@ class CompoundPlugValueWidget( GafferUI.PlugValueWidget ) :
 	# to the user not having opened up the ui - in this case lazy=False may
 	# be passed to force the creation of the ui.
 	def childPlugValueWidget( self, childPlug, lazy=True ) :
-	
+
 		if not lazy and len( self.__childPlugUIs ) == 0 :
 			self.__updateChildPlugUIs()
-			
+
 		w = self.__childPlugUIs.get( childPlug.getName(), None )
 		if w is None :
 			return w
@@ -123,19 +123,19 @@ class CompoundPlugValueWidget( GafferUI.PlugValueWidget ) :
 			return w
 		else :
 			return w.plugValueWidget()
-			
+
 	def hasLabel( self ) :
-	
+
 		return True
 
 	## Overridden to propagate status to children.
 	def setReadOnly( self, readOnly ) :
-	
+
 		if readOnly == self.getReadOnly() :
 			return
-	
+
 		GafferUI.PlugValueWidget.setReadOnly( self, readOnly )
-			
+
 		for w in self.__childPlugUIs.values() :
 			if w is None :
 				continue
@@ -148,18 +148,18 @@ class CompoundPlugValueWidget( GafferUI.PlugValueWidget ) :
 				w.plugValueWidget().setReadOnly( readOnly )
 
 	def _updateFromPlug( self ) :
-				
+
 		if self.__summary is not None and self.__collapsible is not None :
 			with self.getContext() :
 				s = self.__summary( self.getPlug() )
 				if s :
 					s = "<small>" + "&nbsp;( " + s + " ) </small>"
 				self.__collapsible.getCornerWidget().setText( s )
-	
+
 	## May be overridden by derived classes to return a widget to be placed
-	# at the top of the layout.	
+	# at the top of the layout.
 	def _headerWidget( self ) :
-	
+
 		return None
 
 	## May be overridden by derived classes to customise the creation of widgets
@@ -167,41 +167,41 @@ class CompoundPlugValueWidget( GafferUI.PlugValueWidget ) :
 	# PlugValueWidget or must have a plugValueWidget() method which returns
 	# a PlugValueWidget.
 	def _childPlugWidget( self, childPlug ) :
-	
+
 		result = GafferUI.PlugValueWidget.create( childPlug )
 		if isinstance( result, GafferUI.PlugValueWidget ) and not result.hasLabel() :
 			result = GafferUI.PlugWidget( result )
 
 		return result
-	
+
 	## May be overridden by derived classes to return a widget to be placed
-	# at the bottom of the layout.	
+	# at the bottom of the layout.
 	def _footerWidget( self ) :
-	
+
 		return None
-	
+
 	## Returns the Collapsible widget used to contain the child widgets,
 	# or None if this ui is not collapsible.
 	def _collapsible( self ) :
-		
+
 		return self.__collapsible
-	
+
 	## May be overridden by derived classes to specify which child plugs
 	# are represented and in what order.
 	def _childPlugs( self ) :
-	
+
 		return self.getPlug().children()
-	
+
 	## \todo Mapping plugName->widget makes us vulnerable to name changes.
 	# See similar comments in StandardNodeUI and StandardNodeToolbar.
 	def __updateChildPlugUIs( self ) :
-	
+
 		# ditch child uis we don't need any more
 		childNames = set( self.getPlug().keys() )
 		for childName in self.__childPlugUIs.keys() :
 			if childName not in childNames :
 				del self.__childPlugUIs[childName]
-				
+
 		# make (or reuse existing) uis for each child plug
 		orderedChildUIs = []
 		for childPlug in self._childPlugs() :
@@ -221,11 +221,11 @@ class CompoundPlugValueWidget( GafferUI.PlugValueWidget ) :
 						widget.plugValueWidget().setReadOnly( self.getReadOnly() )
 			else :
 				widget = self.__childPlugUIs[childPlug.getName()]
-			if widget is not None :	
+			if widget is not None :
 				orderedChildUIs.append( widget )
 				if Gaffer.Metadata.plugValue( childPlug, "divider" ) :
 					orderedChildUIs.append( GafferUI.Divider() )
-		
+
 		# add header and footer
 		headerWidget = self._headerWidget()
 		if headerWidget is not None :
@@ -233,45 +233,45 @@ class CompoundPlugValueWidget( GafferUI.PlugValueWidget ) :
 		footerWidget = self._footerWidget()
 		if footerWidget is not None :
 			orderedChildUIs.append( footerWidget )
-			
+
 		# and update the column to display them
 		self.__column[:] = orderedChildUIs
-	
+
 	def __visibilityChanged( self, column ) :
-	
+
 		assert( column is self.__column )
-		
+
 		if self.__column.visible() :
 			self.__updateChildPlugUIs()
 			self.__visibilityChangedConnection = None # only need to build once
-	
+
 	def __parentChanged( self, widget ) :
-	
+
 		assert( widget is self )
-		
+
 		if not len( self.__column ) :
 			self.__updateChildPlugUIs()
-			self.__parentChangedConnection = None # only need to build once			
+			self.__parentChangedConnection = None # only need to build once
 
 	def __childAddedOrRemoved( self, *unusedArgs ) :
-	
+
 		# typically many children are added and removed at once. we don't
 		# want to be rebuilding the ui for each individual event, so we
 		# add an idle callback to do the rebuild once the
 		# upheaval is over.
-	
+
 		if not self.__childrenChangedPending :
 			GafferUI.EventLoop.addIdleCallback( self.__childrenChanged )
 			self.__childrenChangedPending = True
-			
+
 	def __childrenChanged( self ) :
-			
+
 		if not self.__column.visible() :
 			return
-	
-		self.__updateChildPlugUIs()	
+
+		self.__updateChildPlugUIs()
 		self.__childrenChangedPending = False
-		
+
 		return False # removes the callback
 
 	def __collapseStateChanged( self, widget ) :

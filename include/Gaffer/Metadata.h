@@ -1,25 +1,25 @@
 //////////////////////////////////////////////////////////////////////////
-//  
+//
 //  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
-//  
+//
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
 //  met:
-//  
+//
 //      * Redistributions of source code must retain the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer.
-//  
+//
 //      * Redistributions in binary form must reproduce the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
-//  
+//
 //      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
-//  
+//
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 //  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 //  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -31,7 +31,7 @@
 //  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 //  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//  
+//
 //////////////////////////////////////////////////////////////////////////
 
 #ifndef GAFFER_METADATA_H
@@ -74,22 +74,22 @@ class Metadata
 		/// values registered above. Instance values are preserved across script save/load and cut/paste.
 		/// \undoable
 		static void registerNodeValue( Node *node, IECore::InternedString key, IECore::ConstDataPtr value );
-		
+
 		/// Fills the keys vector with keys for all values registered for the specified node. If instanceOnly is true,
 		/// then only the values registered for that exact instance are returned.
 		static void registeredNodeValues( const Node *node, std::vector<IECore::InternedString> &keys, bool inherit = true, bool instanceOnly = false );
-		
+
 		/// Retrieves a previously registered value, returning NULL if none exists. If inherit is true
 		/// then the search falls through to the base classes of the node if the node itself doesn't have a value.
 		template<typename T>
 		static typename T::ConstPtr nodeValue( const Node *node, IECore::InternedString key, bool inherit = true, bool instanceOnly = false );
-		
+
 		/// Utility method calling registerNodeValue( nodeTypeId, "description", description ).
 		static void registerNodeDescription( IECore::TypeId nodeTypeId, const std::string &description );
 		static void registerNodeDescription( IECore::TypeId nodeTypeId, NodeValueFunction description );
 		/// Utility method calling nodeValue( node, "description", inherit );
 		static std::string nodeDescription( const Node *node, bool inherit = true );
-		
+
 		/// Registers a static metadata value for plugs with the specified path on the specified node type.
 		static void registerPlugValue( IECore::TypeId nodeTypeId, const MatchPattern &plugPath, IECore::InternedString key, IECore::ConstDataPtr value );
 		/// Registers a dynamic metadata value for the specified plug. Each time the data is retrieved, the
@@ -99,22 +99,22 @@ class Metadata
 		/// values registered above. Instance values are preserved across script save/load and cut/paste.
 		/// \undoable
 		static void registerPlugValue( Plug *plug, IECore::InternedString key, IECore::ConstDataPtr value );
-		
+
 		/// Fills the keys vector with keys for all values registered for the specified plug. If instanceOnly is true,
 		/// then only the values registered for that exact instance are returned.
 		static void registeredPlugValues( const Plug *plug, std::vector<IECore::InternedString> &keys, bool inherit = true, bool instanceOnly = false );
-		
+
 		/// Retrieves a previously registered value, returning NULL if none exists. If inherit is true
 		/// then the search falls through to the base classes of the node if the node itself doesn't have a value.
 		template<typename T>
 		static typename T::ConstPtr plugValue( const Plug *plug, IECore::InternedString key, bool inherit = true, bool instanceOnly = false );
-	
+
 		/// Utility function calling registerPlugValue( nodeTypeId, plugPath, "description", description )
 		static void registerPlugDescription( IECore::TypeId nodeTypeId, const MatchPattern &plugPath, const std::string &description );
 		static void registerPlugDescription( IECore::TypeId nodeTypeId, const MatchPattern &plugPath, PlugValueFunction description );
 		/// Utility function calling plugValue( plug, "description", inherit )
 		static std::string plugDescription( const Plug *plug, bool inherit = true );
-	
+
 		/// @name Signals
 		/// These are emitted when the Metadata has been changed with one
 		/// of the register*() methods. If dynamic metadata is registered
@@ -126,9 +126,9 @@ class Metadata
 		static NodeValueChangedSignal &nodeValueChangedSignal();
 		static PlugValueChangedSignal &plugValueChangedSignal();
 		//@}
-	
+
 	private :
-	
+
 		/// Per-instance Metadata is stored as a mapping from GraphComponent * to the
 		/// metadata values, and needs to be removed when the instance dies. Currently
 		/// there is no callback when a RefCounted object passes away, so we must rely
@@ -139,7 +139,7 @@ class Metadata
 		friend class Node;
 		friend class Plug;
 		static void clearInstanceMetadata( const GraphComponent *graphComponent );
-	
+
 		static IECore::ConstDataPtr nodeValueInternal( const Node *node, IECore::InternedString key, bool inherit, bool instanceOnly );
 		static IECore::ConstDataPtr plugValueInternal( const Plug *plug, IECore::InternedString key, bool inherit, bool instanceOnly );
 

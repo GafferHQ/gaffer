@@ -1,26 +1,26 @@
 //////////////////////////////////////////////////////////////////////////
-//  
+//
 //  Copyright (c) 2012, John Haddon. All rights reserved.
 //  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
-//  
+//
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
 //  met:
-//  
+//
 //      * Redistributions of source code must retain the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer.
-//  
+//
 //      * Redistributions in binary form must reproduce the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
-//  
+//
 //      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
-//  
+//
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 //  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 //  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -32,7 +32,7 @@
 //  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 //  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//  
+//
 //////////////////////////////////////////////////////////////////////////
 
 #include "tbb/parallel_reduce.h"
@@ -88,11 +88,11 @@ const ScenePlug *Instancer::instancePlug() const
 {
 	return getChild<ScenePlug>( g_firstPlugIndex + 1 );
 }
-		
+
 void Instancer::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	BranchCreator::affects( input, outputs );
-	
+
 	if( input->parent<ScenePlug>() == instancePlug() )
 	{
 		outputs.push_back( outPlug()->getChild<ValuePlug>( input->getName() ) );
@@ -105,25 +105,25 @@ void Instancer::affects( const Plug *input, AffectedPlugsContainer &outputs ) co
 
 struct Instancer::BoundHash
 {
-	
+
 	BoundHash( const Instancer *instancer, const ScenePath &branchPath, const Context *c )
 		:	m_instancer( instancer ), m_branchPath( branchPath ), m_context( c ), m_hash()
 	{
 	}
-	
+
 	BoundHash( const BoundHash &rhs, split )
 		:	m_instancer( rhs.m_instancer ), m_branchPath( rhs.m_branchPath ), m_context( rhs.m_context ), m_hash()
 	{
 	}
-	
+
 	void operator() ( const blocked_range<size_t> &r )
 	{
 		ContextPtr ic = new Context( *m_context, Context::Borrowed );
 		Context::Scope scopedContext( ic.get() );
-		
+
 		ScenePath branchChildPath( m_branchPath );
 		branchChildPath.push_back( InternedString() ); // where we'll place the instance index
-	
+
 		for( size_t i=r.begin(); i!=r.end(); ++i )
 		{
 			branchChildPath[branchChildPath.size()-1] = InternedString( i );
@@ -145,12 +145,12 @@ struct Instancer::BoundHash
 	}
 
 	private :
-	
+
 		const Instancer *m_instancer;
 		const ScenePath &m_branchPath;
 		const Context *m_context;
 		MurmurHash m_hash;
-	
+
 };
 
 void Instancer::hashBranchBound( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const
@@ -158,9 +158,9 @@ void Instancer::hashBranchBound( const ScenePath &parentPath, const ScenePath &b
 	if( branchPath.size() <= 1 )
 	{
 		// "/" or "/name"
-	
+
 		BranchCreator::hashBranchBound( parentPath, branchPath, context, h );
-	
+
 		ConstV3fVectorDataPtr p = sourcePoints( parentPath );
 		if( p )
 		{
@@ -177,7 +177,7 @@ void Instancer::hashBranchBound( const ScenePath &parentPath, const ScenePath &b
 				blocked_range<size_t>( 0, p->readable().size(), 100 ),
 				hasher
 			);
-			
+
 			h.append( hasher.result() );
 		}
 	}
@@ -186,35 +186,35 @@ void Instancer::hashBranchBound( const ScenePath &parentPath, const ScenePath &b
 		ContextPtr ic = instanceContext( context, branchPath );
 		Context::Scope scopedContext( ic.get() );
 		h = instancePlug()->boundPlug()->hash();
-	}	
+	}
 }
 
 struct Instancer::BoundUnion
 {
-	
+
 	BoundUnion( const Instancer *instancer, const ScenePath &branchPath, const Context *c, const V3fVectorData *p )
 		:	m_instancer( instancer ), m_branchPath( branchPath ), m_context( c ), m_p( p ), m_union()
 	{
 	}
-	
+
 	BoundUnion( const BoundUnion &rhs, split )
 		:	m_instancer( rhs.m_instancer ), m_branchPath( rhs.m_branchPath ), m_context( rhs.m_context ), m_p( rhs.m_p ), m_union()
 	{
 	}
-	
+
 	void operator() ( const blocked_range<size_t> &r )
 	{
 		ContextPtr ic = new Context( *m_context, Context::Borrowed );
 		Context::Scope scopedContext( ic.get() );
-		
+
 		ScenePath branchChildPath( m_branchPath );
 		branchChildPath.push_back( InternedString() ); // where we'll place the instance index
-	
+
 		for( size_t i=r.begin(); i!=r.end(); ++i )
 		{
 			branchChildPath[branchChildPath.size()-1] = InternedString( i );
 			m_instancer->fillInstanceContext( ic.get(), branchChildPath, i );
-			
+
 			Box3f branchChildBound = m_instancer->instancePlug()->boundPlug()->getValue();
 			branchChildBound = transform( branchChildBound, m_instancer->instanceTransform( m_p, i ) );
 			m_union.extendBy( branchChildBound );
@@ -232,13 +232,13 @@ struct Instancer::BoundUnion
 	}
 
 	private :
-	
+
 		const Instancer *m_instancer;
 		const ScenePath &m_branchPath;
 		const Context *m_context;
 		const V3fVectorData *m_p;
 		Box3f m_union;
-	
+
 };
 
 Imath::Box3f Instancer::computeBranchBound( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const
@@ -255,13 +255,13 @@ Imath::Box3f Instancer::computeBranchBound( const ScenePath &parentPath, const S
 			{
 				branchChildPath.push_back( namePlug()->getValue() );
 			}
-			
+
 			BoundUnion unioner( this, branchChildPath, context, p.get() );
 			parallel_reduce(
 				blocked_range<size_t>( 0, p->readable().size() ),
 				unioner
 			);
-			
+
 			result = unioner.result();
 		}
 
@@ -331,7 +331,7 @@ void Instancer::hashBranchAttributes( const ScenePath &parentPath, const ScenePa
 		ContextPtr ic = instanceContext( context, branchPath );
 		Context::Scope scopedContext( ic.get() );
 		h = instancePlug()->attributesPlug()->hash();
-	}	
+	}
 }
 
 IECore::ConstCompoundObjectPtr Instancer::computeBranchAttributes( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const
@@ -339,7 +339,7 @@ IECore::ConstCompoundObjectPtr Instancer::computeBranchAttributes( const ScenePa
 	if( branchPath.size() <= 1 )
 	{
 		// "/" or "/name"
-		return outPlug()->attributesPlug()->defaultValue();	
+		return outPlug()->attributesPlug()->defaultValue();
 	}
 	else
 	{
@@ -354,7 +354,7 @@ void Instancer::hashBranchObject( const ScenePath &parentPath, const ScenePath &
 	if( branchPath.size() <= 1 )
 	{
 		// "/" or "/name"
-		h = outPlug()->objectPlug()->defaultValue()->Object::hash();	
+		h = outPlug()->objectPlug()->defaultValue()->Object::hash();
 	}
 	else
 	{
@@ -369,7 +369,7 @@ IECore::ConstObjectPtr Instancer::computeBranchObject( const ScenePath &parentPa
 	if( branchPath.size() <= 1 )
 	{
 		// "/" or "/name"
-		return outPlug()->objectPlug()->defaultValue();	
+		return outPlug()->objectPlug()->defaultValue();
 	}
 	else
 	{
@@ -385,7 +385,7 @@ void Instancer::hashBranchChildNames( const ScenePath &parentPath, const ScenePa
 	{
 		// "/"
 		BranchCreator::hashBranchChildNames( parentPath, branchPath, context, h );
-		namePlug()->hash( h );	
+		namePlug()->hash( h );
 	}
 	else if( branchPath.size() == 1 )
 	{
@@ -413,7 +413,7 @@ IECore::ConstInternedStringVectorDataPtr Instancer::computeBranchChildNames( con
 			return outPlug()->childNamesPlug()->defaultValue();
 		}
 		InternedStringVectorDataPtr result = new InternedStringVectorData();
-		result->writable().push_back( name );		
+		result->writable().push_back( name );
 		return result;
 	}
 	else if( branchPath.size() == 1 )
@@ -423,17 +423,17 @@ IECore::ConstInternedStringVectorDataPtr Instancer::computeBranchChildNames( con
 		{
 			return outPlug()->childNamesPlug()->defaultValue();
 		}
-		
+
 		const size_t s = p->readable().size();
 		InternedStringVectorDataPtr resultData = new InternedStringVectorData();
 		vector<InternedString> &result = resultData->writable();
 		result.resize( s );
-		
+
 		for( size_t i = 0; i < s ; ++i )
 		{
 			result[i] = InternedString( i );
 		}
-		
+
 		return resultData;
 	}
 	else
@@ -451,7 +451,7 @@ ConstV3fVectorDataPtr Instancer::sourcePoints( const ScenePath &parentPath ) con
 	{
 		return 0;
 	}
-	
+
 	return primitive->variableData<V3fVectorData>( "P" );
 }
 
@@ -463,10 +463,10 @@ int Instancer::instanceIndex( const ScenePath &branchPath ) const
 Gaffer::ContextPtr Instancer::instanceContext( const Gaffer::Context *parentContext, const ScenePath &branchPath ) const
 {
 	assert( branchPath.size() >= 2 );
-	
+
 	ContextPtr result = new Context( *parentContext, Context::Borrowed );
 	fillInstanceContext( result.get(), branchPath );
-	
+
 	return result;
 }
 
@@ -484,7 +484,7 @@ void Instancer::fillInstanceContext( Gaffer::Context *instanceContext, const Sce
 	ScenePath instancePath;
 	instancePath.insert( instancePath.end(), branchPath.begin() + 2, branchPath.end() );
 	instanceContext->set( ScenePlug::scenePathContextName, instancePath );
-	
+
 	instanceContext->set( "instancer:id", instanceId );
 }
 

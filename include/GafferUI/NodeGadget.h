@@ -1,26 +1,26 @@
 //////////////////////////////////////////////////////////////////////////
-//  
+//
 //  Copyright (c) 2011-2014, John Haddon. All rights reserved.
 //  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
-//  
+//
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
 //  met:
-//  
+//
 //      * Redistributions of source code must retain the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer.
-//  
+//
 //      * Redistributions in binary form must reproduce the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
-//  
+//
 //      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
-//  
+//
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 //  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 //  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -32,7 +32,7 @@
 //  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 //  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//  
+//
 //////////////////////////////////////////////////////////////////////////
 
 #ifndef GAFFERUI_NODEGADGET_H
@@ -55,9 +55,9 @@ class NodeGadget : public Gadget
 	public :
 
 		virtual ~NodeGadget();
-		
+
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::NodeGadget, NodeGadgetTypeId, Gadget );
-		
+
 		Gaffer::Node *node();
 		const Gaffer::Node *node() const;
 
@@ -69,21 +69,21 @@ class NodeGadget : public Gadget
 		/// can be considered to be "away" from the NodeGadget for the
 		/// purposes of drawing connections.
 		virtual Imath::V3f noduleTangent( const Nodule *nodule ) const;
-				
+
 		/// Creates a NodeGadget for the specified node.
 		static NodeGadgetPtr create( Gaffer::NodePtr node );
-		
+
 		typedef boost::function<NodeGadgetPtr ( Gaffer::NodePtr )> NodeGadgetCreator;
 		/// Registers a function which will return a NodeGadget instance for a node of a specific
 		/// type. This can be used to customise the NodeGadget for specific node types.
 		static void registerNodeGadget( IECore::TypeId nodeType, NodeGadgetCreator creator );
 
 		virtual std::string getToolTip( const IECore::LineSegment3f &line ) const;
-		
+
 	protected :
 
 		NodeGadget( Gaffer::NodePtr node );
-	
+
 		/// Creating a static one of these is a convenient way of registering a NodeGadget type.
 		template<class T>
 		struct NodeGadgetTypeDescription
@@ -91,14 +91,14 @@ class NodeGadget : public Gadget
 			NodeGadgetTypeDescription( IECore::TypeId nodeType ) { NodeGadget::registerNodeGadget( nodeType, &creator ); };
 			static NodeGadgetPtr creator( Gaffer::NodePtr node ) { return new T( node ); };
 		};
-		
+
 	private :
-				
+
 		Gaffer::Node *m_node;
-		
+
 		typedef std::map<IECore::TypeId, NodeGadgetCreator> CreatorMap;
 		static CreatorMap &creators();
-		
+
 };
 
 IE_CORE_DECLAREPTR( NodeGadget );

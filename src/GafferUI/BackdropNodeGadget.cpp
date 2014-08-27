@@ -1,25 +1,25 @@
 //////////////////////////////////////////////////////////////////////////
-//  
+//
 //  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
-//  
+//
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
 //  met:
-//  
+//
 //      * Redistributions of source code must retain the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer.
-//  
+//
 //      * Redistributions in binary form must reproduce the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
-//  
+//
 //      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
-//  
+//
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 //  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 //  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -31,7 +31,7 @@
 //  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 //  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//  
+//
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/bind.hpp"
@@ -69,7 +69,7 @@ BackdropNodeGadget::BackdropNodeGadget( Gaffer::NodePtr node )
 	{
 		throw Exception( "BackdropNodeGadget requires a Backdrop" );
 	}
-	
+
 	if( !node->getChild<Box2fPlug>( g_boundPlugName ) )
 	{
 		node->addChild(
@@ -81,9 +81,9 @@ BackdropNodeGadget::BackdropNodeGadget( Gaffer::NodePtr node )
 			)
 		);
 	}
-	
+
 	node->plugDirtiedSignal().connect( boost::bind( &BackdropNodeGadget::plugDirtied, this, ::_1 ) );
-	
+
 	mouseMoveSignal().connect( boost::bind( &BackdropNodeGadget::mouseMove, this, ::_1, ::_2 ) );
 	buttonPressSignal().connect( boost::bind( &BackdropNodeGadget::buttonPress, this, ::_1, ::_2 ) );
 	dragBeginSignal().connect( boost::bind( &BackdropNodeGadget::dragBegin, this, ::_1, ::_2 ) );
@@ -108,11 +108,11 @@ std::string BackdropNodeGadget::getToolTip( const IECore::LineSegment3f &line ) 
 	const Backdrop *backdrop = static_cast<const Backdrop *>( node() );
 	std::string title = backdrop->titlePlug()->getValue();
 	std::string description = backdrop->descriptionPlug()->getValue();
-	
+
 	if( !title.size() && !description.size() )
 	{
 		return NodeGadget::getToolTip( line );
-	}	
+	}
 
 	if( title.size() )
 	{
@@ -127,7 +127,7 @@ std::string BackdropNodeGadget::getToolTip( const IECore::LineSegment3f &line ) 
 		boost::replace_all( description, "\n", "<br>" );
 		result += description;
 	}
-	
+
 	return result;
 }
 
@@ -138,7 +138,7 @@ void BackdropNodeGadget::frame( const std::vector<Gaffer::Node *> &nodes )
 	{
 		return;
 	}
-	
+
 	Box3f b;
 	for( std::vector<Node *>::const_iterator it = nodes.begin(), eIt = nodes.end(); it != eIt; ++it )
 	{
@@ -148,18 +148,18 @@ void BackdropNodeGadget::frame( const std::vector<Gaffer::Node *> &nodes )
 			b.extendBy( nodeGadget->transformedBound( NULL ) );
 		}
 	}
-	
+
 	if( b.isEmpty() )
 	{
 		return;
 	}
-	
+
 	graph->setNodePosition( node(), V2f( b.center().x, b.center().y ) );
-	
+
 	V2f s( b.size().x / 2.0f, b.size().y / 2.0f );
-	
+
 	boundPlug()->setValue(
-		Box2f( 
+		Box2f(
 			V2f( -s ) - V2f( g_margin ),
 			V2f( s ) + V2f( g_margin + 2.0f * g_margin )
 		)
@@ -171,13 +171,13 @@ void BackdropNodeGadget::framed( std::vector<Gaffer::Node *> &nodes ) const
 	const Node *nodeParent = node()->parent<Node>();
 	const GraphGadget *graphGadget = ancestor<GraphGadget>();
 	if( !nodeParent || !graphGadget )
-	{	
+	{
 		return;
 	}
-	
+
 	const Box3f bound3 = transformedBound( graphGadget );
 	const Box2f bound2( V2f( bound3.min.x, bound3.min.y ), V2f( bound3.max.x, bound3.max.y ) );
-	
+
 	for( NodeIterator it( nodeParent ); it != it.end(); ++it )
 	{
 		if( node() == it->get() )
@@ -206,19 +206,19 @@ void BackdropNodeGadget::doRender( const Style *style ) const
 {
 	// this is our bound in gadget space
 	Box2f bound = boundPlug()->getValue();
-	
+
 	// but because we're going to draw our contents at an arbitrary scale,
 	// we need to compute a modified bound which will be in the right place
-	// following scaling. 
-	
+	// following scaling.
+
 	const Backdrop *backdrop = static_cast<const Backdrop *>( node() );
 	const float scale = backdrop->scalePlug()->getValue();
-	
+
 	bound.min /= scale;
 	bound.max /= scale;
-	
+
 	glPushMatrix();
-	
+
 	glScalef( scale, scale, scale );
 
 	const Box3f titleCharacterBound = style->characterBound( Style::HeadingText );
@@ -233,9 +233,9 @@ void BackdropNodeGadget::doRender( const Style *style ) const
 		// around. leaving the main body of the backdrop as a hole is
 		// necessary to allow the GraphGadget to continue to perform
 		// drag selection on the nodes on top of the backdrop.
-		
+
 		const float width = hoverWidth() / scale;
-			
+
 		style->renderSolidRectangle( Box2f( bound.min, V2f( bound.min.x + width, bound.max.y ) ) ); // left
 		style->renderSolidRectangle( Box2f( V2f( bound.max.x - width, bound.min.y ), bound.max ) ); // right
 		style->renderSolidRectangle( Box2f( bound.min, V2f( bound.max.x, bound.min.y + width ) ) ); // bottom
@@ -245,7 +245,7 @@ void BackdropNodeGadget::doRender( const Style *style ) const
 	else
 	{
 		// normal drawing mode
-	
+
 		style->renderBackdrop( bound, getHighlighted() ? Style::HighlightedState : Style::NormalState );
 
 		const std::string title = backdrop->titlePlug()->getValue();
@@ -276,7 +276,7 @@ void BackdropNodeGadget::doRender( const Style *style ) const
 			style->renderWrappedText( Style::BodyText, description, textBound );
 		}
 	}
-	
+
 	glPopMatrix();
 }
 
@@ -314,14 +314,14 @@ bool BackdropNodeGadget::mouseMove( Gadget *gadget, const ButtonEvent &event )
 	{
 		Pointer::setCurrent( "" );
 	}
-	
+
 	bool newHovered = !(h || v);
 	if( newHovered != m_hovered )
 	{
 		m_hovered = newHovered;
 		renderRequestSignal()( this );
 	}
-	
+
 	return true;
 }
 
@@ -331,14 +331,14 @@ bool BackdropNodeGadget::buttonPress( Gadget *gadget, const ButtonEvent &event )
 	{
 		return false;
 	}
-	
+
 	hoveredEdges( event, m_horizontalDragEdge, m_verticalDragEdge );
-	
+
 	if( m_horizontalDragEdge || m_verticalDragEdge )
 	{
 		return true;
 	}
-	
+
 	// the GraphGadget will use the click for performing selection
 	return false;
 }
@@ -356,7 +356,7 @@ bool BackdropNodeGadget::dragEnter( Gadget *gadget, const DragDropEvent &event )
 bool BackdropNodeGadget::dragMove( Gadget *gadget, const DragDropEvent &event )
 {
 	Box2f b = boundPlug()->getValue();
-	
+
 	if( m_horizontalDragEdge == -1 )
 	{
 		b.min.x = std::min( event.line.p0.x, b.max.x - g_margin * 4.0f );
@@ -365,17 +365,17 @@ bool BackdropNodeGadget::dragMove( Gadget *gadget, const DragDropEvent &event )
 	{
 		b.max.x = std::max( event.line.p0.x, b.min.x + g_margin * 4.0f );
 	}
-	
+
 	if( m_verticalDragEdge == -1 )
 	{
 		b.min.y = std::min( event.line.p0.y, b.max.y - g_margin * 4.0f);
 	}
 	else if( m_verticalDragEdge == 1 )
 	{
-		b.max.y = std::max( event.line.p0.y, b.min.y + g_margin * 4.0f);		
+		b.max.y = std::max( event.line.p0.y, b.min.y + g_margin * 4.0f);
 	}
-	
-	boundPlug()->setValue( b );	
+
+	boundPlug()->setValue( b );
 	return true;
 }
 
@@ -403,12 +403,12 @@ float BackdropNodeGadget::hoverWidth() const
 }
 
 void BackdropNodeGadget::hoveredEdges( const ButtonEvent &event, int &horizontal, int &vertical ) const
-{	
+{
 	const Backdrop *backdrop = static_cast<const Backdrop *>( node() );
 	const float scale = backdrop->scalePlug()->getValue();
-	
+
 	const Box2f b = boundPlug()->getValue();
-		
+
 	const V3f &p = event.line.p0;
 	const float width = hoverWidth() * 2.0f;
 
@@ -422,7 +422,7 @@ void BackdropNodeGadget::hoveredEdges( const ButtonEvent &event, int &horizontal
 	{
 		horizontal = 1;
 	}
-	
+
 	if( fabs( p.y - b.min.y ) < width )
 	{
 		vertical = -1;
@@ -430,7 +430,7 @@ void BackdropNodeGadget::hoveredEdges( const ButtonEvent &event, int &horizontal
 	else if( fabs( p.y - b.max.y ) < std::min( width, 0.25f * g_margin * scale ) )
 	{
 		vertical = 1;
-	}	
+	}
 }
 
 Gaffer::Box2fPlug *BackdropNodeGadget::boundPlug()

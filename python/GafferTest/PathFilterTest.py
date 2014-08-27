@@ -1,26 +1,26 @@
 ##########################################################################
-#  
+#
 #  Copyright (c) 2011, John Haddon. All rights reserved.
 #  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
-#  
+#
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
 #  met:
-#  
+#
 #      * Redistributions of source code must retain the above
 #        copyright notice, this list of conditions and the following
 #        disclaimer.
-#  
+#
 #      * Redistributions in binary form must reproduce the above
 #        copyright notice, this list of conditions and the following
 #        disclaimer in the documentation and/or other materials provided with
 #        the distribution.
-#  
+#
 #      * Neither the name of John Haddon nor the names of
 #        any other contributors to this software may be used to endorse or
 #        promote products derived from this software without specific prior
 #        written permission.
-#  
+#
 #  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 #  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 #  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -32,7 +32,7 @@
 #  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 #  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 #  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#  
+#
 ##########################################################################
 
 import unittest
@@ -46,37 +46,37 @@ import GafferTest
 class PathFilterTest( GafferTest.TestCase ) :
 
 	def test( self ) :
-	
+
 		path = Gaffer.FileSystemPath( "test/data/scripts" )
 		children = path.children()
 		self.assertEqual( len( children ), len( glob.glob( "test/data/scripts/*" ) ) )
-		
+
 		# attach a filter
 		gfrFilter = Gaffer.FileNamePathFilter( [ "*.gfr" ] )
 		path.addFilter( gfrFilter )
-		
+
 		children = path.children()
 		self.assertEqual( len( children ), len( glob.glob( "test/data/scripts/*.gfr" ) ) )
-		
+
 		# copy the path and check the filter is working on the copy
 		pathCopy = path.copy()
 		self.assertEqual( len( pathCopy.children() ), len( children ) )
-		
+
 		# detach the filter and check that behaviour has reverted
 		path.removeFilter( gfrFilter )
 		children = path.children()
 		self.assertEqual( len( children ), len( glob.glob( "test/data/scripts/*" ) ) )
-			
+
 	def testEnabledState( self ) :
-	
+
 		path = Gaffer.FileSystemPath( "test/data/scripts" )
-		
+
 		f = Gaffer.FileNamePathFilter( [ "*.gfr" ] )
 		self.assertEqual( f.getEnabled(), True )
-		
+
 		path.setFilter( f )
 		self.assertEqual( len( path.children() ), len( glob.glob( "test/data/scripts/*.gfr" ) ) )
-		
+
 		f.setEnabled( False )
 		self.assertEqual( f.getEnabled(), False )
 		self.assertEqual( len( path.children() ), len( glob.glob( "test/data/scripts/*" ) ) )
@@ -84,38 +84,38 @@ class PathFilterTest( GafferTest.TestCase ) :
 		f.setEnabled( True )
 		self.assertEqual( f.getEnabled(), True )
 		self.assertEqual( len( path.children() ), len( glob.glob( "test/data/scripts/*.gfr" ) ) )
-		
+
 	def testChangedSignal( self ) :
-	
+
 		pathFilter = Gaffer.FileNamePathFilter( [ "*.gfr" ] )
-		
+
 		enabledStates = []
-		
+
 		def f( pf ) :
-		
+
 			self.failUnless( pf is pathFilter )
 			enabledStates.append( pf.getEnabled() )
-			
+
 		c = pathFilter.changedSignal().connect( f )
-	
+
 		pathFilter.setEnabled( False )
 		pathFilter.setEnabled( False )
 		pathFilter.setEnabled( True )
 		pathFilter.setEnabled( True )
 		pathFilter.setEnabled( False )
-		
+
 		self.assertEqual( enabledStates, [ False, True, False ] )
-		
+
 	def testUserData( self ) :
-	
+
 		pathFilter = Gaffer.FileNamePathFilter( [ "*.gfr" ] )
 		self.assertEqual( pathFilter.userData(), {} )
-		
+
 		ud = { "a" : "a" }
 		pathFilter = Gaffer.FileNamePathFilter( [ "*.gfr" ], userData = ud )
 		self.assertEqual( pathFilter.userData(), ud )
 		self.failIf( pathFilter.userData() is ud )
-	
+
 if __name__ == "__main__":
 	unittest.main()
-	
+

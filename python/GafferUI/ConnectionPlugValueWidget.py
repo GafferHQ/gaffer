@@ -44,48 +44,48 @@ import GafferUI
 class ConnectionPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plug, **kw ) :
-		
+
 		self.__frame = GafferUI.Frame( borderWidth = 2, formatter = self.__labelFormatter )
-		
+
 		GafferUI.PlugValueWidget.__init__( self, self.__frame, plug, **kw )
-		
+
 		self.__inputLabel = GafferUI.NameLabel(
 			None,
 			horizontalAlignment = GafferUI.HorizontalAlignment.Center,
 			formatter=self.__labelFormatter,
 			numComponents=2,
 		)
-		
+
 		row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal )
-		row.append( self.__inputLabel, horizontalAlignment = GafferUI.HorizontalAlignment.Center, expand = True )		
+		row.append( self.__inputLabel, horizontalAlignment = GafferUI.HorizontalAlignment.Center, expand = True )
 		self.__frame.setChild( row )
-		
+
 		self.__connections = [
 			self.__frame.buttonReleaseSignal().connect( Gaffer.WeakMethod( self.__buttonRelease ) ),
 			self.__inputLabel.buttonReleaseSignal().connect( Gaffer.WeakMethod( self.__buttonRelease ) ),
 			self.__frame.enterSignal().connect( IECore.curry( GafferUI.Frame.setHighlighted, highlighted=True ) ),
 			self.__frame.leaveSignal().connect( IECore.curry( GafferUI.Frame.setHighlighted, highlighted=False ) ),
 		]
-		
+
 		self._addPopupMenu( self.__frame )
-		
+
 		self._updateFromPlug()
 
 	def setHighlighted( self, highlighted ) :
-	
+
 		GafferUI.PlugValueWidget.setHighlighted( self, highlighted )
 		self.__frame.setHighlighted( highlighted )
 
 	def getToolTip( self ) :
-	
+
 		result = GafferUI.PlugValueWidget.getToolTip( self )
-		
+
 		srcNode = None
 		if self.getPlug() is not None :
 			input = self.getPlug().getInput()
 			if input is not None :
 				srcNode = input.node()
-		
+
 		if srcNode is not None :
 			result += "<ul>"
 			result += "<li>Left drag to drag source plug.</li>"
@@ -93,26 +93,26 @@ class ConnectionPlugValueWidget( GafferUI.PlugValueWidget ) :
 			result += "<ul>"
 
 		return result
-		
+
 	def _updateFromPlug( self ) :
-	
+
 		input = self.getPlug().getInput()
 		self.__inputLabel.setGraphComponent( input )
 		if input is not None :
-			self.__inputLabel.setNumComponents( input.relativeName( input.node() ).count( "." ) + 2 )			
+			self.__inputLabel.setNumComponents( input.relativeName( input.node() ).count( "." ) + 2 )
 
 	def __buttonRelease( self, widget, event ) :
-	
+
 		if event.button == event.Buttons.Left :
 			if self.getPlug().getInput() is not None :
 				GafferUI.NodeEditor.acquire( self.getPlug().getInput().node() )
 				return True
-			
+
 		return False
-		
+
 	@staticmethod
 	def __labelFormatter( graphComponents ) :
-	
+
 		if graphComponents :
 			return "<b>" + ".".join( [ g.getName() for g in graphComponents ] ) + "</b>"
 		else :

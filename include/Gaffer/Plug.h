@@ -1,26 +1,26 @@
 //////////////////////////////////////////////////////////////////////////
-//  
+//
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
-//  
+//
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
 //  met:
-//  
+//
 //      * Redistributions of source code must retain the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer.
-//  
+//
 //      * Redistributions in binary form must reproduce the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
-//  
+//
 //      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
-//  
+//
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 //  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 //  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -32,7 +32,7 @@
 //  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 //  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//  
+//
 //////////////////////////////////////////////////////////////////////////
 
 #ifndef GAFFER_PLUG_H
@@ -54,14 +54,14 @@ class Plug : public GraphComponent
 {
 
 	public :
-	
+
 		enum Direction
 		{
 			Invalid = 0,
 			In = 1,
 			Out = 2
 		};
-	
+
 		enum Flags
 		{
 			None = 0x00000000,
@@ -94,7 +94,7 @@ class Plug : public GraphComponent
 			Default = Serialisable | AcceptsInputs | PerformsSubstitutions | Cacheable,
 			All = Dynamic | Serialisable | AcceptsInputs | PerformsSubstitutions | Cacheable | ReadOnly
 		};
-	
+
 		Plug( const std::string &name=defaultName<Plug>(), Direction direction=In, unsigned flags=Default );
 		virtual ~Plug();
 
@@ -114,7 +114,7 @@ class Plug : public GraphComponent
 		//@}
 
 		Direction direction() const;
-		
+
 		/// Returns the current state of the flags.
 		unsigned getFlags() const;
 		/// Returns true if all the flags passed are currently set.
@@ -125,7 +125,7 @@ class Plug : public GraphComponent
 		/// Sets or unsets the specified flags depending on the enable
 		/// parameter. All other flags remain at their current values.
 		void setFlags( unsigned flags, bool enable );
-		
+
 		/// @name Connections
 		///////////////////////////////////////////////////////////////////////
 		//@{
@@ -135,7 +135,7 @@ class Plug : public GraphComponent
 		/// acceptance and false for rejection. Implementations
 		/// should call their base class and only accept an
 		/// input if their base class does too. The default
-		/// implementation accepts any input, provided that 
+		/// implementation accepts any input, provided that
 		/// direction()==In and the AcceptsInputs flag is set,
 		/// the ReadOnly flag is not set, and that node()->acceptsInput()
 		/// also accepts the input.
@@ -170,25 +170,25 @@ class Plug : public GraphComponent
 		/// Allows iteration over all the outputs of this plug.
 		const OutputContainer &outputs() const;
 		//@}
-	
+
 		/// Creates a new Plug which is a copy of this, but with a specified name and direction.
 		virtual PlugPtr createCounterpart( const std::string &name, Direction direction ) const;
-	
+
 	protected :
-			
+
 		virtual void parentChanging( Gaffer::GraphComponent *newParent );
-		
+
 	private :
 
 		void setInputInternal( PlugPtr input, bool emit );
-		
+
 		static void parentChanged( GraphComponent *child, GraphComponent *previousParent );
 
 		Direction m_direction;
 		Plug *m_input;
 		OutputContainer m_outputs;
 		unsigned m_flags;
-				
+
 };
 
 IE_CORE_DECLAREPTR( Plug );

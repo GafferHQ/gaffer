@@ -1,26 +1,26 @@
 //////////////////////////////////////////////////////////////////////////
-//  
+//
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
-//  
+//
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
 //  met:
-//  
+//
 //      * Redistributions of source code must retain the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer.
-//  
+//
 //      * Redistributions in binary form must reproduce the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
-//  
+//
 //      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
-//  
+//
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 //  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 //  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -32,7 +32,7 @@
 //  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 //  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//  
+//
 //////////////////////////////////////////////////////////////////////////
 
 #ifndef GAFFER_GRAPHCOMPONENT_H
@@ -71,7 +71,7 @@ class GraphComponent : public IECore::RunTimeTyped, public boost::signals::track
 
 		typedef boost::signal<void (GraphComponent *)> UnarySignal;
 		typedef boost::signal<void (GraphComponent *, GraphComponent *)> BinarySignal;
-		
+
 		/// @name Naming
 		/// All GraphComponents have a name, which must be unique among
 		/// siblings. Names may contain only A-Z, a-z, _ and 0-9, with the
@@ -98,7 +98,7 @@ class GraphComponent : public IECore::RunTimeTyped, public boost::signals::track
 		template<typename T>
 		static std::string defaultName();
 		//@}
-		
+
 		/// @name Parent-child relationships
 		/// GraphComponents are structured through parent-child
 		/// relationships. A GraphComponent may have many children but may
@@ -151,7 +151,7 @@ class GraphComponent : public IECore::RunTimeTyped, public boost::signals::track
 		/// Get a child by index, performing a runTimeCast to T.
 		/// Note that this function does not perform any bounds checking.
 		template<typename T>
-		inline const T *getChild( size_t index ) const;		
+		inline const T *getChild( size_t index ) const;
 		/// Read only access to the internal container of children. This
 		/// is useful for iteration over children.
 		const ChildContainer &children() const;
@@ -203,9 +203,9 @@ class GraphComponent : public IECore::RunTimeTyped, public boost::signals::track
 		/// will be 0 as it is no longer available.
 		BinarySignal &parentChangedSignal();
 		//@}
-	
+
 	protected :
-	
+
 		/// Called just /before/ the parent of this GraphComponent is
 		/// changed to newParent. This is an opportunity to do things
 		/// in preparation for the new relationship - currently it allows
@@ -222,9 +222,9 @@ class GraphComponent : public IECore::RunTimeTyped, public boost::signals::track
 		/// beforehand - they should just react to them afterwards. The
 		/// rationale for having this as a virtual function rather than
 		/// a protected signal is that there is less overhead in the virtual
-		/// function. 
+		/// function.
 		virtual void parentChanging( Gaffer::GraphComponent *newParent );
-		
+
 		/// It is common for derived classes to provide accessors for
 		/// constant-time access to specific children, as this can be
 		/// much quicker than a call to getChild<>( name ). This function
@@ -237,9 +237,9 @@ class GraphComponent : public IECore::RunTimeTyped, public boost::signals::track
 		/// from instance to instance, and storeIndexOfNextChild() will error
 		/// if it discovers that not to be the case.
 		void storeIndexOfNextChild( size_t &index ) const;
-				
+
 	private :
-	
+
 		static std::string unprefixedTypeName( const char *typeName );
 
 		void throwIfChildRejected( const GraphComponent *potentialChild ) const;
@@ -257,7 +257,7 @@ class GraphComponent : public IECore::RunTimeTyped, public boost::signals::track
 		BinarySignal m_childAddedSignal;
 		BinarySignal m_childRemovedSignal;
 		BinarySignal m_parentChangedSignal;
-		
+
 		IECore::InternedString m_name;
 		GraphComponent *m_parent;
 		ChildContainer m_children;

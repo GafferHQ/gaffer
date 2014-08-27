@@ -1,26 +1,26 @@
 ##########################################################################
-#  
+#
 #  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
-#  
+#
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
 #  met:
-#  
+#
 #      * Redistributions of source code must retain the above
 #        copyright notice, this list of conditions and the following
 #        disclaimer.
-#  
+#
 #      * Redistributions in binary form must reproduce the above
 #        copyright notice, this list of conditions and the following
 #        disclaimer in the documentation and/or other materials provided with
 #        the distribution.
-#  
+#
 #      * Neither the name of John Haddon nor the names of
 #        any other contributors to this software may be used to endorse or
 #        promote products derived from this software without specific prior
 #        written permission.
-#  
+#
 #  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 #  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 #  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -32,7 +32,7 @@
 #  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 #  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 #  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#  
+#
 ##########################################################################
 
 from __future__ import with_statement
@@ -55,26 +55,26 @@ class NodeMenu :
 	## Chances are you want to use acquire() to get the NodeMenu for a
 	# specific application, rather than construct one directly.
 	def __init__( self ) :
-	
+
 		self.__definition = IECore.MenuDefinition()
 
 	## Acquires the NodeMenu for the specified application.
 	@staticmethod
 	def acquire( applicationOrApplicationRoot ) :
-	
+
 		if isinstance( applicationOrApplicationRoot, Gaffer.Application ) :
 			applicationRoot = applicationOrApplicationRoot.root()
 		else :
 			assert( isinstance( applicationOrApplicationRoot, Gaffer.ApplicationRoot ) )
 			applicationRoot = applicationOrApplicationRoot
-			
+
 		nodeMenu = getattr( applicationRoot, "_nodeMenu", None )
 		if nodeMenu :
 			return nodeMenu
-			
+
 		nodeMenu = NodeMenu()
 		applicationRoot._nodeMenu = nodeMenu
-		
+
 		return nodeMenu
 
 	## Returns a menu definition used for the creation of nodes. This is
@@ -85,7 +85,7 @@ class NodeMenu :
 		return self.__definition
 
 	## Utility function to append a menu item to definition.
-	# nodeCreator must be a callable that returns a Gaffer.Node.	
+	# nodeCreator must be a callable that returns a Gaffer.Node.
 	def append( self, path, nodeCreator, plugValues={}, **kw ) :
 
 		item = IECore.MenuItemDefinition( command = self.nodeCreatorWrapper( nodeCreator=nodeCreator, plugValues=plugValues ), **kw )
@@ -118,10 +118,10 @@ class NodeMenu :
 
 				if node is None :
 					return
-				
+
 				for plugName, plugValue in plugValues.items() :
 					node.descendant( plugName ).setValue( plugValue )
-				
+
 				if node.parent() is None :
 					graphGadget.getRoot().addChild( node )
 

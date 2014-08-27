@@ -1,25 +1,25 @@
 //////////////////////////////////////////////////////////////////////////
-//  
+//
 //  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
-//  
+//
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
 //  met:
-//  
+//
 //      * Redistributions of source code must retain the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer.
-//  
+//
 //      * Redistributions in binary form must reproduce the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
-//  
+//
 //      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
-//  
+//
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 //  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 //  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -31,7 +31,7 @@
 //  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 //  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//  
+//
 //////////////////////////////////////////////////////////////////////////
 
 #include <cstdlib>
@@ -81,26 +81,26 @@ void compareOIIOGetPixelFunctions( std::string fileName )
 	cache->attribute( "autotile", 64 );
 	const ImageSpec *spec = cache->imagespec( uFileName );
 
-	int width = spec->width;	
+	int width = spec->width;
 	int height = spec->height;
 
 	// Get all of the available channels so that we can compare the result
 	// of this get_pixels call to the one below that only retrieves a single channel
 	// at a time.
-	int numberOfChannels = spec->channelnames.size();	
+	int numberOfChannels = spec->channelnames.size();
 	std::vector<float> channelDataRGB( width * height * numberOfChannels );
 	cache->get_pixels(
 		uFileName,
 		0, 0,
 		0, width,
-		0, height, 
+		0, height,
 		0, 1,
 		TypeDesc::FLOAT,
 		&(channelDataRGB[0])
 	);
-	
+
 	// Get the pixels of each channel and compare it to the result that
-	// we retrieved using the other get_pixels call above.	
+	// we retrieved using the other get_pixels call above.
 	for( int channelIndex = 0; channelIndex < numberOfChannels; ++channelIndex )
 	{
 		std::vector<float> channelData( width * height );
@@ -108,7 +108,7 @@ void compareOIIOGetPixelFunctions( std::string fileName )
 				uFileName,
 				0, 0,
 				0, width,
-				0, height, 
+				0, height,
 				0, 1,
 				channelIndex, channelIndex + 1,
 				TypeDesc::FLOAT,

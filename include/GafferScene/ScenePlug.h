@@ -1,26 +1,26 @@
 //////////////////////////////////////////////////////////////////////////
-//  
+//
 //  Copyright (c) 2012, John Haddon. All rights reserved.
 //  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
-//  
+//
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
 //  met:
-//  
+//
 //      * Redistributions of source code must retain the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer.
-//  
+//
 //      * Redistributions in binary form must reproduce the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
-//  
+//
 //      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
-//  
+//
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 //  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 //  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -32,7 +32,7 @@
 //  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 //  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//  
+//
 //////////////////////////////////////////////////////////////////////////
 
 #ifndef GAFFER_SCENEPLUG_H
@@ -54,7 +54,7 @@ class ScenePlug : public Gaffer::CompoundPlug
 {
 
 	public :
-			
+
 		ScenePlug( const std::string &name=defaultName<ScenePlug>(), Direction direction=In, unsigned flags=Default );
 		virtual ~ScenePlug();
 
@@ -64,7 +64,7 @@ class ScenePlug : public Gaffer::CompoundPlug
 		virtual Gaffer::PlugPtr createCounterpart( const std::string &name, Direction direction ) const;
 		/// Only accepts ScenePlug inputs.
 		virtual bool acceptsInput( const Gaffer::Plug *input ) const;
-	
+
 		/// @name Child plugs
 		/// Different aspects of the scene are passed through different
 		/// child plugs. Plugs are expected to be evaluated in the context
@@ -100,7 +100,7 @@ class ScenePlug : public Gaffer::CompoundPlug
 		Gaffer::CompoundObjectPlug *globalsPlug();
 		const Gaffer::CompoundObjectPlug *globalsPlug() const;
 		//@}
-		
+
 		/// The type used to specify the current scene path in
 		/// a Context object.
 		typedef std::vector<IECore::InternedString> ScenePath;
@@ -110,7 +110,7 @@ class ScenePlug : public Gaffer::CompoundPlug
 		/// and quicker than constructing a new InternedString
 		/// each time.
 		static const IECore::InternedString scenePathContextName;
-		
+
 		/// @name Convenience accessors
 		/// These functions create temporary Contexts specifying the scenePath
 		/// and then return the result of calling getValue() or hash() on the
@@ -128,22 +128,22 @@ class ScenePlug : public Gaffer::CompoundPlug
 		IECore::CompoundObjectPtr fullAttributes( const ScenePath &scenePath ) const;
 		IECore::ConstObjectPtr object( const ScenePath &scenePath ) const;
 		IECore::ConstInternedStringVectorDataPtr childNames( const ScenePath &scenePath ) const;
-		
+
 		IECore::MurmurHash boundHash( const ScenePath &scenePath ) const;
 		IECore::MurmurHash transformHash( const ScenePath &scenePath ) const;
 		IECore::MurmurHash fullTransformHash( const ScenePath &scenePath ) const;
 		IECore::MurmurHash attributesHash( const ScenePath &scenePath ) const;
 		IECore::MurmurHash fullAttributesHash( const ScenePath &scenePath ) const;
 		IECore::MurmurHash objectHash( const ScenePath &scenePath ) const;
-		IECore::MurmurHash childNamesHash( const ScenePath &scenePath ) const;		
+		IECore::MurmurHash childNamesHash( const ScenePath &scenePath ) const;
 		//@}
-	
+
 		/// Utility function to convert a string into a path by splitting on '/'.
 		/// \todo Many of the places we use this, it would be preferable if the source data was already
 		/// a path. Perhaps a ScenePathPlug could take care of this for us?
 		static void stringToPath( const std::string &s, ScenePlug::ScenePath &path );
 		static void pathToString( const ScenePlug::ScenePath &path, std::string &s );
-		
+
 };
 
 IE_CORE_DECLAREPTR( ScenePlug );

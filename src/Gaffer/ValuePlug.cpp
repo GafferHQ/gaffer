@@ -1,26 +1,26 @@
 //////////////////////////////////////////////////////////////////////////
-//  
+//
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
-//  
+//
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
 //  met:
-//  
+//
 //      * Redistributions of source code must retain the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer.
-//  
+//
 //      * Redistributions in binary form must reproduce the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
-//  
+//
 //      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
-//  
+//
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 //  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 //  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -32,7 +32,7 @@
 //  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 //  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//  
+//
 //////////////////////////////////////////////////////////////////////////
 
 #include <stack>
@@ -62,15 +62,15 @@ using namespace Gaffer;
 
 class ValuePlug::Computation
 {
-	
+
 	public :
-	
+
 		Computation( const ValuePlug *resultPlug )
 			:	m_resultPlug( resultPlug ), m_resultValue( NULL )
 		{
 			g_threadComputations.local().push( this );
 		}
-		
+
 		~Computation()
 		{
 			g_threadComputations.local().pop();
@@ -98,8 +98,8 @@ class ValuePlug::Computation
 				}
 				p = p->getInput<ValuePlug>();
 			}
-						
-			// do the cache lookup/computation.						
+
+			// do the cache lookup/computation.
 			if( cacheable )
 			{
 				IECore::MurmurHash hash = m_resultPlug->hash();
@@ -116,26 +116,26 @@ class ValuePlug::Computation
 				// time.
 				computeOrSetFromInput();
 			}
-			
+
 			return m_resultValue;
 		}
-				
+
 		static void receiveResult( const ValuePlug *plug, IECore::ConstObjectPtr result )
 		{
 			Computation *computation = Computation::current();
 			if( !computation )
 			{
-				throw IECore::Exception( boost::str( boost::format( "Cannot set value for plug \"%s\" except during computation." ) % plug->fullName() ) );					
+				throw IECore::Exception( boost::str( boost::format( "Cannot set value for plug \"%s\" except during computation." ) % plug->fullName() ) );
 			}
-			
+
 			if( computation->m_resultPlug != plug )
 			{
-				throw IECore::Exception( boost::str( boost::format( "Cannot set value for plug \"%s\" during computation for plug \"%s\"." ) % plug->fullName() % computation->m_resultPlug->fullName() ) );						
+				throw IECore::Exception( boost::str( boost::format( "Cannot set value for plug \"%s\" during computation for plug \"%s\"." ) % plug->fullName() % computation->m_resultPlug->fullName() ) );
 			}
-			
+
 			computation->m_resultValue = result;
 		}
-		
+
 		static Computation *current()
 		{
 			ComputationStack &s = g_threadComputations.local();
@@ -145,24 +145,24 @@ class ValuePlug::Computation
 			}
 			return s.top();
 		}
-	
+
 		static size_t getCacheMemoryLimit()
 		{
 			return g_valueCache.getMaxCost();
 		}
-		
+
 		static void setCacheMemoryLimit( size_t bytes )
 		{
 			return g_valueCache.setMaxCost( bytes );
 		}
-	
+
 		static size_t cacheMemoryUsage()
 		{
 			return g_valueCache.currentCost();
 		}
-		
+
 	private :
-	
+
 		// Fills in m_resultValue by calling ComputeNode::compute() or ValuePlug::setFrom().
 		// Throws if the result was not successfully retrieved.
 		void computeOrSetFromInput()
@@ -178,12 +178,12 @@ class ValuePlug::Computation
 				const ComputeNode *n = m_resultPlug->ancestor<ComputeNode>();
 				if( !n )
 				{
-					throw IECore::Exception( boost::str( boost::format( "Unable to compute value for Plug \"%s\" as it has no ComputeNode." ) % m_resultPlug->fullName() ) );			
+					throw IECore::Exception( boost::str( boost::format( "Unable to compute value for Plug \"%s\" as it has no ComputeNode." ) % m_resultPlug->fullName() ) );
 				}
 				// cast is ok - see comment above.
 				n->compute( const_cast<ValuePlug *>( m_resultPlug ), Context::current() );
 			}
-			
+
 			// the calls above should cause setValue() to be called on the result plug, which in
 			// turn will call ValuePlug::setObjectValue(), which will then store the result in
 			// the current computation by calling receiveResult(). If that hasn't happened then
@@ -193,23 +193,23 @@ class ValuePlug::Computation
 				throw IECore::Exception( boost::str( boost::format( "Value for Plug \"%s\" not set as expected." ) % m_resultPlug->fullName() ) );
 			}
 		}
-	
+
 		const ValuePlug *m_resultPlug;
 		IECore::ConstObjectPtr m_resultValue;
 
 		typedef std::stack<Computation *> ComputationStack;
 		typedef tbb::enumerable_thread_specific<ComputationStack> ThreadSpecificComputationStack;
 		static ThreadSpecificComputationStack g_threadComputations;
-		
+
 		static IECore::ObjectPtr nullGetter( const IECore::MurmurHash &h, size_t &cost )
 		{
 			cost = 0;
 			return NULL;
 		}
-		
+
 		typedef IECore::LRUCache<IECore::MurmurHash, IECore::ConstObjectPtr> ValueCache;
 		static ValueCache g_valueCache;
-		
+
 };
 
 ValuePlug::Computation::ThreadSpecificComputationStack ValuePlug::Computation::g_threadComputations;
@@ -223,7 +223,7 @@ class ValuePlug::SetValueAction : public Gaffer::Action
 {
 
 	public :
-	
+
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::ValuePlug::SetValueAction, SetValueActionTypeId, Gaffer::Action );
 
 		SetValueAction( ValuePlugPtr plug, IECore::ConstObjectPtr value )
@@ -237,12 +237,12 @@ class ValuePlug::SetValueAction : public Gaffer::Action
 		{
 			return m_plug.get();
 		}
-		
+
 		virtual void doAction()
 		{
 			m_plug->setValueInternal( m_doValue, true );
 		}
-		
+
 		virtual void undoAction()
 		{
 			m_plug->setValueInternal( m_undoValue, true );
@@ -257,7 +257,7 @@ class ValuePlug::SetValueAction : public Gaffer::Action
 			const SetValueAction *setValueAction = IECore::runTimeCast<const SetValueAction>( other );
 			return setValueAction && setValueAction->m_plug == m_plug;
 		}
-		
+
 		virtual void merge( const Action *other )
 		{
 			const SetValueAction *setValueAction = static_cast<const SetValueAction *>( other );
@@ -269,7 +269,7 @@ class ValuePlug::SetValueAction : public Gaffer::Action
 		ValuePlugPtr m_plug;
 		IECore::ConstObjectPtr m_doValue;
 		IECore::ConstObjectPtr m_undoValue;
-		
+
 };
 
 IE_CORE_DEFINERUNTIMETYPED( ValuePlug::SetValueAction );
@@ -319,7 +319,7 @@ void ValuePlug::setInput( PlugPtr input )
 	{
 		return;
 	}
-	
+
 	// set value back to what it was before
 	// we received a connection. we do that
 	// before calling Plug::setInput, so that
@@ -332,7 +332,7 @@ void ValuePlug::setInput( PlugPtr input )
 	{
 		setValueInternal( m_staticValue, false );
 	}
-	
+
 	Plug::setInput( input );
 }
 
@@ -342,12 +342,12 @@ bool ValuePlug::settable() const
 	{
 		return false;
 	}
-	
+
 	if( getInput<Plug>() )
 	{
 		return false;
 	}
-	
+
 	if( Computation *c = Computation::current() )
 	{
 		return c->resultPlug() == this;
@@ -397,7 +397,7 @@ IECore::MurmurHash ValuePlug::hash() const
 				n->hash( this, Context::current(), h );
 				if( h == emptyHash )
 				{
-					throw IECore::Exception( boost::str( boost::format( "ComputeNode::hash() not implemented for Plug \"%s\"." ) % fullName() ) );			
+					throw IECore::Exception( boost::str( boost::format( "ComputeNode::hash() not implemented for Plug \"%s\"." ) % fullName() ) );
 				}
 			}
 			else
@@ -406,7 +406,7 @@ IECore::MurmurHash ValuePlug::hash() const
 			}
 		}
 	}
-	
+
 	return h;
 }
 
@@ -427,7 +427,7 @@ IECore::ConstObjectPtr ValuePlug::getObjectValue() const
 			return m_staticValue;
 		}
 	}
-	
+
 	// an plug with an input connection or an output plug on a ComputeNode. there can be many values -
 	// one per context. the computation class is responsible for providing storage for the result
 	// and also actually managing the computation.
@@ -444,7 +444,7 @@ void ValuePlug::setObjectValue( IECore::ConstObjectPtr value )
 		// which we store directly on the plug. when setting this we need to take care
 		// of undo, and also of triggering the plugValueSet signal and propagating the
 		// plugDirtiedSignal.
-		
+
 		if( getFlags( ReadOnly ) )
 		{
 			// We don't allow static values to be set on read only plugs, so we throw.
@@ -455,12 +455,12 @@ void ValuePlug::setObjectValue( IECore::ConstObjectPtr value )
 			// read only after having their input set.
 			throw IECore::Exception( boost::str( boost::format( "Cannot set value for read only plug \"%s\"" ) % fullName() ) );
 		}
-	
+
 		if( value->isNotEqualTo( m_staticValue.get() ) )
 		{
 			Action::enact( new SetValueAction( this, value ) );
 		}
-		
+
 		return;
 	}
 
@@ -478,7 +478,7 @@ bool ValuePlug::inCompute() const
 void ValuePlug::setValueInternal( IECore::ConstObjectPtr value, bool propagateDirtiness )
 {
 	m_staticValue = value;
-	
+
 	// it is important that we emit the plug set signal before
 	// we emit dirty signals. this is because the node may wish to
 	// perform some internal setup when plugs are set, and listeners
@@ -503,7 +503,7 @@ void ValuePlug::emitPlugSet()
 			p = p->parent<ValuePlug>();
 		}
 	}
-	
+
 	// take a copy of the outputs, owning a reference - because who
 	// knows what will be added and removed by the connected slots.
 	std::vector<PlugPtr> o( outputs().begin(), outputs().end() );

@@ -1,26 +1,26 @@
 //////////////////////////////////////////////////////////////////////////
-//  
+//
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
-//  
+//
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
 //  met:
-//  
+//
 //      * Redistributions of source code must retain the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer.
-//  
+//
 //      * Redistributions in binary form must reproduce the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
-//  
+//
 //      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
-//  
+//
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 //  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 //  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -32,7 +32,7 @@
 //  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 //  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//  
+//
 //////////////////////////////////////////////////////////////////////////
 
 #ifndef GAFFER_VALUEPLUG_H
@@ -55,7 +55,7 @@ class ValuePlug : public Plug
 {
 
 	public :
-	
+
 		virtual ~ValuePlug();
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::ValuePlug, ValuePlugTypeId, Plug );
@@ -81,13 +81,13 @@ class ValuePlug : public Plug
 		/// Must be implemented by derived classes to set the value
 		/// to the default for this Plug.
 		virtual void setToDefault() = 0;
-		
+
 		/// Returns a hash to represent the value of this plug
 		/// in the current context.
 		virtual IECore::MurmurHash hash() const;
 		/// Convenience function to append the hash to h.
 		void hash( IECore::MurmurHash &h ) const;
-		
+
 		/// @name Cache management
 		/// ValuePlug optimises repeated computation by storing a cache of
 		/// recently computed values. These functions allow for management
@@ -114,7 +114,7 @@ class ValuePlug : public Plug
 		/// the values of child plugs, and aren't computed or stored directly
 		/// (CompoundPlug may not call getObjectValue() or setObjectValue() as a result).
 		ValuePlug( const std::string &name, Direction direction, unsigned flags );
-	
+
 		/// Internally all values are stored as instances of classes derived
 		/// from IECore::Object, although this isn't necessarily visible to the user.
 		/// This function updates the value using node()->compute()
@@ -134,7 +134,7 @@ class ValuePlug : public Plug
 		/// value - the value is referenced directly (not copied) and so must
 		/// not be changed following the call.
 		void setObjectValue( IECore::ConstObjectPtr value );
-		
+
 		/// Returns true if a computation is currently being performed on this thread -
 		/// if we are inside Node::compute().
 		bool inCompute() const;
@@ -145,16 +145,16 @@ class ValuePlug : public Plug
 		/// need to be called manually. It is exposed so that CompoundPlug can
 		/// simulate the behaviour of a plug being set when a child is added or removed.
 		void emitPlugSet();
-						
+
 	private :
-	
+
 		class Computation;
 		friend class Computation;
 
 		class SetValueAction;
-	
+
 		void setValueInternal( IECore::ConstObjectPtr value, bool propagateDirtiness );
-		
+
 		/// For holding the value of input plugs with no input connections.
 		IECore::ConstObjectPtr m_staticValue;
 

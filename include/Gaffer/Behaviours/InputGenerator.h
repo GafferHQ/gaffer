@@ -1,25 +1,25 @@
 //////////////////////////////////////////////////////////////////////////
-//  
+//
 //  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
-//  
+//
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
 //  met:
-//  
+//
 //      * Redistributions of source code must retain the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer.
-//  
+//
 //      * Redistributions in binary form must reproduce the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
-//  
+//
 //      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
-//  
+//
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 //  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 //  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -31,7 +31,7 @@
 //  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 //  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//  
+//
 //////////////////////////////////////////////////////////////////////////
 
 #ifndef GAFFER_BEHAVIOURS_INPUTGENERATOR_H
@@ -76,7 +76,7 @@ class InputGenerator : public Behaviour
 
 		/// Returns the maximum number of inputs that will be maintained.
 		inline size_t maximumInputs() const { return m_maximumInputs; };
-		
+
 		/// Returns a vector of the input plugs which are being maintained.
 		/// \todo The only reason this class is templated is so that this vector contains pointers
 		/// of the desired type and can therefore be used without casts. Consider
@@ -93,7 +93,7 @@ class InputGenerator : public Behaviour
 		size_t nConnectedInputs() const;
 
 	private :
-		
+
 		// Returns true if the specified plug is one that should be managed by us.
 		bool plugValid( const Plug *plug );
 		void childAdded( Gaffer::GraphComponent *parent, Gaffer::GraphComponent *child );
@@ -107,7 +107,7 @@ class InputGenerator : public Behaviour
 		/// the number of optional inputs are derived.
 		const size_t m_minimumInputs;
 		const size_t m_maximumInputs;
-		
+
 		/// The vector which holds the inputs that are visible on the node.
 		/// This vector will always hold the minimum number of inputs defined
 		/// within the constructor. It can never exceed the maximum number of inputs.

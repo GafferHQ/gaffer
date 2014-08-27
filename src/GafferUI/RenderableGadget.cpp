@@ -1,26 +1,26 @@
 //////////////////////////////////////////////////////////////////////////
-//  
+//
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
-//  
+//
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
 //  met:
-//  
+//
 //      * Redistributions of source code must retain the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer.
-//  
+//
 //      * Redistributions in binary form must reproduce the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
-//  
+//
 //      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
-//  
+//
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 //  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 //  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -32,7 +32,7 @@
 //  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 //  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//  
+//
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/bind.hpp"
@@ -120,19 +120,19 @@ void RenderableGadget::doRender( const Style *style ) const
 	}
 
 	if( m_scene )
-	{		
+	{
 		m_scene->render( m_baseState.get() );
 	}
-	
+
 	if( m_dragSelecting )
 	{
 		const ViewportGadget *viewportGadget = ancestor<ViewportGadget>();
 		ViewportGadget::RasterScope rasterScope( viewportGadget );
-		
+
 		Box2f b;
 		b.extendBy( viewportGadget->gadgetToRasterSpace( m_dragStartPosition, this ) );
 		b.extendBy( viewportGadget->gadgetToRasterSpace( m_lastDragPosition, this ) );
-		
+
 		style->renderSelectionBox( b );
 	}
 }
@@ -150,9 +150,9 @@ void RenderableGadget::setRenderable( IECore::ConstVisibleRenderablePtr renderab
 			{
 				IECore::WorldBlock world( renderer );
 				m_renderable->render( renderer.get() );
-			}	
+			}
 			m_scene = renderer->scene();
-			m_scene->setCamera( 0 );	
+			m_scene->setCamera( 0 );
 			applySelection();
 		}
 		renderRequestSignal()( this );
@@ -170,13 +170,13 @@ IECoreGL::State *RenderableGadget::baseState()
 }
 
 std::string RenderableGadget::objectAt( const IECore::LineSegment3f &lineInGadgetSpace ) const
-{	
+{
 	std::vector<IECoreGL::HitRecord> selection;
 	{
 		ViewportGadget::SelectionScope selectionScope( lineInGadgetSpace, this, selection, IECoreGL::Selector::IDRender );
 		m_scene->render( selectionScope.baseState() );
 	}
-	
+
 	if( !selection.size() )
 	{
 		return "";
@@ -191,13 +191,13 @@ size_t RenderableGadget::objectsAt( const Imath::V3f &corner0InGadgetSpace, cons
 		ViewportGadget::SelectionScope selectionScope( corner0InGadgetSpace, corner1InGadgetSpace, this, selection, IECoreGL::Selector::OcclusionQuery );
 		m_scene->render( selectionScope.baseState() );
 	}
-	
+
 	objectNames.reserve( selection.size() );
 	for( size_t i = 0, e = selection.size(); i < e; i++ )
 	{
 		objectNames.push_back( selection[i].name.value() );
 	}
-	
+
 	return objectNames.size();
 }
 
@@ -217,7 +217,7 @@ void RenderableGadget::setSelection( const std::set<std::string> &selection )
 	{
 		return;
 	}
-	
+
 	m_selection = selection;
 	applySelection();
 	m_selectionChangedSignal( this );
@@ -269,7 +269,7 @@ std::string RenderableGadget::getToolTip( const IECore::LineSegment3f &line ) co
 	{
 		return result;
 	}
-	
+
 	return objectAt( line );
 }
 
@@ -279,7 +279,7 @@ bool RenderableGadget::buttonPress( GadgetPtr gadget, const ButtonEvent &event )
 	{
 		return false;
 	}
-	
+
 	std::string objectUnderMouse = objectAt( event.line );
 
 	bool shiftHeld = event.modifiers && ButtonEvent::Shift;
@@ -298,7 +298,7 @@ bool RenderableGadget::buttonPress( GadgetPtr gadget, const ButtonEvent &event )
 	else
 	{
 		bool objectSelectedAlready = m_selection.find( objectUnderMouse ) != m_selection.end();
-		
+
 		if( objectSelectedAlready )
 		{
 			if( shiftHeld )
@@ -317,7 +317,7 @@ bool RenderableGadget::buttonPress( GadgetPtr gadget, const ButtonEvent &event )
 			selectionChanged = true;
 		}
 	}
-	
+
 	if( selectionChanged )
 	{
 		applySelection();
@@ -333,7 +333,7 @@ IECore::RunTimeTypedPtr RenderableGadget::dragBegin( GadgetPtr gadget, const Dra
 	{
 		return 0;
 	}
-	
+
 	std::string objectUnderMouse = objectAt( event.line );
 	if( objectUnderMouse == "" )
 	{
@@ -376,12 +376,12 @@ bool RenderableGadget::dragEnd( GadgetPtr gadget, const DragDropEvent &event )
 	{
 		return false;
 	}
-	
+
 	m_dragSelecting = false;
-	
+
 	std::vector<std::string> selection;
 	objectsAt( m_dragStartPosition, m_lastDragPosition, selection );
-	
+
 	bool selectionChanged = false;
 	for( std::vector<std::string>::const_iterator it = selection.begin(), eIt = selection.end(); it != eIt; it++ )
 	{
@@ -391,13 +391,13 @@ bool RenderableGadget::dragEnd( GadgetPtr gadget, const DragDropEvent &event )
 			selectionChanged = true;
 		}
 	}
-	
+
 	if( selectionChanged )
 	{
 		applySelection();
 		m_selectionChangedSignal( this );
 	}
-	
+
 	renderRequestSignal()( this );
 	return true;
 }
@@ -412,7 +412,7 @@ void RenderableGadget::applySelection( IECoreGL::Group *group )
 		}
 		group = m_scene->root().get();
 	}
-	
+
 	IECoreGL::State *state = group->getState();
 	IECoreGL::NameStateComponent *nameState = state->get<IECoreGL::NameStateComponent>();
 	WireframeColorStateComponent *currentWireframeColor = state->get<WireframeColorStateComponent>();
@@ -462,15 +462,15 @@ void RenderableGadget::applySelection( IECoreGL::Group *group )
 			it = userAttributes.find( g_drawWireframeName );
 			if( it != userAttributes.end() )
 			{
-				state->add( new Primitive::DrawWireframe( static_cast<const IECore::BoolData *>( it->second.get() )->readable() ) );			
+				state->add( new Primitive::DrawWireframe( static_cast<const IECore::BoolData *>( it->second.get() )->readable() ) );
 			}
 			else
 			{
-				state->remove<Primitive::DrawWireframe>();			
+				state->remove<Primitive::DrawWireframe>();
 			}
 		}
 	}
-	
+
 	const IECoreGL::Group::ChildContainer &children = group->children();
 	for( IECoreGL::Group::ChildContainer::const_iterator it = children.begin(), eIt = children.end(); it != eIt; it++ )
 	{

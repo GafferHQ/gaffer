@@ -52,13 +52,13 @@ namespace GafferImageBindings
 static boost::python::list filterList()
 {
 	std::vector<std::string> filters( Filter::filters() );
-	std::vector<std::string>::iterator it( filters.begin() );	
+	std::vector<std::string>::iterator it( filters.begin() );
 	boost::python::list result;
 	for( ; it != filters.end(); it++ )
 	{
 		result.append( *it );
 	}
-	
+
 	return result;
 }
 

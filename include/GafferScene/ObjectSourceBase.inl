@@ -1,26 +1,26 @@
 //////////////////////////////////////////////////////////////////////////
-//  
+//
 //  Copyright (c) 2012, John Haddon. All rights reserved.
 //  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
-//  
+//
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
 //  met:
-//  
+//
 //      * Redistributions of source code must retain the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer.
-//  
+//
 //      * Redistributions in binary form must reproduce the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
-//  
+//
 //      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
-//  
+//
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 //  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 //  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -32,7 +32,7 @@
 //  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 //  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//  
+//
 //////////////////////////////////////////////////////////////////////////
 
 #include "OpenEXR/ImathBoxAlgo.h"
@@ -99,7 +99,7 @@ template<typename BaseType>
 void ObjectSourceBase<BaseType>::affects( const Gaffer::Plug *input, Gaffer::DependencyNode::AffectedPlugsContainer &outputs ) const
 {
 	BaseType::affects( input, outputs );
-	
+
 	if( input == inputSourcePlug() )
 	{
 		outputs.push_back( BaseType::outPlug()->boundPlug() );
@@ -120,7 +120,7 @@ template<typename BaseType>
 void ObjectSourceBase<BaseType>::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	BaseType::hash( output, context, h );
-	
+
 	if( output == sourcePlug() )
 	{
 		hashSource( context, h );
@@ -155,7 +155,7 @@ template<typename BaseType>
 void ObjectSourceBase<BaseType>::hashBound( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
 	BaseType::hashBound( path, context, parent, h );
-	inputSourcePlug()->hash( h );	
+	inputSourcePlug()->hash( h );
 	if( path.size() == 0 )
 	{
 		transformPlug()->hash( h );
@@ -173,7 +173,7 @@ template<typename BaseType>
 void ObjectSourceBase<BaseType>::hashObject( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
 	BaseType::hashObject( path, context, parent, h );
-	inputSourcePlug()->hash( h );	
+	inputSourcePlug()->hash( h );
 }
 
 template<typename BaseType>
@@ -182,7 +182,7 @@ void ObjectSourceBase<BaseType>::hashChildNames( const SceneNode::ScenePath &pat
 	BaseType::hashChildNames( path, context, parent, h );
 	namePlug()->hash( h );
 }
-				
+
 template<typename BaseType>
 void ObjectSourceBase<BaseType>::compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const
 {
@@ -191,7 +191,7 @@ void ObjectSourceBase<BaseType>::compute( Gaffer::ValuePlug *output, const Gaffe
 		static_cast<Gaffer::ObjectPlug *>( output )->setValue( computeSource( context ) );
 		return;
 	}
-	
+
 	return BaseType::compute( output, context );
 }
 
@@ -200,7 +200,7 @@ Imath::Box3f ObjectSourceBase<BaseType>::computeBound( const SceneNode::ScenePat
 {
 	Imath::Box3f result;
 	IECore::ConstObjectPtr object = inputSourcePlug()->getValue();
-	
+
 	if( const IECore::VisibleRenderable *renderable = IECore::runTimeCast<const IECore::VisibleRenderable>( object.get() ) )
 	{
 		result = renderable->bound();
@@ -217,7 +217,7 @@ Imath::Box3f ObjectSourceBase<BaseType>::computeBound( const SceneNode::ScenePat
 	{
 		result = Imath::Box3f( Imath::V3f( -0.5 ), Imath::V3f( 0.5 ) );
 	}
-	
+
 	if( path.size() == 0 )
 	{
 		result = Imath::transform( result, transformPlug()->matrix() );
@@ -264,7 +264,7 @@ IECore::ConstInternedStringVectorDataPtr ObjectSourceBase<BaseType>::computeChil
 		}
 		else
 		{
-			result->writable().push_back( "unnamed" );		
+			result->writable().push_back( "unnamed" );
 		}
 		return result;
 	}

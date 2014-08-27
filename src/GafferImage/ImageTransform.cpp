@@ -1,25 +1,25 @@
 //////////////////////////////////////////////////////////////////////////
-//  
+//
 //  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
-//  
+//
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
 //  met:
-//  
+//
 //      * Redistributions of source code must retain the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer.
-//  
+//
 //      * Redistributions in binary form must reproduce the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
-//  
+//
 //      * Neither the name of Image Engine Design nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
-//  
+//
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 //  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 //  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -31,7 +31,7 @@
 //  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 //  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//  
+//
 //////////////////////////////////////////////////////////////////////////
 
 #include "IECore/AngleConversion.h"
@@ -68,35 +68,35 @@ class Implementation : public ImageProcessor
 		Implementation( const std::string &name=staticTypeName() );
 
 		virtual ~Implementation(){};
-		
+
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Implementation, ImageTransformImplementationTypeId, ImageProcessor );
-	
+
 		virtual void hashFormat( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual void hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual void hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual void hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		
+
 		virtual GafferImage::Format computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const;
 		virtual Imath::Box2i computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const;
 		virtual IECore::ConstStringVectorDataPtr computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const;
 		virtual IECore::ConstFloatVectorDataPtr computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const;
 
-		/// Plug accessors.	
+		/// Plug accessors.
 		Gaffer::Transform2DPlug *transformPlug();
 		const Gaffer::Transform2DPlug *transformPlug() const;
 		GafferImage::FilterPlug *filterPlug();
 		const GafferImage::FilterPlug *filterPlug() const;
 		GafferImage::FormatPlug *outputFormatPlug();
-		const GafferImage::FormatPlug *outputFormatPlug() const;	
-		
+		const GafferImage::FormatPlug *outputFormatPlug() const;
+
 		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
 		virtual bool enabled() const;
 
 	private :
-				
+
 		static size_t g_firstPlugIndex;
 
-		// A useful method that returns an axis-aligned box that contains box*m.		
+		// A useful method that returns an axis-aligned box that contains box*m.
 		Imath::Box2i transformBox( const Imath::M33f &m, const Imath::Box2i &box ) const;
 
 		// A method that uses the input and output format along with the transform plug to create
@@ -110,7 +110,7 @@ Implementation::Implementation( const std::string &name )
 	:	ImageProcessor( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
-	
+
 	addChild( new Gaffer::Transform2DPlug( "transform" ) );
 	addChild( new GafferImage::FilterPlug( "filter" ) );
 	addChild( new GafferImage::FormatPlug( "outputFormat" ) );
@@ -156,7 +156,7 @@ void Implementation::affects( const Gaffer::Plug *input, AffectedPlugsContainer 
 	}
 	else if( input == inPlug()->dataWindowPlug() )
 	{
-		outputs.push_back( outPlug()->dataWindowPlug() );	
+		outputs.push_back( outPlug()->dataWindowPlug() );
 	}
 	else if( input == inPlug()->channelNamesPlug() )
 	{
@@ -183,7 +183,7 @@ bool Implementation::enabled() const
 	{
 		return false;
 	}
-	
+
 	// Disable the node if it isn't doing anything...
 	Imath::V2f scale = transformPlug()->scalePlug()->getValue();
 	Imath::V2f translate = transformPlug()->translatePlug()->getValue();
@@ -221,23 +221,23 @@ void Implementation::hashChannelData( const GafferImage::ImagePlug *output, cons
 {
 	ImageProcessor::hashChannelData( output, context, h );
 
-	// Hash all of the tiles that the sample requires for this tile.	
+	// Hash all of the tiles that the sample requires for this tile.
 	Imath::V2i tileOrigin( Context::current()->get<Imath::V2i>( ImagePlug::tileOriginContextName ) );
 	std::string channelName( Context::current()->get<std::string>( ImagePlug::channelNameContextName ) );
 	Imath::M33f sampleTransform( computeAdjustedMatrix().inverse() );
 	Imath::Box2i tile( transformBox( sampleTransform, Imath::Box2i( tileOrigin, tileOrigin + Imath::V2i( ImagePlug::tileSize() ) ) ) );
-	
+
 	GafferImage::FilterPtr filter = GafferImage::Filter::create( filterPlug()->getValue() );
 	Sampler sampler( inPlug(), channelName, tile, filter );
 	sampler.hash( h );
-	
+
 	// Hash in the origin of the output tile. Multiple output tiles may share the exact same set of input
 	// tiles, but will reference different parts of them depending on the tile origin.
 	h.append( tileOrigin );
 
-	// Hash the filter type that we are using.	
+	// Hash the filter type that we are using.
 	filterPlug()->hash( h );
-	
+
 	// Finally we hash the transformation.
 	transformPlug()->hash( h );
 }
@@ -270,16 +270,16 @@ Imath::M33f Implementation::computeAdjustedMatrix() const
 	invPivotVec *= trueScale;
 	pi.translate( invPivotVec );
 
-	// As the input was only scaled to the nearest integer bounding box by the reformat node we need to 
+	// As the input was only scaled to the nearest integer bounding box by the reformat node we need to
 	// do a slight scale adjustment to achieve any sub-pixel scale factor.
 	Imath::V2f scaleOffset = scale / trueScale;
 	Imath::M33f s;
 	s.scale( scaleOffset );
 
-	// The rotation component.	
+	// The rotation component.
 	Imath::M33f r;
 	r.rotate( -IECore::degreesToRadians( transformPlug()->rotatePlug()->getValue() ) );
-	
+
 	// The translation component.
 	Imath::M33f t;
 	t.translate( transformPlug()->translatePlug()->getValue() );
@@ -306,7 +306,7 @@ Imath::Box2i Implementation::transformBox( const Imath::M33f &m, const Imath::Bo
 	int maxY = std::numeric_limits<int>::min();
 	int minX = std::numeric_limits<int>::max();
 	int minY = std::numeric_limits<int>::max();
-	
+
 	for( unsigned int i = 0; i < 4; ++i )
 	{
 		pt[i] = pt[i] * m;
@@ -315,8 +315,8 @@ Imath::Box2i Implementation::transformBox( const Imath::M33f &m, const Imath::Bo
 		minX = std::min( int( floor( pt[i].x ) ), minX );
 		minY = std::min( int( floor( pt[i].y ) ), minY );
 	}
-	
-	return Imath::Box2i( Imath::V2i( minX, minY ), Imath::V2i( maxX-1, maxY-1 ) );	
+
+	return Imath::Box2i( Imath::V2i( minX, minY ), Imath::V2i( maxX-1, maxY-1 ) );
 }
 
 GafferImage::Format Implementation::computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const
@@ -343,7 +343,7 @@ IECore::ConstFloatVectorDataPtr Implementation::computeChannelData( const std::s
 
 	Imath::M33f t = computeAdjustedMatrix().inverse();
 	Imath::Box2i sampleBox( transformBox( t, tile ) );
-	
+
 	GafferImage::FilterPtr filter = GafferImage::Filter::create( filterPlug()->getValue() );
 	Sampler sampler( inPlug(), channelName, sampleBox, filter );
 	for ( int j = 0; j < ImagePlug::tileSize(); ++j )
@@ -373,12 +373,12 @@ ImageTransform::ImageTransform( const std::string &name )
 	:	ImageProcessor( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
-	
+
 	addChild( new Gaffer::Transform2DPlug( "transform" ) );
-	
+
 	FilterPlug *filterPlug = new FilterPlug( "filter" );
 	addChild( filterPlug );
-	
+
 	addChild( new GafferImage::FormatPlug( "__scaledFormat", Gaffer::Plug::Out ) );
 
 	// Create the internal implementation of our transform and connect it up the our plugs.
@@ -399,7 +399,7 @@ ImageTransform::ImageTransform( const std::string &name )
 	t->filterPlug()->setInput( filterPlug );
 	t->enabledPlug()->setInput( enabledPlug() );
 	addChild( t );
-	
+
 	outPlug()->setInput( t->outPlug() );
 }
 
@@ -468,7 +468,7 @@ void ImageTransform::compute( ValuePlug *output, const Context *context ) const
 void ImageTransform::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	ImageProcessor::affects( input, outputs );
-	
+
 	if( transformPlug()->scalePlug()->isAncestorOf( input ) ||
 		input == inPlug()->formatPlug()
 	)
@@ -480,7 +480,7 @@ void ImageTransform::affects( const Gaffer::Plug *input, AffectedPlugsContainer 
 void ImageTransform::hash( const ValuePlug *output, const Context *context, IECore::MurmurHash &h ) const
 {
 	ImageProcessor::hash( output, context, h );
-	
+
 	const FormatPlug *fPlug = IECore::runTimeCast<const FormatPlug>(output);
 	if( fPlug == formatPlug() )
 	{

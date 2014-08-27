@@ -1,25 +1,25 @@
 //////////////////////////////////////////////////////////////////////////
-//  
+//
 //  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
-//  
+//
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
 //  met:
-//  
+//
 //      * Redistributions of source code must retain the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer.
-//  
+//
 //      * Redistributions in binary form must reproduce the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
-//  
+//
 //      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
-//  
+//
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 //  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 //  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -31,7 +31,7 @@
 //  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 //  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//  
+//
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/bind.hpp"
@@ -61,7 +61,7 @@ InputGenerator<PlugClass>::InputGenerator( Gaffer::GraphComponent *parent, PlugC
 			throw IECore::Exception( "Parent must be a Node or have an ancestor Node" );
 		}
 	}
-	
+
 	node->plugInputChangedSignal().connect( boost::bind( &InputGenerator<PlugClass>::inputChanged, this, ::_1 ) );
 	m_parent->childAddedSignal().connect( boost::bind( &InputGenerator<PlugClass>::childAdded, this, ::_1, ::_2 ) );
 	m_parent->childRemovedSignal().connect( boost::bind( &InputGenerator<PlugClass>::childRemoved, this, ::_1, ::_2 ) );
@@ -81,7 +81,7 @@ InputGenerator<PlugClass>::InputGenerator( Gaffer::GraphComponent *parent, PlugC
 	{
 		PlugClassPtr p = IECore::runTimeCast<PlugClass>( plugPrototype->createCounterpart( plugPrototype->getName(), Plug::In ) );
 		m_parent->addChild( p );
-	}	
+	}
 }
 
 template< typename PlugClass >
@@ -111,7 +111,7 @@ bool InputGenerator<PlugClass>::plugValid( const Plug *plug )
 	{
 		return true;
 	}
-	
+
 	if( !plug )
 	{
 		return false;
@@ -167,7 +167,7 @@ void InputGenerator<PlugClass>::inputChanged( Gaffer::Plug *plug )
 	{
 		return;
 	}
-	
+
 	if( const ScriptNode *script = plug->ancestor<ScriptNode>() )
 	{
 		if( script->currentActionStage() == Action::Undo ||
@@ -177,11 +177,11 @@ void InputGenerator<PlugClass>::inputChanged( Gaffer::Plug *plug )
 			// if we're currently in an undo or redo, we don't
 			// need to do anything, because our previous actions
 			// will be in the undo queue and will be being replayed
-			// for us automatically. 
+			// for us automatically.
 			return;
 		}
 	}
-		
+
 	if( plug->getInput<Plug>() )
 	{
 		// connection made. if it's the last plug
@@ -210,7 +210,7 @@ void InputGenerator<PlugClass>::inputChanged( Gaffer::Plug *plug )
 				break;
 			}
 		}
-		
+
 		if( toRemove.size() )
 		{
 			for( std::vector<Plug *>::const_iterator it = toRemove.begin(), eIt = toRemove.end(); it != eIt; ++it )
@@ -218,7 +218,7 @@ void InputGenerator<PlugClass>::inputChanged( Gaffer::Plug *plug )
 				(*it)->parent<Gaffer::GraphComponent>()->removeChild( *it );
 			}
 		}
-	}	
+	}
 }
 
 } // namespace Behaviours

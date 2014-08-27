@@ -1,26 +1,26 @@
 //////////////////////////////////////////////////////////////////////////
-//  
+//
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
-//  
+//
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
 //  met:
-//  
+//
 //      * Redistributions of source code must retain the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer.
-//  
+//
 //      * Redistributions in binary form must reproduce the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
-//  
+//
 //      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
-//  
+//
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 //  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 //  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -32,7 +32,7 @@
 //  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 //  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//  
+//
 //////////////////////////////////////////////////////////////////////////
 
 #include <set>
@@ -69,7 +69,7 @@ GraphComponent::~GraphComponent()
 		(*it)->m_parent = 0;
 		(*it)->parentChanging( 0 );
 		(*it)->parentChangedSignal()( (*it).get(), 0 );
-	}	
+	}
 }
 
 const IECore::InternedString &GraphComponent::setName( const IECore::InternedString &name )
@@ -81,7 +81,7 @@ const IECore::InternedString &GraphComponent::setName( const IECore::InternedStr
 		std::string what = boost::str( boost::format( "Invalid name \"%s\"" ) % name.string() );
 		throw IECore::Exception( what );
 	}
-	
+
 	// make sure the name is unique
 	IECore::InternedString newName = name;
 	if( m_parent )
@@ -95,7 +95,7 @@ const IECore::InternedString &GraphComponent::setName( const IECore::InternedStr
 				break;
 			}
 		}
-	
+
 		if( !uniqueAlready )
 		{
 			// split name into a prefix and a numeric suffix. if no suffix
@@ -125,13 +125,13 @@ const IECore::InternedString &GraphComponent::setName( const IECore::InternedStr
 			newName = boost::str( formatter % prefix % suffix );
 		}
 	}
-	
+
 	// set the new name if it's different to the old
 	if( newName==m_name )
 	{
 		return m_name;
 	}
-	
+
 	Action::enact(
 		this,
 		// ok to bind raw pointers to this, because enact() guarantees
@@ -139,7 +139,7 @@ const IECore::InternedString &GraphComponent::setName( const IECore::InternedStr
 		boost::bind( &GraphComponent::setNameInternal, this, newName ),
 		boost::bind( &GraphComponent::setNameInternal, this, m_name )
 	);
-	
+
 	return m_name;
 }
 
@@ -197,7 +197,7 @@ void GraphComponent::addChild( GraphComponentPtr child )
 	{
 		return;
 	}
-	
+
 	throwIfChildRejected( child.get() );
 
 	if( refCount() )
@@ -225,7 +225,7 @@ void GraphComponent::addChild( GraphComponentPtr child )
 			// no previous parent.
 			undoFn = boost::bind( &GraphComponent::removeChildInternal, this, child, true );
 		}
-		
+
 		Action::enact(
 			this,
 			// ok to use raw pointer for this - lifetime of subject guaranteed.
@@ -249,14 +249,14 @@ void GraphComponent::setChild( const IECore::InternedString &name, GraphComponen
 	{
 		return;
 	}
-	
+
 	throwIfChildRejected( child.get() );
 
 	if( existingChild )
 	{
 		removeChild( existingChild );
 	}
-	
+
 	child->setName( name );
 	addChild( child );
 }
@@ -268,19 +268,19 @@ void GraphComponent::throwIfChildRejected( const GraphComponent *potentialChild 
 		string what = boost::str( boost::format( "Child \"%s\" cannot be parented to itself." ) % m_name.value() );
 		throw Exception( what );
 	}
-	
+
 	if( potentialChild->isAncestorOf( this ) )
 	{
 		string what = boost::str( boost::format( "Child \"%s\" cannot be parented to parent \"%s\" as it is an ancestor of \"%s\"." ) % potentialChild->m_name.value() % m_name.value() % m_name.value() );
 		throw Exception( what );
 	}
-	
+
 	if( !acceptsChild( potentialChild ) )
 	{
 		string what = boost::str( boost::format( "Parent \"%s\" rejects child \"%s\"." ) % m_name.value() % potentialChild->m_name.value() );
 		throw Exception( what );
 	}
-	
+
 	if( !potentialChild->acceptsParent( this ) )
 	{
 		string what = boost::str( boost::format( "Child \"%s\" rejects parent \"%s\"." ) % potentialChild->m_name.value() % m_name.value() );
@@ -312,7 +312,7 @@ void GraphComponent::removeChild( GraphComponentPtr child )
 	{
 		throw Exception( "Object is not a child." );
 	}
-	
+
 	if( refCount() )
 	{
 		// someone is pointing to us, so we may have a ScriptNode ancestor and we should do things
@@ -353,7 +353,7 @@ void GraphComponent::removeChildInternal( GraphComponentPtr child, bool emitPare
 	ChildContainer::iterator it = std::find( m_children.begin(), m_children.end(), child );
 	if( it == m_children.end() || child->m_parent != this )
 	{
-		// the public removeChild() method protects against this case, but it's still possible to 
+		// the public removeChild() method protects against this case, but it's still possible to
 		// arrive here if an Action (which has a direct binding to removeChildInternal) is being replayed
 		// from the undo queue, and just prior to that something called the public removeChild() method.
 		// this can occur if a slot calls removeChild() from a signal triggered during the replay of the
@@ -366,7 +366,7 @@ void GraphComponent::removeChildInternal( GraphComponentPtr child, bool emitPare
 	child->m_parent = 0;
 	childRemovedSignal()( this, child.get() );
 	if( emitParentChanged )
-	{	
+	{
 		child->parentChangedSignal()( child.get(), this );
 	}
 }

@@ -1,25 +1,25 @@
 ##########################################################################
-#  
+#
 #  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
-#  
+#
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
 #  met:
-#  
+#
 #      * Redistributions of source code must retain the above
 #        copyright notice, this list of conditions and the following
 #        disclaimer.
-#  
+#
 #      * Redistributions in binary form must reproduce the above
 #        copyright notice, this list of conditions and the following
 #        disclaimer in the documentation and/or other materials provided with
 #        the distribution.
-#  
+#
 #      * Neither the name of John Haddon nor the names of
 #        any other contributors to this software may be used to endorse or
 #        promote products derived from this software without specific prior
 #        written permission.
-#  
+#
 #  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 #  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 #  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -31,7 +31,7 @@
 #  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 #  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 #  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#  
+#
 ##########################################################################
 
 import os
@@ -47,34 +47,34 @@ class ApplicationRootTest( GafferTest.TestCase ) :
 	__preferencesFile = "/tmp/testPreferences.py"
 
 	def testPreferences( self ) :
-	
+
 		class testApp( Gaffer.Application ) :
-		
+
 			def __init__( self ) :
-			
+
 				Gaffer.Application.__init__( self )
-	
+
 		application = testApp()
 		applicationRoot = application.root()
-		
+
 		p = applicationRoot["preferences"]
 		self.failUnless( isinstance( p, Gaffer.Preferences ) )
-		
+
 		p["category1"] = Gaffer.CompoundPlug()
 		p["category1"]["i"] = Gaffer.IntPlug( defaultValue = 2 )
-		
+
 		p["category2"] = Gaffer.CompoundPlug()
 		p["category2"]["s"] = Gaffer.StringPlug( defaultValue = "apples" )
 		p["category2"]["v"] = Gaffer.V3fPlug( defaultValue = IECore.V3f( 1, 0, 0 ) )
-		
+
 		p["category1"]["i"].setValue( 10 )
 		p["category2"]["s"].setValue( "oranges" )
 		p["category2"]["v"].setValue( IECore.V3f( 2, 3, 4 ) )
-				
+
 		self.failIf( os.path.exists( self.__defaultPreferencesFile ) )
 		applicationRoot.savePreferences()
 		self.failUnless( os.path.exists( self.__defaultPreferencesFile ) )
-		
+
 		self.failIf( os.path.exists( self.__preferencesFile ) )
 		applicationRoot.savePreferences( self.__preferencesFile )
 		self.failUnless( os.path.exists( self.__preferencesFile ) )
@@ -82,58 +82,58 @@ class ApplicationRootTest( GafferTest.TestCase ) :
 		p["category1"]["i"].setValue( 1 )
 		p["category2"]["s"].setValue( "beef" )
 		p["category2"]["v"].setValue( IECore.V3f( -10 ) )
-	
+
 		executionContext = { "application" : application }
 		execfile( self.__preferencesFile, executionContext, executionContext )
-	
+
 		self.assertEqual( p["category1"]["i"].getValue(), 10 )
 		self.assertEqual( p["category2"]["s"].getValue(), "oranges" )
 		self.assertEqual( p["category2"]["v"].getValue(), IECore.V3f( 2, 3, 4 ) )
 
 	def testPreferencesPermissionsErrors( self ) :
-	
+
 		a = Gaffer.ApplicationRoot( "testApp" )
-		
+
 		a.savePreferences( self.__preferencesFile )
 		os.chmod( self.__preferencesFile, 0 )
 		self.assertRaises( RuntimeError, a.savePreferences, self.__preferencesFile )
-	
+
 	def testPreferencesLocation( self ) :
-	
+
 		a = Gaffer.ApplicationRoot( "testApp" )
-		
+
 		self.assertEqual( a.preferencesLocation(), os.path.dirname( self.__defaultPreferencesFile ) )
 		self.failUnless( os.path.isdir( a.preferencesLocation() ) )
-	
+
 	def testClipboard( self ) :
-	
+
 		a = Gaffer.ApplicationRoot()
-		
+
 		d = []
 		def f( app ) :
-		
+
 			self.assertTrue( app.isSame( a ) )
 			d.append( app.getClipboardContents() )
-			
+
 		c = a.clipboardContentsChangedSignal().connect( f )
-		
+
 		self.assertEqual( len( d ), 0 )
 		self.assertEqual( a.getClipboardContents(), None )
-		
+
 		a.setClipboardContents( IECore.IntData( 10 ) )
 		self.assertEqual( len( d ), 1 )
 		self.assertEqual( a.getClipboardContents(), IECore.IntData( 10 ) )
-		
+
 		a.setClipboardContents( IECore.IntData( 20 ) )
 		self.assertEqual( len( d ), 2 )
 		self.assertEqual( a.getClipboardContents(), IECore.IntData( 20 ) )
-		
+
 		a.setClipboardContents( IECore.IntData( 20 ) )
 		self.assertEqual( len( d ), 2 )
 		self.assertEqual( a.getClipboardContents(), IECore.IntData( 20 ) )
-	
+
 	def tearDown( self ) :
-				
+
 		for f in [
 			self.__defaultPreferencesFile,
 			self.__preferencesFile,
@@ -143,4 +143,4 @@ class ApplicationRootTest( GafferTest.TestCase ) :
 
 if __name__ == "__main__":
 	unittest.main()
-	
+

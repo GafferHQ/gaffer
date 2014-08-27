@@ -1,25 +1,25 @@
 //////////////////////////////////////////////////////////////////////////
-//  
+//
 //  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
-//  
+//
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
 //  met:
-//  
+//
 //      * Redistributions of source code must retain the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer.
-//  
+//
 //      * Redistributions in binary form must reproduce the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
-//  
+//
 //      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
-//  
+//
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 //  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 //  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -31,7 +31,7 @@
 //  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 //  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//  
+//
 //////////////////////////////////////////////////////////////////////////
 
 #include "GafferImage/ImageSampler.h"
@@ -59,7 +59,7 @@ ImageSampler::ImageSampler( const std::string &name )
 	addChild( new V2fPlug( "pixel" ) );
 	addChild( new FilterPlug( "filter" ) );
 	addChild( new Color4fPlug( "color", Plug::Out ) );
-	
+
 }
 
 ImageSampler::~ImageSampler()
@@ -88,12 +88,12 @@ const Gaffer::V2fPlug *ImageSampler::pixelPlug() const
 
 FilterPlug *ImageSampler::filterPlug()
 {
-	return getChild<FilterPlug>( g_firstPlugIndex + 2 );	
+	return getChild<FilterPlug>( g_firstPlugIndex + 2 );
 }
 
 const FilterPlug *ImageSampler::filterPlug() const
 {
-	return getChild<FilterPlug>( g_firstPlugIndex + 2 );	
+	return getChild<FilterPlug>( g_firstPlugIndex + 2 );
 }
 
 Gaffer::Color4fPlug *ImageSampler::colorPlug()
@@ -109,7 +109,7 @@ const Gaffer::Color4fPlug *ImageSampler::colorPlug() const
 void ImageSampler::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	ComputeNode::affects( input, outputs );
-	
+
 	const Gaffer::Plug *inputParent = input->parent<Plug>();
 	if( inputParent == imagePlug() || inputParent == pixelPlug() || input == filterPlug() )
 	{
@@ -128,10 +128,10 @@ void ImageSampler::hash( const Gaffer::ValuePlug *output, const Gaffer::Context 
 	{
 		std::string channel = channelName( output );
 		if( channel.size() )
-		{	
+		{
 			V2f pixel = pixelPlug()->getValue();
 			Box2i sampleWindow;
-			sampleWindow.extendBy( V2i( pixel ) - V2i( 1 ) );	
+			sampleWindow.extendBy( V2i( pixel ) - V2i( 1 ) );
 			sampleWindow.extendBy( V2i( pixel ) + V2i( 1 ) );
 			const string filter = filterPlug()->getValue();
 			Sampler sampler( imagePlug(), channel, sampleWindow, Filter::create( filter ) );
@@ -148,29 +148,29 @@ void ImageSampler::compute( Gaffer::ValuePlug *output, const Gaffer::Context *co
 	if( output->parent<Plug>() == colorPlug() )
 	{
 		float sample = 0;
-		
+
 		std::string channel = channelName( output );
 		if( channel.size() )
 		{
 			V2f pixel = pixelPlug()->getValue();
 			Box2i sampleWindow;
-			sampleWindow.extendBy( V2i( pixel ) - V2i( 1 ) );	
+			sampleWindow.extendBy( V2i( pixel ) - V2i( 1 ) );
 			sampleWindow.extendBy( V2i( pixel ) + V2i( 1 ) );
 			Sampler sampler( imagePlug(), channel, sampleWindow, Filter::create( filterPlug()->getValue() ) );
 			sample = sampler.sample( pixel.x, pixel.y );
 		}
-		
+
 		static_cast<FloatPlug *>( output )->setValue( sample );
 		return;
 	}
-	
-	ComputeNode::compute( output, context );	
+
+	ComputeNode::compute( output, context );
 }
 
 std::string ImageSampler::channelName( const Gaffer::ValuePlug *output ) const
 {
 	std::string name;
-	
+
 	const Color4fPlug *c = colorPlug();
 	if( output == c->getChild( 0 ) )
 	{
@@ -188,12 +188,12 @@ std::string ImageSampler::channelName( const Gaffer::ValuePlug *output ) const
 	{
 		name = "A";
 	}
-		
+
 	ConstStringVectorDataPtr channelNames = imagePlug()->channelNamesPlug()->getValue();
 	if( find( channelNames->readable().begin(), channelNames->readable().end(), name ) != channelNames->readable().end() )
 	{
 		return name;
 	}
 
-	return "";	
+	return "";
 }

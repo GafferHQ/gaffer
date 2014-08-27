@@ -1,25 +1,25 @@
 ##########################################################################
-#  
+#
 #  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
-#  
+#
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
 #  met:
-#  
+#
 #      * Redistributions of source code must retain the above
 #        copyright notice, this list of conditions and the following
 #        disclaimer.
-#  
+#
 #      * Redistributions in binary form must reproduce the above
 #        copyright notice, this list of conditions and the following
 #        disclaimer in the documentation and/or other materials provided with
 #        the distribution.
-#  
+#
 #      * Neither the name of John Haddon nor the names of
 #        any other contributors to this software may be used to endorse or
 #        promote products derived from this software without specific prior
 #        written permission.
-#  
+#
 #  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 #  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 #  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -31,7 +31,7 @@
 #  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 #  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 #  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#  
+#
 ##########################################################################
 
 import Gaffer
@@ -48,13 +48,13 @@ def __visibilitySummary( plug ) :
 
 	info = []
 	for childName, label in (
-	
+
 		( "camera", "Camera" ),
 		( "transmission", "Trans" ),
 		( "diffuse", "Diff" ),
 		( "specular", "Spec" ),
 		( "photon", "Photon" )
-	
+
 	)	:
 		values = []
 		if plug[childName+"Visibility"]["enabled"].getValue() :
@@ -63,7 +63,7 @@ def __visibilitySummary( plug ) :
 			values.append( plug[childName+"HitMode"]["value"].getValue().capitalize() )
 		if values :
 			info.append( label + " : " + "/".join( values ) )
-			
+
 	return ", ".join( info )
 
 def __shadingSummary( plug ) :
@@ -77,9 +77,9 @@ def __shadingSummary( plug ) :
 		info.append( "Matte %s" % ( "On" if plug["matte"]["value"].getValue() else "Off" ) )
 	if plug["displacementBound"]["enabled"].getValue() :
 		info.append( "Displacement Bound %s" % __floatToString( plug["displacementBound"]["value"].getValue() ) )
-			
+
 	return ", ".join( info )
-	
+
 def __raytracingSummary( plug ) :
 
 	info = []
@@ -89,37 +89,37 @@ def __raytracingSummary( plug ) :
 		info.append( "Specular Depth %d" % plug["maxSpecularDepth"]["value"].getValue() )
 	if plug["traceDisplacements"]["enabled"].getValue() :
 		info.append( "Displacements %s" % ( "On" if plug["traceDisplacements"]["value"].getValue() else "Off" ) )
-	
+
 	return ", ".join( info )
-		
+
 GafferUI.PlugValueWidget.registerCreator(
-	
+
 	GafferRenderMan.RenderManAttributes,
 	"attributes",
 	GafferUI.SectionedCompoundDataPlugValueWidget,
 	sections = (
-		
+
 		{
 			"label" : "Visibility",
 			"summary" : __visibilitySummary,
 			"namesAndLabels" : (
 				( "ri:visibility:camera", "Camera" ),
 				( "ri:shade:camerahitmode", "Camera Mode" ),
-				
+
 				( "ri:visibility:transmission", "Transmission" ),
 				( "ri:shade:transmissionhitmode", "Transmission Mode" ),
-				
+
 				( "ri:visibility:diffuse", "Diffuse" ),
 				( "ri:shade:diffusehitmode", "Diffuse Mode" ),
-				
+
 				( "ri:visibility:specular", "Specular" ),
 				( "ri:shade:specularhitmode", "Specular Mode" ),
-				
+
 				( "ri:visibility:photon", "Photon" ),
 				( "ri:shade:photonhitmode", "Photon Mode" ),
 			),
 		},
-		
+
 		{
 			"label" : "Shading",
 			"summary" : __shadingSummary,
@@ -130,7 +130,7 @@ GafferUI.PlugValueWidget.registerCreator(
 				( "ri:displacementbound:sphere", "Displacement Bound" ),
 			),
 		},
-		
+
 		{
 			"label" : "Raytracing",
 			"summary" : __raytracingSummary,
@@ -140,9 +140,9 @@ GafferUI.PlugValueWidget.registerCreator(
 				( "ri:trace:displacements", "Trace Displacements" ),
 			),
 		},
-		
-	),	
-	
+
+	),
+
 )
 
 GafferUI.PlugValueWidget.registerCreator(

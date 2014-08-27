@@ -1,26 +1,26 @@
 ##########################################################################
-#  
+#
 #  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
-#  
+#
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
 #  met:
-#  
+#
 #      * Redistributions of source code must retain the above
 #        copyright notice, this list of conditions and the following
 #        disclaimer.
-#  
+#
 #      * Redistributions in binary form must reproduce the above
 #        copyright notice, this list of conditions and the following
 #        disclaimer in the documentation and/or other materials provided with
 #        the distribution.
-#  
+#
 #      * Neither the name of John Haddon nor the names of
 #        any other contributors to this software may be used to endorse or
 #        promote products derived from this software without specific prior
 #        written permission.
-#  
+#
 #  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 #  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 #  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -32,7 +32,7 @@
 #  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 #  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 #  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#  
+#
 ##########################################################################
 
 import types
@@ -47,41 +47,41 @@ import GafferUI
 class EditorWidget( GafferUI.Widget ) :
 
 	def __init__( self, topLevelWidget, scriptNode, **kw ) :
-	
+
 		GafferUI.Widget.__init__( self, topLevelWidget, **kw )
-		
+
 		assert( isinstance( scriptNode, Gaffer.ScriptNode ) )
-		
+
 		self.__scriptNode = scriptNode
 		self.__context = None
-		
+
 		self.__title = ""
 		self.__titleChangedSignal = GafferUI.WidgetSignal()
-		
+
 		self.__setContextInternal( scriptNode.context(), callUpdate=False )
-				
+
 	def scriptNode( self ) :
-	
+
 		return self.__scriptNode
-	
+
 	## May be called to explicitly set the title for this editor. The
 	# editor itself is not responsible for displaying the title - this
 	# is left to the enclosing ui.
 	def setTitle( self, title ) :
-	
+
 		if title == self.__title :
 			return
-			
+
 		self.__title = title
 		self.titleChangedSignal()( self )
-		
+
 	## May be overridden to provide sensible default behaviour for
 	# the title, but must return BaseClass.getTitle() if it is non-empty.
 	def getTitle( self ) :
-	
+
 		if self.__title :
 			return self.__title
-		
+
 		# if there's no explicit title and a derived class
 		# has overridden getTitle() then we return the empty
 		# string to signify that the derived class is free
@@ -91,30 +91,30 @@ class EditorWidget( GafferUI.Widget ) :
 			if "getTitle" in c.__dict__ :
 				return ""
 			c = c.__bases__[0]
-			
-		# otherwise we default to using the classname		
+
+		# otherwise we default to using the classname
 		return IECore.CamelCase.toSpaced( self.__class__.__name__ )
-	
-	## A signal emitted whenever the title changes.	
+
+	## A signal emitted whenever the title changes.
 	def titleChangedSignal( self ) :
 
 		return self.__titleChangedSignal
-	
+
 	## By default Editors operate in the main context held by the script node. This function
-	# allows an alternative context to be provided, making it possible for an editor to 
+	# allows an alternative context to be provided, making it possible for an editor to
 	# display itself at a custom frame (or with any other context modification).
 	def setContext( self, context ) :
-	
+
 		self.__setContextInternal( context, callUpdate=True )
-	
+
 	def getContext( self ) :
-	
+
 		return self.__context
-			
+
 	def __setContextInternal( self, context, callUpdate ) :
-	
+
 		assert( isinstance( context, ( Gaffer.Context, types.NoneType ) ) )
-	
+
 		previousContext = self.__context
 		self.__context = context
 		if self.__context is not None :
@@ -123,7 +123,7 @@ class EditorWidget( GafferUI.Widget ) :
 			## \todo I'm not sure why this code allows a None context - surely we
 			# should always have a valid one?
 			self.__contextChangedConnection = None
-	
+
 		if callUpdate :
 			modifiedItems = set()
 			if previousContext is not None :
@@ -131,44 +131,44 @@ class EditorWidget( GafferUI.Widget ) :
 			if self.__context is not None :
 				modifiedItems |= set( self.__context.names() )
 			self._updateFromContext( modifiedItems )
-		
+
 	## May be implemented by derived classes to update state based on a change of context.
 	# To temporarily suspend calls to this function, use Gaffer.BlockedConnection( self._contextChangedConnection() ).
 	def _updateFromContext( self, modifiedItems ) :
-	
+
 		pass
-		
+
 	def _contextChangedConnection( self ) :
-	
+
 		return self.__contextChangedConnection
-	
+
 	## This must be implemented by all derived classes as it is used for serialisation of layouts.
-	# It is not expected that the script being edited is also serialised as part of this operation - 
+	# It is not expected that the script being edited is also serialised as part of this operation -
 	# instead the new script will be provided later as a variable named scriptNode. So a suitable
 	# serialisation will look like "GafferUI.EditorWidget( scriptNode )".
 	def __repr__( self ) :
-	
+
 		raise NotImplementedError
-		
+
 	def __contextChanged( self, context, key ) :
-		
+
 		assert( context.isSame( self.getContext() ) )
-		
+
 		self._updateFromContext( set( [ key ] ) )
-	
+
 	@classmethod
 	def types( cls ) :
-	
+
 		return cls.__namesToCreators.keys()
-	
+
 	@classmethod
 	def create( cls, name, scriptNode ) :
-	
+
 		return cls.__namesToCreators[name]( scriptNode = scriptNode )
-	
+
 	@classmethod
 	def registerType( cls, name, creator ) :
-	
+
 		cls.__namesToCreators[name] = creator
-		
+
 	__namesToCreators = {}

@@ -1,26 +1,26 @@
 //////////////////////////////////////////////////////////////////////////
-//  
+//
 //  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //  Copyright (c) 2013, Luke Goddard. All rights reserved.
-//  
+//
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
 //  met:
-//  
+//
 //      * Redistributions of source code must retain the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer.
-//  
+//
 //      * Redistributions in binary form must reproduce the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
-//  
+//
 //      * Neither the name Image Engine Design nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
-//  
+//
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 //  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 //  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -32,7 +32,7 @@
 //  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 //  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//  
+//
 //////////////////////////////////////////////////////////////////////////
 
 #ifndef GAFFERIMAGE_FILTER_H
@@ -52,7 +52,7 @@
 #include "IECore/Lookup.h"
 
 #include "GafferImage/TypeIds.h"
-	
+
 #define GAFFERIMAGE_FILTER_DECLAREFILTER( CLASS_NAME )\
 static FilterRegistration<CLASS_NAME> m_registration;\
 template<typename T> friend struct Filter::FilterRegistration;
@@ -64,12 +64,12 @@ IE_CORE_FORWARDDECLARE( Filter );
 
 /// Interpolation class for filtering an image.
 ///
-/// The filter class represents a 1D separable kernel which 
+/// The filter class represents a 1D separable kernel which
 /// provides methods for convolution with a set of pixel samples.
 /// We can convolve a 2D image (I) by 1D kernel (g) by:
 /// C(x,y) = g*I = (g2 *y (g1 *x I))(x,y)
 /// Where *x and *y denotes convolution in the x and y directions.
-/// 
+///
 /// A good overview of image sampling and the variety of filters is:
 /// "Reconstruction Filters in Computer Graphics", by Don P.Mitchell,
 /// Arun N.Netravali, AT&T Bell Laboratories.
@@ -77,9 +77,9 @@ class Filter : public IECore::RunTimeTyped
 {
 
 public :
-	
+
 	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::Filter, FilterTypeId, RunTimeTyped );
-	
+
 	virtual ~Filter(){};
 
 	//! @name Accessors
@@ -102,7 +102,7 @@ public :
 		return int( m_scaledRadius*2. + 1. );
 	};
 	/// Returns the weight of a pixel to be convolved with the filter
-	/// given the center of the filter and the position of the pixel to be sampled.  
+	/// given the center of the filter and the position of the pixel to be sampled.
 	/// @param center The center of the kernel.
 	/// @param samplePosition The position of the sample to return the weight for.
 	//  @return The weight of the sample.
@@ -136,7 +136,7 @@ public :
 		return filterList();
 	}
 	//@}
-	
+
 	/// Returns the name of the default filter.
 	static const IECore::InternedString &defaultFilter();
 
@@ -172,7 +172,7 @@ protected :
 			{
 				T* filter = new T( scale );
 				const std::string &filterName( filter->typeName() );
-				
+
 				tbb::mutex::scoped_lock lock;
 				lock.acquire( lutMutex() );
 				std::map< std::string, boost::weak_ptr<IECore::Lookupff> > &lutMap( Filter::lutMap() );
@@ -199,37 +199,37 @@ protected :
 	float m_scale;
 	float m_scaledRadius;
 
-	/// Constructor	
+	/// Constructor
 	/// The constructor is protected as only the factory function create() should be able to construct filters as it needs to initialise the LUT.
 	/// @param radius Half the width of the kernel at a scale of 1.
-	/// @param scale Scales the size and weights of the kernel for values > 1. This is used when sampling an area of pixels. 
+	/// @param scale Scales the size and weights of the kernel for values > 1. This is used when sampling an area of pixels.
 	Filter( float radius, float scale = 1. );
 
 	template<typename T> friend struct FilterRegistration;
 
 private:
 
-		
+
 	/// Registration mechanism for Filter classes.
-	/// We keep a vector of the names so that we can maintain an order. 
+	/// We keep a vector of the names so that we can maintain an order.
 	static std::vector< CreatorFn >& creators()
 	{
 		static std::vector< CreatorFn > g_creators;
 		return g_creators;
 	}
-	
+
 	static std::vector< std::string >& filterList()
 	{
 		static std::vector< std::string > g_filters;
 		return g_filters;
 	}
-	
+
 	static std::map< std::string, boost::weak_ptr<IECore::Lookupff> > &lutMap()
 	{
 		static std::map< std::string, boost::weak_ptr<IECore::Lookupff> > l;
 		return l;
 	}
-	
+
 	boost::shared_ptr<IECore::Lookupff> m_lut;
 
 };
@@ -240,7 +240,7 @@ class BoxFilter : public Filter
 {
 
 public:
-	
+
 	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::BoxFilter, BoxFilterTypeId, Filter );
 
 	float weight( float delta ) const
@@ -255,9 +255,9 @@ protected:
 		: Filter( .5, scale )
 	{
 	}
-	
+
 private:
-	
+
 	/// Register this filter so that it can be created using the Filter::create method.
 	GAFFERIMAGE_FILTER_DECLAREFILTER( BoxFilter )
 
@@ -270,7 +270,7 @@ class BilinearFilter : public Filter
 public:
 
 	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::BilinearFilter, BilinearFilterTypeId, Filter );
-	
+
 	float weight( float delta ) const
 	{
 		delta = fabs(delta);
@@ -281,8 +281,8 @@ public:
 		return 0.;
 	}
 
-protected:	
-	
+protected:
+
 	BilinearFilter( float scale = 1. )
 		: Filter( 1, scale )
 	{}
@@ -298,7 +298,7 @@ class SincFilter : public Filter
 {
 
 public:
-	
+
 	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::SincFilter, SincFilterTypeId, Filter );
 
 	float weight( float delta ) const
@@ -334,7 +334,7 @@ class HermiteFilter : public Filter
 {
 
 public:
-	
+
 	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::HermiteFilter, HermiteFilterTypeId, Filter );
 
 	float weight( float delta ) const
@@ -364,13 +364,13 @@ class LanczosFilter : public Filter
 {
 
 public:
-	
+
 	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::LanczosFilter, LanczosFilterTypeId, Filter );
 
 	float weight( float delta ) const
 	{
 		delta = fabs(delta);
-		
+
 		if ( delta > m_radius )
 		{
 			return 0.;
@@ -379,11 +379,11 @@ public:
 		{
 			return 1.;
 		}
-		
+
 		const float PI = M_PI;
 		return ( m_radius * (1./PI) * (1./PI) ) / ( delta*delta) * sin( PI * delta ) * sin( PI*delta * (1./m_radius) );
 	}
-	
+
 protected:
 
 	LanczosFilter( float scale = 1. )
@@ -404,7 +404,7 @@ class SplineFilter : public Filter
 public:
 
 	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::SplineFilter, SplineFilterTypeId, Filter );
-	
+
 	float weight( float delta ) const
 	{
 		delta = fabs(delta);
@@ -424,9 +424,9 @@ public:
 
 		return 0.;
 	}
-	
+
 protected:
-	
+
 	SplineFilter( float B, float C, float scale = 1. )
 		: Filter( 2, scale ),
 		m_B( B ),
@@ -445,7 +445,7 @@ class MitchellFilter : public SplineFilter
 {
 
 public:
-	
+
 	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::MitchellFilter, MitchellFilterTypeId, SplineFilter );
 
 protected:
@@ -465,7 +465,7 @@ class BSplineFilter : public SplineFilter
 {
 
 public:
-	
+
 	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::BSplineFilter, BSplineFilterTypeId, SplineFilter );
 
 protected:
@@ -487,7 +487,7 @@ class CatmullRomFilter : public SplineFilter
 public:
 
 	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::CatmullRomFilter, CatmullRomFilterTypeId, SplineFilter );
-	
+
 protected:
 
 	CatmullRomFilter( float scale = 1. )
@@ -507,7 +507,7 @@ class CubicFilter : public Filter
 public:
 
 	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::CubicFilter, CubicFilterTypeId, Filter );
-	
+
 	CubicFilter( float scale = 1. )
 		: Filter( 3., scale )
 	{
@@ -515,7 +515,7 @@ public:
 
 protected:
 
-	float weight( float delta ) const 
+	float weight( float delta ) const
 	{
 		delta = fabs( delta );
 		float delta2 = delta*delta;

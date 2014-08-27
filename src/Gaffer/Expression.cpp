@@ -1,26 +1,26 @@
 //////////////////////////////////////////////////////////////////////////
-//  
+//
 //  Copyright (c) 2012, John Haddon. All rights reserved.
 //  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
-//  
+//
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
 //  met:
-//  
+//
 //      * Redistributions of source code must retain the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer.
-//  
+//
 //      * Redistributions in binary form must reproduce the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
-//  
+//
 //      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
-//  
+//
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 //  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 //  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -32,7 +32,7 @@
 //  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 //  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//  
+//
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/bind.hpp"
@@ -91,7 +91,7 @@ const StringPlug *Expression::enginePlug() const
 {
 	return getChild<StringPlug>( "engine" );
 }
-		
+
 StringPlug *Expression::expressionPlug()
 {
 	return getChild<StringPlug>( "expression" );
@@ -105,7 +105,7 @@ const StringPlug *Expression::expressionPlug() const
 void Expression::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	ComputeNode::affects( input, outputs );
-	
+
 	const CompoundPlug *in = getChild<CompoundPlug>( "in" );
 	const ValuePlug *out = getChild<ValuePlug>( "out" );
 	if( in && out )
@@ -162,13 +162,13 @@ void Expression::compute( ValuePlug *output, const Context *context ) const
 	{
 		if( m_engine )
 		{
-			const CompoundPlug *in = getChild<CompoundPlug>( "in" );	
+			const CompoundPlug *in = getChild<CompoundPlug>( "in" );
 			std::vector<const ValuePlug *> inputs;
 			for( ChildContainer::const_iterator it = in->children().begin(); it!=in->children().end(); it++ )
 			{
 				inputs.push_back( static_cast<const ValuePlug *>( (*it).get() ) );
 			}
-			
+
 			m_engine->execute( context, inputs, output );
 		}
 		else
@@ -177,7 +177,7 @@ void Expression::compute( ValuePlug *output, const Context *context ) const
 		}
 		return;
 	}
-	
+
 	ComputeNode::compute( output, context );
 }
 
@@ -195,22 +195,22 @@ void Expression::plugSet( Plug *plug )
 	if( plug == e )
 	{
 		m_engine = 0;
-		
+
 		try {
 			std::string newExpression = e->getValue();
 			if( newExpression.size() )
 			{
 				m_engine = Engine::create( enginePlug()->getValue(), newExpression );
-				
+
 				std::vector<std::string> inPlugPaths;
 				std::string outPlugPath;
-		
+
 				if( m_engine )
 				{
 					m_engine->inPlugs( inPlugPaths );
 					outPlugPath = m_engine->outPlug();
 				}
-				
+
 				updatePlugs( outPlugPath, inPlugPaths );
 			}
 		}
@@ -220,7 +220,7 @@ void Expression::plugSet( Plug *plug )
 			IECore::msg( IECore::Msg::Error, "Expression::plugSet", e.what() );
 			m_engine = 0;
 		}
-		
+
 	}
 }
 
@@ -234,7 +234,7 @@ void Expression::parentChanged( GraphComponent *child, GraphComponent *oldParent
 		std::string expression = expressionPlug()->getValue();
 		if( expression.size() )
 		{
-			m_engine = Engine::create( enginePlug()->getValue(), expression );	
+			m_engine = Engine::create( enginePlug()->getValue(), expression );
 		}
 	}
 }
@@ -242,7 +242,7 @@ void Expression::parentChanged( GraphComponent *child, GraphComponent *oldParent
 void Expression::updatePlugs( const std::string &dstPlugPath, std::vector<std::string> &srcPlugPaths )
 {
 	Node *p = parent<Node>();
-	
+
 	// if the expression was invalid, remove our plugs
 	if( !dstPlugPath.size() )
 	{
@@ -258,15 +258,15 @@ void Expression::updatePlugs( const std::string &dstPlugPath, std::vector<std::s
 		}
 		return;
 	}
-	
+
 	// otherwise try to create connections to the plugs the expression wants
-	
+
 	ValuePlug *dstPlug = p->descendant<ValuePlug>( dstPlugPath );
 	if( !dstPlug )
 	{
 		throw IECore::Exception( boost::str( boost::format( "Destination plug \"%s\" does not exist" ) % dstPlugPath ) );
 	}
-		
+
 	CompoundPlugPtr inPlugs = new CompoundPlug( "in", Plug::In, Plug::Default | Plug::Dynamic );
 	setChild( "in", inPlugs );
 	for( std::vector<std::string>::const_iterator it = srcPlugPaths.begin(); it!=srcPlugPaths.end(); it++ )
@@ -280,7 +280,7 @@ void Expression::updatePlugs( const std::string &dstPlugPath, std::vector<std::s
 		inPlugs->addChild( inPlug );
 		inPlug->setInput( srcPlug );
 	}
-	
+
 	PlugPtr outPlug = dstPlug->createCounterpart( "out", Plug::Out );
 	setChild( "out", outPlug );
 	dstPlug->setInput( outPlug );

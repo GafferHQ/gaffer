@@ -1,25 +1,25 @@
 ##########################################################################
-#  
+#
 #  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
-#  
+#
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
 #  met:
-#  
+#
 #      * Redistributions of source code must retain the above
 #        copyright notice, this list of conditions and the following
 #        disclaimer.
-#  
+#
 #      * Redistributions in binary form must reproduce the above
 #        copyright notice, this list of conditions and the following
 #        disclaimer in the documentation and/or other materials provided with
 #        the distribution.
-#  
+#
 #      * Neither the name of John Haddon nor the names of
 #        any other contributors to this software may be used to endorse or
 #        promote products derived from this software without specific prior
 #        written permission.
-#  
+#
 #  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 #  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 #  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -31,7 +31,7 @@
 #  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 #  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 #  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#  
+#
 ##########################################################################
 
 import IECore
@@ -44,28 +44,28 @@ QtCore = GafferUI._qtImport( "QtCore" )
 class MenuButton( GafferUI.Button ) :
 
 	def __init__( self, text="", image=None, hasFrame=True, menu=None, **kw ) :
-	
+
 		GafferUI.Button.__init__( self, text, image, hasFrame, **kw )
-		
+
 		self.setMenu( menu )
-	
+
 		self.__clickedConnection = self.clickedSignal().connect( Gaffer.WeakMethod( self.__clicked ) )
-		
+
 	def setMenu( self, menu ) :
-	
+
 		self.__menu = menu
-		
+
 		self.setEnabled( self.__menu is not None )
-		
+
 	def getMenu( self ) :
-	
+
 		return self.__menu
-		
+
 	def __clicked( self, button ) :
-	
+
 		if self.__menu is None :
 			return
-				
+
 		b = self.bound()
 		self.__menu.popup(
 			parent = self,

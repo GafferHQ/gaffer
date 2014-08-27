@@ -1,25 +1,25 @@
 ##########################################################################
-#  
+#
 #  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
-#  
+#
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
 #  met:
-#  
+#
 #      * Redistributions of source code must retain the above
 #        copyright notice, this list of conditions and the following
 #        disclaimer.
-#  
+#
 #      * Redistributions in binary form must reproduce the above
 #        copyright notice, this list of conditions and the following
 #        disclaimer in the documentation and/or other materials provided with
 #        the distribution.
-#  
+#
 #      * Neither the name of John Haddon nor the names of
 #        any other contributors to this software may be used to endorse or
 #        promote products derived from this software without specific prior
 #        written permission.
-#  
+#
 #  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 #  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 #  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -31,7 +31,7 @@
 #  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 #  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 #  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#  
+#
 ##########################################################################
 
 import unittest
@@ -43,12 +43,12 @@ import GafferTest
 import os
 
 class ClampTest( unittest.TestCase ) :
-	
+
 	def testClamp( self ) :
 
 		i = GafferImage.ImageReader()
 		i["fileName"].setValue( os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/colorbars_half_max.exr" ) )
-		
+
 		clamp = GafferImage.Clamp()
 		clamp["in"].setInput(i["out"])
 		clamp["max"].setValue( IECore.Color4f( .5, .5, .5, .5 ) )
@@ -59,7 +59,7 @@ class ClampTest( unittest.TestCase ) :
 
 		i = GafferImage.ImageReader()
 		i["fileName"].setValue( os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/colorbars_half_max.exr" ) )
-		
+
 		clamp = GafferImage.Clamp()
 		clamp["in"].setInput(i["out"])
 
@@ -80,15 +80,15 @@ class ClampTest( unittest.TestCase ) :
 		self.assertEqual(blueHash, blueHash2)
 
 	def testDisconnectedDirty( self ) :
-		
+
 		r = GafferImage.ImageReader()
-		r["fileName"].setValue( os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/colorbars_half_max.exr" ) )	
+		r["fileName"].setValue( os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/colorbars_half_max.exr" ) )
 		clamp = GafferImage.Clamp()
 		clamp["in"].setInput( r["out"] )
 
 		cs = GafferTest.CapturingSlot( clamp.plugDirtiedSignal() )
 		clamp["max"].setValue( IECore.Color4f( .25, 1., 1., 1. ) )
-		
+
 		dirtiedPlugs = set( [ x[0].relativeName( x[0].node() ) for x in cs ] )
 
 		expectedPlugs = [
@@ -99,11 +99,11 @@ class ClampTest( unittest.TestCase ) :
 		for plug in expectedPlugs :
 			self.assertTrue( plug in dirtiedPlugs )
 
-	def testClampWithMaxTo( self ) : 
+	def testClampWithMaxTo( self ) :
 
 		i = GafferImage.ImageReader()
 		i["fileName"].setValue( os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/colorbars_max_clamp.exr" ) )
-		
+
 		clamp = GafferImage.Clamp()
 		clamp["in"].setInput(i["out"])
 		clamp["min"].setValue( IECore.Color4f( .0, .0, .0, .0 ) )
@@ -120,7 +120,7 @@ class ClampTest( unittest.TestCase ) :
 	def testDefaultState( self ) :
 
 		clamp = GafferImage.Clamp()
-	
+
 		self.assertTrue( clamp['minEnabled'].getValue() )
 		self.assertTrue( clamp['maxEnabled'].getValue() )
 		self.assertFalse( clamp['minClampToEnabled'].getValue() )
@@ -130,7 +130,7 @@ class ClampTest( unittest.TestCase ) :
 
 		i = GafferImage.ImageReader()
 		i["fileName"].setValue( os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/colorbars_half_max.exr" ) )
-		
+
 		clamp = GafferImage.Clamp()
 		clamp["in"].setInput(i["out"])
 		clamp["minEnabled"].setValue( False )
@@ -140,9 +140,9 @@ class ClampTest( unittest.TestCase ) :
 		self.assertEqual( i["out"]["format"].hash(), clamp["out"]["format"].hash() )
 		self.assertEqual( i["out"]["dataWindow"].hash(), clamp["out"]["dataWindow"].hash() )
 		self.assertEqual( i["out"]["channelNames"].hash(), clamp["out"]["channelNames"].hash() )
-		
+
 	def testEnableBehaviour( self ) :
-		
+
 		clamp = GafferImage.Clamp()
 
 		self.assertTrue( clamp.enabledPlug().isSame( clamp["enabled"] ) )

@@ -59,7 +59,7 @@ class OSLRenderer : public IECore::Renderer
 {
 
 	public :
-		
+
 		OSLRenderer();
 		virtual ~OSLRenderer();
 
@@ -124,29 +124,29 @@ class OSLRenderer : public IECore::Renderer
 
 		virtual void editBegin( const std::string &editType, const IECore::CompoundDataMap &parameters );
 		virtual void editEnd();
-				
+
 		class ShadingEngine : public IECore::RefCounted
 		{
-			
+
 			public :
 
 				IE_CORE_DECLAREMEMBERPTR( ShadingEngine )
-		
+
 				IECore::CompoundDataPtr shade( const IECore::CompoundData *points ) const;
-				
+
 			private :
-			
+
 				friend class OSLRenderer;
-			
+
 				ShadingEngine( ConstOSLRendererPtr renderer, OSL::ShadingAttribStateRef shadingState );
-			
+
 				ConstOSLRendererPtr m_renderer;
 				OSL::ShadingAttribStateRef m_shadingState;
-		
+
 		};
-		
+
 		IE_CORE_DECLAREPTR( ShadingEngine )
-		
+
 		/// Returns a shading engine set up using the current attribute state.
 		ShadingEnginePtr shadingEngine() const;
 
@@ -155,13 +155,13 @@ class OSLRenderer : public IECore::Renderer
 		class RenderState;
 		class RendererServices;
 		class ShadingResults;
-		
+
 		enum ClosureId
 		{
 			EmissionClosureId,
 			DebugClosureId
 		};
-		
+
 		struct EmissionParameters;
 		struct DebugParameters;
 
@@ -172,15 +172,15 @@ class OSLRenderer : public IECore::Renderer
 			State();
 			State( const State &other );
 			~State();
-			
+
 			std::vector<IECore::ConstShaderPtr> shaders;
 			IECore::ConstShaderPtr surfaceShader;
 		};
-		
+
 		typedef std::stack<State> StateStack;
-		
+
 		StateStack m_stateStack;
-		
+
 };
 
 IE_CORE_DECLAREPTR( OSLRenderer );

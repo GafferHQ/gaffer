@@ -1,26 +1,26 @@
 ##########################################################################
-#  
+#
 #  Copyright (c) 2011-2014, Image Engine Design Inc. All rights reserved.
 #  Copyright (c) 2012, John Haddon. All rights reserved.
-#  
+#
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
 #  met:
-#  
+#
 #      * Redistributions of source code must retain the above
 #        copyright notice, this list of conditions and the following
 #        disclaimer.
-#  
+#
 #      * Redistributions in binary form must reproduce the above
 #        copyright notice, this list of conditions and the following
 #        disclaimer in the documentation and/or other materials provided with
 #        the distribution.
-#  
+#
 #      * Neither the name of John Haddon nor the names of
 #        any other contributors to this software may be used to endorse or
 #        promote products derived from this software without specific prior
 #        written permission.
-#  
+#
 #  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 #  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 #  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -32,7 +32,7 @@
 #  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 #  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 #  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#  
+#
 ##########################################################################
 
 import unittest
@@ -47,101 +47,101 @@ import GafferUITest
 class StandardNodeGadgetTest( GafferUITest.TestCase ) :
 
 	def testContents( self ) :
-	
+
 		n = Gaffer.Node()
-		
+
 		g = GafferUI.StandardNodeGadget( n )
-		
+
 		self.failUnless( isinstance( g.getContents(), GafferUI.NameGadget ) )
 		self.assertEqual( g.getContents().getText(), n.getName() )
-		
+
 		t = GafferUI.TextGadget( "I'll choose my own label thanks" )
 		g.setContents( t )
-		
+
 		self.failUnless( g.getContents().isSame( t ) )
-	
+
 	def testNestedNodules( self ) :
-	
+
 		class DeeplyNestedNode( Gaffer.Node ) :
-		
+
 			def __init__( self, name = "DeeplyNestedNode" ) :
-			
+
 				Gaffer.Node.__init__( self, name )
-				
+
 				self["c1"] = Gaffer.CompoundPlug()
 				self["c1"]["i1"] = Gaffer.IntPlug()
 				self["c1"]["c2"] = Gaffer.CompoundPlug()
 				self["c1"]["c2"]["i2"] = Gaffer.IntPlug()
 				self["c1"]["c2"]["c3"] = Gaffer.CompoundPlug()
 				self["c1"]["c2"]["c3"]["i3"] = Gaffer.IntPlug()
-				
+
 		IECore.registerRunTimeTyped( DeeplyNestedNode )
-				
+
 		n = DeeplyNestedNode()
-		
+
 		def noduleCreator( plug ) :
 			if isinstance( plug, Gaffer.CompoundPlug ) :
 				return GafferUI.CompoundNodule( plug )
 			else :
 				return GafferUI.StandardNodule( plug )
-			
+
 		GafferUI.Nodule.registerNodule( DeeplyNestedNode, ".*", noduleCreator )
-		
+
 		g = GafferUI.StandardNodeGadget( n )
-		
+
 		self.assertTrue( g.nodule( n["c1"] ).plug().isSame( n["c1"] ) )
 		self.assertTrue( g.nodule( n["c1"]["i1"] ).plug().isSame( n["c1"]["i1"] ) )
 		self.assertTrue( g.nodule( n["c1"]["c2"] ).plug().isSame( n["c1"]["c2"] ) )
 		self.assertTrue( g.nodule( n["c1"]["c2"]["i2"] ).plug().isSame( n["c1"]["c2"]["i2"] ) )
 		self.assertTrue( g.nodule( n["c1"]["c2"]["c3"] ).plug().isSame( n["c1"]["c2"]["c3"] ) )
 		self.assertTrue( g.nodule( n["c1"]["c2"]["c3"]["i3"] ).plug().isSame( n["c1"]["c2"]["c3"]["i3"] ) )
-		
+
 	def testAddAndRemovePlugs( self ) :
-	
+
 		n = Gaffer.Node()
 		g = GafferUI.StandardNodeGadget( n )
-		
+
 		p = Gaffer.IntPlug()
 		n["p"] = p
-		
+
 		nodule = g.nodule( p )
 		self.assertTrue( nodule is not None )
-		
+
 		del n["p"]
-		
+
 		self.assertTrue( g.nodule( p ) is None )
 		self.assertTrue( nodule.parent() is None )
-	
+
 	def testNoduleTangents( self ) :
-	
+
 		n = GafferTest.AddNode()
 		g = GafferUI.StandardNodeGadget( n )
-		
+
 		self.assertEqual( g.noduleTangent( g.nodule( n["op1"] ) ), IECore.V3f( 0, 1, 0 ) )
 		self.assertEqual( g.noduleTangent( g.nodule( n["op2"] ) ), IECore.V3f( 0, 1, 0 ) )
 		self.assertEqual( g.noduleTangent( g.nodule( n["sum"] ) ), IECore.V3f( 0, -1, 0 ) )
-	
+
 	def testNodulePositionMetadata( self ) :
-	
+
 		n = GafferTest.MultiplyNode()
-		
+
 		g = GafferUI.StandardNodeGadget( n )
 		self.assertEqual( g.noduleTangent( g.nodule( n["op1"] ) ), IECore.V3f( 0, 1, 0 ) )
 
 		Gaffer.Metadata.registerPlugValue( n.typeId(), "op1", "nodeGadget:nodulePosition", "left" )
-				
+
 		g = GafferUI.StandardNodeGadget( n )
 		self.assertEqual( g.noduleTangent( g.nodule( n["op1"] ) ), IECore.V3f( -1, 0, 0 ) )
 
 	def testNameDoesntAffectHeight( self ) :
-	
+
 		n = GafferTest.MultiplyNode( "a" )
 		g = GafferUI.StandardNodeGadget( n )
 		h = g.bound().size().y
-		
+
 		n.setName( "hg" )
 		self.assertEqual( g.bound().size().y, h )
 
 if __name__ == "__main__":
 	unittest.main()
-	
+

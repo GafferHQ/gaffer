@@ -1,25 +1,25 @@
 //////////////////////////////////////////////////////////////////////////
-//  
+//
 //  Copyright (c) 2014, John Haddon. All rights reserved.
-//  
+//
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
 //  met:
-//  
+//
 //      * Redistributions of source code must retain the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer.
-//  
+//
 //      * Redistributions in binary form must reproduce the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
-//  
+//
 //      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
-//  
+//
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 //  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 //  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -31,7 +31,7 @@
 //  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 //  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//  
+//
 //////////////////////////////////////////////////////////////////////////
 
 #ifndef GAFFERUI_HANDLE_H
@@ -58,12 +58,12 @@ class Handle : public Gadget
 		virtual ~Handle();
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::Handle, HandleTypeId, Gadget );
-		
+
 		void setType( Type type );
 		Type getType() const;
-		
+
 		float dragOffset( const DragDropEvent &event ) const;
-		
+
 		virtual Imath::Box3f bound() const;
 
 	protected :
@@ -71,10 +71,10 @@ class Handle : public Gadget
 		virtual void doRender( const Style *style ) const;
 
 	private :
-				
+
 		void enter();
 		void leave();
-		
+
 		bool buttonPress( const ButtonEvent &event );
 		IECore::RunTimeTypedPtr dragBegin( const DragDropEvent &event );
 		bool dragEnter( const DragDropEvent &event );
@@ -83,7 +83,7 @@ class Handle : public Gadget
 
 		Type m_type;
 		bool m_hovering;
-	
+
 		// When a drag starts, we store the line of our
 		// handle here. We store it in world space so that
 		// dragOffset() returns consistent results even if
@@ -93,7 +93,7 @@ class Handle : public Gadget
 		// that dragOffset() can return relative rather than
 		// absolute offsets.
 		float m_dragBeginOffset;
-	
+
 };
 
 IE_CORE_DECLAREPTR( Handle )

@@ -1,26 +1,26 @@
 ##########################################################################
-#  
+#
 #  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
-#  
+#
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
 #  met:
-#  
+#
 #      * Redistributions of source code must retain the above
 #        copyright notice, this list of conditions and the following
 #        disclaimer.
-#  
+#
 #      * Redistributions in binary form must reproduce the above
 #        copyright notice, this list of conditions and the following
 #        disclaimer in the documentation and/or other materials provided with
 #        the distribution.
-#  
+#
 #      * Neither the name of John Haddon nor the names of
 #        any other contributors to this software may be used to endorse or
 #        promote products derived from this software without specific prior
 #        written permission.
-#  
+#
 #  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 #  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 #  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -32,7 +32,7 @@
 #  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 #  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 #  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#  
+#
 ##########################################################################
 
 from __future__ import with_statement
@@ -46,14 +46,14 @@ import GafferTest
 class UndoTest( GafferTest.TestCase ) :
 
 	def testSetName( self ) :
-	
+
 		s = Gaffer.ScriptNode()
 		self.assertEqual( s.undoAvailable(), False )
 		self.assertEqual( s.redoAvailable(), False )
 		self.assertRaises( Exception, s.undo )
-		
+
 		n = Gaffer.Node()
-		
+
 		s["a"] = n
 		self.assertEqual( n.getName(), "a" )
 
@@ -65,14 +65,14 @@ class UndoTest( GafferTest.TestCase ) :
 
 		with Gaffer.UndoContext( s ) :
 			n.setName( "c" )
-			
+
 		self.assertEqual( s.undoAvailable(), True )
 		self.assertEqual( s.redoAvailable(), False )
 		s.undo()
 		self.assertEqual( s.undoAvailable(), False )
 		self.assertEqual( s.redoAvailable(), True )
 		self.assertEqual( n.getName(), "b" )
-		
+
 		s.redo()
 		self.assertEqual( s.undoAvailable(), True )
 		self.assertEqual( s.redoAvailable(), False )
@@ -80,33 +80,33 @@ class UndoTest( GafferTest.TestCase ) :
 		self.assertRaises( Exception, s.redo )
 
 	def testSetInput( self ) :
-	
+
 		s = Gaffer.ScriptNode()
-		
+
 		n1 = GafferTest.AddNode()
 		n2 = GafferTest.AddNode()
-		
+
 		s["n1"] = n1
 		s["n2"] = n2
-		
+
 		with Gaffer.UndoContext( s ) :
 			n1["op1"].setInput( n2["sum"] )
-			
+
 		self.assert_( n1["op1"].getInput().isSame( n2["sum"] ) )
 
 		s.undo()
 		self.assertEqual( n1["op1"].getInput(), None )
-		
+
 		s.redo()
 		self.assert_( n1["op1"].getInput().isSame( n2["sum"] ) )
-		
+
 	def testChildren( self ) :
-	
+
 		s = Gaffer.ScriptNode()
 		n = Gaffer.Node()
-		
+
 		self.assertEqual( n.parent(), None )
-		
+
 		with Gaffer.UndoContext( s ) :
 			s["n"] = n
 		self.assert_( n.parent().isSame( s ) )
@@ -114,18 +114,18 @@ class UndoTest( GafferTest.TestCase ) :
 		self.assertEqual( n.parent(), None )
 		s.redo()
 		self.assert_( n.parent().isSame( s ) )
-		
-	def testDelete( self ) :	
-		
+
+	def testDelete( self ) :
+
 		s = Gaffer.ScriptNode()
 		n1 = GafferTest.AddNode()
 		n2 = GafferTest.AddNode()
 		n3 = GafferTest.AddNode()
-		
+
 		s.addChild( n1 )
 		s.addChild( n2 )
 		s.addChild( n3 )
-		
+
 		n2["op1"].setInput( n1["sum"] )
 		n2["op2"].setInput( n1["sum"] )
 		n3["op1"].setInput( n2["sum"] )
@@ -134,53 +134,53 @@ class UndoTest( GafferTest.TestCase ) :
 		self.assert_( n2["op2"].getInput().isSame( n1["sum"] ) )
 		self.assert_( n3["op1"].getInput().isSame( n2["sum"] ) )
 		self.assert_( n3["op2"].getInput().isSame( n2["sum"] ) )
-		
+
 		with Gaffer.UndoContext( s ) :
 			s.deleteNodes( filter = Gaffer.StandardSet( [ n2 ] ) )
-		
+
 		self.assertEqual( n2["op1"].getInput(), None )
 		self.assertEqual( n2["op2"].getInput(), None )
 		self.assert_( n3["op1"].getInput().isSame( n1["sum"] ) )
 		self.assert_( n3["op2"].getInput().isSame( n1["sum"] ) )
-		
+
 		s.undo()
-		
+
 		self.assert_( n2["op1"].getInput().isSame( n1["sum"] ) )
 		self.assert_( n2["op2"].getInput().isSame( n1["sum"] ) )
 		self.assert_( n3["op1"].getInput().isSame( n2["sum"] ) )
 		self.assert_( n3["op2"].getInput().isSame( n2["sum"] ) )
-		
+
 		with Gaffer.UndoContext( s ) :
 			s.deleteNodes( filter = Gaffer.StandardSet( [ n2 ] ), reconnect = False )
-		
+
 		self.assertEqual( n2["op1"].getInput(), None )
 		self.assertEqual( n2["op2"].getInput(), None )
 		self.assertEqual( n3["op1"].getInput(), None )
 		self.assertEqual( n3["op2"].getInput(), None )
-		
+
 		s.undo()
-		
+
 		self.assert_( n2["op1"].getInput().isSame( n1["sum"] ) )
 		self.assert_( n2["op2"].getInput().isSame( n1["sum"] ) )
 		self.assert_( n3["op1"].getInput().isSame( n2["sum"] ) )
 		self.assert_( n3["op2"].getInput().isSame( n2["sum"] ) )
-	
+
 	def testDisable( self ) :
-	
+
 		s = Gaffer.ScriptNode()
 		s["n"] = GafferTest.AddNode()
-		
+
 		with Gaffer.UndoContext( s, Gaffer.UndoContext.State.Disabled ) :
 			s["n"]["op1"].setValue( 10 )
-			
+
 		self.assertFalse( s.undoAvailable() )
-		
+
 		with Gaffer.UndoContext( s, Gaffer.UndoContext.State.Enabled ) :
 			with Gaffer.UndoContext( s, Gaffer.UndoContext.State.Disabled ) :
 				s["n"]["op1"].setValue( 20 )
-			
+
 		self.assertFalse( s.undoAvailable() )
-		
+
 if __name__ == "__main__":
 	unittest.main()
-	
+

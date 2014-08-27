@@ -1,25 +1,25 @@
 //////////////////////////////////////////////////////////////////////////
-//  
+//
 //  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
-//  
+//
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
 //  met:
-//  
+//
 //      * Redistributions of source code must retain the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer.
-//  
+//
 //      * Redistributions in binary form must reproduce the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
-//  
+//
 //      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
-//  
+//
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 //  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 //  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -31,7 +31,7 @@
 //  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 //  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//  
+//
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/python.hpp"
@@ -55,7 +55,7 @@ class ExecutableRenderWrapper : public ExecutableNodeWrapper<ExecutableRender>
 {
 
 	public :
-	
+
 		ExecutableRenderWrapper( PyObject *self, const std::string &name )
 			:	ExecutableNodeWrapper<ExecutableRender>( self, name )
 		{
@@ -74,7 +74,7 @@ class ExecutableRenderWrapper : public ExecutableNodeWrapper<ExecutableRender>
 			}
 			throw IECore::Exception( "No _createRenderer method defined in Python." );
 		}
-		
+
 		virtual void outputWorldProcedural( const ScenePlug *scene, IECore::Renderer *renderer ) const
 		{
 			if( this->isSubclassed() )
@@ -89,7 +89,7 @@ class ExecutableRenderWrapper : public ExecutableNodeWrapper<ExecutableRender>
 			}
 			return ExecutableRender::outputWorldProcedural( scene, renderer );
 		}
-		
+
 		virtual std::string command() const
 		{
 			if( this->isSubclassed() )
@@ -113,19 +113,19 @@ static ContextPtr interactiveRenderGetContext( InteractiveRender &r )
 
 void GafferSceneBindings::bindRender()
 {
-	
+
 	GafferBindings::ExecutableNodeClass<ExecutableRender, ExecutableRenderWrapper>();
-	
+
 	GafferBindings::NodeClass<OpenGLRender>();
-	
+
 	scope s = GafferBindings::NodeClass<InteractiveRender>()
 		.def( "getContext", &interactiveRenderGetContext )
 		.def( "setContext", &InteractiveRender::setContext );
-	
+
 	enum_<InteractiveRender::State>( "State" )
 		.value( "Stopped", InteractiveRender::Stopped )
 		.value( "Running", InteractiveRender::Running )
 		.value( "Paused", InteractiveRender::Paused )
 	;
-	
+
 }

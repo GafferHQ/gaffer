@@ -1,26 +1,26 @@
 //////////////////////////////////////////////////////////////////////////
-//  
+//
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
-//  
+//
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
 //  met:
-//  
+//
 //      * Redistributions of source code must retain the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer.
-//  
+//
 //      * Redistributions in binary form must reproduce the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
-//  
+//
 //      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
-//  
+//
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 //  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 //  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -32,7 +32,7 @@
 //  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 //  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//  
+//
 //////////////////////////////////////////////////////////////////////////
 
 #ifndef GAFFERBINDINGS_GRAPHCOMPONENTBINDING_H
@@ -49,9 +49,9 @@ template<typename T, typename TWrapper=T>
 class GraphComponentClass : public IECorePython::RunTimeTypedClass<T, TWrapper>
 {
 	public :
-	
+
 		GraphComponentClass( const char *docString = 0 );
-		
+
 };
 
 template<typename WrappedType>
@@ -59,7 +59,7 @@ class GraphComponentWrapper : public IECorePython::RunTimeTypedWrapper<WrappedTy
 {
 
 	public :
-	
+
 		GraphComponentWrapper( PyObject *self, const std::string &name=Gaffer::GraphComponent::defaultName<WrappedType>() )
 			:	IECorePython::RunTimeTypedWrapper<WrappedType>( self, name )
 		{
@@ -70,7 +70,7 @@ class GraphComponentWrapper : public IECorePython::RunTimeTypedWrapper<WrappedTy
 			:	IECorePython::RunTimeTypedWrapper<WrappedType>( self, arg1, arg2 )
 		{
 		}
-		
+
 		template<typename Arg1, typename Arg2, typename Arg3>
 		GraphComponentWrapper( PyObject *self, Arg1 arg1, Arg2 arg2, Arg3 arg3 )
 			:	IECorePython::RunTimeTypedWrapper<WrappedType>( self, arg1, arg2, arg3 )
@@ -90,7 +90,7 @@ class GraphComponentWrapper : public IECorePython::RunTimeTypedWrapper<WrappedTy
 			}
 			return WrappedType::acceptsChild( potentialChild );
 		}
-	
+
 		virtual bool acceptsParent( const Gaffer::GraphComponent *potentialParent ) const
 		{
 			if( this->isSubclassed() )
@@ -121,7 +121,7 @@ class GraphComponentWrapper : public IECorePython::RunTimeTypedWrapper<WrappedTy
 		}
 
 };
-	
+
 void bindGraphComponent();
 
 } // namespace GafferBindings

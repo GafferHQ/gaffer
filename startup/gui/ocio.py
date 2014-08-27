@@ -1,26 +1,26 @@
 ##########################################################################
-#  
+#
 #  Copyright (c) 2012, John Haddon. All rights reserved.
 #  Copyright (c) 2013-2014, Image Engine Design Inc. All rights reserved.
-#  
+#
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
 #  met:
-#  
+#
 #      * Redistributions of source code must retain the above
 #        copyright notice, this list of conditions and the following
 #        disclaimer.
-#  
+#
 #      * Redistributions in binary form must reproduce the above
 #        copyright notice, this list of conditions and the following
 #        disclaimer in the documentation and/or other materials provided with
 #        the distribution.
-#  
+#
 #      * Neither the name of John Haddon nor the names of
 #        any other contributors to this software may be used to endorse or
 #        promote products derived from this software without specific prior
 #        written permission.
-#  
+#
 #  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 #  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 #  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -32,7 +32,7 @@
 #  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 #  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 #  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#  
+#
 ##########################################################################
 
 import IECore
@@ -71,26 +71,26 @@ def __setDisplayTransform() :
 	view = preferences["displayColorSpace"]["view"].getValue()
 	colorSpace = config.getDisplayColorSpaceName( defaultDisplay, view )
 	processor = config.getProcessor( OCIO.Constants.ROLE_SCENE_LINEAR, colorSpace )
-	
+
 	def f( c ) :
-	
+
 		cc = processor.applyRGB( [ c.r, c.g, c.b ] )
 		return IECore.Color3f( *cc )
-		
+
 	GafferUI.DisplayTransform.set( f )
 
 __setDisplayTransform()
-	
+
 # and connect to plug changed to update things again when the user asks
 
 def __plugSet( plug ) :
-	
+
 	if plug.relativeName( plug.node() ) != "displayColorSpace" :
 		return
-	
+
 	__setDisplayTransform()
 	__updateDefaultDisplayTransforms()
-	
+
 application.__ocioPlugSetConnection = preferences.plugSetSignal().connect( __plugSet )
 
 # register display transforms with the image viewer
@@ -100,7 +100,7 @@ def __displayTransformCreator( name ) :
 	result = GafferImage.OpenColorIO()
 	result["inputSpace"].setValue( "linear" )
 	result["outputSpace"].setValue( config.getDisplayColorSpaceName( defaultDisplay, name ) )
-	
+
 	return result
 
 for name in config.getViews( defaultDisplay ) :
@@ -122,10 +122,10 @@ def __defaultDisplayTransformCreator() :
 
 	result = GafferImage.OpenColorIO()
 	result["inputSpace"].setValue( "linear" )
-	
+
 	__defaultDisplayTransforms.append( result )
 	__updateDefaultDisplayTransforms()
-		
+
 	return result
 
 GafferImageUI.ImageView.registerDisplayTransform( "Default", __defaultDisplayTransformCreator )

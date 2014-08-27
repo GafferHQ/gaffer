@@ -1,25 +1,25 @@
 //////////////////////////////////////////////////////////////////////////
-//  
+//
 //  Copyright (c) 2013, John Haddon. All rights reserved.
-//  
+//
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
 //  met:
-//  
+//
 //      * Redistributions of source code must retain the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer.
-//  
+//
 //      * Redistributions in binary form must reproduce the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
-//  
+//
 //      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
-//  
+//
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 //  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 //  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -31,7 +31,7 @@
 //  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 //  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//  
+//
 //////////////////////////////////////////////////////////////////////////
 
 #include "Gaffer/Box.h"
@@ -76,10 +76,10 @@ const Gaffer::Plug *OSLObject::shaderPlug() const
 void OSLObject::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	SceneElementProcessor::affects( input, outputs );
-	
+
 	if( input == shaderPlug() )
 	{
-		outputs.push_back( outPlug()->objectPlug() );		
+		outputs.push_back( outPlug()->objectPlug() );
 	}
 	else if( input == outPlug()->objectPlug() )
 	{
@@ -93,12 +93,12 @@ bool OSLObject::acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inpu
 	{
 		return false;
 	}
-	
+
 	if( !inputPlug )
 	{
 		return true;
 	}
-	
+
 	if( plug == shaderPlug() )
 	{
 		const Node *sourceNode = inputPlug->source<Plug>()->node();
@@ -120,7 +120,7 @@ bool OSLObject::acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inpu
 		}
 		return false;
 	}
-	
+
 	return true;
 }
 
@@ -173,12 +173,12 @@ IECore::ConstObjectPtr OSLObject::computeProcessedObject( const ScenePath &path,
 
 	ConstOSLShaderPtr shader = runTimeCast<const OSLShader>( shaderPlug()->source<Plug>()->node() );
 	OSLRenderer::ConstShadingEnginePtr shadingEngine = shader ? shader->shadingEngine() : NULL;
-	
+
 	if( !shadingEngine )
 	{
-		return inputObject;	
+		return inputObject;
 	}
-	
+
 	CompoundDataPtr shadingPoints = new CompoundData;
 	for( PrimitiveVariableMap::const_iterator it = inputPrimitive->variables.begin(), eIt = inputPrimitive->variables.end(); it != eIt; ++it )
 	{
@@ -200,6 +200,6 @@ IECore::ConstObjectPtr OSLObject::computeProcessedObject( const ScenePath &path,
 			outputPrimitive->variables[it->first] = PrimitiveVariable( PrimitiveVariable::Vertex, it->second );
 		}
 	}
-			
+
 	return outputPrimitive;
 }

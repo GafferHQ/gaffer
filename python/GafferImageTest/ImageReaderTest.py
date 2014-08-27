@@ -1,26 +1,26 @@
 ##########################################################################
-#  
+#
 #  Copyright (c) 2012, John Haddon. All rights reserved.
 #  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
-#  
+#
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
 #  met:
-#  
+#
 #      * Redistributions of source code must retain the above
 #        copyright notice, this list of conditions and the following
 #        disclaimer.
-#  
+#
 #      * Redistributions in binary form must reproduce the above
 #        copyright notice, this list of conditions and the following
 #        disclaimer in the documentation and/or other materials provided with
 #        the distribution.
-#  
+#
 #      * Neither the name of John Haddon nor the names of
 #        any other contributors to this software may be used to endorse or
 #        promote products derived from this software without specific prior
 #        written permission.
-#  
+#
 #  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 #  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 #  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -32,7 +32,7 @@
 #  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 #  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 #  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#  
+#
 ##########################################################################
 
 import os
@@ -54,7 +54,7 @@ class ImageReaderTest( unittest.TestCase ) :
 	circlesJpgFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/circles.jpg" )
 
 	def testInternalImageSpaceConversion( self ) :
-		
+
 		r = IECore.EXRImageReader( self.negativeDataWindowFileName )
 		image = r.read()
 		exrDisplayWindow = image.displayWindow
@@ -68,26 +68,26 @@ class ImageReaderTest( unittest.TestCase ) :
 		self.assertEqual( internalDataWindow, expectedDataWindow )
 
 	def test( self ) :
-	
+
 		n = GafferImage.ImageReader()
-		n["fileName"].setValue( self.fileName )		
-	
+		n["fileName"].setValue( self.fileName )
+
 		self.assertEqual( n["out"]["dataWindow"].getValue(), IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 199, 149 ) ) )
 		self.assertEqual( n["out"]["format"].getValue().getDisplayWindow(), IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 199, 149 ) ) )
-	
+
 		channelNames = n["out"]["channelNames"].getValue()
 		self.failUnless( isinstance( channelNames, IECore.StringVectorData ) )
 		self.failUnless( "R" in channelNames )
 		self.failUnless( "G" in channelNames )
 		self.failUnless( "B" in channelNames )
 		self.failUnless( "A" in channelNames )
-	
+
 		image = n["out"].image()
 		image2 = IECore.Reader.create( self.fileName ).read()
-		
+
 		image.blindData().clear()
 		image2.blindData().clear()
-		
+
 		self.assertEqual( image, image2 )
 
 	def testNegativeDisplayWindowRead( self ) :
@@ -104,38 +104,38 @@ class ImageReaderTest( unittest.TestCase ) :
 		self.assertEqual( expectedImage, n["out"].image() )
 
 	def testNegativeDataWindow( self ) :
-		
+
 		n = GafferImage.ImageReader()
-		n["fileName"].setValue( self.negativeDataWindowFileName )		
+		n["fileName"].setValue( self.negativeDataWindowFileName )
 		self.assertEqual( n["out"]["dataWindow"].getValue(), IECore.Box2i( IECore.V2i( -25, -30 ), IECore.V2i( 174, 119 ) ) )
 		self.assertEqual( n["out"]["format"].getValue().getDisplayWindow(), IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 199, 149 ) ) )
-	
+
 		channelNames = n["out"]["channelNames"].getValue()
 		self.failUnless( isinstance( channelNames, IECore.StringVectorData ) )
 		self.failUnless( "R" in channelNames )
 		self.failUnless( "G" in channelNames )
 		self.failUnless( "B" in channelNames )
-	
+
 		image = n["out"].image()
 		image2 = IECore.Reader.create( self.negativeDataWindowFileName ).read()
-		
+
 		op = IECore.ImageDiffOp()
 		res = op(
 			imageA = image,
 			imageB = image2
 		)
-		self.assertFalse( res.value )   	
+		self.assertFalse( res.value )
 
 	def testTileSize( self ) :
-	
+
 		n = GafferImage.ImageReader()
 		n["fileName"].setValue( self.fileName )
-		
+
 		tile = n["out"].channelData( "R", IECore.V2i( 0 ) )
 		self.assertEqual( len( tile ), GafferImage.ImagePlug().tileSize() **2 )
-	
+
 	def testNoCaching( self ) :
-	
+
 		n = GafferImage.ImageReader()
 		n["fileName"].setValue( self.fileName )
 
@@ -147,27 +147,27 @@ class ImageReaderTest( unittest.TestCase ) :
 			# of these tests.
 			t1 = n["out"]["channelData"].getValue( _copy=False )
 			t2 = n["out"]["channelData"].getValue( _copy=False )
-		
+
 		# we don't want the separate computations to result in the
 		# same value, because the ImageReader has its own cache in
 		# OIIO, so doing any caching on top of that would be wasteful.
 		self.failIf( t1.isSame( t2 ) )
-	
+
 	def testNonexistentFile( self ) :
-	
+
 		n = GafferImage.ImageReader()
 		n["out"]["channelNames"].getValue()
 		n["out"].channelData( "R", IECore.V2i( 0 ) )
-		
+
 	def testChannelDataHashes( self ) :
 		# Test that two tiles within the same image have different hashes.
 		n = GafferImage.ImageReader()
 		n["fileName"].setValue( self.fileName )
 		h1 = n["out"].channelData( "R", IECore.V2i( 0 ) ).hash()
 		h2 = n["out"].channelData( "R", IECore.V2i( GafferImage.ImagePlug().tileSize() ) ).hash()
-		
+
 		self.assertNotEqual( h1, h2 )
-		
+
 	def testDisabledChannelDataHashes( self ) :
 		# Test that two tiles within the same image have the same hash when disabled.
 		n = GafferImage.ImageReader()
@@ -175,20 +175,20 @@ class ImageReaderTest( unittest.TestCase ) :
 		n["enabled"].setValue( False )
 		h1 = n["out"].channelData( "R", IECore.V2i( 0 ) ).hash()
 		h2 = n["out"].channelData( "R", IECore.V2i( GafferImage.ImagePlug().tileSize() ) ).hash()
-		
+
 		self.assertEqual( h1, h2 )
-		
+
 	def testOffsetDataWindowOrigin( self ) :
-	
+
 		n = GafferImage.ImageReader()
 		n["fileName"].setValue( self.offsetDataWindowFileName )
-		
+
 		image = n["out"].image()
 		image2 = IECore.Reader.create( self.offsetDataWindowFileName ).read()
-		
+
 		image.blindData().clear()
 		image2.blindData().clear()
-		
+
 		self.assertEqual( image, image2 )
 
 	def testJpgRead( self ) :
@@ -204,7 +204,7 @@ class ImageReaderTest( unittest.TestCase ) :
 		jpgOCIO["in"].setInput( jpgReader["out"] )
 		jpgOCIO["inputSpace"].setValue( "sRGB" )
 		jpgOCIO["outputSpace"].setValue( "linear" )
-		
+
 		exrImage = exrReader["out"].image()
 		jpgImage = jpgOCIO["out"].image()
 
@@ -216,28 +216,28 @@ class ImageReaderTest( unittest.TestCase ) :
 			imageA = exrImage,
 			imageB = jpgImage,
 		)
-		self.assertFalse( res.value )	
+		self.assertFalse( res.value )
 
 	def testOIIOJpgRead( self ) :
-	
+
 		# call through to c++ test.
 		GafferImageTest.testOIIOJpgRead()
-				
+
 	def testOIIOExrRead( self ) :
-	
+
 		# call through to c++ test.
 		GafferImageTest.testOIIOExrRead()
-	
+
 	def testSupportedExtensions( self ) :
-	
+
 		e = GafferImage.ImageReader.supportedExtensions()
-		
+
 		self.assertTrue( "exr" in e )
 		self.assertTrue( "jpg" in e )
 		self.assertTrue( "tif" in e )
 		self.assertTrue( "png" in e )
 		self.assertTrue( "cin" in e )
 		self.assertTrue( "dpx" in e )
-		
+
 if __name__ == "__main__":
 	unittest.main()

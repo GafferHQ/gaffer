@@ -1,26 +1,26 @@
 ##########################################################################
-#  
+#
 #  Copyright (c) 2011, John Haddon. All rights reserved.
 #  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
-#  
+#
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
 #  met:
-#  
+#
 #      * Redistributions of source code must retain the above
 #        copyright notice, this list of conditions and the following
 #        disclaimer.
-#  
+#
 #      * Redistributions in binary form must reproduce the above
 #        copyright notice, this list of conditions and the following
 #        disclaimer in the documentation and/or other materials provided with
 #        the distribution.
-#  
+#
 #      * Neither the name of John Haddon nor the names of
 #        any other contributors to this software may be used to endorse or
 #        promote products derived from this software without specific prior
 #        written permission.
-#  
+#
 #  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 #  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 #  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -32,7 +32,7 @@
 #  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 #  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 #  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#  
+#
 ##########################################################################
 
 import unittest
@@ -52,85 +52,85 @@ class WidgetSignalTest( GafferUITest.TestCase ) :
 
 		s = GafferUI.WidgetSignal()
 		self.assertEqual( s( w ), False )
-		
+
 		self.__widget = None
 		def f( ww ) :
-		
+
 			self.__widget = ww
 			return True
-			
+
 		c = s.connect( f )
-		self.assertEqual( s( w ), True )		
-		self.assert_( self.__widget is w )		
-		
+		self.assertEqual( s( w ), True )
+		self.assert_( self.__widget is w )
+
 	def testDeletionOfConnectionDisconnects( self ) :
-	
+
 		w = GafferUI.TabbedContainer()
 
 		s = GafferUI.WidgetSignal()
 		self.assertEqual( s( w ), False )
-			
+
 		def f( ww ) :
-		
+
 			return True
-			
+
 		c = s.connect( f )
 
 		self.assertEqual( s( w ), True )
-		
-		del c 
+
+		del c
 
 		self.assertEqual( s( w ), False )
 
 	def testCircularRef( self ) :
-	
+
 		class A( GafferUI.TabbedContainer ) :
-		
+
 			def __init__( self ) :
-			
+
 				GafferUI.TabbedContainer.__init__( self )
-				
+
 				self.signal = GafferUI.WidgetSignal()
-			
-			@staticmethod	
+
+			@staticmethod
 			def f( widget ) :
-			
+
 				return True
-				
+
 			def ff( self, other ) :
-			
+
 				return True
-				
+
 		a = A()
-		self.assertEqual( a.signal( a ), False )	
-		
+		self.assertEqual( a.signal( a ), False )
+
 		a.c = a.signal.connect( A.f )
 		self.assertEqual( a.signal( a ), True )
-			
+
 		w = weakref.ref( a )
 		self.assert_( w() is a )
 		del a
 		self.assertEqual( w(), None )
-		
+
 		a2 = A()
-		self.assertEqual( a2.signal( a2 ), False )	
+		self.assertEqual( a2.signal( a2 ), False )
 
 		# it is imperative to connect to a WeakMethod to prevent
 		# unbreakable circular references from forming.
 		a2.c = a2.signal.connect( Gaffer.WeakMethod( a2.ff ) )
 		self.assertEqual( a2.signal( a2 ), True )
-		
+
 		w = weakref.ref( a2 )
 		self.assert_( w() is a2 )
 		del a2
 		self.assertEqual( w(), None )
-		
+
 	def tearDown( self ) :
-	
+
 		self.__widget = None
-		
+
 		GafferUITest.TestCase.tearDown( self )
-		
+
 if __name__ == "__main__":
 	unittest.main()
-	
+

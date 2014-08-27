@@ -62,34 +62,34 @@ static ChannelMaskPlugPtr constructChannelMask(
 static boost::python::list maskChannelList( GafferImage::ChannelMaskPlug &plug, boost::python::object channelList )
 {
 	std::vector<std::string> channels;
-	
+
 	container_utils::extend_container< std::vector<std::string> >( channels, channelList );
 
 	plug.maskChannels( channels );
-	
+
 	boost::python::list result;
 	for( std::vector<std::string>::const_iterator it = channels.begin(); it != channels.end(); it++ )
 	{
 		result.append( *it );
 	}
-	
+
 	return result;
 }
 
 static boost::python::list removeDuplicates( boost::python::object channelList )
 {
 	std::vector<std::string> channels;
-	
+
 	container_utils::extend_container< std::vector<std::string> >( channels, channelList );
 
 	GafferImage::ChannelMaskPlug::removeDuplicateIndices( channels );
-	
+
 	boost::python::list result;
 	for( std::vector<std::string>::const_iterator it = channels.begin(); it != channels.end(); it++ )
 	{
 		result.append( *it );
 	}
-	
+
 	return result;
 }
 

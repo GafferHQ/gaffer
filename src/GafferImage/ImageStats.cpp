@@ -1,25 +1,25 @@
 //////////////////////////////////////////////////////////////////////////
-//  
+//
 //  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
-//  
+//
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
 //  met:
-//  
+//
 //      * Redistributions of source code must retain the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer.
-//  
+//
 //      * Redistributions in binary form must reproduce the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
-//  
+//
 //      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
-//  
+//
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 //  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 //  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -31,7 +31,7 @@
 //  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 //  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//  
+//
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/bind.hpp"
@@ -166,7 +166,7 @@ void ImageStats::parentChanging( Gaffer::GraphComponent *newParent )
 			Format::addDefaultFormatPlug( scriptNode );
 		}
 	}
-	
+
 	ComputeNode::parentChanging( newParent );
 }
 
@@ -177,13 +177,13 @@ void ImageStats::affects( const Gaffer::Plug *input, AffectedPlugsContainer &out
 			input == channelsPlug() ||
 			input->parent<ImagePlug>() == inPlug() ||
 			regionOfInterestPlug()->isAncestorOf( input )
-	   ) 
+	   )
 	{
 		for( unsigned int i = 0; i < 4; ++i )
 		{
-			outputs.push_back( minPlug()->getChild(i) );	
-			outputs.push_back( averagePlug()->getChild(i) );	
-			outputs.push_back( maxPlug()->getChild(i) );	
+			outputs.push_back( minPlug()->getChild(i) );
+			outputs.push_back( averagePlug()->getChild(i) );
+			outputs.push_back( maxPlug()->getChild(i) );
 		}
 		return;
 	}
@@ -192,7 +192,7 @@ void ImageStats::affects( const Gaffer::Plug *input, AffectedPlugsContainer &out
 void ImageStats::hash( const ValuePlug *output, const Context *context, IECore::MurmurHash &h ) const
 {
 	ComputeNode::hash( output, context, h);
-	
+
 	bool earlyOut = true;
 	for( int i = 0; i < 4; ++i )
 	{
@@ -220,7 +220,7 @@ void ImageStats::hash( const ValuePlug *output, const Context *context, IECore::
 	std::vector<std::string> maskChannels = channelNamesData->readable();
 	channelsPlug()->maskChannels( maskChannels );
 	const int nChannels( maskChannels.size() );
-	
+
 	if ( nChannels > 0 )
 	{
 		std::vector<std::string> uniqueChannels = maskChannels;
@@ -230,7 +230,7 @@ void ImageStats::hash( const ValuePlug *output, const Context *context, IECore::
 
 		if ( !channel.empty() )
 		{
-			h.append( channel );	
+			h.append( channel );
 			Sampler s( inPlug(), channel, regionOfInterest );
 			s.hash( h );
 			return;
@@ -260,10 +260,10 @@ void ImageStats::channelNameFromOutput( const ValuePlug *output, std::string &ch
 
 	/// As the channelMaskPlug allows any combination of channels to be input we need to make sure that
 	/// the channels that it masks each have a distinct channelIndex. Otherwise multiple channels would be
-	/// outputting to the same plug.	
+	/// outputting to the same plug.
 	std::vector<std::string> uniqueChannels = maskChannels;
 	GafferImage::ChannelMaskPlug::removeDuplicateIndices( uniqueChannels );
-		
+
 	for( int channelIndex = 0; channelIndex < 4; ++channelIndex )
 	{
 		if ( output == minPlug()->getChild( channelIndex ) ||
@@ -308,7 +308,7 @@ void ImageStats::compute( ValuePlug *output, const Context *context ) const
 		setOutputToDefault( static_cast<FloatPlug*>( output ) );
 		return;
 	}
-	
+
 	std::string channelName;
 	channelNameFromOutput( output, channelName );
 	if ( channelName.empty() )
@@ -325,7 +325,7 @@ void ImageStats::compute( ValuePlug *output, const Context *context ) const
 	Context::Scope scopedContext( tmpContext.get() );
 
 	// Loop over the ROI and compute the min, max and average channel values and then set our outputs.
-	Sampler s( inPlug(), channelName, regionOfInterest );	
+	Sampler s( inPlug(), channelName, regionOfInterest );
 
 	float min = std::numeric_limits<float>::max();
 	float max = std::numeric_limits<float>::min();

@@ -46,50 +46,50 @@ import GafferImage
 class ImageNodeTest( GafferTest.TestCase ) :
 
 	def testCacheThreadSafety( self ) :
-	
+
 		c = GafferImage.Constant()
 		c["format"].setValue( GafferImage.Format( 200, 200, 1.0 ) )
 		g = GafferImage.Grade()
 		g["in"].setInput( c["out"] )
 		g["multiply"].setValue( IECore.Color3f( 0.4, 0.5, 0.6 ) )
-		
+
 		gradedImage = g["out"].image()
 
 		# not enough for both images - will cause cache thrashing
 		Gaffer.ValuePlug.setCacheMemoryLimit( 2 * g["out"].channelData( "R", IECore.V2i( 0 ) ).memoryUsage() )
-		
+
 		images = []
 		exceptions = []
 		def grader() :
-		
+
 			try :
 				images.append( g["out"].image() )
 			except Exception, e :
 				exceptions.append( e )
-				
+
 		threads = []
 		for i in range( 0, 10 ) :
 			thread = threading.Thread( target = grader )
 			threads.append( thread )
 			thread.start()
-		
+
 		for thread in threads :
 			thread.join()
 
 		for image in images :
 			self.assertEqual( image, gradedImage )
-			
+
 		for e in exceptions :
 			raise e
-	
+
 	def setUp( self ) :
-	
+
 		self.__previousCacheMemoryLimit = Gaffer.ValuePlug.getCacheMemoryLimit()
-	
+
 	def tearDown( self ) :
-	
+
 		Gaffer.ValuePlug.setCacheMemoryLimit( self.__previousCacheMemoryLimit )
-		
+
 if __name__ == "__main__":
 	unittest.main()
 

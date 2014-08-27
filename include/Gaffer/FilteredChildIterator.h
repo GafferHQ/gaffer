@@ -1,25 +1,25 @@
 //////////////////////////////////////////////////////////////////////////
-//  
+//
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  
+//
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
 //  met:
-//  
+//
 //      * Redistributions of source code must retain the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer.
-//  
+//
 //      * Redistributions in binary form must reproduce the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
-//  
+//
 //      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
-//  
+//
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 //  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 //  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -31,7 +31,7 @@
 //  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 //  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//  
+//
 //////////////////////////////////////////////////////////////////////////
 
 #ifndef GAFFER_FILTEREDCHILDITERATOR_H
@@ -58,15 +58,15 @@ struct TypePredicate
 template<typename Predicate>
 class FilteredChildIterator : public boost::filter_iterator<Predicate, GraphComponent::ChildIterator>
 {
-	
+
 	public :
-	
+
 		typedef typename Predicate::ChildType ChildType;
 		typedef boost::filter_iterator<Predicate, GraphComponent::ChildIterator> BaseIterator;
-		
+
 		typedef const typename ChildType::Ptr &reference;
 		typedef const typename ChildType::Ptr *pointer;
-		
+
 		FilteredChildIterator()
 			:	BaseIterator()
 		{
@@ -79,7 +79,7 @@ class FilteredChildIterator : public boost::filter_iterator<Predicate, GraphComp
 
 		FilteredChildIterator( const GraphComponent::ChildContainer &children )
 			:	BaseIterator( children.begin(), children.end() )
-			
+
 		{
 		}
 
@@ -97,7 +97,7 @@ class FilteredChildIterator : public boost::filter_iterator<Predicate, GraphComp
 		{
 			return BaseIterator::base()!=( rhs );
 		}
-		
+
 		reference operator*() const
 		{
 			// cast should be safe as predicate has checked type, and the layout of
@@ -109,20 +109,20 @@ class FilteredChildIterator : public boost::filter_iterator<Predicate, GraphComp
 		{
 			return reinterpret_cast<pointer>( BaseIterator::operator->() );
 		}
-		
+
     	FilteredChildIterator &operator++()
 		{
 			BaseIterator::operator++();
 			return *this;
 		}
-		
+
 		FilteredChildIterator operator++( int )
 		{
 			FilteredChildIterator r( *this );
 			BaseIterator::operator++();
 			return r;
 		}
-		
+
 };
 
 } // namespace Gaffer

@@ -1,25 +1,25 @@
 //////////////////////////////////////////////////////////////////////////
-//  
+//
 //  Copyright (c) 2012-2013, John Haddon. All rights reserved.
-//  
+//
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
 //  met:
-//  
+//
 //      * Redistributions of source code must retain the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer.
-//  
+//
 //      * Redistributions in binary form must reproduce the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
-//  
+//
 //      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
-//  
+//
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 //  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 //  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -31,7 +31,7 @@
 //  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 //  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//  
+//
 //////////////////////////////////////////////////////////////////////////
 
 #ifndef GAFFER_CONTEXT_INL
@@ -46,9 +46,9 @@ namespace Gaffer
 
 template<typename T, typename Enabler>
 struct Context::Accessor
-{	
+{
 	typedef const T &ResultType;
-	
+
 	/// Returns true if the value has changed
 	bool set( Storage &storage, const T &value )
 	{
@@ -69,23 +69,23 @@ struct Context::Accessor
 				// is Copied, we're free to do as we please.
 				const_cast<IECore::TypedData<T> *>( d )->writable() = value;
 				return true;
-			}			
+			}
 		}
-		
+
 		// data wasn't of the right type or we didn't have sole ownership.
 		// remove the old value and replace it with a new one.
 		if( storage.data && storage.ownership != Borrowed )
 		{
 			storage.data->removeRef();
 		}
-		
+
 		storage.data = new IECore::TypedData<T>( value );
 		storage.data->addRef();
 		storage.ownership = Copied;
-		
+
 		return true;
 	}
-	
+
 	ResultType get( const IECore::Data *data )
 	{
 		if( !data->isInstanceOf( IECore::TypedData<T>::staticTypeId() ) )
@@ -101,7 +101,7 @@ struct Context::Accessor<T, typename boost::enable_if<boost::is_base_of<IECore::
 {
 	typedef typename boost::remove_pointer<T>::type ValueType;
 	typedef const ValueType *ResultType;
-	
+
 	bool set( Storage &storage, const T &value )
 	{
 		const ValueType *d = IECore::runTimeCast<const ValueType>( storage.data );
@@ -109,20 +109,20 @@ struct Context::Accessor<T, typename boost::enable_if<boost::is_base_of<IECore::
 		{
 			return false;
 		}
-		
+
 		if( storage.data && storage.ownership != Borrowed )
 		{
 			storage.data->removeRef();
 		}
-		
+
 		IECore::DataPtr valueCopy = value->copy();
 		storage.data = valueCopy.get();
 		storage.data->addRef();
 		storage.ownership = Copied;
-		
+
 		return true;
 	}
-	
+
 	ResultType get( const IECore::Data *data )
 	{
 		if( !data->isInstanceOf( T::staticTypeId() ) )
@@ -141,7 +141,7 @@ void Context::set( const IECore::InternedString &name, const T &value )
 	{
 		if( m_changedSignal )
 		{
-			(*m_changedSignal)( this, name );		
+			(*m_changedSignal)( this, name );
 		}
 	}
 }
@@ -167,7 +167,7 @@ typename Context::Accessor<T>::ResultType Context::get( const IECore::InternedSt
 	}
 	return Accessor<T>().get( it->second.data );
 }
-		
+
 } // namespace Gaffer
 
 #endif // GAFFER_CONTEXT_INL

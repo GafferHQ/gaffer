@@ -1,26 +1,26 @@
 //////////////////////////////////////////////////////////////////////////
-//  
+//
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
-//  
+//
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
 //  met:
-//  
+//
 //      * Redistributions of source code must retain the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer.
-//  
+//
 //      * Redistributions in binary form must reproduce the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
-//  
+//
 //      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
-//  
+//
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 //  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 //  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -32,7 +32,7 @@
 //  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 //  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//  
+//
 //////////////////////////////////////////////////////////////////////////
 
 #ifndef GAFFER_APPLICATIONROOT_H
@@ -49,20 +49,20 @@ class ApplicationRoot : public GraphComponent
 {
 
 	public :
-	
+
 		ApplicationRoot( const std::string &name = defaultName<ApplicationRoot>() );
 		virtual ~ApplicationRoot();
-		
+
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::ApplicationRoot, ApplicationRootTypeId, GraphComponent );
 
-		/// Accepts no user added children.				
+		/// Accepts no user added children.
 		virtual bool acceptsChild( const GraphComponent *potentialChild ) const;
 		/// Accepts no parent.
 		virtual bool acceptsParent( const GraphComponent *potentialParent ) const;
-		
+
 		ScriptContainer *scripts();
 		const ScriptContainer *scripts() const;
-		
+
 		//! @name Clipboard
 		/// The ApplicationRoot class holds a clipboard which is
 		/// shared by all ScriptNodes belonging to the application.
@@ -80,7 +80,7 @@ class ApplicationRoot : public GraphComponent
 		typedef boost::signal<void (ApplicationRoot *)> ClipboardSignal;
 		ClipboardSignal &clipboardContentsChangedSignal();
 		//@}
-		
+
 		//! @name Preferences
 		/// User preferences are represented as Plugs on a centrally
 		/// held Node. During application startup plugs should be added
@@ -105,14 +105,14 @@ class ApplicationRoot : public GraphComponent
 		/// \todo Perhaps this should include a major version number in the future.
 		std::string preferencesLocation() const;
 		//@}
-		
+
 	private :
-	
+
 		std::string defaultPreferencesFileName() const;
-	
+
 		IECore::ObjectPtr m_clipboardContents;
 		ClipboardSignal m_clipboardContentsChangedSignal;
-	
+
 };
 
 IE_CORE_DECLAREPTR( ApplicationRoot );

@@ -1,26 +1,26 @@
 //////////////////////////////////////////////////////////////////////////
-//  
+//
 //  Copyright (c) 2012, John Haddon. All rights reserved.
 //  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
-//  
+//
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
 //  met:
-//  
+//
 //      * Redistributions of source code must retain the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer.
-//  
+//
 //      * Redistributions in binary form must reproduce the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
-//  
+//
 //      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
-//  
+//
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 //  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 //  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -32,7 +32,7 @@
 //  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 //  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//  
+//
 //////////////////////////////////////////////////////////////////////////
 
 #include <set>
@@ -88,7 +88,7 @@ const Gaffer::BoolPlug *SubTree::includeRootPlug() const
 void SubTree::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	SceneProcessor::affects( input, outputs );
-	
+
 	if( input->parent<ScenePlug>() == inPlug() )
 	{
 		outputs.push_back( outPlug()->getChild<ValuePlug>( input->getName() ) );
@@ -100,7 +100,7 @@ void SubTree::affects( const Plug *input, AffectedPlugsContainer &outputs ) cons
 			outputs.push_back( it->get() );
 		}
 	}
-	
+
 }
 
 void SubTree::hashBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
@@ -195,7 +195,7 @@ void SubTree::hashChildNames( const ScenePath &path, const Gaffer::Context *cont
 }
 
 IECore::ConstInternedStringVectorDataPtr SubTree::computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
-{		
+{
 	bool createRoot = false;
 	const ScenePath source = sourcePath( path, createRoot );
 	if( createRoot )
@@ -230,13 +230,13 @@ IECore::ConstCompoundObjectPtr SubTree::computeGlobals( const Gaffer::Context *c
 	CompoundObjectPtr outputGlobals = inputGlobals->copy();
 	CompoundDataPtr outputSets = new CompoundData;
 	outputGlobals->members()["gaffer:sets"] = outputSets;
-	
+
 	std::string root = rootPlug()->getValue();
 	if( !root.size() || root[root.size()-1] != '/' )
 	{
 		root += "/";
 	}
-	
+
 	size_t prefixSize = root.size() - 1; // number of characters to remove from front of each declaration
 	if( includeRootPlug()->getValue() && prefixSize )
 	{
@@ -246,7 +246,7 @@ IECore::ConstCompoundObjectPtr SubTree::computeGlobals( const Gaffer::Context *c
 			prefixSize = lastSlashButOne;
 		}
 	}
-	
+
 	for( CompoundDataMap::const_iterator it = inputSets->readable().begin(), eIt = inputSets->readable().end(); it != eIt; ++it )
 	{
 		/// \todo This could be more efficient if PathMatcher exposed the internal nodes,
@@ -254,7 +254,7 @@ IECore::ConstCompoundObjectPtr SubTree::computeGlobals( const Gaffer::Context *c
 		/// the matcher that we wanted.
 		const PathMatcher &inputSet = static_cast<const PathMatcherData *>( it->second.get() )->readable();
 		PathMatcher &outputSet = outputSets->member<PathMatcherData>( it->first, /* throwExceptions = */ false, /* createIfMissing = */ true )->writable();
-	
+
 		vector<string> inputPaths;
 		inputSet.paths( inputPaths );
 		for( vector<string>::const_iterator pIt = inputPaths.begin(), peIt = inputPaths.end(); pIt != peIt; ++pIt )
@@ -267,7 +267,7 @@ IECore::ConstCompoundObjectPtr SubTree::computeGlobals( const Gaffer::Context *c
 			}
 		}
 	}
-	
+
 	return outputGlobals;
 }
 
@@ -276,13 +276,13 @@ SceneNode::ScenePath SubTree::sourcePath( const ScenePath &outputPath, bool &cre
 	typedef boost::tokenizer<boost::char_separator<char> > Tokenizer;
 	/// \todo We should introduce a plug type which stores its values as a ScenePath directly.
 	string rootAsString = rootPlug()->getValue();
-	Tokenizer rootTokenizer( rootAsString, boost::char_separator<char>( "/" ) );	
+	Tokenizer rootTokenizer( rootAsString, boost::char_separator<char>( "/" ) );
 	ScenePath result;
 	for( Tokenizer::const_iterator it = rootTokenizer.begin(), eIt = rootTokenizer.end(); it != eIt; it++ )
 	{
 		result.push_back( *it );
 	}
-	
+
 	createRoot = false;
 	if( result.size() && includeRootPlug()->getValue() )
 	{
@@ -297,8 +297,8 @@ SceneNode::ScenePath SubTree::sourcePath( const ScenePath &outputPath, bool &cre
 	}
 	else
 	{
-		result.insert( result.end(), outputPath.begin(), outputPath.end() );	
+		result.insert( result.end(), outputPath.begin(), outputPath.end() );
 	}
-	
+
 	return result;
 }

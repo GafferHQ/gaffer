@@ -1,26 +1,26 @@
 ##########################################################################
-#  
+#
 #  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
-#  
+#
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
 #  met:
-#  
+#
 #      * Redistributions of source code must retain the above
 #        copyright notice, this list of conditions and the following
 #        disclaimer.
-#  
+#
 #      * Redistributions in binary form must reproduce the above
 #        copyright notice, this list of conditions and the following
 #        disclaimer in the documentation and/or other materials provided with
 #        the distribution.
-#  
+#
 #      * Neither the name of John Haddon nor the names of
 #        any other contributors to this software may be used to endorse or
 #        promote products derived from this software without specific prior
 #        written permission.
-#  
+#
 #  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 #  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 #  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -32,7 +32,7 @@
 #  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 #  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 #  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#  
+#
 ##########################################################################
 
 import weakref
@@ -86,9 +86,9 @@ class Widget( object ) :
 	# Container.addChild() when using the automatic parenting mechanism. Keyword arguments
 	# must not be used for any other purpose.
 	def __init__( self, topLevelWidget, toolTip="", **kw ) :
-	
+
 		assert( isinstance( topLevelWidget, ( QtGui.QWidget, Widget ) ) )
-		
+
 		if isinstance( topLevelWidget, QtGui.QWidget ) :
 			assert( Widget.__qtWidgetOwners.get( topLevelWidget ) is None )
 			self.__qtWidget = topLevelWidget
@@ -103,14 +103,14 @@ class Widget( object ) :
 			self.__qtWidget.layout().setSizeConstraint( QtGui.QLayout.SetMinAndMaxSize )
 			self.__qtWidget.layout().setContentsMargins( 0, 0, 0, 0 )
 			self.__qtWidget.layout().addWidget( self.__gafferWidget._qtWidget(), 0, 0 )
-			
+
 		Widget.__qtWidgetOwners[self.__qtWidget] = weakref.ref( self )
-				
+
 		# disable different focus appearance on os x
 		## \todo If we have a style class for Widget at some point, then perhaps
 		# this should go in there.
 		self.__qtWidget.setAttribute( QtCore.Qt.WA_MacShowFocusRect, False )
-		
+
 		self._keyPressSignal = None
 		self._keyReleaseSignal = None
  		self._buttonPressSignal = None
@@ -129,11 +129,11 @@ class Widget( object ) :
  		self._visibilityChangedSignal = None
  		self._contextMenuSignal = None
  		self._parentChangedSignal = None
- 		
+
  		self.__visible = not isinstance( self, GafferUI.Window )
- 		
+
 		self.setToolTip( toolTip )
-		
+
 		# perform automatic parenting if necessary. we don't want to do this
 		# for menus, because they don't have the same parenting semantics. if other
 		# types end up with similar requirements then we should probably just have
@@ -148,8 +148,8 @@ class Widget( object ) :
 					addChildKW.update( addChildKW["parenting"] )
 					del addChildKW["parenting"]
 				self.__parentStack[-1][0].addChild( self, **addChildKW )
-				
-		self.__eventFilterInstalled = False		
+
+		self.__eventFilterInstalled = False
 		# if a class has overridden getToolTip, then the tooltips
 		# may be dynamic based on context, and we need to display
 		# them using the event filter.
@@ -159,16 +159,16 @@ class Widget( object ) :
 				self.__ensureEventFilter()
 				break
 			c = c.__bases__[0]
-				
+
 	## Sets whether or not this Widget is visible. Widgets are
 	# visible by default, except for Windows which need to be made
-	# visible explicitly after creation.		
+	# visible explicitly after creation.
 	def setVisible( self, visible ) :
-	
+
 		if visible == self.__visible :
 			return
-		
-		self.__visible = visible	
+
+		self.__visible = visible
 		if (
 			not self.__visible or
 			isinstance( self, GafferUI.Window ) or
@@ -183,7 +183,7 @@ class Widget( object ) :
 			# so we'll wait to get a parent again and apply
 			# the visibility in _applyVisibility().
 			pass
-		
+
 	## Returns False if this Widget has been explicitly hidden
 	# using setVisible( False ), and True otherwise. Note that if
 	# a parent Widget has been hidden, then this function may still
@@ -191,30 +191,30 @@ class Widget( object ) :
 	# visible() method to determine visibility taking into account
 	# parent Widgets.
 	def getVisible( self ) :
-	
+
  		# I'm very reluctant to have an explicit visibility field on Widget like this,
  		# as you'd think that would be duplicating the real information Qt holds inside
  		# QWidget. But Qt shows and hides things behind your back when parenting widgets,
  		# so there's no real way of knowing whether the Qt visibility is a result of
  		# your explicit actions or of Qt's implicit actions. Qt does have a flag
  		# WA_WState_ExplicitShowHide which appears to record whether or not the current
- 		# visibility was requested explicitly, but in the case that that is false, 
+ 		# visibility was requested explicitly, but in the case that that is false,
  		# I can't see a way of determining what the explicit visibility should be
  		# without tracking it separately. The only time our idea of visibility should
  		# differ from Qt's is if we're a parentless widget, so at least most of the time
  		# the assertion covers our asses a bit.
  		if self.__qtWidget.parent() or isinstance( self, GafferUI.Window ) :
  			assert( self.__visible == ( not self.__qtWidget.isHidden() ) )
- 		
+
  		return self.__visible
- 		
+
 	## Returns True if this Widget and all its parents up to the specified
 	# ancestor are visible.
 	def visible( self, relativeTo=None ) :
-	
+
 		if relativeTo is not None :
 			relativeTo = relativeTo.__qtWidget
-			
+
 		return self.__qtWidget.isVisibleTo( relativeTo )
 
 	## Even when Widget.visible() is True, the Widget may not /actually/
@@ -223,7 +223,7 @@ class Widget( object ) :
 	# method takes care of everything necessary to make sure this is not
 	# the case, and the Widget is directly visible to the user.
 	def reveal( self ) :
-	
+
 		widget = self
 		while widget is not None :
 			widget.setVisible( True )
@@ -236,9 +236,9 @@ class Widget( object ) :
 	# will not be emitted for them. Disabling a Widget disables
 	# all children too.
 	def setEnabled( self, enabled ) :
-	
+
 		self.__qtWidget.setEnabled( enabled )
-	
+
 	## Returns False if this Widget has been explicitly disabled using
 	# setEnabled( False ), and True otherwise. Note that if a parent
 	# Widget has been disabled, then this function may still return
@@ -246,16 +246,16 @@ class Widget( object ) :
 	# enabled() method to determine enabled state taking into account
 	# parent Widgets.
 	def getEnabled( self ) :
-	
+
 		return not self.__qtWidget.testAttribute( QtCore.Qt.WA_ForceDisabled )
-	
+
 	## Returns True if neither this Widget nor all its parents up to the specified
 	# ancestor have been disabled with setEnabled( False ).
 	def enabled( self, relativeTo=None ) :
-	
+
 		if relativeTo is not None :
 			relativeTo = relativeTo.__qtWidget
-			
+
 		return self.__qtWidget.isEnabledTo( relativeTo )
 
 	## Sets whether or not this Widget should be rendered in a highlighted
@@ -265,28 +265,28 @@ class Widget( object ) :
 	# implementation from their reimplementation.
 	## \todo Implement highlighting for more subclasses.
 	def setHighlighted( self, highlighted ) :
-	
+
 		if highlighted == self.getHighlighted() :
 			return
-			
+
 		self._qtWidget().setProperty( "gafferHighlighted", GafferUI._Variant.toVariant( highlighted ) )
 		self._repolish()
-		
+
 	def getHighlighted( self ) :
-	
+
 		if "gafferHighlighted" not in self._qtWidget().dynamicPropertyNames() :
 			return False
-	
+
 		return GafferUI._Variant.fromVariant( self._qtWidget().property( "gafferHighlighted" ) )
-		
+
 	## Returns the GafferUI.Widget which is the parent for this
 	# Widget, or None if it has no parent.
 	def parent( self ) :
-	
+
 		q = self._qtWidget()
-				
+
 		while q is not None :
-			
+
 			parentWidget = q.parentWidget()
 			if parentWidget is not None :
 				q = parentWidget
@@ -298,45 +298,45 @@ class Widget( object ) :
 					q = graphicsProxyWidget.scene().parent()
 				else :
 					q = None
-			
+
 			if q in Widget.__qtWidgetOwners :
 				return Widget.__qtWidgetOwners[q]()
-				
+
 		return None
-	
+
 	## Returns the first Widget in the hierarchy above this one
 	# to match the desired type.
 	def ancestor( self, type ) :
-	
+
 		w = self
 		while w is not None :
 			w = w.parent()
 			if isinstance( w, type ) :
 				return w
-				
+
 		return None
-	
+
 	## Returns true if this Widget is an ancestor (or direct parent) of other.
 	def isAncestorOf( self, other ) :
-	
+
 		while other :
 			parent = other.parent()
 			if parent is self :
 				return True
 			other = parent
-			
+
 		return False
-	
-	## \deprecated Use bound().size() instead.	
+
+	## \deprecated Use bound().size() instead.
 	def size( self ) :
-	
+
 		return IECore.V2i( self.__qtWidget.width(), self.__qtWidget.height() )
-	
+
 	## Returns the bounding box of the Widget as a Box2i. If relativeTo
 	# is None then the bound is provided in screen coordinates, if a
 	# Widget is passed then it is provided relative to that Widget.
 	def bound( self, relativeTo=None ) :
-		
+
 		# traverse up the hierarchy, accumulating the transform
 		# till we reach the top. in an ideal world we'd just call
 		# self.__qtWidget.mapToGlobal() but that doesn't take into
@@ -357,76 +357,76 @@ class Widget( object ) :
 				if parentWidget is not None :
 					pos = q.mapToParent( pos )
 				q = parentWidget
-							
+
 		pos = IECore.V2i( pos.x(), pos.y() )
 		if relativeTo is not None :
 			pos -= relativeTo.bound().min
-		
+
 		return IECore.Box2i( pos, pos + IECore.V2i( self.__qtWidget.width(), self.__qtWidget.height() ) )
-	
+
 	def keyPressSignal( self ) :
-	
+
 		self.__ensureEventFilter()
 		if self._keyPressSignal is None :
 			self._keyPressSignal = GafferUI.WidgetEventSignal()
 		return self._keyPressSignal
 
 	def keyReleaseSignal( self ) :
-	
+
 		self.__ensureEventFilter()
 		if self._keyReleaseSignal is None :
 			self._keyReleaseSignal = GafferUI.WidgetEventSignal()
 		return self._keyReleaseSignal
-	
-	## \todo Should these be renamed to mousePressSignal and mouseReleaseSignal?	
+
+	## \todo Should these be renamed to mousePressSignal and mouseReleaseSignal?
 	def buttonPressSignal( self ) :
-	
+
 		self.__ensureEventFilter()
 		if self._buttonPressSignal is None :
 			self._buttonPressSignal = GafferUI.WidgetEventSignal()
 		return self._buttonPressSignal
-	
+
 	def buttonReleaseSignal( self ) :
-	
+
 		self.__ensureEventFilter()
 		if self._buttonReleaseSignal is None :
-			self._buttonReleaseSignal = GafferUI.WidgetEventSignal()		
+			self._buttonReleaseSignal = GafferUI.WidgetEventSignal()
 		return self._buttonReleaseSignal
-		
+
 	def buttonDoubleClickSignal( self ) :
-	
+
 		self.__ensureEventFilter()
 		if self._buttonDoubleClickSignal is None :
-			self._buttonDoubleClickSignal = GafferUI.WidgetEventSignal()		
+			self._buttonDoubleClickSignal = GafferUI.WidgetEventSignal()
 		return self._buttonDoubleClickSignal
-	
+
 	def mouseMoveSignal( self ) :
-	
+
 		if self._mouseMoveSignal is None :
 			self._mouseMoveSignal = GafferUI.WidgetEventSignal()
 			self.__ensureEventFilter()
 			self.__ensureMouseTracking()
 		return self._mouseMoveSignal
-	
+
 	def enterSignal( self ) :
-	
+
 		self.__ensureEventFilter()
 		if self._enterSignal is None :
 			self._enterSignal = GafferUI.WidgetSignal()
 		return self._enterSignal
-		
+
 	def leaveSignal( self ) :
-	
+
 		self.__ensureEventFilter()
 		if self._leaveSignal is None :
 			self._leaveSignal = GafferUI.WidgetSignal()
 		return self._leaveSignal
-	
+
 	## This signal is emitted if a previous buttonPressSignal() returned true, and the
 	# user has subsequently moved the mouse with the button down. To initiate a drag
 	# a Widget must return an IECore::RunTimeTyped object representing the data being
 	# dragged - note that this return type differs from many signals where either True
-	# or False is returned, and that a False return value will actually initiate a 
+	# or False is returned, and that a False return value will actually initiate a
 	# drag with IECore.BoolData( False ) which is almost certainly not what is intended.
 	# Return None to signify that no drag should be initiated.
 	#
@@ -436,143 +436,143 @@ class Widget( object ) :
 	# the drag ends. Finally, the originating Widget receives a dragEndSignal
 	# to signify the result of the drop.
 	def dragBeginSignal( self ) :
-	
+
 		if self._dragBeginSignal is None :
 			self._dragBeginSignal = GafferUI.WidgetDragBeginSignal()
 			self.__ensureEventFilter()
 			self.__ensureMouseTracking()
 		return self._dragBeginSignal
-	
+
 	## This signal is emitted when a drag enters a Widget. You must return True
 	# from a connected slot in order for dragMoveSignal() and dropSignal()
 	# to be emitted subsequently.
 	def dragEnterSignal( self ) :
-	
+
 		if self._dragEnterSignal is None :
 			self._dragEnterSignal = GafferUI.WidgetEventSignal()
 		return self._dragEnterSignal
-	
+
 	## This signal is emitted when a drag is moving within a Widget which
 	# previously returned true from a dragEnterSignal() emission.
 	def dragMoveSignal( self ) :
-	
+
 		if self._dragMoveSignal is None :
 			self._dragMoveSignal = GafferUI.WidgetEventSignal()
 		return self._dragMoveSignal
-	
+
 	## This signal is emitted on the previous target when a new Widget
 	# accepts the drag in dragEnterSignal().
 	def dragLeaveSignal( self ) :
-	
+
 		if self._dragLeaveSignal is None :
 			self._dragLeaveSignal = GafferUI.WidgetEventSignal()
 		return self._dragLeaveSignal
-	
+
 	## This signal is emitted when a drop is made within a Widget which
 	# previously returned true from a dragEnterSignal().
 	def dropSignal( self ) :
-	
+
 		if self._dropSignal is None :
 			self._dropSignal = GafferUI.WidgetEventSignal()
 		return self._dropSignal
-	
+
 	## After the dropSignal() has been emitted on the destination of the drag, the
 	# dragEndSignal() is emitted on the Gadget which provided the source of the
 	# drag.
 	def dragEndSignal( self ) :
-	
+
 		if self._dragEndSignal is None :
 			self._dragEndSignal = GafferUI.WidgetEventSignal()
 		return self._dragEndSignal
-				
+
 	def wheelSignal( self ) :
-	
+
 		self.__ensureEventFilter()
 		if self._wheelSignal is None :
 			self._wheelSignal = GafferUI.WidgetEventSignal()
 		return self._wheelSignal
-	
+
 	## Note that this is not emitted every time setVisible() is called -
 	# instead it is emitted when the Widget either becomes or ceases to
 	# be visible on screen.
 	def visibilityChangedSignal( self ) :
-	
+
 		self.__ensureEventFilter()
 		if self._visibilityChangedSignal is None :
 			self._visibilityChangedSignal = GafferUI.WidgetSignal()
 		return self._visibilityChangedSignal
 
 	def contextMenuSignal( self ) :
-	
+
 		self.__ensureEventFilter()
 		if self._contextMenuSignal is None :
 			self._contextMenuSignal = GafferUI.WidgetSignal()
 		return self._contextMenuSignal
 
 	def parentChangedSignal( self ) :
-	
+
 		self.__ensureEventFilter()
 		if self._parentChangedSignal is None :
 			self._parentChangedSignal = GafferUI.WidgetSignal()
 		return self._parentChangedSignal
-	
+
 	## A signal emitted whenever the keyboard focus moves from one Widget
 	# to another. The signature for slots is ( oldWidget, newWidget ).
 	## \todo Add methods for setting and querying the focus. TextWidget
 	# and MultiLineTextWidget provide their own methods for this but these
 	# don't apply generally so they should be replaced. Currently I'm favouring
-	# simple setFocus( widget ) and getFocus() class methods on the Widget class - 
+	# simple setFocus( widget ) and getFocus() class methods on the Widget class -
 	# since there can be only one focussed widget at a time it doesn't really make
 	# sense for it to be a property of each widget.
 	@classmethod
 	def focusChangedSignal( cls ) :
-	
+
 		cls.__ensureFocusChangedConnection()
 		return cls.__focusChangedSignal
-		
+
 	## Returns the tooltip to be displayed. This may be overriden
 	# by derived classes to provide sensible default behaviour, but
 	# allow custom behaviour when setToolTip( nonEmptyString ) has
 	# been called.
 	def getToolTip( self ) :
-	
+
 		return str( self._qtWidget().toolTip() )
-	
+
 	## Sets the tooltip to be displayed for this Widget. This
 	# will override any default behaviour until setToolTip( "" )
 	# is called.
 	def setToolTip( self, toolTip ) :
-	
+
 		assert( isinstance( toolTip, basestring ) )
-		
+
 		self._qtWidget().setToolTip( toolTip )
 
 	## Returns the current position of the mouse. If relativeTo
 	# is not specified, then the position will be in screen coordinates,
-	# otherwise it will be in the local coordinate system of the 
+	# otherwise it will be in the local coordinate system of the
 	# specified widget.
 	@staticmethod
 	def mousePosition( relativeTo=None ) :
-	
+
 		p = QtGui.QCursor.pos()
 		p = IECore.V2i( p.x(), p.y() )
 		if relativeTo is not None :
 			p = p - relativeTo.bound().min
-			
+
 		return p
-	
+
 	## Returns the widget at the specified screen position.
 	# If widgetType is specified, then it is used to find
 	# an ancestor of the widget at the position.
 	@staticmethod
 	def widgetAt( position, widgetType = None ) :
-	
+
 		if widgetType is None :
 			widgetType = GafferUI.Widget
-	
+
 		qWidget = QtGui.QApplication.instance().widgetAt( position[0], position[1] )
 		widget = GafferUI.Widget._owner( qWidget )
-		
+
 		if widget is not None and isinstance( widget._qtWidget(), QtGui.QGraphicsView ) :
 			# if the widget is a QGraphicsView, then we have to dive into it ourselves
 			# to find any widgets embedded within it - qt won't do that for us.
@@ -584,35 +584,35 @@ class Widget( object ) :
 				localPosition = graphicsItem.mapFromScene( localPosition )
 				qWidget = graphicsItem.widget().childAt( localPosition.x(), localPosition.y() )
 				widget = GafferUI.Widget._owner( qWidget )
-						
+
 		if widget is not None and not isinstance( widget, widgetType ) :
 			widget = widget.ancestor( widgetType )
-			
+
 		return widget
-			
+
 	## Returns the top level QWidget instance used to implement
 	# the GafferUI.Widget functionality.
 	def _qtWidget( self ) :
-	
+
 		return self.__qtWidget
-			
+
 	## Returns the GafferUI.Widget that owns the specified QtGui.QWidget
 	@classmethod
 	def _owner( cls, qtWidget ) :
-		
+
 		while qtWidget is not None :
-	
+
 			if qtWidget in cls.__qtWidgetOwners :
 				return cls.__qtWidgetOwners[qtWidget]()
-		
+
 			qtWidget = qtWidget.parentWidget()
-			
+
 		return None
-	
+
 	__qtWidgetOwners = weakref.WeakKeyDictionary()
-	
+
 	## Applies the current visibility to self._qtWidget(). It is
-	# essential that this is called whenever the Qt parent of the 
+	# essential that this is called whenever the Qt parent of the
 	# widget is changed, to work around undesirable Qt behaviours
 	# (documented in the function body). In theory we could do this
 	# automatically in response to parent changed events, but that
@@ -622,7 +622,7 @@ class Widget( object ) :
 	# can do this automatically. If doing this, take note of
 	# comments in TabbedContainer.append().
 	def _applyVisibility( self ) :
-	
+
 		if self.__qtWidget.parent() is None :
 			# When a QWidget becomes parentless, Qt will turn
 			# it into a toplevel window. We really don't want
@@ -634,28 +634,28 @@ class Widget( object ) :
 			# the widget, so if necessary we reapply the visibility
 			# we actually want.
 			if self.__visible != ( not self.__qtWidget.isHidden() ) :
-				self.__qtWidget.setVisible( self.__visible )			
-			
+				self.__qtWidget.setVisible( self.__visible )
+
 	## Used by the ContainerWidget classes to implement the automatic parenting
 	# using the with statement.
 	@classmethod
 	def _pushParent( cls, container ) :
-	
+
 		assert( isinstance( container, GafferUI.ContainerWidget ) )
-	
+
 		cls.__parentStack.append( ( container, cls.__initNesting() ) )
-	
+
 	@classmethod
 	def _popParent( cls ) :
-	
+
 		return cls.__parentStack.pop()[0]
-	
+
 	# Returns how many Widgets are currently in construction
 	# on the call stack. We use this to avoid automatically
 	# parenting Widgets that are being created inside a constructor.
 	@staticmethod
 	def __initNesting() :
-	
+
 		widgetsInInit = set()
 		frame = inspect.currentframe( 1 )
 		while frame :
@@ -664,30 +664,30 @@ class Widget( object ) :
 				if isinstance( frameSelf, Widget ) :
 					widgetsInInit.add( frameSelf )
 			frame = frame.f_back
-			
+
 		return len( widgetsInInit )
-	
+
 	__parentStack = []
-	
+
 	## Converts a Qt key code into a string
 	@classmethod
 	def _key( cls, qtKey ) :
-	
+
 		if not cls.__keyMapping :
 			for k in dir( QtCore.Qt ) :
 				if k.startswith( "Key_" ) :
 					keyValue = int( getattr( QtCore.Qt, k ) )
 					keyString = k[4:]
 					cls.__keyMapping[keyValue] = keyString
-	
+
 		return cls.__keyMapping[int(qtKey)]
-	
+
 	__keyMapping = {}
-	
+
 	## Converts a Qt buttons enum value into Gaffer ButtonEvent enum
 	@staticmethod
 	def _buttons( qtButtons ) :
-	
+
 		result = GafferUI.ButtonEvent.Buttons.None
 		if qtButtons & QtCore.Qt.LeftButton :
 			result |= GafferUI.ButtonEvent.Buttons.Left
@@ -695,42 +695,42 @@ class Widget( object ) :
 			result |= GafferUI.ButtonEvent.Buttons.Middle
 		if qtButtons & QtCore.Qt.RightButton :
 			result |= GafferUI.ButtonEvent.Buttons.Right
-			
+
 		return GafferUI.ButtonEvent.Buttons( result )
-			
+
 	## Converts Qt modifiers to Gaffer modifiers
 	@staticmethod
 	def _modifiers( qtModifiers ) :
-	
+
 		modifiers = GafferUI.ModifiableEvent.Modifiers.None
 		if qtModifiers & QtCore.Qt.ShiftModifier :
 			modifiers = modifiers | GafferUI.ModifiableEvent.Modifiers.Shift
 		if qtModifiers & QtCore.Qt.ControlModifier :
 			modifiers = modifiers | GafferUI.ModifiableEvent.Modifiers.Control
 		if qtModifiers & QtCore.Qt.AltModifier :
-			modifiers = modifiers | GafferUI.ModifiableEvent.Modifiers.Alt		
-			
+			modifiers = modifiers | GafferUI.ModifiableEvent.Modifiers.Alt
+
 		return GafferUI.ModifiableEvent.Modifiers( modifiers )
-	
+
 	## Converts an IECore.Color[34]f to a QtColor. Note that this
 	# does not take into account GafferUI.DisplayTransform.
 	@staticmethod
 	def _qtColor( color ) :
-	
+
 		color = color * 255
 		return QtGui.QColor(
 			min( 255, max( 0, color.r ) ),
 			min( 255, max( 0, color.g ) ),
 			min( 255, max( 0, color.b ) ),
 		)
-	
+
 	# We try not to install the event filter until absolutely
 	# necessary, as there's an overhead in having it in place.
 	# This function installs the filter, and is called when
 	# we know that the filter will be needed (typically when a
 	# client accesses one of the signals triggered by the filter).
 	def __ensureEventFilter( self ) :
-	
+
 		if not self.__eventFilterInstalled :
 			self._qtWidget().installEventFilter( _eventFilter )
 			if isinstance( self._qtWidget(), QtGui.QAbstractScrollArea ) :
@@ -738,7 +738,7 @@ class Widget( object ) :
 			self.__eventFilterInstalled = True
 
 	def __ensureMouseTracking( self ) :
-	
+
 		if isinstance( self._qtWidget(), QtGui.QAbstractScrollArea ) :
 			self._qtWidget().viewport().setMouseTracking( True )
 		else :
@@ -749,14 +749,14 @@ class Widget( object ) :
 	__focusChangedConnected = False
 	@classmethod
 	def __ensureFocusChangedConnection( cls ) :
-	
+
 		if not cls.__focusChangedConnected :
 			QtGui.QApplication.instance().focusChanged.connect( cls.__focusChanged )
 			cls.__focusChangedConnected = True
-	
+
 	@classmethod
 	def __focusChanged( cls, oldWidget, newWidget ) :
-	
+
 		cls.__focusChangedSignal( cls._owner( oldWidget ), cls._owner( newWidget ) )
 
 		if cls.__focusChangedSignal.empty() :
@@ -765,12 +765,12 @@ class Widget( object ) :
 			# interested.
 			QtGui.QApplication.instance().focusChanged.disconnect( cls.__focusChanged )
 			cls.__focusChangedConnected = False
-		
+
 	def _repolish( self, qtWidget=None ) :
-	
+
 		if qtWidget is None :
 			qtWidget = self._qtWidget()
-	
+
 		style = qtWidget.style()
 		style.unpolish( qtWidget )
 		for child in qtWidget.children() :
@@ -783,7 +783,7 @@ class Widget( object ) :
 		self.__qtWidget.setStyleSheet( self.__styleSheet )
 
 	## \todo Unify with GafferUI.Style for colours at least.
-	__styleSheet = string.Template( 
+	__styleSheet = string.Template(
 
 		"""
 		QWidget#gafferWindow {
@@ -796,42 +796,42 @@ class Widget( object ) :
 		}
 
 		QWidget {
-		
+
 			background-color: transparent;
-			
+
 		}
-		
+
 		QLabel, QCheckBox, QPushButton, QComboBox, QMenu, QMenuBar, QTabBar, QLineEdit, QAbstractItemView, QPlainTextEdit, QDateTimeEdit {
-		
+
 			color: $foreground;
 			font: 10px;
 			etch-disabled-text: 0;
 			alternate-background-color: $alternateColor;
 			selection-background-color: $brightColor;
 			outline: none;
-			
+
 		}
 
 		QLabel[gafferHighlighted=\"true\"] {
-		
+
 			color: $brightColor;
-		
+
 		}
 
 		QMenuBar {
-		
+
 			background-color: $backgroundDarkest;
 			font-weight: bold;
 			padding: 0px;
 			margin: 0px;
-			
+
 		}
 
 		QMenuBar::item {
 
 			background-color: $backgroundDarkest;
 			padding: 5px 8px 5px 8px;
-			
+
 		}
 
 		QMenu {
@@ -843,7 +843,7 @@ class Widget( object ) :
 		}
 
 		QMenu[gafferHasTitle=\"true\"] {
-		
+
 			/* make sure the title widget sits at the very top.
 			   infuriatingly, qt uses padding-top for the bottom
 			   as well, and is ignoring padding-bottom. that makes
@@ -851,32 +851,32 @@ class Widget( object ) :
 			   at the bottom. we hack around that by adding a little
 			   spacing widget in GafferUI.Menu. */
 			padding-top: 0px;
-			
+
 		}
-		
+
 		QLabel#gafferMenuTitle {
-		
+
 			background-color: $backgroundDarkest;
 			font-weight: bold;
 			padding: 5px 25px 5px 20px;
 			margin-bottom: 6px;
-			
+
 		}
-		
+
 		QLabel#gafferMenuTitle:disabled {
-		
+
 			color: $foreground;
-			
+
 		}
-		
+
 		QMenu::item {
 
 			background-color: transparent;
 			border: 0px;
 			padding: 2px 25px 2px 20px;
-			
+
 		}
-		
+
 		QMenu::item:disabled {
 
 			color: $foregroundFaded;
@@ -887,7 +887,7 @@ class Widget( object ) :
 			image: url($GAFFER_ROOT/graphics/subMenuArrow.png);
 			padding: 0px 7px 0px 0px;
 		}
-		
+
 		QMenu::separator {
 
 			height: 1px;
@@ -898,30 +898,30 @@ class Widget( object ) :
 			margin-bottom: 5px;
 
 		}
-		
+
 		QMenu::indicator {
 			padding: 0px 0px 0px 3px;
 		}
-		
-		
+
+
 		QMenu::indicator:non-exclusive:checked {
 			image: url($GAFFER_ROOT/graphics/menuChecked.png);
 		}
-		
+
 		QMenu::indicator:exclusive:checked:selected {
 			image: url($GAFFER_ROOT/graphics/arrowRight10.png);
 		}
-		
+
 		QMenu, QTabBar::tab:selected, QHeaderView::section {
 
 			background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 $backgroundLight, stop: 1 $backgroundMid);
 
 		}
-		
+
 		QPlainTextEdit {
-		
+
 			border: 1px solid $backgroundDark;
-		
+
 		}
 
 		QLineEdit, QPlainTextEdit[readOnly="false"] {
@@ -946,11 +946,11 @@ class Widget( object ) :
 		}
 
 		QLineEdit:disabled {
-		
+
 			color: $foregroundFaded;
-		
+
 		}
-		
+
 		QLineEdit#search{
 			background-image: url($GAFFER_ROOT/graphics/search.png);
 			background-repeat:no-repeat;
@@ -961,51 +961,51 @@ class Widget( object ) :
 			margin-left: 4px;
 			margin-right: 4px;
 		}
-		
+
 		QWidget#gafferSplineWidget
 		{
-			border: 1px solid $backgroundDark;			
+			border: 1px solid $backgroundDark;
 		}
-		
+
 		QWidget#gafferSplineWidget[gafferHighlighted=\"true\"] {
 
 			border: 1px solid $brightColor;
-		
+
 		}
-		 
+
 		QDateTimeEdit {
 
 			background-color: $backgroundLighter;
 			padding: 1px;
 			margin: 0px;
-			border: 1px solid $backgroundDark;	
+			border: 1px solid $backgroundDark;
 		}
-		
+
 		QDateTimeEdit::drop-down {
 			width: 15px;
 			image: url($GAFFER_ROOT/graphics/arrowDown10.png);
 		}
 
 		#qt_calendar_navigationbar {
-		
+
 			background-color : $brightColor;
-		
+
 		}
-		
+
 		#qt_calendar_monthbutton, #qt_calendar_yearbutton {
-		
+
 			color : $foreground;
 			font-weight : bold;
 			font-size : 16pt;
-		
+
 		}
-		
+
 		#qt_calendar_monthbutton::menu-indicator {
 			image : none;
 		}
-		
+
 		#qt_calendar_calendarview {
-		
+
 			color : $foreground;
 			font-weight : normal;
 			font-size : 14pt;
@@ -1014,13 +1014,13 @@ class Widget( object ) :
 			gridline-color: $backgroundDark;
 
 		}
-		
+
 		/* buttons */
-		
+
 		QPushButton, QComboBox {
-		
+
 			font-weight: bold;
-		
+
 		}
 
 		QPushButton#gafferWithFrame, QComboBox {
@@ -1038,70 +1038,70 @@ class Widget( object ) :
 			border: 2px solid $brightColor;
 			margin: 0px;
 		}
-		
+
 		QPushButton#gafferWithFrame:pressed {
-			
+
 			color: white;
 			background-color:	$brightColor;
 
 		}
-		
+
 		QPushButton#gafferWithoutFrame {
-			
+
 			border: 0px solid transparent;
 			border-radius: 3px;
 			padding: 0px;
 			background-color: none;
-			
+
 		}
-			
+
 		QPushButton:disabled, QComboBox:disabled, QLabel::disabled {
 
 			color: $foregroundFaded;
 
 		}
-		
+
 		QPushButton#gafferWithFrame:disabled {
 
 			background-color: $backgroundLighter;
-		
+
 		}
-		
+
 		QPushButton::menu-indicator {
 			image: url($GAFFER_ROOT/graphics/arrowDown10.png);
 			subcontrol-position: right center;
 			subcontrol-origin: padding;
 			left: -4px;
 		}
-		
+
 		QComboBox {
-		
+
 			padding: 0;
 			padding-left:3px;
-			
+
 		}
-		
+
 		QComboBox::drop-down {
 			width: 15px;
 			image: url($GAFFER_ROOT/graphics/arrowDown10.png);
 		}
-		
+
 		QComboBox QAbstractItemView {
-					
+
 			border: 1px solid $backgroundDark;
 			selection-background-color: $backgroundLighter;
 			background-color: $backgroundMid;
 			height:40px;
 			margin:0;
-			
+
 		}
-		
+
 		QComboBox QAbstractItemView::item {
-		
+
 			border: none;
 			padding: 2px;
 			font-weight: bold;
-			
+
 		}
 
 		/* tabs */
@@ -1113,12 +1113,12 @@ class Widget( object ) :
 		}
 
 		QTabBar {
-			
+
 			color: $foreground;
 			font-weight: bold;
 			outline:none;
 			background-color: transparent;
-			
+
 		}
 
 		QTabBar::tab {
@@ -1136,9 +1136,9 @@ class Widget( object ) :
 		/* indent the first tab. can't do this using QTabWidget::tab-bar:left */
 		/* as that messes up the alignment of the corner widget (makes it overlap) */
 		QTabBar::tab:first, QTabBar::tab:only-one {
-		
+
 			margin-left: 10px;
-		
+
 		}
 
 		QTabBar::tab:selected {
@@ -1148,7 +1148,7 @@ class Widget( object ) :
 		}
 
 		QTabBar::tab:!selected {
-		
+
 			color: $foregroundFaded;
 			background-color: $backgroundDark;
 			border-color: transparent;
@@ -1157,9 +1157,9 @@ class Widget( object ) :
 			padding-top: 2px;
 			margin-top: 4px;
 		}
- 	
+
 		QSplitter::handle:vertical {
-		
+
 			background-color: $backgroundDark;
 			height: 2px;
 			margin-top: 2px;
@@ -1168,9 +1168,9 @@ class Widget( object ) :
 			padding-top: -2px;
 			padding-bottom: -2px;
 		}
-		
+
 		QSplitter::handle:horizontal {
-		
+
 			background-color: $backgroundDark;
 			width: 2px;
 			margin-left: 2px;
@@ -1198,7 +1198,7 @@ class Widget( object ) :
 			border-top: 1px solid $backgroundDark;
 			top: -1px;
 		}
-		
+
 		QTabWidget[gafferHighlighted=\"true\"]::pane {
 			border: 1px solid $brightColor;
 			border-top: 1px solid $brightColor;
@@ -1209,13 +1209,13 @@ class Widget( object ) :
 			border: 1px solid $brightColor;
 			border-bottom-color: $backgroundMid; /* blend into frame below */
 		}
-		
+
 		QTabWidget[gafferHighlighted=\"true\"] > QTabBar::tab:!selected {
 			border-bottom-color: $brightColor;
 		}
-		
+
 		QCheckBox#gafferCollapsibleToggle {
-		
+
 			font-weight: bold;
 		}
 
@@ -1238,7 +1238,7 @@ class Widget( object ) :
 			image: url($GAFFER_ROOT/graphics/collapsibleArrowRight.png);
 
 		}
-		
+
 		QCheckBox#gafferCollapsibleToggle::indicator:unchecked:hover, QCheckBox#gafferCollapsibleToggle::indicator:unchecked:focus {
 
 			image: url($GAFFER_ROOT/graphics/collapsibleArrowDownHover.png);
@@ -1250,98 +1250,98 @@ class Widget( object ) :
 			image: url($GAFFER_ROOT/graphics/collapsibleArrowRightHover.png);
 
 		}
-		
+
 		QHeaderView {
-		
+
 			border: 0px;
 			margin: 0px;
-		
+
 		}
-		
+
 		QHeaderView::section {
-		
+
 			border: 1px solid $backgroundDark;
 			padding: 6px;
 			font-weight: bold;
 			margin: 0px;
-		
+
 		}
-		
+
 		/* tuck adjacent header sections beneath one another so we only get */
 		/* a single width line between them                                 */
 		QHeaderView::section:horizontal:!first {
-		
+
 			margin-left: -1px;
-		
+
 		}
-		
+
 		QHeaderView::section:horizontal:only-one {
-		
+
 			margin-left: 0px;
-		
+
 		}
-		
+
 		QHeaderView::section:vertical:!first {
-		
+
 			margin-top: -1px;
-		
+
 		}
-		
+
 		QHeaderView::section:vertical:only-one {
-		
+
 			margin-top: 0px;
-		
+
 		}
-		
+
 		QHeaderView::down-arrow {
-			
+
 			image: url($GAFFER_ROOT/graphics/headerSortDown.png);
-			
+
 		}
-		
+
 		QHeaderView::up-arrow {
-			
+
 			image: url($GAFFER_ROOT/graphics/headerSortUp.png);
-		
+
 		}
 
 		QScrollBar {
-		
+
 			border: 1px solid $backgroundDark;
 			background-color: $backgroundDark;
-			
+
 		}
-		
+
 		QScrollBar:vertical {
-		
+
 			width: 14px;
 			margin: 0px 0px 28px 0px;
-			
+
 		}
-		
+
 		QScrollBar:horizontal {
-		
+
 			height: 14px;
 			margin: 0px 28px 0px 0px;
-			
+
 		}
-		
+
 		QScrollBar::add-page, QScrollBar::sub-page {
 			background: none;
  			border: none;
 		}
-		
+
 		QScrollBar::add-line, QScrollBar::sub-line {
 			background-color: $backgroundLight;
 			border: 1px solid $backgroundDark;
 		}
-		
+
 		QScrollBar::add-line:vertical {
 			height: 14px;
 			subcontrol-position: bottom;
 			subcontrol-origin: margin;
 		}
-		
+
 		QScrollBar::add-line:horizontal {
 			width: 14px;
 			subcontrol-position: right;
@@ -1355,7 +1355,7 @@ class Widget( object ) :
 			position: absolute;
 			bottom: 15px;
 		}
-		
+
 		QScrollBar::sub-line:horizontal {
 			width: 14px;
 			subcontrol-position: top right;
@@ -1363,50 +1363,50 @@ class Widget( object ) :
 			position: absolute;
 			right: 15px;
 		}
-		
+
 		QScrollBar::down-arrow {
 			image: url($GAFFER_ROOT/graphics/arrowDown10.png);
 		}
-		
+
 		QScrollBar::up-arrow {
 			image: url($GAFFER_ROOT/graphics/arrowUp10.png);
 		}
-		
+
 		QScrollBar::left-arrow {
 			image: url($GAFFER_ROOT/graphics/arrowLeft10.png);
 		}
-		
+
 		QScrollBar::right-arrow {
 			image: url($GAFFER_ROOT/graphics/arrowRight10.png);
 		}
 
 		QScrollBar::handle {
-			background-color: $backgroundLight;			
+			background-color: $backgroundLight;
 			border: 1px solid $backgroundDark;
 		}
-		
+
 		QScrollBar::handle:vertical {
 			min-height: 14px;
 			border-left: none;
-			border-right: none;			
-			margin-top: -1px;		
+			border-right: none;
+			margin-top: -1px;
 		}
-		
+
 		QScrollBar::handle:horizontal {
 			min-width: 14px;
 			border-top: none;
 			border-bottom: none;
-			margin-left: -1px;		
+			margin-left: -1px;
 		}
-		
+
 		QScrollBar::handle:hover, QScrollBar::add-line:hover, QScrollBar::sub-line:hover {
 			background-color: $brightColor;
 		}
-		
+
 		QScrollArea {
 			border: none;
 		}
-		
+
 		QCheckBox {
 			spacing: 5px;
 		}
@@ -1417,34 +1417,34 @@ class Widget( object ) :
 			margin-left: -1px;
 			margin-right: -1px;
 		}
-		
+
 		QTreeView::branch {
 			border-image : none;
-			image : none;		
+			image : none;
 		}
 
 		QTreeView::branch:closed:has-children {
 			border-image : none;
 			image : url($GAFFER_ROOT/graphics/collapsibleArrowRight.png);
 		}
-		
+
 		QTreeView::branch:open:has-children {
 			border-image : none;
 			image : url($GAFFER_ROOT/graphics/collapsibleArrowDown.png);
 		}
-		
+
 		/* checkbox */
-		
+
 		QCheckBox::indicator {
 			width: 20px;
 			height: 20px;
-			background-color: transparent;			
+			background-color: transparent;
 		}
-		
+
 		QCheckBox::indicator:unchecked {
 			image: url($GAFFER_ROOT/graphics/checkBoxUnchecked.png);
 		}
-		
+
 		QCheckBox::indicator:unchecked:hover,
 		QCheckBox::indicator:unchecked:focus,
 		QCheckBox[gafferHighlighted=\"true\"]::indicator:unchecked {
@@ -1455,25 +1455,25 @@ class Widget( object ) :
 		QCheckBox[gafferHighlighted=\"true\"]::indicator:checked {
 			image: url($GAFFER_ROOT/graphics/checkBoxCheckedHover.png);
 		}
-		
+
 		QCheckBox::indicator:checked {
 			image: url($GAFFER_ROOT/graphics/checkBoxChecked.png);
 		}
-		
+
 		QCheckBox::indicator:checked:disabled {
 			image: url($GAFFER_ROOT/graphics/checkBoxCheckedDisabled.png);
 		}
-		
+
 		QCheckBox::indicator:unchecked:disabled {
 			image: url($GAFFER_ROOT/graphics/checkBoxUncheckedDisabled.png);
 		}
-		
+
 		/* boolwidget drawn as switch */
-		
+
 		QCheckBox#gafferBoolWidgetSwitch::indicator:unchecked {
 			image: url($GAFFER_ROOT/graphics/toggleOff.png);
 		}
-		
+
 		QCheckBox#gafferBoolWidgetSwitch::indicator:unchecked:hover,
 		QCheckBox#gafferBoolWidgetSwitch::indicator:unchecked:focus,
 		QCheckBox#gafferBoolWidgetSwitch[gafferHighlighted=\"true\"]::indicator:unchecked {
@@ -1484,15 +1484,15 @@ class Widget( object ) :
 		QCheckBox#gafferBoolWidgetSwitch[gafferHighlighted=\"true\"]::indicator:checked {
 			image: url($GAFFER_ROOT/graphics/toggleOnHover.png);
 		}
-		
+
 		QCheckBox#gafferBoolWidgetSwitch::indicator:checked {
 			image: url($GAFFER_ROOT/graphics/toggleOn.png);
 		}
-		
+
 		QCheckBox#gafferBoolWidgetSwitch::indicator:checked:disabled {
 			image: url($GAFFER_ROOT/graphics/toggleOnDisabled.png);
 		}
-		
+
 		QCheckBox#gafferBoolWidgetSwitch::indicator:unchecked:disabled {
 			image: url($GAFFER_ROOT/graphics/toggleOffDisabled.png);
 		}
@@ -1504,21 +1504,21 @@ class Widget( object ) :
 			border-radius: 4px;
 			padding: 2px;
 		}
-		
+
 		.QFrame#borderStyleFlat {
 			border: 1px solid $backgroundDark;
 			border-radius: 4px;
 			padding: 2px;
 		}
-		
+
 		.QFrame[gafferHighlighted=\"true\"]#borderStyleFlat {
-			border: 1px solid $brightColor;		
+			border: 1px solid $brightColor;
 		}
-		
+
 		.QFrame#gafferDivider {
 			color: $backgroundDark;
 		}
-		
+
 		QToolTip {
 			background-clip: border;
 			color: $backgroundDarkest;
@@ -1537,26 +1537,26 @@ class Widget( object ) :
 		}
 
 		QTableView {
-		
+
 			border: 0px solid transparent;
-		
+
 		}
 
 		QTableView::item:selected {
 			background-color: $brightColor;
 		}
-		
+
 		QTableView QTableCornerButton::section {
 			background-color: $backgroundMid;
 			border: 1px solid $backgroundMid;
 		}
-	
+
 		QTableView#vectorDataWidget {
 			gridline-color: $backgroundDark;
 			padding: 0px;
 			background-color: transparent;
 		}
-		
+
 		QTableView#vectorDataWidgetEditable {
 			padding: 0px;
 			gridline-color: $backgroundDark;
@@ -1565,106 +1565,106 @@ class Widget( object ) :
 		QTableView::item#vectorDataWidgetEditable {
 			background-color: $backgroundLighter;
 		}
-		
+
 		QTableView::item:selected#vectorDataWidgetEditable {
 			background-color: $brightColor;
 		}
-			
+
 		QHeaderView::section#vectorDataWidgetVerticalHeader {
 			background-color: transparent;
 			padding: 2px;
 		}
-		
+
 		/* checkboxes within table views */
-		
+
 		QTableView::indicator {
 			background-color: transparent;
 		}
-		
+
 		QTableView::indicator:unchecked {
-			image: url($GAFFER_ROOT/graphics/checkBoxUnchecked.png);		
+			image: url($GAFFER_ROOT/graphics/checkBoxUnchecked.png);
 		}
-		
+
 		QTableView::indicator:unchecked:hover {
-			image: url($GAFFER_ROOT/graphics/checkBoxUncheckedHover.png);		
+			image: url($GAFFER_ROOT/graphics/checkBoxUncheckedHover.png);
 		}
-		
+
 		QTableView::indicator:checked {
 			image: url($GAFFER_ROOT/graphics/checkBoxChecked.png);
 		}
-		
+
 		QTableView::indicator:checked:hover {
 			image: url($GAFFER_ROOT/graphics/checkBoxCheckedHover.png);
 		}
-		
+
 		QTableView::indicator:selected {
 			background-color: $brightColor;
 		}
-		
+
 		/* highlighted state for VectorDataWidget */
-		
+
 		QTableView[gafferHighlighted=\"true\"]#vectorDataWidget,
 		QTableView[gafferHighlighted=\"true\"]#vectorDataWidgetEditable {
 
 			gridline-color: $brightColor;
-			
+
 		}
-		
+
 		QTableView[gafferHighlighted=\"true\"] QHeaderView::section#vectorDataWidgetVerticalHeader {
-		
+
 			border-color: $brightColor;
-			
+
 		}
-		
+
 		/* progress bars */
 
 		QProgressBar {
-		
+
 			border: 1px solid $backgroundDark;
 			background: $backgroundLighter;
 			padding: 1px;
 			text-align: center;
-			
+
 		}
-		
+
 		QProgressBar::chunk:horizontal {
-		
+
 			background-color: $brightColor;
-		
+
 		}
 
 		/* gl widget */
 
 		QGraphicsView#gafferGLWidget {
-		
+
 			border: 0px;
-		
+
 		}
 
 		/* frame variants */
-		
+
 		QFrame#gafferDiffA {
-		
+
 			background: solid rgba( 181, 30, 0, 60 );
-			
+
 		}
-		
+
 		QFrame#gafferDiffB {
-		
+
 			background: solid rgba( 34, 159, 0, 60 );
-			
+
 		}
 
 		QFrame#gafferLighter {
-		
+
 			background: solid rgba( 255, 255, 255, 10 );
-			
+
 		}
-		
+
 		"""
-		
+
 	).substitute( {
-	
+
 		"GAFFER_ROOT" : os.environ["GAFFER_ROOT"],
 		"backgroundDarkest" : "#000000",
 		"backgroundDark" : "#3c3c3c",
@@ -1675,20 +1675,20 @@ class Widget( object ) :
 		"foreground" : "#f0f0f0",
 		"foregroundFaded" : "#999999",
 		"alternateColor" : "#454545",
-	
+
 	} )
-	
+
 class _EventFilter( QtCore.QObject ) :
 
 	def __init__( self ) :
-	
+
 		QtCore.QObject.__init__( self )
-	
+
 		# variables used in the implementation of drag and drop.
 		self.__lastButtonPressWidget = None
 		self.__lastButtonPressEvent = None
 		self.__dragDropEvent = None
-			
+
 		# the vast majority ( ~99% at time of testing ) of events entering
 		# eventFilter() are totally irrelevant to us. it's therefore very
 		# important for interactivity to exit the filter as fast as possible
@@ -1706,82 +1706,82 @@ class _EventFilter( QtCore.QObject ) :
 			QtCore.QEvent.MouseMove,
 			QtCore.QEvent.Enter,
 			QtCore.QEvent.Leave,
-			QtCore.QEvent.Wheel,			
-			QtCore.QEvent.Show,			
+			QtCore.QEvent.Wheel,
+			QtCore.QEvent.Show,
 			QtCore.QEvent.Hide,
-			QtCore.QEvent.ContextMenu,	
-			QtCore.QEvent.ParentChange,	
+			QtCore.QEvent.ContextMenu,
+			QtCore.QEvent.ParentChange,
 		) )
-	
+
 	def eventFilter( self, qObject, qEvent ) :
-				
+
 		qEventType = qEvent.type() # for speed it's best not to keep calling this below
 		# early out as quickly as possible for the majority of cases where we have literally
 		# no interest in the event.
 		if qEventType not in self.__eventMask :
 			return False
-		
+
 		# we display tooltips and emit visibility events even on disabled widgets
 		if qEventType==qEvent.ToolTip :
-		
+
 			return self.__toolTip( qObject, qEvent )
-			
+
 		elif qEventType==qEvent.Show or qEventType==qEvent.Hide :
-				
+
 			self.__showHide( qObject, qEvent )
 
 		# but for anything else we ignore disabled widgets
 		if not qObject.isEnabled() :
 			return False
-			
+
 		if qEventType==qEvent.KeyPress :
-						
+
 			return self.__keyPress( qObject, qEvent )
 
 		elif qEventType==qEvent.KeyRelease :
-						
+
 			return self.__keyRelease( qObject, qEvent )
-		
+
 		elif qEventType==qEvent.MouseButtonPress :
-					
+
 			return self.__mouseButtonPress( qObject, qEvent )
-					
+
 		elif qEventType==qEvent.MouseButtonRelease :
-			
+
 			return self.__mouseButtonRelease( qObject, qEvent )
-				
+
 		elif qEventType==qEvent.MouseButtonDblClick :
-				
-			return self.__mouseButtonDblClick( qObject, qEvent )	
-			
+
+			return self.__mouseButtonDblClick( qObject, qEvent )
+
 		elif qEventType==qEvent.MouseMove :
-		
+
 			return self.__mouseMove( qObject, qEvent )
-				
+
 		elif qEventType==qEvent.Enter :
-				
+
 			return self.__enter( qObject, qEvent )
-			
+
 		elif qEventType==qEvent.Leave :
-				
+
 			return self.__leave( qObject, qEvent )
-			
+
 		elif qEventType==qEvent.Wheel :
-				
+
 			return self.__wheel( qObject, qEvent )
-				
+
 		elif qEventType==qEvent.ContextMenu :
-		
+
 			return self.__contextMenu( qObject, qEvent )
-			
+
 		elif qEventType==qEvent.ParentChange :
-		
-			return self.__parentChange( qObject, qEvent )	
-			
+
+			return self.__parentChange( qObject, qEvent )
+
 		return False
 
 	def __toolTip( self, qObject, qEvent ) :
-	
+
 		widget = Widget._owner( qObject )
 		toolTip = widget.getToolTip()
 		if toolTip :
@@ -1789,16 +1789,16 @@ class _EventFilter( QtCore.QObject ) :
 			return True
 		else :
 			return False
-			
+
 	def __showHide( self, qObject, qEvent ) :
-	
+
 		widget = Widget._owner( qObject )
 		if widget is not None and widget._visibilityChangedSignal is not None :
 			widget._visibilityChangedSignal( widget )
-		return False		
+		return False
 
 	def __keyPress( self, qObject, qEvent ) :
-	
+
 		widget = Widget._owner( qObject )
 		if widget._keyPressSignal is not None :
 
@@ -1808,11 +1808,11 @@ class _EventFilter( QtCore.QObject ) :
 			)
 
 			return widget._keyPressSignal( widget, event )
-		
+
 		return False
-	
+
 	def __keyRelease( self, qObject, qEvent ) :
-	
+
 		widget = Widget._owner( qObject )
 		if widget._keyReleaseSignal is not None :
 
@@ -1820,13 +1820,13 @@ class _EventFilter( QtCore.QObject ) :
 				Widget._key( qEvent.key() ),
 				Widget._modifiers( qEvent.modifiers() ),
 			)
-	
+
 			return widget._keyReleaseSignal( widget, event )
 
 		return False
-	
+
 	def __mouseButtonPress( self, qObject, qEvent ) :
-	
+
 		widget = Widget._owner( qObject )
 		if widget._buttonPressSignal is not None :
 			event = GafferUI.ButtonEvent(
@@ -1843,21 +1843,21 @@ class _EventFilter( QtCore.QObject ) :
 					self.__lastButtonPressWidget = weakref.ref( widget )
 					self.__lastButtonPressEvent = event
 				return result
-				
+
 		return False
-	
+
 	def __mouseButtonRelease( self, qObject, qEvent ) :
-				
+
 		if self.__dragDropEvent is not None :
 			return self.__endDrag( qObject, qEvent )
 		else :
 
 			self.__lastButtonPressWidget = None
 			self.__lastButtonPressEvent = None
-				
+
 			widget = Widget._owner( qObject )
 			if widget._buttonReleaseSignal is not None :
-	
+
 				event = GafferUI.ButtonEvent(
 					Widget._buttons( qEvent.button() ),
 					Widget._buttons( qEvent.buttons() ),
@@ -1865,13 +1865,13 @@ class _EventFilter( QtCore.QObject ) :
 					0.0,
 					Widget._modifiers( qEvent.modifiers() ),
 				)
-	
+
 				return widget._buttonReleaseSignal( widget, event )
 
 		return False
-	
+
 	def __mouseButtonDblClick( self, qObject, qEvent ) :
-	
+
 		self.__lastButtonPressWidget = None
 
 		widget = Widget._owner( qObject )
@@ -1886,14 +1886,14 @@ class _EventFilter( QtCore.QObject ) :
 			)
 
 			return widget._buttonDoubleClickSignal( widget, event )
-			
+
 		return False
-	
+
 	def __mouseMove( self, qObject, qEvent ) :
-		
+
 		if self.__doDrag( qObject, qEvent ) :
 			return True
-		
+
 		widget = Widget._owner( qObject )
 		if widget._mouseMoveSignal is not None :
 
@@ -1906,19 +1906,19 @@ class _EventFilter( QtCore.QObject ) :
 			)
 
 			return widget._mouseMoveSignal( widget, event )
-			
+
 		return False
-		
+
 	def __enter( self, qObject, qEvent ) :
-			
+
 		widget = Widget._owner( qObject )
 		if widget is not None and widget._enterSignal is not None :
 			return widget._enterSignal( widget )
-				
+
 		return False
-	
+
 	def __leave( self, qObject, qEvent ) :
-	
+
 		widget = Widget._owner( qObject )
 		if widget is not None and widget._leaveSignal is not None :
 			return widget._leaveSignal( widget )
@@ -1926,10 +1926,10 @@ class _EventFilter( QtCore.QObject ) :
 		return False
 
 	def __wheel( self, qObject, qEvent ) :
-	
+
 		widget = Widget._owner( qObject )
 		if widget._wheelSignal is not None :
-		
+
 			event = GafferUI.ButtonEvent(
 				GafferUI.ButtonEvent.Buttons.None,
 				Widget._buttons( qEvent.buttons() ),
@@ -1941,9 +1941,9 @@ class _EventFilter( QtCore.QObject ) :
 			return widget._wheelSignal( widget, event )
 
 		return False
-		
+
 	def __contextMenu( self, qObject, qEvent ) :
-	
+
 		widget = Widget._owner( qObject )
 		if widget._contextMenuSignal is not None :
 			return widget._contextMenuSignal( widget )
@@ -1951,7 +1951,7 @@ class _EventFilter( QtCore.QObject ) :
 		return False
 
 	def __parentChange( self, qObject, qEvent ) :
-			
+
 		## \todo It might be nice to investigate having the
 		# the signature for this signal match that of
 		# GraphComponent::parentChangedSignal(), which takes
@@ -1962,8 +1962,8 @@ class _EventFilter( QtCore.QObject ) :
 		if widget._parentChangedSignal is not None :
 			widget._parentChangedSignal( widget )
 			return True
-			
-		return False	
+
+		return False
 
 	# Although Qt has a drag and drop system, we ignore it and implement our
 	# own. This isn't ideal. The primary reasons for implementing our own are :
@@ -1977,19 +1977,19 @@ class _EventFilter( QtCore.QObject ) :
 	#   mouse button.
 	#
 	def __doDrag( self, qObject, qEvent ) :
-	
+
 		if not self.__dragDropEvent :
 			return self.__startDrag( qObject, qEvent )
 		else :
 			return self.__updateDrag( qObject, qEvent )
 
 		return False
-		
+
 	def __startDrag( self, qObject, qEvent ) :
-	
+
 		if self.__lastButtonPressWidget is None :
 			return False
-		
+
 		if qEvent.buttons() == QtCore.Qt.NoButton :
 			# sometimes Qt can fail to give us a mouse button release event
 			# for the widget that received the mouse button press - in particular
@@ -1999,18 +1999,18 @@ class _EventFilter( QtCore.QObject ) :
 			# so we fix that.
 			self.__lastButtonPressWidget = None
 			return False
-	
+
 		if ( self.__lastButtonPressEvent.line.p0 - self.__positionToLine( qEvent.pos() ).p0 ).length() < 3 :
 			return False
-			
+
 		sourceWidget = self.__lastButtonPressWidget()
 		if sourceWidget is None :
 			# the widget died
 			return False
-			
+
 		if sourceWidget._dragBeginSignal is None :
 			return False
-		
+
 		dragDropEvent = GafferUI.DragDropEvent(
 			Widget._buttons( qEvent.button() ),
 			Widget._buttons( qEvent.buttons() ),
@@ -2019,12 +2019,12 @@ class _EventFilter( QtCore.QObject ) :
 		)
 		dragDropEvent.sourceWidget = sourceWidget
 		dragDropEvent.destinationWidget = None
-				
+
 		dragData = sourceWidget._dragBeginSignal( sourceWidget, dragDropEvent )
 		if dragData is not None :
-		
+
 			dragDropEvent.data = dragData
-			
+
 			self.__lastButtonPressWidget = None
 			self.__lastButtonPressEvent = None
 			self.__dragDropEvent = dragDropEvent
@@ -2034,13 +2034,13 @@ class _EventFilter( QtCore.QObject ) :
 			return True
 
 	def __doDragEnterAndLeave( self, qObject, qEvent ) :
-		
+
 		cursorPos = IECore.V2i( qEvent.globalPos().x(), qEvent.globalPos().y() )
 		candidateWidget = Widget.widgetAt( cursorPos )
-		
+
 		if candidateWidget is self.__dragDropEvent.destinationWidget :
 			return
-				
+
 		newDestinationWidget = None
 		if candidateWidget is not None :
 			while candidateWidget is not None :
@@ -2050,85 +2050,85 @@ class _EventFilter( QtCore.QObject ) :
 						newDestinationWidget = candidateWidget
 						break
 				candidateWidget = candidateWidget.parent()
-		
+
 		if newDestinationWidget is None :
 			if self.__dragDropEvent.destinationWidget is self.__dragDropEvent.sourceWidget :
 				# we allow the source widget to keep a hold of the drag even when outside
 				# its borders, so that we can do intuitive drag-to-zoom and sliders that
 				# go outside their displayed range.
 				newDestinationWidget = self.__dragDropEvent.destinationWidget
-								
+
 		if newDestinationWidget is not self.__dragDropEvent.destinationWidget :
 			previousDestinationWidget = self.__dragDropEvent.destinationWidget
 			self.__dragDropEvent.destinationWidget = newDestinationWidget
 			if previousDestinationWidget is not None and previousDestinationWidget._dragLeaveSignal is not None :
 				self.__dragDropEvent.line = self.__positionToLine( cursorPos - previousDestinationWidget.bound().min )
-				previousDestinationWidget._dragLeaveSignal( previousDestinationWidget, self.__dragDropEvent )	
+				previousDestinationWidget._dragLeaveSignal( previousDestinationWidget, self.__dragDropEvent )
 
 	def __updateDrag( self, qObject, qEvent ) :
-	
+
 		self.__dragDropEvent.modifiers = Widget._modifiers( qEvent.modifiers() )
 
 		# emit enter and leave events as necessary, updating
 		# the destination widget as we do.
 		self.__doDragEnterAndLeave( qObject, qEvent )
-		
+
 		# emit move events on current destination
 		dst = self.__dragDropEvent.destinationWidget
 		if dst is None :
 			return True
-			
+
 		if dst._dragMoveSignal :
-			
+
 			cursorPos = IECore.V2i( qEvent.globalPos().x(), qEvent.globalPos().y() )
 			self.__dragDropEvent.line = self.__positionToLine( cursorPos - dst.bound().min )
-			
+
 			dst._dragMoveSignal( dst, self.__dragDropEvent )
-			
+
 		return True
-		
+
 	def __endDrag( self, qObject, qEvent ) :
-		
+
 		# Reset self.__dragDropEvent to None before emitting
 		# dropSignal or dragEndSignal, because slots connected
 		# to those signals could do anything at all - including
 		# popping up modal dialogues which then want to start new
 		# drags.
-		
+
 		dragDropEvent = self.__dragDropEvent
 		self.__dragDropEvent = None
-		
+
 		# Emit dropSignal() on the destination.
-		
+
 		cursorPos = IECore.V2i( qEvent.globalPos().x(), qEvent.globalPos().y() )
 
 		dst = dragDropEvent.destinationWidget
 		if dst is not None and dst._dropSignal :
-		
+
 			dragDropEvent.line = self.__positionToLine( cursorPos - dst.bound().min )
 			dragDropEvent.dropResult = dst._dropSignal( dst, dragDropEvent )
-		
+
 		# Emit dragEndSignal() on source.
-		
+
 		src = dragDropEvent.sourceWidget
 		if src._dragEndSignal :
-			
+
 			dragDropEvent.line = self.__positionToLine( cursorPos - src.bound().min )
-			
+
 			src._dragEndSignal(
 				src,
 				dragDropEvent
 			)
-		
+
 		return True
 
 	def __positionToLine( self, pos ) :
-	
+
 		if isinstance( pos, IECore.V2i ) :
 			x, y = pos.x, pos.y
 		else :
 			x, y = pos.x(), pos.y()
-	
+
 		return IECore.LineSegment3f(
 			IECore.V3f( x, y, 1 ),
 			IECore.V3f( x, y, 0 )

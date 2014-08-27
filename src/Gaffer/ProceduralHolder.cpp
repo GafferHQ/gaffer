@@ -1,25 +1,25 @@
 //////////////////////////////////////////////////////////////////////////
-//  
+//
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  
+//
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
 //  met:
-//  
+//
 //      * Redistributions of source code must retain the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer.
-//  
+//
 //      * Redistributions in binary form must reproduce the above
 //        copyright notice, this list of conditions and the following
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
-//  
+//
 //      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
-//  
+//
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 //  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 //  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -31,7 +31,7 @@
 //  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 //  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//  
+//
 //////////////////////////////////////////////////////////////////////////
 
 #include "IECore/ParameterisedProcedural.h"
@@ -51,17 +51,17 @@ ProceduralHolder::ProceduralHolder( const std::string &name )
 {
 
 	addChild(
-	
+
 		new ObjectPlug(
 			"output",
 			Plug::Out,
 			NullObject::defaultNullObject()
 		)
-		
+
 	);
 
 }
-			
+
 void ProceduralHolder::setParameterised( IECore::RunTimeTypedPtr parameterised, bool keepExistingValues )
 {
 	ParameterisedProceduralPtr op = runTimeCast<ParameterisedProcedural>( parameterised );
@@ -69,9 +69,9 @@ void ProceduralHolder::setParameterised( IECore::RunTimeTypedPtr parameterised, 
 	{
 		throw IECore::Exception( "Parameterised object is not an IECore::ParameterisedProcedural" );
 	}
-	
+
 	ParameterisedHolderComputeNode::setParameterised( parameterised, keepExistingValues );
-	
+
 	plugDirtiedSignal()( getChild<ObjectPlug>( "output" ) );
 }
 
@@ -93,7 +93,7 @@ const IECore::ParameterisedProcedural *ProceduralHolder::getProcedural( std::str
 void ProceduralHolder::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	ParameterisedHolderComputeNode::affects( input, outputs );
-	
+
 	const Plug *parametersPlug = getChild<Plug>( "parameters" );
 	if( parametersPlug && parametersPlug->isAncestorOf( input ) )
 	{
@@ -111,7 +111,7 @@ void ProceduralHolder::hash( const ValuePlug *output, const Context *context, IE
 		getParameterised( &className, &classVersion );
 		h.append( className );
 		h.append( classVersion );
-	
+
 		const ValuePlug *parametersPlug = getChild<ValuePlug>( "parameters" );
 		if( parametersPlug )
 		{
@@ -123,11 +123,11 @@ void ProceduralHolder::hash( const ValuePlug *output, const Context *context, IE
 void ProceduralHolder::compute( ValuePlug *output, const Context *context ) const
 {
 	if( output==getChild<ObjectPlug>( "output" ) )
-	{	
+	{
 		const_cast<CompoundParameterHandler *>( parameterHandler() )->setParameterValue();
 		static_cast<ObjectPlug *>( output )->setValue( getProcedural() );
 		return;
 	}
-	
-	ParameterisedHolderComputeNode::compute( output, context );	
+
+	ParameterisedHolderComputeNode::compute( output, context );
 }
