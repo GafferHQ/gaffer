@@ -131,6 +131,8 @@ IECore::ConstCompoundObjectPtr Attributes::computeGlobals( const Gaffer::Context
 
 bool Attributes::processesAttributes() const
 {
+	// Although the base class says that we should return a constant, it should
+	// be OK to return this because it's constant across the hierarchy.
 	return attributesPlug()->children().size() && !globalPlug()->getValue();
 }
 
@@ -143,6 +145,15 @@ IECore::ConstCompoundObjectPtr Attributes::computeProcessedAttributes( const Sce
 {
 	const CompoundDataPlug *ap = attributesPlug();
 	if( !ap->children().size() )
+	{
+		return inputAttributes;
+	}
+
+	/// \todo You might think that we wouldn't have to check this again
+	/// because the base class would have used processesAttributes()
+	/// to avoid even calling this function. But that isn't the case for
+	/// some reason.
+	if( globalPlug()->getValue() )
 	{
 		return inputAttributes;
 	}
