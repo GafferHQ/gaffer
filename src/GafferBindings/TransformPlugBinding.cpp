@@ -50,7 +50,7 @@ using namespace Gaffer;
 
 void GafferBindings::bindTransformPlug()
 {	
-	IECorePython::RunTimeTypedClass<TransformPlug>()
+	PlugClass<TransformPlug>()
 		.def(
 			init< const std::string &, Gaffer::Plug::Direction, unsigned >
 			(
@@ -61,7 +61,6 @@ void GafferBindings::bindTransformPlug()
 				)
 			)
 		)
-		.GAFFERBINDINGS_DEFPLUGWRAPPERFNS( TransformPlug )
 		.def( "matrix", &TransformPlug::matrix )
 	;
 }

@@ -197,8 +197,7 @@ bool ValuePlugSerialiser::valueNeedsSerialisation( const Gaffer::ValuePlug *plug
 
 void GafferBindings::bindValuePlug()
 {
-	IECorePython::RunTimeTypedClass<ValuePlug>()
-		.GAFFERBINDINGS_DEFPLUGWRAPPERFNS( ValuePlug )
+	PlugClass<ValuePlug>()
 		.def( "settable", &ValuePlug::settable )
 		.def( "setFrom", &ValuePlug::setFrom )
 		.def( "setToDefault", &ValuePlug::setToDefault )

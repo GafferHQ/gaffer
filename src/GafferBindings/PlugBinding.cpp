@@ -219,7 +219,7 @@ void GafferBindings::bindPlug()
 	typedef PlugWrapper<Plug> Wrapper;
 	IE_CORE_DECLAREPTR( Wrapper );
 	
-	IECorePython::RunTimeTypedClass<Plug, WrapperPtr> c;
+	PlugClass<Plug, WrapperPtr> c;
 	{
 		scope s( c );
 		enum_<Plug::Direction>( "Direction" )
@@ -255,7 +255,6 @@ void GafferBindings::bindPlug()
 		.def( "getFlags", (bool (Plug::*)( unsigned ) const )&Plug::getFlags )
 		.def( "setFlags", (void (Plug::*)( unsigned ) )&Plug::setFlags )
 		.def( "setFlags", (void (Plug::*)( unsigned, bool ) )&Plug::setFlags )
-		.GAFFERBINDINGS_DEFPLUGWRAPPERFNS( Plug )
 		.def( "getInput", &getInput )
 		.def( "source", &source )
 		.def( "removeOutputs", &Plug::removeOutputs )

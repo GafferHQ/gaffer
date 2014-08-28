@@ -97,7 +97,7 @@ class ArrayPlugSerialiser : public CompoundPlugSerialiser
 
 void GafferBindings::bindArrayPlug()
 {
-	IECorePython::RunTimeTypedClass<ArrayPlug>()
+	PlugClass<ArrayPlug>()
 		.def(	init< const std::string &, Plug::Direction, PlugPtr, size_t, size_t, unsigned >
 				(
 					(
@@ -112,7 +112,6 @@ void GafferBindings::bindArrayPlug()
 		)
 		.def( "minSize", &ArrayPlug::minSize )
 		.def( "maxSize", &ArrayPlug::maxSize )
-		.GAFFERBINDINGS_DEFPLUGWRAPPERFNS( ArrayPlug )
 		.def( "__repr__", &repr )
 	;
 

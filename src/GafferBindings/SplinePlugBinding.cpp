@@ -95,7 +95,7 @@ static void bind()
 {
 	typedef typename T::ValueType V;
 	
-	IECorePython::RunTimeTypedClass<T>()
+	PlugClass<T>()
 		.def( init<const std::string &, Plug::Direction, const V &, unsigned>( 
 				(
 					boost::python::arg_( "name" )=GraphComponent::defaultName<T>(),
@@ -105,7 +105,6 @@ static void bind()
 				)
 			)
 		)
-		.GAFFERBINDINGS_DEFPLUGWRAPPERFNS( T )
 		.def( "defaultValue", &T::defaultValue, return_value_policy<copy_const_reference>() )
 		.def( "setValue", &T::setValue )
 		.def( "getValue", &T::getValue )

@@ -107,7 +107,7 @@ class FormatPlugSerialiser : public GafferBindings::ValuePlugSerialiser
 
 void GafferImageBindings::bindFormatPlug()
 {
-	IECorePython::RunTimeTypedClass<FormatPlug>()
+	PlugClass<FormatPlug>()
 		.def( init<const std::string &, Plug::Direction, const Format &, unsigned>(
 				(
 					boost::python::arg_( "name" )=GraphComponent::defaultName<FormatPlug>(),
@@ -117,7 +117,6 @@ void GafferImageBindings::bindFormatPlug()
 				)
 			)
 		)
-		.GAFFERBINDINGS_DEFPLUGWRAPPERFNS( FormatPlug )
 		.def( "defaultValue", &FormatPlug::defaultValue, return_value_policy<copy_const_reference>() )
 		.def( "setValue", &FormatPlug::setValue )
 		.def( "getValue", &FormatPlug::getValue )
