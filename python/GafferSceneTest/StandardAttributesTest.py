@@ -82,5 +82,28 @@ class StandardAttributesTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertEqual( s["attributes"]["out"].attributes( "/plane" )["scene:visible"], IECore.BoolData( False ) )
 
+	def testGlobal( self ) :
+
+		p = GafferScene.Plane()
+		f = GafferScene.PathFilter()
+		f["paths"].setValue( IECore.StringVectorData( [ "/plane" ] ) )
+
+		a = GafferScene.StandardAttributes()
+		a["in"].setInput( p["out"] )
+		a["filter"].setInput( f["match"] )
+		a["attributes"]["transformBlurSegments"]["enabled"].setValue( True )
+		a["attributes"]["transformBlurSegments"]["value"].setValue( 2 )
+
+		self.assertEqual( a["out"].attributes( "/plane" )["gaffer:transformBlurSegments"], IECore.IntData( 2 ) )
+		self.assertEqual( a["out"]["globals"].hash(), a["in"]["globals"].hash() )
+		self.assertEqual( a["out"]["globals"].getValue(), a["in"]["globals"].getValue() )
+
+		a["global"].setValue( True )
+
+		self.assertEqual( a["out"].attributes( "/plane" ), IECore.CompoundObject() )
+		self.assertEqual( a["out"].attributesHash( "/plane" ), a["in"].attributesHash( "/plane" ) )
+		self.assertNotEqual( a["out"]["globals"].hash(), a["in"]["globals"].hash() )
+		self.assertEqual( a["out"]["globals"].getValue()["attribute:gaffer:transformBlurSegments"], IECore.IntData( 2 ) )
+
 if __name__ == "__main__":
 	unittest.main()

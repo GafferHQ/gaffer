@@ -52,6 +52,13 @@ GafferScene.Attributes,
 as children of this plug via the user interface, or using the CompoundDataPlug API via
 python.""",
 
+"global",
+{
+	"description" : "Causes the attributes to be applied to the scene globals "
+	                "instead of the individual locations defined by the filter.",
+	"nodeUI:section" : "Filter",
+}
+
 )
 
 
