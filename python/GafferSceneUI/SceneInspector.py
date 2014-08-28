@@ -122,8 +122,6 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 	@classmethod
 	def registerSection( cls, section, tab ) :
 
-		assert( issubclass( section, cls.Section ) )
-
 		cls.__sectionRegistrations.append( cls.__SectionRegistration( section = section, tab = tab ) )
 
 	__SectionRegistration = collections.namedtuple( "SectionRegistration", [ "section", "tab" ] )
@@ -1332,17 +1330,17 @@ class __ObjectSection( Section ) :
 SceneInspector.registerSection( __ObjectSection, tab = "Selection" )
 
 ##########################################################################
-# Options section
+# Global Options and Attributes section
 ##########################################################################
 
-class __OptionsSection( Section ) :
+class __GlobalsSection( Section ) :
 
-	def __init__( self ) :
+	def __init__( self, prefix, label ) :
 
-		Section.__init__( self, collapsed = True, label = "Options" )
+		Section.__init__( self, collapsed = True, label = label )
 
 		with self._mainColumn() :
-			self.__diffColumn = DiffColumn( self.__Inspector() )
+			self.__diffColumn = DiffColumn( self.__Inspector( prefix ) )
 
 	def update( self, targets ) :
 
@@ -1350,28 +1348,30 @@ class __OptionsSection( Section ) :
 
 	class __Inspector( Inspector ) :
 
-		def __init__( self, optionName = None ) :
+		def __init__( self, prefix, key = None ) :
 
-			self.__optionName = optionName
+			self.__prefix = prefix
+			self.__key = key
 
 		def name( self ) :
 
-			return self.__optionName[7:] if self.__optionName else ""
+			return self.__key[len(self.__prefix):] if self.__key else ""
 
 		def __call__( self, target ) :
 
 			## \todo Investigate caching the globals on the target.
-			options = target.scene["globals"].getValue()
-			return options.get( self.__optionName )
+			globals = target.scene["globals"].getValue()
+			return globals.get( self.__key )
 
 		def children( self, target ) :
 
 			globals = target.scene["globals"].getValue()
-			optionNames = [ k for k in globals.keys() if k.startswith( "option:" ) ]
+			keys = [ k for k in globals.keys() if k.startswith( self.__prefix ) ]
 
-			return [ self.__class__( optionName ) for optionName in optionNames ]
+			return [ self.__class__( self.__prefix, key ) for key in keys ]
 
-SceneInspector.registerSection( __OptionsSection, tab = "Globals" )
+SceneInspector.registerSection( lambda : __GlobalsSection( "option:", "Options" ), tab = "Globals" )
+SceneInspector.registerSection( lambda : __GlobalsSection( "attribute:", "Attributes" ), tab = "Globals" )
 
 ##########################################################################
 # Outputs section

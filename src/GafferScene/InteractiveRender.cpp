@@ -244,6 +244,7 @@ void InteractiveRender::update()
 		{
 			WorldBlock world( m_renderer );
 
+			outputGlobalAttributes( globals.get(), m_renderer.get() );
 			outputCoordinateSystems( inPlug(), globals.get(), m_renderer.get() );
 			outputLightsInternal( globals.get(), /* editing = */ false );
 

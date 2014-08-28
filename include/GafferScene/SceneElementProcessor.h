@@ -94,6 +94,7 @@ class SceneElementProcessor : public FilteredSceneProcessor
 		/// and finally reimplement the processAspect() function to perform the processing. Note that the implementation
 		/// of processesAspect() is expected to return a constant - returning different values for different scene paths
 		/// is currently not supported (this is because the bound computation may need to take into account child locations).
+		/// \todo Review the use of the processes*() methods - see comments in StandardAttributes.cpp.
 		/////////////////////////////////////////////////////////////////////////////////////////////////
 		//@{
 		virtual bool processesBound() const;

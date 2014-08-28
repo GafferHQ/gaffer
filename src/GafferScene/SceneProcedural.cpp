@@ -82,10 +82,17 @@ SceneProcedural::SceneProcedural( ConstScenePlugPtr scenePlug, const Gaffer::Con
 
 	// attributes
 
-	m_attributes.transformBlur = true;
-	m_attributes.transformBlurSegments = 1;
-	m_attributes.deformationBlur = true;
-	m_attributes.deformationBlurSegments = 1;
+	transformBlurData = globals->member<BoolData>( "attribute:gaffer:transformBlur" );
+	m_attributes.transformBlur = transformBlurData ? transformBlurData->readable() : true;
+	
+	const IntData *transformBlurSegmentsData = globals->member<IntData>( "attribute:gaffer:transformBlurSegments" );
+	m_attributes.transformBlurSegments = transformBlurSegmentsData ? transformBlurSegmentsData->readable() : 1;
+	
+	deformationBlurData = globals->member<BoolData>( "attribute:gaffer:deformationBlur" );
+	m_attributes.deformationBlur = deformationBlurData ? deformationBlurData->readable() : true;
+	
+	const IntData *deformationBlurSegmentsData = globals->member<IntData>( "attribute:gaffer:deformationBlurSegments" );
+	m_attributes.deformationBlurSegments = deformationBlurSegmentsData ? deformationBlurSegmentsData->readable() : 1;
 
 	updateAttributes( true );
 

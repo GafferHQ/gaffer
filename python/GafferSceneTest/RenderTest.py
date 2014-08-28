@@ -232,5 +232,26 @@ class RenderTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertEqual( s["r"].renderer().getOption( "user:test" ), IECore.IntData( 10 ) )
 
+	def testGlobalAttributes( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["p"] = GafferScene.Plane()
+		s["a"] = GafferScene.StandardAttributes()
+		s["a"]["in"].setInput( s["p"]["out"] )
+		s["a"]["attributes"]["doubleSided"]["enabled"].setValue( True )
+		s["a"]["attributes"]["doubleSided"]["value"].setValue( False )
+		s["a"]["global"].setValue( True )
+
+		s["r"] = GafferSceneTest.TestRender()
+		s["r"]["in"].setInput( s["a"]["out"] )
+
+		# CapturingRenderer outputs some spurious errors which
+		# we suppress by capturing them.
+		with IECore.CapturingMessageHandler() :
+			s["r"].execute()
+
+		self.assertEqual( s["r"].world().state()[0].attributes["doubleSided"], IECore.BoolData( False ) )
+
 if __name__ == "__main__":
 	unittest.main()

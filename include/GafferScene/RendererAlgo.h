@@ -59,6 +59,9 @@ void outputOptions( const IECore::CompoundObject *globals, IECore::Renderer *ren
 /// Outputs the camera specified by the globals.
 void outputCamera( const ScenePlug *scene, const IECore::CompoundObject *globals, IECore::Renderer *renderer );
 
+/// Outputs the attributes stored in the globals.
+void outputGlobalAttributes( const IECore::CompoundObject *globals, IECore::Renderer *renderer );
+
 /// Outputs all the visible lights from the scene.
 void outputLights( const ScenePlug *scene, const IECore::CompoundObject *globals, IECore::Renderer *renderer );
 

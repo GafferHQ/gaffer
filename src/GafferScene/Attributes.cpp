@@ -50,6 +50,7 @@ Attributes::Attributes( const std::string &name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new CompoundDataPlug( "attributes" ) );
+	addChild( new BoolPlug( "global", Plug::In, false ) );
 }
 
 Attributes::~Attributes()
@@ -66,19 +67,73 @@ const Gaffer::CompoundDataPlug *Attributes::attributesPlug() const
 	return getChild<Gaffer::CompoundDataPlug>( g_firstPlugIndex );
 }
 
+Gaffer::BoolPlug *Attributes::globalPlug()
+{
+	return getChild<Gaffer::BoolPlug>( g_firstPlugIndex + 1 );
+}
+
+const Gaffer::BoolPlug *Attributes::globalPlug() const
+{
+	return getChild<Gaffer::BoolPlug>( g_firstPlugIndex + 1 );
+}
+
 void Attributes::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	SceneElementProcessor::affects( input, outputs );
 
-	if( attributesPlug()->isAncestorOf( input ) )
+	if( attributesPlug()->isAncestorOf( input ) || input == globalPlug() )
 	{
 		outputs.push_back( outPlug()->attributesPlug() );
+		outputs.push_back( outPlug()->globalsPlug() );
 	}
+}
+
+void Attributes::hashGlobals( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	if( globalPlug()->getValue() )
+	{
+		// We will modify the globals. Bypass the SceneElementProcessor::hashGlobals()
+		// because it's a pass-through and we need to compute a proper hash instead.
+		FilteredSceneProcessor::hashGlobals( context, parent, h );
+		inPlug()->globalsPlug()->hash( h );
+		attributesPlug()->hash( h );
+	}
+	else
+	{
+		// We won't modify the globals - pass through the hash.
+		h = inPlug()->globalsPlug()->hash();
+	}
+}
+
+IECore::ConstCompoundObjectPtr Attributes::computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const
+{
+	ConstCompoundObjectPtr inputGlobals = inPlug()->globalsPlug()->getValue();
+	if( !globalPlug()->getValue() )
+	{
+		return inputGlobals;
+	}
+
+	const CompoundDataPlug *p = attributesPlug();
+	IECore::CompoundObjectPtr result = inputGlobals->copy();
+
+	std::string name;
+	for( CompoundDataPlug::MemberPlugIterator it( p ); it != it.end(); ++it )
+	{
+		IECore::DataPtr d = p->memberDataAndName( it->get(), name );
+		if( d )
+		{
+			result->members()["attribute:" + name] = d;
+		}
+	}
+
+	return result;
 }
 
 bool Attributes::processesAttributes() const
 {
-	return attributesPlug()->children().size();
+	// Although the base class says that we should return a constant, it should
+	// be OK to return this because it's constant across the hierarchy.
+	return attributesPlug()->children().size() && !globalPlug()->getValue();
 }
 
 void Attributes::hashProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
@@ -90,6 +145,15 @@ IECore::ConstCompoundObjectPtr Attributes::computeProcessedAttributes( const Sce
 {
 	const CompoundDataPlug *ap = attributesPlug();
 	if( !ap->children().size() )
+	{
+		return inputAttributes;
+	}
+
+	/// \todo You might think that we wouldn't have to check this again
+	/// because the base class would have used processesAttributes()
+	/// to avoid even calling this function. But that isn't the case for
+	/// some reason.
+	if( globalPlug()->getValue() )
 	{
 		return inputAttributes;
 	}
