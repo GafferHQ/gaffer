@@ -301,6 +301,30 @@ class ArrayPlugTest( unittest.TestCase ) :
 		self.assertTrue( s2["n"]["a"][1].getInput().isSame( s2["a"]["sum"] ) )
 		self.assertTrue( s2["n"]["a"][1].getInput().isSame( s2["a"]["sum"] ) )
 		self.assertTrue( s2["n"]["a"][3].getInput() is None )
+
+	def testPythonElement( self ) :
+
+		class PythonElement( Gaffer.Plug ) :
+
+			def __init__( self, name = "PythonElement", direction = Gaffer.Plug.Direction.In, flags = Gaffer.Plug.Flags.Default ) :
+
+				Gaffer.Plug.__init__( self, name, direction, flags )
+
+			def createCounterpart(  self, name, direction ) :
+
+				return PythonElement( name, direction, self.getFlags() )
+
+		n = Gaffer.Node()
+		n["a"] = Gaffer.ArrayPlug( element = PythonElement() )
+
+		self.assertEqual( len( n["a"] ), 1 )
+		self.assertTrue( isinstance( n["a"][0], PythonElement ) )
+
+		p = PythonElement()
+		n["a"][0].setInput( p )
+
+		self.assertEqual( len( n["a"] ), 2 )
+		self.assertTrue( isinstance( n["a"][1], PythonElement ) )
 		
 	def tearDown( self ) :
 		
