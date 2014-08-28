@@ -70,6 +70,7 @@ void outputScene( const ScenePlug *scene, IECore::Renderer *renderer )
 	{
 		WorldBlock world( renderer );
 
+		outputGlobalAttributes( globals.get(), renderer );
 		outputCoordinateSystems( scene, globals.get(), renderer );
 		outputLights( scene, globals.get(), renderer );
 
@@ -174,6 +175,26 @@ void outputCamera( const ScenePlug *scene, const IECore::CompoundObject *globals
 
 	camera->render( renderer );
 
+}
+
+void outputGlobalAttributes( const IECore::CompoundObject *globals, IECore::Renderer *renderer )
+{
+	CompoundObject::ObjectMap::const_iterator it, eIt;
+	for( it = globals->members().begin(), eIt = globals->members().end(); it != eIt; it++ )
+	{
+		if( !boost::starts_with( it->first.c_str(), "attribute:" ) )
+		{
+			continue;
+		}
+		if( const Data *d = runTimeCast<Data>( it->second.get() ) )
+		{
+			renderer->setAttribute( it->first.c_str() + 10, d );
+		}
+		else
+		{
+			throw IECore::Exception( "Global \"" + it->first.string() + "\" is not IECore::Data" );
+		}
+	}
 }
 
 void outputLights( const ScenePlug *scene, const IECore::CompoundObject *globals, IECore::Renderer *renderer )

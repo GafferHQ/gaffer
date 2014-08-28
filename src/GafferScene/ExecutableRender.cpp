@@ -128,6 +128,7 @@ void ExecutableRender::execute() const
 		{
 			WorldBlock world( renderer );
 
+			outputGlobalAttributes( globals.get(), renderer.get() );
 			outputCoordinateSystems( scene, globals.get(), renderer.get() );
 			outputLights( scene, globals.get(), renderer.get() );
 			outputWorldProcedural( scene, renderer.get() );
