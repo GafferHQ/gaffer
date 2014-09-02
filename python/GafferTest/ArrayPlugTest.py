@@ -115,6 +115,17 @@ class ArrayPlugTest( unittest.TestCase ) :
 		s2 = Gaffer.ScriptNode()
 		s2.execute( s.serialise() )
 		
+		self.assertEqual( len( s2["n"]["in"] ), 4 )
+		self.assertTrue( s2["n"]["in"]["e1"].isSame( s2["n"]["in"][0] ) )
+		self.assertTrue( s2["n"]["in"]["e2"].isSame( s2["n"]["in"][1] ) )
+		self.assertTrue( s2["n"]["in"]["e3"].isSame( s2["n"]["in"][2] ) )
+		self.assertTrue( s2["n"]["in"]["e4"].isSame( s2["n"]["in"][3] ) )
+		
+		self.assertTrue( s2["n"]["in"]["e1"].getInput(), s2["a"]["sum"] )
+		self.assertTrue( s2["n"]["in"]["e2"].getInput() is None )
+		self.assertTrue( s2["n"]["in"]["e3"].getInput(), s2["a"]["sum"] )
+		self.assertTrue( s2["n"]["in"]["e4"].getInput() is None )
+		
 	def testMaximumInputs( self ) :
 	
 		a = GafferTest.AddNode()
