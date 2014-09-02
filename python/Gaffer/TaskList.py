@@ -1,7 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2014, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,37 +34,30 @@
 #
 ##########################################################################
 
-from _Gaffer import *
-from About import About
-from Application import Application
-from WeakMethod import WeakMethod
-from Path import Path
-from FileSystemPath import FileSystemPath
-from PathFilter import PathFilter
-from BlockedConnection import BlockedConnection
-from FileNamePathFilter import FileNamePathFilter
-from UndoContext import UndoContext
-from ObjectReader import ObjectReader
-from ObjectWriter import ObjectWriter
-from Context import Context
-from CompoundPathFilter import CompoundPathFilter
-from InfoPathFilter import InfoPathFilter
-from LazyModule import lazyImport, LazyModule
-from LeafPathFilter import LeafPathFilter
-from DictPath import DictPath
-from IndexedIOPath import IndexedIOPath
-from ClassLoaderPath import ClassLoaderPath
-from PythonExpressionEngine import PythonExpressionEngine
-from SequencePath import SequencePath
-from OpMatcher import OpMatcher
-from AttributeCachePath import AttributeCachePath
-from ClassParameterHandler import ClassParameterHandler
-from ClassVectorParameterHandler import ClassVectorParameterHandler
-from GraphComponentPath import GraphComponentPath
-from ParameterPath import ParameterPath
-from OutputRedirection import OutputRedirection
-from LocalDispatcher import LocalDispatcher
-from SystemCommand import SystemCommand
-from TaskList import TaskList
+import os
+import subprocess
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "Gaffer" )
+import IECore
+
+import Gaffer
+
+# Used to collect Executable tasks for dispatching all at once
+class TaskList( Gaffer.ExecutableNode ) :
+	
+	def __init__( self, name = "TaskList" ) :
+		
+		Gaffer.ExecutableNode.__init__( self, name )
+	
+	def hash( self, context ) :
+		
+		h = Gaffer.ExecutableNode.hash( self, context )
+		# we don't want different TaskLists to look like the same task
+		h.append( self.relativeName( self.ancestor( Gaffer.ScriptNode ) ) )
+		
+		return h
+	
+	def execute( self ) :
+		
+		pass
+
+IECore.registerRunTimeTyped( TaskList, typeName = "Gaffer::TaskList" )

@@ -1,7 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2014, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,37 +34,38 @@
 #
 ##########################################################################
 
-from _Gaffer import *
-from About import About
-from Application import Application
-from WeakMethod import WeakMethod
-from Path import Path
-from FileSystemPath import FileSystemPath
-from PathFilter import PathFilter
-from BlockedConnection import BlockedConnection
-from FileNamePathFilter import FileNamePathFilter
-from UndoContext import UndoContext
-from ObjectReader import ObjectReader
-from ObjectWriter import ObjectWriter
-from Context import Context
-from CompoundPathFilter import CompoundPathFilter
-from InfoPathFilter import InfoPathFilter
-from LazyModule import lazyImport, LazyModule
-from LeafPathFilter import LeafPathFilter
-from DictPath import DictPath
-from IndexedIOPath import IndexedIOPath
-from ClassLoaderPath import ClassLoaderPath
-from PythonExpressionEngine import PythonExpressionEngine
-from SequencePath import SequencePath
-from OpMatcher import OpMatcher
-from AttributeCachePath import AttributeCachePath
-from ClassParameterHandler import ClassParameterHandler
-from ClassVectorParameterHandler import ClassVectorParameterHandler
-from GraphComponentPath import GraphComponentPath
-from ParameterPath import ParameterPath
-from OutputRedirection import OutputRedirection
-from LocalDispatcher import LocalDispatcher
-from SystemCommand import SystemCommand
-from TaskList import TaskList
+import os
+import unittest
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "Gaffer" )
+import IECore
+
+import Gaffer
+import GafferTest
+
+class TaskListTest( GafferTest.TestCase ) :
+
+	def test( self ) :
+
+		n = Gaffer.TaskList()
+		c = Gaffer.Context()
+		c2 = Gaffer.Context()
+		c2["frame"] = 10.0
+		self.assertEqual( n.hash( c ), n.hash( c2 ) )
+		
+		n2 = Gaffer.TaskList( "TaskList2" )
+		self.assertNotEqual( n.hash( c ), n2.hash( c ) )
+		self.assertNotEqual( n.hash( c2 ), n2.hash( c2 ) )
+	
+	def setUp( self ) :
+
+		for f in [ "/tmp/systemCommandTest.txt" ] :
+			if os.path.exists( f ) :
+				os.remove( f )
+
+	def tearDown( self ) :
+
+		self.setUp()
+
+if __name__ == "__main__":
+	unittest.main()
+
