@@ -86,7 +86,7 @@ class gui( Gaffer.Application ) :
 			for fileName in args["scripts"] :
 				scriptNode = Gaffer.ScriptNode( os.path.splitext( os.path.basename( fileName ) )[0] )
 				scriptNode["fileName"].setValue( os.path.abspath( fileName ) )
-				scriptNode.load()
+				scriptNode.load( continueOnError = True )
 				self.root()["scripts"].addChild( scriptNode )
 				GafferUI.FileMenu.addRecentFile( self, fileName )
 				del scriptNode
