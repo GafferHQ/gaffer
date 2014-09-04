@@ -52,12 +52,17 @@
 using namespace Gaffer;
 
 //////////////////////////////////////////////////////////////////////////
-// Computation implementation
-// The computation class is responsible for managing the transient storage
-// necessary for computed results, and for managing the call to Node::compute().
-// One day it may also be responsible for managing a cache of previous
-// results and maybe even shipping some computations off over the network
-// to a special computation server of some sort.
+//
+// The computation class is responsible for managing calls to
+// ComputeNode::hash(), ComputNode::compute() and Plug::setFrom()
+// in order to acquire the output values for plugs. It manages a
+// per-thread stack of current computations, and caches the results of
+// previous computations to avoid repeating work.
+//
+// In the future we might consider abstracting the basic concept of
+// a computation and allowing different implementations - perhaps even
+// network based ones.
+//
 //////////////////////////////////////////////////////////////////////////
 
 class ValuePlug::Computation
@@ -81,6 +86,49 @@ class ValuePlug::Computation
 			return m_resultPlug;
 		}
 
+		IECore::MurmurHash hash() const
+		{
+			const ValuePlug *input = m_resultPlug->getInput<ValuePlug>();
+			if( input )
+			{
+				if( input->typeId() == m_resultPlug->typeId() )
+				{
+					// we can assume that setFrom( input ) would perform no
+					// conversion on the value, so by sharing hashes we also
+					// get to share cache entries.
+					return input->hash();
+				}
+				else
+				{
+					// it would be unsafe to assume we can share cache entries,
+					// because conversion is probably performed by setFrom( input ).
+					// hash in a little extra something to represent the conversion
+					// and break apart the cache entries.
+					IECore::MurmurHash h = input->hash();
+					h.append( input->typeId() );
+					h.append( m_resultPlug->typeId() );
+					return h;
+				}
+			}
+			else
+			{
+				const ComputeNode *n = m_resultPlug->ancestor<ComputeNode>();
+				if( !n )
+				{
+					throw IECore::Exception( boost::str( boost::format( "Unable to compute hash for Plug \"%s\" as it has no ComputeNode." ) % m_resultPlug->fullName() ) );
+				}
+
+				IECore::MurmurHash h;
+				n->hash( m_resultPlug, Context::current(), h );
+				if( h == IECore::MurmurHash() )
+				{
+					throw IECore::Exception( boost::str( boost::format( "ComputeNode::hash() not implemented for Plug \"%s\"." ) % m_resultPlug->fullName() ) );
+				}
+
+				return h;
+			}
+		}
+
 		IECore::ConstObjectPtr compute()
 		{
 			// decide whether or not to use the cache. even if
@@ -102,7 +150,7 @@ class ValuePlug::Computation
 			// do the cache lookup/computation.
 			if( cacheable )
 			{
-				IECore::MurmurHash hash = m_resultPlug->hash();
+				IECore::MurmurHash hash = this->hash();
 				m_resultValue = g_valueCache.get( hash );
 				if( !m_resultValue )
 				{
@@ -360,54 +408,22 @@ bool ValuePlug::settable() const
 
 IECore::MurmurHash ValuePlug::hash() const
 {
-	IECore::MurmurHash h;
-	const ValuePlug *input = getInput<ValuePlug>();
-	if( input )
+	if( !getInput<Plug>() )
 	{
-		if( input->typeId() == typeId() )
+		if( direction() == In || !ancestor<ComputeNode>() )
 		{
-			// we can assume that setFrom( input ) would perform no
-			// conversion on the value, so by sharing hashes we also
-			// get to share cache entries.
-			h = input->hash();
-		}
-		else
-		{
-			// it would be unsafe to assume we can share cache entries,
-			// because conversion is probably performed by setFrom( input ).
-			// hash in a little extra something to represent the conversion
-			// and break apart the cache entries.
-			h = input->hash();
-			h.append( input->typeId() );
-			h.append( typeId() );
-		}
-	}
-	else
-	{
-		if( direction() == Plug::In )
-		{
-			h = m_staticValue->hash();
-		}
-		else
-		{
-			const ComputeNode *n = ancestor<ComputeNode>();
-			if( n )
-			{
-				IECore::MurmurHash emptyHash;
-				n->hash( this, Context::current(), h );
-				if( h == emptyHash )
-				{
-					throw IECore::Exception( boost::str( boost::format( "ComputeNode::hash() not implemented for Plug \"%s\"." ) % fullName() ) );
-				}
-			}
-			else
-			{
-				h = m_staticValue->hash();
-			}
+			// no input connection, and no means of computing
+			// a value. there can only ever be a single value,
+			// which is stored directly on the plug - so we return
+			// the hash of that.
+			return m_staticValue->hash();
 		}
 	}
 
-	return h;
+	// a plug with an input connection or an output plug on a ComputeNode. there can be many values -
+	// one per context. the computation class is responsible for figuring out the hash.
+	Computation computation( this );
+	return computation.hash();
 }
 
 void ValuePlug::hash( IECore::MurmurHash &h ) const
