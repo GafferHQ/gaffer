@@ -105,7 +105,7 @@ class execute( Gaffer.Application ) :
 		nodes = []
 		if len( args["nodes"] ) :
 			for nodeName in args["nodes"] :
-				node = scriptNode.getChild( nodeName )
+				node = scriptNode.descendant( nodeName )
 				if node is None :
 					IECore.msg( IECore.Msg.Level.Error, "gaffer execute", "Node \"%s\" does not exist" % nodeName )
 					return 1
