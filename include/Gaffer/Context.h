@@ -42,6 +42,7 @@
 
 #include "IECore/InternedString.h"
 #include "IECore/Data.h"
+#include "IECore/MurmurHash.h"
 
 namespace Gaffer
 {
@@ -186,6 +187,8 @@ class Context : public IECore::RefCounted
 
 		Map m_map;
 		ChangedSignal *m_changedSignal;
+		mutable IECore::MurmurHash m_hash;
+		mutable bool m_hashValid;
 
 };
 

@@ -139,6 +139,7 @@ void Context::set( const IECore::InternedString &name, const T &value )
 	Storage &s = m_map[name];
 	if( Accessor<T>().set( s, value ) )
 	{
+		m_hashValid = false;
 		if( m_changedSignal )
 		{
 			(*m_changedSignal)( this, name );

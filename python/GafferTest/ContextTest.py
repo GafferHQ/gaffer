@@ -418,6 +418,26 @@ class ContextTest( GafferTest.TestCase ) :
 
 		self.assertEqual( c1.get( "testIntVector", _copy=False ).refCount(), r )
 
+	def testHash( self ) :
+
+		c = Gaffer.Context()
+		hashes = [ c.hash() ]
+
+		c["test"] = 1
+		hashes.append( c.hash() )
+
+		c["test"] = 2
+		hashes.append( c.hash() )
+
+		c["test2"] = "test2"
+		hashes.append( c.hash() )
+
+		self.assertEqual( len( hashes ), 4 )
+		self.assertEqual( len( set( str( h ) for h in hashes ) ), len( hashes ) )
+
+		c["test2"] = "test2" # no change
+		self.assertEqual( c.hash(), hashes[-1] )
+
 if __name__ == "__main__":
 	unittest.main()
 
