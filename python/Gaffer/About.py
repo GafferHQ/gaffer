@@ -64,6 +64,11 @@ class About :
 		return !GAFFER_PATCH_VERSION!
 
 	@staticmethod
+	def compatibilityVersion() :
+
+		return About.milestoneVersion() * 1000 + About.majorVersion()
+
+	@staticmethod
 	def versionString() :
 
 		return "%d.%d.%d.%d" % ( About.milestoneVersion(), About.majorVersion(), About.minorVersion(), About.patchVersion() )
