@@ -44,6 +44,11 @@ class About :
 		return "Gaffer"
 
 	@staticmethod
+	def milestoneVersion() :
+
+		return !GAFFER_MILESTONE_VERSION!
+
+	@staticmethod
 	def majorVersion() :
 
 		return !GAFFER_MAJOR_VERSION!
@@ -61,12 +66,12 @@ class About :
 	@staticmethod
 	def versionString() :
 
-		return "%d.%d.%d" % ( About.majorVersion(), About.minorVersion(), About.patchVersion() )
+		return "%d.%d.%d.%d" % ( About.milestoneVersion(), About.majorVersion(), About.minorVersion(), About.patchVersion() )
 
 	@staticmethod
 	def copyright() :
 
-		return "Copyright (c) 2011-2013 John Haddon, Copyright (c) 2011-2013 Image Engine Design Inc."
+		return "Copyright (c) 2011-2014 John Haddon, Copyright (c) 2011-2014 Image Engine Design Inc."
 
 	@staticmethod
 	def license() :

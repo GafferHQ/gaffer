@@ -45,6 +45,23 @@ import py_compile
 import subprocess
 
 ###############################################################################################
+# Version
+###############################################################################################
+
+gafferMilestoneVersion = 0 # for announcing major milestones - may contain all of the below
+gafferMajorVersion = 1 # backwards-incompatible changes
+gafferMinorVersion = 0 # new backwards-compatible features
+gafferPatchVersion = 0 # bug fixes
+
+# All of the following must be considered when determining
+# whether or not a change is backwards-compatible
+#
+#	- Library ABIs
+#	- Python APIs
+#	- Node/Plug naming
+#	- Application command line arguments
+
+###############################################################################################
 # Command line options
 ###############################################################################################
 
@@ -79,7 +96,7 @@ options.Add(
 options.Add(
 	"BUILD_DIR",
 	"The destination directory in which the build will be made.",
-	"./build/gaffer-${GAFFER_MAJOR_VERSION}.${GAFFER_MINOR_VERSION}.${GAFFER_PATCH_VERSION}-${GAFFER_PLATFORM}",
+	"./build/gaffer-${GAFFER_MILESTONE_VERSION}.${GAFFER_MAJOR_VERSION}.${GAFFER_MINOR_VERSION}.${GAFFER_PATCH_VERSION}-${GAFFER_PLATFORM}",
 )
 
 options.Add(
@@ -93,13 +110,13 @@ options.Add(
 options.Add(
 	"INSTALL_DIR",
 	"The destination directory for the installation.",
-	"./install/gaffer-${GAFFER_MAJOR_VERSION}.${GAFFER_MINOR_VERSION}.${GAFFER_PATCH_VERSION}-${GAFFER_PLATFORM}",
+	"./install/gaffer-${GAFFER_MILESTONE_VERSION}.${GAFFER_MAJOR_VERSION}.${GAFFER_MINOR_VERSION}.${GAFFER_PATCH_VERSION}-${GAFFER_PLATFORM}",
 )
 
 options.Add(
 	"DEPENDENCIES_INSTALL_DIR",
 	"The destination directory for a separate installation of only the dependencies.",
-	"./install/gafferDependencies-${GAFFER_MAJOR_VERSION}.${GAFFER_MINOR_VERSION}.${GAFFER_PATCH_VERSION}-${GAFFER_PLATFORM}",
+	"./install/gafferDependencies-${GAFFER_MILESTONE_VERSION}.${GAFFER_MAJOR_VERSION}.${GAFFER_MINOR_VERSION}.${GAFFER_PATCH_VERSION}-${GAFFER_PLATFORM}",
 )
 
 options.Add(
@@ -492,9 +509,10 @@ env = Environment(
 
 	options = options,
 
-	GAFFER_MAJOR_VERSION = "0",
-	GAFFER_MINOR_VERSION = "101",
-	GAFFER_PATCH_VERSION = "0",
+	GAFFER_MILESTONE_VERSION = str( gafferMilestoneVersion ),
+	GAFFER_MAJOR_VERSION = str( gafferMajorVersion ),
+	GAFFER_MINOR_VERSION = str( gafferMinorVersion ),
+	GAFFER_PATCH_VERSION = str( gafferPatchVersion ),
 
 )
 
@@ -1123,6 +1141,11 @@ for libraryName, libraryDef in libraries.items() :
 
 	# header install
 
+	sedSubstitutions = "s/!GAFFER_MILESTONE_VERSION!/$GAFFER_MILESTONE_VERSION/g"
+	sedSubstitutions += "; s/!GAFFER_MAJOR_VERSION!/$GAFFER_MAJOR_VERSION/g"
+	sedSubstitutions += "; s/!GAFFER_MINOR_VERSION!/$GAFFER_MINOR_VERSION/g"
+	sedSubstitutions += "; s/!GAFFER_PATCH_VERSION!/$GAFFER_PATCH_VERSION/g"
+
 	headers = (
 		glob.glob( "include/" + libraryName + "/*.h" ) +
 		glob.glob( "include/" + libraryName + "/*.inl" ) +
@@ -1131,10 +1154,7 @@ for libraryName, libraryDef in libraries.items() :
 	)
 
 	for header in headers :
-		headerInstall = libEnv.Install(
-			"$BUILD_DIR/" + os.path.dirname( header ),
-			header
-		)
+		headerInstall = env.Command( "$BUILD_DIR/" + header, header, "sed \"" + sedSubstitutions + "\" $SOURCE > $TARGET" )
 		libEnv.Alias( "build", headerInstall )
 
 	# bindings library and binary python modules
@@ -1177,10 +1197,6 @@ for libraryName, libraryDef in libraries.items() :
 		pythonModuleEnv.Alias( "build", moduleInstall )
 
 	# python component of python module
-
-	sedSubstitutions = "s/!GAFFER_MAJOR_VERSION!/$GAFFER_MAJOR_VERSION/g"
-	sedSubstitutions += "; s/!GAFFER_MINOR_VERSION!/$GAFFER_MINOR_VERSION/g"
-	sedSubstitutions += "; s/!GAFFER_PATCH_VERSION!/$GAFFER_PATCH_VERSION/g"
 
 	for pythonFile in glob.glob( "python/" + libraryName + "/*.py" ) :
 		pythonFileInstall = env.Command( "$BUILD_DIR/" + pythonFile, pythonFile, "sed \"" + sedSubstitutions + "\" $SOURCE > $TARGET" )
@@ -1364,7 +1380,7 @@ def createDoxygenPython( target, source, env ) :
 
 docEnv = env.Clone()
 docEnv["ENV"]["PATH"] = os.environ["PATH"]
-for v in ( "BUILD_DIR", "GAFFER_MAJOR_VERSION", "GAFFER_MINOR_VERSION", "GAFFER_PATCH_VERSION" ) :
+for v in ( "BUILD_DIR", "GAFFER_MILESTONE_VERSION", "GAFFER_MAJOR_VERSION", "GAFFER_MINOR_VERSION", "GAFFER_PATCH_VERSION" ) :
 	docEnv["ENV"][v] = docEnv[v]
 
 docs = docEnv.Command( "doc/html/index.html", "doc/config/Doxyfile", "$DOXYGEN doc/config/Doxyfile" )
