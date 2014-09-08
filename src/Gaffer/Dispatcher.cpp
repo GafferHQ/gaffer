@@ -73,6 +73,36 @@ Dispatcher::~Dispatcher()
 {
 }
 
+/// Guard class for calling a dispatcher's preDispatchSignal(), then guaranteeing postDispatchSignal() gets called
+/// \todo: postDispatchSignal() should probably be supplied info about what happened: did everything go smoothly?
+/// Did the preDispatchSignal cancel the execution? Did doDispatch throw an exception?
+class DispatcherSignalGuard
+{
+public:
+	DispatcherSignalGuard( const Dispatcher* d, const std::vector<ExecutableNodePtr> &executables ) : m_executables( executables ), m_dispatcher( d )
+	{
+		m_cancelledByPreDispatch = m_dispatcher->preDispatchSignal()( m_dispatcher, m_executables );
+	}
+	
+	~DispatcherSignalGuard()
+	{
+		m_dispatcher->postDispatchSignal()( m_dispatcher, m_executables );
+	}
+	
+	bool cancelledByPreDispatch( )
+	{
+		return m_cancelledByPreDispatch;
+	}
+	
+private:
+	
+	bool m_cancelledByPreDispatch;
+	
+	const std::vector<ExecutableNodePtr> &m_executables;
+	const Dispatcher* m_dispatcher;
+};
+
+
 void Dispatcher::dispatch( const std::vector<NodePtr> &nodes ) const
 {
 	if ( nodes.empty() )
@@ -110,8 +140,13 @@ void Dispatcher::dispatch( const std::vector<NodePtr> &nodes ) const
 			throw IECore::Exception( getName().string() + ": Dispatched nodes must be ExecutableNodes or Boxes containing ExecutableNodes." );
 		}
 	}
-
-	if ( preDispatchSignal()( this, executables ) )
+	
+	// this object calls this->preDispatchSignal() in its constructor and this->postDispatchSignal()
+	// in its destructor, thereby guaranteeing that we always call this->postDispatchSignal().
+	
+	DispatcherSignalGuard signalGuard( this, executables );
+	
+	if ( signalGuard.cancelledByPreDispatch() )
 	{
 		/// \todo: communicate the cancellation to the user
 		return;
@@ -143,7 +178,6 @@ void Dispatcher::dispatch( const std::vector<NodePtr> &nodes ) const
 		doDispatch( rootBatch.get() );
 	}
 
-	postDispatchSignal()( this, executables );
 }
 
 IntPlug *Dispatcher::framesModePlug()
