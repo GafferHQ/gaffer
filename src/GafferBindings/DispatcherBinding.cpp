@@ -106,6 +106,30 @@ class DispatcherWrapper : public NodeWrapper<Dispatcher>
 				f( tmpPointer );
 			}
 		}
+		
+		std::string createJobDirectory( const Context *context ) const
+		{
+			ScopedGILLock gilLock;
+			boost::python::object f = this->methodOverride( "_createJobDirectory" );
+			if( f )
+			{
+				object resultObject = f( Gaffer::ContextPtr( const_cast<Gaffer::Context *>( context ) ) );
+				extract<std::string> result( resultObject );
+				if( !result.check() )
+				{
+					throw Exception( "_createJobDirectory() python method should return a string pointing to the new job directory" );
+				}
+				
+				std::cerr << "createJobDirectory wrapper!" << std::endl;
+				std::cerr << "result = " << result() << std::endl;
+				
+				return result();
+			}
+			else
+			{
+				throw Exception( "_createJobDirectory() python method not defined" );
+			}
+		}
 
 		static list dispatcherNames()
 		{
@@ -216,6 +240,7 @@ void GafferBindings::bindDispatcher()
 {
 	scope s = NodeClass<Dispatcher, DispatcherWrapper>()
 		.def( "dispatch", &DispatcherWrapper::dispatch )
+		.def( "createJobDirectory", &DispatcherWrapper::createJobDirectory )
 		.def( "jobDirectory", &Dispatcher::jobDirectory )
 		.def( "dispatcher", &DispatcherWrapper::dispatcher ).staticmethod( "dispatcher" )
 		.def( "dispatcherNames", &DispatcherWrapper::dispatcherNames ).staticmethod( "dispatcherNames" )

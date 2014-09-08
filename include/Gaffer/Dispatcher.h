@@ -148,7 +148,7 @@ class Dispatcher : public Node
 		StringPlug *jobDirectoryPlug();
 		const StringPlug *jobDirectoryPlug() const;
 		/// Returns the directory specified by jobDirectoryPlug + jobNamePlug, creating it when necessary.
-		const std::string jobDirectory( const Context *context ) const;
+		const std::string jobDirectory() const;
 		//@}
 
 		//! @name Registration
@@ -213,7 +213,11 @@ class Dispatcher : public Node
 		/// TaskBatches. It is the responsibility of derived classes to track which
 		/// batches have been dispatched in order to prevent duplicate work.
 		virtual void doDispatch( const TaskBatch *batch ) const = 0;
-
+		
+		/// createJobDirectory will be called before doDispatch() and the preDispatchSignal(),
+		/// and should create a directory to put temporary files for the job, returning its path.
+		virtual std::string createJobDirectory( const Context *context ) const = 0;
+		
 		//! @name ExecutableNode Customization
 		/// Dispatchers are able to create custom plugs on ExecutableNodes when they are constructed.
 		/////////////////////////////////////////////////////////////////////////////////////////////
@@ -232,9 +236,11 @@ class Dispatcher : public Node
 		/// before all Dispatchers have been registered could result in lost settings.
 		virtual void doSetupPlugs( CompoundPlug *parentPlug ) const = 0;
 		//@}
-
+		
 	private :
-
+		
+		mutable std::string m_jobDirectory;
+		
 		typedef std::map< std::string, DispatcherPtr > DispatcherMap;
 
 		typedef std::map<IECore::MurmurHash, TaskBatchPtr> BatchMap;

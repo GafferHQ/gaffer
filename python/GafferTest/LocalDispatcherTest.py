@@ -370,7 +370,7 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		dispatcher = Gaffer.LocalDispatcher()
 		self.assertEqual( dispatcher["jobName"].getValue(), "" )
 		self.assertEqual( dispatcher["jobDirectory"].getValue(), "" )
-		jobDir = dispatcher.jobDirectory( Gaffer.Context() )
+		jobDir = dispatcher.createJobDirectory( Gaffer.Context.current() )
 		self.assertNotEqual( jobDir, "" )
 		self.assertTrue( os.path.exists( jobDir ) )
 		shutil.rmtree( jobDir )

@@ -109,7 +109,10 @@ void Dispatcher::dispatch( const std::vector<NodePtr> &nodes ) const
 	{
 		throw IECore::Exception( getName().string() + ": Must specify at least one node to dispatch." );
 	}
-
+	
+	const Context *context = Context::current();
+	m_jobDirectory = createJobDirectory( context );
+	
 	std::vector<ExecutableNodePtr> executables;
 	const ScriptNode *script = (*nodes.begin())->scriptNode();
 	for ( std::vector<NodePtr>::const_iterator nIt = nodes.begin(); nIt != nodes.end(); ++nIt )
@@ -151,8 +154,6 @@ void Dispatcher::dispatch( const std::vector<NodePtr> &nodes ) const
 		/// \todo: communicate the cancellation to the user
 		return;
 	}
-
-	const Context *context = Context::current();
 
 	std::vector<FrameList::Frame> frames;
 	FrameListPtr frameList = frameRange( script, context );
@@ -220,19 +221,9 @@ const StringPlug *Dispatcher::jobDirectoryPlug() const
 	return getChild<StringPlug>( g_firstPlugIndex + 3 );
 }
 
-const std::string Dispatcher::jobDirectory( const Context *context ) const
+const std::string Dispatcher::jobDirectory() const
 {
-	std::string jobDir = context->substitute( jobDirectoryPlug()->getValue() );
-
-	boost::filesystem::path path( jobDir );
-	path /= context->substitute( jobNamePlug()->getValue() );
-	if ( path == "" )
-	{
-		return boost::filesystem::current_path().string();
-	}
-
-	boost::filesystem::create_directories( path );
-	return path.string();
+	return m_jobDirectory;
 }
 
 /*
