@@ -95,6 +95,12 @@ class DispatcherTest( GafferTest.TestCase ) :
 				flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic
 			)
 
+		def _createJobDirectory( self, context ) :
+
+			jobDir = context.substitute( self["jobDirectory"].getValue() )
+			jobDir += context.substitute( self["jobName"].getValue() )
+			return jobDir
+
 	def setUp( self ) :
 
 		os.makedirs( "/tmp/dispatcherTest" )
