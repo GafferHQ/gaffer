@@ -1,26 +1,26 @@
 ##########################################################################
-#  
+#
 #  Copyright (c) 2011-2014, John Haddon. All rights reserved.
 #  Copyright (c) 2011-2014, Image Engine Design Inc. All rights reserved.
-#  
+#
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
 #  met:
-#  
+#
 #      * Redistributions of source code must retain the above
 #        copyright notice, this list of conditions and the following
 #        disclaimer.
-#  
+#
 #      * Redistributions in binary form must reproduce the above
 #        copyright notice, this list of conditions and the following
 #        disclaimer in the documentation and/or other materials provided with
 #        the distribution.
-#  
+#
 #      * Neither the name of John Haddon nor the names of
 #        any other contributors to this software may be used to endorse or
 #        promote products derived from this software without specific prior
 #        written permission.
-#  
+#
 #  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 #  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 #  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -32,7 +32,7 @@
 #  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 #  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 #  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#  
+#
 ##########################################################################
 
 import os
@@ -52,10 +52,10 @@ optionsFile = None
 
 if "GAFFER_OPTIONS_FILE" in os.environ :
 	optionsFile = os.environ["GAFFER_OPTIONS_FILE"]
-	
+
 if "OPTIONS" in ARGUMENTS :
 	optionsFile = ARGUMENTS["OPTIONS"]
-	
+
 options = Variables( optionsFile, ARGUMENTS )
 
 options.Add(
@@ -115,7 +115,7 @@ options.Add(
 	"${DEPENDENCIES_INSTALL_DIR}.tar.gz",
 )
 
-options.Add( 
+options.Add(
 	BoolVariable( "BUILD_DEPENDENCIES", "Set this to build all the library dependencies gaffer has.", False )
 )
 
@@ -507,9 +507,9 @@ if env["PLATFORM"] == "darwin" :
 	env["ENV"]["MACOSX_DEPLOYMENT_TARGET"] = "10.4"
 	env.Append( CXXFLAGS = [ "-D__USE_ISOC99" ] )
 	env["GAFFER_PLATFORM"] = "osx"
-	
+
 elif env["PLATFORM"] == "posix" :
-	
+
 	# gcc 4.1.2 in conjunction with boost::flat_map produces crashes when
 	# using the -fstrict-aliasing optimisation (which defaults to on with -O2),
 	# so we turn the optimisation off here, only for that specific gcc version.
@@ -517,12 +517,12 @@ elif env["PLATFORM"] == "posix" :
 		gccVersion = subprocess.Popen( [ env["CXX"], "-dumpversion" ], env=env["ENV"], stdout=subprocess.PIPE ).stdout.read().strip()
 		if gccVersion == "4.1.2" :
 			env.Append( CXXFLAGS = [ "-fno-strict-aliasing" ] )
-	
+
 	env["GAFFER_PLATFORM"] = "linux"
-	
+
 if env["BUILD_CACHEDIR"] != "" :
 	CacheDir( env["BUILD_CACHEDIR"] )
-			
+
 ###############################################################################################
 # Verify that we're either trying to build and package the dependencies with gaffer, /or/
 # trying to build against libraries installed elsewhere, but not both.
@@ -544,7 +544,7 @@ if buildingDependencies and locatingDependencies :
 # They doesn't fit into the SCons way of things too well so we just build them directly when
 # the script runs.
 ###############################################################################################
-			
+
 depEnv = env.Clone()
 
 depEnv["ENV"].update(
@@ -575,7 +575,7 @@ def runCommand( command ) :
 	subprocess.check_call( command, shell=True, env=depEnv["ENV"] )
 
 if depEnv["BUILD_DEPENDENCY_PYTHON"] :
-	
+
 	if depEnv["PLATFORM"]=="darwin" :
 		runCommand( "cd $PYTHON_SRC_DIR; ./configure --prefix=$BUILD_DIR --enable-framework=$BUILD_DIR/lib --enable-unicode=ucs4 && make clean && make && make install" )
 		runCommand( "cd $BUILD_DIR/bin && ln -fsh ../lib/Python.framework/Versions/Current/bin/python python" )
@@ -600,10 +600,10 @@ if depEnv["BUILD_DEPENDENCY_TIFF"] :
 
 if depEnv["BUILD_DEPENDENCY_PNG"] :
 	runCommand( "cd $PNG_SRC_DIR && ./configure --prefix=$BUILD_DIR && make clean && make && make install" )
-		
+
 if depEnv["BUILD_DEPENDENCY_FREETYPE"] :
 	runCommand( "cd $FREETYPE_SRC_DIR && ./configure --prefix=$BUILD_DIR && make clean && make && make install" )
-			
+
 if depEnv["BUILD_DEPENDENCY_TBB"] :
 	runCommand( "cd $TBB_SRC_DIR; make clean; make" )
 	if depEnv["PLATFORM"]=="darwin" :
@@ -674,7 +674,7 @@ if depEnv["BUILD_DEPENDENCY_ALEMBIC"] :
 	runCommand( "cd $ALEMBIC_SRC_DIR && rm -f CMakeCache.txt && cmake -DCMAKE_INSTALL_PREFIX=$BUILD_DIR -DBoost_NO_SYSTEM_PATHS=TRUE -DBoost_NO_BOOST_CMAKE=TRUE -DBOOST_ROOT=$BUILD_DIR -DILMBASE_ROOT=$BUILD_DIR -DUSE_PYILMBASE=FALSE -DUSE_PYALEMBIC=FALSE && make clean && make -j 4 && make install" )
 	runCommand( "mv $BUILD_DIR/alembic-*/include/* $BUILD_DIR/include" )
 	runCommand( "mv $BUILD_DIR/alembic-*/lib/static/* $BUILD_DIR/lib" )
-	
+
 if depEnv["BUILD_DEPENDENCY_CORTEX"] :
 	runCommand( "cd $CORTEX_SRC_DIR && rm -rf .sconsign.dblite .sconf_temp" )
 	runCommand(
@@ -723,7 +723,7 @@ if depEnv["BUILD_DEPENDENCY_QT"] :
 		"-I $BUILD_DIR/include -L $BUILD_DIR/lib "
 		"&& make -j 4 && make install"
 	)
-	
+
 if depEnv["BUILD_DEPENDENCY_PYQT"] :
 	runCommand( "cd $SIP_SRC_DIR && python configure.py -d $BUILD_DIR/python && make clean && make && make install" )
 	runCommand( "cd $PYQT_SRC_DIR && python configure.py -d $BUILD_DIR/python  --confirm-license && make && make install" )
@@ -754,7 +754,7 @@ if depEnv["BUILD_DEPENDENCY_PYSIDE"] :
 			"-DSITE_PACKAGE=$BUILD_DIR/python -DCMAKE_INSTALL_PREFIX=$BUILD_DIR "
 			"&& make clean && make -j 4 && make install"
 		)
-		
+
 ###############################################################################################
 # The basic environment for building libraries
 ###############################################################################################
@@ -771,17 +771,17 @@ baseLibEnv.Append(
 	CPPPATH = [
 		"include",
 	] + env["LOCATE_DEPENDENCY_CPPPATH"],
-	
+
 	CPPFLAGS = [
 		"-DBOOST_FILESYSTEM_VERSION=3",
 	],
-	
+
 	LIBPATH = [
 		"./lib",
 		"$BUILD_DIR/lib",
 		"$LOCATE_DEPENDENCY_LIBPATH",
 	],
-	
+
 	LIBS = [
 		"boost_signals" + boostLibSuffix,
 		"boost_iostreams" + boostLibSuffix,
@@ -789,14 +789,14 @@ baseLibEnv.Append(
 		"boost_date_time" + boostLibSuffix,
 		"boost_thread" + boostLibSuffix,
 		"boost_wave" + boostLibSuffix,
-		"boost_regex" + boostLibSuffix,		
+		"boost_regex" + boostLibSuffix,
 		"boost_system" + boostLibSuffix,
 		"tbb",
 		"Imath$OPENEXR_LIB_SUFFIX",
 		"IlmImf$OPENEXR_LIB_SUFFIX",
 		"IECore$CORTEX_LIB_SUFFIX",
 	],
-	
+
 )
 
 # include 3rd party headers with -isystem rather than -I.
@@ -809,11 +809,11 @@ for path in [
 		"$BUILD_DIR/include/OpenEXR",
 		"$BUILD_DIR/include/GL",
 	] + env["LOCATE_DEPENDENCY_SYSTEMPATH"] :
-	
+
 	baseLibEnv.Append(
 		CXXFLAGS = [ "-isystem", path ]
 	)
-		
+
 ###############################################################################################
 # The basic environment for building python modules
 ###############################################################################################
@@ -825,13 +825,13 @@ basePythonEnv.Append(
 	CPPFLAGS = [
 		"-DBOOST_PYTHON_MAX_ARITY=20",
 	],
-		
+
 	LIBS = [
 		"boost_python" + boostLibSuffix,
 		"IECorePython$CORTEX_PYTHON_LIB_SUFFIX",
 		"Gaffer",
 	],
-	
+
 )
 
 if basePythonEnv["PLATFORM"]=="darwin" :
@@ -868,7 +868,7 @@ libraries = {
 
 	"Gaffer" : {
 	},
-	
+
 	"GafferTest" : {
 		"envAppends" : {
 			"LIBS" : [ "Gaffer" ],
@@ -878,7 +878,7 @@ libraries = {
 		},
 		"additionalFiles" : glob.glob( "python/GafferTest/*/*" ) + glob.glob( "python/GafferTest/*/*/*" ),
 	},
-	
+
 	"GafferUI" : {
 		"envAppends" : {
 			"LIBS" : [ "Gaffer", "Iex$OPENEXR_LIB_SUFFIX", "IECoreGL$CORTEX_LIB_SUFFIX", "GLEW$GLEW_LIB_SUFFIX" ],
@@ -887,9 +887,9 @@ libraries = {
 			"LIBS" : [ "IECoreGL$CORTEX_LIB_SUFFIX", "GafferUI", "GafferBindings" ],
 		},
 	},
-	
+
 	"GafferUITest" : {},
-	
+
 	"GafferScene" : {
 		"envAppends" : {
 			"LIBS" : [ "Gaffer", "Iex$OPENEXR_LIB_SUFFIX", "IECoreGL$CORTEX_LIB_SUFFIX", "IECoreAlembic$CORTEX_LIB_SUFFIX", "GafferImage" ],
@@ -902,7 +902,7 @@ libraries = {
 		],
 		"additionalFiles" : glob.glob( "glsl/*.frag" ) + glob.glob( "glsl/*.vert" ),
 	},
-	
+
 	"GafferSceneTest" : {
 		"envAppends" : {
 			"LIBS" : [ "Gaffer", "GafferScene" ],
@@ -912,7 +912,7 @@ libraries = {
 		},
 		"additionalFiles" : glob.glob( "python/GafferSceneTest/*/*" ),
 	},
-	
+
 	"GafferSceneUI" : {
 		"envAppends" : {
 			"LIBS" : [ "Gaffer", "GafferUI", "GafferScene", "IECoreGL$CORTEX_LIB_SUFFIX", "GLEW$GLEW_LIB_SUFFIX" ],
@@ -923,7 +923,7 @@ libraries = {
 	},
 
 	"GafferSceneUITest" : {},
-	
+
 	"GafferImage" : {
 		"envAppends" : {
 			"LIBS" : [ "Gaffer", "Iex$OPENEXR_LIB_SUFFIX", "OpenImageIO$OIIO_LIB_SUFFIX", "OpenColorIO$OCIO_LIB_SUFFIX" ],
@@ -933,7 +933,7 @@ libraries = {
 		},
 		"requiredOptions" : [ "OIIO_SRC_DIR", "OCIO_SRC_DIR" ],
 	},
-	
+
 	"GafferImageTest" : {
 		"envAppends" : {
 			"LIBS" : [ "Gaffer", "GafferImage", "OpenImageIO$OIIO_LIB_SUFFIX",  ],
@@ -942,9 +942,9 @@ libraries = {
 			"LIBS" : [ "GafferImageTest", "GafferImageBindings" ],
 		},
 	},
-	
+
 	"GafferImageUITest" : {},
-	
+
 	"GafferImageUI" : {
 		"envAppends" : {
 			"LIBS" : [ "IECoreGL$CORTEX_LIB_SUFFIX", "Gaffer", "GafferImage", "GafferUI", "GLEW$GLEW_LIB_SUFFIX" ],
@@ -953,7 +953,7 @@ libraries = {
 			"LIBS" : [ "GafferUI", "GafferImageUI" ],
 		},
 	},
-	
+
 	"GafferArnold" : {
 		"envAppends" : {
 			"CPPPATH" : [ "$ARNOLD_ROOT/include" ],
@@ -1007,30 +1007,30 @@ libraries = {
 	"GafferOSLUI" : {
 		"requiredOptions" : [ "OSL_SRC_DIR" ],
 	},
-	
+
 	"GafferOSLTest" : {
 		"additionalFiles" : glob.glob( "python/GafferOSLTest/*/*" ),
 		"requiredOptions" : [ "OSL_SRC_DIR" ],
 	},
-		
+
 	"apps" : {
 		"additionalFiles" : glob.glob( "apps/*/*-1.py" ),
 	},
-	
+
 	"scripts" : {
 		"additionalFiles" : [ "bin/gaffer", "bin/gaffer.py" ],
 	},
-	
+
 	"startupScripts" : {
 		"additionalFiles" : glob.glob( "startup/*/*.py" ),
 	},
-		
+
 	"misc" : {
 		"additionalFiles" : [ "LICENSE" ],
 	},
-	
+
 	"IECore" : {
-				
+
 		"classStubs" : [
 
 			# images
@@ -1044,17 +1044,17 @@ libraries = {
 			( "CurveLineariser", "ops/curves/linearise" ),
 			( "CurvesMergeOp", "ops/curves/merge" ),
 			( "CurveTangentsOp", "ops/curves/tangents" ),
-			
+
 			# meshes
 			( "TriangulateOp", "ops/mesh/triangulate" ),
 			( "FaceAreaOp", "ops/mesh/faceArea" ),
 			( "MeshMergeOp", "ops/mesh/merge" ),
 			( "MeshNormalsOp", "ops/mesh/normals" ),
-			
+
 			# primitives
 			( "TransformOp", "ops/primitive/transform" ),
 			( "RenamePrimitiveVariables", "ops/primitive/renameVariables" ),
-			
+
 			# files
 			( "SequenceLsOp", "ops/files/sequenceLs" ),
 			( "SequenceCpOp", "ops/files/sequenceCopy" ),
@@ -1062,22 +1062,22 @@ libraries = {
 			( "SequenceRmOp", "ops/files/sequenceRemove" ),
 			( "SequenceRenumberOp", "ops/files/sequenceRenumber" ),
 			( "SequenceConvertOp", "ops/files/sequenceConvert" ),
-			
+
 			# procedurals
-			( "ReadProcedural", "procedurals/read" ), 
+			( "ReadProcedural", "procedurals/read" ),
 
 		],
-		
+
 	},
-	
+
 	"IECoreAlembic" : {
-			
+
 		"classStubs" : [
 
 			( "ABCToMDC", "ops/files/abcToMDC" ),
-			
+
 		],
-		
+
 	},
 
 }
@@ -1096,7 +1096,7 @@ for library in ( "GafferUI", "GafferSceneUI", "GafferImageUI" ) :
 for libraryName, libraryDef in libraries.items() :
 
 	# skip this library if we don't have the config we need
-	
+
 	haveRequiredOptions = True
 	for requiredOption in libraryDef.get( "requiredOptions", [] ) :
 		if not env[requiredOption] :
@@ -1114,15 +1114,15 @@ for libraryName, libraryDef in libraries.items() :
 
 	librarySource = sorted( glob.glob( "src/" + libraryName + "/*.cpp" ) + glob.glob( "src/" + libraryName + "/*/*.cpp" ) )
 	if librarySource :
-	
+
 		library = libEnv.SharedLibrary( "lib/" + libraryName, librarySource )
 		libEnv.Default( library )
-	
+
 		libraryInstall = libEnv.Install( "$BUILD_DIR/lib", library )
 		libEnv.Alias( "build", libraryInstall )
-	
+
 	# header install
-	
+
 	headers = (
 		glob.glob( "include/" + libraryName + "/*.h" ) +
 		glob.glob( "include/" + libraryName + "/*.inl" ) +
@@ -1136,21 +1136,21 @@ for libraryName, libraryDef in libraries.items() :
 			header
 		)
 		libEnv.Alias( "build", headerInstall )
-		
+
 	# bindings library and binary python modules
 
 	pythonEnv = basePythonEnv.Clone()
 	pythonEnv.Append( **(libraryDef.get( "pythonEnvAppends", {} ))  )
-	
+
 	bindingsSource = sorted( glob.glob( "src/" + libraryName + "Bindings/*.cpp" ) )
 	if bindingsSource :
-			
+
 		bindingsLibrary = pythonEnv.SharedLibrary( "lib/" + libraryName + "Bindings", bindingsSource )
 		pythonEnv.Default( bindingsLibrary )
-		
+
 		bindingsLibraryInstall = pythonEnv.Install( "$BUILD_DIR/lib", bindingsLibrary )
 		env.Alias( "build", bindingsLibraryInstall )
-				
+
 		# header install
 		bindingsHeaderInstall = pythonEnv.Install(
 			"$BUILD_DIR/" + "include/" + libraryName + "Bindings",
@@ -1159,29 +1159,29 @@ for libraryName, libraryDef in libraries.items() :
 		)
 		pythonEnv.Alias( "build", bindingsHeaderInstall )
 
-	
+
 	pythonModuleSource = sorted( glob.glob( "src/" + libraryName + "Module/*.cpp" ) )
 	if pythonModuleSource :
-		
+
 		pythonModuleEnv = pythonEnv.Clone()
 		if bindingsSource :
 			pythonModuleEnv.Append( LIBS = [ libraryName + "Bindings" ] )
 		pythonModuleEnv["SHLIBPREFIX"] = ""
 		pythonModuleEnv["SHLIBSUFFIX"] = ".so"
-	
+
 		pythonModule = pythonModuleEnv.SharedLibrary( "python/" + libraryName + "/_" + libraryName, pythonModuleSource )
 		pythonModuleEnv.Default( pythonModule )
-	
+
 		moduleInstall = pythonModuleEnv.Install( "$BUILD_DIR/python/" + libraryName, pythonModule )
 		pythonModuleEnv.Default( moduleInstall )
 		pythonModuleEnv.Alias( "build", moduleInstall )
-	
+
 	# python component of python module
 
 	sedSubstitutions = "s/!GAFFER_MAJOR_VERSION!/$GAFFER_MAJOR_VERSION/g"
 	sedSubstitutions += "; s/!GAFFER_MINOR_VERSION!/$GAFFER_MINOR_VERSION/g"
 	sedSubstitutions += "; s/!GAFFER_PATCH_VERSION!/$GAFFER_PATCH_VERSION/g"
-	
+
 	for pythonFile in glob.glob( "python/" + libraryName + "/*.py" ) :
 		pythonFileInstall = env.Command( "$BUILD_DIR/" + pythonFile, pythonFile, "sed \"" + sedSubstitutions + "\" $SOURCE > $TARGET" )
 		env.Alias( "build", pythonFileInstall )
@@ -1191,37 +1191,37 @@ for libraryName, libraryDef in libraries.items() :
 	for additionalFile in libraryDef.get( "additionalFiles", [] ) :
 		additionalFileInstall = env.InstallAs( "$BUILD_DIR/" + additionalFile, additionalFile )
 		env.Alias( "build", additionalFileInstall )
-	
+
 	# osl headers
-	
+
 	for oslHeader in libraryDef.get( "oslHeaders", [] ) :
 		oslHeaderInstall = env.InstallAs( "$BUILD_DIR/" + oslHeader, oslHeader )
 		env.Alias( "oslHeaders", oslHeaderInstall )
 		env.Alias( "build", oslHeaderInstall )
-	
+
 	# osl shaders
-	
+
 	for oslShader in libraryDef.get( "oslShaders", [] ) :
 		oslShaderInstall = env.InstallAs( "$BUILD_DIR/" + oslShader, oslShader )
 		env.Alias( "build", oslShader )
 		compiledFile = commandEnv.Command( os.path.splitext( str( oslShaderInstall[0] ) )[0] + ".oso", oslShader, "oslc -I./shaders -o $TARGET $SOURCE" )
 		env.Depends( compiledFile, "oslHeaders" )
 		env.Alias( "build", compiledFile )
-	
+
 	# class stubs
-	
+
 	def buildClassStub( target, source, env ) :
 
 		dir = os.path.dirname( str( target[0] ) )
 		if not os.path.isdir( dir ) :
 			os.makedirs( dir )
-		
+
 		classLoadableName = dir.rpartition( "/" )[2]
-				
+
 		f = open( str( target[0] ), "w" )
 		f.write( "import IECore\n\n" )
 		f.write( env.subst( "from $GAFFER_STUB_MODULE import $GAFFER_STUB_CLASS as %s" % classLoadableName ) )
-		
+
 	for classStub in libraryDef.get( "classStubs", [] ) :
 		stubFileName = "$BUILD_DIR/" + classStub[1] + "/" + classStub[1].rpartition( "/" )[2] + "-1.py"
 		stubEnv = env.Clone(
@@ -1230,7 +1230,7 @@ for libraryName, libraryDef in libraries.items() :
 		)
 		stub = stubEnv.Command( stubFileName, "", buildClassStub )
 		stubEnv.Alias( "build", stub )
-	
+
 #########################################################################################################
 # Graphics
 #########################################################################################################
@@ -1240,7 +1240,7 @@ def buildGraphics( target, source, env ) :
 	dir = os.path.dirname( str( target[0] ) )
 	if not os.path.isdir( dir ) :
 		os.makedirs( dir )
-	
+
 	objects, stderr = subprocess.Popen( env["INKSCAPE"] + " --query-all " + str( source[0] ), stdout=subprocess.PIPE, shell=True ).communicate()
 	for object in objects.split( "\n" ) :
 		tokens = object.split( "," )
@@ -1259,7 +1259,7 @@ for source, target in (
 	( "resources/GafferLogo.svg", "GafferLogo.png" ),
 	( "resources/GafferLogoMini.svg", "GafferLogoMini.png" ),
 ) :
-	
+
 	graphicsBuild = env.Command( os.path.join( "$BUILD_DIR/graphics/", target ), source, buildGraphics )
 	env.NoCache( graphicsBuild )
 	env.Alias( "build", graphicsBuild )
@@ -1289,18 +1289,18 @@ if buildingDependencies :
 		( "qt", "$QT_SRC_DIR/LICENSE.LGPL" ),
 		( "osl", "$OSL_SRC_DIR/LICENSE" ),
 	]
-	
+
 	if env["BUILD_DEPENDENCY_PYQT"] :
 		licenses.append( ( "pyQt", "$PYQT_SRC_DIR/GPL_EXCEPTION.TXT" ) )
-	
+
 	if env["BUILD_DEPENDENCY_PYSIDE"] :
 		licenses.append( ( "pySide", "$PYSIDE_SRC_DIR/COPYING" ) )
-	
+
 	for l in licenses :
 
 		license = env.InstallAs( "$BUILD_DIR/doc/licenses/" + l[0], l[1] )
 		env.Alias( "build", license )
-	
+
 #########################################################################################################
 # Documentation
 #########################################################################################################
@@ -1313,12 +1313,12 @@ def readLinesMinusLicense( f ) :
 	result = []
 	skippedLicense = False
 	for line in f.readlines() :
-	
+
 		if not line.startswith( "#" ) :
 			skippedLicense = True
 		if skippedLicense :
 			result.append( line )
-			
+
 	return result
 
 # Builder action that munges a nicely organised python module into a much less nicely organised one
@@ -1328,18 +1328,18 @@ def createDoxygenPython( target, source, env ) :
 
 	target = str( target[0] )
 	source = str( source[0] )
-	
+
 	if not os.path.isdir( target ) :
 		os.makedirs( target )
-	
+
 	outFile = open( target + "/__init__.py", "w" )
-	
+
 	for line in readLinesMinusLicense( source ) :
-	
+
 		outFile.write( line )
-	
+
 		if line.startswith( "import" ) :
-		
+
 			# copy source file over to target directory
 			words = line.split()
 			fileName = os.path.dirname( source ) + "/" + words[1] + ".py"
@@ -1347,21 +1347,21 @@ def createDoxygenPython( target, source, env ) :
 				destFile = open( target + "/" + words[1] + ".py", "w" )
 				for l in readLinesMinusLicense( fileName ) :
 					destFile.write( l )
-		
+
 		elif line.startswith( "from" ) :
-		
+
 			# cat source file directly into init file
 			words = line.split()
 			fileName = os.path.dirname( source ) + "/" + words[1] + ".py"
 			if os.path.isfile( fileName ) :
-				
+
 				outFile.write( "\n" )
-				
+
 				for line in readLinesMinusLicense( fileName ) :
 					outFile.write( line )
-				
+
 				outFile.write( "\n" )
-	
+
 docEnv = env.Clone()
 docEnv["ENV"]["PATH"] = os.environ["PATH"]
 for v in ( "BUILD_DIR", "GAFFER_MAJOR_VERSION", "GAFFER_MINOR_VERSION", "GAFFER_PATCH_VERSION" ) :
@@ -1408,36 +1408,36 @@ dependenciesManifest = [
 	"lib/libboost_chrono" + boostLibSuffix + "$SHLIBSUFFIX*",
 
 	"lib/libIECore*$SHLIBSUFFIX",
-	
+
 	"lib/libIex*$SHLIBSUFFIX*",
 	"lib/libHalf*$SHLIBSUFFIX*",
 	"lib/libImath*$SHLIBSUFFIX*",
 	"lib/libIlmImf*$SHLIBSUFFIX*",
 	"lib/libIlmThread*$SHLIBSUFFIX*",
-	
+
 	"lib/libtiff*$SHLIBSUFFIX*",
 	"lib/libfreetype*$SHLIBSUFFIX*",
 	"lib/libjpeg*$SHLIBSUFFIX*",
 	"lib/libpng*$SHLIBSUFFIX*",
-	
+
 	"lib/libOpenImageIO*$SHLIBSUFFIX*",
 	"lib/libOpenColorIO*$SHLIBSUFFIX*",
-	
+
 	"lib/libLLVM*$SHLIBSUFFIX*",
 	"lib/libosl*",
-	
+
 	"lib/libpython*$SHLIBSUFFIX*",
 	"lib/Python.framework",
 	"lib/python$PYTHON_VERSION",
-	
+
 	"lib/libGLEW*$SHLIBSUFFIX*",
 	"lib/libtbb*$SHLIBSUFFIX*",
-	
+
 	"lib/libhdf5*$SHLIBSUFFIX*",
-	
+
 	"lib/libpyside*$SHLIBSUFFIX*",
 	"lib/libshiboken*$SHLIBSUFFIX*",
-	
+
 	"lib/libQtCore*",
 	"lib/libQtGui*",
 	"lib/libQtOpenGL*",
@@ -1480,7 +1480,7 @@ dependenciesManifest = [
 	"include/OSL",
 	"include/OpenImageIO",
 	"include/OpenColorIO",
-	
+
 	"renderMan",
 	"arnold",
 
@@ -1490,13 +1490,13 @@ gafferManifest = dependenciesManifest + [
 
 	"bin/gaffer",
 	"bin/gaffer.py",
-	
+
 	"LICENSE",
 
 	"apps/*/*-1.py",
 
 	"lib/libGaffer*$SHLIBSUFFIX",
-		
+
 	"startup/*/*.py",
 
 	"graphics/*.png",
@@ -1506,20 +1506,20 @@ gafferManifest = dependenciesManifest + [
 	"python/Gaffer*",
 
 	"include/Gaffer*",
-		
+
 ]
 
 def installer( target, source, env ) :
 
 	def copyTree( src, dst, regex ) :
-	
+
 		names = os.listdir( src )
-		
+
 		for name in names:
-				
+
 			srcName = os.path.join( src, name )
 			dstName = os.path.join( dst, name )
-						
+
 			if os.path.isdir( srcName ) :
 				if regex.match( srcName ) :
 					copyTree( srcName, dstName, re.compile( ".*" ) )
@@ -1534,12 +1534,12 @@ def installer( target, source, env ) :
 						os.symlink( os.readlink( srcName ), dstName )
 					else:
 						shutil.copy2( srcName, dstName )
-	
+
 	regex = re.compile( "|".join( [ fnmatch.translate( env.subst( "$BUILD_DIR/" + m ) ) for m in env["MANIFEST"] ] ) )
 	copyTree( str( source[0] ), str( target[0] ), regex )
 
 if env.subst( "$PACKAGE_FILE" ).endswith( ".dmg" ) :
-	
+
 	# if the packaging will make a disk image, then build an os x app bundle
 
 	install = env.Command( "$INSTALL_DIR/Gaffer.app/Contents/Resources", "$BUILD_DIR", installer, MANIFEST=gafferManifest )
@@ -1549,10 +1549,10 @@ if env.subst( "$PACKAGE_FILE" ).endswith( ".dmg" ) :
 
 	plistInstall = env.Install( "$INSTALL_DIR/Gaffer.app/Contents", "resources/Info.plist" )
 	env.Alias( "install", plistInstall )
-	
+
 	gafferLink = env.Command( "$INSTALL_DIR/Gaffer.app/Contents/MacOS/gaffer", "", "ln -s ../Resources/bin/gaffer $TARGET" )
 	env.Alias( "install", gafferLink )
-	
+
 else :
 
 	install = env.Command( "$INSTALL_DIR", "$BUILD_DIR", installer, MANIFEST=gafferManifest )
@@ -1576,12 +1576,12 @@ def packager( target, source, env ) :
 	source = str( source[0] )
 	b = os.path.basename( source )
 	d = os.path.dirname( source )
-	
+
 	if target.endswith( ".dmg" ) :
-		runCommand( "hdiutil create -volname '%s' -srcfolder '%s' -ov -format UDZO '%s'" % ( os.path.basename( target ), source, target ) )				
+		runCommand( "hdiutil create -volname '%s' -srcfolder '%s' -ov -format UDZO '%s'" % ( os.path.basename( target ), source, target ) )
 	else :
 		runCommand( "tar -czf %s -C %s %s" % ( target, d, b ) )
-	
+
 package = env.Command( "$PACKAGE_FILE", "$INSTALL_DIR", packager )
 env.NoCache( package )
 env.Alias( "package", package )
