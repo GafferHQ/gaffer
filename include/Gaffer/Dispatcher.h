@@ -63,7 +63,7 @@ IE_CORE_FORWARDDECLARE( CompoundPlug )
 namespace Detail
 {
 
-struct DispatchSignalCombiner
+struct PreDispatchSignalCombiner
 {
 	typedef bool result_type;
 
@@ -99,7 +99,8 @@ class Dispatcher : public Node
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::Dispatcher, DispatcherTypeId, Node );
 
-		typedef boost::signal<bool (const Dispatcher *, const std::vector<ExecutableNodePtr> &), Detail::DispatchSignalCombiner> DispatchSignal;
+		typedef boost::signal<bool (const Dispatcher *, const std::vector<ExecutableNodePtr> &), Detail::PreDispatchSignalCombiner> PreDispatchSignal;
+		typedef boost::signal<void (const Dispatcher *, const std::vector<ExecutableNodePtr> &, bool)> PostDispatchSignal;
 
 		//! @name Dispatch Signals
 		/// These signals are emitted on dispatch events for any registered Dispatcher instance.
@@ -108,9 +109,11 @@ class Dispatcher : public Node
 		/// Called when any dispatcher is about to dispatch nodes. Slots should have the
 		/// signature `bool slot( dispatcher, nodes )`, and may return True to cancel
 		/// the dispatch, or False to allow it to continue.
-		static DispatchSignal &preDispatchSignal();
-		/// Called after any dispatcher has finished dispatching nodes.
-		static DispatchSignal &postDispatchSignal();
+		static PreDispatchSignal &preDispatchSignal();
+		/// Called after any dispatcher has finished dispatching nodes. Slots should have the
+		/// signature `void slot( dispatcher, nodes, bool )`. The third argument will be True
+		/// if the process was successful, and False otherwise.
+		static PostDispatchSignal &postDispatchSignal();
 		//@}
 
 		/// Calls doDispatch, taking care to trigger the dispatch signals at the appropriate times.
@@ -260,8 +263,8 @@ class Dispatcher : public Node
 
 		static size_t g_firstPlugIndex;
 		static DispatcherMap g_dispatchers;
-		static DispatchSignal g_preDispatchSignal;
-		static DispatchSignal g_postDispatchSignal;
+		static PreDispatchSignal g_preDispatchSignal;
+		static PostDispatchSignal g_postDispatchSignal;
 
 		friend void GafferBindings::bindDispatcher();
 };
