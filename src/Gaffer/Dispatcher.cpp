@@ -53,8 +53,8 @@ static InternedString g_batchSize( "batchSize" );
 
 size_t Dispatcher::g_firstPlugIndex = 0;
 Dispatcher::DispatcherMap Dispatcher::g_dispatchers;
-Dispatcher::DispatchSignal Dispatcher::g_preDispatchSignal;
-Dispatcher::DispatchSignal Dispatcher::g_postDispatchSignal;
+Dispatcher::PreDispatchSignal Dispatcher::g_preDispatchSignal;
+Dispatcher::PostDispatchSignal Dispatcher::g_postDispatchSignal;
 
 IE_CORE_DEFINERUNTIMETYPED( Dispatcher )
 
@@ -73,20 +73,28 @@ Dispatcher::~Dispatcher()
 {
 }
 
+namespace
+{
+
 /// Guard class for calling a dispatcher's preDispatchSignal(), then guaranteeing postDispatchSignal() gets called
-/// \todo: postDispatchSignal() should probably be supplied info about what happened: did everything go smoothly?
-/// Did the preDispatchSignal cancel the execution? Did doDispatch throw an exception?
 class DispatcherSignalGuard
 {
 public:
-	DispatcherSignalGuard( const Dispatcher* d, const std::vector<ExecutableNodePtr> &executables ) : m_executables( executables ), m_dispatcher( d )
+	DispatcherSignalGuard( const Dispatcher* d, const std::vector<ExecutableNodePtr> &executables ) : m_dispatchSuccessful( false ), m_executables( executables ), m_dispatcher( d )
 	{
 		m_cancelledByPreDispatch = m_dispatcher->preDispatchSignal()( m_dispatcher, m_executables );
 	}
 	
 	~DispatcherSignalGuard()
 	{
-		m_dispatcher->postDispatchSignal()( m_dispatcher, m_executables );
+		try
+		{
+			m_dispatcher->postDispatchSignal()( m_dispatcher, m_executables, (m_dispatchSuccessful && ( !m_cancelledByPreDispatch )) );
+		}
+		catch( const std::exception& e )
+		{
+			IECore::msg( IECore::Msg::Error, "postDispatchSignal exception:", e.what() );
+		}
 	}
 	
 	bool cancelledByPreDispatch( )
@@ -94,14 +102,21 @@ public:
 		return m_cancelledByPreDispatch;
 	}
 	
+	void success()
+	{
+		m_dispatchSuccessful = true;
+	}
+	
 private:
 	
 	bool m_cancelledByPreDispatch;
+	bool m_dispatchSuccessful;
 	
 	const std::vector<ExecutableNodePtr> &m_executables;
 	const Dispatcher* m_dispatcher;
 };
 
+}
 
 void Dispatcher::dispatch( const std::vector<NodePtr> &nodes ) const
 {
@@ -148,10 +163,8 @@ void Dispatcher::dispatch( const std::vector<NodePtr> &nodes ) const
 	// in its destructor, thereby guaranteeing that we always call this->postDispatchSignal().
 	
 	DispatcherSignalGuard signalGuard( this, executables );
-	
 	if ( signalGuard.cancelledByPreDispatch() )
 	{
-		/// \todo: communicate the cancellation to the user
 		return;
 	}
 
@@ -178,7 +191,11 @@ void Dispatcher::dispatch( const std::vector<NodePtr> &nodes ) const
 	{
 		doDispatch( rootBatch.get() );
 	}
-
+	
+	// inform the guard that the process has been completed, so it can pass this info to
+	// postDispatchSignal():
+	
+	signalGuard.success();
 }
 
 IntPlug *Dispatcher::framesModePlug()
@@ -230,12 +247,12 @@ const std::string Dispatcher::jobDirectory() const
  * Static functions
  */
 
-Dispatcher::DispatchSignal &Dispatcher::preDispatchSignal()
+Dispatcher::PreDispatchSignal &Dispatcher::preDispatchSignal()
 {
 	return g_preDispatchSignal;
 }
 
-Dispatcher::DispatchSignal &Dispatcher::postDispatchSignal()
+Dispatcher::PostDispatchSignal &Dispatcher::postDispatchSignal()
 {
 	return g_postDispatchSignal;
 }
