@@ -148,9 +148,9 @@ class Dispatcher : public Node
 		const StringPlug *jobNamePlug() const;
 		/// Returns the plug which specifies the directory used by dispatchers to store temporary
 		/// files on a per-job basis.
-		StringPlug *jobDirectoryPlug();
-		const StringPlug *jobDirectoryPlug() const;
-		/// Returns the directory specified by jobDirectoryPlug + jobNamePlug, creating it when necessary.
+		StringPlug *jobsDirectoryPlug();
+		const StringPlug *jobsDirectoryPlug() const;
+		/// Returns the directory specified by jobsDirectoryPlug + jobNamePlug, creating it when necessary.
 		const std::string jobDirectory() const;
 		//@}
 

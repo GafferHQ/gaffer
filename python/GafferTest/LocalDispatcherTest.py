@@ -49,7 +49,7 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 	def setUp( self ) :
 
 		localDispatcher = Gaffer.Dispatcher.dispatcher( "Local" )
-		localDispatcher["jobDirectory"].setValue( "/tmp/dispatcherTest" )
+		localDispatcher["jobsDirectory"].setValue( "/tmp/dispatcherTest" )
 		localDispatcher["framesMode"].setValue( Gaffer.Dispatcher.FramesMode.CurrentFrame )
 
 	def testDispatcherRegistration( self ) :
@@ -369,7 +369,7 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 
 		dispatcher = Gaffer.LocalDispatcher()
 		self.assertEqual( dispatcher["jobName"].getValue(), "" )
-		self.assertEqual( dispatcher["jobDirectory"].getValue(), "" )
+		self.assertEqual( dispatcher["jobsDirectory"].getValue(), "" )
 		jobDir = dispatcher.createJobDirectory( Gaffer.Context.current() )
 		self.assertNotEqual( jobDir, "" )
 		self.assertTrue( os.path.exists( jobDir ) )
