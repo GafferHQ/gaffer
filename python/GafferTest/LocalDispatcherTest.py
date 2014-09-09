@@ -365,16 +365,6 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 
 		self.assertTrue( os.path.isfile( s.context().substitute( s["n1"]["fileName"].getValue() ) ) )
 
-	def testBadJobDirectory( self ) :
-
-		dispatcher = Gaffer.LocalDispatcher()
-		self.assertEqual( dispatcher["jobName"].getValue(), "" )
-		self.assertEqual( dispatcher["jobsDirectory"].getValue(), "" )
-		jobDir = dispatcher.createJobDirectory( Gaffer.Context.current() )
-		self.assertNotEqual( jobDir, "" )
-		self.assertTrue( os.path.exists( jobDir ) )
-		shutil.rmtree( jobDir )
-
 	def testMixedForegroundAndBackground( self ) :
 
 		preCs = GafferTest.CapturingSlot( Gaffer.LocalDispatcher.preDispatchSignal() )
