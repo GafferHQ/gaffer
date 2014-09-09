@@ -89,7 +89,7 @@ const IECore::InternedString &GraphComponent::setName( const IECore::InternedStr
 		bool uniqueAlready = true;
 		for( ChildContainer::const_iterator it=m_parent->m_children.begin(), eIt=m_parent->m_children.end(); it != eIt; it++ )
 		{
-			if( *it != this && (*it)->m_name == m_name )
+			if( *it != this && (*it)->m_name == newName )
 			{
 				uniqueAlready = false;
 				break;
