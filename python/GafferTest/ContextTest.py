@@ -438,6 +438,24 @@ class ContextTest( GafferTest.TestCase ) :
 		c["test2"] = "test2" # no change
 		self.assertEqual( c.hash(), hashes[-1] )
 
+	def testChanged( self ) :
+
+		c = Gaffer.Context()
+		c["test"] = IECore.StringVectorData( [ "one" ] )
+		h = c.hash()
+
+		cs = GafferTest.CapturingSlot( c.changedSignal() )
+
+		d = c.get( "test", _copy = False ) # dangerous! the context won't know if we make changes
+		d.append( "two" )
+		self.assertEqual( c.get( "test" ), IECore.StringVectorData( [ "one", "two" ] ) )
+		self.assertEqual( len( cs ), 0 )
+
+		c.changed( "test" ) # let the context know what we've been up to
+		self.assertEqual( len( cs ), 1 )
+		self.assertEqual( cs[0], ( c, "test" ) )
+		self.assertNotEqual( c.hash(), h )
+
 if __name__ == "__main__":
 	unittest.main()
 

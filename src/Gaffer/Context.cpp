@@ -102,6 +102,15 @@ Context::~Context()
 	delete m_changedSignal;
 }
 
+void Context::changed( const IECore::InternedString &name )
+{
+	m_hashValid = false;
+	if( m_changedSignal )
+	{
+		(*m_changedSignal)( this, name );
+	}
+}
+
 void Context::names( std::vector<IECore::InternedString> &names ) const
 {
 	for( Map::const_iterator it = m_map.begin(), eIt = m_map.end(); it != eIt; it++ )
