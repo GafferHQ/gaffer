@@ -150,12 +150,18 @@ IECore::MurmurHash Context::hash() const
 	{
 		return m_hash;
 	}
-	
+
 	m_hash = IECore::MurmurHash();
 	for( Map::const_iterator it = m_map.begin(), eIt = m_map.end(); it != eIt; it++ )
 	{
-		m_hash.append( it->first );
-		it->second.data->hash( m_hash );
+		/// \todo Perhaps at some point the UI should use a different container for
+		/// these "not computationally important" values, so we wouldn't have to skip
+		/// them here.
+		if( it->first.string().compare( 0, 3, "ui:" ) )
+		{
+			m_hash.append( it->first );
+			it->second.data->hash( m_hash );
+		}
 	}
 	m_hashValid = true;
 	return m_hash;

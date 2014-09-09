@@ -456,6 +456,14 @@ class ContextTest( GafferTest.TestCase ) :
 		self.assertEqual( cs[0], ( c, "test" ) )
 		self.assertNotEqual( c.hash(), h )
 
+	def testHashIgnoresUIEntries( self ) :
+
+		c = Gaffer.Context()
+		h = c.hash()
+
+		c["ui:test"] = 1
+		self.assertEqual( h, c.hash() )
+
 if __name__ == "__main__":
 	unittest.main()
 
