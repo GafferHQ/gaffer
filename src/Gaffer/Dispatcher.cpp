@@ -243,6 +243,29 @@ const std::string Dispatcher::jobDirectory() const
 	return m_jobDirectory;
 }
 
+std::string Dispatcher::createJobDirectory( const Context *context ) const
+{
+	boost::filesystem::path jobDirectory( context->substitute( jobsDirectoryPlug()->getValue() ) );
+	jobDirectory /= context->substitute( jobNamePlug()->getValue() );
+	
+	if ( jobDirectory == "" )
+	{
+		jobDirectory = boost::filesystem::current_path().string();
+	}
+	
+	boost::filesystem::path result;
+	for( int i=0; ; ++i )
+	{
+		result = jobDirectory / ( boost::format("%06d") % i ).str();
+		if( boost::filesystem::is_directory( result ) )
+		{
+			continue;
+		}
+		boost::filesystem::create_directories( result );
+		return result.string();
+	}
+}
+
 /*
  * Static functions
  */

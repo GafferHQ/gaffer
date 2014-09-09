@@ -50,28 +50,7 @@ class LocalDispatcher( Gaffer.Dispatcher ) :
 
 		backgroundPlug = Gaffer.BoolPlug( "executeInBackground", defaultValue = False )
 		self.addChild( backgroundPlug )
-
-	def _createJobDirectory( self, context ) :
-		jobDirectory = context.substitute( self["jobsDirectory"].getValue() )
-		jobDirectory += "/" + context.substitute( self["jobName"].getValue() )
-		if jobDirectory == "/":
-			jobDirectory = os.getcwd()
-		
-		result = os.path.join( jobDirectory, "%06d" % self.__nextJobId( jobDirectory ) )
-		
-		while True :
-			try :
-				os.makedirs( result )
-				break
-			except OSError, e :
-				if e.errno == errno.EEXIST :
-					result = os.path.join( jobDirectory, "%06d" % self.__nextJobId( jobDirectory ) )
-					continue
-				else :
-					raise e
-
-		return result
-
+	
 	def _doDispatch( self, batch ) :
 
 		script = batch.requirements()[0].node().scriptNode()

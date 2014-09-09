@@ -150,7 +150,8 @@ class Dispatcher : public Node
 		/// files on a per-job basis.
 		StringPlug *jobsDirectoryPlug();
 		const StringPlug *jobsDirectoryPlug() const;
-		/// Returns the directory specified by jobsDirectoryPlug + jobNamePlug, creating it when necessary.
+		/// At the start of dispatch(), a directory is created under jobsDirectoryPlug + jobNamePlug 
+		/// which the dispatcher writes temporary files to. This method returns the most recent created directory.
 		const std::string jobDirectory() const;
 		//@}
 
@@ -217,10 +218,6 @@ class Dispatcher : public Node
 		/// batches have been dispatched in order to prevent duplicate work.
 		virtual void doDispatch( const TaskBatch *batch ) const = 0;
 		
-		/// createJobDirectory will be called before doDispatch() and the preDispatchSignal(),
-		/// and should create a directory to put temporary files for the job, returning its path.
-		virtual std::string createJobDirectory( const Context *context ) const = 0;
-		
 		//! @name ExecutableNode Customization
 		/// Dispatchers are able to create custom plugs on ExecutableNodes when they are constructed.
 		/////////////////////////////////////////////////////////////////////////////////////////////
@@ -242,6 +239,7 @@ class Dispatcher : public Node
 		
 	private :
 		
+		std::string createJobDirectory( const Context *context ) const;
 		mutable std::string m_jobDirectory;
 		
 		typedef std::map< std::string, DispatcherPtr > DispatcherMap;
