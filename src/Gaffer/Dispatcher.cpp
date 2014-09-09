@@ -66,7 +66,7 @@ Dispatcher::Dispatcher( const std::string &name )
 	addChild( new IntPlug( "framesMode", Plug::In, CurrentFrame, CurrentFrame ) );
 	addChild( new StringPlug( "frameRange", Plug::In, "" ) );
 	addChild( new StringPlug( "jobName", Plug::In, "" ) );
-	addChild( new StringPlug( "jobDirectory", Plug::In, "" ) );
+	addChild( new StringPlug( "jobsDirectory", Plug::In, "" ) );
 }
 
 Dispatcher::~Dispatcher()
@@ -228,12 +228,12 @@ const StringPlug *Dispatcher::jobNamePlug() const
 	return getChild<StringPlug>( g_firstPlugIndex + 2 );
 }
 
-StringPlug *Dispatcher::jobDirectoryPlug()
+StringPlug *Dispatcher::jobsDirectoryPlug()
 {
 	return getChild<StringPlug>( g_firstPlugIndex + 3 );
 }
 
-const StringPlug *Dispatcher::jobDirectoryPlug() const
+const StringPlug *Dispatcher::jobsDirectoryPlug() const
 {
 	return getChild<StringPlug>( g_firstPlugIndex + 3 );
 }

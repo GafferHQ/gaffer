@@ -97,7 +97,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		
 		def _createJobDirectory( self, context ) :
 			
-			jobDir = context.substitute( self["jobDirectory"].getValue() )
+			jobDir = context.substitute( self["jobsDirectory"].getValue() )
 			jobDir += context.substitute( self["jobName"].getValue() )
 			return jobDir
 

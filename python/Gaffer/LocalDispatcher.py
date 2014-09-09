@@ -52,7 +52,7 @@ class LocalDispatcher( Gaffer.Dispatcher ) :
 		self.addChild( backgroundPlug )
 
 	def _createJobDirectory( self, context ) :
-		jobDirectory = context.substitute( self["jobDirectory"].getValue() )
+		jobDirectory = context.substitute( self["jobsDirectory"].getValue() )
 		jobDirectory += "/" + context.substitute( self["jobName"].getValue() )
 		if jobDirectory == "/":
 			jobDirectory = os.getcwd()
