@@ -220,11 +220,11 @@ Gaffer.Metadata.registerPlugDescription( Gaffer.ExecutableNode, "dispatcher.batc
 
 Gaffer.Metadata.registerPlugDescription( Gaffer.Dispatcher, "framesMode", "Determines the active frame range for dispatching." )
 Gaffer.Metadata.registerPlugDescription( Gaffer.Dispatcher, "frameRange", "The frame range to be used when framesMode is set to CustomRange." )
-Gaffer.Metadata.registerPlugDescription( Gaffer.Dispatcher, "jobDirectory", "A directory to store temporary files used by the dispatcher." )
+Gaffer.Metadata.registerPlugDescription( Gaffer.Dispatcher, "jobsDirectory", "A directory to store temporary files used by the dispatcher." )
 
 GafferUI.PlugValueWidget.registerCreator(
 	Gaffer.Dispatcher,
-	"jobDirectory",
+	"jobsDirectory",
 	lambda plug : GafferUI.PathPlugValueWidget( plug,
 		path = Gaffer.FileSystemPath( "/", filter = Gaffer.FileSystemPath.createStandardFilter( [ "gfr" ] ) ),
 		pathChooserDialogueKeywords = {

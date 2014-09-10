@@ -53,8 +53,8 @@ static InternedString g_batchSize( "batchSize" );
 
 size_t Dispatcher::g_firstPlugIndex = 0;
 Dispatcher::DispatcherMap Dispatcher::g_dispatchers;
-Dispatcher::DispatchSignal Dispatcher::g_preDispatchSignal;
-Dispatcher::DispatchSignal Dispatcher::g_postDispatchSignal;
+Dispatcher::PreDispatchSignal Dispatcher::g_preDispatchSignal;
+Dispatcher::PostDispatchSignal Dispatcher::g_postDispatchSignal;
 
 IE_CORE_DEFINERUNTIMETYPED( Dispatcher )
 
@@ -66,11 +66,56 @@ Dispatcher::Dispatcher( const std::string &name )
 	addChild( new IntPlug( "framesMode", Plug::In, CurrentFrame, CurrentFrame ) );
 	addChild( new StringPlug( "frameRange", Plug::In, "" ) );
 	addChild( new StringPlug( "jobName", Plug::In, "" ) );
-	addChild( new StringPlug( "jobDirectory", Plug::In, "" ) );
+	addChild( new StringPlug( "jobsDirectory", Plug::In, "" ) );
 }
 
 Dispatcher::~Dispatcher()
 {
+}
+
+namespace
+{
+
+/// Guard class for calling a dispatcher's preDispatchSignal(), then guaranteeing postDispatchSignal() gets called
+class DispatcherSignalGuard
+{
+public:
+	DispatcherSignalGuard( const Dispatcher* d, const std::vector<ExecutableNodePtr> &executables ) : m_dispatchSuccessful( false ), m_executables( executables ), m_dispatcher( d )
+	{
+		m_cancelledByPreDispatch = m_dispatcher->preDispatchSignal()( m_dispatcher, m_executables );
+	}
+	
+	~DispatcherSignalGuard()
+	{
+		try
+		{
+			m_dispatcher->postDispatchSignal()( m_dispatcher, m_executables, (m_dispatchSuccessful && ( !m_cancelledByPreDispatch )) );
+		}
+		catch( const std::exception& e )
+		{
+			IECore::msg( IECore::Msg::Error, "postDispatchSignal exception:", e.what() );
+		}
+	}
+	
+	bool cancelledByPreDispatch( )
+	{
+		return m_cancelledByPreDispatch;
+	}
+	
+	void success()
+	{
+		m_dispatchSuccessful = true;
+	}
+	
+private:
+	
+	bool m_cancelledByPreDispatch;
+	bool m_dispatchSuccessful;
+	
+	const std::vector<ExecutableNodePtr> &m_executables;
+	const Dispatcher* m_dispatcher;
+};
+
 }
 
 void Dispatcher::dispatch( const std::vector<NodePtr> &nodes ) const
@@ -79,7 +124,10 @@ void Dispatcher::dispatch( const std::vector<NodePtr> &nodes ) const
 	{
 		throw IECore::Exception( getName().string() + ": Must specify at least one node to dispatch." );
 	}
-
+	
+	const Context *context = Context::current();
+	m_jobDirectory = createJobDirectory( context );
+	
 	std::vector<ExecutableNodePtr> executables;
 	const ScriptNode *script = (*nodes.begin())->scriptNode();
 	for ( std::vector<NodePtr>::const_iterator nIt = nodes.begin(); nIt != nodes.end(); ++nIt )
@@ -110,14 +158,15 @@ void Dispatcher::dispatch( const std::vector<NodePtr> &nodes ) const
 			throw IECore::Exception( getName().string() + ": Dispatched nodes must be ExecutableNodes or Boxes containing ExecutableNodes." );
 		}
 	}
-
-	if ( preDispatchSignal()( this, executables ) )
+	
+	// this object calls this->preDispatchSignal() in its constructor and this->postDispatchSignal()
+	// in its destructor, thereby guaranteeing that we always call this->postDispatchSignal().
+	
+	DispatcherSignalGuard signalGuard( this, executables );
+	if ( signalGuard.cancelledByPreDispatch() )
 	{
-		/// \todo: communicate the cancellation to the user
 		return;
 	}
-
-	const Context *context = Context::current();
 
 	std::vector<FrameList::Frame> frames;
 	FrameListPtr frameList = frameRange( script, context );
@@ -142,8 +191,11 @@ void Dispatcher::dispatch( const std::vector<NodePtr> &nodes ) const
 	{
 		doDispatch( rootBatch.get() );
 	}
-
-	postDispatchSignal()( this, executables );
+	
+	// inform the guard that the process has been completed, so it can pass this info to
+	// postDispatchSignal():
+	
+	signalGuard.success();
 }
 
 IntPlug *Dispatcher::framesModePlug()
@@ -176,41 +228,54 @@ const StringPlug *Dispatcher::jobNamePlug() const
 	return getChild<StringPlug>( g_firstPlugIndex + 2 );
 }
 
-StringPlug *Dispatcher::jobDirectoryPlug()
+StringPlug *Dispatcher::jobsDirectoryPlug()
 {
 	return getChild<StringPlug>( g_firstPlugIndex + 3 );
 }
 
-const StringPlug *Dispatcher::jobDirectoryPlug() const
+const StringPlug *Dispatcher::jobsDirectoryPlug() const
 {
 	return getChild<StringPlug>( g_firstPlugIndex + 3 );
 }
 
-const std::string Dispatcher::jobDirectory( const Context *context ) const
+const std::string Dispatcher::jobDirectory() const
 {
-	std::string jobDir = context->substitute( jobDirectoryPlug()->getValue() );
+	return m_jobDirectory;
+}
 
-	boost::filesystem::path path( jobDir );
-	path /= context->substitute( jobNamePlug()->getValue() );
-	if ( path == "" )
+std::string Dispatcher::createJobDirectory( const Context *context ) const
+{
+	boost::filesystem::path jobDirectory( context->substitute( jobsDirectoryPlug()->getValue() ) );
+	jobDirectory /= context->substitute( jobNamePlug()->getValue() );
+	
+	if ( jobDirectory == "" )
 	{
-		return boost::filesystem::current_path().string();
+		jobDirectory = boost::filesystem::current_path().string();
 	}
-
-	boost::filesystem::create_directories( path );
-	return path.string();
+	
+	boost::filesystem::path result;
+	for( int i=0; ; ++i )
+	{
+		result = jobDirectory / ( boost::format("%06d") % i ).str();
+		if( boost::filesystem::is_directory( result ) )
+		{
+			continue;
+		}
+		boost::filesystem::create_directories( result );
+		return result.string();
+	}
 }
 
 /*
  * Static functions
  */
 
-Dispatcher::DispatchSignal &Dispatcher::preDispatchSignal()
+Dispatcher::PreDispatchSignal &Dispatcher::preDispatchSignal()
 {
 	return g_preDispatchSignal;
 }
 
-Dispatcher::DispatchSignal &Dispatcher::postDispatchSignal()
+Dispatcher::PostDispatchSignal &Dispatcher::postDispatchSignal()
 {
 	return g_postDispatchSignal;
 }
