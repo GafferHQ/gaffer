@@ -51,31 +51,13 @@ class LocalDispatcher( Gaffer.Dispatcher ) :
 		backgroundPlug = Gaffer.BoolPlug( "executeInBackground", defaultValue = False )
 		self.addChild( backgroundPlug )
 
-	def jobDirectory( self, context ) :
-
-		jobDirectory = Gaffer.Dispatcher.jobDirectory( self, context )
-		result = os.path.join( jobDirectory, "%06d" % self.__nextJobId( jobDirectory ) )
-
-		while True :
-			try :
-				os.makedirs( result )
-				break
-			except OSError, e :
-				if e.errno == errno.EEXIST :
-					result = os.path.join( jobDirectory, "%06d" % self.__nextJobId( jobDirectory ) )
-					continue
-				else :
-					raise e
-
-		return result
-
 	def _doDispatch( self, batch ) :
 
 		script = batch.requirements()[0].node().scriptNode()
 		context = Gaffer.Context.current()
 		scriptFileName = script["fileName"].getValue()
 		jobName = context.substitute( self["jobName"].getValue() )
-		jobDirectory = self.jobDirectory( context )
+		jobDirectory = self.jobDirectory()
 		messageTitle = "%s : Job %s %s" % ( self.getName(), jobName, os.path.basename( jobDirectory ) )
 		tmpScript = os.path.join( jobDirectory, os.path.basename( scriptFileName ) if scriptFileName else "untitled.gfr" )
 

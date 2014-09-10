@@ -63,7 +63,7 @@ IE_CORE_FORWARDDECLARE( CompoundPlug )
 namespace Detail
 {
 
-struct DispatchSignalCombiner
+struct PreDispatchSignalCombiner
 {
 	typedef bool result_type;
 
@@ -99,7 +99,8 @@ class Dispatcher : public Node
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::Dispatcher, DispatcherTypeId, Node );
 
-		typedef boost::signal<bool (const Dispatcher *, const std::vector<ExecutableNodePtr> &), Detail::DispatchSignalCombiner> DispatchSignal;
+		typedef boost::signal<bool (const Dispatcher *, const std::vector<ExecutableNodePtr> &), Detail::PreDispatchSignalCombiner> PreDispatchSignal;
+		typedef boost::signal<void (const Dispatcher *, const std::vector<ExecutableNodePtr> &, bool)> PostDispatchSignal;
 
 		//! @name Dispatch Signals
 		/// These signals are emitted on dispatch events for any registered Dispatcher instance.
@@ -108,9 +109,11 @@ class Dispatcher : public Node
 		/// Called when any dispatcher is about to dispatch nodes. Slots should have the
 		/// signature `bool slot( dispatcher, nodes )`, and may return True to cancel
 		/// the dispatch, or False to allow it to continue.
-		static DispatchSignal &preDispatchSignal();
-		/// Called after any dispatcher has finished dispatching nodes.
-		static DispatchSignal &postDispatchSignal();
+		static PreDispatchSignal &preDispatchSignal();
+		/// Called after any dispatcher has finished dispatching nodes. Slots should have the
+		/// signature `void slot( dispatcher, nodes, bool )`. The third argument will be True
+		/// if the process was successful, and False otherwise.
+		static PostDispatchSignal &postDispatchSignal();
 		//@}
 
 		/// Calls doDispatch, taking care to trigger the dispatch signals at the appropriate times.
@@ -145,10 +148,11 @@ class Dispatcher : public Node
 		const StringPlug *jobNamePlug() const;
 		/// Returns the plug which specifies the directory used by dispatchers to store temporary
 		/// files on a per-job basis.
-		StringPlug *jobDirectoryPlug();
-		const StringPlug *jobDirectoryPlug() const;
-		/// Returns the directory specified by jobDirectoryPlug + jobNamePlug, creating it when necessary.
-		const std::string jobDirectory( const Context *context ) const;
+		StringPlug *jobsDirectoryPlug();
+		const StringPlug *jobsDirectoryPlug() const;
+		/// At the start of dispatch(), a directory is created under jobsDirectoryPlug + jobNamePlug
+		/// which the dispatcher writes temporary files to. This method returns the most recent created directory.
+		const std::string jobDirectory() const;
 		//@}
 
 		//! @name Registration
@@ -235,6 +239,9 @@ class Dispatcher : public Node
 
 	private :
 
+		std::string createJobDirectory( const Context *context ) const;
+		mutable std::string m_jobDirectory;
+
 		typedef std::map< std::string, DispatcherPtr > DispatcherMap;
 
 		typedef std::map<IECore::MurmurHash, TaskBatchPtr> BatchMap;
@@ -254,8 +261,8 @@ class Dispatcher : public Node
 
 		static size_t g_firstPlugIndex;
 		static DispatcherMap g_dispatchers;
-		static DispatchSignal g_preDispatchSignal;
-		static DispatchSignal g_postDispatchSignal;
+		static PreDispatchSignal g_preDispatchSignal;
+		static PostDispatchSignal g_postDispatchSignal;
 
 		friend void GafferBindings::bindDispatcher();
 };

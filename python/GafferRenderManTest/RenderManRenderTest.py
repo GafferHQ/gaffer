@@ -393,7 +393,7 @@ class RenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		# the GIL appropriately, we'll get a deadlock when the Display signals
 		# above try to enter python on the background thread.
 		dispatcher = Gaffer.LocalDispatcher()
-		dispatcher["jobDirectory"].setValue( "/tmp/testJobDirectory" )
+		dispatcher["jobsDirectory"].setValue( "/tmp/testJobDirectory" )
 		dispatcher["framesMode"].setValue( Gaffer.Dispatcher.FramesMode.CurrentFrame )
 		dispatcher["executeInBackground"].setValue( False )
 

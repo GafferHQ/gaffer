@@ -49,7 +49,7 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 	def setUp( self ) :
 
 		localDispatcher = Gaffer.Dispatcher.dispatcher( "Local" )
-		localDispatcher["jobDirectory"].setValue( "/tmp/dispatcherTest" )
+		localDispatcher["jobsDirectory"].setValue( "/tmp/dispatcherTest" )
 		localDispatcher["framesMode"].setValue( Gaffer.Dispatcher.FramesMode.CurrentFrame )
 
 	def testDispatcherRegistration( self ) :
@@ -364,16 +364,6 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		import time; time.sleep( 2 )
 
 		self.assertTrue( os.path.isfile( s.context().substitute( s["n1"]["fileName"].getValue() ) ) )
-
-	def testBadJobDirectory( self ) :
-
-		dispatcher = Gaffer.LocalDispatcher()
-		self.assertEqual( dispatcher["jobName"].getValue(), "" )
-		self.assertEqual( dispatcher["jobDirectory"].getValue(), "" )
-		jobDir = dispatcher.jobDirectory( Gaffer.Context() )
-		self.assertNotEqual( jobDir, "" )
-		self.assertTrue( os.path.exists( jobDir ) )
-		shutil.rmtree( jobDir )
 
 	def testMixedForegroundAndBackground( self ) :
 

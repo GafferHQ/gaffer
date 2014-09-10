@@ -188,7 +188,7 @@ class DispatcherWrapper : public NodeWrapper<Dispatcher>
 
 };
 
-struct DispatchSlotCaller
+struct PreDispatchSlotCaller
 {
 	bool operator()( boost::python::object slot, const Dispatcher *d, const std::vector<ExecutableNodePtr> &nodes )
 	{
@@ -207,6 +207,28 @@ struct DispatchSlotCaller
 			PyErr_PrintEx( 0 ); // clears the error status
 		}
 		return false;
+	}
+};
+
+struct PostDispatchSlotCaller
+{
+	boost::signals::detail::unusable operator()( boost::python::object slot, const Dispatcher *d, const std::vector<ExecutableNodePtr> &nodes, bool success )
+	{
+		try
+		{
+			list nodeList;
+			for( std::vector<ExecutableNodePtr>::const_iterator nIt = nodes.begin(); nIt != nodes.end(); nIt++ )
+			{
+				nodeList.append( *nIt );
+			}
+			DispatcherPtr dd = const_cast<Dispatcher*>(d);
+			slot( dd, nodeList, success );
+		}
+		catch( const error_already_set &e )
+		{
+			PyErr_PrintEx( 0 ); // clears the error status
+		}
+		return boost::signals::detail::unusable();
 	}
 };
 
@@ -239,5 +261,6 @@ void GafferBindings::bindDispatcher()
 		.def( "blindData", &DispatcherWrapper::taskBatchGetBlindData )
 	;
 
-	SignalBinder<Dispatcher::DispatchSignal, DefaultSignalCaller<Dispatcher::DispatchSignal>, DispatchSlotCaller >::bind( "DispatchSignal" );
+	SignalBinder<Dispatcher::PreDispatchSignal, DefaultSignalCaller<Dispatcher::PreDispatchSignal>, PreDispatchSlotCaller >::bind( "PreDispatchSignal" );
+	SignalBinder<Dispatcher::PostDispatchSignal, DefaultSignalCaller<Dispatcher::PostDispatchSignal>, PostDispatchSlotCaller >::bind( "PostDispatchSignal" );
 }
