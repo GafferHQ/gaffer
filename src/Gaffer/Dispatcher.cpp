@@ -120,13 +120,16 @@ private:
 
 void Dispatcher::dispatch( const std::vector<NodePtr> &nodes ) const
 {
+	// clear job directory, so that if our node validation fails,
+	// jobDirectory() won't return the result from the previous dispatch.
+	m_jobDirectory = "";
+
+	// validate the nodes we've been given
+
 	if ( nodes.empty() )
 	{
 		throw IECore::Exception( getName().string() + ": Must specify at least one node to dispatch." );
 	}
-
-	const Context *context = Context::current();
-	m_jobDirectory = createJobDirectory( context );
 
 	std::vector<ExecutableNodePtr> executables;
 	const ScriptNode *script = (*nodes.begin())->scriptNode();
@@ -158,6 +161,10 @@ void Dispatcher::dispatch( const std::vector<NodePtr> &nodes ) const
 			throw IECore::Exception( getName().string() + ": Dispatched nodes must be ExecutableNodes or Boxes containing ExecutableNodes." );
 		}
 	}
+
+	// create the job directory now, so it's available in preDispatchSignal().
+	const Context *context = Context::current();
+	m_jobDirectory = createJobDirectory( context );
 
 	// this object calls this->preDispatchSignal() in its constructor and this->postDispatchSignal()
 	// in its destructor, thereby guaranteeing that we always call this->postDispatchSignal().
