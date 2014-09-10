@@ -1,3 +1,35 @@
+# 0.1.0.0
+
+#### Apps
+
+- The "gui" app now tolerates errors when loading scripts from the command line. Note that currently errors are only reported to the shell.
+- The "execute" app can now handle nodes inside Boxes.
+
+#### Core
+
+- Improved version numbering (#980)
+	- Versions are now MILESTONE.MAJOR.MINOR.PATCH
+		- Changes to MILESTONE version denote major development landmarks
+		- Changes to MAJOR version denote backwards incompatible changes
+		- Changes to MINOR version denote new backwards compatible features
+		- Changes to PATCH version denote bug fixes
+	- Added Gaffer.About.compatibilityVersion() method
+	- Added GAFFER_COMPATIBILITY_VERSION macro for conditional compilation of C++ extensions
+- Fixed bug whereby GraphComponent::setName() could allow duplicate names
+- Dispatcher improvements
+	- `Dispatcher::postDispatchSignal()` is now always executed, even if execution is cancelled or fails. A new boolean argument is passed to specify whether or not dispatch succeeded.
+	- Dispatcher now creates job directories automatically, so derived classes don't have to
+
+#### Incompatible changes
+
+- `Dispatcher::postDispatchSignal()` signature change.
+- Dispatcher jobDirectory() semantics change.
+- Dispatcher jobDirectoryPlug() -> jobsDirectoryPlug() rename.
+
+#### Build
+
+- Requires Cortex 9.0.0-a5
+
 # 0.101.0
 
 #### Core
