@@ -1,7 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2012, John Haddon. All rights reserved.
-#  Copyright (c) 2012-2014, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,54 +34,33 @@
 #
 ##########################################################################
 
-from _GafferSceneUI import *
+import unittest
 
-from SceneHierarchy import SceneHierarchy
-from SceneInspector import SceneInspector
-from FilterPlugValueWidget import FilterPlugValueWidget
-import SceneNodeUI
-import SceneReaderUI
-import SceneProcessorUI
-import FilteredSceneProcessorUI
-import PruneUI
-import SubTreeUI
-import OutputsUI
-import OptionsUI
-import OpenGLAttributesUI
-import SceneContextVariablesUI
-import SceneWriterUI
-import StandardOptionsUI
-import StandardAttributesUI
-import ShaderUI
-import OpenGLShaderUI
-import ObjectSourceUI
-import TransformUI
-import AttributesUI
-import LightUI
-import InteractiveRenderUI
-import SphereUI
-import MapProjectionUI
-import MapOffsetUI
-import CustomAttributesUI
-import CustomOptionsUI
-import SceneViewToolbar
-import SceneSwitchUI
-import ShaderSwitchUI
-import ShaderAssignmentUI
-import ParentConstraintUI
-import ParentUI
-import PrimitiveVariablesUI
-import DuplicateUI
-import GridUI
-import SetFilterUI
-import DeleteGlobalsUI
-import DeleteOptionsUI
-import ExternalProceduralUI
+import IECore
 
-# then all the PathPreviewWidgets. note that the order
-# of import controls the order of display.
+import GafferScene
+import GafferSceneTest
 
-from AlembicPathPreview import AlembicPathPreview
-from SceneReaderPathPreview import SceneReaderPathPreview
+class ExternalProceduralTest( GafferSceneTest.SceneTestCase ) :
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferSceneUI" )
+	def test( self ) :
+
+		n = GafferScene.ExternalProcedural()
+		self.assertTrue( n["name"].getValue(), "procedural" )
+		
+		self.assertSceneValid( n["out"] )
+		
+		n["bound"].setValue( IECore.Box3f( IECore.V3f( 1, 2, 3 ), IECore.V3f( 4, 5, 6 ) ) )
+		n["fileName"].setValue( "test.so" )
+		n["parameters"].addMember( "testFloat", 1.0 )
+		
+		p = n["out"].object( "/procedural" )
+		
+		self.assertTrue( isinstance( p, IECore.ExternalProcedural ) )
+		self.assertEqual( p.getFileName(), "test.so" )
+		self.assertEqual( p.getBound(), IECore.Box3f( IECore.V3f( 1, 2, 3 ), IECore.V3f( 4, 5, 6 ) ) )
+		self.assertEqual( p.parameters().keys(), [ "testFloat" ] )
+		self.assertEqual( p.parameters()["testFloat"], IECore.FloatData( 1.0 ) )
+		
+if __name__ == "__main__":
+	unittest.main()

@@ -93,6 +93,7 @@
 #include "GafferSceneBindings/SceneAlgoBinding.h"
 #include "GafferSceneBindings/CoordinateSystemBinding.h"
 #include "GafferSceneBindings/DeleteGlobalsBinding.h"
+#include "GafferSceneBindings/ExternalProceduralBinding.h"
 
 using namespace boost::python;
 using namespace GafferScene;
@@ -169,5 +170,6 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	bindFreezeTransform();
 	bindSceneAlgo();
 	bindCoordinateSystem();
+	bindExternalProcedural();
 
 }

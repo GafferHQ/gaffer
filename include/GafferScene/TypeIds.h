@@ -117,6 +117,7 @@ enum TypeId
 	DeleteGlobalsTypeId = 110572,
 	DeleteOptionsTypeId = 110573,
 	DeleteOutputsTypeId = 110574,
+	ExternalProceduralTypeId = 110575,
 
 	LastTypeId = 110650
 };
