@@ -102,6 +102,7 @@ from FilterTest import FilterTest
 from SceneAlgoTest import SceneAlgoTest
 from CoordinateSystemTest import CoordinateSystemTest
 from DeleteOutputsTest import DeleteOutputsTest
+from ExternalProceduralTest import ExternalProceduralTest
 
 if __name__ == "__main__":
 	import unittest
