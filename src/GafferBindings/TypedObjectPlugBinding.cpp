@@ -125,7 +125,6 @@ static typename T::Ptr construct(
 template<typename T>
 static void bind()
 {
-	typedef typename T::ValuePtr V;
 
 	scope s = PlugClass<T>()
 		.def( "__init__", make_constructor( construct<T>, default_call_policies(),

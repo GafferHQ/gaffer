@@ -355,7 +355,6 @@ static Plug *loadCompoundNumericParameter( const OSLQuery::Parameter *parameter,
 
 	if( existingPlug )
 	{
-		typedef typename PlugType::ChildType ChildType;
 		for( size_t i = 0, e = existingPlug->children().size(); i < e; ++i )
 		{
 			transferConnectionOrValue(
