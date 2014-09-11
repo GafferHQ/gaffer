@@ -38,14 +38,14 @@
 #ifndef GAFFERSCENE_FILESOURCE_H
 #define GAFFERSCENE_FILESOURCE_H
 
-#include "GafferScene/Source.h"
+#include "GafferScene/SceneNode.h"
 
 namespace GafferScene
 {
 
 /// The SceneNode class is the base class for all Nodes which are capable of loading
 /// a scene from a file.
-class FileSource : public Source
+class FileSource : public SceneNode
 {
 
 	public :
@@ -53,7 +53,7 @@ class FileSource : public Source
 		FileSource( const std::string &name=defaultName<FileSource>() );
 		virtual ~FileSource();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::FileSource, FileSourceTypeId, Source )
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::FileSource, FileSourceTypeId, SceneNode )
 
 		/// Holds the name of the file to be loaded.
 		Gaffer::StringPlug *fileNamePlug();

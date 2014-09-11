@@ -106,18 +106,35 @@ void AlembicSource::plugSet( Gaffer::Plug *plug )
 void AlembicSource::hashBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
 	FileSource::hashBound( path, context, parent, h );
+	h.append( &(path[0]), path.size() );
 	h.append( context->getFrame() );
 }
 
 void AlembicSource::hashTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
 	FileSource::hashTransform( path, context, parent, h );
+	h.append( &(path[0]), path.size() );
+	h.append( context->getFrame() );
+}
+
+void AlembicSource::hashAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	FileSource::hashAttributes( path, context, parent, h );
+	h.append( &(path[0]), path.size() );
 	h.append( context->getFrame() );
 }
 
 void AlembicSource::hashObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
 	FileSource::hashObject( path, context, parent, h );
+	h.append( &(path[0]), path.size() );
+	h.append( context->getFrame() );
+}
+
+void AlembicSource::hashChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	FileSource::hashChildNames( path, context, parent, h );
+	h.append( &(path[0]), path.size() );
 	h.append( context->getFrame() );
 }
 

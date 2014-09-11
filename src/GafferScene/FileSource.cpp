@@ -45,7 +45,7 @@ IE_CORE_DEFINERUNTIMETYPED( FileSource );
 size_t FileSource::g_firstPlugIndex = 0;
 
 FileSource::FileSource( const std::string &name )
-	:	Source( name )
+	:	SceneNode( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new StringPlug( "fileName" ) );
@@ -78,7 +78,7 @@ const Gaffer::IntPlug *FileSource::refreshCountPlug() const
 
 void FileSource::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
 {
-	Source::affects( input, outputs );
+	SceneNode::affects( input, outputs );
 
 	if( input == fileNamePlug() || input == refreshCountPlug() )
 	{
@@ -91,7 +91,7 @@ void FileSource::affects( const Plug *input, AffectedPlugsContainer &outputs ) c
 
 void FileSource::hashBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	Source::hashBound( path, context, parent, h );
+	SceneNode::hashBound( path, context, parent, h );
 
 	fileNamePlug()->hash( h );
 	refreshCountPlug()->hash( h );
@@ -99,7 +99,7 @@ void FileSource::hashBound( const ScenePath &path, const Gaffer::Context *contex
 
 void FileSource::hashTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	Source::hashTransform( path, context, parent, h );
+	SceneNode::hashTransform( path, context, parent, h );
 
 	fileNamePlug()->hash( h );
 	refreshCountPlug()->hash( h );
@@ -107,7 +107,7 @@ void FileSource::hashTransform( const ScenePath &path, const Gaffer::Context *co
 
 void FileSource::hashAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	Source::hashAttributes( path, context, parent, h );
+	SceneNode::hashAttributes( path, context, parent, h );
 
 	fileNamePlug()->hash( h );
 	refreshCountPlug()->hash( h );
@@ -115,7 +115,7 @@ void FileSource::hashAttributes( const ScenePath &path, const Gaffer::Context *c
 
 void FileSource::hashObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	Source::hashObject( path, context, parent, h );
+	SceneNode::hashObject( path, context, parent, h );
 
 	fileNamePlug()->hash( h );
 	refreshCountPlug()->hash( h );
@@ -123,7 +123,7 @@ void FileSource::hashObject( const ScenePath &path, const Gaffer::Context *conte
 
 void FileSource::hashChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	Source::hashChildNames( path, context, parent, h );
+	SceneNode::hashChildNames( path, context, parent, h );
 
 	fileNamePlug()->hash( h );
 	refreshCountPlug()->hash( h );
@@ -131,7 +131,7 @@ void FileSource::hashChildNames( const ScenePath &path, const Gaffer::Context *c
 
 void FileSource::hashGlobals( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	Source::hashGlobals( context, parent, h );
+	SceneNode::hashGlobals( context, parent, h );
 
 	fileNamePlug()->hash( h );
 	refreshCountPlug()->hash( h );
