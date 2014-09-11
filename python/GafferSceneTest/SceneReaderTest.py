@@ -216,40 +216,6 @@ class SceneReaderTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( s["out"].attributes( "/" ), IECore.CompoundObject() )
 		self.assertEqual( s["out"].object( "/" ), IECore.NullObject() )
 
-	def testTagsAsAttributes( self ) :
-
-		s = IECore.SceneCache( "/tmp/test.scc", IECore.IndexedIO.OpenMode.Write )
-
-		sphereGroup = s.createChild( "sphereGroup" )
-		sphereGroup.writeTags( [ "chrome" ] )
-		sphere = sphereGroup.createChild( "sphere" )
-		sphere.writeObject( IECore.SpherePrimitive(), 0 )
-
-		planeGroup = s.createChild( "planeGroup" )
-		plane = planeGroup.createChild( "plane" )
-		plane.writeTags( [ "wood", "something" ] )
-		plane.writeObject( IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ), 0 )
-
-		del s, sphereGroup, sphere, planeGroup, plane
-
-		s = GafferScene.SceneReader()
-		s["fileName"].setValue( "/tmp/test.scc" )
-		s["refreshCount"].setValue( self.uniqueInt( "/tmp/test.scc" ) ) # account for our changing of file contents between tests
-
-		self.assertEqual( len( s["out"].attributes( "/" ) ), 0 )
-
-		a = s["out"].attributes( "/sphereGroup" )
-		self.assertEqual( len( a ), 1 )
-		self.assertEqual( a["user:tag:chrome"], IECore.BoolData( True ) )
-
-		self.assertEqual( len( s["out"].attributes( "/sphereGroup/sphere" ) ), 0 )
-		self.assertEqual( len( s["out"].attributes( "/planeGroup" ) ), 0 )
-
-		a = s["out"].attributes( "/planeGroup/plane" )
-		self.assertEqual( len( a ), 2 )
-		self.assertEqual( a["user:tag:wood"], IECore.BoolData( True ) )
-		self.assertEqual( a["user:tag:something"], IECore.BoolData( True ) )
-
 	def testChildNamesHash( self ) :
 
 		s = IECore.SceneCache( "/tmp/test.scc", IECore.IndexedIO.OpenMode.Write )
