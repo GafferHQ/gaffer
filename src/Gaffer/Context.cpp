@@ -55,13 +55,13 @@ using namespace IECore;
 static InternedString g_frame( "frame" );
 
 Context::Context()
-	:	m_changedSignal( NULL )
+	:	m_changedSignal( NULL ), m_hashValid( false )
 {
 	set( g_frame, 1.0f );
 }
 
 Context::Context( const Context &other, Ownership ownership )
-	:	m_map( other.m_map ), m_changedSignal( NULL )
+	:	m_map( other.m_map ), m_changedSignal( NULL ), m_hash( other.m_hash ), m_hashValid( other.m_hashValid )
 {
 	// We used the (shallow) Map copy constructor in our initialiser above
 	// because it offers a big performance win over iterating and inserting copies
@@ -102,6 +102,15 @@ Context::~Context()
 	delete m_changedSignal;
 }
 
+void Context::changed( const IECore::InternedString &name )
+{
+	m_hashValid = false;
+	if( m_changedSignal )
+	{
+		(*m_changedSignal)( this, name );
+	}
+}
+
 void Context::names( std::vector<IECore::InternedString> &names ) const
 {
 	for( Map::const_iterator it = m_map.begin(), eIt = m_map.end(); it != eIt; it++ )
@@ -137,13 +146,25 @@ Context::ChangedSignal &Context::changedSignal()
 
 IECore::MurmurHash Context::hash() const
 {
-	IECore::MurmurHash result;
+	if( m_hashValid )
+	{
+		return m_hash;
+	}
+
+	m_hash = IECore::MurmurHash();
 	for( Map::const_iterator it = m_map.begin(), eIt = m_map.end(); it != eIt; it++ )
 	{
-		result.append( it->first );
-		it->second.data->hash( result );
+		/// \todo Perhaps at some point the UI should use a different container for
+		/// these "not computationally important" values, so we wouldn't have to skip
+		/// them here.
+		if( it->first.string().compare( 0, 3, "ui:" ) )
+		{
+			m_hash.append( it->first );
+			it->second.data->hash( m_hash );
+		}
 	}
-	return result;
+	m_hashValid = true;
+	return m_hash;
 }
 
 bool Context::operator == ( const Context &other ) const

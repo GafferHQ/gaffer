@@ -41,6 +41,7 @@
 
 #include "boost/bind.hpp"
 #include "boost/format.hpp"
+#include "boost/unordered_map.hpp"
 
 #include "IECore/LRUCache.h"
 
@@ -52,12 +53,17 @@
 using namespace Gaffer;
 
 //////////////////////////////////////////////////////////////////////////
-// Computation implementation
-// The computation class is responsible for managing the transient storage
-// necessary for computed results, and for managing the call to Node::compute().
-// One day it may also be responsible for managing a cache of previous
-// results and maybe even shipping some computations off over the network
-// to a special computation server of some sort.
+//
+// The computation class is responsible for managing calls to
+// ComputeNode::hash(), ComputNode::compute() and Plug::setFrom()
+// in order to acquire the output values for plugs. It manages a
+// per-thread stack of current computations, and caches the results of
+// previous computations to avoid repeating work.
+//
+// In the future we might consider abstracting the basic concept of
+// a computation and allowing different implementations - perhaps even
+// network based ones.
+//
 //////////////////////////////////////////////////////////////////////////
 
 class ValuePlug::Computation
@@ -68,17 +74,37 @@ class ValuePlug::Computation
 		Computation( const ValuePlug *resultPlug )
 			:	m_resultPlug( resultPlug ), m_resultValue( NULL )
 		{
-			g_threadComputations.local().push( this );
+			g_threadData.local().computationStack.push( this );
 		}
 
 		~Computation()
 		{
-			g_threadComputations.local().pop();
+			ThreadData &threadData = g_threadData.local();
+			threadData.computationStack.pop();
+			if( threadData.computationStack.empty() )
+			{
+				threadData.hashCache.clear();
+			}
 		}
 
 		const ValuePlug *resultPlug() const
 		{
 			return m_resultPlug;
+		}
+
+		IECore::MurmurHash hash() const
+		{
+			HashCache &hashCache = g_threadData.local().hashCache;
+			HashCacheKey key( m_resultPlug, Context::current()->hash() );
+			HashCache::iterator it = hashCache.find( key );
+			if( it != hashCache.end() )
+			{
+				return it->second;
+			}
+
+			IECore::MurmurHash h = hashInternal();
+			hashCache[key] = h;
+			return h;
 		}
 
 		IECore::ConstObjectPtr compute()
@@ -102,7 +128,7 @@ class ValuePlug::Computation
 			// do the cache lookup/computation.
 			if( cacheable )
 			{
-				IECore::MurmurHash hash = m_resultPlug->hash();
+				IECore::MurmurHash hash = this->hash();
 				m_resultValue = g_valueCache.get( hash );
 				if( !m_resultValue )
 				{
@@ -138,7 +164,7 @@ class ValuePlug::Computation
 
 		static Computation *current()
 		{
-			ComputationStack &s = g_threadComputations.local();
+			ComputationStack &s = g_threadData.local().computationStack;
 			if( !s.size() )
 			{
 				return 0;
@@ -162,6 +188,50 @@ class ValuePlug::Computation
 		}
 
 	private :
+
+		// Calculates the hash for m_resultPlug - not using any cache at all.
+		IECore::MurmurHash hashInternal() const
+		{
+			const ValuePlug *input = m_resultPlug->getInput<ValuePlug>();
+			if( input )
+			{
+				if( input->typeId() == m_resultPlug->typeId() )
+				{
+					// we can assume that setFrom( input ) would perform no
+					// conversion on the value, so by sharing hashes we also
+					// get to share cache entries.
+					return input->hash();
+				}
+				else
+				{
+					// it would be unsafe to assume we can share cache entries,
+					// because conversion is probably performed by setFrom( input ).
+					// hash in a little extra something to represent the conversion
+					// and break apart the cache entries.
+					IECore::MurmurHash h = input->hash();
+					h.append( input->typeId() );
+					h.append( m_resultPlug->typeId() );
+					return h;
+				}
+			}
+			else
+			{
+				const ComputeNode *n = m_resultPlug->ancestor<ComputeNode>();
+				if( !n )
+				{
+					throw IECore::Exception( boost::str( boost::format( "Unable to compute hash for Plug \"%s\" as it has no ComputeNode." ) % m_resultPlug->fullName() ) );
+				}
+
+				IECore::MurmurHash h;
+				n->hash( m_resultPlug, Context::current(), h );
+				if( h == IECore::MurmurHash() )
+				{
+					throw IECore::Exception( boost::str( boost::format( "ComputeNode::hash() not implemented for Plug \"%s\"." ) % m_resultPlug->fullName() ) );
+				}
+
+				return h;
+			}
+		}
 
 		// Fills in m_resultValue by calling ComputeNode::compute() or ValuePlug::setFrom().
 		// Throws if the result was not successfully retrieved.
@@ -197,9 +267,39 @@ class ValuePlug::Computation
 		const ValuePlug *m_resultPlug;
 		IECore::ConstObjectPtr m_resultValue;
 
+		// During a single graph evaluation, we actually call ValuePlug::hash()
+		// many times for the same plugs. First hash() is called for the terminating plug,
+		// which will call hash() for all the upstream plugs, and then compute() is called
+		// for the terminating plug, which will call getValue() on the upstream plugs. But
+		// those upstream plugs will need to call their hash() again in getValue(), so their
+		// value can be cached. This ripples on up the chain, leading to quadratic complexity
+		// in the length of the chain of nodes - not good. Thanks is due to David Minor for
+		// being the first to point this out.
+		//
+		// We address this problem by keeping a small per-thread cache of hashes, indexed
+		// by the plug the hash is for and the context the hash was performed in. The
+		// typedefs below describe that data structure. Note that the entries in this cache
+		// are short lived - we flush the cache upon completion of each evaluation of the
+		// graph, as subsequent changes to plug values and connections invalidate our entries.
+		typedef std::pair<const ValuePlug *, IECore::MurmurHash> HashCacheKey;
+		typedef boost::unordered_map<HashCacheKey, IECore::MurmurHash> HashCache;
+
+		// A computation starts with a call to ValuePlug::getValue(), but the compute()
+		// that triggers will make calls to getValue() on upstream plugs too. We use this
+		// stack to keep track of the current computation - each upstream evaluation pushes
+		// a new entry on to the stack, and the full graph evaluation is complete when we pop
+		// the last entry.
 		typedef std::stack<Computation *> ComputationStack;
-		typedef tbb::enumerable_thread_specific<ComputationStack> ThreadSpecificComputationStack;
-		static ThreadSpecificComputationStack g_threadComputations;
+
+		// To support multithreading, each thread has it's own HashCache and ComputationStack,
+		// stored in g_threadData.
+		struct ThreadData
+		{
+			HashCache hashCache;
+			ComputationStack computationStack;
+		};
+
+		static tbb::enumerable_thread_specific<ThreadData> g_threadData;
 
 		static IECore::ObjectPtr nullGetter( const IECore::MurmurHash &h, size_t &cost )
 		{
@@ -207,12 +307,15 @@ class ValuePlug::Computation
 			return NULL;
 		}
 
+		// A cache mapping from ValuePlug::hash() to the result of the previous computation
+		// for that hash. This allows us to cache results for faster repeat evaluation. Unlike
+		// the HashCache, the ValueCache persists from one graph evaluation to the next.
 		typedef IECore::LRUCache<IECore::MurmurHash, IECore::ConstObjectPtr> ValueCache;
 		static ValueCache g_valueCache;
 
 };
 
-ValuePlug::Computation::ThreadSpecificComputationStack ValuePlug::Computation::g_threadComputations;
+tbb::enumerable_thread_specific<ValuePlug::Computation::ThreadData> ValuePlug::Computation::g_threadData;
 ValuePlug::Computation::ValueCache ValuePlug::Computation::g_valueCache( nullGetter, 1024 * 1024 * 500 );
 
 //////////////////////////////////////////////////////////////////////////
@@ -360,54 +463,22 @@ bool ValuePlug::settable() const
 
 IECore::MurmurHash ValuePlug::hash() const
 {
-	IECore::MurmurHash h;
-	const ValuePlug *input = getInput<ValuePlug>();
-	if( input )
+	if( !getInput<Plug>() )
 	{
-		if( input->typeId() == typeId() )
+		if( direction() == In || !ancestor<ComputeNode>() )
 		{
-			// we can assume that setFrom( input ) would perform no
-			// conversion on the value, so by sharing hashes we also
-			// get to share cache entries.
-			h = input->hash();
-		}
-		else
-		{
-			// it would be unsafe to assume we can share cache entries,
-			// because conversion is probably performed by setFrom( input ).
-			// hash in a little extra something to represent the conversion
-			// and break apart the cache entries.
-			h = input->hash();
-			h.append( input->typeId() );
-			h.append( typeId() );
-		}
-	}
-	else
-	{
-		if( direction() == Plug::In )
-		{
-			h = m_staticValue->hash();
-		}
-		else
-		{
-			const ComputeNode *n = ancestor<ComputeNode>();
-			if( n )
-			{
-				IECore::MurmurHash emptyHash;
-				n->hash( this, Context::current(), h );
-				if( h == emptyHash )
-				{
-					throw IECore::Exception( boost::str( boost::format( "ComputeNode::hash() not implemented for Plug \"%s\"." ) % fullName() ) );
-				}
-			}
-			else
-			{
-				h = m_staticValue->hash();
-			}
+			// no input connection, and no means of computing
+			// a value. there can only ever be a single value,
+			// which is stored directly on the plug - so we return
+			// the hash of that.
+			return m_staticValue->hash();
 		}
 	}
 
-	return h;
+	// a plug with an input connection or an output plug on a ComputeNode. there can be many values -
+	// one per context. the computation class is responsible for figuring out the hash.
+	Computation computation( this );
+	return computation.hash();
 }
 
 void ValuePlug::hash( IECore::MurmurHash &h ) const

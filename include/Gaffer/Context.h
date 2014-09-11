@@ -42,6 +42,7 @@
 
 #include "IECore/InternedString.h"
 #include "IECore/Data.h"
+#include "IECore/MurmurHash.h"
 
 namespace Gaffer
 {
@@ -76,7 +77,7 @@ class Context : public IECore::RefCounted
 			/// doesn't have sole ownership of the value, other code
 			/// could change the value without its knowledge. It is the
 			/// responsibility of client code to either ensure that this does
-			/// not happen, or to manually emit changedSignal() as
+			/// not happen, or to manually call Context::changed() as
 			/// necessary when it does. This avoids the overhead of copying
 			/// values when setting them.
 			Shared,
@@ -120,6 +121,10 @@ class Context : public IECore::RefCounted
 		/// an Exception.
 		template<typename T>
 		typename Accessor<T>::ResultType get( const IECore::InternedString &name, typename Accessor<T>::ResultType defaultValue ) const;
+
+		/// When a Shared or Borrowed value is changed behind the scenes, this method
+		/// must be called to notify the Context of the change.
+		void changed( const IECore::InternedString &name );
 
 		/// Fills the specified vector with the names of all items in the Context.
 		void names( std::vector<IECore::InternedString> &names ) const;
@@ -186,6 +191,8 @@ class Context : public IECore::RefCounted
 
 		Map m_map;
 		ChangedSignal *m_changedSignal;
+		mutable IECore::MurmurHash m_hash;
+		mutable bool m_hashValid;
 
 };
 

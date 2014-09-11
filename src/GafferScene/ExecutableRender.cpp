@@ -85,20 +85,7 @@ IECore::MurmurHash ExecutableRender::hash( const Gaffer::Context *context ) cons
 	IECore::MurmurHash h = ExecutableNode::hash( context );
 	/// \todo hash the actual scene when we have a hierarchyHash
 	h.append( (uint64_t)scenePlug );
-
-	std::vector<IECore::InternedString> names;
-	context->names( names );
-	for ( std::vector<IECore::InternedString>::const_iterator it = names.begin(); it != names.end(); ++it )
-	{
-		if ( it->string().compare( 0, 3, "ui:" ) )
-		{
-			h.append( *it );
-			if ( const IECore::Data *data = context->get<const IECore::Data>( *it ) )
-			{
-				data->hash( h );
-			}
-		}
-	}
+	h.append( context->hash() );
 
 	return h;
 }

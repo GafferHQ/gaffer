@@ -418,6 +418,52 @@ class ContextTest( GafferTest.TestCase ) :
 
 		self.assertEqual( c1.get( "testIntVector", _copy=False ).refCount(), r )
 
+	def testHash( self ) :
+
+		c = Gaffer.Context()
+		hashes = [ c.hash() ]
+
+		c["test"] = 1
+		hashes.append( c.hash() )
+
+		c["test"] = 2
+		hashes.append( c.hash() )
+
+		c["test2"] = "test2"
+		hashes.append( c.hash() )
+
+		self.assertEqual( len( hashes ), 4 )
+		self.assertEqual( len( set( str( h ) for h in hashes ) ), len( hashes ) )
+
+		c["test2"] = "test2" # no change
+		self.assertEqual( c.hash(), hashes[-1] )
+
+	def testChanged( self ) :
+
+		c = Gaffer.Context()
+		c["test"] = IECore.StringVectorData( [ "one" ] )
+		h = c.hash()
+
+		cs = GafferTest.CapturingSlot( c.changedSignal() )
+
+		d = c.get( "test", _copy = False ) # dangerous! the context won't know if we make changes
+		d.append( "two" )
+		self.assertEqual( c.get( "test" ), IECore.StringVectorData( [ "one", "two" ] ) )
+		self.assertEqual( len( cs ), 0 )
+
+		c.changed( "test" ) # let the context know what we've been up to
+		self.assertEqual( len( cs ), 1 )
+		self.assertEqual( cs[0], ( c, "test" ) )
+		self.assertNotEqual( c.hash(), h )
+
+	def testHashIgnoresUIEntries( self ) :
+
+		c = Gaffer.Context()
+		h = c.hash()
+
+		c["ui:test"] = 1
+		self.assertEqual( h, c.hash() )
+
 if __name__ == "__main__":
 	unittest.main()
 
