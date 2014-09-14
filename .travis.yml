@@ -1,5 +1,7 @@
 language: cpp
 
+install: python ./config/travis/installDependencies.py
+
 script: scons build CXX=$CXX
 
 compiler:
