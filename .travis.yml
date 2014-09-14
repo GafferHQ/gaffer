@@ -1,0 +1,7 @@
+language: cpp
+
+script: scons build CXX=$CXX
+
+compiler:
+    - gcc
+    - clang
