@@ -7,7 +7,7 @@ before_install:
 
 install: python ./config/travis/installDependencies.py
 
-script: scons build CXX=$CXX
+script: scons build CXX=$CXX ENV_VARS_TO_IMPORT=PATH
 
 compiler:
     - gcc
