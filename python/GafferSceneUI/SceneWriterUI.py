@@ -51,3 +51,4 @@ GafferUI.PlugValueWidget.registerCreator(
 )
 
 GafferUI.Nodule.registerNodule( GafferScene.SceneWriter, "fileName", lambda plug: None )
+GafferUI.Nodule.registerNodule( GafferScene.SceneWriter, "out", lambda plug : None )

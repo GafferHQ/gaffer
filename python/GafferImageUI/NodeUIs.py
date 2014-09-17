@@ -104,6 +104,7 @@ GafferUI.PlugValueWidget.registerCreator( GafferImage.ImageWriter, "channels", G
 GafferUI.Nodule.registerNodule( GafferImage.ImageWriter, "fileName", lambda plug : None )
 GafferUI.Nodule.registerNodule( GafferImage.ImageWriter, "channels", lambda plug : None )
 GafferUI.Nodule.registerNodule( GafferImage.ImageWriter, "writeMode", lambda plug : None )
+GafferUI.Nodule.registerNodule( GafferImage.ImageWriter, "out", lambda plug : None )
 
 writeModeLabelsAndValues = [ ( "Scanline", 0), ( "Tile", 1 ) ]
 
