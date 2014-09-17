@@ -72,7 +72,6 @@ enum TypeId
 	PathFilterTypeId = 110527,
 	AttributesTypeId = 110528,
 	AlembicSourceTypeId = 110529,
-	SourceTypeId = 110530,
 	SceneContextVariablesTypeId = 110531,
 	StandardOptionsTypeId = 110532,
 	SubTreeTypeId = 110533,

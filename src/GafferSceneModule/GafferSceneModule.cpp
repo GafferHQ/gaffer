@@ -102,9 +102,7 @@ BOOST_PYTHON_MODULE( _GafferScene )
 {
 
 	bindScenePlug();
-
 	GafferBindings::DependencyNodeClass<SceneNode>();
-	GafferBindings::DependencyNodeClass<Source>();
 	GafferBindings::DependencyNodeClass<FileSource>();
 	GafferBindings::DependencyNodeClass<SceneProcessor>();
 	GafferBindings::DependencyNodeClass<FilteredSceneProcessor>();

@@ -41,7 +41,7 @@
 #include "Gaffer/TypedObjectPlug.h"
 #include "Gaffer/TransformPlug.h"
 
-#include "GafferScene/Source.h"
+#include "GafferScene/SceneNode.h"
 
 namespace GafferScene
 {
@@ -74,6 +74,8 @@ class ObjectSourceBase : public BaseType
 		const Gaffer::ObjectPlug *sourcePlug() const;
 
 		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual void hashGlobals( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const;
+		virtual void hashAttributes( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const;
 		virtual void hashBound( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const;
 		virtual void hashTransform( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const;
 		virtual void hashObject( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const;
@@ -97,7 +99,7 @@ class ObjectSourceBase : public BaseType
 
 };
 
-typedef ObjectSourceBase<Source> ObjectSource;
+typedef ObjectSourceBase<SceneNode> ObjectSource;
 IE_CORE_DECLAREPTR( ObjectSource );
 
 } // namespace GafferScene
