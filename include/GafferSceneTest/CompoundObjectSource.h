@@ -40,7 +40,7 @@
 
 #include "IECore/CompoundObject.h"
 
-#include "GafferScene/Source.h"
+#include "GafferScene/SceneNode.h"
 
 #include "GafferSceneTest/TypeIds.h"
 
@@ -49,7 +49,7 @@ namespace GafferSceneTest
 
 /// A source which turns a CompoundObject hierarchy into a scene.
 /// It's useful as a source node in unit tests.
-class CompoundObjectSource : public GafferScene::Source
+class CompoundObjectSource : public GafferScene::SceneNode
 {
 
 	public :
@@ -57,7 +57,7 @@ class CompoundObjectSource : public GafferScene::Source
 		CompoundObjectSource( const std::string &name=defaultName<CompoundObjectSource>() );
 		virtual ~CompoundObjectSource();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferSceneTest::CompoundObjectSource, CompoundObjectSourceTypeId, GafferScene::Source );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferSceneTest::CompoundObjectSource, CompoundObjectSourceTypeId, GafferScene::SceneNode );
 
 		Gaffer::ObjectPlug *inPlug();
 		const Gaffer::ObjectPlug *inPlug() const;
