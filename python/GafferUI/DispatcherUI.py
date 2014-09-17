@@ -72,7 +72,7 @@ def repeatPrevious( menu ) :
 
 	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
 	script = scriptWindow.scriptNode()
-	_execute( __previous( script ) )
+	_dispatch( __previous( script ) )
 
 ##################################################################################
 # Dispatcher Window
@@ -135,9 +135,7 @@ class _DispatcherWindow( GafferUI.Window ) :
 
 	def __dispatchClicked( self, button ) :
 
-		with self.parent().scriptNode().context() :
-			self.__dispatcher.dispatch( self.__nodes )
-		## \todo: update _executeUILastExecuted
+		_dispatch( self.__nodes )
 		self.close()
 
 	def __dispatcherChanged( self, menu ) :
@@ -245,15 +243,14 @@ GafferUI.Nodule.registerNodule( Gaffer.ExecutableNode, "dispatcher", lambda plug
 # Implementation Details
 ##########################################################################
 
-def _execute( nodes ) :
+def _dispatch( nodes ) :
 
 	script = nodes[0].scriptNode()
-	script._executeUILastExecuted = []
-
 	with script.context() :
 		__dispatcherWindow( script ).dispatcher().dispatch( nodes )
 
-	script._executeUILastExecuted = [ weakref.ref( node ) for node in nodes ]
+	scriptWindow = GafferUI.ScriptWindow.acquire( script )
+	scriptWindow._lastDispatch = [ weakref.ref( node ) for node in nodes ]
 
 __dispatcherWindowInstance = None
 def __dispatcherWindow( script ) :
@@ -294,18 +291,9 @@ def __selectionAvailable( menu ) :
 
 def __previous( script ) :
 
-	if not hasattr( script, "_executeUILastExecuted" ) :
-		return []
-
-	result = []
-	for w in script._executeUILastExecuted :
-		n = w()
-		if n is not None :
-			s = n.scriptNode()
-			if s is not None and s.isSame( script ) :
-				result.append( n )
-
-	return result
+	scriptWindow = GafferUI.ScriptWindow.acquire( script )
+	nodes = getattr( scriptWindow, "_lastDispatch", [] )
+	return [ w() for w in nodes if w() is not None and script.isSame( w().scriptNode() ) ]
 
 def __previousAvailable( menu ) :
 
