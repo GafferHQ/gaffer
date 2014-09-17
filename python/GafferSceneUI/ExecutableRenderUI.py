@@ -1,7 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2012, John Haddon. All rights reserved.
-#  Copyright (c) 2012-2014, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,55 +34,32 @@
 #
 ##########################################################################
 
-from _GafferSceneUI import *
+import IECore
 
-from SceneHierarchy import SceneHierarchy
-from SceneInspector import SceneInspector
-from FilterPlugValueWidget import FilterPlugValueWidget
-import SceneNodeUI
-import SceneReaderUI
-import SceneProcessorUI
-import FilteredSceneProcessorUI
-import PruneUI
-import SubTreeUI
-import OutputsUI
-import OptionsUI
-import OpenGLAttributesUI
-import SceneContextVariablesUI
-import SceneWriterUI
-import StandardOptionsUI
-import StandardAttributesUI
-import ShaderUI
-import OpenGLShaderUI
-import ObjectSourceUI
-import TransformUI
-import AttributesUI
-import LightUI
-import InteractiveRenderUI
-import SphereUI
-import MapProjectionUI
-import MapOffsetUI
-import CustomAttributesUI
-import CustomOptionsUI
-import SceneViewToolbar
-import SceneSwitchUI
-import ShaderSwitchUI
-import ShaderAssignmentUI
-import ParentConstraintUI
-import ParentUI
-import PrimitiveVariablesUI
-import DuplicateUI
-import GridUI
-import SetFilterUI
-import DeleteGlobalsUI
-import DeleteOptionsUI
-import ExternalProceduralUI
-import ExecutableRenderUI
+import Gaffer
+import GafferUI
+import GafferScene
 
-# then all the PathPreviewWidgets. note that the order
-# of import controls the order of display.
+##########################################################################
+# Metadata
+##########################################################################
 
-from AlembicPathPreview import AlembicPathPreview
-from SceneReaderPathPreview import SceneReaderPathPreview
+Gaffer.Metadata.registerNodeDescription(
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferSceneUI" )
+GafferScene.ExecutableRender,
+
+"""Base class for nodes which perform batch rendering.""",
+
+"in",
+"The scene to be rendered.",
+
+"out",
+"A pass-through of the input scene.",
+
+)
+
+##########################################################################
+# Nodules
+##########################################################################
+
+GafferUI.Nodule.registerNodule( GafferScene.ExecutableRender, "out", lambda plug : None )

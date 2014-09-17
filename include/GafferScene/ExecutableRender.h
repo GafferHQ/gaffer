@@ -64,6 +64,10 @@ class ExecutableRender : public Gaffer::ExecutableNode
 		ScenePlug *inPlug();
 		const ScenePlug *inPlug() const;
 
+		/// A direct pass-through of the input scene.
+		ScenePlug *outPlug();
+		const ScenePlug *outPlug() const;
+
 		virtual IECore::MurmurHash hash( const Gaffer::Context *context ) const;
 		/// Implemented to perform the render.
 		virtual void execute() const;
