@@ -35,6 +35,7 @@
 #
 ##########################################################################
 
+import cgi
 import math
 import difflib
 import itertools
@@ -363,7 +364,7 @@ class TextDiff( Diff ) :
 		elif isinstance( values[0], basestring ) :
 			return self.__formatStrings( [ str( v ) for v in values ] )
 		else :
-			return [ str( v ) for v in values ]
+			return [ cgi.escape( str( v ) ) for v in values ]
 
 	def __formatVectors( self, vectors ) :
 
@@ -445,29 +446,26 @@ class TextDiff( Diff ) :
 
 	def __formatStrings( self, strings ) :
 
-		if len( strings ) == 1 :
-			return strings
+		if len( strings ) == 1 or strings[0] == strings[1] or not self.__highlightDiffs :
+			return [ cgi.escape( s ) for s in strings ]
 
 		a = strings[0]
 		b = strings[1]
-
-		if a == b or not self.__highlightDiffs :
-			return strings
 
 		aFormatted = ""
 		bFormatted = ""
 		for op, a1, a2, b1, b2 in difflib.SequenceMatcher( None, a, b ).get_opcodes() :
 
 			if op == "equal" :
-				aFormatted += a[a1:a2]
-				bFormatted += b[b1:b2]
+				aFormatted += cgi.escape( a[a1:a2] )
+				bFormatted += cgi.escape( b[b1:b2] )
 			elif op == "replace" :
-				aFormatted += '<span class="diffA">' + a[a1:a2] + "</span>"
-				bFormatted += '<span class="diffB">' + b[b1:b2] + "</span>"
+				aFormatted += '<span class="diffA">' + cgi.escape( a[a1:a2] ) + "</span>"
+				bFormatted += '<span class="diffB">' + cgi.escape( b[b1:b2] ) + "</span>"
 			elif op == "delete" :
-				aFormatted += '<span class="diffA">' + a[a1:a2] + "</span>"
+				aFormatted += '<span class="diffA">' + cgi.escape( a[a1:a2] ) + "</span>"
 			elif op == "insert" :
-				bFormatted += '<span class="diffB">' + b[b1:b2] + "</span>"
+				bFormatted += '<span class="diffB">' + cgi.escape( b[b1:b2] ) + "</span>"
 
 		return [ aFormatted, bFormatted ]
 
