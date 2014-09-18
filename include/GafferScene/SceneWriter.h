@@ -65,6 +65,9 @@ class SceneWriter : public Gaffer::ExecutableNode
 		ScenePlug *inPlug();
 		const ScenePlug *inPlug() const;
 
+		ScenePlug *outPlug();
+		const ScenePlug *outPlug() const;
+
 		virtual IECore::MurmurHash hash( const Gaffer::Context *context ) const;
 
 		virtual void execute() const;

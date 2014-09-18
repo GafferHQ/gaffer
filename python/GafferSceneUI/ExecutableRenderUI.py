@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2013-2014, Image Engine Design inc. All rights reserved.
+#  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,21 +34,32 @@
 #
 ##########################################################################
 
+import IECore
+
 import Gaffer
 import GafferUI
 import GafferScene
 
-GafferUI.PlugValueWidget.registerCreator(
-	GafferScene.SceneWriter,
-	"fileName",
-	lambda plug : GafferUI.PathPlugValueWidget( plug,
-		path = Gaffer.FileSystemPath( "/", filter = Gaffer.FileSystemPath.createStandardFilter() ),
-		pathChooserDialogueKeywords = {
-			"bookmarks" : GafferUI.Bookmarks.acquire( plug, category = "sceneCache" ),
-			"leaf" : True,
-		},
-	),
+##########################################################################
+# Metadata
+##########################################################################
+
+Gaffer.Metadata.registerNodeDescription(
+
+GafferScene.ExecutableRender,
+
+"""Base class for nodes which perform batch rendering.""",
+
+"in",
+"The scene to be rendered.",
+
+"out",
+"A pass-through of the input scene.",
+
 )
 
-GafferUI.Nodule.registerNodule( GafferScene.SceneWriter, "fileName", lambda plug: None )
-GafferUI.Nodule.registerNodule( GafferScene.SceneWriter, "out", lambda plug : None )
+##########################################################################
+# Nodules
+##########################################################################
+
+GafferUI.Nodule.registerNodule( GafferScene.ExecutableRender, "out", lambda plug : None )

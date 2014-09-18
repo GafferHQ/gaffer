@@ -78,6 +78,7 @@ import SetFilterUI
 import DeleteGlobalsUI
 import DeleteOptionsUI
 import ExternalProceduralUI
+import ExecutableRenderUI
 
 # then all the PathPreviewWidgets. note that the order
 # of import controls the order of display.

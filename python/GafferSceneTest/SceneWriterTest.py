@@ -200,6 +200,24 @@ class SceneWriterTest( GafferSceneTest.SceneTestCase ) :
 		writer["in"].setInput( cube["out"] )
 		self.assertNotEqual( writer.hash( c ), current )
 
+	def testPassThrough( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["p"] = GafferScene.Plane()
+		s["w"] = GafferScene.SceneWriter()
+		s["w"]["in"].setInput( s["p"]["out"] )
+
+		self.assertScenesEqual( s["p"]["out"], s["w"]["out"] )
+
+	def testPassThroughSerialisation( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["w"] = GafferScene.SceneWriter()
+
+		ss = s.serialise()
+		self.assertFalse( "out" in ss )
+
 	def tearDown( self ) :
 
 		if os.path.exists( self.__testFile ) :

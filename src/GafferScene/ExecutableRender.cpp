@@ -57,6 +57,8 @@ ExecutableRender::ExecutableRender( const std::string &name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new ScenePlug( "in" ) );
+	addChild( new ScenePlug( "out", Plug::Out, Plug::Default & ~Plug::Serialisable ) );
+	outPlug()->setInput( inPlug() );
 }
 
 ExecutableRender::~ExecutableRender()
@@ -71,6 +73,16 @@ ScenePlug *ExecutableRender::inPlug()
 const ScenePlug *ExecutableRender::inPlug() const
 {
 	return getChild<ScenePlug>( g_firstPlugIndex );
+}
+
+ScenePlug *ExecutableRender::outPlug()
+{
+	return getChild<ScenePlug>( g_firstPlugIndex + 1 );
+}
+
+const ScenePlug *ExecutableRender::outPlug() const
+{
+	return getChild<ScenePlug>( g_firstPlugIndex + 1 );
 }
 
 IECore::MurmurHash ExecutableRender::hash( const Gaffer::Context *context ) const

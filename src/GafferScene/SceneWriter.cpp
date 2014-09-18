@@ -61,6 +61,8 @@ SceneWriter::SceneWriter( const std::string &name )
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new ScenePlug( "in", Plug::In ) );
 	addChild( new StringPlug( "fileName" ) );
+	addChild( new ScenePlug( "out", Plug::Out, Plug::Default & ~Plug::Serialisable ) );
+	outPlug()->setInput( inPlug() );
 }
 
 SceneWriter::~SceneWriter()
@@ -85,6 +87,16 @@ StringPlug *SceneWriter::fileNamePlug()
 const StringPlug *SceneWriter::fileNamePlug() const
 {
 	return getChild<StringPlug>( g_firstPlugIndex + 1 );
+}
+
+ScenePlug *SceneWriter::outPlug()
+{
+	return getChild<ScenePlug>( g_firstPlugIndex + 2 );
+}
+
+const ScenePlug *SceneWriter::outPlug() const
+{
+	return getChild<ScenePlug>( g_firstPlugIndex + 2 );
 }
 
 IECore::MurmurHash SceneWriter::hash( const Gaffer::Context *context ) const

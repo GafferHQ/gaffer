@@ -74,6 +74,8 @@ ImageWriter::ImageWriter( const std::string &name )
 			Gaffer::Plug::Default & ~(Gaffer::Plug::Dynamic | Gaffer::Plug::ReadOnly)
 		)
 	);
+	addChild( new ImagePlug( "out", Plug::Out, Plug::Default & ~Plug::Serialisable ) );
+	outPlug()->setInput( inPlug() );
 
 	Node::plugSetSignal().connect( boost::bind( &GafferImage::ImageWriter::plugSet, this, ::_1 ) );
 }
@@ -151,6 +153,16 @@ GafferImage::ChannelMaskPlug *ImageWriter::channelsPlug()
 const GafferImage::ChannelMaskPlug *ImageWriter::channelsPlug() const
 {
 	return getChild<ChannelMaskPlug>( g_firstPlugIndex+3 );
+}
+
+GafferImage::ImagePlug *ImageWriter::outPlug()
+{
+	return getChild<ImagePlug>( g_firstPlugIndex + 4 );
+}
+
+const GafferImage::ImagePlug *ImageWriter::outPlug() const
+{
+	return getChild<ImagePlug>( g_firstPlugIndex + 4 );
 }
 
 IECore::MurmurHash ImageWriter::hash( const Context *context ) const

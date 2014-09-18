@@ -253,5 +253,23 @@ class RenderTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertEqual( s["r"].world().state()[0].attributes["doubleSided"], IECore.BoolData( False ) )
 
+	def testPassThrough( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["p"] = GafferScene.Plane()
+		s["r"] = GafferSceneTest.TestRender()
+		s["r"]["in"].setInput( s["p"]["out"] )
+
+		self.assertScenesEqual( s["p"]["out"], s["r"]["out"] )
+
+	def testPassThroughSerialisation( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["r"] = GafferSceneTest.TestRender()
+
+		ss = s.serialise()
+		self.assertFalse( "out" in ss )
+
 if __name__ == "__main__":
 	unittest.main()

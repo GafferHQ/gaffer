@@ -242,6 +242,24 @@ class ImageWriterTest( unittest.TestCase ) :
 		writer["channels"].setValue( IECore.StringVectorData( [ "R" ] ) )
 		self.assertNotEqual( writer.hash( c ), current )
 
+	def testPassThrough( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["c"] = GafferImage.Constant()
+		s["w"] = GafferImage.ImageWriter()
+		s["w"]["in"].setInput( s["c"]["out"] )
+
+		self.assertEqual( s["c"]["out"].image(), s["w"]["out"].image() )
+
+	def testPassThroughSerialisation( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["w"] = GafferImage.ImageWriter()
+
+		ss = s.serialise()
+		self.assertFalse( "out" in ss )
+
 	def tearDown( self ) :
 
 		files = [
@@ -264,7 +282,6 @@ class ImageWriterTest( unittest.TestCase ) :
 				testFile = self.__testFile( name, "RGBA", ext )
 				if os.path.exists( testFile ) :
 					os.remove( testFile )
-
 
 	def __testFile( self, mode, channels, ext ) :
 

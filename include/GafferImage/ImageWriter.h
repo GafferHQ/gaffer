@@ -76,6 +76,9 @@ class ImageWriter : public Gaffer::ExecutableNode
 		Gaffer::IntPlug *writeModePlug();
 		const Gaffer::IntPlug *writeModePlug() const;
 
+		GafferImage::ImagePlug *outPlug();
+		const GafferImage::ImagePlug *outPlug() const;
+
 		virtual IECore::MurmurHash hash( const Gaffer::Context *context ) const;
 
 		virtual void execute() const;
