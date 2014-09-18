@@ -61,6 +61,8 @@ def __cameraSummary( plug ) :
 	if plug["renderCropWindow"]["enabled"].getValue() :
 		crop = plug["renderCropWindow"]["value"].getValue()
 		info.append( "Crop %s,%s-%s,%s" % tuple( __floatToString( x ) for x in ( crop.min.x, crop.min.y, crop.max.x, crop.max.y ) ) )
+	if plug["overscan"]["enabled"].getValue() :
+		info.append( "Overscan %s" % ( "On" if plug["overscan"]["value"].getValue() else "Off" ) )
 
 	return ", ".join( info )
 
@@ -94,6 +96,11 @@ GafferUI.PlugValueWidget.registerCreator(
 				( "render:pixelAspectRatio", "Pixel Aspect Ratio" ),
 				( "render:resolutionMultiplier", "Resolution Multiplier" ),
 				( "render:cropWindow", "Crop Window" ),
+				( "render:overscan", "Overscan" ),
+				( "render:overscanTop", "Overscan Top" ),
+				( "render:overscanBottom", "Overscan Bottom" ),
+				( "render:overscanLeft", "Overscan Left" ),
+				( "render:overscanRight", "Overscan Right" ),
 			),
 		},
 

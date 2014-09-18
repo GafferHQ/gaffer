@@ -55,6 +55,12 @@ StandardOptions::StandardOptions( const std::string &name )
 	options->addOptionalMember( "render:resolutionMultiplier", new IECore::FloatData( 1.0f ), "resolutionMultiplier", Plug::Default, false );
 	options->addOptionalMember( "render:cropWindow", new IECore::Box2fData( Imath::Box2f( Imath::V2f( 0 ), Imath::V2f( 1 ) ) ), "renderCropWindow", Plug::Default, false );
 
+	options->addOptionalMember( "render:overscan", new IECore::BoolData( false ), "overscan", Plug::Default, false );
+	options->addOptionalMember( "render:overscanTop", new FloatPlug( "value", Plug::In, 0.1f, 0.0f, 1.0f ), "overscanTop", false );
+	options->addOptionalMember( "render:overscanBottom", new FloatPlug( "value", Plug::In, 0.1f, 0.0f, 1.0f ), "overscanBottom", false );
+	options->addOptionalMember( "render:overscanLeft", new FloatPlug( "value", Plug::In, 0.1f, 0.0f, 1.0f ), "overscanLeft", false );
+	options->addOptionalMember( "render:overscanRight", new FloatPlug( "value", Plug::In, 0.1f, 0.0f, 1.0f ), "overscanRight", false );
+	
 	// motion blur
 
 	options->addOptionalMember( "render:cameraBlur", new IECore::BoolData( false ), "cameraBlur", Gaffer::Plug::Default, false );
