@@ -52,6 +52,9 @@ def __cameraSummary( plug ) :
 	if plug["renderResolution"]["enabled"].getValue() :
 		resolution = plug["renderResolution"]["value"].getValue()
 		info.append( "%dx%d" % ( resolution[0], resolution[1] ) )
+	if plug["pixelAspectRatio"]["enabled"].getValue() :
+		pixelAspectRatio = plug["pixelAspectRatio"]["value"].getValue()
+		info.append( "Aspect %s" % __floatToString( pixelAspectRatio ) )
 	if plug["renderCropWindow"]["enabled"].getValue() :
 		crop = plug["renderCropWindow"]["value"].getValue()
 		info.append( "Crop %s,%s-%s,%s" % tuple( __floatToString( x ) for x in ( crop.min.x, crop.min.y, crop.max.x, crop.max.y ) ) )
@@ -85,6 +88,7 @@ GafferUI.PlugValueWidget.registerCreator(
 			"namesAndLabels" : (
 				( "render:camera", "Camera" ),
 				( "render:resolution", "Resolution" ),
+				( "render:pixelAspectRatio", "Pixel Aspect Ratio" ),
 				( "render:cropWindow", "Crop Window" ),
 			),
 		},

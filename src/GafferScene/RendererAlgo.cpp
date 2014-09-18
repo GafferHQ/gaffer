@@ -151,12 +151,18 @@ void outputCamera( const ScenePlug *scene, const IECore::CompoundObject *globals
 		camera = new IECore::Camera();
 	}
 
-	// apply the resolution and crop window
+	// apply the resolution, aspect ratio and crop window
 
 	const V2iData *resolutionData = globals->member<V2iData>( "option:render:resolution" );
 	if( resolutionData )
 	{
 		camera->parameters()["resolution"] = resolutionData->copy();
+	}
+
+	const FloatData *pixelAspectRatioData = globals->member<FloatData>( "option:render:pixelAspectRatio" );
+	if( pixelAspectRatioData )
+	{
+		camera->parameters()["pixelAspectRatio"] = pixelAspectRatioData->copy();
 	}
 
 	const Box2fData *cropWindowData = globals->member<Box2fData>( "option:render:cropWindow" );
