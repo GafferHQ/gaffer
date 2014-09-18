@@ -61,7 +61,7 @@ SceneWriter::SceneWriter( const std::string &name )
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new ScenePlug( "in", Plug::In ) );
 	addChild( new StringPlug( "fileName" ) );
-	addChild( new ScenePlug( "out", Plug::Out ) );
+	addChild( new ScenePlug( "out", Plug::Out, Plug::Default & ~Plug::Serialisable ) );
 	outPlug()->setInput( inPlug() );
 }
 

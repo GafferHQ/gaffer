@@ -57,7 +57,7 @@ ExecutableRender::ExecutableRender( const std::string &name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new ScenePlug( "in" ) );
-	addChild( new ScenePlug( "out", Plug::Out ) );
+	addChild( new ScenePlug( "out", Plug::Out, Plug::Default & ~Plug::Serialisable ) );
 	outPlug()->setInput( inPlug() );
 }
 
