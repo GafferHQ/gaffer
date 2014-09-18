@@ -153,11 +153,19 @@ void outputCamera( const ScenePlug *scene, const IECore::CompoundObject *globals
 
 	// apply the resolution, aspect ratio and crop window
 
-	const V2iData *resolutionData = globals->member<V2iData>( "option:render:resolution" );
-	if( resolutionData )
+	V2i resolution( 640, 480 );
+	if( const V2iData *resolutionData = globals->member<V2iData>( "option:render:resolution" ) )
 	{
-		camera->parameters()["resolution"] = resolutionData->copy();
+		resolution = resolutionData->readable();
 	}
+
+	if( const FloatData *resolutionMultiplierData = globals->member<FloatData>( "option:render:resolutionMultiplier" ) )
+	{
+		resolution.x = (float)resolution.x * resolutionMultiplierData->readable();
+		resolution.y = (float)resolution.y * resolutionMultiplierData->readable();
+	}
+
+	camera->parameters()["resolution"] = new V2iData( resolution );
 
 	const FloatData *pixelAspectRatioData = globals->member<FloatData>( "option:render:pixelAspectRatio" );
 	if( pixelAspectRatioData )
