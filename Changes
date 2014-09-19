@@ -1,3 +1,34 @@
+# 0.1.1.0
+
+#### Core
+
+- Optimised computation for long chains of nodes (#963).
+	- Optimised repeat calls to Context::hash().
+	- Added Context::changed() method.
+	- Made Context::hash() ignore "ui:" prefixed entries.
+	- Refactored ValuePlug::hash() to delegate to Computation.
+
+#### UI
+
+- Fixed Execute->Repeat Previous menu item.
+- Fixed display of '<', '>' and '&' in SceneInspector.
+
+#### Scene
+
+- Added an ExternalProcedural node (#722).
+- Added pass-through plugs to ExecutableRender nodes and SceneWriter.
+- Added pixelAspectRatio, overscan, and resolutionMultiplier options (#979).
+
+#### Image
+
+- Added pass-through plugs for ImageWriter.
+
+#### Build
+
+- Requires Cortex 9.0.0-a6
+- Fixed typedef issues when building with GCC 4.8
+- Added Travis config for build verification (doesn't run the tests yet)
+
 # 0.1.0.0
 
 #### Apps
