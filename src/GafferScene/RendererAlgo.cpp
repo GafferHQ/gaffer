@@ -161,8 +161,8 @@ void outputCamera( const ScenePlug *scene, const IECore::CompoundObject *globals
 
 	if( const FloatData *resolutionMultiplierData = globals->member<FloatData>( "option:render:resolutionMultiplier" ) )
 	{
-		resolution.x = (float)resolution.x * resolutionMultiplierData->readable();
-		resolution.y = (float)resolution.y * resolutionMultiplierData->readable();
+		resolution.x = int((float)resolution.x * resolutionMultiplierData->readable());
+		resolution.y = int((float)resolution.y * resolutionMultiplierData->readable());
 	}
 
 	camera->parameters()["resolution"] = new V2iData( resolution );
@@ -211,13 +211,13 @@ void outputCamera( const ScenePlug *scene, const IECore::CompoundObject *globals
 		// convert those offsets into pixel values
 		
 		V2i minPixelOffset(
-			minOffset.x * (float)resolution.x,
-			minOffset.y * (float)resolution.y
+			int(minOffset.x * (float)resolution.x),
+			int(minOffset.y * (float)resolution.y)
 		);
 		
 		V2i maxPixelOffset(
-			maxOffset.x * (float)resolution.x,
-			maxOffset.y * (float)resolution.y
+			int(maxOffset.x * (float)resolution.x),
+			int(maxOffset.y * (float)resolution.y)
 		);
 
 		// recalculate original offsets to account for the rounding when
