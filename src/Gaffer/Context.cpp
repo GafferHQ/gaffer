@@ -194,7 +194,7 @@ std::string Context::substitute( const std::string &s ) const
 {
 	std::string result;
 	result.reserve( s.size() ); // might need more or less, but this is a decent ballpark
-	substituteInternal( s, result, 0 );
+	substituteInternal( s.c_str(), result, 0 );
 	return result;
 }
 
@@ -207,6 +207,7 @@ bool Context::hasSubstitutions( const std::string &input )
 			case '$' :
 			case '#' :
 			case '~' :
+			case '\\' :
 				return true;
 			default :
 				; // do nothing
@@ -215,92 +216,120 @@ bool Context::hasSubstitutions( const std::string &input )
 	return false;
 }
 
-void Context::substituteInternal( const std::string &s, std::string &result, const int recursionDepth ) const
+void Context::substituteInternal( const char *s, std::string &result, const int recursionDepth ) const
 {
 	if( recursionDepth > 8 )
 	{
 		throw IECore::Exception( "Context::substitute() : maximum recursion depth reached." );
 	}
 
-	for( size_t i=0, size=s.size(); i<size; )
+	while( *s )
 	{
-		if( s[i] == '$' )
+		switch( *s )
 		{
-			std::string variableName;
-			i++; // skip $
-			bool bracketed = ( i < size ) && s[i]=='{';
-			if( bracketed )
+			case '\\' :
 			{
-				i++; // skip initial bracket
-				while( i < size && s[i] != '}' )
+				s++;
+				if( *s )
 				{
-					variableName.push_back( s[i] );
-					i++;
+					result.push_back( *s++ );
 				}
-				i++; // skip final bracket
+				break;
 			}
-			else
+			case '$' :
 			{
-				while( i < size && isalnum( s[i] ) )
+				s++; // skip $
+				bool bracketed = *s =='{';
+				const char *variableNameStart = NULL;
+				const char *variableNameEnd = NULL;
+				if( bracketed )
 				{
-					variableName.push_back( s[i] );
-					i++;
+					s++; // skip initial bracket
+					variableNameStart = s;
+					while( *s && *s != '}' )
+					{
+						s++;
+					}
+					variableNameEnd = s;
+					if( *s )
+					{
+						s++; // skip final bracket
+					}
 				}
-			}
+				else
+				{
+					variableNameStart = s;
+					while( isalnum( *s ) )
+					{
+						s++;
+					}
+					variableNameEnd = s;
+				}
 
-			const IECore::Data *d = get<IECore::Data>( variableName, NULL );
-			if( d )
-			{
-				switch( d->typeId() )
+#ifdef IECORE_INTERNEDSTRING_RANGECONSTRUCTOR
+				InternedString variableName( variableNameStart, variableNameEnd - variableNameStart );
+#else
+				InternedString variableName( std::string( variableNameStart, variableNameEnd - variableNameStart ) );
+#endif
+				const IECore::Data *d = get<IECore::Data>( variableName, NULL );
+				if( d )
 				{
-					case IECore::StringDataTypeId :
-						substituteInternal( static_cast<const IECore::StringData *>( d )->readable(), result, recursionDepth + 1 );
-						break;
-					case IECore::FloatDataTypeId :
-						result += boost::lexical_cast<std::string>(
-							static_cast<const IECore::FloatData *>( d )->readable()
-						);
-						break;
-					case IECore::IntDataTypeId :
-						result += boost::lexical_cast<std::string>(
-							static_cast<const IECore::IntData *>( d )->readable()
-						);
-						break;
-					default :
-						break;
+					switch( d->typeId() )
+					{
+						case IECore::StringDataTypeId :
+							substituteInternal( static_cast<const IECore::StringData *>( d )->readable().c_str(), result, recursionDepth + 1 );
+							break;
+						case IECore::FloatDataTypeId :
+							result += boost::lexical_cast<std::string>(
+								static_cast<const IECore::FloatData *>( d )->readable()
+							);
+							break;
+						case IECore::IntDataTypeId :
+							result += boost::lexical_cast<std::string>(
+								static_cast<const IECore::IntData *>( d )->readable()
+							);
+							break;
+						default :
+							break;
+					}
 				}
+				else if( const char *v = getenv( variableName.c_str() ) )
+				{
+					// variable not in context - try environment
+					result += v;
+				}
+				break;
 			}
-			else if( const char *v = getenv( variableName.c_str() ) )
+			case '#' :
 			{
-				// variable not in context - try environment
-				result += v;
+				int padding = 0;
+				while( *s == '#' )
+				{
+					padding++;
+					s++;
+				}
+				int frame = (int)round( getFrame() );
+				std::ostringstream padder;
+				padder << std::setw( padding ) << std::setfill( '0' ) << frame;
+				result += padder.str();
+				break;
 			}
-		}
-		else if( s[i] == '#' )
-		{
-			int padding = 0;
-			while( i < size && s[i]=='#' )
+			case '~' :
 			{
-				padding++;
-				i++;
+				if( result.size() == 0 )
+				{
+					if( const char *v = getenv( "HOME" ) )
+					{
+						result += v;
+					}
+					++s;
+					break;
+				}
+				// fall through
 			}
-			int frame = (int)round( getFrame() );
-			std::ostringstream padder;
-			padder << std::setw( padding ) << std::setfill( '0' ) << frame;
-			result += padder.str();
-		}
-		else if( s[i] == '~' && result.size()==0 )
-		{
-			if( const char *v = getenv( "HOME" ) )
-			{
-				result += v;
-			}
-			i++;
-		}
-		else
-		{
-			result.push_back( s[i] );
-			i++;
+			default :
+				result.push_back( *s++ );
+				break;
 		}
 	}
 }

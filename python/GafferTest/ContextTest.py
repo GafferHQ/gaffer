@@ -464,6 +464,28 @@ class ContextTest( GafferTest.TestCase ) :
 		c["ui:test"] = 1
 		self.assertEqual( h, c.hash() )
 
+	def testManySubstitutions( self ) :
+
+		GafferTest.testManySubstitutions()
+
+	def testEscapedSubstitutions( self ) :
+
+		c = Gaffer.Context()
+		c.setFrame( 20 )
+		c["a"] = "apple"
+		c["b"] = "bear"
+
+		self.assertEqual( c.substitute( "\${a}.\$b" ), "${a}.$b" )
+		self.assertEqual( c.substitute( "\~" ), "~" )
+		self.assertEqual( c.substitute( "\#\#\#\#" ), "####" )
+		# really we're passing \\ to substitute and getting back \ -
+		# the extra slashes are escaping for the python interpreter.
+		self.assertEqual( c.substitute( "\\\\" ), "\\" )
+		self.assertEqual( c.substitute( "\\" ), "" )
+
+		self.assertTrue( c.hasSubstitutions( "\\" ) ) # must return true, because escaping affects substitution
+		self.assertTrue( c.hasSubstitutions( "\\\\" ) ) # must return true, because escaping affects substitution
+
 if __name__ == "__main__":
 	unittest.main()
 

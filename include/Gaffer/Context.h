@@ -173,7 +173,7 @@ class Context : public IECore::RefCounted
 
 	private :
 
-		void substituteInternal( const std::string &s, std::string &result, const int recursionDepth ) const;
+		void substituteInternal( const char *s, std::string &result, const int recursionDepth ) const;
 
 		// Storage for each entry.
 		struct Storage

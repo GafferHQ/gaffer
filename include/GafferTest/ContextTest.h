@@ -41,6 +41,7 @@ namespace GafferTest
 {
 
 void testManyContexts();
+void testManySubstitutions();
 
 } // namespace GafferTest
 
