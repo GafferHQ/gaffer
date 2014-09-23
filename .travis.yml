@@ -11,7 +11,12 @@ before_install:
 
 install: python ./config/travis/installDependencies.py
 
-script: scons build CXX=$CXX ENV_VARS_TO_IMPORT=PATH
+script:
+    - scons install CXX=$CXX ENV_VARS_TO_IMPORT=PATH
+    - ./install/gaffer-*/bin/gaffer test GafferTest
+    - ./install/gaffer-*/bin/gaffer test GafferImageTest
+    - ./install/gaffer-*/bin/gaffer test GafferSceneTest
+    - ./install/gaffer-*/bin/gaffer test GafferOSLTest
 
 compiler:
     - gcc

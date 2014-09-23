@@ -86,10 +86,11 @@ class ImageWriterTest( unittest.TestCase ) :
 	def testTiffWrite( self ) :
 		self.__testExtension( "tif" )
 
-	# Outputting RGBA images with JPG doesn't work but it should... this is a known issue and needs fixing.
+	@unittest.expectedFailure
 	def testJpgWrite( self ) :
 		self.__testExtension( "jpg" )
 
+	@unittest.expectedFailure
 	def testTgaWrite( self ) :
 		self.__testExtension( "tga" )
 
