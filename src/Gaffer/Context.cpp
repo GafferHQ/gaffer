@@ -207,6 +207,7 @@ bool Context::hasSubstitutions( const std::string &input )
 			case '$' :
 			case '#' :
 			case '~' :
+			case '\\' :
 				return true;
 			default :
 				; // do nothing
@@ -224,7 +225,14 @@ void Context::substituteInternal( const std::string &s, std::string &result, con
 
 	for( size_t i=0, size=s.size(); i<size; )
 	{
-		if( s[i] == '$' )
+		if( s[i] == '\\' )
+		{
+			if( ++i < size )
+			{
+				result.push_back( s[i++] );
+			}
+		}
+		else if( s[i] == '$' )
 		{
 			i++; // skip $
 			bool bracketed = ( i < size ) && s[i]=='{';
