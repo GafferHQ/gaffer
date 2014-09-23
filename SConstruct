@@ -1551,7 +1551,7 @@ def installer( target, source, env ) :
 					else:
 						shutil.copy2( srcName, dstName )
 
-	regex = re.compile( "|".join( [ fnmatch.translate( env.subst( "$BUILD_DIR/" + m ) ) for m in env["MANIFEST"] ] ) )
+	regex = re.compile( "|".join( [ fnmatch.translate( os.path.normpath( env.subst( "$BUILD_DIR/" + m ) ) ) for m in env["MANIFEST"] ] ) )
 	copyTree( str( source[0] ), str( target[0] ), regex )
 
 if env.subst( "$PACKAGE_FILE" ).endswith( ".dmg" ) :

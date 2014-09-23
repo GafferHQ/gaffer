@@ -35,6 +35,7 @@
 ##########################################################################
 
 import os
+import unittest
 
 import IECore
 import IECoreGL
@@ -45,6 +46,7 @@ import GafferImage
 import GafferScene
 import GafferSceneTest
 
+@unittest.skipIf( "TRAVIS" in os.environ, "OpenGL not set up on Travis" )
 class OpenGLShaderTest( GafferSceneTest.SceneTestCase ) :
 
 	def test( self ) :
