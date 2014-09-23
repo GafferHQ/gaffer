@@ -9,14 +9,20 @@ before_install:
     - sudo apt-get install -qq inkscape
     - sudo apt-get install -qq doxygen
 
-install: python ./config/travis/installDependencies.py
+install:
+    - python ./config/travis/installDependencies.py
+    - export DELIGHT_PACKAGE=3delight-11.0.85-Linux-x86_64
+    - curl -A Mozilla/4.0 http://www.3delight.com/downloads/free/$DELIGHT_PACKAGE.tar.gz
+    - tar -xf $DELIGHT_PACKAGE
+    - export DELIGHT=$DELIGHT_PACKAGE/3delight/Linux-x86_64
 
 script:
-    - scons install CXX=$CXX ENV_VARS_TO_IMPORT=PATH
+    - scons install CXX=$CXX ENV_VARS_TO_IMPORT=PATH RMAN_ROOT=$DELIGHT
     - ./install/gaffer-*/bin/gaffer test GafferTest
     - ./install/gaffer-*/bin/gaffer test GafferImageTest
     - ./install/gaffer-*/bin/gaffer test GafferSceneTest
     - ./install/gaffer-*/bin/gaffer test GafferOSLTest
+    - ./install/gaffer-*/bin/gaffer test GafferRenderManTest
 
 compiler:
     - gcc
