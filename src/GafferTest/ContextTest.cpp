@@ -79,3 +79,24 @@ void GafferTest::testManyContexts()
 	// uncomment to get timing information
 	//std::cerr << t.stop() << std::endl;
 }
+
+// Useful for assessing the performance of substitutions.
+void GafferTest::testManySubstitutions()
+{
+	ContextPtr context = new Context();
+	context->set( "foodType", std::string( "kipper" ) );
+	context->set( "cookingMethod", std::string( "smoke" ) );
+
+	const std::string phrase( "${cookingMethod} me a ${foodType}" );
+	const std::string expectedResult( "smoke me a kipper" );
+
+	Timer t;
+	for( int i = 0; i < 100000; ++i )
+	{
+		const std::string s = context->substitute( phrase );
+		GAFFERTEST_ASSERT( s == expectedResult );
+	}
+
+	// uncomment to get timing information
+	//std::cerr << t.stop() << std::endl;
+}

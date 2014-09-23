@@ -464,6 +464,10 @@ class ContextTest( GafferTest.TestCase ) :
 		c["ui:test"] = 1
 		self.assertEqual( h, c.hash() )
 
+	def testManySubstitutions( self ) :
+
+		GafferTest.testManySubstitutions()
+
 if __name__ == "__main__":
 	unittest.main()
 

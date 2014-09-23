@@ -63,4 +63,5 @@ BOOST_PYTHON_MODULE( _GafferTest )
 	def( "testFilteredRecursiveChildIterator", &testFilteredRecursiveChildIterator );
 	def( "testMetadataThreading", &testMetadataThreadingWrapper );
 	def( "testManyContexts", &testManyContexts );
+	def( "testManySubstitutions", &testManySubstitutions );
 }

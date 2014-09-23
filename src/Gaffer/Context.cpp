@@ -226,28 +226,36 @@ void Context::substituteInternal( const std::string &s, std::string &result, con
 	{
 		if( s[i] == '$' )
 		{
-			std::string variableName;
 			i++; // skip $
 			bool bracketed = ( i < size ) && s[i]=='{';
+			const char *variableNameStart = NULL;
+			const char *variableNameEnd = NULL;
 			if( bracketed )
 			{
 				i++; // skip initial bracket
+				variableNameStart = s.c_str() + i;
 				while( i < size && s[i] != '}' )
 				{
-					variableName.push_back( s[i] );
 					i++;
 				}
+				variableNameEnd = s.c_str() + i;
 				i++; // skip final bracket
 			}
 			else
 			{
+				variableNameStart = s.c_str() + i;
 				while( i < size && isalnum( s[i] ) )
 				{
-					variableName.push_back( s[i] );
 					i++;
 				}
+				variableNameEnd = s.c_str() + i;
 			}
 
+#ifdef IECORE_INTERNEDSTRING_RANGECONSTRUCTOR
+			InternedString variableName( variableNameStart, variableNameEnd - variableNameStart );
+#else
+			InternedString variableName( std::string( variableNameStart, variableNameEnd - variableNameStart ) );
+#endif
 			const IECore::Data *d = get<IECore::Data>( variableName, NULL );
 			if( d )
 			{
