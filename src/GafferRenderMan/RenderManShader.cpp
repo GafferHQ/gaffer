@@ -508,14 +508,15 @@ static void loadCompoundNumericParameter( Gaffer::CompoundPlug *parametersPlug, 
 	{
 		for( size_t i = 0, e = existingPlug->children().size(); i < e; i++ )
 		{
-			FloatPlug *existingComponentPlug = existingPlug->template GraphComponent::getChild<FloatPlug>( i );
+			FloatPlug *existingComponentPlug = static_cast<GraphComponent *>( existingPlug )->getChild<FloatPlug>( i );
+			FloatPlug *componentPlug = static_cast<GraphComponent *>( plug.get() )->getChild<FloatPlug>( i );
 			if( existingComponentPlug->getInput<Plug>() )
 			{
-				plug->template GraphComponent::getChild<FloatPlug>( i )->setInput( existingComponentPlug->getInput<Plug>() );
+				componentPlug->setInput( existingComponentPlug->getInput<Plug>() );
 			}
 			else
 			{
-				plug->template GraphComponent::getChild<FloatPlug>( i )->setValue( existingComponentPlug->getValue() );
+				componentPlug->setValue( existingComponentPlug->getValue() );
 			}
 		}
 	}

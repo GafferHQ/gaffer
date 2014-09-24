@@ -46,6 +46,7 @@ import GafferScene
 import GafferRenderMan
 import GafferRenderManTest
 
+@unittest.skipIf( "TRAVIS" in os.environ, "No license available on Travis" )
 class InteractiveRenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 
 	def __colorAtUV( self, image, uv ) :
