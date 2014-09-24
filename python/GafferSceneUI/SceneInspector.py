@@ -1337,6 +1337,82 @@ class __ObjectSection( Section ) :
 SceneInspector.registerSection( __ObjectSection, tab = "Selection" )
 
 ##########################################################################
+# Set Membership section
+##########################################################################
+
+class _SetMembershipDiff( Diff ) :
+
+	def __init__( self, **kw ) :
+
+		Diff.__init__( self, **kw )
+
+		for i in range( 0, 2 ) :
+			self.frame( i )._qtWidget().layout().setContentsMargins( 2, 2, 2, 2 )
+			self.frame( i ).setChild( GafferUI.Image( "setMembershipDot.png" ) )
+
+class __SetMembershipSection( Section ) :
+
+	def __init__( self ) :
+
+		Section.__init__( self, collapsed = True, label = "Set Membership" )
+
+		with self._mainColumn() :
+			self.__diffColumn = DiffColumn( self.__Inspector(), _SetMembershipDiff )
+
+	def update( self, targets ) :
+
+		self.__diffColumn.update( targets )
+
+	class __Inspector( Inspector ) :
+
+		def __init__( self, setName = None ) :
+
+			self.__setName = setName
+
+		def name( self ) :
+
+			if self.__setName == "__lights" :
+				return "Lights"
+			elif self.__setName == "__cameras" :
+				return "Cameras"
+			else :
+				return self.__setName or ""
+
+		def inspectsAttributes( self ) :
+
+			# strictly speaking we're not actually inspecting attributes,
+			# but we can support ignoreInheritance arguments in __call__,
+			# which is what we're really being asked about.
+			return True
+
+		def __call__( self, target, ignoreInheritance = False ) :
+
+			globals = target.scene["globals"].getValue()
+			sets = globals.get( "gaffer:sets", {} )
+			set = sets.get( self.__setName )
+			if set is None :
+				return None
+
+			m = set.value.match( target.path )
+			if m & GafferScene.Filter.Result.ExactMatch :
+				return True
+
+			if (not ignoreInheritance) and (m & GafferScene.Filter.Result.AncestorMatch) :
+				return True
+
+			return None
+
+		def children( self, target ) :
+
+			if not target.path :
+				return []
+
+			sets = target.scene["globals"].getValue().get( "gaffer:sets", {} )
+			return [ self.__class__( setName ) for setName in sorted( sets.keys() ) ]
+
+SceneInspector.registerSection( __SetMembershipSection, tab = "Selection" )
+
+##########################################################################
 # Global Options and Attributes section
 ##########################################################################
 
