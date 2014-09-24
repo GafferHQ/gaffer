@@ -58,6 +58,7 @@ class RenderManLightTest( unittest.TestCase ) :
 		light = n["out"].object( "/light" )
 		self.assertEqual( light.parameters["intensity"].value, 10 )
 
+	@unittest.skipIf( "TRAVIS" in os.environ, "No license available on Travis" )
 	def testRender( self ) :
 
 		s = Gaffer.ScriptNode()
