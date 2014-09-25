@@ -222,9 +222,9 @@ static std::string plugName( const OSLQuery::Parameter *parameter )
 	size_t i = parameter->name.find( "." );
 	if( i != string::npos )
 	{
-		return parameter->name.substr( i + 1 );
+		return parameter->name.substr( i + 1 ).c_str();
 	}
-	return parameter->name;
+	return parameter->name.c_str();
 }
 
 static void transferConnectionOrValue( Plug *sourcePlug, Plug *destinationPlug )
@@ -254,7 +254,7 @@ static Plug *loadStringParameter( const OSLQuery::Parameter *parameter, Gaffer::
 	string defaultValue;
 	if( parameter->sdefault.size() )
 	{
-		defaultValue = parameter->sdefault[0];
+		defaultValue = parameter->sdefault[0].c_str();
 	}
 
 	const string name = plugName( parameter );
@@ -408,9 +408,15 @@ static Plug *loadStructParameter( const OSLQuery &query, const OSLQuery::Paramet
 		result = new CompoundPlug( name, parent->direction(), Plug::Default | Plug::Dynamic );
 	}
 
-	for( vector<string>::const_iterator it = parameter->fields.begin(), eIt = parameter->fields.end(); it != eIt; ++it )
+#if OSL_LIBRARY_VERSION_CODE > 10500
+	typedef OIIO::ustring String;
+#else
+	typedef std::string String;
+#endif
+
+	for( vector<String>::const_iterator it = parameter->fields.begin(), eIt = parameter->fields.end(); it != eIt; ++it )
 	{
-		std::string fieldName = parameter->name + "." + *it;
+		std::string fieldName = std::string( parameter->name.c_str() ) + "." + it->c_str();
 		loadShaderParameter( query, query.getparam( fieldName ), result, keepExistingValues );
 	}
 
@@ -492,7 +498,7 @@ static Plug *loadShaderParameter( const OSLQuery &query, const OSLQuery::Paramet
 
 	if( !result )
 	{
-		msg( Msg::Warning, "OSLShader::loadShader", boost::format( "Parameter \"%s\" has unsupported type" ) % parameter->name );
+		msg( Msg::Warning, "OSLShader::loadShader", boost::format( "Parameter \"%s\" has unsupported type" ) % parameter->name.c_str() );
 	}
 
 	return result;
@@ -531,7 +537,7 @@ static void loadShaderParameters( const OSLQuery &query, Gaffer::CompoundPlug *p
 
 		if( plug )
 		{
-			validPlugNames.insert( parameter->name );
+			validPlugNames.insert( parameter->name.c_str() );
 		}
 	}
 
@@ -584,7 +590,7 @@ void OSLShader::loadShader( const std::string &shaderName, bool keepExistingValu
 	}
 
 	namePlug()->setValue( shaderName );
-	typePlug()->setValue( "osl:" + query.shadertype() );
+	typePlug()->setValue( std::string( "osl:" ) + query.shadertype().c_str() );
 
 	m_metadata = NULL;
 }
@@ -605,7 +611,7 @@ static IECore::DataPtr convertMetadata( const OSLQuery::Parameter &metadata )
 	}
 	else if( metadata.type == TypeDesc::STRING )
 	{
-		return new IECore::StringData( metadata.sdefault[0] );
+		return new IECore::StringData( metadata.sdefault[0].c_str() );
 	}
 
 	return NULL;
@@ -619,7 +625,7 @@ static IECore::CompoundDataPtr convertMetadata( const std::vector<OSLQuery::Para
 		DataPtr data = convertMetadata( *it );
 		if( data )
 		{
-			result->writable()[it->name] = data;
+			result->writable()[it->name.c_str()] = data;
 		}
 	}
 	return result;
@@ -650,7 +656,7 @@ static IECore::ConstCompoundDataPtr metadataGetter( const std::string &key, size
 		const OSLQuery::Parameter *parameter = query.getparam( i );
 		if( parameter->metadata.size() )
 		{
-			parameterMetadata->writable()[parameter->name] = convertMetadata( parameter->metadata );
+			parameterMetadata->writable()[parameter->name.c_str()] = convertMetadata( parameter->metadata );
 		}
 	}
 
