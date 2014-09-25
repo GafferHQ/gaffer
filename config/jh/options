@@ -64,8 +64,9 @@ NUKE_ROOT = "/Applications/Nuke6.3v6/Nuke6.3v6.app/Contents/MacOS"
 DOXYGEN = "/usr/local/bin/doxygen"
 PYTHON_LINK_FLAGS = [ "-lpython$PYTHON_VERSION" ]
 
-OIIO_SRC_DIR = "$DEPENDENCIES_SRC_DIR/oiio.git"
-OSL_SRC_DIR = "$DEPENDENCIES_SRC_DIR/OpenShadingLanguage.git"
+OIIO_SRC_DIR = "/Users/john/dev/oiio.git"
+LLVM_SRC_DIR = "/Users/john/dev/llvm-3.4.2.src"
+OSL_SRC_DIR = "/Users/john/dev/OpenShadingLanguage.git"
 
 SIP_SRC_DIR = "$DEPENDENCIES_SRC_DIR/sip-4.14"
 PYQT_SRC_DIR = "$DEPENDENCIES_SRC_DIR/PyQt-mac-gpl-4.9.5"
