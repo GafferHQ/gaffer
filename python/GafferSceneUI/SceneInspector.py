@@ -314,8 +314,10 @@ class Diff( GafferUI.Widget ) :
 			if cornerWidget is not None :
 				cornerWidget.setVisible( visibilities[i] )
 
-		self.frame( 0 )._qtWidget().setObjectName( "gafferDiffA" if different else "" )
-		self.frame( 0 )._repolish()
+		name =  "gafferDiffA" if different else ""
+		if name != self.frame( 0 )._qtWidget().objectName() :
+			self.frame( 0 )._qtWidget().setObjectName( name )
+			self.frame( 0 )._repolish()
 
 class TextDiff( Diff ) :
 
@@ -543,6 +545,7 @@ class Row( GafferUI.Widget ) :
 			 GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
 		)
 
+		self.__alternate = None
 		self.setAlternate( alternate )
 
 	def listContainer( self ) :
@@ -551,12 +554,16 @@ class Row( GafferUI.Widget ) :
 
 	def setAlternate( self, alternate ) :
 
+		if alternate == self.__alternate :
+			return
+
+		self.__alternate = alternate
 		self.__frame._qtWidget().setObjectName( "gafferLighter" if alternate else "" )
 		self.__frame._repolish()
 
 	def getAlternate( self ) :
 
-		return self.__frame._qtWidget.objectName() == "gafferLighter"
+		return self.__alternate
 
 ##########################################################################
 # Inspector
