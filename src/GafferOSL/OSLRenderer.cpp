@@ -291,6 +291,25 @@ class OSLRenderer::RenderState
 // OSLRenderer::RendererServices
 //////////////////////////////////////////////////////////////////////////
 
+// OSL 1.5 introduced a new argument to the front of the get_matrix()
+// methods. We use this macro to declare it or not as appropriate.
+#if OSL_LIBRARY_VERSION_CODE > 10500
+	#define GETMATRIX_SHADERGLOBALS_ARGUMENT OSL::ShaderGlobals *sg,
+#else
+	#define GETMATRIX_SHADERGLOBALS_ARGUMENT
+#endif
+
+// OSL 1.5 replaced "void *renderState" arguments with ShaderGlobals *sg
+// arguments. We use these macros to declare them and access our render
+// state appropriately.
+#if OSL_LIBRARY_VERSION_CODE > 10500
+	#define SHADERGLOBALS_ARGUMENT OSL::ShaderGlobals *sg
+	#define ACQUIRE_RENDERSTATE sg ? static_cast<RenderState *>( sg->renderstate ) : NULL
+#else
+	#define SHADERGLOBALS_ARGUMENT void *sg
+	#define ACQUIRE_RENDERSTATE static_cast<RenderState *>( sg )
+#endif
+
 class OSLRenderer::RendererServices : public OSL::RendererServices
 {
 
@@ -300,59 +319,60 @@ class OSLRenderer::RendererServices : public OSL::RendererServices
 		{
 		}
 
-		virtual bool get_matrix( OSL::Matrix44 &result, TransformationPtr xform, float time )
+		virtual bool get_matrix( GETMATRIX_SHADERGLOBALS_ARGUMENT OSL::Matrix44 &result, TransformationPtr xform, float time )
 		{
 			return false;
 		}
 
-		virtual bool get_matrix( OSL::Matrix44 &result, TransformationPtr xform )
+		virtual bool get_matrix( GETMATRIX_SHADERGLOBALS_ARGUMENT OSL::Matrix44 &result, TransformationPtr xform )
 		{
 			return false;
 		}
 
-		virtual bool get_matrix( OSL::Matrix44 &result, ustring from, float time )
+		virtual bool get_matrix( GETMATRIX_SHADERGLOBALS_ARGUMENT OSL::Matrix44 &result, ustring from, float time )
 		{
 			return false;
 		}
 
-		virtual bool get_matrix( OSL::Matrix44 &result, ustring from )
+		virtual bool get_matrix( GETMATRIX_SHADERGLOBALS_ARGUMENT OSL::Matrix44 &result, ustring from )
 		{
 			return false;
 		}
 
-		virtual bool get_attribute( void *renderState, bool derivatives, ustring object, TypeDesc type, ustring name, void *value )
+		virtual bool get_attribute( SHADERGLOBALS_ARGUMENT, bool derivatives, ustring object, TypeDesc type, ustring name, void *value )
 		{
+			const RenderState *renderState = ACQUIRE_RENDERSTATE;
 			if( !renderState )
 			{
 				return false;
 			}
 			// fall through to get_userdata - i'm not sure this is the intention of the osl spec, but how else can
 			// a shader access a primvar by name? maybe i've overlooked something.
-			return get_userdata( derivatives, name, type, renderState, value );
+			return get_userdata( derivatives, name, type, sg, value );
 		}
 
-		virtual bool get_array_attribute( void *renderState, bool derivatives, ustring object, TypeDesc type, ustring name, int index, void *value )
+		virtual bool get_array_attribute( SHADERGLOBALS_ARGUMENT, bool derivatives, ustring object, TypeDesc type, ustring name, int index, void *value )
 		{
 			return false;
 		}
 
-		virtual bool get_userdata( bool derivatives, ustring name, TypeDesc type, void *rState, void *value )
+		virtual bool get_userdata( bool derivatives, ustring name, TypeDesc type, SHADERGLOBALS_ARGUMENT, void *value )
 		{
-			if( !rState )
+			const RenderState *renderState = ACQUIRE_RENDERSTATE;
+			if( !renderState )
 			{
 				return false;
 			}
-			const RenderState *renderState = static_cast<RenderState *>( rState );
 			return renderState->userData( name, type, value );
 		}
 
-		virtual bool has_userdata( ustring name, TypeDesc type, void *rState )
+		virtual bool has_userdata( ustring name, TypeDesc type, SHADERGLOBALS_ARGUMENT )
 		{
-			if( !rState )
+			const RenderState *renderState = ACQUIRE_RENDERSTATE;
+			if( !renderState )
 			{
 				return false;
 			}
-			const RenderState *renderState = static_cast<RenderState *>( rState );
 			return renderState->userData( name, type, NULL );
 		}
 
