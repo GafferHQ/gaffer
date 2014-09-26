@@ -110,6 +110,11 @@ class Button( GafferUI.Widget ) :
 	def setHasFrame( self, hasFrame ) :
 
 		self._qtWidget().setObjectName( "gafferWithFrame" if hasFrame else "gafferWithoutFrame" )
+		self._qtWidget().setSizePolicy(
+			QtGui.QSizePolicy.Minimum if hasFrame else QtGui.QSizePolicy.Fixed,
+			QtGui.QSizePolicy.Fixed
+		)
+		self._repolish()
 
 	def getHasFrame( self ) :
 

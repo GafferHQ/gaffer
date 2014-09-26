@@ -305,8 +305,13 @@ _styleSheet = string.Template(
 	QPushButton#gafferWithoutFrame {
 
 		border: 0px solid transparent;
-		border-radius: 3px;
+		border-radius: 0px;
 		padding: 0px;
+		margin: 0px;
+		/* negative margins to counteract the annoying
+		   hardcoded padding in QPushButton::sizeHint() */
+		margin-left: -2px;
+		margin-right: -2px;
 		background-color: none;
 
 	}
