@@ -109,7 +109,7 @@ class VectorDataWidget( GafferUI.Widget ) :
 
 		# buttons
 
-		self.__buttonRow = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal )
+		self.__buttonRow = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
 
 		addButton = GafferUI.Button( image="plus.png", hasFrame=False )
 		self.__addButtonConnection = addButton.clickedSignal().connect( Gaffer.WeakMethod( self.__addRows ) )

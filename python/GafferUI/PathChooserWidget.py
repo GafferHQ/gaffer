@@ -55,7 +55,7 @@ class PathChooserWidget( GafferUI.Widget ) :
 		with self.__column :
 
 			# row for manipulating current directory
-			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 0 ) :
+			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
 
 				self.__displayModeButton = GafferUI.Button( image = "pathListingTree.png", hasFrame=False )
 				self.__displayModeButton.setToolTip( "Toggle between list and tree views" )
@@ -79,7 +79,7 @@ class PathChooserWidget( GafferUI.Widget ) :
 				upButton.setToolTip( "Up one level" )
 				self.__upButtonClickedConnection = upButton.clickedSignal().connect( Gaffer.WeakMethod( self.__upButtonClicked ) )
 
-				GafferUI.Spacer( IECore.V2i( 4, 4 ) )
+				GafferUI.Spacer( IECore.V2i( 2, 2 ) )
 
 				self.__dirPathWidget = GafferUI.PathWidget( tmpPath )
 

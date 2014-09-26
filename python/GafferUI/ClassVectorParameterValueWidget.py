@@ -237,6 +237,8 @@ class _ChildParameterUI( GafferUI.CompoundPlugValueWidget ) :
 			collapseButton = GafferUI.Button( image = "collapsibleArrowRight.png", hasFrame=False )
 			self.__collapseButtonConnection = collapseButton.clickedSignal().connect( Gaffer.WeakMethod( self.__collapseButtonClicked ) )
 
+			GafferUI.Spacer( IECore.V2i( 2 ) )
+
 			# find parameters which belong in the header
 			############################################
 
@@ -273,6 +275,8 @@ class _ChildParameterUI( GafferUI.CompoundPlugValueWidget ) :
 
 			compoundPlugValueWidget = self.ancestor( _PlugValueWidget )
 			layerButton.setMenu( GafferUI.Menu( IECore.curry( Gaffer.WeakMethod( compoundPlugValueWidget._layerMenuDefinition ), self.__parameterHandler.parameter().name ) ) )
+
+			GafferUI.Spacer( IECore.V2i( 2 ) )
 
 			# the label
 

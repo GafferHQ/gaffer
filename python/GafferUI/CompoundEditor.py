@@ -427,7 +427,7 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 
 		GafferUI.TabbedContainer.__init__( self, cornerWidget, **kw )
 
-		with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, borderWidth=1 ) as cornerWidget :
+		with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 2, borderWidth=1 ) as cornerWidget :
 
 			self.__pinningButton = GafferUI.Button( image="targetNodesUnlocked.png", hasFrame=False )
 
