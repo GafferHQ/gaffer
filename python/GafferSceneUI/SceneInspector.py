@@ -1059,7 +1059,7 @@ class __PathSection( Section ) :
 		Section.__init__( self, collapsed = None )
 
 		with self._mainColumn() :
-			self.__row = DiffRow( self.__Inspector() )
+			self.__row = DiffRow( self.__Inspector(), functools.partial( TextDiff, highlightDiffs = False ) )
 
 	def update( self, targets ) :
 
@@ -1073,9 +1073,7 @@ class __PathSection( Section ) :
 
 		def __call__( self, target ) :
 
-			# using StringData rather than string for invalid paths disables
-			# per-character diffs (because the types are different).
-			return target.path or IECore.StringData( "<i>Invalid</i>" )
+			return target.path or "Invalid"
 
 SceneInspector.registerSection( __PathSection, tab = "Selection" )
 
