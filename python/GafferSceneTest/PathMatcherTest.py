@@ -553,5 +553,16 @@ class PathMatcherTest( unittest.TestCase ) :
 		m.addPath( paths[0] )
 		self.assertEqual( m.match( paths[0] ), r.ExactMatch )
 
+	def testInvalidPathArguments( self ) :
+	
+		self.assertRaises( TypeError, GafferScene.PathMatcher, [ None ] )
+	
+		m = GafferScene.PathMatcher()
+		
+		self.assertRaises( TypeError, m.match, None )
+
+		self.assertRaises( TypeError, m.addPath, None )
+		self.assertRaises( TypeError, m.removePath, None )
+		
 if __name__ == "__main__":
 	unittest.main()
