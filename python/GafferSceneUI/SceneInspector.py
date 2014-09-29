@@ -1387,6 +1387,9 @@ class __SetMembershipSection( Section ) :
 
 		def __call__( self, target, ignoreInheritance = False ) :
 
+			if target.path is None :
+				return None
+
 			globals = target.scene["globals"].getValue()
 			sets = globals.get( "gaffer:sets", {} )
 			set = sets.get( self.__setName )
