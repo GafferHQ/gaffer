@@ -60,15 +60,15 @@ static void initWrapper( PathMatcher &m, boost::python::object paths )
 	for( size_t i = 0, e = len( paths ); i < e; ++i )
 	{
 		object path = paths[i];
-		extract<const char *> stringExtractor( path );
-		if( stringExtractor.check() )
+		extract<const IECore::InternedStringVectorData *> pathDataExtractor( path );
+		const IECore::InternedStringVectorData *pathData = pathDataExtractor.check() ? pathDataExtractor() : NULL;
+		if( pathData )
 		{
-			m.addPath( stringExtractor() );
+			m.addPath( pathData->readable() );
 		}
 		else
 		{
-			IECore::ConstInternedStringVectorDataPtr d = extract<IECore::ConstInternedStringVectorDataPtr>( path );
-			m.addPath( d->readable() );
+			m.addPath( extract<std::string>( path ) );
 		}
 	}
 }
@@ -93,21 +93,6 @@ static PathMatcher *constructFromVectorData( IECore::ConstStringVectorDataPtr pa
 	return new PathMatcher( paths->readable().begin(), paths->readable().end() );
 }
 
-static bool addPathInternedStringVectorData( PathMatcher &p, const IECore::InternedStringVectorData *d )
-{
-	return p.addPath( d->readable() );
-}
-
-static bool removePathInternedStringVectorData( PathMatcher &p, const IECore::InternedStringVectorData *d )
-{
-	return p.removePath( d->readable() );
-}
-
-static unsigned matchInternedStringVectorData( const PathMatcher &p, const IECore::InternedStringVectorData *d )
-{
-	return p.match( d->readable() );
-}
-
 static list paths( const PathMatcher &p )
 {
 	std::vector<std::string> paths;
@@ -128,13 +113,13 @@ void bindPathMatcher()
 		.def( init<const PathMatcher &>() )
 		.def( "init", &initWrapper )
 		.def( "addPath", (bool (PathMatcher::*)( const std::string & ))&PathMatcher::addPath )
-		.def( "addPath", &addPathInternedStringVectorData )
+		.def( "addPath", (bool (PathMatcher::*)( const std::vector<IECore::InternedString> & ))&PathMatcher::addPath )
 		.def( "removePath", (bool (PathMatcher::*)( const std::string & ))&PathMatcher::removePath )
-		.def( "removePath", &removePathInternedStringVectorData )
+		.def( "removePath", (bool (PathMatcher::*)( const std::vector<IECore::InternedString> & ))&PathMatcher::removePath )
 		.def( "clear", &PathMatcher::clear )
 		.def( "paths", &paths )
 		.def( "match", (unsigned (PathMatcher ::*)( const std::string & ) const)&PathMatcher::match )
-		.def( "match", &matchInternedStringVectorData )
+		.def( "match", (unsigned (PathMatcher ::*)( const std::vector<IECore::InternedString> & ) const)&PathMatcher::match )
 		.def( self == self )
 		.def( self != self )
 	;

@@ -51,9 +51,9 @@
      borderopacity="1"
      inkscape:pageopacity="1"
      inkscape:pageshadow="2"
-     inkscape:zoom="5.6568543"
-     inkscape:cx="345.4161"
-     inkscape:cy="823.71361"
+     inkscape:zoom="22.627417"
+     inkscape:cx="327.38632"
+     inkscape:cy="859.25733"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="true"
@@ -64,7 +64,7 @@
      inkscape:window-maximized="0"
      inkscape:snap-global="true"
      inkscape:snap-nodes="true"
-     inkscape:snap-bbox="false"
+     inkscape:snap-bbox="true"
      inkscape:object-nodes="true"
      inkscape:snap-object-midpoints="false"
      inkscape:snap-bbox-midpoints="false"
@@ -2234,5 +2234,16 @@
        id="path3303"
        inkscape:connector-curvature="0"
        sodipodi:nodetypes="ssscs" />
+    <path
+       transform="matrix(0.375,0,0,0.375,269.25,176.61218)"
+       d="m 166,38 a 8,8 0 1 1 -16,0 8,8 0 1 1 16,0 z"
+       sodipodi:ry="8"
+       sodipodi:rx="8"
+       sodipodi:cy="38"
+       sodipodi:cx="158"
+       id="forExport:setMembershipDot"
+       style="fill:#f9f9f9;fill-opacity:1;stroke:#3c3c3c;stroke-width:2.66666675;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       sodipodi:type="arc"
+       inkscape:label="#path3699" />
   </g>
 </svg>
