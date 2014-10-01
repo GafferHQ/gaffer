@@ -1594,3 +1594,151 @@ class __OutputsSection( Section ) :
 		self._mainColumn()[:] = rows
 
 SceneInspector.registerSection( __OutputsSection, tab = "Globals" )
+
+##########################################################################
+# Sets section
+##########################################################################
+
+class _SetDiff( Diff ) :
+
+	def __init__( self, **kw ) :
+
+		self.__row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal )
+
+		Diff.__init__( self, self.__row, **kw )
+
+		self.__connections = []
+		with self.__row :
+			for i, name in enumerate( [ "gafferDiffA", "gafferDiffCommon", "gafferDiffB" ] ) :
+				with GafferUI.Frame( borderWidth = 5 ) as frame :
+
+					frame._qtWidget().setObjectName( name )
+					frame._qtWidget().setProperty( "gafferRounded", True )
+
+					self.__connections.extend( [
+						frame.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) ),
+						frame.buttonReleaseSignal().connect( Gaffer.WeakMethod( self.__buttonRelease ) ),
+						frame.enterSignal().connect( lambda widget : widget.setHighlighted( True ) ),
+						frame.leaveSignal().connect( lambda widget : widget.setHighlighted( False ) ),
+						frame.dragBeginSignal().connect( Gaffer.WeakMethod( self.__dragBegin ) ),
+						frame.dragEndSignal().connect( Gaffer.WeakMethod( self.__dragEnd ) ),
+					] )
+
+					GafferUI.Label( "" )
+
+	def update( self, values ) :
+
+		paths = [ v.value.paths() if v is not None else [] for v in values ]
+		if len( paths ) == 1 :
+			self.__updateField( 0, [] )
+			self.__updateField( 1, paths[0] )
+			self.__updateField( 2, [] )
+		else :
+			paths = [ set( p ) for p in paths ]
+			aOnly = paths[0] - paths[1]
+			bOnly = paths[1] - paths[0]
+			intersection = paths[0] & paths[1]
+			self.__updateField( 0, paths[0] - paths[1], "-" )
+			self.__updateField( 1, paths[0] & paths[1], "" )
+			self.__updateField( 2, paths[1] - paths[0], " +" )
+
+		self.__updateCorners()
+
+	def __updateField( self, i, paths, prefix = "" ) :
+
+		self.__row[i].paths = paths
+
+		if not len( paths ) :
+			self.__row[i].setVisible( False )
+			return
+
+		self.__row[i].getChild().setText( prefix + str( len( paths ) ) )
+		self.__row[i].setVisible( True )
+
+	def __updateCorners( self ) :
+
+		## \todo It feels like it might be nice to have a Container that
+		# did this automatically. Perhaps a ButtonRow or something like that?
+		flatLeft = False
+		flatRight = False
+		for i in range( 0, len( self.__row ) ) :
+			widgetLeft = self.__row[i]
+			widgetRight = self.__row[-1-i]
+			if widgetLeft.getVisible() :
+				widgetLeft._qtWidget().setProperty( "gafferFlatLeft", flatLeft )
+				flatLeft = True
+			if widgetRight.getVisible() :
+				widgetRight._qtWidget().setProperty( "gafferFlatRight", flatRight )
+				flatRight = True
+
+	def __buttonPress( self, widget, event ) :
+
+		return event.buttons == event.Buttons.Left
+
+	def __buttonRelease( self, widget, event ) :
+
+		if event.buttons != event.Buttons.None or event.button != event.Buttons.Left :
+			return False
+
+		section = self.ancestor( _SetsSection )
+		editor = section.ancestor( SceneInspector )
+
+		context = editor.getContext()
+		context["ui:scene:selectedPaths"] = IECore.StringVectorData( widget.paths )
+
+		return True
+
+	def __dragBegin( self, widget, event ) :
+
+		if event.buttons != event.Buttons.Left :
+			return None
+
+		GafferUI.Pointer.setCurrent( "objects" )
+		return IECore.StringVectorData( widget.paths )
+
+	def __dragEnd( self, widget, event ) :
+
+		GafferUI.Pointer.setCurrent( None )
+
+class _SetsSection( Section ) :
+
+	def __init__( self ) :
+
+		Section.__init__( self, collapsed = True, label = "Sets" )
+
+		with self._mainColumn() :
+			self.__diffColumn = DiffColumn( self.__Inspector(), _SetDiff )
+
+	def update( self, targets ) :
+
+		self.__diffColumn.update( targets )
+
+	class __Inspector( Inspector ) :
+
+		def __init__( self, setName = None ) :
+
+			self.__setName = setName
+
+		def name( self ) :
+
+			if self.__setName == "__lights" :
+				return "Lights"
+			elif self.__setName == "__cameras" :
+				return "Cameras"
+			else :
+				return self.__setName or ""
+
+		def __call__( self, target ) :
+
+			globals = target.scene["globals"].getValue()
+			sets = globals.get( "gaffer:sets", {} )
+			return sets.get( self.__setName )
+
+		def children( self, target ) :
+
+			sets = target.scene["globals"].getValue().get( "gaffer:sets", {} )
+			return [ self.__class__( setName ) for setName in sorted( sets.keys() ) ]
+
+SceneInspector.SetsSection = _SetsSection
+
+SceneInspector.registerSection( _SetsSection, tab = "Globals" )

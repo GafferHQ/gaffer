@@ -1645,19 +1645,65 @@ class Widget( object ) :
 
 		QFrame#gafferDiffA {
 
-			background: solid rgba( 181, 30, 0, 60 );
+			background: solid rgba( 181, 30, 0, 80 );
 
 		}
 
 		QFrame#gafferDiffB {
 
-			background: solid rgba( 34, 159, 0, 60 );
+			background: solid rgba( 34, 159, 0, 80 );
+
+		}
+
+		QFrame#gafferDiffCommon {
+
+			background: solid rgba( 170, 170, 170, 80 );
 
 		}
 
 		QFrame#gafferLighter {
 
 			background: solid rgba( 255, 255, 255, 10 );
+
+		}
+
+		QFrame[gafferHighlighted=\"true\"]#gafferDiffA, QFrame[gafferHighlighted=\"true\"]#gafferDiffB, QFrame[gafferHighlighted=\"true\"]#gafferDiffCommon {
+			background-color: $brightColor;
+		}
+
+		/* turn off rounded corners based on adjacency of other widgets */
+
+		*[gafferRounded="true"] {
+
+			border-radius: 8px;
+
+		}
+
+		*[gafferFlatTop="true"] {
+
+			border-top-left-radius: 0px;
+			border-top-right-radius: 0px;
+
+		}
+
+		*[gafferFlatBottom="true"] {
+
+			border-bottom-left-radius: 0px;
+			border-bottom-right-radius: 0px;
+
+		}
+
+		*[gafferFlatLeft="true"] {
+
+			border-top-left-radius: 0px;
+			border-bottom-left-radius: 0px;
+
+		}
+
+		*[gafferFlatRight="true"] {
+
+			border-top-right-radius: 0px;
+			border-bottom-right-radius: 0px;
 
 		}
 
