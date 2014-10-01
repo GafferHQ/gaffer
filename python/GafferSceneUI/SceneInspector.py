@@ -250,16 +250,31 @@ GafferUI.EditorWidget.registerType( "SceneInspector", SceneInspector )
 # Diff
 ##########################################################################
 
-## Base class for widgets which want to display a diff view for a pair
-# of values. It maintains two frames, one for each value, and in update()
-# it displays one or both of the frames, with background colours appropriate
-# to the relationship between the two values.
+## Abstract base class for widgets which display 0-2 values of
+# the same type, highlighting the differences in some way when
+# displaying 2 different values.
 class Diff( GafferUI.Widget ) :
+
+	def __init__( self, topLevelWidget, **kw ) :
+
+		GafferUI.Widget.__init__( self, topLevelWidget, **kw )
+
+	## Must be implemented to update the UI for the given
+	# values.
+	def update( self, values ) :
+
+		raise NotImplementedError
+
+# Base class for showing side-by-side diffs. It maintains two frames,
+# one for each value, and in update() it displays one or both of the frames,
+# with background colours appropriate to the relationship between the two
+# values.
+class SideBySideDiff( Diff ) :
 
 	def __init__( self, **kw ) :
 
 		self.__grid = GafferUI.GridContainer()
-		GafferUI.Widget.__init__( self, self.__grid, **kw )
+		Diff.__init__( self, self.__grid, **kw )
 
 		with self.__grid :
 			for i in range( 0, 2 ) :
@@ -314,14 +329,16 @@ class Diff( GafferUI.Widget ) :
 			if cornerWidget is not None :
 				cornerWidget.setVisible( visibilities[i] )
 
-		self.frame( 0 )._qtWidget().setObjectName( "gafferDiffA" if different else "" )
-		self.frame( 0 )._repolish()
+		name =  "gafferDiffA" if different else ""
+		if name != self.frame( 0 )._qtWidget().objectName() :
+			self.frame( 0 )._qtWidget().setObjectName( name )
+			self.frame( 0 )._repolish()
 
-class TextDiff( Diff ) :
+class TextDiff( SideBySideDiff ) :
 
 	def __init__( self, highlightDiffs=True, **kw ) :
 
-		Diff.__init__( self, **kw )
+		SideBySideDiff.__init__( self, **kw )
 
 		self.__connections = []
 		for i in range( 0, 2 ) :
@@ -335,7 +352,7 @@ class TextDiff( Diff ) :
 
 	def update( self, values ) :
 
-		Diff.update( self, values )
+		SideBySideDiff.update( self, values )
 
 		self.__values = values
 
@@ -543,6 +560,7 @@ class Row( GafferUI.Widget ) :
 			 GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
 		)
 
+		self.__alternate = None
 		self.setAlternate( alternate )
 
 	def listContainer( self ) :
@@ -551,12 +569,16 @@ class Row( GafferUI.Widget ) :
 
 	def setAlternate( self, alternate ) :
 
+		if alternate == self.__alternate :
+			return
+
+		self.__alternate = alternate
 		self.__frame._qtWidget().setObjectName( "gafferLighter" if alternate else "" )
 		self.__frame._repolish()
 
 	def getAlternate( self ) :
 
-		return self.__frame._qtWidget.objectName() == "gafferLighter"
+		return self.__alternate
 
 ##########################################################################
 # Inspector
@@ -620,17 +642,18 @@ class DiffRow( Row ) :
 			diff = diffCreator()
 			self.listContainer().append( diff )
 
-			if inspector.inspectsAttributes() :
+			if inspector.inspectsAttributes() and isinstance( diff, SideBySideDiff ) :
 
 				diff.setCornerWidget( 0, GafferUI.Label( "<sup>Inherited</sup>") )
 				diff.setCornerWidget( 1, GafferUI.Label( "<sup>Inherited</sup>") )
 
 			self.__diffConnections = []
-			for i in range( 0, 2 ) :
+			diffWidgets = [ diff.frame( 0 ), diff.frame( 1 ) ] if isinstance( diff, SideBySideDiff ) else [ diff ]
+			for diffWidget in diffWidgets :
 				self.__diffConnections.extend( [
-					diff.frame( i ).enterSignal().connect( Gaffer.WeakMethod( self.__enter ) ),
-					diff.frame( i ).leaveSignal().connect( Gaffer.WeakMethod( self.__leave ) ),
-					diff.frame( i ).contextMenuSignal().connect( Gaffer.WeakMethod( self.__contextMenu ) )
+					diffWidget.enterSignal().connect( Gaffer.WeakMethod( self.__enter ) ),
+					diffWidget.leaveSignal().connect( Gaffer.WeakMethod( self.__leave ) ),
+					diffWidget.contextMenuSignal().connect( Gaffer.WeakMethod( self.__contextMenu ) ),
 				] )
 
 			GafferUI.Spacer( IECore.V2i( 0 ), expand = True )
@@ -641,13 +664,13 @@ class DiffRow( Row ) :
 	def update( self, targets ) :
 
 		self.__targets = targets
-		values = [ self.__inspector( target ) for target in targets ]
-		self.__diff().update( values )
+		self.__values = [ self.__inspector( target ) for target in targets ]
+		self.__diff().update( self.__values )
 
 		if self.__inspector.inspectsAttributes() :
 			localValues = [ self.__inspector( target, ignoreInheritance=True ) for target in targets ]
 			for i, value in enumerate( localValues ) :
-				if value is not None :
+				if value is not None and isinstance( self.__diff(), SideBySideDiff ) :
 					self.__diff().getCornerWidget( i ).setVisible( False )
 
 	def __label( self ) :
@@ -674,28 +697,40 @@ class DiffRow( Row ) :
 
 	def __menuDefinition( self, widget ) :
 
-		if widget is self.__diff().frame( 0 ) :
-			target = self.__targets[0]
+		diff = self.__diff()
+		if isinstance( diff, SideBySideDiff ) :
+			# For SideBySideDiffs, we know which target the user has clicked on
+			# and only present menu items for that target.
+			targets = [ self.__targets[ 0 if widget is diff.frame( 0 ) else 1 ] ]
 		else :
-			target = self.__targets[1]
+			# But for other Diff types we don't know, and so present menu items
+			# for any target which has a value.
+			targets = [ t for i, t in enumerate( self.__targets ) if self.__values[i] is not None ]
 
 		m = IECore.MenuDefinition()
 
-		m.append(
-			"/Show History",
-			{
-				"command" : IECore.curry( Gaffer.WeakMethod( self.__showHistory ), target ),
-			}
-		)
+		for i, target in enumerate( targets ) :
 
-		if self.__inspector.inspectsAttributes() :
+			if len( targets ) == 2 :
+				labelSuffix = "/For " + ( "A", "B" )[i]
+			else :
+				labelSuffix = ""
 
 			m.append(
-				"/Show Inheritance",
+				"/Show History" + labelSuffix,
 				{
-					"command" : IECore.curry( Gaffer.WeakMethod( self.__showInheritance ), target ),
+					"command" : IECore.curry( Gaffer.WeakMethod( self.__showHistory ), target ),
 				}
 			)
+
+			if self.__inspector.inspectsAttributes() :
+
+				m.append(
+					"/Show Inheritance" + labelSuffix,
+					{
+						"command" : IECore.curry( Gaffer.WeakMethod( self.__showInheritance ), target ),
+					}
+				)
 
 		return m
 
@@ -789,6 +824,7 @@ class Section( GafferUI.Widget ) :
 
 # export classes for use in custom sections
 SceneInspector.Diff = Diff
+SceneInspector.SideBySideDiff = SideBySideDiff
 SceneInspector.TextDiff = TextDiff
 SceneInspector.Row = Row
 SceneInspector.Inspector = Inspector
@@ -911,7 +947,7 @@ class _InheritanceSection( Section ) :
 					if atEitherEnd or value is not None :
 						d = self.__diffCreator()
 						d.update( ( prevDisplayedValue, fullValue ) )
-						if prevDisplayedValue != fullValue :
+						if prevDisplayedValue != fullValue and isinstance( d, SideBySideDiff ) :
 							d.frame( 0 ).setVisible( False )
 
 				prevDisplayedValue = fullValue
@@ -992,7 +1028,7 @@ class _HistorySection( Section ) :
 					history[i].value
 				] )
 
-				if i == 0 or history[i-1].value != history[i].value :
+				if (i == 0 or history[i-1].value != history[i].value) and isinstance( diff, SideBySideDiff ) :
 					diff.frame( 0 if history[i].value is not None else 1 ).setVisible( False )
 
 		self._mainColumn()[:] = rows
@@ -1338,11 +1374,11 @@ SceneInspector.registerSection( __ObjectSection, tab = "Selection" )
 # Set Membership section
 ##########################################################################
 
-class _SetMembershipDiff( Diff ) :
+class _SetMembershipDiff( SideBySideDiff ) :
 
 	def __init__( self, **kw ) :
 
-		Diff.__init__( self, **kw )
+		SideBySideDiff.__init__( self, **kw )
 
 		for i in range( 0, 2 ) :
 			self.frame( i )._qtWidget().layout().setContentsMargins( 2, 2, 2, 2 )
@@ -1558,3 +1594,151 @@ class __OutputsSection( Section ) :
 		self._mainColumn()[:] = rows
 
 SceneInspector.registerSection( __OutputsSection, tab = "Globals" )
+
+##########################################################################
+# Sets section
+##########################################################################
+
+class _SetDiff( Diff ) :
+
+	def __init__( self, **kw ) :
+
+		self.__row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal )
+
+		Diff.__init__( self, self.__row, **kw )
+
+		self.__connections = []
+		with self.__row :
+			for i, name in enumerate( [ "gafferDiffA", "gafferDiffCommon", "gafferDiffB" ] ) :
+				with GafferUI.Frame( borderWidth = 5 ) as frame :
+
+					frame._qtWidget().setObjectName( name )
+					frame._qtWidget().setProperty( "gafferRounded", True )
+
+					self.__connections.extend( [
+						frame.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) ),
+						frame.buttonReleaseSignal().connect( Gaffer.WeakMethod( self.__buttonRelease ) ),
+						frame.enterSignal().connect( lambda widget : widget.setHighlighted( True ) ),
+						frame.leaveSignal().connect( lambda widget : widget.setHighlighted( False ) ),
+						frame.dragBeginSignal().connect( Gaffer.WeakMethod( self.__dragBegin ) ),
+						frame.dragEndSignal().connect( Gaffer.WeakMethod( self.__dragEnd ) ),
+					] )
+
+					GafferUI.Label( "" )
+
+	def update( self, values ) :
+
+		paths = [ v.value.paths() if v is not None else [] for v in values ]
+		if len( paths ) == 1 :
+			self.__updateField( 0, [] )
+			self.__updateField( 1, paths[0] )
+			self.__updateField( 2, [] )
+		else :
+			paths = [ set( p ) for p in paths ]
+			aOnly = paths[0] - paths[1]
+			bOnly = paths[1] - paths[0]
+			intersection = paths[0] & paths[1]
+			self.__updateField( 0, paths[0] - paths[1], "-" )
+			self.__updateField( 1, paths[0] & paths[1], "" )
+			self.__updateField( 2, paths[1] - paths[0], " +" )
+
+		self.__updateCorners()
+
+	def __updateField( self, i, paths, prefix = "" ) :
+
+		self.__row[i].paths = paths
+
+		if not len( paths ) :
+			self.__row[i].setVisible( False )
+			return
+
+		self.__row[i].getChild().setText( prefix + str( len( paths ) ) )
+		self.__row[i].setVisible( True )
+
+	def __updateCorners( self ) :
+
+		## \todo It feels like it might be nice to have a Container that
+		# did this automatically. Perhaps a ButtonRow or something like that?
+		flatLeft = False
+		flatRight = False
+		for i in range( 0, len( self.__row ) ) :
+			widgetLeft = self.__row[i]
+			widgetRight = self.__row[-1-i]
+			if widgetLeft.getVisible() :
+				widgetLeft._qtWidget().setProperty( "gafferFlatLeft", flatLeft )
+				flatLeft = True
+			if widgetRight.getVisible() :
+				widgetRight._qtWidget().setProperty( "gafferFlatRight", flatRight )
+				flatRight = True
+
+	def __buttonPress( self, widget, event ) :
+
+		return event.buttons == event.Buttons.Left
+
+	def __buttonRelease( self, widget, event ) :
+
+		if event.buttons != event.Buttons.None or event.button != event.Buttons.Left :
+			return False
+
+		section = self.ancestor( _SetsSection )
+		editor = section.ancestor( SceneInspector )
+
+		context = editor.getContext()
+		context["ui:scene:selectedPaths"] = IECore.StringVectorData( widget.paths )
+
+		return True
+
+	def __dragBegin( self, widget, event ) :
+
+		if event.buttons != event.Buttons.Left :
+			return None
+
+		GafferUI.Pointer.setCurrent( "objects" )
+		return IECore.StringVectorData( widget.paths )
+
+	def __dragEnd( self, widget, event ) :
+
+		GafferUI.Pointer.setCurrent( None )
+
+class _SetsSection( Section ) :
+
+	def __init__( self ) :
+
+		Section.__init__( self, collapsed = True, label = "Sets" )
+
+		with self._mainColumn() :
+			self.__diffColumn = DiffColumn( self.__Inspector(), _SetDiff )
+
+	def update( self, targets ) :
+
+		self.__diffColumn.update( targets )
+
+	class __Inspector( Inspector ) :
+
+		def __init__( self, setName = None ) :
+
+			self.__setName = setName
+
+		def name( self ) :
+
+			if self.__setName == "__lights" :
+				return "Lights"
+			elif self.__setName == "__cameras" :
+				return "Cameras"
+			else :
+				return self.__setName or ""
+
+		def __call__( self, target ) :
+
+			globals = target.scene["globals"].getValue()
+			sets = globals.get( "gaffer:sets", {} )
+			return sets.get( self.__setName )
+
+		def children( self, target ) :
+
+			sets = target.scene["globals"].getValue().get( "gaffer:sets", {} )
+			return [ self.__class__( setName ) for setName in sorted( sets.keys() ) ]
+
+SceneInspector.SetsSection = _SetsSection
+
+SceneInspector.registerSection( _SetsSection, tab = "Globals" )
