@@ -250,16 +250,31 @@ GafferUI.EditorWidget.registerType( "SceneInspector", SceneInspector )
 # Diff
 ##########################################################################
 
-## Base class for widgets which want to display a diff view for a pair
-# of values. It maintains two frames, one for each value, and in update()
-# it displays one or both of the frames, with background colours appropriate
-# to the relationship between the two values.
+## Abstract base class for widgets which display 0-2 values of
+# the same type, highlighting the differences in some way when
+# displaying 2 different values.
 class Diff( GafferUI.Widget ) :
+
+	def __init__( self, topLevelWidget, **kw ) :
+
+		GafferUI.Widget.__init__( self, topLevelWidget, **kw )
+
+	## Must be implemented to update the UI for the given
+	# values.
+	def update( self, values ) :
+
+		raise NotImplementedError
+
+# Base class for showing side-by-side diffs. It maintains two frames,
+# one for each value, and in update() it displays one or both of the frames,
+# with background colours appropriate to the relationship between the two
+# values.
+class SideBySideDiff( Diff ) :
 
 	def __init__( self, **kw ) :
 
 		self.__grid = GafferUI.GridContainer()
-		GafferUI.Widget.__init__( self, self.__grid, **kw )
+		Diff.__init__( self, self.__grid, **kw )
 
 		with self.__grid :
 			for i in range( 0, 2 ) :
@@ -319,11 +334,11 @@ class Diff( GafferUI.Widget ) :
 			self.frame( 0 )._qtWidget().setObjectName( name )
 			self.frame( 0 )._repolish()
 
-class TextDiff( Diff ) :
+class TextDiff( SideBySideDiff ) :
 
 	def __init__( self, highlightDiffs=True, **kw ) :
 
-		Diff.__init__( self, **kw )
+		SideBySideDiff.__init__( self, **kw )
 
 		self.__connections = []
 		for i in range( 0, 2 ) :
@@ -337,7 +352,7 @@ class TextDiff( Diff ) :
 
 	def update( self, values ) :
 
-		Diff.update( self, values )
+		SideBySideDiff.update( self, values )
 
 		self.__values = values
 
@@ -627,17 +642,18 @@ class DiffRow( Row ) :
 			diff = diffCreator()
 			self.listContainer().append( diff )
 
-			if inspector.inspectsAttributes() :
+			if inspector.inspectsAttributes() and isinstance( diff, SideBySideDiff ) :
 
 				diff.setCornerWidget( 0, GafferUI.Label( "<sup>Inherited</sup>") )
 				diff.setCornerWidget( 1, GafferUI.Label( "<sup>Inherited</sup>") )
 
 			self.__diffConnections = []
-			for i in range( 0, 2 ) :
+			diffWidgets = [ diff.frame( 0 ), diff.frame( 1 ) ] if isinstance( diff, SideBySideDiff ) else [ diff ]
+			for diffWidget in diffWidgets :
 				self.__diffConnections.extend( [
-					diff.frame( i ).enterSignal().connect( Gaffer.WeakMethod( self.__enter ) ),
-					diff.frame( i ).leaveSignal().connect( Gaffer.WeakMethod( self.__leave ) ),
-					diff.frame( i ).contextMenuSignal().connect( Gaffer.WeakMethod( self.__contextMenu ) )
+					diffWidget.enterSignal().connect( Gaffer.WeakMethod( self.__enter ) ),
+					diffWidget.leaveSignal().connect( Gaffer.WeakMethod( self.__leave ) ),
+					diffWidget.contextMenuSignal().connect( Gaffer.WeakMethod( self.__contextMenu ) ),
 				] )
 
 			GafferUI.Spacer( IECore.V2i( 0 ), expand = True )
@@ -648,13 +664,13 @@ class DiffRow( Row ) :
 	def update( self, targets ) :
 
 		self.__targets = targets
-		values = [ self.__inspector( target ) for target in targets ]
-		self.__diff().update( values )
+		self.__values = [ self.__inspector( target ) for target in targets ]
+		self.__diff().update( self.__values )
 
 		if self.__inspector.inspectsAttributes() :
 			localValues = [ self.__inspector( target, ignoreInheritance=True ) for target in targets ]
 			for i, value in enumerate( localValues ) :
-				if value is not None :
+				if value is not None and isinstance( self.__diff, SideBySideDiff ) :
 					self.__diff().getCornerWidget( i ).setVisible( False )
 
 	def __label( self ) :
@@ -681,28 +697,40 @@ class DiffRow( Row ) :
 
 	def __menuDefinition( self, widget ) :
 
-		if widget is self.__diff().frame( 0 ) :
-			target = self.__targets[0]
+		diff = self.__diff()
+		if isinstance( diff, SideBySideDiff ) :
+			# For SideBySideDiffs, we know which target the user has clicked on
+			# and only present menu items for that target.
+			targets = [ self.__targets[ 0 if widget is diff.frame( 0 ) else 1 ] ]
 		else :
-			target = self.__targets[1]
+			# But for other Diff types we don't know, and so present menu items
+			# for any target which has a value.
+			targets = [ t for i, t in enumerate( self.__targets ) if self.__values[i] is not None ]
 
 		m = IECore.MenuDefinition()
 
-		m.append(
-			"/Show History",
-			{
-				"command" : IECore.curry( Gaffer.WeakMethod( self.__showHistory ), target ),
-			}
-		)
+		for i, target in enumerate( targets ) :
 
-		if self.__inspector.inspectsAttributes() :
+			if len( targets ) == 2 :
+				labelSuffix = "/For " + ( "A", "B" )[i]
+			else :
+				labelSuffix = ""
 
 			m.append(
-				"/Show Inheritance",
+				"/Show History" + labelSuffix,
 				{
-					"command" : IECore.curry( Gaffer.WeakMethod( self.__showInheritance ), target ),
+					"command" : IECore.curry( Gaffer.WeakMethod( self.__showHistory ), target ),
 				}
 			)
+
+			if self.__inspector.inspectsAttributes() :
+
+				m.append(
+					"/Show Inheritance" + labelSuffix,
+					{
+						"command" : IECore.curry( Gaffer.WeakMethod( self.__showInheritance ), target ),
+					}
+				)
 
 		return m
 
@@ -796,6 +824,7 @@ class Section( GafferUI.Widget ) :
 
 # export classes for use in custom sections
 SceneInspector.Diff = Diff
+SceneInspector.SideBySideDiff = SideBySideDiff
 SceneInspector.TextDiff = TextDiff
 SceneInspector.Row = Row
 SceneInspector.Inspector = Inspector
@@ -918,7 +947,7 @@ class _InheritanceSection( Section ) :
 					if atEitherEnd or value is not None :
 						d = self.__diffCreator()
 						d.update( ( prevDisplayedValue, fullValue ) )
-						if prevDisplayedValue != fullValue :
+						if prevDisplayedValue != fullValue and isinstance( d, SideBySideDiff ) :
 							d.frame( 0 ).setVisible( False )
 
 				prevDisplayedValue = fullValue
@@ -999,7 +1028,7 @@ class _HistorySection( Section ) :
 					history[i].value
 				] )
 
-				if i == 0 or history[i-1].value != history[i].value :
+				if (i == 0 or history[i-1].value != history[i].value) and isinstance( diff, SideBySideDiff ) :
 					diff.frame( 0 if history[i].value is not None else 1 ).setVisible( False )
 
 		self._mainColumn()[:] = rows
@@ -1345,11 +1374,11 @@ SceneInspector.registerSection( __ObjectSection, tab = "Selection" )
 # Set Membership section
 ##########################################################################
 
-class _SetMembershipDiff( Diff ) :
+class _SetMembershipDiff( SideBySideDiff ) :
 
 	def __init__( self, **kw ) :
 
-		Diff.__init__( self, **kw )
+		SideBySideDiff.__init__( self, **kw )
 
 		for i in range( 0, 2 ) :
 			self.frame( i )._qtWidget().layout().setContentsMargins( 2, 2, 2, 2 )
