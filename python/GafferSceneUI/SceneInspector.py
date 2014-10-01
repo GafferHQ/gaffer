@@ -670,7 +670,7 @@ class DiffRow( Row ) :
 		if self.__inspector.inspectsAttributes() :
 			localValues = [ self.__inspector( target, ignoreInheritance=True ) for target in targets ]
 			for i, value in enumerate( localValues ) :
-				if value is not None and isinstance( self.__diff, SideBySideDiff ) :
+				if value is not None and isinstance( self.__diff(), SideBySideDiff ) :
 					self.__diff().getCornerWidget( i ).setVisible( False )
 
 	def __label( self ) :
