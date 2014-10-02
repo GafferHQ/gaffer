@@ -330,6 +330,15 @@ _styleSheet = string.Template(
 		left: -4px;
 	}
 
+	QPushButton#gafferWithFrame[gafferMenuIndicator="true"] {
+
+		background-image: url($GAFFER_ROOT/graphics/menuIndicator.png);
+		background-repeat: none;
+		background-position: center right;
+		padding-right: 20px
+
+	}
+
 	QComboBox {
 
 		padding: 0;

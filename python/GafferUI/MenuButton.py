@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012-2014, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -74,6 +74,16 @@ class MenuButton( GafferUI.Button ) :
 	def getMenu( self ) :
 
 		return self.__menu
+
+	def setText( self, text ) :
+
+		GafferUI.Button.setText( self, text )
+
+		# Because we can't use QPushButton::setMenu() to manage our menus,
+		# we also can't use the QPushButton::menu-indicator subcontrol to
+		# style menus. Instead we use this custom property to drive the
+		# stylesheet.
+		self._qtWidget().setProperty( "gafferMenuIndicator", text != "" )
 
 	def __pressed( self ) :
 
