@@ -57,8 +57,12 @@ using namespace IECore;
 using namespace Gaffer;
 using namespace GafferScene;
 
+tbb::atomic<int> SceneProcedural::g_pendingSceneProcedurals;
+
+SceneProcedural::AllRenderedSignal SceneProcedural::g_allRenderedSignal;
+
 SceneProcedural::SceneProcedural( ConstScenePlugPtr scenePlug, const Gaffer::Context *context, const ScenePlug::ScenePath &scenePath, const PathMatcherData *pathsToExpand, size_t minimumExpansionDepth )
-	:	m_scenePlug( scenePlug ), m_context( new Context( *context ) ), m_scenePath( scenePath ), m_pathsToExpand( pathsToExpand ? pathsToExpand->copy() : 0 ), m_minimumExpansionDepth( minimumExpansionDepth )
+	:	m_scenePlug( scenePlug ), m_context( new Context( *context ) ), m_scenePath( scenePath ), m_pathsToExpand( pathsToExpand ? pathsToExpand->copy() : 0 ), m_minimumExpansionDepth( minimumExpansionDepth ), m_rendered( false )
 {
 	// get a reference to the script node to prevent it being destroyed while we're doing a render:
 	m_scriptNode = m_scenePlug->ancestor<ScriptNode>();
@@ -95,13 +99,14 @@ SceneProcedural::SceneProcedural( ConstScenePlugPtr scenePlug, const Gaffer::Con
 	m_attributes.deformationBlurSegments = deformationBlurSegmentsData ? deformationBlurSegmentsData->readable() : 1;
 
 	updateAttributes( true );
+	++g_pendingSceneProcedurals;
 
 }
 
 SceneProcedural::SceneProcedural( const SceneProcedural &other, const ScenePlug::ScenePath &scenePath )
 	:	m_scenePlug( other.m_scenePlug ), m_context( new Context( *(other.m_context), Context::Shared ) ), m_scenePath( scenePath ),
 		m_pathsToExpand( other.m_pathsToExpand ), m_minimumExpansionDepth( other.m_minimumExpansionDepth ? other.m_minimumExpansionDepth - 1 : 0 ),
-		m_options( other.m_options ), m_attributes( other.m_attributes )
+		m_options( other.m_options ), m_attributes( other.m_attributes ), m_rendered( false )
 {
 	// get a reference to the script node to prevent it being destroyed while we're doing a render:
 	m_scriptNode = m_scenePlug->ancestor<ScriptNode>();
@@ -109,10 +114,15 @@ SceneProcedural::SceneProcedural( const SceneProcedural &other, const ScenePlug:
 	m_context->set( ScenePlug::scenePathContextName, m_scenePath );
 
 	updateAttributes( false );
+	++g_pendingSceneProcedurals;
 }
 
 SceneProcedural::~SceneProcedural()
 {
+	if( !m_rendered )
+	{
+		decrementPendingProcedurals();
+	}
 }
 
 Imath::Box3f SceneProcedural::bound() const
@@ -189,6 +199,12 @@ void SceneProcedural::render( Renderer *renderer ) const
 		const BoolData *visibilityData = attributes->member<BoolData>( "scene:visible" );
 		if( visibilityData && !visibilityData->readable() )
 		{
+		
+			if( !m_rendered )
+			{
+				decrementPendingProcedurals();
+			}
+			m_rendered = true;
 			return;
 		}
 
@@ -348,6 +364,27 @@ void SceneProcedural::render( Renderer *renderer ) const
 	catch( const std::exception &e )
 	{
 		IECore::msg( IECore::Msg::Error, "SceneProcedural::render()", e.what() );
+	}
+	if( !m_rendered )
+	{
+		decrementPendingProcedurals();
+	}
+	m_rendered = true;
+}
+
+void SceneProcedural::decrementPendingProcedurals() const
+{
+	--g_pendingSceneProcedurals;
+	if( g_pendingSceneProcedurals == 0 )
+	{
+		try
+		{
+			g_allRenderedSignal();
+		}
+		catch( const std::exception& e )
+		{
+			IECore::msg( IECore::Msg::Error, "SceneProcedural::allRenderedSignal() error", e.what() );
+		}
 	}
 }
 
@@ -548,4 +585,9 @@ void SceneProcedural::drawCoordinateSystem( const IECore::CoordinateSystem *coor
 
 	CurvesPrimitivePtr c = new IECore::CurvesPrimitive( vertIds, CubicBasisf::linear(), false, pData );
 	c->render( renderer );
+}
+
+SceneProcedural::AllRenderedSignal &SceneProcedural::allRenderedSignal()
+{
+	return g_allRenderedSignal;
 }

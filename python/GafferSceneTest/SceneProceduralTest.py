@@ -178,6 +178,73 @@ class SceneProceduralTest( unittest.TestCase ) :
 			return None
 
 		self.assertNotEqual( findMesh( renderer.world() ), None )
+	
+	def testAllRenderedSignal( self ) :
+		
+		class AllRenderedTest :
+			allRenderedSignalCalled = False
+			def allRendered( self ):
+				self.allRenderedSignalCalled = True
+		
+		script = Gaffer.ScriptNode()
+		script["plane"] = GafferScene.Plane()
+		
+		# test creating/deleting a single procedural:
+		t = AllRenderedTest()
+		allRenderedConnection = GafferScene.SceneProcedural.allRenderedSignal().connect( t.allRendered )
+		
+		procedural = GafferScene.SceneProcedural( script["plane"]["out"], Gaffer.Context(), "/" )
+		self.assertEqual( t.allRenderedSignalCalled, False )
+		del procedural
+		self.assertEqual( t.allRenderedSignalCalled, True )
+		
+		# create/delete two of 'em:
+		t = AllRenderedTest()
+		allRenderedConnection = GafferScene.SceneProcedural.allRenderedSignal().connect( t.allRendered )
+		procedural1 = GafferScene.SceneProcedural( script["plane"]["out"], Gaffer.Context(), "/" )
+		procedural2 = GafferScene.SceneProcedural( script["plane"]["out"], Gaffer.Context(), "/" )
+		
+		self.assertEqual( t.allRenderedSignalCalled, False )
+		del procedural1
+		self.assertEqual( t.allRenderedSignalCalled, False )
+		del procedural2
+		self.assertEqual( t.allRenderedSignalCalled, True )
+		
+		
+		# now actually render them:
+		renderer = IECore.CapturingRenderer()
+		t = AllRenderedTest()
+		allRenderedConnection = GafferScene.SceneProcedural.allRenderedSignal().connect( t.allRendered )
+		procedural1 = GafferScene.SceneProcedural( script["plane"]["out"], Gaffer.Context(), "/" )
+		procedural2 = GafferScene.SceneProcedural( script["plane"]["out"], Gaffer.Context(), "/" )
+		
+		self.assertEqual( t.allRenderedSignalCalled, False )
+		with IECore.WorldBlock( renderer ) :
+			renderer.procedural( procedural1 )
+		
+		self.assertEqual( t.allRenderedSignalCalled, False )
+		with IECore.WorldBlock( renderer ) :
+			renderer.procedural( procedural2 )
+		
+		self.assertEqual( t.allRenderedSignalCalled, True )
+		
+		# now render one and delete one:
+		renderer = IECore.CapturingRenderer()
+		t = AllRenderedTest()
+		allRenderedConnection = GafferScene.SceneProcedural.allRenderedSignal().connect( t.allRendered )
+		procedural1 = GafferScene.SceneProcedural( script["plane"]["out"], Gaffer.Context(), "/" )
+		procedural2 = GafferScene.SceneProcedural( script["plane"]["out"], Gaffer.Context(), "/" )
+		
+		self.assertEqual( t.allRenderedSignalCalled, False )
+		del procedural1
+		self.assertEqual( t.allRenderedSignalCalled, False )
+		with IECore.WorldBlock( renderer ) :
+			renderer.procedural( procedural2 )
+		
+		self.assertEqual( t.allRenderedSignalCalled, True )
+		
+		
+		
 
 if __name__ == "__main__":
 	unittest.main()
