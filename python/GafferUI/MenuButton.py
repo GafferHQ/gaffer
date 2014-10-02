@@ -39,21 +39,35 @@ import IECore
 import Gaffer
 import GafferUI
 
-QtCore = GafferUI._qtImport( "QtCore" )
-
 class MenuButton( GafferUI.Button ) :
 
 	def __init__( self, text="", image=None, hasFrame=True, menu=None, **kw ) :
 
 		GafferUI.Button.__init__( self, text, image, hasFrame, **kw )
 
+		self.__menu = None
 		self.setMenu( menu )
 
-		self.__clickedConnection = self.clickedSignal().connect( Gaffer.WeakMethod( self.__clicked ) )
+		self._qtWidget().pressed.connect( Gaffer.WeakMethod( self.__pressed ) )
 
 	def setMenu( self, menu ) :
 
+		# Note that although QPushButton does have a setMenu() method that would
+		# ostensibly do everything for us, we don't use it. Primarily this is because
+		# it pops the menu up in utterly the wrong position when we place a MenuButton
+		# in GLWidget overlay - this is a Qt bug. Secondarily, we also want to use
+		# Menu.popup() as it gives the menu a parent for return from Menu.parent(),
+		# which may be important to the menu item callbacks.
+
+		if menu is self.__menu :
+			return
+
 		self.__menu = menu
+
+		if self.__menu is not None :
+			self.__menuVisibilityChangedConnection = self.__menu.visibilityChangedSignal().connect( Gaffer.WeakMethod( self.__menuVisibilityChanged ) )
+		else :
+			self.__menuVisibilityChangedConnection = None
 
 		self.setEnabled( self.__menu is not None )
 
@@ -61,7 +75,7 @@ class MenuButton( GafferUI.Button ) :
 
 		return self.__menu
 
-	def __clicked( self, button ) :
+	def __pressed( self ) :
 
 		if self.__menu is None :
 			return
@@ -71,3 +85,8 @@ class MenuButton( GafferUI.Button ) :
 			parent = self,
 			position = IECore.V2i( b.min.x, b.max.y ),
 		)
+
+	def __menuVisibilityChanged( self, menu ) :
+
+		if not menu.visible() :
+			self._qtWidget().setDown( False )
