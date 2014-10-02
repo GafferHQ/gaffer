@@ -133,7 +133,16 @@ class ValuePlug::Computation
 				if( !m_resultValue )
 				{
 					computeOrSetFromInput();
-					g_valueCache.set( hash, m_resultValue, m_resultValue->memoryUsage() );
+					
+					// computeOrSetFromInput may have stored this result already, and m_resultValue->memoryUsage()
+					// can be expensive, so we do one last check to avoid inserting a value multiple times:
+					
+					// \todo: This should really be g_valueCache.cached(), but for some reason that seems to deadlock
+					// one of my test renders
+					if( !g_valueCache.get( hash ) )
+					{
+						g_valueCache.set( hash, m_resultValue, m_resultValue->memoryUsage() );
+					}
 				}
 			}
 			else
