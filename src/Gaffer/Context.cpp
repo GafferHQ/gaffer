@@ -107,7 +107,7 @@ void Context::remove( const IECore::InternedString &name )
 	Map::iterator it = m_map.find( name );
 	if( it != m_map.end() )
 	{
-		m_map.erase( name );
+		m_map.erase( it );
 		m_hashValid = false;
 	}
 }
