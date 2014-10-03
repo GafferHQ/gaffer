@@ -121,7 +121,10 @@ class Context : public IECore::RefCounted
 		/// an Exception.
 		template<typename T>
 		typename Accessor<T>::ResultType get( const IECore::InternedString &name, typename Accessor<T>::ResultType defaultValue ) const;
-
+		
+		/// Removes an entry from the context if it exists
+		void remove( const IECore::InternedString& name );
+		
 		/// When a Shared or Borrowed value is changed behind the scenes, this method
 		/// must be called to notify the Context of the change.
 		void changed( const IECore::InternedString &name );

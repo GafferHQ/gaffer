@@ -102,6 +102,16 @@ Context::~Context()
 	delete m_changedSignal;
 }
 
+void Context::remove( const IECore::InternedString &name )
+{
+	Map::iterator it = m_map.find( name );
+	if( it != m_map.end() )
+	{
+		m_map.erase( name );
+		m_hashValid = false;
+	}
+}
+
 void Context::changed( const IECore::InternedString &name )
 {
 	m_hashValid = false;
