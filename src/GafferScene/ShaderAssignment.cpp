@@ -54,6 +54,11 @@ ShaderAssignment::ShaderAssignment( const std::string &name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new Plug( "shader" ) );
+
+	// Fast pass-throughs for the things we don't alter.
+	outPlug()->objectPlug()->setInput( inPlug()->objectPlug() );
+	outPlug()->transformPlug()->setInput( inPlug()->transformPlug() );
+	outPlug()->boundPlug()->setInput( inPlug()->boundPlug() );
 }
 
 ShaderAssignment::~ShaderAssignment()

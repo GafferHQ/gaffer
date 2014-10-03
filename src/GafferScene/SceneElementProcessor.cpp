@@ -35,6 +35,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include "IECore/Exception.h"
+
 #include "Gaffer/Context.h"
 
 #include "GafferScene/SceneElementProcessor.h"
@@ -52,6 +54,12 @@ SceneElementProcessor::SceneElementProcessor( const std::string &name, Filter::R
 	:	FilteredSceneProcessor( name, filterDefault )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
+	
+	// We don't ever want to change the scene hierarchy or globals, so we make
+	// pass-through connections for them. This is quicker than implementing a
+	// pass through of the input in hashChildNames()/computeChildNames().
+	outPlug()->childNamesPlug()->setInput( inPlug()->childNamesPlug() );
+	outPlug()->globalsPlug()->setInput( inPlug()->globalsPlug() );
 }
 
 SceneElementProcessor::~SceneElementProcessor()
@@ -159,16 +167,6 @@ void SceneElementProcessor::hashObject( const ScenePath &path, const Gaffer::Con
 	}
 }
 
-void SceneElementProcessor::hashChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
-{
-	h = inPlug()->childNamesPlug()->hash();
-}
-
-void SceneElementProcessor::hashGlobals( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
-{
-	h = inPlug()->globalsPlug()->hash();
-}
-
 Imath::Box3f SceneElementProcessor::computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	switch( boundMethod( context ) )
@@ -216,16 +214,6 @@ IECore::ConstObjectPtr SceneElementProcessor::computeObject( const ScenePath &pa
 	{
 		return inPlug()->objectPlug()->getValue();
 	}
-}
-
-IECore::ConstInternedStringVectorDataPtr SceneElementProcessor::computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
-{
-	return inPlug()->childNamesPlug()->getValue();
-}
-
-IECore::ConstCompoundObjectPtr SceneElementProcessor::computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const
-{
-	return inPlug()->globalsPlug()->getValue();
 }
 
 bool SceneElementProcessor::processesBound() const

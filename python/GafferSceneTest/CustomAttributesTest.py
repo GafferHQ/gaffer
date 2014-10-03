@@ -303,5 +303,13 @@ class CustomAttributesTest( GafferSceneTest.SceneTestCase ) :
 		self.assertTrue( "f" not in s )
 		self.assertTrue( "user:test" in s["a"]["out"].attributes( "/plane" ) )
 
+	def testOutPlugNotSerialised( self ) :
+	
+		s = Gaffer.ScriptNode()
+		s["a"] = GafferScene.CustomAttributes()
+		
+		ss = s.serialise()
+		self.failIf( "out" in ss )
+		
 if __name__ == "__main__":
 	unittest.main()

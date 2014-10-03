@@ -51,6 +51,16 @@ Attributes::Attributes( const std::string &name )
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new CompoundDataPlug( "attributes" ) );
 	addChild( new BoolPlug( "global", Plug::In, false ) );
+	
+	// Fast pass-throughs for the things we don't alter.
+	outPlug()->objectPlug()->setInput( inPlug()->objectPlug() );
+	outPlug()->transformPlug()->setInput( inPlug()->transformPlug() );
+	outPlug()->boundPlug()->setInput( inPlug()->boundPlug() );
+	// Disconnect globals pass-through the SceneElementProcessor made
+	// because we do modify the globals.
+	/// \todo Use plugInputChangedSignal() and plugSetSignal() to
+	/// keep the globals pass-through connected when possible?
+	outPlug()->globalsPlug()->setInput( NULL );
 }
 
 Attributes::~Attributes()
@@ -92,9 +102,8 @@ void Attributes::hashGlobals( const Gaffer::Context *context, const ScenePlug *p
 {
 	if( globalPlug()->getValue() )
 	{
-		// We will modify the globals. Bypass the SceneElementProcessor::hashGlobals()
-		// because it's a pass-through and we need to compute a proper hash instead.
-		FilteredSceneProcessor::hashGlobals( context, parent, h );
+		// We will modify the globals.
+		SceneElementProcessor::hashGlobals( context, parent, h );
 		inPlug()->globalsPlug()->hash( h );
 		attributesPlug()->hash( h );
 	}

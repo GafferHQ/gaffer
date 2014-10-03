@@ -53,6 +53,11 @@ PrimitiveVariableProcessor::PrimitiveVariableProcessor( const std::string &name 
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new StringPlug( "names" ) );
 	addChild( new BoolPlug( "invertNames" ) );
+
+	// Fast pass-throughs for things we don't modify
+	outPlug()->attributesPlug()->setInput( inPlug()->attributesPlug() );
+	outPlug()->transformPlug()->setInput( inPlug()->transformPlug() );
+	outPlug()->boundPlug()->setInput( inPlug()->boundPlug() );
 }
 
 PrimitiveVariableProcessor::~PrimitiveVariableProcessor()
