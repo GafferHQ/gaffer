@@ -496,12 +496,14 @@ class ContextTest( GafferTest.TestCase ) :
 		h = c.hash()
 		self.assertEqual( set( c.names() ), set( [ "a", "b", "c", "frame" ] ) )
 		
+		# test Context.remove()
 		c.remove( "a" )
 		self.assertNotEqual( c.hash(), h )
 		self.assertEqual( set( c.names() ), set( [ "b", "c", "frame" ] ) )
 		h = c.hash()
 		
-		c.remove( "c" )
+		# test Context.__delitem__()
+		del c[ "c" ]
 		self.assertNotEqual( c.hash(), h )
 		self.assertEqual( set( c.names() ), set( [ "b", "frame" ] ) )
 		
