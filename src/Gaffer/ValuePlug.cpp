@@ -137,8 +137,10 @@ class ValuePlug::Computation
 					// computeOrSetFromInput may have stored this result already, and m_resultValue->memoryUsage()
 					// can be expensive, so we do one last check to avoid inserting a value multiple times:
 					
-					// \todo: This should really be g_valueCache.cached(), but for some reason that seems to deadlock
-					// one of my test renders
+					// We're not using g_valueCache.cached() here, because g_valueCache.get() caches a null
+					// value if we haven't set an object yet, so g_valueCache.cached() would always return true.
+					// In practice, the LRU list maintenance overhead in g_valueCache.get() doesn't seem to hurt
+					// render startup times significantly.
 					if( !g_valueCache.get( hash ) )
 					{
 						g_valueCache.set( hash, m_resultValue, m_resultValue->memoryUsage() );
