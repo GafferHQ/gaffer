@@ -51,7 +51,7 @@ using namespace Gaffer;
 IE_CORE_DEFINERUNTIMETYPED( Box );
 
 Box::Box( const std::string &name )
-	:	Node( name )
+	:	DependencyNode( name )
 {
 }
 
@@ -486,4 +486,70 @@ BoxPtr Box::create( Node *parent, const Set *childNodes )
 	}
 
 	return result;
+}
+
+void Box::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
+{
+	DependencyNode::affects( input, outputs );
+}
+
+BoolPlug *Box::enabledPlug()
+{
+	return getChild<BoolPlug>( "enabled" );
+}
+
+const BoolPlug *Box::enabledPlug() const
+{
+	return getChild<BoolPlug>( "enabled" );
+}
+
+Plug *Box::correspondingInput( const Plug *output )
+{
+	return const_cast<Plug *>( const_cast<const Box *>( this )->Box::correspondingInput( output ) );
+}
+
+const Plug *Box::correspondingInput( const Plug *output ) const
+{
+	const Plug *internalOutput = output->getInput<Plug>();
+	if( !internalOutput )
+	{
+		return NULL;
+	}
+
+	const DependencyNode *node = IECore::runTimeCast<const DependencyNode>( internalOutput->node() );
+	if( !node )
+	{
+		return NULL;
+	}
+
+	const BoolPlug *externalEnabledPlug = enabledPlug();
+	if( !externalEnabledPlug )
+	{
+		return NULL;
+	}
+
+	const BoolPlug *internalEnabledPlug = node->enabledPlug();
+	if( !internalEnabledPlug )
+	{
+		return NULL;
+	}
+
+	if( internalEnabledPlug->getInput<Plug>() != externalEnabledPlug )
+	{
+		return NULL;
+	}
+
+	const Plug *internalInput = node->correspondingInput( internalOutput );
+	if( !internalInput )
+	{
+		return NULL;
+	}
+
+	const Plug *input = internalInput->getInput<Plug>();
+	if( !input || input->node() != this )
+	{
+		return NULL;
+	}
+
+	return input;
 }

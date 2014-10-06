@@ -762,5 +762,51 @@ class BoxTest( GafferTest.TestCase ) :
 		self.assertFalse( b.canPromotePlug( b["n"]["sum"] ) )
 		self.assertTrue( b.canPromotePlug( b["n"]["sum"], asUserPlug=False ) )
 
+	def testDependencyNode( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		# Make a box, and check it's a DependencyNode
+
+		s["b"] = Gaffer.Box()
+		self.assertTrue( isinstance( s["b"], Gaffer.DependencyNode ) )
+		self.assertTrue( s["b"].isInstanceOf( Gaffer.DependencyNode.staticTypeId() ) )
+
+		s["b"]["n"] = GafferTest.AddNode()
+		outPromoted = s["b"].promotePlug( s["b"]["n"]["sum"], asUserPlug = False )
+
+		# Wire it up to support enabledPlug() and correspondingInput()
+
+		self.assertEqual( s["b"].correspondingInput( outPromoted ), None )
+		self.assertEqual( s["b"].enabledPlug(), None )
+
+		inPromoted = s["b"].promotePlug( s["b"]["n"]["op1"], asUserPlug = False )
+		s["b"]["n"]["op2"].setValue( 10 )
+
+		self.assertEqual( s["b"].correspondingInput( outPromoted ), None )
+		self.assertEqual( s["b"].enabledPlug(), None )
+
+		s["b"]["enabled"] = Gaffer.BoolPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		self.assertEqual( s["b"].correspondingInput( outPromoted ), None )
+		self.assertTrue( s["b"].enabledPlug().isSame( s["b"]["enabled"] ) )
+
+		s["b"]["n"]["enabled"].setInput( s["b"]["enabled"] )
+
+		self.assertTrue( s["b"].enabledPlug().isSame( s["b"]["enabled"] ) )
+		self.assertTrue( s["b"].correspondingInput( outPromoted ).isSame( inPromoted ) )
+
+		# Connect it into a network, delete it, and check that we get nice auto-reconnect behaviour
+
+		s["a"] = GafferTest.AddNode()
+		inPromoted.setInput( s["a"]["sum"] )
+
+		s["c"] = GafferTest.AddNode()
+		s["c"]["op1"].setInput( outPromoted )
+
+		s.deleteNodes( filter = Gaffer.StandardSet( [ s["b"] ] ) )
+
+		self.assertTrue( s["c"]["op1"].getInput().isSame( s["a"]["sum"] ) )
+
 if __name__ == "__main__":
 	unittest.main()

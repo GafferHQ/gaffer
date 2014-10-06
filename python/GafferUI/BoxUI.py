@@ -161,6 +161,15 @@ def __unpromoteFromBox( box, plug ) :
 	with Gaffer.UndoContext( box.ancestor( Gaffer.ScriptNode ) ) :
 		box.unpromotePlug( plug )
 
+def __promoteToBoxEnabledPlug( box, plug ) :
+
+	with Gaffer.UndoContext( box.ancestor( Gaffer.ScriptNode ) ) :
+		enabledPlug = box.getChild( "enabled" )
+		if enabledPlug is None :
+			enabledPlug = Gaffer.BoolPlug( "enabled", defaultValue = True, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		box["enabled"] = enabledPlug
+		plug.setInput( enabledPlug )
+
 def __plugPopupMenu( menuDefinition, plugValueWidget ) :
 
 	plug = plugValueWidget.getPlug()
@@ -179,6 +188,13 @@ def __plugPopupMenu( menuDefinition, plugValueWidget ) :
 			"command" : IECore.curry( __promoteToBox, box, plug ),
 			"active" : not plugValueWidget.getReadOnly(),
 		} )
+
+		if isinstance( node, Gaffer.DependencyNode ) :
+			if plug.isSame( node.enabledPlug() ) :
+				menuDefinition.append( "/Promote to %s.enabled" % box.getName(), {
+					"command" : IECore.curry( __promoteToBoxEnabledPlug, box, plug ),
+					"active" : not plugValueWidget.getReadOnly(),
+				} )
 
 	elif box.plugIsPromoted( plug ) :
 
