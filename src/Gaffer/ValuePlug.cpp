@@ -133,7 +133,18 @@ class ValuePlug::Computation
 				if( !m_resultValue )
 				{
 					computeOrSetFromInput();
-					g_valueCache.set( hash, m_resultValue, m_resultValue->memoryUsage() );
+					
+					// computeOrSetFromInput may have stored this result already, and m_resultValue->memoryUsage()
+					// can be expensive, so we do one last check to avoid inserting a value multiple times:
+					
+					// We're not using g_valueCache.cached() here, because g_valueCache.get() caches a null
+					// value if we haven't set an object yet, so g_valueCache.cached() would always return true.
+					// In practice, the LRU list maintenance overhead in g_valueCache.get() doesn't seem to hurt
+					// render startup times significantly.
+					if( !g_valueCache.get( hash ) )
+					{
+						g_valueCache.set( hash, m_resultValue, m_resultValue->memoryUsage() );
+					}
 				}
 			}
 			else
