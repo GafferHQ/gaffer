@@ -108,6 +108,11 @@ object getItem( Context &c, const IECore::InternedString &name )
 	return get( c, name, /* copy = */ true );
 }
 
+void delItem( Context &context, const IECore::InternedString &name )
+{
+	context.remove( name );
+}
+
 list names( const Context &context )
 {
 	std::vector<IECore::InternedString> names;
@@ -146,7 +151,6 @@ ContextPtr current()
 
 void GafferBindings::bindContext()
 {
-
 	IECorePython::RefCountedClass<Context, IECore::RefCounted> contextClass( "Context" );
 	scope s = contextClass;
 
@@ -173,6 +177,8 @@ void GafferBindings::bindContext()
 		.def( "get", &get, arg( "_copy" ) = true )
 		.def( "get", &getWithDefault, ( arg( "defaultValue" ), arg( "_copy" ) = true ) )
 		.def( "__getitem__", &getItem )
+		.def( "remove", &Context::remove )
+		.def( "__delitem__", &delItem )
 		.def( "changed", &Context::changed )
 		.def( "names", &names )
 		.def( "keys", &names )
