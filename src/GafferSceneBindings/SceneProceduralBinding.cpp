@@ -40,6 +40,8 @@
 
 #include "Gaffer/Context.h"
 
+#include "GafferBindings/SignalBinding.h"
+
 #include "GafferScene/SceneProcedural.h"
 
 #include "GafferSceneBindings/ScenePlugBinding.h"
@@ -48,6 +50,7 @@
 using namespace boost::python;
 using namespace Gaffer;
 using namespace GafferScene;
+using namespace GafferBindings;
 
 void GafferSceneBindings::bindSceneProcedural()
 {
@@ -70,6 +73,8 @@ void GafferSceneBindings::bindSceneProcedural()
 				)
 			)
 		)
+		.def( "allRenderedSignal", &SceneProcedural::allRenderedSignal, boost::python::return_value_policy<reference_existing_object>() ).staticmethod( "allRenderedSignal" )
 	;
-
+	
+	SignalBinder<SceneProcedural::AllRenderedSignal>::bind( "AllRenderedSignal" );
 }

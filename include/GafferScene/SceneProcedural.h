@@ -38,6 +38,8 @@
 #ifndef GAFFERSCENE_SCENEPROCEDURAL_H
 #define GAFFERSCENE_SCENEPROCEDURAL_H
 
+#include "tbb/atomic.h"
+
 #include "IECore/Renderer.h"
 #include "IECore/Camera.h"
 #include "IECore/Light.h"
@@ -87,6 +89,11 @@ class SceneProcedural : public IECore::Renderer::Procedural
 		virtual IECore::MurmurHash hash() const;
 		virtual Imath::Box3f bound() const;
 		virtual void render( IECore::Renderer *renderer ) const;
+		
+		typedef boost::signal<void ( void )> AllRenderedSignal;
+		
+		/// A signal emitted when all pending SceneProcedurals have been rendered or destroyed
+		static AllRenderedSignal &allRenderedSignal();
 
 	protected :
 
@@ -129,7 +136,21 @@ class SceneProcedural : public IECore::Renderer::Procedural
 		void drawCamera( const IECore::Camera *camera, IECore::Renderer *renderer ) const;
 		void drawLight( const IECore::Light *light, IECore::Renderer *renderer ) const;
 		void drawCoordinateSystem( const IECore::CoordinateSystem *coordinateSystem, IECore::Renderer *renderer ) const;
-
+		
+		// A global counter of all the scene procedurals that are hanging around but haven't been rendered yet, which 
+		// gets incremented in the constructor and decremented in doRender() or the destructor, whichever happens first.
+		// When this counter falls to zero, a signal is emitted, so you can eg clear the cache when procedural expansion
+		// has finished during a render.
+		static tbb::atomic<int> g_pendingSceneProcedurals;
+		
+		// Indicates if SceneProcedural::doRender() has been called. If not, g_pendingSceneProcedurals is decremented in the
+		// destructor
+		mutable bool m_rendered;
+		
+		void decrementPendingProcedurals() const;
+		
+		static AllRenderedSignal g_allRenderedSignal;
+		
 };
 
 IE_CORE_DECLAREPTR( SceneProcedural );
