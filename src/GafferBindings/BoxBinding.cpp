@@ -39,7 +39,7 @@
 #include "Gaffer/Box.h"
 #include "Gaffer/Plug.h"
 
-#include "GafferBindings/NodeBinding.h"
+#include "GafferBindings/DependencyNodeBinding.h"
 #include "GafferBindings/BoxBinding.h"
 
 using namespace boost::python;
@@ -78,9 +78,9 @@ static PlugPtr promotePlug( Box &b, Plug *descendantPlug, bool asUserPlug )
 
 void bindBox()
 {
-	typedef NodeWrapper<Box> BoxWrapper;
+	typedef DependencyNodeWrapper<Box> BoxWrapper;
 
-	NodeClass<Box, BoxWrapper>()
+	DependencyNodeClass<Box, BoxWrapper>()
 		.def( "canPromotePlug", &Box::canPromotePlug, ( arg( "descendantPlug" ), arg( "asUserPlug" ) = true ) )
 		.def( "promotePlug", &promotePlug, ( arg( "descendantPlug" ), arg( "asUserPlug" ) = true ) )
 		.def( "plugIsPromoted", &Box::plugIsPromoted )
