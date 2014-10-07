@@ -149,8 +149,6 @@ class ValuePlug : public Plug
 	private :
 
 		class Computation;
-		friend class Computation;
-
 		class SetValueAction;
 
 		void setValueInternal( IECore::ConstObjectPtr value, bool propagateDirtiness );
