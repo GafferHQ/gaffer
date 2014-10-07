@@ -53,6 +53,11 @@ Prune::Prune( const std::string &name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new BoolPlug( "adjustBounds", Plug::In, false ) );
+
+	// Direct pass-throughs
+	outPlug()->transformPlug()->setInput( inPlug()->transformPlug() );
+	outPlug()->attributesPlug()->setInput( inPlug()->attributesPlug() );
+	outPlug()->objectPlug()->setInput( inPlug()->objectPlug() );
 }
 
 Prune::~Prune()
@@ -104,21 +109,6 @@ void Prune::hashBound( const ScenePath &path, const Gaffer::Context *context, co
 	h = inPlug()->boundPlug()->hash();
 }
 
-void Prune::hashTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
-{
-	h = inPlug()->transformPlug()->hash();
-}
-
-void Prune::hashAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
-{
-	h = inPlug()->attributesPlug()->hash();
-}
-
-void Prune::hashObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
-{
-	h = inPlug()->objectPlug()->hash();
-}
-
 void Prune::hashChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
 	ContextPtr tmpContext = filterContext( context );
@@ -156,21 +146,6 @@ Imath::Box3f Prune::computeBound( const ScenePath &path, const Gaffer::Context *
 	}
 
 	return inPlug()->boundPlug()->getValue();
-}
-
-Imath::M44f Prune::computeTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
-{
-	return inPlug()->transformPlug()->getValue();
-}
-
-IECore::ConstCompoundObjectPtr Prune::computeAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
-{
-	return inPlug()->attributesPlug()->getValue();
-}
-
-IECore::ConstObjectPtr Prune::computeObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
-{
-	return inPlug()->objectPlug()->getValue();
 }
 
 IECore::ConstInternedStringVectorDataPtr Prune::computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
