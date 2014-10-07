@@ -134,11 +134,20 @@ class ValuePlug::Computation
 				{
 					computeOrSetFromInput();
 					
-					// computeOrSetFromInput may have stored this result already, and m_resultValue->memoryUsage()
-					// can be expensive, so we do one last check to avoid inserting a value multiple times:
-					
-					// \todo: This should really be g_valueCache.cached(), but for some reason that seems to deadlock
-					// one of my test renders
+					// Store the value in the cache, after first checking that this hasn't
+					// been done already. The check is useful because it's common for an
+					// upstream compute triggered by computeOrSetFromInput() to have already
+					// done the work, and calling memoryUsage() can be very expensive for some
+					// datatypes. A prime example of this is the attribute state passed around
+					// in GafferScene - it's common for a selective filter to mean that the
+					// attribute compute is implemented as a pass-through (thus an upstream node
+					// will already have computed the same result) and the attribute data itself
+					// consists of many small objects for which computing memory usage is slow.
+					/// \todo Accessing the LRUCache multiple times like this does have an
+					/// overhead, and at some point we'll need to address that.
+					/// Perhaps we can augment our HashCache to also store computed values
+					/// temporarily - because the HashCache is per-thread, this would avoid
+					/// the locking associated with LRUCache::get().
 					if( !g_valueCache.get( hash ) )
 					{
 						g_valueCache.set( hash, m_resultValue, m_resultValue->memoryUsage() );
