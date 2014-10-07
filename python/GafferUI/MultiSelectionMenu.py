@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2013-2014, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,11 +34,12 @@
 #
 ##########################################################################
 
-import Gaffer
-import GafferUI
 import IECore
 
-class MultiSelectionMenu( GafferUI.Button ) :
+import Gaffer
+import GafferUI
+
+class MultiSelectionMenu( GafferUI.MenuButton ) :
 
 	def __init__(
 		self,
@@ -47,9 +48,11 @@ class MultiSelectionMenu( GafferUI.Button ) :
 		**kw
 	) :
 
-		GafferUI.Button.__init__( self, **kw )
-
-		self.__menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) )
+		GafferUI.MenuButton.__init__(
+			self,
+			menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) ),
+			**kw
+		)
 
 		self.__allowMultipleSelection = allowMultipleSelection
 		self.__allowEmptySelection = allowEmptySelection
@@ -59,8 +62,6 @@ class MultiSelectionMenu( GafferUI.Button ) :
 		self.__selectedLabels = []
 		self.__enabledLabels = []
 		self.__setDisplayName()
-
-		self.__clickedConnection = self.clickedSignal().connect( Gaffer.WeakMethod( self.__clicked ) )
 
 	## A signal emitted whenever the selection changes.
 	def selectionChangedSignal( self ) :
@@ -277,24 +278,18 @@ class MultiSelectionMenu( GafferUI.Button ) :
 		return self.__menuLabels[index]
 
 	def __setDisplayName( self ) :
+
 		name = "..."
 		nEntries = len( self.__menuLabels )
 		nSelected = len( self.__selectedLabels )
+
 		if nEntries == 0 :
-			name = "none"
+			name = "None"
 		elif nSelected == 0 :
-			name = "none"
+			name = "None"
 		elif nSelected == 1 :
 			name = self.getSelection()[0]
 		elif nSelected == nEntries :
-			name = "all"
-		self._qtWidget().setText(name)
+			name = "All"
 
-	def __clicked( self, button ) :
-
-		b = self.bound()
-		self.__menu.popup(
-			parent = self,
-			position = IECore.V2i( b.min.x, b.max.y )
-		)
-
+		self.setText( name )

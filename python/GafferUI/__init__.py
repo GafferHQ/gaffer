@@ -135,7 +135,6 @@ from VectorDataWidget import VectorDataWidget
 from PathVectorDataWidget import PathVectorDataWidget
 from ProgressBar import ProgressBar
 from SelectionMenu import SelectionMenu
-from MultiSelectionMenu import MultiSelectionMenu
 from PathFilterWidget import PathFilterWidget
 from CompoundPathFilterWidget import CompoundPathFilterWidget
 from InfoPathFilterWidget import InfoPathFilterWidget
@@ -146,6 +145,7 @@ from ColorChooserDialogue import ColorChooserDialogue
 from MessageWidget import MessageWidget
 from NotificationMessageHandler import NotificationMessageHandler
 from MenuButton import MenuButton
+from MultiSelectionMenu import MultiSelectionMenu
 from PopupWindow import PopupWindow
 from ConfirmationDialogue import ConfirmationDialogue
 from DisplayTransform import DisplayTransform
