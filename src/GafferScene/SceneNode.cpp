@@ -270,6 +270,36 @@ void SceneNode::compute( ValuePlug *output, const Context *context ) const
 	}
 }
 
+Imath::Box3f SceneNode::computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+{
+	throw IECore::NotImplementedException( string( typeName() ) + "::computeBound" );
+}
+
+Imath::M44f SceneNode::computeTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+{
+	throw IECore::NotImplementedException( string( typeName() ) + "::computeTransform" );
+}
+
+IECore::ConstCompoundObjectPtr SceneNode::computeAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+{
+	throw IECore::NotImplementedException( string( typeName() ) + "::computeAttributes" );
+}
+
+IECore::ConstObjectPtr SceneNode::computeObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+{
+	throw IECore::NotImplementedException( string( typeName() ) + "::computeObject" );
+}
+
+IECore::ConstInternedStringVectorDataPtr SceneNode::computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+{
+	throw IECore::NotImplementedException( string( typeName() ) + "::computeChildNames" );
+}
+
+IECore::ConstCompoundObjectPtr SceneNode::computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const
+{
+	throw IECore::NotImplementedException( string( typeName() ) + "::computeGlobals" );
+}
+
 IECore::MurmurHash SceneNode::hashOfTransformedChildBounds( const ScenePath &path, const ScenePlug *out ) const
 {
 	IECore::MurmurHash result;
