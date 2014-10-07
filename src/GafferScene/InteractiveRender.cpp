@@ -64,6 +64,8 @@ InteractiveRender::InteractiveRender( const std::string &name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new ScenePlug( "in" ) );
+	addChild( new ScenePlug( "out", Plug::Out, Plug::Default & ~Plug::Serialisable ) );
+	outPlug()->setInput( inPlug() );
 	addChild( new IntPlug( "state", Plug::In, Stopped, Stopped, Paused, Plug::Default & ~Plug::Serialisable ) );
 	addChild( new BoolPlug( "updateLights", Plug::In, true ) );
 	addChild( new BoolPlug( "updateShaders", Plug::In, true ) );
@@ -90,54 +92,64 @@ const ScenePlug *InteractiveRender::inPlug() const
 	return getChild<ScenePlug>( g_firstPlugIndex );
 }
 
+ScenePlug *InteractiveRender::outPlug()
+{
+	return getChild<ScenePlug>( g_firstPlugIndex + 1 );
+}
+
+const ScenePlug *InteractiveRender::outPlug() const
+{
+	return getChild<ScenePlug>( g_firstPlugIndex + 1 );
+}
+
 Gaffer::IntPlug *InteractiveRender::statePlug()
 {
-	return getChild<IntPlug>( g_firstPlugIndex + 1 );
+	return getChild<IntPlug>( g_firstPlugIndex + 2 );
 }
 
 const Gaffer::IntPlug *InteractiveRender::statePlug() const
 {
-	return getChild<IntPlug>( g_firstPlugIndex + 1);
+	return getChild<IntPlug>( g_firstPlugIndex + 2 );
 }
 
 Gaffer::BoolPlug *InteractiveRender::updateLightsPlug()
 {
-	return getChild<BoolPlug>( g_firstPlugIndex + 2 );
+	return getChild<BoolPlug>( g_firstPlugIndex + 3 );
 }
 
 const Gaffer::BoolPlug *InteractiveRender::updateLightsPlug() const
 {
-	return getChild<BoolPlug>( g_firstPlugIndex + 2 );
+	return getChild<BoolPlug>( g_firstPlugIndex + 3 );
 }
 
 Gaffer::BoolPlug *InteractiveRender::updateShadersPlug()
 {
-	return getChild<BoolPlug>( g_firstPlugIndex + 3 );
+	return getChild<BoolPlug>( g_firstPlugIndex + 4 );
 }
 
 const Gaffer::BoolPlug *InteractiveRender::updateShadersPlug() const
 {
-	return getChild<BoolPlug>( g_firstPlugIndex + 3 );
+	return getChild<BoolPlug>( g_firstPlugIndex + 4 );
 }
 
 Gaffer::BoolPlug *InteractiveRender::updateCameraPlug()
 {
-	return getChild<BoolPlug>( g_firstPlugIndex + 4 );
+	return getChild<BoolPlug>( g_firstPlugIndex + 5 );
 }
 
 const Gaffer::BoolPlug *InteractiveRender::updateCameraPlug() const
 {
-	return getChild<BoolPlug>( g_firstPlugIndex + 4 );
+	return getChild<BoolPlug>( g_firstPlugIndex + 5 );
 }
 
 Gaffer::BoolPlug *InteractiveRender::updateCoordinateSystemsPlug()
 {
-	return getChild<BoolPlug>( g_firstPlugIndex + 5 );
+	return getChild<BoolPlug>( g_firstPlugIndex + 6 );
 }
 
 const Gaffer::BoolPlug *InteractiveRender::updateCoordinateSystemsPlug() const
 {
-	return getChild<BoolPlug>( g_firstPlugIndex + 5 );
+	return getChild<BoolPlug>( g_firstPlugIndex + 6 );
 }
 
 void InteractiveRender::plugDirtied( const Gaffer::Plug *plug )

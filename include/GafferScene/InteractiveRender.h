@@ -76,6 +76,10 @@ class InteractiveRender : public Gaffer::Node
 		ScenePlug *inPlug();
 		const ScenePlug *inPlug() const;
 
+		/// A direct pass-through of the input scene.
+		ScenePlug *outPlug();
+		const ScenePlug *outPlug() const;
+
 		Gaffer::IntPlug *statePlug();
 		const Gaffer::IntPlug *statePlug() const;
 
