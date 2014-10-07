@@ -248,7 +248,7 @@ void GafferBindings::bindDispatcher()
 
 	enum_<Dispatcher::FramesMode>( "FramesMode" )
 		.value( "CurrentFrame", Dispatcher::CurrentFrame )
-		.value( "ScriptRange", Dispatcher::ScriptRange )
+		.value( "FullRange", Dispatcher::FullRange )
 		.value( "CustomRange", Dispatcher::CustomRange )
 	;
 

@@ -392,10 +392,10 @@ class DispatcherTest( GafferTest.TestCase ) :
 		self.assertEqual( op1.counter, 1 )
 		self.assertEqual( op1.frames, [ context.getFrame() ] )
 
-	def testDispatchScriptRange( self ) :
+	def testDispatchFullRange( self ) :
 
 		dispatcher = DispatcherTest.MyDispatcher()
-		dispatcher["framesMode"].setValue( Gaffer.Dispatcher.FramesMode.ScriptRange )
+		dispatcher["framesMode"].setValue( Gaffer.Dispatcher.FramesMode.FullRange )
 
 		s = Gaffer.ScriptNode()
 		op1 = TestOp("1", dispatcher.log)

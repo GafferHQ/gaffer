@@ -123,7 +123,7 @@ class Dispatcher : public Node
 		enum FramesMode
 		{
 			CurrentFrame,
-			ScriptRange,
+			FullRange,
 			CustomRange
 		};
 
