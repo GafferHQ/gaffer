@@ -122,7 +122,15 @@ class _DispatcherWindow( GafferUI.Window ) :
 
 	def __update( self ) :
 
-		self.__frame.setChild( GafferUI.NodeUI.create( self.__dispatcher ) )
+		nodeUI = GafferUI.NodeUI.create( self.__dispatcher )
+		
+		# force the framesMode widget to update so we start with
+		# the correct enabled state on the frameRange plug.
+		framesModeWidget = nodeUI.plugValueWidget( self.__dispatcher["framesMode"], lazy = False )
+		if framesModeWidget :
+			framesModeWidget.selectionMenu().setSelection( framesModeWidget.selectionMenu().getSelection() )
+		
+		self.__frame.setChild( nodeUI )
 		self.__updateTitle()
 
 	def __updateTitle( self ) :
@@ -203,6 +211,10 @@ class __FramesModePlugValueWidget( GafferUI.PlugValueWidget ) :
 		
 		self._updateFromPlug()
 	
+	def selectionMenu( self ) :
+
+		return self.__selectionMenu
+
 	def _updateFromPlug( self ) :
 		
 		self.__selectionMenu.setEnabled( self._editable() )
