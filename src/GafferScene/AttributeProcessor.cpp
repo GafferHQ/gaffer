@@ -52,6 +52,11 @@ AttributeProcessor::AttributeProcessor( const std::string &name )
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new StringPlug( "names" ) );
 	addChild( new BoolPlug( "invertNames" ) );
+
+	// Fast pass-throughs for things we don't modify
+	outPlug()->objectPlug()->setInput( inPlug()->objectPlug() );
+	outPlug()->transformPlug()->setInput( inPlug()->transformPlug() );
+	outPlug()->boundPlug()->setInput( inPlug()->boundPlug() );
 }
 
 AttributeProcessor::~AttributeProcessor()

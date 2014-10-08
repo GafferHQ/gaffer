@@ -57,6 +57,10 @@ OSLObject::OSLObject( const std::string &name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new Plug( "shader" ) );
+
+	// Pass-throughs for things we don't want to modify
+	outPlug()->attributesPlug()->setInput( inPlug()->attributesPlug() );
+	outPlug()->transformPlug()->setInput( inPlug()->transformPlug() );
 }
 
 OSLObject::~OSLObject()

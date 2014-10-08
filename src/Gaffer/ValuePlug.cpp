@@ -479,23 +479,44 @@ bool ValuePlug::settable() const
 	}
 }
 
+// Before using the Computation class to get a hash or a value,
+// we first traverse back down the chain of input plugs to the
+// start, or till we find a plug of a different type. This
+// traversal is much quicker than using the Computation class
+// for every step in the chain.
+static const ValuePlug *sourcePlug( const ValuePlug *p )
+{
+	const IECore::TypeId typeId = p->typeId();
+	
+	const ValuePlug *in = p->getInput<ValuePlug>();
+	while( in && in->typeId() == typeId )
+	{
+		p = in;
+		in = p->getInput<ValuePlug>();
+	}
+	
+	return p;
+}
+
 IECore::MurmurHash ValuePlug::hash() const
 {
-	if( !getInput<Plug>() )
+	const ValuePlug *p = sourcePlug( this );
+
+	if( !p->getInput<Plug>() )
 	{
-		if( direction() == In || !ancestor<ComputeNode>() )
+		if( p->direction() == In || !p->ancestor<ComputeNode>() )
 		{
 			// no input connection, and no means of computing
 			// a value. there can only ever be a single value,
 			// which is stored directly on the plug - so we return
 			// the hash of that.
-			return m_staticValue->hash();
+			return p->m_staticValue->hash();
 		}
 	}
 
 	// a plug with an input connection or an output plug on a ComputeNode. there can be many values -
 	// one per context. the computation class is responsible for figuring out the hash.
-	Computation computation( this );
+	Computation computation( p );
 	return computation.hash();
 }
 
@@ -506,21 +527,23 @@ void ValuePlug::hash( IECore::MurmurHash &h ) const
 
 IECore::ConstObjectPtr ValuePlug::getObjectValue() const
 {
-	if( !getInput<Plug>() )
+	const ValuePlug *p = sourcePlug( this );
+
+	if( !p->getInput<Plug>() )
 	{
-		if( direction()==In || !ancestor<ComputeNode>() )
+		if( p->direction()==In || !p->ancestor<ComputeNode>() )
 		{
 			// no input connection, and no means of computing
 			// a value. there can only ever be a single value,
 			// which is stored directly on the plug.
-			return m_staticValue;
+			return p->m_staticValue;
 		}
 	}
 
 	// an plug with an input connection or an output plug on a ComputeNode. there can be many values -
 	// one per context. the computation class is responsible for providing storage for the result
 	// and also actually managing the computation.
-	Computation computation( this );
+	Computation computation( p );
 	return computation.compute();
 }
 

@@ -56,6 +56,11 @@ FreezeTransform::FreezeTransform( const std::string &name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new M44fPlug( "__transform", Plug::Out ) );
+	
+	// pass through the things we don't want to change
+	outPlug()->attributesPlug()->setInput( inPlug()->attributesPlug() );
+	outPlug()->childNamesPlug()->setInput( inPlug()->childNamesPlug() );
+	outPlug()->globalsPlug()->setInput( inPlug()->globalsPlug() );
 }
 
 FreezeTransform::~FreezeTransform()
@@ -189,16 +194,6 @@ Imath::M44f FreezeTransform::computeTransform( const ScenePath &path, const Gaff
 	}
 }
 
-void FreezeTransform::hashAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
-{
-	h = inPlug()->attributesPlug()->hash();
-}
-
-IECore::ConstCompoundObjectPtr FreezeTransform::computeAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
-{
-	return inPlug()->attributesPlug()->getValue();
-}
-
 void FreezeTransform::hashObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
 	const unsigned m = filterPlug()->getValue();
@@ -262,24 +257,4 @@ IECore::ConstObjectPtr FreezeTransform::computeObject( const ScenePath &path, co
 	{
 		return inPlug()->objectPlug()->getValue();
 	}
-}
-
-void FreezeTransform::hashChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
-{
-	h = inPlug()->childNamesPlug()->hash();
-}
-
-IECore::ConstInternedStringVectorDataPtr FreezeTransform::computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
-{
-	return inPlug()->childNamesPlug()->getValue();
-}
-
-void FreezeTransform::hashGlobals( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
-{
-	h = inPlug()->globalsPlug()->hash();
-}
-
-IECore::ConstCompoundObjectPtr FreezeTransform::computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const
-{
-	return inPlug()->globalsPlug()->getValue();
 }

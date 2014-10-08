@@ -68,10 +68,6 @@ class SceneElementProcessor : public FilteredSceneProcessor
 		virtual void hashAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const;
 		/// Implemented to call hashProcessedObject() where appropriate.
 		virtual void hashObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const;
-		/// Implemented as a pass-through.
-		virtual void hashChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const;
-		/// Implemented as a pass-through.
-		virtual void hashGlobals( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const;
 
 		/// Implemented to call computeProcessedBound() where appropriate.
 		virtual Imath::Box3f computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
@@ -81,10 +77,6 @@ class SceneElementProcessor : public FilteredSceneProcessor
 		virtual IECore::ConstCompoundObjectPtr computeAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
 		/// Implemented to call computeProcessedObject() where appropriate.
 		virtual IECore::ConstObjectPtr computeObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
-		/// Implemented as a pass-through.
-		virtual IECore::ConstInternedStringVectorDataPtr computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
-		/// Implemented as a pass-through.
-		virtual IECore::ConstCompoundObjectPtr computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const;
 
 		/// @name Scene processing methods
 		/// These methods should be reimplemented by derived classes to process the input scene - they will be called as

@@ -45,6 +45,12 @@ IE_CORE_DEFINERUNTIMETYPED( GlobalsProcessor );
 GlobalsProcessor::GlobalsProcessor( const std::string &name )
 	:	SceneProcessor( name )
 {
+	// Fast pass-throughs for everything except the globals
+	outPlug()->boundPlug()->setInput( inPlug()->boundPlug() );
+	outPlug()->transformPlug()->setInput( inPlug()->transformPlug() );
+	outPlug()->attributesPlug()->setInput( inPlug()->attributesPlug() );
+	outPlug()->objectPlug()->setInput( inPlug()->objectPlug() );
+	outPlug()->childNamesPlug()->setInput( inPlug()->childNamesPlug() );
 }
 
 GlobalsProcessor::~GlobalsProcessor()
@@ -62,61 +68,11 @@ void GlobalsProcessor::affects( const Plug *input, AffectedPlugsContainer &outpu
 	}
 }
 
-void GlobalsProcessor::hashBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
-{
-	h = inPlug()->boundPlug()->hash();
-}
-
-void GlobalsProcessor::hashTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
-{
-	h = inPlug()->transformPlug()->hash();
-}
-
-void GlobalsProcessor::hashAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
-{
-	h = inPlug()->attributesPlug()->hash();
-}
-
-void GlobalsProcessor::hashObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
-{
-	h = inPlug()->objectPlug()->hash();
-}
-
-void GlobalsProcessor::hashChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
-{
-	h = inPlug()->childNamesPlug()->hash();
-}
-
 void GlobalsProcessor::hashGlobals( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
 	SceneProcessor::hashGlobals( context, parent, h );
 	inPlug()->globalsPlug()->hash( h );
 	hashProcessedGlobals( context, h );
-}
-
-Imath::Box3f GlobalsProcessor::computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
-{
-	return inPlug()->boundPlug()->getValue();
-}
-
-Imath::M44f GlobalsProcessor::computeTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
-{
-	return inPlug()->transformPlug()->getValue();
-}
-
-IECore::ConstCompoundObjectPtr GlobalsProcessor::computeAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
-{
-	return inPlug()->attributesPlug()->getValue();
-}
-
-IECore::ConstObjectPtr GlobalsProcessor::computeObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
-{
-	return inPlug()->objectPlug()->getValue();
-}
-
-IECore::ConstInternedStringVectorDataPtr GlobalsProcessor::computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
-{
-	return inPlug()->childNamesPlug()->getValue();
 }
 
 IECore::ConstCompoundObjectPtr GlobalsProcessor::computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const

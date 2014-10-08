@@ -427,6 +427,21 @@ class NumericPlugTest( GafferTest.TestCase ) :
 		self.assertEqual( i.getValue(), 1 )
 		self.assertEqual( f.getValue(), 1 )
 
+	def testIntermediateConversions( self ) :
+	
+		f1 = Gaffer.FloatPlug()
+		i = Gaffer.IntPlug()
+		f2 = Gaffer.FloatPlug()
+		
+		i.setInput( f1 )
+		f2.setInput( i )
+		
+		f1.setValue( 10.2 )
+		self.assertEqual( f2.getValue(), 10 )
+		
+		f1.setValue( 100.8 )
+		self.assertEqual( f2.getValue(), 100 )
+
 if __name__ == "__main__":
 	unittest.main()
 
