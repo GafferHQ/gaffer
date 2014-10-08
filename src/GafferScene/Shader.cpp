@@ -330,7 +330,7 @@ IECore::Shader *Shader::NetworkBuilder::shader( const Shader *shaderNode )
 
 	shaderAndHash.shader = new IECore::Shader( shaderNode->namePlug()->getValue(), shaderNode->typePlug()->getValue() );
 
-	parameterValueWalk( shaderNode, shaderNode->parametersPlug(), "", shaderAndHash.shader->parameters() );
+	parameterValueWalk( shaderNode, shaderNode->parametersPlug(), IECore::InternedString(), shaderAndHash.shader->parameters() );
 
 	shaderAndHash.shader->blindData()->writable()["gaffer:nodeName"] = new IECore::StringData( shaderNode->nodeNamePlug()->getValue() );
 
@@ -338,18 +338,18 @@ IECore::Shader *Shader::NetworkBuilder::shader( const Shader *shaderNode )
 	return shaderAndHash.shader.get();
 }
 
-void Shader::NetworkBuilder::parameterValueWalk( const Shader *shaderNode, const Gaffer::Plug *parameterPlug, const std::string &parameterName, IECore::CompoundDataMap &values )
+void Shader::NetworkBuilder::parameterValueWalk( const Shader *shaderNode, const Gaffer::Plug *parameterPlug, const IECore::InternedString &parameterName, IECore::CompoundDataMap &values )
 {
 	for( InputPlugIterator it( parameterPlug ); it != it.end(); ++it )
 	{
-		std::string childParameterName;
-		if( parameterName.size() )
+		IECore::InternedString childParameterName;
+		if( parameterName.string().size() )
 		{
-			childParameterName = parameterName + "." + (*it)->getName().string();
+			childParameterName = parameterName.string() + "." + (*it)->getName().string();
 		}
 		else
 		{
-			childParameterName = (*it)->getName().string();
+			childParameterName = (*it)->getName();
 		}
 
 		if( (*it)->typeId() == CompoundPlug::staticTypeId() )
