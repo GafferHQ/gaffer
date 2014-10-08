@@ -321,7 +321,18 @@ class OpDialogue( GafferUI.Dialogue ) :
 
 			result = sys.exc_info()
 
-		GafferUI.EventLoop.executeOnUIThread( IECore.curry( self.__finishExecution, result ) )
+		if self.__executeInBackground :
+			GafferUI.EventLoop.executeOnUIThread( IECore.curry( self.__finishExecution, result ) )
+		else :
+			# We're being called on the main gui thread, most likely from a button click on
+			# the forward button. If we called __finishExecution() immediately, it would add
+			# new slots to the button click signal, and these would be executed immediately
+			# for the _current_ click - this is not what we want! So we defer __finishExecution
+			# to the next idle event, when the current click is a thing of the past.
+			## \todo The documentation for boost::signals2 seems to imply that it has a different
+			# behaviour, and that slots added during signal emission are ignored until the next
+			# emission. If we move to using signals2, we may be able to revert this change.
+			GafferUI.EventLoop.addIdleCallback( IECore.curry( self.__finishExecution, result ) )
 
 	def __finishExecution( self, result ) :
 
@@ -338,6 +349,8 @@ class OpDialogue( GafferUI.Dialogue ) :
 		else :
 
 			self.__initiateErrorDisplay( result )
+
+		return False # remove idle callback
 
 	def __initiateErrorDisplay( self, exceptionInfo ) :
 
