@@ -182,7 +182,12 @@ IECore::ConstCompoundObjectPtr Outputs::computeProcessedGlobals( const Gaffer::C
 		return inputGlobals;
 	}
 
-	CompoundObjectPtr result = inputGlobals->copy();
+	IECore::CompoundObjectPtr result = new IECore::CompoundObject;
+	// Since we're not going to modify any existing members (only add new ones),
+	// and our result becomes const on returning it, we can directly reference
+	// the input members in our result without copying. Be careful not to modify
+	// them though!
+	result->members() = inputGlobals->members();
 
 	// add our outputs to the result
 	for( InputCompoundPlugIterator it( dsp ); it != it.end(); it++ )
