@@ -142,13 +142,19 @@ IECore::ConstCompoundObjectPtr Set::computeProcessedGlobals( const Gaffer::Conte
 		return inputGlobals;
 	}
 
-	CompoundObjectPtr result = inputGlobals->copy();
+	IECore::CompoundObjectPtr result = new IECore::CompoundObject;
+	// Since we're not going to modify any existing members other than the sets,
+	// and our result becomes const on returning it, we can directly reference
+	// the input members in our result without copying. We have to be careful not
+	// to modify the input sets though.
+	result->members() = inputGlobals->members();
 
-	CompoundDataPtr sets = result->member<CompoundData>(
-		"gaffer:sets",
-		/* throwExceptions = */ false,
-		/* createIfMissing = */ true
-	);
+	CompoundDataPtr sets = new CompoundData;
+	if( const CompoundData *inputSets = inputGlobals->member<CompoundData>( "gaffer:sets" ) )
+	{
+		sets->writable() = inputSets->readable();
+	}
+	result->members()["gaffer:sets"] = sets;
 
 	ConstObjectPtr set = pathMatcherPlug()->getValue();
 	// const cast is acceptable because we're just using it to place a const object into a

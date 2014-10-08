@@ -70,5 +70,31 @@ class SetTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( g["gaffer:sets"].keys(), [ "shinyThings" ] )
 		self.assertEqual( set( g["gaffer:sets"]["shinyThings"].value.paths() ), set( [ "/two", "/sphere" ] ) )
 
+	def testInputNotModified( self ) :
+
+		s1 = GafferScene.Set()
+		s1["name"].setValue( "setOne" )
+		s1["paths"].setValue( IECore.StringVectorData( [ "/one" ] ) )
+
+		s2 = GafferScene.Set()
+		s2["in"].setInput( s1["out"] )
+		s2["name"].setValue( "setTwo" )
+		s2["paths"].setValue( IECore.StringVectorData( [ "/two" ] ) )
+
+		g1 = s1["out"]["globals"].getValue( _copy = False )
+		self.assertEqual( g1.keys(), [ "gaffer:sets" ] )
+		self.assertEqual( g1["gaffer:sets"].keys(), [ "setOne" ] )
+		self.assertEqual( g1["gaffer:sets"]["setOne"].value.paths(), [ "/one" ] )
+
+		g2 = s2["out"]["globals"].getValue( _copy = False )
+		self.assertEqual( g2.keys(), [ "gaffer:sets" ] )
+		self.assertEqual( g2["gaffer:sets"].keys(), [ "setOne", "setTwo" ] )
+		self.assertEqual( g2["gaffer:sets"]["setOne"].value.paths(), [ "/one" ] )
+		self.assertEqual( set( g2["gaffer:sets"]["setTwo"].value.paths() ), set( [ "/two" ] ) )
+
+		self.assertEqual( g1.keys(), [ "gaffer:sets" ] )
+		self.assertEqual( g1["gaffer:sets"].keys(), [ "setOne" ] )
+		self.assertEqual( g1["gaffer:sets"]["setOne"].value.paths(), [ "/one" ] )
+
 if __name__ == "__main__":
 	unittest.main()
