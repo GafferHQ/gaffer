@@ -145,12 +145,6 @@ class LocalDispatcher( Gaffer.Dispatcher ) :
 		foregroundPlug = Gaffer.BoolPlug( "executeInForeground", defaultValue = False )
 		parentPlug["local"].addChild( foregroundPlug )
 
-	def __nextJobId( self, directory ) :
-
-		previousJobs = IECore.ls( directory, minSequenceSize = 1 )
-		nextJob = max( previousJobs[0].frameList.asList() ) + 1 if previousJobs else 0
-		return nextJob
-
 IECore.registerRunTimeTyped( LocalDispatcher, typeName = "Gaffer::LocalDispatcher" )
 
 Gaffer.Dispatcher.registerDispatcher( "Local", LocalDispatcher() )
