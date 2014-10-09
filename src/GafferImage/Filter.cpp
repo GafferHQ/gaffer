@@ -64,6 +64,25 @@ void Filter::setScale( float scale )
 	m_scaledRadius = m_radius * m_scale;
 }
 
+std::vector< Filter::CreatorFn >& Filter::creators()
+{
+	static std::vector< CreatorFn > g_creators;
+	return g_creators;
+}
+
+std::vector< std::string >& Filter::filterList()
+{
+	static std::vector< std::string > g_filters;
+	return g_filters;
+}
+
+std::map< std::string, boost::weak_ptr<IECore::Lookupff> > &Filter::lutMap()
+{
+	static std::map< std::string, boost::weak_ptr<IECore::Lookupff> > l;
+	return l;
+}
+
+
 FilterPtr Filter::create( const std::string &name, float scale )
 {
 	// Check to see whether the requested Filter is registered and if not, throw an exception.
