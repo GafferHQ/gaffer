@@ -450,7 +450,7 @@ FrameListPtr Dispatcher::frameRange( const ScriptNode *script, const Context *co
 		FrameList::Frame frame = (FrameList::Frame)context->getFrame();
 		return new FrameRange( frame, frame );
 	}
-	else if ( mode == ScriptRange )
+	else if ( mode == FullRange )
 	{
 		return new FrameRange( script->frameStartPlug()->getValue(), script->frameEndPlug()->getValue() );
 	}

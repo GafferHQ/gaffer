@@ -122,7 +122,15 @@ class _DispatcherWindow( GafferUI.Window ) :
 
 	def __update( self ) :
 
-		self.__frame.setChild( GafferUI.NodeUI.create( self.__dispatcher ) )
+		nodeUI = GafferUI.NodeUI.create( self.__dispatcher )
+		
+		# force the framesMode widget to update so we start with
+		# the correct enabled state on the frameRange plug.
+		framesModeWidget = nodeUI.plugValueWidget( self.__dispatcher["framesMode"], lazy = False )
+		if framesModeWidget :
+			framesModeWidget.selectionMenu().setSelection( framesModeWidget.selectionMenu().getSelection() )
+		
+		self.__frame.setChild( nodeUI )
 		self.__updateTitle()
 
 	def __updateTitle( self ) :
@@ -178,35 +186,72 @@ class __RequirementPlugValueWidget( GafferUI.PlugValueWidget ) :
 # PlugValueWidget for framesMode
 #################################
 
-## \todo: This can be removed once we have enums and activators driven by metadata.
-class __FramesModePlugValueWidget( GafferUI.EnumPlugValueWidget ) :
+# Much of this is copied from EnumPlugValueWidget, but we're not deriving because we
+# want the ability to add in menu items that don't correspond to plug values directly.
+class __FramesModePlugValueWidget( GafferUI.PlugValueWidget ) :
 
-	def __init__( self, plug ) :
+	def __init__( self, plug, **kw ) :
 
-		GafferUI.EnumPlugValueWidget.__init__(
-			self, plug,
-			labelsAndValues = (
-				( "CurrentFrame", Gaffer.Dispatcher.FramesMode.CurrentFrame ),
-				( "ScriptRange", Gaffer.Dispatcher.FramesMode.ScriptRange ),
-				( "CustomRange", Gaffer.Dispatcher.FramesMode.CustomRange ),
-			)
+		self.__selectionMenu = GafferUI.MultiSelectionMenu( allowMultipleSelection = False, allowEmptySelection = False )
+		GafferUI.PlugValueWidget.__init__( self, self.__selectionMenu, plug, **kw )
+		
+		self.__labelsAndValues = (
+			( "CurrentFrame", Gaffer.Dispatcher.FramesMode.CurrentFrame ),
+			( "FullRange", Gaffer.Dispatcher.FramesMode.FullRange ),
+			( "CustomRange", Gaffer.Dispatcher.FramesMode.CustomRange ),
+			( "PlaybackRange", Gaffer.Dispatcher.FramesMode.CustomRange ),
 		)
+		
+		for label, value in self.__labelsAndValues :
+			self.__selectionMenu.append( label )
+		
+		self.__selectionChangedConnection = self.__selectionMenu.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__selectionChanged ) )
+		
+		self._addPopupMenu( self.__selectionMenu )
+		
+		self._updateFromPlug()
+	
+	def selectionMenu( self ) :
+
+		return self.__selectionMenu
 
 	def _updateFromPlug( self ) :
-
-		GafferUI.EnumPlugValueWidget._updateFromPlug( self )
-
+		
+		self.__selectionMenu.setEnabled( self._editable() )
+		
 		if self.getPlug() is None :
 			return
-
+		
 		with self.getContext() :
-			framesMode = self.getPlug().getValue()
-
+			plugValue = self.getPlug().getValue()
+		
+		for labelAndValue in self.__labelsAndValues :
+			if labelAndValue[1] == plugValue :
+				with Gaffer.BlockedConnection( self.__selectionChangedConnection ) :
+					self.__selectionMenu.setSelection( labelAndValue[0] )
+				break
+	
+	def __selectionChanged( self, selectionMenu ) :
+		
+		label = selectionMenu.getSelection()[0]
+		value = self.__labelsAndValues[ selectionMenu.index( label ) ][1]
+		
+		with Gaffer.BlockedConnection( self._plugConnections() ) :
+			self.getPlug().setValue( value )
+		
 		nodeUI = self.ancestor( GafferUI.NodeUI )
 		if nodeUI :
 			frameRangeWidget = nodeUI.plugValueWidget( self.getPlug().node()["frameRange"], lazy = False )
 			if frameRangeWidget :
-				frameRangeWidget.setEnabled( framesMode == Gaffer.Dispatcher.FramesMode.CustomRange )
+				## \todo: This should be managed by activator metadata once we've ported
+				# that functionality out of RenderManShaderUI and into PlugLayout.
+				frameRangeWidget.setReadOnly( value != Gaffer.Dispatcher.FramesMode.CustomRange )
+		
+		if label == "PlaybackRange" :
+			window = self.ancestor( GafferUI.ScriptWindow )
+			frameRange = GafferUI.Playback.acquire( window.scriptNode().context() ).getFrameRange()
+			frameRange = str(IECore.frameListFromList( range(frameRange[0], frameRange[1]+1) ))
+			self.getPlug().node()["frameRange"].setValue( frameRange )
 
 ##########################################################################
 # Metadata, PlugValueWidgets and Nodules
@@ -216,8 +261,13 @@ Gaffer.Metadata.registerPlugValue( Gaffer.ExecutableNode, "requirement", "nodeUI
 Gaffer.Metadata.registerPlugValue( Gaffer.ExecutableNode, "dispatcher", "nodeUI:section", "Dispatcher" )
 Gaffer.Metadata.registerPlugDescription( Gaffer.ExecutableNode, "dispatcher.batchSize", "Maximum number of frames to batch together when dispatching execution tasks." )
 
-Gaffer.Metadata.registerPlugDescription( Gaffer.Dispatcher, "framesMode", "Determines the active frame range for dispatching." )
-Gaffer.Metadata.registerPlugDescription( Gaffer.Dispatcher, "frameRange", "The frame range to be used when framesMode is set to CustomRange." )
+Gaffer.Metadata.registerPlugDescription( Gaffer.Dispatcher, "framesMode",
+	"Determines the active frame range for dispatching. " +
+	"\"CurrentFrame\" uses the current timeline frame only. " +
+	"\"FullRange\" uses the outer handles of the timeline (i.e. the full range of the script). " +
+	"\"CustomRange\" uses a user defined range, as specified by the string plug below."
+)
+Gaffer.Metadata.registerPlugDescription( Gaffer.Dispatcher, "frameRange", "The frame range to be used when framesMode is set to \"CustomRange\"." )
 Gaffer.Metadata.registerPlugDescription( Gaffer.Dispatcher, "jobsDirectory", "A directory to store temporary files used by the dispatcher." )
 
 GafferUI.PlugValueWidget.registerCreator(

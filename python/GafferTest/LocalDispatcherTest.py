@@ -149,10 +149,10 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 			text = f.read()
 		self.assertEqual( text, "%s on %d" % ( s["n1"].getName(), context.getFrame() ) )
 
-	def testDispatchScriptRange( self ) :
+	def testDispatchFullRange( self ) :
 
 		dispatcher = Gaffer.Dispatcher.dispatcher( "Local" )
-		dispatcher["framesMode"].setValue( Gaffer.Dispatcher.FramesMode.ScriptRange )
+		dispatcher["framesMode"].setValue( Gaffer.Dispatcher.FramesMode.FullRange )
 		frameList = IECore.FrameList.parse( "5-7" )
 		fileName = "/tmp/dispatcherTest/result.txt"
 
