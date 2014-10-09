@@ -212,23 +212,11 @@ private:
 
 	/// Registration mechanism for Filter classes.
 	/// We keep a vector of the names so that we can maintain an order.
-	static std::vector< CreatorFn >& creators()
-	{
-		static std::vector< CreatorFn > g_creators;
-		return g_creators;
-	}
+	static std::vector< CreatorFn >& creators();
+	
+	static std::vector< std::string >& filterList();
 
-	static std::vector< std::string >& filterList()
-	{
-		static std::vector< std::string > g_filters;
-		return g_filters;
-	}
-
-	static std::map< std::string, boost::weak_ptr<IECore::Lookupff> > &lutMap()
-	{
-		static std::map< std::string, boost::weak_ptr<IECore::Lookupff> > l;
-		return l;
-	}
+	static std::map< std::string, boost::weak_ptr<IECore::Lookupff> > &lutMap();
 
 	boost::shared_ptr<IECore::Lookupff> m_lut;
 
