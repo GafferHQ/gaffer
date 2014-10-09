@@ -1,3 +1,67 @@
+# 0.2.0.0
+
+This release brings significant optimisations, further additions to the SceneInspector, and the usual collection of miscellaneous enhancements and bug fixes.
+
+#### Core
+
+- Optimised Context::substitute(). This gives a 73% reduction in runtime for a substitutions benchmark.
+- Added '\' as an escape character in Context::substitute() (#997).
+- Boxes may now be enabled/disabled and define pass-through behaviours (#1015).
+- Significant optimisations to the computation engine.
+
+#### Image
+
+- Fixed Display node for bucket sizes larger than the native tile size.
+- Fixed problems when running embedded in Maya.
+
+#### Scene
+
+- Added code to clear caches after full procedural expansion in batch renders.
+- Added scene pass-through to the InteractiveRender node. This allows it to be seen in the Viewer, SceneHierarchy, SceneInspector etc.
+- Significant optimisations. A benchmark scene can now be generated in 3% of its previous runtime.
+
+#### RenderMan
+
+- Added "command" plug to RenderManRender. This allows the user to customise the command used to render the RIB (#1017).
+
+#### UI
+
+- SceneInspector improvements
+	- Added set membership section (#930).
+	- Added sets section to globals (#895).
+	- Improved responsiveness.
+- MenuButton improvements
+	- Menus are shown on press rather than release (#742).
+	- Added menu indicator (#493).
+- Fixed OpDialogue bug which caused it to return to the parameters pane when it should have been displaying an error.
+- Dispatcher improvements
+	- Added PlaybackRange to the frames mode menu (#1007).
+	- Renamed ScriptRange to FullRange.
+
+#### API
+
+- Added custom Diff support to SceneInspector.
+- Fixed crashes when passing None to PathMatcher python methods.
+- Added accessors for the buttons on VectorDataWidget (#1003).
+- Fixed broken SceneInspector.Row.getAlternate() method.
+- Added SceneProcedural::allRenderedSignal().
+- Added Context::remove() method.
+
+#### Incompatible changes
+
+- SceneInspector API changes.
+- Box rederived from DependencyNode.
+- Dispatcher ScriptRange renamed to FullRange.
+
+#### Build
+
+- Improved Travis continuous integration setup
+	- Added running of unit tests
+	- Added GafferRenderMan support
+- Fixed installation to paths starting with "./"
+- Fixed RenderManShader compilation in Clang 3.4
+- GafferOSL compatibility for OSL version 1.5
+
 # 0.1.1.0
 
 #### Core
