@@ -83,8 +83,18 @@ void Options::hashProcessedGlobals( const Gaffer::Context *context, IECore::Murm
 
 IECore::ConstCompoundObjectPtr Options::computeProcessedGlobals( const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputGlobals ) const
 {
-	IECore::CompoundObjectPtr result = inputGlobals->copy();
 	const CompoundDataPlug *p = optionsPlug();
+	if( !p->children().size() )
+	{
+		return inputGlobals;
+	}
+
+	IECore::CompoundObjectPtr result = new IECore::CompoundObject;
+	// Since we're not going to modify any existing members (only add new ones),
+	// and our result becomes const on returning it, we can directly reference
+	// the input members in our result without copying. Be careful not to modify
+	// them though!
+	result->members() = inputGlobals->members();
 
 	std::string name;
 	for( CompoundDataPlug::MemberPlugIterator it( p ); it != it.end(); ++it )

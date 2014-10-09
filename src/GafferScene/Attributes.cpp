@@ -123,7 +123,12 @@ IECore::ConstCompoundObjectPtr Attributes::computeGlobals( const Gaffer::Context
 	}
 
 	const CompoundDataPlug *p = attributesPlug();
-	IECore::CompoundObjectPtr result = inputGlobals->copy();
+	IECore::CompoundObjectPtr result = new CompoundObject;
+	// Since we're not going to modify any existing members (only add new ones),
+	// and our result becomes const on returning it, we can directly reference
+	// the input members in our result without copying. Be careful not to modify
+	// them though!
+	result->members() = inputGlobals->members();
 
 	std::string name;
 	for( CompoundDataPlug::MemberPlugIterator it( p ); it != it.end(); ++it )
@@ -167,7 +172,13 @@ IECore::ConstCompoundObjectPtr Attributes::computeProcessedAttributes( const Sce
 		return inputAttributes;
 	}
 
-	CompoundObjectPtr result = inputAttributes->copy();
+	CompoundObjectPtr result = new CompoundObject;
+	// Since we're not going to modify any existing members (only add new ones),
+	// and our result becomes const on returning it, we can directly reference
+	// the input members in our result without copying. Be careful not to modify
+	// them though!
+	result->members() = inputAttributes->members();
+
 	ap->fillCompoundObject( result->members() );
 
 	return result;
