@@ -1548,5 +1548,23 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 		state = script["shader"].state()
 		self.assertNotEqual( state[0].parameters["__handle"], state[1].parameters["__handle"] )
 
+	def testShaderTypesInState( self ) :
+
+		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/coshaderParameter.sl" )
+
+		shaderNode = GafferRenderMan.RenderManShader()
+		shaderNode.loadShader( shader )
+
+		coshader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/coshader.sl" )
+
+		coshaderNode = GafferRenderMan.RenderManShader()
+		coshaderNode.loadShader( coshader )
+
+		shaderNode["parameters"]["coshaderParameter"].setInput( coshaderNode["out"] )
+
+		state = shaderNode.state()
+		self.assertEqual( state[0].type, "ri:shader" )
+		self.assertEqual( state[1].type, "ri:surface" )
+
 if __name__ == "__main__":
 	unittest.main()

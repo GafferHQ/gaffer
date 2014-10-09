@@ -139,7 +139,7 @@ class ArnoldShaderTest( unittest.TestCase ) :
 		st = s.state()
 		self.assertEqual( len( st ), 2 )
 
-		self.assertEqual( st[0].type, "shader" )
+		self.assertEqual( st[0].type, "ai:shader" )
 		self.assertEqual( st[0].name, "noise" )
 		self.failUnless( "__handle" in st[0].parameters )
 

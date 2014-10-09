@@ -96,5 +96,22 @@ class ShaderTest( unittest.TestCase ) :
 		self.assertEqual( s1[0].blindData()["gaffer:nodeName"], IECore.StringData( "node1" ) )
 		self.assertEqual( s2[0].blindData()["gaffer:nodeName"], IECore.StringData( "node2" ) )
 
+	def testShaderTypesInState( self ) :
+
+		surface = GafferSceneTest.TestShader( "surface" )
+		surface["name"].setValue( "testSurface" )
+		surface["type"].setValue( "test:surface" )
+		surface["parameters"]["t"] = Gaffer.Color3fPlug()
+
+		texture = GafferSceneTest.TestShader( "texture" )
+		texture["name"].setValue( "testTexture" )
+		texture["type"].setValue( "test:shader" )
+
+		surface["parameters"]["t"].setInput( texture["out"] )
+
+		state = surface.state()
+		self.assertEqual( state[0].type, "test:shader" )
+		self.assertEqual( state[1].type, "test:surface" )
+
 if __name__ == "__main__":
 	unittest.main()

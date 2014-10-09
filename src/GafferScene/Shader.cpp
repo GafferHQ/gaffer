@@ -35,6 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include "boost/algorithm/string/predicate.hpp"
 #include "boost/lexical_cast.hpp"
 #include "boost/bind.hpp"
 
@@ -378,7 +379,23 @@ const std::string &Shader::NetworkBuilder::shaderHandle( const Shader *shaderNod
 	IECore::StringDataPtr handleData = s->parametersData()->member<IECore::StringData>( "__handle" );
 	if( !handleData )
 	{
-		s->setType( "shader" );
+		// Some renderers (Arnold for one) allow surface shaders to be connected
+		// as inputs to other shaders, so we may need to change the shader type to
+		// convert it into a standard shader. We must take care to preserve any
+		// renderer specific prefix when doing this.
+		const std::string &type = s->getType();
+		if( !boost::ends_with( type, "shader" ) )
+		{
+			size_t i = type.find_first_of( ":" );
+			if( i != std::string::npos )
+			{
+				s->setType( type.substr( 0, i + 1 ) + "shader" );
+			}
+			else
+			{
+				s->setType( "shader" );
+			}
+		}
 		// the handle includes the node name so as to help with debugging, but also
 		// includes an integer unique to this shader group, as two shaders could have
 		// the same name if they don't have the same parent - because one is inside a
