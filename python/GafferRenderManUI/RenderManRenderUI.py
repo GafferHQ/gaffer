@@ -62,3 +62,4 @@ GafferUI.PlugValueWidget.registerCreator(
 
 GafferUI.Nodule.registerNodule( GafferRenderMan.RenderManRender, "mode", lambda plug : None )
 GafferUI.Nodule.registerNodule( GafferRenderMan.RenderManRender, "ribFileName", lambda plug : None )
+GafferUI.Nodule.registerNodule( GafferRenderMan.RenderManRender, "command", lambda plug : None )
