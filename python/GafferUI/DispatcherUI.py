@@ -243,7 +243,8 @@ class __FramesModePlugValueWidget( GafferUI.PlugValueWidget ) :
 		if nodeUI :
 			frameRangeWidget = nodeUI.plugValueWidget( self.getPlug().node()["frameRange"], lazy = False )
 			if frameRangeWidget :
-				frameRangeWidget.setEnabled( value == Gaffer.Dispatcher.FramesMode.CustomRange )
+				## \todo: This should be managed by activator metadata once we've ported
+				# that functionality out of RenderManShaderUI and into PlugLayout.
 				frameRangeWidget.setReadOnly( value != Gaffer.Dispatcher.FramesMode.CustomRange )
 		
 		if label == "PlaybackRange" :
