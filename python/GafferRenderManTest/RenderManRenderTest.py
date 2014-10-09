@@ -399,6 +399,61 @@ class RenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 
 		dispatcher.dispatch( [ s["render"] ] )
 
+	def testCommand( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["sphere"] = GafferScene.Sphere()
+
+		s["outputs"] = GafferScene.Outputs()
+		s["outputs"].addOutput(
+			"beauty",
+			IECore.Display(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"quantize" : IECore.FloatVectorData( [ 0, 0, 0, 0 ] ),
+					"driverType" : "ClientDisplayDriver",
+					"displayHost" : "localhost",
+					"displayPort" : "1559",
+					"remoteDisplayType" : "GafferImage::GafferDisplayDriver",
+					"handle" : "myLovelyPlane",
+				}
+			)
+		)
+		s["outputs"]["in"].setInput( s["sphere"]["out"] )
+
+		s["display"] = GafferImage.Display()
+	
+		s["render"] = GafferRenderMan.RenderManRender()
+		s["render"]["ribFileName"].setValue( "/tmp/test.rib" )
+		s["render"]["in"].setInput( s["outputs"]["out"] )
+
+		s["fileName"].setValue( "/tmp/test.gfr" )
+		s.save()
+		
+		# render a full frame and get the data window
+		s["render"].execute()
+		dataWindow1 = s["display"]["out"].image().dataWindow
+
+		# specify a crop on the command line and get the new data window
+		s["render"]["command"].setValue( "renderdl -crop 0 0.5 0 0.5" )
+		s["render"].execute()
+
+		# check that the crop worked
+		dataWindow2 = s["display"]["out"].image().dataWindow
+		self.assertEqual( dataWindow2.size(), dataWindow1.size() / 2 )
+
+		# now check that we can specify values via the context too
+		s["render"]["command"].setValue( "renderdl -crop 0 ${size} 0 ${size}" )
+		s.context()["size"] = 0.25
+		with s.context() :
+			s["render"].execute()
+		
+		dataWindow3 = s["display"]["out"].image().dataWindow
+		self.assertEqual( dataWindow3.size(), dataWindow1.size() / 4 )
+		
 	def testOptions( self ) :
 
 		s = Gaffer.ScriptNode()

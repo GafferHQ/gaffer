@@ -61,6 +61,13 @@ class RenderManRender( GafferScene.ExecutableRender ) :
 				"ribFileName",
 			)
 		)
+		
+		self.addChild(
+			Gaffer.StringPlug(
+				"command",
+				defaultValue = "renderdl",
+			)
+		)
 
 	def _createRenderer( self ) :
 
@@ -111,12 +118,19 @@ class RenderManRender( GafferScene.ExecutableRender ) :
 
 	def _command( self ) :
 
-		mode = self["mode"].getValue()
-		if mode == "render" :
-			return "renderdl " + self.__fileName()
-		else :
+		if self["mode"].getValue() != "render" :
 			return ""
-
+		
+		result = self["command"].getValue()
+		result = Gaffer.Context.current().substitute( result ) ## \todo See __fileName()
+		result = result.strip()
+		if result == "" :
+			return
+		
+		result += " '" + self.__fileName() + "'"
+		
+		return result
+		
 	def __fileName( self ) :
 
 		result = self["ribFileName"].getValue()
