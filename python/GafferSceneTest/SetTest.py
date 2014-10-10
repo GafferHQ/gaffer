@@ -88,9 +88,9 @@ class SetTest( GafferSceneTest.SceneTestCase ) :
 
 		g2 = s2["out"]["globals"].getValue( _copy = False )
 		self.assertEqual( g2.keys(), [ "gaffer:sets" ] )
-		self.assertEqual( g2["gaffer:sets"].keys(), [ "setOne", "setTwo" ] )
+		self.assertEqual( set( g2["gaffer:sets"].keys() ), set( [ "setOne", "setTwo" ] ) )
 		self.assertEqual( g2["gaffer:sets"]["setOne"].value.paths(), [ "/one" ] )
-		self.assertEqual( set( g2["gaffer:sets"]["setTwo"].value.paths() ), set( [ "/two" ] ) )
+		self.assertEqual( g2["gaffer:sets"]["setTwo"].value.paths(), [ "/two" ] )
 
 		self.assertEqual( g1.keys(), [ "gaffer:sets" ] )
 		self.assertEqual( g1["gaffer:sets"].keys(), [ "setOne" ] )
