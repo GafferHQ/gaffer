@@ -43,7 +43,7 @@ class _TogglePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plug, imagePrefix, defaultToggleValue = None, **kw ) :
 
-		row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal )
+		row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 2 )
 
 		GafferUI.PlugValueWidget.__init__( self, row, plug, **kw )
 

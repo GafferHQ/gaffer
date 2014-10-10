@@ -102,12 +102,14 @@ class _Editor( GafferUI.ListContainer ) :
 
 	def __init__( self, path ) :
 
-		GafferUI.ListContainer.__init__( self, orientation = GafferUI.ListContainer.Orientation.Horizontal )
+		GafferUI.ListContainer.__init__( self, orientation = GafferUI.ListContainer.Orientation.Horizontal, spacing = 2 )
 
 		with self :
 			GafferUI.PathWidget( path )
 			button = GafferUI.Button( image = "pathChooser.png", hasFrame = False )
 			self.__buttonClickedConnection = button.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ) )
+
+			GafferUI.Spacer( IECore.V2i( 2 ) )
 
 		# needed to give the focus to our main editable field when editing starts.
 		self._qtWidget().setFocusProxy( self.__pathWidget()._qtWidget() )

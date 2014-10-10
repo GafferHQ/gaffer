@@ -37,6 +37,8 @@
 import os
 import unittest
 
+import IECore
+
 import GafferUI
 import GafferUITest
 
@@ -84,6 +86,22 @@ class ButtonTest( GafferUITest.TestCase ) :
 
 		self.assertRaises( Exception, b.setText, 1 )
 		self.assertRaises( Exception, b.setImage, 1 )
+
+	def testImageSize( self ) :
+
+		with GafferUI.Window( "Test" ) as w :
+			b = GafferUI.Button( image = "arrowRight10.png", hasFrame=False )
+
+		w.setVisible( True )
+		self.waitForIdle()
+
+		self.assertEqual( b.bound().size(), IECore.V2i( 10 ) )
+
+		b.setHasFrame( True )
+		self.waitForIdle( 20 )
+
+		self.assertGreater( b.bound().size().x, 10 )
+		self.assertGreater( b.bound().size().y, 10 )
 
 if __name__ == "__main__":
 	unittest.main()
