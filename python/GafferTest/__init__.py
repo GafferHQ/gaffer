@@ -136,6 +136,7 @@ from SwitchTest import SwitchTest
 from MetadataTest import MetadataTest
 from StringAlgoTest import StringAlgoTest
 from SystemCommandTest import SystemCommandTest
+from TaskListTest import TaskListTest
 
 if __name__ == "__main__":
 	import unittest

@@ -402,14 +402,22 @@ Dispatcher::TaskBatchPtr Dispatcher::acquireBatch( const ExecutableNode::Task &t
 				}
 			}
 
-			tasksToBatches[taskHash] = batch;
+			if ( taskHash != MurmurHash() )
+			{
+				tasksToBatches[taskHash] = batch;
+			}
+			
 			return batch;
 		}
 	}
 
 	TaskBatchPtr batch = new TaskBatch( task );
 	currentBatches[hash] = batch;
-	tasksToBatches[taskHash] = batch;
+	if ( taskHash != MurmurHash() )
+	{
+		tasksToBatches[taskHash] = batch;
+	}
+	
 	return batch;
 }
 

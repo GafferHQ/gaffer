@@ -109,6 +109,10 @@ class LocalDispatcher( Gaffer.Dispatcher ) :
 
 		script = batch.node().scriptNode()
 
+		if isinstance( batch.node(), Gaffer.TaskList ) :
+			IECore.msg( IECore.MessageHandler.Level.Info, messageTitle, "Finished " + batch.node().relativeName( script ) )
+			return
+		
 		taskContext = batch.context()
 		frames = str( IECore.frameListFromList( [ int(x) for x in batch.frames() ] ) )
 
