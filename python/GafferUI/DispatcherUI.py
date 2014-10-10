@@ -191,8 +191,8 @@ class __FramesModePlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__labelsAndValues = (
 			( "CurrentFrame", Gaffer.Dispatcher.FramesMode.CurrentFrame ),
 			( "FullRange", Gaffer.Dispatcher.FramesMode.FullRange ),
-			( "CustomRange", Gaffer.Dispatcher.FramesMode.CustomRange ),
 			( "PlaybackRange", Gaffer.Dispatcher.FramesMode.CustomRange ),
+			( "CustomRange", Gaffer.Dispatcher.FramesMode.CustomRange ),
 		)
 		
 		for label, value in self.__labelsAndValues :
@@ -246,7 +246,7 @@ class __FramesModePlugValueWidget( GafferUI.PlugValueWidget ) :
 		if frameRangeWidget :
 			## \todo: This should be managed by activator metadata once we've ported
 			# that functionality out of RenderManShaderUI and into PlugLayout.
-			frameRangeWidget.setReadOnly( value != Gaffer.Dispatcher.FramesMode.CustomRange )		
+			frameRangeWidget.setReadOnly( label in [ "CurrentFrame", "FullRange", "PlaybackRange" ] )
 		
 		self.__updateFrameRangeConnection = None
 		
