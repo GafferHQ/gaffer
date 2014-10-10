@@ -1566,5 +1566,18 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 		self.assertEqual( state[0].type, "ri:shader" )
 		self.assertEqual( state[1].type, "ri:surface" )
 
+	def testAssignmentAttributeName( self ) :
+
+		p = GafferScene.Plane()
+
+		s = GafferRenderMan.RenderManShader()
+		s.loadShader( "plastic" )
+
+		a = GafferScene.ShaderAssignment()
+		a["in"].setInput( p["out"] )
+		a["shader"].setInput( s["out"] )
+
+		self.assertEqual( a["out"].attributes( "/plane" ).keys(), [ "ri:surface"] )
+
 if __name__ == "__main__":
 	unittest.main()

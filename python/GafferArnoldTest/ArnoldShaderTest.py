@@ -42,6 +42,7 @@ import IECoreArnold
 
 import Gaffer
 import GafferTest
+import GafferScene
 import GafferArnold
 
 class ArnoldShaderTest( unittest.TestCase ) :
@@ -328,6 +329,19 @@ class ArnoldShaderTest( unittest.TestCase ) :
 		for key in state[1].parameters.keys() :
 			if key != "Ks_color" :
 				self.assertEqual( state[1].parameters[key], state2[0].parameters[key] )
+
+	def testAssignmentAttributeName( self ) :
+
+		p = GafferScene.Plane()
+
+		s = GafferArnold.ArnoldShader()
+		s.loadShader( "standard" )
+
+		a = GafferScene.ShaderAssignment()
+		a["in"].setInput( p["out"] )
+		a["shader"].setInput( s["out"] )
+
+		self.assertEqual( a["out"].attributes( "/plane" ).keys(), [ "ai:surface"] )
 
 if __name__ == "__main__":
 	unittest.main()
