@@ -50,11 +50,7 @@ class TaskList( Gaffer.ExecutableNode ) :
 	
 	def hash( self, context ) :
 		
-		h = Gaffer.ExecutableNode.hash( self, context )
-		# we don't want different TaskLists to look like the same task
-		h.append( self.relativeName( self.ancestor( Gaffer.ScriptNode ) ) )
-		
-		return h
+		return IECore.MurmurHash()
 	
 	def execute( self ) :
 		

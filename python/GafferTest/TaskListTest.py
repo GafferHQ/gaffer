@@ -53,8 +53,8 @@ class TaskListTest( GafferTest.TestCase ) :
 		self.assertEqual( n.hash( c ), n.hash( c2 ) )
 		
 		n2 = Gaffer.TaskList( "TaskList2" )
-		self.assertNotEqual( n.hash( c ), n2.hash( c ) )
-		self.assertNotEqual( n.hash( c2 ), n2.hash( c2 ) )
+		self.assertEqual( n.hash( c ), n2.hash( c ) )
+		self.assertEqual( n.hash( c2 ), n2.hash( c2 ) )
 	
 	def setUp( self ) :
 
