@@ -8,6 +8,7 @@ This release brings significant optimisations, further additions to the SceneIns
 - Added '\' as an escape character in Context::substitute() (#997).
 - Boxes may now be enabled/disabled and define pass-through behaviours (#1015).
 - Significant optimisations to the computation engine.
+- Added TaskList node for grouping the dispatch of several input requirements.
 
 #### Image
 
