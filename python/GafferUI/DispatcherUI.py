@@ -204,6 +204,9 @@ class __FramesModePlugValueWidget( GafferUI.PlugValueWidget ) :
 		
 		self._addPopupMenu( self.__selectionMenu )
 		
+		# save the metadata in case the frameRange plug is set prior to enabling CustomRange mode
+		self.__customFrameRangeChanged( self.getPlug().node()["frameRange"] )
+		
 		self._updateFromPlug()
 	
 	def selectionMenu( self ) :
@@ -267,6 +270,11 @@ class __FramesModePlugValueWidget( GafferUI.PlugValueWidget ) :
 			playback = GafferUI.Playback.acquire( context )
 			self.__updateFrameRangeConnection = playback.frameRangeChangedSignal().connect( Gaffer.WeakMethod( self.__playbackFrameRangeChanged ) )
 			self.__playbackFrameRangeChanged( playback )
+		else :
+			frameRange = Gaffer.Metadata.plugValue( self.getPlug(), "dispatcherWindow:frameRange", inherit=False )
+			if frameRange is not None :
+				self.getPlug().node()["frameRange"].setValue( frameRange )
+			self.__updateFrameRangeConnection = self.getPlug().node().plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__customFrameRangeChanged ) )
 	
 	def __visibilityChanged( self, widget ) :
 		
@@ -295,6 +303,12 @@ class __FramesModePlugValueWidget( GafferUI.PlugValueWidget ) :
 			frameRangeWidget = self.__frameRangeWidget()
 			if frameRangeWidget :
 				frameRangeWidget.textWidget().setText( str(IECore.FrameRange( script["frameRange"]["start"].getValue(), script["frameRange"]["end"].getValue() )) )
+	
+	def __customFrameRangeChanged( self, plug ) :
+		
+		if plug.isSame( self.getPlug().node()["frameRange"] ) :
+			with self.getContext() :
+				Gaffer.Metadata.registerPlugValue( self.getPlug(), "dispatcherWindow:frameRange", plug.getValue() )
 
 class __FrameRangePlugValueWidget( GafferUI.StringPlugValueWidget ) :
 	
