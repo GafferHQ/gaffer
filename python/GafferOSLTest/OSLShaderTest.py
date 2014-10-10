@@ -122,7 +122,7 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		self.assertEqual( state[1].parameters["c"], IECore.Color3fData( IECore.Color3f( 1, 2, 3 ) ) )
 		self.assertEqual( state[1].parameters["s"], IECore.StringData( "s" ) )
 		self.assertEqual( state[0].name, outputTypesShader )
-		self.assertEqual( state[0].type, "shader" )
+		self.assertEqual( state[0].type, "osl:shader" )
 		self.assertEqual( state[0].parameters["input"], IECore.FloatData( 1 ) )
 
 	def testSerialiation( self ) :

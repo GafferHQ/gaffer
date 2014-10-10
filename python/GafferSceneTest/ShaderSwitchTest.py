@@ -47,6 +47,9 @@ class ShaderSwitchTest( GafferSceneTest.SceneTestCase ) :
 		shader1 = GafferSceneTest.TestShader()
 		shader2 = GafferSceneTest.TestShader()
 
+		shader1["type"].setValue( "test:surface" )
+		shader2["type"].setValue( "test:surface" )
+
 		shader1["parameters"]["i"].setValue( 1 )
 		shader2["parameters"]["i"].setValue( 2 )
 
@@ -60,13 +63,13 @@ class ShaderSwitchTest( GafferSceneTest.SceneTestCase ) :
 		sphere = GafferScene.Sphere()
 		assignment["in"].setInput( sphere["out"] )
 
-		self.assertEqual( assignment["out"].attributes( "/sphere" )["shader"][0].parameters["i"].value, 1 )
+		self.assertEqual( assignment["out"].attributes( "/sphere" )["test:surface"][0].parameters["i"].value, 1 )
 
 		switch["index"].setValue( 1 )
-		self.assertEqual( assignment["out"].attributes( "/sphere" )["shader"][0].parameters["i"].value, 2 )
+		self.assertEqual( assignment["out"].attributes( "/sphere" )["test:surface"][0].parameters["i"].value, 2 )
 
 		switch["enabled"].setValue( False )
-		self.assertEqual( assignment["out"].attributes( "/sphere" )["shader"][0].parameters["i"].value, 1 )
+		self.assertEqual( assignment["out"].attributes( "/sphere" )["test:surface"][0].parameters["i"].value, 1 )
 
 	def testSerialisation( self ) :
 
