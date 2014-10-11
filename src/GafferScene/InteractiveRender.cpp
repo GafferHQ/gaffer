@@ -60,7 +60,7 @@ IE_CORE_DEFINERUNTIMETYPED( InteractiveRender );
 size_t InteractiveRender::g_firstPlugIndex = 0;
 
 InteractiveRender::InteractiveRender( const std::string &name )
-	:	Node( name ), m_lightsDirty( true ), m_shadersDirty( true ), m_cameraDirty( true ), m_coordinateSystemsDirty( true )
+	:	Node( name ), m_lightsDirty( true ), m_attributesDirty( true ), m_cameraDirty( true ), m_coordinateSystemsDirty( true )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new ScenePlug( "in" ) );
@@ -68,7 +68,7 @@ InteractiveRender::InteractiveRender( const std::string &name )
 	outPlug()->setInput( inPlug() );
 	addChild( new IntPlug( "state", Plug::In, Stopped, Stopped, Paused, Plug::Default & ~Plug::Serialisable ) );
 	addChild( new BoolPlug( "updateLights", Plug::In, true ) );
-	addChild( new BoolPlug( "updateShaders", Plug::In, true ) );
+	addChild( new BoolPlug( "updateAttributes", Plug::In, true ) );
 	addChild( new BoolPlug( "updateCamera", Plug::In, true ) );
 	addChild( new BoolPlug( "updateCoordinateSystems", Plug::In, true ) );
 
@@ -122,12 +122,12 @@ const Gaffer::BoolPlug *InteractiveRender::updateLightsPlug() const
 	return getChild<BoolPlug>( g_firstPlugIndex + 3 );
 }
 
-Gaffer::BoolPlug *InteractiveRender::updateShadersPlug()
+Gaffer::BoolPlug *InteractiveRender::updateAttributesPlug()
 {
 	return getChild<BoolPlug>( g_firstPlugIndex + 4 );
 }
 
-const Gaffer::BoolPlug *InteractiveRender::updateShadersPlug() const
+const Gaffer::BoolPlug *InteractiveRender::updateAttributesPlug() const
 {
 	return getChild<BoolPlug>( g_firstPlugIndex + 4 );
 }
@@ -175,13 +175,13 @@ void InteractiveRender::plugDirtied( const Gaffer::Plug *plug )
 	else if( plug == inPlug()->attributesPlug() )
 	{
 		// as above.
-		m_shadersDirty = true;
+		m_attributesDirty = true;
 		m_lightsDirty = true;
 	}
 	else if(
 		plug == inPlug() ||
 		plug == updateLightsPlug() ||
-		plug == updateShadersPlug() ||
+		plug == updateAttributesPlug() ||
 		plug == updateCameraPlug() ||
 		plug == updateCoordinateSystemsPlug() ||
 		plug == statePlug()
@@ -234,7 +234,7 @@ void InteractiveRender::update()
 		m_scene = NULL;
 		m_state = Stopped;
 		m_lightHandles.clear();
-		m_shadersDirty = m_lightsDirty = m_cameraDirty = true;
+		m_attributesDirty = m_lightsDirty = m_cameraDirty = true;
 		if( !requiredScene || requiredState == Stopped )
 		{
 			return;
@@ -266,7 +266,7 @@ void InteractiveRender::update()
 
 		m_scene = requiredScene;
 		m_state = Running;
-		m_lightsDirty = m_shadersDirty = m_cameraDirty = false;
+		m_lightsDirty = m_attributesDirty = m_cameraDirty = false;
 	}
 
 	// Make sure the paused/running state is as we want.
@@ -289,7 +289,7 @@ void InteractiveRender::update()
 	if( m_state == Running )
 	{
 		updateLights();
-		updateShaders();
+		updateAttributes();
 		updateCamera();
 		updateCoordinateSystems();
 	}
@@ -378,22 +378,22 @@ void InteractiveRender::outputLightsInternal( const IECore::CompoundObject *glob
 	}
 }
 
-void InteractiveRender::updateShaders()
+void InteractiveRender::updateAttributes()
 {
-	if( !m_shadersDirty || !updateShadersPlug()->getValue() )
+	if( !m_attributesDirty || !updateAttributesPlug()->getValue() )
 	{
 		return;
 	}
 
-	updateShadersWalk( ScenePlug::ScenePath() );
+	updateAttributesWalk( ScenePlug::ScenePath() );
 
-	m_shadersDirty = false;
+	m_attributesDirty = false;
 }
 
-void InteractiveRender::updateShadersWalk( const ScenePlug::ScenePath &path )
+void InteractiveRender::updateAttributesWalk( const ScenePlug::ScenePath &path )
 {
-	/// \todo Keep a track of the hashes of the shaders at each path,
-	/// and use it to only update the shaders when they've changed.
+	/// \todo Keep a track of the hashes of the attributes at each path,
+	/// and use it to only update the attributes when they've changed.
 	ConstCompoundObjectPtr attributes = inPlug()->attributes( path );
 
 	// terminate recursion for invisible locations
@@ -402,36 +402,44 @@ void InteractiveRender::updateShadersWalk( const ScenePlug::ScenePath &path )
 	{
 		return;
 	}
-
-	ConstObjectVectorPtr shader = attributes->member<ObjectVector>( "shader" );
-	if( shader )
+	
+	std::string name;
+	ScenePlug::pathToString( path, name );
+	CompoundDataMap parameters;
+	parameters["exactscopename"] = new StringData( name );
 	{
-		std::string name;
-		ScenePlug::pathToString( path, name );
-
-		CompoundDataMap parameters;
-		parameters["exactscopename"] = new StringData( name );
+		EditBlock edit( m_renderer.get(), "attribute", parameters );
+		for( CompoundObject::ObjectMap::const_iterator it = attributes->members().begin(), eIt = attributes->members().end(); it != eIt; it++ )
 		{
-			EditBlock edit( m_renderer.get(), "attribute", parameters );
-
-			for( ObjectVector::MemberContainer::const_iterator it = shader->members().begin(), eIt = shader->members().end(); it != eIt; it++ )
+			if( const StateRenderable *s = runTimeCast<const StateRenderable>( it->second.get() ) )
 			{
-				const StateRenderable *s = runTimeCast<const StateRenderable>( it->get() );
-				if( s )
+				s->render( m_renderer.get() );
+			}
+			else if( const ObjectVector *o = runTimeCast<const ObjectVector>( it->second.get() ) )
+			{
+				for( ObjectVector::MemberContainer::const_iterator it = o->members().begin(), eIt = o->members().end(); it != eIt; it++ )
 				{
-					s->render( m_renderer.get() );
+					const StateRenderable *s = runTimeCast<const StateRenderable>( it->get() );
+					if( s )
+					{
+						s->render( m_renderer.get() );
+					}
 				}
+			}
+			else if( const Data *d = runTimeCast<const Data>( it->second.get() ) )
+			{
+				m_renderer->setAttribute( it->first, d );
 			}
 		}
 	}
-
+	
 	ConstInternedStringVectorDataPtr childNames = inPlug()->childNames( path );
 	ScenePlug::ScenePath childPath = path;
 	childPath.push_back( InternedString() ); // for the child name
 	for( vector<InternedString>::const_iterator it=childNames->readable().begin(); it!=childNames->readable().end(); it++ )
 	{
 		childPath[path.size()] = *it;
-		updateShadersWalk( childPath );
+		updateAttributesWalk( childPath );
 	}
 }
 
