@@ -86,8 +86,8 @@ class InteractiveRender : public Gaffer::Node
 		Gaffer::BoolPlug *updateLightsPlug();
 		const Gaffer::BoolPlug *updateLightsPlug() const;
 
-		Gaffer::BoolPlug *updateShadersPlug();
-		const Gaffer::BoolPlug *updateShadersPlug() const;
+		Gaffer::BoolPlug *updateAttributesPlug();
+		const Gaffer::BoolPlug *updateAttributesPlug() const;
 
 		Gaffer::BoolPlug *updateCameraPlug();
 		const Gaffer::BoolPlug *updateCameraPlug() const;
@@ -112,8 +112,8 @@ class InteractiveRender : public Gaffer::Node
 
 		void update();
 		void updateLights();
-		void updateShaders();
-		void updateShadersWalk( const ScenePlug::ScenePath &path );
+		void updateAttributes();
+		void updateAttributesWalk( const ScenePlug::ScenePath &path );
 		void updateCamera();
 		void updateCoordinateSystems();
 
@@ -126,7 +126,7 @@ class InteractiveRender : public Gaffer::Node
 		State m_state;
 		LightHandles m_lightHandles;
 		bool m_lightsDirty;
-		bool m_shadersDirty;
+		bool m_attributesDirty;
 		bool m_cameraDirty;
 		bool m_coordinateSystemsDirty;
 

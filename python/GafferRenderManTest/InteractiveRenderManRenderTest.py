@@ -195,7 +195,7 @@ class InteractiveRenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		)
 		self.assertEqual( c / c[2], IECore.Color3f( 0.25, 0.5, 1 ) )
 
-	def testShaders( self ) :
+	def testAttributes( self ) :
 
 		s = Gaffer.ScriptNode()
 
@@ -271,7 +271,7 @@ class InteractiveRenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 
 		# turn off shader updates, do the same, and check that it hasn't changed
 
-		s["r"]["updateShaders"].setValue( False )
+		s["r"]["updateAttributes"].setValue( False )
 		s["s"]["parameters"]["blackcolor"].setValue( IECore.Color3f( 0.5 ) )
 		time.sleep( 1 )
 		c = self.__colorAtUV(
@@ -282,7 +282,7 @@ class InteractiveRenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 
 		# turn shader updates back on, and check that it updates
 
-		s["r"]["updateShaders"].setValue( True )
+		s["r"]["updateAttributes"].setValue( True )
 		time.sleep( 1 )
 		c = self.__colorAtUV(
 			IECore.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
