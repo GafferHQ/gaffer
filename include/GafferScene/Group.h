@@ -56,6 +56,15 @@ class Group : public SceneProcessor
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::Group, GroupTypeId, SceneProcessor );
 
+		/// The Group adds new input plugs as needed as the existing
+		/// ones receive input connections. This method returns the
+		/// most recently added plug - the one that should be used
+		/// to connect a new input.
+		/// \todo If SceneProcessor::inPlug() was an ArrayPlug as
+		/// per #996, we wouldn't need this method.
+		ScenePlug *nextInPlug();
+		const ScenePlug *nextInPlug() const;
+
 		Gaffer::StringPlug *namePlug();
 		const Gaffer::StringPlug *namePlug() const;
 

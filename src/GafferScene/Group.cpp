@@ -76,6 +76,16 @@ Group::~Group()
 {
 }
 
+ScenePlug *Group::nextInPlug()
+{
+	return m_inPlugs.inputs().back().get();
+}
+
+const ScenePlug *Group::nextInPlug() const
+{
+	return m_inPlugs.inputs().back().get();
+}
+
 Gaffer::StringPlug *Group::namePlug()
 {
 	return getChild<StringPlug>( g_firstPlugIndex );
