@@ -106,6 +106,12 @@ class Expression : public ComputeNode
 
 	private :
 
+		CompoundPlug *inPlug();
+		const CompoundPlug *inPlug() const;
+
+		ValuePlug *outPlug();
+		const ValuePlug *outPlug() const;
+
 		void plugSet( Plug *plug );
 		void parentChanged( GraphComponent *child, GraphComponent *oldParent );
 
