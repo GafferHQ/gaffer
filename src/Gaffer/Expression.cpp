@@ -138,9 +138,7 @@ void Expression::hash( const ValuePlug *output, const Context *context, IECore::
 		}
 		if( m_engine )
 		{
-			std::vector<std::string> contextNames;
-			m_engine->contextNames( contextNames );
-			for( std::vector<std::string>::const_iterator it = contextNames.begin(); it != contextNames.end(); it++ )
+			for( std::vector<IECore::InternedString>::const_iterator it = m_contextNames.begin(); it != m_contextNames.end(); it++ )
 			{
 				const IECore::Data *d = context->get<IECore::Data>( *it, 0 );
 				if( d )
@@ -209,6 +207,8 @@ void Expression::plugSet( Plug *plug )
 				{
 					m_engine->inPlugs( inPlugPaths );
 					outPlugPath = m_engine->outPlug();
+					m_contextNames.clear();
+					m_engine->contextNames( m_contextNames );
 				}
 
 				updatePlugs( outPlugPath, inPlugPaths );

@@ -103,7 +103,7 @@ class EngineWrapper : public Expression::Engine, public IECorePython::Wrapper<Ex
 			}
 		}
 
-		virtual void contextNames( std::vector<std::string> &names )
+		virtual void contextNames( std::vector<IECore::InternedString> &names )
 		{
 			IECorePython::ScopedGILLock gilLock;
 			try
