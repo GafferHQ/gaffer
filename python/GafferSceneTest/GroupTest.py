@@ -709,6 +709,25 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 			} )
 		)
 
+	def testNextInPlug( self ) :
+
+		g = GafferScene.Group()
+		self.assertTrue( g.nextInPlug().isSame( g["in"] ) )
+
+		p = GafferScene.Plane()
+		g["in"].setInput( p["out"] )
+		self.assertTrue( g.nextInPlug().isSame( g["in1"] ) )
+
+		g["in"].setInput( None )
+		self.assertTrue( g.nextInPlug().isSame( g["in"] ) )
+
+		g["in"].setInput( p["out"] )
+		g["in1"].setInput( p["out"] )
+		self.assertTrue( g.nextInPlug().isSame( g["in2"] ) )
+
+		g["in"].setInput( None )
+		self.assertTrue( g.nextInPlug().isSame( g["in2"] ) )
+
 	def setUp( self ) :
 
 		self.__originalCacheMemoryLimit = Gaffer.ValuePlug.getCacheMemoryLimit()

@@ -48,7 +48,6 @@
 #include "GafferScene/PrimitiveVariableProcessor.h"
 #include "GafferScene/DeletePrimitiveVariables.h"
 #include "GafferScene/MeshType.h"
-#include "GafferScene/Group.h"
 #include "GafferScene/Plane.h"
 #include "GafferScene/Seeds.h"
 #include "GafferScene/Instancer.h"
@@ -94,6 +93,7 @@
 #include "GafferSceneBindings/CoordinateSystemBinding.h"
 #include "GafferSceneBindings/DeleteGlobalsBinding.h"
 #include "GafferSceneBindings/ExternalProceduralBinding.h"
+#include "GafferSceneBindings/GroupBinding.h"
 
 using namespace boost::python;
 using namespace GafferScene;
@@ -112,7 +112,6 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	GafferBindings::DependencyNodeClass<SceneElementProcessor>();
 	GafferBindings::DependencyNodeClass<AttributeCache>();
 	GafferBindings::DependencyNodeClass<MeshType>();
-	GafferBindings::DependencyNodeClass<Group>();
 	GafferBindings::DependencyNodeClass<ObjectSource>();
 	GafferBindings::DependencyNodeClass<Cube>();
 	GafferBindings::DependencyNodeClass<Plane>();
@@ -132,6 +131,7 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	bindSceneProcedural();
 	bindShader();
 	bindOptions();
+	bindGroup();
 
 	GafferBindings::DependencyNodeClass<AlembicSource>();
 	GafferBindings::DependencyNodeClass<SubTree>();
