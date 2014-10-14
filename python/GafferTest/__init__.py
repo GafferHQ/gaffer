@@ -137,6 +137,7 @@ from MetadataTest import MetadataTest
 from StringAlgoTest import StringAlgoTest
 from SystemCommandTest import SystemCommandTest
 from TaskListTest import TaskListTest
+from NodeAlgoTest import NodeAlgoTest
 
 if __name__ == "__main__":
 	import unittest

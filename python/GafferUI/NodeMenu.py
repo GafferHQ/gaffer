@@ -119,6 +119,8 @@ class NodeMenu :
 				if node is None :
 					return
 
+				Gaffer.NodeAlgo.applyUserDefaults( node )
+				
 				for plugName, plugValue in plugValues.items() :
 					node.descendant( plugName ).setValue( plugValue )
 

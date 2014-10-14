@@ -1,7 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2014, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,38 +34,23 @@
 #
 ##########################################################################
 
-from _Gaffer import *
-from About import About
-from Application import Application
-from WeakMethod import WeakMethod
-from Path import Path
-from FileSystemPath import FileSystemPath
-from PathFilter import PathFilter
-from BlockedConnection import BlockedConnection
-from FileNamePathFilter import FileNamePathFilter
-from UndoContext import UndoContext
-from ObjectReader import ObjectReader
-from ObjectWriter import ObjectWriter
-from Context import Context
-from CompoundPathFilter import CompoundPathFilter
-from InfoPathFilter import InfoPathFilter
-from LazyModule import lazyImport, LazyModule
-from LeafPathFilter import LeafPathFilter
-from DictPath import DictPath
-from IndexedIOPath import IndexedIOPath
-from ClassLoaderPath import ClassLoaderPath
-from PythonExpressionEngine import PythonExpressionEngine
-from SequencePath import SequencePath
-from OpMatcher import OpMatcher
-from AttributeCachePath import AttributeCachePath
-from ClassParameterHandler import ClassParameterHandler
-from ClassVectorParameterHandler import ClassVectorParameterHandler
-from GraphComponentPath import GraphComponentPath
-from ParameterPath import ParameterPath
-from OutputRedirection import OutputRedirection
-from LocalDispatcher import LocalDispatcher
-from SystemCommand import SystemCommand
-from TaskList import TaskList
-import NodeAlgo
+import Gaffer
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "Gaffer" )
+def applyUserDefaults( nodeOrNodes ) :
+	
+	if isinstance( nodeOrNodes, list ) :
+		for node in nodeOrNodes :
+			__applyUserDefaults( node )
+	
+	else :
+		__applyUserDefaults( nodeOrNodes )
+
+def __applyUserDefaults( graphComponent ) :
+	
+	if isinstance( graphComponent, Gaffer.Plug ) :
+		plugValue = Gaffer.Metadata.plugValue( graphComponent, "userDefault" )
+		if plugValue is not None :
+			graphComponent.setValue( plugValue )
+	
+	for child in graphComponent.children() :
+		__applyUserDefaults( child )
