@@ -1,3 +1,20 @@
+# 0.2.1.0
+
+#### Core
+
+* Expression node optimizations
+
+#### Scene
+
+* Made ShaderAssignment use the shader type as an attribute name.
+* Added Group::nextInPlug() method
+* InteractiveRender now updates all attributes, not just shaders
+
+#### UI
+
+* Dispatcher FrameRange UI displays the value that will actually be dispatched.
+* Removed unwanted horizontal padding from frameless Buttons.
+
 # 0.2.0.0
 
 This release brings significant optimisations, further additions to the SceneInspector, and the usual collection of miscellaneous enhancements and bug fixes.
