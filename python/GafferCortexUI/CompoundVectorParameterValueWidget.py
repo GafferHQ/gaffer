@@ -41,6 +41,7 @@ import IECore
 
 import Gaffer
 import GafferUI
+import GafferCortexUI
 
 ## Supported userData entries :
 #
@@ -56,17 +57,17 @@ import GafferUI
 #	)
 #
 # ["UI"]["elementPresetsOnly"] BoolData.
-class CompoundVectorParameterValueWidget( GafferUI.CompoundParameterValueWidget ) :
+class CompoundVectorParameterValueWidget( GafferCortexUI.CompoundParameterValueWidget ) :
 
 	def __init__( self, parameterHandler, collapsible=None, **kw ) :
 
-		GafferUI.CompoundParameterValueWidget.__init__( self, parameterHandler, collapsible, _plugValueWidgetClass=_PlugValueWidget, **kw )
+		GafferCortexUI.CompoundParameterValueWidget.__init__( self, parameterHandler, collapsible, _plugValueWidgetClass=_PlugValueWidget, **kw )
 
-class _PlugValueWidget( GafferUI.CompoundParameterValueWidget._PlugValueWidget ) :
+class _PlugValueWidget( GafferCortexUI.CompoundParameterValueWidget._PlugValueWidget ) :
 
 	def __init__( self, parameterHandler, collapsed ) :
 
-		GafferUI.CompoundParameterValueWidget._PlugValueWidget.__init__( self, parameterHandler, collapsed )
+		GafferCortexUI.CompoundParameterValueWidget._PlugValueWidget.__init__( self, parameterHandler, collapsed )
 
 		self.__vectorDataWidget = None
 
@@ -103,7 +104,7 @@ class _PlugValueWidget( GafferUI.CompoundParameterValueWidget._PlugValueWidget )
 
 	def _updateFromPlug( self ) :
 
-		GafferUI.CompoundParameterValueWidget._PlugValueWidget._updateFromPlug( self )
+		GafferCortexUI.CompoundParameterValueWidget._PlugValueWidget._updateFromPlug( self )
 
 		if self.__vectorDataWidget is None:
 			return
@@ -157,7 +158,7 @@ class _PlugValueWidget( GafferUI.CompoundParameterValueWidget._PlugValueWidget )
 			for d, p in zip( data, self._parameterHandler().plug().children() ) :
 				p.setValue( d )
 
-GafferUI.ParameterValueWidget.registerType( IECore.CompoundVectorParameter, CompoundVectorParameterValueWidget )
+GafferCortexUI.ParameterValueWidget.registerType( IECore.CompoundVectorParameter, CompoundVectorParameterValueWidget )
 
 # Deriving from ListContainer and not adding any children, so that we're
 # entirely see-through, allowing the underlying cell value to remain visible.
@@ -230,7 +231,7 @@ class _VectorDataWidget( GafferUI.VectorDataWidget ) :
 	def _contextMenuDefinition( self, selectedRows ) :
 
 		m = GafferUI.VectorDataWidget._contextMenuDefinition( self, selectedRows )
-		GafferUI.ParameterValueWidget.popupMenuSignal()( m, self.ancestor( GafferUI.ParameterValueWidget ) )
+		GafferCortexUI.ParameterValueWidget.popupMenuSignal()( m, self.ancestor( GafferCortexUI.ParameterValueWidget ) )
 		return m
 
 ##########################################################################
@@ -293,4 +294,4 @@ def __parameterPopupMenu( menuDefinition, parameterValueWidget ) :
 			},
 		)
 
-__parameterPopupMenuConnection = GafferUI.ParameterValueWidget.popupMenuSignal().connect( __parameterPopupMenu )
+__parameterPopupMenuConnection = GafferCortexUI.ParameterValueWidget.popupMenuSignal().connect( __parameterPopupMenu )

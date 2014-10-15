@@ -41,17 +41,18 @@ import IECore
 
 import Gaffer
 import GafferUI
+import GafferCortexUI
 
 QtCore = GafferUI._qtImport( "QtCore" )
 QtGui = GafferUI._qtImport( "QtGui" )
 
-class DateTimeParameterValueWidget( GafferUI.ParameterValueWidget ) :
+class DateTimeParameterValueWidget( GafferCortexUI.ParameterValueWidget ) :
 
 	def __init__( self, parameterHandler, **kw ) :
 
-		GafferUI.ParameterValueWidget.__init__( self, _DateTimePlugValueWidget( parameterHandler.plug() ), parameterHandler, **kw )
+		GafferCortexUI.ParameterValueWidget.__init__( self, _DateTimePlugValueWidget( parameterHandler.plug() ), parameterHandler, **kw )
 
-GafferUI.ParameterValueWidget.registerType( IECore.DateTimeParameter, DateTimeParameterValueWidget )
+GafferCortexUI.ParameterValueWidget.registerType( IECore.DateTimeParameter, DateTimeParameterValueWidget )
 
 class _DateTimePlugValueWidget( GafferUI.PlugValueWidget ) :
 

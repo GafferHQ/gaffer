@@ -34,33 +34,60 @@
 #
 ##########################################################################
 
-from __future__ import with_statement
+import re
 
 import IECore
 
 import Gaffer
 import GafferUI
+import GafferCortexUI
 
-## Supported userData entries :
-#
-# ["UI"]["password"]
-# ["UI"]["multiLine"]
-class StringParameterValueWidget( GafferUI.ParameterValueWidget ) :
+class PathParameterValueWidget( GafferCortexUI.ParameterValueWidget ) :
 
 	def __init__( self, parameterHandler, **kw ) :
 
-		multiLine = False
+		self.__pathWidget = GafferUI.PathPlugValueWidget(
+			parameterHandler.plug(),
+			self._path(),
+			pathChooserDialogueKeywords = Gaffer.WeakMethod( self._pathChooserDialogueKeywords ),
+		)
+
+		GafferCortexUI.ParameterValueWidget.__init__(
+
+			self,
+			self.__pathWidget,
+			parameterHandler,
+			**kw
+
+		)
+
+	def _path( self ) :
+
+		return Gaffer.FileSystemPath( "/", filter = self._filter() )
+
+	def _filter( self ) :
+
+		return Gaffer.FileSystemPath.createStandardFilter()
+
+	def _pathChooserDialogueKeywords( self ) :
+
+		result = {}
+
+		bookmarksCategory = None
 		with IECore.IgnoredExceptions( KeyError ) :
-			multiLine = parameterHandler.parameter().userData()["UI"]["multiLine"].value
+			bookmarksCategory = self.parameter().userData()["UI"]["bookmarksCategory"].value
+		result["bookmarks"] = GafferUI.Bookmarks.acquire(
+			# sometimes parameter widgets are used with nodes which are parented to an application,
+			# but where the window isn't. and sometimes they're used with nodes with no application,
+			# but where the window does belong to an application. so we hedge our bets and use both
+			# the widget and the plug to try to find bookmarks for the application.
+			( self, self.plug() ),
+			# deliberately using FileSystemPath directly rather than using _path().__class__
+			# so that file sequences share the same set of bookmarks as files.
+			pathType = Gaffer.FileSystemPath,
+			category = bookmarksCategory,
+		)
 
-		if multiLine :
-			plugValueWidget = GafferUI.MultiLineStringPlugValueWidget( parameterHandler.plug() )
-		else :
-			plugValueWidget = GafferUI.StringPlugValueWidget( parameterHandler.plug() )
-			with IECore.IgnoredExceptions( KeyError ) :
-				if parameterHandler.parameter().userData()["UI"]["password"].value :
-					plugValueWidget.textWidget().setDisplayMode( GafferUI.TextWidget.DisplayMode.Password )
+		return result
 
-		GafferUI.ParameterValueWidget.__init__( self, plugValueWidget, parameterHandler, **kw )
-
-GafferUI.ParameterValueWidget.registerType( IECore.StringParameter, StringParameterValueWidget )
+GafferCortexUI.ParameterValueWidget.registerType( IECore.PathParameter, PathParameterValueWidget )

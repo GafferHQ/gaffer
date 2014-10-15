@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,18 +34,34 @@
 #
 ##########################################################################
 
+from __future__ import with_statement
+
 import IECore
 
 import Gaffer
 import GafferUI
+import GafferCortexUI
 
-class ToolParameterValueWidget( GafferUI.ParameterValueWidget ) :
+## Supported userData entries :
+#
+# ["UI"]["password"]
+# ["UI"]["multiLine"]
+class StringParameterValueWidget( GafferCortexUI.ParameterValueWidget ) :
 
 	def __init__( self, parameterHandler, **kw ) :
 
-		GafferUI.ParameterValueWidget.__init__(
-			self,
-			GafferUI.ToolPlugValueWidget( parameterHandler.plug() ),
-			parameterHandler,
-			**kw
-		)
+		multiLine = False
+		with IECore.IgnoredExceptions( KeyError ) :
+			multiLine = parameterHandler.parameter().userData()["UI"]["multiLine"].value
+
+		if multiLine :
+			plugValueWidget = GafferUI.MultiLineStringPlugValueWidget( parameterHandler.plug() )
+		else :
+			plugValueWidget = GafferUI.StringPlugValueWidget( parameterHandler.plug() )
+			with IECore.IgnoredExceptions( KeyError ) :
+				if parameterHandler.parameter().userData()["UI"]["password"].value :
+					plugValueWidget.textWidget().setDisplayMode( GafferUI.TextWidget.DisplayMode.Password )
+
+		GafferCortexUI.ParameterValueWidget.__init__( self, plugValueWidget, parameterHandler, **kw )
+
+GafferCortexUI.ParameterValueWidget.registerType( IECore.StringParameter, StringParameterValueWidget )

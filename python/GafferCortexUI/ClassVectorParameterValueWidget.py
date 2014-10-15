@@ -39,12 +39,13 @@ import IECore
 
 import Gaffer
 import GafferUI
+import GafferCortexUI
 
-class ClassVectorParameterValueWidget( GafferUI.CompoundParameterValueWidget ) :
+class ClassVectorParameterValueWidget( GafferCortexUI.CompoundParameterValueWidget ) :
 
 	def __init__( self, parameterHandler, collapsible=None, **kw ) :
 
-		GafferUI.CompoundParameterValueWidget.__init__(
+		GafferCortexUI.CompoundParameterValueWidget.__init__(
 			self,
 			parameterHandler,
 			collapsible,
@@ -52,11 +53,11 @@ class ClassVectorParameterValueWidget( GafferUI.CompoundParameterValueWidget ) :
 			**kw
 		)
 
-class _PlugValueWidget( GafferUI.CompoundParameterValueWidget._PlugValueWidget ) :
+class _PlugValueWidget( GafferCortexUI.CompoundParameterValueWidget._PlugValueWidget ) :
 
 	def __init__( self, parameterHandler, collapsed ) :
 
-		GafferUI.CompoundParameterValueWidget._PlugValueWidget.__init__( self, parameterHandler, collapsed )
+		GafferCortexUI.CompoundParameterValueWidget._PlugValueWidget.__init__( self, parameterHandler, collapsed )
 
 		self.__buttonRow = None
 
@@ -213,7 +214,7 @@ class _PlugValueWidget( GafferUI.CompoundParameterValueWidget._PlugValueWidget )
 		# and reorder things automatically.
 		self._CompoundPlugValueWidget__updateChildPlugUIs()
 
-GafferUI.ParameterValueWidget.registerType( IECore.ClassVectorParameter, ClassVectorParameterValueWidget )
+GafferCortexUI.ParameterValueWidget.registerType( IECore.ClassVectorParameter, ClassVectorParameterValueWidget )
 
 class _ChildParameterUI( GafferUI.CompoundPlugValueWidget ) :
 
@@ -258,7 +259,7 @@ class _ChildParameterUI( GafferUI.CompoundPlugValueWidget ) :
 			# things before the layer button
 
 			for parameter in preHeaderParameters :
-				GafferUI.ParameterValueWidget.create( self.__parameterHandler.childParameterHandler( parameter ) )
+				GafferCortexUI.ParameterValueWidget.create( self.__parameterHandler.childParameterHandler( parameter ) )
 
 			# the layer button
 
@@ -293,7 +294,7 @@ class _ChildParameterUI( GafferUI.CompoundPlugValueWidget ) :
 
 			# parameters after the label
 			for parameter in headerParameters :
-				GafferUI.ParameterValueWidget.create( self.__parameterHandler.childParameterHandler( parameter ) )
+				GafferCortexUI.ParameterValueWidget.create( self.__parameterHandler.childParameterHandler( parameter ) )
 
 			# prevent things expanding in an unwanted way
 			GafferUI.Spacer( IECore.V2i( 1 ), IECore.V2i( 999999, 1 ), parenting = { "expand" : True } )
@@ -310,7 +311,7 @@ class _ChildParameterUI( GafferUI.CompoundPlugValueWidget ) :
 		if self.__footerWidget is not None :
 			return self.__footerWidget
 
-		self.__footerWidget = GafferUI.CompoundParameterValueWidget( self.__parameterHandler, collapsible=False )
+		self.__footerWidget = GafferCortexUI.CompoundParameterValueWidget( self.__parameterHandler, collapsible=False )
 		self.__footerWidget.setVisible( False )
 		return self.__footerWidget
 

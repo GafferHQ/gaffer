@@ -34,33 +34,12 @@
 #
 ##########################################################################
 
-import IECore
-
-import Gaffer
 import GafferUI
+import GafferCortexUI
 
-class DirNameParameterValueWidget( GafferUI.PathParameterValueWidget ) :
-
-	def __init__( self, parameterHandler, **kw ) :
-
-		GafferUI.PathParameterValueWidget.__init__(
-			self,
-			parameterHandler,
-			**kw
-		)
-
-	def _filter( self ) :
-
-		result = GafferUI.PathParameterValueWidget._filter( self )
-		result.addFilter(
-			Gaffer.LeafPathFilter(
-				userData = {
-					"UI" : {
-						"visible" : False,
-					}
-				}
-			)
-		)
-		return result
-
-GafferUI.ParameterValueWidget.registerType( IECore.DirNameParameter, DirNameParameterValueWidget )
+# Backwards compatibility - import classes from GafferCortexUI into
+# the GafferUI namespace.
+for name in dir( GafferCortexUI ) :
+	if name.endswith( "__" ) :
+		continue
+	setattr( GafferUI, name, getattr( GafferCortexUI, name ) )

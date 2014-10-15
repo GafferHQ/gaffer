@@ -163,6 +163,7 @@ class op( Gaffer.Application ) :
 		if args["gui"].value :
 		
 			import GafferUI # delay import to improve startup times for non-gui case
+			import GafferCortexUI
 			
 			# build a script to host the op.
 			
@@ -174,11 +175,11 @@ class op( Gaffer.Application ) :
 			# values were specified via the command line.
 			
 			if not args["preset"].value and not args["arguments"] :
-				GafferUI.ParameterPresets.autoLoad( self.root()["scripts"]["script1"]["op"] )
+				GafferCortexUI.ParameterPresets.autoLoad( self.root()["scripts"]["script1"]["op"] )
 			
 			# create a ui to display everything.
 			
-			self.__dialogue = GafferUI.OpDialogue( self.root()["scripts"]["script1"]["op"], executeInBackground=True )
+			self.__dialogue = GafferCortexUI.OpDialogue( self.root()["scripts"]["script1"]["op"], executeInBackground=True )
 			self.__dialogueClosedConnection = self.__dialogue.closedSignal().connect( Gaffer.WeakMethod( self.__dialogueClosed ) )
 			self.__dialogue.setVisible( True )
 			GafferUI.EventLoop.mainEventLoop().start()

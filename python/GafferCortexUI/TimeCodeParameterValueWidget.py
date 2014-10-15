@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,78 +34,18 @@
 #
 ##########################################################################
 
-import re
-import os
-
 import IECore
 
 import Gaffer
 import GafferUI
+import GafferCortexUI
 
-class PathVectorParameterValueWidget( GafferUI.ParameterValueWidget ) :
+class TimeCodeParameterValueWidget( GafferCortexUI.ParameterValueWidget ) :
 
 	def __init__( self, parameterHandler, **kw ) :
 
-		self.__pathVectorWidget = GafferUI.PathVectorDataPlugValueWidget(
-			parameterHandler.plug(),
-			self._path(),
-			Gaffer.WeakMethod( self.__pathChooserDialogueKeywords ),
-		)
+		plugValueWidget = GafferUI.CompoundNumericPlugValueWidget( parameterHandler.plug() )
 
-		GafferUI.ParameterValueWidget.__init__(
+		GafferCortexUI.ParameterValueWidget.__init__( self, plugValueWidget, parameterHandler, **kw )
 
-			self,
-			self.__pathVectorWidget,
-			parameterHandler,
-			**kw
-		)
-
-	def _path( self ) :
-
-		return Gaffer.FileSystemPath( os.getcwd(), filter = self._filter() )
-
-	def _filter( self ) :
-
-		result = Gaffer.CompoundPathFilter()
-		result.addFilter(
-			Gaffer.FileNamePathFilter(
-				[ re.compile( "^[^.].*" ) ],
-				leafOnly=False,
-				userData = {
-					"UI" : {
-						"label" : "Show hidden files",
-						"invertEnabled" : True,
-					}
-				}
-			)
-		)
-
-		result.addFilter(
-			Gaffer.InfoPathFilter(
-				infoKey = "name",
-				matcher = None, # the ui will fill this in
-				leafOnly = False,
-			)
-		)
-
-		return result
-
-	def __pathChooserDialogueKeywords( self ) :
-
-		result = {}
-
-		bookmarksCategory = None
-		with IECore.IgnoredExceptions( KeyError ) :
-			bookmarksCategory = self.parameter().userData()["UI"]["bookmarksCategory"].value
-
-		result["bookmarks"] = GafferUI.Bookmarks.acquire(
-			( self, self.plug() ),
-			# deliberately using FileSystemPath directly rather than using _path().__class__
-			# so that file sequences share the same set of bookmarks as files.
-			pathType = Gaffer.FileSystemPath,
-			category = bookmarksCategory,
-		)
-
-		return result
-
-GafferUI.ParameterValueWidget.registerType( IECore.PathVectorParameter, PathVectorParameterValueWidget )
+GafferCortexUI.ParameterValueWidget.registerType( IECore.TimeCodeParameter, TimeCodeParameterValueWidget )

@@ -1,7 +1,7 @@
 ##########################################################################
 #
 #  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2012-2014, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2014, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,38 +35,37 @@
 #
 ##########################################################################
 
-import fnmatch
+# PathPreviewWidgets
 
-import IECore
+from FileIndexedIOPathPreview import FileIndexedIOPathPreview
+from AttributeCachePathPreview import AttributeCachePathPreview
+from ImageReaderPathPreview import ImageReaderPathPreview
+from OpPathPreview import OpPathPreview
 
-import Gaffer
-import GafferUI
+# UI for Parameters and ParameterisedHolders
 
-def __createParameterWidget( plug ) :
+from OpDialogue import OpDialogue
+from ParameterisedHolderNodeUI import ParameterisedHolderNodeUI
+from ParameterValueWidget import ParameterValueWidget
+from PresetsOnlyParameterValueWidget import PresetsOnlyParameterValueWidget
+from CompoundParameterValueWidget import CompoundParameterValueWidget
+from PathParameterValueWidget import PathParameterValueWidget
+from DirNameParameterValueWidget import DirNameParameterValueWidget
+from PathVectorParameterValueWidget import PathVectorParameterValueWidget
+from StringParameterValueWidget import StringParameterValueWidget
+from CompoundVectorParameterValueWidget import CompoundVectorParameterValueWidget
+from FileSequenceParameterValueWidget import FileSequenceParameterValueWidget
+from DateTimeParameterValueWidget import DateTimeParameterValueWidget
+from ClassParameterValueWidget import ClassParameterValueWidget
+from FileSequenceVectorParameterValueWidget import FileSequenceVectorParameterValueWidget
+from ClassVectorParameterValueWidget import ClassVectorParameterValueWidget
+from TimeCodeParameterValueWidget import TimeCodeParameterValueWidget
+from ToolParameterValueWidget import ToolParameterValueWidget
+import ParameterPresets
 
-	return GafferUI.CompoundParameterValueWidget( plug.node().parameterHandler(), collapsible=False )
+# Specific node uis
 
-GafferUI.PlugValueWidget.registerCreator(
-	Gaffer.ObjectWriter.staticTypeId(),
-	"fileName",
-	lambda plug : GafferUI.PathPlugValueWidget(
-		plug,
-		path = Gaffer.FileSystemPath(
-			"/",
-			filter = Gaffer.FileSystemPath.createStandardFilter(
-				extensions = IECore.Reader.supportedExtensions(),
-				extensionsLabel = "Show only supported files",
-			),
-		),
-		pathChooserDialogueKeywords = {
-			"bookmarks" : GafferUI.Bookmarks.acquire( plug, category = "cortex" ),
-			"leaf" : True,
-		},
-	),
-)
+import ObjectReaderUI
+import ObjectWriterUI
 
-GafferUI.PlugValueWidget.registerCreator( Gaffer.ObjectWriter, "parameters", __createParameterWidget )
-GafferUI.PlugValueWidget.registerCreator( Gaffer.ObjectWriter, "in", None )
-
-GafferUI.Nodule.registerNodule( Gaffer.ObjectWriter, fnmatch.translate( "parameter*" ), lambda plug : None )
-GafferUI.Nodule.registerNodule( Gaffer.ObjectWriter, "fileName", lambda plug : None )
+__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferCortexUI" )

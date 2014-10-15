@@ -39,12 +39,13 @@ import IECore
 
 import Gaffer
 import GafferUI
+import GafferCortexUI
 
-class ClassParameterValueWidget( GafferUI.CompoundParameterValueWidget ) :
+class ClassParameterValueWidget( GafferCortexUI.CompoundParameterValueWidget ) :
 
 	def __init__( self, parameterHandler, collapsible=None, **kw ) :
 
-		GafferUI.CompoundParameterValueWidget.__init__(
+		GafferCortexUI.CompoundParameterValueWidget.__init__(
 			self,
 			parameterHandler,
 			collapsible,
@@ -52,11 +53,11 @@ class ClassParameterValueWidget( GafferUI.CompoundParameterValueWidget ) :
 			**kw
 		)
 
-class _PlugValueWidget( GafferUI.CompoundParameterValueWidget._PlugValueWidget ) :
+class _PlugValueWidget( GafferCortexUI.CompoundParameterValueWidget._PlugValueWidget ) :
 
 	def __init__( self, parameterHandler, collapsed ) :
 
-		GafferUI.CompoundParameterValueWidget._PlugValueWidget.__init__( self, parameterHandler, collapsed )
+		GafferCortexUI.CompoundParameterValueWidget._PlugValueWidget.__init__( self, parameterHandler, collapsed )
 
 	def _headerWidget( self ) :
 
@@ -155,4 +156,4 @@ class _PlugValueWidget( GafferUI.CompoundParameterValueWidget._PlugValueWidget )
 		with self.getPlug().node().parameterModificationContext() :
 			self._parameter().setClass( className, classVersion )
 
-GafferUI.ParameterValueWidget.registerType( IECore.ClassParameter, ClassParameterValueWidget )
+GafferCortexUI.ParameterValueWidget.registerType( IECore.ClassParameter, ClassParameterValueWidget )

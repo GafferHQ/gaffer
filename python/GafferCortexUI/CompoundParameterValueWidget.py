@@ -41,6 +41,7 @@ import IECore
 
 import Gaffer
 import GafferUI
+import GafferCortexUI
 
 ## Supported parameter userData entries :
 #
@@ -50,7 +51,7 @@ import GafferUI
 # Supported child userData entries :
 #
 # ["UI"]["visible"]
-class CompoundParameterValueWidget( GafferUI.ParameterValueWidget ) :
+class CompoundParameterValueWidget( GafferCortexUI.ParameterValueWidget ) :
 
 	## If collapsible is not None then it overrides any ["UI]["collapsible"] userData the parameter might have.
 	def __init__( self, parameterHandler, collapsible=None, _plugValueWidgetClass=None, **kw ) :
@@ -69,7 +70,7 @@ class CompoundParameterValueWidget( GafferUI.ParameterValueWidget ) :
 		if _plugValueWidgetClass is None :
 			_plugValueWidgetClass = _PlugValueWidget
 
-		GafferUI.ParameterValueWidget.__init__(
+		GafferCortexUI.ParameterValueWidget.__init__(
 			self,
 			_plugValueWidgetClass( parameterHandler, collapsed ),
 			parameterHandler,
@@ -96,7 +97,7 @@ class _PlugValueWidget( GafferUI.CompoundPlugValueWidget ) :
 				return None
 
 		childParameterHandler = self.__parameterHandler.childParameterHandler( childParameter )
-		valueWidget = GafferUI.ParameterValueWidget.create( childParameterHandler )
+		valueWidget = GafferCortexUI.ParameterValueWidget.create( childParameterHandler )
 		if not valueWidget :
 			return None
 
@@ -131,4 +132,4 @@ class _PlugValueWidget( GafferUI.CompoundPlugValueWidget ) :
 # derived classes.
 CompoundParameterValueWidget._PlugValueWidget = _PlugValueWidget
 
-GafferUI.ParameterValueWidget.registerType( IECore.CompoundParameter, CompoundParameterValueWidget )
+GafferCortexUI.ParameterValueWidget.registerType( IECore.CompoundParameter, CompoundParameterValueWidget )

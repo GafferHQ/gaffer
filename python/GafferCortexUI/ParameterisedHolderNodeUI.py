@@ -44,6 +44,8 @@ import IECore
 
 import Gaffer
 import GafferUI
+import GafferCortex
+import GafferCortexUI
 
 class ParameterisedHolderNodeUI( GafferUI.NodeUI ) :
 
@@ -57,12 +59,12 @@ class ParameterisedHolderNodeUI( GafferUI.NodeUI ) :
 
 			with GafferUI.ListContainer( orientation = GafferUI.ListContainer.Orientation.Horizontal ) :
 				GafferUI.Spacer( IECore.V2i( 10 ), parenting = { "expand"  : True } )
-				toolButton = GafferUI.ToolParameterValueWidget( self.node().parameterHandler() )
+				toolButton = GafferCortexUI.ToolParameterValueWidget( self.node().parameterHandler() )
 				toolButton.plugValueWidget().setReadOnly( readOnly )
 				_InfoButton( node )
 
 			with GafferUI.ScrolledContainer( horizontalMode=GafferUI.ScrolledContainer.ScrollMode.Never, borderWidth=4 ) :
-				self.__parameterValueWidget = GafferUI.CompoundParameterValueWidget( self.node().parameterHandler(), collapsible = False )
+				self.__parameterValueWidget = GafferCortexUI.CompoundParameterValueWidget( self.node().parameterHandler(), collapsible = False )
 
 		self.setReadOnly( readOnly )
 
@@ -75,9 +77,9 @@ class ParameterisedHolderNodeUI( GafferUI.NodeUI ) :
 
 		self.__parameterValueWidget.plugValueWidget().setReadOnly( readOnly )
 
-GafferUI.NodeUI.registerNodeUI( Gaffer.ParameterisedHolderNode, ParameterisedHolderNodeUI )
-GafferUI.NodeUI.registerNodeUI( Gaffer.ParameterisedHolderComputeNode, ParameterisedHolderNodeUI )
-GafferUI.NodeUI.registerNodeUI( Gaffer.ParameterisedHolderDependencyNode, ParameterisedHolderNodeUI )
+GafferUI.NodeUI.registerNodeUI( GafferCortex.ParameterisedHolderNode, ParameterisedHolderNodeUI )
+GafferUI.NodeUI.registerNodeUI( GafferCortex.ParameterisedHolderComputeNode, ParameterisedHolderNodeUI )
+GafferUI.NodeUI.registerNodeUI( GafferCortex.ParameterisedHolderDependencyNode, ParameterisedHolderNodeUI )
 
 ##########################################################################
 # Info button
@@ -136,13 +138,13 @@ def __parameterNoduleCreator( plug ) :
 	else :
 		return None
 
-GafferUI.Nodule.registerNodule( Gaffer.ParameterisedHolderNode, "parameters", GafferUI.CompoundNodule )
-GafferUI.Nodule.registerNodule( Gaffer.ParameterisedHolderComputeNode, "parameters", GafferUI.CompoundNodule )
-GafferUI.Nodule.registerNodule( Gaffer.ParameterisedHolderDependencyNode, "parameters", GafferUI.CompoundNodule )
+GafferUI.Nodule.registerNodule( GafferCortex.ParameterisedHolderNode, "parameters", GafferUI.CompoundNodule )
+GafferUI.Nodule.registerNodule( GafferCortex.ParameterisedHolderComputeNode, "parameters", GafferUI.CompoundNodule )
+GafferUI.Nodule.registerNodule( GafferCortex.ParameterisedHolderDependencyNode, "parameters", GafferUI.CompoundNodule )
 
-GafferUI.Nodule.registerNodule( Gaffer.ParameterisedHolderNode, fnmatch.translate( "parameters.*" ), __parameterNoduleCreator )
-GafferUI.Nodule.registerNodule( Gaffer.ParameterisedHolderComputeNode, fnmatch.translate( "parameters.*" ), __parameterNoduleCreator )
-GafferUI.Nodule.registerNodule( Gaffer.ParameterisedHolderDependencyNode, fnmatch.translate( "parameters.*" ), __parameterNoduleCreator )
+GafferUI.Nodule.registerNodule( GafferCortex.ParameterisedHolderNode, fnmatch.translate( "parameters.*" ), __parameterNoduleCreator )
+GafferUI.Nodule.registerNodule( GafferCortex.ParameterisedHolderComputeNode, fnmatch.translate( "parameters.*" ), __parameterNoduleCreator )
+GafferUI.Nodule.registerNodule( GafferCortex.ParameterisedHolderDependencyNode, fnmatch.translate( "parameters.*" ), __parameterNoduleCreator )
 
 ##########################################################################
 # Metadata
@@ -187,9 +189,9 @@ def __plugDescription( plug ) :
 	return parameter.description
 
 for nodeType in (
-	Gaffer.ParameterisedHolderNode,
-	Gaffer.ParameterisedHolderComputeNode,
-	Gaffer.ParameterisedHolderDependencyNode,
+	GafferCortex.ParameterisedHolderNode,
+	GafferCortex.ParameterisedHolderComputeNode,
+	GafferCortex.ParameterisedHolderDependencyNode,
 ) :
 
 	Gaffer.Metadata.registerNodeDescription( nodeType, __nodeDescription )

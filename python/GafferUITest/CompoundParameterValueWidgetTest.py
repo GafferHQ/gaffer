@@ -37,17 +37,17 @@
 import unittest
 import weakref
 
-import Gaffer
-import GafferTest
 import GafferUI
 import GafferUITest
+import GafferCortex
+import GafferCortexTest
 
 class CompoundParameterValueWidgetTest( GafferUITest.TestCase ) :
 
 	def testLifetime( self ) :
 
-		n = Gaffer.OpHolder()
-		opSpec = GafferTest.ParameterisedHolderTest.classSpecification( "image/grade", "IECORE_OP_PATHS" )[:-1]
+		n = GafferCortex.OpHolder()
+		opSpec = GafferCortexTest.ParameterisedHolderTest.classSpecification( "image/grade", "IECORE_OP_PATHS" )[:-1]
 		n.setOp( *opSpec )
 
 		ui = GafferUI.CompoundParameterValueWidget( n.parameterHandler() )

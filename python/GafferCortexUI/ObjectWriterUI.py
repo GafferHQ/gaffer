@@ -1,6 +1,7 @@
 ##########################################################################
 #
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
+#  Copyright (c) 2012-2014, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,50 +35,40 @@
 #
 ##########################################################################
 
-from __future__ import with_statement
+import fnmatch
 
 import IECore
 
 import Gaffer
 import GafferUI
+import GafferCortex
+import GafferCortexUI
 
-class PresetsOnlyParameterValueWidget( GafferUI.ParameterValueWidget ) :
+def __createParameterWidget( plug ) :
 
-	def __init__( self, parameterHandler, **kw ) :
+	return GafferCortexUI.CompoundParameterValueWidget( plug.node().parameterHandler(), collapsible=False )
 
-		GafferUI.ParameterValueWidget.__init__(
-			self,
-			_PlugValueWidget( parameterHandler ),
-			parameterHandler,
-			**kw
-		)
+GafferUI.PlugValueWidget.registerCreator(
+	GafferCortex.ObjectWriter.staticTypeId(),
+	"fileName",
+	lambda plug : GafferUI.PathPlugValueWidget(
+		plug,
+		path = Gaffer.FileSystemPath(
+			"/",
+			filter = Gaffer.FileSystemPath.createStandardFilter(
+				extensions = IECore.Reader.supportedExtensions(),
+				extensionsLabel = "Show only supported files",
+			),
+		),
+		pathChooserDialogueKeywords = {
+			"bookmarks" : GafferUI.Bookmarks.acquire( plug, category = "cortex" ),
+			"leaf" : True,
+		},
+	),
+)
 
-GafferUI.ParameterValueWidget.registerType( IECore.Parameter, PresetsOnlyParameterValueWidget, "presets" )
+GafferUI.PlugValueWidget.registerCreator( GafferCortex.ObjectWriter, "parameters", __createParameterWidget )
+GafferUI.PlugValueWidget.registerCreator( GafferCortex.ObjectWriter, "in", None )
 
-# The actual ui is more easily implemented as a PlugValueWidget, because
-# we get _addPopupMenu() and the machinery for updating on plug changes for free.
-class _PlugValueWidget( GafferUI.PlugValueWidget ) :
-
-	def __init__( self, parameterHandler, **kw ) :
-
-		self.__row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
-
-		GafferUI.PlugValueWidget.__init__( self, self.__row, parameterHandler.plug(), **kw )
-
-		self.__row.append( GafferUI.Image( "collapsibleArrowDownHover.png" ) )
-		self.__label = GafferUI.Label( "" )
-		self.__row.append( self.__label )
-
-		self._addPopupMenu( buttons = GafferUI.ButtonEvent.Buttons.All )
-
-		self.__parameterHandler = parameterHandler
-
-		self._updateFromPlug()
-
-	def _updateFromPlug( self ) :
-
-		with self.getContext() :
-			self.__parameterHandler.setParameterValue()
-			self.__label.setText( self.__parameterHandler.parameter().getCurrentPresetName() )
-
-		self.setEnabled( self._editable() )
+GafferUI.Nodule.registerNodule( GafferCortex.ObjectWriter, fnmatch.translate( "parameter*" ), lambda plug : None )
+GafferUI.Nodule.registerNodule( GafferCortex.ObjectWriter, "fileName", lambda plug : None )

@@ -34,25 +34,20 @@
 #
 ##########################################################################
 
-import os
-
 import IECore
 
 import Gaffer
 import GafferUI
+import GafferCortexUI
 
-class FileSequenceVectorParameterValueWidget( GafferUI.PathVectorParameterValueWidget ) :
+class FileSequenceParameterValueWidget( GafferCortexUI.PathParameterValueWidget ) :
 
 	def __init__( self, parameterHandler, **kw ) :
 
-		GafferUI.PathVectorParameterValueWidget.__init__(
-			self,
-			parameterHandler,
-			**kw
-		)
+		GafferCortexUI.PathParameterValueWidget.__init__( self, parameterHandler, **kw )
 
 	def _path( self ) :
 
-		return Gaffer.SequencePath( os.getcwd(), filter = self._filter() )
+		return Gaffer.SequencePath( "/", filter = self._filter() )
 
-GafferUI.ParameterValueWidget.registerType( IECore.FileSequenceVectorParameter, FileSequenceVectorParameterValueWidget )
+GafferCortexUI.ParameterValueWidget.registerType( IECore.FileSequenceParameter, FileSequenceParameterValueWidget )

@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,59 +34,26 @@
 #
 ##########################################################################
 
-import re
+import os
 
 import IECore
 
 import Gaffer
 import GafferUI
+import GafferCortexUI
 
-class PathParameterValueWidget( GafferUI.ParameterValueWidget ) :
+class FileSequenceVectorParameterValueWidget( GafferCortexUI.PathVectorParameterValueWidget ) :
 
 	def __init__( self, parameterHandler, **kw ) :
 
-		self.__pathWidget = GafferUI.PathPlugValueWidget(
-			parameterHandler.plug(),
-			self._path(),
-			pathChooserDialogueKeywords = Gaffer.WeakMethod( self._pathChooserDialogueKeywords ),
-		)
-
-		GafferUI.ParameterValueWidget.__init__(
-
+		GafferCortexUI.PathVectorParameterValueWidget.__init__(
 			self,
-			self.__pathWidget,
 			parameterHandler,
 			**kw
-
 		)
 
 	def _path( self ) :
 
-		return Gaffer.FileSystemPath( "/", filter = self._filter() )
+		return Gaffer.SequencePath( os.getcwd(), filter = self._filter() )
 
-	def _filter( self ) :
-
-		return Gaffer.FileSystemPath.createStandardFilter()
-
-	def _pathChooserDialogueKeywords( self ) :
-
-		result = {}
-
-		bookmarksCategory = None
-		with IECore.IgnoredExceptions( KeyError ) :
-			bookmarksCategory = self.parameter().userData()["UI"]["bookmarksCategory"].value
-		result["bookmarks"] = GafferUI.Bookmarks.acquire(
-			# sometimes parameter widgets are used with nodes which are parented to an application,
-			# but where the window isn't. and sometimes they're used with nodes with no application,
-			# but where the window does belong to an application. so we hedge our bets and use both
-			# the widget and the plug to try to find bookmarks for the application.
-			( self, self.plug() ),
-			# deliberately using FileSystemPath directly rather than using _path().__class__
-			# so that file sequences share the same set of bookmarks as files.
-			pathType = Gaffer.FileSystemPath,
-			category = bookmarksCategory,
-		)
-
-		return result
-
-GafferUI.ParameterValueWidget.registerType( IECore.PathParameter, PathParameterValueWidget )
+GafferCortexUI.ParameterValueWidget.registerType( IECore.FileSequenceVectorParameter, FileSequenceVectorParameterValueWidget )

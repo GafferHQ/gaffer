@@ -38,6 +38,8 @@ import IECore
 
 import Gaffer
 import GafferUI
+import GafferCortex
+import GafferCortexUI
 
 class OpPathPreview( GafferUI.DeferredPathPreview ) :
 
@@ -58,7 +60,7 @@ class OpPathPreview( GafferUI.DeferredPathPreview ) :
 	def isValid( self ) :
 
 		path = self.getPath()
-		if not isinstance( path, Gaffer.ClassLoaderPath ) :
+		if not isinstance( path, GafferCortex.ClassLoaderPath ) :
 			return False
 
 		if hasattr( path.classLoader(), "classType" ) :
@@ -78,7 +80,7 @@ class OpPathPreview( GafferUI.DeferredPathPreview ) :
 
 		self.__node = Gaffer.ParameterisedHolderNode()
 		self.__node.setParameterised( op )
-		GafferUI.ParameterPresets.autoLoad( self.__node )
+		GafferCortexUI.ParameterPresets.autoLoad( self.__node )
 
 		self.__column[0] = GafferUI.NodeUI.create( self.__node )
 
@@ -97,7 +99,7 @@ class OpPathPreview( GafferUI.DeferredPathPreview ) :
 
 		# Launch an OpDialogue, executing the copy in the background
 
-		dialogue = GafferUI.OpDialogue(
+		dialogue = GafferCortexUI.OpDialogue(
 			opCopy,
 			executeInBackground = True,
 			executeImmediately = True

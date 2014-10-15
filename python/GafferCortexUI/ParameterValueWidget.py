@@ -41,6 +41,7 @@ import IECore
 
 import Gaffer
 import GafferUI
+import GafferCortexUI
 
 class ParameterValueWidget( GafferUI.Widget ) :
 
@@ -85,7 +86,7 @@ class ParameterValueWidget( GafferUI.Widget ) :
 		parameter = parameterHandler.parameter()
 
 		if parameter.presetsOnly :
-			return GafferUI.PresetsOnlyParameterValueWidget( parameterHandler )
+			return GafferCortexUI.PresetsOnlyParameterValueWidget( parameterHandler )
 
 		uiTypeHint = None
 		with IECore.IgnoredExceptions( KeyError ) :
@@ -137,7 +138,7 @@ def __plugPopupMenu( menuDefinition, plugValueWidget ) :
 
 	# see if we can find a ParameterValueWidget associated with the PlugValueWidget,
 	# and if we can then emit the popupMenuSignal() on it.
-	parameterValueWidget = plugValueWidget.ancestor( GafferUI.ParameterValueWidget )
+	parameterValueWidget = plugValueWidget.ancestor( GafferCortexUI.ParameterValueWidget )
 	if parameterValueWidget is None :
 		return
 
