@@ -35,12 +35,13 @@
 #
 ##########################################################################
 
-# PathPreviewWidgets
+# PathPreviewWidgets and browser modes
 
 from FileIndexedIOPathPreview import FileIndexedIOPathPreview
 from AttributeCachePathPreview import AttributeCachePathPreview
 from ImageReaderPathPreview import ImageReaderPathPreview
 from OpPathPreview import OpPathPreview
+import OpBrowserMode
 
 # UI for Parameters and ParameterisedHolders
 
