@@ -36,6 +36,8 @@
 
 #include "boost/python.hpp"
 
+#include "IECorePython/ScopedGILRelease.h"
+
 #include "GafferScene/SceneAlgo.h"
 #include "GafferScene/ScenePlug.h"
 #include "GafferScene/Filter.h"
@@ -49,11 +51,25 @@ using namespace GafferScene;
 namespace GafferSceneBindings
 {
 
+static void matchingPathsHelper1( const Filter *filter, const ScenePlug *scene, PathMatcher &paths )
+{
+	// gil release in case the scene traversal dips back into python:
+	IECorePython::ScopedGILRelease r;
+	matchingPaths( filter, scene, paths );
+}
+
+static void matchingPathsHelper2( const Gaffer::IntPlug *filterPlug, const ScenePlug *scene, PathMatcher &paths )
+{
+	// gil release in case the scene traversal dips back into python:
+	IECorePython::ScopedGILRelease r;
+	matchingPaths( filterPlug, scene, paths );
+}
+
 void bindSceneAlgo()
 {
 	def( "exists", exists );
-	def( "matchingPaths", (void (*)( const GafferScene::Filter *, const GafferScene::ScenePlug *, GafferScene::PathMatcher & ))&matchingPaths );
-	def( "matchingPaths", (void (*)( const Gaffer::IntPlug *, const GafferScene::ScenePlug *, GafferScene::PathMatcher & ))&matchingPaths );
+	def( "matchingPaths", &matchingPathsHelper1 );
+	def( "matchingPaths", &matchingPathsHelper2 );
 }
 
 } // namespace GafferSceneBindings
