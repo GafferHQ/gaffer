@@ -34,7 +34,21 @@
 #
 ##########################################################################
 
+import IECore
+
 import Gaffer
+import GafferUI
+
+QtCore = GafferUI._qtImport( "QtCore" )
+QtGui = GafferUI._qtImport( "QtGui" )
+
+##########################################################################
+# Public functions
+##########################################################################
+
+def appendMenuDefinitions( menuDefinition, prefix="" ) :
+	
+	menuDefinition.append( prefix + "/View Local Jobs", { "command" : __showLocalDispatcherWindow } )
 
 ##########################################################################
 # Metadata, PlugValueWidgets and Nodules
@@ -42,3 +56,159 @@ import Gaffer
 
 Gaffer.Metadata.registerPlugDescription( Gaffer.LocalDispatcher, "executeInBackground", "Executes the dispatched tasks on a background thread." )
 Gaffer.Metadata.registerPlugDescription( Gaffer.ExecutableNode, "dispatcher.Local.executeInForeground", "Forces the tasks from this node (and all preceding tasks) to execute on the current thread." )
+
+##################################################################################
+# Dispatcher Window
+##################################################################################
+
+class _LocalJobsPath( Gaffer.Path ) :
+	
+	def __init__( self, jobPool, job = None, path = None, root = "/" ) :
+		
+		Gaffer.Path.__init__( self, path = path, root = root )
+		
+		self.__jobPool = jobPool
+		self.__job = job
+	
+	def copy( self ) :
+		
+		c = self.__class__( self.__jobPool, self.__job )
+		
+		return c
+	
+	def info( self ) :
+		
+		result = Gaffer.Path.info( self )
+		
+		if result is not None and self.__job is not None :
+			
+			if self.__job.failed() :
+				result["status"] = Gaffer.LocalDispatcher._BatchStatus.Failed
+			elif self.__job.killed() :
+				result["status"] = Gaffer.LocalDispatcher._BatchStatus.Killed
+			else :
+				result["status"] = Gaffer.LocalDispatcher._BatchStatus.Running
+			
+			result["id"] = self.__job.id()
+			result["name"] = self.__job.name()
+			result["directory"] = self.__job.directory()
+		
+		return result
+	
+	def job( self ) :
+		
+		return self.__job
+	
+	def isLeaf( self ) :
+		
+		return len( self )
+	
+	def _children( self ) :
+		
+		if self.isLeaf() :
+			return []
+		
+		result = []
+		jobs = self.__jobPool.jobs() + self.__jobPool.failedJobs()
+		for job in jobs :
+			result.append(
+				_LocalJobsPath(
+					jobPool = self.__jobPool,
+					job = job,
+					path = [ str(jobs.index(job)) ],
+				)
+			)
+		
+		return result
+
+class _LocalJobsWindow( GafferUI.Window ) :
+	
+	def __init__( self, jobPool, **kw ) :
+		
+		GafferUI.Window.__init__( self, **kw )
+		
+		with self :
+			with GafferUI.ListContainer( orientation = GafferUI.ListContainer.Orientation.Vertical, spacing = 2, borderWidth = 4 ) as self.__column :
+				
+				self.__jobListingWidget = GafferUI.PathListingWidget(
+					_LocalJobsPath( jobPool ),
+					columns = (
+						GafferUI.PathListingWidget.Column( infoField = "status", label = "Status", displayFunction = _LocalJobsWindow._displayStatus ),
+						GafferUI.PathListingWidget.Column( infoField = "name", label = "Name" ),
+						GafferUI.PathListingWidget.Column( infoField = "id", label = "Id" ),
+					),
+					allowMultipleSelection=True
+				)
+				self.__jobListingWidget._qtWidget().header().setSortIndicator( 1, QtCore.Qt.AscendingOrder )
+				
+				killButton = GafferUI.Button( "Kill Selected Jobs" )
+				self.__killClickedConnection = killButton.clickedSignal().connect( Gaffer.WeakMethod( self.__killClicked ) )
+		
+		self.setTitle( "Local Dispatcher Jobs" )
+		
+		self.__updateTimer = QtCore.QTimer()
+		self.__updateTimer.timeout.connect( Gaffer.WeakMethod( self.__update ) )
+		self.__visibilityChangedConnection = self.visibilityChangedSignal().connect( Gaffer.WeakMethod( self.__visibilityChanged ) )
+		
+		self.__jobAddedConnection = jobPool.jobAddedSignal().connect( Gaffer.WeakMethod( self.__jobAdded ) )
+		self.__jobRemovedConnection = jobPool.jobRemovedSignal().connect( Gaffer.WeakMethod( self.__jobRemoved ) )
+	
+	## Acquires the LocalJobsWindow for the specified application.
+	@staticmethod
+	def acquire( jobPool ) :
+		
+		assert( isinstance( jobPool, Gaffer.LocalDispatcher.JobPool ) )
+		
+		window = getattr( jobPool, "_window", None )
+		if window :
+			return window
+		
+		window = _LocalJobsWindow( jobPool )
+		jobPool._window = window
+		
+		return window
+	
+	@staticmethod
+	def _displayStatus( status )  :
+		
+		if status == Gaffer.LocalDispatcher._BatchStatus.Killed :
+			return GafferUI.Image._qtPixmapFromFile( "debugNotification.png" )
+		elif status == Gaffer.LocalDispatcher._BatchStatus.Failed :
+			return GafferUI.Image._qtPixmapFromFile( "errorNotification.png" )
+		
+		return GafferUI.Image._qtPixmapFromFile( "infoNotification.png" )
+	
+	def __visibilityChanged( self, widget ) :
+		
+		if widget.visible() :
+			self.__updateTimer.start( 5000 )
+		else :
+			self.__updateTimer.stop()
+	
+	def __jobAdded( self, job ) :
+		
+		GafferUI.EventLoop.executeOnUIThread( self.__update )
+	
+	def __jobRemoved( self, job ) :
+		
+		GafferUI.EventLoop.executeOnUIThread( self.__update )
+	
+	def __update( self ) :
+		
+		self.__jobListingWidget.getPath()._emitPathChanged()
+	
+	def __killClicked( self, button ) :
+		
+		for path in self.__jobListingWidget.getSelectedPaths() :
+			path.job().kill()
+		
+		self.__update()
+
+##########################################################################
+# Implementation Details
+##########################################################################
+
+def __showLocalDispatcherWindow( menu ) :
+	
+	window = _LocalJobsWindow.acquire( Gaffer.LocalDispatcher.defaultJobPool() )
+	window.setVisible( True )
