@@ -41,6 +41,7 @@ import IECore
 
 import Gaffer
 import GafferTest
+import GafferCortex
 
 class OpMatcherTest( GafferTest.TestCase ) :
 
@@ -57,7 +58,7 @@ class OpMatcherTest( GafferTest.TestCase ) :
 		# we need a suitable op as part of the gaffer install before we
 		# can have this test pass.
 
-		matcher = Gaffer.OpMatcher.defaultInstance()
+		matcher = GafferCortex.OpMatcher.defaultInstance()
 
 		exrFile = os.path.dirname( __file__ ) + "/images/checker.exr"
 		path = Gaffer.FileSystemPath( exrFile )
@@ -67,7 +68,7 @@ class OpMatcherTest( GafferTest.TestCase ) :
 
 	def testSequences( self ) :
 
-		matcher = Gaffer.OpMatcher.defaultInstance()
+		matcher = GafferCortex.OpMatcher.defaultInstance()
 
 		path = Gaffer.SequencePath( str( self.__sequence ) )
 		ops = matcher.matches( path )
@@ -82,14 +83,14 @@ class OpMatcherTest( GafferTest.TestCase ) :
 
 	def testDefaultInstance( self ) :
 
-		self.failUnless( isinstance( Gaffer.OpMatcher.defaultInstance(), Gaffer.OpMatcher ) )
-		self.failUnless( Gaffer.OpMatcher.defaultInstance() is Gaffer.OpMatcher.defaultInstance() )
-		self.failUnless( Gaffer.OpMatcher.defaultInstance( IECore.ClassLoader.defaultOpLoader() ) is Gaffer.OpMatcher.defaultInstance() )
+		self.failUnless( isinstance( GafferCortex.OpMatcher.defaultInstance(), GafferCortex.OpMatcher ) )
+		self.failUnless( GafferCortex.OpMatcher.defaultInstance() is GafferCortex.OpMatcher.defaultInstance() )
+		self.failUnless( GafferCortex.OpMatcher.defaultInstance( IECore.ClassLoader.defaultOpLoader() ) is GafferCortex.OpMatcher.defaultInstance() )
 
 		alternativeClassLoader = IECore.ClassLoader( IECore.SearchPath( "wherever:i:want", ":" ) )
 
-		self.failUnless( Gaffer.OpMatcher.defaultInstance( alternativeClassLoader ) is Gaffer.OpMatcher.defaultInstance( alternativeClassLoader ) )
-		self.failUnless( Gaffer.OpMatcher.defaultInstance( alternativeClassLoader ) is not Gaffer.OpMatcher.defaultInstance() )
+		self.failUnless( GafferCortex.OpMatcher.defaultInstance( alternativeClassLoader ) is GafferCortex.OpMatcher.defaultInstance( alternativeClassLoader ) )
+		self.failUnless( GafferCortex.OpMatcher.defaultInstance( alternativeClassLoader ) is not GafferCortex.OpMatcher.defaultInstance() )
 
 	def tearDown( self ) :
 
@@ -99,4 +100,3 @@ class OpMatcherTest( GafferTest.TestCase ) :
 
 if __name__ == "__main__":
 	unittest.main()
-

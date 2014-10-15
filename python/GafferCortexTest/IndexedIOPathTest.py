@@ -41,6 +41,7 @@ import IECore
 
 import Gaffer
 import GafferTest
+import GafferCortex
 
 class IndexedIOPathTest( GafferTest.TestCase ) :
 
@@ -59,7 +60,7 @@ class IndexedIOPathTest( GafferTest.TestCase ) :
 
 	def testConstructFromFileName( self ) :
 
-		p = Gaffer.IndexedIOPath( self.__fileName, "/" )
+		p = GafferCortex.IndexedIOPath( self.__fileName, "/" )
 		self.failUnless( p.isValid() )
 
 		p.append( "d1" )
@@ -70,7 +71,7 @@ class IndexedIOPathTest( GafferTest.TestCase ) :
 
 	def testConstructFromIndexedIO( self ) :
 
-		p = Gaffer.IndexedIOPath( IECore.FileIndexedIO( self.__fileName, IECore.IndexedIO.OpenMode.Read ), "/" )
+		p = GafferCortex.IndexedIOPath( IECore.FileIndexedIO( self.__fileName, IECore.IndexedIO.OpenMode.Read ), "/" )
 		self.failUnless( p.isValid() )
 
 		p.append( "d1" )
@@ -81,7 +82,7 @@ class IndexedIOPathTest( GafferTest.TestCase ) :
 
 	def testChildren( self ) :
 
-		p = Gaffer.IndexedIOPath( self.__fileName, "/" )
+		p = GafferCortex.IndexedIOPath( self.__fileName, "/" )
 
 		c = p.children()
 		self.assertEqual( len( c ), 2 )
@@ -92,31 +93,31 @@ class IndexedIOPathTest( GafferTest.TestCase ) :
 
 	def testInfo( self ) :
 
-		p = Gaffer.IndexedIOPath( self.__fileName, "/d1/d2/c" )
+		p = GafferCortex.IndexedIOPath( self.__fileName, "/d1/d2/c" )
 		i = p.info()
 
 		self.assertEqual( i["indexedIO:entryType"], IECore.IndexedIO.EntryType.File )
 		self.assertEqual( i["indexedIO:dataType"], IECore.IndexedIO.DataType.String )
 
-		p = Gaffer.IndexedIOPath( self.__fileName, "/d1/d2/d" )
+		p = GafferCortex.IndexedIOPath( self.__fileName, "/d1/d2/d" )
 		i = p.info()
 
 		self.assertEqual( i["indexedIO:entryType"], IECore.IndexedIO.EntryType.File )
 		self.assertEqual( i["indexedIO:dataType"], IECore.IndexedIO.DataType.IntArray )
 		self.assertEqual( i["indexedIO:arrayLength"], 3 )
 
-		p = Gaffer.IndexedIOPath( self.__fileName, "/d1/d2" )
+		p = GafferCortex.IndexedIOPath( self.__fileName, "/d1/d2" )
 		i = p.info()
 		self.assertEqual( i["indexedIO:entryType"], IECore.IndexedIO.EntryType.Directory )
 
 	def testData( self ) :
 
-		p = Gaffer.IndexedIOPath( self.__fileName, "/d1/d2/c" )
+		p = GafferCortex.IndexedIOPath( self.__fileName, "/d1/d2/c" )
 		self.assertEqual( p.data(), IECore.StringData( "three" ) )
 
 	def testRelative( self ) :
 
-		p = Gaffer.IndexedIOPath( self.__fileName, "d1/d2" )
+		p = GafferCortex.IndexedIOPath( self.__fileName, "d1/d2" )
 		self.assertEqual( str( p ), "d1/d2" )
 		self.assertEqual( p.root(), "" )
 		self.assertTrue( "d1/d2/a" in [ str( c ) for c in p.children() ] )
@@ -133,4 +134,3 @@ class IndexedIOPathTest( GafferTest.TestCase ) :
 
 if __name__ == "__main__":
 	unittest.main()
-

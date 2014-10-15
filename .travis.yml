@@ -23,6 +23,7 @@ install:
 script:
     - scons install CXX=$CXX ENV_VARS_TO_IMPORT=PATH RMAN_ROOT=$DELIGHT
     - ./install/gaffer-*/bin/gaffer test GafferTest
+    - ./install/gaffer-*/bin/gaffer test GafferCortexTest
     - ./install/gaffer-*/bin/gaffer test GafferImageTest
     - ./install/gaffer-*/bin/gaffer test GafferSceneTest
     - ./install/gaffer-*/bin/gaffer test GafferOSLTest

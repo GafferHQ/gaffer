@@ -41,6 +41,7 @@ import unittest
 import IECore
 
 import Gaffer
+import GafferCortex
 import GafferTest
 
 class ObjectWriterTest( GafferTest.TestCase ) :
@@ -51,10 +52,10 @@ class ObjectWriterTest( GafferTest.TestCase ) :
 
 	def test( self ) :
 
-		checker = os.path.dirname( __file__ ) + "/images/checker.exr"
+		checker = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/checker.exr" )
 		checker = IECore.Reader.create( checker ).read()
 
-		node = Gaffer.ObjectWriter()
+		node = GafferCortex.ObjectWriter()
 		node["fileName"].setValue( self.__exrFileName )
 		node["in"].setValue( checker )
 
@@ -84,10 +85,10 @@ class ObjectWriterTest( GafferTest.TestCase ) :
 
 	def testChangingFileType( self ) :
 
-		checker = os.path.dirname( __file__ ) + "/images/checker.exr"
+		checker = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/checker.exr" )
 		checker = IECore.Reader.create( checker ).read()
 
-		node = Gaffer.ObjectWriter()
+		node = GafferCortex.ObjectWriter()
 		node["fileName"].setValue( self.__exrFileName )
 		node["in"].setValue( checker )
 
@@ -99,10 +100,10 @@ class ObjectWriterTest( GafferTest.TestCase ) :
 
 		self.failUnless( IECore.TIFFImageReader.canRead( self.__tifFileName ) )
 
- 	def testExtraneousPlugsAfterSerialisation( self ) :
+	def testExtraneousPlugsAfterSerialisation( self ) :
 
 		s = Gaffer.ScriptNode()
-		s["n"] = Gaffer.ObjectWriter()
+		s["n"] = GafferCortex.ObjectWriter()
 		s["n"]["fileName"].setValue( self.__exrFileName )
 
 		self.failUnless( "parameters" in s["n"] )
@@ -118,10 +119,10 @@ class ObjectWriterTest( GafferTest.TestCase ) :
 
 	def testStringSubstitutions( self ) :
 
-		checker = os.path.dirname( __file__ ) + "/images/checker.exr"
+		checker = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/checker.exr" )
 		checker = IECore.Reader.create( checker ).read()
 
-		node = Gaffer.ObjectWriter()
+		node = GafferCortex.ObjectWriter()
 		node["fileName"].setValue( self.__exrSequence.fileName )
 		node["in"].setValue( checker )
 
@@ -143,7 +144,7 @@ class ObjectWriterTest( GafferTest.TestCase ) :
 		c2.setFrame( 2 )
 
 		s = Gaffer.ScriptNode()
-		s["n"] = Gaffer.ObjectWriter()
+		s["n"] = GafferCortex.ObjectWriter()
 
 		# no file produces no effect
 		self.assertEqual( s["n"].hash( c ), IECore.MurmurHash() )
@@ -175,4 +176,3 @@ class ObjectWriterTest( GafferTest.TestCase ) :
 
 if __name__ == "__main__":
 	unittest.main()
-

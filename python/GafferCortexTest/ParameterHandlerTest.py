@@ -43,6 +43,7 @@ import IECore
 
 import Gaffer
 import GafferTest
+import GafferCortex
 
 class ParameterHandlerTest( GafferTest.TestCase ) :
 
@@ -51,10 +52,10 @@ class ParameterHandlerTest( GafferTest.TestCase ) :
 		p = IECore.IntParameter( "i", "d", 10 )
 
 		n = Gaffer.Node()
-		h = Gaffer.ParameterHandler.create( p )
+		h = GafferCortex.ParameterHandler.create( p )
 		h.setupPlug( n )
 
-		self.failUnless( isinstance( h, Gaffer.ParameterHandler ) )
+		self.failUnless( isinstance( h, GafferCortex.ParameterHandler ) )
 		self.failUnless( isinstance( n["i"], Gaffer.IntPlug ) )
 
 	def testCustomHandler( self ) :
@@ -67,11 +68,11 @@ class ParameterHandlerTest( GafferTest.TestCase ) :
 
 		IECore.registerRunTimeTyped( CustomParameter )
 
-		class CustomHandler( Gaffer.ParameterHandler ) :
+		class CustomHandler( GafferCortex.ParameterHandler ) :
 
 			def __init__( self, parameter ) :
 
-				Gaffer.ParameterHandler.__init__( self )
+				GafferCortex.ParameterHandler.__init__( self )
 
 				self.__parameter = parameter
 				self.__plug = None
@@ -109,7 +110,7 @@ class ParameterHandlerTest( GafferTest.TestCase ) :
 
 				self.__plug.setValue( self.__parameter.getNumericValue() / 10 )
 
-		Gaffer.ParameterHandler.registerParameterHandler( CustomParameter, CustomHandler )
+		GafferCortex.ParameterHandler.registerParameterHandler( CustomParameter, CustomHandler )
 
 		p = IECore.Parameterised( "" )
 		p.parameters().addParameter(
@@ -124,7 +125,7 @@ class ParameterHandlerTest( GafferTest.TestCase ) :
 
 		)
 
-		ph = Gaffer.ParameterisedHolderNode()
+		ph = GafferCortex.ParameterisedHolderNode()
 		ph.setParameterised( p )
 
 		self.assertEqual( ph["parameters"]["i"].getValue(), 1 )
@@ -146,7 +147,7 @@ class ParameterHandlerTest( GafferTest.TestCase ) :
 		p = IECore.IntParameter( "i", "d", 10 )
 
 		n = Gaffer.Node()
-		h = Gaffer.ParameterHandler.create( p )
+		h = GafferCortex.ParameterHandler.create( p )
 		h.setupPlug( n )
 
 		self.assertEqual( h.plug().getName(), "i" )
@@ -168,7 +169,7 @@ class ParameterHandlerTest( GafferTest.TestCase ) :
 
 		n = Gaffer.Node()
 
-		h = Gaffer.CompoundParameterHandler( c )
+		h = GafferCortex.CompoundParameterHandler( c )
 		h.setupPlug( n )
 
 		self.failUnless( h.childParameterHandler( c["i"] ).parameter().isSame( c["i"] ) )
@@ -179,7 +180,7 @@ class ParameterHandlerTest( GafferTest.TestCase ) :
 		p = IECore.IntParameter( "i", "d", 10 )
 
 		n = Gaffer.Node()
-		h = Gaffer.ParameterHandler.create( p )
+		h = GafferCortex.ParameterHandler.create( p )
 		h.setupPlug( n )
 
 		self.failIf( h.plug().getFlags( Gaffer.Plug.Flags.ReadOnly ) )
@@ -196,7 +197,7 @@ class ParameterHandlerTest( GafferTest.TestCase ) :
 		p = IECore.IntParameter( "i", "d", 10 )
 
 		n = Gaffer.Node()
-		h = Gaffer.ParameterHandler.create( p )
+		h = GafferCortex.ParameterHandler.create( p )
 
 		h.setupPlug( n )
 		self.assertTrue( h.plug().getFlags( Gaffer.Plug.Flags.Dynamic ) )
@@ -212,4 +213,3 @@ class ParameterHandlerTest( GafferTest.TestCase ) :
 
 if __name__ == "__main__":
 	unittest.main()
-

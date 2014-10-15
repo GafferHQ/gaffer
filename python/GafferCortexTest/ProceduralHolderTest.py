@@ -41,21 +41,23 @@ import IECore
 
 import Gaffer
 import GafferTest
+import GafferCortex
+import GafferCortexTest
 
 class ProceduralHolderTest( GafferTest.TestCase ) :
 
 	def testType( self ) :
 
-		n = Gaffer.ProceduralHolder()
+		n = GafferCortex.ProceduralHolder()
 		self.assertEqual( n.typeName(), "GafferCortex::ProceduralHolder" )
-		self.failUnless( n.isInstanceOf( Gaffer.ParameterisedHolderComputeNode ) )
+		self.failUnless( n.isInstanceOf( GafferCortex.ParameterisedHolderComputeNode ) )
 		self.failUnless( n.isInstanceOf( Gaffer.ComputeNode.staticTypeId() ) )
 		self.failUnless( n.isInstanceOf( Gaffer.DependencyNode.staticTypeId() ) )
 
 	def testCompute( self ) :
 
-		n = Gaffer.ProceduralHolder()
-		classSpec = GafferTest.ParameterisedHolderTest.classSpecification( "read", "IECORE_PROCEDURAL_PATHS" )[:-1]
+		n = GafferCortex.ProceduralHolder()
+		classSpec = GafferCortexTest.ParameterisedHolderTest.classSpecification( "read", "IECORE_PROCEDURAL_PATHS" )[:-1]
 		n.setProcedural( *classSpec )
 
 		p = n["output"].getValue()
@@ -65,8 +67,8 @@ class ProceduralHolderTest( GafferTest.TestCase ) :
 
 	def testAffects( self ) :
 
-		n = Gaffer.ProceduralHolder()
-		classSpec = GafferTest.ParameterisedHolderTest.classSpecification( "read", "IECORE_PROCEDURAL_PATHS" )[:-1]
+		n = GafferCortex.ProceduralHolder()
+		classSpec = GafferCortexTest.ParameterisedHolderTest.classSpecification( "read", "IECORE_PROCEDURAL_PATHS" )[:-1]
 		n.setProcedural( *classSpec )
 
 		a = n.affects( n["parameters"]["motion"]["blur"] )
@@ -75,8 +77,8 @@ class ProceduralHolderTest( GafferTest.TestCase ) :
 
 	def testHash( self ) :
 
-		n = Gaffer.ProceduralHolder()
-		classSpec = GafferTest.ParameterisedHolderTest.classSpecification( "read", "IECORE_PROCEDURAL_PATHS" )[:-1]
+		n = GafferCortex.ProceduralHolder()
+		classSpec = GafferCortexTest.ParameterisedHolderTest.classSpecification( "read", "IECORE_PROCEDURAL_PATHS" )[:-1]
 		n.setProcedural( *classSpec )
 
 		h1 = n["output"].hash()
@@ -87,12 +89,11 @@ class ProceduralHolderTest( GafferTest.TestCase ) :
 
 	def testRunTimeTyped( self ) :
 
-		n = Gaffer.ProceduralHolder()
+		n = GafferCortex.ProceduralHolder()
 
 		self.assertEqual( n.typeName(), "GafferCortex::ProceduralHolder" )
 		self.assertEqual( IECore.RunTimeTyped.typeNameFromTypeId( n.typeId() ), "GafferCortex::ProceduralHolder" )
-		self.assertEqual( IECore.RunTimeTyped.baseTypeId( n.typeId() ), Gaffer.ParameterisedHolderComputeNode.staticTypeId() )
+		self.assertEqual( IECore.RunTimeTyped.baseTypeId( n.typeId() ), GafferCortex.ParameterisedHolderComputeNode.staticTypeId() )
 
 if __name__ == "__main__":
 	unittest.main()
-

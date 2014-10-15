@@ -45,6 +45,7 @@ import IECore
 
 import Gaffer
 import GafferTest
+import GafferCortex
 
 class ParameterisedHolderTest( GafferTest.TestCase ) :
 
@@ -64,13 +65,13 @@ class ParameterisedHolderTest( GafferTest.TestCase ) :
 
 	def testCreateEmpty( self ) :
 
-		n = Gaffer.ParameterisedHolderNode()
+		n = GafferCortex.ParameterisedHolderNode()
 		self.assertEqual( n.getName(), "ParameterisedHolderNode" )
 		self.assertEqual( n.getParameterised(), ( None, "", -1, "" ) )
 
 	def testSetParameterisedWithoutClassLoader( self ) :
 
-		n = Gaffer.ParameterisedHolderNode()
+		n = GafferCortex.ParameterisedHolderNode()
 		op = IECore.SequenceRenumberOp()
 
 		n.setParameterised( op )
@@ -78,7 +79,7 @@ class ParameterisedHolderTest( GafferTest.TestCase ) :
 
 	def testSimplePlugTypes( self ) :
 
-		n = Gaffer.ParameterisedHolderNode()
+		n = GafferCortex.ParameterisedHolderNode()
 		op = IECore.SequenceRenumberOp()
 		n.setParameterised( op )
 
@@ -134,7 +135,7 @@ class ParameterisedHolderTest( GafferTest.TestCase ) :
 
 		)
 
-		ph = Gaffer.ParameterisedHolderNode()
+		ph = GafferCortex.ParameterisedHolderNode()
 		ph.setParameterised( p )
 
 		self.assertEqual( ph["parameters"]["bv"].defaultValue(), IECore.BoolVectorData() )
@@ -193,7 +194,7 @@ class ParameterisedHolderTest( GafferTest.TestCase ) :
 
 		)
 
-		ph = Gaffer.ParameterisedHolderNode()
+		ph = GafferCortex.ParameterisedHolderNode()
 		ph.setParameterised( p )
 
 		self.failUnless( "i1" in ph["parameters"] )
@@ -207,7 +208,7 @@ class ParameterisedHolderTest( GafferTest.TestCase ) :
 
 		p["i1"].setNumericValue( 10 )
 
-		ph = Gaffer.ParameterisedHolderNode()
+		ph = GafferCortex.ParameterisedHolderNode()
 		ph.setParameterised( p )
 
 		self.assertEqual( ph["parameters"]["i1"].defaultValue(), 1 )
@@ -227,7 +228,7 @@ class ParameterisedHolderTest( GafferTest.TestCase ) :
 
 		)
 
-		ph = Gaffer.ParameterisedHolderNode()
+		ph = GafferCortex.ParameterisedHolderNode()
 		ph.setParameterised( p )
 
 		self.assertEqual( ph["parameters"]["v2i"].defaultValue(), IECore.V2i( 1, 2 ) )
@@ -253,11 +254,11 @@ class ParameterisedHolderTest( GafferTest.TestCase ) :
 		p = IECore.Parameterised( "" )
 		p.parameters().addParameter( IECore.IntParameter( "i1", "", 1, ) )
 
-		ph = Gaffer.ParameterisedHolderNode()
+		ph = GafferCortex.ParameterisedHolderNode()
 		ph.setParameterised( p )
 
 		h = ph.parameterHandler()
-		self.failUnless( isinstance( h, Gaffer.CompoundParameterHandler ) )
+		self.failUnless( isinstance( h, GafferCortex.CompoundParameterHandler ) )
 		self.failUnless( h.parameter().isSame( p.parameters() ) )
 		self.failUnless( h.plug().isSame( ph["parameters"] ) )
 
@@ -280,7 +281,7 @@ class ParameterisedHolderTest( GafferTest.TestCase ) :
 
 		)
 
-		ph = Gaffer.ParameterisedHolderNode()
+		ph = GafferCortex.ParameterisedHolderNode()
 		ph.setParameterised( p )
 
 		self.failUnless( isinstance( ph["parameters"]["b"], Gaffer.CompoundPlug ) )
@@ -321,7 +322,7 @@ class ParameterisedHolderTest( GafferTest.TestCase ) :
 
 		)
 
-		ph = Gaffer.ParameterisedHolderNode()
+		ph = GafferCortex.ParameterisedHolderNode()
 		ph.setParameterised( p )
 
 		self.failUnless( isinstance( ph["parameters"], Gaffer.CompoundPlug ) )
@@ -351,7 +352,7 @@ class ParameterisedHolderTest( GafferTest.TestCase ) :
 
 		)
 
-		ph = Gaffer.ParameterisedHolderNode()
+		ph = GafferCortex.ParameterisedHolderNode()
 		ph.setParameterised( p )
 
 		self.failUnless( isinstance( ph["parameters"], Gaffer.CompoundPlug ) )
@@ -374,7 +375,7 @@ class ParameterisedHolderTest( GafferTest.TestCase ) :
 
 		p = IECore.Parameterised( "" )
 
-		phn = Gaffer.ParameterisedHolderNode()
+		phn = GafferCortex.ParameterisedHolderNode()
 		phn.setParameterised( p )
 
 		ph = phn.parameterHandler()
@@ -386,7 +387,7 @@ class ParameterisedHolderTest( GafferTest.TestCase ) :
 
 	def testClassLoading( self ) :
 
-		ph = Gaffer.ParameterisedHolderNode()
+		ph = GafferCortex.ParameterisedHolderNode()
 		classSpec = self.classSpecification( "files/sequenceLs", "IECORE_OP_PATHS" )
 		ph.setParameterised( *classSpec )
 
@@ -398,7 +399,7 @@ class ParameterisedHolderTest( GafferTest.TestCase ) :
 
 	def testRunTimeTyped( self ) :
 
-		n = Gaffer.ParameterisedHolderNode()
+		n = GafferCortex.ParameterisedHolderNode()
 
 		self.assertEqual( n.typeName(), "GafferCortex::ParameterisedHolderNode" )
 		self.assertEqual( IECore.RunTimeTyped.typeNameFromTypeId( n.typeId() ), "GafferCortex::ParameterisedHolderNode" )
@@ -406,7 +407,7 @@ class ParameterisedHolderTest( GafferTest.TestCase ) :
 
 	def testSerialisation( self ) :
 
-		ph = Gaffer.ParameterisedHolderNode()
+		ph = GafferCortex.ParameterisedHolderNode()
 		classSpec = self.classSpecification( "files/sequenceRenumber", "IECORE_OP_PATHS" )
 		ph.setParameterised( *classSpec )
 
@@ -428,7 +429,7 @@ class ParameterisedHolderTest( GafferTest.TestCase ) :
 
 	def testKeepExistingValues( self ) :
 
-		ph = Gaffer.ParameterisedHolderNode()
+		ph = GafferCortex.ParameterisedHolderNode()
 
 		ph.setParameterised( IECore.Grade() )
 		ph["parameters"]["lift"].setValue( IECore.Color3f( 1, 0, 0 ) )
@@ -457,7 +458,7 @@ class ParameterisedHolderTest( GafferTest.TestCase ) :
 
 		)
 
-		ph = Gaffer.ParameterisedHolderNode()
+		ph = GafferCortex.ParameterisedHolderNode()
 		ph.setParameterised( p )
 
 		self.failUnless( isinstance( ph["parameters"]["dt"], Gaffer.StringPlug ) )
@@ -473,8 +474,8 @@ class ParameterisedHolderTest( GafferTest.TestCase ) :
 
 	def testClassParameter( self ) :
 
-		ph = Gaffer.ParameterisedHolderNode()
-		ph.setParameterised( "classParameter", 1, "GAFFERTEST_CLASS_PATHS" )
+		ph = GafferCortex.ParameterisedHolderNode()
+		ph.setParameterised( "classParameter", 1, "GAFFERCORTEXTEST_CLASS_PATHS" )
 		p = ph.getParameterised()[0]
 
 		with ph.parameterModificationContext() :
@@ -494,8 +495,8 @@ class ParameterisedHolderTest( GafferTest.TestCase ) :
 
 		s = Gaffer.ScriptNode()
 
-		s["ph"] = Gaffer.ParameterisedHolderNode()
-		s["ph"].setParameterised( "classParameter", 1, "GAFFERTEST_CLASS_PATHS" )
+		s["ph"] = GafferCortex.ParameterisedHolderNode()
+		s["ph"].setParameterised( "classParameter", 1, "GAFFERCORTEXTEST_CLASS_PATHS" )
 
 		p = s["ph"].getParameterised()[0]
 
@@ -525,8 +526,8 @@ class ParameterisedHolderTest( GafferTest.TestCase ) :
 
 	def testClassVectorParameter( self ) :
 
-		ph = Gaffer.ParameterisedHolderNode()
-		ph.setParameterised( "classVectorParameter", 1, "GAFFERTEST_CLASS_PATHS" )
+		ph = GafferCortex.ParameterisedHolderNode()
+		ph.setParameterised( "classVectorParameter", 1, "GAFFERCORTEXTEST_CLASS_PATHS" )
 		p = ph.getParameterised()[0]
 
 		seqLsClassSpec = self.classSpecification( "files/sequenceLs", "IECORE_OP_PATHS" )[:2]
@@ -555,8 +556,8 @@ class ParameterisedHolderTest( GafferTest.TestCase ) :
 
 	def testClassVectorParameterMaintainsPlugValues( self ) :
 
-		ph = Gaffer.ParameterisedHolderNode()
-		ph.setParameterised( "classVectorParameter", 1, "GAFFERTEST_CLASS_PATHS" )
+		ph = GafferCortex.ParameterisedHolderNode()
+		ph.setParameterised( "classVectorParameter", 1, "GAFFERCORTEXTEST_CLASS_PATHS" )
 		p = ph.getParameterised()[0]
 
 		seqLsClassSpec = self.classSpecification( "files/sequenceLs", "IECORE_OP_PATHS" )[:2]
@@ -580,8 +581,8 @@ class ParameterisedHolderTest( GafferTest.TestCase ) :
 	def testClassVectorParameterSerialisation( self ) :
 
 		s = Gaffer.ScriptNode()
-		s["ph"] = Gaffer.ParameterisedHolderNode()
-		s["ph"].setParameterised( "classVectorParameter", 1, "GAFFERTEST_CLASS_PATHS" )
+		s["ph"] = GafferCortex.ParameterisedHolderNode()
+		s["ph"].setParameterised( "classVectorParameter", 1, "GAFFERCORTEXTEST_CLASS_PATHS" )
 		p = s["ph"].getParameterised()[0]
 
 		gradeClassSpec = self.classSpecification( "files/sequenceRenumber", "IECORE_OP_PATHS" )[:2]
@@ -622,7 +623,7 @@ class ParameterisedHolderTest( GafferTest.TestCase ) :
 
 		)
 
-		ph = Gaffer.ParameterisedHolderNode()
+		ph = GafferCortex.ParameterisedHolderNode()
 		ph.setParameterised( p )
 
 		self.failUnless( "t" in ph["parameters"] )
@@ -716,7 +717,7 @@ class ParameterisedHolderTest( GafferTest.TestCase ) :
 
 		c = ParameterChanger()
 
-		ph = Gaffer.ParameterisedHolderNode()
+		ph = GafferCortex.ParameterisedHolderNode()
 		ph.setParameterised( c )
 
 		self.assertEqual( ph["parameters"]["driver"].getValue(), 0 )
@@ -782,7 +783,7 @@ class ParameterisedHolderTest( GafferTest.TestCase ) :
 
 		c = ParameterChanger()
 
-		ph = Gaffer.ParameterisedHolderNode()
+		ph = GafferCortex.ParameterisedHolderNode()
 		ph.setParameterised( c )
 
 		self.failUnless( "parameters" in ph )
@@ -830,13 +831,13 @@ class ParameterisedHolderTest( GafferTest.TestCase ) :
 								IECore.ClassParameter(
 									name = "class",
 									description = "",
-									searchPathEnvVar = "GAFFERTEST_CLASS_PATHS",
+									searchPathEnvVar = "GAFFERCORTEXTEST_CLASS_PATHS",
 								),
 
 								IECore.ClassVectorParameter(
 									name = "classes",
 									description = "",
-									searchPathEnvVar = "GAFFERTEST_CLASS_PATHS",
+									searchPathEnvVar = "GAFFERCORTEXTEST_CLASS_PATHS",
 								),
 
 							],
@@ -862,7 +863,7 @@ class ParameterisedHolderTest( GafferTest.TestCase ) :
 
 		c = ClassParameterChanger()
 
-		ph = Gaffer.ParameterisedHolderNode()
+		ph = GafferCortex.ParameterisedHolderNode()
 		ph.setParameterised( c )
 
 		with ph.parameterModificationContext() :
@@ -879,48 +880,48 @@ class ParameterisedHolderTest( GafferTest.TestCase ) :
 
 		self.assertEqual( ph["parameters"]["driver"].getValue(), 0 )
 		self.assertEqual( ph["parameters"]["driven"].getValue(), 0 )
- 		self.assertEqual( len( c.changes ), 0 )
+		self.assertEqual( len( c.changes ), 0 )
 
- 		ph["parameters"]["driver"].setValue( 10 )
+		ph["parameters"]["driver"].setValue( 10 )
 
- 		self.assertEqual( ph["parameters"]["driver"].getValue(), 10 )
- 		self.assertEqual( ph["parameters"]["driven"].getValue(), 20 )
- 		self.assertEqual( len( c.changes ), 1 )
- 		self.failUnless( c.changes[0][0].isSame( c["driver"] ) )
- 		self.assertEqual( c.changes[0][1], "10" )
+		self.assertEqual( ph["parameters"]["driver"].getValue(), 10 )
+		self.assertEqual( ph["parameters"]["driven"].getValue(), 20 )
+		self.assertEqual( len( c.changes ), 1 )
+		self.failUnless( c.changes[0][0].isSame( c["driver"] ) )
+		self.assertEqual( c.changes[0][1], "10" )
 
- 		ph["parameters"]["driven"].setValue( 30 )
+		ph["parameters"]["driven"].setValue( 30 )
 
- 		self.assertEqual( ph["parameters"]["driver"].getValue(), 10 )
- 		self.assertEqual( ph["parameters"]["driven"].getValue(), 30 )
- 		self.assertEqual( len( c.changes ), 2 )
- 		self.failUnless( c.changes[1][0].isSame( c["driven"] ) )
- 		self.assertEqual( c.changes[1][1], "30" )
+		self.assertEqual( ph["parameters"]["driver"].getValue(), 10 )
+		self.assertEqual( ph["parameters"]["driven"].getValue(), 30 )
+		self.assertEqual( len( c.changes ), 2 )
+		self.failUnless( c.changes[1][0].isSame( c["driven"] ) )
+		self.assertEqual( c.changes[1][1], "30" )
 
 		# check that the main class gets callbacks for the parameters it
 		# owns directly via a CompoundParameter.
 
- 		self.assertEqual( ph["parameters"]["c"]["driver2"].getValue(), 0 )
- 		self.assertEqual( ph["parameters"]["c"]["driven2"].getValue(), 0 )
- 		self.assertEqual( len( c.changes ), 2 )
+		self.assertEqual( ph["parameters"]["c"]["driver2"].getValue(), 0 )
+		self.assertEqual( ph["parameters"]["c"]["driven2"].getValue(), 0 )
+		self.assertEqual( len( c.changes ), 2 )
 
- 		ph["parameters"]["c"]["driver2"].setValue( 10 )
+		ph["parameters"]["c"]["driver2"].setValue( 10 )
 
- 		self.assertEqual( ph["parameters"]["c"]["driver2"].getValue(), 10 )
- 		self.assertEqual( ph["parameters"]["c"]["driven2"].getValue(), 40 )
- 		self.assertEqual( len( c.changes ), 4 )
- 		self.failUnless( c.changes[2][0].isSame( c["c"]["driver2"] ) )
- 		self.assertEqual( c.changes[2][1], "10" )
- 		self.failUnless( c.changes[3][0].isSame( c["c"] ) )
+		self.assertEqual( ph["parameters"]["c"]["driver2"].getValue(), 10 )
+		self.assertEqual( ph["parameters"]["c"]["driven2"].getValue(), 40 )
+		self.assertEqual( len( c.changes ), 4 )
+		self.failUnless( c.changes[2][0].isSame( c["c"]["driver2"] ) )
+		self.assertEqual( c.changes[2][1], "10" )
+		self.failUnless( c.changes[3][0].isSame( c["c"] ) )
 
- 		ph["parameters"]["c"]["driven2"].setValue( 30 )
+		ph["parameters"]["c"]["driven2"].setValue( 30 )
 
- 		self.assertEqual( ph["parameters"]["c"]["driver2"].getValue(), 10 )
- 		self.assertEqual( ph["parameters"]["c"]["driven2"].getValue(), 30 )
- 		self.assertEqual( len( c.changes ), 6 )
- 		self.failUnless( c.changes[4][0].isSame( c["c"]["driven2"] ) )
- 		self.assertEqual( c.changes[4][1], "30" )
- 		self.failUnless( c.changes[5][0].isSame( c["c"] ) )
+		self.assertEqual( ph["parameters"]["c"]["driver2"].getValue(), 10 )
+		self.assertEqual( ph["parameters"]["c"]["driven2"].getValue(), 30 )
+		self.assertEqual( len( c.changes ), 6 )
+		self.failUnless( c.changes[4][0].isSame( c["c"]["driven2"] ) )
+		self.assertEqual( c.changes[4][1], "30" )
+		self.failUnless( c.changes[5][0].isSame( c["c"] ) )
 
 		# check that parameters changed on the classparameter are passed to
 		# the class itself and not the top level parameterised.
@@ -931,11 +932,11 @@ class ParameterisedHolderTest( GafferTest.TestCase ) :
 		ph["parameters"]["c"]["class"]["driver"].setValue( 10 )
 
 		self.assertEqual( ph["parameters"]["c"]["class"]["driver"].getValue(), 10 )
- 		self.assertEqual( ph["parameters"]["c"]["class"]["driven"].getValue(), 50 )
+		self.assertEqual( ph["parameters"]["c"]["class"]["driven"].getValue(), 50 )
 
- 		self.assertEqual( len( c2.changes ), 1 )
- 		self.failUnless( c2.changes[0][0].isSame( c2["driver"] ) )
- 		self.assertEqual( c2.changes[0][1], "10" )
+		self.assertEqual( len( c2.changes ), 1 )
+		self.failUnless( c2.changes[0][0].isSame( c2["driver"] ) )
+		self.assertEqual( c2.changes[0][1], "10" )
 
 		# check that parameters changed on the classvectorparameter are passed to
 		# the class itself and not the top level parameterised.
@@ -946,25 +947,25 @@ class ParameterisedHolderTest( GafferTest.TestCase ) :
 		ph["parameters"]["c"]["classes"]["p0"]["driver"].setValue( 10 )
 
 		self.assertEqual( ph["parameters"]["c"]["classes"]["p0"]["driver"].getValue(), 10 )
- 		self.assertEqual( ph["parameters"]["c"]["classes"]["p0"]["driven"].getValue(), 50 )
+		self.assertEqual( ph["parameters"]["c"]["classes"]["p0"]["driven"].getValue(), 50 )
 
- 		self.assertEqual( len( c3.changes ), 2 )
- 		self.failUnless( c3.changes[0][0].isSame( c3["driver"] ) )
- 		self.assertEqual( c3.changes[0][1], "10" )
- 		self.failUnless( c3.changes[1][0].isSame( c["c"]["classes"]["p0"] ) )
+		self.assertEqual( len( c3.changes ), 2 )
+		self.failUnless( c3.changes[0][0].isSame( c3["driver"] ) )
+		self.assertEqual( c3.changes[0][1], "10" )
+		self.failUnless( c3.changes[1][0].isSame( c["c"]["classes"]["p0"] ) )
 
- 		c4 = c["c"]["classes"].getClass( "p1" )
+		c4 = c["c"]["classes"].getClass( "p1" )
 		self.assertEqual( len( c4.changes ), 0 )
 
 		ph["parameters"]["c"]["classes"]["p1"]["driver"].setValue( 10 )
 
 		self.assertEqual( ph["parameters"]["c"]["classes"]["p1"]["driver"].getValue(), 10 )
- 		self.assertEqual( ph["parameters"]["c"]["classes"]["p1"]["driven"].getValue(), 50 )
+		self.assertEqual( ph["parameters"]["c"]["classes"]["p1"]["driven"].getValue(), 50 )
 
- 		self.assertEqual( len( c4.changes ), 2 )
- 		self.failUnless( c4.changes[0][0].isSame( c4["driver"] ) )
- 		self.assertEqual( c4.changes[0][1], "10" )
- 		self.failUnless( c4.changes[1][0].isSame( c["c"]["classes"]["p1"] ) )
+		self.assertEqual( len( c4.changes ), 2 )
+		self.failUnless( c4.changes[0][0].isSame( c4["driver"] ) )
+		self.assertEqual( c4.changes[0][1], "10" )
+		self.failUnless( c4.changes[1][0].isSame( c["c"]["classes"]["p1"] ) )
 
 	def testReadOnly( self ) :
 
@@ -982,7 +983,7 @@ class ParameterisedHolderTest( GafferTest.TestCase ) :
 
 		)
 
-		ph = Gaffer.ParameterisedHolderNode()
+		ph = GafferCortex.ParameterisedHolderNode()
 		ph.setParameterised( p )
 
 		self.failUnless( "parameters" in ph )
@@ -1030,7 +1031,7 @@ class ParameterisedHolderTest( GafferTest.TestCase ) :
 
 		c = ParameterChangedRaiser()
 
-		ph = Gaffer.ParameterisedHolderNode()
+		ph = GafferCortex.ParameterisedHolderNode()
 		ph.setParameterised( c )
 
 		self.assertRaises( RuntimeError, ph["parameters"]["driver"].setValue, 10 )
@@ -1071,15 +1072,14 @@ class ParameterisedHolderTest( GafferTest.TestCase ) :
 
 		c = InvalidValueRaiser()
 
-		ph = Gaffer.ParameterisedHolderNode()
+		ph = GafferCortex.ParameterisedHolderNode()
 		ph.setParameterised( c )
 
 		self.assertRaises( RuntimeError, ph["parameters"]["driver"].setValue, 1 )
 
 	def setUp( self ) :
 
-		os.environ["GAFFERTEST_CLASS_PATHS"] = os.path.dirname( __file__ ) + "/classes"
+		os.environ["GAFFERCORTEXTEST_CLASS_PATHS"] = os.path.dirname( __file__ ) + "/classes"
 
 if __name__ == "__main__":
 	unittest.main()
-

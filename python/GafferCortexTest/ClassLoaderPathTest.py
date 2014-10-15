@@ -41,12 +41,13 @@ import IECore
 
 import Gaffer
 import GafferTest
+import GafferCortex
 
 class ClassLoaderPathTest( GafferTest.TestCase ) :
 
 	def test( self ) :
 
-		p = Gaffer.ClassLoaderPath( IECore.ClassLoader.defaultOpLoader(), "/" )
+		p = GafferCortex.ClassLoaderPath( IECore.ClassLoader.defaultOpLoader(), "/" )
 		self.failUnless( p.isValid() )
 		self.failIf( p.isLeaf() )
 
@@ -69,7 +70,7 @@ class ClassLoaderPathTest( GafferTest.TestCase ) :
 		p.setFromString( "/files" )
 		children = p.children()
 		for child in children :
-			self.failUnless( isinstance( child, Gaffer.ClassLoaderPath ) )
+			self.failUnless( isinstance( child, GafferCortex.ClassLoaderPath ) )
 			self.assertEqual( len( child ), len( p ) + 1 )
 			self.failUnless( child.isLeaf() )
 
@@ -81,7 +82,7 @@ class ClassLoaderPathTest( GafferTest.TestCase ) :
 		p.setFromString( "/" )
 		children = p.children()
 		for child in children :
-			self.failUnless( isinstance( child, Gaffer.ClassLoaderPath ) )
+			self.failUnless( isinstance( child, GafferCortex.ClassLoaderPath ) )
 			self.assertEqual( len( child ), len( p ) + 1 )
 
 		p.setFromString( "/mesh/normals" )
@@ -91,7 +92,7 @@ class ClassLoaderPathTest( GafferTest.TestCase ) :
 
 	def testRelative( self ) :
 
-		p = Gaffer.ClassLoaderPath( IECore.ClassLoader.defaultOpLoader(), "files" )
+		p = GafferCortex.ClassLoaderPath( IECore.ClassLoader.defaultOpLoader(), "files" )
 		self.assertEqual( str( p ), "files" )
 		self.assertEqual( p.root(), "" )
 		self.assertTrue( "files/sequenceRenumber" in [ str( c ) for c in p.children() ] )
@@ -103,11 +104,10 @@ class ClassLoaderPathTest( GafferTest.TestCase ) :
 
 	def testLoad( self ) :
 
-		p = Gaffer.ClassLoaderPath( IECore.ClassLoader.defaultOpLoader(), "/mesh/normals" )
+		p = GafferCortex.ClassLoaderPath( IECore.ClassLoader.defaultOpLoader(), "/mesh/normals" )
 
 		op = p.load()()
 		self.failUnless( isinstance( op, IECore.Op ) )
 
 if __name__ == "__main__":
 	unittest.main()
-

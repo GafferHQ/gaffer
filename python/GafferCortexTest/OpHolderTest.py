@@ -41,14 +41,16 @@ import IECore
 
 import Gaffer
 import GafferTest
+import GafferCortex
+import GafferCortexTest
 
 class OpHolderTest( GafferTest.TestCase ) :
 
 	def testType( self ) :
 
-		n = Gaffer.OpHolder()
+		n = GafferCortex.OpHolder()
 		self.assertEqual( n.typeName(), "GafferCortex::OpHolder" )
-		self.failUnless( n.isInstanceOf( Gaffer.ParameterisedHolderComputeNode.staticTypeId() ) )
+		self.failUnless( n.isInstanceOf( GafferCortex.ParameterisedHolderComputeNode.staticTypeId() ) )
 		self.failUnless( n.isInstanceOf( Gaffer.ComputeNode.staticTypeId() ) )
 		self.failUnless( n.isInstanceOf( Gaffer.DependencyNode.staticTypeId() ) )
 
@@ -58,8 +60,8 @@ class OpHolderTest( GafferTest.TestCase ) :
 		self.failUnless( "P" in m )
 		self.failUnless( "renamed" not in m )
 
-		n = Gaffer.OpHolder()
-		opSpec = GafferTest.ParameterisedHolderTest.classSpecification( "primitive/renameVariables", "IECORE_OP_PATHS" )[:-1]
+		n = GafferCortex.OpHolder()
+		opSpec = GafferCortexTest.ParameterisedHolderTest.classSpecification( "primitive/renameVariables", "IECORE_OP_PATHS" )[:-1]
 		n.setOp( *opSpec )
 
 		n["parameters"]["input"].setValue( m )
@@ -77,8 +79,8 @@ class OpHolderTest( GafferTest.TestCase ) :
 
 	def testAffects( self ) :
 
-		n = Gaffer.OpHolder()
-		opSpec = GafferTest.ParameterisedHolderTest.classSpecification( "primitive/renameVariables", "IECORE_OP_PATHS" )[:-1]
+		n = GafferCortex.OpHolder()
+		opSpec = GafferCortexTest.ParameterisedHolderTest.classSpecification( "primitive/renameVariables", "IECORE_OP_PATHS" )[:-1]
 		n.setOp( *opSpec )
 
 		a = n.affects( n["parameters"]["input"] )
@@ -89,8 +91,8 @@ class OpHolderTest( GafferTest.TestCase ) :
 
 		s = Gaffer.ScriptNode()
 
-		s["op"] = Gaffer.OpHolder()
-		opSpec = GafferTest.ParameterisedHolderTest.classSpecification( "primitive/renameVariables", "IECORE_OP_PATHS" )[:-1]
+		s["op"] = GafferCortex.OpHolder()
+		opSpec = GafferCortexTest.ParameterisedHolderTest.classSpecification( "primitive/renameVariables", "IECORE_OP_PATHS" )[:-1]
 		s["op"].setOp( *opSpec )
 
 		ss = s.serialise()
@@ -119,7 +121,7 @@ class OpHolderTest( GafferTest.TestCase ) :
 
 				return IECore.IntData( len( self["sequence"].getFileSequenceValue().fileNames() ) )
 
-		holder = Gaffer.OpHolder()
+		holder = GafferCortex.OpHolder()
 		holder.setParameterised( TestOp() )
 		holder["parameters"]["sequence"].setValue( "test.###.exr 1-3" )
 
@@ -127,12 +129,11 @@ class OpHolderTest( GafferTest.TestCase ) :
 
 	def testRunTimeTyped( self ) :
 
-		n = Gaffer.OpHolder()
+		n = GafferCortex.OpHolder()
 
 		self.assertEqual( n.typeName(), "GafferCortex::OpHolder" )
 		self.assertEqual( IECore.RunTimeTyped.typeNameFromTypeId( n.typeId() ), "GafferCortex::OpHolder" )
-		self.assertEqual( IECore.RunTimeTyped.baseTypeId( n.typeId() ), Gaffer.ParameterisedHolderComputeNode.staticTypeId() )
+		self.assertEqual( IECore.RunTimeTyped.baseTypeId( n.typeId() ), GafferCortex.ParameterisedHolderComputeNode.staticTypeId() )
 
 if __name__ == "__main__":
 	unittest.main()
-

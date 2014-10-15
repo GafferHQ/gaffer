@@ -42,14 +42,15 @@ import IECore
 
 import Gaffer
 import GafferTest
+import GafferCortex
 
 class ObjectReaderTest( GafferTest.TestCase ) :
 
 	def test( self ) :
 
-		fileName = os.path.dirname( __file__ ) + "/images/checker.exr"
+		fileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/checker.exr" )
 
-		node = Gaffer.ObjectReader()
+		node = GafferCortex.ObjectReader()
 		node["fileName"].setValue( fileName )
 		self.assertEqual( node["fileName"].getValue(), fileName )
 
@@ -60,10 +61,10 @@ class ObjectReaderTest( GafferTest.TestCase ) :
 
 	def testChangingFileType( self ) :
 
-		imageFileName = os.path.dirname( __file__ ) + "/images/checker.exr"
-		cobFileName = os.path.dirname( __file__ ) + "/cobs/pSphereShape1.cob"
+		imageFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/checker.exr" )
+		cobFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/cobs/pSphereShape1.cob" )
 
-		node = Gaffer.ObjectReader()
+		node = GafferCortex.ObjectReader()
 		node["fileName"].setValue( imageFileName )
 		reader = IECore.Reader.create( imageFileName )
 		self.assertEqual( reader.read(), node["out"].getValue() )
@@ -75,7 +76,7 @@ class ObjectReaderTest( GafferTest.TestCase ) :
 	def testReadAfterSerialisation( self ) :
 
 		s = Gaffer.ScriptNode()
-		s["n"] = Gaffer.ObjectReader()
+		s["n"] = GafferCortex.ObjectReader()
 		s["n"]["fileName"].setValue( os.path.dirname( __file__ ) + "/images/checker.exr" )
 
 		r = s["n"]["out"].getValue()
@@ -89,9 +90,8 @@ class ObjectReaderTest( GafferTest.TestCase ) :
 
 	def testReadNoFilename( self ) :
 
-		r = Gaffer.ObjectReader()
+		r = GafferCortex.ObjectReader()
 		self.assertEqual( r["out"].getValue(), r["out"].defaultValue() )
 
 if __name__ == "__main__":
 	unittest.main()
-

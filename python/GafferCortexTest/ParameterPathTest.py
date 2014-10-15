@@ -40,6 +40,7 @@ import IECore
 
 import Gaffer
 import GafferTest
+import GafferCortex
 
 class ParameterPathTest( GafferTest.TestCase ) :
 
@@ -117,7 +118,7 @@ class ParameterPathTest( GafferTest.TestCase ) :
 
 		p = self.__parameters()
 
-		p = Gaffer.ParameterPath( p, "/" )
+		p = GafferCortex.ParameterPath( p, "/" )
 
 		self.failUnless( p.isValid() )
 		self.failIf( p.isLeaf() )
@@ -125,7 +126,7 @@ class ParameterPathTest( GafferTest.TestCase ) :
 		children = p.children()
 		self.assertEqual( len( children ), 4 )
 		for child in children :
-			self.failUnless( isinstance( child, Gaffer.ParameterPath ) )
+			self.failUnless( isinstance( child, GafferCortex.ParameterPath ) )
 			if child[-1] in ( "c", "cv" ) :
 				self.failIf( child.isLeaf() )
 			else :
@@ -134,68 +135,68 @@ class ParameterPathTest( GafferTest.TestCase ) :
 
 	def testChildOrdering( self ) :
 
-		p = Gaffer.ParameterPath( self.__parameters(), "/" )
+		p = GafferCortex.ParameterPath( self.__parameters(), "/" )
 
 		self.assertEqual(
 			[ str( c ) for c in p.children() ],
 			[ "/a", "/b", "/c", "/cv" ]
 		)
 
-		p = Gaffer.ParameterPath( self.__parameters(), "/c" )
+		p = GafferCortex.ParameterPath( self.__parameters(), "/c" )
 		self.assertEqual(
 			[ str( c ) for c in p.children() ],
 			[ "/c/d", "/c/e" ]
 		)
 
- 	def testCopy( self ) :
+	def testCopy( self ) :
 
- 		p = Gaffer.ParameterPath( self.__parameters(), "/c" )
+		p = GafferCortex.ParameterPath( self.__parameters(), "/c" )
 
 		pp = p.copy()
- 		self.assertEqual( str( pp ), str( p ) )
- 		self.assertEqual( pp, p )
- 		self.failIf( p != p )
+		self.assertEqual( str( pp ), str( p ) )
+		self.assertEqual( pp, p )
+		self.failIf( p != p )
 
- 		del pp[-1]
- 		self.assertNotEqual( str( pp ), str( p ) )
- 		self.assertNotEqual( pp, p )
- 		self.failUnless( pp != p )
+		del pp[-1]
+		self.assertNotEqual( str( pp ), str( p ) )
+		self.assertNotEqual( pp, p )
+		self.failUnless( pp != p )
 
- 	def testRepr( self ) :
+	def testRepr( self ) :
 
- 		p = Gaffer.ParameterPath( self.__parameters(), "/c" )
+		p = GafferCortex.ParameterPath( self.__parameters(), "/c" )
 
- 		self.assertEqual( repr( p ), "ParameterPath( '/c' )" )
+		self.assertEqual( repr( p ), "ParameterPath( '/c' )" )
 
 	def testForcedLeafTypes( self ) :
 
- 		p = Gaffer.ParameterPath( self.__parameters(), "/c" )
+		p = GafferCortex.ParameterPath( self.__parameters(), "/c" )
 
-		self.assertEqual( Gaffer.ParameterPath( self.__parameters(), "/" ).isLeaf(), False )
-		self.assertEqual( Gaffer.ParameterPath( self.__parameters(), "/a" ).isLeaf(), True )
-		self.assertEqual( Gaffer.ParameterPath( self.__parameters(), "/b" ).isLeaf(), True )
-		self.assertEqual( Gaffer.ParameterPath( self.__parameters(), "/c" ).isLeaf(), False )
-		self.assertEqual( Gaffer.ParameterPath( self.__parameters(), "/c/d" ).isLeaf(), True )
-		self.assertEqual( Gaffer.ParameterPath( self.__parameters(), "/c/e" ).isLeaf(), True )
-		self.assertEqual( Gaffer.ParameterPath( self.__parameters(), "/cv" ).isLeaf(), False )
-		self.assertEqual( Gaffer.ParameterPath( self.__parameters(), "/cv/s" ).isLeaf(), True )
-		self.assertEqual( Gaffer.ParameterPath( self.__parameters(), "/cv/b" ).isLeaf(), True )
+		self.assertEqual( GafferCortex.ParameterPath( self.__parameters(), "/" ).isLeaf(), False )
+		self.assertEqual( GafferCortex.ParameterPath( self.__parameters(), "/a" ).isLeaf(), True )
+		self.assertEqual( GafferCortex.ParameterPath( self.__parameters(), "/b" ).isLeaf(), True )
+		self.assertEqual( GafferCortex.ParameterPath( self.__parameters(), "/c" ).isLeaf(), False )
+		self.assertEqual( GafferCortex.ParameterPath( self.__parameters(), "/c/d" ).isLeaf(), True )
+		self.assertEqual( GafferCortex.ParameterPath( self.__parameters(), "/c/e" ).isLeaf(), True )
+		self.assertEqual( GafferCortex.ParameterPath( self.__parameters(), "/cv" ).isLeaf(), False )
+		self.assertEqual( GafferCortex.ParameterPath( self.__parameters(), "/cv/s" ).isLeaf(), True )
+		self.assertEqual( GafferCortex.ParameterPath( self.__parameters(), "/cv/b" ).isLeaf(), True )
 
 		kw = { "forcedLeafTypes" : ( IECore.CompoundVectorParameter, ) }
 
-		self.assertEqual( Gaffer.ParameterPath( self.__parameters(), "/", **kw ).isLeaf(), False )
-		self.assertEqual( Gaffer.ParameterPath( self.__parameters(), "/a", **kw ).isLeaf(), True )
-		self.assertEqual( Gaffer.ParameterPath( self.__parameters(), "/b", **kw ).isLeaf(), True )
-		self.assertEqual( Gaffer.ParameterPath( self.__parameters(), "/c", **kw ).isLeaf(), False )
-		self.assertEqual( Gaffer.ParameterPath( self.__parameters(), "/c/d", **kw ).isLeaf(), True )
-		self.assertEqual( Gaffer.ParameterPath( self.__parameters(), "/c/e", **kw ).isLeaf(), True )
-		self.assertEqual( Gaffer.ParameterPath( self.__parameters(), "/cv", **kw ).isLeaf(), True )
+		self.assertEqual( GafferCortex.ParameterPath( self.__parameters(), "/", **kw ).isLeaf(), False )
+		self.assertEqual( GafferCortex.ParameterPath( self.__parameters(), "/a", **kw ).isLeaf(), True )
+		self.assertEqual( GafferCortex.ParameterPath( self.__parameters(), "/b", **kw ).isLeaf(), True )
+		self.assertEqual( GafferCortex.ParameterPath( self.__parameters(), "/c", **kw ).isLeaf(), False )
+		self.assertEqual( GafferCortex.ParameterPath( self.__parameters(), "/c/d", **kw ).isLeaf(), True )
+		self.assertEqual( GafferCortex.ParameterPath( self.__parameters(), "/c/e", **kw ).isLeaf(), True )
+		self.assertEqual( GafferCortex.ParameterPath( self.__parameters(), "/cv", **kw ).isLeaf(), True )
 
-		self.assertEqual( Gaffer.ParameterPath( self.__parameters(), "/cv", **kw ).children(), [] )
+		self.assertEqual( GafferCortex.ParameterPath( self.__parameters(), "/cv", **kw ).children(), [] )
 
 	def testForcedLeafTypesCopy( self ) :
 
-		p = Gaffer.ParameterPath( self.__parameters(), "/cv", forcedLeafTypes = ( IECore.CompoundVectorParameter, ) )
+		p = GafferCortex.ParameterPath( self.__parameters(), "/cv", forcedLeafTypes = ( IECore.CompoundVectorParameter, ) )
 		self.assertEqual( p.isLeaf(), True )
 
 		pp = p.copy()
@@ -203,7 +204,7 @@ class ParameterPathTest( GafferTest.TestCase ) :
 
 	def testChildForcedLeafTypes( self ) :
 
-		p = Gaffer.ParameterPath( self.__parameters(), "/", forcedLeafTypes = ( IECore.CompoundVectorParameter, ) )
+		p = GafferCortex.ParameterPath( self.__parameters(), "/", forcedLeafTypes = ( IECore.CompoundVectorParameter, ) )
 
 		c = p.children()[3]
 		self.assertEqual( str( c ), "/cv" )
@@ -211,7 +212,7 @@ class ParameterPathTest( GafferTest.TestCase ) :
 
 	def testRelative( self ) :
 
-		p = Gaffer.ParameterPath( self.__parameters(), "c", forcedLeafTypes = ( IECore.CompoundVectorParameter, ) )
+		p = GafferCortex.ParameterPath( self.__parameters(), "c", forcedLeafTypes = ( IECore.CompoundVectorParameter, ) )
 
 		self.assertEqual( str( p ), "c" )
 		self.assertTrue( "c/d" in [ str( c ) for c in p.children() ] )
@@ -224,4 +225,3 @@ class ParameterPathTest( GafferTest.TestCase ) :
 
 if __name__ == "__main__":
 	unittest.main()
-

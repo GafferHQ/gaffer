@@ -40,6 +40,8 @@ import IECore
 
 import Gaffer
 import GafferTest
+import GafferCortex
+import GafferCortexTest
 
 class TestOp (IECore.Op) :
 
@@ -60,31 +62,31 @@ class ExecutableOpHolderTest( GafferTest.TestCase ) :
 
 	def testType( self ) :
 
-		n = Gaffer.ExecutableOpHolder()
+		n = GafferCortex.ExecutableOpHolder()
 		self.assertEqual( n.typeName(), "GafferCortex::ExecutableOpHolder" )
-		self.failUnless( n.isInstanceOf( Gaffer.ParameterisedHolderExecutableNode.staticTypeId() ) )
+		self.failUnless( n.isInstanceOf( GafferCortex.ParameterisedHolderExecutableNode.staticTypeId() ) )
 		self.failUnless( n.isInstanceOf( Gaffer.Node.staticTypeId() ) )
 
 	def testIsExecutable( self ) :
 
-		self.assertTrue( isinstance( Gaffer.ExecutableOpHolder(), Gaffer.ExecutableNode ) )
+		self.assertTrue( isinstance( GafferCortex.ExecutableOpHolder(), Gaffer.ExecutableNode ) )
 
 	def testExecutablePlugs( self ) :
 
-		n = Gaffer.ExecutableOpHolder()
+		n = GafferCortex.ExecutableOpHolder()
 		self.assertEqual( n['requirement'].direction(), Gaffer.Plug.Direction.Out )
 		self.assertEqual( n['requirements'].direction(), Gaffer.Plug.Direction.In )
 
 	def testSetOp( self ) :
 
-		n = Gaffer.ExecutableOpHolder()
-		opSpec = GafferTest.ParameterisedHolderTest.classSpecification( "primitive/renameVariables", "IECORE_OP_PATHS" )[:-1]
+		n = GafferCortex.ExecutableOpHolder()
+		opSpec = GafferCortexTest.ParameterisedHolderTest.classSpecification( "primitive/renameVariables", "IECORE_OP_PATHS" )[:-1]
 		n.setOp( *opSpec )
 
 	def testExecutableMethods( self ) :
 
-		n = Gaffer.ExecutableOpHolder()
-		opSpec = GafferTest.ParameterisedHolderTest.classSpecification( "primitive/renameVariables", "IECORE_OP_PATHS" )[:-1]
+		n = GafferCortex.ExecutableOpHolder()
+		opSpec = GafferCortexTest.ParameterisedHolderTest.classSpecification( "primitive/renameVariables", "IECORE_OP_PATHS" )[:-1]
 		n.setOp( *opSpec )
 		c = Gaffer.Context()
 		h = n.hash(c)
@@ -92,14 +94,14 @@ class ExecutableOpHolderTest( GafferTest.TestCase ) :
 
 	def testSetParameterised( self ) :
 
-		n = Gaffer.ExecutableOpHolder()
+		n = GafferCortex.ExecutableOpHolder()
 		op = TestOp()
 		n.setParameterised( op )
 		self.assertEqual( op, n.getOp() )
 
 	def testExecute( self ) :
 
-		n = Gaffer.ExecutableOpHolder()
+		n = GafferCortex.ExecutableOpHolder()
 		op = TestOp()
 		n.setParameterised( op )
 		script = n.scriptNode()
@@ -110,7 +112,7 @@ class ExecutableOpHolderTest( GafferTest.TestCase ) :
 
 	def testContextSubstitutions( self ) :
 
-		n = Gaffer.ExecutableOpHolder()
+		n = GafferCortex.ExecutableOpHolder()
 		op = TestOp()
 		n.setParameterised( op )
 		self.assertEqual( op.counter, 0 )
@@ -144,10 +146,10 @@ class ExecutableOpHolderTest( GafferTest.TestCase ) :
 
 	def testRequirements( self ) :
 
-		n1 = Gaffer.ExecutableOpHolder()
-		n2 = Gaffer.ExecutableOpHolder()
-		n2a = Gaffer.ExecutableOpHolder()
-		n2b = Gaffer.ExecutableOpHolder()
+		n1 = GafferCortex.ExecutableOpHolder()
+		n2 = GafferCortex.ExecutableOpHolder()
+		n2a = GafferCortex.ExecutableOpHolder()
+		n2b = GafferCortex.ExecutableOpHolder()
 
 		r1 = Gaffer.Plug( name = "r1" )
 		n1['requirements'].addChild( r1 )
@@ -179,9 +181,9 @@ class ExecutableOpHolderTest( GafferTest.TestCase ) :
 	def testSerialise( self ) :
 
 		s = Gaffer.ScriptNode()
-		s["n"] = Gaffer.ExecutableOpHolder()
+		s["n"] = GafferCortex.ExecutableOpHolder()
 
-		opSpec = GafferTest.ParameterisedHolderTest.classSpecification( "primitive/renameVariables", "IECORE_OP_PATHS" )[:-1]
+		opSpec = GafferCortexTest.ParameterisedHolderTest.classSpecification( "primitive/renameVariables", "IECORE_OP_PATHS" )[:-1]
 		s["n"].setOp( *opSpec )
 
 		s2 = Gaffer.ScriptNode()
@@ -196,7 +198,7 @@ class ExecutableOpHolderTest( GafferTest.TestCase ) :
 		c2 = Gaffer.Context()
 		c2.setFrame( 2 )
 
-		n = Gaffer.ExecutableOpHolder()
+		n = GafferCortex.ExecutableOpHolder()
 		op = TestOp()
 
 		# output doesn't vary until we set an op
@@ -225,4 +227,3 @@ class ExecutableOpHolderTest( GafferTest.TestCase ) :
 
 if __name__ == "__main__":
 	unittest.main()
-
