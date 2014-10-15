@@ -522,6 +522,33 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		self.assertFalse( os.path.isfile( s.context().substitute( s["n2"]["fileName"].getValue() ) ) )
 		self.assertFalse( os.path.isfile( s.context().substitute( s["n1"]["fileName"].getValue() ) ) )
 	
+	def testKill( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n1"] = GafferTest.TextWriter()
+		s["n1"]["fileName"].setValue( "/tmp/dispatcherTest/n1_####.txt" )
+		s["n1"]["text"].setValue( "n1 on ${frame}" )
+		
+		dispatcher = Gaffer.Dispatcher.create( "LocalTest" )
+		dispatcher["executeInBackground"].setValue( True )
+		
+		self.assertEqual( len(dispatcher.jobPool().jobs()), 0 )
+		dispatcher.dispatch( [ s["n1"] ] )
+		self.assertEqual( len(dispatcher.jobPool().jobs()), 1 )
+
+		# the execution hasn't finished yet
+		self.assertFalse( os.path.isfile( s.context().substitute( s["n1"]["fileName"].getValue() ) ) )
+		
+		# kill the job
+		dispatcher.jobPool().jobs()[0].kill()
+		
+		# wait long enough for the process to die
+		dispatcher.jobPool().waitForAll()
+		self.assertEqual( len(dispatcher.jobPool().jobs()), 0 )
+		
+		# make sure it never wrote the file
+		self.assertFalse( os.path.isfile( s.context().substitute( s["n1"]["fileName"].getValue() ) ) )
+	
 	def tearDown( self ) :
 
 		shutil.rmtree( "/tmp/dispatcherTest", ignore_errors = True )

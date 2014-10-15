@@ -36,6 +36,7 @@
 
 import os
 import errno
+import signal
 import subprocess
 import threading
 import time
@@ -55,7 +56,7 @@ class LocalDispatcher( Gaffer.Dispatcher ) :
 		
 		self.__jobPool = jobPool if jobPool else LocalDispatcher.defaultJobPool()
 
-	_BatchStatus = IECore.Enum.create( "Waiting", "Running", "Complete", "Failed" )
+	_BatchStatus = IECore.Enum.create( "Waiting", "Running", "Complete", "Failed", "Killed" )
 	
 	class Job :
 		
@@ -89,6 +90,23 @@ class LocalDispatcher( Gaffer.Dispatcher ) :
 		def _fail( self ) :
 			
 			LocalDispatcher._setStatus( self.__batch, LocalDispatcher._BatchStatus.Failed )
+		
+		def kill( self ) :
+			
+			if not self.failed() :
+				self.__kill( self.__batch )
+		
+		def killed( self ) :
+			
+			return "killed" in self.__batch.blindData().keys()
+		
+		def __kill( self, batch ) :
+			
+			# this doesn't set the status to Killed because that could
+			# run into a race condition with a background dispatch.
+			batch.blindData()["killed"] = IECore.BoolData( True )
+			for requirement in batch.requirements() :
+				self.__kill( requirement )
 	
 	class JobPool( IECore.RunTimeTyped ) :
 		
@@ -197,7 +215,11 @@ class LocalDispatcher( Gaffer.Dispatcher ) :
 		for currentBatch in batch.requirements() :
 			if not self.__foregroundDispatch( job, currentBatch, messageTitle ) :
 				return False
-
+		
+		if batch.blindData().get( "killed" ) :
+			self.__dispatchKilled( job, batch, messageTitle )
+			return False
+		
 		if not batch.node() or LocalDispatcher._getStatus( batch ) == LocalDispatcher._BatchStatus.Complete :
 			LocalDispatcher._setStatus( batch, LocalDispatcher._BatchStatus.Complete )
 			return True
@@ -240,6 +262,10 @@ class LocalDispatcher( Gaffer.Dispatcher ) :
 			if not self.__backgroundDispatch( job, currentBatch, scriptFile, messageTitle ) :
 				return False
 
+		if batch.blindData().get( "killed" ) :
+			self.__dispatchKilled( job, batch, messageTitle )
+			return False
+		
 		if not batch.node() :
 			self.__dispatchComplete( job, batch, messageTitle )
 			return True
@@ -271,8 +297,17 @@ class LocalDispatcher( Gaffer.Dispatcher ) :
 
 		LocalDispatcher._setStatus( batch, LocalDispatcher._BatchStatus.Running )
 		IECore.msg( IECore.MessageHandler.Level.Info, messageTitle, " ".join( cmd ) )
-		result = subprocess.call( cmd )
-		if result :
+		process = subprocess.Popen( " ".join( cmd ), shell=True, preexec_fn=os.setsid )
+		while process.poll() is None :
+			
+			if batch.blindData().get( "killed" ) :
+				os.killpg( process.pid, signal.SIGTERM )
+				self.__dispatchKilled( job, batch, messageTitle )
+				return False
+			
+			time.sleep( 0.01 )
+		
+		if process.returncode :
 			self.__dispatchFailed( job, batch, messageTitle )
 			return False
 
@@ -306,6 +341,12 @@ class LocalDispatcher( Gaffer.Dispatcher ) :
 		self.__jobPool._fail( job )
 		frames = str( IECore.frameListFromList( [ int(x) for x in batch.frames() ] ) )
 		IECore.msg( IECore.MessageHandler.Level.Error, messageTitle, "Failed to execute " + batch.node().getName() + " on frames " + frames )
+	
+	def __dispatchKilled( self, job, batch, messageTitle ) :
+		
+		LocalDispatcher._setStatus( batch, LocalDispatcher._BatchStatus.Killed )
+		self.__jobPool._remove( job )
+		IECore.msg( IECore.MessageHandler.Level.Info, messageTitle, "Killed " + job.name() )
 	
 	@staticmethod
 	def _doSetupPlugs( parentPlug ) :
