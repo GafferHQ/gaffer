@@ -130,17 +130,23 @@ class DispatcherWindow( GafferUI.Window ) :
 
 		self.__nodes = nodes
 		self.__updateTitle()
-
-	__instance = None
-	## Returns the DispatcherWindow, creating one if necessary.
+	
+	## Acquires the DispatcherWindow for the specified application.
 	@staticmethod
-	def acquire() :
+	def acquire( applicationOrApplicationRoot ) :
 		
-		if DispatcherWindow.__instance is not None and DispatcherWindow.__instance() :
-			window = DispatcherWindow.__instance()
+		if isinstance( applicationOrApplicationRoot, Gaffer.Application ) :
+			applicationRoot = applicationOrApplicationRoot.root()
 		else :
-			window = DispatcherWindow()
-			DispatcherWindow.__instance = weakref.ref( window )
+			assert( isinstance( applicationOrApplicationRoot, Gaffer.ApplicationRoot ) )
+			applicationRoot = applicationOrApplicationRoot
+		
+		window = getattr( applicationRoot, "_dispatcherWindow", None )
+		if window :
+			return window
+		
+		window = DispatcherWindow()
+		applicationRoot._dispatcherWindow = window
 		
 		return window
 	
@@ -399,7 +405,7 @@ def _dispatch( nodes ) :
 
 def __dispatcherWindow( script ) :
 	
-	window = DispatcherWindow.acquire()
+	window = DispatcherWindow.acquire( script.applicationRoot() )
 	scriptWindow = GafferUI.ScriptWindow.acquire( script )
 	scriptWindow.addChildWindow( window )
 	
