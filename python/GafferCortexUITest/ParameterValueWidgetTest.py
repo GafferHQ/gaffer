@@ -1,6 +1,7 @@
 ##########################################################################
 #
 #  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012, John Haddon. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,27 +36,60 @@
 ##########################################################################
 
 import unittest
-import weakref
 
+import IECore
+
+import Gaffer
 import GafferUI
 import GafferUITest
-import GafferCortex
-import GafferCortexTest
+import GafferCortexUI
 
-class CompoundParameterValueWidgetTest( GafferUITest.TestCase ) :
+class ParameterValueWidgetTest( GafferUITest.TestCase ) :
 
-	def testLifetime( self ) :
+	def testCreate( self ) :
 
-		n = GafferCortex.OpHolder()
-		opSpec = GafferCortexTest.ParameterisedHolderTest.classSpecification( "image/grade", "IECORE_OP_PATHS" )[:-1]
-		n.setOp( *opSpec )
+		n = Gaffer.Node()
+		p = IECore.StringParameter( "s", "", "" )
 
-		ui = GafferUI.CompoundParameterValueWidget( n.parameterHandler() )
-		w = weakref.ref( ui )
-		del ui
+		h = Gaffer.ParameterHandler.create( p )
+		h.setupPlug( n )
 
-		self.assertEqual( w(), None )
+		w = GafferCortexUI.ParameterValueWidget.create( h )
+		self.failUnless( isinstance( w, GafferCortexUI.StringParameterValueWidget ) )
+
+	def testCreateWithUIHint( self ) :
+
+		class CustomParameterValueWidget( GafferCortexUI.ParameterValueWidget ) :
+
+			def __init__( self, parameterHandler, **kw ) :
+
+				GafferCortexUI.ParameterValueWidget.__init__( self, GafferUI.StringPlugValueWidget( parameterHandler.plug() ), parameterHandler )
+
+		GafferCortexUI.ParameterValueWidget.registerType( IECore.StringParameter.staticTypeId(), CustomParameterValueWidget, "CustomUI" )
+
+		n = Gaffer.Node()
+		p = IECore.StringParameter( "s", "", "" )
+
+		h = Gaffer.ParameterHandler.create( p )
+		h.setupPlug( n )
+
+		w = GafferCortexUI.ParameterValueWidget.create( h )
+		self.failUnless( isinstance( w, GafferCortexUI.StringParameterValueWidget ) )
+
+		p.userData()["UI"] = IECore.CompoundObject( { "typeHint" : IECore.StringData( "CustomUI" ) } )
+		w = GafferCortexUI.ParameterValueWidget.create( h )
+		self.failUnless( isinstance( w, CustomParameterValueWidget ) )
+
+	def testCreateAlwaysReturnsParameterValueWidgetInstance( self ) :
+
+		n = Gaffer.Node()
+		p = IECore.V2fParameter( "v", "", IECore.V2f( 1 ) )
+
+		h = Gaffer.ParameterHandler.create( p )
+		h.setupPlug( n )
+
+		w = GafferCortexUI.ParameterValueWidget.create( h )
+		self.failUnless( isinstance( w, GafferCortexUI.ParameterValueWidget ) )
 
 if __name__ == "__main__":
 	unittest.main()
-
