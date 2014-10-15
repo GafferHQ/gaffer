@@ -46,7 +46,6 @@ import OpBrowserMode
 # UI for Parameters and ParameterisedHolders
 
 from OpDialogue import OpDialogue
-from ParameterisedHolderNodeUI import ParameterisedHolderNodeUI
 from ParameterValueWidget import ParameterValueWidget
 from PresetsOnlyParameterValueWidget import PresetsOnlyParameterValueWidget
 from CompoundParameterValueWidget import CompoundParameterValueWidget
@@ -66,6 +65,7 @@ import ParameterPresets
 
 # Specific node uis
 
+import ParameterisedHolderUI
 import ObjectReaderUI
 import ObjectWriterUI
 

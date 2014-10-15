@@ -47,7 +47,11 @@ import GafferUI
 import GafferCortex
 import GafferCortexUI
 
-class ParameterisedHolderNodeUI( GafferUI.NodeUI ) :
+##########################################################################
+# NodeUI
+##########################################################################
+
+class _ParameterisedHolderNodeUI( GafferUI.NodeUI ) :
 
 	def __init__( self, node, readOnly=False, **kw ) :
 
@@ -77,9 +81,9 @@ class ParameterisedHolderNodeUI( GafferUI.NodeUI ) :
 
 		self.__parameterValueWidget.plugValueWidget().setReadOnly( readOnly )
 
-GafferUI.NodeUI.registerNodeUI( GafferCortex.ParameterisedHolderNode, ParameterisedHolderNodeUI )
-GafferUI.NodeUI.registerNodeUI( GafferCortex.ParameterisedHolderComputeNode, ParameterisedHolderNodeUI )
-GafferUI.NodeUI.registerNodeUI( GafferCortex.ParameterisedHolderDependencyNode, ParameterisedHolderNodeUI )
+GafferUI.NodeUI.registerNodeUI( GafferCortex.ParameterisedHolderNode, _ParameterisedHolderNodeUI )
+GafferUI.NodeUI.registerNodeUI( GafferCortex.ParameterisedHolderComputeNode, _ParameterisedHolderNodeUI )
+GafferUI.NodeUI.registerNodeUI( GafferCortex.ParameterisedHolderDependencyNode, _ParameterisedHolderNodeUI )
 
 ##########################################################################
 # Info button
