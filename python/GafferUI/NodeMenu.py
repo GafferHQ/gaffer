@@ -148,34 +148,3 @@ class NodeMenu :
 			nodeGraph.frame( [ node ], extend = True )
 
 		return f
-
-	## Utility function to append menu items to definition. One item will
-	# be created for each class found on the specified search path.
-	def appendParameterisedHolders( self, path, parameterisedHolderType, searchPathEnvVar, matchExpression = re.compile( ".*" ) ) :
-
-		if isinstance( matchExpression, str ) :
-			matchExpression = re.compile( fnmatch.translate( matchExpression ) )
-
-		self.definition().append( path, { "subMenu" : IECore.curry( self.__parameterisedHolderMenu, parameterisedHolderType, searchPathEnvVar, matchExpression ) } )
-
-	@staticmethod
-	def __parameterisedHolderCreator( parameterisedHolderType, className, classVersion, searchPathEnvVar ) :
-
-		nodeName = className.rpartition( "/" )[-1]
-		node = parameterisedHolderType( nodeName )
-		node.setParameterised( className, classVersion, searchPathEnvVar )
-
-		return node
-
-	@staticmethod
-	def __parameterisedHolderMenu( parameterisedHolderType, searchPathEnvVar, matchExpression ) :
-
-		c = IECore.ClassLoader.defaultLoader( searchPathEnvVar )
-		d = IECore.MenuDefinition()
-		for n in c.classNames() :
-			if matchExpression.match( n ) :
-				nc = "/".join( [ IECore.CamelCase.toSpaced( x ) for x in n.split( "/" ) ] )
-				v = c.getDefaultVersion( n )
-				d.append( "/" + nc, { "command" : NodeMenu.nodeCreatorWrapper( IECore.curry( NodeMenu.__parameterisedHolderCreator, parameterisedHolderType, n, v, searchPathEnvVar ) ) } )
-
-		return d

@@ -37,6 +37,7 @@
 
 from __future__ import with_statement
 
+import re
 import pipes
 import fnmatch
 
@@ -201,3 +202,35 @@ for nodeType in (
 	Gaffer.Metadata.registerNodeDescription( nodeType, __nodeDescription )
 	Gaffer.Metadata.registerNodeValue( nodeType, "summary", __nodeSummary )
 	Gaffer.Metadata.registerPlugDescription( nodeType, "parameters.*", __plugDescription )
+
+##########################################################################
+# Node menu
+##########################################################################
+
+## Appends menu items for the creation of all Parameterised classes found on some searchpaths.
+def appendParameterisedHolders( menuDefinition, prefix, searchPathEnvVar, nodeCreator, matchExpression = re.compile( ".*" ) ) :
+
+	if isinstance( matchExpression, str ) :
+		matchExpression = re.compile( fnmatch.translate( matchExpression ) )
+
+	menuDefinition.append( prefix, { "subMenu" : IECore.curry( __parameterisedHolderMenu, nodeCreator, searchPathEnvVar, matchExpression ) } )
+
+def __parameterisedHolderCreator( nodeCreator, className, classVersion, searchPathEnvVar ) :
+
+	nodeName = className.rpartition( "/" )[-1]
+	node = nodeCreator( nodeName )
+	node.setParameterised( className, classVersion, searchPathEnvVar )
+
+	return node
+
+def __parameterisedHolderMenu( nodeCreator, searchPathEnvVar, matchExpression ) :
+
+	c = IECore.ClassLoader.defaultLoader( searchPathEnvVar )
+	d = IECore.MenuDefinition()
+	for n in c.classNames() :
+		if matchExpression.match( n ) :
+			nc = "/".join( [ IECore.CamelCase.toSpaced( x ) for x in n.split( "/" ) ] )
+			v = c.getDefaultVersion( n )
+			d.append( "/" + nc, { "command" : GafferUI.NodeMenu.nodeCreatorWrapper( IECore.curry( __parameterisedHolderCreator, nodeCreator, n, v, searchPathEnvVar ) ) } )
+
+	return d
