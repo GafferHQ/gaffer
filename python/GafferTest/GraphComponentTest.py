@@ -658,7 +658,21 @@ class GraphComponentTest( GafferTest.TestCase ) :
 
 	def testTypeNamePrefixes( self ) :
 
-		self.assertTypeNamesArePrefixed( Gaffer )
+		self.assertTypeNamesArePrefixed(
+			Gaffer,
+			# Ignore the names imported from GafferCortex into
+			# the Gaffer namespace - they're just for backwards
+			# compatibility.
+			namesToIgnore = set( [
+				"GafferCortex::ExecutableOpHolder",
+				"GafferCortex::ProceduralHolder",
+				"GafferCortex::OpHolder",
+				"GafferCortex::ParameterisedHolderNode",
+				"GafferCortex::ParameterisedHolderDependencyNode",
+				"GafferCortex::ParameterisedHolderComputeNode",
+				"GafferCortex::ParameterisedHolderExecutableNode",
+			] )
+		)
 		self.assertTypeNamesArePrefixed( GafferTest )
 
 	def testDefaultNames( self ) :

@@ -400,8 +400,8 @@ class ParameterisedHolderTest( GafferTest.TestCase ) :
 
 		n = Gaffer.ParameterisedHolderNode()
 
-		self.assertEqual( n.typeName(), "Gaffer::ParameterisedHolderNode" )
-		self.assertEqual( IECore.RunTimeTyped.typeNameFromTypeId( n.typeId() ), "Gaffer::ParameterisedHolderNode" )
+		self.assertEqual( n.typeName(), "GafferCortex::ParameterisedHolderNode" )
+		self.assertEqual( IECore.RunTimeTyped.typeNameFromTypeId( n.typeId() ), "GafferCortex::ParameterisedHolderNode" )
 		self.assertEqual( IECore.RunTimeTyped.baseTypeId( n.typeId() ), Gaffer.Node.staticTypeId() )
 
 	def testSerialisation( self ) :

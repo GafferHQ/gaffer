@@ -47,7 +47,7 @@ class ProceduralHolderTest( GafferTest.TestCase ) :
 	def testType( self ) :
 
 		n = Gaffer.ProceduralHolder()
-		self.assertEqual( n.typeName(), "Gaffer::ProceduralHolder" )
+		self.assertEqual( n.typeName(), "GafferCortex::ProceduralHolder" )
 		self.failUnless( n.isInstanceOf( Gaffer.ParameterisedHolderComputeNode ) )
 		self.failUnless( n.isInstanceOf( Gaffer.ComputeNode.staticTypeId() ) )
 		self.failUnless( n.isInstanceOf( Gaffer.DependencyNode.staticTypeId() ) )
@@ -89,8 +89,8 @@ class ProceduralHolderTest( GafferTest.TestCase ) :
 
 		n = Gaffer.ProceduralHolder()
 
-		self.assertEqual( n.typeName(), "Gaffer::ProceduralHolder" )
-		self.assertEqual( IECore.RunTimeTyped.typeNameFromTypeId( n.typeId() ), "Gaffer::ProceduralHolder" )
+		self.assertEqual( n.typeName(), "GafferCortex::ProceduralHolder" )
+		self.assertEqual( IECore.RunTimeTyped.typeNameFromTypeId( n.typeId() ), "GafferCortex::ProceduralHolder" )
 		self.assertEqual( IECore.RunTimeTyped.baseTypeId( n.typeId() ), Gaffer.ParameterisedHolderComputeNode.staticTypeId() )
 
 if __name__ == "__main__":

@@ -68,7 +68,7 @@ enum TypeId
 	M33fPlugTypeId = 110021,
 	M44fPlugTypeId = 110022,
 	BoolPlugTypeId = 110023,
-	ParameterisedHolderNodeTypeId = 110024,
+	ParameterisedHolderNodeTypeId = 110024, // obsolete - available for reuse
 	IntVectorDataPlugTypeId = 110025,
 	FloatVectorDataPlugTypeId = 110026,
 	StringVectorDataPlugTypeId = 110027,
@@ -76,8 +76,8 @@ enum TypeId
 	StandardSetTypeId = 110029,
 	ChildSetTypeId = 110030,
 	BoolVectorDataPlugTypeId = 110031,
-	OpHolderTypeId = 110032,
-	ProceduralHolderTypeId = 110033,
+	OpHolderTypeId = 110032, // obsolete - available for reuse
+	ProceduralHolderTypeId = 110033, // obsolete - available for reuse
 	PreferencesTypeId = 110034,
 	ObjectVectorPlugTypeId = 110035,
 	Box2iPlugTypeId = 110036,
@@ -96,16 +96,16 @@ enum TypeId
 	ContextVariablesComputeNodeTypeId = 110049,
 	RandomTypeId = 110050,
 	DependencyNodeTypeId = 110051,
-	ParameterisedHolderDependencyNodeTypeId = 110052,
+	ParameterisedHolderDependencyNodeTypeId = 110052, // obsolete - available for reuse
 	BoxTypeId = 110053,
 	InternedStringVectorDataPlugTypeId = 110054,
 	ExecutableNodeTypeId = 110055,
-	ExecutableOpHolderTypeId = 110056,
+	ExecutableOpHolderTypeId = 110056, // obsolete - available for reuse
 	DispatcherTypeId = 110057,
 	Transform2DPlugTypeId = 110058,
 	ReferenceTypeId = 110059,
 	ComputeNodeTypeId = 110060,
-	ParameterisedHolderComputeNodeTypeId = 110061,
+	ParameterisedHolderComputeNodeTypeId = 110061, // obsolete - available for reuse
 	Color3fVectorDataPlugTypeId = 110062,
 	ActionTypeId = 110063,
 	SimpleActionTypeId = 110064,
@@ -116,8 +116,8 @@ enum TypeId
 	BackdropTypeId = 110069,
 	SwitchComputeNodeTypeId = 110070,
 	SwitchDependencyNodeTypeId = 110071,
-	ParameterisedHolderExecutableNodeTypeId = 110072,
-	LastTypeId = 110200,
+	ParameterisedHolderExecutableNodeTypeId = 110072, // obsolete - available for reuse
+	LastTypeId = 110180,
 
 };
 
