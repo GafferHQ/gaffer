@@ -76,4 +76,4 @@ class ObjectReader( Gaffer.ComputeNode ) :
 
 		plug.setValue( reader.read() if reader else plug.defaultValue() )
 
-IECore.registerRunTimeTyped( ObjectReader, typeName = "Gaffer::ObjectReader" )
+IECore.registerRunTimeTyped( ObjectReader, typeName = "GafferCortex::ObjectReader" )

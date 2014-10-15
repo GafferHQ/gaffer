@@ -46,6 +46,7 @@ import IECore
 import Gaffer
 import GafferTest
 import GafferCortex
+import GafferCortexTest
 
 class ParameterisedHolderTest( GafferTest.TestCase ) :
 
@@ -1076,6 +1077,11 @@ class ParameterisedHolderTest( GafferTest.TestCase ) :
 		ph.setParameterised( c )
 
 		self.assertRaises( RuntimeError, ph["parameters"]["driver"].setValue, 1 )
+
+	def testTypeNamePrefixes( self ) :
+
+		self.assertTypeNamesArePrefixed( GafferCortex )
+		self.assertTypeNamesArePrefixed( GafferCortexTest )
 
 	def setUp( self ) :
 

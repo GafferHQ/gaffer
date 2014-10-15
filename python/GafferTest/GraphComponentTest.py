@@ -664,6 +664,8 @@ class GraphComponentTest( GafferTest.TestCase ) :
 			# the Gaffer namespace - they're just for backwards
 			# compatibility.
 			namesToIgnore = set( [
+				"GafferCortex::ObjectReader",
+				"GafferCortex::ObjectWriter",
 				"GafferCortex::ExecutableOpHolder",
 				"GafferCortex::ProceduralHolder",
 				"GafferCortex::OpHolder",

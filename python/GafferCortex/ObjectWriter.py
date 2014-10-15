@@ -134,4 +134,4 @@ class ObjectWriter( Gaffer.ExecutableNode ) :
 
 		self["parameters"].setFlags( Gaffer.Plug.Flags.Dynamic, False )
 
-IECore.registerRunTimeTyped( ObjectWriter, typeName = "Gaffer::ObjectWriter" )
+IECore.registerRunTimeTyped( ObjectWriter, typeName = "GafferCortex::ObjectWriter" )
