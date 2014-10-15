@@ -42,6 +42,7 @@ import IECore
 import Gaffer
 import GafferUI
 import GafferUITest
+import GafferCortex
 import GafferCortexUI
 
 class ParameterValueWidgetTest( GafferUITest.TestCase ) :
@@ -51,7 +52,7 @@ class ParameterValueWidgetTest( GafferUITest.TestCase ) :
 		n = Gaffer.Node()
 		p = IECore.StringParameter( "s", "", "" )
 
-		h = Gaffer.ParameterHandler.create( p )
+		h = GafferCortex.ParameterHandler.create( p )
 		h.setupPlug( n )
 
 		w = GafferCortexUI.ParameterValueWidget.create( h )
@@ -70,7 +71,7 @@ class ParameterValueWidgetTest( GafferUITest.TestCase ) :
 		n = Gaffer.Node()
 		p = IECore.StringParameter( "s", "", "" )
 
-		h = Gaffer.ParameterHandler.create( p )
+		h = GafferCortex.ParameterHandler.create( p )
 		h.setupPlug( n )
 
 		w = GafferCortexUI.ParameterValueWidget.create( h )
@@ -85,7 +86,7 @@ class ParameterValueWidgetTest( GafferUITest.TestCase ) :
 		n = Gaffer.Node()
 		p = IECore.V2fParameter( "v", "", IECore.V2f( 1 ) )
 
-		h = Gaffer.ParameterHandler.create( p )
+		h = GafferCortex.ParameterHandler.create( p )
 		h.setupPlug( n )
 
 		w = GafferCortexUI.ParameterValueWidget.create( h )
