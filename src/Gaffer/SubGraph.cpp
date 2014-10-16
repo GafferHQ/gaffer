@@ -34,45 +34,84 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_REFERENCE_H
-#define GAFFER_REFERENCE_H
-
 #include "Gaffer/SubGraph.h"
 
-namespace Gaffer
+using namespace IECore;
+using namespace Gaffer;
+
+IE_CORE_DEFINERUNTIMETYPED( SubGraph );
+
+SubGraph::SubGraph( const std::string &name )
+	:	DependencyNode( name )
 {
+}
 
-class Reference : public SubGraph
+SubGraph::~SubGraph()
 {
+}
 
-	public :
+void SubGraph::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
+{
+	DependencyNode::affects( input, outputs );
+}
 
-		Reference( const std::string &name=defaultName<Reference>() );
-		virtual ~Reference();
+BoolPlug *SubGraph::enabledPlug()
+{
+	return getChild<BoolPlug>( "enabled" );
+}
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::Reference, ReferenceTypeId, SubGraph );
+const BoolPlug *SubGraph::enabledPlug() const
+{
+	return getChild<BoolPlug>( "enabled" );
+}
 
-		/// The plugs that stores the name of the file being
-		/// referenced. This should be considered read-only, and the
-		/// load() method should be used to set it.
-		StringPlug *fileNamePlug();
-		const StringPlug *fileNamePlug() const;
+Plug *SubGraph::correspondingInput( const Plug *output )
+{
+	return const_cast<Plug *>( const_cast<const SubGraph *>( this )->SubGraph::correspondingInput( output ) );
+}
 
-		/// Loads the specified script, which should have been exported
-		/// using Box::exportForReference().
-		void load( const std::string &fileName );
+const Plug *SubGraph::correspondingInput( const Plug *output ) const
+{
+	const Plug *internalOutput = output->getInput<Plug>();
+	if( !internalOutput )
+	{
+		return NULL;
+	}
 
-	private :
+	const DependencyNode *node = IECore::runTimeCast<const DependencyNode>( internalOutput->node() );
+	if( !node )
+	{
+		return NULL;
+	}
 
-		bool isReferencePlug( const Plug *plug ) const;
+	const BoolPlug *externalEnabledPlug = enabledPlug();
+	if( !externalEnabledPlug )
+	{
+		return NULL;
+	}
 
-		static size_t g_firstPlugIndex;
+	const BoolPlug *internalEnabledPlug = node->enabledPlug();
+	if( !internalEnabledPlug )
+	{
+		return NULL;
+	}
 
-};
+	if( internalEnabledPlug->getInput<Plug>() != externalEnabledPlug )
+	{
+		return NULL;
+	}
 
-typedef FilteredChildIterator<TypePredicate<Reference> > ReferenceIterator;
-typedef FilteredRecursiveChildIterator<TypePredicate<Reference> > RecursiveReferenceIterator;
+	const Plug *internalInput = node->correspondingInput( internalOutput );
+	if( !internalInput )
+	{
+		return NULL;
+	}
 
-} // namespace Gaffer
+	const Plug *input = internalInput->getInput<Plug>();
+	if( !input || input->node() != this )
+	{
+		return NULL;
+	}
 
-#endif // GAFFER_REFERENCE_H
+	return input;
+}

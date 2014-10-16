@@ -84,6 +84,7 @@
 #include "GafferBindings/Serialisation.h"
 #include "GafferBindings/MetadataBinding.h"
 #include "GafferBindings/StringAlgoBinding.h"
+#include "GafferBindings/SubGraphBinding.h"
 
 using namespace boost::python;
 using namespace Gaffer;
@@ -126,6 +127,7 @@ BOOST_PYTHON_MODULE( _Gaffer )
 	bindTransform2DPlug();
 	bindCompoundDataPlug();
 	bindRandom();
+	bindSubGraph();
 	bindBox();
 	bindAction();
 	bindDispatcher();

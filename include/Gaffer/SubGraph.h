@@ -34,45 +34,42 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_REFERENCE_H
-#define GAFFER_REFERENCE_H
+#ifndef GAFFER_SUBGRAPH_H
+#define GAFFER_SUBGRAPH_H
 
-#include "Gaffer/SubGraph.h"
+#include "Gaffer/DependencyNode.h"
 
 namespace Gaffer
 {
 
-class Reference : public SubGraph
+class SubGraph : public DependencyNode
 {
 
 	public :
 
-		Reference( const std::string &name=defaultName<Reference>() );
-		virtual ~Reference();
+		SubGraph( const std::string &name=defaultName<SubGraph>() );
+		virtual ~SubGraph();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::Reference, ReferenceTypeId, SubGraph );
-
-		/// The plugs that stores the name of the file being
-		/// referenced. This should be considered read-only, and the
-		/// load() method should be used to set it.
-		StringPlug *fileNamePlug();
-		const StringPlug *fileNamePlug() const;
-
-		/// Loads the specified script, which should have been exported
-		/// using Box::exportForReference().
-		void load( const std::string &fileName );
-
-	private :
-
-		bool isReferencePlug( const Plug *plug ) const;
-
-		static size_t g_firstPlugIndex;
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::SubGraph, SubGraphTypeId, DependencyNode );
+		
+		/// Does nothing
+		void affects( const Plug *input, AffectedPlugsContainer &outputs ) const;
+		
+		/// Returns getChild<BoolPlug>( "enabled" ).
+		virtual BoolPlug *enabledPlug();
+		virtual const BoolPlug *enabledPlug() const;
+		
+		/// Implemented to allow a user to define a pass-through behaviour
+		/// by wiring the nodes inside this sub graph up appropriately. The
+		/// input to the output plug must be connected from a node inside
+		/// the sub graph, where that node itself has its enabled plug driven
+		/// by the external enabled plug, and the correspondingInput for the
+		/// node comes from one of the inputs to the sub graph.
+		virtual Plug *correspondingInput( const Plug *output );
+		virtual const Plug *correspondingInput( const Plug *output ) const;
 
 };
 
-typedef FilteredChildIterator<TypePredicate<Reference> > ReferenceIterator;
-typedef FilteredRecursiveChildIterator<TypePredicate<Reference> > RecursiveReferenceIterator;
-
 } // namespace Gaffer
 
-#endif // GAFFER_REFERENCE_H
+#endif // GAFFER_SUBGRAPH_H

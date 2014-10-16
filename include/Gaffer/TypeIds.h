@@ -117,6 +117,7 @@ enum TypeId
 	SwitchComputeNodeTypeId = 110070,
 	SwitchDependencyNodeTypeId = 110071,
 	ParameterisedHolderExecutableNodeTypeId = 110072,
+	SubGraphTypeId = 110073,
 	LastTypeId = 110200,
 
 };

@@ -51,7 +51,7 @@ IE_CORE_DEFINERUNTIMETYPED( Reference );
 size_t Reference::g_firstPlugIndex = 0;
 
 Reference::Reference( const std::string &name )
-	:	Node( name )
+	:	SubGraph( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new StringPlug( "fileName", Plug::In, "", Plug::Default & ~Plug::AcceptsInputs ) );
