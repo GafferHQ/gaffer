@@ -140,5 +140,20 @@ class CustomOptionsTest( GafferSceneTest.SceneTestCase ) :
 		self.assertTrue( "out.object" in dirtiedPlugs )
 		self.assertTrue( "out" in dirtiedPlugs )
 
+	def testSubstitution( self ) :
+
+		o = GafferScene.CustomOptions()
+		o["options"].addMember( "test", "${foo}" )
+
+		self.assertEqual( o["out"]["globals"].getValue()["option:test"], IECore.StringData( "" ) )
+		h = o["out"]["globals"].hash()
+
+		c = Gaffer.Context()
+		c["foo"] = "foo"
+
+		with c :
+			self.assertNotEqual( o["out"]["globals"].hash(), h )
+			self.assertEqual( o["out"]["globals"].getValue()["option:test"], IECore.StringData( "foo" ) )
+
 if __name__ == "__main__":
 	unittest.main()
