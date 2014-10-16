@@ -160,6 +160,24 @@ class StringPlugTest( GafferTest.TestCase ) :
 		with context :
 			self.assertEqual( n["out"].getValue(), "b" )
 
+	def testExpansionFromInputConnection( self ) :
+
+		p = Gaffer.StringPlug()
+		p.setValue( "${foo}" )
+
+		n = GafferTest.StringInOutNode()
+		n["in"].setInput( p )
+
+		c = Gaffer.Context()
+		with c :
+			self.assertEqual( n["out"].getValue(), "" )
+			h = n["out"].hash()
+
+		c["foo"] = "foo"
+		with c :
+			self.assertNotEqual( n["out"].hash(), h )
+			self.assertEqual( n["out"].getValue(), "foo" )
+
 if __name__ == "__main__":
 	unittest.main()
 
