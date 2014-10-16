@@ -140,7 +140,7 @@ class ExecuteApplicationTest( GafferTest.TestCase ) :
 		p.wait()
 
 		error = "".join( p.stderr.readlines() )
-		self.failUnless( error == "" )
+		self.assertEqual( error, "" )
 		self.failIf( p.returncode )
 		self.failUnless( os.path.exists( self.__outputFileSeq.fileNameForFrame( 1 ) ) )
 
