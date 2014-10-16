@@ -85,16 +85,13 @@ class ObjectToSceneTest( GafferSceneTest.SceneTestCase ) :
 
 	def testProceduralInput( self ) :
 
-		p = Gaffer.ProceduralHolder()
-		classSpec = GafferTest.ParameterisedHolderTest.classSpecification( "read", "IECORE_PROCEDURAL_PATHS" )[:-1]
-		p.setProcedural( *classSpec )
+		p = IECore.ReadProcedural()
 
 		s = GafferScene.ObjectToScene()
-		s["object"].setInput( p["output"] )
+		s["object"].setValue( p, _copy = False )
 
 		self.failUnless( isinstance( s["out"].object( "/object" ), IECore.ParameterisedProcedural ) )
-
-		p = s["out"].object( "/object" )
+		self.assertTrue( s["out"].object( "/object", _copy=False ).isSame( p ) )
 
 if __name__ == "__main__":
 	unittest.main()

@@ -67,7 +67,6 @@ from ProgressBarTest import ProgressBarTest
 from ContainerWidgetTest import ContainerWidgetTest
 from SelectionMenuTest import SelectionMenuTest
 from StandardStyleTest import StandardStyleTest
-from CompoundParameterValueWidgetTest import CompoundParameterValueWidgetTest
 from EditorWidgetTest import EditorWidgetTest
 from NumericSliderTest import NumericSliderTest
 from RenderableGadgetTest import RenderableGadgetTest
@@ -76,7 +75,6 @@ from PathListingWidgetTest import PathListingWidgetTest
 from MultiLineTextWidgetTest import MultiLineTextWidgetTest
 from LabelTest import LabelTest
 from ScrolledContainerTest import ScrolledContainerTest
-from ParameterValueWidgetTest import ParameterValueWidgetTest
 from NodeEditorTest import NodeEditorTest
 from ScriptWindowTest import ScriptWindowTest
 from CompoundPlugValueWidgetTest import CompoundPlugValueWidgetTest

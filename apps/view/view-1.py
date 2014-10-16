@@ -39,6 +39,7 @@ import IECore
 
 import Gaffer
 import GafferUI
+import GafferCortexUI
 import GafferSceneUI
 
 class view( Gaffer.Application ) :

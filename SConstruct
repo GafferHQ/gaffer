@@ -908,6 +908,23 @@ libraries = {
 
 	"GafferUITest" : {},
 
+	"GafferCortex" : {
+		"envAppends" : {
+			"LIBS" : [ "Gaffer" ],
+		},
+		"pythonEnvAppends" : {
+			"LIBS" : [ "GafferBindings", "GafferCortex" ],
+		},
+	},
+
+	"GafferCortexTest" : {
+		"additionalFiles" : glob.glob( "python/GafferTest/*/*" ) + glob.glob( "python/GafferCortexTest/*/*/*" ),
+	},
+
+	"GafferCortexUI" : {},
+
+	"GafferCortexUITest" : {},
+
 	"GafferScene" : {
 		"envAppends" : {
 			"LIBS" : [ "Gaffer", "Iex$OPENEXR_LIB_SUFFIX", "IECoreGL$CORTEX_LIB_SUFFIX", "IECoreAlembic$CORTEX_LIB_SUFFIX", "GafferImage" ],

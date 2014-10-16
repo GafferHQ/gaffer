@@ -56,13 +56,8 @@
 #include "GafferBindings/CompoundPlugBinding.h"
 #include "GafferBindings/CompoundNumericPlugBinding.h"
 #include "GafferBindings/SplinePlugBinding.h"
-#include "GafferBindings/ParameterisedHolderBinding.h"
-#include "GafferBindings/ParameterHandlerBinding.h"
-#include "GafferBindings/CompoundParameterHandlerBinding.h"
 #include "GafferBindings/StandardSetBinding.h"
 #include "GafferBindings/ChildSetBinding.h"
-#include "GafferBindings/OpHolderBinding.h"
-#include "GafferBindings/ProceduralHolderBinding.h"
 #include "GafferBindings/PreferencesBinding.h"
 #include "GafferBindings/ContextBinding.h"
 #include "GafferBindings/BoxPlugBinding.h"
@@ -75,7 +70,6 @@
 #include "GafferBindings/ComputeNodeBinding.h"
 #include "GafferBindings/BoxBinding.h"
 #include "GafferBindings/ActionBinding.h"
-#include "GafferBindings/ExecutableOpHolderBinding.h"
 #include "GafferBindings/ExecutableNodeBinding.h"
 #include "GafferBindings/DispatcherBinding.h"
 #include "GafferBindings/ReferenceBinding.h"
@@ -111,13 +105,8 @@ BOOST_PYTHON_MODULE( _Gaffer )
 	bindCompoundPlug();
 	bindCompoundNumericPlug();
 	bindSplinePlug();
-	bindParameterisedHolder();
-	bindParameterHandler();
-	bindCompoundParameterHandler();
 	bindStandardSet();
 	bindChildSet();
-	bindOpHolder();
-	bindProceduralHolder();
 	bindPreferences();
 	bindContext();
 	bindBoxPlug();
@@ -129,7 +118,6 @@ BOOST_PYTHON_MODULE( _Gaffer )
 	bindBox();
 	bindAction();
 	bindDispatcher();
-	bindExecutableOpHolder();
 	bindReference();
 	bindArrayPlug();
 	bindSerialisation();

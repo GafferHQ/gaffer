@@ -162,11 +162,7 @@ from CompoundPathPreview import CompoundPathPreview
 from DeferredPathPreview import DeferredPathPreview
 from InfoPathPreview import InfoPathPreview
 from HeaderPathPreview import HeaderPathPreview
-from FileIndexedIOPathPreview import FileIndexedIOPathPreview
 from DataPathPreview import DataPathPreview
-from AttributeCachePathPreview import AttributeCachePathPreview
-from ImageReaderPathPreview import ImageReaderPathPreview
-from OpPathPreview import OpPathPreview
 
 # then stuff specific to graph uis
 
@@ -234,31 +230,8 @@ import View3DToolbar
 from Playback import Playback
 from UIEditor import UIEditor
 
-# then stuff specific to parameterised objects
+# and then specific node uis
 
-from OpDialogue import OpDialogue
-from ParameterisedHolderNodeUI import ParameterisedHolderNodeUI
-from ParameterValueWidget import ParameterValueWidget
-from PresetsOnlyParameterValueWidget import PresetsOnlyParameterValueWidget
-from CompoundParameterValueWidget import CompoundParameterValueWidget
-from PathParameterValueWidget import PathParameterValueWidget
-from DirNameParameterValueWidget import DirNameParameterValueWidget
-from PathVectorParameterValueWidget import PathVectorParameterValueWidget
-from StringParameterValueWidget import StringParameterValueWidget
-from CompoundVectorParameterValueWidget import CompoundVectorParameterValueWidget
-from FileSequenceParameterValueWidget import FileSequenceParameterValueWidget
-from DateTimeParameterValueWidget import DateTimeParameterValueWidget
-from ClassParameterValueWidget import ClassParameterValueWidget
-from FileSequenceVectorParameterValueWidget import FileSequenceVectorParameterValueWidget
-from ClassVectorParameterValueWidget import ClassVectorParameterValueWidget
-from TimeCodeParameterValueWidget import TimeCodeParameterValueWidget
-from ToolParameterValueWidget import ToolParameterValueWidget
-import ParameterPresets
-
-# and specific node uis
-
-import ObjectReaderUI
-import ObjectWriterUI
 import RandomUI
 import ExpressionUI
 import BoxUI

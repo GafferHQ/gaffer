@@ -45,24 +45,15 @@ from PathFilter import PathFilter
 from BlockedConnection import BlockedConnection
 from FileNamePathFilter import FileNamePathFilter
 from UndoContext import UndoContext
-from ObjectReader import ObjectReader
-from ObjectWriter import ObjectWriter
 from Context import Context
 from CompoundPathFilter import CompoundPathFilter
 from InfoPathFilter import InfoPathFilter
 from LazyModule import lazyImport, LazyModule
 from LeafPathFilter import LeafPathFilter
 from DictPath import DictPath
-from IndexedIOPath import IndexedIOPath
-from ClassLoaderPath import ClassLoaderPath
 from PythonExpressionEngine import PythonExpressionEngine
 from SequencePath import SequencePath
-from OpMatcher import OpMatcher
-from AttributeCachePath import AttributeCachePath
-from ClassParameterHandler import ClassParameterHandler
-from ClassVectorParameterHandler import ClassVectorParameterHandler
 from GraphComponentPath import GraphComponentPath
-from ParameterPath import ParameterPath
 from OutputRedirection import OutputRedirection
 from LocalDispatcher import LocalDispatcher
 from SystemCommand import SystemCommand
