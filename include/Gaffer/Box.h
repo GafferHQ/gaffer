@@ -37,7 +37,7 @@
 #ifndef GAFFER_BOX_H
 #define GAFFER_BOX_H
 
-#include "Gaffer/DependencyNode.h"
+#include "Gaffer/SubGraph.h"
 
 namespace GafferBindings
 {
@@ -54,7 +54,7 @@ IE_CORE_FORWARDDECLARE( Set )
 
 /// A Box is simply a Node which is intended to hold other Nodes
 /// as children.
-class Box : public DependencyNode
+class Box : public SubGraph
 {
 
 	public :
@@ -62,7 +62,7 @@ class Box : public DependencyNode
 		Box( const std::string &name=defaultName<Box>() );
 		virtual ~Box();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::Box, BoxTypeId, DependencyNode );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::Box, BoxTypeId, SubGraph );
 
 		/// Returns true if it would be valid to call promotePlug( descendantPlug, asUserPlug ),
 		/// and false otherwise.
@@ -93,24 +93,6 @@ class Box : public DependencyNode
 		/// were previously held by a different parent.
 		/// \undoable
 		static BoxPtr create( Node *parent, const Set *childNodes );
-
-		/// Does nothing.
-		virtual void affects( const Plug *input, AffectedPlugsContainer &outputs ) const;
-
-		/// Returns getChild<BoolPlug>( "enabled" ). It is the user's
-		/// responsibility to create this plug if they need it - it is
-		/// not created automatically by the Box.
-		virtual BoolPlug *enabledPlug();
-		virtual const BoolPlug *enabledPlug() const;
-
-		/// Implemented to allow a user to define a pass-through behaviour
-		/// by wiring the box up appropriately. The input to the output
-		/// plug must be connected from a node inside the Box,
-		/// where that node itself has its enabled plug driven
-		/// by the box's enabled plug, and the correspondingInput for the
-		/// node comes from one of the inputs to the box.
-		virtual Plug *correspondingInput( const Plug *output );
-		virtual const Plug *correspondingInput( const Plug *output ) const;
 
 	private :
 
