@@ -74,10 +74,12 @@ std::string StringPlug::getValue() const
 template<>
 IECore::MurmurHash StringPlug::hash() const
 {
-	bool performSubstitution = direction()==Plug::In && !getInput<ValuePlug>() && Plug::getFlags( Plug::PerformsSubstitutions );
+	const StringPlug *p = source<StringPlug>();
+
+	const bool performSubstitution = p->direction()==Plug::In && p->getFlags( Plug::PerformsSubstitutions );
 	if( performSubstitution )
 	{
-		IECore::ConstObjectPtr o = getObjectValue();
+		IECore::ConstObjectPtr o = p->getObjectValue();
 		const IECore::StringData *s = IECore::runTimeCast<const IECore::StringData>( o.get() );
 		if( !s )
 		{
@@ -93,7 +95,7 @@ IECore::MurmurHash StringPlug::hash() const
 	}
 
 	// no substitutions
-	return ValuePlug::hash();
+	return p->ValuePlug::hash();
 }
 
 // specialise BoolPlug to accept connections from NumericPlugs
