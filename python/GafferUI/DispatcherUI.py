@@ -84,7 +84,13 @@ class DispatcherWindow( GafferUI.Window ) :
 
 		GafferUI.Window.__init__( self, **kw )
 
-		self.__dispatcher = Gaffer.Dispatcher.dispatcher( "Local" )
+		self.__dispatchers = {}
+		for dispatcherType in Gaffer.Dispatcher.registeredDispatchers() :
+			dispatcher = Gaffer.Dispatcher.create( dispatcherType )
+			Gaffer.NodeAlgo.applyUserDefaults( dispatcher )
+			self.__dispatchers[dispatcherType] = dispatcher
+		
+		self.__currentDispatcher = self.__dispatchers["Local"]
 		self.__nodes = []
 
 		with self :
@@ -94,7 +100,7 @@ class DispatcherWindow( GafferUI.Window ) :
 				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
 					GafferUI.Label( "Dispatcher" )
 					self.__dispatchersMenu = GafferUI.MultiSelectionMenu( allowMultipleSelection = False, allowEmptySelection = False )
-					self.__dispatchersMenu.append( Gaffer.Dispatcher.dispatcherNames() )
+					self.__dispatchersMenu.append( self.__dispatchers.keys() )
 					self.__dispatchersMenu.setSelection( [ "Local" ] )
 					self.__dispatchersMenuSelectionChangedConnection = self.__dispatchersMenu.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__dispatcherChanged ) )
 
@@ -111,21 +117,25 @@ class DispatcherWindow( GafferUI.Window ) :
 		if visible :
 			self.__dispatchButton._qtWidget().setFocus( QtCore.Qt.OtherFocusReason )
 
-	def getDispatcher( self ) :
+	def getDispatcher( self, dispatcherType ) :
 
-		return self.__dispatcher
+		return self.__dispatchers.get( dispatcherType, None )
 
-	def setDispatcher( self, dispatcher ) :
+	def setDispatcher( self, dispatcherType, dispatcher ) :
 		
-		for name in Gaffer.Dispatcher.dispatcherNames() :
-			if Gaffer.Dispatcher.dispatcher( name ).isSame( dispatcher ) :
-				self.__dispatcher = dispatcher
-				self.__dispatchersMenu.setSelection( [ name ] )
-				self.__update()
-				return
+		if dispatcherType not in self.__dispatchers.keys() :
+			self.__dispatchersMenu.append( dispatcherType )
 		
-		raise RuntimeError, "DispatcherWindow.setDispatcher only accepts dispatchers which have been registered."
-
+		self.__currentDispatcher = dispatcher
+		self.__dispatchers[dispatcherType] = dispatcher
+		
+		self.__dispatchersMenu.setSelection( [ dispatcherType ] )
+		self.__update()
+	
+	def currentDispatcher( self ) :
+		
+		return self.__currentDispatcher
+	
 	def setNodesToDispatch( self, nodes ) :
 
 		self.__nodes = nodes
@@ -152,7 +162,7 @@ class DispatcherWindow( GafferUI.Window ) :
 	
 	def __update( self ) :
 		
-		nodeUI = GafferUI.NodeUI.create( self.__dispatcher )
+		nodeUI = GafferUI.NodeUI.create( self.__currentDispatcher )
 		self.__frame.setChild( nodeUI )
 		self.__updateTitle()
 
@@ -171,7 +181,7 @@ class DispatcherWindow( GafferUI.Window ) :
 
 	def __dispatcherChanged( self, menu ) :
 
-		self.__dispatcher = Gaffer.Dispatcher.dispatcher( menu.getSelection()[0] )
+		self.__currentDispatcher = self.__dispatchers[ menu.getSelection()[0] ]
 		self.__update()
 
 ##################################################################################
@@ -398,7 +408,7 @@ def _dispatch( nodes ) :
 
 	script = nodes[0].scriptNode()
 	with script.context() :
-		__dispatcherWindow( script ).getDispatcher().dispatch( nodes )
+		__dispatcherWindow( script ).currentDispatcher().dispatch( nodes )
 
 	scriptWindow = GafferUI.ScriptWindow.acquire( script )
 	scriptWindow._lastDispatch = [ weakref.ref( node ) for node in nodes ]
