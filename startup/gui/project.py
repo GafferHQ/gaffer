@@ -75,10 +75,9 @@ def __projectBookmark( forWidget, location ) :
 	else :
 		return os.getcwd()
 
-localDispatcher = Gaffer.Dispatcher.dispatcher( "Local" )
-localDispatcher["jobName"].setValue( "${script:name}" )
-localDispatcher["jobsDirectory"].setValue( "${project:rootDirectory}/dispatcher" )
-localDispatcher["executeInBackground"].setValue( True )
+Gaffer.Metadata.registerPlugValue( Gaffer.LocalDispatcher.staticTypeId(), "jobName", "userDefault", "${script:name}" )
+Gaffer.Metadata.registerPlugValue( Gaffer.LocalDispatcher.staticTypeId(), "jobsDirectory", "userDefault", "${project:rootDirectory}/dispatcher/local" )
+Gaffer.Metadata.registerPlugValue( Gaffer.LocalDispatcher.staticTypeId(), "executeInBackground", "userDefault", True )
 
 GafferUI.Bookmarks.acquire( application ).add( "Project", IECore.curry( __projectBookmark, location="${project:rootDirectory}" ) )
 GafferUI.Bookmarks.acquire( application, category="script" ).setDefault( IECore.curry( __projectBookmark, location="${project:rootDirectory}/scripts" ) )

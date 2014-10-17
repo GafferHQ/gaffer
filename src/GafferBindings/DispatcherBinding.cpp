@@ -123,29 +123,6 @@ class DispatcherWrapper : public NodeWrapper<Dispatcher>
 			}
 		}
 
-		static list dispatcherNames()
-		{
-			std::vector<std::string> names;
-			Dispatcher::dispatcherNames( names );
-			list result;
-			for ( std::vector<std::string>::const_iterator nIt = names.begin(); nIt != names.end(); nIt++ )
-			{
-				result.append( *nIt );
-			}
-			return result;
-		}
-
-		static void registerDispatcher( std::string name, Dispatcher *dispatcher )
-		{
-			Dispatcher::registerDispatcher( name, dispatcher );
-		}
-
-		static DispatcherPtr dispatcher( std::string name )
-		{
-			const Dispatcher *d = Dispatcher::dispatcher( name );
-			return const_cast< Dispatcher *>(d);
-		}
-
 		static void taskBatchExecute( const Dispatcher::TaskBatch &batch )
 		{
 			ScopedGILRelease gilRelease;
@@ -204,6 +181,43 @@ class DispatcherWrapper : public NodeWrapper<Dispatcher>
 
 };
 
+struct DispatcherCreator
+{
+	DispatcherCreator( object fn )
+		:	m_fn( fn )
+	{
+	}
+
+	DispatcherPtr operator()()
+	{
+		IECorePython::ScopedGILLock gilLock;
+		DispatcherPtr result = extract<DispatcherPtr>( m_fn() );
+		return result;
+	}
+
+	private :
+
+		object m_fn;
+
+};
+
+static void registerDispatcher( std::string type, object creator )
+{
+	Dispatcher::registerDispatcher( type, DispatcherCreator( creator ) );
+}
+
+static tuple registeredDispatchersWrapper()
+{
+	std::vector<std::string> types;
+	Dispatcher::registeredDispatchers( types );
+	list result;
+	for ( std::vector<std::string>::const_iterator it = types.begin(); it != types.end(); ++it )
+	{
+		result.append( *it );
+	}
+	return boost::python::tuple( result );
+}
+
 struct PreDispatchSlotCaller
 {
 	bool operator()( boost::python::object slot, const Dispatcher *d, const std::vector<ExecutableNodePtr> &nodes )
@@ -255,9 +269,9 @@ void GafferBindings::bindDispatcher()
 	scope s = NodeClass<Dispatcher, DispatcherWrapper>()
 		.def( "dispatch", &DispatcherWrapper::dispatch )
 		.def( "jobDirectory", &Dispatcher::jobDirectory )
-		.def( "dispatcher", &DispatcherWrapper::dispatcher ).staticmethod( "dispatcher" )
-		.def( "dispatcherNames", &DispatcherWrapper::dispatcherNames ).staticmethod( "dispatcherNames" )
-		.def( "registerDispatcher", &DispatcherWrapper::registerDispatcher ).staticmethod( "registerDispatcher" )
+		.def( "create", &Dispatcher::create ).staticmethod( "create" )
+		.def( "registerDispatcher", &registerDispatcher ).staticmethod( "registerDispatcher" )
+		.def( "registeredDispatchers", &registeredDispatchersWrapper ).staticmethod( "registeredDispatchers" )
 		.def( "preDispatchSignal", &Dispatcher::preDispatchSignal, return_value_policy<reference_existing_object>() ).staticmethod( "preDispatchSignal" )
 		.def( "postDispatchSignal", &Dispatcher::postDispatchSignal, return_value_policy<reference_existing_object>() ).staticmethod( "postDispatchSignal" )
 	;

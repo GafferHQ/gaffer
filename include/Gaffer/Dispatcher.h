@@ -155,16 +155,18 @@ class Dispatcher : public Node
 		const std::string jobDirectory() const;
 		//@}
 
+		typedef boost::function<DispatcherPtr ()> Creator;
+		
 		//! @name Registration
 		/// Utility functions for registering and retrieving Dispatchers.
 		/////////////////////////////////////////////////////////////////
 		//@{
-		/// Register a named Dispatcher instance.
-		static void registerDispatcher( const std::string &name, DispatcherPtr dispatcher );
-		/// Fills the vector with the names of all the registered Dispatchers.
-		static void dispatcherNames( std::vector<std::string> &names );
-		/// Returns a registered Dispatcher by name.
-		static const Dispatcher *dispatcher( const std::string &name );
+		/// Create a registered Dispatcher of the specified type.
+		static DispatcherPtr create( const std::string &dispatcherType );
+		/// Register a Dispatcher creation function.
+		static void registerDispatcher( const std::string &dispatcherType, Creator creator );
+		/// Fills the vector with the names of all the registered Dispatcher creators.
+		static void registeredDispatchers( std::vector<std::string> &dispatcherTypes );
 		//@}
 
 	protected :
@@ -242,7 +244,8 @@ class Dispatcher : public Node
 		std::string createJobDirectory( const Context *context ) const;
 		mutable std::string m_jobDirectory;
 
-		typedef std::map< std::string, DispatcherPtr > DispatcherMap;
+		typedef std::map<std::string, Creator> CreatorMap;
+		static CreatorMap &creators();
 
 		typedef std::map<IECore::MurmurHash, TaskBatchPtr> BatchMap;
 		typedef std::map<IECore::MurmurHash, TaskBatchPtr> TaskToBatchMap;
@@ -260,7 +263,6 @@ class Dispatcher : public Node
 		static IECore::MurmurHash batchHash( const ExecutableNode::Task &task );
 
 		static size_t g_firstPlugIndex;
-		static DispatcherMap g_dispatchers;
 		static PreDispatchSignal g_preDispatchSignal;
 		static PostDispatchSignal g_postDispatchSignal;
 

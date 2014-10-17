@@ -98,30 +98,35 @@ class DispatcherTest( GafferTest.TestCase ) :
 	def setUp( self ) :
 
 		os.makedirs( "/tmp/dispatcherTest" )
-
-		if not "testDispatcher" in Gaffer.Dispatcher.dispatcherNames():
+		
+		if not "testDispatcher" in Gaffer.Dispatcher.registeredDispatchers():
 			IECore.registerRunTimeTyped( DispatcherTest.MyDispatcher )
-			dispatcher = DispatcherTest.MyDispatcher()
-			Gaffer.Dispatcher.registerDispatcher( "testDispatcher", dispatcher )
+			
+			def create() :
+				dispatcher = DispatcherTest.MyDispatcher()
+				dispatcher["jobsDirectory"].setValue( "/tmp/dispatcherTest" )
+				return dispatcher
+			
+			Gaffer.Dispatcher.registerDispatcher( "testDispatcher", create )
 
 	def testBadJobDirectory( self ) :
 
-		dispatcher = DispatcherTest.MyDispatcher()
+		dispatcher = Gaffer.Dispatcher.create( "testDispatcher" )
 		self.assertEqual( dispatcher["jobName"].getValue(), "" )
-		self.assertEqual( dispatcher["jobsDirectory"].getValue(), "" )
+		self.assertEqual( dispatcher["jobsDirectory"].getValue(), "/tmp/dispatcherTest" )
 		s = Gaffer.ScriptNode()
 		op1 = TestOp("1", dispatcher.log)
 		s["n1"] = Gaffer.ExecutableOpHolder()
 		s["n1"].setParameterised( op1 )
 		dispatcher.dispatch( [ s["n1"] ] )
 		jobDir = dispatcher.jobDirectory()
-		self.assertNotEqual( jobDir, "" )
+		self.assertEqual( jobDir, "/tmp/dispatcherTest/000000" )
 		self.assertTrue( os.path.exists( jobDir ) )
 		shutil.rmtree( jobDir )
 
 	def testDerivedClass( self ) :
 
-		dispatcher = DispatcherTest.MyDispatcher()
+		dispatcher = Gaffer.Dispatcher.create( "testDispatcher" )
 
 		s = Gaffer.ScriptNode()
 		op1 = TestOp("1", dispatcher.log)
@@ -135,7 +140,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 	def testNoScript( self ) :
 
-		dispatcher = DispatcherTest.MyDispatcher()
+		dispatcher = Gaffer.Dispatcher.create( "testDispatcher" )
 
 		op1 = TestOp("1", dispatcher.log)
 		n1 = Gaffer.ExecutableOpHolder()
@@ -147,7 +152,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 	def testDifferentScripts( self ) :
 
-		dispatcher = DispatcherTest.MyDispatcher()
+		dispatcher = Gaffer.Dispatcher.create( "testDispatcher" )
 
 		op1 = TestOp("1", dispatcher.log)
 		s = Gaffer.ScriptNode()
@@ -166,7 +171,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 	def testNonExecutables( self ) :
 
-		dispatcher = DispatcherTest.MyDispatcher()
+		dispatcher = Gaffer.Dispatcher.create( "testDispatcher" )
 
 		s = Gaffer.ScriptNode()
 		s["n1"] = Gaffer.Node()
@@ -176,8 +181,8 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 	def testDispatcherRegistration( self ) :
 
-		self.failUnless( "testDispatcher" in Gaffer.Dispatcher.dispatcherNames() )
-		self.failUnless( Gaffer.Dispatcher.dispatcher( 'testDispatcher' ).isInstanceOf( DispatcherTest.MyDispatcher.staticTypeId() ) )
+		self.failUnless( "testDispatcher" in Gaffer.Dispatcher.registeredDispatchers() )
+		self.failUnless( Gaffer.Dispatcher.create( 'testDispatcher' ).isInstanceOf( DispatcherTest.MyDispatcher.staticTypeId() ) )
 
 	def testDispatcherSignals( self ) :
 
@@ -202,7 +207,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		s = Gaffer.ScriptNode()
 		s["n1"] = Gaffer.ExecutableOpHolder()
 		s["n1"].setParameterised( op1 )
-		dispatcher = DispatcherTest.MyDispatcher()
+		dispatcher = Gaffer.Dispatcher.create( "testDispatcher" )
 		dispatcher.dispatch( [ s["n1"] ] )
 		shutil.rmtree( dispatcher.jobDirectory() )
 
@@ -225,7 +230,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 		connection = Gaffer.Dispatcher.preDispatchSignal().connect( onlyRunOnce )
 
-		dispatcher = DispatcherTest.MyDispatcher()
+		dispatcher = Gaffer.Dispatcher.create( "testDispatcher" )
 		op1 = TestOp( "1", dispatcher.log )
 		s = Gaffer.ScriptNode()
 		s["n1"] = Gaffer.ExecutableOpHolder()
@@ -256,7 +261,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 	def testDispatch( self ) :
 
-		dispatcher = Gaffer.Dispatcher.dispatcher( "testDispatcher" )
+		dispatcher = Gaffer.Dispatcher.create( "testDispatcher" )
 
 		# Create a tree of dependencies for execution:
 		# n1 requires:
@@ -327,7 +332,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 	def testDispatchIdenticalTasks( self ) :
 
-		dispatcher = Gaffer.Dispatcher.dispatcher( "testDispatcher" )
+		dispatcher = Gaffer.Dispatcher.create( "testDispatcher" )
 
 		# Create a tree of dependencies for execution:
 		# n1 requires:
@@ -367,14 +372,14 @@ class DispatcherTest( GafferTest.TestCase ) :
 		self.assertEqual( s["n1"].hash( s.context() ), IECore.MurmurHash() )
 
 		# It doesn't execute, because the executionHash is null
-		dispatcher = Gaffer.Dispatcher.dispatcher( "testDispatcher" )
+		dispatcher = Gaffer.Dispatcher.create( "testDispatcher" )
 		dispatcher.dispatch( [ s["n1"] ] )
 		shutil.rmtree( dispatcher.jobDirectory() )
 		self.assertEqual( dispatcher.log, [] )
 
 	def testDispatchDifferentFrame( self ) :
 
-		dispatcher = DispatcherTest.MyDispatcher()
+		dispatcher = Gaffer.Dispatcher.create( "testDispatcher" )
 		dispatcher["framesMode"].setValue( Gaffer.Dispatcher.FramesMode.CurrentFrame )
 
 		s = Gaffer.ScriptNode()
@@ -394,7 +399,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 	def testDispatchFullRange( self ) :
 
-		dispatcher = DispatcherTest.MyDispatcher()
+		dispatcher = Gaffer.Dispatcher.create( "testDispatcher" )
 		dispatcher["framesMode"].setValue( Gaffer.Dispatcher.FramesMode.FullRange )
 
 		s = Gaffer.ScriptNode()
@@ -411,7 +416,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 	def testDispatchCustomRange( self ) :
 
-		dispatcher = DispatcherTest.MyDispatcher()
+		dispatcher = Gaffer.Dispatcher.create( "testDispatcher" )
 		dispatcher["framesMode"].setValue( Gaffer.Dispatcher.FramesMode.CustomRange )
 		frameList = IECore.FrameList.parse( "2-6x2" )
 		dispatcher["frameRange"].setValue( str(frameList) )
@@ -430,7 +435,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 	def testDispatchBadCustomRange( self ) :
 
-		dispatcher = DispatcherTest.MyDispatcher()
+		dispatcher = Gaffer.Dispatcher.create( "testDispatcher" )
 		dispatcher["framesMode"].setValue( Gaffer.Dispatcher.FramesMode.CustomRange )
 		dispatcher["frameRange"].setValue( "notAFrameRange" )
 
@@ -445,7 +450,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 	def testDoesNotRequireSequenceExecution( self ) :
 
-		dispatcher = DispatcherTest.MyDispatcher()
+		dispatcher = Gaffer.Dispatcher.create( "testDispatcher" )
 		dispatcher["framesMode"].setValue( Gaffer.Dispatcher.FramesMode.CustomRange )
 		frameList = IECore.FrameList.parse( "2-6x2" )
 		dispatcher["frameRange"].setValue( str(frameList) )
@@ -483,7 +488,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 	def testRequiresSequenceExecution( self ) :
 
-		dispatcher = DispatcherTest.MyDispatcher()
+		dispatcher = Gaffer.Dispatcher.create( "testDispatcher" )
 		dispatcher["framesMode"].setValue( Gaffer.Dispatcher.FramesMode.CustomRange )
 		frameList = IECore.FrameList.parse( "2-6x2" )
 		dispatcher["frameRange"].setValue( str(frameList) )
@@ -532,7 +537,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 	def testBatchSize( self ) :
 
-		dispatcher = DispatcherTest.MyDispatcher()
+		dispatcher = Gaffer.Dispatcher.create( "testDispatcher" )
 		dispatcher["framesMode"].setValue( Gaffer.Dispatcher.FramesMode.CustomRange )
 		frameList = IECore.FrameList.parse( "2-6x2" )
 		dispatcher["frameRange"].setValue( str(frameList) )
@@ -587,7 +592,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 	def testDispatchThroughABox( self ) :
 
-		dispatcher = DispatcherTest.MyDispatcher()
+		dispatcher = Gaffer.Dispatcher.create( "testDispatcher" )
 		dispatcher["framesMode"].setValue( Gaffer.Dispatcher.FramesMode.CustomRange )
 		frameList = IECore.FrameList.parse( "2-6x2" )
 		dispatcher["frameRange"].setValue( str(frameList) )

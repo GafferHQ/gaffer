@@ -151,4 +151,4 @@ class LocalDispatcher( Gaffer.Dispatcher ) :
 
 IECore.registerRunTimeTyped( LocalDispatcher, typeName = "Gaffer::LocalDispatcher" )
 
-Gaffer.Dispatcher.registerDispatcher( "Local", LocalDispatcher() )
+Gaffer.Dispatcher.registerDispatcher( "Local", LocalDispatcher )
