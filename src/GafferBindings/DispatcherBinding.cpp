@@ -45,6 +45,7 @@
 #include "GafferBindings/DispatcherBinding.h"
 #include "GafferBindings/NodeBinding.h"
 #include "GafferBindings/SignalBinding.h"
+#include "GafferBindings/ExceptionAlgo.h"
 
 using namespace boost::python;
 using namespace IECore;
@@ -94,8 +95,7 @@ class DispatcherWrapper : public NodeWrapper<Dispatcher>
 				}
 				catch( const boost::python::error_already_set &e )
 				{
-					PyErr_PrintEx(0);
-					throw Exception( "doDispatch() failed" );
+					translatePythonException();
 				}
 			}
 			else
@@ -117,8 +117,7 @@ class DispatcherWrapper : public NodeWrapper<Dispatcher>
 				}
 				catch( const boost::python::error_already_set &e )
 				{
-					PyErr_PrintEx(0);
-					throw Exception( "doSetupPlugs() failed" );
+					translatePythonException();
 				}
 
 			}
