@@ -34,45 +34,14 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_REFERENCE_H
-#define GAFFER_REFERENCE_H
+#ifndef GAFFERBINDINGS_SUBGRAPHBINDING_H
+#define GAFFERBINDINGS_SUBGRAPHBINDING_H
 
-#include "Gaffer/SubGraph.h"
-
-namespace Gaffer
+namespace GafferBindings
 {
 
-class Reference : public SubGraph
-{
+void bindSubGraph();
 
-	public :
+} // namespace GafferBindings
 
-		Reference( const std::string &name=defaultName<Reference>() );
-		virtual ~Reference();
-
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::Reference, ReferenceTypeId, SubGraph );
-
-		/// The plugs that stores the name of the file being
-		/// referenced. This should be considered read-only, and the
-		/// load() method should be used to set it.
-		StringPlug *fileNamePlug();
-		const StringPlug *fileNamePlug() const;
-
-		/// Loads the specified script, which should have been exported
-		/// using Box::exportForReference().
-		void load( const std::string &fileName );
-
-	private :
-
-		bool isReferencePlug( const Plug *plug ) const;
-
-		static size_t g_firstPlugIndex;
-
-};
-
-typedef FilteredChildIterator<TypePredicate<Reference> > ReferenceIterator;
-typedef FilteredRecursiveChildIterator<TypePredicate<Reference> > RecursiveReferenceIterator;
-
-} // namespace Gaffer
-
-#endif // GAFFER_REFERENCE_H
+#endif // GAFFERBINDINGS_SUBGRAPHBINDING_H
