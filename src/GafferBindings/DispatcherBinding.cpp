@@ -45,6 +45,7 @@
 #include "GafferBindings/DispatcherBinding.h"
 #include "GafferBindings/NodeBinding.h"
 #include "GafferBindings/SignalBinding.h"
+#include "GafferBindings/ExceptionAlgo.h"
 
 using namespace boost::python;
 using namespace IECore;
@@ -88,7 +89,14 @@ class DispatcherWrapper : public NodeWrapper<Dispatcher>
 			boost::python::object f = this->methodOverride( "_doDispatch" );
 			if( f )
 			{
-				f( boost::const_pointer_cast<Dispatcher::TaskBatch>( ConstTaskBatchPtr( batch ) ) );
+				try
+				{
+					f( boost::const_pointer_cast<Dispatcher::TaskBatch>( ConstTaskBatchPtr( batch ) ) );
+				}
+				catch( const boost::python::error_already_set &e )
+				{
+					translatePythonException();
+				}
 			}
 			else
 			{
@@ -103,7 +111,15 @@ class DispatcherWrapper : public NodeWrapper<Dispatcher>
 			if( f )
 			{
 				CompoundPlugPtr tmpPointer = parentPlug;
-				f( tmpPointer );
+				try
+				{
+					f( tmpPointer );
+				}
+				catch( const boost::python::error_already_set &e )
+				{
+					translatePythonException();
+				}
+
 			}
 		}
 
