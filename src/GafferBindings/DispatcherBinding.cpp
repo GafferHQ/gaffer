@@ -123,6 +123,11 @@ class DispatcherWrapper : public NodeWrapper<Dispatcher>
 			}
 		}
 
+		static DispatcherPtr getDefaultDispatcher()
+		{
+			return Dispatcher::getDefaultDispatcher();
+		}
+		
 		static void taskBatchExecute( const Dispatcher::TaskBatch &batch )
 		{
 			ScopedGILRelease gilRelease;
@@ -270,6 +275,8 @@ void GafferBindings::bindDispatcher()
 		.def( "dispatch", &DispatcherWrapper::dispatch )
 		.def( "jobDirectory", &Dispatcher::jobDirectory )
 		.def( "create", &Dispatcher::create ).staticmethod( "create" )
+		.def( "getDefaultDispatcher", &DispatcherWrapper::getDefaultDispatcher ).staticmethod( "getDefaultDispatcher" )
+		.def( "setDefaultDispatcher", &Dispatcher::setDefaultDispatcher ).staticmethod( "setDefaultDispatcher" )
 		.def( "registerDispatcher", &registerDispatcher ).staticmethod( "registerDispatcher" )
 		.def( "registeredDispatchers", &registeredDispatchersWrapper ).staticmethod( "registeredDispatchers" )
 		.def( "preDispatchSignal", &Dispatcher::preDispatchSignal, return_value_policy<reference_existing_object>() ).staticmethod( "preDispatchSignal" )

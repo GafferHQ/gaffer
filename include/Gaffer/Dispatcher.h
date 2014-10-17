@@ -163,6 +163,8 @@ class Dispatcher : public Node
 		//@{
 		/// Create a registered Dispatcher of the specified type.
 		static DispatcherPtr create( const std::string &dispatcherType );
+		static Dispatcher *getDefaultDispatcher();
+		static void setDefaultDispatcher( Dispatcher *dispatcher );
 		/// Register a Dispatcher creation function.
 		static void registerDispatcher( const std::string &dispatcherType, Creator creator );
 		/// Fills the vector with the names of all the registered Dispatcher creators.
@@ -265,6 +267,7 @@ class Dispatcher : public Node
 		static size_t g_firstPlugIndex;
 		static PreDispatchSignal g_preDispatchSignal;
 		static PostDispatchSignal g_postDispatchSignal;
+		static DispatcherPtr g_defaultDispatcher;
 
 		friend void GafferBindings::bindDispatcher();
 };

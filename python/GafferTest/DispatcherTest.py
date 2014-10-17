@@ -718,6 +718,18 @@ class DispatcherTest( GafferTest.TestCase ) :
 		expectedText = "n1 on 2;n1 on 4;n1 on 6;n3 on 2;n3 on 4;n3 on 6;n2 on 2;n2 on 4;n2 on 6;"
 		self.assertEqual( text, expectedText )
 
+	def testDefaultDispatcher( self ) :
+		
+		dispatcher = Gaffer.Dispatcher.create( "testDispatcher" )
+		self.assertEqual( Gaffer.Dispatcher.getDefaultDispatcher(), None )
+		Gaffer.Dispatcher.setDefaultDispatcher( dispatcher )
+		self.assertTrue( Gaffer.Dispatcher.getDefaultDispatcher().isSame( dispatcher ) )
+		dispatcher2 = Gaffer.Dispatcher.create( "testDispatcher" )
+		self.assertFalse( Gaffer.Dispatcher.getDefaultDispatcher().isSame( dispatcher2 ) )
+		Gaffer.Dispatcher.setDefaultDispatcher( dispatcher2 )
+		self.assertFalse( Gaffer.Dispatcher.getDefaultDispatcher().isSame( dispatcher ) )
+		self.assertTrue( Gaffer.Dispatcher.getDefaultDispatcher().isSame( dispatcher2 ) )
+	
 	def tearDown( self ) :
 
 		shutil.rmtree( "/tmp/dispatcherTest", ignore_errors = True )

@@ -79,6 +79,10 @@ Gaffer.Metadata.registerPlugValue( Gaffer.LocalDispatcher.staticTypeId(), "jobNa
 Gaffer.Metadata.registerPlugValue( Gaffer.LocalDispatcher.staticTypeId(), "jobsDirectory", "userDefault", "${project:rootDirectory}/dispatcher/local" )
 Gaffer.Metadata.registerPlugValue( Gaffer.LocalDispatcher.staticTypeId(), "executeInBackground", "userDefault", True )
 
+localDispatcher = Gaffer.Dispatcher.create( "Local" )
+Gaffer.NodeAlgo.applyUserDefaults( localDispatcher )
+Gaffer.Dispatcher.setDefaultDispatcher( localDispatcher )
+
 GafferUI.Bookmarks.acquire( application ).add( "Project", IECore.curry( __projectBookmark, location="${project:rootDirectory}" ) )
 GafferUI.Bookmarks.acquire( application, category="script" ).setDefault( IECore.curry( __projectBookmark, location="${project:rootDirectory}/scripts" ) )
 GafferUI.Bookmarks.acquire( application, category="reference" ).setDefault( IECore.curry( __projectBookmark, location="${project:rootDirectory}/references" ) )
