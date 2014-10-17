@@ -88,7 +88,15 @@ class DispatcherWrapper : public NodeWrapper<Dispatcher>
 			boost::python::object f = this->methodOverride( "_doDispatch" );
 			if( f )
 			{
-				f( boost::const_pointer_cast<Dispatcher::TaskBatch>( ConstTaskBatchPtr( batch ) ) );
+				try
+				{
+					f( boost::const_pointer_cast<Dispatcher::TaskBatch>( ConstTaskBatchPtr( batch ) ) );
+				}
+				catch( const boost::python::error_already_set &e )
+				{
+					PyErr_PrintEx(0);
+					throw Exception( "doDispatch() failed" );
+				}
 			}
 			else
 			{
@@ -103,7 +111,16 @@ class DispatcherWrapper : public NodeWrapper<Dispatcher>
 			if( f )
 			{
 				CompoundPlugPtr tmpPointer = parentPlug;
-				f( tmpPointer );
+				try
+				{
+					f( tmpPointer );
+				}
+				catch( const boost::python::error_already_set &e )
+				{
+					PyErr_PrintEx(0);
+					throw Exception( "doSetupPlugs() failed" );
+				}
+
 			}
 		}
 
