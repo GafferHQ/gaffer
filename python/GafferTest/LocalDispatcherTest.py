@@ -442,6 +442,52 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 			expectedText += context.substitute( "n3 on ${frame};n1 on ${frame};" )
 		self.assertEqual( text, expectedText )
 
+	def testFailure( self ) :
+		
+		s = Gaffer.ScriptNode()
+		s["n1"] = GafferTest.TextWriter()
+		s["n1"]["fileName"].setValue( "/tmp/dispatcherTest/n1_####.txt" )
+		s["n1"]["text"].setValue( "n1 on ${frame}" )
+		s["n2"] = GafferTest.TextWriter()
+		s["n2"]["fileName"].setValue( "" )
+		s["n2"]["text"].setValue( "n2 on ${frame}" )
+		s["n3"] = GafferTest.TextWriter()
+		s["n3"]["fileName"].setValue( "/tmp/dispatcherTest/n3_####.txt" )
+		s["n3"]["text"].setValue( "n3 on ${frame}" )
+		s["n1"]['requirements'][0].setInput( s["n2"]['requirement'] )
+		s["n2"]['requirements'][0].setInput( s["n3"]['requirement'] )
+		
+		dispatcher = Gaffer.Dispatcher.create( "LocalTest" )
+		dispatcher.dispatch( [ s["n1"] ] )
+		
+		# n3 executed correctly
+		self.assertTrue( os.path.isfile( s.context().substitute( s["n3"]["fileName"].getValue() ) ) )
+		with file( s.context().substitute( s["n3"]["fileName"].getValue() ), "r" ) as f :
+			text = f.read()
+		self.assertEqual( text, "n3 on %d" % s.context().getFrame() )
+		
+		# n2 failed, so n1 never executed
+		self.assertFalse( os.path.isfile( s.context().substitute( s["n2"]["fileName"].getValue() ) ) )
+		self.assertFalse( os.path.isfile( s.context().substitute( s["n1"]["fileName"].getValue() ) ) )
+		
+		self.tearDown()
+		
+		dispatcher["executeInBackground"].setValue( True )
+		dispatcher.dispatch( [ s["n1"] ] )
+		
+		# wait long enough for background execution to finish
+		import time; time.sleep( 15 )
+		
+		# n3 executed correctly
+		self.assertTrue( os.path.isfile( s.context().substitute( s["n3"]["fileName"].getValue() ) ) )
+		with file( s.context().substitute( s["n3"]["fileName"].getValue() ), "r" ) as f :
+			text = f.read()
+		self.assertEqual( text, "n3 on %d" % s.context().getFrame() )
+		
+		# n2 failed, so n1 never executed
+		self.assertFalse( os.path.isfile( s.context().substitute( s["n2"]["fileName"].getValue() ) ) )
+		self.assertFalse( os.path.isfile( s.context().substitute( s["n1"]["fileName"].getValue() ) ) )
+	
 	def tearDown( self ) :
 
 		shutil.rmtree( "/tmp/dispatcherTest", ignore_errors = True )

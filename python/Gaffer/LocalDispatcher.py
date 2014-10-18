@@ -38,6 +38,7 @@ import os
 import errno
 import subprocess
 import threading
+import traceback
 
 import Gaffer
 import IECore
@@ -64,8 +65,12 @@ class LocalDispatcher( Gaffer.Dispatcher ) :
 		script.serialiseToFile( tmpScript )
 
 		if self["executeInBackground"].getValue() :
-			self.__preBackgroundDispatch( batch, messageTitle )
+			
+			if not self.__preBackgroundDispatch( batch, messageTitle ) :
+				return
+			
 			threading.Thread( target = IECore.curry( self.__backgroundDispatch, batch, tmpScript, messageTitle ) ).start()
+		
 		else :
 			self.__foregroundDispatch( batch, messageTitle )
 			IECore.msg( IECore.MessageHandler.Level.Info, messageTitle, "Dispatched all tasks." )
@@ -73,45 +78,58 @@ class LocalDispatcher( Gaffer.Dispatcher ) :
 	def __foregroundDispatch( self, batch, messageTitle ) :
 
 		for currentBatch in batch.requirements() :
-			self.__foregroundDispatch( currentBatch, messageTitle )
+			if not self.__foregroundDispatch( currentBatch, messageTitle ) :
+				return False
 
 		if not batch.node() or batch.blindData().get( "dispatched" ) :
-			return
+			return True
 
 		script = batch.node().scriptNode()
 
 		description = "executing %s on %s" % ( batch.node().relativeName( script ), str(batch.frames()) )
 		IECore.msg( IECore.MessageHandler.Level.Info, messageTitle, description )
 
-		batch.execute()
-
+		try :
+			batch.execute()
+		except :
+			traceback.print_exc()
+			IECore.msg( IECore.MessageHandler.Level.Error, messageTitle, "Failed to execute " + batch.node().getName() + " on " + str(batch.frames()) )
+			return False
+		
 		batch.blindData()["dispatched"] = IECore.BoolData( True )
+		
+		return True
 
 	def __preBackgroundDispatch( self, batch, messageTitle ) :
 
 		if batch.node() and batch.node()["dispatcher"]["local"]["executeInForeground"].getValue() :
-			self.__foregroundDispatch( batch, messageTitle )
+			if not self.__foregroundDispatch( batch, messageTitle ) :
+				return False
 		else :
 			for currentBatch in batch.requirements() :
-				self.__preBackgroundDispatch( currentBatch, messageTitle )
+				if not self.__preBackgroundDispatch( currentBatch, messageTitle ) :
+					return False
+		
+		return True
 
 	def __backgroundDispatch( self, batch, scriptFile, messageTitle ) :
 
 		if batch.blindData().get( "dispatched" ) :
-			return
+			return True
 
 		for currentBatch in batch.requirements() :
-			self.__backgroundDispatch( currentBatch, scriptFile, messageTitle )
+			if not self.__backgroundDispatch( currentBatch, scriptFile, messageTitle ) :
+				return False
 
 		if not batch.node() :
 			IECore.msg( IECore.MessageHandler.Level.Info, messageTitle, "Dispatched all tasks." )
-			return
+			return True
 
 		script = batch.node().scriptNode()
 
 		if isinstance( batch.node(), Gaffer.TaskList ) :
 			IECore.msg( IECore.MessageHandler.Level.Info, messageTitle, "Finished " + batch.node().relativeName( script ) )
-			return
+			return True
 		
 		taskContext = batch.context()
 		frames = str( IECore.frameListFromList( [ int(x) for x in batch.frames() ] ) )
@@ -135,8 +153,11 @@ class LocalDispatcher( Gaffer.Dispatcher ) :
 		result = subprocess.call( cmd )
 		if result :
 			IECore.msg( IECore.MessageHandler.Level.Error, messageTitle, "Failed to execute " + batch.node().getName() + " on frames " + frames )
+			return False
 
 		batch.blindData()["dispatched"] = IECore.BoolData( True )
+		
+		return True
 
 	@staticmethod
 	def _doSetupPlugs( parentPlug ) :
