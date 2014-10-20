@@ -118,24 +118,35 @@ class DispatcherWindow( GafferUI.Window ) :
 		if visible :
 			self.__dispatchButton._qtWidget().setFocus( QtCore.Qt.OtherFocusReason )
 
-	def getDispatcher( self, dispatcherType ) :
-
-		return self.__dispatchers.get( dispatcherType, None )
-
-	def setDispatcher( self, dispatcherType, dispatcher ) :
+	def addDispatcher( self, dispatcherType, dispatcher ) :
 		
 		if dispatcherType not in self.__dispatchers.keys() :
 			self.__dispatchersMenu.append( dispatcherType )
 		
-		self.__currentDispatcher = dispatcher
 		self.__dispatchers[dispatcherType] = dispatcher
+	
+	def dispatcher( self, dispatcherType ) :
 		
-		self.__dispatchersMenu.setSelection( [ dispatcherType ] )
-		self.__update()
+		return self.__dispatchers.get( dispatcherType, None )
 	
 	def currentDispatcher( self ) :
 		
 		return self.__currentDispatcher
+	
+	def getCurrentDispatcherType( self ) :
+		
+		for dispatcherType, dispatcher in self.__dispatchers.items() :
+			if self.__currentDispatcher.isSame( dispatcher ) :
+				return dispatcherType
+	
+	def setCurrentDispatcherType( self, dispatcherType ) :
+		
+		if dispatcherType not in self.__dispatchers.keys() :
+			return
+		
+		self.__currentDispatcher = self.__dispatchers[dispatcherType]
+		self.__dispatchersMenu.setSelection( [ dispatcherType ] )
+		self.__update()
 	
 	def setNodesToDispatch( self, nodes ) :
 
