@@ -54,7 +54,7 @@ static InternedString g_batchSize( "batchSize" );
 size_t Dispatcher::g_firstPlugIndex = 0;
 Dispatcher::PreDispatchSignal Dispatcher::g_preDispatchSignal;
 Dispatcher::PostDispatchSignal Dispatcher::g_postDispatchSignal;
-DispatcherPtr Dispatcher::g_defaultDispatcher = 0;
+std::string Dispatcher::g_defaultDispatcherType = "";
 
 IE_CORE_DEFINERUNTIMETYPED( Dispatcher )
 
@@ -543,14 +543,14 @@ DispatcherPtr Dispatcher::create( const std::string &dispatcherType )
 	return it->second();
 }
 
-Dispatcher *Dispatcher::getDefaultDispatcher()
+const std::string &Dispatcher::getDefaultDispatcherType()
 {
-	return g_defaultDispatcher.get();
+	return g_defaultDispatcherType;
 }
 
-void Dispatcher::setDefaultDispatcher( Dispatcher *dispatcher )
+void Dispatcher::setDefaultDispatcherType( const std::string &dispatcherType )
 {
-	g_defaultDispatcher = dispatcher;
+	g_defaultDispatcherType = dispatcherType;
 }
 
 void Dispatcher::registerDispatcher( const std::string &dispatcherType, Creator creator )

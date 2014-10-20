@@ -90,7 +90,8 @@ class DispatcherWindow( GafferUI.Window ) :
 			Gaffer.NodeAlgo.applyUserDefaults( dispatcher )
 			self.__dispatchers[dispatcherType] = dispatcher
 		
-		self.__currentDispatcher = self.__dispatchers["Local"]
+		defaultType = Gaffer.Dispatcher.getDefaultDispatcherType()
+		self.__currentDispatcher = self.__dispatchers[ defaultType ]
 		self.__nodes = []
 
 		with self :
@@ -101,7 +102,7 @@ class DispatcherWindow( GafferUI.Window ) :
 					GafferUI.Label( "Dispatcher" )
 					self.__dispatchersMenu = GafferUI.MultiSelectionMenu( allowMultipleSelection = False, allowEmptySelection = False )
 					self.__dispatchersMenu.append( self.__dispatchers.keys() )
-					self.__dispatchersMenu.setSelection( [ "Local" ] )
+					self.__dispatchersMenu.setSelection( [ defaultType ] )
 					self.__dispatchersMenuSelectionChangedConnection = self.__dispatchersMenu.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__dispatcherChanged ) )
 
 				self.__frame = GafferUI.Frame( borderStyle=GafferUI.Frame.BorderStyle.None, borderWidth=0 )

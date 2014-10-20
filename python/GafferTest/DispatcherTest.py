@@ -721,14 +721,15 @@ class DispatcherTest( GafferTest.TestCase ) :
 	def testDefaultDispatcher( self ) :
 		
 		dispatcher = Gaffer.Dispatcher.create( "testDispatcher" )
-		self.assertEqual( Gaffer.Dispatcher.getDefaultDispatcher(), None )
-		Gaffer.Dispatcher.setDefaultDispatcher( dispatcher )
-		self.assertTrue( Gaffer.Dispatcher.getDefaultDispatcher().isSame( dispatcher ) )
-		dispatcher2 = Gaffer.Dispatcher.create( "testDispatcher" )
-		self.assertFalse( Gaffer.Dispatcher.getDefaultDispatcher().isSame( dispatcher2 ) )
-		Gaffer.Dispatcher.setDefaultDispatcher( dispatcher2 )
-		self.assertFalse( Gaffer.Dispatcher.getDefaultDispatcher().isSame( dispatcher ) )
-		self.assertTrue( Gaffer.Dispatcher.getDefaultDispatcher().isSame( dispatcher2 ) )
+		self.assertEqual( Gaffer.Dispatcher.getDefaultDispatcherType(), "" )
+		Gaffer.Dispatcher.setDefaultDispatcherType( "testDispatcher" )
+		self.assertEqual( Gaffer.Dispatcher.getDefaultDispatcherType(), "testDispatcher" )
+		dispatcher2 = Gaffer.Dispatcher.create( Gaffer.Dispatcher.getDefaultDispatcherType() )
+		self.assertTrue( isinstance( dispatcher2, DispatcherTest.MyDispatcher ) )
+		self.assertFalse( dispatcher2.isSame( dispatcher ) )
+		Gaffer.Dispatcher.setDefaultDispatcherType( "fakeDispatcher" )
+		self.assertEqual( Gaffer.Dispatcher.getDefaultDispatcherType(), "fakeDispatcher" )
+		self.assertEqual( Gaffer.Dispatcher.create( Gaffer.Dispatcher.getDefaultDispatcherType() ), None )
 	
 	def tearDown( self ) :
 
