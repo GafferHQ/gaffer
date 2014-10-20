@@ -127,7 +127,22 @@ void RenderManShader::loadShader( const std::string &shaderName, bool keepExisti
 	IECore::ConstShaderPtr shader = runTimeCast<const IECore::Shader>( shaderLoader()->read( shaderName + ".sdl" ) );
 	loadShaderParameters( shader.get(), parametersPlug(), keepExistingValues );
 	namePlug()->setValue( shaderName );
-	typePlug()->setValue( "ri:" + shader->getType() );
+
+	string type = "ri:" + shader->getType();
+	bool oldAndNewTypesCompatible = false;
+	if( type == "ri:volume" )
+	{
+		// "ri:volume" is the type of the shader, but it's not a valid assignment
+		// type. Valid assignment types are "ri:atmosphere", "ri:interior" and "ri:exterior".
+		type = "ri:atmosphere";
+		const string oldType = typePlug()->getValue();
+		oldAndNewTypesCompatible = oldType == "ri:atmosphere" || oldType == "ri:interior" || oldType == "ri:exterior";
+	}
+
+	if( !keepExistingValues || !oldAndNewTypesCompatible )
+	{
+		typePlug()->setValue( type );
+	}
 }
 
 bool RenderManShader::acceptsInput( const Plug *plug, const Plug *inputPlug ) const
