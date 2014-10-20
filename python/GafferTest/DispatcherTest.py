@@ -88,7 +88,8 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 			batch.blindData()["dispatched"] = IECore.BoolData( True )
 
-		def _doSetupPlugs( self, parentPlug ) :
+		@staticmethod
+		def _doSetupPlugs( parentPlug ) :
 
 			parentPlug["testDispatcherPlug"] = Gaffer.IntPlug(
 				direction = Gaffer.Plug.Direction.In,
@@ -255,9 +256,13 @@ class DispatcherTest( GafferTest.TestCase ) :
 	def testPlugs( self ) :
 
 		n = Gaffer.ExecutableOpHolder()
-		n['dispatcher'].direction()
-		n['dispatcher']['testDispatcherPlug'].direction()
-		self.assertEqual( n['dispatcher']['testDispatcherPlug'].direction(), Gaffer.Plug.Direction.In )
+		self.assertEqual( n['dispatcher'].getChild( 'testDispatcherPlug' ), None )
+		
+		Gaffer.Dispatcher.registerDispatcher( "testDispatcherWithCustomPlugs", DispatcherTest.MyDispatcher, setupPlugsFn = DispatcherTest.MyDispatcher._doSetupPlugs )
+		
+		n2 = Gaffer.ExecutableOpHolder()
+		self.assertTrue( isinstance( n2['dispatcher'].getChild( 'testDispatcherPlug' ), Gaffer.IntPlug ) )
+		self.assertEqual( n2['dispatcher']['testDispatcherPlug'].direction(), Gaffer.Plug.Direction.In )
 
 	def testDispatch( self ) :
 

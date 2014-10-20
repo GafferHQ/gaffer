@@ -301,7 +301,10 @@ void Dispatcher::setupPlugs( CompoundPlug *parentPlug )
 	const CreatorMap &m = creators();
 	for ( CreatorMap::const_iterator it = m.begin(); it != m.end(); ++it )
 	{
-		it->second()->doSetupPlugs( parentPlug );
+		if ( it->second.second )
+		{
+			it->second.second( parentPlug );
+		}
 	}
 }
 
@@ -540,7 +543,7 @@ DispatcherPtr Dispatcher::create( const std::string &dispatcherType )
 		return 0;
 	}
 	
-	return it->second();
+	return it->second.first();
 }
 
 const std::string &Dispatcher::getDefaultDispatcherType()
@@ -553,9 +556,9 @@ void Dispatcher::setDefaultDispatcherType( const std::string &dispatcherType )
 	g_defaultDispatcherType = dispatcherType;
 }
 
-void Dispatcher::registerDispatcher( const std::string &dispatcherType, Creator creator )
+void Dispatcher::registerDispatcher( const std::string &dispatcherType, Creator creator, SetupPlugsFn setupPlugsFn )
 {
-	creators()[dispatcherType] = creator;
+	creators()[dispatcherType] = std::pair<Creator, SetupPlugsFn>( creator, setupPlugsFn );
 }
 
 void Dispatcher::registeredDispatchers( std::vector<std::string> &dispatcherTypes )

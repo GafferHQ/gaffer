@@ -104,25 +104,6 @@ class DispatcherWrapper : public NodeWrapper<Dispatcher>
 			}
 		}
 
-		void doSetupPlugs( CompoundPlug *parentPlug ) const
-		{
-			ScopedGILLock gilLock;
-			boost::python::object f = this->methodOverride( "_doSetupPlugs" );
-			if( f )
-			{
-				CompoundPlugPtr tmpPointer = parentPlug;
-				try
-				{
-					f( tmpPointer );
-				}
-				catch( const boost::python::error_already_set &e )
-				{
-					translatePythonException();
-				}
-
-			}
-		}
-
 		static void taskBatchExecute( const Dispatcher::TaskBatch &batch )
 		{
 			ScopedGILRelease gilRelease;
@@ -181,29 +162,60 @@ class DispatcherWrapper : public NodeWrapper<Dispatcher>
 
 };
 
-struct DispatcherCreator
+struct DispatcherHelper
 {
-	DispatcherCreator( object fn )
-		:	m_fn( fn )
+	DispatcherHelper( object fn, object setupPlugsFn )
+		:	m_fn( fn ), m_setupFn( setupPlugsFn )
 	{
 	}
 
 	DispatcherPtr operator()()
 	{
 		IECorePython::ScopedGILLock gilLock;
-		DispatcherPtr result = extract<DispatcherPtr>( m_fn() );
-		return result;
+		
+		try
+		{
+			DispatcherPtr result = extract<DispatcherPtr>( m_fn() );
+			return result;
+		}
+		catch( const boost::python::error_already_set &e )
+		{
+			translatePythonException();
+		}
+		
+		return 0;
+	}
+	
+	void operator()( CompoundPlug *parentPlug )
+	{
+		if ( m_setupFn )
+		{
+			CompoundPlugPtr tmpPointer = parentPlug;
+			
+			IECorePython::ScopedGILLock gilLock;
+			
+			try
+			{
+				m_setupFn( tmpPointer );
+			}
+			catch( const boost::python::error_already_set &e )
+			{
+				translatePythonException();
+			}
+		}
 	}
 
 	private :
 
 		object m_fn;
+		object m_setupFn;
 
 };
 
-static void registerDispatcher( std::string type, object creator )
+static void registerDispatcher( std::string type, object creator, object setupPlugsFn )
 {
-	Dispatcher::registerDispatcher( type, DispatcherCreator( creator ) );
+	DispatcherHelper helper( creator, setupPlugsFn );
+	Dispatcher::registerDispatcher( type, helper, helper );
 }
 
 static tuple registeredDispatchersWrapper()
@@ -272,7 +284,7 @@ void GafferBindings::bindDispatcher()
 		.def( "create", &Dispatcher::create ).staticmethod( "create" )
 		.def( "getDefaultDispatcherType", &Dispatcher::getDefaultDispatcherType, return_value_policy<copy_const_reference>() ).staticmethod( "getDefaultDispatcherType" )
 		.def( "setDefaultDispatcherType", &Dispatcher::setDefaultDispatcherType ).staticmethod( "setDefaultDispatcherType" )
-		.def( "registerDispatcher", &registerDispatcher ).staticmethod( "registerDispatcher" )
+		.def( "registerDispatcher", &registerDispatcher, ( arg( "dispatcherType" ), arg( "creator" ), arg( "setupPlugsFn" ) = 0 ) ).staticmethod( "registerDispatcher" )
 		.def( "registeredDispatchers", &registeredDispatchersWrapper ).staticmethod( "registeredDispatchers" )
 		.def( "preDispatchSignal", &Dispatcher::preDispatchSignal, return_value_policy<reference_existing_object>() ).staticmethod( "preDispatchSignal" )
 		.def( "postDispatchSignal", &Dispatcher::postDispatchSignal, return_value_policy<reference_existing_object>() ).staticmethod( "postDispatchSignal" )
