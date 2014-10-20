@@ -1579,5 +1579,19 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 
 		self.assertEqual( a["out"].attributes( "/plane" ).keys(), [ "ri:surface"] )
 
+	def testVolumeShader( self ) :
+
+		s = GafferRenderMan.RenderManShader()
+		s.loadShader( "fog" )
+
+		self.assertEqual( s["type"].getValue(), "ri:atmosphere" )
+
+		s["type"].setValue( "ri:interior" )
+		s.loadShader( "fog", keepExistingValues = True )
+		self.assertEqual( s["type"].getValue(), "ri:interior" )
+
+		s.loadShader( "fog", keepExistingValues = False )
+		self.assertEqual( s["type"].getValue(), "ri:atmosphere" )
+
 if __name__ == "__main__":
 	unittest.main()
