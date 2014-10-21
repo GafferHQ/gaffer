@@ -72,7 +72,16 @@ Plug::~Plug()
 
 bool Plug::acceptsChild( const GraphComponent *potentialChild ) const
 {
-	return false;
+	if( !GraphComponent::acceptsChild( potentialChild ) )
+	{
+		return false;
+	}
+	const Plug *p = IECore::runTimeCast<const Plug>( potentialChild );
+	if( !p )
+	{
+		return false;
+	}
+	return p->direction()==direction();
 }
 
 bool Plug::acceptsParent( const GraphComponent *potentialParent ) const
@@ -162,15 +171,36 @@ bool Plug::acceptsInput( const Plug *input ) const
 		}
 	}
 
+	if( input )
+	{
+		if( children().size() > input->children().size() )
+		{
+			return false;
+		}
+		for( PlugIterator it1( this ), it2( input ); it1!=it1.end(); ++it1, ++it2 )
+		{
+			if( !( *it1 )->acceptsInput( it2->get() ) )
+			{
+				return false;
+			}
+		}
+	}
+
 	return true;
 }
 
 void Plug::setInput( PlugPtr input )
 {
+	setInput( input, /* setChildInputs = */ true, /* updateParentInput = */ true );
+}
+
+void Plug::setInput( PlugPtr input, bool setChildInputs, bool updateParentInput )
+{
 	if( input.get()==m_input )
 	{
 		return;
 	}
+
 	if( input && !acceptsInput( input.get() ) )
 	{
 		std::string what = boost::str(
@@ -180,6 +210,29 @@ void Plug::setInput( PlugPtr input )
 		);
 		throw IECore::Exception( what );
 	}
+
+	// connect our children first
+
+	if( setChildInputs )
+	{
+		if( !input )
+		{
+			for( PlugIterator it( this ); it!=it.end(); ++it )
+			{
+				(*it)->setInput( NULL, /* setChildInputs = */ true, /* updateParentInput = */ false );
+			}
+		}
+		else
+		{
+			for( PlugIterator it1( this ), it2( input.get() ); it1!=it1.end(); ++it1, ++it2 )
+			{
+				(*it1)->setInput( *it2, /* setChildInputs = */ true, /* updateParentInput = */ false );
+			}
+		}
+	}
+
+	// then connect ourselves
+
 	if( refCount() )
 	{
 		// someone is referring to us, so we're definitely fully constructed and we may have a ScriptNode
@@ -197,6 +250,18 @@ void Plug::setInput( PlugPtr input )
 		// to ourselves (it will result in double destruction). so we just set the input directly.
 		setInputInternal( input, false );
 	}
+
+	// finally, adjust our parent's connection to take account of
+	// the changes to its child.
+
+	if( updateParentInput )
+	{
+		if( Plug *parentPlug = parent<Plug>() )
+		{
+			parentPlug->updateInputFromChildInputs( this );
+		}
+	}
+
 }
 
 void Plug::setInputInternal( PlugPtr input, bool emit )
@@ -221,6 +286,48 @@ void Plug::setInputInternal( PlugPtr input, bool emit )
 	}
 }
 
+void Plug::updateInputFromChildInputs( Plug *checkFirst )
+{
+	if( !children().size() )
+	{
+		return;
+	}
+
+	if( !checkFirst )
+	{
+		checkFirst = static_cast<Plug *>( children().front().get() );
+	}
+
+	Plug *input = checkFirst->getInput<Plug>();
+	if( !input || !input->parent<Plug>() )
+	{
+		setInput( NULL, /* setChildInputs = */ false, /* updateParentInput = */ true );
+		return;
+	}
+
+	Plug *commonParent = input->parent<Plug>();
+	if( !acceptsInput( commonParent ) )
+	{
+		// if we're never going to accept the candidate input anyway, then
+		// don't even bother checking to see if all the candidate's children
+		// are connected to our children.
+		setInput( NULL, /* setChildInputs = */ false, /* updateParentInput = */ true );
+		return;
+	}
+
+	for( PlugIterator it( this ); it!=it.end(); ++it )
+	{
+		input = (*it)->getInput<Plug>();
+		if( !input || input->parent<Plug>()!=commonParent )
+		{
+			setInput( NULL, /* setChildInputs = */ false, /* updateParentInput = */ true );
+			return;
+		}
+	}
+
+	setInput( commonParent, /* setChildInputs = */ false, /* updateParentInput = */ true );
+}
+
 void Plug::removeOutputs()
 {
 	for( OutputContainer::iterator it = m_outputs.begin(); it!=m_outputs.end();  )
@@ -237,19 +344,29 @@ const Plug::OutputContainer &Plug::outputs() const
 
 PlugPtr Plug::createCounterpart( const std::string &name, Direction direction ) const
 {
-	return new Plug( name, direction, getFlags() );
+	PlugPtr result = new Plug( name, direction, getFlags() );
+	for( PlugIterator it( this ); it != it.end(); ++it )
+	{
+		result->addChild( (*it)->createCounterpart( (*it)->getName(), direction ) );
+	}
+	return result;
 }
 
 void Plug::parentChanging( Gaffer::GraphComponent *newParent )
 {
-	// if we're losing our parent then remove all our connections first.
-	// this must be done here (rather than in a parentChangedSignal() slot)
-	// because we need a current parent for the operation to be undoable.
-
 	if( !newParent )
 	{
+		// we're losing our parent - remove all our connections first.
+		// this must be done here (rather than in a parentChangedSignal() slot)
+		// because we need a current parent for the operation to be undoable.
 		setInput( 0 );
 		removeOutputs();
+	}
+	else if( Plug *newParentPlug = IECore::runTimeCast<Plug>( newParent ) )
+	{
+		// we're getting a new parent - update its input connection from
+		// all the children including the pending one.
+		newParentPlug->updateInputFromChildInputs( this );
 	}
 
 }

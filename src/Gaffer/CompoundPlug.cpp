@@ -53,101 +53,12 @@ IE_CORE_DEFINERUNTIMETYPED( CompoundPlug )
 CompoundPlug::CompoundPlug( const std::string &name, Direction direction, unsigned flags )
 	:	ValuePlug( name, direction, flags )
 {
-	parentChangedSignal().connect( boost::bind( &CompoundPlug::parentChanged, this ) );
 	childAddedSignal().connect( boost::bind( &CompoundPlug::childAddedOrRemoved, this ) );
 	childRemovedSignal().connect( boost::bind( &CompoundPlug::childAddedOrRemoved, this ) );
 }
 
 CompoundPlug::~CompoundPlug()
 {
-}
-
-bool CompoundPlug::acceptsChild( const GraphComponent *potentialChild ) const
-{
-	ConstPlugPtr p = IECore::runTimeCast<const Plug>( potentialChild );
-	if( !p )
-	{
-		return false;
-	}
-	return p->direction()==direction();
-}
-
-bool CompoundPlug::acceptsInput( const Plug *input ) const
-{
-	if( !ValuePlug::acceptsInput( input ) )
-	{
-		return false;
-	}
-	if( input )
-	{
-		const CompoundPlug *p = IECore::runTimeCast<const CompoundPlug>( input );
-		if( !p )
-		{
-			return false;
-		}
-		if( children().size() > p->children().size() )
-		{
-			return false;
-		}
-		for( PlugIterator it1( this ), it2( p ); it1!=it1.end(); ++it1, ++it2 )
-		{
-			if( !( *it1 )->acceptsInput( it2->get() ) )
-			{
-				return false;
-			}
-		}
-	}
-	return true;
-}
-
-void CompoundPlug::setInput( PlugPtr input )
-{
-	if( input.get() == getInput<Plug>() )
-	{
-		return;
-	}
-
-	// unfortunately we have to duplicate the check in Plug::setInput()
-	// ourselves as we delay calling Plug::setInput() until we've connected
-	// the children, but need to do the check first.
-	/// \todo I think there's a case for not having CompoundPlug at all,
-	/// and having Plug have all its functionality.
-	if( input && !acceptsInput( input.get() ) )
-	{
-		std::string what = boost::str(
-			boost::format( "Plug \"%s\" rejects input \"%s\"." )
-			% fullName()
-			% input->fullName()
-		);
-		throw IECore::Exception( what );
-	}
-
-	{
-		// we use the plugInputChangedConnection to trigger calls to updateInputFromChildInputs()
-		// when child inputs are changed by code elsewhere. it would be counterproductive for
-		// us to call updateInputFromChildInputs() while we ourselves are changing those inputs,
-		// so we temporarily block the connection.
-		BlockedConnection block( m_plugInputChangedConnection );
-
-		if( !input )
-		{
-			for( PlugIterator it( this ); it!=it.end(); ++it )
-			{
-				(*it)->setInput( NULL );
-			}
-		}
-		else
-		{
-			for( PlugIterator it1( this ), it2( input.get() ); it1!=it1.end(); ++it1, ++it2 )
-			{
-				(*it1)->setInput( *it2 );
-			}
-		}
-	}
-
-	// we connect ourselves last, so that all our child plugs are correctly connected
-	// before we signal our own connection change.
-	ValuePlug::setInput( input );
 }
 
 PlugPtr CompoundPlug::createCounterpart( const std::string &name, Direction direction ) const
@@ -224,76 +135,12 @@ void CompoundPlug::hash( IECore::MurmurHash &h ) const
 	ValuePlug::hash( h );
 }
 
-void CompoundPlug::parentChanged()
-{
-	m_plugInputChangedConnection.disconnect();
-
-	Node *n = node();
-	if( n )
-	{
-		m_plugInputChangedConnection = n->plugInputChangedSignal().connect( boost::bind( &CompoundPlug::plugInputChanged, this, ::_1 ) );
-	}
-}
-
 void CompoundPlug::childAddedOrRemoved()
 {
-	updateInputFromChildInputs( 0 );
 	// addition or removal of a child to a compound is considered to
 	// change its value, so we emit the appropriate signal. this is
 	// mostly of use for the SplinePlug, as points are added by adding
 	// plugs and removed by removing them.
+	/// \todo Do we really need this?
 	emitPlugSet();
-}
-
-void CompoundPlug::plugInputChanged( Plug *plug )
-{
-	if( plug->parent<CompoundPlug>()==this )
-	{
-		updateInputFromChildInputs( plug );
-	}
-}
-
-void CompoundPlug::updateInputFromChildInputs( Plug *checkFirst )
-{
-	if( !children().size() )
-	{
-		return;
-	}
-
-	if( !checkFirst )
-	{
-		checkFirst = static_cast<Plug *>( children().front().get() );
-	}
-
-	Plug *input = checkFirst->getInput<Plug>();
-	if( !input || !input->ancestor<CompoundPlug>() )
-	{
-		// calling ValuePlug::setInput explicitly rather than setInput
-		// so that we don't invoke the behaviour of changing the child
-		// plugs' inputs too.
-		ValuePlug::setInput( 0 );
-		return;
-	}
-
-	CompoundPlug *commonParent = input->ancestor<CompoundPlug>();
-	if( !acceptsInput( commonParent ) )
-	{
-		// if we're never going to accept the candidate input anyway, then
-		// don't even bother checking to see if all the candidate's children
-		// are connected to our children.
-		ValuePlug::setInput( 0 );
-		return;
-	}
-
-	for( PlugIterator it( this ); it!=it.end(); ++it )
-	{
-		input = (*it)->getInput<Plug>();
-		if( !input || input->ancestor<CompoundPlug>()!=commonParent )
-		{
-			ValuePlug::setInput( 0 );
-			return;
-		}
-	}
-
-	ValuePlug::setInput( commonParent );
 }

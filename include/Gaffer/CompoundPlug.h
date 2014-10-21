@@ -53,17 +53,7 @@ class CompoundPlug : public ValuePlug
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::CompoundPlug, CompoundPlugTypeId, ValuePlug );
 
-		/// Accepts any child provided it's a Plug and has the same direction
-		/// as this CompoundPlug.
-		virtual bool acceptsChild( const GraphComponent *potentialChild ) const;
 		virtual PlugPtr createCounterpart( const std::string &name, Direction direction ) const;
-
-		/// Only accepts inputs which are CompoundPlugs with child
-		/// Plugs compatible with this plug.
-		virtual bool acceptsInput( const Plug *input ) const;
-		/// Makes connections between the corresponding child Plugs of
-		/// input and this Plug.
-		virtual void setInput( PlugPtr input );
 
 		/// Only returns true if all child plugs are settable.
 		virtual bool settable() const;
@@ -81,13 +71,7 @@ class CompoundPlug : public ValuePlug
 
 	private :
 
-		void parentChanged();
 		void childAddedOrRemoved();
-
-		boost::signals::connection m_plugInputChangedConnection;
-		void plugInputChanged( Plug *plug );
-
-		void updateInputFromChildInputs( Plug *checkFirst );
 
 };
 

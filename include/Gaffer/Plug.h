@@ -49,7 +49,8 @@ IE_CORE_FORWARDDECLARE( Plug )
 IE_CORE_FORWARDDECLARE( Node )
 
 /// The Plug class defines a means of making point to point connections.
-/// A Plug may have many outputs but only one input.
+/// A Plug may have many outputs but only one input, and may have an
+/// arbitrary number of child plugs.
 class Plug : public GraphComponent
 {
 
@@ -103,7 +104,7 @@ class Plug : public GraphComponent
 		/// @name Parent-child relationships
 		//////////////////////////////////////////////////////////////////////
 		//@{
-		/// Accepts no children.
+		/// Accepts only Plugs with the same direction.
 		virtual bool acceptsChild( const GraphComponent *potentialChild ) const;
 		/// Accepts only Nodes or Plugs as a parent.
 		virtual bool acceptsParent( const GraphComponent *potentialParent ) const;
@@ -135,10 +136,12 @@ class Plug : public GraphComponent
 		/// acceptance and false for rejection. Implementations
 		/// should call their base class and only accept an
 		/// input if their base class does too. The default
-		/// implementation accepts any input, provided that
-		/// direction()==In and the AcceptsInputs flag is set,
-		/// the ReadOnly flag is not set, and that node()->acceptsInput()
-		/// also accepts the input.
+		/// implementation accepts inputs provided that :
+		///
+		///  - direction()==In and the AcceptsInputs flag is set
+		///  - the ReadOnly flag is not set
+		///  - node()->acceptsInput() also accepts the input
+		///  - corresponding child plugs also accept the input
 		virtual bool acceptsInput( const Plug *input ) const;
 		/// Sets the input to this plug if acceptsInput( input )
 		/// returns true, otherwise throws an IECore::Exception.
@@ -180,9 +183,10 @@ class Plug : public GraphComponent
 
 	private :
 
+		void setInput( PlugPtr input, bool setChildInputs, bool updateParentInput );
 		void setInputInternal( PlugPtr input, bool emit );
 
-		static void parentChanged( GraphComponent *child, GraphComponent *previousParent );
+		void updateInputFromChildInputs( Plug *checkFirst );
 
 		Direction m_direction;
 		Plug *m_input;

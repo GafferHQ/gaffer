@@ -406,6 +406,17 @@ class PlugTest( GafferTest.TestCase ) :
 		self.assertEqual( p2.direction(), Gaffer.Plug.Direction.In )
 		self.assertEqual( p2.getFlags(), p.getFlags() )
 
+	def testCreateCounterpartWithChildren( self ) :
+
+		p = Gaffer.Plug()
+		p["i"] = Gaffer.IntPlug()
+		p["f"] = Gaffer.FloatPlug()
+
+		p2 = p.createCounterpart( "p2", Gaffer.Plug.Direction.In )
+		self.assertEqual( p2.keys(), [ "i", "f" ] )
+		self.assertTrue( isinstance( p2["i"], Gaffer.IntPlug ) )
+		self.assertTrue( isinstance( p2["f"], Gaffer.FloatPlug ) )
+
 	def testSource( self ) :
 
 		p1 = Gaffer.Plug( "p1" )
@@ -520,6 +531,58 @@ class PlugTest( GafferTest.TestCase ) :
 		self.assertEqual( input.outputs(), () )
 		for output in outputs :
 			self.assertTrue( output.getInput() is None )
+
+	def testParentConnectionTracksChildConnections( self ) :
+
+		n1 = Gaffer.Node()
+		n1["p"] = Gaffer.Plug()
+		n1["p"]["c1"] = Gaffer.Plug()
+		n1["p"]["c2"] = Gaffer.Plug()
+
+		n2 = Gaffer.Node()
+		n2["p"] = Gaffer.Plug()
+		n2["p"]["c1"] = Gaffer.Plug()
+		n2["p"]["c2"] = Gaffer.Plug()
+
+		n2["p"]["c1"].setInput( n1["p"]["c1"] )
+		n2["p"]["c2"].setInput( n1["p"]["c2"] )
+		self.failUnless( n2["p"].getInput().isSame( n1["p"] ) )
+
+		n2["p"]["c2"].setInput( None )
+		self.failUnless( n2["p"].getInput() is None )
+
+		n2["p"]["c2"].setInput( n1["p"]["c2"] )
+		self.failUnless( n2["p"].getInput().isSame( n1["p"] ) )
+
+		n1["p"]["c3"] = Gaffer.Plug()
+		n2["p"]["c3"] = Gaffer.Plug()
+
+		self.failUnless( n2["p"].getInput() is None )
+
+		n2["p"]["c3"].setInput( n1["p"]["c3"] )
+		self.failUnless( n2["p"].getInput().isSame( n1["p"] ) )
+
+	def testAncestorConnectionTracksDescendantConnections( self ) :
+
+		a1 = Gaffer.Plug()
+		a1["b1"] = Gaffer.Plug()
+		a1["b1"]["c1"] = Gaffer.Plug()
+
+		a2 = Gaffer.Plug()
+		a2["b2"] = Gaffer.Plug()
+		a2["b2"]["c2"] = Gaffer.Plug()
+
+		a2["b2"]["c2"].setInput( a1["b1"]["c1"] )
+
+		self.assertTrue( a2["b2"]["c2"].getInput().isSame( a1["b1"]["c1"] ) )
+		self.assertTrue( a2["b2"].getInput().isSame( a1["b1"] ) )
+		self.assertTrue( a2.getInput().isSame( a1 ) )
+
+		a2["b2"]["c2"].setInput( None )
+
+		self.assertTrue( a2["b2"]["c2"].getInput() is None )
+		self.assertTrue( a2["b2"].getInput() is None )
+		self.assertTrue( a2.getInput() is None )
 
 if __name__ == "__main__":
 	unittest.main()
