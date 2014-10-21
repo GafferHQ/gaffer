@@ -84,7 +84,14 @@ class DispatcherWindow( GafferUI.Window ) :
 
 		GafferUI.Window.__init__( self, **kw )
 
-		self.__dispatcher = Gaffer.Dispatcher.dispatcher( "Local" )
+		self.__dispatchers = {}
+		for dispatcherType in Gaffer.Dispatcher.registeredDispatchers() :
+			dispatcher = Gaffer.Dispatcher.create( dispatcherType )
+			Gaffer.NodeAlgo.applyUserDefaults( dispatcher )
+			self.__dispatchers[dispatcherType] = dispatcher
+		
+		defaultType = Gaffer.Dispatcher.getDefaultDispatcherType()
+		self.__currentDispatcher = self.__dispatchers[ defaultType ]
 		self.__nodes = []
 
 		with self :
@@ -94,8 +101,8 @@ class DispatcherWindow( GafferUI.Window ) :
 				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
 					GafferUI.Label( "Dispatcher" )
 					self.__dispatchersMenu = GafferUI.MultiSelectionMenu( allowMultipleSelection = False, allowEmptySelection = False )
-					self.__dispatchersMenu.append( Gaffer.Dispatcher.dispatcherNames() )
-					self.__dispatchersMenu.setSelection( [ "Local" ] )
+					self.__dispatchersMenu.append( self.__dispatchers.keys() )
+					self.__dispatchersMenu.setSelection( [ defaultType ] )
 					self.__dispatchersMenuSelectionChangedConnection = self.__dispatchersMenu.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__dispatcherChanged ) )
 
 				self.__frame = GafferUI.Frame( borderStyle=GafferUI.Frame.BorderStyle.None, borderWidth=0 )
@@ -111,21 +118,48 @@ class DispatcherWindow( GafferUI.Window ) :
 		if visible :
 			self.__dispatchButton._qtWidget().setFocus( QtCore.Qt.OtherFocusReason )
 
-	def getDispatcher( self ) :
-
-		return self.__dispatcher
-
-	def setDispatcher( self, dispatcher ) :
+	def addDispatcher( self, label, dispatcher ) :
 		
-		for name in Gaffer.Dispatcher.dispatcherNames() :
-			if Gaffer.Dispatcher.dispatcher( name ).isSame( dispatcher ) :
-				self.__dispatcher = dispatcher
-				self.__dispatchersMenu.setSelection( [ name ] )
-				self.__update()
-				return
+		if label not in self.__dispatchers.keys() :
+			self.__dispatchersMenu.append( label )
 		
-		raise RuntimeError, "DispatcherWindow.setDispatcher only accepts dispatchers which have been registered."
-
+		self.__dispatchers[label] = dispatcher
+	
+	def removeDispatcher( self, label ) :
+		
+		if label in self.__dispatchers.keys() :
+			toRemove = self.__dispatchers.get( label, None )
+			if toRemove and self.__currentDispatcher.isSame( toRemove ) :
+				if len(self.__dispatchers.items()) < 2 :
+					raise RuntimeError, "DispatcherWindow: " + label + " is the only dispatcher, so it cannot be removed."
+				self.setCurrentDispatcher( self.__dispatchers.values()[0] )
+			
+			del self.__dispatchers[label]
+			self.__dispatchersMenu.remove( label )
+	
+	def dispatcher( self, label ) :
+		
+		return self.__dispatchers.get( label, None )
+	
+	def getCurrentDispatcher( self ) :
+		
+		return self.__currentDispatcher
+	
+	def setCurrentDispatcher( self, dispatcher ) :
+		
+		dispatcherLabel = ""
+		for label, d in self.__dispatchers.items() :
+			if d.isSame( dispatcher ) :
+				dispatcherLabel = label
+				break
+		
+		if not dispatcherLabel :
+			raise RuntimeError, "DispatcherWindow: The current dispatcher must be added first. Use DispatcherWindow.addDispatcher( label, dispatcher )"
+		
+		self.__currentDispatcher = dispatcher
+		self.__dispatchersMenu.setSelection( [ dispatcherLabel ] )
+		self.__update()
+	
 	def setNodesToDispatch( self, nodes ) :
 
 		self.__nodes = nodes
@@ -152,7 +186,7 @@ class DispatcherWindow( GafferUI.Window ) :
 	
 	def __update( self ) :
 		
-		nodeUI = GafferUI.NodeUI.create( self.__dispatcher )
+		nodeUI = GafferUI.NodeUI.create( self.__currentDispatcher )
 		self.__frame.setChild( nodeUI )
 		self.__updateTitle()
 
@@ -171,7 +205,7 @@ class DispatcherWindow( GafferUI.Window ) :
 
 	def __dispatcherChanged( self, menu ) :
 
-		self.__dispatcher = Gaffer.Dispatcher.dispatcher( menu.getSelection()[0] )
+		self.__currentDispatcher = self.__dispatchers[ menu.getSelection()[0] ]
 		self.__update()
 
 ##################################################################################
@@ -398,7 +432,7 @@ def _dispatch( nodes ) :
 
 	script = nodes[0].scriptNode()
 	with script.context() :
-		__dispatcherWindow( script ).getDispatcher().dispatch( nodes )
+		__dispatcherWindow( script ).getCurrentDispatcher().dispatch( nodes )
 
 	scriptWindow = GafferUI.ScriptWindow.acquire( script )
 	scriptWindow._lastDispatch = [ weakref.ref( node ) for node in nodes ]

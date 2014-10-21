@@ -52,9 +52,9 @@ static InternedString g_frame( "frame" );
 static InternedString g_batchSize( "batchSize" );
 
 size_t Dispatcher::g_firstPlugIndex = 0;
-Dispatcher::DispatcherMap Dispatcher::g_dispatchers;
 Dispatcher::PreDispatchSignal Dispatcher::g_preDispatchSignal;
 Dispatcher::PostDispatchSignal Dispatcher::g_postDispatchSignal;
+std::string Dispatcher::g_defaultDispatcherType = "";
 
 IE_CORE_DEFINERUNTIMETYPED( Dispatcher )
 
@@ -298,37 +298,15 @@ void Dispatcher::setupPlugs( CompoundPlug *parentPlug )
 		}
 	}
 
-	for ( DispatcherMap::const_iterator cit = g_dispatchers.begin(); cit != g_dispatchers.end(); cit++ )
+	const CreatorMap &m = creators();
+	for ( CreatorMap::const_iterator it = m.begin(); it != m.end(); ++it )
 	{
-		cit->second->doSetupPlugs( parentPlug );
+		if ( it->second.second )
+		{
+			it->second.second( parentPlug );
+		}
 	}
 }
-
-void Dispatcher::dispatcherNames( std::vector<std::string> &names )
-{
-	names.clear();
-	names.reserve( g_dispatchers.size() );
-	for ( DispatcherMap::const_iterator cit = g_dispatchers.begin(); cit != g_dispatchers.end(); cit++ )
-	{
-		names.push_back( cit->first );
-	}
-}
-
-void Dispatcher::registerDispatcher( const std::string &name, DispatcherPtr dispatcher )
-{
-	g_dispatchers[name] = dispatcher;
-}
-
-const Dispatcher *Dispatcher::dispatcher( const std::string &name )
-{
-	DispatcherMap::const_iterator cit = g_dispatchers.find( name );
-	if ( cit == g_dispatchers.end() )
-	{
-		throw Exception( "\"" + name + "\" is not a registered Dispatcher." );
-	}
-	return cit->second.get();
-}
-
 
 Dispatcher::TaskBatchPtr Dispatcher::batchTasks( const ExecutableNode::Tasks &tasks )
 {
@@ -550,4 +528,50 @@ CompoundData *Dispatcher::TaskBatch::blindData()
 const CompoundData *Dispatcher::TaskBatch::blindData() const
 {
 	return m_blindData.get();
+}
+
+//////////////////////////////////////////////////////////////////////////
+// Registration
+//////////////////////////////////////////////////////////////////////////
+
+DispatcherPtr Dispatcher::create( const std::string &dispatcherType )
+{
+	const CreatorMap &m = creators();
+	CreatorMap::const_iterator it = m.find( dispatcherType );
+	if( it == m.end() )
+	{
+		return 0;
+	}
+	
+	return it->second.first();
+}
+
+const std::string &Dispatcher::getDefaultDispatcherType()
+{
+	return g_defaultDispatcherType;
+}
+
+void Dispatcher::setDefaultDispatcherType( const std::string &dispatcherType )
+{
+	g_defaultDispatcherType = dispatcherType;
+}
+
+void Dispatcher::registerDispatcher( const std::string &dispatcherType, Creator creator, SetupPlugsFn setupPlugsFn )
+{
+	creators()[dispatcherType] = std::pair<Creator, SetupPlugsFn>( creator, setupPlugsFn );
+}
+
+void Dispatcher::registeredDispatchers( std::vector<std::string> &dispatcherTypes )
+{
+	const CreatorMap &m = creators();
+	for ( CreatorMap::const_iterator it = m.begin(); it!=m.end(); ++it )
+	{
+		dispatcherTypes.push_back( it->first );
+	}
+}
+
+Dispatcher::CreatorMap &Dispatcher::creators()
+{
+	static CreatorMap m;
+	return m;
 }

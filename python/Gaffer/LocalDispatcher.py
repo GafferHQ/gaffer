@@ -138,7 +138,8 @@ class LocalDispatcher( Gaffer.Dispatcher ) :
 
 		batch.blindData()["dispatched"] = IECore.BoolData( True )
 
-	def _doSetupPlugs( self, parentPlug ) :
+	@staticmethod
+	def _doSetupPlugs( parentPlug ) :
 
 		if "local" not in parentPlug :
 			localPlug = Gaffer.CompoundPlug( "local" )
@@ -151,4 +152,4 @@ class LocalDispatcher( Gaffer.Dispatcher ) :
 
 IECore.registerRunTimeTyped( LocalDispatcher, typeName = "Gaffer::LocalDispatcher" )
 
-Gaffer.Dispatcher.registerDispatcher( "Local", LocalDispatcher() )
+Gaffer.Dispatcher.registerDispatcher( "Local", LocalDispatcher, setupPlugsFn = LocalDispatcher._doSetupPlugs )

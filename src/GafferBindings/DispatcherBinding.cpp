@@ -104,48 +104,6 @@ class DispatcherWrapper : public NodeWrapper<Dispatcher>
 			}
 		}
 
-		void doSetupPlugs( CompoundPlug *parentPlug ) const
-		{
-			ScopedGILLock gilLock;
-			boost::python::object f = this->methodOverride( "_doSetupPlugs" );
-			if( f )
-			{
-				CompoundPlugPtr tmpPointer = parentPlug;
-				try
-				{
-					f( tmpPointer );
-				}
-				catch( const boost::python::error_already_set &e )
-				{
-					translatePythonException();
-				}
-
-			}
-		}
-
-		static list dispatcherNames()
-		{
-			std::vector<std::string> names;
-			Dispatcher::dispatcherNames( names );
-			list result;
-			for ( std::vector<std::string>::const_iterator nIt = names.begin(); nIt != names.end(); nIt++ )
-			{
-				result.append( *nIt );
-			}
-			return result;
-		}
-
-		static void registerDispatcher( std::string name, Dispatcher *dispatcher )
-		{
-			Dispatcher::registerDispatcher( name, dispatcher );
-		}
-
-		static DispatcherPtr dispatcher( std::string name )
-		{
-			const Dispatcher *d = Dispatcher::dispatcher( name );
-			return const_cast< Dispatcher *>(d);
-		}
-
 		static void taskBatchExecute( const Dispatcher::TaskBatch &batch )
 		{
 			ScopedGILRelease gilRelease;
@@ -204,6 +162,74 @@ class DispatcherWrapper : public NodeWrapper<Dispatcher>
 
 };
 
+struct DispatcherHelper
+{
+	DispatcherHelper( object fn, object setupPlugsFn )
+		:	m_fn( fn ), m_setupFn( setupPlugsFn )
+	{
+	}
+
+	DispatcherPtr operator()()
+	{
+		IECorePython::ScopedGILLock gilLock;
+		
+		try
+		{
+			DispatcherPtr result = extract<DispatcherPtr>( m_fn() );
+			return result;
+		}
+		catch( const boost::python::error_already_set &e )
+		{
+			translatePythonException();
+		}
+		
+		return 0;
+	}
+	
+	void operator()( CompoundPlug *parentPlug )
+	{
+		if ( m_setupFn )
+		{
+			CompoundPlugPtr tmpPointer = parentPlug;
+			
+			IECorePython::ScopedGILLock gilLock;
+			
+			try
+			{
+				m_setupFn( tmpPointer );
+			}
+			catch( const boost::python::error_already_set &e )
+			{
+				translatePythonException();
+			}
+		}
+	}
+
+	private :
+
+		object m_fn;
+		object m_setupFn;
+
+};
+
+static void registerDispatcher( std::string type, object creator, object setupPlugsFn )
+{
+	DispatcherHelper helper( creator, setupPlugsFn );
+	Dispatcher::registerDispatcher( type, helper, helper );
+}
+
+static tuple registeredDispatchersWrapper()
+{
+	std::vector<std::string> types;
+	Dispatcher::registeredDispatchers( types );
+	list result;
+	for ( std::vector<std::string>::const_iterator it = types.begin(); it != types.end(); ++it )
+	{
+		result.append( *it );
+	}
+	return boost::python::tuple( result );
+}
+
 struct PreDispatchSlotCaller
 {
 	bool operator()( boost::python::object slot, const Dispatcher *d, const std::vector<ExecutableNodePtr> &nodes )
@@ -255,9 +281,11 @@ void GafferBindings::bindDispatcher()
 	scope s = NodeClass<Dispatcher, DispatcherWrapper>()
 		.def( "dispatch", &DispatcherWrapper::dispatch )
 		.def( "jobDirectory", &Dispatcher::jobDirectory )
-		.def( "dispatcher", &DispatcherWrapper::dispatcher ).staticmethod( "dispatcher" )
-		.def( "dispatcherNames", &DispatcherWrapper::dispatcherNames ).staticmethod( "dispatcherNames" )
-		.def( "registerDispatcher", &DispatcherWrapper::registerDispatcher ).staticmethod( "registerDispatcher" )
+		.def( "create", &Dispatcher::create ).staticmethod( "create" )
+		.def( "getDefaultDispatcherType", &Dispatcher::getDefaultDispatcherType, return_value_policy<copy_const_reference>() ).staticmethod( "getDefaultDispatcherType" )
+		.def( "setDefaultDispatcherType", &Dispatcher::setDefaultDispatcherType ).staticmethod( "setDefaultDispatcherType" )
+		.def( "registerDispatcher", &registerDispatcher, ( arg( "dispatcherType" ), arg( "creator" ), arg( "setupPlugsFn" ) = 0 ) ).staticmethod( "registerDispatcher" )
+		.def( "registeredDispatchers", &registeredDispatchersWrapper ).staticmethod( "registeredDispatchers" )
 		.def( "preDispatchSignal", &Dispatcher::preDispatchSignal, return_value_policy<reference_existing_object>() ).staticmethod( "preDispatchSignal" )
 		.def( "postDispatchSignal", &Dispatcher::postDispatchSignal, return_value_policy<reference_existing_object>() ).staticmethod( "postDispatchSignal" )
 	;
