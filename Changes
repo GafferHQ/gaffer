@@ -1,3 +1,41 @@
+# 0.3.0.0
+
+#### Core
+
+- Added SubGraph base class, which Reference and Box now derive from, allowing them both to be enabled/disabled.
+- Redesigned Dispatcher registration (#922) (see API section for details).
+
+#### UI
+
+- Nodes created via the NodeMenu apply default values to their plugs, using the "userDefault" key in the Metadata (#1038).
+- Exposed the DispatcherWindow to the public API.
+
+#### Cortex
+
+- Moved Cortex-specific functionality into new GafferCortex library and module.
+	- The Gaffer core itself remains heavily dependent on Cortex, and always will. Here we're splitting out "end user" functionality such as OpHolders and ProceduralHolders, so that GafferCortex can be thought of as the user-visible presence of Cortex within Gaffer.
+	- This remains backwards compatible for now via startup files, which allows a grace period for dependent code to update to the new module layout.
+
+#### RenderMan
+
+- Added basic support for RenderMan volume shaders.
+
+#### API
+
+- Added Gaffer.NodeAlgo python scope with applyUserDefaults( node ) (#1038).
+- Redesigned Dispatcher registration (#922).
+	- Dispatchers are registered with Creator functions rather than instances.
+	- Added get/setDefaultDispatcherType(), which can be used to create a new instance of the default type.
+	- SetupPlugsFn is now a static function that can be registered along with a Creator, rather than a virtual method of Dispatcher instances.
+- Added gil release to GafferScene.matchingPaths python binding.
+- Fixed StringPlug string substitution bug.
+- Catching error_already_set in Dispatcher bindings.
+
+#### Incompatible changes
+
+- Reference and Box now derive from SubGraph rather than Node or DependencyNode.
+- Redesigned Dispatcher registration (#922) (see API section for details).
+
 # 0.2.1.0
 
 #### Core
