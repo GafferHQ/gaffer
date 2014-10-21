@@ -118,34 +118,46 @@ class DispatcherWindow( GafferUI.Window ) :
 		if visible :
 			self.__dispatchButton._qtWidget().setFocus( QtCore.Qt.OtherFocusReason )
 
-	def addDispatcher( self, dispatcherType, dispatcher ) :
+	def addDispatcher( self, label, dispatcher ) :
 		
-		if dispatcherType not in self.__dispatchers.keys() :
-			self.__dispatchersMenu.append( dispatcherType )
+		if label not in self.__dispatchers.keys() :
+			self.__dispatchersMenu.append( label )
 		
-		self.__dispatchers[dispatcherType] = dispatcher
+		self.__dispatchers[label] = dispatcher
 	
-	def dispatcher( self, dispatcherType ) :
+	def removeDispatcher( self, label ) :
 		
-		return self.__dispatchers.get( dispatcherType, None )
+		if label in self.__dispatchers.keys() :
+			toRemove = self.__dispatchers.get( label, None )
+			if toRemove and self.__currentDispatcher.isSame( toRemove ) :
+				if len(self.__dispatchers.items()) < 2 :
+					raise RuntimeError, "DispatcherWindow: " + label + " is the only dispatcher, so it cannot be removed."
+				self.setCurrentDispatcher( self.__dispatchers.values()[0] )
+			
+			del self.__dispatchers[label]
+			self.__dispatchersMenu.remove( label )
 	
-	def currentDispatcher( self ) :
+	def dispatcher( self, label ) :
+		
+		return self.__dispatchers.get( label, None )
+	
+	def getCurrentDispatcher( self ) :
 		
 		return self.__currentDispatcher
 	
-	def getCurrentDispatcherType( self ) :
+	def setCurrentDispatcher( self, dispatcher ) :
 		
-		for dispatcherType, dispatcher in self.__dispatchers.items() :
-			if self.__currentDispatcher.isSame( dispatcher ) :
-				return dispatcherType
-	
-	def setCurrentDispatcherType( self, dispatcherType ) :
+		dispatcherLabel = ""
+		for label, d in self.__dispatchers.items() :
+			if d.isSame( dispatcher ) :
+				dispatcherLabel = label
+				break
 		
-		if dispatcherType not in self.__dispatchers.keys() :
-			return
+		if not dispatcherLabel :
+			raise RuntimeError, "DispatcherWindow: The current dispatcher must be added first. Use DispatcherWindow.addDispatcher( label, dispatcher )"
 		
-		self.__currentDispatcher = self.__dispatchers[dispatcherType]
-		self.__dispatchersMenu.setSelection( [ dispatcherType ] )
+		self.__currentDispatcher = dispatcher
+		self.__dispatchersMenu.setSelection( [ dispatcherLabel ] )
 		self.__update()
 	
 	def setNodesToDispatch( self, nodes ) :
@@ -420,7 +432,7 @@ def _dispatch( nodes ) :
 
 	script = nodes[0].scriptNode()
 	with script.context() :
-		__dispatcherWindow( script ).currentDispatcher().dispatch( nodes )
+		__dispatcherWindow( script ).getCurrentDispatcher().dispatch( nodes )
 
 	scriptWindow = GafferUI.ScriptWindow.acquire( script )
 	scriptWindow._lastDispatch = [ weakref.ref( node ) for node in nodes ]
