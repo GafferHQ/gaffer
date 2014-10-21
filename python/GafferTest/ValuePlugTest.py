@@ -232,6 +232,18 @@ class ValuePlugTest( GafferTest.TestCase ) :
 
 		self.assertTrue( "[\"f\"].setValue" in s.serialise() )
 
+	def testCreateCounterpart( self ) :
+
+		p = Gaffer.ValuePlug()
+		p["i"] = Gaffer.IntPlug()
+		p["f"] = Gaffer.FloatPlug()
+
+		p2 = p.createCounterpart( "p2", Gaffer.Plug.Direction.In )
+		self.assertEqual( p2.keys(), [ "i", "f" ] )
+		self.assertTrue( isinstance( p2["i"], Gaffer.IntPlug ) )
+		self.assertTrue( isinstance( p2["f"], Gaffer.FloatPlug ) )
+		self.assertTrue( isinstance( p2, Gaffer.ValuePlug ) )
+
 	def setUp( self ) :
 
 		self.__originalCacheMemoryLimit = Gaffer.ValuePlug.getCacheMemoryLimit()

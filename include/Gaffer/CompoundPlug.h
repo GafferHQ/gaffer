@@ -43,6 +43,13 @@
 namespace Gaffer
 {
 
+/// \todo Remove this type entirely - it only existed to allow
+/// "plugs with children", and now the Plug and ValuePlug classes
+/// implement that directly. When doing this, refactor ValuePlug
+/// to accept only ValuePlugs as children rather than also accepting
+/// normal Plugs. It's currently accepting Plugs for backwards
+/// compatibility with CompoundPlug, and having to do a number of
+/// runTimeCast<Value>Plug() operations internally to work around that.
 class CompoundPlug : public ValuePlug
 {
 
@@ -54,20 +61,6 @@ class CompoundPlug : public ValuePlug
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::CompoundPlug, CompoundPlugTypeId, ValuePlug );
 
 		virtual PlugPtr createCounterpart( const std::string &name, Direction direction ) const;
-
-		/// Only returns true if all child plugs are settable.
-		virtual bool settable() const;
-
-		virtual void setToDefault();
-		virtual void setFrom( const ValuePlug *other );
-
-		/// Implemented to hash all the child plugs.
-		virtual IECore::MurmurHash hash() const;
-		/// Just calls ValuePlug::hash( h ) - only
-		/// exists to workaround the problem of the
-		/// function above masking this function on
-		/// the base class.
-		void hash( IECore::MurmurHash &h ) const;
 
 	private :
 

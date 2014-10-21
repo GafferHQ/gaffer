@@ -421,6 +421,18 @@ ValuePlug::~ValuePlug()
 {
 }
 
+bool ValuePlug::acceptsChild( const GraphComponent *potentialChild ) const
+{
+	if( !Plug::acceptsChild( potentialChild ) )
+	{
+		return false;
+	}
+	/// \todo Check that child is a ValuePlug - the
+	/// only reason we're not doing that is for backwards
+	/// compatibility with CompoundPlug.
+	return m_staticValue == NULL;
+}
+
 bool ValuePlug::acceptsInput( const Plug *input ) const
 {
 	if( !Plug::acceptsInput( input ) )
@@ -457,6 +469,16 @@ void ValuePlug::setInput( PlugPtr input )
 	Plug::setInput( input );
 }
 
+PlugPtr ValuePlug::createCounterpart( const std::string &name, Direction direction ) const
+{
+	PlugPtr result = new ValuePlug( name, direction, getFlags() );
+	for( PlugIterator it( this ); it != it.end(); ++it )
+	{
+		result->addChild( (*it)->createCounterpart( (*it)->getName(), direction ) );
+	}
+	return result;
+}
+
 bool ValuePlug::settable() const
 {
 	if( getFlags( ReadOnly ) )
@@ -475,7 +497,48 @@ bool ValuePlug::settable() const
 	}
 	else
 	{
-		return direction() == Plug::In;
+		if( direction() != Plug::In )
+		{
+			return false;
+		}
+		for( PlugIterator it( this ); it!=it.end(); ++it )
+		{
+			ValuePlug *valuePlug = IECore::runTimeCast<ValuePlug>( it->get() );
+			if( !valuePlug || !valuePlug->settable() )
+			{
+				return false;
+			}
+		}
+		return true;
+	}
+}
+
+void ValuePlug::setFrom( const ValuePlug *other )
+{
+	const ValuePlug *typedOther = IECore::runTimeCast<const ValuePlug>( other );
+	if( !typedOther )
+	{
+		throw IECore::Exception( "Unsupported plug type" );
+	}
+
+	ChildContainer::const_iterator it, otherIt;
+	for( it = children().begin(), otherIt = typedOther->children().begin(); it!=children().end() && otherIt!=typedOther->children().end(); it++, otherIt++ )
+	{
+		ValuePlug *child = IECore::runTimeCast<ValuePlug>( it->get() );
+		const ValuePlug *otherChild = IECore::runTimeCast<ValuePlug>( otherIt->get() );
+		if( !child || !otherChild )
+		{
+			throw IECore::Exception( "Children are not ValuePlugs" );
+		}
+		child->setFrom( otherChild );
+	}
+}
+
+void ValuePlug::setToDefault()
+{
+	for( ValuePlugIterator it( this ); it != it.end(); ++it )
+	{
+		(*it)->setToDefault();
 	}
 }
 
@@ -500,6 +563,19 @@ static const ValuePlug *sourcePlug( const ValuePlug *p )
 
 IECore::MurmurHash ValuePlug::hash() const
 {
+	if( !m_staticValue )
+	{
+		// We don't store or compute our own value - we're just
+		// being used as a parent for other ValuePlugs. So
+		// return the combined hashes of our children.
+		IECore::MurmurHash result;
+		for( ValuePlugIterator it( this ); it!=it.end(); it++ )
+		{
+			(*it)->hash( result );
+		}
+		return result;
+	}
+
 	const ValuePlug *p = sourcePlug( this );
 
 	if( !p->getInput<Plug>() )
