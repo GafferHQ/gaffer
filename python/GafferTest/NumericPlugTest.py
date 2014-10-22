@@ -442,6 +442,14 @@ class NumericPlugTest( GafferTest.TestCase ) :
 		f1.setValue( 100.8 )
 		self.assertEqual( f2.getValue(), 100 )
 
+	def testNoChildrenAccepted( self ) :
+
+		p1 = Gaffer.IntPlug()
+		p2 = Gaffer.IntPlug()
+
+		self.assertFalse( p1.acceptsChild( p2 ) )
+		self.assertRaises( RuntimeError, p1.addChild, p2 )
+
 if __name__ == "__main__":
 	unittest.main()
 

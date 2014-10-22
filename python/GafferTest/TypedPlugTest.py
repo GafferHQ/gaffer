@@ -209,6 +209,14 @@ class TypedPlugTest( GafferTest.TestCase ) :
 			p.setValue( 1000 )
 			self.assertEqual( b.getValue(), True )
 
+	def testNoChildrenAccepted( self ) :
+
+		p1 = Gaffer.BoolPlug()
+		p2 = Gaffer.BoolPlug()
+
+		self.assertFalse( p1.acceptsChild( p2 ) )
+		self.assertRaises( RuntimeError, p1.addChild, p2 )
+
 if __name__ == "__main__":
 	unittest.main()
 
