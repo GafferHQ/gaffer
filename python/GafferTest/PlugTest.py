@@ -584,6 +584,18 @@ class PlugTest( GafferTest.TestCase ) :
 		self.assertTrue( a2["b2"].getInput() is None )
 		self.assertTrue( a2.getInput() is None )
 
+	def testSerialisationWithChildren( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = Gaffer.Node()
+		s["n"]["p"] = Gaffer.Plug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["n"]["p"]["c"] = Gaffer.Plug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+
+		self.assertTrue( isinstance( s2["n"]["p"]["c"], Gaffer.Plug ) )
+
 if __name__ == "__main__":
 	unittest.main()
 

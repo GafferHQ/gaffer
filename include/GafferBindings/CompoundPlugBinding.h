@@ -48,10 +48,6 @@ void bindCompoundPlug();
 class CompoundPlugSerialiser : public ValuePlugSerialiser
 {
 
-	public :
-
-		virtual bool childNeedsConstruction( const Gaffer::GraphComponent *child ) const;
-
 	protected :
 
 		// Always returns false - since some children may have input connections, storing the whole value for
