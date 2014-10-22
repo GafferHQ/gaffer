@@ -293,6 +293,55 @@ class CompoundDataPlugTest( GafferTest.TestCase ) :
 			m = p.addMember( name, value )
 			self.assertEqual( p.memberDataAndName( m ), ( value, name ) )
 
+	def testBoxPromotion( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["b"] = Gaffer.Box()
+		s["b"]["n"] = Gaffer.Node()
+		s["b"]["n"]["p"] = Gaffer.CompoundDataPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		p = s["b"].promotePlug( s["b"]["n"]["p"], asUserPlug=False )
+		p.setName( "p" )
+
+		def assertPreconditions( script ) :
+
+			self.assertEqual( script["b"]["n"]["p"].keys(), [] )
+			self.assertEqual( script["b"]["p"].keys(), [] )
+			self.assertTrue( script["b"]["n"]["p"].getInput().isSame( script["b"]["p"] ) )
+
+		def assertPostconditions( script ) :
+
+			self.assertEqual( script["b"]["p"].keys(), [ "test" ] )
+			self.assertEqual( script["b"]["n"]["p"].keys(), [ "test" ] )
+
+			self.assertEqual( script["b"]["p"]["test"].keys(), [ "name", "value" ]  )
+			self.assertEqual( script["b"]["n"]["p"]["test"].keys(), [ "name", "value" ]  )
+
+			self.assertTrue( script["b"]["n"]["p"].getInput().isSame( script["b"]["p"] ) )
+			self.assertTrue( script["b"]["n"]["p"]["test"].getInput().isSame( script["b"]["p"]["test"] ) )
+			self.assertTrue( script["b"]["n"]["p"]["test"]["name"].getInput().isSame( script["b"]["p"]["test"]["name"] ) )
+			self.assertTrue( script["b"]["n"]["p"]["test"]["value"].getInput().isSame( script["b"]["p"]["test"]["value"] ) )
+
+		assertPreconditions( s )
+
+		with Gaffer.UndoContext( s ) :
+
+			p.addMember( "test", 10, "test" )
+
+		assertPostconditions( s )
+
+		s.undo()
+		assertPreconditions( s )
+
+		s.redo()
+		assertPostconditions( s )
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+
+		assertPostconditions( s2 )
+
 if __name__ == "__main__":
 	unittest.main()
 
