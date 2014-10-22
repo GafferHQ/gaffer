@@ -502,6 +502,25 @@ class PlugTest( GafferTest.TestCase ) :
 			)
 			self.assertTrue( "Gaffer.Plug.Flags.Default" in repr( p ) )
 
+	def testRemoveOutputs( self ) :
+
+		input = Gaffer.Plug()
+
+		outputs = []
+		for i in range( 0, 1000 ) :
+			outputs.append( Gaffer.Plug() )
+			outputs[-1].setInput( input )
+
+		self.assertEqual( input.outputs(), tuple( outputs ) )
+		for output in outputs :
+			self.assertTrue( output.getInput().isSame( input ) )
+
+		input.removeOutputs()
+
+		self.assertEqual( input.outputs(), () )
+		for output in outputs :
+			self.assertTrue( output.getInput() is None )
+
 if __name__ == "__main__":
 	unittest.main()
 
