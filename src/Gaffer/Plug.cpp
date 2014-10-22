@@ -48,10 +48,48 @@
 
 using namespace Gaffer;
 
+//////////////////////////////////////////////////////////////////////////
+// ScopedAssignment utility class
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+/// Assigns a value to something, reassigning the original
+/// value when it goes out of scope.
+template<typename T>
+class ScopedAssignment : boost::noncopyable
+{
+	public :
+
+		ScopedAssignment( T &target, const T &value )
+			:	m_target( target ), m_originalValue( value )
+		{
+			m_target = value;
+		}
+
+		~ScopedAssignment()
+		{
+			m_target = m_originalValue;
+		}
+
+	private :
+
+		T &m_target;
+		T m_originalValue;
+
+};
+
+} // namespace
+
+//////////////////////////////////////////////////////////////////////////
+// Plug implementation
+//////////////////////////////////////////////////////////////////////////
+
 IE_CORE_DEFINERUNTIMETYPED( Plug );
 
 Plug::Plug( const std::string &name, Direction direction, unsigned flags )
-	:	GraphComponent( name ), m_direction( direction ), m_input( 0 ), m_flags( None )
+	:	GraphComponent( name ), m_direction( direction ), m_input( 0 ), m_flags( None ), m_skipNextUpdateInputFromChildInputs( false )
 {
 	setFlags( flags );
 }
@@ -288,6 +326,23 @@ void Plug::setInputInternal( PlugPtr input, bool emit )
 
 void Plug::updateInputFromChildInputs( Plug *checkFirst )
 {
+
+#ifndef NDEBUG
+	if( ScriptNode *scriptNode = ancestor<ScriptNode>() )
+	{
+		// This function should not be called during Undo/Redo. The actions
+		// it takes should be recorded during Do and then undone/redone
+		// automatically thereafter.
+		assert( scriptNode->currentActionStage() != Action::Undo && scriptNode->currentActionStage() != Action::Redo );
+	}
+#endif // NDEBUG
+
+	if( m_skipNextUpdateInputFromChildInputs )
+	{
+		m_skipNextUpdateInputFromChildInputs = false;
+		return;
+	}
+
 	if( !children().size() )
 	{
 		return;
@@ -354,12 +409,49 @@ PlugPtr Plug::createCounterpart( const std::string &name, Direction direction ) 
 
 void Plug::parentChanging( Gaffer::GraphComponent *newParent )
 {
+	// This method manages the connections between plugs when
+	// additional child plugs are added or removed. We only
+	// want to react to these changes when they are first made -
+	// after this our own actions will have been recorded in the
+	// undo buffer anyway and will be undone/redone automatically.
+	// So here we early out if we're in such an Undo/Redo situation.
+
+	ScriptNode *scriptNode = ancestor<ScriptNode>();
+	scriptNode = scriptNode ? scriptNode : ( newParent ? newParent->ancestor<ScriptNode>() : NULL );
+	if( scriptNode && ( scriptNode->currentActionStage() == Action::Undo || scriptNode->currentActionStage() == Action::Redo ) )
+	{
+		return;
+	}
+
+	// Now we can take the actions we need to based on the new parent
+	// we're getting.
+
 	if( !newParent )
 	{
-		// we're losing our parent - remove all our connections first.
+		// We're losing our parent - remove all our connections first.
 		// this must be done here (rather than in a parentChangedSignal() slot)
 		// because we need a current parent for the operation to be undoable.
 		setInput( 0 );
+		// Deal with outputs whose parent is an output of our parent.
+		// For these we actually remove the destination plug itself,
+		// so that the parent plugs may remain connected.
+		if( Plug *oldParent = parent<Plug>() )
+		{
+			for( OutputContainer::iterator it = m_outputs.begin(); it!=m_outputs.end();  )
+			{
+				Plug *output = *it++;
+				Plug *outputParent = output->parent<Plug>();
+				if( outputParent && outputParent->getInput<Plug>() == oldParent )
+				{
+					// We're removing the child precisely so that the parent connection
+					// remains valid, so we can block its updateInputFromChildInputs() call.
+					assert( outputParent->m_skipNextUpdateInputFromChildInputs == false );
+					ScopedAssignment<bool> blocker( outputParent->m_skipNextUpdateInputFromChildInputs, true );
+					outputParent->removeChild( output );
+				}
+			}
+		}
+		// Remove any remaining output connections.
 		removeOutputs();
 	}
 	else if( Plug *newParentPlug = IECore::runTimeCast<Plug>( newParent ) )
@@ -367,6 +459,28 @@ void Plug::parentChanging( Gaffer::GraphComponent *newParent )
 		// we're getting a new parent - update its input connection from
 		// all the children including the pending one.
 		newParentPlug->updateInputFromChildInputs( this );
+		// and add a new child plug to any of its outputs to maintain
+		// the output connections.
+		const OutputContainer &outputs = newParentPlug->outputs();
+		for( OutputContainer::const_iterator it = outputs.begin(), eIt = outputs.end(); it != eIt; ++it )
+		{
+			Plug *output = *it;
+			if( output->acceptsChild( this ) )
+			{
+				PlugPtr outputChildPlug = createCounterpart( getName(), direction() );
+				{
+					// We're adding the child so that the parent connection remains valid,
+					// but the parent connection wouldn't be considered valid until the
+					// child has both been added and had its input connected. We therefore
+					// block the call to updateInputFromChildInputs() to keep the parent
+					// connection intact.
+					assert( output->m_skipNextUpdateInputFromChildInputs == false );
+					ScopedAssignment<bool> blocker( output->m_skipNextUpdateInputFromChildInputs, true );
+					output->addChild( outputChildPlug );
+				}
+				outputChildPlug->setInput( this, /* setChildInputs = */ true, /* updateParentInput = */ false );
+			}
+		}
 	}
 
 }

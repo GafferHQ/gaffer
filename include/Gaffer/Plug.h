@@ -48,9 +48,22 @@ namespace Gaffer
 IE_CORE_FORWARDDECLARE( Plug )
 IE_CORE_FORWARDDECLARE( Node )
 
-/// The Plug class defines a means of making point to point connections.
-/// A Plug may have many outputs but only one input, and may have an
-/// arbitrary number of child plugs.
+/// The Plug class defines a means of making point to point connections
+/// between Nodes. A plug may receive a single input connection from
+/// another plug, and may have an arbitrary number of output connections
+/// to other plugs.
+///
+/// Plugs may also have child plugs. When this is the case, they may only
+/// receive connections from other plugs with equivalent children. When
+/// two such parent plugs are connected, the corresponding children are
+/// connected automatically too. The reverse also applies - manually connecting
+/// all the children will cause the parent connection to be made automatically.
+/// Likewise, disconnecting one or more children will cause the parent connection
+/// to be broken.
+///
+/// When two parent plugs are connected, and children are added to or removed
+/// from the source plug, the equivalent operation will be automatically
+/// performed on the destination plug so as to maintain the parent connection.
 class Plug : public GraphComponent
 {
 
@@ -192,6 +205,8 @@ class Plug : public GraphComponent
 		Plug *m_input;
 		OutputContainer m_outputs;
 		unsigned m_flags;
+
+		bool m_skipNextUpdateInputFromChildInputs;
 
 };
 

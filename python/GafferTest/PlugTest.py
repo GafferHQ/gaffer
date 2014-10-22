@@ -554,11 +554,11 @@ class PlugTest( GafferTest.TestCase ) :
 		n2["p"]["c2"].setInput( n1["p"]["c2"] )
 		self.failUnless( n2["p"].getInput().isSame( n1["p"] ) )
 
-		n1["p"]["c3"] = Gaffer.Plug()
 		n2["p"]["c3"] = Gaffer.Plug()
 
 		self.failUnless( n2["p"].getInput() is None )
 
+		n1["p"]["c3"] = Gaffer.Plug()
 		n2["p"]["c3"].setInput( n1["p"]["c3"] )
 		self.failUnless( n2["p"].getInput().isSame( n1["p"] ) )
 
@@ -595,6 +595,104 @@ class PlugTest( GafferTest.TestCase ) :
 		s2.execute( s.serialise() )
 
 		self.assertTrue( isinstance( s2["n"]["p"]["c"], Gaffer.Plug ) )
+
+	def testChildAdditionPropagatesToOutputs( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n1"] = Gaffer.Node()
+		s["n2"] = Gaffer.Node()
+
+		s["n1"]["c"] = Gaffer.Plug()
+		s["n2"]["c"] = Gaffer.Plug()
+
+		s["n2"]["c"].setInput( s["n1"]["c"] )
+		self.assertTrue( s["n2"]["c"].getInput().isSame( s["n1"]["c"] ) )
+
+		def assertPreconditions() :
+
+			self.assertEqual( s["n1"]["c"].keys(), [] )
+			self.assertEqual( s["n2"]["c"].keys(), [] )
+			self.assertTrue( s["n2"]["c"].getInput().isSame( s["n1"]["c"] ) )
+
+		def assertPostconditions() :
+
+			self.assertEqual( s["n1"]["c"].keys(), [ "i", "f" ] )
+			self.assertEqual( s["n2"]["c"].keys(), [ "i", "f" ] )
+
+			self.assertTrue( isinstance( s["n2"]["c"]["i"], Gaffer.IntPlug ) )
+			self.assertTrue( s["n2"]["c"]["i"].getInput().isSame( s["n1"]["c"]["i"] ) )
+			self.assertTrue( s["n2"]["c"].getInput().isSame( s["n1"]["c"] ) )
+
+			self.assertTrue( isinstance( s["n2"]["c"]["f"], Gaffer.FloatPlug ) )
+			self.assertTrue( s["n2"]["c"]["f"].getInput().isSame( s["n1"]["c"]["f"] ) )
+			self.assertTrue( s["n2"]["c"].getInput().isSame( s["n1"]["c"] ) )
+
+		assertPreconditions()
+
+		with Gaffer.UndoContext( s ) :
+
+			s["n1"]["c"].addChild( Gaffer.IntPlug( "i" ) )
+			s["n1"]["c"].addChild( Gaffer.FloatPlug( "f" ) )
+
+		assertPostconditions()
+
+		s.undo()
+		assertPreconditions()
+
+		s.redo()
+		assertPostconditions()
+
+	def testChildRemovalPropagatesToOutputs( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n1"] = Gaffer.Node()
+		s["n2"] = Gaffer.Node()
+
+		s["n1"]["c"] = Gaffer.Plug()
+		s["n2"]["c"] = Gaffer.Plug()
+
+		s["n1"]["c"]["f"] = Gaffer.FloatPlug()
+		s["n2"]["c"]["f"] = Gaffer.FloatPlug()
+
+		s["n1"]["c"]["i"] = Gaffer.FloatPlug()
+		s["n2"]["c"]["i"] = Gaffer.FloatPlug()
+
+		s["n2"]["c"].setInput( s["n1"]["c"] )
+
+		def assertPreconditions() :
+
+			self.assertEqual( s["n1"]["c"].keys(), [ "f", "i" ] )
+			self.assertEqual( s["n2"]["c"].keys(), [ "f", "i" ] )
+
+			self.assertTrue( s["n2"]["c"].getInput().isSame( s["n1"]["c"] ) )
+			self.assertTrue( s["n2"]["c"]["i"].getInput().isSame( s["n1"]["c"]["i"] ) )
+			self.assertTrue( s["n2"]["c"]["f"].getInput().isSame( s["n1"]["c"]["f"] ) )
+
+		def assertPostconditions() :
+
+			self.assertEqual( s["n1"]["c"].keys(), [] )
+			self.assertEqual( s["n2"]["c"].keys(), [] )
+
+			self.assertTrue( s["n2"]["c"].getInput().isSame( s["n1"]["c"] ) )
+
+		assertPreconditions()
+
+		with Gaffer.UndoContext( s ) :
+
+			del s["n1"]["c"]["i"]
+			del s["n1"]["c"]["f"]
+
+		assertPostconditions()
+
+		s.undo()
+
+		assertPreconditions()
+
+		s.redo()
+
+		assertPostconditions()
 
 if __name__ == "__main__":
 	unittest.main()
