@@ -119,37 +119,8 @@ void outputOptions( const IECore::CompoundObject *globals, IECore::Renderer *ren
 	}
 }
 
-void outputCamera( const ScenePlug *scene, const IECore::CompoundObject *globals, IECore::Renderer *renderer )
+static void outputCameraInternal( IECore::Camera *camera, const IECore::CompoundObject *globals, IECore::Renderer *renderer )
 {
-	// get the camera from the scene
-
-	const StringData *cameraPathData = globals->member<StringData>( "option:render:camera" );
-	IECore::CameraPtr camera = 0;
-	if( cameraPathData )
-	{
-		ScenePlug::ScenePath cameraPath;
-		ScenePlug::stringToPath( cameraPathData->readable(), cameraPath );
-		if( !exists( scene, cameraPath ) )
-		{
-			throw IECore::Exception( "Camera \"" + cameraPathData->readable() + "\" does not exist" );
-		}
-
-		IECore::ConstCameraPtr constCamera = runTimeCast<const IECore::Camera>( scene->object( cameraPath ) );
-		if( !constCamera )
-		{
-			throw IECore::Exception( "Location \"" + cameraPathData->readable() + "\" is not a camera" );
-		}
-
-		camera = constCamera->copy();
-		const BoolData *cameraBlurData = globals->member<BoolData>( "option:render:cameraBlur" );
-		const bool cameraBlur = cameraBlurData ? cameraBlurData->readable() : false;
-		camera->setTransform( transform( scene, cameraPath, shutter( globals ), cameraBlur ) );
-	}
-
-	if( !camera )
-	{
-		camera = new IECore::Camera();
-	}
 
 	// apply the resolution, aspect ratio and crop window
 
@@ -283,6 +254,85 @@ void outputCamera( const ScenePlug *scene, const IECore::CompoundObject *globals
 
 	camera->render( renderer );
 
+}
+
+void outputCameras( const ScenePlug *scene, const IECore::CompoundObject *globals, IECore::Renderer *renderer )
+{
+	const PathMatcherData *cameraSet = NULL;
+	if( const CompoundData *sets = globals->member<CompoundData>( "gaffer:sets" ) )
+	{
+		cameraSet = sets->member<PathMatcherData>( "__cameras" );
+	}
+
+	if( cameraSet )
+	{
+		// Output all the cameras, skipping the primary one - we need to output this
+		// last, as that's how cortex determines the primary camera.
+		ScenePlug::ScenePath primaryCameraPath;
+		if( const StringData *primaryCameraPathData = globals->member<StringData>( "option:render:camera" ) )
+		{
+			ScenePlug::stringToPath( primaryCameraPathData->readable(), primaryCameraPath );
+		}
+
+		vector<string> paths;
+		cameraSet->readable().paths( paths );
+		for( vector<string>::const_iterator it = paths.begin(), eIt = paths.end(); it != eIt; ++it )
+		{
+			ScenePlug::ScenePath path;
+			ScenePlug::stringToPath( *it, path );
+			if( path != primaryCameraPath )
+			{
+				outputCamera( scene, path, globals, renderer );
+			}
+		}
+	}
+
+	// output the primary camera, or a default if it doesn't exist.
+
+	outputCamera( scene, globals, renderer );
+
+}
+
+void outputCamera( const ScenePlug *scene, const IECore::CompoundObject *globals, IECore::Renderer *renderer )
+{
+	if( const StringData *cameraPathData = globals->member<StringData>( "option:render:camera" ) )
+	{
+		ScenePlug::ScenePath cameraPath;
+		ScenePlug::stringToPath( cameraPathData->readable(), cameraPath );
+		outputCamera( scene, cameraPath, globals, renderer );
+	}
+	else
+	{
+		CameraPtr defaultCamera = new IECore::Camera();
+		outputCameraInternal( defaultCamera.get(), globals, renderer );
+	}
+}
+
+void outputCamera( const ScenePlug *scene, const ScenePlug::ScenePath &cameraPath, const IECore::CompoundObject *globals, IECore::Renderer *renderer )
+{
+	std::string cameraName;
+	ScenePlug::pathToString( cameraPath, cameraName );
+
+	if( !exists( scene, cameraPath ) )
+	{
+		throw IECore::Exception( "Camera \"" + cameraName + "\" does not exist" );
+	}
+
+	IECore::ConstCameraPtr constCamera = runTimeCast<const IECore::Camera>( scene->object( cameraPath ) );
+	if( !constCamera )
+	{
+		std::string path; ScenePlug::pathToString( cameraPath, path );
+		throw IECore::Exception( "Location \"" + cameraName + "\" is not a camera" );
+	}
+
+	IECore::CameraPtr camera = constCamera->copy();
+	camera->setName( cameraName );
+
+	const BoolData *cameraBlurData = globals->member<BoolData>( "option:render:cameraBlur" );
+	const bool cameraBlur = cameraBlurData ? cameraBlurData->readable() : false;
+	camera->setTransform( transform( scene, cameraPath, shutter( globals ), cameraBlur ) );
+
+	outputCameraInternal( camera.get(), globals, renderer );
 }
 
 void outputGlobalAttributes( const IECore::CompoundObject *globals, IECore::Renderer *renderer )
