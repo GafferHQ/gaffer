@@ -35,16 +35,16 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include "boost/format.hpp"
+#include "boost/bind.hpp"
+
+#include "IECore/Exception.h"
+
 #include "Gaffer/Plug.h"
 #include "Gaffer/DependencyNode.h"
 #include "Gaffer/Action.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/Metadata.h"
-
-#include "IECore/Exception.h"
-
-#include "boost/format.hpp"
-#include "boost/bind.hpp"
 
 using namespace Gaffer;
 
