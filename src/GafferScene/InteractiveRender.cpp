@@ -60,7 +60,7 @@ IE_CORE_DEFINERUNTIMETYPED( InteractiveRender );
 size_t InteractiveRender::g_firstPlugIndex = 0;
 
 InteractiveRender::InteractiveRender( const std::string &name )
-	:	Node( name ), m_lightsDirty( true ), m_attributesDirty( true ), m_cameraDirty( true ), m_coordinateSystemsDirty( true )
+	:	Node( name ), m_lightsDirty( true ), m_attributesDirty( true ), m_camerasDirty( true ), m_coordinateSystemsDirty( true )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new ScenePlug( "in" ) );
@@ -69,7 +69,7 @@ InteractiveRender::InteractiveRender( const std::string &name )
 	addChild( new IntPlug( "state", Plug::In, Stopped, Stopped, Paused, Plug::Default & ~Plug::Serialisable ) );
 	addChild( new BoolPlug( "updateLights", Plug::In, true ) );
 	addChild( new BoolPlug( "updateAttributes", Plug::In, true ) );
-	addChild( new BoolPlug( "updateCamera", Plug::In, true ) );
+	addChild( new BoolPlug( "updateCameras", Plug::In, true ) );
 	addChild( new BoolPlug( "updateCoordinateSystems", Plug::In, true ) );
 
 	plugDirtiedSignal().connect( boost::bind( &InteractiveRender::plugDirtied, this, ::_1 ) );
@@ -132,12 +132,12 @@ const Gaffer::BoolPlug *InteractiveRender::updateAttributesPlug() const
 	return getChild<BoolPlug>( g_firstPlugIndex + 4 );
 }
 
-Gaffer::BoolPlug *InteractiveRender::updateCameraPlug()
+Gaffer::BoolPlug *InteractiveRender::updateCamerasPlug()
 {
 	return getChild<BoolPlug>( g_firstPlugIndex + 5 );
 }
 
-const Gaffer::BoolPlug *InteractiveRender::updateCameraPlug() const
+const Gaffer::BoolPlug *InteractiveRender::updateCamerasPlug() const
 {
 	return getChild<BoolPlug>( g_firstPlugIndex + 5 );
 }
@@ -163,14 +163,14 @@ void InteractiveRender::plugDirtied( const Gaffer::Plug *plug )
 		// updating. we'll do the actual update when
 		// the dirty signal is emitted for the parent plug.
 		m_lightsDirty = true;
-		m_cameraDirty = true;
+		m_camerasDirty = true;
 		m_coordinateSystemsDirty = true;
 	}
 	else if( plug == inPlug()->objectPlug() )
 	{
 		// as above.
 		m_lightsDirty = true;
-		m_cameraDirty = true;
+		m_camerasDirty = true;
 	}
 	else if( plug == inPlug()->attributesPlug() )
 	{
@@ -182,7 +182,7 @@ void InteractiveRender::plugDirtied( const Gaffer::Plug *plug )
 		plug == inPlug() ||
 		plug == updateLightsPlug() ||
 		plug == updateAttributesPlug() ||
-		plug == updateCameraPlug() ||
+		plug == updateCamerasPlug() ||
 		plug == updateCoordinateSystemsPlug() ||
 		plug == statePlug()
 	)
@@ -234,7 +234,7 @@ void InteractiveRender::update()
 		m_scene = NULL;
 		m_state = Stopped;
 		m_lightHandles.clear();
-		m_attributesDirty = m_lightsDirty = m_cameraDirty = true;
+		m_attributesDirty = m_lightsDirty = m_camerasDirty = true;
 		if( !requiredScene || requiredState == Stopped )
 		{
 			return;
@@ -252,7 +252,7 @@ void InteractiveRender::update()
 		ConstCompoundObjectPtr globals = inPlug()->globalsPlug()->getValue();
 		outputOptions( globals.get(), m_renderer.get() );
 		outputOutputs( globals.get(), m_renderer.get() );
-		outputCamera( inPlug(), globals.get(), m_renderer.get() );
+		outputCameras( inPlug(), globals.get(), m_renderer.get() );
 		{
 			WorldBlock world( m_renderer );
 
@@ -266,7 +266,7 @@ void InteractiveRender::update()
 
 		m_scene = requiredScene;
 		m_state = Running;
-		m_lightsDirty = m_attributesDirty = m_cameraDirty = false;
+		m_lightsDirty = m_attributesDirty = m_camerasDirty = false;
 	}
 
 	// Make sure the paused/running state is as we want.
@@ -290,7 +290,7 @@ void InteractiveRender::update()
 	{
 		updateLights();
 		updateAttributes();
-		updateCamera();
+		updateCameras();
 		updateCoordinateSystems();
 	}
 }
@@ -443,18 +443,19 @@ void InteractiveRender::updateAttributesWalk( const ScenePlug::ScenePath &path )
 	}
 }
 
-void InteractiveRender::updateCamera()
+void InteractiveRender::updateCameras()
 {
-	if( !m_cameraDirty || !updateCameraPlug()->getValue() )
+	if( !m_camerasDirty || !updateCamerasPlug()->getValue() )
 	{
 		return;
 	}
+
 	IECore::ConstCompoundObjectPtr globals = inPlug()->globalsPlug()->getValue();
 	{
 		EditBlock edit( m_renderer.get(), "option", CompoundDataMap() );
-		outputCamera( inPlug(), globals.get(), m_renderer.get() );
+		outputCameras( inPlug(), globals.get(), m_renderer.get() );
 	}
-	m_cameraDirty = false;
+	m_camerasDirty = false;
 }
 
 void InteractiveRender::updateCoordinateSystems()
