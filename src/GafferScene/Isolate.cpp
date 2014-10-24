@@ -109,6 +109,19 @@ void Isolate::hashBound( const ScenePath &path, const Gaffer::Context *context, 
 	h = inPlug()->boundPlug()->hash();
 }
 
+Imath::Box3f Isolate::computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+{
+	if( adjustBoundsPlug()->getValue() )
+	{
+		if( filterValue( context ) == Filter::DescendantMatch )
+		{
+			return unionOfTransformedChildBounds( path, outPlug() );
+		}
+	}
+
+	return inPlug()->boundPlug()->getValue();
+}
+
 void Isolate::hashChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
 	ContextPtr tmpContext = filterContext( context );
@@ -126,26 +139,6 @@ void Isolate::hashChildNames( const ScenePath &path, const Gaffer::Context *cont
 		// pass through
 		h = inPlug()->childNamesPlug()->hash();
 	}
-}
-
-void Isolate::hashGlobals( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
-{
-	FilteredSceneProcessor::hashGlobals( context, parent, h );
-	inPlug()->globalsPlug()->hash( h );
-	filterHash( context, h );
-}
-
-Imath::Box3f Isolate::computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
-{
-	if( adjustBoundsPlug()->getValue() )
-	{
-		if( filterValue( context ) == Filter::DescendantMatch )
-		{
-			return unionOfTransformedChildBounds( path, outPlug() );
-		}
-	}
-
-	return inPlug()->boundPlug()->getValue();
 }
 
 IECore::ConstInternedStringVectorDataPtr Isolate::computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
@@ -181,6 +174,28 @@ IECore::ConstInternedStringVectorDataPtr Isolate::computeChildNames( const Scene
 		// pass through
 		return inPlug()->childNamesPlug()->getValue();
 	}
+}
+
+void Isolate::hashGlobals( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	FilteredSceneProcessor::hashGlobals( context, parent, h );
+	inPlug()->globalsPlug()->hash( h );
+
+	// The globals themselves do not depend on the "scene:path"
+	// context entry - the whole point is that they're global.
+	// However, the PathFilter is dependent on scene:path, so
+	// we must remove the path before hashing in the filter in
+	// case we're computed from multiple contexts with different
+	// paths (from a SetFilter for instance). If we didn't do this,
+	// our different hashes would lead to huge numbers of redundant
+	// calls to computeGlobals() and a huge overhead in recomputing
+	// the same sets repeatedly.
+	//
+	// See further comments in FilteredSceneProcessor::affects().
+	ContextPtr c = filterContext( context );
+	c->remove( ScenePlug::scenePathContextName );
+	Context::Scope s( c.get() );
+	filterPlug()->hash( h );
 }
 
 IECore::ConstCompoundObjectPtr Isolate::computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const

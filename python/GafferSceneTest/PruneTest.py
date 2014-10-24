@@ -269,5 +269,27 @@ class PruneTest( GafferSceneTest.SceneTestCase ) :
 		b.promotePlug( b["n"]["filter"] )
 		self.assertTrue( b.plugIsPromoted( b["n"]["filter"] ) )
 
+	def testGlobalsDoNotDependOnScenePath( self ) :
+
+		pathFilter = GafferScene.PathFilter()
+		pathFilter["paths"].setValue( IECore.StringVectorData( [ "/grid/borderLines" ] ) )
+
+		grid = GafferScene.Grid()
+
+		prune = GafferScene.Prune()
+		prune["in"].setInput( grid["out"] )
+		prune["filter"].setInput( pathFilter["match"] )
+
+		c = Gaffer.Context()
+		with c :
+			h1 = prune["out"]["globals"].hash()
+			c["scene:path"] = IECore.InternedStringVectorData( [ "grid" ] )
+			h2 = prune["out"]["globals"].hash()
+			c["scene:path"] = IECore.InternedStringVectorData( [ "grid", "centerLines" ] )
+			h3 = prune["out"]["globals"].hash()
+
+		self.assertEqual( h1, h2 )
+		self.assertEqual( h2, h3 )
+
 if __name__ == "__main__":
 	unittest.main()
