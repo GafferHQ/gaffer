@@ -109,6 +109,19 @@ void Prune::hashBound( const ScenePath &path, const Gaffer::Context *context, co
 	h = inPlug()->boundPlug()->hash();
 }
 
+Imath::Box3f Prune::computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+{
+	if( adjustBoundsPlug()->getValue() )
+	{
+		if( filterValue( context ) & Filter::DescendantMatch )
+		{
+			return unionOfTransformedChildBounds( path, outPlug() );
+		}
+	}
+
+	return inPlug()->boundPlug()->getValue();
+}
+
 void Prune::hashChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
 	ContextPtr tmpContext = filterContext( context );
@@ -126,26 +139,6 @@ void Prune::hashChildNames( const ScenePath &path, const Gaffer::Context *contex
 		// pass through
 		h = inPlug()->childNamesPlug()->hash();
 	}
-}
-
-void Prune::hashGlobals( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
-{
-	FilteredSceneProcessor::hashGlobals( context, parent, h );
-	inPlug()->globalsPlug()->hash( h );
-	filterHash( context, h );
-}
-
-Imath::Box3f Prune::computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
-{
-	if( adjustBoundsPlug()->getValue() )
-	{
-		if( filterValue( context ) & Filter::DescendantMatch )
-		{
-			return unionOfTransformedChildBounds( path, outPlug() );
-		}
-	}
-
-	return inPlug()->boundPlug()->getValue();
 }
 
 IECore::ConstInternedStringVectorDataPtr Prune::computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
@@ -181,6 +174,13 @@ IECore::ConstInternedStringVectorDataPtr Prune::computeChildNames( const ScenePa
 		// pass through
 		return inPlug()->childNamesPlug()->getValue();
 	}
+}
+
+void Prune::hashGlobals( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	FilteredSceneProcessor::hashGlobals( context, parent, h );
+	inPlug()->globalsPlug()->hash( h );
+	filterHash( context, h );
 }
 
 IECore::ConstCompoundObjectPtr Prune::computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const
