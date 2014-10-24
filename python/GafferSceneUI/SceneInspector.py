@@ -381,6 +381,8 @@ class TextDiff( SideBySideDiff ) :
 			return self.__formatNumbers( values )
 		elif isinstance( values[0], basestring ) :
 			return self.__formatStrings( [ str( v ) for v in values ] )
+		elif isinstance( values[0], IECore.PrimitiveVariable ) :
+			return self.__formatPrimitiveVariables( values )
 		else :
 			return [ cgi.escape( str( v ) ) for v in values ]
 
@@ -486,6 +488,18 @@ class TextDiff( SideBySideDiff ) :
 				bFormatted += '<span class="diffB">' + cgi.escape( b[b1:b2] ) + "</span>"
 
 		return [ aFormatted, bFormatted ]
+
+	def __formatPrimitiveVariables( self, values ) :
+
+		result = []
+		for value in values :
+			s = str( value.interpolation )
+			s += " " + value.data.typeName()
+			if hasattr( value.data, "getInterpretation" ) :
+				s += " (" + str( value.data.getInterpretation() ) + ")"
+			result.append( s )
+
+		return result
 
 	def __numbersToAlignedStrings( self, values ) :
 
@@ -763,7 +777,7 @@ class DiffRow( Row ) :
 ## Class for displaying a column of DiffRows.
 class DiffColumn( GafferUI.ListContainer ) :
 
-	def __init__( self, inspector, diffCreator = TextDiff, **kw ) :
+	def __init__( self, inspector, diffCreator = TextDiff, label = None, **kw ) :
 
 		GafferUI.ListContainer.__init__( self )
 
@@ -773,6 +787,15 @@ class DiffColumn( GafferUI.ListContainer ) :
 		self.__rows = {} # mapping from row name to row
 		self.__diffCreator = diffCreator
 
+		self.__label = None
+		if label is not None :
+			with GafferUI.Frame( borderWidth = 4, borderStyle = GafferUI.Frame.BorderStyle.None ) as self.__label :
+				l = GafferUI.Label(
+					"<b>" + label + "</b>",
+					horizontalAlignment = GafferUI.Label.HorizontalAlignment.Right,
+				)
+				l._qtWidget().setFixedWidth( 150 )
+
 	def update( self, targets ) :
 
 		inspectors = {}
@@ -781,7 +804,7 @@ class DiffColumn( GafferUI.ListContainer ) :
 
 		rowNames = sorted( inspectors.keys() )
 
-		rows = []
+		rows = [ self.__label ] if len( rowNames ) and self.__label is not None else []
 		for rowName in rowNames :
 
 			row = self.__rows.get( rowName )
@@ -1346,20 +1369,28 @@ class __ObjectSection( Section ) :
 		Section.__init__( self, collapsed = True, label = "Object" )
 
 		with self._mainColumn() :
-			self.__uniformRow = DiffRow( self.__SizeInspector( IECore.PrimitiveVariable.Interpolation.Uniform ), alternate = True )
-			self.__vertexRow = DiffRow( self.__SizeInspector( IECore.PrimitiveVariable.Interpolation.Vertex )  )
-			self.__varyingRow = DiffRow( self.__SizeInspector( IECore.PrimitiveVariable.Interpolation.Varying ), alternate = True )
-			self.__faceVaryingRow = DiffRow( self.__SizeInspector( IECore.PrimitiveVariable.Interpolation.FaceVarying ) )
-			self.__variablesRow = DiffRow( self.__VariablesInspector(), alternate = True )
+
+			DiffColumn(
+				self.__TopologyInspector(),
+				label = "Topology"
+			)
+
+			DiffColumn(
+				self.__ParametersInspector(),
+				label = "Parameters"
+			)
+
+			DiffColumn(
+				self.__PrimitiveVariablesInspector(),
+				label = "Primitive Variables"
+			)
 
 	def update( self, targets ) :
 
 		Section.update( self, targets )
 
-		## \todo Since most section update calls now seem to just be calling update
-		# on a bunch of rows, can we make that happen automatically?
-		for row in self._mainColumn() :
-			row.update( targets )
+		for diffColumn in self._mainColumn() :
+			diffColumn.update( targets )
 
 	def _summary( self, targets ) :
 
@@ -1375,15 +1406,21 @@ class __ObjectSection( Section ) :
 		else :
 			return " / ".join( typeNames )
 
-	class __SizeInspector( Inspector ) :
+	class __TopologyInspector( Inspector ) :
 
-		def __init__( self, interpolation ) :
+		def __init__( self, interpolation = None, property = None ) :
+
+			Inspector.__init__( self )
 
 			self.__interpolation = interpolation
+			self.__property = property
 
 		def name( self ) :
 
-			return str( self.__interpolation )
+			if self.__interpolation is not None :
+				return str( self.__interpolation )
+			else :
+				return IECore.CamelCase.toSpaced( self.__property )
 
 		def __call__( self, target ) :
 
@@ -1391,13 +1428,86 @@ class __ObjectSection( Section ) :
 				return None
 
 			object = target.scene.object( target.path )
-			return object.variableSize( self.__interpolation ) if isinstance( object, IECore.Primitive ) else None
+			if isinstance( object, IECore.NullObject ) :
+				return None
 
-	class __VariablesInspector( Inspector ) :
+			if self.__interpolation is not None :
+				return object.variableSize( self.__interpolation ) if isinstance( object, IECore.Primitive ) else None
+			else :
+				return getattr( object, self.__property, None )
+
+		def children( self, target ) :
+
+			object = target.scene.object( target.path )
+			if object is None or not isinstance( object, IECore.Primitive ) :
+				return []
+
+			result = []
+
+			if isinstance( object, IECore.MeshPrimitive ) :
+				result.append( self.__class__( property = "interpolation" ) )
+
+			for i in [
+				IECore.PrimitiveVariable.Interpolation.Constant,
+				IECore.PrimitiveVariable.Interpolation.Uniform,
+				IECore.PrimitiveVariable.Interpolation.Vertex,
+				IECore.PrimitiveVariable.Interpolation.Varying,
+				IECore.PrimitiveVariable.Interpolation.FaceVarying,
+			] :
+				result.append( self.__class__( interpolation = i ) )
+
+			return result
+
+	class __ParametersInspector( Inspector ) :
+
+		def __init__( self, parameterName = None ) :
+
+			Inspector.__init__( self )
+
+			self.__parameterName = parameterName
 
 		def name( self ) :
 
-			return "Variables"
+			return self.__parameterName
+
+		def __call__( self, target ) :
+
+			parameters = self.__parameters( target )
+			if parameters is None :
+				return None
+
+			return parameters.get( self.__parameterName )
+
+		def children( self, target ) :
+
+			parameters = self.__parameters( target )
+			if parameters is None :
+				return []
+
+			return [ self.__class__( p ) for p in parameters.keys() ]
+
+		def __parameters( self, target ) :
+
+			if target.path is None :
+				return None
+
+			object = target.scene.object( target.path )
+			if not isinstance( object, IECore.Camera ) :
+				return None
+
+			return object.parameters()
+
+	class __PrimitiveVariablesInspector( Inspector ) :
+
+		def __init__( self, primitiveVariableName = None ) :
+
+			Inspector.__init__( self )
+
+			self.__primitiveVariableName = primitiveVariableName
+
+		def name( self ) :
+
+			return self.__primitiveVariableName
 
 		def __call__( self, target ) :
 
@@ -1405,7 +1515,21 @@ class __ObjectSection( Section ) :
 				return None
 
 			object = target.scene.object( target.path )
-			return " ".join( sorted( object.keys() ) ) if isinstance( object, IECore.Primitive ) else None
+			if not isinstance( object, IECore.Primitive ) :
+				return None
+
+			if self.__primitiveVariableName not in object :
+				return None
+
+			return object[self.__primitiveVariableName]
+
+		def children( self, target ) :
+
+			object = target.scene.object( target.path )
+			if not isinstance( object, IECore.Primitive ) :
+				return []
+
+			return [ self.__class__( k ) for k in object.keys() ]
 
 SceneInspector.registerSection( __ObjectSection, tab = "Selection" )
 
