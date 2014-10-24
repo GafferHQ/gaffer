@@ -814,9 +814,34 @@ class Section( GafferUI.Widget ) :
 
 		self.__numRows = 0
 
+	## Should be implemented by derived classes to update the
+	# UI to reflect the state of the targets. Implementations should
+	# first call the base class implementation.
 	def update( self, targets ) :
 
-		raise NotImplementedError
+		if self.__collapsible is None :
+			return
+
+		label = self.__collapsible.getCornerWidget()
+		summary = self._summary( targets )
+		if summary is None and label is None :
+			return
+
+		if label is None :
+			label = GafferUI.Label()
+			label._qtWidget().setSizePolicy( QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Fixed )
+			self.__collapsible.setCornerWidget( label, True )
+
+		if summary :
+			summary = "<small>" + "&nbsp;( " + summary + " ) </small>"
+
+		label.setText( summary )
+
+	## May be implemented by derived classes to provide
+	# a short summary of the contents.
+	def _summary( self, targets ) :
+
+		return None
 
 	def _mainColumn( self ) :
 
@@ -900,6 +925,8 @@ class _InheritanceSection( Section ) :
 
 	def update( self, targets ) :
 
+		Section.update( self, targets )
+
 		self.__target = targets[0]
 		self.__connections = []
 
@@ -977,6 +1004,8 @@ class _HistorySection( Section ) :
 		self.__diffCreator = diffCreator
 
 	def update( self, targets ) :
+
+		Section.update( self, targets )
 
 		self.__target = targets[0]
 		self.__connections = []
@@ -1069,6 +1098,8 @@ class __NodeSection( Section ) :
 
 	def update( self, targets ) :
 
+		Section.update( self, targets )
+
 		self.__row.update( targets )
 
 	class __Inspector( Inspector ) :
@@ -1098,6 +1129,8 @@ class __PathSection( Section ) :
 			self.__row = DiffRow( self.__Inspector(), functools.partial( TextDiff, highlightDiffs = False ) )
 
 	def update( self, targets ) :
+
+		Section.update( self, targets )
 
 		self.__row.update( targets )
 
@@ -1144,6 +1177,8 @@ class __TransformSection( Section ) :
 					index += 1
 
 	def update( self, targets ) :
+
+		Section.update( self, targets )
 
 		for row in self._mainColumn() :
 			if isinstance( row, DiffRow ) :
@@ -1216,6 +1251,8 @@ class __BoundSection( Section ) :
 
 	def update( self, targets ) :
 
+		Section.update( self, targets )
+
 		self.__localBoundRow.update( targets )
 		self.__worldBoundRow.update( targets )
 
@@ -1257,6 +1294,8 @@ class __AttributesSection( Section ) :
 			self.__diffColumn = DiffColumn( self.__Inspector() )
 
 	def update( self, targets ) :
+
+		Section.update( self, targets )
 
 		self.__diffColumn.update( targets )
 
@@ -1307,7 +1346,6 @@ class __ObjectSection( Section ) :
 		Section.__init__( self, collapsed = True, label = "Object" )
 
 		with self._mainColumn() :
-			self.__typeRow = DiffRow( self.__TypeInspector() )
 			self.__uniformRow = DiffRow( self.__SizeInspector( IECore.PrimitiveVariable.Interpolation.Uniform ), alternate = True )
 			self.__vertexRow = DiffRow( self.__SizeInspector( IECore.PrimitiveVariable.Interpolation.Vertex )  )
 			self.__varyingRow = DiffRow( self.__SizeInspector( IECore.PrimitiveVariable.Interpolation.Varying ), alternate = True )
@@ -1316,25 +1354,26 @@ class __ObjectSection( Section ) :
 
 	def update( self, targets ) :
 
+		Section.update( self, targets )
+
 		## \todo Since most section update calls now seem to just be calling update
 		# on a bunch of rows, can we make that happen automatically?
 		for row in self._mainColumn() :
 			row.update( targets )
 
-	class __TypeInspector( Inspector ) :
+	def _summary( self, targets ) :
 
-		def name( self ) :
+		if not len( targets ) :
+			return ""
 
-			return "Type"
+		objects = [ target.scene.object( target.path ) for target in targets ]
+		typeNames = [ o.typeName().split( ":" )[-1] for o in objects ]
+		typeNames = [ "None" if t == "NullObject" else t for t in typeNames ]
 
-		def __call__( self, target ) :
-
-			if target.path is None :
-				return None
-
-			## \todo Investigate caching the result of scene.object() on the target.
-			object = target.scene.object( target.path )
-			return object.typeName() if not isinstance( object, IECore.NullObject ) else None
+		if len( typeNames ) == 1 or typeNames[0] == typeNames[1] :
+			return typeNames[0] if typeNames[0] != "None" else ""
+		else :
+			return " / ".join( typeNames )
 
 	class __SizeInspector( Inspector ) :
 
@@ -1394,6 +1433,8 @@ class __SetMembershipSection( Section ) :
 			self.__diffColumn = DiffColumn( self.__Inspector(), _SetMembershipDiff )
 
 	def update( self, targets ) :
+
+		Section.update( self, targets )
 
 		self.__diffColumn.update( targets )
 
@@ -1463,6 +1504,8 @@ class __GlobalsSection( Section ) :
 			self.__diffColumn = DiffColumn( self.__Inspector( prefix ) )
 
 	def update( self, targets ) :
+
+		Section.update( self, targets )
 
 		self.__diffColumn.update( targets )
 
@@ -1572,6 +1615,8 @@ class __OutputsSection( Section ) :
 		self.__rows = {} # mapping from output name to row
 
 	def update( self, targets ) :
+
+		Section.update( self, targets )
 
 		outputNames = set()
 		for target in targets :
@@ -1710,6 +1755,8 @@ class _SetsSection( Section ) :
 			self.__diffColumn = DiffColumn( self.__Inspector(), _SetDiff )
 
 	def update( self, targets ) :
+
+		Section.update( self, targets )
 
 		self.__diffColumn.update( targets )
 
