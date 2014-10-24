@@ -235,5 +235,27 @@ class IsolateTest( GafferSceneTest.SceneTestCase ) :
 		lightSet = isolate["out"]["globals"].getValue()["gaffer:sets"]["__lights"]
 		self.assertEqual( set( lightSet.value.paths() ), set( [ "/group/light", "/group/light1" ] ) )
 
+	def testGlobalsDoNotDependOnScenePath( self ) :
+
+		pathFilter = GafferScene.PathFilter()
+		pathFilter["paths"].setValue( IECore.StringVectorData( [ "/grid/borderLines" ] ) )
+
+		grid = GafferScene.Grid()
+
+		isolate = GafferScene.Isolate()
+		isolate["in"].setInput( grid["out"] )
+		isolate["filter"].setInput( pathFilter["match"] )
+
+		c = Gaffer.Context()
+		with c :
+			h1 = isolate["out"]["globals"].hash()
+			c["scene:path"] = IECore.InternedStringVectorData( [ "grid" ] )
+			h2 = isolate["out"]["globals"].hash()
+			c["scene:path"] = IECore.InternedStringVectorData( [ "grid", "centerLines" ] )
+			h3 = isolate["out"]["globals"].hash()
+
+		self.assertEqual( h1, h2 )
+		self.assertEqual( h2, h3 )
+
 if __name__ == "__main__":
 	unittest.main()
