@@ -70,6 +70,8 @@ class LocalDispatcher( Gaffer.Dispatcher ) :
 			self.__name = name
 			self.__id = jobId
 			self.__directory = directory
+			
+			self.__stats = {}
 		
 		def name( self ) :
 			
@@ -82,6 +84,30 @@ class LocalDispatcher( Gaffer.Dispatcher ) :
 		def directory( self ) :
 			
 			return self.__directory
+		
+		def statistics( self ) :
+			
+			batch = LocalDispatcher.Job.__currentBatch( self.__batch )
+			if batch is None or "pid" not in batch.blindData().keys() :
+				return {}
+			
+			rss = 0
+			pcpu = 0.0
+			pid = batch.blindData().get( "pid" )
+			
+			try :
+				stats = subprocess.Popen( "ps -s `ps -p %i -o sess=` -o pcpu=,rss=" % pid, shell=True, stdout=subprocess.PIPE ).communicate()[0].split()
+				for i in range( 0, len(stats), 2 ) :
+					pcpu += float(stats[i])
+					rss += float(stats[i+1])
+			except :
+				return {}
+			
+			return {
+				"pid" : pid,
+				"pcpu" : pcpu,
+				"rss" : rss,
+			}
 		
 		def failed( self ) :
 			
@@ -107,6 +133,20 @@ class LocalDispatcher( Gaffer.Dispatcher ) :
 			batch.blindData()["killed"] = IECore.BoolData( True )
 			for requirement in batch.requirements() :
 				self.__kill( requirement )
+		
+		@staticmethod
+		def __currentBatch( batch ) :
+			
+			if LocalDispatcher._getStatus( batch ) == LocalDispatcher._BatchStatus.Running :
+				return batch
+			
+			for requirement in batch.requirements() :
+				
+				batch = LocalDispatcher.Job.__currentBatch( requirement )
+				if batch is not None :
+					return batch
+			
+			return None
 	
 	class JobPool( IECore.RunTimeTyped ) :
 		
@@ -298,6 +338,8 @@ class LocalDispatcher( Gaffer.Dispatcher ) :
 		LocalDispatcher._setStatus( batch, LocalDispatcher._BatchStatus.Running )
 		IECore.msg( IECore.MessageHandler.Level.Info, messageTitle, " ".join( cmd ) )
 		process = subprocess.Popen( " ".join( cmd ), shell=True, preexec_fn=os.setsid )
+		batch.blindData()["pid"] = IECore.IntData( process.pid )
+		
 		while process.poll() is None :
 			
 			if batch.blindData().get( "killed" ) :

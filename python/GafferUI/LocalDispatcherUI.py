@@ -92,6 +92,9 @@ class _LocalJobsPath( Gaffer.Path ) :
 			result["id"] = self.__job.id()
 			result["name"] = self.__job.name()
 			result["directory"] = self.__job.directory()
+			stats = self.__job.statistics()
+			result["cpu"] = "{0:.2f} %".format( stats["pcpu"] ) if "pcpu" in stats.keys() else "N/A"
+			result["memory"] = "{0:.2f} GB".format( stats["rss"] / 1024.0  / 1024.0 ) if "rss" in stats.keys() else "N/A"
 		
 		return result
 	
@@ -136,6 +139,8 @@ class _LocalJobsWindow( GafferUI.Window ) :
 						GafferUI.PathListingWidget.Column( infoField = "status", label = "Status", displayFunction = _LocalJobsWindow._displayStatus ),
 						GafferUI.PathListingWidget.Column( infoField = "name", label = "Name" ),
 						GafferUI.PathListingWidget.Column( infoField = "id", label = "Id" ),
+						GafferUI.PathListingWidget.Column( infoField = "cpu", label = "CPU" ),
+						GafferUI.PathListingWidget.Column( infoField = "memory", label = "Memory" ),
 					),
 					allowMultipleSelection=True
 				)
