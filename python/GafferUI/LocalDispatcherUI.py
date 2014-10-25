@@ -145,6 +145,26 @@ class _LocalJobsWindow( GafferUI.Window ) :
 					allowMultipleSelection=True
 				)
 				self.__jobListingWidget._qtWidget().header().setSortIndicator( 1, QtCore.Qt.AscendingOrder )
+				self.__jobSelectionChangedConnection = self.__jobListingWidget.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__jobSelectionChanged ) )
+				
+				with GafferUI.TabbedContainer() as self.__tabs :
+					
+					with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing=10, borderWidth=10, parenting = { "label"  : "Details" } ) as self.__detailsTab :
+						
+						with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing=15 ) :
+							GafferUI.Label( "<h3>Current Batch</h3>" )
+							self.__detailsCurrentDescription = GafferUI.Label( "N/A" )
+							self.__detailsCurrentDescription.setTextSelectable( True )
+						
+						with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing=15 ) :
+							GafferUI.Label( "<h3>Directory</h3>" )
+							self.__detailsDirectory = GafferUI.Label( "N/A" )
+							self.__detailsDirectory.setTextSelectable( True )
+					
+					with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing=10, borderWidth=10, parenting = { "label"  : "Messages" } ) as self.__messagesTab :
+						self.__messageWidget = GafferUI.MessageWidget()
+				
+				self.__tabChangedConnection = self.__tabs.currentChangedSignal().connect( Gaffer.WeakMethod( self.__tabChanged ) )
 				
 				killButton = GafferUI.Button( "Kill Selected Jobs" )
 				self.__killClickedConnection = killButton.clickedSignal().connect( Gaffer.WeakMethod( self.__killClicked ) )
@@ -202,12 +222,50 @@ class _LocalJobsWindow( GafferUI.Window ) :
 		
 		self.__jobListingWidget.getPath()._emitPathChanged()
 	
+	def __updateDetails( self ) :
+		
+		paths = self.__jobListingWidget.getSelectedPaths()
+		if not len(paths) :
+			self.__detailsCurrentDescription.setText( "N/A" )
+			self.__detailsDirectory.setText( "N/A" )
+			return
+		
+		job = paths[0].job()
+		self.__detailsCurrentDescription.setText( job.description() )
+		self.__detailsDirectory.setText( job.directory() )
+	
+	def __updateMessages( self ) :
+		
+		self.__messageWidget.clear()
+		
+		paths = self.__jobListingWidget.getSelectedPaths()
+		if not len(paths) :
+			return
+		
+		for m in paths[0].job().messageHandler().messages :
+			self.__messageWidget.appendMessage( m.level, m.context, m.message )
+	
 	def __killClicked( self, button ) :
 		
 		for path in self.__jobListingWidget.getSelectedPaths() :
 			path.job().kill()
 		
 		self.__update()
+	
+	def __jobSelectionChanged( self, widget ) :	
+		
+		currentTab = self.__tabs.getCurrent()
+		if currentTab is self.__detailsTab :
+			self.__updateDetails()
+		elif currentTab is self.__messagesTab :
+			self.__updateMessages()
+	
+	def __tabChanged( self, tabs, currentTab ) :
+		
+		if currentTab is self.__detailsTab :
+			self.__updateDetails()
+		elif currentTab is self.__messagesTab :
+			self.__updateMessages()
 
 ##########################################################################
 # Implementation Details

@@ -72,6 +72,8 @@ class LocalDispatcher( Gaffer.Dispatcher ) :
 			self.__directory = directory
 			
 			self.__stats = {}
+			
+			self.__messageHandler = IECore.CapturingMessageHandler()
 		
 		def name( self ) :
 			
@@ -84,6 +86,17 @@ class LocalDispatcher( Gaffer.Dispatcher ) :
 		def directory( self ) :
 			
 			return self.__directory
+		
+		def description( self ) :
+			
+			batch = LocalDispatcher.Job.__currentBatch( self.__batch )
+			if batch is None or batch.node() is None :
+				return "N/A"
+			
+			node = batch.node().relativeName( batch.node().scriptNode() )
+			frames = str( IECore.frameListFromList( [ int(x) for x in batch.frames() ] ) )
+			
+			return "Executing " + node + " on frames " + frames
 		
 		def statistics( self ) :
 			
@@ -108,6 +121,10 @@ class LocalDispatcher( Gaffer.Dispatcher ) :
 				"pcpu" : pcpu,
 				"rss" : rss,
 			}
+		
+		def messageHandler( self ) :
+			
+			return self.__messageHandler
 		
 		def failed( self ) :
 			
@@ -241,14 +258,16 @@ class LocalDispatcher( Gaffer.Dispatcher ) :
 		
 		if self["executeInBackground"].getValue() :
 			
-			if not self.__preBackgroundDispatch( job, batch, messageTitle ) :
-				return
+			with job.messageHandler() :
+				if not self.__preBackgroundDispatch( job, batch, messageTitle ) :
+					return
 			
 			threading.Thread( target = IECore.curry( self.__backgroundDispatch, job, batch, tmpScript, messageTitle ) ).start()
 		
 		else :
-			self.__foregroundDispatch( job, batch, messageTitle )
-			self.__dispatchComplete( job, batch, messageTitle )
+			with job.messageHandler() :
+				self.__foregroundDispatch( job, batch, messageTitle )
+				self.__dispatchComplete( job, batch, messageTitle )
 
 	def __foregroundDispatch( self, job, batch, messageTitle ) :
 
@@ -294,12 +313,17 @@ class LocalDispatcher( Gaffer.Dispatcher ) :
 		return True
 
 	def __backgroundDispatch( self, job, batch, scriptFile, messageTitle ) :
+		
+		with job.messageHandler() :
+			self.__doBackgroundDispatch( job, batch, scriptFile, messageTitle )
+	
+	def __doBackgroundDispatch( self, job, batch, scriptFile, messageTitle ) :
 
 		if LocalDispatcher._getStatus( batch ) == LocalDispatcher._BatchStatus.Complete :
 			return True
 
 		for currentBatch in batch.requirements() :
-			if not self.__backgroundDispatch( job, currentBatch, scriptFile, messageTitle ) :
+			if not self.__doBackgroundDispatch( job, currentBatch, scriptFile, messageTitle ) :
 				return False
 
 		if batch.blindData().get( "killed" ) :
