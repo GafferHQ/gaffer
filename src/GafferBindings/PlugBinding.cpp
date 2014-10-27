@@ -132,6 +132,13 @@ std::string PlugSerialiser::postHierarchy( const Gaffer::GraphComponent *graphCo
 	return "";
 }
 
+bool PlugSerialiser::childNeedsConstruction( const Gaffer::GraphComponent *child ) const
+{
+	// cast is safe because of constraints maintained by Plug::acceptsChild().
+	const Plug *childPlug = static_cast<const Plug *>( child );
+	return childPlug->getFlags( Plug::Dynamic | Plug::Serialisable );
+}
+
 std::string PlugSerialiser::directionRepr( Plug::Direction direction )
 {
 	switch( direction )

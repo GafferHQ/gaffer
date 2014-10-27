@@ -227,6 +227,14 @@ class TypedObjectPlugTest( GafferTest.TestCase ) :
 		self.assertEqual( p2.defaultValue(), p.defaultValue() )
 		self.assertEqual( p2.getFlags(), p.getFlags() )
 
+	def testNoChildrenAccepted( self ) :
+
+		p1 = Gaffer.ObjectPlug( defaultValue = IECore.IntData( 20 ) )
+		p2 = Gaffer.ObjectPlug( defaultValue = IECore.IntData( 20 ) )
+
+		self.assertFalse( p1.acceptsChild( p2 ) )
+		self.assertRaises( RuntimeError, p1.addChild, p2 )
+
 if __name__ == "__main__":
 	unittest.main()
 

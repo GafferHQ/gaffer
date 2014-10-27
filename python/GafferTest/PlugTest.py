@@ -406,6 +406,17 @@ class PlugTest( GafferTest.TestCase ) :
 		self.assertEqual( p2.direction(), Gaffer.Plug.Direction.In )
 		self.assertEqual( p2.getFlags(), p.getFlags() )
 
+	def testCreateCounterpartWithChildren( self ) :
+
+		p = Gaffer.Plug()
+		p["i"] = Gaffer.IntPlug()
+		p["f"] = Gaffer.FloatPlug()
+
+		p2 = p.createCounterpart( "p2", Gaffer.Plug.Direction.In )
+		self.assertEqual( p2.keys(), [ "i", "f" ] )
+		self.assertTrue( isinstance( p2["i"], Gaffer.IntPlug ) )
+		self.assertTrue( isinstance( p2["f"], Gaffer.FloatPlug ) )
+
 	def testSource( self ) :
 
 		p1 = Gaffer.Plug( "p1" )
@@ -501,6 +512,187 @@ class PlugTest( GafferTest.TestCase ) :
 				flags = Gaffer.Plug.Flags( i )
 			)
 			self.assertTrue( "Gaffer.Plug.Flags.Default" in repr( p ) )
+
+	def testRemoveOutputs( self ) :
+
+		input = Gaffer.Plug()
+
+		outputs = []
+		for i in range( 0, 1000 ) :
+			outputs.append( Gaffer.Plug() )
+			outputs[-1].setInput( input )
+
+		self.assertEqual( input.outputs(), tuple( outputs ) )
+		for output in outputs :
+			self.assertTrue( output.getInput().isSame( input ) )
+
+		input.removeOutputs()
+
+		self.assertEqual( input.outputs(), () )
+		for output in outputs :
+			self.assertTrue( output.getInput() is None )
+
+	def testParentConnectionTracksChildConnections( self ) :
+
+		n1 = Gaffer.Node()
+		n1["p"] = Gaffer.Plug()
+		n1["p"]["c1"] = Gaffer.Plug()
+		n1["p"]["c2"] = Gaffer.Plug()
+
+		n2 = Gaffer.Node()
+		n2["p"] = Gaffer.Plug()
+		n2["p"]["c1"] = Gaffer.Plug()
+		n2["p"]["c2"] = Gaffer.Plug()
+
+		n2["p"]["c1"].setInput( n1["p"]["c1"] )
+		n2["p"]["c2"].setInput( n1["p"]["c2"] )
+		self.failUnless( n2["p"].getInput().isSame( n1["p"] ) )
+
+		n2["p"]["c2"].setInput( None )
+		self.failUnless( n2["p"].getInput() is None )
+
+		n2["p"]["c2"].setInput( n1["p"]["c2"] )
+		self.failUnless( n2["p"].getInput().isSame( n1["p"] ) )
+
+		n2["p"]["c3"] = Gaffer.Plug()
+
+		self.failUnless( n2["p"].getInput() is None )
+
+		n1["p"]["c3"] = Gaffer.Plug()
+		n2["p"]["c3"].setInput( n1["p"]["c3"] )
+		self.failUnless( n2["p"].getInput().isSame( n1["p"] ) )
+
+	def testAncestorConnectionTracksDescendantConnections( self ) :
+
+		a1 = Gaffer.Plug()
+		a1["b1"] = Gaffer.Plug()
+		a1["b1"]["c1"] = Gaffer.Plug()
+
+		a2 = Gaffer.Plug()
+		a2["b2"] = Gaffer.Plug()
+		a2["b2"]["c2"] = Gaffer.Plug()
+
+		a2["b2"]["c2"].setInput( a1["b1"]["c1"] )
+
+		self.assertTrue( a2["b2"]["c2"].getInput().isSame( a1["b1"]["c1"] ) )
+		self.assertTrue( a2["b2"].getInput().isSame( a1["b1"] ) )
+		self.assertTrue( a2.getInput().isSame( a1 ) )
+
+		a2["b2"]["c2"].setInput( None )
+
+		self.assertTrue( a2["b2"]["c2"].getInput() is None )
+		self.assertTrue( a2["b2"].getInput() is None )
+		self.assertTrue( a2.getInput() is None )
+
+	def testSerialisationWithChildren( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = Gaffer.Node()
+		s["n"]["p"] = Gaffer.Plug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["n"]["p"]["c"] = Gaffer.Plug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+
+		self.assertTrue( isinstance( s2["n"]["p"]["c"], Gaffer.Plug ) )
+
+	def testChildAdditionPropagatesToOutputs( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n1"] = Gaffer.Node()
+		s["n2"] = Gaffer.Node()
+
+		s["n1"]["c"] = Gaffer.Plug()
+		s["n2"]["c"] = Gaffer.Plug()
+
+		s["n2"]["c"].setInput( s["n1"]["c"] )
+		self.assertTrue( s["n2"]["c"].getInput().isSame( s["n1"]["c"] ) )
+
+		def assertPreconditions() :
+
+			self.assertEqual( s["n1"]["c"].keys(), [] )
+			self.assertEqual( s["n2"]["c"].keys(), [] )
+			self.assertTrue( s["n2"]["c"].getInput().isSame( s["n1"]["c"] ) )
+
+		def assertPostconditions() :
+
+			self.assertEqual( s["n1"]["c"].keys(), [ "i", "f" ] )
+			self.assertEqual( s["n2"]["c"].keys(), [ "i", "f" ] )
+
+			self.assertTrue( isinstance( s["n2"]["c"]["i"], Gaffer.IntPlug ) )
+			self.assertTrue( s["n2"]["c"]["i"].getInput().isSame( s["n1"]["c"]["i"] ) )
+			self.assertTrue( s["n2"]["c"].getInput().isSame( s["n1"]["c"] ) )
+
+			self.assertTrue( isinstance( s["n2"]["c"]["f"], Gaffer.FloatPlug ) )
+			self.assertTrue( s["n2"]["c"]["f"].getInput().isSame( s["n1"]["c"]["f"] ) )
+			self.assertTrue( s["n2"]["c"].getInput().isSame( s["n1"]["c"] ) )
+
+		assertPreconditions()
+
+		with Gaffer.UndoContext( s ) :
+
+			s["n1"]["c"].addChild( Gaffer.IntPlug( "i" ) )
+			s["n1"]["c"].addChild( Gaffer.FloatPlug( "f" ) )
+
+		assertPostconditions()
+
+		s.undo()
+		assertPreconditions()
+
+		s.redo()
+		assertPostconditions()
+
+	def testChildRemovalPropagatesToOutputs( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n1"] = Gaffer.Node()
+		s["n2"] = Gaffer.Node()
+
+		s["n1"]["c"] = Gaffer.Plug()
+		s["n2"]["c"] = Gaffer.Plug()
+
+		s["n1"]["c"]["f"] = Gaffer.FloatPlug()
+		s["n2"]["c"]["f"] = Gaffer.FloatPlug()
+
+		s["n1"]["c"]["i"] = Gaffer.FloatPlug()
+		s["n2"]["c"]["i"] = Gaffer.FloatPlug()
+
+		s["n2"]["c"].setInput( s["n1"]["c"] )
+
+		def assertPreconditions() :
+
+			self.assertEqual( s["n1"]["c"].keys(), [ "f", "i" ] )
+			self.assertEqual( s["n2"]["c"].keys(), [ "f", "i" ] )
+
+			self.assertTrue( s["n2"]["c"].getInput().isSame( s["n1"]["c"] ) )
+			self.assertTrue( s["n2"]["c"]["i"].getInput().isSame( s["n1"]["c"]["i"] ) )
+			self.assertTrue( s["n2"]["c"]["f"].getInput().isSame( s["n1"]["c"]["f"] ) )
+
+		def assertPostconditions() :
+
+			self.assertEqual( s["n1"]["c"].keys(), [] )
+			self.assertEqual( s["n2"]["c"].keys(), [] )
+
+			self.assertTrue( s["n2"]["c"].getInput().isSame( s["n1"]["c"] ) )
+
+		assertPreconditions()
+
+		with Gaffer.UndoContext( s ) :
+
+			del s["n1"]["c"]["i"]
+			del s["n1"]["c"]["f"]
+
+		assertPostconditions()
+
+		s.undo()
+
+		assertPreconditions()
+
+		s.redo()
+
+		assertPostconditions()
 
 if __name__ == "__main__":
 	unittest.main()

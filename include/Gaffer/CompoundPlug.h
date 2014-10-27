@@ -43,6 +43,13 @@
 namespace Gaffer
 {
 
+/// \todo Remove this type entirely - it only existed to allow
+/// "plugs with children", and now the Plug and ValuePlug classes
+/// implement that directly. When doing this, refactor ValuePlug
+/// to accept only ValuePlugs as children rather than also accepting
+/// normal Plugs. It's currently accepting Plugs for backwards
+/// compatibility with CompoundPlug, and having to do a number of
+/// runTimeCast<Value>Plug() operations internally to work around that.
 class CompoundPlug : public ValuePlug
 {
 
@@ -53,41 +60,11 @@ class CompoundPlug : public ValuePlug
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::CompoundPlug, CompoundPlugTypeId, ValuePlug );
 
-		/// Accepts any child provided it's a Plug and has the same direction
-		/// as this CompoundPlug.
-		virtual bool acceptsChild( const GraphComponent *potentialChild ) const;
 		virtual PlugPtr createCounterpart( const std::string &name, Direction direction ) const;
-
-		/// Only accepts inputs which are CompoundPlugs with child
-		/// Plugs compatible with this plug.
-		virtual bool acceptsInput( const Plug *input ) const;
-		/// Makes connections between the corresponding child Plugs of
-		/// input and this Plug.
-		virtual void setInput( PlugPtr input );
-
-		/// Only returns true if all child plugs are settable.
-		virtual bool settable() const;
-
-		virtual void setToDefault();
-		virtual void setFrom( const ValuePlug *other );
-
-		/// Implemented to hash all the child plugs.
-		virtual IECore::MurmurHash hash() const;
-		/// Just calls ValuePlug::hash( h ) - only
-		/// exists to workaround the problem of the
-		/// function above masking this function on
-		/// the base class.
-		void hash( IECore::MurmurHash &h ) const;
 
 	private :
 
-		void parentChanged();
 		void childAddedOrRemoved();
-
-		boost::signals::connection m_plugInputChangedConnection;
-		void plugInputChanged( Plug *plug );
-
-		void updateInputFromChildInputs( Plug *checkFirst );
 
 };
 

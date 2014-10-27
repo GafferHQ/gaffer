@@ -60,13 +60,6 @@ class CompoundPlugWrapper : public PlugWrapper<CompoundPlug>
 
 };
 
-bool CompoundPlugSerialiser::childNeedsConstruction( const Gaffer::GraphComponent *child ) const
-{
-	// cast is safe because of constraints maintained by CompoundPlug.
-	const Plug *childPlug = static_cast<const Plug *>( child );
-	return childPlug->getFlags( Plug::Dynamic | Plug::Serialisable );
-}
-
 bool CompoundPlugSerialiser::valueNeedsSerialisation( const Gaffer::ValuePlug *plug, const Serialisation &serialisation ) const
 {
 	return false;

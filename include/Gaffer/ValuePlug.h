@@ -56,10 +56,13 @@ class ValuePlug : public Plug
 
 	public :
 
+		/// Constructs a ValuePlug which can be used as a parent for other ValuePlugs.
+		ValuePlug( const std::string &name, Direction direction, unsigned flags );
 		virtual ~ValuePlug();
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::ValuePlug, ValuePlugTypeId, Plug );
 
+		virtual bool acceptsChild( const GraphComponent *potentialChild ) const;
 		/// Accepts the input only if it is derived from ValuePlug.
 		/// Derived classes may accept more types provided they
 		/// derive from ValuePlug too, and they can deal with them
@@ -68,19 +71,21 @@ class ValuePlug : public Plug
 		/// Reimplemented so that values can be propagated from inputs.
 		virtual void setInput( PlugPtr input );
 
+		virtual PlugPtr createCounterpart( const std::string &name, Direction direction ) const;
+
 		/// Returns true if it is valid to call setFrom(), setToDefault(),
 		/// or setValue() on this plug. False will be returned if the plug
 		/// has an input connection or the ReadOnly flag is set.
-		virtual bool settable() const;
+		bool settable() const;
 
 		/// Must be implemented to set the value of this Plug from the other Plug,
 		/// performing any necessary conversions on the input value. Should throw
 		/// an exception if other is of an unsupported type.
-		virtual void setFrom( const ValuePlug *other ) = 0;
+		virtual void setFrom( const ValuePlug *other );
 
 		/// Must be implemented by derived classes to set the value
 		/// to the default for this Plug.
-		virtual void setToDefault() = 0;
+		virtual void setToDefault();
 
 		/// Returns a hash to represent the value of this plug
 		/// in the current context.
@@ -104,16 +109,14 @@ class ValuePlug : public Plug
 
 	protected :
 
-		/// The initialValue will be referenced directly (not copied) and
-		/// therefore must not be changed after passing to the constructor.
-		/// The initialValue must be non-null.
+		/// This constructor must be used by all derived classes which wish
+		/// to store their own values - without it m_staticValue is not initialised
+		/// and getObjectValue() will fail. The initialValue will be referenced directly
+		/// (not copied) and therefore must not be changed after passing to the constructor.
+		/// The initialValue must be non-null. When this constructor is used, the ValuePlug
+		/// does not accept child plugs - values are always stored on leaf plugs.
 		ValuePlug( const std::string &name, Direction direction,
 			IECore::ConstObjectPtr initialValue, unsigned flags );
-		/// For use /only/ by CompoundPlug. This results in a null m_staticValue,
-		/// which is acceptable only because CompoundPlug values are composed from
-		/// the values of child plugs, and aren't computed or stored directly
-		/// (CompoundPlug may not call getObjectValue() or setObjectValue() as a result).
-		ValuePlug( const std::string &name, Direction direction, unsigned flags );
 
 		/// Internally all values are stored as instances of classes derived
 		/// from IECore::Object, although this isn't necessarily visible to the user.
