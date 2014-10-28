@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import weakref
+
 import IECore
 
 import Gaffer
@@ -185,11 +187,11 @@ class _LocalJobsWindow( GafferUI.Window ) :
 		assert( isinstance( jobPool, Gaffer.LocalDispatcher.JobPool ) )
 		
 		window = getattr( jobPool, "_window", None )
-		if window :
-			return window
+		if window is not None and window() :
+			return window()
 		
 		window = _LocalJobsWindow( jobPool )
-		jobPool._window = window
+		jobPool._window = weakref.ref( window )
 		
 		return window
 	
@@ -274,4 +276,6 @@ class _LocalJobsWindow( GafferUI.Window ) :
 def __showLocalDispatcherWindow( menu ) :
 	
 	window = _LocalJobsWindow.acquire( Gaffer.LocalDispatcher.defaultJobPool() )
+	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
+	scriptWindow.addChildWindow( window )
 	window.setVisible( True )
