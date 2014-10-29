@@ -94,7 +94,7 @@ class BranchCreator : public SceneProcessor
 		/// or :
 		///
 		///   - Assign directly to the hash from an input hash to signify that the input will be
-		///     passed through unchanged by the corresponding computBranch*() method.
+		///     passed through unchanged by the corresponding computeBranch*() method.
 		///
 		//@{
 		virtual void hashBranchBound( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const = 0;
