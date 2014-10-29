@@ -123,3 +123,12 @@ IECore::ConstInternedStringVectorDataPtr Parent::computeBranchChildNames( const 
 	return childPlug()->childNames( branchPath );
 }
 
+void Parent::hashBranchGlobals( const ScenePath &parentPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	h = childPlug()->globalsPlug()->hash();
+}
+
+IECore::ConstCompoundObjectPtr Parent::computeBranchGlobals( const ScenePath &parentPath, const Gaffer::Context *context ) const
+{
+	return childPlug()->globalsPlug()->getValue();
+}
