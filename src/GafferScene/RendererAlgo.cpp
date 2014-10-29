@@ -125,30 +125,44 @@ static void outputCameraInternal( IECore::Camera *camera, const IECore::Compound
 	// apply the resolution, aspect ratio and crop window
 
 	V2i resolution( 640, 480 );
-	if( const V2iData *resolutionData = globals->member<V2iData>( "option:render:resolution" ) )
-	{
-		resolution = resolutionData->readable();
-	}
 
-	if( const FloatData *resolutionMultiplierData = globals->member<FloatData>( "option:render:resolutionMultiplier" ) )
+	const Box2fData *cropWindowData = NULL;
+	const V2iData *resolutionOverrideData = camera->parametersData()->member<V2iData>( "resolutionOverride" );
+	if( resolutionOverrideData )
 	{
-		resolution.x = int((float)resolution.x * resolutionMultiplierData->readable());
-		resolution.y = int((float)resolution.y * resolutionMultiplierData->readable());
+		// We allow a parameter on the camera to override the resolution from the globals - this
+		// is useful when defining secondary cameras for doing texture projections.
+		/// \todo Consider how this might fit in as part of a more comprehensive camera setup.
+		/// Perhaps we might actually want a specific Camera subclass for such things?
+		resolution = resolutionOverrideData->readable();
+	}
+	else
+	{
+		if( const V2iData *resolutionData = globals->member<V2iData>( "option:render:resolution" ) )
+		{
+			resolution = resolutionData->readable();
+		}
+
+		if( const FloatData *resolutionMultiplierData = globals->member<FloatData>( "option:render:resolutionMultiplier" ) )
+		{
+			resolution.x = int((float)resolution.x * resolutionMultiplierData->readable());
+			resolution.y = int((float)resolution.y * resolutionMultiplierData->readable());
+		}
+
+		const FloatData *pixelAspectRatioData = globals->member<FloatData>( "option:render:pixelAspectRatio" );
+		if( pixelAspectRatioData )
+		{
+			camera->parameters()["pixelAspectRatio"] = pixelAspectRatioData->copy();
+		}
+
+		cropWindowData = globals->member<Box2fData>( "option:render:cropWindow" );
+		if( cropWindowData )
+		{
+			camera->parameters()["cropWindow"] = cropWindowData->copy();
+		}
 	}
 
 	camera->parameters()["resolution"] = new V2iData( resolution );
-
-	const FloatData *pixelAspectRatioData = globals->member<FloatData>( "option:render:pixelAspectRatio" );
-	if( pixelAspectRatioData )
-	{
-		camera->parameters()["pixelAspectRatio"] = pixelAspectRatioData->copy();
-	}
-
-	const Box2fData *cropWindowData = globals->member<Box2fData>( "option:render:cropWindow" );
-	if( cropWindowData )
-	{
-		camera->parameters()["cropWindow"] = cropWindowData->copy();
-	}
 
 	// calculate an appropriate screen window
 
@@ -157,7 +171,7 @@ static void outputCameraInternal( IECore::Camera *camera, const IECore::Compound
 	// apply overscan
 	
 	const BoolData *overscanData = globals->member<BoolData>( "option:render:overscan" );
-	if( overscanData && overscanData->readable() )
+	if( overscanData && overscanData->readable() && !resolutionOverrideData )
 	{
 		
 		// get offsets for each corner of image (as a multiplier of the image width)
