@@ -494,6 +494,49 @@ class RenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 				rib = "\n".join( file( "/tmp/test.rib" ).readlines() )
 				self.assertTrue( "FrameBegin %d" % i in rib )
 
+	def testMultipleCameras( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["camera1"] = GafferScene.Camera()
+		s["camera1"]["name"].setValue( "camera1" )
+
+		s["camera2"] = GafferScene.Camera()
+		s["camera2"]["name"].setValue( "camera2" )
+
+		s["camera3"] = GafferScene.Camera()
+		s["camera3"]["name"].setValue( "camera3" )
+
+		s["group"] = GafferScene.Group()
+		s["group"]["in"].setInput( s["camera1"]["out"] )
+		s["group"]["in1"].setInput( s["camera2"]["out"] )
+		s["group"]["in2"].setInput( s["camera3"]["out"] )
+
+		s["options"] = GafferScene.StandardOptions()
+		s["options"]["in"].setInput( s["group"]["out"] )
+		s["options"]["options"]["renderCamera"]["enabled"].setValue( True )
+		s["options"]["options"]["renderCamera"]["value"].setValue( "/group/camera2" )
+
+		s["render"] = GafferRenderMan.RenderManRender()
+		s["render"]["in"].setInput( s["options"]["out"] )
+		s["render"]["mode"].setValue( "generate" )
+
+		s["render"]["ribFileName"].setValue( "/tmp/test.rib" )
+
+		s["fileName"].setValue( "/tmp/test.gfr" )
+		s.save()
+
+		s["render"].execute()
+
+		rib = "\n".join( file( "/tmp/test.rib" ).readlines() )
+
+		self.assertTrue( "Camera \"/group/camera1\"" in rib )
+		self.assertTrue( "Camera \"/group/camera2\"" in rib )
+		self.assertTrue( "Camera \"/group/camera3\"" in rib )
+		# camera3 must come last, because it is the primary render camera
+		self.assertTrue( rib.index( "Camera \"/group/camera2\"" ) > rib.index( "Camera \"/group/camera1\"" ) )
+		self.assertTrue( rib.index( "Camera \"/group/camera2\"" ) > rib.index( "Camera \"/group/camera3\"" ) )
+
 	def setUp( self ) :
 
 		for f in (

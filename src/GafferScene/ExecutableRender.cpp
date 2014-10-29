@@ -123,7 +123,7 @@ void ExecutableRender::execute() const
 		IECore::RendererPtr renderer = createRenderer();
 		outputOptions( globals.get(), renderer.get() );
 		outputOutputs( globals.get(), renderer.get() );
-		outputCamera( scene, globals.get(), renderer.get() );
+		outputCameras( scene, globals.get(), renderer.get() );
 		{
 			WorldBlock world( renderer );
 

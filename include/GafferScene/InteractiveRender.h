@@ -89,8 +89,8 @@ class InteractiveRender : public Gaffer::Node
 		Gaffer::BoolPlug *updateAttributesPlug();
 		const Gaffer::BoolPlug *updateAttributesPlug() const;
 
-		Gaffer::BoolPlug *updateCameraPlug();
-		const Gaffer::BoolPlug *updateCameraPlug() const;
+		Gaffer::BoolPlug *updateCamerasPlug();
+		const Gaffer::BoolPlug *updateCamerasPlug() const;
 
 		Gaffer::BoolPlug *updateCoordinateSystemsPlug();
 		const Gaffer::BoolPlug *updateCoordinateSystemsPlug() const;
@@ -114,7 +114,7 @@ class InteractiveRender : public Gaffer::Node
 		void updateLights();
 		void updateAttributes();
 		void updateAttributesWalk( const ScenePlug::ScenePath &path );
-		void updateCamera();
+		void updateCameras();
 		void updateCoordinateSystems();
 
 		void outputLightsInternal( const IECore::CompoundObject *globals, bool editing );
@@ -127,7 +127,7 @@ class InteractiveRender : public Gaffer::Node
 		LightHandles m_lightHandles;
 		bool m_lightsDirty;
 		bool m_attributesDirty;
-		bool m_cameraDirty;
+		bool m_camerasDirty;
 		bool m_coordinateSystemsDirty;
 
 		Gaffer::ContextPtr m_context;
