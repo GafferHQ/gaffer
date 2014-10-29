@@ -111,6 +111,10 @@ class BranchCreator : public SceneProcessor
 
 		virtual void hashBranchChildNames( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const = 0;
 		virtual IECore::ConstInternedStringVectorDataPtr computeBranchChildNames( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const = 0;
+
+		/// Note that only the sets from the globals are used in any way.
+		virtual void hashBranchGlobals( const ScenePath &parentPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual IECore::ConstCompoundObjectPtr computeBranchGlobals( const ScenePath &parentPath, const Gaffer::Context *context ) const;
 		//@}
 
 	private :

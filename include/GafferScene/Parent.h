@@ -74,6 +74,9 @@ class Parent : public BranchCreator
 		virtual void hashBranchChildNames( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual IECore::ConstInternedStringVectorDataPtr computeBranchChildNames( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const;
 
+		virtual void hashBranchGlobals( const ScenePath &parentPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual IECore::ConstCompoundObjectPtr computeBranchGlobals( const ScenePath &parentPath, const Gaffer::Context *context ) const;
+
 	private :
 
 		static size_t g_firstPlugIndex;

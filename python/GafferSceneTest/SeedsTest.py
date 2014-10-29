@@ -177,5 +177,21 @@ class SeedsTest( GafferSceneTest.SceneTestCase ) :
 		self.assertScenesEqual( s["out"], p["out"] )
 		self.assertSceneHashesEqual( s["out"], p["out"] )
 
+	def testGlobalsPassThrough( self ) :
+
+		p = GafferScene.Plane()
+		l = GafferSceneTest.TestLight()
+
+		g = GafferScene.Group()
+		g["in"].setInput( p["out"] )
+		g["in1"].setInput( l["out"] )
+
+		s = GafferScene.Seeds()
+		s["in"].setInput( g["out"] )
+		s["parent"].setValue( "/group/plane" )
+
+		self.assertEqual( s["in"]["globals"].hash(), s["out"]["globals"].hash() )
+		self.assertEqual( s["in"]["globals"].getValue(), s["out"]["globals"].getValue() )
+
 if __name__ == "__main__":
 	unittest.main()
