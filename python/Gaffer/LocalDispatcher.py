@@ -109,10 +109,11 @@ class LocalDispatcher( Gaffer.Dispatcher ) :
 			pid = batch.blindData().get( "pid" )
 			
 			try :
-				stats = subprocess.Popen( "ps -s `ps -p %i -o sess=` -o pcpu=,rss=" % pid, shell=True, stdout=subprocess.PIPE ).communicate()[0].split()
-				for i in range( 0, len(stats), 2 ) :
-					pcpu += float(stats[i])
-					rss += float(stats[i+1])
+				stats = subprocess.Popen( "ps -Ao pid,ppid,pgid,sess,pcpu,rss | grep %i" % pid, shell=True, stdout=subprocess.PIPE ).communicate()[0].split()
+				for i in range( 0, len(stats), 6 ) :
+					if str(pid) in stats[i:i+4] :
+						pcpu += float(stats[i+4])
+						rss += float(stats[i+5])
 			except :
 				return {}
 			
