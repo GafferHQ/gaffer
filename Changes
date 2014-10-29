@@ -1,3 +1,39 @@
+# 0.4.0.0
+
+#### Core
+
+- Plugs and ValuePlugs now accept children (#1043).
+- Added child matching to connected Plugs (#1043).
+- Added LocalDispatcher.Job and LocalDispatcher.JobPool to track running batches (#1064).
+- Failing batches not stop a LocalDispatch job.
+
+#### UI
+
+- Improved Object section of SceneInspector (#897).
+- Added a window for tracking currently running LocalDispatcher jobs (#872).
+- Fixed reparenting bug with DispatcherWindows (#1064).
+
+#### Scene
+
+- Fixed poor performance of Prune/Isolate in presence of SetFilter.
+- Added sets support to Parent node (#1065).
+- Outputting all cameras, not just the primary camera, to the renderer.
+- Added support for per-camera resolution overrides, specified with a "resolutionOverride" V2iData in the camera parameters.
+
+#### API
+
+- Plugs and ValuePlugs now accept children. CompoundPlug will be deprecated.
+- Added BranchCreator::hashBranchGlobals() and computeBranchGlobals(), and implemented them for Parent.
+- Added outputCameras() and overload for outputCamera() to RendererAlgo.h.
+- Added LocalDispatcher.Job and LocalDispatcher.JobPool to track running batches.
+
+#### Incompatible changes
+
+- Added additional virtual methods to BranchCreator
+- ValuePlug::settable() is no longer virtual
+- Removed methods and member variable from CompoundPlug
+- InteractiveRender "updateCamera" plug renamed to "updateCameras".
+
 # 0.3.0.0
 
 #### Core
