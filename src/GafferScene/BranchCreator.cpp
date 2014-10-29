@@ -50,6 +50,9 @@ IE_CORE_DEFINERUNTIMETYPED( BranchCreator );
 
 size_t BranchCreator::g_firstPlugIndex = 0;
 
+static InternedString g_childNamesKey( "__BranchCreatorChildNames" );
+static InternedString g_parentKey( "__BranchCreatorParent" );
+
 BranchCreator::BranchCreator( const std::string &name )
 	:	SceneProcessor( name )
 {
@@ -272,7 +275,7 @@ void BranchCreator::hashChildNames( const ScenePath &path, const Gaffer::Context
 	}
 	else if( parentMatch == Filter::ExactMatch )
 	{
-		h = mapping->member<InternedStringVectorData>( "__BranchCreatorChildNames" )->Object::hash();
+		h = mapping->member<InternedStringVectorData>( g_childNamesKey )->Object::hash();
 	}
 	else
 	{
@@ -292,7 +295,7 @@ IECore::ConstInternedStringVectorDataPtr BranchCreator::computeChildNames( const
 	}
 	else if( parentMatch == Filter::ExactMatch )
 	{
-		return mapping->member<InternedStringVectorData>( "__BranchCreatorChildNames" );
+		return mapping->member<InternedStringVectorData>( g_childNamesKey );
 	}
 	else
 	{
@@ -385,7 +388,7 @@ IECore::ConstCompoundDataPtr BranchCreator::computeMapping( const Gaffer::Contex
 	// but for now we're just packing everything into a CompoundData.
 
 	CompoundDataPtr result = new CompoundData;
-	result->writable()["__BranchCreatorParent"] = new InternedStringVectorData( parent );
+	result->writable()[g_parentKey] = new InternedStringVectorData( parent );
 
 	// calculate the child names for the result. this is the full list of child names
 	// immediately below the parent. we need to be careful to ensure that we rename any
@@ -398,7 +401,7 @@ IECore::ConstCompoundDataPtr BranchCreator::computeMapping( const Gaffer::Contex
 	const vector<InternedString> &branchChildNames = branchChildNamesData->readable();
 	vector<InternedString> &childNames = childNamesData->writable();
 
-	result->writable()["__BranchCreatorChildNames"] = childNamesData;
+	result->writable()[g_childNamesKey] = childNamesData;
 
 	set<InternedString> allNames;
 	for( vector<InternedString>::const_iterator it = inChildNames.begin(); it != inChildNames.end(); ++it )
@@ -441,7 +444,7 @@ Filter::Result BranchCreator::parentAndBranchPaths( const IECore::CompoundData *
 		return Filter::NoMatch;
 	}
 
-	const ScenePath &parent = mapping->member<InternedStringVectorData>( "__BranchCreatorParent" )->readable();
+	const ScenePath &parent = mapping->member<InternedStringVectorData>( g_parentKey )->readable();
 
 	ScenePath::const_iterator parentIterator, parentIteratorEnd, pathIterator, pathIteratorEnd;
 
