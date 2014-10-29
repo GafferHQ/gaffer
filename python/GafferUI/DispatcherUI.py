@@ -176,11 +176,11 @@ class DispatcherWindow( GafferUI.Window ) :
 			applicationRoot = applicationOrApplicationRoot
 		
 		window = getattr( applicationRoot, "_dispatcherWindow", None )
-		if window :
-			return window
+		if window is not None and window() :
+			return window()
 		
 		window = DispatcherWindow()
-		applicationRoot._dispatcherWindow = window
+		applicationRoot._dispatcherWindow = weakref.ref( window )
 		
 		return window
 	
