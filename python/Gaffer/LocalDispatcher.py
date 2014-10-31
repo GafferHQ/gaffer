@@ -345,7 +345,7 @@ class LocalDispatcher( Gaffer.Dispatcher ) :
 		taskContext = batch.context()
 		frames = str( IECore.frameListFromList( [ int(x) for x in batch.frames() ] ) )
 
-		cmd = [
+		args = [
 			"gaffer", "execute",
 			"-script", scriptFile,
 			"-nodes", batch.node().relativeName( script ),
@@ -358,11 +358,11 @@ class LocalDispatcher( Gaffer.Dispatcher ) :
 				contextArgs.extend( [ "-" + entry, repr(taskContext[entry]) ] )
 
 		if contextArgs :
-			cmd.extend( [ "-context" ] + contextArgs )
+			args.extend( [ "-context" ] + contextArgs )
 
 		LocalDispatcher._setStatus( batch, LocalDispatcher._BatchStatus.Running )
-		IECore.msg( IECore.MessageHandler.Level.Info, messageTitle, " ".join( cmd ) )
-		process = subprocess.Popen( " ".join( cmd ), shell=True, preexec_fn=os.setsid )
+		IECore.msg( IECore.MessageHandler.Level.Info, messageTitle, " ".join( args ) )
+		process = subprocess.Popen( args, preexec_fn=os.setsid )
 		batch.blindData()["pid"] = IECore.IntData( process.pid )
 		
 		while process.poll() is None :

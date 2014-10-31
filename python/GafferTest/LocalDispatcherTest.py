@@ -549,6 +549,28 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		# make sure it never wrote the file
 		self.assertFalse( os.path.isfile( s.context().substitute( s["n1"]["fileName"].getValue() ) ) )
 	
+	def testSpacesInContext( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = GafferTest.TextWriter()
+		s["n"]["fileName"].setValue( "/tmp/dispatcherTest/test.txt" )
+		s["n"]["text"].setValue( "${test}" )
+
+		dispatcher = Gaffer.Dispatcher.create( "LocalTest" )
+		dispatcher["executeInBackground"].setValue( True )
+
+		c = Gaffer.Context()
+		c["test"] = "i am a string with spaces"
+
+		with c :
+			dispatcher.dispatch( [ s["n"] ] )
+
+		dispatcher.jobPool().waitForAll()
+
+		text = "".join( open( "/tmp/dispatcherTest/test.txt" ).readlines() )
+		self.assertEqual( text, "i am a string with spaces" )
+
 	def tearDown( self ) :
 
 		shutil.rmtree( "/tmp/dispatcherTest", ignore_errors = True )
