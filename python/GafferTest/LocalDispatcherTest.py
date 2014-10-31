@@ -571,6 +571,28 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		text = "".join( open( "/tmp/dispatcherTest/test.txt" ).readlines() )
 		self.assertEqual( text, "i am a string with spaces" )
 
+	def testUIContextEntriesIgnored( self ) :
+	
+		s = Gaffer.ScriptNode()
+		s["n"] = GafferTest.TextWriter()
+		s["n"]["fileName"].setValue( "/tmp/dispatcherTest/out.txt" )
+		s["n"]["text"].setValue( "${foo} ${ui:foo}" )
+		
+		dispatcher = Gaffer.Dispatcher.create( "LocalTest" )
+		dispatcher["executeInBackground"].setValue( True )
+		
+		c = Gaffer.Context()
+		c["ui:foo"] = "uiFoo"
+		c["foo"] = "foo"
+		
+		with c :
+			dispatcher.dispatch( [ s["n"] ] )	
+		
+		dispatcher.jobPool().waitForAll()
+		
+		text = "".join( open( "/tmp/dispatcherTest/out.txt" ).readlines() )
+		self.assertEqual( text, "foo " )
+		
 	def tearDown( self ) :
 
 		shutil.rmtree( "/tmp/dispatcherTest", ignore_errors = True )

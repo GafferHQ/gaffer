@@ -353,8 +353,8 @@ class LocalDispatcher( Gaffer.Dispatcher ) :
 		]
 
 		contextArgs = []
-		for entry in taskContext.keys() :
-			if entry != "frame" and ( entry not in script.context().keys() or taskContext[entry] != script.context()[entry] ) :
+		for entry in [ k for k in taskContext.keys() if k != "frame" and not k.startswith( "ui:" ) ] :
+			if entry not in script.context().keys() or taskContext[entry] != script.context()[entry] :
 				contextArgs.extend( [ "-" + entry, repr(taskContext[entry]) ] )
 
 		if contextArgs :
