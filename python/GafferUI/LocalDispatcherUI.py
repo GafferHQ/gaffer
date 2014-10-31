@@ -168,8 +168,9 @@ class _LocalJobsWindow( GafferUI.Window ) :
 				
 				self.__tabChangedConnection = self.__tabs.currentChangedSignal().connect( Gaffer.WeakMethod( self.__tabChanged ) )
 				
-				killButton = GafferUI.Button( "Kill Selected Jobs" )
-				self.__killClickedConnection = killButton.clickedSignal().connect( Gaffer.WeakMethod( self.__killClicked ) )
+				self.__killButton = GafferUI.Button( "Kill Selected Jobs" )
+				self.__killButton.setEnabled( False )
+				self.__killClickedConnection = self.__killButton.clickedSignal().connect( Gaffer.WeakMethod( self.__killClicked ) )
 		
 		self.setTitle( "Local Dispatcher Jobs" )
 		
@@ -255,6 +256,8 @@ class _LocalJobsWindow( GafferUI.Window ) :
 		self.__update()
 	
 	def __jobSelectionChanged( self, widget ) :	
+		
+		self.__killButton.setEnabled( len(self.__jobListingWidget.getSelectedPaths()) )
 		
 		currentTab = self.__tabs.getCurrent()
 		if currentTab is self.__detailsTab :
