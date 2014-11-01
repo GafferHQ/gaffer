@@ -133,7 +133,7 @@ class _LocalJobsWindow( GafferUI.Window ) :
 		GafferUI.Window.__init__( self, **kw )
 		
 		with self :
-			with GafferUI.ListContainer( orientation = GafferUI.ListContainer.Orientation.Vertical, spacing = 2, borderWidth = 4 ) as self.__column :
+			with GafferUI.SplitContainer() :
 				
 				self.__jobListingWidget = GafferUI.PathListingWidget(
 					_LocalJobsPath( jobPool ),
@@ -151,25 +151,28 @@ class _LocalJobsWindow( GafferUI.Window ) :
 				
 				with GafferUI.TabbedContainer() as self.__tabs :
 					
-					with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing=10, borderWidth=10, parenting = { "label"  : "Details" } ) as self.__detailsTab :
+					with GafferUI.ScrolledContainer( parenting = { "label"  : "Details" } ) as self.__detailsTab :
 						
-						with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing=15 ) :
-							GafferUI.Label( "<h3>Current Batch</h3>" )
-							self.__detailsCurrentDescription = GafferUI.Label( "N/A" )
-							self.__detailsCurrentDescription.setTextSelectable( True )
-						
-						with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing=15 ) :
-							GafferUI.Label( "<h3>Directory</h3>" )
-							self.__detailsDirectory = GafferUI.Label( "N/A" )
-							self.__detailsDirectory.setTextSelectable( True )
+						with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing=10, borderWidth=10 ) :
+							
+							with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing=15 ) :
+								GafferUI.Label( "<h3>Current Batch</h3>" )
+								self.__detailsCurrentDescription = GafferUI.Label( "N/A" )
+								self.__detailsCurrentDescription.setTextSelectable( True )
+							
+							with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing=15 ) :
+								GafferUI.Label( "<h3>Directory</h3>" )
+								self.__detailsDirectory = GafferUI.Label( "N/A" )
+								self.__detailsDirectory.setTextSelectable( True )
 					
 					with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing=10, borderWidth=10, parenting = { "label"  : "Messages" } ) as self.__messagesTab :
 						self.__messageWidget = GafferUI.MessageWidget()
 				
 				self.__tabChangedConnection = self.__tabs.currentChangedSignal().connect( Gaffer.WeakMethod( self.__tabChanged ) )
 				
-				killButton = GafferUI.Button( "Kill Selected Jobs" )
-				self.__killClickedConnection = killButton.clickedSignal().connect( Gaffer.WeakMethod( self.__killClicked ) )
+				self.__killButton = GafferUI.Button( "Kill Selected Jobs" )
+				self.__killButton.setEnabled( False )
+				self.__killClickedConnection = self.__killButton.clickedSignal().connect( Gaffer.WeakMethod( self.__killClicked ) )
 		
 		self.setTitle( "Local Dispatcher Jobs" )
 		
@@ -255,6 +258,8 @@ class _LocalJobsWindow( GafferUI.Window ) :
 		self.__update()
 	
 	def __jobSelectionChanged( self, widget ) :	
+		
+		self.__killButton.setEnabled( len(self.__jobListingWidget.getSelectedPaths()) )
 		
 		currentTab = self.__tabs.getCurrent()
 		if currentTab is self.__detailsTab :

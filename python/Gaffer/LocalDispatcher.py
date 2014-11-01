@@ -109,7 +109,7 @@ class LocalDispatcher( Gaffer.Dispatcher ) :
 			pid = batch.blindData().get( "pid" )
 			
 			try :
-				stats = subprocess.Popen( "ps -Ao pid,ppid,pgid,sess,pcpu,rss | grep %i" % pid, shell=True, stdout=subprocess.PIPE ).communicate()[0].split()
+				stats = subprocess.Popen( ( "ps -Ao pid,ppid,pgid,sess,pcpu,rss" ).split( " " ), stdout=subprocess.PIPE, stderr=subprocess.PIPE ).communicate()[0].split()
 				for i in range( 0, len(stats), 6 ) :
 					if str(pid) in stats[i:i+4] :
 						pcpu += float(stats[i+4])
