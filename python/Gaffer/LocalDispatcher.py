@@ -67,6 +67,8 @@ class LocalDispatcher( Gaffer.Dispatcher ) :
 			
 			self.__batch = batch
 			self.__dispatcher = dispatcher
+			script = batch.requirements()[0].node().scriptNode()
+			self.__context = Gaffer.Context( script.context() )
 			
 			self.__name = name
 			self.__id = jobId
@@ -76,7 +78,6 @@ class LocalDispatcher( Gaffer.Dispatcher ) :
 			self.__messageHandler = IECore.CapturingMessageHandler()
 			self.__messageTitle = "%s : Job %s %s" % ( self.__dispatcher.getName(), self.__name, self.__id )
 			
-			script = batch.requirements()[0].node().scriptNode()
 			scriptFileName = script["fileName"].getValue()
 			self.__scriptFile = os.path.join( self.__directory, os.path.basename( scriptFileName ) if scriptFileName else "untitled.gfr" )
 			script.serialiseToFile( self.__scriptFile )
@@ -259,7 +260,7 @@ class LocalDispatcher( Gaffer.Dispatcher ) :
 			
 			contextArgs = []
 			for entry in [ k for k in taskContext.keys() if k != "frame" and not k.startswith( "ui:" ) ] :
-				if entry not in script.context().keys() or taskContext[entry] != script.context()[entry] :
+				if entry not in self.__context.keys() or taskContext[entry] != self.__context[entry] :
 					contextArgs.extend( [ "-" + entry, repr(taskContext[entry]) ] )
 			
 			if contextArgs :
