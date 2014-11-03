@@ -85,11 +85,11 @@ class _LocalJobsPath( Gaffer.Path ) :
 		if result is not None and self.__job is not None :
 			
 			if self.__job.failed() :
-				result["status"] = Gaffer.LocalDispatcher._BatchStatus.Failed
+				result["status"] = Gaffer.LocalDispatcher.Job.Status.Failed
 			elif self.__job.killed() :
-				result["status"] = Gaffer.LocalDispatcher._BatchStatus.Killed
+				result["status"] = Gaffer.LocalDispatcher.Job.Status.Killed
 			else :
-				result["status"] = Gaffer.LocalDispatcher._BatchStatus.Running
+				result["status"] = Gaffer.LocalDispatcher.Job.Status.Running
 			
 			result["id"] = self.__job.id()
 			result["name"] = self.__job.name()
@@ -201,9 +201,9 @@ class _LocalJobsWindow( GafferUI.Window ) :
 	@staticmethod
 	def _displayStatus( status )  :
 		
-		if status == Gaffer.LocalDispatcher._BatchStatus.Killed :
+		if status == Gaffer.LocalDispatcher.Job.Status.Killed :
 			return GafferUI.Image._qtPixmapFromFile( "debugNotification.png" )
-		elif status == Gaffer.LocalDispatcher._BatchStatus.Failed :
+		elif status == Gaffer.LocalDispatcher.Job.Status.Failed :
 			return GafferUI.Image._qtPixmapFromFile( "errorNotification.png" )
 		
 		return GafferUI.Image._qtPixmapFromFile( "infoNotification.png" )
