@@ -62,6 +62,9 @@ class Handle : public Gadget
 		void setType( Type type );
 		Type getType() const;
 
+		void setRasterScale( float rasterScale );
+		float getRasterScale() const;
+
 		float dragOffset( const DragDropEvent &event ) const;
 
 		virtual Imath::Box3f bound() const;
@@ -83,6 +86,7 @@ class Handle : public Gadget
 
 		Type m_type;
 		bool m_hovering;
+		float m_rasterScale;
 
 		// When a drag starts, we store the line of our
 		// handle here. We store it in world space so that

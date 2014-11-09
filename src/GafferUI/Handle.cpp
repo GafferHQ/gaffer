@@ -37,7 +37,11 @@
 #include "boost/bind.hpp"
 #include "boost/bind/placeholders.hpp"
 
+#include "OpenEXR/ImathMatrixAlgo.h"
+
 #include "IECore/NullObject.h"
+
+#include "IECoreGL/Camera.h"
 
 #include "GafferUI/Handle.h"
 #include "GafferUI/Style.h"
@@ -50,7 +54,7 @@ using namespace GafferUI;
 IE_CORE_DEFINERUNTIMETYPED( Handle );
 
 Handle::Handle( Type type )
-	:	Gadget( defaultName<Handle>() ), m_type( type ), m_hovering( false )
+	:	Gadget( defaultName<Handle>() ), m_type( type ), m_hovering( false ), m_rasterScale( 0.0f )
 {
 	enterSignal().connect( boost::bind( &Handle::enter, this ) );
 	leaveSignal().connect( boost::bind( &Handle::leave, this ) );
@@ -80,6 +84,22 @@ Handle::Type Handle::getType() const
 	return m_type;
 }
 
+void Handle::setRasterScale( float rasterScale )
+{
+	if( rasterScale == m_rasterScale )
+	{
+		return;
+	}
+
+	m_rasterScale = rasterScale;
+	renderRequestSignal()( this );
+}
+
+float Handle::getRasterScale() const
+{
+	return m_rasterScale;
+}
+
 float Handle::dragOffset( const DragDropEvent &event ) const
 {
 	return absoluteDragOffset( event ) - m_dragBeginOffset;
@@ -102,6 +122,32 @@ Imath::Box3f Handle::bound() const
 
 void Handle::doRender( const Style *style ) const
 {
+	if( m_rasterScale > 0.0f )
+	{
+		// We want our handles to be a constant length in
+		// raster space. Two things get in our way :
+		//
+		//  1. The distance from camera.
+		//  2. Scaling applied to our transform.
+
+		const ViewportGadget *viewport = ancestor<ViewportGadget>();
+
+		// Scale factor to address 1.
+		const V2f p1 = viewport->gadgetToRasterSpace( V3f( 0.0f ), this );
+		const V2f p2 = viewport->gadgetToRasterSpace( IECoreGL::Camera::upInObjectSpace(), this );
+		const float s1 = m_rasterScale / ( p1 - p2 ).length();
+
+		// Scale factor to address 2. We use fabs because we don't
+		// want to lose the change of orientation brought about by
+		// negative scaling.
+		V3f s2;
+		extractScaling( fullTransform(), s2 );
+		s2 = V3f( 1.0f / fabs( s2.x ), 1.0f / fabs( s2.y ), 1.0f / fabs( s2.z ) );
+
+		glPushMatrix();
+		glScalef( s1 * s2.x, s1 * s2.y, s1 * s2.z );
+	}
+
 	Style::State state = getHighlighted() || m_hovering ? Style::HighlightedState : Style::NormalState;
 
 	switch( m_type )
@@ -115,6 +161,11 @@ void Handle::doRender( const Style *style ) const
 		case TranslateZ :
 			style->renderTranslateHandle( 2, state );
 			break;
+	}
+
+	if( m_rasterScale > 0.0f )
+	{
+		glPopMatrix();
 	}
 }
 

@@ -51,6 +51,8 @@ void GafferUIBindings::bindHandle()
 		.def( init<Handle::Type>() )
 		.def( "setType", &Handle::setType )
 		.def( "getType", &Handle::getType )
+		.def( "setRasterScale", &Handle::setRasterScale )
+		.def( "getRasterScale", &Handle::getRasterScale )
 		.def( "dragOffset", &Handle::dragOffset )
 	;
 
