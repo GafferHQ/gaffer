@@ -222,9 +222,8 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 				if window is not None :
 					window.parent().removeChild( window )
 
-			with self.getContext() :
-				for section in self.__sections :
-					section.update( targets )
+			for section in self.__sections :
+				section.update( targets )
 
 			return False # remove idle callback
 
