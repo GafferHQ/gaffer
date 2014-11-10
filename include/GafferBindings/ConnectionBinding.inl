@@ -42,6 +42,8 @@
 
 #include "IECorePython/ScopedGILLock.h"
 
+#include "GafferBindings/ExceptionAlgo.h"
+
 namespace boost { namespace python {
 
 /// \todo this works for now, but should blatantly be implemented as some rvalue_from_python jobby.
@@ -129,7 +131,15 @@ struct SlotBase<0, Signal, Caller>
 	typename Signal::slot_result_type operator()()
 	{
 		IECorePython::ScopedGILLock gilLock;
-		return Caller()( m_connection->slot() );
+		try
+		{
+			return Caller()( m_connection->slot() );
+		}
+		catch( const boost::python::error_already_set& e )
+		{
+			translatePythonException();
+		}
+		return typename Signal::slot_result_type();
 	}
 	Connection *m_connection;
 };
@@ -148,7 +158,15 @@ struct SlotBase<1, Signal, Caller>
 #endif
 	{
 		IECorePython::ScopedGILLock gilLock;
-		return Caller()( m_connection->slot(), a1 );
+		try
+		{
+			return Caller()( m_connection->slot(), a1 );
+		}
+		catch( const boost::python::error_already_set& e )
+		{
+			translatePythonException();
+		}
+		return typename Signal::slot_result_type();
 	}
 	Connection *m_connection;
 };
@@ -167,7 +185,15 @@ struct SlotBase<2, Signal, Caller>
 #endif
 	{
 		IECorePython::ScopedGILLock gilLock;
-		return Caller()( m_connection->slot(), a1, a2 );
+		try
+		{
+			return Caller()( m_connection->slot(), a1, a2 );
+		}
+		catch( const boost::python::error_already_set& e )
+		{
+			translatePythonException();
+		}
+		return typename Signal::slot_result_type();
 	}
 	Connection *m_connection;
 };
@@ -186,7 +212,15 @@ struct SlotBase<3, Signal, Caller>
 #endif
 	{
 		IECorePython::ScopedGILLock gilLock;
-		return Caller()( m_connection->slot(), a1, a2, a3 );
+		try
+		{
+			return Caller()( m_connection->slot(), a1, a2, a3 );
+		}
+		catch( const boost::python::error_already_set& e )
+		{
+			translatePythonException();
+		}
+		return typename Signal::slot_result_type();
 	}
 	Connection *m_connection;
 };
