@@ -104,6 +104,10 @@ class _LocalJobsPath( Gaffer.Path ) :
 		
 		return self.__job
 	
+	def jobPool( self ) :
+		
+		return self.__jobPool
+	
 	def isLeaf( self ) :
 		
 		return len( self )
@@ -170,9 +174,13 @@ class _LocalJobsWindow( GafferUI.Window ) :
 				
 				self.__tabChangedConnection = self.__tabs.currentChangedSignal().connect( Gaffer.WeakMethod( self.__tabChanged ) )
 				
-				self.__killButton = GafferUI.Button( "Kill Selected Jobs" )
-				self.__killButton.setEnabled( False )
-				self.__killClickedConnection = self.__killButton.clickedSignal().connect( Gaffer.WeakMethod( self.__killClicked ) )
+				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing=5 ) :
+					self.__killButton = GafferUI.Button( "Kill Selected Jobs" )
+					self.__killButton.setEnabled( False )
+					self.__killClickedConnection = self.__killButton.clickedSignal().connect( Gaffer.WeakMethod( self.__killClicked ) )
+					self.__removeButton = GafferUI.Button( "Remove Failed Jobs" )
+					self.__removeButton.setEnabled( False )
+					self.__removedClickedConnection = self.__removeButton.clickedSignal().connect( Gaffer.WeakMethod( self.__removeClicked ) )
 		
 		self.setTitle( "Local Dispatcher Jobs" )
 		
@@ -257,9 +265,20 @@ class _LocalJobsWindow( GafferUI.Window ) :
 		
 		self.__update()
 	
+	def __removeClicked( self, button ) :
+		
+		for path in self.__jobListingWidget.getSelectedPaths() :
+			if path.job().failed() :
+				path.jobPool()._remove( path.job(), force = True )
+		
+		self.__update()
+	
 	def __jobSelectionChanged( self, widget ) :	
 		
-		self.__killButton.setEnabled( len(self.__jobListingWidget.getSelectedPaths()) )
+		paths = self.__jobListingWidget.getSelectedPaths()
+		numFailed = len([ x for x in paths if x.job().failed() ])
+		self.__removeButton.setEnabled( numFailed )
+		self.__killButton.setEnabled( len(paths) - numFailed > 0 )
 		
 		currentTab = self.__tabs.getCurrent()
 		if currentTab is self.__detailsTab :

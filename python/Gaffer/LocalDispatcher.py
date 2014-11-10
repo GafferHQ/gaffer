@@ -379,11 +379,14 @@ class LocalDispatcher( Gaffer.Dispatcher ) :
 			self.__jobs.append( job )
 			self.jobAddedSignal()( job )
 		
-		def _remove( self, job ) :
+		def _remove( self, job, force = False ) :
 			
 			if job in self.__jobs :
 				self.__jobs.remove( job )
 				self.jobRemovedSignal()( job )
+			
+			if force and job in self.__failedJobs :
+				self.__failedJobs.remove( job )
 		
 		def _fail( self, job ) :
 			
