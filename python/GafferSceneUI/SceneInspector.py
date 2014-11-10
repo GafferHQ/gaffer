@@ -190,39 +190,42 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 
 	def __update( self ) :
 
-		self.__pendingUpdate = False
+		# The SceneInspector's internal context is not necessarily bound at this point, which can lead to errors
+		# if nodes in the graph are expecting special context variables, so we make sure it is:
+		with self.getContext():
 
-		assert( len( self.__scenePlugs ) <= 2 )
+			self.__pendingUpdate = False
 
-		if self.__targetPaths is not None :
-			paths = self.__targetPaths
-		else :
-			paths = self.getContext().get( "ui:scene:selectedPaths", [] )
-		paths = paths[:2] if len( self.__scenePlugs ) < 2 else paths[:1]
-		if not paths :
-			paths = [ "/" ]
+			assert( len( self.__scenePlugs ) <= 2 )
 
-		targets = []
-		for scene in self.__scenePlugs :
-			for path in paths :
-				if not GafferScene.exists( scene, path ) :
-					# selection may not be valid for both scenes,
-					# and we can't inspect invalid paths.
-					path = None
-				targets.append( self.Target( scene, path ) )
+			if self.__targetPaths is not None :
+				paths = self.__targetPaths
+			else :
+				paths = self.getContext().get( "ui:scene:selectedPaths", [] )
+			paths = paths[:2] if len( self.__scenePlugs ) < 2 else paths[:1]
+			if not paths :
+				paths = [ "/" ]
 
-		if next( (target.path for target in targets if target.path is not None), None ) is None :
-			# all target paths have become invalid - if we're
-			# in a popup window then close it.
-			window = self.ancestor( _SectionWindow )
-			if window is not None :
-				window.parent().removeChild( window )
+			targets = []
+			for scene in self.__scenePlugs :
+				for path in paths :
+					if not GafferScene.exists( scene, path ) :
+						# selection may not be valid for both scenes,
+						# and we can't inspect invalid paths.
+						path = None
+					targets.append( self.Target( scene, path ) )
 
-		with self.getContext() :
+			if next( (target.path for target in targets if target.path is not None), None ) is None :
+				# all target paths have become invalid - if we're
+				# in a popup window then close it.
+				window = self.ancestor( _SectionWindow )
+				if window is not None :
+					window.parent().removeChild( window )
+
 			for section in self.__sections :
 				section.update( targets )
 
-		return False # remove idle callback
+			return False # remove idle callback
 
 	def __visibilityChanged( self, widget ) :
 
