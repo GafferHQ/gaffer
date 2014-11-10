@@ -479,7 +479,7 @@ ConnectionGadget *GraphGadget::reconnectionGadgetAt( NodeGadget *gadget, const I
 
 	for ( std::vector<IECoreGL::HitRecord>::const_iterator it = selection.begin(); it != selection.end(); ++it )
 	{
-		GadgetPtr gadget = Gadget::select( it->name.value() );
+		GadgetPtr gadget = Gadget::select( it->name );
 		if ( gadget )
 		{
 			return runTimeCast<ConnectionGadget>( gadget.get() );

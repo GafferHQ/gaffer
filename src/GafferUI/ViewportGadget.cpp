@@ -249,7 +249,7 @@ void ViewportGadget::gadgetsAt( const Imath::V2f &rasterPosition, std::vector<Ga
 
 	for( std::vector<HitRecord>::const_iterator it = selection.begin(); it!= selection.end(); it++ )
 	{
-		GadgetPtr gadget = Gadget::select( it->name.value() );
+		GadgetPtr gadget = Gadget::select( it->name );
 		if( gadget )
 		{
 			gadgets.push_back( gadget );

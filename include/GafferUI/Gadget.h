@@ -82,7 +82,7 @@ class Gadget : public Gaffer::GraphComponent
 		/// Returns the Gadget with the specified name, where name has been retrieved
 		/// from an IECoreGL::HitRecord after rendering some Gadget in GL_SELECT mode.
 		/// \todo Consider better mechanisms.
-		static GadgetPtr select( const std::string &name );
+		static GadgetPtr select( GLuint id );
 
 		/// @name Parent-child relationships
 		////////////////////////////////////////////////////////////////////

@@ -181,7 +181,7 @@ std::string RenderableGadget::objectAt( const IECore::LineSegment3f &lineInGadge
 	{
 		return "";
 	}
-	return selection[0].name.value();
+	return NameStateComponent::nameFromGLName( selection[0].name );
 }
 
 size_t RenderableGadget::objectsAt( const Imath::V3f &corner0InGadgetSpace, const Imath::V3f &corner1InGadgetSpace, std::vector<std::string> &objectNames ) const
@@ -195,7 +195,7 @@ size_t RenderableGadget::objectsAt( const Imath::V3f &corner0InGadgetSpace, cons
 	objectNames.reserve( selection.size() );
 	for( size_t i = 0, e = selection.size(); i < e; i++ )
 	{
-		objectNames.push_back( selection[i].name.value() );
+		objectNames.push_back( NameStateComponent::nameFromGLName( selection[i].name ) );
 	}
 
 	return objectNames.size();
