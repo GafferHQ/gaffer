@@ -281,16 +281,16 @@ def importFile( menu ) :
 	if path is None :
 		return
 
-	newNodes = []
-	c = script.childAddedSignal().connect( lambda parent, child : newNodes.append( child ) )
+	newChildren = []
+	c = script.childAddedSignal().connect( lambda parent, child : newChildren.append( child ) )
 	with Gaffer.UndoContext( script ) :
 		## \todo We need to prevent the ScriptNode plugs themselves getting clobbered
 		# when importing an entire script.
 		script.executeFile( str( path ) )
 
+	newNodes = [ c for c in newChildren if isinstance( c, Gaffer.Node ) ]
 	script.selection().clear()
-	for n in newNodes :
-		script.selection().add( n )
+	script.selection().add( newNodes )
 
 	## \todo Position the nodes somewhere sensible if there's a Node Graph available
 
