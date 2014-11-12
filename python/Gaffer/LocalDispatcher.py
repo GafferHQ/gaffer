@@ -81,7 +81,6 @@ class LocalDispatcher( Gaffer.Dispatcher ) :
 			scriptFileName = script["fileName"].getValue()
 			self.__scriptFile = os.path.join( self.__directory, os.path.basename( scriptFileName ) if scriptFileName else "untitled.gfr" )
 			script.serialiseToFile( self.__scriptFile )
-			self.__nodeNames = {}
 			self.__storeNodeNames( script, batch )
 			
 			self.__setStatus( batch, LocalDispatcher.Job.Status.Waiting, recursive = True )
@@ -106,7 +105,7 @@ class LocalDispatcher( Gaffer.Dispatcher ) :
 			
 			frames = str( IECore.frameListFromList( [ int(x) for x in batch.frames() ] ) )
 			
-			return "Executing " + self.__nodeNames[batch] + " on frames " + frames
+			return "Executing " + batch.blindData()["nodeName"].value + " on frames " + frames
 		
 		def statistics( self ) :
 			
@@ -191,7 +190,7 @@ class LocalDispatcher( Gaffer.Dispatcher ) :
 				self.__setStatus( batch, LocalDispatcher.Job.Status.Complete )
 				return True
 			
-			description = "executing %s on %s" % ( self.__nodeNames[batch], str(batch.frames()) )
+			description = "executing %s on %s" % ( batch.blindData()["nodeName"].value, str(batch.frames()) )
 			IECore.msg( IECore.MessageHandler.Level.Info, self.__messageTitle, description )
 			
 			try :
@@ -242,7 +241,7 @@ class LocalDispatcher( Gaffer.Dispatcher ) :
 			
 			if isinstance( batch.node(), Gaffer.TaskList ) :
 				self.__setStatus( batch, LocalDispatcher.Job.Status.Complete )
-				IECore.msg( IECore.MessageHandler.Level.Info, self.__messageTitle, "Finished " + self.__nodeNames[batch] )
+				IECore.msg( IECore.MessageHandler.Level.Info, self.__messageTitle, "Finished " + batch.blindData()["nodeName"].value )
 				return True
 			
 			taskContext = batch.context()
@@ -251,7 +250,7 @@ class LocalDispatcher( Gaffer.Dispatcher ) :
 			args = [
 				"gaffer", "execute",
 				"-script", self.__scriptFile,
-				"-nodes", self.__nodeNames[batch],
+				"-nodes", batch.blindData()["nodeName"].value,
 				"-frames", frames,
 			]
 			
@@ -308,7 +307,7 @@ class LocalDispatcher( Gaffer.Dispatcher ) :
 			self.__setStatus( batch, LocalDispatcher.Job.Status.Failed )
 			self.__dispatcher.jobPool()._fail( self )
 			frames = str( IECore.frameListFromList( [ int(x) for x in batch.frames() ] ) )
-			IECore.msg( IECore.MessageHandler.Level.Error, self.__messageTitle, "Failed to execute " + batch.node().getName() + " on frames " + frames )
+			IECore.msg( IECore.MessageHandler.Level.Error, self.__messageTitle, "Failed to execute " + batch.blindData()["nodeName"].value + " on frames " + frames )
 		
 		def __reportKilled( self, batch ) :
 			
@@ -332,7 +331,7 @@ class LocalDispatcher( Gaffer.Dispatcher ) :
 		def __storeNodeNames( self, script, batch ) :
 			
 			if batch.node() :
-				self.__nodeNames[batch] = batch.node().relativeName( script )
+				batch.blindData()["nodeName"] = batch.node().relativeName( script )
 			
 			for requirement in batch.requirements() :
 				self.__storeNodeNames( script, requirement )
