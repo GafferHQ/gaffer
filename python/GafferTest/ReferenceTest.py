@@ -481,6 +481,32 @@ class ReferenceTest( GafferTest.TestCase ) :
 		s.deleteNodes( filter = Gaffer.StandardSet( [ s["r"] ] ) )
 
 		self.assertTrue( s["c"]["op1"].getInput().isSame( s["a"]["sum"] ) )
+
+	def testPlugFlagsOnReload( self ):
+
+		s = Gaffer.ScriptNode()
+		s["b"] = Gaffer.Box()
+		s["b"]["s"] = GafferTest.SphereNode()
+		s["b"]["a"] = GafferTest.AddNode()
+
+		s["b"].exportForReference( "/tmp/test.grf" )
+
+		# import it into a script.
+
+		s2 = Gaffer.ScriptNode()
+		s2["r"] = Gaffer.Reference()
+		s2["r"].load( "/tmp/test.grf" )
+		s2["r"]["__pluggy"] = Gaffer.CompoundPlug( flags = Gaffer.Plug.Flags.Dynamic | Gaffer.Plug.Flags.Serialisable )
+		s2["r"]["__pluggy"]["int"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Dynamic | Gaffer.Plug.Flags.Serialisable )
+
+		self.assertEqual( s2["r"]["__pluggy"].getFlags(), Gaffer.Plug.Flags.Dynamic | Gaffer.Plug.Flags.Serialisable )
+		self.assertEqual( s2["r"]["__pluggy"]["int"].getFlags(), Gaffer.Plug.Flags.Dynamic | Gaffer.Plug.Flags.Serialisable )
+
+		s2["r"].load( "/tmp/test.grf" )
+
+		self.assertEqual( s2["r"]["__pluggy"].getFlags(), Gaffer.Plug.Flags.Dynamic | Gaffer.Plug.Flags.Serialisable )
+		self.assertEqual( s2["r"]["__pluggy"]["int"].getFlags(), Gaffer.Plug.Flags.Dynamic | Gaffer.Plug.Flags.Serialisable )
+
 	def tearDown( self ) :
 
 		GafferTest.SphereNode = self.__SphereNode

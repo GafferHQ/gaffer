@@ -205,6 +205,14 @@ bool Reference::isReferencePlug( const Plug *plug ) const
 	{
 		return false;
 	}
+	
+	// apply the same logic to compound plugs:
+	const Gaffer::CompoundPlug* compoundPlugAncestor = plug->ancestor<CompoundPlug>();
+	if( compoundPlugAncestor && boost::starts_with( compoundPlugAncestor->getName().c_str(), "__" ) )
+	{
+		return false;
+	}
+	
 	// we know these two don't come from a reference,
 	// because they're made during construction.
 	if( plug == fileNamePlug() || plug == userPlug() )
