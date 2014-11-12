@@ -394,6 +394,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 		context = Gaffer.Context( s.context() )
 		context.setFrame( s.context().getFrame() + 10 )
+		self.assertEqual( dispatcher.frameRange( s, context ), IECore.frameListFromList( [ int(context.getFrame()) ] ) )
 
 		with context :
 			dispatcher.dispatch( [ s["n1"] ] )
@@ -415,9 +416,10 @@ class DispatcherTest( GafferTest.TestCase ) :
 		dispatcher.dispatch( [ s["n1"] ] )
 		shutil.rmtree( dispatcher.jobDirectory() )
 
-		frames = IECore.FrameRange( s["frameRange"]["start"].getValue(), s["frameRange"]["end"].getValue() ).asList()
-		self.assertEqual( op1.counter, len(frames) )
-		self.assertEqual( op1.frames, frames )
+		frameRange = IECore.FrameRange( s["frameRange"]["start"].getValue(), s["frameRange"]["end"].getValue() )
+		self.assertEqual( dispatcher.frameRange( s, s.context() ), frameRange )
+		self.assertEqual( op1.counter, len(frameRange.asList()) )
+		self.assertEqual( op1.frames, frameRange.asList() )
 
 	def testDispatchCustomRange( self ) :
 
@@ -435,6 +437,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		shutil.rmtree( dispatcher.jobDirectory() )
 
 		frames = frameList.asList()
+		self.assertEqual( dispatcher.frameRange( s, s.context() ), frameList )
 		self.assertEqual( op1.counter, len(frames) )
 		self.assertEqual( op1.frames, frames )
 
@@ -450,6 +453,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		s["n1"].setParameterised( op1 )
 
 		self.assertRaises( RuntimeError, dispatcher.dispatch, [ s["n1"] ] )
+		self.assertRaises( RuntimeError, dispatcher.frameRange, s, s.context() )
 		self.assertEqual( op1.counter, 0 )
 		self.assertEqual( op1.frames, [] )
 
@@ -735,6 +739,47 @@ class DispatcherTest( GafferTest.TestCase ) :
 		Gaffer.Dispatcher.setDefaultDispatcherType( "fakeDispatcher" )
 		self.assertEqual( Gaffer.Dispatcher.getDefaultDispatcherType(), "fakeDispatcher" )
 		self.assertEqual( Gaffer.Dispatcher.create( Gaffer.Dispatcher.getDefaultDispatcherType() ), None )
+	
+	def testFrameRangeOverride( self ) :
+		
+		class BinaryDispatcher( DispatcherTest.MyDispatcher ) :
+			
+			def frameRange( self, script, context ) :
+				
+				frameRange = Gaffer.Dispatcher.frameRange( self, script, context )
+				
+				if self["framesMode"].getValue() == Gaffer.Dispatcher.FramesMode.CurrentFrame :
+					return frameRange
+				
+				return IECore.BinaryFrameList( frameRange )
+		
+		IECore.registerRunTimeTyped( BinaryDispatcher )
+		
+		dispatcher = BinaryDispatcher()
+		dispatcher["jobsDirectory"].setValue( "/tmp/dispatcherTest" )
+		frameList = IECore.FrameList.parse( "1-10" )
+		dispatcher["frameRange"].setValue( str(frameList) )
+		
+		s = Gaffer.ScriptNode()
+		op1 = TestOp("1", dispatcher.log)
+		s["n1"] = Gaffer.ExecutableOpHolder()
+		s["n1"].setParameterised( op1 )
+		
+		dispatcher["framesMode"].setValue( Gaffer.Dispatcher.FramesMode.CurrentFrame )
+		self.assertEqual( dispatcher.frameRange( s, s.context() ), IECore.frameListFromList( [ int(s.context().getFrame()) ] ) )
+		
+		dispatcher["framesMode"].setValue( Gaffer.Dispatcher.FramesMode.FullRange )
+		self.assertEqual( dispatcher.frameRange( s, s.context() ), IECore.FrameList.parse( "1-100b" ) )
+		
+		dispatcher["framesMode"].setValue( Gaffer.Dispatcher.FramesMode.CustomRange )
+		binaryFrames = IECore.FrameList.parse( "1-10b" )
+		self.assertEqual( dispatcher.frameRange( s, s.context() ), binaryFrames )
+		
+		dispatcher.dispatch( [ s["n1"] ] )
+		
+		self.assertEqual( op1.counter, len(frameList.asList()) )
+		self.assertNotEqual( op1.frames, frameList.asList() )
+		self.assertEqual( op1.frames, binaryFrames.asList() )
 	
 	def tearDown( self ) :
 
