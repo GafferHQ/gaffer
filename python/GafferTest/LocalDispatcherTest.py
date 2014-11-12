@@ -592,7 +592,56 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		
 		text = "".join( open( "/tmp/dispatcherTest/out.txt" ).readlines() )
 		self.assertEqual( text, "foo " )
+	
+	def testContextLockedDuringBackgroundDispatch( self ) :
 		
+		s = Gaffer.ScriptNode()
+		s["n1"] = GafferTest.TextWriter()
+		s["n1"]["fileName"].setValue( "/tmp/dispatcherTest/out.txt" )
+		s["n1"]["text"].setValue( "n1 on ${frame} with ${foo}" )
+		
+		dispatcher = Gaffer.Dispatcher.create( "LocalTest" )
+		dispatcher["executeInBackground"].setValue( True )
+		
+		c = Gaffer.Context( s.context() )
+		c["foo"] = "foo"
+		
+		with c :
+			dispatcher.dispatch( [ s["n1"] ] )
+		
+		self.assertFalse( os.path.isfile( "/tmp/dispatcherTest/out.txt" ) )
+		
+		foo = s["variables"].addMember( "foo", IECore.StringData( "foo" ) )
+		
+		dispatcher.jobPool().waitForAll()
+		
+		self.assertTrue( os.path.isfile( "/tmp/dispatcherTest/out.txt" ) )
+		
+		text = "".join( open( "/tmp/dispatcherTest/out.txt" ).readlines() )
+		self.assertEqual( text, "n1 on 1 with foo" )
+	
+	def testNodeNamesLockedDuringBackgroundDispatch( self ) :
+		
+		s = Gaffer.ScriptNode()
+		s["n1"] = GafferTest.TextWriter()
+		s["n1"]["fileName"].setValue( "/tmp/dispatcherTest/out.txt" )
+		s["n1"]["text"].setValue( "n1 on ${frame}" )
+		
+		dispatcher = Gaffer.Dispatcher.create( "LocalTest" )
+		dispatcher["executeInBackground"].setValue( True )
+		dispatcher.dispatch( [ s["n1"] ] )
+		
+		self.assertFalse( os.path.isfile( "/tmp/dispatcherTest/out.txt" ) )
+		
+		s["n1"].setName( "n2" )
+		
+		dispatcher.jobPool().waitForAll()
+		
+		self.assertTrue( os.path.isfile( "/tmp/dispatcherTest/out.txt" ) )
+		
+		text = "".join( open( "/tmp/dispatcherTest/out.txt" ).readlines() )
+		self.assertEqual( text, "n1 on 1" )
+	
 	def tearDown( self ) :
 
 		shutil.rmtree( "/tmp/dispatcherTest", ignore_errors = True )
