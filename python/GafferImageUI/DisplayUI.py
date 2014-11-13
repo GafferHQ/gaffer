@@ -66,9 +66,14 @@ def __scheduleUpdate( plug, force = False ) :
 	GafferUI.EventLoop.executeOnUIThread( lambda : __update( plug ) )
 
 def __update( plug ) :
-
-	updateCountPlug = plug.node()["__updateCount"]
-	updateCountPlug.setValue( updateCountPlug.getValue() + 1 )
+	
+	# it's possible that this function can get called on a plug whose node has
+	# been deleted, so we always check if the node exists:
+	
+	node = plug.node()
+	if node:
+		updateCountPlug = node["__updateCount"]
+		updateCountPlug.setValue( updateCountPlug.getValue() + 1 )
 
 	global __plugsPendingUpdate
 	global __plugsPendingUpdateLock
