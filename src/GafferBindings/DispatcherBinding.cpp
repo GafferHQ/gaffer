@@ -41,6 +41,7 @@
 #include "Gaffer/Context.h"
 #include "Gaffer/Dispatcher.h"
 #include "Gaffer/CompoundPlug.h"
+#include "Gaffer/ScriptNode.h"
 
 #include "GafferBindings/DispatcherBinding.h"
 #include "GafferBindings/NodeBinding.h"
@@ -104,6 +105,31 @@ class DispatcherWrapper : public NodeWrapper<Dispatcher>
 			}
 		}
 
+		FrameListPtr frameRange( const ScriptNode *script, const Context *context ) const
+		{
+			ScopedGILLock gilLock;
+			
+			boost::python::object f = this->methodOverride( "frameRange" );
+			if( f )
+			{
+				try
+				{
+					object obj = f(
+						ScriptNodePtr( const_cast<ScriptNode *>( script ) ),
+						ContextPtr( const_cast<Context *>( context ) )
+					);
+					
+					return extract<FrameListPtr>( obj );
+				}
+				catch( const boost::python::error_already_set &e )
+				{
+					translatePythonException();
+				}
+			}
+			
+			return Dispatcher::frameRange( script, context );
+		}
+		
 		static void taskBatchExecute( const Dispatcher::TaskBatch &batch )
 		{
 			ScopedGILRelease gilRelease;
@@ -212,6 +238,11 @@ struct DispatcherHelper
 
 };
 
+IECore::FrameListPtr frameRange( Dispatcher &n, const ScriptNode *script, const Context *context )
+{
+	return n.Dispatcher::frameRange( script, context );
+}
+
 static void registerDispatcher( std::string type, object creator, object setupPlugsFn )
 {
 	DispatcherHelper helper( creator, setupPlugsFn );
@@ -281,6 +312,7 @@ void GafferBindings::bindDispatcher()
 	scope s = NodeClass<Dispatcher, DispatcherWrapper>()
 		.def( "dispatch", &DispatcherWrapper::dispatch )
 		.def( "jobDirectory", &Dispatcher::jobDirectory )
+		.def( "frameRange", &frameRange )
 		.def( "create", &Dispatcher::create ).staticmethod( "create" )
 		.def( "getDefaultDispatcherType", &Dispatcher::getDefaultDispatcherType, return_value_policy<copy_const_reference>() ).staticmethod( "getDefaultDispatcherType" )
 		.def( "setDefaultDispatcherType", &Dispatcher::setDefaultDispatcherType ).staticmethod( "setDefaultDispatcherType" )

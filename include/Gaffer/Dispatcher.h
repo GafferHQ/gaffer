@@ -137,6 +137,9 @@ class Dispatcher : public Node
 		/// Returns frame range to be used when framesModePlug is set to CustomRange.
 		StringPlug *frameRangePlug();
 		const StringPlug *frameRangePlug() const;
+		/// Returns the FrameList that will be used during dispatch() to create the TaskBatches.
+		/// Derived classes which reimplement this must call the base class first.
+		virtual IECore::FrameListPtr frameRange( const ScriptNode *script, const Context *context ) const;
 		//@}
 
 		//! @name Dispatcher Jobs
@@ -251,8 +254,6 @@ class Dispatcher : public Node
 
 		typedef std::map<IECore::MurmurHash, TaskBatchPtr> BatchMap;
 		typedef std::map<IECore::MurmurHash, TaskBatchPtr> TaskToBatchMap;
-
-		IECore::FrameListPtr frameRange( const ScriptNode *script, const Context *context ) const;
 
 		// Utility functions that recursively collect all nodes and their execution requirements,
 		// arranging them into a graph of TaskBatches. Tasks will be grouped by executionHash,
