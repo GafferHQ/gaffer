@@ -196,15 +196,33 @@ void Reference::load( const std::string &fileName )
 
 bool Reference::isReferencePlug( const Plug *plug ) const
 {
-	// assume plugs starting with __ are for gaffer's
-	// internal use, so would never come directly from a
-	// reference - this lines up with the export code
-	// in Box::exportForReference(), where such plugs
-	// are excluded from the export.
-	if( boost::starts_with( plug->getName().c_str(), "__" ) )
+	// If a plug is the descendant of a plug starting with
+	// __, and that plug is a direct child of the reference,
+	// assume that it is for gaffer's internal use, so would
+	// never come directly from a reference. This lines up
+	// with the export code in Box::exportForReference(), where
+	// such plugs are excluded from the export.
+	
+	// find ancestor of p which is a direct child of this node:
+	const Plug* ancestorPlug = plug;
+	const GraphComponent* parent = plug->parent<GraphComponent>();
+	while( parent != this )
+	{
+		ancestorPlug = runTimeCast< const Plug >( parent );
+		if( !ancestorPlug )
+		{
+			// Looks like the plug we're looking for doesn't exist,
+			// so we exit the loop.
+			break;
+		}
+		parent = ancestorPlug->parent<GraphComponent>();
+	}
+	
+	if( ancestorPlug && boost::starts_with( ancestorPlug->getName().c_str(), "__" ) )
 	{
 		return false;
 	}
+	
 	// we know these two don't come from a reference,
 	// because they're made during construction.
 	if( plug == fileNamePlug() || plug == userPlug() )
