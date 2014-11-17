@@ -55,7 +55,6 @@
 
 #include "GafferScene/SceneProcedural.h"
 #include "GafferScene/PathMatcherData.h"
-#include "GafferScene/StandardOptions.h"
 #include "GafferScene/StandardAttributes.h"
 #include "GafferScene/PathFilter.h"
 #include "GafferScene/Grid.h"
@@ -681,17 +680,6 @@ SceneView::SceneView( const std::string &name )
 	ScenePlugPtr preprocessorInput = new ScenePlug( "in" );
 	preprocessor->addChild( preprocessorInput );
 
-	// remove motion blur, because the opengl renderer doesn't support it.
-
-	StandardOptionsPtr standardOptions = new StandardOptions( "disableBlur" );
-	standardOptions->optionsPlug()->getChild<CompoundPlug>( "transformBlur" )->getChild<BoolPlug>( "enabled" )->setValue( true );
-	standardOptions->optionsPlug()->getChild<CompoundPlug>( "transformBlur" )->getChild<BoolPlug>( "value" )->setValue( false );
-	standardOptions->optionsPlug()->getChild<CompoundPlug>( "deformationBlur" )->getChild<BoolPlug>( "enabled" )->setValue( true );
-	standardOptions->optionsPlug()->getChild<CompoundPlug>( "deformationBlur" )->getChild<BoolPlug>( "value" )->setValue( false );
-
-	preprocessor->addChild( standardOptions );
-	standardOptions->inPlug()->setInput( preprocessorInput );
-
 	// add a node for hiding things
 
 	StandardAttributesPtr hide = new StandardAttributes( "hide" );
@@ -699,7 +687,7 @@ SceneView::SceneView( const std::string &name )
 	hide->attributesPlug()->getChild<CompoundPlug>( "visibility" )->getChild<BoolPlug>( "value" )->setValue( false );
 
 	preprocessor->addChild( hide );
-	hide->inPlug()->setInput( standardOptions->outPlug() );
+	hide->inPlug()->setInput( preprocessorInput );
 
 	PathFilterPtr hideFilter = new PathFilter( "hideFilter" );
 	preprocessor->addChild( hideFilter );
