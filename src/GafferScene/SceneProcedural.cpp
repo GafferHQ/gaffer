@@ -39,11 +39,9 @@
 
 #include "IECore/AttributeBlock.h"
 #include "IECore/MessageHandler.h"
-#include "IECore/CurvesPrimitive.h"
 #include "IECore/StateRenderable.h"
 #include "IECore/AngleConversion.h"
 #include "IECore/MotionBlock.h"
-#include "IECore/CoordinateSystem.h"
 
 #include "Gaffer/Context.h"
 #include "Gaffer/ScriptNode.h"
@@ -62,8 +60,8 @@ tbb::mutex SceneProcedural::g_allRenderedMutex;
 
 SceneProcedural::AllRenderedSignal SceneProcedural::g_allRenderedSignal;
 
-SceneProcedural::SceneProcedural( ConstScenePlugPtr scenePlug, const Gaffer::Context *context, const ScenePlug::ScenePath &scenePath, const PathMatcherData *pathsToExpand, size_t minimumExpansionDepth )
-	:	m_scenePlug( scenePlug ), m_context( new Context( *context ) ), m_scenePath( scenePath ), m_pathsToExpand( pathsToExpand ? pathsToExpand->copy() : 0 ), m_minimumExpansionDepth( minimumExpansionDepth ), m_rendered( false )
+SceneProcedural::SceneProcedural( ConstScenePlugPtr scenePlug, const Gaffer::Context *context, const ScenePlug::ScenePath &scenePath )
+	:	m_scenePlug( scenePlug ), m_context( new Context( *context ) ), m_scenePath( scenePath ), m_rendered( false )
 {
 	// get a reference to the script node to prevent it being destroyed while we're doing a render:
 	m_scriptNode = m_scenePlug->ancestor<ScriptNode>();
@@ -106,7 +104,6 @@ SceneProcedural::SceneProcedural( ConstScenePlugPtr scenePlug, const Gaffer::Con
 
 SceneProcedural::SceneProcedural( const SceneProcedural &other, const ScenePlug::ScenePath &scenePath )
 	:	m_scenePlug( other.m_scenePlug ), m_context( new Context( *(other.m_context), Context::Shared ) ), m_scenePath( scenePath ),
-		m_pathsToExpand( other.m_pathsToExpand ), m_minimumExpansionDepth( other.m_minimumExpansionDepth ? other.m_minimumExpansionDepth - 1 : 0 ),
 		m_options( other.m_options ), m_attributes( other.m_attributes ), m_rendered( false )
 {
 	// get a reference to the script node to prevent it being destroyed while we're doing a render:
@@ -290,35 +287,6 @@ void SceneProcedural::render( Renderer *renderer ) const
 						renderer->motionEnd();
 					}
 				}
-				else if( const Camera *camera = runTimeCast<const Camera>( object.get() ) )
-				{
-					/// \todo This absolutely does not belong here, but until we have
-					/// a mechanism for drawing manipulators, we don't have any other
-					/// means of visualising the cameras.
-					if( renderer->isInstanceOf( "IECoreGL::Renderer" ) )
-					{
-						drawCamera( camera, renderer );
-					}
-					break; // no motion blur for these chappies.
-				}
-				else if( const Light *light = runTimeCast<const Light>( object.get() ) )
-				{
-					/// \todo This doesn't belong here.
-					if( renderer->isInstanceOf( "IECoreGL::Renderer" ) )
-					{
-						drawLight( light, renderer );
-					}
-					break; // no motion blur for these chappies.
-				}
-				else if( const CoordinateSystem *coordinateSystem = runTimeCast<const CoordinateSystem>( object.get() ) )
-				{
-					/// \todo This doesn't belong here.
-					if( renderer->isInstanceOf( "IECoreGL::Renderer" ) )
-					{
-						drawCoordinateSystem( coordinateSystem, renderer );
-					}
-					break; // no motion blur for these chappies.
-				}
 				else if( const VisibleRenderable* renderable = runTimeCast< const VisibleRenderable >( object.get() ) )
 				{
 					renderable->render( renderer );
@@ -333,32 +301,12 @@ void SceneProcedural::render( Renderer *renderer ) const
 		ConstInternedStringVectorDataPtr childNames = m_scenePlug->childNamesPlug()->getValue();
 		if( childNames->readable().size() )
 		{
-			bool expand = true;
-			if( m_pathsToExpand )
+			ScenePlug::ScenePath childScenePath = m_scenePath;
+			childScenePath.push_back( InternedString() ); // for the child name
+			for( vector<InternedString>::const_iterator it=childNames->readable().begin(); it!=childNames->readable().end(); it++ )
 			{
-				if( !m_minimumExpansionDepth )
-				{
-					expand = m_pathsToExpand->readable().match( m_scenePath ) & Filter::ExactMatch;
-				}
-			}
-
-			if( !expand )
-			{
-				renderer->setAttribute( "gl:primitive:wireframe", new BoolData( true ) );
-				renderer->setAttribute( "gl:primitive:solid", new BoolData( false ) );
-				renderer->setAttribute( "gl:curvesPrimitive:useGLLines", new BoolData( true ) );
-				Box3f b = m_scenePlug->boundPlug()->getValue();
-				CurvesPrimitive::createBox( b )->render( renderer );
-			}
-			else
-			{
-				ScenePlug::ScenePath childScenePath = m_scenePath;
-				childScenePath.push_back( InternedString() ); // for the child name
-				for( vector<InternedString>::const_iterator it=childNames->readable().begin(); it!=childNames->readable().end(); it++ )
-				{
-					childScenePath[m_scenePath.size()] = *it;
-					renderer->procedural( new SceneProcedural( *this, childScenePath ) );
-				}
+				childScenePath[m_scenePath.size()] = *it;
+				renderer->procedural( new SceneProcedural( *this, childScenePath ) );
 			}
 		}
 	}
@@ -442,150 +390,6 @@ void SceneProcedural::motionTimes( unsigned segments, std::set<float> &times ) c
 			times.insert( lerp( m_options.shutter[0], m_options.shutter[1], (float)i / (float)segments ) );
 		}
 	}
-}
-
-void SceneProcedural::drawCamera( const IECore::Camera *camera, IECore::Renderer *renderer ) const
-{
-	CameraPtr fullCamera = camera->copy();
-	fullCamera->addStandardParameters();
-
-	AttributeBlock attributeBlock( renderer );
-
-	renderer->setAttribute( "gl:primitive:wireframe", new BoolData( true ) );
-	renderer->setAttribute( "gl:primitive:solid", new BoolData( false ) );
-	renderer->setAttribute( "gl:curvesPrimitive:useGLLines", new BoolData( true ) );
-	renderer->setAttribute( "gl:primitive:wireframeColor", new Color4fData( Color4f( 0, 0.25, 0, 1 ) ) );
-
-	CurvesPrimitive::createBox( Box3f(
-		V3f( -0.5, -0.5, 0 ),
-		V3f( 0.5, 0.5, 2.0 )
-	) )->render( renderer );
-
-	const std::string &projection = fullCamera->parametersData()->member<StringData>( "projection" )->readable();
-	const Box2f &screenWindow = fullCamera->parametersData()->member<Box2fData>( "screenWindow" )->readable();
-	/// \todo When we're drawing the camera by some means other than creating a primitive for it,
-	/// use the actual clippings planes. Right now that's not a good idea as it results in /huge/
-	/// framing bounds when the viewer frames a selected camera.
-	V2f clippingPlanes( 0, 5 );
-
-	Box2f near( screenWindow );
-	Box2f far( screenWindow );
-
-	if( projection == "perspective" )
-	{
-		float fov = fullCamera->parametersData()->member<FloatData>( "projection:fov" )->readable();
-		float d = tan( degreesToRadians( fov / 2.0f ) );
-		near.min *= d * clippingPlanes[0];
-		near.max *= d * clippingPlanes[0];
-		far.min *= d * clippingPlanes[1];
-		far.max *= d * clippingPlanes[1];
-	}
-
-	V3fVectorDataPtr p = new V3fVectorData;
-	IntVectorDataPtr n = new IntVectorData;
-
-	n->writable().push_back( 5 );
-	p->writable().push_back( V3f( near.min.x, near.min.y, -clippingPlanes[0] ) );
-	p->writable().push_back( V3f( near.max.x, near.min.y, -clippingPlanes[0] ) );
-	p->writable().push_back( V3f( near.max.x, near.max.y, -clippingPlanes[0] ) );
-	p->writable().push_back( V3f( near.min.x, near.max.y, -clippingPlanes[0] ) );
-	p->writable().push_back( V3f( near.min.x, near.min.y, -clippingPlanes[0] ) );
-
-	n->writable().push_back( 5 );
-	p->writable().push_back( V3f( far.min.x, far.min.y, -clippingPlanes[1] ) );
-	p->writable().push_back( V3f( far.max.x, far.min.y, -clippingPlanes[1] ) );
-	p->writable().push_back( V3f( far.max.x, far.max.y, -clippingPlanes[1] ) );
-	p->writable().push_back( V3f( far.min.x, far.max.y, -clippingPlanes[1] ) );
-	p->writable().push_back( V3f( far.min.x, far.min.y, -clippingPlanes[1] ) );
-
-	n->writable().push_back( 2 );
-	p->writable().push_back( V3f( near.min.x, near.min.y, -clippingPlanes[0] ) );
-	p->writable().push_back( V3f( far.min.x, far.min.y, -clippingPlanes[1] ) );
-
-	n->writable().push_back( 2 );
-	p->writable().push_back( V3f( near.max.x, near.min.y, -clippingPlanes[0] ) );
-	p->writable().push_back( V3f( far.max.x, far.min.y, -clippingPlanes[1] ) );
-
-	n->writable().push_back( 2 );
-	p->writable().push_back( V3f( near.max.x, near.max.y, -clippingPlanes[0] ) );
-	p->writable().push_back( V3f( far.max.x, far.max.y, -clippingPlanes[1] ) );
-
-	n->writable().push_back( 2 );
-	p->writable().push_back( V3f( near.min.x, near.max.y, -clippingPlanes[0] ) );
-	p->writable().push_back( V3f( far.min.x, far.max.y, -clippingPlanes[1] ) );
-
-	CurvesPrimitivePtr c = new IECore::CurvesPrimitive( n, CubicBasisf::linear(), false, p );
-	c->render( renderer );
-}
-
-void SceneProcedural::drawLight( const IECore::Light *light, IECore::Renderer *renderer ) const
-{
-	AttributeBlock attributeBlock( renderer );
-
-	renderer->setAttribute( "gl:primitive:wireframe", new BoolData( true ) );
-	renderer->setAttribute( "gl:primitive:solid", new BoolData( false ) );
-	renderer->setAttribute( "gl:curvesPrimitive:useGLLines", new BoolData( true ) );
-	renderer->setAttribute( "gl:primitive:wireframeColor", new Color4fData( Color4f( 0.5, 0, 0, 1 ) ) );
-
-	const float a = 0.5f;
-	const float phi = 1.0f + sqrt( 5.0f ) / 2.0f;
-	const float b = 1.0f / ( 2.0f * phi );
-
-	// icosahedron points
-	IECore::V3fVectorDataPtr pData = new V3fVectorData;
-	vector<V3f> &p = pData->writable();
-	p.resize( 24 );
-	p[0] = V3f( 0, b, -a );
-	p[2] = V3f( b, a, 0 );
-	p[4] = V3f( -b, a, 0 );
-	p[6] = V3f( 0, b, a );
-	p[8] = V3f( 0, -b, a );
-	p[10] = V3f( -a, 0, b );
-	p[12] = V3f( 0, -b, -a );
-	p[14] = V3f( a, 0, -b );
-	p[16] = V3f( a, 0, b );
-	p[18] = V3f( -a, 0, -b );
-	p[20] = V3f( b, -a, 0 );
-	p[22] = V3f( -b, -a, 0 );
-
-	for( size_t i = 0; i<12; i++ )
-	{
-		p[i*2] = 2.0f * p[i*2].normalized();
-		p[i*2+1] = V3f( 0 );
-	}
-
-	IntVectorDataPtr vertIds = new IntVectorData;
-	vertIds->writable().resize( 12, 2 );
-
-	CurvesPrimitivePtr c = new IECore::CurvesPrimitive( vertIds, CubicBasisf::linear(), false, pData );
-	c->render( renderer );
-}
-
-void SceneProcedural::drawCoordinateSystem( const IECore::CoordinateSystem *coordinateSystem, IECore::Renderer *renderer ) const
-{
-	AttributeBlock attributeBlock( renderer );
-
-	renderer->setAttribute( "gl:primitive:wireframe", new BoolData( true ) );
-	renderer->setAttribute( "gl:primitive:solid", new BoolData( false ) );
-	renderer->setAttribute( "gl:curvesPrimitive:useGLLines", new BoolData( true ) );
-	renderer->setAttribute( "gl:primitive:wireframeColor", new Color4fData( Color4f( 0.06, 0.2, 0.56, 1 ) ) );
-	renderer->setAttribute( "gl:curvesPrimitive:glLineWidth", new FloatData( 2.0f ) );
-
-	IECore::V3fVectorDataPtr pData = new V3fVectorData;
-	vector<V3f> &p = pData->writable();
-	p.reserve( 6 );
-	p.push_back( V3f( 0 ) );
-	p.push_back( V3f( 1, 0, 0 ) );
-	p.push_back( V3f( 0 ) );
-	p.push_back( V3f( 0, 1, 0 ) );
-	p.push_back( V3f( 0 ) );
-	p.push_back( V3f( 0, 0, 1 ) );
-
-	IntVectorDataPtr vertIds = new IntVectorData;
-	vertIds->writable().resize( 3, 2 );
-
-	CurvesPrimitivePtr c = new IECore::CurvesPrimitive( vertIds, CubicBasisf::linear(), false, pData );
-	c->render( renderer );
 }
 
 SceneProcedural::AllRenderedSignal &SceneProcedural::allRenderedSignal()
