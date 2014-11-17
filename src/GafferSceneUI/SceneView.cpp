@@ -51,7 +51,6 @@
 #include "Gaffer/BlockedConnection.h"
 
 #include "GafferUI/Style.h"
-#include "GafferUI/RenderableGadget.h"
 #include "GafferUI/Pointer.h"
 
 #include "GafferScene/SceneProcedural.h"
@@ -72,43 +71,6 @@ using namespace GafferScene;
 using namespace GafferSceneUI;
 
 //////////////////////////////////////////////////////////////////////////
-// Implementation of a ParameterisedProcedural wrapping a SceneProcedural.
-// We need this to allow us to use the RenderableGadget for doing our
-// display.
-/// \todo Build our own scene representation.
-//////////////////////////////////////////////////////////////////////////
-
-class WrappingProcedural : public IECore::ParameterisedProcedural
-{
-
-	public :
-
-		WrappingProcedural( SceneProceduralPtr sceneProcedural )
-			:	ParameterisedProcedural( "" ), m_sceneProcedural( sceneProcedural )
-		{
-		}
-
-	protected :
-
-		virtual Imath::Box3f doBound( ConstCompoundObjectPtr args ) const
-		{
-			return m_sceneProcedural->bound();
-		}
-
-		virtual void doRender( RendererPtr renderer, ConstCompoundObjectPtr args ) const
-		{
-			m_sceneProcedural->render( renderer.get() );
-		}
-
-	private :
-
-		SceneProceduralPtr m_sceneProcedural;
-
-};
-
-IE_CORE_DECLAREPTR( WrappingProcedural );
-
-//////////////////////////////////////////////////////////////////////////
 // SceneView::Grid implementation
 //////////////////////////////////////////////////////////////////////////
 
@@ -118,7 +80,7 @@ class SceneView::Grid
 	public :
 
 		Grid( SceneView *view )
-			:	m_view( view ), m_node( new GafferScene::Grid ), m_gadget( new RenderableGadget )
+			:	m_view( view ), m_node( new GafferScene::Grid ), m_gadget( new SceneGadget )
 		{
 			m_node->transformPlug()->rotatePlug()->setValue( V3f( 90, 0, 0 ) );
 
@@ -137,6 +99,8 @@ class SceneView::Grid
 
 			m_node->dimensionsPlug()->setInput( dimensionsPlug );
 
+			m_gadget->setMinimumExpansionDepth( 1 );
+			m_gadget->setScene( m_node->outPlug() );
 			view->viewportGadget()->setChild( "__grid", m_gadget );
 
 			view->plugDirtiedSignal().connect( boost::bind( &Grid::plugDirtied, this, ::_1 ) );
@@ -176,17 +140,12 @@ class SceneView::Grid
 
 		void update()
 		{
-			m_gadget->setRenderable(
-				new WrappingProcedural(
-					new SceneProcedural( m_node->outPlug(), m_view->getContext() )
-				)
-			);
 			m_gadget->setVisible( plug()->getChild<BoolPlug>( "visible" )->getValue() );
 		}
 
 		SceneView *m_view;
 		GafferScene::GridPtr m_node;
-		GafferUI::RenderableGadgetPtr m_gadget;
+		SceneGadgetPtr m_gadget;
 
 };
 
