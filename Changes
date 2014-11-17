@@ -1,5 +1,28 @@
+# 0.5.0.0
+
+#### Core
+
+- Fixed LocalDispatcher to quote command line arguments and ignore "ui:" prefixed context variables.
+- Avoiding shell subprocess for Local Jobs stats.
+- LocalDispatcher now just constructs a Job and lets it do the heavy lifting
+- Fixed bug where script context changes could leak into local background dispatches.
+- added python error catching to ConnectionBinding, to prevent crashes
+- Fixed serialization bug with extra plugs on references
+- Dispatcher::frameRange() is now public and virtual.
+
 #### UI
+
 - Menu widget: Added support for icons
+- Disabled Kill button when no jobs are selected.
+- Job details tab is scrollable and resizable.
+- Fixed context errors in teh scene inspector
+- Added button to remove failed jobs.
+- Preventing update error for deleted display node.
+- Adding support for icons in menus
+
+#### Image
+
+- Preventing OIIO error overflow crash
 
 # 0.4.0.0
 
