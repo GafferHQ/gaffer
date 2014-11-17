@@ -153,8 +153,13 @@ StylePtr style( Gadget &g )
 	return const_cast<Style *>( g.style() );
 }
 
+void render( const Gadget &g, const Style *currentStyle )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	g.render( currentStyle );
+}
+
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( fullTransformOverloads, fullTransform, 0, 1 );
-BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( renderOverloads, render, 0, 1 );
 
 } // namespace
 
@@ -177,7 +182,7 @@ void GafferUIBindings::bindGadget()
 		.def( "fullTransform", &Gadget::fullTransform, fullTransformOverloads() )
 		.def( "transformedBound", (Imath::Box3f (Gadget::*)() const)&Gadget::transformedBound )
 		.def( "transformedBound", (Imath::Box3f (Gadget::*)( const Gadget * ) const)&Gadget::transformedBound )
-		.def( "render", &Gadget::render, renderOverloads() )
+		.def( "render", &render, ( arg_( "currentStyle" ) = object() ) )
 		.def( "renderRequestSignal", &Gadget::renderRequestSignal, return_internal_reference<1>() )
 		.def( "setToolTip", &Gadget::setToolTip )
 		.def( "buttonPressSignal", &Gadget::buttonPressSignal, return_internal_reference<1>() )

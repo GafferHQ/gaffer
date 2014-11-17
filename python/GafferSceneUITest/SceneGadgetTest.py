@@ -152,5 +152,22 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 		self.assertObjectAt( sg, IECore.V2f( 0.5 ), None )
 		self.assertObjectsAt( sg, IECore.Box2f( IECore.V2f( 0 ), IECore.V2f( 1 ) ), [ "/group" ] )
 
+	def testExpressions( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["p"] = GafferScene.Plane()
+		s["g"] = GafferScene.Group()
+		s["g"]["in"].setInput( s["p"]["out"] )
+		s["g"]["in1"].setInput( s["p"]["out"] )
+		s["g"]["in2"].setInput( s["p"]["out"] )
+
+		s["e"] = Gaffer.Expression()
+		s["e"]["engine"].setValue( "python" )
+		s["e"]["expression"].setValue( "parent['p']['dimensions']['x'] = 1 + context.getFrame() * 0.1" )
+
+		g = GafferSceneUI.SceneGadget()
+		g.setScene( s["g"]["out"] )
+		g.bound()
+
 if __name__ == "__main__":
 	unittest.main()

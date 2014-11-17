@@ -46,18 +46,21 @@ namespace Detail
 template<typename T>
 static void setHighlighted( T &p, bool highlighted )
 {
+	IECorePython::ScopedGILRelease gilRelease;
 	p.T::setHighlighted( highlighted );
 }
 
 template<typename T>
 static Imath::Box3f bound( const T &p )
 {
+	IECorePython::ScopedGILRelease gilRelease;
 	return p.T::bound();
 }
 
 template<typename T>
 static std::string getToolTip( const T &p, const IECore::LineSegment3f &line )
 {
+	IECorePython::ScopedGILRelease gilRelease;
 	return p.T::getToolTip( line );
 }
 
