@@ -122,7 +122,14 @@ bool ImageReader::enabled() const
 {
 	std::string fileName = fileNamePlug()->getValue();
 	const ImageSpec *spec = imageCache()->imagespec( ustring( fileName.c_str() ) );
-	return (spec != 0) ? ImageNode::enabled() : false;
+	if( spec == 0 )
+	{
+		// clear error on failure to prevent error buffer overflow crash.
+		imageCache()->geterror();
+		return false;
+	}
+	
+	return ImageNode::enabled();
 }
 
 size_t ImageReader::supportedExtensions( std::vector<std::string> &extensions )
