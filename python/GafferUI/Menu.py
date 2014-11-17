@@ -321,6 +321,16 @@ class Menu( GafferUI.Widget ) :
 		if shortCut is not None :
 			qtAction.setShortcuts( [ QtGui.QKeySequence( s.strip() ) for s in shortCut.split( "," ) ] )
 
+		# when an icon file path is defined in the menu definition 		
+		icon = getattr( item, "icon", None )
+		if icon is not None :
+			if isinstance( icon, basestring ) :
+				image = GafferUI.Image( icon )
+			else :
+				assert( isinstance( icon, GafferUI.Image ) )
+				image = icon
+			qtAction.setIcon( QtGui.QIcon( image._qtPixmap() ) )
+
 		if item.description :
 			qtAction.setStatusTip( item.description )
 
