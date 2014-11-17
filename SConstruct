@@ -953,7 +953,7 @@ libraries = {
 			"LIBS" : [ "Gaffer", "GafferUI", "GafferScene", "IECoreGL$CORTEX_LIB_SUFFIX", "GLEW$GLEW_LIB_SUFFIX" ],
 		},
 		"pythonEnvAppends" : {
-			"LIBS" : [ "GafferUI", "GafferSceneUI" ],
+			"LIBS" : [ "IECoreGL$CORTEX_LIB_SUFFIX", "GafferScene", "GafferUI", "GafferSceneUI" ],
 		},
 	},
 
