@@ -57,7 +57,7 @@ namespace GafferUI
 
 IE_CORE_FORWARDDECLARE( RenderableGadget );
 
-/// \todo Should this be defined in GafferSceneUI instead?
+/// \todo Either remove this or move it to GafferCortexUI.
 class RenderableGadget : public Gadget
 {
 
