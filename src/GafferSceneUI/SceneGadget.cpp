@@ -542,6 +542,8 @@ class SceneGadget::SceneGraph
 		bool m_visible;
 		bool m_expanded;
 
+		IECore::MurmurHash m_objectHash;
+
 };
 
 class SceneGadget::UpdateTask : public tbb::task
@@ -604,11 +606,16 @@ class SceneGadget::UpdateTask : public tbb::task
 
 			if( m_dirtyFlags & ObjectDirty )
 			{
-				IECore::ConstObjectPtr object = m_sceneGadget->m_scene->objectPlug()->getValue();
-				m_sceneGraph->m_renderable = NULL;
-				if( !object->isInstanceOf( IECore::NullObjectTypeId ) )
+				IECore::MurmurHash objectHash = m_sceneGadget->m_scene->objectPlug()->hash();
+				if( objectHash != m_sceneGraph->m_objectHash )
 				{
-					m_sceneGraph->m_renderable = objectToRenderable( object.get() );
+					IECore::ConstObjectPtr object = m_sceneGadget->m_scene->objectPlug()->getValue( &objectHash );
+					m_sceneGraph->m_renderable = NULL;
+					if( !object->isInstanceOf( IECore::NullObjectTypeId ) )
+					{
+						m_sceneGraph->m_renderable = objectToRenderable( object.get() );
+					}
+					m_sceneGraph->m_objectHash = objectHash;
 				}
 			}
 
@@ -670,21 +677,24 @@ class SceneGadget::UpdateTask : public tbb::task
 				m_dirtyFlags = AllDirty;
 			}
 
-			// Make a child for each child name
+			// Make sure we have a child for each child name
 
 			if( m_dirtyFlags & ChildNamesDirty )
 			{
-				/// \todo Keep existing children if their names match.
-				m_sceneGraph->clearChildren();
-				m_dirtyFlags = AllDirty; // We've made brand new children, so they need a full update.
-
 				IECore::ConstInternedStringVectorDataPtr childNamesData = m_sceneGadget->m_scene->childNamesPlug()->getValue();
 				const std::vector<IECore::InternedString> &childNames = childNamesData->readable();
-				for( std::vector<IECore::InternedString>::const_iterator it = childNames.begin(), eIt = childNames.end(); it != eIt; ++it )
+				if( !existingChildNamesValid( childNames ) )
 				{
-					SceneGraph *child = new SceneGraph();
-					child->m_name = *it;
-					m_sceneGraph->m_children.push_back( child );
+					m_sceneGraph->clearChildren();
+
+					for( std::vector<IECore::InternedString>::const_iterator it = childNames.begin(), eIt = childNames.end(); it != eIt; ++it )
+					{
+						SceneGraph *child = new SceneGraph();
+						child->m_name = *it;
+						m_sceneGraph->m_children.push_back( child );
+					}
+
+					m_dirtyFlags = AllDirty; // We've made brand new children, so they need a full update.
 				}
 			}
 
@@ -718,6 +728,22 @@ class SceneGadget::UpdateTask : public tbb::task
 		}
 
 	private :
+
+		bool existingChildNamesValid( const vector<IECore::InternedString> &childNames )
+		{
+			if( m_sceneGraph->m_children.size() != childNames.size() )
+			{
+				return false;
+			}
+			for( size_t i = 0, e = childNames.size(); i < e; ++i )
+			{
+				if( m_sceneGraph->m_children[i]->m_name != childNames[i] )
+				{
+					return false;
+				}
+			}
+			return true;
+		}
 
 		const SceneGadget *m_sceneGadget;
 		SceneGraph *m_sceneGraph;
