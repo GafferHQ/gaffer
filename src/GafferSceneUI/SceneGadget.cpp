@@ -862,7 +862,7 @@ bool SceneGadget::objectAt( const IECore::LineSegment3f &lineInGadgetSpace, Gaff
 	std::vector<IECoreGL::HitRecord> selection;
 	{
 		ViewportGadget::SelectionScope selectionScope( lineInGadgetSpace, this, selection, IECoreGL::Selector::IDRender );
-		m_sceneGraph->render( const_cast<IECoreGL::State *>( m_baseState.get() ), IECoreGL::Selector::currentSelector() );
+		m_sceneGraph->render( selectionScope.baseState(), IECoreGL::Selector::currentSelector() );
 	}
 
 	if( !selection.size() )
@@ -884,7 +884,7 @@ size_t SceneGadget::objectsAt(
 	std::vector<IECoreGL::HitRecord> selection;
 	{
 		ViewportGadget::SelectionScope selectionScope( corner0InGadgetSpace, corner1InGadgetSpace, this, selection, IECoreGL::Selector::OcclusionQuery );
-		m_sceneGraph->render( const_cast<IECoreGL::State *>( m_baseState.get() ), IECoreGL::Selector::currentSelector() );
+		m_sceneGraph->render( selectionScope.baseState(), IECoreGL::Selector::currentSelector() );
 	}
 
 	size_t result = 0;
