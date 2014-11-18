@@ -132,7 +132,11 @@ class ValuePlug : public Plug
 		/// following return from getObjectValue(), it is possible that nothing
 		/// else references the value - the value could have come from the cache
 		/// and then have been immediately removed by another thread.
-		IECore::ConstObjectPtr getObjectValue() const;
+		///
+		/// If a precomputed hash is available it may be passed to avoid computing
+		/// it again unnecessarily. Passing an incorrect hash has dire consequences, so
+		/// use with care.
+		IECore::ConstObjectPtr getObjectValue( const IECore::MurmurHash *precomputedHash = NULL ) const;
 		/// Should be called by derived classes when they wish to set the plug
 		/// value - the value is referenced directly (not copied) and so must
 		/// not be changed following the call.

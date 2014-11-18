@@ -69,18 +69,21 @@ static void setValue( typename T::Ptr p, typename T::ValuePtr v, bool copy=true 
 	p->setValue( v );
 }
 
-// generally we copy the value when returning to python, because in C++
-// it's const, and we can only send non-const objects to python. letting
+// Generally we copy the value when returning to python, because in C++
+// it's const, and we can only send non-const objects to python. Letting
 // someone modify the actual value in python could cause all sorts of problems,
 // because that value may be in the cache, and be returned as the result of
-// subsequent computations. the copy argument is provided mainly for the tests,
+// subsequent computations. The copy argument is provided mainly for the tests,
 // so that we can verify whether or not a returned value is shared with the
-// result of another computation. there might be a performance case for using it
+// result of another computation. There might be a performance case for using it
 // in other scenarios, but in general copy==false should be avoided like the plague.
+//
+// Likewise, we expose the precomputedHash argument prefixed with an underscore to
+// discourage its use - again it is mainly exposed for use only in the tests.
 template<typename T>
-static IECore::ObjectPtr getValue( typename T::Ptr p, bool copy=true )
+static IECore::ObjectPtr getValue( typename T::Ptr p, const IECore::MurmurHash *precomputedHash=NULL, bool copy=true )
 {
-	typename IECore::ConstObjectPtr v = p->getValue();
+	typename IECore::ConstObjectPtr v = p->getValue( precomputedHash );
 	if( v )
 	{
 		if( copy )
@@ -138,7 +141,7 @@ static void bind()
 		)
 		.def( "defaultValue", &defaultValue<T> )
 		.def( "setValue", setValue<T>, ( boost::python::arg_( "value" ), boost::python::arg_( "_copy" ) = true ) )
-		.def( "getValue", getValue<T>, ( boost::python::arg_( "_copy" ) = true ) )
+		.def( "getValue", getValue<T>, ( boost::python::arg_( "_precomputedHash" ) = object(), boost::python::arg_( "_copy" ) = true ) )
 	;
 
 	PyTypeObject *valueType = boost::python::converter::registry::query(

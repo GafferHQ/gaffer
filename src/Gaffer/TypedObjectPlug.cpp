@@ -92,9 +92,9 @@ void TypedObjectPlug<T>::setValue( ConstValuePtr value )
 }
 
 template<class T>
-typename TypedObjectPlug<T>::ConstValuePtr TypedObjectPlug<T>::getValue() const
+typename TypedObjectPlug<T>::ConstValuePtr TypedObjectPlug<T>::getValue( const IECore::MurmurHash *precomputedHash ) const
 {
-	return boost::static_pointer_cast<const ValueType>( getObjectValue() );
+	return boost::static_pointer_cast<const ValueType>( getObjectValue( precomputedHash ) );
 }
 
 template<class T>
