@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,9 +34,47 @@
 #
 ##########################################################################
 
-from SceneViewTest import SceneViewTest
-from ShaderAssignmentUITest import ShaderAssignmentUITest
-from StandardGraphLayoutTest import StandardGraphLayoutTest
+import Gaffer
+import GafferUI
+import GafferUITest
+import GafferScene
+
+class StandardGraphLayoutTest( GafferUITest.TestCase ) :
+
+	def testConnectNodeInStream( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["a1"] = GafferScene.ShaderAssignment()
+		s["a2"] = GafferScene.ShaderAssignment()
+		s["a3"] = GafferScene.ShaderAssignment()
+
+		s["a2"]["in"].setInput( s["a1"]["out"] )
+
+		g = GafferUI.GraphGadget( s )
+		g.getLayout().connectNode( g, s["a3"], Gaffer.StandardSet( [ s["a1"] ] ) )
+
+		self.assertTrue( s["a3"]["in"].getInput().isSame( s["a1"]["out"] ) )
+		self.assertTrue( s["a2"]["in"].getInput().isSame( s["a3"]["out"] ) )
+
+	def testConnectNodeInStreamWithMultipleOutputs( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["a1"] = GafferScene.ShaderAssignment()
+		s["a2"] = GafferScene.ShaderAssignment()
+		s["a3"] = GafferScene.ShaderAssignment()
+		s["a4"] = GafferScene.ShaderAssignment()
+
+		s["a2"]["in"].setInput( s["a1"]["out"] )
+		s["a3"]["in"].setInput( s["a1"]["out"] )
+
+		g = GafferUI.GraphGadget( s )
+		g.getLayout().connectNode( g, s["a4"], Gaffer.StandardSet( [ s["a1"] ] ) )
+
+		self.assertTrue( s["a2"]["in"].getInput().isSame( s["a4"]["out"] ) )
+		self.assertTrue( s["a3"]["in"].getInput().isSame( s["a4"]["out"] ) )
 
 if __name__ == "__main__":
 	unittest.main()
+

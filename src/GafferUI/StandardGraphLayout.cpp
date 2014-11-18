@@ -1072,51 +1072,40 @@ bool StandardGraphLayout::connectNodeInternal( GraphGadget *graph, Gaffer::Node 
 		Plug *correspondingOutput = this->correspondingOutput( firstConnectionDst );
 		if( correspondingOutput )
 		{
-			bool allCompatible = true;
-
-			// This is a copy of (*it)->outputs() rather than a reference, as reconnection can modify (*it)->outputs()...
-			Plug::OutputContainer outputs = firstConnectionSrc->outputs();
+			// Find the destination plugs at the end of the existing
+			// connections we want to insert into.
+			vector<Plug *> insertionDsts;
+			const Plug::OutputContainer &outputs = firstConnectionSrc->outputs();
 			for( Plug::OutputContainer::const_iterator it = outputs.begin(); it != outputs.end(); ++it )
 			{
 				// ignore outputs that aren't visible:
 				NodeGadget *nodeGadget = graph->nodeGadget( (*it)->node() );
-				if( !nodeGadget )
+				if( !nodeGadget || !nodeGadget->nodule( *it ) )
 				{
 					continue;
 				}
-				if( !nodeGadget->nodule( *it ) )
+				// Ignore the output which we made when connecting the node above
+				if( *it == firstConnectionDst )
 				{
 					continue;
 				}
-
-				if( !(*it)->acceptsInput( correspondingOutput ) )
+				if( (*it)->acceptsInput( correspondingOutput ) )
 				{
-					allCompatible = false;
+					// Insertion accepted - store for reconnection
+					insertionDsts.push_back( *it );
+				}
+				else
+				{
+					// Insertion rejected - clear insertionDsts to
+					// abort insertion entirely.
+					insertionDsts.clear();
 					break;
 				}
 			}
-
-			if( allCompatible )
+			// Reconnect the destination plugs such that we've inserted our node
+			for( vector<Plug *>::const_iterator it = insertionDsts.begin(), eIt = insertionDsts.end(); it != eIt; ++it )
 			{
-				for( Plug::OutputContainer::const_iterator it = outputs.begin(); it != outputs.end(); ++it )
-				{
-					// ignore outputs that aren't visible:
-					NodeGadget *nodeGadget = graph->nodeGadget( (*it)->node() );
-					if( !nodeGadget )
-					{
-						continue;
-					}
-					if( !nodeGadget->nodule( *it ) )
-					{
-						continue;
-					}
-
-					Plug *p = *it;
-					if( p != firstConnectionDst )
-					{
-						p->setInput( correspondingOutput );
-					}
-				}
+				(*it)->setInput( correspondingOutput );
 			}
 		}
 	}
