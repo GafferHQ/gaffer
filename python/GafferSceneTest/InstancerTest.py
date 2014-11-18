@@ -38,6 +38,7 @@
 import IECore
 
 import Gaffer
+import GafferTest
 import GafferScene
 import GafferSceneTest
 
@@ -245,6 +246,25 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		h = instancer["out"].boundHash( "/plane/instances" )
 		for i in range( 0, 100 ) :
 			self.assertEqual( instancer["out"].boundHash( "/plane/instances" ), h )
+
+	def testObjectAffectsChildNames( self ) :
+
+		plane = GafferScene.Plane()
+		sphere = GafferScene.Sphere()
+
+		instancer = GafferScene.Instancer()
+		instancer["in"].setInput( plane["out"] )
+		instancer["instance"].setInput( sphere["out"] )
+		instancer["parent"].setValue( "/plane" )
+
+		cs = GafferTest.CapturingSlot( instancer.plugDirtiedSignal() )
+		plane["divisions"]["x"].setValue( 2 )
+
+		dirtiedPlugs = [ s[0] for s in cs ]
+
+		self.assertTrue( instancer["out"]["childNames"] in dirtiedPlugs )
+		self.assertTrue( instancer["out"]["bound"] in dirtiedPlugs )
+		self.assertTrue( instancer["out"]["transform"] in dirtiedPlugs )
 
 if __name__ == "__main__":
 	unittest.main()
