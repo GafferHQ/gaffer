@@ -512,7 +512,7 @@ class SceneView::SelectionTool
 			ScenePlug::ScenePath objectUnderMouse;
 			sg->objectAt( event.line, objectUnderMouse );
 
-			PathMatcher &selection = const_cast<PathMatcherData *>( sg->getSelection() )->writable();
+			PathMatcher &selection = const_cast<GafferScene::PathMatcherData *>( sg->getSelection() )->writable();
 
 			const bool shiftHeld = event.modifiers && ButtonEvent::Shift;
 			bool selectionChanged = false;
@@ -608,7 +608,7 @@ class SceneView::SelectionTool
 			m_dragOverlay->setVisible( false );
 
 			SceneGadget *sg = sceneGadget();
-			PathMatcher &selection = const_cast<PathMatcherData *>( sg->getSelection() )->writable();
+			PathMatcher &selection = const_cast<GafferScene::PathMatcherData *>( sg->getSelection() )->writable();
 
 			if( sg->objectsAt( m_dragOverlay->getStartPosition(), m_dragOverlay->getEndPosition(), selection ) )
 			{
@@ -790,14 +790,14 @@ void SceneView::contextChanged( const IECore::InternedString &name )
 		const StringVectorData *sc = getContext()->get<StringVectorData>( "ui:scene:selectedPaths" );
 		/// \todo Store selection as PathMatcherData within the context, so we don't need
 		/// this conversion.
-		PathMatcherDataPtr sg = new PathMatcherData;
+		GafferScene::PathMatcherDataPtr sg = new GafferScene::PathMatcherData;
 		sg->writable().init( sc->readable().begin(), sc->readable().end() );
 		m_sceneGadget->setSelection( sg );
 		return;
 	}
 	else if( name.value() == "ui:scene:expandedPaths" )
 	{
-		const PathMatcherData *expandedPaths = getContext()->get<PathMatcherData>( "ui:scene:expandedPaths" );
+		const GafferScene::PathMatcherData *expandedPaths = getContext()->get<GafferScene::PathMatcherData>( "ui:scene:expandedPaths" );
 		m_sceneGadget->setExpandedPaths( expandedPaths );
 		return;
 	}
@@ -869,7 +869,7 @@ void SceneView::expandSelection( size_t depth )
 {
 	Context::Scope scopedContext( getContext() );
 
-	PathMatcher &selection = const_cast<PathMatcherData *>( m_sceneGadget->getSelection() )->writable();
+	PathMatcher &selection = const_cast<GafferScene::PathMatcherData *>( m_sceneGadget->getSelection() )->writable();
 	PathMatcher &expanded = expandedPaths()->writable();
 
 	std::vector<string> toExpand;
@@ -942,7 +942,7 @@ bool SceneView::expandWalk( const GafferScene::ScenePlug::ScenePath &path, size_
 
 void SceneView::collapseSelection()
 {
-	PathMatcher &selection = const_cast<PathMatcherData *>( m_sceneGadget->getSelection() )->writable();
+	PathMatcher &selection = const_cast<GafferScene::PathMatcherData *>( m_sceneGadget->getSelection() )->writable();
 
 	std::vector<string> toCollapse;
 	selection.paths( toCollapse );
