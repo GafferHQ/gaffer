@@ -57,7 +57,8 @@ using namespace IECore;
 using namespace Gaffer;
 using namespace GafferScene;
 
-tbb::atomic<int> SceneProcedural::g_pendingSceneProcedurals;
+int SceneProcedural::g_pendingSceneProcedurals(0);
+tbb::mutex SceneProcedural::g_pendingSceneProceduralsMutex;
 
 SceneProcedural::AllRenderedSignal SceneProcedural::g_allRenderedSignal;
 
@@ -99,6 +100,8 @@ SceneProcedural::SceneProcedural( ConstScenePlugPtr scenePlug, const Gaffer::Con
 	m_attributes.deformationBlurSegments = deformationBlurSegmentsData ? deformationBlurSegmentsData->readable() : 1;
 
 	updateAttributes( true );
+	
+	tbb::mutex::scoped_lock l( g_pendingSceneProceduralsMutex );
 	++g_pendingSceneProcedurals;
 
 }
@@ -114,6 +117,8 @@ SceneProcedural::SceneProcedural( const SceneProcedural &other, const ScenePlug:
 	m_context->set( ScenePlug::scenePathContextName, m_scenePath );
 
 	updateAttributes( false );
+	
+	tbb::mutex::scoped_lock l( g_pendingSceneProceduralsMutex );
 	++g_pendingSceneProcedurals;
 }
 
@@ -374,6 +379,7 @@ void SceneProcedural::render( Renderer *renderer ) const
 
 void SceneProcedural::decrementPendingProcedurals() const
 {
+	tbb::mutex::scoped_lock l( g_pendingSceneProceduralsMutex );
 	--g_pendingSceneProcedurals;
 	if( g_pendingSceneProcedurals == 0 )
 	{
