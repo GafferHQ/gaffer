@@ -35,6 +35,7 @@
 ##########################################################################
 
 import IECore
+import IECoreGL
 
 import Gaffer
 import GafferUI
@@ -168,6 +169,46 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 		g = GafferSceneUI.SceneGadget()
 		g.setScene( s["g"]["out"] )
 		g.bound()
+
+	def testGLResourceDestruction( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["p"] = GafferScene.Plane()
+		s["g"] = GafferScene.Group()
+		s["g"]["in"].setInput( s["p"]["out"] )
+		s["g"]["in1"].setInput( s["p"]["out"] )
+		s["g"]["in2"].setInput( s["p"]["out"] )
+		s["g"]["in3"].setInput( s["p"]["out"] )
+
+		sg = GafferSceneUI.SceneGadget()
+		sg.setScene( s["g"]["out"] )
+		sg.setMinimumExpansionDepth( 2 )
+
+		with GafferUI.Window() as w :
+			gw = GafferUI.GadgetWidget( sg )
+		w.setVisible( True )
+
+		# Reduce the GL cache size so that not everything will fit, and we'll
+		# need to dispose of some objects. We can't dispose of objects on any
+		# old thread, just the main GL thread, so it's important that we test
+		# that we're doing that appropriately.
+		IECoreGL.CachedConverter.defaultCachedConverter().setMaxMemory( 100 )
+
+		for i in range( 1, 1000 ) :
+			s["p"]["dimensions"]["x"].setValue( i )
+			self.waitForIdle( 10 )
+
+	def setUp( self ) :
+
+		GafferUITest.TestCase.setUp( self )
+
+		self.__cachedConverterMaxMemory = IECoreGL.CachedConverter.defaultCachedConverter().getMaxMemory()
+
+	def tearDown( self ) :
+
+		GafferUITest.TestCase.tearDown( self )
+
+		IECoreGL.CachedConverter.defaultCachedConverter().setMaxMemory( self.__cachedConverterMaxMemory )
 
 if __name__ == "__main__":
 	unittest.main()

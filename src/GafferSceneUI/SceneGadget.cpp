@@ -35,6 +35,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "tbb/task.h"
+#include "tbb/concurrent_unordered_set.h"
 
 #include "boost/bind.hpp"
 #include "boost/algorithm/string/predicate.hpp"
@@ -349,6 +350,44 @@ IECoreGL::ConstRenderablePtr objectToRenderable( const IECore::Object *object )
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
+// Mechanism for deferred destruction of OpenGL resources.
+// We use threads to update our scene graph in parallel, and as part of
+// that we need to throw away IECoreGL objects that are no longer needed.
+// We can only actually destroy them on the main thread when the GL context
+// is active though, so we use this mechanism to defer the destruction till
+// an appropriate time.
+// \todo Similar ad-hoc mechanisms exist in IECoreGL (see removeObjectWalk
+// in IECoreGL/Renderer.cpp, IECoreGL::CachedConverter::clearUnused() and
+// IECoreGL::ShaderLoader::clearUnused()). Perhaps we could do this properly
+// once and for all in IECoreGL, at the same time as introducing proper
+// OpenGL context management?
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+tbb::concurrent_unordered_set<IECore::ConstRefCountedPtr> g_pendingReferenceRemovals;
+
+template<typename T>
+void deferReferenceRemoval( boost::intrusive_ptr<T> &o )
+{
+	// insert() can be called concurrently with other inserts.
+	g_pendingReferenceRemovals.insert( o );
+	o = NULL;
+}
+
+void doPendingReferenceRemovals()
+{
+	// clear() cannot be called concurrently with inserts, but
+	// we only call this method from doRender(), which we know
+	// is single threaded.
+	g_pendingReferenceRemovals.clear();
+	IECoreGL::CachedConverter::defaultCachedConverter()->clearUnused();
+}
+
+} // namespace
+
+//////////////////////////////////////////////////////////////////////////
 // SceneGraph implementation
 //////////////////////////////////////////////////////////////////////////
 
@@ -364,6 +403,9 @@ class SceneGadget::SceneGraph
 
 		~SceneGraph()
 		{
+			deferReferenceRemoval( m_state );
+			deferReferenceRemoval( m_renderable );
+			deferReferenceRemoval( m_boundRenderable );
 			clearChildren();
 		}
 
@@ -591,6 +633,7 @@ class SceneGadget::UpdateTask : public tbb::task
 					m_sceneGraph->m_visible = visibilityData ? visibilityData->readable() : true;
 
 					IECore::ConstRunTimeTypedPtr glState = IECoreGL::CachedConverter::defaultCachedConverter()->convert( attributes.get() );
+					deferReferenceRemoval( m_sceneGraph->m_state );
 					m_sceneGraph->m_state = IECore::runTimeCast<const IECoreGL::State>( glState );
 
 					m_sceneGraph->m_attributesHash = attributesHash;
@@ -617,7 +660,7 @@ class SceneGadget::UpdateTask : public tbb::task
 				if( objectHash != m_sceneGraph->m_objectHash )
 				{
 					IECore::ConstObjectPtr object = m_sceneGadget->m_scene->objectPlug()->getValue( &objectHash );
-					m_sceneGraph->m_renderable = NULL;
+					deferReferenceRemoval( m_sceneGraph->m_renderable );
 					if( !object->isInstanceOf( IECore::NullObjectTypeId ) )
 					{
 						m_sceneGraph->m_renderable = objectToRenderable( object.get() );
@@ -649,7 +692,7 @@ class SceneGadget::UpdateTask : public tbb::task
 
 			// If we're not expanded, then we can early out after creating a bounding box.
 
-			m_sceneGraph->m_boundRenderable = NULL;
+			deferReferenceRemoval( m_sceneGraph->m_boundRenderable );
 			if( !m_sceneGraph->m_expanded )
 			{
 				// We're not expanded, so we early out before updating the children.
@@ -967,6 +1010,8 @@ void SceneGadget::doRender( const GafferUI::Style *style ) const
 
 	glPopAttrib();
 	glUseProgram( prevProgram );
+
+	doPendingReferenceRemovals();
 }
 
 void SceneGadget::plugDirtied( const Gaffer::Plug *plug )
