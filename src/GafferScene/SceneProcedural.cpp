@@ -58,6 +58,7 @@ using namespace Gaffer;
 using namespace GafferScene;
 
 tbb::atomic<int> SceneProcedural::g_pendingSceneProcedurals;
+tbb::mutex SceneProcedural::g_allRenderedMutex;
 
 SceneProcedural::AllRenderedSignal SceneProcedural::g_allRenderedSignal;
 
@@ -374,11 +375,11 @@ void SceneProcedural::render( Renderer *renderer ) const
 
 void SceneProcedural::decrementPendingProcedurals() const
 {
-	--g_pendingSceneProcedurals;
-	if( g_pendingSceneProcedurals == 0 )
+	if( --g_pendingSceneProcedurals == 0 )
 	{
 		try
 		{
+			tbb::mutex::scoped_lock l( g_allRenderedMutex );
 			g_allRenderedSignal();
 		}
 		catch( const std::exception& e )

@@ -39,6 +39,7 @@
 #define GAFFERSCENE_SCENEPROCEDURAL_H
 
 #include "tbb/atomic.h"
+#include "tbb/mutex.h"
 
 #include "IECore/Renderer.h"
 #include "IECore/Camera.h"
@@ -143,12 +144,14 @@ class SceneProcedural : public IECore::Renderer::Procedural
 		// has finished during a render.
 		static tbb::atomic<int> g_pendingSceneProcedurals;
 		
+		
 		// Indicates if SceneProcedural::doRender() has been called. If not, g_pendingSceneProcedurals is decremented in the
 		// destructor
 		mutable bool m_rendered;
 		
 		void decrementPendingProcedurals() const;
 		
+		static tbb::mutex g_allRenderedMutex;
 		static AllRenderedSignal g_allRenderedSignal;
 		
 };
