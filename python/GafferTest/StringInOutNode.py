@@ -46,6 +46,9 @@ class StringInOutNode( Gaffer.ComputeNode ) :
 		self.addChild( Gaffer.StringPlug( "in", Gaffer.Plug.Direction.In, defaultValue ) )
 		self.addChild( Gaffer.StringPlug( "out", Gaffer.Plug.Direction.Out ) )
 
+		self.numHashCalls = 0
+		self.numComputeCalls = 0
+
 	def affects( self, input ) :
 
 		 if input.isSame( self["in"] ) :
@@ -58,9 +61,13 @@ class StringInOutNode( Gaffer.ComputeNode ) :
 		if output.isSame( self["out"] ) :
 			self["in"].hash( h )
 
+		self.numHashCalls += 1
+
 	def compute( self, plug, context ) :
 
 		if plug.isSame( self["out"] ) :
 			plug.setValue( self["in"].getValue() )
+
+		self.numComputeCalls += 1
 
 IECore.registerRunTimeTyped( StringInOutNode, typeName = "GafferTest::StringInOutNode" )

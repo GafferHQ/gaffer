@@ -97,9 +97,9 @@ void TypedPlug<T>::setValue( const T &value )
 }
 
 template<class T>
-T TypedPlug<T>::getValue() const
+T TypedPlug<T>::getValue( const IECore::MurmurHash *precomputedHash ) const
 {
-	IECore::ConstObjectPtr o = getObjectValue();
+	IECore::ConstObjectPtr o = getObjectValue( precomputedHash );
 	return static_cast<const DataType *>( o.get() )->readable();
 }
 

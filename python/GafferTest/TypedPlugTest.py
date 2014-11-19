@@ -217,6 +217,23 @@ class TypedPlugTest( GafferTest.TestCase ) :
 		self.assertFalse( p1.acceptsChild( p2 ) )
 		self.assertRaises( RuntimeError, p1.addChild, p2 )
 
+	def testPrecomputedHash( self ) :
+
+		n = GafferTest.StringInOutNode()
+		n["in"].setValue( "hi" )
+
+		self.assertEqual( n["out"].getValue(), "hi" )
+		self.assertEqual( n.numHashCalls, 1 )
+		self.assertEqual( n.numComputeCalls, 1 )
+
+		h = n["out"].hash()
+		self.assertEqual( n.numHashCalls, 2 )
+		self.assertEqual( n.numComputeCalls, 1 )
+
+		self.assertEqual( n["out"].getValue( _precomputedHash = h ), "hi" )
+		self.assertEqual( n.numHashCalls, 2 )
+		self.assertEqual( n.numComputeCalls, 1 )
+
 if __name__ == "__main__":
 	unittest.main()
 

@@ -52,9 +52,9 @@ namespace Gaffer
 IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( GafferImage::FormatPlug, FormatPlugTypeId )
 
 template<>
-Format FormatPlug::getValue() const
+Format FormatPlug::getValue( const IECore::MurmurHash *precomputedHash ) const
 {
-	IECore::ConstObjectPtr o = getObjectValue();
+	IECore::ConstObjectPtr o = getObjectValue( precomputedHash );
 	const GafferImage::FormatData *d = IECore::runTimeCast<const GafferImage::FormatData>( o.get() );
 	if( !d )
 	{

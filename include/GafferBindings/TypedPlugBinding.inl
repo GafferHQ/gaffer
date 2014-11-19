@@ -74,7 +74,7 @@ TypedPlugClass<T, TWrapper>::TypedPlugClass( const char *docString )
 	);
 	this->def( "defaultValue", &T::defaultValue, boost::python::return_value_policy<boost::python::copy_const_reference>() );
 	this->def( "setValue", &Detail::setValue<T> );
-	this->def( "getValue", &T::getValue );
+	this->def( "getValue", &T::getValue, ( boost::python::arg( "_precomputedHash" ) = boost::python::object() ) );
 }
 
 } // namespace GafferBindings
