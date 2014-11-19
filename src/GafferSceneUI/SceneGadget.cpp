@@ -389,6 +389,31 @@ void doPendingReferenceRemovals()
 
 //////////////////////////////////////////////////////////////////////////
 // SceneGraph implementation
+//
+// This is effectively a replacement for IECoreGL::Scene, tailored
+// specifically to work well with Gaffer. Our only good means of generating
+// IECoreGL::Scenes is to use IECoreGL::Renderer, which would mean regenerating
+// the entire scene for any change in Gaffer. By maintaining our own scene graph,
+// we are able to make in-place edits to minimally reflect changes in Gaffer,
+// yielding much improved performance.
+//
+// In the longer term, the following might be a good course of action :
+//
+// - Refactor SceneGraph into an IECoreGL::GLScene class which maps well
+//   to Gaffer, but doesn't have direct Gaffer dependencies. It seems
+//   promising to have this class implement IECore::SceneInterface, or
+//   a future version tailored a little for broader use cases such as this
+//   (the existing interface is a little file-specific).
+// - Refactor UpdateTask into a class which couples Gaffer to
+//   IECore::SceneInterfaces, performing minimal edits as necessary to
+//   reflect changes in Gaffer.
+// - Implement our renderer backends for RenderMan, Arnold etc as
+//   SceneInterfaces. This is the most challenging part of this approach,
+//   but the hope is that the SceneInterface is a better API for performing
+//   render edits for IPR, rather than the nasty RI style API we currently
+//   have.
+// - Reuse the new UpdateTask in the InteractiveRender node.
+//
 //////////////////////////////////////////////////////////////////////////
 
 class SceneGadget::SceneGraph
