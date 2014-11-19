@@ -543,6 +543,7 @@ class SceneGadget::SceneGraph
 		bool m_expanded;
 
 		IECore::MurmurHash m_objectHash;
+		IECore::MurmurHash m_attributesHash;
 
 };
 
@@ -582,12 +583,18 @@ class SceneGadget::UpdateTask : public tbb::task
 			const bool previouslyVisible = m_sceneGraph->m_visible;
 			if( m_dirtyFlags & AttributesDirty )
 			{
-				IECore::ConstCompoundObjectPtr attributes = m_sceneGadget->m_scene->attributesPlug()->getValue();
-				const IECore::BoolData *visibilityData = attributes->member<IECore::BoolData>( "scene:visible" );
-				m_sceneGraph->m_visible = visibilityData ? visibilityData->readable() : true;
+				const IECore::MurmurHash attributesHash = m_sceneGadget->m_scene->attributesPlug()->hash();
+				if( attributesHash != m_sceneGraph->m_attributesHash )
+				{
+					IECore::ConstCompoundObjectPtr attributes = m_sceneGadget->m_scene->attributesPlug()->getValue( &attributesHash );
+					const IECore::BoolData *visibilityData = attributes->member<IECore::BoolData>( "scene:visible" );
+					m_sceneGraph->m_visible = visibilityData ? visibilityData->readable() : true;
 
-				IECore::ConstRunTimeTypedPtr glState = IECoreGL::CachedConverter::defaultCachedConverter()->convert( attributes.get() );
-				m_sceneGraph->m_state = IECore::runTimeCast<const IECoreGL::State>( glState );
+					IECore::ConstRunTimeTypedPtr glState = IECoreGL::CachedConverter::defaultCachedConverter()->convert( attributes.get() );
+					m_sceneGraph->m_state = IECore::runTimeCast<const IECoreGL::State>( glState );
+
+					m_sceneGraph->m_attributesHash = attributesHash;
+				}
 			}
 
 			if( !m_sceneGraph->m_visible )
@@ -606,7 +613,7 @@ class SceneGadget::UpdateTask : public tbb::task
 
 			if( m_dirtyFlags & ObjectDirty )
 			{
-				IECore::MurmurHash objectHash = m_sceneGadget->m_scene->objectPlug()->hash();
+				const IECore::MurmurHash objectHash = m_sceneGadget->m_scene->objectPlug()->hash();
 				if( objectHash != m_sceneGraph->m_objectHash )
 				{
 					IECore::ConstObjectPtr object = m_sceneGadget->m_scene->objectPlug()->getValue( &objectHash );
