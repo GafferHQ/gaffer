@@ -450,6 +450,24 @@ class NumericPlugTest( GafferTest.TestCase ) :
 		self.assertFalse( p1.acceptsChild( p2 ) )
 		self.assertRaises( RuntimeError, p1.addChild, p2 )
 
+	def testPrecomputedHash( self ) :
+
+		n = GafferTest.AddNode()
+		n["op1"].setValue( 10 )
+		n["op2"].setValue( 20 )
+
+		self.assertEqual( n["sum"].getValue(), 30 )
+		self.assertEqual( n.numHashCalls, 1 )
+		self.assertEqual( n.numComputeCalls, 1 )
+
+		h = n["sum"].hash()
+		self.assertEqual( n.numHashCalls, 2 )
+		self.assertEqual( n.numComputeCalls, 1 )
+
+		self.assertEqual( n["sum"].getValue( _precomputedHash = h ), 30 )
+		self.assertEqual( n.numHashCalls, 2 )
+		self.assertEqual( n.numComputeCalls, 1 )
+
 if __name__ == "__main__":
 	unittest.main()
 
