@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,16 +34,49 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferBindings/TypedPlugBinding.h"
+#ifndef GAFFERBINDINGS_TYPEDPLUGBINDING_INL
+#define GAFFERBINDINGS_TYPEDPLUGBINDING_INL
 
-using namespace Gaffer;
+#include "IECorePython/ScopedGILRelease.h"
 
-void GafferBindings::bindTypedPlug()
+namespace GafferBindings
 {
-	TypedPlugClass<BoolPlug>();
-	TypedPlugClass<StringPlug>();
-	TypedPlugClass<M33fPlug>();
-	TypedPlugClass<M44fPlug>();
-	TypedPlugClass<AtomicBox3fPlug>();
-	TypedPlugClass<AtomicBox2iPlug>();
+
+namespace Detail
+{
+
+template<typename T>
+static void setValue( T *plug, const typename T::ValueType value )
+{
+	// we use a GIL release here to prevent a lock in the case where this triggers a graph
+	// evaluation which decides to go back into python on another thread:
+	IECorePython::ScopedGILRelease r;
+	plug->setValue( value );
 }
+
+} // namespace Detail
+
+template<typename T, typename TWrapper>
+TypedPlugClass<T, TWrapper>::TypedPlugClass( const char *docString )
+	:	PlugClass<T, TWrapper>( docString )
+{
+	typedef typename T::ValueType V;
+
+	this->def(
+		boost::python::init<const std::string &, Gaffer::Plug::Direction, const V &, unsigned>(
+			(
+				boost::python::arg_( "name" )=Gaffer::GraphComponent::defaultName<T>(),
+				boost::python::arg_( "direction" )=Gaffer::Plug::In,
+				boost::python::arg_( "defaultValue" )=V(),
+				boost::python::arg_( "flags" )=Gaffer::Plug::Default
+			)
+		)
+	);
+	this->def( "defaultValue", &T::defaultValue, boost::python::return_value_policy<boost::python::copy_const_reference>() );
+	this->def( "setValue", &Detail::setValue<T> );
+	this->def( "getValue", &T::getValue );
+}
+
+} // namespace GafferBindings
+
+#endif // GAFFERBINDINGS_PLUGBINDING_INL

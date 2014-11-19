@@ -37,11 +37,24 @@
 #ifndef GAFFERBINDINGS_TYPEDPLUGBINDING_H
 #define GAFFERBINDINGS_TYPEDPLUGBINDING_H
 
+#include "GafferBindings/PlugBinding.h"
+
 namespace GafferBindings
 {
 
 void bindTypedPlug();
 
+template<typename T, typename TWrapper=T>
+class TypedPlugClass : public PlugClass<T, TWrapper>
+{
+	public :
+
+		TypedPlugClass( const char *docString = 0 );
+
+};
+
 } // namespace GafferBindings
+
+#include "GafferBindings/TypedPlugBinding.inl"
 
 #endif // GAFFERBINDINGS_TYPEDPLUGBINDING_H
