@@ -1,3 +1,9 @@
+# 0.5.0.1
+
+#### Scene
+
+- Fixed signal threading bug in SceneProcedural which was causing sporadic crashes
+
 # 0.5.0.0
 
 #### Core
