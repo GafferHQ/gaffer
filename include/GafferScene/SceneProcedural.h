@@ -38,6 +38,7 @@
 #ifndef GAFFERSCENE_SCENEPROCEDURAL_H
 #define GAFFERSCENE_SCENEPROCEDURAL_H
 
+#include "tbb/atomic.h"
 #include "tbb/mutex.h"
 
 #include "IECore/Renderer.h"
@@ -141,8 +142,8 @@ class SceneProcedural : public IECore::Renderer::Procedural
 		// gets incremented in the constructor and decremented in doRender() or the destructor, whichever happens first.
 		// When this counter falls to zero, a signal is emitted, so you can eg clear the cache when procedural expansion
 		// has finished during a render.
-		static tbb::mutex g_pendingSceneProceduralsMutex;
-		static int g_pendingSceneProcedurals;
+		static tbb::atomic<int> g_pendingSceneProcedurals;
+		
 		
 		// Indicates if SceneProcedural::doRender() has been called. If not, g_pendingSceneProcedurals is decremented in the
 		// destructor
@@ -150,6 +151,7 @@ class SceneProcedural : public IECore::Renderer::Procedural
 		
 		void decrementPendingProcedurals() const;
 		
+		static tbb::mutex g_allRenderedMutex;
 		static AllRenderedSignal g_allRenderedSignal;
 		
 };
