@@ -315,7 +315,7 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 
 		n = Gaffer.ScriptNode()
 
-		self.assertRaises( ValueError, n.execute, "raise ValueError" )
+		self.assertRaises( RuntimeError, n.execute, "raise ValueError" )
 
 		self.assertRaises( KeyError, n.evaluate, "{}['a']" )
 
@@ -1175,6 +1175,11 @@ a = A()"""
 
 		with IECore.CapturingMessageHandler() : # suppress error reporting, to avoid confusing test output
 			self.assertEqual( s.execute( "a = iDontExist", continueOnError=True ), True )
+
+	def testExecuteExceptionsIncludeLineNumber( self ) :
+
+		s = Gaffer.ScriptNode()
+		self.assertRaisesRegexp( RuntimeError, "Line 2 .* name 'iDontExist' is not defined", s.execute, "a = 10\na=iDontExist" )
 
 	def tearDown( self ) :
 
