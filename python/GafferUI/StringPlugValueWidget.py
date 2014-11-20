@@ -72,8 +72,14 @@ class StringPlugValueWidget( GafferUI.PlugValueWidget ) :
 	def _updateFromPlug( self ) :
 
 		if self.getPlug() is not None :
+
 			with self.getContext() :
-				value = self.getPlug().getValue()
+				try :
+					value = self.getPlug().getValue()
+				except :
+					value = None
+
+			if value is not None :
 				if value != self.__textWidget.getText() :
 					# Setting the text moves the cursor to the end,
 					# even if the new text is the same. We must avoid
@@ -81,6 +87,8 @@ class StringPlugValueWidget( GafferUI.PlugValueWidget ) :
 					# cursor is always moving to the end whenever a key is
 					# pressed in continuousUpdate mode.
 					self.__textWidget.setText( value )
+
+			self.__textWidget.setErrored( value is None )
 
 		self.__textWidget.setEditable( self._editable() )
 
