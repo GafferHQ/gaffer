@@ -51,9 +51,7 @@ using namespace boost::python;
 using namespace GafferBindings;
 using namespace Gaffer;
 
-namespace GafferBindings
-{
-namespace Detail
+namespace
 {
 
 class SplinePlugSerialiser : public CompoundPlugSerialiser
@@ -73,25 +71,25 @@ class SplinePlugSerialiser : public CompoundPlugSerialiser
 };
 
 template<typename T>
-static CompoundPlugPtr pointPlug( T &s, size_t index )
+CompoundPlugPtr pointPlug( T &s, size_t index )
 {
 	return s.pointPlug( index );
 }
 
 template<typename T>
-static typename T::XPlugType::Ptr pointXPlug( T &s, size_t index )
+typename T::XPlugType::Ptr pointXPlug( T &s, size_t index )
 {
 	return s.pointXPlug( index );
 }
 
 template<typename T>
-static typename T::YPlugType::Ptr pointYPlug( T &s, size_t index )
+typename T::YPlugType::Ptr pointYPlug( T &s, size_t index )
 {
 	return s.pointYPlug( index );
 }
 
 template<typename T>
-static void bind()
+void bind()
 {
 	typedef typename T::ValueType V;
 
@@ -121,12 +119,15 @@ static void bind()
 
 }
 
-} // namespace Detail
+} // namespace
+
+namespace GafferBindings
+{
 
 void bindSplinePlug()
 {
-	Detail::bind<SplineffPlug>();
-	Detail::bind<SplinefColor3fPlug>();
+	bind<SplineffPlug>();
+	bind<SplinefColor3fPlug>();
 }
 
 } // namespace GafferBindings

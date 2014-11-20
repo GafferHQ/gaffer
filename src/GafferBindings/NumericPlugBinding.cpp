@@ -51,8 +51,11 @@ using namespace boost::python;
 using namespace GafferBindings;
 using namespace Gaffer;
 
+namespace
+{
+
 template<typename T>
-static std::string maskedRepr( const T *plug, unsigned flagsMask )
+std::string maskedRepr( const T *plug, unsigned flagsMask )
 {
 	std::string result = Serialisation::classPath( plug ) + "( \"" + plug->getName().string() + "\", ";
 
@@ -88,13 +91,13 @@ static std::string maskedRepr( const T *plug, unsigned flagsMask )
 }
 
 template<typename T>
-static std::string repr( const T *plug )
+std::string repr( const T *plug )
 {
 	return maskedRepr( plug, Plug::All );
 }
 
 template<typename T>
-static void setValue( T *plug, const typename T::ValueType value )
+void setValue( T *plug, const typename T::ValueType value )
 {
 	// we use a GIL release here to prevent a lock in the case where this triggers a graph
 	// evaluation which decides to go back into python on another thread:
@@ -116,7 +119,7 @@ class NumericPlugSerialiser : public ValuePlugSerialiser
 };
 
 template<typename T>
-static void bind()
+void bind()
 {
 	typedef typename T::ValueType V;
 
@@ -145,6 +148,8 @@ static void bind()
 	Serialisation::registerSerialiser( T::staticTypeId(), new NumericPlugSerialiser<T>() );
 
 }
+
+} // namespace
 
 void GafferBindings::bindNumericPlug()
 {
