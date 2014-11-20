@@ -106,6 +106,15 @@ void setValue( T *plug, const typename T::ValueType value )
 }
 
 template<typename T>
+typename T::ValueType getValue( const T *plug, const IECore::MurmurHash *precomputedHash )
+{
+	// Must release GIL in case computation spawns threads which need
+	// to reenter Python.
+	IECorePython::ScopedGILRelease r;
+	return plug->getValue( precomputedHash );
+}
+
+template<typename T>
 class NumericPlugSerialiser : public ValuePlugSerialiser
 {
 
@@ -141,7 +150,7 @@ void bind()
 		.def( "minValue", &T::minValue )
 		.def( "maxValue", &T::maxValue )
 		.def( "setValue", setValue<T> )
-		.def( "getValue", &T::getValue, ( boost::python::arg( "_precomputedHash" ) = boost::python::object() ) )
+		.def( "getValue", &getValue<T>, ( boost::python::arg( "_precomputedHash" ) = boost::python::object() ) )
 		.def( "__repr__", &repr<T> )
 	;
 

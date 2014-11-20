@@ -89,6 +89,15 @@ typename T::YPlugType::Ptr pointYPlug( T &s, size_t index )
 }
 
 template<typename T>
+typename T::ValueType getValue( const T &plug )
+{
+	// Must release GIL in case computation spawns threads which need
+	// to reenter Python.
+	IECorePython::ScopedGILRelease r;
+	return plug.getValue();
+}
+
+template<typename T>
 void bind()
 {
 	typedef typename T::ValueType V;
@@ -105,7 +114,7 @@ void bind()
 		)
 		.def( "defaultValue", &T::defaultValue, return_value_policy<copy_const_reference>() )
 		.def( "setValue", &T::setValue )
-		.def( "getValue", &T::getValue )
+		.def( "getValue", &getValue<T> )
 		.def( "numPoints", &T::numPoints )
 		.def( "addPoint", &T::addPoint )
 		.def( "removePoint", &T::removePoint )

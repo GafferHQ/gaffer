@@ -143,6 +143,15 @@ void setValue( T *plug, const typename T::ValueType value )
 }
 
 template<typename T>
+typename T::ValueType getValue( const T *plug )
+{
+	// Must release GIL in case computation spawns threads which need
+	// to reenter Python.
+	IECorePython::ScopedGILRelease r;
+	return plug->getValue();
+}
+
+template<typename T>
 void bind()
 {
 	typedef typename T::ValueType V;
@@ -165,7 +174,7 @@ void bind()
 		.def( "minValue", &T::minValue )
 		.def( "maxValue", &T::maxValue )
 		.def( "setValue", &setValue<T> )
-		.def( "getValue", &T::getValue )
+		.def( "getValue", &getValue<T> )
 		.def( "__repr__", &compoundNumericPlugRepr<T> )
 		.def( "canGang", &T::canGang )
 		.def( "gang", &T::gang )

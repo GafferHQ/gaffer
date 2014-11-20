@@ -83,6 +83,10 @@ static void setValue( typename T::Ptr p, typename T::ValuePtr v, bool copy=true 
 template<typename T>
 static IECore::ObjectPtr getValue( typename T::Ptr p, const IECore::MurmurHash *precomputedHash=NULL, bool copy=true )
 {
+	// Must release GIL in case computation spawns threads which need
+	// to reenter Python.
+	IECorePython::ScopedGILRelease r;
+	
 	typename IECore::ConstObjectPtr v = p->getValue( precomputedHash );
 	if( v )
 	{
