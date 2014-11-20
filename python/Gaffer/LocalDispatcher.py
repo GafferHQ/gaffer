@@ -66,6 +66,13 @@ class LocalDispatcher( Gaffer.Dispatcher ) :
 			assert( isinstance( dispatcher, Gaffer.Dispatcher ) )
 			
 			self.__batch = batch
+			## \todo Stop storing this. It's just a temptation to access potentially
+			# invalid data during background dispatches - all dispatcher settings _must_
+			# be copied to the job upon construction, because nothing stops a user changing
+			# the dispatcher settings during a background dispatch. Currently __dispatcher
+			# is used to access the JobPool in __reportCompleted etc - instead the job should
+			# use signals to report changes in status, and the JobPool should connect to those
+			# signals. Jobs should be blissfully ignorant of JobPools.
 			self.__dispatcher = dispatcher
 			script = batch.requirements()[0].node().scriptNode()
 			self.__context = Gaffer.Context( script.context() )
