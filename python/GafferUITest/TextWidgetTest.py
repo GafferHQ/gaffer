@@ -126,5 +126,16 @@ class TextWidgetTest( GafferUITest.TestCase ) :
 		self.assertEqual( w.getPreferredCharacterWidth(), 10 )
 		self.assertEqual( w.getFixedCharacterWidth(), None )
 
+	def testErrored( self ) :
+
+		w = GafferUI.TextWidget()
+		self.assertEqual( w.getErrored(), False )
+
+		w.setErrored( True )
+		self.assertEqual( w.getErrored(), True )
+
+		w.setErrored( False )
+		self.assertEqual( w.getErrored(), False )
+
 if __name__ == "__main__":
 	unittest.main()

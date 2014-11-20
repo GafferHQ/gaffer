@@ -95,6 +95,18 @@ class TextWidget( GafferUI.Widget ) :
 			QtGui.QLineEdit.Password : self.DisplayMode.Password,
 		}[self._qtWidget().echoMode()]
 
+	def setErrored( self, errored ) :
+
+		if errored == self.getErrored() :
+			return
+
+		self._qtWidget().setProperty( "gafferError", GafferUI._Variant.toVariant( bool( errored ) ) )
+		self._repolish()
+
+	def getErrored( self ) :
+
+		return GafferUI._Variant.fromVariant( self._qtWidget().property( "gafferError" ) ) or False
+
 	def setCursorPosition( self, position ) :
 
 		self._qtWidget().setCursorPosition( position )
