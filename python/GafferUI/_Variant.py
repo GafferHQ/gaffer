@@ -75,7 +75,9 @@ class _Variant() :
 				return variant.toInt()[0]
 			elif t == QtCore.QVariant.Bool :
 				return variant.toBool()
+			elif t == QtCore.QVariant.Invalid :
+				return None
 			else :
-				raise ValueError( "Unsupported QVariant type" )
+				raise ValueError( "Unsupported QVariant type \"%s\"" % variant.typeName() )
 		else :
 			return variant
