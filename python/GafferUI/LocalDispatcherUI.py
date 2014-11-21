@@ -56,7 +56,8 @@ def appendMenuDefinitions( menuDefinition, prefix="" ) :
 # Metadata, PlugValueWidgets and Nodules
 ##########################################################################
 
-Gaffer.Metadata.registerPlugDescription( Gaffer.LocalDispatcher, "executeInBackground", "Executes the dispatched tasks on a background thread." )
+Gaffer.Metadata.registerPlugDescription( Gaffer.LocalDispatcher, "executeInBackground", "Executes the dispatched tasks in separate processes via a background thread." )
+Gaffer.Metadata.registerPlugDescription( Gaffer.LocalDispatcher, "ignoreScriptLoadErrors", "Ignores errors loading the script when executing in the background. This is not recommended." )
 Gaffer.Metadata.registerPlugDescription( Gaffer.ExecutableNode, "dispatcher.Local.executeInForeground", "Forces the tasks from this node (and all preceding tasks) to execute on the current thread." )
 
 ##################################################################################

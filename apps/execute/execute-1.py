@@ -59,6 +59,13 @@ class execute( Gaffer.Application ) :
 					check = IECore.FileNameParameter.CheckType.MustExist,
 				),
 				
+				IECore.BoolParameter(
+					name = "ignoreScriptLoadErrors",
+					description = "Causes errors which occur while loading the script "
+						"to be ignored. Not recommended.",
+					defaultValue = False,
+				),
+
 				IECore.StringVectorParameter(
 					name = "nodes",
 					description = "The names of the nodes to execute. If not specified "
@@ -99,7 +106,12 @@ class execute( Gaffer.Application ) :
 			
 		scriptNode = Gaffer.ScriptNode( os.path.splitext( os.path.basename( args["script"].value ) )[0] )
 		scriptNode["fileName"].setValue( os.path.abspath( args["script"].value ) )
-		scriptNode.load()
+		try :
+			scriptNode.load( continueOnError = args["ignoreScriptLoadErrors"].value )
+		except Exception as exception :
+			IECore.msg( IECore.Msg.Level.Error, "gaffer execute : loading \"%s\"" % scriptNode["fileName"].getValue(), str( exception ) )
+			return 1
+
 		self.root()["scripts"].addChild( scriptNode )
 		
 		nodes = []

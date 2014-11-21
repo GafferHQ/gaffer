@@ -168,6 +168,45 @@ class ExecuteApplicationTest( GafferTest.TestCase ) :
 		self.failUnless( "Context parameter" in error )
 		self.failUnless( p.returncode )
 
+	def testIgnoreScriptLoadErrors( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["node"] = Gaffer.SystemCommand()
+		s["node"]["command"].setValue( "sleep .1" )
+
+		# because this doesn't have the dynamic flag set,
+		# it won't serialise/load properly.
+		s["node"]["user"]["badPlug"] = Gaffer.IntPlug()
+		s["node"]["user"]["badPlug"].setValue( 10 )
+
+		s["fileName"].setValue( self.__scriptFileName )
+		s.save()
+
+		p = subprocess.Popen(
+			"gaffer execute -script " + self.__scriptFileName,
+			shell = True,
+			stderr = subprocess.PIPE,
+		)
+		p.wait()
+
+		error = "".join( p.stderr.readlines() )
+		self.assertTrue( self.__scriptFileName in error )
+		self.assertTrue( "KeyError: 'badPlug'" in error )
+		self.assertFalse( "Traceback" in error )
+		self.assertNotEqual( p.returncode, 0 )
+
+		p = subprocess.Popen(
+			"gaffer execute -ignoreScriptLoadErrors -script " + self.__scriptFileName,
+			shell = True,
+			stderr = subprocess.PIPE,
+		)
+		p.wait()
+
+		error = "".join( p.stderr.readlines() )
+		self.assertTrue( "KeyError: 'badPlug'" in error )
+		self.assertFalse( "Traceback" in error )
+		self.assertEqual( p.returncode, 0 )
+
 	def tearDown( self ) :
 
 		files = [ self.__scriptFileName ]

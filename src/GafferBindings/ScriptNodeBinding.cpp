@@ -120,7 +120,16 @@ class ScriptNodeWrapper : public NodeWrapper<ScriptNode>
 			bool result = false;
 			if( !continueOnError )
 			{
-				exec( pythonScript.c_str(), e, e );
+				try
+				{
+					exec( pythonScript.c_str(), e, e );
+				}
+				catch( boost::python::error_already_set &e )
+				{
+					int lineNumber = 0;
+					std::string message = formatPythonException( /* withTraceback = */ false, &lineNumber );
+					throw IECore::Exception( boost::str( boost::format( "Line %d : %s" ) % lineNumber % message ) );
+				}
 			}
 			else
 			{

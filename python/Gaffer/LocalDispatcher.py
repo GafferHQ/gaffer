@@ -53,6 +53,7 @@ class LocalDispatcher( Gaffer.Dispatcher ) :
 
 		backgroundPlug = Gaffer.BoolPlug( "executeInBackground", defaultValue = False )
 		self.addChild( backgroundPlug )
+		self.addChild( Gaffer.BoolPlug( "ignoreScriptLoadErrors", defaultValue = False ) )
 		
 		self.__jobPool = jobPool if jobPool else LocalDispatcher.defaultJobPool()
 
@@ -66,6 +67,13 @@ class LocalDispatcher( Gaffer.Dispatcher ) :
 			assert( isinstance( dispatcher, Gaffer.Dispatcher ) )
 			
 			self.__batch = batch
+			## \todo Stop storing this. It's just a temptation to access potentially
+			# invalid data during background dispatches - all dispatcher settings _must_
+			# be copied to the job upon construction, because nothing stops a user changing
+			# the dispatcher settings during a background dispatch. Currently __dispatcher
+			# is used to access the JobPool in __reportCompleted etc - instead the job should
+			# use signals to report changes in status, and the JobPool should connect to those
+			# signals. Jobs should be blissfully ignorant of JobPools.
 			self.__dispatcher = dispatcher
 			script = batch.requirements()[0].node().scriptNode()
 			self.__context = Gaffer.Context( script.context() )
@@ -74,6 +82,7 @@ class LocalDispatcher( Gaffer.Dispatcher ) :
 			self.__id = jobId
 			self.__directory = directory
 			self.__stats = {}
+			self.__ignoreScriptLoadErrors = dispatcher["ignoreScriptLoadErrors"].getValue()
 			
 			self.__messageHandler = IECore.CapturingMessageHandler()
 			self.__messageTitle = "%s : Job %s %s" % ( self.__dispatcher.getName(), self.__name, self.__id )
@@ -254,6 +263,9 @@ class LocalDispatcher( Gaffer.Dispatcher ) :
 				"-frames", frames,
 			]
 			
+			if self.__ignoreScriptLoadErrors :
+				args.append( "-ignoreScriptLoadErrors" )
+
 			contextArgs = []
 			for entry in [ k for k in taskContext.keys() if k != "frame" and not k.startswith( "ui:" ) ] :
 				if entry not in self.__context.keys() or taskContext[entry] != self.__context[entry] :
