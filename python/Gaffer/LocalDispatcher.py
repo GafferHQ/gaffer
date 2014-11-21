@@ -53,6 +53,7 @@ class LocalDispatcher( Gaffer.Dispatcher ) :
 
 		backgroundPlug = Gaffer.BoolPlug( "executeInBackground", defaultValue = False )
 		self.addChild( backgroundPlug )
+		self.addChild( Gaffer.BoolPlug( "ignoreScriptLoadErrors", defaultValue = False ) )
 		
 		self.__jobPool = jobPool if jobPool else LocalDispatcher.defaultJobPool()
 
@@ -81,6 +82,7 @@ class LocalDispatcher( Gaffer.Dispatcher ) :
 			self.__id = jobId
 			self.__directory = directory
 			self.__stats = {}
+			self.__ignoreScriptLoadErrors = dispatcher["ignoreScriptLoadErrors"].getValue()
 			
 			self.__messageHandler = IECore.CapturingMessageHandler()
 			self.__messageTitle = "%s : Job %s %s" % ( self.__dispatcher.getName(), self.__name, self.__id )
@@ -261,6 +263,9 @@ class LocalDispatcher( Gaffer.Dispatcher ) :
 				"-frames", frames,
 			]
 			
+			if self.__ignoreScriptLoadErrors :
+				args.append( "-ignoreScriptLoadErrors" )
+
 			contextArgs = []
 			for entry in [ k for k in taskContext.keys() if k != "frame" and not k.startswith( "ui:" ) ] :
 				if entry not in self.__context.keys() or taskContext[entry] != self.__context[entry] :

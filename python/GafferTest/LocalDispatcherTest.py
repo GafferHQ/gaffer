@@ -642,6 +642,32 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		text = "".join( open( "/tmp/dispatcherTest/out.txt" ).readlines() )
 		self.assertEqual( text, "n1 on 1" )
 	
+	def testIgnoreScriptLoadErrors( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = GafferTest.TextWriter()
+		s["n"]["fileName"].setValue( "/tmp/dispatcherTest/scriptLoadErrorTest.txt" )
+		s["n"]["text"].setValue( "test" )
+
+		# because this doesn't have the dynamic flag set,
+		# it won't serialise/load properly.
+		s["n"]["user"]["badPlug"] = Gaffer.IntPlug()
+		s["n"]["user"]["badPlug"].setValue( 10 )
+
+		dispatcher = Gaffer.Dispatcher.create( "LocalTest" )
+		dispatcher["executeInBackground"].setValue( True )
+
+		dispatcher.dispatch( [ s["n"] ] )
+		dispatcher.jobPool().waitForAll()
+
+		self.assertFalse( os.path.isfile( "/tmp/dispatcherTest/scriptLoadErrorTest.txt" ) )
+
+		dispatcher["ignoreScriptLoadErrors"].setValue( True )
+		dispatcher.dispatch( [ s["n"] ] )
+		dispatcher.jobPool().waitForAll()
+
+		self.assertTrue( os.path.isfile( "/tmp/dispatcherTest/scriptLoadErrorTest.txt" ) )
+
 	def tearDown( self ) :
 
 		shutil.rmtree( "/tmp/dispatcherTest", ignore_errors = True )
