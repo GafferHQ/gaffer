@@ -937,7 +937,7 @@ bool SceneGadget::objectAt( const IECore::LineSegment3f &lineInGadgetSpace, Gaff
 	std::vector<IECoreGL::HitRecord> selection;
 	{
 		ViewportGadget::SelectionScope selectionScope( lineInGadgetSpace, this, selection, IECoreGL::Selector::IDRender );
-		m_sceneGraph->render( selectionScope.baseState(), IECoreGL::Selector::currentSelector() );
+		renderSceneGraph( selectionScope.baseState() );
 	}
 
 	if( !selection.size() )
@@ -959,7 +959,7 @@ size_t SceneGadget::objectsAt(
 	std::vector<IECoreGL::HitRecord> selection;
 	{
 		ViewportGadget::SelectionScope selectionScope( corner0InGadgetSpace, corner1InGadgetSpace, this, selection, IECoreGL::Selector::OcclusionQuery );
-		m_sceneGraph->render( selectionScope.baseState(), IECoreGL::Selector::currentSelector() );
+		renderSceneGraph( selectionScope.baseState() );
 	}
 
 	size_t result = 0;
@@ -1024,18 +1024,8 @@ void SceneGadget::doRender( const GafferUI::Style *style ) const
 	}
 
 	updateSceneGraph();
-
-	GLint prevProgram;
-	glGetIntegerv( GL_CURRENT_PROGRAM, &prevProgram );
-	glPushAttrib( GL_ALL_ATTRIB_BITS );
-
-		IECoreGL::State::bindBaseState();
-		m_baseState->bind();
-		m_sceneGraph->render( const_cast<IECoreGL::State *>( m_baseState.get() ) );
-
-	glPopAttrib();
-	glUseProgram( prevProgram );
-
+	renderSceneGraph( m_baseState.get() );
+	
 	doPendingReferenceRemovals();
 }
 
@@ -1094,4 +1084,18 @@ void SceneGadget::updateSceneGraph() const
 	}
 
 	m_dirtyFlags = UpdateTask::NothingDirty;
+}
+
+void SceneGadget::renderSceneGraph( const IECoreGL::State *stateToBind ) const
+{
+	GLint prevProgram;
+	glGetIntegerv( GL_CURRENT_PROGRAM, &prevProgram );
+	glPushAttrib( GL_ALL_ATTRIB_BITS );
+
+		IECoreGL::State::bindBaseState();
+		stateToBind->bind();
+		m_sceneGraph->render( const_cast<IECoreGL::State *>( stateToBind ), IECoreGL::Selector::currentSelector() );
+
+	glPopAttrib();
+	glUseProgram( prevProgram );
 }
