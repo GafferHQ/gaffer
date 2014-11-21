@@ -332,14 +332,11 @@ class _PlugListing( GafferUI.PathListingWidget ) :
 
 		# build a DictPath to represent our child plugs.
 
-		plugsAndIndices = [ list( x ) for x in enumerate( self.__parent.children() ) ]
-		for plugAndIndex in plugsAndIndices :
-			index = Gaffer.Metadata.plugValue( plugAndIndex[1], "layout:index" )
-			if index is not None :
-				plugAndIndex[0] = index
+		plugs = self.__parent.children( Gaffer.Plug )
+		plugs = GafferUI.PlugLayout.layoutOrder( plugs )
 
 		d = {}
-		for index, plug in plugsAndIndices :
+		for index, plug in enumerate( plugs ) :
 			d[plug.getName()] = self.Entry( plug, index )
 
 		self.setPath( Gaffer.DictPath( d, "/" ) )
