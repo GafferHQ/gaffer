@@ -45,7 +45,7 @@ class VariantTest( GafferUITest.TestCase ) :
 
 		v = GafferUI._Variant
 
-		for value in [ "hi", 10, 10.0 ] :
+		for value in [ "hi", 10, 10.0, True, False, None ] :
 			self.assertEqual( v.fromVariant( v.toVariant( value ) ), value )
 
 if __name__ == "__main__":

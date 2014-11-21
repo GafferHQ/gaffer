@@ -96,8 +96,16 @@ class NumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 		if plug is not None :
 
 			with self.getContext() :
+				try :
+					value = plug.getValue()
+				except :
+					value = None
+
+			if value is not None :
 				with Gaffer.BlockedConnection( self.__valueChangedConnection ) :
-					self.__numericWidget.setValue( plug.getValue() )
+					self.__numericWidget.setValue( value )
+
+			self.__numericWidget.setErrored( value is None )
 
 		self.__numericWidget.setEditable( self._editable() )
 
