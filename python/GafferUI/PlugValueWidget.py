@@ -221,6 +221,15 @@ class PlugValueWidget( GafferUI.Widget ) :
 				}
 			)
 
+		userDefault = Gaffer.Metadata.plugValue( self.getPlug(), "userDefault" )
+		if userDefault is not None and self.getPlug().direction() == Gaffer.Plug.Direction.In :
+			menuDefinition.append(
+				"/User Default", {
+					"command" : IECore.curry( Gaffer.WeakMethod( self.__setValue ), userDefault ),
+					"active" : self._editable()
+				}
+			)
+		
 		self.popupMenuSignal()( menuDefinition, self )
 
 		return menuDefinition
