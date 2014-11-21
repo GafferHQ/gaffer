@@ -90,7 +90,26 @@ class TypedObjectPlug : public ValuePlug
 		/// imperative that it not be modified in any way. The python bindings
 		/// automatically return a copy from getValue() (unless instructed otherwise)
 		/// to make it harder for less experienced coders to get this wrong.
-		ConstValuePtr getValue() const;
+		///
+		/// If available, an optional precomputed hash may be passed to avoid the cost
+		/// of computing it again. This hash must have been computed in the current context
+		/// with the node graph in the current state. Passing an incorrect hash has dire
+		/// consequences - use with care.
+		///
+		/// Precomputed hashes are intended to support the following use pattern :
+		///
+		/// MurmurHash currentHash = plug->hash();
+		/// if( currentHash != storedHash )
+		/// {
+		/// 	ConstObjectPtr currentObject = plug->getValue( &currentHash );
+		/// 	storedObject = convertObjectInSomeWay( currentObject );
+		/// 	storedHash = currentHash;
+		/// }
+		///
+		/// This pattern is particularly effective because it not only
+		/// avoids unnecessary conversions, but it also avoids churn in
+		/// the ValuePlug cache.
+		ConstValuePtr getValue( const IECore::MurmurHash *precomputedHash = NULL ) const;
 
 		virtual void setToDefault();
 		virtual void setFrom( const ValuePlug *other );

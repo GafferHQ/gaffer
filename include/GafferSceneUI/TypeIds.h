@@ -43,6 +43,7 @@ namespace GafferSceneUI
 enum TypeId
 {
 	SceneViewTypeId = 110651,
+	SceneGadgetTypeId = 110652,
 	LastTypeId = 110700
 };
 

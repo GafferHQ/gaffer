@@ -71,8 +71,8 @@ class ValuePlug::Computation
 
 	public :
 
-		Computation( const ValuePlug *resultPlug )
-			:	m_resultPlug( resultPlug ), m_resultValue( NULL )
+		Computation( const ValuePlug *resultPlug, const IECore::MurmurHash *precomputedHash = NULL )
+			:	m_resultPlug( resultPlug ), m_precomputedHash( precomputedHash ), m_resultValue( NULL )
 		{
 			g_threadData.local().computationStack.push( this );
 		}
@@ -94,6 +94,11 @@ class ValuePlug::Computation
 
 		IECore::MurmurHash hash() const
 		{
+			if( m_precomputedHash )
+			{
+				return *m_precomputedHash;
+			}
+
 			HashCache &hashCache = g_threadData.local().hashCache;
 			HashCacheKey key( m_resultPlug, Context::current()->hash() );
 			HashCache::iterator it = hashCache.find( key );
@@ -283,6 +288,7 @@ class ValuePlug::Computation
 		}
 
 		const ValuePlug *m_resultPlug;
+		const IECore::MurmurHash *m_precomputedHash;
 		IECore::ConstObjectPtr m_resultValue;
 
 		// During a single graph evaluation, we actually call ValuePlug::hash()
@@ -601,7 +607,7 @@ void ValuePlug::hash( IECore::MurmurHash &h ) const
 	h.append( hash() );
 }
 
-IECore::ConstObjectPtr ValuePlug::getObjectValue() const
+IECore::ConstObjectPtr ValuePlug::getObjectValue( const IECore::MurmurHash *precomputedHash ) const
 {
 	const ValuePlug *p = sourcePlug( this );
 
@@ -619,7 +625,7 @@ IECore::ConstObjectPtr ValuePlug::getObjectValue() const
 	// an plug with an input connection or an output plug on a ComputeNode. there can be many values -
 	// one per context. the computation class is responsible for providing storage for the result
 	// and also actually managing the computation.
-	Computation computation( p );
+	Computation computation( p, precomputedHash );
 	return computation.compute();
 }
 

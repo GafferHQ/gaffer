@@ -83,7 +83,9 @@ class NumericPlug : public ValuePlug
 		/// \undoable
 		void setValue( T value );
 		/// Returns the value.
-		T getValue() const;
+		/// See comments in TypedObjectPlug::getValue() for details of
+		/// the optional precomputedHash argument - and use with care!
+		T getValue( const IECore::MurmurHash *precomputedHash = NULL ) const;
 
 		virtual void setToDefault();
 		virtual void setFrom( const ValuePlug *other );

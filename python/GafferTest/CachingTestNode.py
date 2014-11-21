@@ -47,6 +47,8 @@ class CachingTestNode( Gaffer.ComputeNode ) :
 		self.addChild( Gaffer.StringPlug( "in", Gaffer.Plug.Direction.In ) )
 		self.addChild( Gaffer.ObjectPlug( "out", Gaffer.Plug.Direction.Out, IECore.NullObject() ) )
 
+		self.numHashCalls = 0
+
 	def affects( self, input ) :
 
 		if input.isSame( self["in"] ) :
@@ -59,6 +61,8 @@ class CachingTestNode( Gaffer.ComputeNode ) :
 		assert( output.isSame( self["out"] ) )
 
 		self["in"].hash( h )
+
+		self.numHashCalls += 1
 
 	def compute( self, plug, context ) :
 

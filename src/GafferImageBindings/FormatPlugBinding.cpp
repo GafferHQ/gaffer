@@ -37,11 +37,9 @@
 #include "boost/python.hpp"
 #include "boost/format.hpp"
 
-#include "IECore/RunTimeTyped.h"
-#include "IECorePython/RunTimeTypedBinding.h"
-
 #include "GafferBindings/Serialisation.h"
 #include "GafferBindings/ValuePlugBinding.h"
+#include "GafferBindings/TypedPlugBinding.h"
 
 #include "GafferImage/FormatPlug.h"
 #include "GafferImageBindings/FormatBinding.h"
@@ -107,20 +105,7 @@ class FormatPlugSerialiser : public GafferBindings::ValuePlugSerialiser
 
 void GafferImageBindings::bindFormatPlug()
 {
-	PlugClass<FormatPlug>()
-		.def( init<const std::string &, Plug::Direction, const Format &, unsigned>(
-				(
-					boost::python::arg_( "name" )=GraphComponent::defaultName<FormatPlug>(),
-					boost::python::arg_( "direction" )=Plug::In,
-					boost::python::arg_( "defaultValue" )=Format(),
-					boost::python::arg_( "flags" )=Plug::Default
-				)
-			)
-		)
-		.def( "defaultValue", &FormatPlug::defaultValue, return_value_policy<copy_const_reference>() )
-		.def( "setValue", &FormatPlug::setValue )
-		.def( "getValue", &FormatPlug::getValue )
-	;
+	TypedPlugClass<FormatPlug>();
 
 	Serialisation::registerSerialiser( static_cast<IECore::TypeId>(FormatPlugTypeId), new FormatPlugSerialiser );
 }

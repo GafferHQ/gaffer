@@ -37,6 +37,7 @@
 
 #include "boost/bind.hpp"
 #include "boost/bind/placeholders.hpp"
+#include "boost/algorithm/string/predicate.hpp"
 
 #include "IECore/ParameterisedProcedural.h"
 #include "IECore/VectorTypedData.h"
@@ -50,10 +51,10 @@
 #include "Gaffer/BlockedConnection.h"
 
 #include "GafferUI/Style.h"
+#include "GafferUI/Pointer.h"
 
 #include "GafferScene/SceneProcedural.h"
 #include "GafferScene/PathMatcherData.h"
-#include "GafferScene/StandardOptions.h"
 #include "GafferScene/StandardAttributes.h"
 #include "GafferScene/PathFilter.h"
 #include "GafferScene/Grid.h"
@@ -69,43 +70,6 @@ using namespace GafferScene;
 using namespace GafferSceneUI;
 
 //////////////////////////////////////////////////////////////////////////
-// Implementation of a ParameterisedProcedural wrapping a SceneProcedural.
-// We need this to allow us to use the RenderableGadget for doing our
-// display.
-/// \todo Build our own scene representation.
-//////////////////////////////////////////////////////////////////////////
-
-class WrappingProcedural : public IECore::ParameterisedProcedural
-{
-
-	public :
-
-		WrappingProcedural( SceneProceduralPtr sceneProcedural )
-			:	ParameterisedProcedural( "" ), m_sceneProcedural( sceneProcedural )
-		{
-		}
-
-	protected :
-
-		virtual Imath::Box3f doBound( ConstCompoundObjectPtr args ) const
-		{
-			return m_sceneProcedural->bound();
-		}
-
-		virtual void doRender( RendererPtr renderer, ConstCompoundObjectPtr args ) const
-		{
-			m_sceneProcedural->render( renderer.get() );
-		}
-
-	private :
-
-		SceneProceduralPtr m_sceneProcedural;
-
-};
-
-IE_CORE_DECLAREPTR( WrappingProcedural );
-
-//////////////////////////////////////////////////////////////////////////
 // SceneView::Grid implementation
 //////////////////////////////////////////////////////////////////////////
 
@@ -115,7 +79,7 @@ class SceneView::Grid
 	public :
 
 		Grid( SceneView *view )
-			:	m_view( view ), m_node( new GafferScene::Grid ), m_gadget( new RenderableGadget )
+			:	m_view( view ), m_node( new GafferScene::Grid ), m_gadget( new SceneGadget )
 		{
 			m_node->transformPlug()->rotatePlug()->setValue( V3f( 90, 0, 0 ) );
 
@@ -134,6 +98,8 @@ class SceneView::Grid
 
 			m_node->dimensionsPlug()->setInput( dimensionsPlug );
 
+			m_gadget->setMinimumExpansionDepth( 1 );
+			m_gadget->setScene( m_node->outPlug() );
 			view->viewportGadget()->setChild( "__grid", m_gadget );
 
 			view->plugDirtiedSignal().connect( boost::bind( &Grid::plugDirtied, this, ::_1 ) );
@@ -173,17 +139,12 @@ class SceneView::Grid
 
 		void update()
 		{
-			m_gadget->setRenderable(
-				new WrappingProcedural(
-					new SceneProcedural( m_node->outPlug(), m_view->getContext() )
-				)
-			);
 			m_gadget->setVisible( plug()->getChild<BoolPlug>( "visible" )->getValue() );
 		}
 
 		SceneView *m_view;
 		GafferScene::GridPtr m_node;
-		GafferUI::RenderableGadgetPtr m_gadget;
+		SceneGadgetPtr m_gadget;
 
 };
 
@@ -429,6 +390,247 @@ class SceneView::Gnomon
 };
 
 //////////////////////////////////////////////////////////////////////////
+// SceneView::SelectionTool implementation
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+class DragOverlay : public GafferUI::Gadget
+{
+
+	public :
+
+		DragOverlay()
+			:	Gadget()
+		{
+		}
+
+		Imath::Box3f bound() const
+		{
+			// we draw in raster space so don't have a sensible bound
+			return Box3f();
+		}
+
+		void setStartPosition( const V3f &p )
+		{
+			if( m_startPosition == p )
+			{
+				return;
+			}
+			m_startPosition = p;
+			renderRequestSignal()( this );
+		}
+
+		const V3f &getStartPosition() const
+		{
+			return m_startPosition;
+		}
+
+		void setEndPosition( const V3f &p )
+		{
+			if( m_endPosition == p )
+			{
+				return;
+			}
+			m_endPosition = p;
+			renderRequestSignal()( this );
+		}
+
+		const V3f &getEndPosition() const
+		{
+			return m_endPosition;
+		}
+
+	protected :
+
+		virtual void doRender( const Style *style ) const
+		{
+			if( IECoreGL::Selector::currentSelector() )
+			{
+				return;
+			}
+
+			const ViewportGadget *viewportGadget = ancestor<ViewportGadget>();
+			ViewportGadget::RasterScope rasterScope( viewportGadget );
+
+			Box2f b;
+			b.extendBy( viewportGadget->gadgetToRasterSpace( m_startPosition, this ) );
+			b.extendBy( viewportGadget->gadgetToRasterSpace( m_endPosition, this ) );
+
+			style->renderSelectionBox( b );
+		}
+
+	private :
+
+		Imath::V3f m_startPosition;
+		Imath::V3f m_endPosition;
+
+};
+
+IE_CORE_DECLAREPTR( DragOverlay )
+
+} // namespace
+
+/// \todo Introduce a proper mechanism for custom tools attached to
+/// Views and reimplement this as part of that.
+class SceneView::SelectionTool
+{
+
+	public :
+
+		SelectionTool( SceneView *view )
+			:	m_view( view ), m_dragOverlay( new DragOverlay() )
+		{
+			SceneGadget *sg = sceneGadget();
+
+			sg->buttonPressSignal().connect( boost::bind( &SelectionTool::buttonPress, this, ::_2 ) );
+			sg->dragBeginSignal().connect( boost::bind( &SelectionTool::dragBegin, this, ::_1, ::_2 ) );
+			sg->dragEnterSignal().connect( boost::bind( &SelectionTool::dragEnter, this, ::_1, ::_2 ) );
+			sg->dragMoveSignal().connect( boost::bind( &SelectionTool::dragMove, this, ::_2 ) );
+			sg->dragEndSignal().connect( boost::bind( &SelectionTool::dragEnd, this, ::_2 ) );
+
+			m_dragOverlay->setVisible( false );
+			view->viewportGadget()->setChild( "__selectionOverlay", m_dragOverlay );
+		}
+
+	private :
+
+		SceneGadget *sceneGadget()
+		{
+			return runTimeCast<SceneGadget>( m_view->viewportGadget()->getPrimaryChild() );
+		}
+
+		bool buttonPress( const ButtonEvent &event )
+		{
+			if( event.buttons != ButtonEvent::Left )
+			{
+				return false;
+			}
+
+			SceneGadget *sg = sceneGadget();
+			ScenePlug::ScenePath objectUnderMouse;
+			sg->objectAt( event.line, objectUnderMouse );
+
+			PathMatcher &selection = const_cast<GafferScene::PathMatcherData *>( sg->getSelection() )->writable();
+
+			const bool shiftHeld = event.modifiers && ButtonEvent::Shift;
+			bool selectionChanged = false;
+			if( !objectUnderMouse.size() )
+			{
+				// background click - clear the selection unless
+				// shift is held in which case we might be starting
+				// a drag to add more.
+				if( !shiftHeld )
+				{
+					selection.clear();
+					selectionChanged = true;
+				}
+			}
+			else
+			{
+				const bool objectSelectedAlready = selection.match( objectUnderMouse ) & Filter::ExactMatch;
+
+				if( objectSelectedAlready )
+				{
+					if( shiftHeld )
+					{
+						selection.removePath( objectUnderMouse );
+						selectionChanged = true;
+					}
+				}
+				else
+				{
+					if( !shiftHeld )
+					{
+						selection.clear();
+					}
+					selection.addPath( objectUnderMouse );
+					selectionChanged = true;
+				}
+			}
+
+			if( selectionChanged )
+			{
+				transferSelectionToContext();
+			}
+
+			return true;
+		}
+
+		IECore::RunTimeTypedPtr dragBegin( Gadget *gadget, const DragDropEvent &event )
+		{
+			SceneGadget *sg = sceneGadget();
+			ScenePlug::ScenePath objectUnderMouse;
+
+			if( !sg->objectAt( event.line, objectUnderMouse ) )
+			{
+				// drag to select
+				m_dragOverlay->setStartPosition( event.line.p0 );
+				m_dragOverlay->setEndPosition( event.line.p0 );
+				m_dragOverlay->setVisible( true );
+				return gadget;
+			}
+			else
+			{
+				const PathMatcher &selection = sg->getSelection()->readable();
+				if( selection.match( objectUnderMouse ) & Filter::ExactMatch )
+				{
+					// drag the selection somewhere
+					IECore::StringVectorDataPtr dragData = new IECore::StringVectorData();
+					selection.paths( dragData->writable() );
+					Pointer::setCurrent( "objects" );
+					return dragData;
+				}
+			}
+			return NULL;
+		}
+
+		bool dragEnter( const Gadget *gadget, const DragDropEvent &event )
+		{
+			return event.sourceGadget == gadget && event.data == gadget;
+		}
+
+		bool dragMove( const DragDropEvent &event )
+		{
+			m_dragOverlay->setEndPosition( event.line.p0 );
+			return true;
+		}
+
+		bool dragEnd( const DragDropEvent &event )
+		{
+			Pointer::setCurrent( "" );
+			if( !m_dragOverlay->getVisible() )
+			{
+				return false;
+			}
+
+			m_dragOverlay->setVisible( false );
+
+			SceneGadget *sg = sceneGadget();
+			PathMatcher &selection = const_cast<GafferScene::PathMatcherData *>( sg->getSelection() )->writable();
+
+			if( sg->objectsAt( m_dragOverlay->getStartPosition(), m_dragOverlay->getEndPosition(), selection ) )
+			{
+				transferSelectionToContext();
+			}
+
+			return true;
+		}
+
+		void transferSelectionToContext()
+		{
+			StringVectorDataPtr s = new StringVectorData();
+			sceneGadget()->getSelection()->readable().paths( s->writable() );
+			m_view->getContext()->set( "ui:scene:selectedPaths", s.get() );
+		}
+
+		SceneView *m_view;
+		DragOverlayPtr m_dragOverlay;
+
+};
+
+//////////////////////////////////////////////////////////////////////////
 // SceneView implementation
 //////////////////////////////////////////////////////////////////////////
 
@@ -439,7 +641,8 @@ SceneView::ViewDescription<SceneView> SceneView::g_viewDescription( GafferScene:
 
 SceneView::SceneView( const std::string &name )
 	:	View3D( name, new GafferScene::ScenePlug() ),
-		m_renderableGadget( new RenderableGadget )
+		m_sceneGadget( new SceneGadget ),
+		m_framed( false )
 {
 
 	// add plugs and signal handling for them
@@ -457,16 +660,17 @@ SceneView::SceneView( const std::string &name )
 
 	// set up our gadgets
 
-	viewportGadget()->setPrimaryChild( m_renderableGadget );
+	viewportGadget()->setPrimaryChild( m_sceneGadget );
 
-	m_selectionChangedConnection = m_renderableGadget->selectionChangedSignal().connect( boost::bind( &SceneView::selectionChanged, this, ::_1 ) );
 	viewportGadget()->keyPressSignal().connect( boost::bind( &SceneView::keyPress, this, ::_1, ::_2 ) );
 
-	m_renderableGadget->baseState()->add( const_cast<IECoreGL::State *>( baseState() ) );
+	m_sceneGadget->baseState()->add( const_cast<IECoreGL::State *>( baseState() ) );
+	m_sceneGadget->setContext( getContext() );
 	baseStateChangedSignal().connect( boost::bind( &SceneView::baseStateChanged, this ) );
 
 	m_grid = boost::shared_ptr<Grid>( new Grid( this ) );
 	m_gnomon = boost::shared_ptr<Gnomon>( new Gnomon( this ) );
+	m_selectionTool = boost::shared_ptr<SelectionTool>( new SelectionTool( this ) );
 
 	//////////////////////////////////////////////////////////////////////////
 	// add a preprocessor which monkeys with the scene before it is displayed.
@@ -476,17 +680,6 @@ SceneView::SceneView( const std::string &name )
 	ScenePlugPtr preprocessorInput = new ScenePlug( "in" );
 	preprocessor->addChild( preprocessorInput );
 
-	// remove motion blur, because the opengl renderer doesn't support it.
-
-	StandardOptionsPtr standardOptions = new StandardOptions( "disableBlur" );
-	standardOptions->optionsPlug()->getChild<CompoundPlug>( "transformBlur" )->getChild<BoolPlug>( "enabled" )->setValue( true );
-	standardOptions->optionsPlug()->getChild<CompoundPlug>( "transformBlur" )->getChild<BoolPlug>( "value" )->setValue( false );
-	standardOptions->optionsPlug()->getChild<CompoundPlug>( "deformationBlur" )->getChild<BoolPlug>( "enabled" )->setValue( true );
-	standardOptions->optionsPlug()->getChild<CompoundPlug>( "deformationBlur" )->getChild<BoolPlug>( "value" )->setValue( false );
-
-	preprocessor->addChild( standardOptions );
-	standardOptions->inPlug()->setInput( preprocessorInput );
-
 	// add a node for hiding things
 
 	StandardAttributesPtr hide = new StandardAttributes( "hide" );
@@ -494,7 +687,7 @@ SceneView::SceneView( const std::string &name )
 	hide->attributesPlug()->getChild<CompoundPlug>( "visibility" )->getChild<BoolPlug>( "value" )->setValue( false );
 
 	preprocessor->addChild( hide );
-	hide->inPlug()->setInput( standardOptions->outPlug() );
+	hide->inPlug()->setInput( preprocessorInput );
 
 	PathFilterPtr hideFilter = new PathFilter( "hideFilter" );
 	preprocessor->addChild( hideFilter );
@@ -507,6 +700,11 @@ SceneView::SceneView( const std::string &name )
 	preprocessorOutput->setInput( hide->outPlug() );
 
 	setPreprocessor( preprocessor );
+
+	// connect up our scene gadget
+
+	m_sceneGadget->setScene( preprocessedInPlug<ScenePlug>() );
+
 }
 
 SceneView::~SceneView()
@@ -583,28 +781,35 @@ const GafferScene::PathFilter *SceneView::hideFilter() const
 	return getPreprocessor<Node>()->getChild<PathFilter>( "hideFilter" );
 }
 
+void SceneView::setContext( Gaffer::ContextPtr context )
+{
+	View3D::setContext( context );
+	m_sceneGadget->setContext( context );
+}
+
 void SceneView::contextChanged( const IECore::InternedString &name )
 {
 	if( name.value() == "ui:scene:selectedPaths" )
 	{
-		// if only the selection has changed then we can just update the selection
+		// If only the selection has changed then we can just update the selection
 		// on our existing scene representation.
 		const StringVectorData *sc = getContext()->get<StringVectorData>( "ui:scene:selectedPaths" );
-		RenderableGadget::Selection sr;
-		sr.insert( sc->readable().begin(), sc->readable().end() );
-
-		BlockedConnection blockedConnection( m_selectionChangedConnection );
-		m_renderableGadget->setSelection( sr );
+		/// \todo Store selection as PathMatcherData within the context, so we don't need
+		/// this conversion.
+		GafferScene::PathMatcherDataPtr sg = new GafferScene::PathMatcherData;
+		sg->writable().init( sc->readable().begin(), sc->readable().end() );
+		m_sceneGadget->setSelection( sg );
 		return;
 	}
-
-	if(
-		name.value().compare( 0, 3, "ui:" ) == 0 &&
-		name.value() != "ui:scene:expandedPaths"
-	)
+	else if( name.value() == "ui:scene:expandedPaths" )
 	{
-		// if it's just a ui context entry that has changed, and it doesn't
-		// affect our expansion, then early out.
+		const GafferScene::PathMatcherData *expandedPaths = getContext()->get<GafferScene::PathMatcherData>( "ui:scene:expandedPaths" );
+		m_sceneGadget->setExpandedPaths( expandedPaths );
+		return;
+	}
+	else if( boost::starts_with( name.value(), "ui:" ) )
+	{
+		// ui context entries shouldn't affect computation.
 		return;
 	}
 
@@ -613,27 +818,24 @@ void SceneView::contextChanged( const IECore::InternedString &name )
 	updateRequestSignal()( this );
 }
 
+/// \todo Stop using this method, and remove it and the whole
+/// updateRequestSignal() mechanism from the base class. That all
+/// only existed to work around GIL problems we believe we have now
+/// fixed, and since the SceneGadget is doing all its work without
+/// assistance with the GIL, we should be able to too.
 void SceneView::update()
 {
-	SceneProceduralPtr p = new SceneProcedural(
-		preprocessedInPlug<ScenePlug>(), getContext(), ScenePlug::ScenePath(),
-		expandedPaths(), minimumExpansionDepthPlug()->getValue()
-	);
-	WrappingProceduralPtr wp = new WrappingProcedural( p );
-
-	bool hadRenderable = m_renderableGadget->getRenderable();
-	m_renderableGadget->setRenderable( wp );
-	if( !hadRenderable )
+	if( !m_framed )
 	{
 		viewportGadget()->frame( framingBound() );
+		m_framed = true;
 	}
-
 	updateLookThrough();
 }
 
 Imath::Box3f SceneView::framingBound() const
 {
-	Imath::Box3f b = m_renderableGadget->selectionBound();
+	Imath::Box3f b = m_sceneGadget->selectionBound();
 	if( !b.isEmpty() )
 	{
 		return b;
@@ -646,12 +848,6 @@ Imath::Box3f SceneView::framingBound() const
 	}
 
 	return b;
-}
-
-void SceneView::selectionChanged( GafferUI::RenderableGadgetPtr renderableGadget )
-{
-	BlockedConnection blockedConnection( contextChangedConnection() );
-	transferSelectionToContext();
 }
 
 bool SceneView::keyPress( GafferUI::GadgetPtr gadget, const GafferUI::KeyEvent &event )
@@ -674,38 +870,40 @@ void SceneView::expandSelection( size_t depth )
 {
 	Context::Scope scopedContext( getContext() );
 
-	RenderableGadget::Selection &selection = m_renderableGadget->getSelection();
+	PathMatcher &selection = const_cast<GafferScene::PathMatcherData *>( m_sceneGadget->getSelection() )->writable();
 	PathMatcher &expanded = expandedPaths()->writable();
 
-	// must take a copy of the selection to iterate over, because we'll modify the
-	// selection inside expandWalk().
-	const std::vector<string> toExpand( selection.begin(), selection.end() );
+	std::vector<string> toExpand;
+	selection.paths( toExpand );
 
 	bool needUpdate = false;
 	for( std::vector<string>::const_iterator it = toExpand.begin(), eIt = toExpand.end(); it != eIt; ++it )
 	{
-		needUpdate |= expandWalk( *it, depth, expanded, selection );
+		/// \todo It would be nice to be able to get ScenePaths out of
+		/// PathMatcher::paths() directly.
+		ScenePlug::ScenePath path;
+		ScenePlug::stringToPath( *it, path );
+		needUpdate |= expandWalk( path, depth, expanded, selection );
 	}
 
 	if( needUpdate )
 	{
-		// we were naughty and modified the expanded paths in place (to avoid
-		// unecessary copying), so the context doesn't know they've changed.
-		// so we emit the changed signal ourselves. this will then trigger update()
-		// via contextChanged().
+		// We modified the expanded paths in place to avoid unecessary copying,
+		// so the context doesn't know they've changed. So we emit the changed
+		// signal ourselves - this will then update the SceneGadget via contextChanged().
 		getContext()->changedSignal()( getContext(), "ui:scene:expandedPaths" );
-		// and this will trigger a selection update also via contextChanged().
+		// Transfer the new selection to the context - we'd like to use the same
+		// trick as above for that, but can't yet because the context selection isn't
+		// stored as PathMatcherData.
 		transferSelectionToContext();
 	}
 }
 
-bool SceneView::expandWalk( const std::string &path, size_t depth, PathMatcher &expanded, RenderableGadget::Selection &selected )
+bool SceneView::expandWalk( const GafferScene::ScenePlug::ScenePath &path, size_t depth, PathMatcher &expanded, PathMatcher &selected )
 {
 	bool result = false;
 
-	ScenePlug::ScenePath scenePath;
-	ScenePlug::stringToPath( path, scenePath );
-	ConstInternedStringVectorDataPtr childNamesData = preprocessedInPlug<ScenePlug>()->childNames( scenePath );
+	ConstInternedStringVectorDataPtr childNamesData = preprocessedInPlug<ScenePlug>()->childNames( path );
 	const vector<InternedString> &childNames = childNamesData->readable();
 
 	if( childNames.size() )
@@ -714,19 +912,17 @@ bool SceneView::expandWalk( const std::string &path, size_t depth, PathMatcher &
 		// not selected - we only want selection at the leaf levels of
 		// our expansion.
 		result |= expanded.addPath( path );
-		result |= selected.erase( path );
+		result |= selected.removePath( path );
+
+		ScenePlug::ScenePath childPath = path;
+		childPath.push_back( InternedString() ); // room for the child name
 		for( vector<InternedString>::const_iterator cIt = childNames.begin(), ceIt = childNames.end(); cIt != ceIt; cIt++ )
 		{
-			std::string childPath( path );
-			if( *childPath.rbegin() != '/' )
-			{
-				childPath += '/';
-			}
-			childPath += cIt->string();
+			childPath.back() = *cIt;
 			if( depth == 1 )
 			{
 				// at the bottom of the expansion - just select the child
-				result |= selected.insert( childPath ).second;
+				result |= selected.addPath( childPath );
 			}
 			else
 			{
@@ -739,7 +935,7 @@ bool SceneView::expandWalk( const std::string &path, size_t depth, PathMatcher &
 	{
 		// we have no children, just make sure we're selected to mark the
 		// leaf of the expansion.
-		result |= selected.insert( path ).second;
+		result |= selected.addPath( path );
 	}
 
 	return result;
@@ -747,58 +943,52 @@ bool SceneView::expandWalk( const std::string &path, size_t depth, PathMatcher &
 
 void SceneView::collapseSelection()
 {
-	RenderableGadget::Selection &selection = m_renderableGadget->getSelection();
-	if( !selection.size() )
+	PathMatcher &selection = const_cast<GafferScene::PathMatcherData *>( m_sceneGadget->getSelection() )->writable();
+
+	std::vector<string> toCollapse;
+	selection.paths( toCollapse );
+
+	if( !toCollapse.size() )
 	{
 		return;
 	}
 
-	set<string> pathsToSelect;
-	vector<const string *> pathsToDeselect;
 	GafferScene::PathMatcherData *expandedData = expandedPaths();
 	PathMatcher &expanded = expandedData->writable();
 
-	for( RenderableGadget::Selection::const_iterator it = selection.begin(), eIt = selection.end(); it != eIt; it++ )
+	for( vector<string>::const_iterator it = toCollapse.begin(), eIt = toCollapse.end(); it != eIt; ++it )
 	{
-		if( !expanded.removePath( *it ) )
+		/// \todo It would be nice to be able to get ScenePaths out of
+		/// PathMatcher::paths() directly.
+		ScenePlug::ScenePath path;
+		ScenePlug::stringToPath( *it, path );
+
+		if( !expanded.removePath( path ) )
 		{
-			if( *it == "/" )
+			if( path.size() <= 1 )
 			{
 				continue;
 			}
-			pathsToDeselect.push_back( &(*it) );
-			std::string parentPath( *it, 0, it->rfind( '/' ) );
-			if( parentPath == "" )
-			{
-				parentPath = "/";
-			}
-			expanded.removePath( parentPath );
-			pathsToSelect.insert( parentPath );
+			selection.removePath( path );
+			path.pop_back(); // now the parent path
+			expanded.removePath( path );
+			selection.addPath( path );
 		}
 	}
 
-	for( set<string>::const_iterator it = pathsToSelect.begin(), eIt = pathsToSelect.end(); it != eIt; it++ )
-	{
-		selection.insert( *it );
-	}
-	for( vector<const string *>::const_iterator it = pathsToDeselect.begin(), eIt = pathsToDeselect.end(); it != eIt; it++ )
-	{
-		selection.erase( **it );
-	}
-
-	// see comment in expandSelection().
+	// See comment in expandSelection().
 	getContext()->changedSignal()( getContext(), "ui:scene:expandedPaths" );
-	// and this will trigger a selection update also via contextChanged().
+	// See comment in expandSelection().
 	transferSelectionToContext();
 }
 
 void SceneView::transferSelectionToContext()
 {
-	/// \todo If RenderableGadget used PathMatcherData, then we might not need
-	/// to copy data here.
-	const RenderableGadget::Selection &selection = m_renderableGadget->getSelection();
+	/// \todo Use PathMatcherData for the context variable so we don't need
+	/// to do this copying into StringVectorData. See related comments
+	/// in SceneHierarchy.__transferSelectionFromContext
 	StringVectorDataPtr s = new StringVectorData();
-	s->writable().insert( s->writable().end(), selection.begin(), selection.end() );
+	m_sceneGadget->getSelection()->readable().paths( s->writable() );
 	getContext()->set( "ui:scene:selectedPaths", s.get() );
 }
 
@@ -819,15 +1009,15 @@ GafferScene::PathMatcherData *SceneView::expandedPaths()
 void SceneView::baseStateChanged()
 {
 	/// \todo This isn't transferring the override state properly. Probably an IECoreGL problem.
-	m_renderableGadget->baseState()->add( const_cast<IECoreGL::State *>( baseState() ) );
-	m_renderableGadget->renderRequestSignal()( m_renderableGadget.get() );
+	m_sceneGadget->baseState()->add( const_cast<IECoreGL::State *>( baseState() ) );
+	m_sceneGadget->renderRequestSignal()( m_sceneGadget.get() );
 }
 
 void SceneView::plugSet( Gaffer::Plug *plug )
 {
 	if( plug == minimumExpansionDepthPlug() )
 	{
-		updateRequestSignal()( this );
+		m_sceneGadget->setMinimumExpansionDepth( minimumExpansionDepthPlug()->getValue() );
 	}
 	else if( plug == lookThroughPlug() )
 	{

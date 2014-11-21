@@ -101,6 +101,12 @@ void Instancer::affects( const Plug *input, AffectedPlugsContainer &outputs ) co
 	{
 		outputs.push_back( outPlug()->childNamesPlug() );
 	}
+	else if( input == inPlug()->objectPlug() )
+	{
+		outputs.push_back( outPlug()->childNamesPlug() );
+		outputs.push_back( outPlug()->boundPlug() );
+		outputs.push_back( outPlug()->transformPlug() );
+	}
 }
 
 struct Instancer::BoundHash

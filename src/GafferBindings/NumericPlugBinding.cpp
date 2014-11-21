@@ -138,7 +138,7 @@ static void bind()
 		.def( "minValue", &T::minValue )
 		.def( "maxValue", &T::maxValue )
 		.def( "setValue", setValue<T> )
-		.def( "getValue", &T::getValue )
+		.def( "getValue", &T::getValue, ( boost::python::arg( "_precomputedHash" ) = boost::python::object() ) )
 		.def( "__repr__", &repr<T> )
 	;
 

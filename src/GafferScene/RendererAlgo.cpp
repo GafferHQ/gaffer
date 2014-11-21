@@ -45,6 +45,7 @@
 #include "IECore/AttributeBlock.h"
 #include "IECore/Display.h"
 #include "IECore/TransformBlock.h"
+#include "IECore/CoordinateSystem.h"
 
 #include "Gaffer/Context.h"
 

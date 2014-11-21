@@ -53,9 +53,9 @@ IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( Gaffer::AtomicBox2iPlug, Atomi
 // specialise StringPlug::getValue() to perform substitutions.
 
 template<>
-std::string StringPlug::getValue() const
+std::string StringPlug::getValue( const IECore::MurmurHash *precomputedHash ) const
 {
-	IECore::ConstObjectPtr o = getObjectValue();
+	IECore::ConstObjectPtr o = getObjectValue( precomputedHash );
 	const IECore::StringData *s = IECore::runTimeCast<const IECore::StringData>( o.get() );
 	if( !s )
 	{

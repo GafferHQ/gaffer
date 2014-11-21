@@ -294,7 +294,7 @@ IECore::ConstCompoundObjectPtr Grid::computeAttributes( const SceneNode::ScenePa
 
 		ShaderPtr shader = new Shader( "Constant", "gl:surface" );
 		shader->parameters()["Cs"] = new Color3fData( Color3f( 1 ) );
-		result->members()["shader"] = shader;
+		result->members()["gl:surface"] = shader;
 
 		return result;
 	}

@@ -65,8 +65,9 @@ Gadget::Gadget( const std::string &name )
 	childRemovedSignal().connect( boost::bind( &Gadget::childRemoved, this, ::_1, ::_2 )  );
 }
 
-GadgetPtr Gadget::select( const std::string &name )
+GadgetPtr Gadget::select( GLuint id )
 {
+	const std::string &name = IECoreGL::NameStateComponent::nameFromGLName( id );
 	if( name.compare( 0, 18, "__Gaffer::Gadget::" ) )
 	{
 		return 0;

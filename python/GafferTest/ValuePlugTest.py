@@ -244,6 +244,26 @@ class ValuePlugTest( GafferTest.TestCase ) :
 		self.assertTrue( isinstance( p2["f"], Gaffer.FloatPlug ) )
 		self.assertTrue( isinstance( p2, Gaffer.ValuePlug ) )
 
+	def testPrecomputedHashOptimisation( self ) :
+
+		n = GafferTest.CachingTestNode()
+		n["in"].setValue( "a" )
+
+		a1 = n["out"].getValue( _copy = False )
+		self.assertEqual( a1, IECore.StringData( "a" ) )
+		self.assertEqual( n.numHashCalls, 1 )
+
+		a2 = n["out"].getValue( _copy = False )
+		self.assertTrue( a2.isSame( a1 ) )
+		self.assertEqual( n.numHashCalls, 2 )
+
+		h = n["out"].hash()
+		self.assertEqual( n.numHashCalls, 3 )
+
+		a3 = n["out"].getValue( _copy = False, _precomputedHash = h )
+		self.assertEqual( n.numHashCalls, 3 )
+		self.assertTrue( a3.isSame( a1 ) )
+
 	def setUp( self ) :
 
 		self.__originalCacheMemoryLimit = Gaffer.ValuePlug.getCacheMemoryLimit()

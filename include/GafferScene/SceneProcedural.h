@@ -42,12 +42,8 @@
 #include "tbb/mutex.h"
 
 #include "IECore/Renderer.h"
-#include "IECore/Camera.h"
-#include "IECore/Light.h"
-#include "IECore/CoordinateSystem.h"
 
 #include "GafferScene/ScenePlug.h"
-#include "GafferScene/PathMatcherData.h"
 
 namespace Gaffer
 {
@@ -64,16 +60,6 @@ namespace GafferScene
 /// in a tree of nested deferred procedurals. See the python ScriptProcedural for
 /// a procedural which will load a gaffer script and generate geometry from a named
 /// node.
-/// \todo This class is currently being abused by the SceneView for drawing the scene in
-/// the viewer, and has some functionality that would otherwise be meaningless. We should
-/// instead implement custom scene traversal in the SceneView and simplify the SceneProcedural
-/// so it has just enough functionality for final rendering and nothing more. Things we should
-/// remove include :
-///
-///   - the PathMatcher
-///   - the minimumExpansionDepth
-///   - the drawing of cameras, lights and coordinate systems
-///
 /// \todo There is useful functionality in here for calculating bounds and outputting things
 /// to Renderers that should probably be moved to RendererAlgo.h and/or SceneAlgo.h.
 class SceneProcedural : public IECore::Renderer::Procedural
@@ -84,7 +70,7 @@ class SceneProcedural : public IECore::Renderer::Procedural
 		IE_CORE_DECLAREMEMBERPTR( SceneProcedural );
 
 		/// A copy of context is taken.
-		SceneProcedural( ConstScenePlugPtr scenePlug, const Gaffer::Context *context, const ScenePlug::ScenePath &scenePath=ScenePlug::ScenePath(), const PathMatcherData *pathsToExpand=0, size_t minimumExpansionDepth=0 );
+		SceneProcedural( ConstScenePlugPtr scenePlug, const Gaffer::Context *context, const ScenePlug::ScenePath &scenePath=ScenePlug::ScenePath() );
 		virtual ~SceneProcedural();
 
 		virtual IECore::MurmurHash hash() const;
@@ -106,9 +92,6 @@ class SceneProcedural : public IECore::Renderer::Procedural
 		ConstScenePlugPtr m_scenePlug;
 		Gaffer::ContextPtr m_context;
 		ScenePlug::ScenePath m_scenePath;
-
-		PathMatcherDataPtr m_pathsToExpand;
-		size_t m_minimumExpansionDepth;
 
 		struct Options
 		{
@@ -133,10 +116,6 @@ class SceneProcedural : public IECore::Renderer::Procedural
 
 		void updateAttributes( bool full );
 		void motionTimes( unsigned segments, std::set<float> &times ) const;
-
-		void drawCamera( const IECore::Camera *camera, IECore::Renderer *renderer ) const;
-		void drawLight( const IECore::Light *light, IECore::Renderer *renderer ) const;
-		void drawCoordinateSystem( const IECore::CoordinateSystem *coordinateSystem, IECore::Renderer *renderer ) const;
 		
 		// A global counter of all the scene procedurals that are hanging around but haven't been rendered yet, which 
 		// gets incremented in the constructor and decremented in doRender() or the destructor, whichever happens first.

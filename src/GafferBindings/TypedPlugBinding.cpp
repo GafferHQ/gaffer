@@ -35,60 +35,16 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
-
-#include "IECorePython/RunTimeTypedBinding.h"
-#include "IECorePython/IECoreBinding.h"
-#include "IECorePython/ScopedGILRelease.h"
-
-#include "Gaffer/TypedPlug.h"
-#include "Gaffer/Node.h"
-
 #include "GafferBindings/TypedPlugBinding.h"
-#include "GafferBindings/PlugBinding.h"
 
-using namespace boost::python;
-using namespace GafferBindings;
 using namespace Gaffer;
-
-template<typename T>
-static void setValue( T *plug, const typename T::ValueType value )
-{
-	// we use a GIL release here to prevent a lock in the case where this triggers a graph
-	// evaluation which decides to go back into python on another thread:
-	IECorePython::ScopedGILRelease r;
-	plug->setValue( value );
-}
-
-
-template<typename T>
-static void bind()
-{
-	typedef typename T::ValueType V;
-
-	PlugClass<T>()
-		.def( init<const std::string &, Plug::Direction, const V &, unsigned>(
-				(
-					boost::python::arg_( "name" )=GraphComponent::defaultName<T>(),
-					boost::python::arg_( "direction" )=Plug::In,
-					boost::python::arg_( "defaultValue" )=V(),
-					boost::python::arg_( "flags" )=Plug::Default
-				)
-			)
-		)
-		.def( "defaultValue", &T::defaultValue, return_value_policy<copy_const_reference>() )
-		.def( "setValue", &setValue<T> )
-		.def( "getValue", &T::getValue )
-	;
-
-}
 
 void GafferBindings::bindTypedPlug()
 {
-	bind<BoolPlug>();
-	bind<StringPlug>();
-	bind<M33fPlug>();
-	bind<M44fPlug>();
-	bind<AtomicBox3fPlug>();
-	bind<AtomicBox2iPlug>();
+	TypedPlugClass<BoolPlug>();
+	TypedPlugClass<StringPlug>();
+	TypedPlugClass<M33fPlug>();
+	TypedPlugClass<M44fPlug>();
+	TypedPlugClass<AtomicBox3fPlug>();
+	TypedPlugClass<AtomicBox2iPlug>();
 }

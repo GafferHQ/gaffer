@@ -39,13 +39,13 @@
 #define GAFFERSCENEUI_SCENEVIEW_H
 
 #include "GafferUI/View3D.h"
-#include "GafferUI/RenderableGadget.h"
 
 #include "GafferScene/ScenePlug.h"
 #include "GafferScene/PathMatcherData.h"
 #include "GafferScene/PathFilter.h"
 
 #include "GafferSceneUI/TypeIds.h"
+#include "GafferSceneUI/SceneGadget.h"
 
 namespace GafferSceneUI
 {
@@ -81,6 +81,8 @@ class SceneView : public GafferUI::View3D
 		void expandSelection( size_t depth = 1 );
 		void collapseSelection();
 
+		virtual void setContext( Gaffer::ContextPtr context );
+
 	protected :
 
 		virtual void contextChanged( const IECore::InternedString &name );
@@ -93,14 +95,13 @@ class SceneView : public GafferUI::View3D
 		GafferScene::PathFilter *hideFilter();
 		const GafferScene::PathFilter *hideFilter() const;
 
-		void selectionChanged( GafferUI::RenderableGadgetPtr renderableGadget );
 		bool keyPress( GafferUI::GadgetPtr gadget, const GafferUI::KeyEvent &event );
 		void transferSelectionToContext();
 		void plugSet( Gaffer::Plug *plug );
 
 		GafferScene::PathMatcherData *expandedPaths();
 		// Returns true if the expansion or selection were modified, false otherwise.
-		bool expandWalk( const std::string &path, size_t depth, GafferScene::PathMatcher &expanded, GafferUI::RenderableGadget::Selection &selected );
+		bool expandWalk( const GafferScene::ScenePlug::ScenePath &path, size_t depth, GafferScene::PathMatcher &expanded, GafferScene::PathMatcher &selected );
 
 		void updateLookThrough();
 
@@ -108,12 +109,16 @@ class SceneView : public GafferUI::View3D
 
 		void baseStateChanged();
 
-		GafferUI::RenderableGadgetPtr m_renderableGadget;
+		SceneGadgetPtr m_sceneGadget;
 
 		class Grid;
 		boost::shared_ptr<Grid> m_grid;
 		class Gnomon;
 		boost::shared_ptr<Gnomon> m_gnomon;
+		class SelectionTool;
+		boost::shared_ptr<SelectionTool> m_selectionTool;
+
+		bool m_framed;
 
 		static size_t g_firstPlugIndex;
 		static ViewDescription<SceneView> g_viewDescription;

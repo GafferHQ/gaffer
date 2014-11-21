@@ -60,16 +60,12 @@ void GafferSceneBindings::bindSceneProcedural()
 			init<
 				ConstScenePlugPtr,
 				const Gaffer::Context *,
-				const ScenePlug::ScenePath &,
-				const PathMatcherData *,
-				size_t
+				const ScenePlug::ScenePath &
 			>(
 				(
 					boost::python::arg( "scenePlug" ),
 					boost::python::arg( "context" ),
-					boost::python::arg( "scenePath" ),
-					boost::python::arg( "pathsToExpand" ) = PathMatcherDataPtr(),
-					boost::python::arg( "minimumExpansionDepth" ) = 0
+					boost::python::arg( "scenePath" )
 				)
 			)
 		)

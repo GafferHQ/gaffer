@@ -55,6 +55,9 @@ class AddNode( Gaffer.ComputeNode ) :
 
 		self.addChild( p3 )
 
+		self.numHashCalls = 0
+		self.numComputeCalls = 0
+
 	def enabledPlug( self ) :
 
 		return self["enabled"]
@@ -83,6 +86,8 @@ class AddNode( Gaffer.ComputeNode ) :
 		self.getChild("op1").hash( h )
 		self.getChild("op2").hash( h )
 
+		self.numHashCalls += 1
+
 	def compute( self, plug, context ) :
 
 		# we're allowing the addition of dynamic output plugs which will also receive the sum
@@ -97,5 +102,7 @@ class AddNode( Gaffer.ComputeNode ) :
 			plug.setValue( self.getChild("op1").getValue() + self.getChild("op2").getValue() )
 		else :
 			plug.setValue( self.getChild("op1").getValue() )
+
+		self.numComputeCalls += 1
 
 IECore.registerRunTimeTyped( AddNode, typeName = "GafferTest::AddNode" )

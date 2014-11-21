@@ -34,47 +34,49 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUIBINDINGS_GADGETBINDING_INL
-#define GAFFERUIBINDINGS_GADGETBINDING_INL
+#ifndef GAFFERBINDINGS_TYPEDPLUGBINDING_INL
+#define GAFFERBINDINGS_TYPEDPLUGBINDING_INL
 
-namespace GafferUIBindings
+#include "IECorePython/ScopedGILRelease.h"
+
+namespace GafferBindings
 {
 
 namespace Detail
 {
 
 template<typename T>
-static void setHighlighted( T &p, bool highlighted )
+static void setValue( T *plug, const typename T::ValueType value )
 {
-	IECorePython::ScopedGILRelease gilRelease;
-	p.T::setHighlighted( highlighted );
-}
-
-template<typename T>
-static Imath::Box3f bound( const T &p )
-{
-	IECorePython::ScopedGILRelease gilRelease;
-	return p.T::bound();
-}
-
-template<typename T>
-static std::string getToolTip( const T &p, const IECore::LineSegment3f &line )
-{
-	IECorePython::ScopedGILRelease gilRelease;
-	return p.T::getToolTip( line );
+	// we use a GIL release here to prevent a lock in the case where this triggers a graph
+	// evaluation which decides to go back into python on another thread:
+	IECorePython::ScopedGILRelease r;
+	plug->setValue( value );
 }
 
 } // namespace Detail
 
 template<typename T, typename TWrapper>
-GadgetClass<T, TWrapper>::GadgetClass( const char *docString )
-	:	GafferBindings::GraphComponentClass<T, TWrapper>( docString )
+TypedPlugClass<T, TWrapper>::TypedPlugClass( const char *docString )
+	:	PlugClass<T, TWrapper>( docString )
 {
-	this->def( "setHighlighted", &Detail::setHighlighted<T> );
-	this->def( "bound", &Detail::bound<T> );
-	this->def( "getToolTip", &Detail::getToolTip<T> );
+	typedef typename T::ValueType V;
+
+	this->def(
+		boost::python::init<const std::string &, Gaffer::Plug::Direction, const V &, unsigned>(
+			(
+				boost::python::arg_( "name" )=Gaffer::GraphComponent::defaultName<T>(),
+				boost::python::arg_( "direction" )=Gaffer::Plug::In,
+				boost::python::arg_( "defaultValue" )=V(),
+				boost::python::arg_( "flags" )=Gaffer::Plug::Default
+			)
+		)
+	);
+	this->def( "defaultValue", &T::defaultValue, boost::python::return_value_policy<boost::python::copy_const_reference>() );
+	this->def( "setValue", &Detail::setValue<T> );
+	this->def( "getValue", &T::getValue, ( boost::python::arg( "_precomputedHash" ) = boost::python::object() ) );
 }
 
-} // namespace GafferUIBindings
+} // namespace GafferBindings
 
-#endif // GAFFERUIBINDINGS_GADGETBINDING_INL
+#endif // GAFFERBINDINGS_PLUGBINDING_INL
