@@ -781,6 +781,12 @@ const GafferScene::PathFilter *SceneView::hideFilter() const
 	return getPreprocessor<Node>()->getChild<PathFilter>( "hideFilter" );
 }
 
+void SceneView::setContext( Gaffer::ContextPtr context )
+{
+	View3D::setContext( context );
+	m_sceneGadget->setContext( context );
+}
+
 void SceneView::contextChanged( const IECore::InternedString &name )
 {
 	if( name.value() == "ui:scene:selectedPaths" )
@@ -806,11 +812,6 @@ void SceneView::contextChanged( const IECore::InternedString &name )
 		// ui context entries shouldn't affect computation.
 		return;
 	}
-
-	/// \todo I think this would be best done elsewhere - it needs
-	/// doing every time SceneView::setContext() is called, but not
-	/// more frequently.
-	m_sceneGadget->setContext( getContext() );
 
 	// the context change might affect the scene itself, so we must
 	// schedule an update.

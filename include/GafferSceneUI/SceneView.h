@@ -81,6 +81,8 @@ class SceneView : public GafferUI::View3D
 		void expandSelection( size_t depth = 1 );
 		void collapseSelection();
 
+		virtual void setContext( Gaffer::ContextPtr context );
+
 	protected :
 
 		virtual void contextChanged( const IECore::InternedString &name );
