@@ -117,7 +117,7 @@ class ScriptProcedural( IECore.ParameterisedProcedural ) :
 			else :
 				self.__scriptNode = Gaffer.ScriptNode()
 				self.__scriptNode["fileName"].setValue( args["fileName"].value )
-				self.__scriptNode.load()
+				self.__scriptNode.load( continueOnError = True )
 				self.__currentFileName = args["fileName"].value
 
 		if self.__scriptNode is None :
