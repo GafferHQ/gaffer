@@ -90,26 +90,48 @@ class Style : public IECore::RunTimeTyped
 			LastText
 		};
 
-		virtual Imath::Box3f characterBound( TextType textType ) const = 0;
-		virtual Imath::Box3f textBound( TextType textType, const std::string &text ) const = 0;
-		virtual void renderText( TextType textType, const std::string &text, State state = NormalState ) const = 0;
-		virtual void renderWrappedText( TextType textType, const std::string &text, const Imath::Box2f &bound, State state = NormalState ) const = 0;
-
-		/// \todo Should all these be taking 3d arguments - no but 3d counterparts might be good.
-		virtual void renderFrame( const Imath::Box2f &frame, float borderWidth, State state = NormalState ) const = 0;
-		virtual void renderNodule( float radius, State state = NormalState ) const = 0;
-		/// The tangents give an indication of which direction is "out" from a node.
-		virtual void renderConnection( const Imath::V3f &srcPosition, const Imath::V3f &srcTangent, const Imath::V3f &dstPosition, const Imath::V3f &dstTangent, State state = NormalState ) const = 0;
-		virtual void renderBackdrop( const Imath::Box2f &box, State state = NormalState ) const = 0;
-		virtual void renderSelectionBox( const Imath::Box2f &box ) const = 0;
-		virtual void renderHorizontalRule( const Imath::V2f &center, float length, State state = NormalState ) const = 0;
-
-		virtual void renderTranslateHandle( int axis, State state = NormalState ) const = 0;
-
+		/// @name General drawing.
+		/// I'm not sure this really belongs in the Style class - perhaps
+		/// it would be better to have some utility drawing methods in IECoreGL?
+		//////////////////////////////////////////////////////////////////////////
+		//@{
 		virtual void renderImage( const Imath::Box2f &box, const IECoreGL::Texture *texture ) const = 0;
 		virtual void renderLine( const IECore::LineSegment3f &line ) const = 0;
 		virtual void renderSolidRectangle( const Imath::Box2f &box ) const = 0;
 		virtual void renderRectangle( const Imath::Box2f &box ) const = 0;
+		//@}
+
+		/// @name Text drawing
+		//////////////////////////////////////////////////////////////////////////
+		//@{
+		virtual Imath::Box3f characterBound( TextType textType ) const = 0;
+		virtual Imath::Box3f textBound( TextType textType, const std::string &text ) const = 0;
+		virtual void renderText( TextType textType, const std::string &text, State state = NormalState ) const = 0;
+		virtual void renderWrappedText( TextType textType, const std::string &text, const Imath::Box2f &bound, State state = NormalState ) const = 0;
+		//@}
+
+		/// @name Generic UI elements
+		//////////////////////////////////////////////////////////////////////////
+		//@{
+		virtual void renderFrame( const Imath::Box2f &frame, float borderWidth, State state = NormalState ) const = 0;
+		virtual void renderSelectionBox( const Imath::Box2f &box ) const = 0;
+		virtual void renderHorizontalRule( const Imath::V2f &center, float length, State state = NormalState ) const = 0;
+		//@}
+
+		/// @name NodeGraph UI elements
+		//////////////////////////////////////////////////////////////////////////
+		//@{
+		virtual void renderNodule( float radius, State state = NormalState ) const = 0;
+		/// The tangents give an indication of which direction is "out" from a node.
+		virtual void renderConnection( const Imath::V3f &srcPosition, const Imath::V3f &srcTangent, const Imath::V3f &dstPosition, const Imath::V3f &dstTangent, State state = NormalState ) const = 0;
+		virtual void renderBackdrop( const Imath::Box2f &box, State state = NormalState ) const = 0;
+		//@}
+
+		/// @name 3D UI elements
+		//////////////////////////////////////////////////////////////////////////
+		//@{
+		virtual void renderTranslateHandle( int axis, State state = NormalState ) const = 0;
+		//@}
 
 		typedef boost::signal<void (Style *)> UnarySignal;
 		/// Emitted when the style has changed in a way which
