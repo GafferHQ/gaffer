@@ -216,6 +216,11 @@ void PathMatcher::clear()
 	m_root = boost::shared_ptr<Node>( new Node );
 }
 
+bool PathMatcher::isEmpty() const
+{
+	return !m_root->terminator && !m_root->ellipsis && m_root->children.empty();
+}
+
 void PathMatcher::paths( std::vector<std::string> &paths ) const
 {
 	pathsWalk( m_root.get(), "/", paths );

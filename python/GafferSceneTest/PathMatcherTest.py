@@ -587,6 +587,7 @@ class PathMatcherTest( unittest.TestCase ) :
 		self.assertEqual( m.paths(), [ "/c/d" ] )
 		self.assertEqual( m.prune( "/c/d" ), True )
 		self.assertEqual( m.paths(), [] )
+		self.assertTrue( m.isEmpty() )
 		self.assertEqual( m.prune( "/c/d" ), False )
 	
 	def testPruneRoot( self ) :
@@ -600,6 +601,30 @@ class PathMatcherTest( unittest.TestCase ) :
 		
 		self.assertEqual( m.prune( "/" ), True )
 		self.assertEqual( m.paths(), [] )
+		self.assertTrue( m.isEmpty() )
+	
+	def testIsEmpty( self ) :
+	
+		m = GafferScene.PathMatcher( [] )
+		self.assertTrue( m.isEmpty() )
 		
+		m.addPath( "/a" )
+		self.assertFalse( m.isEmpty() )
+	
+		m.removePath( "/a" )
+		self.assertTrue( m.isEmpty() )
+	
+		m.addPath( "/..." )
+		self.assertFalse( m.isEmpty() )
+	
+		m.removePath( "/..." )
+		self.assertTrue( m.isEmpty() )
+	
+		m.addPath( "/" )
+		self.assertFalse( m.isEmpty() )
+		
+		m.removePath( "/" )
+		self.assertTrue( m.isEmpty() )
+	
 if __name__ == "__main__":
 	unittest.main()

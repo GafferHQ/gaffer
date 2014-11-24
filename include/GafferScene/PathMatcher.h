@@ -86,6 +86,8 @@ class PathMatcher
 		bool prune( const std::vector<IECore::InternedString> &path );
 
 		void clear();
+		
+		bool isEmpty() const;
 
 		/// Fills the paths container with all the paths held
 		/// within this matcher.
