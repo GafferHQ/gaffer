@@ -73,12 +73,7 @@ struct PathMatcher::Node
 
 	~Node()
 	{
-		ChildMap::iterator it, eIt;
-		for( it = children.begin(), eIt = children.end(); it != eIt; it++ )
-		{
-			delete it->second;
-		}
-		delete ellipsis;
+		clearChildren();
 	}
 
 	ChildMapIterator childIterator( const IECore::InternedString &name )
@@ -175,6 +170,20 @@ struct PathMatcher::Node
 	bool operator != ( const Node &other )
 	{
 		return !( *this == other );
+	}
+
+	bool clearChildren()
+	{
+		const bool result = !children.empty() || ellipsis;
+		ChildMap::iterator it, eIt;
+		for( it = children.begin(), eIt = children.end(); it != eIt; it++ )
+		{
+			delete it->second;
+		}
+		children.clear();
+		delete ellipsis;
+		ellipsis = NULL;
+		return result;
 	}
 
 	bool terminator;
@@ -368,28 +377,43 @@ bool PathMatcher::removePath( const std::string &path )
 {
 	bool result = false;
 	Tokenizer tokenizer( path, boost::char_separator<char>( "/" ) );
-	removeWalk( m_root.get(), tokenizer.begin(), tokenizer.end(), result );
+	removeWalk( m_root.get(), tokenizer.begin(), tokenizer.end(), /* prune = */ false, result );
 	return result;
 }
 
 bool PathMatcher::removePath( const std::vector<IECore::InternedString> &path )
 {
 	bool result = false;
-	removeWalk( m_root.get(), path.begin(), path.end(), result );
+	removeWalk( m_root.get(), path.begin(), path.end(), /* prune = */ false, result );
+	return result;
+}
+
+bool PathMatcher::prune( const std::string &path )
+{
+	bool result = false;
+	removeWalk( m_root.get(), path.begin(), path.end(), /* prune = */ true, result );
+	return result;
+}
+
+bool PathMatcher::prune( const std::vector<IECore::InternedString> &path )
+{
+	bool result = false;
+	removeWalk( m_root.get(), path.begin(), path.end(), /* prune = */ true, result );
 	return result;
 }
 
 template<typename NameIterator>
-void PathMatcher::removeWalk( Node *node, const NameIterator &start, const NameIterator &end, bool &removed )
+void PathMatcher::removeWalk( Node *node, const NameIterator &start, const NameIterator &end, const bool prune, bool &removed )
 {
 	if( start == end )
 	{
 		// we've found the end of the path we wish to remove.
-		if( node->terminator )
+		if( prune )
 		{
-			node->terminator = false;
-			removed = true;
+			removed = node->clearChildren();
 		}
+		removed = removed || node->terminator;
+		node->terminator = false;
 		return;
 	}
 
@@ -415,7 +439,7 @@ void PathMatcher::removeWalk( Node *node, const NameIterator &start, const NameI
 	}
 
 	NameIterator childStart = start; childStart++;
-	removeWalk( childNode, childStart, end, removed );
+	removeWalk( childNode, childStart, end, prune, removed );
 	if( !childNode->terminator && !childNode->ellipsis && !childNode->children.size() )
 	{
 		delete childNode;

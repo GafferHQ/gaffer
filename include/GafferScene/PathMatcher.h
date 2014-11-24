@@ -80,6 +80,11 @@ class PathMatcher
 		bool removePath( const std::string &path );
 		bool removePath( const std::vector<IECore::InternedString> &path );
 
+		/// Removes the specified path and all descendant paths.
+		/// Returns true if something was removed, false otherwise.
+		bool prune( const std::string &path );
+		bool prune( const std::vector<IECore::InternedString> &path );
+
 		void clear();
 
 		/// Fills the paths container with all the paths held
@@ -102,7 +107,7 @@ class PathMatcher
 		template<typename NameIterator>
 		bool addPath( const NameIterator &start, const NameIterator &end );
 		template<typename NameIterator>
-		void removeWalk( Node *node, const NameIterator &start, const NameIterator &end, bool &removed );
+		void removeWalk( Node *node, const NameIterator &start, const NameIterator &end, const bool prune, bool &removed );
 		void pathsWalk( Node *node, const std::string &path, std::vector<std::string> &paths ) const;
 
 		template<typename NameIterator>
