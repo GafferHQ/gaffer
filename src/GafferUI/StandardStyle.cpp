@@ -431,7 +431,7 @@ void StandardStyle::renderTranslateHandle( int axis, State state ) const
 	PushAttrib pushAttrib( GL_ENABLE_BIT | GL_CURRENT_BIT | GL_LINE_BIT );
 
 	glEnable( GL_LINE_SMOOTH );
-	glLineWidth( 2 );
+	glLineWidth( Selector::currentSelector() ? 8 : 2 );
 	glColor( c );
 
 	glBegin( GL_LINES );
