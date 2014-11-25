@@ -50,8 +50,11 @@ using namespace boost::python;
 using namespace GafferBindings;
 using namespace Gaffer;
 
+namespace
+{
+
 template<typename T>
-static std::string maskedCompoundNumericPlugRepr( const T *plug, unsigned flagsMask  )
+std::string maskedCompoundNumericPlugRepr( const T *plug, unsigned flagsMask  )
 {
 	std::string result = Serialisation::classPath( plug ) + "( \"" + plug->getName().string() + "\", ";
 
@@ -91,7 +94,7 @@ static std::string maskedCompoundNumericPlugRepr( const T *plug, unsigned flagsM
 }
 
 template<typename T>
-static std::string compoundNumericPlugRepr( const T *plug )
+std::string compoundNumericPlugRepr( const T *plug )
 {
 	return maskedCompoundNumericPlugRepr( plug, Plug::All );
 }
@@ -131,7 +134,7 @@ class CompoundNumericPlugSerialiser : public CompoundPlugSerialiser
 };
 
 template<typename T>
-static void setValue( T *plug, const typename T::ValueType value )
+void setValue( T *plug, const typename T::ValueType value )
 {
 	// we use a GIL release here to prevent a lock in the case where this triggers a graph
 	// evaluation which decides to go back into python on another thread:
@@ -139,9 +142,17 @@ static void setValue( T *plug, const typename T::ValueType value )
 	plug->setValue( value );
 }
 
+template<typename T>
+typename T::ValueType getValue( const T *plug )
+{
+	// Must release GIL in case computation spawns threads which need
+	// to reenter Python.
+	IECorePython::ScopedGILRelease r;
+	return plug->getValue();
+}
 
 template<typename T>
-static void bind()
+void bind()
 {
 	typedef typename T::ValueType V;
 
@@ -163,7 +174,7 @@ static void bind()
 		.def( "minValue", &T::minValue )
 		.def( "maxValue", &T::maxValue )
 		.def( "setValue", &setValue<T> )
-		.def( "getValue", &T::getValue )
+		.def( "getValue", &getValue<T> )
 		.def( "__repr__", &compoundNumericPlugRepr<T> )
 		.def( "canGang", &T::canGang )
 		.def( "gang", &T::gang )
@@ -174,6 +185,8 @@ static void bind()
 	Serialisation::registerSerialiser( T::staticTypeId(), new CompoundNumericPlugSerialiser<T>() );
 
 }
+
+} // namespace
 
 void GafferBindings::bindCompoundNumericPlug()
 {

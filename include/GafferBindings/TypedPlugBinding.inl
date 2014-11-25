@@ -54,6 +54,15 @@ static void setValue( T *plug, const typename T::ValueType value )
 	plug->setValue( value );
 }
 
+template<typename T>
+static typename T::ValueType getValue( const T *plug, const IECore::MurmurHash *precomputedHash )
+{
+	// Must release GIL in case computation spawns threads which need
+	// to reenter Python.
+	IECorePython::ScopedGILRelease r;
+	return plug->getValue( precomputedHash );
+}
+
 } // namespace Detail
 
 template<typename T, typename TWrapper>
@@ -74,7 +83,7 @@ TypedPlugClass<T, TWrapper>::TypedPlugClass( const char *docString )
 	);
 	this->def( "defaultValue", &T::defaultValue, boost::python::return_value_policy<boost::python::copy_const_reference>() );
 	this->def( "setValue", &Detail::setValue<T> );
-	this->def( "getValue", &T::getValue, ( boost::python::arg( "_precomputedHash" ) = boost::python::object() ) );
+	this->def( "getValue", &Detail::getValue<T>, ( boost::python::arg( "_precomputedHash" ) = boost::python::object() ) );
 }
 
 } // namespace GafferBindings

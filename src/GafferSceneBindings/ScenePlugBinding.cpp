@@ -130,22 +130,91 @@ struct ScenePathFromString
 
 };
 
+Imath::Box3f boundWrapper( const ScenePlug &plug, const ScenePlug::ScenePath &scenePath )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return plug.bound( scenePath );
+}
+
+Imath::M44f transformWrapper( const ScenePlug &plug, const ScenePlug::ScenePath &scenePath )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return plug.transform( scenePath );
+}
+
+Imath::M44f fullTransformWrapper( const ScenePlug &plug, const ScenePlug::ScenePath &scenePath )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return plug.fullTransform( scenePath );
+}
+
 IECore::ObjectPtr objectWrapper( const ScenePlug &plug, const ScenePlug::ScenePath &scenePath, bool copy=true )
 {
+	IECorePython::ScopedGILRelease gilRelease;
 	IECore::ConstObjectPtr o = plug.object( scenePath );
 	return copy ? o->copy() : boost::const_pointer_cast<IECore::Object>( o );
 }
 
 IECore::InternedStringVectorDataPtr childNamesWrapper( const ScenePlug &plug, const ScenePlug::ScenePath &scenePath, bool copy=true )
 {
+	IECorePython::ScopedGILRelease gilRelease;
 	IECore::ConstInternedStringVectorDataPtr n = plug.childNames( scenePath );
 	return copy ? n->copy() : boost::const_pointer_cast<IECore::InternedStringVectorData>( n );
 }
 
 IECore::CompoundObjectPtr attributesWrapper( const ScenePlug &plug, const ScenePlug::ScenePath &scenePath, bool copy=true )
 {
+	IECorePython::ScopedGILRelease gilRelease;
 	IECore::ConstCompoundObjectPtr a = plug.attributes( scenePath );
 	return copy ? a->copy() : boost::const_pointer_cast<IECore::CompoundObject>( a );
+}
+
+IECore::CompoundObjectPtr fullAttributesWrapper( const ScenePlug &plug, const ScenePlug::ScenePath &scenePath )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return plug.fullAttributes( scenePath );
+}
+
+IECore::MurmurHash boundHashWrapper( const ScenePlug &plug, const ScenePlug::ScenePath &scenePath )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return plug.boundHash( scenePath );
+}
+
+IECore::MurmurHash transformHashWrapper( const ScenePlug &plug, const ScenePlug::ScenePath &scenePath )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return plug.transformHash( scenePath );
+}
+
+IECore::MurmurHash fullTransformHashWrapper( const ScenePlug &plug, const ScenePlug::ScenePath &scenePath )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return plug.fullTransformHash( scenePath );
+}
+
+IECore::MurmurHash objectHashWrapper( const ScenePlug &plug, const ScenePlug::ScenePath &scenePath )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return plug.objectHash( scenePath );
+}
+
+IECore::MurmurHash childNamesHashWrapper( const ScenePlug &plug, const ScenePlug::ScenePath &scenePath )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return plug.childNamesHash( scenePath );
+}
+
+IECore::MurmurHash attributesHashWrapper( const ScenePlug &plug, const ScenePlug::ScenePath &scenePath )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return plug.attributesHash( scenePath );
+}
+
+IECore::MurmurHash fullAttributesHashWrapper( const ScenePlug &plug, const ScenePlug::ScenePath &scenePath )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return plug.fullAttributesHash( scenePath );
 }
 
 } // namespace
@@ -163,19 +232,21 @@ void GafferSceneBindings::bindScenePlug()
 			)
 		)
 		// value accessors
-		.def( "bound", &ScenePlug::bound )
-		.def( "transform", &ScenePlug::transform )
-		.def( "fullTransform", &ScenePlug::fullTransform )
+		.def( "bound", &boundWrapper )
+		.def( "transform", &transformWrapper )
+		.def( "fullTransform", &fullTransformWrapper )
 		.def( "object", &objectWrapper, ( boost::python::arg_( "_copy" ) = true ) )
 		.def( "childNames", &childNamesWrapper, ( boost::python::arg_( "_copy" ) = true ) )
 		.def( "attributes", &attributesWrapper, ( boost::python::arg_( "_copy" ) = true ) )
-		.def( "fullAttributes", &ScenePlug::fullAttributes )
+		.def( "fullAttributes", &fullAttributesWrapper )
 		// hash accessors
-		.def( "boundHash", &ScenePlug::boundHash )
-		.def( "transformHash", &ScenePlug::transformHash )
-		.def( "objectHash", &ScenePlug::objectHash )
-		.def( "childNamesHash", &ScenePlug::childNamesHash )
-		.def( "attributesHash", &ScenePlug::attributesHash )
+		.def( "boundHash", &boundHashWrapper )
+		.def( "transformHash", &transformHashWrapper )
+		.def( "fullTransformHash", &fullTransformHashWrapper )
+		.def( "objectHash", &objectHashWrapper )
+		.def( "childNamesHash", &childNamesHashWrapper )
+		.def( "attributesHash", &attributesHashWrapper )
+		.def( "fullAttributesHash", &fullAttributesHashWrapper )
 	;
 
 	ScenePathFromInternedStringVectorData();

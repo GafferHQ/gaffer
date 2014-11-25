@@ -51,9 +51,7 @@ using namespace boost::python;
 using namespace GafferBindings;
 using namespace Gaffer;
 
-namespace GafferBindings
-{
-namespace Detail
+namespace
 {
 
 class SplinePlugSerialiser : public CompoundPlugSerialiser
@@ -73,25 +71,34 @@ class SplinePlugSerialiser : public CompoundPlugSerialiser
 };
 
 template<typename T>
-static CompoundPlugPtr pointPlug( T &s, size_t index )
+CompoundPlugPtr pointPlug( T &s, size_t index )
 {
 	return s.pointPlug( index );
 }
 
 template<typename T>
-static typename T::XPlugType::Ptr pointXPlug( T &s, size_t index )
+typename T::XPlugType::Ptr pointXPlug( T &s, size_t index )
 {
 	return s.pointXPlug( index );
 }
 
 template<typename T>
-static typename T::YPlugType::Ptr pointYPlug( T &s, size_t index )
+typename T::YPlugType::Ptr pointYPlug( T &s, size_t index )
 {
 	return s.pointYPlug( index );
 }
 
 template<typename T>
-static void bind()
+typename T::ValueType getValue( const T &plug )
+{
+	// Must release GIL in case computation spawns threads which need
+	// to reenter Python.
+	IECorePython::ScopedGILRelease r;
+	return plug.getValue();
+}
+
+template<typename T>
+void bind()
 {
 	typedef typename T::ValueType V;
 
@@ -107,7 +114,7 @@ static void bind()
 		)
 		.def( "defaultValue", &T::defaultValue, return_value_policy<copy_const_reference>() )
 		.def( "setValue", &T::setValue )
-		.def( "getValue", &T::getValue )
+		.def( "getValue", &getValue<T> )
 		.def( "numPoints", &T::numPoints )
 		.def( "addPoint", &T::addPoint )
 		.def( "removePoint", &T::removePoint )
@@ -121,12 +128,15 @@ static void bind()
 
 }
 
-} // namespace Detail
+} // namespace
+
+namespace GafferBindings
+{
 
 void bindSplinePlug()
 {
-	Detail::bind<SplineffPlug>();
-	Detail::bind<SplinefColor3fPlug>();
+	bind<SplineffPlug>();
+	bind<SplinefColor3fPlug>();
 }
 
 } // namespace GafferBindings

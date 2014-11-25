@@ -266,5 +266,94 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		self.assertTrue( instancer["out"]["bound"] in dirtiedPlugs )
 		self.assertTrue( instancer["out"]["transform"] in dirtiedPlugs )
 
+	def testPythonExpressionAndGIL( self ) :
+	
+		script = Gaffer.ScriptNode()
+		
+		script["plane"] = GafferScene.Plane()
+		script["plane"]["divisions"].setValue( IECore.V2i( 20 ) )
+		
+		script["sphere"] = GafferScene.Sphere()
+		
+		script["expression"] = Gaffer.Expression()
+		script["expression"]["engine"].setValue( "python" )
+		script["expression"]["expression"].setValue( "parent['sphere']['radius'] = context.getFrame() + float( context['instancer:id'] )" )
+		
+		script["instancer"] = GafferScene.Instancer()
+		script["instancer"]["in"].setInput( script["plane"]["out"] )
+		script["instancer"]["instance"].setInput( script["sphere"]["out"] )
+		script["instancer"]["parent"].setValue( "/plane" )
+		
+		# The Instancer spawns its own threads, so if we don't release the GIL
+		# when invoking it, and an upstream node enters Python, we'll end up
+		# with a deadlock. Test that isn't the case. We increment the frame
+		# between each test to ensure the expression result is not cached and
+		# we do truly enter python.
+		with Gaffer.Context() as c :
+		
+			c["scene:path"] = IECore.InternedStringVectorData( [ "plane" ] )
+			
+			c.setFrame( 1 )
+			script["instancer"]["out"]["globals"].getValue()
+			c.setFrame( 2 )
+			script["instancer"]["out"]["bound"].getValue()
+			c.setFrame( 3 )
+			script["instancer"]["out"]["transform"].getValue()
+			c.setFrame( 4 )
+			script["instancer"]["out"]["object"].getValue()
+			c.setFrame( 5 )
+			script["instancer"]["out"]["attributes"].getValue()
+			c.setFrame( 6 )
+			script["instancer"]["out"]["childNames"].getValue()
+			c.setFrame( 7 )
+			
+			c.setFrame( 101 )
+			script["instancer"]["out"]["globals"].hash()
+			c.setFrame( 102 )
+			script["instancer"]["out"]["bound"].hash()
+			c.setFrame( 103 )
+			script["instancer"]["out"]["transform"].hash()
+			c.setFrame( 104 )
+			script["instancer"]["out"]["object"].hash()
+			c.setFrame( 105 )
+			script["instancer"]["out"]["attributes"].hash()
+			c.setFrame( 106 )
+			script["instancer"]["out"]["childNames"].hash()
+			c.setFrame( 107 )
+			
+			# The same applies for the higher level helper functions on ScenePlug	
+			
+			c.setFrame( 200 )
+			script["instancer"]["out"].bound( "/plane" )
+			c.setFrame( 201 )
+			script["instancer"]["out"].transform( "/plane" )
+			c.setFrame( 202 )
+			script["instancer"]["out"].fullTransform( "/plane" )
+			c.setFrame( 203 )
+			script["instancer"]["out"].attributes( "/plane" )
+			c.setFrame( 204 )
+			script["instancer"]["out"].fullAttributes( "/plane" )
+			c.setFrame( 205 )
+			script["instancer"]["out"].object( "/plane" )
+			c.setFrame( 206 )
+			script["instancer"]["out"].childNames( "/plane" )
+			c.setFrame( 207 )
+
+			c.setFrame( 300 )
+			script["instancer"]["out"].boundHash( "/plane" )
+			c.setFrame( 301 )
+			script["instancer"]["out"].transformHash( "/plane" )
+			c.setFrame( 302 )
+			script["instancer"]["out"].fullTransformHash( "/plane" )
+			c.setFrame( 303 )
+			script["instancer"]["out"].attributesHash( "/plane" )
+			c.setFrame( 304 )
+			script["instancer"]["out"].fullAttributesHash( "/plane" )
+			c.setFrame( 305 )
+			script["instancer"]["out"].objectHash( "/plane" )
+			c.setFrame( 306 )
+			script["instancer"]["out"].childNamesHash( "/plane" )
+			c.setFrame( 307 )
+
 if __name__ == "__main__":
 	unittest.main()
