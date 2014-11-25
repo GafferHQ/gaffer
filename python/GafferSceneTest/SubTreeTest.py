@@ -283,5 +283,21 @@ class SubTreeTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( lightSet.value.paths(), [ "/group/light" ] )
 		self.assertSetsValid( s["out"] )
 
+	def testSetsWithNoLeadingSlash( self ) :
+
+		l = GafferSceneTest.TestLight()
+		g = GafferScene.Group()
+		g["in"].setInput( l["out"] )
+
+		self.assertSetsValid( g["out"] )
+
+		s = GafferScene.SubTree()
+		s["in"].setInput( g["out"] )
+		s["root"].setValue( "group" )
+
+		lightSet = s["out"]["globals"].getValue()["gaffer:sets"]["__lights"]
+		self.assertEqual( lightSet.value.paths(), [ "/light" ] )
+		self.assertSetsValid( s["out"] )
+
 if __name__ == "__main__":
 	unittest.main()
