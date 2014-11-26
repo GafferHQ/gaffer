@@ -212,7 +212,7 @@ class DispatcherWindow( GafferUI.Window ) :
 # PlugValueWidget for execution - this forms the header for the ExecutableNode ui.
 ##################################################################################
 
-class __RequirementPlugValueWidget( GafferUI.PlugValueWidget ) :
+class RequirementPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plug, **kw ) :
 
@@ -418,7 +418,7 @@ GafferUI.PlugValueWidget.registerCreator(
 GafferUI.PlugValueWidget.registerCreator( Gaffer.Dispatcher, "user", None )
 GafferUI.PlugValueWidget.registerCreator( Gaffer.Dispatcher, "framesMode", __FramesModePlugValueWidget )
 GafferUI.PlugValueWidget.registerCreator( Gaffer.Dispatcher, "frameRange", __FrameRangePlugValueWidget )
-GafferUI.PlugValueWidget.registerCreator( Gaffer.ExecutableNode, "requirement", __RequirementPlugValueWidget )
+GafferUI.PlugValueWidget.registerCreator( Gaffer.ExecutableNode, "requirement", RequirementPlugValueWidget )
 GafferUI.PlugValueWidget.registerCreator( Gaffer.ExecutableNode, "dispatcher", GafferUI.CompoundPlugValueWidget, collapsed = None )
 
 GafferUI.Nodule.registerNodule( Gaffer.Dispatcher, fnmatch.translate( "*" ), lambda plug : None )
