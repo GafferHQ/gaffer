@@ -232,9 +232,15 @@ IECore::ConstCompoundObjectPtr SubTree::computeGlobals( const Gaffer::Context *c
 	outputGlobals->members()["gaffer:sets"] = outputSets;
 
 	std::string root = rootPlug()->getValue();
+	
+	// append/prepend slashes if required:
 	if( !root.size() || root[root.size()-1] != '/' )
 	{
 		root += "/";
+	}
+	if( root[0] != '/' )
+	{
+		root = "/" + root;
 	}
 
 	size_t prefixSize = root.size() - 1; // number of characters to remove from front of each declaration
