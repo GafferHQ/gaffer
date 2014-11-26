@@ -396,7 +396,8 @@ bool PathMatcher::removePath( const std::vector<IECore::InternedString> &path )
 bool PathMatcher::prune( const std::string &path )
 {
 	bool result = false;
-	removeWalk( m_root.get(), path.begin(), path.end(), /* prune = */ true, result );
+	Tokenizer tokenizer( path, boost::char_separator<char>( "/" ) );
+	removeWalk( m_root.get(), tokenizer.begin(), tokenizer.end(), /* prune = */ true, result );
 	return result;
 }
 
