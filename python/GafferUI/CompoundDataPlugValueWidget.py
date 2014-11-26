@@ -199,3 +199,28 @@ class _MemberPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 GafferUI.PlugValueWidget.registerType( Gaffer.CompoundDataPlug, CompoundDataPlugValueWidget )
 GafferUI.PlugValueWidget.registerType( Gaffer.CompoundDataPlug.MemberPlug, _MemberPlugValueWidget )
+
+##########################################################################
+# Plug menu
+##########################################################################
+
+def __deletePlug( plug ) :
+
+	with Gaffer.UndoContext( plug.ancestor( Gaffer.ScriptNode ) ) :
+		plug.parent().removeChild( plug )
+
+def __plugPopupMenu( menuDefinition, plugValueWidget ) :
+
+	plug = plugValueWidget.getPlug()
+	memberPlug = plug if isinstance( plug, Gaffer.CompoundDataPlug.MemberPlug ) else None
+	memberPlug = memberPlug if memberPlug is not None else plug.ancestor( Gaffer.CompoundDataPlug.MemberPlug )
+	if memberPlug is None :
+		return
+
+	if not memberPlug.getFlags( Gaffer.Plug.Flags.Dynamic ) :
+		return
+
+	menuDefinition.append( "/DeleteDivider", { "divider" : True } )
+	menuDefinition.append( "/Delete", { "command" : IECore.curry( __deletePlug, memberPlug ), "active" : not plugValueWidget.getReadOnly() } )
+
+__plugPopupMenuConnection = GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugPopupMenu )
