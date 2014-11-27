@@ -631,6 +631,22 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 				"/group/lightGroup2/light",
 			] )
 		)
+	
+	def testSetsWithRootPath( self ) :
+		
+		sph = GafferScene.Sphere()
+		
+		s = GafferScene.Set()
+		s["in"].setInput( sph["out"] )
+		s["name"].setValue( "stuff" )
+		s["paths"].setValue( IECore.StringVectorData(["/", "/sphere"]) )
+		
+		g = GafferScene.Group()
+		g["name"].setValue( "group" )
+		
+		g["in"].setInput( s["out"] )
+		
+		self.assertEqual( set( g["out"]["globals"].getValue()["gaffer:sets"]["stuff"].value.paths() ), set( ["/group", "/group/sphere"] ) )
 
 	def testMakeConnectionAndUndo( self ) :
 

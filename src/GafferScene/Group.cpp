@@ -502,6 +502,12 @@ IECore::ConstCompoundObjectPtr Group::computeGlobals( const Gaffer::Context *con
 			for( vector<string>::const_iterator pIt = inputPaths.begin(), peIt = inputPaths.end(); pIt != peIt; ++pIt )
 			{
 				const string &inputPath = *pIt;
+				if( inputPath == "/" )
+				{
+					outputSet.addPath( std::string( "/" ) + groupName );
+					continue;
+				}
+				
 				const size_t secondSlashPos = inputPath.find( '/', 1 );
 				const std::string inputName( inputPath, 1, secondSlashPos - 1 );
 				const InternedStringData *outputName = forwardMapping->member<InternedStringData>( inputName );
