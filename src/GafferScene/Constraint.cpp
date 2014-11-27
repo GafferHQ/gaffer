@@ -34,8 +34,6 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/tokenizer.hpp"
-
 #include "Gaffer/Context.h"
 
 #include "GafferScene/Constraint.h"
@@ -184,12 +182,6 @@ Imath::M44f Constraint::computeProcessedTransform( const ScenePath &path, const 
 
 void Constraint::tokenizeTargetPath( ScenePath &path ) const
 {
-	/// \todo We really need a plug type which stores a path internally.
-	typedef boost::tokenizer<boost::char_separator<char> > Tokenizer;
 	std::string targetPathAsString = targetPlug()->getValue();
-	Tokenizer tokenizer( targetPathAsString, boost::char_separator<char>( "/" ) );
-	for( Tokenizer::const_iterator it = tokenizer.begin(), eIt = tokenizer.end(); it != eIt; it++ )
-	{
-		path.push_back( *it );
-	}
+	ScenePlug::stringToPath( targetPathAsString, path );
 }
