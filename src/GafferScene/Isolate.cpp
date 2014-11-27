@@ -34,6 +34,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include "boost/algorithm/string/predicate.hpp"
+
 #include "Gaffer/Context.h"
 
 #include "GafferScene/Isolate.h"
@@ -52,6 +54,7 @@ Isolate::Isolate( const std::string &name )
 	:	FilteredSceneProcessor( name, Filter::EveryMatch )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
+	addChild( new StringPlug( "from", Plug::In, "/" ) );
 	addChild( new BoolPlug( "adjustBounds", Plug::In, false ) );
 	
 	// Direct pass-throughs
@@ -64,14 +67,24 @@ Isolate::~Isolate()
 {
 }
 
+Gaffer::StringPlug *Isolate::fromPlug()
+{
+	return getChild<StringPlug>( g_firstPlugIndex );
+}
+
+const Gaffer::StringPlug *Isolate::fromPlug() const
+{
+	return getChild<StringPlug>( g_firstPlugIndex );
+}
+
 Gaffer::BoolPlug *Isolate::adjustBoundsPlug()
 {
-	return getChild<BoolPlug>( g_firstPlugIndex );
+	return getChild<BoolPlug>( g_firstPlugIndex + 1 );
 }
 
 const Gaffer::BoolPlug *Isolate::adjustBoundsPlug() const
 {
-	return getChild<BoolPlug>( g_firstPlugIndex );
+	return getChild<BoolPlug>( g_firstPlugIndex + 1 );
 }
 
 void Isolate::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
@@ -83,7 +96,7 @@ void Isolate::affects( const Gaffer::Plug *input, AffectedPlugsContainer &output
 	{
 		outputs.push_back( outPlug()->getChild<ValuePlug>( input->getName() ) );
 	}
-	else if( input == filterPlug() )
+	else if( input == filterPlug() || input == fromPlug() )
 	{
 		outputs.push_back( outPlug()->childNamesPlug() );
 		outputs.push_back( outPlug()->globalsPlug() );
@@ -96,13 +109,10 @@ void Isolate::affects( const Gaffer::Plug *input, AffectedPlugsContainer &output
 
 void Isolate::hashBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	if( adjustBoundsPlug()->getValue() )
+	if( adjustBoundsPlug()->getValue() && mayPruneChildren( path, filterValue( context ) ) )
 	{
-		if( filterValue( context ) == Filter::DescendantMatch )
-		{
-			h = hashOfTransformedChildBounds( path, outPlug() );
-			return;
-		}
+		h = hashOfTransformedChildBounds( path, outPlug() );
+		return;
 	}
 
 	// pass through
@@ -111,12 +121,9 @@ void Isolate::hashBound( const ScenePath &path, const Gaffer::Context *context, 
 
 Imath::Box3f Isolate::computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	if( adjustBoundsPlug()->getValue() )
+	if( adjustBoundsPlug()->getValue() && mayPruneChildren( path, filterValue( context ) ) )
 	{
-		if( filterValue( context ) == Filter::DescendantMatch )
-		{
-			return unionOfTransformedChildBounds( path, outPlug() );
-		}
+		return unionOfTransformedChildBounds( path, outPlug() );
 	}
 
 	return inPlug()->boundPlug()->getValue();
@@ -127,7 +134,7 @@ void Isolate::hashChildNames( const ScenePath &path, const Gaffer::Context *cont
 	ContextPtr tmpContext = filterContext( context );
 	Context::Scope scopedContext( tmpContext.get() );
 
-	if( filterPlug()->getValue() == Filter::DescendantMatch )
+	if( mayPruneChildren( path, filterPlug()->getValue() ) )
 	{
 		// we might be computing new childnames for this level.
 		FilteredSceneProcessor::hashChildNames( path, context, parent, h );
@@ -146,7 +153,7 @@ IECore::ConstInternedStringVectorDataPtr Isolate::computeChildNames( const Scene
 	ContextPtr tmpContext = filterContext( context );
 	Context::Scope scopedContext( tmpContext.get() );
 
-	if( filterPlug()->getValue() == Filter::DescendantMatch )
+	if( mayPruneChildren( path, filterPlug()->getValue() ) )
 	{
 		// we may need to delete one or more of our children
 		ConstInternedStringVectorDataPtr inputChildNamesData = inPlug()->childNamesPlug()->getValue();
@@ -180,6 +187,7 @@ void Isolate::hashGlobals( const Gaffer::Context *context, const ScenePlug *pare
 {
 	FilteredSceneProcessor::hashGlobals( context, parent, h );
 	inPlug()->globalsPlug()->hash( h );
+	fromPlug()->hash( h );
 
 	// The globals themselves do not depend on the "scene:path"
 	// context entry - the whole point is that they're global.
@@ -215,6 +223,9 @@ IECore::ConstCompoundObjectPtr Isolate::computeGlobals( const Gaffer::Context *c
 	Context::Scope scopedContext( tmpContext.get() );
 	ScenePath path;
 
+	const std::string fromString = fromPlug()->getValue();
+	ScenePlug::ScenePath fromPath; ScenePlug::stringToPath( fromString, fromPath );
+
 	for( CompoundDataMap::const_iterator it = inputSets->readable().begin(), eIt = inputSets->readable().end(); it != eIt; ++it )
 	{
 		/// \todo This could be more efficient if PathMatcher exposed the internal nodes,
@@ -229,11 +240,15 @@ IECore::ConstCompoundObjectPtr Isolate::computeGlobals( const Gaffer::Context *c
 		{
 			path.clear();
 			ScenePlug::stringToPath( *pIt, path );
-
-			tmpContext->set( ScenePlug::scenePathContextName, path );
-			if( filterPlug()->getValue() != Filter::NoMatch )
+			bool prune = false;
+			if( boost::starts_with( path, fromPath ) )
 			{
-				outputSet.addPath( *pIt );
+				tmpContext->set( ScenePlug::scenePathContextName, path );
+				prune = filterPlug()->getValue() == Filter::NoMatch;
+			}
+			if( !prune )
+			{
+				outputSet.addPath( path );
 			}
 		}
 	}
@@ -241,3 +256,14 @@ IECore::ConstCompoundObjectPtr Isolate::computeGlobals( const Gaffer::Context *c
 	return outputGlobals;
 }
 
+bool Isolate::mayPruneChildren( const ScenePath &path, unsigned filterValue ) const
+{
+	const std::string fromString = fromPlug()->getValue();
+	ScenePlug::ScenePath fromPath; ScenePlug::stringToPath( fromString, fromPath );
+	if( !boost::starts_with( path, fromPath ) )
+	{
+		return false;
+	}
+
+	return filterValue == Filter::DescendantMatch;
+}
