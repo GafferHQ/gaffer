@@ -55,7 +55,9 @@ class SubTreeTest( GafferSceneTest.SceneTestCase ) :
 		s = GafferScene.SubTree()
 		s["in"].setInput( a["out"] )
 
-		self.assertSceneValid( s["out"] )
+		# We have to skip the test of built in sets, because our alembic file contains cameras
+		# and alembic doesn't provide a means of flagging them upfront.
+		self.assertSceneValid( s["out"], assertBuiltInSetsComplete = False )
 
 		self.assertScenesEqual( a["out"], s["out"] )
 		self.assertSceneHashesEqual( a["out"], s["out"] )
@@ -96,7 +98,9 @@ class SubTreeTest( GafferSceneTest.SceneTestCase ) :
 		s = GafferScene.SubTree()
 		s["in"].setInput( a["out"] )
 
-		self.assertSceneValid( s["out"] )
+		# We have to skip the test of built in sets, because our alembic file contains cameras
+		# and alembic doesn't provide a means of flagging them upfront.
+		self.assertSceneValid( s["out"], assertBuiltInSetsComplete = False )
 		self.assertPathHashesEqual( a["out"], "/", s["out"], "/" )
 
 	def testDisabled( self ) :
@@ -260,7 +264,9 @@ class SubTreeTest( GafferSceneTest.SceneTestCase ) :
 		s["root"].setValue( "" )
 		s["includeRoot"].setValue( True )
 
-		self.assertSceneValid( s["out"] )
+		# We have to skip the test of built in sets, because our alembic file contains cameras
+		# and alembic doesn't provide a means of flagging them upfront.
+		self.assertSceneValid( s["out"], assertBuiltInSetsComplete = False )
 
 		self.assertScenesEqual( a["out"], s["out"] )
 		self.assertSceneHashesEqual( a["out"], s["out"] )
