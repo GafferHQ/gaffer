@@ -35,10 +35,6 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include <set>
-
-#include "boost/tokenizer.hpp"
-
 #include "Gaffer/Context.h"
 
 #include "GafferScene/SubTree.h"
@@ -279,15 +275,10 @@ IECore::ConstCompoundObjectPtr SubTree::computeGlobals( const Gaffer::Context *c
 
 SceneNode::ScenePath SubTree::sourcePath( const ScenePath &outputPath, bool &createRoot ) const
 {
-	typedef boost::tokenizer<boost::char_separator<char> > Tokenizer;
 	/// \todo We should introduce a plug type which stores its values as a ScenePath directly.
 	string rootAsString = rootPlug()->getValue();
-	Tokenizer rootTokenizer( rootAsString, boost::char_separator<char>( "/" ) );
 	ScenePath result;
-	for( Tokenizer::const_iterator it = rootTokenizer.begin(), eIt = rootTokenizer.end(); it != eIt; it++ )
-	{
-		result.push_back( *it );
-	}
+	ScenePlug::stringToPath( rootAsString, result );
 
 	createRoot = false;
 	if( result.size() && includeRootPlug()->getValue() )
