@@ -1,3 +1,47 @@
+#### UI
+
+- Fixed bug which prevented newly created nodes from being inserted inline in the Node Graph.
+- Added error display to string and numeric plug widgets - typically this is useful when a bad expression has been entered. Previously bad expressions would break the UI.
+- Optimised the 3d view significantly.
+- Fixed UI reordering bug in UIEditor (#847).
+
+#### Apps
+
+- Added ignoreScriptLoadErrors parameter to execute app.
+
+#### Core
+
+- LocalDispatcher now has an option to ignore errors when loading the script (#1084).
+
+#### Scene
+
+- Fixed Grid node GL shader assignment.
+- Fixed bug in Instancer dirty propagation.
+- Fixed SubTree set computation when root path omits the leading slash.
+
+#### API
+
+- Added support for invalid variants to GafferUI._Variant.fromVariant().
+- Added TextWidget setErrored()/getErrored() methods.
+- Added GafferSceneUI::SceneGadget class, for optimised display of scenes in OpenGL.
+- Removed bloat from SceneProcedural - this was being used previously to implement the viewer but is no longer needed.
+- Added ValuePlug::getValue() arguments for when hash is known.
+- Added TypedPlugClass helper to GafferBindings.
+- Improved exceptions thrown from ScriptNode::execute().
+- ScriptProcedural now ignores errors when loading the script.
+- Added PlugLayout.layoutOrder() static method.
+- Fixed deadlocks if computes spawn their own threads.
+- Added GafferScene::PathMatcher::prune() and isEmpty() methods.
+
+#### Incompatibilities
+
+- Added argument to ValuePlug::getObjectValue(), and associated derived class getValue() calls. Source compatibility is maintained, but binary compatibility is not.
+- View::setContext() is now virtual.
+
+#### Build
+
+- Requires Cortex 9.0.0-a10
+
 # 0.5.0.1
 
 #### Scene
