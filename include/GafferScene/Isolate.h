@@ -52,6 +52,9 @@ class Isolate : public FilteredSceneProcessor
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::Isolate, IsolateTypeId, FilteredSceneProcessor );
 
+		Gaffer::StringPlug *fromPlug();
+		const Gaffer::StringPlug *fromPlug() const;
+
 		Gaffer::BoolPlug *adjustBoundsPlug();
 		const Gaffer::BoolPlug *adjustBoundsPlug() const;
 
@@ -68,6 +71,8 @@ class Isolate : public FilteredSceneProcessor
 		virtual IECore::ConstCompoundObjectPtr computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const;
 
 	private :
+
+		bool mayPruneChildren( const ScenePath &path, unsigned filterValue ) const;
 
 		static size_t g_firstPlugIndex;
 

@@ -84,7 +84,9 @@ class AlembicSourceTest( GafferSceneTest.SceneTestCase ) :
 		a = GafferScene.AlembicSource()
 		a["fileName"].setValue( os.path.dirname( __file__ ) + "/alembicFiles/animatedCube.abc" )
 
-		self.assertSceneValid( a["out"] )
+		# We have to skip the test of built in sets, because our alembic file contains cameras
+		# and alembic doesn't provide a means of flagging them upfront.
+		self.assertSceneValid( a["out"], assertBuiltInSetsComplete = False )
 
 		b = IECoreAlembic.AlembicInput( os.path.dirname( __file__ ) + "/alembicFiles/animatedCube.abc" )
 		c = b.child( "pCube1" ).child( "pCubeShape1" )
@@ -129,7 +131,9 @@ class AlembicSourceTest( GafferSceneTest.SceneTestCase ) :
 
 		a["refreshCount"].setValue( a["refreshCount"].getValue() + 1 )
 
-		self.assertSceneValid( a["out"] )
+		# We have to skip the test of built in sets, because our alembic file contains cameras
+		# and alembic doesn't provide a means of flagging them upfront.
+		self.assertSceneValid( a["out"], assertBuiltInSetsComplete = False )
 		self.assertEqual( a["out"].childNames( "/" ), IECore.InternedStringVectorData( [ "front", "pCube1", "persp", "side", "top" ] ) )
 
 	def testEmptyFileName( self ) :
