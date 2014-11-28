@@ -363,11 +363,18 @@ IECore::MurmurHash ScenePlug::childNamesHash( const ScenePath &scenePath ) const
 
 void ScenePlug::stringToPath( const std::string &s, ScenePlug::ScenePath &path )
 {
-	typedef boost::tokenizer<boost::char_separator<char> > Tokenizer;
-	Tokenizer tokenizer( s, boost::char_separator<char>( "/" ) );
-	for( Tokenizer::const_iterator it = tokenizer.begin(), eIt = tokenizer.end(); it != eIt; it++ )
+	path.clear();
+	size_t index = 0, size = s.size();
+	while( index < size )
 	{
-		path.push_back( *it );
+		const size_t prevIndex = index;
+		index = s.find( '/', index );
+		index = index == std::string::npos ? size : index;
+		if( index > prevIndex )
+		{
+			path.push_back( IECore::InternedString( s.c_str() + prevIndex, index - prevIndex ) );
+		}
+		index++;
 	}
 }
 
