@@ -1,8 +1,12 @@
 #!/bin/bash
 
-BUILD_DIR=$HOME'/publicGafferBuild/builds/gaffer-${GAFFER_MAJOR_VERSION}.${GAFFER_MINOR_VERSION}.${GAFFER_PATCH_VERSION}-${GAFFER_PLATFORM}'
-INSTALL_DIR=$HOME'/publicGafferBuild/packages/gaffer-${GAFFER_MAJOR_VERSION}.${GAFFER_MINOR_VERSION}.${GAFFER_PATCH_VERSION}-${GAFFER_PLATFORM}'
-DEPENDENCIES_INSTALL_DIR=$HOME'/publicGafferBuild/packages/gafferDependencies-${GAFFER_MAJOR_VERSION}.${GAFFER_MINOR_VERSION}.${GAFFER_PATCH_VERSION}-${GAFFER_PLATFORM}'
+# This script will build the whole of Gaffer from scratch including dependencies.
+# Nowadays we just use it for packaging prebuilt dependencies, and use a separate
+# script to automate the build and release of Gaffer itself.
+
+BUILD_DIR=$HOME'/publicGafferBuild/builds/gaffer-${GAFFER_MILESTONE_VERSION}.${GAFFER_MAJOR_VERSION}.${GAFFER_MINOR_VERSION}.${GAFFER_PATCH_VERSION}-${GAFFER_PLATFORM}'
+INSTALL_DIR=$HOME'/publicGafferBuild/packages/gaffer-${GAFFER_MILESTONE_VERSION}.${GAFFER_MAJOR_VERSION}.${GAFFER_MINOR_VERSION}.${GAFFER_PATCH_VERSION}-${GAFFER_PLATFORM}'
+DEPENDENCIES_INSTALL_DIR=$HOME'/publicGafferBuild/packages/gafferDependencies-${GAFFER_MILESTONE_VERSION}.${GAFFER_MAJOR_VERSION}.${GAFFER_MINOR_VERSION}.${GAFFER_PATCH_VERSION}-${GAFFER_PLATFORM}'
 
 DEPENDENCIES_SRC_DIR=$HOME'/publicGafferBuild/gafferDependenciesSource-0.89.0'
 DOXYGEN='/software/apps/doxygen/1.8.4/cent6.x86_64/bin/doxygen'
