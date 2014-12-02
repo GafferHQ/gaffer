@@ -186,6 +186,22 @@ class ScenePlugTest( unittest.TestCase ) :
 		p = GafferScene.Plane()
 		self.assertRaises( Exception, p["out"].transform, None )
 
+	def testStringToPath( self ) :
+
+		self.assertEqual( GafferScene.ScenePlug.stringToPath( "" ), IECore.InternedStringVectorData() )
+		self.assertEqual( GafferScene.ScenePlug.stringToPath( "/" ), IECore.InternedStringVectorData() )
+		self.assertEqual( GafferScene.ScenePlug.stringToPath( "/a" ), IECore.InternedStringVectorData( [ "a" ] ) )
+		self.assertEqual( GafferScene.ScenePlug.stringToPath( "a" ), IECore.InternedStringVectorData( [ "a" ] ) )
+		self.assertEqual( GafferScene.ScenePlug.stringToPath( "/a/b" ), IECore.InternedStringVectorData( [ "a", "b" ] ) )
+		self.assertEqual( GafferScene.ScenePlug.stringToPath( "/a/b/" ), IECore.InternedStringVectorData( [ "a", "b" ] ) )
+		self.assertEqual( GafferScene.ScenePlug.stringToPath( "//a//b//" ), IECore.InternedStringVectorData( [ "a", "b" ] ) )
+		self.assertEqual( GafferScene.ScenePlug.stringToPath( "/foo/bar/" ), IECore.InternedStringVectorData( [ "foo", "bar" ] ) )
+		self.assertEqual( GafferScene.ScenePlug.stringToPath( "foo/bar/" ), IECore.InternedStringVectorData( [ "foo", "bar" ] ) )
+
+	def testManyStringToPathCalls( self ) :
+
+		GafferSceneTest.testManyStringToPathCalls()
+
 if __name__ == "__main__":
 	unittest.main()
 

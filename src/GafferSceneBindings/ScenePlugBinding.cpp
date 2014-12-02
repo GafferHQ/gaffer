@@ -217,6 +217,13 @@ IECore::MurmurHash fullAttributesHashWrapper( const ScenePlug &plug, const Scene
 	return plug.fullAttributesHash( scenePath );
 }
 
+IECore::InternedStringVectorDataPtr stringToPathWrapper( const char *s )
+{
+	IECore::InternedStringVectorDataPtr p = new IECore::InternedStringVectorData;
+	ScenePlug::stringToPath( s, p->writable() );
+	return p;
+}
+
 } // namespace
 
 void GafferSceneBindings::bindScenePlug()
@@ -247,7 +254,12 @@ void GafferSceneBindings::bindScenePlug()
 		.def( "childNamesHash", &childNamesHashWrapper )
 		.def( "attributesHash", &attributesHashWrapper )
 		.def( "fullAttributesHash", &fullAttributesHashWrapper )
-	;
+		// string utilities
+		.def( "stringToPath", &stringToPathWrapper )
+		.staticmethod( "stringToPath" )
+		.def( "pathToString", &ScenePlug::pathToString )
+		.staticmethod( "pathToString" )
+;
 
 	ScenePathFromInternedStringVectorData();
 	ScenePathFromString();

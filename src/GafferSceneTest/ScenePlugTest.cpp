@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,35 +34,25 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#include "IECore/Timer.h"
 
-#include "IECorePython/ScopedGILRelease.h"
+#include "GafferScene/ScenePlug.h"
 
-#include "GafferBindings/DependencyNodeBinding.h"
-
-#include "GafferSceneTest/CompoundObjectSource.h"
-#include "GafferSceneTest/TraverseScene.h"
-#include "GafferSceneTest/TestShader.h"
-#include "GafferSceneTest/TestLight.h"
 #include "GafferSceneTest/ScenePlugTest.h"
 
-using namespace boost::python;
-using namespace GafferSceneTest;
+using namespace GafferScene;
 
-static void traverseSceneWrapper( GafferScene::ScenePlug *scenePlug, Gaffer::Context *context )
+void GafferSceneTest::testManyStringToPathCalls()
 {
-	IECorePython::ScopedGILRelease gilRelease;
-	traverseScene( scenePlug, context );
-}
+	std::string s = "/i/am/a/fairly/long/string/for/testing/string/to/path";
+	ScenePlug::ScenePath p;
 
-BOOST_PYTHON_MODULE( _GafferSceneTest )
-{
+	IECore::Timer t;
+	for( int i = 0; i < 100000; ++i )
+	{
+		ScenePlug::stringToPath( s, p );
+	}
 
-	GafferBindings::DependencyNodeClass<CompoundObjectSource>();
-	GafferBindings::NodeClass<TestShader>();
-	GafferBindings::NodeClass<TestLight>();
-
-	def( "traverseScene", &traverseSceneWrapper );
-	def( "testManyStringToPathCalls", &testManyStringToPathCalls );
-
+	// Uncomment to get timing information.
+	//std::cerr << t.stop() << std::endl;
 }
