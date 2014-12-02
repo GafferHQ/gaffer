@@ -88,9 +88,9 @@ options.Add(
 )
 
 options.Add(
-        "LINKFLAGS",
-        "The extra flags to pass to the C++ linker during compilation.",
-        "",
+	"LINKFLAGS",
+	"The extra flags to pass to the C++ linker during compilation.",
+	"",
 )
 
 options.Add(
@@ -343,6 +343,24 @@ options.Add(
 )
 
 options.Add(
+	"APPLESEED_INCLUDE_PATH",
+	"The path to the appleseed include directory. Used to build Gafferseed",
+	"/usr/local/appleseed/include",
+)
+
+options.Add(
+	"APPLESEED_LIB_PATH",
+	"The path to the appleseed lib directory. Used to build Gafferseed",
+	"/usr/local/appleseed/lib",
+)
+
+options.Add(
+	"APPLESEED_BIN_PATH",
+	"The path to the appleseed bin directory. Used to build Gafferseed",
+	"/usr/local/appleseed/bin",
+)
+
+options.Add(
 	BoolVariable( "BUILD_DEPENDENCY_GL", "Set this to build PyOpenGL.", "$BUILD_DEPENDENCIES" )
 )
 
@@ -490,15 +508,15 @@ options.Add(
 )
 
 options.Add(
-       "DOXYGEN",
-       "Where to find the doxygen binary",
-       "doxygen",
+	"DOXYGEN",
+	"Where to find the doxygen binary",
+	"doxygen",
 )
 
 options.Add(
-       "INKSCAPE",
-       "Where to find the inkscape binary",
-       "inkscape",
+	"INKSCAPE",
+	"Where to find the inkscape binary",
+	"inkscape",
 )
 
 ###############################################################################################
@@ -1048,6 +1066,24 @@ libraries = {
 		"requiredOptions" : [ "OSL_SRC_DIR" ],
 	},
 
+	"GafferAppleseed" : {
+		"envAppends" : {
+			"CPPPATH" : [ "$APPLESEED_INCLUDE_PATH" ],
+			"LIBPATH" : [ "$APPLESEED_LIB_PATH" ],
+			"LIBS" : [ "Gaffer", "GafferScene", "appleseed", "IECoreAppleseed$CORTEX_LIB_SUFFIX" ],
+		},
+		"pythonEnvAppends" : {
+			"CPPPATH" : [ "$APPLESEED_INCLUDE_PATH" ],
+			"LIBPATH" : [ "$APPLESEED_LIB_PATH" ],
+			"LIBS" : [ "Gaffer", "GafferScene", "GafferBindings", "GafferAppleseed" ],
+		},
+		"requiredOptions" : [ "APPLESEED_INCLUDE_PATH", "APPLESEED_LIB_PATH", "APPLESEED_BIN_PATH" ],
+	},
+
+	"GafferAppleseedTest" : {},
+
+	"GafferAppleseedUI" : {},
+
 	"apps" : {
 		"additionalFiles" : glob.glob( "apps/*/*-1.py" ),
 	},
@@ -1516,6 +1552,7 @@ dependenciesManifest = [
 
 	"renderMan",
 	"arnold",
+	"appleseed",
 
 ]
 
