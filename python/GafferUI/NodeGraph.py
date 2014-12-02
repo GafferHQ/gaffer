@@ -289,12 +289,13 @@ class NodeGraph( GafferUI.EditorWidget ) :
 		# generalisation.
 		elif event.key == "Down" :
 			selection = self.scriptNode().selection()
-			if selection.size() and isinstance( selection[0], Gaffer.Box ) :
-				self.graphGadget().setRoot( selection[0] )
-				return True
+			if selection.size() :
+				if isinstance( selection[0], Gaffer.Box ) or event.modifiers == event.modifiers.Shift | event.modifiers.Control :
+					self.graphGadget().setRoot( selection[0] )
+					return True
 		elif event.key == "Up" :
 			root = self.graphGadget().getRoot()
-			if isinstance( root, Gaffer.Box ) :
+			if not isinstance( root, Gaffer.ScriptNode ) :
 				self.graphGadget().setRoot( root.parent() )
 				return True
 		elif event.key == "Tab" :
