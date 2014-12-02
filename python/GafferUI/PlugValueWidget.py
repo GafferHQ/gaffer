@@ -221,11 +221,10 @@ class PlugValueWidget( GafferUI.Widget ) :
 				}
 			)
 
-		userDefault = Gaffer.Metadata.plugValue( self.getPlug(), "userDefault" )
-		if userDefault is not None and self.getPlug().direction() == Gaffer.Plug.Direction.In :
+		if Gaffer.NodeAlgo.hasUserDefault( self.getPlug() ) and self.getPlug().direction() == Gaffer.Plug.Direction.In :
 			menuDefinition.append(
 				"/User Default", {
-					"command" : IECore.curry( Gaffer.WeakMethod( self.__setValue ), userDefault ),
+					"command" : Gaffer.WeakMethod( self.__applyUserDefault ),
 					"active" : self._editable()
 				}
 			)
@@ -431,6 +430,11 @@ class PlugValueWidget( GafferUI.Widget ) :
 
 		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
 			self.getPlug().setInput( None )
+
+	def __applyUserDefault( self ) :
+
+		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
+			Gaffer.NodeAlgo.applyUserDefault( self.getPlug() )
 
 	# drag and drop stuff
 
