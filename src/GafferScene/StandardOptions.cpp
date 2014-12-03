@@ -53,7 +53,7 @@ StandardOptions::StandardOptions( const std::string &name )
 	options->addOptionalMember( "render:resolution", new IECore::V2iData( Imath::V2i( 1024, 778 ) ), "renderResolution", Plug::Default, false );
 	options->addOptionalMember( "render:pixelAspectRatio", new IECore::FloatData( 1.0f ), "pixelAspectRatio", Plug::Default, false );
 	options->addOptionalMember( "render:resolutionMultiplier", new IECore::FloatData( 1.0f ), "resolutionMultiplier", Plug::Default, false );
-	options->addOptionalMember( "render:cropWindow", new IECore::Box2fData( Imath::Box2f( Imath::V2f( 0 ), Imath::V2f( 1 ) ) ), "renderCropWindow", Plug::Default, false );
+	options->addOptionalMember( "render:cropWindow", new Box2fPlug( "value", Plug::In, Imath::Box2f( Imath::V2f( 0 ), Imath::V2f( 1 ) ), Imath::V2f( 0 ), Imath::V2f( 1 ) ), "renderCropWindow", false );
 
 	options->addOptionalMember( "render:overscan", new IECore::BoolData( false ), "overscan", Plug::Default, false );
 	options->addOptionalMember( "render:overscanTop", new FloatPlug( "value", Plug::In, 0.1f, 0.0f, 1.0f ), "overscanTop", false );
