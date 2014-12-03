@@ -47,6 +47,7 @@ namespace IECore
 {
 
 IE_CORE_FORWARDDECLARE( Transform )
+IE_CORE_FORWARDDECLARE( Camera )
 
 } // namespace IECore
 
@@ -73,6 +74,13 @@ Imath::V2f shutter( const IECore::CompoundObject *globals );
 /// Calculates the full transform for the specified location in the scene, sampling motion according to the attributes at that
 /// location if motionBlur is true.
 IECore::TransformPtr transform( const ScenePlug *scene, const ScenePlug::ScenePath &path, const Imath::V2f &shutter, bool motionBlur );
+
+/// Returns the primary render camera, with all globals settings such as
+/// crop, resolution, overscan etc applied as they would be for rendering.
+/// The globals may be passed if they are available, if not they will be computed.
+IECore::CameraPtr camera( const ScenePlug *scene, const IECore::CompoundObject *globals = NULL );
+/// As above, but choosing a specific camera rather than the primary one.
+IECore::CameraPtr camera( const ScenePlug *scene, const ScenePlug::ScenePath &cameraPath, const IECore::CompoundObject *globals = NULL );
 
 } // namespace GafferScene
 
