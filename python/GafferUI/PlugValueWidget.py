@@ -221,6 +221,14 @@ class PlugValueWidget( GafferUI.Widget ) :
 				}
 			)
 
+		if Gaffer.NodeAlgo.hasUserDefault( self.getPlug() ) and self.getPlug().direction() == Gaffer.Plug.Direction.In :
+			menuDefinition.append(
+				"/User Default", {
+					"command" : Gaffer.WeakMethod( self.__applyUserDefault ),
+					"active" : self._editable()
+				}
+			)
+		
 		self.popupMenuSignal()( menuDefinition, self )
 
 		return menuDefinition
@@ -422,6 +430,11 @@ class PlugValueWidget( GafferUI.Widget ) :
 
 		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
 			self.getPlug().setInput( None )
+
+	def __applyUserDefault( self ) :
+
+		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
+			Gaffer.NodeAlgo.applyUserDefault( self.getPlug() )
 
 	# drag and drop stuff
 

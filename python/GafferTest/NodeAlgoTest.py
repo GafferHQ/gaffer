@@ -46,7 +46,9 @@ class NodeAlgoTest( GafferTest.TestCase ) :
 		node = GafferTest.AddNode()
 		
 		self.assertEqual( node["op1"].getValue(), 0 )
+		self.assertFalse( Gaffer.NodeAlgo.hasUserDefault( node["op1"] ) )
 		Gaffer.Metadata.registerPlugValue( GafferTest.AddNode.staticTypeId(), "op1", "userDefault", IECore.IntData( 7 ) )
+		self.assertTrue( Gaffer.NodeAlgo.hasUserDefault( node["op1"] ) )
 		Gaffer.NodeAlgo.applyUserDefaults( node )
 		self.assertEqual( node["op1"].getValue(), 7 )
 		
@@ -56,9 +58,15 @@ class NodeAlgoTest( GafferTest.TestCase ) :
 		Gaffer.NodeAlgo.applyUserDefaults( node2 )
 		self.assertEqual( node2["op1"].getValue(), 7 )
 		
+		# they can also be applied to the plug directly
+		node2["op1"].setValue( 1 )
+		Gaffer.NodeAlgo.applyUserDefault( node2["op1"] )
+		self.assertEqual( node2["op1"].getValue(), 7 )
+		
 		# the userDefault can be unregistered by overriding with None
 		node3 = GafferTest.AddNode()
 		Gaffer.Metadata.registerPlugValue( GafferTest.AddNode.staticTypeId(), "op1", "userDefault", None )
+		self.assertFalse( Gaffer.NodeAlgo.hasUserDefault( node3["op1"] ) )
 		Gaffer.NodeAlgo.applyUserDefaults( node3 )
 		self.assertEqual( node3["op1"].getValue(), 0 )
 	

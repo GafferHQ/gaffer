@@ -45,6 +45,14 @@ def applyUserDefaults( nodeOrNodes ) :
 	else :
 		__applyUserDefaults( nodeOrNodes )
 
+def hasUserDefault( plug ) :
+	
+	return Gaffer.Metadata.plugValue( plug, "userDefault" ) is not None
+
+def applyUserDefault( plug ) :
+	
+	__applyUserDefaults( plug )
+
 def __applyUserDefaults( graphComponent ) :
 	
 	if isinstance( graphComponent, Gaffer.Plug ) :
