@@ -84,6 +84,8 @@ class View : public Gaffer::Node
 		/// additional work, but they _must_ call the base
 		/// class implementation.
 		virtual void setContext( Gaffer::ContextPtr context );
+		/// Signal emitted by setContext().
+		UnarySignal &contextChangedSignal();
 
 		/// Subclasses are responsible for presenting their content in this viewport.
 		ViewportGadget *viewportGadget();
@@ -177,6 +179,7 @@ class View : public Gaffer::Node
 
 		ViewportGadgetPtr m_viewportGadget;
 		Gaffer::ContextPtr m_context;
+		UnarySignal m_contextChangedSignal;
 		UnarySignal m_updateRequestSignal;
 		boost::signals::scoped_connection m_contextChangedConnection;
 		boost::signals::scoped_connection m_preprocessorPlugDirtiedConnection;

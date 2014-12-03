@@ -79,8 +79,18 @@ const Gaffer::Context *View::getContext() const
 
 void View::setContext( Gaffer::ContextPtr context )
 {
+	if( context == m_context )
+	{
+		return;
+	}
 	m_context = context;
 	m_contextChangedConnection = m_context->changedSignal().connect( boost::bind( &View::contextChanged, this, ::_2 ) );
+	contextChangedSignal()( this );
+}
+
+View::UnarySignal &View::contextChangedSignal()
+{
+	return m_contextChangedSignal;
 }
 
 ViewportGadget *View::viewportGadget()
