@@ -202,6 +202,7 @@ class Viewer( GafferUI.NodeSetEditor ) :
 					"checkBox" : tool["active"].getValue(),
 					"active" : not tool["active"].getValue(),
 					"command" : IECore.curry( Gaffer.WeakMethod( self.__activateTool ), tool ),
+					"description" : self.__toolDescription( tool )
 				}
 			)
 
@@ -215,6 +216,17 @@ class Viewer( GafferUI.NodeSetEditor ) :
 		iconName = tool.typeName().replace( ":", "" )
 		iconName = iconName[:1].lower() + iconName[1:] + ".png"
 		self.__toolMenuButton.setImage( iconName )
+
+		self.__toolMenuButton.setToolTip( self.__toolDescription( tool ) )
+
+	def __toolDescription( self, tool ) :
+
+		result = tool.getName()
+		description = Gaffer.Metadata.nodeDescription( tool )
+		if description :
+			result += "\n\n" + IECore.StringUtil.wrap( description, 80 )
+
+		return result
 
 GafferUI.EditorWidget.registerType( "Viewer", Viewer )
 
