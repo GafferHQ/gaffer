@@ -37,6 +37,8 @@
 #include "tbb/spin_mutex.h"
 #include "tbb/task.h"
 
+#include "IECore/MatrixMotionTransform.h"
+
 #include "Gaffer/Context.h"
 
 #include "GafferScene/SceneAlgo.h"
@@ -45,6 +47,7 @@
 #include "GafferScene/PathMatcher.h"
 
 using namespace std;
+using namespace Imath;
 using namespace IECore;
 using namespace Gaffer;
 using namespace GafferScene;
@@ -170,4 +173,55 @@ void GafferScene::matchingPaths( const Gaffer::IntPlug *filterPlug, const SceneP
 	MatchingPathsTask::PathMatcherMutex mutex;
 	MatchingPathsTask *task = new( tbb::task::allocate_root() ) MatchingPathsTask( filterPlug, scene, context.get(), mutex, paths );
 	tbb::task::spawn_root_and_wait( *task );
+}
+
+Imath::V2f GafferScene::shutter( const IECore::CompoundObject *globals )
+{
+	const BoolData *cameraBlurData = globals->member<BoolData>( "option:render:cameraBlur" );
+	const bool cameraBlur = cameraBlurData ? cameraBlurData->readable() : false;
+
+	const BoolData *transformBlurData = globals->member<BoolData>( "option:render:transformBlur" );
+	const bool transformBlur = transformBlurData ? transformBlurData->readable() : false;
+
+	const BoolData *deformationBlurData = globals->member<BoolData>( "option:render:deformationBlur" );
+	const bool deformationBlur = deformationBlurData ? deformationBlurData->readable() : false;
+
+	V2f shutter( Context::current()->getFrame() );
+	if( cameraBlur || transformBlur || deformationBlur )
+	{
+		const V2fData *shutterData = globals->member<V2fData>( "option:render:shutter" );
+		const V2f relativeShutter = shutterData ? shutterData->readable() : V2f( -0.25, 0.25 );
+		shutter += relativeShutter;
+	}
+
+	return shutter;
+}
+
+IECore::TransformPtr GafferScene::transform( const ScenePlug *scene, const ScenePlug::ScenePath &path, const Imath::V2f &shutter, bool motionBlur )
+{
+	int numSamples = 1;
+	if( motionBlur )
+	{
+		ConstCompoundObjectPtr attributes = scene->fullAttributes( path );
+		const IntData *transformBlurSegmentsData = attributes->member<IntData>( "gaffer:transformBlurSegments" );
+		numSamples = transformBlurSegmentsData ? transformBlurSegmentsData->readable() + 1 : 2;
+
+		const BoolData *transformBlurData = attributes->member<BoolData>( "gaffer:transformBlur" );
+		if( transformBlurData && !transformBlurData->readable() )
+		{
+			numSamples = 1;
+		}
+	}
+
+	MatrixMotionTransformPtr result = new MatrixMotionTransform();
+	ContextPtr transformContext = new Context( *Context::current(), Context::Borrowed );
+	Context::Scope scopedContext( transformContext.get() );
+	for( int i = 0; i < numSamples; i++ )
+	{
+		float frame = lerp( shutter[0], shutter[1], (float)i / std::max( 1, numSamples - 1 ) );
+		transformContext->setFrame( frame );
+		result->snapshots()[frame] = scene->fullTransform( path );
+	}
+
+	return result;
 }
