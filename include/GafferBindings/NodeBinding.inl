@@ -67,6 +67,12 @@ NodeClass<T, TWrapper>::NodeClass( const char *docString )
 	Detail::defNodeConstructor( *this );
 }
 
+template<typename T, typename TWrapper>
+NodeClass<T, TWrapper>::NodeClass( const char *docString, boost::python::no_init_t )
+	:	GraphComponentClass<T, TWrapper>( docString )
+{
+}
+
 } // namespace GafferBindings
 
 #endif // GAFFERBINDINGS_NODEBINDING_INL
