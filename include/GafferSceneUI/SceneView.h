@@ -66,12 +66,6 @@ class SceneView : public GafferUI::View3D
 		Gaffer::CompoundPlug *lookThroughPlug();
 		const Gaffer::CompoundPlug *lookThroughPlug() const;
 
-		Gaffer::BoolPlug *lookThroughEnabledPlug();
-		const Gaffer::BoolPlug *lookThroughEnabledPlug() const;
-
-		Gaffer::StringPlug *lookThroughCameraPlug();
-		const Gaffer::StringPlug *lookThroughCameraPlug() const;
-
 		Gaffer::CompoundPlug *gridPlug();
 		const Gaffer::CompoundPlug *gridPlug() const;
 
@@ -83,10 +77,17 @@ class SceneView : public GafferUI::View3D
 
 		virtual void setContext( Gaffer::ContextPtr context );
 
+		/// If the view is locked to a particular camera,
+		/// this returns the bound of the resolution gate
+		/// in raster space - this can be useful when
+		/// drawing additional overlays. If the view is not
+		/// locked to a particular camera then returns an
+		/// empty bound.
+		const Imath::Box2f &resolutionGate() const;
+
 	protected :
 
 		virtual void contextChanged( const IECore::InternedString &name );
-		virtual void update();
 		virtual Imath::Box3f framingBound() const;
 
 	private :
@@ -103,20 +104,18 @@ class SceneView : public GafferUI::View3D
 		// Returns true if the expansion or selection were modified, false otherwise.
 		bool expandWalk( const GafferScene::ScenePlug::ScenePath &path, size_t depth, GafferScene::PathMatcher &expanded, GafferScene::PathMatcher &selected );
 
-		void updateLookThrough();
-
 		boost::signals::scoped_connection m_selectionChangedConnection;
 
 		void baseStateChanged();
 
 		SceneGadgetPtr m_sceneGadget;
 
+		class LookThrough;
+		boost::shared_ptr<LookThrough> m_lookThrough;
 		class Grid;
 		boost::shared_ptr<Grid> m_grid;
 		class Gnomon;
 		boost::shared_ptr<Gnomon> m_gnomon;
-
-		bool m_framed;
 
 		static size_t g_firstPlugIndex;
 		static ViewDescription<SceneView> g_viewDescription;
