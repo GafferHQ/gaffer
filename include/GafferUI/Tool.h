@@ -103,7 +103,6 @@ class Tool : public Gaffer::Node
 	private :
 
 		View *m_view;
-		bool m_active;
 
 		static size_t g_firstPlugIndex;
 
