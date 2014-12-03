@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,21 +34,66 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENEUI_TYPEIDS_H
-#define GAFFERSCENEUI_TYPEIDS_H
+#ifndef GAFFERSCENEUI_CROPWINDOWTOOL_H
+#define GAFFERSCENEUI_CROPWINDOWTOOL_H
+
+#include "Gaffer/CompoundDataPlug.h"
+
+#include "GafferUI/Tool.h"
+#include "GafferUI/DragDropEvent.h"
+
+#include "GafferSceneUI/TypeIds.h"
 
 namespace GafferSceneUI
 {
 
-enum TypeId
+IE_CORE_FORWARDDECLARE( SceneView )
+
+class CropWindowTool : public GafferUI::Tool
 {
-	SceneViewTypeId = 110651,
-	SceneGadgetTypeId = 110652,
-	SelectionToolTypeId = 110653,
-	CropWindowToolTypeId = 110654,
-	LastTypeId = 110700
+
+	public :
+
+		CropWindowTool( SceneView *view, const std::string &name = defaultName<CropWindowTool>() );
+
+		virtual ~CropWindowTool();
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferSceneUI::CropWindowTool, CropWindowToolTypeId, GafferUI::Tool );
+
+	private :
+
+		IE_CORE_FORWARDDECLARE( Rectangle );
+
+		// We connect view->inPlug() as the input to this, so
+		// we'll get notified via plugDirtiedSignal() when the
+		// scene changes.
+		GafferScene::ScenePlug *scenePlug();
+		const GafferScene::ScenePlug *scenePlug() const;
+
+		void viewportChanged();
+		void plugDirtied( const Gaffer::Plug *plug );
+		void overlayRectangleChanged( unsigned reason );
+
+		void preRender();
+
+		void findCropWindowPlug();
+		Gaffer::CompoundDataPlug::MemberPlug *findCropWindowPlug( GafferScene::ScenePlug *scene, bool enabledOnly  );
+		Gaffer::CompoundDataPlug::MemberPlug *findCropWindowPlugFromNode( GafferScene::ScenePlug *scene, bool enabledOnly  );
+
+		boost::signals::scoped_connection m_overlayRectangleChangedConnection;
+
+		bool m_needCropWindowPlugSearch;
+		Gaffer::CompoundDataPlug::MemberPlugPtr m_cropWindowPlug;
+		boost::signals::scoped_connection m_cropWindowPlugDirtiedConnection;
+
+		bool m_overlayDirty;
+		RectanglePtr m_overlay;
+
+		static size_t g_firstPlugIndex;
+		static ToolDescription<CropWindowTool, SceneView> g_toolDescription;
+
 };
 
 } // namespace GafferSceneUI
 
-#endif // GAFFERSCENEUI_TYPEIDS_H
+#endif // GAFFERSCENEUI_CROPWINDOWTOOL_H

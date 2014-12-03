@@ -43,6 +43,7 @@
 #include "GafferSceneUI/SceneView.h"
 #include "GafferSceneUI/SceneGadget.h"
 #include "GafferSceneUI/SelectionTool.h"
+#include "GafferSceneUI/CropWindowTool.h"
 
 using namespace boost::python;
 using namespace IECorePython;
@@ -90,5 +91,6 @@ BOOST_PYTHON_MODULE( _GafferSceneUI )
 	;
 
 	GafferBindings::NodeClass<SelectionTool>( NULL, no_init );
+	GafferBindings::NodeClass<CropWindowTool>( NULL, no_init );
 
 }
