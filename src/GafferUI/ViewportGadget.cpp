@@ -192,8 +192,12 @@ void ViewportGadget::setCamera( const IECore::Camera *camera )
 	{
 		return;
 	}
-
+	// Remember the viewport size
+	const V2i viewport = getViewport();
+	// Because the incoming camera resolution might not be right
 	m_cameraController.setCamera( camera->copy() );
+	// So we must reset the viewport to update the camera
+	setViewport( viewport );
 	m_cameraChangedSignal( this );
 }
 
