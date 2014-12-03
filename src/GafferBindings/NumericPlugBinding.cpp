@@ -55,48 +55,6 @@ namespace
 {
 
 template<typename T>
-std::string maskedRepr( const T *plug, unsigned flagsMask )
-{
-	std::string result = Serialisation::classPath( plug ) + "( \"" + plug->getName().string() + "\", ";
-
-	if( plug->direction()!=Plug::In )
-	{
-		result += "direction = " + PlugSerialiser::directionRepr( plug->direction() ) + ", ";
-	}
-
-	if( plug->defaultValue()!=typename T::ValueType() )
-	{
-		result += "defaultValue = " + boost::lexical_cast<std::string>( plug->defaultValue() ) + ", ";
-	}
-
-	if( plug->hasMinValue() )
-	{
-		result += "minValue = " + boost::lexical_cast<std::string>( plug->minValue() ) + ", ";
-	}
-
-	if( plug->hasMaxValue() )
-	{
-		result += "maxValue = " + boost::lexical_cast<std::string>( plug->maxValue() ) + ", ";
-	}
-
-	const unsigned flags = plug->getFlags() & flagsMask;
-	if( flags != Plug::Default )
-	{
-		result += "flags = " + PlugSerialiser::flagsRepr( flags ) + ", ";
-	}
-
-	result += ")";
-
-	return result;
-}
-
-template<typename T>
-std::string repr( const T *plug )
-{
-	return maskedRepr( plug, Plug::All );
-}
-
-template<typename T>
 void setValue( T *plug, const typename T::ValueType value )
 {
 	// we use a GIL release here to prevent a lock in the case where this triggers a graph
@@ -113,19 +71,6 @@ typename T::ValueType getValue( const T *plug, const IECore::MurmurHash *precomp
 	IECorePython::ScopedGILRelease r;
 	return plug->getValue( precomputedHash );
 }
-
-template<typename T>
-class NumericPlugSerialiser : public ValuePlugSerialiser
-{
-
-	public :
-
-		virtual std::string constructor( const Gaffer::GraphComponent *graphComponent ) const
-		{
-			return maskedRepr( static_cast<const T *>( graphComponent ), Plug::All & ~Plug::ReadOnly );
-		}
-
-};
 
 template<typename T>
 void bind()
@@ -151,10 +96,7 @@ void bind()
 		.def( "maxValue", &T::maxValue )
 		.def( "setValue", setValue<T> )
 		.def( "getValue", &getValue<T>, ( boost::python::arg( "_precomputedHash" ) = boost::python::object() ) )
-		.def( "__repr__", &repr<T> )
 	;
-
-	Serialisation::registerSerialiser( T::staticTypeId(), new NumericPlugSerialiser<T>() );
 
 }
 

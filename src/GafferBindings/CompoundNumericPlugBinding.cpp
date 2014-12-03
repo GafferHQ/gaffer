@@ -54,46 +54,6 @@ namespace
 {
 
 template<typename T>
-std::string maskedCompoundNumericPlugRepr( const T *plug, unsigned flagsMask  )
-{
-	std::string result = Serialisation::classPath( plug ) + "( \"" + plug->getName().string() + "\", ";
-
-	if( plug->direction()!=Plug::In )
-	{
-		result += "direction = " + PlugSerialiser::directionRepr( plug->direction() ) + ", ";
-	}
-
-	typename T::ValueType v;
-	if( plug->defaultValue()!=typename T::ValueType( 0 ) )
-	{
-		v = plug->defaultValue();
-		result += "defaultValue = " + IECorePython::repr( v ) + ", ";
-	}
-
-	if( plug->hasMinValue() )
-	{
-		v = plug->minValue();
-		result += "minValue = " + IECorePython::repr( v ) + ", ";
-	}
-
-	if( plug->hasMaxValue() )
-	{
-		v = plug->maxValue();
-		result += "maxValue = " + IECorePython::repr( v ) + ", ";
-	}
-
-	const unsigned flags = plug->getFlags() & flagsMask;
-	if( flags != Plug::Default )
-	{
-		result += "flags = " + PlugSerialiser::flagsRepr( flags ) + ", ";
-	}
-
-	result += ")";
-
-	return result;
-}
-
-template<typename T>
 std::string compoundNumericPlugRepr( const T *plug )
 {
 	return maskedCompoundNumericPlugRepr( plug, Plug::All );
@@ -102,13 +62,6 @@ std::string compoundNumericPlugRepr( const T *plug )
 template<typename T>
 class CompoundNumericPlugSerialiser : public CompoundPlugSerialiser
 {
-
-	public :
-
-		virtual std::string constructor( const Gaffer::GraphComponent *graphComponent ) const
-		{
-			return maskedCompoundNumericPlugRepr( static_cast<const T *>( graphComponent ), Plug::All & ~Plug::ReadOnly );
-		}
 
 	protected :
 
@@ -175,7 +128,6 @@ void bind()
 		.def( "maxValue", &T::maxValue )
 		.def( "setValue", &setValue<T> )
 		.def( "getValue", &getValue<T> )
-		.def( "__repr__", &compoundNumericPlugRepr<T> )
 		.def( "canGang", &T::canGang )
 		.def( "gang", &T::gang )
 		.def( "isGanged", &T::isGanged )
