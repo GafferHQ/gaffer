@@ -100,7 +100,7 @@ Gaffer::NodePtr GafferUIBindings::getPreprocessor( View &v )
 
 void GafferUIBindings::bindView()
 {
-	GafferBindings::NodeClass<View>()
+	GafferBindings::NodeClass<View>( NULL, no_init )
 		.def( "getContext", (Context *(View::*)())&View::getContext, return_value_policy<IECorePython::CastToIntrusivePtr>() )
 		.def( "setContext", &View::setContext )
 		.def( "viewportGadget", (ViewportGadget *(View::*)())&View::viewportGadget, return_value_policy<IECorePython::CastToIntrusivePtr>() )
@@ -115,7 +115,7 @@ void GafferUIBindings::bindView()
 		.staticmethod( "registerView" )
 	;
 
-	GafferBindings::NodeClass<View3D>();
+	GafferBindings::NodeClass<View3D>( NULL, no_init );
 
 	typedef GafferBindings::NodeWrapper<ObjectView> ObjectViewWrapper;
 

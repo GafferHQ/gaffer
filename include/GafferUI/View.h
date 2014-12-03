@@ -159,7 +159,7 @@ class View : public Gaffer::Node
 		/// to manage their own updates. SceneView/SceneGadget provide a reasonable
 		/// model for how to do this.
 		/// \see View::updateRequestSignal().
-		virtual void update() = 0;
+		virtual void update();
 
 		/// May be overridden by derived classes to control the region that is framed
 		/// when "F" is pressed.

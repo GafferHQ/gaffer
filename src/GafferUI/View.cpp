@@ -123,6 +123,10 @@ void View::plugDirtied( const Gaffer::Plug *plug )
 	}
 }
 
+void View::update()
+{
+}
+
 bool View::keyPress( GadgetPtr gadget, const KeyEvent &keyEvent )
 {
 	if( keyEvent.key == "F" )
