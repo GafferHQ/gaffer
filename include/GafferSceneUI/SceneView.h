@@ -50,6 +50,13 @@
 namespace GafferSceneUI
 {
 
+/// \todo As we add more features to the View classes, they're feeling a
+/// bit monolithic, and not in the modular "plug it together how you like"
+/// spirit of the rest of Gaffer. Internally the various features are implemented
+/// as their own little classes though, so perhaps it would make sense to expose
+/// these in the public API as optional "bolt on" components that applications can
+/// use as they see fit. If we do this, we need to consider how these relate to
+/// Tools, which could also be seen as viewer components.
 class SceneView : public GafferUI::View3D
 {
 
