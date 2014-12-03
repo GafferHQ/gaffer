@@ -47,6 +47,26 @@ namespace GafferUI
 IE_CORE_FORWARDDECLARE( Tool )
 IE_CORE_FORWARDDECLARE( View )
 
+/// Base class for adding interactive functionality to Views.
+/// Typically this will be used to create manipulators to modify
+/// settings on the node graph being viewed, or to provide
+/// additional overlays in the View.
+///
+/// Tool is derived from Node so that plugs may be added to
+/// provide tool settings the user can change. The base class
+/// itself has a single plug to determine whether or not the
+/// tool is currently active - this should be honoured by all
+/// implementations.
+///
+/// Typically a tool implementation will add Gadgets to the
+/// viewport for the View it is constructed with, and connect
+/// to signals on the Gadgets to provide the interactive
+/// functionality desired. The Tool may also need to modify
+/// the Gadgets when the input to the View is dirtied, for instance
+/// to reflect the new position of an object being manipulated.
+/// It is recommended that such updates are performed via
+/// ViewportGadget::preRenderSignal(), so that they are
+/// performed lazily only when needed.
 class Tool : public Gaffer::Node
 {
 
