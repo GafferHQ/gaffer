@@ -42,6 +42,7 @@
 #include "IECore/CompoundObject.h"
 
 #include "Gaffer/CompoundPlug.h"
+#include "Gaffer/TypedPlug.h"
 
 namespace Gaffer
 {
@@ -76,6 +77,19 @@ class CompoundDataPlug : public Gaffer::CompoundPlug
 				IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::CompoundDataPlug::MemberPlug, CompoundDataMemberPlugTypeId, Gaffer::CompoundPlug );
 
 				MemberPlug( const std::string &name=defaultName<MemberPlug>(), Direction direction=In, unsigned flags=Default );
+
+				StringPlug *namePlug();
+				const StringPlug *namePlug() const;
+
+				template<typename T>
+				T *valuePlug();
+				template<typename T>
+				const T *valuePlug() const;
+
+				/// May return NULL, since the enabled plug
+				/// is optional.
+				BoolPlug *enabledPlug();
+				const BoolPlug *enabledPlug() const;
 
 				virtual bool acceptsChild( const Gaffer::GraphComponent *potentialChild ) const;
 				virtual PlugPtr createCounterpart( const std::string &name, Direction direction ) const;
@@ -137,5 +151,7 @@ typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::PlugPredicate<Gaffer::Plu
 typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::Out, CompoundDataPlug>, PlugPredicate<> > RecursiveOutputCompoundDataPlugIterator;
 
 } // namespace Gaffer
+
+#include "Gaffer/CompoundDataPlug.inl"
 
 #endif // GAFFER_COMPOUNDDATAPLUG_H
