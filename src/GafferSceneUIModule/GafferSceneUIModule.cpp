@@ -42,6 +42,7 @@
 
 #include "GafferSceneUI/SceneView.h"
 #include "GafferSceneUI/SceneGadget.h"
+#include "GafferSceneUI/SelectionTool.h"
 
 using namespace boost::python;
 using namespace IECorePython;
@@ -87,5 +88,7 @@ BOOST_PYTHON_MODULE( _GafferSceneUI )
 		.def( "getSelection", &SceneGadget::getSelection, return_value_policy<CastToIntrusivePtr>() )
 		.def( "selectionBound", &SceneGadget::selectionBound )
 	;
+
+	GafferBindings::NodeClass<SelectionTool>( NULL, no_init );
 
 }

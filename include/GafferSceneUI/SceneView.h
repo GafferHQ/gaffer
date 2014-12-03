@@ -115,8 +115,6 @@ class SceneView : public GafferUI::View3D
 		boost::shared_ptr<Grid> m_grid;
 		class Gnomon;
 		boost::shared_ptr<Gnomon> m_gnomon;
-		class SelectionTool;
-		boost::shared_ptr<SelectionTool> m_selectionTool;
 
 		bool m_framed;
 

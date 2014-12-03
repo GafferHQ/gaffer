@@ -177,3 +177,9 @@ class _GridPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 GafferUI.PlugValueWidget.registerCreator( GafferSceneUI.SceneView.staticTypeId(), "grid", _GridPlugValueWidget )
 GafferUI.PlugValueWidget.registerCreator( GafferSceneUI.SceneView.staticTypeId(), "gnomon", None )
+
+##########################################################################
+# SelectionTool
+##########################################################################
+
+Gaffer.Metadata.registerNodeValue( GafferSceneUI.SelectionTool, "order", 0 )
