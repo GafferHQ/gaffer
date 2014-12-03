@@ -127,6 +127,7 @@ class GadgetWidget( GafferUI.GLWidget ) :
 
 	def _draw( self ) :
 
+		self.__viewportGadget.preRenderSignal()( self.__viewportGadget )
 		self.__viewportGadget.render()
 
 	def __enter( self, widget ) :

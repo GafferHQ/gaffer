@@ -303,6 +303,11 @@ Imath::V2f ViewportGadget::worldToRasterSpace( const Imath::V3f &worldPosition )
 	return m_cameraController.project( worldPosition );
 }
 
+ViewportGadget::UnarySignal &ViewportGadget::preRenderSignal()
+{
+	return m_preRenderSignal;
+}
+
 void ViewportGadget::doRender( const Style *style ) const
 {
 	glClearColor( 0.3f, 0.3f, 0.3f, 0.0f );
