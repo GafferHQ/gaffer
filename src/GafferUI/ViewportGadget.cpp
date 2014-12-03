@@ -984,6 +984,12 @@ ViewportGadget::RasterScope::RasterScope( const ViewportGadget *viewportGadget )
 	glMatrixMode( GL_PROJECTION );
 	glPushMatrix();
 	glLoadIdentity();
+
+	if( IECoreGL::Selector *selector = IECoreGL::Selector::currentSelector() )
+	{
+		glMultMatrixd( selector->postProjectionMatrix().getValue() );
+	}
+
 	glOrtho( 0, viewport.x, viewport.y, 0, -1, 1 );
 
 	glMatrixMode( GL_MODELVIEW );
