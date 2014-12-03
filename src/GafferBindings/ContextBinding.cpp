@@ -108,6 +108,11 @@ object getItem( Context &c, const IECore::InternedString &name )
 	return get( c, name, /* copy = */ true );
 }
 
+bool contains( Context &c, const IECore::InternedString &name )
+{
+	return c.get<Data>( name, NULL );
+}
+
 void delItem( Context &context, const IECore::InternedString &name )
 {
 	context.remove( name );
@@ -177,6 +182,7 @@ void GafferBindings::bindContext()
 		.def( "get", &get, arg( "_copy" ) = true )
 		.def( "get", &getWithDefault, ( arg( "defaultValue" ), arg( "_copy" ) = true ) )
 		.def( "__getitem__", &getItem )
+		.def( "__contains__", &contains )
 		.def( "remove", &Context::remove )
 		.def( "__delitem__", &delItem )
 		.def( "changed", &Context::changed )

@@ -508,7 +508,20 @@ class ContextTest( GafferTest.TestCase ) :
 		self.assertEqual( set( c.names() ), set( [ "b", "frame" ] ) )
 		
 		self.assertEqual( c["b"], "bear" )
+
+	def testContains( self ) :
+
+		c = Gaffer.Context()
+		self.assertFalse( "a" in c )
+		self.assertTrue( "a" not in c )
+
+		c["a"] = 1
+		self.assertTrue( "a" in c )
+		self.assertFalse( "a" not in c )
 		
+		del c["a"]
+		self.assertFalse( "a" in c )
+		self.assertTrue( "a" not in c )
 		
 if __name__ == "__main__":
 	unittest.main()
