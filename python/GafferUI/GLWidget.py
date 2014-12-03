@@ -188,6 +188,14 @@ class _GLGraphicsView( QtGui.QGraphicsView ) :
 		self.setViewport( glWidget )
 		self.setViewportUpdateMode( self.FullViewportUpdate )
 
+	# QAbstractScrollArea (one of our base classes), implements
+	# minimumSizeHint() to include enough room for scrollbars.
+	# But we know we'll never show scrollbars, and don't want
+	# a minimum size, so we reimplement it.
+	def minimumSizeHint( self ) :
+
+		return QtCore.QSize()
+
 	def event( self, event ) :
 
 		if event.type() == event.PolishRequest :
