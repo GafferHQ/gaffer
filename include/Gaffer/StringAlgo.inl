@@ -153,6 +153,29 @@ inline bool MatchPatternLess::operator() ( const std::string &s1, const std::str
 	return *c1 < *c2;
 }
 
+template<typename Token, typename OutputIterator>
+void tokenize( const std::string &s, const char separator, OutputIterator outputIterator )
+{
+	size_t index = 0, size = s.size();
+	while( index < size )
+	{
+		const size_t prevIndex = index;
+		index = s.find( separator, index );
+		index = index == std::string::npos ? size : index;
+		if( index > prevIndex )
+		{
+			*outputIterator++ = Token( s.c_str() + prevIndex, index - prevIndex );
+		}
+		index++;
+	}
+}
+
+template<typename OutputContainer>
+void tokenize( const std::string &s, const char separator, OutputContainer &outputContainer )
+{
+	tokenize<typename OutputContainer::value_type>( s, separator, std::back_inserter( outputContainer ) );
+}
+
 } // namespace Gaffer
 
 #endif // GAFFER_STRINGALGO_INL

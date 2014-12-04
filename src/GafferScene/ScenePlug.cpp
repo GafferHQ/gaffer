@@ -41,6 +41,7 @@
 #include "IECore/NullObject.h"
 
 #include "Gaffer/Context.h"
+#include "Gaffer/StringAlgo.h"
 
 #include "GafferScene/ScenePlug.h"
 
@@ -364,18 +365,7 @@ IECore::MurmurHash ScenePlug::childNamesHash( const ScenePath &scenePath ) const
 void ScenePlug::stringToPath( const std::string &s, ScenePlug::ScenePath &path )
 {
 	path.clear();
-	size_t index = 0, size = s.size();
-	while( index < size )
-	{
-		const size_t prevIndex = index;
-		index = s.find( '/', index );
-		index = index == std::string::npos ? size : index;
-		if( index > prevIndex )
-		{
-			path.push_back( IECore::InternedString( s.c_str() + prevIndex, index - prevIndex ) );
-		}
-		index++;
-	}
+	tokenize( s, '/', path );
 }
 
 void ScenePlug::pathToString( const ScenePlug::ScenePath &path, std::string &s )
