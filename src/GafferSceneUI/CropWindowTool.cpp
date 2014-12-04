@@ -446,7 +446,7 @@ void CropWindowTool::plugDirtied( const Gaffer::Plug *plug )
 	{
 		m_needCropWindowPlugSearch = m_overlayDirty = true;
 	}
-	else if( plug == m_cropWindowPlug )
+	else if( plug == m_cropWindowPlug || plug == m_cropWindowEnabledPlug )
 	{
 		m_overlayDirty = true;
 	}
@@ -491,15 +491,12 @@ void CropWindowTool::overlayRectangleChanged( unsigned reason )
 
 	UndoContext undoContext( m_cropWindowPlug->ancestor<ScriptNode>() );
 
-	if( BoolPlug *enabledPlug = m_cropWindowPlug->enabledPlug() )
+	if( m_cropWindowEnabledPlug && !m_cropWindowEnabledPlug->getValue() )
 	{
-		if( !enabledPlug->getValue() )
-		{
-			enabledPlug->setValue( true );
-		}
+		m_cropWindowEnabledPlug->setValue( true );
 	}
 
-	m_cropWindowPlug->valuePlug<Box2fPlug>()->setValue( b );
+	m_cropWindowPlug->setValue( b );
 	m_overlayDirty = true;
 }
 
@@ -528,7 +525,7 @@ void CropWindowTool::preRender()
 	findCropWindowPlug();
 	if( m_cropWindowPlug )
 	{
-		cropWindow = m_cropWindowPlug->valuePlug<Box2fPlug>()->getValue();
+		cropWindow = m_cropWindowPlug->getValue();
 	}
 
 	BlockedConnection blockedConnection( m_overlayRectangleChangedConnection );
@@ -555,15 +552,17 @@ void CropWindowTool::findCropWindowPlug()
 		return;
 	}
 
-	m_cropWindowPlug = findCropWindowPlug( scenePlug(), /* enabledOnly = */ true );
-	if( !m_cropWindowPlug )
+	m_cropWindowPlug = NULL;
+	if( !findCropWindowPlug( scenePlug(), /* enabledOnly = */ true ) )
 	{
-		m_cropWindowPlug = findCropWindowPlug( scenePlug(), /* enabledOnly = */ false );
+		findCropWindowPlug( scenePlug(), /* enabledOnly = */ false );
 	}
 
 	if( m_cropWindowPlug )
 	{
-		m_overlay->setEditable( m_cropWindowPlug->settable() );
+		bool editable = m_cropWindowPlug->settable();
+		editable = m_cropWindowEnabledPlug ? editable || m_cropWindowEnabledPlug->settable() : editable;
+		m_overlay->setEditable( editable );
 		m_overlay->setCaption( m_cropWindowPlug->relativeName( m_cropWindowPlug->ancestor<ScriptNode>() ) );
 		m_cropWindowPlugDirtiedConnection = m_cropWindowPlug->node()->plugDirtiedSignal().connect( boost::bind( &CropWindowTool::plugDirtied, this, ::_1 ) );
 	}
@@ -575,7 +574,7 @@ void CropWindowTool::findCropWindowPlug()
 	}
 }
 
-Gaffer::CompoundDataPlug::MemberPlug *CropWindowTool::findCropWindowPlug( GafferScene::ScenePlug *scene, bool enabledOnly )
+bool CropWindowTool::findCropWindowPlug( GafferScene::ScenePlug *scene, bool enabledOnly )
 {
 	while( true )
 	{
@@ -594,34 +593,34 @@ Gaffer::CompoundDataPlug::MemberPlug *CropWindowTool::findCropWindowPlug( Gaffer
 
 		if( !scene )
 		{
-			return NULL;
+			return false;
 		}
 
-		if( CompoundDataPlug::MemberPlug *p = findCropWindowPlugFromNode( scene, enabledOnly ) )
+		if( findCropWindowPlugFromNode( scene, enabledOnly ) )
 		{
-			return p;
+			return true;
 		}
 	}
 
-	return NULL;
+	return false;
 }
 
-Gaffer::CompoundDataPlug::MemberPlug *CropWindowTool::findCropWindowPlugFromNode( GafferScene::ScenePlug *scene, bool enabledOnly )
+bool CropWindowTool::findCropWindowPlugFromNode( GafferScene::ScenePlug *scene, bool enabledOnly )
 {
 	if( scene->direction() != Plug::Out )
 	{
-		return NULL;
+		return false;
 	}
 
 	Options *options = runTimeCast<Options>( scene->node() );
 	if( !options )
 	{
-		return NULL;
+		return false;
 	}
 
 	if( !options->enabledPlug()->getValue() )
 	{
-		return NULL;
+		return false;
 	}
 
 	for( CompoundDataPlug::MemberPlugIterator it( options->optionsPlug() ); it != it.end(); ++it )
@@ -641,8 +640,11 @@ Gaffer::CompoundDataPlug::MemberPlug *CropWindowTool::findCropWindowPlugFromNode
 				}
 			}
 		}
-		return memberPlug->source<CompoundDataPlug::MemberPlug>();
+		m_cropWindowPlug = memberPlug->valuePlug<Box2fPlug>()->source<Box2fPlug>();
+		m_cropWindowEnabledPlug = memberPlug->enabledPlug();
+		m_cropWindowEnabledPlug = m_cropWindowEnabledPlug ? m_cropWindowEnabledPlug->source<BoolPlug>() : NULL;
+		return true;
 	}
 
-	return NULL;
+	return false;
 }
