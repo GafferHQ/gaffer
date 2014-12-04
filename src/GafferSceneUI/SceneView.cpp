@@ -398,6 +398,8 @@ class SceneView::Gnomon
 namespace
 {
 
+/// \todo If we made CropWindowTool::Rectangle public, we
+/// could ditch this class.
 class CameraOverlay : public GafferUI::Gadget
 {
 
@@ -428,6 +430,22 @@ class CameraOverlay : public GafferUI::Gadget
 		const Box2f &getResolutionGate() const
 		{
 			return m_resolutionGate;
+		}
+
+		// Specified in 0-1 space relative to resolution gate
+		void setCropWindow( const Box2f &cropWindow )
+		{
+			if( cropWindow == m_cropWindow )
+			{
+				return;
+			}
+			m_cropWindow = cropWindow;
+			renderRequestSignal()( this );
+		}
+
+		const Box2f &getCropWindow() const
+		{
+			return m_cropWindow;
 		}
 
 		void setCaption( const std::string &caption )
@@ -461,7 +479,20 @@ class CameraOverlay : public GafferUI::Gadget
 
 				glEnable( GL_LINE_SMOOTH );
 				glLineWidth( 1.5f );
-				glColor4f( 0, 0.25, 0, 0.5f );
+
+				glColor4f( 0.5, 0.5, 0.5, 0.5 );
+				style->renderRectangle( Box2f(
+					V2f(
+						lerp( m_resolutionGate.min.x, m_resolutionGate.max.x, m_cropWindow.min.x ),
+						lerp( m_resolutionGate.min.y, m_resolutionGate.max.y, m_cropWindow.min.y )
+					),
+					V2f(
+						lerp( m_resolutionGate.min.x, m_resolutionGate.max.x, m_cropWindow.max.x ),
+						lerp( m_resolutionGate.min.y, m_resolutionGate.max.y, m_cropWindow.max.y )
+					)
+				) );
+
+				glColor4f( 0, 0.25, 0, 1.0f );
 				style->renderRectangle( m_resolutionGate );
 
 				glPushMatrix();
@@ -478,6 +509,7 @@ class CameraOverlay : public GafferUI::Gadget
 	private :
 
 		Box2f m_resolutionGate;
+		Box2f m_cropWindow;
 		std::string m_caption;
 
 };
@@ -725,6 +757,7 @@ class SceneView::LookThrough
 			const V2f offset = ( viewport - resolutionGateSize ) / 2.0f;
 
 			m_overlay->setResolutionGate( Box2f( V2f( offset ), V2f( resolutionGateSize + offset ) ) );
+			m_overlay->setCropWindow( camera->parametersData()->member<Box2fData>( "cropWindow" )->readable() );
 			m_overlay->setCaption( boost::str( boost::format( "%dx%d %.3f" ) % resolution.x % resolution.y % pixelAspectRatio ) );
 			m_overlay->setVisible( true );
 
