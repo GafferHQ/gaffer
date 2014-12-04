@@ -542,11 +542,13 @@ class SceneView::LookThrough
 			view->addChild( lookThrough );
 
 			// Set up our nodes. We use a standard options node to disable camera motion blur
-			// because we don't want it applied to the cameras we retrieve with SceneAlgo.
+			// and overscan because we don't want them applied to the cameras we retrieve with SceneAlgo.
 
 			m_standardOptions->inPlug()->setInput( view->inPlug<ScenePlug>() );
-			m_standardOptions->optionsPlug()->getChild<CompoundPlug>( "cameraBlur" )->getChild<BoolPlug>( "enabled" )->setValue( true );
-			m_standardOptions->optionsPlug()->getChild<CompoundPlug>( "cameraBlur" )->getChild<BoolPlug>( "value" )->setValue( false );
+			m_standardOptions->optionsPlug()->getChild<CompoundDataPlug::MemberPlug>( "cameraBlur" )->enabledPlug()->setValue( true );
+			m_standardOptions->optionsPlug()->getChild<CompoundDataPlug::MemberPlug>( "cameraBlur" )->valuePlug<BoolPlug>()->setValue( false );
+			m_standardOptions->optionsPlug()->getChild<CompoundDataPlug::MemberPlug>( "overscan" )->enabledPlug()->setValue( true );
+			m_standardOptions->optionsPlug()->getChild<CompoundDataPlug::MemberPlug>( "overscan" )->valuePlug<BoolPlug>()->setValue( false );
 
 			// Set up our gadgets
 
