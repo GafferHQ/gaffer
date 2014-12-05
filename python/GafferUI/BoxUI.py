@@ -132,13 +132,13 @@ GafferUI.PlugValueWidget.registerCreator( Gaffer.Box, re.compile( "out[0-9]*" ),
 
 def __plugValueWidgetCreator( plug ) :
 
-	# when a plug has been promoted, we get the widget that would
+	# When a plug has been promoted, we get the widget that would
 	# have been used to represent the internal plug, and then
-	# call setPlug() with the external plug. this allows us to
-	# transfer custom uis from inside the box to outside the box.
-	box = plug.node()
+	# call setPlug() with the external plug. This allows us to
+	# transfer custom uis from inside the node to outside the node.
+	node = plug.node()
 	for output in plug.outputs() :
-		if box.plugIsPromoted( output ) :
+		if node.isAncestorOf( output.node() ) :
 			widget = GafferUI.PlugValueWidget.create( output )
 			if widget is not None :
 				widget.setPlug( plug )
@@ -147,6 +147,11 @@ def __plugValueWidgetCreator( plug ) :
 	return GafferUI.PlugValueWidget.create( plug, useTypeOnly=True )
 
 GafferUI.PlugValueWidget.registerCreator( Gaffer.Box, "user.*" , __plugValueWidgetCreator )
+## \todo We're registering the Box PlugValueWidget creator for the Reference node too, because
+# we want the two to have the same appearance. We perhaps should just have one registration for
+# the SubGraph (the base class for Box and Reference) instead, but it's not yet totally clear
+# whether or not we'll have future SubGraph subclasses that will want a different behaviour.
+GafferUI.PlugValueWidget.registerCreator( Gaffer.Reference, "user.*" , __plugValueWidgetCreator )
 
 # PlugValueWidget menu
 ##########################################################################
