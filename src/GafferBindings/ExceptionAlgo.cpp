@@ -49,11 +49,28 @@ std::string formatPythonException( bool withStacktrace, int *lineNumber )
 {
 	PyObject *exceptionPyObject, *valuePyObject, *tracebackPyObject;
 	PyErr_Fetch( &exceptionPyObject, &valuePyObject, &tracebackPyObject );
+
+	if( !exceptionPyObject )
+	{
+		throw IECore::Exception( "No Python exception set" );
+	}
+
 	PyErr_NormalizeException( &exceptionPyObject, &valuePyObject, &tracebackPyObject );
 
 	object exception( ( handle<>( exceptionPyObject ) ) );
-	object value( ( handle<>( valuePyObject ) ) );
-	object traceback( ( handle<>( tracebackPyObject ) ) );
+
+	// valuePyObject and tracebackPyObject may be NULL.
+	object value;
+	if( valuePyObject )
+	{
+		value = object( handle<>( valuePyObject ) );
+	}
+
+	object traceback;
+	if( tracebackPyObject )
+	{
+		traceback = object( handle<>( tracebackPyObject ) );
+	}
 
 	object tracebackModule( import( "traceback" ) );
 
