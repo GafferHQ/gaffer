@@ -42,8 +42,9 @@
 #include "GafferBindings/SignalBinding.h"
 
 using namespace boost::python;
+using namespace GafferBindings;
 
-namespace GafferBindings
+namespace
 {
 
 // A wrapper class presenting the boost::signal::slot_call_iterator
@@ -133,13 +134,13 @@ struct PythonResultCombiner
 };
 
 template<typename Signal>
-static Signal *construct( object combiner )
+Signal *construct( object combiner )
 {
 	return new Signal( PythonResultCombiner( combiner ) );
 }
 
 template<typename Signal>
-static void bind( const char *name )
+void bind( const char *name )
 {
 
 	// bind using the standard SignalBinder, and add a constructor allowing a custom
@@ -157,7 +158,9 @@ static void bind( const char *name )
 
 }
 
-void bindSignal()
+} // namespace
+
+void GafferBindings::bindSignal()
 {
 
 	typedef boost::signal<object (), PythonResultCombiner > Signal0;
@@ -171,5 +174,3 @@ void bindSignal()
 	bind<Signal3>( "Signal3" );
 
 }
-
-} // namespace GafferBindings
