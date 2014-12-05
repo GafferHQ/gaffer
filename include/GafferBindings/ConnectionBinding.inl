@@ -44,21 +44,6 @@
 
 #include "GafferBindings/ExceptionAlgo.h"
 
-namespace boost { namespace python {
-
-/// \todo this works for now, but should blatantly be implemented as some rvalue_from_python jobby.
-template<>
-struct extract<boost::signals::detail::unusable>
-{
-	extract( PyObject *o ) { m_obj = o; };
-	extract( object const &o ) { m_obj = o.ptr();  };
-	PyObject *m_obj;
-	bool check() const { return m_obj==Py_None; };
-	boost::signals::detail::unusable operator()() const { return boost::signals::detail::unusable(); };
-};
-
-}}
-
 namespace GafferBindings
 {
 

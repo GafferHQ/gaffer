@@ -42,8 +42,9 @@
 #include "GafferBindings/SignalBinding.h"
 
 using namespace boost::python;
+using namespace GafferBindings;
 
-namespace GafferBindings
+namespace
 {
 
 // A wrapper class presenting the boost::signal::slot_call_iterator
@@ -133,13 +134,13 @@ struct PythonResultCombiner
 };
 
 template<typename Signal>
-static Signal *construct( object combiner )
+Signal *construct( object combiner )
 {
 	return new Signal( PythonResultCombiner( combiner ) );
 }
 
 template<typename Signal>
-static void bind( const char *name )
+void bind( const char *name )
 {
 
 	// bind using the standard SignalBinder, and add a constructor allowing a custom
@@ -157,7 +158,39 @@ static void bind( const char *name )
 
 }
 
-void bindSignal()
+// If a boost::signal has a return type of void, it gets converted
+// to a return type of boost::signals::detail::unusable. We register
+// this converter so that we can accept a None return from a python
+// slot where boost::signals::detail::unusable is expected.
+struct UnusableFromNone
+{
+
+	UnusableFromNone()
+	{
+		boost::python::converter::registry::push_back(
+			&convertible,
+			&construct,
+			boost::python::type_id<boost::signals::detail::unusable>()
+		);
+	}
+
+	static void *convertible( PyObject *obj )
+	{
+		return obj == Py_None ? obj : NULL;
+	}
+
+	static void construct( PyObject *obj, boost::python::converter::rvalue_from_python_stage1_data *data )
+	{
+		void *storage = (( converter::rvalue_from_python_storage<boost::signals::detail::unusable>* ) data )->storage.bytes;
+		boost::signals::detail::unusable *unusable = new( storage ) boost::signals::detail::unusable();
+		data->convertible = unusable;
+	}
+
+};
+
+} // namespace
+
+void GafferBindings::bindSignal()
 {
 
 	typedef boost::signal<object (), PythonResultCombiner > Signal0;
@@ -170,6 +203,6 @@ void bindSignal()
 	bind<Signal2>( "Signal2" );
 	bind<Signal3>( "Signal3" );
 
-}
+	UnusableFromNone();
 
-} // namespace GafferBindings
+}
