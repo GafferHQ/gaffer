@@ -77,6 +77,7 @@ Switch<BaseType>::Switch( const std::string &name )
 
 	BaseType::childAddedSignal().connect( boost::bind( &Switch::childAdded, this, ::_2 ) );
 	BaseType::plugSetSignal().connect( boost::bind( &Switch::plugSet, this, ::_1 ) );
+	BaseType::plugInputChangedSignal().connect( boost::bind( &Switch::plugInputChanged, this, ::_1 ) );
 }
 
 template<typename BaseType>
@@ -197,8 +198,7 @@ bool Switch<BaseType>::acceptsInput( const Plug *plug, const Plug *inputPlug ) c
 		// we're not a compute node, so we have to implement the switching by making an internal connection
 		// from an input to the output. this means the index must be a constant value, which means that it
 		// cannot be the output of a ComputeNode, which could vary according to the Context.
-		inputPlug = inputPlug->source<Plug>();
-		if( inputPlug->direction() == Plug::Out && IECore::runTimeCast<const ComputeNode>( inputPlug->node() ) )
+		if( variesWithContext( inputPlug ) )
 		{
 			return false;
 		}
@@ -275,7 +275,19 @@ void Switch<BaseType>::computeInternal( ValuePlug *output, const Context *contex
 template<typename BaseType>
 void Switch<BaseType>::plugSet( Plug *plug )
 {
-	updateInternalConnection();
+	if( plug == indexPlug() || plug == enabledPlug() )
+	{
+		updateInternalConnection();
+	}
+}
+
+template<typename BaseType>
+void Switch<BaseType>::plugInputChanged( Plug *plug )
+{
+	if( plug == indexPlug() || plug == enabledPlug() )
+	{
+		updateInternalConnection();
+	}
 }
 
 template<typename BaseType>
@@ -350,24 +362,33 @@ const Plug *Switch<BaseType>::oppositePlug( const Plug *plug, size_t inputIndex 
 }
 
 template<typename BaseType>
+bool Switch<BaseType>::variesWithContext( const Plug *plug ) const
+{
+	plug = plug->source<Gaffer::Plug>();
+	return plug->direction() == Plug::Out && IECore::runTimeCast<const ComputeNode>( plug->node() );
+}
+
+template<typename BaseType>
 void Switch<BaseType>::updateInternalConnection()
 {
-	if( isInstanceOf( ComputeNode::staticTypeId() ) )
+	Plug *out = BaseType::template getChild<Plug>( "out" );
+	if( !out )
 	{
-		// we don't need to make internal connections, because we'll deal with
-		// the switching in hash() and compute().
-		/// \todo Investigate whether or not it might be an optimisation to
-		/// make an internal connection here if we know that our input index
-		/// is constant.
 		return;
 	}
 
-	Plug *out = BaseType::template getChild<Plug>( "out" );
-	if( out )
+	if( variesWithContext( enabledPlug() ) || variesWithContext( indexPlug() ) )
 	{
-		Plug *in = const_cast<Plug *>( oppositePlug( out, inputIndex() ) );
-		out->setInput( in );
+		// We can't use an internal connection to implement the switch,
+		// because the index might vary from context to context. We must
+		// therefore implement switching via hash()/compute().
+		assert( this->isInstanceOf( ComputeNode::staticTypeId() ) );
+		out->setInput( NULL );
+		return;
 	}
+
+	Plug *in = const_cast<Plug *>( oppositePlug( out, inputIndex() ) );
+	out->setInput( in );
 }
 
 } // namespace Gaffer
