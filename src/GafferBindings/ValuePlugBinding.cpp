@@ -84,6 +84,28 @@ static std::string maskedRepr( const Plug *plug, unsigned flagsMask )
 		}
 	}
 
+	if( PyObject_HasAttrString( pythonPlug.ptr(), "hasMinValue" ) )
+	{
+		const bool hasMinValue = pythonPlug.attr( "hasMinValue" )();
+		if( hasMinValue )
+		{
+			object pythonMinValue = pythonPlug.attr( "minValue" )();
+			std::string minValue = extract<std::string>( pythonMinValue.attr( "__repr__" )() );
+			result += "minValue = " + minValue + ", ";
+		}
+	}
+
+	if( PyObject_HasAttrString( pythonPlug.ptr(), "hasMaxValue" ) )
+	{
+		const bool hasMinValue = pythonPlug.attr( "hasMaxValue" )();
+		if( hasMinValue )
+		{
+			object pythonMinValue = pythonPlug.attr( "maxValue" )();
+			std::string minValue = extract<std::string>( pythonMinValue.attr( "__repr__" )() );
+			result += "maxValue = " + minValue + ", ";
+		}
+	}
+
 	const unsigned flags = plug->getFlags() & flagsMask;
 	if( flags != Plug::Default )
 	{

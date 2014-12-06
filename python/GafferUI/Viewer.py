@@ -72,11 +72,20 @@ class Viewer( GafferUI.NodeSetEditor ) :
 
 		with GafferUI.ListContainer( borderWidth = 2, spacing = 2 ) as toolbarColumn :
 			self.__nodeToolbarFrame = GafferUI.Frame( borderWidth = 0, borderStyle=GafferUI.Frame.BorderStyle.None )
-			self.__toolbarFrame = GafferUI.Frame( borderWidth = 0, borderStyle=GafferUI.Frame.BorderStyle.None )
+			with GafferUI.ListContainer( borderWidth = 0, spacing = 2, orientation = GafferUI.ListContainer.Orientation.Horizontal ) :
+				with GafferUI.Frame( borderWidth = 1, borderStyle=GafferUI.Frame.BorderStyle.None ) :
+					self.__toolMenuButton = GafferUI.MenuButton( menu = GafferUI.Menu( Gaffer.WeakMethod( self.__toolMenuDefinition ) ), hasFrame=False )
+				self.__toolbarFrame = GafferUI.Frame( borderWidth = 0, borderStyle=GafferUI.Frame.BorderStyle.None )
 		self.__gadgetWidget.addOverlay( toolbarColumn )
 
 		self.__views = []
-		self.__viewToolbars = {} # indexed by View instance
+		# The following two variables are indexed by view
+		# instance. We would prefer to simply store toolbars
+		# and tools as python attributes on the view instances
+		# themselves, but we can't because that would create
+		# circular references.
+		self.__viewToolbars = {}
+		self.__viewTools = {}
 		self.__currentView = None
 
 		self._updateFromSet()
@@ -119,6 +128,10 @@ class Viewer( GafferUI.NodeSetEditor ) :
 							self.__currentView.__updateRequestConnection = self.__currentView.updateRequestSignal().connect( Gaffer.WeakMethod( self.__updateRequest, fallbackResult=None ) )
 							self.__currentView.__pendingUpdate = True
 							self.__viewToolbars[self.__currentView] = GafferUI.NodeToolbar.create( self.__currentView )
+							self.__viewTools[self.__currentView] = [ GafferUI.Tool.create( n, self.__currentView ) for n in GafferUI.Tool.registeredTools( self.__currentView.typeId() ) ]
+							self.__viewTools[self.__currentView].sort( key = lambda v : Gaffer.Metadata.nodeValue( v, "order" ) if Gaffer.Metadata.nodeValue( v, "order" ) is not None else 999 )
+							if len( self.__viewTools[self.__currentView] ) :
+								self.__activateTool( self.__viewTools[self.__currentView][0] )
 							self.__views.append( self.__currentView )
 					# if we succeeded in getting a suitable view, then
 					# don't bother checking the other plugs
@@ -129,12 +142,14 @@ class Viewer( GafferUI.NodeSetEditor ) :
 			self.__gadgetWidget.setViewportGadget( self.__currentView.viewportGadget() )
 			self.__nodeToolbarFrame.setChild( GafferUI.NodeToolbar.create( node ) )
 			self.__toolbarFrame.setChild( self.__viewToolbars[self.__currentView] )
+			self.__toolMenuButton.setVisible( len( self.__viewTools[self.__currentView] ) != 0 )
 			if self.__currentView.__pendingUpdate :
 				self.__update()
 		else :
 			self.__gadgetWidget.setViewportGadget( GafferUI.ViewportGadget() )
 			self.__nodeToolbarFrame.setChild( None )
 			self.__toolbarFrame.setChild( None )
+			self.__toolMenuButton.setVisible( False )
 
 		self.__nodeToolbarFrame.setVisible( self.__nodeToolbarFrame.getChild() is not None )
 
@@ -173,6 +188,45 @@ class Viewer( GafferUI.NodeSetEditor ) :
 			view.__pendingUpdate = True
 			if view.isSame( self.__currentView ) :
 				GafferUI.EventLoop.executeOnUIThread( self.__update )
+
+	def __toolMenuDefinition( self ) :
+
+		m = IECore.MenuDefinition()
+		if self.__currentView is None :
+			return m
+
+		for tool in self.__viewTools[self.__currentView] :
+			m.append(
+				"/" + IECore.CamelCase.toSpaced( tool.typeName().rpartition( ":" )[2] ),
+				{
+					"checkBox" : tool["active"].getValue(),
+					"active" : not tool["active"].getValue(),
+					"command" : IECore.curry( Gaffer.WeakMethod( self.__activateTool ), tool ),
+					"description" : self.__toolDescription( tool )
+				}
+			)
+
+		return m
+
+	def __activateTool( self, tool, *unused ) :
+
+		for t in self.__viewTools[self.__currentView] :
+			t["active"].setValue( t.isSame( tool ) )
+
+		iconName = tool.typeName().replace( ":", "" )
+		iconName = iconName[:1].lower() + iconName[1:] + ".png"
+		self.__toolMenuButton.setImage( iconName )
+
+		self.__toolMenuButton.setToolTip( self.__toolDescription( tool ) )
+
+	def __toolDescription( self, tool ) :
+
+		result = tool.getName()
+		description = Gaffer.Metadata.nodeDescription( tool )
+		if description :
+			result += "\n\n" + IECore.StringUtil.wrap( description, 80 )
+
+		return result
 
 GafferUI.EditorWidget.registerType( "Viewer", Viewer )
 

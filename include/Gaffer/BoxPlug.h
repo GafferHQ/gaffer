@@ -54,7 +54,8 @@ class BoxPlug : public CompoundPlug
 	public :
 
 		typedef T ValueType;
-		typedef CompoundNumericPlug<typename IECore::BoxTraits<T>::BaseType> ChildType;
+		typedef typename IECore::BoxTraits<T>::BaseType PointType;
+		typedef CompoundNumericPlug<PointType> ChildType;
 
 		IECORE_RUNTIMETYPED_DECLARETEMPLATE( BoxPlug<T>, CompoundPlug );
 
@@ -64,6 +65,16 @@ class BoxPlug : public CompoundPlug
 			T defaultValue = T(),
 			unsigned flags = Default
 		);
+
+		BoxPlug(
+			const std::string &name,
+			Direction direction,
+			T defaultValue,
+			const PointType &minValue,
+			const PointType &maxValue,
+			unsigned flags = Default
+		);
+
 		virtual ~BoxPlug();
 
 		/// Accepts no children following construction.
@@ -77,6 +88,12 @@ class BoxPlug : public CompoundPlug
 		const ChildType *maxPlug() const;
 
 		T defaultValue() const;
+
+		bool hasMinValue() const;
+		bool hasMaxValue() const;
+
+		PointType minValue() const;
+		PointType maxValue() const;
 
 		/// Calls setValue for the min and max child plugs, using the min and max of
 		/// value.

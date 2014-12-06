@@ -192,8 +192,12 @@ void ViewportGadget::setCamera( const IECore::Camera *camera )
 	{
 		return;
 	}
-
+	// Remember the viewport size
+	const V2i viewport = getViewport();
+	// Because the incoming camera resolution might not be right
 	m_cameraController.setCamera( camera->copy() );
+	// So we must reset the viewport to update the camera
+	setViewport( viewport );
 	m_cameraChangedSignal( this );
 }
 
@@ -297,6 +301,11 @@ IECore::LineSegment3f ViewportGadget::rasterToWorldSpace( const Imath::V2f &rast
 Imath::V2f ViewportGadget::worldToRasterSpace( const Imath::V3f &worldPosition ) const
 {
 	return m_cameraController.project( worldPosition );
+}
+
+ViewportGadget::UnarySignal &ViewportGadget::preRenderSignal()
+{
+	return m_preRenderSignal;
 }
 
 void ViewportGadget::doRender( const Style *style ) const
@@ -980,6 +989,12 @@ ViewportGadget::RasterScope::RasterScope( const ViewportGadget *viewportGadget )
 	glMatrixMode( GL_PROJECTION );
 	glPushMatrix();
 	glLoadIdentity();
+
+	if( IECoreGL::Selector *selector = IECoreGL::Selector::currentSelector() )
+	{
+		glMultMatrixd( selector->postProjectionMatrix().getValue() );
+	}
+
 	glOrtho( 0, viewport.x, viewport.y, 0, -1, 1 );
 
 	glMatrixMode( GL_MODELVIEW );

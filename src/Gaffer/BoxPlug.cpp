@@ -74,6 +74,39 @@ BoxPlug<T>::BoxPlug(
 }
 
 template<typename T>
+BoxPlug<T>::BoxPlug(
+	const std::string &name,
+	Direction direction,
+	T defaultValue,
+	const PointType &minValue,
+	const PointType &maxValue,
+	unsigned flags
+)
+	:	CompoundPlug( name, direction, flags )
+{
+	const unsigned childFlags = flags & ~Dynamic;
+	addChild(
+		new ChildType(
+			"min", direction,
+			defaultValue.min,
+			minValue,
+			maxValue,
+			childFlags
+		)
+	);
+
+	addChild(
+		new ChildType(
+			"max", direction,
+			defaultValue.max,
+			minValue,
+			maxValue,
+			childFlags
+		)
+	);
+}
+
+template<typename T>
 BoxPlug<T>::~BoxPlug()
 {
 }
@@ -87,7 +120,7 @@ bool BoxPlug<T>::acceptsChild( const GraphComponent *potentialChild ) const
 template<typename T>
 PlugPtr BoxPlug<T>::createCounterpart( const std::string &name, Direction direction ) const
 {
-	return new BoxPlug<T>( name, direction, defaultValue(), getFlags() );
+	return new BoxPlug<T>( name, direction, defaultValue(), minValue(), maxValue(), getFlags() );
 }
 
 template<typename T>
@@ -118,6 +151,30 @@ template<typename T>
 T BoxPlug<T>::defaultValue() const
 {
 	return T( this->minPlug()->defaultValue(), this->maxPlug()->defaultValue() );
+}
+
+template<typename T>
+bool BoxPlug<T>::hasMinValue() const
+{
+	return minPlug()->hasMinValue();
+}
+
+template<typename T>
+bool BoxPlug<T>::hasMaxValue() const
+{
+	return minPlug()->hasMaxValue();
+}
+
+template<typename T>
+typename BoxPlug<T>::PointType BoxPlug<T>::minValue() const
+{
+	return minPlug()->minValue();
+}
+
+template<typename T>
+typename BoxPlug<T>::PointType BoxPlug<T>::maxValue() const
+{
+	return minPlug()->maxValue();
 }
 
 template<typename T>

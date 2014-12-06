@@ -60,6 +60,26 @@ CompoundDataPlug::MemberPlug::MemberPlug( const std::string &name, Direction dir
 {
 }
 
+StringPlug *CompoundDataPlug::MemberPlug::namePlug()
+{
+	return getChild<StringPlug>( 0 );
+}
+
+const StringPlug *CompoundDataPlug::MemberPlug::namePlug() const
+{
+	return getChild<StringPlug>( 0 );
+}
+
+BoolPlug *CompoundDataPlug::MemberPlug::enabledPlug()
+{
+	return children().size() > 2 ? getChild<BoolPlug>( 2 ) : NULL;
+}
+
+const BoolPlug *CompoundDataPlug::MemberPlug::enabledPlug() const
+{
+	return children().size() > 2 ? getChild<BoolPlug>( 2 ) : NULL;
+}
+
 bool CompoundDataPlug::MemberPlug::acceptsChild( const Gaffer::GraphComponent *potentialChild ) const
 {
 	if( !CompoundPlug::acceptsChild( potentialChild ) )

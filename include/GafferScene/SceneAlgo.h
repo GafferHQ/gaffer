@@ -37,9 +37,19 @@
 #ifndef GAFFERSCENE_SCENEALGO_H
 #define GAFFERSCENE_SCENEALGO_H
 
+#include "OpenEXR/ImathVec.h"
+
 #include "Gaffer/NumericPlug.h"
 
 #include "GafferScene/ScenePlug.h"
+
+namespace IECore
+{
+
+IE_CORE_FORWARDDECLARE( Transform )
+IE_CORE_FORWARDDECLARE( Camera )
+
+} // namespace IECore
 
 namespace GafferScene
 {
@@ -57,6 +67,20 @@ void matchingPaths( const Filter *filter, const ScenePlug *scene, PathMatcher &p
 /// As above, but specifying the filter as a plug - typically Filter::matchPlug() or
 /// FilteredSceneProcessor::filterPlug() would be passed.
 void matchingPaths( const Gaffer::IntPlug *filterPlug, const ScenePlug *scene, PathMatcher &paths );
+
+/// Calculates the shutter specified by the globals.
+Imath::V2f shutter( const IECore::CompoundObject *globals );
+
+/// Calculates the full transform for the specified location in the scene, sampling motion according to the attributes at that
+/// location if motionBlur is true.
+IECore::TransformPtr transform( const ScenePlug *scene, const ScenePlug::ScenePath &path, const Imath::V2f &shutter, bool motionBlur );
+
+/// Returns the primary render camera, with all globals settings such as
+/// crop, resolution, overscan etc applied as they would be for rendering.
+/// The globals may be passed if they are available, if not they will be computed.
+IECore::CameraPtr camera( const ScenePlug *scene, const IECore::CompoundObject *globals = NULL );
+/// As above, but choosing a specific camera rather than the primary one.
+IECore::CameraPtr camera( const ScenePlug *scene, const ScenePlug::ScenePath &cameraPath, const IECore::CompoundObject *globals = NULL );
 
 } // namespace GafferScene
 

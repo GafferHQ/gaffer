@@ -61,6 +61,8 @@ template<typename T>
 static void bind()
 {
 	typedef typename T::ValueType V;
+	typedef typename T::PointType P;
+	typedef typename P::BaseType B;
 
 	PlugClass<T>()
 		.def( init<const std::string &, Plug::Direction, const V&, unsigned>(
@@ -72,7 +74,22 @@ static void bind()
 				)
 			)
 		)
+		.def( init<const std::string &, Plug::Direction, const V&, const P&, const P&, unsigned>(
+				(
+					boost::python::arg_( "name" )=GraphComponent::defaultName<T>(),
+					boost::python::arg_( "direction" )=Plug::In,
+					boost::python::arg_( "defaultValue" )=V(),
+					boost::python::arg_( "minValue")=P( Imath::limits<B>::min() ),
+					boost::python::arg_( "maxValue")=P( Imath::limits<B>::max() ),
+					boost::python::arg_( "flags" )=Plug::Default
+				)
+			)
+		)
 		.def( "defaultValue", &T::defaultValue )
+		.def( "hasMinValue", &T::hasMinValue )
+		.def( "hasMaxValue", &T::hasMaxValue )
+		.def( "minValue", &T::minValue )
+		.def( "maxValue", &T::maxValue )
 		.def( "setValue", &T::setValue )
 		.def( "getValue", &getValue<T> )
 	;

@@ -79,8 +79,18 @@ const Gaffer::Context *View::getContext() const
 
 void View::setContext( Gaffer::ContextPtr context )
 {
+	if( context == m_context )
+	{
+		return;
+	}
 	m_context = context;
 	m_contextChangedConnection = m_context->changedSignal().connect( boost::bind( &View::contextChanged, this, ::_2 ) );
+	contextChangedSignal()( this );
+}
+
+View::UnarySignal &View::contextChangedSignal()
+{
+	return m_contextChangedSignal;
 }
 
 ViewportGadget *View::viewportGadget()
@@ -121,6 +131,10 @@ void View::plugDirtied( const Gaffer::Plug *plug )
 	{
 		updateRequestSignal()( this );
 	}
+}
+
+void View::update()
+{
 }
 
 bool View::keyPress( GadgetPtr gadget, const KeyEvent &keyEvent )

@@ -177,6 +177,11 @@ class ViewportGadget : public Gadget
 
 		};
 
+		/// A signal emitted just prior to rendering the viewport each time. This
+		/// provides an opportunity for clients to make last minute adjustments to
+		/// the viewport or its children.
+		UnarySignal &preRenderSignal();
+
 	protected :
 
 		virtual void doRender( const Style *style ) const;
@@ -231,6 +236,7 @@ class ViewportGadget : public Gadget
 
 		UnarySignal m_viewportChangedSignal;
 		UnarySignal m_cameraChangedSignal;
+		UnarySignal m_preRenderSignal;
 
 };
 

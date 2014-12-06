@@ -120,10 +120,13 @@ class Switch : public BaseType
 
 		void childAdded( GraphComponent *child );
 		void plugSet( Plug *plug );
+		void plugInputChanged( Plug *plug );
 		size_t inputIndex() const;
 		// Returns the input corresponding to the output and vice versa. Returns NULL
 		// if plug is not meaningful to the switching process.
 		const Plug *oppositePlug( const Plug *plug, size_t inputIndex = 0 ) const;
+
+		bool variesWithContext( const Plug *plug ) const;
 
 		void updateInternalConnection();
 
