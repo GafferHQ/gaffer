@@ -135,5 +135,19 @@ class PlaneTest( GafferSceneTest.SceneTestCase ) :
 
 		ss = s.serialise()
 
+	def testUndoAndRedoAndCompute( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		with Gaffer.UndoContext( s ) :
+			s["p"] = GafferScene.Plane()
+
+		self.assertTrue( isinstance( s["p"]["out"].object( "/plane" ), IECore.MeshPrimitive ) )
+
+		s.undo()
+		s.redo()
+
+		self.assertTrue( isinstance( s["p"]["out"].object( "/plane" ), IECore.MeshPrimitive ) )
+
 if __name__ == "__main__":
 	unittest.main()
