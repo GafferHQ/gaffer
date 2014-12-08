@@ -34,15 +34,15 @@
 #
 ##########################################################################
 
-from PathFilter import PathFilter
+import Gaffer
 
 ## A PathFilter which filters based on an item from Path.info() and an
 # arbitrary match function.
-class InfoPathFilter( PathFilter ) :
+class InfoPathFilter( Gaffer.PathFilter ) :
 
 	def __init__( self, infoKey, matcher, leafOnly=True, userData={} ) :
 
-		PathFilter.__init__( self, userData )
+		Gaffer.PathFilter.__init__( self, userData )
 
 		self.__infoKey = infoKey
 		self.__matcher = matcher

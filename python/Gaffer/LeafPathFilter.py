@@ -34,14 +34,14 @@
 #
 ##########################################################################
 
-from PathFilter import PathFilter
+import Gaffer
 
 ## A PathFilter which removes leaf items.
-class LeafPathFilter( PathFilter ) :
+class LeafPathFilter( Gaffer.PathFilter ) :
 
 	def __init__( self, userData={} ) :
 
-		PathFilter.__init__( self, userData )
+		Gaffer.PathFilter.__init__( self, userData )
 
 	def _filter( self, paths ) :
 
