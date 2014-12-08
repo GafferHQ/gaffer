@@ -82,6 +82,8 @@
 #include "GafferBindings/StringAlgoBinding.h"
 #include "GafferBindings/SubGraphBinding.h"
 #include "GafferBindings/DotBinding.h"
+#include "GafferBindings/PathBinding.h"
+#include "GafferBindings/PathFilterBinding.h"
 
 using namespace boost::python;
 using namespace Gaffer;
@@ -168,6 +170,8 @@ BOOST_PYTHON_MODULE( _Gaffer )
 	bindMetadata();
 	bindStringAlgo();
 	bindDot();
+	bindPath();
+	bindPathFilter();
 
 	NodeClass<Backdrop>();
 

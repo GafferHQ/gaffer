@@ -119,6 +119,8 @@ enum TypeId
 	ParameterisedHolderExecutableNodeTypeId = 110072, // obsolete - available for reuse
 	SubGraphTypeId = 110073,
 	DotTypeId = 110074,
+	PathTypeId = 110075,
+	PathFilterTypeId = 110076,
 	LastTypeId = 110180,
 
 };

@@ -131,9 +131,9 @@ class PathFilterTest( GafferTest.TestCase ) :
 	def testUserData( self ) :
 
 		pathFilter = Gaffer.FileNamePathFilter( [ "*.gfr" ] )
-		self.assertEqual( pathFilter.userData(), {} )
+		self.assertEqual( pathFilter.userData(), IECore.CompoundData() )
 
-		ud = { "a" : "a" }
+		ud = IECore.CompoundData( { "a" : "a" } )
 		pathFilter = Gaffer.FileNamePathFilter( [ "*.gfr" ], userData = ud )
 		self.assertEqual( pathFilter.userData(), ud )
 		self.failIf( pathFilter.userData() is ud )

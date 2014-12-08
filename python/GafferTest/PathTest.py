@@ -196,6 +196,73 @@ class PathTest( GafferTest.TestCase ) :
 		self.assertEqual( self.TestPath( "a/b" ), self.TestPath( "a/b" ) )
 		self.assertNotEqual( self.TestPath( "/a/b" ), self.TestPath( "a/b" ) )
 
+	def testFilterSignals( self ) :
+
+		p = Gaffer.Path( "/" )
+
+		f1 = Gaffer.FileNamePathFilter( [ "*.gfr" ] )
+		f2 = Gaffer.FileNamePathFilter( [ "*.grf" ] )
+		self.assertEqual( f1.changedSignal().num_slots(), 0 )
+		self.assertEqual( f2.changedSignal().num_slots(), 0 )
+
+		# The Path shouldn't connect to the filter changed signal
+		# until it really needs to - when something is connected
+		# to the path's own changed signal.
+		p.setFilter( f1 )
+		self.assertEqual( f1.changedSignal().num_slots(), 0 )
+		self.assertEqual( f2.changedSignal().num_slots(), 0 )
+
+		cs = GafferTest.CapturingSlot( p.pathChangedSignal() )
+		self.assertEqual( f1.changedSignal().num_slots(), 1 )
+		self.assertEqual( f2.changedSignal().num_slots(), 0 )
+		self.assertEqual( len( cs ), 0 )
+
+		f1.setEnabled( False )
+		self.assertEqual( len( cs ), 1 )
+
+		p.setFilter( f2 )
+		self.assertEqual( f1.changedSignal().num_slots(), 0 )
+		self.assertEqual( f2.changedSignal().num_slots(), 1 )
+		self.assertEqual( len( cs ), 2 )
+
+		f1.setEnabled( True )
+		self.assertEqual( len( cs ), 2 )
+
+		f2.setEnabled( False )
+		self.assertEqual( len( cs ), 3 )
+
+	def testSlicing( self ) :
+
+		p = Gaffer.Path()
+		self.assertEqual( p[:], [] )
+
+		p[:] = [ "a", "b" ]
+		self.assertEqual( p[:], [ "a", "b" ] )
+
+		p[:1] = [ "c" ]
+		self.assertEqual( p[:], [ "c", "b" ] )
+
+		p[1:] = [ "d" ]
+		self.assertEqual( p[:], [ "c", "d" ] )
+
+		p[:] = [ "a", "b", "c", "d" ]
+		self.assertEqual( p[:], [ "a", "b", "c", "d" ] )
+
+		p[1:3] = [ "e", "f", "g" ]
+		self.assertEqual( p[:], [ "a", "e", "f", "g", "d" ] )
+
+		p[1:3] = [ "j" ]
+		self.assertEqual( p[:], [ "a", "j", "g", "d" ] )
+
+		del p[3:]
+		self.assertEqual( p[:], [ "a", "j", "g" ] )
+
+		del p[:2]
+		self.assertEqual( p[:], [ "g" ] )
+
+		del p[:]
+		self.assertEqual( p[:], [] )
+
 if __name__ == "__main__":
 	unittest.main()
 
