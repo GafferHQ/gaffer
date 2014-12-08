@@ -158,6 +158,55 @@ if "DELIGHT" in os.environ :
 		stacktrace = traceback.format_exc()
 		IECore.msg( IECore.Msg.Level.Error, "startup/gui/menus.py", "Error loading RenderMan module - \"%s\".\n %s" % ( m, stacktrace ) )
 
+# appleseed nodes
+
+if "APPLESEED" in os.environ :
+
+	try :
+
+		import GafferAppleseed
+		import GafferAppleseedUI
+		import GafferOSL
+		import GafferOSLUI
+
+		def __shaderNodeCreator( nodeName, shaderName ) :
+
+			node = GafferOSL.OSLShader( nodeName )
+			node.loadShader( shaderName )
+
+			return node
+
+		GafferSceneUI.ShaderUI.appendShaders(
+			nodeMenu.definition(), "/Appleseed/Shader",
+			os.environ["APPLESEED_SEARCHPATH"].split( ":" ),
+			[ "oso" ],
+			__shaderNodeCreator
+		)
+
+		GafferAppleseedUI.LightMenu.appendLights( nodeMenu.definition() )
+
+		nodeMenu.append( "/Appleseed/Attributes", GafferAppleseed.AppleseedAttributes, searchText = "AppleseedAttributes" )
+		nodeMenu.append( "/Appleseed/Options", GafferAppleseed.AppleseedOptions, searchText = "AppleseedOptions" )
+		nodeMenu.append(
+			"/Appleseed/Render", GafferAppleseed.AppleseedRender,
+			plugValues = {
+				"fileName" : "${project:rootDirectory}/appleseeds/${script:name}/${script:name}.####.appleseed",
+			},
+			searchText = "AppleseedRender"
+		)
+
+		scriptWindowMenu.append(
+			"/Help/Appleseed/User Docs",
+			{
+				"command" : IECore.curry( GafferUI.showURL, "https://github.com/appleseedhq/appleseed/wiki" ),
+			}
+		)
+
+	except Exception, m :
+
+		stacktrace = traceback.format_exc()
+		IECore.msg( IECore.Msg.Level.Error, "startup/gui/menus.py", "Error loading Appleseed module - \"%s\".\n %s" % ( m, stacktrace ) )
+
 # Scene nodes
 
 nodeMenu.append( "/Scene/File/Reader", GafferScene.SceneReader, searchText = "SceneReader" )
@@ -289,3 +338,11 @@ nodeMenu.append( "/Utility/Reference", GafferUI.ReferenceUI.nodeMenuCreateComman
 nodeMenu.definition().append( "/Utility/Backdrop", { "command" : GafferUI.BackdropUI.nodeMenuCreateCommand } )
 nodeMenu.append( "/Utility/System Command", Gaffer.SystemCommand, searchText = "SystemCommand" )
 nodeMenu.append( "/Utility/Task List", Gaffer.TaskList, searchText = "TaskList" )
+
+# appleseed uses GafferOSL shaders so  we need to 
+# add the paths to them to OSL_SHADER_PATHS environment var.
+# this has to happen after GafferOSL is initialized otherwise 
+# appleseed shaders also show on the OSL menu.
+if "APPLESEED" in os.environ :
+
+	os.environ["OSL_SHADER_PATHS"] = os.environ["APPLESEED_SEARCHPATH"] + ":" + os.environ["OSL_SHADER_PATHS"]

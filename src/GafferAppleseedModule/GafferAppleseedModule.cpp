@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2011-2014, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2014, Esteban Tovagliari. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,49 +34,25 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUI_TYPEIDS_H
-#define GAFFERUI_TYPEIDS_H
+#include "boost/python.hpp"
 
-namespace GafferUI
+#include "GafferBindings/DependencyNodeBinding.h"
+
+#include "GafferAppleseed/AppleseedOptions.h"
+#include "GafferAppleseed/AppleseedAttributes.h"
+#include "GafferAppleseed/AppleseedLight.h"
+
+using namespace boost::python;
+using namespace GafferAppleseed;
+
+BOOST_PYTHON_MODULE( _GafferAppleseed )
 {
 
-enum TypeId
-{
-	GadgetTypeId = 110251,
-	NodeGadgetTypeId = 110252,
-	GraphGadgetTypeId = 110253,
-	ContainerGadgetTypeId = 110254,
-	RenderableGadgetTypeId = 110255,
-	TextGadgetTypeId = 110256,
-	NameGadgetTypeId = 110257,
-	IndividualContainerTypeId = 110258,
-	FrameTypeId = 110259,
-	StyleTypeId = 110260,
-	StandardStyleTypeId = 110261,
-	NoduleTypeId = 110262,
-	LinearContainerTypeId = 110263,
-	ConnectionGadgetTypeId = 110264,
-	StandardNodeGadgetTypeId = 110265,
-	SplinePlugGadgetTypeId = 110266,
-	StandardNoduleTypeId = 110267,
-	CompoundNoduleTypeId = 110268,
-	ImageGadgetTypeId = 110269,
-	ViewportGadgetTypeId = 110270,
-	ViewTypeId = 110271,
-	View3DTypeId = 110272,
-	ObjectViewTypeId = 110273,
-	PlugGadgetTypeId = 110274,
-	GraphLayoutTypeId = 110275,
-	StandardGraphLayoutTypeId = 110276,
-	BackdropNodeGadgetTypeId = 110277,
-	SpacerGadgetTypeId = 110278,
-	StandardConnectionGadgetTypeId = 110279,
-	HandleTypeId = 110280,
-	ToolTypeId = 110281,
+	GafferBindings::NodeClass<AppleseedLight>()
+		.def( "loadShader", (void (AppleseedLight::*)( const std::string & ) )&AppleseedLight::loadShader )
+	;
 
-	LastTypeId = 110450
-};
+	GafferBindings::DependencyNodeClass<AppleseedOptions>();
+	GafferBindings::DependencyNodeClass<AppleseedAttributes>();
 
-} // namespace GafferUI
-
-#endif // GAFFERUI_TYPEIDS_H
+}
