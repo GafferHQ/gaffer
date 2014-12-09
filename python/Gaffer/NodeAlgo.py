@@ -36,6 +36,45 @@
 
 import Gaffer
 
+##########################################################################
+# Presets
+##########################################################################
+
+## Returns the names of all presets defined for the plug.
+def presets( plug ) :
+
+	result = []
+	for n in Gaffer.Metadata.registeredPlugValues( plug ) :
+		if n.startswith( "preset:" ) :
+			result.append( n[7:] )
+			
+	return result
+
+## Returns the name of the preset currently applied to the plug.
+# Returns None if no preset is applied.
+def currentPreset( plug ) :
+
+	if not hasattr( plug, "getValue" ) :
+		return None
+	
+	value = plug.getValue()
+	for n in Gaffer.Metadata.registeredPlugValues( plug ) :
+		if n.startswith( "preset:" ) :
+			if Gaffer.Metadata.plugValue( plug, n ) == value :
+				return n[7:]
+				
+	return None
+	
+## Applies the named preset to the plug.
+def applyPreset( plug, presetName ) :
+
+	value = Gaffer.Metadata.plugValue( plug, "preset:" + presetName )
+	plug.setValue( value )
+
+##########################################################################
+# User defaults
+##########################################################################
+
 def applyUserDefaults( nodeOrNodes ) :
 	
 	if isinstance( nodeOrNodes, list ) :

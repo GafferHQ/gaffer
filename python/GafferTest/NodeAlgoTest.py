@@ -104,6 +104,27 @@ class NodeAlgoTest( GafferTest.TestCase ) :
 		self.assertEqual( node["op1"].getValue(), 1 )
 		self.assertEqual( node2["op1"].getValue(), 2 )
 
+	def testPresets( self ) :
+	
+		node = GafferTest.AddNode()
+		
+		self.assertEqual( Gaffer.NodeAlgo.presets( node["op1"] ), [] )
+		self.assertEqual( Gaffer.NodeAlgo.currentPreset( node["op1"] ), None )
+		
+		Gaffer.Metadata.registerPlugValue( node["op1"], "preset:one", 1 )
+		Gaffer.Metadata.registerPlugValue( node["op1"], "preset:two", 2 )
+		
+		self.assertEqual( Gaffer.NodeAlgo.presets( node["op1"] ), [ "one", "two" ] )
+		self.assertEqual( Gaffer.NodeAlgo.currentPreset( node["op1"] ), None )
+		
+		Gaffer.NodeAlgo.applyPreset( node["op1"], "one" )
+		self.assertEqual( node["op1"].getValue(), 1 )
+		self.assertEqual( Gaffer.NodeAlgo.currentPreset( node["op1"] ), "one" )
+
+		Gaffer.NodeAlgo.applyPreset( node["op1"], "two" )
+		self.assertEqual( node["op1"].getValue(), 2 )
+		self.assertEqual( Gaffer.NodeAlgo.currentPreset( node["op1"] ), "two" )
+
 if __name__ == "__main__":
 	unittest.main()
 
