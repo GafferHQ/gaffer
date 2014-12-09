@@ -62,8 +62,6 @@ ObjectSourceBase<BaseType>::ObjectSourceBase( const std::string &name, const std
 	BaseType::addChild( new Gaffer::StringPlug( "name", Gaffer::Plug::In, namePlugDefaultValue ) );
 	BaseType::addChild( new Gaffer::TransformPlug( "transform" ) );
 	BaseType::addChild( new Gaffer::ObjectPlug( "__source", Gaffer::Plug::Out, IECore::NullObject::defaultNullObject() ) );
-	BaseType::addChild( new Gaffer::ObjectPlug( "__inputSource", Gaffer::Plug::In, IECore::NullObject::defaultNullObject(), Gaffer::Plug::Default & ~Gaffer::Plug::Serialisable ) );
-	inputSourcePlug()->setInput( sourcePlug() );
 }
 
 template<typename BaseType>
@@ -100,7 +98,7 @@ void ObjectSourceBase<BaseType>::affects( const Gaffer::Plug *input, Gaffer::Dep
 {
 	BaseType::affects( input, outputs );
 
-	if( input == inputSourcePlug() )
+	if( input == sourcePlug() )
 	{
 		outputs.push_back( BaseType::outPlug()->boundPlug() );
 		outputs.push_back( BaseType::outPlug()->objectPlug() );
@@ -140,22 +138,10 @@ const Gaffer::ObjectPlug *ObjectSourceBase<BaseType>::sourcePlug() const
 }
 
 template<typename BaseType>
-Gaffer::ObjectPlug *ObjectSourceBase<BaseType>::inputSourcePlug()
-{
-	return BaseType::template getChild<Gaffer::ObjectPlug>( g_firstPlugIndex + 3 );
-}
-
-template<typename BaseType>
-const Gaffer::ObjectPlug *ObjectSourceBase<BaseType>::inputSourcePlug() const
-{
-	return BaseType::template getChild<Gaffer::ObjectPlug>( g_firstPlugIndex + 3 );
-}
-
-template<typename BaseType>
 void ObjectSourceBase<BaseType>::hashBound( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
 	BaseType::hashBound( path, context, parent, h );
-	inputSourcePlug()->hash( h );
+	sourcePlug()->hash( h );
 	if( path.size() == 0 )
 	{
 		transformPlug()->hash( h );
@@ -173,7 +159,7 @@ template<typename BaseType>
 void ObjectSourceBase<BaseType>::hashObject( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
 	BaseType::hashObject( path, context, parent, h );
-	inputSourcePlug()->hash( h );
+	sourcePlug()->hash( h );
 }
 
 template<typename BaseType>
@@ -199,7 +185,7 @@ template<typename BaseType>
 Imath::Box3f ObjectSourceBase<BaseType>::computeBound( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	Imath::Box3f result;
-	IECore::ConstObjectPtr object = inputSourcePlug()->getValue();
+	IECore::ConstObjectPtr object = sourcePlug()->getValue();
 
 	if( const IECore::VisibleRenderable *renderable = IECore::runTimeCast<const IECore::VisibleRenderable>( object.get() ) )
 	{
@@ -246,7 +232,7 @@ IECore::ConstObjectPtr ObjectSourceBase<BaseType>::computeObject( const SceneNod
 {
 	if( path.size() == 1 )
 	{
-		return inputSourcePlug()->getValue();
+		return sourcePlug()->getValue();
 	}
 	return parent->objectPlug()->defaultValue();
 }

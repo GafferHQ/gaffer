@@ -93,9 +93,6 @@ class ObjectSourceBase : public BaseType
 
 	private :
 
-		Gaffer::ObjectPlug *inputSourcePlug();
-		const Gaffer::ObjectPlug *inputSourcePlug() const;
-
 		static size_t g_firstPlugIndex;
 
 };

@@ -51,14 +51,10 @@ class SceneWriterTest( GafferSceneTest.SceneTestCase ) :
 
 	def testWrite( self ) :
 
-		s = GafferTest.SphereNode()
-
-		o = GafferScene.ObjectToScene()
-
-		o["__inputSource"].setInput( s["out"] )
+		s = GafferScene.Sphere()
 
 		g = GafferScene.Group()
-		g["in"].setInput( o["out"] )
+		g["in"].setInput( s["out"] )
 
 		g["transform"]["translate"]["x"].setValue( 5 )
 		g["transform"]["translate"]["z"].setValue( 2 )
