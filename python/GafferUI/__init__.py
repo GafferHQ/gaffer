@@ -207,6 +207,7 @@ from Timeline import Timeline
 from MultiLineStringPlugValueWidget import MultiLineStringPlugValueWidget
 from CompoundPlugValueWidget import CompoundPlugValueWidget
 from EnumPlugValueWidget import EnumPlugValueWidget
+from PresetsPlugValueWidget import PresetsPlugValueWidget
 from GraphComponentBrowserMode import GraphComponentBrowserMode
 from ToolPlugValueWidget import ToolPlugValueWidget
 from LabelPlugValueWidget import LabelPlugValueWidget
