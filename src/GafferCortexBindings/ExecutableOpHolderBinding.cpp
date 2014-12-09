@@ -38,9 +38,6 @@
 
 #include "IECore/Op.h"
 
-#include "IECorePython/Wrapper.h"
-#include "IECorePython/RunTimeTypedBinding.h"
-
 #include "Gaffer/Context.h"
 
 #include "GafferBindings/ExecutableNodeBinding.h"

@@ -38,10 +38,6 @@
 #include "boost/python.hpp"
 #include "boost/format.hpp"
 
-#include "IECore/MurmurHash.h"
-#include "IECorePython/Wrapper.h"
-#include "IECorePython/RunTimeTypedBinding.h"
-
 #include "Gaffer/ValuePlug.h"
 #include "Gaffer/Node.h"
 #include "Gaffer/Reference.h"

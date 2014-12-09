@@ -38,9 +38,6 @@
 #include "boost/python.hpp"
 #include "boost/format.hpp"
 
-#include "IECorePython/RunTimeTypedBinding.h"
-#include "IECorePython/Wrapper.h"
-
 #include "GafferBindings/DependencyNodeBinding.h"
 #include "GafferBindings/ComputeNodeBinding.h"
 #include "GafferBindings/ExecutableNodeBinding.h"

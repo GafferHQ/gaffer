@@ -35,15 +35,11 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/python.hpp"
-#include "boost/python/extract.hpp"
-
-#include "IECorePython/Wrapper.h"
-#include "IECorePython/RunTimeTypedBinding.h"
 
 #include "Gaffer/Plug.h"
 #include "Gaffer/Context.h"
 #include "Gaffer/ExecutableNode.h"
-#include "GafferBindings/NodeBinding.h"
+
 #include "GafferBindings/ExecutableNodeBinding.h"
 
 using namespace boost::python;
