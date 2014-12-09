@@ -372,6 +372,92 @@ class MetadataTest( GafferTest.TestCase ) :
 			del p
 			del n
 
+	def testOrder( self ) :
+	
+		class MetadataTestNodeA( Gaffer.Node ) :
+		
+			def __init__( self, name = "MetadataTestNodeOne" ) :
+			
+				Gaffer.Node.__init__( self, name )
+				
+				self["a"] = Gaffer.IntPlug()
+		
+		IECore.registerRunTimeTyped( MetadataTestNodeA )
+		
+		class MetadataTestNodeB( MetadataTestNodeA ) :
+		
+			def __init__( self, name = "MetadataTestNodeOne" ) :
+
+				MetadataTestNodeA.__init__( self, name )
+					
+		IECore.registerRunTimeTyped( MetadataTestNodeB )
+
+		# test node registrations
+
+		node = MetadataTestNodeB()
+		
+		Gaffer.Metadata.registerNodeValue( node, "nodeSeven", 7 )
+		Gaffer.Metadata.registerNodeValue( node, "nodeEight", 8 )
+		Gaffer.Metadata.registerNodeValue( node, "nodeNine", 9 )
+
+		Gaffer.Metadata.registerNodeValue( MetadataTestNodeB, "nodeFour", 4 )
+		Gaffer.Metadata.registerNodeValue( MetadataTestNodeB, "nodeFive", 5 )
+		Gaffer.Metadata.registerNodeValue( MetadataTestNodeB, "nodeSix", 6 )
+		
+		Gaffer.Metadata.registerNodeValue( MetadataTestNodeA, "nodeOne", 1 )
+		Gaffer.Metadata.registerNodeValue( MetadataTestNodeA, "nodeTwo", 2 )
+		Gaffer.Metadata.registerNodeValue( MetadataTestNodeA, "nodeThree", 3 )
+		
+		self.assertEqual(
+			Gaffer.Metadata.registeredNodeValues( node ),
+			[
+				# base class values first, in order of their registration
+				"nodeOne",
+				"nodeTwo",
+				"nodeThree",
+				# derived class values next, in order of their registration
+				"nodeFour",
+				"nodeFive",
+				"nodeSix",
+				# instance values last, in order of their registration
+				"nodeSeven",
+				"nodeEight",
+				"nodeNine",
+			]
+		)
+		
+		# test plug registrations
+
+		Gaffer.Metadata.registerPlugValue( node["a"], "plugSeven", 7 )
+		Gaffer.Metadata.registerPlugValue( node["a"], "plugEight", 8 )
+		Gaffer.Metadata.registerPlugValue( node["a"], "plugNine", 9 )
+
+		Gaffer.Metadata.registerPlugValue( MetadataTestNodeB, "a", "plugFour", 4 )
+		Gaffer.Metadata.registerPlugValue( MetadataTestNodeB, "a", "plugFive", 5 )
+		Gaffer.Metadata.registerPlugValue( MetadataTestNodeB, "a", "plugSix", 6 )
+		
+		Gaffer.Metadata.registerPlugValue( MetadataTestNodeA, "a", "plugOne", 1 )
+		Gaffer.Metadata.registerPlugValue( MetadataTestNodeA, "a", "plugTwo", 2 )
+		Gaffer.Metadata.registerPlugValue( MetadataTestNodeA, "a", "plugThree", 3 )
+				
+		self.assertEqual(
+			Gaffer.Metadata.registeredPlugValues( node["a"] ),
+			[
+				# base class values first, in order of their registration
+				"plugOne",
+				"plugTwo",
+				"plugThree",
+				# derived class values next, in order of their registration
+				"plugFour",
+				"plugFive",
+				"plugSix",
+				# instance values last, in order of their registration
+				"plugSeven",
+				"plugEight",
+				"plugNine",
+			]
+		)
+	
 	def testThreading( self ) :
 
 		GafferTest.testMetadataThreading()
