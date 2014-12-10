@@ -42,6 +42,18 @@ import Gaffer
 import GafferUI
 
 ##########################################################################
+# Public methods
+##########################################################################
+
+## May be called to connect the DotUI functionality to an application
+# instance. This isn't done automatically because some applications
+# may have graphs for which it doesn't make sense to use Dots. Typically
+# this function would be called from an application startup file.
+def connect( applicationRoot ) :
+
+	applicationRoot.__dotUIConnected = True
+
+##########################################################################
 # Metadata
 ##########################################################################
 
@@ -83,6 +95,14 @@ def __insertDot( menu, destinationPlug ) :
 		graphGadget.setNodePosition( node, IECore.V2f( position.x, position.y ) )
 
 def __connectionContextMenu( nodeGraph, destinationPlug, menuDefinition ) :
+
+	applicationRoot = nodeGraph.scriptNode().ancestor( Gaffer.ApplicationRoot )
+	connected = False
+	with IECore.IgnoredExceptions( AttributeError ) :
+		connected = applicationRoot.__dotUIConnected
+
+	if not connected :
+		return
 
 	if len( menuDefinition.items() ) :
 		menuDefinition.append( "/DotDivider", { "divider" : True } )

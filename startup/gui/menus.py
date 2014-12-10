@@ -347,3 +347,8 @@ nodeMenu.append( "/Utility/Task List", Gaffer.TaskList, searchText = "TaskList" 
 if "APPLESEED" in os.environ :
 
 	os.environ["OSL_SHADER_PATHS"] = os.environ["APPLESEED_SEARCHPATH"] + ":" + os.environ["OSL_SHADER_PATHS"]
+
+## Miscellaneous UI
+###########################################################################
+
+GafferUI.DotUI.connect( application.root() )
