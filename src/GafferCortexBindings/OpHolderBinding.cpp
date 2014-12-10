@@ -39,9 +39,6 @@
 
 #include "IECore/Op.h"
 
-#include "IECorePython/Wrapper.h"
-#include "IECorePython/RunTimeTypedBinding.h"
-
 #include "GafferBindings/DependencyNodeBinding.h"
 
 #include "GafferCortex/OpHolder.h"

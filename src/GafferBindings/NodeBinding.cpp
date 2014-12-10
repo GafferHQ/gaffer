@@ -36,12 +36,6 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/python.hpp"
-#include "boost/python/raw_function.hpp"
-
-#include "boost/format.hpp"
-
-#include "IECorePython/Wrapper.h"
-#include "IECorePython/RunTimeTypedBinding.h"
 
 #include "Gaffer/ScriptNode.h"
 

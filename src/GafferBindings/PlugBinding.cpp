@@ -37,9 +37,6 @@
 
 #include "boost/python.hpp"
 
-#include "IECorePython/RunTimeTypedBinding.h"
-#include "IECorePython/Wrapper.h"
-
 #include "Gaffer/Plug.h"
 #include "Gaffer/Node.h"
 #include "Gaffer/Reference.h"
