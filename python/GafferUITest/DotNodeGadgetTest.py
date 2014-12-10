@@ -123,5 +123,27 @@ class DotNodeGadgetTest( GafferUITest.TestCase ) :
 		self.assertEqual( g.noduleTangent( g.nodule( s["d"]["in"] ) ), IECore.V3f( -1, 0, 0 ) )
 		self.assertEqual( g.noduleTangent( g.nodule( s["d"]["out"] ) ), IECore.V3f( 1, 0, 0 ) )
 
+	def testCutAndPasteKeepsTangents( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = GafferTest.AddNode()
+		Gaffer.Metadata.registerPlugValue( s["n"]["sum"], "nodeGadget:nodulePosition", "right" )
+
+		graphGadget = GafferUI.GraphGadget( s )
+
+		s["d"] = Gaffer.Dot()
+		s["d"].setup( s["n"]["sum"] )
+		s["d"]["in"].setInput( s["n"]["sum"] )
+
+		dotNodeGadget = graphGadget.nodeGadget( s["d"] )
+
+		self.assertEqual( dotNodeGadget.noduleTangent( dotNodeGadget.nodule( s["d"]["in"] ) ), IECore.V3f( -1, 0, 0 ) )
+
+		s.execute( s.serialise( filter = Gaffer.StandardSet( [ s["n"], s["d"] ] ) ) )
+
+		dot1NodeGadget = graphGadget.nodeGadget( s["d1"] )
+		self.assertEqual( dot1NodeGadget.noduleTangent( dot1NodeGadget.nodule( s["d1"]["in"] ) ), IECore.V3f( -1, 0, 0 ) )
+
 if __name__ == "__main__":
 	unittest.main()

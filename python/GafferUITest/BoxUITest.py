@@ -43,24 +43,24 @@ import GafferUITest
 
 class BoxUITest( GafferUITest.TestCase ) :
 
+	class NodulePositionNode( GafferTest.AddNode ) :
+
+		def __init__( self, name = "NodulePositionNode" ) :
+
+			GafferTest.AddNode.__init__( self, name )
+
+	IECore.registerRunTimeTyped( NodulePositionNode )
+
+	Gaffer.Metadata.registerPlugValue( NodulePositionNode, "op1", "nodeGadget:nodulePosition", "left" )
+	Gaffer.Metadata.registerPlugValue( NodulePositionNode, "sum", "nodeGadget:nodulePosition", "right" )
+
 	def testNodulePositions( self ) :
-
-		class NodulePositionNode( GafferTest.AddNode ) :
-
-			def __init__( self, name = "NodulePositionNode" ) :
-
-				GafferTest.AddNode.__init__( self, name )
-
-		IECore.registerRunTimeTyped( NodulePositionNode )
-
-		Gaffer.Metadata.registerPlugValue( NodulePositionNode, "op1", "nodeGadget:nodulePosition", "left" )
-		Gaffer.Metadata.registerPlugValue( NodulePositionNode, "sum", "nodeGadget:nodulePosition", "right" )
 
 		s = Gaffer.ScriptNode()
 		g = GafferUI.GraphGadget( s )
 
 		s["a"] = GafferTest.AddNode()
-		s["n"] = NodulePositionNode()
+		s["n"] = self.NodulePositionNode()
 		s["r"] = GafferTest.AddNode()
 
 		s["n"]["op1"].setInput( s["a"]["sum"] )
@@ -72,6 +72,19 @@ class BoxUITest( GafferUITest.TestCase ) :
 
 		self.assertEqual( boxGadget.noduleTangent( boxGadget.nodule( box["in"] ) ), IECore.V3f( -1, 0, 0 ) )
 		self.assertEqual( boxGadget.noduleTangent( boxGadget.nodule( box["out"] ) ), IECore.V3f( 1, 0, 0 ) )
+
+		# Now test that a copy/paste of the box maintains the tangents in the copy.
+
+		s2 = Gaffer.ScriptNode()
+		g2 = GafferUI.GraphGadget( s2 )
+
+		s2.execute( s.serialise() )
+
+		box2 = s2[box.getName()]
+		boxGadget2 = g2.nodeGadget( box2 )
+
+		self.assertEqual( boxGadget2.noduleTangent( boxGadget2.nodule( box2["in"] ) ), IECore.V3f( -1, 0, 0 ) )
+		self.assertEqual( boxGadget2.noduleTangent( boxGadget2.nodule( box2["out"] ) ), IECore.V3f( 1, 0, 0 ) )
 
 	def testRenamingPlugs( self ) :
 
