@@ -38,6 +38,8 @@
 #ifndef GAFFERUI_STANDARDNODEGADGET_H
 #define GAFFERUI_STANDARDNODEGADGET_H
 
+#include "Gaffer/StringAlgo.h"
+
 #include "GafferUI/NodeGadget.h"
 #include "GafferUI/LinearContainer.h"
 
@@ -103,6 +105,7 @@ class StandardNodeGadget : public NodeGadget
 
 	private :
 
+		Edge plugEdge( const Gaffer::Plug *plug );
 		NodulePtr addNodule( Gaffer::PlugPtr plug );
 
 		LinearContainer *noduleContainer( Edge edge );
@@ -127,6 +130,8 @@ class StandardNodeGadget : public NodeGadget
 		bool dragMove( GadgetPtr gadget, const DragDropEvent &event );
 		bool dragLeave( GadgetPtr gadget, const DragDropEvent &event );
 		bool drop( GadgetPtr gadget, const DragDropEvent &event );
+
+		void plugMetadataChanged( IECore::TypeId nodeTypeId, const Gaffer::MatchPattern &plugPath, IECore::InternedString key );
 
 		Nodule *closestCompatibleNodule( const DragDropEvent &event );
 		bool noduleIsCompatible( const Nodule *nodule, const DragDropEvent &event );

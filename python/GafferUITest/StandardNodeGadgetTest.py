@@ -165,6 +165,16 @@ class StandardNodeGadgetTest( GafferUITest.TestCase ) :
 		self.assertTrue( g.nodule( n["p"] ) is not None )
 		self.assertTrue( g.getEdgeGadget( g.Edge.TopEdge ).isSame( e ) )
 
+	def testEdgeMetadataChange( self ) :
+
+		n = GafferTest.MultiplyNode()
+
+		g = GafferUI.StandardNodeGadget( n )
+		self.assertEqual( g.noduleTangent( g.nodule( n["op2"] ) ), IECore.V3f( 0, 1, 0 ) )
+
+		Gaffer.Metadata.registerPlugValue( n["op2"], "nodeGadget:nodulePosition", "left" )
+		self.assertEqual( g.noduleTangent( g.nodule( n["op2"] ) ), IECore.V3f( -1, 0, 0 ) )
+
 if __name__ == "__main__":
 	unittest.main()
 
