@@ -118,6 +118,7 @@ enum TypeId
 	SwitchDependencyNodeTypeId = 110071,
 	ParameterisedHolderExecutableNodeTypeId = 110072, // obsolete - available for reuse
 	SubGraphTypeId = 110073,
+	DotTypeId = 110074,
 	LastTypeId = 110180,
 
 };
