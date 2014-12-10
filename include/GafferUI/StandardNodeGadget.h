@@ -46,11 +46,11 @@ namespace GafferUI
 
 /// The standard means of representing a Node in a GraphGadget.
 /// Nodes are represented as rectangular boxes with the name displayed
-/// centrally and the nodules arranged at the sides. The orientation
-/// argument to the constructor is used to determine whether the direction
-/// of flow is left->right or top->bottom, and in addition nodules may be
-/// positioned arbitrarily using a "nodeGadget:nodulePosition" Metadata entry
-/// with a value of "left", "right", "top" or "bottom".
+/// centrally and the nodules arranged at the sides. Nodules may be
+/// positioned using a "nodeGadget:nodulePosition" Metadata entry
+/// with a value of "left", "right", "top" or "bottom". The minimum
+/// width for the gadget can be specified with a "nodeGadget:minimumWidth"
+/// Metadata entry with a float value.
 class StandardNodeGadget : public NodeGadget
 {
 
@@ -58,6 +58,7 @@ class StandardNodeGadget : public NodeGadget
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::StandardNodeGadget, StandardNodeGadgetTypeId, NodeGadget );
 
+		/// \todo Remove orientation parameter - Metadata can do everything it can do.
 		StandardNodeGadget( Gaffer::NodePtr node, LinearContainer::Orientation orientation=LinearContainer::X );
 		virtual ~StandardNodeGadget();
 

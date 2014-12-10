@@ -80,7 +80,11 @@ StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node, LinearContainer::O
 
 	const float horizontalNoduleSpacing = 2.0f;
 	const float verticalNoduleSpacing = 0.2f;
-	const float minWidth = m_orientation == LinearContainer::X ? 10.0f : 0.0f;
+	float minWidth = m_orientation == LinearContainer::X ? 10.0f : 0.0f;
+	if( IECore::ConstFloatDataPtr d = Metadata::nodeValue<IECore::FloatData>( node.get(), "nodeGadget:minWidth" ) )
+	{
+		minWidth = d->readable();
+	}
 
 	// four containers for nodules - one each for the top, bottom, left and right.
 	// these contain spacers at either end to prevent nodules being placed in
