@@ -35,13 +35,16 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "Gaffer/Dot.h"
+#include "Gaffer/Metadata.h"
 
+using namespace IECore;
 using namespace Gaffer;
 
 IE_CORE_DEFINERUNTIMETYPED( Dot );
 
-static IECore::InternedString g_inPlugName( "in" );
-static IECore::InternedString g_outPlugName( "out" );
+static InternedString g_inPlugName( "in" );
+static InternedString g_outPlugName( "out" );
+static InternedString g_nodulePositionName( "nodeGadget:nodulePosition" );
 
 Dot::Dot( const std::string &name )
 	:	DependencyNode( name )
@@ -54,11 +57,62 @@ Dot::~Dot()
 
 void Dot::setup( const Plug *plug )
 {
+	if( const Plug *inputPlug = plug->getInput<Plug>() )
+	{
+		// We'd prefer to set up based on an input plug if possible - see comments
+		// in DotNodeGadgetTest.testCustomNoduleTangentsPreferInputIfAvailable().
+		plug = inputPlug;
+	}
+
 	Gaffer::PlugPtr in = plug->createCounterpart( g_inPlugName, Plug::In );
 	Gaffer::PlugPtr out = plug->createCounterpart( g_outPlugName, Plug::Out );
 
 	in->setFlags( Plug::Dynamic, true );
 	out->setFlags( Plug::Dynamic, true );
+
+	// Set up Metadata so our plugs appear in the right place. We must do this now rather
+	// than later because the NodeGraph will add a Nodule for the plug as soon as the plug
+	// is added as a child.
+
+	ConstStringDataPtr nodulePosition;
+	for( const Plug *metadataPlug = plug; metadataPlug; metadataPlug = metadataPlug->parent<Plug>() )
+	{
+		if( nodulePosition = Metadata::plugValue<StringData>( metadataPlug, g_nodulePositionName ) )
+		{
+			break;
+		}
+	}
+
+	if( nodulePosition )
+	{
+		const std::string &position = nodulePosition->readable();
+		std::string oppositePosition;
+		if( position == "left" )
+		{
+			oppositePosition = "right";
+		}
+		else if( position == "right" )
+		{
+			oppositePosition = "left";
+		}
+		else if( position == "bottom" )
+		{
+			oppositePosition = "top";
+		}
+		else
+		{
+			oppositePosition = "bottom";
+		}
+
+		Metadata::registerPlugValue(
+			plug->direction() == Plug::In ? in.get() : out.get(),
+			g_nodulePositionName, nodulePosition
+		);
+		Metadata::registerPlugValue(
+			plug->direction() == Plug::In ? out.get() : in.get(),
+			g_nodulePositionName, new StringData( oppositePosition )
+		);
+	}
 
 	setChild( g_inPlugName, in );
 	setChild( g_outPlugName, out );

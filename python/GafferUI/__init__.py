@@ -238,6 +238,7 @@ import BoxUI
 import ReferenceUI
 import BackdropUI
 import SystemCommandUI
+import DotUI
 
 # backwards compatibility
 ## \todo Remove me

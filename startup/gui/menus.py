@@ -336,6 +336,7 @@ nodeMenu.append( "/Utility/Random", Gaffer.Random )
 nodeMenu.append( "/Utility/Box", GafferUI.BoxUI.nodeMenuCreateCommand )
 nodeMenu.append( "/Utility/Reference", GafferUI.ReferenceUI.nodeMenuCreateCommand )
 nodeMenu.definition().append( "/Utility/Backdrop", { "command" : GafferUI.BackdropUI.nodeMenuCreateCommand } )
+nodeMenu.append( "/Utility/Dot", Gaffer.Dot )
 nodeMenu.append( "/Utility/System Command", Gaffer.SystemCommand, searchText = "SystemCommand" )
 nodeMenu.append( "/Utility/Task List", Gaffer.TaskList, searchText = "TaskList" )
 
