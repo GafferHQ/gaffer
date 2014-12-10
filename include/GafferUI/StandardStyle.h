@@ -116,6 +116,7 @@ class StandardStyle : public Style
 		static IECoreGL::Shader *shader();
 		static int g_borderParameter;
 		static int g_borderRadiusParameter;
+		static int g_borderWidthParameter;
 		static int g_edgeAntiAliasingParameter;
 		static int g_textureParameter;
 		static int g_textureTypeParameter;

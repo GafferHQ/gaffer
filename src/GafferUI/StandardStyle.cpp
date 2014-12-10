@@ -77,7 +77,7 @@ StandardStyle::StandardStyle()
 	setColor( RaisedColor, Color3f( 0.4 ) );
 	setColor( ForegroundColor, Color3f( 0.9 ) );
 	setColor( HighlightColor, Color3f( 0.466, 0.612, 0.741 ) );
-	setColor( ConnectionColor, Color3f( 0.1, 0.1, 0.1 ) );
+	setColor( ConnectionColor, Color3f( 0.125, 0.125, 0.125 ) );
 }
 
 StandardStyle::~StandardStyle()
@@ -222,6 +222,7 @@ void StandardStyle::renderFrame( const Imath::Box2f &frame, float borderWidth, S
 	glUniform1i( g_bezierParameter, 0 );
 	glUniform1i( g_borderParameter, 1 );
 	glUniform2f( g_borderRadiusParameter, cornerSizes.x, cornerSizes.y );
+	glUniform1f( g_borderWidthParameter, 0.15f / borderWidth );
 	glUniform1i( g_edgeAntiAliasingParameter, 0 );
 	glUniform1i( g_textureTypeParameter, 0 );
 
@@ -247,6 +248,7 @@ void StandardStyle::renderNodule( float radius, State state ) const
 	glUniform1i( g_bezierParameter, 0 );
 	glUniform1i( g_borderParameter, 1 );
 	glUniform2f( g_borderRadiusParameter, 0.5f, 0.5f );
+	glUniform1f( g_borderWidthParameter, 0.2f );
 	glUniform1i( g_edgeAntiAliasingParameter, 0 );
 	glUniform1i( g_textureTypeParameter, 0 );
 
@@ -651,6 +653,7 @@ static const std::string &fragmentSource()
 
 		"uniform bool border;"
 		"uniform vec2 borderRadius;"
+		"uniform float borderWidth;"
 
 		"uniform bool edgeAntiAliasing;"
 
@@ -680,7 +683,7 @@ static const std::string &fragmentSource()
 		"		v /= borderRadius;"
 		"		float r = length( v );"
 
-		"		OUTCOLOR = mix( OUTCOLOR, vec4( 0.05, 0.05, 0.05, OUTCOLOR.a ), ieFilteredStep( 0.8, r ) );"
+		"		OUTCOLOR = mix( OUTCOLOR, vec4( 0.15, 0.15, 0.15, OUTCOLOR.a ), ieFilteredStep( 1.0 - borderWidth, r ) );"
 		"		OUTCOLOR.a *= ( 1.0 - ieFilteredStep( 1.0, r ) );"
 		"	}"
 
@@ -720,6 +723,7 @@ static const std::string &fragmentSource()
 
 int StandardStyle::g_borderParameter;
 int StandardStyle::g_borderRadiusParameter;
+int StandardStyle::g_borderWidthParameter;
 int StandardStyle::g_edgeAntiAliasingParameter;
 int StandardStyle::g_textureParameter;
 int StandardStyle::g_textureTypeParameter;
@@ -739,6 +743,7 @@ IECoreGL::Shader *StandardStyle::shader()
 		g_shader = ShaderLoader::defaultShaderLoader()->create( vertexSource(), "", fragmentSource() );
 		g_borderParameter = g_shader->uniformParameter( "border" )->location;
 		g_borderRadiusParameter = g_shader->uniformParameter( "borderRadius" )->location;
+		g_borderWidthParameter = g_shader->uniformParameter( "borderWidth" )->location;
 		g_edgeAntiAliasingParameter = g_shader->uniformParameter( "edgeAntiAliasing" )->location;
 		g_textureParameter = g_shader->uniformParameter( "texture" )->location;
 		g_textureTypeParameter = g_shader->uniformParameter( "textureType" )->location;
