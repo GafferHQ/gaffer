@@ -130,12 +130,9 @@ class NodeMenu :
 				graphGadget.getLayout().connectNode( graphGadget, node, script.selection() )
 
 			# if no connections were made, we can't expect the graph layout to
-			# know where to put the node, so we'll try to position it based on
+			# know where to put the node, so we'll position it based on
 			# the click location that opened the menu.
-			## \todo This positioning doesn't work very well when the menu min
-			# is not where the mouse was clicked to open the window (when the menu
-			# has been moved to keep it on screen).
-			menuPosition = menu.bound( relativeTo=gadgetWidget ).min
+			menuPosition = menu.popupPosition( relativeTo = gadgetWidget )
 			fallbackPosition = gadgetWidget.getViewportGadget().rasterToGadgetSpace(
 				IECore.V2f( menuPosition.x, menuPosition.y ),
 				gadget = graphGadget
