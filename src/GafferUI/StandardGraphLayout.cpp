@@ -48,6 +48,7 @@
 #include "Gaffer/PlugIterator.h"
 #include "Gaffer/DependencyNode.h"
 #include "Gaffer/StandardSet.h"
+#include "Gaffer/Dot.h"
 
 #include "GafferUI/StandardGraphLayout.h"
 #include "GafferUI/GraphGadget.h"
@@ -1034,6 +1035,15 @@ bool StandardGraphLayout::connectNodeInternal( GraphGadget *graph, Gaffer::Node 
 	if( !this->outputPlugs( graph, potentialInputs, outputPlugs ) )
 	{
 		return false;
+	}
+
+	// if we're trying to connect a dot, then we may need to give it plugs first
+	if( Dot *dot = runTimeCast<Dot>( node ) )
+	{
+		if( !dot->inPlug<Plug>() )
+		{
+			dot->setup( outputPlugs.front() );
+		}
 	}
 
 	// iterate over the output plugs, connecting them in to the node if we can

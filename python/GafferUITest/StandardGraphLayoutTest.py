@@ -703,6 +703,32 @@ class StandardGraphLayoutTest( GafferUITest.TestCase ) :
 		g.getLayout().positionNode( g, s["n"], fallbackPosition )
 		self.assertEqual( g.getNodePosition( s["n"] ), fallbackPosition )
 
+	def testConnectDot( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = GafferTest.AddNode()
+		s["d"] = Gaffer.Dot()
+
+		g = GafferUI.GraphGadget( s )
+		g.getLayout().connectNode( g, s["d"], Gaffer.StandardSet( [ s["n"] ] ) )
+
+		self.assertTrue( s["d"]["out"].source().isSame( s["n"]["sum"] ) )
+
+	def testInsertDot( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n1"] = GafferTest.AddNode()
+		s["n2"] = GafferTest.AddNode()
+		s["n2"]["op1"].setInput( s["n1"]["sum"] )
+
+		s["d"] = Gaffer.Dot()
+
+		g = GafferUI.GraphGadget( s )
+		g.getLayout().connectNode( g, s["d"], Gaffer.StandardSet( [ s["n1"] ] ) )
+
+		self.assertTrue( s["d"]["out"].source().isSame( s["n1"]["sum"] ) )
+		self.assertTrue( s["n2"]["op1"].getInput().isSame( s["d"]["out"] ) )
+
 if __name__ == "__main__":
 	unittest.main()
 
