@@ -336,10 +336,10 @@ NodulePtr StandardNodeGadget::addNodule( Gaffer::PlugPtr plug )
 
 	// remove the spacer at the end, add the nodule, and replace the spacer at the end
 
-	SpacerGadgetPtr spacer = container->getChild<SpacerGadget>( container->children().size() - 1 );
-	container->removeChild( spacer );
-	noduleContainer( edge )->addChild( nodule );
-	container->addChild( spacer );
+	GadgetPtr endGadget = container->getChild<Gadget>( container->children().size() - 1 );
+	container->removeChild( endGadget );
+	container->addChild( nodule );
+	container->addChild( endGadget );
 
 	// remember our nodule
 
@@ -426,6 +426,25 @@ Gadget *StandardNodeGadget::getContents()
 const Gadget *StandardNodeGadget::getContents() const
 {
 	return contentsContainer()->getChild<Gadget>();
+}
+
+void StandardNodeGadget::setEdgeGadget( Edge edge, GadgetPtr gadget )
+{
+	LinearContainer *c = noduleContainer( edge );
+	c->removeChild( c->getChild<Gadget>( c->children().size() - 1 ) );
+	c->addChild( gadget );
+}
+
+Gadget *StandardNodeGadget::getEdgeGadget( Edge edge )
+{
+	LinearContainer *c = noduleContainer( edge );
+	return c->getChild<Gadget>( c->children().size() - 1 );
+}
+
+const Gadget *StandardNodeGadget::getEdgeGadget( Edge edge ) const
+{
+	const LinearContainer *c = noduleContainer( edge );
+	return c->getChild<Gadget>( c->children().size() - 1 );
 }
 
 void StandardNodeGadget::setLabelsVisibleOnHover( bool labelsVisible )

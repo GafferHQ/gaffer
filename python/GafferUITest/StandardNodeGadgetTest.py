@@ -142,6 +142,29 @@ class StandardNodeGadgetTest( GafferUITest.TestCase ) :
 		n.setName( "hg" )
 		self.assertEqual( g.bound().size().y, h )
 
+	def testEdgeGadgets( self ) :
+
+		n = GafferTest.MultiplyNode()
+		g = GafferUI.StandardNodeGadget( n )
+
+		for name, edge in g.Edge.names.items() :
+			eg = GafferUI.TextGadget( name )
+			g.setEdgeGadget( edge, eg )
+			self.assertTrue( g.getEdgeGadget( edge ).isSame( eg ) )
+
+	def testEdgeGadgetsAndNoduleAddition( self ) :
+
+		n = Gaffer.Node()
+		g = GafferUI.StandardNodeGadget( n )
+
+		e = GafferUI.TextGadget( "test" )
+		g.setEdgeGadget( g.Edge.TopEdge, e )
+		self.assertTrue( g.getEdgeGadget( g.Edge.TopEdge ).isSame( e ) )
+
+		n["p"] = Gaffer.IntPlug()
+		self.assertTrue( g.nodule( n["p"] ) is not None )
+		self.assertTrue( g.getEdgeGadget( g.Edge.TopEdge ).isSame( e ) )
+
 if __name__ == "__main__":
 	unittest.main()
 

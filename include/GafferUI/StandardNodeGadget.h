@@ -58,6 +58,17 @@ class StandardNodeGadget : public NodeGadget
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::StandardNodeGadget, StandardNodeGadgetTypeId, NodeGadget );
 
+		enum Edge
+		{
+			TopEdge,
+			BottomEdge,
+			LeftEdge,
+			RightEdge,
+			FirstEdge = TopEdge,
+			LastEdge = RightEdge,
+			InvalidEdge
+		};
+
 		/// \todo Remove orientation parameter - Metadata can do everything it can do.
 		StandardNodeGadget( Gaffer::NodePtr node, LinearContainer::Orientation orientation=LinearContainer::X );
 		virtual ~StandardNodeGadget();
@@ -72,6 +83,13 @@ class StandardNodeGadget : public NodeGadget
 		void setContents( GadgetPtr contents );
 		Gadget *getContents();
 		const Gadget *getContents() const;
+		/// Additional Gadgets can be placed alongside the
+		/// Nodules at the end of each outside edge.
+		/// Initially these are SpacerGadgets, but they can
+		/// be replaced with anything.
+		void setEdgeGadget( Edge edge, GadgetPtr gadget );
+		Gadget *getEdgeGadget( Edge edge );
+		const Gadget *getEdgeGadget( Edge edge ) const;
 
 		void setLabelsVisibleOnHover( bool labelsVisible );
 		bool getLabelsVisibleOnHover() const;
@@ -86,16 +104,6 @@ class StandardNodeGadget : public NodeGadget
 	private :
 
 		NodulePtr addNodule( Gaffer::PlugPtr plug );
-
-		enum Edge
-		{
-			TopEdge,
-			BottomEdge,
-			LeftEdge,
-			RightEdge,
-			FirstEdge = TopEdge,
-			LastEdge = RightEdge
-		};
 
 		LinearContainer *noduleContainer( Edge edge );
 		const LinearContainer *noduleContainer( Edge edge ) const;
