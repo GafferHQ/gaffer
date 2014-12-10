@@ -65,6 +65,10 @@ const Gaffer::Plug *Nodule::plug() const
 	return m_plug.get();
 }
 
+void Nodule::updateDragEndPoint( const Imath::V3f position, const Imath::V3f &tangent )
+{
+}
+
 Nodule::CreatorMap &Nodule::creators()
 {
 	static CreatorMap m;

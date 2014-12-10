@@ -61,6 +61,8 @@ class StandardNodule : public Nodule
 		void setLabelVisible( bool labelVisible );
 		bool getLabelVisible() const;
 
+		virtual void updateDragEndPoint( const Imath::V3f position, const Imath::V3f &tangent );
+
 		virtual Imath::Box3f bound() const;
 
 	protected :
