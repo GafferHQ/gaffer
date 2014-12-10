@@ -233,6 +233,11 @@ class VectorDataWidget( GafferUI.Widget ) :
 				)
 			)
 
+			selectionModel = self.__tableView.selectionModel()
+			selectionModel.selectionChanged.connect( Gaffer.WeakMethod( self.__selectionChanged ) )
+
+		self.__updateRemoveButtonEnabled()
+
 		# Somehow the QTableView can leave its header in a state where updates are disabled.
 		# If we didn't turn them back on, the header would disappear.
 		self.__tableView.verticalHeader().setUpdatesEnabled( True )
@@ -475,6 +480,14 @@ class VectorDataWidget( GafferUI.Widget ) :
 
 		return selectedRows
 
+	def __updateRemoveButtonEnabled( self ) :
+
+		self.removeButton().setEnabled( self.__tableView.selectionModel().hasSelection() )
+
+	def __selectionChanged( self, *unused ) :
+
+		self.__updateRemoveButtonEnabled()
+
 	def __removeSelection( self, button ) :
 
 		self.__removeRows( self.__selectedRows() )
@@ -520,6 +533,10 @@ class VectorDataWidget( GafferUI.Widget ) :
 
 		data = self.getData()
 		if len( data ) == 1 and event.data.isInstanceOf( data[0].typeId() ) :
+			# The remove button will be disabled if there's no selection -
+			# we reenable it so it can receive the drag. We'll update it again
+			# in __dragLeave() and __drop().
+			self.removeButton().setEnabled( True )
 			widget.setHighlighted( True )
 			return True
 
@@ -528,6 +545,10 @@ class VectorDataWidget( GafferUI.Widget ) :
 	def __dragLeave( self, widget, event ) :
 
 		widget.setHighlighted( False )
+
+		if event.destinationWidget is not self and not self.isAncestorOf( event.destinationWidget ) :
+			self.__updateRemoveButtonEnabled()
+
 		return True
 
 	def __drop( self, widget, event ) :
@@ -555,6 +576,7 @@ class VectorDataWidget( GafferUI.Widget ) :
 		self.dataChangedSignal()( self )
 
 		widget.setHighlighted( False )
+		self.__updateRemoveButtonEnabled()
 
 		return True
 
