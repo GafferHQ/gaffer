@@ -497,28 +497,34 @@ bool StandardNodeGadget::dragMove( GadgetPtr gadget, const DragDropEvent &event 
 			m_dragDestinationProxy = closest;
 		}
 	}
-	return true;
+	return m_dragDestinationProxy;
 }
 
 bool StandardNodeGadget::dragLeave( GadgetPtr gadget, const DragDropEvent &event )
 {
-	if( m_dragDestinationProxy && m_dragDestinationProxy != event.destinationGadget )
+	if( !m_dragDestinationProxy )
+	{
+		return false;
+	}
+
+	if( m_dragDestinationProxy != event.destinationGadget )
 	{
 		m_dragDestinationProxy->dragLeaveSignal()( m_dragDestinationProxy, event );
 	}
-	m_dragDestinationProxy = 0;
+	m_dragDestinationProxy = NULL;
 
 	return true;
 }
 
 bool StandardNodeGadget::drop( GadgetPtr gadget, const DragDropEvent &event )
 {
-	bool result = true;
-	if( m_dragDestinationProxy )
+	if( !m_dragDestinationProxy )
 	{
-		result = m_dragDestinationProxy->dropSignal()( m_dragDestinationProxy, event );
-		m_dragDestinationProxy = 0;
+		return false;
 	}
+
+	const bool result = m_dragDestinationProxy->dropSignal()( m_dragDestinationProxy, event );
+	m_dragDestinationProxy = NULL;
 	return result;
 }
 
