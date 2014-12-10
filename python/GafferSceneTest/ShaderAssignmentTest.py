@@ -245,5 +245,15 @@ class ShaderAssignmentTest( unittest.TestCase ) :
 		a = GafferScene.ShaderAssignment()
 		self.assertTrue( a["shader"].acceptsInput( None ) )
 
+	def testInputAcceptanceFromDots( self ) :
+
+		a = GafferScene.ShaderAssignment()
+
+		s = GafferSceneTest.TestShader()
+		d = Gaffer.Dot()
+		d.setup( s["out"] )
+
+		self.assertTrue( a["shader"].acceptsInput( d["out"] ) )
+
 if __name__ == "__main__":
 	unittest.main()

@@ -52,6 +52,7 @@
 #include "Gaffer/SplinePlug.h"
 #include "Gaffer/ArrayPlug.h"
 #include "Gaffer/Box.h"
+#include "Gaffer/Dot.h"
 
 #include "GafferScene/ShaderSwitch.h"
 
@@ -164,8 +165,8 @@ bool RenderManShader::acceptsInput( const Plug *plug, const Plug *inputPlug ) co
 		if( plug->typeId() == Plug::staticTypeId() )
 		{
 			// coshader parameter - source must be another
-			// renderman shader hosting a coshader, or a box
-			// or shader switch with a currently dangling connection.
+			// renderman shader hosting a coshader, or a box,
+			// shader switch or dot with a currently dangling connection.
 			// in the latter cases, we will be called again when the
 			// box or switch is connected to something, so we can check
 			// that the indirect connection is to our liking.
@@ -173,7 +174,8 @@ bool RenderManShader::acceptsInput( const Plug *plug, const Plug *inputPlug ) co
 
 			if(
 				runTimeCast<const Box>( sourceNode ) ||
-				runTimeCast<const ShaderSwitch>( sourceNode )
+				runTimeCast<const ShaderSwitch>( sourceNode ) ||
+				runTimeCast<const Dot>( sourceNode )
 			)
 			{
 				return true;

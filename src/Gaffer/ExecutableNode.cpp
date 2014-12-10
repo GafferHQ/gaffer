@@ -35,6 +35,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "Gaffer/Box.h"
+#include "Gaffer/Dot.h"
 #include "Gaffer/Context.h"
 #include "Gaffer/ArrayPlug.h"
 #include "Gaffer/Dispatcher.h"
@@ -199,8 +200,9 @@ bool ExecutableNode::acceptsInput( const Plug *plug, const Plug *inputPlug ) con
 
 		// we only really want to accept connections from ExecutableNodes, because we can't require
 		// anything else, but we also accept the unconnected inputs and outputs of boxes, so you
-		// can wrap ExecutableNodes in boxes prior to connecting the other side.
-		return runTimeCast<const Box>( sourceNode );
+		// can wrap ExecutableNodes in boxes prior to connecting the other side. likewise, we accept
+		// connections from dots.
+		return runTimeCast<const Box>( sourceNode ) || runTimeCast<const Dot>( sourceNode );
 	}
 
 	return true;

@@ -340,6 +340,20 @@ class ExecutableNodeTest( GafferTest.TestCase ) :
 		s["b"]["out"].setInput( s["b"]["b"]["requirement"] )
 		self.assertTrue( s["a"]["requirements"][0].acceptsInput( s["b"]["out"] ) )
 
+	def testInputAcceptanceFromDots( self ) :
+
+		e1 = GafferTest.TextWriter()
+		e2 = GafferTest.TextWriter()
+
+		d1 = Gaffer.Dot()
+		d1.setup( e1["requirement"] )
+
+		self.assertTrue( e2["requirements"][0].acceptsInput( d1["out"] ) )
+
+		d1["in"].setInput( e1["requirement"] )
+
+		self.assertTrue( e2["requirements"][0].acceptsInput( d1["out"] ) )
+
 if __name__ == "__main__":
 	unittest.main()
 

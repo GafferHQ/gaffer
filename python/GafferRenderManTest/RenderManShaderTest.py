@@ -1593,5 +1593,20 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 		s.loadShader( "fog", keepExistingValues = False )
 		self.assertEqual( s["type"].getValue(), "ri:atmosphere" )
 
+	def testInputAcceptanceFromDots( self ) :
+
+		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/coshaderParameter.sl" )
+		shaderNode = GafferRenderMan.RenderManShader()
+		shaderNode.loadShader( shader )
+
+		coshader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/coshader.sl" )
+		coshaderNode = GafferRenderMan.RenderManShader()
+		coshaderNode.loadShader( coshader )
+
+		dot = Gaffer.Dot()
+		dot.setup( coshaderNode["out"] )
+
+		self.assertTrue( shaderNode["parameters"]["coshaderParameter"].acceptsInput( dot["out"] ) )
+
 if __name__ == "__main__":
 	unittest.main()

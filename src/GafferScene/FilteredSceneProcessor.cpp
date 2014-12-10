@@ -36,6 +36,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "Gaffer/Box.h"
+#include "Gaffer/Dot.h"
 
 #include "Gaffer/Context.h"
 
@@ -119,9 +120,10 @@ bool FilteredSceneProcessor::acceptsInput( const Gaffer::Plug *plug, const Gaffe
 	{
 		// we only want to accept inputs from Filter nodes, but we accept
 		// them from Boxes too, because the intermediate plugs there can
-		// be used to later connect a filter in from the outside.
+		// be used to later connect a filter in from the outside. likewise
+		// with dots.
 		const Node *n = inputPlug->source<Plug>()->node();
-		return runTimeCast<const Filter>( n ) || runTimeCast<const Box>( n );
+		return runTimeCast<const Filter>( n ) || runTimeCast<const Box>( n ) || runTimeCast<const Dot>( n );
 	}
 	return true;
 }
