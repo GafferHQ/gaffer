@@ -99,6 +99,14 @@ Imath::Box3f StandardNodule::bound() const
 	return Box3f( V3f( -0.5, -0.5, 0 ), V3f( 0.5, 0.5, 0 ) );
 }
 
+void StandardNodule::updateDragEndPoint( const Imath::V3f position, const Imath::V3f &tangent )
+{
+	m_dragPosition = position;
+	m_dragTangent = tangent;
+	m_draggingConnection = true;
+	renderRequestSignal()( this );
+}
+
 void StandardNodule::doRender( const Style *style ) const
 {
 	if( m_draggingConnection )
@@ -226,9 +234,7 @@ bool StandardNodule::dragEnter( GadgetPtr gadget, const DragDropEvent &event )
 
 	if( event.sourceGadget == this )
 	{
-		m_draggingConnection = true;
-		m_dragPosition = event.line.p0;
-		m_dragTangent = V3f( 0 );
+		updateDragEndPoint( event.line.p0, V3f( 0 ) );
 		return true;
 	}
 
@@ -249,11 +255,9 @@ bool StandardNodule::dragEnter( GadgetPtr gadget, const DragDropEvent &event )
 			tangent = nodeGadget->noduleTangent( this );
 		}
 
-		if( StandardNodule *sourceNodule = IECore::runTimeCast<StandardNodule>( event.sourceGadget.get() ) )
+		if( Nodule *sourceNodule = IECore::runTimeCast<Nodule>( event.sourceGadget.get() ) )
 		{
-			sourceNodule->m_dragPosition = centre;
-			sourceNodule->m_dragTangent = tangent;
-			sourceNodule->m_draggingConnection = true;
+			sourceNodule->updateDragEndPoint( centre, tangent );
 		}
 		else if( ConnectionGadget *sourceConnection = IECore::runTimeCast<ConnectionGadget>( event.sourceGadget.get() ) )
 		{
@@ -308,7 +312,7 @@ bool StandardNodule::dragLeave( GadgetPtr gadget, const DragDropEvent &event )
 			setCompatibleLabelsVisible( event, false );
 		}
 	}
-	else if( !event.destinationGadget || !event.destinationGadget->isInstanceOf( Nodule::staticTypeId() ) )
+	else if( !event.destinationGadget )
 	{
 		m_draggingConnection = false;
 	}

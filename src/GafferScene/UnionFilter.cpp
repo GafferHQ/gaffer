@@ -35,9 +35,12 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "Gaffer/ArrayPlug.h"
+#include "Gaffer/Box.h"
+#include "Gaffer/Dot.h"
 
 #include "GafferScene/UnionFilter.h"
 
+using namespace IECore;
 using namespace Gaffer;
 using namespace GafferScene;
 
@@ -102,9 +105,8 @@ bool UnionFilter::acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *in
 
 	if( plug->parent<ArrayPlug>() == inPlug() && inputPlug )
 	{
-		const Plug *sourcePlug = inputPlug->source<Plug>();
-		const Node* sourceNode = sourcePlug->node();
-		return sourceNode && sourceNode->isInstanceOf( Filter::staticTypeId() );
+		const Node *n = inputPlug->source<Plug>()->node();
+		return runTimeCast<const Filter>( n ) || runTimeCast<const Box>( n ) || runTimeCast<const Dot>( n );
 	}
 
 	return true;

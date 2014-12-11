@@ -66,11 +66,25 @@ static GadgetPtr getContents( StandardNodeGadget &g )
 	return g.getContents();
 }
 
+static GadgetPtr getEdgeGadget( StandardNodeGadget &g, StandardNodeGadget::Edge edge )
+{
+	return g.getEdgeGadget( edge );
+}
+
 void GafferUIBindings::bindStandardNodeGadget()
 {
-	NodeGadgetClass<StandardNodeGadget, StandardNodeGadgetWrapper>()
+	scope s = NodeGadgetClass<StandardNodeGadget, StandardNodeGadgetWrapper>()
 		.def( init<Gaffer::NodePtr, LinearContainer::Orientation>( ( arg( "node" ), arg( "orientation" )=LinearContainer::X ) ) )
 		.def( "setContents", &StandardNodeGadget::setContents )
 		.def( "getContents", &getContents )
+		.def( "setEdgeGadget", &StandardNodeGadget::setEdgeGadget )
+		.def( "getEdgeGadget", &getEdgeGadget )
+	;
+
+	enum_<StandardNodeGadget::Edge>( "Edge" )
+		.value( "TopEdge", StandardNodeGadget::TopEdge )
+		.value( "BottomEdge", StandardNodeGadget::BottomEdge )
+		.value( "LeftEdge", StandardNodeGadget::LeftEdge )
+		.value( "RightEdge", StandardNodeGadget::RightEdge )
 	;
 }

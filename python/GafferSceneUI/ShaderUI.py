@@ -63,9 +63,20 @@ GafferScene.Shader,
 },
 
 "parameters",
-"""Where the parameters for the shader are represented.""",
+{
+	"description" : """Where the parameters for the shader are represented.""",
+	"nodeGadget:nodulePosition" : "left",
+},
+
+"out",
+{
+	"description" : """The output from the shader.""",
+	"nodeGadget:nodulePosition" : "right",
+},
 
 )
+
+Gaffer.Metadata.registerNodeValue( GafferScene.Shader, "nodeGadget:minWidth", 0.0 )
 
 ##########################################################################
 # PlugValueWidgets
@@ -122,12 +133,6 @@ GafferUI.Metadata.registerPlugValue( GafferScene.Shader, "enabled", "nodeUI:sect
 ##########################################################################
 # NodeGadgets and Nodules
 ##########################################################################
-
-def __nodeGadgetCreator( node ) :
-
-	return GafferUI.StandardNodeGadget( node, GafferUI.LinearContainer.Orientation.Y )
-
-GafferUI.NodeGadget.registerNodeGadget( GafferScene.Shader, __nodeGadgetCreator )
 
 def __parametersNoduleCreator( plug ) :
 

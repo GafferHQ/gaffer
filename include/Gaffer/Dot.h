@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2011-2014, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,50 +34,61 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUI_TYPEIDS_H
-#define GAFFERUI_TYPEIDS_H
+#ifndef GAFFER_DOT_H
+#define GAFFER_DOT_H
 
-namespace GafferUI
+#include "Gaffer/DependencyNode.h"
+
+namespace Gaffer
 {
 
-enum TypeId
+/// The Dot node has no computational purpose - it is merely a pass-through,
+/// used as an organisational tool in the graph.
+class Dot : public DependencyNode
 {
-	GadgetTypeId = 110251,
-	NodeGadgetTypeId = 110252,
-	GraphGadgetTypeId = 110253,
-	ContainerGadgetTypeId = 110254,
-	RenderableGadgetTypeId = 110255,
-	TextGadgetTypeId = 110256,
-	NameGadgetTypeId = 110257,
-	IndividualContainerTypeId = 110258,
-	FrameTypeId = 110259,
-	StyleTypeId = 110260,
-	StandardStyleTypeId = 110261,
-	NoduleTypeId = 110262,
-	LinearContainerTypeId = 110263,
-	ConnectionGadgetTypeId = 110264,
-	StandardNodeGadgetTypeId = 110265,
-	SplinePlugGadgetTypeId = 110266,
-	StandardNoduleTypeId = 110267,
-	CompoundNoduleTypeId = 110268,
-	ImageGadgetTypeId = 110269,
-	ViewportGadgetTypeId = 110270,
-	ViewTypeId = 110271,
-	View3DTypeId = 110272,
-	ObjectViewTypeId = 110273,
-	PlugGadgetTypeId = 110274,
-	GraphLayoutTypeId = 110275,
-	StandardGraphLayoutTypeId = 110276,
-	BackdropNodeGadgetTypeId = 110277,
-	SpacerGadgetTypeId = 110278,
-	StandardConnectionGadgetTypeId = 110279,
-	HandleTypeId = 110280,
-	ToolTypeId = 110281,
-	DotNodeGadgetTypeId = 110282,
 
-	LastTypeId = 110450
+	public :
+
+		Dot( const std::string &name=defaultName<Dot>() );
+		virtual ~Dot();
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::Dot, DotTypeId, DependencyNode );
+
+		/// Because plugs are strongly typed in Gaffer, a
+		/// Dot cannot be set up in advance to work with
+		/// any type. This method should be called after
+		/// construction to set the Dot up for a plug of
+		/// a particular type. The passed plug is used as
+		/// a template, but will not be referenced by the
+		/// Dot itself - typically you will pass a plug
+		/// which you will connect to the Dot after calling
+		/// setup().
+		/// \undoable
+		void setup( const Plug *plug );
+
+		template<typename T>
+		T *inPlug();
+		template<typename T>
+		const T *inPlug() const;
+
+		template<typename T>
+		T *outPlug();
+		template<typename T>
+		const T *outPlug() const;
+
+		virtual void affects( const Plug *input, AffectedPlugsContainer &outputs ) const;
+		virtual Plug *correspondingInput( const Plug *output );
+		virtual const Plug *correspondingInput( const Plug *output ) const;
+
 };
 
-} // namespace GafferUI
+IE_CORE_DECLAREPTR( Dot )
 
-#endif // GAFFERUI_TYPEIDS_H
+typedef FilteredChildIterator<TypePredicate<Dot> > DotIterator;
+typedef FilteredRecursiveChildIterator<TypePredicate<Dot> > RecursiveDotIterator;
+
+} // namespace Gaffer
+
+#include "Gaffer/Dot.inl"
+
+#endif // GAFFER_DOT_H

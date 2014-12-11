@@ -65,6 +65,10 @@ class Nodule : public Gadget
 		Gaffer::Plug *plug();
 		const Gaffer::Plug *plug() const;
 
+		/// May be called by the recipient of a drag to set a more appropriate position
+		/// and tangent for the connection as the drag progresses within the destination.
+		virtual void updateDragEndPoint( const Imath::V3f position, const Imath::V3f &tangent );
+
 		/// Creates a Nodule for the specified plug.
 		static NodulePtr create( Gaffer::PlugPtr plug );
 

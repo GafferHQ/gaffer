@@ -34,6 +34,7 @@
 #
 ##########################################################################
 
+import Gaffer
 import GafferUI
 import GafferScene
 
@@ -45,8 +46,7 @@ GafferUI.PlugValueWidget.registerCreator( GafferScene.ShaderSwitch, "in", None )
 GafferUI.PlugValueWidget.registerCreator( GafferScene.ShaderSwitch, "in[0-9]*", None )
 GafferUI.PlugValueWidget.registerCreator( GafferScene.ShaderSwitch, "out", None )
 
-def __nodeGadgetCreator( node ) :
+Gaffer.Metadata.registerNodeValue( GafferScene.ShaderSwitch, "nodeGadget:minWidth", 0.0 )
 
-	return GafferUI.StandardNodeGadget( node, GafferUI.LinearContainer.Orientation.Y )
-
-GafferUI.NodeGadget.registerNodeGadget( GafferScene.ShaderSwitch, __nodeGadgetCreator )
+Gaffer.Metadata.registerPlugValue( GafferScene.ShaderSwitch, "in*", "nodeGadget:nodulePosition", "left" )
+Gaffer.Metadata.registerPlugValue( GafferScene.ShaderSwitch, "out", "nodeGadget:nodulePosition", "right" )

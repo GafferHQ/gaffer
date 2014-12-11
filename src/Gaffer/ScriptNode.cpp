@@ -469,7 +469,7 @@ void ScriptNode::deleteNodes( Node *parent, const Set *filter, bool reconnect )
 		{
 			// reconnect the inputs and outputs as though the node was disabled
 			DependencyNode *dependencyNode = IECore::runTimeCast<DependencyNode>( node );
-			if( reconnect && dependencyNode && dependencyNode->enabledPlug() )
+			if( reconnect && dependencyNode )
 			{
 				for( OutputPlugIterator it( node ); it != it.end(); ++it )
 				{

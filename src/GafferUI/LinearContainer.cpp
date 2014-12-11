@@ -35,15 +35,16 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferUI/LinearContainer.h"
+#include "boost/bind.hpp"
 
 #include "IECore/Exception.h"
 
-#include "boost/bind.hpp"
+#include "GafferUI/LinearContainer.h"
+#include "GafferUI/Style.h"
 
-using namespace GafferUI;
-using namespace Imath;
 using namespace std;
+using namespace Imath;
+using namespace GafferUI;
 
 IE_CORE_DEFINERUNTIMETYPED( LinearContainer );
 

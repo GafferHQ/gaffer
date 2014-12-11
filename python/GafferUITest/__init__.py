@@ -100,6 +100,7 @@ from ModuleTest import ModuleTest
 from PlugLayoutTest import PlugLayoutTest
 from ViewportGadgetTest import ViewportGadgetTest
 from VectorDataWidgetTest import VectorDataWidgetTest
+from DotNodeGadgetTest import DotNodeGadgetTest
 
 if __name__ == "__main__":
 	unittest.main()

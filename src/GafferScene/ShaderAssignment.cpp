@@ -36,6 +36,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "Gaffer/Box.h"
+#include "Gaffer/Dot.h"
 
 #include "GafferScene/ShaderAssignment.h"
 #include "GafferScene/Shader.h"
@@ -119,7 +120,8 @@ bool ShaderAssignment::acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plu
 		if(
 			runTimeCast<const Shader>( sourceNode ) ||
 			runTimeCast<const Box>( sourceNode ) ||
-			runTimeCast<const ShaderSwitch>( sourceNode )
+			runTimeCast<const ShaderSwitch>( sourceNode ) ||
+			runTimeCast<const Dot>( sourceNode )
 		)
 		{
 			return true;

@@ -121,6 +121,15 @@ class OSLObjectTest( GafferOSLTest.OSLTestCase ) :
 
 		self.assertTrue( object["shader"].acceptsInput( switch["out"] ) )
 
+	def testAcceptsDot( self ) :
+
+		object = GafferOSL.OSLObject()
+		switch = GafferScene.ShaderSwitch()
+		dot = Gaffer.Dot()
+		dot.setup( switch["out"] )
+
+		self.assertTrue( object["shader"].acceptsInput( dot["out"] ) )
+
 	def testPrimitiveVariableWithZeroValue( self ) :
 
 		outPoint = GafferOSL.OSLShader()

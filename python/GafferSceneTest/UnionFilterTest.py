@@ -166,5 +166,31 @@ class UnionFilterTest( GafferSceneTest.SceneTestCase ) :
 		self.assertTrue( a["out"]["globals"] in set( [ c[0] for c in cs ] ) )
 		self.assertTrue( a["out"]["attributes"] in set( [ c[0] for c in cs ] ) )
 
+	def testAcceptsDots( self ) :
+
+		sf = GafferScene.SetFilter()
+		dot = Gaffer.Dot()
+		dot.setup( sf["match"] )
+		dot["in"].setInput( sf["match"] )
+
+		uf = GafferScene.UnionFilter()
+		self.assertTrue( uf["in"][0].acceptsInput( dot["out"] ) )
+
+		dot["in"].setInput( None )
+		self.assertTrue( uf["in"][0].acceptsInput( dot["out"] ) )
+
+		uf["in"][0].setInput( dot["out"] )
+		dot["in"].setInput( sf["match"] )
+
+		a = GafferTest.AddNode()
+		dot2 = Gaffer.Dot()
+		dot2.setup( a["sum"] )
+		dot2["in"].setInput( a["sum"] )
+
+		self.assertFalse( uf["in"][0].acceptsInput( dot2["out"] ) )
+
+		dot2["in"].setInput( None )
+		self.assertTrue( uf["in"][0].acceptsInput( dot2["out"] ) )
+
 if __name__ == "__main__":
 	unittest.main()

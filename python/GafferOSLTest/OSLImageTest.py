@@ -160,6 +160,15 @@ class OSLImageTest( GafferOSLTest.OSLTestCase ) :
 
 		self.assertTrue( image["shader"].acceptsInput( switch["out"] ) )
 
+	def testAcceptsDot( self ) :
+
+		object = GafferOSL.OSLImage()
+		switch = GafferScene.ShaderSwitch()
+		dot = Gaffer.Dot()
+		dot.setup( switch["out"] )
+
+		self.assertTrue( object["shader"].acceptsInput( dot["out"] ) )
+
 	def testChannelWithZeroValue( self ) :
 
 		outR = GafferOSL.OSLShader()

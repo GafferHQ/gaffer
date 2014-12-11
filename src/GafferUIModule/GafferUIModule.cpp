@@ -73,6 +73,7 @@
 #include "GafferUIBindings/StandardConnectionGadgetBinding.h"
 #include "GafferUIBindings/HandleBinding.h"
 #include "GafferUIBindings/ToolBinding.h"
+#include "GafferUIBindings/DotNodeGadgetBinding.h"
 
 using namespace GafferUIBindings;
 
@@ -115,5 +116,6 @@ BOOST_PYTHON_MODULE( _GafferUI )
 	bindStandardConnectionGadget();
 	bindHandle();
 	bindTool();
+	bindDotNodeGadget();
 
 }

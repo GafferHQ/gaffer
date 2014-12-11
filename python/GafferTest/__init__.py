@@ -127,6 +127,7 @@ from StringAlgoTest import StringAlgoTest
 from SystemCommandTest import SystemCommandTest
 from TaskListTest import TaskListTest
 from NodeAlgoTest import NodeAlgoTest
+from DotTest import DotTest
 
 if __name__ == "__main__":
 	import unittest

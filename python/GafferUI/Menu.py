@@ -36,6 +36,7 @@
 ##########################################################################
 
 import inspect
+import functools
 import weakref
 import types
 import re
@@ -70,6 +71,7 @@ class Menu( GafferUI.Widget ) :
 		self._setStyleSheet()
 
 		self.__popupParent = None
+		self.__popupPosition = None
 
 	## Displays the menu at the specified position, and attached to
 	# an optional parent. If position is not specified then it
@@ -86,9 +88,11 @@ class Menu( GafferUI.Widget ) :
 			self.__popupParent = None
 
 		if position is None :
-			position = QtGui.QCursor.pos()
-		else :
-			position = QtCore.QPoint( position.x, position.y )
+			position = GafferUI.Widget.mousePosition()
+
+		self.__popupPosition = position
+
+		position = QtCore.QPoint( position.x, position.y )
 
 		self._qtWidget().keyboardMode = _Menu.KeyboardMode.Grab if grabFocus else _Menu.KeyboardMode.Close
 
@@ -109,6 +113,19 @@ class Menu( GafferUI.Widget ) :
 
 		return GafferUI.Widget.parent( self )
 
+	## Returns the position for the last popup request, before it
+	# was adjusted to keep the menu on screen.
+	def popupPosition( self, relativeTo = None ) :
+
+		result = self.__popupPosition
+		if result is None :
+			return result
+
+		if relativeTo is not None :
+			result = result - relativeTo.bound().min
+
+		return result
+
 	def searchable( self ) :
 
 		return self.__searchable
@@ -119,6 +136,8 @@ class Menu( GafferUI.Widget ) :
 			return inspect.getargspec( function )[0]
 		elif isinstance( function, Gaffer.WeakMethod ) :
 			return inspect.getargspec( function.method() )[0][1:]
+		elif isinstance( function, functools.partial ) :
+			return inspect.getargspec( function.func )[0]
 
 		return []
 

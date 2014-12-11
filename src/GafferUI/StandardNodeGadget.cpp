@@ -65,7 +65,11 @@ IE_CORE_DEFINERUNTIMETYPED( StandardNodeGadget );
 NodeGadget::NodeGadgetTypeDescription<StandardNodeGadget> StandardNodeGadget::g_nodeGadgetTypeDescription( Gaffer::Node::staticTypeId() );
 
 static const float g_borderWidth = 0.5f;
-static const float g_spacing = 0.5f;
+static IECore::InternedString g_horizontalNoduleSpacingKey( "nodeGadget:horizontalNoduleSpacing"  );
+static IECore::InternedString g_verticalNoduleSpacingKey( "nodeGadget:verticalNoduleSpacing"  );
+static IECore::InternedString g_minWidthKey( "nodeGadget:minWidth"  );
+static IECore::InternedString g_paddingKey( "nodeGadget:padding"  );
+static IECore::InternedString g_nodulePositionKey( "nodeGadget:nodulePosition" );
 
 StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node, LinearContainer::Orientation orientation )
 	:	NodeGadget( node ),
@@ -78,9 +82,30 @@ StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node, LinearContainer::O
 	// build our ui structure
 	////////////////////////////////////////////////////////
 
-	const float horizontalNoduleSpacing = 2.0f;
-	const float verticalNoduleSpacing = 0.2f;
-	const float minWidth = m_orientation == LinearContainer::X ? 10.0f : 0.0f;
+	float horizontalNoduleSpacing = 2.0f;
+	float verticalNoduleSpacing = 0.2f;
+	float minWidth = m_orientation == LinearContainer::X ? 10.0f : 0.0f;
+	float padding = 1.0f;
+
+	if( IECore::ConstFloatDataPtr d = Metadata::nodeValue<IECore::FloatData>( node.get(), g_horizontalNoduleSpacingKey ) )
+	{
+		horizontalNoduleSpacing = d->readable();
+	}
+
+	if( IECore::ConstFloatDataPtr d = Metadata::nodeValue<IECore::FloatData>( node.get(), g_verticalNoduleSpacingKey ) )
+	{
+		verticalNoduleSpacing = d->readable();
+	}
+
+	if( IECore::ConstFloatDataPtr d = Metadata::nodeValue<IECore::FloatData>( node.get(), g_minWidthKey ) )
+	{
+		minWidth = d->readable();
+	}
+
+	if( IECore::ConstFloatDataPtr d = Metadata::nodeValue<IECore::FloatData>( node.get(), g_paddingKey ) )
+	{
+		padding = d->readable();
+	}
 
 	// four containers for nodules - one each for the top, bottom, left and right.
 	// these contain spacers at either end to prevent nodules being placed in
@@ -119,7 +144,7 @@ StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node, LinearContainer::O
 		"row",
 		LinearContainer::X,
 		LinearContainer::Centre,
-		g_spacing
+		0.0f
 	);
 
 	column->addChild( row );
@@ -140,11 +165,11 @@ StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node, LinearContainer::O
 
 	IndividualContainerPtr contentsContainer = new IndividualContainer();
 	contentsContainer->setName( "contentsContainer" );
-	contentsContainer->setPadding( Box3f( V3f( -g_borderWidth ), V3f( g_borderWidth ) ) );
+	contentsContainer->setPadding( Box3f( V3f( -padding ), V3f( padding ) ) );
 
-	contentsColumn->addChild( new SpacerGadget( Box3f( V3f( 0 ), V3f( minWidth, g_spacing, 0 ) ) ) );
+	contentsColumn->addChild( new SpacerGadget( Box3f( V3f( 0 ), V3f( minWidth, 0, 0 ) ) ) );
 	contentsColumn->addChild( contentsContainer );
-	contentsColumn->addChild( new SpacerGadget( Box3f( V3f( 0 ), V3f( minWidth, g_spacing, 0 ) ) ) );
+	contentsColumn->addChild( new SpacerGadget( Box3f( V3f( 0 ), V3f( minWidth, 0, 0 ) ) ) );
 
 	row->addChild( rightNoduleContainer );
 	column->addChild( bottomNoduleContainer );
@@ -187,6 +212,8 @@ StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node, LinearContainer::O
 		c->leaveSignal().connect( boost::bind( &StandardNodeGadget::leave, this, ::_1 ) );
 	}
 
+	Metadata::plugValueChangedSignal().connect( boost::bind( &StandardNodeGadget::plugMetadataChanged, this, ::_1, ::_2, ::_3 ) );
+
 }
 
 StandardNodeGadget::~StandardNodeGadget()
@@ -209,8 +236,8 @@ Imath::Box3f StandardNodeGadget::bound() const
 	// cheat a little - shave a bit off to make it possible to
 	// select the node by having the drag region cover only the
 	// background frame, and not the full extent of the nodules.
-	b.min += V3f( g_spacing, g_spacing, 0 );
-	b.max -= V3f( g_spacing, g_spacing, 0 );
+	b.min += V3f( g_borderWidth, g_borderWidth, 0 );
+	b.max -= V3f( g_borderWidth, g_borderWidth, 0 );
 
 	return b;
 }
@@ -285,30 +312,15 @@ Imath::V3f StandardNodeGadget::noduleTangent( const Nodule *nodule ) const
 	}
 }
 
-NodulePtr StandardNodeGadget::addNodule( Gaffer::PlugPtr plug )
+StandardNodeGadget::Edge StandardNodeGadget::plugEdge( const Gaffer::Plug *plug )
 {
-	// create a Nodule if we actually want one
-
-	if( plug->getName().string().compare( 0, 2, "__" )==0 )
-	{
-		return 0;
-	}
-
-	NodulePtr nodule = Nodule::create( plug );
-	if( !nodule )
-	{
-		return 0;
-	}
-
-	// decide which nodule container to put it in
-
 	Edge edge = plug->direction() == Gaffer::Plug::In ? TopEdge : BottomEdge;
 	if( m_orientation == LinearContainer::Y )
 	{
 		edge = edge == TopEdge ? LeftEdge : RightEdge;
 	}
 
-	if( IECore::ConstStringDataPtr d = Metadata::plugValue<IECore::StringData>( plug.get(), "nodeGadget:nodulePosition" ) )
+	if( IECore::ConstStringDataPtr d = Metadata::plugValue<IECore::StringData>( plug, g_nodulePositionKey ) )
 	{
 		if( d->readable() == "left" )
 		{
@@ -328,14 +340,34 @@ NodulePtr StandardNodeGadget::addNodule( Gaffer::PlugPtr plug )
 		}
 	}
 
-	LinearContainer *container = noduleContainer( edge );
+	return edge;
+}
+
+NodulePtr StandardNodeGadget::addNodule( Gaffer::PlugPtr plug )
+{
+	// create a Nodule if we actually want one
+
+	if( plug->getName().string().compare( 0, 2, "__" )==0 )
+	{
+		return 0;
+	}
+
+	NodulePtr nodule = Nodule::create( plug );
+	if( !nodule )
+	{
+		return 0;
+	}
+
+	// decide which nodule container to put it in
+
+	LinearContainer *container = noduleContainer( plugEdge( plug.get() ) );
 
 	// remove the spacer at the end, add the nodule, and replace the spacer at the end
 
-	SpacerGadgetPtr spacer = container->getChild<SpacerGadget>( container->children().size() - 1 );
-	container->removeChild( spacer );
-	noduleContainer( edge )->addChild( nodule );
-	container->addChild( spacer );
+	GadgetPtr endGadget = container->getChild<Gadget>( container->children().size() - 1 );
+	container->removeChild( endGadget );
+	container->addChild( nodule );
+	container->addChild( endGadget );
 
 	// remember our nodule
 
@@ -424,6 +456,25 @@ const Gadget *StandardNodeGadget::getContents() const
 	return contentsContainer()->getChild<Gadget>();
 }
 
+void StandardNodeGadget::setEdgeGadget( Edge edge, GadgetPtr gadget )
+{
+	LinearContainer *c = noduleContainer( edge );
+	c->removeChild( c->getChild<Gadget>( c->children().size() - 1 ) );
+	c->addChild( gadget );
+}
+
+Gadget *StandardNodeGadget::getEdgeGadget( Edge edge )
+{
+	LinearContainer *c = noduleContainer( edge );
+	return c->getChild<Gadget>( c->children().size() - 1 );
+}
+
+const Gadget *StandardNodeGadget::getEdgeGadget( Edge edge ) const
+{
+	const LinearContainer *c = noduleContainer( edge );
+	return c->getChild<Gadget>( c->children().size() - 1 );
+}
+
 void StandardNodeGadget::setLabelsVisibleOnHover( bool labelsVisible )
 {
 	m_labelsVisibleOnHover = labelsVisible;
@@ -493,29 +544,66 @@ bool StandardNodeGadget::dragMove( GadgetPtr gadget, const DragDropEvent &event 
 			m_dragDestinationProxy = closest;
 		}
 	}
-	return true;
+	return m_dragDestinationProxy;
 }
 
 bool StandardNodeGadget::dragLeave( GadgetPtr gadget, const DragDropEvent &event )
 {
-	if( m_dragDestinationProxy && m_dragDestinationProxy != event.destinationGadget )
+	if( !m_dragDestinationProxy )
+	{
+		return false;
+	}
+
+	if( m_dragDestinationProxy != event.destinationGadget )
 	{
 		m_dragDestinationProxy->dragLeaveSignal()( m_dragDestinationProxy, event );
 	}
-	m_dragDestinationProxy = 0;
+	m_dragDestinationProxy = NULL;
 
 	return true;
 }
 
 bool StandardNodeGadget::drop( GadgetPtr gadget, const DragDropEvent &event )
 {
-	bool result = true;
-	if( m_dragDestinationProxy )
+	if( !m_dragDestinationProxy )
 	{
-		result = m_dragDestinationProxy->dropSignal()( m_dragDestinationProxy, event );
-		m_dragDestinationProxy = 0;
+		return false;
 	}
+
+	const bool result = m_dragDestinationProxy->dropSignal()( m_dragDestinationProxy, event );
+	m_dragDestinationProxy = NULL;
 	return result;
+}
+
+void StandardNodeGadget::plugMetadataChanged( IECore::TypeId nodeTypeId, const Gaffer::MatchPattern &plugPath, IECore::InternedString key )
+{
+	if(
+		key != g_nodulePositionKey ||
+		!node()->isInstanceOf( nodeTypeId )
+	)
+	{
+		return;
+	}
+
+	for( NoduleMap::const_iterator it = m_nodules.begin(), eIt = m_nodules.end(); it != eIt; ++it )
+	{
+		const Gaffer::Plug *plug = it->first;
+		if( match( plug->relativeName( node() ), plugPath ) )
+		{
+			Nodule *n = nodule( plug );
+			if( !n )
+			{
+				continue;
+			}
+
+			LinearContainer *container = noduleContainer( plugEdge( plug ) );
+
+			GadgetPtr endGadget = container->getChild<Gadget>( container->children().size() - 1 );
+			container->removeChild( endGadget );
+			container->addChild( n );
+			container->addChild( endGadget );
+		}
+	}
 }
 
 Nodule *StandardNodeGadget::closestCompatibleNodule( const DragDropEvent &event )

@@ -79,6 +79,7 @@
 #include "GafferBindings/MetadataBinding.h"
 #include "GafferBindings/StringAlgoBinding.h"
 #include "GafferBindings/SubGraphBinding.h"
+#include "GafferBindings/DotBinding.h"
 
 using namespace boost::python;
 using namespace Gaffer;
@@ -125,6 +126,7 @@ BOOST_PYTHON_MODULE( _Gaffer )
 	bindSerialisation();
 	bindMetadata();
 	bindStringAlgo();
+	bindDot();
 
 	NodeClass<Backdrop>();
 
