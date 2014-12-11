@@ -491,6 +491,10 @@ class VectorDataWidget( GafferUI.Widget ) :
 	def __removeSelection( self, button ) :
 
 		self.__removeRows( self.__selectedRows() )
+		# If __updateRemoveButtonEnabled() disables
+		# the button, then it can get stuck in a highlighted
+		# state unless we unstick it like so.
+		button.setHighlighted( False )
 
 	def __removeRows( self, rows ) :
 
