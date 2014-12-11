@@ -63,7 +63,10 @@ DotNodeGadget::DotNodeGadget( Gaffer::NodePtr node )
 	{
 		throw Exception( "DotNodeGadget requires a Dot" );
 	}
-	setContents( new SpacerGadget( Box3f( V3f( -0.1 ), V3f( 0.1 ) ) ) );
+
+	// Set the contents to have a small size, so the size of the Dot is controlled
+	// largely by the nodeGadget:padding Metadata.
+	setContents( new SpacerGadget( Box3f( V3f( -0.25 ), V3f( 0.25 ) ) ) );
 
 	dragEnterSignal().connect( boost::bind( &DotNodeGadget::dragEnter, this, ::_2 ) );
 	dropSignal().connect( boost::bind( &DotNodeGadget::drop, this, ::_2 ) );
@@ -77,8 +80,9 @@ void DotNodeGadget::doRender( const Style *style ) const
 {
 	Style::State state = getHighlighted() ? Style::HighlightedState : Style::NormalState;
 
-	Box3f b = bound();
-	style->renderFrame( Box2f( V2f( 0 ), V2f( 0 ) ), b.size().y / 2.0f, state );
+	const Box3f b = bound();
+	const V3f s = b.size();
+	style->renderFrame( Box2f( V2f( 0 ), V2f( 0 ) ), std::min( s.x, s.y ) / 2.0f, state );
 
 	NodeGadget::doRender( style );
 }

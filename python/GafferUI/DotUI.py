@@ -66,6 +66,7 @@ Gaffer.Dot,
 )
 
 Gaffer.Metadata.registerNodeValue( Gaffer.Dot, "nodeGadget:minWidth", 0.0 )
+Gaffer.Metadata.registerNodeValue( Gaffer.Dot, "nodeGadget:padding", 0.5 )
 
 ##########################################################################
 # NodeGraph menus
