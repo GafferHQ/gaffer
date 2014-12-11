@@ -80,8 +80,8 @@ class VectorDataPlugValueWidget( GafferUI.PlugValueWidget ) :
 		assert( widget is self.__dataWidget )
 
 		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
-
-			self.getPlug().setValue( self.__dataWidget.getData()[0] )
+			with Gaffer.BlockedConnection( self._plugConnections() ) :
+				self.getPlug().setValue( self.__dataWidget.getData()[0] )
 
 GafferUI.PlugValueWidget.registerType( Gaffer.BoolVectorDataPlug, VectorDataPlugValueWidget )
 GafferUI.PlugValueWidget.registerType( Gaffer.IntVectorDataPlug, VectorDataPlugValueWidget )

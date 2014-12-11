@@ -233,6 +233,11 @@ class VectorDataWidget( GafferUI.Widget ) :
 				)
 			)
 
+			selectionModel = self.__tableView.selectionModel()
+			selectionModel.selectionChanged.connect( Gaffer.WeakMethod( self.__selectionChanged ) )
+
+		self.__updateRemoveButtonEnabled()
+
 		# Somehow the QTableView can leave its header in a state where updates are disabled.
 		# If we didn't turn them back on, the header would disappear.
 		self.__tableView.verticalHeader().setUpdatesEnabled( True )
@@ -475,9 +480,21 @@ class VectorDataWidget( GafferUI.Widget ) :
 
 		return selectedRows
 
+	def __updateRemoveButtonEnabled( self ) :
+
+		self.removeButton().setEnabled( self.__tableView.selectionModel().hasSelection() )
+
+	def __selectionChanged( self, *unused ) :
+
+		self.__updateRemoveButtonEnabled()
+
 	def __removeSelection( self, button ) :
 
 		self.__removeRows( self.__selectedRows() )
+		# If __updateRemoveButtonEnabled() disables
+		# the button, then it can get stuck in a highlighted
+		# state unless we unstick it like so.
+		button.setHighlighted( False )
 
 	def __removeRows( self, rows ) :
 
@@ -497,18 +514,51 @@ class VectorDataWidget( GafferUI.Widget ) :
 		if self.__model is None :
 			return
 
+		# Get the data we want to append.
+
 		newData = self._createRows()
 		if not newData :
 			return
 
+		# Extend our current data with the new data,
+		# and call setData() to update the table view.
+
 		data = self.getData()
 		assert( len( data ) == len( newData ) )
+		originalLength = len( data[0] )
 		for i in range( 0, len( data ) ) :
 			data[i].extend( newData[i] )
 
 		self.setData( data )
 
+		# Select the newly created rows, making the last one
+		# the current selection (the one used as the endpoint
+		# for shift-click region selects).
+
+		lastIndex = self.__model.index( len( data[0] ) - 1, 0 )
+
+		self.__tableView.setCurrentIndex(
+			lastIndex
+		)
+
+		selection = QtGui.QItemSelection(
+			self.__model.index( originalLength, 0 ),
+			lastIndex
+		)
+
+		self.__tableView.selectionModel().select(
+			selection,
+			QtGui.QItemSelectionModel.ClearAndSelect | QtGui.QItemSelectionModel.Rows
+		)
+
+		# Scroll so the newly added item is visible, and
+		# move the focus to the table view, so the new item can
+		# be edited with the keyboard immediately.
+
 		self.__tableView.scrollToBottom()
+		self.__tableView.setFocus( QtCore.Qt.OtherFocusReason )
+
+		# Let everyone know about this wondrous event.
 
 		self.__emitDataChangedSignal()
 
@@ -520,6 +570,10 @@ class VectorDataWidget( GafferUI.Widget ) :
 
 		data = self.getData()
 		if len( data ) == 1 and event.data.isInstanceOf( data[0].typeId() ) :
+			# The remove button will be disabled if there's no selection -
+			# we reenable it so it can receive the drag. We'll update it again
+			# in __dragLeave() and __drop().
+			self.removeButton().setEnabled( True )
 			widget.setHighlighted( True )
 			return True
 
@@ -528,6 +582,10 @@ class VectorDataWidget( GafferUI.Widget ) :
 	def __dragLeave( self, widget, event ) :
 
 		widget.setHighlighted( False )
+
+		if event.destinationWidget is not self and not self.isAncestorOf( event.destinationWidget ) :
+			self.__updateRemoveButtonEnabled()
+
 		return True
 
 	def __drop( self, widget, event ) :
@@ -555,6 +613,7 @@ class VectorDataWidget( GafferUI.Widget ) :
 		self.dataChangedSignal()( self )
 
 		widget.setHighlighted( False )
+		self.__updateRemoveButtonEnabled()
 
 		return True
 
