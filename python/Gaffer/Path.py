@@ -157,27 +157,6 @@ class Path( object ) :
 
 		return self.__filter
 
-	## \deprecated
-	# Use setFilter() instead. If you wish to use more than
-	# one filter then use a CompoundPathFilter.
-	def addFilter( self, pathFilter ) :
-
-		warnings.warn( "Path.addFilter() is deprecated, use Path.setFilter() instead. If you wish to use more than one filter then use a CompoundPathFilter.", DeprecationWarning, 2 )
-
-		if not isinstance( self.__filter, Gaffer.CompoundPathFilter ) :
-			self.__filter = Gaffer.CompoundPathFilter()
-
-		self.__filter.addFilter( pathFilter )
-
-	## \deprecated
-	# Use setFilter() instead. If you wish to use more than
-	# one filter then use a CompoundPathFilter.
-	def removeFilter( self, pathFilter ) :
-
-		warnings.warn( "Path.removeFilter() is deprecated, use Path.setFilter() instead. If you wish to use more than one filter then use a CompoundPathFilter.", DeprecationWarning, 2 )
-
-		self.__filter.removeFilter( pathFilter )
-
 	def pathChangedSignal( self ) :
 
 		if not hasattr( self, "_Path__pathChangedSignal" ) :

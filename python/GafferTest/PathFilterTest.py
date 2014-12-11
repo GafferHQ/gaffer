@@ -53,7 +53,7 @@ class PathFilterTest( GafferTest.TestCase ) :
 
 		# attach a filter
 		gfrFilter = Gaffer.FileNamePathFilter( [ "*.gfr" ] )
-		path.addFilter( gfrFilter )
+		path.setFilter( gfrFilter )
 
 		children = path.children()
 		self.assertEqual( len( children ), len( glob.glob( "test/data/scripts/*.gfr" ) ) )
@@ -63,7 +63,7 @@ class PathFilterTest( GafferTest.TestCase ) :
 		self.assertEqual( len( pathCopy.children() ), len( children ) )
 
 		# detach the filter and check that behaviour has reverted
-		path.removeFilter( gfrFilter )
+		path.setFilter( None )
 		children = path.children()
 		self.assertEqual( len( children ), len( glob.glob( "test/data/scripts/*" ) ) )
 
