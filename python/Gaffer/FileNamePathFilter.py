@@ -38,6 +38,8 @@
 import fnmatch
 import re
 
+import IECore
+
 import Gaffer
 
 ## A PathFilter which filters based on filename.
@@ -80,3 +82,5 @@ class FileNamePathFilter( Gaffer.PathFilter ) :
 							break
 
 		return result
+
+IECore.registerRunTimeTyped( FileNamePathFilter, typeName = "Gaffer::FileNamePathFilter" )

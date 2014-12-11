@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import IECore
+
 import Gaffer
 
 ## A PathFilter which removes leaf items.
@@ -47,3 +49,4 @@ class LeafPathFilter( Gaffer.PathFilter ) :
 
 		return [ p for p in paths if not p.isLeaf() ]
 
+IECore.registerRunTimeTyped( LeafPathFilter, typeName = "Gaffer::LeafPathFilter" )

@@ -40,6 +40,8 @@ import re
 import pwd
 import grp
 
+import IECore
+
 import Gaffer
 
 class FileSystemPath( Gaffer.Path ) :
@@ -144,3 +146,5 @@ class FileSystemPath( Gaffer.Path ) :
 		)
 
 		return result
+
+IECore.registerRunTimeTyped( FileSystemPath, typeName = "Gaffer::FileSystemPath" )

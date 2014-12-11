@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import IECore
+
 import Gaffer
 
 ## A PathFilter which filters based on an item from Path.info() and an
@@ -77,3 +79,5 @@ class InfoPathFilter( Gaffer.PathFilter ) :
 						result.append( p )
 
 		return result
+
+IECore.registerRunTimeTyped( InfoPathFilter, typeName = "Gaffer::InfoPathFilter" )

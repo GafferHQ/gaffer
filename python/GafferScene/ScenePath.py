@@ -131,3 +131,4 @@ class ScenePath( Gaffer.Path ) :
 		if plug.isSame( self.__scenePlug["childNames"] ) :
 			self._emitPathChanged()
 
+IECore.registerRunTimeTyped( ScenePath, typeName = "GafferScene::ScenePath" )

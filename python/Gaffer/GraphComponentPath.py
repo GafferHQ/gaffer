@@ -99,3 +99,5 @@ class GraphComponentPath( Gaffer.Path ) :
 			e = e[p]
 
 		return e
+
+IECore.registerRunTimeTyped( GraphComponentPath, typeName = "Gaffer::GraphComponentPath" )

@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import IECore
+
 import Gaffer
 
 class ClassLoaderPath( Gaffer.Path ) :
@@ -100,3 +102,5 @@ class ClassLoaderPath( Gaffer.Path ) :
 				added.add( str( child ) )
 
 		return result
+
+IECore.registerRunTimeTyped( ClassLoaderPath, typeName = "GafferCortex::ClassLoaderPath" )

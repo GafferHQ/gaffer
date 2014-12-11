@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import IECore
+
 import Gaffer
 
 ## The CompoundPathFilter class simply combines a number of other
@@ -100,3 +102,5 @@ class CompoundPathFilter( Gaffer.PathFilter ) :
 
 		if self.getEnabled() :
 			self.changedSignal()( self )
+
+IECore.registerRunTimeTyped( CompoundPathFilter, typeName = "Gaffer::CompoundPathFilter" )

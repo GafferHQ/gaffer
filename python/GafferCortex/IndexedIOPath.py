@@ -110,3 +110,5 @@ class IndexedIOPath( Gaffer.Path ) :
 
 		d = self.__indexedIO.directory( self[:-1], IECore.IndexedIO.MissingBehaviour.ThrowIfMissing )
 		return d.entry( self[-1] )
+
+IECore.registerRunTimeTyped( IndexedIOPath, typeName = "GafferCortex::IndexedIOPath" )

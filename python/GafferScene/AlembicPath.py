@@ -84,3 +84,5 @@ class AlembicPath( Gaffer.Path ) :
 			result = result.child( p )
 
 		return result
+
+IECore.registerRunTimeTyped( AlembicPath, typeName = "GafferScene::AlembicPath" )

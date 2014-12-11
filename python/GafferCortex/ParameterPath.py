@@ -103,3 +103,5 @@ class ParameterPath( Gaffer.Path ) :
 			result = result[p]
 
 		return result
+
+IECore.registerRunTimeTyped( ParameterPath, typeName = "GafferCortex::ParameterPath" )

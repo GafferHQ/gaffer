@@ -109,3 +109,5 @@ class DictPath( Gaffer.Path ) :
 			e = e[p]
 
 		return e
+
+IECore.registerRunTimeTyped( DictPath, typeName = "Gaffer::DictPath" )
