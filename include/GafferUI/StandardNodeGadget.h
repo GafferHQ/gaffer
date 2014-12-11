@@ -48,11 +48,15 @@ namespace GafferUI
 
 /// The standard means of representing a Node in a GraphGadget.
 /// Nodes are represented as rectangular boxes with the name displayed
-/// centrally and the nodules arranged at the sides. Nodules may be
-/// positioned using a "nodeGadget:nodulePosition" Metadata entry
-/// with a value of "left", "right", "top" or "bottom". The minimum
-/// width for the gadget can be specified with a "nodeGadget:minimumWidth"
-/// Metadata entry with a float value.
+/// centrally and the nodules arranged at the sides. Supports the following
+/// Metadata entries :
+///
+/// - "nodeGadget:nodulePosition" : a plug entry with a value of
+/// "left", "right", "top" or "bottom"
+/// - "nodeGadget:minimumWidth" : a node entry with a float value
+/// - "nodeGadget:horizontalNoduleSpacing" : a node entry with a float value
+/// - "nodeGadget:verticalNoduleSpacing" : a node entry with a float value
+/// - "nodeGadget:padding" : a node entry with a float value
 class StandardNodeGadget : public NodeGadget
 {
 

@@ -65,7 +65,10 @@ IE_CORE_DEFINERUNTIMETYPED( StandardNodeGadget );
 NodeGadget::NodeGadgetTypeDescription<StandardNodeGadget> StandardNodeGadget::g_nodeGadgetTypeDescription( Gaffer::Node::staticTypeId() );
 
 static const float g_borderWidth = 0.5f;
-static const float g_spacing = 0.5f;
+static IECore::InternedString g_horizontalNoduleSpacingKey( "nodeGadget:horizontalNoduleSpacing"  );
+static IECore::InternedString g_verticalNoduleSpacingKey( "nodeGadget:verticalNoduleSpacing"  );
+static IECore::InternedString g_minWidthKey( "nodeGadget:minWidth"  );
+static IECore::InternedString g_paddingKey( "nodeGadget:padding"  );
 static IECore::InternedString g_nodulePositionKey( "nodeGadget:nodulePosition" );
 
 StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node, LinearContainer::Orientation orientation )
@@ -79,12 +82,29 @@ StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node, LinearContainer::O
 	// build our ui structure
 	////////////////////////////////////////////////////////
 
-	const float horizontalNoduleSpacing = 2.0f;
-	const float verticalNoduleSpacing = 0.2f;
+	float horizontalNoduleSpacing = 2.0f;
+	float verticalNoduleSpacing = 0.2f;
 	float minWidth = m_orientation == LinearContainer::X ? 10.0f : 0.0f;
-	if( IECore::ConstFloatDataPtr d = Metadata::nodeValue<IECore::FloatData>( node.get(), "nodeGadget:minWidth" ) )
+	float padding = 1.0f;
+
+	if( IECore::ConstFloatDataPtr d = Metadata::nodeValue<IECore::FloatData>( node.get(), g_horizontalNoduleSpacingKey ) )
+	{
+		horizontalNoduleSpacing = d->readable();
+	}
+
+	if( IECore::ConstFloatDataPtr d = Metadata::nodeValue<IECore::FloatData>( node.get(), g_verticalNoduleSpacingKey ) )
+	{
+		verticalNoduleSpacing = d->readable();
+	}
+
+	if( IECore::ConstFloatDataPtr d = Metadata::nodeValue<IECore::FloatData>( node.get(), g_minWidthKey ) )
 	{
 		minWidth = d->readable();
+	}
+
+	if( IECore::ConstFloatDataPtr d = Metadata::nodeValue<IECore::FloatData>( node.get(), g_paddingKey ) )
+	{
+		padding = d->readable();
 	}
 
 	// four containers for nodules - one each for the top, bottom, left and right.
@@ -124,7 +144,7 @@ StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node, LinearContainer::O
 		"row",
 		LinearContainer::X,
 		LinearContainer::Centre,
-		g_spacing
+		0.0f
 	);
 
 	column->addChild( row );
@@ -145,11 +165,11 @@ StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node, LinearContainer::O
 
 	IndividualContainerPtr contentsContainer = new IndividualContainer();
 	contentsContainer->setName( "contentsContainer" );
-	contentsContainer->setPadding( Box3f( V3f( -g_borderWidth ), V3f( g_borderWidth ) ) );
+	contentsContainer->setPadding( Box3f( V3f( -padding ), V3f( padding ) ) );
 
-	contentsColumn->addChild( new SpacerGadget( Box3f( V3f( 0 ), V3f( minWidth, g_spacing, 0 ) ) ) );
+	contentsColumn->addChild( new SpacerGadget( Box3f( V3f( 0 ), V3f( minWidth, 0, 0 ) ) ) );
 	contentsColumn->addChild( contentsContainer );
-	contentsColumn->addChild( new SpacerGadget( Box3f( V3f( 0 ), V3f( minWidth, g_spacing, 0 ) ) ) );
+	contentsColumn->addChild( new SpacerGadget( Box3f( V3f( 0 ), V3f( minWidth, 0, 0 ) ) ) );
 
 	row->addChild( rightNoduleContainer );
 	column->addChild( bottomNoduleContainer );
@@ -216,8 +236,8 @@ Imath::Box3f StandardNodeGadget::bound() const
 	// cheat a little - shave a bit off to make it possible to
 	// select the node by having the drag region cover only the
 	// background frame, and not the full extent of the nodules.
-	b.min += V3f( g_spacing, g_spacing, 0 );
-	b.max -= V3f( g_spacing, g_spacing, 0 );
+	b.min += V3f( g_borderWidth, g_borderWidth, 0 );
+	b.max -= V3f( g_borderWidth, g_borderWidth, 0 );
 
 	return b;
 }
