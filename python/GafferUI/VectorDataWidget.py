@@ -510,18 +510,51 @@ class VectorDataWidget( GafferUI.Widget ) :
 		if self.__model is None :
 			return
 
+		# Get the data we want to append.
+
 		newData = self._createRows()
 		if not newData :
 			return
 
+		# Extend our current data with the new data,
+		# and call setData() to update the table view.
+
 		data = self.getData()
 		assert( len( data ) == len( newData ) )
+		originalLength = len( data[0] )
 		for i in range( 0, len( data ) ) :
 			data[i].extend( newData[i] )
 
 		self.setData( data )
 
+		# Select the newly created rows, making the last one
+		# the current selection (the one used as the endpoint
+		# for shift-click region selects).
+
+		lastIndex = self.__model.index( len( data[0] ) - 1, 0 )
+
+		self.__tableView.setCurrentIndex(
+			lastIndex
+		)
+
+		selection = QtGui.QItemSelection(
+			self.__model.index( originalLength, 0 ),
+			lastIndex
+		)
+
+		self.__tableView.selectionModel().select(
+			selection,
+			QtGui.QItemSelectionModel.ClearAndSelect | QtGui.QItemSelectionModel.Rows
+		)
+
+		# Scroll so the newly added item is visible, and
+		# move the focus to the table view, so the new item can
+		# be edited with the keyboard immediately.
+
 		self.__tableView.scrollToBottom()
+		self.__tableView.setFocus( QtCore.Qt.OtherFocusReason )
+
+		# Let everyone know about this wondrous event.
 
 		self.__emitDataChangedSignal()
 
