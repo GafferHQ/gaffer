@@ -229,6 +229,16 @@ class PlugValueWidget( GafferUI.Widget ) :
 				}
 			)
 		
+		currentPreset = Gaffer.NodeAlgo.currentPreset( self.getPlug() )
+		for presetName in Gaffer.NodeAlgo.presets( self.getPlug() ) :
+			menuDefinition.append(
+				"/Preset/" + presetName, {
+					"command" : IECore.curry( Gaffer.WeakMethod( self.__applyPreset ), presetName ),
+					"active" : self._editable(),
+					"checkBox" : presetName == currentPreset,
+				}
+			)
+		
 		self.popupMenuSignal()( menuDefinition, self )
 
 		return menuDefinition
@@ -435,6 +445,11 @@ class PlugValueWidget( GafferUI.Widget ) :
 
 		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
 			Gaffer.NodeAlgo.applyUserDefault( self.getPlug() )
+
+	def __applyPreset( self, presetName, *unused ) :
+	
+		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
+			Gaffer.NodeAlgo.applyPreset( self.getPlug(), presetName )					
 
 	# drag and drop stuff
 

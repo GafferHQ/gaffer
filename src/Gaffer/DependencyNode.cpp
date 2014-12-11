@@ -40,14 +40,9 @@
 #include "boost/graph/adjacency_list.hpp"
 #include "boost/graph/topological_sort.hpp"
 
-#include "boost/multi_index_container.hpp"
-#include "boost/multi_index/sequenced_index.hpp"
-#include "boost/multi_index/ordered_index.hpp"
-
 #include "Gaffer/DependencyNode.h"
 #include "Gaffer/ValuePlug.h"
 #include "Gaffer/CompoundPlug.h"
-#include "Gaffer/StandardSet.h"
 
 using namespace boost;
 using namespace Gaffer;

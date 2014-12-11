@@ -138,18 +138,6 @@ GafferUI.PlugValueWidget.registerCreator( GafferScene.Group, "transform", Gaffer
 
 GafferUI.PlugValueWidget.registerCreator( GafferScene.Filter, "match", None )
 
-# Camera
-
-GafferUI.PlugValueWidget.registerCreator(
-	GafferScene.Camera,
-	"projection",
-	GafferUI.EnumPlugValueWidget,
-	labelsAndValues = (
-		( "Perspective", "perspective" ),
-		( "Orthographic", "orthographic" ),
-	),
-)
-
 # Constraint
 
 GafferUI.PlugValueWidget.registerCreator(
