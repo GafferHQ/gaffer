@@ -103,6 +103,7 @@ class ImageViewGadget : public GafferUI::Gadget
 			IECore::ConstImagePrimitivePtr image,
 			GafferImage::ImageStatsPtr imageStats,
 			GafferImage::ImageSamplerPtr imageSampler,
+			ConstContextPtr context,
 			int &channelToView,
 			Imath::V2f &mousePos,
 			Color4f &sampleColor,
@@ -123,7 +124,8 @@ class ImageViewGadget : public GafferUI::Gadget
 				m_channelToView( channelToView ),
 				m_hasAlpha( false ),
 				m_imageStats( imageStats ),
-				m_imageSampler( imageSampler )
+				m_imageSampler( imageSampler ),
+				m_context( context )
 		{
 			V2f displayWindowCenter( ( m_displayWindow.min + m_displayWindow.max + V2f( 1 ) ) / Imath::V2f( 2. ) );
 			V2f dataWindowCenter( ( m_dataWindow.min + m_dataWindow.max + V2f( 1 ) ) / Imath::V2f( 2. ) );
@@ -407,6 +409,7 @@ class ImageViewGadget : public GafferUI::Gadget
 		Color4f sampleColor( const V2f &point ) const
 		{
 			m_imageSampler->pixelPlug()->setValue( point );
+			Context::Scope context( m_context.get() );
 			return m_imageSampler->colorPlug()->getValue();
 		};
 
@@ -502,6 +505,7 @@ class ImageViewGadget : public GafferUI::Gadget
 				);
 				m_imageStats->regionOfInterestPlug()->setValue( roi );
 
+				Context::Scope context( m_context.get() );
 				*m_colorUiElements[1].color = m_imageStats->minPlug()->getValue();
 				*m_colorUiElements[2].color = m_imageStats->maxPlug()->getValue();
 				*m_colorUiElements[3].color = m_imageStats->averagePlug()->getValue();
@@ -889,6 +893,7 @@ class ImageViewGadget : public GafferUI::Gadget
 		Imath::Box3f m_sampleWindow;
 		GafferImage::ImageStatsPtr m_imageStats;
 		GafferImage::ImageSamplerPtr m_imageSampler;
+		ConstContextPtr m_context;
 		std::vector<ColorUiElement> m_colorUiElements;
 };
 
@@ -1100,7 +1105,7 @@ void ImageView::update()
 	Context::Scope context( getContext() );
 	ConstImagePrimitivePtr image = preprocessedInPlug<ImagePlug>()->image();
 
-	Detail::ImageViewGadgetPtr imageViewGadget = new Detail::ImageViewGadget( image, imageStatsNode(), imageSamplerNode(), m_channelToView, m_mousePos, m_sampleColor, m_minColor, m_maxColor, m_averageColor );
+	Detail::ImageViewGadgetPtr imageViewGadget = new Detail::ImageViewGadget( image, imageStatsNode(), imageSamplerNode(), getContext(), m_channelToView, m_mousePos, m_sampleColor, m_minColor, m_maxColor, m_averageColor );
 	bool hadChild = viewportGadget()->getPrimaryChild();
 	viewportGadget()->setPrimaryChild( imageViewGadget );
 	if( !hadChild )

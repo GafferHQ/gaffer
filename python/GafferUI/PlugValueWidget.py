@@ -145,6 +145,16 @@ class PlugValueWidget( GafferUI.Widget ) :
 
 		return result
 
+	## Because Plugs may have child Plugs, so too PlugValueWidgets may
+	# have child PlugValueWidgets to represent the children of their plug.
+	# This method should be reimplemented to return such children. Because
+	# UIs may be built lazily on demand, the lazy flag is provided to
+	# determine whether or not the query should force a build in the case
+	# that one has not been performed yet.
+	def childPlugValueWidget( self, childPlug, lazy=True ) :
+
+		return None
+
 	## Must be implemented by subclasses so that the widget reflects the current
 	# status of the plug. To temporarily suspend calls to this function, use
 	# Gaffer.BlockedConnection( self._plugConnections() ).
