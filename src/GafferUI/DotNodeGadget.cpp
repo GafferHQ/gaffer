@@ -82,7 +82,7 @@ void DotNodeGadget::doRender( const Style *style ) const
 
 	const Box3f b = bound();
 	const V3f s = b.size();
-	style->renderFrame( Box2f( V2f( 0 ), V2f( 0 ) ), std::min( s.x, s.y ) / 2.0f, state );
+	style->renderNodeFrame( Box2f( V2f( 0 ), V2f( 0 ) ), std::min( s.x, s.y ) / 2.0f, state, userColor() );
 
 	NodeGadget::doRender( style );
 }

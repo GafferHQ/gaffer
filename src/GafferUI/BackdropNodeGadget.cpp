@@ -43,6 +43,7 @@
 #include "IECoreGL/Selector.h"
 
 #include "Gaffer/BlockedConnection.h"
+#include "Gaffer/Metadata.h"
 
 #include "GafferUI/BackdropNodeGadget.h"
 #include "GafferUI/GraphGadget.h"
@@ -59,6 +60,7 @@ IE_CORE_DEFINERUNTIMETYPED( BackdropNodeGadget );
 
 static const float g_margin = 3.0f;
 static IECore::InternedString g_boundPlugName( "__uiBound" );
+static IECore::InternedString g_colorKey( "nodeGadget:color" );
 
 BackdropNodeGadget::NodeGadgetTypeDescription<BackdropNodeGadget> BackdropNodeGadget::g_nodeGadgetTypeDescription( Gaffer::Backdrop::staticTypeId() );
 
@@ -91,6 +93,10 @@ BackdropNodeGadget::BackdropNodeGadget( Gaffer::NodePtr node )
 	dragMoveSignal().connect( boost::bind( &BackdropNodeGadget::dragMove, this, ::_1, ::_2 ) );
 	dragEndSignal().connect( boost::bind( &BackdropNodeGadget::dragEnd, this, ::_1, ::_2 ) );
 	leaveSignal().connect( boost::bind( &BackdropNodeGadget::leave, this, ::_1, ::_2 ) );
+
+	Metadata::nodeValueChangedSignal().connect( boost::bind( &BackdropNodeGadget::nodeMetadataChanged, this, ::_1, ::_2 ) );
+
+	updateUserColor();
 }
 
 BackdropNodeGadget::~BackdropNodeGadget()
@@ -246,7 +252,7 @@ void BackdropNodeGadget::doRender( const Style *style ) const
 	{
 		// normal drawing mode
 
-		style->renderBackdrop( bound, getHighlighted() ? Style::HighlightedState : Style::NormalState );
+		style->renderBackdrop( bound, getHighlighted() ? Style::HighlightedState : Style::NormalState, m_userColor.get_ptr() );
 
 		const std::string title = backdrop->titlePlug()->getValue();
 		if( title.size() )
@@ -441,4 +447,32 @@ Gaffer::Box2fPlug *BackdropNodeGadget::boundPlug()
 const Gaffer::Box2fPlug *BackdropNodeGadget::boundPlug() const
 {
 	return node()->getChild<Box2fPlug>( g_boundPlugName );
+}
+
+void BackdropNodeGadget::nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore::InternedString key )
+{
+	if( node()->isInstanceOf( nodeTypeId ) && key == g_colorKey )
+	{
+		if( updateUserColor() )
+		{
+			renderRequestSignal()( this );
+		}
+	}
+}
+
+bool BackdropNodeGadget::updateUserColor()
+{
+	boost::optional<Color3f> c;
+	if( IECore::ConstColor3fDataPtr d = Metadata::nodeValue<IECore::Color3fData>( node(), g_colorKey ) )
+	{
+		c = d->readable();
+	}
+
+	if( c == m_userColor )
+	{
+		return false;
+	}
+
+	m_userColor = c;
+	return true;
 }
