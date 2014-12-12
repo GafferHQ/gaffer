@@ -35,17 +35,21 @@
 ##########################################################################
 
 import os
+import shutil
+import sys
 import unittest
+
 import IECore
+
 import Gaffer
 import GafferImage
-import sys
 
 class ImageWriterTest( unittest.TestCase ) :
 
 	__rgbFilePath = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/rgb.100x100" )
 	__defaultFormatFile = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/defaultNegativeDisplayWindow.exr" )
-	__testFilePath = "/tmp/test"
+	__testDir = "/tmp/testImageWriter/"
+	__testFilePath = __testDir + "test"
 	__writeModes = [ ("scanline", 0), ("tile", 1) ]
 
 	# Test that we can select which channels to write.
@@ -263,26 +267,8 @@ class ImageWriterTest( unittest.TestCase ) :
 
 	def tearDown( self ) :
 
-		files = [
-			self.__testFilePath + "testBlack.exr",
-			self.__testFile( "scanline", "RGBA", "jpg" ),
-			self.__testFile( "offsetDisplayWindow", "RGBA", "exr" )
-		]
-
-		for f in files :
-			if os.path.exists( f ) :
-				os.remove( f )
-
-		for name, mode in self.__writeModes :
-			testFileRB = self.__testFile( name, "RB", "exr" )
-			if os.path.exists( testFileRB ) :
-				os.remove( testFileRB )
-
-			exts = ["exr", "tga", "tif", "jpg"]
-			for ext in exts :
-				testFile = self.__testFile( name, "RGBA", ext )
-				if os.path.exists( testFile ) :
-					os.remove( testFile )
+		if os.path.isdir( self.__testDir ) :
+			shutil.rmtree( self.__testDir )
 
 	def __testFile( self, mode, channels, ext ) :
 
