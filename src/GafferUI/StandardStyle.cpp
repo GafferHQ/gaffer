@@ -212,8 +212,13 @@ void StandardStyle::renderWrappedText( TextType textType, const std::string &tex
 
 void StandardStyle::renderFrame( const Imath::Box2f &frame, float borderWidth, State state ) const
 {
+	renderNodeFrame( frame, borderWidth, state );
+}
 
-	Box2f b = frame;
+void StandardStyle::renderNodeFrame( const Imath::Box2f &contents, float borderWidth, State state, const Imath::Color3f *userColor ) const
+{
+
+	Box2f b = contents;
 	V2f bw( borderWidth );
 	b.min -= bw;
 	b.max += bw;
@@ -226,7 +231,7 @@ void StandardStyle::renderFrame( const Imath::Box2f &frame, float borderWidth, S
 	glUniform1i( g_edgeAntiAliasingParameter, 0 );
 	glUniform1i( g_textureTypeParameter, 0 );
 
-	glColor( colorForState( RaisedColor, state ) );
+	glColor( colorForState( RaisedColor, state, userColor ) );
 
 	glBegin( GL_QUADS );
 
@@ -243,7 +248,7 @@ void StandardStyle::renderFrame( const Imath::Box2f &frame, float borderWidth, S
 
 }
 
-void StandardStyle::renderNodule( float radius, State state ) const
+void StandardStyle::renderNodule( float radius, State state, const Imath::Color3f *userColor ) const
 {
 	glUniform1i( g_bezierParameter, 0 );
 	glUniform1i( g_borderParameter, 1 );
@@ -252,7 +257,7 @@ void StandardStyle::renderNodule( float radius, State state ) const
 	glUniform1i( g_edgeAntiAliasingParameter, 0 );
 	glUniform1i( g_textureTypeParameter, 0 );
 
-	glColor( colorForState( RaisedColor, state ) );
+	glColor( colorForState( RaisedColor, state, userColor ) );
 
 	glBegin( GL_QUADS );
 
@@ -268,14 +273,14 @@ void StandardStyle::renderNodule( float radius, State state ) const
 	glEnd();
 }
 
-void StandardStyle::renderConnection( const Imath::V3f &srcPosition, const Imath::V3f &srcTangent, const Imath::V3f &dstPosition, const Imath::V3f &dstTangent, State state ) const
+void StandardStyle::renderConnection( const Imath::V3f &srcPosition, const Imath::V3f &srcTangent, const Imath::V3f &dstPosition, const Imath::V3f &dstTangent, State state, const Imath::Color3f *userColor ) const
 {
 	glUniform1i( g_bezierParameter, 1 );
 	glUniform1i( g_borderParameter, 0 );
 	glUniform1i( g_edgeAntiAliasingParameter, 1 );
 	glUniform1i( g_textureTypeParameter, 0 );
 
-	glColor( colorForState( ConnectionColor, state ) );
+	glColor( colorForState( ConnectionColor, state, userColor ) );
 
 	V3f d = dstPosition - srcPosition;
 
@@ -322,9 +327,10 @@ void StandardStyle::renderRectangle( const Imath::Box2f &box ) const
 	glEnd();
 }
 
-void StandardStyle::renderBackdrop( const Imath::Box2f &box, State state ) const
+void StandardStyle::renderBackdrop( const Imath::Box2f &box, State state, const Imath::Color3f *userColor ) const
 {
-	glColor( m_colors[RaisedColor] );
+	glColor( userColor ? *userColor : m_colors[RaisedColor] );
+
 	renderSolidRectangle( box );
 	if( state == HighlightedState )
 	{
@@ -569,9 +575,9 @@ unsigned int StandardStyle::connectionDisplayList()
 	return g_list;
 }
 
-Imath::Color3f StandardStyle::colorForState( Color c, State s ) const
+Imath::Color3f StandardStyle::colorForState( Color c, State s, const Imath::Color3f *userColor ) const
 {
-	Color3f result = m_colors[c];
+	Color3f result = userColor ? *userColor : m_colors[c];
 	if( s == Style::HighlightedState )
 	{
 		result = m_colors[HighlightColor];

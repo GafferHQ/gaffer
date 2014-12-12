@@ -79,6 +79,7 @@ void GafferUIBindings::bindStyle()
 		.def( "renderSelectionBox", &Style::renderSelectionBox )
 		.def( "renderHorizontalRule", &Style::renderHorizontalRule )
 
+		.def( "renderNodeFrame", &Style::renderNodeFrame )
 		.def( "renderNodule", &Style::renderNodule )
 		.def( "renderConnection", &Style::renderConnection )
 		.def( "renderBackdrop", &Style::renderBackdrop )

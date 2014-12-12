@@ -121,10 +121,11 @@ class Style : public IECore::RunTimeTyped
 		/// @name NodeGraph UI elements
 		//////////////////////////////////////////////////////////////////////////
 		//@{
-		virtual void renderNodule( float radius, State state = NormalState ) const = 0;
+		virtual void renderNodeFrame( const Imath::Box2f &contents, float borderWidth, State state = NormalState, const Imath::Color3f *userColor = NULL ) const = 0;
+		virtual void renderNodule( float radius, State state = NormalState, const Imath::Color3f *userColor = NULL ) const = 0;
 		/// The tangents give an indication of which direction is "out" from a node.
-		virtual void renderConnection( const Imath::V3f &srcPosition, const Imath::V3f &srcTangent, const Imath::V3f &dstPosition, const Imath::V3f &dstTangent, State state = NormalState ) const = 0;
-		virtual void renderBackdrop( const Imath::Box2f &box, State state = NormalState ) const = 0;
+		virtual void renderConnection( const Imath::V3f &srcPosition, const Imath::V3f &srcTangent, const Imath::V3f &dstPosition, const Imath::V3f &dstTangent, State state = NormalState, const Imath::Color3f *userColor = NULL ) const = 0;
+		virtual void renderBackdrop( const Imath::Box2f &box, State state = NormalState, const Imath::Color3f *userColor = NULL ) const = 0;
 		//@}
 
 		/// @name 3D UI elements

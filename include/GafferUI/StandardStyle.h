@@ -81,9 +81,10 @@ class StandardStyle : public Style
 		virtual void renderSelectionBox( const Imath::Box2f &box ) const;
 		virtual void renderHorizontalRule( const Imath::V2f &center, float length, State state = NormalState ) const;
 
-		virtual void renderNodule( float radius, State state = NormalState ) const;
-		virtual void renderConnection( const Imath::V3f &srcPosition, const Imath::V3f &srcTangent, const Imath::V3f &dstPosition, const Imath::V3f &dstTangent, State state = NormalState ) const;
-		virtual void renderBackdrop( const Imath::Box2f &box, State state = NormalState ) const;
+		virtual void renderNodeFrame( const Imath::Box2f &contents, float borderWidth, State state = NormalState, const Imath::Color3f *userColor = NULL ) const;
+		virtual void renderNodule( float radius, State state = NormalState, const Imath::Color3f *userColor = NULL ) const;
+		virtual void renderConnection( const Imath::V3f &srcPosition, const Imath::V3f &srcTangent, const Imath::V3f &dstPosition, const Imath::V3f &dstTangent, State state = NormalState, const Imath::Color3f *userColor = NULL ) const;
+		virtual void renderBackdrop( const Imath::Box2f &box, State state = NormalState, const Imath::Color3f *userColor = NULL ) const;
 
 		virtual void renderTranslateHandle( int axis, State state = NormalState ) const;
 
@@ -127,7 +128,7 @@ class StandardStyle : public Style
 		static int g_v2Parameter;
 		static int g_v3Parameter;
 
-		Imath::Color3f colorForState( Color c, State s ) const;
+		Imath::Color3f colorForState( Color c, State s, const Imath::Color3f *userColor = NULL ) const;
 		boost::array<Imath::Color3f, LastColor> m_colors;
 
 		boost::array<IECoreGL::FontPtr, LastText> m_fonts;
