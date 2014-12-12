@@ -229,7 +229,9 @@ class PlugValueWidget( GafferUI.Widget ) :
 				}
 			)
 		
-		currentPreset = Gaffer.NodeAlgo.currentPreset( self.getPlug() )
+		with self.getContext() :
+			currentPreset = Gaffer.NodeAlgo.currentPreset( self.getPlug() )
+		
 		for presetName in Gaffer.NodeAlgo.presets( self.getPlug() ) :
 			menuDefinition.append(
 				"/Preset/" + presetName, {
