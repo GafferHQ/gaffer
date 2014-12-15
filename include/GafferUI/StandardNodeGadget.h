@@ -144,6 +144,7 @@ class StandardNodeGadget : public NodeGadget
 		void nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore::InternedString key );
 
 		bool updateUserColor();
+		void updatePadding();
 
 		const LinearContainer::Orientation m_orientation;
 		bool m_nodeEnabled;

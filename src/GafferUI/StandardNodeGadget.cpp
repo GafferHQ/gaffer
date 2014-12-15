@@ -87,7 +87,6 @@ StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node, LinearContainer::O
 	float horizontalNoduleSpacing = 2.0f;
 	float verticalNoduleSpacing = 0.2f;
 	float minWidth = m_orientation == LinearContainer::X ? 10.0f : 0.0f;
-	float padding = 1.0f;
 
 	if( IECore::ConstFloatDataPtr d = Metadata::nodeValue<IECore::FloatData>( node.get(), g_horizontalNoduleSpacingKey ) )
 	{
@@ -102,11 +101,6 @@ StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node, LinearContainer::O
 	if( IECore::ConstFloatDataPtr d = Metadata::nodeValue<IECore::FloatData>( node.get(), g_minWidthKey ) )
 	{
 		minWidth = d->readable();
-	}
-
-	if( IECore::ConstFloatDataPtr d = Metadata::nodeValue<IECore::FloatData>( node.get(), g_paddingKey ) )
-	{
-		padding = d->readable();
 	}
 
 	// four containers for nodules - one each for the top, bottom, left and right.
@@ -167,7 +161,6 @@ StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node, LinearContainer::O
 
 	IndividualContainerPtr contentsContainer = new IndividualContainer();
 	contentsContainer->setName( "contentsContainer" );
-	contentsContainer->setPadding( Box3f( V3f( -padding ), V3f( padding ) ) );
 
 	contentsColumn->addChild( new SpacerGadget( Box3f( V3f( 0 ), V3f( minWidth, 0, 0 ) ) ) );
 	contentsColumn->addChild( contentsContainer );
@@ -218,6 +211,7 @@ StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node, LinearContainer::O
 	Metadata::nodeValueChangedSignal().connect( boost::bind( &StandardNodeGadget::nodeMetadataChanged, this, ::_1, ::_2 ) );
 
 	updateUserColor();
+	updatePadding();
 }
 
 StandardNodeGadget::~StandardNodeGadget()
@@ -663,12 +657,21 @@ bool StandardNodeGadget::noduleIsCompatible( const Nodule *nodule, const DragDro
 
 void StandardNodeGadget::nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore::InternedString key )
 {
-	if( node()->isInstanceOf( nodeTypeId ) && key == g_colorKey )
+	if( !node()->isInstanceOf( nodeTypeId ) )
+	{
+		return;
+	}
+
+	if( key == g_colorKey )
 	{
 		if( updateUserColor() )
 		{
 			renderRequestSignal()( this );
 		}
+	}
+	else if( key == g_paddingKey )
+	{
+		updatePadding();
 	}
 }
 
@@ -687,4 +690,15 @@ bool StandardNodeGadget::updateUserColor()
 
 	m_userColor = c;
 	return true;
+}
+
+void StandardNodeGadget::updatePadding()
+{
+	float padding = 1.0f;
+	if( IECore::ConstFloatDataPtr d = Metadata::nodeValue<IECore::FloatData>( node(), g_paddingKey ) )
+	{
+		padding = d->readable();
+	}
+
+	contentsContainer()->setPadding( Box3f( V3f( -padding ), V3f( padding ) ) );
 }
