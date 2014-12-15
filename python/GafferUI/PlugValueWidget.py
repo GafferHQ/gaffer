@@ -239,15 +239,11 @@ class PlugValueWidget( GafferUI.Widget ) :
 				}
 			)
 		
-		with self.getContext() :
-			currentPreset = Gaffer.NodeAlgo.currentPreset( self.getPlug() )
-		
-		for presetName in Gaffer.NodeAlgo.presets( self.getPlug() ) :
+		if Gaffer.NodeAlgo.presets( self.getPlug() ) :
 			menuDefinition.append(
-				"/Preset/" + presetName, {
-					"command" : IECore.curry( Gaffer.WeakMethod( self.__applyPreset ), presetName ),
-					"active" : self._editable(),
-					"checkBox" : presetName == currentPreset,
+				"/Preset", {
+					"subMenu" : Gaffer.WeakMethod( self.__presetsSubMenu ),
+					"active" : self._editable()
 				}
 			)
 		
@@ -457,6 +453,23 @@ class PlugValueWidget( GafferUI.Widget ) :
 
 		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
 			Gaffer.NodeAlgo.applyUserDefault( self.getPlug() )
+
+	def __presetsSubMenu( self ) :
+
+		with self.getContext() :
+			currentPreset = Gaffer.NodeAlgo.currentPreset( self.getPlug() )
+
+		result = IECore.MenuDefinition()
+		for presetName in Gaffer.NodeAlgo.presets( self.getPlug() ) :
+			result.append(
+				presetName, {
+					"command" : IECore.curry( Gaffer.WeakMethod( self.__applyPreset ), presetName ),
+					"active" : self._editable(),
+					"checkBox" : presetName == currentPreset,
+				}
+			)
+
+		return result
 
 	def __applyPreset( self, presetName, *unused ) :
 	
