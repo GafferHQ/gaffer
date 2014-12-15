@@ -62,7 +62,7 @@ class ColorChooserDialogue( GafferUI.Dialogue ) :
 	def waitForColor( self, **kw ) :
 
 		button = self.waitForButton( **kw )
-		if button is self.__confirmButton :
+		if button is self.confirmButton :
 			return self.colorChooser().getColor()
 
 		return None
