@@ -90,6 +90,21 @@ class UIEditor( GafferUI.NodeSetEditor ) :
 					)
 				)
 
+				GafferUI.Label(
+					"Color",
+					parenting = {
+						"index" : ( 0, 2 ),
+						"alignment" : ( GafferUI.HorizontalAlignment.Right, GafferUI.VerticalAlignment.Top )
+					}
+				)
+
+				self.__nodeMetadataWidgets.append(
+					_ColorSwatchMetadataWidget(
+						key = "nodeGadget:color",
+						parenting = { "index" : ( 1, 2 ) }
+					)
+				)
+
 			# Plugs tab
 			with GafferUI.SplitContainer( orientation=GafferUI.SplitContainer.Orientation.Horizontal, borderWidth = 8, parenting = { "label" : "Plugs" } ) as self.__plugTab :
 
@@ -597,3 +612,38 @@ class _MultiLineStringMetadataWidget( _MetadataWidget ) :
 	def __editingFinished( self, *unused ) :
 
 		self._updateFromWidget( self.__textWidget.getText() )
+
+class _ColorSwatchMetadataWidget( _MetadataWidget ) :
+
+	def __init__( self, key, target = None, **kw ) :
+
+		self.__swatch = GafferUI.ColorSwatch( useDisplayTransform = False )
+
+		_MetadataWidget.__init__( self, self.__swatch, key, target, **kw )
+
+		self.__swatch._qtWidget().setMaximumHeight( 20 )
+		self.__swatch._qtWidget().setMaximumWidth( 40 )
+		self.__value = None
+
+		self.__buttonReleaseConnection = self.__swatch.buttonReleaseSignal().connect( Gaffer.WeakMethod( self.__buttonRelease ) )
+
+	def _updateFromValue( self, value ) :
+
+		if value is not None :
+			self.__swatch.setColor( value )
+		else :
+			self.__swatch.setColor( IECore.Color4f( 0, 0, 0, 0 ) )
+
+		self.__value = value
+
+	def __buttonRelease( self, swatch, event ) :
+
+		if event.button != event.Buttons.Left :
+			return False
+
+		color = self.__value if self.__value is not None else IECore.Color3f( 1 )
+		dialogue = GafferUI.ColorChooserDialogue( color = color, useDisplayTransform = False )
+		color = dialogue.waitForColor( parentWindow = self.ancestor( GafferUI.Window ) )
+
+		if color is not None :
+			self._updateFromWidget( color )
