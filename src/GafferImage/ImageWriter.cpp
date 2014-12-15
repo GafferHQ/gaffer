@@ -35,6 +35,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/bind.hpp"
+#include "boost/filesystem.hpp"
 
 #include "OpenImageIO/imageio.h"
 OIIO_NAMESPACE_USING
@@ -258,6 +259,13 @@ void ImageWriter::execute() const
 	spec.x = dataWindow.min.x;
 	spec.y = dataWindow.min.y;
 
+	// create the directories before opening the file
+	boost::filesystem::path directory = boost::filesystem::path( fileName ).parent_path();
+	if( !directory.empty() )
+	{
+		boost::filesystem::create_directories( directory );
+	}
+	
 	if ( !out->open( fileName, spec ) )
 	{
 		throw IECore::Exception( boost::str( boost::format( "Could not open \"%s\", error = %s" ) % fileName % out->geterror() ) );

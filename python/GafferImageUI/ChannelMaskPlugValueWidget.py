@@ -122,7 +122,8 @@ class ChannelMaskPlugValueWidget( GafferUI.PlugValueWidget ) :
 		input = self.__inputPlug
 
 		# Get the new channels from the input plug.
-		channels = list( input['channelNames'].getValue() )
+		with self.getContext() :
+			channels = list( input['channelNames'].getValue() )
 		channels = [ channel.replace( ".", "/" ) for channel in channels ]
 
 		# Get the currently selected channels from the input plug.
