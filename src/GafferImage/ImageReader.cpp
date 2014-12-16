@@ -35,6 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include "boost/bind.hpp"
 #include "boost/tokenizer.hpp"
 
 #include "OpenImageIO/imagecache.h"
@@ -96,12 +97,15 @@ ImageReader::ImageReader( const std::string &name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new StringPlug( "fileName" ) );
+	addChild( new IntPlug( "refreshCount" ) );
 
 	// disable caching on our outputs, as OIIO is already doing caching for us.
 	for( OutputPlugIterator it( outPlug() ); it!=it.end(); it++ )
 	{
 		(*it)->setFlags( Plug::Cacheable, false );
 	}
+	
+	plugSetSignal().connect( boost::bind( &ImageReader::plugSet, this, ::_1 ) );
 }
 
 ImageReader::~ImageReader()
@@ -116,6 +120,16 @@ Gaffer::StringPlug *ImageReader::fileNamePlug()
 const Gaffer::StringPlug *ImageReader::fileNamePlug() const
 {
 	return getChild<StringPlug>( g_firstPlugIndex );
+}
+
+Gaffer::IntPlug *ImageReader::refreshCountPlug()
+{
+	return getChild<IntPlug>( g_firstPlugIndex + 1 );
+}
+
+const Gaffer::IntPlug *ImageReader::refreshCountPlug() const
+{
+	return getChild<IntPlug>( g_firstPlugIndex + 1 );
 }
 
 bool ImageReader::enabled() const
@@ -160,7 +174,7 @@ void ImageReader::affects( const Gaffer::Plug *input, AffectedPlugsContainer &ou
 {
 	ImageNode::affects( input, outputs );
 
-	if( input==fileNamePlug() )
+	if( input == fileNamePlug() || input == refreshCountPlug() )
 	{
 		for( ValuePlugIterator it( outPlug() ); it != it.end(); it++ )
 		{
@@ -173,18 +187,21 @@ void ImageReader::hashFormat( const GafferImage::ImagePlug *output, const Gaffer
 {
 	ImageNode::hashFormat( output, context, h );
 	fileNamePlug()->hash( h );
+	refreshCountPlug()->hash( h );
 }
 
 void ImageReader::hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	ImageNode::hashChannelNames( output, context, h );
 	fileNamePlug()->hash( h );
+	refreshCountPlug()->hash( h );
 }
 
 void ImageReader::hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	ImageNode::hashDataWindow( output, context, h );
 	fileNamePlug()->hash( h );
+	refreshCountPlug()->hash( h );
 }
 
 void ImageReader::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
@@ -193,6 +210,7 @@ void ImageReader::hashChannelData( const GafferImage::ImagePlug *output, const G
 	h.append( context->get<V2i>( ImagePlug::tileOriginContextName ) );
 	h.append( context->get<std::string>( ImagePlug::channelNameContextName ) );
 	fileNamePlug()->hash( h );
+	refreshCountPlug()->hash( h );
 }
 
 GafferImage::Format ImageReader::computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const
@@ -276,3 +294,12 @@ IECore::ConstFloatVectorDataPtr ImageReader::computeChannelData( const std::stri
 	return resultData;
 }
 
+void ImageReader::plugSet( Gaffer::Plug *plug )
+{
+	// this clears the cache every time the refresh count is updated, so you don't get entries
+	// from old files hanging around.
+	if( plug == refreshCountPlug() )
+	{
+		imageCache()->invalidate_all( true );
+	}
+}

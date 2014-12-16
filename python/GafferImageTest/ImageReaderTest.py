@@ -1,7 +1,7 @@
 ##########################################################################
 #
 #  Copyright (c) 2012, John Haddon. All rights reserved.
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2013-2014, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -36,6 +36,7 @@
 ##########################################################################
 
 import os
+import shutil
 import unittest
 
 import IECore
@@ -46,6 +47,7 @@ import GafferImageTest
 
 class ImageReaderTest( unittest.TestCase ) :
 
+	__testDir = "/tmp/imageReaderTest"
 	fileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/checker.exr" )
 	offsetDataWindowFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/rgb.100x100.exr" )
 	negativeDataWindowFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/checkerWithNegativeDataWindow.200x150.exr" )
@@ -238,6 +240,38 @@ class ImageReaderTest( unittest.TestCase ) :
 		self.assertTrue( "png" in e )
 		self.assertTrue( "cin" in e )
 		self.assertTrue( "dpx" in e )
+	
+	def testFileRefresh( self ) :
+		
+		testFile = self.__testDir + "/refresh.exr"
+		reader = GafferImage.ImageReader()
+		reader["fileName"].setValue( testFile )
+		dataWindow = reader["out"]["dataWindow"].getValue()
+		
+		shutil.copyfile( self.fileName, testFile )
+		# the default image is cached
+		self.assertEqual( dataWindow, reader["out"]["dataWindow"].getValue() )
+		# until we force a refresh
+		reader["refreshCount"].setValue( reader["refreshCount"].getValue() + 1 )
+		newDataWindow = reader["out"]["dataWindow"].getValue()
+		self.assertNotEqual( dataWindow, newDataWindow )
+		
+		shutil.copyfile( self.circlesExrFileName, testFile )
+		# the old file is cached
+		self.assertEqual( newDataWindow, reader["out"]["dataWindow"].getValue() )
+		# until we force a refresh
+		reader["refreshCount"].setValue( reader["refreshCount"].getValue() + 1 )
+		self.assertNotEqual( newDataWindow, reader["out"]["dataWindow"].getValue() )
+	
+	def setUp( self ) :
+		
+		os.mkdir( self.__testDir )
+	
+	def tearDown( self ) :
+		
+		if os.path.isdir( self.__testDir ) :
+			shutil.rmtree( self.__testDir )
+
 
 if __name__ == "__main__":
 	unittest.main()
