@@ -92,6 +92,7 @@
 #include "GafferSceneBindings/DeleteGlobalsBinding.h"
 #include "GafferSceneBindings/ExternalProceduralBinding.h"
 #include "GafferSceneBindings/GroupBinding.h"
+#include "GafferSceneBindings/ScenePathBinding.h"
 
 using namespace boost::python;
 using namespace GafferScene;
@@ -165,5 +166,6 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	bindSceneAlgo();
 	bindCoordinateSystem();
 	bindExternalProcedural();
+	bindScenePath();
 
 }

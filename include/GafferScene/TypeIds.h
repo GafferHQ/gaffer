@@ -118,6 +118,7 @@ enum TypeId
 	DeleteOptionsTypeId = 110573,
 	DeleteOutputsTypeId = 110574,
 	ExternalProceduralTypeId = 110575,
+	ScenePathTypeId = 110576,
 
 	LastTypeId = 110650
 };
