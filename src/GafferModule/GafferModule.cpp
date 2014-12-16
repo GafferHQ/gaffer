@@ -84,6 +84,7 @@
 #include "GafferBindings/DotBinding.h"
 #include "GafferBindings/PathBinding.h"
 #include "GafferBindings/PathFilterBinding.h"
+#include "GafferBindings/CompoundPathFilterBinding.h"
 
 using namespace boost::python;
 using namespace Gaffer;
@@ -172,6 +173,7 @@ BOOST_PYTHON_MODULE( _Gaffer )
 	bindDot();
 	bindPath();
 	bindPathFilter();
+	bindCompoundPathFilter();
 
 	NodeClass<Backdrop>();
 

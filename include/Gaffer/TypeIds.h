@@ -121,6 +121,8 @@ enum TypeId
 	DotTypeId = 110074,
 	PathTypeId = 110075,
 	PathFilterTypeId = 110076,
+	CompoundPathFilterTypeId = 110077,
+
 	LastTypeId = 110180,
 
 };

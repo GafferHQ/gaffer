@@ -41,25 +41,31 @@ import GafferTest
 
 class CompoundPathFilterTest( GafferTest.TestCase ) :
 
+	def assertFilterListsEqual( self, a, b ) :
+
+		self.assertEqual( len( a ), len( b ) )
+		for ae, be in zip( a, b ) :
+			self.assertTrue( ae.isSame( be ) )
+
 	def test( self ) :
 
 		f1 = Gaffer.FileNamePathFilter( [ "*.gfr" ] )
 		f2 = Gaffer.FileNamePathFilter( [ "*.tif" ] )
 
 		c = Gaffer.CompoundPathFilter()
-		self.assertEqual( c.getFilters(), [] )
+		self.assertFilterListsEqual( c.getFilters(), [] )
 
 		c.addFilter( f1 )
-		self.assertEqual( c.getFilters(), [ f1 ] )
+		self.assertFilterListsEqual( c.getFilters(), [ f1 ] )
 
 		c.addFilter( f2 )
-		self.assertEqual( c.getFilters(), [ f1, f2 ] )
+		self.assertFilterListsEqual( c.getFilters(), [ f1, f2 ] )
 
 		c.removeFilter( f1 )
-		self.assertEqual( c.getFilters(), [ f2 ] )
+		self.assertFilterListsEqual( c.getFilters(), [ f2 ] )
 
 		c.setFilters( [ f1, f2 ] )
-		self.assertEqual( c.getFilters(), [ f1, f2 ] )
+		self.assertFilterListsEqual( c.getFilters(), [ f1, f2 ] )
 
 	def testChangedSignal( self ) :
 
@@ -67,7 +73,7 @@ class CompoundPathFilterTest( GafferTest.TestCase ) :
 
 		self.__numChanges = 0
 		def f( filter ) :
-			self.failUnless( filter is cf )
+			self.failUnless( filter.isSame( cf ) )
 			self.__numChanges += 1
 
 		f1 = Gaffer.FileNamePathFilter( [ "*.gfr" ] )
@@ -105,7 +111,7 @@ class CompoundPathFilterTest( GafferTest.TestCase ) :
 
 		self.__numChanges = 0
 		def f( filter ) :
-			self.failUnless( filter is cf )
+			self.failUnless( filter.isSame( cf ) )
 			self.__numChanges += 1
 
 		f1 = Gaffer.FileNamePathFilter( [ "*.gfr" ] )
@@ -137,6 +143,37 @@ class CompoundPathFilterTest( GafferTest.TestCase ) :
 		self.assertEqual( self.__numChanges, 6 )
 		f1.changedSignal()( f1 )
 		self.assertEqual( self.__numChanges, 7 )
+
+	def testFiltering( self ) :
+
+		p = Gaffer.DictPath(
+			{
+				"a.txt" : 1,
+				"b.txt" : 2,
+				"c.exr" : 3,
+			},
+			"/"
+		)
+
+		self.assertEqual( len( p.children() ), 3 )
+
+		f = Gaffer.CompoundPathFilter()
+		p.setFilter( f )
+		self.assertEqual( len( p.children() ), 3 )
+
+		f.addFilter( Gaffer.FileNamePathFilter( [ "*.txt" ] ) )
+		self.assertEqual( len( p.children() ), 2 )
+
+		f.addFilter( Gaffer.FileNamePathFilter( [ "a.*" ] ) )
+		self.assertEqual( len( p.children() ), 1 )
+
+	def testConstructFromList( self ) :
+
+		f1 = Gaffer.FileNamePathFilter( [ "a.*" ] )
+		f2 = Gaffer.FileNamePathFilter( [ "b.*" ] )
+
+		f = Gaffer.CompoundPathFilter( [ f1, f2 ] )
+		self.assertFilterListsEqual( f.getFilters(), [ f1, f2 ] )
 
 if __name__ == "__main__":
 	unittest.main()
