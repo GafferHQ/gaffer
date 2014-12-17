@@ -1608,5 +1608,13 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 
 		self.assertTrue( shaderNode["parameters"]["coshaderParameter"].acceptsInput( dot["out"] ) )
 
+	def testShaderTypeOverride( self ) :
+
+		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/shaderTypeOverride.sl" )
+		shaderNode = GafferRenderMan.RenderManShader()
+		shaderNode.loadShader( shader )
+
+		self.assertEqual( shaderNode['type'].getValue(), "ri:overrideType" )
+
 if __name__ == "__main__":
 	unittest.main()
