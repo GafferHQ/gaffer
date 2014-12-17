@@ -47,7 +47,7 @@ QtGui = GafferUI._qtImport( "QtGui" )
 # A custom slider for drawing the backgrounds.
 class _ComponentSlider( GafferUI.NumericSlider ) :
 
-	def __init__( self, color, component, **kw ) :
+	def __init__( self, color, component, useDisplayTransform = True, **kw ) :
 
 		min = hardMin = 0
 		max = hardMax = 1
@@ -59,8 +59,10 @@ class _ComponentSlider( GafferUI.NumericSlider ) :
 
 		self.color = color
 		self.component = component
+		self.__useDisplayTransform = useDisplayTransform
 
-		self.__displayTransformChangedConnection = GafferUI.DisplayTransform.changedSignal().connect( Gaffer.WeakMethod( self.__displayTransformChanged ) )
+		if self.__useDisplayTransform :
+			self.__displayTransformChangedConnection = GafferUI.DisplayTransform.changedSignal().connect( Gaffer.WeakMethod( self.__displayTransformChanged ) )
 
 	def setColor( self, color ) :
 
@@ -76,7 +78,7 @@ class _ComponentSlider( GafferUI.NumericSlider ) :
 		size = self.size()
 		grad = QtGui.QLinearGradient( 0, 0, size.x, 0 )
 
-		displayTransform = GafferUI.DisplayTransform.get()
+		displayTransform = GafferUI.DisplayTransform.get() if self.__useDisplayTransform else lambda x : x
 
 		if self.component == "a" :
 			c1 = IECore.Color3f( 0 )
@@ -112,7 +114,7 @@ class ColorChooser( GafferUI.Widget ) :
 
 	ColorChangedReason = IECore.Enum.create( "Invalid", "SetColor", "Reset" )
 
-	def __init__( self, color=IECore.Color3f( 1 ) ) :
+	def __init__( self, color=IECore.Color3f( 1 ), useDisplayTransform = True ) :
 
 		self.__column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing = 4 )
 
@@ -136,7 +138,7 @@ class ColorChooser( GafferUI.Widget ) :
 					numericWidget.component = component
 					self.__numericWidgets[component] = numericWidget
 
-					slider = _ComponentSlider( color, component )
+					slider = _ComponentSlider( color, component, useDisplayTransform = useDisplayTransform )
 					self.__sliders[component] = slider
 
 					self.__componentValueChangedConnections.append(
@@ -150,12 +152,12 @@ class ColorChooser( GafferUI.Widget ) :
 			# initial and current colour swatches
 			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, parenting = { "expand" : True } ) :
 
-				self.__initialColorSwatch = GafferUI.ColorSwatch( color, parenting = { "expand" : True } )
+				self.__initialColorSwatch = GafferUI.ColorSwatch( color, useDisplayTransform = useDisplayTransform, parenting = { "expand" : True } )
 				self.__initialColorPressConnection = self.__initialColorSwatch.buttonPressSignal().connect( Gaffer.WeakMethod( self.__initialColorPress ) )
 
 				GafferUI.Spacer( IECore.V2i( 4, 40 ) )
 
-				self.__colorSwatch = GafferUI.ColorSwatch( color, parenting = { "expand" : True } )
+				self.__colorSwatch = GafferUI.ColorSwatch( color, useDisplayTransform = useDisplayTransform, parenting = { "expand" : True } )
 
 		self.__colorChangedSignal = Gaffer.Signal2()
 
