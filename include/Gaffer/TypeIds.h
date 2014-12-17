@@ -124,6 +124,7 @@ enum TypeId
 	CompoundPathFilterTypeId = 110077,
 	LeafPathFilterTypeId = 110078,
 	MatchPatternPathFilterTypeId = 110079,
+	FileSystemPathTypeId = 110080,
 
 	LastTypeId = 110180,
 

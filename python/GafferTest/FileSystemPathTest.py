@@ -39,6 +39,10 @@ from __future__ import with_statement
 
 import unittest
 import shutil
+import time
+import datetime
+import pwd
+import grp
 import os
 
 import IECore
@@ -163,6 +167,56 @@ class FileSystemPathTest( GafferTest.TestCase ) :
 		self.assertEqual( len( c ), 1 )
 		self.assertEqual( str( c[0] ), "dir/a" )
 		self.assertTrue( c[0].isValid() )
+
+	def testChildrenOfFile( self ) :
+
+		p = Gaffer.FileSystemPath( __file__ )
+		self.assertEqual( p.children(), [] )
+
+	def testModificationTimes( self ) :
+
+		p = Gaffer.FileSystemPath( self.__dir )
+		p.append( "t" )
+
+		with open( str( p ), "w" ) as f :
+			f.write( "AAAA" )
+
+		mt = p.attribute( "fileSystem:modificationTime" )
+		self.assertTrue( isinstance( mt, datetime.datetime ) )
+		self.assertTrue( (mt - datetime.datetime.now()).total_seconds() < 0.1 )
+
+		time.sleep( 1 )
+
+		with open( str( p ), "w" ) as f :
+			f.write( "BBBB" )
+
+		mt = p.attribute( "fileSystem:modificationTime" )
+		self.assertTrue( isinstance( mt, datetime.datetime ) )
+		self.assertTrue( (mt - datetime.datetime.now()).total_seconds() < 0.1 )
+
+	def testOwner( self ) :
+
+		p = Gaffer.FileSystemPath( self.__dir )
+		p.append( "t" )
+
+		with open( str( p ), "w" ) as f :
+			f.write( "AAAA" )
+
+		o = p.attribute( "fileSystem:owner" )
+		self.assertTrue( isinstance( o, str ) )
+		self.assertEqual( o, pwd.getpwuid( os.stat( str( p ) ).st_uid ).pw_name )
+
+	def testGroup( self ) :
+
+		p = Gaffer.FileSystemPath( self.__dir )
+		p.append( "t" )
+
+		with open( str( p ), "w" ) as f :
+			f.write( "AAAA" )
+
+		g = p.attribute( "fileSystem:group" )
+		self.assertTrue( isinstance( g, str ) )
+		self.assertEqual( g, grp.getgrgid( os.stat( str( p ) ).st_gid ).gr_name )
 
 	def setUp( self ) :
 

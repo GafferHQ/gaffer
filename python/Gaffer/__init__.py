@@ -39,7 +39,6 @@ from _Gaffer import *
 from About import About
 from Application import Application
 from WeakMethod import WeakMethod
-from FileSystemPath import FileSystemPath
 from BlockedConnection import BlockedConnection
 from FileNamePathFilter import FileNamePathFilter
 from UndoContext import UndoContext
