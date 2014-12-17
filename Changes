@@ -1,3 +1,90 @@
+# 0.7.0.0
+
+This release brings the exciting addition of support for the open source [Appleseed](http://appleseedhq.net/) renderer. It also adds the much asked for Dot node, and a tool for editing render crop windows. Plus of course the usual small improvements, optimisations and bug fixes.
+
+## UI
+
+- Added resolution gate and crop windows overlays to 3d viewer (#1016).
+- Added tool for manipulating crop window.
+- Added "User Default" item to plug popup menus.
+- Added sneaky hotkey for navigating inside any node in NodeGraph.
+- Fixed Reference node UI to match equivalent Box node UI (#1108).
+- Improved positioning of nodes created by the NodeMenu.
+- Improved table widget (#204).
+	- Remove button disabled when selection empty
+	- Newly added rows are selected automatically
+	- Newly added row has keyboard focus for immediate editing
+- Added customisable presets to plug widgets (#1113).
+- Fixed bugs where image viewer was using incorrect context (#1124).
+- Fixed bug where channel mask UI was using incorrect context.
+- Added a refresh button to ImageReaders.
+
+## Core
+
+- Optimised Switch node for constant indices. A benchmark with the bunny scene followed by 50 switches shows a 6x speedup overall.
+- Added Dot node (#12).
+
+## Scene
+
+- Added min/max limits to StandardOptions crop window plug.
+- Fixed bugs which prevented ObjectSource nodes from working after create/undo/redo.
+- Fixed UnionFilter to accept inputs from Boxes.
+
+## Image
+
+- ImageWriter now creates the necessary directories before writing images.
+
+## Appleseed
+
+- Added support for the Appleseed renderer, courtesy of Esteban Tovagliari.
+
+## API
+
+- Optimised ScenePlug::stringToPath(). This gives an 88% reduction in runtime for a synthetic test of just that function, and a 7% reduction in total runtime for a scene benchmark using the Instancer.
+- Added hasUserDefault( plug ) and applyUserDefault( plug ) to NodeAlgo.
+- Added Context.__contains__ binding.
+- Simplified numeric plug bindings.
+- Added min/max values to BoxPlug.
+- Added handy CompoundDataPlug::MemberPlug child accessors.
+- Added GafferBindings::NodeClass() overload for suppressing init.
+- Moved shutter() and transform() from RendererAlgo.h to SceneAlgo.h.
+- Added camera() methods to SceneAlgo.h.
+- Removed GLWidget minimum size.
+- Fixed bug where ViewportGadget::setCamera() could forget viewport size.
+- Fixed ViewportGadget::RasterScope to work during selection.
+- Added ViewportGadget::preRenderSignal().
+- Made View::update() non-pure virtual.
+- Added View::contextChangedSignal().
+- Added Tool base class.
+- Fixed bugs in ExceptionAlgo formatPythonException().
+- Fixed StandardStyle border widths to be independent of border radius.
+- Added Menu.popupPosition() method.
+- Improved support for functools.partial() callables in Menu commands.
+- Added metadata to control StandardNodeGadget minimum width, padding, and nodule spacing.
+- Improved StandardNodeGadget drag/drop handling. Previously it would accept drags it wasn't going to use, preventing other handlers from working.
+- Added Nodule::updateDragEndPoint() virtual method.
+- Fixed ScriptNode::deleteNodes() for nodes without enabled plugs.
+- Added customisable edge gadgets to StandardNodeGadget.
+- Added support for changing nodule position on StandardNodeGadget.
+- Guaranteed order of Metadata::registered*Values().
+- Added plug presets methods to Gaffer.NodeAlgo.
+- Added GafferUI.PresetsPlugValueWidget.
+- Added PlugValueWidget.childPlugValueWidget(), so derived classes don't need to implement it if they don't have such children.
+
+## Build
+
+- Added scripts for automating releases.
+- Updated IE public build script to use MILESTONE_VERSION, and renamed it to publicDependenciesBuild, since it is no longer used for producing the public release builds.
+- Requires Cortex 9.0.0-b1 for Appleseed support.
+
+## Incompatibilities
+
+- Moved shutter() and transform() from RendererAlgo.h to SceneAlgo.h.
+- Made View::update() non-pure virtual.
+- Added virtual method to Nodule.
+
+# 0.6.0.0
+
 #### UI
 
 - Fixed bug which prevented newly created nodes from being inserted inline in the Node Graph.
