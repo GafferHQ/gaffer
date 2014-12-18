@@ -130,6 +130,21 @@ void RenderManShader::loadShader( const std::string &shaderName, bool keepExisti
 	namePlug()->setValue( shaderName );
 
 	string type = "ri:" + shader->getType();
+
+	// A metadata option to override the shader type.
+	// This can be useful to work around some 3delight issues.
+	// For example, if you want to call illuminance() in a coshader, you need to add a 
+	// dummy surface() method, but you still want the type to be "ri:shader".
+	ConstCompoundDataPtr annotations = shader->blindData()->member<CompoundData>( "ri:annotations" );
+	if( annotations )
+	{
+		const StringData *shaderTypeOverride = annotations->member<StringData>( "shaderTypeOverride" );
+		if( shaderTypeOverride )
+		{
+			type = shaderTypeOverride->readable();
+		}
+	}
+
 	bool oldAndNewTypesCompatible = false;
 	if( type == "ri:volume" )
 	{
