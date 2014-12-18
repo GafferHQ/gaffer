@@ -54,8 +54,8 @@ Gaffer.Metadata.registerPlugValue( Gaffer.ExecutableNode, "requirements.*", "con
 
 Gaffer.Metadata.registerNodeValue( Gaffer.SubGraph, "nodeGadget:color", IECore.Color3f( 0.225 ) )
 
-Gaffer.Metadata.registerPlugValue( GafferScene.SceneNode, "in*", "nodule:color", IECore.Color3f( 0.2346, 0.326, 0.46 ) )
-Gaffer.Metadata.registerPlugValue( GafferScene.SceneNode, "out", "nodule:color", IECore.Color3f( 0.2346, 0.326, 0.46 ) )
+Gaffer.Metadata.registerPlugValue( GafferScene.SceneNode, "in*", "nodule:color", IECore.Color3f( 0.2401, 0.3394, 0.485 ) )
+Gaffer.Metadata.registerPlugValue( GafferScene.SceneNode, "out", "nodule:color", IECore.Color3f( 0.2401, 0.3394, 0.485 ) )
 Gaffer.Metadata.registerPlugValue( GafferScene.ExecutableRender, "in", "nodule:color", IECore.Color3f( 0.2346, 0.326, 0.46 ) )
 Gaffer.Metadata.registerPlugValue( GafferScene.InteractiveRender, "in", "nodule:color", IECore.Color3f( 0.2346, 0.326, 0.46 ) )
 Gaffer.Metadata.registerPlugValue( GafferScene.Parent, "child", "nodule:color", IECore.Color3f( 0.2346, 0.326, 0.46 ) )
