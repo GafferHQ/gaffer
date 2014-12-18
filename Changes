@@ -18,11 +18,16 @@ This release brings the exciting addition of support for the open source [Apples
 - Fixed bugs where image viewer was using incorrect context (#1124).
 - Fixed bug where channel mask UI was using incorrect context.
 - Added a refresh button to ImageReaders.
+- Added support for specifying node, nodule, and connection colours via Metadata (#89).
+- Added support for setting node colour in the UIEditor or from the RMB popup in the graph.
+- Fixed bug in ColorChooserDialogue.waitForColor().
+- Added basic colour scheme for nodes in the GUI app (#1098, #154).
 
 ## Core
 
 - Optimised Switch node for constant indices. A benchmark with the bunny scene followed by 50 switches shows a 6x speedup overall.
 - Added Dot node (#12).
+- Fixed bindings for Metadata types other than simple typed data (#1136).
 
 ## Scene
 
@@ -33,6 +38,10 @@ This release brings the exciting addition of support for the open source [Apples
 ## Image
 
 - ImageWriter now creates the necessary directories before writing images.
+
+## RenderMan
+
+- Added shader Metadata option "shaderTypeOverride" (#pragma annotation "shaderTypeOverride" "ri:shader" will force the Gaffer shader type to "ri:shader").
 
 ## Appleseed
 
@@ -69,7 +78,12 @@ This release brings the exciting addition of support for the open source [Apples
 - Guaranteed order of Metadata::registered*Values().
 - Added plug presets methods to Gaffer.NodeAlgo.
 - Added GafferUI.PresetsPlugValueWidget.
-- Added PlugValueWidget.childPlugValueWidget(), so derived classes don't need to implement it if they don't have such children.
+- Added PlugValueWidget.childPlugValueWidget(), so derived classes don't need to implement it if they don't have such children (#1123).
+- Added Style::renderNodeFrame() to distinguish between frames drawn for nodes and those drawn as normal frames.
+- Updated Style bindings.
+- Added useDisplayTransform argument to ColorSwatch constructor.
+- Added useDisplayTransform argument to ColorChooser and ColorChooserDialogue.
+- Added DataBinding.h header with dataToPython().
 
 ## Build
 
@@ -82,6 +96,7 @@ This release brings the exciting addition of support for the open source [Apples
 - Moved shutter() and transform() from RendererAlgo.h to SceneAlgo.h.
 - Made View::update() non-pure virtual.
 - Added virtual method to Nodule.
+- Added and reordered Style virtual methods.
 
 # 0.6.0.0
 
