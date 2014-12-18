@@ -35,6 +35,7 @@
 ##########################################################################
 
 import weakref
+import functools
 
 import IECore
 
@@ -187,6 +188,12 @@ class UIEditor( GafferUI.NodeSetEditor ) :
 
 		return self.__plugTab
 
+	@classmethod
+	def appendNodeContextMenuDefinitions( cls, nodeGraph, node, menuDefinition ) :
+
+		menuDefinition.append( "/UIEditorDivider", { "divider" : True } )
+		menuDefinition.append( "/Set Color...", { "command" : functools.partial( cls.__setColor, node = node ) } )
+
 	def _updateFromSet( self ) :
 
 		GafferUI.NodeSetEditor._updateFromSet( self )
@@ -264,6 +271,16 @@ class UIEditor( GafferUI.NodeSetEditor ) :
 	def __repr__( self ) :
 
 		return "GafferUI.UIEditor( scriptNode )"
+
+	@classmethod
+	def __setColor( cls, menu, node ) :
+
+		color = Gaffer.Metadata.nodeValue( node, "nodeGadget:color" ) or IECore.Color3f( 1 )
+		dialogue = GafferUI.ColorChooserDialogue( color = color, useDisplayTransform = False )
+		color = dialogue.waitForColor( parentWindow = menu.ancestor( GafferUI.Window ) )
+		if color is not None :
+			with Gaffer.UndoContext( node.ancestor( Gaffer.ScriptNode ) ) :
+				Gaffer.Metadata.registerNodeValue( node, "nodeGadget:color", color )
 
 GafferUI.EditorWidget.registerType( "UIEditor", UIEditor )
 
