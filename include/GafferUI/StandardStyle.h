@@ -67,24 +67,26 @@ class StandardStyle : public Style
 
 		virtual void bind( const Style *currentStyle=0 ) const;
 
+		virtual void renderImage( const Imath::Box2f &box, const IECoreGL::Texture *texture ) const;
+		virtual void renderLine( const IECore::LineSegment3f &line ) const;
+		virtual void renderSolidRectangle( const Imath::Box2f &box ) const;
+		virtual void renderRectangle( const Imath::Box2f &box ) const;
+
 		virtual Imath::Box3f characterBound( TextType textType ) const;
 		virtual Imath::Box3f textBound( TextType type, const std::string &text ) const;
 		virtual void renderText( TextType type, const std::string &text, State state = NormalState ) const;
 		virtual void renderWrappedText( TextType textType, const std::string &text, const Imath::Box2f &bound, State state = NormalState ) const;
 
 		virtual void renderFrame( const Imath::Box2f &frame, float borderWidth, State state = NormalState ) const;
-		virtual void renderNodule( float radius, State state = NormalState ) const;
-		virtual void renderConnection( const Imath::V3f &srcPosition, const Imath::V3f &srcTangent, const Imath::V3f &dstPosition, const Imath::V3f &dstTangent, State state = NormalState ) const;
-		virtual void renderBackdrop( const Imath::Box2f &box, State state = NormalState ) const;
 		virtual void renderSelectionBox( const Imath::Box2f &box ) const;
 		virtual void renderHorizontalRule( const Imath::V2f &center, float length, State state = NormalState ) const;
 
-		virtual void renderTranslateHandle( int axis, State state = NormalState ) const;
+		virtual void renderNodeFrame( const Imath::Box2f &contents, float borderWidth, State state = NormalState, const Imath::Color3f *userColor = NULL ) const;
+		virtual void renderNodule( float radius, State state = NormalState, const Imath::Color3f *userColor = NULL ) const;
+		virtual void renderConnection( const Imath::V3f &srcPosition, const Imath::V3f &srcTangent, const Imath::V3f &dstPosition, const Imath::V3f &dstTangent, State state = NormalState, const Imath::Color3f *userColor = NULL ) const;
+		virtual void renderBackdrop( const Imath::Box2f &box, State state = NormalState, const Imath::Color3f *userColor = NULL ) const;
 
-		virtual void renderImage( const Imath::Box2f &box, const IECoreGL::Texture *texture ) const;
-		virtual void renderLine( const IECore::LineSegment3f &line ) const;
-		virtual void renderSolidRectangle( const Imath::Box2f &box ) const;
-		virtual void renderRectangle( const Imath::Box2f &box ) const;
+		virtual void renderTranslateHandle( int axis, State state = NormalState ) const;
 
 		enum Color
 		{
@@ -126,7 +128,7 @@ class StandardStyle : public Style
 		static int g_v2Parameter;
 		static int g_v3Parameter;
 
-		Imath::Color3f colorForState( Color c, State s ) const;
+		Imath::Color3f colorForState( Color c, State s, const Imath::Color3f *userColor = NULL ) const;
 		boost::array<Imath::Color3f, LastColor> m_colors;
 
 		boost::array<IECoreGL::FontPtr, LastText> m_fonts;

@@ -70,13 +70,15 @@ static IECore::InternedString g_verticalNoduleSpacingKey( "nodeGadget:verticalNo
 static IECore::InternedString g_minWidthKey( "nodeGadget:minWidth"  );
 static IECore::InternedString g_paddingKey( "nodeGadget:padding"  );
 static IECore::InternedString g_nodulePositionKey( "nodeGadget:nodulePosition" );
+static IECore::InternedString g_colorKey( "nodeGadget:color" );
 
 StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node, LinearContainer::Orientation orientation )
 	:	NodeGadget( node ),
 		m_orientation( orientation ),
 		m_nodeEnabled( true ),
 		m_labelsVisibleOnHover( true ),
-		m_dragDestinationProxy( 0 )
+		m_dragDestinationProxy( 0 ),
+		m_userColor( 0 )
 {
 
 	// build our ui structure
@@ -85,7 +87,6 @@ StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node, LinearContainer::O
 	float horizontalNoduleSpacing = 2.0f;
 	float verticalNoduleSpacing = 0.2f;
 	float minWidth = m_orientation == LinearContainer::X ? 10.0f : 0.0f;
-	float padding = 1.0f;
 
 	if( IECore::ConstFloatDataPtr d = Metadata::nodeValue<IECore::FloatData>( node.get(), g_horizontalNoduleSpacingKey ) )
 	{
@@ -100,11 +101,6 @@ StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node, LinearContainer::O
 	if( IECore::ConstFloatDataPtr d = Metadata::nodeValue<IECore::FloatData>( node.get(), g_minWidthKey ) )
 	{
 		minWidth = d->readable();
-	}
-
-	if( IECore::ConstFloatDataPtr d = Metadata::nodeValue<IECore::FloatData>( node.get(), g_paddingKey ) )
-	{
-		padding = d->readable();
 	}
 
 	// four containers for nodules - one each for the top, bottom, left and right.
@@ -165,7 +161,6 @@ StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node, LinearContainer::O
 
 	IndividualContainerPtr contentsContainer = new IndividualContainer();
 	contentsContainer->setName( "contentsContainer" );
-	contentsContainer->setPadding( Box3f( V3f( -padding ), V3f( padding ) ) );
 
 	contentsColumn->addChild( new SpacerGadget( Box3f( V3f( 0 ), V3f( minWidth, 0, 0 ) ) ) );
 	contentsColumn->addChild( contentsContainer );
@@ -213,7 +208,10 @@ StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node, LinearContainer::O
 	}
 
 	Metadata::plugValueChangedSignal().connect( boost::bind( &StandardNodeGadget::plugMetadataChanged, this, ::_1, ::_2, ::_3 ) );
+	Metadata::nodeValueChangedSignal().connect( boost::bind( &StandardNodeGadget::nodeMetadataChanged, this, ::_1, ::_2 ) );
 
+	updateUserColor();
+	updatePadding();
 }
 
 StandardNodeGadget::~StandardNodeGadget()
@@ -249,7 +247,12 @@ void StandardNodeGadget::doRender( const Style *style ) const
 
 	// draw our background frame
 	Box3f b = bound();
-	style->renderFrame( Box2f( V2f( b.min.x, b.min.y ) + V2f( g_borderWidth ), V2f( b.max.x, b.max.y ) - V2f( g_borderWidth ) ), g_borderWidth, state );
+	style->renderNodeFrame(
+		Box2f( V2f( b.min.x, b.min.y ) + V2f( g_borderWidth ), V2f( b.max.x, b.max.y ) - V2f( g_borderWidth ) ),
+		g_borderWidth,
+		state,
+		m_userColor.get_ptr()
+	);
 
 	// draw our contents
 	NodeGadget::doRender( style );
@@ -261,6 +264,11 @@ void StandardNodeGadget::doRender( const Style *style ) const
 		/// so that styles can do customised drawing based on knowledge of what is being drawn.
 		style->renderLine( IECore::LineSegment3f( V3f( b.min.x, b.min.y, 0 ), V3f( b.max.x, b.max.y, 0 ) ) );
 	}
+}
+
+const Imath::Color3f *StandardNodeGadget::userColor() const
+{
+	return m_userColor.get_ptr();
 }
 
 Nodule *StandardNodeGadget::nodule( const Gaffer::Plug *plug )
@@ -645,4 +653,52 @@ bool StandardNodeGadget::noduleIsCompatible( const Nodule *nodule, const DragDro
 	{
 		return nodulePlug->direction() == Plug::Out && dropPlug->acceptsInput( nodulePlug );
 	}
+}
+
+void StandardNodeGadget::nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore::InternedString key )
+{
+	if( !node()->isInstanceOf( nodeTypeId ) )
+	{
+		return;
+	}
+
+	if( key == g_colorKey )
+	{
+		if( updateUserColor() )
+		{
+			renderRequestSignal()( this );
+		}
+	}
+	else if( key == g_paddingKey )
+	{
+		updatePadding();
+	}
+}
+
+bool StandardNodeGadget::updateUserColor()
+{
+	boost::optional<Color3f> c;
+	if( IECore::ConstColor3fDataPtr d = Metadata::nodeValue<IECore::Color3fData>( node(), g_colorKey ) )
+	{
+		c = d->readable();
+	}
+
+	if( c == m_userColor )
+	{
+		return false;
+	}
+
+	m_userColor = c;
+	return true;
+}
+
+void StandardNodeGadget::updatePadding()
+{
+	float padding = 1.0f;
+	if( IECore::ConstFloatDataPtr d = Metadata::nodeValue<IECore::FloatData>( node(), g_paddingKey ) )
+	{
+		padding = d->readable();
+	}
+
+	contentsContainer()->setPadding( Box3f( V3f( -padding ), V3f( padding ) ) );
 }

@@ -37,6 +37,8 @@
 #ifndef GAFFERUI_STANDARDCONNECTIONGADGET_H
 #define GAFFERUI_STANDARDCONNECTIONGADGET_H
 
+#include "Gaffer/StringAlgo.h"
+
 #include "GafferUI/ConnectionGadget.h"
 
 namespace GafferUI
@@ -83,6 +85,10 @@ class StandardConnectionGadget : public ConnectionGadget
 
 		bool nodeSelected( const Nodule *nodule ) const;
 
+		void plugMetadataChanged( IECore::TypeId nodeTypeId, const Gaffer::MatchPattern &plugPath, IECore::InternedString key );
+
+		bool updateUserColor();
+
 		Imath::V3f m_srcPos;
 		Imath::V3f m_srcTangent;
 		Imath::V3f m_dstPos;
@@ -91,6 +97,7 @@ class StandardConnectionGadget : public ConnectionGadget
 		Gaffer::Plug::Direction m_dragEnd;
 
 		bool m_hovering;
+		boost::optional<Imath::Color3f> m_userColor;
 
 };
 

@@ -47,6 +47,7 @@
 namespace Gaffer
 {
 
+IE_CORE_FORWARDDECLARE( GraphComponent )
 IE_CORE_FORWARDDECLARE( Node )
 IE_CORE_FORWARDDECLARE( Plug )
 

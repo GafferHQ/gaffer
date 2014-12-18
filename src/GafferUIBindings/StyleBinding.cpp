@@ -64,21 +64,32 @@ struct UnarySlotCaller
 void GafferUIBindings::bindStyle()
 {
 	scope s = IECorePython::RunTimeTypedClass<Style>()
+
+		.def( "renderImage", &Style::renderImage )
+		.def( "renderLine", &Style::renderLine )
+		.def( "renderSolidRectangle", &Style::renderSolidRectangle )
+		.def( "renderRectangle", &Style::renderRectangle )
+
 		.def( "characterBound", &Style::characterBound )
 		.def( "textBound", &Style::textBound )
 		.def( "renderText", &Style::renderText )
 		.def( "renderWrappedText", &Style::renderWrappedText )
+
 		.def( "renderFrame", &Style::renderFrame )
+		.def( "renderSelectionBox", &Style::renderSelectionBox )
+		.def( "renderHorizontalRule", &Style::renderHorizontalRule )
+
+		.def( "renderNodeFrame", &Style::renderNodeFrame )
 		.def( "renderNodule", &Style::renderNodule )
 		.def( "renderConnection", &Style::renderConnection )
 		.def( "renderBackdrop", &Style::renderBackdrop )
-		.def( "renderSelectionBox", &Style::renderSelectionBox )
-		.def( "renderHorizontalRule", &Style::renderHorizontalRule )
-		.def( "renderImage", &Style::renderImage )
+
 		.def( "renderTranslateHandle", &Style::renderTranslateHandle )
+
 		.def( "changedSignal", &Style::changedSignal, return_internal_reference<1>() )
 		.def( "getDefaultStyle", &Style::getDefaultStyle ).staticmethod( "getDefaultStyle" )
 		.def( "setDefaultStyle", &Style::getDefaultStyle ).staticmethod( "setDefaultStyle" )
+
 	;
 
 	enum_<Style::State>( "State" )

@@ -88,12 +88,18 @@ class BackdropNodeGadget : public NodeGadget
 		// means not hovered in that direction.
 		void hoveredEdges( const ButtonEvent &event, int &horizontal, int &vertical ) const;
 
+		void nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore::InternedString key );
+
+		bool updateUserColor();
+
 		Gaffer::Box2fPlug *boundPlug();
 		const Gaffer::Box2fPlug *boundPlug() const;
 
 		bool m_hovered;
 		int m_horizontalDragEdge;
 		int m_verticalDragEdge;
+
+		boost::optional<Imath::Color3f> m_userColor;
 
 		static NodeGadgetTypeDescription<BackdropNodeGadget> g_nodeGadgetTypeDescription;
 

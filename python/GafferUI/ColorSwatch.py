@@ -43,21 +43,27 @@ import GafferUI
 QtCore = GafferUI._qtImport( "QtCore" )
 QtGui = GafferUI._qtImport( "QtGui" )
 
-## The ColorSwatch simply displays a flat patch of colour. The colour is specified
-# in linear space, but the GafferUI.DisplayTransform is used to ensure it is correctly
-# corrected when displayed.
+## The ColorSwatch simply displays a flat patch of colour. By default, the colour
+# is specified in linear space and GafferUI.DisplayTransform is used to ensure it
+# is correctly corrected when displayed. To specify the colour directly in display
+# space, pass `useDisplayTransform = False` to the constructor.
 class ColorSwatch( GafferUI.Widget ) :
 
-	def __init__( self, color=IECore.Color4f( 1 ), **kw ) :
+	__linearBackgroundColor0 = IECore.Color3f( 0.1 )
+	__linearBackgroundColor1 = IECore.Color3f( 0.2 )
+
+	def __init__( self, color=IECore.Color4f( 1 ), useDisplayTransform = True, **kw ) :
 
 		GafferUI.Widget.__init__( self, _Checker(), **kw )
 
 		## \todo Should this be an option? Should it be an option for all Widgets?
 		self._qtWidget().setMinimumSize( 12, 12 )
 
+		self.__useDisplayTransform = useDisplayTransform
+		self.__color = color
+
 		self.__displayTransformChangedConnection = GafferUI.DisplayTransform.changedSignal().connect( Gaffer.WeakMethod( self.__displayTransformChanged ) )
 
-		self.__linearColor = color
 		self.__updateCheckerColors()
 
 	def setHighlighted( self, highlighted ) :
@@ -73,27 +79,36 @@ class ColorSwatch( GafferUI.Widget ) :
 	# are /not/ expected to be premultiplied.
 	def setColor( self, color ) :
 
-		if color != self.__linearColor :
-			self.__linearColor = color
+		if color != self.__color :
+			self.__color = color
 			self.__updateCheckerColors()
 
 	def getColor( self ) :
 
-		return self.__linearColor
+		return self.__color
 
 	def __updateCheckerColors( self ) :
 
 		displayTransform = GafferUI.DisplayTransform.get()
+		effectiveDisplayTransform = displayTransform if self.__useDisplayTransform else lambda x : x
 
-		if self.__linearColor.dimensions()==3 :
-			displayColor = self._qtColor( displayTransform( self.__linearColor ) )
+		if self.__color.dimensions()==3 :
+			displayColor = self._qtColor( effectiveDisplayTransform( self.__color ) )
 			self._qtWidget().color0 = self._qtWidget().color1 = displayColor
 		else :
-			c = self.__linearColor
-			color0 = IECore.Color3f( 0.1 ) * ( 1.0 - c.a ) + IECore.Color3f( c.r, c.g, c.b ) * c.a
-			color1 = IECore.Color3f( 0.2 ) * ( 1.0 - c.a ) + IECore.Color3f( c.r, c.g, c.b ) * c.a
-			self._qtWidget().color0 = self._qtColor( displayTransform( color0 ) )
-			self._qtWidget().color1 = self._qtColor( displayTransform( color1 ) )
+			c = self.__color
+			# We want the background colour to be the same whether or not we're using the display transform for
+			# the main colour, so if we're not using the display transform later after compositing, we pre-apply
+			# it to the background colours before compositing.
+			bg0 = self.__linearBackgroundColor0 if self.__useDisplayTransform else displayTransform( self.__linearBackgroundColor0 )
+			bg1 = self.__linearBackgroundColor1 if self.__useDisplayTransform else displayTransform( self.__linearBackgroundColor1 )
+			# Now composite the main colour with the background colour. This is happening in linear space
+			# if __useDisplayTransform is True, and in display space otherwise.
+			color0 = bg0 * ( 1.0 - c.a ) + IECore.Color3f( c.r, c.g, c.b ) * c.a
+			color1 = bg1 * ( 1.0 - c.a ) + IECore.Color3f( c.r, c.g, c.b ) * c.a
+
+			self._qtWidget().color0 = self._qtColor( effectiveDisplayTransform( color0 ) )
+			self._qtWidget().color1 = self._qtColor( effectiveDisplayTransform( color1 ) )
 
 		## \todo Colour should come from the style when we have styles applying to Widgets as well as Gadgets
 		self._qtWidget().borderColor = QtGui.QColor( 119, 156, 255 ) if self.getHighlighted() else None

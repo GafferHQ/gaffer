@@ -107,6 +107,8 @@ class StandardNodeGadget : public NodeGadget
 
 		virtual void doRender( const Style *style ) const;
 
+		const Imath::Color3f *userColor() const;
+
 	private :
 
 		Edge plugEdge( const Gaffer::Plug *plug );
@@ -135,10 +137,14 @@ class StandardNodeGadget : public NodeGadget
 		bool dragLeave( GadgetPtr gadget, const DragDropEvent &event );
 		bool drop( GadgetPtr gadget, const DragDropEvent &event );
 
-		void plugMetadataChanged( IECore::TypeId nodeTypeId, const Gaffer::MatchPattern &plugPath, IECore::InternedString key );
-
 		Nodule *closestCompatibleNodule( const DragDropEvent &event );
 		bool noduleIsCompatible( const Nodule *nodule, const DragDropEvent &event );
+
+		void plugMetadataChanged( IECore::TypeId nodeTypeId, const Gaffer::MatchPattern &plugPath, IECore::InternedString key );
+		void nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore::InternedString key );
+
+		bool updateUserColor();
+		void updatePadding();
 
 		const LinearContainer::Orientation m_orientation;
 		bool m_nodeEnabled;
@@ -146,6 +152,7 @@ class StandardNodeGadget : public NodeGadget
 		// we accept drags from nodules and forward them to the
 		// closest compatible child nodule - m_dragDestinationProxy.
 		Nodule *m_dragDestinationProxy;
+		boost::optional<Imath::Color3f> m_userColor;
 
 };
 
