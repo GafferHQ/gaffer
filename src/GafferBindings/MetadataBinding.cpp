@@ -37,8 +37,8 @@
 #include "boost/python.hpp"
 #include "boost/python/raw_function.hpp"
 #include "boost/lambda/lambda.hpp"
+#include "boost/format.hpp"
 
-#include "IECore/DespatchTypedData.h"
 #include "IECorePython/ScopedGILLock.h"
 
 #include "Gaffer/Plug.h"
@@ -47,10 +47,12 @@
 
 #include "GafferBindings/MetadataBinding.h"
 #include "GafferBindings/SignalBinding.h"
+#include "GafferBindings/DataBinding.h"
 
 using namespace boost::python;
 using namespace IECore;
 using namespace Gaffer;
+using namespace GafferBindings;
 
 namespace
 {
@@ -95,17 +97,6 @@ struct PythonPlugValueFunction
 
 };
 
-struct SimpleTypedDataGetter
-{
-	typedef object ReturnType;
-
-	template<typename T>
-	object operator()( typename T::Ptr data )
-	{
-		return object( data->readable() );
-	}
-};
-
 Metadata::NodeValueFunction objectToNodeValueFunction( object o )
 {
 	extract<IECore::DataPtr> dataExtractor( o );
@@ -137,17 +128,10 @@ void registerNodeValue( IECore::TypeId nodeTypeId, IECore::InternedString key, o
 	Metadata::registerNodeValue( nodeTypeId, key, objectToNodeValueFunction( value ) );
 }
 
-object nodeValue( const Node *node, const char *key, bool inherit, bool instanceOnly )
+object nodeValue( const Node *node, const char *key, bool inherit, bool instanceOnly, bool copy )
 {
 	ConstDataPtr d = Metadata::nodeValue<Data>( node, key, inherit, instanceOnly );
-	if( d )
-	{
-		return despatchTypedData<SimpleTypedDataGetter, TypeTraits::IsSimpleTypedData>( const_cast<Data *>( d.get() ) );
-	}
-	else
-	{
-		return object(); // none
-	}
+	return dataToPython( d.get(), copy );
 }
 
 object registerNodeDescription( tuple args, dict kw )
@@ -185,17 +169,10 @@ void registerPlugValue( IECore::TypeId nodeTypeId, const char *plugPath, IECore:
 	Metadata::registerPlugValue( nodeTypeId, plugPath, key, objectToPlugValueFunction( value ) );
 }
 
-object plugValue( const Plug *plug, const char *key, bool inherit, bool instanceOnly )
+object plugValue( const Plug *plug, const char *key, bool inherit, bool instanceOnly, bool copy )
 {
 	ConstDataPtr d = Metadata::plugValue<Data>( plug, key, inherit, instanceOnly );
-	if( d )
-	{
-		return despatchTypedData<SimpleTypedDataGetter, TypeTraits::IsSimpleTypedData>( const_cast<Data *>( d.get() ) );
-	}
-	else
-	{
-		return object(); // none
-	}
+	return dataToPython( d.get(), copy );
 }
 
 void registerPlugDescription( IECore::TypeId nodeTypeId, const char *plugPath, object &description )
@@ -272,7 +249,8 @@ void bindMetadata()
 				boost::python::arg( "node" ),
 				boost::python::arg( "key" ),
 				boost::python::arg( "inherit" ) = true,
-				boost::python::arg( "instanceOnly" ) = false
+				boost::python::arg( "instanceOnly" ) = false,
+				boost::python::arg( "_copy" ) = true
 			)
 		)
 		.staticmethod( "nodeValue" )
@@ -306,7 +284,8 @@ void bindMetadata()
 				boost::python::arg( "plug" ),
 				boost::python::arg( "key" ),
 				boost::python::arg( "inherit" ) = true,
-				boost::python::arg( "instanceOnly" ) = false
+				boost::python::arg( "instanceOnly" ) = false,
+				boost::python::arg( "_copy" ) = true
 			)
 		)
 		.staticmethod( "plugValue" )

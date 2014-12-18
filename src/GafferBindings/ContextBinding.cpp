@@ -36,15 +36,13 @@
 
 #include "boost/python.hpp"
 
-#include "IECore/SimpleTypedData.h"
-#include "IECore/DespatchTypedData.h"
-#include "IECore/TypeTraits.h"
 #include "IECorePython/RefCountedBinding.h"
 
 #include "Gaffer/Context.h"
 
 #include "GafferBindings/SignalBinding.h"
 #include "GafferBindings/ContextBinding.h"
+#include "GafferBindings/DataBinding.h"
 
 using namespace boost::python;
 using namespace GafferBindings;
@@ -53,17 +51,6 @@ using namespace IECore;
 
 namespace
 {
-
-struct SimpleTypedDataGetter
-{
-	typedef object ReturnType;
-
-	template<typename T>
-	object operator()( typename T::Ptr data )
-	{
-		return object( data->readable() );
-	}
-};
 
 // In the C++ API, get() returns "const Data *". Because python has no idea of constness,
 // by default we return a copy from the bindings because we don't want the unwitting Python
@@ -75,32 +62,13 @@ struct SimpleTypedDataGetter
 object get( Context &c, const IECore::InternedString &name, bool copy )
 {
 	ConstDataPtr d = c.get<Data>( name );
-	try
-	{
-		return despatchTypedData<SimpleTypedDataGetter, TypeTraits::IsSimpleTypedData>( const_cast<Data *>( d.get() ) );
-	}
-	catch( const InvalidArgumentException &e )
-	{
-		return object( copy ? d->copy() : boost::const_pointer_cast<Data>( d ) );
-	}
+	return dataToPython( d.get(), copy );
 }
 
 object getWithDefault( Context &c, const IECore::InternedString &name, object defaultValue, bool copy )
 {
 	ConstDataPtr d = c.get<Data>( name, NULL );
-	if( !d )
-	{
-		return defaultValue;
-	}
-
-	try
-	{
-		return despatchTypedData<SimpleTypedDataGetter, TypeTraits::IsSimpleTypedData>( const_cast<Data *>( d.get() ) );
-	}
-	catch( const InvalidArgumentException &e )
-	{
-		return object( copy ? d->copy() : boost::const_pointer_cast<Data>( d ) );
-	}
+	return dataToPython( d.get(), copy, defaultValue );
 }
 
 object getItem( Context &c, const IECore::InternedString &name )

@@ -462,6 +462,31 @@ class MetadataTest( GafferTest.TestCase ) :
 
 		GafferTest.testMetadataThreading()
 
+	def testVectorTypes( self ) :
+
+		n = Gaffer.Node()
+
+		Gaffer.Metadata.registerNodeValue( n, "stringVector", IECore.StringVectorData( [ "a", "b", "c" ] ) )
+		self.assertEqual( Gaffer.Metadata.nodeValue( n, "stringVector" ), IECore.StringVectorData( [ "a", "b", "c" ] ) )
+
+		Gaffer.Metadata.registerNodeValue( n, "intVector", IECore.IntVectorData( [ 1, 2, 3 ] ) )
+		self.assertEqual( Gaffer.Metadata.nodeValue( n, "intVector" ), IECore.IntVectorData( [ 1, 2, 3 ] ) )
+
+	def testCopy( self ) :
+
+		n = Gaffer.Node()
+
+		s = IECore.StringVectorData( [ "a", "b", "c" ] )
+		Gaffer.Metadata.registerNodeValue( n, "stringVector", s )
+
+		s2 = Gaffer.Metadata.nodeValue( n, "stringVector" )
+		self.assertEqual( s, s2 )
+		self.assertFalse( s.isSame( s2 ) )
+
+		s3 = Gaffer.Metadata.nodeValue( n, "stringVector", _copy = False )
+		self.assertEqual( s, s3 )
+		self.assertTrue( s.isSame( s3 ) )
+
 if __name__ == "__main__":
 	unittest.main()
 
