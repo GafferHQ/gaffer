@@ -122,6 +122,7 @@ enum TypeId
 	PathTypeId = 110075,
 	PathFilterTypeId = 110076,
 	CompoundPathFilterTypeId = 110077,
+	LeafPathFilterTypeId = 110078,
 
 	LastTypeId = 110180,
 

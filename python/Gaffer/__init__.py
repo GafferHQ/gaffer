@@ -46,7 +46,6 @@ from UndoContext import UndoContext
 from Context import Context
 from InfoPathFilter import InfoPathFilter
 from LazyModule import lazyImport, LazyModule
-from LeafPathFilter import LeafPathFilter
 from DictPath import DictPath
 from PythonExpressionEngine import PythonExpressionEngine
 from SequencePath import SequencePath

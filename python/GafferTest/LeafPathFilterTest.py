@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,19 +34,28 @@
 #
 ##########################################################################
 
-import IECore
+import unittest
 
 import Gaffer
+import GafferTest
 
-## A PathFilter which removes leaf items.
-class LeafPathFilter( Gaffer.PathFilter ) :
+class LeafPathFilterTest( GafferTest.TestCase ) :
 
-	def __init__( self, userData={} ) :
+	def test( self ) :
 
-		Gaffer.PathFilter.__init__( self, userData )
+		p = Gaffer.DictPath(
+			{
+				"a" : "a",
+				"b" : "b",
+				"d" : {}
+			},
+			"/",
+		)
 
-	def _filter( self, paths ) :
+		self.assertEqual( set( [ str( c ) for c in p.children() ] ), set( [ "/a", "/b", "/d" ] ) )
 
-		return [ p for p in paths if not p.isLeaf() ]
+		p.setFilter( Gaffer.LeafPathFilter() )
+		self.assertEqual( set( [ str( c ) for c in p.children() ] ), set( [ "/d" ] ) )
 
-IECore.registerRunTimeTyped( LeafPathFilter, typeName = "Gaffer::LeafPathFilter" )
+if __name__ == "__main__":
+	unittest.main()
