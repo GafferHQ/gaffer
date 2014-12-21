@@ -44,6 +44,8 @@ import GafferUI
 
 QtGui = GafferUI._qtImport( "QtGui" )
 
+## \deprecated. CompoundPlug itself will be removed in the future, as will this
+# class. Use LayoutPlugValueWidget instead.
 class CompoundPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	## Possible values for collapsed are :

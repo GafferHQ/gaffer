@@ -54,6 +54,8 @@ class _Section( GafferUI.CompoundDataPlugValueWidget ) :
 
 		return self.__namesToLabels[childPlug["name"].getValue()]
 
+## \todo Remove this class. Add native metadata-driven sectioning support to
+# PlugLayout instead.
 class SectionedCompoundDataPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plug, sections, **kw ) :

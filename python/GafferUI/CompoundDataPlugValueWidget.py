@@ -42,6 +42,10 @@ import IECore
 import Gaffer
 import GafferUI
 
+## \todo Refactor to derive from LayoutPlugValueWidget. Before we can do this we need
+# to stop relying on the _label() and _childPlugWidget() methods to define labels - this
+# is currently overridden in SectionedCompoundDataPlugValueWidget, but we can use metadata
+# to define labels instead.
 class CompoundDataPlugValueWidget( GafferUI.CompoundPlugValueWidget ) :
 
 	def __init__( self, plug, collapsed=True, label=None, summary=None, editable=True, **kw ) :
@@ -70,8 +74,6 @@ class CompoundDataPlugValueWidget( GafferUI.CompoundPlugValueWidget ) :
 
 		return self.__footerWidget
 
-	## May be reimplemented by derived classes to return a suitable label
-	# for the member represented by childPlug.
 	def _label( self, childPlug ) :
 
 		if not childPlug.getFlags( Gaffer.Plug.Flags.Dynamic ) :
