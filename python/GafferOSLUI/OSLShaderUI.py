@@ -39,7 +39,35 @@ import GafferUI
 
 import GafferOSL
 
-## \todo Extract UI metadata from shader and use it
+##########################################################################
+# Metadata. We register dynamic Gaffer.Metadata entries which are
+# implemented as queries to the OSL metadata held within the shader.
+##########################################################################
+
+def __nodeDescription( node ) :
+
+	__defaultDescription = """Loads OSL shaders for use in supported renderers. Use the ShaderAssignment node to assign shaders to objects in the scene."""
+
+	description = node.shaderMetadata( "help" )
+	return description or __defaultDescription
+
+def __plugDescription( plug ) :
+
+	return plug.node().parameterMetadata( plug, "help" ) or ""
+
+def __plugLabel( plug ) :
+
+	return plug.node().parameterMetadata( plug, "label" )
+
+def __plugDivider( plug ) :
+
+	return plug.node().parameterMetadata( plug, "divider" ) or False
+
+Gaffer.Metadata.registerNodeDescription( GafferOSL.OSLShader, __nodeDescription )
+
+Gaffer.Metadata.registerPlugDescription( GafferOSL.OSLShader, "parameters.*", __plugDescription )
+Gaffer.Metadata.registerPlugValue( GafferOSL.OSLShader, "parameters.*", "label", __plugLabel )
+Gaffer.Metadata.registerPlugValue( GafferOSL.OSLShader, "parameters.*", "divider", __plugDivider )
 
 ##########################################################################
 # Nodules
@@ -53,15 +81,3 @@ def __outPlugNoduleCreator( plug ) :
 		return GafferUI.StandardNodule( plug )
 
 GafferUI.Nodule.registerNodule( GafferOSL.OSLShader, "out", __outPlugNoduleCreator )
-
-##########################################################################
-# Metadata
-##########################################################################
-
-Gaffer.Metadata.registerNodeDescription(
-
-GafferOSL.OSLShader,
-
-"""Represents OSL shaders.""",
-
-)
