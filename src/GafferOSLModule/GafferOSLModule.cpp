@@ -80,6 +80,26 @@ object parameterMetadata( const OSLShader &s, const Gaffer::Plug *plug, const ch
 	return dataToPython( s.parameterMetadata( plug, key ), copy );
 }
 
+int oslLibraryVersionMajor()
+{
+	return OSL_LIBRARY_VERSION_MAJOR;
+}
+
+int oslLibraryVersionMinor()
+{
+	return OSL_LIBRARY_VERSION_MINOR;
+}
+
+int oslLibraryVersionPatch()
+{
+	return OSL_LIBRARY_VERSION_PATCH;
+}
+
+int oslLibraryVersionCode()
+{
+	return OSL_LIBRARY_VERSION_CODE;
+}
+
 } // namespace
 
 BOOST_PYTHON_MODULE( _GafferOSL )
@@ -95,6 +115,11 @@ BOOST_PYTHON_MODULE( _GafferOSL )
 
 	GafferBindings::DependencyNodeClass<OSLImage>();
 	GafferBindings::DependencyNodeClass<OSLObject>();
+
+	def( "oslLibraryVersionMajor", &oslLibraryVersionMajor );
+	def( "oslLibraryVersionMinor", &oslLibraryVersionMinor );
+	def( "oslLibraryVersionPatch", &oslLibraryVersionPatch );
+	def( "oslLibraryVersionCode", &oslLibraryVersionCode );
 
 	scope s = IECorePython::RunTimeTypedClass<OSLRenderer>()
 		.def( init<>() )

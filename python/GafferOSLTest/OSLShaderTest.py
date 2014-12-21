@@ -384,14 +384,23 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		self.assertEqual( n.parameterMetadata( n["parameters"]["a"], "aStringValue" ), "s" )
 		self.assertEqual( n.parameterMetadata( n["parameters"]["a"], "aIntValue" ), 1 )
 		self.assertEqual( n.parameterMetadata( n["parameters"]["a"], "aFloatValue" ), 0.5 )
-		self.assertEqual( n.parameterMetadata( n["parameters"]["a"], "aStringValues" ), IECore.StringVectorData( [ "one","two" ] ) )
-		self.assertEqual( n.parameterMetadata( n["parameters"]["a"], "aIntValues" ), IECore.IntVectorData( [ 1, 2 ] ) )
-		self.assertEqual( n.parameterMetadata( n["parameters"]["a"], "aFloatValues" ), IECore.FloatVectorData( [ 0.25, 0.5 ] ) )
 
 		self.assertEqual( n.parameterMetadata( n["parameters"]["b"], "bStringValue" ), "st" )
 		self.assertEqual( n.parameterMetadata( n["parameters"]["b"], "bIntValue" ), 2 )
 		self.assertEqual( n.parameterMetadata( n["parameters"]["b"], "bFloatValue" ), 0.75 )
 
+	@unittest.skipIf( GafferOSL.oslLibraryVersionCode() < 10600, "OSL doesn't support array metadata" )
+	def testParameterArrayMetadata( self ) :
+
+		s = self.compileShader( os.path.dirname( __file__ ) + "/shaders/arrayMetadata.osl" )
+		n = GafferOSL.OSLShader()
+		n.loadShader( s )
+
+		self.assertEqual( n.parameterMetadata( n["parameters"]["a"], "aStringValues" ), IECore.StringVectorData( [ "one","two" ] ) )
+		self.assertEqual( n.parameterMetadata( n["parameters"]["a"], "aIntValues" ), IECore.IntVectorData( [ 1, 2 ] ) )
+		self.assertEqual( n.parameterMetadata( n["parameters"]["a"], "aFloatValues" ), IECore.FloatVectorData( [ 0.25, 0.5 ] ) )
+
+	@unittest.skipIf( GafferOSL.oslLibraryVersionCode() < 10600, "OSL doesn't support array metadata" )
 	def testMetadaReuse( self ) :
 
 		s = self.compileShader( os.path.dirname( __file__ ) + "/shaders/metadata.osl" )

@@ -34,22 +34,12 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-surface metadata
-[[
-	string stringValue = "s",
-	int intValue = 1,
-	float floatValue = 0.5
-]]
+surface arrayMetadata
 (
 	string a = "" [[
-		string aStringValue = "s",
-		int aIntValue = 1,
-		float aFloatValue = 0.5
-	]],
-	string b = "" [[
-		string bStringValue = "st",
-		int bIntValue = 2,
-		float bFloatValue = 0.75
+		string aStringValues[2] = { "one", "two" },
+		int aIntValues[2] = { 1, 2 },
+		float aFloatValues[2] = { 0.25, 0.5 }
 	]]
 )
 {

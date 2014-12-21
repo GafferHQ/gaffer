@@ -625,12 +625,16 @@ static IECore::DataPtr convertMetadata( const OSLQuery::Parameter &metadata )
 		}
 		else if( metadata.type.elementtype() == TypeDesc::STRING )
 		{
+#if OSL_LIBRARY_VERSION_CODE < 10600
+			return new StringVectorData( metadata.sdefault );
+# else
 			StringVectorDataPtr result = new StringVectorData;
 			for( vector<ustring>::const_iterator it = metadata.sdefault.begin(), eIt = metadata.sdefault.end(); it != eIt; ++it )
 			{
 				result->writable().push_back( it->string() );
 			}
 			return result;
+#endif
 		}
 	}
 
