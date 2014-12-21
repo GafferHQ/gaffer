@@ -1,6 +1,7 @@
 ##########################################################################
 #
 #  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2014, John Haddon. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -38,6 +39,13 @@ import Gaffer
 import GafferUI
 
 ## A class for laying out widgets to represent all the plugs held on a particular parent.
+#
+# Supported metadata :
+#
+#	- "layout:index" controls ordering of plugs within the layout
+#	- "divider" specifies whether or not a plug should be followed by a divider
+#	- "layout:widgetType" the class name for the widget type of a particular plug
+#
 class PlugLayout( GafferUI.Widget ) :
 
 	def __init__( self, parent, orientation = GafferUI.ListContainer.Orientation.Vertical, **kw ) :
@@ -154,9 +162,23 @@ class PlugLayout( GafferUI.Widget ) :
 
  	def __createPlugWidget( self, plug ) :
 
- 		result = GafferUI.PlugValueWidget.create( plug )
- 		if result is None :
- 			return result
+		widgetType = Gaffer.Metadata.plugValue( plug, "layout:widgetType" )
+		if widgetType is not None :
+
+			if widgetType == "None" :
+				return None
+			else :
+				widgetType = widgetType.split( "." )
+				widgetClass = __import__( widgetType[0] )
+				for n in widgetType[1:] :
+					widgetClass = getattr( widgetClass, n )
+				result = widgetClass( plug )
+
+		else :
+
+			result = GafferUI.PlugValueWidget.create( plug )
+			if result is None :
+				return result
 
  		if not result.hasLabel() and Gaffer.Metadata.plugValue( plug, "label" ) != "" :
  			result = GafferUI.PlugWidget( result )
