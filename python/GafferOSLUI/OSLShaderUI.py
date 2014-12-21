@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2013, John Haddon. All rights reserved.
+#  Copyright (c) 2013-2014, John Haddon. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -89,6 +89,23 @@ def __plugPresetValues( plug ) :
 
 	return None
 
+__widgetTypes = {
+	"number" : "GafferUI.NumericPlugValueWidget",
+	"string" : "GafferUI.StringPlugValueWidget",
+	"boolean" : "GafferUI.BoolPlugValueWidget",
+	"checkBox" : "GafferUI.BoolPlugValueWidget",
+	"popup" : "GafferUI.PresetsPlugValueWidget",
+	"mapper" : "GafferUI.PresetsPlugValueWidget",
+	"filename" : "GafferUI.PathPlugValueWidget",
+	"null" : "None",
+}
+
+def __plugWidgetType( plug ) :
+
+	return __widgetTypes.get(
+		plug.node().parameterMetadata( plug, "widget" )
+	)
+
 Gaffer.Metadata.registerNodeDescription( GafferOSL.OSLShader, __nodeDescription )
 
 Gaffer.Metadata.registerPlugDescription( GafferOSL.OSLShader, "parameters.*", __plugDescription )
@@ -96,6 +113,7 @@ Gaffer.Metadata.registerPlugValue( GafferOSL.OSLShader, "parameters.*", "label",
 Gaffer.Metadata.registerPlugValue( GafferOSL.OSLShader, "parameters.*", "divider", __plugDivider )
 Gaffer.Metadata.registerPlugValue( GafferOSL.OSLShader, "parameters.*", "presetNames", __plugPresetNames )
 Gaffer.Metadata.registerPlugValue( GafferOSL.OSLShader, "parameters.*", "presetValues", __plugPresetValues )
+Gaffer.Metadata.registerPlugValue( GafferOSL.OSLShader, "parameters.*", "layout:widgetType", __plugWidgetType )
 
 ##########################################################################
 # Nodules
