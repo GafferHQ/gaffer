@@ -381,16 +381,16 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		n = GafferOSL.OSLShader()
 		n.loadShader( s )
 
-		self.assertEqual( n.parameterMetadata( n["parameters"]["a"], "aStringValue" ), IECore.StringData( "s" ) )
-		self.assertEqual( n.parameterMetadata( n["parameters"]["a"], "aIntValue" ), IECore.IntData( 1 ) )
-		self.assertEqual( n.parameterMetadata( n["parameters"]["a"], "aFloatValue" ), IECore.FloatData( 0.5 ) )
+		self.assertEqual( n.parameterMetadata( n["parameters"]["a"], "aStringValue" ), "s" )
+		self.assertEqual( n.parameterMetadata( n["parameters"]["a"], "aIntValue" ), 1 )
+		self.assertEqual( n.parameterMetadata( n["parameters"]["a"], "aFloatValue" ), 0.5 )
 		self.assertEqual( n.parameterMetadata( n["parameters"]["a"], "aStringValues" ), IECore.StringVectorData( [ "one","two" ] ) )
 		self.assertEqual( n.parameterMetadata( n["parameters"]["a"], "aIntValues" ), IECore.IntVectorData( [ 1, 2 ] ) )
 		self.assertEqual( n.parameterMetadata( n["parameters"]["a"], "aFloatValues" ), IECore.FloatVectorData( [ 0.25, 0.5 ] ) )
 
-		self.assertEqual( n.parameterMetadata( n["parameters"]["b"], "bStringValue" ), IECore.StringData( "st" ) )
-		self.assertEqual( n.parameterMetadata( n["parameters"]["b"], "bIntValue" ), IECore.IntData( 2 ) )
-		self.assertEqual( n.parameterMetadata( n["parameters"]["b"], "bFloatValue" ), IECore.FloatData( 0.75 ) )
+		self.assertEqual( n.parameterMetadata( n["parameters"]["b"], "bStringValue" ), "st" )
+		self.assertEqual( n.parameterMetadata( n["parameters"]["b"], "bIntValue" ), 2 )
+		self.assertEqual( n.parameterMetadata( n["parameters"]["b"], "bFloatValue" ), 0.75 )
 
 	def testMetadaReuse( self ) :
 
@@ -404,16 +404,16 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 
 		# we don't want every shader to have its own copy of metadata when it could be shared
 		self.assertTrue(
-			n1.parameterMetadata( n1["parameters"]["a"], "aStringValue", _copy = False ).isSame(
-				n2.parameterMetadata( n2["parameters"]["a"], "aStringValue", _copy = False )
+			n1.parameterMetadata( n1["parameters"]["a"], "aStringValues", _copy = False ).isSame(
+				n2.parameterMetadata( n2["parameters"]["a"], "aStringValues", _copy = False )
 			)
 		)
 
 		# but because there is no const in python, we want to make sure that the casual
 		# caller doesn't have the opportunity to really break things, so unless requested
 		# copies are returned from the query.
-		n1.parameterMetadata( n1["parameters"]["a"], "aStringValue" ).value = "editingSharedConstDataIsABadIdea"
-		self.assertEqual( n1.parameterMetadata( n1["parameters"]["a"], "aStringValue" ), IECore.StringData( "s" ) )
+		n1.parameterMetadata( n1["parameters"]["a"], "aStringValues" ).value = "editingSharedConstDataIsABadIdea"
+		self.assertEqual( n1.parameterMetadata( n1["parameters"]["a"], "aStringValues" ), IECore.StringVectorData( [ "one", "two" ] ) )
 
 	def testAcceptsNoneInput( self ) :
 

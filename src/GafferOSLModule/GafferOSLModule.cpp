@@ -37,6 +37,7 @@
 #include "boost/python.hpp"
 
 #include "GafferBindings/DependencyNodeBinding.h"
+#include "GafferBindings/DataBinding.h"
 
 #include "GafferOSL/OSLShader.h"
 #include "GafferOSL/OSLRenderer.h"
@@ -46,6 +47,9 @@
 using namespace boost::python;
 using namespace GafferBindings;
 using namespace GafferOSL;
+
+namespace
+{
 
 /// \todo Move this serialisation to the bindings for GafferScene::Shader, once we've made Shader::loadShader() virtual
 /// and implemented it so reloading works in ArnoldShader and OpenGLShader.
@@ -66,39 +70,17 @@ class OSLShaderSerialiser : public GafferBindings::NodeSerialiser
 
 };
 
-static IECore::DataPtr shaderMetadata( const OSLShader &s, const char *key, bool copy = true )
+object shaderMetadata( const OSLShader &s, const char *key, bool copy = true )
 {
-	if( const IECore::Data *m = s.shaderMetadata( key ) )
-	{
-		if( copy )
-		{
-			return m->copy();
-		}
-		else
-		{
-			return const_cast<IECore::Data *>( m );
-		}
-	}
-
-	return NULL;
+	return dataToPython( s.shaderMetadata( key ), copy );
 }
 
-static IECore::DataPtr parameterMetadata( const OSLShader &s, const Gaffer::Plug *plug, const char *key, bool copy = true )
+object parameterMetadata( const OSLShader &s, const Gaffer::Plug *plug, const char *key, bool copy = true )
 {
-	if( const IECore::Data *m = s.parameterMetadata( plug, key ) )
-	{
-		if( copy )
-		{
-			return m->copy();
-		}
-		else
-		{
-			return const_cast<IECore::Data *>( m );
-		}
-	}
-
-	return NULL;
+	return dataToPython( s.parameterMetadata( plug, key ), copy );
 }
+
+} // namespace
 
 BOOST_PYTHON_MODULE( _GafferOSL )
 {
