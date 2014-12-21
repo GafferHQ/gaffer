@@ -384,6 +384,9 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		self.assertEqual( n.parameterMetadata( n["parameters"]["a"], "aStringValue" ), IECore.StringData( "s" ) )
 		self.assertEqual( n.parameterMetadata( n["parameters"]["a"], "aIntValue" ), IECore.IntData( 1 ) )
 		self.assertEqual( n.parameterMetadata( n["parameters"]["a"], "aFloatValue" ), IECore.FloatData( 0.5 ) )
+		self.assertEqual( n.parameterMetadata( n["parameters"]["a"], "aStringValues" ), IECore.StringVectorData( [ "one","two" ] ) )
+		self.assertEqual( n.parameterMetadata( n["parameters"]["a"], "aIntValues" ), IECore.IntVectorData( [ 1, 2 ] ) )
+		self.assertEqual( n.parameterMetadata( n["parameters"]["a"], "aFloatValues" ), IECore.FloatVectorData( [ 0.25, 0.5 ] ) )
 
 		self.assertEqual( n.parameterMetadata( n["parameters"]["b"], "bStringValue" ), IECore.StringData( "st" ) )
 		self.assertEqual( n.parameterMetadata( n["parameters"]["b"], "bIntValue" ), IECore.IntData( 2 ) )
