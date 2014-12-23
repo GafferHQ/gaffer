@@ -36,7 +36,11 @@
 
 shader Noise
 (
-	string type = "uperlin",
+	string type = "uperlin" [[
+		string help = "The type of noise. See OSL documentation for more details.",
+		string widget = "popup",
+		string options = "Signed Perlin:perlin|Unsigned Perlin:uperlin|Cell:cell|Signed Simplex:simplex|Unsigned Simplex:usimplex|Gabor:gabor"
+	]],
 	float scale = 1,
 	int dimensions = 3,
 	point p = 0,

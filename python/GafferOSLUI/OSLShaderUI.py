@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import IECore
+
 import Gaffer
 import GafferUI
 
@@ -63,11 +65,37 @@ def __plugDivider( plug ) :
 
 	return plug.node().parameterMetadata( plug, "divider" ) or False
 
+def __plugPresetNames( plug ) :
+
+	options = plug.node().parameterMetadata( plug, "options" )
+	if not options :
+		return None
+
+	return IECore.StringVectorData( [ o.partition( ":" )[0] for o in options.split( "|" ) ] )
+
+def __plugPresetValues( plug ) :
+
+	options = plug.node().parameterMetadata( plug, "options" )
+	if not options :
+		return None
+
+	values = [ o.rpartition( ":" )[2] for o in options.split( "|" ) ]
+	if isinstance( plug, Gaffer.StringPlug ) :
+		return IECore.StringVectorData( values )
+	elif isinstance( plug.Gaffer.IntPlug ) :
+		return IECore.IntVectorData( [ int( v ) for v in values ] )
+	elif isinstance( plug.Gaffer.FloatPlug ) :
+		return IECore.FloatVectorData( [ float( v ) for v in values ] )
+
+	return None
+
 Gaffer.Metadata.registerNodeDescription( GafferOSL.OSLShader, __nodeDescription )
 
 Gaffer.Metadata.registerPlugDescription( GafferOSL.OSLShader, "parameters.*", __plugDescription )
 Gaffer.Metadata.registerPlugValue( GafferOSL.OSLShader, "parameters.*", "label", __plugLabel )
 Gaffer.Metadata.registerPlugValue( GafferOSL.OSLShader, "parameters.*", "divider", __plugDivider )
+Gaffer.Metadata.registerPlugValue( GafferOSL.OSLShader, "parameters.*", "presetNames", __plugPresetNames )
+Gaffer.Metadata.registerPlugValue( GafferOSL.OSLShader, "parameters.*", "presetValues", __plugPresetValues )
 
 ##########################################################################
 # Nodules
