@@ -40,6 +40,28 @@ import Gaffer
 import GafferUI
 import GafferAppleseed
 
+def __visibilitySummary( plug ) :
+
+	info = []
+	for childName, label in (
+
+		( "camera", "Camera" ),
+		( "light", "Light" ),
+		( "shadow", "Shadow" ),
+		( "transparency", "Transparency" ),
+		( "probe", "Probe" ),
+		( "diffuse", "Diffuse" ),
+		( "specular", "Specular" ),
+		( "glossy", "Glossy" ),
+	)	:
+		values = []
+		if plug[childName+"Visibility"]["enabled"].getValue() :
+			values.append( "On" if plug[childName+"Visibility"]["value"].getValue() else "Off" )
+		if values :
+			info.append( label + " : " + "/".join( values ) )
+
+	return ", ".join( info )
+
 def __shadingSummary( plug ) :
 
 	info = []
@@ -62,6 +84,20 @@ GafferUI.PlugValueWidget.registerCreator(
 	"attributes",
 	GafferUI.SectionedCompoundDataPlugValueWidget,
 	sections = (
+		{
+			"label" : "Visibility",
+			"summary" : __visibilitySummary,
+			"namesAndLabels" : (
+				( "as:visibility:camera", "Camera" ),
+				( "as:visibility:light", "Light" ),
+				( "as:visibility:shadow" , "Shadow" ),
+				( "as:visibility:transparency" , "Transparency" ),
+				( "as:visibility:probe" , "Probe" ),
+				( "as:visibility:diffuse", "Diffuse" ),
+				( "as:visibility:specular", "Specular" ),
+				( "as:visibility:glossy", "Glossy" ),
+			),
+		},
 		{
 			"label" : "Shading",
 			"summary" : __shadingSummary,

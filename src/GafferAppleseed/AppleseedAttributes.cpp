@@ -47,6 +47,16 @@ AppleseedAttributes::AppleseedAttributes( const std::string &name )
 {
 	Gaffer::CompoundDataPlug *attributes = attributesPlug();
 
+	// visibility parameters
+	attributes->addOptionalMember( "as:visibility:camera", new IECore::BoolData( true ), "cameraVisibility", Gaffer::Plug::Default, false );
+	attributes->addOptionalMember( "as:visibility:light", new IECore::BoolData( true ), "lightVisibility", Gaffer::Plug::Default, false );
+	attributes->addOptionalMember( "as:visibility:shadow", new IECore::BoolData( true ), "shadowVisibility", Gaffer::Plug::Default, false );
+	attributes->addOptionalMember( "as:visibility:transparency", new IECore::BoolData( true ), "transparencyVisibility", Gaffer::Plug::Default, false );
+	attributes->addOptionalMember( "as:visibility:probe", new IECore::BoolData( true ), "probeVisibility", Gaffer::Plug::Default, false );
+	attributes->addOptionalMember( "as:visibility:diffuse", new IECore::BoolData( true ), "diffuseVisibility", Gaffer::Plug::Default, false );
+	attributes->addOptionalMember( "as:visibility:specular", new IECore::BoolData( true ), "specularVisibility", Gaffer::Plug::Default, false );
+	attributes->addOptionalMember( "as:visibility:glossy", new IECore::BoolData( true ), "glossyVisibility", Gaffer::Plug::Default, false );
+
 	// shading parameters
 	attributes->addOptionalMember( "as:shading_samples", new IECore::IntData( 1.0f ), "shadingSamples", Gaffer::Plug::Default, false );
 
