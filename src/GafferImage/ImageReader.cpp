@@ -135,6 +135,14 @@ const Gaffer::IntPlug *ImageReader::refreshCountPlug() const
 bool ImageReader::enabled() const
 {
 	std::string fileName = fileNamePlug()->getValue();
+	
+	/// \todo We get the spec here, and then we go and get it again in the
+	/// hash()/compute() functions if we turn out to be enabled. This overhead
+	/// is a fundamental problem with the whole enabled() mechanism - we should
+	/// stop using it, and just deal with missing files in the various methods
+	/// that try to access them.
+	/// \todo This is swallowing errors when we should be reporting them via
+	/// exceptions. Fix it.
 	const ImageSpec *spec = imageCache()->imagespec( ustring( fileName.c_str() ) );
 	if( spec == 0 )
 	{
@@ -218,16 +226,13 @@ GafferImage::Format ImageReader::computeFormat( const Gaffer::Context *context, 
 	std::string fileName = fileNamePlug()->getValue();
 	const ImageSpec *spec = imageCache()->imagespec( ustring( fileName.c_str() ) );
 
-	GafferImage::Format format(
+	return GafferImage::Format(
 		Imath::Box2i(
 			Imath::V2i( spec->full_x, spec->full_y ),
 			Imath::V2i( spec->full_x + spec->full_width - 1, spec->full_y + spec->full_height - 1 )
 		),
 		1.
 	);
-	/// \todo This shouldn't really be here. Compute methods shouldn't really have side effects and the
-	/// registerFormat() method is not only slow but it's also not threadsafe.
-	return GafferImage::Format::registerFormat( format );
 }
 
 Imath::Box2i ImageReader::computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const
