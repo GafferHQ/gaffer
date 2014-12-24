@@ -36,6 +36,8 @@
 
 #include "boost/bind.hpp"
 
+#include "tbb/task.h"
+
 #include "IECore/WorldBlock.h"
 #include "IECore/EditBlock.h"
 #include "IECore/MessageHandler.h"
@@ -58,6 +60,235 @@ using namespace GafferScene;
 IE_CORE_DEFINERUNTIMETYPED( InteractiveRender );
 
 size_t InteractiveRender::g_firstPlugIndex = 0;
+
+
+//////////////////////////////////////////////////////////////////////////
+// SceneGraph implementation
+//
+// This is a node in a scene hierarchy, which gets built when the
+// interactive render starts up. Each node stores the attribute hash of
+// the input scene at its corresponding location in the hierarchy, so
+// when the incoming scene updates, we are able to determine the locations
+// at which the attributes have changed since the last update, reevaluate
+// those attributes and send updates to the renderer.
+//
+// \todo: This is very similar to the SceneGraph mechanism in
+// GafferSceneUI::SceneGadget. At some point it would be good to refactor
+// this and use the same class for both of them. See the comments in
+// src/GafferSceneUI/SceneGadget.cpp for details.
+//
+//////////////////////////////////////////////////////////////////////////
+
+class InteractiveRender::SceneGraph
+{
+
+	public :
+
+		SceneGraph()
+		{
+		}
+
+		~SceneGraph()
+		{
+			for( std::vector<SceneGraph *>::const_iterator it = m_children.begin(), eIt = m_children.end(); it != eIt; ++it )
+			{
+				delete *it;
+			}
+		}
+
+	private :
+
+		friend class BuildTask;
+		friend class UpdateTask;
+		
+		IECore::InternedString m_name;
+		std::vector<SceneGraph *> m_children;
+		IECore::MurmurHash m_attributesHash;
+};
+
+
+
+//////////////////////////////////////////////////////////////////////////
+// BuildTask implementation
+//
+// We use this tbb::task to traverse the input scene and build the
+// hierarchy for the first time:
+//
+//////////////////////////////////////////////////////////////////////////
+
+class InteractiveRender::BuildTask : public tbb::task
+{
+
+	public :
+
+		BuildTask( const ScenePlug *scene, const Context* context, SceneGraph *sceneGraph, const ScenePlug::ScenePath &scenePath )
+			:	m_scene( scene ),
+				m_context( context ),
+				m_sceneGraph( sceneGraph ),
+				m_scenePath( scenePath )
+		{
+		}
+		
+		~BuildTask()
+		{
+		}
+
+		virtual task *execute()
+		{
+			ContextPtr context = new Context( *m_context, Context::Borrowed );
+			context->set( ScenePlug::scenePathContextName, m_scenePath );
+			Context::Scope scopedContext( context.get() );
+			
+			// find attribute hash for current location:
+			m_sceneGraph->m_attributesHash = m_scene->attributesPlug()->hash();
+
+			// compute child names:
+			IECore::ConstInternedStringVectorDataPtr childNamesData = m_scene->childNamesPlug()->getValue();
+			
+			const std::vector<IECore::InternedString> &childNames = childNamesData->readable();
+			if( childNames.empty() )
+			{
+				// nothing more to do
+				return NULL;
+			}
+			
+			// add children for this location:
+			for( std::vector<IECore::InternedString>::const_iterator it = childNames.begin(), eIt = childNames.end(); it != eIt; ++it )
+			{
+				SceneGraph *child = new SceneGraph();
+				child->m_name = *it;
+				m_sceneGraph->m_children.push_back( child );
+			}
+			
+			// spawn child tasks:
+			set_ref_count( 1 + m_sceneGraph->m_children.size() );
+			ScenePlug::ScenePath childPath = m_scenePath;
+			childPath.push_back( IECore::InternedString() ); // space for the child name
+			for( std::vector<SceneGraph *>::const_iterator it = m_sceneGraph->m_children.begin(), eIt = m_sceneGraph->m_children.end(); it != eIt; ++it )
+			{
+				childPath.back() = (*it)->m_name;
+				BuildTask *t = new( allocate_child() ) BuildTask(
+					m_scene,
+					m_context,
+					(*it),
+					childPath
+				);
+				
+				spawn( *t );
+			}
+			
+
+			wait_for_all();
+
+			return NULL;
+		}
+
+	private :
+
+		const ScenePlug *m_scene;
+		const Context* m_context;
+		SceneGraph *m_sceneGraph;
+		ScenePlug::ScenePath m_scenePath;
+};
+
+
+//////////////////////////////////////////////////////////////////////////
+// UpdateTask implementation
+//
+// We use this tbb::task to traverse the input scene and identify the
+// locations whose attributes have changed since the last update, by
+// comparing attribute hashes. Attributes are evaluated on locations which
+// have changed, and are added to the attributeEditsResult map.
+//
+//////////////////////////////////////////////////////////////////////////
+
+class InteractiveRender::UpdateTask : public tbb::task
+{
+
+	public :
+
+		typedef std::map<ScenePlug::ScenePath,IECore::ConstCompoundObjectPtr> AttributeEditMap;
+		
+		UpdateTask( const ScenePlug *scene, const Context* context, SceneGraph *sceneGraph, const ScenePlug::ScenePath &scenePath, AttributeEditMap& attributeEditsResult )
+			:	m_scene( scene ),
+				m_context( context ),
+				m_sceneGraph( sceneGraph ),
+				m_scenePath( scenePath ),
+				m_attributeEditsResult( attributeEditsResult )
+		{
+		}
+		
+		~UpdateTask()
+		{
+		}
+
+		virtual task *execute()
+		{
+			ContextPtr context = new Context( *m_context, Context::Borrowed );
+			context->set( ScenePlug::scenePathContextName, m_scenePath );
+			Context::Scope scopedContext( context.get() );
+			
+			// find attribute hash for current location:
+			IECore::MurmurHash attributesHash = m_scene->attributesPlug()->hash();
+			if( attributesHash != m_sceneGraph->m_attributesHash )
+			{
+				// this location's attributes have changed since the last evaluation - 
+				// lets reevaluate them and add them to the result:
+				m_sceneGraph->m_attributesHash = attributesHash;
+				m_attributeEditsResult[ m_scenePath ] = m_scene->attributesPlug()->getValue();
+			}
+			
+			// recurse into children:
+			if( m_sceneGraph->m_children.size() )
+			{
+				set_ref_count( 1 + m_sceneGraph->m_children.size() );
+
+				// vector of AttributeEditMaps to collect edits from the children:
+				std::vector<AttributeEditMap> childEdits( m_sceneGraph->m_children.size() );
+
+				// launch tasks for the children:
+				ScenePlug::ScenePath childPath = m_scenePath;
+				childPath.push_back( IECore::InternedString() ); // space for the child name
+				for( std::vector<SceneGraph *>::const_iterator it = m_sceneGraph->m_children.begin(), eIt = m_sceneGraph->m_children.end(); it != eIt; ++it )
+				{
+					childEdits.resize( childEdits.size() + 1 );
+					childPath.back() = (*it)->m_name;
+					UpdateTask *t = new( allocate_child() ) UpdateTask(
+						m_scene,
+						m_context,
+						*it,
+						childPath,
+						childEdits[ it - m_sceneGraph->m_children.begin() ]
+					);
+
+					spawn( *t );
+				}
+				wait_for_all();
+
+				// add the edits we collected from the child tasks to the
+				// ones we collected for this task:
+				for( size_t i=0; i < childEdits.size(); ++i )
+				{
+					for( AttributeEditMap::const_iterator it = childEdits[i].begin(); it != childEdits[i].end(); ++it )
+					{
+						m_attributeEditsResult[it->first] = it->second;
+					}
+				}
+			}
+			
+			return NULL;
+		}
+
+	private :
+
+		const ScenePlug *m_scene;
+		const Context* m_context;
+		SceneGraph *m_sceneGraph;
+		ScenePlug::ScenePath m_scenePath;
+		AttributeEditMap& m_attributeEditsResult;
+};
+
+
 
 InteractiveRender::InteractiveRender( const std::string &name )
 	:	Node( name ), m_lightsDirty( true ), m_attributesDirty( true ), m_camerasDirty( true ), m_coordinateSystemsDirty( true )
@@ -267,6 +498,13 @@ void InteractiveRender::update()
 		m_scene = requiredScene;
 		m_state = Running;
 		m_lightsDirty = m_attributesDirty = m_camerasDirty = false;
+		
+		// now we need to clear the scene graph and build a new one. This will just replicate the structure of the
+		// input scene, storing attribute hashes at each location:
+		
+		m_sceneGraph.reset( new SceneGraph );
+		BuildTask *task = new( tbb::task::allocate_root() ) BuildTask( inPlug(), m_context.get(), m_sceneGraph.get(), ScenePlug::ScenePath() );
+		tbb::task::spawn_root_and_wait( *task );
 	}
 
 	// Make sure the paused/running state is as we want.
@@ -385,62 +623,52 @@ void InteractiveRender::updateAttributes()
 		return;
 	}
 
-	updateAttributesWalk( ScenePlug::ScenePath() );
-
-	m_attributesDirty = false;
-}
-
-void InteractiveRender::updateAttributesWalk( const ScenePlug::ScenePath &path )
-{
-	/// \todo Keep a track of the hashes of the attributes at each path,
-	/// and use it to only update the attributes when they've changed.
-	ConstCompoundObjectPtr attributes = inPlug()->attributes( path );
-
-	// terminate recursion for invisible locations
-	ConstBoolDataPtr visibility = attributes->member<BoolData>( SceneInterface::visibilityName );
-	if( visibility && ( !visibility->readable() ) )
+	// do a multithreaded traversal and collect attribute edits since the last time we traversed the scene:
+	UpdateTask::AttributeEditMap attributeEdits;
+	UpdateTask *task = new( tbb::task::allocate_root() ) UpdateTask( inPlug(), m_context.get(), m_sceneGraph.get(), ScenePlug::ScenePath(), attributeEdits );
+	tbb::task::spawn_root_and_wait( *task );
+	
+	// Now run through and make edits where we need to:
+	UpdateTask::AttributeEditMap::const_iterator it = attributeEdits.begin();
+	UpdateTask::AttributeEditMap::const_iterator end = attributeEdits.end();
+	
+	for( ;it != end; ++it )
 	{
-		return;
-	}
-
-	std::string name;
-	ScenePlug::pathToString( path, name );
-	CompoundDataMap parameters;
-	parameters["exactscopename"] = new StringData( name );
-	{
-		EditBlock edit( m_renderer.get(), "attribute", parameters );
-		for( CompoundObject::ObjectMap::const_iterator it = attributes->members().begin(), eIt = attributes->members().end(); it != eIt; it++ )
+		const ScenePlug::ScenePath& path = it->first;
+		ConstCompoundObjectPtr attributes = it->second;
+		
+		std::string name;
+		ScenePlug::pathToString( path, name );
+		CompoundDataMap parameters;
+		parameters["exactscopename"] = new StringData( name );
 		{
-			if( const StateRenderable *s = runTimeCast<const StateRenderable>( it->second.get() ) )
+			EditBlock edit( m_renderer.get(), "attribute", parameters );
+			for( CompoundObject::ObjectMap::const_iterator it = attributes->members().begin(), eIt = attributes->members().end(); it != eIt; it++ )
 			{
-				s->render( m_renderer.get() );
-			}
-			else if( const ObjectVector *o = runTimeCast<const ObjectVector>( it->second.get() ) )
-			{
-				for( ObjectVector::MemberContainer::const_iterator it = o->members().begin(), eIt = o->members().end(); it != eIt; it++ )
+				if( const StateRenderable *s = runTimeCast<const StateRenderable>( it->second.get() ) )
 				{
-					const StateRenderable *s = runTimeCast<const StateRenderable>( it->get() );
-					if( s )
+					s->render( m_renderer.get() );
+				}
+				else if( const ObjectVector *o = runTimeCast<const ObjectVector>( it->second.get() ) )
+				{
+					for( ObjectVector::MemberContainer::const_iterator it = o->members().begin(), eIt = o->members().end(); it != eIt; it++ )
 					{
-						s->render( m_renderer.get() );
+						const StateRenderable *s = runTimeCast<const StateRenderable>( it->get() );
+						if( s )
+						{
+							s->render( m_renderer.get() );
+						}
 					}
 				}
-			}
-			else if( const Data *d = runTimeCast<const Data>( it->second.get() ) )
-			{
-				m_renderer->setAttribute( it->first, d );
+				else if( const Data *d = runTimeCast<const Data>( it->second.get() ) )
+				{
+					m_renderer->setAttribute( it->first, d );
+				}
 			}
 		}
 	}
 
-	ConstInternedStringVectorDataPtr childNames = inPlug()->childNames( path );
-	ScenePlug::ScenePath childPath = path;
-	childPath.push_back( InternedString() ); // for the child name
-	for( vector<InternedString>::const_iterator it=childNames->readable().begin(); it!=childNames->readable().end(); it++ )
-	{
-		childPath[path.size()] = *it;
-		updateAttributesWalk( childPath );
-	}
+	m_attributesDirty = false;
 }
 
 void InteractiveRender::updateCameras()

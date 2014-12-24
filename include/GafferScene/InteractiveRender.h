@@ -113,7 +113,6 @@ class InteractiveRender : public Gaffer::Node
 		void update();
 		void updateLights();
 		void updateAttributes();
-		void updateAttributesWalk( const ScenePlug::ScenePath &path );
 		void updateCameras();
 		void updateCoordinateSystems();
 
@@ -121,6 +120,11 @@ class InteractiveRender : public Gaffer::Node
 
 		typedef std::set<std::string> LightHandles;
 
+		class SceneGraph;
+		class BuildTask;
+		class UpdateTask;
+		
+		boost::shared_ptr<SceneGraph> m_sceneGraph;
 		IECore::RendererPtr m_renderer;
 		ConstScenePlugPtr m_scene;
 		State m_state;
