@@ -40,14 +40,25 @@ import Gaffer
 # Presets
 ##########################################################################
 
-## Returns the names of all presets defined for the plug.
+## Returns the names of all presets defined for the plug. Presets may
+# be registered in two ways :
+#
+#	- Individually as "preset:<name>" plug metadata items
+#	- En masse as a "presetNames" array metadata item with
+#     corresponding "presetValues" array metadata item.
+#
+# Presets registered with the "preset:<name>" form take precedence. The
+# "en masse" form can be useful where metadata is computed dynamically
+# and the available presets will vary from instance to instance of a node.
 def presets( plug ) :
 
 	result = []
 	for n in Gaffer.Metadata.registeredPlugValues( plug ) :
 		if n.startswith( "preset:" ) :
 			result.append( n[7:] )
-			
+
+	result.extend( Gaffer.Metadata.plugValue( plug, "presetNames" ) or [] )
+
 	return result
 
 ## Returns the name of the preset currently applied to the plug.
@@ -58,17 +69,32 @@ def currentPreset( plug ) :
 		return None
 	
 	value = plug.getValue()
+	failedNames = set()
 	for n in Gaffer.Metadata.registeredPlugValues( plug ) :
 		if n.startswith( "preset:" ) :
+			presetName = n[7:]
 			if Gaffer.Metadata.plugValue( plug, n ) == value :
-				return n[7:]
-				
+				return presetName
+			else :
+				failedNames.add( presetName )
+
+	presetNames = Gaffer.Metadata.plugValue( plug, "presetNames" )
+	if presetNames is not None :
+		for presetName, presetValue in zip( presetNames, Gaffer.Metadata.plugValue( plug, "presetValues" ) ) :
+			if value == presetValue and presetName not in failedNames :
+				return presetName
+
 	return None
 	
 ## Applies the named preset to the plug.
 def applyPreset( plug, presetName ) :
 
 	value = Gaffer.Metadata.plugValue( plug, "preset:" + presetName )
+	if value is None :
+		presetNames = Gaffer.Metadata.plugValue( plug, "presetNames" )
+		presetValues = Gaffer.Metadata.plugValue( plug, "presetValues" )
+		value = presetValues[presetNames.index( presetName )]
+
 	plug.setValue( value )
 
 ##########################################################################

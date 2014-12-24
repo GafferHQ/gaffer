@@ -123,8 +123,7 @@ class __ShaderNamePlugValueWidget( GafferUI.PlugValueWidget ) :
 			node.loadShader( node["name"].getValue(), keepExistingValues = True )
 
 GafferUI.PlugValueWidget.registerCreator( GafferScene.Shader, "name", __ShaderNamePlugValueWidget )
-
-GafferUI.PlugValueWidget.registerCreator( GafferScene.Shader, "parameters", GafferUI.CompoundPlugValueWidget, collapsed=None )
+GafferUI.PlugValueWidget.registerCreator( GafferScene.Shader, "parameters", GafferUI.LayoutPlugValueWidget )
 GafferUI.PlugValueWidget.registerCreator( GafferScene.Shader, "out", None )
 GafferUI.PlugValueWidget.registerCreator( GafferScene.Shader, "type", None )
 

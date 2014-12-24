@@ -125,6 +125,44 @@ class NodeAlgoTest( GafferTest.TestCase ) :
 		self.assertEqual( node["op1"].getValue(), 2 )
 		self.assertEqual( Gaffer.NodeAlgo.currentPreset( node["op1"] ), "two" )
 
+	def testPresetsArray( self ) :
+	
+		node = GafferTest.AddNode()
+		self.assertEqual( Gaffer.NodeAlgo.presets( node["op1"] ), [] )
+
+		Gaffer.Metadata.registerPlugValue(
+			node["op1"], "presetNames",
+			IECore.StringVectorData( [ "a", "b", "c" ] )
+		)
+		
+		Gaffer.Metadata.registerPlugValue(
+			node["op1"], "presetValues",
+			IECore.IntVectorData( [ 1, 2, 3 ] )
+		)
+
+		self.assertEqual( Gaffer.NodeAlgo.presets( node["op1"] ), [ "a", "b", "c" ] )
+
+		Gaffer.NodeAlgo.applyPreset( node["op1"], "a" )
+		self.assertEqual( node["op1"].getValue(), 1 )
+		self.assertEqual( Gaffer.NodeAlgo.currentPreset( node["op1"] ), "a" )
+
+		Gaffer.NodeAlgo.applyPreset( node["op1"], "b" )
+		self.assertEqual( node["op1"].getValue(), 2 )
+		self.assertEqual( Gaffer.NodeAlgo.currentPreset( node["op1"] ), "b" )
+
+		Gaffer.NodeAlgo.applyPreset( node["op1"], "c" )
+		self.assertEqual( node["op1"].getValue(), 3 )
+		self.assertEqual( Gaffer.NodeAlgo.currentPreset( node["op1"] ), "c" )
+
+		# a preset registered individually should take precedence
+		
+		Gaffer.Metadata.registerPlugValue( node["op1"], "preset:c", 10 )
+		self.assertEqual( Gaffer.NodeAlgo.currentPreset( node["op1"] ), None )
+
+		Gaffer.NodeAlgo.applyPreset( node["op1"], "c" )
+		self.assertEqual( node["op1"].getValue(), 10 )
+		self.assertEqual( Gaffer.NodeAlgo.currentPreset( node["op1"] ), "c" )
+	
 if __name__ == "__main__":
 	unittest.main()
 

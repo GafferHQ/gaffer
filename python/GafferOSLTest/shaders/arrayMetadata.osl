@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //  
-//  Copyright (c) 2013, John Haddon. All rights reserved.
+//  Copyright (c) 2014, John Haddon. All rights reserved.
 //  
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,37 +34,14 @@
 //  
 //////////////////////////////////////////////////////////////////////////
 
-shader Noise
+surface arrayMetadata
 (
-	string type = "uperlin" [[
-		string help = "The type of noise. See OSL documentation for more details.",
-		string widget = "popup",
-		string options = "Signed Perlin:perlin|Unsigned Perlin:uperlin|Cell:cell|Signed Simplex:simplex|Unsigned Simplex:usimplex|Gabor:gabor"
-	]],
-	float scale = 1,
-	int dimensions = 3,
-	point p = 0,
-	float t = 0,
-	output float n = 0
+	string a = "" [[
+		string aStringValues[2] = { "one", "two" },
+		int aIntValues[2] = { 1, 2 },
+		float aFloatValues[2] = { 0.25, 0.5 }
+	]]
 )
 {
-	point pp = isconnected( p ) ? p : P;
-	pp /= scale;
-
-	if( dimensions == 1 )
-	{
-		n = noise( type, pp[0] );
-	}
-	else if( dimensions == 2 )
-	{
-		n = noise( type, pp[0], pp[1] );
-	}
-	else if( dimensions == 3 )
-	{
-		n = noise( type, pp );
-	}
-	else
-	{
-		n = noise( type, pp, t );
-	}
+	Ci = emission();
 }

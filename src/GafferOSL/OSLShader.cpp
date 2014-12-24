@@ -613,7 +613,32 @@ static IECore::DataPtr convertMetadata( const OSLQuery::Parameter &metadata )
 	{
 		return new IECore::StringData( metadata.sdefault[0].c_str() );
 	}
+	else if( metadata.type.arraylen > 0 )
+	{
+		if( metadata.type.elementtype() == TypeDesc::FLOAT )
+		{
+			return new FloatVectorData( metadata.fdefault );
+		}
+		else if( metadata.type.elementtype() == TypeDesc::INT )
+		{
+			return new IntVectorData( metadata.idefault );
+		}
+		else if( metadata.type.elementtype() == TypeDesc::STRING )
+		{
+#if OSL_LIBRARY_VERSION_CODE < 10600
+			return new StringVectorData( metadata.sdefault );
+# else
+			StringVectorDataPtr result = new StringVectorData;
+			for( vector<ustring>::const_iterator it = metadata.sdefault.begin(), eIt = metadata.sdefault.end(); it != eIt; ++it )
+			{
+				result->writable().push_back( it->string() );
+			}
+			return result;
+#endif
+		}
+	}
 
+	IECore::msg( IECore::Msg::Warning, "OSLShader", string( "Metadata \"" ) + metadata.name.c_str() + "\" has unsupported type" );
 	return NULL;
 }
 

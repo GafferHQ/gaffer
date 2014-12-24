@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2014 John Haddon. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,20 +34,34 @@
 #
 ##########################################################################
 
-import Gaffer
 import GafferUI
 
-import GafferScene
+## A PlugValueWidget which uses a PlugLayout to present all the child
+# plugs of the main plug.
+## \todo If required, add support for a surrounding collapsible layout,
+# the presence of which should be specified via a metadata item. All
+# additional features should be driven by metadata only as far as is 
+# feasible.
+class LayoutPlugValueWidget( GafferUI.PlugValueWidget ) :
 
-Gaffer.Metadata.registerNodeDescription(
+	def __init__( self, plug, **kw ) :
 
-GafferScene.Light,
+		self.__layout = GafferUI.PlugLayout( plug )
+		GafferUI.PlugValueWidget.__init__( self, self.__layout, plug, **kw )
 
-"""Creates a scene with a single light in it.""",
+	def hasLabel( self ) :
 
-"parameters",
-"""The parameters of the light shader - these will vary based on the light type.""",
+		return True
 
-)
+	def setReadOnly( self, readOnly ) :
 
-GafferUI.PlugValueWidget.registerCreator( GafferScene.Light, "parameters", GafferUI.LayoutPlugValueWidget )
+		GafferUI.PlugValueWidget.setReadOnly( self, readOnly )
+		self.__layout.setReadOnly( readOnly )
+
+	def childPlugValueWidget( self, childPlug, lazy=True ) :
+
+		return self.__layout.plugValueWidget( childPlug, lazy )
+
+	def _updateFromPlug( self ) :
+
+		pass
