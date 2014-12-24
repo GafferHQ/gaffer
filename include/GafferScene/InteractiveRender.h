@@ -37,6 +37,8 @@
 #ifndef GAFFERSCENE_INTERACTIVERENDER_H
 #define GAFFERSCENE_INTERACTIVERENDER_H
 
+#include "tbb/compat/condition_variable"
+
 #include "IECore/Renderer.h"
 
 #include "Gaffer/Node.h"
@@ -109,7 +111,8 @@ class InteractiveRender : public Gaffer::Node
 
 		void plugDirtied( const Gaffer::Plug *plug );
 		void parentChanged( Gaffer::GraphComponent *child, Gaffer::GraphComponent *oldParent );
-
+		static void renderStartupFinished();
+		
 		void update();
 		void updateLights();
 		void updateAttributes();
@@ -134,6 +137,8 @@ class InteractiveRender : public Gaffer::Node
 
 		static size_t g_firstPlugIndex;
 
+		static tbb::mutex g_mutex;
+		static std::condition_variable g_condition;
 };
 
 IE_CORE_DECLAREPTR( InteractiveRender );
