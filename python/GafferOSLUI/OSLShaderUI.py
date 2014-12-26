@@ -82,9 +82,9 @@ def __plugPresetValues( plug ) :
 	values = [ o.rpartition( ":" )[2] for o in options.split( "|" ) ]
 	if isinstance( plug, Gaffer.StringPlug ) :
 		return IECore.StringVectorData( values )
-	elif isinstance( plug.Gaffer.IntPlug ) :
+	elif isinstance( plug, Gaffer.IntPlug ) :
 		return IECore.IntVectorData( [ int( v ) for v in values ] )
-	elif isinstance( plug.Gaffer.FloatPlug ) :
+	elif isinstance( plug, Gaffer.FloatPlug ) :
 		return IECore.FloatVectorData( [ float( v ) for v in values ] )
 
 	return None
