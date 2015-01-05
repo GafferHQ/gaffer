@@ -45,7 +45,6 @@ enum TypeId
 {
 	ScenePlugTypeId = 110501,
 	SceneNodeTypeId = 110502,
-	FileSourceTypeId = 110503,
 	SetFilterTypeId = 110504,
 	SceneProcessorTypeId = 110505,
 	SceneElementProcessorTypeId = 110506,

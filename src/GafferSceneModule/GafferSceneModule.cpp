@@ -41,7 +41,6 @@
 #include "GafferBindings/ExecutableNodeBinding.h"
 
 #include "GafferScene/SceneNode.h"
-#include "GafferScene/FileSource.h"
 #include "GafferScene/SceneProcedural.h"
 #include "GafferScene/SceneProcessor.h"
 #include "GafferScene/PrimitiveVariableProcessor.h"
@@ -103,7 +102,6 @@ BOOST_PYTHON_MODULE( _GafferScene )
 
 	bindScenePlug();
 	GafferBindings::DependencyNodeClass<SceneNode>();
-	GafferBindings::DependencyNodeClass<FileSource>();
 	GafferBindings::DependencyNodeClass<SceneProcessor>();
 	GafferBindings::DependencyNodeClass<FilteredSceneProcessor>();
 	GafferBindings::DependencyNodeClass<SceneElementProcessor>();
