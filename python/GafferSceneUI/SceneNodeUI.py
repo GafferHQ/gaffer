@@ -81,10 +81,10 @@ GafferUI.PlugValueWidget.registerCreator( GafferScene.Instancer, "instance", Non
 
 GafferUI.Nodule.registerNodule( GafferScene.ObjectToScene, "object", GafferUI.StandardNodule )
 
-# FileSource
+# SceneReader
 
 GafferUI.PlugValueWidget.registerCreator(
-	GafferScene.FileSource,
+	GafferScene.SceneReader,
 	"refreshCount",
 	GafferUI.IncrementingPlugValueWidget,
 	label = "Refresh",
@@ -104,6 +104,25 @@ GafferUI.PlugValueWidget.registerCreator(
 			"bookmarks" : GafferUI.Bookmarks.acquire( plug, category = "sceneCache" ),
 			"leaf" : True,
 		},
+	)
+)
+
+GafferUI.PlugValueWidget.registerCreator(
+	GafferScene.AlembicSource,
+	"refreshCount",
+	GafferUI.IncrementingPlugValueWidget,
+	label = "Refresh",
+	undoable = False
+)
+
+# AttributeCache
+
+GafferUI.PlugValueWidget.registerCreator(
+	GafferScene.AttributeCache,
+	"fileName",
+	lambda plug : GafferUI.PathPlugValueWidget(
+		plug,
+		path = Gaffer.SequencePath( "/", filter = Gaffer.FileSystemPath.createStandardFilter( extensions = [ "fio" ] ) ),
 	)
 )
 
