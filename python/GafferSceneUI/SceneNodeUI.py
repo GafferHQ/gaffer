@@ -107,17 +107,6 @@ GafferUI.PlugValueWidget.registerCreator(
 	)
 )
 
-# AttributeCache
-
-GafferUI.PlugValueWidget.registerCreator(
-	GafferScene.AttributeCache,
-	"fileName",
-	lambda plug : GafferUI.PathPlugValueWidget(
-		plug,
-		path = Gaffer.SequencePath( "/", filter = Gaffer.FileSystemPath.createStandardFilter( extensions = [ "fio" ] ) ),
-	)
-)
-
 # BranchCreator
 
 GafferUI.PlugValueWidget.registerCreator(

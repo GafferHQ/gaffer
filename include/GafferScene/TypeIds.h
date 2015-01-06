@@ -49,7 +49,7 @@ enum TypeId
 	SetFilterTypeId = 110504,
 	SceneProcessorTypeId = 110505,
 	SceneElementProcessorTypeId = 110506,
-	AttributeCacheTypeId = 110507,
+	AttributeCacheTypeId = 110507, // obsolete - available for reuse
 	PrimitiveVariableProcessorTypeId = 110508,
 	DeletePrimitiveVariablesTypeId = 110509,
 	GroupTypeId = 110510,

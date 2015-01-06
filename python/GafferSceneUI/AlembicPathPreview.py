@@ -104,8 +104,8 @@ class AlembicPathPreview( GafferUI.DeferredPathPreview ) :
 		pathCopy.truncateUntilValid()
 
 		with Gaffer.BlockedConnection( self.__pathListingSelectionChangedConnection ) :
-			## \todo This functionality is copied from IndexedIOPathPreview and
-			# AttributeCache - can we share it somehow? Is it some sort of Behaviour class?
+			## \todo This functionality is copied from IndexedIOPathPreview - can
+			# we share it somehow? Is it some sort of Behaviour class?
 			# Or should all these classes just have a common base?
 			self.__pathListing.setSelectedPaths( [ pathCopy ], expandNonLeaf=False )
 			# expand as people type forwards
