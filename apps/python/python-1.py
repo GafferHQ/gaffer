@@ -78,6 +78,9 @@ class python( Gaffer.Application ) :
 		try :
 			execfile( args["file"].value, { "argv" : args["arguments"] } )
 			return 0
+		except SystemExit as e :
+			# don't print traceback when a sys.exit was called, but return the exit code as the result
+			return e.code
 		except :
 			traceback.print_exc()
 			return 1
