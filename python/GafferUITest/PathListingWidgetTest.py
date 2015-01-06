@@ -187,6 +187,15 @@ class PathListingWidgetTest( unittest.TestCase ) :
 		w.setHeaderVisible( False )
 		self.assertFalse( w.getHeaderVisible() )
 
+	def testDeeperExpandedPaths( self ) :
+
+		p = Gaffer.DictPath( { "a" : { "b" : { "c" : { "d" : 10 } } } }, "/" )
+
+		w = GafferUI.PathListingWidget( p )
+		w.setPathExpanded( p.copy().setFromString( "/a/b/c" ), True )
+
+		self.assertTrue( w.getPathExpanded( p.copy().setFromString( "/a/b/c" ) ) )
+
 if __name__ == "__main__":
 	unittest.main()
 
