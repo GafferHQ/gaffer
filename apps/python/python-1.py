@@ -52,7 +52,6 @@ class python( Gaffer.Application ) :
 					name = "file",
 					description = "The python script to execute",
 					defaultValue = "",
-					extensions = "py",
 					allowEmptyString = False,
 					check = IECore.FileNameParameter.CheckType.MustExist,
 				),
