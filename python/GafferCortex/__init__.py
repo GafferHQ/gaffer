@@ -42,7 +42,6 @@ from ObjectReader import ObjectReader
 from ObjectWriter import ObjectWriter
 from IndexedIOPath import IndexedIOPath
 from ClassLoaderPath import ClassLoaderPath
-from AttributeCachePath import AttributeCachePath
 from ClassParameterHandler import ClassParameterHandler
 from ClassVectorParameterHandler import ClassVectorParameterHandler
 from ParameterPath import ParameterPath

@@ -44,7 +44,6 @@
 #include "GafferScene/FileSource.h"
 #include "GafferScene/SceneProcedural.h"
 #include "GafferScene/SceneProcessor.h"
-#include "GafferScene/AttributeCache.h"
 #include "GafferScene/PrimitiveVariableProcessor.h"
 #include "GafferScene/DeletePrimitiveVariables.h"
 #include "GafferScene/MeshType.h"
@@ -110,7 +109,6 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	GafferBindings::DependencyNodeClass<SceneProcessor>();
 	GafferBindings::DependencyNodeClass<FilteredSceneProcessor>();
 	GafferBindings::DependencyNodeClass<SceneElementProcessor>();
-	GafferBindings::DependencyNodeClass<AttributeCache>();
 	GafferBindings::DependencyNodeClass<MeshType>();
 	GafferBindings::DependencyNodeClass<ObjectSource>();
 	GafferBindings::DependencyNodeClass<Cube>();

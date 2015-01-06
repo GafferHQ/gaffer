@@ -41,7 +41,6 @@ from _GafferSceneTest import *
 
 from SceneTestCase import SceneTestCase
 from ScenePlugTest import ScenePlugTest
-from AttributeCacheTest import AttributeCacheTest
 from GroupTest import GroupTest
 from SceneTimeWarpTest import SceneTimeWarpTest
 from SceneProceduralTest import SceneProceduralTest
