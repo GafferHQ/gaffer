@@ -130,6 +130,7 @@ from NodeAlgoTest import NodeAlgoTest
 from DotTest import DotTest
 from ApplicationTest import ApplicationTest
 from LeafPathFilterTest import LeafPathFilterTest
+from MatchPatternPathFilterTest import MatchPatternPathFilterTest
 
 if __name__ == "__main__":
 	import unittest

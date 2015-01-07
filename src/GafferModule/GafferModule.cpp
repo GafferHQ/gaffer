@@ -86,6 +86,7 @@
 #include "GafferBindings/PathFilterBinding.h"
 #include "GafferBindings/CompoundPathFilterBinding.h"
 #include "GafferBindings/LeafPathFilterBinding.h"
+#include "GafferBindings/MatchPatternPathFilterBinding.h"
 
 using namespace boost::python;
 using namespace Gaffer;
@@ -176,6 +177,7 @@ BOOST_PYTHON_MODULE( _Gaffer )
 	bindPathFilter();
 	bindCompoundPathFilter();
 	bindLeafPathFilter();
+	bindMatchPatternPathFilter();
 
 	NodeClass<Backdrop>();
 
