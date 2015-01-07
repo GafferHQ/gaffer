@@ -959,6 +959,7 @@ class NodeGraphTest( GafferUITest.TestCase ) :
 		self.assertFalse( g.nodeGadget( script["a"] ).getHighlighted() )
 		self.assertFalse( g.nodeGadget( script["b"] ).getHighlighted() )
 
+	@GafferTest.expectedFailure
 	def testNoDuplicatePositionPlugsAfterPasting( self ) :
 
 		script = Gaffer.ScriptNode()
