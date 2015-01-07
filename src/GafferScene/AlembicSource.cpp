@@ -165,13 +165,7 @@ void AlembicSource::hashTransform( const ScenePath &path, const Gaffer::Context 
 
 void AlembicSource::hashAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	SceneNode::hashAttributes( path, context, parent, h );
-
-	fileNamePlug()->hash( h );
-	refreshCountPlug()->hash( h );
-
-	h.append( &(path[0]), path.size() );
-	h.append( context->getFrame() );
+	h = parent->attributesPlug()->defaultValue()->hash();
 }
 
 void AlembicSource::hashObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
@@ -193,15 +187,11 @@ void AlembicSource::hashChildNames( const ScenePath &path, const Gaffer::Context
 	refreshCountPlug()->hash( h );
 
 	h.append( &(path[0]), path.size() );
-	h.append( context->getFrame() );
 }
 
 void AlembicSource::hashGlobals( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	SceneNode::hashGlobals( context, parent, h );
-
-	fileNamePlug()->hash( h );
-	refreshCountPlug()->hash( h );
+	h = parent->globalsPlug()->defaultValue()->hash();
 }
 
 Imath::Box3f AlembicSource::computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
