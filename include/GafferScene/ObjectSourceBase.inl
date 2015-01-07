@@ -140,20 +140,19 @@ const Gaffer::ObjectPlug *ObjectSourceBase<BaseType>::sourcePlug() const
 template<typename BaseType>
 void ObjectSourceBase<BaseType>::hashGlobals( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	BaseType::hashGlobals( context, parent, h );
+	h = parent->globalsPlug()->defaultValue()->hash();
 }
 
 template<typename BaseType>
 void ObjectSourceBase<BaseType>::hashAttributes( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	BaseType::hashAttributes( path, context, parent, h );
+	h = parent->attributesPlug()->defaultValue()->hash();
 }
 
 template<typename BaseType>
 void ObjectSourceBase<BaseType>::hashBound( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
 	BaseType::hashBound( path, context, parent, h );
-	h.append( &path.front(), path.size() );
 	sourcePlug()->hash( h );
 	if( path.size() == 0 )
 	{
@@ -165,15 +164,21 @@ template<typename BaseType>
 void ObjectSourceBase<BaseType>::hashTransform( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
 	BaseType::hashTransform( path, context, parent, h );
-	h.append( &path.front(), path.size() );
-	transformPlug()->hash( h );
+	if( path.size() == 1 )
+	{
+		transformPlug()->hash( h );
+	}
 }
 
 template<typename BaseType>
 void ObjectSourceBase<BaseType>::hashObject( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
+	if( path.size() == 0 )
+	{
+		h = parent->objectPlug()->defaultValue()->hash();
+		return;
+	}
 	BaseType::hashObject( path, context, parent, h );
-	h.append( &path.front(), path.size() );
 	sourcePlug()->hash( h );
 }
 
