@@ -220,17 +220,17 @@ Imath::M44f SceneReader::computeTransform( const ScenePath &path, const Gaffer::
 
 void SceneReader::hashAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	SceneNode::hashAttributes( path, context, parent, h );
-
-	fileNamePlug()->hash( h );
-	refreshCountPlug()->hash( h );
-	
 	ConstSceneInterfacePtr s = scene( path );
 	if( !s )
 	{
 		h = parent->attributesPlug()->defaultValue()->Object::hash();
 		return;
 	}
+
+	SceneNode::hashAttributes( path, context, parent, h );
+
+	fileNamePlug()->hash( h );
+	refreshCountPlug()->hash( h );
 
 	s->hash( SceneInterface::AttributesHash, context->getFrame() / g_frameRate, h );
 }
@@ -271,16 +271,19 @@ IECore::ConstCompoundObjectPtr SceneReader::computeAttributes( const ScenePath &
 
 void SceneReader::hashObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
+
+	ConstSceneInterfacePtr s = scene( path );
+	if( !s || !s->hasObject() )
+	{
+		// no object
+		h = parent->objectPlug()->defaultValue()->hash();
+		return;
+	}
+
 	SceneNode::hashObject( path, context, parent, h );
 
 	fileNamePlug()->hash( h );
 	refreshCountPlug()->hash( h );
-	
-	ConstSceneInterfacePtr s = scene( path );
-	if( !s )
-	{
-		return;
-	}
 
 	s->hash( SceneInterface::ObjectHash, context->getFrame() / g_frameRate, h );
 }
@@ -298,6 +301,14 @@ IECore::ConstObjectPtr SceneReader::computeObject( const ScenePath &path, const 
 
 void SceneReader::hashChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
+	ConstSceneInterfacePtr s = scene( path );
+	if( !s )
+	{
+		h = IECore::MurmurHash();
+		parent->childNamesPlug()->defaultValue()->hash( h );
+		return;
+	}
+
 	SceneNode::hashChildNames( path, context, parent, h );
 
 	fileNamePlug()->hash( h );
@@ -305,12 +316,6 @@ void SceneReader::hashChildNames( const ScenePath &path, const Gaffer::Context *
 	
 	// append a hash of the tags plug, as restricting the tags can affect the hierarchy
 	tagsPlug()->hash( h );
-
-	ConstSceneInterfacePtr s = scene( path );
-	if( !s )
-	{
-		return;
-	}
 
 	s->hash( SceneInterface::ChildNamesHash, context->getFrame() / g_frameRate, h );
 }
