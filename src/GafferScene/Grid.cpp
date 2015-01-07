@@ -330,7 +330,7 @@ void Grid::hashObject( const SceneNode::ScenePath &path, const Gaffer::Context *
 	if( path.size() == 2 )
 	{
 		SceneNode::hashObject( path, context, parent, h );
-		h.append( &path.front(), path.size() );
+		h.append( path.back() );
 		dimensionsPlug()->hash( h );
 		if( path.back() == g_gridLinesName )
 		{
@@ -423,7 +423,7 @@ IECore::ConstObjectPtr Grid::computeObject( const SceneNode::ScenePath &path, co
 void Grid::hashChildNames( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
 	SceneNode::hashChildNames( path, context, parent, h );
-	h.append( &path.front(), path.size() );
+	h.append( path.size() );
 
 	if( path.size() == 0 )
 	{
