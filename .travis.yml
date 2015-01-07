@@ -5,6 +5,8 @@ os:
     - osx
 
 before_install:
+    - export DISPLAY=:99.0
+    - sh -e /etc/init.d/xvfb start
     - sudo apt-get update -qq
     - sudo apt-get install -qq inkscape
     - sudo apt-get install -qq doxygen
@@ -23,9 +25,13 @@ install:
 script:
     - scons install CXX=$CXX ENV_VARS_TO_IMPORT=PATH RMAN_ROOT=$DELIGHT
     - ./install/gaffer-*/bin/gaffer test GafferTest
+    - ./install/gaffer-*/bin/gaffer test GafferUITest
     - ./install/gaffer-*/bin/gaffer test GafferCortexTest
+    - ./install/gaffer-*/bin/gaffer test GafferCortexUITest
     - ./install/gaffer-*/bin/gaffer test GafferImageTest
+    - ./install/gaffer-*/bin/gaffer test GafferImageUITest
     - ./install/gaffer-*/bin/gaffer test GafferSceneTest
+    - ./install/gaffer-*/bin/gaffer test GafferSceneUITest
     - ./install/gaffer-*/bin/gaffer test GafferOSLTest
     - ./install/gaffer-*/bin/gaffer test GafferRenderManTest
 
