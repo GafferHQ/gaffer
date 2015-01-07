@@ -153,7 +153,7 @@ class PathListingWidget( GafferUI.Widget ) :
 
 	def setPath( self, path ) :
 
-		if path is self.__path :
+		if path.isSame( self.__path ) :
 			return
 
 		self.__path = path

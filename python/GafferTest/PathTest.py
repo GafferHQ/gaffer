@@ -104,11 +104,11 @@ class PathTest( GafferTest.TestCase ) :
 		filter = Gaffer.FileNamePathFilter( [ "*.gfr" ] )
 
 		p.setFilter( filter )
-		self.failUnless( p.getFilter() is filter )
+		self.failUnless( p.getFilter().isSame( filter ) )
 		self.assertEqual( len( changedPaths ), 1 )
 
 		p.setFilter( filter )
-		self.failUnless( p.getFilter() is filter )
+		self.failUnless( p.getFilter().isSame( filter ) )
 		self.assertEqual( len( changedPaths ), 1 )
 
 		p.setFilter( None )
@@ -116,7 +116,7 @@ class PathTest( GafferTest.TestCase ) :
 		self.assertEqual( len( changedPaths ), 2 )
 
 		p.setFilter( filter )
-		self.failUnless( p.getFilter() is filter )
+		self.failUnless( p.getFilter().isSame( filter ) )
 		self.assertEqual( len( changedPaths ), 3 )
 
 		filter.setEnabled( False )
@@ -132,7 +132,7 @@ class PathTest( GafferTest.TestCase ) :
 
 		f = Gaffer.FileNamePathFilter( [ "*.exr" ] )
 		p = Gaffer.Path( "/test/path", filter = f )
-		self.failUnless( p.getFilter() is f )
+		self.failUnless( p.getFilter().isSame( f ) )
 
 	def testInfo( self ) :
 

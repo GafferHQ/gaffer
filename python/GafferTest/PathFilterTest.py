@@ -115,7 +115,7 @@ class PathFilterTest( GafferTest.TestCase ) :
 
 		def f( pf ) :
 
-			self.failUnless( pf is pathFilter )
+			self.failUnless( pf.isSame( pathFilter ) )
 			enabledStates.append( pf.getEnabled() )
 
 		c = pathFilter.changedSignal().connect( f )

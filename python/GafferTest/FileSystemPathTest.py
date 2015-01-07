@@ -75,7 +75,7 @@ class FileSystemPathTest( GafferTest.TestCase ) :
 
 		f = Gaffer.FileNamePathFilter( [ "*.exr" ] )
 		p = Gaffer.FileSystemPath( __file__, filter = f )
-		self.failUnless( p.getFilter() is f )
+		self.failUnless( p.getFilter().isSame( f ) )
 
 	def testBrokenSymbolicLinks( self ) :
 

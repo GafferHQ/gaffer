@@ -62,7 +62,7 @@ class PathFilterWidget( GafferUI.Widget ) :
 
 	def __pathFilterChanged( self, pathFilter ) :
 
-		assert( pathFilter is self.__pathFilter )
+		assert( pathFilter.isSame( self.__pathFilter ) )
 
 		self._updateFromPathFilter()
 
