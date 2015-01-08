@@ -143,6 +143,23 @@ struct KeySlotCaller
 	}
 };
 
+struct ExecuteOnUIThreadSlotCaller
+{
+	boost::signals::detail::unusable operator()( boost::python::object slot, Gadget::UIThreadFunction function )
+	{
+		object pythonFunction = make_function( function, default_call_policies(), boost::mpl::vector<void>() );
+		try
+		{
+			slot( pythonFunction );
+		}
+		catch( const error_already_set &e )
+		{
+			translatePythonException();
+		}
+		return boost::signals::detail::unusable();
+	}
+};
+
 StylePtr getStyle( Gadget &g )
 {
 	return const_cast<Style *>( g.getStyle() );
@@ -204,6 +221,8 @@ void GafferUIBindings::bindGadget()
 		.staticmethod( "idleSignal" )
 		.def( "_idleSignalAccessedSignal", &Gadget::idleSignalAccessedSignal, return_value_policy<reference_existing_object>() )
 		.staticmethod( "_idleSignalAccessedSignal" )
+		.def( "_executeOnUIThreadSignal", &Gadget::executeOnUIThreadSignal, return_value_policy<reference_existing_object>() )
+		.staticmethod( "_executeOnUIThreadSignal" )
 		.def( "select", &Gadget::select ).staticmethod( "select" )
 	;
 
@@ -214,5 +233,6 @@ void GafferUIBindings::bindGadget()
 	SignalBinder<Gadget::DragDropSignal, DefaultSignalCaller<Gadget::DragDropSignal>, DragDropSlotCaller>::bind( "DragDropSignal" );
 	SignalBinder<Gadget::EnterLeaveSignal, DefaultSignalCaller<Gadget::EnterLeaveSignal>, EnterLeaveSlotCaller>::bind( "EnterLeaveSignal" );
 	SignalBinder<Gadget::IdleSignal>::bind( "IdleSignal" );
+	SignalBinder<Gadget::ExecuteOnUIThreadSignal, DefaultSignalCaller<Gadget::EnterLeaveSignal>, ExecuteOnUIThreadSlotCaller>::bind( "ExecuteOnUIThreadSignal" );
 
 }

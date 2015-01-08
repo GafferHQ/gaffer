@@ -248,6 +248,9 @@ class Gadget : public Gaffer::GraphComponent
 		static IdleSignal &idleSignal();
 		//@}
 
+		typedef boost::function<void ()> UIThreadFunction;
+		static void executeOnUIThread( UIThreadFunction function );
+
 	protected :
 
 		/// The subclass specific part of render(). The public render() method
@@ -300,7 +303,14 @@ class Gadget : public Gaffer::GraphComponent
 		// when absolutely necessary (when slots are connected).
 		static IdleSignal &idleSignalAccessedSignal();
 		friend void GafferUIBindings::bindGadget();
-
+		// Used to implement executeOnUIThread(). When Gadget::executeOnUIThread()
+		// is called, it emits this signal to request that EventLoop.py arranges
+		// to call the passed function on the UI thread.
+		/// \todo I suspect that soon we'll have a Qt dependency in the C++
+		/// half of GafferUI, at which point it'd make more sense to implement
+		/// EventLoop in C++ rather than to implement this in such an awkward way.
+		typedef boost::signal<void ( UIThreadFunction )> ExecuteOnUIThreadSignal;
+		static ExecuteOnUIThreadSignal &executeOnUIThreadSignal();
 };
 
 typedef Gaffer::FilteredChildIterator<Gaffer::TypePredicate<Gadget> > GadgetIterator;
