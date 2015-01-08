@@ -100,7 +100,6 @@ class StandardNodeGadget : public NodeGadget
 		void setLabelsVisibleOnHover( bool labelsVisible );
 		bool getLabelsVisibleOnHover() const;
 
-		virtual bool acceptsChild( const Gaffer::GraphComponent *potentialChild ) const;
 		virtual Imath::Box3f bound() const;
 
 	protected :
@@ -145,6 +144,11 @@ class StandardNodeGadget : public NodeGadget
 
 		bool updateUserColor();
 		void updatePadding();
+
+		IE_CORE_FORWARDDECLARE( ErrorGadget );
+		ErrorGadget *errorGadget( bool createIfMissing = true );
+		void error( Gaffer::ConstPlugPtr plug, Gaffer::ConstPlugPtr source, const std::string &message );
+		void displayError( Gaffer::ConstPlugPtr plug, const std::string &message );
 
 		const LinearContainer::Orientation m_orientation;
 		bool m_nodeEnabled;
