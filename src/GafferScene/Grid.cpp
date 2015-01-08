@@ -222,7 +222,6 @@ void Grid::hashBound( const SceneNode::ScenePath &path, const Gaffer::Context *c
 	else
 	{
 		SceneNode::hashBound( path, context, parent, h );
-		h.append( &path.front(), path.size() );
 		dimensionsPlug()->hash( h );
 	}
 }
@@ -244,7 +243,6 @@ Imath::Box3f Grid::computeBound( const SceneNode::ScenePath &path, const Gaffer:
 void Grid::hashTransform( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
 	SceneNode::hashTransform( path, context, parent, h );
-	h.append( &path.front(), path.size() );
 
 	if( path.size() == 1 )
 	{
@@ -263,14 +261,14 @@ Imath::M44f Grid::computeTransform( const SceneNode::ScenePath &path, const Gaff
 
 void Grid::hashAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	SceneNode::hashAttributes( path, context, parent, h );
-	h.append( &path.front(), path.size() );
 	if( path.size() == 1 )
 	{
-		h.append( 1 );
+		SceneNode::hashAttributes( path, context, parent, h );
+		return;
 	}
 	else if( path.size() == 2 )
 	{
+		SceneNode::hashAttributes( path, context, parent, h );
 		if( path.back() == g_gridLinesName )
 		{
 			gridPixelWidthPlug()->hash( h );
@@ -283,7 +281,9 @@ void Grid::hashAttributes( const ScenePath &path, const Gaffer::Context *context
 		{
 			borderPixelWidthPlug()->hash( h );
 		}
+		return;
 	}
+	h = outPlug()->attributesPlug()->defaultValue()->Object::hash();
 }
 
 IECore::ConstCompoundObjectPtr Grid::computeAttributes( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
