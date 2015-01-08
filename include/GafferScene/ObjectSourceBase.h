@@ -46,7 +46,6 @@
 namespace GafferScene
 {
 
-/// \todo Support turning IECore::Groups into a proper scene hierarchy.
 template<typename BaseType>
 class ObjectSourceBase : public BaseType
 {
