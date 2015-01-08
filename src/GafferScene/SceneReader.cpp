@@ -304,8 +304,7 @@ void SceneReader::hashChildNames( const ScenePath &path, const Gaffer::Context *
 	ConstSceneInterfacePtr s = scene( path );
 	if( !s )
 	{
-		h = IECore::MurmurHash();
-		parent->childNamesPlug()->defaultValue()->hash( h );
+		h = parent->childNamesPlug()->defaultValue()->Object::hash();
 		return;
 	}
 
