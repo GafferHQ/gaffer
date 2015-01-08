@@ -130,6 +130,15 @@ class SceneProcedural : public IECore::Renderer::Procedural
 		
 		void decrementPendingProcedurals() const;
 		
+		// We use this variable for caching the bound computation, so we can compute bounds for
+		// a SceneProcedural's children in parallel, and avoid computing them again when we send
+		// them all to the renderer in serial
+		mutable Imath::Box3f m_bound;
+		
+		// struct for creating child procedurals in parallel and computing their bounds, using
+		// tbb::parallel_for:
+		class SceneProceduralCreate;
+		
 		static tbb::mutex g_allRenderedMutex;
 		static AllRenderedSignal g_allRenderedSignal;
 		
