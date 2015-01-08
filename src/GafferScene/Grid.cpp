@@ -423,7 +423,7 @@ IECore::ConstObjectPtr Grid::computeObject( const SceneNode::ScenePath &path, co
 void Grid::hashChildNames( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
 	SceneNode::hashChildNames( path, context, parent, h );
-	h.append( path.size() );
+	h.append( (uint64_t)path.size() );
 
 	if( path.size() == 0 )
 	{
