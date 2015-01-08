@@ -71,6 +71,98 @@ class ValuePlug::Computation
 
 	public :
 
+		const ValuePlug *resultPlug() const
+		{
+			return m_resultPlug;
+		}
+
+		static IECore::MurmurHash hash( const ValuePlug *plug )
+		{
+			const ValuePlug *p = sourcePlug( plug );
+
+			if( !p->getInput<Plug>() )
+			{
+				if( p->direction() == In || !p->ancestor<ComputeNode>() )
+				{
+					// no input connection, and no means of computing
+					// a value. there can only ever be a single value,
+					// which is stored directly on the plug - so we return
+					// the hash of that.
+					return p->m_staticValue->hash();
+				}
+			}
+
+			// a plug with an input connection or an output plug on a ComputeNode. there can be many values -
+			// one per context. the computation class is responsible for figuring out the hash.
+			Computation computation( p );
+			return computation.hash();
+		}
+
+		static IECore::ConstObjectPtr value( const ValuePlug *plug, const IECore::MurmurHash *precomputedHash )
+		{
+			const ValuePlug *p = sourcePlug( plug );
+
+			if( !p->getInput<Plug>() )
+			{
+				if( p->direction()==In || !p->ancestor<ComputeNode>() )
+				{
+					// no input connection, and no means of computing
+					// a value. there can only ever be a single value,
+					// which is stored directly on the plug.
+					return p->m_staticValue;
+				}
+			}
+
+			// an plug with an input connection or an output plug on a ComputeNode. there can be many values -
+			// one per context. the computation class is responsible for providing storage for the result
+			// and also actually managing the computation.
+			Computation computation( p, precomputedHash );
+			return computation.value();
+		}
+
+		static void receiveResult( const ValuePlug *plug, IECore::ConstObjectPtr result )
+		{
+			Computation *computation = Computation::current();
+			if( !computation )
+			{
+				throw IECore::Exception( boost::str( boost::format( "Cannot set value for plug \"%s\" except during computation." ) % plug->fullName() ) );
+			}
+
+			if( computation->m_resultPlug != plug )
+			{
+				throw IECore::Exception( boost::str( boost::format( "Cannot set value for plug \"%s\" during computation for plug \"%s\"." ) % plug->fullName() % computation->m_resultPlug->fullName() ) );
+			}
+
+			computation->m_resultValue = result;
+		}
+
+		static Computation *current()
+		{
+			ComputationStack &s = g_threadData.local().computationStack;
+			if( !s.size() )
+			{
+				return 0;
+			}
+			return s.top();
+		}
+
+		static size_t getCacheMemoryLimit()
+		{
+			return g_valueCache.getMaxCost();
+		}
+
+		static void setCacheMemoryLimit( size_t bytes )
+		{
+			return g_valueCache.setMaxCost( bytes );
+		}
+
+		static size_t cacheMemoryUsage()
+		{
+			return g_valueCache.currentCost();
+		}
+
+	private :
+
 		Computation( const ValuePlug *resultPlug, const IECore::MurmurHash *precomputedHash = NULL )
 			:	m_resultPlug( resultPlug ), m_precomputedHash( precomputedHash ), m_resultValue( NULL ), m_threadData( &g_threadData.local() )
 		{
@@ -86,9 +178,23 @@ class ValuePlug::Computation
 			}
 		}
 
-		const ValuePlug *resultPlug() const
+		// Before using the Computation class to get a hash or a value,
+		// we first traverse back down the chain of input plugs to the
+		// start, or till we find a plug of a different type. This
+		// traversal is much quicker than using the Computation class
+		// for every step in the chain.
+		static inline const ValuePlug *sourcePlug( const ValuePlug *p )
 		{
-			return m_resultPlug;
+			const IECore::TypeId typeId = p->typeId();
+
+			const ValuePlug *in = p->getInput<ValuePlug>();
+			while( in && in->typeId() == typeId )
+			{
+				p = in;
+				in = p->getInput<ValuePlug>();
+			}
+
+			return p;
 		}
 
 		IECore::MurmurHash hash() const
@@ -111,7 +217,7 @@ class ValuePlug::Computation
 			return h;
 		}
 
-		IECore::ConstObjectPtr compute()
+		IECore::ConstObjectPtr value()
 		{
 			// decide whether or not to use the cache. even if
 			// the result plug has the Cacheable flag set, we disable
@@ -167,49 +273,6 @@ class ValuePlug::Computation
 
 			return m_resultValue;
 		}
-
-		static void receiveResult( const ValuePlug *plug, IECore::ConstObjectPtr result )
-		{
-			Computation *computation = Computation::current();
-			if( !computation )
-			{
-				throw IECore::Exception( boost::str( boost::format( "Cannot set value for plug \"%s\" except during computation." ) % plug->fullName() ) );
-			}
-
-			if( computation->m_resultPlug != plug )
-			{
-				throw IECore::Exception( boost::str( boost::format( "Cannot set value for plug \"%s\" during computation for plug \"%s\"." ) % plug->fullName() % computation->m_resultPlug->fullName() ) );
-			}
-
-			computation->m_resultValue = result;
-		}
-
-		static Computation *current()
-		{
-			ComputationStack &s = g_threadData.local().computationStack;
-			if( !s.size() )
-			{
-				return 0;
-			}
-			return s.top();
-		}
-
-		static size_t getCacheMemoryLimit()
-		{
-			return g_valueCache.getMaxCost();
-		}
-
-		static void setCacheMemoryLimit( size_t bytes )
-		{
-			return g_valueCache.setMaxCost( bytes );
-		}
-
-		static size_t cacheMemoryUsage()
-		{
-			return g_valueCache.currentCost();
-		}
-
-	private :
 
 		// Calculates the hash for m_resultPlug - not using any cache at all.
 		IECore::MurmurHash hashInternal() const
@@ -547,25 +610,6 @@ void ValuePlug::setToDefault()
 	}
 }
 
-// Before using the Computation class to get a hash or a value,
-// we first traverse back down the chain of input plugs to the
-// start, or till we find a plug of a different type. This
-// traversal is much quicker than using the Computation class
-// for every step in the chain.
-static const ValuePlug *sourcePlug( const ValuePlug *p )
-{
-	const IECore::TypeId typeId = p->typeId();
-	
-	const ValuePlug *in = p->getInput<ValuePlug>();
-	while( in && in->typeId() == typeId )
-	{
-		p = in;
-		in = p->getInput<ValuePlug>();
-	}
-	
-	return p;
-}
-
 IECore::MurmurHash ValuePlug::hash() const
 {
 	if( !m_staticValue )
@@ -581,24 +625,7 @@ IECore::MurmurHash ValuePlug::hash() const
 		return result;
 	}
 
-	const ValuePlug *p = sourcePlug( this );
-
-	if( !p->getInput<Plug>() )
-	{
-		if( p->direction() == In || !p->ancestor<ComputeNode>() )
-		{
-			// no input connection, and no means of computing
-			// a value. there can only ever be a single value,
-			// which is stored directly on the plug - so we return
-			// the hash of that.
-			return p->m_staticValue->hash();
-		}
-	}
-
-	// a plug with an input connection or an output plug on a ComputeNode. there can be many values -
-	// one per context. the computation class is responsible for figuring out the hash.
-	Computation computation( p );
-	return computation.hash();
+	return Computation::hash( this );
 }
 
 void ValuePlug::hash( IECore::MurmurHash &h ) const
@@ -608,24 +635,7 @@ void ValuePlug::hash( IECore::MurmurHash &h ) const
 
 IECore::ConstObjectPtr ValuePlug::getObjectValue( const IECore::MurmurHash *precomputedHash ) const
 {
-	const ValuePlug *p = sourcePlug( this );
-
-	if( !p->getInput<Plug>() )
-	{
-		if( p->direction()==In || !p->ancestor<ComputeNode>() )
-		{
-			// no input connection, and no means of computing
-			// a value. there can only ever be a single value,
-			// which is stored directly on the plug.
-			return p->m_staticValue;
-		}
-	}
-
-	// an plug with an input connection or an output plug on a ComputeNode. there can be many values -
-	// one per context. the computation class is responsible for providing storage for the result
-	// and also actually managing the computation.
-	Computation computation( p, precomputedHash );
-	return computation.compute();
+	return Computation::value( this, precomputedHash );
 }
 
 void ValuePlug::setObjectValue( IECore::ConstObjectPtr value )
