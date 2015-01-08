@@ -53,7 +53,7 @@ static InternedString g_centerLinesName( "centerLines" );
 static InternedString g_borderLinesName( "borderLines" );
 
 Grid::Grid( const std::string &name )
-	:	Source( name )
+	:	SceneNode( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 
@@ -179,7 +179,7 @@ const Gaffer::FloatPlug *Grid::borderPixelWidthPlug() const
 
 void Grid::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
 {
-	Source::affects( input, outputs );
+	SceneNode::affects( input, outputs );
 
 	if( input == namePlug() )
 	{
@@ -221,7 +221,8 @@ void Grid::hashBound( const SceneNode::ScenePath &path, const Gaffer::Context *c
 	}
 	else
 	{
-		Source::hashBound( path, context, parent, h );
+		SceneNode::hashBound( path, context, parent, h );
+		h.append( &path.front(), path.size() );
 		dimensionsPlug()->hash( h );
 	}
 }
@@ -242,7 +243,8 @@ Imath::Box3f Grid::computeBound( const SceneNode::ScenePath &path, const Gaffer:
 
 void Grid::hashTransform( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	Source::hashTransform( path, context, parent, h );
+	SceneNode::hashTransform( path, context, parent, h );
+	h.append( &path.front(), path.size() );
 
 	if( path.size() == 1 )
 	{
@@ -261,7 +263,8 @@ Imath::M44f Grid::computeTransform( const SceneNode::ScenePath &path, const Gaff
 
 void Grid::hashAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	Source::hashAttributes( path, context, parent, h );
+	SceneNode::hashAttributes( path, context, parent, h );
+	h.append( &path.front(), path.size() );
 	if( path.size() == 1 )
 	{
 		h.append( 1 );
@@ -419,7 +422,8 @@ IECore::ConstObjectPtr Grid::computeObject( const SceneNode::ScenePath &path, co
 
 void Grid::hashChildNames( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	Source::hashChildNames( path, context, parent, h );
+	SceneNode::hashChildNames( path, context, parent, h );
+	h.append( path.size() );
 
 	if( path.size() == 0 )
 	{
@@ -451,7 +455,7 @@ IECore::ConstInternedStringVectorDataPtr Grid::computeChildNames( const SceneNod
 
 void Grid::hashGlobals( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	Source::hashGlobals( context, parent, h );
+	SceneNode::hashGlobals( context, parent, h );
 }
 
 IECore::ConstCompoundObjectPtr Grid::computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const

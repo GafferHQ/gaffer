@@ -41,12 +41,12 @@
 
 #include "IECore/SceneInterface.h"
 
-#include "GafferScene/FileSource.h"
+#include "GafferScene/SceneNode.h"
 
 namespace GafferScene
 {
 
-class SceneReader : public FileSource
+class SceneReader : public SceneNode
 {
 
 	public :
@@ -54,7 +54,15 @@ class SceneReader : public FileSource
 		SceneReader( const std::string &name=defaultName<SceneReader>() );
 		virtual ~SceneReader();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::SceneReader, SceneReaderTypeId, FileSource )
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::SceneReader, SceneReaderTypeId, SceneNode )
+
+		/// Holds the name of the file to be loaded.
+		Gaffer::StringPlug *fileNamePlug();
+		const Gaffer::StringPlug *fileNamePlug() const;
+
+		/// Number of times the node has been refreshed.
+		Gaffer::IntPlug *refreshCountPlug();
+		const Gaffer::IntPlug *refreshCountPlug() const;
 
 		Gaffer::StringPlug *tagsPlug();
 		const Gaffer::StringPlug *tagsPlug() const;

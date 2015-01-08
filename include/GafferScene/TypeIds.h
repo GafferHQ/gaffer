@@ -45,7 +45,7 @@ enum TypeId
 {
 	ScenePlugTypeId = 110501,
 	SceneNodeTypeId = 110502,
-	FileSourceTypeId = 110503,
+	// 110502 obsolete, available for reuse
 	SetFilterTypeId = 110504,
 	SceneProcessorTypeId = 110505,
 	SceneElementProcessorTypeId = 110506,
@@ -72,7 +72,7 @@ enum TypeId
 	PathFilterTypeId = 110527,
 	AttributesTypeId = 110528,
 	AlembicSourceTypeId = 110529,
-	SourceTypeId = 110530,
+	// 110530 obsolete, available for reuse
 	SceneContextVariablesTypeId = 110531,
 	StandardOptionsTypeId = 110532,
 	SubTreeTypeId = 110533,
