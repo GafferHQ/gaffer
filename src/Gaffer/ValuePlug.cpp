@@ -72,18 +72,17 @@ class ValuePlug::Computation
 	public :
 
 		Computation( const ValuePlug *resultPlug, const IECore::MurmurHash *precomputedHash = NULL )
-			:	m_resultPlug( resultPlug ), m_precomputedHash( precomputedHash ), m_resultValue( NULL )
+			:	m_resultPlug( resultPlug ), m_precomputedHash( precomputedHash ), m_resultValue( NULL ), m_threadData( &g_threadData.local() )
 		{
-			g_threadData.local().computationStack.push( this );
+			m_threadData->computationStack.push( this );
 		}
 
 		~Computation()
 		{
-			ThreadData &threadData = g_threadData.local();
-			threadData.computationStack.pop();
-			if( threadData.computationStack.empty() )
+			m_threadData->computationStack.pop();
+			if( m_threadData->computationStack.empty() )
 			{
-				threadData.hashCache.clear();
+				m_threadData->hashCache.clear();
 			}
 		}
 
@@ -99,7 +98,7 @@ class ValuePlug::Computation
 				return *m_precomputedHash;
 			}
 
-			HashCache &hashCache = g_threadData.local().hashCache;
+			HashCache &hashCache = m_threadData->hashCache;
 			HashCacheKey key( m_resultPlug, Context::current()->hash() );
 			HashCache::iterator it = hashCache.find( key );
 			if( it != hashCache.end() )
@@ -287,10 +286,6 @@ class ValuePlug::Computation
 			}
 		}
 
-		const ValuePlug *m_resultPlug;
-		const IECore::MurmurHash *m_precomputedHash;
-		IECore::ConstObjectPtr m_resultValue;
-
 		// During a single graph evaluation, we actually call ValuePlug::hash()
 		// many times for the same plugs. First hash() is called for the terminating plug,
 		// which will call hash() for all the upstream plugs, and then compute() is called
@@ -315,8 +310,7 @@ class ValuePlug::Computation
 		// the last entry.
 		typedef std::stack<Computation *> ComputationStack;
 
-		// To support multithreading, each thread has it's own HashCache and ComputationStack,
-		// stored in g_threadData.
+		// To support multithreading, each thread has it's own state.
 		struct ThreadData
 		{
 			HashCache hashCache;
@@ -324,6 +318,11 @@ class ValuePlug::Computation
 		};
 
 		static tbb::enumerable_thread_specific<ThreadData> g_threadData;
+
+		const ValuePlug *m_resultPlug;
+		const IECore::MurmurHash *m_precomputedHash;
+		IECore::ConstObjectPtr m_resultValue;
+		ThreadData *m_threadData;
 
 		static IECore::ObjectPtr nullGetter( const IECore::MurmurHash &h, size_t &cost )
 		{
