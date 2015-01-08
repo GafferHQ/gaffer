@@ -37,6 +37,8 @@
 #ifndef GAFFERSCENE_INTERACTIVERENDER_H
 #define GAFFERSCENE_INTERACTIVERENDER_H
 
+#include "tbb/pipeline.h"
+
 #include "IECore/Renderer.h"
 
 #include "Gaffer/Node.h"
@@ -111,9 +113,12 @@ class InteractiveRender : public Gaffer::Node
 		void parentChanged( Gaffer::GraphComponent *child, Gaffer::GraphComponent *oldParent );
 
 		void update();
+		
+		static void runPipeline(tbb::pipeline* p);
+		void outputScene( bool update );
+		
 		void updateLights();
 		void updateAttributes();
-		void updateAttributesWalk( const ScenePlug::ScenePath &path );
 		void updateCameras();
 		void updateCoordinateSystems();
 
@@ -123,6 +128,17 @@ class InteractiveRender : public Gaffer::Node
 
 		typedef std::set<std::string> LightHandles;
 
+		// hierarchical structure for tracking scene information:
+		class SceneGraph;
+		boost::shared_ptr<SceneGraph> m_sceneGraph;
+
+		// tbb classes for performing multithreaded traversals of the scene graph, etc.
+		class SceneGraphBuildTask;
+
+		class SceneGraphIteratorFilter;
+		class SceneGraphEvaluatorFilter;
+		class SceneGraphOutputFilter;
+		
 		IECore::RendererPtr m_renderer;
 		ConstScenePlugPtr m_scene;
 		State m_state;

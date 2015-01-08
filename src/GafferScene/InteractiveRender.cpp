@@ -36,6 +36,10 @@
 
 #include "boost/bind.hpp"
 
+#include "tbb/task.h"
+#include "tbb/task_scheduler_init.h"
+#include "tbb/compat/thread"
+
 #include "IECore/WorldBlock.h"
 #include "IECore/EditBlock.h"
 #include "IECore/MessageHandler.h"
@@ -56,6 +60,71 @@ using namespace Gaffer;
 using namespace GafferScene;
 
 IE_CORE_DEFINERUNTIMETYPED( InteractiveRender );
+
+//////////////////////////////////////////////////////////////////////////
+// SceneGraph implementation
+//
+// This is a node in a scene hierarchy, which gets built when the
+// interactive render starts up. Each node stores the attribute hash of
+// the input scene at its corresponding location in the hierarchy, so
+// when the incoming scene updates, we are able to determine the locations
+// at which the attributes have changed since the last update, reevaluate
+// those attributes and send updates to the renderer.
+//
+// \todo: This is very similar to the SceneGraph mechanism in
+// GafferSceneUI::SceneGadget. At some point it would be good to refactor
+// this and use the same class for both of them. See the comments in
+// src/GafferSceneUI/SceneGadget.cpp for details.
+//
+//////////////////////////////////////////////////////////////////////////
+
+class InteractiveRender::SceneGraph
+{
+
+	public :
+
+		SceneGraph() : m_parent(0)
+		{
+		}
+
+		~SceneGraph()
+		{
+			for( std::vector<SceneGraph *>::const_iterator it = m_children.begin(), eIt = m_children.end(); it != eIt; ++it )
+			{
+				delete *it;
+			}
+		}
+		
+		void path( ScenePlug::ScenePath& p )
+		{
+			if( !m_parent )
+			{
+				return;
+			}
+			m_parent->path( p );
+			p.push_back( m_name );
+		}
+
+	private :
+		
+		friend class SceneGraphBuildTask;
+		friend class SceneGraphIteratorFilter;
+		friend class SceneGraphEvaluatorFilter;
+		friend class SceneGraphOutputFilter;
+		
+		// scene structure data:
+		IECore::InternedString m_name;
+		SceneGraph* m_parent;
+		std::vector<InteractiveRender::SceneGraph *> m_children;
+		
+		// hash of the attributes as of the most recent evaluation:
+		IECore::MurmurHash m_attributesHash;
+		
+		// actual scene data:
+		IECore::ConstCompoundObjectPtr m_attributes;
+		IECore::ConstObjectPtr m_object;
+		IECore::M44fDataPtr m_transform;
+};
 
 size_t InteractiveRender::g_firstPlugIndex = 0;
 
@@ -218,6 +287,421 @@ void InteractiveRender::parentChanged( GraphComponent *child, GraphComponent *ol
 	}
 }
 
+
+
+//////////////////////////////////////////////////////////////////////////
+// BuildTask implementation
+//
+// We use this tbb::task to traverse the input scene and build the
+// hierarchy for the first time. Recursion is terminated for locations
+// at which scene:visible is set to false, so this task also computes
+// and stores the attributes.
+//
+//////////////////////////////////////////////////////////////////////////
+
+class InteractiveRender::SceneGraphBuildTask : public tbb::task
+{
+
+	public :
+
+		SceneGraphBuildTask( const ScenePlug *scene, const Context* context, SceneGraph *sceneGraph, const ScenePlug::ScenePath &scenePath )
+			:	m_scene( scene ),
+				m_context( context ),
+				m_sceneGraph( sceneGraph ),
+				m_scenePath( scenePath )
+		{
+		}
+
+		~SceneGraphBuildTask()
+		{
+		}
+
+		virtual task *execute()
+		{
+			ContextPtr context = new Context( *m_context, Context::Borrowed );
+			context->set( ScenePlug::scenePathContextName, m_scenePath );
+			Context::Scope scopedContext( context.get() );
+
+			m_sceneGraph->m_attributes = m_scene->attributesPlug()->getValue();
+			const BoolData *visibilityData = m_sceneGraph->m_attributes->member<BoolData>( SceneInterface::visibilityName );
+			if( visibilityData && !visibilityData->readable() )
+			{
+				// terminate recursion for invisible locations
+				return NULL;
+			}
+			
+			// compute child names:
+			IECore::ConstInternedStringVectorDataPtr childNamesData = m_scene->childNamesPlug()->getValue();
+
+			const std::vector<IECore::InternedString> &childNames = childNamesData->readable();
+			if( childNames.empty() )
+			{
+				// nothing more to do
+				return NULL;
+			}
+
+			// add children for this location:
+			std::vector<InteractiveRender::SceneGraph *> children;
+			for( std::vector<IECore::InternedString>::const_iterator it = childNames.begin(), eIt = childNames.end(); it != eIt; ++it )
+			{
+				SceneGraph *child = new SceneGraph();
+				child->m_name = *it;
+				child->m_parent = m_sceneGraph;
+				children.push_back( child );
+			}
+
+			// spawn child tasks:
+			set_ref_count( 1 + children.size() );
+			ScenePlug::ScenePath childPath = m_scenePath;
+			childPath.push_back( IECore::InternedString() ); // space for the child name
+			for( std::vector<SceneGraph *>::const_iterator it = children.begin(), eIt = children.end(); it != eIt; ++it )
+			{
+				childPath.back() = (*it)->m_name;
+				SceneGraphBuildTask *t = new( allocate_child() ) SceneGraphBuildTask(
+					m_scene,
+					m_context,
+					(*it),
+					childPath
+				);
+				
+				spawn( *t );
+			}
+
+			wait_for_all();
+			
+			// add visible children to m_sceneGraph->m_children:
+			for( std::vector<SceneGraph *>::const_iterator it = children.begin(), eIt = children.end(); it != eIt; ++it )
+			{
+				const BoolData *visibilityData = (*it)->m_attributes->member<BoolData>( SceneInterface::visibilityName );
+				if( visibilityData && !visibilityData->readable() )
+				{
+					continue;
+				}
+				m_sceneGraph->m_children.push_back( *it );
+			}
+			
+			return NULL;
+		}
+
+	private :
+
+		const ScenePlug *m_scene;
+		const Context* m_context;
+		SceneGraph *m_sceneGraph;
+		ScenePlug::ScenePath m_scenePath;
+};
+
+
+//////////////////////////////////////////////////////////////////////////
+// SceneGraphIteratorFilter implementation
+//
+// Does a serial, depth first traversal of a SceneGraph hierarchy based at
+// "start", and spits out SceneGraph* tokens:
+//
+//////////////////////////////////////////////////////////////////////////
+
+class InteractiveRender::SceneGraphIteratorFilter : public tbb::filter
+{
+	public:
+		SceneGraphIteratorFilter( InteractiveRender::SceneGraph* start ) :
+			tbb::filter( tbb::filter::serial_in_order ), m_current( start )
+		{
+			m_childIndices.push_back( 0 );
+		}
+		
+		void next()
+		{
+			// go down one level in the hierarchy if we can:
+			if( m_current->m_children.size() )
+			{
+				m_current = m_current->m_children[0];
+				m_childIndices.push_back(0);
+				return;
+			}
+			
+			while( m_childIndices.size() )
+			{
+				
+				// increment child index:
+				++m_childIndices.back();
+				
+				// find parent's child count - for the root we define this as 1:
+				size_t parentNumChildren = m_current->m_parent ? m_current->m_parent->m_children.size() : 1;
+				
+				if( m_childIndices.back() == parentNumChildren )
+				{
+					// we've got to the end of the child list, jump up one level:
+					m_childIndices.pop_back();
+					m_current = m_current->m_parent;
+					continue;
+				}
+				else
+				{
+					// move to next child of the parent:
+					m_current = m_current->m_parent->m_children[ m_childIndices.back() ];
+					return;
+				}
+			}
+		}
+		
+		void* operator()( void* item )
+		{
+			if( m_childIndices.empty() )
+			{
+				// we've finished the iteration
+				return NULL;
+			}
+			InteractiveRender::SceneGraph* s = m_current;
+			next();
+			return s;
+		}
+	
+	private:
+		
+		SceneGraph* m_current;
+		std::vector<size_t> m_childIndices;
+};
+
+
+//////////////////////////////////////////////////////////////////////////
+// SceneGraphEvaluatorFilter implementation
+//
+// This parallel filter computes the data living at the scene graph
+// location it receives. If the "onlyChanged" flag is set to true, it
+// only recomputes data when the hashes change, otherwise it computes
+// all non null scene data.
+//
+//////////////////////////////////////////////////////////////////////////
+
+class InteractiveRender::SceneGraphEvaluatorFilter : public tbb::filter
+{
+	public:
+		SceneGraphEvaluatorFilter( const ScenePlug* scene, const Context* context, bool onlyChanged ) :
+			tbb::filter( tbb::filter::parallel ), m_scene( scene ), m_context( context ), m_onlyChanged( onlyChanged )
+		{
+		}
+
+		void* operator()( void* item )
+		{
+			SceneGraph* s = (SceneGraph*)item;
+			ScenePlug::ScenePath p;
+			s->path( p );
+
+			ContextPtr context = new Context( *m_context, Context::Borrowed );
+			context->set( ScenePlug::scenePathContextName, p );
+			Context::Scope scopedContext( context.get() );
+			
+			if( m_onlyChanged )
+			{
+				// we're re-traversing this location, so lets only recompute attributes where
+				// their hashes change:
+				
+				IECore::MurmurHash attributesHash = m_scene->attributesPlug()->hash();
+				if( attributesHash != s->m_attributesHash )
+				{
+					s->m_attributesHash = attributesHash;
+					s->m_attributes = m_scene->attributesPlug()->getValue();
+				}
+			}
+			else
+			{
+				// Compute the initial attribute hash, and all the data that hasn't already
+				// been computed:
+
+				s->m_attributesHash = m_scene->attributesPlug()->hash();
+				if( !s->m_attributes )
+				{
+					s->m_attributes = m_scene->attributesPlug()->getValue();
+				}
+				if( !s->m_object )
+				{
+					s->m_object = m_scene->objectPlug()->getValue();
+				}
+				if( !s->m_transform )
+				{
+					s->m_transform = new IECore::M44fData( m_scene->transformPlug()->getValue() );
+				}
+			}
+			
+
+			return s;
+		}
+
+	private:
+
+		const ScenePlug* m_scene;
+		const Context* m_context;
+		const bool m_onlyChanged;
+};
+
+//////////////////////////////////////////////////////////////////////////
+// SceneGraphOutputFilter implementation
+//
+// This serial thread bound filter outputs scene data to a renderer on
+// the main thread, then discards that data to save memory. If the
+// editMode flag is set to true, the filter outputs edits, otherwise
+// it renders the data directly.
+//
+//////////////////////////////////////////////////////////////////////////
+
+class InteractiveRender::SceneGraphOutputFilter : public tbb::thread_bound_filter
+{
+	public:
+	
+		SceneGraphOutputFilter( Renderer* renderer, bool editMode ) :
+			tbb::thread_bound_filter( tbb::filter::serial_in_order ), 
+			m_renderer( renderer ),
+			m_attrBlockCounter( 0 ),
+			m_editMode( editMode )
+		{
+		}
+		
+		~SceneGraphOutputFilter()
+		{
+			// close pending attribute blocks:
+			while( m_attrBlockCounter )
+			{
+				--m_attrBlockCounter;
+				m_renderer->attributeEnd();
+			}
+		}
+		
+		void* operator()( void* item )
+		{
+			SceneGraph* s = (SceneGraph*)item;
+			ScenePlug::ScenePath path;
+			s->path( path );
+			
+			std::string name;
+			ScenePlug::pathToString( path, name );
+			
+			if( !m_editMode )
+			{
+				// outputting scene for the first time - do some attribute block tracking:
+				if( path.size() )
+				{
+					for( int i = m_previousPath.size(); i >= (int)path.size(); --i )
+					{
+						--m_attrBlockCounter;
+						m_renderer->attributeEnd();
+					}
+				}
+
+				m_previousPath = path;
+
+				++m_attrBlockCounter;
+				m_renderer->attributeBegin();
+				
+				// set the name for this location:
+				m_renderer->setAttribute( "name", new StringData( name ) );
+
+			}
+
+			// transform:
+			if( s->m_transform && !m_editMode )
+			{
+				m_renderer->concatTransform( s->m_transform->readable() );
+				s->m_transform = 0;
+			}
+			
+			// attributes:
+			if( s->m_attributes )
+			{
+				if( m_editMode )
+				{
+					CompoundDataMap parameters;
+					parameters["exactscopename"] = new StringData( name );
+					m_renderer->editBegin( "attribute", parameters );
+				}
+				
+				for( CompoundObject::ObjectMap::const_iterator it = s->m_attributes->members().begin(), eIt = s->m_attributes->members().end(); it != eIt; it++ )
+				{
+					if( const StateRenderable *s = runTimeCast<const StateRenderable>( it->second.get() ) )
+					{
+						s->render( m_renderer );
+					}
+					else if( const ObjectVector *o = runTimeCast<const ObjectVector>( it->second.get() ) )
+					{
+						for( ObjectVector::MemberContainer::const_iterator it = o->members().begin(), eIt = o->members().end(); it != eIt; it++ )
+						{
+							const StateRenderable *s = runTimeCast<const StateRenderable>( it->get() );
+							if( s )
+							{
+								s->render( m_renderer );
+							}
+						}
+					}
+					else if( const Data *d = runTimeCast<const Data>( it->second.get() ) )
+					{
+						m_renderer->setAttribute( it->first, d );
+					}
+				}
+				s->m_attributes = 0;
+				
+				if( m_editMode )
+				{
+					m_renderer->editEnd();
+				}
+				
+			}
+			
+			// object:
+			if( s->m_object && !m_editMode )
+			{
+				if( const VisibleRenderable* renderable = runTimeCast< const VisibleRenderable >( s->m_object.get() ) )
+				{
+					renderable->render( m_renderer );
+				}
+				s->m_object = 0;
+			}
+			
+			return NULL;
+		}
+		
+	private:
+		
+		Renderer* m_renderer;
+		ScenePlug::ScenePath m_previousPath;
+		int m_attrBlockCounter;
+		bool m_editMode;
+};
+
+void InteractiveRender::runPipeline(tbb::pipeline* p)
+{
+	p->run( 2 * tbb::task_scheduler_init::default_num_threads() );
+}
+
+void InteractiveRender::outputScene( bool update )
+{
+	SceneGraphIteratorFilter iterator( m_sceneGraph.get() );
+
+	SceneGraphEvaluatorFilter evaluator(
+		inPlug(),
+		m_context.get(),
+		update // only recompute locations whose hashes have changed if true:
+	);
+
+	SceneGraphOutputFilter output( 
+		m_renderer.get(),
+		update // edit mode if true
+	);
+
+	tbb::pipeline p;
+	p.add_filter( iterator );
+	p.add_filter( evaluator );
+	p.add_filter( output );
+
+	 // Another thread initiates execution of the pipeline
+	std::thread pipelineThread( runPipeline, &p );
+
+	// Process the SceneGraphOutputFilter with the current thread:
+	while( output.process_item() != tbb::thread_bound_filter::end_of_stream )
+	{
+		continue;
+	}
+	pipelineThread.join();
+}
+
 void InteractiveRender::update()
 {
 	Context::Scope scopedContext( m_context.get() );
@@ -256,9 +740,14 @@ void InteractiveRender::update()
 			outputGlobalAttributes( globals.get(), m_renderer.get() );
 			outputCoordinateSystems( inPlug(), globals.get(), m_renderer.get() );
 			outputLightsInternal( globals.get(), /* editing = */ false );
-
-			SceneProceduralPtr proc = new SceneProcedural( inPlug(), Context::current() );
-			m_renderer->procedural( proc );
+			
+			// build the scene graph structure in parallel:
+			m_sceneGraph.reset( new SceneGraph );
+			SceneGraphBuildTask *task = new( tbb::task::allocate_root() ) SceneGraphBuildTask( inPlug(), m_context.get(), m_sceneGraph.get(), ScenePlug::ScenePath() );
+			tbb::task::spawn_root_and_wait( *task );
+			
+			// output the scene for the first time:
+			outputScene( false );
 		}
 
 		m_scene = requiredScene;
@@ -381,63 +870,11 @@ void InteractiveRender::updateAttributes()
 	{
 		return;
 	}
-
-	updateAttributesWalk( ScenePlug::ScenePath() );
-
+	
+	// output the scene, updating locations whose hashes have changed since last time:
+	outputScene( true );
+	
 	m_attributesDirty = false;
-}
-
-void InteractiveRender::updateAttributesWalk( const ScenePlug::ScenePath &path )
-{
-	/// \todo Keep a track of the hashes of the attributes at each path,
-	/// and use it to only update the attributes when they've changed.
-	ConstCompoundObjectPtr attributes = inPlug()->attributes( path );
-
-	// terminate recursion for invisible locations
-	ConstBoolDataPtr visibility = attributes->member<BoolData>( SceneInterface::visibilityName );
-	if( visibility && ( !visibility->readable() ) )
-	{
-		return;
-	}
-
-	std::string name;
-	ScenePlug::pathToString( path, name );
-	CompoundDataMap parameters;
-	parameters["exactscopename"] = new StringData( name );
-	{
-		EditBlock edit( m_renderer.get(), "attribute", parameters );
-		for( CompoundObject::ObjectMap::const_iterator it = attributes->members().begin(), eIt = attributes->members().end(); it != eIt; it++ )
-		{
-			if( const StateRenderable *s = runTimeCast<const StateRenderable>( it->second.get() ) )
-			{
-				s->render( m_renderer.get() );
-			}
-			else if( const ObjectVector *o = runTimeCast<const ObjectVector>( it->second.get() ) )
-			{
-				for( ObjectVector::MemberContainer::const_iterator it = o->members().begin(), eIt = o->members().end(); it != eIt; it++ )
-				{
-					const StateRenderable *s = runTimeCast<const StateRenderable>( it->get() );
-					if( s )
-					{
-						s->render( m_renderer.get() );
-					}
-				}
-			}
-			else if( const Data *d = runTimeCast<const Data>( it->second.get() ) )
-			{
-				m_renderer->setAttribute( it->first, d );
-			}
-		}
-	}
-
-	ConstInternedStringVectorDataPtr childNames = inPlug()->childNames( path );
-	ScenePlug::ScenePath childPath = path;
-	childPath.push_back( InternedString() ); // for the child name
-	for( vector<InternedString>::const_iterator it=childNames->readable().begin(); it!=childNames->readable().end(); it++ )
-	{
-		childPath[path.size()] = *it;
-		updateAttributesWalk( childPath );
-	}
 }
 
 void InteractiveRender::updateCameras()
