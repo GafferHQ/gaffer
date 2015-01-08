@@ -249,9 +249,13 @@ IECore::ConstObjectPtr ObjectSourceBase<BaseType>::computeObject( const SceneNod
 template<typename BaseType>
 void ObjectSourceBase<BaseType>::hashChildNames( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	BaseType::hashChildNames( path, context, parent, h );
-	h.append( &path.front(), path.size() );
-	namePlug()->hash( h );
+	if( path.size() == 0 )
+	{
+		BaseType::hashChildNames( path, context, parent, h );
+		namePlug()->hash( h );
+		return;
+	}
+	h = parent->childNamesPlug()->defaultValue()->Object::hash();
 }
 
 template<typename BaseType>
