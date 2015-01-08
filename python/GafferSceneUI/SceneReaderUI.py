@@ -74,6 +74,16 @@ GafferUI.PlugValueWidget.registerCreator(
 	)
 )
 
+GafferUI.PlugValueWidget.registerCreator(
+	GafferScene.SceneReader,
+	"refreshCount",
+	GafferUI.IncrementingPlugValueWidget,
+	label = "Refresh",
+	undoable = False
+)
+
+## \todo Once it's possible to register Widgets to go on the right of a PlugWidget, place the refresh button there.
+
 ##########################################################################
 # Right click menu for tags
 ##########################################################################

@@ -194,5 +194,19 @@ class SphereTest( GafferSceneTest.SceneTestCase ) :
 
 		ss = s.serialise()
 
+	def testChildNamesHash( self ) :
+
+		s1 = GafferScene.Sphere()
+		s1["name"].setValue( "sphere1" )
+
+		s2 = GafferScene.Sphere()
+		s2["name"].setValue( "sphere2" )
+
+		self.assertNotEqual( s1["out"].childNamesHash( "/" ), s2["out"].childNamesHash( "/" ) )
+		self.assertEqual( s1["out"].childNamesHash( "/sphere1" ), s2["out"].childNamesHash( "/sphere2" ) )
+
+		self.assertNotEqual( s1["out"].childNames( "/" ), s2["out"].childNames( "/" ) )
+		self.assertTrue( s1["out"].childNames( "/sphere1", _copy=False ).isSame( s2["out"].childNames( "sphere2", _copy=False ) ) )
+
 if __name__ == "__main__":
 	unittest.main()

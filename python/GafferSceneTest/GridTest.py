@@ -76,5 +76,53 @@ class GridTest( GafferSceneTest.SceneTestCase ) :
 		a2 = g["out"].attributes( "/grid/centerLines" )
 		self.assertEqual( a2, IECore.CompoundObject( { "gl:curvesPrimitive:glLineWidth" : IECore.FloatData( 2 ) } ) )
 
+	def testBoundHash( self ) :
+
+		g1 = GafferScene.Grid()
+		g1["name"].setValue( "g1" )
+
+		g2 = GafferScene.Grid()
+		g2["name"].setValue( "g2" )
+
+		self.assertEqual( g1["out"].boundHash( "/" ), g2["out"].boundHash( "/" ) )
+		self.assertEqual( g1["out"].boundHash( "/g1" ), g2["out"].boundHash( "/g2" ) )
+		self.assertEqual( g1["out"].boundHash( "/g1/centerLines" ), g2["out"].boundHash( "/g2/centerLines" ) )
+
+		g1["dimensions"].setValue( g2["dimensions"].getValue() * 2 )
+
+		self.assertNotEqual( g1["out"].boundHash( "/" ), g2["out"].boundHash( "/" ) )
+		self.assertNotEqual( g1["out"].boundHash( "/g1" ), g2["out"].boundHash( "/g2" ) )
+		self.assertNotEqual( g1["out"].boundHash( "/g1/centerLines" ), g2["out"].boundHash( "/g2/centerLines" ) )
+
+	def testTransformHash( self ) :
+
+		g1 = GafferScene.Grid()
+		g1["name"].setValue( "g1" )
+
+		g2 = GafferScene.Grid()
+		g2["name"].setValue( "g2" )
+
+		self.assertEqual( g1["out"].transformHash( "/" ), g2["out"].transformHash( "/" ) )
+		self.assertEqual( g1["out"].transformHash( "/g1" ), g2["out"].transformHash( "/g2" ) )
+		self.assertEqual( g1["out"].transformHash( "/g1/centerLines" ), g2["out"].transformHash( "/g2/centerLines" ) )
+
+		g1["transform"]["translate"]["x"].setValue( 10 )
+
+		self.assertEqual( g1["out"].transformHash( "/" ), g2["out"].transformHash( "/" ) )
+		self.assertNotEqual( g1["out"].boundHash( "/g1" ), g2["out"].transformHash( "/g2" ) )
+		self.assertEqual( g1["out"].transformHash( "/g1/centerLines" ), g2["out"].transformHash( "/g2/centerLines" ) )
+
+	def testAttributesHash( self ) :
+
+		g1 = GafferScene.Grid()
+		g1["name"].setValue( "g1" )
+
+		g2 = GafferScene.Grid()
+		g2["name"].setValue( "g2" )
+
+		self.assertEqual( g1["out"].attributesHash( "/" ), g2["out"].attributesHash( "/" ) )
+		self.assertEqual( g1["out"].attributesHash( "/g1" ), g2["out"].attributesHash( "/g2" ) )
+		self.assertEqual( g1["out"].attributesHash( "/g1/centerLines" ), g2["out"].attributesHash( "/g2/centerLines" ) )
+
 if __name__ == "__main__":
 	unittest.main()

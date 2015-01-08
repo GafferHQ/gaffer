@@ -34,14 +34,231 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferScene/ObjectSourceBase.inl"
+#include "OpenEXR/ImathBoxAlgo.h"
 
-namespace GafferScene
+#include "IECore/NullObject.h"
+#include "IECore/Camera.h"
+#include "IECore/CoordinateSystem.h"
+
+#include "Gaffer/Context.h"
+
+#include "GafferScene/ObjectSource.h"
+
+using namespace GafferScene;
+
+IE_CORE_DEFINERUNTIMETYPED( ObjectSource );
+
+size_t ObjectSource::g_firstPlugIndex = 0;
+
+ObjectSource::ObjectSource( const std::string &name, const std::string &namePlugDefaultValue )
+	:	SceneNode( name )
 {
+	storeIndexOfNextChild( g_firstPlugIndex );
+	addChild( new Gaffer::StringPlug( "name", Gaffer::Plug::In, namePlugDefaultValue ) );
+	addChild( new Gaffer::TransformPlug( "transform" ) );
+	addChild( new Gaffer::ObjectPlug( "__source", Gaffer::Plug::Out, IECore::NullObject::defaultNullObject() ) );
+}
 
-IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( GafferScene::ObjectSource, ObjectSourceTypeId )
+ObjectSource::~ObjectSource()
+{
+}
 
-// explicit instantiation
-template class GafferScene::ObjectSourceBase<Source>;
+Gaffer::StringPlug *ObjectSource::namePlug()
+{
+	return getChild<Gaffer::StringPlug>( g_firstPlugIndex );
+}
 
-} // namespace GafferScene
+const Gaffer::StringPlug *ObjectSource::namePlug() const
+{
+	return getChild<Gaffer::StringPlug>( g_firstPlugIndex );
+}
+
+Gaffer::TransformPlug *ObjectSource::transformPlug()
+{
+	return getChild<Gaffer::TransformPlug>( g_firstPlugIndex + 1 );
+}
+
+const Gaffer::TransformPlug *ObjectSource::transformPlug() const
+{
+	return getChild<Gaffer::TransformPlug>( g_firstPlugIndex + 1 );
+}
+
+void ObjectSource::affects( const Gaffer::Plug *input, Gaffer::DependencyNode::AffectedPlugsContainer &outputs ) const
+{
+	SceneNode::affects( input, outputs );
+
+	if( input == sourcePlug() )
+	{
+		outputs.push_back( outPlug()->boundPlug() );
+		outputs.push_back( outPlug()->objectPlug() );
+	}
+	else if( input == namePlug() )
+	{
+		outputs.push_back( outPlug()->childNamesPlug() );
+	}
+	else if( transformPlug()->isAncestorOf( input ) )
+	{
+		outputs.push_back( outPlug()->transformPlug() );
+	}
+
+}
+
+Gaffer::ObjectPlug *ObjectSource::sourcePlug()
+{
+	return getChild<Gaffer::ObjectPlug>( g_firstPlugIndex + 2 );
+}
+
+const Gaffer::ObjectPlug *ObjectSource::sourcePlug() const
+{
+	return getChild<Gaffer::ObjectPlug>( g_firstPlugIndex + 2 );
+}
+
+void ObjectSource::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	SceneNode::hash( output, context, h );
+
+	if( output == sourcePlug() )
+	{
+		hashSource( context, h );
+	}
+}
+
+void ObjectSource::compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const
+{
+	if( output == sourcePlug() )
+	{
+		static_cast<Gaffer::ObjectPlug *>( output )->setValue( computeSource( context ) );
+		return;
+	}
+
+	return SceneNode::compute( output, context );
+}
+
+void ObjectSource::hashAttributes( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	h = parent->attributesPlug()->defaultValue()->Object::hash();
+}
+
+IECore::ConstCompoundObjectPtr ObjectSource::computeAttributes( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+{
+	return parent->attributesPlug()->defaultValue();
+}
+
+void ObjectSource::hashBound( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	SceneNode::hashBound( path, context, parent, h );
+	sourcePlug()->hash( h );
+	if( path.size() == 0 )
+	{
+		transformPlug()->hash( h );
+	}
+}
+
+Imath::Box3f ObjectSource::computeBound( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+{
+	Imath::Box3f result;
+	IECore::ConstObjectPtr object = sourcePlug()->getValue();
+
+	if( const IECore::VisibleRenderable *renderable = IECore::runTimeCast<const IECore::VisibleRenderable>( object.get() ) )
+	{
+		result = renderable->bound();
+	}
+	else if( object->isInstanceOf( IECore::Camera::staticTypeId() ) )
+	{
+		result = Imath::Box3f( Imath::V3f( -0.5, -0.5, 0 ), Imath::V3f( 0.5, 0.5, 2.0 ) );
+	}
+	else if( object->isInstanceOf( IECore::CoordinateSystem::staticTypeId() ) )
+	{
+		result = Imath::Box3f( Imath::V3f( 0 ), Imath::V3f( 1 ) );
+	}
+	else
+	{
+		result = Imath::Box3f( Imath::V3f( -0.5 ), Imath::V3f( 0.5 ) );
+	}
+
+	if( path.size() == 0 )
+	{
+		result = Imath::transform( result, transformPlug()->matrix() );
+	}
+	return result;
+}
+
+void ObjectSource::hashTransform( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	SceneNode::hashTransform( path, context, parent, h );
+	if( path.size() == 1 )
+	{
+		transformPlug()->hash( h );
+	}
+}
+
+Imath::M44f ObjectSource::computeTransform( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+{
+	if( path.size() == 1 )
+	{
+		return transformPlug()->matrix();
+	}
+	return Imath::M44f();
+}
+
+void ObjectSource::hashObject( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	if( path.size() != 1 )
+	{
+		h = parent->objectPlug()->defaultValue()->hash();
+		return;
+	}
+
+	SceneNode::hashObject( path, context, parent, h );
+	sourcePlug()->hash( h );
+}
+
+IECore::ConstObjectPtr ObjectSource::computeObject( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+{
+	if( path.size() != 1 )
+	{
+		return parent->objectPlug()->defaultValue();
+	}
+
+	return sourcePlug()->getValue();
+}
+
+void ObjectSource::hashChildNames( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	if( path.size() == 0 )
+	{
+		SceneNode::hashChildNames( path, context, parent, h );
+		namePlug()->hash( h );
+		return;
+	}
+	h = parent->childNamesPlug()->defaultValue()->Object::hash();
+}
+
+IECore::ConstInternedStringVectorDataPtr ObjectSource::computeChildNames( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+{
+	if( path.size() == 0 )
+	{
+		IECore::InternedStringVectorDataPtr result = new IECore::InternedStringVectorData();
+		const std::string &name = namePlug()->getValue();
+		if( name.size() )
+		{
+			result->writable().push_back( name );
+		}
+		else
+		{
+			result->writable().push_back( "unnamed" );
+		}
+		return result;
+	}
+	return parent->childNamesPlug()->defaultValue();
+}
+
+void ObjectSource::hashGlobals( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	h = parent->globalsPlug()->defaultValue()->Object::hash();
+}
+
+IECore::ConstCompoundObjectPtr ObjectSource::computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const
+{
+	return parent->globalsPlug()->defaultValue();
+}

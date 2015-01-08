@@ -40,12 +40,12 @@
 
 #include "IECoreAlembic/AlembicInput.h"
 
-#include "GafferScene/FileSource.h"
+#include "GafferScene/SceneNode.h"
 
 namespace GafferScene
 {
 
-class AlembicSource : public FileSource
+class AlembicSource : public SceneNode
 {
 
 	public :
@@ -53,7 +53,18 @@ class AlembicSource : public FileSource
 		AlembicSource( const std::string &name=defaultName<AlembicSource>() );
 		virtual ~AlembicSource();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::AlembicSource, AlembicSourceTypeId, FileSource )
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::AlembicSource, AlembicSourceTypeId, SceneNode )
+
+		/// Holds the name of the file to be loaded.
+		Gaffer::StringPlug *fileNamePlug();
+		const Gaffer::StringPlug *fileNamePlug() const;
+
+		/// Number of times the node has been refreshed.
+		Gaffer::IntPlug *refreshCountPlug();
+		const Gaffer::IntPlug *refreshCountPlug() const;
+
+		/// Implemented to specify that fileNamePlug() affects all the scene output.
+		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
 
 	private :
 
@@ -61,7 +72,10 @@ class AlembicSource : public FileSource
 
 		virtual void hashBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const;
 		virtual void hashTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const;
+		virtual void hashAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const;
 		virtual void hashObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const;
+		virtual void hashChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const;
+		virtual void hashGlobals( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const;
 
 		virtual Imath::Box3f computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
 		virtual Imath::M44f computeTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
@@ -74,6 +88,7 @@ class AlembicSource : public FileSource
 
 		float fps() const;
 
+		static size_t g_firstPlugIndex;
 };
 
 IE_CORE_DECLAREPTR( AlembicSource )

@@ -41,12 +41,12 @@
 
 #include "IECore/SceneInterface.h"
 
-#include "GafferScene/FileSource.h"
+#include "GafferScene/SceneNode.h"
 
 namespace GafferScene
 {
 
-class SceneReader : public FileSource
+class SceneReader : public SceneNode
 {
 
 	public :
@@ -54,7 +54,15 @@ class SceneReader : public FileSource
 		SceneReader( const std::string &name=defaultName<SceneReader>() );
 		virtual ~SceneReader();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::SceneReader, SceneReaderTypeId, FileSource )
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::SceneReader, SceneReaderTypeId, SceneNode )
+
+		/// Holds the name of the file to be loaded.
+		Gaffer::StringPlug *fileNamePlug();
+		const Gaffer::StringPlug *fileNamePlug() const;
+
+		/// Number of times the node has been refreshed.
+		Gaffer::IntPlug *refreshCountPlug();
+		const Gaffer::IntPlug *refreshCountPlug() const;
 
 		Gaffer::StringPlug *tagsPlug();
 		const Gaffer::StringPlug *tagsPlug() const;
@@ -68,6 +76,11 @@ class SceneReader : public FileSource
 
 	protected :
 
+		/// \todo These methods defer to SceneInterface::hash() to do most of the work, but we could go further.
+		/// Currently we still hash in fileNamePlug() and refreshCountPlug() because we don't trust the current
+		/// implementation of SceneCache::hash() - it should hash the filename and modification time, but instead
+		/// it hashes some pointer value which isn't guaranteed to be unique (see sceneHash() in IECore/SceneCache.cpp).
+		/// Additionally, we don't have a way of hashing in the tags, which we would need in hashChildNames().
 		virtual void hashBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const;
 		virtual void hashTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const;
 		virtual void hashAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const;

@@ -81,18 +81,6 @@ GafferUI.PlugValueWidget.registerCreator( GafferScene.Instancer, "instance", Non
 
 GafferUI.Nodule.registerNodule( GafferScene.ObjectToScene, "object", GafferUI.StandardNodule )
 
-# FileSource
-
-GafferUI.PlugValueWidget.registerCreator(
-	GafferScene.FileSource,
-	"refreshCount",
-	GafferUI.IncrementingPlugValueWidget,
-	label = "Refresh",
-	undoable = False
-)
-
-## \todo Once it's possible to register Widgets to go on the right of a PlugWidget, place the refresh button there.
-
 # AlembicSource
 
 GafferUI.PlugValueWidget.registerCreator(
@@ -105,6 +93,14 @@ GafferUI.PlugValueWidget.registerCreator(
 			"leaf" : True,
 		},
 	)
+)
+
+GafferUI.PlugValueWidget.registerCreator(
+	GafferScene.AlembicSource,
+	"refreshCount",
+	GafferUI.IncrementingPlugValueWidget,
+	label = "Refresh",
+	undoable = False
 )
 
 # BranchCreator

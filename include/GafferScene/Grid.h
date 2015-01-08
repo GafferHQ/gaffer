@@ -39,17 +39,17 @@
 
 #include "Gaffer/TransformPlug.h"
 
-#include "GafferScene/Source.h"
+#include "GafferScene/SceneNode.h"
 
 namespace GafferScene
 {
 
-class Grid : public Source
+class Grid : public SceneNode
 {
 
 	public :
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::Grid, GridTypeId, Source );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::Grid, GridTypeId, SceneNode );
 
 		Grid( const std::string &name=defaultName<Grid>() );
 		virtual ~Grid();

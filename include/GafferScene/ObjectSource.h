@@ -35,28 +35,25 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_OBJECTSOURCEBASE_H
-#define GAFFERSCENE_OBJECTSOURCEBASE_H
+#ifndef GAFFERSCENE_OBJECTSOURCE_H
+#define GAFFERSCENE_OBJECTSOURCE_H
 
 #include "Gaffer/TypedObjectPlug.h"
 #include "Gaffer/TransformPlug.h"
 
-#include "GafferScene/Source.h"
+#include "GafferScene/SceneNode.h"
 
 namespace GafferScene
 {
 
-/// \todo Support turning IECore::Groups into a proper scene hierarchy.
-template<typename BaseType>
-class ObjectSourceBase : public BaseType
+class ObjectSource : public SceneNode
 {
 
 	public :
 
-		IECORE_RUNTIMETYPED_DECLARETEMPLATE( ObjectSourceBase<BaseType>, BaseType );
-		IE_CORE_DECLARERUNTIMETYPEDDESCRIPTION( ObjectSourceBase<BaseType> );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::ObjectSource, ObjectSourceTypeId, SceneNode );
 
-		virtual ~ObjectSourceBase();
+		virtual ~ObjectSource();
 
 		Gaffer::StringPlug *namePlug();
 		const Gaffer::StringPlug *namePlug() const;
@@ -68,7 +65,7 @@ class ObjectSourceBase : public BaseType
 
 	protected :
 
-		ObjectSourceBase( const std::string &name, const std::string &namePlugDefaultValue );
+		ObjectSource( const std::string &name, const std::string &namePlugDefaultValue );
 
 		Gaffer::ObjectPlug *sourcePlug();
 		const Gaffer::ObjectPlug *sourcePlug() const;
@@ -76,8 +73,10 @@ class ObjectSourceBase : public BaseType
 		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual void hashBound( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const;
 		virtual void hashTransform( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const;
+		virtual void hashAttributes( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const;
 		virtual void hashObject( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const;
 		virtual void hashChildNames( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const;
+		virtual void hashGlobals( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const;
 
 		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const;
 		virtual Imath::Box3f computeBound( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
@@ -97,9 +96,8 @@ class ObjectSourceBase : public BaseType
 
 };
 
-typedef ObjectSourceBase<Source> ObjectSource;
 IE_CORE_DECLAREPTR( ObjectSource );
 
 } // namespace GafferScene
 
-#endif // GAFFERSCENE_OBJECTSOURCEBASE_H
+#endif // GAFFERSCENE_OBJECTSOURCE_H
