@@ -95,7 +95,22 @@ class ValuePlug::Computation
 			// a plug with an input connection or an output plug on a ComputeNode. there can be many values -
 			// one per context. the computation class is responsible for figuring out the hash.
 			Computation computation( p );
-			return computation.hash();
+			try
+			{
+				return computation.hash();
+			}
+			catch( const std::exception &e )
+			{
+				computation.m_threadData->errorSource = computation.m_threadData->errorSource ? computation.m_threadData->errorSource : p;
+				emitError( plug, p, computation.m_threadData->errorSource, e.what() );
+				throw;
+			}
+			catch( ... )
+			{
+				computation.m_threadData->errorSource = computation.m_threadData->errorSource ? computation.m_threadData->errorSource : p;
+				emitError( plug, p, computation.m_threadData->errorSource, "Unknown error" );
+				throw;
+			}
 		}
 
 		static IECore::ConstObjectPtr value( const ValuePlug *plug, const IECore::MurmurHash *precomputedHash )
@@ -117,7 +132,22 @@ class ValuePlug::Computation
 			// one per context. the computation class is responsible for providing storage for the result
 			// and also actually managing the computation.
 			Computation computation( p, precomputedHash );
-			return computation.value();
+			try
+			{
+				return computation.value();
+			}
+			catch( const std::exception &e )
+			{
+				computation.m_threadData->errorSource = computation.m_threadData->errorSource ? computation.m_threadData->errorSource : p;
+				emitError( plug, p, computation.m_threadData->errorSource, e.what() );
+				throw;
+			}
+			catch( ... )
+			{
+				computation.m_threadData->errorSource = computation.m_threadData->errorSource ? computation.m_threadData->errorSource : p;
+				emitError( plug, p, computation.m_threadData->errorSource, "Unknown error" );
+				throw;
+			}
 		}
 
 		static void receiveResult( const ValuePlug *plug, IECore::ConstObjectPtr result )
@@ -175,6 +205,7 @@ class ValuePlug::Computation
 			if( m_threadData->computationStack.empty() )
 			{
 				m_threadData->hashCache.clear();
+				m_threadData->errorSource = NULL;
 			}
 		}
 
@@ -227,7 +258,7 @@ class ValuePlug::Computation
 				if( !m_resultValue )
 				{
 					computeOrSetFromInput();
-					
+
 					// Store the value in the cache, after first checking that this hasn't
 					// been done already. The check is useful because it's common for an
 					// upstream compute triggered by computeOrSetFromInput() to have already
@@ -323,6 +354,22 @@ class ValuePlug::Computation
 			}
 		}
 
+		// Emits Node::errorSignal() for all plugs between plug and sourcePlug (inclusive).
+		static void emitError( const ValuePlug *plug, const ValuePlug *sourcePlug, const Plug *errorSource, const char *error )
+		{
+			while( plug )
+			{
+				if( plug->direction() == Plug::Out )
+				{
+					if( const Node *node = plug->node() )
+					{
+						node->errorSignal()( plug, errorSource, error );
+					}
+				}
+				plug = plug != sourcePlug ? plug->getInput<ValuePlug>() : NULL;
+			}
+		}
+
 		// During a single graph evaluation, we actually call ValuePlug::hash()
 		// many times for the same plugs. First hash() is called for the terminating plug,
 		// which will call hash() for all the upstream plugs, and then compute() is called
@@ -350,8 +397,10 @@ class ValuePlug::Computation
 		// To support multithreading, each thread has it's own state.
 		struct ThreadData
 		{
+			ThreadData() :	errorSource( NULL ) {}
 			HashCache hashCache;
 			ComputationStack computationStack;
+			const Plug *errorSource;
 		};
 
 		static tbb::enumerable_thread_specific<ThreadData> g_threadData;
