@@ -66,7 +66,7 @@ class TestCase( unittest.TestCase ) :
 	## Attempts to ensure that the hashes for a node
 	# are reasonable by jiggling around input values
 	# and checking that the hash changes when it should.
-	def assertHashesValid( self, node, inputsToIgnore=[] ) :
+	def assertHashesValid( self, node, inputsToIgnore=[], outputsToIgnore=[] ) :
 
 		# find all input ValuePlugs
 		inputPlugs = []
@@ -75,12 +75,7 @@ class TestCase( unittest.TestCase ) :
 				if isinstance( child, Gaffer.CompoundPlug ) :
 					__walkInputs( child )
 				elif isinstance( child, Gaffer.ValuePlug ) :
-					ignore = False
-					for toIgnore in inputsToIgnore :
-						if child.isSame( toIgnore ) :
-							ignore = True
-							break
-					if not ignore :
+					if child not in inputsToIgnore :
 						inputPlugs.append( child )
 		__walkInputs( node )
 
@@ -89,6 +84,9 @@ class TestCase( unittest.TestCase ) :
 		numTests = 0
 		for inputPlug in inputPlugs :
 			for outputPlug in node.affects( inputPlug ) :
+
+				if outputPlug in outputsToIgnore :
+					continue
 
 				hash = outputPlug.hash()
 
@@ -110,7 +108,7 @@ class TestCase( unittest.TestCase ) :
 				if inputPlug.getValue() == value :
 					continue
 
-				self.assertNotEqual( outputPlug.hash(), hash )
+				self.assertNotEqual( outputPlug.hash(), hash, outputPlug.fullName() + " hash not affected by " + inputPlug.fullName() )
 
 				numTests += 1
 
