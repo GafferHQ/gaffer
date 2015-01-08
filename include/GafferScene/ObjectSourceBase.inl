@@ -225,11 +225,12 @@ Imath::M44f ObjectSourceBase<BaseType>::computeTransform( const SceneNode::Scene
 template<typename BaseType>
 void ObjectSourceBase<BaseType>::hashObject( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	if( path.size() == 0 )
+	if( path.size() != 1 )
 	{
 		h = parent->objectPlug()->defaultValue()->hash();
 		return;
 	}
+
 	BaseType::hashObject( path, context, parent, h );
 	sourcePlug()->hash( h );
 }
@@ -237,11 +238,12 @@ void ObjectSourceBase<BaseType>::hashObject( const SceneNode::ScenePath &path, c
 template<typename BaseType>
 IECore::ConstObjectPtr ObjectSourceBase<BaseType>::computeObject( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	if( path.size() == 1 )
+	if( path.size() != 1 )
 	{
-		return sourcePlug()->getValue();
+		return parent->objectPlug()->defaultValue();
 	}
-	return parent->objectPlug()->defaultValue();
+
+	return sourcePlug()->getValue();
 }
 
 template<typename BaseType>
