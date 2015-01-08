@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2012-2014, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -130,6 +130,28 @@ class Node : public GraphComponent
 		/// Accepts only Nodes.
 		virtual bool acceptsParent( const GraphComponent *potentialParent ) const;
 
+		/// Signal type for communicating errors. The plug argument is the
+		/// plug being processed when the error occurred. The source argument
+		/// specifies the original source of the error, since it may be being
+		/// propagated downstream from an original upstream error. The error
+		/// argument is a description of the problem.
+		typedef boost::signal<void ( const Plug *plug, const Plug *source, const std::string &error )> ErrorSignal;
+		/// Signal emitted when an error occurs while processing this node.
+		/// This is intended to allow UI elements to display errors that occur
+		/// during processing triggered by other parts of the UI.
+		///
+		/// Note that C++ exceptions are still the primary mechanism for error handling
+		/// within Gaffer - the existence of this signal does nothing to change
+		/// that. The signal merely allows passive observers of the graph to be
+		/// notified of errors during processing - clients which invoke such
+		/// processing must still use C++ exception handling to deal directly with
+		/// any errors which occur.
+		///
+		/// \threading Since node graph processing may occur on any thread, it is
+		/// important to note that this signal may also be emitted on any thread.
+		ErrorSignal &errorSignal();
+		const ErrorSignal &errorSignal() const;
+
 	protected :
 
 		/// May be overridden to restrict the inputs that plugs on this node will
@@ -160,6 +182,7 @@ class Node : public GraphComponent
 		UnaryPlugSignal m_plugInputChangedSignal;
 		UnaryPlugSignal m_plugFlagsChangedSignal;
 		UnaryPlugSignal m_plugDirtiedSignal;
+		ErrorSignal m_errorSignal;
 
 };
 

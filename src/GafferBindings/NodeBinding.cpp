@@ -84,6 +84,22 @@ struct BinaryPlugSlotCaller
 	}
 };
 
+struct ErrorSlotCaller
+{
+	boost::signals::detail::unusable operator()( boost::python::object slot, const Plug *plug, const Plug *source, const std::string &error )
+	{
+		try
+		{
+			slot( PlugPtr( const_cast<Plug *>( plug ) ), PlugPtr( const_cast<Plug *>( source ) ), error );
+		}
+		catch( const error_already_set &e )
+		{
+			translatePythonException();
+		}
+		return boost::signals::detail::unusable();
+	}
+};
+
 } // namespace
 
 void NodeSerialiser::moduleDependencies( const Gaffer::GraphComponent *graphComponent, std::set<std::string> &modules ) const
@@ -126,10 +142,12 @@ void GafferBindings::bindNode()
 		.def( "plugInputChangedSignal", &Node::plugInputChangedSignal, return_internal_reference<1>() )
 		.def( "plugFlagsChangedSignal", &Node::plugFlagsChangedSignal, return_internal_reference<1>() )
 		.def( "plugDirtiedSignal", &Node::plugDirtiedSignal, return_internal_reference<1>() )
+		.def( "errorSignal", (Node::ErrorSignal &(Node::*)())&Node::errorSignal, return_internal_reference<1>() )
 	;
 
 	SignalBinder<Node::UnaryPlugSignal, DefaultSignalCaller<Node::UnaryPlugSignal>, UnaryPlugSlotCaller >::bind( "UnaryPlugSignal" );
 	SignalBinder<Node::BinaryPlugSignal, DefaultSignalCaller<Node::BinaryPlugSignal>, BinaryPlugSlotCaller >::bind( "BinaryPlugSignal" );
+	SignalBinder<Node::ErrorSignal, DefaultSignalCaller<Node::ErrorSignal>, ErrorSlotCaller >::bind( "ErrorSignal" );
 
 	Serialisation::registerSerialiser( Node::staticTypeId(), new NodeSerialiser() );
 
