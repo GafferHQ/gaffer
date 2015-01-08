@@ -802,12 +802,20 @@ StandardNodeGadget::ErrorGadget *StandardNodeGadget::errorGadget( bool createIfM
 	return g.get();
 }
 
-void StandardNodeGadget::error( ConstPlugPtr plug, ConstPlugPtr source, const std::string &message )
+void StandardNodeGadget::error( const Gaffer::Plug *plug, const Gaffer::Plug *source, const std::string &message )
 {
+	if( !node()->isAncestorOf( source ) )
+	{
+		// We only want to display errors that occurred directly on this node (or an internal
+		// node), rather than upstream errors that are merely being propagated downstream to
+		// us.
+		return;
+	}
+
 	// We could be on any thread at this point, so we
 	// use an idle callback to do the work of displaying the error
 	// on the main thread.
-	executeOnUIThread( boost::bind( &StandardNodeGadget::displayError, this, plug, message ) );
+	executeOnUIThread( boost::bind( &StandardNodeGadget::displayError, this, ConstPlugPtr( plug ), message ) );
 }
 
 void StandardNodeGadget::displayError( ConstPlugPtr plug, const std::string &message )

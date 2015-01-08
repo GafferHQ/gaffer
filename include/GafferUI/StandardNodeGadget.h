@@ -147,7 +147,7 @@ class StandardNodeGadget : public NodeGadget
 
 		IE_CORE_FORWARDDECLARE( ErrorGadget );
 		ErrorGadget *errorGadget( bool createIfMissing = true );
-		void error( Gaffer::ConstPlugPtr plug, Gaffer::ConstPlugPtr source, const std::string &message );
+		void error( const Gaffer::Plug *plug, const Gaffer::Plug *source, const std::string &message );
 		void displayError( Gaffer::ConstPlugPtr plug, const std::string &message );
 
 		const LinearContainer::Orientation m_orientation;
