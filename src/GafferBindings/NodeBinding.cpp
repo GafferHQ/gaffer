@@ -40,15 +40,16 @@
 #include "Gaffer/ScriptNode.h"
 
 #include "GafferBindings/NodeBinding.h"
-#include "GafferBindings/ValuePlugBinding.h"
 #include "GafferBindings/SignalBinding.h"
-#include "GafferBindings/RawConstructor.h"
-#include "GafferBindings/CatchingSlotCaller.h"
 #include "GafferBindings/MetadataBinding.h"
 
 using namespace boost::python;
-using namespace GafferBindings;
+using namespace IECorePython;
 using namespace Gaffer;
+using namespace GafferBindings;
+
+namespace
+{
 
 struct UnaryPlugSlotCaller
 {
@@ -83,10 +84,7 @@ struct BinaryPlugSlotCaller
 	}
 };
 
-static ScriptNodePtr scriptNode( Node &node )
-{
-	return node.scriptNode();
-}
+} // namespace
 
 void NodeSerialiser::moduleDependencies( const Gaffer::GraphComponent *graphComponent, std::set<std::string> &modules ) const
 {
@@ -123,7 +121,7 @@ void GafferBindings::bindNode()
 	typedef NodeWrapper<Node> Wrapper;
 
 	scope s = NodeClass<Node, Wrapper>()
-		.def( "scriptNode", &scriptNode )
+		.def( "scriptNode", (ScriptNode *(Node::*)())&Node::scriptNode, return_value_policy<CastToIntrusivePtr>() )
 		.def( "plugSetSignal", &Node::plugSetSignal, return_internal_reference<1>() )
 		.def( "plugInputChangedSignal", &Node::plugInputChangedSignal, return_internal_reference<1>() )
 		.def( "plugFlagsChangedSignal", &Node::plugFlagsChangedSignal, return_internal_reference<1>() )
