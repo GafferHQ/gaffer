@@ -38,7 +38,7 @@
 #ifndef GAFFERSCENE_CAMERA_H
 #define GAFFERSCENE_CAMERA_H
 
-#include "GafferScene/ObjectSourceBase.h"
+#include "GafferScene/ObjectSource.h"
 
 namespace GafferScene
 {

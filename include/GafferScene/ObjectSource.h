@@ -35,8 +35,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_OBJECTSOURCEBASE_H
-#define GAFFERSCENE_OBJECTSOURCEBASE_H
+#ifndef GAFFERSCENE_OBJECTSOURCE_H
+#define GAFFERSCENE_OBJECTSOURCE_H
 
 #include "Gaffer/TypedObjectPlug.h"
 #include "Gaffer/TransformPlug.h"
@@ -46,16 +46,14 @@
 namespace GafferScene
 {
 
-template<typename BaseType>
-class ObjectSourceBase : public BaseType
+class ObjectSource : public SceneNode
 {
 
 	public :
 
-		IECORE_RUNTIMETYPED_DECLARETEMPLATE( ObjectSourceBase<BaseType>, BaseType );
-		IE_CORE_DECLARERUNTIMETYPEDDESCRIPTION( ObjectSourceBase<BaseType> );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::ObjectSource, ObjectSourceTypeId, SceneNode );
 
-		virtual ~ObjectSourceBase();
+		virtual ~ObjectSource();
 
 		Gaffer::StringPlug *namePlug();
 		const Gaffer::StringPlug *namePlug() const;
@@ -67,7 +65,7 @@ class ObjectSourceBase : public BaseType
 
 	protected :
 
-		ObjectSourceBase( const std::string &name, const std::string &namePlugDefaultValue );
+		ObjectSource( const std::string &name, const std::string &namePlugDefaultValue );
 
 		Gaffer::ObjectPlug *sourcePlug();
 		const Gaffer::ObjectPlug *sourcePlug() const;
@@ -98,9 +96,8 @@ class ObjectSourceBase : public BaseType
 
 };
 
-typedef ObjectSourceBase<SceneNode> ObjectSource;
 IE_CORE_DECLAREPTR( ObjectSource );
 
 } // namespace GafferScene
 
-#endif // GAFFERSCENE_OBJECTSOURCEBASE_H
+#endif // GAFFERSCENE_OBJECTSOURCE_H

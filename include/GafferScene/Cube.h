@@ -39,7 +39,7 @@
 
 #include "Gaffer/CompoundNumericPlug.h"
 
-#include "GafferScene/ObjectSourceBase.h"
+#include "GafferScene/ObjectSource.h"
 
 namespace GafferScene
 {

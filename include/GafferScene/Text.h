@@ -37,7 +37,7 @@
 #ifndef GAFFERSCENE_TEXT_H
 #define GAFFERSCENE_TEXT_H
 
-#include "GafferScene/ObjectSourceBase.h"
+#include "GafferScene/ObjectSource.h"
 
 namespace GafferScene
 {

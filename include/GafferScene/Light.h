@@ -39,7 +39,7 @@
 
 #include "IECore/Light.h"
 
-#include "GafferScene/ObjectSourceBase.h"
+#include "GafferScene/ObjectSource.h"
 
 namespace GafferScene
 {
