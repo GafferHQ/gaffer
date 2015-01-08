@@ -219,24 +219,8 @@ class ValuePlug::Computation
 
 		IECore::ConstObjectPtr value()
 		{
-			// decide whether or not to use the cache. even if
-			// the result plug has the Cacheable flag set, we disable
-			// caching if it gets its value from a direct input which
-			// does not have the Cacheable flag set.
-			bool cacheable = true;
-			const ValuePlug *p = m_resultPlug;
-			while( p )
-			{
-				if( !p->getFlags( Plug::Cacheable ) )
-				{
-					cacheable = false;
-					break;
-				}
-				p = p->getInput<ValuePlug>();
-			}
-
 			// do the cache lookup/computation.
-			if( cacheable )
+			if( m_resultPlug->getFlags( Plug::Cacheable ) )
 			{
 				IECore::MurmurHash hash = this->hash();
 				m_resultValue = g_valueCache.get( hash );
@@ -277,27 +261,17 @@ class ValuePlug::Computation
 		// Calculates the hash for m_resultPlug - not using any cache at all.
 		IECore::MurmurHash hashInternal() const
 		{
-			const ValuePlug *input = m_resultPlug->getInput<ValuePlug>();
-			if( input )
+			if( const ValuePlug *input = m_resultPlug->getInput<ValuePlug>() )
 			{
-				if( input->typeId() == m_resultPlug->typeId() )
-				{
-					// we can assume that setFrom( input ) would perform no
-					// conversion on the value, so by sharing hashes we also
-					// get to share cache entries.
-					return input->hash();
-				}
-				else
-				{
-					// it would be unsafe to assume we can share cache entries,
-					// because conversion is probably performed by setFrom( input ).
-					// hash in a little extra something to represent the conversion
-					// and break apart the cache entries.
-					IECore::MurmurHash h = input->hash();
-					h.append( input->typeId() );
-					h.append( m_resultPlug->typeId() );
-					return h;
-				}
+				// We know that the input is of a different type to m_resultPlug,
+				// because that is guaranteed by sourcePlug(). Get the hash from
+				// the input and add a little extra something to represent the
+				// conversion that m_resultPlug->setFrom( input ) will perform,
+				// to break apart the cache entries.
+				IECore::MurmurHash h = input->hash();
+				h.append( input->typeId() );
+				h.append( m_resultPlug->typeId() );
+				return h;
 			}
 			else
 			{
