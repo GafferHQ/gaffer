@@ -35,6 +35,7 @@
 ##########################################################################
 
 import traceback
+import sys
 import IECore
 import Gaffer
 
@@ -52,7 +53,6 @@ class python( Gaffer.Application ) :
 					name = "file",
 					description = "The python script to execute",
 					defaultValue = "",
-					extensions = "py",
 					allowEmptyString = False,
 					check = IECore.FileNameParameter.CheckType.MustExist,
 				),
@@ -76,11 +76,40 @@ class python( Gaffer.Application ) :
 		
 	def _run( self, args ) :
 
-		try :
-			execfile( args["file"].value, { "argv" : args["arguments"] } )
-			return 0
-		except :
-			traceback.print_exc()
-			return 1
+		# trying to set the sys.argv to the same values as we would expect from a python call
+		#
+		# the gaffer python command line syntax is expected to be:
+		# gaffer python -file <script path> [-arguments <arguments>]
+		#
+		# given the limitations of the gaffer python app command line syntax, we can assume that the equivalent python command syntax would be:
+		# python <script path> [<arguments>]
+		#
+		# python removes the "python" command from the start of the sys.argv list, making the first argument the script path
+		# sys.argv should therefore be:
+		# [<script path>] + [<arguments>]
+		#
+		# sys.argv is assumed to be the source of information for python argument parsing methods (argparse, getopt, ...)
+		#
+		# NOTE: this is not thread-safe
+		# we could make it thread safe by using a mechanism similar to the one used by gaffer/python/Gaffer/OutputRedirection.py
+		# but using that method, a generic python code could break if it was actually trying to alter a global sys.argv from a thread
+		# however, since changing sys.argv is quite rare, and calling "gaffer python app" from a Thread is also a very unlikely scenario
+		# we'll just leave it thread-unsafe for the moment
+
+		origSysArgv = sys.argv
+		try:
+			sys.argv = [ args[ "file" ].value ] + list( args[ "arguments" ] )
+			try :
+				execfile( args["file"].value, { "argv" : args["arguments"] } )
+				return 0
+			except SystemExit as e :
+				# don't print traceback when a sys.exit was called, but return the exit code as the result
+				return e.code
+			except :
+				traceback.print_exc()
+				return 1
+		finally:
+			# restore sys.argv
+			sys.argv = origSysArgv
 
 IECore.registerRunTimeTyped( python )
