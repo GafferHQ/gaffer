@@ -140,13 +140,13 @@ const Gaffer::ObjectPlug *ObjectSourceBase<BaseType>::sourcePlug() const
 template<typename BaseType>
 void ObjectSourceBase<BaseType>::hashGlobals( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	h = parent->globalsPlug()->defaultValue()->hash();
+	h = parent->globalsPlug()->defaultValue()->Object::hash();
 }
 
 template<typename BaseType>
 void ObjectSourceBase<BaseType>::hashAttributes( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	h = parent->attributesPlug()->defaultValue()->hash();
+	h = parent->attributesPlug()->defaultValue()->Object::hash();
 }
 
 template<typename BaseType>
