@@ -36,6 +36,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/bind.hpp"
+#include "boost/algorithm/string/predicate.hpp"
 
 #include "OpenEXR/ImathBoxAlgo.h"
 
@@ -46,6 +47,7 @@
 #include "Gaffer/StandardSet.h"
 #include "Gaffer/DependencyNode.h"
 #include "Gaffer/Metadata.h"
+#include "Gaffer/ScriptNode.h"
 
 #include "GafferUI/StandardNodeGadget.h"
 #include "GafferUI/Nodule.h"
@@ -80,7 +82,7 @@ class StandardNodeGadget::ErrorGadget : public Gadget
 		void addError( PlugPtr plug, const std::string &error )
 		{
 			PlugEntry &entry = m_errors[plug];
-			if( entry.error.empty() || error != "Previous attempt to get item failed." )
+			if( entry.error.empty() || !boost::ends_with( error, "Previous attempt to get item failed." ) )
 			{
 				// Update the error message. Unfortunately the IECore::LRUCache at the
 				// heart of Gaffer's caching  does not remember the details of exceptions that
@@ -804,18 +806,25 @@ StandardNodeGadget::ErrorGadget *StandardNodeGadget::errorGadget( bool createIfM
 
 void StandardNodeGadget::error( const Gaffer::Plug *plug, const Gaffer::Plug *source, const std::string &message )
 {
-	if( !node()->isAncestorOf( source ) )
+	std::string header;
+	if( source->node() == node() )
 	{
-		// We only want to display errors that occurred directly on this node (or an internal
-		// node), rather than upstream errors that are merely being propagated downstream to
-		// us.
-		return;
+		header = "Error on plug " + source->relativeName( node() );
 	}
+	else if( node()->isAncestorOf( source ) )
+	{
+		header = "Error on internal node " + source->node()->relativeName( node() );
+	}
+	else
+	{
+		header = "Error on upstream node " + source->node()->relativeName( source->ancestor<ScriptNode>() );
+	}
+	header = "<h3>" + header + "</h3>";
 
 	// We could be on any thread at this point, so we
 	// use an idle callback to do the work of displaying the error
 	// on the main thread.
-	executeOnUIThread( boost::bind( &StandardNodeGadget::displayError, this, ConstPlugPtr( plug ), message ) );
+	executeOnUIThread( boost::bind( &StandardNodeGadget::displayError, this, ConstPlugPtr( plug ), header + message ) );
 }
 
 void StandardNodeGadget::displayError( ConstPlugPtr plug, const std::string &message )
