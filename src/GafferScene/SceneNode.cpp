@@ -304,7 +304,7 @@ IECore::MurmurHash SceneNode::hashOfTransformedChildBounds( const ScenePath &pat
 {
 	IECore::MurmurHash result;
 	ConstInternedStringVectorDataPtr childNamesData = out->childNames( path );
-	vector<InternedString> childNames = childNamesData->readable();
+	const vector<InternedString> &childNames = childNamesData->readable();
 	if( childNames.size() )
 	{
 		ScenePath childPath( path );
@@ -328,7 +328,7 @@ Imath::Box3f SceneNode::unionOfTransformedChildBounds( const ScenePath &path, co
 {
 	Box3f result;
 	ConstInternedStringVectorDataPtr childNamesData = out->childNames( path );
-	vector<InternedString> childNames = childNamesData->readable();
+	const vector<InternedString> &childNames = childNamesData->readable();
 
 	ScenePath childPath( path );
 	childPath.push_back( InternedString() ); // room for the child name
