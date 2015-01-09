@@ -228,6 +228,8 @@ class EventLoop() :
 	@classmethod
 	def __ensureIdleTimer( cls ) :
 
+		assert( QtCore.QThread.currentThread() == EventLoop.__qtApplication.thread() )
+
 		if cls.__idleTimer is None :
 			cls.__idleTimer = QtCore.QTimer( cls.__qtApplication )
 			cls.__idleTimer.timeout.connect( cls.__qtIdleCallback )
@@ -239,6 +241,8 @@ class EventLoop() :
 	# doesn't support classmethods as slots.
 	@staticmethod
 	def __qtIdleCallback() :
+
+		assert( QtCore.QThread.currentThread() == EventLoop.__qtApplication.thread() )
 
 		GafferUI.Gadget.idleSignal()()
 
@@ -259,7 +263,16 @@ class EventLoop() :
 	@classmethod
 	def _gadgetIdleSignalAccessed( cls ) :
 
+		# It would be an error to access the idle signal from anything but the main
+		# thread, because it would imply multiple threads fighting over the same signal.
+		assert( QtCore.QThread.currentThread() == EventLoop.__qtApplication.thread() )
+
 		cls.__ensureIdleTimer()
+
+	@classmethod
+	def _gadgetExecuteOnUIThread( cls, callable ) :
+
+		cls.executeOnUIThread( callable )
 
 	def __pumpThreadFn( self ) :
 
@@ -275,6 +288,7 @@ class EventLoop() :
 			self.__qtEventLoop.processEvents()
 
 _gadgetIdleSignalAccessedConnection = GafferUI.Gadget._idleSignalAccessedSignal().connect( EventLoop._gadgetIdleSignalAccessed )
+_gadgetExecuteOnUIThreadConnection = GafferUI.Gadget._executeOnUIThreadSignal().connect( EventLoop._gadgetExecuteOnUIThread )
 
 class _UIThreadExecutor( QtCore.QObject ) :
 

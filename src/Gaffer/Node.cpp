@@ -116,6 +116,16 @@ bool Node::acceptsParent( const GraphComponent *potentialParent ) const
 	return potentialParent->isInstanceOf( (IECore::TypeId)NodeTypeId );
 }
 
+Node::ErrorSignal &Node::errorSignal()
+{
+	return m_errorSignal;
+}
+
+const Node::ErrorSignal &Node::errorSignal() const
+{
+	return m_errorSignal;
+}
+
 bool Node::acceptsInput( const Plug *plug, const Plug *inputPlug ) const
 {
 	return true;

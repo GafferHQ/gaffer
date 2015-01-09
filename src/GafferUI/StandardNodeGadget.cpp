@@ -36,6 +36,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/bind.hpp"
+#include "boost/algorithm/string/predicate.hpp"
 
 #include "OpenEXR/ImathBoxAlgo.h"
 
@@ -46,6 +47,7 @@
 #include "Gaffer/StandardSet.h"
 #include "Gaffer/DependencyNode.h"
 #include "Gaffer/Metadata.h"
+#include "Gaffer/ScriptNode.h"
 
 #include "GafferUI/StandardNodeGadget.h"
 #include "GafferUI/Nodule.h"
@@ -55,10 +57,94 @@
 #include "GafferUI/CompoundNodule.h"
 #include "GafferUI/StandardNodule.h"
 #include "GafferUI/SpacerGadget.h"
+#include "GafferUI/ImageGadget.h"
 
 using namespace GafferUI;
 using namespace Gaffer;
 using namespace Imath;
+
+//////////////////////////////////////////////////////////////////////////
+// ErrorGadget implementation
+//////////////////////////////////////////////////////////////////////////
+
+class StandardNodeGadget::ErrorGadget : public Gadget
+{
+
+	public :
+
+		ErrorGadget( const std::string &name = defaultName<ErrorGadget>() )
+			:	Gadget( name ), m_image( new ImageGadget( "gadgetError.png" ) )
+		{
+			m_image->setTransform( M44f().scale( V3f( .025 ) ) );
+			addChild( m_image );
+		}
+
+		void addError( PlugPtr plug, const std::string &error )
+		{
+			PlugEntry &entry = m_errors[plug];
+			if( entry.error.empty() || !boost::ends_with( error, "Previous attempt to get item failed." ) )
+			{
+				// Update the error message. Unfortunately the IECore::LRUCache at the
+				// heart of Gaffer's caching  does not remember the details of exceptions that
+				// occurred when the cache entry is in error - instead it throws a different
+				// exception saying "Previous attempt to get item failed.". We ignore these less
+				// helpful messages in favour of a previous messages if one exists.
+				/// \todo Improve LRUCache behaviour and remove this workaround.
+				entry.error = error;
+			}
+			if( !entry.parentChangedConnection.connected() )
+			{
+				entry.parentChangedConnection = plug->parentChangedSignal().connect( boost::bind( &ErrorGadget::parentChanged, this, ::_1 ) );
+			}
+			m_image->setVisible( true );
+		}
+
+		void removeError( const Plug *plug )
+		{
+			m_errors.erase( plug );
+			m_image->setVisible( m_errors.size() );
+		}
+
+		virtual std::string getToolTip( const IECore::LineSegment3f &position ) const
+		{
+			std::string result = Gadget::getToolTip( position );
+			if( !result.empty() )
+			{
+				return result;
+			}
+			for( PlugErrors::const_iterator it = m_errors.begin(); it != m_errors.end(); ++it )
+			{
+				result += it->second.error;
+			}
+			return result;
+		}
+
+	private :
+
+		void parentChanged( GraphComponent *plug )
+		{
+			if( !plug->parent<GraphComponent>() )
+			{
+				removeError( static_cast<Plug *>( plug ) );
+			}
+		}
+
+		ImageGadgetPtr m_image;
+
+		struct PlugEntry
+		{
+			std::string error;
+			boost::signals::scoped_connection parentChangedConnection;
+		};
+
+		typedef std::map<ConstPlugPtr, PlugEntry> PlugErrors;
+		PlugErrors m_errors;
+
+};
+
+//////////////////////////////////////////////////////////////////////////
+// StandardNodeGadget implementation
+//////////////////////////////////////////////////////////////////////////
 
 IE_CORE_DEFINERUNTIMETYPED( StandardNodeGadget );
 
@@ -71,6 +157,7 @@ static IECore::InternedString g_minWidthKey( "nodeGadget:minWidth"  );
 static IECore::InternedString g_paddingKey( "nodeGadget:padding"  );
 static IECore::InternedString g_nodulePositionKey( "nodeGadget:nodulePosition" );
 static IECore::InternedString g_colorKey( "nodeGadget:color" );
+static IECore::InternedString g_errorGadgetName( "__error" );
 
 StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node, LinearContainer::Orientation orientation )
 	:	NodeGadget( node ),
@@ -184,6 +271,7 @@ StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node, LinearContainer::O
 
 	node->childAddedSignal().connect( boost::bind( &StandardNodeGadget::childAdded, this, ::_1,  ::_2 ) );
 	node->childRemovedSignal().connect( boost::bind( &StandardNodeGadget::childRemoved, this, ::_1,  ::_2 ) );
+	node->errorSignal().connect( boost::bind( &StandardNodeGadget::error, this, ::_1, ::_2, ::_3 ) );
 
 	if( DependencyNode *dependencyNode = IECore::runTimeCast<DependencyNode>( node.get() ) )
 	{
@@ -191,8 +279,8 @@ StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node, LinearContainer::O
 		if( enabledPlug )
 		{
 			m_nodeEnabled = enabledPlug->getValue();
-			node->plugDirtiedSignal().connect( boost::bind( &StandardNodeGadget::plugDirtied, this, ::_1 ) );
 		}
+		node->plugDirtiedSignal().connect( boost::bind( &StandardNodeGadget::plugDirtied, this, ::_1 ) );
 	}
 
 	dragEnterSignal().connect( boost::bind( &StandardNodeGadget::dragEnter, this, ::_1, ::_2 ) );
@@ -218,18 +306,9 @@ StandardNodeGadget::~StandardNodeGadget()
 {
 }
 
-bool StandardNodeGadget::acceptsChild( const Gaffer::GraphComponent *potentialChild ) const
-{
-	if( !NodeGadget::acceptsChild( potentialChild ) )
-	{
-		return false;
-	}
-	return children().size()==0;
-}
-
 Imath::Box3f StandardNodeGadget::bound() const
 {
-	Box3f b = NodeGadget::bound();
+	Box3f b = getChild<Gadget>( 0 )->bound();
 
 	// cheat a little - shave a bit off to make it possible to
 	// select the node by having the drag region cover only the
@@ -501,6 +580,11 @@ void StandardNodeGadget::plugDirtied( const Gaffer::Plug *plug )
 		m_nodeEnabled = static_cast<const Gaffer::BoolPlug *>( plug )->getValue();
 		renderRequestSignal()( this );
 	}
+
+	if( ErrorGadget *e = errorGadget( /* createIfMissing = */ false ) )
+	{
+		e->removeError( plug );
+	}
 }
 
 void StandardNodeGadget::enter( Gadget *gadget )
@@ -701,4 +785,54 @@ void StandardNodeGadget::updatePadding()
 	}
 
 	contentsContainer()->setPadding( Box3f( V3f( -padding ), V3f( padding ) ) );
+}
+
+StandardNodeGadget::ErrorGadget *StandardNodeGadget::errorGadget( bool createIfMissing )
+{
+	if( ErrorGadget *result = getChild<ErrorGadget>( g_errorGadgetName ) )
+	{
+		return result;
+	}
+
+	if( !createIfMissing )
+	{
+		return NULL;
+	}
+
+	ErrorGadgetPtr g = new ErrorGadget;
+	setChild( g_errorGadgetName, g );
+	return g.get();
+}
+
+void StandardNodeGadget::error( const Gaffer::Plug *plug, const Gaffer::Plug *source, const std::string &message )
+{
+	std::string header;
+	if( source->node() == node() )
+	{
+		header = "Error on plug " + source->relativeName( node() );
+	}
+	else if( node()->isAncestorOf( source ) )
+	{
+		header = "Error on internal node " + source->node()->relativeName( node() );
+	}
+	else
+	{
+		header = "Error on upstream node " + source->node()->relativeName( source->ancestor<ScriptNode>() );
+	}
+	header = "<h3>" + header + "</h3>";
+
+	// We could be on any thread at this point, so we
+	// use an idle callback to do the work of displaying the error
+	// on the main thread.
+	executeOnUIThread( boost::bind( &StandardNodeGadget::displayError, this, ConstPlugPtr( plug ), header + message ) );
+}
+
+void StandardNodeGadget::displayError( ConstPlugPtr plug, const std::string &message )
+{
+	// We need the const cast, because addError() needs non-const access to the plug
+	// in order to be able to connect to its signals. The plug we were passed in
+	// StandardNodeGadget::error() was const for a very good reason - we could be
+	// on any thread so modifying the plug would be a big no-no. But now we're back
+	// on the main thread, converting to non-const access is OK.
+	errorGadget()->addError( boost::const_pointer_cast<Plug>( plug ), message );
 }

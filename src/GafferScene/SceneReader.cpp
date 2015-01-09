@@ -535,15 +535,17 @@ ConstSceneInterfacePtr SceneReader::scene( const ScenePath &path ) const
 		}
 		else
 		{
-			lastScene.path = path;
 			lastScene.pathScene = lastScene.fileNameScene->scene( path );
+			lastScene.path = path;
 			return lastScene.pathScene;
 		}
 	}
 
-	lastScene.fileName = fileName;
 	lastScene.fileNameScene = SharedSceneInterfaces::get( fileName );
-	lastScene.path = path;
+	lastScene.fileName = fileName;
+
 	lastScene.pathScene = lastScene.fileNameScene->scene( path );
+	lastScene.path = path;
+
 	return lastScene.pathScene;
 }

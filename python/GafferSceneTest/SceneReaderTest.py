@@ -467,6 +467,25 @@ class SceneReaderTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( sets["wood"].value.paths(), [ "/planeGroup/plane" ] )
 		self.assertEqual( sets["something"].value.paths(), [ "/planeGroup/plane" ] )
 
+	def testInvalidFiles( self ) :
+
+		reader = GafferScene.SceneReader()
+		reader["fileName"].setValue( "iDontExist.scc" )
+
+		for i in range( 0, 10 ) :
+			self.assertRaises( RuntimeError, GafferSceneTest.traverseScene, reader["out"], Gaffer.Context() )
+
+	def testInvalidPaths( self ) :
+
+		self.writeAnimatedSCC()
+
+		reader = GafferScene.SceneReader()
+		reader["fileName"].setValue( self.__testFile )
+		reader["refreshCount"].setValue( self.uniqueInt( self.__testFile ) )
+
+		for i in range( 0, 10 ) :
+			self.assertRaises( RuntimeError, reader["out"].object, "/this/object/does/not/exist" )
+
 	def tearDown( self ) :
 
 		if os.path.exists( self.__testFile ) :

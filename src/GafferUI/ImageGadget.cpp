@@ -135,6 +135,7 @@ void ImageGadget::doRender( const Style *style ) const
 		style->renderImage( b, texture );
 	}
 
+	Gadget::doRender( style );
 }
 
 Imath::Box3f ImageGadget::bound() const
