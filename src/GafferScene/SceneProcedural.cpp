@@ -419,6 +419,9 @@ IECore::MurmurHash SceneProcedural::hash() const
 void SceneProcedural::updateAttributes( bool full )
 {
 	Context::Scope scopedContext( m_context.get() );
+	
+	// \todo: Investigate if it's worth keeping these around and reusing them in SceneProcedural::render().
+	
 	ConstCompoundObjectPtr attributes;
 	if( full )
 	{
