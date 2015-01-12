@@ -238,10 +238,9 @@ bool PathMatcher::operator != ( const PathMatcher &other ) const
 
 unsigned PathMatcher::match( const std::string &path ) const
 {
-	unsigned result = Filter::NoMatch;
-	Tokenizer tokenizer( path, boost::char_separator<char>( "/" ) );
-	matchWalk( m_root.get(), tokenizer.begin(), tokenizer.end(), result );
-	return result;
+	std::vector<IECore::InternedString> tokenizedPath;
+	Gaffer::tokenize( path, '/', tokenizedPath );
+	return match( tokenizedPath );
 }
 
 unsigned PathMatcher::match( const std::vector<IECore::InternedString> &path ) const
@@ -335,8 +334,9 @@ void PathMatcher::matchWalk( Node *node, const NameIterator &start, const NameIt
 
 bool PathMatcher::addPath( const std::string &path )
 {
-	Tokenizer tokenizer( path, boost::char_separator<char>( "/" ) );
-	return addPath( tokenizer.begin(), tokenizer.end() );
+	std::vector<IECore::InternedString> tokenizedPath;
+	Gaffer::tokenize( path, '/', tokenizedPath );
+	return addPath( tokenizedPath );
 }
 
 bool PathMatcher::addPath( const std::vector<IECore::InternedString> &path )
@@ -380,10 +380,9 @@ bool PathMatcher::addPath( const NameIterator &start, const NameIterator &end )
 
 bool PathMatcher::removePath( const std::string &path )
 {
-	bool result = false;
-	Tokenizer tokenizer( path, boost::char_separator<char>( "/" ) );
-	removeWalk( m_root.get(), tokenizer.begin(), tokenizer.end(), /* prune = */ false, result );
-	return result;
+	std::vector<IECore::InternedString> tokenizedPath;
+	Gaffer::tokenize( path, '/', tokenizedPath );
+	return removePath( tokenizedPath );
 }
 
 bool PathMatcher::removePath( const std::vector<IECore::InternedString> &path )
@@ -395,10 +394,9 @@ bool PathMatcher::removePath( const std::vector<IECore::InternedString> &path )
 
 bool PathMatcher::prune( const std::string &path )
 {
-	bool result = false;
-	Tokenizer tokenizer( path, boost::char_separator<char>( "/" ) );
-	removeWalk( m_root.get(), tokenizer.begin(), tokenizer.end(), /* prune = */ true, result );
-	return result;
+	std::vector<IECore::InternedString> tokenizedPath;
+	Gaffer::tokenize( path, '/', tokenizedPath );
+	return prune( tokenizedPath );;
 }
 
 bool PathMatcher::prune( const std::vector<IECore::InternedString> &path )

@@ -82,6 +82,14 @@ int numericSuffix( const std::string &s, std::string *stem = NULL );
 /// As above, but returns defaultSuffix in the case that no suffix exists.
 int numericSuffix( const std::string &s, int defaultSuffix, std::string *stem = NULL );
 
+/// Splits the input string wherever the separator is found, outputting all non-empty tokens
+/// in sequence. Note that this is significantly quicker than boost::tokenizer
+/// where TokenType is IECore::InternedString.
+template<typename TokenType, typename OutputIterator>
+void tokenize( const std::string &s, const char separator, OutputIterator outputIterator );
+template<typename OutputContainer>
+void tokenize( const std::string &s, const char separator, OutputContainer &outputContainer );
+
 } // namespace Gaffer
 
 #include "Gaffer/StringAlgo.inl"

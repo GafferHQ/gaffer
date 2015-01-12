@@ -103,7 +103,6 @@ class PathMatcher
 
 	private :
 
-		typedef boost::tokenizer<boost::char_separator<char> > Tokenizer;
 		struct Node;
 
 		template<typename NameIterator>
