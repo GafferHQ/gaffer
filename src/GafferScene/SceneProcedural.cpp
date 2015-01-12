@@ -114,6 +114,10 @@ SceneProcedural::SceneProcedural( const SceneProcedural &other, const ScenePlug:
 	m_context->set( ScenePlug::scenePathContextName, m_scenePath );
 
 	updateAttributes( false );
+	
+	// precompute the bounds here, as this gets executed in parallel and bounds computation is potentially expensive:
+	m_bound = bound();
+	
 	++g_pendingSceneProcedurals;
 }
 
@@ -129,6 +133,7 @@ Imath::Box3f SceneProcedural::bound() const
 {
 	if( !m_bound.isEmpty() )
 	{
+		// if this has been precomputed, return precomputed value:
 		return m_bound;
 	}
 	
@@ -181,8 +186,6 @@ Imath::Box3f SceneProcedural::bound() const
 			result.extendBy( transform( b, t ) );
 		}
 
-		m_bound = result;
-		
 		return result;
 	}
 	catch( const std::exception &e )
@@ -226,10 +229,6 @@ class SceneProcedural::SceneProceduralCreate
 				ScenePlug::ScenePath childScenePath = m_parent.m_scenePath;
 				childScenePath.push_back( m_childNames[i] );
 				SceneProceduralPtr sceneProcedural = new SceneProcedural( m_parent, childScenePath );
-
-				// precompute bounds:
-				sceneProcedural->bound();
-
 				m_childProcedurals[ i ] = sceneProcedural;
 			}
 		}
@@ -361,9 +360,8 @@ void SceneProcedural::render( Renderer *renderer ) const
 		ConstInternedStringVectorDataPtr childNames = m_scenePlug->childNamesPlug()->getValue();
 		if( childNames->readable().size() )
 		{
-			// Creating a SceneProcedural involves an attribute evaluation, and sending it to the
-			// renderer involves a call to bound(). Both are potentially expensive, so we're parallelizing
-			// them.
+			// Creating a SceneProcedural involves an attribute/bound evaluation, which are
+			// potentially expensive, so we're parallelizing them.
 
 			// allocate space for child procedurals:
 			SceneProceduralCreate::SceneProceduralContainer childProcedurals( childNames->readable().size() );
