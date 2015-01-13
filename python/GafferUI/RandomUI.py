@@ -83,7 +83,7 @@ def __createRandom( plug ) :
 		randomNode = Gaffer.Random()
 		parentNode.addChild( randomNode )
 
-		if isinstance( plug, Gaffer.FloatPlug ) :
+		if isinstance( plug, ( Gaffer.FloatPlug, Gaffer.IntPlug ) ) :
 			plug.setInput( randomNode["outFloat"] )
 		elif isinstance( plug, Gaffer.Color3fPlug ) :
 			plug.setInput( randomNode["outColor"] )
@@ -93,7 +93,7 @@ def __createRandom( plug ) :
 def __popupMenu( menuDefinition, plugValueWidget ) :
 
 	plug = plugValueWidget.getPlug()
-	if not isinstance( plug, ( Gaffer.FloatPlug, Gaffer.Color3fPlug ) ) :
+	if not isinstance( plug, ( Gaffer.FloatPlug, Gaffer.IntPlug, Gaffer.Color3fPlug ) ) :
 		return
 
 	node = plug.node()
