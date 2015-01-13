@@ -115,6 +115,7 @@ class SceneProcedural : public IECore::Renderer::Procedural
 	private :
 
 		void updateAttributes( bool full );
+		void computeBound();
 		void motionTimes( unsigned segments, std::set<float> &times ) const;
 		
 		// A global counter of all the scene procedurals that are hanging around but haven't been rendered yet, which 
@@ -129,6 +130,15 @@ class SceneProcedural : public IECore::Renderer::Procedural
 		mutable bool m_rendered;
 		
 		void decrementPendingProcedurals() const;
+		
+		// We use this variable for caching the bound computation, so we can compute bounds for
+		// a SceneProcedural's children in parallel, and avoid computing them again when we send
+		// them all to the renderer in serial
+		Imath::Box3f m_bound;
+		
+		// struct for creating child procedurals in parallel and computing their bounds, using
+		// tbb::parallel_for:
+		class SceneProceduralCreate;
 		
 		static tbb::mutex g_allRenderedMutex;
 		static AllRenderedSignal g_allRenderedSignal;
