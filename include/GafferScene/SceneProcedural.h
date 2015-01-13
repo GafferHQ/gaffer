@@ -115,6 +115,7 @@ class SceneProcedural : public IECore::Renderer::Procedural
 	private :
 
 		void updateAttributes( bool full );
+		void computeBound();
 		void motionTimes( unsigned segments, std::set<float> &times ) const;
 		
 		// A global counter of all the scene procedurals that are hanging around but haven't been rendered yet, which 

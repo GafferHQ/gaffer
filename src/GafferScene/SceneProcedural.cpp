@@ -99,6 +99,7 @@ SceneProcedural::SceneProcedural( ConstScenePlugPtr scenePlug, const Gaffer::Con
 	const IntData *deformationBlurSegmentsData = globals->member<IntData>( "attribute:gaffer:deformationBlurSegments" );
 	m_attributes.deformationBlurSegments = deformationBlurSegmentsData ? deformationBlurSegmentsData->readable() : 1;
 
+	computeBound();
 	updateAttributes( true );
 	++g_pendingSceneProcedurals;
 
@@ -113,11 +114,8 @@ SceneProcedural::SceneProcedural( const SceneProcedural &other, const ScenePlug:
 
 	m_context->set( ScenePlug::scenePathContextName, m_scenePath );
 
+	computeBound();
 	updateAttributes( false );
-	
-	// precompute the bounds here, as this gets executed in parallel and bounds computation is potentially expensive:
-	m_bound = bound();
-	
 	++g_pendingSceneProcedurals;
 }
 
@@ -129,14 +127,8 @@ SceneProcedural::~SceneProcedural()
 	}
 }
 
-Imath::Box3f SceneProcedural::bound() const
+void SceneProcedural::computeBound()
 {
-	if( !m_bound.isEmpty() )
-	{
-		// if this has been precomputed, return precomputed value:
-		return m_bound;
-	}
-	
 	/// \todo I think we should be able to remove this exception handling in the future.
 	/// Either when we do better error handling in ValuePlug computations, or when
 	/// the bug in IECoreGL that caused the crashes in SceneProceduralTest.testComputationErrors
@@ -177,22 +169,25 @@ Imath::Box3f SceneProcedural::bound() const
 		motionTimes( ( m_options.deformationBlur && m_attributes.deformationBlur ) ? m_attributes.deformationBlurSegments : 0, times );
 		motionTimes( ( m_options.transformBlur && m_attributes.transformBlur ) ? m_attributes.transformBlurSegments : 0, times );
 
-		Box3f result;
+		m_bound = Imath::Box3f();
 		for( std::set<float>::const_iterator it = times.begin(), eIt = times.end(); it != eIt; it++ )
 		{
 			timeContext->setFrame( *it );
 			Box3f b = m_scenePlug->boundPlug()->getValue();
 			M44f t = m_scenePlug->transformPlug()->getValue();
-			result.extendBy( transform( b, t ) );
+			m_bound.extendBy( transform( b, t ) );
 		}
-
-		return result;
 	}
 	catch( const std::exception &e )
 	{
+		m_bound = Imath::Box3f();
 		IECore::msg( IECore::Msg::Error, "SceneProcedural::bound()", e.what() );
 	}
-	return Box3f();
+}
+
+Imath::Box3f SceneProcedural::bound() const
+{
+	return m_bound;
 }
 
 //////////////////////////////////////////////////////////////////////////
