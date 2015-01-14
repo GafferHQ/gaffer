@@ -206,9 +206,9 @@ class SceneProcedural::SceneProceduralCreate
 		typedef std::vector<SceneProceduralPtr> SceneProceduralContainer;
 
 		SceneProceduralCreate(
-			SceneProceduralContainer& childProcedurals,
-			const SceneProcedural& parent,
-			const vector<InternedString>& childNames
+			SceneProceduralContainer &childProcedurals,
+			const SceneProcedural &parent,
+			const vector<InternedString> &childNames
 			
 		) :
 			m_childProcedurals( childProcedurals ),
@@ -217,7 +217,7 @@ class SceneProcedural::SceneProceduralCreate
 		{
 		}
 
-		void operator()( const tbb::blocked_range<int>& range ) const
+		void operator()( const tbb::blocked_range<int> &range ) const
 		{
 			for( int i=range.begin(); i!=range.end(); ++i )
 			{
@@ -230,9 +230,9 @@ class SceneProcedural::SceneProceduralCreate
 	
 	private:
 	
-		SceneProceduralContainer& m_childProcedurals;
-		const SceneProcedural& m_parent;
-		const vector<InternedString>& m_childNames;
+		SceneProceduralContainer &m_childProcedurals;
+		const SceneProcedural &m_parent;
+		const vector<InternedString> &m_childNames;
 		
 };
 
@@ -398,7 +398,7 @@ void SceneProcedural::decrementPendingProcedurals() const
 			tbb::mutex::scoped_lock l( g_allRenderedMutex );
 			g_allRenderedSignal();
 		}
-		catch( const std::exception& e )
+		catch( const std::exception &e )
 		{
 			IECore::msg( IECore::Msg::Error, "SceneProcedural::allRenderedSignal() error", e.what() );
 		}
