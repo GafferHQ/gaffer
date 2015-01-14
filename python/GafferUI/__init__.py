@@ -138,6 +138,7 @@ from SelectionMenu import SelectionMenu
 from PathFilterWidget import PathFilterWidget
 from CompoundPathFilterWidget import CompoundPathFilterWidget
 from InfoPathFilterWidget import InfoPathFilterWidget
+from MatchPatternPathFilterWidget import MatchPatternPathFilterWidget
 from BusyWidget import BusyWidget
 from NumericSlider import NumericSlider
 from ColorChooser import ColorChooser
