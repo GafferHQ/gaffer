@@ -59,6 +59,9 @@ IE_CORE_DEFINERUNTIMETYPED( InteractiveRender );
 
 size_t InteractiveRender::g_firstPlugIndex = 0;
 
+tbb::mutex InteractiveRender::g_mutex;
+condition_variable InteractiveRender::g_condition;
+
 InteractiveRender::InteractiveRender( const std::string &name )
 	:	Node( name ), m_lightsDirty( true ), m_attributesDirty( true ), m_camerasDirty( true ), m_coordinateSystemsDirty( true )
 {
@@ -217,6 +220,13 @@ void InteractiveRender::parentChanged( GraphComponent *child, GraphComponent *ol
 	}
 }
 
+void InteractiveRender::renderStartupFinished()
+{
+	// signal the condition variable we wait on in InteractiveRender::update(), and unblock the main thread:
+	unique_lock<tbb::mutex> ul( g_mutex );
+	g_condition.notify_one();
+}
+
 void InteractiveRender::update()
 {
 	Context::Scope scopedContext( m_context.get() );
@@ -246,27 +256,51 @@ void InteractiveRender::update()
 
 	if( !m_renderer )
 	{
-		m_renderer = createRenderer();
-		m_renderer->setOption( "editable", new BoolData( true ) );
-
-		ConstCompoundObjectPtr globals = inPlug()->globalsPlug()->getValue();
-		outputOptions( globals.get(), m_renderer.get() );
-		outputOutputs( globals.get(), m_renderer.get() );
-		outputCameras( inPlug(), globals.get(), m_renderer.get() );
+		// We're gonna launch an asynchronous scene traversal via m_renderer->procedural() in a bit.
+		// However, we don't want the user to mess around with the graph while this is happening, as
+		// this can cause unpredictable behaviour and crashes, so we want this thread to block until
+		// everything's finished. We do this by setting up this callback, so renderStartupFinished()
+		// can unblock the thread once the scene has been traversed.
+		
+		boost::signals::connection startupFinishedConnection = SceneProcedural::allRenderedSignal().connect( InteractiveRender::renderStartupFinished );
+		
+		try
 		{
-			WorldBlock world( m_renderer );
 
-			outputGlobalAttributes( globals.get(), m_renderer.get() );
-			outputCoordinateSystems( inPlug(), globals.get(), m_renderer.get() );
-			outputLightsInternal( globals.get(), /* editing = */ false );
+			m_renderer = createRenderer();
+			m_renderer->setOption( "editable", new BoolData( true ) );
 
-			SceneProceduralPtr proc = new SceneProcedural( inPlug(), Context::current() );
-			m_renderer->procedural( proc );
+			ConstCompoundObjectPtr globals = inPlug()->globalsPlug()->getValue();
+			outputOptions( globals.get(), m_renderer.get() );
+			outputOutputs( globals.get(), m_renderer.get() );
+			outputCameras( inPlug(), globals.get(), m_renderer.get() );
+			{
+				WorldBlock world( m_renderer );
+
+				outputGlobalAttributes( globals.get(), m_renderer.get() );
+				outputCoordinateSystems( inPlug(), globals.get(), m_renderer.get() );
+				outputLightsInternal( globals.get(), /* editing = */ false );
+
+				SceneProceduralPtr proc = new SceneProcedural( inPlug(), Context::current() );
+				m_renderer->procedural( proc );
+			}
+
+			m_scene = requiredScene;
+			m_state = Running;
+			m_lightsDirty = m_attributesDirty = m_camerasDirty = false;
+			
+			// we use the g_condition condition variable to block this thread until renderStartupFinished() gets called
+			// and unblocks it:
+			
+			unique_lock<tbb::mutex> ul( g_mutex );
+			g_condition.wait( ul );
+		}
+		catch( std::exception& e )
+		{
+			IECore::msg( IECore::Msg::Error, "InteractiveRender::update", e.what() );
 		}
 
-		m_scene = requiredScene;
-		m_state = Running;
-		m_lightsDirty = m_attributesDirty = m_camerasDirty = false;
+		startupFinishedConnection.disconnect();
 	}
 
 	// Make sure the paused/running state is as we want.
