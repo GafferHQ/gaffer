@@ -34,6 +34,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include "tbb/parallel_for.h"
+
 #include "OpenEXR/ImathBoxAlgo.h"
 #include "OpenEXR/ImathFun.h"
 
@@ -97,6 +99,7 @@ SceneProcedural::SceneProcedural( ConstScenePlugPtr scenePlug, const Gaffer::Con
 	const IntData *deformationBlurSegmentsData = globals->member<IntData>( "attribute:gaffer:deformationBlurSegments" );
 	m_attributes.deformationBlurSegments = deformationBlurSegmentsData ? deformationBlurSegmentsData->readable() : 1;
 
+	computeBound();
 	updateAttributes( true );
 	++g_pendingSceneProcedurals;
 
@@ -111,6 +114,7 @@ SceneProcedural::SceneProcedural( const SceneProcedural &other, const ScenePlug:
 
 	m_context->set( ScenePlug::scenePathContextName, m_scenePath );
 
+	computeBound();
 	updateAttributes( false );
 	++g_pendingSceneProcedurals;
 }
@@ -123,7 +127,7 @@ SceneProcedural::~SceneProcedural()
 	}
 }
 
-Imath::Box3f SceneProcedural::bound() const
+void SceneProcedural::computeBound()
 {
 	/// \todo I think we should be able to remove this exception handling in the future.
 	/// Either when we do better error handling in ValuePlug computations, or when
@@ -165,23 +169,73 @@ Imath::Box3f SceneProcedural::bound() const
 		motionTimes( ( m_options.deformationBlur && m_attributes.deformationBlur ) ? m_attributes.deformationBlurSegments : 0, times );
 		motionTimes( ( m_options.transformBlur && m_attributes.transformBlur ) ? m_attributes.transformBlurSegments : 0, times );
 
-		Box3f result;
+		m_bound = Imath::Box3f();
 		for( std::set<float>::const_iterator it = times.begin(), eIt = times.end(); it != eIt; it++ )
 		{
 			timeContext->setFrame( *it );
 			Box3f b = m_scenePlug->boundPlug()->getValue();
 			M44f t = m_scenePlug->transformPlug()->getValue();
-			result.extendBy( transform( b, t ) );
+			m_bound.extendBy( transform( b, t ) );
 		}
-
-		return result;
 	}
 	catch( const std::exception &e )
 	{
+		m_bound = Imath::Box3f();
 		IECore::msg( IECore::Msg::Error, "SceneProcedural::bound()", e.what() );
 	}
-	return Box3f();
 }
+
+Imath::Box3f SceneProcedural::bound() const
+{
+	return m_bound;
+}
+
+//////////////////////////////////////////////////////////////////////////
+// SceneProceduralCreate implementation
+//
+// This uses tbb::parallel_for to fill up a preallocated array of
+// SceneProceduralPtrs with new SceneProcedurals, based on the parent
+// SceneProcedural and the child names we supply.
+//
+//////////////////////////////////////////////////////////////////////////
+
+class SceneProcedural::SceneProceduralCreate
+{
+
+	public:
+		typedef std::vector<SceneProceduralPtr> SceneProceduralContainer;
+
+		SceneProceduralCreate(
+			SceneProceduralContainer &childProcedurals,
+			const SceneProcedural &parent,
+			const vector<InternedString> &childNames
+			
+		) :
+			m_childProcedurals( childProcedurals ),
+			m_parent( parent ),
+			m_childNames( childNames )
+		{
+		}
+
+		void operator()( const tbb::blocked_range<int> &range ) const
+		{
+			for( int i=range.begin(); i!=range.end(); ++i )
+			{
+				ScenePlug::ScenePath childScenePath = m_parent.m_scenePath;
+				childScenePath.push_back( m_childNames[i] );
+				SceneProceduralPtr sceneProcedural = new SceneProcedural( m_parent, childScenePath );
+				m_childProcedurals[ i ] = sceneProcedural;
+			}
+		}
+	
+	private:
+	
+		SceneProceduralContainer &m_childProcedurals;
+		const SceneProcedural &m_parent;
+		const vector<InternedString> &m_childNames;
+		
+};
+
 
 void SceneProcedural::render( Renderer *renderer ) const
 {
@@ -301,12 +355,26 @@ void SceneProcedural::render( Renderer *renderer ) const
 		ConstInternedStringVectorDataPtr childNames = m_scenePlug->childNamesPlug()->getValue();
 		if( childNames->readable().size() )
 		{
-			ScenePlug::ScenePath childScenePath = m_scenePath;
-			childScenePath.push_back( InternedString() ); // for the child name
-			for( vector<InternedString>::const_iterator it=childNames->readable().begin(); it!=childNames->readable().end(); it++ )
+			// Creating a SceneProcedural involves an attribute/bound evaluation, which are
+			// potentially expensive, so we're parallelizing them.
+
+			// allocate space for child procedurals:
+			SceneProceduralCreate::SceneProceduralContainer childProcedurals( childNames->readable().size() );
+
+			// create procedurals in parallel:
+			SceneProceduralCreate s(
+				childProcedurals,
+				*this,
+				childNames->readable()
+			);
+			tbb::parallel_for( tbb::blocked_range<int>( 0, childNames->readable().size() ), s );
+
+			// send to the renderer in series:
+
+			std::vector<SceneProceduralPtr>::const_iterator procIt = childProcedurals.begin(), procEit = childProcedurals.end();
+			for( ; procIt != procEit; ++procIt )
 			{
-				childScenePath[m_scenePath.size()] = *it;
-				renderer->procedural( new SceneProcedural( *this, childScenePath ) );
+				renderer->procedural( *procIt );
 			}
 		}
 	}
@@ -330,7 +398,7 @@ void SceneProcedural::decrementPendingProcedurals() const
 			tbb::mutex::scoped_lock l( g_allRenderedMutex );
 			g_allRenderedSignal();
 		}
-		catch( const std::exception& e )
+		catch( const std::exception &e )
 		{
 			IECore::msg( IECore::Msg::Error, "SceneProcedural::allRenderedSignal() error", e.what() );
 		}
@@ -346,6 +414,9 @@ IECore::MurmurHash SceneProcedural::hash() const
 void SceneProcedural::updateAttributes( bool full )
 {
 	Context::Scope scopedContext( m_context.get() );
+	
+	// \todo: Investigate if it's worth keeping these around and reusing them in SceneProcedural::render().
+	
 	ConstCompoundObjectPtr attributes;
 	if( full )
 	{
