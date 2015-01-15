@@ -95,7 +95,7 @@ class InteractiveRender::SceneGraph
 			}
 		}
 		
-		void path( ScenePlug::ScenePath& p )
+		void path( ScenePlug::ScenePath &p )
 		{
 			if( !m_parent )
 			{
@@ -114,7 +114,7 @@ class InteractiveRender::SceneGraph
 		
 		// scene structure data:
 		IECore::InternedString m_name;
-		SceneGraph* m_parent;
+		SceneGraph *m_parent;
 		std::vector<InteractiveRender::SceneGraph *> m_children;
 		
 		// hash of the attributes as of the most recent evaluation:
@@ -304,7 +304,7 @@ class InteractiveRender::SceneGraphBuildTask : public tbb::task
 
 	public :
 
-		SceneGraphBuildTask( const ScenePlug *scene, const Context* context, SceneGraph *sceneGraph, const ScenePlug::ScenePath &scenePath )
+		SceneGraphBuildTask( const ScenePlug *scene, const Context *context, SceneGraph *sceneGraph, const ScenePlug::ScenePath &scenePath )
 			:	m_scene( scene ),
 				m_context( context ),
 				m_sceneGraph( sceneGraph ),
@@ -386,7 +386,7 @@ class InteractiveRender::SceneGraphBuildTask : public tbb::task
 	private :
 
 		const ScenePlug *m_scene;
-		const Context* m_context;
+		const Context *m_context;
 		SceneGraph *m_sceneGraph;
 		ScenePlug::ScenePath m_scenePath;
 };
@@ -403,7 +403,7 @@ class InteractiveRender::SceneGraphBuildTask : public tbb::task
 class InteractiveRender::SceneGraphIteratorFilter : public tbb::filter
 {
 	public:
-		SceneGraphIteratorFilter( InteractiveRender::SceneGraph* start ) :
+		SceneGraphIteratorFilter( InteractiveRender::SceneGraph *start ) :
 			tbb::filter( tbb::filter::serial_in_order ), m_current( start )
 		{
 			m_childIndices.push_back( 0 );
@@ -444,21 +444,21 @@ class InteractiveRender::SceneGraphIteratorFilter : public tbb::filter
 			}
 		}
 		
-		void* operator()( void* item )
+		void *operator()( void *item )
 		{
 			if( m_childIndices.empty() )
 			{
 				// we've finished the iteration
 				return NULL;
 			}
-			InteractiveRender::SceneGraph* s = m_current;
+			InteractiveRender::SceneGraph *s = m_current;
 			next();
 			return s;
 		}
 	
 	private:
 		
-		SceneGraph* m_current;
+		SceneGraph *m_current;
 		std::vector<size_t> m_childIndices;
 };
 
@@ -476,14 +476,14 @@ class InteractiveRender::SceneGraphIteratorFilter : public tbb::filter
 class InteractiveRender::SceneGraphEvaluatorFilter : public tbb::filter
 {
 	public:
-		SceneGraphEvaluatorFilter( const ScenePlug* scene, const Context* context, bool onlyChanged ) :
+		SceneGraphEvaluatorFilter( const ScenePlug *scene, const Context *context, bool onlyChanged ) :
 			tbb::filter( tbb::filter::parallel ), m_scene( scene ), m_context( context ), m_onlyChanged( onlyChanged )
 		{
 		}
 
-		void* operator()( void* item )
+		void *operator()( void *item )
 		{
-			SceneGraph* s = (SceneGraph*)item;
+			SceneGraph *s = (SceneGraph*)item;
 			ScenePlug::ScenePath p;
 			s->path( p );
 
@@ -529,8 +529,8 @@ class InteractiveRender::SceneGraphEvaluatorFilter : public tbb::filter
 
 	private:
 
-		const ScenePlug* m_scene;
-		const Context* m_context;
+		const ScenePlug *m_scene;
+		const Context *m_context;
 		const bool m_onlyChanged;
 };
 
@@ -548,7 +548,7 @@ class InteractiveRender::SceneGraphOutputFilter : public tbb::thread_bound_filte
 {
 	public:
 	
-		SceneGraphOutputFilter( Renderer* renderer, bool editMode ) :
+		SceneGraphOutputFilter( Renderer *renderer, bool editMode ) :
 			tbb::thread_bound_filter( tbb::filter::serial_in_order ), 
 			m_renderer( renderer ),
 			m_attrBlockCounter( 0 ),
@@ -566,9 +566,9 @@ class InteractiveRender::SceneGraphOutputFilter : public tbb::thread_bound_filte
 			}
 		}
 		
-		void* operator()( void* item )
+		void *operator()( void *item )
 		{
-			SceneGraph* s = (SceneGraph*)item;
+			SceneGraph *s = (SceneGraph*)item;
 			ScenePlug::ScenePath path;
 			s->path( path );
 			
@@ -648,7 +648,7 @@ class InteractiveRender::SceneGraphOutputFilter : public tbb::thread_bound_filte
 			// object:
 			if( s->m_object && !m_editMode )
 			{
-				if( const VisibleRenderable* renderable = runTimeCast< const VisibleRenderable >( s->m_object.get() ) )
+				if( const VisibleRenderable *renderable = runTimeCast< const VisibleRenderable >( s->m_object.get() ) )
 				{
 					renderable->render( m_renderer );
 				}
@@ -660,13 +660,13 @@ class InteractiveRender::SceneGraphOutputFilter : public tbb::thread_bound_filte
 		
 	private:
 		
-		Renderer* m_renderer;
+		Renderer *m_renderer;
 		ScenePlug::ScenePath m_previousPath;
 		int m_attrBlockCounter;
 		bool m_editMode;
 };
 
-void InteractiveRender::runPipeline(tbb::pipeline* p)
+void InteractiveRender::runPipeline(tbb::pipeline *p)
 {
 	p->run( 2 * tbb::task_scheduler_init::default_num_threads() );
 }

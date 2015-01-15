@@ -114,7 +114,7 @@ class InteractiveRender : public Gaffer::Node
 
 		void update();
 		
-		static void runPipeline(tbb::pipeline* p);
+		static void runPipeline(tbb::pipeline *p);
 		void outputScene( bool update );
 		
 		void updateLights();
