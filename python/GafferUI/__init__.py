@@ -86,6 +86,22 @@ def _qtImport( name, lazy=False ) :
 		return getattr( qtModule, name )
 
 ##########################################################################
+# Function to return the C++ address of a wrapped Qt object. This can
+# be useful if needing to implement part of the UI in C++ and the rest
+# in Python.
+##########################################################################
+
+def _qtAddress( o ) :
+
+	global __qtModuleName
+	if "PyQt" in __qtModuleName :
+		import sip
+		return sip.unwrapinstance( o )
+	else :
+		import shiboken
+		return shiboken.getCppPointer( o )[0]
+
+##########################################################################
 # now import our actual functionality
 ##########################################################################
 
