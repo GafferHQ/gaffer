@@ -484,45 +484,54 @@ class InteractiveRender::SceneGraphEvaluatorFilter : public tbb::filter
 		void *operator()( void *item )
 		{
 			SceneGraph *s = (SceneGraph*)item;
-			ScenePlug::ScenePath p;
-			s->path( p );
+			ScenePlug::ScenePath path;
+			s->path( path );
 
-			ContextPtr context = new Context( *m_context, Context::Borrowed );
-			context->set( ScenePlug::scenePathContextName, p );
-			Context::Scope scopedContext( context.get() );
-			
-			if( m_onlyChanged )
+			try
 			{
-				// we're re-traversing this location, so lets only recompute attributes where
-				// their hashes change:
-				
-				IECore::MurmurHash attributesHash = m_scene->attributesPlug()->hash();
-				if( attributesHash != s->m_attributesHash )
+				ContextPtr context = new Context( *m_context, Context::Borrowed );
+				context->set( ScenePlug::scenePathContextName, path );
+				Context::Scope scopedContext( context.get() );
+			
+				if( m_onlyChanged )
 				{
-					s->m_attributesHash = attributesHash;
-					s->m_attributes = m_scene->attributesPlug()->getValue();
+					// we're re-traversing this location, so lets only recompute attributes where
+					// their hashes change:
+
+					IECore::MurmurHash attributesHash = m_scene->attributesPlug()->hash();
+					if( attributesHash != s->m_attributesHash )
+					{
+						s->m_attributesHash = attributesHash;
+						s->m_attributes = m_scene->attributesPlug()->getValue();
+					}
+				}
+				else
+				{
+					// Compute the initial attribute hash, and all the data that hasn't already
+					// been computed:
+
+					s->m_attributesHash = m_scene->attributesPlug()->hash();
+					if( !s->m_attributes )
+					{
+						s->m_attributes = m_scene->attributesPlug()->getValue();
+					}
+					if( !s->m_object )
+					{
+						s->m_object = m_scene->objectPlug()->getValue();
+					}
+					if( !s->m_transform )
+					{
+						s->m_transform = new IECore::M44fData( m_scene->transformPlug()->getValue() );
+					}
 				}
 			}
-			else
+			catch( const std::exception& e )
 			{
-				// Compute the initial attribute hash, and all the data that hasn't already
-				// been computed:
-
-				s->m_attributesHash = m_scene->attributesPlug()->hash();
-				if( !s->m_attributes )
-				{
-					s->m_attributes = m_scene->attributesPlug()->getValue();
-				}
-				if( !s->m_object )
-				{
-					s->m_object = m_scene->objectPlug()->getValue();
-				}
-				if( !s->m_transform )
-				{
-					s->m_transform = new IECore::M44fData( m_scene->transformPlug()->getValue() );
-				}
-			}
+				std::string name;
+				ScenePlug::pathToString( path, name );
 			
+				IECore::msg( IECore::Msg::Error, "InteractiveRender::update", name + ": " + e.what() );
+			}
 
 			return s;
 		}
@@ -574,87 +583,94 @@ class InteractiveRender::SceneGraphOutputFilter : public tbb::thread_bound_filte
 			
 			std::string name;
 			ScenePlug::pathToString( path, name );
-			
-			if( !m_editMode )
+
+			try
 			{
-				// outputting scene for the first time - do some attribute block tracking:
-				if( path.size() )
+				if( !m_editMode )
 				{
-					for( int i = m_previousPath.size(); i >= (int)path.size(); --i )
+					// outputting scene for the first time - do some attribute block tracking:
+					if( path.size() )
 					{
-						--m_attrBlockCounter;
-						m_renderer->attributeEnd();
-					}
-				}
-
-				m_previousPath = path;
-
-				++m_attrBlockCounter;
-				m_renderer->attributeBegin();
-				
-				// set the name for this location:
-				m_renderer->setAttribute( "name", new StringData( name ) );
-
-			}
-
-			// transform:
-			if( s->m_transform && !m_editMode )
-			{
-				m_renderer->concatTransform( s->m_transform->readable() );
-				s->m_transform = 0;
-			}
-			
-			// attributes:
-			if( s->m_attributes )
-			{
-				if( m_editMode )
-				{
-					CompoundDataMap parameters;
-					parameters["exactscopename"] = new StringData( name );
-					m_renderer->editBegin( "attribute", parameters );
-				}
-				
-				for( CompoundObject::ObjectMap::const_iterator it = s->m_attributes->members().begin(), eIt = s->m_attributes->members().end(); it != eIt; it++ )
-				{
-					if( const StateRenderable *s = runTimeCast<const StateRenderable>( it->second.get() ) )
-					{
-						s->render( m_renderer );
-					}
-					else if( const ObjectVector *o = runTimeCast<const ObjectVector>( it->second.get() ) )
-					{
-						for( ObjectVector::MemberContainer::const_iterator it = o->members().begin(), eIt = o->members().end(); it != eIt; it++ )
+						for( int i = m_previousPath.size(); i >= (int)path.size(); --i )
 						{
-							const StateRenderable *s = runTimeCast<const StateRenderable>( it->get() );
-							if( s )
-							{
-								s->render( m_renderer );
-							}
+							--m_attrBlockCounter;
+							m_renderer->attributeEnd();
 						}
 					}
-					else if( const Data *d = runTimeCast<const Data>( it->second.get() ) )
+
+					m_previousPath = path;
+
+					++m_attrBlockCounter;
+					m_renderer->attributeBegin();
+
+					// set the name for this location:
+					m_renderer->setAttribute( "name", new StringData( name ) );
+
+				}
+
+				// transform:
+				if( s->m_transform && !m_editMode )
+				{
+					m_renderer->concatTransform( s->m_transform->readable() );
+					s->m_transform = 0;
+				}
+
+				// attributes:
+				if( s->m_attributes )
+				{
+					if( m_editMode )
 					{
-						m_renderer->setAttribute( it->first, d );
+						CompoundDataMap parameters;
+						parameters["exactscopename"] = new StringData( name );
+						m_renderer->editBegin( "attribute", parameters );
 					}
+
+					for( CompoundObject::ObjectMap::const_iterator it = s->m_attributes->members().begin(), eIt = s->m_attributes->members().end(); it != eIt; it++ )
+					{
+						if( const StateRenderable *s = runTimeCast<const StateRenderable>( it->second.get() ) )
+						{
+							s->render( m_renderer );
+						}
+						else if( const ObjectVector *o = runTimeCast<const ObjectVector>( it->second.get() ) )
+						{
+							for( ObjectVector::MemberContainer::const_iterator it = o->members().begin(), eIt = o->members().end(); it != eIt; it++ )
+							{
+								const StateRenderable *s = runTimeCast<const StateRenderable>( it->get() );
+								if( s )
+								{
+									s->render( m_renderer );
+								}
+							}
+						}
+						else if( const Data *d = runTimeCast<const Data>( it->second.get() ) )
+						{
+							m_renderer->setAttribute( it->first, d );
+						}
+					}
+					s->m_attributes = 0;
+
+					if( m_editMode )
+					{
+						m_renderer->editEnd();
+					}
+
 				}
-				s->m_attributes = 0;
-				
-				if( m_editMode )
+
+				// object:
+				if( s->m_object && !m_editMode )
 				{
-					m_renderer->editEnd();
+					if( const VisibleRenderable *renderable = runTimeCast< const VisibleRenderable >( s->m_object.get() ) )
+					{
+						renderable->render( m_renderer );
+					}
+					s->m_object = 0;
 				}
-				
 			}
-			
-			// object:
-			if( s->m_object && !m_editMode )
+			catch( const std::exception& e )
 			{
-				if( const VisibleRenderable *renderable = runTimeCast< const VisibleRenderable >( s->m_object.get() ) )
-				{
-					renderable->render( m_renderer );
-				}
-				s->m_object = 0;
+				IECore::msg( IECore::Msg::Error, "InteractiveRender::update", name + ": " + e.what() );
 			}
-			
+
 			return NULL;
 		}
 		
