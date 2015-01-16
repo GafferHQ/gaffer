@@ -1,3 +1,102 @@
+# 0.8.0.0
+=========
+
+Apps
+-----------------------------------------------------------------------
+
+- Python
+    - Added support for executing files with arbitrary extensions.
+    - Properly handled `sys.exit()` usage from within a script.
+    - Updated sys.argv so `gaffer python myScript.py` behaves like
+      `python myScript.py`.
+
+Core
+-----------------------------------------------------------------------
+
+- Made small optimisations to the computation engine.
+
+UI
+-----------------------------------------------------------------------
+
+- Added "layout:widgetType" metadata entry.
+- Improved image rendering quality.
+- Added error display in the node graph (#1115).
+- Added menu item for applying Random node to IntPlugs.
+
+Scene
+-----------------------------------------------------------------------
+
+- Removed support for attribute caches.
+- Optimised SceneReader hashes.
+- Improved hash computation for many node types. This should improve
+  cache memory usage and speed.
+- Fixed SceneReader for invalid files and paths. Previously it would
+  error on the first attempt, but either silently fail or crash on
+  subsequent attempts.
+- Optimised PathMatcher construction.
+- Multithreaded child procedural instantiation in SceneProcedural.
+
+RenderMan
+-----------------------------------------------------------------------
+
+- Added support for a "nodeColor" annotation.
+
+Image
+-----------------------------------------------------------------------
+
+- Optimised ImageReader. Reduced runtime of ImageReader->ImageTransform
+  benchmark by nearly 40%.
+- Fixed thread-safety bug in ImageReader.
+
+OSL
+-----------------------------------------------------------------------
+
+- Added UI support for OSL "help", "label", "divider", "widget" and
+  "options" metadata entries.
+
+Appleseed
+-----------------------------------------------------------------------
+
+- Added visibility attributes to AppleseedAttributes node.
+
+API
+-----------------------------------------------------------------------
+
+- Added outputsToIgnore argument to GafferTest.TestCase.assertHashesValid().
+- Added NodeAlgo support for plug presets specified en masse via arrays.
+- Added Node::errorSignal().
+- Added tokenize() function to StringAlgo.h.
+- Added support for array metadata in OSLShader.
+- Simplified OSLShader::*Metadata() python return types.
+- Added Python bindings exposing the OSL version.
+- Removed Source node.
+- Removed FileSource node.
+- Detemplatized ObjectSource.
+- Added GafferUI.LayoutPlugValueWidget. This is entirely metadata-driven,
+  and will be used to slowly replace legacy CompoundPlugValueWidget UIs.
+- Deprecated CompoundPlugValueWidget.
+- Fixed drawing of ImageGadget children.
+- Added Gadget::executeOnUIThread() method.
+
+
+Build
+-----------------------------------------------------------------------
+
+- Updated README with simplified build instructions.
+- Added support for OSL 1.6.
+- Requires Cortex 9.0.0-b2.
+
+Incompatibilities
+-----------------------------------------------------------------------
+
+- Simplified OSLShader::*Metadata() python return types.
+- Removed support for attribute caches.
+- Removed Source node.
+- Removed FileSource node.
+- Detemplatized ObjectSource.
+
+-----------------------------------------------------------------------
+
 # 0.7.0.0
 
 This release brings the exciting addition of support for the open source [Appleseed](http://appleseedhq.net/) renderer. It also adds the much asked for Dot node, and a tool for editing render crop windows. Plus of course the usual small improvements, optimisations and bug fixes.
