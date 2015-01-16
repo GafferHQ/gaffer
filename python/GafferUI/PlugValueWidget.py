@@ -312,6 +312,8 @@ class PlugValueWidget( GafferUI.Widget ) :
 
 	## Registers a function to create a PlugWidget. None may be passed as creator, to
 	# disable the creation of uis for specific plugs.
+	## \todo Use PlugLayout and "layout:widgetType" metadata everywhere instead of
+	# using this. Then remove this method.
 	@classmethod
 	def registerCreator( cls, nodeClassOrTypeId, plugPath, creator, **creatorKeywordArgs ) :
 
