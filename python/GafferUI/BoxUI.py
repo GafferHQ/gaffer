@@ -138,6 +138,16 @@ def __plugValueWidgetCreator( plug ) :
 	# transfer custom uis from inside the node to outside the node.
 	node = plug.node()
 	for output in plug.outputs() :
+		if type( output ) is not type( plug ) :
+			# If the types don't match, we can't expect the
+			# UI for the internal plug to work with the external
+			# plug. Typically the types will match, because the
+			# external plug was created by Box::promotePlug(), but
+			# it's possible to use scripting to connect different
+			# types, for instance to drive an internal IntPlug with
+			# an external BoolPlug. In this case we make no attempt
+			# to transfer the internal UI.
+			continue
 		if node.isAncestorOf( output.node() ) :
 			widget = GafferUI.PlugValueWidget.create( output )
 			if widget is not None :

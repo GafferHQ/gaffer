@@ -102,5 +102,18 @@ class BoxUITest( GafferUITest.TestCase ) :
 		self.assertTrue( w2 is not None )
 		self.assertTrue( w2 is w )
 
+	def testUIForNonMatchingPromotedPlugTypes( self ) :
+	
+		box = Gaffer.Box()
+		box["user"]["b"] = Gaffer.BoolPlug()
+		box["node"] = Gaffer.Node()
+		box["node"]["i"] = Gaffer.IntPlug()
+		box["node"]["i"].setInput( box["user"]["b"] )
+		
+		ui = GafferUI.NodeUI.create( box )
+		w = ui.plugValueWidget( box["user"]["b"], lazy=False )
+		
+		self.assertTrue( isinstance( w, GafferUI.BoolPlugValueWidget ) )
+
 if __name__ == "__main__":
 	unittest.main()
