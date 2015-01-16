@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2013-2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,6 +35,7 @@
 ##########################################################################
 
 import fnmatch
+import re
 import traceback
 
 import IECore
@@ -418,6 +419,22 @@ def __nodeDescription( node ) :
 	description = _shaderAnnotations( node ).get( "help", None )
 	return description.value if description is not None else __defaultNodeDescription
 
+def __nodeColor( node ) :
+
+	try:
+		annotations = _shaderAnnotations( node )
+		if annotations.has_key( "nodeColor" ) :
+			match = re.search( "color\((.+),(.+),(.+)\)", annotations["nodeColor"].value )
+			if match:
+				return IECore.Color3f( float( match.group(1) ), float( match.group(2) ), float( match.group(3) ) )
+			else:
+				raise Exception, "Error parsing \"nodeColor\" annotation: " + annotations["nodeColor"].value
+
+	except Exception, e:
+		IECore.msg( IECore.Msg.Level.Warning, "RenderManShaderUI", str( e ) )
+
+	return None
+
 def __plugDescription( plug ) :
 
 	annotations = _shaderAnnotations( plug.node() )
@@ -442,6 +459,8 @@ def __plugDivider( plug ) :
 	return d.value.lower() in ( "True", "true", "1" )
 
 Gaffer.Metadata.registerNodeDescription( GafferRenderMan.RenderManShader, __nodeDescription )
+
+Gaffer.Metadata.registerNodeValue( GafferRenderMan.RenderManShader, "nodeGadget:color", __nodeColor )
 
 Gaffer.Metadata.registerPlugDescription( GafferRenderMan.RenderManShader, "parameters.*", __plugDescription )
 Gaffer.Metadata.registerPlugDescription( GafferRenderMan.RenderManLight, "parameters.*", __plugDescription )
