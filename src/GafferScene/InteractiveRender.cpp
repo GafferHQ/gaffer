@@ -123,7 +123,7 @@ class InteractiveRender::SceneGraph
 		// actual scene data:
 		IECore::ConstCompoundObjectPtr m_attributes;
 		IECore::ConstObjectPtr m_object;
-		IECore::M44fDataPtr m_transform;
+		Imath::M44f m_transform;
 };
 
 size_t InteractiveRender::g_firstPlugIndex = 0;
@@ -518,7 +518,7 @@ class InteractiveRender::SceneGraphEvaluatorFilter : public tbb::filter
 					// by the SceneGraphBuildTasks, so we only need to compute the object/transform:
 
 					s->m_object = m_scene->objectPlug()->getValue();
-					s->m_transform = new IECore::M44fData( m_scene->transformPlug()->getValue() );
+					s->m_transform = m_scene->transformPlug()->getValue();
 
 				}
 			}
@@ -606,10 +606,9 @@ class InteractiveRender::SceneGraphOutputFilter : public tbb::thread_bound_filte
 				}
 
 				// transform:
-				if( s->m_transform && !m_editMode )
+				if( !m_editMode )
 				{
-					m_renderer->concatTransform( s->m_transform->readable() );
-					s->m_transform = 0;
+					m_renderer->concatTransform( s->m_transform );
 				}
 
 				// attributes:
