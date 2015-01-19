@@ -57,6 +57,8 @@ using namespace GafferBindings;
 namespace
 {
 
+InternedString g_descriptionName( "description" );
+
 struct PythonNodeValueFunction
 {
 	PythonNodeValueFunction( object fn )
@@ -97,12 +99,31 @@ struct PythonPlugValueFunction
 
 };
 
-Metadata::NodeValueFunction objectToNodeValueFunction( object o )
+ConstDataPtr dedent( InternedString name, IECore::ConstDataPtr data )
+{
+	if( name != g_descriptionName )
+	{
+		return data;
+	}
+	if( const StringData *stringData = runTimeCast<const StringData>( data.get() ) )
+	{
+		// Perform special processing to strip blank lines from the start and
+		// end of descriptions and common indents from all lines. This allows the
+		// use of indendented triple-quoted strings for formatting long descriptions.
+		object inspect = import( "inspect" );
+		object pythonString( stringData->readable() );
+		pythonString = inspect.attr( "cleandoc" )( pythonString );
+		return new StringData( extract<const char *>( pythonString )() );
+	}
+	return data;
+}
+
+Metadata::NodeValueFunction objectToNodeValueFunction( InternedString name, object o )
 {
 	extract<IECore::DataPtr> dataExtractor( o );
 	if( dataExtractor.check() )
 	{
-		return boost::lambda::constant( dataExtractor() );
+		return boost::lambda::constant( dedent( name, dataExtractor() ) );
 	}
 	else
 	{
@@ -110,12 +131,12 @@ Metadata::NodeValueFunction objectToNodeValueFunction( object o )
 	}
 }
 
-Metadata::PlugValueFunction objectToPlugValueFunction( object o )
+Metadata::PlugValueFunction objectToPlugValueFunction( InternedString name, object o )
 {
 	extract<IECore::DataPtr> dataExtractor( o );
 	if( dataExtractor.check() )
 	{
-		return boost::lambda::constant( dataExtractor() );
+		return boost::lambda::constant( dedent( name, dataExtractor() ) );
 	}
 	else
 	{
@@ -125,7 +146,7 @@ Metadata::PlugValueFunction objectToPlugValueFunction( object o )
 
 void registerNodeValue( IECore::TypeId nodeTypeId, IECore::InternedString key, object &value )
 {
-	Metadata::registerNodeValue( nodeTypeId, key, objectToNodeValueFunction( value ) );
+	Metadata::registerNodeValue( nodeTypeId, key, objectToNodeValueFunction( key, value ) );
 }
 
 object nodeValue( const Node *node, const char *key, bool inherit, bool instanceOnly, bool copy )
@@ -137,7 +158,7 @@ object nodeValue( const Node *node, const char *key, bool inherit, bool instance
 object registerNodeDescription( tuple args, dict kw )
 {
 	IECore::TypeId nodeTypeId = extract<IECore::TypeId>( args[0] );
-	Metadata::registerNodeDescription( nodeTypeId, objectToNodeValueFunction( args[1] ) );
+	Metadata::registerNodeDescription( nodeTypeId, objectToNodeValueFunction( g_descriptionName, args[1] ) );
 
 	for( size_t i = 2, e = len( args ); i < e; i += 2 )
 	{
@@ -148,16 +169,52 @@ object registerNodeDescription( tuple args, dict kw )
 			list dictItems = dictExtractor().items();
 			for( size_t di = 0, de = len( dictItems ); di < de; ++di )
 			{
+				InternedString name = extract<const char *>( dictItems[di][0] )();
 				Metadata::registerPlugValue(
 					nodeTypeId, plugPath,
-					extract<const char *>( dictItems[di][0] )(),
-					objectToPlugValueFunction( dictItems[di][1] )
+					name,
+					objectToPlugValueFunction( name, dictItems[di][1] )
 				);
 			}
 		}
 		else
 		{
-			Metadata::registerPlugDescription( nodeTypeId, plugPath, objectToPlugValueFunction( args[i+1] ) );
+			Metadata::registerPlugDescription( nodeTypeId, plugPath, objectToPlugValueFunction( g_descriptionName, args[i+1] ) );
+		}
+	}
+
+	return object(); // none
+}
+
+object registerNode( tuple args, dict kw )
+{
+	IECore::TypeId nodeTypeId = extract<IECore::TypeId>( args[0] );
+
+	for( size_t i = 1, e = len( args ); i < e; i += 2 )
+	{
+		IECore::InternedString name = extract<IECore::InternedString>( args[i] )();
+		Metadata::registerNodeValue( nodeTypeId, name, objectToNodeValueFunction( name, args[i+1] ) );
+	}
+
+	object plugsObject = kw.get( "plugs" );
+	if( plugsObject )
+	{
+		dict plugs = extract<dict>( plugsObject )();
+		list plugsItems = plugs.items();
+		for( size_t i = 0, e = len( plugsItems ); i < e; ++i )
+		{
+			MatchPattern plugPath = extract<MatchPattern>( plugsItems[i][0] )();
+			object plugValues = plugsItems[i][1];
+			for( size_t vi = 0, ve = len( plugValues ); vi < ve; vi += 2 )
+			{
+				InternedString name = extract<InternedString>( plugValues[vi] );
+				Metadata::registerPlugValue(
+					nodeTypeId,
+					plugPath,
+					name,
+					objectToPlugValueFunction( name, plugValues[vi+1] )
+				);
+			}
 		}
 	}
 
@@ -166,7 +223,7 @@ object registerNodeDescription( tuple args, dict kw )
 
 void registerPlugValue( IECore::TypeId nodeTypeId, const char *plugPath, IECore::InternedString key, object &value )
 {
-	Metadata::registerPlugValue( nodeTypeId, plugPath, key, objectToPlugValueFunction( value ) );
+	Metadata::registerPlugValue( nodeTypeId, plugPath, key, objectToPlugValueFunction( key, value ) );
 }
 
 object plugValue( const Plug *plug, const char *key, bool inherit, bool instanceOnly, bool copy )
@@ -177,7 +234,7 @@ object plugValue( const Plug *plug, const char *key, bool inherit, bool instance
 
 void registerPlugDescription( IECore::TypeId nodeTypeId, const char *plugPath, object &description )
 {
-	Metadata::registerPlugDescription( nodeTypeId, plugPath, objectToPlugValueFunction( description ) );
+	Metadata::registerPlugDescription( nodeTypeId, plugPath, objectToPlugValueFunction( g_descriptionName, description ) );
 }
 
 struct ValueChangedSlotCaller
@@ -257,6 +314,9 @@ void bindMetadata()
 
 		.def( "registerNodeDescription", boost::python::raw_function( &registerNodeDescription, 2 ) )
 		.staticmethod( "registerNodeDescription" )
+
+		.def( "registerNode", boost::python::raw_function( &registerNode, 1 ) )
+		.staticmethod( "registerNode" )
 
 		.def( "nodeDescription", &Metadata::nodeDescription,
 			(
