@@ -22,6 +22,7 @@ UI
 - Improved image rendering quality.
 - Added error display in the node graph (#1115).
 - Added menu item for applying Random node to IntPlugs.
+- Fixed Box UI error when connecting external BoolPlug to internal IntPlug.
 
 Scene
 -----------------------------------------------------------------------
@@ -78,13 +79,14 @@ API
 - Fixed drawing of ImageGadget children.
 - Added Gadget::executeOnUIThread() method.
 
-
 Build
 -----------------------------------------------------------------------
 
 - Updated README with simplified build instructions.
 - Added support for OSL 1.6.
 - Requires Cortex 9.0.0-b2.
+- Added Qt headers to Gaffer packages.
+- Fixed TBB compilation on OS X.
 
 Incompatibilities
 -----------------------------------------------------------------------
