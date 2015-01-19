@@ -35,13 +35,39 @@
 #
 ##########################################################################
 
-import re
-import fnmatch
-
 import IECore
 
 import Gaffer
 import GafferUI
+
+Gaffer.Metadata.registerNode(
+
+	Gaffer.Node,
+
+	"description",
+	"""
+	A container for plugs.
+	""",
+
+	plugs = {
+
+		"user" : (
+
+			"description",
+			"""
+			Container for user-defined plugs. Nodes
+			should never make their own plugs here,
+			so users are free to do as they wish.
+			"""
+		)
+
+	}
+
+)
+
+##########################################################################
+# NodeUI
+##########################################################################
 
 ## This class forms the base class for all uis for nodes.
 class NodeUI( GafferUI.Widget ) :
