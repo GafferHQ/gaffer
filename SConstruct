@@ -1549,6 +1549,9 @@ dependenciesManifest = [
 	"include/OSL",
 	"include/OpenImageIO",
 	"include/OpenColorIO",
+	"include/QtCore",
+	"include/QtGui",
+	"include/QtOpenGL",
 
 	"renderMan",
 	"arnold",
