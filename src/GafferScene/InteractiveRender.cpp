@@ -83,7 +83,7 @@ class InteractiveRender::SceneGraph
 
 	public :
 
-		SceneGraph() : m_parent(0)
+		SceneGraph() : m_parent( NULL )
 		{
 		}
 
@@ -409,6 +409,20 @@ class InteractiveRender::SceneGraphIteratorFilter : public tbb::filter
 			m_childIndices.push_back( 0 );
 		}
 		
+		virtual void *operator()( void *item )
+		{
+			if( m_childIndices.empty() )
+			{
+				// we've finished the iteration
+				return NULL;
+			}
+			InteractiveRender::SceneGraph *s = m_current;
+			next();
+			return s;
+		}
+	
+	private:
+		
 		void next()
 		{
 			// go down one level in the hierarchy if we can:
@@ -444,20 +458,6 @@ class InteractiveRender::SceneGraphIteratorFilter : public tbb::filter
 			}
 		}
 		
-		void *operator()( void *item )
-		{
-			if( m_childIndices.empty() )
-			{
-				// we've finished the iteration
-				return NULL;
-			}
-			InteractiveRender::SceneGraph *s = m_current;
-			next();
-			return s;
-		}
-	
-	private:
-		
 		SceneGraph *m_current;
 		std::vector<size_t> m_childIndices;
 };
@@ -481,7 +481,7 @@ class InteractiveRender::SceneGraphEvaluatorFilter : public tbb::filter
 		{
 		}
 
-		void *operator()( void *item )
+		virtual void *operator()( void *item )
 		{
 			SceneGraph *s = (SceneGraph*)item;
 			ScenePlug::ScenePath path;
@@ -525,7 +525,7 @@ class InteractiveRender::SceneGraphEvaluatorFilter : public tbb::filter
 					}
 				}
 			}
-			catch( const std::exception& e )
+			catch( const std::exception &e )
 			{
 				std::string name;
 				ScenePlug::pathToString( path, name );
@@ -575,7 +575,7 @@ class InteractiveRender::SceneGraphOutputFilter : public tbb::thread_bound_filte
 			}
 		}
 		
-		void *operator()( void *item )
+		virtual void *operator()( void *item )
 		{
 			SceneGraph *s = (SceneGraph*)item;
 			ScenePlug::ScenePath path;
@@ -666,7 +666,7 @@ class InteractiveRender::SceneGraphOutputFilter : public tbb::thread_bound_filte
 					s->m_object = 0;
 				}
 			}
-			catch( const std::exception& e )
+			catch( const std::exception &e )
 			{
 				IECore::msg( IECore::Msg::Error, "InteractiveRender::update", name + ": " + e.what() );
 			}
