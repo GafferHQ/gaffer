@@ -680,6 +680,9 @@ class InteractiveRender::SceneGraphOutputFilter : public tbb::thread_bound_filte
 
 void InteractiveRender::runPipeline(tbb::pipeline *p)
 {
+	// \todo: tune this number to find a balance between memory and speed once
+	// we have a load of production data:
+	
 	p->run( 2 * tbb::task_scheduler_init::default_num_threads() );
 }
 
