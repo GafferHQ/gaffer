@@ -235,6 +235,7 @@ from UIEditor import UIEditor
 # and then specific node uis
 
 import DependencyNodeUI
+import ComputeNodeUI
 import RandomUI
 import ExpressionUI
 import BoxUI
