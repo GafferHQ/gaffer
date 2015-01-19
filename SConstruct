@@ -641,7 +641,8 @@ if depEnv["BUILD_DEPENDENCY_FREETYPE"] :
 	runCommand( "cd $FREETYPE_SRC_DIR && ./configure --prefix=$BUILD_DIR && make clean && make && make install" )
 
 if depEnv["BUILD_DEPENDENCY_TBB"] :
-	runCommand( "cd $TBB_SRC_DIR; make clean; make" )
+	tbbCompiler = "clang" if "clang" in env["CXX"] else "gcc"
+	runCommand( "cd $TBB_SRC_DIR; make clean; make compiler=" + tbbCompiler )
 	if depEnv["PLATFORM"]=="darwin" :
 		runCommand( "cd $TBB_SRC_DIR; cp build/macos_*_release/*.dylib $BUILD_DIR/lib; cp -r include/tbb $BUILD_DIR/include" )
 	else :
