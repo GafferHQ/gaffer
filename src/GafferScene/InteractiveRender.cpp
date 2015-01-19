@@ -562,7 +562,7 @@ class InteractiveRender::SceneGraphOutputFilter : public tbb::thread_bound_filte
 		{
 		}
 		
-		~SceneGraphOutputFilter()
+		virtual ~SceneGraphOutputFilter()
 		{
 			// close pending attribute blocks:
 			while( m_attrBlockCounter )
