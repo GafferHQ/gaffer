@@ -322,14 +322,21 @@ class InteractiveRender::SceneGraphBuildTask : public tbb::task
 			context->set( ScenePlug::scenePathContextName, m_scenePath );
 			Context::Scope scopedContext( context.get() );
 
-			m_sceneGraph->m_attributes = m_scene->attributesPlug()->getValue();
+			// we need the attributes so we can terminate recursion at invisible locations, so
+			// we might as well store them in the scene graph, along with the hash:
+
+			m_sceneGraph->m_attributesHash = m_scene->attributesPlug()->hash();
+			
+			// use the precomputed hash in getValue() to save a bit of time:
+			
+			m_sceneGraph->m_attributes = m_scene->attributesPlug()->getValue( &m_sceneGraph->m_attributesHash );
 			const BoolData *visibilityData = m_sceneGraph->m_attributes->member<BoolData>( SceneInterface::visibilityName );
 			if( visibilityData && !visibilityData->readable() )
 			{
 				// terminate recursion for invisible locations
 				return NULL;
 			}
-			
+
 			// compute child names:
 			IECore::ConstInternedStringVectorDataPtr childNamesData = m_scene->childNamesPlug()->getValue();
 
@@ -476,8 +483,8 @@ class InteractiveRender::SceneGraphIteratorFilter : public tbb::filter
 class InteractiveRender::SceneGraphEvaluatorFilter : public tbb::filter
 {
 	public:
-		SceneGraphEvaluatorFilter( const ScenePlug *scene, const Context *context, bool onlyChanged ) :
-			tbb::filter( tbb::filter::parallel ), m_scene( scene ), m_context( context ), m_onlyChanged( onlyChanged )
+		SceneGraphEvaluatorFilter( const ScenePlug *scene, const Context *context, bool update ) :
+			tbb::filter( tbb::filter::parallel ), m_scene( scene ), m_context( context ), m_update( update )
 		{
 		}
 
@@ -493,7 +500,7 @@ class InteractiveRender::SceneGraphEvaluatorFilter : public tbb::filter
 				context->set( ScenePlug::scenePathContextName, path );
 				Context::Scope scopedContext( context.get() );
 			
-				if( m_onlyChanged )
+				if( m_update )
 				{
 					// we're re-traversing this location, so lets only recompute attributes where
 					// their hashes change:
@@ -501,28 +508,18 @@ class InteractiveRender::SceneGraphEvaluatorFilter : public tbb::filter
 					IECore::MurmurHash attributesHash = m_scene->attributesPlug()->hash();
 					if( attributesHash != s->m_attributesHash )
 					{
+						s->m_attributes = m_scene->attributesPlug()->getValue( &attributesHash );
 						s->m_attributesHash = attributesHash;
-						s->m_attributes = m_scene->attributesPlug()->getValue();
 					}
 				}
 				else
 				{
-					// Compute the initial attribute hash, and all the data that hasn't already
-					// been computed:
+					// First traversal: attributes and attribute hash should have been computed
+					// by the SceneGraphBuildTasks, so we only need to compute the object/transform:
 
-					s->m_attributesHash = m_scene->attributesPlug()->hash();
-					if( !s->m_attributes )
-					{
-						s->m_attributes = m_scene->attributesPlug()->getValue();
-					}
-					if( !s->m_object )
-					{
-						s->m_object = m_scene->objectPlug()->getValue();
-					}
-					if( !s->m_transform )
-					{
-						s->m_transform = new IECore::M44fData( m_scene->transformPlug()->getValue() );
-					}
+					s->m_object = m_scene->objectPlug()->getValue();
+					s->m_transform = new IECore::M44fData( m_scene->transformPlug()->getValue() );
+
 				}
 			}
 			catch( const std::exception &e )
@@ -540,7 +537,7 @@ class InteractiveRender::SceneGraphEvaluatorFilter : public tbb::filter
 
 		const ScenePlug *m_scene;
 		const Context *m_context;
-		const bool m_onlyChanged;
+		const bool m_update;
 };
 
 //////////////////////////////////////////////////////////////////////////
