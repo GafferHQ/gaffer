@@ -124,7 +124,7 @@ if getOption( "RELEASE", "0" )=="1" :
 	installRoot = "/software"
 else :
 	buildRoot = os.path.expanduser( "~" )
-	installRoot = os.path.expanduser( "~/gafferTestInstalls" )
+	installRoot = os.path.expanduser( "/tmp/gafferTestInstalls" )
 	versionString += "dev"
 
 BUILD_DIR = buildRoot + "/apps/gaffer/" + versionString + "/" + IEEnv.platform() + "/cortex/" + cortexMajorVersion + "/" + targetApp
