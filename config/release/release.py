@@ -84,7 +84,7 @@ os.system( "tar xf %s -C %s --strip-components=1" % ( dependenciesTarFileName, b
 
 # do the build
 
-buildCommand = "scons package BUILD_DIR=%s INSTALL_DIR=%s ENV_VARS_TO_IMPORT=PATH RMAN_ROOT=$DELIGHT ARNOLD_ROOT=$ARNOLD_ROOT" % ( buildDir, installDir )
+buildCommand = "scons package BUILD_DIR=%s INSTALL_DIR=%s ENV_VARS_TO_IMPORT=PATH RMAN_ROOT=$DELIGHT ARNOLD_ROOT=$ARNOLD_ROOT OPTIONS=''" % ( buildDir, installDir )
 sys.stderr.write( buildCommand + "\n" )
 
 subprocess.check_call( buildCommand, shell=True )
