@@ -584,6 +584,54 @@ class RenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		rib = "\n".join( file( "/tmp/test.rib" ).readlines() )
 		self.assertTrue( "CoordinateSystem" not in rib )
 
+	def testHiddenLight( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["fileName"].setValue( "/tmp/test.gfr" )
+
+		s["l"] = GafferRenderMan.RenderManLight()
+		s["l"]["name"].setValue( "myLight" )
+		s["l"].loadShader( "pointlight" )
+
+		s["g"] = GafferScene.Group()
+		s["g"]["in"].setInput( s["l"]["out"] )
+
+		s["f1"] = GafferScene.PathFilter()
+		s["f2"] = GafferScene.PathFilter()
+
+		s["a1"] = GafferScene.StandardAttributes()
+		s["a1"]["attributes"]["visibility"]["enabled"].setValue( True )
+		s["a1"]["attributes"]["visibility"]["value"].setValue( False )
+		s["a1"]["in"].setInput( s["g"]["out"] )
+		s["a1"]["filter"].setInput( s["f1"]["match"] )
+
+		s["a2"] = GafferScene.StandardAttributes()
+		s["a2"]["attributes"]["visibility"]["enabled"].setValue( True )
+		s["a2"]["attributes"]["visibility"]["value"].setValue( True )
+		s["a2"]["in"].setInput( s["a1"]["out"] )
+		s["a2"]["filter"].setInput( s["f2"]["match"] )
+
+		s["r"] = GafferRenderMan.RenderManRender()
+		s["r"]["mode"].setValue( "generate" )
+		s["r"]["ribFileName"].setValue( "/tmp/test.rib" )
+		s["r"]["in"].setInput( s["a2"]["out"] )
+
+		s["r"].execute()
+		rib = "\n".join( file( "/tmp/test.rib" ).readlines() )
+		self.assertTrue( "LightSource \"pointlight\"" in rib )
+
+		s["f1"]["paths"].setValue( IECore.StringVectorData( [ "/group" ] ) ) # hide group
+
+		s["r"].execute()
+		rib = "\n".join( file( "/tmp/test.rib" ).readlines() )
+		self.assertTrue( "LightSource \"pointlight\"" not in rib )
+
+		s["f2"]["paths"].setValue( IECore.StringVectorData( [ "/group/myLight" ] ) ) # show coordsys (but parent still hidden)
+
+		s["r"].execute()
+		rib = "\n".join( file( "/tmp/test.rib" ).readlines() )
+		self.assertTrue( "LightSource \"pointlight\"" not in rib )
+
 	def setUp( self ) :
 
 		for f in (
