@@ -41,6 +41,42 @@ import IECore
 import Gaffer
 import GafferUI
 
+Gaffer.Metadata.registerNode(
+
+	Gaffer.Expression,
+
+	"description",
+	"""
+	Utility node for computing values via
+	scripted expressions.
+	""",
+
+	plugs = {
+
+		"engine" : (
+
+			"description",
+			"""
+			The expression language to use.
+			"""
+
+		),
+
+		"expression" : (
+
+			## \todo We need better help here, specific to the
+			# different engines themselves.
+			"description",
+			"""
+			The expression to evaluate."
+			"""
+
+		),
+
+	}
+
+)
+
 # NodeUI registration
 ##########################################################################
 
