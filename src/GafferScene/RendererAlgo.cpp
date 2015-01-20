@@ -294,9 +294,7 @@ bool outputCoordinateSystem( const ScenePlug *scene, const ScenePlug::ScenePath 
 		return false;
 	}
 
-	ConstCompoundObjectPtr attributes = scene->fullAttributes( path );
-	const BoolData *visibilityData = attributes->member<BoolData>( "scene:visible" );
-	if( visibilityData && !visibilityData->readable() )
+	if( !visible( scene, path ) )
 	{
 		return false;
 	}

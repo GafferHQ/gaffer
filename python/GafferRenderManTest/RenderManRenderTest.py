@@ -537,6 +537,53 @@ class RenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		self.assertTrue( rib.index( "Camera \"/group/camera2\"" ) > rib.index( "Camera \"/group/camera1\"" ) )
 		self.assertTrue( rib.index( "Camera \"/group/camera2\"" ) > rib.index( "Camera \"/group/camera3\"" ) )
 
+	def testHiddenCoordinateSystem( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["fileName"].setValue( "/tmp/test.gfr" )
+
+		s["c"] = GafferScene.CoordinateSystem()
+		s["c"]["name"].setValue( "myCoordSys" )
+
+		s["g"] = GafferScene.Group()
+		s["g"]["in"].setInput( s["c"]["out"] )
+
+		s["f1"] = GafferScene.PathFilter()
+		s["f2"] = GafferScene.PathFilter()
+
+		s["a1"] = GafferScene.StandardAttributes()
+		s["a1"]["attributes"]["visibility"]["enabled"].setValue( True )
+		s["a1"]["attributes"]["visibility"]["value"].setValue( False )
+		s["a1"]["in"].setInput( s["g"]["out"] )
+		s["a1"]["filter"].setInput( s["f1"]["match"] )
+
+		s["a2"] = GafferScene.StandardAttributes()
+		s["a2"]["attributes"]["visibility"]["enabled"].setValue( True )
+		s["a2"]["attributes"]["visibility"]["value"].setValue( True )
+		s["a2"]["in"].setInput( s["a1"]["out"] )
+		s["a2"]["filter"].setInput( s["f2"]["match"] )
+
+		s["r"] = GafferRenderMan.RenderManRender()
+		s["r"]["mode"].setValue( "generate" )
+		s["r"]["ribFileName"].setValue( "/tmp/test.rib" )
+		s["r"]["in"].setInput( s["a2"]["out"] )
+
+		s["r"].execute()
+		rib = "\n".join( file( "/tmp/test.rib" ).readlines() )
+		self.assertTrue( "CoordinateSystem \"/group/myCoordSys\"" in rib )
+
+		s["f1"]["paths"].setValue( IECore.StringVectorData( [ "/group" ] ) ) # hide group
+
+		s["r"].execute()
+		rib = "\n".join( file( "/tmp/test.rib" ).readlines() )
+		self.assertTrue( "CoordinateSystem" not in rib )
+
+		s["f2"]["paths"].setValue( IECore.StringVectorData( [ "/group/myCoordSys" ] ) ) # show coordsys (but parent still hidden)
+
+		s["r"].execute()
+		rib = "\n".join( file( "/tmp/test.rib" ).readlines() )
+		self.assertTrue( "CoordinateSystem" not in rib )
+
 	def setUp( self ) :
 
 		for f in (
