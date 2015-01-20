@@ -24,6 +24,9 @@ install:
 
 script:
     - scons install CXX=$CXX ENV_VARS_TO_IMPORT=PATH RMAN_ROOT=$DELIGHT
+    # Preload libSegFault when running tests, so we get stack
+    # traces from any crashes.
+    - export LD_PRELOAD=/lib/x86_64-linux-gnu/libSegFault.so
     - ./install/gaffer-*/bin/gaffer test GafferTest
     - ./install/gaffer-*/bin/gaffer test GafferUITest
     - ./install/gaffer-*/bin/gaffer test GafferCortexTest
