@@ -1247,7 +1247,6 @@ for libraryName, libraryDef in libraries.items() :
 		pythonModuleEnv.Default( pythonModule )
 
 		moduleInstall = pythonModuleEnv.Install( "$BUILD_DIR/python/" + libraryName, pythonModule )
-		pythonModuleEnv.Default( moduleInstall )
 		pythonModuleEnv.Alias( "build", moduleInstall )
 
 	# python component of python module
