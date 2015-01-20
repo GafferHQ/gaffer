@@ -8,7 +8,7 @@ BUILD_DIR=$HOME'/publicGafferBuild/builds/gaffer-${GAFFER_MILESTONE_VERSION}.${G
 INSTALL_DIR=$HOME'/publicGafferBuild/packages/gaffer-${GAFFER_MILESTONE_VERSION}.${GAFFER_MAJOR_VERSION}.${GAFFER_MINOR_VERSION}.${GAFFER_PATCH_VERSION}-${GAFFER_PLATFORM}'
 DEPENDENCIES_INSTALL_DIR=$HOME'/publicGafferBuild/packages/gafferDependencies-${GAFFER_MILESTONE_VERSION}.${GAFFER_MAJOR_VERSION}.${GAFFER_MINOR_VERSION}.${GAFFER_PATCH_VERSION}-${GAFFER_PLATFORM}'
 
-DEPENDENCIES_SRC_DIR=$HOME'/publicGafferBuild/gafferDependenciesSource-0.89.0'
+DEPENDENCIES_SRC_DIR=$HOME'/publicGafferBuild/gafferDependencies-0.8.0.0'
 DOXYGEN='/software/apps/doxygen/1.8.4/cent6.x86_64/bin/doxygen'
 RMAN_ROOT='/software/apps/3delight/10.0.49/cent6.x86_64'
 ARNOLD_ROOT='/software/apps/arnold/4.1.2.0/cent6.x86_64'
@@ -29,3 +29,4 @@ scons \
 	DOXYGEN=$DOXYGEN \
 	dependenciesPackage \
 	package
+
