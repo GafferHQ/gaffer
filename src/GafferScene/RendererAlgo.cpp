@@ -222,14 +222,19 @@ bool outputLight( const ScenePlug *scene, const ScenePlug::ScenePath &path, IECo
 		return false;
 	}
 
-	ConstCompoundObjectPtr attributes = scene->fullAttributes( path );
-	const BoolData *visibilityData = attributes->member<BoolData>( "scene:visible" );
-	if( visibilityData && !visibilityData->readable() )
+	if( !visible( scene, path ) )
 	{
+		/// \todo Since both visible() and fullAttributes() perform similar work,
+		/// we may want to combine them into one query if we see this function
+		/// being a significant fraction of render time. Maybe something like
+		/// `fullAttributes( returnNullIfInvisible = true )`? It probably also
+		/// makes sense to migrate all the convenience functions from ScenePlug
+		/// into SceneAlgo.
 		return false;
 	}
 
-	M44f transform = scene->fullTransform( path );
+	ConstCompoundObjectPtr attributes = scene->fullAttributes( path );
+	const M44f transform = scene->fullTransform( path );
 
 	std::string lightHandle;
 	ScenePlug::pathToString( path, lightHandle );
@@ -294,9 +299,7 @@ bool outputCoordinateSystem( const ScenePlug *scene, const ScenePlug::ScenePath 
 		return false;
 	}
 
-	ConstCompoundObjectPtr attributes = scene->fullAttributes( path );
-	const BoolData *visibilityData = attributes->member<BoolData>( "scene:visible" );
-	if( visibilityData && !visibilityData->readable() )
+	if( !visible( scene, path ) )
 	{
 		return false;
 	}

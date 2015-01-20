@@ -74,6 +74,28 @@ bool GafferScene::exists( const ScenePlug *scene, const ScenePlug::ScenePath &pa
 	return true;
 }
 
+bool GafferScene::visible( const ScenePlug *scene, const ScenePlug::ScenePath &path )
+{
+	ContextPtr context = new Context( *Context::current(), Context::Borrowed );
+	Context::Scope scopedContext( context.get() );
+
+	ScenePlug::ScenePath p; p.reserve( path.size() );
+	for( ScenePlug::ScenePath::const_iterator it = path.begin(), eIt = path.end(); it != eIt; ++it )
+	{
+		p.push_back( *it );
+		context->set( ScenePlug::scenePathContextName, p );
+
+		ConstCompoundObjectPtr attributes = scene->attributesPlug()->getValue();
+		const BoolData *visibilityData = attributes->member<BoolData>( "scene:visible" );
+		if( visibilityData && !visibilityData->readable() )
+		{
+			return false;
+		}
+	}
+
+	return true;
+}
+
 namespace
 {
 
