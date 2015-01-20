@@ -243,6 +243,7 @@ import ReferenceUI
 import BackdropUI
 import SystemCommandUI
 import DotUI
+import TaskListUI
 
 # backwards compatibility
 ## \todo Remove me
