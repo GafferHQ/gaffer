@@ -62,6 +62,11 @@ class PathMatcher;
 /// the next path element within its child names.
 bool exists( const ScenePlug *scene, const ScenePlug::ScenePath &path );
 
+/// Returns true if the specified location is visible, and false otherwise.
+/// This operates by traversing the path from the root, terminating if
+/// the "scene:visible" attribute is false.
+bool visible( const ScenePlug *scene, const ScenePlug::ScenePath &path );
+
 /// Finds all the paths in the scene that are matched by the filter, and adds them into the PathMatcher.
 void matchingPaths( const Filter *filter, const ScenePlug *scene, PathMatcher &paths );
 /// As above, but specifying the filter as a plug - typically Filter::matchPlug() or

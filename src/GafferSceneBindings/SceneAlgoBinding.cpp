@@ -68,6 +68,7 @@ static void matchingPathsHelper2( const Gaffer::IntPlug *filterPlug, const Scene
 void bindSceneAlgo()
 {
 	def( "exists", exists );
+	def( "visible", visible );
 	def( "matchingPaths", &matchingPathsHelper1 );
 	def( "matchingPaths", &matchingPathsHelper2 );
 }

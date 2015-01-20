@@ -88,6 +88,56 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 		self.assertFalse( GafferScene.exists( group["out"], "/group/sphere2" ) )
 		self.assertFalse( GafferScene.exists( group["out"], "/group/plane/child" ) )
 
+	def testVisible( self ) :
+
+		sphere = GafferScene.Sphere()
+		group = GafferScene.Group()
+		group["in"].setInput( sphere["out"] )
+		group2 = GafferScene.Group()
+		group2["in"].setInput( group["out"] )
+
+		visibleFilter = GafferScene.PathFilter()
+
+		attributes1 = GafferScene.StandardAttributes()
+		attributes1["attributes"]["visibility"]["enabled"].setValue( True )
+		attributes1["attributes"]["visibility"]["value"].setValue( True )
+		attributes1["in"].setInput( group2["out"] )
+		attributes1["filter"].setInput( visibleFilter["match"] )
+
+		invisibleFilter = GafferScene.PathFilter()
+
+		attributes2 = GafferScene.StandardAttributes()
+		attributes2["attributes"]["visibility"]["enabled"].setValue( True )
+		attributes2["attributes"]["visibility"]["value"].setValue( False )
+		attributes2["in"].setInput( attributes1["out"] )
+		attributes2["filter"].setInput( invisibleFilter["match"] )
+
+		self.assertTrue( GafferScene.visible( attributes2["out"], "/group/group/sphere" ) )
+		self.assertTrue( GafferScene.visible( attributes2["out"], "/group/group" ) )
+		self.assertTrue( GafferScene.visible( attributes2["out"], "/group" ) )
+		self.assertTrue( GafferScene.visible( attributes2["out"], "/" ) )
+
+		visibleFilter["paths"].setValue( IECore.StringVectorData( [ "/group" ] ) )
+
+		self.assertTrue( GafferScene.visible( attributes2["out"], "/group/group/sphere" ) )
+		self.assertTrue( GafferScene.visible( attributes2["out"], "/group/group" ) )
+		self.assertTrue( GafferScene.visible( attributes2["out"], "/group" ) )
+		self.assertTrue( GafferScene.visible( attributes2["out"], "/" ) )
+
+		invisibleFilter["paths"].setValue( IECore.StringVectorData( [ "/group/group" ] ) )
+
+		self.assertFalse( GafferScene.visible( attributes2["out"], "/group/group/sphere" ) )
+		self.assertFalse( GafferScene.visible( attributes2["out"], "/group/group" ) )
+		self.assertTrue( GafferScene.visible( attributes2["out"], "/group" ) )
+		self.assertTrue( GafferScene.visible( attributes2["out"], "/" ) )
+
+		visibleFilter["paths"].setValue( IECore.StringVectorData( [ "/group/group/sphere" ] ) )
+
+		self.assertFalse( GafferScene.visible( attributes2["out"], "/group/group/sphere" ) )
+		self.assertFalse( GafferScene.visible( attributes2["out"], "/group/group" ) )
+		self.assertTrue( GafferScene.visible( attributes2["out"], "/group" ) )
+		self.assertTrue( GafferScene.visible( attributes2["out"], "/" ) )
+
 if __name__ == "__main__":
 	unittest.main()
 
