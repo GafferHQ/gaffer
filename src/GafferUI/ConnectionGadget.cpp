@@ -183,12 +183,20 @@ void ConnectionGadget::registerConnectionGadget( const IECore::TypeId nodeType, 
 
 ConnectionGadget::CreatorMap &ConnectionGadget::creators()
 {
-	static CreatorMap m;
-	return m;
+	// We deliberately allocate our static CreatorMap with `new`,
+	// knowing that it will never be freed. The alternative of
+	// declaring it as `static CreatorMap m;` can lead to crashes
+	// at Python shutdown. This appears to be because Python calls
+	// Py_Finalize(), and then _after_ that, static destruction
+	// would destroy CreatorMap, which in the case of creators
+	// registered from Python, still contains boost::python::object
+	// instances whose destructors will be run - boom!
+	static CreatorMap *m = new CreatorMap;
+	return *m;
 }
 
 ConnectionGadget::NamedCreatorMap &ConnectionGadget::namedCreators()
 {
-	static NamedCreatorMap m;
-	return m;
+	static NamedCreatorMap *m = new NamedCreatorMap;
+	return *m;
 }

@@ -20,6 +20,7 @@ releases = json.load( urllib.urlopen( "https://api.github.com/repos/johnhaddon/g
 release = next( r for r in releases if len( r["assets"] ) )
  
 asset = next( a for a in release["assets"] if platform in a["name"] )
+sys.stderr.write( "Downloading dependencies \"%s\"" % asset["browser_download_url"] )
 tarFileName, headers = urllib.urlretrieve( asset["browser_download_url"] )
 
 os.makedirs( buildDir )
