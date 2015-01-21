@@ -355,6 +355,7 @@ def __nullCreator( plug, annotations ) :
 
 __creators = {
 	"number" : __numberCreator,
+	"vector2" : __numberCreator,
 	"string" : __stringCreator,
 	"boolean" : __booleanCreator,
 	"checkBox" : __booleanCreator,
@@ -411,7 +412,6 @@ GafferUI.PlugValueWidget.registerCreator( GafferRenderMan.RenderManLight, "param
 # Metadata registrations
 ##########################################################################
 
-
 def __nodeDescription( node ) :
 
 	__defaultNodeDescription = """Loads shaders for use in RenderMan renderers. Use the ShaderAssignment node to assign shaders to objects in the scene."""
@@ -458,6 +458,16 @@ def __plugDivider( plug ) :
 
 	return d.value.lower() in ( "True", "true", "1" )
 
+def __plugVisibleDimensions( plug ) :
+
+	annotations = _shaderAnnotations( plug.node() )
+	d = annotations.get( plug.getName() + ".widget", None )
+
+	if d is not None and d.value == "vector2" :
+		return 2
+	else :
+		return None
+
 Gaffer.Metadata.registerNodeDescription( GafferRenderMan.RenderManShader, __nodeDescription )
 
 Gaffer.Metadata.registerNodeValue( GafferRenderMan.RenderManShader, "nodeGadget:color", __nodeColor )
@@ -470,3 +480,6 @@ Gaffer.Metadata.registerPlugValue( GafferRenderMan.RenderManLight, "parameters.*
 
 Gaffer.Metadata.registerPlugValue( GafferRenderMan.RenderManShader, "parameters.*", "divider", __plugDivider )
 Gaffer.Metadata.registerPlugValue( GafferRenderMan.RenderManLight, "parameters.*", "divider", __plugDivider )
+
+Gaffer.Metadata.registerPlugValue( GafferRenderMan.RenderManShader, "parameters.*", "ui:visibleDimensions", __plugVisibleDimensions )
+Gaffer.Metadata.registerPlugValue( GafferRenderMan.RenderManLight, "parameters.*", "ui:visibleDimensions", __plugVisibleDimensions )
