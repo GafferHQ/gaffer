@@ -72,5 +72,17 @@ class CompoundNumericPlugValueWidgetTest( unittest.TestCase ) :
 			self.assertTrue( w.childPlugValueWidget( n["v1"][i] ).getPlug().isSame( n["v1"][i] ) )
 			self.assertTrue( w.childPlugValueWidget( n["v2"][i] ) is None )
 
+	def testVisibleDimensionsMetadata( self ) :
+
+		n = Gaffer.Node()
+		n["v"] = Gaffer.V3fPlug()
+		Gaffer.Metadata.registerPlugValue( n["v"], "ui:visibleDimensions", 2 )
+
+		w = GafferUI.CompoundNumericPlugValueWidget( n["v"] )
+
+		self.assertTrue( w.childPlugValueWidget( n["v"][0] ).getVisible() )
+		self.assertTrue( w.childPlugValueWidget( n["v"][1] ).getVisible() )
+		self.assertFalse( w.childPlugValueWidget( n["v"][2] ).getVisible() )
+
 if __name__ == "__main__":
 	unittest.main()
