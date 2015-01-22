@@ -65,7 +65,7 @@ GafferUI.Nodule.registerNodule( GafferScene.OpenGLShader, fnmatch.translate( "pa
 def __shaderCreator( shaderName ) :
 
 	nodeName = os.path.split( shaderName )[-1]
-	nodeName = IECore.CamelCase.toSpaced( nodeName.translate( string.maketrans( ".-", "__" ) ) )
+	nodeName = nodeName.translate( string.maketrans( ".-", "__" ) )
 
 	node = GafferScene.OpenGLShader( nodeName )
 	node.loadShader( shaderName )
