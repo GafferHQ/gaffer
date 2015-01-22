@@ -39,6 +39,7 @@ from __future__ import with_statement
 
 import unittest
 import weakref
+import threading
 
 import IECore
 
@@ -971,6 +972,40 @@ class NodeGraphTest( GafferUITest.TestCase ) :
 
 		self.assertTrue( "__uiPosition" in script["n1"] )
 		self.assertFalse( "__uiPosition1" in script["n1"] )
+
+	def testErrorAndDelete( self ) :
+
+		# Create a script with a dodgy node,
+		# and a GraphGadget for displaying it.
+
+		script = Gaffer.ScriptNode()
+		script["n"] = GafferTest.BadNode()
+
+		graphGadget = GafferUI.GraphGadget( script )
+
+		# Arrange for the node to error on
+		# a background thread.
+
+		def f() :
+			with IECore.IgnoredExceptions( Exception ) :
+				script["n"]["out1"].getValue()
+
+		r = threading.Thread( target = f )
+		r.start()
+		r.join()
+
+		# Delete the node on the
+		# foreground thread - this will
+		# remove the NodeGadget inside
+		# the GraphGadget.
+
+		del script["n"]
+
+		# Run idle events. Woe betide any NodeGadget
+		# implementation assuming it will still be
+		# alive at arbitrary points in the future!
+
+		self.waitForIdle( 1000 )
 
 if __name__ == "__main__":
 	unittest.main()

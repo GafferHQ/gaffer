@@ -47,6 +47,7 @@
 #include "Gaffer/ValuePlug.h"
 
 #include "GafferBindings/DependencyNodeBinding.h"
+#include "GafferBindings/ExceptionAlgo.h"
 
 namespace GafferBindings
 {
@@ -69,16 +70,23 @@ class ComputeNodeWrapper : public DependencyNodeWrapper<WrappedType>
 			if( this->isSubclassed() )
 			{
 				IECorePython::ScopedGILLock gilLock;
-				boost::python::object f = this->methodOverride( "hash" );
-				if( f )
+				try
 				{
-					boost::python::object pythonHash( h );
-					f(
-						Gaffer::ValuePlugPtr( const_cast<Gaffer::ValuePlug *>( output ) ),
-						Gaffer::ContextPtr( const_cast<Gaffer::Context *>( context ) ),
-						pythonHash
-					);
-					h = boost::python::extract<IECore::MurmurHash>( pythonHash );
+					boost::python::object f = this->methodOverride( "hash" );
+					if( f )
+					{
+						boost::python::object pythonHash( h );
+						f(
+							Gaffer::ValuePlugPtr( const_cast<Gaffer::ValuePlug *>( output ) ),
+							Gaffer::ContextPtr( const_cast<Gaffer::Context *>( context ) ),
+							pythonHash
+						);
+						h = boost::python::extract<IECore::MurmurHash>( pythonHash );
+					}
+				}
+				catch( const boost::python::error_already_set &e )
+				{
+					translatePythonException();
 				}
 			}
 		}
@@ -88,11 +96,18 @@ class ComputeNodeWrapper : public DependencyNodeWrapper<WrappedType>
 			if( this->isSubclassed() )
 			{
 				IECorePython::ScopedGILLock gilLock;
-				boost::python::object f = this->methodOverride( "compute" );
-				if( f )
+				try
 				{
-					f( Gaffer::ValuePlugPtr( output ), Gaffer::ContextPtr( const_cast<Gaffer::Context *>( context ) ) );
-					return;
+					boost::python::object f = this->methodOverride( "compute" );
+					if( f )
+					{
+						f( Gaffer::ValuePlugPtr( output ), Gaffer::ContextPtr( const_cast<Gaffer::Context *>( context ) ) );
+						return;
+					}
+				}
+				catch( const boost::python::error_already_set &e )
+				{
+					translatePythonException();
 				}
 			}
 			WrappedType::compute( output, context );

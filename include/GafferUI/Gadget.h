@@ -249,6 +249,12 @@ class Gadget : public Gaffer::GraphComponent
 		//@}
 
 		typedef boost::function<void ()> UIThreadFunction;
+		/// Arranges for the specified function to be run on the main UI thread.
+		/// Note that this is run asynchronously at some point in the future. If
+		/// using boost::bind() to pass a member function here, you _must_
+		/// guarantee that the class instance will still be alive when the
+		/// member function is called. Typically this means using a smart pointer
+		/// to hold `this`.
 		static void executeOnUIThread( UIThreadFunction function );
 
 	protected :
