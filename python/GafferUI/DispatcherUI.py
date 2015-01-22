@@ -51,8 +51,8 @@ QtCore = GafferUI._qtImport( "QtCore" )
 
 def appendMenuDefinitions( menuDefinition, prefix="" ) :
 
-	menuDefinition.append( prefix + "/Execute Selected", { "command" : executeSelected, "shortCut" : "Ctrl+E", "active" : __selectionAvailable } )
-	menuDefinition.append( prefix + "/Repeat Previous", { "command" : repeatPrevious, "shortCut" : "Ctrl+R", "active" : __previousAvailable } )
+	menuDefinition.append( prefix + "/Execute Selected", { "command" : executeSelected, "shortCut" : "Ctrl+E", "active" : selectionAvailable } )
+	menuDefinition.append( prefix + "/Repeat Previous", { "command" : repeatPrevious, "shortCut" : "Ctrl+R", "active" : previousAvailable } )
 
 def appendNodeContextMenuDefinitions( nodeGraph, node, menuDefinition ) :
 
@@ -63,10 +63,9 @@ def appendNodeContextMenuDefinitions( nodeGraph, node, menuDefinition ) :
 	menuDefinition.append( "/Execute", { "command" : IECore.curry( _showDispatcherWindow, [ node ] ) } )
 
 def executeSelected( menu ) :
-
 	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
 	script = scriptWindow.scriptNode()
-	_showDispatcherWindow( __selectedNodes( script ) )
+	_showDispatcherWindow( selectedNodes( script ) )
 
 def repeatPrevious( menu ) :
 
@@ -451,20 +450,23 @@ def _showDispatcherWindow( nodes ) :
 	window.setNodesToDispatch( nodes )
 	window.setVisible( True )
 
-def __selectedNodes( script ) :
-
+def selectedNodes( script ) :
 	result = []
 	for n in script.selection() :
-		if hasattr( n, "execute" ) :
+		if isinstance( n, Gaffer.ExecutableNode):
 			result.append( n )
+		elif isinstance( n, Gaffer.Box):
+			for p in n.children( Gaffer.Plug ):
+				if p.direction() == Gaffer.Plug.Direction.Out and p.source() and isinstance( p.source().node(), Gaffer.ExecutableNode) :
+					result.append( n )
 
 	return result
 
-def __selectionAvailable( menu ) :
+def selectionAvailable( menu ) :
 
 	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
 	script = scriptWindow.scriptNode()
-	return bool( __selectedNodes( script ) )
+	return bool( selectedNodes( script ) )
 
 def __previous( script ) :
 
@@ -472,7 +474,7 @@ def __previous( script ) :
 	nodes = getattr( scriptWindow, "_lastDispatch", [] )
 	return [ w() for w in nodes if w() is not None and script.isSame( w().scriptNode() ) ]
 
-def __previousAvailable( menu ) :
+def previousAvailable( menu ) :
 
 	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
 	script = scriptWindow.scriptNode()
