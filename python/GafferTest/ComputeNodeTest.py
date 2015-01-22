@@ -429,5 +429,28 @@ class ComputeNodeTest( GafferTest.TestCase ) :
 		self.assertTrue( csbb[0][0].isSame( s["b"]["b"]["out3"] ) )
 		self.assertTrue( csbb[0][1].isSame( s["b"]["b"]["out3"] ) )
 
+	def testErrorSlotsDontSeeException( self ) :
+
+		self.fRan = False
+		def f( *unusedArgs ) :
+
+			# If there's an active python exception (from
+			# the error in BadNode below) when we try this
+			# import, it'll appear (falsely) as if the error
+			# originated from the import, and throw an exception
+			# here. This is not the intention - error slots are
+			# just meant to be informed of the error, without
+			# ever seeing the exception itself.
+			import IECore
+			self.fRan = True
+
+		n = GafferTest.BadNode()
+		c = n.errorSignal().connect( f )
+
+		with IECore.IgnoredExceptions( Exception ) :
+			n["out1"].getValue()
+
+		self.assertTrue( self.fRan )
+
 if __name__ == "__main__":
 	unittest.main()
