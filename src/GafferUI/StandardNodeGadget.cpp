@@ -823,8 +823,10 @@ void StandardNodeGadget::error( const Gaffer::Plug *plug, const Gaffer::Plug *so
 
 	// We could be on any thread at this point, so we
 	// use an idle callback to do the work of displaying the error
-	// on the main thread.
-	executeOnUIThread( boost::bind( &StandardNodeGadget::displayError, this, ConstPlugPtr( plug ), header + message ) );
+	// on the main thread. We _must_ use smart pointers for both
+	// this and plug, because otherwise we have no guarantee that
+	// they'll be alive later when the UI thread does its thing.
+	executeOnUIThread( boost::bind( &StandardNodeGadget::displayError, StandardNodeGadgetPtr( this ), ConstPlugPtr( plug ), header + message ) );
 }
 
 void StandardNodeGadget::displayError( ConstPlugPtr plug, const std::string &message )
