@@ -40,6 +40,11 @@ import IECore
 import Gaffer
 import GafferUI
 
+# Supported metadata :
+#
+#	- "ui:visibleDimensions" controls how many dimensions are actually shown.
+#     For instance, a value of 2 can be used to make a V3fPlug appear like a
+#     V2fPlug.
 class CompoundNumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plug, **kw ) :
@@ -53,6 +58,8 @@ class CompoundNumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 			w = GafferUI.NumericPlugValueWidget( p )
 			self.__row.append( w )
 
+		self.__applyVisibleDimensions()
+
 		self.__keyPressConnection = self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
 
 	def setPlug( self, plug ) :
@@ -63,6 +70,8 @@ class CompoundNumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		for index, plug in enumerate( plug.children() ) :
 			self.__row[index].setPlug( plug )
+
+		self.__applyVisibleDimensions()
 
 	def setHighlighted( self, highlighted ) :
 
@@ -169,6 +178,15 @@ class CompoundNumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 				"shortCut" : "Ctrl+G",
 				"active" : not plugValueWidget.getReadOnly(),
 			} )
+
+	def __applyVisibleDimensions( self ) :
+
+		actualDimensions = len( self.getPlug() )
+		visibleDimensions = Gaffer.Metadata.plugValue( self.getPlug(), "ui:visibleDimensions" )
+		visibleDimensions = visibleDimensions if visibleDimensions is not None else actualDimensions
+
+		for i in range( 0, actualDimensions ) :
+			self.__row[i].setVisible( i < visibleDimensions )
 
 __popupMenuConnection = GafferUI.PlugValueWidget.popupMenuSignal().connect( CompoundNumericPlugValueWidget._popupMenu )
 
