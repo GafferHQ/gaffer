@@ -1,3 +1,44 @@
+# 0.8.1.0
+=========
+
+Core
+-----------------------------------------------------------------------
+
+- Fixed ComputeNodeWrapper exception handling.
+
+UI
+-----------------------------------------------------------------------
+
+- Fixed GafferUI crashes seen at Python shutdown.
+- Added support for hiding some fields of CompoundNumericPlugValueWidgets.
+- Update DispatcherUI; can dispatch box with promoted requirement.
+- Fixed crashes when deleting a node immediately after it errored.
+
+Scene
+-----------------------------------------------------------------------
+
+- Fixed light visibility bug.
+- Fixed coordinate system visibility bug.
+- Added visible() function to SceneAlgo.h.
+- Added GL FacingRatio shader
+
+RenderMan
+-----------------------------------------------------------------------
+
+- Added "vector2" widget annotation support for RenderMan shaders.
+
+Build
+-----------------------------------------------------------------------
+
+- Stopped installing the python module by default
+- Moved installDir to /tmp for local IE builds.
+- Fixed release script to ignore GAFFER_OPTIONS_FILE environment variable.
+- Updated IE publicDependenciesBuild script.
+- Enabled testing of UI modules on Travis CI.
+- Added debug output to installDependencies.py.
+
+-----------------------------------------------------------------------
+
 # 0.8.0.0
 =========
 
