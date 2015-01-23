@@ -163,7 +163,15 @@ std::string Serialisation::classPath( boost::python::object &object )
 	{
 		result += ".";
 	}
-	result += extract<std::string>( object.attr( "__class__" ).attr( "__name__" ) );
+
+	if( PyType_Check( object.ptr() ) )
+	{
+		result += extract<std::string>( object.attr( "__name__" ) );
+	}
+	else
+	{
+		result += extract<std::string>( object.attr( "__class__" ).attr( "__name__" ) );
+	}
 	return result;
 }
 
