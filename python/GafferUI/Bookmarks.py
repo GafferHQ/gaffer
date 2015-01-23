@@ -311,7 +311,7 @@ class Bookmarks :
 				if not acquired :
 					f.write(
 						"bookmarks = GafferUI.Bookmarks.acquire( application, %s, %s )\n" %
-						( Gaffer.Serialisation.classPath( key[0] ).rpartition( "." )[0], repr( key[1] ) )
+						( Gaffer.Serialisation.classPath( key[0] ), repr( key[1] ) )
 					)
 					acquired = True
 				if b.name.startswith( "__recent:" ) :
