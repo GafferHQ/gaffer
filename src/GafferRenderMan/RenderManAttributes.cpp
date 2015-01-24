@@ -73,6 +73,7 @@ RenderManAttributes::RenderManAttributes( const std::string &name )
 
 	attributes->addOptionalMember( "ri:trace:maxdiffusedepth", new IECore::IntData( 1 ), "maxDiffuseDepth", Gaffer::Plug::Default, false );
 	attributes->addOptionalMember( "ri:trace:maxspeculardepth", new IECore::IntData( 2 ), "maxSpecularDepth", Gaffer::Plug::Default, false );
+	attributes->addOptionalMember( "ri:trace:displacements", new IECore::BoolData( false ), "traceDisplacements", Gaffer::Plug::Default, false );
 	attributes->addOptionalMember( "ri:trace:bias", new IECore::FloatData( 0.01f ), "traceBias", Gaffer::Plug::Default, false );
 
 	// displacement parameters
