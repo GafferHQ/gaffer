@@ -38,7 +38,6 @@
 #include "boost/python.hpp"
 
 #include "GafferBindings/SignalBinding.h"
-#include "GafferBindings/CatchingSlotCaller.h"
 
 #include "GafferUI/Gadget.h"
 #include "GafferUI/Style.h"

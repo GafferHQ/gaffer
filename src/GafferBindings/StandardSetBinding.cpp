@@ -39,7 +39,6 @@
 #include "boost/python/suite/indexing/container_utils.hpp"
 
 #include "GafferBindings/SignalBinding.h"
-#include "GafferBindings/CatchingSlotCaller.h"
 #include "GafferBindings/StandardSetBinding.h"
 
 #include "Gaffer/StandardSet.h"

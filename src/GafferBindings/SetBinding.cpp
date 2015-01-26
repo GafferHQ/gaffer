@@ -43,7 +43,6 @@
 #include "Gaffer/Set.h"
 
 #include "GafferBindings/SignalBinding.h"
-#include "GafferBindings/CatchingSlotCaller.h"
 
 using namespace Gaffer;
 
