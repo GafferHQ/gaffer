@@ -487,6 +487,29 @@ class MetadataTest( GafferTest.TestCase ) :
 		self.assertEqual( s, s3 )
 		self.assertTrue( s.isSame( s3 ) )
 
+	def testBadSlotsDontAffectGoodSlots( self ) :
+			
+		def badSlot( nodeTypeId, key ) :
+		
+			raise Exception( "Oops" )
+			
+		self.__goodSlotExecuted = False
+		def goodSlot( nodeTypeId, key ) :
+		
+			self.__goodSlotExecuted = True
+			
+		badConnection = Gaffer.Metadata.nodeValueChangedSignal().connect( badSlot )
+		goodConnection = Gaffer.Metadata.nodeValueChangedSignal().connect( goodSlot )
+
+		n = Gaffer.Node()
+		with IECore.CapturingMessageHandler() as mh :
+			Gaffer.Metadata.registerNodeValue( n, "test", 10 )	
+
+		self.assertTrue( self.__goodSlotExecuted )
+
+		self.assertEqual( len( mh.messages ), 1 )
+		self.assertTrue( "Oops" in mh.messages[0].message )
+
 if __name__ == "__main__":
 	unittest.main()
 
