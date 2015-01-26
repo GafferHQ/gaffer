@@ -90,7 +90,7 @@ def __raytracingSummary( plug ) :
 	if plug["traceDisplacements"]["enabled"].getValue() :
 		info.append( "Displacements %s" % ( "On" if plug["traceDisplacements"]["value"].getValue() else "Off" ) )
 	if plug["traceBias"]["enabled"].getValue() :
-		info.append( "Trace Bias %s" % ( "On" if plug["traceBias"]["value"].getValue() else "Off" ) )
+		info.append( "Trace Bias %g" % plug["traceBias"]["value"].getValue() )
 
 	return ", ".join( info )
 
