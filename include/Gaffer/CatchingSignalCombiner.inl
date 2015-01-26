@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,23 +34,61 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERBINDINGS_CATCHINGSLOTCALLER_H
-#define GAFFERBINDINGS_CATCHINGSLOTCALLER_H
+#ifndef GAFFER_CATCHINGSIGNALCOMBINER_INL
+#define GAFFER_CATCHINGSIGNALCOMBINER_INL
 
-namespace GafferBindings
+#include "IECore/MessageHandler.h"
+
+namespace Gaffer
 {
 
-/// This struct provides an alternative SlotCaller for use with
-/// SignalBinding. It ensures that any python execution errors
-/// within the slot are not propagated up to the caller, and
-/// therefore don't block the continued execution of other slots.
-/// If an execution error does occur in the slot then the CatchingSlotCaller
-/// will return a default constructed result.
-template<typename Signal>
-struct CatchingSlotCaller;
+template<typename T>
+template<typename InputIterator>
+typename CatchingSignalCombiner<T>::result_type CatchingSignalCombiner<T>::operator()( InputIterator first, InputIterator last ) const
+{
+	result_type r = result_type();
+	while( first != last )
+	{
+		try
+		{
+			r = *first;
+		}
+		catch( const std::exception &e )
+		{
+			IECore::msg( IECore::Msg::Error, "Emitting signal", e.what() );
+		}
+		catch( ... )
+		{
+			IECore::msg( IECore::Msg::Error, "Emitting signal", "Unknown error" );
+		}
+		++first;
+	}
+	return r;
+};
 
-} // namespace GafferBindings
+// Specialisation for void return type.
+template<>
+template<typename InputIterator>
+typename CatchingSignalCombiner<void>::result_type CatchingSignalCombiner<void>::operator()( InputIterator first, InputIterator last ) const
+{
+	while( first != last )
+	{
+		try
+		{
+			*first;
+		}
+		catch( const std::exception &e )
+		{
+			IECore::msg( IECore::Msg::Error, "Emitting signal", e.what() );
+		}
+		catch( ... )
+		{
+			IECore::msg( IECore::Msg::Error, "Emitting signal", "Unknown error" );
+		}
+		++first;
+	}
+};
 
-#include "GafferBindings/CatchingSlotCaller.inl"
+} // namespace Gaffer
 
-#endif // GAFFERBINDINGS_CATCHINGSLOTCALLER_H
+#endif // GAFFER_CATCHINGSIGNALCOMBINER_INL

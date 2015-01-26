@@ -43,6 +43,7 @@
 #include "IECore/Data.h"
 
 #include "Gaffer/StringAlgo.h"
+#include "Gaffer/CatchingSignalCombiner.h"
 
 namespace Gaffer
 {
@@ -60,8 +61,8 @@ class Metadata
 
 	public :
 
-		typedef boost::signal<void ( IECore::TypeId nodeTypeId, IECore::InternedString key )> NodeValueChangedSignal;
-		typedef boost::signal<void ( IECore::TypeId nodeTypeId, const MatchPattern &plugPath, IECore::InternedString key )> PlugValueChangedSignal;
+		typedef boost::signal<void ( IECore::TypeId nodeTypeId, IECore::InternedString key ), CatchingSignalCombiner<void> > NodeValueChangedSignal;
+		typedef boost::signal<void ( IECore::TypeId nodeTypeId, const MatchPattern &plugPath, IECore::InternedString key ), CatchingSignalCombiner<void> > PlugValueChangedSignal;
 
 		typedef boost::function<IECore::ConstDataPtr ( const Node *node )> NodeValueFunction;
 		typedef boost::function<IECore::ConstDataPtr ( const Plug *plug )> PlugValueFunction;

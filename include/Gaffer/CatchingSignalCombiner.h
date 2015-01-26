@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,20 +34,18 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUI_EVENTSIGNALCOMBINER_H
-#define GAFFERUI_EVENTSIGNALCOMBINER_H
+#ifndef GAFFER_CATCHINGSIGNALCOMBINER_H
+#define GAFFER_CATCHINGSIGNALCOMBINER_H
 
-namespace GafferUI
+namespace Gaffer
 {
 
-/// The EventSignalCombiner is used in the definition of the various Gadget signals. It
-/// calls each slot in order until one returns true, at which point it shortcuts and returns
-/// without calling the other slots.
-/// \todo Make this suppress exceptions in the same way that CatchingSignalCombiner does,
-/// and then update the various slot callers in the bindings to remove their own exception
-/// handling.
+/// Equivalent to the default combiner (boost::last_value), except that
+/// exceptions thrown from slots are caught and reported via IECore::MessageHandler.
+/// This is useful for situations where an error in a slot should not affect the
+/// calling of other slots, or the emitter of the signal.
 template<typename T>
-struct EventSignalCombiner
+struct CatchingSignalCombiner
 {
 
 	typedef T result_type;
@@ -57,8 +55,8 @@ struct EventSignalCombiner
 
 };
 
-} // namespace GafferUI
+} // namespace Gaffer
 
-#include "GafferUI/EventSignalCombiner.inl"
+#include "Gaffer/CatchingSignalCombiner.inl"
 
-#endif // GAFFERUI_EVENTSIGNALCOMBINER_H
+#endif // GAFFER_CATCHINGSIGNALCOMBINER_H
