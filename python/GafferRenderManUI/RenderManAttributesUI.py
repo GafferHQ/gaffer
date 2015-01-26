@@ -87,8 +87,16 @@ def __raytracingSummary( plug ) :
 		info.append( "Diffuse Depth %d" % plug["maxDiffuseDepth"]["value"].getValue() )
 	if plug["maxSpecularDepth"]["enabled"].getValue() :
 		info.append( "Specular Depth %d" % plug["maxSpecularDepth"]["value"].getValue() )
-	if plug["traceDisplacements"]["enabled"].getValue() :
-		info.append( "Displacements %s" % ( "On" if plug["traceDisplacements"]["value"].getValue() else "Off" ) )
+	if plug["traceBias"]["enabled"].getValue() :
+		info.append( "Trace Bias %s" % ( "On" if plug["traceBias"]["value"].getValue() else "Off" ) )
+
+	return ", ".join( info )
+
+def __displacementSummary( plug ) :
+
+	info = []
+	if plug["displacementLevel"]["enabled"].getValue() :
+		info.append( "Displacement Level %d" % plug["displacementLevel"]["value"].getValue() )
 
 	return ", ".join( info )
 
@@ -137,7 +145,15 @@ GafferUI.PlugValueWidget.registerCreator(
 			"namesAndLabels" : (
 				( "ri:trace:maxdiffusedepth", "Max Diffuse Depth" ),
 				( "ri:trace:maxspeculardepth", "Max Specular Depth" ),
-				( "ri:trace:displacements", "Trace Displacements" ),
+				( "ri:trace:bias", "Trace Bias" ),
+			),
+		},
+
+		{
+			"label" : "Displacement",
+			"summary" : __displacementSummary,
+			"namesAndLabels" : (
+				( "ri:displacement:level", "Displacement Level" ),
 			),
 		},
 
@@ -193,4 +209,17 @@ GafferUI.PlugValueWidget.registerCreator(
 		( "Shader", "shader" ),
 		( "Primitive", "primitive" ),
 	),
+)
+
+Gaffer.Metadata.registerNodeDescription(
+
+	GafferRenderMan.RenderManAttributes,
+
+	"""Apply render attributes to your scene.""",
+
+	"attributes.traceBias",
+	{
+		"description" : """This bias value affects rays. It is an offset applied to the ray origin, moving it slightly away from the surface launch point in the ray direction. This offset can prevent blotchy artifacts resulting from the ray immediately finding an intersection with the surface it just left. Usually, 0.01 is the default scene value.""",
+	}
+
 )
