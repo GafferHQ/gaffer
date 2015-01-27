@@ -61,8 +61,7 @@ Gadget::Gadget( const std::string &name )
 	std::string n = "__Gaffer::Gadget::" + boost::lexical_cast<std::string>( (size_t)this );
 	m_glName = IECoreGL::NameStateComponent::glNameFromName( n, true );
 
-	childAddedSignal().connect( boost::bind( &Gadget::childAdded, this, ::_1, ::_2 ) );
-	childRemovedSignal().connect( boost::bind( &Gadget::childRemoved, this, ::_1, ::_2 )  );
+	parentChangedSignal().connect( boost::bind( &Gadget::parentChanged, this, ::_1, ::_2 ) );
 }
 
 GadgetPtr Gadget::select( GLuint id )
@@ -402,14 +401,15 @@ void Gadget::styleChanged()
 	requestRender();
 }
 
-void Gadget::childAdded( GraphComponent *parent, GraphComponent *child )
+void Gadget::parentChanged( GraphComponent *child, GraphComponent *oldParent )
 {
-	assert( parent==this );
-	requestRender();
-}
-
-void Gadget::childRemoved( GraphComponent *parent, GraphComponent *child )
-{
-	assert( parent==this );
-	requestRender();
+	assert( child==this );
+	if( Gadget *oldParentGadget = IECore::runTimeCast<Gadget>( oldParent ) )
+	{
+		oldParentGadget->requestRender();
+	}
+	if( Gadget *parentGadget = child->parent<Gadget>() )
+	{
+		parentGadget->requestRender();
+	}
 }

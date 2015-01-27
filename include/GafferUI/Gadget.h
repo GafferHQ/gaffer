@@ -272,8 +272,7 @@ class Gadget : public Gaffer::GraphComponent
 	private :
 
 		void styleChanged();
-		void childAdded( GraphComponent *parent, GraphComponent *child );
-		void childRemoved( GraphComponent *parent, GraphComponent *child );
+		void parentChanged( GraphComponent *child, GraphComponent *oldParent );
 
 		ConstStylePtr m_style;
 
