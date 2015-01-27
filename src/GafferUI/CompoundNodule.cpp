@@ -73,8 +73,6 @@ CompoundNodule::CompoundNodule( Gaffer::CompoundPlugPtr plug, LinearContainer::O
 			m_row->addChild( nodule );
 		}
 	}
-
-	m_row->renderRequestSignal().connect( boost::bind( &CompoundNodule::childRenderRequest, this, ::_1 ) );
 }
 
 CompoundNodule::~CompoundNodule()
@@ -145,9 +143,4 @@ void CompoundNodule::childRemoved( Gaffer::GraphComponent *parent, Gaffer::Graph
 			break;
 		}
 	}
-}
-
-void CompoundNodule::childRenderRequest( Gadget *child )
-{
-	renderRequestSignal()( this );
 }

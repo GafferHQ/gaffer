@@ -87,7 +87,6 @@ class CompoundNodule : public Nodule
 
 		void childAdded( Gaffer::GraphComponent *parent, Gaffer::GraphComponent *child );
 		void childRemoved( Gaffer::GraphComponent *parent, Gaffer::GraphComponent *child );
-		void childRenderRequest( Gadget *child );
 
 		typedef std::map<const Gaffer::Plug *, Nodule *> NoduleMap;
 		NoduleMap m_nodules;
