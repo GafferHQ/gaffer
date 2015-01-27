@@ -89,6 +89,8 @@ def __raytracingSummary( plug ) :
 		info.append( "Specular Depth %d" % plug["maxSpecularDepth"]["value"].getValue() )
 	if plug["traceDisplacements"]["enabled"].getValue() :
 		info.append( "Displacements %s" % ( "On" if plug["traceDisplacements"]["value"].getValue() else "Off" ) )
+	if plug["traceBias"]["enabled"].getValue() :
+		info.append( "Trace Bias %s" % __floatToString( plug["traceBias"]["value"].getValue() ) )
 
 	return ", ".join( info )
 
@@ -138,6 +140,7 @@ GafferUI.PlugValueWidget.registerCreator(
 				( "ri:trace:maxdiffusedepth", "Max Diffuse Depth" ),
 				( "ri:trace:maxspeculardepth", "Max Specular Depth" ),
 				( "ri:trace:displacements", "Trace Displacements" ),
+				( "ri:trace:bias", "Trace Bias" ),
 			),
 		},
 
@@ -193,4 +196,17 @@ GafferUI.PlugValueWidget.registerCreator(
 		( "Shader", "shader" ),
 		( "Primitive", "primitive" ),
 	),
+)
+
+Gaffer.Metadata.registerNodeDescription(
+
+	GafferRenderMan.RenderManAttributes,
+
+	"""Apply render attributes to your scene.""",
+
+	"attributes.traceBias",
+	{
+		"description" : """This bias value affects rays. It is an offset applied to the ray origin, moving it slightly away from the surface launch point in the ray direction. This offset can prevent blotchy artifacts resulting from the ray immediately finding an intersection with the surface it just left. Usually, 0.01 is the default scene value.""",
+	}
+
 )
