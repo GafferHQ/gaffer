@@ -77,7 +77,7 @@ void LinearContainer::setOrientation( Orientation orientation )
 	if( orientation != m_orientation )
 	{
 		m_orientation = orientation;
-		renderRequestSignal()( this );
+		requestRender();
 		m_clean = false;
 	}
 }
@@ -97,7 +97,7 @@ void LinearContainer::setAlignment( Alignment alignment )
 	{
 		m_alignment = alignment;
 		m_clean = false;
-		renderRequestSignal()( this );
+		requestRender();
 	}
 }
 
@@ -116,7 +116,7 @@ void LinearContainer::setSpacing( float spacing )
 	{
 		m_spacing = spacing;
 		m_clean = false;
-		renderRequestSignal()( this );
+ 		requestRender();
 	}
 }
 
@@ -135,7 +135,7 @@ void LinearContainer::setDirection( Direction direction )
 	{
 		m_direction = direction;
 		m_clean = false;
-		renderRequestSignal()( this );
+ 		requestRender();
 	}
 }
 

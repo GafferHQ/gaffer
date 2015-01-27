@@ -81,5 +81,5 @@ void ObjectView::update()
 void ObjectView::baseStateChanged()
 {
 	m_renderableGadget->baseState()->add( const_cast<IECoreGL::State *>( baseState() ) );
-	m_renderableGadget->renderRequestSignal()( m_renderableGadget.get() );
+	viewportGadget()->renderRequestSignal()( viewportGadget() );
 }

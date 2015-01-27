@@ -871,13 +871,13 @@ bool GraphGadget::dragEnter( GadgetPtr gadget, const DragDropEvent &event )
 		V2f pos = V2f( i.x, i.y );
 		offsetNodes( m_scriptNode->selection(), pos - m_lastDragPosition );
 		m_lastDragPosition = pos;
-		renderRequestSignal()( this );
+ 		requestRender();
 		return true;
 	}
 	else if( m_dragMode == Selecting )
 	{
 		m_lastDragPosition = V2f( i.x, i.y );
-		renderRequestSignal()( this );
+ 		requestRender();
 		return true;
 	}
 
@@ -934,7 +934,7 @@ bool GraphGadget::dragMove( GadgetPtr gadget, const DragDropEvent &event )
 		offsetNodes( m_scriptNode->selection(), pos - m_lastDragPosition );
 		m_lastDragPosition = pos;
 		updateDragReconnectCandidate( event );
-		renderRequestSignal()( this );
+ 		requestRender();
 		return true;
 	}
 	else
@@ -942,7 +942,7 @@ bool GraphGadget::dragMove( GadgetPtr gadget, const DragDropEvent &event )
 		// we're drag selecting
 		m_lastDragPosition = V2f( i.x, i.y );
 		updateDragSelection( false );
-		renderRequestSignal()( this );
+ 		requestRender();
 		return true;
 	}
 
@@ -1105,12 +1105,12 @@ bool GraphGadget::dragEnd( GadgetPtr gadget, const DragDropEvent &event )
 		}
 
 		m_dragReconnectCandidate = 0;
-		renderRequestSignal()( this );
+ 		requestRender();
 	}
 	else if( dragMode == Selecting )
 	{
 		updateDragSelection( true );
-		renderRequestSignal()( this );
+ 		requestRender();
 	}
 
 	return true;

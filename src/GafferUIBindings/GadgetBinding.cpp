@@ -222,6 +222,7 @@ void GafferUIBindings::bindGadget()
 		.staticmethod( "_idleSignalAccessedSignal" )
 		.def( "_executeOnUIThreadSignal", &Gadget::executeOnUIThreadSignal, return_value_policy<reference_existing_object>() )
 		.staticmethod( "_executeOnUIThreadSignal" )
+		.def( "_requestRender", &Gadget::requestRender )
 		.def( "select", &Gadget::select ).staticmethod( "select" )
 	;
 

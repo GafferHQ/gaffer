@@ -104,7 +104,7 @@ void Gadget::setStyle( ConstStylePtr style )
 		{
 			const_cast<Style *>( m_style.get() )->changedSignal().connect( boost::bind( &Gadget::styleChanged, this ) );
 		}
-		renderRequestSignal()( this );
+ 		requestRender();
 	}
 }
 
@@ -134,7 +134,7 @@ void Gadget::setVisible( bool visible )
 		return;
 	}
 	m_visible = visible;
-	renderRequestSignal()( this );
+ 	requestRender();
 }
 
 bool Gadget::getVisible() const
@@ -164,7 +164,7 @@ void Gadget::setHighlighted( bool highlighted )
 	}
 
 	m_highlighted = highlighted;
-	renderRequestSignal()( this );
+ 	requestRender();
 }
 
 bool Gadget::getHighlighted() const
@@ -177,7 +177,7 @@ void Gadget::setTransform( const Imath::M44f &matrix )
 	if( matrix!=m_transform )
 	{
 		m_transform = matrix;
-		renderRequestSignal()( this );
+ 		requestRender();
 	}
 }
 
@@ -227,6 +227,16 @@ void Gadget::render( const Style *currentStyle ) const
 		doRender( currentStyle );
 
 	glPopMatrix();
+}
+
+void Gadget::requestRender()
+{
+	Gadget *g = this;
+	while( g )
+	{
+		g->renderRequestSignal()( g );
+		g = g->parent<Gadget>();
+	}
 }
 
 void Gadget::doRender( const Style *style ) const
@@ -389,24 +399,17 @@ Gadget::ExecuteOnUIThreadSignal &Gadget::executeOnUIThreadSignal()
 
 void Gadget::styleChanged()
 {
-	renderRequestSignal()( this );
+	requestRender();
 }
 
 void Gadget::childAdded( GraphComponent *parent, GraphComponent *child )
 {
 	assert( parent==this );
-	static_cast<Gadget *>( child )->renderRequestSignal().connect( boost::bind( &Gadget::childRenderRequest, this, ::_1 ) );
-	renderRequestSignal()( this );
+	requestRender();
 }
 
 void Gadget::childRemoved( GraphComponent *parent, GraphComponent *child )
 {
 	assert( parent==this );
-	static_cast<Gadget *>( child )->renderRequestSignal().disconnect( &Gadget::childRenderRequest );
-	renderRequestSignal()( this );
-}
-
-void Gadget::childRenderRequest( Gadget *child )
-{
-	renderRequestSignal()( this );
+	requestRender();
 }

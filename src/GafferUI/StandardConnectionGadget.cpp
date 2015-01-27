@@ -167,7 +167,7 @@ void StandardConnectionGadget::updateDragEndPoint( const Imath::V3f position, co
 	{
 		throw IECore::Exception( "Not dragging" );
 	}
-	renderRequestSignal()( this );
+ 	requestRender();
 }
 
 void StandardConnectionGadget::doRender( const Style *style ) const
@@ -261,7 +261,7 @@ bool StandardConnectionGadget::dragEnd( GadgetPtr gadget, const DragDropEvent &e
 	}
 
 	m_dragEnd = Gaffer::Plug::Invalid;
-	renderRequestSignal()( this );
+ 	requestRender();
 	return true;
 }
 
@@ -301,13 +301,13 @@ std::string StandardConnectionGadget::getToolTip( const IECore::LineSegment3f &l
 void StandardConnectionGadget::enter( GadgetPtr gadget, const ButtonEvent &event )
 {
 	m_hovering = true;
-	renderRequestSignal()( this );
+ 	requestRender();
 }
 
 void StandardConnectionGadget::leave( GadgetPtr gadget, const ButtonEvent &event )
 {
 	m_hovering = false;
-	renderRequestSignal()( this );
+ 	requestRender();
 }
 
 bool StandardConnectionGadget::nodeSelected( const Nodule *nodule ) const
@@ -342,7 +342,7 @@ void StandardConnectionGadget::plugMetadataChanged( IECore::TypeId nodeTypeId, c
 
 	if( updateUserColor() )
 	{
-		renderRequestSignal()( this );
+ 		requestRender();
 	}
 }
 

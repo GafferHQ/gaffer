@@ -867,7 +867,7 @@ void SceneGadget::setScene( GafferScene::ConstScenePlugPtr scene )
 	}
 
 	m_dirtyFlags = UpdateTask::AllDirty;
-	renderRequestSignal()( this );
+	requestRender();
 }
 
 const GafferScene::ScenePlug *SceneGadget::getScene() const
@@ -884,7 +884,7 @@ void SceneGadget::setContext( Gaffer::ContextPtr context )
 
 	m_context = context;
 	m_contextChangedConnection = m_context->changedSignal().connect( boost::bind( &SceneGadget::contextChanged, this, ::_2 ) );
-	renderRequestSignal()( this );
+	requestRender();
 }
 
 Gaffer::Context *SceneGadget::getContext()
@@ -901,7 +901,7 @@ void SceneGadget::setExpandedPaths( GafferScene::ConstPathMatcherDataPtr expande
 {
 	m_expandedPaths = expandedPaths;
 	m_dirtyFlags |= UpdateTask::ExpansionDirty;
-	renderRequestSignal()( this );
+	requestRender();
 }
 
 const GafferScene::PathMatcherData *SceneGadget::getExpandedPaths() const
@@ -917,7 +917,7 @@ void SceneGadget::setMinimumExpansionDepth( size_t depth )
 	}
 	m_minimumExpansionDepth = depth;
 	m_dirtyFlags |= UpdateTask::ExpansionDirty;
-	renderRequestSignal()( this );
+	requestRender();
 }
 
 size_t SceneGadget::getMinimumExpansionDepth() const
@@ -984,7 +984,7 @@ void SceneGadget::setSelection( ConstPathMatcherDataPtr selection )
 {
 	m_selection = selection;
 	m_sceneGraph->applySelection( m_selection->readable() );
-	renderRequestSignal()( this );
+	requestRender();
 }
 
 Imath::Box3f SceneGadget::selectionBound() const
@@ -1056,7 +1056,7 @@ void SceneGadget::plugDirtied( const Gaffer::Plug *plug )
 		return;
 	}
 
-	renderRequestSignal()( this );
+	requestRender();
 }
 
 void SceneGadget::contextChanged( const IECore::InternedString &name )
@@ -1064,7 +1064,7 @@ void SceneGadget::contextChanged( const IECore::InternedString &name )
 	if( !boost::starts_with( name.string(), "ui:" ) )
 	{
 		m_dirtyFlags = UpdateTask::AllDirty;
-		renderRequestSignal()( this );
+		requestRender();
 	}
 }
 

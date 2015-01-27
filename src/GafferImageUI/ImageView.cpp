@@ -346,7 +346,7 @@ class ImageViewGadget : public GafferUI::Gadget
 				m_channelToView = channel;
 			}
 
-			renderRequestSignal()( this );
+			requestRender();
 
 			return true;
 		}
@@ -440,7 +440,7 @@ class ImageViewGadget : public GafferUI::Gadget
 					if( boxIntersects( swatchBox, mouseRasterPos ) )
 					{
 						m_sampleColor = *m_colorUiElements[i].color;
-						renderRequestSignal()( this );
+						requestRender();
 						return true;
 					}
 				}
@@ -448,7 +448,7 @@ class ImageViewGadget : public GafferUI::Gadget
 
 			m_drawSelection = m_colorUiElements[1].draw = m_colorUiElements[2].draw = m_colorUiElements[3].draw = false;
 			*m_colorUiElements[0].color = m_sampleColor = sampleColor( m_mousePos );
-			renderRequestSignal()( this );
+			requestRender();
 
 			return true;
 		}
@@ -457,7 +457,7 @@ class ImageViewGadget : public GafferUI::Gadget
 		{
 			m_mousePos = gadgetToDisplaySpace( V3f( event.line.p0.x, event.line.p0.y, 0 ) );
 			*m_colorUiElements[0].color = sampleColor( m_mousePos );
-			renderRequestSignal()( this );
+			requestRender();
 			return true;
 		}
 
@@ -513,7 +513,7 @@ class ImageViewGadget : public GafferUI::Gadget
 
 			m_mousePos = gadgetToDisplaySpace( V3f( event.line.p0.x, event.line.p0.y, 0 ) );
 			*m_colorUiElements[0].color = sampleColor( m_mousePos );
-			renderRequestSignal()( this );
+			requestRender();
 			return true;
 		}
 
@@ -526,7 +526,7 @@ class ImageViewGadget : public GafferUI::Gadget
 			}
 			m_dragSelecting = false;
 
-			renderRequestSignal()( this );
+			requestRender();
 			return true;
 		}
 
