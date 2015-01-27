@@ -768,7 +768,7 @@ class SceneView::LookThrough
 
 			m_overlay->setResolutionGate( Box2f( V2f( offset ), V2f( resolutionGateSize + offset ) ) );
 			m_overlay->setCropWindow( camera->parametersData()->member<Box2fData>( "cropWindow" )->readable() );
-			m_overlay->setCaption( boost::str( boost::format( "%dx%d %.3f" ) % resolution.x % resolution.y % pixelAspectRatio ) );
+			m_overlay->setCaption( boost::str( boost::format( "%dx%d, %.3f, %s" ) % resolution.x % resolution.y % pixelAspectRatio % camera->getName() ) );
 			m_overlay->setVisible( true );
 
 			// Now modify the camera, so that the view through the resolution gate we've calculated
