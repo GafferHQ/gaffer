@@ -543,10 +543,18 @@ class SceneView::LookThrough
 
 			// Set up our nodes. We use a standard options node to disable camera motion blur
 			// and overscan because we don't want them applied to the cameras we retrieve with SceneAlgo.
+			// We also must disable transform blur and deformation blur, because if either of those is
+			// on, the shutter range becomes non-zero and the SceneAlgo transform() method will evaluate the
+			// camera at the shutter start rather than the current time, even though its only evaluating a
+			// single time sample.
 
 			m_standardOptions->inPlug()->setInput( view->inPlug<ScenePlug>() );
 			m_standardOptions->optionsPlug()->getChild<CompoundDataPlug::MemberPlug>( "cameraBlur" )->enabledPlug()->setValue( true );
 			m_standardOptions->optionsPlug()->getChild<CompoundDataPlug::MemberPlug>( "cameraBlur" )->valuePlug<BoolPlug>()->setValue( false );
+			m_standardOptions->optionsPlug()->getChild<CompoundDataPlug::MemberPlug>( "transformBlur" )->enabledPlug()->setValue( true );
+			m_standardOptions->optionsPlug()->getChild<CompoundDataPlug::MemberPlug>( "transformBlur" )->valuePlug<BoolPlug>()->setValue( false );
+			m_standardOptions->optionsPlug()->getChild<CompoundDataPlug::MemberPlug>( "deformationBlur" )->enabledPlug()->setValue( true );
+			m_standardOptions->optionsPlug()->getChild<CompoundDataPlug::MemberPlug>( "deformationBlur" )->valuePlug<BoolPlug>()->setValue( false );
 			m_standardOptions->optionsPlug()->getChild<CompoundDataPlug::MemberPlug>( "overscan" )->enabledPlug()->setValue( true );
 			m_standardOptions->optionsPlug()->getChild<CompoundDataPlug::MemberPlug>( "overscan" )->valuePlug<BoolPlug>()->setValue( false );
 
