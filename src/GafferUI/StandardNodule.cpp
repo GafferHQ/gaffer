@@ -94,7 +94,7 @@ void StandardNodule::setLabelVisible( bool labelVisible )
 		return;
 	}
 	m_labelVisible = labelVisible;
-	renderRequestSignal()( this );
+ 	requestRender();
 }
 
 bool StandardNodule::getLabelVisible() const
@@ -112,7 +112,7 @@ void StandardNodule::updateDragEndPoint( const Imath::V3f position, const Imath:
 	m_dragPosition = position;
 	m_dragTangent = tangent;
 	m_draggingConnection = true;
-	renderRequestSignal()( this );
+ 	requestRender();
 }
 
 void StandardNodule::doRender( const Style *style ) const
@@ -220,7 +220,7 @@ bool StandardNodule::buttonPress( GadgetPtr gadget, const ButtonEvent &event )
 
 IECore::RunTimeTypedPtr StandardNodule::dragBegin( GadgetPtr gadget, const ButtonEvent &event )
 {
-	renderRequestSignal()( this );
+ 	requestRender();
 	if( event.buttons == ButtonEvent::Middle )
 	{
 		GafferUI::Pointer::setCurrent( "plug" );
@@ -280,7 +280,7 @@ bool StandardNodule::dragEnter( GadgetPtr gadget, const DragDropEvent &event )
 			setCompatibleLabelsVisible( event, true );
 		}
 
-		renderRequestSignal()( this );
+ 		requestRender();
 		return true;
 	}
 
@@ -290,7 +290,7 @@ bool StandardNodule::dragEnter( GadgetPtr gadget, const DragDropEvent &event )
 bool StandardNodule::dragMove( GadgetPtr gadget, const DragDropEvent &event )
 {
 	m_dragPosition = event.line.p0;
-	renderRequestSignal()( this );
+ 	requestRender();
 	return true;
 }
 
@@ -325,7 +325,7 @@ bool StandardNodule::dragLeave( GadgetPtr gadget, const DragDropEvent &event )
 		m_draggingConnection = false;
 	}
 
-	renderRequestSignal()( this );
+ 	requestRender();
 	return true;
 }
 
@@ -434,7 +434,7 @@ void StandardNodule::plugMetadataChanged( IECore::TypeId nodeTypeId, const Gaffe
 
 	if( updateUserColor() )
 	{
-		renderRequestSignal()( this );
+ 		requestRender();
 	}
 }
 

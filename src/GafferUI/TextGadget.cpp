@@ -73,7 +73,7 @@ void TextGadget::setText( const std::string &text )
 		Imath::Box3f cb = style()->characterBound( Style::LabelText );
 		m_bound.min.y = std::min( m_bound.min.y, cb.min.y );
 		m_bound.max.y = std::max( m_bound.max.y, cb.max.y );
-		renderRequestSignal()( this );
+ 		requestRender();
 	}
 }
 

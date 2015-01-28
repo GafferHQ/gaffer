@@ -173,13 +173,13 @@ void SplinePlugGadget::splineAdded( SetPtr splineStandardSet, IECore::RunTimeTyp
 
 void SplinePlugGadget::pointAdded( GraphComponentPtr spline, GraphComponentPtr pointPlug )
 {
-	renderRequestSignal()( this );
+ 	requestRender();
 }
 
 void SplinePlugGadget::pointRemoved( GraphComponentPtr spline, GraphComponentPtr pointPlug )
 {
 	m_selection->remove( pointPlug.get() );
-	renderRequestSignal()( this );
+ 	requestRender();
 }
 
 bool SplinePlugGadget::selectionAcceptance( ConstStandardSetPtr selection, IECore::ConstRunTimeTypedPtr point )
@@ -217,7 +217,7 @@ void SplinePlugGadget::plugSet( Plug *plug )
 {
 	if( m_splines->contains( plug ) )
 	{
-		renderRequestSignal()( this );
+ 		requestRender();
 	}
 }
 
@@ -334,7 +334,7 @@ bool SplinePlugGadget::buttonPress( GadgetPtr, const ButtonEvent &event )
 
 		if( handled )
 		{
-			renderRequestSignal()( this );
+ 			requestRender();
 		}
 
 		return handled;

@@ -296,7 +296,7 @@ void BackdropNodeGadget::plugDirtied( const Gaffer::Plug *plug )
 		plug == boundPlug()
 	)
 	{
-		renderRequestSignal()( this );
+		requestRender();
 	}
 }
 
@@ -325,7 +325,7 @@ bool BackdropNodeGadget::mouseMove( Gadget *gadget, const ButtonEvent &event )
 	if( newHovered != m_hovered )
 	{
 		m_hovered = newHovered;
-		renderRequestSignal()( this );
+		requestRender();
 	}
 
 	return true;
@@ -395,7 +395,7 @@ void BackdropNodeGadget::leave( Gadget *gadget, const ButtonEvent &event )
 {
 	Pointer::setCurrent( "" );
 	m_hovered = false;
-	renderRequestSignal()( this );
+	requestRender();
 }
 
 float BackdropNodeGadget::hoverWidth() const
@@ -455,7 +455,7 @@ void BackdropNodeGadget::nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore:
 	{
 		if( updateUserColor() )
 		{
-			renderRequestSignal()( this );
+			requestRender();
 		}
 	}
 }

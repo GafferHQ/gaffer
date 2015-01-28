@@ -578,7 +578,7 @@ void StandardNodeGadget::plugDirtied( const Gaffer::Plug *plug )
 	if( dependencyNode && plug == dependencyNode->enabledPlug() )
 	{
 		m_nodeEnabled = static_cast<const Gaffer::BoolPlug *>( plug )->getValue();
-		renderRequestSignal()( this );
+ 		requestRender();
 	}
 
 	if( ErrorGadget *e = errorGadget( /* createIfMissing = */ false ) )
@@ -750,7 +750,7 @@ void StandardNodeGadget::nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore:
 	{
 		if( updateUserColor() )
 		{
-			renderRequestSignal()( this );
+ 			requestRender();
 		}
 	}
 	else if( key == g_paddingKey )

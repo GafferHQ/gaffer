@@ -259,6 +259,10 @@ class Gadget : public Gaffer::GraphComponent
 
 	protected :
 
+		/// Emits renderRequestSignal() as necessary for this and all ancestors.
+		/// Use this rather than emit the signal manually.
+		void requestRender();
+
 		/// The subclass specific part of render(). The public render() method
 		/// sets the GL state up with the name attribute and transform for
 		/// this Gadget, makes sure the style is bound and then calls doRender().
@@ -268,9 +272,7 @@ class Gadget : public Gaffer::GraphComponent
 	private :
 
 		void styleChanged();
-		void childAdded( GraphComponent *parent, GraphComponent *child );
-		void childRemoved( GraphComponent *parent, GraphComponent *child );
-		void childRenderRequest( Gadget *child );
+		void parentChanged( GraphComponent *child, GraphComponent *oldParent );
 
 		ConstStylePtr m_style;
 

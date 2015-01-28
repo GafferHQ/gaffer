@@ -220,7 +220,7 @@ void ViewportGadget::frame( const Imath::Box3f &box )
 {
 	m_cameraController.frame( box );
 	m_cameraChangedSignal( this );
- 	renderRequestSignal()( this );
+ 	requestRender();
 }
 
 void ViewportGadget::frame( const Imath::Box3f &box, const Imath::V3f &viewDirection,
@@ -228,7 +228,7 @@ void ViewportGadget::frame( const Imath::Box3f &box, const Imath::V3f &viewDirec
 {
  	m_cameraController.frame( box, viewDirection, upVector );
 	m_cameraChangedSignal( this );
-	renderRequestSignal()( this );
+ 	requestRender();
 }
 
 void ViewportGadget::setDragTracking( bool dragTracking )
@@ -564,7 +564,7 @@ bool ViewportGadget::dragMove( GadgetPtr gadget, const DragDropEvent &event )
 		{
 			m_cameraController.motionUpdate( V2i( (int)event.line.p1.x, (int)event.line.p1.y ) );
 			m_cameraChangedSignal( this );
-			renderRequestSignal()( this );
+ 			requestRender();
 		}
 		return true;
 	}
@@ -696,7 +696,7 @@ void ViewportGadget::trackDragIdle()
 	dragMove( this, m_dragTrackingEvent );
 
 	m_cameraChangedSignal( this );
-	renderRequestSignal()( this );
+ 	requestRender();
 }
 
 GadgetPtr ViewportGadget::updatedDragDestination( std::vector<GadgetPtr> &gadgets, const DragDropEvent &event )
@@ -789,7 +789,7 @@ bool ViewportGadget::dragEnd( GadgetPtr gadget, const DragDropEvent &event )
 		{
 			m_cameraController.motionEnd( V2i( (int)event.line.p1.x, (int)event.line.p1.y ) );
 			m_cameraChangedSignal( this );
-			renderRequestSignal()( this );
+ 			requestRender();
 		}
 		return true;
 	}
@@ -827,7 +827,7 @@ bool ViewportGadget::wheel( GadgetPtr gadget, const ButtonEvent &event )
 	m_cameraController.motionEnd( position );
 
 	m_cameraChangedSignal( this );
-	renderRequestSignal()( this );
+ 	requestRender();
 
 	return true;
 }

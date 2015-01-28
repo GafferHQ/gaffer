@@ -191,13 +191,13 @@ class GnomonPlane : public GafferUI::Gadget
 		void enter()
 		{
 			m_hovering = true;
-			renderRequestSignal()( this );
+			requestRender();
 		}
 
 		void leave()
 		{
 			m_hovering = false;
-			renderRequestSignal()( this );
+			requestRender();
 		}
 
 		bool m_hovering;
@@ -424,7 +424,7 @@ class CameraOverlay : public GafferUI::Gadget
 				return;
 			}
 			m_resolutionGate = resolutionGate;
-			renderRequestSignal()( this );
+			requestRender();
 		}
 
 		const Box2f &getResolutionGate() const
@@ -440,7 +440,7 @@ class CameraOverlay : public GafferUI::Gadget
 				return;
 			}
 			m_cropWindow = cropWindow;
-			renderRequestSignal()( this );
+			requestRender();
 		}
 
 		const Box2f &getCropWindow() const
@@ -455,7 +455,7 @@ class CameraOverlay : public GafferUI::Gadget
 				return;
 			}
 			m_caption = caption;
-			renderRequestSignal()( this );
+			requestRender();
 		}
 
 		const std::string &getCaption() const
@@ -1151,7 +1151,7 @@ void SceneView::baseStateChanged()
 {
 	/// \todo This isn't transferring the override state properly. Probably an IECoreGL problem.
 	m_sceneGadget->baseState()->add( const_cast<IECoreGL::State *>( baseState() ) );
-	m_sceneGadget->renderRequestSignal()( m_sceneGadget.get() );
+	viewportGadget()->renderRequestSignal()( viewportGadget() );
 }
 
 void SceneView::plugSet( Gaffer::Plug *plug )

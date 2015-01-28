@@ -70,7 +70,7 @@ void SpacerGadget::setSize( const Imath::Box3f &size )
 		return;
 	}
 	m_bound = size;
-	renderRequestSignal()( this );
+ 	requestRender();
 }
 
 bool SpacerGadget::acceptsChild( const GraphComponent *potentialChild ) const

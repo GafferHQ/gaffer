@@ -122,7 +122,7 @@ void ConnectionGadget::setMinimised( bool minimised )
 		return;
 	}
 	m_minimised = minimised;
-	renderRequestSignal()( this );
+	requestRender();
 }
 
 bool ConnectionGadget::getMinimised() const

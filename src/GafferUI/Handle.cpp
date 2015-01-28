@@ -72,7 +72,7 @@ void Handle::setType( Type type )
 	}
 
 	m_type = type;
-	renderRequestSignal()( this );
+ 	requestRender();
 }
 
 Handle::Type Handle::getType() const
@@ -121,13 +121,13 @@ void Handle::doRender( const Style *style ) const
 void Handle::enter()
 {
 	m_hovering = true;
-	renderRequestSignal()( this );
+ 	requestRender();
 }
 
 void Handle::leave()
 {
 	m_hovering = false;
-	renderRequestSignal()( this );
+ 	requestRender();
 }
 
 bool Handle::buttonPress( const ButtonEvent &event )
