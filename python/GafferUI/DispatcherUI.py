@@ -358,6 +358,9 @@ class __FramesModePlugValueWidget( GafferUI.PlugValueWidget ) :
 		frameRange = playback.getFrameRange()
 		frameRange = str(IECore.frameListFromList( range(frameRange[0], frameRange[1]+1) ))
 		self.getPlug().node()["frameRange"].setValue( frameRange )
+		frameRangeWidget = self.__frameRangeWidget()
+		if frameRangeWidget :
+			frameRangeWidget.textWidget().setText( str(frameRange) )
 	
 	def __scriptPlugDirtied( self, plug ) :
 		
