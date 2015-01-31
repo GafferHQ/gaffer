@@ -65,15 +65,15 @@ class SelectionTool : public GafferUI::Tool
 
 		SceneGadget *sceneGadget();
 
+		class DragOverlay;
+		DragOverlay *dragOverlay();
+
 		bool buttonPress( const GafferUI::ButtonEvent &event );
 		IECore::RunTimeTypedPtr dragBegin( GafferUI::Gadget *gadget, const GafferUI::DragDropEvent &event );
 		bool dragEnter( const GafferUI::Gadget *gadget, const GafferUI::DragDropEvent &event );
 		bool dragMove( const GafferUI::DragDropEvent &event );
 		bool dragEnd( const GafferUI::DragDropEvent &event );
 		void transferSelectionToContext();
-
-		IE_CORE_FORWARDDECLARE( DragOverlay );
-		DragOverlayPtr m_dragOverlay;
 
 };
 

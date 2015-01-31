@@ -134,9 +134,10 @@ class SelectionTool::DragOverlay : public GafferUI::Gadget
 IE_CORE_DEFINERUNTIMETYPED( SelectionTool );
 
 SelectionTool::ToolDescription<SelectionTool, SceneView> SelectionTool::g_toolDescription;
+static IECore::InternedString g_dragOverlayName( "__selectionToolDragOverlay" );
 
 SelectionTool::SelectionTool( SceneView *view, const std::string &name )
-	:	Tool( view, name ), m_dragOverlay( new DragOverlay() )
+	:	Tool( view, name )
 {
 	SceneGadget *sg = sceneGadget();
 
@@ -145,9 +146,6 @@ SelectionTool::SelectionTool( SceneView *view, const std::string &name )
 	sg->dragEnterSignal().connect( boost::bind( &SelectionTool::dragEnter, this, ::_1, ::_2 ) );
 	sg->dragMoveSignal().connect( boost::bind( &SelectionTool::dragMove, this, ::_2 ) );
 	sg->dragEndSignal().connect( boost::bind( &SelectionTool::dragEnd, this, ::_2 ) );
-
-	m_dragOverlay->setVisible( false );
-	view->viewportGadget()->setChild( "__selectionOverlay", m_dragOverlay );
 }
 
 SelectionTool::~SelectionTool()
@@ -157,6 +155,20 @@ SelectionTool::~SelectionTool()
 SceneGadget *SelectionTool::sceneGadget()
 {
 	return runTimeCast<SceneGadget>( view()->viewportGadget()->getPrimaryChild() );
+}
+
+SelectionTool::DragOverlay *SelectionTool::dragOverlay()
+{
+	// All instances of SelectionTool share a single drag overlay - this
+	// allows SelectionTool to be subclassed for the creation of other tools.
+	DragOverlay *result = view()->viewportGadget()->getChild<DragOverlay>( g_dragOverlayName );
+	if( !result )
+	{
+		result = new DragOverlay;
+		view()->viewportGadget()->setChild( g_dragOverlayName, result );
+		result->setVisible( false );
+	}
+	return result;
 }
 
 bool SelectionTool::buttonPress( const GafferUI::ButtonEvent &event )
@@ -229,9 +241,9 @@ IECore::RunTimeTypedPtr SelectionTool::dragBegin( GafferUI::Gadget *gadget, cons
 	if( !sg->objectAt( event.line, objectUnderMouse ) )
 	{
 		// drag to select
-		m_dragOverlay->setStartPosition( event.line.p1 );
-		m_dragOverlay->setEndPosition( event.line.p1 );
-		m_dragOverlay->setVisible( true );
+		dragOverlay()->setStartPosition( event.line.p1 );
+		dragOverlay()->setEndPosition( event.line.p1 );
+		dragOverlay()->setVisible( true );
 		return gadget;
 	}
 	else
@@ -256,24 +268,24 @@ bool SelectionTool::dragEnter( const GafferUI::Gadget *gadget, const GafferUI::D
 
 bool SelectionTool::dragMove( const GafferUI::DragDropEvent &event )
 {
-	m_dragOverlay->setEndPosition( event.line.p1 );
+	dragOverlay()->setEndPosition( event.line.p1 );
 	return true;
 }
 
 bool SelectionTool::dragEnd( const GafferUI::DragDropEvent &event )
 {
 	Pointer::setCurrent( "" );
-	if( !m_dragOverlay->getVisible() )
+	if( !dragOverlay()->getVisible() )
 	{
 		return false;
 	}
 
-	m_dragOverlay->setVisible( false );
+	dragOverlay()->setVisible( false );
 
 	SceneGadget *sg = sceneGadget();
 	PathMatcher &selection = const_cast<GafferScene::PathMatcherData *>( sg->getSelection() )->writable();
 
-	if( sg->objectsAt( m_dragOverlay->getStartPosition(), m_dragOverlay->getEndPosition(), selection ) )
+	if( sg->objectsAt( dragOverlay()->getStartPosition(), dragOverlay()->getEndPosition(), selection ) )
 	{
 		transferSelectionToContext();
 	}
