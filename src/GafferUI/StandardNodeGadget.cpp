@@ -112,9 +112,15 @@ class StandardNodeGadget::ErrorGadget : public Gadget
 			{
 				return result;
 			}
+
+			std::set<std::string> reported;
 			for( PlugErrors::const_iterator it = m_errors.begin(); it != m_errors.end(); ++it )
 			{
-				result += it->second.error;
+				if( reported.find( it->second.error ) == reported.end() )
+				{
+					result += it->second.error;
+					reported.insert( it->second.error );
+				}
 			}
 			return result;
 		}
