@@ -99,6 +99,10 @@ void BranchCreator::affects( const Plug *input, AffectedPlugsContainer &outputs 
 	}
 	else if( input == parentPlug() )
 	{
+		outputs.push_back( mappingPlug() );
+	}
+	else if( input == mappingPlug() )
+	{
 		for( ValuePlugIterator it( outPlug() ); it != it.end(); it++ )
 		{
 			outputs.push_back( it->get() );
