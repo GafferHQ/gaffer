@@ -98,7 +98,7 @@ application.__ocioPlugSetConnection = preferences.plugSetSignal().connect( __plu
 def __displayTransformCreator( name ) :
 
 	result = GafferImage.OpenColorIO()
-	result["inputSpace"].setValue( "linear" )
+	result["inputSpace"].setValue( config.getColorSpace( OCIO.Constants.ROLE_SCENE_LINEAR ).getName() )
 	result["outputSpace"].setValue( config.getDisplayColorSpaceName( defaultDisplay, name ) )
 
 	return result
@@ -121,7 +121,7 @@ def __updateDefaultDisplayTransforms() :
 def __defaultDisplayTransformCreator() :
 
 	result = GafferImage.OpenColorIO()
-	result["inputSpace"].setValue( "linear" )
+	result["inputSpace"].setValue( config.getColorSpace( OCIO.Constants.ROLE_SCENE_LINEAR ).getName() )
 
 	__defaultDisplayTransforms.append( result )
 	__updateDefaultDisplayTransforms()
