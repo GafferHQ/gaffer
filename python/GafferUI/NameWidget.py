@@ -37,6 +37,8 @@
 
 from __future__ import with_statement
 
+import re
+
 import Gaffer
 import GafferUI
 
@@ -49,7 +51,7 @@ class NameWidget( GafferUI.TextWidget ) :
 
 		GafferUI.TextWidget.__init__( self, **kw )
 
-		self._qtWidget().setValidator( QtGui.QRegExpValidator( QtCore.QRegExp( "[A-Za-z_]+[A-Za-z_0-9]*" ), self._qtWidget() ) )
+		self._qtWidget().setValidator( _Validator( self._qtWidget() ) )
 
 		self.__graphComponent = None
 		self.setGraphComponent( graphComponent )
@@ -84,3 +86,28 @@ class NameWidget( GafferUI.TextWidget ) :
 	def __setText( self, *unwantedArgs ) :
 
 		self.setText( self.__graphComponent.getName() if self.__graphComponent is not None else "" )
+
+class _Validator( QtGui.QValidator ) :
+
+	def __init__( self, parent ) :
+
+		QtGui.QValidator.__init__( self, parent )
+
+	def validate( self, input, pos ) :
+
+		input = input.replace( " ", "_" )
+		if len( input ) :
+			if re.match( "^[A-Za-z_]+[A-Za-z_0-9]*$", input ) :
+				result = QtGui.QValidator.Acceptable
+			else :
+				result = QtGui.QValidator.Invalid
+		else :
+			result = QtGui.QValidator.Intermediate
+
+		if hasattr( QtCore, "QString" ) and isinstance( input, QtCore.QString ) :
+			# PyQt API, where QString type is exposed and we modify it in place
+			return result, pos
+		else :
+			# PySide API, where QString is mapped automatically to python string
+			# and we return a new string.
+			return result, input, pos
