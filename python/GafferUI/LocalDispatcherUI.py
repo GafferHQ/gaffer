@@ -119,18 +119,18 @@ class _LocalJobsPath( Gaffer.Path ) :
 		if result is not None and self.__job is not None :
 			
 			if self.__job.failed() :
-				result["status"] = Gaffer.LocalDispatcher.Job.Status.Failed
+				result["localDispatcher:status"] = "Failed"
 			elif self.__job.killed() :
-				result["status"] = Gaffer.LocalDispatcher.Job.Status.Killed
+				result["localDispatcher:status"] = "Killed"
 			else :
-				result["status"] = Gaffer.LocalDispatcher.Job.Status.Running
+				result["localDispatcher:status"] = "Running"
 			
-			result["id"] = self.__job.id()
-			result["name"] = self.__job.name()
-			result["directory"] = self.__job.directory()
+			result["localDispatcher:id"] = self.__job.id()
+			result["localDispatcher:jobName"] = self.__job.name()
+			result["localDispatcher:directory"] = self.__job.directory()
 			stats = self.__job.statistics()
-			result["cpu"] = "{0:.2f} %".format( stats["pcpu"] ) if "pcpu" in stats.keys() else "N/A"
-			result["memory"] = "{0:.2f} GB".format( stats["rss"] / 1024.0  / 1024.0 ) if "rss" in stats.keys() else "N/A"
+			result["localDispatcher:cpu"] = "{0:.2f} %".format( stats["pcpu"] ) if "pcpu" in stats.keys() else "N/A"
+			result["localDispatcher:memory"] = "{0:.2f} GB".format( stats["rss"] / 1024.0  / 1024.0 ) if "rss" in stats.keys() else "N/A"
 		
 		return result
 	
@@ -176,11 +176,11 @@ class _LocalJobsWindow( GafferUI.Window ) :
 				self.__jobListingWidget = GafferUI.PathListingWidget(
 					_LocalJobsPath( jobPool ),
 					columns = (
-						GafferUI.PathListingWidget.Column( infoField = "status", label = "Status", displayFunction = _LocalJobsWindow._displayStatus ),
-						GafferUI.PathListingWidget.Column( infoField = "name", label = "Name" ),
-						GafferUI.PathListingWidget.Column( infoField = "id", label = "Id" ),
-						GafferUI.PathListingWidget.Column( infoField = "cpu", label = "CPU" ),
-						GafferUI.PathListingWidget.Column( infoField = "memory", label = "Memory" ),
+						GafferUI.PathListingWidget.IconColumn( "Status", "localDispatcherStatus", "localDispatcher:status" ),
+						GafferUI.PathListingWidget.StandardColumn( "Name", "localDispatcher:jobName" ),
+						GafferUI.PathListingWidget.StandardColumn( "Id", "localDispatcher:id" ),
+						GafferUI.PathListingWidget.StandardColumn( "CPU", "localDispatcher:cpu" ),
+						GafferUI.PathListingWidget.StandardColumn( "Memory", "localDispatcher:memory" ),
 					),
 					allowMultipleSelection=True
 				)
@@ -239,17 +239,7 @@ class _LocalJobsWindow( GafferUI.Window ) :
 		jobPool._window = weakref.ref( window )
 		
 		return window
-	
-	@staticmethod
-	def _displayStatus( status )  :
 		
-		if status == Gaffer.LocalDispatcher.Job.Status.Killed :
-			return GafferUI.Image._qtPixmapFromFile( "debugNotification.png" )
-		elif status == Gaffer.LocalDispatcher.Job.Status.Failed :
-			return GafferUI.Image._qtPixmapFromFile( "errorNotification.png" )
-		
-		return GafferUI.Image._qtPixmapFromFile( "infoNotification.png" )
-	
 	def __visibilityChanged( self, widget ) :
 		
 		if widget.visible() :
