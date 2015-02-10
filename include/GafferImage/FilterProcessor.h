@@ -52,6 +52,11 @@ namespace GafferImage
 /// Only hash connected inputs (if it is enabled).
 /// Expand the data window to by merging all of the connect input's data windows.
 /// Use the first display window encountered on a connected input.
+/// \todo Rename this to something sensible (what does it have to do with filtering?). Ideally I think
+/// we might make both the SceneProcessor and ImageProcessor base classes capable of having multiple inputs
+/// via an ArrayPlug called "in".
+/// \todo Review the usefulness of this base class. At present it is only subclassed by Merge, and it's not clear
+/// that the behaviour of FilterProcessor is useful for any other subclasses.
 class FilterProcessor : public ImageProcessor
 {
 

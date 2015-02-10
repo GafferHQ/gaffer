@@ -79,6 +79,9 @@ class Merge : public FilterProcessor
 	protected :
 
 		/// The different types of operation that are available.
+		/// \todo Remove the "k" prefix. Expose the enum publicly
+		/// and bind it so we don't have to use hardcoded integers
+		/// from the test scripts.
 		enum
 		{
 			kAdd = 0,

@@ -69,9 +69,12 @@ void FilterProcessor::affects( const Gaffer::Plug *input, AffectedPlugsContainer
 	const ImagePlugList& inputs( m_inputs.inputs() );
 	for( ImagePlugList::const_iterator it( inputs.begin() ); it < inputs.end(); it++ )
 	{
-		if( input == (*it)->formatPlug() ||
-				input == (*it)->dataWindowPlug() ||
-				input == (*it)->channelNamesPlug() )
+		if(
+			input == (*it)->formatPlug() ||
+			input == (*it)->dataWindowPlug() ||
+			input == (*it)->channelNamesPlug() ||
+			input == (*it)->channelDataPlug()
+		)
 		{
 			outputs.push_back( outPlug()->getChild<ValuePlug>( input->getName() ) );
 			return;
