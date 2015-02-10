@@ -34,13 +34,15 @@
 #
 ##########################################################################
 
+import os
 import unittest
 
 import IECore
-import GafferImage
-import os
 
-class MergeTest( unittest.TestCase ) :
+import GafferTest
+import GafferImage
+
+class MergeTest( GafferTest.TestCase ) :
 
 	rPath = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/redWithDataWindow.100x100.exr" )
 	gPath = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/greenWithDataWindow.100x100.exr" )
@@ -149,6 +151,7 @@ class MergeTest( unittest.TestCase ) :
 
 	# Overlay a red, green and blue tile of different data window sizes and check the data window is expanded on the result and looks as we expect.
 	def testOverRGBAonRGB( self ) :
+
 		c = GafferImage.ImageReader()
 		c["fileName"].setValue( self.checkerPath )
 
@@ -173,6 +176,34 @@ class MergeTest( unittest.TestCase ) :
 
 		self.assertTrue( not IECore.ImageDiffOp()( imageA = expected, imageB = mergeResult, skipMissingChannels = False, maxError = 0.001 ).value )
 
+	def testAffects( self ) :
+
+		c1 = GafferImage.Constant()
+		c2 = GafferImage.Constant()
+
+		m = GafferImage.Merge()
+		m["in"].setInput( c1["out"] )
+		m["in1"].setInput( c2["out"] )
+
+		cs = GafferTest.CapturingSlot( m.plugDirtiedSignal() )
+
+		c1["color"]["r"].setValue( 0.1 )
+
+		self.assertEqual( len( cs ), 4 )
+		self.assertTrue( cs[0][0].isSame( m["in"]["channelData"] ) )
+		self.assertTrue( cs[1][0].isSame( m["in"] ) )
+		self.assertTrue( cs[2][0].isSame( m["out"]["channelData"] ) )
+		self.assertTrue( cs[3][0].isSame( m["out"] ) )
+
+		del cs[:]
+
+		c2["color"]["g"].setValue( 0.2 )
+
+		self.assertEqual( len( cs ), 4 )
+		self.assertTrue( cs[0][0].isSame( m["in1"]["channelData"] ) )
+		self.assertTrue( cs[1][0].isSame( m["in1"] ) )
+		self.assertTrue( cs[2][0].isSame( m["out"]["channelData"] ) )
+		self.assertTrue( cs[3][0].isSame( m["out"] ) )
 
 if __name__ == "__main__":
 	unittest.main()
