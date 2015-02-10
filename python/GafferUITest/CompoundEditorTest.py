@@ -97,6 +97,18 @@ class CompoundEditorTest( GafferUITest.TestCase ) :
 		self.assertEqual( wc(), None )
 		self.assertEqual( wn(), None )
 
+	def testReprLifetime( self ) :
+
+		s = Gaffer.ScriptNode()
+		c = GafferUI.CompoundEditor( s )
+
+		wc = weakref.ref( c )
+		repr( c )
+
+		del c
+
+		self.assertEqual( wc(), None )
+
 if __name__ == "__main__":
 	unittest.main()
 
