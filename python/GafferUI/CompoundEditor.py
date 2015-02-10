@@ -108,35 +108,35 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 
 		return self.__editorAddedSignal
 
+	def __serialise( self, w ) :
+
+		assert( isinstance( w, GafferUI.SplitContainer ) )
+
+		if len( w ) > 1 :
+			# it's split
+			sizes = w.getSizes()
+			splitPosition = ( float( sizes[0] ) / sum( sizes ) ) if sum( sizes ) else 0
+			return "( GafferUI.SplitContainer.Orientation.%s, %f, ( %s, %s ) )" % ( str( w.getOrientation() ), splitPosition, self.__serialise( w[0] ), self.__serialise( w[1] ) )
+		else :
+			# not split - a tabbed container full of editors
+			tabbedContainer = w[0]
+			tabDict = { "tabs" : tuple( tabbedContainer[:] ) }
+			if tabbedContainer.getCurrent() is not None :
+				tabDict["currentTab"] = tabbedContainer.index( tabbedContainer.getCurrent() )
+			tabDict["tabsVisible"] = tabbedContainer.getTabsVisible()
+
+			tabDict["pinned"] = []
+			for editor in tabbedContainer :
+				if isinstance( editor, GafferUI.NodeSetEditor ) :
+					tabDict["pinned"].append( not editor.getNodeSet().isSame( self.scriptNode().selection() ) )
+				else :
+					tabDict["pinned"].append( None )
+
+			return repr( tabDict )
+	
 	def __repr__( self ) :
 
-		def __serialise( w ) :
-
-			assert( isinstance( w, GafferUI.SplitContainer ) )
-
-			if len( w ) > 1 :
-				# it's split
-				sizes = w.getSizes()
-				splitPosition = ( float( sizes[0] ) / sum( sizes ) ) if sum( sizes ) else 0
-				return "( GafferUI.SplitContainer.Orientation.%s, %f, ( %s, %s ) )" % ( str( w.getOrientation() ), splitPosition, __serialise( w[0] ), __serialise( w[1] ) )
-			else :
-				# not split - a tabbed container full of editors
-				tabbedContainer = w[0]
-				tabDict = { "tabs" : tuple( tabbedContainer[:] ) }
-				if tabbedContainer.getCurrent() is not None :
-					tabDict["currentTab"] = tabbedContainer.index( tabbedContainer.getCurrent() )
-				tabDict["tabsVisible"] = tabbedContainer.getTabsVisible()
-
-				tabDict["pinned"] = []
-				for editor in tabbedContainer :
-					if isinstance( editor, GafferUI.NodeSetEditor ) :
-						tabDict["pinned"].append( not editor.getNodeSet().isSame( self.scriptNode().selection() ) )
-					else :
-						tabDict["pinned"].append( None )
-
-				return repr( tabDict )
-
-		return "GafferUI.CompoundEditor( scriptNode, children = %s )" % __serialise( self.__splitContainer )
+		return "GafferUI.CompoundEditor( scriptNode, children = %s )" % self.__serialise( self.__splitContainer )
 
 	def _layoutMenuDefinition( self, tabbedContainer ) :
 
