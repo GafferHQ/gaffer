@@ -107,8 +107,7 @@ dlVersion = getOption( "DL_VERSION", os.environ["DL_VERSION"] )
 
 try :
 	dlReg = IEEnv.registry["apps"]["3delight"][dlVersion][IEEnv.platform()]
-	if dlReg["compiler"]==compiler and dlReg["compilerVersion"]==compilerVersion :
-		RMAN_ROOT = dlReg["location"]
+	RMAN_ROOT = dlReg["location"]
 except :
 	pass
 
