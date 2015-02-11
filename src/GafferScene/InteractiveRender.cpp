@@ -83,7 +83,7 @@ class InteractiveRender::SceneGraph
 
 	public :
 
-		SceneGraph() : m_parent( NULL )
+		SceneGraph() : m_parent( NULL ), m_locationPresent( true )
 		{
 		}
 
@@ -108,6 +108,8 @@ class InteractiveRender::SceneGraph
 	private :
 		
 		friend class SceneGraphBuildTask;
+		friend class ChildNamesUpdateTask;
+		
 		friend class SceneGraphIteratorFilter;
 		friend class SceneGraphEvaluatorFilter;
 		friend class SceneGraphOutputFilter;
@@ -117,13 +119,18 @@ class InteractiveRender::SceneGraph
 		SceneGraph *m_parent;
 		std::vector<InteractiveRender::SceneGraph *> m_children;
 		
-		// hash of the attributes as of the most recent evaluation:
+		// hashes as of the most recent evaluation:
 		IECore::MurmurHash m_attributesHash;
+		IECore::MurmurHash m_childNamesHash;
 		
 		// actual scene data:
 		IECore::ConstCompoundObjectPtr m_attributes;
 		IECore::ConstObjectPtr m_object;
 		Imath::M44f m_transform;
+		
+		// flag indicating if this location is currently present - (used
+		// when the child names change)
+		bool m_locationPresent;
 };
 
 size_t InteractiveRender::g_firstPlugIndex = 0;
@@ -222,6 +229,116 @@ const Gaffer::BoolPlug *InteractiveRender::updateCoordinateSystemsPlug() const
 	return getChild<BoolPlug>( g_firstPlugIndex + 6 );
 }
 
+//////////////////////////////////////////////////////////////////////////
+// ChildNamesUpdateTask implementation
+//
+// We use this tbb::task to traverse the input scene and check if the child
+// names are still valid at each location. If not, we flag the location as
+// not present so it doesn't get traversed during an update
+//
+//////////////////////////////////////////////////////////////////////////
+
+class InteractiveRender::ChildNamesUpdateTask : public tbb::task
+{
+
+	public :
+
+		ChildNamesUpdateTask( const ScenePlug *scene, const Context *context, SceneGraph *sceneGraph, const ScenePlug::ScenePath &scenePath )
+			:	m_scene( scene ),
+				m_context( context ),
+				m_sceneGraph( sceneGraph ),
+				m_scenePath( scenePath )
+		{
+		}
+
+		~ChildNamesUpdateTask()
+		{
+		}
+
+		virtual task *execute()
+		{
+			ContextPtr context = new Context( *m_context, Context::Borrowed );
+			context->set( ScenePlug::scenePathContextName, m_scenePath );
+			Context::Scope scopedContext( context.get() );
+			
+			IECore::MurmurHash childNamesHash = m_scene->childNamesPlug()->hash();
+			
+			if( childNamesHash != m_sceneGraph->m_childNamesHash )
+			{
+				// child names have changed - we need to update m_locationPresent on the children:
+				m_sceneGraph->m_childNamesHash = childNamesHash;
+				
+				// read updated child names:
+				IECore::ConstInternedStringVectorDataPtr childNamesData = m_scene->childNamesPlug()->getValue( &m_sceneGraph->m_childNamesHash );
+				std::vector<IECore::InternedString> childNames = childNamesData->readable();
+				
+				// m_sceneGraph->m_children should be sorted by name. Sort this list too so we can
+				// compare the two easily:
+				std::sort( childNames.begin(), childNames.end() );
+				
+				std::vector<InternedString>::iterator childNamesBegin = childNames.begin();
+				for( std::vector<SceneGraph *>::const_iterator it = m_sceneGraph->m_children.begin(), eIt = m_sceneGraph->m_children.end(); it != eIt; ++it )
+				{
+					// try and find the current child name in the list of child names:
+					std::vector<InternedString>::iterator nameIt = std::find( childNamesBegin, childNames.end(), (*it)->m_name );
+					if( nameIt != childNames.end() )
+					{
+						// ok, it's there - mark this child as still present
+						(*it)->m_locationPresent = true;
+						
+						// As both the name lists are sorted, no further child names will be found beyond nameIt
+						// in the list, nor will they be found at nameIt as there shouldn't be any duplicates.
+						// This means we can move the start of the child names list one position past nameIt
+						// to save a bit of time:
+						childNamesBegin = nameIt;
+						++childNamesBegin;
+					}
+					else
+					{
+						(*it)->m_locationPresent = false;
+					}
+				}
+			}
+			
+			// count children currently present in the scene:
+			size_t numPresentChildren = 0;
+			for( std::vector<SceneGraph *>::const_iterator it = m_sceneGraph->m_children.begin(), eIt = m_sceneGraph->m_children.end(); it != eIt; ++it )
+			{
+				numPresentChildren += (*it)->m_locationPresent;
+			}
+			
+			// spawn child tasks:
+			set_ref_count( 1 + numPresentChildren );
+			ScenePlug::ScenePath childPath = m_scenePath;
+			childPath.push_back( IECore::InternedString() ); // space for the child name
+			for( std::vector<SceneGraph *>::const_iterator it = m_sceneGraph->m_children.begin(), eIt = m_sceneGraph->m_children.end(); it != eIt; ++it )
+			{
+				if( (*it)->m_locationPresent )
+				{
+					childPath.back() = (*it)->m_name;
+					ChildNamesUpdateTask *t = new( allocate_child() ) ChildNamesUpdateTask(
+						m_scene,
+						m_context,
+						(*it),
+						childPath
+					);
+
+					spawn( *t );
+				}
+			}
+
+			return NULL;
+		}
+
+	private :
+
+		const ScenePlug *m_scene;
+		const Context *m_context;
+		SceneGraph *m_sceneGraph;
+		ScenePlug::ScenePath m_scenePath;
+};
+
+
 void InteractiveRender::plugDirtied( const Gaffer::Plug *plug )
 {
 	if(
@@ -247,6 +364,17 @@ void InteractiveRender::plugDirtied( const Gaffer::Plug *plug )
 		// as above.
 		m_attributesDirty = true;
 		m_lightsDirty = true;
+	}
+	else if( plug == inPlug()->childNamesPlug() )
+	{
+		if( m_sceneGraph.get() )
+		{
+			// child names may have changed: we need to run through the scene graph data structure
+			// checking for locations that are no longer present, and flag them as absent if this
+			// is the case:
+			ChildNamesUpdateTask *task = new( tbb::task::allocate_root() ) ChildNamesUpdateTask( inPlug(), m_context.get(), m_sceneGraph.get(), ScenePlug::ScenePath() );
+			tbb::task::spawn_root_and_wait( *task );
+		}
 	}
 	else if(
 		plug == inPlug() ||
@@ -337,15 +465,21 @@ class InteractiveRender::SceneGraphBuildTask : public tbb::task
 				return NULL;
 			}
 
-			// compute child names:
-			IECore::ConstInternedStringVectorDataPtr childNamesData = m_scene->childNamesPlug()->getValue();
+			// store the hash of the child names so we know when they change:
+			m_sceneGraph->m_childNamesHash = m_scene->childNamesPlug()->hash();
 
-			const std::vector<IECore::InternedString> &childNames = childNamesData->readable();
+			// compute child names:
+			IECore::ConstInternedStringVectorDataPtr childNamesData = m_scene->childNamesPlug()->getValue( &m_sceneGraph->m_childNamesHash );
+
+			std::vector<IECore::InternedString> childNames = childNamesData->readable();
 			if( childNames.empty() )
 			{
 				// nothing more to do
 				return NULL;
 			}
+			
+			// sort the child names so we can compare child name lists easily in ChildNamesUpdateTask:
+			std::sort( childNames.begin(), childNames.end() );
 
 			// add children for this location:
 			std::vector<InteractiveRender::SceneGraph *> children;
@@ -433,11 +567,15 @@ class InteractiveRender::SceneGraphIteratorFilter : public tbb::filter
 		void next()
 		{
 			// go down one level in the hierarchy if we can:
-			if( m_current->m_children.size() )
+			for( size_t i=0; i < m_current->m_children.size(); ++i )
 			{
-				m_current = m_current->m_children[0];
-				m_childIndices.push_back(0);
-				return;
+				// skip out locations that aren't present
+				if( m_current->m_children[i]->m_locationPresent )
+				{
+					m_current = m_current->m_children[i];
+					m_childIndices.push_back(i);
+					return;
+				}
 			}
 			
 			while( m_childIndices.size() )
@@ -456,9 +594,9 @@ class InteractiveRender::SceneGraphIteratorFilter : public tbb::filter
 					m_current = m_current->m_parent;
 					continue;
 				}
-				else
+				else if( m_current->m_parent->m_children[ m_childIndices.back() ]->m_locationPresent )
 				{
-					// move to next child of the parent:
+					// move to next child of the parent, if it is still present in the scene:
 					m_current = m_current->m_parent->m_children[ m_childIndices.back() ];
 					return;
 				}
@@ -580,7 +718,7 @@ class InteractiveRender::SceneGraphOutputFilter : public tbb::thread_bound_filte
 			
 			std::string name;
 			ScenePlug::pathToString( path, name );
-
+			
 			try
 			{
 				if( !m_editMode )

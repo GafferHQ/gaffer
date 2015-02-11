@@ -134,6 +134,7 @@ class InteractiveRender : public Gaffer::Node
 
 		// tbb classes for performing multithreaded traversals of the scene graph, etc.
 		class SceneGraphBuildTask;
+		class ChildNamesUpdateTask;
 
 		class SceneGraphIteratorFilter;
 		class SceneGraphEvaluatorFilter;
