@@ -1,3 +1,51 @@
+# 0.8.2.0
+=========
+
+Core
+-----------------------------------------------------------------------
+
+- Prevented errors in Metadata slots from stopping other slots running.
+
+Scene
+-----------------------------------------------------------------------
+
+- Fixed BranchCreator dirty propagation.
+
+RenderMan
+-----------------------------------------------------------------------
+
+- Add trace bias in RenderManAttributes.
+
+Image
+-----------------------------------------------------------------------
+
+- Stopped display transforms hardcoding OCIO "linear" colour space.
+- Fixed dirty propagation for Merge node.
+
+UI
+-----------------------------------------------------------------------
+
+- Fixed evaluation time of look-through cameras in the Viewer.
+- Added camera name to resolution gate overlay.
+- Removed redundant render requests from CompoundNodule.
+- Simplified Gadget render requests when children are added/removed
+- Prevented duplicate errors on StandardNodeGadget tooltips.
+- Fixed CompoundEditor lifetime bug
+- Setting DispatcherUI frameRange widget text in PlaybackRange mode.
+- Made NameWidget replace " " with "_" automatically.
+
+API
+-----------------------------------------------------------------------
+
+- Removed GafferBindings::CatchingSlotCaller.
+- Added Gaffer::CatchingSignalCombiner class.
+- Added Gadget::requestRender() method.
+
+Build
+-----------------------------------------------------------------------
+
+- Fixed GafferRenderMan public build.
+
 # 0.8.1.0
 =========
 
