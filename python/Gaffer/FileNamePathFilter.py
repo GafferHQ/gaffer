@@ -43,6 +43,7 @@ import IECore
 import Gaffer
 
 ## A PathFilter which filters based on filename.
+## \deprecated Use MatchPatternPathFilter instead.
 class FileNamePathFilter( Gaffer.PathFilter ) :
 
 	## Matchers is a list of compiled regular expressions and/or

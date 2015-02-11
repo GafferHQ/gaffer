@@ -40,6 +40,7 @@ import Gaffer
 
 ## A PathFilter which filters based on an item from Path.info() and an
 # arbitrary match function.
+## \deprecated Use MatchPatternPathFilter instead.
 class InfoPathFilter( Gaffer.PathFilter ) :
 
 	def __init__( self, infoKey, matcher, leafOnly=True, userData={} ) :
