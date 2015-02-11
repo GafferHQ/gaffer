@@ -685,12 +685,9 @@ void InteractiveRender::runPipeline(tbb::pipeline *p)
 	
 	p->run( 2 * tbb::task_scheduler_init::default_num_threads() );
 }
-#include "sys/time.h"
+
 void InteractiveRender::outputScene( bool update )
 {
-	struct timeval tv;
-	gettimeofday(&tv, NULL);
-	double t0 = tv.tv_sec + double( tv.tv_usec )/ 1000000;
 	
 	SceneGraphIteratorFilter iterator( m_sceneGraph.get() );
 
@@ -710,6 +707,12 @@ void InteractiveRender::outputScene( bool update )
 	p.add_filter( evaluator );
 	p.add_filter( output );
 
+	if( update )
+	{
+		// suspend interactive rendering:
+		m_renderer->editBegin( "suspendrendering", CompoundDataMap() );
+	}
+	
 	 // Another thread initiates execution of the pipeline
 	std::thread pipelineThread( runPipeline, &p );
 
@@ -720,10 +723,11 @@ void InteractiveRender::outputScene( bool update )
 	}
 	pipelineThread.join();
 	
-	gettimeofday(&tv, NULL);
-	double t1 = tv.tv_sec + double( tv.tv_usec )/ 1000000;
+	if( update )
+	{
+		m_renderer->editEnd();
+	}
 	
-	std::cerr << "outputScene " << t1 - t0 << std::endl;
 }
 
 void InteractiveRender::update()
