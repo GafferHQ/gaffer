@@ -120,8 +120,6 @@ class PathListingWidget( GafferUI.Widget ) :
 		if allowMultipleSelection :
 			self._qtWidget().setSelectionMode( QtGui.QAbstractItemView.ExtendedSelection )
 
-		self.__columns = columns
-
 		self.__pathSelectedSignal = GafferUI.WidgetSignal()
 		self.__selectionChangedSignal = GafferUI.WidgetSignal()
 		self.__displayModeChangedSignal = GafferUI.WidgetSignal()
@@ -263,16 +261,14 @@ class PathListingWidget( GafferUI.Widget ) :
 
 	def setColumns( self, columns ) :
 
-		if columns == self.__columns :
+		if columns == self.getColumns() :
 			return
 
-		self.__columns = columns
-		self.__currentDir = None # force update to do something
-		self.__update()
+		_GafferUI._pathListingWidgetSetColumns( GafferUI._qtAddress( self._qtWidget() ), columns )
 
 	def getColumns( self ) :
 
-		return self.__columns
+		return _GafferUI._pathListingWidgetGetColumns( GafferUI._qtAddress( self._qtWidget() ) )
 
 	def setHeaderVisible( self, visible ) :
 

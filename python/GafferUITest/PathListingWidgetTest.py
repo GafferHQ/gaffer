@@ -196,6 +196,21 @@ class PathListingWidgetTest( unittest.TestCase ) :
 
 		self.assertTrue( w.getPathExpanded( p.copy().setFromString( "/a/b/c" ) ) )
 
+	def testColumns( self ) :
+
+		w = GafferUI.PathListingWidget( Gaffer.DictPath( {}, "/" ) )
+
+		self.assertEqual( w.getColumns(), list( w.defaultFileSystemColumns ) )
+
+		c1 = [ w.defaultNameColumn, w.defaultFileSystemIconColumn ]
+		c2 = [ w.defaultNameColumn, w.StandardColumn( "h", "a" ) ]
+
+		w.setColumns( c1 )
+		self.assertEqual( w.getColumns(), c1 )
+
+		w.setColumns( c2 )
+		self.assertEqual( w.getColumns(), c2 )
+
 	def testSortable( self ) :
 
 		w = GafferUI.PathListingWidget( Gaffer.DictPath( {}, "/" ) )

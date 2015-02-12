@@ -348,9 +348,8 @@ class PathModel : public QAbstractItemModel
 
 		void setColumns( const std::vector<ColumnPtr> columns )
 		{
-			beginResetModel();
 			m_columns = columns;
-			endResetModel();
+			setRoot( getRoot() ); // force a rebuild of our items
 		}
 
 		const std::vector<ColumnPtr> &getColumns() const
