@@ -266,7 +266,7 @@ class UIEditor( GafferUI.NodeSetEditor ) :
 			else :
 				self.setSelectedPlug( None )
 		else :
-			self.setSelectedPlug( paths[0].info()["dict:value"].plug )
+			self.setSelectedPlug( paths[0].entry().plug )
 
 	def __repr__( self ) :
 
@@ -323,21 +323,65 @@ class _PlugListing( GafferUI.PathListingWidget ) :
 			self.plug = plug
 			self.index = index
 
+	# Class used to present Entry instances as Paths.
+	class EntryPath( Gaffer.Path ) :
+
+		def __init__( self, entries, path, root="/", filter = None ) :
+
+			Gaffer.Path.__init__( self, path, root, filter )
+
+			self.__entries = entries
+
+		def entry( self ) :
+
+			if len( self ) != 1 :
+				return None
+
+			for e in self.__entries :
+				if e.plug.getName() == self[0] :
+					return e
+
+			return None
+
+		def entries( self ) :
+
+			return self.__entries
+
+		def copy( self ) :
+
+			return self.__class__( self.__entries, self[:], self.root(), self.getFilter() )
+
+		def isLeaf( self ) :
+
+			return len( self ) > 0
+
+		def _children( self ) :
+
+			if len( self ) > 0 :
+				return []
+
+			e = sorted( self.__entries, key = lambda x : x.index )
+			return [
+				self.__class__( self.__entries, [ x.plug.getName() ], self.root(), self.getFilter() )
+				for x in e
+			]
+
 	def __init__( self ) :
 
 		GafferUI.PathListingWidget.__init__(
 			self,
-			Gaffer.DictPath( {}, "/" ),
+			self.EntryPath( [], "/" ),
 			# listing displays the plug name and automatically sorts based on plug index
-			columns = ( GafferUI.PathListingWidget.Column( "dict:value", "Name", lambda x : x.plug.getName(), lambda x : x.index ), ),
+			columns = ( GafferUI.PathListingWidget.defaultNameColumn, ),
 			displayMode = GafferUI.PathListingWidget.DisplayMode.Tree,
 		)
 
 		self.__parent = None # the parent of the plugs we're listing
 
 		self.setDragPointer( "" )
-
+		self.setSortable( False )
 		self.setHeaderVisible( False )
+
 		self.__dragEnterConnection = self.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ) )
 		self.__dragMoveConnection = self.dragMoveSignal().connect( Gaffer.WeakMethod( self.__dragMove ) )
 		self.__dragEndConnection = self.dragEndSignal().connect( Gaffer.WeakMethod( self.__dragEnd ) )
@@ -369,19 +413,16 @@ class _PlugListing( GafferUI.PathListingWidget ) :
 
 		if self.__parent is None :
 			# we have nothing to show - early out.
-			self.setPath( Gaffer.DictPath( {}, "/" ) )
+			self.setPath( self.EntryPath( [], "/" ) )
 			return
 
-		# build a DictPath to represent our child plugs.
+		# build an EntryPath to represent our child plugs.
 
 		plugs = self.__parent.children( Gaffer.Plug )
 		plugs = GafferUI.PlugLayout.layoutOrder( plugs )
 
-		d = {}
-		for index, plug in enumerate( plugs ) :
-			d[plug.getName()] = self.Entry( plug, index )
-
-		self.setPath( Gaffer.DictPath( d, "/" ) )
+		entries = [ self.Entry( plug, index ) for index, plug in enumerate( plugs ) ]
+		self.setPath( self.EntryPath( entries, "/" ) )
 
 	def __childAddedOrRemoved( self, parent, child ) :
 
@@ -430,17 +471,17 @@ class _PlugListing( GafferUI.PathListingWidget ) :
 		# figure out which index we're moving,
 		# and to where.
 
-		d = self.getPath().dict()
+		dragPath = self.getPath().copy().setFromString( event.data[0] )
 
-		oldIndex = d[event.data[0][1:]].index
+		oldIndex = dragPath.entry().index
 		targetPath = self.pathAt( event.line.p0 )
 		if targetPath is not None :
-			newIndex = d[targetPath[0]].index
+			newIndex = targetPath.entry().index
 		else :
 			if event.line.p0.y < 1 :
 				newIndex = 0
 			else :
-				newIndex = len( d ) - 1
+				newIndex = len( self.getPath().entries() ) - 1
 
 		if newIndex == oldIndex :
 			return True
@@ -448,7 +489,7 @@ class _PlugListing( GafferUI.PathListingWidget ) :
 		# edit our plug dictionary in place to apply the
 		# new ordering.
 
-		for entry in self.getPath().dict().values() :
+		for entry in self.getPath().entries() :
 			if entry.index > oldIndex and entry.index <= newIndex :
 				entry.index -= 1
 			elif entry.index == oldIndex :
@@ -472,7 +513,7 @@ class _PlugListing( GafferUI.PathListingWidget ) :
 		# the new ordering.
 
 		with Gaffer.UndoContext( self.getPlugParent().ancestor( Gaffer.ScriptNode ) ) :
-			for entry in self.getPath().dict().values() :
+			for entry in self.getPath().entries() :
 				Gaffer.Metadata.registerPlugValue( entry.plug, "layout:index", entry.index )
 
 		return True
