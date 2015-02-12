@@ -282,6 +282,19 @@ class PathListingWidget( GafferUI.Widget ) :
 
 		return not self._qtWidget().header().isHidden()
 
+	def setSortable( self, sortable ) :
+
+		if sortable == self.getSortable() :
+			return
+
+		self._qtWidget().setSortingEnabled( sortable )
+		if not sortable :
+			self._qtWidget().model().sort( -1 )
+
+	def getSortable( self ) :
+
+		return self._qtWidget().isSortingEnabled()
+
 	## Returns a list of all currently selected paths. Note that a list is returned
 	# even when in single selection mode.
 	def getSelectedPaths( self ) :

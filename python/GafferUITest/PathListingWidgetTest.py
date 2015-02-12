@@ -196,6 +196,17 @@ class PathListingWidgetTest( unittest.TestCase ) :
 
 		self.assertTrue( w.getPathExpanded( p.copy().setFromString( "/a/b/c" ) ) )
 
+	def testSortable( self ) :
+
+		w = GafferUI.PathListingWidget( Gaffer.DictPath( {}, "/" ) )
+		self.assertTrue( w.getSortable() )
+
+		w.setSortable( False )
+		self.assertFalse( w.getSortable() )
+
+		w.setSortable( True )
+		self.assertTrue( w.getSortable() )
+
 if __name__ == "__main__":
 	unittest.main()
 

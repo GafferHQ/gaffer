@@ -512,11 +512,17 @@ class PathModel : public QAbstractItemModel
 		// Although this method sounds like it means "take what you've got and
 		// sort it right now", it seems really to also mean "and remember that
 		// this is how you should sort all other stuff you might generate later".
-		// So that's what we do.
+		// So that's what we do. We also use a column of < 0 to say "turn off
+		// sorting".
 		virtual void sort( int column, Qt::SortOrder order = Qt::AscendingOrder )
 		{
 			m_sortColumn = column;
 			m_sortOrder = order;
+
+			if( m_sortColumn < 0 )
+			{
+				return;
+			}
 
 			layoutAboutToBeChanged();
 			m_rootItem->sort( this );
