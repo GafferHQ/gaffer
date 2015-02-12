@@ -1164,10 +1164,16 @@ for library in ( "GafferUI", "GafferSceneUI", "GafferImageUI" ) :
 	else :
 		libraries[library]["envAppends"]["LIBS"].append( "GL" )
 
+# Add on Qt libraries to definitions - these vary from platform to platform
 for library in ( "GafferUI", ) :
-	libraries[library]["pythonEnvAppends"].setdefault( "FRAMEWORKPATH", [] ).append( "$BUILD_DIR/lib" )
-	libraries[library]["pythonEnvAppends"].setdefault( "FRAMEWORKS", [] ).append( "QtCore" )
-	libraries[library]["pythonEnvAppends"].setdefault( "FRAMEWORKS", [] ).append( "QtGui" )
+	if env["PLATFORM"] == "darwin" :
+		libraries[library]["pythonEnvAppends"].setdefault( "FRAMEWORKPATH", [] ).append( "$BUILD_DIR/lib" )
+		libraries[library]["pythonEnvAppends"].setdefault( "FRAMEWORKS", [] ).append( "QtCore" )
+		libraries[library]["pythonEnvAppends"].setdefault( "FRAMEWORKS", [] ).append( "QtGui" )
+	else :
+		libraries[library]["pythonEnvAppends"]["LIBS"].append( "QtCore" )
+		libraries[library]["pythonEnvAppends"]["LIBS"].append( "QtGui" )
+		
 
 ###############################################################################################
 # The stuff that actually builds the libraries and python modules
