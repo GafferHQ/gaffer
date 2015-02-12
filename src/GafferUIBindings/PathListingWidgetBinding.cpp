@@ -152,7 +152,7 @@ class StandardColumn : public Column
 				case IECore::UIntDataTypeId :
 					return static_cast<const IECore::UIntData *>( attribute.get() )->readable();
 				case IECore::UInt64DataTypeId :
-					return static_cast<const IECore::UInt64Data *>( attribute.get() )->readable();
+					return (quint64)static_cast<const IECore::UInt64Data *>( attribute.get() )->readable();
 				case IECore::FloatDataTypeId :
 					return static_cast<const IECore::FloatData *>( attribute.get() )->readable();
 				case IECore::DoubleDataTypeId :
