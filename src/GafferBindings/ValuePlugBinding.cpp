@@ -136,7 +136,7 @@ void ValuePlugSerialiser::moduleDependencies( const Gaffer::GraphComponent *grap
 	}
 }
 
-std::string ValuePlugSerialiser::constructor( const Gaffer::GraphComponent *graphComponent ) const
+std::string ValuePlugSerialiser::constructor( const Gaffer::GraphComponent *graphComponent, const Serialisation &serialisation ) const
 {
 	return maskedRepr( static_cast<const Plug *>( graphComponent ), Plug::All & ~Plug::ReadOnly );
 }

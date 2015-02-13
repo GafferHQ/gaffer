@@ -62,7 +62,7 @@ class SerialisationTest( GafferTest.TestCase ) :
 
 				return ( "GafferTest", )
 
-			def constructor( self, node ) :
+			def constructor( self, node, serialisation ) :
 
 				return ( "GafferTest.SerialisationTest.SerialisationTestNode( \"%s\", %d )" % ( node.getName(), node.initArgument ) )
 

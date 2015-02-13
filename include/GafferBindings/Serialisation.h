@@ -84,7 +84,7 @@ class Serialisation
 				virtual void moduleDependencies( const Gaffer::GraphComponent *graphComponent, std::set<std::string> &modules ) const;
 				/// Should be implemented to return a string which when executed will reconstruct the specified object.
 				/// The default implementation uses repr().
-				virtual std::string constructor( const Gaffer::GraphComponent *graphComponent ) const;
+				virtual std::string constructor( const Gaffer::GraphComponent *graphComponent, const Serialisation &serialisation ) const;
 				/// May be implemented to return a string which will be executed immediately after the object has been constructed and
 				/// parented. identifier is the name of a variable which refers to the object. The Serialisation may be used to query
 				/// the identifiers for other objects, but note that at this stage those objects may not have been constructed so it

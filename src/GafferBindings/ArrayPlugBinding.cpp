@@ -88,7 +88,7 @@ class ArrayPlugSerialiser : public CompoundPlugSerialiser
 
 	public :
 
-		virtual std::string constructor( const Gaffer::GraphComponent *graphComponent ) const
+		virtual std::string constructor( const Gaffer::GraphComponent *graphComponent, const Serialisation &serialisation ) const
 		{
 			return maskedRepr( static_cast<const ArrayPlug *>( graphComponent ), Plug::All & ~Plug::ReadOnly );
 		}
