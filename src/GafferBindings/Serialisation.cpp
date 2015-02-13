@@ -65,6 +65,11 @@ Serialisation::Serialisation( const Gaffer::GraphComponent *parent, const std::s
 	walk( parent, parentName, acquireSerialiser( parent ) );
 }
 
+const Gaffer::GraphComponent *Serialisation::parent() const
+{
+	return m_parent;
+}
+
 std::string Serialisation::result() const
 {
 	std::string result;
@@ -308,6 +313,9 @@ bool Serialisation::Serialiser::childNeedsConstruction( const Gaffer::GraphCompo
 // Python binding
 //////////////////////////////////////////////////////////////////////////
 
+namespace
+{
+
 class SerialiserWrapper : public Serialisation::Serialiser, public IECorePython::Wrapper<Serialisation::Serialiser>
 {
 
@@ -422,7 +430,12 @@ class SerialiserWrapper : public Serialisation::Serialiser, public IECorePython:
 
 };
 
-static object moduleDependencies( Serialisation::Serialiser &serialiser, const Gaffer::GraphComponent *graphComponent )
+GraphComponentPtr parent( const Serialisation &serialisation )
+{
+	return const_cast<GraphComponent *>( serialisation.parent() );
+}
+
+object moduleDependencies( Serialisation::Serialiser &serialiser, const Gaffer::GraphComponent *graphComponent )
 {
 	std::set<std::string> modules;
 	serialiser.moduleDependencies( graphComponent, modules );
@@ -434,6 +447,8 @@ static object moduleDependencies( Serialisation::Serialiser &serialiser, const G
 	PyObject *modulesSet = PySet_New( modulesList.ptr() );
 	return object( handle<>( modulesSet ) );
 }
+
+} // namespace
 
 void GafferBindings::bindSerialisation()
 {
@@ -449,6 +464,7 @@ void GafferBindings::bindSerialisation()
 				)
 			)
 		)
+		.def( "parent", &parent )
 		.def( "identifier", &Serialisation::identifier )
 		.def( "result", &Serialisation::result )
 		.def( "modulePath", (std::string (*)( object & ))&Serialisation::modulePath )

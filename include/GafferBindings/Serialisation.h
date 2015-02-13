@@ -51,6 +51,9 @@ class Serialisation
 
 		Serialisation( const Gaffer::GraphComponent *parent, const std::string &parentName = "parent", const Gaffer::Set *filter = 0 );
 
+		/// Returns the parent passed to the constructor.
+		const Gaffer::GraphComponent *parent() const;
+
 		/// Returns the name of a variable used to reference the specified object
 		/// within the serialisation. Returns the empty string if the object is not
 		/// to be included in the serialisation.

@@ -121,6 +121,12 @@ class SerialisationTest( GafferTest.TestCase ) :
 		self.assertEqual( s2["n"].postHierarchyWasHere, True )
 		self.assertEqual( s2["n"].postScriptWasHere, True )
 
+	def testParentAccessor( self ) :
+
+		n = Gaffer.Node()
+		s = Gaffer.Serialisation( n )
+		self.assertTrue( s.parent().isSame( n ) )
+
 if __name__ == "__main__":
 	unittest.main()
 
