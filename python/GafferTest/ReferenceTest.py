@@ -335,7 +335,7 @@ class ReferenceTest( GafferTest.TestCase ) :
 		s["b"] = Gaffer.Box()
 		s["b"]["n"] = GafferTest.AddNode()
 		p = s["b"].promotePlug( s["b"]["n"]["op1"] )
-		p.setValue( p.defaultValue() + 10 )
+		p.setValue( 10 )
 
 		s["b"].exportForReference( "/tmp/test.grf" )
 
@@ -347,7 +347,7 @@ class ReferenceTest( GafferTest.TestCase ) :
 		s2["r"].load( "/tmp/test.grf" )
 
 		p2 = s2["r"].descendant( p.relativeName( s["b"] ) )
-		self.assertEqual( p2.getValue(), p2.defaultValue() + 10 )
+		self.assertEqual( p2.getValue(), 10 )
 		p2.setToDefault()
 		self.assertEqual( p2.getValue(), p2.defaultValue() )
 
