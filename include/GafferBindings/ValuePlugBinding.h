@@ -46,6 +46,13 @@ namespace GafferBindings
 
 void bindValuePlug();
 
+/// Supports the following Context variables :
+///
+/// "valuePlugSerialiser:resetParentPlugDefaults"
+///
+/// :	Replaces the default value with the current value for plugs
+///     of the parent node. This is used when exporting the contents
+///     of a Box node.
 class ValuePlugSerialiser : public PlugSerialiser
 {
 

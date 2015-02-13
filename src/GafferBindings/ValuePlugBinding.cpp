@@ -40,7 +40,7 @@
 
 #include "Gaffer/ValuePlug.h"
 #include "Gaffer/Node.h"
-#include "Gaffer/Reference.h"
+#include "Gaffer/Context.h"
 
 #include "GafferBindings/ValuePlugBinding.h"
 #include "GafferBindings/PlugBinding.h"
@@ -50,7 +50,22 @@ using namespace boost::python;
 using namespace GafferBindings;
 using namespace Gaffer;
 
-static std::string maskedRepr( const Plug *plug, unsigned flagsMask )
+static bool shouldResetPlugDefault( const Gaffer::Plug *plug, const Serialisation *serialisation )
+{
+	if( !serialisation )
+	{
+		return false;
+	}
+
+	if( plug->node() != serialisation->parent() || plug->getInput<Plug>() )
+	{
+		return false;
+	}
+
+	return Context::current()->get<bool>( "valuePlugSerialiser:resetParentPlugDefaults", false );
+}
+
+static std::string maskedRepr( const Plug *plug, unsigned flagsMask, const Serialisation *serialisation = NULL )
 {
 	std::string result = Serialisation::classPath( plug ) + "( \"" + plug->getName().string() + "\", ";
 
@@ -62,7 +77,16 @@ static std::string maskedRepr( const Plug *plug, unsigned flagsMask )
 	object pythonPlug( PlugPtr( const_cast<Plug *>( plug ) ) );
 	if( PyObject_HasAttrString( pythonPlug.ptr(), "defaultValue" ) )
 	{
-		object pythonDefaultValue = pythonPlug.attr( "defaultValue" )();
+		object pythonDefaultValue;
+		if( shouldResetPlugDefault( plug, serialisation ) )
+		{
+			pythonDefaultValue = pythonPlug.attr( "getValue" )();
+		}
+		else
+		{
+			pythonDefaultValue = pythonPlug.attr( "defaultValue" )();
+		}
+
 		object r = pythonDefaultValue.attr( "__repr__" )();
 		extract<std::string> defaultValueExtractor( r );
 		std::string defaultValue = defaultValueExtractor();
@@ -138,7 +162,7 @@ void ValuePlugSerialiser::moduleDependencies( const Gaffer::GraphComponent *grap
 
 std::string ValuePlugSerialiser::constructor( const Gaffer::GraphComponent *graphComponent, const Serialisation &serialisation ) const
 {
-	return maskedRepr( static_cast<const Plug *>( graphComponent ), Plug::All & ~Plug::ReadOnly );
+	return maskedRepr( static_cast<const Plug *>( graphComponent ), Plug::All & ~Plug::ReadOnly, &serialisation );
 }
 
 std::string ValuePlugSerialiser::postConstructor( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const
@@ -150,23 +174,7 @@ std::string ValuePlugSerialiser::postConstructor( const Gaffer::GraphComponent *
 		if( PyObject_HasAttrString( pythonPlug.ptr(), "getValue" ) )
 		{
 			object pythonValue = pythonPlug.attr( "getValue" )();
-
-			bool omitDefaultValue = true;
-			if( IECore::runTimeCast<const Reference>( plug->node() ) )
-			{
-				// We always emit setValue() calls for plugs held directly on
-				// Reference nodes, even if they are at the default value.
-				// This is because the user may have exported the
-				// reference with the plug at a non-default value, but then
-				// set the value back to the default in a file that references
-				// it back in.
-				/// \todo Consider whether or not we might like to have a plug flag
-				/// to control this behaviour, so that ValuePlugSerialiser doesn't
-				/// need explicit knowledge of Reference Nodes.
-				omitDefaultValue = false;
-			}
-
-			if( omitDefaultValue && PyObject_HasAttrString( pythonPlug.ptr(), "defaultValue" ) )
+			if( PyObject_HasAttrString( pythonPlug.ptr(), "defaultValue" ) )
 			{
 				object pythonDefaultValue = pythonPlug.attr( "defaultValue" )();
 				if( pythonValue == pythonDefaultValue )
@@ -190,6 +198,13 @@ bool ValuePlugSerialiser::valueNeedsSerialisation( const Gaffer::ValuePlug *plug
 		plug->getInput<Plug>()
 	)
 	{
+		return false;
+	}
+
+	if( shouldResetPlugDefault( plug, &serialisation ) )
+	{
+		// There's no point in serialising the value if we're
+		// turning it into the default value anyway.
 		return false;
 	}
 

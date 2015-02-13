@@ -144,10 +144,12 @@ void Reference::load( const std::string &fileName )
 					else
 					{
 						ValuePlug *oldValuePlug = runTimeCast<ValuePlug>( oldPlug );
-						ValuePlug *newValuePlug = runTimeCast<ValuePlug>( newPlug );
-						if( oldValuePlug && newValuePlug )
+						if( oldValuePlug && !oldValuePlug->isSetToDefault() )
 						{
-							newValuePlug->setFrom( oldValuePlug );
+							if( ValuePlug *newValuePlug = runTimeCast<ValuePlug>( newPlug ) )
+							{
+								newValuePlug->setFrom( oldValuePlug );
+							}
 						}
 					}
 				}

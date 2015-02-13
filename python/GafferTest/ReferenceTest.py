@@ -513,6 +513,139 @@ class ReferenceTest( GafferTest.TestCase ) :
 		self.assertEqual( s2["r"]["__pluggy"]["compound"].getFlags(), Gaffer.Plug.Flags.Dynamic | Gaffer.Plug.Flags.Default )
 		self.assertEqual( s2["r"]["__pluggy"]["compound"]["int"].getFlags(), Gaffer.Plug.Flags.Dynamic | Gaffer.Plug.Flags.Default )
 
+	def testDefaultValues( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["b"] = Gaffer.Box()
+		s["b"]["p"] = Gaffer.IntPlug( defaultValue = 1, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["b"]["p"].setValue( 2 )
+		s["b"].exportForReference( "/tmp/test.grf" )
+
+		s["r"] = Gaffer.Reference()
+		s["r"].load( "/tmp/test.grf" )
+
+		# The value at the time of box export should become
+		# the default value on the reference node. But the
+		# default value on the box itself should remain the
+		# same.
+
+		self.assertEqual( s["r"]["p"].getValue(), 2 )
+		self.assertEqual( s["r"]["p"].defaultValue(), 2 )
+		self.assertEqual( s["b"]["p"].defaultValue(), 1 )
+
+		# And we should be able to save and reload the script
+		# and have that still be the case.
+
+		s["fileName"].setValue( "/tmp/test.gfr" )
+		s.save()
+		s.load()
+
+		self.assertEqual( s["r"]["p"].getValue(), 2 )
+		self.assertEqual( s["r"]["p"].defaultValue(), 2 )
+		self.assertEqual( s["b"]["p"].getValue(), 2 )
+		self.assertEqual( s["b"]["p"].defaultValue(), 1 )
+
+		# If we change the value on the box and reexport,
+		# then the reference should pick up both the new value
+		# and the new default.
+
+		s["b"]["p"].setValue( 3 )
+		s["b"].exportForReference( "/tmp/test.grf" )
+		s["r"].load( "/tmp/test.grf" )
+
+		self.assertEqual( s["r"]["p"].getValue(), 3 )
+		self.assertEqual( s["r"]["p"].defaultValue(), 3 )
+		self.assertEqual( s["b"]["p"].getValue(), 3 )
+		self.assertEqual( s["b"]["p"].defaultValue(), 1 )
+
+		# And that should still hold after saving and reloading the script.
+
+		s.save()
+		s.load()
+		self.assertEqual( s["r"]["p"].getValue(), 3 )
+		self.assertEqual( s["r"]["p"].defaultValue(), 3 )
+		self.assertEqual( s["b"]["p"].getValue(), 3 )
+		self.assertEqual( s["b"]["p"].defaultValue(), 1 )
+
+		# But if the user changes the value on the reference node,
+		# it should be kept.
+
+		s["r"]["p"].setValue( 100 )
+
+		self.assertEqual( s["r"]["p"].getValue(), 100 )
+		self.assertEqual( s["r"]["p"].defaultValue(), 3 )
+		self.assertEqual( s["b"]["p"].getValue(), 3 )
+		self.assertEqual( s["b"]["p"].defaultValue(), 1 )
+
+		# And a save and load shouldn't change that.
+
+		s.save()
+		s.load()
+
+		self.assertEqual( s["r"]["p"].getValue(), 100 )
+		self.assertEqual( s["r"]["p"].defaultValue(), 3 )
+		self.assertEqual( s["b"]["p"].getValue(), 3 )
+		self.assertEqual( s["b"]["p"].defaultValue(), 1 )
+
+		# And now the user has changed a value, only the
+		# default value should be updated if we load a new
+		# reference.
+
+		s["b"]["p"].setValue( 4 )
+		s["b"].exportForReference( "/tmp/test.grf" )
+		s["r"].load( "/tmp/test.grf" )
+
+		self.assertEqual( s["r"]["p"].getValue(), 100 )
+		self.assertEqual( s["r"]["p"].defaultValue(), 4 )
+		self.assertEqual( s["b"]["p"].getValue(), 4 )
+		self.assertEqual( s["b"]["p"].defaultValue(), 1 )
+
+		# And a save and load shouldn't change anything.
+
+		s.save()
+		s.load()
+
+		self.assertEqual( s["r"]["p"].getValue(), 100 )
+		self.assertEqual( s["r"]["p"].defaultValue(), 4 )
+		self.assertEqual( s["b"]["p"].getValue(), 4 )
+		self.assertEqual( s["b"]["p"].defaultValue(), 1 )
+
+		# And since we know that all plugs in box exports
+		# have had their default values set to the current
+		# value, there shouldn't be any need for a single
+		# setValue() call in the exported file.
+
+		e = "".join( file( "/tmp/test.grf" ).readlines() )
+		self.assertTrue( "setValue" not in e )
+
+	def testInternalNodeDefaultValues( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["b"] = Gaffer.Box()
+		s["b"]["n"] = Gaffer.Node()
+		s["b"]["n"]["p"] = Gaffer.IntPlug( defaultValue = 1, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["b"]["n"]["p"].setValue( 2 )
+		s["b"].exportForReference( "/tmp/test.grf" )
+
+		s["r"] = Gaffer.Reference()
+		s["r"].load( "/tmp/test.grf" )
+
+		# Nothing at all should have changed about the
+		# values and defaults on the internal nodes.
+
+		self.assertEqual( s["r"]["n"]["p"].getValue(), 2 )
+		self.assertEqual( s["r"]["n"]["p"].defaultValue(), 1 )
+
+		# And we should be able to save and reload the script
+		# and have that still be the case.
+
+		s["fileName"].setValue( "/tmp/test.gfr" )
+		s.save()
+		s.load()
+
+		self.assertEqual( s["r"]["n"]["p"].getValue(), 2 )
+		self.assertEqual( s["r"]["n"]["p"].defaultValue(), 1 )
+
 	def tearDown( self ) :
 
 		GafferTest.SphereNode = self.__SphereNode
