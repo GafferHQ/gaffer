@@ -66,13 +66,6 @@ class FormatPlugSerialiser : public GafferBindings::ValuePlugSerialiser
 			modules.insert( "IECore" );
 		}
 
-		virtual std::string constructor( const Gaffer::GraphComponent *graphComponent ) const
-		{
-			object o( GraphComponentPtr( const_cast<GraphComponent *>( graphComponent ) ) );
-			std::string r = extract<std::string>( o.attr( "__repr__" )() );
-			return r;
-		}
-
 		virtual std::string postConstructor( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const
 		{
 			std::string result;

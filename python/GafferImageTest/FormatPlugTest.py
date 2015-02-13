@@ -71,6 +71,7 @@ class FormatPlugTest( unittest.TestCase ) :
 		self.assertEqual( s2["n"]["f"].getValue(), format )
 
 	def testInputPlug( self ) :
+
 		n = Gaffer.Node()
 		f = GafferImage.FormatPlug("f", direction = Gaffer.Plug.Direction.In, flags = Gaffer.Plug.Flags.Default )
 		n.addChild( f )
@@ -84,6 +85,7 @@ class FormatPlugTest( unittest.TestCase ) :
 		self.assertEqual( f1, GafferImage.Format() )
 
 	def testDefaultFormatOutput( self ) :
+
 		n = GafferImage.Constant()
 		s = Gaffer.ScriptNode()
 		s.addChild( n )
@@ -104,6 +106,20 @@ class FormatPlugTest( unittest.TestCase ) :
 
 		# Check that the output of the constant node matches the default format...
 		self.assertEqual( GafferImage.Format( 100, 102, 1.3 ), f1 )
+
+	def testReadOnlySerialisation( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = Gaffer.Node()
+		s["n"]["p"] = GafferImage.FormatPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["n"]["p"].setValue( GafferImage.Format( IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 10 ) ), 2.0 ) )
+		s["n"]["p"].setFlags( Gaffer.Plug.Flags.ReadOnly, True )
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+
+		self.assertEqual( s2["n"]["p"].getValue(), GafferImage.Format( IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 10 ) ), 2.0 ) )
+		self.assertTrue( s2["n"]["p"].getFlags( Gaffer.Plug.Flags.ReadOnly ) )
 
 if __name__ == "__main__":
 	unittest.main()
