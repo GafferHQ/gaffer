@@ -49,8 +49,7 @@ TypedObjectPlug<T>::TypedObjectPlug(
 	ConstValuePtr defaultValue,
 	unsigned flags
 )
-	:	ValuePlug( name, direction, defaultValue->copy(), flags ),
-		m_defaultValue( defaultValue->copy() )
+	:	ValuePlug( name, direction, defaultValue->copy(), flags )
 {
 }
 
@@ -82,7 +81,7 @@ PlugPtr TypedObjectPlug<T>::createCounterpart( const std::string &name, Directio
 template<class T>
 const typename TypedObjectPlug<T>::ValueType *TypedObjectPlug<T>::defaultValue() const
 {
-	return m_defaultValue.get();
+	return static_cast<const ValueType *>( defaultObjectValue() );
 }
 
 template<class T>
@@ -95,12 +94,6 @@ template<class T>
 typename TypedObjectPlug<T>::ConstValuePtr TypedObjectPlug<T>::getValue( const IECore::MurmurHash *precomputedHash ) const
 {
 	return boost::static_pointer_cast<const ValueType>( getObjectValue( precomputedHash ) );
-}
-
-template<class T>
-void TypedObjectPlug<T>::setToDefault()
-{
-	setValue( m_defaultValue );
 }
 
 template<class T>

@@ -54,8 +54,7 @@ TypedPlug<T>::TypedPlug(
 	const T &defaultValue,
 	unsigned flags
 )
-	:	ValuePlug( name, direction, new DataType( defaultValue ), flags ),
-		m_defaultValue( defaultValue )
+	:	ValuePlug( name, direction, new DataType( defaultValue ), flags )
 {
 }
 
@@ -87,7 +86,7 @@ PlugPtr TypedPlug<T>::createCounterpart( const std::string &name, Direction dire
 template<class T>
 const T &TypedPlug<T>::defaultValue() const
 {
-	return m_defaultValue;
+	return static_cast<const DataType *>( defaultObjectValue() )->readable();
 }
 
 template<class T>
@@ -101,12 +100,6 @@ T TypedPlug<T>::getValue( const IECore::MurmurHash *precomputedHash ) const
 {
 	IECore::ConstObjectPtr o = getObjectValue( precomputedHash );
 	return static_cast<const DataType *>( o.get() )->readable();
-}
-
-template<class T>
-void TypedPlug<T>::setToDefault()
-{
-	setValue( m_defaultValue );
 }
 
 template<class T>

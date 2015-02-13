@@ -111,14 +111,11 @@ class TypedObjectPlug : public ValuePlug
 		/// the ValuePlug cache.
 		ConstValuePtr getValue( const IECore::MurmurHash *precomputedHash = NULL ) const;
 
-		virtual void setToDefault();
 		virtual void setFrom( const ValuePlug *other );
 
 	private :
 
 		IE_CORE_DECLARERUNTIMETYPEDDESCRIPTION( TypedObjectPlug<T> );
-
-		ConstValuePtr m_defaultValue;
 
 };
 

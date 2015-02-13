@@ -79,7 +79,6 @@ class TypedPlug : public ValuePlug
 		/// with care!
 		T getValue( const IECore::MurmurHash *precomputedHash = NULL ) const;
 
-		virtual void setToDefault();
 		virtual void setFrom( const ValuePlug *other );
 
 		/// Implemented to perform automatic substitutions
@@ -97,8 +96,6 @@ class TypedPlug : public ValuePlug
 
 		typedef IECore::TypedData<T> DataType;
 		typedef typename DataType::Ptr DataTypePtr;
-
-		T m_defaultValue;
 
 };
 
