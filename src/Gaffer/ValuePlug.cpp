@@ -641,6 +641,25 @@ void ValuePlug::setToDefault()
 	}
 }
 
+bool ValuePlug::isSetToDefault() const
+{
+	if( m_defaultValue != NULL )
+	{
+		return getObjectValue()->isEqualTo( m_defaultValue.get() );
+	}
+	else
+	{
+		for( ValuePlugIterator it( this ); it != it.end(); ++it )
+		{
+			if( !(*it)->isSetToDefault() )
+			{
+				return false;
+			}
+		}
+		return true;
+	}
+}
+
 IECore::MurmurHash ValuePlug::hash() const
 {
 	if( !m_staticValue )

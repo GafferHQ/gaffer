@@ -87,6 +87,11 @@ class ValuePlug : public Plug
 		/// implementation is sufficient for all subclasses except those
 		/// where the number of child plugs varies based on the value.
 		virtual void setToDefault();
+		/// Returns true if the current value of the plug is the same
+		/// as the default value. The default implementation is sufficient
+		/// for all subclasses except those where the number of child plugs
+		/// varies based on the value.
+		virtual bool isSetToDefault() const;
 
 		/// Returns a hash to represent the value of this plug
 		/// in the current context.

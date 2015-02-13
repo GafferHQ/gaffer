@@ -88,6 +88,7 @@ class SplinePlug : public CompoundPlug
 
 		const T &defaultValue() const;
 		virtual void setToDefault();
+		virtual bool isSetToDefault() const;
 
 		/// Sets the value of all the child plugs by decomposing
 		/// the passed spline and storing it in the basis, points,

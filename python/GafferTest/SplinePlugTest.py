@@ -297,14 +297,17 @@ class SplinePlugTest( GafferTest.TestCase ) :
 
 		self.assertEqual( p.defaultValue(), s1 )
 		self.assertEqual( p.getValue(), s1 )
+		self.assertTrue( p.isSetToDefault() )
 
 		p.setValue( s2 )
 		self.assertEqual( p.defaultValue(), s1 )
 		self.assertEqual( p.getValue(), s2 )
+		self.assertFalse( p.isSetToDefault() )
 
 		p.setToDefault()
 		self.assertEqual( p.defaultValue(), s1 )
 		self.assertEqual( p.getValue(), s1 )
+		self.assertTrue( p.isSetToDefault() )
 
 	def testPlugFlags( self ) :
 
@@ -508,6 +511,39 @@ class SplinePlugTest( GafferTest.TestCase ) :
 
 		p = Gaffer.SplineffPlug()
 		p.getValue()
+
+	def testTruncatedDefaultValue( self ) :
+
+		defaultValue = IECore.Splineff(
+			IECore.CubicBasisf.catmullRom(),
+			(
+				( 0, 0 ),
+				( 0, 0 ),
+				( 0.5, 0.5 ),
+				( 0.5, 0.5 ),
+				( 1, 1 ),
+				( 1, 1 ),
+			)
+		)
+
+		# This tricky value could fool a naive implementation
+		# of isSetToDefault().
+		truncatedDefaultValue = IECore.Splineff(
+			IECore.CubicBasisf.catmullRom(),
+			(
+				( 0, 0 ),
+				( 0, 0 ),
+				( 0.5, 0.5 ),
+				( 0.5, 0.5 ),
+			)
+		)
+
+		p = Gaffer.SplineffPlug( "a", defaultValue=defaultValue, flags=Gaffer.Plug.Flags.Dynamic )
+
+		p.setValue( truncatedDefaultValue )
+		self.assertEqual( p.defaultValue(), defaultValue )
+		self.assertEqual( p.getValue(), truncatedDefaultValue )
+		self.assertFalse( p.isSetToDefault() )
 
 if __name__ == "__main__":
 	unittest.main()

@@ -416,6 +416,23 @@ class CompoundNumericPlugTest( GafferTest.TestCase ) :
 
 		self.assertTrue( s2["n"]["p"]["x"].getFlags( Gaffer.Plug.Flags.ReadOnly ) )
 
+	def testIsSetToDefault( self ) :
+
+		n = GafferTest.CompoundNumericNode()
+		self.assertTrue( n["p"].isSetToDefault() )
+
+		n["p"].setValue( IECore.V3f( 4, 5, 6 ) )
+		self.assertFalse( n["p"].isSetToDefault() )
+
+		n["p"].setToDefault()
+		self.assertTrue( n["p"].isSetToDefault() )
+
+		n["p"].setValue( IECore.V3f( 4, 5, 6 ) )
+		self.assertFalse( n["p"].isSetToDefault() )
+
+		n["p"].setValue( n["p"].defaultValue() )
+		self.assertTrue( n["p"].isSetToDefault() )
+
 if __name__ == "__main__":
 	unittest.main()
 
