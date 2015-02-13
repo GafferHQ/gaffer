@@ -43,7 +43,10 @@ class SequencePath( Gaffer.Path ) :
 	def __init__( self, path, root="/", minSequenceSize=1, filter=None ) :
 
 		if not isinstance( path, Gaffer.Path ) :
-			path = Gaffer.FileSystemPath( path, root )
+			if isinstance( path, str ) :
+				path = Gaffer.FileSystemPath( path )
+			else :
+				path = Gaffer.FileSystemPath( path, root )
 
 		Gaffer.Path.__init__( self, path[:], path.root(), filter=filter )
 
