@@ -93,7 +93,7 @@ AppleseedOptions::AppleseedOptions( const std::string &name )
 
 	// system parameters
 	options->addOptionalMember( "as:searchpath", new IECore::StringData( "" ), "searchPath", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "as:num_threads", new IECore::IntData( 8 ), "numThreads", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "as:texture_mem", new IECore::IntData( 256 ), "textureMem", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "as:cfg:rendering_threads", new IECore::IntData( 8 ), "numThreads", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "as:cfg:texture_store:max_size", new IECore::IntData( 256 * 1024 ), "textureMem", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "as:cfg:generic_frame_renderer:tile_ordering", new IECore::StringData( "hilbert" ), "tileOrdering", Gaffer::Plug::Default, false );
 }
