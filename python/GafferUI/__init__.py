@@ -245,6 +245,7 @@ import SystemCommandUI
 import DotUI
 import TaskListUI
 import SubGraphUI
+import SwitchUI
 
 # backwards compatibility
 ## \todo Remove me
