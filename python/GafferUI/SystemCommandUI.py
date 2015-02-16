@@ -37,20 +37,48 @@
 import Gaffer
 import GafferUI
 
-Gaffer.Metadata.registerNodeDescription(
+Gaffer.Metadata.registerNode(
 
-Gaffer.SystemCommand,
+	Gaffer.SystemCommand,
 
-"""Runs system commands via a shell""",
+	"description",
+	"""
+	Runs system commands via a shell.
+	""",
 
-"command",
-"The command to be run. This may reference values from substitutions with '{substitutionName}' syntax."
+	plugs = {
 
-"substitutions",
-"An arbitrary set of name/value pairs which can be referenced in command with '{substitutionsName}' syntax."
+		"command" : (
 
-"environmentVariables",
-"An arbitrary set of name/value pairs which will be set as environment variables when running the command."
+			"description",
+			"""
+			The command to be run. This may reference values
+			from substitutions with '{substitutionName}' syntax.
+			""",
+
+		),
+
+		"substitutions" : (
+
+			"description",
+			"""
+			An arbitrary set of name/value pairs which can be
+			referenced in command with '{substitutionsName}' syntax.
+			"""
+
+		),
+
+		"environmentVariables" : (
+
+			"description",
+			"""
+			An arbitrary set of name/value pairs which will be set as
+			environment variables when running the command.
+			""",
+
+		)
+
+	}
 
 )
 
