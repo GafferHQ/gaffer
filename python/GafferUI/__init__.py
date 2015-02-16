@@ -246,6 +246,7 @@ import DotUI
 import TaskListUI
 import SubGraphUI
 import SwitchUI
+import ContextVariablesUI
 
 # backwards compatibility
 ## \todo Remove me
