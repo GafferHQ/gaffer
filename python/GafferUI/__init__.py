@@ -247,6 +247,7 @@ import TaskListUI
 import SubGraphUI
 import SwitchUI
 import ContextVariablesUI
+import TimeWarpUI
 
 # backwards compatibility
 ## \todo Remove me
