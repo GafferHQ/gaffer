@@ -254,5 +254,10 @@ class NodeTest( GafferTest.TestCase ) :
 
 		self.assertEqual( s2["n"]["user"]["test"].getValue(), 10 )
 
+	def testNodesConstructWithDefaultValues( self ) :
+
+		self.assertNodesConstructWithDefaultValues( Gaffer )
+		self.assertNodesConstructWithDefaultValues( GafferTest )
+
 if __name__ == "__main__":
 	unittest.main()

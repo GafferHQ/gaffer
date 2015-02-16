@@ -178,6 +178,11 @@ class AppleseedRenderTest( GafferTest.TestCase ) :
 		self.assertDefaultNamesAreCorrect( GafferAppleseed )
 		self.assertDefaultNamesAreCorrect( GafferAppleseedTest )
 
+	def testNodesConstructWithDefaultValues( self ) :
+
+		self.assertNodesConstructWithDefaultValues( GafferAppleseed )
+		self.assertNodesConstructWithDefaultValues( GafferAppleseedTest )
+
 	def testDirectoryCreation( self ) :
 
 		s = Gaffer.ScriptNode()

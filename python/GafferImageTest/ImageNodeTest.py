@@ -42,6 +42,7 @@ import IECore
 import Gaffer
 import GafferTest
 import GafferImage
+import GafferImageTest
 
 class ImageNodeTest( GafferTest.TestCase ) :
 
@@ -81,6 +82,11 @@ class ImageNodeTest( GafferTest.TestCase ) :
 
 		for e in exceptions :
 			raise e
+
+	def testNodesConstructWithDefaultValues( self ) :
+
+		self.assertNodesConstructWithDefaultValues( GafferImage )
+		self.assertNodesConstructWithDefaultValues( GafferImageTest )
 
 	def setUp( self ) :
 
