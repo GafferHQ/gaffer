@@ -42,8 +42,54 @@ import Gaffer
 import GafferUI
 import GafferCortex
 
+Gaffer.Metadata.registerNode(
+
+	GafferCortex.ObjectReader,
+
+	"description",
+	"""
+	Loads objects from disk using the readers provided by
+	the Cortex project. In most cases it is preferable to
+	use a dedicated SceneReader or ImageReader instead of
+	this node.
+	""",
+
+	plugs = {
+
+		"fileName" : [
+
+			"description",
+			"""
+			The file to load.
+			""",
+
+		],
+
+		"out" : [
+
+			"description",
+			"""
+			The loaded object. Note that the ObjectToScene node may
+			be used to convert this for use with the GafferScene
+			module.
+			""",
+
+		]
+
+	}
+
+)
+
+##########################################################################
+# Nodules
+##########################################################################
+
 GafferUI.Nodule.registerNodule( GafferCortex.ObjectReader, fnmatch.translate( "*" ), lambda plug : None )
 GafferUI.Nodule.registerNodule( GafferCortex.ObjectReader, "out", GafferUI.StandardNodule )
+
+##########################################################################
+# PlugValueWidgets
+##########################################################################
 
 GafferUI.PlugValueWidget.registerCreator(
 	GafferCortex.ObjectReader,
