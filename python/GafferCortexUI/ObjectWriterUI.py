@@ -44,6 +44,55 @@ import GafferUI
 import GafferCortex
 import GafferCortexUI
 
+Gaffer.Metadata.registerNode(
+
+	GafferCortex.ObjectWriter,
+
+	"description",
+	"""
+	Saves objects to disk using the writers provided by
+	the Cortex project.
+	""",
+
+	plugs = {
+
+		"in" : [
+
+			"description",
+			"""
+			The object to be written to disk.
+			""",
+
+		],
+
+		"fileName" : [
+
+			"description",
+			"""
+			The name of the file to write.
+			""",
+
+		],
+
+		"parameters" : [
+
+			"description",
+			"""
+			Additional parameters specific to the format of the
+			file being written. These are created automatically
+			based on the extension when the fileName is specified.
+			""",
+
+		],
+
+	}
+
+)
+
+##########################################################################
+# PlugValueWidgets
+##########################################################################
+
 def __createParameterWidget( plug ) :
 
 	return GafferCortexUI.CompoundParameterValueWidget( plug.node().parameterHandler(), collapsible=False )
@@ -69,6 +118,10 @@ GafferUI.PlugValueWidget.registerCreator(
 
 GafferUI.PlugValueWidget.registerCreator( GafferCortex.ObjectWriter, "parameters", __createParameterWidget )
 GafferUI.PlugValueWidget.registerCreator( GafferCortex.ObjectWriter, "in", None )
+
+##########################################################################
+# Nodules
+##########################################################################
 
 GafferUI.Nodule.registerNodule( GafferCortex.ObjectWriter, fnmatch.translate( "parameter*" ), lambda plug : None )
 GafferUI.Nodule.registerNodule( GafferCortex.ObjectWriter, "fileName", lambda plug : None )
