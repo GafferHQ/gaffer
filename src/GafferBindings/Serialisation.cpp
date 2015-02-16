@@ -46,8 +46,11 @@
 #include "IECorePython/ScopedGILLock.h"
 #include "IECorePython/Wrapper.h"
 
+#include "Gaffer/Context.h"
+
 #include "GafferBindings/Serialisation.h"
 #include "GafferBindings/GraphComponentBinding.h"
+#include "GafferBindings/MetadataBinding.h"
 
 using namespace IECore;
 using namespace Gaffer;
@@ -63,6 +66,18 @@ Serialisation::Serialisation( const Gaffer::GraphComponent *parent, const std::s
 {
 	IECorePython::ScopedGILLock gilLock;
 	walk( parent, parentName, acquireSerialiser( parent ) );
+
+	if( Context::current()->get<bool>( "serialiser:includeParentMetadata", false ) )
+	{
+		if( const Node *node = runTimeCast<const Node>( parent ) )
+		{
+			m_postScript += metadataSerialisation( node, parentName );
+		}
+		else if( const Plug *plug = runTimeCast<const Plug>( parent ) )
+		{
+			m_postScript += metadataSerialisation( plug, parentName );
+		}
+	}
 }
 
 const Gaffer::GraphComponent *Serialisation::parent() const

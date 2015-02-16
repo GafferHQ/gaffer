@@ -808,5 +808,24 @@ class BoxTest( GafferTest.TestCase ) :
 
 		self.assertTrue( s["c"]["op1"].getInput().isSame( s["a"]["sum"] ) )
 
+	def testSerialiseChildrenOmitsParentMetadata( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["b"] = Gaffer.Box()
+		s["b"]["n"] = Gaffer.Node()
+
+		Gaffer.Metadata.registerNodeValue( s["b"], "description", "Test description" )
+		Gaffer.Metadata.registerNodeValue( s["b"], "nodeGadget:color", IECore.Color3f( 1, 0, 0 ) )
+
+		ss = s.serialise( parent = s["b"] )
+		self.assertFalse( "Metadata" in ss )
+
+		s["b2"] = Gaffer.Box()
+		s.execute( ss, parent = s["b2"] )
+
+		self.assertTrue( "n" in s["b2"] )
+		self.assertEqual( Gaffer.Metadata.nodeValue( s["b2"], "description" ), None )
+		self.assertEqual( Gaffer.Metadata.nodeValue( s["b2"], "nodeGadget:color" ), None )
+
 if __name__ == "__main__":
 	unittest.main()

@@ -646,6 +646,22 @@ class ReferenceTest( GafferTest.TestCase ) :
 		self.assertEqual( s["r"]["n"]["p"].getValue(), 2 )
 		self.assertEqual( s["r"]["n"]["p"].defaultValue(), 1 )
 
+	def testNodeMetadata( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["b"] = Gaffer.Box()
+
+		Gaffer.Metadata.registerNodeValue( s["b"], "description", "Test description" )
+		Gaffer.Metadata.registerNodeValue( s["b"], "nodeGadget:color", IECore.Color3f( 1, 0, 0 ) )
+
+		s["b"].exportForReference( "/tmp/test.grf" )
+
+		s["r"] = Gaffer.Reference()
+		s["r"].load( "/tmp/test.grf" )
+
+		self.assertEqual( Gaffer.Metadata.nodeValue( s["r"], "description" ), "Test description" )
+		self.assertEqual( Gaffer.Metadata.nodeValue( s["r"], "nodeGadget:color" ), IECore.Color3f( 1, 0, 0 ) )
+
 	def tearDown( self ) :
 
 		GafferTest.SphereNode = self.__SphereNode
