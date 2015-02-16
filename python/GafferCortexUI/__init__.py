@@ -67,5 +67,6 @@ import ParameterPresets
 import ParameterisedHolderUI
 import ObjectReaderUI
 import ObjectWriterUI
+import OpHolderUI
 
 __import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferCortexUI" )
