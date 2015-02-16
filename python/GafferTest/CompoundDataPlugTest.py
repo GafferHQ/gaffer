@@ -246,14 +246,20 @@ class CompoundDataPlugTest( GafferTest.TestCase ) :
 		m = p.addMember( "a", IECore.IntData( 10 ) )
 		self.assertTrue( m["value"].defaultValue(), 10 )
 		self.assertTrue( m["value"].getValue(), 10 )
+		self.assertTrue( m["name"].defaultValue(), "a" )
+		self.assertTrue( m["name"].getValue(), "a" )
 
 		m = p.addMember( "b", IECore.FloatData( 20 ) )
 		self.assertTrue( m["value"].defaultValue(), 20 )
 		self.assertTrue( m["value"].getValue(), 20 )
+		self.assertTrue( m["name"].defaultValue(), "b" )
+		self.assertTrue( m["name"].getValue(), "b" )
 
 		m = p.addMember( "c", IECore.StringData( "abc" ) )
 		self.assertTrue( m["value"].defaultValue(), "abc" )
 		self.assertTrue( m["value"].getValue(), "abc" )
+		self.assertTrue( m["name"].defaultValue(), "c" )
+		self.assertTrue( m["name"].getValue(), "c" )
 
 	def testAddMembers( self ) :
 

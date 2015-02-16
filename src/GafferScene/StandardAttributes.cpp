@@ -73,16 +73,20 @@ void StandardAttributes::plugSet( Gaffer::Plug *plug )
 
 	if( plug == attributesPlug()->getChild<Gaffer::Plug>( "visibility" )->getChild<Gaffer::Plug>( "name" ) )
 	{
-		// we only need to do this once during loading, so disconnect from the signal so we
-		// don't have any overhead after the load.
+		/// We only need to do this once during loading, so disconnect from the signal so we
+		/// don't have any overhead after the load.
+		/// \todo Now that "name" plugs are created with the correct default value, they
+		/// no longer serialise with a `setValue()` call included. This means that we
+		/// will never reach this point when loading new saved scripts, and therefore won't
+		/// ever remove the callback.
+		///
+		/// Either :
+		///
+		/// 1. Make the name plugs read-only. Then any unwanted old `setValue()` saved in
+		///   scripts will simply fail. Then we can simply remove all this code.
+		/// 2. Just remove all this code anyway, after determining that we no longer have
+		///    old scripts requiring fixup floating around.
 		plugSetSignal().disconnect( boost::bind( &StandardAttributes::plugSet, this, ::_1 ) );
-		/// \todo Stop storing the values for the name plug in the file to avoid similar
-		/// situations in the future, and reduce file sizes. We could do this either by
-		/// making the value they take the default, or by making them non-serialisable.
-		/// When we do this though, newly saved files won't trigger this code path, meaning
-		/// we'll never disconnect the signal and will always have this overhead. If we
-		/// implemented error tolerant script loading (#746) _and_ made the plug read only,
-		/// then we could remove this code entirely, as the setValue() call would fail.
 
 		/// We're resetting the value at the source in case this node has an incoming
 		/// connection. If we directly set the plug in this case, it'll throw an exception,
