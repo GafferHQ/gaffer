@@ -59,7 +59,7 @@ enum TypeId
 	GradeTypeId = 110763,
 	FilterProcessorTypeId = 110764,
 	ConstantTypeId = 110765,
-	SelectTypeId = 110766,
+	SelectTypeId = 110766, // obsolete, available for reuse
 	ChannelMaskPlugTypeId = 110767,
 	ReformatTypeId = 110768,
 	FilterPlugTypeId = 110769,
