@@ -115,13 +115,6 @@ GafferUI.PlugValueWidget.registerCreator(
 	labelsAndValues = writeModeLabelsAndValues
 )
 
-# Constant
-GafferUI.PlugValueWidget.registerCreator(
-	GafferImage.Constant,
-	"format",
-	GafferImageUI.FormatPlugValueWidget
-)
-
 # OpenColorIO
 ocioColorSpaceLabelsAndValues = [ ( "None", "" ) ]
 import PyOpenColorIO as OCIO

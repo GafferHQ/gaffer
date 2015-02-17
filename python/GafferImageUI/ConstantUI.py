@@ -1,7 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2012, John Haddon. All rights reserved.
-#  Copyright (c) 2012-2014, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,18 +34,38 @@
 #
 ##########################################################################
 
-from _GafferImageUI import *
+import Gaffer
+import GafferImage
 
-import DisplayUI
-from FormatPlugValueWidget import FormatPlugValueWidget
-from FilterPlugValueWidget import FilterPlugValueWidget
-from ChannelMaskPlugValueWidget import ChannelMaskPlugValueWidget
+Gaffer.Metadata.registerNode(
 
-import ImageReaderUI
-import ImageViewToolbar
-import ImageTransformUI
-import ConstantUI
+	GafferImage.Constant,
 
-import NodeUIs # Put this at the bottom or we get ordering issues!
+	"description",
+	"""
+	Outputs an image of a constant flat colour.
+	""",
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferImageUI" )
+	plugs = {
+
+		"format" : [
+
+			"description",
+			"""
+			The resolution and aspect ratio of the image.
+			""",
+
+		],
+
+		"color" : [
+
+			"description",
+			"""
+			The colour of the image.
+			""",
+
+		],
+
+	}
+
+)
