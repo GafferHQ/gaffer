@@ -276,13 +276,28 @@ class LocalDispatcher( Gaffer.Dispatcher ) :
 			
 			self.__setStatus( batch, LocalDispatcher.Job.Status.Running )
 			IECore.msg( IECore.MessageHandler.Level.Info, self.__messageTitle, " ".join( args ) )
-			process = subprocess.Popen( args, preexec_fn=os.setsid )
+			
+			# we used to be calling subprocess.Popen with an additional argument of preexec_fn=os.setsid, 
+			# and then using os.killpg( process.pid, signal.SIGTERM ) to kill the entire process subtree
+			# if required. However, this was occasionally causing hangs in Popen, so now we're calling
+			# Popen with no arguments and manually crawling the process tree when we want to kill a job:
+			
+			process = subprocess.Popen( args )
 			batch.blindData()["pid"] = IECore.IntData( process.pid )
 			
 			while process.poll() is None :
 				
 				if batch.blindData().get( "killed" ) :
-					os.killpg( process.pid, signal.SIGTERM )
+					
+					def killProcessTree( pid ) :
+
+						psChildrenPipe = os.popen( "ps -o pid --no-headers --ppid %d" % pid )
+						for line in psChildrenPipe:
+							killProcessTree( int( line ) )
+
+						os.system( "kill -%d %d" % ( signal.SIGTERM, pid ) )
+					
+					killProcessTree( process.pid )
 					self.__reportKilled( batch )
 					return False
 				
