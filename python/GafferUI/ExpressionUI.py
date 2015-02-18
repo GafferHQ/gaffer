@@ -63,12 +63,7 @@ def __createExpression( plug ) :
 		expression += plug.relativeName( parentNode ).replace( ".", "']['" )
 		expression += "'] = "
 
-		if isinstance( plug, Gaffer.StringPlug ) :
-			expression += "''"
-		elif isinstance( plug, Gaffer.IntPlug ) :
-			expression += "1"
-		elif isinstance( plug, Gaffer.FloatPlug ) :
-			expression += "1.0"
+		expression += repr( plug.getValue() )
 
 		expressionNode["expression"].setValue( expression )
 
