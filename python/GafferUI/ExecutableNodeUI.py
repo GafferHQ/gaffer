@@ -37,6 +37,57 @@
 import Gaffer
 import GafferUI
 
+Gaffer.Metadata.registerNode(
+
+	Gaffer.ExecutableNode,
+
+	"description",
+	"""
+	Base class for nodes which have external side effects - generating
+	files on disk for instance. Can be connected with other executable
+	nodes to define an order of execution based on dependencies between
+	nodes. A Dispatcher can then be used to actually perform the execution
+	of such a network.
+	""",
+
+	plugs = {
+
+		"requirements" : (
+
+			"description",
+			"""
+			Input connections to upstream nodes which must be
+			executed before this node.
+			""",
+
+		),
+
+		"requirement" : (
+
+			"description",
+			"""
+			Output connections to downstream nodes which must
+			not be executed until after this node.
+			""",
+
+		),
+
+		"dispatcher" : (
+
+			"description",
+			"""
+			Container for custom plugs which dispatchers use to
+			control their behaviour.
+			""",
+
+			"nodeUI:section", "Dispatcher"
+
+		),
+
+	}
+
+)
+
 ##########################################################################
 # Metadata, PlugValueWidgets and Nodules
 ##########################################################################

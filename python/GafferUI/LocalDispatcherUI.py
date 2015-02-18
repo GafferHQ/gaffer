@@ -44,6 +44,47 @@ import GafferUI
 QtCore = GafferUI._qtImport( "QtCore" )
 QtGui = GafferUI._qtImport( "QtGui" )
 
+Gaffer.Metadata.registerNode(
+
+	Gaffer.LocalDispatcher,
+
+	"description",
+	"""
+	Schedules execution of task graphs on the local machine. Tasks
+	may be dispatched in the background to keep the UI responsive.
+	""",
+
+	plugs = {
+
+		"executeInBackground" : (
+
+			"description",
+			"""
+			Executes the dispatched tasks in separate processes via a
+			background thread. Foreground execution may still be forced
+			for specific nodes using the dispatcher.local.executeInForeground
+			plug on the node itself.
+			""",
+
+		),
+
+		"ignoreScriptLoadErrors" : (
+
+			"description",
+			"""
+			Ignores errors loading the script when executing in the background.
+			This is not recommended - fix the problem instead.
+			""",
+
+		)
+
+	}
+
+)
+
+Gaffer.Metadata.registerPlugDescription( Gaffer.ExecutableNode, "dispatcher.local", "Settings used by the local dispatcher." )
+Gaffer.Metadata.registerPlugDescription( Gaffer.ExecutableNode, "dispatcher.local.executeInForeground", "Forces the tasks from this node (and all preceding tasks) to execute on the current thread." )
+
 ##########################################################################
 # Public functions
 ##########################################################################
@@ -51,14 +92,6 @@ QtGui = GafferUI._qtImport( "QtGui" )
 def appendMenuDefinitions( menuDefinition, prefix="" ) :
 	
 	menuDefinition.append( prefix + "/View Local Jobs", { "command" : __showLocalDispatcherWindow } )
-
-##########################################################################
-# Metadata, PlugValueWidgets and Nodules
-##########################################################################
-
-Gaffer.Metadata.registerPlugDescription( Gaffer.LocalDispatcher, "executeInBackground", "Executes the dispatched tasks in separate processes via a background thread." )
-Gaffer.Metadata.registerPlugDescription( Gaffer.LocalDispatcher, "ignoreScriptLoadErrors", "Ignores errors loading the script when executing in the background. This is not recommended." )
-Gaffer.Metadata.registerPlugDescription( Gaffer.ExecutableNode, "dispatcher.Local.executeInForeground", "Forces the tasks from this node (and all preceding tasks) to execute on the current thread." )
 
 ##################################################################################
 # Dispatcher Window

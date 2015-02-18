@@ -48,6 +48,13 @@ import GafferUI
 import GafferCortex
 import GafferCortexUI
 
+__nodeTypes = (
+	GafferCortex.ParameterisedHolderNode,
+	GafferCortex.ParameterisedHolderComputeNode,
+	GafferCortex.ParameterisedHolderDependencyNode,
+	GafferCortex.ParameterisedHolderExecutableNode,
+)
+
 ##########################################################################
 # NodeUI
 ##########################################################################
@@ -82,9 +89,8 @@ class _ParameterisedHolderNodeUI( GafferUI.NodeUI ) :
 
 		self.__parameterValueWidget.plugValueWidget().setReadOnly( readOnly )
 
-GafferUI.NodeUI.registerNodeUI( GafferCortex.ParameterisedHolderNode, _ParameterisedHolderNodeUI )
-GafferUI.NodeUI.registerNodeUI( GafferCortex.ParameterisedHolderComputeNode, _ParameterisedHolderNodeUI )
-GafferUI.NodeUI.registerNodeUI( GafferCortex.ParameterisedHolderDependencyNode, _ParameterisedHolderNodeUI )
+for nodeType in __nodeTypes :
+	GafferUI.NodeUI.registerNodeUI( nodeType, _ParameterisedHolderNodeUI )
 
 ##########################################################################
 # Info button
@@ -143,13 +149,11 @@ def __parameterNoduleCreator( plug ) :
 	else :
 		return None
 
-GafferUI.Nodule.registerNodule( GafferCortex.ParameterisedHolderNode, "parameters", GafferUI.CompoundNodule )
-GafferUI.Nodule.registerNodule( GafferCortex.ParameterisedHolderComputeNode, "parameters", GafferUI.CompoundNodule )
-GafferUI.Nodule.registerNodule( GafferCortex.ParameterisedHolderDependencyNode, "parameters", GafferUI.CompoundNodule )
+for nodeType in __nodeTypes :
+	GafferUI.Nodule.registerNodule( nodeType, "parameters", GafferUI.CompoundNodule )
 
-GafferUI.Nodule.registerNodule( GafferCortex.ParameterisedHolderNode, fnmatch.translate( "parameters.*" ), __parameterNoduleCreator )
-GafferUI.Nodule.registerNodule( GafferCortex.ParameterisedHolderComputeNode, fnmatch.translate( "parameters.*" ), __parameterNoduleCreator )
-GafferUI.Nodule.registerNodule( GafferCortex.ParameterisedHolderDependencyNode, fnmatch.translate( "parameters.*" ), __parameterNoduleCreator )
+for nodeType in __nodeTypes :
+	GafferUI.Nodule.registerNodule( nodeType, fnmatch.translate( "parameters.*" ), __parameterNoduleCreator )
 
 ##########################################################################
 # Metadata
@@ -159,7 +163,7 @@ def __nodeDescription( node ) :
 
 	parameterised = node.getParameterised()[0]
 	if parameterised is None :
-		return ""
+		return "Hosts Cortex Parameterised classes"
 
 	return parameterised.description
 
@@ -193,11 +197,7 @@ def __plugDescription( plug ) :
 
 	return parameter.description
 
-for nodeType in (
-	GafferCortex.ParameterisedHolderNode,
-	GafferCortex.ParameterisedHolderComputeNode,
-	GafferCortex.ParameterisedHolderDependencyNode,
-) :
+for nodeType in __nodeTypes :
 
 	Gaffer.Metadata.registerNodeDescription( nodeType, __nodeDescription )
 	Gaffer.Metadata.registerNodeValue( nodeType, "summary", __nodeSummary )

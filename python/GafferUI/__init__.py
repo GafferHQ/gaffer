@@ -234,6 +234,8 @@ from UIEditor import UIEditor
 
 # and then specific node uis
 
+import DependencyNodeUI
+import ComputeNodeUI
 import RandomUI
 import ExpressionUI
 import BoxUI
@@ -241,6 +243,11 @@ import ReferenceUI
 import BackdropUI
 import SystemCommandUI
 import DotUI
+import TaskListUI
+import SubGraphUI
+import SwitchUI
+import ContextVariablesUI
+import TimeWarpUI
 
 # backwards compatibility
 ## \todo Remove me

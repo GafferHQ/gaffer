@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -39,49 +39,12 @@ import GafferUI
 
 Gaffer.Metadata.registerNode(
 
-	Gaffer.SystemCommand,
+	Gaffer.ComputeNode,
 
 	"description",
 	"""
-	Runs system commands via a shell.
+	Base class for nodes which can compute the values
+	of output plugs based on the values of input plugs.
 	""",
 
-	plugs = {
-
-		"command" : (
-
-			"description",
-			"""
-			The command to be run. This may reference values
-			from substitutions with '{substitutionName}' syntax.
-			""",
-
-		),
-
-		"substitutions" : (
-
-			"description",
-			"""
-			An arbitrary set of name/value pairs which can be
-			referenced in command with '{substitutionsName}' syntax.
-			"""
-
-		),
-
-		"environmentVariables" : (
-
-			"description",
-			"""
-			An arbitrary set of name/value pairs which will be set as
-			environment variables when running the command.
-			""",
-
-		)
-
-	}
-
 )
-
-GafferUI.Nodule.registerNodule( Gaffer.SystemCommand, "command", lambda plug : None )
-GafferUI.Nodule.registerNodule( Gaffer.SystemCommand, "substitutions", lambda plug : None )
-GafferUI.Nodule.registerNodule( Gaffer.SystemCommand, "environmentVariables", lambda plug : None )

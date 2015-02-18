@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
+#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,85 +34,32 @@
 #
 ##########################################################################
 
-import fnmatch
-
-import IECore
-
 import Gaffer
-import GafferUI
 import GafferCortex
 
 Gaffer.Metadata.registerNode(
 
-	GafferCortex.ObjectReader,
+	GafferCortex.OpHolder,
 
 	"description",
 	"""
-	Loads objects from disk using the readers provided by
-	the Cortex project. In most cases it is preferable to
-	use a dedicated SceneReader or ImageReader instead of
-	this node.
+	Hosts Cortex Ops, allowing them to take part
+	in computations performed in Gaffer's dependency
+	graph. For hosting Ops which create files, the
+	ExecutableOpHolder is probably more appropriate.
 	""",
 
 	plugs = {
 
-		"fileName" : [
+		"result" : [
 
 			"description",
 			"""
-			The file to load.
+			The result of running the Op.
 			""",
 
 		],
 
-		"out" : [
-
-			"description",
-			"""
-			The loaded object. Note that the ObjectToScene node may
-			be used to convert this for use with the GafferScene
-			module.
-			""",
-
-		]
-
 	}
 
 )
-
-##########################################################################
-# Nodules
-##########################################################################
-
-GafferUI.Nodule.registerNodule( GafferCortex.ObjectReader, fnmatch.translate( "*" ), lambda plug : None )
-GafferUI.Nodule.registerNodule( GafferCortex.ObjectReader, "out", GafferUI.StandardNodule )
-
-##########################################################################
-# PlugValueWidgets
-##########################################################################
-
-GafferUI.PlugValueWidget.registerCreator(
-	GafferCortex.ObjectReader,
-	"fileName",
-	lambda plug : GafferUI.PathPlugValueWidget(
-		plug,
-		path = Gaffer.FileSystemPath(
-			"/",
-			filter = Gaffer.FileSystemPath.createStandardFilter(
-				extensions = IECore.Reader.supportedExtensions(),
-				extensionsLabel = "Show only supported files",
-			),
-		),
-		pathChooserDialogueKeywords = {
-			"bookmarks" : GafferUI.Bookmarks.acquire( plug, category = "cortex" ),
-			"leaf" : True,
-		},
-	),
-)
-
-def __createParameterWidget( plug ) :
-
-	return GafferCortexUI.CompoundParameterValueWidget( plug.node().parameterHandler(), collapsible=False )
-
-GafferUI.PlugValueWidget.registerCreator( GafferCortex.ObjectReader, "parameters", __createParameterWidget )
-GafferUI.PlugValueWidget.registerCreator( GafferCortex.ObjectReader, "out", None )

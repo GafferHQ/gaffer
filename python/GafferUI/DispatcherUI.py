@@ -45,6 +45,65 @@ import GafferUI
 
 QtCore = GafferUI._qtImport( "QtCore" )
 
+Gaffer.Metadata.registerNode(
+
+	Gaffer.Dispatcher,
+
+	"description",
+	"""
+	Used to schedule the execution of a network
+	of ExecutableNodes.
+	""",
+
+	plugs = {
+
+		"framesMode" : (
+
+			"description",
+			"""
+			Determines the active frame range to be dispatched as
+			follows :
+
+			  - CurrentFrame uses the current timeline frame only.
+			  - FullRange uses the outer handles of the timeline
+			    (i.e. the full range of the script).
+			  - CustomRange uses a user defined range, as specified by
+			    the frameRange plug.
+			"""
+
+		),
+
+		"frameRange" : (
+
+			"description",
+			"""
+			The frame range to be used when framedMode is "CustomRange".
+			"""
+
+		),
+
+		"jobName" : (
+
+			"description",
+			"""
+			A descriptive name for the job.
+			"""
+
+		),
+
+		"jobsDirectory" : (
+
+			"description",
+			"""
+			A directory to store temporary files used by the dispatcher.
+			"""
+
+		),
+
+	}
+
+)
+
 ##########################################################################
 # Public functions
 ##########################################################################
@@ -394,17 +453,7 @@ class __FrameRangePlugValueWidget( GafferUI.StringPlugValueWidget ) :
 ##########################################################################
 
 Gaffer.Metadata.registerPlugValue( Gaffer.ExecutableNode, "requirement", "nodeUI:section", "header" )
-Gaffer.Metadata.registerPlugValue( Gaffer.ExecutableNode, "dispatcher", "nodeUI:section", "Dispatcher" )
 Gaffer.Metadata.registerPlugDescription( Gaffer.ExecutableNode, "dispatcher.batchSize", "Maximum number of frames to batch together when dispatching execution tasks." )
-
-Gaffer.Metadata.registerPlugDescription( Gaffer.Dispatcher, "framesMode",
-	"Determines the active frame range for dispatching. " +
-	"\"CurrentFrame\" uses the current timeline frame only. " +
-	"\"FullRange\" uses the outer handles of the timeline (i.e. the full range of the script). " +
-	"\"CustomRange\" uses a user defined range, as specified by the string plug below."
-)
-Gaffer.Metadata.registerPlugDescription( Gaffer.Dispatcher, "frameRange", "The frame range to be used when framesMode is set to \"CustomRange\"." )
-Gaffer.Metadata.registerPlugDescription( Gaffer.Dispatcher, "jobsDirectory", "A directory to store temporary files used by the dispatcher." )
 
 GafferUI.PlugValueWidget.registerCreator(
 	Gaffer.Dispatcher,

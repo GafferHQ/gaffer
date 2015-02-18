@@ -141,3 +141,46 @@ class TestCase( unittest.TestCase ) :
 				continue
 
 			self.assertEqual( instance.getName(), cls.staticTypeName().rpartition( ":" )[2] )
+
+	def assertNodesAreDocumented( self, module ) :
+
+		terminalPlugTypes = (
+			Gaffer.ArrayPlug,
+			Gaffer.V2fPlug, Gaffer.V3fPlug,
+			Gaffer.V2iPlug, Gaffer.V3iPlug,
+			Gaffer.Color3fPlug, Gaffer.Color4fPlug,
+			Gaffer.SplineffPlug, Gaffer.SplinefColor3fPlug,
+		)
+
+		undocumentedNodes = []
+		undocumentedPlugs = []
+		for name in dir( module ) :
+
+			cls = getattr( module, name )
+			if not inspect.isclass( cls ) or not issubclass( cls, Gaffer.Node ) :
+				continue
+
+			try :
+				node = cls()
+			except :
+				continue
+
+			description = Gaffer.Metadata.nodeValue( node, "description", inherit = False )
+			if (not description) or description.isspace() :
+				undocumentedNodes.append( node.getName() )
+
+			def checkPlugs( graphComponent ) :
+
+				if isinstance( graphComponent, Gaffer.Plug ) and not graphComponent.getName().startswith( "__" ) :
+					description = Gaffer.Metadata.plugValue( graphComponent, "description" )
+					if (not description) or description.isspace() :
+						undocumentedPlugs.append( graphComponent.fullName() )
+
+				if not isinstance( graphComponent, terminalPlugTypes ) :
+					for plug in graphComponent.children( Gaffer.Plug ) :
+						checkPlugs( plug )
+
+			checkPlugs( node )
+
+		self.assertEqual( undocumentedNodes, [] )
+		self.assertEqual( undocumentedPlugs, [] )

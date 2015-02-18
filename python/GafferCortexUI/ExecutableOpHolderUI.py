@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,53 +35,20 @@
 ##########################################################################
 
 import Gaffer
-import GafferUI
+import GafferCortex
 
 Gaffer.Metadata.registerNode(
 
-	Gaffer.SystemCommand,
+	GafferCortex.ExecutableOpHolder,
 
 	"description",
 	"""
-	Runs system commands via a shell.
+	Hosts Cortex Ops, allowing them to take perform
+	tasks in graphs executed by Gaffer's dispatchers.
+	graph. This is most appropriate for hosting Ops
+	which generate files on disk - for Ops which output
+	objects directly, an OpHolder is a more appropriate
+	host.
 	""",
 
-	plugs = {
-
-		"command" : (
-
-			"description",
-			"""
-			The command to be run. This may reference values
-			from substitutions with '{substitutionName}' syntax.
-			""",
-
-		),
-
-		"substitutions" : (
-
-			"description",
-			"""
-			An arbitrary set of name/value pairs which can be
-			referenced in command with '{substitutionsName}' syntax.
-			"""
-
-		),
-
-		"environmentVariables" : (
-
-			"description",
-			"""
-			An arbitrary set of name/value pairs which will be set as
-			environment variables when running the command.
-			""",
-
-		)
-
-	}
-
 )
-
-GafferUI.Nodule.registerNodule( Gaffer.SystemCommand, "command", lambda plug : None )
-GafferUI.Nodule.registerNodule( Gaffer.SystemCommand, "substitutions", lambda plug : None )
-GafferUI.Nodule.registerNodule( Gaffer.SystemCommand, "environmentVariables", lambda plug : None )

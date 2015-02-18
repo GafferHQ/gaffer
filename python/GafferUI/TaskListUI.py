@@ -35,12 +35,14 @@
 ##########################################################################
 
 import Gaffer
-import GafferUI
 
-Gaffer.Metadata.registerNodeDescription(
+Gaffer.Metadata.registerNode(
 
-Gaffer.TaskList,
+	Gaffer.TaskList,
 
-"""Used to collect Executable tasks for dispatching all at once""",
+	"description",
+	"""
+	Used to collect executable tasks for dispatching all at once.
+	""",
 
 )

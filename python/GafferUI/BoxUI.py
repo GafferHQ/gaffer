@@ -42,6 +42,28 @@ import IECore
 import Gaffer
 import GafferUI
 
+Gaffer.Metadata.registerNode(
+
+	Gaffer.Box,
+
+	"description",
+	"""
+	A container for "subgraphs" - node networks which exist inside the
+	Box and can be exposed by promoting selected internal plugs onto the
+	outside of the Box.
+
+	Boxes can be used as an organisational tool for simplifying large
+	graphs by collapsing them into sections which perform distinct tasks.
+	They are also used for authoring files to be used with the Reference
+	node.
+	""",
+
+)
+
+##########################################################################
+# Public functions
+##########################################################################
+
 ## A command suitable for use with NodeMenu.append(), to add a menu
 # item for the creation of a Box from the current selection. We don't
 # actually append it automatically, but instead let the startup files

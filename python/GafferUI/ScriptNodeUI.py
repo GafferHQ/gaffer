@@ -38,6 +38,88 @@
 import Gaffer
 import GafferUI
 
+Gaffer.Metadata.registerNode(
+
+	Gaffer.ScriptNode,
+
+	"description",
+	"""
+	Defines a "script" - a Gaffer node network which can be
+	saved to disk as a ".gfr" file and reloaded.
+	""",
+
+	plugs = {
+
+		"fileName" : (
+
+			"description",
+			"""
+			Where the script is stored.
+			""",
+
+		),
+
+		"unsavedChanges" : (
+
+			"description",
+			"""
+			Indicates whether or not the script has been
+			modified since it was last saved.
+			""",
+
+		),
+
+		"frameRange" : (
+
+			"description",
+			"""
+			Defines the start and end frames for the script.
+			These don't enforce anything, but are typically
+			used by dispatchers to control default frame
+			ranges, and by the UI to define the range of the
+			time slider.
+			""",
+
+		),
+
+		"frameRange.start" : (
+
+			"description",
+			"""
+			The start frame. This doesn't enforce anything,
+			but is typically used by dispatchers to control
+			default frame ranges, and by the UI to define
+			the range of the time slider.
+			""",
+
+		),
+
+		"frameRange.end" : (
+
+			"description",
+			"""
+			The end frame. This doesn't enforce anything,
+			but is typically used by dispatchers to control
+			default frame ranges, and by the UI to define
+			the range of the time slider.
+			""",
+
+		),
+
+		"variables" : (
+
+			"description",
+			"""
+			Container for user-defined variables which can
+			be used in expressions anywhere in the script.
+			"""
+
+		),
+
+	},
+
+)
+
 GafferUI.PlugValueWidget.registerCreator(
 	Gaffer.ScriptNode,
 	"unsavedChanges",

@@ -38,6 +38,126 @@ import IECore
 import Gaffer
 import GafferUI
 
+Gaffer.Metadata.registerNode(
+
+	Gaffer.Random,
+
+	"description",
+	"""
+	Generates repeatable random values from a seed. This can be
+	very useful for the procedural generation of variation.
+	Numeric or colour values may be generated.
+
+	The random values are generated from a seed and a context
+	variable - to get useful variation either the seed or the
+	value of the context variable must be varied too.
+	""",
+
+	plugs = {
+
+		"seed" : [
+
+			"description",
+			"""
+			Seed for the random number generator. Different seeds
+			produce different random numbers. When controlling two
+			different properties using the same context variable,
+			different seeds may be used to ensure that the generated
+			values are different.
+			""",
+
+		],
+
+		"contextEntry" : [
+
+			"description",
+			"""
+			The most important plug for achieving interesting variation.
+			Should be set to the name of a context variable which will
+			be different for each evaluation of the node. Good examples
+			are "scene:path" to generate a different value per scene
+			location, or "frame" to generate a different value per frame.
+			""",
+
+			"preset:Time", "frame",
+			"preset:Scene Location", "scene:path",
+
+		],
+
+		"floatRange" : [
+
+			"description",
+			"""
+			The minimum and maximum values that will be generated for the
+			outFloat plug.
+			""",
+
+		],
+
+		"baseColor" : [
+
+			"description",
+			"""
+			Used as the basis for the random colours generated for the
+			outColor plug. All colours start with this value and then
+			have a random HSV variation applied, using the ranges specified
+			below.
+			""",
+
+		],
+
+		"hue" : [
+
+			"description",
+			"""
+			The +- range over which the hue of the base colour is varied.
+			""",
+
+		],
+
+		"saturation" : [
+
+			"description",
+			"""
+			The +- range over which the saturation of the base colour is varied.
+			""",
+
+		],
+
+		"value" : [
+
+			"description",
+			"""
+			The +- range over which the value of the base colour is varied.
+			""",
+
+		],
+
+		"outFloat" : [
+
+			"description",
+			"""
+			Random floating point output derived from seed, context variable
+			and float range plugs.
+			""",
+
+		],
+
+		"outColor" : [
+
+			"description",
+			"""
+			Random colour output derived from seed, context variable, base
+			colour, hue, saturation and value plugs.
+			""",
+
+		]
+
+	}
+
+)
+
+
 # PlugValueWidget registrations
 ##########################################################################
 

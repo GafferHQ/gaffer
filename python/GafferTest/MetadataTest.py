@@ -510,6 +510,68 @@ class MetadataTest( GafferTest.TestCase ) :
 		self.assertEqual( len( mh.messages ), 1 )
 		self.assertTrue( "Oops" in mh.messages[0].message )
 
+	def testRegisterNode( self ) :
+
+		class MetadataTestNodeC( Gaffer.Node ) :
+
+			def __init__( self, name = "MetadataTestNodeC" ) :
+
+				Gaffer.Node.__init__( self, name )
+
+				self["a"] = Gaffer.IntPlug()
+				self["b"] = Gaffer.IntPlug()
+
+		IECore.registerRunTimeTyped( MetadataTestNodeC )
+
+		Gaffer.Metadata.registerNode(
+
+			MetadataTestNodeC,
+
+			"description",
+			"""
+			I am a multi
+			line description
+			""",
+
+			"nodeGadget:color", IECore.Color3f( 1, 0, 0 ),
+
+			plugs = {
+				"a" : [
+					"description",
+					"""Another multi
+					line description""",
+
+					"preset:One", 1,
+					"preset:Two", 2,
+					"preset:Three", 3,
+				],
+				"b" : (
+					"description",
+					"""
+					I am the first paragraph.
+
+					I am the second paragraph.
+					""",
+					"otherValue", 100,
+				)
+			}
+
+		)
+
+		n = MetadataTestNodeC()
+
+		self.assertEqual( Gaffer.Metadata.nodeValue( n, "description" ), "I am a multi\nline description" )
+		self.assertEqual( Gaffer.Metadata.nodeValue( n, "nodeGadget:color" ), IECore.Color3f( 1, 0, 0 ) )
+
+		self.assertEqual( Gaffer.Metadata.plugValue( n["a"], "description" ), "Another multi\nline description" )
+		self.assertEqual( Gaffer.Metadata.plugValue( n["a"], "preset:One" ), 1 )
+		self.assertEqual( Gaffer.Metadata.plugValue( n["a"], "preset:Two" ), 2 )
+		self.assertEqual( Gaffer.Metadata.plugValue( n["a"], "preset:Three" ), 3 )
+		self.assertEqual( Gaffer.Metadata.registeredPlugValues( n["a"] ), [ "description", "preset:One", "preset:Two", "preset:Three" ] )
+
+		self.assertEqual( Gaffer.Metadata.plugValue( n["b"], "description" ), "I am the first paragraph.\n\nI am the second paragraph." )
+		self.assertEqual( Gaffer.Metadata.plugValue( n["b"], "otherValue" ), 100 )
+
 if __name__ == "__main__":
 	unittest.main()
 

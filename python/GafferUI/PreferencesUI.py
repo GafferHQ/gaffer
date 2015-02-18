@@ -37,5 +37,16 @@
 import Gaffer
 import GafferUI
 
+Gaffer.Metadata.registerNode(
+
+	Gaffer.Preferences,
+
+	"description",
+	"""
+	A container for application preferences.
+	""",
+
+)
+
 # we don't want the user plug to be visible on the preferences node
 GafferUI.NodeUI.registerNodeUI( Gaffer.Preferences, lambda node : GafferUI.StandardNodeUI( node, displayMode = GafferUI.StandardNodeUI.DisplayMode.Simplified ) )
