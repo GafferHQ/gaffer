@@ -119,6 +119,8 @@ class InteractiveRender : public Gaffer::Node
 
 		void outputLightsInternal( const IECore::CompoundObject *globals, bool editing );
 
+		void stop();
+
 		typedef std::set<std::string> LightHandles;
 
 		IECore::RendererPtr m_renderer;

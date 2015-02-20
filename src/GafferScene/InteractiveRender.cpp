@@ -80,6 +80,7 @@ InteractiveRender::InteractiveRender( const std::string &name )
 
 InteractiveRender::~InteractiveRender()
 {
+	stop();
 }
 
 ScenePlug *InteractiveRender::inPlug()
@@ -229,12 +230,7 @@ void InteractiveRender::update()
 
 	if( !requiredScene || requiredScene != m_scene || requiredState == Stopped )
 	{
-		// stop the current render
-		m_renderer = NULL;
-		m_scene = NULL;
-		m_state = Stopped;
-		m_lightHandles.clear();
-		m_attributesDirty = m_lightsDirty = m_camerasDirty = true;
+		stop();
 		if( !requiredScene || requiredState == Stopped )
 		{
 			return;
@@ -486,4 +482,21 @@ const Gaffer::Context *InteractiveRender::getContext() const
 void InteractiveRender::setContext( Gaffer::ContextPtr context )
 {
 	m_context = context;
+}
+
+void InteractiveRender::stop()
+{
+	if( m_renderer && m_state == Paused )
+	{
+		// Unpause if necessary. Prior to 3delight 11.0.142,
+		// deleting the renderer (calling RiEnd()) while
+		// paused led to deadlock.
+		m_renderer->editEnd();
+	}
+
+	m_renderer = NULL;
+	m_scene = NULL;
+	m_state = Stopped;
+	m_lightHandles.clear();
+	m_attributesDirty = m_lightsDirty = m_camerasDirty = true;
 }
