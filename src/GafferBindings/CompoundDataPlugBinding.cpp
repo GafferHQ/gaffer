@@ -129,7 +129,7 @@ class MemberPlugSerialiser : public CompoundPlugSerialiser
 
 	public :
 
-		virtual std::string constructor( const Gaffer::GraphComponent *graphComponent ) const
+		virtual std::string constructor( const Gaffer::GraphComponent *graphComponent, const Serialisation &serialisation ) const
 		{
 			return maskedMemberPlugRepr( static_cast<const CompoundDataPlug::MemberPlug *>( graphComponent ), Plug::All & ~Plug::ReadOnly );
 		}

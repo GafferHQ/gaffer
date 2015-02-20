@@ -178,6 +178,11 @@ class ArnoldRenderTest( GafferTest.TestCase ) :
 		self.assertDefaultNamesAreCorrect( GafferArnold )
 		self.assertDefaultNamesAreCorrect( GafferArnoldTest )
 
+	def testNodesConstructWithDefaultValues( self ) :
+
+		self.assertNodesConstructWithDefaultValues( GafferArnold )
+		self.assertNodesConstructWithDefaultValues( GafferArnoldTest )
+
 	def testDirectoryCreation( self ) :
 
 		s = Gaffer.ScriptNode()

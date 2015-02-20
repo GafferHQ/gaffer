@@ -169,8 +169,7 @@ CompoundDataPlug::MemberPlug *CompoundDataPlug::addMember( const std::string &na
 {
 	MemberPlugPtr plug = new MemberPlug( plugName, direction(), valuePlug->getFlags() );
 
-	StringPlugPtr namePlug = new StringPlug( "name", direction(), "", valuePlug->getFlags() );
-	namePlug->setValue( name );
+	StringPlugPtr namePlug = new StringPlug( "name", direction(), name, valuePlug->getFlags() );
 	plug->addChild( namePlug );
 
 	valuePlug->setName( "value" );

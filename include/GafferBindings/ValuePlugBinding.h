@@ -46,13 +46,20 @@ namespace GafferBindings
 
 void bindValuePlug();
 
+/// Supports the following Context variables :
+///
+/// "valuePlugSerialiser:resetParentPlugDefaults"
+///
+/// :	Replaces the default value with the current value for plugs
+///     of the parent node. This is used when exporting the contents
+///     of a Box node.
 class ValuePlugSerialiser : public PlugSerialiser
 {
 
 	public :
 
 		virtual void moduleDependencies( const Gaffer::GraphComponent *graphComponent, std::set<std::string> &modules ) const;
-		virtual std::string constructor( const Gaffer::GraphComponent *graphComponent ) const;
+		virtual std::string constructor( const Gaffer::GraphComponent *graphComponent, const Serialisation &serialisation ) const;
 		virtual std::string postConstructor( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const;
 
 	protected :

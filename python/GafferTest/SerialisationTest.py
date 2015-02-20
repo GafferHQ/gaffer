@@ -62,7 +62,7 @@ class SerialisationTest( GafferTest.TestCase ) :
 
 				return ( "GafferTest", )
 
-			def constructor( self, node ) :
+			def constructor( self, node, serialisation ) :
 
 				return ( "GafferTest.SerialisationTest.SerialisationTestNode( \"%s\", %d )" % ( node.getName(), node.initArgument ) )
 
@@ -120,6 +120,12 @@ class SerialisationTest( GafferTest.TestCase ) :
 		self.assertEqual( s2["n"].postConstructorWasHere, True )
 		self.assertEqual( s2["n"].postHierarchyWasHere, True )
 		self.assertEqual( s2["n"].postScriptWasHere, True )
+
+	def testParentAccessor( self ) :
+
+		n = Gaffer.Node()
+		s = Gaffer.Serialisation( n )
+		self.assertTrue( s.parent().isSame( n ) )
 
 if __name__ == "__main__":
 	unittest.main()

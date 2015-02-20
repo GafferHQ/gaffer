@@ -468,6 +468,23 @@ class NumericPlugTest( GafferTest.TestCase ) :
 		self.assertEqual( n.numHashCalls, 2 )
 		self.assertEqual( n.numComputeCalls, 1 )
 
+	def testIsSetToDefault( self ) :
+
+		n = GafferTest.AddNode()
+		self.assertTrue( n["op1"].isSetToDefault() )
+
+		n["op1"].setValue( 1000 )
+		self.assertFalse( n["op1"].isSetToDefault() )
+
+		n["op1"].setToDefault()
+		self.assertTrue( n["op1"].isSetToDefault() )
+
+		n["op1"].setValue( 1000 )
+		self.assertFalse( n["op1"].isSetToDefault() )
+
+		n["op1"].setValue( n["op1"].defaultValue() )
+		self.assertTrue( n["op1"].isSetToDefault() )
+
 if __name__ == "__main__":
 	unittest.main()
 

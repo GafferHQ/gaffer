@@ -186,6 +186,10 @@ class SceneNodeTest( GafferTest.TestCase ) :
 		for e in exceptions :
 			raise e
 
+	def testNodesConstructWithDefaultValues( self ) :
+
+		self.assertNodesConstructWithDefaultValues( GafferScene )
+
 	def setUp( self ) :
 
 		self.__previousCacheMemoryLimit = Gaffer.ValuePlug.getCacheMemoryLimit()

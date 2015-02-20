@@ -95,7 +95,7 @@ void PlugSerialiser::moduleDependencies( const Gaffer::GraphComponent *graphComp
 	modules.insert( "IECore" ); // for the metadata calls
 }
 
-std::string PlugSerialiser::constructor( const Gaffer::GraphComponent *graphComponent ) const
+std::string PlugSerialiser::constructor( const Gaffer::GraphComponent *graphComponent, const Serialisation &serialisation ) const
 {
 	return maskedRepr( static_cast<const Plug *>( graphComponent ), Plug::All & ~Plug::ReadOnly );
 }

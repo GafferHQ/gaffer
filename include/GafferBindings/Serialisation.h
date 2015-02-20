@@ -51,6 +51,9 @@ class Serialisation
 
 		Serialisation( const Gaffer::GraphComponent *parent, const std::string &parentName = "parent", const Gaffer::Set *filter = 0 );
 
+		/// Returns the parent passed to the constructor.
+		const Gaffer::GraphComponent *parent() const;
+
 		/// Returns the name of a variable used to reference the specified object
 		/// within the serialisation. Returns the empty string if the object is not
 		/// to be included in the serialisation.
@@ -84,7 +87,7 @@ class Serialisation
 				virtual void moduleDependencies( const Gaffer::GraphComponent *graphComponent, std::set<std::string> &modules ) const;
 				/// Should be implemented to return a string which when executed will reconstruct the specified object.
 				/// The default implementation uses repr().
-				virtual std::string constructor( const Gaffer::GraphComponent *graphComponent ) const;
+				virtual std::string constructor( const Gaffer::GraphComponent *graphComponent, const Serialisation &serialisation ) const;
 				/// May be implemented to return a string which will be executed immediately after the object has been constructed and
 				/// parented. identifier is the name of a variable which refers to the object. The Serialisation may be used to query
 				/// the identifiers for other objects, but note that at this stage those objects may not have been constructed so it

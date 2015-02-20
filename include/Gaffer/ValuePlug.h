@@ -83,9 +83,15 @@ class ValuePlug : public Plug
 		/// an exception if other is of an unsupported type.
 		virtual void setFrom( const ValuePlug *other );
 
-		/// Must be implemented by derived classes to set the value
-		/// to the default for this Plug.
+		/// Sets the value to the default for this plug. The default
+		/// implementation is sufficient for all subclasses except those
+		/// where the number of child plugs varies based on the value.
 		virtual void setToDefault();
+		/// Returns true if the current value of the plug is the same
+		/// as the default value. The default implementation is sufficient
+		/// for all subclasses except those where the number of child plugs
+		/// varies based on the value.
+		virtual bool isSetToDefault() const;
 
 		/// Returns a hash to represent the value of this plug
 		/// in the current context.
@@ -110,13 +116,18 @@ class ValuePlug : public Plug
 	protected :
 
 		/// This constructor must be used by all derived classes which wish
-		/// to store their own values - without it m_staticValue is not initialised
-		/// and getObjectValue() will fail. The initialValue will be referenced directly
-		/// (not copied) and therefore must not be changed after passing to the constructor.
-		/// The initialValue must be non-null. When this constructor is used, the ValuePlug
-		/// does not accept child plugs - values are always stored on leaf plugs.
+		/// to store their own values - without calling it defaultObjectValue()
+		/// and getObjectValue() will return NULL. The defaultValue will be
+		/// referenced directly (not copied) and therefore must not be changed
+		/// after passing to the constructor. The defaultValue must be non-null.
+		/// When this constructor is used, the ValuePlug does not accept child
+		/// plugs - values are always stored on leaf plugs.
 		ValuePlug( const std::string &name, Direction direction,
-			IECore::ConstObjectPtr initialValue, unsigned flags );
+			IECore::ConstObjectPtr defaultValue, unsigned flags );
+
+		/// Returns the default value that was passed to the constructor.
+		/// It is imperative that this value is not changed.
+		const IECore::Object *defaultObjectValue() const;
 
 		/// Internally all values are stored as instances of classes derived
 		/// from IECore::Object, although this isn't necessarily visible to the user.
@@ -160,6 +171,7 @@ class ValuePlug : public Plug
 
 		void setValueInternal( IECore::ConstObjectPtr value, bool propagateDirtiness );
 
+		IECore::ConstObjectPtr m_defaultValue;
 		/// For holding the value of input plugs with no input connections.
 		IECore::ConstObjectPtr m_staticValue;
 

@@ -497,14 +497,15 @@ IE_CORE_DEFINERUNTIMETYPED( ValuePlug );
 /// or by doing it more intelligently in the derived classes (where we could avoid
 /// even creating the values before figuring out if we've already got them somewhere).
 ValuePlug::ValuePlug( const std::string &name, Direction direction,
-	IECore::ConstObjectPtr initialValue, unsigned flags )
-	:	Plug( name, direction, flags ), m_staticValue( initialValue )
+	IECore::ConstObjectPtr defaultValue, unsigned flags )
+	:	Plug( name, direction, flags ), m_defaultValue( defaultValue ), m_staticValue( defaultValue )
 {
+	assert( m_defaultValue );
 	assert( m_staticValue );
 }
 
 ValuePlug::ValuePlug( const std::string &name, Direction direction, unsigned flags )
-	:	Plug( name, direction, flags ), m_staticValue( 0 )
+	:	Plug( name, direction, flags ), m_defaultValue( NULL ), m_staticValue( NULL )
 {
 }
 
@@ -627,9 +628,35 @@ void ValuePlug::setFrom( const ValuePlug *other )
 
 void ValuePlug::setToDefault()
 {
-	for( ValuePlugIterator it( this ); it != it.end(); ++it )
+	if( m_defaultValue != NULL )
 	{
-		(*it)->setToDefault();
+		setObjectValue( m_defaultValue );
+	}
+	else
+	{
+		for( ValuePlugIterator it( this ); it != it.end(); ++it )
+		{
+			(*it)->setToDefault();
+		}
+	}
+}
+
+bool ValuePlug::isSetToDefault() const
+{
+	if( m_defaultValue != NULL )
+	{
+		return getObjectValue()->isEqualTo( m_defaultValue.get() );
+	}
+	else
+	{
+		for( ValuePlugIterator it( this ); it != it.end(); ++it )
+		{
+			if( !(*it)->isSetToDefault() )
+			{
+				return false;
+			}
+		}
+		return true;
 	}
 }
 
@@ -654,6 +681,11 @@ IECore::MurmurHash ValuePlug::hash() const
 void ValuePlug::hash( IECore::MurmurHash &h ) const
 {
 	h.append( hash() );
+}
+
+const IECore::Object *ValuePlug::defaultObjectValue() const
+{
+	return m_defaultValue.get();
 }
 
 IECore::ConstObjectPtr ValuePlug::getObjectValue( const IECore::MurmurHash *precomputedHash ) const

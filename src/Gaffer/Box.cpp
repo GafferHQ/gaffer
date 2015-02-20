@@ -45,6 +45,7 @@
 #include "Gaffer/CompoundPlug.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/Metadata.h"
+#include "Gaffer/Context.h"
 
 using namespace Gaffer;
 
@@ -388,8 +389,12 @@ void Box::exportForReference( const std::string &fileName ) const
 		}
 	}
 
-	script->serialiseToFile( fileName, this, toExport.get() );
+	ContextPtr context = new Context;
+	context->set( "valuePlugSerialiser:resetParentPlugDefaults", true );
+	context->set( "serialiser:includeParentMetadata", true );
+	Context::Scope scopedContext( context.get() );
 
+	script->serialiseToFile( fileName, this, toExport.get() );
 }
 
 BoxPtr Box::create( Node *parent, const Set *childNodes )

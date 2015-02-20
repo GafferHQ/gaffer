@@ -184,3 +184,22 @@ class TestCase( unittest.TestCase ) :
 
 		self.assertEqual( undocumentedNodes, [] )
 		self.assertEqual( undocumentedPlugs, [] )
+
+	## We don't serialise plug values when they're at their default, so
+	# newly constructed nodes must have all their plugs be at the default value.
+	def assertNodesConstructWithDefaultValues( self, module ) :
+
+		for name in dir( module ) :
+
+			cls = getattr( module, name )
+			if not inspect.isclass( cls ) or not issubclass( cls, Gaffer.Node ) :
+				continue
+
+			try :
+				node = cls()
+			except :
+				continue
+
+			for plug in node.children( Gaffer.Plug ) :
+				if plug.direction() == plug.Direction.In and isinstance( plug, Gaffer.ValuePlug ) :
+					self.assertTrue( plug.isSetToDefault(), plug.fullName() + " not at default value following construction" )

@@ -124,6 +124,12 @@ void SplinePlug<T>::setToDefault()
 }
 
 template<typename T>
+bool SplinePlug<T>::isSetToDefault() const
+{
+	return getValue() == m_defaultValue;
+}
+
+template<typename T>
 void SplinePlug<T>::setValue( const T &value )
 {
 	basisMatrixPlug()->setValue( value.basis.matrix );

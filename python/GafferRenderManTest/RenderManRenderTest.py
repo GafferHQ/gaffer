@@ -262,6 +262,11 @@ class RenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		self.assertDefaultNamesAreCorrect( GafferRenderMan )
 		self.assertDefaultNamesAreCorrect( GafferRenderManTest )
 
+	def testNodesConstructWithDefaultValues( self ) :
+
+		self.assertNodesConstructWithDefaultValues( GafferRenderMan )
+		self.assertNodesConstructWithDefaultValues( GafferRenderManTest )
+
 	def testCropWindow( self ) :
 
 		s = Gaffer.ScriptNode()

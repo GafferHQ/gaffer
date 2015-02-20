@@ -65,7 +65,6 @@ NumericPlug<T>::NumericPlug(
 	unsigned flags
 )
 	:	ValuePlug( name, direction, new DataType( defaultValue ), flags ),
-		m_defaultValue( defaultValue ),
 		m_minValue( minValue ),
 		m_maxValue( maxValue )
 {
@@ -101,7 +100,7 @@ PlugPtr NumericPlug<T>::createCounterpart( const std::string &name, Direction di
 template<class T>
 T NumericPlug<T>::defaultValue() const
 {
-	return m_defaultValue;
+	return static_cast<const DataType *>( defaultObjectValue() )->readable();
 }
 
 template<class T>
@@ -145,12 +144,6 @@ T NumericPlug<T>::getValue( const IECore::MurmurHash *precomputedHash ) const
 		throw IECore::Exception( "NumericPlug::getObjectValue() didn't return expected type - is the hash being computed correctly?" );
 	}
 	return d->readable();
-}
-
-template<class T>
-void NumericPlug<T>::setToDefault()
-{
-	setValue( m_defaultValue );
 }
 
 template<class T>

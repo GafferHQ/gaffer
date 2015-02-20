@@ -46,8 +46,11 @@
 #include "IECorePython/ScopedGILLock.h"
 #include "IECorePython/Wrapper.h"
 
+#include "Gaffer/Context.h"
+
 #include "GafferBindings/Serialisation.h"
 #include "GafferBindings/GraphComponentBinding.h"
+#include "GafferBindings/MetadataBinding.h"
 
 using namespace IECore;
 using namespace Gaffer;
@@ -63,6 +66,23 @@ Serialisation::Serialisation( const Gaffer::GraphComponent *parent, const std::s
 {
 	IECorePython::ScopedGILLock gilLock;
 	walk( parent, parentName, acquireSerialiser( parent ) );
+
+	if( Context::current()->get<bool>( "serialiser:includeParentMetadata", false ) )
+	{
+		if( const Node *node = runTimeCast<const Node>( parent ) )
+		{
+			m_postScript += metadataSerialisation( node, parentName );
+		}
+		else if( const Plug *plug = runTimeCast<const Plug>( parent ) )
+		{
+			m_postScript += metadataSerialisation( plug, parentName );
+		}
+	}
+}
+
+const Gaffer::GraphComponent *Serialisation::parent() const
+{
+	return m_parent;
 }
 
 std::string Serialisation::result() const
@@ -167,7 +187,7 @@ void Serialisation::walk( const Gaffer::GraphComponent *parent, const std::strin
 		std::string childConstructor;
 		if( parentSerialiser->childNeedsConstruction( child ) )
 		{
-			childConstructor = childSerialiser->constructor( child );
+			childConstructor = childSerialiser->constructor( child, *this );
 		}
 
 		std::string childIdentifier;
@@ -272,7 +292,7 @@ void Serialisation::Serialiser::moduleDependencies( const Gaffer::GraphComponent
 	modules.insert( Serialisation::modulePath( graphComponent ) );
 }
 
-std::string Serialisation::Serialiser::constructor( const Gaffer::GraphComponent *graphComponent ) const
+std::string Serialisation::Serialiser::constructor( const Gaffer::GraphComponent *graphComponent, const Serialisation &serialisation ) const
 {
 	object o( GraphComponentPtr( const_cast<GraphComponent *>( graphComponent ) ) );
 	std::string r = extract<std::string>( o.attr( "__repr__" )() );
@@ -308,6 +328,9 @@ bool Serialisation::Serialiser::childNeedsConstruction( const Gaffer::GraphCompo
 // Python binding
 //////////////////////////////////////////////////////////////////////////
 
+namespace
+{
+
 class SerialiserWrapper : public Serialisation::Serialiser, public IECorePython::Wrapper<Serialisation::Serialiser>
 {
 
@@ -336,7 +359,7 @@ class SerialiserWrapper : public Serialisation::Serialiser, public IECorePython:
 			Serialiser::moduleDependencies( graphComponent, modules );
 		}
 
-		virtual std::string constructor( const Gaffer::GraphComponent *graphComponent ) const
+		virtual std::string constructor( const Gaffer::GraphComponent *graphComponent, const Serialisation &serialisation ) const
 		{
 			if( this->isSubclassed() )
 			{
@@ -344,10 +367,10 @@ class SerialiserWrapper : public Serialisation::Serialiser, public IECorePython:
 				boost::python::override f = this->get_override( "constructor" );
 				if( f )
 				{
-					return f( GraphComponentPtr( const_cast<GraphComponent *>( graphComponent ) ) );
+					return f( GraphComponentPtr( const_cast<GraphComponent *>( graphComponent ) ), serialisation );
 				}
 			}
-			return Serialiser::constructor( graphComponent );
+			return Serialiser::constructor( graphComponent, serialisation );
 		}
 
 		virtual std::string postConstructor( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const
@@ -422,7 +445,12 @@ class SerialiserWrapper : public Serialisation::Serialiser, public IECorePython:
 
 };
 
-static object moduleDependencies( Serialisation::Serialiser &serialiser, const Gaffer::GraphComponent *graphComponent )
+GraphComponentPtr parent( const Serialisation &serialisation )
+{
+	return const_cast<GraphComponent *>( serialisation.parent() );
+}
+
+object moduleDependencies( Serialisation::Serialiser &serialiser, const Gaffer::GraphComponent *graphComponent )
 {
 	std::set<std::string> modules;
 	serialiser.moduleDependencies( graphComponent, modules );
@@ -434,6 +462,8 @@ static object moduleDependencies( Serialisation::Serialiser &serialiser, const G
 	PyObject *modulesSet = PySet_New( modulesList.ptr() );
 	return object( handle<>( modulesSet ) );
 }
+
+} // namespace
 
 void GafferBindings::bindSerialisation()
 {
@@ -449,6 +479,7 @@ void GafferBindings::bindSerialisation()
 				)
 			)
 		)
+		.def( "parent", &parent )
 		.def( "identifier", &Serialisation::identifier )
 		.def( "result", &Serialisation::result )
 		.def( "modulePath", (std::string (*)( object & ))&Serialisation::modulePath )
