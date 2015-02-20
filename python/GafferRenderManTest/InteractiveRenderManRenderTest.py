@@ -894,5 +894,104 @@ class InteractiveRenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 			)
 			self.assertAlmostEqual( c[0], 1, delta = 0.001 )
 
+	def testDeleteWhilePaused( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["p"] = GafferScene.Plane()
+
+		s["c"] = GafferScene.Camera()
+		s["c"]["transform"]["translate"]["z"].setValue( 1 )
+
+		s["g"] = GafferScene.Group()
+		s["g"]["in"].setInput( s["p"]["out"] )
+		s["g"]["in1"].setInput( s["c"]["out"] )
+
+		s["d"] = GafferScene.Outputs()
+		s["d"].addOutput(
+			"beauty",
+			IECore.Display(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"quantize" : IECore.FloatVectorData( [ 0, 0, 0, 0 ] ),
+					"driverType" : "ImageDisplayDriver",
+					"handle" : "myLovelyPlane",
+				}
+			)
+		)
+		s["d"]["in"].setInput( s["g"]["out"] )
+
+		s["o"] = GafferScene.StandardOptions()
+		s["o"]["options"]["renderCamera"]["value"].setValue( "/group/camera" )
+		s["o"]["options"]["renderCamera"]["enabled"].setValue( True )
+		s["o"]["in"].setInput( s["d"]["out"] )
+
+		s["r"] = GafferRenderMan.InteractiveRenderManRender()
+		s["r"]["in"].setInput( s["o"]["out"] )
+
+		# start a render, give it time to get going, then pause it
+		s["r"]["state"].setValue( s["r"].State.Running )
+		time.sleep( 2 )
+		s["r"]["state"].setValue( s["r"].State.Paused )
+
+		# delete everything, and check that we don't hang
+		del s
+
+	def testChangeInputWhilePaused( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["p"] = GafferScene.Plane()
+
+		s["c"] = GafferScene.Camera()
+		s["c"]["transform"]["translate"]["z"].setValue( 1 )
+
+		s["g"] = GafferScene.Group()
+		s["g"]["in"].setInput( s["p"]["out"] )
+		s["g"]["in1"].setInput( s["c"]["out"] )
+
+		s["d"] = GafferScene.Outputs()
+		s["d"].addOutput(
+			"beauty",
+			IECore.Display(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"quantize" : IECore.FloatVectorData( [ 0, 0, 0, 0 ] ),
+					"driverType" : "ImageDisplayDriver",
+					"handle" : "myLovelyPlane",
+				}
+			)
+		)
+		s["d"]["in"].setInput( s["g"]["out"] )
+
+		s["o"] = GafferScene.StandardOptions()
+		s["o"]["options"]["renderCamera"]["value"].setValue( "/group/camera" )
+		s["o"]["options"]["renderCamera"]["enabled"].setValue( True )
+		s["o"]["in"].setInput( s["d"]["out"] )
+
+		s["r"] = GafferRenderMan.InteractiveRenderManRender()
+		s["r"]["in"].setInput( s["o"]["out"] )
+
+		# start a render, give it time to get going, then pause it
+
+		s["r"]["state"].setValue( s["r"].State.Running )
+		time.sleep( 2 )
+		s["r"]["state"].setValue( s["r"].State.Paused )
+
+		# change the input to the render node, and check that we don't hang
+
+		s["o2"] = GafferScene.StandardOptions()
+		s["o2"]["in"].setInput( s["o"]["out"] )
+
+		s["r"]["in"].setInput( s["o2"]["out"] )
+
+		# start the render again, so we know we're not just testing
+		# the same thing as testDeleteWhilePaused().
+		s["r"]["state"].setValue( s["r"].State.Running )
+
 if __name__ == "__main__":
 	unittest.main()
