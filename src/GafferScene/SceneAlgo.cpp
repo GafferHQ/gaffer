@@ -220,19 +220,28 @@ Imath::V2f GafferScene::shutter( const IECore::CompoundObject *globals )
 	return shutter;
 }
 
-IECore::TransformPtr GafferScene::transform( const ScenePlug *scene, const ScenePlug::ScenePath &path, const Imath::V2f &shutter, bool motionBlur )
+IECore::TransformPtr GafferScene::transform( const ScenePlug *scene, const ScenePlug::ScenePath &path, const Imath::V2f &shutter, bool motionBlur, int cameraSegmentsOverride )
 {
 	int numSamples = 1;
 	if( motionBlur )
 	{
-		ConstCompoundObjectPtr attributes = scene->fullAttributes( path );
-		const IntData *transformBlurSegmentsData = attributes->member<IntData>( "gaffer:transformBlurSegments" );
-		numSamples = transformBlurSegmentsData ? transformBlurSegmentsData->readable() + 1 : 2;
 
-		const BoolData *transformBlurData = attributes->member<BoolData>( "gaffer:transformBlur" );
-		if( transformBlurData && !transformBlurData->readable() )
+
+		if( cameraSegmentsOverride )
 		{
-			numSamples = 1;
+			numSamples = cameraSegmentsOverride + 1;
+		}
+		else
+		{
+			ConstCompoundObjectPtr attributes = scene->fullAttributes( path );
+			const IntData *transformBlurSegmentsData = attributes->member<IntData>( "gaffer:transformBlurSegments" );
+			numSamples = transformBlurSegmentsData ? transformBlurSegmentsData->readable() + 1 : 2;
+
+			const BoolData *transformBlurData = attributes->member<BoolData>( "gaffer:transformBlur" );
+			if( transformBlurData && !transformBlurData->readable() )
+			{
+				numSamples = 1;
+			}
 		}
 	}
 
@@ -456,9 +465,12 @@ IECore::CameraPtr GafferScene::camera( const ScenePlug *scene, const ScenePlug::
 	camera->setName( cameraName );
 
 	const BoolData *cameraBlurData = globals->member<BoolData>( "option:render:cameraBlur" );
+	const IntData *cameraTransformBlurSegmentsData = globals->member<IntData>( "attribute:gaffer:cameraTransformBlurSegments" );
 	const bool cameraBlur = cameraBlurData ? cameraBlurData->readable() : false;
-	camera->setTransform( transform( scene, cameraPath, shutter( globals ), cameraBlur ) );
+	const int cameraSegmentsOverride = cameraTransformBlurSegmentsData ? cameraTransformBlurSegmentsData->readable() : 2;
 
+	camera->setTransform( transform( scene, cameraPath, shutter( globals ), cameraBlur, cameraSegmentsOverride ) );
 	applyCameraGlobals( camera.get(), globals );
+
 	return camera;
 }
