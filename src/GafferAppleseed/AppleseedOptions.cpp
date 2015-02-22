@@ -48,6 +48,7 @@ AppleseedOptions::AppleseedOptions( const std::string &name )
 
 	// main
 	options->addOptionalMember( "as:cfg:generic_frame_renderer:passes", new IECore::IntData( 1 ), "renderPasses", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "as:cfg:sampling_mode", new IECore::StringData( "rng" ), "sampler", Gaffer::Plug::Default, false );	
 	options->addOptionalMember( "as:cfg:uniform_pixel_renderer:samples", new IECore::IntData( 64 ), "aaSamples", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "as:cfg:uniform_pixel_renderer:force_antialiasing", new IECore::BoolData( false ), "forceAA", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "as:cfg:uniform_pixel_renderer:decorrelate_pixels", new IECore::BoolData( true ), "decorrelatePixels", Gaffer::Plug::Default, false );
