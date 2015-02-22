@@ -78,6 +78,15 @@ def __alphaMapSummary( plug ) :
 
 	return ", ".join( info )
 
+def __photonsSummary( plug ) :
+
+	info = []
+	if plug["photonTarget"]["enabled"].getValue() :
+		if plug["photonTarget"]["value"].getValue() :
+			info.append( "Photon Target" )
+
+	return ", ".join( info )
+
 GafferUI.PlugValueWidget.registerCreator(
 
 	GafferAppleseed.AppleseedAttributes,
@@ -110,6 +119,13 @@ GafferUI.PlugValueWidget.registerCreator(
 			"summary" : __alphaMapSummary,
 			"namesAndLabels" : (
 				( "as:alpha_map", "Alpha Map" ),
+			),
+		},
+		{
+			"label" : "Photons",
+			"summary" : __photonsSummary,
+			"namesAndLabels" : (
+				( "as:photon_target", "Photon Target" ),
 			),
 		},
 	),
