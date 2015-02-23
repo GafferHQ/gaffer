@@ -35,6 +35,9 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "tbb/parallel_for.h"
+#include "tbb/task_scheduler_init.h"
+
+#include "boost/lexical_cast.hpp"
 
 #include "OpenEXR/ImathBoxAlgo.h"
 #include "OpenEXR/ImathFun.h"
@@ -57,6 +60,75 @@ using namespace IECore;
 using namespace Gaffer;
 using namespace GafferScene;
 
+// TBB recommends that you defer decisions about how many threads to create
+// to it, so you can write nice high level code and it can decide how best
+// to schedule the work. Generally if left to do this, it schedules it by
+// making as many threads as there are cores, to make best use of the hardware.
+// This is all well and good, until you're running multiple renders side-by-side,
+// telling the renderer to use a limited number of threads so they all play nicely 
+// together. Let's use the example of a 32 core machine with 4 8-thread 3delight
+// renders running side by side.
+//
+// - 3delight will make 8 threads. TBB didn't make them itself, so it considers
+//   them to be "master" threads.
+// - 3delight will then call our procedurals on some subset of those 8 threads.
+//   We'll execute graphs, which may or may not use TBB internally, but even if they
+//   don't, we're using parallel_for for child procedural construction.
+// - TBB will be invoked from these master threads, see that it hasn't been
+//   initialised yet, and merrily initialise itself to use 32 threads.
+// - We now have 4 side by side renders each trying to take over the machine,
+//   and a not-so-happy IT department.
+//
+// The "solution" to this is to explicitly initialise TBB every time a procedural
+// is invoked, limiting it to a certain number of threads. Problem solved? Maybe.
+// There's another wrinkle, in that TBB is initialised separately for each master
+// thread, and if each master asks for a maximum of N threads, and there are M masters,
+// TBB might actually make up to `M * N` threads, clamped at the number of cores.
+// So with N set to 8, you could still get a single process trying to use the
+// whole machine. In practice, it appears that 3delight perhaps doesn't make great
+// use of procedural concurrency, so the worst case of M procedurals in flight,
+// each trying to use N threads may not occur. What other renderers do in this
+// situation is unknown.
+//
+// I strongly suspect that the long term solution to this is to abandon using
+// a procedural hierarchy matching the scene hierarchy, and to do our own
+// threaded traversal of the scene, outputting the results to the renderer via
+// a single master thread. We could then be sure of our resource usage, and
+// also get better performance with renderers unable to make best use of
+// procedural concurrency.
+//
+// In the meantime, we introduce a hack. The GAFFERSCENE_SCENEPROCEDURAL_THREADS
+// environment variable may be used to clamp the number of threads used by any
+// given master thread. We sincerely hope to have a better solution before too
+// long.
+//
+// Worthwhile reading :
+//
+// https://software.intel.com/en-us/blogs/2011/04/09/tbb-initialization-termination-and-resource-management-details-juicy-and-gory/
+//
+void initializeTaskScheduler( tbb::task_scheduler_init &tsi )
+{
+	assert( !tsi.is_active() );
+
+	static int g_maxThreads = -1;
+	if( g_maxThreads == -1 )
+	{
+		if( const char *c = getenv( "GAFFERSCENE_SCENEPROCEDURAL_THREADS" ) )
+		{
+			g_maxThreads = boost::lexical_cast<int>( c );
+		}
+		else
+		{
+			g_maxThreads = 0;
+		}
+	}
+
+	if( g_maxThreads > 0 )
+	{
+		tsi.initialize( g_maxThreads );
+	}
+}
+
 tbb::atomic<int> SceneProcedural::g_pendingSceneProcedurals;
 tbb::mutex SceneProcedural::g_allRenderedMutex;
 
@@ -65,6 +137,9 @@ SceneProcedural::AllRenderedSignal SceneProcedural::g_allRenderedSignal;
 SceneProcedural::SceneProcedural( ConstScenePlugPtr scenePlug, const Gaffer::Context *context, const ScenePlug::ScenePath &scenePath )
 	:	m_scenePlug( scenePlug ), m_context( new Context( *context ) ), m_scenePath( scenePath ), m_rendered( false )
 {
+	tbb::task_scheduler_init tsi( tbb::task_scheduler_init::deferred );
+	initializeTaskScheduler( tsi );
+
 	// get a reference to the script node to prevent it being destroyed while we're doing a render:
 	m_scriptNode = m_scenePlug->ancestor<ScriptNode>();
 
@@ -109,6 +184,9 @@ SceneProcedural::SceneProcedural( const SceneProcedural &other, const ScenePlug:
 	:	m_scenePlug( other.m_scenePlug ), m_context( new Context( *(other.m_context), Context::Shared ) ), m_scenePath( scenePath ),
 		m_options( other.m_options ), m_attributes( other.m_attributes ), m_rendered( false )
 {
+	tbb::task_scheduler_init tsi( tbb::task_scheduler_init::deferred );
+	initializeTaskScheduler( tsi );
+
 	// get a reference to the script node to prevent it being destroyed while we're doing a render:
 	m_scriptNode = m_scenePlug->ancestor<ScriptNode>();
 
@@ -239,6 +317,9 @@ class SceneProcedural::SceneProceduralCreate
 
 void SceneProcedural::render( Renderer *renderer ) const
 {
+	tbb::task_scheduler_init tsi( tbb::task_scheduler_init::deferred );
+	initializeTaskScheduler( tsi );
+
 	Context::Scope scopedContext( m_context.get() );
 
 	/// \todo See above.
