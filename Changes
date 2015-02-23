@@ -1,3 +1,81 @@
+# 0.9.0.0
+=========
+
+This is primarily a bugfix release.
+
+Core
+-----------------------------------------------------------------------
+
+- Documented all nodes and plugs.
+- Improved Reference workflow
+  - Boxes exported for referencing contain new default values for all
+    promoted plugs to match their current values on the Box.
+  - When reloading a reference, only values the user has changed from
+    their defaults will be kept. Other values will be updated from the
+    new reference.
+  - Box metadata is included when exporting for referencing. This
+    means that colours and descriptions set via the UIEditor will
+    be transferred onto any Reference nodes which load the exported
+    reference (#1171).
+
+Cortex
+-----------------------------------------------------------------------
+
+- Documented all nodes and plugs.
+
+
+RenderMan
+-----------------------------------------------------------------------
+
+- Fixed hangs caused by deleting or reconnecting a paused
+  InteractiveRenderManRender node.
+
+Appleseed
+-----------------------------------------------------------------------
+
+- Fixed render threads and texture memory options.
+
+Image
+-----------------------------------------------------------------------
+
+- Fixed bug which prevented serialisation of read only FormatPlugs.
+
+UI
+-----------------------------------------------------------------------
+
+- Fixed creation of expressions for BoolPlugs.
+- Fixed context used by scene view camera chooser.
+
+API
+-----------------------------------------------------------------------
+
+- Added Metadata::registerNode() method. This allows all the metadata
+  for a node and its plugs to be registered with a single function call
+  (#1160).
+- Added GafferTest.TestCase.assertNodesAreDocumented().
+- Serialisation
+  - Added serialisation argument to `Serialiser::constructor()`.
+  - Added Serialisation::parent() accessor.
+- ValuePlug
+  - Simplified handling of default values.
+  - Added isSetToDefault() method.
+- Made CompoundDataPlug::addMember() set default value for name plug
+  (#935).
+
+Incompatibilities
+-----------------------------------------------------------------------
+
+- Added argument to virtual method `Serialiser::constructor()`.
+- Changed layout of ValuePlug classes.
+- Removed virtual overrides from some ValuePlug classes.
+- Added virtual method to ValuePlug.
+
+Build
+-----------------------------------------------------------------------
+
+- Updated public build to use Cortex 9.0.0-b3.
+- Included Shiboken module in release packages.
+
 # 0.8.2.0
 =========
 
