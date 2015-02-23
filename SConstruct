@@ -49,8 +49,8 @@ import subprocess
 ###############################################################################################
 
 gafferMilestoneVersion = 0 # for announcing major milestones - may contain all of the below
-gafferMajorVersion = 8 # backwards-incompatible changes
-gafferMinorVersion = 2 # new backwards-compatible features
+gafferMajorVersion = 9 # backwards-incompatible changes
+gafferMinorVersion = 0 # new backwards-compatible features
 gafferPatchVersion = 0 # bug fixes
 
 # All of the following must be considered when determining
@@ -315,7 +315,7 @@ options.Add(
 options.Add(
 	"CORTEX_SRC_DIR",
 	"The location of the cortex source to be used if BUILD_DEPENDENCY_CORTEX is specified.",
-	"$DEPENDENCIES_SRC_DIR/cortex-9.0.0-b2",
+	"$DEPENDENCIES_SRC_DIR/cortex-9.0.0-b3",
 )
 
 options.Add(
@@ -1531,6 +1531,7 @@ dependenciesManifest = [
 	"doc/osl*",
 
 	"python/IECore*",
+	"python/shiboken.so",
 	"python/PySide/*.py",
 	"python/PySide/QtCore.so",
 	"python/PySide/QtGui.so",
