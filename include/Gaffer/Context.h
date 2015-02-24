@@ -56,6 +56,13 @@ namespace Gaffer
 /// ValuePlug::getValue() calls will be made with respect to the current Context. Each thread
 /// maintains a stack of contexts, allowing computations in different contexts to be performed
 /// in parallel, and allowing contexts to be changed temporarily for a specific computation.
+///
+/// \note The various UI components currently use "ui:" prefixed context variables for their
+/// own purposes. These variables are expected to never affect computation, and are therefore
+/// excluded from hash(). Other code may find that it too needs to ignore them in order to
+/// avoid unnecessary recomputation. In the future we may explore having the UI use a separate
+/// container for such variables, or a more general mechanism for variables guaranteed to be
+/// unrelated to computation.
 class Context : public IECore::RefCounted
 {
 
