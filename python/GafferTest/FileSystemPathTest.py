@@ -218,6 +218,18 @@ class FileSystemPathTest( GafferTest.TestCase ) :
 		self.assertTrue( isinstance( g, str ) )
 		self.assertEqual( g, grp.getgrgid( os.stat( str( p ) ).st_gid ).gr_name )
 
+	def testAttributeNames( self ) :
+
+		p = Gaffer.FileSystemPath( self.__dir )
+
+		a = p.attributeNames()
+		self.assertTrue( isinstance( a, list ) )
+
+		self.assertTrue( "fileSystem:group" in a )
+		self.assertTrue( "fileSystem:owner" in a )
+		self.assertTrue( "fileSystem:modificationTime" in a )
+		self.assertTrue( "fileSystem:size" in a )
+
 	def setUp( self ) :
 
 		self.__originalCWD = os.getcwd()

@@ -115,7 +115,7 @@ PathClass<T, TWrapper>::PathClass( const char *docString )
 {
 	this->def( "isValid", &Detail::isValid<T> );
 	this->def( "isLeaf", &Detail::isLeaf<T> );
-	this->def( "attributesNames", &Detail::attributeNames<T> );
+	this->def( "attributeNames", &Detail::attributeNames<T> );
 	this->def( "attribute", &Detail::attribute<T> );
 	// Backwards compatibility with old Path.info()
 	// method from original python implementation.
