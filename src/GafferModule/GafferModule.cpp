@@ -179,8 +179,8 @@ BOOST_PYTHON_MODULE( _Gaffer )
 
 	object tsi = class_<TaskSchedulerInitWrapper, boost::noncopyable>( "_tbb_task_scheduler_init", no_init )
 		.def( init<int>( arg( "max_threads" ) = tbb::task_scheduler_init::automatic ) )
-		.def( "__enter__", &TaskSchedulerInitWrapper::enter )
-		.def( "__exit__", &TaskSchedulerInitWrapper::exit, return_self<>() )
+		.def( "__enter__", &TaskSchedulerInitWrapper::enter, return_self<>() )
+		.def( "__exit__", &TaskSchedulerInitWrapper::exit )
 	;
 	tsi.attr( "automatic" ) = tbb::task_scheduler_init::automatic;
 
