@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2011, John Haddon. All rights reserved.
-//  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2012-2015, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -53,8 +53,8 @@ IE_CORE_FORWARDDECLARE( PathFilter )
 
 /// PathFilters are classes which can filter the results
 /// of Path::children() methods to provide a masked view of
-/// filesystems. Filters are applied to a path using the
-/// Path::setFilter() method.
+/// the hierarchy the Path navigates. Filters are applied
+/// to a path using the Path::setFilter() method.
 class PathFilter : public IECore::RunTimeTyped
 {
 
