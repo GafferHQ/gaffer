@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2011, John Haddon. All rights reserved.
-//  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2015, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -67,6 +67,9 @@ IE_CORE_FORWARDDECLARE( PathFilter )
 /// of items by name, and retrieving attributes from them. Examples of intended
 /// uses include querying a filesystem, exploring a cache file, or navigating
 /// a scene graph.
+///
+/// A path is represented by a root location followed by a series of names
+/// which refer to items nested below the root.
 class Path : public IECore::RunTimeTyped
 {
 
@@ -134,16 +137,38 @@ class Path : public IECore::RunTimeTyped
 		/// type.
 		virtual PathPtr copy() const;
 
+		/// Keeps removing names from the back of
+		/// names() until isValid() returns true.
 		void truncateUntilValid();
 
-		void set( size_t index, const IECore::InternedString &name );
-		void set( size_t begin, size_t end, const Names &names );
-		void remove( size_t index );
-		void remove( size_t begin, size_t end );
-		void append( const IECore::InternedString &name );
-
+		/// @name Name accessors
+		/// These methods provide access to the vector or names that
+		/// make up the path.
+		////////////////////////////////////////////////////////////////////
+		//@{
+		/// Direct (const) access to the internal names. Use the
+		/// methods below to modify them.
 		const Names &names() const;
+		/// Sets the name at the specified index, throwing if the
+		/// index does not exist.
+		void set( size_t index, const IECore::InternedString &name );
+		/// Replaces the names in the specified range with the
+		/// specified names. Throws if the range does not exist.
+		/// The new range may be shorter or longer than the one
+		/// it replaces.
+		void set( size_t begin, size_t end, const Names &names );
+		/// Removes the name at the specified index, throwing if
+		/// the index is out of range,
+		void remove( size_t index );
+		/// Removes the names in the specified range, throwing
+		/// if the index is out of range.
+		void remove( size_t begin, size_t end );
+		/// Appends a name to the end of the path.
+		void append( const IECore::InternedString &name );
+		//@}
 
+		/// Returns the path concatenated into a string, using '/'
+		/// as a separator between names.
 		std::string string() const;
 
 		bool operator == ( const Path &other ) const;
