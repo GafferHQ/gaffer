@@ -119,7 +119,15 @@ std::string Serialisation::modulePath( boost::python::object &o )
 		return "";
 	}
 	std::string modulePath = extract<std::string>( o.attr( "__module__" ) );
-	std::string className = extract<std::string>( o.attr( "__class__" ).attr( "__name__" ) );
+	std::string objectName;
+	if( PyType_Check( o.ptr() ) )
+	{
+		objectName = extract<std::string>( o.attr( "__name__" ) );
+	}
+	else
+	{
+		objectName = extract<std::string>( o.attr( "__class__" ).attr( "__name__" ) );
+	}
 
 	typedef boost::tokenizer<boost::char_separator<char> > Tokenizer;
 	std::string sanitisedModulePath;
@@ -134,7 +142,7 @@ std::string Serialisation::modulePath( boost::python::object &o )
 			continue;
 		}
 		Tokenizer::iterator next = tIt; next++;
-		if( next==tokens.end() && *tIt == className )
+		if( next==tokens.end() && *tIt == objectName )
 		{
 			// if the last module name is the same as the class name then assume this is just the file the
 			// class has been implemented in.
