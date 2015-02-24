@@ -17,12 +17,20 @@ Core
     means that colours and descriptions set via the UIEditor will
     be transferred onto any Reference nodes which load the exported
     reference (#1171).
+- Added "-threads" command line argument to Gaffer.Application
+- Fixed "gaffer execute" error handling
 
 Cortex
 -----------------------------------------------------------------------
 
 - Documented all nodes and plugs.
 
+
+Scene
+-----------------------------------------------------------------------
+
+- Added hack for controlling TBB concurrency from SceneProcedural
+  - Using the GAFFERSCENE_SCENEPROCEDURAL_THREADS environment variable
 
 RenderMan
 -----------------------------------------------------------------------
@@ -61,6 +69,7 @@ API
   - Added isSetToDefault() method.
 - Made CompoundDataPlug::addMember() set default value for name plug
   (#935).
+- Added Python bindings for tbb::task_scheduler_init
 
 Incompatibilities
 -----------------------------------------------------------------------
