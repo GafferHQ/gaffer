@@ -87,7 +87,7 @@ class ClassLoaderPathTest( GafferTest.TestCase ) :
 
 		p.setFromString( "/mesh/normals" )
 		versions = p.info()["classLoader:versions"]
-		self.failUnless( isinstance( versions, list ) )
+		self.failUnless( isinstance( versions, IECore.IntVectorData ) )
 		self.failUnless( len( versions ) )
 
 	def testRelative( self ) :

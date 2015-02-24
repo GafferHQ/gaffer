@@ -72,7 +72,7 @@ class ClassLoaderPath( Gaffer.Path ) :
 			return None
 
 		if self.isLeaf() :
-			result["classLoader:versions"] = self.__classLoader.versions( str( self )[1:] )
+			result["classLoader:versions"] = IECore.IntVectorData( self.__classLoader.versions( str( self )[1:] ) )
 
 		return result
 
