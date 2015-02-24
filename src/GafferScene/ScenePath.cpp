@@ -135,6 +135,7 @@ void ScenePath::doChildren( std::vector<PathPtr> &children ) const
 	const std::vector<InternedString> &childNames = childNamesData->readable();
 	ScenePlug::ScenePath childPath( names() );
 	childPath.push_back( InternedString() ); // for the child name
+	children.reserve( childNames.size() );
 	for( std::vector<InternedString>::const_iterator it = childNames.begin(), eIt = childNames.end(); it != eIt; ++it )
 	{
 		childPath.back() = *it;
