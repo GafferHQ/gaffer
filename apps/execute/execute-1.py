@@ -146,8 +146,12 @@ class execute( Gaffer.Application ) :
 		
 		with context :
 			for node in nodes :
-				node.executeSequence( frames )
-		
+				try :
+					node.executeSequence( frames )
+				except Exception as exception :
+					IECore.msg( IECore.Msg.Level.Error, "gaffer execute : executing %s" % node.relativeName( scriptNode ), str( exception ) )
+					return 1
+
 		return 0
 
 IECore.registerRunTimeTyped( execute )

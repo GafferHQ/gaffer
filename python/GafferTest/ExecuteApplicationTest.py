@@ -207,6 +207,26 @@ class ExecuteApplicationTest( GafferTest.TestCase ) :
 		self.assertFalse( "Traceback" in error )
 		self.assertEqual( p.returncode, 0 )
 
+	def testErrorReturnStatusForExceptionDuringExecution( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["fileName"].setValue( self.__scriptFileName )
+		s["t"] = GafferTest.TextWriter()
+		s["t"]["fileName"].setValue( "" ) # will cause an error
+		s.save()
+
+		p = subprocess.Popen(
+			"gaffer execute -script " + self.__scriptFileName,
+			shell=True,
+			stderr = subprocess.PIPE,
+		)
+		p.wait()
+
+		error = "".join( p.stderr.readlines() )
+		self.failUnless( "ERROR" in error )
+		self.failUnless( "executing t" in error )
+		self.failUnless( p.returncode )
+
 	def tearDown( self ) :
 
 		files = [ self.__scriptFileName ]
