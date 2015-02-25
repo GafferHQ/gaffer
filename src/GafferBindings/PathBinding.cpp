@@ -243,6 +243,10 @@ class PathWrapper : public IECorePython::RunTimeTypedWrapper<WrappedType>
 					{
 						return extract<PathPtr>( f() );
 					}
+					else
+					{
+						throw IECore::Exception( "Path.copy() not implemented." );
+					}
 				}
 				catch( const error_already_set &e )
 				{

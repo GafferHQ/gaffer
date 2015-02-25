@@ -263,6 +263,17 @@ class PathTest( GafferTest.TestCase ) :
 		del p[:]
 		self.assertEqual( p[:], [] )
 
+	def testSubclassWithoutCopy( self ) :
+
+		class PathWithoutCopy( Gaffer.Path ) :
+
+			def __init__( self, path=None, root="/", filter=None ) :
+
+				Gaffer.Path.__init__( self, path, root, filter )
+
+		p = PathWithoutCopy( "/a" )
+		self.assertRaisesRegexp( Exception, ".*Path.copy\(\) not implemented.*", p.parent )
+
 if __name__ == "__main__":
 	unittest.main()
 
