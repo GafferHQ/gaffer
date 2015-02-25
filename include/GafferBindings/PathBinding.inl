@@ -81,20 +81,65 @@ boost::python::object property( const T &p, const IECore::InternedString &name )
 }
 
 template<typename T>
-boost::python::object info( const T &p )
+boost::python::object info( boost::python::object o )
 {
+	const T &p = boost::python::extract<const T &>( o );
 	if( !p.isValid() )
 	{
 		return boost::python::object();
 	}
 
+	// Our aim here is to emulate the old deprecated Path.info()
+	// Python method using the new propertyNames() and property()
+	// API defined in C++. We want to collect all properties and
+	// return them in a dictionary.
+	//
+	// There are two cases we must deal with :
+	//
+	// 1. Where the actual info() method has *not* been overridden
+	//    in Python. This is the case when the Python instance is
+	//    not of a Python-derived class, or where it is, but the
+	//    derived class implements the new property API rather
+	//    then the old info one. In this case we want to use the
+	//    virtual property methods, so that we return the complete
+	//    info.
+	//
+	// 2. Where the info() method has been overridden by a Python
+	//    derived class. In this case, we're being called when
+	//    the Python implementation calls the base class method.
+	//    We are only responsible for filling in the properties
+	//    that T implements, as the derived implementation will
+	//    fill in the rest.
+	//
+	// We use PyFunction_Check to determine if the most-derived
+	// implementation of info() is a python function (case 2), if
+	// not then we assume it's a boost::python function (case 1).
+	boost::python::object infoMethod = o.attr( "info" );
+	const PyObject *infoFunction = PyMethod_Function( infoMethod.ptr() );
+	const bool infoImplementedInPython = PyFunction_Check( infoFunction );
+
 	std::vector<IECore::InternedString> propertyNames;
-	p.T::propertyNames( propertyNames );
+	if( infoImplementedInPython )
+	{
+		p.T::propertyNames( propertyNames );
+	}
+	else
+	{
+		p.propertyNames( propertyNames );
+	}
 
 	boost::python::dict result;
 	for( std::vector<IECore::InternedString>::const_iterator it = propertyNames.begin(), eIt = propertyNames.end(); it != eIt; ++it )
 	{
-		IECore::ConstRunTimeTypedPtr a = p.T::property( *it );
+		IECore::ConstRunTimeTypedPtr a;
+		if( infoImplementedInPython )
+		{
+			a = p.T::property( *it );
+		}
+		else
+		{
+			a = p.property( *it );
+		}
 		result[it->c_str()] = propertyToPython( a );
 	}
 
@@ -117,8 +162,9 @@ PathClass<T, TWrapper>::PathClass( const char *docString )
 	this->def( "isLeaf", &Detail::isLeaf<T> );
 	this->def( "propertyNames", &Detail::propertyNames<T> );
 	this->def( "property", &Detail::property<T> );
-	// Backwards compatibility with old Path.info()
+	// Backwards compatibility with deprecated Path.info()
 	// method from original python implementation.
+	/// \todo Remove this in due course.
 	this->def( "info", &Detail::info<T> );
 	this->def( "copy", &Detail::copy<T> );
 }
