@@ -64,10 +64,6 @@ class AlembicPath( Gaffer.Path ) :
 		# any alembic object may have children.
 		return False
 
-	def info( self ) :
-
-		return Gaffer.Path.info( self )
-
 	def _children( self ) :
 
 		childNames = self.__input().childNames()
