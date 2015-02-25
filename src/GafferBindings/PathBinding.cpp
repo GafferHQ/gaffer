@@ -68,7 +68,7 @@ boost::python::object propertyToPython( IECore::ConstRunTimeTypedPtr a )
 		return dataToPython( d, /* copy = */ true );
 	}
 
-	return boost::python::object( a );
+	return boost::python::object( boost::const_pointer_cast<IECore::RunTimeTyped>( a ) );
 }
 
 } // namespace Detail

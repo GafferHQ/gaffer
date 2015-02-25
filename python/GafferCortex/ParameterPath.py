@@ -66,19 +66,18 @@ class ParameterPath( Gaffer.Path ) :
 
 		return isinstance( p, self.__forcedLeafTypes ) or not isinstance( p, IECore.CompoundParameter )
 
-	def info( self ) :
+	def propertyNames( self ) :
 
-		result = Gaffer.Path.info( self )
-		if result is None :
+		return Gaffer.Path.propertyNames( self ) + [ "parameter:parameter" ]
+
+	def property( self, name ) :
+
+		if name == "parameter:parameter" :
+			with IECore.IgnoredExceptions() :
+				return self.__parameter()
 			return None
 
-		try :
-			p = self.__parameter()
-			result["parameter:parameter"] = p
-		except :
-			pass
-
-		return result
+		return Gaffer.Path.property( self, name )
 
 	def copy( self ) :
 
