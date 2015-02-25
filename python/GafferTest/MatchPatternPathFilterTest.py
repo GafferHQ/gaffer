@@ -63,7 +63,7 @@ class MatchPatternPathFilterTest( GafferTest.TestCase ) :
 		p.setFilter( Gaffer.MatchPatternPathFilter( [ ".*" ] ) )
 		self.assertEqual( set( [ str( c ) for c in p.children() ] ), set( [ "/.hiddenFile" ] ) )
 
-	def testAttributeName( self ) :
+	def testPropertyName( self ) :
 
 		p = Gaffer.DictPath(
 			{

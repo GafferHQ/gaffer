@@ -44,12 +44,12 @@
 
 using namespace Gaffer;
 
-static IECore::InternedString g_nameAttributeName( "name" );
+static IECore::InternedString g_namePropertyName( "name" );
 
 IE_CORE_DEFINERUNTIMETYPED( MatchPatternPathFilter );
 
-MatchPatternPathFilter::MatchPatternPathFilter( const std::vector<MatchPattern> &patterns, IECore::InternedString attributeName, bool leafOnly, IECore::CompoundDataPtr userData )
-	:	PathFilter( userData ), m_patterns( patterns ), m_attributeName( attributeName ), m_leafOnly( leafOnly ), m_inverted( false )
+MatchPatternPathFilter::MatchPatternPathFilter( const std::vector<MatchPattern> &patterns, IECore::InternedString propertyName, bool leafOnly, IECore::CompoundDataPtr userData )
+	:	PathFilter( userData ), m_patterns( patterns ), m_propertyName( propertyName ), m_leafOnly( leafOnly ), m_inverted( false )
 {
 }
 
@@ -72,19 +72,19 @@ const std::vector<MatchPattern> &MatchPatternPathFilter::getMatchPatterns() cons
 	return m_patterns;
 }
 
-void MatchPatternPathFilter::setAttributeName( IECore::InternedString attributeName )
+void MatchPatternPathFilter::setPropertyName( IECore::InternedString propertyName )
 {
-	if( attributeName == m_attributeName )
+	if( propertyName == m_propertyName )
 	{
 		return;
 	}
-	m_attributeName = attributeName;
+	m_propertyName = propertyName;
 	changedSignal()( this );
 }
 
-IECore::InternedString MatchPatternPathFilter::getAttributeName() const
+IECore::InternedString MatchPatternPathFilter::getPropertyName() const
 {
-	return m_attributeName;
+	return m_propertyName;
 }
 
 void MatchPatternPathFilter::setInverted( bool inverted )
@@ -126,30 +126,30 @@ bool MatchPatternPathFilter::remove( PathPtr path ) const
 		return false;
 	}
 
-	IECore::ConstStringDataPtr attributeData;
-	const std::string *attributeValue = NULL;
-	if( m_attributeName == g_nameAttributeName )
+	IECore::ConstStringDataPtr propertyData;
+	const std::string *propertyValue = NULL;
+	if( m_propertyName == g_namePropertyName )
 	{
 		if( !path->names().size() )
 		{
 			return invert( true );
 		}
-		// quicker to retrieve the value from the path than as an attribute
-		attributeValue = &(path->names().back().string());
+		// quicker to retrieve the value from the path than as a property
+		propertyValue = &(path->names().back().string());
 	}
 	else
 	{
-		attributeData = IECore::runTimeCast<const IECore::StringData>( path->attribute( m_attributeName ) );
-		if( !attributeData )
+		propertyData = IECore::runTimeCast<const IECore::StringData>( path->property( m_propertyName ) );
+		if( !propertyData )
 		{
 			throw IECore::Exception( "Expected StringData" );
 		}
-		attributeValue = &attributeData->readable();
+		propertyValue = &propertyData->readable();
 	}
 
 	for( std::vector<MatchPattern>::const_iterator it = m_patterns.begin(), eIt = m_patterns.end(); it != eIt; ++it )
 	{
-		if( match( attributeValue->c_str(), *it ) )
+		if( match( propertyValue->c_str(), *it ) )
 		{
 			return invert( false );
 		}

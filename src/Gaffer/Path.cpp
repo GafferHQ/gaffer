@@ -49,8 +49,8 @@ using namespace Gaffer;
 
 IE_CORE_DEFINERUNTIMETYPED( Path );
 
-static InternedString g_nameAttributeName( "name" );
-static InternedString g_fullNameAttributeName( "fullName" );
+static InternedString g_namePropertyName( "name" );
+static InternedString g_fullNamePropertyName( "fullName" );
 
 Path::Path( PathFilterPtr filter )
 	:	m_pathChangedSignal( NULL )
@@ -100,15 +100,15 @@ bool Path::isLeaf() const
 	return false;
 }
 
-void Path::attributeNames( std::vector<IECore::InternedString> &names ) const
+void Path::propertyNames( std::vector<IECore::InternedString> &names ) const
 {
-	names.push_back( g_nameAttributeName );
-	names.push_back( g_fullNameAttributeName );
+	names.push_back( g_namePropertyName );
+	names.push_back( g_fullNamePropertyName );
 }
 
-IECore::ConstRunTimeTypedPtr Path::attribute( const IECore::InternedString &name ) const
+IECore::ConstRunTimeTypedPtr Path::property( const IECore::InternedString &name ) const
 {
-	if( name == g_nameAttributeName )
+	if( name == g_namePropertyName )
 	{
 		if( m_names.size() )
 		{
@@ -119,7 +119,7 @@ IECore::ConstRunTimeTypedPtr Path::attribute( const IECore::InternedString &name
 			return new StringData( "" );
 		}
 	}
-	else if( name == g_fullNameAttributeName )
+	else if( name == g_fullNamePropertyName )
 	{
 		return new StringData( this->string() );
 	}

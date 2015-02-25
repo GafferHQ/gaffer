@@ -64,7 +64,7 @@ IE_CORE_FORWARDDECLARE( Path )
 IE_CORE_FORWARDDECLARE( PathFilter )
 
 /// The Path base class provides an abstraction for traversing a hierarchy
-/// of items by name, and retrieving attributes from them. Examples of intended
+/// of items by name, and retrieving properties from them. Examples of intended
 /// uses include querying a filesystem, exploring a cache file, or navigating
 /// a scene graph.
 ///
@@ -99,13 +99,13 @@ class Path : public IECore::RunTimeTyped
 		/// Returns true if this path can never have child Paths.
 		virtual bool isLeaf() const;
 
-		/// Fills the vector with the names of all the attributes queryable via attribute().
+		/// Fills the vector with the names of all the properties queryable via property().
 		/// Derived class implementations must call the base class implementation first.
-		virtual void attributeNames( std::vector<IECore::InternedString> &names ) const;
-		/// Queries an attribute, whose name must have first been retrieved via attributeNames().
+		virtual void propertyNames( std::vector<IECore::InternedString> &names ) const;
+		/// Queries a property, whose name must have first been retrieved via propertyNames().
 		/// Derived class implementations should fall back to the base class implementation for
-		/// any unrecognised names. Returns NULL for unknown attributes. May return NULL for invalid paths.
-		virtual IECore::ConstRunTimeTypedPtr attribute( const IECore::InternedString &name ) const;
+		/// any unrecognised names. Returns NULL for unknown properties. May return NULL for invalid paths.
+		virtual IECore::ConstRunTimeTypedPtr property( const IECore::InternedString &name ) const;
 
 		/// Returns the parent of this path, or None if the path
 		/// has no parent (is the root).

@@ -61,10 +61,10 @@ using namespace Gaffer;
 
 IE_CORE_DEFINERUNTIMETYPED( FileSystemPath );
 
-static InternedString g_ownerAttributeName( "fileSystem:owner" );
-static InternedString g_groupAttributeName( "fileSystem:group" );
-static InternedString g_modificationTimeAttributeName( "fileSystem:modificationTime" );
-static InternedString g_sizeAttributeName( "fileSystem:size" );
+static InternedString g_ownerPropertyName( "fileSystem:owner" );
+static InternedString g_groupPropertyName( "fileSystem:group" );
+static InternedString g_modificationTimePropertyName( "fileSystem:modificationTime" );
+static InternedString g_sizePropertyName( "fileSystem:size" );
 
 FileSystemPath::FileSystemPath( PathFilterPtr filter )
 	:	Path( filter )
@@ -96,19 +96,19 @@ bool FileSystemPath::isLeaf() const
 	return isValid() && !is_directory( path( this->string() ) );
 }
 
-void FileSystemPath::attributeNames( std::vector<IECore::InternedString> &names ) const
+void FileSystemPath::propertyNames( std::vector<IECore::InternedString> &names ) const
 {
-	Path::attributeNames( names );
+	Path::propertyNames( names );
 
-	names.push_back( g_ownerAttributeName );
-	names.push_back( g_groupAttributeName );
-	names.push_back( g_modificationTimeAttributeName );
-	names.push_back( g_sizeAttributeName );
+	names.push_back( g_ownerPropertyName );
+	names.push_back( g_groupPropertyName );
+	names.push_back( g_modificationTimePropertyName );
+	names.push_back( g_sizePropertyName );
 }
 
-IECore::ConstRunTimeTypedPtr FileSystemPath::attribute( const IECore::InternedString &name ) const
+IECore::ConstRunTimeTypedPtr FileSystemPath::property( const IECore::InternedString &name ) const
 {
-	if( name == g_ownerAttributeName )
+	if( name == g_ownerPropertyName )
 	{
 		std::string n = this->string();
 		struct stat s;
@@ -116,7 +116,7 @@ IECore::ConstRunTimeTypedPtr FileSystemPath::attribute( const IECore::InternedSt
 		struct passwd *pw = getpwuid( s.st_uid );
 		return new StringData( pw ? pw->pw_name : "" );
 	}
-	else if( name == g_groupAttributeName )
+	else if( name == g_groupPropertyName )
 	{
 		std::string n = this->string();
 		struct stat s;
@@ -124,20 +124,20 @@ IECore::ConstRunTimeTypedPtr FileSystemPath::attribute( const IECore::InternedSt
 		struct group *gr = getgrgid( s.st_gid );
 		return new StringData( gr ? gr->gr_name : "" );
 	}
-	else if( name == g_modificationTimeAttributeName )
+	else if( name == g_modificationTimePropertyName )
 	{
 		boost::system::error_code e;
 		std::time_t t = last_write_time( path( this->string() ), e );
 		return new DateTimeData( from_time_t( t ) );
 	}
-	else if( name == g_sizeAttributeName )
+	else if( name == g_sizePropertyName )
 	{
 		boost::system::error_code e;
 		uintmax_t s = file_size( path( this->string() ), e );
 		return new UInt64Data( !e ? s : 0 );
 	}
 
-	return Path::attribute( name );
+	return Path::property( name );
 }
 
 PathPtr FileSystemPath::copy() const

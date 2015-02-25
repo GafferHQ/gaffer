@@ -274,6 +274,18 @@ class PathTest( GafferTest.TestCase ) :
 		p = PathWithoutCopy( "/a" )
 		self.assertRaisesRegexp( Exception, ".*Path.copy\(\) not implemented.*", p.parent )
 
+	def testProperties( self ) :
+
+		p = Gaffer.Path( "/a/b/c")
+
+		n = p.propertyNames()
+		self.assertTrue( isinstance( n, list ) )
+		self.assertTrue( "name" in n )
+		self.assertTrue( "fullName" in n )
+
+		self.assertEqual( p.property( "name"), "c" )
+		self.assertEqual( p.property( "fullName"), "/a/b/c" )
+
 if __name__ == "__main__":
 	unittest.main()
 

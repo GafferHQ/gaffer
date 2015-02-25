@@ -56,7 +56,7 @@ namespace GafferBindings
 namespace Detail
 {
 
-boost::python::object attributeToPython( IECore::ConstRunTimeTypedPtr a )
+boost::python::object propertyToPython( IECore::ConstRunTimeTypedPtr a )
 {
 	if( !a )
 	{
@@ -165,22 +165,22 @@ class PathWrapper : public IECorePython::RunTimeTypedWrapper<WrappedType>
 			return WrappedType::isLeaf();
 		}
 
-		virtual void attributeNames( std::vector<IECore::InternedString> &names ) const
+		virtual void propertyNames( std::vector<IECore::InternedString> &names ) const
 		{
 			if( this->isSubclassed() )
 			{
 				IECorePython::ScopedGILLock gilLock;
 				try
 				{
-					boost::python::object f = this->methodOverride( "attributeNames" );
+					boost::python::object f = this->methodOverride( "propertyNames" );
 					if( f )
 					{
-						WrappedType::attributeNames( names );
+						WrappedType::propertyNames( names );
 						boost::python::list pythonNames = extract<boost::python::list>( f() );
 						boost::python::container_utils::extend_container( names, pythonNames );
 						return;
 					}
-					// fall back to emulating attributes using the deprecated python info() method.
+					// fall back to emulating properties using the deprecated python info() method.
 					f = this->methodOverride( "info" );
 					if( f )
 					{
@@ -195,22 +195,22 @@ class PathWrapper : public IECorePython::RunTimeTypedWrapper<WrappedType>
 					translatePythonException();
 				}
 			}
-			WrappedType::attributeNames( names );
+			WrappedType::propertyNames( names );
 		}
 
-		virtual IECore::ConstRunTimeTypedPtr attribute( const IECore::InternedString &name ) const
+		virtual IECore::ConstRunTimeTypedPtr property( const IECore::InternedString &name ) const
 		{
 			if( this->isSubclassed() )
 			{
 				IECorePython::ScopedGILLock gilLock;
 				try
 				{
-					boost::python::object f = this->methodOverride( "attribute" );
+					boost::python::object f = this->methodOverride( "property" );
 					if( f )
 					{
 						return extract<IECore::ConstRunTimeTypedPtr>( f( name.c_str() ) );
 					}
-					// fall back to emulating attributes using the deprecated python info() method.
+					// fall back to emulating properties using the deprecated python info() method.
 					f = this->methodOverride( "info" );
 					if( f )
 					{
@@ -228,7 +228,7 @@ class PathWrapper : public IECorePython::RunTimeTypedWrapper<WrappedType>
 					translatePythonException();
 				}
 			}
-			return WrappedType::attribute( name );
+			return WrappedType::property( name );
 		}
 
 		virtual PathPtr copy() const

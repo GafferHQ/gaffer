@@ -181,7 +181,7 @@ class FileSystemPathTest( GafferTest.TestCase ) :
 		with open( str( p ), "w" ) as f :
 			f.write( "AAAA" )
 
-		mt = p.attribute( "fileSystem:modificationTime" )
+		mt = p.property( "fileSystem:modificationTime" )
 		self.assertTrue( isinstance( mt, datetime.datetime ) )
 		self.assertTrue( (mt - datetime.datetime.now()).total_seconds() < 0.1 )
 
@@ -190,7 +190,7 @@ class FileSystemPathTest( GafferTest.TestCase ) :
 		with open( str( p ), "w" ) as f :
 			f.write( "BBBB" )
 
-		mt = p.attribute( "fileSystem:modificationTime" )
+		mt = p.property( "fileSystem:modificationTime" )
 		self.assertTrue( isinstance( mt, datetime.datetime ) )
 		self.assertTrue( (mt - datetime.datetime.now()).total_seconds() < 0.1 )
 
@@ -202,7 +202,7 @@ class FileSystemPathTest( GafferTest.TestCase ) :
 		with open( str( p ), "w" ) as f :
 			f.write( "AAAA" )
 
-		o = p.attribute( "fileSystem:owner" )
+		o = p.property( "fileSystem:owner" )
 		self.assertTrue( isinstance( o, str ) )
 		self.assertEqual( o, pwd.getpwuid( os.stat( str( p ) ).st_uid ).pw_name )
 
@@ -214,15 +214,15 @@ class FileSystemPathTest( GafferTest.TestCase ) :
 		with open( str( p ), "w" ) as f :
 			f.write( "AAAA" )
 
-		g = p.attribute( "fileSystem:group" )
+		g = p.property( "fileSystem:group" )
 		self.assertTrue( isinstance( g, str ) )
 		self.assertEqual( g, grp.getgrgid( os.stat( str( p ) ).st_gid ).gr_name )
 
-	def testAttributeNames( self ) :
+	def testPropertyNames( self ) :
 
 		p = Gaffer.FileSystemPath( self.__dir )
 
-		a = p.attributeNames()
+		a = p.propertyNames()
 		self.assertTrue( isinstance( a, list ) )
 
 		self.assertTrue( "fileSystem:group" in a )

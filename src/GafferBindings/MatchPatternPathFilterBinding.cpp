@@ -50,11 +50,11 @@ using namespace GafferBindings;
 namespace
 {
 
-MatchPatternPathFilterPtr construct( list pythonPatterns, const char *attributeName, bool leafOnly )
+MatchPatternPathFilterPtr construct( list pythonPatterns, const char *propertyName, bool leafOnly )
 {
 	std::vector<MatchPattern> patterns;
 	boost::python::container_utils::extend_container( patterns, pythonPatterns );
-	return new MatchPatternPathFilter( patterns, attributeName, leafOnly );
+	return new MatchPatternPathFilter( patterns, propertyName, leafOnly );
 }
 
 void setMatchPatterns( MatchPatternPathFilter &f, list pythonPatterns )
@@ -75,9 +75,9 @@ list getMatchPatterns( const MatchPatternPathFilter &f )
 	return result;
 }
 
-const char *getAttributeName( const MatchPatternPathFilter &f )
+const char *getPropertyName( const MatchPatternPathFilter &f )
 {
-	return f.getAttributeName().string().c_str();
+	return f.getPropertyName().string().c_str();
 }
 
 } // namespace
@@ -88,15 +88,15 @@ void GafferBindings::bindMatchPatternPathFilter()
 		.def( "__init__", make_constructor( construct, default_call_policies(),
 				(
 					boost::python::arg_( "patterns" ),
-					boost::python::arg_( "attributeName" ) = "name",
+					boost::python::arg_( "propertyName" ) = "name",
 					boost::python::arg_( "leafOnly" ) = true
 				)
 			)
 		)
 		.def( "setMatchPatterns", &setMatchPatterns )
 		.def( "getMatchPatterns", &getMatchPatterns )
-		.def( "setAttributeName", &MatchPatternPathFilter::setAttributeName )
-		.def( "getAttributeName", &getAttributeName )
+		.def( "setPropertyName", &MatchPatternPathFilter::setPropertyName )
+		.def( "getPropertyName", &getPropertyName )
 		.def( "setInverted", &MatchPatternPathFilter::setInverted )
 		.def( "getInverted", &MatchPatternPathFilter::getInverted )
 	;

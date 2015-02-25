@@ -54,7 +54,7 @@ class MatchPatternPathFilter : public Gaffer::PathFilter
 		/// one or more of the patterns (using StringAlgo match()).
 		/// If leafOnly is true then directories will always be passed
 		/// through.
-		MatchPatternPathFilter( const std::vector<MatchPattern> &patterns, IECore::InternedString attributeName = "name", bool leafOnly = true, IECore::CompoundDataPtr userData = NULL );
+		MatchPatternPathFilter( const std::vector<MatchPattern> &patterns, IECore::InternedString propertyName = "name", bool leafOnly = true, IECore::CompoundDataPtr userData = NULL );
 		virtual ~MatchPatternPathFilter();
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::MatchPatternPathFilter, MatchPatternPathFilterTypeId, PathFilter );
@@ -62,8 +62,8 @@ class MatchPatternPathFilter : public Gaffer::PathFilter
 		void setMatchPatterns( const std::vector<MatchPattern> &patterns );
 		const std::vector<MatchPattern> &getMatchPatterns() const;
 
-		void setAttributeName( IECore::InternedString attributeName );
-		IECore::InternedString getAttributeName() const;
+		void setPropertyName( IECore::InternedString propertyName );
+		IECore::InternedString getPropertyName() const;
 
 		/// \todo Refactor the base class so that derived classes
 		/// are just responsible for returning a bool when given a
@@ -81,7 +81,7 @@ class MatchPatternPathFilter : public Gaffer::PathFilter
 		bool remove( PathPtr path ) const;
 
 		std::vector<MatchPattern> m_patterns;
-		IECore::InternedString m_attributeName;
+		IECore::InternedString m_propertyName;
 		bool m_leafOnly;
 		bool m_inverted;
 

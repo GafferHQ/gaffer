@@ -60,10 +60,10 @@ bool isLeaf( const T &p )
 }
 
 template<typename T>
-boost::python::list attributeNames( const T &p )
+boost::python::list propertyNames( const T &p )
 {
 	std::vector<IECore::InternedString> n;
-	p.T::attributeNames( n );
+	p.T::propertyNames( n );
 	boost::python::list result;
 	for( std::vector<IECore::InternedString>::const_iterator it = n.begin(), eIt = n.end(); it != eIt; ++it )
 	{
@@ -72,12 +72,12 @@ boost::python::list attributeNames( const T &p )
 	return result;
 }
 
-boost::python::object attributeToPython( IECore::ConstRunTimeTypedPtr a );
+boost::python::object propertyToPython( IECore::ConstRunTimeTypedPtr a );
 
 template<typename T>
-boost::python::object attribute( const T &p, const IECore::InternedString &name )
+boost::python::object property( const T &p, const IECore::InternedString &name )
 {
-	return attributeToPython( p.T::attribute( name ) );
+	return propertyToPython( p.T::property( name ) );
 }
 
 template<typename T>
@@ -88,14 +88,14 @@ boost::python::object info( const T &p )
 		return boost::python::object();
 	}
 
-	std::vector<IECore::InternedString> attributeNames;
-	p.T::attributeNames( attributeNames );
+	std::vector<IECore::InternedString> propertyNames;
+	p.T::propertyNames( propertyNames );
 
 	boost::python::dict result;
-	for( std::vector<IECore::InternedString>::const_iterator it = attributeNames.begin(), eIt = attributeNames.end(); it != eIt; ++it )
+	for( std::vector<IECore::InternedString>::const_iterator it = propertyNames.begin(), eIt = propertyNames.end(); it != eIt; ++it )
 	{
-		IECore::ConstRunTimeTypedPtr a = p.T::attribute( *it );
-		result[it->c_str()] = attributeToPython( a );
+		IECore::ConstRunTimeTypedPtr a = p.T::property( *it );
+		result[it->c_str()] = propertyToPython( a );
 	}
 
 	return result;
@@ -115,8 +115,8 @@ PathClass<T, TWrapper>::PathClass( const char *docString )
 {
 	this->def( "isValid", &Detail::isValid<T> );
 	this->def( "isLeaf", &Detail::isLeaf<T> );
-	this->def( "attributeNames", &Detail::attributeNames<T> );
-	this->def( "attribute", &Detail::attribute<T> );
+	this->def( "propertyNames", &Detail::propertyNames<T> );
+	this->def( "property", &Detail::property<T> );
 	// Backwards compatibility with old Path.info()
 	// method from original python implementation.
 	this->def( "info", &Detail::info<T> );

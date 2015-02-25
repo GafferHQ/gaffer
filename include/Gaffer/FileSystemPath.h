@@ -58,8 +58,8 @@ class FileSystemPath : public Path
 
 		virtual bool isValid() const;
 		virtual bool isLeaf() const;
-		virtual void attributeNames( std::vector<IECore::InternedString> &names ) const;
-		virtual IECore::ConstRunTimeTypedPtr attribute( const IECore::InternedString &name ) const;
+		virtual void propertyNames( std::vector<IECore::InternedString> &names ) const;
+		virtual IECore::ConstRunTimeTypedPtr property( const IECore::InternedString &name ) const;
 		virtual PathPtr copy() const;
 
 		static PathFilterPtr createStandardFilter( const std::vector<std::string> &extensions = std::vector<std::string>(), const std::string &extensionsLabel = "" );

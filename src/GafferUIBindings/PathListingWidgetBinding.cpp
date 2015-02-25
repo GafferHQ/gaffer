@@ -67,7 +67,7 @@ using namespace Gaffer;
 namespace
 {
 
-IECore::InternedString g_nameAttributeName( "name" );
+IECore::InternedString g_namePropertyName( "name" );
 
 // Abstract class for extracting QVariants from Path objects
 // in order to populate columns in the PathMode. Column
@@ -94,8 +94,8 @@ class StandardColumn : public Column
 
 		IE_CORE_DECLAREMEMBERPTR( StandardColumn )
 
-		StandardColumn( const std::string &label, IECore::InternedString attributeName )
-			:	m_label( label.c_str() ), m_attributeName( attributeName )
+		StandardColumn( const std::string &label, IECore::InternedString propertyName )
+			:	m_label( label.c_str() ), m_propertyName( propertyName )
 		{
 		}
 
@@ -104,7 +104,7 @@ class StandardColumn : public Column
 			switch( role )
 			{
 				case Qt::DisplayRole :
-					return variantFromAttribute( path );
+					return variantFromProperty( path );
 				default :
 					return QVariant();
 			}
@@ -121,10 +121,10 @@ class StandardColumn : public Column
 
 	private :
 
-		QVariant variantFromAttribute( const Path *path ) const
+		QVariant variantFromProperty( const Path *path ) const
 		{
-			// shortcut for getting the name attribute directly
-			if( m_attributeName == g_nameAttributeName )
+			// shortcut for getting the name property directly
+			if( m_propertyName == g_namePropertyName )
 			{
 				if( path->names().size() )
 				{
@@ -136,30 +136,30 @@ class StandardColumn : public Column
 				}
 			}
 
-			IECore::ConstRunTimeTypedPtr attribute = path->attribute( m_attributeName );
+			IECore::ConstRunTimeTypedPtr property = path->property( m_propertyName );
 
-			if( !attribute )
+			if( !property )
 			{
 				return QVariant();
 			}
 
-			switch( attribute->typeId() )
+			switch( property->typeId() )
 			{
 				case IECore::StringDataTypeId :
-					return static_cast<const IECore::StringData *>( attribute.get() )->readable().c_str();
+					return static_cast<const IECore::StringData *>( property.get() )->readable().c_str();
 				case IECore::IntDataTypeId :
-					return static_cast<const IECore::IntData *>( attribute.get() )->readable();
+					return static_cast<const IECore::IntData *>( property.get() )->readable();
 				case IECore::UIntDataTypeId :
-					return static_cast<const IECore::UIntData *>( attribute.get() )->readable();
+					return static_cast<const IECore::UIntData *>( property.get() )->readable();
 				case IECore::UInt64DataTypeId :
-					return (quint64)static_cast<const IECore::UInt64Data *>( attribute.get() )->readable();
+					return (quint64)static_cast<const IECore::UInt64Data *>( property.get() )->readable();
 				case IECore::FloatDataTypeId :
-					return static_cast<const IECore::FloatData *>( attribute.get() )->readable();
+					return static_cast<const IECore::FloatData *>( property.get() )->readable();
 				case IECore::DoubleDataTypeId :
-					return static_cast<const IECore::DoubleData *>( attribute.get() )->readable();
+					return static_cast<const IECore::DoubleData *>( property.get() )->readable();
 				case IECore::DateTimeDataTypeId :
 				{
-					const IECore::DateTimeData *d = static_cast<const IECore::DateTimeData *>( attribute.get() );
+					const IECore::DateTimeData *d = static_cast<const IECore::DateTimeData *>( property.get() );
 					time_t t = ( d->readable() - from_time_t( 0 ) ).total_seconds();
 					return QVariant( QDateTime::fromTime_t( t ) );
 				}
@@ -169,15 +169,15 @@ class StandardColumn : public Column
 					// used types within large hierarchies falling through to here, we will need to give
 					// them their own special case above, for improved performance.
 					IECorePython::ScopedGILLock gilLock;
-					object pythonAttribute( boost::const_pointer_cast<IECore::RunTimeTyped>( attribute ) );
-					boost::python::str pythonString( pythonAttribute );
+					object pythonProperty( boost::const_pointer_cast<IECore::RunTimeTyped>( property ) );
+					boost::python::str pythonString( pythonProperty );
 					return QVariant( boost::python::extract<const char *>( pythonString ) );
 				}
 			}
 		}
 
 		QVariant m_label;
-		IECore::InternedString m_attributeName;
+		IECore::InternedString m_propertyName;
 
 };
 
@@ -190,8 +190,8 @@ class IconColumn : public Column
 
 		IE_CORE_DECLAREMEMBERPTR( IconColumn )
 
-		IconColumn( const std::string &label, const std::string &prefix, IECore::InternedString attributeName )
-			:	m_label( label.c_str() ), m_prefix( prefix ), m_attributeName( attributeName )
+		IconColumn( const std::string &label, const std::string &prefix, IECore::InternedString propertyName )
+			:	m_label( label.c_str() ), m_prefix( prefix ), m_propertyName( propertyName )
 		{
 		}
 
@@ -199,29 +199,29 @@ class IconColumn : public Column
 		{
 			if( role == Qt::DecorationRole )
 			{
-				IECore::ConstRunTimeTypedPtr attribute = path->attribute( m_attributeName );
-				if( !attribute )
+				IECore::ConstRunTimeTypedPtr property = path->property( m_propertyName );
+				if( !property )
 				{
 					return QVariant();
 				}
 
 				std::string fileName = m_prefix;
-				switch( attribute->typeId() )
+				switch( property->typeId() )
 				{
 					case IECore::StringDataTypeId :
-						fileName += static_cast<const IECore::StringData *>( attribute.get() )->readable();
+						fileName += static_cast<const IECore::StringData *>( property.get() )->readable();
 						break;
 					case IECore::IntDataTypeId :
-						fileName += boost::lexical_cast<std::string>( static_cast<const IECore::IntData *>( attribute.get() )->readable() );
+						fileName += boost::lexical_cast<std::string>( static_cast<const IECore::IntData *>( property.get() )->readable() );
 						break;
 					case IECore::UInt64DataTypeId :
-						fileName += boost::lexical_cast<std::string>( static_cast<const IECore::UInt64Data *>( attribute.get() )->readable() );
+						fileName += boost::lexical_cast<std::string>( static_cast<const IECore::UInt64Data *>( property.get() )->readable() );
 						break;
 					case IECore::BoolDataTypeId :
-						fileName += boost::lexical_cast<std::string>( static_cast<const IECore::BoolData *>( attribute.get() )->readable() );
+						fileName += boost::lexical_cast<std::string>( static_cast<const IECore::BoolData *>( property.get() )->readable() );
 						break;
 					default :
-						IECore::msg( IECore::Msg::Warning, "PathListingWidget", boost::str( boost::format( "Unsupported attribute type \"%s\"" ) % attribute->typeName() ) );
+						IECore::msg( IECore::Msg::Warning, "PathListingWidget", boost::str( boost::format( "Unsupported property type \"%s\"" ) % property->typeName() ) );
 						return QVariant();
 				}
 
@@ -244,7 +244,7 @@ class IconColumn : public Column
 
 		QVariant m_label;
 		std::string m_prefix;
-		IECore::InternedString m_attributeName;
+		IECore::InternedString m_propertyName;
 
 		static QVariant iconGetter( const std::string &fileName, size_t &cost )
 		{
