@@ -112,27 +112,47 @@ class _LocalJobsPath( Gaffer.Path ) :
 
 		return c
 
-	def info( self ) :
+	def propertyNames( self ) :
 
-		result = Gaffer.Path.info( self )
+		return Gaffer.Path.propertyNames() + [
+			"localDispatcher:status",
+			"localDispatcher:id",
+			"localDispatcher:jobName",
+			"localDispatcher:directory",
+			"localDispatcher:cpu",
+			"localDispatcher:memory",
+		]
 
-		if result is not None and self.__job is not None :
+	def property( self, name ) :
 
+		result = Gaffer.Path.property( self, name )
+		if result is not None :
+			return result
+
+		if self.__job is None :
+			return None
+
+		if name == "localDispatcher:status" :
 			if self.__job.failed() :
-				result["localDispatcher:status"] = "Failed"
+				return "Failed"
 			elif self.__job.killed() :
-				result["localDispatcher:status"] = "Killed"
+				return "Killed"
 			else :
-				result["localDispatcher:status"] = "Running"
-
-			result["localDispatcher:id"] = self.__job.id()
-			result["localDispatcher:jobName"] = self.__job.name()
-			result["localDispatcher:directory"] = self.__job.directory()
+				return "Running"
+		elif name == "localDispatcher:id" :
+			return self.__job.id()
+		elif name == "localDispatcher:jobName" :
+			return self.__job.name()
+		elif name == "localDispatcher:directory" :
+			return self.__job.directory()
+		elif name == "localDispatcher:cpu" :
 			stats = self.__job.statistics()
-			result["localDispatcher:cpu"] = "{0:.2f} %".format( stats["pcpu"] ) if "pcpu" in stats.keys() else "N/A"
-			result["localDispatcher:memory"] = "{0:.2f} GB".format( stats["rss"] / 1024.0  / 1024.0 ) if "rss" in stats.keys() else "N/A"
+			return "{0:.2f} %".format( stats["pcpu"] ) if "pcpu" in stats.keys() else "N/A"
+		elif name == "localDispatcher:memory" :
+			stats = self.__job.statistics()
+			return "{0:.2f} GB".format( stats["rss"] / 1024.0  / 1024.0 ) if "rss" in stats.keys() else "N/A"
 
-		return result
+		return None
 
 	def job( self ) :
 
