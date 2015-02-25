@@ -63,21 +63,6 @@ class GraphComponentPath( Gaffer.Path ) :
 
 		return False
 
-	def info( self ) :
-
-		result = Gaffer.Path.info( self )
-		if result is None :
-			return None
-
-		gc = None
-		with IECore.IgnoredExceptions( Exception ) :
-			gc = self.__dictEntry()
-
-		if gc is not None :
-			result["graphComponent:type"] = gc.typeName()
-
-		return result
-
 	def copy( self ) :
 
 		return GraphComponentPath( self.__rootComponent, self[:], self.root(), self.getFilter() )

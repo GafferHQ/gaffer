@@ -59,6 +59,16 @@ class GraphComponentPathTest( GafferTest.TestCase ) :
 		self.assertEqual( p2.root(), "" )
 		self.assertEqual( [ str( c ) for c in p2.children() ], [ "d/e" ] )
 
+	def testProperties( self ) :
+
+		r = Gaffer.GraphComponent()
+		r["d"] = Gaffer.GraphComponent()
+
+		p = Gaffer.GraphComponentPath( r, "/d" )
+		self.assertEqual( p.propertyNames(), [ "name", "fullName" ] )
+		self.assertEqual( p.property( "name" ), "d" )
+		self.assertEqual( p.property( "fullName" ), "/d" )
+
 if __name__ == "__main__":
 	unittest.main()
 
