@@ -66,21 +66,28 @@ class IndexedIOPath( Gaffer.Path ) :
 
 		return e.entryType() == IECore.IndexedIO.EntryType.File
 
-	def info( self ) :
+	def propertyNames( self ) :
 
-		result = Gaffer.Path.info( self )
-		if result is None :
-			return None
+		return Gaffer.Path.propertyNames( self ) + [
+			"indexedIO:entryType", "indexedIO:dataType", "indexedIO:arrayLength"
+		]
+
+	def property( self, name ) :
+
+		result = Gaffer.Path.property( self, name )
+		if result is not None :
+			return result
 
 		e = self.__entry()
-
-		result["indexedIO:entryType"] = e.entryType()
-		if e.entryType() == IECore.IndexedIO.EntryType.File :
-			result["indexedIO:dataType"] = e.dataType()
+		if name == "indexedIO:entryType" :
+			return e.entryType()
+		elif name == "indexedIO:dataType" :
+			return e.dataType() if e.entryType() == IECore.IndexedIO.EntryType.File else None
+		elif name == "indexedIO:arrayLength" :
 			with IECore.IgnoredExceptions( Exception ) :
-				result["indexedIO:arrayLength"] = e.arrayLength()
+				return e.arrayLength()
 
-		return result
+		return None
 
 	def copy( self ) :
 
