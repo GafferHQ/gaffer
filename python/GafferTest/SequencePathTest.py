@@ -137,5 +137,13 @@ class SequencePathTest( GafferTest.TestCase ) :
 		path2 = path.copy()
 		self.assertTrue( path2.isEmpty() )
 
+	def testProperties( self ) :
+
+		dictPath = self.__dictPath()
+		path = Gaffer.SequencePath( dictPath )
+
+		self.assertEqual( dictPath.propertyNames(), path.propertyNames() )
+		self.assertEqual( dictPath.property( "dict:value" ), path.property( "dict:value" ) )
+
 if __name__ == "__main__":
 	unittest.main()
