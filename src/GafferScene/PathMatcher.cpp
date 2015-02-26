@@ -186,6 +186,11 @@ struct PathMatcher::Node
 		return result;
 	}
 
+	bool isEmpty()
+	{
+		return !terminator && !ellipsis && children.empty();
+	}
+
 	bool terminator;
 	// map of child nodes
 	ChildMap children;
@@ -218,7 +223,7 @@ void PathMatcher::clear()
 
 bool PathMatcher::isEmpty() const
 {
-	return !m_root->terminator && !m_root->ellipsis && m_root->children.empty();
+	return m_root->isEmpty();
 }
 
 void PathMatcher::paths( std::vector<std::string> &paths ) const
@@ -397,6 +402,11 @@ bool PathMatcher::addPaths( const PathMatcher &paths )
 	return addPathsWalk( m_root.get(), paths.m_root.get() );
 }
 
+bool PathMatcher::removePaths( const PathMatcher &paths )
+{
+	return removePathsWalk( m_root.get(), paths.m_root.get() );
+}
+
 bool PathMatcher::prune( const std::string &path )
 {
 	std::vector<IECore::InternedString> tokenizedPath;
@@ -449,7 +459,7 @@ void PathMatcher::removeWalk( Node *node, const NameIterator &start, const NameI
 
 	NameIterator childStart = start; childStart++;
 	removeWalk( childNode, childStart, end, prune, removed );
-	if( !childNode->terminator && !childNode->ellipsis && !childNode->children.size() )
+	if( childNode->isEmpty() )
 	{
 		delete childNode;
 		if( childIt != node->children.end() )
@@ -497,6 +507,49 @@ bool PathMatcher::addPathsWalk( Node *node, const Node *srcNode )
 		{
 			node->ellipsis = new Node( *srcNode->ellipsis );
 			result = true; // source node can only exist if it or a descendant is a terminator
+		}
+	}
+
+	return result;
+}
+
+bool PathMatcher::removePathsWalk( Node *node, const Node *srcNode )
+{
+	bool result = false;
+	if( node->terminator && srcNode->terminator )
+	{
+		node->terminator = false;
+		result = true;
+	}
+
+	for( Node::ChildMap::const_iterator it = srcNode->children.begin(), eIt = srcNode->children.end(); it != eIt; ++it )
+	{
+		const Node::ChildMapIterator childIt = node->childIterator( it->first );
+		if( childIt != node->children.end() )
+		{
+			Node *child = childIt->second;
+			if( removePathsWalk( child, it->second ) )
+			{
+				result = true;
+				if( child->isEmpty() )
+				{
+					node->children.erase( childIt );
+					delete child;
+				}
+			}
+		}
+	}
+
+	if( node->ellipsis && srcNode->ellipsis )
+	{
+		if( removePathsWalk( node->ellipsis, srcNode->ellipsis ) )
+		{
+			result = true;
+			if( node->ellipsis->isEmpty() )
+			{
+				delete node->ellipsis;
+				node->ellipsis = NULL;
+			}
 		}
 	}
 

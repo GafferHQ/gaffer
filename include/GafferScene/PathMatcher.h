@@ -83,6 +83,9 @@ class PathMatcher
 		/// Adds all paths from the other PathMatcher, returning true if
 		/// any were added, and false if they were all already present.
 		bool addPaths( const PathMatcher &paths );
+		/// Removes all specified paths, returning true if any paths
+		/// were removed, and false if none existed anyway.
+		bool removePaths( const PathMatcher &paths );
 
 		/// Removes the specified path and all descendant paths.
 		/// Returns true if something was removed, false otherwise.
@@ -114,6 +117,7 @@ class PathMatcher
 		template<typename NameIterator>
 		void removeWalk( Node *node, const NameIterator &start, const NameIterator &end, const bool prune, bool &removed );
 		bool addPathsWalk( Node *node, const Node *srcNode );
+		bool removePathsWalk( Node *node, const Node *srcNode );
 		void pathsWalk( Node *node, const std::string &path, std::vector<std::string> &paths ) const;
 
 		template<typename NameIterator>
