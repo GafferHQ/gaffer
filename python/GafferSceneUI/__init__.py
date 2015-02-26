@@ -83,6 +83,7 @@ import IsolateUI
 import SelectionToolUI
 import CropWindowToolUI
 import CameraUI
+import SetUI
 
 # then all the PathPreviewWidgets. note that the order
 # of import controls the order of display.
