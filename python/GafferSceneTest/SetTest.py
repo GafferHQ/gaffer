@@ -96,5 +96,86 @@ class SetTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( g1["gaffer:sets"].keys(), [ "setOne" ] )
 		self.assertEqual( g1["gaffer:sets"]["setOne"].value.paths(), [ "/one" ] )
 
+	def testOverwrite( self ) :
+
+		s1 = GafferScene.Set()
+		s1["paths"].setValue( IECore.StringVectorData( [ "/old"] ) )
+
+		s2 = GafferScene.Set()
+		s2["paths"].setValue( IECore.StringVectorData( [ "/new"] ) )
+		s2["in"].setInput( s1["out"] )
+
+		g1 = s1["out"]["globals"].getValue()
+		self.assertEqual( g1.keys(), [ "gaffer:sets" ] )
+		self.assertEqual( g1["gaffer:sets"].keys(), [ "set" ] )
+		self.assertEqual( set( g1["gaffer:sets"]["set"].value.paths() ), set( [ "/old" ] ) )
+
+		g2 = s2["out"]["globals"].getValue()
+		self.assertEqual( g2.keys(), [ "gaffer:sets" ] )
+		self.assertEqual( g2["gaffer:sets"].keys(), [ "set" ] )
+		self.assertEqual( set( g2["gaffer:sets"]["set"].value.paths() ), set( [ "/new" ] ) )
+
+	def testAdd( self ) :
+
+		s1 = GafferScene.Set()
+		s1["paths"].setValue( IECore.StringVectorData( [ "/old"] ) )
+
+		s2 = GafferScene.Set()
+		s2["paths"].setValue( IECore.StringVectorData( [ "/new"] ) )
+		s2["mode"].setValue( s2.Mode.Add )
+		s2["in"].setInput( s1["out"] )
+
+		g = s2["out"]["globals"].getValue()
+		self.assertEqual( g.keys(), [ "gaffer:sets" ] )
+		self.assertEqual( g["gaffer:sets"].keys(), [ "set" ] )
+		self.assertEqual( set( g["gaffer:sets"]["set"].value.paths() ), set( [ "/old", "/new" ] ) )
+
+		s1["enabled"].setValue( False )
+
+		g = s2["out"]["globals"].getValue()
+		self.assertEqual( g.keys(), [ "gaffer:sets" ] )
+		self.assertEqual( g["gaffer:sets"].keys(), [ "set" ] )
+		self.assertEqual( set( g["gaffer:sets"]["set"].value.paths() ), set( [ "/new" ] ) )
+
+	def testRemove( self ) :
+
+		s1 = GafferScene.Set()
+		s1["paths"].setValue( IECore.StringVectorData( [ "/a", "/b" ] ) )
+
+		s2 = GafferScene.Set()
+		s2["paths"].setValue( IECore.StringVectorData( [ "/a"] ) )
+		s2["mode"].setValue( s2.Mode.Remove )
+		s2["in"].setInput( s1["out"] )
+
+		g = s2["out"]["globals"].getValue()
+		self.assertEqual( g.keys(), [ "gaffer:sets" ] )
+		self.assertEqual( g["gaffer:sets"].keys(), [ "set" ] )
+		self.assertEqual( set( g["gaffer:sets"]["set"].value.paths() ), set( [ "/b" ] ) )
+
+		s2["enabled"].setValue( False )
+
+		g = s2["out"]["globals"].getValue()
+		self.assertEqual( g.keys(), [ "gaffer:sets" ] )
+		self.assertEqual( g["gaffer:sets"].keys(), [ "set" ] )
+		self.assertEqual( set( g["gaffer:sets"]["set"].value.paths() ), set( [ "/a", "/b" ] ) )
+
+	def testRemoveFromNonExistentSet( self ) :
+
+		p = GafferScene.Plane()
+
+		s1 = GafferScene.Set()
+		s1["paths"].setValue( IECore.StringVectorData( [ "/a", "/b" ] ) )
+
+		s2 = GafferScene.Set()
+		s2["paths"].setValue( IECore.StringVectorData( [ "/a"] ) )
+		s2["name"].setValue( "thisSetDoesNotExist" )
+		s2["mode"].setValue( s2.Mode.Remove )
+		s2["in"].setInput( s1["out"] )
+
+		g = s2["out"]["globals"].getValue()
+		self.assertEqual( g.keys(), [ "gaffer:sets" ] )
+		self.assertEqual( g["gaffer:sets"].keys(), [ "set" ] )
+		self.assertEqual( set( g["gaffer:sets"]["set"].value.paths() ), set( [ "/a", "/b" ] ) )
+
 if __name__ == "__main__":
 	unittest.main()
