@@ -392,6 +392,11 @@ bool PathMatcher::removePath( const std::vector<IECore::InternedString> &path )
 	return result;
 }
 
+bool PathMatcher::addPaths( const PathMatcher &paths )
+{
+	return addPathsWalk( m_root.get(), paths.m_root.get() );
+}
+
 bool PathMatcher::prune( const std::string &path )
 {
 	std::vector<IECore::InternedString> tokenizedPath;
@@ -456,6 +461,46 @@ void PathMatcher::removeWalk( Node *node, const NameIterator &start, const NameI
 			node->ellipsis = 0;
 		}
 	}
+}
+
+bool PathMatcher::addPathsWalk( Node *node, const Node *srcNode )
+{
+	bool result = false;
+	if( !node->terminator && srcNode->terminator )
+	{
+		node->terminator = result = true;
+	}
+
+	for( Node::ChildMap::const_iterator it = srcNode->children.begin(), eIt = srcNode->children.end(); it != eIt; ++it )
+	{
+		const Node *srcChild = it->second;
+		if( Node *child = node->child( it->first ) )
+		{
+			// result must be on right of ||, to avoid short-circuiting addPathsWalk().
+			result = addPathsWalk( child, srcChild ) || result;
+		}
+		else
+		{
+			node->children.insert( Node::ChildMapValue( it->first, new Node( *srcChild ) ) );
+			result = true; // source node can only exist if it or a descendant is a terminator
+		}
+	}
+
+	if( srcNode->ellipsis )
+	{
+		if( node->ellipsis )
+		{
+			// result must be on right of ||, to avoid short-circuiting addPathsWalk().
+			result = addPathsWalk( node->ellipsis, srcNode->ellipsis ) || result;
+		}
+		else
+		{
+			node->ellipsis = new Node( *srcNode->ellipsis );
+			result = true; // source node can only exist if it or a descendant is a terminator
+		}
+	}
+
+	return result;
 }
 
 void PathMatcher::pathsWalk( Node *node, const std::string &path, std::vector<std::string> &paths ) const

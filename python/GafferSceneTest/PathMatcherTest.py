@@ -625,6 +625,49 @@ class PathMatcherTest( unittest.TestCase ) :
 
 		m.removePath( "/" )
 		self.assertTrue( m.isEmpty() )
-	
+
+	def testAddPaths( self ) :
+
+		m1 = GafferScene.PathMatcher( [
+			"/a",
+			"/a/../b",
+			"/b",
+			"/b/c/d"
+		] )
+
+		m2 = GafferScene.PathMatcher( [
+			"/a/b",
+			"/a/../c",
+			"/b/e",
+			"/b/c/d/e/f",
+			"/b/c/d/e/f/...",
+			"/b/c/d/e/f/.../g",
+		] )
+
+		m = GafferScene.PathMatcher()
+		self.assertEqual( m.addPaths( m1 ), True )
+		self.assertEqual( m.paths(), m1.paths() )
+		self.assertEqual( m.addPaths( m1 ), False )
+
+		self.assertEqual( m.addPaths( m2 ), True )
+		self.assertEqual( set( m.paths() ), set( m1.paths() + m2.paths() ) )
+		self.assertEqual( m.addPaths( m2 ), False )
+
+		m3 = GafferScene.PathMatcher( [
+			"/b/e/..."
+		] )
+
+		self.assertEqual( m.addPaths( m3 ), True )
+		self.assertEqual( set( m.paths() ), set( m1.paths() + m2.paths() + m3.paths() ) )
+		self.assertEqual( m.addPaths( m3 ), False )
+
+		m4 = GafferScene.PathMatcher( [
+			"/b/e/f/g"
+		] )
+
+		self.assertEqual( m.addPaths( m4 ), True )
+		self.assertEqual( set( m.paths() ), set( m1.paths() + m2.paths() + m3.paths() + m4.paths() ) )
+		self.assertEqual( m.addPaths( m4 ), False )
+
 if __name__ == "__main__":
 	unittest.main()
