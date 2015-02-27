@@ -144,6 +144,24 @@ class ScenePathTest( unittest.TestCase ) :
 		plane["name"].setValue( "dontCrashNow" )
 		context["dontCrashNow"] = 10
 
+	def testPlugRemovedFromNode( self ) :
+
+		box = Gaffer.Box()
+		box["p"] = Gaffer.IntPlug()
+		box["out"] = GafferScene.ScenePlug( direction = Gaffer.Plug.Direction.Out )
+		context = Gaffer.Context()
+		path = GafferScene.ScenePath( box["out"], context, "/" )
+
+		# force path to connect to signals
+		path.pathChangedSignal()
+
+		# mess things up
+		del box["out"]
+		del path
+
+		# trigger plug dirtied on the Box
+		box["p"].setValue( 10 )
+
 if __name__ == "__main__":
 	unittest.main()
 

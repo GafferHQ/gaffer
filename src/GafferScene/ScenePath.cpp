@@ -53,17 +53,17 @@ using namespace GafferScene;
 IE_CORE_DEFINERUNTIMETYPED( ScenePath );
 
 ScenePath::ScenePath( ScenePlugPtr scene, Gaffer::ContextPtr context, Gaffer::PathFilterPtr filter )
-	:	Path( filter ), m_scene( scene ), m_context( context )
+	:	Path( filter ), m_node( scene->node() ), m_scene( scene ), m_context( context )
 {
 }
 
 ScenePath::ScenePath( ScenePlugPtr scene, Gaffer::ContextPtr context, const std::string &path, Gaffer::PathFilterPtr filter )
-	:	Path( path, filter ), m_scene( scene ), m_context( context )
+	:	Path( path, filter ), m_node( scene->node() ), m_scene( scene ), m_context( context )
 {
 }
 
 ScenePath::ScenePath( ScenePlugPtr scene, Gaffer::ContextPtr context, const Names &names, const IECore::InternedString &root, Gaffer::PathFilterPtr filter )
-	:	Path( names, root, filter ), m_scene( scene ), m_context( context )
+	:	Path( names, root, filter ), m_node( scene->node() ), m_scene( scene ), m_context( context )
 {
 }
 
@@ -72,9 +72,9 @@ ScenePath::~ScenePath()
 	if( havePathChangedSignal() )
 	{
 		m_context->changedSignal().disconnect( boost::bind( &ScenePath::contextChanged, this, ::_2 ) );
-		if( Node *node = m_scene->node() )
+		if( m_node )
 		{
-			node->plugDirtiedSignal().disconnect( boost::bind( &ScenePath::plugDirtied, this, ::_1 ) );
+			m_node->plugDirtiedSignal().disconnect( boost::bind( &ScenePath::plugDirtied, this, ::_1 ) );
 		}
 	}
 }
@@ -146,9 +146,9 @@ void ScenePath::doChildren( std::vector<PathPtr> &children ) const
 void ScenePath::pathChangedSignalCreated()
 {
 	Path::pathChangedSignalCreated();
-	if( Node *node = m_scene->node() )
+	if( m_node )
 	{
-		node->plugDirtiedSignal().connect( boost::bind( &ScenePath::plugDirtied, this, ::_1 ) );
+		m_node->plugDirtiedSignal().connect( boost::bind( &ScenePath::plugDirtied, this, ::_1 ) );
 	}
 	m_context->changedSignal().connect( boost::bind( &ScenePath::contextChanged, this, ::_2 ) );
 }

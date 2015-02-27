@@ -47,6 +47,7 @@ namespace Gaffer
 
 IE_CORE_FORWARDDECLARE( Context )
 IE_CORE_FORWARDDECLARE( Plug )
+IE_CORE_FORWARDDECLARE( Node )
 
 } // namespace Gaffer
 
@@ -86,6 +87,7 @@ class ScenePath : public Gaffer::Path
 		void contextChanged( const IECore::InternedString &key );
 		void plugDirtied( Gaffer::Plug *plug );
 
+		Gaffer::NodePtr m_node;
 		ScenePlugPtr m_scene;
 		Gaffer::ContextPtr m_context;
 
