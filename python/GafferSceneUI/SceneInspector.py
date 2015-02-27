@@ -750,6 +750,10 @@ class DiffRow( Row ) :
 		self.__inspector = inspector
 		self.__diffCreator = diffCreator
 
+	def inspector( self ) :
+
+		return self.__inspector
+
 	def update( self, targets ) :
 
 		self.__targets = targets
@@ -849,11 +853,12 @@ class DiffRow( Row ) :
 ##########################################################################
 
 ## Class for displaying a column of DiffRows.
-class DiffColumn( GafferUI.ListContainer ) :
+class DiffColumn( GafferUI.Widget ) :
 
-	def __init__( self, inspector, diffCreator = TextDiff, label = None, **kw ) :
+	def __init__( self, inspector, diffCreator = TextDiff, label = None, filterable = False, **kw ) :
 
-		GafferUI.ListContainer.__init__( self )
+		outerColumn = GafferUI.ListContainer()
+		GafferUI.Widget.__init__( self, outerColumn )
 
 		assert( isinstance( inspector, Inspector ) )
 
@@ -861,14 +866,24 @@ class DiffColumn( GafferUI.ListContainer ) :
 		self.__rows = {} # mapping from row name to row
 		self.__diffCreator = diffCreator
 
-		self.__label = None
-		if label is not None :
-			with GafferUI.Frame( borderWidth = 4, borderStyle = GafferUI.Frame.BorderStyle.None ) as self.__label :
-				l = GafferUI.Label(
-					"<b>" + label + "</b>",
-					horizontalAlignment = GafferUI.Label.HorizontalAlignment.Right,
-				)
-				l._qtWidget().setFixedWidth( 150 )
+		with outerColumn :
+			with GafferUI.Frame( borderWidth = 4, borderStyle = GafferUI.Frame.BorderStyle.None ) as self.__header :
+				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal ) :
+					if label is not None :
+						l = GafferUI.Label(
+							"<b>" + label + "</b>",
+							horizontalAlignment = GafferUI.Label.HorizontalAlignment.Right,
+						)
+						l._qtWidget().setFixedWidth( 150 )
+					self.__filterWidget = None
+					if filterable :
+						self.__filterWidget = GafferUI.TextWidget()
+						self.__filterWidget._qtWidget().setPlaceholderText( "Filter..." )
+						self.__filterTextChangedConnection = self.__filterWidget.textChangedSignal().connect(
+							Gaffer.WeakMethod( self.__filterTextChanged )
+						)
+
+			self.__rowContainer = GafferUI.ListContainer()
 
 	def update( self, targets ) :
 
@@ -876,10 +891,13 @@ class DiffColumn( GafferUI.ListContainer ) :
 		for target in targets :
 			inspectors.update( { i.name() : i for i in self.__inspector.children( target ) } )
 
-		rowNames = sorted( inspectors.keys() )
+		# mark all rows as invalid
+		for row in self.__rowContainer :
+			row.__valid = False
 
-		rows = [ self.__label ] if len( rowNames ) and self.__label is not None else []
-		for rowName in rowNames :
+		# iterate over the fields we want to display,
+		# creating/updating the rows that are to be valid.
+		for rowName in inspectors.keys() :
 
 			row = self.__rows.get( rowName )
 			if row is None :
@@ -887,10 +905,47 @@ class DiffColumn( GafferUI.ListContainer ) :
 				self.__rows[rowName] = row
 
 			row.update( targets )
-			row.setAlternate( len( rows ) % 2 )
-			rows.append( row )
+			row.__valid = True
 
-		self[:] = rows
+		# update the rowContainer with _all_ rows (both
+		# valid and invalid) in the correct order. this
+		# is a no-op except when adding new rows. it is
+		# much quicker to hide invalid rows than it is
+		# to reparent widgets so that the container only
+		# contains the valid ones.
+		self.__rowContainer[:] = sorted( self.__rows.values(), key = lambda r : r.inspector().name() )
+
+		# show only the currently valid ones.
+		self.__updateRowVisibility()
+
+	def __updateRowVisibility( self ) :
+
+		patterns = self.__filterWidget.getText() if self.__filterWidget is not None else ""
+		if not patterns :
+			patterns = "*"
+		else :
+			patterns = " ".join( "*" + p + "*" if "*" not in p else p for p in patterns.split() )
+
+		numValidRows = 0
+		numVisibleRows = 0
+		for row in self.__rowContainer :
+
+			visible = False
+			if row.__valid :
+				numValidRows += 1
+				if Gaffer.matchMultiple( row.inspector().name(), patterns ) :
+					visible = True
+
+			row.setVisible( visible )
+			if visible :
+				row.setAlternate( numVisibleRows % 2 )
+				numVisibleRows += 1
+
+		self.__header.setVisible( numValidRows )
+
+	def __filterTextChanged( self, filterWidget ) :
+
+		self.__updateRowVisibility()
 
 ##########################################################################
 # Section
@@ -1388,7 +1443,7 @@ class __AttributesSection( Section ) :
 		Section.__init__( self, collapsed = True, label = "Attributes" )
 
 		with self._mainColumn() :
-			self.__diffColumn = DiffColumn( self.__Inspector() )
+			self.__diffColumn = DiffColumn( self.__Inspector(), filterable=True )
 
 	def update( self, targets ) :
 
@@ -1696,7 +1751,7 @@ class __GlobalsSection( Section ) :
 		Section.__init__( self, collapsed = True, label = label )
 
 		with self._mainColumn() :
-			self.__diffColumn = DiffColumn( self.__Inspector( prefix ) )
+			self.__diffColumn = DiffColumn( self.__Inspector( prefix ), filterable=True )
 
 	def update( self, targets ) :
 
