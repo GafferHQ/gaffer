@@ -554,18 +554,18 @@ class PathMatcherTest( unittest.TestCase ) :
 		self.assertEqual( m.match( paths[0] ), r.ExactMatch )
 
 	def testInvalidPathArguments( self ) :
-	
+
 		self.assertRaises( TypeError, GafferScene.PathMatcher, [ None ] )
-	
+
 		m = GafferScene.PathMatcher()
-		
+
 		self.assertRaises( TypeError, m.match, None )
 
 		self.assertRaises( TypeError, m.addPath, None )
 		self.assertRaises( TypeError, m.removePath, None )
-	
+
 	def testPrune( self ) :
-	
+
 		m = GafferScene.PathMatcher( [
 			"/a/b/c",
 			"/a/.../c",
@@ -574,57 +574,134 @@ class PathMatcherTest( unittest.TestCase ) :
 			"/a",
 			"/c/d",
 		] )
-		
+
 		self.assertEqual( m.prune( "/a/b" ), True )
 		self.assertEqual( set( m.paths() ), set( [ "/a/.../c", "/a", "/c/d" ] ) )
 		self.assertEqual( m.prune( "/a/b" ), False )
-		
+
 		self.assertEqual( m.prune( "/a" ), True )
 		self.assertEqual( m.paths(), [ "/c/d" ] )
 		self.assertEqual( m.prune( "/a" ), False )
-		
+
 		self.assertEqual( m.prune( "/c/d/e" ), False )
 		self.assertEqual( m.paths(), [ "/c/d" ] )
 		self.assertEqual( m.prune( "/c/d" ), True )
 		self.assertEqual( m.paths(), [] )
 		self.assertTrue( m.isEmpty() )
 		self.assertEqual( m.prune( "/c/d" ), False )
-	
+
 	def testPruneRoot( self ) :
-	
+
 		m = GafferScene.PathMatcher( [
 			"/a/b",
 			"/a",
 			"/.../c",
 			"/...",
 		] )
-		
+
 		self.assertEqual( m.prune( "/" ), True )
 		self.assertEqual( m.paths(), [] )
 		self.assertTrue( m.isEmpty() )
-	
+
 	def testIsEmpty( self ) :
-	
+
 		m = GafferScene.PathMatcher( [] )
 		self.assertTrue( m.isEmpty() )
-		
+
 		m.addPath( "/a" )
 		self.assertFalse( m.isEmpty() )
-	
+
 		m.removePath( "/a" )
 		self.assertTrue( m.isEmpty() )
-	
+
 		m.addPath( "/..." )
 		self.assertFalse( m.isEmpty() )
-	
+
 		m.removePath( "/..." )
 		self.assertTrue( m.isEmpty() )
-	
+
 		m.addPath( "/" )
 		self.assertFalse( m.isEmpty() )
-		
+
 		m.removePath( "/" )
 		self.assertTrue( m.isEmpty() )
-	
+
+	def testAddPaths( self ) :
+
+		m1 = GafferScene.PathMatcher( [
+			"/a",
+			"/a/../b",
+			"/b",
+			"/b/c/d"
+		] )
+
+		m2 = GafferScene.PathMatcher( [
+			"/a/b",
+			"/a/../c",
+			"/b/e",
+			"/b/c/d/e/f",
+			"/b/c/d/e/f/...",
+			"/b/c/d/e/f/.../g",
+		] )
+
+		m = GafferScene.PathMatcher()
+		self.assertEqual( m.addPaths( m1 ), True )
+		self.assertEqual( m.paths(), m1.paths() )
+		self.assertEqual( m.addPaths( m1 ), False )
+
+		self.assertEqual( m.addPaths( m2 ), True )
+		self.assertEqual( set( m.paths() ), set( m1.paths() + m2.paths() ) )
+		self.assertEqual( m.addPaths( m2 ), False )
+
+		m3 = GafferScene.PathMatcher( [
+			"/b/e/..."
+		] )
+
+		self.assertEqual( m.addPaths( m3 ), True )
+		self.assertEqual( set( m.paths() ), set( m1.paths() + m2.paths() + m3.paths() ) )
+		self.assertEqual( m.addPaths( m3 ), False )
+
+		m4 = GafferScene.PathMatcher( [
+			"/b/e/f/g"
+		] )
+
+		self.assertEqual( m.addPaths( m4 ), True )
+		self.assertEqual( set( m.paths() ), set( m1.paths() + m2.paths() + m3.paths() + m4.paths() ) )
+		self.assertEqual( m.addPaths( m4 ), False )
+
+	def testRemovePaths( self ) :
+
+		m1 = GafferScene.PathMatcher( [
+			"/a",
+			"/a/../b",
+			"/b",
+			"/b/c/d"
+		] )
+
+		m2 = GafferScene.PathMatcher( [
+			"/a/b",
+			"/a/../c",
+			"/b/e",
+			"/b/c/d/e/f",
+			"/b/c/d/e/f/...",
+			"/b/c/d/e/f/.../g",
+		] )
+
+		m = GafferScene.PathMatcher()
+		m.addPaths( m1 )
+		m.addPaths( m2 )
+		self.assertEqual( set( m.paths() ), set( m1.paths() + m2.paths() ) )
+		self.assertFalse( m.isEmpty() )
+
+		self.assertEqual( m.removePaths( m1 ), True )
+		self.assertEqual( m.paths(), m2.paths() )
+		self.assertEqual( m.removePaths( m1 ), False )
+		self.assertFalse( m.isEmpty() )
+
+		self.assertEqual( m.removePaths( m2 ), True )
+		self.assertEqual( m.paths(), [] )
+		self.assertEqual( m.removePaths( m2 ), False )
+		self.assertTrue( m.isEmpty() )
+
 if __name__ == "__main__":
 	unittest.main()

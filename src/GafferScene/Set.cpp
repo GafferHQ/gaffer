@@ -48,6 +48,7 @@ Set::Set( const std::string &name )
 	:	GlobalsProcessor( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
+	addChild( new Gaffer::IntPlug( "mode", Gaffer::Plug::In, Create, Create, Remove ) );
 	addChild( new Gaffer::StringPlug( "name", Gaffer::Plug::In, "set" ) );
 	addChild( new Gaffer::StringVectorDataPlug( "paths", Gaffer::Plug::In, new StringVectorData ) );
 	addChild( new Gaffer::ObjectPlug( "__pathMatcher", Gaffer::Plug::Out, new PathMatcherData ) );
@@ -57,34 +58,44 @@ Set::~Set()
 {
 }
 
+Gaffer::IntPlug *Set::modePlug()
+{
+	return getChild<Gaffer::IntPlug>( g_firstPlugIndex );
+}
+
+const Gaffer::IntPlug *Set::modePlug() const
+{
+	return getChild<Gaffer::IntPlug>( g_firstPlugIndex );
+}
+
 Gaffer::StringPlug *Set::namePlug()
 {
-	return getChild<Gaffer::StringPlug>( g_firstPlugIndex );
+	return getChild<Gaffer::StringPlug>( g_firstPlugIndex + 1 );
 }
 
 const Gaffer::StringPlug *Set::namePlug() const
 {
-	return getChild<Gaffer::StringPlug>( g_firstPlugIndex );
+	return getChild<Gaffer::StringPlug>( g_firstPlugIndex + 1 );
 }
 
 Gaffer::StringVectorDataPlug *Set::pathsPlug()
 {
-	return getChild<Gaffer::StringVectorDataPlug>( g_firstPlugIndex + 1 );
+	return getChild<Gaffer::StringVectorDataPlug>( g_firstPlugIndex + 2 );
 }
 
 const Gaffer::StringVectorDataPlug *Set::pathsPlug() const
 {
-	return getChild<Gaffer::StringVectorDataPlug>( g_firstPlugIndex + 1 );
+	return getChild<Gaffer::StringVectorDataPlug>( g_firstPlugIndex + 2 );
 }
 
 Gaffer::ObjectPlug *Set::pathMatcherPlug()
 {
-	return getChild<Gaffer::ObjectPlug>( g_firstPlugIndex + 2 );
+	return getChild<Gaffer::ObjectPlug>( g_firstPlugIndex + 3 );
 }
 
 const Gaffer::ObjectPlug *Set::pathMatcherPlug() const
 {
-	return getChild<Gaffer::ObjectPlug>( g_firstPlugIndex + 2 );
+	return getChild<Gaffer::ObjectPlug>( g_firstPlugIndex + 3 );
 }
 
 void Set::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
@@ -96,6 +107,7 @@ void Set::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) 
 		outputs.push_back( pathMatcherPlug() );
 	}
 	else if(
+		modePlug() == input ||
 		namePlug() == input ||
 		pathMatcherPlug() == input
 	)
@@ -130,6 +142,7 @@ void Set::compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) c
 
 void Set::hashProcessedGlobals( const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
+	modePlug()->hash( h );
 	namePlug()->hash( h );
 	pathMatcherPlug()->hash( h );
 }
@@ -156,10 +169,44 @@ IECore::ConstCompoundObjectPtr Set::computeProcessedGlobals( const Gaffer::Conte
 	}
 	result->members()["gaffer:sets"] = sets;
 
-	ConstObjectPtr set = pathMatcherPlug()->getValue();
-	// const cast is acceptable because we're just using it to place a const object into a
-	// container that will be treated as const everywhere immediately after return from this method.
-	sets->writable()[name] = const_cast<Data *>( static_cast<const Data *>( set.get() ) );
+	ConstPathMatcherDataPtr pathMatcher = boost::static_pointer_cast<const PathMatcherData>(
+		pathMatcherPlug()->getValue()
+	);
+
+	PathMatcherDataPtr set;
+	switch( modePlug()->getValue() )
+	{
+		case Add : {
+			const PathMatcherData *inputSet = sets->member<PathMatcherData>( name );
+			if( inputSet )
+			{
+				set = inputSet->copy();
+				set->writable().addPaths( pathMatcher->readable() );
+				break;
+			}
+			// no input set with this name - fall through to create mode
+		}
+		case Create : {
+			// const cast is acceptable because we're just using it to place a const object into a
+			// container that will be treated as const everywhere immediately after return from this method.
+			set = boost::const_pointer_cast<PathMatcherData>( pathMatcher );
+			break;
+		}
+		case Remove : {
+			const PathMatcherData *inputSet = sets->member<PathMatcherData>( name );
+			if( inputSet )
+			{
+				set = inputSet->copy();
+				set->writable().removePaths( pathMatcher->readable() );
+			}
+			break;
+		}
+	}
+
+	if( set )
+	{
+		sets->writable()[name] = set;
+	}
 
 	return result;
 }

@@ -57,6 +57,16 @@ class Set : public GlobalsProcessor
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::Set, SetTypeId, GlobalsProcessor );
 
+		enum Mode
+		{
+			Create,
+			Add,
+			Remove
+		};
+
+		Gaffer::IntPlug *modePlug();
+		const Gaffer::IntPlug *modePlug() const;
+
 		Gaffer::StringPlug *namePlug();
 		const Gaffer::StringPlug *namePlug() const;
 

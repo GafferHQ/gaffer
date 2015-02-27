@@ -42,9 +42,16 @@
 
 #include "GafferSceneBindings/SetBinding.h"
 
+using namespace boost::python;
 using namespace GafferScene;
 
 void GafferSceneBindings::bindSet()
 {
-	GafferBindings::DependencyNodeClass<Set>();
+	scope s = GafferBindings::DependencyNodeClass<Set>();
+
+	enum_<Set::Mode>( "Mode" )
+		.value( "Create", Set::Create )
+		.value( "Add", Set::Add )
+		.value( "Remove", Set::Remove )
+	;
 }
