@@ -661,8 +661,8 @@ class DiffRow( Row ) :
 
 			if inspector.inspectsAttributes() and isinstance( diff, SideBySideDiff ) :
 
-				diff.setCornerWidget( 0, GafferUI.Label( "<sup>Inherited</sup>") )
-				diff.setCornerWidget( 1, GafferUI.Label( "<sup>Inherited</sup>") )
+				diff.setCornerWidget( 0, GafferUI.Label( "" ) )
+				diff.setCornerWidget( 1, GafferUI.Label( "" ) )
 
 			self.__diffConnections = []
 			diffWidgets = [ diff.frame( 0 ), diff.frame( 1 ) ] if isinstance( diff, SideBySideDiff ) else [ diff ]
@@ -684,11 +684,10 @@ class DiffRow( Row ) :
 		self.__values = [ self.__inspector( target ) for target in targets ]
 		self.__diff().update( self.__values )
 
-		if self.__inspector.inspectsAttributes() :
+		if self.__inspector.inspectsAttributes() and isinstance( self.__diff(), SideBySideDiff ) :
 			localValues = [ self.__inspector( target, ignoreInheritance=True ) for target in targets ]
 			for i, value in enumerate( localValues ) :
-				if value is not None and isinstance( self.__diff(), SideBySideDiff ) :
-					self.__diff().getCornerWidget( i ).setVisible( False )
+				self.__diff().getCornerWidget( i ).setText( "<sup>Inherited</sup>" if value is None else "" )
 
 	def __label( self ) :
 
