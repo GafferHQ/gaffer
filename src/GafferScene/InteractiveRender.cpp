@@ -1103,4 +1103,5 @@ void InteractiveRender::stop()
 	m_state = Stopped;
 	m_lightHandles.clear();
 	m_attributesDirty = m_lightsDirty = m_camerasDirty = true;
+	m_sceneGraph.reset( (SceneGraph*)NULL );
 }
