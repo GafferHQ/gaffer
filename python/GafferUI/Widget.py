@@ -165,6 +165,8 @@ class Widget( object ) :
 	# visible explicitly after creation.
 	def setVisible( self, visible ) :
 
+		visible = bool( visible )
+
 		if visible == self.__visible :
 			return
 
