@@ -50,6 +50,81 @@ import GafferUI
 
 class SceneInspector( GafferUI.NodeSetEditor ) :
 
+	## Simple class to specify the target of an inspection,
+	# and provide cached queries for that target.
+	class Target( object ) :
+
+		def __init__( self, scene, path ) :
+
+			self.__scene = scene
+			self.__path = path
+			self.__bound = None
+			self.__transform = None
+			self.__fullTransform = None
+			self.__attributes = None
+			self.__fullAttributes = None
+			self.__object = None
+			self.__globals = None
+
+		@property
+		def scene( self ) :
+
+			return self.__scene
+
+		@property
+		def path( self ) :
+
+			return self.__path
+
+		def bound( self ) :
+
+			if self.__bound is None :
+				self.__bound = self.scene.bound( self.path )
+
+			return self.__bound
+
+		def transform( self ) :
+
+			if self.__transform is None :
+				self.__transform = self.scene.transform( self.path )
+
+			return self.__transform
+
+		def fullTransform( self ) :
+
+			if self.__fullTransform is None :
+				self.__fullTransform = self.scene.fullTransform( self.path )
+
+			return self.__fullTransform
+
+		def attributes( self ) :
+
+			if self.__attributes is None :
+				self.__attributes = self.scene.attributes( self.path )
+
+			return self.__attributes
+
+		def fullAttributes( self ) :
+
+			if self.__fullAttributes is None :
+				self.__fullAttributes = self.scene.fullAttributes( self.path )
+
+			return self.__fullAttributes
+
+		def object( self ) :
+
+			if self.__object is None :
+				self.__object = self.scene.object( self.path )
+
+			return self.__object
+
+		def globals( self ) :
+
+			if self.__globals is None :
+				self.__globals = self.scene["globals"].getValue()
+
+			return self.__globals
+
 	## A list of Section instances may be passed to create a custom inspector,
 	# otherwise all registered Sections will be used.
 	def __init__( self, scriptNode, sections = None, **kw ) :
@@ -99,9 +174,6 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 		self.__acquirePlayback()
 
 		self._updateFromSet()
-
-	## Simple struct to specify the target of an inspection.
-	Target = collections.namedtuple( "Target", [ "scene", "path" ] )
 
 	## May be used to "pin" target paths into the editor, rather than
 	# having it automatically follow the scene selection. A value of
@@ -1296,9 +1368,9 @@ class __BoundSection( Section ) :
 			if target.path is None :
 				return None
 
-			bound = target.scene.bound( target.path )
+			bound = target.bound()
 			if self.__world :
-				transform = target.scene.fullTransform( target.path )
+				transform = target.fullTransform()
 				bound = bound.transform( transform )
 
 			return bound
@@ -1343,19 +1415,16 @@ class __AttributesSection( Section ) :
 			if target.path is None :
 				return None
 
-			## \todo Investigate caching the results of these calls so that
-			# not every Inspector instance is making the same call - maybe the target
-			# could provide this service?
 			if ignoreInheritance :
-				attributes = target.scene.attributes( target.path )
+				attributes = target.attributes()
 			else :
-				attributes = target.scene.fullAttributes( target.path )
+				attributes = target.fullAttributes()
 
 			return attributes.get( self.__attributeName )
 
 		def children( self, target ) :
 
-			attributeNames = target.scene.fullAttributes( target.path ).keys() if target.path else []
+			attributeNames = target.fullAttributes().keys() if target.path else []
 			return [ self.__class__( attributeName ) for attributeName in attributeNames ]
 
 SceneInspector.registerSection( __AttributesSection, tab = "Selection" )
@@ -1399,7 +1468,7 @@ class __ObjectSection( Section ) :
 		if not len( targets ) :
 			return ""
 
-		objects = [ target.scene.object( target.path ) for target in targets ]
+		objects = [ target.object() for target in targets ]
 		typeNames = [ o.typeName().split( ":" )[-1] for o in objects ]
 		typeNames = [ "None" if t == "NullObject" else t for t in typeNames ]
 
@@ -1429,7 +1498,7 @@ class __ObjectSection( Section ) :
 			if target.path is None :
 				return None
 
-			object = target.scene.object( target.path )
+			object = target.object()
 			if isinstance( object, IECore.NullObject ) :
 				return None
 
@@ -1440,7 +1509,7 @@ class __ObjectSection( Section ) :
 
 		def children( self, target ) :
 
-			object = target.scene.object( target.path )
+			object = target.object()
 			if object is None or not isinstance( object, IECore.Primitive ) :
 				return []
 
@@ -1493,7 +1562,7 @@ class __ObjectSection( Section ) :
 			if target.path is None :
 				return None
 
-			object = target.scene.object( target.path )
+			object = target.object()
 			if not isinstance( object, IECore.Camera ) :
 				return None
 
@@ -1516,7 +1585,7 @@ class __ObjectSection( Section ) :
 			if target.path is None :
 				return None
 
-			object = target.scene.object( target.path )
+			object = target.object()
 			if not isinstance( object, IECore.Primitive ) :
 				return None
 
@@ -1527,7 +1596,7 @@ class __ObjectSection( Section ) :
 
 		def children( self, target ) :
 
-			object = target.scene.object( target.path )
+			object = target.object()
 			if not isinstance( object, IECore.Primitive ) :
 				return []
 
@@ -1591,7 +1660,7 @@ class __SetMembershipSection( Section ) :
 			if target.path is None :
 				return None
 
-			globals = target.scene["globals"].getValue()
+			globals = target.globals()
 			sets = globals.get( "gaffer:sets", {} )
 			set = sets.get( self.__setName )
 			if set is None :
@@ -1611,7 +1680,7 @@ class __SetMembershipSection( Section ) :
 			if not target.path :
 				return []
 
-			sets = target.scene["globals"].getValue().get( "gaffer:sets", {} )
+			sets = target.globals().get( "gaffer:sets", {} )
 			return [ self.__class__( setName ) for setName in sorted( sets.keys() ) ]
 
 SceneInspector.registerSection( __SetMembershipSection, tab = "Selection" )
@@ -1648,13 +1717,12 @@ class __GlobalsSection( Section ) :
 
 		def __call__( self, target ) :
 
-			## \todo Investigate caching the globals on the target.
-			globals = target.scene["globals"].getValue()
+			globals = target.globals()
 			return globals.get( self.__key )
 
 		def children( self, target ) :
 
-			globals = target.scene["globals"].getValue()
+			globals = target.globals()
 			keys = [ k for k in globals.keys() if k.startswith( self.__prefix ) ]
 
 			return [ self.__class__( self.__prefix, key ) for key in keys ]
@@ -1688,7 +1756,7 @@ class _OutputRow( Row ) :
 
 	def update( self, targets ) :
 
-		outputs = [ target.scene["globals"].getValue().get( self.__name ) for target in targets ]
+		outputs = [ target.globals().get( self.__name ) for target in targets ]
 		self.__label.update( [ self.__name[7:] if output else None for output in outputs ] )
 		self.__diffColumn.update( targets )
 
@@ -1711,7 +1779,7 @@ class _OutputRow( Row ) :
 
 		def __call__( self, target ) :
 
-			output = target.scene["globals"].getValue().get( self.__outputName )
+			output = target.globals().get( self.__outputName )
 			if output is None :
 				return None
 
@@ -1726,7 +1794,7 @@ class _OutputRow( Row ) :
 
 		def children( self, target ) :
 
-			output = target.scene["globals"].getValue().get( self.__outputName )
+			output = target.globals().get( self.__outputName )
 			if output is None :
 				return []
 
@@ -1746,7 +1814,7 @@ class __OutputsSection( Section ) :
 
 		outputNames = set()
 		for target in targets :
-			g = target.scene["globals"].getValue()
+			g = target.globals()
 			outputNames.update( [ k for k in g.keys() if k.startswith( "output:" ) ] )
 
 		rows = []
@@ -1903,13 +1971,13 @@ class _SetsSection( Section ) :
 
 		def __call__( self, target ) :
 
-			globals = target.scene["globals"].getValue()
+			globals = target.globals()
 			sets = globals.get( "gaffer:sets", {} )
 			return sets.get( self.__setName )
 
 		def children( self, target ) :
 
-			sets = target.scene["globals"].getValue().get( "gaffer:sets", {} )
+			sets = target.globals().get( "gaffer:sets", {} )
 			return [ self.__class__( setName ) for setName in sorted( sets.keys() ) ]
 
 SceneInspector.SetsSection = _SetsSection
