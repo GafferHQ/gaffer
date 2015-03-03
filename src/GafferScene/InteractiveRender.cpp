@@ -249,6 +249,7 @@ void InteractiveRender::update()
 		outputOptions( globals.get(), m_renderer.get() );
 		outputOutputs( globals.get(), m_renderer.get() );
 		outputCameras( inPlug(), globals.get(), m_renderer.get() );
+		outputClippingPlanes( inPlug(), globals.get(), m_renderer.get() );
 		{
 			WorldBlock world( m_renderer );
 
