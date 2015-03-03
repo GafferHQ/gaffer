@@ -1,7 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2012, John Haddon. All rights reserved.
-#  Copyright (c) 2012-2014, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,61 +34,34 @@
 #
 ##########################################################################
 
-from _GafferSceneUI import *
+import Gaffer
+import GafferUI
 
-from SceneHierarchy import SceneHierarchy
-from SceneInspector import SceneInspector
-from FilterPlugValueWidget import FilterPlugValueWidget
-import SceneNodeUI
-import SceneReaderUI
-import SceneProcessorUI
-import FilteredSceneProcessorUI
-import PruneUI
-import SubTreeUI
-import OutputsUI
-import OptionsUI
-import OpenGLAttributesUI
-import SceneContextVariablesUI
-import SceneWriterUI
-import StandardOptionsUI
-import StandardAttributesUI
-import ShaderUI
-import OpenGLShaderUI
-import ObjectSourceUI
-import TransformUI
-import AttributesUI
-import LightUI
-import InteractiveRenderUI
-import SphereUI
-import MapProjectionUI
-import MapOffsetUI
-import CustomAttributesUI
-import CustomOptionsUI
-import SceneViewToolbar
-import SceneSwitchUI
-import ShaderSwitchUI
-import ShaderAssignmentUI
-import ParentConstraintUI
-import ParentUI
-import PrimitiveVariablesUI
-import DuplicateUI
-import GridUI
-import SetFilterUI
-import DeleteGlobalsUI
-import DeleteOptionsUI
-import ExternalProceduralUI
-import ExecutableRenderUI
-import IsolateUI
-import SelectionToolUI
-import CropWindowToolUI
-import CameraUI
-import SetUI
-import ClippingPlaneUI
+import GafferScene
 
-# then all the PathPreviewWidgets. note that the order
-# of import controls the order of display.
+Gaffer.Metadata.registerNode(
 
-from AlembicPathPreview import AlembicPathPreview
-from SceneReaderPathPreview import SceneReaderPathPreview
+	GafferScene.ClippingPlane,
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferSceneUI" )
+	"description",
+	"""
+	Creates an arbitrary clipping plane. This is like the near
+	and far clipping planes provided by the Camera node, but
+	can be positioned arbitrarily in space. All geometry on
+	the positive Z side of the plane is clipped away.
+	""",
+
+	plugs = {
+
+		"name" : [
+
+			"description",
+			"""
+			The name of the clipping plane to be created.
+			""",
+
+		],
+
+	}
+
+)
