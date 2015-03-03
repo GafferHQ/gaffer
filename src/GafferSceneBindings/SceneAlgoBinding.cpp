@@ -36,6 +36,8 @@
 
 #include "boost/python.hpp"
 
+#include "IECore/Camera.h"
+
 #include "IECorePython/ScopedGILRelease.h"
 
 #include "GafferScene/SceneAlgo.h"
@@ -71,6 +73,17 @@ void bindSceneAlgo()
 	def( "visible", visible );
 	def( "matchingPaths", &matchingPathsHelper1 );
 	def( "matchingPaths", &matchingPathsHelper2 );
+	def( "shutter", &shutter );
+	def(
+		"camera",
+		(IECore::CameraPtr (*)( const ScenePlug *, const IECore::CompoundObject * ) )&camera,
+		( arg( "scene" ), arg( "globals" ) = object() )
+	);
+	def(
+		"camera",
+		(IECore::CameraPtr (*)( const ScenePlug *, const ScenePlug::ScenePath &, const IECore::CompoundObject * ) )&camera,
+		( arg( "scene" ), args( "cameraPath" ), arg( "globals" ) = object() )
+	);
 }
 
 } // namespace GafferSceneBindings
