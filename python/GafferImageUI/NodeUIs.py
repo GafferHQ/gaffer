@@ -115,27 +115,6 @@ GafferUI.PlugValueWidget.registerCreator(
 	labelsAndValues = writeModeLabelsAndValues
 )
 
-# OpenColorIO
-ocioColorSpaceLabelsAndValues = [ ( "None", "" ) ]
-import PyOpenColorIO as OCIO
-config = OCIO.GetCurrentConfig()
-for cs in config.getColorSpaces() :
-	ocioColorSpaceLabelsAndValues.append( ( cs.getName(), cs.getName() ) )
-
-GafferUI.PlugValueWidget.registerCreator(
-	GafferImage.OpenColorIO,
-	"inputSpace",
-	GafferUI.EnumPlugValueWidget,
-	labelsAndValues = ocioColorSpaceLabelsAndValues
-)
-
-GafferUI.PlugValueWidget.registerCreator(
-	GafferImage.OpenColorIO,
-	"outputSpace",
-	GafferUI.EnumPlugValueWidget,
-	labelsAndValues = ocioColorSpaceLabelsAndValues
-)
-
 # Merge
 mergeOperationLabelsAndValues = [ ( "Add", 0 ), ( "Atop", 1 ), ( "Divide", 2 ), ( "In", 3 ), ( "Out", 4 ), ( "Mask", 5 ), ( "Matte", 6 ), ( "Multiply", 7 ), ( "Over", 8 ), ( "Subtract", 9 ), ( "Under", 10 ) ]
 GafferUI.PlugValueWidget.registerCreator(
