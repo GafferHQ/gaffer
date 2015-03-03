@@ -39,6 +39,7 @@
 #include "IECore/NullObject.h"
 #include "IECore/Camera.h"
 #include "IECore/CoordinateSystem.h"
+#include "IECore/ClippingPlane.h"
 
 #include "Gaffer/Context.h"
 
@@ -170,6 +171,10 @@ Imath::Box3f ObjectSource::computeBound( const SceneNode::ScenePath &path, const
 	else if( object->isInstanceOf( IECore::CoordinateSystem::staticTypeId() ) )
 	{
 		result = Imath::Box3f( Imath::V3f( 0 ), Imath::V3f( 1 ) );
+	}
+	else if( object->isInstanceOf( IECore::ClippingPlane::staticTypeId() ) )
+	{
+		result = Imath::Box3f( Imath::V3f( -0.5, -0.5, 0 ), Imath::V3f( 0.5 ) );
 	}
 	else
 	{

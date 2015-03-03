@@ -93,6 +93,7 @@
 #include "GafferSceneBindings/ExternalProceduralBinding.h"
 #include "GafferSceneBindings/GroupBinding.h"
 #include "GafferSceneBindings/ScenePathBinding.h"
+#include "GafferSceneBindings/ClippingPlaneBinding.h"
 
 using namespace boost::python;
 using namespace GafferScene;
@@ -167,5 +168,6 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	bindCoordinateSystem();
 	bindExternalProcedural();
 	bindScenePath();
+	bindClippingPlane();
 
 }
