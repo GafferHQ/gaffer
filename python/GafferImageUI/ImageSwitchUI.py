@@ -1,7 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2012, John Haddon. All rights reserved.
-#  Copyright (c) 2012-2014, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,18 +34,33 @@
 #
 ##########################################################################
 
-from _GafferImageUI import *
+import Gaffer
+import GafferImage
 
-import DisplayUI
-from FormatPlugValueWidget import FormatPlugValueWidget
-from FilterPlugValueWidget import FilterPlugValueWidget
-from ChannelMaskPlugValueWidget import ChannelMaskPlugValueWidget
+Gaffer.Metadata.registerNode(
 
-import ImageReaderUI
-import ImageViewToolbar
-import ImageTransformUI
-import ConstantUI
-import ImageSwitchUI
-import NodeUIs # Put this at the bottom or we get ordering issues!
+	GafferImage.ImageSwitch,
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferImageUI" )
+	"description",
+	"""
+	Chooses between multiple input images, passing through the
+	chosen input to the output.
+	""",
+
+	plugs = {
+
+		"index" : [
+
+			"description",
+			"""
+			The index of the input which is passed through. A value
+			of 0 chooses the first input, 1 the second and so on. Values
+			larger than the number of available inputs wrap back around to
+			the beginning.
+			"""
+
+		]
+
+	}
+		
+)
