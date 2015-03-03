@@ -924,7 +924,8 @@ class DiffColumn( GafferUI.Widget ) :
 		if not patterns :
 			patterns = "*"
 		else :
-			patterns = " ".join( "*" + p + "*" if "*" not in p else p for p in patterns.split() )
+			patterns = [ p.lower() for p in patterns.split() ]
+			patterns = " ".join( "*" + p + "*" if "*" not in p else p for p in patterns )
 
 		numValidRows = 0
 		numVisibleRows = 0
@@ -933,7 +934,7 @@ class DiffColumn( GafferUI.Widget ) :
 			visible = False
 			if row.__valid :
 				numValidRows += 1
-				if Gaffer.matchMultiple( row.inspector().name(), patterns ) :
+				if Gaffer.matchMultiple( row.inspector().name().lower(), patterns ) :
 					visible = True
 
 			row.setVisible( visible )
