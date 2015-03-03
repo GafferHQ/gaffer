@@ -45,6 +45,7 @@
 #include "IECore/Display.h"
 #include "IECore/TransformBlock.h"
 #include "IECore/CoordinateSystem.h"
+#include "IECore/ClippingPlane.h"
 
 #include "Gaffer/Context.h"
 
@@ -317,6 +318,54 @@ bool outputCoordinateSystem( const ScenePlug *scene, const ScenePlug::ScenePath 
 		renderer->concatTransform( transform );
 		coordinateSystem->render( renderer );
 	}
+
+	return true;
+}
+
+void outputClippingPlanes( const ScenePlug *scene, const IECore::CompoundObject *globals, IECore::Renderer *renderer )
+{
+	const CompoundData *sets = globals->member<CompoundData>( "gaffer:sets" );
+	if( !sets )
+	{
+		return;
+	}
+
+	const PathMatcherData *clippingPlanesSet = sets->member<PathMatcherData>( "__clippingPlanes" );
+	if( !clippingPlanesSet )
+	{
+		return;
+	}
+
+	vector<string> paths;
+	clippingPlanesSet->readable().paths( paths );
+	for( vector<string>::const_iterator it = paths.begin(), eIt = paths.end(); it != eIt; ++it )
+	{
+		/// \todo We should be able to get paths out of the PathMatcher in
+		/// the first place, rather than have to convert from strings.
+		ScenePlug::ScenePath path;
+		ScenePlug::stringToPath( *it, path );
+		outputClippingPlane( scene, path, renderer );
+	}
+}
+
+bool outputClippingPlane( const ScenePlug *scene, const ScenePlug::ScenePath &path, IECore::Renderer *renderer )
+{
+	IECore::ConstClippingPlanePtr clippingPlane = runTimeCast<const IECore::ClippingPlane>( scene->object( path ) );
+	if( !clippingPlane )
+	{
+		return false;
+	}
+
+	if( !visible( scene, path ) )
+	{
+		return false;
+	}
+
+	const M44f transform = scene->fullTransform( path );
+
+	TransformBlock transformBlock( renderer );
+	renderer->concatTransform( transform );
+	clippingPlane->render( renderer );
 
 	return true;
 }
