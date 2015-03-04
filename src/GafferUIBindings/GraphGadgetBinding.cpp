@@ -108,10 +108,10 @@ static list connectionGadgets2( GraphGadget &graphGadget, const Gaffer::Node *no
 	return l;
 }
 
-static list upstreamNodeGadgets( GraphGadget &graphGadget, const Gaffer::Node *node )
+static list upstreamNodeGadgets( GraphGadget &graphGadget, const Gaffer::Node *node, size_t degreesOfSeparation )
 {
 	std::vector<NodeGadget *> nodeGadgets;
-	graphGadget.upstreamNodeGadgets( node, nodeGadgets );
+	graphGadget.upstreamNodeGadgets( node, nodeGadgets, degreesOfSeparation );
 
 	boost::python::list l;
 	for( std::vector<NodeGadget *>::const_iterator it=nodeGadgets.begin(), eIt=nodeGadgets.end(); it!=eIt; ++it )
@@ -154,7 +154,7 @@ void GafferUIBindings::bindGraphGadget()
 		.def( "connectionGadget", &connectionGadget )
 		.def( "connectionGadgets", &connectionGadgets1, ( arg_( "plug" ), arg_( "excludedNodes" ) = object() ) )
 		.def( "connectionGadgets", &connectionGadgets2, ( arg_( "node" ), arg_( "excludedNodes" ) = object() ) )
-		.def( "upstreamNodeGadgets", &upstreamNodeGadgets )
+		.def( "upstreamNodeGadgets", &upstreamNodeGadgets, ( arg( "node" ), arg( "degreesOfSeparation" ) = Imath::limits<size_t>::max() ) )
 		.def( "setNodePosition", &GraphGadget::setNodePosition )
 		.def( "getNodePosition", &GraphGadget::getNodePosition )
 		.def( "setNodeInputConnectionsMinimised", &GraphGadget::setNodeInputConnectionsMinimised )

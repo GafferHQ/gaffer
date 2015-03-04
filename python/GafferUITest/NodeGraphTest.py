@@ -924,6 +924,13 @@ class NodeGraphTest( GafferUITest.TestCase ) :
 		self.assertEqual( len( u ), 5 )
 		self.assertEqual( set( u ), set( [ "a", "b", "d", "c", "e" ] ) )
 
+		# the degreesOfSeparation argument should limit the depth
+		# of the search.
+
+		u = [ x.node().relativeName( script ) for x in g.upstreamNodeGadgets( script["c"], degreesOfSeparation = 1 ) ]
+		self.assertEqual( len( u ), 2 )
+		self.assertEqual( set( u ), set( [ "b", "d" ] ) )
+
 		# filtered nodes should be ignored
 
 		g.setFilter( Gaffer.StandardSet( [ script["f"], script["e"], script["a"] ] ) )

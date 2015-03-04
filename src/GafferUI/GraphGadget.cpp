@@ -285,7 +285,7 @@ size_t GraphGadget::connectionGadgets( const Gaffer::Node *node, std::vector<con
 	return connections.size();
 }
 
-size_t GraphGadget::upstreamNodeGadgets( const Gaffer::Node *node, std::vector<NodeGadget *> &upstreamNodeGadgets )
+size_t GraphGadget::upstreamNodeGadgets( const Gaffer::Node *node, std::vector<NodeGadget *> &upstreamNodeGadgets, size_t degreesOfSeparation )
 {
 	NodeGadget *g = nodeGadget( node );
 	if( !g )
@@ -294,19 +294,24 @@ size_t GraphGadget::upstreamNodeGadgets( const Gaffer::Node *node, std::vector<N
 	}
 
 	std::set<NodeGadget *> n;
-	upstreamNodeGadgetsWalk( g, n );
+	upstreamNodeGadgetsWalk( g, n, degreesOfSeparation );
 	std::copy( n.begin(), n.end(), back_inserter( upstreamNodeGadgets ) );
 	return 0;
 }
 
-size_t GraphGadget::upstreamNodeGadgets( const Gaffer::Node *node, std::vector<const NodeGadget *> &upstreamNodeGadgets ) const
+size_t GraphGadget::upstreamNodeGadgets( const Gaffer::Node *node, std::vector<const NodeGadget *> &upstreamNodeGadgets, size_t degreesOfSeparation ) const
 {
 	// preferring naughty casts over maintaining two identical implementations
-	return const_cast<GraphGadget *>( this )->upstreamNodeGadgets( node, reinterpret_cast<std::vector<NodeGadget *> &>( upstreamNodeGadgets ) );
+	return const_cast<GraphGadget *>( this )->upstreamNodeGadgets( node, reinterpret_cast<std::vector<NodeGadget *> &>( upstreamNodeGadgets ), degreesOfSeparation );
 }
 
-void GraphGadget::upstreamNodeGadgetsWalk( NodeGadget *gadget, std::set<NodeGadget *> &upstreamNodeGadgets )
+void GraphGadget::upstreamNodeGadgetsWalk( NodeGadget *gadget, std::set<NodeGadget *> &upstreamNodeGadgets, size_t degreesOfSeparation )
 {
+	if( !degreesOfSeparation )
+	{
+		return;
+	}
+
 	for( Gaffer::RecursiveInputPlugIterator it( gadget->node() ); it != it.end(); ++it )
 	{
 		if( ConnectionGadget *connection = connectionGadget( it->get() ) )
@@ -318,7 +323,7 @@ void GraphGadget::upstreamNodeGadgetsWalk( NodeGadget *gadget, std::set<NodeGadg
 					if( upstreamNodeGadgets.insert( inputNodeGadget ).second )
 					{
 						// inserted the node for the first time
-						upstreamNodeGadgetsWalk( inputNodeGadget, upstreamNodeGadgets );
+						upstreamNodeGadgetsWalk( inputNodeGadget, upstreamNodeGadgets, degreesOfSeparation - 1 );
 					}
 				}
 			}

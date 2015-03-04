@@ -113,8 +113,8 @@ class GraphGadget : public ContainerGadget
 		/// \note Here "upstream" nodes are defined as nodes at the end of input
 		/// connections as shown in the graph - invisible connections and
 		/// invisible nodes are not considered at all.
-		size_t upstreamNodeGadgets( const Gaffer::Node *node, std::vector<NodeGadget *> &upstreamNodeGadgets );
-		size_t upstreamNodeGadgets( const Gaffer::Node *node, std::vector<const NodeGadget *> &upstreamNodeGadgets ) const;
+		size_t upstreamNodeGadgets( const Gaffer::Node *node, std::vector<NodeGadget *> &upstreamNodeGadgets, size_t degreesOfSeparation = Imath::limits<size_t>::max() );
+		size_t upstreamNodeGadgets( const Gaffer::Node *node, std::vector<const NodeGadget *> &upstreamNodeGadgets, size_t degreesOfSeparation = Imath::limits<size_t>::max() ) const;
 
 		/// Sets the position of the specified node within the graph. This
 		/// method may be used even when the node currently has no NodeGadget
@@ -193,7 +193,7 @@ class GraphGadget : public ContainerGadget
 		ConnectionGadget *reconnectionGadgetAt( NodeGadget *gadget, const IECore::LineSegment3f &lineInGadgetSpace ) const;
 		void updateDragReconnectCandidate( const DragDropEvent &event );
 
-		void upstreamNodeGadgetsWalk( NodeGadget *gadget, std::set<NodeGadget *> &upstreamNodeGadgets );
+		void upstreamNodeGadgetsWalk( NodeGadget *gadget, std::set<NodeGadget *> &upstreamNodeGadgets, size_t degreesOfSeparation );
 
 		Gaffer::NodePtr m_root;
 		Gaffer::ScriptNodePtr m_scriptNode;
