@@ -924,12 +924,119 @@ class NodeGraphTest( GafferUITest.TestCase ) :
 		self.assertEqual( len( u ), 5 )
 		self.assertEqual( set( u ), set( [ "a", "b", "d", "c", "e" ] ) )
 
+		# the degreesOfSeparation argument should limit the depth
+		# of the search.
+
+		u = [ x.node().relativeName( script ) for x in g.upstreamNodeGadgets( script["c"], degreesOfSeparation = 1 ) ]
+		self.assertEqual( len( u ), 2 )
+		self.assertEqual( set( u ), set( [ "b", "d" ] ) )
+
 		# filtered nodes should be ignored
 
 		g.setFilter( Gaffer.StandardSet( [ script["f"], script["e"], script["a"] ] ) )
 
 		u = [ x.node().relativeName( script ) for x in g.upstreamNodeGadgets( script["f"] ) ]
 		self.assertEqual( u, [ "e" ] )
+
+	def testDownstreamNodeGadgets( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		# a -> b -> c -> e -> f
+		#           |
+		#           v
+		#			d
+
+		script["a"] = GafferTest.AddNode()
+		script["b"] = GafferTest.AddNode()
+		script["c"] = GafferTest.AddNode()
+		script["d"] = GafferTest.AddNode()
+		script["e"] = GafferTest.AddNode()
+		script["f"] = GafferTest.AddNode()
+
+		script["b"]["op1"].setInput( script["a"]["sum"] )
+		script["c"]["op1"].setInput( script["b"]["sum"] )
+		script["d"]["op1"].setInput( script["c"]["sum"] )
+		script["e"]["op1"].setInput( script["c"]["sum"] )
+		script["f"]["op1"].setInput( script["e"]["sum"] )
+
+		g = GafferUI.GraphGadget( script )
+
+		u = [ x.node().relativeName( script ) for x in g.downstreamNodeGadgets( script["b"] ) ]
+		self.assertEqual( len( u ), 4 )
+		self.assertEqual( set( u ), set( [ "c", "d", "e", "f" ] ) )
+
+		u = [ x.node().relativeName( script ) for x in g.downstreamNodeGadgets( script["e"] ) ]
+		self.assertEqual( len( u ), 1 )
+		self.assertEqual( set( u ), set( [ "f" ] ) )
+
+		u = [ x.node().relativeName( script ) for x in g.downstreamNodeGadgets( script["c"], degreesOfSeparation = 1 ) ]
+		self.assertEqual( len( u ), 2 )
+		self.assertEqual( set( u ), set( [ "d", "e" ] ) )
+
+	def testConnectedNodeGadgets( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		# a -> b -> c -> e -> f
+		#           |
+		#           v
+		#			d
+
+		script["a"] = GafferTest.AddNode()
+		script["b"] = GafferTest.AddNode()
+		script["c"] = GafferTest.AddNode()
+		script["d"] = GafferTest.AddNode()
+		script["e"] = GafferTest.AddNode()
+		script["f"] = GafferTest.AddNode()
+
+		script["b"]["op1"].setInput( script["a"]["sum"] )
+		script["c"]["op1"].setInput( script["b"]["sum"] )
+		script["d"]["op1"].setInput( script["c"]["sum"] )
+		script["e"]["op1"].setInput( script["c"]["sum"] )
+		script["f"]["op1"].setInput( script["e"]["sum"] )
+
+		g = GafferUI.GraphGadget( script )
+
+		# test traversing in both directions
+
+		u = [ x.node().relativeName( script ) for x in g.connectedNodeGadgets( script["b"] ) ]
+		self.assertEqual( set( u ), set( [ "a", "c", "d", "e", "f" ] ) )
+
+		u = [ x.node().relativeName( script ) for x in g.connectedNodeGadgets( script["e"] ) ]
+		self.assertEqual( set( u ), set( [ "a", "b", "c", "d", "f" ] ) )
+
+		u = [ x.node().relativeName( script ) for x in g.connectedNodeGadgets( script["c"], degreesOfSeparation = 1 ) ]
+		self.assertEqual( set( u ), set( [ "b", "d", "e" ] ) )
+
+		# test traversing upstream
+
+		u = [ x.node().relativeName( script ) for x in g.connectedNodeGadgets( script["c"], direction = Gaffer.Plug.Direction.In ) ]
+		self.assertEqual( set( u ), set( [ "a", "b" ] ) )
+
+		u = [ x.node().relativeName( script ) for x in g.connectedNodeGadgets( script["c"], direction = Gaffer.Plug.Direction.In, degreesOfSeparation = 1 ) ]
+		self.assertEqual( set( u ), set( [ "b" ] ) )
+
+		# test traversing downstream
+
+		u = [ x.node().relativeName( script ) for x in g.connectedNodeGadgets( script["c"], direction = Gaffer.Plug.Direction.Out ) ]
+		self.assertEqual( set( u ), set( [ "d", "e", "f" ] ) )
+
+		u = [ x.node().relativeName( script ) for x in g.connectedNodeGadgets( script["c"], direction = Gaffer.Plug.Direction.Out, degreesOfSeparation = 1 ) ]
+		self.assertEqual( set( u ), set( [ "d", "e" ] ) )
+
+		# test that invisible nodes are ignored
+
+		g.setFilter( Gaffer.StandardSet( [ script["f"], script["e"], script["c"] ] ) )
+
+		u = [ x.node().relativeName( script ) for x in g.connectedNodeGadgets( script["e"] ) ]
+		self.assertEqual( set( u ), set( [ "f", "c" ] ) )
+
+		u = [ x.node().relativeName( script ) for x in g.connectedNodeGadgets( script["e"], direction = Gaffer.Plug.Direction.In ) ]
+		self.assertEqual( set( u ), set( [ "c" ] ) )
+
+		u = [ x.node().relativeName( script ) for x in g.connectedNodeGadgets( script["e"], direction = Gaffer.Plug.Direction.Out ) ]
+		self.assertEqual( set( u ), set( [ "f" ] ) )
 
 	def testSelectionHighlighting( self ) :
 

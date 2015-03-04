@@ -37,6 +37,9 @@
 
 from __future__ import with_statement
 
+import sys
+import collections
+
 import IECore
 
 import Gaffer
@@ -66,278 +69,257 @@ def appendDefinitions( menuDefinition, prefix="" ) :
 	menuDefinition.append( prefix + "/Select Connected/Inputs", { "command" : selectInputs, "active" : __selectionAvailable } )
 	menuDefinition.append( prefix + "/Select Connected/Add Inputs", { "command" : selectAddInputs, "active" : __selectionAvailable } )
 	menuDefinition.append( prefix + "/Select Connected/InputsDivider", { "divider" : True } )
+
+	menuDefinition.append( prefix + "/Select Connected/Upstream", { "command" : selectUpstream, "active" : __selectionAvailable } )
+	menuDefinition.append( prefix + "/Select Connected/Add Upstream", { "command" : selectAddUpstream, "active" : __selectionAvailable } )
+	menuDefinition.append( prefix + "/Select Connected/UpstreamDivider", { "divider" : True } )
+
 	menuDefinition.append( prefix + "/Select Connected/Outputs", { "command" : selectOutputs, "active" : __selectionAvailable } )
 	menuDefinition.append( prefix + "/Select Connected/Add Outputs", { "command" : selectAddOutputs, "active" : __selectionAvailable } )
+	menuDefinition.append( prefix + "/Select Connected/OutputsDivider", { "divider" : True } )
+
+	menuDefinition.append( prefix + "/Select Connected/Downstream", { "command" : selectDownstream, "active" : __selectionAvailable } )
+	menuDefinition.append( prefix + "/Select Connected/Add Downstream", { "command" : selectAddDownstream, "active" : __selectionAvailable } )
+	menuDefinition.append( prefix + "/Select Connected/DownstreamDivider", { "divider" : True } )
+
+	menuDefinition.append( prefix + "/Select Connected/Add All", { "command" : selectConnected, "active" : __selectionAvailable } )
+
+__Scope = collections.namedtuple( "Scope", [ "scriptWindow", "script", "parent", "nodeGraph" ] )
+
+## Returns the scope in which an edit menu item should operate. The return
+# value has "scriptWindow", "script", "root" and "nodeGraph" attributes.
+# The "nodeGraph" attribute may be None if no NodeGraph can be found. Note
+# that in many cases user expectation is that an operation will only apply
+# to nodes currently visible within the NodeGraph, and that nodes can be
+# filtered within the NodeGraph.
+def scope( menu ) :
+
+	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
+
+	nodeGraph = None
+	## \todo Add public methods for querying focus.
+	focusWidget = GafferUI.Widget._owner( scriptWindow._qtWidget().focusWidget() )
+	if focusWidget is not None :
+		nodeGraph = focusWidget.ancestor( GafferUI.NodeGraph )
+
+	if nodeGraph is None :
+		nodeGraphs = scriptWindow.getLayout().editors( GafferUI.NodeGraph )
+		if nodeGraphs :
+			nodeGraph = nodeGraphs[0]
+
+	if nodeGraph is not None :
+		parent = nodeGraph.graphGadget().getRoot()
+	else :
+		parent = scriptWindow.scriptNode()
+
+	return __Scope( scriptWindow, scriptWindow.scriptNode(), parent, nodeGraph )
 
 ## A function suitable as the command for an Edit/Undo menu item. It must
 # be invoked from a menu that has a ScriptWindow in its ancestry.
 def undo( menu ) :
 
-	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
-	script = scriptWindow.scriptNode()
-	script.undo()
+	scope( menu ).script.undo()
 
 ## A function suitable as the command for an Edit/Redo menu item. It must
 # be invoked from a menu that has a ScriptWindow in its ancestry.
 def redo( menu ) :
 
-	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
-	script = scriptWindow.scriptNode()
-	script.redo()
+	scope( menu ).script.redo()
 
 ## A function suitable as the command for an Edit/Cut menu item. It must
 # be invoked from a menu that has a ScriptWindow in its ancestry.
 def cut( menu ) :
 
-	script, parent = __scriptAndParent( menu )
-	with Gaffer.UndoContext( script ) :
-		script.cut( parent, script.selection() )
+	s = scope( menu )
+	with Gaffer.UndoContext( s.script ) :
+		s.script.cut( s.parent, s.script.selection() )
 
 ## A function suitable as the command for an Edit/Copy menu item. It must
 # be invoked from a menu that has a ScriptWindow in its ancestry.
 def copy( menu ) :
 
-	script, parent = __scriptAndParent( menu )
-	script.copy( parent, script.selection() )
+	s = scope( menu )
+	s.script.copy( s.parent, s.script.selection() )
 
 ## A function suitable as the command for an Edit/Paste menu item. It must
 # be invoked from a menu that has a ScriptWindow in its ancestry.
 def paste( menu ) :
 
-	script, parent = __scriptAndParent( menu )
-	originalSelection = Gaffer.StandardSet( iter( script.selection() ) )
+	s = scope( menu )
+	originalSelection = Gaffer.StandardSet( iter( s.script.selection() ) )
 
-	with Gaffer.UndoContext( script ) :
+	with Gaffer.UndoContext( s.script ) :
 
-		script.paste( parent )
+		s.script.paste( s.parent )
 
 		# try to get the new nodes connected to the original selection
-		nodeGraph = __nodeGraph( menu, focussedOnly=False )
-		if nodeGraph is None :
+		if s.nodeGraph is None :
 			return
 
-		nodeGraph.graphGadget().getLayout().connectNodes( nodeGraph.graphGadget(), script.selection(), originalSelection )
+		s.nodeGraph.graphGadget().getLayout().connectNodes( s.nodeGraph.graphGadget(), s.script.selection(), originalSelection )
 
 		# position the new nodes sensibly
 
-		bound = nodeGraph.bound()
+		bound = s.nodeGraph.bound()
 		mousePosition = GafferUI.Widget.mousePosition()
 		if bound.intersects( mousePosition ) :
 			fallbackPosition = mousePosition - bound.min
 		else :
 			fallbackPosition = bound.center() - bound.min
 
-		fallbackPosition = nodeGraph.graphGadgetWidget().getViewportGadget().rasterToGadgetSpace(
+		fallbackPosition = s.nodeGraph.graphGadgetWidget().getViewportGadget().rasterToGadgetSpace(
 			IECore.V2f( fallbackPosition.x, fallbackPosition.y ),
-			gadget = nodeGraph.graphGadget()
+			gadget = s.nodeGraph.graphGadget()
 		).p0
 		fallbackPosition = IECore.V2f( fallbackPosition.x, fallbackPosition.y )
 
-		nodeGraph.graphGadget().getLayout().positionNodes( nodeGraph.graphGadget(), script.selection(), fallbackPosition )
+		s.nodeGraph.graphGadget().getLayout().positionNodes( s.nodeGraph.graphGadget(), s.script.selection(), fallbackPosition )
 
-		nodeGraph.frame( script.selection(), extend = True )
+		s.nodeGraph.frame( s.script.selection(), extend = True )
 
 ## A function suitable as the command for an Edit/Delete menu item. It must
 # be invoked from a menu that has a ScriptWindow in its ancestry.
 def delete( menu ) :
 
-	script, parent = __scriptAndParent( menu )
-	with Gaffer.UndoContext( script ) :
-		script.deleteNodes( parent, script.selection() )
+	s = scope( menu )
+	with Gaffer.UndoContext( s.script ) :
+		s.script.deleteNodes( s.parent, s.script.selection() )
 
 ## A function suitable as the command for an Edit/Find menu item.  It must
 # be invoked from a menu that has a ScriptWindow in its ancestry.
 def find( menu ) :
 
-	script, parent = __scriptAndParent( menu )
-	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
+	s = scope( menu )
 
 	try :
-		findDialogue = scriptWindow.__findDialogue
+		findDialogue = s.scriptWindow.__findDialogue
 	except AttributeError :
-		findDialogue = GafferUI.NodeFinderDialogue( parent )
-		scriptWindow.addChildWindow( findDialogue )
-		scriptWindow.__findDialogue = findDialogue
+		findDialogue = GafferUI.NodeFinderDialogue( s.parent )
+		s.scriptWindow.addChildWindow( findDialogue )
+		s.scriptWindow.__findDialogue = findDialogue
 
-	findDialogue.setScope( parent )
+	findDialogue.setScope( s.parent )
 	findDialogue.setVisible( True )
 
 ## A function suitable as the command for an Edit/Arrange menu item.  It must
 # be invoked from a menu that has a ScriptWindow in its ancestry.
 def arrange( menu ) :
 
-	script, parent = __scriptAndParent( menu )
-	nodeGraph = __nodeGraph( menu, focussedOnly=False )
-	if not nodeGraph :
+	s = scope( menu )
+	if not s.nodeGraph :
 		return
 
-	graph = nodeGraph.graphGadget()
+	graph = s.nodeGraph.graphGadget()
 
-	nodes = script.selection()
+	nodes = s.script.selection()
 	if not nodes :
 		nodes = Gaffer.StandardSet( graph.getRoot().children( Gaffer.Node ) )
 
-	with Gaffer.UndoContext( script ) :
+	with Gaffer.UndoContext( s.script ) :
 		graph.getLayout().layoutNodes( graph, nodes )
 
 ## A function suitable as the command for an Edit/Select All menu item. It must
 # be invoked from a menu that has a ScriptWindow in its ancestry.
 def selectAll( menu ) :
 
-	script, parent = __scriptAndParent( menu )
-	for c in parent.children( Gaffer.Node ) :
-		script.selection().add( c )
+	s = scope( menu )
+	if s.nodeGraph is None :
+		return
+
+	graphGadget = s.nodeGraph.graphGadget()
+	for node in s.parent.children( Gaffer.Node ) :
+		if graphGadget.nodeGadget( node ) is not None :
+			s.script.selection().add( node )
 
 ## A function suitable as the command for an Edit/Select None menu item. It must
 # be invoked from a menu that has a ScriptWindow in its ancestry.
 def selectNone( menu ) :
 
-	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
-	script = scriptWindow.scriptNode()
-
-	script.selection().clear()
+	scope( menu ).script.selection().clear()
 
 ## The command function for the default "Edit/Select Connected/Inputs" menu item. It must
 # be invoked from a menu that has a ScriptWindow in its ancestry.
 def selectInputs( menu ) :
 
-	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
-	script = scriptWindow.scriptNode()
-
-	inputs = Gaffer.StandardSet()
-	for node in script.selection() :
-		__inputNodes( node, inputs )
-
-	selection = script.selection()
-	selection.clear()
-	for node in inputs :
-		selection.add( node )
+	__selectConnected( menu, Gaffer.Plug.Direction.In, degreesOfSeparation = 1, add = False )
 
 ## The command function for the default "Edit/Select Connected/Add Inputs" menu item. It must
 # be invoked from a menu that has a ScriptWindow in its ancestry.
 def selectAddInputs( menu ) :
 
-	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
-	script = scriptWindow.scriptNode()
+	__selectConnected( menu, Gaffer.Plug.Direction.In, degreesOfSeparation = 1, add = True )
 
-	inputs = Gaffer.StandardSet()
-	for node in script.selection() :
-		__inputNodes( node, inputs )
+## The command function for the default "Edit/Select Connected/Upstream" menu item. It must
+# be invoked from a menu that has a ScriptWindow in its ancestry.
+def selectUpstream( menu ) :
 
-	selection = script.selection()
-	for node in inputs :
-		selection.add( node )
+	__selectConnected( menu, Gaffer.Plug.Direction.In, degreesOfSeparation = sys.maxint, add = False )
+
+## The command function for the default "Edit/Select Connected/Add Upstream" menu item. It must
+# be invoked from a menu that has a ScriptWindow in its ancestry.
+def selectAddUpstream( menu ) :
+
+	__selectConnected( menu, Gaffer.Plug.Direction.In, degreesOfSeparation = sys.maxint, add = True )
 
 ## The command function for the default "Edit/Select Connected/Outputs" menu item. It must
 # be invoked from a menu that has a ScriptWindow in its ancestry.
 def selectOutputs( menu ) :
 
-	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
-	script = scriptWindow.scriptNode()
-
-	outputs = Gaffer.StandardSet()
-	for node in script.selection() :
-		__outputNodes( node, outputs )
-
-	selection = script.selection()
-	selection.clear()
-	for node in outputs :
-		selection.add( node )
+	__selectConnected( menu, Gaffer.Plug.Direction.Out, degreesOfSeparation = 1, add = False )
 
 ## The command function for the default "Edit/Select Connected/Add Outputs" menu item. It must
 # be invoked from a menu that has a ScriptWindow in its ancestry.
 def selectAddOutputs( menu ) :
 
-	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
-	script = scriptWindow.scriptNode()
+	__selectConnected( menu, Gaffer.Plug.Direction.Out, degreesOfSeparation = 1, add = True )
 
-	outputs = Gaffer.StandardSet()
-	for node in script.selection() :
-		__outputNodes( node, outputs )
+## The command function for the default "Edit/Select Connected/Downstream" menu item. It must
+# be invoked from a menu that has a ScriptWindow in its ancestry.
+def selectDownstream( menu ) :
 
-	selection = script.selection()
-	for node in outputs :
-		selection.add( node )
+	__selectConnected( menu, Gaffer.Plug.Direction.Out, degreesOfSeparation = sys.maxint, add = False )
+
+## The command function for the default "Edit/Select Connected/Add Downstream" menu item. It must
+# be invoked from a menu that has a ScriptWindow in its ancestry.
+def selectAddDownstream( menu ) :
+
+	__selectConnected( menu, Gaffer.Plug.Direction.Out, degreesOfSeparation = sys.maxint, add = True )
+
+## The command function for the default "Edit/Select Connected/Add All" menu item. It must
+# be invoked from a menu that has a ScriptWindow in its ancestry.
+def selectConnected( menu ) :
+
+	__selectConnected( menu, Gaffer.Plug.Direction.Invalid, degreesOfSeparation = sys.maxint, add = True )
+
+
+def __selectConnected( menu, direction, degreesOfSeparation, add ) :
+
+	s = scope( menu )
+	if s.nodeGraph is None :
+		return
+
+	connected = Gaffer.StandardSet()
+	for node in s.script.selection() :
+		connected.add( [ g.node() for g in s.nodeGraph.graphGadget().connectedNodeGadgets( node, direction, degreesOfSeparation ) ] )
+
+	selection = s.script.selection()
+	if not add :
+		selection.clear()
+	selection.add( connected )
 
 def __selectionAvailable( menu ) :
 
-	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
-	return True if scriptWindow.scriptNode().selection().size() else False
+	return True if scope( menu ).script.selection().size() else False
 
 def __pasteAvailable( menu ) :
 
-	scriptNode = menu.ancestor( GafferUI.ScriptWindow ).scriptNode()
-	root = scriptNode.ancestor( Gaffer.ApplicationRoot )
+	root = scope( menu ).script.ancestor( Gaffer.ApplicationRoot )
 	return isinstance( root.getClipboardContents(), IECore.StringData )
-
-def __nodeGraph( menu, focussedOnly=True ) :
-
-	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
-
-	nodeGraph = None
-	## \todo Does this belong as a Window.focussedChild() method?
-	focusWidget = GafferUI.Widget._owner( scriptWindow._qtWidget().focusWidget() )
-	if focusWidget is not None :
-		nodeGraph = focusWidget.ancestor( GafferUI.NodeGraph )
-
-	if nodeGraph is not None or focussedOnly :
-		return nodeGraph
-
-	nodeGraphs = scriptWindow.getLayout().editors( GafferUI.NodeGraph )
-	return nodeGraphs[0] if nodeGraphs else None
-
-def __scriptAndParent( menu ) :
-
-	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
-	script = scriptWindow.scriptNode()
-
-	nodeGraph = __nodeGraph( menu )
-	if nodeGraph is not None :
-		parent = nodeGraph.graphGadget().getRoot()
-	else :
-		parent = script
-
-	return script, parent
 
 def __undoAvailable( menu ) :
 
-	scriptNode = menu.ancestor( GafferUI.ScriptWindow ).scriptNode()
-	return scriptNode.undoAvailable()
+	return scope( menu ).script.undoAvailable()
 
 def __redoAvailable( menu ) :
 
-	scriptNode = menu.ancestor( GafferUI.ScriptWindow ).scriptNode()
-	return scriptNode.redoAvailable()
-
-def __inputNodes( node, inputNodes ) :
-
-	def __walkPlugs( parent ) :
-
-		for plug in parent :
-			if isinstance( plug, Gaffer.Plug ) :
-				inputPlug = plug.getInput()
-				if inputPlug is not None :
-					inputNode = inputPlug.node()
-					if inputNode is not None and not inputNode.isSame( node ) :
-						inputNodes.add( inputNode )
-				else :
-					__walkPlugs( plug )
-
-	__walkPlugs( node )
-
-def __outputNodes( node, outputNodes ) :
-
-	def __walkPlugs( parent ) :
-
-		for plug in parent :
-			if isinstance( plug, Gaffer.Plug ) :
-				outputPlugs = plug.outputs()
-				if outputPlugs :
-					for outputPlug in outputPlugs :
-						outputNode = outputPlug.node()
-						if outputNode is not None and not outputNode.isSame( node ) :
-							outputNodes.add( outputNode )
-				else :
-					__walkPlugs( plug )
-
-	__walkPlugs( node )
+	return scope( menu ).script.redoAvailable()

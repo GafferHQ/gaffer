@@ -113,8 +113,24 @@ class GraphGadget : public ContainerGadget
 		/// \note Here "upstream" nodes are defined as nodes at the end of input
 		/// connections as shown in the graph - invisible connections and
 		/// invisible nodes are not considered at all.
-		size_t upstreamNodeGadgets( const Gaffer::Node *node, std::vector<NodeGadget *> &upstreamNodeGadgets );
-		size_t upstreamNodeGadgets( const Gaffer::Node *node, std::vector<const NodeGadget *> &upstreamNodeGadgets ) const;
+		size_t upstreamNodeGadgets( const Gaffer::Node *node, std::vector<NodeGadget *> &upstreamNodeGadgets, size_t degreesOfSeparation = Imath::limits<size_t>::max() );
+		size_t upstreamNodeGadgets( const Gaffer::Node *node, std::vector<const NodeGadget *> &upstreamNodeGadgets, size_t degreesOfSeparation = Imath::limits<size_t>::max() ) const;
+
+		/// Finds all the downstream NodeGadgets connected to the specified node
+		/// and appends them to the specified vector. Returns the new size of the vector.
+		/// \note Here "downstream" nodes are defined as nodes at the end of output
+		/// connections as shown in the graph - invisible connections and
+		/// invisible nodes are not considered at all.
+		size_t downstreamNodeGadgets( const Gaffer::Node *node, std::vector<NodeGadget *> &downstreamNodeGadgets, size_t degreesOfSeparation = Imath::limits<size_t>::max() );
+		size_t downstreamNodeGadgets( const Gaffer::Node *node, std::vector<const NodeGadget *> &downstreamNodeGadgets, size_t degreesOfSeparation = Imath::limits<size_t>::max() ) const;
+
+		/// Finds all the NodeGadgets connected to the specified node
+		/// and appends them to the specified vector. Returns the new size of the vector.
+		/// \note Here "connected" nodes are defined as nodes at the end of
+		/// connections as shown in the graph - invisible connections and
+		/// invisible nodes are not considered at all.
+		size_t connectedNodeGadgets( const Gaffer::Node *node, std::vector<NodeGadget *> &connectedNodeGadgets, Gaffer::Plug::Direction direction = Gaffer::Plug::Invalid, size_t degreesOfSeparation = Imath::limits<size_t>::max() );
+		size_t connectedNodeGadgets( const Gaffer::Node *node, std::vector<const NodeGadget *> &connectedNodeGadgets, Gaffer::Plug::Direction direction = Gaffer::Plug::Invalid, size_t degreesOfSeparation = Imath::limits<size_t>::max() ) const;
 
 		/// Sets the position of the specified node within the graph. This
 		/// method may be used even when the node currently has no NodeGadget
@@ -193,7 +209,7 @@ class GraphGadget : public ContainerGadget
 		ConnectionGadget *reconnectionGadgetAt( NodeGadget *gadget, const IECore::LineSegment3f &lineInGadgetSpace ) const;
 		void updateDragReconnectCandidate( const DragDropEvent &event );
 
-		void upstreamNodeGadgetsWalk( NodeGadget *gadget, std::set<NodeGadget *> &upstreamNodeGadgets );
+		void connectedNodeGadgetsWalk( NodeGadget *gadget, std::set<NodeGadget *> &connectedGadgets, Gaffer::Plug::Direction direction, size_t degreesOfSeparation );
 
 		Gaffer::NodePtr m_root;
 		Gaffer::ScriptNodePtr m_scriptNode;
