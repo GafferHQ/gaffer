@@ -46,6 +46,7 @@ import GafferCortexUI
 ## Supported userData entries :
 #
 # ["UI"]["sizeEditable"]
+# ["UI"]["showIndices"]
 #
 # Supported child parameter userData entries :
 #
@@ -79,6 +80,10 @@ class _PlugValueWidget( GafferCortexUI.CompoundParameterValueWidget._PlugValueWi
 		header = [ IECore.CamelCase.toSpaced( x ) for x in self._parameter().keys() ]
 		columnToolTips = [ self._parameterToolTip( self._parameterHandler().childParameterHandler( x ) ) for x in self._parameter().values() ]
 
+		showIndices = True
+		with IECore.IgnoredExceptions( KeyError ) :
+			showIndices = self._parameterHandler().parameter().userData()["UI"]["showIndices"].value
+
 		sizeEditable = True
 		with IECore.IgnoredExceptions( KeyError ) :
 			sizeEditable = self._parameterHandler().parameter().userData()["UI"]["sizeEditable"].value
@@ -86,6 +91,7 @@ class _PlugValueWidget( GafferCortexUI.CompoundParameterValueWidget._PlugValueWi
 		self.__vectorDataWidget = _VectorDataWidget(
 			header = header,
 			columnToolTips = columnToolTips,
+			showIndices = showIndices,
 			sizeEditable = sizeEditable,
 		)
 
@@ -214,12 +220,13 @@ class _PresetEditor( GafferUI.ListContainer ) :
 
 class _VectorDataWidget( GafferUI.VectorDataWidget ) :
 
-	def __init__( self, header, columnToolTips, sizeEditable ) :
+	def __init__( self, header, columnToolTips, showIndices, sizeEditable ) :
 
 		GafferUI.VectorDataWidget.__init__(
 			self,
 			header = header,
 			columnToolTips = columnToolTips,
+			showIndices = showIndices,
 			sizeEditable = sizeEditable,
 		)
 
