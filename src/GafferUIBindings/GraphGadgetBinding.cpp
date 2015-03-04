@@ -121,6 +121,32 @@ static list upstreamNodeGadgets( GraphGadget &graphGadget, const Gaffer::Node *n
 	return l;
 }
 
+static list downstreamNodeGadgets( GraphGadget &graphGadget, const Gaffer::Node *node, size_t degreesOfSeparation )
+{
+	std::vector<NodeGadget *> nodeGadgets;
+	graphGadget.downstreamNodeGadgets( node, nodeGadgets, degreesOfSeparation );
+
+	boost::python::list l;
+	for( std::vector<NodeGadget *>::const_iterator it=nodeGadgets.begin(), eIt=nodeGadgets.end(); it!=eIt; ++it )
+	{
+		l.append( NodeGadgetPtr( *it ) );
+	}
+	return l;
+}
+
+static list connectedNodeGadgets( GraphGadget &graphGadget, const Gaffer::Node *node, Gaffer::Plug::Direction direction, size_t degreesOfSeparation )
+{
+	std::vector<NodeGadget *> nodeGadgets;
+	graphGadget.connectedNodeGadgets( node, nodeGadgets, direction, degreesOfSeparation );
+
+	boost::python::list l;
+	for( std::vector<NodeGadget *>::const_iterator it=nodeGadgets.begin(), eIt=nodeGadgets.end(); it!=eIt; ++it )
+	{
+		l.append( NodeGadgetPtr( *it ) );
+	}
+	return l;
+}
+
 static void setLayout( GraphGadget &g, GraphLayoutPtr l )
 {
 	return g.setLayout( l );
@@ -155,6 +181,8 @@ void GafferUIBindings::bindGraphGadget()
 		.def( "connectionGadgets", &connectionGadgets1, ( arg_( "plug" ), arg_( "excludedNodes" ) = object() ) )
 		.def( "connectionGadgets", &connectionGadgets2, ( arg_( "node" ), arg_( "excludedNodes" ) = object() ) )
 		.def( "upstreamNodeGadgets", &upstreamNodeGadgets, ( arg( "node" ), arg( "degreesOfSeparation" ) = Imath::limits<size_t>::max() ) )
+		.def( "downstreamNodeGadgets", &downstreamNodeGadgets, ( arg( "node" ), arg( "degreesOfSeparation" ) = Imath::limits<size_t>::max() ) )
+		.def( "connectedNodeGadgets", &connectedNodeGadgets, ( arg( "node" ), arg( "direction" ) = Gaffer::Plug::Invalid, arg( "degreesOfSeparation" ) = Imath::limits<size_t>::max() ) )
 		.def( "setNodePosition", &GraphGadget::setNodePosition )
 		.def( "getNodePosition", &GraphGadget::getNodePosition )
 		.def( "setNodeInputConnectionsMinimised", &GraphGadget::setNodeInputConnectionsMinimised )
