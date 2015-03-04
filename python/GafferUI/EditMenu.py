@@ -37,6 +37,7 @@
 
 from __future__ import with_statement
 
+import sys
 import collections
 
 import IECore
@@ -68,8 +69,20 @@ def appendDefinitions( menuDefinition, prefix="" ) :
 	menuDefinition.append( prefix + "/Select Connected/Inputs", { "command" : selectInputs, "active" : __selectionAvailable } )
 	menuDefinition.append( prefix + "/Select Connected/Add Inputs", { "command" : selectAddInputs, "active" : __selectionAvailable } )
 	menuDefinition.append( prefix + "/Select Connected/InputsDivider", { "divider" : True } )
+
+	menuDefinition.append( prefix + "/Select Connected/Upstream", { "command" : selectUpstream, "active" : __selectionAvailable } )
+	menuDefinition.append( prefix + "/Select Connected/Add Upstream", { "command" : selectAddUpstream, "active" : __selectionAvailable } )
+	menuDefinition.append( prefix + "/Select Connected/UpstreamDivider", { "divider" : True } )
+
 	menuDefinition.append( prefix + "/Select Connected/Outputs", { "command" : selectOutputs, "active" : __selectionAvailable } )
 	menuDefinition.append( prefix + "/Select Connected/Add Outputs", { "command" : selectAddOutputs, "active" : __selectionAvailable } )
+	menuDefinition.append( prefix + "/Select Connected/OutputsDivider", { "divider" : True } )
+
+	menuDefinition.append( prefix + "/Select Connected/Downstream", { "command" : selectDownstream, "active" : __selectionAvailable } )
+	menuDefinition.append( prefix + "/Select Connected/Add Downstream", { "command" : selectAddDownstream, "active" : __selectionAvailable } )
+	menuDefinition.append( prefix + "/Select Connected/DownstreamDivider", { "divider" : True } )
+
+	menuDefinition.append( prefix + "/Select Connected/Add All", { "command" : selectConnected, "active" : __selectionAvailable } )
 
 __Scope = collections.namedtuple( "Scope", [ "scriptWindow", "script", "parent", "nodeGraph" ] )
 
@@ -236,6 +249,18 @@ def selectAddInputs( menu ) :
 
 	__selectConnected( menu, Gaffer.Plug.Direction.In, degreesOfSeparation = 1, add = True )
 
+## The command function for the default "Edit/Select Connected/Upstream" menu item. It must
+# be invoked from a menu that has a ScriptWindow in its ancestry.
+def selectUpstream( menu ) :
+
+	__selectConnected( menu, Gaffer.Plug.Direction.In, degreesOfSeparation = sys.maxint, add = False )
+
+## The command function for the default "Edit/Select Connected/Add Upstream" menu item. It must
+# be invoked from a menu that has a ScriptWindow in its ancestry.
+def selectAddUpstream( menu ) :
+
+	__selectConnected( menu, Gaffer.Plug.Direction.In, degreesOfSeparation = sys.maxint, add = True )
+
 ## The command function for the default "Edit/Select Connected/Outputs" menu item. It must
 # be invoked from a menu that has a ScriptWindow in its ancestry.
 def selectOutputs( menu ) :
@@ -247,6 +272,25 @@ def selectOutputs( menu ) :
 def selectAddOutputs( menu ) :
 
 	__selectConnected( menu, Gaffer.Plug.Direction.Out, degreesOfSeparation = 1, add = True )
+
+## The command function for the default "Edit/Select Connected/Downstream" menu item. It must
+# be invoked from a menu that has a ScriptWindow in its ancestry.
+def selectDownstream( menu ) :
+
+	__selectConnected( menu, Gaffer.Plug.Direction.Out, degreesOfSeparation = sys.maxint, add = False )
+
+## The command function for the default "Edit/Select Connected/Add Downstream" menu item. It must
+# be invoked from a menu that has a ScriptWindow in its ancestry.
+def selectAddDownstream( menu ) :
+
+	__selectConnected( menu, Gaffer.Plug.Direction.Out, degreesOfSeparation = sys.maxint, add = True )
+
+## The command function for the default "Edit/Select Connected/Add All" menu item. It must
+# be invoked from a menu that has a ScriptWindow in its ancestry.
+def selectConnected( menu ) :
+
+	__selectConnected( menu, Gaffer.Plug.Direction.Invalid, degreesOfSeparation = sys.maxint, add = True )
+
 
 def __selectConnected( menu, direction, degreesOfSeparation, add ) :
 
