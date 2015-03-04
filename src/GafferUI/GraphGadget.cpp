@@ -833,11 +833,11 @@ bool GraphGadget::buttonPress( GadgetPtr gadget, const ButtonEvent &event )
 				backdrop->framed( affectedNodes );
 			}
 
-			if( event.modifiers & ButtonEvent::Alt )
+			if( ( event.modifiers & ButtonEvent::Alt ) || ( event.modifiers & ButtonEvent::Control ) )
 			{
-				std::vector<NodeGadget *> upstream;
-				upstreamNodeGadgets( node, upstream );
-				for( std::vector<NodeGadget *>::const_iterator it = upstream.begin(), eIt = upstream.end(); it != eIt; ++it )
+				std::vector<NodeGadget *> connected;
+				connectedNodeGadgets( node, connected, event.modifiers & ButtonEvent::Alt ? Gaffer::Plug::In : Gaffer::Plug::Out );
+				for( std::vector<NodeGadget *>::const_iterator it = connected.begin(), eIt = connected.end(); it != eIt; ++it )
 				{
 					affectedNodes.push_back( (*it)->node() );
 				}
