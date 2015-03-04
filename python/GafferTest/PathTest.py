@@ -104,11 +104,11 @@ class PathTest( GafferTest.TestCase ) :
 		filter = Gaffer.FileNamePathFilter( [ "*.gfr" ] )
 
 		p.setFilter( filter )
-		self.failUnless( p.getFilter() is filter )
+		self.failUnless( p.getFilter().isSame( filter ) )
 		self.assertEqual( len( changedPaths ), 1 )
 
 		p.setFilter( filter )
-		self.failUnless( p.getFilter() is filter )
+		self.failUnless( p.getFilter().isSame( filter ) )
 		self.assertEqual( len( changedPaths ), 1 )
 
 		p.setFilter( None )
@@ -116,7 +116,7 @@ class PathTest( GafferTest.TestCase ) :
 		self.assertEqual( len( changedPaths ), 2 )
 
 		p.setFilter( filter )
-		self.failUnless( p.getFilter() is filter )
+		self.failUnless( p.getFilter().isSame( filter ) )
 		self.assertEqual( len( changedPaths ), 3 )
 
 		filter.setEnabled( False )
@@ -132,7 +132,7 @@ class PathTest( GafferTest.TestCase ) :
 
 		f = Gaffer.FileNamePathFilter( [ "*.exr" ] )
 		p = Gaffer.Path( "/test/path", filter = f )
-		self.failUnless( p.getFilter() is f )
+		self.failUnless( p.getFilter().isSame( f ) )
 
 	def testInfo( self ) :
 
@@ -195,6 +195,96 @@ class PathTest( GafferTest.TestCase ) :
 
 		self.assertEqual( self.TestPath( "a/b" ), self.TestPath( "a/b" ) )
 		self.assertNotEqual( self.TestPath( "/a/b" ), self.TestPath( "a/b" ) )
+
+	def testFilterSignals( self ) :
+
+		p = Gaffer.Path( "/" )
+
+		f1 = Gaffer.FileNamePathFilter( [ "*.gfr" ] )
+		f2 = Gaffer.FileNamePathFilter( [ "*.grf" ] )
+		self.assertEqual( f1.changedSignal().num_slots(), 0 )
+		self.assertEqual( f2.changedSignal().num_slots(), 0 )
+
+		# The Path shouldn't connect to the filter changed signal
+		# until it really needs to - when something is connected
+		# to the path's own changed signal.
+		p.setFilter( f1 )
+		self.assertEqual( f1.changedSignal().num_slots(), 0 )
+		self.assertEqual( f2.changedSignal().num_slots(), 0 )
+
+		cs = GafferTest.CapturingSlot( p.pathChangedSignal() )
+		self.assertEqual( f1.changedSignal().num_slots(), 1 )
+		self.assertEqual( f2.changedSignal().num_slots(), 0 )
+		self.assertEqual( len( cs ), 0 )
+
+		f1.setEnabled( False )
+		self.assertEqual( len( cs ), 1 )
+
+		p.setFilter( f2 )
+		self.assertEqual( f1.changedSignal().num_slots(), 0 )
+		self.assertEqual( f2.changedSignal().num_slots(), 1 )
+		self.assertEqual( len( cs ), 2 )
+
+		f1.setEnabled( True )
+		self.assertEqual( len( cs ), 2 )
+
+		f2.setEnabled( False )
+		self.assertEqual( len( cs ), 3 )
+
+	def testSlicing( self ) :
+
+		p = Gaffer.Path()
+		self.assertEqual( p[:], [] )
+
+		p[:] = [ "a", "b" ]
+		self.assertEqual( p[:], [ "a", "b" ] )
+
+		p[:1] = [ "c" ]
+		self.assertEqual( p[:], [ "c", "b" ] )
+
+		p[1:] = [ "d" ]
+		self.assertEqual( p[:], [ "c", "d" ] )
+
+		p[:] = [ "a", "b", "c", "d" ]
+		self.assertEqual( p[:], [ "a", "b", "c", "d" ] )
+
+		p[1:3] = [ "e", "f", "g" ]
+		self.assertEqual( p[:], [ "a", "e", "f", "g", "d" ] )
+
+		p[1:3] = [ "j" ]
+		self.assertEqual( p[:], [ "a", "j", "g", "d" ] )
+
+		del p[3:]
+		self.assertEqual( p[:], [ "a", "j", "g" ] )
+
+		del p[:2]
+		self.assertEqual( p[:], [ "g" ] )
+
+		del p[:]
+		self.assertEqual( p[:], [] )
+
+	def testSubclassWithoutCopy( self ) :
+
+		class PathWithoutCopy( Gaffer.Path ) :
+
+			def __init__( self, path=None, root="/", filter=None ) :
+
+				Gaffer.Path.__init__( self, path, root, filter )
+
+		p = PathWithoutCopy( "/a" )
+		self.assertRaisesRegexp( Exception, ".*Path.copy\(\) not implemented.*", p.parent )
+
+	def testProperties( self ) :
+
+		p = Gaffer.Path( "/a/b/c")
+
+		n = p.propertyNames()
+		self.assertTrue( isinstance( n, list ) )
+		self.assertTrue( "name" in n )
+		self.assertTrue( "fullName" in n )
+
+		self.assertEqual( p.property( "name"), "c" )
+		self.assertEqual( p.property( "fullName"), "/a/b/c" )
 
 if __name__ == "__main__":
 	unittest.main()

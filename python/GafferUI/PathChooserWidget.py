@@ -123,7 +123,7 @@ class PathChooserWidget( GafferUI.Widget ) :
 
 	def setPath( self, path ) :
 
-		if path is self.__path :
+		if path.isSame( self.__path ) :
 			return
 
 		self.__path = path
@@ -215,7 +215,7 @@ class PathChooserWidget( GafferUI.Widget ) :
 	def __updateFilter( self ) :
 
 		newFilter = self.__path.getFilter()
-		if self.__filter is newFilter :
+		if self.__filter is not None and self.__filter.isSame( newFilter ) :
 			return
 
 		# update the directory path filter to include
@@ -280,7 +280,7 @@ class PathChooserWidget( GafferUI.Widget ) :
 
 	def __listingPathChanged( self, listingPath ) :
 
-		assert( listingPath is self.__listingPath )
+		assert( listingPath.isSame( self.__listingPath ) )
 
 		# update the directory path and the main path
 		with Gaffer.BlockedConnection( ( self.__pathChangedConnection, self.__dirPathChangedConnection ) ) :

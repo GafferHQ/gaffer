@@ -34,15 +34,18 @@
 #
 ##########################################################################
 
-from PathFilter import PathFilter
+import IECore
+
+import Gaffer
 
 ## A PathFilter which filters based on an item from Path.info() and an
 # arbitrary match function.
-class InfoPathFilter( PathFilter ) :
+## \deprecated Use MatchPatternPathFilter instead.
+class InfoPathFilter( Gaffer.PathFilter ) :
 
 	def __init__( self, infoKey, matcher, leafOnly=True, userData={} ) :
 
-		PathFilter.__init__( self, userData )
+		Gaffer.PathFilter.__init__( self, userData )
 
 		self.__infoKey = infoKey
 		self.__matcher = matcher
@@ -77,3 +80,5 @@ class InfoPathFilter( PathFilter ) :
 						result.append( p )
 
 		return result
+
+IECore.registerRunTimeTyped( InfoPathFilter, typeName = "Gaffer::InfoPathFilter" )

@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import IECore
+
 import Gaffer
 
 class ClassLoaderPath( Gaffer.Path ) :
@@ -63,16 +65,18 @@ class ClassLoaderPath( Gaffer.Path ) :
 
 		return str( self )[1:] in self.__classLoader.classNames()
 
-	def info( self ) :
+	def propertyNames( self ) :
 
-		result = Gaffer.Path.info( self )
-		if result is None :
-			return None
+		return Gaffer.Path.propertyNames( self ) + [ "classLoader:versions" ]
 
-		if self.isLeaf() :
-			result["classLoader:versions"] = self.__classLoader.versions( str( self )[1:] )
+	def property( self, name ) :
 
-		return result
+		if name == "classLoader:versions" :
+			if not self.isLeaf() :
+				return None
+			return IECore.IntVectorData( self.__classLoader.versions( str( self )[1:] ) )
+
+		return Gaffer.Path.property( self, name )
 
 	def copy( self ) :
 
@@ -100,3 +104,5 @@ class ClassLoaderPath( Gaffer.Path ) :
 				added.add( str( child ) )
 
 		return result
+
+IECore.registerRunTimeTyped( ClassLoaderPath, typeName = "GafferCortex::ClassLoaderPath" )

@@ -189,6 +189,25 @@ class DictPathTest( GafferTest.TestCase ) :
 		self.assertTrue( "d/e" in [ str( c ) for c in p2.children() ] )
 		self.assertTrue( "d/five" in [ str( c ) for c in p2.children() ] )
 
+	def testProperties( self ) :
+
+		d = {
+			"one" : 1,
+			"d" : {
+				"two" : 2,
+			},
+		}
+
+		p = Gaffer.DictPath( d, "/one" )
+		self.assertTrue( "dict:value" in p.propertyNames() )
+		self.assertEqual( p.property( "dict:value"), 1 )
+
+		p = Gaffer.DictPath( d, "/d" )
+		self.assertEqual( p.property( "dict:value"), None )
+
+		p = Gaffer.DictPath( d, "/ invalid" )
+		self.assertEqual( p.property( "dict:value"), None )
+
 if __name__ == "__main__":
 	unittest.main()
 

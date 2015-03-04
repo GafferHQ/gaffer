@@ -922,6 +922,9 @@ libraries = {
 		},
 		"pythonEnvAppends" : {
 			"LIBS" : [ "IECoreGL$CORTEX_LIB_SUFFIX", "GafferUI", "GafferBindings" ],
+			 # Prevent Qt clashing with boost::signals - we can remove
+			 # this if we move to boost::signals2.
+			 "CXXFLAGS" : [ "-DQT_NO_KEYWORDS" ],
 		},
 	},
 
@@ -1160,6 +1163,17 @@ for library in ( "GafferUI", "GafferSceneUI", "GafferImageUI" ) :
 		libraries[library]["envAppends"].setdefault( "FRAMEWORKS", [] ).append( "OpenGL" )
 	else :
 		libraries[library]["envAppends"]["LIBS"].append( "GL" )
+
+# Add on Qt libraries to definitions - these vary from platform to platform
+for library in ( "GafferUI", ) :
+	if env["PLATFORM"] == "darwin" :
+		libraries[library]["pythonEnvAppends"].setdefault( "FRAMEWORKPATH", [] ).append( "$BUILD_DIR/lib" )
+		libraries[library]["pythonEnvAppends"].setdefault( "FRAMEWORKS", [] ).append( "QtCore" )
+		libraries[library]["pythonEnvAppends"].setdefault( "FRAMEWORKS", [] ).append( "QtGui" )
+	else :
+		libraries[library]["pythonEnvAppends"]["LIBS"].append( "QtCore" )
+		libraries[library]["pythonEnvAppends"]["LIBS"].append( "QtGui" )
+		
 
 ###############################################################################################
 # The stuff that actually builds the libraries and python modules

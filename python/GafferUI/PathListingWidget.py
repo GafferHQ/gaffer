@@ -44,6 +44,7 @@ import warnings
 import IECore
 
 import Gaffer
+import _GafferUI
 import GafferUI
 
 QtCore = GafferUI._qtImport( "QtCore" )
@@ -54,28 +55,15 @@ QtGui = GafferUI._qtImport( "QtGui" )
 # allows customisable column listings, and supports both single and multiple selection.
 class PathListingWidget( GafferUI.Widget ) :
 
-	## This simple class defines the content of a column.
-	class Column( object ) :
-
-		__slots__ = ( "infoField", "label", "displayFunction", "sortFunction" )
-
-		def __init__( self, infoField, label, displayFunction=str, sortFunction=str ) :
-
-			self.infoField = infoField
-			self.label = label
-			self.displayFunction = displayFunction
-			self.sortFunction = sortFunction
+	Column = _GafferUI._PathListingWidgetColumn
+	StandardColumn = _GafferUI._PathListingWidgetStandardColumn
+	IconColumn = _GafferUI._PathListingWidgetIconColumn
 
 	## A collection of handy column definitions for FileSystemPaths
-	defaultNameColumn = Column( infoField = "name", label = "Name" )
-	defaultFileSystemOwnerColumn = Column( infoField = "fileSystem:owner", label = "Owner" )
-	defaultFileSystemModificationTimeColumn = Column( infoField = "fileSystem:modificationTime", label = "Modified", displayFunction = time.ctime )
-	defaultFileSystemIconColumn = Column(
-		infoField = "fullName",
-		label = "Type",
-		displayFunction = lambda x, provider = QtGui.QFileIconProvider() : provider.icon( QtCore.QFileInfo( x ) ),
-		sortFunction = lambda x : os.path.splitext( x )[-1],
-	)
+	defaultNameColumn = StandardColumn( "Name", "name" )
+	defaultFileSystemOwnerColumn = StandardColumn( "Owner", "fileSystem:owner" )
+	defaultFileSystemModificationTimeColumn = StandardColumn( "Modified", "fileSystem:modificationTime" )
+	defaultFileSystemIconColumn = _GafferUI._PathListingWidgetFileIconColumn()
 
 	defaultFileSystemColumns = (
 		defaultNameColumn,
@@ -85,9 +73,10 @@ class PathListingWidget( GafferUI.Widget ) :
 	)
 
 	## A collection of handy column definitions for IndexedIOPaths
-	defaultIndexedIOEntryTypeColumn = Column( infoField = "indexedIO:entryType", label = "Entry Type" )
-	defaultIndexedIODataTypeColumn = Column( infoField = "indexedIO:dataType", label = "Data Type" )
-	defaultIndexedIOArrayLengthColumn = Column( infoField = "indexedIO:arrayLength", label = "Array Length" )
+	## \todo Perhaps these belong in GafferCortexUI?
+	defaultIndexedIOEntryTypeColumn = StandardColumn( "Entry Type", "indexedIO:entryType" )
+	defaultIndexedIODataTypeColumn = StandardColumn( "Data Type", "indexedIO:dataType" )
+	defaultIndexedIOArrayLengthColumn = StandardColumn( "Array Length", "indexedIO:arrayLength" )
 
 	defaultIndexedIOColumns = (
 		defaultNameColumn,
@@ -115,23 +104,21 @@ class PathListingWidget( GafferUI.Widget ) :
 		self._qtWidget().activated.connect( Gaffer.WeakMethod( self.__activated ) )
 		self._qtWidget().header().setMovable( False )
 		self._qtWidget().header().setSortIndicator( 0, QtCore.Qt.AscendingOrder )
+		self._qtWidget().setSortingEnabled( True )
 
 		self._qtWidget().expansionChanged.connect( Gaffer.WeakMethod( self.__expansionChanged ) )
 
-		self.__sortProxyModel = QtGui.QSortFilterProxyModel()
-		self.__sortProxyModel.setSortRole( QtCore.Qt.UserRole )
+		# install an empty model, so we an construct our selection model
+		# around it. we'll update the model contents shortly in setPath().
+		_GafferUI._pathListingWidgetUpdateModel( GafferUI._qtAddress( self._qtWidget() ), None )
+		_GafferUI._pathListingWidgetSetColumns( GafferUI._qtAddress( self._qtWidget() ), columns )
 
-		self._qtWidget().setModel( self.__sortProxyModel )
-
-		self.__selectionModel = QtGui.QItemSelectionModel( self.__sortProxyModel )
+		self.__selectionModel = QtGui.QItemSelectionModel( self._qtWidget().model() )
 		self._qtWidget().setSelectionModel( self.__selectionModel )
 		self.__selectionChangedSlot = Gaffer.WeakMethod( self.__selectionChanged )
 		self._qtWidget().selectionModel().selectionChanged.connect( self.__selectionChangedSlot )
 		if allowMultipleSelection :
 			self._qtWidget().setSelectionMode( QtGui.QAbstractItemView.ExtendedSelection )
-
-		self.__columns = columns
-		self.__displayMode = displayMode
 
 		self.__pathSelectedSignal = GafferUI.WidgetSignal()
 		self.__selectionChangedSignal = GafferUI.WidgetSignal()
@@ -149,11 +136,13 @@ class PathListingWidget( GafferUI.Widget ) :
 		self.__dragPointer = "paths"
 
 		self.__path = None
+
+		self.setDisplayMode( displayMode )
 		self.setPath( path )
 
 	def setPath( self, path ) :
 
-		if path is self.__path :
+		if path.isSame( self.__path ) :
 			return
 
 		self.__path = path
@@ -215,6 +204,10 @@ class PathListingWidget( GafferUI.Widget ) :
 
 		return False
 
+	## \todo Improve performance of this method by making
+	# a complete implementation in C++. This might be best
+	# done by using a PathMatcher do define the expanded
+	# paths, rather than a huge list.
 	def setExpandedPaths( self, paths ) :
 
 		indices = []
@@ -227,7 +220,7 @@ class PathListingWidget( GafferUI.Widget ) :
 
 	def getExpandedPaths( self ) :
 
-		return [ self.__pathForIndex( i ) for i in self._qtWidget().getExpandedIndices() ]
+		return _GafferUI._pathListingWidgetGetExpandedPaths( GafferUI._qtAddress( self._qtWidget() ) )
 
 	def expansionChangedSignal( self ) :
 
@@ -235,16 +228,31 @@ class PathListingWidget( GafferUI.Widget ) :
 
 	def getDisplayMode( self ) :
 
-		return self.__displayMode
+		if _GafferUI._pathListingWidgetGetFlat( GafferUI._qtAddress( self._qtWidget() ) ) :
+			return self.DisplayMode.List
+		else :
+			return self.DisplayMode.Tree
 
 	def setDisplayMode( self, displayMode ) :
 
-		if displayMode == self.__displayMode :
+		if displayMode == self.getDisplayMode() :
 			return
 
-		self.__displayMode = displayMode
-		self.__currentDir = None # force update to do something
-		self.__update()
+		# It is possible to implement list mode as follows :
+		#
+		# ```
+		# self._qtWidget().setItemsExpandable( False )
+		# self._qtWidget().setRootIsDecorated( False )
+		# ```
+		#
+		# However, even when doing this QTreeView will call
+		# QModel::hasChildren() anyway, causing our model to
+		# recurse one level deeper than strictly necessary.
+		# This can be costly, so instead we implement list
+		# view by making the model flat.
+
+		_GafferUI._pathListingWidgetSetFlat( GafferUI._qtAddress( self._qtWidget() ), displayMode == self.DisplayMode.List )
+
 		self.__displayModeChangedSignal( self )
 
 	def displayModeChangedSignal( self ) :
@@ -253,16 +261,14 @@ class PathListingWidget( GafferUI.Widget ) :
 
 	def setColumns( self, columns ) :
 
-		if columns == self.__columns :
+		if columns == self.getColumns() :
 			return
 
-		self.__columns = columns
-		self.__currentDir = None # force update to do something
-		self.__update()
+		_GafferUI._pathListingWidgetSetColumns( GafferUI._qtAddress( self._qtWidget() ), columns )
 
 	def getColumns( self ) :
 
-		return self.__columns
+		return _GafferUI._pathListingWidgetGetColumns( GafferUI._qtAddress( self._qtWidget() ) )
 
 	def setHeaderVisible( self, visible ) :
 
@@ -271,6 +277,19 @@ class PathListingWidget( GafferUI.Widget ) :
 	def getHeaderVisible( self ) :
 
 		return not self._qtWidget().header().isHidden()
+
+	def setSortable( self, sortable ) :
+
+		if sortable == self.getSortable() :
+			return
+
+		self._qtWidget().setSortingEnabled( sortable )
+		if not sortable :
+			self._qtWidget().model().sort( -1 )
+
+	def getSortable( self ) :
+
+		return self._qtWidget().isSortingEnabled()
 
 	## Returns a list of all currently selected paths. Note that a list is returned
 	# even when in single selection mode.
@@ -345,7 +364,9 @@ class PathListingWidget( GafferUI.Widget ) :
 		# hasn't changed at all then we assume that the filter has changed and
 		# we therefore have to update the listing anyway.
 		# \todo Add an argument to Path.pathChangedSignal() to specify whether it
-		# is the path or the filtering that has changed, and remove self.__currentPath
+		# is the path or the filtering that has changed, and remove self.__currentPath.
+		# Also consider whether it might be easier for the C++ PathModel to be
+		# doing the signal handling at that point.
 
 		dirPath = self.__dirPath()
 		if self.__currentDir!=dirPath or str( self.__path )==self.__currentPath :
@@ -359,18 +380,7 @@ class PathListingWidget( GafferUI.Widget ) :
 				if self.getDisplayMode() == self.DisplayMode.Tree :
 					expandedPaths = self.getExpandedPaths()
 
-			self.__sortProxyModel.setSourceModel(
-				_PathModel(
-					dirPath,
-					self.__columns,
-					recurse = self.__displayMode != self.DisplayMode.List,
-				)
-			)
-
-			# it's not sufficient to set this once during construction - Qt
-			# needs reminding every time we change the model that we would like
-			# it to be sorted.
-			self._qtWidget().setSortingEnabled( True )
+			_GafferUI._pathListingWidgetUpdateModel( GafferUI._qtAddress( self._qtWidget() ), dirPath.copy() )
 
 			if expandedPaths is not None :
 				self.setExpandedPaths( expandedPaths )
@@ -409,7 +419,7 @@ class PathListingWidget( GafferUI.Widget ) :
 
 		activatedPath = self.__pathForIndex( modelIndex )
 
-		if self.__displayMode == self.DisplayMode.List :
+		if self.getDisplayMode() == self.DisplayMode.List :
 			self.__path[:] = activatedPath[:]
 
 		if activatedPath.isLeaf() :
@@ -438,14 +448,21 @@ class PathListingWidget( GafferUI.Widget ) :
 
 	def __indexForPath( self, path ) :
 
-		indexToSelect = self.__sortProxyModel.sourceModel().indexForPath( path )
-		indexToSelect = self.__sortProxyModel.mapFromSource( indexToSelect )
+		result = QtCore.QModelIndex()
+		_GafferUI._pathListingWidgetIndexForPath(
+			GafferUI._qtAddress( self._qtWidget() ),
+			path,
+			GafferUI._qtAddress( result ),
+		)
 
-		return indexToSelect
+		return result
 
 	def __pathForIndex( self, modelIndex ) :
 
-		return self.__sortProxyModel.mapToSource( modelIndex ).internalPointer().path()
+		return _GafferUI._pathListingWidgetPathForIndex(
+			GafferUI._qtAddress( self._qtWidget() ),
+			GafferUI._qtAddress( modelIndex ),
+		)
 
 	def __expansionChanged( self ) :
 
@@ -587,6 +604,10 @@ class _TreeView( QtGui.QTreeView ) :
 		self.expanded.disconnect( self.__expanded )
 
 		self.collapseAll()
+		# This call is critical to performance - without
+		# it an update is triggered for every call to
+		# setExpanded().
+		self.scheduleDelayedItemsLayout()
 		for index in indices :
 			self.setExpanded( index, True )
 
@@ -596,27 +617,6 @@ class _TreeView( QtGui.QTreeView ) :
 		self.__recalculateColumnSizes()
 
 		self.expansionChanged.emit()
-
-	## \todo This isn't returning expanded items which are
-	# parented below collapsed items. Changing this either
-	# means a full traversal of the entire tree, or keeping
-	# track of a set of expanded indices in __collapsed/__expanded.
-	# Traversing the entire tree might not be too expensive
-	# if we get the model populated lazily using fetchMore()
-	# though.
-	def getExpandedIndices( self ) :
-
-		result = []
-		model = self.model()
-		def walk( index ) :
-			for i in range( 0, model.rowCount( index ) ) :
-				childIndex = model.index( i, 0, index )
-				if self.isExpanded( childIndex ) :
-					result.append( childIndex )
-					walk( childIndex )
-
-		walk( QtCore.QModelIndex() )
-		return result
 
 	def sizeHint( self ) :
 
@@ -709,18 +709,6 @@ class _TreeView( QtGui.QTreeView ) :
 
 	def __propagateExpanded( self, index, expanded ) :
 
-		def __walk( index, expanded, numLevels ) :
-
-			model = self.model()
-			while model.canFetchMore( index ) :
-				model.fetchMore( index )
-
-			for i in range( 0, model.rowCount( index ) ) :
-				childIndex = model.index( i, 0, index )
-				self.setExpanded( childIndex, expanded )
-				if numLevels - 1 :
-					__walk( childIndex, expanded, numLevels - 1 )
-
 		numLevels = 0
 		if self.__currentEventModifiers & QtCore.Qt.ShiftModifier :
 			numLevels = 10000
@@ -732,158 +720,21 @@ class _TreeView( QtGui.QTreeView ) :
 			self.collapsed.disconnect( self.__collapsed )
 			self.expanded.disconnect( self.__expanded )
 
-			__walk( index, expanded, numLevels )
+			# This call is critical for performance. Without it,
+			# QTreeView will start doing relayout for every single
+			# call to setExpanded() that we make inside
+			# _pathListingWidgetPropagateExpanded(). With it, it
+			# waits nicely till the end and does it all at once.
+			self.scheduleDelayedItemsLayout()
+
+			# Defer to C++ to do the heavy lifting.
+			_GafferUI._pathListingWidgetPropagateExpanded(
+				GafferUI._qtAddress( self ),
+				GafferUI._qtAddress( index ),
+				expanded,
+				numLevels
+			)
 
 			self.collapsed.connect( self.__collapsed )
 			self.expanded.connect( self.__expanded )
 
-class _PathItem() :
-
-	def __init__( self, path, columns, parent = None, row = 0 ) :
-
-		self.__path = path
-		self.__childItems = None
-		# yes, this does make reference cycles, but just storing a weak reference to parent
-		# seems to allow the parent to die in some cases. we'll just have to let the
-		# garbage collector tidy things up.
-		self.__parent = parent
-		self.__columns = columns
-		self.__row = row
-
-		self.__displayData = []
-		self.__decorationData = []
-		self.__sortData = []
-
-	def path( self ) :
-
-		return self.__path
-
-	def parent( self ) :
-
-		return self.__parent
-
-	def row( self ) :
-
-		return self.__row
-
-	def data( self, columnIndex, role ) :
-
-		# populate all data the first time we're asked for any element, to avoid wasted calls
-		# to info(). chances are if we've been asked for one piece we're gonna be asked for the
-		# others really soon.
-		if not self.__displayData :
-			info = self.__path.info()
-			for column in self.__columns :
-				if info is not None and column.infoField in info :
-					value = column.displayFunction( info[column.infoField] )
-					if isinstance( value, GafferUI.Image ) :
-						value = value._qtPixmap()
-					if isinstance( value, basestring ) :
-						self.__displayData.append( GafferUI._Variant.toVariant( value ) )
-						self.__decorationData.append( GafferUI._Variant.toVariant( None ) )
-					else :
-						self.__displayData.append( GafferUI._Variant.toVariant( None ) )
-						self.__decorationData.append( GafferUI._Variant.toVariant( value ) )
-					self.__sortData.append( GafferUI._Variant.toVariant( column.sortFunction( info[column.infoField] ) ) )
-				else :
-					self.__displayData.append( GafferUI._Variant.toVariant( None ) )
-					self.__decorationData.append( GafferUI._Variant.toVariant( None ) )
-					self.__sortData.append( GafferUI._Variant.toVariant( None ) )
-
-		if role == QtCore.Qt.DisplayRole :
-			return self.__displayData[columnIndex]
-		elif role == QtCore.Qt.DecorationRole :
-			return self.__decorationData[columnIndex]
-		elif role == QtCore.Qt.UserRole :
-			return self.__sortData[columnIndex]
-
-		return GafferUI._Variant.toVariant( None )
-
-	def childItems( self ) :
-
-		if self.__childItems is None :
-			self.__childItems = [ _PathItem( p, self.__columns, self, i ) for i, p in enumerate( self.__path.children() ) ]
-
-		return self.__childItems
-
-class _PathModel( QtCore.QAbstractItemModel ) :
-
-	def __init__( self, path, columns, recurse=True, parent = None ) :
-
-		QtCore.QAbstractItemModel.__init__( self, parent )
-
-		self.__rootItem = _PathItem( path.copy(), columns )
-		self.__columns = columns
-		self.__recurse = recurse
-
-	def columnCount( self, parentIndex ) :
-
-		return len( self.__columns )
-
-	def rowCount( self, parentIndex ) :
-
-		parentItem = parentIndex.internalPointer() if parentIndex.isValid() else self.__rootItem
-		if not self.__recurse and parentItem is not self.__rootItem :
-			return 0
-		else :
-			return len( parentItem.childItems() )
-
-	def index( self, row, column, parentIndex ) :
-
-		parentItem = parentIndex.internalPointer() if parentIndex.isValid() else self.__rootItem
-
-		childItems = parentItem.childItems()
-		if row >=0 and row < len( childItems ) and column >= 0 and column < len( self.__columns ) :
-			return self.createIndex( row, column, childItems[row] )
-		else :
-			return QtCore.QModelIndex()
-
-	def parent( self, index ) :
-
-		if not index.isValid() :
-			return QtCore.QModelIndex()
-
-		parentItem = index.internalPointer().parent()
-		if parentItem is None or parentItem is self.__rootItem :
-			return QtCore.QModelIndex()
-
-		return self.createIndex( parentItem.row(), 0, parentItem )
-
-	def headerData( self, section, orientation, role ) :
-
-		if orientation == QtCore.Qt.Horizontal and role == QtCore.Qt.DisplayRole :
-			return GafferUI._Variant.toVariant( self.__columns[section].label )
-
-		return GafferUI._Variant.toVariant( None )
-
-	def data( self, index, role ) :
-
-		if not index.isValid() :
-			return GafferUI._Variant.toVariant( None )
-
-		item = index.internalPointer()
-		return item.data( index.column(), role )
-
-	def indexForPath( self, path ) :
-
-		rootPath = self.__rootItem.path()
-		if len( path ) <= len( rootPath ) or path[:len(rootPath)] != rootPath[:] :
-			return QtCore.QModelIndex()
-
-		index = QtCore.QModelIndex()
-		item = self.__rootItem
-		for i in range( len( rootPath ), len( path ) ) :
-			foundNextItem = False
-			for j, childItem in enumerate( item.childItems() ) :
-				if childItem.path()[i] == path[i] :
-					item = childItem
-					index = self.index( j, 0, index )
-					foundNextItem = True
-					break
-			if not foundNextItem :
-				break
-
-		if foundNextItem :
-			return index
-
-		return QtCore.QModelIndex()

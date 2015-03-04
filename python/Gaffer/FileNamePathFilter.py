@@ -38,10 +38,13 @@
 import fnmatch
 import re
 
-from PathFilter import PathFilter
+import IECore
+
+import Gaffer
 
 ## A PathFilter which filters based on filename.
-class FileNamePathFilter( PathFilter ) :
+## \deprecated Use MatchPatternPathFilter instead.
+class FileNamePathFilter( Gaffer.PathFilter ) :
 
 	## Matchers is a list of compiled regular expressions and/or
 	# shell style pattern strings. The latter will be compiled
@@ -53,7 +56,7 @@ class FileNamePathFilter( PathFilter ) :
 
 		assert( isinstance( matchers, ( list, tuple ) ) )
 
-		PathFilter.__init__( self, userData )
+		Gaffer.PathFilter.__init__( self, userData )
 
 		self.__matchers = []
 		for m in matchers :
@@ -80,3 +83,5 @@ class FileNamePathFilter( PathFilter ) :
 							break
 
 		return result
+
+IECore.registerRunTimeTyped( FileNamePathFilter, typeName = "Gaffer::FileNamePathFilter" )

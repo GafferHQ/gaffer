@@ -55,14 +55,20 @@ class PathFilterWidget( GafferUI.Widget ) :
 		return self.__pathFilter
 
 	## Must be implemented by subclasses to update the UI when the filter
-	# changes in some way.
+	# changes in some way. To temporarily suspend calls to this function, use
+	# Gaffer.BlockedConnection( self._pathFilterChangedConnection() ).
 	def _updateFromPathFilter( self ) :
 
 		raise NotImplementedError
 
+	## Returns the connection
+	def _pathFilterChangedConnection( self ) :
+
+		return self.__pathFilterChangedConnection
+
 	def __pathFilterChanged( self, pathFilter ) :
 
-		assert( pathFilter is self.__pathFilter )
+		assert( pathFilter.isSame( self.__pathFilter ) )
 
 		self._updateFromPathFilter()
 
@@ -73,7 +79,7 @@ class PathFilterWidget( GafferUI.Widget ) :
 
 		visible = True
 		with IECore.IgnoredExceptions( KeyError ) :
-			visible = pathFilter.userData()["UI"]["visible"]
+			visible = pathFilter.userData()["UI"]["visible"].value
 
 		if not visible :
 			return None
@@ -113,19 +119,19 @@ class BasicPathFilterWidget( PathFilterWidget ) :
 
 		label = str( self.pathFilter() )
 		with IECore.IgnoredExceptions( KeyError ) :
-			label = self.pathFilter().userData()["UI"]["label"]
+			label = self.pathFilter().userData()["UI"]["label"].value
 		self.__checkBox.setText( label )
 
 		invertEnabled = False
 		with IECore.IgnoredExceptions( KeyError ) :
-			invertEnabled = self.pathFilter().userData()["UI"]["invertEnabled"]
+			invertEnabled = self.pathFilter().userData()["UI"]["invertEnabled"].value
 		self.__checkBox.setState( self.pathFilter().getEnabled() is not invertEnabled )
 
 	def __stateChanged( self, checkBox ) :
 
 		invertEnabled = False
 		with IECore.IgnoredExceptions( KeyError ) :
-			invertEnabled = self.pathFilter().userData()["UI"]["invertEnabled"]
+			invertEnabled = self.pathFilter().userData()["UI"]["invertEnabled"].value
 		self.pathFilter().setEnabled( checkBox.getState() is not invertEnabled )
 
 PathFilterWidget.registerType( Gaffer.PathFilter, BasicPathFilterWidget )

@@ -71,6 +71,8 @@ class Serialisation
 		/// simply does not provide the information to do so. See http://www.python.org/dev/peps/pep-3155/
 		static std::string classPath( const IECore::RefCounted *object );
 		/// Convenience function to return the name of the class which object is an instance of.
+		/// If object is a type object rather than an instance, then the path for the type
+		/// object itself is returned.
 		static std::string classPath( boost::python::object &object );
 
 		/// The Serialiser class may be implemented differently for specific types to customise

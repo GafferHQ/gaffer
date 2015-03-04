@@ -52,7 +52,7 @@ class PathPreviewWidget( GafferUI.Widget ) :
 
 		assert( isinstance( path, Gaffer.Path ) )
 
-		if path is self.__path :
+		if path.isSame( self.__path ) :
 			return
 
 		prevPath = self.__path
@@ -84,7 +84,7 @@ class PathPreviewWidget( GafferUI.Widget ) :
 
 	def __pathChanged( self, path ) :
 
-		assert( path is self.__path )
+		assert( path.isSame( self.__path ) )
 
 		if str( path ) == self.__currentPath :
 			return

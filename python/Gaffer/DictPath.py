@@ -72,20 +72,20 @@ class DictPath( Gaffer.Path ) :
 		except :
 			return False
 
-	def info( self ) :
 
-		result = Gaffer.Path.info( self )
-		if result is None :
-			return None
+	def propertyNames( self ) :
 
-		try :
-			e = self.__dictEntry()
-			if not isinstance( e, self.__dictTypes ) :
-				result["dict:value"] = e
-		except :
-			pass
+		return Gaffer.Path.propertyNames( self ) + [ "dict:value" ]
 
-		return result
+	def property( self, name ) :
+
+		if name == "dict:value" :
+			with IECore.IgnoredExceptions( Exception ) :
+				e = self.__dictEntry()
+				if not isinstance( e, self.__dictTypes ) :
+					return e
+
+		return Gaffer.Path.property( self, name )
 
 	def copy( self ) :
 
@@ -109,3 +109,5 @@ class DictPath( Gaffer.Path ) :
 			e = e[p]
 
 		return e
+
+IECore.registerRunTimeTyped( DictPath, typeName = "Gaffer::DictPath" )

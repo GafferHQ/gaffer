@@ -426,6 +426,11 @@ class WidgetTest( GafferUITest.TestCase ) :
 
 		self.assertEqual( mouseGlobal, mouseLocal + b.bound().min )
 
+	def testAddress( self ) :
+
+		w = GafferUI.Button()
+		self.assertTrue( isinstance( GafferUI._qtAddress( w._qtWidget() ), int ) )
+
 if __name__ == "__main__":
 	unittest.main()
 

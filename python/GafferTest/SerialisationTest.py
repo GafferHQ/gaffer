@@ -127,6 +127,22 @@ class SerialisationTest( GafferTest.TestCase ) :
 		s = Gaffer.Serialisation( n )
 		self.assertTrue( s.parent().isSame( n ) )
 
+	def testClassPath( self ) :
+
+		self.assertEqual( Gaffer.Serialisation.classPath( Gaffer.Node() ), "Gaffer.Node" )
+		self.assertEqual( Gaffer.Serialisation.classPath( Gaffer.Node ), "Gaffer.Node" )
+
+		self.assertEqual( Gaffer.Serialisation.classPath( GafferTest.SphereNode() ), "GafferTest.SphereNode" )
+		self.assertEqual( Gaffer.Serialisation.classPath( GafferTest.SphereNode ), "GafferTest.SphereNode" )
+
+	def testModulePath( self ) :
+
+		self.assertEqual( Gaffer.Serialisation.modulePath( Gaffer.Node() ), "Gaffer" )
+		self.assertEqual( Gaffer.Serialisation.modulePath( Gaffer.Node ), "Gaffer" )
+
+		self.assertEqual( Gaffer.Serialisation.modulePath( GafferTest.SphereNode() ), "GafferTest" )
+		self.assertEqual( Gaffer.Serialisation.modulePath( GafferTest.SphereNode ), "GafferTest" )
+
 if __name__ == "__main__":
 	unittest.main()
 

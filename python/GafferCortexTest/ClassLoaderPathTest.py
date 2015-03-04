@@ -86,8 +86,9 @@ class ClassLoaderPathTest( GafferTest.TestCase ) :
 			self.assertEqual( len( child ), len( p ) + 1 )
 
 		p.setFromString( "/mesh/normals" )
+		self.assertTrue( p.isLeaf() )
 		versions = p.info()["classLoader:versions"]
-		self.failUnless( isinstance( versions, list ) )
+		self.failUnless( isinstance( versions, IECore.IntVectorData ) )
 		self.failUnless( len( versions ) )
 
 	def testRelative( self ) :
@@ -108,6 +109,22 @@ class ClassLoaderPathTest( GafferTest.TestCase ) :
 
 		op = p.load()()
 		self.failUnless( isinstance( op, IECore.Op ) )
+
+	def testProperties( self ) :
+
+		p = GafferCortex.ClassLoaderPath( IECore.ClassLoader.defaultOpLoader(), "/mesh" )
+
+		self.assertEqual( p.propertyNames(), [ "name", "fullName", "classLoader:versions" ])
+		self.assertEqual( p.property( "name" ), "mesh" )
+		self.assertEqual( p.property( "fullName" ), "/mesh" )
+		self.assertEqual( p.property( "classLoader:versions" ), None )
+
+		p.append( "normals" )
+
+		self.assertEqual( p.propertyNames(), [ "name", "fullName", "classLoader:versions" ])
+		self.assertEqual( p.property( "name" ), "normals" )
+		self.assertEqual( p.property( "fullName" ), "/mesh/normals" )
+		self.assertTrue( isinstance( p.property( "classLoader:versions" ), IECore.IntVectorData ) )
 
 if __name__ == "__main__":
 	unittest.main()

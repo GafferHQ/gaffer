@@ -1,7 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,52 +34,28 @@
 #
 ##########################################################################
 
+import unittest
+
 import Gaffer
+import GafferTest
 
-## PathFilters are classes which can filter the results
-# of Path.children() methods to provide a masked view of
-# filesystems. Filters are applied to a path using the Path.addFilter()
-# method.
-class PathFilter( object ) :
+class LeafPathFilterTest( GafferTest.TestCase ) :
 
-	def __init__( self, userData={} ) :
+	def test( self ) :
 
-		self.__userData = userData.copy()
+		p = Gaffer.DictPath(
+			{
+				"a" : "a",
+				"b" : "b",
+				"d" : {}
+			},
+			"/",
+		)
 
-		self.__enabled = True
-		self.__changedSignal = Gaffer.Signal1()
+		self.assertEqual( set( [ str( c ) for c in p.children() ] ), set( [ "/a", "/b", "/d" ] ) )
 
-	def userData( self ) :
+		p.setFilter( Gaffer.LeafPathFilter() )
+		self.assertEqual( set( [ str( c ) for c in p.children() ] ), set( [ "/d" ] ) )
 
-		return self.__userData
-
-	def setEnabled( self, enabled ) :
-
-		if enabled == self.__enabled :
-			return
-
-		self.__enabled = enabled
-		self.__changedSignal( self )
-
-	def getEnabled( self ) :
-
-		return self.__enabled
-
-	def filter( self, paths ) :
-
-		if self.__enabled :
-			return self._filter( paths )
-		else :
-			return paths
-
-	## Returns a signal which is emitted whenever the filter
-	# changes in some way.
-	def changedSignal( self ) :
-
-		return self.__changedSignal
-
-	## Must be implemented by derived classes to filter the passed
-	# list of paths and return a new list.
-	def _filter( self, paths ) :
-
-		raise NotImplementedError
+if __name__ == "__main__":
+	unittest.main()

@@ -673,6 +673,10 @@ class GraphComponentTest( GafferTest.TestCase ) :
 				"GafferCortex::ParameterisedHolderDependencyNode",
 				"GafferCortex::ParameterisedHolderComputeNode",
 				"GafferCortex::ParameterisedHolderExecutableNode",
+				"GafferCortex::AttributeCachePath",
+				"GafferCortex::ClassLoaderPath",
+				"GafferCortex::IndexedIOPath",
+				"GafferCortex::ParameterPath",
 			] )
 		)
 		self.assertTypeNamesArePrefixed( GafferTest )

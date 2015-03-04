@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import collections
+
 import IECore
 
 import Gaffer
@@ -43,7 +45,10 @@ class SequencePath( Gaffer.Path ) :
 	def __init__( self, path, root="/", minSequenceSize=1, filter=None ) :
 
 		if not isinstance( path, Gaffer.Path ) :
-			path = Gaffer.FileSystemPath( path, root )
+			if isinstance( path, str ) :
+				path = Gaffer.FileSystemPath( path )
+			else :
+				path = Gaffer.FileSystemPath( path, root )
 
 		Gaffer.Path.__init__( self, path[:], path.root(), filter=filter )
 
@@ -67,11 +72,15 @@ class SequencePath( Gaffer.Path ) :
 
 		return True
 
-	def info( self ) :
+	def propertyNames( self ) :
 
-		result = Gaffer.Path.info( self )
-		if result is None :
-			return None
+		return self.__basePathSeed.propertyNames()
+
+	def property( self, name ) :
+
+		result = Gaffer.Path.property( self, name )
+		if result is not None :
+			return result
 
 		def average( values ) :
 
@@ -79,21 +88,7 @@ class SequencePath( Gaffer.Path ) :
 
 		def mostCommon( values ) :
 
-			counter = {}
-			for value in values :
-				if value in counter :
-					counter[value] += 1
-				else :
-					counter[value] = 1
-
-			maxCount = 0
-			mostCommonValue = None
-			for value, count in counter.items() :
-				if count > maxCount :
-					mostCommonValue = value
-					maxCount = count
-
-			return mostCommonValue
+			return collections.Counter( values ).most_common( 1 )[0][0]
 
 		combiners = {
 			"fileSystem:owner" : mostCommon,
@@ -103,22 +98,19 @@ class SequencePath( Gaffer.Path ) :
 			"fileSystem:size" : sum,
 		}
 
-		infos = [ path.info() for path in self.__basePaths() ]
-		if len( infos ) :
-			for key, exampleValue in infos[0].items() :
-				if key in result :
-					continue
-				combiner = combiners.get( key, None )
-				if combiner is None :
-					if isinstance( exampleValue, ( int, float ) ) :
-						combiner = average
-					elif isinstance( exampleValue, basestring ) :
-						combiner = mostCommon
-				if combiner is not None :
-					values = [ i[key] for i in infos ]
-					result[key] = combiner( values )
+		values = [ path.property( name ) for path in self.__basePaths() ]
 
-		return result
+		combiner = combiners.get( name, None )
+		if combiner is None :
+			if isinstance( values[0], ( int, float ) ) :
+				combiner = average
+			elif isinstance( values[0], basestring ) :
+				combiner = mostCommon
+
+		if combiner is not None :
+			return combiner( values )
+
+		return None
 
 	def _children( self ) :
 
@@ -180,3 +172,5 @@ class SequencePath( Gaffer.Path ) :
 			return True
 
 		return False
+
+IECore.registerRunTimeTyped( SequencePath, typeName = "Gaffer::SequencePath" )

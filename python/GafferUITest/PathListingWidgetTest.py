@@ -187,6 +187,41 @@ class PathListingWidgetTest( unittest.TestCase ) :
 		w.setHeaderVisible( False )
 		self.assertFalse( w.getHeaderVisible() )
 
+	def testDeeperExpandedPaths( self ) :
+
+		p = Gaffer.DictPath( { "a" : { "b" : { "c" : { "d" : 10 } } } }, "/" )
+
+		w = GafferUI.PathListingWidget( p )
+		w.setPathExpanded( p.copy().setFromString( "/a/b/c" ), True )
+
+		self.assertTrue( w.getPathExpanded( p.copy().setFromString( "/a/b/c" ) ) )
+
+	def testColumns( self ) :
+
+		w = GafferUI.PathListingWidget( Gaffer.DictPath( {}, "/" ) )
+
+		self.assertEqual( w.getColumns(), list( w.defaultFileSystemColumns ) )
+
+		c1 = [ w.defaultNameColumn, w.defaultFileSystemIconColumn ]
+		c2 = [ w.defaultNameColumn, w.StandardColumn( "h", "a" ) ]
+
+		w.setColumns( c1 )
+		self.assertEqual( w.getColumns(), c1 )
+
+		w.setColumns( c2 )
+		self.assertEqual( w.getColumns(), c2 )
+
+	def testSortable( self ) :
+
+		w = GafferUI.PathListingWidget( Gaffer.DictPath( {}, "/" ) )
+		self.assertTrue( w.getSortable() )
+
+		w.setSortable( False )
+		self.assertFalse( w.getSortable() )
+
+		w.setSortable( True )
+		self.assertTrue( w.getSortable() )
+
 if __name__ == "__main__":
 	unittest.main()
 

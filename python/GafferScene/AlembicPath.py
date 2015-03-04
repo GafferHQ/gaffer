@@ -64,10 +64,6 @@ class AlembicPath( Gaffer.Path ) :
 		# any alembic object may have children.
 		return False
 
-	def info( self ) :
-
-		return Gaffer.Path.info( self )
-
 	def _children( self ) :
 
 		childNames = self.__input().childNames()
@@ -84,3 +80,5 @@ class AlembicPath( Gaffer.Path ) :
 			result = result.child( p )
 
 		return result
+
+IECore.registerRunTimeTyped( AlembicPath, typeName = "GafferScene::AlembicPath" )

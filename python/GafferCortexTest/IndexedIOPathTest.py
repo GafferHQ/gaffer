@@ -127,6 +127,24 @@ class IndexedIOPathTest( GafferTest.TestCase ) :
 		self.assertEqual( p2.root(), "" )
 		self.assertTrue( "d1/d2/a" in [ str( c ) for c in p2.children() ] )
 
+	def testProperties( self ) :
+
+		p = GafferCortex.IndexedIOPath( self.__fileName, "/d1/d2/c" )
+
+		self.assertTrue( "indexedIO:entryType" in p.propertyNames() )
+		self.assertEqual( p.property( "indexedIO:entryType" ), IECore.IndexedIO.EntryType.File )
+
+		self.assertTrue( "indexedIO:dataType" in p.propertyNames() )
+		self.assertEqual( p.property( "indexedIO:dataType" ), IECore.IndexedIO.DataType.String )
+
+		p = GafferCortex.IndexedIOPath( self.__fileName, "/d1/d2/d" )
+		self.assertEqual( p.property( "indexedIO:entryType" ), IECore.IndexedIO.EntryType.File )
+		self.assertEqual( p.property( "indexedIO:dataType" ), IECore.IndexedIO.DataType.IntArray )
+		self.assertEqual( p.property( "indexedIO:arrayLength" ), 3 )
+
+		p = GafferCortex.IndexedIOPath( self.__fileName, "/d1/d2" )
+		self.assertEqual( p.property( "indexedIO:entryType" ), IECore.IndexedIO.EntryType.Directory )
+
 	def tearDown( self ) :
 
 		if os.path.exists( self.__fileName ) :
