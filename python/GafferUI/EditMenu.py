@@ -210,8 +210,13 @@ def arrange( menu ) :
 def selectAll( menu ) :
 
 	s = scope( menu )
-	for c in s.parent.children( Gaffer.Node ) :
-		s.script.selection().add( c )
+	if s.nodeGraph is None :
+		return
+
+	graphGadget = s.nodeGraph.graphGadget()
+	for node in s.parent.children( Gaffer.Node ) :
+		if graphGadget.nodeGadget( node ) is not None :
+			s.script.selection().add( node )
 
 ## A function suitable as the command for an Edit/Select None menu item. It must
 # be invoked from a menu that has a ScriptWindow in its ancestry.
