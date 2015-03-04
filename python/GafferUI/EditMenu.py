@@ -228,59 +228,40 @@ def selectNone( menu ) :
 # be invoked from a menu that has a ScriptWindow in its ancestry.
 def selectInputs( menu ) :
 
-	s = scope( menu )
-
-	inputs = Gaffer.StandardSet()
-	for node in s.script.selection() :
-		__inputNodes( node, inputs )
-
-	selection = s.script.selection()
-	selection.clear()
-	for node in inputs :
-		selection.add( node )
+	__selectConnected( menu, Gaffer.Plug.Direction.In, degreesOfSeparation = 1, add = False )
 
 ## The command function for the default "Edit/Select Connected/Add Inputs" menu item. It must
 # be invoked from a menu that has a ScriptWindow in its ancestry.
 def selectAddInputs( menu ) :
 
-	s = scope( menu )
-
-	inputs = Gaffer.StandardSet()
-	for node in s.script.selection() :
-		__inputNodes( node, inputs )
-
-	selection = s.script.selection()
-	for node in inputs :
-		selection.add( node )
+	__selectConnected( menu, Gaffer.Plug.Direction.In, degreesOfSeparation = 1, add = True )
 
 ## The command function for the default "Edit/Select Connected/Outputs" menu item. It must
 # be invoked from a menu that has a ScriptWindow in its ancestry.
 def selectOutputs( menu ) :
 
-	s = scope( menu )
-
-	outputs = Gaffer.StandardSet()
-	for node in s.script.selection() :
-		__outputNodes( node, outputs )
-
-	selection = s.script.selection()
-	selection.clear()
-	for node in outputs :
-		selection.add( node )
+	__selectConnected( menu, Gaffer.Plug.Direction.Out, degreesOfSeparation = 1, add = False )
 
 ## The command function for the default "Edit/Select Connected/Add Outputs" menu item. It must
 # be invoked from a menu that has a ScriptWindow in its ancestry.
 def selectAddOutputs( menu ) :
 
-	s = scope( menu )
+	__selectConnected( menu, Gaffer.Plug.Direction.Out, degreesOfSeparation = 1, add = True )
 
-	outputs = Gaffer.StandardSet()
+def __selectConnected( menu, direction, degreesOfSeparation, add ) :
+
+	s = scope( menu )
+	if s.nodeGraph is None :
+		return
+
+	connected = Gaffer.StandardSet()
 	for node in s.script.selection() :
-		__outputNodes( node, outputs )
+		connected.add( [ g.node() for g in s.nodeGraph.graphGadget().connectedNodeGadgets( node, direction, degreesOfSeparation ) ] )
 
 	selection = s.script.selection()
-	for node in outputs :
-		selection.add( node )
+	if not add :
+		selection.clear()
+	selection.add( connected )
 
 def __selectionAvailable( menu ) :
 
@@ -298,36 +279,3 @@ def __undoAvailable( menu ) :
 def __redoAvailable( menu ) :
 
 	return scope( menu ).script.redoAvailable()
-
-def __inputNodes( node, inputNodes ) :
-
-	def __walkPlugs( parent ) :
-
-		for plug in parent :
-			if isinstance( plug, Gaffer.Plug ) :
-				inputPlug = plug.getInput()
-				if inputPlug is not None :
-					inputNode = inputPlug.node()
-					if inputNode is not None and not inputNode.isSame( node ) :
-						inputNodes.add( inputNode )
-				else :
-					__walkPlugs( plug )
-
-	__walkPlugs( node )
-
-def __outputNodes( node, outputNodes ) :
-
-	def __walkPlugs( parent ) :
-
-		for plug in parent :
-			if isinstance( plug, Gaffer.Plug ) :
-				outputPlugs = plug.outputs()
-				if outputPlugs :
-					for outputPlug in outputPlugs :
-						outputNode = outputPlug.node()
-						if outputNode is not None and not outputNode.isSame( node ) :
-							outputNodes.add( outputNode )
-				else :
-					__walkPlugs( plug )
-
-	__walkPlugs( node )
