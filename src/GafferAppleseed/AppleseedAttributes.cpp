@@ -62,6 +62,9 @@ AppleseedAttributes::AppleseedAttributes( const std::string &name )
 
 	// alpha map parameters
 	attributes->addOptionalMember( "as:alpha_map", new IECore::StringData(), "alphaMap", Gaffer::Plug::Default, false );
+
+	// photon target parameters
+	attributes->addOptionalMember( "as:photon_target", new IECore::BoolData( false ), "photonTarget", Gaffer::Plug::Default, false );
 }
 
 AppleseedAttributes::~AppleseedAttributes()

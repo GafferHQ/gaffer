@@ -48,7 +48,8 @@ AppleseedOptions::AppleseedOptions( const std::string &name )
 
 	// main
 	options->addOptionalMember( "as:cfg:generic_frame_renderer:passes", new IECore::IntData( 1 ), "renderPasses", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "as:cfg:uniform_pixel_renderer:samples", new IECore::IntData( 16 ), "aaSamples", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "as:cfg:sampling_mode", new IECore::StringData( "rng" ), "sampler", Gaffer::Plug::Default, false );	
+	options->addOptionalMember( "as:cfg:uniform_pixel_renderer:samples", new IECore::IntData( 64 ), "aaSamples", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "as:cfg:uniform_pixel_renderer:force_antialiasing", new IECore::BoolData( false ), "forceAA", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "as:cfg:uniform_pixel_renderer:decorrelate_pixels", new IECore::BoolData( true ), "decorrelatePixels", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "as:cfg:lighting_engine", new IECore::StringData( "pt" ), "lightingEngine", Gaffer::Plug::Default, false );
@@ -95,5 +96,5 @@ AppleseedOptions::AppleseedOptions( const std::string &name )
 	options->addOptionalMember( "as:searchpath", new IECore::StringData( "" ), "searchPath", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "as:cfg:rendering_threads", new IECore::IntData( 8 ), "numThreads", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "as:cfg:texture_store:max_size", new IECore::IntData( 256 * 1024 ), "textureMem", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "as:cfg:generic_frame_renderer:tile_ordering", new IECore::StringData( "hilbert" ), "tileOrdering", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "as:cfg:generic_frame_renderer:tile_ordering", new IECore::StringData( "spiral" ), "tileOrdering", Gaffer::Plug::Default, false );
 }

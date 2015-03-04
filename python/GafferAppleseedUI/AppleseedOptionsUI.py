@@ -44,6 +44,8 @@ def __mainSummary( plug ) :
 	info = []
 	if plug["renderPasses"]["enabled"].getValue() :
 		info.append( "Passes %d" % plug["renderPasses"]["value"].getValue() )
+	if plug["sampler"]["enabled"].getValue() :
+		info.append( "Sampler %s" % plug["sampler"]["value"].getValue() )
 	if plug["aaSamples"]["enabled"].getValue() :
 		info.append( "AA Samples %d" % plug["aaSamples"]["value"].getValue() )
 	if plug["forceAA"]["enabled"].getValue() and plug["forceAA"]["value"].getValue() :
@@ -165,6 +167,7 @@ GafferUI.PlugValueWidget.registerCreator(
 			"namesAndLabels" : (
 				( "as:mesh_file_format", "Mesh File Format" ),
 				( "as:cfg:generic_frame_renderer:passes", "Passes" ),
+				( "as:cfg:sampling_mode", "Sampler" ),
 				( "as:cfg:uniform_pixel_renderer:samples", "AA Samples" ),
 				( "as:cfg:uniform_pixel_renderer:force_antialiasing", "Force Antialiasing" ),
 				( "as:cfg:uniform_pixel_renderer:decorrelate_pixels", "Decorrelate Pixels" ),
@@ -297,5 +300,15 @@ GafferUI.PlugValueWidget.registerCreator(
 		( "Spiral", "spiral" ),
 		( "Hilbert", "hilbert" ),
 		( "Random", "random" ),
+	),
+)
+
+GafferUI.PlugValueWidget.registerCreator(
+	GafferAppleseed.AppleseedOptions,
+	"options.sampler.value",
+	GafferUI.EnumPlugValueWidget,
+	labelsAndValues = (
+		( "Random", "rng" ),
+		( "QMC", "qmc" ),
 	),
 )
