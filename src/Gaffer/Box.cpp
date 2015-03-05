@@ -392,6 +392,7 @@ void Box::exportForReference( const std::string &fileName ) const
 	ContextPtr context = new Context;
 	context->set( "valuePlugSerialiser:resetParentPlugDefaults", true );
 	context->set( "serialiser:includeParentMetadata", true );
+	context->set( "serialiser:includeVersionMetadata", true );
 	Context::Scope scopedContext( context.get() );
 
 	script->serialiseToFile( fileName, this, toExport.get() );
