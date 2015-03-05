@@ -170,7 +170,7 @@ class PathMatcherTest( unittest.TestCase ) :
 			c = Gaffer.Context()
 			c["scene:path"] = IECore.InternedStringVectorData( path[1:].split( "/" ) )
 			with c :
-				self.assertEqual( f["match"].getValue(), int( result ) )
+				self.assertEqual( f["out"].getValue(), int( result ) )
 
 	def testWildcardsWithSiblings( self ) :
 
@@ -190,7 +190,7 @@ class PathMatcherTest( unittest.TestCase ) :
 			c = Gaffer.Context()
 			c["scene:path"] = IECore.InternedStringVectorData( path[1:].split( "/" ) )
 			with c :
-				self.assertEqual( f["match"].getValue(), int( result ) )
+				self.assertEqual( f["out"].getValue(), int( result ) )
 
 	def testRepeatedWildcards( self ) :
 
@@ -204,7 +204,7 @@ class PathMatcherTest( unittest.TestCase ) :
 		c = Gaffer.Context()
 		c["scene:path"] = IECore.InternedStringVectorData( [ "a", "s" ] )
 		with c :
-			self.assertEqual( f["match"].getValue(), int( GafferScene.Filter.Result.ExactMatch ) )
+			self.assertEqual( f["out"].getValue(), int( GafferScene.Filter.Result.ExactMatch ) )
 
 	def testEllipsis( self ) :
 
@@ -233,7 +233,7 @@ class PathMatcherTest( unittest.TestCase ) :
 			c = Gaffer.Context()
 			c["scene:path"] = IECore.InternedStringVectorData( path[1:].split( "/" ) )
 			with c :
-				self.assertEqual( f["match"].getValue(), int( result ) )
+				self.assertEqual( f["out"].getValue(), int( result ) )
 
 	def testEllipsisWithMultipleBranches( self ) :
 
@@ -262,7 +262,7 @@ class PathMatcherTest( unittest.TestCase ) :
 			c = Gaffer.Context()
 			c["scene:path"] = IECore.InternedStringVectorData( path[1:].split( "/" ) )
 			with c :
-				self.assertEqual( f["match"].getValue(), int( result ) )
+				self.assertEqual( f["out"].getValue(), int( result ) )
 
 	def testEllipsisAsTerminator( self ) :
 
@@ -284,7 +284,7 @@ class PathMatcherTest( unittest.TestCase ) :
 			c = Gaffer.Context()
 			c["scene:path"] = IECore.InternedStringVectorData( path[1:].split( "/" ) )
 			with c :
-				self.assertEqual( f["match"].getValue(), int( result ) )
+				self.assertEqual( f["out"].getValue(), int( result ) )
 
 	def testCopyConstructorIsDeep( self ) :
 

@@ -68,7 +68,7 @@ class ParentConstraintTest( GafferSceneTest.SceneTestCase ) :
 
 		filter = GafferScene.PathFilter()
 		filter["paths"].setValue( IECore.StringVectorData( [ "/group/constrained" ] ) )
-		constraint["filter"].setInput( filter["match"] )
+		constraint["filter"].setInput( filter["out"] )
 
 		self.assertSceneValid( constraint["out"] )
 
@@ -97,7 +97,7 @@ class ParentConstraintTest( GafferSceneTest.SceneTestCase ) :
 
 		filter = GafferScene.PathFilter()
 		filter["paths"].setValue( IECore.StringVectorData( [ "/group/constrained" ] ) )
-		constraint["filter"].setInput( filter["match"] )
+		constraint["filter"].setInput( filter["out"] )
 
 		self.assertSceneValid( constraint["out"] )
 
@@ -118,7 +118,7 @@ class ParentConstraintTest( GafferSceneTest.SceneTestCase ) :
 
 		filter = GafferScene.PathFilter()
 		filter["paths"].setValue( IECore.StringVectorData( [ "/group/constrained" ] ) )
-		constraint["filter"].setInput( filter["match"] )
+		constraint["filter"].setInput( filter["out"] )
 
 		cs = GafferTest.CapturingSlot( constraint.plugDirtiedSignal() )
 

@@ -102,7 +102,7 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 		attributes1["attributes"]["visibility"]["enabled"].setValue( True )
 		attributes1["attributes"]["visibility"]["value"].setValue( True )
 		attributes1["in"].setInput( group2["out"] )
-		attributes1["filter"].setInput( visibleFilter["match"] )
+		attributes1["filter"].setInput( visibleFilter["out"] )
 
 		invisibleFilter = GafferScene.PathFilter()
 
@@ -110,7 +110,7 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 		attributes2["attributes"]["visibility"]["enabled"].setValue( True )
 		attributes2["attributes"]["visibility"]["value"].setValue( False )
 		attributes2["in"].setInput( attributes1["out"] )
-		attributes2["filter"].setInput( invisibleFilter["match"] )
+		attributes2["filter"].setInput( invisibleFilter["out"] )
 
 		self.assertTrue( GafferScene.visible( attributes2["out"], "/group/group/sphere" ) )
 		self.assertTrue( GafferScene.visible( attributes2["out"], "/group/group" ) )

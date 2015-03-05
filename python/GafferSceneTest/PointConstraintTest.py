@@ -76,7 +76,7 @@ class PointConstraintTest( GafferSceneTest.SceneTestCase ) :
 
 		filter = GafferScene.PathFilter()
 		filter["paths"].setValue( IECore.StringVectorData( [ "/group/constrained" ] ) )
-		constraint["filter"].setInput( filter["match"] )
+		constraint["filter"].setInput( filter["out"] )
 
 		self.assertSceneValid( constraint["out"] )
 

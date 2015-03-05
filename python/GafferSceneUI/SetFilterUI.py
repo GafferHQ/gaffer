@@ -85,7 +85,7 @@ def __setsPopupMenu( menuDefinition, plugValueWidget ) :
 
 	setNames = set()
 	with plugValueWidget.getContext() :
-		for output in node["match"].outputs() :
+		for output in node["out"].outputs() :
 			if not isinstance( output.node(), GafferScene.SceneProcessor ) :
 				continue
 			globals = output.node()["in"]["globals"].getValue()

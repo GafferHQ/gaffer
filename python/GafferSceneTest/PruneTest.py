@@ -98,7 +98,7 @@ class PruneTest( GafferSceneTest.SceneTestCase ) :
 
 		filter = GafferScene.PathFilter()
 		filter["paths"].setValue( IECore.StringVectorData( [ "/*" ] ) )
-		prune["filter"].setInput( filter["match"] )
+		prune["filter"].setInput( filter["out"] )
 
 		prune["enabled"].setValue( False )
 
@@ -149,7 +149,7 @@ class PruneTest( GafferSceneTest.SceneTestCase ) :
 
 		filter = GafferScene.PathFilter()
 		filter["paths"].setValue( IECore.StringVectorData( [ "/groupA/sphereAB" ] ) )
-		prune["filter"].setInput( filter["match"] )
+		prune["filter"].setInput( filter["out"] )
 
 		self.assertNotEqual( prune["out"].childNamesHash( "/groupA" ), input["out"].childNamesHash( "/groupA" ) )
 		self.assertEqual( prune["out"].childNames( "/groupA" ), IECore.InternedStringVectorData( [ "sphereAA" ] ) )
@@ -188,7 +188,7 @@ class PruneTest( GafferSceneTest.SceneTestCase ) :
 
 		filter = GafferScene.PathFilter()
 		filter["paths"].setValue( IECore.StringVectorData( [ "/group/sphere2" ] ) )
-		prune["filter"].setInput( filter["match"] )
+		prune["filter"].setInput( filter["out"] )
 
 		self.assertEqual( prune["out"].bound( "/" ), sphere2.bound() )
 		self.assertEqual( prune["out"].bound( "/group" ), sphere2.bound() )
@@ -219,7 +219,7 @@ class PruneTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( set( lightSet.value.paths() ), set( [ "/group/light", "/group/light1" ] ) )
 
 		filter = GafferScene.PathFilter()
-		prune["filter"].setInput( filter["match"] )
+		prune["filter"].setInput( filter["out"] )
 
 		lightSet = prune["out"]["globals"].getValue()["gaffer:sets"]["__lights"]
 		self.assertEqual( set( lightSet.value.paths() ), set( [ "/group/light", "/group/light1" ] ) )
@@ -255,7 +255,7 @@ class PruneTest( GafferSceneTest.SceneTestCase ) :
 
 		prune = GafferScene.Prune()
 		prune["in"].setInput( topGroup["out"] )
-		prune["filter"].setInput( filter["match"] )
+		prune["filter"].setInput( filter["out"] )
 
 		lightSet = prune["out"]["globals"].getValue()["gaffer:sets"]["__lights"]
 		self.assertEqual( set( lightSet.value.paths() ), set( [ "/group/group1/light" ] ) )
@@ -278,7 +278,7 @@ class PruneTest( GafferSceneTest.SceneTestCase ) :
 
 		prune = GafferScene.Prune()
 		prune["in"].setInput( grid["out"] )
-		prune["filter"].setInput( pathFilter["match"] )
+		prune["filter"].setInput( pathFilter["out"] )
 
 		c = Gaffer.Context()
 		with c :

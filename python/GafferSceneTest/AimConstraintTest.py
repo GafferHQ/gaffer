@@ -70,7 +70,7 @@ class AimConstraintTest( GafferSceneTest.SceneTestCase ) :
 
 		filter = GafferScene.PathFilter()
 		filter["paths"].setValue( IECore.StringVectorData( [ "/group/constrained" ] ) )
-		aim["filter"].setInput( filter["match"] )
+		aim["filter"].setInput( filter["out"] )
 
 		self.assertSceneValid( aim["out"] )
 
@@ -106,7 +106,7 @@ class AimConstraintTest( GafferSceneTest.SceneTestCase ) :
 
 		filter = GafferScene.PathFilter()
 		filter["paths"].setValue( IECore.StringVectorData( [ "/group/constrained" ] ) )
-		aim["filter"].setInput( filter["match"] )
+		aim["filter"].setInput( filter["out"] )
 
 		self.assertSceneValid( aim["out"] )
 
@@ -141,7 +141,7 @@ class AimConstraintTest( GafferSceneTest.SceneTestCase ) :
 
 		filter = GafferScene.PathFilter()
 		filter["paths"].setValue( IECore.StringVectorData( [ "/group/constrained" ] ) )
-		aim["filter"].setInput( filter["match"] )
+		aim["filter"].setInput( filter["out"] )
 
 		self.assertSceneValid( aim["out"] )
 
@@ -189,7 +189,7 @@ class AimConstraintTest( GafferSceneTest.SceneTestCase ) :
 
 		filter = GafferScene.PathFilter()
 		filter["paths"].setValue( IECore.StringVectorData( [ "/group/constrained" ] ) )
-		aim["filter"].setInput( filter["match"] )
+		aim["filter"].setInput( filter["out"] )
 
 		self.assertSceneValid( aim["out"] )
 

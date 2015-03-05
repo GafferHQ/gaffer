@@ -75,7 +75,7 @@ class ShaderAssignmentTest( unittest.TestCase ) :
 
 		f = GafferScene.PathFilter()
 		f["paths"].setValue( IECore.StringVectorData( [ "/ball1" ] ) )
-		a["filter"].setInput( f["match"] )
+		a["filter"].setInput( f["out"] )
 
 		self.assertEqual( a["out"].attributes( "/" ), IECore.CompoundObject() )
 		self.assertNotEqual( a["out"].attributes( "/ball1" ), IECore.CompoundObject() )
@@ -86,13 +86,13 @@ class ShaderAssignmentTest( unittest.TestCase ) :
 		a = GafferScene.ShaderAssignment()
 
 		f = GafferScene.PathFilter()
-		self.assertTrue( a["filter"].acceptsInput( f["match"] ) )
+		self.assertTrue( a["filter"].acceptsInput( f["out"] ) )
 
 		n = GafferTest.AddNode()
 		self.assertFalse( a["filter"].acceptsInput( n["sum"] ) )
 
 		p = Gaffer.IntPlug()
-		p.setInput( f["match"] )
+		p.setInput( f["out"] )
 
 		self.assertTrue( a["filter"].acceptsInput( p ) )
 

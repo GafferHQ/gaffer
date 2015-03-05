@@ -324,7 +324,7 @@ class InteractiveRenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		s["a"] = GafferScene.ShaderAssignment()
 		s["a"]["in"].setInput( s["g"]["out"] )
 		s["a"]["shader"].setInput( s["s"]["out"] )
-		s["a"]["filter"].setInput( s["f"]["match"] )
+		s["a"]["filter"].setInput( s["f"]["out"] )
 
 		s["d"] = GafferScene.Outputs()
 		s["d"].addOutput(
