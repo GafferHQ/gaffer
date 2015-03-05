@@ -1,3 +1,81 @@
+Core
+-----------------------------------------------------------------------
+
+- Reimplemented paths framework in C++ (#1190). This gives much 
+  improved performance - 10x or more speed improvements in the
+  SceneHierarchy panel.
+
+UI
+-----------------------------------------------------------------------
+
+- Added bookmarks system for NodeGraph (#849).
+  - Bookmark nodes using the right-click node context menu
+  - Connect plugs to bookmarked nodes using the right-click plug
+    context menu.
+- Added NodeGraph Ctrl+Click to select all downstream nodes (#941).
+- Added additional "Edit/Select Connected" menu items
+- Fixed "Edit/SelectConnected" menu items to ignore invisible nodes.
+- Fixed "Edit/SelectAll" menu item to ignore invisible nodes (#1207).
+
+Scene
+-----------------------------------------------------------------------
+
+- Added "mode" plug to Set node. This allows paths to be added to or
+  removed from existing sets, in addition to the old behaviour of
+  creating a new set (or replacing an existing one of the same name).
+
+Appleseed
+-----------------------------------------------------------------------
+
+- Added photon target attribute.
+- Added sampler option.
+- Synced default options with new Appleseed defaults.
+
+API
+-----------------------------------------------------------------------
+
+- GraphGadget
+  - Added degreesOfSeparation argument to upstreamNodeGadgets() method.
+  - Added downstreamNodeGadgets() and connectedNodeGadgets() methods.
+- EditMenu
+  - Added scope() method. This should be used by custom edit menu
+    commands to ensure they operate on the right portion of the
+    node graph.
+- CompoundVectorParameterValueWidget
+  - Added support for "showIndices" parameter user data.
+- PathMatcher
+  - Added addPaths() and removePaths() methods, each taking a second
+    PathMatcher to provide the paths.
+- Serialisation
+  - Made classPath() and modulePath() methods compatible with passing
+    a class as well as an instance.
+- PathListingWidget
+  - Added setSortable() and getSortable() methods.
+- Added MatchPatternPathFilter
+
+Incompatibilities
+-----------------------------------------------------------------------
+
+- Path
+  - The info API has been replaced with a property API. Emulation
+    for the old API exists, but it has been deprecated.
+  - Properties must derive from RunTimeTyped, whereas info could
+    contain any python type.
+  - Subclasses now _must_ implement the copy() method.
+- PathListingWidget
+  - Column python class has been replaced with several specialised
+    C++ subclasses. It is no longer possible to derive from Column
+    in python.
+- GraphGadget
+  - Added argument to upstreamNodeGadgets() method.
+
+Build
+-----------------------------------------------------------------------
+
+- Updated public build to use Cortex 9.0.0-b4.
+- libGafferUI now links with Qt. This must be considered when building
+  Gaffer to be hosted inside other applications.
+
 # 0.9.0.0
 =========
 
@@ -24,7 +102,6 @@ Cortex
 -----------------------------------------------------------------------
 
 - Documented all nodes and plugs.
-
 
 Scene
 -----------------------------------------------------------------------
