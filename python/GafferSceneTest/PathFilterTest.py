@@ -186,5 +186,27 @@ class PathFilterTest( unittest.TestCase ) :
 			c["passName"] = "foreground"
 			self.assertEqual( s["f"]["match"].getValue(), GafferScene.Filter.Result.ExactMatch )
 
+	def testEnabled( self ) :
+
+		f = GafferScene.PathFilter()
+		self.assertTrue( f.enabledPlug().isSame( f["enabled"] ) )
+		self.assertTrue( isinstance( f.enabledPlug(), Gaffer.BoolPlug ) )
+		self.assertEqual( f.enabledPlug().defaultValue(), True )
+		self.assertEqual( f.enabledPlug().getValue(), True )
+		self.assertEqual( f.correspondingInput( f["match"] ), None )
+
+		f["paths"].setValue( IECore.StringVectorData( [ "/a" ] ) )
+
+		with Gaffer.Context() as c :
+
+			c["scene:path"] = IECore.InternedStringVectorData( [ "a" ] )
+			self.assertEqual( f["match"].getValue(), GafferScene.Filter.Result.ExactMatch )
+
+			f["enabled"].setValue( False )
+			self.assertEqual( f["match"].getValue(), GafferScene.Filter.Result.NoMatch )
+
+		a = f.affects( f["enabled"] )
+		self.assertTrue( f["match"] in a )
+
 if __name__ == "__main__":
 	unittest.main()

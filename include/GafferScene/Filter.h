@@ -69,9 +69,13 @@ class Filter : public Gaffer::ComputeNode
 		Filter( const std::string &name=defaultName<Filter>() );
 		virtual ~Filter();
 
+		virtual Gaffer::BoolPlug *enabledPlug();
+		virtual const Gaffer::BoolPlug *enabledPlug() const;
+
 		Gaffer::IntPlug *matchPlug();
 		const Gaffer::IntPlug *matchPlug() const;
 
+		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
 		virtual bool sceneAffectsMatch( const ScenePlug *scene, const Gaffer::ValuePlug *child ) const;
 
 		/// Because a single filter may be used with many different input scenes,
