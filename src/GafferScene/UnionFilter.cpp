@@ -55,7 +55,7 @@ UnionFilter::UnionFilter( const std::string &name )
 	addChild( new ArrayPlug(
 		"in",
 		Plug::In,
-		matchPlug()->createCounterpart( "in", Plug::In )
+		outPlug()->createCounterpart( "in", Plug::In )
 	) );
 }
 
@@ -79,7 +79,7 @@ void UnionFilter::affects( const Gaffer::Plug *input, AffectedPlugsContainer &ou
 
 	if( input->parent<ArrayPlug>() == inPlug() )
 	{
-		outputs.push_back( matchPlug() );
+		outputs.push_back( outPlug() );
 	}
 }
 

@@ -92,7 +92,7 @@ void PathFilter::affects( const Gaffer::Plug *input, AffectedPlugsContainer &out
 	}
 	else if( input == pathMatcherPlug() )
 	{
-		outputs.push_back( matchPlug() );
+		outputs.push_back( outPlug() );
 	}
 }
 

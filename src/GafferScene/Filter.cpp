@@ -94,7 +94,7 @@ void Filter::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs
 
 	if( input == enabledPlug() )
 	{
-		outputs.push_back( matchPlug() );
+		outputs.push_back( outPlug() );
 	}
 }
 
@@ -116,7 +116,7 @@ const ScenePlug *Filter::getInputScene( const Gaffer::Context *context )
 void Filter::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	ComputeNode::hash( output, context, h );
-	if( output == matchPlug() )
+	if( output == outPlug() )
 	{
 		if( enabledPlug()->getValue() )
 		{
@@ -135,7 +135,7 @@ void Filter::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *conte
 
 void Filter::compute( ValuePlug *output, const Context *context ) const
 {
-	if( output == matchPlug() )
+	if( output == outPlug() )
 	{
 		unsigned match = NoMatch;
 		if( enabledPlug()->getValue() )

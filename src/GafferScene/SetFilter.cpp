@@ -77,7 +77,7 @@ void SetFilter::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outp
 
 	if( input == setPlug() )
 	{
-		outputs.push_back( matchPlug() );
+		outputs.push_back( outPlug() );
 	}
 }
 

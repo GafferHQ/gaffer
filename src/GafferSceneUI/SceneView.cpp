@@ -866,7 +866,7 @@ SceneView::SceneView( const std::string &name )
 
 	PathFilterPtr hideFilter = new PathFilter( "hideFilter" );
 	preprocessor->addChild( hideFilter );
-	hide->filterPlug()->setInput( hideFilter->matchPlug() );
+	hide->filterPlug()->setInput( hideFilter->outPlug() );
 
 	// make the output for the preprocessor
 
