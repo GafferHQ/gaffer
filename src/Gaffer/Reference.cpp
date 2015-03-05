@@ -42,6 +42,7 @@
 #include "Gaffer/Reference.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/CompoundPlug.h"
+#include "Gaffer/Metadata.h"
 
 using namespace IECore;
 using namespace Gaffer;
@@ -125,6 +126,21 @@ void Reference::load( const std::string &fileName )
 	const bool errors = script->executeFile( fileName, this, /* continueOnError = */ true );
 	fileNamePlug()->setValue( fileName );
 
+	// figure out what version of gaffer was used to save the reference. prior to
+	// version 0.9.0.0, references could contain setValue() calls for promoted plugs,
+	// and we must make sure they don't clobber the user-set values on the reference node.
+	int milestoneVersion = 0;
+	int majorVersion = 0;
+	if( IECore::ConstIntDataPtr v = Metadata::nodeValue<IECore::IntData>( this, "serialiser:milestoneVersion" ) )
+	{
+		milestoneVersion = v->readable();
+	}
+	if( IECore::ConstIntDataPtr v = Metadata::nodeValue<IECore::IntData>( this, "serialiser:majorVersion" ) )
+	{
+		majorVersion = v->readable();
+	}
+	const bool versionPriorTo09 = milestoneVersion == 0 && majorVersion < 9;
+
 	// transfer connections and values from the old plugs onto the corresponding new ones.
 
 	for( std::map<std::string, Plug *>::const_iterator it = previousPlugs.begin(), eIt = previousPlugs.end(); it != eIt; ++it )
@@ -144,9 +160,10 @@ void Reference::load( const std::string &fileName )
 					else
 					{
 						ValuePlug *oldValuePlug = runTimeCast<ValuePlug>( oldPlug );
-						if( oldValuePlug && !oldValuePlug->isSetToDefault() )
+						ValuePlug *newValuePlug = runTimeCast<ValuePlug>( newPlug );
+						if( oldValuePlug && newValuePlug )
 						{
-							if( ValuePlug *newValuePlug = runTimeCast<ValuePlug>( newPlug ) )
+							if( versionPriorTo09 || !oldValuePlug->isSetToDefault() )
 							{
 								newValuePlug->setFrom( oldValuePlug );
 							}

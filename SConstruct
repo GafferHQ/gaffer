@@ -51,7 +51,7 @@ import subprocess
 gafferMilestoneVersion = 0 # for announcing major milestones - may contain all of the below
 gafferMajorVersion = 9 # backwards-incompatible changes
 gafferMinorVersion = 0 # new backwards-compatible features
-gafferPatchVersion = 0 # bug fixes
+gafferPatchVersion = 1 # bug fixes
 
 # All of the following must be considered when determining
 # whether or not a change is backwards-compatible
@@ -531,6 +531,13 @@ env = Environment(
 	GAFFER_MAJOR_VERSION = str( gafferMajorVersion ),
 	GAFFER_MINOR_VERSION = str( gafferMinorVersion ),
 	GAFFER_PATCH_VERSION = str( gafferPatchVersion ),
+
+	CPPDEFINES = [
+		( "GAFFER_MILESTONE_VERSION", "$GAFFER_MILESTONE_VERSION" ),
+		( "GAFFER_MAJOR_VERSION", "$GAFFER_MAJOR_VERSION" ),
+		( "GAFFER_MINOR_VERSION", "$GAFFER_MINOR_VERSION" ),
+		( "GAFFER_PATCH_VERSION", "$GAFFER_PATCH_VERSION" ),
+	]
 
 )
 

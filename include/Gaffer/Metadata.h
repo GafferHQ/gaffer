@@ -73,13 +73,14 @@ class Metadata
 		/// NodeValueFunction will be called to compute it.
 		static void registerNodeValue( IECore::TypeId nodeTypeId, IECore::InternedString key, NodeValueFunction value );
 		/// Registers a metadata value specific to a single instance - this will take precedence over any
-		/// values registered above. Instance values are preserved across script save/load and cut/paste.
+		/// values registered above. If persistent is true, the value will be preserved across script save/load and cut/paste.
 		/// \undoable
-		static void registerNodeValue( Node *node, IECore::InternedString key, IECore::ConstDataPtr value );
+		static void registerNodeValue( Node *node, IECore::InternedString key, IECore::ConstDataPtr value, bool persistent = true );
 
 		/// Fills the keys vector with keys for all values registered for the specified node. If instanceOnly is true,
-		/// then only the values registered for that exact instance are returned.
-		static void registeredNodeValues( const Node *node, std::vector<IECore::InternedString> &keys, bool inherit = true, bool instanceOnly = false );
+		/// then only the values registered for that exact instance are returned. If persistentOnly is true, then
+		/// non-persistent instance values are ignored.
+		static void registeredNodeValues( const Node *node, std::vector<IECore::InternedString> &keys, bool inherit = true, bool instanceOnly = false, bool persistentOnly = false );
 
 		/// Retrieves a previously registered value, returning NULL if none exists. If inherit is true
 		/// then the search falls through to the base classes of the node if the node itself doesn't have a value.
@@ -98,13 +99,15 @@ class Metadata
 		/// PlugValueFunction will be called to compute it.
 		static void registerPlugValue( IECore::TypeId nodeTypeId, const MatchPattern &plugPath, IECore::InternedString key, PlugValueFunction value );
 		/// Registers a metadata value specific to a single instance - this will take precedence over any
-		/// values registered above. Instance values are preserved across script save/load and cut/paste.
+		/// values registered above. If persistent is true, the value will be preserved across script
+		/// save/load and cut/paste.
 		/// \undoable
-		static void registerPlugValue( Plug *plug, IECore::InternedString key, IECore::ConstDataPtr value );
+		static void registerPlugValue( Plug *plug, IECore::InternedString key, IECore::ConstDataPtr value, bool persistent = true );
 
 		/// Fills the keys vector with keys for all values registered for the specified plug. If instanceOnly is true,
-		/// then only the values registered for that exact instance are returned.
-		static void registeredPlugValues( const Plug *plug, std::vector<IECore::InternedString> &keys, bool inherit = true, bool instanceOnly = false );
+		/// then only the values registered for that exact instance are returned. If persistentOnly is true, then
+		/// non-persistent instance values are ignored.
+		static void registeredPlugValues( const Plug *plug, std::vector<IECore::InternedString> &keys, bool inherit = true, bool instanceOnly = false, bool persistentOnly = false );
 
 		/// Retrieves a previously registered value, returning NULL if none exists. If inherit is true
 		/// then the search falls through to the base classes of the node if the node itself doesn't have a value.

@@ -41,6 +41,8 @@
 #include "Gaffer/ValuePlug.h"
 #include "Gaffer/Node.h"
 #include "Gaffer/Context.h"
+#include "Gaffer/Reference.h"
+#include "Gaffer/Metadata.h"
 
 #include "GafferBindings/ValuePlugBinding.h"
 #include "GafferBindings/PlugBinding.h"
@@ -174,7 +176,35 @@ std::string ValuePlugSerialiser::postConstructor( const Gaffer::GraphComponent *
 		if( PyObject_HasAttrString( pythonPlug.ptr(), "getValue" ) )
 		{
 			object pythonValue = pythonPlug.attr( "getValue" )();
-			if( PyObject_HasAttrString( pythonPlug.ptr(), "defaultValue" ) )
+			
+			bool omitDefaultValue = true;
+			if( const Reference *reference = IECore::runTimeCast<const Reference>( plug->node() ) )
+			{
+				// Prior to version 0.9.0.0, `.grf` files created with `Box::exportForReference()`
+				// could contain setValue() calls for promoted plugs like this one. When such
+				// files have been loaded on a Reference node, we must always serialise the plug values
+				// from the Reference node, lest they should get clobbered by the setValue() calls
+				// in the `.grf` file.
+				int milestoneVersion = 0;
+				int majorVersion = 0;
+				if( IECore::ConstIntDataPtr v = Metadata::nodeValue<IECore::IntData>( reference, "serialiser:milestoneVersion" ) )
+				{
+					milestoneVersion = v->readable();
+				}
+				if( IECore::ConstIntDataPtr v = Metadata::nodeValue<IECore::IntData>( reference, "serialiser:majorVersion" ) )
+				{
+					majorVersion = v->readable();
+				}
+				omitDefaultValue = milestoneVersion > 0 || majorVersion > 8;
+				/// \todo Consider whether or not we might like to have a plug flag
+				/// to control this behaviour, so that ValuePlugSerialiser doesn't
+				/// need explicit knowledge of Reference Nodes. On the one hand, reducing
+				/// coupling between this and the Reference node seems good, but on the other,
+				/// it'd be nice to keep the plug flags as simple as possible, and we don't have
+				/// another worthwhile use case.
+			}
+
+			if( omitDefaultValue && PyObject_HasAttrString( pythonPlug.ptr(), "defaultValue" ) )
 			{
 				object pythonDefaultValue = pythonPlug.attr( "defaultValue" )();
 				if( pythonValue == pythonDefaultValue )

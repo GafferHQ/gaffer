@@ -93,6 +93,20 @@ std::string Serialisation::result() const
 		result += "import " + *it + "\n";
 	}
 
+	if(
+		Context::current()->get<bool>( "serialiser:includeVersionMetadata", false ) &&
+		runTimeCast<const Node>( m_parent )
+	)
+	{
+		boost::format formatter( "Gaffer.Metadata.registerNodeValue( %s, \"%s\", %d, persistent=False )\n" );
+		
+		result += "\n";
+		result += boost::str( formatter % m_parentName % "serialiser:milestoneVersion" % GAFFER_MILESTONE_VERSION );
+		result += boost::str( formatter % m_parentName % "serialiser:majorVersion" % GAFFER_MAJOR_VERSION );
+		result += boost::str( formatter % m_parentName % "serialiser:minorVersion" % GAFFER_MINOR_VERSION );
+		result += boost::str( formatter % m_parentName % "serialiser:patchVersion" % GAFFER_PATCH_VERSION );
+	}
+
 	result += "\n__children = {}\n\n";
 
 	result += m_hierarchyScript;

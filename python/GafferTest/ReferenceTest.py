@@ -662,6 +662,84 @@ class ReferenceTest( GafferTest.TestCase ) :
 		self.assertEqual( Gaffer.Metadata.nodeValue( s["r"], "description" ), "Test description" )
 		self.assertEqual( Gaffer.Metadata.nodeValue( s["r"], "nodeGadget:color" ), IECore.Color3f( 1, 0, 0 ) )
 
+	def testVersionMetadata( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["b"] = Gaffer.Box()
+		s["b"].exportForReference( "/tmp/test.grf" )
+
+		s["r"] = Gaffer.Reference()
+		s["r"].load( "/tmp/test.grf" )
+
+		self.assertEqual( Gaffer.Metadata.nodeValue( s["r"], "serialiser:milestoneVersion" ), Gaffer.About.milestoneVersion() )
+		self.assertEqual( Gaffer.Metadata.nodeValue( s["r"], "serialiser:majorVersion" ), Gaffer.About.majorVersion() )
+		self.assertEqual( Gaffer.Metadata.nodeValue( s["r"], "serialiser:minorVersion" ), Gaffer.About.minorVersion() )
+		self.assertEqual( Gaffer.Metadata.nodeValue( s["r"], "serialiser:patchVersion" ), Gaffer.About.patchVersion() )
+
+		self.assertTrue( "serialiser:milestoneVersion" not in Gaffer.Metadata.registeredNodeValues( s["r"], persistentOnly = True ) )
+		self.assertTrue( "serialiser:majorVersion" not in Gaffer.Metadata.registeredNodeValues( s["r"], persistentOnly = True ) )
+		self.assertTrue( "serialiser:minorVersion" not in Gaffer.Metadata.registeredNodeValues( s["r"], persistentOnly = True ) )
+		self.assertTrue( "serialiser:patchVersion" not in Gaffer.Metadata.registeredNodeValues( s["r"], persistentOnly = True ) )
+
+	def testBackwardCompatibility( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["r"] = Gaffer.Reference()
+		s["r"].load( os.path.dirname( __file__ ) + "/references/version-0.8.0.0.grf" )
+		
+		self.assertEqual( s["r"]["user"]["promoted"].defaultValue(), False )
+		self.assertEqual( s["r"]["user"]["promoted"].getValue(), True )
+		
+		s["r"]["user"]["promoted"].setValue( False )
+		self.assertEqual( s["r"]["user"]["promoted"].defaultValue(), False )
+		self.assertEqual( s["r"]["user"]["promoted"].getValue(), False )
+		
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+		
+		self.assertEqual( s2["r"]["user"]["promoted"].defaultValue(), False )
+		self.assertEqual( s2["r"]["user"]["promoted"].getValue(), False )
+
+	def testCutAndPasteOldReferenceTwice( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["r"] = Gaffer.Reference()
+		s["r"].load( os.path.dirname( __file__ ) + "/references/version-0.8.0.0.grf" )
+
+		self.assertEqual( s["r"]["user"]["promoted"].defaultValue(), False )
+		self.assertEqual( s["r"]["user"]["promoted"].getValue(), True )
+
+		s["r"]["user"]["promoted"].setValue( False )
+		self.assertEqual( s["r"]["user"]["promoted"].defaultValue(), False )
+		self.assertEqual( s["r"]["user"]["promoted"].getValue(), False )
+
+		s.execute( s.serialise( filter = Gaffer.StandardSet( [ s["r"] ] ) ) )
+
+		self.assertEqual( s["r1"]["user"]["promoted"].defaultValue(), False )
+		self.assertEqual( s["r1"]["user"]["promoted"].getValue(), False )
+
+		s.execute( s.serialise( filter = Gaffer.StandardSet( [ s["r1"] ] ) ) )
+
+		self.assertEqual( s["r2"]["user"]["promoted"].defaultValue(), False )
+		self.assertEqual( s["r2"]["user"]["promoted"].getValue(), False )
+
+	def testReloadOldReference( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["r"] = Gaffer.Reference()
+		s["r"].load( os.path.dirname( __file__ ) + "/references/version-0.8.0.0.grf" )
+
+		self.assertEqual( s["r"]["user"]["promoted"].defaultValue(), False )
+		self.assertEqual( s["r"]["user"]["promoted"].getValue(), True )
+
+		s["r"]["user"]["promoted"].setValue( False )
+		self.assertEqual( s["r"]["user"]["promoted"].defaultValue(), False )
+		self.assertEqual( s["r"]["user"]["promoted"].getValue(), False )
+
+		s["r"].load( os.path.dirname( __file__ ) + "/references/version-0.8.0.0.grf" )
+		self.assertEqual( s["r"]["user"]["promoted"].defaultValue(), False )
+		self.assertEqual( s["r"]["user"]["promoted"].getValue(), False )
+
 	def tearDown( self ) :
 
 		GafferTest.SphereNode = self.__SphereNode
