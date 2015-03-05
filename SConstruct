@@ -315,7 +315,7 @@ options.Add(
 options.Add(
 	"CORTEX_SRC_DIR",
 	"The location of the cortex source to be used if BUILD_DEPENDENCY_CORTEX is specified.",
-	"$DEPENDENCIES_SRC_DIR/cortex-9.0.0-b3",
+	"$DEPENDENCIES_SRC_DIR/cortex-9.0.0-b4",
 )
 
 options.Add(
