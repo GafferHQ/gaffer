@@ -662,6 +662,25 @@ class ReferenceTest( GafferTest.TestCase ) :
 		self.assertEqual( Gaffer.Metadata.nodeValue( s["r"], "description" ), "Test description" )
 		self.assertEqual( Gaffer.Metadata.nodeValue( s["r"], "nodeGadget:color" ), IECore.Color3f( 1, 0, 0 ) )
 
+	def testVersionMetadata( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["b"] = Gaffer.Box()
+		s["b"].exportForReference( "/tmp/test.grf" )
+
+		s["r"] = Gaffer.Reference()
+		s["r"].load( "/tmp/test.grf" )
+
+		self.assertEqual( Gaffer.Metadata.nodeValue( s["r"], "serialiser:milestoneVersion" ), Gaffer.About.milestoneVersion() )
+		self.assertEqual( Gaffer.Metadata.nodeValue( s["r"], "serialiser:majorVersion" ), Gaffer.About.majorVersion() )
+		self.assertEqual( Gaffer.Metadata.nodeValue( s["r"], "serialiser:minorVersion" ), Gaffer.About.minorVersion() )
+		self.assertEqual( Gaffer.Metadata.nodeValue( s["r"], "serialiser:patchVersion" ), Gaffer.About.patchVersion() )
+
+		self.assertTrue( "serialiser:milestoneVersion" not in Gaffer.Metadata.registeredNodeValues( s["r"], persistentOnly = True ) )
+		self.assertTrue( "serialiser:majorVersion" not in Gaffer.Metadata.registeredNodeValues( s["r"], persistentOnly = True ) )
+		self.assertTrue( "serialiser:minorVersion" not in Gaffer.Metadata.registeredNodeValues( s["r"], persistentOnly = True ) )
+		self.assertTrue( "serialiser:patchVersion" not in Gaffer.Metadata.registeredNodeValues( s["r"], persistentOnly = True ) )
+
 	def tearDown( self ) :
 
 		GafferTest.SphereNode = self.__SphereNode
