@@ -265,17 +265,17 @@ list keysToList( const std::vector<InternedString> &keys )
 	return result;
 }
 
-list registeredNodeValues( const Node *node, bool inherit, bool instanceOnly )
+list registeredNodeValues( const Node *node, bool inherit, bool instanceOnly, bool persistentOnly )
 {
 	std::vector<InternedString> keys;
-	Metadata::registeredNodeValues( node, keys, inherit, instanceOnly );
+	Metadata::registeredNodeValues( node, keys, inherit, instanceOnly, persistentOnly );
 	return keysToList( keys );
 }
 
-list registeredPlugValues( const Plug *plug, bool inherit, bool instanceOnly )
+list registeredPlugValues( const Plug *plug, bool inherit, bool instanceOnly, bool persistentOnly )
 {
 	std::vector<InternedString> keys;
-	Metadata::registeredPlugValues( plug, keys, inherit, instanceOnly );
+	Metadata::registeredPlugValues( plug, keys, inherit, instanceOnly, persistentOnly );
 	return keysToList( keys );
 }
 
@@ -289,14 +289,21 @@ void bindMetadata()
 	scope s = class_<Metadata>( "Metadata", no_init )
 
 		.def( "registerNodeValue", &registerNodeValue )
-		.def( "registerNodeValue", (void (*)( Node *, InternedString key, ConstDataPtr value ))&Metadata::registerNodeValue )
+		.def( "registerNodeValue", (void (*)( Node *, InternedString key, ConstDataPtr value, bool ))&Metadata::registerNodeValue,
+			(
+				boost::python::arg( "node" ),
+				boost::python::arg( "value" ),
+				boost::python::arg( "persistent" ) = true
+			)
+		)
 		.staticmethod( "registerNodeValue" )
 
 		.def( "registeredNodeValues", &registeredNodeValues,
 			(
 				boost::python::arg( "node" ),
 				boost::python::arg( "inherit" ) = true,
-				boost::python::arg( "instanceOnly" ) = false
+				boost::python::arg( "instanceOnly" ) = false,
+				boost::python::arg( "persistentOnly" ) = false			
 			)
 		)
 		.staticmethod( "registeredNodeValues" )
@@ -327,14 +334,21 @@ void bindMetadata()
 		.staticmethod( "nodeDescription" )
 
 		.def( "registerPlugValue", &registerPlugValue )
-		.def( "registerPlugValue", (void (*)( Plug *, InternedString key, ConstDataPtr value ))&Metadata::registerPlugValue )
+		.def( "registerPlugValue", (void (*)( Plug *, InternedString key, ConstDataPtr value, bool ))&Metadata::registerPlugValue,
+			(
+				boost::python::arg( "plug" ),
+				boost::python::arg( "value" ),
+				boost::python::arg( "persistent" ) = true
+			)
+		)
 		.staticmethod( "registerPlugValue" )
 
 		.def( "registeredPlugValues", &registeredPlugValues,
 			(
 				boost::python::arg( "plug" ),
 				boost::python::arg( "inherit" ) = true,
-				boost::python::arg( "instanceOnly" ) = false
+				boost::python::arg( "instanceOnly" ) = false,
+				boost::python::arg( "persistentOnly" ) = false			
 			)
 		)
 		.staticmethod( "registeredPlugValues" )
@@ -376,7 +390,7 @@ void bindMetadata()
 std::string metadataSerialisation( const Gaffer::Node *node, const std::string &identifier )
 {
 	std::vector<InternedString> keys;
-	Metadata::registeredNodeValues( node, keys, false, true );
+	Metadata::registeredNodeValues( node, keys, /* inherit = */ false, /* instanceOnly = */ true, /* persistentOnly = */ true );
 
 	std::string result;
 	for( std::vector<InternedString>::const_iterator it = keys.begin(), eIt = keys.end(); it != eIt; ++it )
@@ -399,7 +413,7 @@ std::string metadataSerialisation( const Gaffer::Node *node, const std::string &
 std::string metadataSerialisation( const Plug *plug, const std::string &identifier )
 {
 	std::vector<InternedString> keys;
-	Metadata::registeredPlugValues( plug, keys, false, true );
+	Metadata::registeredPlugValues( plug, keys, /* inherit = */ false, /* instanceOnly = */ true, /* persistentOnly = */ true );
 
 	std::string result;
 	for( std::vector<InternedString>::const_iterator it = keys.begin(), eIt = keys.end(); it != eIt; ++it )
