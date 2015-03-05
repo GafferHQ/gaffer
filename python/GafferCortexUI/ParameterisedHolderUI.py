@@ -59,6 +59,10 @@ __nodeTypes = (
 # NodeUI
 ##########################################################################
 
+# Supported userData entries :
+#
+# ["UI"]["showHeader"]
+
 class _ParameterisedHolderNodeUI( GafferUI.NodeUI ) :
 
 	def __init__( self, node, readOnly=False, **kw ) :
@@ -66,14 +70,21 @@ class _ParameterisedHolderNodeUI( GafferUI.NodeUI ) :
 		column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing = 4 )
 
 		GafferUI.NodeUI.__init__( self, node, column, **kw )
+		
+		showHeader = True
+		parameterised = self.node().getParameterised()[0]
+		if isinstance( parameterised, IECore.Op ) :
+			with IECore.IgnoredExceptions( KeyError ) :		
+				showHeader = parameterised.userData()["UI"]["showHeader"].value
 
 		with column :
-
-			with GafferUI.ListContainer( orientation = GafferUI.ListContainer.Orientation.Horizontal ) :
-				GafferUI.Spacer( IECore.V2i( 10 ), parenting = { "expand"  : True } )
-				toolButton = GafferCortexUI.ToolParameterValueWidget( self.node().parameterHandler() )
-				toolButton.plugValueWidget().setReadOnly( readOnly )
-				_InfoButton( node )
+			
+			if showHeader :	
+				with GafferUI.ListContainer( orientation = GafferUI.ListContainer.Orientation.Horizontal ) :
+					GafferUI.Spacer( IECore.V2i( 10 ), parenting = { "expand"  : True } )
+					toolButton = GafferCortexUI.ToolParameterValueWidget( self.node().parameterHandler() )
+					toolButton.plugValueWidget().setReadOnly( readOnly )
+					_InfoButton( node )
 
 			with GafferUI.ScrolledContainer( horizontalMode=GafferUI.ScrolledContainer.ScrollMode.Never, borderWidth=4 ) :
 				self.__parameterValueWidget = GafferCortexUI.CompoundParameterValueWidget( self.node().parameterHandler(), collapsible = False )
