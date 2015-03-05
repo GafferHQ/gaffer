@@ -65,6 +65,13 @@ void outputCamera( const ScenePlug *scene, const IECore::CompoundObject *globals
 /// Outputs the camera from the specified location.
 void outputCamera( const ScenePlug *scene, const ScenePlug::ScenePath &cameraPath, const IECore::CompoundObject *globals, IECore::Renderer *renderer );
 
+/// Outputs all the visible clipping planes from the scene.
+void outputClippingPlanes( const ScenePlug *scene, const IECore::CompoundObject *globals, IECore::Renderer *renderer );
+
+/// Outputs a single clipping plane from the scene. Returns true for success, and false if no clipping plane
+/// was found or if it was invisible.
+bool outputClippingPlane( const ScenePlug *scene, const ScenePlug::ScenePath &path, IECore::Renderer *renderer );
+
 /// Outputs the attributes stored in the globals.
 void outputGlobalAttributes( const IECore::CompoundObject *globals, IECore::Renderer *renderer );
 

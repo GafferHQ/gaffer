@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,56 +34,55 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#include "IECore/ClippingPlane.h"
 
-#include "IECore/Camera.h"
+#include "GafferScene/ClippingPlane.h"
+#include "GafferScene/PathMatcherData.h"
 
-#include "IECorePython/ScopedGILRelease.h"
-
-#include "GafferScene/SceneAlgo.h"
-#include "GafferScene/ScenePlug.h"
-#include "GafferScene/Filter.h"
-#include "GafferScene/PathMatcher.h"
-
-#include "GafferSceneBindings/SceneAlgoBinding.h"
-
-using namespace boost::python;
+using namespace Gaffer;
 using namespace GafferScene;
+using namespace Imath;
 
-namespace GafferSceneBindings
-{
+IE_CORE_DEFINERUNTIMETYPED( ClippingPlane );
 
-static void matchingPathsHelper1( const Filter *filter, const ScenePlug *scene, PathMatcher &paths )
+ClippingPlane::ClippingPlane( const std::string &name )
+	:	ObjectSource( name, "clippingPlane" )
 {
-	// gil release in case the scene traversal dips back into python:
-	IECorePython::ScopedGILRelease r;
-	matchingPaths( filter, scene, paths );
 }
 
-static void matchingPathsHelper2( const Gaffer::IntPlug *filterPlug, const ScenePlug *scene, PathMatcher &paths )
+ClippingPlane::~ClippingPlane()
 {
-	// gil release in case the scene traversal dips back into python:
-	IECorePython::ScopedGILRelease r;
-	matchingPaths( filterPlug, scene, paths );
 }
 
-void bindSceneAlgo()
+void ClippingPlane::hashGlobals( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	def( "exists", exists );
-	def( "visible", visible );
-	def( "matchingPaths", &matchingPathsHelper1 );
-	def( "matchingPaths", &matchingPathsHelper2 );
-	def( "shutter", &shutter );
-	def(
-		"camera",
-		(IECore::CameraPtr (*)( const ScenePlug *, const IECore::CompoundObject * ) )&camera,
-		( arg( "scene" ), arg( "globals" ) = object() )
+	ObjectSource::hashGlobals( context, parent, h );
+	namePlug()->hash( h );
+}
+
+IECore::ConstCompoundObjectPtr ClippingPlane::computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const
+{
+	IECore::CompoundObjectPtr result = new IECore::CompoundObject;
+
+	IECore::CompoundDataPtr sets = result->member<IECore::CompoundData>(
+		"gaffer:sets",
+		/* throwExceptions = */ false,
+		/* createIfMissing = */ true
 	);
-	def(
-		"camera",
-		(IECore::CameraPtr (*)( const ScenePlug *, const ScenePlug::ScenePath &, const IECore::CompoundObject * ) )&camera,
-		( arg( "scene" ), args( "cameraPath" ), arg( "globals" ) = object() )
-	);
+
+	PathMatcherDataPtr clippingPlaneSet = new PathMatcherData;
+	clippingPlaneSet->writable().addPath( "/" + namePlug()->getValue() );
+
+	sets->writable()["__clippingPlanes"] = clippingPlaneSet;
+
+	return result;
 }
 
-} // namespace GafferSceneBindings
+void ClippingPlane::hashSource( const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+}
+
+IECore::ConstObjectPtr ClippingPlane::computeSource( const Context *context ) const
+{
+	return new IECore::ClippingPlane();
+}

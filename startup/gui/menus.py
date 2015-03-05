@@ -215,6 +215,7 @@ nodeMenu.append( "/Scene/File/Alembic", GafferScene.AlembicSource, searchText = 
 nodeMenu.append( "/Scene/Source/Object To Scene", GafferScene.ObjectToScene, searchText = "ObjectToScene" )
 nodeMenu.append( "/Scene/Source/Camera", GafferScene.Camera )
 nodeMenu.append( "/Scene/Source/Coordinate System", GafferScene.CoordinateSystem, searchText = "CoordinateSystem" )
+nodeMenu.append( "/Scene/Source/Clipping Plane", GafferScene.ClippingPlane, searchText = "ClippingPlane" )
 nodeMenu.append( "/Scene/Source/External Procedural", GafferScene.ExternalProcedural, searchText = "ExternalProcedural" )
 nodeMenu.append( "/Scene/Source/Grid", GafferScene.Grid )
 nodeMenu.append( "/Scene/Source/Primitive/Cube", GafferScene.Cube )

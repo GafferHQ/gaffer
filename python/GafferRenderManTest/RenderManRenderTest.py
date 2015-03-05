@@ -637,6 +637,22 @@ class RenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		rib = "\n".join( file( "/tmp/test.rib" ).readlines() )
 		self.assertTrue( "LightSource \"pointlight\"" not in rib )
 
+	def testClippingPlane( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["c"] = GafferScene.ClippingPlane()
+
+		s["r"] = GafferRenderMan.RenderManRender()
+		s["r"]["mode"].setValue( "generate" )
+		s["r"]["ribFileName"].setValue( "/tmp/test.rib" )
+		s["r"]["in"].setInput( s["c"]["out"] )
+
+		s["r"].execute()
+
+		rib = "\n".join( file( "/tmp/test.rib" ).readlines() )
+		self.assertTrue( "ClippingPlane" in rib )
+
 	def setUp( self ) :
 
 		for f in (

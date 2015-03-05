@@ -322,6 +322,52 @@ IECoreGL::ConstRenderablePtr visibleRenderableToRenderable( const IECore::Visibl
 	return group;
 }
 
+IECoreGL::ConstRenderablePtr clippingPlaneToRenderable( const IECore::Object *clippingPlane )
+{
+	static IECoreGL::GroupPtr group = NULL;
+	if( !group )
+	{
+		group = new IECoreGL::Group();
+
+		group->getState()->add( new IECoreGL::Primitive::DrawWireframe( true ) );
+		group->getState()->add( new IECoreGL::Primitive::DrawSolid( false ) );
+		group->getState()->add( new IECoreGL::CurvesPrimitive::UseGLLines( true ) );
+		group->getState()->add( new IECoreGL::WireframeColorStateComponent( Color4f( 0.06, 0.2, 0.56, 1 ) ) );
+		group->getState()->add( new IECoreGL::CurvesPrimitive::GLLineWidth( 1.0f ) );
+
+		IECore::V3fVectorDataPtr pData = new IECore::V3fVectorData;
+		IECore::IntVectorDataPtr vertsPerCurveData = new IECore::IntVectorData;
+		vector<V3f> &p = pData->writable();
+		vector<int> &vertsPerCurve = vertsPerCurveData->writable();
+		p.reserve( 11 );
+		vertsPerCurve.reserve( 4 );
+		// square
+		p.push_back( V3f( -0.5, -0.5, 0 ) );
+		p.push_back( V3f( -0.5, 0.5, 0 ) );
+		p.push_back( V3f( 0.5, 0.5, 0 ) );
+		p.push_back( V3f( 0.5, -0.5, 0 ) );
+		p.push_back( V3f( -0.5, -0.5, 0 ) );
+		vertsPerCurve.push_back( 5 );
+		// cross
+		p.push_back( V3f( -0.5, -0.5, 0 ) );
+		p.push_back( V3f( 0.5, 0.5, 0 ) );
+		vertsPerCurve.push_back( 2 );
+		p.push_back( V3f( -0.5, 0.5, 0 ) );
+		p.push_back( V3f( 0.5, -0.5, 0 ) );
+		vertsPerCurve.push_back( 2 );
+		// normal
+		p.push_back( V3f( 0, 0, 0 ) );
+		p.push_back( V3f( 0, 0, 0.5 ) );
+		vertsPerCurve.push_back( 2 );
+
+		IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), false, vertsPerCurveData );
+		curves->addPrimitiveVariable( "P", IECore::PrimitiveVariable( IECore::PrimitiveVariable::Vertex, pData ) );
+		group->addChild( curves );
+	}
+
+	return group;
+}
+
 IECoreGL::ConstRenderablePtr objectToRenderable( const IECore::Object *object )
 {
 	switch( object->typeId() )
@@ -334,6 +380,8 @@ IECoreGL::ConstRenderablePtr objectToRenderable( const IECore::Object *object )
 			return coordinateSystemToRenderable( static_cast<const IECore::CoordinateSystem *>( object ) );
 		case IECore::ExternalProceduralTypeId :
 			return visibleRenderableToRenderable( static_cast<const IECore::VisibleRenderable *>( object ) );
+		case IECore::ClippingPlaneTypeId :
+			return clippingPlaneToRenderable( object );
 		default :
 			try
 			{
@@ -1025,7 +1073,7 @@ void SceneGadget::doRender( const GafferUI::Style *style ) const
 
 	updateSceneGraph();
 	renderSceneGraph( m_baseState.get() );
-	
+
 	doPendingReferenceRemovals();
 }
 

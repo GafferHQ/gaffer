@@ -124,6 +124,7 @@ void ExecutableRender::execute() const
 		outputOptions( globals.get(), renderer.get() );
 		outputOutputs( globals.get(), renderer.get() );
 		outputCameras( scene, globals.get(), renderer.get() );
+		outputClippingPlanes( scene, globals.get(), renderer.get() );
 		{
 			WorldBlock world( renderer );
 

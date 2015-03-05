@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,56 +34,14 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
-
-#include "IECore/Camera.h"
-
-#include "IECorePython/ScopedGILRelease.h"
-
-#include "GafferScene/SceneAlgo.h"
-#include "GafferScene/ScenePlug.h"
-#include "GafferScene/Filter.h"
-#include "GafferScene/PathMatcher.h"
-
-#include "GafferSceneBindings/SceneAlgoBinding.h"
-
-using namespace boost::python;
-using namespace GafferScene;
+#ifndef GAFFERSCENEBINDINGS_CLIPPINGPLANEBINDING_H
+#define GAFFERSCENEBINDINGS_CLIPPINGPLANEBINDING_H
 
 namespace GafferSceneBindings
 {
 
-static void matchingPathsHelper1( const Filter *filter, const ScenePlug *scene, PathMatcher &paths )
-{
-	// gil release in case the scene traversal dips back into python:
-	IECorePython::ScopedGILRelease r;
-	matchingPaths( filter, scene, paths );
-}
-
-static void matchingPathsHelper2( const Gaffer::IntPlug *filterPlug, const ScenePlug *scene, PathMatcher &paths )
-{
-	// gil release in case the scene traversal dips back into python:
-	IECorePython::ScopedGILRelease r;
-	matchingPaths( filterPlug, scene, paths );
-}
-
-void bindSceneAlgo()
-{
-	def( "exists", exists );
-	def( "visible", visible );
-	def( "matchingPaths", &matchingPathsHelper1 );
-	def( "matchingPaths", &matchingPathsHelper2 );
-	def( "shutter", &shutter );
-	def(
-		"camera",
-		(IECore::CameraPtr (*)( const ScenePlug *, const IECore::CompoundObject * ) )&camera,
-		( arg( "scene" ), arg( "globals" ) = object() )
-	);
-	def(
-		"camera",
-		(IECore::CameraPtr (*)( const ScenePlug *, const ScenePlug::ScenePath &, const IECore::CompoundObject * ) )&camera,
-		( arg( "scene" ), args( "cameraPath" ), arg( "globals" ) = object() )
-	);
-}
+void bindClippingPlane();
 
 } // namespace GafferSceneBindings
+
+#endif // GAFFERSCENEBINDINGS_CLIPPINGPLANEBINDING_H
