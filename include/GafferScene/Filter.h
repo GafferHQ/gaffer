@@ -72,6 +72,11 @@ class Filter : public Gaffer::ComputeNode
 		virtual Gaffer::BoolPlug *enabledPlug();
 		virtual const Gaffer::BoolPlug *enabledPlug() const;
 
+		Gaffer::IntPlug *outPlug();
+		const Gaffer::IntPlug *outPlug() const;
+
+		/// \deprecated Use outPlug() instead - it returns the
+		/// same thing.
 		Gaffer::IntPlug *matchPlug();
 		const Gaffer::IntPlug *matchPlug() const;
 

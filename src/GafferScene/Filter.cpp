@@ -51,7 +51,7 @@ Filter::Filter( const std::string &name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new BoolPlug( "enabled", Gaffer::Plug::In, true ) );
-	addChild( new IntPlug( "match", Gaffer::Plug::Out, NoMatch, NoMatch, EveryMatch ) );
+	addChild( new IntPlug( "out", Gaffer::Plug::Out, NoMatch, NoMatch, EveryMatch ) );
 }
 
 Filter::~Filter()
@@ -68,14 +68,24 @@ const Gaffer::BoolPlug *Filter::enabledPlug() const
 	return getChild<Gaffer::BoolPlug>( g_firstPlugIndex );
 }
 
-Gaffer::IntPlug *Filter::matchPlug()
+Gaffer::IntPlug *Filter::outPlug()
 {
 	return getChild<Gaffer::IntPlug>( g_firstPlugIndex + 1 );
 }
 
-const Gaffer::IntPlug *Filter::matchPlug() const
+const Gaffer::IntPlug *Filter::outPlug() const
 {
 	return getChild<Gaffer::IntPlug>( g_firstPlugIndex + 1 );
+}
+
+Gaffer::IntPlug *Filter::matchPlug()
+{
+	return outPlug();
+}
+
+const Gaffer::IntPlug *Filter::matchPlug() const
+{
+	return outPlug();
 }
 
 void Filter::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const

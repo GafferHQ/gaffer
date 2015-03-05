@@ -35,46 +35,13 @@
 ##########################################################################
 
 import Gaffer
-import GafferUI
 import GafferScene
 
-Gaffer.Metadata.registerNode(
+# Provides backwards compatibility by allowing access to "out" plug
+# using its old name of "match".
+def __getItem( self, key ) :
 
-	GafferScene.Filter,
+	key = "out" if key == "match" else key
+	return Gaffer.GraphComponent.__getitem__( self, key )
 
-	"description",
-	"""
-	The base type for all nodes which are capable of choosing which
-	scene locations a FilteredSceneProcessor applies to.
-	""",
-
-	plugs = {
-
-		"enabled" : [
-
-			"description",
-			"""
-			The on/off state of the filter. When it is off, the
-			filter does not match any locations.
-			""",
-
-			"nodeUI:section", "Node",
-
-		],
-
-		"out" : [
-
-			"description",
-			"""
-			The result of the filter. This should be connected into
-			the "filter" plug of a FilteredSceneProcessor.
-			""",
-
-		]
-
-	}
-
-)
-
-GafferUI.Nodule.registerNodule( GafferScene.Filter, "enabled", lambda plug : None )
-GafferUI.PlugValueWidget.registerCreator( GafferScene.Filter, "out", None )
+GafferScene.Filter.__getitem__ = __getItem

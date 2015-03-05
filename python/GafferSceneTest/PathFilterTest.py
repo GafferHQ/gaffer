@@ -55,7 +55,7 @@ class PathFilterTest( unittest.TestCase ) :
 		f = GafferScene.PathFilter()
 		cs = GafferTest.CapturingSlot( f.plugDirtiedSignal() )
 		f["paths"].setValue( IECore.StringVectorData( [ "/a" ] ) )
-		self.assertTrue( "match" in [ x[0].getName() for x in cs ] )
+		self.assertTrue( f["match"] in [ x[0] for x in cs ] )
 
 	def testMatch( self ) :
 

@@ -111,13 +111,13 @@ class UnionFilterTest( GafferSceneTest.SceneTestCase ) :
 
 		u["in"][0].setInput( f1["match"] )
 
-		self.assertEqual( [ x[0].fullName() for x in cs if x[0].direction() == x[0].Direction.Out ], [ "u.match" ] )
+		self.assertEqual( [ x[0] for x in cs if x[0].direction() == x[0].Direction.Out ], [ u["match"] ] )
 
 		del cs[:]
 
 		f1["paths"].setValue( IECore.StringVectorData( [ "/a" ] ) )
 
-		self.assertEqual( [ x[0].fullName() for x in cs if x[0].direction() == x[0].Direction.Out ], [ "u.match" ] )
+		self.assertEqual( [ x[0] for x in cs if x[0].direction() == x[0].Direction.Out ], [ u["match"] ] )
 
 	def testAcceptsInput( self ) :
 
