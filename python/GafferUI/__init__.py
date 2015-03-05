@@ -248,6 +248,7 @@ from ConnectionPlugValueWidget import ConnectionPlugValueWidget
 import View3DToolbar
 from Playback import Playback
 from UIEditor import UIEditor
+import GraphBookmarksUI
 
 # and then specific node uis
 
