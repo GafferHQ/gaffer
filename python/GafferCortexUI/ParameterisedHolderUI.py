@@ -61,7 +61,7 @@ __nodeTypes = (
 
 # Supported userData entries :
 #
-# ["UI"]["showHeader"]
+# ["UI"]["headerVisible"]
 
 class _ParameterisedHolderNodeUI( GafferUI.NodeUI ) :
 
@@ -71,15 +71,14 @@ class _ParameterisedHolderNodeUI( GafferUI.NodeUI ) :
 
 		GafferUI.NodeUI.__init__( self, node, column, **kw )
 		
-		showHeader = True
+		headerVisible = True
 		parameterised = self.node().getParameterised()[0]
-		if isinstance( parameterised, IECore.Op ) :
-			with IECore.IgnoredExceptions( KeyError ) :		
-				showHeader = parameterised.userData()["UI"]["showHeader"].value
+		with IECore.IgnoredExceptions( KeyError ) :		
+			headerVisible = parameterised.userData()["UI"]["headerVisible"].value
 
 		with column :
 			
-			if showHeader :	
+			if headerVisible :	
 				with GafferUI.ListContainer( orientation = GafferUI.ListContainer.Orientation.Horizontal ) :
 					GafferUI.Spacer( IECore.V2i( 10 ), parenting = { "expand"  : True } )
 					toolButton = GafferCortexUI.ToolParameterValueWidget( self.node().parameterHandler() )
