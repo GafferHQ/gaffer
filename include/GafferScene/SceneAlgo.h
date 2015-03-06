@@ -69,7 +69,7 @@ bool visible( const ScenePlug *scene, const ScenePlug::ScenePath &path );
 
 /// Finds all the paths in the scene that are matched by the filter, and adds them into the PathMatcher.
 void matchingPaths( const Filter *filter, const ScenePlug *scene, PathMatcher &paths );
-/// As above, but specifying the filter as a plug - typically Filter::matchPlug() or
+/// As above, but specifying the filter as a plug - typically Filter::outPlug() or
 /// FilteredSceneProcessor::filterPlug() would be passed.
 void matchingPaths( const Gaffer::IntPlug *filterPlug, const ScenePlug *scene, PathMatcher &paths );
 

@@ -186,7 +186,7 @@ class MatchingPathsTask : public tbb::task
 
 void GafferScene::matchingPaths( const Filter *filter, const ScenePlug *scene, PathMatcher &paths )
 {
-	matchingPaths( filter->matchPlug(), scene, paths );
+	matchingPaths( filter->outPlug(), scene, paths );
 }
 
 void GafferScene::matchingPaths( const Gaffer::IntPlug *filterPlug, const ScenePlug *scene, PathMatcher &paths )

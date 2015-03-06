@@ -103,6 +103,7 @@ from CoordinateSystemTest import CoordinateSystemTest
 from DeleteOutputsTest import DeleteOutputsTest
 from ExternalProceduralTest import ExternalProceduralTest
 from ClippingPlaneTest import ClippingPlaneTest
+from FilterSwitchTest import FilterSwitchTest
 
 if __name__ == "__main__":
 	import unittest

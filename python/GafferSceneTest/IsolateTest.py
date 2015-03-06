@@ -98,7 +98,7 @@ class IsolateTest( GafferSceneTest.SceneTestCase ) :
 
 		filter = GafferScene.PathFilter()
 		filter["paths"].setValue( IECore.StringVectorData( [ "/*" ] ) )
-		isolate["filter"].setInput( filter["match"] )
+		isolate["filter"].setInput( filter["out"] )
 
 		isolate["enabled"].setValue( False )
 
@@ -149,7 +149,7 @@ class IsolateTest( GafferSceneTest.SceneTestCase ) :
 
 		filter = GafferScene.PathFilter()
 		filter["paths"].setValue( IECore.StringVectorData( [ "/groupA/sphereAB" ] ) )
-		isolate["filter"].setInput( filter["match"] )
+		isolate["filter"].setInput( filter["out"] )
 
 		self.assertNotEqual( isolate["out"].childNamesHash( "/groupA" ), input["out"].childNamesHash( "/groupA" ) )
 		self.assertEqual( isolate["out"].childNames( "/groupA" ), IECore.InternedStringVectorData( [ "sphereAB" ] ) )
@@ -191,7 +191,7 @@ class IsolateTest( GafferSceneTest.SceneTestCase ) :
 
 		filter = GafferScene.PathFilter()
 		filter["paths"].setValue( IECore.StringVectorData( [ "/group/sphere1" ] ) )
-		isolate["filter"].setInput( filter["match"] )
+		isolate["filter"].setInput( filter["out"] )
 
 		self.assertEqual( isolate["out"].bound( "/" ), sphere2.bound() )
 		self.assertEqual( isolate["out"].bound( "/group" ), sphere2.bound() )
@@ -222,7 +222,7 @@ class IsolateTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( set( lightSet.value.paths() ), set( [ "/group/light", "/group/light1" ] ) )
 
 		filter = GafferScene.PathFilter()
-		isolate["filter"].setInput( filter["match"] )
+		isolate["filter"].setInput( filter["out"] )
 
 		lightSet = isolate["out"]["globals"].getValue()["gaffer:sets"]["__lights"]
 		self.assertEqual( set( lightSet.value.paths() ), set( [] ) )
@@ -244,7 +244,7 @@ class IsolateTest( GafferSceneTest.SceneTestCase ) :
 
 		isolate = GafferScene.Isolate()
 		isolate["in"].setInput( grid["out"] )
-		isolate["filter"].setInput( pathFilter["match"] )
+		isolate["filter"].setInput( pathFilter["out"] )
 
 		c = Gaffer.Context()
 		with c :
@@ -301,7 +301,7 @@ class IsolateTest( GafferSceneTest.SceneTestCase ) :
 		filter = GafferScene.PathFilter()
 		filter["paths"].setValue( IECore.StringVectorData( [ "/group1/group2/light1" ] ) )
 
-		isolate["filter"].setInput( filter["match"] )
+		isolate["filter"].setInput( filter["out"] )
 
 		self.assertSceneValid( isolate["out"] )
 		self.assertEqual( isolate["out"].childNames( "/" ), IECore.InternedStringVectorData( [ "group1" ] ) )

@@ -58,12 +58,12 @@ class UnionFilterTest( GafferSceneTest.SceneTestCase ) :
 		] ) )
 
 		u = GafferScene.UnionFilter()
-		self.assertEqual( u["match"].getValue(), GafferScene.Filter.Result.NoMatch )
+		self.assertEqual( u["out"].getValue(), GafferScene.Filter.Result.NoMatch )
 
-		h1 = u["match"].hash()
+		h1 = u["out"].hash()
 
-		u["in"][0].setInput( f1["match"] )
-		h2 = u["match"].hash()
+		u["in"][0].setInput( f1["out"] )
+		h2 = u["out"].hash()
 		self.assertNotEqual( h1, h2 )
 
 		for path in [
@@ -75,10 +75,10 @@ class UnionFilterTest( GafferSceneTest.SceneTestCase ) :
 		] :
 			with Gaffer.Context() as c :
 				c["scene:path"] = IECore.InternedStringVectorData( path[1:].split( "/" ) )
- 				self.assertEqual( u["match"].getValue(), f1["match"].getValue() )
+				self.assertEqual( u["out"].getValue(), f1["out"].getValue() )
 
-		u["in"][1].setInput( f2["match"] )
-		h3 = u["match"].hash()
+		u["in"][1].setInput( f2["out"] )
+		h3 = u["out"].hash()
 		self.assertNotEqual( h2, h3 )
 
 		for path, result in [
@@ -93,13 +93,13 @@ class UnionFilterTest( GafferSceneTest.SceneTestCase ) :
 		] :
 			with Gaffer.Context() as c :
 				c["scene:path"] = IECore.InternedStringVectorData( path[1:].split( "/" ) )
- 				self.assertEqual( u["match"].getValue(), int( result ) )
+				self.assertEqual( u["out"].getValue(), int( result ) )
 
 		f2["paths"].setValue( IECore.StringVectorData( [
 			"/a/b",
 		] ) )
 
-		h4 = u["match"].hash()
+		h4 = u["out"].hash()
 		self.assertNotEqual( h3, h4 )
 
 	def testDirtiedSignal( self ) :
@@ -109,24 +109,24 @@ class UnionFilterTest( GafferSceneTest.SceneTestCase ) :
 
 		cs = GafferTest.CapturingSlot( u.plugDirtiedSignal() )
 
-		u["in"][0].setInput( f1["match"] )
+		u["in"][0].setInput( f1["out"] )
 
-		self.assertEqual( [ x[0].fullName() for x in cs if x[0].direction() == x[0].Direction.Out ], [ "u.match" ] )
+		self.assertEqual( [ x[0] for x in cs if x[0].direction() == x[0].Direction.Out ], [ u["out"] ] )
 
 		del cs[:]
 
 		f1["paths"].setValue( IECore.StringVectorData( [ "/a" ] ) )
 
-		self.assertEqual( [ x[0].fullName() for x in cs if x[0].direction() == x[0].Direction.Out ], [ "u.match" ] )
+		self.assertEqual( [ x[0] for x in cs if x[0].direction() == x[0].Direction.Out ], [ u["out"] ] )
 
 	def testAcceptsInput( self ) :
 
 		f = GafferScene.PathFilter()
 		n = Gaffer.Node()
-		n["match"] = f["match"].createCounterpart( "match", Gaffer.Plug.Direction.Out )
+		n["out"] = f["out"].createCounterpart( "out", Gaffer.Plug.Direction.Out )
 
 		u = GafferScene.UnionFilter()
-		self.assertFalse( u["in"][0].acceptsInput( n["match"] ) )
+		self.assertFalse( u["in"][0].acceptsInput( n["out"] ) )
 
 	def testSceneAffects( self ) :
 
@@ -138,10 +138,10 @@ class UnionFilterTest( GafferSceneTest.SceneTestCase ) :
 		a["in"].setInput( s["out"] )
 
 		f = GafferScene.UnionFilter()
-		a["filter"].setInput( f["match"] )
+		a["filter"].setInput( f["out"] )
 
 		pf = GafferScene.PathFilter()
-		f["in"][0].setInput( pf["match"] )
+		f["in"][0].setInput( pf["out"] )
 
 		# PathFilter isn't sensitive to scene changes, so we shouldn't get
 		# any dirtiness signalled for the attributes.
@@ -157,7 +157,7 @@ class UnionFilterTest( GafferSceneTest.SceneTestCase ) :
 		# the attributes.
 
 		sf = GafferScene.SetFilter()
-		f["in"][1].setInput( sf["match"] )
+		f["in"][1].setInput( sf["out"] )
 
 		cs = GafferTest.CapturingSlot( a.plugDirtiedSignal() )
 
@@ -170,8 +170,8 @@ class UnionFilterTest( GafferSceneTest.SceneTestCase ) :
 
 		sf = GafferScene.SetFilter()
 		dot = Gaffer.Dot()
-		dot.setup( sf["match"] )
-		dot["in"].setInput( sf["match"] )
+		dot.setup( sf["out"] )
+		dot["in"].setInput( sf["out"] )
 
 		uf = GafferScene.UnionFilter()
 		self.assertTrue( uf["in"][0].acceptsInput( dot["out"] ) )
@@ -180,7 +180,7 @@ class UnionFilterTest( GafferSceneTest.SceneTestCase ) :
 		self.assertTrue( uf["in"][0].acceptsInput( dot["out"] ) )
 
 		uf["in"][0].setInput( dot["out"] )
-		dot["in"].setInput( sf["match"] )
+		dot["in"].setInput( sf["out"] )
 
 		a = GafferTest.AddNode()
 		dot2 = Gaffer.Dot()

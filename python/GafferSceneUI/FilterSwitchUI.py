@@ -1,7 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2012, John Haddon. All rights reserved.
-#  Copyright (c) 2012-2014, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,63 +34,23 @@
 #
 ##########################################################################
 
-from _GafferSceneUI import *
+import Gaffer
+import GafferUI
+import GafferScene
 
-from SceneHierarchy import SceneHierarchy
-from SceneInspector import SceneInspector
-from FilterPlugValueWidget import FilterPlugValueWidget
-import SceneNodeUI
-import SceneReaderUI
-import SceneProcessorUI
-import FilteredSceneProcessorUI
-import PruneUI
-import SubTreeUI
-import OutputsUI
-import OptionsUI
-import OpenGLAttributesUI
-import SceneContextVariablesUI
-import SceneWriterUI
-import StandardOptionsUI
-import StandardAttributesUI
-import ShaderUI
-import OpenGLShaderUI
-import ObjectSourceUI
-import TransformUI
-import AttributesUI
-import LightUI
-import InteractiveRenderUI
-import SphereUI
-import MapProjectionUI
-import MapOffsetUI
-import CustomAttributesUI
-import CustomOptionsUI
-import SceneViewToolbar
-import SceneSwitchUI
-import ShaderSwitchUI
-import ShaderAssignmentUI
-import ParentConstraintUI
-import ParentUI
-import PrimitiveVariablesUI
-import DuplicateUI
-import GridUI
-import SetFilterUI
-import DeleteGlobalsUI
-import DeleteOptionsUI
-import ExternalProceduralUI
-import ExecutableRenderUI
-import IsolateUI
-import SelectionToolUI
-import CropWindowToolUI
-import CameraUI
-import SetUI
-import ClippingPlaneUI
-import FilterUI
-import FilterSwitchUI
+Gaffer.Metadata.registerNode(
 
-# then all the PathPreviewWidgets. note that the order
-# of import controls the order of display.
+	GafferScene.FilterSwitch,
 
-from AlembicPathPreview import AlembicPathPreview
-from SceneReaderPathPreview import SceneReaderPathPreview
+	"description",
+	"""
+	Chooses between multiple input filters, passing the chosen
+	filter through to the output.
+	""",
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferSceneUI" )
+)
+
+GafferUI.Nodule.registerNodule( GafferScene.Filter, "index", lambda plug : None )
+
+GafferUI.PlugValueWidget.registerCreator( GafferScene.Filter, "in", None )
+GafferUI.PlugValueWidget.registerCreator( GafferScene.Filter, "in[0-9]*", None )

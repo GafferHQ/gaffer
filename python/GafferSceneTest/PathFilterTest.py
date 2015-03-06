@@ -55,7 +55,7 @@ class PathFilterTest( unittest.TestCase ) :
 		f = GafferScene.PathFilter()
 		cs = GafferTest.CapturingSlot( f.plugDirtiedSignal() )
 		f["paths"].setValue( IECore.StringVectorData( [ "/a" ] ) )
-		self.assertTrue( "match" in [ x[0].getName() for x in cs ] )
+		self.assertTrue( f["out"] in [ x[0] for x in cs ] )
 
 	def testMatch( self ) :
 
@@ -76,14 +76,14 @@ class PathFilterTest( unittest.TestCase ) :
 
 			with Gaffer.Context() as c :
 				c["scene:path"] = IECore.InternedStringVectorData( path[1:].split( "/" ) )
-				self.assertEqual( f["match"].getValue(), int( result ) )
+				self.assertEqual( f["out"].getValue(), int( result ) )
 
 	def testNullPaths( self ) :
 
 		f = GafferScene.PathFilter()
 		with Gaffer.Context() as c :
 			c["scene:path"] = IECore.InternedStringVectorData( [ "a" ] )
-			self.assertEqual( f["match"].getValue(), int( f.Result.NoMatch ) )
+			self.assertEqual( f["out"].getValue(), int( f.Result.NoMatch ) )
 
 	def testScaling( self ) :
 
@@ -98,7 +98,7 @@ class PathFilterTest( unittest.TestCase ) :
 		with Gaffer.Context() as c :
 			for path in paths :
 				c["scene:path"] = path
-				self.assertTrue( f["match"].getValue() & f.Result.ExactMatch )
+				self.assertTrue( f["out"].getValue() & f.Result.ExactMatch )
 
 	def testInputsAccepted( self ) :
 
@@ -117,7 +117,7 @@ class PathFilterTest( unittest.TestCase ) :
 		s["a"]["in"].setInput( s["p"]["out"] )
 
 		s["f"] = GafferScene.PathFilter()
-		s["a"]["filter"].setInput( s["f"]["match"] )
+		s["a"]["filter"].setInput( s["f"]["out"] )
 
 		b = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["a"] ] ) )
 
@@ -127,7 +127,7 @@ class PathFilterTest( unittest.TestCase ) :
 
 		s["f"] = GafferScene.PathFilter()
 		s["a"] = GafferScene.Attributes()
-		s["a"]["filter"].setInput( s["f"]["match"] )
+		s["a"]["filter"].setInput( s["f"]["out"] )
 
 		ss = s.serialise( s, Gaffer.StandardSet( [ s["a"] ] ) )
 
@@ -160,7 +160,7 @@ class PathFilterTest( unittest.TestCase ) :
 
 			with Gaffer.Context() as c :
 				c["scene:path"] = IECore.InternedStringVectorData( path[1:].split( "/" ) )
-				self.assertEqual( b["f"]["match"].getValue(), int( result ) )
+				self.assertEqual( b["f"]["out"].getValue(), int( result ) )
 
 	def testPathPlugExpression( self ) :
 
@@ -182,9 +182,31 @@ class PathFilterTest( unittest.TestCase ) :
 
 		with Gaffer.Context() as c :
 			c["scene:path"] = IECore.InternedStringVectorData( [ "a" ])
-			self.assertEqual( s["f"]["match"].getValue(), GafferScene.Filter.Result.NoMatch )
+			self.assertEqual( s["f"]["out"].getValue(), GafferScene.Filter.Result.NoMatch )
 			c["passName"] = "foreground"
-			self.assertEqual( s["f"]["match"].getValue(), GafferScene.Filter.Result.ExactMatch )
+			self.assertEqual( s["f"]["out"].getValue(), GafferScene.Filter.Result.ExactMatch )
+
+	def testEnabled( self ) :
+
+		f = GafferScene.PathFilter()
+		self.assertTrue( f.enabledPlug().isSame( f["enabled"] ) )
+		self.assertTrue( isinstance( f.enabledPlug(), Gaffer.BoolPlug ) )
+		self.assertEqual( f.enabledPlug().defaultValue(), True )
+		self.assertEqual( f.enabledPlug().getValue(), True )
+		self.assertEqual( f.correspondingInput( f["out"] ), None )
+
+		f["paths"].setValue( IECore.StringVectorData( [ "/a" ] ) )
+
+		with Gaffer.Context() as c :
+
+			c["scene:path"] = IECore.InternedStringVectorData( [ "a" ] )
+			self.assertEqual( f["out"].getValue(), GafferScene.Filter.Result.ExactMatch )
+
+			f["enabled"].setValue( False )
+			self.assertEqual( f["out"].getValue(), GafferScene.Filter.Result.NoMatch )
+
+		a = f.affects( f["enabled"] )
+		self.assertTrue( f["out"] in a )
 
 if __name__ == "__main__":
 	unittest.main()

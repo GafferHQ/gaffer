@@ -85,7 +85,7 @@ class CustomAttributesTest( GafferSceneTest.SceneTestCase ) :
 		# finally once we've applied a filter, we should get some attributes.
 		f = GafferScene.PathFilter()
 		f["paths"].setValue( IECore.StringVectorData( [ "/ball1" ] ) )
-		a["filter"].setInput( f["match"] )
+		a["filter"].setInput( f["out"] )
 
 		self.assertEqual( a["out"].attributes( "/" ), IECore.CompoundObject() )
 		self.assertEqual( a["out"].attributes( "/ball1" ), IECore.CompoundObject( { "ri:shadingRate" : IECore.FloatData( 0.25 ) } ) )
@@ -215,7 +215,7 @@ class CustomAttributesTest( GafferSceneTest.SceneTestCase ) :
 		# when we add a filter, non-matching objects should become pass-throughs
 		f = GafferScene.PathFilter()
 		f["paths"].setValue( IECore.StringVectorData( [ "/ball1" ] ) )
-		a["filter"].setInput( f["match"] )
+		a["filter"].setInput( f["out"] )
 		self.assertSceneHashesEqual( input["out"], a["out"], pathsToIgnore = ( "/ball1", ) )
 
 		c = Gaffer.Context()
@@ -274,7 +274,7 @@ class CustomAttributesTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertTrue( "user:test" in s["a"]["out"].attributes( "/plane" ) )
 
-		s["a"]["filter"].setInput( s["f"]["match"] )
+		s["a"]["filter"].setInput( s["f"]["out"] )
 		self.assertFalse( "user:test" in s["a"]["out"].attributes( "/plane" ) )
 
 		s["a"]["filter"].setInput( None )
@@ -291,7 +291,7 @@ class CustomAttributesTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertTrue( "user:test" in s["a"]["out"].attributes( "/plane" ) )
 
-		s["a"]["filter"].setInput( s["f"]["match"] )
+		s["a"]["filter"].setInput( s["f"]["out"] )
 
 		self.assertFalse( "user:test" in s["a"]["out"].attributes( "/plane" ) )
 

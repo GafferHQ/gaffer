@@ -64,7 +64,7 @@ Gaffer.Metadata.registerNodeValue( GafferScene.SceneProcessor, "nodeGadget:color
 Gaffer.Metadata.registerNodeValue( GafferScene.SceneElementProcessor, "nodeGadget:color", IECore.Color3f( 0.1886, 0.2772, 0.41 ) )
 
 Gaffer.Metadata.registerPlugValue( GafferScene.FilteredSceneProcessor, "filter", "nodule:color", IECore.Color3f( 0.69, 0.5378, 0.2283 ) )
-Gaffer.Metadata.registerPlugValue( GafferScene.Filter, "match", "nodule:color", IECore.Color3f( 0.69, 0.5378, 0.2283 ) )
+Gaffer.Metadata.registerPlugValue( GafferScene.Filter, "out", "nodule:color", IECore.Color3f( 0.69, 0.5378, 0.2283 ) )
 
 Gaffer.Metadata.registerNodeValue( GafferScene.Transform, "nodeGadget:color", IECore.Color3f( 0.485, 0.3112, 0.2255 ) )
 Gaffer.Metadata.registerNodeValue( GafferScene.Constraint, "nodeGadget:color", IECore.Color3f( 0.485, 0.3112, 0.2255 ) )

@@ -237,6 +237,7 @@ nodeMenu.append( "/Scene/Attributes/Delete Attributes", GafferScene.DeleteAttrib
 nodeMenu.append( "/Scene/Filters/Set Filter", GafferScene.SetFilter, searchText = "SetFilter" )
 nodeMenu.append( "/Scene/Filters/Path Filter", GafferScene.PathFilter, searchText = "PathFilter" )
 nodeMenu.append( "/Scene/Filters/Union Filter", GafferScene.UnionFilter, searchText = "UnionFilter" )
+nodeMenu.append( "/Scene/Filters/FilterSwitch", GafferScene.FilterSwitch, searchText = "FilterSwitch" )
 nodeMenu.append( "/Scene/Hierarchy/Group", GafferScene.Group )
 nodeMenu.append( "/Scene/Hierarchy/Parent", GafferScene.Parent )
 nodeMenu.append( "/Scene/Hierarchy/Duplicate", GafferScene.Duplicate )

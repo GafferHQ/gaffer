@@ -560,13 +560,13 @@ class RenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		s["a1"]["attributes"]["visibility"]["enabled"].setValue( True )
 		s["a1"]["attributes"]["visibility"]["value"].setValue( False )
 		s["a1"]["in"].setInput( s["g"]["out"] )
-		s["a1"]["filter"].setInput( s["f1"]["match"] )
+		s["a1"]["filter"].setInput( s["f1"]["out"] )
 
 		s["a2"] = GafferScene.StandardAttributes()
 		s["a2"]["attributes"]["visibility"]["enabled"].setValue( True )
 		s["a2"]["attributes"]["visibility"]["value"].setValue( True )
 		s["a2"]["in"].setInput( s["a1"]["out"] )
-		s["a2"]["filter"].setInput( s["f2"]["match"] )
+		s["a2"]["filter"].setInput( s["f2"]["out"] )
 
 		s["r"] = GafferRenderMan.RenderManRender()
 		s["r"]["mode"].setValue( "generate" )
@@ -608,13 +608,13 @@ class RenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		s["a1"]["attributes"]["visibility"]["enabled"].setValue( True )
 		s["a1"]["attributes"]["visibility"]["value"].setValue( False )
 		s["a1"]["in"].setInput( s["g"]["out"] )
-		s["a1"]["filter"].setInput( s["f1"]["match"] )
+		s["a1"]["filter"].setInput( s["f1"]["out"] )
 
 		s["a2"] = GafferScene.StandardAttributes()
 		s["a2"]["attributes"]["visibility"]["enabled"].setValue( True )
 		s["a2"]["attributes"]["visibility"]["value"].setValue( True )
 		s["a2"]["in"].setInput( s["a1"]["out"] )
-		s["a2"]["filter"].setInput( s["f2"]["match"] )
+		s["a2"]["filter"].setInput( s["f2"]["out"] )
 
 		s["r"] = GafferRenderMan.RenderManRender()
 		s["r"]["mode"].setValue( "generate" )

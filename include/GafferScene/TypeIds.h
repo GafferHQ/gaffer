@@ -119,6 +119,8 @@ enum TypeId
 	DeleteOutputsTypeId = 110574,
 	ExternalProceduralTypeId = 110575,
 	ScenePathTypeId = 110576,
+	FilterMixinBaseTypeId = 110577,
+	FilterSwitchTypeId = 110578,
 
 	LastTypeId = 110650
 };

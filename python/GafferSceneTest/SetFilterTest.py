@@ -64,7 +64,7 @@ class SetFilterTest( GafferSceneTest.SceneTestCase ) :
 		a = GafferScene.StandardAttributes()
 		a["in"].setInput( s["out"] )
 		a["attributes"]["doubleSided"]["enabled"].setValue( True )
-		a["filter"].setInput( f["match"] )
+		a["filter"].setInput( f["out"] )
 
 		self.assertSceneValid( a["out"] )
 
@@ -108,7 +108,7 @@ class SetFilterTest( GafferSceneTest.SceneTestCase ) :
 		# attributes too.
 
 		f = GafferScene.SetFilter()
-		a["filter"].setInput( f["match"] )
+		a["filter"].setInput( f["out"] )
 
 		cs = GafferTest.CapturingSlot( a.plugDirtiedSignal() )
 
@@ -139,12 +139,12 @@ class SetFilterTest( GafferSceneTest.SceneTestCase ) :
 		a1 = GafferScene.StandardAttributes()
 		a1["in"].setInput( s1["out"] )
 		a1["attributes"]["doubleSided"]["enabled"].setValue( True )
-		a1["filter"].setInput( f["match"] )
+		a1["filter"].setInput( f["out"] )
 
 		a2 = GafferScene.StandardAttributes()
 		a2["in"].setInput( s2["out"] )
 		a2["attributes"]["doubleSided"]["enabled"].setValue( True )
-		a2["filter"].setInput( f["match"] )
+		a2["filter"].setInput( f["out"] )
 
 		self.assertSceneValid( a1["out"] )
 		self.assertSceneValid( a2["out"] )
@@ -178,7 +178,7 @@ class SetFilterTest( GafferSceneTest.SceneTestCase ) :
 
 		i = GafferScene.Isolate()
 		i["in"].setInput( s2["out"] )
-		i["filter"].setInput( f["match"] )
+		i["filter"].setInput( f["out"] )
 
 		self.assertSceneValid( i["out"] )
 		self.assertEqual( i["out"].childNames( "/group" ), IECore.InternedStringVectorData( [ "plane" ] ) )

@@ -76,7 +76,7 @@ class FreezeTransformTest( GafferSceneTest.SceneTestCase ) :
 
 		t = GafferScene.FreezeTransform()
 		t["in"].setInput( g["out"] )
-		t["filter"].setInput( f["match"] )
+		t["filter"].setInput( f["out"] )
 
 		self.assertSceneValid( t["out"] )
 

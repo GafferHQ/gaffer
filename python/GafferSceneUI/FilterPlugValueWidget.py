@@ -124,7 +124,7 @@ class FilterPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		with Gaffer.UndoContext( self.getPlug().node().scriptNode() ) :
 			self.getPlug().node().parent().addChild( filterNode )
-			self.getPlug().setInput( filterNode["match"] )
+			self.getPlug().setInput( filterNode["out"] )
 
 		# position the node appropriately.
 		## \todo In an ideal world the GraphGadget would do this

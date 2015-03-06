@@ -50,21 +50,52 @@ Filter::Filter( const std::string &name )
 	:	ComputeNode( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
-	addChild( new IntPlug( "match", Gaffer::Plug::Out, NoMatch, NoMatch, EveryMatch ) );
+	addChild( new BoolPlug( "enabled", Gaffer::Plug::In, true ) );
+	addChild( new IntPlug( "out", Gaffer::Plug::Out, NoMatch, NoMatch, EveryMatch ) );
 }
 
 Filter::~Filter()
 {
 }
 
+Gaffer::BoolPlug *Filter::enabledPlug()
+{
+	return getChild<Gaffer::BoolPlug>( g_firstPlugIndex );
+}
+
+const Gaffer::BoolPlug *Filter::enabledPlug() const
+{
+	return getChild<Gaffer::BoolPlug>( g_firstPlugIndex );
+}
+
+Gaffer::IntPlug *Filter::outPlug()
+{
+	return getChild<Gaffer::IntPlug>( g_firstPlugIndex + 1 );
+}
+
+const Gaffer::IntPlug *Filter::outPlug() const
+{
+	return getChild<Gaffer::IntPlug>( g_firstPlugIndex + 1 );
+}
+
 Gaffer::IntPlug *Filter::matchPlug()
 {
-	return getChild<Gaffer::IntPlug>( g_firstPlugIndex );
+	return outPlug();
 }
 
 const Gaffer::IntPlug *Filter::matchPlug() const
 {
-	return getChild<Gaffer::IntPlug>( g_firstPlugIndex );
+	return outPlug();
+}
+
+void Filter::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
+{
+	ComputeNode::affects( input, outputs );
+
+	if( input == enabledPlug() )
+	{
+		outputs.push_back( outPlug() );
+	}
 }
 
 bool Filter::sceneAffectsMatch( const ScenePlug *scene, const Gaffer::ValuePlug *child ) const
@@ -85,16 +116,35 @@ const ScenePlug *Filter::getInputScene( const Gaffer::Context *context )
 void Filter::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	ComputeNode::hash( output, context, h );
-	if( output == matchPlug() )
+	if( output == outPlug() )
 	{
-		hashMatch( getInputScene( context ), context, h );
+		if( enabledPlug()->getValue() )
+		{
+			/// \todo In SceneNode (and other enableable nodes) we
+			/// require methods like hashMatch() to call the base class
+			/// implementation, which then calls ComputeNode::hash(). We
+			/// should do that here too, rather than calling ComputeNode::hash()
+			/// unconditionally first. This would allow derived classes to
+			/// avoid the redundant call to ComputeNode::hash() in the case
+			/// that their hashMatch() implementation simply passes through an
+			/// input hash.
+			hashMatch( getInputScene( context ), context, h );
+		}
 	}
 }
 
 void Filter::compute( ValuePlug *output, const Context *context ) const
 {
-	if( output == matchPlug() )
+	if( output == outPlug() )
 	{
-		static_cast<IntPlug *>( output )->setValue( computeMatch( getInputScene( context ), context ) );
+		unsigned match = NoMatch;
+		if( enabledPlug()->getValue() )
+		{
+			match = computeMatch( getInputScene( context ), context );
+		}
+		static_cast<IntPlug *>( output )->setValue( match );
+		return;
 	}
+
+	ComputeNode::compute( output, context );
 }

@@ -89,7 +89,7 @@ class TransformTest( GafferSceneTest.SceneTestCase ) :
 
 		filter = GafferScene.PathFilter()
 		filter["paths"].setValue( IECore.StringVectorData( [ "/group/sphere" ] ) )
-		transform["filter"].setInput( filter["match"] )
+		transform["filter"].setInput( filter["out"] )
 
 		self.assertSceneValid( transform["out"] )
 
@@ -118,7 +118,7 @@ class TransformTest( GafferSceneTest.SceneTestCase ) :
 
 		filter = GafferScene.PathFilter()
 		filter["paths"].setValue( IECore.StringVectorData( [ "/sphere" ] ) )
-		transform["filter"].setInput( filter["match"] )
+		transform["filter"].setInput( filter["out"] )
 
 		self.assertEqual( transform["space"].getValue(), GafferScene.Transform.Space.World )
 

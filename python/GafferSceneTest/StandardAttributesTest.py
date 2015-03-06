@@ -90,7 +90,7 @@ class StandardAttributesTest( GafferSceneTest.SceneTestCase ) :
 
 		a = GafferScene.StandardAttributes()
 		a["in"].setInput( p["out"] )
-		a["filter"].setInput( f["match"] )
+		a["filter"].setInput( f["out"] )
 		a["attributes"]["transformBlurSegments"]["enabled"].setValue( True )
 		a["attributes"]["transformBlurSegments"]["value"].setValue( 2 )
 
