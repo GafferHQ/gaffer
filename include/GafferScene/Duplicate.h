@@ -60,6 +60,9 @@ class Duplicate : public BranchCreator
 		Gaffer::IntPlug *copiesPlug();
 		const Gaffer::IntPlug *copiesPlug() const;
 
+		Gaffer::StringPlug *namePlug();
+		const Gaffer::StringPlug *namePlug() const;
+
 		Gaffer::TransformPlug *transformPlug();
 		const Gaffer::TransformPlug *transformPlug() const;
 

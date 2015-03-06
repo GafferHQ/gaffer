@@ -43,21 +43,65 @@ import GafferScene
 # Metadata
 ##########################################################################
 
-Gaffer.Metadata.registerNodeDescription(
+Gaffer.Metadata.registerNode(
 
-GafferScene.Duplicate,
+	GafferScene.Duplicate,
 
-"""Duplicates elements of a scene.""",
+	"description",
+	"""
+	Duplicates a part of the scene. The duplicates
+	are parented alongside the original, and have
+	a transform applied to them.
+	""",
 
-"target",
-"The element to be duplicated.",
+	plugs = {
 
-"copies",
-"""The number of copies to be made.""",
+		"target" : [
 
-"transform",
-"""The transform to be applied to the copies.""",
+			"description",
+			"""
+			The part of the scene to be duplicated.
+			""",
 
+		],
+
+		"copies" : [
+
+			"description",
+			"""
+			The number of copies to be made.
+			""",
+
+		],
+
+		"name" : [
+
+			"description",
+			"""
+			The name given to the copies. If this
+			is left empty, the name from the target
+			will be used instead. The names will have
+			a numeric suffix applied to distinguish
+			between the different copies, unless only a
+			single copy is being made. Even in the case
+			of a single copy, a suffix will be applied
+			if necessary to keep the names unique.
+			""",
+
+		],
+
+		"transform" : [
+
+			"description",
+			"""
+			The transform to be applied to the copies. The transform
+			is applied iteratively, so the second copy is transformed
+			twice, the third copy is transformed three times and so on.
+			""",
+
+		],
+
+	}
 )
 
 ##########################################################################
