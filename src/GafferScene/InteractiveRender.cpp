@@ -373,7 +373,14 @@ void InteractiveRender::plugDirtied( const Gaffer::Plug *plug )
 			// checking for locations that are no longer present, and flag them as absent if this
 			// is the case:
 			ChildNamesUpdateTask *task = new( tbb::task::allocate_root() ) ChildNamesUpdateTask( inPlug(), m_context.get(), m_sceneGraph.get(), ScenePlug::ScenePath() );
-			tbb::task::spawn_root_and_wait( *task );
+			try
+			{
+				tbb::task::spawn_root_and_wait( *task );
+			}
+			catch( const std::exception& e )
+			{
+				IECore::msg( IECore::Msg::Error, "InteractiveRender::update", e.what() );
+			}
 		}
 	}
 	else if(
