@@ -55,6 +55,7 @@ Duplicate::Duplicate( const std::string &name )
 
 	addChild( new StringPlug( "target" ) );
 	addChild( new IntPlug( "copies", Plug::In, 1, 0 ) );
+	addChild( new StringPlug( "name" ) );
 	addChild( new TransformPlug( "transform" ) );
 	addChild( new StringPlug( "__outParent", Plug::Out ) );
 	addChild( new InternedStringVectorDataPlug( "__outChildNames", Plug::Out, inPlug()->childNamesPlug()->defaultValue() ) );
@@ -89,34 +90,44 @@ const Gaffer::IntPlug *Duplicate::copiesPlug() const
 	return getChild<IntPlug>( g_firstPlugIndex + 1 );
 }
 
+Gaffer::StringPlug *Duplicate::namePlug()
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 2 );
+}
+
+const Gaffer::StringPlug *Duplicate::namePlug() const
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 2 );
+}
+
 Gaffer::TransformPlug *Duplicate::transformPlug()
 {
-	return getChild<TransformPlug>( g_firstPlugIndex + 2 );
+	return getChild<TransformPlug>( g_firstPlugIndex + 3 );
 }
 
 const Gaffer::TransformPlug *Duplicate::transformPlug() const
 {
-	return getChild<TransformPlug>( g_firstPlugIndex + 2 );
+	return getChild<TransformPlug>( g_firstPlugIndex + 3 );
 }
 
 Gaffer::StringPlug *Duplicate::outParentPlug()
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 3 );
+	return getChild<StringPlug>( g_firstPlugIndex + 4 );
 }
 
 const Gaffer::StringPlug *Duplicate::outParentPlug() const
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 3 );
+	return getChild<StringPlug>( g_firstPlugIndex + 4 );
 }
 
 Gaffer::InternedStringVectorDataPlug *Duplicate::childNamesPlug()
 {
-	return getChild<InternedStringVectorDataPlug>( g_firstPlugIndex + 4 );
+	return getChild<InternedStringVectorDataPlug>( g_firstPlugIndex + 5 );
 }
 
 const Gaffer::InternedStringVectorDataPlug *Duplicate::childNamesPlug() const
 {
-	return getChild<InternedStringVectorDataPlug>( g_firstPlugIndex + 4 );
+	return getChild<InternedStringVectorDataPlug>( g_firstPlugIndex + 5 );
 }
 
 void Duplicate::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
@@ -129,6 +140,10 @@ void Duplicate::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outp
 		outputs.push_back( childNamesPlug() );
 	}
 	else if( input == copiesPlug() )
+	{
+		outputs.push_back( childNamesPlug() );
+	}
+	else if( input == namePlug() )
 	{
 		outputs.push_back( childNamesPlug() );
 	}
@@ -154,6 +169,7 @@ void Duplicate::hash( const ValuePlug *output, const Context *context, IECore::M
 	{
 		targetPlug()->hash( h );
 		copiesPlug()->hash( h );
+		namePlug()->hash( h );
 	}
 }
 
@@ -192,21 +208,48 @@ void Duplicate::compute( ValuePlug *output, const Context *context ) const
 			throw Exception( boost::str( boost::format( "Target \"%s\" does not exist" ) % target.back().string() ) );
 		}
 
-		// go ahead and generate our childnames by incrementing a numeric suffix on
-		// the target name.
+		// go ahead and generate our childnames.
+		// these are composed of a stem and possibly
+		// a numeric suffix. we default to deriving
+		// these from the name of the target.
+
 		std::string stem;
 		int suffix = numericSuffix( target.back(), 0, &stem );
+		suffix++;
 
-		InternedStringVectorDataPtr childNames = new InternedStringVectorData;
+		const int copies = copiesPlug()->getValue();
+		const std::string name = namePlug()->getValue();
 
-		boost::format formatter( "%s%d" );
-		int copies = copiesPlug()->getValue();
-		for( int i = 0; i < copies; ++i )
+		// if a name is provided explicitly, then
+		// it overrides the name and suffix derived
+		// from the target.
+		if( name.size() )
 		{
-			childNames->writable().push_back( boost::str( formatter % stem % ++suffix ) );
+			std::string nameStem;
+			const int nameSuffix = numericSuffix( name, &nameStem );
+			stem = nameStem;
+			suffix = copies == 1 ? nameSuffix : max( nameSuffix, 1 );
 		}
 
-		static_cast<InternedStringVectorDataPlug *>( output )->setValue( childNames );
+		InternedStringVectorDataPtr childNamesData = new InternedStringVectorData;
+		std::vector<InternedString> &childNames = childNamesData->writable();
+		childNames.reserve( copies );
+
+		if( suffix == -1 )
+		{
+			assert( copies == 1 );
+			childNames.push_back( stem );
+		}
+		else
+		{
+			boost::format formatter( "%s%d" );
+			for( int i = 0; i < copies; ++i )
+			{
+				childNames.push_back( boost::str( formatter % stem % suffix++ ) );
+			}
+		}
+
+		static_cast<InternedStringVectorDataPlug *>( output )->setValue( childNamesData );
 		return;
 	}
 
