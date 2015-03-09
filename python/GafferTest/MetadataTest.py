@@ -572,6 +572,123 @@ class MetadataTest( GafferTest.TestCase ) :
 		self.assertEqual( Gaffer.Metadata.plugValue( n["b"], "description" ), "I am the first paragraph.\n\nI am the second paragraph." )
 		self.assertEqual( Gaffer.Metadata.plugValue( n["b"], "otherValue" ), 100 )
 
+	def testPersistenceOfInstanceValues( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = GafferTest.AddNode()
+
+		Gaffer.Metadata.registerNodeValue( s["n"], "persistent1", 1 )
+		Gaffer.Metadata.registerNodeValue( s["n"], "persistent2", 2, persistent = True )
+		Gaffer.Metadata.registerNodeValue( s["n"], "nonpersistent", 3, persistent = False )
+
+		Gaffer.Metadata.registerPlugValue( s["n"]["op1"], "persistent1", "one" )
+		Gaffer.Metadata.registerPlugValue( s["n"]["op1"], "persistent2", "two", persistent = True )
+		Gaffer.Metadata.registerPlugValue( s["n"]["op1"], "nonpersistent", "three", persistent = False )
+
+		self.assertEqual( Gaffer.Metadata.nodeValue( s["n"], "persistent1" ), 1 )
+		self.assertEqual( Gaffer.Metadata.nodeValue( s["n"], "persistent2" ), 2 )
+		self.assertEqual( Gaffer.Metadata.nodeValue( s["n"], "nonpersistent" ), 3 )
+
+		self.assertEqual( Gaffer.Metadata.plugValue( s["n"]["op1"], "persistent1" ), "one" )
+		self.assertEqual( Gaffer.Metadata.plugValue( s["n"]["op1"], "persistent2" ), "two" )
+		self.assertEqual( Gaffer.Metadata.plugValue( s["n"]["op1"], "nonpersistent" ), "three" )
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+
+		self.assertEqual( Gaffer.Metadata.nodeValue( s2["n"], "persistent1" ), 1 )
+		self.assertEqual( Gaffer.Metadata.nodeValue( s2["n"], "persistent2" ), 2 )
+		self.assertEqual( Gaffer.Metadata.nodeValue( s2["n"], "nonpersistent" ), None )
+
+		self.assertEqual( Gaffer.Metadata.plugValue( s2["n"]["op1"], "persistent1" ), "one" )
+		self.assertEqual( Gaffer.Metadata.plugValue( s2["n"]["op1"], "persistent2" ), "two" )
+		self.assertEqual( Gaffer.Metadata.plugValue( s2["n"]["op1"], "nonpersistent" ), None )
+
+	def testUndoOfPersistentInstanceValues( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = GafferTest.AddNode()
+
+		def assertNonExistent() :
+
+			self.assertEqual( Gaffer.Metadata.nodeValue( s["n"], "a" ), None )
+			self.assertEqual( Gaffer.Metadata.plugValue( s["n"]["op1"], "b" ), None )
+			
+		def assertPersistent() :
+
+			self.assertEqual( Gaffer.Metadata.registeredNodeValues( s["n"], instanceOnly = True ), [ "a" ] )
+			self.assertEqual( Gaffer.Metadata.registeredPlugValues( s["n"]["op1"], instanceOnly = True ), [ "b" ] )
+			self.assertEqual( Gaffer.Metadata.registeredNodeValues( s["n"], instanceOnly = True, persistentOnly = True ), [ "a" ] )
+			self.assertEqual( Gaffer.Metadata.registeredPlugValues( s["n"]["op1"], instanceOnly = True, persistentOnly = True ), [ "b" ] )
+			self.assertEqual( Gaffer.Metadata.nodeValue( s["n"], "a" ), 1 )
+			self.assertEqual( Gaffer.Metadata.plugValue( s["n"]["op1"], "b" ), 2 )
+			
+		def assertNonPersistent() :
+
+			self.assertEqual( Gaffer.Metadata.registeredNodeValues( s["n"], instanceOnly = True ), [ "a" ] )
+			self.assertEqual( Gaffer.Metadata.registeredPlugValues( s["n"]["op1"], instanceOnly = True ), [ "b" ] )
+			self.assertEqual( Gaffer.Metadata.registeredNodeValues( s["n"], instanceOnly = True, persistentOnly = True ), [] )
+			self.assertEqual( Gaffer.Metadata.registeredPlugValues( s["n"]["op1"], instanceOnly = True, persistentOnly = True ), [] )
+			self.assertEqual( Gaffer.Metadata.nodeValue( s["n"], "a" ), 1 )
+			self.assertEqual( Gaffer.Metadata.plugValue( s["n"]["op1"], "b" ), 2 )
+
+		assertNonExistent()
+
+		with Gaffer.UndoContext( s ) :
+
+			Gaffer.Metadata.registerNodeValue( s["n"], "a", 1, persistent = True )
+			Gaffer.Metadata.registerPlugValue( s["n"]["op1"], "b", 2, persistent = True )
+
+		assertPersistent()
+
+		with Gaffer.UndoContext( s ) :
+
+			Gaffer.Metadata.registerNodeValue( s["n"], "a", 1, persistent = False )
+			Gaffer.Metadata.registerPlugValue( s["n"]["op1"], "b", 2, persistent = False )
+
+		assertNonPersistent()
+
+		s.undo()
+		assertPersistent()
+
+		s.undo()
+		assertNonExistent()
+
+		s.redo()
+		assertPersistent()
+
+		s.redo()
+		assertNonPersistent()
+
+	def testChangeOfPersistenceSignals( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = GafferTest.AddNode()
+
+		ncs = GafferTest.CapturingSlot( Gaffer.Metadata.nodeValueChangedSignal() )
+		pcs = GafferTest.CapturingSlot( Gaffer.Metadata.nodeValueChangedSignal() )
+
+		self.assertEqual( len( ncs ), 0 )
+		self.assertEqual( len( pcs ), 0 )
+
+		Gaffer.Metadata.registerNodeValue( s["n"], "a", 1, persistent = False )
+		Gaffer.Metadata.registerPlugValue( s["n"]["op1"], "b", 2, persistent = False )
+
+		self.assertEqual( len( ncs ), 1 )
+		self.assertEqual( len( pcs ), 1 )
+
+		Gaffer.Metadata.registerNodeValue( s["n"], "a", 1, persistent = True )
+		Gaffer.Metadata.registerPlugValue( s["n"]["op1"], "b", 2, persistent = True )
+
+		self.assertEqual( len( ncs ), 2 )
+		self.assertEqual( len( pcs ), 2 )
+
+		Gaffer.Metadata.registerNodeValue( s["n"], "a", 1, persistent = False )
+		Gaffer.Metadata.registerPlugValue( s["n"]["op1"], "b", 2, persistent = False )
+
+		self.assertEqual( len( ncs ), 3 )
+		self.assertEqual( len( pcs ), 3 )
+
 if __name__ == "__main__":
 	unittest.main()
 
