@@ -159,6 +159,16 @@ options.Add(
 )
 
 options.Add(
+	BoolVariable( "BUILD_DEPENDENCY_SUBPROCESS32", "Set this to build the subprocess32 module.", "$BUILD_DEPENDENCIES" )
+)
+
+options.Add(
+	"SUBPROCESS32_SRC_DIR",
+	"The location of the subprocess32 source to be used if BUILD_DEPENDENCY_SUBPROCESS32 is specified.",
+	"$DEPENDENCIES_SRC_DIR/subprocess32-3.2.6",
+)
+
+options.Add(
 	BoolVariable( "BUILD_DEPENDENCY_BOOST", "Set this to build boost.", "$BUILD_DEPENDENCIES" )
 )
 
@@ -624,6 +634,9 @@ pythonVersion = pythonVersion.split()[1].rpartition( "." )[0]
 
 depEnv["PYTHON_VERSION"] = pythonVersion
 env["PYTHON_VERSION"] = pythonVersion
+
+if depEnv["BUILD_DEPENDENCY_SUBPROCESS32"] :
+	runCommand( "cd $SUBPROCESS32_SRC_DIR && python setup.py install" )
 
 if depEnv["BUILD_DEPENDENCY_BOOST"] :
 	runCommand( "cd $BOOST_SRC_DIR; ./bootstrap.sh --prefix=$BUILD_DIR --with-python=$BUILD_DIR/bin/python --with-python-root=$BUILD_DIR && ./bjam -d+2 variant=release link=shared threading=multi install" )
