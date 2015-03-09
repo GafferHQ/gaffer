@@ -70,7 +70,7 @@ _styleSheet = string.Template(
 
 	QLabel[gafferHighlighted=\"true\"] {
 
-		color: $brightColor;
+		color: #b0d8fb;
 
 	}
 
@@ -994,7 +994,7 @@ _styleSheet = string.Template(
 	"backgroundLighter" : "#6c6c6c",
 	"backgroundLight" : "#7d7d7d",
 	"brightColor" : "#779cbd",
-	"foreground" : "#f0f0f0",
+	"foreground" : "#e0e0e0",
 	"foregroundFaded" : "#999999",
 	"alternateColor" : "#454545",
 	"errorColor" : "#ff5555",

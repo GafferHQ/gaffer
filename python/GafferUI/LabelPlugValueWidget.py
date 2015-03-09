@@ -116,10 +116,17 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def _updateFromPlug( self ) :
 
+		plug = self.getPlug()
+
 		self.__label.setEnabled(
-			self.getPlug() is not None and
-			not self.getPlug().getFlags( Gaffer.Plug.Flags.ReadOnly )
+			plug is not None and
+			not plug.getFlags( Gaffer.Plug.Flags.ReadOnly )
 		)
+
+		highlighted = plug.getInput() is not None
+		if not highlighted and isinstance( plug, Gaffer.ValuePlug ) :
+			highlighted = highlighted or not plug.isSetToDefault()
+		self.__label.setHighlighted( highlighted )
 
 	def __dragBegin( self, widget, event ) :
 
