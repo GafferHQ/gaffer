@@ -278,6 +278,7 @@ StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node, LinearContainer::O
 	node->childAddedSignal().connect( boost::bind( &StandardNodeGadget::childAdded, this, ::_1,  ::_2 ) );
 	node->childRemovedSignal().connect( boost::bind( &StandardNodeGadget::childRemoved, this, ::_1,  ::_2 ) );
 	node->errorSignal().connect( boost::bind( &StandardNodeGadget::error, this, ::_1, ::_2, ::_3 ) );
+	node->plugDirtiedSignal().connect( boost::bind( &StandardNodeGadget::plugDirtied, this, ::_1 ) );
 
 	if( DependencyNode *dependencyNode = IECore::runTimeCast<DependencyNode>( node.get() ) )
 	{
@@ -286,7 +287,6 @@ StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node, LinearContainer::O
 		{
 			m_nodeEnabled = enabledPlug->getValue();
 		}
-		node->plugDirtiedSignal().connect( boost::bind( &StandardNodeGadget::plugDirtied, this, ::_1 ) );
 	}
 
 	dragEnterSignal().connect( boost::bind( &StandardNodeGadget::dragEnter, this, ::_1, ::_2 ) );
