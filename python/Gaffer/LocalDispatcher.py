@@ -37,7 +37,7 @@
 import os
 import errno
 import signal
-import subprocess
+import subprocess32 as subprocess
 import threading
 import time
 import traceback
@@ -276,7 +276,7 @@ class LocalDispatcher( Gaffer.Dispatcher ) :
 			
 			self.__setStatus( batch, LocalDispatcher.Job.Status.Running )
 			IECore.msg( IECore.MessageHandler.Level.Info, self.__messageTitle, " ".join( args ) )
-			process = subprocess.Popen( args, preexec_fn=os.setsid )
+			process = subprocess.Popen( args, start_new_session=True )
 			batch.blindData()["pid"] = IECore.IntData( process.pid )
 			
 			while process.poll() is None :
