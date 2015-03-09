@@ -1,3 +1,6 @@
+# 0.10.0.0
+=========
+
 Core
 -----------------------------------------------------------------------
 
@@ -19,6 +22,12 @@ UI
 - Fixed "Edit/SelectConnected" menu items to ignore invisible nodes.
 - Fixed "Edit/SelectAll" menu item to ignore invisible nodes (#1207).
 - Highlighted plugs at non-default values in the NodeEditor (#1216).
+- SceneInspector
+  - Significant performance improvements.
+  - Added name based filtering for options and attributes (#1159).
+  - Added query caching.
+- Fixed bug whereby Widget.setVisible( notABool ) could cause problems.
+- Fixed clearing of StandardNodeGadget errors for non-DependencyNodes.
 
 Scene
 -----------------------------------------------------------------------
@@ -97,6 +106,7 @@ Build
 - libGafferUI now links with Qt. This must be considered when building
   Gaffer to be hosted inside other applications.
 - Requires subprocess32 python module.
+- Added subprocess32 to dependencies build process.
 
 # 0.9.0.0
 =========
