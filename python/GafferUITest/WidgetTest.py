@@ -431,6 +431,17 @@ class WidgetTest( GafferUITest.TestCase ) :
 		w = GafferUI.Button()
 		self.assertTrue( isinstance( GafferUI._qtAddress( w._qtWidget() ), int ) )
 
+	def testSetVisibleWithNonBool( self ) :
+
+		w = TestWidget()
+		self.assertTrue( w.getVisible() is True )
+
+		w.setVisible( 0 )
+		self.assertTrue( w.getVisible() is False )
+
+		w.setVisible( 1 )
+		self.assertTrue( w.getVisible() is True )
+
 if __name__ == "__main__":
 	unittest.main()
 

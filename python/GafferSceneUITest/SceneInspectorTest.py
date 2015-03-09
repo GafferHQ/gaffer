@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,11 +34,33 @@
 #
 ##########################################################################
 
-from SceneViewTest import SceneViewTest
-from ShaderAssignmentUITest import ShaderAssignmentUITest
-from StandardGraphLayoutTest import StandardGraphLayoutTest
-from SceneGadgetTest import SceneGadgetTest
-from SceneInspectorTest import SceneInspectorTest
+import Gaffer
+import GafferUITest
+import GafferScene
+import GafferSceneUI
+
+class SceneInspectorTest( GafferUITest.TestCase ) :
+
+	def testTarget( self ) :
+
+		g = GafferScene.Grid()
+		t = GafferSceneUI.SceneInspector.Target( g["out"], "/grid" )
+
+		self.assertTrue( t.scene.isSame( g["out"] ) )
+		self.assertEqual( t.path, "/grid" )
+
+		p = GafferScene.Plane()
+
+		# Targets are read only
+		self.assertRaises( AttributeError, setattr, t, "scene", p["out"] )
+		self.assertRaises( AttributeError, setattr, t, "path", "/plane" )
+
+		# Targets cache their lookups
+		self.assertTrue( t.attributes().isSame( t.attributes() ) )
+		self.assertTrue( t.fullAttributes().isSame( t.fullAttributes() ) )
+		self.assertTrue( t.object().isSame( t.object() ) )
+		self.assertTrue( t.globals().isSame( t.globals() ) )
 
 if __name__ == "__main__":
 	unittest.main()
+

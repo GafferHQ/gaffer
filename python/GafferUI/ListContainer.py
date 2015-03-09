@@ -111,6 +111,12 @@ class ListContainer( GafferUI.ContainerWidget ) :
 
 	def __setitem__( self, index, child ) :
 
+		# Shortcut if there would be no change. Rearranging
+		# things in Qt is extremely costly and this test is
+		# trivial in comparison, so this is well worth doing.
+		if self.__widgets[index] == child :
+			return
+
 		if isinstance( index, slice ) :
 			assert( isinstance( child, list ) )
 			children = child
