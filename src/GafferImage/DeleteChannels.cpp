@@ -142,12 +142,9 @@ void DeleteChannels::hashChannelNames( const GafferImage::ImagePlug *output, con
 {
 	ImageProcessor::hash( output, context, h );
 
-	IECore::ConstStringVectorDataPtr channelNamesData = inPlug()->channelNamesPlug()->getValue();
-	std::vector<std::string> maskChannels = channelNamesData->readable();
-	channelsPlug()->maskChannels( maskChannels );
-
+	inPlug()->channelNamesPlug()->hash( h );
 	modePlug()->hash( h );
-	h.append( &maskChannels[0], maskChannels.size() );
+	channelsPlug()->hash( h );
 }
 
 IECore::ConstStringVectorDataPtr DeleteChannels::computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const
