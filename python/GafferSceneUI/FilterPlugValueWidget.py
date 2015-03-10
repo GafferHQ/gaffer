@@ -127,19 +127,12 @@ class FilterPlugValueWidget( GafferUI.PlugValueWidget ) :
 			self.getPlug().setInput( filterNode["out"] )
 
 		# position the node appropriately.
-		## \todo In an ideal world the GraphGadget would do this
-		# without prompting.
 		scriptWindow = self.ancestor( GafferUI.ScriptWindow )
 		if scriptWindow is not None :
 			nodeGraphs = scriptWindow.getLayout().editors( GafferUI.NodeGraph )
 			if nodeGraphs :
 				graphGadget = nodeGraphs[0].graphGadget()
 				graphGadget.getLayout().positionNode( graphGadget, filterNode )
-
-	def __linkFilter( self ) :
-
-		## \todo Implement browsing to other nodes with existing filters
-		pass
 
 	def __menuDefinition( self ) :
 
@@ -150,10 +143,25 @@ class FilterPlugValueWidget( GafferUI.PlugValueWidget ) :
 			result.append( "/Remove", { "command" : Gaffer.WeakMethod( self.__removeFilter ) } )
 			result.append( "/RemoveDivider", { "divider" : True } )
 
-		for filterType in GafferScene.Filter.__subclasses__() :
+		for filterType in self.__filterTypes() :
 			result.append( "/" + filterType.staticTypeName().rpartition( ":" )[2], { "command" : IECore.curry( Gaffer.WeakMethod( self.__addFilter ), filterType ) } )
 
-		result.append( "/AddDivider", { "divider" : True } )
-		result.append( "/Link...", { "command" : Gaffer.WeakMethod( self.__linkFilter ), "active" : False } )
-
 		return result
+
+	@staticmethod
+	def __filterTypes() :
+	
+		def walk( f ) :
+		
+			result = []
+			
+			subClasses = f.__subclasses__()
+			if not len( subClasses ) :
+				result.append( f )
+			else :
+				for s in subClasses :
+					result += walk( s )
+					
+			return result
+		
+		return walk( GafferScene.Filter )
