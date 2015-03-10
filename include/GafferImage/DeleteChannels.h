@@ -61,17 +61,17 @@ class DeleteChannels : public ImageProcessor
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::DeleteChannels, DeleteChannelsTypeId, ImageProcessor );
 
-		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
-
 		//! @name Plug Accessors
-		/// Returns a pointer to the node's plugs.
 		//////////////////////////////////////////////////////////////
 		//@{
 		Gaffer::IntPlug *modePlug();
 		const Gaffer::IntPlug *modePlug() const;
-		GafferImage::ChannelMaskPlug *channelSelectionPlug();
-		const GafferImage::ChannelMaskPlug *channelSelectionPlug() const;
+
+		GafferImage::ChannelMaskPlug *channelsPlug();
+		const GafferImage::ChannelMaskPlug *channelsPlug() const;
 		//@}
+
+		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
 
 	protected :
 

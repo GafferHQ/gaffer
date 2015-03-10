@@ -76,12 +76,12 @@ const Gaffer::IntPlug *DeleteChannels::modePlug() const
 	return getChild<IntPlug>( g_firstPlugIndex );
 }
 
-GafferImage::ChannelMaskPlug *DeleteChannels::channelSelectionPlug()
+GafferImage::ChannelMaskPlug *DeleteChannels::channelsPlug()
 {
 	return getChild<ChannelMaskPlug>( g_firstPlugIndex + 1 );
 }
 
-const GafferImage::ChannelMaskPlug *DeleteChannels::channelSelectionPlug() const
+const GafferImage::ChannelMaskPlug *DeleteChannels::channelsPlug() const
 {
 	return getChild<ChannelMaskPlug>( g_firstPlugIndex + 1 );
 }
@@ -100,7 +100,7 @@ void DeleteChannels::affects( const Gaffer::Plug *input, AffectedPlugsContainer 
 		return;
 	}
 
-	if( input == channelSelectionPlug() || input == modePlug() )
+	if( input == channelsPlug() || input == modePlug() )
 	{
 		outputs.push_back( outPlug()->channelNamesPlug() );
 	}
@@ -137,7 +137,7 @@ void DeleteChannels::hashChannelNames( const GafferImage::ImagePlug *output, con
 
 	IECore::ConstStringVectorDataPtr channelNamesData = inPlug()->channelNamesPlug()->getValue();
 	std::vector<std::string> maskChannels = channelNamesData->readable();
-	channelSelectionPlug()->maskChannels( maskChannels );
+	channelsPlug()->maskChannels( maskChannels );
 
 	modePlug()->hash( h );
 	h.append( &maskChannels[0], maskChannels.size() );
@@ -162,7 +162,7 @@ IECore::ConstStringVectorDataPtr DeleteChannels::computeChannelNames( const Gaff
 	{
 		IECore::ConstStringVectorDataPtr inChannelsData = inPlug()->channelNamesPlug()->getValue();
 		std::vector<std::string> inChannels( inChannelsData->readable() );
-		IECore::ConstStringVectorDataPtr inSelectionData = channelSelectionPlug()->getValue();
+		IECore::ConstStringVectorDataPtr inSelectionData = channelsPlug()->getValue();
 		const std::vector<std::string> &channelSelection( inSelectionData->readable() );
 
 		std::vector<std::string>::iterator it( inChannels.begin() );
@@ -184,7 +184,7 @@ IECore::ConstStringVectorDataPtr DeleteChannels::computeChannelNames( const Gaff
 	{
 		IECore::ConstStringVectorDataPtr channelNamesData = inPlug()->channelNamesPlug()->getValue();
 		std::vector<std::string> maskChannels( channelNamesData->readable() );
-		channelSelectionPlug()->maskChannels( maskChannels );
+		channelsPlug()->maskChannels( maskChannels );
 		result->writable() = maskChannels;
 	}
 	return result;
