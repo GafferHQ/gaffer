@@ -51,7 +51,7 @@ DeleteChannels::DeleteChannels( const std::string &name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 
-	addChild( new IntPlug( "mode" ) );
+	addChild( new IntPlug( "mode", Plug::In, Delete, Delete, Keep ) );
 
 	addChild(
 		new ChannelMaskPlug(

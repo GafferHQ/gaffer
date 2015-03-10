@@ -137,3 +137,15 @@ class DeleteChannelsTest( unittest.TestCase ) :
 		c["channels"].setValue( IECore.StringVectorData( [ "R", "B" ] ) )
 		h2 = c["out"]["channelNames"].hash()
 		self.assertNotEqual( h, h2 )
+
+	def testModePlug( self ) :
+
+		n = GafferImage.DeleteChannels()
+		self.assertEqual( n["mode"].defaultValue(), n.Mode.Delete )
+		self.assertEqual( n["mode"].getValue(), n.Mode.Delete )
+
+		n["mode"].setValue( n.Mode.Keep )
+		self.assertEqual( n["mode"].getValue(), n.Mode.Keep )
+
+		self.assertEqual( n["mode"].minValue(), n.Mode.Delete )
+		self.assertEqual( n["mode"].maxValue(), n.Mode.Keep )
