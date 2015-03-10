@@ -1,7 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2012, John Haddon. All rights reserved.
-#  Copyright (c) 2012-2014, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,22 +34,50 @@
 #
 ##########################################################################
 
-from _GafferImageUI import *
+import Gaffer
+import GafferUI
+import GafferImage
+import GafferImageUI
 
-import DisplayUI
-from FormatPlugValueWidget import FormatPlugValueWidget
-from FilterPlugValueWidget import FilterPlugValueWidget
-from ChannelMaskPlugValueWidget import ChannelMaskPlugValueWidget
+Gaffer.Metadata.registerNode(
 
-import ImageReaderUI
-import ImageViewToolbar
-import ImageTransformUI
-import ConstantUI
-import ImageSwitchUI
-import OpenColorIOUI
-import ImageContextVariablesUI
-import ImageStatsUI
-import DeleteChannelsUI
-import NodeUIs # Put this at the bottom or we get ordering issues!
+	GafferImage.DeleteChannels,
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferImageUI" )
+	"description",
+	"""
+	Deletes channels from an image.
+	""",
+
+	plugs = {
+
+		"mode" : [
+
+			"description",
+			"""
+			Defines how the channels listed in the channels
+			plug are treated. Delete mode deletes the listed
+			channels. Keep mode keeps the listed channels,
+			deleting all others.
+			""",
+
+			"preset:Delete", GafferImage.DeleteChannels.Mode.Delete,
+			"preset:Keep", GafferImage.DeleteChannels.Mode.Keep,
+
+		],
+
+		"channels" : [
+
+			"description",
+			"""
+			The names of the channels to be deleted (or kept
+			if the mode is set to Keep).
+			""",
+
+		],
+
+	}
+
+)
+
+GafferUI.PlugValueWidget.registerCreator( GafferImage.DeleteChannels, "mode", GafferUI.PresetsPlugValueWidget )
+GafferUI.PlugValueWidget.registerCreator( GafferImage.DeleteChannels, "channels", GafferImageUI.ChannelMaskPlugValueWidget, inputImagePlug = "in" )

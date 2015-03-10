@@ -100,14 +100,3 @@ GafferUI.PlugValueWidget.registerCreator(
 	GafferUI.EnumPlugValueWidget,
 	labelsAndValues = mergeOperationLabelsAndValues
 )
-
-# Remove Channels
-removeChannelsLabelsAndValues = [ ( "Remove", 0 ), ( "Keep", 1 ) ]
-GafferUI.PlugValueWidget.registerCreator(
-	GafferImage.RemoveChannels,
-	"mode",
-	GafferUI.EnumPlugValueWidget,
-	labelsAndValues = removeChannelsLabelsAndValues
-)
-
-
