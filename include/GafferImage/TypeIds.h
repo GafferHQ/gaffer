@@ -78,7 +78,7 @@ enum TypeId
 	LanczosFilterTypeId = 110782,
 	ImageStatsTypeId = 110783,
 	ImageTransformImplementationTypeId = 110784,
-	RemoveChannelsTypeId = 110785,
+	DeleteChannelsTypeId = 110785,
 	ColorProcessorTypeId = 110786,
 	ClampTypeId = 110787,
 	ImageMixinBaseTypeId = 110788,

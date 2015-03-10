@@ -64,7 +64,7 @@
 #include "GafferImageBindings/SamplerBinding.h"
 #include "GafferImageBindings/FilterPlugBindings.h"
 #include "GafferImageBindings/FilterBinding.h"
-#include "GafferImageBindings/RemoveChannelsBinding.h"
+#include "GafferImageBindings/DeleteChannelsBinding.h"
 #include "GafferImageBindings/ChannelMaskPlugBindings.h"
 #include "GafferImageBindings/MixinBinding.h"
 #include "GafferImageBindings/FormatDataBinding.h"
@@ -129,7 +129,7 @@ BOOST_PYTHON_MODULE( _GafferImage )
 	GafferBindings::DependencyNodeClass<ImageStats>();
 	GafferBindings::DependencyNodeClass<ImageSampler>();
 
-	GafferImageBindings::bindRemoveChannels();
+	GafferImageBindings::bindDeleteChannels();
 	GafferImageBindings::bindFormat();
 	GafferImageBindings::bindFormatPlug();
 	GafferImageBindings::bindChannelMaskPlug();

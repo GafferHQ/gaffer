@@ -34,7 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferImage/RemoveChannels.h"
+#include "GafferImage/DeleteChannels.h"
 
 using namespace IECore;
 using namespace Gaffer;
@@ -42,11 +42,11 @@ using namespace Gaffer;
 namespace GafferImage
 {
 
-IE_CORE_DEFINERUNTIMETYPED( RemoveChannels );
+IE_CORE_DEFINERUNTIMETYPED( DeleteChannels );
 
-size_t RemoveChannels::g_firstPlugIndex = 0;
+size_t DeleteChannels::g_firstPlugIndex = 0;
 
-RemoveChannels::RemoveChannels( const std::string &name )
+DeleteChannels::DeleteChannels( const std::string &name )
 	:	ImageProcessor( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
@@ -62,31 +62,31 @@ RemoveChannels::RemoveChannels( const std::string &name )
 	);
 }
 
-RemoveChannels::~RemoveChannels()
+DeleteChannels::~DeleteChannels()
 {
 }
 
-Gaffer::IntPlug *RemoveChannels::modePlug()
-{
-	return getChild<IntPlug>( g_firstPlugIndex );
-}
-
-const Gaffer::IntPlug *RemoveChannels::modePlug() const
+Gaffer::IntPlug *DeleteChannels::modePlug()
 {
 	return getChild<IntPlug>( g_firstPlugIndex );
 }
 
-GafferImage::ChannelMaskPlug *RemoveChannels::channelSelectionPlug()
+const Gaffer::IntPlug *DeleteChannels::modePlug() const
+{
+	return getChild<IntPlug>( g_firstPlugIndex );
+}
+
+GafferImage::ChannelMaskPlug *DeleteChannels::channelSelectionPlug()
 {
 	return getChild<ChannelMaskPlug>( g_firstPlugIndex + 1 );
 }
 
-const GafferImage::ChannelMaskPlug *RemoveChannels::channelSelectionPlug() const
+const GafferImage::ChannelMaskPlug *DeleteChannels::channelSelectionPlug() const
 {
 	return getChild<ChannelMaskPlug>( g_firstPlugIndex + 1 );
 }
 
-void RemoveChannels::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
+void DeleteChannels::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	ImageProcessor::affects( input, outputs );
 
@@ -106,32 +106,32 @@ void RemoveChannels::affects( const Gaffer::Plug *input, AffectedPlugsContainer 
 	}
 }
 
-bool RemoveChannels::channelEnabled( const std::string &channel ) const
+bool DeleteChannels::channelEnabled( const std::string &channel ) const
 {
 	return false;
 }
 
-IECore::ConstFloatVectorDataPtr RemoveChannels::computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const
+IECore::ConstFloatVectorDataPtr DeleteChannels::computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const
 {
 	return inPlug()->channelData( channelName, tileOrigin );
 }
 
-void RemoveChannels::hashFormat( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void DeleteChannels::hashFormat( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	h = inPlug()->formatPlug()->hash();
 }
 
-void RemoveChannels::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void DeleteChannels::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	h = inPlug()->channelDataPlug()->hash();
 }
 
-void RemoveChannels::hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void DeleteChannels::hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	h = inPlug()->dataWindowPlug()->hash();
 }
 
-void RemoveChannels::hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void DeleteChannels::hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	ImageProcessor::hash( output, context, h );
 
@@ -143,22 +143,22 @@ void RemoveChannels::hashChannelNames( const GafferImage::ImagePlug *output, con
 	h.append( &maskChannels[0], maskChannels.size() );
 }
 
-GafferImage::Format RemoveChannels::computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const
+GafferImage::Format DeleteChannels::computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
 	return inPlug()->formatPlug()->getValue();
 }
 
-Imath::Box2i RemoveChannels::computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const
+Imath::Box2i DeleteChannels::computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
 	return inPlug()->dataWindowPlug()->getValue();
 }
 
-IECore::ConstStringVectorDataPtr RemoveChannels::computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const
+IECore::ConstStringVectorDataPtr DeleteChannels::computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
 	StringVectorDataPtr result = new StringVectorData();
 
 	int mode( modePlug()->getValue() );
-	if( mode == Remove ) // Remove the selected channels
+	if( mode == Delete ) // Delete the selected channels
 	{
 		IECore::ConstStringVectorDataPtr inChannelsData = inPlug()->channelNamesPlug()->getValue();
 		std::vector<std::string> inChannels( inChannelsData->readable() );
@@ -191,4 +191,3 @@ IECore::ConstStringVectorDataPtr RemoveChannels::computeChannelNames( const Gaff
 }
 
 } // namespace GafferImage
-

@@ -34,8 +34,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_REMOVECHANNELS_H
-#define GAFFERIMAGE_REMOVECHANNELS_H
+#ifndef GAFFERIMAGE_DELETECHANNELS_H
+#define GAFFERIMAGE_DELETECHANNELS_H
 
 #include "Gaffer/NumericPlug.h"
 
@@ -45,22 +45,21 @@
 namespace GafferImage
 {
 
-/// The Remove channels node provides a simple mechanism for removing channels from an image by specifying which to keep or remove.
-class RemoveChannels : public ImageProcessor
+class DeleteChannels : public ImageProcessor
 {
 
 	public :
 
-		enum RemoveChannelsMode
+		enum Mode
 		{
-			Remove = 0,
+			Delete = 0,
 			Keep = 1
 		};
 
-		RemoveChannels( const std::string &name=defaultName<RemoveChannels>() );
-		virtual ~RemoveChannels();
+		DeleteChannels( const std::string &name=defaultName<DeleteChannels>() );
+		virtual ~DeleteChannels();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::RemoveChannels, RemoveChannelsTypeId, ImageProcessor );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::DeleteChannels, DeleteChannelsTypeId, ImageProcessor );
 
 		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
 
@@ -97,8 +96,8 @@ class RemoveChannels : public ImageProcessor
 
 };
 
-IE_CORE_DECLAREPTR( RemoveChannels );
+IE_CORE_DECLAREPTR( DeleteChannels );
 
 } // namespace GafferImage
 
-#endif // GAFFERIMAGE_REMOVECHANNELS_H
+#endif // GAFFERIMAGE_DELETECHANNELS_H
