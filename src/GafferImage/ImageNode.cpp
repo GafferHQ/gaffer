@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2012-2015, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -220,6 +220,26 @@ void ImageNode::compute( ValuePlug *output, const Context *context ) const
 			output->setToDefault();
 		}
 	}
+}
+
+GafferImage::Format ImageNode::computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const
+{
+	throw IECore::NotImplementedException( string( typeName() ) + "::computeFormat" );
+}
+
+Imath::Box2i ImageNode::computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const
+{
+	throw IECore::NotImplementedException( string( typeName() ) + "::computeDataWindow" );
+}
+
+IECore::ConstStringVectorDataPtr ImageNode::computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const
+{
+	throw IECore::NotImplementedException( string( typeName() ) + "::computeChannelNames" );
+}
+
+IECore::ConstFloatVectorDataPtr ImageNode::computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const
+{
+	throw IECore::NotImplementedException( string( typeName() ) + "::computeChannelData" );
 }
 
 void ImageNode::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
