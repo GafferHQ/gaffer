@@ -1,7 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2012, John Haddon. All rights reserved.
-#  Copyright (c) 2012-2014, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,21 +34,83 @@
 #
 ##########################################################################
 
-from _GafferImageUI import *
+import Gaffer
+import GafferUI
+import GafferImage
+import GafferImageUI
 
-import DisplayUI
-from FormatPlugValueWidget import FormatPlugValueWidget
-from FilterPlugValueWidget import FilterPlugValueWidget
-from ChannelMaskPlugValueWidget import ChannelMaskPlugValueWidget
+Gaffer.Metadata.registerNode(
 
-import ImageReaderUI
-import ImageViewToolbar
-import ImageTransformUI
-import ConstantUI
-import ImageSwitchUI
-import OpenColorIOUI
-import ImageContextVariablesUI
-import ImageStatsUI
-import NodeUIs # Put this at the bottom or we get ordering issues!
+	GafferImage.ImageStats,
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferImageUI" )
+	"description",
+	"""
+	Calculates minimum, maximum and average colours for a region of
+	an image. These outputs can then be used to drive other plugs
+	within the node graph.
+	""",
+
+	plugs = {
+
+		"in" : [
+
+			"description",
+			"""
+			The input image to be analysed.
+			""",
+
+		],
+
+		"channels" : [
+
+			"description",
+			"""
+			The names of the channels to be analysed.
+			""",
+
+		],
+
+		"regionOfInterest" : [
+
+			"description",
+			"""
+			The region of the image to be analysed.
+			""",
+
+		],
+
+		"average" : [
+
+			"description",
+			"""
+			The per-channel mean values computed from the input image region.
+			""",
+
+		],
+
+		"min" : [
+
+			"description",
+			"""
+			The per-channel minimum values computed from the input image region.
+			""",
+
+		],
+
+		"max" : [
+
+			"description",
+			"""
+			The per-channel maximum values computed from the input image region.
+			""",
+
+		],
+
+	}
+
+)
+
+GafferUI.PlugValueWidget.registerCreator( GafferImage.ImageStats, "channels", GafferImageUI.ChannelMaskPlugValueWidget, inputImagePlug = "in" )
+
+GafferUI.Nodule.registerNodule( GafferImage.ImageStats, "channels", lambda x : None )
+GafferUI.Nodule.registerNodule( GafferImage.ImageStats, "regionOfInterest", lambda x : None )

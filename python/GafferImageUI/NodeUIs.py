@@ -55,10 +55,6 @@ GafferUI.PlugValueWidget.registerType( GafferImage.ImagePlug, None )
 
 Gaffer.Metadata.registerPlugValue( GafferImage.ImageNode, "enabled", "nodeUI:section", "Node" )
 
-# ImageStats
-GafferUI.PlugValueWidget.registerCreator( GafferImage.ImageStats, "channels", GafferImageUI.ChannelMaskPlugValueWidget, inputImagePlug = "in" )
-GafferUI.Nodule.registerNodule( GafferImage.ImageStats, "channels", __noduleCreator )
-
 # ChannelDataProcessor
 GafferUI.PlugValueWidget.registerCreator( GafferImage.ImageNode, "channels", GafferImageUI.ChannelMaskPlugValueWidget, inputImagePlug = "in" )
 
