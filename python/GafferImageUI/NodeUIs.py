@@ -58,25 +58,6 @@ Gaffer.Metadata.registerPlugValue( GafferImage.ImageNode, "enabled", "nodeUI:sec
 # ChannelDataProcessor
 GafferUI.PlugValueWidget.registerCreator( GafferImage.ImageNode, "channels", GafferImageUI.ChannelMaskPlugValueWidget, inputImagePlug = "in" )
 
-# ImageReader
-GafferUI.PlugValueWidget.registerCreator(
-	GafferImage.ImageReader,
-	"fileName",
-	lambda plug : GafferUI.PathPlugValueWidget( plug,
-		path = Gaffer.FileSystemPath(
-			"/",
-			filter = Gaffer.FileSystemPath.createStandardFilter(
-				extensions = GafferImage.ImageReader.supportedExtensions(),
-				extensionsLabel = "Show only image files",
-			)
-		),
-		pathChooserDialogueKeywords = {
-			"bookmarks" : GafferUI.Bookmarks.acquire( plug, category = "image" ),
-			"leaf" : True,
-		},
-	)
-)
-
 # ImageWriter
 
 GafferUI.PlugValueWidget.registerCreator(

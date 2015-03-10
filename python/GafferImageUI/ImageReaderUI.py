@@ -38,4 +38,60 @@ import Gaffer
 import GafferUI
 import GafferImage
 
+Gaffer.Metadata.registerNode(
+
+	GafferImage.ImageReader,
+
+	"description",
+	"""
+	Reads image files from disk using OpenImageIO. All file
+	types supported by OpenImageIO are supported by the ImageReader.
+	""",
+
+	plugs = {
+
+		"fileName" : [
+
+			"description",
+			"""
+			The name of the file to be read. File sequences with
+			arbitrary padding may be specified using the '#' character
+			as a placeholder for the frame numbers.
+			""",
+
+		],
+
+		"refreshCount" : [
+
+			"description",
+			"""
+			May be incremented to force a reload if the file has
+			changed on disk - otherwise old contents may still
+			be loaded via Gaffer's cache.
+			""",
+
+		],
+
+	}
+
+)
+
+GafferUI.PlugValueWidget.registerCreator(
+	GafferImage.ImageReader,
+	"fileName",
+	lambda plug : GafferUI.PathPlugValueWidget( plug,
+		path = Gaffer.FileSystemPath(
+			"/",
+			filter = Gaffer.FileSystemPath.createStandardFilter(
+				extensions = GafferImage.ImageReader.supportedExtensions(),
+				extensionsLabel = "Show only image files",
+			)
+		),
+		pathChooserDialogueKeywords = {
+			"bookmarks" : GafferUI.Bookmarks.acquire( plug, category = "image" ),
+			"leaf" : True,
+		},
+	)
+)
+
 GafferUI.PlugValueWidget.registerCreator( GafferImage.ImageReader, "refreshCount", GafferUI.IncrementingPlugValueWidget, label = "Refresh", undoable = False )
