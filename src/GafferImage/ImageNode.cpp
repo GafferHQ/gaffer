@@ -117,6 +117,10 @@ void ImageNode::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *co
 		{
 			hashDataWindow( imagePlug, context, h );
 		}
+		else if( output == imagePlug->metadataPlug() )
+		{
+			hashMetadata( imagePlug, context, h );
+		}
 		else if( output == imagePlug->channelNamesPlug() )
 		{
 			hashChannelNames( imagePlug, context, h );
@@ -136,6 +140,11 @@ void ImageNode::hashFormat( const GafferImage::ImagePlug *parent, const Gaffer::
 void ImageNode::hashDataWindow( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	ComputeNode::hash( parent->dataWindowPlug(), context, h );
+}
+
+void ImageNode::hashMetadata( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	ComputeNode::hash( parent->metadataPlug(), context, h );
 }
 
 void ImageNode::hashChannelNames( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
@@ -195,6 +204,12 @@ void ImageNode::compute( ValuePlug *output, const Context *context ) const
 			computeDataWindow( context, imagePlug )
 		);
 	}
+	else if( output == imagePlug->metadataPlug() )
+	{
+		static_cast<CompoundObjectPlug *>( output )->setValue(
+			computeMetadata( context, imagePlug )
+		);
+	}
 	else if( output == imagePlug->channelNamesPlug() )
 	{
 		static_cast<StringVectorDataPlug *>( output )->setValue(
@@ -230,6 +245,11 @@ GafferImage::Format ImageNode::computeFormat( const Gaffer::Context *context, co
 Imath::Box2i ImageNode::computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
 	throw IECore::NotImplementedException( string( typeName() ) + "::computeDataWindow" );
+}
+
+IECore::ConstCompoundObjectPtr ImageNode::computeMetadata( const Gaffer::Context *context, const ImagePlug *parent ) const
+{
+	throw IECore::NotImplementedException( string( typeName() ) + "::computeMetadata" );
 }
 
 IECore::ConstStringVectorDataPtr ImageNode::computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const

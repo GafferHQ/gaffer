@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2013-2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -67,7 +67,7 @@ class ImageSwitchTest( GafferTest.TestCase ) :
 		switch["in1"].setInput( in1["out"] )
 
 		for p in [ switch["in"], switch["in1"] ] :
-			for n in [ "format", "dataWindow", "channelNames", "channelData" ] :
+			for n in [ "format", "dataWindow", "metadata", "channelNames", "channelData" ] :
 				a = switch.affects( p[n] )
 				self.assertEqual( len( a ), 1 )
 				self.assertTrue( a[0].isSame( switch["out"][n] ) )
@@ -76,7 +76,7 @@ class ImageSwitchTest( GafferTest.TestCase ) :
 		self.assertEqual(
 			a,
 			set( [
-				"out.format", "out.dataWindow", "out.channelNames", "out.channelData",
+				"out.format", "out.dataWindow", "out.metadata", "out.channelNames", "out.channelData",
 			] ),
 		)
 
@@ -84,7 +84,7 @@ class ImageSwitchTest( GafferTest.TestCase ) :
 		self.assertEqual(
 			a,
 			set( [
-				"out.format", "out.dataWindow", "out.channelNames", "out.channelData",
+				"out.format", "out.dataWindow", "out.metadata", "out.channelNames", "out.channelData",
 			] ),
 		)
 
