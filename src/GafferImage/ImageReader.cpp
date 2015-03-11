@@ -38,6 +38,8 @@
 #include "boost/bind.hpp"
 #include "boost/tokenizer.hpp"
 
+#include "OpenEXR/half.h"
+
 #include "OpenImageIO/imagecache.h"
 OIIO_NAMESPACE_USING
 
@@ -83,6 +85,185 @@ static ImageCache *imageCache()
 	}
 	return cache;
 }
+
+//////////////////////////////////////////////////////////////////////////
+// Utility for converting OIIO::TypeDesc types to IECore::Data types.
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+void oiioParameterListToMetadata( const ImageIOParameterList &paramList, CompoundObject *metadata )
+{
+	CompoundObject::ObjectMap &members = metadata->members();
+	for ( ImageIOParameterList::const_iterator it = paramList.begin(); it != paramList.end(); ++it )
+	{
+		ObjectPtr value = 0;
+		
+		const TypeDesc &type = it->type();
+		switch ( type.basetype )
+		{
+			case TypeDesc::CHAR :
+			{
+				if ( type.aggregate == TypeDesc::SCALAR )
+				{
+					value = new CharData( *static_cast<const char *>( it->data() ) );
+				}
+				break;
+			}
+			case TypeDesc::UCHAR :
+			{
+				if ( type.aggregate == TypeDesc::SCALAR )
+				{
+					value = new UCharData( *static_cast<const unsigned char *>( it->data() ) );
+				}
+				break;
+			}
+			case TypeDesc::STRING :
+			{
+				if ( type.aggregate == TypeDesc::SCALAR )
+				{
+					value = new StringData( *static_cast<const std::string *>( it->data() ) );
+				}
+				break;
+			}
+			case TypeDesc::USHORT :
+			{
+				if ( type.aggregate == TypeDesc::SCALAR )
+				{
+					value = new UShortData( *static_cast<const unsigned short *>( it->data() ) );
+				}
+				break;
+			}
+			case TypeDesc::SHORT :
+			{
+				if ( type.aggregate == TypeDesc::SCALAR )
+				{
+					value = new ShortData( *static_cast<const short *>( it->data() ) );
+				}
+				break;
+			}
+			case TypeDesc::UINT :
+			{
+				if ( type.aggregate == TypeDesc::SCALAR )
+				{
+					value = new UIntData( *static_cast<const unsigned *>( it->data() ) );
+				}
+				break;
+			}
+			case TypeDesc::INT :
+			{
+				const int *data = static_cast<const int *>( it->data() );
+				switch ( type.aggregate )
+				{
+					case TypeDesc::SCALAR :
+					{
+						value = new IntData( *data );
+						break;
+					}
+					case TypeDesc::VEC2 :
+					{
+						value = new V2iData( Imath::V2i( data[0], data[1] ) );
+						break;
+					}
+					case TypeDesc::VEC3 :
+					{
+						value = new V3iData( Imath::V3i( data[0], data[1], data[2] ) );
+						break;
+					}
+					default :
+					{
+						break;
+					}
+				}
+				break;
+			}
+			case TypeDesc::HALF :
+			{
+				if ( type.aggregate == TypeDesc::SCALAR )
+				{
+					value = new HalfData( *static_cast<const half *>( it->data() ) );
+				}
+				break;
+			}
+			case TypeDesc::FLOAT :
+			{
+				const float *data = static_cast<const float *>( it->data() );
+				switch ( type.aggregate )
+				{
+					case TypeDesc::SCALAR :
+					{
+						value = new FloatData( *data );
+						break;
+					}
+					case TypeDesc::VEC2 :
+					{
+						value = new V2fData( Imath::V2f( data[0], data[1] ) );
+						break;
+					}
+					case TypeDesc::VEC3 :
+					{
+						value = new V3fData( Imath::V3f( data[0], data[1], data[2] ) );
+						break;
+					}
+					case TypeDesc::MATRIX44 :
+					{
+						value = new M44fData( Imath::M44f( data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7], data[8], data[9], data[10], data[11], data[12], data[13], data[14], data[15] ) );
+						break;
+					}
+					default :
+					{
+						break;
+					}
+				}
+				break;
+			}
+			case TypeDesc::DOUBLE :
+			{
+				const double *data = static_cast<const double *>( it->data() );
+				switch ( type.aggregate )
+				{
+					case TypeDesc::SCALAR :
+					{
+						value = new DoubleData( *data );
+						break;
+					}
+					case TypeDesc::VEC2 :
+					{
+						value = new V2dData( Imath::V2d( data[0], data[1] ) );
+						break;
+					}
+					case TypeDesc::VEC3 :
+					{
+						value = new V3dData( Imath::V3d( data[0], data[1], data[2] ) );
+						break;
+					}
+					case TypeDesc::MATRIX44 :
+					{
+						value = new M44dData( Imath::M44d( data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7], data[8], data[9], data[10], data[11], data[12], data[13], data[14], data[15] ) );
+						break;
+					}
+					default :
+					{
+						break;
+					}
+				}
+				break;
+			}
+			default :
+			{
+				break;
+			}
+		}
+		
+		if ( value )
+		{
+			members[ it->name().string() ] = value;
+		}
+	}
+}
+
+} // namespace
 
 //////////////////////////////////////////////////////////////////////////
 // ImageReader implementation
@@ -228,6 +409,24 @@ Imath::Box2i ImageReader::computeDataWindow( const Gaffer::Context *context, con
 	Imath::Box2i dataWindow( Imath::V2i( spec->x, spec->y ), Imath::V2i( spec->width + spec->x - 1, spec->height + spec->y - 1 ) );
 
 	return format.yDownToFormatSpace( dataWindow );
+}
+
+void ImageReader::hashMetadata( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	ImageNode::hashMetadata( output, context, h );
+	fileNamePlug()->hash( h );
+	refreshCountPlug()->hash( h );
+}
+
+IECore::ConstCompoundObjectPtr ImageReader::computeMetadata( const Gaffer::Context *context, const ImagePlug *parent ) const
+{
+	std::string fileName = fileNamePlug()->getValue();
+	const ImageSpec *spec = imageCache()->imagespec( ustring( fileName.c_str() ) );
+	
+	CompoundObjectPtr result = new CompoundObject;
+	oiioParameterListToMetadata( spec->extra_attribs, result.get() );
+	
+	return result;
 }
 
 void ImageReader::hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const

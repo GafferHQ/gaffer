@@ -1,7 +1,7 @@
 ##########################################################################
 #
 #  Copyright (c) 2012, John Haddon. All rights reserved.
-#  Copyright (c) 2013-2014, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2013-2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -77,6 +77,15 @@ class ImageReaderTest( unittest.TestCase ) :
 		self.assertEqual( n["out"]["dataWindow"].getValue(), IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 199, 149 ) ) )
 		self.assertEqual( n["out"]["format"].getValue().getDisplayWindow(), IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 199, 149 ) ) )
 
+		expectedMetadata = IECore.CompoundObject( {
+			"oiio:ColorSpace" : IECore.StringData( 'Linear' ),
+			"compression" : IECore.StringData( 'zips' ),
+			"PixelAspectRatio" : IECore.FloatData( 1 ),
+			"screenWindowCenter" : IECore.V2fData( IECore.V2f( 0, 0 ) ),
+			"screenWindowWidth" : IECore.FloatData( 1 ),
+		} )
+		self.assertEqual( n["out"]["metadata"].getValue(), expectedMetadata )
+		
 		channelNames = n["out"]["channelNames"].getValue()
 		self.failUnless( isinstance( channelNames, IECore.StringVectorData ) )
 		self.failUnless( "R" in channelNames )
@@ -87,9 +96,23 @@ class ImageReaderTest( unittest.TestCase ) :
 		image = n["out"].image()
 		image2 = IECore.Reader.create( self.fileName ).read()
 
-		image.blindData().clear()
-		image2.blindData().clear()
-
+		# OIIO adds compression and colorspace as metadata, but
+		# IECore.Reader doesn't, so we're removing that discrepancy
+		del image.blindData()["compression"]
+		del image.blindData()["oiio:ColorSpace"]
+		# OIIO capitalizes PixelAspectRatio for some reason, so we
+		# need to adjust for that when comparing the images
+		image.blindData()["pixelAspectRatio"] = image.blindData()["PixelAspectRatio"]
+		del image.blindData()["PixelAspectRatio"]
+		# Gaffer stores displayWindow and dataWindow outside of the metadata
+		# so it's ok to remove them from the IECore.Reader's image blindData
+		del image2.blindData()["displayWindow"]
+		del image2.blindData()["dataWindow"]
+		# make sure we're still validating some metadata at least...
+		self.assertNotEqual( image.blindData(), IECore.CompoundObject() )
+		self.assertNotEqual( image2.blindData(), IECore.CompoundObject() )
+		self.assertEqual( image.blindData(), image2.blindData() )
+		
 		self.assertEqual( image, image2 )
 
 	def testNegativeDisplayWindowRead( self ) :
@@ -102,8 +125,10 @@ class ImageReaderTest( unittest.TestCase ) :
 		self.assertEqual( d, IECore.Box2i( IECore.V2i( 2, -14 ), IECore.V2i( 35, 19 ) ) )
 
 		expectedImage = IECore.Reader.create( self.negativeDisplayWindowFileName ).read()
+		outImage = n["out"].image()
 		expectedImage.blindData().clear()
-		self.assertEqual( expectedImage, n["out"].image() )
+		outImage.blindData().clear()
+		self.assertEqual( expectedImage, outImage )
 
 	def testNegativeDataWindow( self ) :
 
