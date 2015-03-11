@@ -198,29 +198,6 @@ void ImageReader::hashFormat( const GafferImage::ImagePlug *output, const Gaffer
 	refreshCountPlug()->hash( h );
 }
 
-void ImageReader::hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
-{
-	ImageNode::hashChannelNames( output, context, h );
-	fileNamePlug()->hash( h );
-	refreshCountPlug()->hash( h );
-}
-
-void ImageReader::hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
-{
-	ImageNode::hashDataWindow( output, context, h );
-	fileNamePlug()->hash( h );
-	refreshCountPlug()->hash( h );
-}
-
-void ImageReader::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
-{
-	ImageNode::hashChannelData( output, context, h );
-	h.append( context->get<V2i>( ImagePlug::tileOriginContextName ) );
-	h.append( context->get<std::string>( ImagePlug::channelNameContextName ) );
-	fileNamePlug()->hash( h );
-	refreshCountPlug()->hash( h );
-}
-
 GafferImage::Format ImageReader::computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
 	std::string fileName = fileNamePlug()->getValue();
@@ -235,6 +212,13 @@ GafferImage::Format ImageReader::computeFormat( const Gaffer::Context *context, 
 	);
 }
 
+void ImageReader::hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	ImageNode::hashDataWindow( output, context, h );
+	fileNamePlug()->hash( h );
+	refreshCountPlug()->hash( h );
+}
+
 Imath::Box2i ImageReader::computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
 	std::string fileName = fileNamePlug()->getValue();
@@ -246,6 +230,13 @@ Imath::Box2i ImageReader::computeDataWindow( const Gaffer::Context *context, con
 	return format.yDownToFormatSpace( dataWindow );
 }
 
+void ImageReader::hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	ImageNode::hashChannelNames( output, context, h );
+	fileNamePlug()->hash( h );
+	refreshCountPlug()->hash( h );
+}
+
 IECore::ConstStringVectorDataPtr ImageReader::computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
 	std::string fileName = fileNamePlug()->getValue();
@@ -253,6 +244,15 @@ IECore::ConstStringVectorDataPtr ImageReader::computeChannelNames( const Gaffer:
 	StringVectorDataPtr result = new StringVectorData();
 	result->writable() = spec->channelnames;
 	return result;
+}
+
+void ImageReader::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	ImageNode::hashChannelData( output, context, h );
+	h.append( context->get<V2i>( ImagePlug::tileOriginContextName ) );
+	h.append( context->get<std::string>( ImagePlug::channelNameContextName ) );
+	fileNamePlug()->hash( h );
+	refreshCountPlug()->hash( h );
 }
 
 IECore::ConstFloatVectorDataPtr ImageReader::computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const
