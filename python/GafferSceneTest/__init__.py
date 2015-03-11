@@ -104,6 +104,7 @@ from DeleteOutputsTest import DeleteOutputsTest
 from ExternalProceduralTest import ExternalProceduralTest
 from ClippingPlaneTest import ClippingPlaneTest
 from FilterSwitchTest import FilterSwitchTest
+from PointsTypeTest import PointsTypeTest
 
 if __name__ == "__main__":
 	import unittest
