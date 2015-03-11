@@ -290,6 +290,8 @@ class InteractiveRender::ChildNamesUpdateTask : public tbb::task
 						// in the list, nor will they be found at nameIt as there shouldn't be any duplicates.
 						// This means we can move the start of the child names list one position past nameIt
 						// to save a bit of time:
+						/// \todo Note that if all the children have changed names, we never end up in here, and
+						/// we will end up with quadratic behaviour calling find (a linear search N times).
 						childNamesBegin = nameIt;
 						++childNamesBegin;
 					}
@@ -372,6 +374,10 @@ void InteractiveRender::plugDirtied( const Gaffer::Plug *plug )
 			// child names may have changed: we need to run through the scene graph data structure
 			// checking for locations that are no longer present, and flag them as absent if this
 			// is the case:
+			/// \todo doing this directly here is out of keeping with the basic structure
+			/// of this node. Everything else just figures out what is dirty here, and then
+			/// waits until update() to do the work. Since we'll most likely delay calls to update()
+			/// further in the future, we should fix this.
 			ChildNamesUpdateTask *task = new( tbb::task::allocate_root() ) ChildNamesUpdateTask( inPlug(), m_context.get(), m_sceneGraph.get(), ScenePlug::ScenePath() );
 			try
 			{
