@@ -111,16 +111,13 @@ void Expression::affects( const Plug *input, AffectedPlugsContainer &outputs ) c
 
 	const CompoundPlug *in = inPlug();
 	const ValuePlug *out = outPlug();
-	if( in && out )
+	if( out )
 	{
-		if( input->parent<CompoundPlug>() == in )
+		if( in && input->parent<CompoundPlug>() == in )
 		{
 			outputs.push_back( out );
 		}
-	}
-	else if( out )
-	{
-		if( input == expressionPlug() || input == enginePlug() )
+		else if( input == expressionPlug() || input == enginePlug() )
 		{
 			outputs.push_back( out );
 		}
