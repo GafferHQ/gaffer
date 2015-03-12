@@ -58,40 +58,6 @@ Gaffer.Metadata.registerPlugValue( GafferImage.ImageNode, "enabled", "nodeUI:sec
 # ChannelDataProcessor
 GafferUI.PlugValueWidget.registerCreator( GafferImage.ImageNode, "channels", GafferImageUI.ChannelMaskPlugValueWidget, inputImagePlug = "in" )
 
-# ImageWriter
-
-GafferUI.PlugValueWidget.registerCreator(
-	GafferImage.ImageWriter,
-	"fileName",
-	lambda plug : GafferUI.PathPlugValueWidget( plug,
-		path = Gaffer.FileSystemPath(
-			"/",
-			filter = Gaffer.FileSystemPath.createStandardFilter(
-				extensions = GafferImage.ImageReader.supportedExtensions(),
-				extensionsLabel = "Show only image files",
-			)
-		),
-		pathChooserDialogueKeywords = {
-			"bookmarks" : GafferUI.Bookmarks.acquire( plug, category = "image" ),
-			"leaf" : True,
-		},
-	)
-)
-GafferUI.PlugValueWidget.registerCreator( GafferImage.ImageWriter, "channels", GafferImageUI.ChannelMaskPlugValueWidget, inputImagePlug = "in" )
-GafferUI.Nodule.registerNodule( GafferImage.ImageWriter, "fileName", lambda plug : None )
-GafferUI.Nodule.registerNodule( GafferImage.ImageWriter, "channels", lambda plug : None )
-GafferUI.Nodule.registerNodule( GafferImage.ImageWriter, "writeMode", lambda plug : None )
-GafferUI.Nodule.registerNodule( GafferImage.ImageWriter, "out", lambda plug : None )
-
-writeModeLabelsAndValues = [ ( "Scanline", 0), ( "Tile", 1 ) ]
-
-GafferUI.PlugValueWidget.registerCreator(
-	GafferImage.ImageWriter,
-	"writeMode",
-	GafferUI.EnumPlugValueWidget,
-	labelsAndValues = writeModeLabelsAndValues
-)
-
 # Merge
 mergeOperationLabelsAndValues = [ ( "Add", 0 ), ( "Atop", 1 ), ( "Divide", 2 ), ( "In", 3 ), ( "Out", 4 ), ( "Mask", 5 ), ( "Matte", 6 ), ( "Multiply", 7 ), ( "Over", 8 ), ( "Subtract", 9 ), ( "Under", 10 ) ]
 GafferUI.PlugValueWidget.registerCreator(

@@ -54,6 +54,7 @@ import DeleteChannelsUI
 import ReformatUI
 import ObjectToImageUI
 import ClampUI
+import ImageWriterUI
 import NodeUIs # Put this at the bottom or we get ordering issues!
 
 __import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferImageUI" )
