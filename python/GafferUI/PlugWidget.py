@@ -100,7 +100,7 @@ class PlugWidget( GafferUI.Widget ) :
 		layout.addWidget( self.__valueWidget._qtWidget() )
 
 		# The plugValueWidget() may have smarter drop behaviour than the labelPlugValueWidget(),
-		# because it has specialised PlugValueWidget._dropValue(). It's also more meaningful to the
+		# because it has specialised PlugValueWidget._convertValue(). It's also more meaningful to the
 		# user if we highlight the plugValueWidget() on dragEnter rather than the label. So we
 		# forward the dragEnter/dragLeave/drop signals from the labelPlugValueWidget() to the plugValueWidget().
 		self.__dragEnterConnection = self.__label.dragEnterSignal().connect( 0, Gaffer.WeakMethod( self.__labelDragEnter ) )

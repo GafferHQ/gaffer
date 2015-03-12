@@ -187,6 +187,40 @@ class PlugValueWidget( GafferUI.Widget ) :
 
 		return True
 
+	## Called to convert the specified value into something
+	# suitable for passing to a plug.setValue() call. Returns
+	# None if no such conversion is necessary. May be reimplemented
+	# by derived classes to provide more complex conversions than
+	# the standard. The base class uses this method to accept drag/drop
+	# and copy/paste data.
+	def _convertValue( self, value ) :
+
+		if not hasattr( self.getPlug(), "defaultValue" ) :
+			return None
+
+		plugValueType = type( self.getPlug().defaultValue() )
+		if isinstance( value, plugValueType ) :
+			return value
+		elif isinstance( value, IECore.Data ) :
+
+			dataValue = None
+			if hasattr( value, "value" ) :
+				dataValue = value.value
+			else :
+				with IECore.IgnoredExceptions( Exception ) :
+					if len( value ) == 1 :
+						dataValue = value[0]
+
+			if dataValue is None :
+				return None
+			elif isinstance( dataValue, plugValueType ) :
+				return dataValue
+			else :
+				with IECore.IgnoredExceptions( Exception ) :
+					return plugValueType( dataValue )
+
+		return None
+
 	## Adds a useful popup menu to the specified widget, providing useful functions that
 	# operate on the plug. The menu is populated with the result of _popupMenuDefinition(),
 	# and may also be customised by external code using the popupMenuSignal().
@@ -497,7 +531,7 @@ class PlugValueWidget( GafferUI.Widget ) :
 			if self.getPlug().acceptsInput( event.data ) :
 				self.setHighlighted( True )
 				return True
-		elif hasattr( self.getPlug(), "setValue" ) and self._dropValue( event ) is not None :
+		elif hasattr( self.getPlug(), "setValue" ) and self._convertValue( event.data ) is not None :
 			if self.getPlug().settable() :
 				self.setHighlighted( True )
 				return True
@@ -516,40 +550,7 @@ class PlugValueWidget( GafferUI.Widget ) :
 			if isinstance( event.data, Gaffer.Plug ) :
 				self.getPlug().setInput( event.data )
 			else :
-				self.getPlug().setValue( self._dropValue( event ) )
+				self.getPlug().setValue( self._convertValue( event.data ) )
 
 		return True
-
-	## Called from a dragEnter slot to see if the drag data can
-	# be converted to a value suitable for a plug.setValue() call.
-	# If this returns a non-None value then the drag will be accepted
-	# and plug.setValue() will be called in the drop event. May be
-	# reimplemented by derived classes to provide conversions of the
-	# drag data to the type needed for setValue().
-	def _dropValue( self, dragDropEvent ) :
-
-		if not hasattr( self.getPlug(), "defaultValue" ) :
-			return None
-
-		plugValueType = type( self.getPlug().defaultValue() )
-		if isinstance( dragDropEvent.data, plugValueType ) :
-			return dragDropEvent.data
-		elif isinstance( dragDropEvent.data, IECore.Data ) :
-
-			dataValue = None
-			if hasattr( dragDropEvent.data, "value" ) :
-				dataValue = dragDropEvent.data.value
-			else :
-				with IECore.IgnoredExceptions( Exception ) :
-					if len( dragDropEvent.data ) == 1 :
-						dataValue = dragDropEvent.data[0]
-
-			if dataValue is None :
-				return None
-			elif isinstance( dataValue, plugValueType ) :
-				return dataValue
-			else :
-				with IECore.IgnoredExceptions( Exception ) :
-					return plugValueType( dataValue )
-
-		return None
+		
