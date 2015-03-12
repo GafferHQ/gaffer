@@ -57,12 +57,3 @@ Gaffer.Metadata.registerPlugValue( GafferImage.ImageNode, "enabled", "nodeUI:sec
 
 # ChannelDataProcessor
 GafferUI.PlugValueWidget.registerCreator( GafferImage.ImageNode, "channels", GafferImageUI.ChannelMaskPlugValueWidget, inputImagePlug = "in" )
-
-# Merge
-mergeOperationLabelsAndValues = [ ( "Add", 0 ), ( "Atop", 1 ), ( "Divide", 2 ), ( "In", 3 ), ( "Out", 4 ), ( "Mask", 5 ), ( "Matte", 6 ), ( "Multiply", 7 ), ( "Over", 8 ), ( "Subtract", 9 ), ( "Under", 10 ) ]
-GafferUI.PlugValueWidget.registerCreator(
-	GafferImage.Merge,
-	"operation",
-	GafferUI.EnumPlugValueWidget,
-	labelsAndValues = mergeOperationLabelsAndValues
-)

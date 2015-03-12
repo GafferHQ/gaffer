@@ -1,7 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2012, John Haddon. All rights reserved.
-#  Copyright (c) 2012-2014, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,31 +34,77 @@
 #
 ##########################################################################
 
-from _GafferImageUI import *
+import Gaffer
+import GafferUI
+import GafferImage
 
-import DisplayUI
-from FormatPlugValueWidget import FormatPlugValueWidget
-from FilterPlugValueWidget import FilterPlugValueWidget
-from ChannelMaskPlugValueWidget import ChannelMaskPlugValueWidget
+Gaffer.Metadata.registerNode(
 
-import ImageReaderUI
-import ImageViewToolbar
-import ImageTransformUI
-import ConstantUI
-import ImageSwitchUI
-import OpenColorIOUI
-import ImageContextVariablesUI
-import ImageStatsUI
-import DeleteChannelsUI
-import ReformatUI
-import ObjectToImageUI
-import ClampUI
-import ImageWriterUI
-import GradeUI
-import ImageMixinBaseUI
-import ImageTimeWarpUI
-import ImageSamplerUI
-import MergeUI
-import NodeUIs # Put this at the bottom or we get ordering issues!
+	GafferImage.Merge,
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferImageUI" )
+	"description",
+	"""
+	Composites two or more images together. The following operations
+	are available :
+
+	  - Add : A + B
+	  - Atop : Ab + B(1-a)
+	  - Divide : A / B
+	  - In : Ab
+	  - Out : A(1-b)
+	  - Mask : Ba
+	  - Matte : Aa + B(1.-a)
+	  - Multiply : AB
+	  - Over : A + B(1-a)
+	  - Subtract : A - B
+	  - Under : A(1-b) + B
+	""",
+
+	plugs = {
+
+		"in" : [
+
+			"description",
+			"""
+			The B input.
+			""",
+
+		],
+
+		"in1" : [
+
+			"description",
+			"""
+			The A input.
+			""",
+
+		],
+
+		"operation" : [
+
+			"description",
+			"""
+			The compositing operation used to merge the
+			image together. See node documentation for
+			more details.
+			""",
+
+			"preset:Add", 0,
+			"preset:Atop", 1 ,
+			"preset:Divide", 2,
+			"preset:In", 3,
+			"preset:Out", 4,
+			"preset:Mask", 5,
+			"preset:Matte", 6,
+			"preset:Multiply", 7,
+			"preset:Over", 8,
+			"preset:Subtract", 9,
+			"preset:Under", 10,
+
+		],
+
+	}
+
+)
+
+GafferUI.PlugValueWidget.registerCreator( GafferImage.Merge, "operation", GafferUI.PresetsPlugValueWidget )
