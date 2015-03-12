@@ -44,6 +44,11 @@ from IECore import StringVectorData
 
 class ChannelMaskPlugValueWidget( GafferUI.PlugValueWidget ) :
 
+	## \todo The inputImagePlug argument should take a Plug, not the name of a plug.
+	# It should default to None, and in this case look for an input ImagePlug called "in".
+	# We should then be able to remove all the specific registrations of this class with
+	# PlugValueWidget, and instead rely on the one at the bottom of this file, which is
+	# currently useless.
 	def __init__( self, plug, inputImagePlug, **kw ) :
 
 		self.__multiSelectionMenu = GafferUI.MultiSelectionMenu( allowMultipleSelection = True, alwaysHaveASelection=False )
