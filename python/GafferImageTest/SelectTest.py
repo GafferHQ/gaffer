@@ -38,6 +38,7 @@ import unittest
 import os
 import IECore
 import GafferImage
+import GafferTest
 
 class SelectTest( unittest.TestCase ) :
 
@@ -79,6 +80,33 @@ class SelectTest( unittest.TestCase ) :
 		h1 = s["out"].image().hash()
 		h2 = r3["out"].image().hash()
 		self.assertEqual( h1, h2 )
+
+	def testDirtyPropagation( self ) :
+	
+		r1 = GafferImage.ImageReader()
+		r1["fileName"].setValue( self.rPath )
+
+		r2 = GafferImage.ImageReader()
+		r2["fileName"].setValue( self.gPath )
+
+		r3 = GafferImage.ImageReader()
+		r3["fileName"].setValue( self.bPath )
+
+		##########################################
+		# Test to see if the hash changes when we set the select plug.
+		##########################################
+		s = GafferImage.Select()
+		s["select"].setValue(1)
+		s["in"].setInput(r1["out"])
+		s["in1"].setInput(r2["out"])
+		s["in2"].setInput(r3["out"])
+
+		dirtied = GafferTest.CapturingSlot( s.plugDirtiedSignal() )
+		s["select"].setValue(0)
+		self.failUnless( s["out"]["format"] in [ p[0] for p in dirtied ] )
+		self.failUnless( s["out"]["dataWindow"] in [ p[0] for p in dirtied ] )
+		self.failUnless( s["out"]["channelNames"] in [ p[0] for p in dirtied ] )
+		self.failUnless( s["out"]["channelData"] in [ p[0] for p in dirtied ] )
 
 if __name__ == "__main__":
 	unittest.main()

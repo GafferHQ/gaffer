@@ -72,7 +72,10 @@ void Select::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs
 {
 	if( input == selectPlug() )
 	{
-		outputs.push_back( outPlug()->channelDataPlug() );
+		for( OutputPlugIterator it( outPlug() ); it != it.end(); it++ )
+		{
+			outputs.push_back( it->get() );
+		}
 	}
 	else FilterProcessor::affects( input, outputs );
 }
