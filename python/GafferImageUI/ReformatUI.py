@@ -1,7 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2012, John Haddon. All rights reserved.
-#  Copyright (c) 2012-2014, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,23 +34,41 @@
 #
 ##########################################################################
 
-from _GafferImageUI import *
+import Gaffer
+import GafferImage
 
-import DisplayUI
-from FormatPlugValueWidget import FormatPlugValueWidget
-from FilterPlugValueWidget import FilterPlugValueWidget
-from ChannelMaskPlugValueWidget import ChannelMaskPlugValueWidget
+Gaffer.Metadata.registerNode(
 
-import ImageReaderUI
-import ImageViewToolbar
-import ImageTransformUI
-import ConstantUI
-import ImageSwitchUI
-import OpenColorIOUI
-import ImageContextVariablesUI
-import ImageStatsUI
-import DeleteChannelsUI
-import ReformatUI
-import NodeUIs # Put this at the bottom or we get ordering issues!
+	GafferImage.Reformat,
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferImageUI" )
+	"description",
+	"""
+	Reformats the image to a new resolution, scaling it
+	to fit the new display window.
+	""",
+
+	plugs = {
+
+		"format" : [
+
+			"description",
+			"""
+			The format (resolution and pixel aspect ratio) of the output image.
+			""",
+
+		],
+
+		"filter" : [
+
+			"description",
+			"""
+			The pixel filter used when transforming the image. Each
+			filter provides different tradeoffs between sharpness and
+			the danger of aliasing or ringing.
+			""",
+
+		],
+
+	}
+
+)
