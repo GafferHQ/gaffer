@@ -154,5 +154,32 @@ class DuplicateTest( GafferSceneTest.SceneTestCase ) :
 		d["name"].setValue( "test" )
 		self.assertTrue( d["out"]["childNames"] in [ c[0] for c in cs ] )
 
+
+	def testDirtyPropagation( self ) :
+
+		s = GafferScene.Sphere()
+		g = GafferScene.Group()
+		g["in"].setInput( s["out"] )
+
+		d = GafferScene.Duplicate()
+		d["in"].setInput( g["out"] )
+
+		dirtied = GafferTest.CapturingSlot( d.plugDirtiedSignal() )
+		s["name"].setValue( "yeahyeah" )
+		self.failUnless( d["__mapping"] in [ p[0] for p in dirtied ] )
+		
+		dirtied = GafferTest.CapturingSlot( d.plugDirtiedSignal() )
+		d["name"].setValue( "/group/yeahyeah" )
+		self.failUnless( d["__mapping"] in [ p[0] for p in dirtied ] )
+		
+		dirtied = GafferTest.CapturingSlot( d.plugDirtiedSignal() )
+		d["target"].setValue( "sphere" )
+		self.failUnless( d["__mapping"] in [ p[0] for p in dirtied ] )
+		
+		dirtied = GafferTest.CapturingSlot( d.plugDirtiedSignal() )
+		d["copies"].setValue( 3 )
+		self.failUnless( d["__mapping"] in [ p[0] for p in dirtied ] )
+		self.failUnless( d["__mapping"] in [ p[0] for p in dirtied ] )
+
 if __name__ == "__main__":
 	unittest.main()
