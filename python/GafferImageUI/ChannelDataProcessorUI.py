@@ -1,7 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2012, John Haddon. All rights reserved.
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,25 +34,34 @@
 #
 ##########################################################################
 
-import fnmatch
-
 import Gaffer
 import GafferUI
-import GafferImageUI
 import GafferImage
+import GafferImageUI
 
-# ImageNode
-def __noduleCreator( plug ) :
+Gaffer.Metadata.registerNode(
 
-	if isinstance( plug, GafferImage.ImagePlug ) :
-		return GafferUI.StandardNodule( plug )
+	GafferImage.ChannelDataProcessor,
 
-	return None
+	"description",
+	"""
+	Base class for nodes which process a subset of the image channels,
+	while leaving the format and data window unchanged.
+	""",
 
-GafferUI.Nodule.registerNodule( GafferImage.ImageNode, fnmatch.translate( "*" ), __noduleCreator )
-GafferUI.PlugValueWidget.registerType( GafferImage.ImagePlug, None )
+	plugs = {
 
-Gaffer.Metadata.registerPlugValue( GafferImage.ImageNode, "enabled", "nodeUI:section", "Node" )
+		"channels" : [
 
-# ChannelDataProcessor
-GafferUI.PlugValueWidget.registerCreator( GafferImage.ImageNode, "channels", GafferImageUI.ChannelMaskPlugValueWidget, inputImagePlug = "in" )
+			"description",
+			"""
+			The subset of channels to operate on.
+			""",
+
+		],
+
+	}
+
+)
+
+GafferUI.PlugValueWidget.registerCreator( GafferImage.ChannelDataProcessor, "channels", GafferImageUI.ChannelMaskPlugValueWidget, inputImagePlug = "in" )
