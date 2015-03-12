@@ -255,5 +255,25 @@ class ExpressionTest( GafferTest.TestCase ) :
 
 		self.assertEqual( s["n"]["sum"].getValue(), 101 )
 
+	def testDirtyPropagation( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = GafferTest.AddNode()
+		s["n"]["op1"].setValue( 0 )
+
+		s["e"] = Gaffer.Expression()
+		
+		s["e"]["engine"].setValue( "python" )
+		
+		dirtied = GafferTest.CapturingSlot( s["n"].plugDirtiedSignal() )
+		s["e"]["expression"].setValue( "parent['n']['op2'] = context.get( 'iDontExist', 101 )" )
+		self.failUnless( s["n"]["sum"] in [ p[0] for p in dirtied ] )
+		
+		dirtied = GafferTest.CapturingSlot( s["n"].plugDirtiedSignal() )
+		s["e"]["expression"].setValue( "" )
+		self.failUnless( s["n"]["sum"] in [ p[0] for p in dirtied ] )
+		
+
 if __name__ == "__main__":
 	unittest.main()
