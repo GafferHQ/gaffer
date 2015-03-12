@@ -1,7 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2012, John Haddon. All rights reserved.
-#  Copyright (c) 2012-2014, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,24 +34,34 @@
 #
 ##########################################################################
 
-from _GafferImageUI import *
+import Gaffer
+import GafferImage
 
-import DisplayUI
-from FormatPlugValueWidget import FormatPlugValueWidget
-from FilterPlugValueWidget import FilterPlugValueWidget
-from ChannelMaskPlugValueWidget import ChannelMaskPlugValueWidget
+Gaffer.Metadata.registerNode(
 
-import ImageReaderUI
-import ImageViewToolbar
-import ImageTransformUI
-import ConstantUI
-import ImageSwitchUI
-import OpenColorIOUI
-import ImageContextVariablesUI
-import ImageStatsUI
-import DeleteChannelsUI
-import ReformatUI
-import ObjectToImageUI
-import NodeUIs # Put this at the bottom or we get ordering issues!
+	GafferImage.ObjectToImage,
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferImageUI" )
+	"description",
+	"""
+	Converts Cortex ImagePrimitives into Gaffer's standard
+	form, so they can processed using Gaffer's image
+	processing nodes. This is a somewhat esoteric node, and
+	is unlikely to have a great number of uses.
+	""",
+
+	plugs = {
+
+		"object" : [
+
+			"description",
+			"""
+			The Cortex ImagePrimitive to be converted. The most
+			likely source of one of these would be an ObjectReader
+			from the GafferCortex module.
+			""",
+
+		],
+
+	}
+
+)
