@@ -104,6 +104,11 @@ void Camera::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
 	{
 		outputs.push_back( sourcePlug() );
 	}
+	
+	if( input == namePlug() )
+	{
+		outputs.push_back( outPlug()->globalsPlug() );
+	}
 }
 
 void Camera::hashGlobals( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const

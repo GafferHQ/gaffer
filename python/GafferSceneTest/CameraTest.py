@@ -40,6 +40,7 @@ import unittest
 import IECore
 
 import Gaffer
+import GafferTest
 import GafferScene
 import GafferSceneTest
 
@@ -141,6 +142,34 @@ class CameraTest( GafferSceneTest.SceneTestCase ) :
 				GafferScene.PathMatcher( [ "/renderCam" ] )
 			)
 		)
+
+	def testDirtyPropagation( self ) :
+
+		c = GafferScene.Camera()
+
+		dirtied = GafferTest.CapturingSlot( c.plugDirtiedSignal() )
+		c["transform"]["translate"]["x"].setValue( 10 )
+		self.failUnless( c["out"]["transform"] in [ p[0] for p in dirtied ] )
+
+		dirtied = GafferTest.CapturingSlot( c.plugDirtiedSignal() )
+		c["name"].setValue( "renderCam" )
+		self.failUnless( c["out"]["childNames"] in [ p[0] for p in dirtied ] )
+		self.failUnless( c["out"]["globals"] in [ p[0] for p in dirtied ] )
+
+		dirtied = GafferTest.CapturingSlot( c.plugDirtiedSignal() )
+		c["projection"].setValue( "orthographic" )
+		self.failUnless( c["out"]["object"] in [ p[0] for p in dirtied ] )
+		self.failUnless( c["out"]["bound"] in [ p[0] for p in dirtied ] )
+
+		dirtied = GafferTest.CapturingSlot( c.plugDirtiedSignal() )
+		c["fieldOfView"].setValue( 100 )
+		self.failUnless( c["out"]["object"] in [ p[0] for p in dirtied ] )
+		self.failUnless( c["out"]["bound"] in [ p[0] for p in dirtied ] )
+
+		dirtied = GafferTest.CapturingSlot( c.plugDirtiedSignal() )
+		c["clippingPlanes"]["x"].setValue( 100 )
+		self.failUnless( c["out"]["object"] in [ p[0] for p in dirtied ] )
+		self.failUnless( c["out"]["bound"] in [ p[0] for p in dirtied ] )
 
 if __name__ == "__main__":
 	unittest.main()
