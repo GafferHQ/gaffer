@@ -37,6 +37,7 @@
 
 import re
 import fnmatch
+import functools
 
 import IECore
 
@@ -247,6 +248,29 @@ class PlugValueWidget( GafferUI.Widget ) :
 	def _popupMenuDefinition( self ) :
 
 		menuDefinition = IECore.MenuDefinition()
+
+		if hasattr( self.getPlug(), "getValue" ) :
+
+			applicationRoot = self.getPlug().ancestor( Gaffer.ApplicationRoot )
+			menuDefinition.append(
+				"/Copy Value", {
+					"command" : Gaffer.WeakMethod( self.__copyValue ),
+					"active" : applicationRoot is not None
+				}
+			)
+
+			pasteValue = None
+			if applicationRoot is not None :
+				pasteValue = self._convertValue( applicationRoot.getClipboardContents() )
+			
+			menuDefinition.append(
+				"/Paste Value", {
+					"command" : functools.partial( Gaffer.WeakMethod( self.__setValue ), pasteValue ),
+					"active" : pasteValue is not None
+				}
+			)
+
+			menuDefinition.append( "/CopyPasteDivider", { "divider" : True } )
 
 		if self.getPlug().getInput() is not None :
 			menuDefinition.append( "/Edit input...", { "command" : Gaffer.WeakMethod( self.__editInput ) } )
@@ -462,6 +486,19 @@ class PlugValueWidget( GafferUI.Widget ) :
 		self.__popupMenu.popup()
 
 		return True
+
+	def __copyValue( self ) :
+
+		with self.getContext() :
+			value = self.getPlug().getValue()
+
+		if not isinstance( value, IECore.Object ) :
+			# Trick to get Data from a simple type - put
+			# it in a CompoundData (which will convert to
+			# Data automatically) and then get it back out.
+			value = IECore.CompoundData( { "v" : value } )["v"]
+
+		self.getPlug().ancestor( Gaffer.ApplicationRoot ).setClipboardContents( value )
 
 	def __setValue( self, value ) :
 
