@@ -1,7 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2012, John Haddon. All rights reserved.
-#  Copyright (c) 2012-2014, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,29 +34,44 @@
 #
 ##########################################################################
 
-from _GafferImageUI import *
+import Gaffer
+import GafferImage
 
-import DisplayUI
-from FormatPlugValueWidget import FormatPlugValueWidget
-from FilterPlugValueWidget import FilterPlugValueWidget
-from ChannelMaskPlugValueWidget import ChannelMaskPlugValueWidget
+Gaffer.Metadata.registerNode(
 
-import ImageReaderUI
-import ImageViewToolbar
-import ImageTransformUI
-import ConstantUI
-import ImageSwitchUI
-import OpenColorIOUI
-import ImageContextVariablesUI
-import ImageStatsUI
-import DeleteChannelsUI
-import ReformatUI
-import ObjectToImageUI
-import ClampUI
-import ImageWriterUI
-import GradeUI
-import ImageMixinBaseUI
-import ImageTimeWarpUI
-import NodeUIs # Put this at the bottom or we get ordering issues!
+	GafferImage.ImageTimeWarp,
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferImageUI" )
+	"description",
+	"""
+	Changes the time at which upstream nodes are evaluated using
+	the following formula :
+
+	`upstreamFrame = frame * speed + offset`
+
+	Note that this node does not perform frame blending of any sort -
+	it is the responsibility of nodes upstream to do this.
+	""",
+
+	plugs = {
+
+		"speed" : [
+
+			"description",
+			"""
+			Multiplies the current frame value.
+			"""
+
+		],
+
+		"offset" : [
+
+			"description",
+			"""
+			Adds to the current frame value (after multiplication with speed).
+			"""
+
+		],
+
+	}
+
+)
