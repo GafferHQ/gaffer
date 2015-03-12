@@ -169,7 +169,7 @@ class ShaderAssignmentTest( unittest.TestCase ) :
 		s["s2"]["enabled"].setValue( False )
 
 		self.assertTrue( "test:surface" in s["a"]["out"].attributes( "/plane" ) )
-		self.assertEqual( s["a2"]["out"].attributes( "/plane" )["test:surface"][-1].name, "test" )
+		self.assertEqual( s["a2"]["out"].attributes( "/plane" )["test:surface"][-1].name, "test" ) # fails beause dirty propagation is broken - see todo in ShaderAssignment::affects()
 
 	def testInputAcceptanceInsideBoxes( self ) :
 

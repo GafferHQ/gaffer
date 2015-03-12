@@ -79,7 +79,7 @@ class CustomAttributesTest( GafferSceneTest.SceneTestCase ) :
 		# isn't allowed attributes.
 		a["attributes"].addMember( "ri:shadingRate", IECore.FloatData( 0.25 ) )
 		self.assertEqual( a["out"].attributes( "/" ), IECore.CompoundObject() )
-		self.assertEqual( a["out"].attributes( "/ball1" ), IECore.CompoundObject( { "ri:shadingRate" : IECore.FloatData( 0.25 ) } ) )
+		self.assertEqual( a["out"].attributes( "/ball1" ), IECore.CompoundObject( { "ri:shadingRate" : IECore.FloatData( 0.25 ) } ) ) # fails because addMember does not correctly propagate dirtiness
 		self.assertEqual( a["out"].attributes( "/ball2" ), IECore.CompoundObject( { "ri:shadingRate" : IECore.FloatData( 0.25 ) } ) )
 
 		# finally once we've applied a filter, we should get some attributes.
@@ -139,7 +139,7 @@ class CustomAttributesTest( GafferSceneTest.SceneTestCase ) :
 			IECore.CompoundObject( {
 				"ri:shadingRate" : IECore.FloatData( 0.5 ),
 				"user:something" : IECore.IntData( 1 ),
-				"user:somethingElse" : IECore.IntData( 10 ),
+				"user:somethingElse" : IECore.IntData( 10 ),  # fails because addMember does not correctly propagate dirtiness
 			} )
 		)
 
@@ -210,7 +210,7 @@ class CustomAttributesTest( GafferSceneTest.SceneTestCase ) :
 		# be a pass-through.
 		a["attributes"].addMember( "ri:shadingRate", IECore.FloatData( 2.0 ) )
 		self.assertSceneHashesEqual( input["out"], a["out"], childPlugNames = ( "globals", "childNames", "transform", "bound", "object" ) )
-		self.assertSceneHashesNotEqual( input["out"], a["out"], childPlugNames = ( "attributes", ) )
+		self.assertSceneHashesNotEqual( input["out"], a["out"], childPlugNames = ( "attributes", ) ) # fails because addMember does not correctly propagate dirtiness
 
 		# when we add a filter, non-matching objects should become pass-throughs
 		f = GafferScene.PathFilter()

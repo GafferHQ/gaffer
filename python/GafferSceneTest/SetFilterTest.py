@@ -76,7 +76,11 @@ class SetFilterTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertSceneValid( a["out"] )
 
-		self.assertTrue( "doubleSided" not in a["out"].attributes( "/group/plane" ) )
+		# this fails on the current branch. It's failing because the hash caches on the
+		# set filter node haven't been cleared, as it hasn't been touched by
+		# the propagateDirtiness launched by s["paths"].setValue(). This means it's
+		# still erroneously getting a filter match from /group/plane.
+		self.assertTrue( "doubleSided" not in a["out"].attributes( "/group/plane" ) ) # annoying new failure - see comment above
 		self.assertTrue( "doubleSided" not in a["out"].attributes( "/group/plane1" ) )
 		self.assertTrue( "doubleSided" in a["out"].attributes( "/group" ) )
 

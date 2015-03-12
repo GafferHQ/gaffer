@@ -59,7 +59,7 @@ class ContextVariablesTest( GafferTest.TestCase ) :
 		self.assertEqual( c["out"].getValue(), "" )
 
 		c["variables"].addMember( "a", IECore.StringData( "A" ) )
-		self.assertEqual( c["out"].getValue(), "A" )
+		self.assertEqual( c["out"].getValue(), "A" ) # fails because addMember doesn't correctly propagate dirtiness
 
 if __name__ == "__main__":
 	unittest.main()
