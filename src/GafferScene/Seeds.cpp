@@ -102,7 +102,7 @@ void Seeds::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
 	}
 	else if( input == namePlug() )
 	{
-		outputs.push_back( outPlug()->childNamesPlug() );
+		outputs.push_back( getChild<Plug>("__mapping") );
 	}
 }
 
@@ -167,7 +167,6 @@ IECore::ConstObjectPtr Seeds::computeBranchObject( const ScenePath &parentPath, 
 
 		PrimitivePtr result = runTimeCast<Primitive>( op->operate() );
 		result->variables["type"] = PrimitiveVariable( PrimitiveVariable::Constant, new StringData( pointTypePlug()->getValue() ) );
-
 		return result;
 	}
 	return outPlug()->objectPlug()->defaultValue();

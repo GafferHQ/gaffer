@@ -41,6 +41,7 @@ import threading
 import IECore
 
 import Gaffer
+import GafferTest
 import GafferScene
 import GafferSceneTest
 
@@ -118,11 +119,30 @@ class SeedsTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( s["name"].defaultValue(), "seeds" )
 		self.assertEqual( s["name"].getValue(), "seeds" )
 
-	def testAffects( self ) :
+	def testDirtyPropagation( self ) :
+
+		p = GafferScene.Plane()
 
 		s = GafferScene.Seeds()
-		a = s.affects( s["name"] )
-		self.assertEqual( [ x.relativeName( s ) for x in a ], [ "out.childNames" ] )
+		s["in"].setInput( p["out"] )
+		s["parent"].setValue( "/plane" )
+		s["name"].setValue( "seeds" )
+
+		s2 = GafferScene.Seeds()
+		s2["in"].setInput( s["out"] )
+		s2["parent"].setValue( "/plane" )
+		s2["name"].setValue( "seeds" )
+		s2["density"].setValue( 10 )
+
+		dirtied = GafferTest.CapturingSlot( s2.plugDirtiedSignal() )
+		s2["name"].setValue( "blah" )
+		self.failUnless( s2["__mapping"] in [ p[0] for p in dirtied ] )
+		self.failUnless( s2["out"]["childNames"] in [ p[0] for p in dirtied ] )
+
+		dirtied = GafferTest.CapturingSlot( s2.plugDirtiedSignal() )
+		s["name"].setValue( "blah" )
+		self.failUnless( s2["__mapping"] in [ p[0] for p in dirtied ] )
+		self.failUnless( s2["out"]["childNames"] in [ p[0] for p in dirtied ] )
 
 	def testMultipleChildren( self ) :
 

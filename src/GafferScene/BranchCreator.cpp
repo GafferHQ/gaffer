@@ -96,6 +96,10 @@ void BranchCreator::affects( const Plug *input, AffectedPlugsContainer &outputs 
 	if( input->parent<ScenePlug>() == inPlug() )
 	{
 		outputs.push_back( outPlug()->getChild<ValuePlug>( input->getName() ) );
+		if( input == inPlug()->childNamesPlug() )
+		{
+			outputs.push_back( mappingPlug() );
+		}
 	}
 	else if( input == parentPlug() )
 	{
