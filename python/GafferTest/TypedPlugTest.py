@@ -227,11 +227,13 @@ class TypedPlugTest( GafferTest.TestCase ) :
 		self.assertEqual( n.numComputeCalls, 1 )
 
 		h = n["out"].hash()
-		self.assertEqual( n.numHashCalls, 2 )
+		# this hash should have been cached on the plug, so numHashCalls should have been
+		# unaffected:
+		self.assertEqual( n.numHashCalls, 1 )
 		self.assertEqual( n.numComputeCalls, 1 )
 
 		self.assertEqual( n["out"].getValue( _precomputedHash = h ), "hi" )
-		self.assertEqual( n.numHashCalls, 2 )
+		self.assertEqual( n.numHashCalls, 1 )
 		self.assertEqual( n.numComputeCalls, 1 )
 
 if __name__ == "__main__":

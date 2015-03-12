@@ -91,9 +91,6 @@ const Plug *DependencyNode::correspondingInput( const Plug *output ) const
 // Dirty propagation
 //////////////////////////////////////////////////////////////////////////
 
-namespace
-{
-
 // We don't emit dirtiness immediately for each plug as we traverse the
 // dependency graph for two reasons :
 //
@@ -107,7 +104,7 @@ namespace
 // The container used is stored per-thread as although it's illegal to be
 // monkeying with a script from multiple threads, it's perfectly legal to
 // be monkeying with a different script in each thread.
-class DirtyPlugs
+class DependencyNode::DirtyPlugs
 {
 
 	public :
@@ -128,6 +125,10 @@ class DirtyPlugs
 				if( node )
 				{
 					node->plugDirtiedSignal()( plug );
+				}
+				if( ValuePlug* vPlug = IECore::runTimeCast<ValuePlug>( plug ) )
+				{
+					vPlug->m_hashCaches.clear();
 				}
 			}
 		}
@@ -232,9 +233,7 @@ class DirtyPlugs
 
 };
 
-} // namespace
-
-static tbb::enumerable_thread_specific<DirtyPlugs> g_dirtyPlugs;
+tbb::enumerable_thread_specific<DependencyNode::DirtyPlugs> DependencyNode::g_dirtyPlugs;
 
 void DependencyNode::propagateDirtiness( Plug *plugToDirty )
 {

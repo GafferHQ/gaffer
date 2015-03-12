@@ -249,21 +249,100 @@ class ValuePlugTest( GafferTest.TestCase ) :
 		n = GafferTest.CachingTestNode()
 		n["in"].setValue( "a" )
 
+		# hashes are being cached on the plug, so the hash should only get computed once:
 		a1 = n["out"].getValue( _copy = False )
 		self.assertEqual( a1, IECore.StringData( "a" ) )
 		self.assertEqual( n.numHashCalls, 1 )
 
 		a2 = n["out"].getValue( _copy = False )
 		self.assertTrue( a2.isSame( a1 ) )
-		self.assertEqual( n.numHashCalls, 2 )
+		self.assertEqual( n.numHashCalls, 1 )
 
 		h = n["out"].hash()
-		self.assertEqual( n.numHashCalls, 3 )
+		self.assertEqual( n.numHashCalls, 1 )
 
 		a3 = n["out"].getValue( _copy = False, _precomputedHash = h )
-		self.assertEqual( n.numHashCalls, 3 )
+		self.assertEqual( n.numHashCalls, 1 )
 		self.assertTrue( a3.isSame( a1 ) )
+		
+		# change the input and call hash() twice again. This should have cleared the
+		# internal hash cache and incremented numHashCalls:
+		n["in"].setValue( "b" )
+		n["out"].hash()
+		n["out"].hash()
+		self.assertEqual( n.numHashCalls, 2 )
 
+	def testHashCache( self ):
+		
+		n = GafferTest.CachingTestNode()
+		c = Gaffer.Context()
+		with c:
+			# fill up hash cache:
+			c.setFrame( 0 )
+			n["out"].hash()
+			c.setFrame( 1 )
+			n["out"].hash()
+			c.setFrame( 2 )
+			n["out"].hash()
+			c.setFrame( 3 )
+			n["out"].hash()
+			c.setFrame( 4 )
+			n["out"].hash()
+			
+			self.assertEqual( n.numHashCalls, 5 )
+
+			# run the same computations again - should have no effect on numHashCalls:
+			c.setFrame( 0 )
+			n["out"].hash()
+			c.setFrame( 1 )
+			n["out"].hash()
+			c.setFrame( 2 )
+			n["out"].hash()
+			c.setFrame( 3 )
+			n["out"].hash()
+			c.setFrame( 4 )
+			n["out"].hash()
+			
+			self.assertEqual( n.numHashCalls, 5 )
+			
+			# exceed the capacity of the cache: should add one extra hash call
+			c.setFrame( 5 )
+			n["out"].hash()
+
+			self.assertEqual( n.numHashCalls, 6 )
+			
+			# should have removed "0" from the cache, so these calls shouldn't increment
+			# numHashCalls
+			c.setFrame( 1 )
+			n["out"].hash()
+			c.setFrame( 2 )
+			n["out"].hash()
+			c.setFrame( 3 )
+			n["out"].hash()
+			c.setFrame( 4 )
+			n["out"].hash()
+			c.setFrame( 5 )
+			n["out"].hash()
+			self.assertEqual( n.numHashCalls, 6 )
+			
+			# ask for the hash at frame 0 again:
+			c.setFrame( 0 )
+			n["out"].hash()
+			self.assertEqual( n.numHashCalls, 7 )
+			
+			# this should have pushed frame 1 out of the cache, the following calls shouldn't change numHashCalls:
+			c.setFrame( 2 )
+			n["out"].hash()
+			c.setFrame( 3 )
+			n["out"].hash()
+			c.setFrame( 4 )
+			n["out"].hash()
+			c.setFrame( 5 )
+			n["out"].hash()
+			c.setFrame( 0 )
+			n["out"].hash()
+			self.assertEqual( n.numHashCalls, 7 )
+			
 	def setUp( self ) :
 
 		self.__originalCacheMemoryLimit = Gaffer.ValuePlug.getCacheMemoryLimit()

@@ -38,6 +38,14 @@
 #ifndef GAFFER_VALUEPLUG_H
 #define GAFFER_VALUEPLUG_H
 
+#include "IECore/MurmurHash.h"
+
+#include "tbb/enumerable_thread_specific.h"
+#include "boost/multi_index_container.hpp"
+#include <boost/multi_index/random_access_index.hpp>
+#include <boost/multi_index/ordered_index.hpp>
+#include <boost/multi_index/member.hpp>
+
 #include "Gaffer/Plug.h"
 #include "Gaffer/PlugIterator.h"
 
@@ -98,7 +106,7 @@ class ValuePlug : public Plug
 		virtual IECore::MurmurHash hash() const;
 		/// Convenience function to append the hash to h.
 		void hash( IECore::MurmurHash &h ) const;
-
+		
 		/// @name Cache management
 		/// ValuePlug optimises repeated computation by storing a cache of
 		/// recently computed values. These functions allow for management
@@ -169,11 +177,44 @@ class ValuePlug : public Plug
 		class Computation;
 		class SetValueAction;
 
+		friend class DependencyNode;
+
 		void setValueInternal( IECore::ConstObjectPtr value, bool propagateDirtiness );
 
 		IECore::ConstObjectPtr m_defaultValue;
 		/// For holding the value of input plugs with no input connections.
 		IECore::ConstObjectPtr m_staticValue;
+
+
+		// During a single graph evaluation, we actually call ValuePlug::hash()
+		// many times for the same plugs. First hash() is called for the terminating plug,
+		// which will call hash() for all the upstream plugs, and then compute() is called
+		// for the terminating plug, which will call getValue() on the upstream plugs. But
+		// those upstream plugs will need to call their hash() again in getValue(), so their
+		// value can be cached. This ripples on up the chain, leading to quadratic complexity
+		// in the length of the chain of nodes - not good. Thanks is due to David Minor for
+		// being the first to point this out.
+		//
+		// We address this problem by keeping a small per-thread cache of hashes on each plug,
+		// indexed by the the context the hash was performed in. The typedefs below describe
+		// that data structure. These caches are cleared every time the plug is dirtied in
+		// DependencyNode::propatateDirtiness. 
+		//		
+		// I'm using a multi indexed container for the cache so I can do the lookups with
+		// the ordered_unique index, and remove the oldest one using the random_access index.
+		
+		typedef std::pair< IECore::MurmurHash, IECore::MurmurHash > HashCacheElement;
+		typedef boost::multi_index_container<
+			HashCacheElement,
+			boost::multi_index::indexed_by<
+				boost::multi_index::random_access<>,
+				boost::multi_index::ordered_unique< boost::multi_index::member<HashCacheElement,IECore::MurmurHash,&HashCacheElement::first> >
+			>
+		> HashCache;
+		
+		typedef HashCache::nth_index<1>::type::iterator HashCacheIterator;
+		
+		mutable tbb::enumerable_thread_specific<HashCache> m_hashCaches;
 
 };
 
