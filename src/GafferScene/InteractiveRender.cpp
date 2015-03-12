@@ -772,29 +772,8 @@ class InteractiveRender::SceneGraphOutputFilter : public tbb::thread_bound_filte
 						m_renderer->editBegin( "attribute", parameters );
 					}
 
-					for( CompoundObject::ObjectMap::const_iterator it = s->m_attributes->members().begin(), eIt = s->m_attributes->members().end(); it != eIt; it++ )
-					{
-						if( const StateRenderable *s = runTimeCast<const StateRenderable>( it->second.get() ) )
-						{
-							s->render( m_renderer );
-						}
-						else if( const ObjectVector *o = runTimeCast<const ObjectVector>( it->second.get() ) )
-						{
-							for( ObjectVector::MemberContainer::const_iterator it = o->members().begin(), eIt = o->members().end(); it != eIt; it++ )
-							{
-								const StateRenderable *s = runTimeCast<const StateRenderable>( it->get() );
-								if( s )
-								{
-									s->render( m_renderer );
-								}
-							}
-						}
-						else if( const Data *d = runTimeCast<const Data>( it->second.get() ) )
-						{
-							m_renderer->setAttribute( it->first, d );
-						}
-					}
-					s->m_attributes = 0;
+					outputAttributes( s->m_attributes.get(), m_renderer );
+					s->m_attributes = NULL;
 
 					if( m_editMode )
 					{

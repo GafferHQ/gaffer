@@ -92,6 +92,10 @@ bool outputCoordinateSystem( const ScenePlug *scene, const ScenePlug::ScenePath 
 /// Creates the directories necessary to receive the Displays in globals.
 void createDisplayDirectories( const IECore::CompoundObject *globals );
 
+/// Outputs the specified attributes, which are expected to have been
+/// retrieved from ScenePlug:attributesPlug().
+void outputAttributes( const IECore::CompoundObject *attributes, IECore::Renderer *renderer );
+
 } // namespace GafferScene
 
 #endif // GAFFERSCENE_RENDERERALGO_H
