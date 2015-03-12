@@ -109,15 +109,14 @@ void Expression::affects( const Plug *input, AffectedPlugsContainer &outputs ) c
 {
 	ComputeNode::affects( input, outputs );
 
-	const CompoundPlug *in = inPlug();
-	const ValuePlug *out = outPlug();
-	if( out )
+	if( const ValuePlug *out = outPlug() )
 	{
-		if( in && input->parent<CompoundPlug>() == in )
-		{
-			outputs.push_back( out );
-		}
-		else if( input == expressionPlug() || input == enginePlug() )
+		const CompoundPlug *in = inPlug();
+		if(
+			( in && input->parent<CompoundPlug>() == in ) ||
+			input == expressionPlug() ||
+			input == enginePlug()
+		)
 		{
 			outputs.push_back( out );
 		}
