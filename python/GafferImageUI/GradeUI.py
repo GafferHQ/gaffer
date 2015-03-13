@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,39 +35,113 @@
 ##########################################################################
 
 import Gaffer
-import GafferUI
 import GafferImage
 
 Gaffer.Metadata.registerNode(
 
-	GafferImage.ImageReader,
+	GafferImage.Grade,
 
 	"description",
 	"""
-	Reads image files from disk using OpenImageIO. All file
-	types supported by OpenImageIO are supported by the ImageReader.
+	Performs a simple per-channel colour grading operation
+	as follows :
+
+	A = multiply * (gain - lift) / (whitePoint - blackPoint)
+	B = offset + lift - A * blackPoint
+	result = pow( A * input + B, 1/gamma )
+
+	See the descriptions for individual plug for a slightly
+	more practical explanation of the formula.
 	""",
 
 	plugs = {
 
-		"fileName" : [
+		"blackPoint" : [
 
 			"description",
 			"""
-			The name of the file to be read. File sequences with
-			arbitrary padding may be specified using the '#' character
-			as a placeholder for the frame numbers.
+			The input colour which is considered to be
+			"black". This colour is remapped to the
+			lift value in the output image.
 			""",
 
 		],
 
-		"refreshCount" : [
+		"whitePoint" : [
 
 			"description",
 			"""
-			May be incremented to force a reload if the file has
-			changed on disk - otherwise old contents may still
-			be loaded via Gaffer's cache.
+			The input colour which is considered to be
+			"white". This colour is remapped to the
+			gain value in the output image.
+			""",
+
+		],
+
+		"lift" : [
+
+			"description",
+			"""
+			The colour that input pixels at the blackPoint
+			become in the output image. This can be thought
+			of as lifting the darker values of the image.
+			""",
+
+		],
+
+		"gain" : [
+
+			"description",
+			"""
+			The colour that input pixels at the whitePoint
+			become in the output image. This can be thought
+			of as defining the lighter values of the image.
+			""",
+
+		],
+
+		"multiply" : [
+
+			"description",
+			"""
+			An additional multiplier on the output values.
+			""",
+
+		],
+
+		"offset" : [
+
+			"description",
+			"""
+			An additional offset added to the output values.
+			""",
+
+		],
+
+		"gamma" : [
+
+			"description",
+			"""
+			A gamma correction applied after all the remapping
+			defined above.
+			""",
+
+		],
+
+		"blackClamp" : [
+
+			"description",
+			"""
+			Clamps input values so they don't go below 0.
+			""",
+
+		],
+
+		"whiteClamp" : [
+
+			"description",
+			"""
+			Clamps output values so they don't go above 1.
 			""",
 
 		],
@@ -75,23 +149,3 @@ Gaffer.Metadata.registerNode(
 	}
 
 )
-
-GafferUI.PlugValueWidget.registerCreator(
-	GafferImage.ImageReader,
-	"fileName",
-	lambda plug : GafferUI.PathPlugValueWidget( plug,
-		path = Gaffer.FileSystemPath(
-			"/",
-			filter = Gaffer.FileSystemPath.createStandardFilter(
-				extensions = GafferImage.ImageReader.supportedExtensions(),
-				extensionsLabel = "Show only image files",
-			)
-		),
-		pathChooserDialogueKeywords = {
-			"bookmarks" : GafferUI.Bookmarks.acquire( plug, category = "image" ),
-			"leaf" : True,
-		},
-	)
-)
-
-GafferUI.PlugValueWidget.registerCreator( GafferImage.ImageReader, "refreshCount", GafferUI.IncrementingPlugValueWidget, label = "Refresh", undoable = False )

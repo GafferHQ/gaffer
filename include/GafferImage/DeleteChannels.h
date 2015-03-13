@@ -34,64 +34,67 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_SELECT_H
-#define GAFFERIMAGE_SELECT_H
+#ifndef GAFFERIMAGE_DELETECHANNELS_H
+#define GAFFERIMAGE_DELETECHANNELS_H
 
-#include "GafferImage/FilterProcessor.h"
+#include "Gaffer/NumericPlug.h"
+
+#include "GafferImage/ImageProcessor.h"
+#include "GafferImage/ChannelMaskPlug.h"
 
 namespace GafferImage
 {
 
-/// \deprecated Use ImageSwitch instead.
-class Select : public FilterProcessor
+class DeleteChannels : public ImageProcessor
 {
 
 	public :
 
-		Select( const std::string &name=defaultName<Select>() );
-		virtual ~Select();
+		enum Mode
+		{
+			Delete = 0,
+			Keep = 1
+		};
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::Select, SelectTypeId, FilterProcessor );
+		DeleteChannels( const std::string &name=defaultName<DeleteChannels>() );
+		virtual ~DeleteChannels();
 
-		Gaffer::IntPlug *selectPlug();
-		const Gaffer::IntPlug *selectPlug() const;
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::DeleteChannels, DeleteChannelsTypeId, ImageProcessor );
+
+		//! @name Plug Accessors
+		//////////////////////////////////////////////////////////////
+		//@{
+		Gaffer::IntPlug *modePlug();
+		const Gaffer::IntPlug *modePlug() const;
+
+		GafferImage::ChannelMaskPlug *channelsPlug();
+		const GafferImage::ChannelMaskPlug *channelsPlug() const;
+		//@}
 
 		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
 
 	protected :
 
-		/// Does nothing other than overide the FilterProcessor's implementation.
-		virtual bool enabled() const;
-
-		/// Reimplemented to hash only the selected input plugs.
+		// Reimplemented to throw. Because they are connected as direct pass-throughs these methods should never be called.
 		virtual void hashFormat( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual void hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual void hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual void hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-
-		/// Sets the output format to the selected input.
 		virtual GafferImage::Format computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const;
-
-		/// Sets the data window to the selected input.
 		virtual Imath::Box2i computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const;
-
-		/// Sets the channel names to those of the selected input.
-		virtual IECore::ConstStringVectorDataPtr computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const;
-
-		/// Sets the image data to that of the selected input.
 		virtual IECore::ConstFloatVectorDataPtr computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const;
 
-	private :
+		// Reimplemented to perform the deletion.
+		virtual void hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual IECore::ConstStringVectorDataPtr computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const;
 
-		/// Returns a valid input index.
-		int selectIndex() const;
+	private :
 
 		static size_t g_firstPlugIndex;
 
 };
 
-IE_CORE_DECLAREPTR( Select )
+IE_CORE_DECLAREPTR( DeleteChannels );
 
 } // namespace GafferImage
 
-#endif // GAFFERIMAGE_SELECT_H
+#endif // GAFFERIMAGE_DELETECHANNELS_H

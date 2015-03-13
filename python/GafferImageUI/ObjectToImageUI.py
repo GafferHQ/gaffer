@@ -1,7 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2012, John Haddon. All rights reserved.
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,33 +34,34 @@
 #
 ##########################################################################
 
-from _GafferImageTest import *
+import Gaffer
+import GafferImage
 
-from ImagePlugTest import ImagePlugTest
-from ImageReaderTest import ImageReaderTest
-from OpenColorIOTest import OpenColorIOTest
-from ObjectToImageTest import ObjectToImageTest
-from FormatTest import FormatTest
-from FormatPlugTest import FormatPlugTest
-from MergeTest import MergeTest
-from GradeTest import GradeTest
-from ConstantTest import ConstantTest
-from ImageWriterTest import ImageWriterTest
-from ChannelMaskPlugTest import ChannelMaskPlugTest
-from SamplerTest import SamplerTest
-from ReformatTest import ReformatTest
-from FilterTest import FilterTest
-from DisplayTest import DisplayTest
-from ImageStatsTest import ImageStatsTest
-from ImageTransformTest import ImageTransformTest
-from DeleteChannelsTest import DeleteChannelsTest
-from ClampTest import ClampTest
-from ImageSwitchTest import ImageSwitchTest
-from ImageTimeWarpTest import ImageTimeWarpTest
-from ImageSamplerTest import ImageSamplerTest
-from ImageNodeTest import ImageNodeTest
-from FormatDataTest import FormatDataTest
+Gaffer.Metadata.registerNode(
 
-if __name__ == "__main__":
-	import unittest
-	unittest.main()
+	GafferImage.ObjectToImage,
+
+	"description",
+	"""
+	Converts Cortex ImagePrimitives into Gaffer's standard
+	form, so they can processed using Gaffer's image
+	processing nodes. This is a somewhat esoteric node, and
+	is unlikely to have a great number of uses.
+	""",
+
+	plugs = {
+
+		"object" : [
+
+			"description",
+			"""
+			The Cortex ImagePrimitive to be converted. The most
+			likely source of one of these would be an ObjectReader
+			from the GafferCortex module.
+			""",
+
+		],
+
+	}
+
+)

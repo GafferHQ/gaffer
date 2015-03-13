@@ -6,19 +6,17 @@
 //  modification, are permitted provided that the following conditions are
 //  met:
 //
-//      * Redistributions of source code must retain the above
-//        copyright notice, this list of conditions and the following
-//        disclaimer.
+//     * Redistributions of source code must retain the above copyright
+//       notice, this list of conditions and the following disclaimer.
 //
-//      * Redistributions in binary form must reproduce the above
-//        copyright notice, this list of conditions and the following
-//        disclaimer in the documentation and/or other materials provided with
-//        the distribution.
+//     * Redistributions in binary form must reproduce the above copyright
+//       notice, this list of conditions and the following disclaimer in the
+//       documentation and/or other materials provided with the distribution.
 //
-//      * Neither the name of John Haddon nor the names of
-//        any other contributors to this software may be used to endorse or
-//        promote products derived from this software without specific prior
-//        written permission.
+//     * Neither the name of Image Engine Design nor the names of any
+//       other contributors to this software may be used to endorse or
+//       promote products derived from this software without specific prior
+//       written permission.
 //
 //  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 //  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
@@ -34,16 +32,31 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERBINDINGS_REMOVECHANNELSBINDING_H
-#define GAFFERBINDINGS_REMOVECHANNELSBINDING_H
+#include "boost/python.hpp"
 
-#include "GafferImage/RemoveChannels.h"
+#include "IECorePython/RunTimeTypedBinding.h"
+
+#include "GafferImage/DeleteChannels.h"
+
+#include "GafferBindings/DependencyNodeBinding.h"
+
+using namespace boost::python;
+using namespace GafferImage;
+using namespace GafferBindings;
 
 namespace GafferImageBindings
 {
 
-void bindRemoveChannels();
+void bindDeleteChannels()
+{
 
-}; // namespace GafferImageBindings
+	scope s = GafferBindings::DependencyNodeClass<DeleteChannels>();
 
-#endif // GAFFERBINDINGS_REMOVECHANNELSBINDING_H
+	enum_<DeleteChannels::Mode>( "Mode" )
+		.value( "Keep", DeleteChannels::Keep )
+		.value( "Delete", DeleteChannels::Delete )
+	;
+
+}
+
+} // namespace GafferImageBindings

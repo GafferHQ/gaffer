@@ -1,7 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2012, John Haddon. All rights reserved.
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,33 +34,50 @@
 #
 ##########################################################################
 
-from _GafferImageTest import *
+import Gaffer
+import GafferUI
+import GafferImage
+import GafferImageUI
 
-from ImagePlugTest import ImagePlugTest
-from ImageReaderTest import ImageReaderTest
-from OpenColorIOTest import OpenColorIOTest
-from ObjectToImageTest import ObjectToImageTest
-from FormatTest import FormatTest
-from FormatPlugTest import FormatPlugTest
-from MergeTest import MergeTest
-from GradeTest import GradeTest
-from ConstantTest import ConstantTest
-from ImageWriterTest import ImageWriterTest
-from ChannelMaskPlugTest import ChannelMaskPlugTest
-from SamplerTest import SamplerTest
-from ReformatTest import ReformatTest
-from FilterTest import FilterTest
-from DisplayTest import DisplayTest
-from ImageStatsTest import ImageStatsTest
-from ImageTransformTest import ImageTransformTest
-from DeleteChannelsTest import DeleteChannelsTest
-from ClampTest import ClampTest
-from ImageSwitchTest import ImageSwitchTest
-from ImageTimeWarpTest import ImageTimeWarpTest
-from ImageSamplerTest import ImageSamplerTest
-from ImageNodeTest import ImageNodeTest
-from FormatDataTest import FormatDataTest
+Gaffer.Metadata.registerNode(
 
-if __name__ == "__main__":
-	import unittest
-	unittest.main()
+	GafferImage.DeleteChannels,
+
+	"description",
+	"""
+	Deletes channels from an image.
+	""",
+
+	plugs = {
+
+		"mode" : [
+
+			"description",
+			"""
+			Defines how the channels listed in the channels
+			plug are treated. Delete mode deletes the listed
+			channels. Keep mode keeps the listed channels,
+			deleting all others.
+			""",
+
+			"preset:Delete", GafferImage.DeleteChannels.Mode.Delete,
+			"preset:Keep", GafferImage.DeleteChannels.Mode.Keep,
+
+		],
+
+		"channels" : [
+
+			"description",
+			"""
+			The names of the channels to be deleted (or kept
+			if the mode is set to Keep).
+			""",
+
+		],
+
+	}
+
+)
+
+GafferUI.PlugValueWidget.registerCreator( GafferImage.DeleteChannels, "mode", GafferUI.PresetsPlugValueWidget )
+GafferUI.PlugValueWidget.registerCreator( GafferImage.DeleteChannels, "channels", GafferImageUI.ChannelMaskPlugValueWidget, inputImagePlug = "in" )

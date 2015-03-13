@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,50 +34,86 @@
 #
 ##########################################################################
 
+import fnmatch
+
 import Gaffer
 import GafferUI
+import GafferImageUI
 import GafferImage
 
 Gaffer.Metadata.registerNode(
 
-	GafferImage.ImageReader,
+	GafferImage.ImageWriter,
 
 	"description",
 	"""
-	Reads image files from disk using OpenImageIO. All file
-	types supported by OpenImageIO are supported by the ImageReader.
+	Writes image files to disk using OpenImageIO. All file
+	types supported by OpenImageUI are supported by the
+	ImageWriter.
 	""",
 
 	plugs = {
+
+		"in" : [
+
+			"description",
+			"""
+			The image to be written to disk.
+			""",
+
+		],
 
 		"fileName" : [
 
 			"description",
 			"""
-			The name of the file to be read. File sequences with
+			The name of the file to be written. File sequences with
 			arbitrary padding may be specified using the '#' character
 			as a placeholder for the frame numbers.
 			""",
 
 		],
 
-		"refreshCount" : [
+		"writeMode" : [
 
 			"description",
 			"""
-			May be incremented to force a reload if the file has
-			changed on disk - otherwise old contents may still
-			be loaded via Gaffer's cache.
+			Whether the image is written using tiles or scanlines.
+			Not all file formats support both modes - in the case
+			of the specified mode being unsupported, a fallback mode
+			is chosen automatically.
+			""",
+
+			# \todo Bind the enum and don't hardcode values.
+			"preset:Scanline", 0,
+			"preset:Tile", 1,
+
+		],
+
+		"channels" : [
+
+			"description",
+			"""
+			The channels to be written to the file.
 			""",
 
 		],
+
+		"out" : [
+
+			"description",
+			"""
+			A pass-through of the input image.
+			""",
+
+		]
 
 	}
 
 )
 
 GafferUI.PlugValueWidget.registerCreator(
-	GafferImage.ImageReader,
+	GafferImage.ImageWriter,
 	"fileName",
 	lambda plug : GafferUI.PathPlugValueWidget( plug,
 		path = Gaffer.FileSystemPath(
@@ -94,4 +130,10 @@ GafferUI.PlugValueWidget.registerCreator(
 	)
 )
 
-GafferUI.PlugValueWidget.registerCreator( GafferImage.ImageReader, "refreshCount", GafferUI.IncrementingPlugValueWidget, label = "Refresh", undoable = False )
+GafferUI.PlugValueWidget.registerCreator( GafferImage.ImageWriter, "channels", GafferImageUI.ChannelMaskPlugValueWidget, inputImagePlug = "in" )
+GafferUI.PlugValueWidget.registerCreator( GafferImage.ImageWriter, "writeMode", GafferUI.PresetsPlugValueWidget )
+
+GafferUI.Nodule.registerNodule( GafferImage.ImageWriter, "fileName", lambda plug : None )
+GafferUI.Nodule.registerNodule( GafferImage.ImageWriter, "channels", lambda plug : None )
+GafferUI.Nodule.registerNodule( GafferImage.ImageWriter, "writeMode", lambda plug : None )
+GafferUI.Nodule.registerNodule( GafferImage.ImageWriter, "out", lambda plug : None )

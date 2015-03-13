@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,51 +34,71 @@
 #
 ##########################################################################
 
-import unittest
-import os
+import PyOpenColorIO
+
 import IECore
+
+import Gaffer
+import GafferUI
 import GafferImage
 
-class SelectTest( unittest.TestCase ) :
+def __colorSpacePresetNames( plug ) :
 
-	rPath = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/redWithDataWindow.100x100.exr" )
-	gPath = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/greenWithDataWindow.100x100.exr" )
-	bPath = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/blueWithDataWindow.100x100.exr" )
+	config = PyOpenColorIO.GetCurrentConfig()
 
-	# Do several tests to check the cache is working correctly:
-	def testHashPassThrough( self ) :
+	return IECore.StringVectorData( [ "None" ] + [ cs.getName() for cs in config.getColorSpaces() ] )
 
-		r1 = GafferImage.ImageReader()
-		r1["fileName"].setValue( self.rPath )
+def __colorSpacePresetValues( plug ) :
 
-		r2 = GafferImage.ImageReader()
-		r2["fileName"].setValue( self.gPath )
+	config = PyOpenColorIO.GetCurrentConfig()
 
-		r3 = GafferImage.ImageReader()
-		r3["fileName"].setValue( self.bPath )
+	return IECore.StringVectorData( [ "" ] + [ cs.getName() for cs in config.getColorSpaces() ] )
 
-		##########################################
-		# Test to see if the hash changes when we set the select plug.
-		##########################################
-		s = GafferImage.Select()
-		s["select"].setValue(1)
-		s["in"].setInput(r1["out"])
-		s["in1"].setInput(r2["out"])
-		s["in2"].setInput(r3["out"])
+Gaffer.Metadata.registerNode(
 
-		h1 = s["out"].image().hash()
-		h2 = r2["out"].image().hash()
-		self.assertEqual( h1, h2 )
+	GafferImage.OpenColorIO,
 
-		s["select"].setValue(0)
-		h1 = s["out"].image().hash()
-		h2 = r1["out"].image().hash()
-		self.assertEqual( h1, h2 )
+	"description",
+	"""
+	Applies colour transformations provided by
+	OpenColorIO. Configs are loaded from the
+	configuration specified by the OCIO environment
+	variable.
+	""",
 
-		s["select"].setValue(2)
-		h1 = s["out"].image().hash()
-		h2 = r3["out"].image().hash()
-		self.assertEqual( h1, h2 )
+	plugs = {
 
-if __name__ == "__main__":
-	unittest.main()
+		"inputSpace" : [
+
+			"description",
+			"""
+			The colour space of the input image.
+			""",
+
+			"presetNames", __colorSpacePresetNames,
+			"presetValues", __colorSpacePresetValues,
+
+		],
+
+		"outputSpace" : [
+
+			"description",
+			"""
+			The colour space of the output image.
+			""",
+
+			"presetNames", __colorSpacePresetNames,
+			"presetValues", __colorSpacePresetValues,
+
+		]
+
+	}
+
+)
+
+for plugName in ( "inputSpace", "outputSpace" ) :
+	GafferUI.PlugValueWidget.registerCreator(
+		GafferImage.OpenColorIO,
+		plugName,
+		GafferUI.PresetsPlugValueWidget,
+	)

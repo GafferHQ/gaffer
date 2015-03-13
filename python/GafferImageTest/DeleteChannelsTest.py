@@ -34,29 +34,30 @@
 #
 ##########################################################################
 
+import os
 import unittest
 
 import IECore
 import Gaffer
 import GafferTest
 import GafferImage
-import os
 
-class RemoveChannelsTest( unittest.TestCase ) :
+class DeleteChannelsTest( unittest.TestCase ) :
 
 	checkerFile = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/checker.exr" )
 
 	def testDirtyPropagation( self ) :
+
 		r = GafferImage.ImageReader()
 		r["fileName"].setValue( self.checkerFile )
 
-		c = GafferImage.RemoveChannels()
+		c = GafferImage.DeleteChannels()
 		c["in"].setInput( r["out"] )
 
 		cs = GafferTest.CapturingSlot( c.plugDirtiedSignal() )
 
-		self.assertEqual( c["mode"].getValue(), GafferImage.RemoveChannels.RemoveChannelsMode.Remove )
-		c["mode"].setValue( GafferImage.RemoveChannels.RemoveChannelsMode.Keep )
+		self.assertEqual( c["mode"].getValue(), GafferImage.DeleteChannels.Mode.Delete )
+		c["mode"].setValue( GafferImage.DeleteChannels.Mode.Keep )
 
 		dirtiedPlugs = set( [ x[0].relativeName( x[0].node() ) for x in cs ] )
 
@@ -75,14 +76,14 @@ class RemoveChannelsTest( unittest.TestCase ) :
 		self.assertTrue( "out" in dirtiedPlugs )
 		self.assertTrue( "out.channelNames" in dirtiedPlugs )
 
-	def testRemoveChannels( self ) :
+	def testDeleteChannels( self ) :
 
 		r = GafferImage.ImageReader()
 		r["fileName"].setValue( self.checkerFile )
 
-		c = GafferImage.RemoveChannels()
+		c = GafferImage.DeleteChannels()
 		c["in"].setInput( r["out"] )
-		c["mode"].setValue( GafferImage.RemoveChannels.RemoveChannelsMode.Remove ) # Remove selected channels
+		c["mode"].setValue( GafferImage.DeleteChannels.Mode.Delete ) # Remove selected channels
 		c["channels"].setValue( IECore.StringVectorData( [ "G", "A" ] ) )
 
 		self.assertEqual( c["out"]["channelNames"].getValue(), IECore.StringVectorData( [ "R", "B" ] ) )
@@ -92,44 +93,37 @@ class RemoveChannelsTest( unittest.TestCase ) :
 		r = GafferImage.ImageReader()
 		r["fileName"].setValue( self.checkerFile )
 
-		c = GafferImage.RemoveChannels()
+		c = GafferImage.DeleteChannels()
 		c["in"].setInput( r["out"] )
-		c["mode"].setValue( GafferImage.RemoveChannels.RemoveChannelsMode.Keep ) # Keep selected channels
+		c["mode"].setValue( GafferImage.DeleteChannels.Mode.Keep ) # Keep selected channels
 		c["channels"].setValue( IECore.StringVectorData( [ "G", "A" ] ) )
 
 		self.assertEqual( c["out"]["channelNames"].getValue(), IECore.StringVectorData( [ "G", "A" ] ) )
 
-	# The channel data should not change even if it is removed. This is because we don't modify it but just "hide" it.
 	def testChannelDataHash( self ) :
 
 		r = GafferImage.ImageReader()
 		r["fileName"].setValue( self.checkerFile )
-		h1 = r["out"].channelData( "R", IECore.V2i( 0 ) ).hash()
 
-		c = GafferImage.RemoveChannels()
-		c["in"].setInput( r["out"] )
-		c["mode"].setValue( GafferImage.RemoveChannels.RemoveChannelsMode.Remove ) # Remove selected channels
-		c["channels"].setValue( r["out"]["channelNames"].getValue() )
-		h2 = c["out"].channelData( "R", IECore.V2i( 0 ) ).hash()
+		d = GafferImage.DeleteChannels()
+		d["in"].setInput( r["out"] )
+		d["mode"].setValue( GafferImage.DeleteChannels.Mode.Delete )
+		d["channels"].setValue( IECore.StringVectorData( [ "R" ] ) )
 
-		self.assertEqual( h1, h2 )
-
-		c["channels"].setValue( IECore.StringVectorData( [ "R" ] ) )
-		h2 = c["out"].channelData( "R", IECore.V2i( 0 ) ).hash()
-		self.assertEqual( h1, h2 )
-
-		c["channels"].setValue( IECore.StringVectorData( [ "G" ] ) )
-		h2 = c["out"].channelData( "R", IECore.V2i( 0 ) ).hash()
-		self.assertEqual( h1, h2 )
+		# the channels that are passed through should have identical hashes to the input,
+		# so they can share cache entries.
+		self.assertEqual( r["out"].channelDataHash( "G", IECore.V2i( 0 ) ), d["out"].channelDataHash( "G", IECore.V2i( 0 ) ) )
+		self.assertEqual( r["out"].channelDataHash( "B", IECore.V2i( 0 ) ), d["out"].channelDataHash( "B", IECore.V2i( 0 ) ) )
+		self.assertEqual( r["out"].channelDataHash( "A", IECore.V2i( 0 ) ), d["out"].channelDataHash( "A", IECore.V2i( 0 ) ) )
 
 	def testHashChanged( self ) :
 
 		r = GafferImage.ImageReader()
 		r["fileName"].setValue( self.checkerFile )
 
-		c = GafferImage.RemoveChannels()
+		c = GafferImage.DeleteChannels()
 		c["in"].setInput( r["out"] )
-		c["mode"].setValue( GafferImage.RemoveChannels.RemoveChannelsMode.Keep ) # Keep selected channels
+		c["mode"].setValue( GafferImage.DeleteChannels.Mode.Keep ) # Keep selected channels
 		c["channels"].setValue( r["out"]["channelNames"].getValue() )
 		h = c["out"]["channelNames"].hash()
 
@@ -137,3 +131,31 @@ class RemoveChannelsTest( unittest.TestCase ) :
 		h2 = c["out"]["channelNames"].hash()
 		self.assertNotEqual( h, h2 )
 
+	def testModePlug( self ) :
+
+		n = GafferImage.DeleteChannels()
+		self.assertEqual( n["mode"].defaultValue(), n.Mode.Delete )
+		self.assertEqual( n["mode"].getValue(), n.Mode.Delete )
+
+		n["mode"].setValue( n.Mode.Keep )
+		self.assertEqual( n["mode"].getValue(), n.Mode.Keep )
+
+		self.assertEqual( n["mode"].minValue(), n.Mode.Delete )
+		self.assertEqual( n["mode"].maxValue(), n.Mode.Keep )
+
+	def testImage( self ) :
+
+		r = GafferImage.ImageReader()
+		r["fileName"].setValue( self.checkerFile )
+
+		d = GafferImage.DeleteChannels()
+		d["in"].setInput( r["out"] )
+		d["mode"].setValue( d.Mode.Keep )
+		d["channels"].setValue( IECore.StringVectorData( [ "R" ] ) )
+
+		ri = r["out"].image()
+		di = d["out"].image()
+
+		self.assertEqual( set( ri.keys() ), set( [ "R", "G", "B", "A" ] ) )
+		self.assertEqual( di.keys(), [ "R" ] )
+		self.assertEqual( di["R"].data, ri["R"].data )

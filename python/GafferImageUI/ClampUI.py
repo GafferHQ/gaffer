@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,39 +35,100 @@
 ##########################################################################
 
 import Gaffer
-import GafferUI
 import GafferImage
 
 Gaffer.Metadata.registerNode(
 
-	GafferImage.ImageReader,
+	GafferImage.Clamp,
 
 	"description",
 	"""
-	Reads image files from disk using OpenImageIO. All file
-	types supported by OpenImageIO are supported by the ImageReader.
+	Clamps channel values so that they fit within a specified
+	range. Clamping is performed for each channel individually,
+	and out-of-range colours may be highlighted by setting them
+	to a value different to the clamp threshold itself.
 	""",
 
 	plugs = {
 
-		"fileName" : [
+		"min" : [
 
 			"description",
 			"""
-			The name of the file to be read. File sequences with
-			arbitrary padding may be specified using the '#' character
-			as a placeholder for the frame numbers.
+			The minimum value - values below this will
+			be clamped if minEnabled is on.
 			""",
 
 		],
 
-		"refreshCount" : [
+		"max" : [
 
 			"description",
 			"""
-			May be incremented to force a reload if the file has
-			changed on disk - otherwise old contents may still
-			be loaded via Gaffer's cache.
+			The maximum value - values above this will
+			be clamped if maxEnabled is on.
+			""",
+
+		],
+
+		"minClampTo" : [
+
+			"description",
+			"""
+			By default, values below the minimum value are
+			clamped to the minimum value itself. If minClampToEnabled
+			is on, they are instead set to this value. This can
+			be useful for highlighting out-of-range values.
+			""",
+
+		],
+
+		"maxClampTo" : [
+
+			"description",
+			"""
+			By default, values above the maximum value are
+			clamped to the maximum value itself. If maxClampToEnabled
+			is on, they are instead set to this value. This can
+			be useful for highlighting out-of-range values.
+			""",
+
+		],
+
+		"minEnabled" : [
+
+			"description",
+			"""
+			Turns on clamping for values below the min value.
+			""",
+
+		],
+
+		"maxEnabled" : [
+
+			"description",
+			"""
+			Turns on clamping for values above the max value.
+			""",
+
+		],
+
+		"minClampToEnabled" : [
+
+			"description",
+			"""
+			Turns on the effect of minClampTo, allowing out
+			of range values to be highlighted.
+			""",
+
+		],
+
+		"maxClampToEnabled" : [
+
+			"description",
+			"""
+			Turns on the effect of maxClampTo, allowing out
+			of range values to be highlighted.
 			""",
 
 		],
@@ -75,23 +136,3 @@ Gaffer.Metadata.registerNode(
 	}
 
 )
-
-GafferUI.PlugValueWidget.registerCreator(
-	GafferImage.ImageReader,
-	"fileName",
-	lambda plug : GafferUI.PathPlugValueWidget( plug,
-		path = Gaffer.FileSystemPath(
-			"/",
-			filter = Gaffer.FileSystemPath.createStandardFilter(
-				extensions = GafferImage.ImageReader.supportedExtensions(),
-				extensionsLabel = "Show only image files",
-			)
-		),
-		pathChooserDialogueKeywords = {
-			"bookmarks" : GafferUI.Bookmarks.acquire( plug, category = "image" ),
-			"leaf" : True,
-		},
-	)
-)
-
-GafferUI.PlugValueWidget.registerCreator( GafferImage.ImageReader, "refreshCount", GafferUI.IncrementingPlugValueWidget, label = "Refresh", undoable = False )

@@ -34,7 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferImage/RemoveChannels.h"
+#include "GafferImage/DeleteChannels.h"
 
 using namespace IECore;
 using namespace Gaffer;
@@ -42,16 +42,16 @@ using namespace Gaffer;
 namespace GafferImage
 {
 
-IE_CORE_DEFINERUNTIMETYPED( RemoveChannels );
+IE_CORE_DEFINERUNTIMETYPED( DeleteChannels );
 
-size_t RemoveChannels::g_firstPlugIndex = 0;
+size_t DeleteChannels::g_firstPlugIndex = 0;
 
-RemoveChannels::RemoveChannels( const std::string &name )
+DeleteChannels::DeleteChannels( const std::string &name )
 	:	ImageProcessor( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 
-	addChild( new IntPlug( "mode" ) );
+	addChild( new IntPlug( "mode", Plug::In, Delete, Delete, Keep ) );
 
 	addChild(
 		new ChannelMaskPlug(
@@ -60,109 +60,103 @@ RemoveChannels::RemoveChannels( const std::string &name )
 			inPlug()->channelNamesPlug()->defaultValue()
 		)
 	);
+
+	// Direct pass-through for the things we don't ever change.
+	// This not only simplifies our implementation, but it is also
+	// faster to compute.
+	outPlug()->formatPlug()->setInput( inPlug()->formatPlug() );
+	outPlug()->dataWindowPlug()->setInput( inPlug()->dataWindowPlug() );
+	outPlug()->channelDataPlug()->setInput( inPlug()->channelDataPlug() );
+
 }
 
-RemoveChannels::~RemoveChannels()
+DeleteChannels::~DeleteChannels()
 {
 }
 
-Gaffer::IntPlug *RemoveChannels::modePlug()
+Gaffer::IntPlug *DeleteChannels::modePlug()
 {
 	return getChild<IntPlug>( g_firstPlugIndex );
 }
 
-const Gaffer::IntPlug *RemoveChannels::modePlug() const
+const Gaffer::IntPlug *DeleteChannels::modePlug() const
 {
 	return getChild<IntPlug>( g_firstPlugIndex );
 }
 
-GafferImage::ChannelMaskPlug *RemoveChannels::channelSelectionPlug()
+GafferImage::ChannelMaskPlug *DeleteChannels::channelsPlug()
 {
 	return getChild<ChannelMaskPlug>( g_firstPlugIndex + 1 );
 }
 
-const GafferImage::ChannelMaskPlug *RemoveChannels::channelSelectionPlug() const
+const GafferImage::ChannelMaskPlug *DeleteChannels::channelsPlug() const
 {
 	return getChild<ChannelMaskPlug>( g_firstPlugIndex + 1 );
 }
 
-void RemoveChannels::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
+void DeleteChannels::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	ImageProcessor::affects( input, outputs );
 
-	if( input == inPlug()->formatPlug() ||
-		input == inPlug()->dataWindowPlug() ||
+	if(
 		input == inPlug()->channelNamesPlug() ||
-		input == inPlug()->channelDataPlug()
+		input == modePlug() ||
+		input == channelsPlug()
 	)
-	{
-		outputs.push_back( outPlug()->getChild<ValuePlug>( input->getName() ) );
-		return;
-	}
-
-	if( input == channelSelectionPlug() || input == modePlug() )
 	{
 		outputs.push_back( outPlug()->channelNamesPlug() );
 	}
 }
 
-bool RemoveChannels::channelEnabled( const std::string &channel ) const
+void DeleteChannels::hashFormat( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	return false;
+	throw Exception( "Unexpected call to DeleteChannels::hashFormat" );
 }
 
-IECore::ConstFloatVectorDataPtr RemoveChannels::computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const
+GafferImage::Format DeleteChannels::computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
-	return inPlug()->channelData( channelName, tileOrigin );
+	throw Exception( "Unexpected call to DeleteChannels::computeFormat" );
 }
 
-void RemoveChannels::hashFormat( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void DeleteChannels::hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	h = inPlug()->formatPlug()->hash();
+	throw Exception( "Unexpected call to DeleteChannels::hashDataWindow" );
 }
 
-void RemoveChannels::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+Imath::Box2i DeleteChannels::computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
-	h = inPlug()->channelDataPlug()->hash();
+	throw Exception( "Unexpected call to DeleteChannels::computeDataWindow" );
 }
 
-void RemoveChannels::hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void DeleteChannels::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	h = inPlug()->dataWindowPlug()->hash();
+	throw Exception( "Unexpected call to DeleteChannels::hashChannelData" );
 }
 
-void RemoveChannels::hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+IECore::ConstFloatVectorDataPtr DeleteChannels::computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const
+{
+	throw Exception( "Unexpected call to DeleteChannels::computeChannelData" );
+}
+
+void DeleteChannels::hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	ImageProcessor::hash( output, context, h );
 
-	IECore::ConstStringVectorDataPtr channelNamesData = inPlug()->channelNamesPlug()->getValue();
-	std::vector<std::string> maskChannels = channelNamesData->readable();
-	channelSelectionPlug()->maskChannels( maskChannels );
-
+	inPlug()->channelNamesPlug()->hash( h );
 	modePlug()->hash( h );
-	h.append( &maskChannels[0], maskChannels.size() );
+	channelsPlug()->hash( h );
 }
 
-GafferImage::Format RemoveChannels::computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const
-{
-	return inPlug()->formatPlug()->getValue();
-}
-
-Imath::Box2i RemoveChannels::computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const
-{
-	return inPlug()->dataWindowPlug()->getValue();
-}
-
-IECore::ConstStringVectorDataPtr RemoveChannels::computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const
+IECore::ConstStringVectorDataPtr DeleteChannels::computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
 	StringVectorDataPtr result = new StringVectorData();
 
 	int mode( modePlug()->getValue() );
-	if( mode == Remove ) // Remove the selected channels
+	if( mode == Delete ) // Delete the selected channels
 	{
 		IECore::ConstStringVectorDataPtr inChannelsData = inPlug()->channelNamesPlug()->getValue();
 		std::vector<std::string> inChannels( inChannelsData->readable() );
-		IECore::ConstStringVectorDataPtr inSelectionData = channelSelectionPlug()->getValue();
+		IECore::ConstStringVectorDataPtr inSelectionData = channelsPlug()->getValue();
 		const std::vector<std::string> &channelSelection( inSelectionData->readable() );
 
 		std::vector<std::string>::iterator it( inChannels.begin() );
@@ -184,11 +178,10 @@ IECore::ConstStringVectorDataPtr RemoveChannels::computeChannelNames( const Gaff
 	{
 		IECore::ConstStringVectorDataPtr channelNamesData = inPlug()->channelNamesPlug()->getValue();
 		std::vector<std::string> maskChannels( channelNamesData->readable() );
-		channelSelectionPlug()->maskChannels( maskChannels );
+		channelsPlug()->maskChannels( maskChannels );
 		result->writable() = maskChannels;
 	}
 	return result;
 }
 
 } // namespace GafferImage
-

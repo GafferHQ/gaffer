@@ -34,7 +34,49 @@
 #
 ##########################################################################
 
+import Gaffer
 import GafferUI
 import GafferImage
+
+Gaffer.Metadata.registerNode(
+
+	GafferImage.ImageTransform,
+
+	"description",
+	"""
+	Scales, rotates and translates an image within its display window.
+	Note that although the format is not changed, the data window is
+	expanded to include the portions of the image which have been
+	transformed outside of the display window, and these out-of-frame
+	pixels can still be used by downstream nodes.
+	""",
+
+	plugs = {
+
+		"transform" : [
+
+			"description",
+			"""
+			The transformation to be applied to the image. The translate
+			and pivot values are specified in pixels, and the rotate
+			value is specified in degrees.
+			""",
+
+		],
+
+		"filter" : [
+
+			"description",
+			"""
+			The pixel filter used when transforming the image. Each
+			filter provides different tradeoffs between sharpness and
+			the danger of aliasing or ringing.
+			""",
+
+		],
+
+	}
+
+)
 
 GafferUI.PlugValueWidget.registerCreator( GafferImage.ImageTransform, "transform", GafferUI.LayoutPlugValueWidget )
