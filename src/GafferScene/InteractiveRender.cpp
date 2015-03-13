@@ -326,6 +326,7 @@ class InteractiveRender::ChildNamesUpdateTask : public tbb::task
 					spawn( *t );
 				}
 			}
+			wait_for_all();
 
 			return NULL;
 		}
