@@ -40,10 +40,6 @@
 #include "boost/bind.hpp"
 #include "boost/algorithm/string/predicate.hpp"
 
-#include "IECore/Light.h"
-#include "IECore/CoordinateSystem.h"
-#include "IECore/VisibleRenderable.h"
-#include "IECore/AngleConversion.h"
 #include "IECore/CurvesPrimitive.h"
 #include "IECore/MessageHandler.h"
 
@@ -52,13 +48,11 @@
 #include "IECoreGL/Primitive.h"
 #include "IECoreGL/Selector.h"
 #include "IECoreGL/CurvesPrimitive.h"
-#include "IECoreGL/Group.h"
-
-#include "Gaffer/Node.h"
 
 #include "GafferUI/ViewportGadget.h"
 
 #include "GafferSceneUI/SceneGadget.h"
+#include "GafferSceneUI/Visualiser.h"
 
 using namespace std;
 using namespace Imath;
@@ -69,330 +63,26 @@ using namespace GafferSceneUI;
 
 //////////////////////////////////////////////////////////////////////////
 // IECore::Object -> IECoreGL::Renderable conversion
-// \todo Expose a registry mechanism to allow this to be customised
-// for different types.
 //////////////////////////////////////////////////////////////////////////
 
 namespace
 {
 
-IECoreGL::ConstRenderablePtr cameraToRenderable( const IECore::Camera *camera )
-{
-	IECore::CameraPtr fullCamera = camera->copy();
-	fullCamera->addStandardParameters();
-
-	IECoreGL::GroupPtr group = new IECoreGL::Group();
-	group->getState()->add( new IECoreGL::Primitive::DrawWireframe( true ) );
-	group->getState()->add( new IECoreGL::Primitive::DrawSolid( false ) );
-	group->getState()->add( new IECoreGL::CurvesPrimitive::UseGLLines( true ) );
-	group->getState()->add( new IECoreGL::WireframeColorStateComponent( Color4f( 0, 0.25, 0, 1 ) ) );
-
-	IECore::V3fVectorDataPtr pData = new IECore::V3fVectorData;
-	IECore::IntVectorDataPtr vertsPerCurveData = new IECore::IntVectorData;
-	vector<V3f> &p = pData->writable();
-	vector<int> &vertsPerCurve = vertsPerCurveData->writable();
-
-	// box for the camera body
-
-	const Box3f b( V3f( -0.5, -0.5, 0 ), V3f( 0.5, 0.5, 2.0 ) );
-
-	vertsPerCurve.push_back( 5 );
-	p.push_back( b.min );
-	p.push_back( V3f( b.max.x, b.min.y, b.min.z ) );
-	p.push_back( V3f( b.max.x, b.min.y, b.max.z ) );
-	p.push_back( V3f( b.min.x, b.min.y, b.max.z ) );
-	p.push_back( b.min );
-
-	vertsPerCurve.push_back( 5 );
-	p.push_back( V3f( b.min.x, b.max.y, b.min.z ) );
-	p.push_back( V3f( b.max.x, b.max.y, b.min.z ) );
-	p.push_back( V3f( b.max.x, b.max.y, b.max.z ) );
-	p.push_back( V3f( b.min.x, b.max.y, b.max.z ) );
-	p.push_back( V3f( b.min.x, b.max.y, b.min.z ) );
-
-	vertsPerCurve.push_back( 2 );
-	p.push_back( b.min );
-	p.push_back( V3f( b.min.x, b.max.y, b.min.z ) );
-
-	vertsPerCurve.push_back( 2 );
-	p.push_back( V3f( b.max.x, b.min.y, b.min.z ) );
-	p.push_back( V3f( b.max.x, b.max.y, b.min.z ) );
-
-	vertsPerCurve.push_back( 2 );
-	p.push_back( V3f( b.max.x, b.min.y, b.max.z ) );
-	p.push_back( V3f( b.max.x, b.max.y, b.max.z ) );
-
-	vertsPerCurve.push_back( 2 );
-	p.push_back( V3f( b.min.x, b.min.y, b.max.z ) );
-	p.push_back( V3f( b.min.x, b.max.y, b.max.z ) );
-
-	// frustum
-
-	const std::string &projection = fullCamera->parametersData()->member<IECore::StringData>( "projection" )->readable();
-	const Box2f &screenWindow = fullCamera->parametersData()->member<IECore::Box2fData>( "screenWindow" )->readable();
-	/// \todo When we're drawing the camera by some means other than creating a primitive for it,
-	/// use the actual clippings planes. Right now that's not a good idea as it results in /huge/
-	/// framing bounds when the viewer frames a selected camera.
-	V2f clippingPlanes( 0, 5 );
-
-	Box2f near( screenWindow );
-	Box2f far( screenWindow );
-
-	if( projection == "perspective" )
-	{
-		float fov = fullCamera->parametersData()->member<IECore::FloatData>( "projection:fov" )->readable();
-		float d = tan( IECore::degreesToRadians( fov / 2.0f ) );
-		near.min *= d * clippingPlanes[0];
-		near.max *= d * clippingPlanes[0];
-		far.min *= d * clippingPlanes[1];
-		far.max *= d * clippingPlanes[1];
-	}
-
-	vertsPerCurve.push_back( 5 );
-	p.push_back( V3f( near.min.x, near.min.y, -clippingPlanes[0] ) );
-	p.push_back( V3f( near.max.x, near.min.y, -clippingPlanes[0] ) );
-	p.push_back( V3f( near.max.x, near.max.y, -clippingPlanes[0] ) );
-	p.push_back( V3f( near.min.x, near.max.y, -clippingPlanes[0] ) );
-	p.push_back( V3f( near.min.x, near.min.y, -clippingPlanes[0] ) );
-
-	vertsPerCurve.push_back( 5 );
-	p.push_back( V3f( far.min.x, far.min.y, -clippingPlanes[1] ) );
-	p.push_back( V3f( far.max.x, far.min.y, -clippingPlanes[1] ) );
-	p.push_back( V3f( far.max.x, far.max.y, -clippingPlanes[1] ) );
-	p.push_back( V3f( far.min.x, far.max.y, -clippingPlanes[1] ) );
-	p.push_back( V3f( far.min.x, far.min.y, -clippingPlanes[1] ) );
-
-	vertsPerCurve.push_back( 2 );
-	p.push_back( V3f( near.min.x, near.min.y, -clippingPlanes[0] ) );
-	p.push_back( V3f( far.min.x, far.min.y, -clippingPlanes[1] ) );
-
-	vertsPerCurve.push_back( 2 );
-	p.push_back( V3f( near.max.x, near.min.y, -clippingPlanes[0] ) );
-	p.push_back( V3f( far.max.x, far.min.y, -clippingPlanes[1] ) );
-
-	vertsPerCurve.push_back( 2 );
-	p.push_back( V3f( near.max.x, near.max.y, -clippingPlanes[0] ) );
-	p.push_back( V3f( far.max.x, far.max.y, -clippingPlanes[1] ) );
-
-	vertsPerCurve.push_back( 2 );
-	p.push_back( V3f( near.min.x, near.max.y, -clippingPlanes[0] ) );
-	p.push_back( V3f( far.min.x, far.max.y, -clippingPlanes[1] ) );
-
-	IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), false, vertsPerCurveData );
-	curves->addPrimitiveVariable( "P", IECore::PrimitiveVariable( IECore::PrimitiveVariable::Vertex, pData ) );
-	group->addChild( curves );
-
-	return group;
-}
-
-IECoreGL::ConstRenderablePtr lightToRenderable( const IECore::Light *light )
-{
-	static IECoreGL::GroupPtr group = NULL;
-	if( !group )
-	{
-		group = new IECoreGL::Group();
-
-		group->getState()->add( new IECoreGL::Primitive::DrawWireframe( true ) );
-		group->getState()->add( new IECoreGL::Primitive::DrawSolid( false ) );
-		group->getState()->add( new IECoreGL::CurvesPrimitive::UseGLLines( true ) );
-		group->getState()->add( new IECoreGL::WireframeColorStateComponent( Color4f( 0.5, 0, 0, 1 ) ) );
-
-		const float a = 0.5f;
-		const float phi = 1.0f + sqrt( 5.0f ) / 2.0f;
-		const float b = 1.0f / ( 2.0f * phi );
-
-		// icosahedron points
-		IECore::V3fVectorDataPtr pData = new IECore::V3fVectorData;
-		vector<V3f> &p = pData->writable();
-		p.resize( 24 );
-		p[0] = V3f( 0, b, -a );
-		p[2] = V3f( b, a, 0 );
-		p[4] = V3f( -b, a, 0 );
-		p[6] = V3f( 0, b, a );
-		p[8] = V3f( 0, -b, a );
-		p[10] = V3f( -a, 0, b );
-		p[12] = V3f( 0, -b, -a );
-		p[14] = V3f( a, 0, -b );
-		p[16] = V3f( a, 0, b );
-		p[18] = V3f( -a, 0, -b );
-		p[20] = V3f( b, -a, 0 );
-		p[22] = V3f( -b, -a, 0 );
-
-		for( size_t i = 0; i<12; i++ )
-		{
-			p[i*2] = 2.0f * p[i*2].normalized();
-			p[i*2+1] = V3f( 0 );
-		}
-
-		IECore::IntVectorDataPtr vertsPerCurve = new IECore::IntVectorData;
-		vertsPerCurve->writable().resize( 12, 2 );
-
-		IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), false, vertsPerCurve );
-		curves->addPrimitiveVariable( "P", IECore::PrimitiveVariable( IECore::PrimitiveVariable::Vertex, pData ) );
-
-		group->addChild( curves );
-	}
-
-	return group;
-}
-
-IECoreGL::ConstRenderablePtr coordinateSystemToRenderable( const IECore::CoordinateSystem *coordinateSystem )
-{
-	static IECoreGL::GroupPtr group = NULL;
-	if( !group )
-	{
-		group = new IECoreGL::Group();
-
-		group->getState()->add( new IECoreGL::Primitive::DrawWireframe( true ) );
-		group->getState()->add( new IECoreGL::Primitive::DrawSolid( false ) );
-		group->getState()->add( new IECoreGL::CurvesPrimitive::UseGLLines( true ) );
-		group->getState()->add( new IECoreGL::WireframeColorStateComponent( Color4f( 0.06, 0.2, 0.56, 1 ) ) );
-		group->getState()->add( new IECoreGL::CurvesPrimitive::GLLineWidth( 2.0f ) );
-
-		IECore::V3fVectorDataPtr pData = new IECore::V3fVectorData;
-		vector<V3f> &p = pData->writable();
-		p.reserve( 6 );
-		p.push_back( V3f( 0 ) );
-		p.push_back( V3f( 1, 0, 0 ) );
-		p.push_back( V3f( 0 ) );
-		p.push_back( V3f( 0, 1, 0 ) );
-		p.push_back( V3f( 0 ) );
-		p.push_back( V3f( 0, 0, 1 ) );
-
-		IECore::IntVectorDataPtr vertsPerCurve = new IECore::IntVectorData;
-		vertsPerCurve->writable().resize( 3, 2 );
-
-		IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), false, vertsPerCurve );
-		curves->addPrimitiveVariable( "P", IECore::PrimitiveVariable( IECore::PrimitiveVariable::Vertex, pData ) );
-		group->addChild( curves );
-	}
-
-	return group;
-}
-
-IECoreGL::ConstRenderablePtr visibleRenderableToRenderable( const IECore::VisibleRenderable *visibleRenderable )
-{
-	IECoreGL::GroupPtr group = new IECoreGL::Group();
-	group->getState()->add( new IECoreGL::Primitive::DrawWireframe( true ) );
-	group->getState()->add( new IECoreGL::Primitive::DrawSolid( false ) );
-	group->getState()->add( new IECoreGL::CurvesPrimitive::UseGLLines( true ) );
-
-	IECore::V3fVectorDataPtr pData = new IECore::V3fVectorData;
-	IECore::IntVectorDataPtr vertsPerCurveData = new IECore::IntVectorData;
-	vector<V3f> &p = pData->writable();
-	vector<int> &vertsPerCurve = vertsPerCurveData->writable();
-
-	// box representing the location of the renderable
-
-	const Box3f b = visibleRenderable->bound();
-
-	vertsPerCurve.push_back( 5 );
-	p.push_back( b.min );
-	p.push_back( V3f( b.max.x, b.min.y, b.min.z ) );
-	p.push_back( V3f( b.max.x, b.min.y, b.max.z ) );
-	p.push_back( V3f( b.min.x, b.min.y, b.max.z ) );
-	p.push_back( b.min );
-
-	vertsPerCurve.push_back( 5 );
-	p.push_back( V3f( b.min.x, b.max.y, b.min.z ) );
-	p.push_back( V3f( b.max.x, b.max.y, b.min.z ) );
-	p.push_back( V3f( b.max.x, b.max.y, b.max.z ) );
-	p.push_back( V3f( b.min.x, b.max.y, b.max.z ) );
-	p.push_back( V3f( b.min.x, b.max.y, b.min.z ) );
-
-	vertsPerCurve.push_back( 2 );
-	p.push_back( b.min );
-	p.push_back( V3f( b.min.x, b.max.y, b.min.z ) );
-
-	vertsPerCurve.push_back( 2 );
-	p.push_back( V3f( b.max.x, b.min.y, b.min.z ) );
-	p.push_back( V3f( b.max.x, b.max.y, b.min.z ) );
-
-	vertsPerCurve.push_back( 2 );
-	p.push_back( V3f( b.max.x, b.min.y, b.max.z ) );
-	p.push_back( V3f( b.max.x, b.max.y, b.max.z ) );
-
-	vertsPerCurve.push_back( 2 );
-	p.push_back( V3f( b.min.x, b.min.y, b.max.z ) );
-	p.push_back( V3f( b.min.x, b.max.y, b.max.z ) );
-
-	IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), false, vertsPerCurveData );
-	curves->addPrimitiveVariable( "P", IECore::PrimitiveVariable( IECore::PrimitiveVariable::Vertex, pData ) );
-	group->addChild( curves );
-
-	return group;
-}
-
-IECoreGL::ConstRenderablePtr clippingPlaneToRenderable( const IECore::Object *clippingPlane )
-{
-	static IECoreGL::GroupPtr group = NULL;
-	if( !group )
-	{
-		group = new IECoreGL::Group();
-
-		group->getState()->add( new IECoreGL::Primitive::DrawWireframe( true ) );
-		group->getState()->add( new IECoreGL::Primitive::DrawSolid( false ) );
-		group->getState()->add( new IECoreGL::CurvesPrimitive::UseGLLines( true ) );
-		group->getState()->add( new IECoreGL::WireframeColorStateComponent( Color4f( 0.06, 0.2, 0.56, 1 ) ) );
-		group->getState()->add( new IECoreGL::CurvesPrimitive::GLLineWidth( 1.0f ) );
-
-		IECore::V3fVectorDataPtr pData = new IECore::V3fVectorData;
-		IECore::IntVectorDataPtr vertsPerCurveData = new IECore::IntVectorData;
-		vector<V3f> &p = pData->writable();
-		vector<int> &vertsPerCurve = vertsPerCurveData->writable();
-		p.reserve( 11 );
-		vertsPerCurve.reserve( 4 );
-		// square
-		p.push_back( V3f( -0.5, -0.5, 0 ) );
-		p.push_back( V3f( -0.5, 0.5, 0 ) );
-		p.push_back( V3f( 0.5, 0.5, 0 ) );
-		p.push_back( V3f( 0.5, -0.5, 0 ) );
-		p.push_back( V3f( -0.5, -0.5, 0 ) );
-		vertsPerCurve.push_back( 5 );
-		// cross
-		p.push_back( V3f( -0.5, -0.5, 0 ) );
-		p.push_back( V3f( 0.5, 0.5, 0 ) );
-		vertsPerCurve.push_back( 2 );
-		p.push_back( V3f( -0.5, 0.5, 0 ) );
-		p.push_back( V3f( 0.5, -0.5, 0 ) );
-		vertsPerCurve.push_back( 2 );
-		// normal
-		p.push_back( V3f( 0, 0, 0 ) );
-		p.push_back( V3f( 0, 0, 0.5 ) );
-		vertsPerCurve.push_back( 2 );
-
-		IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), false, vertsPerCurveData );
-		curves->addPrimitiveVariable( "P", IECore::PrimitiveVariable( IECore::PrimitiveVariable::Vertex, pData ) );
-		group->addChild( curves );
-	}
-
-	return group;
-}
-
 IECoreGL::ConstRenderablePtr objectToRenderable( const IECore::Object *object )
 {
-	switch( object->typeId() )
+	if( const Visualiser *visualiser = Visualiser::acquire( object->typeId() ) )
 	{
-		case IECore::CameraTypeId :
-			return cameraToRenderable( static_cast<const IECore::Camera *>( object ) );
-		case IECore::LightTypeId :
-			return lightToRenderable( static_cast<const IECore::Light *>( object ) );
-		case IECore::CoordinateSystemTypeId :
-			return coordinateSystemToRenderable( static_cast<const IECore::CoordinateSystem *>( object ) );
-		case IECore::ExternalProceduralTypeId :
-			return visibleRenderableToRenderable( static_cast<const IECore::VisibleRenderable *>( object ) );
-		case IECore::ClippingPlaneTypeId :
-			return clippingPlaneToRenderable( object );
-		default :
-			try
-			{
-				IECore::ConstRunTimeTypedPtr glObject = IECoreGL::CachedConverter::defaultCachedConverter()->convert( object );
-				return IECore::runTimeCast<const IECoreGL::Renderable>( glObject.get() );
-			}
-			catch( ... )
-			{
-				return NULL;
-			}
+		return visualiser->visualise( object );
+	}
+
+	try
+	{
+		IECore::ConstRunTimeTypedPtr glObject = IECoreGL::CachedConverter::defaultCachedConverter()->convert( object );
+		return IECore::runTimeCast<const IECoreGL::Renderable>( glObject.get() );
+	}
+	catch( ... )
+	{
+		return NULL;
 	}
 }
 
