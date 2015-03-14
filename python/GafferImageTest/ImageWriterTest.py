@@ -171,6 +171,16 @@ class ImageWriterTest( unittest.TestCase ) :
 			writerOutput = GafferImage.ImageReader()
 			writerOutput["fileName"].setValue( testFile )
 
+			expectedMetadata = expectedOutput["out"]["metadata"].getValue()
+			writerMetadata = writerOutput["out"]["metadata"].getValue()
+			# they were written at different times so
+			# we can't expect those values to match
+			del writerMetadata["DateTime"]
+			if "DateTime" in expectedMetadata :
+				del expectedMetadata["DateTime"]
+			
+			self.assertEqual( expectedMetadata, writerMetadata )
+			
 			op = IECore.ImageDiffOp()
 			res = op(
 				imageA = expectedOutput["out"].image(),
