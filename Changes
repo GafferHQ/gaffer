@@ -5,6 +5,7 @@ Image
 -----------------------------------------------------------------------
 
 - Image nodes are now documented
+- RemoveChannels renamed to DeleteChannels
 
 Scene
 -----------------------------------------------------------------------
