@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2012-2015, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -45,7 +45,7 @@ namespace GafferImage
 {
 
 /// The ChannelDataProcessor provides a useful base class for nodes that manipulate individual channels
-/// of an image and leave their image dimensions and channel names unchanged.
+/// of an image and leave their image dimensions, channel names, and metadata unchanged.
 class ChannelDataProcessor : public ImageProcessor
 {
 
@@ -70,17 +70,22 @@ class ChannelDataProcessor : public ImageProcessor
 		/// This implementation queries whether or not the requested channel is masked by the channelMaskPlug().
 		virtual bool channelEnabled( const std::string &channel ) const;
 
-		/// Reimplemented to pass through the hashes from the input plug as they don't change.
-		virtual void hashFormat( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		// Reimplemented to throw. Because they are connected as direct pass-throughs these methods should never be called.
 		virtual void hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual void hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-
-		/// Implemented to pass through the input values. Derived classes need only implement computeChannelData().
-		virtual GafferImage::Format computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const;
+		virtual void hashMetadata( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual void hashChannelNames( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual Imath::Box2i computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const;
+		virtual IECore::ConstCompoundObjectPtr computeMetadata( const Gaffer::Context *context, const ImagePlug *parent ) const;
 		virtual IECore::ConstStringVectorDataPtr computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const;
 
+		// Reimplemented to assign directly from the input. Format cannot be a direct connection
+		// because it needs to update when the default format changes.
+		/// \todo: make this a direct pass-through once FormatPlug supports it.
+		virtual void hashFormat( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual GafferImage::Format computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const;
+		
 		/// Implemented to initialize the output tile and then call processChannelData()
+		/// All other ImagePlug children are passed through via direct connection to the input values.
 		virtual IECore::ConstFloatVectorDataPtr computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const;
 
 		/// Should be implemented by derived classes to processes each channel's data.
