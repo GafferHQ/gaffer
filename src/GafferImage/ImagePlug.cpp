@@ -350,19 +350,17 @@ IECore::MurmurHash ImagePlug::imageHash() const
 	V2i maxTileOrigin = tileOrigin( dataWindow.max );
 
 	ContextPtr context = new Context( *Context::current(), Context::Borrowed );
+	Context::Scope scope( context.get() );
+	
 	for( vector<string>::const_iterator it = channelNames.begin(), eIt = channelNames.end(); it!=eIt; it++ )
 	{
+		context->set( ImagePlug::channelNameContextName, *it );
 		for( int tileOriginY = minTileOrigin.y; tileOriginY<=maxTileOrigin.y; tileOriginY += tileSize() )
 		{
 			for( int tileOriginX = minTileOrigin.x; tileOriginX<=maxTileOrigin.x; tileOriginX += tileSize() )
 			{
-				for( vector<string>::const_iterator it = channelNames.begin(), eIt = channelNames.end(); it!=eIt; it++ )
-				{
-					context->set( ImagePlug::channelNameContextName, *it );
-					context->set( ImagePlug::tileOriginContextName, V2i( tileOriginX, tileOriginY ) );
-					Context::Scope scope( context.get() );
-					channelDataPlug()->hash( result );
-				}
+				context->set( ImagePlug::tileOriginContextName, V2i( tileOriginX, tileOriginY ) );
+				channelDataPlug()->hash( result );
 			}
 		}
 	}
