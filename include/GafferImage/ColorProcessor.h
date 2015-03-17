@@ -76,11 +76,15 @@ class ColorProcessor : public ImageProcessor
 		virtual GafferImage::Format computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const;
 		
 		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const;
-
-		/// Implemented to use the results of colorDataPlug() via processColorData()
-		/// format, dataWindow, and channelNames are passed through via direct connection to the input values.
+		virtual void hashMetadata( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual void hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		
+		/// Implemented to process the color data and stash the results on colorDataPlug()
+		/// format, dataWindow, and channelNames are passed through via direct connection to the input values.
+		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const;
+		/// Implemented to set the "oiio:ColorSpace" metadata using the results of processColorSpace()
+		virtual IECore::ConstCompoundObjectPtr computeMetadata( const Gaffer::Context *context, const ImagePlug *parent ) const;
+		/// Implemented to use the results of colorDataPlug() via processColorData()
 		virtual IECore::ConstFloatVectorDataPtr computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const;
 
 		/// May be implemented by derived classes to return true if the specified input is used in processColorData().
@@ -91,6 +95,16 @@ class ColorProcessor : public ImageProcessor
 		virtual void hashColorData( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		/// Must be implemented by derived classes to modify R, G and B in place.
 		virtual void processColorData( const Gaffer::Context *context, IECore::FloatVectorData *r, IECore::FloatVectorData *g, IECore::FloatVectorData *b ) const = 0;
+
+		/// May be re-implemented by derived classes to return true if the specified input alters the colorspace
+		// of the data. The default implementation returns false.
+		virtual bool affectsColorSpace( const Gaffer::Plug *input ) const;
+		/// May be re-implemented by derived classes to determine if the colorspace is changing. The default
+		/// implementation does not modify the hash.
+		virtual void hashColorSpace( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		/// May be re-implemented by derived classes to return the new colorspace. The default implementation
+		/// returns an empty string, to indicate colorspace is undetermined, and will have no affect.
+		virtual const std::string processColorSpace( const Gaffer::Context *context ) const;
 
 	private :
 

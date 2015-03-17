@@ -91,17 +91,21 @@ void ColorProcessor::affects( const Gaffer::Plug *input, AffectedPlugsContainer 
 	ImageProcessor::affects( input, outputs );
 
 	const ImagePlug *in = inPlug();
-	if ( input->parent<ImagePlug>() == in && input != in->channelDataPlug() )
-	{
-		outputs.push_back( outPlug()->getChild<ValuePlug>( input->getName() ) );
-	}
-	else if( affectsColorData( input ) )
+	if( affectsColorData( input ) )
 	{
 		outputs.push_back( colorDataPlug() );
 	}
 	else if( input == colorDataPlug()  )
 	{
 		outputs.push_back( outPlug()->channelDataPlug() );
+	}
+	else if( affectsColorSpace( input ) )
+	{
+		outputs.push_back( outPlug()->metadataPlug() );
+	}
+	else if ( input->parent<ImagePlug>() == in && input != in->channelDataPlug() && input != in->metadataPlug() )
+	{
+		outputs.push_back( outPlug()->getChild<ValuePlug>( input->getName() ) );
 	}
 }
 
@@ -175,6 +179,25 @@ Imath::Box2i ColorProcessor::computeDataWindow( const Gaffer::Context *context, 
 	throw IECore::Exception( "Unexpected call to ColorProcessor::computeDataWindow" );
 }
 
+void ColorProcessor::hashMetadata( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	ImageProcessor::hashMetadata( parent, context, h );
+	hashColorSpace( context, h );
+}
+
+IECore::ConstCompoundObjectPtr ColorProcessor::computeMetadata( const Gaffer::Context *context, const ImagePlug *parent ) const
+{
+	CompoundObjectPtr metadata = inPlug()->metadataPlug()->getValue()->copy();
+	
+	std::string colorSpace = processColorSpace( context );
+	if ( !colorSpace.empty() )
+	{
+		metadata->members()["oiio:ColorSpace"] = new StringData( colorSpace );
+	}
+	
+	return metadata;
+}
+
 void ColorProcessor::hashChannelNames( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	throw IECore::Exception( "Unexpected call to ColorProcessor::hashChannelNames" );
@@ -227,4 +250,18 @@ void ColorProcessor::hashColorData( const Gaffer::Context *context, IECore::Murm
 	inPlug()->channelDataPlug()->hash( h );
 	tmpContext->set( ImagePlug::channelNameContextName, string( "B" ) );
 	inPlug()->channelDataPlug()->hash( h );
+}
+
+bool ColorProcessor::affectsColorSpace( const Gaffer::Plug *input ) const
+{
+	return false;
+}
+
+void ColorProcessor::hashColorSpace( const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+}
+
+const std::string ColorProcessor::processColorSpace( const Gaffer::Context *context ) const
+{
+	return "";
 }
