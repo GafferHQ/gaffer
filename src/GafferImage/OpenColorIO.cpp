@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2012-2015, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -163,6 +163,23 @@ void OpenColorIO::processColorData( const Gaffer::Context *context, IECore::Floa
 	);
 
 	processor->apply( image );
+}
+
+bool OpenColorIO::affectsColorSpace( const Gaffer::Plug *input ) const
+{
+	return ( input == inputSpacePlug() || input == outputSpacePlug() );
+}
+
+void OpenColorIO::hashColorSpace( const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	ColorProcessor::hashColorSpace( context, h );
+	inputSpacePlug()->hash( h );
+	outputSpacePlug()->hash( h );
+}
+
+const std::string OpenColorIO::processColorSpace( const Gaffer::Context *context ) const
+{
+	return outputSpacePlug()->getValue();
 }
 
 } // namespace GafferImage
