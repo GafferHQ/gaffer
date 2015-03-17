@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2013-2015, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -52,27 +52,27 @@ class Merge : public FilterProcessor
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::Merge, MergeTypeId, FilterProcessor );
 
-        //! @name Plug Accessors
-        /// Returns a pointer to the node's plugs.
-        //////////////////////////////////////////////////////////////
-        //@{
+		//! @name Plug Accessors
+		/// Returns a pointer to the node's plugs.
+		//////////////////////////////////////////////////////////////
+		//@{
 		/// Returns a pointer to the int plug which dictates the operation to perform.
 		/// The available operations are:
 		///
-		/// Add: A + B
-		/// Atop: Ab + B(1-a)
-		/// Divide: A / B
-		/// In: Ab
-		/// Out: A(1-b)
-		/// Mask: Ba
-		/// Matte: Aa + B(1.-a)
-		/// Multiply: AB
-		/// Over: A + B(1-a)
-		/// Subtract: A - B
-		/// Under: A(1-b) + B
+		/// 	Add: A + B
+		/// 	Atop: Ab + B(1-a)
+		/// 	Divide: A / B
+		/// 	In: Ab
+		/// 	Out: A(1-b)
+		/// 	Mask: Ba
+		/// 	Matte: Aa + B(1.-a)
+		/// 	Multiply: AB
+		/// 	Over: A + B(1-a)
+		/// 	Subtract: A - B
+		/// 	Under: A(1-b) + B
 		Gaffer::IntPlug *operationPlug();
 		const Gaffer::IntPlug *operationPlug() const;
-        //@}
+		//@}
 
 		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
 
@@ -99,8 +99,6 @@ class Merge : public FilterProcessor
 
 		virtual void hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual IECore::ConstFloatVectorDataPtr computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const;
-
-	protected:
 
 		/// This implementation checks that each of the inputs is connected and if not, returns false.
 		virtual bool enabled() const;
