@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2013-2015, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -66,6 +66,10 @@ ColorProcessor::ColorProcessor( const std::string &name )
 	// just copying data out of our intermediate colorDataPlug(), it is
 	// actually quicker not to cache the result.
 	outPlug()->channelDataPlug()->setFlags( Plug::Cacheable, false );
+	
+	// We don't ever want to change the these, so we make pass-through connections.
+	outPlug()->dataWindowPlug()->setInput( inPlug()->dataWindowPlug() );
+	outPlug()->channelNamesPlug()->setInput( inPlug()->channelNamesPlug() );
 }
 
 ColorProcessor::~ColorProcessor()
@@ -86,10 +90,8 @@ void ColorProcessor::affects( const Gaffer::Plug *input, AffectedPlugsContainer 
 {
 	ImageProcessor::affects( input, outputs );
 
-	if( input == inPlug()->formatPlug() ||
-		input == inPlug()->dataWindowPlug() ||
-		input == inPlug()->channelNamesPlug()
-	)
+	const ImagePlug *in = inPlug();
+	if ( input->parent<ImagePlug>() == in && input != in->channelDataPlug() )
 	{
 		outputs.push_back( outPlug()->getChild<ValuePlug>( input->getName() ) );
 	}
@@ -165,22 +167,22 @@ GafferImage::Format ColorProcessor::computeFormat( const Gaffer::Context *contex
 
 void ColorProcessor::hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	h = inPlug()->dataWindowPlug()->hash();
+	throw IECore::Exception( "Unexpected call to ColorProcessor::hashDataWindow" );
 }
 
 Imath::Box2i ColorProcessor::computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
-	return inPlug()->dataWindowPlug()->getValue();
+	throw IECore::Exception( "Unexpected call to ColorProcessor::computeDataWindow" );
 }
 
-void ColorProcessor::hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void ColorProcessor::hashChannelNames( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	h = inPlug()->channelNamesPlug()->hash();
+	throw IECore::Exception( "Unexpected call to ColorProcessor::hashChannelNames" );
 }
 
 IECore::ConstStringVectorDataPtr ColorProcessor::computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
-	return inPlug()->channelNamesPlug()->getValue();
+	throw IECore::Exception( "Unexpected call to ColorProcessor::computeChannelNames" );
 }
 
 void ColorProcessor::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const

@@ -130,5 +130,23 @@ class OpenColorIOTest( unittest.TestCase ) :
 			o["out"].channelData( "G", IECore.V2i( 0 ) )
 		)
 
+	def testPassThrough( self ) :
+		
+		i = GafferImage.ImageReader()
+		i["fileName"].setValue( self.fileName )
+
+		o = GafferImage.OpenColorIO()
+		o["in"].setInput( i["out"] )
+		o["inputSpace"].setValue( "linear" )
+		o["outputSpace"].setValue( "sRGB" )
+		
+		self.assertEqual( i["out"]["format"].hash(), o["out"]["format"].hash() )
+		self.assertEqual( i["out"]["dataWindow"].hash(), o["out"]["dataWindow"].hash() )
+		self.assertEqual( i["out"]["channelNames"].hash(), o["out"]["channelNames"].hash() )
+				
+		self.assertEqual( i["out"]["format"].getValue(), o["out"]["format"].getValue() )
+		self.assertEqual( i["out"]["dataWindow"].getValue(), o["out"]["dataWindow"].getValue() )
+		self.assertEqual( i["out"]["channelNames"].getValue(), o["out"]["channelNames"].getValue() )
+
 if __name__ == "__main__":
 	unittest.main()
