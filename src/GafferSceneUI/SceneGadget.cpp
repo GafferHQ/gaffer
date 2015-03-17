@@ -498,7 +498,7 @@ class SceneGadget::SceneGraph
 			}
 
 				{
-					IECoreGL::State::ScopedBinding scope( *m_state, *currentState );
+					IECoreGL::State::ScopedBinding scope( *m_state, *currentState, m_state.get() != NULL );
 					IECoreGL::State::ScopedBinding selectionScope( selectionState(), *currentState, m_selected );
 
 					if( selector )
