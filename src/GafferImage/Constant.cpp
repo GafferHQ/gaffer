@@ -129,6 +129,11 @@ Imath::Box2i Constant::computeDataWindow( const Gaffer::Context *context, const 
 	return formatPlug()->getValue().getDisplayWindow();
 }
 
+IECore::ConstCompoundObjectPtr Constant::computeMetadata( const Gaffer::Context *context, const ImagePlug *parent ) const
+{
+	return outPlug()->metadataPlug()->defaultValue();
+}
+
 void Constant::hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	ImageNode::hashChannelNames( output, context, h );
