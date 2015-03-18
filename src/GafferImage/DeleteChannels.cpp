@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2013-2015, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -65,6 +65,7 @@ DeleteChannels::DeleteChannels( const std::string &name )
 	// This not only simplifies our implementation, but it is also
 	// faster to compute.
 	outPlug()->dataWindowPlug()->setInput( inPlug()->dataWindowPlug() );
+	outPlug()->metadataPlug()->setInput( inPlug()->metadataPlug() );
 	outPlug()->channelDataPlug()->setInput( inPlug()->channelDataPlug() );
 
 }
@@ -125,6 +126,16 @@ void DeleteChannels::hashDataWindow( const GafferImage::ImagePlug *output, const
 Imath::Box2i DeleteChannels::computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
 	throw Exception( "Unexpected call to DeleteChannels::computeDataWindow" );
+}
+
+void DeleteChannels::hashMetadata( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	throw Exception( "Unexpected call to DeleteChannels::hashMetadata" );
+}
+
+IECore::ConstCompoundObjectPtr DeleteChannels::computeMetadata( const Gaffer::Context *context, const ImagePlug *parent ) const
+{
+	throw Exception( "Unexpected call to DeleteChannels::computeMetadata" );
 }
 
 void DeleteChannels::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
