@@ -492,25 +492,3 @@ void ImageTransform::compute( ValuePlug *output, const Context *context ) const
 ImageTransform::~ImageTransform()
 {
 }
-
-GafferImage::Format ImageTransform::computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const
-{
-	return inPlug()->formatPlug()->getValue();
-}
-
-Imath::Box2i ImageTransform::computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const
-{
-	return inPlug()->dataWindowPlug()->getValue();
-}
-
-IECore::ConstStringVectorDataPtr ImageTransform::computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const
-{
-	return inPlug()->channelNamesPlug()->getValue();
-}
-
-IECore::ConstFloatVectorDataPtr ImageTransform::computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const
-{
-	IECore::FloatVectorDataPtr outData = inPlug()->channelData( channelName, tileOrigin )->copy();
-	return outData;
-}
-
