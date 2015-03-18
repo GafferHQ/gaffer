@@ -73,12 +73,10 @@ class Implementation : public ImageProcessor
 
 		virtual void hashFormat( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual void hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual void hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual void hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 
 		virtual GafferImage::Format computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const;
 		virtual Imath::Box2i computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const;
-		virtual IECore::ConstStringVectorDataPtr computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const;
 		virtual IECore::ConstFloatVectorDataPtr computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const;
 
 		/// Plug accessors.
@@ -114,6 +112,10 @@ Implementation::Implementation( const std::string &name )
 	addChild( new Gaffer::Transform2DPlug( "transform" ) );
 	addChild( new GafferImage::FilterPlug( "filter" ) );
 	addChild( new GafferImage::FormatPlug( "outputFormat" ) );
+	
+	// We don't ever want to change these, so we make pass-through connections.
+	outPlug()->metadataPlug()->setInput( inPlug()->metadataPlug() );
+	outPlug()->channelNamesPlug()->setInput( inPlug()->channelNamesPlug() );
 }
 
 Gaffer::Transform2DPlug *Implementation::transformPlug()
@@ -225,16 +227,6 @@ Imath::Box2i Implementation::computeDataWindow( const Gaffer::Context *context, 
 	return outWindow;
 }
 
-void Implementation::hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
-{
-	h = inPlug()->channelNamesPlug()->hash();
-}
-
-IECore::ConstStringVectorDataPtr Implementation::computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const
-{
-	return inPlug()->channelNamesPlug()->getValue();
-}
-
 void Implementation::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	ImageProcessor::hashChannelData( output, context, h );
@@ -289,6 +281,7 @@ IECore::ConstFloatVectorDataPtr Implementation::computeChannelData( const std::s
 
 	return outDataPtr;
 }
+
 Imath::M33f Implementation::computeAdjustedMatrix() const
 {
 	Format inFormat = inPlug()->formatPlug()->getValue();
