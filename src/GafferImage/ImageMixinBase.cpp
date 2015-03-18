@@ -63,6 +63,11 @@ void ImageMixinBase::hashDataWindow( const GafferImage::ImagePlug *parent, const
 	throw Exception( "Unexpected call to ImageMixinBase::hashDataWindow" );
 }
 
+void ImageMixinBase::hashMetadata( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	throw Exception( "Unexpected call to ImageMixinBase::hashMetadata" );
+}
+
 void ImageMixinBase::hashChannelNames( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	throw Exception( "Unexpected call to ImageMixinBase::hashChannelNames" );
@@ -81,6 +86,11 @@ GafferImage::Format ImageMixinBase::computeFormat( const Gaffer::Context *contex
 Imath::Box2i ImageMixinBase::computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
 	throw Exception( "Unexpected call to ImageMixinBase::computeDataWindow" );
+}
+
+IECore::ConstCompoundObjectPtr ImageMixinBase::computeMetadata( const Gaffer::Context *context, const ImagePlug *parent ) const
+{
+	throw Exception( "Unexpected call to ImageMixinBase::computeMetadata" );
 }
 
 IECore::ConstStringVectorDataPtr ImageMixinBase::computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const
