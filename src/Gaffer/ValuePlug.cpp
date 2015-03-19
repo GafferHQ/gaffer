@@ -232,24 +232,28 @@ class ValuePlug::Computation
 				return *m_precomputedHash;
 			}
 
-			static tbb::mutex m;
-			
-			
 			HashCache &hashCache = m_resultPlug->m_hashCaches.local();
+			if( hashCache.graphUpdateCount != g_graphUpdateCount )
+			{
+				// if the local update count is different to the global one, 
+				// this hash cache is invalid, so we need to clear it:
+				hashCache.graphUpdateCount = g_graphUpdateCount;
+				hashCache.cache.clear();
+			}
+			
 			IECore::MurmurHash key = Context::current()->hash();
-			HashCacheIterator it = hashCache.get<1>().find( key );
-			if( it != hashCache.get<1>().end() )
+			HashCacheIterator it = hashCache.cache.get<1>().find( key );
+			if( it != hashCache.cache.get<1>().end() )
 			{
 				return it->second;
 			}
 
 			IECore::MurmurHash h = hashInternal();
-			if( hashCache.size() == 5 )
+			if( hashCache.cache.size() == 5 )
 			{
-				tbb::mutex::scoped_lock l(m);
-				hashCache.get<0>().pop_front();
+				hashCache.cache.get<0>().pop_front();
 			}
-			hashCache.get<1>().insert( std::make_pair(key, h) );
+			hashCache.cache.get<1>().insert( std::make_pair(key, h) );
 			return h;
 		}
 
@@ -477,6 +481,8 @@ IE_CORE_DEFINERUNTIMETYPED( ValuePlug::SetValueAction );
 //////////////////////////////////////////////////////////////////////////
 
 IE_CORE_DEFINERUNTIMETYPED( ValuePlug );
+
+boost::value_initialized<int> ValuePlug::g_graphUpdateCount;
 
 /// \todo We may want to avoid repeatedly storing copies of the same default value
 /// passed to this function. Perhaps by having a central map of unique values here,

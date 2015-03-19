@@ -45,6 +45,7 @@
 #include <boost/multi_index/random_access_index.hpp>
 #include <boost/multi_index/ordered_index.hpp>
 #include <boost/multi_index/member.hpp>
+#include <boost/utility/value_init.hpp>
 
 #include "Gaffer/Plug.h"
 #include "Gaffer/PlugIterator.h"
@@ -210,12 +211,22 @@ class ValuePlug : public Plug
 				boost::multi_index::random_access<>,
 				boost::multi_index::ordered_unique< boost::multi_index::member<HashCacheElement,IECore::MurmurHash,&HashCacheElement::first> >
 			>
-		> HashCache;
+		> HashCacheMap;
 		
-		typedef HashCache::nth_index<1>::type::iterator HashCacheIterator;
+		typedef HashCacheMap::nth_index<1>::type::iterator HashCacheIterator;
+		
+		struct HashCache
+		{
+			HashCacheMap cache;
+			boost::value_initialized<int> graphUpdateCount;
+		};
 		
 		mutable tbb::enumerable_thread_specific<HashCache> m_hashCaches;
-
+		
+		// global graph update count which changes every time DependencyNode::propagateDirtiness
+		// is called.
+		static boost::value_initialized<int> g_graphUpdateCount;
+		
 };
 
 IE_CORE_DECLAREPTR( ValuePlug )

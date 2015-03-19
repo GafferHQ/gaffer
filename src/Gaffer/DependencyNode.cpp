@@ -126,10 +126,6 @@ class DependencyNode::DirtyPlugs
 				{
 					node->plugDirtiedSignal()( plug );
 				}
-				if( ValuePlug* vPlug = IECore::runTimeCast<ValuePlug>( plug ) )
-				{
-					vPlug->m_hashCaches.clear();
-				}
 			}
 		}
 
@@ -238,6 +234,10 @@ tbb::enumerable_thread_specific<DependencyNode::DirtyPlugs> DependencyNode::g_di
 void DependencyNode::propagateDirtiness( Plug *plugToDirty )
 {
 	DirtyPlugs &dirtyPlugs = g_dirtyPlugs.local();
+
+	// update the global graph update count, so the computation engine knows to
+	// invalidate hash caches from the last round of computations:
+	++ValuePlug::g_graphUpdateCount;
 
 	// If the container is currently empty then we are at the start of a traversal,
 	// and will emit plugDirtiedSignal() and empty the container before returning

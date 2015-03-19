@@ -91,6 +91,7 @@ class DependencyNode : public Node
 
 		friend class Plug;
 		friend class ValuePlug;
+		friend class CompoundPlug;
 		class DirtyPlugs;
 		static tbb::enumerable_thread_specific<DirtyPlugs> g_dirtyPlugs;
 

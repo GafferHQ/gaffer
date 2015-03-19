@@ -42,6 +42,7 @@
 #include "IECore/MurmurHash.h"
 
 #include "Gaffer/CompoundPlug.h"
+#include "Gaffer/DependencyNode.h"
 #include "Gaffer/Node.h"
 #include "Gaffer/BlockedConnection.h"
 
@@ -79,4 +80,5 @@ void CompoundPlug::childAddedOrRemoved()
 	// plugs and removed by removing them.
 	/// \todo Do we really need this?
 	emitPlugSet();
+	DependencyNode::propagateDirtiness( this );
 }
