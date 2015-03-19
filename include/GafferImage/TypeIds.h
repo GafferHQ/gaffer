@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2013-2015, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -87,6 +87,10 @@ enum TypeId
 	ImageContextVariablesTypeId = 110791,
 	ImageSwitchTypeId = 110792,
 	ImageSamplerTypeId = 110793,
+	MetadataProcessorTypeId = 110794,
+	ImageMetadataTypeId = 110795,
+	DeleteImageMetadataTypeId = 110796,
+	CopyImageMetadataTypeId = 110797,
 
 	LastTypeId = 110849
 };
