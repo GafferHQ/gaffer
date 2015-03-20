@@ -68,7 +68,15 @@ Merge::Merge( const std::string &name )
 	:	ImageProcessor( name ), m_inputs( this, inPlug(), 2, Imath::limits<int>::max() )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
-	addChild( new IntPlug( "operation" ) );
+	addChild(
+		new IntPlug(
+			"operation",	// name
+			Plug::In,	// direction
+			Add,		// default
+			Add,		// min
+			Under		// max
+		)
+	);
 }
 
 Merge::~Merge()
@@ -283,25 +291,22 @@ IECore::ConstFloatVectorDataPtr Merge::computeChannelData( const std::string &ch
 	}
 
 	// Get a pointer to the operation that we wish to perform.
-	int operation = operationPlug()->getValue();
+	Operation operation = (Operation)operationPlug()->getValue();
 	switch( operation )
 	{
-		default:
-		case( kAdd ): return doMergeOperation( opAdd, inData, inAlpha, tileOrigin ); break;
-		case( kAtop ): return doMergeOperation( opAtop, inData, inAlpha, tileOrigin ); break;
-		case( kDivide ): return doMergeOperation( opDivide, inData, inAlpha, tileOrigin ); break;
-		case( kIn ): return doMergeOperation( opIn, inData, inAlpha, tileOrigin ); break;
-		case( kOut ): return doMergeOperation( opOut, inData, inAlpha, tileOrigin ); break;
-		case( kMask ): return doMergeOperation( opMask, inData, inAlpha, tileOrigin ); break;
-		case( kMatte ): return doMergeOperation( opMatte, inData, inAlpha, tileOrigin ); break;
-		case( kMultiply ): return doMergeOperation( opMultiply, inData, inAlpha, tileOrigin ); break;
-		case( kOver ): return doMergeOperation( opOver, inData, inAlpha, tileOrigin ); break;
-		case( kSubtract ): return doMergeOperation( opSubtract, inData, inAlpha, tileOrigin ); break;
-		case( kUnder ): return doMergeOperation( opUnder, inData, inAlpha, tileOrigin ); break;
+		case( Add ): return doMergeOperation( opAdd, inData, inAlpha, tileOrigin ); break;
+		case( Atop ): return doMergeOperation( opAtop, inData, inAlpha, tileOrigin ); break;
+		case( Divide ): return doMergeOperation( opDivide, inData, inAlpha, tileOrigin ); break;
+		case( In ): return doMergeOperation( opIn, inData, inAlpha, tileOrigin ); break;
+		case( Out ): return doMergeOperation( opOut, inData, inAlpha, tileOrigin ); break;
+		case( Mask ): return doMergeOperation( opMask, inData, inAlpha, tileOrigin ); break;
+		case( Matte ): return doMergeOperation( opMatte, inData, inAlpha, tileOrigin ); break;
+		case( Multiply ): return doMergeOperation( opMultiply, inData, inAlpha, tileOrigin ); break;
+		case( Over ): return doMergeOperation( opOver, inData, inAlpha, tileOrigin ); break;
+		case( Subtract ): return doMergeOperation( opSubtract, inData, inAlpha, tileOrigin ); break;
+		case( Under ): return doMergeOperation( opUnder, inData, inAlpha, tileOrigin ); break;
+		default : throw Exception( "Merge::computeChannelData : Invalid operation mode." );
 	}
-
-	// We should never get here...
-	return doMergeOperation( opAdd, inData, inAlpha, tileOrigin );
 }
 
 bool Merge::hasAlpha( ConstStringVectorDataPtr channelNamesData ) const

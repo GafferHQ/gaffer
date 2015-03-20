@@ -61,13 +61,10 @@ class Merge : public ImageProcessor
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::Merge, MergeTypeId, ImageProcessor );
 
-		//! @name Plug Accessors
-		/// Returns a pointer to the node's plugs.
+		//! @name Operations
+		/// The available operations used to merge the channelData.
 		//////////////////////////////////////////////////////////////
 		//@{
-		/// Returns a pointer to the int plug which dictates the operation to perform.
-		/// The available operations are:
-		///
 		/// 	Add: A + B
 		/// 	Atop: Ab + B(1-a)
 		/// 	Divide: A / B
@@ -79,32 +76,28 @@ class Merge : public ImageProcessor
 		/// 	Over: A + B(1-a)
 		/// 	Subtract: A - B
 		/// 	Under: A(1-b) + B
+		enum Operation
+		{
+			Add,
+			Atop,
+			Divide,
+			In,
+			Out,
+			Mask,
+			Matte,
+			Multiply,
+			Over,
+			Subtract,
+			Under
+		};
+		//@}
+
 		Gaffer::IntPlug *operationPlug();
 		const Gaffer::IntPlug *operationPlug() const;
-		//@}
 
 		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
 
 	protected :
-
-		/// The different types of operation that are available.
-		/// \todo Remove the "k" prefix. Expose the enum publicly
-		/// and bind it so we don't have to use hardcoded integers
-		/// from the test scripts.
-		enum
-		{
-			kAdd = 0,
-			kAtop = 1,
-			kDivide = 2,
-			kIn = 3,
-			kOut = 4,
-			kMask = 5,
-			kMatte = 6,
-			kMultiply = 7,
-			kOver = 8,
-			kSubtract = 9,
-			kUnder = 10
-		};
 
 		/// Reimplementated to check that at least two of the inputs are connected
 		virtual bool enabled() const;

@@ -49,7 +49,6 @@
 #include "GafferImage/ChannelDataProcessor.h"
 #include "GafferImage/OpenColorIO.h"
 #include "GafferImage/ObjectToImage.h"
-#include "GafferImage/Merge.h"
 #include "GafferImage/Grade.h"
 #include "GafferImage/Clamp.h"
 #include "GafferImage/Constant.h"
@@ -66,6 +65,7 @@
 #include "GafferImageBindings/FilterBinding.h"
 #include "GafferImageBindings/DeleteChannelsBinding.h"
 #include "GafferImageBindings/ChannelMaskPlugBindings.h"
+#include "GafferImageBindings/MergeBinding.h"
 #include "GafferImageBindings/MixinBinding.h"
 #include "GafferImageBindings/FormatDataBinding.h"
 #include "GafferImageBindings/ImageReaderBinding.h"
@@ -120,7 +120,6 @@ BOOST_PYTHON_MODULE( _GafferImage )
 	GafferBindings::DependencyNodeClass<ColorProcessor>();
 	GafferBindings::DependencyNodeClass<OpenColorIO>();
 	GafferBindings::DependencyNodeClass<ObjectToImage>();
-	GafferBindings::DependencyNodeClass<Merge>();
 	GafferBindings::DependencyNodeClass<Grade>();
 	GafferBindings::DependencyNodeClass<Clamp>();
 	GafferBindings::DependencyNodeClass<Constant>();
@@ -139,6 +138,7 @@ BOOST_PYTHON_MODULE( _GafferImage )
 	GafferImageBindings::bindMixin();
 	GafferImageBindings::bindFormatData();
 	GafferImageBindings::bindImageReader();
+	GafferImageBindings::bindMerge();
 
 	GafferBindings::ExecutableNodeClass<ImageWriter>();
 }

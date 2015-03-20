@@ -89,17 +89,17 @@ Gaffer.Metadata.registerNode(
 			more details.
 			""",
 
-			"preset:Add", 0,
-			"preset:Atop", 1 ,
-			"preset:Divide", 2,
-			"preset:In", 3,
-			"preset:Out", 4,
-			"preset:Mask", 5,
-			"preset:Matte", 6,
-			"preset:Multiply", 7,
-			"preset:Over", 8,
-			"preset:Subtract", 9,
-			"preset:Under", 10,
+			"preset:Add", GafferImage.Merge.Operation.Add,
+			"preset:Atop", GafferImage.Merge.Operation.Atop,
+			"preset:Divide", GafferImage.Merge.Operation.Divide,
+			"preset:In", GafferImage.Merge.Operation.In,
+			"preset:Out", GafferImage.Merge.Operation.Out,
+			"preset:Mask", GafferImage.Merge.Operation.Mask,
+			"preset:Matte", GafferImage.Merge.Operation.Matte,
+			"preset:Multiply", GafferImage.Merge.Operation.Multiply,
+			"preset:Over", GafferImage.Merge.Operation.Over,
+			"preset:Subtract", GafferImage.Merge.Operation.Subtract,
+			"preset:Under", GafferImage.Merge.Operation.Under,
 
 		],
 

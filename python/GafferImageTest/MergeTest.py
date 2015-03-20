@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2013-2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -64,7 +64,7 @@ class MergeTest( GafferTest.TestCase ) :
 		# Test to see if the hash changes.
 		##########################################
 		merge = GafferImage.Merge()
-		merge["operation"].setValue(8) # 8 is the Enum value of the over operation.
+		merge["operation"].setValue( GafferImage.Merge.Operation.Over )
 
 		merge["in"].setInput(r1["out"])
 		merge["in1"].setInput(r2["out"])
@@ -83,7 +83,7 @@ class MergeTest( GafferTest.TestCase ) :
 		# input plugs used are not.
 		##########################################
 		merge = GafferImage.Merge()
-		merge["operation"].setValue(8) # 8 is the Enum value of the over operation.
+		merge["operation"].setValue( GafferImage.Merge.Operation.Over )
 
 		expectedHash = h1
 
@@ -110,7 +110,7 @@ class MergeTest( GafferTest.TestCase ) :
 		# through if only the first input is connected.
 		##########################################
 		merge = GafferImage.Merge()
-		merge["operation"].setValue(8) # 8 is the Enum value of the over operation.
+		merge["operation"].setValue( GafferImage.Merge.Operation.Over )
 
 		expectedHash = r1["out"].image().hash()
 		merge["in"].setInput(r1["out"])
@@ -139,7 +139,7 @@ class MergeTest( GafferTest.TestCase ) :
 		b["fileName"].setValue( self.bPath )
 
 		merge = GafferImage.Merge()
-		merge["operation"].setValue(8) # 8 is the Enum value of the over operation.
+		merge["operation"].setValue( GafferImage.Merge.Operation.Over )
 		merge["in"].setInput(r["out"])
 		merge["in1"].setInput(g["out"])
 		merge["in2"].setInput(b["out"])
@@ -165,7 +165,7 @@ class MergeTest( GafferTest.TestCase ) :
 		b["fileName"].setValue( self.bPath )
 
 		merge = GafferImage.Merge()
-		merge["operation"].setValue(8) # 8 is the Enum value of the over operation.
+		merge["operation"].setValue( GafferImage.Merge.Operation.Over )
 		merge["in"].setInput(c["out"])
 		merge["in1"].setInput(r["out"])
 		merge["in2"].setInput(g["out"])
