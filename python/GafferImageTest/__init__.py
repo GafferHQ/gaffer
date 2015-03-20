@@ -62,6 +62,7 @@ from ImageSamplerTest import ImageSamplerTest
 from ImageNodeTest import ImageNodeTest
 from FormatDataTest import FormatDataTest
 from ImageMetadataTest import ImageMetadataTest
+from DeleteImageMetadataTest import DeleteImageMetadataTest
 
 if __name__ == "__main__":
 	import unittest
