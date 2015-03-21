@@ -59,6 +59,7 @@
 #include "GafferImage/MetadataProcessor.h"
 #include "GafferImage/ImageMetadata.h"
 #include "GafferImage/DeleteImageMetadata.h"
+#include "GafferImage/CopyImageMetadata.h"
 
 #include "GafferImageBindings/FormatBinding.h"
 #include "GafferImageBindings/FormatPlugBinding.h"
@@ -131,6 +132,7 @@ BOOST_PYTHON_MODULE( _GafferImage )
 	GafferBindings::DependencyNodeClass<MetadataProcessor>();
 	GafferBindings::DependencyNodeClass<ImageMetadata>();
 	GafferBindings::DependencyNodeClass<DeleteImageMetadata>();
+	GafferBindings::DependencyNodeClass<CopyImageMetadata>();
 
 	GafferImageBindings::bindDeleteChannels();
 	GafferImageBindings::bindFormat();

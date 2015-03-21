@@ -283,6 +283,7 @@ nodeMenu.append( "/Image/Context/Time Warp", GafferImage.ImageTimeWarp, searchTe
 nodeMenu.append( "/Image/Context/Variables", GafferImage.ImageContextVariables, searchText = "ImageContextVariables"  )
 nodeMenu.append( "/Image/Utility/Metadata", GafferImage.ImageMetadata, searchText = "ImageMetadata" )
 nodeMenu.append( "/Image/Utility/DeleteMetadata", GafferImage.DeleteImageMetadata, searchText = "DeleteImageMetadata" )
+nodeMenu.append( "/Image/Utility/CopyMetadata", GafferImage.CopyImageMetadata, searchText = "CopyImageMetadata" )
 nodeMenu.append( "/Image/Utility/Stats", GafferImage.ImageStats, searchText = "ImageStats" )
 nodeMenu.append( "/Image/Utility/Sampler", GafferImage.ImageSampler, searchText = "ImageSampler" )
 
