@@ -34,70 +34,17 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/container/flat_map.hpp"
+#include "IECorePython/RefCountedBinding.h"
 
-#include "IECoreGL/CurvesPrimitive.h"
-#include "IECoreGL/Group.h"
-
-#include "GafferSceneUI/LightVisualiser.h"
 #include "GafferSceneUI/StandardLightVisualiser.h"
+#include "GafferSceneUIBindings/StandardLightVisualiserBinding.h"
 
-using namespace std;
-using namespace Imath;
 using namespace GafferSceneUI;
 
-//////////////////////////////////////////////////////////////////////////
-// Internal implementation details
-//////////////////////////////////////////////////////////////////////////
-
-namespace
+void GafferSceneUIBindings::bindStandardLightVisualiser()
 {
 
-typedef boost::container::flat_map<IECore::InternedString, ConstLightVisualiserPtr> LightVisualisers;
-LightVisualisers &lightVisualisers()
-{
-	static LightVisualisers l;
-	return l;
-}
+	IECorePython::RefCountedClass<StandardLightVisualiser, LightVisualiser>( "StandardLightVisualiser" )
+	;
 
-} // namespace
-
-//////////////////////////////////////////////////////////////////////////
-// LightVisualiser class
-//////////////////////////////////////////////////////////////////////////
-
-Visualiser::VisualiserDescription<LightVisualiser> LightVisualiser::g_visualiserDescription;
-
-LightVisualiser::LightVisualiser()
-{
-}
-
-LightVisualiser::~LightVisualiser()
-{
-}
-
-IECoreGL::ConstRenderablePtr LightVisualiser::visualise( const IECore::Object *object ) const
-{
-	const IECore::Light *light = IECore::runTimeCast<const IECore::Light>( object );
-	if( !light )
-	{
-		return NULL;
-	}
-
-	const LightVisualisers &l = lightVisualisers();
-	LightVisualisers::const_iterator it = l.find( light->getName() );
-	if( it != l.end() )
-	{
-		return it->second->visualise( object );
-	}
-	else
-	{
-		static StandardLightVisualiserPtr g_defaultVisualiser = new StandardLightVisualiser();
-		return g_defaultVisualiser->visualise( object );
-	}
-}
-
-void LightVisualiser::registerLightVisualiser( const IECore::InternedString &name, ConstLightVisualiserPtr visualiser )
-{
-	lightVisualisers()[name] = visualiser;
 }

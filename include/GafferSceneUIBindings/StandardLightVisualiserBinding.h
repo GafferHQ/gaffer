@@ -34,70 +34,14 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/container/flat_map.hpp"
+#ifndef GAFFERSCENEUIBINDINGS_STANDARDLIGHTVISUALISERBINDING_H
+#define GAFFERSCENEUIBINDINGS_STANDARDLIGHTVISUALISERBINDING_H
 
-#include "IECoreGL/CurvesPrimitive.h"
-#include "IECoreGL/Group.h"
-
-#include "GafferSceneUI/LightVisualiser.h"
-#include "GafferSceneUI/StandardLightVisualiser.h"
-
-using namespace std;
-using namespace Imath;
-using namespace GafferSceneUI;
-
-//////////////////////////////////////////////////////////////////////////
-// Internal implementation details
-//////////////////////////////////////////////////////////////////////////
-
-namespace
+namespace GafferSceneUIBindings
 {
 
-typedef boost::container::flat_map<IECore::InternedString, ConstLightVisualiserPtr> LightVisualisers;
-LightVisualisers &lightVisualisers()
-{
-	static LightVisualisers l;
-	return l;
-}
+void bindStandardLightVisualiser();
 
-} // namespace
+} // namespace GafferSceneUIBindings
 
-//////////////////////////////////////////////////////////////////////////
-// LightVisualiser class
-//////////////////////////////////////////////////////////////////////////
-
-Visualiser::VisualiserDescription<LightVisualiser> LightVisualiser::g_visualiserDescription;
-
-LightVisualiser::LightVisualiser()
-{
-}
-
-LightVisualiser::~LightVisualiser()
-{
-}
-
-IECoreGL::ConstRenderablePtr LightVisualiser::visualise( const IECore::Object *object ) const
-{
-	const IECore::Light *light = IECore::runTimeCast<const IECore::Light>( object );
-	if( !light )
-	{
-		return NULL;
-	}
-
-	const LightVisualisers &l = lightVisualisers();
-	LightVisualisers::const_iterator it = l.find( light->getName() );
-	if( it != l.end() )
-	{
-		return it->second->visualise( object );
-	}
-	else
-	{
-		static StandardLightVisualiserPtr g_defaultVisualiser = new StandardLightVisualiser();
-		return g_defaultVisualiser->visualise( object );
-	}
-}
-
-void LightVisualiser::registerLightVisualiser( const IECore::InternedString &name, ConstLightVisualiserPtr visualiser )
-{
-	lightVisualisers()[name] = visualiser;
-}
+#endif // GAFFERSCENEUIBINDINGS_STANDARDLIGHTVISUALISERBINDING_H
