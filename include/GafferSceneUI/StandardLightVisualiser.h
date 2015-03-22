@@ -34,70 +34,44 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/container/flat_map.hpp"
-
-#include "IECoreGL/CurvesPrimitive.h"
-#include "IECoreGL/Group.h"
+#ifndef GAFFERSCENEUI_STANDARDLIGHTVISUALISER_H
+#define GAFFERSCENEUI_STANDARDLIGHTVISUALISER_H
 
 #include "GafferSceneUI/LightVisualiser.h"
-#include "GafferSceneUI/StandardLightVisualiser.h"
 
-using namespace std;
-using namespace Imath;
-using namespace GafferSceneUI;
-
-//////////////////////////////////////////////////////////////////////////
-// Internal implementation details
-//////////////////////////////////////////////////////////////////////////
-
-namespace
+namespace GafferSceneUI
 {
 
-typedef boost::container::flat_map<IECore::InternedString, ConstLightVisualiserPtr> LightVisualisers;
-LightVisualisers &lightVisualisers()
+/// Class for performing standard visualisations of lights,
+/// by mapping shader parameters to features of the visualisation.
+/// This also provides several protected utility methods for
+/// making standard visualisations, so is suitable for use as
+/// a base class for custom light visualisers.
+class StandardLightVisualiser : public LightVisualiser
 {
-	static LightVisualisers l;
-	return l;
-}
 
-} // namespace
+	public :
 
-//////////////////////////////////////////////////////////////////////////
-// LightVisualiser class
-//////////////////////////////////////////////////////////////////////////
+		IE_CORE_DECLAREMEMBERPTR( StandardLightVisualiser )
 
-Visualiser::VisualiserDescription<LightVisualiser> LightVisualiser::g_visualiserDescription;
+		StandardLightVisualiser();
+		virtual ~StandardLightVisualiser();
 
-LightVisualiser::LightVisualiser()
-{
-}
+		virtual IECoreGL::ConstRenderablePtr visualise( const IECore::Object *object ) const;
 
-LightVisualiser::~LightVisualiser()
-{
-}
+	protected :
 
-IECoreGL::ConstRenderablePtr LightVisualiser::visualise( const IECore::Object *object ) const
-{
-	const IECore::Light *light = IECore::runTimeCast<const IECore::Light>( object );
-	if( !light )
-	{
-		return NULL;
-	}
+		static const char *faceCameraVertexSource();
 
-	const LightVisualisers &l = lightVisualisers();
-	LightVisualisers::const_iterator it = l.find( light->getName() );
-	if( it != l.end() )
-	{
-		return it->second->visualise( object );
-	}
-	else
-	{
-		static StandardLightVisualiserPtr g_defaultVisualiser = new StandardLightVisualiser();
-		return g_defaultVisualiser->visualise( object );
-	}
-}
+		static IECoreGL::ConstRenderablePtr ray();
+		static IECoreGL::ConstRenderablePtr pointRays();
+		static IECoreGL::ConstRenderablePtr spotlightCone( float innerAngle, float outerAngle );
+		static IECoreGL::ConstRenderablePtr colorIndicator( const Imath::Color3f &color, float intensity );
 
-void LightVisualiser::registerLightVisualiser( const IECore::InternedString &name, ConstLightVisualiserPtr visualiser )
-{
-	lightVisualisers()[name] = visualiser;
-}
+};
+
+IE_CORE_DECLAREPTR( StandardLightVisualiser )
+
+} // namespace GafferSceneUI
+
+#endif // GAFFERSCENEUI_STANDARDLIGHTVISUALISER_H
