@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2012-2015, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -68,10 +68,6 @@ class OpenColorIO : public ColorProcessor
 		virtual bool affectsColorData( const Gaffer::Plug *input ) const;
 		virtual void hashColorData( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual void processColorData( const Gaffer::Context *context, IECore::FloatVectorData *r, IECore::FloatVectorData *g, IECore::FloatVectorData *b ) const;
-		
-		virtual bool affectsColorSpace( const Gaffer::Plug *input ) const;
-		virtual void hashColorSpace( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual const std::string processColorSpace( const Gaffer::Context *context ) const;
 
 	private :
 

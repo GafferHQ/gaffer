@@ -69,6 +69,7 @@ ColorProcessor::ColorProcessor( const std::string &name )
 	
 	// We don't ever want to change the these, so we make pass-through connections.
 	outPlug()->dataWindowPlug()->setInput( inPlug()->dataWindowPlug() );
+	outPlug()->metadataPlug()->setInput( inPlug()->metadataPlug() );
 	outPlug()->channelNamesPlug()->setInput( inPlug()->channelNamesPlug() );
 }
 
@@ -99,11 +100,7 @@ void ColorProcessor::affects( const Gaffer::Plug *input, AffectedPlugsContainer 
 	{
 		outputs.push_back( outPlug()->channelDataPlug() );
 	}
-	else if( affectsColorSpace( input ) )
-	{
-		outputs.push_back( outPlug()->metadataPlug() );
-	}
-	else if ( input->parent<ImagePlug>() == in && input != in->channelDataPlug() && input != in->metadataPlug() )
+	else if ( input->parent<ImagePlug>() == in && input != in->channelDataPlug() )
 	{
 		outputs.push_back( outPlug()->getChild<ValuePlug>( input->getName() ) );
 	}
@@ -169,25 +166,6 @@ GafferImage::Format ColorProcessor::computeFormat( const Gaffer::Context *contex
 	return inPlug()->formatPlug()->getValue();
 }
 
-void ColorProcessor::hashMetadata( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
-{
-	ImageProcessor::hashMetadata( parent, context, h );
-	hashColorSpace( context, h );
-}
-
-IECore::ConstCompoundObjectPtr ColorProcessor::computeMetadata( const Gaffer::Context *context, const ImagePlug *parent ) const
-{
-	CompoundObjectPtr metadata = inPlug()->metadataPlug()->getValue()->copy();
-	
-	std::string colorSpace = processColorSpace( context );
-	if ( !colorSpace.empty() )
-	{
-		metadata->members()["oiio:ColorSpace"] = new StringData( colorSpace );
-	}
-	
-	return metadata;
-}
-
 void ColorProcessor::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	ImageProcessor::hashChannelData( output, context, h );
@@ -230,18 +208,4 @@ void ColorProcessor::hashColorData( const Gaffer::Context *context, IECore::Murm
 	inPlug()->channelDataPlug()->hash( h );
 	tmpContext->set( ImagePlug::channelNameContextName, string( "B" ) );
 	inPlug()->channelDataPlug()->hash( h );
-}
-
-bool ColorProcessor::affectsColorSpace( const Gaffer::Plug *input ) const
-{
-	return false;
-}
-
-void ColorProcessor::hashColorSpace( const Gaffer::Context *context, IECore::MurmurHash &h ) const
-{
-}
-
-const std::string ColorProcessor::processColorSpace( const Gaffer::Context *context ) const
-{
-	return "";
 }

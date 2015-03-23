@@ -57,15 +57,11 @@ class OpenColorIOTest( unittest.TestCase ) :
 		o["in"].setInput( n["out"] )
 
 		self.assertEqual( n["out"].image(), o["out"].image() )
-		self.assertEqual( n["out"]["metadata"].getValue(), o["out"]["metadata"].getValue() )
-		self.assertEqual( o["out"]["metadata"].getValue()["oiio:ColorSpace"], IECore.StringData( "Linear" ) )
 		
 		o["inputSpace"].setValue( "linear" )
 		o["outputSpace"].setValue( "sRGB" )
 
 		self.assertNotEqual( n["out"].image(), o["out"].image() )
-		self.assertNotEqual( n["out"]["metadata"].getValue(), o["out"]["metadata"].getValue() )
-		self.assertEqual( o["out"]["metadata"].getValue()["oiio:ColorSpace"], IECore.StringData( "sRGB" ) )
 
 	def testHashPassThrough( self ) :
 
@@ -76,15 +72,11 @@ class OpenColorIOTest( unittest.TestCase ) :
 		o["in"].setInput( n["out"] )
 
 		self.assertEqual( n["out"].image(), o["out"].image() )
-		self.assertEqual( n["out"]["metadata"].getValue(), o["out"]["metadata"].getValue() )
-		self.assertEqual( o["out"]["metadata"].getValue()["oiio:ColorSpace"], IECore.StringData( "Linear" ) )
 		
 		o["inputSpace"].setValue( "linear" )
 		o["outputSpace"].setValue( "sRGB" )
 
 		self.assertNotEqual( n["out"].image(), o["out"].image() )
-		self.assertNotEqual( n["out"]["metadata"].getValue(), o["out"]["metadata"].getValue() )
-		self.assertEqual( o["out"]["metadata"].getValue()["oiio:ColorSpace"], IECore.StringData( "sRGB" ) )
 		
 		o["enabled"].setValue( False )
 
@@ -92,7 +84,6 @@ class OpenColorIOTest( unittest.TestCase ) :
 		self.assertEqual( n["out"]['format'].hash(), o["out"]['format'].hash() )
 		self.assertEqual( n["out"]['dataWindow'].hash(), o["out"]['dataWindow'].hash() )
 		self.assertEqual( n["out"]["metadata"].getValue(), o["out"]["metadata"].getValue() )
-		self.assertEqual( o["out"]["metadata"].getValue()["oiio:ColorSpace"], IECore.StringData( "Linear" ) )
 		self.assertEqual( n["out"]['channelNames'].hash(), o["out"]['channelNames'].hash() )
 
 		o["enabled"].setValue( True )
@@ -103,7 +94,6 @@ class OpenColorIOTest( unittest.TestCase ) :
 		self.assertEqual( n["out"]['format'].hash(), o["out"]['format'].hash() )
 		self.assertEqual( n["out"]['dataWindow'].hash(), o["out"]['dataWindow'].hash() )
 		self.assertEqual( n["out"]["metadata"].getValue(), o["out"]["metadata"].getValue() )
-		self.assertEqual( o["out"]["metadata"].getValue()["oiio:ColorSpace"], IECore.StringData( "Linear" ) )
 		self.assertEqual( n["out"]['channelNames'].hash(), o["out"]['channelNames'].hash() )
 
 	def testImageHashPassThrough( self ) :
