@@ -222,6 +222,7 @@ def __popupMenu( menuDefinition, plugValueWidget ) :
 
 	input = plug.getInput()
 	if input is None and plugValueWidget._editable() :
+		menuDefinition.prepend( "/RandomiseDivider", { "divider" : True } )
 		menuDefinition.prepend( "/Randomise...", { "command" : IECore.curry( __createRandom, plug ) } )
 
 __popupMenuConnection = GafferUI.PlugValueWidget.popupMenuSignal().connect( __popupMenu )

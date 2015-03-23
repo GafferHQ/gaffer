@@ -110,14 +110,14 @@ class CompoundNumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 		return self.__row
 
 	# Reimplemented to perform casting between vector and color types.
-	def _dropValue( self, dragDropEvent ) :
+	def _convertValue( self, value ) :
 
-		result = GafferUI.PlugValueWidget._dropValue( self, dragDropEvent )
+		result = GafferUI.PlugValueWidget._convertValue( self, value )
 		if result is not None :
 			return result
 
-		if isinstance( dragDropEvent.data, IECore.Data ) and hasattr( dragDropEvent.data, "value" ) :
-			value = dragDropEvent.data.value
+		if isinstance( value, IECore.Data ) and hasattr( value, "value" ) :
+			value = value.value
 			if hasattr( value, "dimensions" ) and isinstance( value.dimensions(), int ) :
 				with self.getContext() :
 					result = self.getPlug().getValue()

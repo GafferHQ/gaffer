@@ -37,6 +37,7 @@
 
 import re
 import fnmatch
+import functools
 
 import IECore
 
@@ -187,6 +188,40 @@ class PlugValueWidget( GafferUI.Widget ) :
 
 		return True
 
+	## Called to convert the specified value into something
+	# suitable for passing to a plug.setValue() call. Returns
+	# None if no such conversion is necessary. May be reimplemented
+	# by derived classes to provide more complex conversions than
+	# the standard. The base class uses this method to accept drag/drop
+	# and copy/paste data.
+	def _convertValue( self, value ) :
+
+		if not hasattr( self.getPlug(), "defaultValue" ) :
+			return None
+
+		plugValueType = type( self.getPlug().defaultValue() )
+		if isinstance( value, plugValueType ) :
+			return value
+		elif isinstance( value, IECore.Data ) :
+
+			dataValue = None
+			if hasattr( value, "value" ) :
+				dataValue = value.value
+			else :
+				with IECore.IgnoredExceptions( Exception ) :
+					if len( value ) == 1 :
+						dataValue = value[0]
+
+			if dataValue is None :
+				return None
+			elif isinstance( dataValue, plugValueType ) :
+				return dataValue
+			else :
+				with IECore.IgnoredExceptions( Exception ) :
+					return plugValueType( dataValue )
+
+		return None
+
 	## Adds a useful popup menu to the specified widget, providing useful functions that
 	# operate on the plug. The menu is populated with the result of _popupMenuDefinition(),
 	# and may also be customised by external code using the popupMenuSignal().
@@ -213,6 +248,29 @@ class PlugValueWidget( GafferUI.Widget ) :
 	def _popupMenuDefinition( self ) :
 
 		menuDefinition = IECore.MenuDefinition()
+
+		if hasattr( self.getPlug(), "getValue" ) :
+
+			applicationRoot = self.getPlug().ancestor( Gaffer.ApplicationRoot )
+			menuDefinition.append(
+				"/Copy Value", {
+					"command" : Gaffer.WeakMethod( self.__copyValue ),
+					"active" : applicationRoot is not None
+				}
+			)
+
+			pasteValue = None
+			if applicationRoot is not None :
+				pasteValue = self._convertValue( applicationRoot.getClipboardContents() )
+			
+			menuDefinition.append(
+				"/Paste Value", {
+					"command" : functools.partial( Gaffer.WeakMethod( self.__setValue ), pasteValue ),
+					"active" : pasteValue is not None
+				}
+			)
+
+			menuDefinition.append( "/CopyPasteDivider", { "divider" : True } )
 
 		if self.getPlug().getInput() is not None :
 			menuDefinition.append( "/Edit input...", { "command" : Gaffer.WeakMethod( self.__editInput ) } )
@@ -429,6 +487,19 @@ class PlugValueWidget( GafferUI.Widget ) :
 
 		return True
 
+	def __copyValue( self ) :
+
+		with self.getContext() :
+			value = self.getPlug().getValue()
+
+		if not isinstance( value, IECore.Object ) :
+			# Trick to get Data from a simple type - put
+			# it in a CompoundData (which will convert to
+			# Data automatically) and then get it back out.
+			value = IECore.CompoundData( { "v" : value } )["v"]
+
+		self.getPlug().ancestor( Gaffer.ApplicationRoot ).setClipboardContents( value )
+
 	def __setValue( self, value ) :
 
 		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
@@ -497,7 +568,7 @@ class PlugValueWidget( GafferUI.Widget ) :
 			if self.getPlug().acceptsInput( event.data ) :
 				self.setHighlighted( True )
 				return True
-		elif hasattr( self.getPlug(), "setValue" ) and self._dropValue( event ) is not None :
+		elif hasattr( self.getPlug(), "setValue" ) and self._convertValue( event.data ) is not None :
 			if self.getPlug().settable() :
 				self.setHighlighted( True )
 				return True
@@ -516,40 +587,7 @@ class PlugValueWidget( GafferUI.Widget ) :
 			if isinstance( event.data, Gaffer.Plug ) :
 				self.getPlug().setInput( event.data )
 			else :
-				self.getPlug().setValue( self._dropValue( event ) )
+				self.getPlug().setValue( self._convertValue( event.data ) )
 
 		return True
-
-	## Called from a dragEnter slot to see if the drag data can
-	# be converted to a value suitable for a plug.setValue() call.
-	# If this returns a non-None value then the drag will be accepted
-	# and plug.setValue() will be called in the drop event. May be
-	# reimplemented by derived classes to provide conversions of the
-	# drag data to the type needed for setValue().
-	def _dropValue( self, dragDropEvent ) :
-
-		if not hasattr( self.getPlug(), "defaultValue" ) :
-			return None
-
-		plugValueType = type( self.getPlug().defaultValue() )
-		if isinstance( dragDropEvent.data, plugValueType ) :
-			return dragDropEvent.data
-		elif isinstance( dragDropEvent.data, IECore.Data ) :
-
-			dataValue = None
-			if hasattr( dragDropEvent.data, "value" ) :
-				dataValue = dragDropEvent.data.value
-			else :
-				with IECore.IgnoredExceptions( Exception ) :
-					if len( dragDropEvent.data ) == 1 :
-						dataValue = dragDropEvent.data[0]
-
-			if dataValue is None :
-				return None
-			elif isinstance( dataValue, plugValueType ) :
-				return dataValue
-			else :
-				with IECore.IgnoredExceptions( Exception ) :
-					return plugValueType( dataValue )
-
-		return None
+		

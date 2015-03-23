@@ -128,14 +128,14 @@ class gui( Gaffer.Application ) :
 		assert( applicationRoot.isSame( self.root() ) )
 
 		data = applicationRoot.getClipboardContents()
-		if isinstance( data, IECore.StringData ) :
-			QtGui = GafferUI._qtImport( "QtGui" )
-			clipboard = QtGui.QApplication.clipboard()
-			try :
-				self.__ignoreQtClipboardContentsChanged = True # avoid triggering an unecessary copy back in __qtClipboardContentsChanged
-				clipboard.setText( data.value )
-			finally :
-				self.__ignoreQtClipboardContentsChanged = False
+
+		QtGui = GafferUI._qtImport( "QtGui" )
+		clipboard = QtGui.QApplication.clipboard()
+		try :
+			self.__ignoreQtClipboardContentsChanged = True # avoid triggering an unecessary copy back in __qtClipboardContentsChanged
+			clipboard.setText( str( data ) )
+		finally :
+			self.__ignoreQtClipboardContentsChanged = False
 				
 	def __qtClipboardContentsChanged( self ) :
 	
