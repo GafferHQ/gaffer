@@ -169,16 +169,6 @@ GafferImage::Format ColorProcessor::computeFormat( const Gaffer::Context *contex
 	return inPlug()->formatPlug()->getValue();
 }
 
-void ColorProcessor::hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
-{
-	throw IECore::Exception( "Unexpected call to ColorProcessor::hashDataWindow" );
-}
-
-Imath::Box2i ColorProcessor::computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const
-{
-	throw IECore::Exception( "Unexpected call to ColorProcessor::computeDataWindow" );
-}
-
 void ColorProcessor::hashMetadata( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	ImageProcessor::hashMetadata( parent, context, h );
@@ -196,16 +186,6 @@ IECore::ConstCompoundObjectPtr ColorProcessor::computeMetadata( const Gaffer::Co
 	}
 	
 	return metadata;
-}
-
-void ColorProcessor::hashChannelNames( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
-{
-	throw IECore::Exception( "Unexpected call to ColorProcessor::hashChannelNames" );
-}
-
-IECore::ConstStringVectorDataPtr ColorProcessor::computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const
-{
-	throw IECore::Exception( "Unexpected call to ColorProcessor::computeChannelNames" );
 }
 
 void ColorProcessor::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const

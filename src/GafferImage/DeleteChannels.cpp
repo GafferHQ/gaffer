@@ -118,36 +118,6 @@ GafferImage::Format DeleteChannels::computeFormat( const Gaffer::Context *contex
 	return inPlug()->formatPlug()->getValue();
 }
 
-void DeleteChannels::hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
-{
-	throw Exception( "Unexpected call to DeleteChannels::hashDataWindow" );
-}
-
-Imath::Box2i DeleteChannels::computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const
-{
-	throw Exception( "Unexpected call to DeleteChannels::computeDataWindow" );
-}
-
-void DeleteChannels::hashMetadata( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
-{
-	throw Exception( "Unexpected call to DeleteChannels::hashMetadata" );
-}
-
-IECore::ConstCompoundObjectPtr DeleteChannels::computeMetadata( const Gaffer::Context *context, const ImagePlug *parent ) const
-{
-	throw Exception( "Unexpected call to DeleteChannels::computeMetadata" );
-}
-
-void DeleteChannels::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
-{
-	throw Exception( "Unexpected call to DeleteChannels::hashChannelData" );
-}
-
-IECore::ConstFloatVectorDataPtr DeleteChannels::computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const
-{
-	throw Exception( "Unexpected call to DeleteChannels::computeChannelData" );
-}
-
 void DeleteChannels::hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	ImageProcessor::hash( output, context, h );

@@ -164,26 +164,6 @@ Imath::Box2i Reformat::computeDataWindow( const Gaffer::Context *context, const 
 	return outDataWindow;
 }
 
-void Reformat::hashMetadata( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
-{
-	throw Exception( "Unexpected call to Reformat::hashMetadata" );
-}
-
-IECore::ConstCompoundObjectPtr Reformat::computeMetadata( const Gaffer::Context *context, const ImagePlug *parent ) const
-{
-	throw Exception( "Unexpected call to Reformat::computeMetadata" );
-}
-
-void Reformat::hashChannelNames( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
-{
-	throw IECore::Exception( "Unexpected call to Reformat::hashChannelNames" );
-}
-
-IECore::ConstStringVectorDataPtr Reformat::computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const
-{
-	throw IECore::Exception( "Unexpected call to Reformat::computeChannelNames" );
-}
-
 Imath::V2d Reformat::scale() const
 {
 	Format inFormat( inPlug()->formatPlug()->getValue() );

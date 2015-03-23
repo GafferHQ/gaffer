@@ -77,36 +77,6 @@ GafferImage::Format MetadataProcessor::computeFormat( const Gaffer::Context *con
 	return inPlug()->formatPlug()->getValue();
 }
 
-void MetadataProcessor::hashDataWindow( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
-{
-	throw Exception( "Unexpected call to MetadataProcessor::hashDataWindow" );
-}
-
-Imath::Box2i MetadataProcessor::computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const
-{
-	throw Exception( "Unexpected call to MetadataProcessor::computeDataWindow" );
-}
-
-void MetadataProcessor::hashChannelNames( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
-{
-	throw Exception( "Unexpected call to MetadataProcessor::hashChannelNames" );
-}
-
-IECore::ConstStringVectorDataPtr MetadataProcessor::computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const
-{
-	throw Exception( "Unexpected call to MetadataProcessor::computeChannelNames" );
-}
-
-void MetadataProcessor::hashChannelData( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
-{
-	throw Exception( "Unexpected call to MetadataProcessor::hashChannelData" );
-}
-
-IECore::ConstFloatVectorDataPtr MetadataProcessor::computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const
-{
-	throw Exception( "Unexpected call to MetadataProcessor::computeChannelData" );
-}
-
 void MetadataProcessor::hashMetadata( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	ImageProcessor::hashMetadata( parent, context, h );

@@ -122,33 +122,3 @@ GafferImage::Format ChannelDataProcessor::computeFormat( const Gaffer::Context *
 {
 	return inPlug()->formatPlug()->getValue();
 }
-
-void ChannelDataProcessor::hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
-{
-	throw IECore::Exception( "Unexpected call to ChannelDataProcessor::hashDataWindow" );
-}
-
-Imath::Box2i ChannelDataProcessor::computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const
-{
-	throw IECore::Exception( "Unexpected call to ChannelDataProcessor::computeDataWindow" );
-}
-
-void ChannelDataProcessor::hashMetadata( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
-{
-	throw IECore::Exception( "Unexpected call to ChannelDataProcessor::hashMetadata" );
-}
-
-IECore::ConstCompoundObjectPtr ChannelDataProcessor::computeMetadata( const Gaffer::Context *context, const ImagePlug *parent ) const
-{
-	throw IECore::Exception( "Unexpected call to ChannelDataProcessor::computeMetadata" );
-}
-
-void ChannelDataProcessor::hashChannelNames( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
-{
-	throw IECore::Exception( "Unexpected call to ChannelDataProcessor::hashChannelNames" );
-}
-
-IECore::ConstStringVectorDataPtr ChannelDataProcessor::computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const
-{
-	throw IECore::Exception( "Unexpected call to ChannelDataProcessor::computeChannelNames" );
-}

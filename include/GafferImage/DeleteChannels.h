@@ -75,14 +75,6 @@ class DeleteChannels : public ImageProcessor
 
 	protected :
 
-		// Reimplemented to throw. Because they are connected as direct pass-throughs these methods should never be called.
-		virtual void hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual void hashMetadata( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual void hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual Imath::Box2i computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const;
-		virtual IECore::ConstCompoundObjectPtr computeMetadata( const Gaffer::Context *context, const ImagePlug *parent ) const;
-		virtual IECore::ConstFloatVectorDataPtr computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const;
-
 		// Reimplemented to assign directly from the input. Format cannot be a direct connection
 		// because it needs to update when the default format changes.
 		/// \todo: make this a direct pass-through once FormatPlug supports it.
