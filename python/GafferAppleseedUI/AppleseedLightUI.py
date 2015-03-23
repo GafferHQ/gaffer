@@ -44,7 +44,7 @@ GafferUI.PlugValueWidget.registerCreator(
 	lambda plug : GafferUI.PathPlugValueWidget( plug,
 		path = Gaffer.FileSystemPath( "/", filter = Gaffer.FileSystemPath.createStandardFilter() ),
 		pathChooserDialogueKeywords = {
-			"bookmarks" : GafferUI.Bookmarks.acquire( plug, category = "appleseed" ),
+			"bookmarks" : GafferUI.Bookmarks.acquire( plug, category = "image" ),
 			"leaf" : True,
 		},
 	),
