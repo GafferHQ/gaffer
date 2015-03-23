@@ -853,12 +853,6 @@ void InteractiveRender::outputScene( bool update )
 	p.add_filter( evaluator );
 	p.add_filter( output );
 
-	if( update )
-	{
-		// suspend interactive rendering:
-		m_renderer->editBegin( "suspendrendering", CompoundDataMap() );
-	}
-	
 	 // Another thread initiates execution of the pipeline
 	std::thread pipelineThread( runPipeline, &p );
 
@@ -868,11 +862,6 @@ void InteractiveRender::outputScene( bool update )
 		continue;
 	}
 	pipelineThread.join();
-	
-	if( update )
-	{
-		m_renderer->editEnd();
-	}
 	
 }
 
@@ -948,6 +937,7 @@ void InteractiveRender::update()
 
 	if( m_state == Running )
 	{
+		EditBlock edit( m_renderer.get(), "suspendrendering", CompoundDataMap() );
 		updateLights();
 		updateAttributes();
 		updateCameras();
