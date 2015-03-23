@@ -100,7 +100,6 @@ class GradeTest( unittest.TestCase ) :
 
 	def testPassThrough( self ) :
 		
-		# Create a grade node and save the hash of a tile from each channel.
 		i = GafferImage.ImageReader()
 		i["fileName"].setValue( self.checkerFile )
 

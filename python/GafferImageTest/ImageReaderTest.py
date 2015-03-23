@@ -94,25 +94,11 @@ class ImageReaderTest( unittest.TestCase ) :
 		self.failUnless( "A" in channelNames )
 
 		image = n["out"].image()
-		image2 = IECore.Reader.create( self.fileName ).read()
-
-		# OIIO adds compression and colorspace as metadata, but
-		# IECore.Reader doesn't, so we're removing that discrepancy
-		del image.blindData()["compression"]
-		del image.blindData()["oiio:ColorSpace"]
-		# OIIO capitalizes PixelAspectRatio for some reason, so we
-		# need to adjust for that when comparing the images
-		image.blindData()["pixelAspectRatio"] = image.blindData()["PixelAspectRatio"]
-		del image.blindData()["PixelAspectRatio"]
-		# Gaffer stores displayWindow and dataWindow outside of the metadata
-		# so it's ok to remove them from the IECore.Reader's image blindData
-		del image2.blindData()["displayWindow"]
-		del image2.blindData()["dataWindow"]
-		# make sure we're still validating some metadata at least...
-		self.assertNotEqual( image.blindData(), IECore.CompoundObject() )
-		self.assertNotEqual( image2.blindData(), IECore.CompoundObject() )
-		self.assertEqual( image.blindData(), image2.blindData() )
+		self.assertEqual( image.blindData(), IECore.CompoundData( dict(expectedMetadata) ) )
 		
+		image2 = IECore.Reader.create( self.fileName ).read()
+		image.blindData().clear()
+		image2.blindData().clear()
 		self.assertEqual( image, image2 )
 
 	def testNegativeDisplayWindowRead( self ) :

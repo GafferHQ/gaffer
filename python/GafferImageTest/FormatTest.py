@@ -144,7 +144,6 @@ class FormatTest( unittest.TestCase ) :
 		
 		classes = findNodes( GafferImage.ImageProcessor )
 		
-		worked = []
 		for cls in classes :
 			self.__hashChanged( cls )
 	
