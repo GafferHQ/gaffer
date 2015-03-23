@@ -53,6 +53,7 @@
 
 #include "GafferScene/SceneProcedural.h"
 #include "GafferScene/ScenePlug.h"
+#include "GafferScene/RendererAlgo.h"
 
 using namespace std;
 using namespace Imath;
@@ -372,28 +373,7 @@ void SceneProcedural::render( Renderer *renderer ) const
 
 		// attributes
 
-		for( CompoundObject::ObjectMap::const_iterator it = attributes->members().begin(), eIt = attributes->members().end(); it != eIt; it++ )
-		{
-			if( const StateRenderable *s = runTimeCast<const StateRenderable>( it->second.get() ) )
-			{
-				s->render( renderer );
-			}
-			else if( const ObjectVector *o = runTimeCast<const ObjectVector>( it->second.get() ) )
-			{
-				for( ObjectVector::MemberContainer::const_iterator it = o->members().begin(), eIt = o->members().end(); it != eIt; it++ )
-				{
-					const StateRenderable *s = runTimeCast<const StateRenderable>( it->get() );
-					if( s )
-					{
-						s->render( renderer );
-					}
-				}
-			}
-			else if( const Data *d = runTimeCast<const Data>( it->second.get() ) )
-			{
-				renderer->setAttribute( it->first, d );
-			}
-		}
+		outputAttributes( attributes.get(), renderer );
 
 		// object
 

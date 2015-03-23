@@ -290,6 +290,8 @@ class InteractiveRender::ChildNamesUpdateTask : public tbb::task
 						// in the list, nor will they be found at nameIt as there shouldn't be any duplicates.
 						// This means we can move the start of the child names list one position past nameIt
 						// to save a bit of time:
+						/// \todo Note that if all the children have changed names, we never end up in here, and
+						/// we will end up with quadratic behaviour calling find (a linear search N times).
 						childNamesBegin = nameIt;
 						++childNamesBegin;
 					}
@@ -373,6 +375,10 @@ void InteractiveRender::plugDirtied( const Gaffer::Plug *plug )
 			// child names may have changed: we need to run through the scene graph data structure
 			// checking for locations that are no longer present, and flag them as absent if this
 			// is the case:
+			/// \todo doing this directly here is out of keeping with the basic structure
+			/// of this node. Everything else just figures out what is dirty here, and then
+			/// waits until update() to do the work. Since we'll most likely delay calls to update()
+			/// further in the future, we should fix this.
 			ChildNamesUpdateTask *task = new( tbb::task::allocate_root() ) ChildNamesUpdateTask( inPlug(), m_context.get(), m_sceneGraph.get(), ScenePlug::ScenePath() );
 			try
 			{
@@ -767,29 +773,8 @@ class InteractiveRender::SceneGraphOutputFilter : public tbb::thread_bound_filte
 						m_renderer->editBegin( "attribute", parameters );
 					}
 
-					for( CompoundObject::ObjectMap::const_iterator it = s->m_attributes->members().begin(), eIt = s->m_attributes->members().end(); it != eIt; it++ )
-					{
-						if( const StateRenderable *s = runTimeCast<const StateRenderable>( it->second.get() ) )
-						{
-							s->render( m_renderer );
-						}
-						else if( const ObjectVector *o = runTimeCast<const ObjectVector>( it->second.get() ) )
-						{
-							for( ObjectVector::MemberContainer::const_iterator it = o->members().begin(), eIt = o->members().end(); it != eIt; it++ )
-							{
-								const StateRenderable *s = runTimeCast<const StateRenderable>( it->get() );
-								if( s )
-								{
-									s->render( m_renderer );
-								}
-							}
-						}
-						else if( const Data *d = runTimeCast<const Data>( it->second.get() ) )
-						{
-							m_renderer->setAttribute( it->first, d );
-						}
-					}
-					s->m_attributes = 0;
+					outputAttributes( s->m_attributes.get(), m_renderer );
+					s->m_attributes = NULL;
 
 					if( m_editMode )
 					{

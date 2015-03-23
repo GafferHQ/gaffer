@@ -247,17 +247,10 @@ bool outputLight( const ScenePlug *scene, const ScenePlug::ScenePath &path, IECo
 		AttributeBlock attributeBlock( renderer );
 
 		renderer->setAttribute( "name", new StringData( lightHandle ) );
-
-		CompoundObject::ObjectMap::const_iterator aIt, aeIt;
-		for( aIt = attributes->members().begin(), aeIt = attributes->members().end(); aIt != aeIt; aIt++ )
-		{
-			if( const Data *attribute = runTimeCast<const Data>( aIt->second.get() ) )
-			{
-				renderer->setAttribute( aIt->first.string(), attribute );
-			}
-		}
+		outputAttributes( attributes.get(), renderer );
 
 		renderer->concatTransform( transform );
+
 		light->render( renderer );
 	}
 
@@ -383,6 +376,32 @@ void createDisplayDirectories( const IECore::CompoundObject *globals )
 			{
 				boost::filesystem::create_directories( directory );
 			}
+		}
+	}
+}
+
+void outputAttributes( const IECore::CompoundObject *attributes, IECore::Renderer *renderer )
+{
+	for( CompoundObject::ObjectMap::const_iterator it = attributes->members().begin(), eIt = attributes->members().end(); it != eIt; it++ )
+	{
+		if( const StateRenderable *s = runTimeCast<const StateRenderable>( it->second.get() ) )
+		{
+			s->render( renderer );
+		}
+		else if( const ObjectVector *o = runTimeCast<const ObjectVector>( it->second.get() ) )
+		{
+			for( ObjectVector::MemberContainer::const_iterator it = o->members().begin(), eIt = o->members().end(); it != eIt; it++ )
+			{
+				const StateRenderable *s = runTimeCast<const StateRenderable>( it->get() );
+				if( s )
+				{
+					s->render( renderer );
+				}
+			}
+		}
+		else if( const Data *d = runTimeCast<const Data>( it->second.get() ) )
+		{
+			renderer->setAttribute( it->first, d );
 		}
 	}
 }
