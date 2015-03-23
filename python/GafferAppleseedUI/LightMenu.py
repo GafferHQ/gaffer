@@ -43,10 +43,20 @@ import GafferAppleseed
 
 def appendLights( menuDefinition, prefix="/Appleseed" ) :
 
+	environmentModelsToSkip = [ "osl_environment_edf" ]
+
 	for model in appleseed.EnvironmentEDF.get_input_metadata() :
+		if model in environmentModelsToSkip :
+			continue
+
 		__addToMenu( menuDefinition, prefix + "/Environment/", model )
 
+	lightModelsToSkip = [ "sun_light" ]
+
 	for model in appleseed.Light.get_input_metadata() :
+		if model in lightModelsToSkip :
+			continue
+
 		__addToMenu( menuDefinition, prefix + "/Light/", model )
 
 def __lightCreator( name ) :

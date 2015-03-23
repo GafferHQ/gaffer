@@ -140,7 +140,7 @@ void AppleseedLight::setupPlugs( const std::string &shaderName, const asf::Dicti
 			}
 			else if( inputType == "colormap" )
 			{
-				// multiplier inputs make more sense is Gaffer as float plugs.
+				// multiplier inputs make more sense in Gaffer as float plugs.
 				if( inputName.find( "multiplier" ) != std::string::npos )
 				{
 					plug = new Gaffer::FloatPlug( inputName, Gaffer::Plug::In, 1.0f, 0.0f );
@@ -160,12 +160,6 @@ void AppleseedLight::setupPlugs( const std::string &shaderName, const asf::Dicti
 			{
 				float defaultValue = boost::lexical_cast<float>( inputMetadata.get( "default" ) );
 				plug = new Gaffer::FloatPlug( inputName, Gaffer::Plug::In, defaultValue );
-			}
-			// entity represent connections between entities that can work together,
-			// like the sky environments and the sun light.
-			else if( inputType == "entity" )
-			{
-				plug = new Gaffer::StringPlug( inputName, Gaffer::Plug::In );
 			}
 		}
 
