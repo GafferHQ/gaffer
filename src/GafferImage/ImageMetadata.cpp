@@ -69,7 +69,7 @@ const Gaffer::CompoundDataPlug *ImageMetadata::metadataPlug() const
 
 void ImageMetadata::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
-	ImageProcessor::affects( input, outputs );
+	MetadataProcessor::affects( input, outputs );
 
 	if ( input == inPlug()->metadataPlug() )
 	{

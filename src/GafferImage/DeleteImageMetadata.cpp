@@ -82,7 +82,7 @@ const Gaffer::BoolPlug *DeleteImageMetadata::invertNamesPlug() const
 
 void DeleteImageMetadata::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
-	ImageProcessor::affects( input, outputs );
+	MetadataProcessor::affects( input, outputs );
 
 	if ( input == namesPlug() || input == invertNamesPlug() )
 	{

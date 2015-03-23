@@ -186,14 +186,15 @@ Imath::Box2i Merge::computeDataWindow( const Gaffer::Context *context, const Ima
 
 void Merge::hashMetadata( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	ImageProcessor::hashMetadata( parent, context, h );
-	
 	const ImagePlugList &inputs( m_inputs.inputs() );
 	const ImagePlugList::const_iterator end( m_inputs.endIterator() );
 	for( ImagePlugList::const_iterator it( inputs.begin() ); it != end; ++it )
 	{
-		(*it)->metadataPlug()->hash( h );
+		h = (*it)->metadataPlug()->hash();
+		return;
 	}
+	
+	ImageProcessor::hashMetadata( parent, context, h );
 }
 
 IECore::ConstCompoundObjectPtr Merge::computeMetadata( const Gaffer::Context *context, const ImagePlug *parent ) const

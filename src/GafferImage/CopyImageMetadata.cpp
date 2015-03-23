@@ -93,7 +93,7 @@ const Gaffer::BoolPlug *CopyImageMetadata::invertNamesPlug() const
 
 void CopyImageMetadata::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
-	ImageProcessor::affects( input, outputs );
+	MetadataProcessor::affects( input, outputs );
 
 	if ( input == copyFromPlug()->metadataPlug() || input == namesPlug() || input == invertNamesPlug() )
 	{
@@ -111,7 +111,7 @@ void CopyImageMetadata::hashProcessedMetadata( const Gaffer::Context *context, I
 IECore::ConstCompoundObjectPtr CopyImageMetadata::computeProcessedMetadata( const Gaffer::Context *context, const IECore::CompoundObject *inputMetadata ) const
 {
 	ConstCompoundObjectPtr copyFrom = copyFromPlug()->metadataPlug()->getValue();
-	if ( inputMetadata->members().empty() && copyFrom->members().empty() )
+	if ( copyFrom->members().empty() )
 	{
 		return inputMetadata;
 	}

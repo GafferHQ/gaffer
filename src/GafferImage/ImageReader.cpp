@@ -98,7 +98,7 @@ void oiioParameterListToMetadata( const ImageIOParameterList &paramList, Compoun
 	CompoundObject::ObjectMap &members = metadata->members();
 	for ( ImageIOParameterList::const_iterator it = paramList.begin(); it != paramList.end(); ++it )
 	{
-		ObjectPtr value = 0;
+		ObjectPtr value = NULL;
 		
 		const TypeDesc &type = it->type();
 		switch ( type.basetype )

@@ -153,7 +153,7 @@ TypeDesc typeDescFromData( const Data *data, const void *&basePointer )
 		case DoubleDataTypeId :
 		{
 			basePointer = static_cast<const DoubleData *>( data )->baseReadable();
-			return TypeDesc::TypeFloat;
+			return TypeDesc( TypeDesc::DOUBLE );
 		}
 		case V2dDataTypeId :
 		{
@@ -196,7 +196,7 @@ void metadataToImageIOParameterList( const CompoundObject *metadata, ImageIOPara
 	const CompoundObject::ObjectMap &members = metadata->members();
 	for ( CompoundObject::ObjectMap::const_iterator it = members.begin(); it != members.end(); ++it )
 	{
-		const void *data = 0;
+		const void *data = NULL;
 		TypeDesc type = typeDescFromData( IECore::runTimeCast<const Data>( it->second.get() ), data );
 		if ( data )
 		{
