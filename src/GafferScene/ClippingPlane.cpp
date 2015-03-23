@@ -54,6 +54,16 @@ ClippingPlane::~ClippingPlane()
 {
 }
 
+void ClippingPlane::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
+{
+	ObjectSource::affects( input, outputs );
+
+	if( input == namePlug() )
+	{
+		outputs.push_back( outPlug()->globalsPlug() );
+	}
+}
+
 void ClippingPlane::hashGlobals( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
 	ObjectSource::hashGlobals( context, parent, h );

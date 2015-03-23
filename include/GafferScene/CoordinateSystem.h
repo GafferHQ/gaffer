@@ -52,6 +52,8 @@ class CoordinateSystem : public ObjectSource
 		CoordinateSystem( const std::string &name=defaultName<CoordinateSystem>() );
 		virtual ~CoordinateSystem();
 
+		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
+
 	protected :
 
 		virtual void hashGlobals( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const;

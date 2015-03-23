@@ -52,6 +52,8 @@ class ClippingPlane : public ObjectSource
 		ClippingPlane( const std::string &name=defaultName<ClippingPlane>() );
 		virtual ~ClippingPlane();
 
+		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
+		
 	protected :
 
 		virtual void hashGlobals( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const;
