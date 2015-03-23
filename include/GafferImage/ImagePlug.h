@@ -65,6 +65,17 @@ namespace GafferImage
 /// to transform them into image space. By using the same coordinate axis for both the screen and
 /// image space, the values taken from the transform2DPlug and Box2iPlug can be used directly and
 /// independently of the image's format.
+///
+/// Some notes on Image Metadata:
+/// Metadata is loaded into Gaffer following the OpenImageIO standards, but after that point it is
+/// considered arbitrary data that flows along with an image. The only image processing nodes that
+/// will modify the metadata are the Metadata specific nodes. Other image processing may occur which
+/// causes the implied meaning of certain metadata entries to become invalid (such as oiio:ColorSpace)
+/// but those nodes will not alter the metadata, nor behave differently based on its value.
+/// 
+/// Some notes on color space:
+/// GafferImage nodes expect to operate in linear space, with associated alpha. Users are responsible
+/// for meeting that expectation (or knowing what they're doing when they don't).
 class ImagePlug : public Gaffer::CompoundPlug
 {
 
