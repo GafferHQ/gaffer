@@ -44,7 +44,7 @@ Gaffer.Metadata.registerNode(
 
 	"description",
 	"""
-	Deletes metadata from an image.
+	Deletes metadata entries from an image based on name.
 	""",
 
 	plugs = {
@@ -53,7 +53,8 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			The names of metadata entries to be removed.
+			The names of metadata entries to be removed. This is a space separated
+			list of entry names, which accepts Gaffer's standard string wildcards.
 			""",
 
 		],

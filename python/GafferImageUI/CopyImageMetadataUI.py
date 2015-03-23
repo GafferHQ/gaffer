@@ -44,7 +44,9 @@ Gaffer.Metadata.registerNode(
 
 	"description",
 	"""
-	Copies metadata from the second image to the first image.
+	Copies metadata entries from the second image to the first image
+	based on name. If those entries already exist in the incoming
+	image metadata, their values will be overwritten.
 	""",
 
 	plugs = {
@@ -62,7 +64,8 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			The names of metadata entries to be copied.
+			The names of metadata entries to be copied. This is a space separated
+			list of entry names, which accepts Gaffer's standard string wildcards.
 			""",
 
 		],

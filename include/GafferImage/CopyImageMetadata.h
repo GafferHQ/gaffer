@@ -42,7 +42,6 @@
 namespace GafferImage
 {
 
-/// A node to set metadata values in an image without changing anything else
 class CopyImageMetadata : public MetadataProcessor
 {
 
