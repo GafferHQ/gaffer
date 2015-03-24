@@ -296,11 +296,13 @@ void Expression::updatePlugs( const std::string &dstPlugPath, std::vector<std::s
 			throw IECore::Exception( boost::str( boost::format( "Source plug \"%s\" does not exist" ) % *it ) );
 		}
 		PlugPtr inPlug = srcPlug->createCounterpart( "plug", Plug::In );
+		inPlug->setFlags( Plug::Dynamic, true );
 		inPlugs->addChild( inPlug );
 		inPlug->setInput( srcPlug );
 	}
 
 	PlugPtr outPlug = dstPlug->createCounterpart( g_outPlugName, Plug::Out );
+	outPlug->setFlags( Plug::Dynamic, true );
 	setChild( g_outPlugName, outPlug );
 	dstPlug->setInput( outPlug );
 }
