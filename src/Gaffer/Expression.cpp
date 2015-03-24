@@ -263,6 +263,7 @@ void Expression::updatePlugs( const std::string &dstPlugPath, std::vector<std::s
 	}
 
 	// otherwise try to create connections to the plugs the expression wants
+	/// \todo Early out if the plugs we have are already suitable.
 
 	ValuePlug *dstPlug = p->descendant<ValuePlug>( dstPlugPath );
 	if( !dstPlug )
