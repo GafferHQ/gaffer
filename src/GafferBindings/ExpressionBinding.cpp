@@ -50,6 +50,9 @@ using namespace boost::python;
 using namespace GafferBindings;
 using namespace Gaffer;
 
+namespace
+{
+
 class EngineWrapper : public Expression::Engine, public IECorePython::Wrapper<Expression::Engine>
 {
 	public :
@@ -174,12 +177,12 @@ struct ExpressionEngineCreator
 
 };
 
-static void registerEngine( const std::string &engineType, object creator )
+void registerEngine( const std::string &engineType, object creator )
 {
 	Expression::Engine::registerEngine( engineType, ExpressionEngineCreator( creator ) );
 }
 
-static tuple registeredEnginesWrapper()
+tuple registeredEnginesWrapper()
 {
 	std::vector<std::string> engineTypes;
 	Expression::Engine::registeredEngines( engineTypes );
@@ -190,6 +193,8 @@ static tuple registeredEnginesWrapper()
 	}
 	return boost::python::tuple( l );
 }
+
+} // namespace
 
 void GafferBindings::bindExpression()
 {
