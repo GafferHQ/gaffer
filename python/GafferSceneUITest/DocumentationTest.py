@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,13 +34,21 @@
 #
 ##########################################################################
 
-from SceneViewTest import SceneViewTest
-from ShaderAssignmentUITest import ShaderAssignmentUITest
-from StandardGraphLayoutTest import StandardGraphLayoutTest
-from SceneGadgetTest import SceneGadgetTest
-from SceneInspectorTest import SceneInspectorTest
-from SceneHierarchyTest import SceneHierarchyTest
-from DocumentationTest import DocumentationTest
+import GafferUITest
+
+import Gaffer
+import GafferScene
+import GafferSceneUI
+
+class DocumentationTest( GafferUITest.TestCase ) :
+
+	def test( self ) :
+
+		self.maxDiff = None
+		self.assertNodesAreDocumented(
+			GafferScene,
+			additionalTerminalPlugTypes = ( GafferScene.ScenePlug, Gaffer.CompoundDataPlug.MemberPlug )
+		)
 
 if __name__ == "__main__":
 	unittest.main()
