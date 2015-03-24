@@ -78,7 +78,6 @@ Expression::Expression( const std::string &name )
 	);
 
 	plugSetSignal().connect( boost::bind( &Expression::plugSet, this, ::_1 ) );
-	parentChangedSignal().connect( boost::bind( &Expression::parentChanged, this, ::_1, ::_2 ) );
 }
 
 Expression::~Expression()
@@ -243,21 +242,6 @@ void Expression::plugSet( Plug *plug )
 	}
 }
 
-void Expression::parentChanged( GraphComponent *child, GraphComponent *oldParent )
-{
-	assert( this == child );
-	if( oldParent == 0 && parent<GraphComponent>() )
-	{
-		// assume we've just been created and parented during the loading of a script.
-		// our plugs are already set up, so we just need to make sure we have an engine.
-		std::string expression = expressionPlug()->getValue();
-		if( expression.size() )
-		{
-			m_engine = Engine::create( enginePlug()->getValue(), expression );
-		}
-	}
-}
-
 void Expression::updatePlugs( const std::string &dstPlugPath, std::vector<std::string> &srcPlugPaths )
 {
 	Node *p = parent<Node>();
@@ -279,6 +263,7 @@ void Expression::updatePlugs( const std::string &dstPlugPath, std::vector<std::s
 	}
 
 	// otherwise try to create connections to the plugs the expression wants
+	/// \todo Early out if the plugs we have are already suitable.
 
 	ValuePlug *dstPlug = p->descendant<ValuePlug>( dstPlugPath );
 	if( !dstPlug )
@@ -296,11 +281,13 @@ void Expression::updatePlugs( const std::string &dstPlugPath, std::vector<std::s
 			throw IECore::Exception( boost::str( boost::format( "Source plug \"%s\" does not exist" ) % *it ) );
 		}
 		PlugPtr inPlug = srcPlug->createCounterpart( "plug", Plug::In );
+		inPlug->setFlags( Plug::Dynamic, true );
 		inPlugs->addChild( inPlug );
 		inPlug->setInput( srcPlug );
 	}
 
 	PlugPtr outPlug = dstPlug->createCounterpart( g_outPlugName, Plug::Out );
+	outPlug->setFlags( Plug::Dynamic, true );
 	setChild( g_outPlugName, outPlug );
 	dstPlug->setInput( outPlug );
 }
