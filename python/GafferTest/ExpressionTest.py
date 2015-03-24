@@ -274,6 +274,51 @@ class ExpressionTest( GafferTest.TestCase ) :
 		s["e"]["expression"].setValue( "" )
 		self.failUnless( s["n"]["sum"] in [ p[0] for p in dirtied ] )
 		
+	def testSerialisationCreationOrder( self ) :
+
+		# Create a script where the expression node is created before the nodes it's targeting,
+		# and make sure it still serialises/loads correctly.
+		s = Gaffer.ScriptNode()
+
+		s["e"] = Gaffer.Expression()
+
+		s["m1"] = GafferTest.MultiplyNode()
+		s["m1"]["op1"].setValue( 10 )
+		s["m1"]["op2"].setValue( 20 )
+
+		s["m2"] = GafferTest.MultiplyNode()
+		s["m2"]["op2"].setValue( 1 )
+
+		s["e"]["expression"].setValue( "parent[\"m2\"][\"op1\"] = parent[\"m1\"][\"product\"] * 2" )
+		self.assertEqual( s["m2"]["product"].getValue(), 400 )
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+		self.assertEqual( s2["m2"]["product"].getValue(), 400 )
+
+	def testSerialisationPlugAccumulation( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = Gaffer.Node()
+		s["n"]["user"].addChild( Gaffer.FloatPlug( "f", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+
+		s["e"] = Gaffer.Expression()
+		s["e"]["engine"].setValue( "python" )
+
+		s["e"]["expression"].setValue( "parent[\"n\"][\"user\"][\"f\"] = 2" )
+
+		self.assertEqual( s["n"]["user"]["f"].getValue(), 2 )
+
+		ss = s.serialise()
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( ss )
+
+		self.assertEqual( s2["n"]["user"]["f"].getValue(), 2 )
+
+		self.failUnless( s2["e"].getChild("out1") is None )
+		self.failUnless( s2["e"].getChild("in1") is None )
 
 if __name__ == "__main__":
 	unittest.main()
