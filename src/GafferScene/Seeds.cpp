@@ -108,12 +108,21 @@ void Seeds::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
 
 void Seeds::hashBranchBound( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	h = inPlug()->boundHash( parentPath );
+	BranchCreator::hashBranchBound( parentPath, branchPath, context, h );
+	h.append( inPlug()->boundHash( parentPath ) );
 }
 
 Imath::Box3f Seeds::computeBranchBound( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const
 {
-	return inPlug()->bound( parentPath );
+	Box3f b =  inPlug()->bound( parentPath );
+	if( !b.isEmpty() )
+	{
+		// The PointsPrimitive we make has a default point width of 1,
+		// so we must expand our bounding box to take that into account.
+		b.min -= V3f( 0.5 );
+		b.max += V3f( 0.5 );
+	}
+	return b;
 }
 
 void Seeds::hashBranchTransform( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const
