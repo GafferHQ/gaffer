@@ -38,6 +38,8 @@
 #ifndef GAFFER_DEPENDENCYNODE_H
 #define GAFFER_DEPENDENCYNODE_H
 
+#include "tbb/enumerable_thread_specific.h"
+
 #include "Gaffer/Node.h"
 
 namespace Gaffer
@@ -89,6 +91,9 @@ class DependencyNode : public Node
 
 		friend class Plug;
 		friend class ValuePlug;
+		friend class CompoundPlug;
+		class DirtyPlugs;
+		static tbb::enumerable_thread_specific<DirtyPlugs> g_dirtyPlugs;
 
 		static void propagateDirtiness( Plug *plugToDirty );
 

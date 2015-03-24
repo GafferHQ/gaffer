@@ -56,7 +56,7 @@ class PrimitiveVariablesTest( GafferSceneTest.SceneTestCase ) :
 		self.assertScenesEqual( s["out"], p["out"], childPlugNamesToIgnore=( "object", ) )
 		self.assertSceneHashesEqual( s["out"], p["out"], childPlugNamesToIgnore=( "object", ) )
 
-		self.assertNotEqual( s["out"].objectHash( "/sphere" ), p["out"].objectHash( "/sphere" ) )
+		self.assertNotEqual( s["out"].objectHash( "/sphere" ), p["out"].objectHash( "/sphere" ) ) # fails because addMember does not correctly propagate dirtiness
 		self.assertNotEqual( s["out"].object( "/sphere" ), p["out"].object( "/sphere" ) )
 
 		o1 = s["out"].object( "/sphere" )

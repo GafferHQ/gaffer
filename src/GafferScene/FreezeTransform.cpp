@@ -85,14 +85,16 @@ void FreezeTransform::affects( const Gaffer::Plug *input, AffectedPlugsContainer
 	{
 		outputs.push_back( transformPlug() );
 	}
-	else if(
-		input == transformPlug() ||
-		input == filterPlug()
-	)
+	else if( input == filterPlug() )
+	{
+		outputs.push_back( transformPlug() );
+	}
+	else if( input == transformPlug() )
 	{
 		outputs.push_back( outPlug()->transformPlug() );
 		outputs.push_back( outPlug()->boundPlug() );
 		outputs.push_back( outPlug()->objectPlug() );
+
 	}
 }
 

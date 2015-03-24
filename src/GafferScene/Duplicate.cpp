@@ -139,6 +139,10 @@ void Duplicate::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outp
 		outputs.push_back( outParentPlug() );
 		outputs.push_back( childNamesPlug() );
 	}
+	else if( input == inPlug()->childNamesPlug() )
+	{
+		outputs.push_back( childNamesPlug() );
+	}
 	else if( input == copiesPlug() )
 	{
 		outputs.push_back( childNamesPlug() );
@@ -149,7 +153,7 @@ void Duplicate::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outp
 	}
 	else if( input == childNamesPlug() )
 	{
-		outputs.push_back( outPlug()->childNamesPlug() );
+		outputs.push_back( getChild<Plug>("__mapping") );
 	}
 	else if( transformPlug()->isAncestorOf( input ) )
 	{

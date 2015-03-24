@@ -36,9 +36,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include <stack>
-
-#include "tbb/enumerable_thread_specific.h"
-
+#include "tbb/mutex.h"
 #include "boost/bind.hpp"
 #include "boost/format.hpp"
 #include "boost/unordered_map.hpp"
@@ -204,7 +202,6 @@ class ValuePlug::Computation
 			m_threadData->computationStack.pop();
 			if( m_threadData->computationStack.empty() )
 			{
-				m_threadData->hashCache.clear();
 				m_threadData->errorSource = NULL;
 			}
 		}
@@ -235,16 +232,28 @@ class ValuePlug::Computation
 				return *m_precomputedHash;
 			}
 
-			HashCache &hashCache = m_threadData->hashCache;
-			HashCacheKey key( m_resultPlug, Context::current()->hash() );
-			HashCache::iterator it = hashCache.find( key );
-			if( it != hashCache.end() )
+			HashCache &hashCache = m_resultPlug->m_hashCaches.local();
+			if( hashCache.graphUpdateCount != g_graphUpdateCount )
+			{
+				// if the local update count is different to the global one, 
+				// this hash cache is invalid, so we need to clear it:
+				hashCache.graphUpdateCount = g_graphUpdateCount;
+				hashCache.cache.clear();
+			}
+			
+			IECore::MurmurHash key = Context::current()->hash();
+			HashCacheIterator it = hashCache.cache.get<1>().find( key );
+			if( it != hashCache.cache.get<1>().end() )
 			{
 				return it->second;
 			}
 
 			IECore::MurmurHash h = hashInternal();
-			hashCache[key] = h;
+			if( hashCache.cache.size() == 5 )
+			{
+				hashCache.cache.get<0>().pop_front();
+			}
+			hashCache.cache.get<1>().insert( std::make_pair(key, h) );
 			return h;
 		}
 
@@ -370,23 +379,6 @@ class ValuePlug::Computation
 			}
 		}
 
-		// During a single graph evaluation, we actually call ValuePlug::hash()
-		// many times for the same plugs. First hash() is called for the terminating plug,
-		// which will call hash() for all the upstream plugs, and then compute() is called
-		// for the terminating plug, which will call getValue() on the upstream plugs. But
-		// those upstream plugs will need to call their hash() again in getValue(), so their
-		// value can be cached. This ripples on up the chain, leading to quadratic complexity
-		// in the length of the chain of nodes - not good. Thanks is due to David Minor for
-		// being the first to point this out.
-		//
-		// We address this problem by keeping a small per-thread cache of hashes, indexed
-		// by the plug the hash is for and the context the hash was performed in. The
-		// typedefs below describe that data structure. Note that the entries in this cache
-		// are short lived - we flush the cache upon completion of each evaluation of the
-		// graph, as subsequent changes to plug values and connections invalidate our entries.
-		typedef std::pair<const ValuePlug *, IECore::MurmurHash> HashCacheKey;
-		typedef boost::unordered_map<HashCacheKey, IECore::MurmurHash> HashCache;
-
 		// A computation starts with a call to ValuePlug::getValue(), but the compute()
 		// that triggers will make calls to getValue() on upstream plugs too. We use this
 		// stack to keep track of the current computation - each upstream evaluation pushes
@@ -398,7 +390,6 @@ class ValuePlug::Computation
 		struct ThreadData
 		{
 			ThreadData() :	errorSource( NULL ) {}
-			HashCache hashCache;
 			ComputationStack computationStack;
 			const Plug *errorSource;
 		};
@@ -417,8 +408,7 @@ class ValuePlug::Computation
 		}
 
 		// A cache mapping from ValuePlug::hash() to the result of the previous computation
-		// for that hash. This allows us to cache results for faster repeat evaluation. Unlike
-		// the HashCache, the ValueCache persists from one graph evaluation to the next.
+		// for that hash. This allows us to cache results for faster repeat evaluation.
 		typedef IECore::LRUCache<IECore::MurmurHash, IECore::ConstObjectPtr> ValueCache;
 		static ValueCache g_valueCache;
 
@@ -491,6 +481,8 @@ IE_CORE_DEFINERUNTIMETYPED( ValuePlug::SetValueAction );
 //////////////////////////////////////////////////////////////////////////
 
 IE_CORE_DEFINERUNTIMETYPED( ValuePlug );
+
+boost::value_initialized<int> ValuePlug::g_graphUpdateCount;
 
 /// \todo We may want to avoid repeatedly storing copies of the same default value
 /// passed to this function. Perhaps by having a central map of unique values here,

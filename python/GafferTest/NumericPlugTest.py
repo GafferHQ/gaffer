@@ -460,12 +460,14 @@ class NumericPlugTest( GafferTest.TestCase ) :
 		self.assertEqual( n.numHashCalls, 1 )
 		self.assertEqual( n.numComputeCalls, 1 )
 
+		# hash values in this context should be stored on the plug, so numHashCalls
+		# should stay at 1:
 		h = n["sum"].hash()
-		self.assertEqual( n.numHashCalls, 2 )
+		self.assertEqual( n.numHashCalls, 1 )
 		self.assertEqual( n.numComputeCalls, 1 )
 
 		self.assertEqual( n["sum"].getValue( _precomputedHash = h ), 30 )
-		self.assertEqual( n.numHashCalls, 2 )
+		self.assertEqual( n.numHashCalls, 1 )
 		self.assertEqual( n.numComputeCalls, 1 )
 
 	def testIsSetToDefault( self ) :

@@ -140,7 +140,7 @@ class StringPlugTest( GafferTest.TestCase ) :
 		self.assertEqual( n["out"].getValue(), "" )
 
 		os.environ["A"] = "a"
-		self.assertEqual( n["out"].getValue(), "a" )
+		self.assertEqual( n["out"].getValue(), "a" ) # fails because changing the environment variable did not trigger propagateDirtiness()
 		h2 = n["out"].hash()
 		self.assertNotEqual( h1, h2 )
 

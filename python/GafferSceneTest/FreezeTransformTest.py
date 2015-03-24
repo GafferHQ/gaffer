@@ -39,6 +39,7 @@ import unittest
 import IECore
 
 import Gaffer
+import GafferTest
 import GafferScene
 import GafferSceneTest
 
@@ -100,6 +101,30 @@ class FreezeTransformTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertEqual( t["out"].bound( "/group/plane" ), IECore.Box3f( IECore.V3f( 1.5, 1.5, 3 ), IECore.V3f( 2.5, 2.5, 3 ) ) )
 		self.assertEqual( t["out"].bound( "/group/plane1" ), IECore.Box3f( IECore.V3f( 0.5, -0.5, 0 ), IECore.V3f( 1.5, 0.5, 0 ) ) )
+
+	def testDirtyPropagation( self ) :
+
+		p1 = GafferScene.Plane()
+		p1["transform"]["translate"].setValue( IECore.V3f( 1, 2, 3 ) )
+
+		p2 = GafferScene.Plane()
+		p2["transform"]["translate"].setValue( IECore.V3f( 1, 2, 3 ) )
+
+		g = GafferScene.Group()
+		g["transform"]["translate"].setValue( IECore.V3f( 1, 0, 0 ) )
+		g["in"].setInput( p1["out"] )
+		g["in1"].setInput( p2["out"] )
+
+		f = GafferScene.PathFilter()
+		f["paths"].setValue( IECore.StringVectorData( [ "/group/plane" ] ) )
+
+		t = GafferScene.FreezeTransform()
+		t["in"].setInput( g["out"] )
+		t["filter"].setInput( f["out"] )
+
+		dirtied = GafferTest.CapturingSlot( t.plugDirtiedSignal() )
+		f["paths"].setValue( IECore.StringVectorData( [ "/group", "/group/plane" ] ) )
+		self.failUnless( t["__transform"] in [ p[0] for p in dirtied ] )
 
 if __name__ == "__main__":
 	unittest.main()

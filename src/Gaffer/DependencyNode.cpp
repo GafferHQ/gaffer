@@ -91,9 +91,6 @@ const Plug *DependencyNode::correspondingInput( const Plug *output ) const
 // Dirty propagation
 //////////////////////////////////////////////////////////////////////////
 
-namespace
-{
-
 // We don't emit dirtiness immediately for each plug as we traverse the
 // dependency graph for two reasons :
 //
@@ -107,7 +104,7 @@ namespace
 // The container used is stored per-thread as although it's illegal to be
 // monkeying with a script from multiple threads, it's perfectly legal to
 // be monkeying with a different script in each thread.
-class DirtyPlugs
+class DependencyNode::DirtyPlugs
 {
 
 	public :
@@ -232,13 +229,15 @@ class DirtyPlugs
 
 };
 
-} // namespace
-
-static tbb::enumerable_thread_specific<DirtyPlugs> g_dirtyPlugs;
+tbb::enumerable_thread_specific<DependencyNode::DirtyPlugs> DependencyNode::g_dirtyPlugs;
 
 void DependencyNode::propagateDirtiness( Plug *plugToDirty )
 {
 	DirtyPlugs &dirtyPlugs = g_dirtyPlugs.local();
+
+	// update the global graph update count, so the computation engine knows to
+	// invalidate hash caches from the last round of computations:
+	++ValuePlug::g_graphUpdateCount;
 
 	// If the container is currently empty then we are at the start of a traversal,
 	// and will emit plugDirtiedSignal() and empty the container before returning
