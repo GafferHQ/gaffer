@@ -39,7 +39,6 @@
 #include "IECore/MessageHandler.h"
 #include "IECorePython/RefCountedBinding.h"
 #include "IECorePython/ScopedGILLock.h"
-#include "IECorePython/Wrapper.h"
 
 #include "Gaffer/Expression.h"
 #include "GafferBindings/DependencyNodeBinding.h"
@@ -53,106 +52,113 @@ using namespace Gaffer;
 namespace
 {
 
-class EngineWrapper : public Expression::Engine, public IECorePython::Wrapper<Expression::Engine>
+class EngineWrapper : public IECorePython::RefCountedWrapper<Expression::Engine>
 {
 	public :
 
 		EngineWrapper( PyObject *self )
-				:	Engine(), IECorePython::Wrapper<Expression::Engine>( self, this )
+				:	IECorePython::RefCountedWrapper<Expression::Engine>( self )
 		{
 		}
 
 		virtual std::string outPlug()
 		{
-			IECorePython::ScopedGILLock gilLock;
-			try
+			if( isSubclassed() )
 			{
-				boost::python::override f = this->get_override( "outPlug" );
-				if( f )
+				IECorePython::ScopedGILLock gilLock;
+				try
 				{
-					return f();
+					object f = this->methodOverride( "outPlug" );
+					if( f )
+					{
+						return extract<std::string>( f() );
+					}
 				}
-				else
+				catch( const error_already_set &e )
 				{
-					msg( IECore::Msg::Error, "EngineWrapper::outPlug", "outPlug method not defined in python." );
+					translatePythonException();
 				}
 			}
-			catch( const error_already_set &e )
-			{
-				translatePythonException();
-			}
+			
+			msg( IECore::Msg::Error, "EngineWrapper::outPlug", "outPlug method not defined in python." );
 			return "";
 		}
 
 		virtual void inPlugs( std::vector<std::string> &plugs )
 		{
-			IECorePython::ScopedGILLock gilLock;
-			try
+			if( isSubclassed() )
 			{
-				override f = this->get_override( "inPlugs" );
-				if( f )
+				IECorePython::ScopedGILLock gilLock;
+				try
 				{
-					list pythonPlugs = f();
-					container_utils::extend_container( plugs, pythonPlugs );
+					object f = this->methodOverride( "inPlugs" );
+					if( f )
+					{
+						list pythonPlugs = extract<list>( f() );
+						container_utils::extend_container( plugs, pythonPlugs );
+						return;
+					}
 				}
-				else
+				catch( const error_already_set &e )
 				{
-					msg( IECore::Msg::Error, "EngineWrapper::inPlugs", "inPlugs method not defined in python." );
+					translatePythonException();
 				}
 			}
-			catch( const error_already_set &e )
-			{
-				translatePythonException();
-			}
+
+			msg( IECore::Msg::Error, "EngineWrapper::inPlugs", "inPlugs method not defined in python." );
 		}
 
 		virtual void contextNames( std::vector<IECore::InternedString> &names )
 		{
-			IECorePython::ScopedGILLock gilLock;
-			try
+			if( isSubclassed() )
 			{
-				override f = this->get_override( "contextNames" );
-				if( f )
+				IECorePython::ScopedGILLock gilLock;
+				try
 				{
-					list pythonNames = f();
-					container_utils::extend_container( names, pythonNames );
+					object f = this->methodOverride( "contextNames" );
+					if( f )
+					{
+						list pythonNames = extract<list>( f() );
+						container_utils::extend_container( names, pythonNames );
+						return;
+					}
 				}
-				else
+				catch( const error_already_set &e )
 				{
-					msg( IECore::Msg::Error, "EngineWrapper::contextNames", "contextNames method not defined in python." );
+					translatePythonException();
 				}
 			}
-			catch( const error_already_set &e )
-			{
-				translatePythonException();
-			}
+
+			msg( IECore::Msg::Error, "EngineWrapper::contextNames", "contextNames method not defined in python." );
 		}
 
 		virtual void execute( const Context *context, const std::vector<const ValuePlug *> &proxyInputs, ValuePlug *proxyOutput )
 		{
-			IECorePython::ScopedGILLock gilLock;
-			try
+			if( isSubclassed() )
 			{
-				override f = this->get_override( "execute" );
-				if( f )
+				IECorePython::ScopedGILLock gilLock;
+				try
 				{
-					list pythonProxyInputs;
-					for( std::vector<const ValuePlug *>::const_iterator it = proxyInputs.begin(); it!=proxyInputs.end(); it++ )
+					object f = this->methodOverride( "execute" );
+					if( f )
 					{
-						pythonProxyInputs.append( PlugPtr( const_cast<ValuePlug *>( *it ) ) );
-					}
+						list pythonProxyInputs;
+						for( std::vector<const ValuePlug *>::const_iterator it = proxyInputs.begin(); it!=proxyInputs.end(); it++ )
+						{
+							pythonProxyInputs.append( PlugPtr( const_cast<ValuePlug *>( *it ) ) );
+						}
 
-					f( ContextPtr( const_cast<Context *>( context ) ), pythonProxyInputs, ValuePlugPtr( proxyOutput ) );
+						f( ContextPtr( const_cast<Context *>( context ) ), pythonProxyInputs, ValuePlugPtr( proxyOutput ) );
+						return;
+					}
 				}
-				else
+				catch( const error_already_set &e )
 				{
-					msg( IECore::Msg::Error, "EngineWrapper::execute", "execute method not defined in python." );
+					translatePythonException();
 				}
 			}
-			catch( const error_already_set &e )
-			{
-				translatePythonException();
-			}
+			
+			msg( IECore::Msg::Error, "EngineWrapper::execute", "execute method not defined in python." );
 		}
 
 };
