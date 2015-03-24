@@ -443,8 +443,27 @@ void ImageWriter::execute() const
 	}
 	appendImageIOParameter( "DocumentName", new StringData( document ), spec.extra_attribs );
 	
-	// Add the metadata to the spec
-	metadataToImageIOParameterList( inPlug()->metadataPlug()->getValue().get(), spec.extra_attribs );
+	// Add the metadata to the spec, removing metadata that could affect the resulting channel data
+	CompoundObjectPtr metadata = inPlug()->metadataPlug()->getValue()->copy();
+	CompoundObject::ObjectMap &members = metadata->members();
+	
+	std::vector<InternedString> oiioSpecifics;
+	oiioSpecifics.push_back( "oiio:ColorSpace" );
+	oiioSpecifics.push_back( "oiio:Gamma" );
+	oiioSpecifics.push_back( "oiio:UnassociatedAlpha" );
+	for ( std::vector<InternedString>::iterator it = oiioSpecifics.begin(); it != oiioSpecifics.end(); ++it )
+	{
+		CompoundObject::ObjectMap::iterator mIt = members.find( *it );
+		if ( mIt != members.end() )
+		{
+			members.erase( mIt );
+		}
+	}
+	
+	metadataToImageIOParameterList( metadata.get(), spec.extra_attribs );
+	
+	// PixelAspectRatio must be defined by the FormatPlug
+	appendImageIOParameter( "PixelAspectRatio", new FloatData( inPlug()->formatPlug()->getValue().getPixelAspect() ), spec.extra_attribs );
 	
 	// create the directories before opening the file
 	boost::filesystem::path directory = boost::filesystem::path( fileName ).parent_path();

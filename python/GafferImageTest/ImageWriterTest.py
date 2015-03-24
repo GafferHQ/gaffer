@@ -341,6 +341,99 @@ class ImageWriterTest( unittest.TestCase ) :
 		result["refreshCount"].setValue( result["refreshCount"].getValue() + 1 )
 		self.assertEqual( result["out"]["metadata"].getValue()["DocumentName"].value, "/my/gaffer/script.gfr" )
 	
+	def __testMetadataDoesNotAffectPixels( self, ext, supportsIPTC = False ) :
+		
+		r = GafferImage.ImageReader()
+		r["fileName"].setValue( self.__rgbFilePath+"."+ext )
+		m = GafferImage.ImageMetadata()
+		m["in"].setInput( r["out"] )
+		# lets tell a few lies
+		m["metadata"].addMember( "PixelAspectRatio", IECore.FloatData( 2 ) )
+		m["metadata"].addMember( "oiio:ColorSpace", IECore.StringData( "Rec709" ) )
+		m["metadata"].addMember( "oiio:BitsPerSample", IECore.IntData( 8 ) )
+		m["metadata"].addMember( "oiio:UnassociatedAlpha", IECore.IntData( 1 ) )
+		m["metadata"].addMember( "oiio:Gamma", IECore.FloatData( 0.25 ) )
+		
+		testFile = self.__testFile( "metadataHasNoAffect", "RGBA", ext )
+		self.failIf( os.path.exists( testFile ) )
+		
+		w = GafferImage.ImageWriter()
+		w["in"].setInput( m["out"] )
+		w["fileName"].setValue( testFile )
+		w["channels"].setValue( IECore.StringVectorData( m["out"]["channelNames"].getValue() ) )
+		
+		testFile2 = self.__testFile( "noNewMetadata", "RGBA", ext )
+		self.failIf( os.path.exists( testFile2 ) )
+		
+		w2 = GafferImage.ImageWriter()
+		w2["in"].setInput( r["out"] )
+		w2["fileName"].setValue( testFile2 )
+		w2["channels"].setValue( IECore.StringVectorData( r["out"]["channelNames"].getValue() ) )
+		
+		inMetadata = w["in"]["metadata"].getValue()
+		self.assertEqual( inMetadata["PixelAspectRatio"], IECore.FloatData( 2 ) )
+		self.assertEqual( inMetadata["oiio:ColorSpace"], IECore.StringData( "Rec709" ) )
+		self.assertEqual( inMetadata["oiio:BitsPerSample"], IECore.IntData( 8 ) )
+		self.assertEqual( inMetadata["oiio:UnassociatedAlpha"], IECore.IntData( 1 ) )
+		self.assertEqual( inMetadata["oiio:Gamma"], IECore.FloatData( 0.25 ) )
+		
+		with Gaffer.Context() :
+			w.execute()
+			w2.execute()
+		self.failUnless( os.path.exists( testFile ) )
+		self.failUnless( os.path.exists( testFile2 ) )
+		
+		after = GafferImage.ImageReader()
+		after["fileName"].setValue( testFile )
+		
+		before = GafferImage.ImageReader()
+		before["fileName"].setValue( testFile2 )
+		
+		inImage = w["in"].image()
+		afterImage = after["out"].image()
+		beforeImage = before["out"].image()
+		
+		inImage.blindData().clear()
+		afterImage.blindData().clear()
+		beforeImage.blindData().clear()
+		
+		self.assertEqual( afterImage, inImage )
+		self.assertEqual( afterImage, beforeImage )
+		
+		self.assertEqual( after["out"]["format"].getValue(), r["out"]["format"].getValue() )
+		self.assertEqual( after["out"]["format"].getValue(), before["out"]["format"].getValue() )
+		
+		self.assertEqual( after["out"]["dataWindow"].getValue(), r["out"]["dataWindow"].getValue() )
+		self.assertEqual( after["out"]["dataWindow"].getValue(), before["out"]["dataWindow"].getValue() )
+		
+		afterMetadata = after["out"]["metadata"].getValue()
+		beforeMetadata = before["out"]["metadata"].getValue()
+		expectedMetadata = r["out"]["metadata"].getValue()
+		# they were written at different times so we can't expect those values to match
+		beforeMetadata["DateTime"] = afterMetadata["DateTime"]
+		expectedMetadata["DateTime"] = afterMetadata["DateTime"]
+		# the writer adds several standard attributes that aren't in the original file
+		expectedMetadata["Software"] = IECore.StringData( "Gaffer " + Gaffer.About.versionString() )
+		expectedMetadata["HostComputer"] = IECore.StringData( platform.node() )
+		expectedMetadata["Artist"] = IECore.StringData( os.getlogin() )
+		expectedMetadata["DocumentName"] = IECore.StringData( "untitled" )
+		# some formats support IPTC standards, and some of the standard metadata
+		# is translated automatically by OpenImageIO.
+		if supportsIPTC :
+			expectedMetadata["IPTC:OriginatingProgram"] = expectedMetadata["Software"]
+			expectedMetadata["IPTC:Creator"] = expectedMetadata["Artist"]
+		
+		self.assertEqual( afterMetadata, expectedMetadata )
+		self.assertEqual( afterMetadata, beforeMetadata )
+	
+	def testExrMetadata( self ) :
+		
+		self.__testMetadataDoesNotAffectPixels( "exr" )
+	
+	def testTiffMetadata( self ) :
+		
+		self.__testMetadataDoesNotAffectPixels( "tif", supportsIPTC = True )
+	
 	def tearDown( self ) :
 
 		if os.path.isdir( self.__testDir ) :
