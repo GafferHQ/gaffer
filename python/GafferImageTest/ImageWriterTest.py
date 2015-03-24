@@ -35,6 +35,7 @@
 ##########################################################################
 
 import os
+import platform
 import shutil
 import sys
 import unittest
@@ -88,15 +89,15 @@ class ImageWriterTest( unittest.TestCase ) :
 		self.failUnless( w["in"].acceptsInput( p ) )
 
 	def testTiffWrite( self ) :
-		self.__testExtension( "tif" )
+		self.__testExtension( "tif", supportsIPTC = True )
 
 	@unittest.expectedFailure
 	def testJpgWrite( self ) :
-		self.__testExtension( "jpg" )
+		self.__testExtension( "jpg", supportsIPTC = True, metadataToIgnore = [ "DocumentName", "HostComputer" ] )
 
 	@unittest.expectedFailure
 	def testTgaWrite( self ) :
-		self.__testExtension( "tga" )
+		self.__testExtension( "tga", metadataToIgnore = [ "compression", "HostComputer", "Software" ] )
 
 	def testExrWrite( self ) :
 		self.__testExtension( "exr" )
@@ -135,7 +136,7 @@ class ImageWriterTest( unittest.TestCase ) :
 
 
 	# Write an RGBA image that has a data window to various supported formats and in both scanline and tile modes.
-	def __testExtension( self, ext ) :
+	def __testExtension( self, ext, supportsIPTC = False, metadataToIgnore = [] ) :
 
 		r = GafferImage.ImageReader()
 		r["fileName"].setValue( self.__rgbFilePath+".exr" )
@@ -175,9 +176,29 @@ class ImageWriterTest( unittest.TestCase ) :
 			writerMetadata = writerOutput["out"]["metadata"].getValue()
 			# they were written at different times so
 			# we can't expect those values to match
-			del writerMetadata["DateTime"]
-			if "DateTime" in expectedMetadata :
-				del expectedMetadata["DateTime"]
+			if "DateTime" in writerMetadata :
+				expectedMetadata["DateTime"] = writerMetadata["DateTime"]
+			
+			# the writer adds several standard attributes that aren't in the original file
+			expectedMetadata["Software"] = IECore.StringData( "Gaffer " + Gaffer.About.versionString() )
+			expectedMetadata["HostComputer"] = IECore.StringData( platform.node() )
+			expectedMetadata["Artist"] = IECore.StringData( os.getlogin() )
+			expectedMetadata["DocumentName"] = IECore.StringData( "untitled" )
+			
+			# some formats support IPTC standards, and some of the standard metadata
+			# is translated automatically by OpenImageIO.
+			if supportsIPTC :
+				expectedMetadata["IPTC:OriginatingProgram"] = expectedMetadata["Software"]
+				expectedMetadata["IPTC:Creator"] = expectedMetadata["Artist"]
+			
+			# some input files don't contain all the metadata that the ImageWriter
+			# will create, and some output files don't support all the metadata
+			# that the ImageWriter attempt to create.
+			for name in metadataToIgnore :
+				if name in writerMetadata :
+					del writerMetadata[name]
+				if name in expectedMetadata :
+					del expectedMetadata[name]
 			
 			self.assertEqual( expectedMetadata, writerMetadata )
 			
@@ -279,6 +300,47 @@ class ImageWriterTest( unittest.TestCase ) :
 		ss = s.serialise()
 		self.assertFalse( "out" in ss )
 
+	def testMetadataDocumentName( self ) :
+		
+		r = GafferImage.ImageReader()
+		r["fileName"].setValue( self.__rgbFilePath+".exr" )
+		w = GafferImage.ImageWriter()
+		
+		testFile = self.__testFile( "metadataTest", "RGBA", "exr" )
+		self.failIf( os.path.exists( testFile ) )
+
+		w["in"].setInput( r["out"] )
+		w["fileName"].setValue( testFile )
+		
+		with Gaffer.Context() :
+			w.execute()
+		self.failUnless( os.path.exists( testFile ) )
+		
+		result = GafferImage.ImageReader()
+		result["fileName"].setValue( testFile )
+		
+		self.assertEqual( result["out"]["metadata"].getValue()["DocumentName"].value, "untitled" )
+		
+		# add the writer to a script
+		
+		s = Gaffer.ScriptNode()
+		s.addChild( w )
+		
+		with Gaffer.Context() :
+			w.execute()
+		
+		result["refreshCount"].setValue( result["refreshCount"].getValue() + 1 )
+		self.assertEqual( result["out"]["metadata"].getValue()["DocumentName"].value, "untitled" )
+		
+		# actually set the script's file name
+		s["fileName"].setValue( "/my/gaffer/script.gfr" )
+		
+		with Gaffer.Context() :
+			w.execute()
+		
+		result["refreshCount"].setValue( result["refreshCount"].getValue() + 1 )
+		self.assertEqual( result["out"]["metadata"].getValue()["DocumentName"].value, "/my/gaffer/script.gfr" )
+	
 	def tearDown( self ) :
 
 		if os.path.isdir( self.__testDir ) :

@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2013-2014, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2013-2015, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,6 +34,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include <sys/utsname.h>
+
 #include "boost/bind.hpp"
 #include "boost/filesystem.hpp"
 
@@ -41,6 +43,7 @@
 OIIO_NAMESPACE_USING
 
 #include "Gaffer/Context.h"
+#include "Gaffer/ScriptNode.h"
 
 #include "GafferImage/ImageWriter.h"
 #include "GafferImage/ImagePlug.h"
@@ -191,18 +194,23 @@ TypeDesc typeDescFromData( const Data *data, const void *&basePointer )
 	}
 };
 
+void appendImageIOParameter( const std::string &name, const Data *data, ImageIOParameterList &paramList )
+{
+	const void *value = NULL;
+	TypeDesc type = typeDescFromData( data, value );
+	if ( value )
+	{
+		ParamValue &param = paramList.grow();
+		param.init( name, type, 1, value );
+	}
+}
+
 void metadataToImageIOParameterList( const CompoundObject *metadata, ImageIOParameterList &paramList )
 {
 	const CompoundObject::ObjectMap &members = metadata->members();
 	for ( CompoundObject::ObjectMap::const_iterator it = members.begin(); it != members.end(); ++it )
 	{
-		const void *data = NULL;
-		TypeDesc type = typeDescFromData( IECore::runTimeCast<const Data>( it->second.get() ), data );
-		if ( data )
-		{
-			ParamValue &param = paramList.grow();
-			param.init( it->first, type, 1, data );
-		}
+		appendImageIOParameter( it->first, IECore::runTimeCast<const Data>( it->second.get() ), paramList );
 	}
 }
 
@@ -415,6 +423,26 @@ void ImageWriter::execute() const
 	spec.x = dataWindow.min.x;
 	spec.y = dataWindow.min.y;
 
+	// Add common attribs to the spec
+	std::string software = ( boost::format( "Gaffer %d.%d.%d.%d" ) % GAFFER_MILESTONE_VERSION % GAFFER_MAJOR_VERSION % GAFFER_MINOR_VERSION % GAFFER_PATCH_VERSION ).str();
+	appendImageIOParameter( "Software", new StringData( software ), spec.extra_attribs );	
+	struct utsname info;
+	if ( !uname( &info ) )
+	{
+		appendImageIOParameter( "HostComputer", new StringData( info.nodename ), spec.extra_attribs );
+	}
+	if ( const char *artist = getenv( "USER" ) )
+	{
+		appendImageIOParameter( "Artist", new StringData( artist ), spec.extra_attribs );
+	}
+	std::string document = "untitled";
+	if ( const ScriptNode *script = ancestor<ScriptNode>() )
+	{
+		const std::string scriptFile = script->fileNamePlug()->getValue();
+		document = ( scriptFile == "" ) ? document : scriptFile;
+	}
+	appendImageIOParameter( "DocumentName", new StringData( document ), spec.extra_attribs );
+	
 	// Add the metadata to the spec
 	metadataToImageIOParameterList( inPlug()->metadataPlug()->getValue().get(), spec.extra_attribs );
 	
