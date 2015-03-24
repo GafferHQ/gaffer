@@ -113,7 +113,6 @@ class Expression : public ComputeNode
 		const ValuePlug *outPlug() const;
 
 		void plugSet( Plug *plug );
-		void parentChanged( GraphComponent *child, GraphComponent *oldParent );
 
 		void updatePlugs( const std::string &outPlugPath, std::vector<std::string> &inPlugPaths );
 

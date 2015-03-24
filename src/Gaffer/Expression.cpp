@@ -78,7 +78,6 @@ Expression::Expression( const std::string &name )
 	);
 
 	plugSetSignal().connect( boost::bind( &Expression::plugSet, this, ::_1 ) );
-	parentChangedSignal().connect( boost::bind( &Expression::parentChanged, this, ::_1, ::_2 ) );
 }
 
 Expression::~Expression()
@@ -240,21 +239,6 @@ void Expression::plugSet( Plug *plug )
 			m_engine = 0;
 		}
 
-	}
-}
-
-void Expression::parentChanged( GraphComponent *child, GraphComponent *oldParent )
-{
-	assert( this == child );
-	if( oldParent == 0 && parent<GraphComponent>() )
-	{
-		// assume we've just been created and parented during the loading of a script.
-		// our plugs are already set up, so we just need to make sure we have an engine.
-		std::string expression = expressionPlug()->getValue();
-		if( expression.size() )
-		{
-			m_engine = Engine::create( enginePlug()->getValue(), expression );
-		}
 	}
 }
 
