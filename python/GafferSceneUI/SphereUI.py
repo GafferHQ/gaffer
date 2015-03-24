@@ -42,29 +42,80 @@ import GafferUI
 # Metadata
 ##########################################################################
 
-Gaffer.Metadata.registerNodeDescription(
+Gaffer.Metadata.registerNode(
 
-GafferScene.Sphere,
+	GafferScene.Sphere,
 
-"""A node which produces scenes containing a sphere.""",
+	"description",
+	"""
+	Produces scenes containing a sphere.
+	""",
 
-"type",
-"The type of object to produce. May be a SpherePrimitive or a Mesh.",
+	plugs = {
 
-"radius",
-"Radius of the sphere.",
+		"type" : [
 
-"zMin",
-"Limits the extent of the sphere along the lower pole. Valid values are in the range [-1,1] and should always be less than zMax.",
+			"description",
+			"""
+			The type of object to produce. May be a SpherePrimitive or a Mesh.
+			""",
 
-"zMax",
-"Limits the extent of the sphere along the upper pole. Valid values are in the range [-1,1] and should always be greater than zMin.",
+			"preset:Primitive", GafferScene.Sphere.Type.Primitive,
+			"preset:Mesh", GafferScene.Sphere.Type.Mesh,
 
-"thetaMax",
-"Limits the extent of the sphere around the pole axis. Valid values are in the range [0,360].",
+		],
 
-"divisions",
-"Controls tesselation of the sphere when type is Mesh.",
+		"radius" : [
+
+			"description",
+			"""
+			Radius of the sphere.
+			""",
+
+		],
+
+		"zMin" : [
+
+			"description",
+			"""
+			Limits the extent of the sphere along the lower pole.
+			Valid values are in the range [-1,1] and should always
+			be less than zMax.
+			""",
+
+		],
+
+		"zMax" : [
+
+			"description",
+			"""
+			Limits the extent of the sphere along the upper pole.
+			Valid values are in the range [-1,1] and should always
+			be greater than zMin.
+			""",
+
+		],
+
+		"thetaMax" : [
+
+			"description",
+			"""
+			Limits the extent of the sphere around the pole axis.
+			Valid values are in the range [0,360].
+			""",
+
+		],
+
+		"divisions" : [
+
+			"description",
+			"""
+			Controls tesselation of the sphere when type is Mesh.
+			""",
+
+		],
+
+	}
 
 )
 
@@ -72,15 +123,7 @@ GafferScene.Sphere,
 # Widgets and nodules
 ##########################################################################
 
-GafferUI.PlugValueWidget.registerCreator(
-	GafferScene.Sphere,
-	"type",
-	GafferUI.EnumPlugValueWidget,
-	labelsAndValues = (
-		( "Primitive", GafferScene.Sphere.Type.Primitive ),
-		( "Mesh", GafferScene.Sphere.Type.Mesh ),
-	),
-)
+GafferUI.PlugValueWidget.registerCreator( GafferScene.Sphere, "type", GafferUI.PresetsPlugValueWidget )
 
 ## \todo: Disable divisions when type is Primitive. There is a similar mechanism in RenderManShaderUI, which
 ## could be generalized on StandardNodeUI and used here.
