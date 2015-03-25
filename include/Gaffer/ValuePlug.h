@@ -164,6 +164,9 @@ class ValuePlug : public Plug
 		/// simulate the behaviour of a plug being set when a child is added or removed.
 		void emitPlugSet();
 
+		/// Reimplemented for cache management.
+		virtual void dirty();
+
 	private :
 
 		class Computation;

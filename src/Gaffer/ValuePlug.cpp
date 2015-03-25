@@ -191,6 +191,15 @@ class ValuePlug::Computation
 			return g_valueCache.currentCost();
 		}
 
+		static void clearHashCaches()
+		{
+			tbb::enumerable_thread_specific<ValuePlug::Computation::ThreadData>::iterator it, eIt;
+			for( it = g_threadData.begin(), eIt = g_threadData.end(); it != eIt; ++it )
+			{
+				it->hashCache.clear();
+			}
+		}
+
 	private :
 
 		Computation( const ValuePlug *resultPlug, const IECore::MurmurHash *precomputedHash = NULL )
@@ -204,7 +213,17 @@ class ValuePlug::Computation
 			m_threadData->computationStack.pop();
 			if( m_threadData->computationStack.empty() )
 			{
-				m_threadData->hashCache.clear();
+				if( ++(m_threadData->hashCacheClearCount) == 100 )
+				{
+					// Prevent unbounded growth in the hash cache
+					// if many computations are being performed
+					// without any plugs being dirtied in between,
+					// by clearing it after every Nth computation.
+					// N == 100 was chosen based on memory/performance
+					// analysis of a particularly heavy render process.
+					m_threadData->hashCacheClearCount = 0;
+					m_threadData->hashCache.clear();
+				}
 				m_threadData->errorSource = NULL;
 			}
 		}
@@ -379,11 +398,12 @@ class ValuePlug::Computation
 		// in the length of the chain of nodes - not good. Thanks is due to David Minor for
 		// being the first to point this out.
 		//
-		// We address this problem by keeping a small per-thread cache of hashes, indexed
+		// We address this problem by keeping a per-thread cache of hashes, indexed
 		// by the plug the hash is for and the context the hash was performed in. The
-		// typedefs below describe that data structure. Note that the entries in this cache
-		// are short lived - we flush the cache upon completion of each evaluation of the
-		// graph, as subsequent changes to plug values and connections invalidate our entries.
+		// typedefs below describe that data structure. We use Plug::dirty() to empty
+		// the caches, because they are invalidated whenever an upstream value or
+		// connection is changed. We also clear the cache unconditionally every N
+		// computations, to prevent unbounded growth.
 		typedef std::pair<const ValuePlug *, IECore::MurmurHash> HashCacheKey;
 		typedef boost::unordered_map<HashCacheKey, IECore::MurmurHash> HashCache;
 
@@ -397,7 +417,8 @@ class ValuePlug::Computation
 		// To support multithreading, each thread has it's own state.
 		struct ThreadData
 		{
-			ThreadData() :	errorSource( NULL ) {}
+			ThreadData() :	hashCacheClearCount( 0 ), errorSource( NULL ) {}
+			int hashCacheClearCount;
 			HashCache hashCache;
 			ComputationStack computationStack;
 			const Plug *errorSource;
@@ -772,6 +793,14 @@ void ValuePlug::emitPlugSet()
 			output->emitPlugSet();
 		}
 	}
+}
+
+void ValuePlug::dirty()
+{
+	/// \todo We might want to investigate methods of doing a
+	/// more fine grained clearing of only the dirtied plugs,
+	/// rather than clearing the whole cache.
+	Computation::clearHashCaches();
 }
 
 size_t ValuePlug::getCacheMemoryLimit()
