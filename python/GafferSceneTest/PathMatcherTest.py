@@ -703,5 +703,14 @@ class PathMatcherTest( unittest.TestCase ) :
 		self.assertEqual( m.removePaths( m2 ), False )
 		self.assertTrue( m.isEmpty() )
 
+	def testStrictWeakOrderingBug( self ) :
+
+		m = GafferScene.PathMatcher( [
+			"/c",
+			"/*b"
+		] )
+
+		self.assertEqual( m.match( "/b"), GafferScene.Filter.Result.ExactMatch )
+
 if __name__ == "__main__":
 	unittest.main()
