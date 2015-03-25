@@ -1619,10 +1619,12 @@ class __ObjectSection( Section ) :
 				return None
 
 			object = target.object()
-			if not isinstance( object, IECore.Camera ) :
-				return None
+			if isinstance( object, ( IECore.Camera, IECore.ExternalProcedural ) ) :
+				return object.parameters()
+			elif isinstance( object, IECore.Light ) :
+				return object.parameters
 
-			return object.parameters()
+			return None
 
 	class __PrimitiveVariablesInspector( Inspector ) :
 
