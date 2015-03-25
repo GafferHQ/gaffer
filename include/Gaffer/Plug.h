@@ -199,12 +199,22 @@ class Plug : public GraphComponent
 		/// DependencyNode::affects()).
 		static void propagateDirtiness( Plug *plugToDirty );
 
+		/// Called by propagateDirtiness() to inform a plug that it has
+		/// been dirtied. For plugs that implement caching of results, this
+		/// provides an opportunity for the plug to invalidate its cache.
+		/// This is called _before_ Node::plugDirtiedSignal() is emitted,
+		/// so that the plug can be ready for any queries from slots
+		/// connected to the signal.
+		virtual void dirty();
+
 	private :
 
 		void setInput( PlugPtr input, bool setChildInputs, bool updateParentInput );
 		void setInputInternal( PlugPtr input, bool emit );
 
 		void updateInputFromChildInputs( Plug *checkFirst );
+
+		class DirtyPlugs;
 
 		Direction m_direction;
 		Plug *m_input;

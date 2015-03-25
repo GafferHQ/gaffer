@@ -494,9 +494,6 @@ void Plug::parentChanging( Gaffer::GraphComponent *newParent )
 // Dirty propagation
 //////////////////////////////////////////////////////////////////////////
 
-namespace
-{
-
 // We don't emit dirtiness immediately for each plug as we traverse the
 // dependency graph for two reasons :
 //
@@ -510,7 +507,7 @@ namespace
 // The container used is stored per-thread as although it's illegal to be
 // monkeying with a script from multiple threads, it's perfectly legal to
 // be monkeying with a different script in each thread.
-class DirtyPlugs
+class Plug::DirtyPlugs
 {
 
 	public :
@@ -527,8 +524,8 @@ class DirtyPlugs
 			for( std::vector<VertexDescriptor>::const_reverse_iterator it = sorted.rbegin(), eIt = sorted.rend(); it != eIt; ++it )
 			{
 				Plug *plug = m_graph[*it];
-				Node *node = plug->node();
-				if( node )
+				plug->dirty();
+				if( Node *node = plug->node() )
 				{
 					node->plugDirtiedSignal()( plug );
 				}
@@ -635,12 +632,9 @@ class DirtyPlugs
 
 };
 
-} // namespace
-
-static tbb::enumerable_thread_specific<DirtyPlugs> g_dirtyPlugs;
-
 void Plug::propagateDirtiness( Plug *plugToDirty )
 {
+	static tbb::enumerable_thread_specific<Plug::DirtyPlugs> g_dirtyPlugs;
 	DirtyPlugs &dirtyPlugs = g_dirtyPlugs.local();
 
 	// If the container is currently empty then we are at the start of a traversal,
@@ -654,4 +648,8 @@ void Plug::propagateDirtiness( Plug *plugToDirty )
 		dirtyPlugs.emit();
 		dirtyPlugs.clear();
 	}
+}
+
+void Plug::dirty()
+{
 }
