@@ -194,6 +194,11 @@ class Plug : public GraphComponent
 
 		virtual void parentChanging( Gaffer::GraphComponent *newParent );
 
+		/// Initiates the propagation of dirtiness from the specified
+		/// plug to its outputs and affected plugs (as defined by
+		/// DependencyNode::affects()).
+		static void propagateDirtiness( Plug *plugToDirty );
+
 	private :
 
 		void setInput( PlugPtr input, bool setChildInputs, bool updateParentInput );

@@ -746,7 +746,7 @@ void ValuePlug::setValueInternal( IECore::ConstObjectPtr value, bool propagateDi
 
 	if( propagateDirtiness )
 	{
-		DependencyNode::propagateDirtiness( this );
+		Plug::propagateDirtiness( this );
 	}
 }
 
