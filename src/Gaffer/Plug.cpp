@@ -521,7 +521,7 @@ class Plug::DirtyPlugs
 		{
 			std::vector<VertexDescriptor> sorted;
 			topological_sort( m_graph, std::back_inserter( sorted ) );
-			for( std::vector<VertexDescriptor>::const_reverse_iterator it = sorted.rbegin(), eIt = sorted.rend(); it != eIt; ++it )
+			for( std::vector<VertexDescriptor>::const_iterator it = sorted.begin(), eIt = sorted.end(); it != eIt; ++it )
 			{
 				Plug *plug = m_graph[*it];
 				plug->dirty();
@@ -548,7 +548,7 @@ class Plug::DirtyPlugs
 		// We use this graph structure to keep track of the dirty propagation.
 		// Vertices in the graph represent plugs which have been dirtied, and
 		// edges represent the relationships that caused the dirtying - an
-		// edge from U to V indicates that V was dirtied by U. We do a topological
+		// edge U,V indicates that U was dirtied by V. We do a topological
 		// sort on the graph to give us an appropriate order to emit the dirty
 		// signals in, so that dirtiness is only signalled for an affected plug
 		// after it has been signalled for all upstream dirty plugs.
@@ -558,10 +558,7 @@ class Plug::DirtyPlugs
 		typedef std::map<const Plug *, VertexDescriptor> PlugMap;
 
 		// Inserts a vertex representing plugToDirty into the graph, and
-		// then inserts all affected plugs. Note that we visit affected
-		// plugs for plugToDirty in the reverse order to which we wish to
-		// emit signals - this is because boost::topological_sort() outputs
-		// vertices in reverse order.
+		// then inserts all affected plugs.
 		VertexDescriptor insertInternal( Plug *plugToDirty )
 		{
 			// If we've inserted this one before, then early out. There's
@@ -578,16 +575,28 @@ class Plug::DirtyPlugs
 			m_graph[result] = plugToDirty;
 			m_plugs[plugToDirty] = result;
 
+			// Insert all ancestor plugs.
+			Plug *child = plugToDirty;
+			VertexDescriptor childVertex = result;
+			while( Plug *parent = child->parent<Plug>() )
+			{
+				VertexDescriptor parentVertex = insertInternal( parent );
+				add_edge( parentVertex, childVertex, m_graph );
+
+				child = parent;
+				childVertex = parentVertex;
+			}
+
 			// Propagate dirtiness to output plugs and affected plugs.
 			// We only propagate dirtiness along leaf level plugs, because
 			// they are the only plugs which can be the target of the affects(),
 			// and compute() methods.
 			if( !plugToDirty->isInstanceOf( (IECore::TypeId)CompoundPlugTypeId ) )
 			{
-				for( Plug::OutputContainer::const_reverse_iterator it=plugToDirty->outputs().rbegin(), eIt=plugToDirty->outputs().rend(); it!=eIt; ++it )
+				for( Plug::OutputContainer::const_iterator it=plugToDirty->outputs().begin(), eIt=plugToDirty->outputs().end(); it!=eIt; ++it )
 				{
 					VertexDescriptor outputVertex = insertInternal( const_cast<Plug *>( *it ) );
-					add_edge( result, outputVertex, m_graph );
+					add_edge( outputVertex, result, m_graph );
 				}
 
 				const DependencyNode *dependencyNode = plugToDirty->ancestor<DependencyNode>();
@@ -595,7 +604,7 @@ class Plug::DirtyPlugs
 				{
 					DependencyNode::AffectedPlugsContainer affected;
 					dependencyNode->affects( plugToDirty, affected );
-					for( DependencyNode::AffectedPlugsContainer::const_reverse_iterator it=affected.rbegin(); it!=affected.rend(); it++ )
+					for( DependencyNode::AffectedPlugsContainer::const_iterator it=affected.begin(); it!=affected.end(); it++ )
 					{
 						if( ( *it )->isInstanceOf( (IECore::TypeId)Gaffer::CompoundPlugTypeId ) )
 						{
@@ -607,21 +616,9 @@ class Plug::DirtyPlugs
 						// cast is ok - AffectedPlugsContainer only holds const pointers so that
 						// affects() can be const to discourage implementations from having side effects.
 						VertexDescriptor affectedVertex = insertInternal( const_cast<Plug *>( *it ) );
-						add_edge( result, affectedVertex, m_graph );
+						add_edge( affectedVertex, result, m_graph );
 					}
 				}
-			}
-
-			// Insert all ancestor plugs.
-			Plug *child = plugToDirty;
-			VertexDescriptor childVertex = result;
-			while( Plug *parent = child->parent<Plug>() )
-			{
-				VertexDescriptor parentVertex = insertInternal( parent );
-				add_edge( childVertex, parentVertex, m_graph );
-
-				child = parent;
-				childVertex = parentVertex;
 			}
 
 			return result;
