@@ -209,6 +209,8 @@ class Plug : public GraphComponent
 
 	private :
 
+		void parentChanged();
+
 		void setInput( PlugPtr input, bool setChildInputs, bool updateParentInput );
 		void setInputInternal( PlugPtr input, bool emit );
 

@@ -97,6 +97,7 @@ Plug::Plug( const std::string &name, Direction direction, unsigned flags )
 	:	GraphComponent( name ), m_direction( direction ), m_input( 0 ), m_flags( None ), m_skipNextUpdateInputFromChildInputs( false )
 {
 	setFlags( flags );
+	parentChangedSignal().connect( boost::bind( &Plug::parentChanged, this ) );
 }
 
 Plug::~Plug()
@@ -418,6 +419,22 @@ PlugPtr Plug::createCounterpart( const std::string &name, Direction direction ) 
 
 void Plug::parentChanging( Gaffer::GraphComponent *newParent )
 {
+	if( getFlags( Dynamic ) )
+	{
+		// When a dynamic plug is removed from a node, we
+		// need to propagate dirtiness based on that. We
+		// must call DependencyNode::affects() now, while the
+		// plug is still a child of the node, but we push
+		// scope so that the emission of plugDirtiedSignal()
+		// is deferred until parentChanged() when the operation
+		// is complete.
+		pushDirtyPropagationScope();
+		if( node() )
+		{
+			propagateDirtiness( this );
+		}
+	}
+
 	// This method manages the connections between plugs when
 	// additional child plugs are added or removed. We only
 	// want to react to these changes when they are first made -
@@ -492,6 +509,21 @@ void Plug::parentChanging( Gaffer::GraphComponent *newParent )
 		}
 	}
 
+}
+
+void Plug::parentChanged()
+{
+	if( getFlags( Dynamic ) )
+	{
+		if( node() )
+		{
+			// If a dynamic plug has been added to a
+			// node, we need to propagate dirtiness.
+			propagateDirtiness( this );
+		}
+		// Pop the scope pushed in parentChanging().
+		popDirtyPropagationScope();
+	}
 }
 
 //////////////////////////////////////////////////////////////////////////

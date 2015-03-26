@@ -451,5 +451,60 @@ class DependencyNodeTest( GafferTest.TestCase ) :
 		n3["p"].setInput( None )
 		assertStatesValid()
 
+	def testDirtyOnPlugAdditionAndRemoval( self ) :
+
+		class DynamicAddNode( Gaffer.ComputeNode ) :
+
+			def __init__( self, name = "DynamicDependencies" ) :
+
+				Gaffer.ComputeNode.__init__( self, name )
+
+				self["out"] = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.Out )
+
+			def affects( self, input ) :
+
+				result = Gaffer.DependencyNode.affects( self, input )
+
+				if input in self.__inputs() :
+					result.append( self["out"] )
+
+				return result
+
+			def hash( self, output, context, h ) :
+
+				assert( output.isSame( self["out"] ) )
+
+				for plug in self.__inputs() :
+					plug.hash( h )
+
+			def compute( self, output, context ) :
+
+				result = 0
+				for plug in self.__inputs() :
+					result += plug.getValue()
+
+				output.setValue( result )
+
+			def __inputs( self ) :
+
+				return [ p for p in self.children( Gaffer.IntPlug ) if p.direction() == p.Direction.In ]
+
+		valuesWhenDirtied = []
+
+		def plugDirtied( plug ) :
+
+			if plug.isSame( n["out"] ) :
+				valuesWhenDirtied.append( plug.getValue() )
+
+		n = DynamicAddNode()
+		c = n.plugDirtiedSignal().connect( plugDirtied )
+
+		n["in"] = Gaffer.IntPlug( defaultValue = 1, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		self.assertEqual( valuesWhenDirtied, [ 1 ] )
+
+		del valuesWhenDirtied[:]
+		del n["in"]
+		self.assertEqual( valuesWhenDirtied, [ 0 ] )
+
 if __name__ == "__main__":
 	unittest.main()
