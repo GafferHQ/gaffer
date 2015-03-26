@@ -34,8 +34,6 @@
 #
 ##########################################################################
 
-import IECore
-
 import Gaffer
 import GafferUI
 import GafferScene
@@ -44,15 +42,31 @@ import GafferScene
 # Metadata
 ##########################################################################
 
-Gaffer.Metadata.registerNodeDescription(
+Gaffer.Metadata.registerNode(
 
-GafferScene.SetFilter,
+	GafferScene.SetFilter,
 
-"""A filter which uses sets to define which locations are matched.""",
+	"description",
+	"""
+	A filter which uses sets to define which locations are matched.
+	""",
 
-"set",
-"The name of a set that defines the locations to be matched.",
+	plugs = {
+	
+		"set" : [
 
+			"description",
+			"""
+			The name of a set that defines the locations to
+			be matched.
+			""",
+			
+			"ui:scene:acceptsSetName", True,
+			
+		],
+		
+	}
+	
 )
 
 ##########################################################################
@@ -60,51 +74,3 @@ GafferScene.SetFilter,
 ##########################################################################
 
 GafferUI.Nodule.registerNodule( GafferScene.SetFilter, "set", lambda plug : None )
-
-##########################################################################
-# Right click menu for sets
-##########################################################################
-
-def __applySet( plug, setName ) :
-
-	with Gaffer.UndoContext( plug.ancestor( Gaffer.ScriptNode ) ) :
-		plug.setValue( setName )
-
-def __setsPopupMenu( menuDefinition, plugValueWidget ) :
-
-	## \todo If plugs on other nodes would like this menu too, then
-	# we could use a piece of metadata to determine whether or not to
-	# perform the menu creation.
-	plug = plugValueWidget.getPlug()
-	node = plug.node()
-	if not isinstance( node, GafferScene.SetFilter ) :
-		return
-
-	if plug != node["set"] :
-		return
-
-	setNames = set()
-	with plugValueWidget.getContext() :
-		for output in node["out"].outputs() :
-			if not isinstance( output.node(), GafferScene.SceneProcessor ) :
-				continue
-			globals = output.node()["in"]["globals"].getValue()
-			if "gaffer:sets" not in globals :
-				continue
-			setNames.update( globals["gaffer:sets"].keys() )
-
-	if not setNames :
-		return
-
-	menuDefinition.prepend( "/SetsDivider", { "divider" : True } )
-
-	for setName in reversed( sorted( list( setNames ) ) ) :
-		menuDefinition.prepend(
-			"/Sets/%s" % setName,
-			{
-				"command" : IECore.curry( __applySet, plug, setName ),
-				"active" : plug.settable() and not plugValueWidget.getReadOnly(),
-			}
-		)
-
-__setsPopupMenuConnection = GafferUI.PlugValueWidget.popupMenuSignal().connect( __setsPopupMenu )

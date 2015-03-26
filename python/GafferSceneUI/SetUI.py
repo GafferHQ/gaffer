@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import functools
+
 import Gaffer
 import GafferUI
 
@@ -81,8 +83,10 @@ Gaffer.Metadata.registerNode(
 			"description",
 			"""
 			The name of the set that will be created or edited.
-			"""
-
+			""",
+			
+			"ui:scene:acceptsSetName", True,
+			
 		],
 
 		"paths" : [
@@ -119,3 +123,59 @@ GafferUI.PlugValueWidget.registerCreator(
 	"paths",
 	__pathsPlugWidgetCreator,
 )
+
+##########################################################################
+# Right click menu for sets
+# This is driven by metadata so it can be used for plugs on other
+# nodes too.
+##########################################################################
+
+def __applySet( plug, setName ) :
+
+	with Gaffer.UndoContext( plug.ancestor( Gaffer.ScriptNode ) ) :
+		plug.setValue( setName )
+
+def __setsPopupMenu( menuDefinition, plugValueWidget ) :
+
+	plug = plugValueWidget.getPlug() 
+	if plug is None :
+		return
+
+	if not Gaffer.Metadata.plugValue( plug, "ui:scene:acceptsSetName" ) :
+		return
+	
+	node = plug.node()
+	if isinstance( node, GafferScene.Filter ) :
+		nodes = [ o.node() for o in node["out"].outputs() ]
+	else :
+		nodes = [ node ]
+	
+	setNames = set()
+	with plugValueWidget.getContext() :
+		for node in nodes :
+			for scenePlug in node.children( GafferScene.ScenePlug ) :
+				
+				if scenePlug.direction() != scenePlug.Direction.In :
+					continue
+				
+				globals = scenePlug["globals"].getValue()
+				if "gaffer:sets" not in globals :
+					continue
+				setNames.update( globals["gaffer:sets"].keys() )
+
+	if not setNames :
+		return
+
+	menuDefinition.prepend( "/SetsDivider", { "divider" : True } )
+
+	for setName in reversed( sorted( list( setNames ) ) ) :
+		menuDefinition.prepend(
+			"/Sets/%s" % setName,
+			{
+				"command" : functools.partial( __applySet, plug, setName ),
+				"active" : plug.settable() and not plugValueWidget.getReadOnly(),
+			}
+		)
+
+__setsPopupMenuConnection = GafferUI.PlugValueWidget.popupMenuSignal().connect( __setsPopupMenu )
+
