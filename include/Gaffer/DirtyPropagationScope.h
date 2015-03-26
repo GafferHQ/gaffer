@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2011, John Haddon. All rights reserved.
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,53 +34,38 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_UNDOCONTEXT_H
-#define GAFFER_UNDOCONTEXT_H
+#ifndef GAFFER_DIRTYPROPAGATIONSCOPE_H
+#define GAFFER_DIRTYPROPAGATIONSCOPE_H
 
-#include <string>
-
-#include "IECore/RefCounted.h"
-
-#include "Gaffer/DirtyPropagationScope.h"
+#include "boost/noncopyable.hpp"
 
 namespace Gaffer
 {
 
-IE_CORE_FORWARDDECLARE( ScriptNode );
-
-/// The UndoContext class is used to control the creation of
-/// items on the undo stack held in a ScriptNode.
-/// \todo Rename to UndoScope to avoid confusion with Context.
-class UndoContext : DirtyPropagationScope
+/// Used to group node graph edits such that dirtiness
+/// is propagated and signalled only once, when all
+/// operations are complete.
+///
+/// ```
+/// {
+/// 	DirtyPropagationScope scope;
+/// 	node->plugOne()->setValue( 1 );
+/// 	node->plugTwo()->setValue( 2 );
+/// }
+/// // Dirtiness is signalled for the affected
+/// // outputs of the node only once, at the exit
+/// // of the scope.
+/// ```
+class DirtyPropagationScope : boost::noncopyable
 {
 
 	public :
 
-		enum State
-		{
-			Invalid,
-			Enabled,
-			Disabled
-		};
-
-		/// Script can be 0, in which case the subsequent actions
-		/// will not be undoable regardless of the specified state.
-		///
-		/// If mergeGroup is specified and matches the group used by
-		/// the previous UndoContext, then the actions performed will
-		/// be merged with the previous entry on the undo stack if
-		/// possible. This can be used by UI elements to compress a
-		/// series of individual editing events into a single item
-		/// on the undo stack.
-		UndoContext( ScriptNodePtr script, State state=Enabled, const std::string &mergeGroup=std::string() );
-		~UndoContext();
-
-	private :
-
-		ScriptNodePtr m_script;
+		DirtyPropagationScope();
+		~DirtyPropagationScope();
 
 };
 
 } // namespace Gaffer
 
-#endif // GAFFER_UNDOCONTEXT_H
+#endif // GAFFER_DIRTYPROPAGATIONSCOPE_H

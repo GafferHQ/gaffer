@@ -341,6 +341,8 @@ void ScriptNode::undo()
 		throw IECore::Exception( "Undo not available" );
 	}
 
+	DirtyPropagationScope dirtyPropagationScope;
+
 	m_currentActionStage = Action::Undo;
 
 		m_undoIterator--;
@@ -378,6 +380,8 @@ void ScriptNode::redo()
 	{
 		throw IECore::Exception( "Redo not available" );
 	}
+
+	DirtyPropagationScope dirtyPropagationScope;
 
 	m_currentActionStage = Action::Redo;
 

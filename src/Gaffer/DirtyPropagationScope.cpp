@@ -35,53 +35,17 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_UNDOCONTEXT_H
-#define GAFFER_UNDOCONTEXT_H
-
-#include <string>
-
-#include "IECore/RefCounted.h"
-
 #include "Gaffer/DirtyPropagationScope.h"
+#include "Gaffer/Plug.h"
 
-namespace Gaffer
+using namespace Gaffer;
+
+DirtyPropagationScope::DirtyPropagationScope()
 {
+	Plug::pushDirtyPropagationScope();
+}
 
-IE_CORE_FORWARDDECLARE( ScriptNode );
-
-/// The UndoContext class is used to control the creation of
-/// items on the undo stack held in a ScriptNode.
-/// \todo Rename to UndoScope to avoid confusion with Context.
-class UndoContext : DirtyPropagationScope
+DirtyPropagationScope::~DirtyPropagationScope()
 {
-
-	public :
-
-		enum State
-		{
-			Invalid,
-			Enabled,
-			Disabled
-		};
-
-		/// Script can be 0, in which case the subsequent actions
-		/// will not be undoable regardless of the specified state.
-		///
-		/// If mergeGroup is specified and matches the group used by
-		/// the previous UndoContext, then the actions performed will
-		/// be merged with the previous entry on the undo stack if
-		/// possible. This can be used by UI elements to compress a
-		/// series of individual editing events into a single item
-		/// on the undo stack.
-		UndoContext( ScriptNodePtr script, State state=Enabled, const std::string &mergeGroup=std::string() );
-		~UndoContext();
-
-	private :
-
-		ScriptNodePtr m_script;
-
-};
-
-} // namespace Gaffer
-
-#endif // GAFFER_UNDOCONTEXT_H
+	Plug::popDirtyPropagationScope();
+}

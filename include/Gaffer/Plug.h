@@ -214,6 +214,13 @@ class Plug : public GraphComponent
 
 		void updateInputFromChildInputs( Plug *checkFirst );
 
+		static void pushDirtyPropagationScope();
+		static void popDirtyPropagationScope();
+		// DirtyPropagationScope allowed friendship, as we use
+		// it to declare an exception-safe public interface to
+		// the two private methods above.
+		friend class DirtyPropagationScope;
+
 		class DirtyPlugs;
 
 		Direction m_direction;

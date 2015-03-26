@@ -360,5 +360,46 @@ class DependencyNodeTest( GafferTest.TestCase ) :
 
 		f1["in"][0].setValue( 10 )
 
+	def testDirtyPropagationScoping( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = GafferTest.AddNode()
+
+		cs = GafferTest.CapturingSlot( s["n"].plugDirtiedSignal() )
+
+		with Gaffer.UndoContext( s ) :
+
+			s["n"]["op1"].setValue( 20 )
+			s["n"]["op2"].setValue( 21 )
+
+		# Even though we made two changes, we only want
+		# dirtiness to have been signalled once, because
+		# we grouped them logically in an UndoContext.
+
+		self.assertEqual( len( cs ), 3 )
+		self.assertTrue( cs[0][0].isSame( s["n"]["op1"] ) )
+		self.assertTrue( cs[1][0].isSame( s["n"]["op2"] ) )
+		self.assertTrue( cs[2][0].isSame( s["n"]["sum"] ) )
+
+		# Likewise, when we undo.
+
+		del cs[:]
+		s.undo()
+
+		self.assertEqual( len( cs ), 3 )
+		self.assertTrue( cs[0][0].isSame( s["n"]["op2"] ) )
+		self.assertTrue( cs[1][0].isSame( s["n"]["op1"] ) )
+		self.assertTrue( cs[2][0].isSame( s["n"]["sum"] ) )
+
+		# And when we redo.
+
+		del cs[:]
+		s.redo()
+
+		self.assertEqual( len( cs ), 3 )
+		self.assertTrue( cs[0][0].isSame( s["n"]["op1"] ) )
+		self.assertTrue( cs[1][0].isSame( s["n"]["op2"] ) )
+		self.assertTrue( cs[2][0].isSame( s["n"]["sum"] ) )
+
 if __name__ == "__main__":
 	unittest.main()

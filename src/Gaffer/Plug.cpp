@@ -512,35 +512,35 @@ class Plug::DirtyPlugs
 
 	public :
 
+		DirtyPlugs()
+			:	m_scopeCount( 0 )
+		{
+		}
+
 		void insert( Plug *plugToDirty )
 		{
 			insertInternal( plugToDirty );
 		}
 
-		void emit()
+		void pushScope()
 		{
-			std::vector<VertexDescriptor> sorted;
-			topological_sort( m_graph, std::back_inserter( sorted ) );
-			for( std::vector<VertexDescriptor>::const_iterator it = sorted.begin(), eIt = sorted.end(); it != eIt; ++it )
+			m_scopeCount++;
+		}
+
+		void popScope()
+		{
+			assert( m_scopeCount );
+			if( --m_scopeCount == 0)
 			{
-				Plug *plug = m_graph[*it];
-				plug->dirty();
-				if( Node *node = plug->node() )
-				{
-					node->plugDirtiedSignal()( plug );
-				}
+				emit();
+				clear();
 			}
 		}
 
-		void clear()
+		static DirtyPlugs &local()
 		{
-			m_graph.clear();
-			m_plugs.clear();
-		}
-
-		bool empty() const
-		{
-			return m_plugs.empty();
+			static tbb::enumerable_thread_specific<Plug::DirtyPlugs> g_dirtyPlugs;
+			return g_dirtyPlugs.local();
 		}
 
 	private :
@@ -624,27 +624,47 @@ class Plug::DirtyPlugs
 			return result;
 		}
 
+		void emit()
+		{
+			std::vector<VertexDescriptor> sorted;
+			topological_sort( m_graph, std::back_inserter( sorted ) );
+			for( std::vector<VertexDescriptor>::const_iterator it = sorted.begin(), eIt = sorted.end(); it != eIt; ++it )
+			{
+				Plug *plug = m_graph[*it];
+				plug->dirty();
+				if( Node *node = plug->node() )
+				{
+					node->plugDirtiedSignal()( plug );
+				}
+			}
+		}
+
+		void clear()
+		{
+			m_graph.clear();
+			m_plugs.clear();
+		}
+
 		Graph m_graph;
 		PlugMap m_plugs;
+		size_t m_scopeCount;
 
 };
 
 void Plug::propagateDirtiness( Plug *plugToDirty )
 {
-	static tbb::enumerable_thread_specific<Plug::DirtyPlugs> g_dirtyPlugs;
-	DirtyPlugs &dirtyPlugs = g_dirtyPlugs.local();
+	DirtyPropagationScope scope;
+	DirtyPlugs::local().insert( plugToDirty );
+}
 
-	// If the container is currently empty then we are at the start of a traversal,
-	// and will emit plugDirtiedSignal() and empty the container before returning
-	// from this function. If the container isn't empty then we are mid-traversal
-	// and will just add to it.
-	const bool emit = dirtyPlugs.empty();
-	dirtyPlugs.insert( plugToDirty );
-	if( emit )
-	{
-		dirtyPlugs.emit();
-		dirtyPlugs.clear();
-	}
+void Plug::pushDirtyPropagationScope()
+{
+	DirtyPlugs::local().pushScope();
+}
+
+void Plug::popDirtyPropagationScope()
+{
+	DirtyPlugs::local().popScope();
 }
 
 void Plug::dirty()
