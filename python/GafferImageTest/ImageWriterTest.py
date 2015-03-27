@@ -434,6 +434,39 @@ class ImageWriterTest( unittest.TestCase ) :
 		
 		self.__testMetadataDoesNotAffectPixels( "tif", supportsIPTC = True )
 	
+	def testPixelAspectRatio( self ) :
+
+		r = GafferImage.ImageReader()
+		r["fileName"].setValue( self.__rgbFilePath+".exr" )
+		self.assertEqual( r["out"]["format"].getValue().getPixelAspect(), 1 )
+		self.assertEqual( r["out"]["metadata"].getValue()["PixelAspectRatio"], IECore.FloatData( 1 ) )
+		
+		# change the Format pixel aspect
+		f = GafferImage.Reformat()
+		f["format"].setValue( GafferImage.Format( r["out"]["format"].getValue().getDisplayWindow(), 2. ) )
+		self.assertEqual( f["out"]["format"].getValue().getPixelAspect(), 2 )
+		# processing does not change metadata
+		self.assertEqual( r["out"]["metadata"].getValue()["PixelAspectRatio"], IECore.FloatData( 1 ) )
+		
+		testFile = self.__testFile( "pixelAspectFromFormat", "RGBA", "exr" )
+		self.failIf( os.path.exists( testFile ) )
+		
+		w = GafferImage.ImageWriter()
+		w["in"].setInput( f["out"] )
+		w["fileName"].setValue( testFile )
+		w["channels"].setValue( IECore.StringVectorData( f["out"]["channelNames"].getValue() ) )
+		
+		with Gaffer.Context() :
+			w.execute()
+		self.failUnless( os.path.exists( testFile ) )
+		
+		after = GafferImage.ImageReader()
+		after["fileName"].setValue( testFile )
+		# the image is loaded with the correct pixel aspect
+		self.assertEqual( after["out"]["format"].getValue().getPixelAspect(), 2 )
+		# the metadata reflects this as well
+		self.assertEqual( after["out"]["metadata"].getValue()["PixelAspectRatio"], IECore.FloatData( 2 ) )
+	
 	def tearDown( self ) :
 
 		if os.path.isdir( self.__testDir ) :

@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2012-2014, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2012-2015, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -389,7 +389,7 @@ GafferImage::Format ImageReader::computeFormat( const Gaffer::Context *context, 
 			Imath::V2i( spec->full_x, spec->full_y ),
 			Imath::V2i( spec->full_x + spec->full_width - 1, spec->full_y + spec->full_height - 1 )
 		),
-		1.
+		spec->get_float_attribute( "PixelAspectRatio", 1.0f )
 	);
 }
 
