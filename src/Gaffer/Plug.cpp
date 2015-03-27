@@ -254,7 +254,11 @@ void Plug::setInput( PlugPtr input, bool setChildInputs, bool updateParentInput 
 		throw IECore::Exception( what );
 	}
 
-	// connect our children first
+	// Connect our children first.
+	// We use a dirty propagation scope to defer dirty signalling
+	// until all connections have been made, when we're in our final
+	// state.
+	DirtyPropagationScope dirtyPropagationScope;
 
 	if( setChildInputs )
 	{
@@ -552,7 +556,7 @@ class Plug::DirtyPlugs
 		// sort on the graph to give us an appropriate order to emit the dirty
 		// signals in, so that dirtiness is only signalled for an affected plug
 		// after it has been signalled for all upstream dirty plugs.
-		typedef boost::adjacency_list<vecS, vecS, directedS, Plug *> Graph;
+		typedef boost::adjacency_list<vecS, vecS, directedS, PlugPtr> Graph;
 		typedef Graph::vertex_descriptor VertexDescriptor;
 
 		typedef std::map<const Plug *, VertexDescriptor> PlugMap;
@@ -561,6 +565,13 @@ class Plug::DirtyPlugs
 		// then inserts all affected plugs.
 		VertexDescriptor insertInternal( Plug *plugToDirty )
 		{
+			// We need to hold a reference to the plug, because otherwise
+			// it might be deleted between now and emit(). But if there is
+			// no reference yet, the plug is still being constructed, and
+			// we'd end up deleting it in clear() since we'd have sole
+			// ownership. Nobody wants that.
+			assert( plugToDirty->refCount() );
+
 			// If we've inserted this one before, then early out. There's
 			// no point repeating the propagation all over again, and our
 			// Graph isn't designed to have duplicate edges anyway.
@@ -580,6 +591,18 @@ class Plug::DirtyPlugs
 			VertexDescriptor childVertex = result;
 			while( Plug *parent = child->parent<Plug>() )
 			{
+				if( !parent->refCount() )
+				{
+					// We can end up here when constructing a SplinePlug,
+					// because it calls setValue() in its constructor.
+					// We don't want to increment the reference count on
+					// an in-construction plug, because then we'll destroy
+					// it in clear(). And there's no point signalling dirtiness
+					// because the plug has no parent and therefore can have
+					// no observers.
+					break;
+				}
+
 				VertexDescriptor parentVertex = insertInternal( parent );
 				add_edge( parentVertex, childVertex, m_graph );
 
@@ -630,7 +653,7 @@ class Plug::DirtyPlugs
 			topological_sort( m_graph, std::back_inserter( sorted ) );
 			for( std::vector<VertexDescriptor>::const_iterator it = sorted.begin(), eIt = sorted.end(); it != eIt; ++it )
 			{
-				Plug *plug = m_graph[*it];
+				Plug *plug = m_graph[*it].get();
 				plug->dirty();
 				if( Node *node = plug->node() )
 				{

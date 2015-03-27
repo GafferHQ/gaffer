@@ -37,6 +37,7 @@
 
 import unittest
 import threading
+import collections
 
 import Gaffer
 import GafferTest
@@ -400,6 +401,55 @@ class DependencyNodeTest( GafferTest.TestCase ) :
 		self.assertTrue( cs[0][0].isSame( s["n"]["op1"] ) )
 		self.assertTrue( cs[1][0].isSame( s["n"]["op2"] ) )
 		self.assertTrue( cs[2][0].isSame( s["n"]["sum"] ) )
+
+	def testDirtyPropagationScopingForCompoundPlugInputChange( self ) :
+
+		n1 = GafferTest.CompoundPlugNode()
+		n2 = GafferTest.CompoundPlugNode()
+		n3 = GafferTest.CompoundPlugNode()
+
+		# We never want to be signalled at a point
+		# when the child connections are not in
+		# a consistent state.
+
+		InputState = collections.namedtuple( "InputState", ( "p", "s", "f" ) )
+
+		inputStates = []
+		def plugDirtied( p ) :
+
+			# We can't use self.assert*() in here,
+			# because exceptions are caught in plugDirtiedSignal()
+			# handling. So we just record the state to check later
+			# in assertStatesValid().
+			inputStates.append(
+				InputState(
+					n3["p"].getInput(),
+					n3["p"]["s"].getInput(),
+					n3["p"]["f"].getInput()
+				)
+			)
+
+		def assertStatesValid() :
+
+			for state in inputStates :
+				if state.p is not None :
+					self.assertTrue( state.s is not None )
+					self.assertTrue( state.f is not None )
+					self.assertTrue( state.p.isSame( state.f.parent() ) )
+				else :
+					self.assertTrue( state.s is None )
+					self.assertTrue( state.f is None )
+
+		c = n3.plugDirtiedSignal().connect( plugDirtied )
+
+		n3["p"].setInput( n1["o"] )
+		assertStatesValid()
+
+		n3["p"].setInput( n2["o"] )
+		assertStatesValid()
+
+		n3["p"].setInput( None )
+		assertStatesValid()
 
 if __name__ == "__main__":
 	unittest.main()
