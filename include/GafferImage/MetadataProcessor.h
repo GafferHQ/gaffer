@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2013-2015, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,48 +34,52 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_IMAGEMIXINBASE_H
-#define GAFFERIMAGE_IMAGEMIXINBASE_H
+#ifndef GAFFERIMAGE_METADATAPROCESSOR_H
+#define GAFFERIMAGE_METADATAPROCESSOR_H
+
+#include "Gaffer/CompoundDataPlug.h"
 
 #include "GafferImage/ImageProcessor.h"
 
 namespace GafferImage
 {
 
-/// Base class to allow Gaffer mixin classes such as TimeWarp and Switch to be used
-// in GafferImage. See SceneMixinBase for some more details of the rationale behind this.
-class ImageMixinBase : public ImageProcessor
+/// The MetadataProcessor class provides a base class for modifying metadata
+/// of an image while passing everything else through unchanged.
+class MetadataProcessor : public ImageProcessor
 {
 
 	public :
 
-		ImageMixinBase( const std::string &name=defaultName<ImageMixinBase>() );
-		virtual ~ImageMixinBase();
+		MetadataProcessor( const std::string &name=defaultName<MetadataProcessor>() );
+		virtual ~MetadataProcessor();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::ImageMixinBase, ImageMixinBaseTypeId, ImageProcessor );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::MetadataProcessor, MetadataProcessorTypeId, ImageProcessor );
+
+		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
 
 	protected :
 
-		/// These stubs should never be called, because the mixed-in class should implement hash() and compute()
-		/// totally. If they are called, they throw to highlight the fact that something is amiss.
+		// Reimplemented to assign directly from the input. Format cannot be a direct connection
+		// because it needs to update when the default format changes.
+		/// \todo: make this a direct pass-through once FormatPlug supports it.
 		virtual void hashFormat( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual void hashDataWindow( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual void hashMetadata( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual void hashChannelNames( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual void hashChannelData( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-
-		/// These stubs should never be called, because the mixed-in class should implement hash() and compute()
-		/// totally. If they are called, they throw to highlight the fact that something is amiss.
 		virtual GafferImage::Format computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const;
-		virtual Imath::Box2i computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const;
+		
+		// Reimplemented to call hashProcessedMetadata()
+		virtual void hashMetadata( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		// Reimplemented to call computeProcessedMetadata()
 		virtual IECore::ConstCompoundObjectPtr computeMetadata( const Gaffer::Context *context, const ImagePlug *parent ) const;
-		virtual IECore::ConstStringVectorDataPtr computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const;
-		virtual IECore::ConstFloatVectorDataPtr computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const;
+		
+		/// Must be implemented by derived classes to compute the hash for the work done in computeProcessedMetadata().
+		virtual void hashProcessedMetadata( const Gaffer::Context *context, IECore::MurmurHash &h ) const = 0;
+		/// Must be implemented by derived classes to process the incoming metadata.
+		virtual IECore::ConstCompoundObjectPtr computeProcessedMetadata( const Gaffer::Context *context, const IECore::CompoundObject *inputMetadata ) const = 0;
 
 };
 
-IE_CORE_DECLAREPTR( ImageMixinBase )
+IE_CORE_DECLAREPTR( MetadataProcessor );
 
 } // namespace GafferImage
 
-#endif // GAFFERIMAGE_IMAGEMIXINBASE_H
+#endif // GAFFERIMAGE_METADATAPROCESSOR_H

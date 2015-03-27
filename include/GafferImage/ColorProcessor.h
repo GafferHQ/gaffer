@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2013-2015, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -63,28 +63,27 @@ class ColorProcessor : public ImageProcessor
 
 		virtual bool channelEnabled( const std::string &channel ) const;
 
-		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const;
-
-		/// Implemented to pass through the hashes from the input plug.
+		// Reimplemented to assign directly from the input. Format cannot be a direct connection
+		// because it needs to update when the default format changes.
+		/// \todo: make this a direct pass-through once FormatPlug supports it.
 		virtual void hashFormat( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual void hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual void hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual void hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-
-		/// Implemented to pass through the input values. Derived classes need only implement computeChannelData().
 		virtual GafferImage::Format computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const;
-		virtual Imath::Box2i computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const;
-		virtual IECore::ConstStringVectorDataPtr computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const;
-		/// Implemented to in terms of processColorData().
+		
+		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual void hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		
+		/// Implemented to process the color data and stash the results on colorDataPlug()
+		/// format, dataWindow, metadata, and channelNames are passed through via direct connection to the input values.
+		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const;
+		/// Implemented to use the results of colorDataPlug() via processColorData()
 		virtual IECore::ConstFloatVectorDataPtr computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const;
 
-		/// Must be implemented by derived classes to return true if the specified input is used in processColorData().
+		/// May be implemented by derived classes to return true if the specified input is used in processColorData().
 		/// Must first call the base class implementation and return true if it does.
-		virtual bool affectsColorData( const Gaffer::Plug *input ) const = 0;
-		/// Must be implemented by derived classes to compute the hash for the color processing - all implementations
+		virtual bool affectsColorData( const Gaffer::Plug *input ) const;
+		/// May be implemented by derived classes to compute the hash for the color processing - all implementations
 		/// must call their base class implementation first.
-		virtual void hashColorData( const Gaffer::Context *context, IECore::MurmurHash &h ) const = 0;
+		virtual void hashColorData( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		/// Must be implemented by derived classes to modify R, G and B in place.
 		virtual void processColorData( const Gaffer::Context *context, IECore::FloatVectorData *r, IECore::FloatVectorData *g, IECore::FloatVectorData *b ) const = 0;
 

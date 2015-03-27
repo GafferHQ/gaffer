@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2013-2015, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,50 +35,65 @@
 ##########################################################################
 
 import os
-import unittest
 
 import IECore
 
 import Gaffer
 import GafferImage
+import GafferTest
 
-class ObjectToImageTest( unittest.TestCase ) :
+class DeleteImageMetadataTest( GafferTest.TestCase ) :
 
-	fileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/checker.exr" )
-	negFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/checkerWithNegativeDataWindow.200x150.exr" )
+	checkerFile = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/checker.exr" )
 
 	def test( self ) :
 
-		i = IECore.Reader.create( self.fileName ).read()
+		i = GafferImage.ImageReader()
+		i["fileName"].setValue( self.checkerFile )
+		inMetadata = i["out"]["metadata"].getValue()
 		
-		n = GafferImage.ObjectToImage()
-		n["object"].setValue( i )
+		m = GafferImage.DeleteImageMetadata()
+		m["in"].setInput( i["out"] )
 
-		self.assertEqual( n["out"].image(), i )
+		# check that the image is passed through
 
-	def testImageWithANegativeDataWindow( self ) :
+		metadata = m["out"]["metadata"].getValue()
+		self.assertEqual( m["out"]["metadata"].getValue(), inMetadata )
+		self.assertEqual( m["out"].image(), i["out"].image() )
+		self.assertTrue( "screenWindowWidth" in metadata )
+		self.assertTrue( "screenWindowCenter" in metadata )
+		self.assertTrue( "compression" in metadata )
 
-		i = IECore.Reader.create( self.negFileName ).read()
+		# check that we can delete metadata
 		
-		n = GafferImage.ObjectToImage()
-		n["object"].setValue( i )
+		m["names"].setValue( "screen* compression" )
+		metadata = m["out"]["metadata"].getValue()
+		self.assertFalse( "screenWindowWidth" in metadata )
+		self.assertFalse( "screenWindowCenter" in metadata )
+		self.assertFalse( "compression" in metadata )
+		for key in metadata.keys() :
+			self.assertEqual( metadata[key], inMetadata[key] )
 
-		self.assertEqual( n["out"].image(), i )
+		# check that we can invert the deletion
+		
+		m["invertNames"].setValue( True )
+		metadata = m["out"]["metadata"].getValue()
+		expected = set([ "screenWindowWidth", "screenWindowCenter", "compression" ])
+		self.assertEqual( set(metadata.keys()), expected )
+		for key in metadata.keys() :
+			self.assertEqual( metadata[key], inMetadata[key] )
+		
+		# test dirty propagation
 
-	def testHashVariesPerTileAndChannel( self ) :
+		cs = GafferTest.CapturingSlot( m.plugDirtiedSignal() )
 
-		n = GafferImage.ObjectToImage()
-		n["object"].setValue( IECore.Reader.create( self.fileName ).read() )
+		m["names"].setValue( "" )
+		self.assertTrue( m["out"]["metadata"] in set( e[0] for e in cs ) )
 
-		self.assertNotEqual(
-			n["out"].channelDataHash( "R", IECore.V2i( 0 ) ),
-			n["out"].channelDataHash( "G", IECore.V2i( 0 ) )
-		)
+		del cs[:]
 
-		self.assertNotEqual(
-			n["out"].channelDataHash( "R", IECore.V2i( 0 ) ),
-			n["out"].channelDataHash( "R", IECore.V2i( GafferImage.ImagePlug.tileSize() ) )
-		)
+		m["invertNames"].setValue( False )
+		self.assertTrue( m["out"]["metadata"] in set( e[0] for e in cs ) )
 
 if __name__ == "__main__":
 	unittest.main()

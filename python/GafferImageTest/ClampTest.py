@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2013-2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -150,6 +150,25 @@ class ClampTest( unittest.TestCase ) :
 		self.assertEqual( clamp.correspondingInput( clamp["in"] ), None )
 		self.assertEqual( clamp.correspondingInput( clamp["enabled"] ), None )
 		self.assertEqual( clamp.correspondingInput( clamp["min"] ), None )
+	
+	def testPassThrough( self ) :
+		
+		i = GafferImage.ImageReader()
+		i["fileName"].setValue( os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/colorbars_half_max.exr" ) )
+
+		c = GafferImage.Clamp()
+		c["in"].setInput( i["out"] )
+		c["max"].setValue( IECore.Color4f( .5, .5, .5, .5 ) )
+		
+		self.assertEqual( i["out"]["format"].hash(), c["out"]["format"].hash() )
+		self.assertEqual( i["out"]["dataWindow"].hash(), c["out"]["dataWindow"].hash() )
+		self.assertEqual( i["out"]["metadata"].hash(), c["out"]["metadata"].hash() )
+		self.assertEqual( i["out"]["channelNames"].hash(), c["out"]["channelNames"].hash() )
+				
+		self.assertEqual( i["out"]["format"].getValue(), c["out"]["format"].getValue() )
+		self.assertEqual( i["out"]["dataWindow"].getValue(), c["out"]["dataWindow"].getValue() )
+		self.assertEqual( i["out"]["metadata"].getValue(), c["out"]["metadata"].getValue() )
+		self.assertEqual( i["out"]["channelNames"].getValue(), c["out"]["channelNames"].getValue() )
 
 if __name__ == "__main__":
 	unittest.main()

@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2013-2014, John Haddon. All rights reserved.
+#  Copyright (c) 2013-2015, John Haddon. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -193,6 +193,32 @@ class OSLImageTest( GafferOSLTest.OSLTestCase ) :
 		self.assertEqual( outputImage["R"].data, IECore.FloatVectorData( [ 0 ] * inputImage["R"].data.size() ) )
 		self.assertEqual( outputImage["G"].data, inputImage["G"].data )
 		self.assertEqual( outputImage["B"].data, inputImage["B"].data )
+
+	def testPassThrough( self ) :
+		
+		outR = GafferOSL.OSLShader()
+		outR.loadShader( "ImageProcessing/OutChannel" )
+		outR["parameters"]["channelName"].setValue( "R" )
+		outR["parameters"]["channelValue"].setValue( 0 )
+
+		imageShader = GafferOSL.OSLShader()
+		imageShader.loadShader( "ImageProcessing/OutImage" )
+		imageShader["parameters"]["in0"].setInput( outR["out"]["channel"] )
+
+		reader = GafferImage.ImageReader()
+		reader["fileName"].setValue( os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/rgb.100x100.exr" ) )
+
+		image = GafferOSL.OSLImage()
+		image["in"].setInput( reader["out"] )
+		image["shader"].setInput( imageShader["out"] )
+		
+		self.assertEqual( image["out"]["format"].hash(), reader["out"]["format"].hash() )
+		self.assertEqual( image["out"]["dataWindow"].hash(), reader["out"]["dataWindow"].hash() )
+		self.assertEqual( image["out"]["metadata"].hash(), reader["out"]["metadata"].hash() )
+		
+		self.assertEqual( image["out"]["format"].getValue(), reader["out"]["format"].getValue() )
+		self.assertEqual( image["out"]["dataWindow"].getValue(), reader["out"]["dataWindow"].getValue() )
+		self.assertEqual( image["out"]["metadata"].getValue(), reader["out"]["metadata"].getValue() )
 
 if __name__ == "__main__":
 	unittest.main()

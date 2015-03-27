@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2012-2015, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -58,7 +58,11 @@ ChannelDataProcessor::ChannelDataProcessor( const std::string &name )
 			~(Gaffer::Plug::Dynamic | Gaffer::Plug::ReadOnly)
 		)
 	);
-
+	
+	// We don't ever want to change these, so we make pass-through connections.
+	outPlug()->dataWindowPlug()->setInput( inPlug()->dataWindowPlug() );
+	outPlug()->metadataPlug()->setInput( inPlug()->metadataPlug() );
+	outPlug()->channelNamesPlug()->setInput( inPlug()->channelNamesPlug() );
 }
 
 ChannelDataProcessor::~ChannelDataProcessor()
@@ -79,15 +83,12 @@ void ChannelDataProcessor::affects( const Gaffer::Plug *input, AffectedPlugsCont
 {
 	ImageProcessor::affects( input, outputs );
 
-	if( input == inPlug()->formatPlug() ||
-		input == inPlug()->dataWindowPlug() ||
-		input == inPlug()->channelNamesPlug()
-	)
+	const ImagePlug *in = inPlug();
+	if ( input->parent<ImagePlug>() == in && input != in->channelDataPlug() )
 	{
 		outputs.push_back( outPlug()->getChild<ValuePlug>( input->getName() ) );
 	}
-
-	if( input == channelMaskPlug() )
+	else if ( input == channelMaskPlug() )
 	{
 		outputs.push_back( outPlug()->channelDataPlug() );
 	}
@@ -117,27 +118,7 @@ void ChannelDataProcessor::hashFormat( const GafferImage::ImagePlug *output, con
 	h = inPlug()->formatPlug()->hash();
 }
 
-void ChannelDataProcessor::hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
-{
-	h = inPlug()->dataWindowPlug()->hash();
-}
-
-void ChannelDataProcessor::hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
-{
-	h = inPlug()->channelNamesPlug()->hash();
-}
-
 GafferImage::Format ChannelDataProcessor::computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
 	return inPlug()->formatPlug()->getValue();
-}
-
-Imath::Box2i ChannelDataProcessor::computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const
-{
-	return inPlug()->dataWindowPlug()->getValue();
-}
-
-IECore::ConstStringVectorDataPtr ChannelDataProcessor::computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const
-{
-	return inPlug()->channelNamesPlug()->getValue();
 }

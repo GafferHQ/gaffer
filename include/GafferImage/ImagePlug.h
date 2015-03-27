@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2012-2015, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -65,6 +65,17 @@ namespace GafferImage
 /// to transform them into image space. By using the same coordinate axis for both the screen and
 /// image space, the values taken from the transform2DPlug and Box2iPlug can be used directly and
 /// independently of the image's format.
+///
+/// Some notes on Image Metadata:
+/// Metadata is loaded into Gaffer following the OpenImageIO standards, but after that point it is
+/// considered arbitrary data that flows along with an image. The only image processing nodes that
+/// will modify the metadata are the Metadata specific nodes. Other image processing may occur which
+/// causes the implied meaning of certain metadata entries to become invalid (such as oiio:ColorSpace)
+/// but those nodes will not alter the metadata, nor behave differently based on its value.
+/// 
+/// Some notes on color space:
+/// GafferImage nodes expect to operate in linear space, with associated alpha. Users are responsible
+/// for meeting that expectation (or knowing what they're doing when they don't).
 class ImagePlug : public Gaffer::CompoundPlug
 {
 
@@ -89,6 +100,8 @@ class ImagePlug : public Gaffer::CompoundPlug
 		const GafferImage::FormatPlug *formatPlug() const;
 		Gaffer::AtomicBox2iPlug *dataWindowPlug();
 		const Gaffer::AtomicBox2iPlug *dataWindowPlug() const;
+		Gaffer::CompoundObjectPlug *metadataPlug();
+		const Gaffer::CompoundObjectPlug *metadataPlug() const;
 		Gaffer::StringVectorDataPlug *channelNamesPlug();
 		const Gaffer::StringVectorDataPlug *channelNamesPlug() const;
 		Gaffer::FloatVectorDataPlug *channelDataPlug();
@@ -139,6 +152,8 @@ class ImagePlug : public Gaffer::CompoundPlug
 
 	private :
 
+		static void compoundObjectToCompoundData( const IECore::CompoundObject *object, IECore::CompoundData *data );
+		
 		static size_t g_firstPlugIndex;
 };
 

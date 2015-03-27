@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -453,6 +454,11 @@ Imath::Box2i Display::computeDataWindow( const Gaffer::Context *context, const I
 		return m_driver->gafferDataWindow();
 	}
 	return Box2i();
+}
+
+IECore::ConstCompoundObjectPtr Display::computeMetadata( const Gaffer::Context *context, const ImagePlug *parent ) const
+{
+	return outPlug()->metadataPlug()->defaultValue();
 }
 
 void Display::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const

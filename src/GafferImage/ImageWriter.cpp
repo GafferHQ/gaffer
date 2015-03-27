@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2013-2014, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2013-2015, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,6 +34,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include <sys/utsname.h>
+
 #include "boost/bind.hpp"
 #include "boost/filesystem.hpp"
 
@@ -41,6 +43,7 @@
 OIIO_NAMESPACE_USING
 
 #include "Gaffer/Context.h"
+#include "Gaffer/ScriptNode.h"
 
 #include "GafferImage/ImageWriter.h"
 #include "GafferImage/ImagePlug.h"
@@ -51,6 +54,167 @@ using namespace Imath;
 using namespace IECore;
 using namespace GafferImage;
 using namespace Gaffer;
+
+//////////////////////////////////////////////////////////////////////////
+// Utility for converting IECore::Data types to OIIO::TypeDesc types.
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+TypeDesc typeDescFromData( const Data *data, const void *&basePointer )
+{
+	switch( data->typeId() )
+	{
+		// simple data
+
+		case CharDataTypeId :
+		{
+			basePointer = static_cast<const CharData *>( data )->baseReadable();
+			return TypeDesc( TypeDesc::CHAR );
+		}
+		case UCharDataTypeId :
+		{
+			basePointer = static_cast<const UCharData *>( data )->baseReadable();
+			return TypeDesc( TypeDesc::UCHAR );
+		}
+		case StringDataTypeId :
+		{
+			basePointer = static_cast<const StringData *>( data )->baseReadable();
+			return TypeDesc::TypeString;
+		}
+		case UShortDataTypeId :
+		{
+			basePointer = static_cast<const UShortData *>( data )->baseReadable();
+			return TypeDesc( TypeDesc::USHORT );
+		}
+		case ShortDataTypeId :
+		{
+			basePointer = static_cast<const ShortData *>( data )->baseReadable();
+			return TypeDesc( TypeDesc::SHORT );
+		}
+		case UIntDataTypeId :
+		{
+			basePointer = static_cast<const UIntData *>( data )->baseReadable();
+			return TypeDesc( TypeDesc::UINT );
+		}
+		case HalfDataTypeId :
+		{
+			basePointer = static_cast<const HalfData *>( data )->baseReadable();
+			return TypeDesc( TypeDesc::HALF );
+		}
+		case IntDataTypeId :
+		{
+			basePointer = static_cast<const IntData *>( data )->baseReadable();
+			return TypeDesc::TypeInt;
+		}
+		case V2iDataTypeId :
+		{
+			basePointer = static_cast<const V2iData *>( data )->baseReadable();
+			return TypeDesc(
+				TypeDesc::INT,
+				TypeDesc::VEC2
+			);
+		}
+		case V3iDataTypeId :
+		{
+			basePointer = static_cast<const V3iData *>( data )->baseReadable();
+			return TypeDesc(
+				TypeDesc::INT,
+				TypeDesc::VEC3
+			);
+		}
+		case FloatDataTypeId :
+		{
+			basePointer = static_cast<const FloatData *>( data )->baseReadable();
+			return TypeDesc::TypeFloat;
+		}
+		case V2fDataTypeId :
+		{
+			basePointer = static_cast<const V2fData *>( data )->baseReadable();
+			return TypeDesc(
+				TypeDesc::FLOAT,
+				TypeDesc::VEC2
+			);
+		}
+		case V3fDataTypeId :
+		{
+			basePointer = static_cast<const V3fData *>( data )->baseReadable();
+			return TypeDesc(
+				TypeDesc::FLOAT,
+				TypeDesc::VEC3
+			);
+		}
+		case M44fDataTypeId :
+		{
+			basePointer = static_cast<const M44fData *>( data )->baseReadable();
+			return TypeDesc(
+				TypeDesc::FLOAT,
+				TypeDesc::MATRIX44
+			);
+		}
+		case DoubleDataTypeId :
+		{
+			basePointer = static_cast<const DoubleData *>( data )->baseReadable();
+			return TypeDesc( TypeDesc::DOUBLE );
+		}
+		case V2dDataTypeId :
+		{
+			basePointer = static_cast<const V2dData *>( data )->baseReadable();
+			return TypeDesc(
+				TypeDesc::DOUBLE,
+				TypeDesc::VEC2
+			);
+		}
+		case V3dDataTypeId :
+		{
+			basePointer = static_cast<const V3dData *>( data )->baseReadable();
+			return TypeDesc(
+				TypeDesc::DOUBLE,
+				TypeDesc::VEC3
+			);
+		}
+		case M44dDataTypeId :
+		{
+			basePointer = static_cast<const M44dData *>( data )->baseReadable();
+			return TypeDesc(
+				TypeDesc::DOUBLE,
+				TypeDesc::MATRIX44
+			);
+		}
+		case Color3fDataTypeId :
+		{
+			basePointer = static_cast<const Color3fData *>( data )->baseReadable();
+			return TypeDesc::TypeColor;
+		}
+		default :
+		{
+			return TypeDesc();
+		}
+	}
+};
+
+void appendImageIOParameter( const std::string &name, const Data *data, ImageIOParameterList &paramList )
+{
+	const void *value = NULL;
+	TypeDesc type = typeDescFromData( data, value );
+	if ( value )
+	{
+		ParamValue &param = paramList.grow();
+		param.init( name, type, 1, value );
+	}
+}
+
+void metadataToImageIOParameterList( const CompoundObject *metadata, ImageIOParameterList &paramList )
+{
+	const CompoundObject::ObjectMap &members = metadata->members();
+	for ( CompoundObject::ObjectMap::const_iterator it = members.begin(); it != members.end(); ++it )
+	{
+		appendImageIOParameter( it->first, IECore::runTimeCast<const Data>( it->second.get() ), paramList );
+	}
+}
+
+} // namespace
 
 //////////////////////////////////////////////////////////////////////////
 // ImageWriter implementation
@@ -259,6 +423,48 @@ void ImageWriter::execute() const
 	spec.x = dataWindow.min.x;
 	spec.y = dataWindow.min.y;
 
+	// Add common attribs to the spec
+	std::string software = ( boost::format( "Gaffer %d.%d.%d.%d" ) % GAFFER_MILESTONE_VERSION % GAFFER_MAJOR_VERSION % GAFFER_MINOR_VERSION % GAFFER_PATCH_VERSION ).str();
+	appendImageIOParameter( "Software", new StringData( software ), spec.extra_attribs );	
+	struct utsname info;
+	if ( !uname( &info ) )
+	{
+		appendImageIOParameter( "HostComputer", new StringData( info.nodename ), spec.extra_attribs );
+	}
+	if ( const char *artist = getenv( "USER" ) )
+	{
+		appendImageIOParameter( "Artist", new StringData( artist ), spec.extra_attribs );
+	}
+	std::string document = "untitled";
+	if ( const ScriptNode *script = ancestor<ScriptNode>() )
+	{
+		const std::string scriptFile = script->fileNamePlug()->getValue();
+		document = ( scriptFile == "" ) ? document : scriptFile;
+	}
+	appendImageIOParameter( "DocumentName", new StringData( document ), spec.extra_attribs );
+	
+	// Add the metadata to the spec, removing metadata that could affect the resulting channel data
+	CompoundObjectPtr metadata = inPlug()->metadataPlug()->getValue()->copy();
+	CompoundObject::ObjectMap &members = metadata->members();
+	
+	std::vector<InternedString> oiioSpecifics;
+	oiioSpecifics.push_back( "oiio:ColorSpace" );
+	oiioSpecifics.push_back( "oiio:Gamma" );
+	oiioSpecifics.push_back( "oiio:UnassociatedAlpha" );
+	for ( std::vector<InternedString>::iterator it = oiioSpecifics.begin(); it != oiioSpecifics.end(); ++it )
+	{
+		CompoundObject::ObjectMap::iterator mIt = members.find( *it );
+		if ( mIt != members.end() )
+		{
+			members.erase( mIt );
+		}
+	}
+	
+	metadataToImageIOParameterList( metadata.get(), spec.extra_attribs );
+	
+	// PixelAspectRatio must be defined by the FormatPlug
+	appendImageIOParameter( "PixelAspectRatio", new FloatData( inPlug()->formatPlug()->getValue().getPixelAspect() ), spec.extra_attribs );
+	
 	// create the directories before opening the file
 	boost::filesystem::path directory = boost::filesystem::path( fileName ).parent_path();
 	if( !directory.empty() )

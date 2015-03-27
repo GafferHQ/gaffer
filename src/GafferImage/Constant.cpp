@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2012-2015, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -113,9 +113,9 @@ void Constant::hashFormat( const GafferImage::ImagePlug *output, const Gaffer::C
 	h.append( formatPlug()->hash() );
 }
 
-void Constant::hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+GafferImage::Format Constant::computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
-	ImageNode::hashChannelNames( output, context, h );
+	return formatPlug()->getValue();
 }
 
 void Constant::hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
@@ -124,23 +124,19 @@ void Constant::hashDataWindow( const GafferImage::ImagePlug *output, const Gaffe
 	h.append( formatPlug()->hash() );
 }
 
-void Constant::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
-{
-	ImageNode::hashChannelData( output, context, h );
-	// Don't bother hashing the format or tile origin here as we couldn't care less about the
-	// position on the canvas, only the colour!
-	h.append( context->get<std::string>( ImagePlug::channelNameContextName ) );
-	colorPlug()->hash( h );
-}
-
-GafferImage::Format Constant::computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const
-{
-	return formatPlug()->getValue();
-}
-
 Imath::Box2i Constant::computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
 	return formatPlug()->getValue().getDisplayWindow();
+}
+
+IECore::ConstCompoundObjectPtr Constant::computeMetadata( const Gaffer::Context *context, const ImagePlug *parent ) const
+{
+	return outPlug()->metadataPlug()->defaultValue();
+}
+
+void Constant::hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	ImageNode::hashChannelNames( output, context, h );
 }
 
 IECore::ConstStringVectorDataPtr Constant::computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const
@@ -152,6 +148,15 @@ IECore::ConstStringVectorDataPtr Constant::computeChannelNames( const Gaffer::Co
 	channelStrVector.push_back("B");
 	channelStrVector.push_back("A");
 	return channelStrVectorData;
+}
+
+void Constant::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	ImageNode::hashChannelData( output, context, h );
+	// Don't bother hashing the format or tile origin here as we couldn't care less about the
+	// position on the canvas, only the colour!
+	h.append( context->get<std::string>( ImagePlug::channelNameContextName ) );
+	colorPlug()->hash( h );
 }
 
 IECore::ConstFloatVectorDataPtr Constant::computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const

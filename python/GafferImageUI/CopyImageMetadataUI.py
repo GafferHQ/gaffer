@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2013-2015, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,51 +34,51 @@
 #
 ##########################################################################
 
-import os
-import unittest
-
-import IECore
-
 import Gaffer
+import GafferUI
 import GafferImage
 
-class ObjectToImageTest( unittest.TestCase ) :
+Gaffer.Metadata.registerNode(
 
-	fileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/checker.exr" )
-	negFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/checkerWithNegativeDataWindow.200x150.exr" )
+	GafferImage.CopyImageMetadata,
 
-	def test( self ) :
+	"description",
+	"""
+	Copies metadata entries from the second image to the first image
+	based on name. If those entries already exist in the incoming
+	image metadata, their values will be overwritten.
+	""",
 
-		i = IECore.Reader.create( self.fileName ).read()
+	plugs = {
+
+		"copyFrom" : [
+
+			"description",
+			"""
+			The image to copy the metadata entries from.
+			""",
+
+		],
 		
-		n = GafferImage.ObjectToImage()
-		n["object"].setValue( i )
+		"names" : [
 
-		self.assertEqual( n["out"].image(), i )
+			"description",
+			"""
+			The names of metadata entries to be copied. This is a space separated
+			list of entry names, which accepts Gaffer's standard string wildcards.
+			""",
 
-	def testImageWithANegativeDataWindow( self ) :
-
-		i = IECore.Reader.create( self.negFileName ).read()
+		],
 		
-		n = GafferImage.ObjectToImage()
-		n["object"].setValue( i )
+		"invertNames" : [
 
-		self.assertEqual( n["out"].image(), i )
+			"description",
+			"""
+			When on, matching names are ignored, and non-matching names are copied instead.
+			""",
 
-	def testHashVariesPerTileAndChannel( self ) :
+		],
 
-		n = GafferImage.ObjectToImage()
-		n["object"].setValue( IECore.Reader.create( self.fileName ).read() )
+	}
 
-		self.assertNotEqual(
-			n["out"].channelDataHash( "R", IECore.V2i( 0 ) ),
-			n["out"].channelDataHash( "G", IECore.V2i( 0 ) )
-		)
-
-		self.assertNotEqual(
-			n["out"].channelDataHash( "R", IECore.V2i( 0 ) ),
-			n["out"].channelDataHash( "R", IECore.V2i( GafferImage.ImagePlug.tileSize() ) )
-		)
-
-if __name__ == "__main__":
-	unittest.main()
+)

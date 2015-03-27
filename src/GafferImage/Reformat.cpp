@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2013-2015, Image Engine Design Inc. All rights reserved.
 //  Copyright (c) 2013, Luke Goddard. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
@@ -52,6 +52,10 @@ Reformat::Reformat( const std::string &name )
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new FormatPlug( "format" ) );
 	addChild( new FilterPlug( "filter" ) );
+	
+	// We don't ever want to change these, so we make pass-through connections.
+	outPlug()->metadataPlug()->setInput( inPlug()->metadataPlug() );
+	outPlug()->channelNamesPlug()->setInput( inPlug()->channelNamesPlug() );
 }
 
 Reformat::~Reformat()
@@ -111,15 +115,20 @@ bool Reformat::enabled() const
 	return inFormat != outFormat;
 }
 
-void Reformat::hashFormat( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void Reformat::hashFormat( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	ImageProcessor::hashFormat( output, context, h );
+	ImageProcessor::hashFormat( parent, context, h );
 	formatPlug()->hash( h );
 }
 
-void Reformat::hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+GafferImage::Format Reformat::computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
-	ImageProcessor::hashDataWindow( output, context, h );
+	return formatPlug()->getValue();
+}
+
+void Reformat::hashDataWindow( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	ImageProcessor::hashDataWindow( parent, context, h );
 
 	Format format = formatPlug()->getValue();
 	h.append( format.getDisplayWindow() );
@@ -130,29 +139,6 @@ void Reformat::hashDataWindow( const GafferImage::ImagePlug *output, const Gaffe
 	h.append( inFormat.getPixelAspect() );
 
 	inPlug()->dataWindowPlug()->hash( h );
-}
-
-void Reformat::hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
-{
-	h = inPlug()->channelNamesPlug()->hash();
-}
-
-void Reformat::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
-{
-	ImageProcessor::hashChannelData( output, context, h );
-
-	inPlug()->channelDataPlug()->hash( h );
-	filterPlug()->hash( h );
-
-	h.append( inPlug()->dataWindowPlug()->getValue() );
-
-	Format format = formatPlug()->getValue();
-	h.append( format.getDisplayWindow() );
-	h.append( format.getPixelAspect() );
-
-	Format inFormat = inPlug()->formatPlug()->getValue();
-	h.append( inFormat.getDisplayWindow() );
-	h.append( inFormat.getPixelAspect() );
 }
 
 Imath::Box2i Reformat::computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const
@@ -178,16 +164,6 @@ Imath::Box2i Reformat::computeDataWindow( const Gaffer::Context *context, const 
 	return outDataWindow;
 }
 
-GafferImage::Format Reformat::computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const
-{
-	return formatPlug()->getValue();
-}
-
-IECore::ConstStringVectorDataPtr Reformat::computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const
-{
-	return inPlug()->channelNamesPlug()->getValue();
-}
-
 Imath::V2d Reformat::scale() const
 {
 	Format inFormat( inPlug()->formatPlug()->getValue() );
@@ -203,6 +179,24 @@ struct Contribution
 	int pixel;
 	float weight;
 };
+
+void Reformat::hashChannelData( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	ImageProcessor::hashChannelData( parent, context, h );
+
+	inPlug()->channelDataPlug()->hash( h );
+	filterPlug()->hash( h );
+
+	h.append( inPlug()->dataWindowPlug()->getValue() );
+
+	Format format = formatPlug()->getValue();
+	h.append( format.getDisplayWindow() );
+	h.append( format.getPixelAspect() );
+
+	Format inFormat = inPlug()->formatPlug()->getValue();
+	h.append( inFormat.getDisplayWindow() );
+	h.append( inFormat.getPixelAspect() );
+}
 
 IECore::ConstFloatVectorDataPtr Reformat::computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const
 {

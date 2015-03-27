@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2013-2015, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,51 +34,35 @@
 #
 ##########################################################################
 
-import os
-import unittest
-
-import IECore
-
 import Gaffer
+import GafferUI
 import GafferImage
 
-class ObjectToImageTest( unittest.TestCase ) :
+Gaffer.Metadata.registerNode(
 
-	fileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/checker.exr" )
-	negFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/checkerWithNegativeDataWindow.200x150.exr" )
+	GafferImage.ImageMetadata,
 
-	def test( self ) :
+	"description",
+	"""
+	Adds arbitrary metadata entires to an image. If those entries
+	already exist in the incoming image metadata, their values
+	will be overwritten.
+	""",
 
-		i = IECore.Reader.create( self.fileName ).read()
-		
-		n = GafferImage.ObjectToImage()
-		n["object"].setValue( i )
+	plugs = {
 
-		self.assertEqual( n["out"].image(), i )
+		"metadata" : [
 
-	def testImageWithANegativeDataWindow( self ) :
+			"description",
+			"""
+			The metadata to be applied - arbitrary numbers of user defined metadata may be added
+			as children of this plug via the user interface, or using the CompoundDataPlug python API
+			""",
 
-		i = IECore.Reader.create( self.negFileName ).read()
-		
-		n = GafferImage.ObjectToImage()
-		n["object"].setValue( i )
+		],
 
-		self.assertEqual( n["out"].image(), i )
+	}
 
-	def testHashVariesPerTileAndChannel( self ) :
+)
 
-		n = GafferImage.ObjectToImage()
-		n["object"].setValue( IECore.Reader.create( self.fileName ).read() )
-
-		self.assertNotEqual(
-			n["out"].channelDataHash( "R", IECore.V2i( 0 ) ),
-			n["out"].channelDataHash( "G", IECore.V2i( 0 ) )
-		)
-
-		self.assertNotEqual(
-			n["out"].channelDataHash( "R", IECore.V2i( 0 ) ),
-			n["out"].channelDataHash( "R", IECore.V2i( GafferImage.ImagePlug.tileSize() ) )
-		)
-
-if __name__ == "__main__":
-	unittest.main()
+GafferUI.PlugValueWidget.registerCreator( GafferImage.ImageMetadata, "metadata", GafferUI.CompoundDataPlugValueWidget, collapsed=None )

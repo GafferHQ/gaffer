@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2013-2014, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2013-2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -239,14 +239,17 @@ class ImageTransformTest( unittest.TestCase ) :
 
 		self.assertFalse( res.value )
 
-	def testChannelNamesPassThrough( self ) :
+	def testPassThrough( self ) :
 
 		c = GafferImage.Constant()
 		t = GafferImage.ImageTransform()
 		t["in"].setInput( c["out"] )
 		t["transform"]["translate"].setValue( IECore.V2f( 1, 0 ) )
-
+		
+		self.assertEqual( t["out"]["metadata"].hash(), c["out"]["metadata"].hash() )
 		self.assertEqual( t["out"]["channelNames"].hash(), c["out"]["channelNames"].hash() )
+		
+		self.assertEqual( t["out"]["metadata"].getValue(), c["out"]["metadata"].getValue() )
 		self.assertEqual( t["out"]["channelNames"].getValue(), c["out"]["channelNames"].getValue() )
 
 if __name__ == "__main__":

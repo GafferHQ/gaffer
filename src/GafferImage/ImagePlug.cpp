@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2012-2014, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2012-2015, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -171,6 +171,15 @@ ImagePlug::ImagePlug( const std::string &name, Direction direction, unsigned fla
 		)
 	);
 
+	addChild(
+		new CompoundObjectPlug(
+			"metadata",
+			direction,
+			new IECore::CompoundObject,
+			childFlags
+		)
+	);
+	
 	IECore::StringVectorDataPtr channelStrVectorData( new IECore::StringVectorData() );
 	std::vector<std::string> &channelStrVector( channelStrVectorData->writable() );
 	channelStrVector.push_back("R");
@@ -215,7 +224,7 @@ const IECore::FloatVectorData *ImagePlug::blackTile()
 
 bool ImagePlug::acceptsChild( const GraphComponent *potentialChild ) const
 {
-	return children().size() != 4;
+	return children().size() != 5;
 }
 
 bool ImagePlug::acceptsInput( const Gaffer::Plug *input ) const
@@ -256,24 +265,34 @@ const Gaffer::AtomicBox2iPlug *ImagePlug::dataWindowPlug() const
 	return getChild<AtomicBox2iPlug>( g_firstPlugIndex+1 );
 }
 
+Gaffer::CompoundObjectPlug *ImagePlug::metadataPlug()
+{
+	return getChild<CompoundObjectPlug>( g_firstPlugIndex+2 );
+}
+
+const Gaffer::CompoundObjectPlug *ImagePlug::metadataPlug() const
+{
+	return getChild<CompoundObjectPlug>( g_firstPlugIndex+2 );
+}
+
 Gaffer::StringVectorDataPlug *ImagePlug::channelNamesPlug()
 {
-	return getChild<StringVectorDataPlug>( g_firstPlugIndex+2 );
+	return getChild<StringVectorDataPlug>( g_firstPlugIndex+3 );
 }
 
 const Gaffer::StringVectorDataPlug *ImagePlug::channelNamesPlug() const
 {
-	return getChild<StringVectorDataPlug>( g_firstPlugIndex+2 );
+	return getChild<StringVectorDataPlug>( g_firstPlugIndex+3 );
 }
 
 Gaffer::FloatVectorDataPlug *ImagePlug::channelDataPlug()
 {
-	return getChild<FloatVectorDataPlug>( g_firstPlugIndex+3 );
+	return getChild<FloatVectorDataPlug>( g_firstPlugIndex+4 );
 }
 
 const Gaffer::FloatVectorDataPlug *ImagePlug::channelDataPlug() const
 {
-	return getChild<FloatVectorDataPlug>( g_firstPlugIndex+3 );
+	return getChild<FloatVectorDataPlug>( g_firstPlugIndex+4 );
 }
 
 IECore::ConstFloatVectorDataPtr ImagePlug::channelData( const std::string &channelName, const Imath::V2i &tile ) const
@@ -316,7 +335,10 @@ IECore::ImagePrimitivePtr ImagePlug::image() const
 	}
 
 	ImagePrimitivePtr result = new ImagePrimitive( newDataWindow, format.getDisplayWindow() );
-
+	
+	ConstCompoundObjectPtr metadata = metadataPlug()->getValue();
+	compoundObjectToCompoundData( metadata.get(), result->blindData() );
+	
 	ConstStringVectorDataPtr channelNamesData = channelNamesPlug()->getValue();
 	const vector<string> &channelNames = channelNamesData->readable();
 
@@ -344,28 +366,47 @@ IECore::MurmurHash ImagePlug::imageHash() const
 
 	MurmurHash result = formatPlug()->hash();
 	result.append( dataWindowPlug()->hash() );
+	result.append( metadataPlug()->hash() );
 	result.append( channelNamesPlug()->hash() );
 
 	V2i minTileOrigin = tileOrigin( dataWindow.min );
 	V2i maxTileOrigin = tileOrigin( dataWindow.max );
 
 	ContextPtr context = new Context( *Context::current(), Context::Borrowed );
+	Context::Scope scope( context.get() );
+	
 	for( vector<string>::const_iterator it = channelNames.begin(), eIt = channelNames.end(); it!=eIt; it++ )
 	{
+		context->set( ImagePlug::channelNameContextName, *it );
 		for( int tileOriginY = minTileOrigin.y; tileOriginY<=maxTileOrigin.y; tileOriginY += tileSize() )
 		{
 			for( int tileOriginX = minTileOrigin.x; tileOriginX<=maxTileOrigin.x; tileOriginX += tileSize() )
 			{
-				for( vector<string>::const_iterator it = channelNames.begin(), eIt = channelNames.end(); it!=eIt; it++ )
-				{
-					context->set( ImagePlug::channelNameContextName, *it );
-					context->set( ImagePlug::tileOriginContextName, V2i( tileOriginX, tileOriginY ) );
-					Context::Scope scope( context.get() );
-					channelDataPlug()->hash( result );
-				}
+				context->set( ImagePlug::tileOriginContextName, V2i( tileOriginX, tileOriginY ) );
+				channelDataPlug()->hash( result );
 			}
 		}
 	}
 
 	return result;
+}
+
+// \todo This function may be useful on other situations. Add as Converter?
+void ImagePlug::compoundObjectToCompoundData( const CompoundObject *object, CompoundData *data )
+{
+	CompoundDataMap &dataMap = data->writable();
+	const CompoundObject::ObjectMap &objectMap = object->members();
+	for ( CompoundObject::ObjectMap::const_iterator it = objectMap.begin(); it != objectMap.end(); ++it )
+	{
+		if ( it->second->typeId() == CompoundObjectTypeId )
+		{
+			CompoundDataPtr newData = new CompoundData();
+			dataMap[ it->first ] = newData;
+			compoundObjectToCompoundData( static_cast<const CompoundObject *>( it->second.get() ), newData.get() );
+		}
+		else if ( Data *value = IECore::runTimeCast<Data>( it->second.get() ) )
+		{
+			dataMap[ it->first ] = value;
+		}
+	}
 }

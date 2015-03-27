@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2013-2015, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -45,11 +45,9 @@
 #include "GafferImage/ImageNode.h"
 #include "GafferImage/Display.h"
 #include "GafferImage/ImageProcessor.h"
-#include "GafferImage/FilterProcessor.h"
 #include "GafferImage/ChannelDataProcessor.h"
 #include "GafferImage/OpenColorIO.h"
 #include "GafferImage/ObjectToImage.h"
-#include "GafferImage/Merge.h"
 #include "GafferImage/Grade.h"
 #include "GafferImage/Clamp.h"
 #include "GafferImage/Constant.h"
@@ -58,6 +56,10 @@
 #include "GafferImage/ImageTransform.h"
 #include "GafferImage/ImageStats.h"
 #include "GafferImage/ImageSampler.h"
+#include "GafferImage/MetadataProcessor.h"
+#include "GafferImage/ImageMetadata.h"
+#include "GafferImage/DeleteImageMetadata.h"
+#include "GafferImage/CopyImageMetadata.h"
 
 #include "GafferImageBindings/FormatBinding.h"
 #include "GafferImageBindings/FormatPlugBinding.h"
@@ -66,6 +68,7 @@
 #include "GafferImageBindings/FilterBinding.h"
 #include "GafferImageBindings/DeleteChannelsBinding.h"
 #include "GafferImageBindings/ChannelMaskPlugBindings.h"
+#include "GafferImageBindings/MergeBinding.h"
 #include "GafferImageBindings/MixinBinding.h"
 #include "GafferImageBindings/FormatDataBinding.h"
 #include "GafferImageBindings/ImageReaderBinding.h"
@@ -115,12 +118,10 @@ BOOST_PYTHON_MODULE( _GafferImage )
 		.def( "imageReceivedSignal", &Display::imageReceivedSignal, return_value_policy<reference_existing_object>() ).staticmethod( "imageReceivedSignal" )
 	;
 	GafferBindings::DependencyNodeClass<ImageProcessor>();
-	GafferBindings::DependencyNodeClass<FilterProcessor>();
 	GafferBindings::DependencyNodeClass<ChannelDataProcessor>();
 	GafferBindings::DependencyNodeClass<ColorProcessor>();
 	GafferBindings::DependencyNodeClass<OpenColorIO>();
 	GafferBindings::DependencyNodeClass<ObjectToImage>();
-	GafferBindings::DependencyNodeClass<Merge>();
 	GafferBindings::DependencyNodeClass<Grade>();
 	GafferBindings::DependencyNodeClass<Clamp>();
 	GafferBindings::DependencyNodeClass<Constant>();
@@ -128,6 +129,10 @@ BOOST_PYTHON_MODULE( _GafferImage )
 	GafferBindings::DependencyNodeClass<ImageTransform>();
 	GafferBindings::DependencyNodeClass<ImageStats>();
 	GafferBindings::DependencyNodeClass<ImageSampler>();
+	GafferBindings::DependencyNodeClass<MetadataProcessor>();
+	GafferBindings::DependencyNodeClass<ImageMetadata>();
+	GafferBindings::DependencyNodeClass<DeleteImageMetadata>();
+	GafferBindings::DependencyNodeClass<CopyImageMetadata>();
 
 	GafferImageBindings::bindDeleteChannels();
 	GafferImageBindings::bindFormat();
@@ -139,6 +144,7 @@ BOOST_PYTHON_MODULE( _GafferImage )
 	GafferImageBindings::bindMixin();
 	GafferImageBindings::bindFormatData();
 	GafferImageBindings::bindImageReader();
+	GafferImageBindings::bindMerge();
 
 	GafferBindings::ExecutableNodeClass<ImageWriter>();
 }

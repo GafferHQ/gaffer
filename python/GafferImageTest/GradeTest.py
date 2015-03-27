@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2013-2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -98,6 +98,25 @@ class GradeTest( unittest.TestCase ) :
 		self.assertEqual( g.correspondingInput( g["enabled"] ), None )
 		self.assertEqual( g.correspondingInput( g["gain"] ), None )
 
+	def testPassThrough( self ) :
+		
+		i = GafferImage.ImageReader()
+		i["fileName"].setValue( self.checkerFile )
+
+		g = GafferImage.Grade()
+		g["in"].setInput( i["out"] )
+		g["gain"].setValue( IECore.Color3f( 2., 2., 2. ) )
+		
+		self.assertEqual( i["out"]["format"].hash(), g["out"]["format"].hash() )
+		self.assertEqual( i["out"]["dataWindow"].hash(), g["out"]["dataWindow"].hash() )
+		self.assertEqual( i["out"]["metadata"].hash(), g["out"]["metadata"].hash() )
+		self.assertEqual( i["out"]["channelNames"].hash(), g["out"]["channelNames"].hash() )
+		
+		self.assertEqual( i["out"]["format"].getValue(), g["out"]["format"].getValue() )
+		self.assertEqual( i["out"]["dataWindow"].getValue(), g["out"]["dataWindow"].getValue() )
+		self.assertEqual( i["out"]["metadata"].getValue(), g["out"]["metadata"].getValue() )
+		self.assertEqual( i["out"]["channelNames"].getValue(), g["out"]["channelNames"].getValue() )
+	
 	def testChannelDataHashesAreIndependent( self ) :
 
 		# changing only one channel of any of the grading plugs should not

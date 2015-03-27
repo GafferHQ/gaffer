@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2013-2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -159,3 +159,29 @@ class DeleteChannelsTest( unittest.TestCase ) :
 		self.assertEqual( set( ri.keys() ), set( [ "R", "G", "B", "A" ] ) )
 		self.assertEqual( di.keys(), [ "R" ] )
 		self.assertEqual( di["R"].data, ri["R"].data )
+
+	def testPassThrough( self ) :
+		
+		i = GafferImage.ImageReader()
+		i["fileName"].setValue( self.checkerFile )
+
+		d = GafferImage.DeleteChannels()
+		d["in"].setInput( i["out"] )
+		d["mode"].setValue( d.Mode.Keep )
+		d["channels"].setValue( IECore.StringVectorData( [ "R" ] ) )
+		
+		self.assertEqual( i["out"]["format"].hash(), d["out"]["format"].hash() )
+		self.assertEqual( i["out"]["dataWindow"].hash(), d["out"]["dataWindow"].hash() )
+		self.assertEqual( i["out"]["metadata"].hash(), d["out"]["metadata"].hash() )
+				
+		self.assertEqual( i["out"]["format"].getValue(), d["out"]["format"].getValue() )
+		self.assertEqual( i["out"]["dataWindow"].getValue(), d["out"]["dataWindow"].getValue() )
+		self.assertEqual( i["out"]["metadata"].getValue(), d["out"]["metadata"].getValue() )
+		
+		context = Gaffer.Context()
+		context["image:tileOrigin"] = IECore.V2i( 0 )
+		with context :
+			for c in [ "G", "B", "A" ] :
+				context["image:channelName"] = c
+				self.assertEqual( i["out"]["channelData"].hash(), d["out"]["channelData"].hash() )
+				self.assertEqual( i["out"]["channelData"].getValue(), d["out"]["channelData"].getValue() )

@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2013-2015, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -73,12 +73,10 @@ class Implementation : public ImageProcessor
 
 		virtual void hashFormat( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual void hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual void hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual void hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 
 		virtual GafferImage::Format computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const;
 		virtual Imath::Box2i computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const;
-		virtual IECore::ConstStringVectorDataPtr computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const;
 		virtual IECore::ConstFloatVectorDataPtr computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const;
 
 		/// Plug accessors.
@@ -114,6 +112,10 @@ Implementation::Implementation( const std::string &name )
 	addChild( new Gaffer::Transform2DPlug( "transform" ) );
 	addChild( new GafferImage::FilterPlug( "filter" ) );
 	addChild( new GafferImage::FormatPlug( "outputFormat" ) );
+	
+	// We don't ever want to change these, so we make pass-through connections.
+	outPlug()->metadataPlug()->setInput( inPlug()->metadataPlug() );
+	outPlug()->channelNamesPlug()->setInput( inPlug()->channelNamesPlug() );
 }
 
 Gaffer::Transform2DPlug *Implementation::transformPlug()
@@ -205,6 +207,11 @@ void Implementation::hashFormat( const GafferImage::ImagePlug *output, const Gaf
 	h = outputFormatPlug()->hash();
 }
 
+GafferImage::Format Implementation::computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const
+{
+	return outputFormatPlug()->getValue();
+}
+
 void Implementation::hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	ImageProcessor::hashDataWindow( output, context, h );
@@ -212,9 +219,12 @@ void Implementation::hashDataWindow( const GafferImage::ImagePlug *output, const
 	transformPlug()->hash( h );
 }
 
-void Implementation::hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+Imath::Box2i Implementation::computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
-	h = inPlug()->channelNamesPlug()->hash();
+	Imath::Box2i inWindow( inPlug()->dataWindowPlug()->getValue() );
+	Imath::M33f t = computeAdjustedMatrix();
+	Imath::Box2i outWindow( transformBox( t, inWindow ) );
+	return outWindow;
 }
 
 void Implementation::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
@@ -242,12 +252,34 @@ void Implementation::hashChannelData( const GafferImage::ImagePlug *output, cons
 	transformPlug()->hash( h );
 }
 
-Imath::Box2i Implementation::computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const
+IECore::ConstFloatVectorDataPtr Implementation::computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const
 {
-	Imath::Box2i inWindow( inPlug()->dataWindowPlug()->getValue() );
-	Imath::M33f t = computeAdjustedMatrix();
-	Imath::Box2i outWindow( transformBox( t, inWindow ) );
-	return outWindow;
+	// Allocate the new tile
+	FloatVectorDataPtr outDataPtr = new FloatVectorData;
+	std::vector<float> &out = outDataPtr->writable();
+	out.resize( ImagePlug::tileSize() * ImagePlug::tileSize() );
+
+	// Work out the bounds of the tile that we are outputting to.
+	Imath::Box2i tile( tileOrigin, Imath::V2i( tileOrigin.x + ImagePlug::tileSize() - 1, tileOrigin.y + ImagePlug::tileSize() - 1 ) );
+
+	// Work out the sample area that we require to compute this tile.
+
+	Imath::M33f t = computeAdjustedMatrix().inverse();
+	Imath::Box2i sampleBox( transformBox( t, tile ) );
+
+	GafferImage::FilterPtr filter = GafferImage::Filter::create( filterPlug()->getValue() );
+	Sampler sampler( inPlug(), channelName, sampleBox, filter );
+	for ( int j = 0; j < ImagePlug::tileSize(); ++j )
+	{
+		for ( int i = 0; i < ImagePlug::tileSize(); ++i )
+		{
+			Imath::V3f p( i+tile.min.x+.5, j+tile.min.y+.5, 1. );
+			p *= t;
+			out[ i + j*ImagePlug::tileSize() ] = sampler.sample( p.x, p.y );
+		}
+	}
+
+	return outDataPtr;
 }
 
 Imath::M33f Implementation::computeAdjustedMatrix() const
@@ -317,46 +349,6 @@ Imath::Box2i Implementation::transformBox( const Imath::M33f &m, const Imath::Bo
 	}
 
 	return Imath::Box2i( Imath::V2i( minX, minY ), Imath::V2i( maxX-1, maxY-1 ) );
-}
-
-GafferImage::Format Implementation::computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const
-{
-	return outputFormatPlug()->getValue();
-}
-
-IECore::ConstStringVectorDataPtr Implementation::computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const
-{
-	return inPlug()->channelNamesPlug()->getValue();
-}
-
-IECore::ConstFloatVectorDataPtr Implementation::computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const
-{
-	// Allocate the new tile
-	FloatVectorDataPtr outDataPtr = new FloatVectorData;
-	std::vector<float> &out = outDataPtr->writable();
-	out.resize( ImagePlug::tileSize() * ImagePlug::tileSize() );
-
-	// Work out the bounds of the tile that we are outputting to.
-	Imath::Box2i tile( tileOrigin, Imath::V2i( tileOrigin.x + ImagePlug::tileSize() - 1, tileOrigin.y + ImagePlug::tileSize() - 1 ) );
-
-	// Work out the sample area that we require to compute this tile.
-
-	Imath::M33f t = computeAdjustedMatrix().inverse();
-	Imath::Box2i sampleBox( transformBox( t, tile ) );
-
-	GafferImage::FilterPtr filter = GafferImage::Filter::create( filterPlug()->getValue() );
-	Sampler sampler( inPlug(), channelName, sampleBox, filter );
-	for ( int j = 0; j < ImagePlug::tileSize(); ++j )
-	{
-		for ( int i = 0; i < ImagePlug::tileSize(); ++i )
-		{
-			Imath::V3f p( i+tile.min.x+.5, j+tile.min.y+.5, 1. );
-			p *= t;
-			out[ i + j*ImagePlug::tileSize() ] = sampler.sample( p.x, p.y );
-		}
-	}
-
-	return outDataPtr;
 }
 
 }; // namespace Detail
@@ -446,25 +438,6 @@ const GafferImage::FormatPlug *ImageTransform::formatPlug() const
 	return getChild<GafferImage::FormatPlug>( g_firstPlugIndex + 2 );
 }
 
-void ImageTransform::compute( ValuePlug *output, const Context *context ) const
-{
-	if( output == formatPlug() )
-	{
-		Imath::V2f scale = transformPlug()->scalePlug()->getValue();
-		GafferImage::Format f = inPlug()->formatPlug()->getValue();
-
-		Imath::Box2i newDisplayWindow(
-			Imath::V2i( IECore::fastFloatFloor( f.getDisplayWindow().min.x * scale.x ), IECore::fastFloatFloor( f.getDisplayWindow().min.y * scale.y ) ),
-			Imath::V2i( IECore::fastFloatCeil( f.getDisplayWindow().max.x * scale.x ), IECore::fastFloatCeil( f.getDisplayWindow().max.y * scale.y ) )
-		);
-
-		static_cast<FormatPlug *>( output )->setValue( GafferImage::Format( newDisplayWindow, 1.f ) );
-		return;
-	}
-
-	ImageProcessor::compute( output, context );
-}
-
 void ImageTransform::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	ImageProcessor::affects( input, outputs );
@@ -490,28 +463,25 @@ void ImageTransform::hash( const ValuePlug *output, const Context *context, IECo
 	}
 }
 
+void ImageTransform::compute( ValuePlug *output, const Context *context ) const
+{
+	if( output == formatPlug() )
+	{
+		Imath::V2f scale = transformPlug()->scalePlug()->getValue();
+		GafferImage::Format f = inPlug()->formatPlug()->getValue();
+
+		Imath::Box2i newDisplayWindow(
+			Imath::V2i( IECore::fastFloatFloor( f.getDisplayWindow().min.x * scale.x ), IECore::fastFloatFloor( f.getDisplayWindow().min.y * scale.y ) ),
+			Imath::V2i( IECore::fastFloatCeil( f.getDisplayWindow().max.x * scale.x ), IECore::fastFloatCeil( f.getDisplayWindow().max.y * scale.y ) )
+		);
+
+		static_cast<FormatPlug *>( output )->setValue( GafferImage::Format( newDisplayWindow, 1.f ) );
+		return;
+	}
+
+	ImageProcessor::compute( output, context );
+}
+
 ImageTransform::~ImageTransform()
 {
 }
-
-GafferImage::Format ImageTransform::computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const
-{
-	return inPlug()->formatPlug()->getValue();
-}
-
-Imath::Box2i ImageTransform::computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const
-{
-	return inPlug()->dataWindowPlug()->getValue();
-}
-
-IECore::ConstStringVectorDataPtr ImageTransform::computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const
-{
-	return inPlug()->channelNamesPlug()->getValue();
-}
-
-IECore::ConstFloatVectorDataPtr ImageTransform::computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const
-{
-	IECore::FloatVectorDataPtr outData = inPlug()->channelData( channelName, tileOrigin )->copy();
-	return outData;
-}
-

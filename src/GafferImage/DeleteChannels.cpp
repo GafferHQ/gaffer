@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2013-2015, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -64,8 +64,8 @@ DeleteChannels::DeleteChannels( const std::string &name )
 	// Direct pass-through for the things we don't ever change.
 	// This not only simplifies our implementation, but it is also
 	// faster to compute.
-	outPlug()->formatPlug()->setInput( inPlug()->formatPlug() );
 	outPlug()->dataWindowPlug()->setInput( inPlug()->dataWindowPlug() );
+	outPlug()->metadataPlug()->setInput( inPlug()->metadataPlug() );
 	outPlug()->channelDataPlug()->setInput( inPlug()->channelDataPlug() );
 
 }
@@ -110,32 +110,12 @@ void DeleteChannels::affects( const Gaffer::Plug *input, AffectedPlugsContainer 
 
 void DeleteChannels::hashFormat( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	throw Exception( "Unexpected call to DeleteChannels::hashFormat" );
+	h = inPlug()->formatPlug()->hash();
 }
 
 GafferImage::Format DeleteChannels::computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
-	throw Exception( "Unexpected call to DeleteChannels::computeFormat" );
-}
-
-void DeleteChannels::hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
-{
-	throw Exception( "Unexpected call to DeleteChannels::hashDataWindow" );
-}
-
-Imath::Box2i DeleteChannels::computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const
-{
-	throw Exception( "Unexpected call to DeleteChannels::computeDataWindow" );
-}
-
-void DeleteChannels::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
-{
-	throw Exception( "Unexpected call to DeleteChannels::hashChannelData" );
-}
-
-IECore::ConstFloatVectorDataPtr DeleteChannels::computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const
-{
-	throw Exception( "Unexpected call to DeleteChannels::computeChannelData" );
+	return inPlug()->formatPlug()->getValue();
 }
 
 void DeleteChannels::hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const

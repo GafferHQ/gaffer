@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2013-2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -179,12 +179,15 @@ class ReformatTest( unittest.TestCase ) :
 
 			self.assertFalse( res.value )
 
-	def testChannelNamesPassThrough( self ) :
+	def testPassThrough( self ) :
 
 		c = GafferImage.Constant()
 		r = GafferImage.Reformat()
 		r["in"].setInput( c["out"] )
 		r["format"].setValue( GafferImage.Format( 200, 150, 1.0 ) )
 
+		self.assertEqual( r["out"]["metadata"].hash(), c["out"]["metadata"].hash() )
 		self.assertEqual( r["out"]["channelNames"].hash(), c["out"]["channelNames"].hash() )
+		
+		self.assertEqual( r["out"]["metadata"].getValue(), c["out"]["metadata"].getValue() )
 		self.assertEqual( r["out"]["channelNames"].getValue(), c["out"]["channelNames"].getValue() )

@@ -34,6 +34,9 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include "IECore/BoxAlgo.h"
+#include "IECore/BoxOps.h"
+
 #include "Gaffer/Context.h"
 #include "GafferImage/Merge.h"
 
@@ -62,10 +65,21 @@ IE_CORE_DEFINERUNTIMETYPED( Merge );
 size_t Merge::g_firstPlugIndex = 0;
 
 Merge::Merge( const std::string &name )
-	:	FilterProcessor( name, 2, 50 )
+	:	ImageProcessor( name ), m_inputs( this, inPlug(), 2, Imath::limits<int>::max() )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
-	addChild( new IntPlug( "operation" ) );
+	addChild(
+		new IntPlug(
+			"operation",	// name
+			Plug::In,	// direction
+			Add,		// default
+			Add,		// min
+			Under		// max
+		)
+	);
+
+	// We don't ever want to change these, so we make pass-through connections.
+	outPlug()->metadataPlug()->setInput( inPlug()->metadataPlug() );
 }
 
 Merge::~Merge()
@@ -88,13 +102,25 @@ void Merge::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs 
 	{
 		outputs.push_back( outPlug()->channelDataPlug() );
 	}
-	else FilterProcessor::affects( input, outputs );
+	else
+	{
+		const ImagePlugList &inputs( m_inputs.inputs() );
+		for ( ImagePlugList::const_iterator it( inputs.begin() ); it < inputs.end(); ++it )
+		{
+			if ( input->parent<ImagePlug>() == *it )
+			{
+				outputs.push_back( outPlug()->getChild<ValuePlug>( input->getName() ) );
+				return;
+			}
+		}
+		
+		ImageProcessor::affects( input, outputs );
+	}
 }
 
 bool Merge::enabled() const
 {
-	// Call enabled() on the image node as we don't care whether the first input is connected or not.
-	if ( !ImageNode::enabled() )
+	if ( !ImageProcessor::enabled() )
 	{
 		return false;
 	}
@@ -102,9 +128,106 @@ bool Merge::enabled() const
 	return ( m_inputs.nConnectedInputs() >= 2 );
 }
 
+void Merge::hashFormat( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	h = inPlug()->formatPlug()->hash();
+}
+
+GafferImage::Format Merge::computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const
+{
+	return inPlug()->formatPlug()->getValue();
+}
+
+void Merge::hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	ImageProcessor::hashDataWindow( output, context, h );
+
+	const ImagePlugList &inputs( m_inputs.inputs() );
+	const ImagePlugList::const_iterator end( m_inputs.endIterator() );
+	for ( ImagePlugList::const_iterator it( inputs.begin() ); it != end; ++it )
+	{
+		if ( (*it)->getInput<ValuePlug>() )
+		{
+			(*it)->dataWindowPlug()->hash( h );
+		}
+	}
+}
+
+Imath::Box2i Merge::computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const
+{
+	Imath::Box2i dataWindow = inPlug()->dataWindowPlug()->getValue();
+	const ImagePlugList &inputs( m_inputs.inputs() );
+	const ImagePlugList::const_iterator end( m_inputs.endIterator() );
+	for ( ImagePlugList::const_iterator it( inputs.begin() ); it != end; ++it )
+	{
+		// We don't need to check that the plug is connected here as unconnected plugs don't have data windows.
+		IECore::boxExtend( dataWindow, (*it)->dataWindowPlug()->getValue() );
+	}
+	
+	return dataWindow;
+}
+
+void Merge::hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	ImageProcessor::hashChannelNames( output, context, h );
+
+	const ImagePlugList &inputs( m_inputs.inputs() );
+	const ImagePlugList::const_iterator end( m_inputs.endIterator() );
+	for ( ImagePlugList::const_iterator it( inputs.begin() ); it != end; ++it )
+	{
+		if ( (*it)->getInput<ValuePlug>() )
+		{
+			(*it)->channelNamesPlug()->hash( h );
+		}
+	}
+}
+
+IECore::ConstStringVectorDataPtr Merge::computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const
+{
+	IECore::StringVectorDataPtr outChannelStrVectorData( new IECore::StringVectorData() );
+	std::vector<std::string> &outChannels( outChannelStrVectorData->writable() );
+
+	// Iterate over the connected inputs.
+	const ImagePlugList& inputs( m_inputs.inputs() );
+	const ImagePlugList::const_iterator end( m_inputs.endIterator() );
+	for ( ImagePlugList::const_iterator it( inputs.begin() ); it != end; ++it )
+	{
+		if ( (*it)->getInput<ValuePlug>() )
+		{
+			IECore::ConstStringVectorDataPtr inChannelStrVectorData((*it)->channelNamesPlug()->getValue() );
+			const std::vector<std::string> &inChannels( inChannelStrVectorData->readable() );
+			for ( std::vector<std::string>::const_iterator cIt( inChannels.begin() ); cIt != inChannels.end(); ++cIt )
+			{
+				if ( std::find( outChannels.begin(), outChannels.end(), *cIt ) == outChannels.end() )
+				{
+					outChannels.push_back( *cIt );
+				}
+			}
+		}
+	}
+
+	if ( !outChannels.empty() )
+	{
+		return outChannelStrVectorData;
+	}
+	
+	return inPlug()->channelNamesPlug()->defaultValue();
+}
+
 void Merge::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	FilterProcessor::hashChannelData( output, context, h );
+	ImageProcessor::hashChannelData( output, context, h );
+	
+	const ImagePlugList &inputs( m_inputs.inputs() );
+	const ImagePlugList::const_iterator end( m_inputs.endIterator() );
+	for ( ImagePlugList::const_iterator it( inputs.begin() ); it != end; ++it )
+	{
+		if ( (*it)->getInput<ValuePlug>() )
+		{
+			(*it)->channelDataPlug()->hash( h );
+		}
+	}
+	
 	operationPlug()->hash( h );
 }
 
@@ -124,25 +247,22 @@ IECore::ConstFloatVectorDataPtr Merge::computeChannelData( const std::string &ch
 	}
 
 	// Get a pointer to the operation that we wish to perform.
-	int operation = operationPlug()->getValue();
+	Operation operation = (Operation)operationPlug()->getValue();
 	switch( operation )
 	{
-		default:
-		case( kAdd ): return doMergeOperation( opAdd, inData, inAlpha, tileOrigin ); break;
-		case( kAtop ): return doMergeOperation( opAtop, inData, inAlpha, tileOrigin ); break;
-		case( kDivide ): return doMergeOperation( opDivide, inData, inAlpha, tileOrigin ); break;
-		case( kIn ): return doMergeOperation( opIn, inData, inAlpha, tileOrigin ); break;
-		case( kOut ): return doMergeOperation( opOut, inData, inAlpha, tileOrigin ); break;
-		case( kMask ): return doMergeOperation( opMask, inData, inAlpha, tileOrigin ); break;
-		case( kMatte ): return doMergeOperation( opMatte, inData, inAlpha, tileOrigin ); break;
-		case( kMultiply ): return doMergeOperation( opMultiply, inData, inAlpha, tileOrigin ); break;
-		case( kOver ): return doMergeOperation( opOver, inData, inAlpha, tileOrigin ); break;
-		case( kSubtract ): return doMergeOperation( opSubtract, inData, inAlpha, tileOrigin ); break;
-		case( kUnder ): return doMergeOperation( opUnder, inData, inAlpha, tileOrigin ); break;
+		case( Add ): return doMergeOperation( opAdd, inData, inAlpha, tileOrigin ); break;
+		case( Atop ): return doMergeOperation( opAtop, inData, inAlpha, tileOrigin ); break;
+		case( Divide ): return doMergeOperation( opDivide, inData, inAlpha, tileOrigin ); break;
+		case( In ): return doMergeOperation( opIn, inData, inAlpha, tileOrigin ); break;
+		case( Out ): return doMergeOperation( opOut, inData, inAlpha, tileOrigin ); break;
+		case( Mask ): return doMergeOperation( opMask, inData, inAlpha, tileOrigin ); break;
+		case( Matte ): return doMergeOperation( opMatte, inData, inAlpha, tileOrigin ); break;
+		case( Multiply ): return doMergeOperation( opMultiply, inData, inAlpha, tileOrigin ); break;
+		case( Over ): return doMergeOperation( opOver, inData, inAlpha, tileOrigin ); break;
+		case( Subtract ): return doMergeOperation( opSubtract, inData, inAlpha, tileOrigin ); break;
+		case( Under ): return doMergeOperation( opUnder, inData, inAlpha, tileOrigin ); break;
+		default : throw Exception( "Merge::computeChannelData : Invalid operation mode." );
 	}
-
-	// We should never get here...
-	return doMergeOperation( opAdd, inData, inAlpha, tileOrigin );
 }
 
 bool Merge::hasAlpha( ConstStringVectorDataPtr channelNamesData ) const

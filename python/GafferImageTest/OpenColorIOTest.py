@@ -1,7 +1,7 @@
 ##########################################################################
 #
 #  Copyright (c) 2012, John Haddon. All rights reserved.
-#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012-2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -57,7 +57,7 @@ class OpenColorIOTest( unittest.TestCase ) :
 		o["in"].setInput( n["out"] )
 
 		self.assertEqual( n["out"].image(), o["out"].image() )
-
+		
 		o["inputSpace"].setValue( "linear" )
 		o["outputSpace"].setValue( "sRGB" )
 
@@ -72,17 +72,18 @@ class OpenColorIOTest( unittest.TestCase ) :
 		o["in"].setInput( n["out"] )
 
 		self.assertEqual( n["out"].image(), o["out"].image() )
-
+		
 		o["inputSpace"].setValue( "linear" )
 		o["outputSpace"].setValue( "sRGB" )
 
 		self.assertNotEqual( n["out"].image(), o["out"].image() )
-
+		
 		o["enabled"].setValue( False )
 
 		self.assertEqual( n["out"].image(), o["out"].image() )
 		self.assertEqual( n["out"]['format'].hash(), o["out"]['format'].hash() )
 		self.assertEqual( n["out"]['dataWindow'].hash(), o["out"]['dataWindow'].hash() )
+		self.assertEqual( n["out"]["metadata"].getValue(), o["out"]["metadata"].getValue() )
 		self.assertEqual( n["out"]['channelNames'].hash(), o["out"]['channelNames'].hash() )
 
 		o["enabled"].setValue( True )
@@ -92,6 +93,7 @@ class OpenColorIOTest( unittest.TestCase ) :
 		self.assertEqual( n["out"].image(), o["out"].image() )
 		self.assertEqual( n["out"]['format'].hash(), o["out"]['format'].hash() )
 		self.assertEqual( n["out"]['dataWindow'].hash(), o["out"]['dataWindow'].hash() )
+		self.assertEqual( n["out"]["metadata"].getValue(), o["out"]["metadata"].getValue() )
 		self.assertEqual( n["out"]['channelNames'].hash(), o["out"]['channelNames'].hash() )
 
 	def testImageHashPassThrough( self ) :
@@ -129,6 +131,24 @@ class OpenColorIOTest( unittest.TestCase ) :
 			o["out"].channelData( "R", IECore.V2i( 0 ) ),
 			o["out"].channelData( "G", IECore.V2i( 0 ) )
 		)
+
+	def testPassThrough( self ) :
+		
+		i = GafferImage.ImageReader()
+		i["fileName"].setValue( self.fileName )
+
+		o = GafferImage.OpenColorIO()
+		o["in"].setInput( i["out"] )
+		o["inputSpace"].setValue( "linear" )
+		o["outputSpace"].setValue( "sRGB" )
+		
+		self.assertEqual( i["out"]["format"].hash(), o["out"]["format"].hash() )
+		self.assertEqual( i["out"]["dataWindow"].hash(), o["out"]["dataWindow"].hash() )
+		self.assertEqual( i["out"]["channelNames"].hash(), o["out"]["channelNames"].hash() )
+				
+		self.assertEqual( i["out"]["format"].getValue(), o["out"]["format"].getValue() )
+		self.assertEqual( i["out"]["dataWindow"].getValue(), o["out"]["dataWindow"].getValue() )
+		self.assertEqual( i["out"]["channelNames"].getValue(), o["out"]["channelNames"].getValue() )
 
 if __name__ == "__main__":
 	unittest.main()

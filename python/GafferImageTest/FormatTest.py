@@ -108,9 +108,9 @@ class FormatTest( unittest.TestCase ) :
 		s.addChild( n )
 		s.context().get("image:defaultFormat")
 
-	def testHashChanged( self ) :
-		# Create a grade node and check that the format changes if it is unconnected.
-		n = GafferImage.Grade()
+	def __hashChanged( self, cls ) :
+		# Create the node and check that the format changes if it is unconnected.
+		n = cls()
 		s = Gaffer.ScriptNode()
 		s.addChild( n )
 
@@ -123,8 +123,30 @@ class FormatTest( unittest.TestCase ) :
 		# Check that the hash has changed.
 		h2 = n["out"]["format"].hash()
 
-		self.assertNotEqual( h1, h2 )
+		# we want to assert h1 != h2, but we get a more useful failure message this way
+		if h1 == h2 :
+			self.assertFalse( cls.__name__ + " format hash did not change" )
 
+	def testHashChanged( self ) :
+		
+		def findNodes( base ) :
+			
+			result = []
+			
+			classes = base.__subclasses__()
+			if not classes :
+				result.append( base )
+			
+			for cls in classes :
+				result.extend( findNodes( cls ) )
+			
+			return result
+		
+		classes = findNodes( GafferImage.ImageProcessor )
+		
+		for cls in classes :
+			self.__hashChanged( cls )
+	
 	def testDefaultFormatChanged( self ) :
 		# Create a grade node and check that the format changes if it is unconnected.
 		n = GafferImage.Grade()

@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2013-2015, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,66 +34,44 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_TYPEIDS_H
-#define GAFFERIMAGE_TYPEIDS_H
+#ifndef GAFFERIMAGE_IMAGEMETADATA_H
+#define GAFFERIMAGE_IMAGEMETADATA_H
+
+#include "Gaffer/CompoundDataPlug.h"
+
+#include "GafferImage/MetadataProcessor.h"
 
 namespace GafferImage
 {
 
-enum TypeId
+class ImageMetadata : public MetadataProcessor
 {
-	ImagePlugTypeId = 110750,
-	ImageNodeTypeId = 110751,
-	ImageReaderTypeId = 110752,
-	ImagePrimitiveNodeTypeId = 110753,
-	DisplayTypeId = 110754,
-	GafferDisplayDriverTypeId = 110755,
-	ImageProcessorTypeId = 110756,
-	ChannelDataProcessorTypeId = 110757,
-	OpenColorIOTypeId = 110758,
-	ObjectToImageTypeId = 110759,
-	FormatDataTypeId = 110760,
-	FormatPlugTypeId = 110761,
-	MergeTypeId = 110762,
-	GradeTypeId = 110763,
-	FilterProcessorTypeId = 110764, // obsolete, available for reuse
-	ConstantTypeId = 110765,
-	SelectTypeId = 110766, // obsolete, available for reuse
-	ChannelMaskPlugTypeId = 110767,
-	ReformatTypeId = 110768,
-	FilterPlugTypeId = 110769,
-	ImageWriterTypeId = 110770,
-	ImageTransformTypeId = 110771,
-	FilterTypeId = 110772,
-	BoxFilterTypeId = 110773,
-	BilinearFilterTypeId = 110774,
-	SplineFilterTypeId = 110775,
-	BSplineFilterTypeId = 110776,
-	HermiteFilterTypeId = 110777,
-	CubicFilterTypeId = 110778,
-	MitchellFilterTypeId = 110779,
-	CatmullRomFilterTypeId = 110780,
-	SincFilterTypeId = 110781,
-	LanczosFilterTypeId = 110782,
-	ImageStatsTypeId = 110783,
-	ImageTransformImplementationTypeId = 110784,
-	DeleteChannelsTypeId = 110785,
-	ColorProcessorTypeId = 110786,
-	ClampTypeId = 110787,
-	ImageMixinBaseTypeId = 110788,
-	ImageContextProcessorTypeId = 110789,
-	ImageTimeWarpTypeId = 110790,
-	ImageContextVariablesTypeId = 110791,
-	ImageSwitchTypeId = 110792,
-	ImageSamplerTypeId = 110793,
-	MetadataProcessorTypeId = 110794,
-	ImageMetadataTypeId = 110795,
-	DeleteImageMetadataTypeId = 110796,
-	CopyImageMetadataTypeId = 110797,
 
-	LastTypeId = 110849
+	public :
+
+		ImageMetadata( const std::string &name=defaultName<ImageMetadata>() );
+		virtual ~ImageMetadata();
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::ImageMetadata, ImageMetadataTypeId, MetadataProcessor );
+
+		Gaffer::CompoundDataPlug *metadataPlug();
+		const Gaffer::CompoundDataPlug *metadataPlug() const;
+
+		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
+
+	protected :
+
+		virtual void hashProcessedMetadata( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual IECore::ConstCompoundObjectPtr computeProcessedMetadata( const Gaffer::Context *context, const IECore::CompoundObject *inputMetadata ) const;
+
+	private :
+
+		static size_t g_firstPlugIndex;
+
 };
+
+IE_CORE_DECLAREPTR( ImageMetadata );
 
 } // namespace GafferImage
 
-#endif // GAFFERIMAGE_TYPEIDS_H
+#endif // GAFFERIMAGE_IMAGEMETADATA_H

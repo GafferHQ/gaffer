@@ -1,7 +1,7 @@
 ##########################################################################
 #
 #  Copyright (c) 2012, John Haddon. All rights reserved.
-#  Copyright (c) 2013-2014, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2013-2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -77,6 +77,15 @@ class ImageReaderTest( unittest.TestCase ) :
 		self.assertEqual( n["out"]["dataWindow"].getValue(), IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 199, 149 ) ) )
 		self.assertEqual( n["out"]["format"].getValue().getDisplayWindow(), IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 199, 149 ) ) )
 
+		expectedMetadata = IECore.CompoundObject( {
+			"oiio:ColorSpace" : IECore.StringData( 'Linear' ),
+			"compression" : IECore.StringData( 'zips' ),
+			"PixelAspectRatio" : IECore.FloatData( 1 ),
+			"screenWindowCenter" : IECore.V2fData( IECore.V2f( 0, 0 ) ),
+			"screenWindowWidth" : IECore.FloatData( 1 ),
+		} )
+		self.assertEqual( n["out"]["metadata"].getValue(), expectedMetadata )
+		
 		channelNames = n["out"]["channelNames"].getValue()
 		self.failUnless( isinstance( channelNames, IECore.StringVectorData ) )
 		self.failUnless( "R" in channelNames )
@@ -85,11 +94,11 @@ class ImageReaderTest( unittest.TestCase ) :
 		self.failUnless( "A" in channelNames )
 
 		image = n["out"].image()
+		self.assertEqual( image.blindData(), IECore.CompoundData( dict(expectedMetadata) ) )
+		
 		image2 = IECore.Reader.create( self.fileName ).read()
-
 		image.blindData().clear()
 		image2.blindData().clear()
-
 		self.assertEqual( image, image2 )
 
 	def testNegativeDisplayWindowRead( self ) :
@@ -102,8 +111,10 @@ class ImageReaderTest( unittest.TestCase ) :
 		self.assertEqual( d, IECore.Box2i( IECore.V2i( 2, -14 ), IECore.V2i( 35, 19 ) ) )
 
 		expectedImage = IECore.Reader.create( self.negativeDisplayWindowFileName ).read()
+		outImage = n["out"].image()
 		expectedImage.blindData().clear()
-		self.assertEqual( expectedImage, n["out"].image() )
+		outImage.blindData().clear()
+		self.assertEqual( expectedImage, outImage )
 
 	def testNegativeDataWindow( self ) :
 

@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2012-2015, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -87,29 +87,44 @@ class ImageNode : public Gaffer::ComputeNode
 		/// on the base class before then computing whether or not it is in fact enabled.
 		virtual bool channelEnabled( const std::string &channel ) const { return true; };
 		/// The default implementation of enabled returns the value of the enabled plug.
+		/// \deprecated remove this once all derived classes stop using it.
 		virtual bool enabled() const;
 
-		/// Implemented to call the hash*() methods below whenever output is part of an ImagePlug and the node is enabled.
+		/// Implemented to call the hash*() methods below whenever output is part of an ImagePlug.
 		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		/// Hash methods for the individual children of an image output - these must be implemented by derived classes.
-		/// An implementation must do one or the other of the following :
+		/// Hash methods for the individual children of outPlug(). A derived class must either :
 		///
-		/// - Call the base class implementation and then append to the hash with any plugs and context items they
-		///   will use in the corresponding compute*() method.
-		/// - Assign directly to the hash from some input hash to signify that an input will be passed through
-		///   unchanged by the corresponding compute*() method.
-		virtual void hashFormat( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const = 0;
-		virtual void hashDataWindow( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const = 0;
-		virtual void hashChannelNames( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const = 0;
-		virtual void hashChannelData( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const = 0;
+		///    * Implement the method to call the base class implementation and then append to the hash.
+		///
+		/// or
+		///
+		///    * Implement the method to assign directly to the hash from some input hash to signify that
+		///      an input will be passed through unchanged by the corresponding compute*() method. Note
+		///      that if you wish to pass through an input unconditionally, regardless of context, it is
+		///      faster to use a connection as described below.
+		///
+		/// or :
+		///
+		///    * Make an input connection into the corresponding plug, so that the hash and compute methods
+		///      are never called for it.
+		///	\todo The connection option is not currently valid for the FormatPlug, because it prevents
+		///	hashes from updating when the ScriptNode's default format changes.
+		virtual void hashFormat( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual void hashDataWindow( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual void hashMetadata( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual void hashChannelNames( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual void hashChannelData( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 
-		/// Implemented to call the compute*() methods below whenever output is part of an ImagePlug and the node is enabled.
+		/// Implemented to call the compute*() methods below whenever output is part of an ImagePlug.
 		/// Derived classes should reimplement the specific compute*() methods rather than compute() itself.
 		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const;
-		virtual GafferImage::Format computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const = 0;
-		virtual Imath::Box2i computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const = 0;
-		virtual IECore::ConstStringVectorDataPtr computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const = 0;
-		virtual IECore::ConstFloatVectorDataPtr computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const = 0;
+		/// Compute methods for the individual children of outPlug() - these must be implemented by derived classes, or
+		/// an input connection must be made to the plug, so that the method is not called.
+		virtual GafferImage::Format computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const;
+		virtual Imath::Box2i computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const;
+		virtual IECore::ConstCompoundObjectPtr computeMetadata( const Gaffer::Context *context, const ImagePlug *parent ) const;
+		virtual IECore::ConstStringVectorDataPtr computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const;
+		virtual IECore::ConstFloatVectorDataPtr computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const;
 
 		/// Implemented to initialize the default format settings if they don't exist already.
 		void parentChanging( Gaffer::GraphComponent *newParent );
