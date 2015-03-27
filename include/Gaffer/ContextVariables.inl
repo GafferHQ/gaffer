@@ -88,7 +88,7 @@ void ContextVariables<BaseType>::affects( const Plug *input, DependencyNode::Aff
 {
 	ContextProcessor<BaseType>::affects( input, outputs );
 
-	if( input == variablesPlug() )
+	if( variablesPlug()->isAncestorOf( input ) )
 	{
 		ContextProcessor<BaseType>::appendAffectedPlugs( outputs );
 	}
