@@ -77,6 +77,9 @@ Merge::Merge( const std::string &name )
 			Under		// max
 		)
 	);
+
+	// We don't ever want to change these, so we make pass-through connections.
+	outPlug()->metadataPlug()->setInput( inPlug()->metadataPlug() );
 }
 
 Merge::~Merge()
@@ -125,34 +128,14 @@ bool Merge::enabled() const
 	return ( m_inputs.nConnectedInputs() >= 2 );
 }
 
-void Merge::hashFormat( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void Merge::hashFormat( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	ImageProcessor::hashFormat( output, context, h );
-
-	const ImagePlugList &inputs( m_inputs.inputs() );
-	const ImagePlugList::const_iterator end( m_inputs.endIterator() );
-	for ( ImagePlugList::const_iterator it( inputs.begin() ); it != end; ++it )
-	{
-		if ( (*it)->getInput<ValuePlug>() )
-		{
-			(*it)->formatPlug()->hash( h );
-		}
-	}
+	h = inPlug()->formatPlug()->hash();
 }
 
 GafferImage::Format Merge::computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
-	const ImagePlugList &inputs( m_inputs.inputs() );
-	const ImagePlugList::const_iterator end( m_inputs.endIterator() );
-	for ( ImagePlugList::const_iterator it( inputs.begin() ); it != end; ++it )
-	{
-		if ( (*it)->getInput<ValuePlug>() )
-		{
-			return (*it)->formatPlug()->getValue();
-		}
-	}
-	
-	return inPlug()->formatPlug()->defaultValue();
+	return inPlug()->formatPlug()->getValue();
 }
 
 void Merge::hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
@@ -182,34 +165,6 @@ Imath::Box2i Merge::computeDataWindow( const Gaffer::Context *context, const Ima
 	}
 	
 	return dataWindow;
-}
-
-void Merge::hashMetadata( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
-{
-	const ImagePlugList &inputs( m_inputs.inputs() );
-	const ImagePlugList::const_iterator end( m_inputs.endIterator() );
-	for( ImagePlugList::const_iterator it( inputs.begin() ); it != end; ++it )
-	{
-		h = (*it)->metadataPlug()->hash();
-		return;
-	}
-	
-	ImageProcessor::hashMetadata( parent, context, h );
-}
-
-IECore::ConstCompoundObjectPtr Merge::computeMetadata( const Gaffer::Context *context, const ImagePlug *parent ) const
-{
-	const ImagePlugList &inputs( m_inputs.inputs() );
-	const ImagePlugList::const_iterator end( m_inputs.endIterator() );
-	for( ImagePlugList::const_iterator it( inputs.begin() ); it != end; it++ )
-	{
-		if ( (*it)->getInput<ValuePlug>() )
-		{
-			return (*it)->metadataPlug()->getValue();
-		}
-	}
-	
-	return inPlug()->metadataPlug()->defaultValue();
 }
 
 void Merge::hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const

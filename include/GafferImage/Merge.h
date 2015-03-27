@@ -44,8 +44,8 @@
 namespace GafferImage
 {
 
-/// A node for Merging two or more images. Merge will use the displayWindow and metadata from the first connected
-/// input; expand the dataWindow to the union of all dataWindows from the connected inputs; create a union of
+/// A node for Merging two or more images. Merge will use the displayWindow and metadata from the first input;
+/// expand the dataWindow to the union of all dataWindows from the connected inputs; create a union of
 /// channelNames from all the connected inputs, and will merge the channelData according to the operation mode.
 /// \todo Ideally ImageProcessor will be capable of having multiple inputs via an ArrayPlug called "in", at
 /// which point we can remove this custom InputGenerator behaviour.
@@ -102,19 +102,19 @@ class Merge : public ImageProcessor
 		/// Reimplementated to check that at least two of the inputs are connected
 		virtual bool enabled() const;
 		
+		// Reimplemented to assign directly from the first input. Format cannot be a direct connection
+		// because it needs to update when the default format changes.
+		/// \todo: make this a direct pass-through once FormatPlug supports it.
+		virtual void hashFormat( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual GafferImage::Format computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const;
+		
 		/// Reimplemented to hash the connected input plugs
-		virtual void hashFormat( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual void hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual void hashMetadata( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual void hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual void hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 
-		/// Sets the output display window to the first connected input found.
-		virtual GafferImage::Format computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const;
 		/// Sets the data window to the union of all of the data windows.
 		virtual Imath::Box2i computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const;
-		/// Sets the output metadata to the first connected input found.
-		virtual IECore::ConstCompoundObjectPtr computeMetadata( const Gaffer::Context *context, const ImagePlug *parent ) const;
 		/// Creates a union of all of the connected inputs channelNames.
 		virtual IECore::ConstStringVectorDataPtr computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const;
 		/// Implemented to call doMergeOperation according to operationPlug()

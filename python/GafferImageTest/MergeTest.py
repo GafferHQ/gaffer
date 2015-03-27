@@ -94,7 +94,7 @@ class MergeTest( GafferTest.TestCase ) :
 		merge["in3"].setInput(r2["out"])
 
 		# but then disconnect two so that the result should still be the same...
-		merge["in"].setInput( None )
+		merge["in1"].setInput( None )
 		merge["in2"].setInput( None )
 		h1 = merge["out"].image().hash()
 
@@ -204,6 +204,35 @@ class MergeTest( GafferTest.TestCase ) :
 		self.assertTrue( cs[1][0].isSame( m["in1"] ) )
 		self.assertTrue( cs[2][0].isSame( m["out"]["channelData"] ) )
 		self.assertTrue( cs[3][0].isSame( m["out"] ) )
+
+	def testPassThrough( self ) :
+
+		c = GafferImage.Constant()
+		f = GafferImage.Reformat()
+		f["in"].setInput( c["out"] )
+		f["format"].setValue( GafferImage.Format( IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 10 ) ), 1 ) )
+		d = GafferImage.ImageMetadata()
+		d["metadata"].addMember( "comment", IECore.StringData( "reformated and metadata updated" ) )
+		d["in"].setInput( f["out"] )
+		
+		m = GafferImage.Merge()
+		m["in"].setInput( c["out"] )
+		m["in1"].setInput( d["out"] )
+
+		self.assertEqual( m["out"]["format"].hash(), c["out"]["format"].hash() )
+		self.assertEqual( m["out"]["metadata"].hash(), c["out"]["metadata"].hash() )
+		
+		self.assertEqual( m["out"]["format"].getValue(), c["out"]["format"].getValue() )
+		self.assertEqual( m["out"]["metadata"].getValue(), c["out"]["metadata"].getValue() )
+		
+		m["in"].setInput( d["out"] )
+		m["in1"].setInput( c["out"] )
+		
+		self.assertEqual( m["out"]["format"].hash(), d["out"]["format"].hash() )
+		self.assertEqual( m["out"]["metadata"].hash(), d["out"]["metadata"].hash() )
+		
+		self.assertEqual( m["out"]["format"].getValue(), d["out"]["format"].getValue() )
+		self.assertEqual( m["out"]["metadata"].getValue(), d["out"]["metadata"].getValue() )
 
 if __name__ == "__main__":
 	unittest.main()
