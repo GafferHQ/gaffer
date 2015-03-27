@@ -155,5 +155,17 @@ class CustomOptionsTest( GafferSceneTest.SceneTestCase ) :
 			self.assertNotEqual( o["out"]["globals"].hash(), h )
 			self.assertEqual( o["out"]["globals"].getValue()["option:test"], IECore.StringData( "foo" ) )
 
+	def testDirtyPropagationOnMemberAdditionAndRemoval( self ) :
+
+		o = GafferScene.CustomOptions()
+		cs = GafferTest.CapturingSlot( o.plugDirtiedSignal() )
+
+		p = o["options"].addMember( "test", IECore.IntData( 10 ) )
+		self.assertTrue( o["out"]["globals"] in [ c[0] for c in cs ] )
+
+		del cs[:]
+		o["options"].removeChild( p )
+		self.assertTrue( o["out"]["globals"] in [ c[0] for c in cs ] )
+
 if __name__ == "__main__":
 	unittest.main()
