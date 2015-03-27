@@ -56,10 +56,14 @@ class DisplayTest( unittest.TestCase ) :
 
 	def __dataReceived( self, plug ) :
 
+		# Emulate the DisplayUI code which increments a plug when data is received, to
+		# trigger correct recomputation.
+		plug.node()["__updateCount"].setValue( plug.node()["__updateCount"].getValue() + 1 )
 		self.__dataReceivedSemaphore.release()
 
 	def __imageReceived( self, plug ) :
 
+		plug.node()["__updateCount"].setValue( plug.node()["__updateCount"].getValue() + 1 )
 		self.__imageReceivedSemaphore.release()
 
 	def testDefaultFormat( self ) :
