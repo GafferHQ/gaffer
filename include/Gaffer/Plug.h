@@ -210,6 +210,7 @@ class Plug : public GraphComponent
 	private :
 
 		void parentChanged();
+		static void propagateDirtinessForParentChange( Plug *plugToDirty );
 
 		void setInput( PlugPtr input, bool setChildInputs, bool updateParentInput );
 		void setInputInternal( PlugPtr input, bool emit );

@@ -431,7 +431,7 @@ void Plug::parentChanging( Gaffer::GraphComponent *newParent )
 		pushDirtyPropagationScope();
 		if( node() )
 		{
-			propagateDirtiness( this );
+			propagateDirtinessForParentChange( this );
 		}
 	}
 
@@ -519,10 +519,28 @@ void Plug::parentChanged()
 		{
 			// If a dynamic plug has been added to a
 			// node, we need to propagate dirtiness.
-			propagateDirtiness( this );
+			propagateDirtinessForParentChange( this );
 		}
 		// Pop the scope pushed in parentChanging().
 		popDirtyPropagationScope();
+	}
+}
+
+void Plug::propagateDirtinessForParentChange( Plug *plugToDirty )
+{
+	// When a plug is reparented, we need to take into account
+	// all the descendants it brings with it, so we recurse to
+	// find them, propagating dirtiness at the leaves.
+	if( plugToDirty->children().size() )
+	{
+		for( PlugIterator it( plugToDirty ); it != it.end(); ++it )
+		{
+			propagateDirtinessForParentChange( it->get() );
+		}
+	}
+	else
+	{
+		propagateDirtiness( plugToDirty );
 	}
 }
 
