@@ -141,6 +141,7 @@ Gaffer::CompoundPlug *Outputs::addOutput( const std::string &name, const IECore:
 	outputPlug->addChild( typePlug );
 
 	StringPlugPtr dataPlug = new StringPlug( "data" );
+	dataPlug->setValue( output->getData() );
 	dataPlug->setFlags( Plug::Dynamic, true );
 	outputPlug->addChild( dataPlug );
 
@@ -150,11 +151,6 @@ Gaffer::CompoundPlug *Outputs::addOutput( const std::string &name, const IECore:
 	outputPlug->addChild( parametersPlug );
 
 	outputsPlug()->addChild( outputPlug );
-
-	// set one of the values _after_ adding the plug, otherwise
-	// affects() is not called and we have no opportunity to
-	// propagate dirtiness to our output globals.
-	dataPlug->setValue( output->getData() );
 
 	return outputPlug.get();
 }

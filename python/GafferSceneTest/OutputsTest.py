@@ -129,11 +129,19 @@ class OutputsTest( GafferSceneTest.SceneTestCase ) :
 
 	def testDirtyPropagation( self ) :
 
-		outputs = GafferScene.Outputs( "outputs" )
+		outputs = GafferScene.Outputs()
 		cs = GafferTest.CapturingSlot( outputs.plugDirtiedSignal() )
 
-		outputs.addOutput( "test", IECore.Display( "name", "type", "data", { "paramA" : 1, "paramB" : 2 } ) )
-		self.assertTrue( "outputs.out.globals" in set( e[0].fullName() for e in cs ) )
+		p = outputs.addOutput( "test", IECore.Display( "name", "type", "data", { "paramA" : 1, "paramB" : 2 } ) )
+		self.assertTrue( outputs["out"]["globals"] in [ c[0] for c in cs ] )
+
+		del cs[:]
+		p["name"].setValue( "newName" )
+		self.assertTrue( outputs["out"]["globals"] in [ c[0] for c in cs ] )
+
+		del cs[:]
+		outputs["outputs"].removeChild( p )
+		self.assertTrue( outputs["out"]["globals"] in [ c[0] for c in cs ] )
 
 	def testBackwardsCompatibility( self ) :
 
