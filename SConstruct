@@ -365,12 +365,6 @@ options.Add(
 )
 
 options.Add(
-	"APPLESEED_BIN_PATH",
-	"The path to the appleseed bin directory. Used to build Gafferseed",
-	"",
-)
-
-options.Add(
 	BoolVariable( "BUILD_DEPENDENCY_GL", "Set this to build PyOpenGL.", "$BUILD_DEPENDENCIES" )
 )
 
@@ -1101,7 +1095,7 @@ libraries = {
 			"LIBPATH" : [ "$APPLESEED_LIB_PATH" ],
 			"LIBS" : [ "Gaffer", "GafferScene", "GafferBindings", "GafferAppleseed" ],
 		},
-		"requiredOptions" : [ "APPLESEED_INCLUDE_PATH", "APPLESEED_LIB_PATH", "APPLESEED_BIN_PATH" ],
+		"requiredOptions" : [ "APPLESEED_INCLUDE_PATH", "APPLESEED_LIB_PATH" ],
 	},
 
 	"GafferAppleseedTest" : {},

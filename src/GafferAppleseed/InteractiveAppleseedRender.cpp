@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2014, Esteban Tovagliari. All rights reserved.
+//  Copyright (c) 2015, Esteban Tovagliari. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,22 +34,25 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERAPPLESEED_TYPEIDS_H
-#define GAFFERAPPLESEED_TYPEIDS_H
+#include "IECoreAppleseed/Renderer.h"
 
-namespace GafferAppleseed
+#include "GafferAppleseed/InteractiveAppleseedRender.h"
+
+using namespace GafferScene;
+using namespace GafferAppleseed;
+
+IE_CORE_DEFINERUNTIMETYPED( InteractiveAppleseedRender );
+
+InteractiveAppleseedRender::InteractiveAppleseedRender( const std::string &name )
+	:	InteractiveRender( name )
 {
+}
 
-enum TypeId
-{    
-	AppleseedOptionsTypeId = 110451,
-	AppleseedAttributesTypeId = 110452,
-	AppleseedLightTypeId = 110453,
-	InteractiveAppleseedRenderTypeId = 110454,
+InteractiveAppleseedRender::~InteractiveAppleseedRender()
+{
+}
 
-	LastTypeId = 110500
-};
-
-} // namespace GafferAppleseed
-
-#endif // GAFFERAPPLESEED_TYPEIDS_H
+IECore::RendererPtr InteractiveAppleseedRender::createRenderer() const
+{
+	return new IECoreAppleseed::Renderer();
+}

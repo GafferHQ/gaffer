@@ -194,6 +194,7 @@ if "APPLESEED" in os.environ :
 			},
 			searchText = "AppleseedRender"
 		)
+		nodeMenu.append( "/Appleseed/InteractiveRender", GafferAppleseed.InteractiveAppleseedRender, searchText = "InteractiveRender" )
 
 		scriptWindowMenu.append(
 			"/Help/Appleseed/User Docs",
