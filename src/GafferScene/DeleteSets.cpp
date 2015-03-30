@@ -103,7 +103,7 @@ IECore::ConstCompoundObjectPtr DeleteSets::computeProcessedGlobals( const Gaffer
 
 	if( inSets )
 	{
-		IECore::CompoundDataPtr outSets = new IECore::CompoundData;
+		IECore::CompoundData* outSets = new IECore::CompoundData;
 		outputGlobals->members()["gaffer:sets"] = outSets;
 
 		const std::string names = namesPlug()->getValue();
