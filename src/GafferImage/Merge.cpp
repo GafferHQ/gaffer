@@ -261,8 +261,9 @@ IECore::ConstFloatVectorDataPtr Merge::computeChannelData( const std::string &ch
 		case( Over ): return doMergeOperation( opOver, inData, inAlpha, tileOrigin ); break;
 		case( Subtract ): return doMergeOperation( opSubtract, inData, inAlpha, tileOrigin ); break;
 		case( Under ): return doMergeOperation( opUnder, inData, inAlpha, tileOrigin ); break;
-		default : throw Exception( "Merge::computeChannelData : Invalid operation mode." );
 	}
+	
+	throw Exception( "Merge::computeChannelData : Invalid operation mode." );
 }
 
 bool Merge::hasAlpha( ConstStringVectorDataPtr channelNamesData ) const
