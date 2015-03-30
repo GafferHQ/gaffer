@@ -42,3 +42,6 @@ bookmarks = GafferUI.Bookmarks.acquire( application )
 bookmarks.setDefault( os.getcwd() )
 bookmarks.add( "Home", os.path.expandvars( "$HOME" ) )
 bookmarks.add( "Desktop", os.path.expandvars( "$HOME/Desktop" ) )
+
+fontBookmarks = GafferUI.Bookmarks.acquire( application, category="font" )
+fontBookmarks.add( "Gaffer Fonts", os.path.expandvars( "$GAFFER_ROOT/fonts" ) )

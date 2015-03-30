@@ -1,7 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2012, John Haddon. All rights reserved.
-#  Copyright (c) 2012-2014, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,67 +34,64 @@
 #
 ##########################################################################
 
-from _GafferSceneUI import *
+import Gaffer
+import GafferUI
+import GafferScene
 
-from SceneHierarchy import SceneHierarchy
-from SceneInspector import SceneInspector
-from FilterPlugValueWidget import FilterPlugValueWidget
-import SceneNodeUI
-import SceneReaderUI
-import SceneProcessorUI
-import FilteredSceneProcessorUI
-import PruneUI
-import SubTreeUI
-import OutputsUI
-import OptionsUI
-import OpenGLAttributesUI
-import SceneContextVariablesUI
-import SceneWriterUI
-import StandardOptionsUI
-import StandardAttributesUI
-import ShaderUI
-import OpenGLShaderUI
-import ObjectSourceUI
-import TransformUI
-import AttributesUI
-import LightUI
-import InteractiveRenderUI
-import SphereUI
-import MapProjectionUI
-import MapOffsetUI
-import CustomAttributesUI
-import CustomOptionsUI
-import SceneViewToolbar
-import SceneSwitchUI
-import ShaderSwitchUI
-import ShaderAssignmentUI
-import ParentConstraintUI
-import ParentUI
-import PrimitiveVariablesUI
-import DuplicateUI
-import GridUI
-import SetFilterUI
-import DeleteGlobalsUI
-import DeleteOptionsUI
-import DeleteSetsUI
-import ExternalProceduralUI
-import ExecutableRenderUI
-import IsolateUI
-import SelectionToolUI
-import CropWindowToolUI
-import CameraUI
-import SetUI
-import ClippingPlaneUI
-import FilterUI
-import FilterSwitchUI
-import PointsTypeUI
-import ParametersUI
-import TextUI
+##########################################################################
+# Metadata
+##########################################################################
 
-# then all the PathPreviewWidgets. note that the order
-# of import controls the order of display.
+Gaffer.Metadata.registerNode(
 
-from AlembicPathPreview import AlembicPathPreview
-from SceneReaderPathPreview import SceneReaderPathPreview
+	GafferScene.Text,
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferSceneUI" )
+	"description",
+	"""
+	Creates an object containing a polygon representation
+	of an arbitrary string of text.
+	""",
+
+	plugs = {
+
+		"text" : [
+
+			"description",
+			"""
+			The text to output. This is triangulated into a mesh
+			representation using the specified font.
+			""",
+
+		],
+
+		"font" : [
+
+			"description",
+			"""
+			The font to use - this should be a .ttf font file which
+			is located on the paths specified by the IECORE_FONT_PATHS
+			environment variable.
+			""",
+
+		],
+
+	}
+
+)
+
+GafferUI.PlugValueWidget.registerCreator(
+	GafferScene.Text,
+	"font",
+	lambda plug : GafferUI.PathPlugValueWidget( plug,
+		path = Gaffer.FileSystemPath(
+			"/",
+			filter = Gaffer.FileSystemPath.createStandardFilter(
+				extensions = [ "ttf" ],
+			)
+		),
+		pathChooserDialogueKeywords = {
+			"bookmarks" : GafferUI.Bookmarks.acquire( plug, category = "font" ),
+			"leaf" : True,
+		},
+	)
+)
