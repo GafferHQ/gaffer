@@ -532,6 +532,10 @@ ValuePlug::ValuePlug( const std::string &name, Direction direction, unsigned fla
 
 ValuePlug::~ValuePlug()
 {
+	// Clear hash cache, so that a newly created plug that just
+	// happens to reuse our address won't end up inadvertently also
+	// reusing our cache entries.
+	Computation::clearHashCaches();
 }
 
 bool ValuePlug::acceptsChild( const GraphComponent *potentialChild ) const
