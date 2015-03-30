@@ -120,6 +120,7 @@ class AlembicSourceTest( GafferSceneTest.SceneTestCase ) :
 
 		a = GafferScene.AlembicSource()
 		a["fileName"].setValue( self.__refreshTestFileName )
+		a["refreshCount"].setValue( self.uniqueInt( self.__refreshTestFileName ) )
 
 		self.assertSceneValid( a["out"] )
 		self.assertEqual( a["out"].childNames( "/" ), IECore.InternedStringVectorData( [ "group1" ] ) )
@@ -129,7 +130,7 @@ class AlembicSourceTest( GafferSceneTest.SceneTestCase ) :
 		self.assertSceneValid( a["out"] )
 		self.assertEqual( a["out"].childNames( "/" ), IECore.InternedStringVectorData( [ "group1" ] ) )
 
-		a["refreshCount"].setValue( a["refreshCount"].getValue() + 1 )
+		a["refreshCount"].setValue( self.uniqueInt( self.__refreshTestFileName ) )
 
 		# We have to skip the test of built in sets, because our alembic file contains cameras
 		# and alembic doesn't provide a means of flagging them upfront.
