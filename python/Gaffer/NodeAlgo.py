@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2014-2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -113,6 +113,17 @@ def applyUserDefaults( nodeOrNodes ) :
 def hasUserDefault( plug ) :
 	
 	return Gaffer.Metadata.plugValue( plug, "userDefault" ) is not None
+
+def isSetToUserDefault( plug ) :
+	
+	if not hasattr( plug, "getValue" ) :
+		return False
+	
+	userDefault = Gaffer.Metadata.plugValue( plug, "userDefault" )
+	if userDefault is None :
+		return False 
+	
+	return userDefault == plug.getValue()
 
 def applyUserDefault( plug ) :
 	
