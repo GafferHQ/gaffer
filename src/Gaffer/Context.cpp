@@ -276,11 +276,7 @@ void Context::substituteInternal( const char *s, std::string &result, const int 
 					variableNameEnd = s;
 				}
 
-#ifdef IECORE_INTERNEDSTRING_RANGECONSTRUCTOR
 				InternedString variableName( variableNameStart, variableNameEnd - variableNameStart );
-#else
-				InternedString variableName( std::string( variableNameStart, variableNameEnd - variableNameStart ) );
-#endif
 				const IECore::Data *d = get<IECore::Data>( variableName, NULL );
 				if( d )
 				{
