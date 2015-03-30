@@ -36,6 +36,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include <stack>
+#include <unistd.h>
 
 #include "tbb/enumerable_thread_specific.h"
 
@@ -47,6 +48,60 @@
 
 using namespace Gaffer;
 using namespace IECore;
+
+//////////////////////////////////////////////////////////////////////////
+// Environment variable access for use in Context::substitute().
+// We can't just take the current value for an environment variable
+// each time we need it, because that defeats the caching of hashes
+// in ValuePlug, which assumes that a hash depends only on graph state
+// and the context. So instead, we take a copy of the environment at
+// startup and use that for our lookups. This is also provides quicker
+// lookups than getenv().
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+class Environment
+{
+
+	public :
+
+		Environment()
+		{
+			for( char **e = environ; *e; e++ )
+			{
+				const char *separator = strchr( *e, '=' );
+				if( !separator )
+				{
+					continue;
+				}
+				InternedString name( *e, separator - *e );
+				InternedString value( separator + 1 );
+				m_map[name] = value;
+			}
+		}
+
+		const char *get( IECore::InternedString name ) const
+		{
+			Map::const_iterator it = m_map.find( name );
+			if( it != m_map.end() )
+			{
+				return it->second.c_str();
+			}
+			return NULL;
+		}
+
+	private :
+
+		typedef boost::container::flat_map<IECore::InternedString, IECore::InternedString> Map;
+		Map m_map;
+
+};
+
+Environment g_environment;
+
+} // namespace
 
 //////////////////////////////////////////////////////////////////////////
 // Context implementation
@@ -299,7 +354,7 @@ void Context::substituteInternal( const char *s, std::string &result, const int 
 							break;
 					}
 				}
-				else if( const char *v = getenv( variableName.c_str() ) )
+				else if( const char *v = g_environment.get( variableName ) )
 				{
 					// variable not in context - try environment
 					result += v;

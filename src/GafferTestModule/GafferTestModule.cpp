@@ -64,4 +64,5 @@ BOOST_PYTHON_MODULE( _GafferTest )
 	def( "testMetadataThreading", &testMetadataThreadingWrapper );
 	def( "testManyContexts", &testManyContexts );
 	def( "testManySubstitutions", &testManySubstitutions );
+	def( "testManyEnvironmentSubstitutions", &testManyEnvironmentSubstitutions );
 }
