@@ -59,7 +59,7 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			The names of the sets to be removed.
+			Space separated list of set names to be removed.
 			""",
 
 		),
