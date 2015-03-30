@@ -148,6 +148,8 @@ def __systemSummary( plug ) :
 		info.append( "Searchpath %s" % plug["searchPath"]["value"].getValue() )
 	if plug["numThreads"]["enabled"].getValue() :
 		info.append( "Threads %d" % plug["numThreads"]["value"].getValue() )
+	if plug["interactiveRenderFps"]["enabled"].getValue() :
+		info.append( "Interactive Render Fps %d" % plug["interactiveRenderFps"]["value"].getValue() )
 	if plug["textureMem"]["enabled"].getValue() :
 		info.append( "Texture Mem %d Kb" % plug["textureMem"]["value"].getValue() )
 	if plug["tileOrdering"]["enabled"].getValue() :
@@ -233,6 +235,7 @@ GafferUI.PlugValueWidget.registerCreator(
 			"namesAndLabels" : (
 				( "as:searchpath", "Searchpath" ),
 				( "as:cfg:rendering_threads", "Threads" ),
+				( "as:cfg:progressive_frame_renderer:max_fps", "Interactive Render Fps" ),
 				( "as:cfg:texture_store:max_size", "Texture Cache Size" ),
 				( "as:cfg:generic_frame_renderer:tile_ordering", "Tile Ordering" ),
 			),
