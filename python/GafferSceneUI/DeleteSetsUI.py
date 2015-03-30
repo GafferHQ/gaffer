@@ -44,19 +44,39 @@ import GafferScene
 # Metadata
 ##########################################################################
 
-Gaffer.Metadata.registerNodeDescription(
+Gaffer.Metadata.registerNode(
 
-GafferScene.DeleteSets,
+	GafferScene.DeleteSets,
 
-"""A node which removes object sets.""",
+	"description",
+	"""
+	A node which removes object sets.
+	""",
 
-"names",
-"The names of the sets to be removed.",
+	plugs = {
 
-"invertNames",
-"When on, matching names are kept, and non-matching names are removed.",
+		"names" : (
+
+			"description",
+			"""
+			The names of the sets to be removed.
+			""",
+
+		),
+
+		"invertNames" : (
+
+			"description",
+			"""
+			When on, matching names are kept, and non-matching names are removed.
+			""",
+
+		),
+
+	},
 
 )
+
 
 ##########################################################################
 # Right click menu for sets
