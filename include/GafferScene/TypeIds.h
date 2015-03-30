@@ -122,6 +122,7 @@ enum TypeId
 	FilterMixinBaseTypeId = 110577,
 	FilterSwitchTypeId = 110578,
 	DeleteSetsTypeId = 110579,
+	ParametersTypeId = 110580,
 
 	LastTypeId = 110650
 };

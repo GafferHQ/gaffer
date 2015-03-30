@@ -97,6 +97,7 @@
 #include "GafferSceneBindings/ClippingPlaneBinding.h"
 #include "GafferSceneBindings/FilterSwitchBinding.h"
 #include "GafferSceneBindings/PointsTypeBinding.h"
+#include "GafferSceneBindings/ParametersBinding.h"
 
 using namespace boost::python;
 using namespace GafferScene;
@@ -175,5 +176,6 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	bindClippingPlane();
 	bindFilterSwitch();
 	bindPointsType();
+	bindParameters();
 
 }
