@@ -84,6 +84,8 @@ Gaffer.Metadata.registerNode(
 # nodes too.
 ##########################################################################
 
+# \todo: Possibly merge this with the menu in SetUI.py
+
 def __addSet( plug, setName ) :
 
 	with Gaffer.UndoContext( plug.ancestor( Gaffer.ScriptNode ) ) :
