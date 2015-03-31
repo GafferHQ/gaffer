@@ -68,7 +68,7 @@ class ScopedAssignment : boost::noncopyable
 	public :
 
 		ScopedAssignment( T &target, const T &value )
-			:	m_target( target ), m_originalValue( value )
+			:	m_target( target ), m_originalValue( target )
 		{
 			m_target = value;
 		}
@@ -570,13 +570,16 @@ class Plug::DirtyPlugs
 	public :
 
 		DirtyPlugs()
-			:	m_scopeCount( 0 )
+			:	m_scopeCount( 0 ), m_clearing( false )
 		{
 		}
 
 		void insert( Plug *plugToDirty )
 		{
-			insertInternal( plugToDirty );
+			if( !m_clearing ) // see comment in clear()
+			{
+				insertInternal( plugToDirty );
+			}
 		}
 
 		void pushScope()
@@ -587,10 +590,13 @@ class Plug::DirtyPlugs
 		void popScope()
 		{
 			assert( m_scopeCount );
-			if( --m_scopeCount == 0)
+			if( --m_scopeCount == 0 )
 			{
-				emit();
-				clear();
+				if( !m_clearing ) // see comment in clear()
+				{
+					emit();
+					clear();
+				}
 			}
 		}
 
@@ -622,7 +628,8 @@ class Plug::DirtyPlugs
 			// it might be deleted between now and emit(). But if there is
 			// no reference yet, the plug is still being constructed, and
 			// we'd end up deleting it in clear() since we'd have sole
-			// ownership. Nobody wants that.
+			// ownership. Nobody wants that. If we had weak pointers, this
+			// would make for an ideal use.
 			assert( plugToDirty->refCount() );
 
 			// If we've inserted this one before, then early out. There's
@@ -745,6 +752,16 @@ class Plug::DirtyPlugs
 
 		void clear()
 		{
+			// Because we hold a reference to the plugs via the graph,
+			// we may be the last owner. This means that when we call
+			// clear, those plugs may be destroyed, which can trigger
+			// a dirty propagation as their child plugs are removed
+			// etc. We use the m_clearing flag to disable this propagation,
+			// since it's not needed, and can cause crashes. In an ideal
+			// world we'd have weak pointers, and could use those in
+			// the graph, so that we'd have no ownership of the plugs at
+			// all.
+			ScopedAssignment<bool> scopedAssignment( m_clearing, true );
 			m_graph.clear();
 			m_plugs.clear();
 		}
@@ -752,6 +769,7 @@ class Plug::DirtyPlugs
 		Graph m_graph;
 		PlugMap m_plugs;
 		size_t m_scopeCount;
+		bool m_clearing;
 
 };
 

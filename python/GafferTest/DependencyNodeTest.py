@@ -554,5 +554,27 @@ class DependencyNodeTest( GafferTest.TestCase ) :
 		node["in1"].setValue( 10 )
 		self.assertTrue( node["out1"] in [ c[0] for c in cs ] )
 
+	def testDeleteNodesInInputChanged( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n1"] = GafferTest.MultiplyNode()
+		s["n2"] = GafferTest.MultiplyNode()
+		s["n3"] = GafferTest.MultiplyNode()
+		s["n4"] = Gaffer.Node()
+
+		s["n3"]["op1"].setInput( s["n2"]["product"] )
+
+		s["n4"]["user"]["d"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["n4"]["user"]["d"].setInput( s["n3"]["product"] )
+
+		def inputChanged( plug ) :
+
+			del s["n3"]
+			del s["n4"]
+
+		c = s["n2"].plugInputChangedSignal().connect( inputChanged )
+
+		s["n2"]["op1"].setInput( s["n1"]["product"] )
+
 if __name__ == "__main__":
 	unittest.main()
