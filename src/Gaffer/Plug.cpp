@@ -427,7 +427,10 @@ void Plug::parentChanging( Gaffer::GraphComponent *newParent )
 		// plug is still a child of the node, but we push
 		// scope so that the emission of plugDirtiedSignal()
 		// is deferred until parentChanged() when the operation
-		// is complete.
+		// is complete. It is essential that exceptions don't
+		// prevent us getting to parentChanged() where we pop
+		// scope, so propateDirtiness() takes care of handling
+		// exceptions thrown by DependencyNode::affects().
 		pushDirtyPropagationScope();
 		if( node() )
 		{
@@ -663,7 +666,11 @@ class Plug::DirtyPlugs
 			// Propagate dirtiness to output plugs and affected plugs.
 			// We only propagate dirtiness along leaf level plugs, because
 			// they are the only plugs which can be the target of the affects(),
-			// and compute() methods.
+			// and compute() methods. We must handle any exceptions thrown by
+			// DependencyNode::affects() so that we don't leave the graph in
+			// an unexpected state - propagateDirtiness() is called in the middle
+			// of addChild(), setInput() and setValue() methods, and we want those
+			// to succeed at all costs.
 			if( !plugToDirty->isInstanceOf( (IECore::TypeId)CompoundPlugTypeId ) )
 			{
 				for( Plug::OutputContainer::const_iterator it=plugToDirty->outputs().begin(), eIt=plugToDirty->outputs().end(); it!=eIt; ++it )
@@ -676,15 +683,39 @@ class Plug::DirtyPlugs
 				if( dependencyNode )
 				{
 					DependencyNode::AffectedPlugsContainer affected;
-					dependencyNode->affects( plugToDirty, affected );
+					try
+					{
+						dependencyNode->affects( plugToDirty, affected );
+					}
+					catch( const std::exception &e )
+					{
+						IECore::msg(
+							IECore::Msg::Error,
+							dependencyNode->relativeName( dependencyNode->scriptNode() ) + "::affects()",
+							e.what()
+						);
+					}
+					catch( ... )
+					{
+						IECore::msg(
+							IECore::Msg::Error,
+							dependencyNode->relativeName( dependencyNode->scriptNode() ) + "::affects()",
+							"Unknown exception"
+						);
+					}
+
 					for( DependencyNode::AffectedPlugsContainer::const_iterator it=affected.begin(); it!=affected.end(); it++ )
 					{
 						if( ( *it )->isInstanceOf( (IECore::TypeId)Gaffer::CompoundPlugTypeId ) )
 						{
 							// DependencyNode::affects() implementations are only allowed to place leaf plugs in the outputs,
 							// so we helpfully report any mistakes.
-							clear();
-							throw IECore::Exception( "Non-leaf plug " + (*it)->fullName() + " cannot be returned by affects()" );
+							IECore::msg(
+								IECore::Msg::Error,
+								dependencyNode->relativeName( dependencyNode->scriptNode() ) + "::affects()",
+								"Non-leaf plug " + (*it)->relativeName( dependencyNode ) + " returned by affects()"
+							);
+							continue;
 						}
 						// cast is ok - AffectedPlugsContainer only holds const pointers so that
 						// affects() can be const to discourage implementations from having side effects.

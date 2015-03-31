@@ -39,6 +39,8 @@ import unittest
 import threading
 import collections
 
+import IECore
+
 import Gaffer
 import GafferTest
 
@@ -133,7 +135,14 @@ class DependencyNodeTest( GafferTest.TestCase ) :
 		src["behaveBadly"].setValue( True )
 		self.assertEqual( len( srcDirtied ), 1 )
 		self.assertTrue( srcDirtied[0][0].isSame( src["behaveBadly"] ) )
-		self.assertRaises( RuntimeError, src["in"].setValue, 10 )
+		with IECore.CapturingMessageHandler() as mh :
+			src["in"].setValue( 10 )
+
+		self.assertEqual( src["in"].getValue(), 10 )
+		self.assertEqual( len( mh.messages ), 1 )
+		self.assertEqual( mh.messages[0].level, IECore.Msg.Level.Error )
+		self.assertEqual( mh.messages[0].context, "CompoundOut::affects()" )
+		self.assertEqual( mh.messages[0].message, "Non-leaf plug out returned by affects()" )
 
 		src["behaveBadly"].setValue( False )
 		del srcDirtied[:]
@@ -505,6 +514,45 @@ class DependencyNodeTest( GafferTest.TestCase ) :
 		del valuesWhenDirtied[:]
 		del n["in"]
 		self.assertEqual( valuesWhenDirtied, [ 0 ] )
+
+	def testThrowInAffects( self ) :
+		# Dirty propagation is a secondary process that
+		# is triggered by primary operations like adding
+		# plugs, setting values, and changing inputs.
+		# We don't want errors that occur during dirty
+		# propagation to prevent the original operation
+		# from succeeding, so that although dirtiness is
+		# not propagated fully, the graph itself is in
+		# an intact state.
+
+		node = GafferTest.BadNode()
+
+		with IECore.CapturingMessageHandler() as mh :
+			node["in3"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		# We want the addition of the child to have succeeded.
+		self.assertTrue( "in3" in node )
+		# And to have been informed of the bug in BadNode.
+		self.assertEqual( len( mh.messages ), 1 )
+		self.assertEqual( mh.messages[0].level, mh.Level.Error )
+		self.assertEqual( mh.messages[0].context, "BadNode::affects()" )
+		self.assertTrue( "BadNode is bad" in mh.messages[0].message )
+
+		with IECore.CapturingMessageHandler() as mh :
+			del node["in3"]
+
+		# We want the removal of the child to have succeeded.
+		self.assertTrue( "in3" not in node )
+		# And to have been informed of the bug in BadNode.
+		self.assertEqual( len( mh.messages ), 1 )
+		self.assertEqual( mh.messages[0].level, mh.Level.Error )
+		self.assertEqual( mh.messages[0].context, "BadNode::affects()" )
+		self.assertTrue( "BadNode is bad" in mh.messages[0].message )
+
+		# And after all that, we still want dirty propagation to work properly.
+		cs = GafferTest.CapturingSlot( node.plugDirtiedSignal() )
+		node["in1"].setValue( 10 )
+		self.assertTrue( node["out1"] in [ c[0] for c in cs ] )
 
 if __name__ == "__main__":
 	unittest.main()

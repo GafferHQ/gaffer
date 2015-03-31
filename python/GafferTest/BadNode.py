@@ -55,10 +55,13 @@ class BadNode( Gaffer.ComputeNode ) :
 	def affects( self, input ) :
 
 		outputs = []
-		if input.getName() == "in1" :
+		if input.isSame( self["in1"] ) :
 			outputs.append( self["out1"] )
-		elif input.getName() == "in2" :
+		elif input.isSame( self["in2"] ) :
 			outputs.append( self["out2"] )
+		elif input.isSame( self.getChild( "in3" ) ) :
+			# "in3" is added dynamically by DependencyNodeTest.testThrowInAffects().
+			raise Exception( "BadNode is bad" )
 
 		return outputs
 
