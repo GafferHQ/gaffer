@@ -121,6 +121,7 @@ enum TypeId
 	ScenePathTypeId = 110576,
 	FilterMixinBaseTypeId = 110577,
 	FilterSwitchTypeId = 110578,
+	DeleteSetsTypeId = 110579,
 
 	LastTypeId = 110650
 };
