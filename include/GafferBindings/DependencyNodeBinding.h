@@ -48,6 +48,7 @@
 #include "Gaffer/ValuePlug.h"
 
 #include "GafferBindings/NodeBinding.h"
+#include "GafferBindings/ExceptionAlgo.h"
 
 namespace GafferBindings
 {
@@ -77,14 +78,21 @@ class DependencyNodeWrapper : public NodeWrapper<WrappedType>
 		{
 			if( this->isSubclassed() )
 			{
-				IECorePython::ScopedGILLock gilLock;
-				boost::python::object f = this->methodOverride( "affects" );
-				if( f )
+				try
 				{
-					boost::python::object r = f( Gaffer::PlugPtr( const_cast<Gaffer::Plug *>( input ) ) );
-					boost::python::list pythonOutputs = boost::python::extract<boost::python::list>( r );
-					boost::python::container_utils::extend_container( outputs, pythonOutputs );
-					return;
+					IECorePython::ScopedGILLock gilLock;
+					boost::python::object f = this->methodOverride( "affects" );
+					if( f )
+					{
+						boost::python::object r = f( Gaffer::PlugPtr( const_cast<Gaffer::Plug *>( input ) ) );
+						boost::python::list pythonOutputs = boost::python::extract<boost::python::list>( r );
+						boost::python::container_utils::extend_container( outputs, pythonOutputs );
+						return;
+					}
+				}
+				catch( const boost::python::error_already_set &e )
+				{
+					translatePythonException();
 				}
 			}
 			WrappedType::affects( input, outputs );
@@ -94,11 +102,18 @@ class DependencyNodeWrapper : public NodeWrapper<WrappedType>
 		{
 			if( this->isSubclassed() )
 			{
-				IECorePython::ScopedGILLock gilLock;
-				boost::python::object f = this->methodOverride( "enabledPlug" );
-				if( f )
+				try
 				{
-					return boost::python::extract<Gaffer::BoolPlug *>( f() );
+					IECorePython::ScopedGILLock gilLock;
+					boost::python::object f = this->methodOverride( "enabledPlug" );
+					if( f )
+					{
+						return boost::python::extract<Gaffer::BoolPlug *>( f() );
+					}
+				}
+				catch( const boost::python::error_already_set &e )
+				{
+					translatePythonException();
 				}
 			}
 			return WrappedType::enabledPlug();
@@ -114,14 +129,21 @@ class DependencyNodeWrapper : public NodeWrapper<WrappedType>
 		{
 			if( this->isSubclassed() )
 			{
-				IECorePython::ScopedGILLock gilLock;
-				boost::python::object f = this->methodOverride( "correspondingInput" );
-				if( f )
+				try
 				{
-					Gaffer::PlugPtr value = boost::python::extract<Gaffer::PlugPtr>(
-						f( Gaffer::PlugPtr( const_cast<Gaffer::Plug *>( output ) ) )
-					);
-					return value.get();
+					IECorePython::ScopedGILLock gilLock;
+					boost::python::object f = this->methodOverride( "correspondingInput" );
+					if( f )
+					{
+						Gaffer::PlugPtr value = boost::python::extract<Gaffer::PlugPtr>(
+							f( Gaffer::PlugPtr( const_cast<Gaffer::Plug *>( output ) ) )
+						);
+						return value.get();
+					}
+				}
+				catch( const boost::python::error_already_set &e )
+				{
+					translatePythonException();
 				}
 			}
 			return WrappedType::correspondingInput( output );
