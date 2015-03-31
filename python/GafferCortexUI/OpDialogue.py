@@ -103,6 +103,11 @@ class OpDialogue( GafferUI.Dialogue ) :
 			opInstance = opInstanceOrOpHolderInstance
 			self.__node = Gaffer.ParameterisedHolderNode()
 			self.__node.setParameterised( opInstance )
+			# set the current plug values as userDefaults to provide
+			# a clean NodeUI based on the initial settings of the Op.
+			# we assume that if an OpHolder was passed directly then
+			# the metadata has already been setup as preferred.
+			self.__setUserDefaults( self.__node )
 		else :
 			self.__node = opInstanceOrOpHolderInstance
 			opInstance = self.__node.getParameterised()[0]
@@ -474,3 +479,12 @@ class OpDialogue( GafferUI.Dialogue ) :
 			# show the messages. after this we assume that if the window is smaller
 			# it is because the user has made it so, and wishes it to remain so.
 			self.__messageCollapsibleStateChangedConnection = None
+
+	def __setUserDefaults( self, graphComponent ) :
+
+		if isinstance( graphComponent, Gaffer.Plug ) and hasattr( graphComponent, "getValue" ) :
+			with IECore.IgnoredExceptions( Exception ) :
+				Gaffer.Metadata.registerPlugValue( graphComponent, "userDefault", graphComponent.getValue() )
+		
+		for child in graphComponent.children() :
+			self.__setUserDefaults( child )
