@@ -41,7 +41,6 @@ import IECore
 import Gaffer
 import GafferTest
 import GafferImage
-import GafferSceneTest
 
 class ImageSwitchTest( GafferTest.TestCase ) :
 
