@@ -35,8 +35,16 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include <stack>
+// Headers needed to access environment - these differ
+// between OS X and Linux.
+#ifdef __APPLE__
+#include <crt_externs.h>
+static char **environ = *_NSGetEnviron();
+#else
 #include <unistd.h>
+#endif
+
+#include <stack>
 
 #include "tbb/enumerable_thread_specific.h"
 
