@@ -92,6 +92,7 @@ import PointsTypeUI
 import ParametersUI
 import TextUI
 import AimConstraintUI
+import AlembicSourceUI
 
 # then all the PathPreviewWidgets. note that the order
 # of import controls the order of display.

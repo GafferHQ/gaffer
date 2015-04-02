@@ -81,28 +81,6 @@ GafferUI.PlugValueWidget.registerCreator( GafferScene.Instancer, "instance", Non
 
 GafferUI.Nodule.registerNodule( GafferScene.ObjectToScene, "object", GafferUI.StandardNodule )
 
-# AlembicSource
-
-GafferUI.PlugValueWidget.registerCreator(
-	GafferScene.AlembicSource,
-	"fileName",
-	lambda plug : GafferUI.PathPlugValueWidget( plug,
-		path = Gaffer.FileSystemPath( "/", filter = Gaffer.FileSystemPath.createStandardFilter( extensions = [ "abc" ] ) ),
-		pathChooserDialogueKeywords = {
-			"bookmarks" : GafferUI.Bookmarks.acquire( plug, category = "sceneCache" ),
-			"leaf" : True,
-		},
-	)
-)
-
-GafferUI.PlugValueWidget.registerCreator(
-	GafferScene.AlembicSource,
-	"refreshCount",
-	GafferUI.IncrementingPlugValueWidget,
-	label = "Refresh",
-	undoable = False
-)
-
 # BranchCreator
 
 GafferUI.PlugValueWidget.registerCreator(
