@@ -47,6 +47,52 @@ import GafferScene
 import GafferSceneUI
 
 ##########################################################################
+# Metadata
+##########################################################################
+
+Gaffer.Metadata.registerNode(
+
+	GafferScene.Outputs,
+
+	"description",
+	"""
+	Defines the image outputs to be created by the renderer. Arbitrary
+	outputs can be defined within the UI and also via the
+	`Outputs::addOutput()` API. Commonly used outputs may also
+	be predefined at startup via a config file - see
+	$GAFFER_ROOT/startup/gui/outputs.py for an example.
+	""",
+
+	plugs = {
+
+		"outputs" : [
+
+			"description",
+			"""
+			The outputs defined by this node.
+			""",
+
+		],
+
+		"outputs.*.parameters.quantize.value" : [
+
+			"description",
+			"""
+			The bit depth of the image.
+			""",
+
+			"preset:8 bit", IECore.IntVectorData( [ 0, 255, 0, 255 ] ),
+			"preset:16 bit", IECore.IntVectorData( [ 0, 65535, 0, 65535 ] ),
+			"preset:Float", IECore.IntVectorData( [ 0, 0, 0, 0 ] ),
+
+
+		],
+
+	}
+
+)
+
+##########################################################################
 # Custom PlugValueWidgets for listing outputs
 ##########################################################################
 
@@ -213,12 +259,7 @@ GafferUI.PlugValueWidget.registerCreator(
 GafferUI.PlugValueWidget.registerCreator(
 	GafferScene.Outputs,
 	re.compile( "outputs.*.parameters.quantize" ),
-	GafferUI.EnumPlugValueWidget,
-	labelsAndValues = [
-		( "8 bit", IECore.IntVectorData( [ 0, 255, 0, 255 ] ) ),
-		( "16 bit", IECore.IntVectorData( [ 0, 65535, 0, 65535 ] ) ),
-		( "Float", IECore.IntVectorData( [ 0, 0, 0, 0 ] ) ),
-	]
+	GafferUI.PresetsPlugValueWidget
 )
 
 GafferUI.PlugValueWidget.registerCreator(
