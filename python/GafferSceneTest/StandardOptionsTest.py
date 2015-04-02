@@ -75,6 +75,7 @@ class StandardOptionsTest( GafferSceneTest.SceneTestCase ) :
 
 		h = o2["out"]["globals"].hash()
 
+		o1["options"]["renderResolution"]["enabled"].setValue( True )
 		o1["options"]["renderResolution"]["value"].setValue( IECore.V2i( 10 ) )
 
 		self.assertNotEqual( o2["out"]["globals"].hash(), h )

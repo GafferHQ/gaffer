@@ -127,6 +127,9 @@ class CompoundDataPlug : public Gaffer::CompoundPlug
 		/// Extracts a Data value from a plug previously created with createPlugFromData().
 		static IECore::DataPtr extractDataFromPlug( const ValuePlug *plug );
 
+		virtual IECore::MurmurHash hash() const;
+		void hash( IECore::MurmurHash &h ) const;
+
 	private :
 
 		template<typename T>
