@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2013-2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -57,6 +57,7 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 			horizontalAlignment = horizontalAlignment,
 			verticalAlignment = verticalAlignment,
 		)
+		self.__label._qtWidget().setObjectName( "gafferPlugLabel" )
 		layout.addWidget( self.__label._qtWidget() )
 
 		self.__editableLabel = None # we'll make this lazily as needed
@@ -123,10 +124,29 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 			not plug.getFlags( Gaffer.Plug.Flags.ReadOnly )
 		)
 
-		highlighted = plug.getInput() is not None
-		if not highlighted and isinstance( plug, Gaffer.ValuePlug ) :
-			highlighted = highlighted or not plug.isSetToDefault()
-		self.__label.setHighlighted( highlighted )
+		valueChanged = plug.getInput() is not None
+		if not valueChanged and isinstance( plug, Gaffer.ValuePlug ) :
+			if Gaffer.NodeAlgo.hasUserDefault( plug ) :
+				valueChanged = valueChanged or not Gaffer.NodeAlgo.isSetToUserDefault( plug )
+			else :
+				valueChanged = valueChanged or not plug.isSetToDefault()
+		self.__setValueChanged( valueChanged )
+
+	# Sets whether or not the label be rendered in a ValueChanged state.
+	def __setValueChanged( self, valueChanged ) :
+
+		if valueChanged == self.__getValueChanged() :
+			return
+
+		self.__label._qtWidget().setProperty( "gafferValueChanged", GafferUI._Variant.toVariant( valueChanged ) )
+		self.__label._repolish()
+
+	def __getValueChanged( self ) :
+
+		if "gafferValueChanged" not in self.__label._qtWidget().dynamicPropertyNames() :
+			return False
+
+		return GafferUI._Variant.fromVariant( self.__label._qtWidget().property( "gafferValueChanged" ) )
 
 	def __dragBegin( self, widget, event ) :
 

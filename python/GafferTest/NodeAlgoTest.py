@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2014-2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -49,8 +49,10 @@ class NodeAlgoTest( GafferTest.TestCase ) :
 		self.assertFalse( Gaffer.NodeAlgo.hasUserDefault( node["op1"] ) )
 		Gaffer.Metadata.registerPlugValue( GafferTest.AddNode.staticTypeId(), "op1", "userDefault", IECore.IntData( 7 ) )
 		self.assertTrue( Gaffer.NodeAlgo.hasUserDefault( node["op1"] ) )
+		self.assertFalse( Gaffer.NodeAlgo.isSetToUserDefault( node["op1"] ) )
 		Gaffer.NodeAlgo.applyUserDefaults( node )
 		self.assertEqual( node["op1"].getValue(), 7 )
+		self.assertTrue( Gaffer.NodeAlgo.isSetToUserDefault( node["op1"] ) )
 		
 		# even if it's registered, it doesn't get applied outside of the NodeMenu UI
 		node2 = GafferTest.AddNode()
@@ -69,6 +71,7 @@ class NodeAlgoTest( GafferTest.TestCase ) :
 		self.assertFalse( Gaffer.NodeAlgo.hasUserDefault( node3["op1"] ) )
 		Gaffer.NodeAlgo.applyUserDefaults( node3 )
 		self.assertEqual( node3["op1"].getValue(), 0 )
+		self.assertFalse( Gaffer.NodeAlgo.isSetToUserDefault( node["op1"] ) )
 	
 	def testCompoundPlug( self ) :
 		
@@ -76,18 +79,24 @@ class NodeAlgoTest( GafferTest.TestCase ) :
 		
 		self.assertEqual( node["p"]["s"].getValue(), "" )
 		Gaffer.Metadata.registerPlugValue( GafferTest.CompoundPlugNode.staticTypeId(), "p.s", "userDefault", IECore.StringData( "from the metadata" ) )
+		self.assertFalse( Gaffer.NodeAlgo.isSetToUserDefault( node["p"]["s"] ) )
 		Gaffer.NodeAlgo.applyUserDefaults( node )
 		self.assertEqual( node["p"]["s"].getValue(), "from the metadata" )
+		self.assertTrue( Gaffer.NodeAlgo.isSetToUserDefault( node["p"]["s"] ) )
 		
 		# override the metadata for this particular instance
 		Gaffer.Metadata.registerPlugValue( node["p"]["s"], "userDefault", IECore.StringData( "i am special" ) )
+		self.assertFalse( Gaffer.NodeAlgo.isSetToUserDefault( node["p"]["s"] ) )
 		Gaffer.NodeAlgo.applyUserDefaults( node )
 		self.assertEqual( node["p"]["s"].getValue(), "i am special" )
+		self.assertTrue( Gaffer.NodeAlgo.isSetToUserDefault( node["p"]["s"] ) )
 		
 		# this node still gets the original userDefault
 		node2 = GafferTest.CompoundPlugNode()
+		self.assertFalse( Gaffer.NodeAlgo.isSetToUserDefault( node2["p"]["s"] ) )
 		Gaffer.NodeAlgo.applyUserDefaults( node2 )
 		self.assertEqual( node2["p"]["s"].getValue(), "from the metadata" )
+		self.assertTrue( Gaffer.NodeAlgo.isSetToUserDefault( node2["p"]["s"] ) )
 	
 	def testSeveral( self ) :	
 		

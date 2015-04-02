@@ -74,6 +74,15 @@ _styleSheet = string.Template(
 
 	}
 
+	QLabel#gafferPlugLabel[gafferValueChanged=\"true\"] {
+
+		background-image: url($GAFFER_ROOT/graphics/valueChanged.png);
+		background-repeat: no-repeat;
+		background-position: left;
+		padding-left: 20px;
+
+	}
+
 	QMenuBar {
 
 		background-color: $backgroundDarkest;
