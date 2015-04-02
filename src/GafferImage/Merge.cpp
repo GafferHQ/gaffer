@@ -98,23 +98,19 @@ const Gaffer::IntPlug *Merge::operationPlug() const
 
 void Merge::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
+	ImageProcessor::affects( input, outputs );
+
 	if( input == operationPlug() )
 	{
 		outputs.push_back( outPlug()->channelDataPlug() );
 	}
-	else
+	else if( const ImagePlug *p = input->parent<ImagePlug>() )
 	{
 		const ImagePlugList &inputs( m_inputs.inputs() );
-		for ( ImagePlugList::const_iterator it( inputs.begin() ); it < inputs.end(); ++it )
+		if( std::find( inputs.begin(), inputs.end(), p ) != inputs.end() )
 		{
-			if ( input->parent<ImagePlug>() == *it )
-			{
-				outputs.push_back( outPlug()->getChild<ValuePlug>( input->getName() ) );
-				return;
-			}
+			outputs.push_back( outPlug()->getChild<ValuePlug>( input->getName() ) );
 		}
-		
-		ImageProcessor::affects( input, outputs );
 	}
 }
 
