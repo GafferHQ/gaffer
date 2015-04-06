@@ -44,6 +44,8 @@ Scene
 - Added DeleteSets node.
 - Fixed CustomOptions dirty propagation (#1039).
 - Fixed ContextVariables dirty propagation.
+- Optimised Filter mechanism, giving a 7-20% improvement in performance
+  across a range of production scenes.
 
 Appleseed
 -----------------------------------------------------------------------
