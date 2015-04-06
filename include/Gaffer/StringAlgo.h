@@ -61,6 +61,11 @@ inline bool match( const char *s, const char *pattern );
 inline bool matchMultiple( const std::string &s, const MatchPattern &patterns );
 inline bool matchMultiple( const char *s, const char *patterns );
 
+/// Returns true if the specified pattern contains characters which
+/// have special meaning to the match() function.
+inline bool hasWildcards( const MatchPattern &pattern );
+inline bool hasWildcards( const char *pattern );
+
 /// Returns the numeric suffix from the end of s, if one exists, and -1 if
 /// one doesn't. If stem is specified then it will be filled with the contents
 /// of s preceding the suffix, or the whole of s if no suffix exists.

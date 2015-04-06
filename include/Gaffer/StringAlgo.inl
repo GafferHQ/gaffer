@@ -38,6 +38,8 @@
 #ifndef GAFFER_STRINGALGO_INL
 #define GAFFER_STRINGALGO_INL
 
+#include <string.h>
+
 namespace Gaffer
 {
 
@@ -133,6 +135,16 @@ inline bool matchMultiple( const std::string &s, const MatchPattern &patterns )
 inline bool matchMultiple( const char *s, const char *patterns )
 {
 	return Detail::matchInternal( s, patterns, /* multiple = */ true );
+}
+
+inline bool hasWildcards( const std::string &pattern )
+{
+	return hasWildcards( pattern.c_str() );
+}
+
+inline bool hasWildcards( const char *pattern )
+{
+	return strchr( pattern, '*' );
 }
 
 template<typename Token, typename OutputIterator>

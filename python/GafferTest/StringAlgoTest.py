@@ -39,7 +39,7 @@ import GafferTest
 
 class StringAlgoTest( GafferTest.TestCase ) :
 
-	def test( self ) :
+	def testMatch( self ) :
 
 		for s, p, r in [
 			( "", "", True ),
@@ -59,7 +59,7 @@ class StringAlgoTest( GafferTest.TestCase ) :
 			if " " not in s :
 				self.assertEqual( Gaffer.matchMultiple( s, p ), r )
 
-	def testMultiple( self ) :
+	def testMatchMultiple( self ) :
 
 		for s, p, r in [
 			( "", "", True ),
@@ -78,6 +78,20 @@ class StringAlgoTest( GafferTest.TestCase ) :
 		] :
 
 			self.assertEqual( Gaffer.matchMultiple( s, p ), r )
+
+	def testHasWildcards( self ) :
+
+		for p, r in [
+			( "", False ),
+			( "a", False ),
+			( "*", True ),
+			( "a*", True ),
+			( "a**", True ),
+			( "a*b", True ),
+			( "*a", True ),
+		] :
+
+			self.assertEqual( Gaffer.hasWildcards( p ), r )
 
 if __name__ == "__main__":
 	unittest.main()

@@ -49,6 +49,7 @@ void bindStringAlgo()
 {
 	def( "match", (bool (*)( const char *, const char * ))&Gaffer::match );
 	def( "matchMultiple", (bool (*)( const char *, const char * ))&Gaffer::matchMultiple );
+	def( "hasWildcards", (bool (*)( const char * ))&Gaffer::hasWildcards );
 }
 
 } // namespace GafferBindings
