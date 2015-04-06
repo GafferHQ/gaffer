@@ -96,12 +96,12 @@ struct PathMatcher::Node
 	typedef ChildMap::const_iterator ConstChildMapIterator;
 
 	Node()
-		:	terminator( false ), ellipsis( 0 )
+		:	terminator( false ), ellipsis( NULL )
 	{
 	}
 
 	Node( const Node &other )
-		:	terminator( other.terminator ), ellipsis( other.ellipsis ? new Node( *(other.ellipsis) ) : 0 )
+		:	terminator( other.terminator ), ellipsis( other.ellipsis ? new Node( *(other.ellipsis) ) : NULL )
 	{
 		ChildMapIterator hint = children.begin();
 		for( ConstChildMapIterator it = other.children.begin(), eIt = other.children.end(); it != eIt; it++ )
@@ -383,7 +383,7 @@ bool PathMatcher::addPath( const NameIterator &start, const NameIterator &end )
 	Node *node = m_root.get();
 	for( NameIterator it = start; it != end; ++it )
 	{
-		Node *nextNode = 0;
+		Node *nextNode = NULL;
 		const Name name( *it );
 		if( name.name == g_ellipsis )
 		{
@@ -466,7 +466,7 @@ void PathMatcher::removeWalk( Node *node, const NameIterator &start, const NameI
 
 	const IECore::InternedString name( *start );
 	Node::ChildMapIterator childIt = node->children.end();
-	Node *childNode = 0;
+	Node *childNode = NULL;
 	if( name == g_ellipsis )
 	{
 		childNode = node->ellipsis;
@@ -496,7 +496,7 @@ void PathMatcher::removeWalk( Node *node, const NameIterator &start, const NameI
 		}
 		else
 		{
-			node->ellipsis = 0;
+			node->ellipsis = NULL;
 		}
 	}
 }
