@@ -110,6 +110,7 @@ class PathMatcher
 
 	private :
 
+		struct Name;
 		struct Node;
 
 		template<typename NameIterator>
