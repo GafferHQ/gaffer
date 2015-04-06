@@ -51,7 +51,7 @@ Filter::Filter( const std::string &name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new BoolPlug( "enabled", Gaffer::Plug::In, true ) );
-	addChild( new IntPlug( "out", Gaffer::Plug::Out, NoMatch, NoMatch, EveryMatch ) );
+	addChild( new IntPlug( "out", Gaffer::Plug::Out, NoMatch, NoMatch, EveryMatch, Plug::Default & ( ~Plug::Cacheable ) ) );
 }
 
 Filter::~Filter()

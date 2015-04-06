@@ -35,6 +35,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include <boost/bind.hpp>
+
 #include "Gaffer/Context.h"
 
 #include "GafferScene/ScenePlug.h"
@@ -56,6 +58,8 @@ PathFilter::PathFilter( const std::string &name )
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new StringVectorDataPlug( "paths", Plug::In, new StringVectorData ) );
 	addChild( new ObjectPlug( "__pathMatcher", Plug::Out, new PathMatcherData ) );
+	
+	plugDirtiedSignal().connect( boost::bind( &PathFilter::plugDirtied, this, ::_1 ) );
 }
 
 PathFilter::~PathFilter()
@@ -80,6 +84,31 @@ Gaffer::ObjectPlug *PathFilter::pathMatcherPlug()
 const Gaffer::ObjectPlug *PathFilter::pathMatcherPlug() const
 {
 	return getChild<Gaffer::ObjectPlug>( g_firstPlugIndex + 1 );
+}
+
+void PathFilter::plugDirtied( const Gaffer::Plug *plug )
+{
+	if( plug == pathsPlug() )
+	{
+		//\todo: share this logic with Switch::variesWithContext()
+		Plug* sourcePlug = pathsPlug()->source<Plug>();
+		if( sourcePlug->direction() == Plug::Out && IECore::runTimeCast<const ComputeNode>( sourcePlug->node() ) )
+		{
+			// pathsPlug() is receiving data from a plug whose value is context varying, meaning 
+			// we need to use the intermediate pathMatcherPlug() in computeMatch() instead:
+			
+			m_pathMatcher = NULL;
+		}
+		else
+		{
+			// pathsPlug() value is not context varying, meaning we can save on graph evaluations
+			// by just precomputing it here and directly using it in computeMatch():
+			
+			ConstStringVectorDataPtr paths = pathsPlug()->getValue();
+			m_pathMatcher = new PathMatcherData;
+			m_pathMatcher->writable().init( paths->readable().begin(), paths->readable().end() );
+		}
+	}
 }
 
 void PathFilter::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
@@ -123,7 +152,7 @@ void PathFilter::compute( Gaffer::ValuePlug *output, const Gaffer::Context *cont
 void PathFilter::hashMatch( const ScenePlug *scene, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	typedef IECore::TypedData<ScenePlug::ScenePath> ScenePathData;
-	const ScenePathData *pathData = context->get<ScenePathData>( ScenePlug::scenePathContextName, 0 );
+	const ScenePathData *pathData = context->get<ScenePathData>( ScenePlug::scenePathContextName, NULL );
 	if( pathData )
 	{
 		const ScenePlug::ScenePath &path = pathData->readable();
@@ -135,10 +164,14 @@ void PathFilter::hashMatch( const ScenePlug *scene, const Gaffer::Context *conte
 unsigned PathFilter::computeMatch( const ScenePlug *scene, const Gaffer::Context *context ) const
 {
 	typedef IECore::TypedData<ScenePlug::ScenePath> ScenePathData;
-	const ScenePathData *pathData = context->get<ScenePathData>( ScenePlug::scenePathContextName, 0 );
+	const ScenePathData *pathData = context->get<ScenePathData>( ScenePlug::scenePathContextName, NULL );
 	if( pathData )
 	{
-		ConstPathMatcherDataPtr pathMatcher = boost::static_pointer_cast<const PathMatcherData>( pathMatcherPlug()->getValue() );
+		// If we have a precomputed PathMatcher, we use that to compute matches, otherwise
+		// we grab the PathMatcher from the intermediate plug (which is a bit more expensive
+		// as it involves graph evaluations):
+		
+		ConstPathMatcherDataPtr pathMatcher = m_pathMatcher ? m_pathMatcher : boost::static_pointer_cast<const PathMatcherData>( pathMatcherPlug()->getValue() );
 		return pathMatcher->readable().match( pathData->readable() );
 	}
 	return NoMatch;
