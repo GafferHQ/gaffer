@@ -181,17 +181,3 @@ GafferUI.Nodule.registerNodule(
 	"paths",
 	lambda plug : None,
 )
-
-# UnionFilter
-
-GafferUI.PlugValueWidget.registerCreator(
-	GafferScene.UnionFilter,
-	"in",
-	None,
-)
-
-GafferUI.Nodule.registerNodule(
-	GafferScene.UnionFilter,
-	"in",
-	GafferUI.CompoundNodule
-)
