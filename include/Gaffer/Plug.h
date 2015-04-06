@@ -194,12 +194,37 @@ class Plug : public GraphComponent
 
 		virtual void parentChanging( Gaffer::GraphComponent *newParent );
 
+		/// Initiates the propagation of dirtiness from the specified
+		/// plug to its outputs and affected plugs (as defined by
+		/// DependencyNode::affects()).
+		static void propagateDirtiness( Plug *plugToDirty );
+
+		/// Called by propagateDirtiness() to inform a plug that it has
+		/// been dirtied. For plugs that implement caching of results, this
+		/// provides an opportunity for the plug to invalidate its cache.
+		/// This is called _before_ Node::plugDirtiedSignal() is emitted,
+		/// so that the plug can be ready for any queries from slots
+		/// connected to the signal.
+		virtual void dirty();
+
 	private :
+
+		void parentChanged();
+		static void propagateDirtinessForParentChange( Plug *plugToDirty );
 
 		void setInput( PlugPtr input, bool setChildInputs, bool updateParentInput );
 		void setInputInternal( PlugPtr input, bool emit );
 
 		void updateInputFromChildInputs( Plug *checkFirst );
+
+		static void pushDirtyPropagationScope();
+		static void popDirtyPropagationScope();
+		// DirtyPropagationScope allowed friendship, as we use
+		// it to declare an exception-safe public interface to
+		// the two private methods above.
+		friend class DirtyPropagationScope;
+
+		class DirtyPlugs;
 
 		Direction m_direction;
 		Plug *m_input;

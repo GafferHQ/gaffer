@@ -61,6 +61,30 @@ class ContextVariablesTest( GafferTest.TestCase ) :
 		c["variables"].addMember( "a", IECore.StringData( "A" ) )
 		self.assertEqual( c["out"].getValue(), "A" )
 
+	def testDirtyPropagation( self ) :
+
+		n = GafferTest.StringInOutNode()
+
+		c = Gaffer.ContextVariablesComputeNode()
+		c["in"] = Gaffer.StringPlug()
+		c["out"] = Gaffer.StringPlug( direction = Gaffer.Plug.Direction.Out )
+		c["in"].setInput( n["out"] )
+
+		# adding a variable should dirty the output:
+		dirtied = GafferTest.CapturingSlot( c.plugDirtiedSignal() )
+		c["variables"].addMember( "a", IECore.StringData( "A" ) )
+		self.failUnless( c["out"] in [ p[0] for p in dirtied ] )
+
+		# modifying the variable should dirty the output:
+		dirtied = GafferTest.CapturingSlot( c.plugDirtiedSignal() )
+		c["variables"]["member1"]["value"].setValue("b")
+		self.failUnless( c["out"] in [ p[0] for p in dirtied ] )
+
+		# removing the variable should also dirty the output:
+		dirtied = GafferTest.CapturingSlot( c.plugDirtiedSignal() )
+		c["variables"].removeChild(c["variables"]["member1"])
+		self.failUnless( c["out"] in [ p[0] for p in dirtied ] )
+
 if __name__ == "__main__":
 	unittest.main()
 

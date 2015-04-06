@@ -40,9 +40,9 @@
 
 #include <string>
 
-#include "boost/noncopyable.hpp"
-
 #include "IECore/RefCounted.h"
+
+#include "Gaffer/DirtyPropagationScope.h"
 
 namespace Gaffer
 {
@@ -51,7 +51,8 @@ IE_CORE_FORWARDDECLARE( ScriptNode );
 
 /// The UndoContext class is used to control the creation of
 /// items on the undo stack held in a ScriptNode.
-class UndoContext : boost::noncopyable
+/// \todo Rename to UndoScope to avoid confusion with Context.
+class UndoContext : DirtyPropagationScope
 {
 
 	public :

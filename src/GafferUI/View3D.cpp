@@ -96,7 +96,10 @@ View3D::View3D( const std::string &name, Gaffer::PlugPtr inPlug )
 
 	// camera
 
-	IECore::CameraPtr camera = new IECore::Camera();
+	// weird two stage assignment is to work around bogus
+	// uninitialised variable warnings in debug builds with
+	// gcc 4.1.2.
+	IECore::CameraPtr camera; camera = new IECore::Camera();
 
 	camera->parameters()["projection"] = new IECore::StringData( "perspective" );
 	camera->parameters()["projection:fov"] = new IECore::FloatData( 54.43 ); // 35 mm focal length

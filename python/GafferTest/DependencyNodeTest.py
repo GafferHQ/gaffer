@@ -37,6 +37,9 @@
 
 import unittest
 import threading
+import collections
+
+import IECore
 
 import Gaffer
 import GafferTest
@@ -132,7 +135,14 @@ class DependencyNodeTest( GafferTest.TestCase ) :
 		src["behaveBadly"].setValue( True )
 		self.assertEqual( len( srcDirtied ), 1 )
 		self.assertTrue( srcDirtied[0][0].isSame( src["behaveBadly"] ) )
-		self.assertRaises( RuntimeError, src["in"].setValue, 10 )
+		with IECore.CapturingMessageHandler() as mh :
+			src["in"].setValue( 10 )
+
+		self.assertEqual( src["in"].getValue(), 10 )
+		self.assertEqual( len( mh.messages ), 1 )
+		self.assertEqual( mh.messages[0].level, IECore.Msg.Level.Error )
+		self.assertEqual( mh.messages[0].context, "CompoundOut::affects()" )
+		self.assertEqual( mh.messages[0].message, "Non-leaf plug out returned by affects()" )
 
 		src["behaveBadly"].setValue( False )
 		del srcDirtied[:]
@@ -359,6 +369,212 @@ class DependencyNodeTest( GafferTest.TestCase ) :
 		f6["in"].setInput( f5["out"] )
 
 		f1["in"][0].setValue( 10 )
+
+	def testDirtyPropagationScoping( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = GafferTest.AddNode()
+
+		cs = GafferTest.CapturingSlot( s["n"].plugDirtiedSignal() )
+
+		with Gaffer.UndoContext( s ) :
+
+			s["n"]["op1"].setValue( 20 )
+			s["n"]["op2"].setValue( 21 )
+
+		# Even though we made two changes, we only want
+		# dirtiness to have been signalled once, because
+		# we grouped them logically in an UndoContext.
+
+		self.assertEqual( len( cs ), 3 )
+		self.assertTrue( cs[0][0].isSame( s["n"]["op1"] ) )
+		self.assertTrue( cs[1][0].isSame( s["n"]["op2"] ) )
+		self.assertTrue( cs[2][0].isSame( s["n"]["sum"] ) )
+
+		# Likewise, when we undo.
+
+		del cs[:]
+		s.undo()
+
+		self.assertEqual( len( cs ), 3 )
+		self.assertTrue( cs[0][0].isSame( s["n"]["op2"] ) )
+		self.assertTrue( cs[1][0].isSame( s["n"]["op1"] ) )
+		self.assertTrue( cs[2][0].isSame( s["n"]["sum"] ) )
+
+		# And when we redo.
+
+		del cs[:]
+		s.redo()
+
+		self.assertEqual( len( cs ), 3 )
+		self.assertTrue( cs[0][0].isSame( s["n"]["op1"] ) )
+		self.assertTrue( cs[1][0].isSame( s["n"]["op2"] ) )
+		self.assertTrue( cs[2][0].isSame( s["n"]["sum"] ) )
+
+	def testDirtyPropagationScopingForCompoundPlugInputChange( self ) :
+
+		n1 = GafferTest.CompoundPlugNode()
+		n2 = GafferTest.CompoundPlugNode()
+		n3 = GafferTest.CompoundPlugNode()
+
+		# We never want to be signalled at a point
+		# when the child connections are not in
+		# a consistent state.
+
+		InputState = collections.namedtuple( "InputState", ( "p", "s", "f" ) )
+
+		inputStates = []
+		def plugDirtied( p ) :
+
+			# We can't use self.assert*() in here,
+			# because exceptions are caught in plugDirtiedSignal()
+			# handling. So we just record the state to check later
+			# in assertStatesValid().
+			inputStates.append(
+				InputState(
+					n3["p"].getInput(),
+					n3["p"]["s"].getInput(),
+					n3["p"]["f"].getInput()
+				)
+			)
+
+		def assertStatesValid() :
+
+			for state in inputStates :
+				if state.p is not None :
+					self.assertTrue( state.s is not None )
+					self.assertTrue( state.f is not None )
+					self.assertTrue( state.p.isSame( state.f.parent() ) )
+				else :
+					self.assertTrue( state.s is None )
+					self.assertTrue( state.f is None )
+
+		c = n3.plugDirtiedSignal().connect( plugDirtied )
+
+		n3["p"].setInput( n1["o"] )
+		assertStatesValid()
+
+		n3["p"].setInput( n2["o"] )
+		assertStatesValid()
+
+		n3["p"].setInput( None )
+		assertStatesValid()
+
+	def testDirtyOnPlugAdditionAndRemoval( self ) :
+
+		class DynamicAddNode( Gaffer.ComputeNode ) :
+
+			def __init__( self, name = "DynamicDependencies" ) :
+
+				Gaffer.ComputeNode.__init__( self, name )
+
+				self["out"] = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.Out )
+
+			def affects( self, input ) :
+
+				result = Gaffer.DependencyNode.affects( self, input )
+
+				if input in self.__inputs() :
+					result.append( self["out"] )
+
+				return result
+
+			def hash( self, output, context, h ) :
+
+				assert( output.isSame( self["out"] ) )
+
+				for plug in self.__inputs() :
+					plug.hash( h )
+
+			def compute( self, output, context ) :
+
+				result = 0
+				for plug in self.__inputs() :
+					result += plug.getValue()
+
+				output.setValue( result )
+
+			def __inputs( self ) :
+
+				return [ p for p in self.children( Gaffer.IntPlug ) if p.direction() == p.Direction.In ]
+
+		valuesWhenDirtied = []
+
+		def plugDirtied( plug ) :
+
+			if plug.isSame( n["out"] ) :
+				valuesWhenDirtied.append( plug.getValue() )
+
+		n = DynamicAddNode()
+		c = n.plugDirtiedSignal().connect( plugDirtied )
+
+		n["in"] = Gaffer.IntPlug( defaultValue = 1, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		self.assertEqual( valuesWhenDirtied, [ 1 ] )
+
+		del valuesWhenDirtied[:]
+		del n["in"]
+		self.assertEqual( valuesWhenDirtied, [ 0 ] )
+
+	def testThrowInAffects( self ) :
+		# Dirty propagation is a secondary process that
+		# is triggered by primary operations like adding
+		# plugs, setting values, and changing inputs.
+		# We don't want errors that occur during dirty
+		# propagation to prevent the original operation
+		# from succeeding, so that although dirtiness is
+		# not propagated fully, the graph itself is in
+		# an intact state.
+
+		node = GafferTest.BadNode()
+
+		with IECore.CapturingMessageHandler() as mh :
+			node["in3"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		# We want the addition of the child to have succeeded.
+		self.assertTrue( "in3" in node )
+		# And to have been informed of the bug in BadNode.
+		self.assertEqual( len( mh.messages ), 1 )
+		self.assertEqual( mh.messages[0].level, mh.Level.Error )
+		self.assertEqual( mh.messages[0].context, "BadNode::affects()" )
+		self.assertTrue( "BadNode is bad" in mh.messages[0].message )
+
+		with IECore.CapturingMessageHandler() as mh :
+			del node["in3"]
+
+		# We want the removal of the child to have succeeded.
+		self.assertTrue( "in3" not in node )
+		# And to have been informed of the bug in BadNode.
+		self.assertEqual( len( mh.messages ), 1 )
+		self.assertEqual( mh.messages[0].level, mh.Level.Error )
+		self.assertEqual( mh.messages[0].context, "BadNode::affects()" )
+		self.assertTrue( "BadNode is bad" in mh.messages[0].message )
+
+		# And after all that, we still want dirty propagation to work properly.
+		cs = GafferTest.CapturingSlot( node.plugDirtiedSignal() )
+		node["in1"].setValue( 10 )
+		self.assertTrue( node["out1"] in [ c[0] for c in cs ] )
+
+	def testDeleteNodesInInputChanged( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n1"] = GafferTest.MultiplyNode()
+		s["n2"] = GafferTest.MultiplyNode()
+		s["n3"] = GafferTest.MultiplyNode()
+		s["n4"] = Gaffer.Node()
+
+		s["n3"]["op1"].setInput( s["n2"]["product"] )
+
+		s["n4"]["user"]["d"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["n4"]["user"]["d"].setInput( s["n3"]["product"] )
+
+		def inputChanged( plug ) :
+
+			del s["n3"]
+			del s["n4"]
+
+		c = s["n2"].plugInputChangedSignal().connect( inputChanged )
+
+		s["n2"]["op1"].setInput( s["n1"]["product"] )
 
 if __name__ == "__main__":
 	unittest.main()

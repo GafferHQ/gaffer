@@ -35,8 +35,12 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include "tbb/enumerable_thread_specific.h"
+
 #include "boost/format.hpp"
 #include "boost/bind.hpp"
+#include "boost/graph/adjacency_list.hpp"
+#include "boost/graph/topological_sort.hpp"
 
 #include "IECore/Exception.h"
 
@@ -46,6 +50,7 @@
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/Metadata.h"
 
+using namespace boost;
 using namespace Gaffer;
 
 //////////////////////////////////////////////////////////////////////////
@@ -63,7 +68,7 @@ class ScopedAssignment : boost::noncopyable
 	public :
 
 		ScopedAssignment( T &target, const T &value )
-			:	m_target( target ), m_originalValue( value )
+			:	m_target( target ), m_originalValue( target )
 		{
 			m_target = value;
 		}
@@ -92,6 +97,7 @@ Plug::Plug( const std::string &name, Direction direction, unsigned flags )
 	:	GraphComponent( name ), m_direction( direction ), m_input( 0 ), m_flags( None ), m_skipNextUpdateInputFromChildInputs( false )
 {
 	setFlags( flags );
+	parentChangedSignal().connect( boost::bind( &Plug::parentChanged, this ) );
 }
 
 Plug::~Plug()
@@ -249,7 +255,11 @@ void Plug::setInput( PlugPtr input, bool setChildInputs, bool updateParentInput 
 		throw IECore::Exception( what );
 	}
 
-	// connect our children first
+	// Connect our children first.
+	// We use a dirty propagation scope to defer dirty signalling
+	// until all connections have been made, when we're in our final
+	// state.
+	DirtyPropagationScope dirtyPropagationScope;
 
 	if( setChildInputs )
 	{
@@ -320,7 +330,7 @@ void Plug::setInputInternal( PlugPtr input, bool emit )
 		{
 			n->plugInputChangedSignal()( this );
 		}
-		DependencyNode::propagateDirtiness( this );
+		propagateDirtiness( this );
 	}
 }
 
@@ -409,6 +419,25 @@ PlugPtr Plug::createCounterpart( const std::string &name, Direction direction ) 
 
 void Plug::parentChanging( Gaffer::GraphComponent *newParent )
 {
+	if( getFlags( Dynamic ) )
+	{
+		// When a dynamic plug is removed from a node, we
+		// need to propagate dirtiness based on that. We
+		// must call DependencyNode::affects() now, while the
+		// plug is still a child of the node, but we push
+		// scope so that the emission of plugDirtiedSignal()
+		// is deferred until parentChanged() when the operation
+		// is complete. It is essential that exceptions don't
+		// prevent us getting to parentChanged() where we pop
+		// scope, so propateDirtiness() takes care of handling
+		// exceptions thrown by DependencyNode::affects().
+		pushDirtyPropagationScope();
+		if( node() )
+		{
+			propagateDirtinessForParentChange( this );
+		}
+	}
+
 	// This method manages the connections between plugs when
 	// additional child plugs are added or removed. We only
 	// want to react to these changes when they are first made -
@@ -485,3 +514,281 @@ void Plug::parentChanging( Gaffer::GraphComponent *newParent )
 
 }
 
+void Plug::parentChanged()
+{
+	if( getFlags( Dynamic ) )
+	{
+		if( node() )
+		{
+			// If a dynamic plug has been added to a
+			// node, we need to propagate dirtiness.
+			propagateDirtinessForParentChange( this );
+		}
+		// Pop the scope pushed in parentChanging().
+		popDirtyPropagationScope();
+	}
+}
+
+void Plug::propagateDirtinessForParentChange( Plug *plugToDirty )
+{
+	// When a plug is reparented, we need to take into account
+	// all the descendants it brings with it, so we recurse to
+	// find them, propagating dirtiness at the leaves.
+	if( plugToDirty->children().size() )
+	{
+		for( PlugIterator it( plugToDirty ); it != it.end(); ++it )
+		{
+			propagateDirtinessForParentChange( it->get() );
+		}
+	}
+	else
+	{
+		propagateDirtiness( plugToDirty );
+	}
+}
+
+//////////////////////////////////////////////////////////////////////////
+// Dirty propagation
+//////////////////////////////////////////////////////////////////////////
+
+// We don't emit dirtiness immediately for each plug as we traverse the
+// dependency graph for two reasons :
+//
+// - we don't want to emit dirtiness for the same plug more than once
+// - we don't want to emit dirtiness while the graph may still be being
+//   rewired by slots connected to plugSetSignal() or plugInputChangedSignal()
+//
+// Instead we collect all the dirty plugs in this container as we traverse
+// the graph and only when the traversal is complete do we emit the plugDirtiedSignal().
+//
+// The container used is stored per-thread as although it's illegal to be
+// monkeying with a script from multiple threads, it's perfectly legal to
+// be monkeying with a different script in each thread.
+class Plug::DirtyPlugs
+{
+
+	public :
+
+		DirtyPlugs()
+			:	m_scopeCount( 0 ), m_clearing( false )
+		{
+		}
+
+		void insert( Plug *plugToDirty )
+		{
+			if( !m_clearing ) // see comment in clear()
+			{
+				insertInternal( plugToDirty );
+			}
+		}
+
+		void pushScope()
+		{
+			m_scopeCount++;
+		}
+
+		void popScope()
+		{
+			assert( m_scopeCount );
+			if( --m_scopeCount == 0 )
+			{
+				if( !m_clearing ) // see comment in clear()
+				{
+					emit();
+					clear();
+				}
+			}
+		}
+
+		static DirtyPlugs &local()
+		{
+			static tbb::enumerable_thread_specific<Plug::DirtyPlugs> g_dirtyPlugs;
+			return g_dirtyPlugs.local();
+		}
+
+	private :
+
+		// We use this graph structure to keep track of the dirty propagation.
+		// Vertices in the graph represent plugs which have been dirtied, and
+		// edges represent the relationships that caused the dirtying - an
+		// edge U,V indicates that U was dirtied by V. We do a topological
+		// sort on the graph to give us an appropriate order to emit the dirty
+		// signals in, so that dirtiness is only signalled for an affected plug
+		// after it has been signalled for all upstream dirty plugs.
+		typedef boost::adjacency_list<vecS, vecS, directedS, PlugPtr> Graph;
+		typedef Graph::vertex_descriptor VertexDescriptor;
+
+		typedef std::map<const Plug *, VertexDescriptor> PlugMap;
+
+		// Inserts a vertex representing plugToDirty into the graph, and
+		// then inserts all affected plugs.
+		VertexDescriptor insertInternal( Plug *plugToDirty )
+		{
+			// We need to hold a reference to the plug, because otherwise
+			// it might be deleted between now and emit(). But if there is
+			// no reference yet, the plug is still being constructed, and
+			// we'd end up deleting it in clear() since we'd have sole
+			// ownership. Nobody wants that. If we had weak pointers, this
+			// would make for an ideal use.
+			assert( plugToDirty->refCount() );
+
+			// If we've inserted this one before, then early out. There's
+			// no point repeating the propagation all over again, and our
+			// Graph isn't designed to have duplicate edges anyway.
+			PlugMap::const_iterator it = m_plugs.find( plugToDirty );
+			if( it != m_plugs.end() )
+			{
+				return it->second;
+			}
+
+			// Insert a vertex for this plug.
+			VertexDescriptor result = add_vertex( m_graph );
+			m_graph[result] = plugToDirty;
+			m_plugs[plugToDirty] = result;
+
+			// Insert all ancestor plugs.
+			Plug *child = plugToDirty;
+			VertexDescriptor childVertex = result;
+			while( Plug *parent = child->parent<Plug>() )
+			{
+				if( !parent->refCount() )
+				{
+					// We can end up here when constructing a SplinePlug,
+					// because it calls setValue() in its constructor.
+					// We don't want to increment the reference count on
+					// an in-construction plug, because then we'll destroy
+					// it in clear(). And there's no point signalling dirtiness
+					// because the plug has no parent and therefore can have
+					// no observers.
+					break;
+				}
+
+				VertexDescriptor parentVertex = insertInternal( parent );
+				add_edge( parentVertex, childVertex, m_graph );
+
+				child = parent;
+				childVertex = parentVertex;
+			}
+
+			// Propagate dirtiness to output plugs and affected plugs.
+			// We only propagate dirtiness along leaf level plugs, because
+			// they are the only plugs which can be the target of the affects(),
+			// and compute() methods. We must handle any exceptions thrown by
+			// DependencyNode::affects() so that we don't leave the graph in
+			// an unexpected state - propagateDirtiness() is called in the middle
+			// of addChild(), setInput() and setValue() methods, and we want those
+			// to succeed at all costs.
+			if( !plugToDirty->isInstanceOf( (IECore::TypeId)CompoundPlugTypeId ) )
+			{
+				for( Plug::OutputContainer::const_iterator it=plugToDirty->outputs().begin(), eIt=plugToDirty->outputs().end(); it!=eIt; ++it )
+				{
+					VertexDescriptor outputVertex = insertInternal( const_cast<Plug *>( *it ) );
+					add_edge( outputVertex, result, m_graph );
+				}
+
+				const DependencyNode *dependencyNode = plugToDirty->ancestor<DependencyNode>();
+				if( dependencyNode )
+				{
+					DependencyNode::AffectedPlugsContainer affected;
+					try
+					{
+						dependencyNode->affects( plugToDirty, affected );
+					}
+					catch( const std::exception &e )
+					{
+						IECore::msg(
+							IECore::Msg::Error,
+							dependencyNode->relativeName( dependencyNode->scriptNode() ) + "::affects()",
+							e.what()
+						);
+					}
+					catch( ... )
+					{
+						IECore::msg(
+							IECore::Msg::Error,
+							dependencyNode->relativeName( dependencyNode->scriptNode() ) + "::affects()",
+							"Unknown exception"
+						);
+					}
+
+					for( DependencyNode::AffectedPlugsContainer::const_iterator it=affected.begin(); it!=affected.end(); it++ )
+					{
+						if( ( *it )->isInstanceOf( (IECore::TypeId)Gaffer::CompoundPlugTypeId ) )
+						{
+							// DependencyNode::affects() implementations are only allowed to place leaf plugs in the outputs,
+							// so we helpfully report any mistakes.
+							IECore::msg(
+								IECore::Msg::Error,
+								dependencyNode->relativeName( dependencyNode->scriptNode() ) + "::affects()",
+								"Non-leaf plug " + (*it)->relativeName( dependencyNode ) + " returned by affects()"
+							);
+							continue;
+						}
+						// cast is ok - AffectedPlugsContainer only holds const pointers so that
+						// affects() can be const to discourage implementations from having side effects.
+						VertexDescriptor affectedVertex = insertInternal( const_cast<Plug *>( *it ) );
+						add_edge( affectedVertex, result, m_graph );
+					}
+				}
+			}
+
+			return result;
+		}
+
+		void emit()
+		{
+			std::vector<VertexDescriptor> sorted;
+			topological_sort( m_graph, std::back_inserter( sorted ) );
+			for( std::vector<VertexDescriptor>::const_iterator it = sorted.begin(), eIt = sorted.end(); it != eIt; ++it )
+			{
+				Plug *plug = m_graph[*it].get();
+				plug->dirty();
+				if( Node *node = plug->node() )
+				{
+					node->plugDirtiedSignal()( plug );
+				}
+			}
+		}
+
+		void clear()
+		{
+			// Because we hold a reference to the plugs via the graph,
+			// we may be the last owner. This means that when we call
+			// clear, those plugs may be destroyed, which can trigger
+			// a dirty propagation as their child plugs are removed
+			// etc. We use the m_clearing flag to disable this propagation,
+			// since it's not needed, and can cause crashes. In an ideal
+			// world we'd have weak pointers, and could use those in
+			// the graph, so that we'd have no ownership of the plugs at
+			// all.
+			ScopedAssignment<bool> scopedAssignment( m_clearing, true );
+			m_graph.clear();
+			m_plugs.clear();
+		}
+
+		Graph m_graph;
+		PlugMap m_plugs;
+		size_t m_scopeCount;
+		bool m_clearing;
+
+};
+
+void Plug::propagateDirtiness( Plug *plugToDirty )
+{
+	DirtyPropagationScope scope;
+	DirtyPlugs::local().insert( plugToDirty );
+}
+
+void Plug::pushDirtyPropagationScope()
+{
+	DirtyPlugs::local().pushScope();
+}
+
+void Plug::popDirtyPropagationScope()
+{
+	DirtyPlugs::local().popScope();
+}
+
+void Plug::dirty()
+{
+}

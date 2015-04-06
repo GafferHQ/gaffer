@@ -135,17 +135,17 @@ class StringPlugTest( GafferTest.TestCase ) :
 
 		n = GafferTest.StringInOutNode()
 
-		n["in"].setValue( "${A}" )
+		n["in"].setValue( "${NOT_AN_ENVIRONMENT_VARIABLE}" )
 		h1 = n["out"].hash()
 		self.assertEqual( n["out"].getValue(), "" )
 
-		os.environ["A"] = "a"
-		self.assertEqual( n["out"].getValue(), "a" )
+		n["in"].setValue( "${GAFFER_ROOT}" )
+		self.assertEqual( n["out"].getValue(), os.environ["GAFFER_ROOT"] )
 		h2 = n["out"].hash()
 		self.assertNotEqual( h1, h2 )
 
 		context = Gaffer.Context()
-		context["A"] = "b"
+		context["GAFFER_ROOT"] = "b"
 		with context :
 			# context should win against environment
 			self.assertEqual( n["out"].getValue(), "b" )

@@ -205,6 +205,13 @@ class MergeTest( GafferTest.TestCase ) :
 		self.assertTrue( cs[2][0].isSame( m["out"]["channelData"] ) )
 		self.assertTrue( cs[3][0].isSame( m["out"] ) )
 
+	def testEnabledAffects( self ) :
+
+		m = GafferImage.Merge()
+
+		affected = m.affects( m["enabled"] )
+		self.assertTrue( m["out"]["channelData"] in affected )
+
 	def testPassThrough( self ) :
 
 		c = GafferImage.Constant()

@@ -468,6 +468,10 @@ class ContextTest( GafferTest.TestCase ) :
 
 		GafferTest.testManySubstitutions()
 
+	def testManyEnvironmentSubstitutions( self ) :
+
+		GafferTest.testManyEnvironmentSubstitutions()
+
 	def testEscapedSubstitutions( self ) :
 
 		c = Gaffer.Context()

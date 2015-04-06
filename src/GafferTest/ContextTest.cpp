@@ -100,3 +100,22 @@ void GafferTest::testManySubstitutions()
 	// uncomment to get timing information
 	//std::cerr << t.stop() << std::endl;
 }
+
+// Useful for assessing the performance of environment variable substitutions.
+void GafferTest::testManyEnvironmentSubstitutions()
+{
+	ContextPtr context = new Context();
+
+	const std::string phrase( "${GAFFER_ROOT}" );
+	const std::string expectedResult( getenv( "GAFFER_ROOT") );
+
+	Timer t;
+	for( int i = 0; i < 1000000; ++i )
+	{
+		const std::string s = context->substitute( phrase );
+		GAFFERTEST_ASSERT( s == expectedResult );
+	}
+
+	// uncomment to get timing information
+	//std::cerr << t.stop() << std::endl;
+}
