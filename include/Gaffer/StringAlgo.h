@@ -61,20 +61,6 @@ inline bool match( const char *s, const char *pattern );
 inline bool matchMultiple( const std::string &s, const MatchPattern &patterns );
 inline bool matchMultiple( const char *s, const char *patterns );
 
-/// A comparison function for strings, equivalent to std::less<> except
-/// that strings are treated as equal if they have identical prefixes followed
-/// by a wildcard character in at least one. This allows searches to be performed
-/// to quickly find all patterns that potentially match a given string. See the
-/// GafferScene::PathMatcher class for an example where this is used in conjunction
-/// with std::multimap and equal_range() to perform rapid matching against multiple
-/// patterns.
-struct MatchPatternLess
-{
-
-	inline bool operator() ( const MatchPattern &s1, const MatchPattern &s2 ) const;
-
-};
-
 /// Returns the numeric suffix from the end of s, if one exists, and -1 if
 /// one doesn't. If stem is specified then it will be filled with the contents
 /// of s preceding the suffix, or the whole of s if no suffix exists.

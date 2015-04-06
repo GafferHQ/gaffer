@@ -135,24 +135,6 @@ inline bool matchMultiple( const char *s, const char *patterns )
 	return Detail::matchInternal( s, patterns, /* multiple = */ true );
 }
 
-inline bool MatchPatternLess::operator() ( const std::string &s1, const std::string &s2 ) const
-{
-	register const char *c1 = s1.c_str();
-	register const char *c2 = s2.c_str();
-
-	while( *c1 == *c2 && *c1 )
-	{
-		c1++; c2++;
-	}
-
-	if( *c1 == '*' || *c2 == '*' )
-	{
-		return false;
-	}
-
-	return *c1 < *c2;
-}
-
 template<typename Token, typename OutputIterator>
 void tokenize( const std::string &s, const char separator, OutputIterator outputIterator )
 {
