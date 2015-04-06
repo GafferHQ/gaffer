@@ -1,3 +1,109 @@
+# 0.12.0.0
+==========
+
+Core
+-----------------------------------------------------------------------
+
+- Optimised CompoundDataPlug::hash() to ignore disabled members. This
+  reduces globals hashing time by 20% for a complex production scene.
+- Fixes Expression serialisation bugs (#1081, #1243).
+- Optimised ValuePlug hash caching. It now caches more aggressively,
+  keeping cache entries alive across multiple computations. This reduces
+  scene traversal time for a complex production scene by 70%.
+- Improved dirty propagation mechanism.
+  - Batched propagation for UndoContexts, so dirtiness is signalled
+    only once for operations batched within a single undo action.
+  - Fixed bugs which meant dirtiness was signalled when child/parent
+    plug connections were in an inconsistent state.
+  - Addition and removal of dynamic plugs now triggers dirty
+    propagation.
+- The values of environment variables used for string plug
+  substitutions are now frozen at startup.
+
+UI
+-----------------------------------------------------------------------
+
+- Improved indicator for non-default plug values (#1216).
+- Added copy/paste entries to plug menus (#601).
+- SceneInspector now shows parameters for ExternalProcedural and
+  Light objects.
+- Added available set names to Set node "sets" plug popup menu.
+
+Scene
+-----------------------------------------------------------------------
+
+- Fixed PathMatcher wildcard matching bug (#1252).
+- Added Parameters node. This can be used for tweaking the parameters
+  of lights, cameras and external procedurals (#1259).
+- Added PointsType node (#476).
+- Fixes Seeds node to take into account the bounding box of the generated
+  points.
+- Fixed dirty propagation bugs in CoordinateSystem and ClippingPlane
+  nodes.
+- Improved InteractiveRenderer pausing during edits.
+- Added DeleteSets node.
+- Fixed CustomOptions dirty propagation (#1039).
+- Fixed ContextVariables dirty propagation.
+
+Appleseed
+-----------------------------------------------------------------------
+
+- Added support for interactive renderering with shader and light
+  edits.
+
+Image
+-----------------------------------------------------------------------
+
+- Added support for image metadata
+  - ImagePlug has a new metadata child plug.
+  - ImageReader reads metadata from file.
+  - ImageWriter writes metadata to file.
+  - ImagePrimitiveSource loads metadata from `ImagePrimitive::blindData()`.
+  - Merge copies metadata from the first input.
+  - ImageMetadata node creates/sets metadata.
+  - DeleteImageMetadata node removed metadata.
+  - CopyImageMetadata transfers metadata from one image to another.
+- Optimised many nodes with direct internal pass-though connections.
+
+API
+-----------------------------------------------------------------------
+
+- StringAlgo
+  - Added `hasWildcards()` function.
+  - Removed flawed MatchPatternLess (#1252).
+- NodeAlgo
+  - Added `isSetToUserDefault( plug )` function.
+- RendererAlgo
+  - Added `outputAttributes()` method.
+- ImageNode
+  - `hash*()` and `compute*()` methods are no longer pure virtual.
+    This allows subclasses to make direct internal connections to
+    pass through input plugs unchanged.
+- PlugValueWidget
+  - Replaced `_dropValue()` method with `_convertValue()`.
+- Menu
+  - Added support for `functools.partial( WeakMethod )`
+    in menu commands.
+- Simplified and improved Merge node implementation.
+- Added MetadataProcessor base class to GafferImage.
+- Added Plug::dirty() virtual method. This is used to inform a Plug
+  that it has been dirtied by Plug::propagateDirtiness().
+- Fixed DependencyNodeWrapper to translate python exceptions to C++.
+
+Build
+-----------------------------------------------------------------------
+
+- Fixed compilation without NDEBUG=1 with gcc 4.1.2.
+
+ Incompatibilities
+-----------------------------------------------------------------------
+
+- Removed MatchPatternLess from StringAlgo.h.
+- Replaced PlugValueWidget `_dropValue()` method with `_convertValue()`.
+- Removed GafferImage::FilterProcessor.
+- Added/removed virtual overrides in GafferImage.
+- Added virtual function to Plug.
+
 # 0.11.0.0
 =========
 
