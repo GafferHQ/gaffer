@@ -46,15 +46,54 @@ using namespace GafferScene;
 // Node implementation
 //////////////////////////////////////////////////////////////////////////
 
+// Struct used to store the name for each node in the tree of paths.
+// This is just an InternedString with an extra flag to specify whether
+// or not the name contains wildcards (and will therefore need to
+// be used with `match()`).
+struct PathMatcher::Name
+{
+
+	Name( IECore::InternedString name )
+		: name( name ), hasWildcards( Gaffer::hasWildcards( name.c_str() ) )
+	{
+	}
+
+	/// Allows explicit instantiation of the hasWildcards member -
+	/// use with care!
+	Name( IECore::InternedString name, bool hasWildcards )
+		: name( name ), hasWildcards( hasWildcards )
+	{
+	}
+
+	// Less than implemented to do a lexicographical comparison,
+	// first on hasWildcards and then on the name. The comparison
+	// of the name uses the InternedString operator which compares
+	// via pointer rather than string content, which gives improved
+	// performance.
+	bool operator < ( const Name &other ) const
+	{
+		return hasWildcards < other.hasWildcards || ( ( hasWildcards == other.hasWildcards ) && name < other.name );
+	}
+
+	const IECore::InternedString name;
+	const bool hasWildcards;
+
+};
+
 struct PathMatcher::Node
 {
 
-	typedef std::multimap<IECore::InternedString, Node *, Gaffer::MatchPatternLess> ChildMap;
+	// Container used to store all the children of the node.
+	// We need two things out of this structure - quick access
+	// to the child with a specific name, and also partitioning
+	// between names with wildcards and those without. This is
+	// achieved by using an ordered container, and having the
+	// less than operation for Names sort first on hasWildcards
+	// and second on the name.
+	typedef std::map<Name, Node *> ChildMap;
 	typedef ChildMap::iterator ChildMapIterator;
 	typedef ChildMap::value_type ChildMapValue;
 	typedef ChildMap::const_iterator ConstChildMapIterator;
-	typedef std::pair<ChildMapIterator, ChildMapIterator> ChildMapRange;
-	typedef std::pair<ConstChildMapIterator, ConstChildMapIterator> ConstChildMapRange;
 
 	Node()
 		:	terminator( false ), ellipsis( 0 )
@@ -76,55 +115,23 @@ struct PathMatcher::Node
 		clearChildren();
 	}
 
-	ChildMapIterator childIterator( const IECore::InternedString &name )
+	// Returns an iterator to the first child whose name contains wildcards.
+	// All children between here and children.end() will also contain wildcards.
+	ConstChildMapIterator wildcardsBegin() const
 	{
-		ChildMapRange range = children.equal_range( name );
-		while( range.first != range.second )
-		{
-			if( range.first->first == name )
-			{
-				return range.first;
-			}
-			range.first++;
-		}
-		return children.end();
+		// The value for name used here will never be inserted in the map,
+		// but it marks the transition from non-wildcarded to wildcarded names.
+		return children.lower_bound( Name( IECore::InternedString(), true ) );
 	}
 
-	ConstChildMapIterator childIterator( const IECore::InternedString &name ) const
+	Node *child( const Name &name )
 	{
-		ConstChildMapRange range = children.equal_range( name );
-		while( range.first != range.second )
-		{
-			if( range.first->first == name )
-			{
-				return range.first;
-			}
-			range.first++;
-		}
-		return children.end();
-	}
-
-	// returns the child exactly matching name.
-	Node *child( const IECore::InternedString &name )
-	{
-		ChildMapIterator it = childIterator( name );
+		ChildMapIterator it = children.find( name );
 		if( it != children.end() )
 		{
 			return it->second;
 		}
-		return 0;
-	}
-
-	// returns the range of children which /may/ match name
-	// when wildcards are taken into account.
-	ChildMapRange childRange( const IECore::InternedString &name )
-	{
-		return children.equal_range( name );
-	}
-
-	ConstChildMapRange childRange( const IECore::InternedString &name ) const
-	{
-		return children.equal_range( name );
+		return NULL;
 	}
 
 	bool operator == ( const Node &other ) const
@@ -141,7 +148,7 @@ struct PathMatcher::Node
 
 		for( ConstChildMapIterator it = children.begin(), eIt = children.end(); it != eIt; it++ )
 		{
-			ConstChildMapIterator oIt = other.childIterator( it->first );
+			ConstChildMapIterator oIt = other.children.find( it->first );
 			if( oIt == other.children.end() )
 			{
 				return false;
@@ -296,25 +303,46 @@ void PathMatcher::matchWalk( Node *node, const NameIterator &start, const NameIt
 
 	// now we can match the remainder of the path against child branches to see
 	// if we have any exact or descendant matches.
-	Node::ChildMapRange range = node->childRange( *start );
-	if( range.first != range.second )
+	///////////////////////////////////////////////////////////////////////////
+
+	// first check for a child with the exact name we're looking for.
+	// we can use the specialised Name constructor to explicitly say we're
+	// not interested in finding a child with wildcards here - this avoids
+	// a call to hasWildcards() and gives us a decent little performance boost.
+
+	Node::ConstChildMapIterator childIt = node->children.find( Name( *start, false ) );
+	const Node::ConstChildMapIterator childItEnd = node->children.end();
+	if( childIt != childItEnd )
 	{
-		NameIterator newStart = start; newStart++;
-		for( Node::ChildMapIterator it = range.first; it != range.second; it++ )
+		NameIterator newStart = start + 1;
+		matchWalk( childIt->second, newStart, end, result );
+		// if we've found every kind of match then we can terminate early,
+		// but otherwise we need to keep going even though we may
+		// have found some of the match types already.
+		if( result == Filter::EveryMatch )
 		{
-			if( Gaffer::match( start->c_str(), it->first.c_str() ) )
+			return;
+		}
+	}
+
+	// then check all the wildcarded children to see if they might match
+
+	for( childIt = node->wildcardsBegin(); childIt != childItEnd; ++childIt )
+	{
+		assert( childIt->first.hasWildcards );
+		NameIterator newStart = start + 1;
+		if( Gaffer::match( start->c_str(), childIt->first.name.c_str() ) )
+		{
+			matchWalk( childIt->second, newStart, end, result );
+			if( result == Filter::EveryMatch )
 			{
-				matchWalk( it->second, newStart, end, result );
-				// if we've found every kind of match then we can terminate early,
-				// but otherwise we need to keep going even though we may
-				// have found some of the match types already.
-				if( result == Filter::EveryMatch )
-				{
-					return;
-				}
+				return;
 			}
 		}
 	}
+
+	// finally check for ellipsis matches. we do this last, since it
+	// is the most expensive.
 
 	if( node->ellipsis )
 	{
@@ -356,8 +384,8 @@ bool PathMatcher::addPath( const NameIterator &start, const NameIterator &end )
 	for( NameIterator it = start; it != end; ++it )
 	{
 		Node *nextNode = 0;
-		const IECore::InternedString name( *it );
-		if( name == g_ellipsis )
+		const Name name( *it );
+		if( name.name == g_ellipsis )
 		{
 			nextNode = node->ellipsis;
 			if( !nextNode )
@@ -445,7 +473,7 @@ void PathMatcher::removeWalk( Node *node, const NameIterator &start, const NameI
 	}
 	else
 	{
-		childIt = node->childIterator( name );
+		childIt = node->children.find( name );
 		if( childIt != node->children.end() )
 		{
 			childNode = childIt->second;
@@ -524,7 +552,7 @@ bool PathMatcher::removePathsWalk( Node *node, const Node *srcNode )
 
 	for( Node::ChildMap::const_iterator it = srcNode->children.begin(), eIt = srcNode->children.end(); it != eIt; ++it )
 	{
-		const Node::ChildMapIterator childIt = node->childIterator( it->first );
+		const Node::ChildMapIterator childIt = node->children.find( it->first );
 		if( childIt != node->children.end() )
 		{
 			Node *child = childIt->second;
@@ -570,7 +598,7 @@ void PathMatcher::pathsWalk( Node *node, const std::string &path, std::vector<st
 		{
 			childPath += "/";
 		}
-		childPath += it->first;
+		childPath += it->first.name;
 		pathsWalk( it->second, childPath, paths );
 	}
 
