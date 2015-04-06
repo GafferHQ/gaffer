@@ -348,6 +348,45 @@ class CompoundDataPlugTest( GafferTest.TestCase ) :
 
 		assertPostconditions( s2 )
 
+	def testHashOmitsDisabledMembers( self ) :
+
+		p = Gaffer.CompoundDataPlug()
+		h1 = p.hash()
+
+		m1 = p.addOptionalMember( "test1", 10, enabled = False )
+		m2 = p.addOptionalMember( "test2", 10, enabled = False )
+
+		# even though we've added members, they're both
+		# disabled, so as far as the hash is concerned, they're
+		# not there.
+		h2 = p.hash()
+		self.assertEqual( h1, h2 )
+
+		# when we enable one, the hash should change.
+		m1["enabled"].setValue( True )
+		h3 = p.hash()
+		self.assertNotEqual( h2, h3 )
+
+		# and it should continue to change as we change the
+		# name and value for the enabled member.
+
+		m1["value"].setValue( 20 )
+		h4 = p.hash()
+		self.assertNotEqual( h3, h4 )
+
+		m1["name"].setValue( "test3" )
+		h5 = p.hash()
+		self.assertNotEqual( h4, h5 )
+
+		# but changing the name and value for the disabled
+		# member should have no effect at all.
+		
+		m2["value"].setValue( 40 )
+		self.assertEqual( h5, p.hash() )
+
+		m2["name"].setValue( "test4" )
+		self.assertEqual( h5, p.hash() )
+
 if __name__ == "__main__":
 	unittest.main()
 

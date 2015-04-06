@@ -221,6 +221,31 @@ void CompoundDataPlug::fillCompoundData( IECore::CompoundDataMap &compoundDataMa
 	}
 }
 
+IECore::MurmurHash CompoundDataPlug::hash() const
+{
+	IECore::MurmurHash h;
+	for( MemberPlugIterator it( this ); it != it.end(); ++it )
+	{
+		const MemberPlug *plug = it->get();
+		bool active = true;
+		if( plug->children().size() == 3 )
+		{
+			active = plug->getChild<BoolPlug>( 2 )->getValue();
+		}
+		if( active )
+		{
+			plug->getChild<ValuePlug>( 0 )->hash( h );
+			plug->getChild<ValuePlug>( 1 )->hash( h );
+		}
+	}
+	return h;
+}
+
+void CompoundDataPlug::hash( IECore::MurmurHash &h ) const
+{
+	h.append( hash() );
+}
+
 void CompoundDataPlug::fillCompoundObject( IECore::CompoundObject::ObjectMap &compoundObjectMap ) const
 {
 	std::string name;
