@@ -34,15 +34,69 @@
 #
 ##########################################################################
 
+import IECore
+
 import Gaffer
 import GafferUI
 import GafferScene
 
+Gaffer.Metadata.registerNode(
+
+	GafferScene.SceneWriter,
+
+	"description",
+	"""
+	Writes scenes to disk. Supports all formats for which a
+	writeable Cortex SceneInterface exists.
+	""",
+
+	plugs = {
+
+		"fileName" : [
+
+			"description",
+			"""
+			The name of the file to be written. Note that unlike
+			image sequences, many scene formats write animation into
+			a single file, so using # characters to specify a frame
+			number is generally not necessary.
+			"""
+
+		],
+
+		"in" : [
+
+			"description",
+			"""
+			The scene to be written.
+			"""
+
+		],
+
+		"out" : [
+
+			"description",
+			"""
+			A direct pass-through of the input scene.
+			"""
+
+		],
+
+	}
+
+)
+
 GafferUI.PlugValueWidget.registerCreator(
 	GafferScene.SceneWriter,
 	"fileName",
-	lambda plug : GafferUI.PathPlugValueWidget( plug,
-		path = Gaffer.FileSystemPath( "/", filter = Gaffer.FileSystemPath.createStandardFilter() ),
+	lambda plug : GafferUI.PathPlugValueWidget(
+		plug,
+		path = Gaffer.FileSystemPath(
+			"/",
+			filter = Gaffer.FileSystemPath.createStandardFilter(
+				extensions = IECore.SceneInterface.supportedExtensions( IECore.IndexedIO.OpenMode.Write )
+			)
+		),
 		pathChooserDialogueKeywords = {
 			"bookmarks" : GafferUI.Bookmarks.acquire( plug, category = "sceneCache" ),
 			"leaf" : True,
