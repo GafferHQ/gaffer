@@ -110,8 +110,67 @@ class PathMatcher
 
 	private :
 
-		struct Name;
-		struct Node;
+		// Struct used to store the name for each node in the tree of paths.
+		// This is just an InternedString with an extra flag to specify whether
+		// or not the name contains wildcards (and will therefore need to
+		// be used with `match()` or the special ellipsis matching code).
+		struct Name
+		{
+
+			Name( IECore::InternedString name );
+			/// Allows explicit instantiation of the hasWildcards member -
+			/// use with care!
+			Name( IECore::InternedString name, bool hasWildcards );
+
+			// Less than implemented to do a lexicographical comparison,
+			// first on hasWildcards and then on the name. The comparison
+			// of the name uses the InternedString operator which compares
+			// via pointer rather than string content, which gives improved
+			// performance.
+			bool operator < ( const Name &other ) const;
+
+			const IECore::InternedString name;
+			const bool hasWildcards;
+
+		};
+
+		struct Node
+		{
+
+			// Container used to store all the children of the node.
+			// We need two things out of this structure - quick access
+			// to the child with a specific name, and also partitioning
+			// between names with wildcards and those without. This is
+			// achieved by using an ordered container, and having the
+			// less than operation for Names sort first on hasWildcards
+			// and second on the name.
+			typedef std::map<Name, Node *> ChildMap;
+			typedef ChildMap::iterator ChildMapIterator;
+			typedef ChildMap::value_type ChildMapValue;
+			typedef ChildMap::const_iterator ConstChildMapIterator;
+
+			Node();
+			Node( const Node &other );
+			~Node();
+
+			// Returns an iterator to the first child whose name contains wildcards.
+			// All children between here and children.end() will also contain wildcards.
+			ConstChildMapIterator wildcardsBegin() const;
+
+			Node *child( const Name &name );
+			const Node *child( const Name &name ) const;
+
+			bool operator == ( const Node &other ) const;
+
+			bool operator != ( const Node &other );
+
+			bool clearChildren();
+			bool isEmpty();
+
+			bool terminator;
+			ChildMap children;
+
+		};
 
 		template<typename NameIterator>
 		bool addPath( const NameIterator &start, const NameIterator &end );

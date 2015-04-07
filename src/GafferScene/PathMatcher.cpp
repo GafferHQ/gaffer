@@ -45,161 +45,124 @@ using namespace GafferScene;
 static IECore::InternedString g_ellipsis( "..." );
 
 //////////////////////////////////////////////////////////////////////////
+// Name implementation
+//////////////////////////////////////////////////////////////////////////
+
+inline PathMatcher::Name::Name( IECore::InternedString name )
+	: name( name ), hasWildcards( name == g_ellipsis || Gaffer::hasWildcards( name.c_str() ) )
+{
+}
+
+inline PathMatcher::Name::Name( IECore::InternedString name, bool hasWildcards )
+	: name( name ), hasWildcards( hasWildcards )
+{
+}
+
+inline bool PathMatcher::Name::operator < ( const Name &other ) const
+{
+	return hasWildcards < other.hasWildcards || ( ( hasWildcards == other.hasWildcards ) && name < other.name );
+}
+
+//////////////////////////////////////////////////////////////////////////
 // Node implementation
 //////////////////////////////////////////////////////////////////////////
 
-// Struct used to store the name for each node in the tree of paths.
-// This is just an InternedString with an extra flag to specify whether
-// or not the name contains wildcards (and will therefore need to
-// be used with `match()` or the special ellipsis matching code).
-struct PathMatcher::Name
+PathMatcher::Node::Node()
+	:	terminator( false )
 {
+}
 
-	Name( IECore::InternedString name )
-		: name( name ), hasWildcards( name == g_ellipsis || Gaffer::hasWildcards( name.c_str() ) )
-	{
-	}
-
-	/// Allows explicit instantiation of the hasWildcards member -
-	/// use with care!
-	Name( IECore::InternedString name, bool hasWildcards )
-		: name( name ), hasWildcards( hasWildcards )
-	{
-	}
-
-	// Less than implemented to do a lexicographical comparison,
-	// first on hasWildcards and then on the name. The comparison
-	// of the name uses the InternedString operator which compares
-	// via pointer rather than string content, which gives improved
-	// performance.
-	bool operator < ( const Name &other ) const
-	{
-		return hasWildcards < other.hasWildcards || ( ( hasWildcards == other.hasWildcards ) && name < other.name );
-	}
-
-	const IECore::InternedString name;
-	const bool hasWildcards;
-
-};
-
-struct PathMatcher::Node
+PathMatcher::Node::Node( const Node &other )
+	:	terminator( other.terminator )
 {
-
-	// Container used to store all the children of the node.
-	// We need two things out of this structure - quick access
-	// to the child with a specific name, and also partitioning
-	// between names with wildcards and those without. This is
-	// achieved by using an ordered container, and having the
-	// less than operation for Names sort first on hasWildcards
-	// and second on the name.
-	typedef std::map<Name, Node *> ChildMap;
-	typedef ChildMap::iterator ChildMapIterator;
-	typedef ChildMap::value_type ChildMapValue;
-	typedef ChildMap::const_iterator ConstChildMapIterator;
-
-	Node()
-		:	terminator( false )
+	ChildMapIterator hint = children.begin();
+	for( ConstChildMapIterator it = other.children.begin(), eIt = other.children.end(); it != eIt; it++ )
 	{
+		hint = children.insert( hint, ChildMapValue( it->first, new Node( *(it->second) ) ) );
+	}
+}
+
+PathMatcher::Node::~Node()
+{
+	clearChildren();
+}
+
+inline PathMatcher::Node::ConstChildMapIterator PathMatcher::Node::wildcardsBegin() const
+{
+	// The value for name used here will never be inserted in the map,
+	// but it marks the transition from non-wildcarded to wildcarded names.
+	return children.lower_bound( Name( IECore::InternedString(), true ) );
+}
+
+inline PathMatcher::Node *PathMatcher::Node::child( const Name &name )
+{
+	ChildMapIterator it = children.find( name );
+	if( it != children.end() )
+	{
+		return it->second;
+	}
+	return NULL;
+}
+
+inline const PathMatcher::Node *PathMatcher::Node::child( const Name &name ) const
+{
+	ConstChildMapIterator it = children.find( name );
+	if( it != children.end() )
+	{
+		return it->second;
+	}
+	return NULL;
+}
+
+bool PathMatcher::Node::operator == ( const Node &other ) const
+{
+	if( terminator != other.terminator )
+	{
+		return false;
 	}
 
-	Node( const Node &other )
-		:	terminator( other.terminator )
+	if( children.size() != other.children.size() )
 	{
-		ChildMapIterator hint = children.begin();
-		for( ConstChildMapIterator it = other.children.begin(), eIt = other.children.end(); it != eIt; it++ )
-		{
-			hint = children.insert( hint, ChildMapValue( it->first, new Node( *(it->second) ) ) );
-		}
+		return false;
 	}
 
-	~Node()
+	for( ConstChildMapIterator it = children.begin(), eIt = children.end(); it != eIt; it++ )
 	{
-		clearChildren();
-	}
-
-	// Returns an iterator to the first child whose name contains wildcards.
-	// All children between here and children.end() will also contain wildcards.
-	ConstChildMapIterator wildcardsBegin() const
-	{
-		// The value for name used here will never be inserted in the map,
-		// but it marks the transition from non-wildcarded to wildcarded names.
-		return children.lower_bound( Name( IECore::InternedString(), true ) );
-	}
-
-	Node *child( const Name &name )
-	{
-		ChildMapIterator it = children.find( name );
-		if( it != children.end() )
-		{
-			return it->second;
-		}
-		return NULL;
-	}
-
-	const Node *child( const Name &name ) const
-	{
-		ConstChildMapIterator it = children.find( name );
-		if( it != children.end() )
-		{
-			return it->second;
-		}
-		return NULL;
-	}
-
-	bool operator == ( const Node &other ) const
-	{
-		if( terminator != other.terminator )
+		ConstChildMapIterator oIt = other.children.find( it->first );
+		if( oIt == other.children.end() )
 		{
 			return false;
 		}
-
-		if( children.size() != other.children.size() )
+		if( !(*(it->second) == *(oIt->second) ) )
 		{
 			return false;
 		}
-
-		for( ConstChildMapIterator it = children.begin(), eIt = children.end(); it != eIt; it++ )
-		{
-			ConstChildMapIterator oIt = other.children.find( it->first );
-			if( oIt == other.children.end() )
-			{
-				return false;
-			}
-			if( !(*(it->second) == *(oIt->second) ) )
-			{
-				return false;
-			}
-		}
-
-		return true;
 	}
 
-	bool operator != ( const Node &other )
+	return true;
+}
+
+bool PathMatcher::Node::operator != ( const Node &other )
+{
+	return !( *this == other );
+}
+
+bool PathMatcher::Node::clearChildren()
+{
+	const bool result = !children.empty();
+	ChildMap::iterator it, eIt;
+	for( it = children.begin(), eIt = children.end(); it != eIt; it++ )
 	{
-		return !( *this == other );
+		delete it->second;
 	}
+	children.clear();
+	return result;
+}
 
-	bool clearChildren()
-	{
-		const bool result = !children.empty();
-		ChildMap::iterator it, eIt;
-		for( it = children.begin(), eIt = children.end(); it != eIt; it++ )
-		{
-			delete it->second;
-		}
-		children.clear();
-		return result;
-	}
-
-	bool isEmpty()
-	{
-		return !terminator && children.empty();
-	}
-
-	bool terminator;
-	ChildMap children;
-
-};
+bool PathMatcher::Node::isEmpty()
+{
+	return !terminator && children.empty();
+}
 
 //////////////////////////////////////////////////////////////////////////
 // PathMatcher implementation
