@@ -38,6 +38,44 @@ import Gaffer
 import GafferUI
 import GafferScene
 
+Gaffer.Metadata.registerNode(
+
+	GafferScene.ShaderSwitch,
+
+	"description",
+	"""
+	Chooses between multiple input shaders, passing through the
+	chosen shader to the output. The switching is resolved
+	before rendering begins, so no per-sample overhead is
+	incurred during shading.
+	""",
+
+	plugs = {
+
+		"in" : [
+
+			"description",
+			"""
+			The first input shader - the one passed through when
+			the index is 0.
+			""",
+
+		],
+
+		"out" : [
+
+			"description",
+			"""
+			The output shader.
+			""",
+
+		],
+
+
+	},
+
+)
+
 GafferUI.Nodule.registerNodule( GafferScene.ShaderSwitch, "enabled", lambda plug : None )
 GafferUI.Nodule.registerNodule( GafferScene.ShaderSwitch, "index", lambda plug : None )
 
