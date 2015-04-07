@@ -38,6 +38,7 @@
 #include "Gaffer/StringAlgo.h"
 
 #include "GafferScene/PathMatcher.h"
+#include "GafferScene/ScenePlug.h"
 
 using namespace std;
 using namespace GafferScene;
@@ -190,7 +191,11 @@ bool PathMatcher::isEmpty() const
 
 void PathMatcher::paths( std::vector<std::string> &paths ) const
 {
-	pathsWalk( m_root.get(), "/", paths );
+	for( Iterator it = begin(), eIt = end(); it != eIt; ++it )
+	{
+		paths.push_back( std::string() );
+		ScenePlug::pathToString( *it, paths.back() );
+	}
 }
 
 bool PathMatcher::operator == ( const PathMatcher &other ) const
@@ -399,6 +404,16 @@ bool PathMatcher::prune( const std::vector<IECore::InternedString> &path )
 	return result;
 }
 
+PathMatcher::Iterator PathMatcher::begin() const
+{
+	return Iterator( *this, false );
+}
+
+PathMatcher::Iterator PathMatcher::end() const
+{
+	return Iterator( *this, true );
+}
+
 template<typename NameIterator>
 void PathMatcher::removeWalk( Node *node, const NameIterator &start, const NameIterator &end, const bool prune, bool &removed )
 {
@@ -488,21 +503,3 @@ bool PathMatcher::removePathsWalk( Node *node, const Node *srcNode )
 	return result;
 }
 
-void PathMatcher::pathsWalk( Node *node, const std::string &path, std::vector<std::string> &paths ) const
-{
-	if( node->terminator )
-	{
-		paths.push_back( path );
-	}
-
-	for( Node::ChildMapIterator it = node->children.begin(), eIt = node->children.end(); it != eIt; it++ )
-	{
-		std::string childPath = path;
-		if( node != m_root.get() )
-		{
-			childPath += "/";
-		}
-		childPath += it->first.name;
-		pathsWalk( it->second, childPath, paths );
-	}
-}

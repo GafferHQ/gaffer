@@ -97,7 +97,8 @@ class PathMatcher
 		bool isEmpty() const;
 
 		/// Fills the paths container with all the paths held
-		/// within this matcher.
+		/// within this matcher. Iterators should be preferred
+		/// over this method.
 		void paths( std::vector<std::string> &paths ) const;
 
 		/// Result is a bitwise or of the relevant values
@@ -107,6 +108,15 @@ class PathMatcher
 
 		bool operator == ( const PathMatcher &other ) const;
 		bool operator != ( const PathMatcher &other ) const;
+
+		class Iterator;
+
+		/// Returns an iterator to the start of the
+		/// tree of paths.
+		Iterator begin() const;
+		/// Returns an iterator to the end of the
+		/// tree of paths.
+		Iterator end() const;
 
 	private :
 
@@ -178,12 +188,74 @@ class PathMatcher
 		void removeWalk( Node *node, const NameIterator &start, const NameIterator &end, const bool prune, bool &removed );
 		bool addPathsWalk( Node *node, const Node *srcNode );
 		bool removePathsWalk( Node *node, const Node *srcNode );
-		void pathsWalk( Node *node, const std::string &path, std::vector<std::string> &paths ) const;
 
 		template<typename NameIterator>
 		void matchWalk( const Node *node, const NameIterator &start, const NameIterator &end, unsigned &result ) const;
 
 		boost::shared_ptr<Node> m_root;
+
+};
+
+/// Iterates over the paths in a PathMatcher. Iteration is guaranteed to be depth-first recursive,
+/// but the order of iteration over siblings at the same depth is not guaranteed.
+class PathMatcher::Iterator : public boost::iterator_facade<Iterator, const std::vector<IECore::InternedString>, boost::forward_traversal_tag>
+{
+
+	public :
+
+		/// Calling prune() causes the next increment to skip any recursion
+		/// that it would normally perform.
+		void prune();
+
+	private :
+
+		friend class boost::iterator_core_access;
+		friend class PathMatcher;
+
+		// Private constructor, called by PathMatcher::begin() and PathMatcher::end().
+		Iterator( const PathMatcher &matcher, bool atEnd );
+
+		//////////////////////////////////////////////////
+		// Methods required by boost::iterator_facade
+		//////////////////////////////////////////////////
+
+		void increment();
+		bool equal( const Iterator &other ) const;
+		const std::vector<IECore::InternedString> &dereference() const;
+
+		//////////////////////////////////////////////////
+		// Our own internal methods.
+		//////////////////////////////////////////////////
+
+		bool atEnd() const;
+		void incrementFromRoot();
+		void incrementOnce();
+		void incrementWhileNonTerminal();
+
+		// Keeps track of our iteration at a given depth in
+		// the hierarchy. We keep a stack of these to allow
+		// us to perform recursion.
+		struct Level
+		{
+
+			Level( const Node::ChildMap &children, Node::ConstChildMapIterator it );
+
+			bool operator == ( const Level &other ) const;
+
+			Node::ConstChildMapIterator end;
+			Node::ConstChildMapIterator it;
+
+		};
+
+		typedef std::vector<Level> Levels;
+		Levels m_stack;
+		std::vector<IECore::InternedString> m_path;
+		// Because there is no ChildMapIterator for the root
+		// node, we have to use this awkward flag saying "we
+		// are conceptually at the root now, even though m_stack
+		// is initialised for the first child".
+		bool m_atRoot;
+		bool m_pruned;
 
 };
 

@@ -712,5 +712,16 @@ class PathMatcherTest( unittest.TestCase ) :
 
 		self.assertEqual( m.match( "/b"), GafferScene.Filter.Result.ExactMatch )
 
+	def testPathsWithRootTerminator( self ) :
+
+		m = GafferScene.PathMatcher()
+		m.addPath( "/" )
+		self.assertEqual( m.paths(), [ "/" ] )
+
+	def testEmptyPaths( self ) :
+
+		m = GafferScene.PathMatcher()
+		self.assertEqual( m.paths(), [] )
+
 if __name__ == "__main__":
 	unittest.main()

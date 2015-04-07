@@ -40,6 +40,10 @@
 namespace GafferScene
 {
 
+//////////////////////////////////////////////////////////////////////////
+// PathMatcher
+//////////////////////////////////////////////////////////////////////////
+
 template<typename PathIterator>
 PathMatcher::PathMatcher( PathIterator pathsBegin, PathIterator pathsEnd )
 {
@@ -54,6 +58,129 @@ void PathMatcher::init( PathIterator pathsBegin, PathIterator pathsEnd )
 	{
 		addPath( *it );
 	}
+}
+
+//////////////////////////////////////////////////////////////////////////
+// Iterator
+//////////////////////////////////////////////////////////////////////////
+
+inline void PathMatcher::Iterator::prune()
+{
+	m_pruned = true;
+}
+
+inline PathMatcher::Iterator::Iterator( const PathMatcher &matcher, bool atEnd )
+	:	m_atRoot( !atEnd ), m_pruned( false )
+{
+	if( atEnd )
+	{
+		m_stack.push_back( Level( matcher.m_root->children, matcher.m_root->children.end() ) );
+	}
+	else
+	{
+		m_stack.push_back( Level( matcher.m_root->children, matcher.m_root->children.begin() ) );
+	}
+
+	if( m_atRoot && !matcher.m_root->terminator )
+	{
+		incrementFromRoot();
+	}
+	incrementWhileNonTerminal();
+}
+
+inline void PathMatcher::Iterator::increment()
+{
+	incrementOnce();
+	incrementWhileNonTerminal();
+}
+
+inline bool PathMatcher::Iterator::equal( const Iterator &other ) const
+{
+	return m_stack == other.m_stack && m_atRoot == other.m_atRoot;
+}
+
+inline const std::vector<IECore::InternedString> &PathMatcher::Iterator::dereference() const
+{
+	return m_path;
+}
+
+inline bool PathMatcher::Iterator::atEnd() const
+{
+	if( m_atRoot )
+	{
+		return false;
+	}
+	if( m_stack.size() > 1 )
+	{
+		return false;
+	}
+	return m_stack.back().it == m_stack.back().end;
+}
+
+inline void PathMatcher::Iterator::incrementFromRoot()
+{
+	assert( m_atRoot );
+	m_atRoot = false;
+	if( m_stack.back().it != m_stack.back().end )
+	{
+		m_path.push_back( m_stack.back().it->first.name );
+	}
+	return;
+}
+
+inline void PathMatcher::Iterator::incrementOnce()
+{
+	if( m_atRoot )
+	{
+		incrementFromRoot();
+		return;
+	}
+
+	const Node *node = m_stack.back().it->second;
+	if( !m_pruned && !node->children.empty() )
+	{
+		m_stack.push_back(
+			Level(
+				node->children,
+				node->children.begin()
+			)
+		);
+		m_path.push_back( m_stack.back().it->first.name );
+	}
+	else
+	{
+		++(m_stack.back().it);
+		while( m_stack.size() > 1 && m_stack.back().it == m_stack.back().end )
+		{
+			m_stack.pop_back();
+			m_path.pop_back();
+			++(m_stack.back().it);
+		}
+
+		if( m_stack.back().it != m_stack.back().end )
+		{
+			m_path.back() = m_stack.back().it->first.name;
+		}
+	}
+	m_pruned = false;
+}
+
+inline void PathMatcher::Iterator::incrementWhileNonTerminal()
+{
+	while( !atEnd() && !m_stack.back().it->second->terminator )
+	{
+		incrementOnce();
+	}
+}
+
+inline PathMatcher::Iterator::Level::Level( const Node::ChildMap &children, Node::ConstChildMapIterator it )
+	:	end( children.end() ), it( it )
+{
+}
+
+inline bool PathMatcher::Iterator::Level::operator == ( const Level &other ) const
+{
+	return end == other.end && it == other.it;
 }
 
 } // namespace GafferScene
