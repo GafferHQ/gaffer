@@ -97,6 +97,7 @@ import CoordinateSystemUI
 import DeleteAttributesUI
 import SeedsUI
 import UnionFilterUI
+import PathFilterUI
 
 # then all the PathPreviewWidgets. note that the order
 # of import controls the order of display.
