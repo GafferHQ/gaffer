@@ -122,7 +122,7 @@ class PathMatcher
 		void pathsWalk( Node *node, const std::string &path, std::vector<std::string> &paths ) const;
 
 		template<typename NameIterator>
-		void matchWalk( Node *node, const NameIterator &start, const NameIterator &end, unsigned &result ) const;
+		void matchWalk( const Node *node, const NameIterator &start, const NameIterator &end, unsigned &result ) const;
 
 		boost::shared_ptr<Node> m_root;
 
