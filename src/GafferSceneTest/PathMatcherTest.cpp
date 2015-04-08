@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,38 +34,53 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#include "boost/assign/list_of.hpp"
 
-#include "IECorePython/ScopedGILRelease.h"
+#include "GafferTest/Assert.h"
 
-#include "GafferBindings/DependencyNodeBinding.h"
+#include "GafferScene/PathMatcher.h"
+#include "GafferScene/ScenePlug.h"
 
-#include "GafferSceneTest/CompoundObjectSource.h"
-#include "GafferSceneTest/TraverseScene.h"
-#include "GafferSceneTest/TestShader.h"
-#include "GafferSceneTest/TestLight.h"
-#include "GafferSceneTest/ScenePlugTest.h"
 #include "GafferSceneTest/PathMatcherTest.h"
 
-using namespace boost::python;
-using namespace GafferSceneTest;
+using namespace std;
+using namespace boost;
+using namespace IECore;
+using namespace GafferScene;
 
-static void traverseSceneWrapper( GafferScene::ScenePlug *scenePlug, Gaffer::Context *context )
+void GafferSceneTest::testPathMatcherIteratorPrune()
 {
-	IECorePython::ScopedGILRelease gilRelease;
-	traverseScene( scenePlug, context );
-}
+	vector<InternedString> root;
+	vector<InternedString> abc = assign::list_of( "a" )( "b" )( "c" );
 
-BOOST_PYTHON_MODULE( _GafferSceneTest )
-{
+	// Prune an empty iterator range.
+	PathMatcher m;
+	PathMatcher::Iterator it = m.begin();
+	GAFFERTEST_ASSERT( it == m.end() );
+	it.prune();
+	GAFFERTEST_ASSERT( it == m.end() );
 
-	GafferBindings::DependencyNodeClass<CompoundObjectSource>();
-	GafferBindings::NodeClass<TestShader>();
-	GafferBindings::NodeClass<TestLight>();
+	// Prune the root iterator itself.
+	m.addPath( root );
+	it = m.begin();
+	GAFFERTEST_ASSERT( *it == root );
+	GAFFERTEST_ASSERT( it != m.end() );
+	it.prune();
+	GAFFERTEST_ASSERT( *it == root );
+	GAFFERTEST_ASSERT( it != m.end() );
+	++it;
+	GAFFERTEST_ASSERT( it == m.end() );
 
-	def( "traverseScene", &traverseSceneWrapper );
-	def( "testManyStringToPathCalls", &testManyStringToPathCalls );
-
-	def( "testPathMatcherIteratorPrune", &testPathMatcherIteratorPrune );
+	// As above, but actually with some
+	// descendants to be pruned.
+	m.addPath( abc );
+	it = m.begin();
+	GAFFERTEST_ASSERT( *it == root );
+	GAFFERTEST_ASSERT( it != m.end() );
+	it.prune();
+	GAFFERTEST_ASSERT( *it == root );
+	GAFFERTEST_ASSERT( it != m.end() );
+	++it;
+	GAFFERTEST_ASSERT( it == m.end() );
 
 }
