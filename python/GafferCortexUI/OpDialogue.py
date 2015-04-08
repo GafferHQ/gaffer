@@ -382,8 +382,8 @@ class OpDialogue( GafferUI.Dialogue ) :
 
 		self.__messageWidget.messageHandler().handle(
 			IECore.Msg.Level.Error,
+			"",
 			str( exceptionInfo[1] ),
-			""
 		)
 
 		self.__frame.setChild( self.__progressUI )
