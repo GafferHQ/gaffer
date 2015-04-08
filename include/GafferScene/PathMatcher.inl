@@ -40,17 +40,17 @@
 namespace GafferScene
 {
 
-template<typename Iterator>
-PathMatcher::PathMatcher( Iterator pathsBegin, Iterator pathsEnd )
+template<typename PathIterator>
+PathMatcher::PathMatcher( PathIterator pathsBegin, PathIterator pathsEnd )
 {
 	init( pathsBegin, pathsEnd );
 }
 
-template<typename Iterator>
-void PathMatcher::init( Iterator pathsBegin, Iterator pathsEnd )
+template<typename PathIterator>
+void PathMatcher::init( PathIterator pathsBegin, PathIterator pathsEnd )
 {
 	clear();
-	for( Iterator it = pathsBegin; it != pathsEnd; it++ )
+	for( PathIterator it = pathsBegin; it != pathsEnd; it++ )
 	{
 		addPath( *it );
 	}

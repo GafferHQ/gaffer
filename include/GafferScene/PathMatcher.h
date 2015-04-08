@@ -59,8 +59,8 @@ class PathMatcher
 		/// Constructs a deep copy of other.
 		PathMatcher( const PathMatcher &other );
 
-		template<typename Iterator>
-		PathMatcher( Iterator pathsBegin, Iterator pathsEnd );
+		template<typename PathIterator>
+		PathMatcher( PathIterator pathsBegin, PathIterator pathsEnd );
 
 		/// \todo Should this keep the existing tree in place,
 		/// but just remove the terminator flags on any items
@@ -68,8 +68,8 @@ class PathMatcher
 		/// better performance for selections and expansions
 		/// which will tend to be adding and removing the same
 		/// paths repeatedly.
-		template<typename Iterator>
-		void init( Iterator pathsBegin, Iterator pathsEnd );
+		template<typename PathIterator>
+		void init( PathIterator pathsBegin, PathIterator pathsEnd );
 
 		/// Returns true if the path was added, false if
 		/// it was already there.
