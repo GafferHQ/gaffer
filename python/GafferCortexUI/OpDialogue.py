@@ -382,7 +382,7 @@ class OpDialogue( GafferUI.Dialogue ) :
 
 		self.__messageWidget.messageHandler().handle(
 			IECore.Msg.Level.Error,
-			"",
+			"Problem Executing {opName}".format( opName=self.__node.getParameterised()[0].typeName() ),
 			str( exceptionInfo[1] ),
 		)
 
