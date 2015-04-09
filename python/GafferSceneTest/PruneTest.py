@@ -200,7 +200,7 @@ class PruneTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( prune["out"].bound( "/group" ), sphere1.bound() )
 		self.assertEqual( prune["out"].bound( "/group/sphere1" ), sphere1.bound() )
 
-	def testSets( self ) :
+	def testLightSets( self ) :
 
 		light1 = GafferSceneTest.TestLight()
 		light2 = GafferSceneTest.TestLight()
@@ -290,6 +290,57 @@ class PruneTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertEqual( h1, h2 )
 		self.assertEqual( h2, h3 )
+
+	def testSets( self ) :
+
+		setPaths = [
+			[
+				"/a",
+				"/a/b/c/d/e",
+				"/a/b/c",
+				"/b/c",
+			],
+			[
+				"/f/g/h/i",
+			],
+		]
+
+		filterPaths = [
+			[],
+			[
+				"/*",
+			],
+			[
+				"/a",
+			],
+			[
+				"/a/b",
+			],
+			[
+				"/f/g/h/...",
+			],
+		]
+
+		for s in setPaths :
+			for p in filterPaths :
+
+				pathFilter = GafferScene.PathFilter()
+				pathFilter["paths"].setValue( IECore.StringVectorData( p ) )
+
+				setNode = GafferScene.Set()
+				setNode["paths"].setValue( IECore.StringVectorData( s ) )
+
+				prune = GafferScene.Prune()
+				prune["in"].setInput( setNode["out"] )
+				prune["filter"].setInput( pathFilter["out"] )
+
+				outputSet = set( prune["out"]["globals"].getValue()["gaffer:sets"]["set"].value.paths() )
+				filterMatcher = GafferScene.PathMatcher( p )
+				for inputSetPath in s :
+					if filterMatcher.match( inputSetPath ) & ( pathFilter.Result.ExactMatch | pathFilter.Result.AncestorMatch ) :
+						self.assertTrue( inputSetPath not in outputSet )
+					else :
+						self.assertTrue( inputSetPath in outputSet )
 
 if __name__ == "__main__":
 	unittest.main()
