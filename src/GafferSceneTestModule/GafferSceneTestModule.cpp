@@ -67,6 +67,7 @@ BOOST_PYTHON_MODULE( _GafferSceneTest )
 	def( "traverseScene", &traverseSceneWrapper );
 	def( "testManyStringToPathCalls", &testManyStringToPathCalls );
 
+	def( "testPathMatcherRawIterator", &testPathMatcherRawIterator );
 	def( "testPathMatcherIteratorPrune", &testPathMatcherIteratorPrune );
 
 }

@@ -40,6 +40,7 @@
 namespace GafferSceneTest
 {
 
+void testPathMatcherRawIterator();
 void testPathMatcherIteratorPrune();
 
 } // namespace GafferSceneTest

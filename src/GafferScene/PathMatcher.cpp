@@ -404,14 +404,14 @@ bool PathMatcher::prune( const std::vector<IECore::InternedString> &path )
 	return result;
 }
 
-PathMatcher::Iterator PathMatcher::begin() const
+PathMatcher::RawIterator PathMatcher::begin() const
 {
-	return Iterator( *this, false );
+	return RawIterator( *this, false );
 }
 
-PathMatcher::Iterator PathMatcher::end() const
+PathMatcher::RawIterator PathMatcher::end() const
 {
-	return Iterator( *this, true );
+	return RawIterator( *this, true );
 }
 
 template<typename NameIterator>

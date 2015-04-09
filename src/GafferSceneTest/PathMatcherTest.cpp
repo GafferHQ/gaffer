@@ -48,6 +48,38 @@ using namespace boost;
 using namespace IECore;
 using namespace GafferScene;
 
+void GafferSceneTest::testPathMatcherRawIterator()
+{
+	vector<InternedString> root;
+	vector<InternedString> a = assign::list_of( "a" );
+	vector<InternedString> ab = assign::list_of( "a" )( "b" );
+	vector<InternedString> abc = assign::list_of( "a" )( "b" )( "c" );
+
+	PathMatcher m;
+	PathMatcher::RawIterator it = m.begin();
+	GAFFERTEST_ASSERT( it == m.end() );
+
+	m.addPath( abc );
+	it = m.begin();
+	GAFFERTEST_ASSERT( *it == root );
+	GAFFERTEST_ASSERT( it.exactMatch() == false );
+	GAFFERTEST_ASSERT( it != m.end() );
+	++it;
+	GAFFERTEST_ASSERT( *it == a );
+	GAFFERTEST_ASSERT( it.exactMatch() == false );
+	GAFFERTEST_ASSERT( it != m.end() );
+	++it;
+	GAFFERTEST_ASSERT( *it == ab );
+	GAFFERTEST_ASSERT( it.exactMatch() == false );
+	GAFFERTEST_ASSERT( it != m.end() );
+	++it;
+	GAFFERTEST_ASSERT( *it == abc );
+	GAFFERTEST_ASSERT( it.exactMatch() == true );
+	GAFFERTEST_ASSERT( it != m.end() );
+	++it;
+	GAFFERTEST_ASSERT( it == m.end() );
+}
+
 void GafferSceneTest::testPathMatcherIteratorPrune()
 {
 	vector<InternedString> root;

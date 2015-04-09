@@ -731,6 +731,10 @@ class PathMatcherTest( unittest.TestCase ) :
 		m = GafferScene.PathMatcher()
 		self.assertEqual( m.paths(), [] )
 
+	def testRawIterator( self ) :
+
+		GafferSceneTest.testPathMatcherRawIterator()
+
 	def testIteratorPrune( self ) :
 
 		GafferSceneTest.testPathMatcherIteratorPrune()

@@ -109,14 +109,15 @@ class PathMatcher
 		bool operator == ( const PathMatcher &other ) const;
 		bool operator != ( const PathMatcher &other ) const;
 
+		class RawIterator;
 		class Iterator;
 
 		/// Returns an iterator to the start of the
 		/// tree of paths.
-		Iterator begin() const;
+		RawIterator begin() const;
 		/// Returns an iterator to the end of the
 		/// tree of paths.
-		Iterator end() const;
+		RawIterator end() const;
 
 	private :
 
@@ -196,9 +197,12 @@ class PathMatcher
 
 };
 
-/// Iterates over the paths in a PathMatcher. Iteration is guaranteed to be depth-first recursive,
-/// but the order of iteration over siblings at the same depth is not guaranteed.
-class PathMatcher::Iterator : public boost::iterator_facade<Iterator, const std::vector<IECore::InternedString>, boost::forward_traversal_tag>
+/// Iterates over the tree of paths in a PathMatcher, visiting not only the locations
+/// explicitly added with addPath(), but also their ancestor locations. Iteration is
+/// guaranteed to be depth-first recursive, but the order of iteration over siblings
+/// at the same depth is not guaranteed. For an iterator which ignores ancestor
+/// locations, see the PathMatcher::Iterator class.
+class PathMatcher::RawIterator : public boost::iterator_facade<RawIterator, const std::vector<IECore::InternedString>, boost::forward_traversal_tag>
 {
 
 	public :
@@ -207,30 +211,35 @@ class PathMatcher::Iterator : public boost::iterator_facade<Iterator, const std:
 		/// that it would normally perform.
 		void prune();
 
+		/// Returns true if this path is in the matcher because it
+		/// has been explicitly added with addPath(), and will therefore
+		/// yield an exact match. If this returns false, then this
+		/// path exists in the matcher only as the ancestor of descendant
+		/// paths for which exactMatch() will be true.
+		const bool exactMatch() const;
+
 	private :
 
 		friend class boost::iterator_core_access;
 		friend class PathMatcher;
+		friend class Iterator;
 
 		// Private constructor, called by PathMatcher::begin() and PathMatcher::end().
-		Iterator( const PathMatcher &matcher, bool atEnd );
+		RawIterator( const PathMatcher &matcher, bool atEnd );
 
 		//////////////////////////////////////////////////
 		// Methods required by boost::iterator_facade
 		//////////////////////////////////////////////////
 
 		void increment();
-		bool equal( const Iterator &other ) const;
+		bool equal( const RawIterator &other ) const;
 		const std::vector<IECore::InternedString> &dereference() const;
 
 		//////////////////////////////////////////////////
 		// Our own internal methods.
 		//////////////////////////////////////////////////
 
-		bool atEnd() const;
-		void incrementFromRoot();
-		void incrementOnce();
-		void incrementWhileNonTerminal();
+		const Node *node() const;
 
 		// Keeps track of our iteration at a given depth in
 		// the hierarchy. We keep a stack of these to allow
@@ -251,11 +260,34 @@ class PathMatcher::Iterator : public boost::iterator_facade<Iterator, const std:
 		Levels m_stack;
 		std::vector<IECore::InternedString> m_path;
 		// Because there is no ChildMapIterator for the root
-		// node, we have to use this awkward flag saying "we
-		// are conceptually at the root now, even though m_stack
-		// is initialised for the first child".
-		bool m_atRoot;
+		// node, we have to store it explicitly. The value
+		// will be non-null only when we're pointing at the root.
+		Node *m_nodeIfRoot;
 		bool m_pruned;
+
+};
+
+/// Iterates over the tree of paths in a PathMatcher, visiting only the locations
+/// explicitly added with addPath(). Iteration is guaranteed to be depth-first recursive,
+/// but the order of iteration over siblings at the same depth is not guaranteed.
+class PathMatcher::Iterator : public boost::iterator_adaptor<Iterator, PathMatcher::RawIterator>
+{
+
+	public :
+
+		Iterator( const RawIterator &it );
+
+		bool operator==( const RawIterator &rhs ) const;
+		bool operator!=( const RawIterator &rhs ) const;
+
+		void prune();
+
+	private :
+
+		friend class boost::iterator_core_access;
+
+		void increment();
+		void satisfyTerminatorRequirement();
 
 };
 
