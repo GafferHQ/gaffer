@@ -259,8 +259,10 @@ void SceneProcedural::computeBound()
 	}
 	catch( const std::exception &e )
 	{
-		m_bound = Imath::Box3f();
-		IECore::msg( IECore::Msg::Error, "SceneProcedural::bound()", e.what() );
+		m_bound = Imath::Box3f();	
+		std::string name;
+		ScenePlug::pathToString( m_scenePath, name );
+		IECore::msg( IECore::Msg::Error, "SceneProcedural::bound() " + name, e.what() );
 	}
 }
 
@@ -323,6 +325,9 @@ void SceneProcedural::render( Renderer *renderer ) const
 
 	Context::Scope scopedContext( m_context.get() );
 
+	std::string name;
+	ScenePlug::pathToString( m_scenePath, name );
+	
 	/// \todo See above.
 	try
 	{
@@ -347,11 +352,6 @@ void SceneProcedural::render( Renderer *renderer ) const
 
 		AttributeBlock attributeBlock( renderer );
 
-		std::string name = "";
-		for( ScenePlug::ScenePath::const_iterator it = m_scenePath.begin(), eIt = m_scenePath.end(); it != eIt; it++ )
-		{
-			name += "/" + it->string();
-		}
 		renderer->setAttribute( "name", new StringData( name ) );
 
 		// transform
@@ -441,7 +441,7 @@ void SceneProcedural::render( Renderer *renderer ) const
 	}
 	catch( const std::exception &e )
 	{
-		IECore::msg( IECore::Msg::Error, "SceneProcedural::render()", e.what() );
+		IECore::msg( IECore::Msg::Error, "SceneProcedural::render() " + name, e.what() );
 	}
 	if( !m_rendered )
 	{
