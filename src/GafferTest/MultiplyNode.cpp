@@ -43,9 +43,12 @@ using namespace Gaffer;
 
 IE_CORE_DEFINERUNTIMETYPED( MultiplyNode )
 
+size_t MultiplyNode::g_firstPlugIndex = 0;
+
 MultiplyNode::MultiplyNode( const std::string &name )
 	:	ComputeNode( name )
 {
+	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new IntPlug( "op1" ) );
 	addChild( new IntPlug( "op2" ) );
 	addChild( new IntPlug( "product", Plug::Out ) );
@@ -55,13 +58,43 @@ MultiplyNode::~MultiplyNode()
 {
 }
 
+Gaffer::IntPlug *MultiplyNode::op1Plug()
+{
+	return getChild<IntPlug>( g_firstPlugIndex );
+}
+
+const Gaffer::IntPlug *MultiplyNode::op1Plug() const
+{
+	return getChild<IntPlug>( g_firstPlugIndex );
+}
+
+Gaffer::IntPlug *MultiplyNode::op2Plug()
+{
+	return getChild<IntPlug>( g_firstPlugIndex + 1 );
+}
+
+const Gaffer::IntPlug *MultiplyNode::op2Plug() const
+{
+	return getChild<IntPlug>( g_firstPlugIndex + 1 );
+}
+
+Gaffer::IntPlug *MultiplyNode::productPlug()
+{
+	return getChild<IntPlug>( g_firstPlugIndex + 2 );
+}
+
+const Gaffer::IntPlug *MultiplyNode::productPlug() const
+{
+	return getChild<IntPlug>( g_firstPlugIndex + 2 );
+}
+
 void MultiplyNode::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	ComputeNode::affects( input, outputs );
 
-	if( input == getChild<IntPlug>( "op1" ) || input == getChild<IntPlug>( "op2" ) )
+	if( input == op1Plug() || input == op2Plug() )
 	{
-		outputs.push_back( getChild<IntPlug>( "product" ) );
+		outputs.push_back( productPlug() );
 	}
 }
 
@@ -71,18 +104,18 @@ void MultiplyNode::hash( const Gaffer::ValuePlug *output, const Gaffer::Context 
 
 	if( output == getChild<IntPlug>( "product" ) )
 	{
-		getChild<IntPlug>( "op1" )->hash( h );
-		getChild<IntPlug>( "op2" )->hash( h );
+		op1Plug()->hash( h );
+		op2Plug()->hash( h );
 	}
 }
 
 void MultiplyNode::compute( ValuePlug *output, const Context *context ) const
 {
-	if( output == getChild<IntPlug>( "product" ) )
+	if( output == productPlug() )
 	{
 		static_cast<IntPlug *>( output )->setValue(
-			getChild<IntPlug>( "op1" )->getValue() *
-			getChild<IntPlug>( "op2" )->getValue()
+			op1Plug()->getValue() *
+			op2Plug()->getValue()
 		);
 		return;
 	}
