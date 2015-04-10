@@ -99,6 +99,7 @@ import SeedsUI
 import UnionFilterUI
 import PathFilterUI
 import GroupUI
+import OpenGLRenderUI
 
 # then all the PathPreviewWidgets. note that the order
 # of import controls the order of display.
