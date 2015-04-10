@@ -92,11 +92,6 @@ GafferUI.PlugValueWidget.registerCreator(
 	),
 )
 
-# Group
-
-GafferUI.PlugValueWidget.registerCreator( GafferScene.Group, "in[0-9]*", None )
-GafferUI.PlugValueWidget.registerCreator( GafferScene.Group, "transform", GafferUI.TransformPlugValueWidget, collapsed=None )
-
 # Constraint
 
 GafferUI.PlugValueWidget.registerCreator(
