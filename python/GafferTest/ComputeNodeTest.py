@@ -452,5 +452,9 @@ class ComputeNodeTest( GafferTest.TestCase ) :
 
 		self.assertTrue( self.fRan )
 
+	def testThreading( self ) :
+
+		GafferTest.testComputeNodeThreading()
+
 if __name__ == "__main__":
 	unittest.main()
