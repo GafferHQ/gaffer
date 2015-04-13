@@ -221,7 +221,6 @@ IECore::ConstCompoundObjectPtr Isolate::computeGlobals( const Gaffer::Context *c
 
 	ContextPtr tmpContext = filterContext( context );
 	Context::Scope scopedContext( tmpContext.get() );
-	ScenePath path;
 
 	const std::string fromString = fromPlug()->getValue();
 	ScenePlug::ScenePath fromPath; ScenePlug::stringToPath( fromString, fromPath );
@@ -234,21 +233,51 @@ IECore::ConstCompoundObjectPtr Isolate::computeGlobals( const Gaffer::Context *c
 		const PathMatcher &inputSet = static_cast<const PathMatcherData *>( it->second.get() )->readable();
 		PathMatcher &outputSet = outputSets->member<PathMatcherData>( it->first, /* throwExceptions = */ false, /* createIfMissing = */ true )->writable();
 
-		vector<string> inputPaths;
-		inputSet.paths( inputPaths );
-		for( vector<string>::const_iterator pIt = inputPaths.begin(), peIt = inputPaths.end(); pIt != peIt; ++pIt )
+		for( PathMatcher::RawIterator pIt = inputSet.begin(), peIt = inputSet.end(); pIt != peIt; )
 		{
-			path.clear();
-			ScenePlug::stringToPath( *pIt, path );
-			bool prune = false;
-			if( boost::starts_with( path, fromPath ) )
+			tmpContext->set( ScenePlug::scenePathContextName, *pIt );
+			const int m = filterPlug()->getValue();
+			if( m & ( Filter::ExactMatch | Filter::AncestorMatch ) )
 			{
-				tmpContext->set( ScenePlug::scenePathContextName, path );
-				prune = filterPlug()->getValue() == Filter::NoMatch;
+				// We want to keep everything below this point, and
+				// we can speed things up by not checking the filter
+				// for our descendants.
+				PathMatcher::RawIterator next = pIt; next.prune(); ++next;
+				while( pIt != next )
+				{
+					if( pIt.exactMatch() )
+					{
+						outputSet.addPath( *pIt );
+					}
+					++pIt;
+				}
 			}
-			if( !prune )
+			else if( m & Filter::DescendantMatch )
 			{
-				outputSet.addPath( path );
+				// We might be removing things below here,
+				// so just continue our iteration normally
+				// so we can find out.
+				if( pIt.exactMatch() )
+				{
+					outputSet.addPath( *pIt );
+				}
+				++pIt;
+			}
+			else
+			{
+				assert( m == Filter::NoMatch );
+				if( boost::starts_with( *pIt, fromPath ) )
+				{
+					// Not going to keep anything below
+					// here, so we can prune traversal
+					// entirely.
+					pIt.prune();
+				}
+				else if( pIt.exactMatch() )
+				{
+					outputSet.addPath( *pIt );
+				}
+				++pIt;
 			}
 		}
 	}
