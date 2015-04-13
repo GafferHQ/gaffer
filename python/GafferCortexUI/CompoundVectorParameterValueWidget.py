@@ -124,6 +124,9 @@ class _PlugValueWidget( GafferCortexUI.CompoundParameterValueWidget._PlugValueWi
 				# columns will have differing lengths until the last plug
 				# has been set. in this case we shortcut ourselves, and wait
 				# for the final plug to be set before updating the VectorDataWidget.
+				# \todo Now dirty propagation is batched via the UndoContext,
+				# we should remove this workaround, since _updateFromPlug()
+				# will only be called when the plug is in a valid state.
 				return
 			data.append( plugData )
 
