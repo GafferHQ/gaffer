@@ -85,9 +85,17 @@ class _MenuBar( QtGui.QMenuBar ) :
 		QtGui.QMenuBar.__init__( self, parent )
 
 		self.setSizePolicy( QtGui.QSizePolicy( QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Fixed ) )
+		
+		self.__computeMenu = True
 
 		# disable menu merging on mac
 		self.setNativeMenuBar( False )
+		
+	def setParent(self, parent):
+
+		# every time that the ownership changes we need to recompute the menu which is made through the show event
+		self.__computeMenu = True
+		super(_MenuBar, self).setParent(parent)
 
 	def showEvent( self, event ) :
 
@@ -97,7 +105,11 @@ class _MenuBar( QtGui.QMenuBar ) :
 		# know then that we're parented below a Window, and many of our menu
 		# commands and status items we use need to find their parent ScriptWindow
 		# before they work properly.
-		for subMenu in GafferUI.Widget._owner( self )._subMenus :
-			subMenu._buildFully()
+		if self.__computeMenu :
+			for subMenu in GafferUI.Widget._owner( self )._subMenus :
+				subMenu._buildFully()
+			
+			# we don't want to re-compute it every time that the menu gets its visibility restored (for example from the minimized state) 
+			self.__computeMenu = False
 
 		return QtGui.QMenuBar.showEvent( self, event )
