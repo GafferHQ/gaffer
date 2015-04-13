@@ -97,7 +97,12 @@ class _MenuBar( QtGui.QMenuBar ) :
 		# know then that we're parented below a Window, and many of our menu
 		# commands and status items we use need to find their parent ScriptWindow
 		# before they work properly.
-		for subMenu in GafferUI.Widget._owner( self )._subMenus :
-			subMenu._buildFully()
 
+		for subMenu in GafferUI.Widget._owner( self )._subMenus :
+			
+			# in order to avoid the potential overhead caused by building the submenus
+			# fully every time the showEvent is triggered we just do it once
+			if subMenu._qtWidget().isEmpty() :
+				subMenu._buildFully()
+			
 		return QtGui.QMenuBar.showEvent( self, event )
