@@ -518,7 +518,7 @@ IECore::ConstCompoundObjectPtr Group::computeGlobals( const Gaffer::Context *con
 					// this would be to properly batch up dirty signals so that only a single signal is
 					// emitted for the parent after all signals for the children have been emitted. Then we
 					// would only ever be called in a consistent connection state.
-					/// \todo Implement improved batching for dirty signalling and remove this workaround,
+					/// \todo Now we have proper batching of dirty propagation we should remove this workaround,
 					/// reverting to a call to forwardMapping->member<InternedStringData>( inputName, true ),
 					/// which will throw when an error is detected.
 					continue;
