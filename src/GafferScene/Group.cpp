@@ -470,7 +470,7 @@ IECore::ConstCompoundObjectPtr Group::computeGlobals( const Gaffer::Context *con
 {
 	IECore::CompoundObjectPtr result = inPlug()->globalsPlug()->getValue()->copy();
 
-	std::string groupName = namePlug()->getValue();
+	InternedString groupName = namePlug()->getValue();
 
 	ConstCompoundObjectPtr mapping = boost::static_pointer_cast<const CompoundObject>( mappingPlug()->getValue() );
 	const ObjectVector *forwardMappings = mapping->member<ObjectVector>( "__GroupForwardMappings", true /* throw if missing */ );
@@ -497,14 +497,16 @@ IECore::ConstCompoundObjectPtr Group::computeGlobals( const Gaffer::Context *con
 			/// \todo If PathMatcher allowed access to the internal nodes, and allowed them to be shared between
 			/// matchers, we could be much more efficient here by making a new matcher which referenced the contents
 			/// of the input matchers.
-			vector<string> inputPaths;
-			inputSet.paths( inputPaths );
-			for( vector<string>::const_iterator pIt = inputPaths.begin(), peIt = inputPaths.end(); pIt != peIt; ++pIt )
+			vector<InternedString> outputPath; outputPath.push_back( groupName );
+			for( PathMatcher::Iterator pIt = inputSet.begin(), peIt = inputSet.end(); pIt != peIt; ++pIt )
 			{
-				const string &inputPath = *pIt;
-				const size_t secondSlashPos = inputPath.find( '/', 1 );
-				const std::string inputName( inputPath, 1, secondSlashPos - 1 );
-				const InternedStringData *outputName = forwardMapping->member<InternedStringData>( inputName );
+				const vector<InternedString> &inputPath = *pIt;
+				if( !inputPath.size() )
+				{
+					continue;
+				}
+
+				const InternedStringData *outputName = forwardMapping->member<InternedStringData>( inputPath[0] );
 				if( !outputName )
 				{
 					// Getting here indicates either a bug in computeMapping() or an inconsistency in one
@@ -524,11 +526,9 @@ IECore::ConstCompoundObjectPtr Group::computeGlobals( const Gaffer::Context *con
 					continue;
 				}
 
-				std::string outputPath = std::string( "/" ) + groupName + "/" + outputName->readable().string();
-				if( secondSlashPos != string::npos )
-				{
-					outputPath += inputPath.substr( secondSlashPos );
-				}
+				outputPath.resize( 2 );
+				outputPath[1] = outputName->readable();
+				outputPath.insert( outputPath.end(), inputPath.begin() + 1, inputPath.end() );
 
 				outputSet.addPath( outputPath );
 			}
