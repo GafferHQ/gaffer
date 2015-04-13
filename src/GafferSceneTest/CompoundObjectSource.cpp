@@ -177,6 +177,16 @@ void CompoundObjectSource::hashGlobals( const Gaffer::Context *context, const Ga
 
 IECore::ConstCompoundObjectPtr CompoundObjectSource::computeGlobals( const Gaffer::Context *context, const GafferScene::ScenePlug *parent ) const
 {
+	ConstCompoundObjectPtr compoundObject = runTimeCast<const CompoundObject>( inPlug()->getValue() );
+	if( !compoundObject )
+	{
+		throw Exception( "Input value is not a CompoundObject" );
+	}
+
+	if( ConstCompoundObjectPtr globals = compoundObject->member<CompoundObject>( "globals" ) )
+	{
+		return globals;
+	}
 	return outPlug()->globalsPlug()->defaultValue();
 }
 
@@ -185,7 +195,7 @@ IECore::ConstCompoundObjectPtr CompoundObjectSource::entryForPath( const ScenePa
 	ConstCompoundObjectPtr result = runTimeCast<const CompoundObject>( inPlug()->getValue() );
 	if( !result )
 	{
-		throw Exception( "Input plug has no value" );
+		throw Exception( "Input value is not a CompoundObject" );
 	}
 
 	for( ScenePath::const_iterator it=path.begin(); it!=path.end(); it++ )
