@@ -385,7 +385,7 @@ class PathListingWidget( GafferUI.Widget ) :
 			if expandedPaths is not None :
 				self.setExpandedPaths( expandedPaths )
 
-			self.setSelectedPaths( selectedPaths, scrollToFirst = False )
+			self.setSelectedPaths( selectedPaths, scrollToFirst = False, expandNonLeaf = False )
 
 			self.__currentDir = dirPath
 

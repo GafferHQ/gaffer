@@ -164,6 +164,40 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 		# once it has processed things, the expansion should be exactly as it was.
 		self.assertEqual( w.getPathExpanded( p1 ), True )
 
+	def testExpandedPathsWhenPathChangesWithSelection( self ) :
+
+		d = {
+			"a" : {
+				"e" : 10,
+			},
+			"b" : {
+				"f" : "g",
+			},
+		}
+
+		p = Gaffer.DictPath( d, "/" )
+		pa = Gaffer.DictPath( d, "/a" )
+		pae = Gaffer.DictPath( d, "/a/e" )
+		w = GafferUI.PathListingWidget( p, displayMode = GafferUI.PathListingWidget.DisplayMode.Tree )
+
+		self.assertEqual( w.getPathExpanded( pa ), False )
+		self.assertEqual( w.getPathExpanded( pae ), False )
+
+		w.setSelectedPaths( [ pa ], expandNonLeaf = False )
+		self.assertEqual( w.getPathExpanded( pa ), False )
+		self.assertEqual( w.getPathExpanded( pae ), False )
+
+		# fake a change to the path
+		p.pathChangedSignal()( p )
+
+		# because the PathListingWidget only updates on idle events, we have
+		# to run the event loop to get it to process the path changed signal.
+		self.waitForIdle( 100 )
+
+		# once it has processed things, the expansion should be exactly as it was.
+		self.assertEqual( w.getPathExpanded( pa ), False )
+		self.assertEqual( w.getPathExpanded( pae ), False )
+
 	def testHeaderVisibility( self ) :
 
 		with GafferUI.ListContainer() as c :
