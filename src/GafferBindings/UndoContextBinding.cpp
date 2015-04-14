@@ -37,29 +37,68 @@
 
 #include "boost/python.hpp"
 
-#include "GafferBindings/UndoContextBinding.h"
+#include "IECorePython/ScopedGILRelease.h"
+
 #include "Gaffer/UndoContext.h"
 #include "Gaffer/ScriptNode.h"
+
+#include "GafferBindings/UndoContextBinding.h"
 
 using namespace boost::python;
 using namespace GafferBindings;
 using namespace Gaffer;
+
+namespace
+{
+
+typedef boost::shared_ptr<UndoContext> UndoContextPtr;
+
+void deleter( UndoContext *undoContext )
+{
+	// The destructor for the undo context may trigger a dirty
+	// propagation, and observers of plugDirtiedSignal() may
+	// well invoke a compute. We need to release the GIL so that
+	// if that compute is multithreaded, those threads can acquire
+	// the GIL for python based nodes and expressions.
+	IECorePython::ScopedGILRelease gilRelease;
+	delete undoContext;
+}
+
+UndoContextPtr construct( ScriptNodePtr script, UndoContext::State state, const char *mergeGroup )
+{
+	return UndoContextPtr( new UndoContext( script, state, mergeGroup ), deleter );
+}
+
+} // namespace
 
 namespace GafferBindings
 {
 
 void bindUndoContext()
 {
-	scope s = class_<UndoContext, boost::noncopyable>( "_UndoContext", init<ScriptNodePtr>() )
-		.def( init<ScriptNodePtr, UndoContext::State>() )
-		.def( init<ScriptNodePtr, UndoContext::State, const std::string &>() )
-	;
+	class_<UndoContext, UndoContextPtr, boost::noncopyable> cls( "_UndoContext", no_init );
 
+	// Must bind enum before constructor, because we need to
+	// use an enum value for a default value.
+	scope s( cls );
 	enum_<UndoContext::State>( "State" )
 		.value( "Invalid", UndoContext::Invalid )
 		.value( "Enabled", UndoContext::Enabled )
 		.value( "Disabled", UndoContext::Disabled )
 	;
+
+	cls.def(
+		"__init__",
+		make_constructor(
+			construct,
+			default_call_policies(),
+			(
+				boost::python::arg_( "script" ),
+				boost::python::arg_( "state" ) = UndoContext::Enabled,
+				boost::python::arg_( "mergeGroup" ) = ""
+			)
+		)
+	);
 }
 
 } // namespace GafferBindings
