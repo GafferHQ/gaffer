@@ -437,7 +437,7 @@ class PathListingWidget( GafferUI.Widget ) :
 
 		if not self.__pathChangedUpdatePending :
 			self.__pathChangedUpdatePending = True
-			GafferUI.EventLoop.addIdleCallback( self.__pathChangedUpdate )
+			GafferUI.EventLoop.addIdleCallback( Gaffer.WeakMethod( self.__pathChangedUpdate, fallbackResult = False ) )
 
 	def __pathChangedUpdate( self ) :
 
