@@ -35,9 +35,6 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/tokenizer.hpp"
-
-#include "IECore/Exception.h"
 #include "IECore/NullObject.h"
 
 #include "Gaffer/Context.h"
