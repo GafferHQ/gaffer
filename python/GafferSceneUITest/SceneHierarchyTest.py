@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,12 +34,60 @@
 #
 ##########################################################################
 
-from SceneViewTest import SceneViewTest
-from ShaderAssignmentUITest import ShaderAssignmentUITest
-from StandardGraphLayoutTest import StandardGraphLayoutTest
-from SceneGadgetTest import SceneGadgetTest
-from SceneInspectorTest import SceneInspectorTest
-from SceneHierarchyTest import SceneHierarchyTest
+import IECore
+
+import Gaffer
+import GafferUITest
+import GafferScene
+import GafferSceneUI
+
+class SceneHierarchyTest( GafferUITest.TestCase ) :
+
+	def assertExpanded( self, context, path, expanded ) :
+
+		e = False
+		if "ui:scene:expandedPaths" in context :
+			if context["ui:scene:expandedPaths"].value.match( path ) & GafferScene.Filter.Result.ExactMatch :
+				e = True
+
+		self.assertEqual( e, expanded )
+
+	def testNoUnwantedExpansion( self ) :
+
+		# Make a small scene, and view it with a SceneHierarchy editor.
+
+		script = Gaffer.ScriptNode()
+		
+		script["plane"] = GafferScene.Plane()
+		script["group"] = GafferScene.Group()
+		script["group"]["in"].setInput( script["plane"]["out"] )
+
+		sceneHierarchy = GafferSceneUI.SceneHierarchy( script )
+		script.selection().add( script["group"] )
+
+		self.waitForIdle( 1000 )
+		self.assertExpanded( script.context(), "/group", False )
+
+		# Expand the root, and select /group.
+
+		script.context()["ui:scene:expandedPaths"] = GafferScene.PathMatcherData( GafferScene.PathMatcher( [ "/" ] ) )
+		script.context()["ui:scene:selectedPaths"] = IECore.StringVectorData( [ "/group"] )
+
+		self.waitForIdle( 1000 )
+
+		self.assertExpanded( script.context(), "/", True )
+		self.assertExpanded( script.context(), "/group", False )
+
+		# Tweak the scene to change the name of a
+		# non-expanded location. We expect the expansion to
+		# remain the same.
+
+		script["plane"]["name"].setValue( "jane" )
+
+		self.waitForIdle( 1000 )
+		self.assertExpanded( script.context(), "/", True )
+		self.assertExpanded( script.context(), "/group", False )
 
 if __name__ == "__main__":
 	unittest.main()
+
