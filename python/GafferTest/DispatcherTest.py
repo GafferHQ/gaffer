@@ -358,17 +358,17 @@ class DispatcherTest( GafferTest.TestCase ) :
 		s["n2"]['requirements'][0].setInput( s["n2a"]['requirement'] )
 		s["n2"]['requirements'][1].setInput( s["n2b"]['requirement'] )
 
-		# Executing n1 should only execute once, because all tasks are identical
+		# even though all tasks are identical, we still execute them all
 		dispatcher.dispatch( [ s["n1"] ] )
 		shutil.rmtree( dispatcher.jobDirectory() )
-		self.assertEqual( op1.counter, 1 )
-		self.assertEqual( dispatcher.log, [ op1 ] )
+		self.assertEqual( op1.counter, 4 )
+		self.assertEqual( dispatcher.log, [ op1, op1, op1, op1 ] )
 
-		# Executing them all should still only execute one, because all tasks are identical
+		# Executing them all should do the same, with no duplicates
 		dispatcher.dispatch( [ s["n2"], s["n2b"], s["n1"], s["n2a"] ] )
 		shutil.rmtree( dispatcher.jobDirectory() )
-		self.assertEqual( op1.counter, 2 )
-		self.assertEqual( dispatcher.log, [ op1 ] )
+		self.assertEqual( op1.counter, 8 )
+		self.assertEqual( dispatcher.log, [ op1, op1, op1, op1 ] )
 
 	def testNoTask( self ) :
 

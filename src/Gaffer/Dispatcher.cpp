@@ -328,7 +328,7 @@ void Dispatcher::batchTasksWalk( Dispatcher::TaskBatchPtr parent, const Executab
 	TaskBatchPtr batch = acquireBatch( task, currentBatches, tasksToBatches );
 
 	TaskBatches &parentRequirements = parent->requirements();
-	if ( ( batch != parent ) && std::find( parentRequirements.begin(), parentRequirements.end(), batch ) == parentRequirements.end() )
+	if ( std::find( parentRequirements.begin(), parentRequirements.end(), batch ) == parentRequirements.end() )
 	{
 		parentRequirements.push_back( batch );
 	}
@@ -344,15 +344,16 @@ void Dispatcher::batchTasksWalk( Dispatcher::TaskBatchPtr parent, const Executab
 
 Dispatcher::TaskBatchPtr Dispatcher::acquireBatch( const ExecutableNode::Task &task, BatchMap &currentBatches, TaskToBatchMap &tasksToBatches )
 {
-	MurmurHash taskHash = task.hash();
-	TaskToBatchMap::iterator it = tasksToBatches.find( taskHash );
+	MurmurHash taskToBatchMapHash = task.hash();
+	taskToBatchMapHash.append( (uint64_t)task.node() );
+	TaskToBatchMap::iterator it = tasksToBatches.find( taskToBatchMapHash );
 	if ( it != tasksToBatches.end() )
 	{
 		return it->second;
 	}
 
-	MurmurHash hash = batchHash( task );
-	BatchMap::iterator bIt = currentBatches.find( hash );
+	MurmurHash batchMapHash = batchHash( task );
+	BatchMap::iterator bIt = currentBatches.find( batchMapHash );
 	if ( bIt != currentBatches.end() )
 	{
 		TaskBatchPtr batch = bIt->second;
@@ -379,22 +380,16 @@ Dispatcher::TaskBatchPtr Dispatcher::acquireBatch( const ExecutableNode::Task &t
 					}
 				}
 			}
-
-			if ( taskHash != MurmurHash() )
-			{
-				tasksToBatches[taskHash] = batch;
-			}
+			
+			tasksToBatches[taskToBatchMapHash] = batch;
 			
 			return batch;
 		}
 	}
 
 	TaskBatchPtr batch = new TaskBatch( task );
-	currentBatches[hash] = batch;
-	if ( taskHash != MurmurHash() )
-	{
-		tasksToBatches[taskHash] = batch;
-	}
+	currentBatches[batchMapHash] = batch;
+	tasksToBatches[taskToBatchMapHash] = batch;
 	
 	return batch;
 }
