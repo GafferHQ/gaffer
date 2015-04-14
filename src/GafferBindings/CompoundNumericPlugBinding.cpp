@@ -105,6 +105,24 @@ typename T::ValueType getValue( const T *plug )
 }
 
 template<typename T>
+void gang( T *plug )
+{
+	// Must release GIL in case this triggers a graph evaluation
+	// which wants to enter Python on another thread.
+	IECorePython::ScopedGILRelease r;
+	plug->gang();
+}
+
+template<typename T>
+void ungang( T *plug )
+{
+	// Must release GIL in case this triggers a graph evaluation
+	// which wants to enter Python on another thread.
+	IECorePython::ScopedGILRelease r;
+	plug->ungang();
+}
+
+template<typename T>
 void bind()
 {
 	typedef typename T::ValueType V;
@@ -129,9 +147,9 @@ void bind()
 		.def( "setValue", &setValue<T> )
 		.def( "getValue", &getValue<T> )
 		.def( "canGang", &T::canGang )
-		.def( "gang", &T::gang )
+		.def( "gang", &gang<T> )
 		.def( "isGanged", &T::isGanged )
-		.def( "ungang", &T::ungang )
+		.def( "ungang", &ungang<T> )
 	;
 
 	Serialisation::registerSerialiser( T::staticTypeId(), new CompoundNumericPlugSerialiser<T>() );
