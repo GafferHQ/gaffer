@@ -317,20 +317,32 @@ Dispatcher::TaskBatchPtr Dispatcher::batchTasks( const ExecutableNode::Tasks &ta
 
 	for ( ExecutableNode::Tasks::const_iterator it = tasks.begin(); it != tasks.end(); ++it )
 	{
-		batchTasksWalk( root, *it, currentBatches, tasksToBatches );
+		std::vector<const TaskBatch *> required;
+		batchTasksWalk( root, *it, currentBatches, tasksToBatches, required );
 	}
 
 	return root;
 }
 
-void Dispatcher::batchTasksWalk( Dispatcher::TaskBatchPtr parent, const ExecutableNode::Task &task, BatchMap &currentBatches, TaskToBatchMap &tasksToBatches )
+void Dispatcher::batchTasksWalk( Dispatcher::TaskBatchPtr parent, const ExecutableNode::Task &task, BatchMap &currentBatches, TaskToBatchMap &tasksToBatches, std::vector<const TaskBatch *> &required )
 {
 	TaskBatchPtr batch = acquireBatch( task, currentBatches, tasksToBatches );
 
+	if ( batch == parent )
+	{
+		throw IECore::Exception( ( boost::format( "Dispatched nodes cannot have cyclic dependencies. %s and %s are identical tasks which require each other." ) % task.node()->relativeName( task.node()->scriptNode() ) % parent->node()->relativeName( parent->node()->scriptNode() ) ).str() );
+	}
+	
+	if ( std::find( required.begin(), required.end(), batch.get() ) != required.end() )
+	{
+		throw IECore::Exception( ( boost::format( "Dispatched nodes cannot have cyclic dependencies. %s is involved in a cycle. Check for cyclic connections or identical ExecutableNodes." ) % batch->node()->relativeName( batch->node()->scriptNode() ) ).str() );
+	}
+	
 	TaskBatches &parentRequirements = parent->requirements();
-	if ( ( batch != parent ) && std::find( parentRequirements.begin(), parentRequirements.end(), batch ) == parentRequirements.end() )
+	if ( std::find( parentRequirements.begin(), parentRequirements.end(), batch ) == parentRequirements.end() )
 	{
 		parentRequirements.push_back( batch );
+		required.push_back( batch.get() );
 	}
 
 	ExecutableNode::Tasks taskRequirements;
@@ -338,7 +350,7 @@ void Dispatcher::batchTasksWalk( Dispatcher::TaskBatchPtr parent, const Executab
 
 	for ( ExecutableNode::Tasks::const_iterator it = taskRequirements.begin(); it != taskRequirements.end(); ++it )
 	{
-		batchTasksWalk( batch, *it, currentBatches, tasksToBatches );
+		batchTasksWalk( batch, *it, currentBatches, tasksToBatches, required );
 	}
 }
 

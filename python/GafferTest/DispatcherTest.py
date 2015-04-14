@@ -358,18 +358,90 @@ class DispatcherTest( GafferTest.TestCase ) :
 		s["n2"]['requirements'][0].setInput( s["n2a"]['requirement'] )
 		s["n2"]['requirements'][1].setInput( s["n2b"]['requirement'] )
 
-		# Executing n1 should only execute once, because all tasks are identical
-		dispatcher.dispatch( [ s["n1"] ] )
-		shutil.rmtree( dispatcher.jobDirectory() )
-		self.assertEqual( op1.counter, 1 )
-		self.assertEqual( dispatcher.log, [ op1 ] )
+		# Executing n1 should throw, because all tasks are identical
+		self.assertRaises( RuntimeError, dispatcher.dispatch, [ s["n1"] ] )
+		self.assertEqual( op1.counter, 0 )
+		self.assertEqual( dispatcher.log, [] )
 
-		# Executing them all should still only execute one, because all tasks are identical
-		dispatcher.dispatch( [ s["n2"], s["n2b"], s["n1"], s["n2a"] ] )
-		shutil.rmtree( dispatcher.jobDirectory() )
-		self.assertEqual( op1.counter, 2 )
-		self.assertEqual( dispatcher.log, [ op1 ] )
+		# Executing them all should still throw, because all tasks are identical
+		self.assertRaises( RuntimeError, dispatcher.dispatch, [ s["n2"], s["n2b"], s["n1"], s["n2a"] ] )
+		self.assertEqual( op1.counter, 0 )
+		self.assertEqual( dispatcher.log, [] )
 
+	def testDirectCycle( self ) :
+		
+		dispatcher = Gaffer.Dispatcher.create( "testDispatcher" )
+		fileName = "/tmp/dispatcherTest/result.txt"
+
+		s = Gaffer.ScriptNode()
+		s["n1"] = GafferTest.TextWriter()
+		s["n1"]["mode"].setValue( "a" )
+		s["n1"]["fileName"].setValue( fileName )
+		s["n1"]["text"].setValue( "a${frame};" )
+		s["n2"] = GafferTest.TextWriter()
+		s["n2"]["mode"].setValue( "a" )
+		s["n2"]["fileName"].setValue( fileName )
+		s["n2"]["text"].setValue( "b${frame};" )
+		s["n3"] = GafferTest.TextWriter()
+		s["n3"]["mode"].setValue( "a" )
+		s["n3"]["fileName"].setValue( fileName )
+		s["n3"]["text"].setValue( "c${frame};" )
+		s["n4"] = GafferTest.TextWriter()
+		s["n4"]["mode"].setValue( "a" )
+		s["n4"]["fileName"].setValue( fileName )
+		s["n4"]["text"].setValue( "d${frame};" )
+		
+		s["n4"]['requirements'][0].setInput( s["n3"]['requirement'] )
+		s["n3"]['requirements'][0].setInput( s["n2"]['requirement'] )
+		s["n2"]['requirements'][0].setInput( s["n1"]['requirement'] )
+		s["n1"]['requirements'][0].setInput( s["n4"]['requirement'] )
+		
+		self.assertNotEqual( s["n1"].hash( s.context() ), s["n2"].hash( s.context() ) )
+		self.assertNotEqual( s["n2"].hash( s.context() ), s["n3"].hash( s.context() ) )
+		self.assertNotEqual( s["n3"].hash( s.context() ), s["n4"].hash( s.context() ) )
+		self.assertNotEqual( s["n1"].hash( s.context() ), s["n4"].hash( s.context() ) )
+		
+		self.assertEqual( os.path.isfile( fileName ), False )
+		self.assertRaises( RuntimeError, dispatcher.dispatch, [ s["n4"] ] )
+		self.assertEqual( os.path.isfile( fileName ), False )
+	
+	def testIndirectCycle( self ) :
+		
+		dispatcher = Gaffer.Dispatcher.create( "testDispatcher" )
+		fileName = "/tmp/dispatcherTest/result.txt"
+
+		s = Gaffer.ScriptNode()
+		s["n1"] = GafferTest.TextWriter()
+		s["n1"]["mode"].setValue( "a" )
+		s["n1"]["fileName"].setValue( fileName )
+		s["n1"]["text"].setValue( "a${frame};" )
+		s["n2"] = GafferTest.TextWriter()
+		s["n2"]["mode"].setValue( "a" )
+		s["n2"]["fileName"].setValue( fileName )
+		s["n2"]["text"].setValue( "b${frame};" )
+		s["n3"] = GafferTest.TextWriter()
+		s["n3"]["mode"].setValue( "a" )
+		s["n3"]["fileName"].setValue( fileName )
+		s["n3"]["text"].setValue( "c${frame};" )
+		s["n4"] = GafferTest.TextWriter()
+		s["n4"]["mode"].setValue( "a" )
+		s["n4"]["fileName"].setValue( fileName )
+		s["n4"]["text"].setValue( "a${frame};" )
+		
+		s["n4"]['requirements'][0].setInput( s["n3"]['requirement'] )
+		s["n3"]['requirements'][0].setInput( s["n2"]['requirement'] )
+		s["n2"]['requirements'][0].setInput( s["n1"]['requirement'] )
+		
+		self.assertNotEqual( s["n1"].hash( s.context() ), s["n2"].hash( s.context() ) )
+		self.assertNotEqual( s["n2"].hash( s.context() ), s["n3"].hash( s.context() ) )
+		self.assertNotEqual( s["n3"].hash( s.context() ), s["n4"].hash( s.context() ) )
+		# its a cycle because n1 and n4 are identical
+		self.assertEqual( s["n1"].hash( s.context() ), s["n4"].hash( s.context() ) )
+		
+		self.assertEqual( os.path.isfile( fileName ), False )
+		self.assertRaises( RuntimeError, dispatcher.dispatch, [ s["n4"] ] )
+		self.assertEqual( os.path.isfile( fileName ), False )
+	
 	def testNoTask( self ) :
 
 		s = Gaffer.ScriptNode()
