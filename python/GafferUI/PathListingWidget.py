@@ -385,7 +385,7 @@ class PathListingWidget( GafferUI.Widget ) :
 			if expandedPaths is not None :
 				self.setExpandedPaths( expandedPaths )
 
-			self.setSelectedPaths( selectedPaths, scrollToFirst = False )
+			self.setSelectedPaths( selectedPaths, scrollToFirst = False, expandNonLeaf = False )
 
 			self.__currentDir = dirPath
 
@@ -437,7 +437,7 @@ class PathListingWidget( GafferUI.Widget ) :
 
 		if not self.__pathChangedUpdatePending :
 			self.__pathChangedUpdatePending = True
-			GafferUI.EventLoop.addIdleCallback( self.__pathChangedUpdate )
+			GafferUI.EventLoop.addIdleCallback( Gaffer.WeakMethod( self.__pathChangedUpdate, fallbackResult = False ) )
 
 	def __pathChangedUpdate( self ) :
 
