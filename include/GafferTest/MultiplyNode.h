@@ -38,6 +38,7 @@
 #define GAFFERTEST_MULTIPLYNODE_H
 
 #include "Gaffer/ComputeNode.h"
+#include "Gaffer/NumericPlug.h"
 
 #include "GafferTest/TypeIds.h"
 
@@ -54,6 +55,15 @@ class MultiplyNode : public Gaffer::ComputeNode
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferTest::MultiplyNode, MultiplyNodeTypeId, Gaffer::ComputeNode );
 
+		Gaffer::IntPlug *op1Plug();
+		const Gaffer::IntPlug *op1Plug() const;
+
+		Gaffer::IntPlug *op2Plug();
+		const Gaffer::IntPlug *op2Plug() const;
+
+		Gaffer::IntPlug *productPlug();
+		const Gaffer::IntPlug *productPlug() const;
+
 		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
 
 	protected :
@@ -61,7 +71,13 @@ class MultiplyNode : public Gaffer::ComputeNode
 		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const;
 
+	private :
+
+		static size_t g_firstPlugIndex;
+
 };
+
+IE_CORE_DECLAREPTR( MultiplyNode )
 
 } // namespace GafferTest
 

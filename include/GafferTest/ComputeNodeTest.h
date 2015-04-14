@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,37 +34,14 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECorePython/ScopedGILRelease.h"
+#ifndef GAFFERTEST_COMPUTENODETEST_H
+#define GAFFERTEST_COMPUTENODETEST_H
 
-#include "GafferBindings/DependencyNodeBinding.h"
-
-#include "GafferTest/MultiplyNode.h"
-#include "GafferTest/RecursiveChildIteratorTest.h"
-#include "GafferTest/FilteredRecursiveChildIteratorTest.h"
-#include "GafferTest/MetadataTest.h"
-#include "GafferTest/ContextTest.h"
-#include "GafferTest/ComputeNodeTest.h"
-
-using namespace boost::python;
-using namespace GafferTest;
-
-static void testMetadataThreadingWrapper()
-{
-	IECorePython::ScopedGILRelease gilRelease;
-	testMetadataThreading();
-}
-
-BOOST_PYTHON_MODULE( _GafferTest )
+namespace GafferTest
 {
 
-	GafferBindings::DependencyNodeClass<MultiplyNode>();
+void testComputeNodeThreading();
 
-	def( "testRecursiveChildIterator", &testRecursiveChildIterator );
-	def( "testFilteredRecursiveChildIterator", &testFilteredRecursiveChildIterator );
-	def( "testMetadataThreading", &testMetadataThreadingWrapper );
-	def( "testManyContexts", &testManyContexts );
-	def( "testManySubstitutions", &testManySubstitutions );
-	def( "testManyEnvironmentSubstitutions", &testManyEnvironmentSubstitutions );
-	def( "testComputeNodeThreading", &testComputeNodeThreading );
+} // namespace GafferTest
 
-}
+#endif // GAFFERTEST_COMPUTENODETEST_H

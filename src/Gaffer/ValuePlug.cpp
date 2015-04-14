@@ -38,6 +38,7 @@
 #include <stack>
 
 #include "tbb/enumerable_thread_specific.h"
+#include "tbb/spin_mutex.h"
 
 #include "boost/bind.hpp"
 #include "boost/format.hpp"
@@ -193,9 +194,14 @@ class ValuePlug::Computation
 
 		static void clearHashCaches()
 		{
+			// The docs for enumerable_thread_specific aren't particularly clear
+			// on whether or not it's ok to iterate an e_t_s while concurrently using
+			// local(), which is what we do here. So far in practice it seems to be
+			// sufficient just to mutex the access to the hash cache within.
 			tbb::enumerable_thread_specific<ValuePlug::Computation::ThreadData>::iterator it, eIt;
 			for( it = g_threadData.begin(), eIt = g_threadData.end(); it != eIt; ++it )
 			{
+				HashCacheMutex::scoped_lock lock( it->hashCacheMutex );
 				it->hashCache.clear();
 			}
 		}
@@ -205,6 +211,11 @@ class ValuePlug::Computation
 		Computation( const ValuePlug *resultPlug, const IECore::MurmurHash *precomputedHash = NULL )
 			:	m_resultPlug( resultPlug ), m_precomputedHash( precomputedHash ), m_resultValue( NULL ), m_threadData( &g_threadData.local() )
 		{
+			if( m_threadData->computationStack.empty() )
+			{
+				m_threadData->hashCacheComputationLock.acquire( m_threadData->hashCacheMutex );
+			}
+
 			m_threadData->computationStack.push( this );
 		}
 
@@ -225,6 +236,7 @@ class ValuePlug::Computation
 					m_threadData->hashCache.clear();
 				}
 				m_threadData->errorSource = NULL;
+				m_threadData->hashCacheComputationLock.release();
 			}
 		}
 
@@ -406,6 +418,9 @@ class ValuePlug::Computation
 		// computations, to prevent unbounded growth.
 		typedef std::pair<const ValuePlug *, IECore::MurmurHash> HashCacheKey;
 		typedef boost::unordered_map<HashCacheKey, IECore::MurmurHash> HashCache;
+		// Even though the hash cache is per-thread, we do need to visit all caches
+		// in clearHashCaches(), so we protect each hash cache with a mutex.
+		typedef tbb::spin_mutex HashCacheMutex;
 
 		// A computation starts with a call to ValuePlug::getValue(), but the compute()
 		// that triggers will make calls to getValue() on upstream plugs too. We use this
@@ -420,6 +435,13 @@ class ValuePlug::Computation
 			ThreadData() :	hashCacheClearCount( 0 ), errorSource( NULL ) {}
 			int hashCacheClearCount;
 			HashCache hashCache;
+			// Used to protect the computation's use of the hash
+			// cache from clearHashCaches() method.
+			HashCacheMutex hashCacheMutex;
+			// Lock acquired when first computation is pushed
+			// onto computationStack - this prevents clearHashCaches()
+			// from clearing it while it's in use.
+			HashCacheMutex::scoped_lock hashCacheComputationLock;
 			ComputationStack computationStack;
 			const Plug *errorSource;
 		};
