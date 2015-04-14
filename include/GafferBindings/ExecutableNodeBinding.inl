@@ -51,7 +51,7 @@ template<typename T>
 boost::python::list requirements( T &n, Gaffer::Context *context )
 {
 	Gaffer::ExecutableNode::Tasks tasks;
-	n.requirements( context, tasks );
+	n.T::requirements( context, tasks );
 	boost::python::list result;
 	for( Gaffer::ExecutableNode::Tasks::const_iterator tIt = tasks.begin(); tIt != tasks.end(); ++tIt )
 	{
