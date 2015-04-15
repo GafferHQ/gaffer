@@ -47,6 +47,8 @@ using namespace Gaffer;
 using namespace GafferScene;
 using namespace Imath;
 
+static IECore::InternedString g_camerasSetName( "__cameras" );
+
 IE_CORE_DEFINERUNTIMETYPED( Camera );
 
 size_t Camera::g_firstPlugIndex = 0;
@@ -106,35 +108,6 @@ void Camera::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
 	{
 		outputs.push_back( sourcePlug() );
 	}
-	
-	if( input == namePlug() )
-	{
-		outputs.push_back( outPlug()->globalsPlug() );
-	}
-}
-
-void Camera::hashGlobals( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
-{
-	ObjectSource::hashGlobals( context, parent, h );
-	namePlug()->hash( h );
-}
-
-IECore::ConstCompoundObjectPtr Camera::computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const
-{
-	IECore::CompoundObjectPtr result = new IECore::CompoundObject;
-
-	IECore::CompoundDataPtr sets = result->member<IECore::CompoundData>(
-		"gaffer:sets",
-		/* throwExceptions = */ false,
-		/* createIfMissing = */ true
-	);
-
-	PathMatcherDataPtr cameraSet = new PathMatcherData;
-	cameraSet->writable().addPath( "/" + namePlug()->getValue() );
-
-	sets->writable()["__cameras"] = cameraSet;
-
-	return result;
 }
 
 void Camera::hashSource( const Gaffer::Context *context, IECore::MurmurHash &h ) const
@@ -151,4 +124,9 @@ IECore::ConstObjectPtr Camera::computeSource( const Context *context ) const
 	result->parameters()["projection:fov"] = new IECore::FloatData( fieldOfViewPlug()->getValue() );
 	result->parameters()["clippingPlanes"] = new IECore::V2fData( clippingPlanesPlug()->getValue() );
 	return result;
+}
+
+IECore::InternedString Camera::standardSetName() const
+{
+	return g_camerasSetName;
 }
