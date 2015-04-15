@@ -1,3 +1,41 @@
+# 0.12.1.0
+==========
+
+Core
+-----------------------------------------------------------------------
+
+- Fixed hangs introduced in 0.12.0.0. These were seen when stopping
+  Appleseed renders and when ganging plugs in Caribou.
+- Fixed thread-related crashes introduced in 0.12.0.0. These have not
+  been observed in the wild, but caused intermittent failures in the
+  unit tests.
+
+UI
+-----------------------------------------------------------------------
+
+- Improved error messages output by OpDialogue.
+- Fixed unwanted auto-expansion in SceneHierarchy panel.
+
+Scene
+-----------------------------------------------------------------------
+
+- Added current scene location to error messages emitted by SceneProcedural.
+- Reduced memory usage for sets by 10%.
+- Optimised set computations. This reduces globals computation time for
+  a complex production scene by 60%.
+- Fixed PathFilter wildcard matching bug.
+
+OSL
+-----------------------------------------------------------------------
+
+- Added metadata presets support for color and point parameters.
+
+API
+-----------------------------------------------------------------------
+
+- Added iterators to GafferScene::PathMatcher.
+- Added GafferUI.EditMenu.selectionAvailable() method.
+
 # 0.12.0.0
 ==========
 
