@@ -50,18 +50,18 @@ static IECore::InternedString g_ellipsis( "..." );
 //////////////////////////////////////////////////////////////////////////
 
 inline PathMatcher::Name::Name( IECore::InternedString name )
-	: name( name ), hasWildcards( name == g_ellipsis || Gaffer::hasWildcards( name.c_str() ) )
+	: name( name ), type( name == g_ellipsis || Gaffer::hasWildcards( name.c_str() ) ? Wildcarded : Plain )
 {
 }
 
-inline PathMatcher::Name::Name( IECore::InternedString name, bool hasWildcards )
-	: name( name ), hasWildcards( hasWildcards )
+inline PathMatcher::Name::Name( IECore::InternedString name, Type type )
+	: name( name ), type( type )
 {
 }
 
 inline bool PathMatcher::Name::operator < ( const Name &other ) const
 {
-	return hasWildcards < other.hasWildcards || ( ( hasWildcards == other.hasWildcards ) && name < other.name );
+	return type < other.type || ( ( type == other.type ) && name < other.name );
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -92,7 +92,7 @@ inline PathMatcher::Node::ConstChildMapIterator PathMatcher::Node::wildcardsBegi
 {
 	// The value for name used here will never be inserted in the map,
 	// but it marks the transition from non-wildcarded to wildcarded names.
-	return children.lower_bound( Name( IECore::InternedString(), true ) );
+	return children.lower_bound( Name( IECore::InternedString(), Name::Boundary ) );
 }
 
 inline PathMatcher::Node *PathMatcher::Node::child( const Name &name )
@@ -270,7 +270,7 @@ void PathMatcher::matchWalk( const Node *node, const NameIterator &start, const 
 	// not interested in finding a child with wildcards here - this avoids
 	// a call to hasWildcards() and gives us a decent little performance boost.
 
-	Node::ConstChildMapIterator childIt = node->children.find( Name( *start, false ) );
+	Node::ConstChildMapIterator childIt = node->children.find( Name( *start, Name::Plain ) );
 	const Node::ConstChildMapIterator childItEnd = node->children.end();
 	if( childIt != childItEnd )
 	{

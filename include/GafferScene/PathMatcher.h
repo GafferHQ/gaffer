@@ -122,26 +122,35 @@ class PathMatcher
 	private :
 
 		// Struct used to store the name for each node in the tree of paths.
-		// This is just an InternedString with an extra flag to specify whether
-		// or not the name contains wildcards (and will therefore need to
-		// be used with `match()` or the special ellipsis matching code).
+		// This is just an InternedString with an extra field used to separate
+		// names containing wildcards from plain names - since they need to
+		// be used with `match()` or the special ellipsis matching code.
 		struct Name
 		{
 
+			enum Type
+			{
+				Plain = 0, // No wildcards
+				Boundary = 1, // Marker between plain and wildcarded
+				Wildcarded = 2 // Has wildcards or ...
+			};
+
 			Name( IECore::InternedString name );
-			/// Allows explicit instantiation of the hasWildcards member -
-			/// use with care!
-			Name( IECore::InternedString name, bool hasWildcards );
+			// Allows explicit instantiation of the type member -
+			// use with care!
+			Name( IECore::InternedString name, Type type );
 
 			// Less than implemented to do a lexicographical comparison,
-			// first on hasWildcards and then on the name. The comparison
+			// first on type and then on the name. This has the effect of
+			// segregating plain strings from wildcarded strings with the
+			// Boundary type providing a marker between them. The comparison
 			// of the name uses the InternedString operator which compares
 			// via pointer rather than string content, which gives improved
 			// performance.
 			bool operator < ( const Name &other ) const;
 
 			const IECore::InternedString name;
-			const bool hasWildcards;
+			const unsigned char type;
 
 		};
 
