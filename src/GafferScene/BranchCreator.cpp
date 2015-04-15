@@ -364,13 +364,7 @@ IECore::ConstCompoundObjectPtr BranchCreator::computeGlobals( const Gaffer::Cont
 	outputGlobals->members()["gaffer:sets"] = outputSets;
 
 	const CompoundData *forwardMapping = mapping->member<CompoundData>( g_forwardMappingKey );
-
-	string parentString;
-	ScenePlug::pathToString( mapping->member<InternedStringVectorData>( g_parentKey )->readable(), parentString );
-	if( !boost::ends_with( parentString, "/" ) )
-	{
-		parentString += "/";
-	}
+	ScenePlug::ScenePath parentPath = mapping->member<InternedStringVectorData>( g_parentKey )->readable();
 
 	for( CompoundDataMap::const_iterator it = branchSets->readable().begin(), eIt = branchSets->readable().end(); it != eIt; ++it )
 	{
@@ -379,25 +373,26 @@ IECore::ConstCompoundObjectPtr BranchCreator::computeGlobals( const Gaffer::Cont
 
 		/// \todo If PathMatcher allowed us to rename nodes and merge in other PathMatchers, this could
 		/// be much more efficient.
-		vector<string> branchPaths;
-		branchSet.paths( branchPaths );
-		for( vector<string>::const_iterator pIt = branchPaths.begin(), peIt = branchPaths.end(); pIt != peIt; ++pIt )
+		vector<InternedString> outputPath( parentPath );
+		for( PathMatcher::Iterator pIt = branchSet.begin(), peIt = branchSet.end(); pIt != peIt; ++pIt )
 		{
-			const string &branchPath = *pIt;
-			const size_t secondSlashPos = branchPath.find( '/', 1 );
-			const std::string branchName( branchPath, 1, secondSlashPos - 1 );
-			const InternedStringData *outputName = forwardMapping->member<InternedStringData>( branchName );
+			const ScenePlug::ScenePath &branchPath = *pIt;
+			if( !branchPath.size() )
+			{
+				continue;
+			}
+
+			const InternedStringData *outputName = forwardMapping->member<InternedStringData>( branchPath[0] );
 			if( !outputName )
 			{
 				// See comments in Group::computeGlobals().
 				continue;
 			}
 
-			std::string outputPath = parentString + outputName->readable().string();
-			if( secondSlashPos != string::npos )
-			{
-				outputPath += branchPath.substr( secondSlashPos );
-			}
+			outputPath.resize( parentPath.size() + 1 );
+			outputPath.back() = outputName->readable();
+			outputPath.insert( outputPath.end(), branchPath.begin() + 1, branchPath.end() );
+
 			outputSet.addPath( outputPath );
 		}
 	}

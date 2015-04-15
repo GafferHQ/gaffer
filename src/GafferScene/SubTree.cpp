@@ -35,6 +35,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include "boost/algorithm/string/predicate.hpp"
+
 #include "Gaffer/Context.h"
 
 #include "GafferScene/SubTree.h"
@@ -227,26 +229,14 @@ IECore::ConstCompoundObjectPtr SubTree::computeGlobals( const Gaffer::Context *c
 	CompoundDataPtr outputSets = new CompoundData;
 	outputGlobals->members()["gaffer:sets"] = outputSets;
 
-	std::string root = rootPlug()->getValue();
-	
-	// append/prepend slashes if required:
-	if( !root.size() || root[root.size()-1] != '/' )
-	{
-		root += "/";
-	}
-	if( root[0] != '/' )
-	{
-		root = "/" + root;
-	}
+	const std::string rootString = rootPlug()->getValue();
+	ScenePlug::ScenePath root;
+	ScenePlug::stringToPath( rootString, root );
 
-	size_t prefixSize = root.size() - 1; // number of characters to remove from front of each declaration
+	size_t prefixSize = root.size(); // number of names to remove from front of each path
 	if( includeRootPlug()->getValue() && prefixSize )
 	{
-		size_t lastSlashButOne = root.rfind( "/", prefixSize-1 );
-		if( lastSlashButOne != string::npos )
-		{
-			prefixSize = lastSlashButOne;
-		}
+		prefixSize--;
 	}
 
 	for( CompoundDataMap::const_iterator it = inputSets->readable().begin(), eIt = inputSets->readable().end(); it != eIt; ++it )
@@ -257,14 +247,13 @@ IECore::ConstCompoundObjectPtr SubTree::computeGlobals( const Gaffer::Context *c
 		const PathMatcher &inputSet = static_cast<const PathMatcherData *>( it->second.get() )->readable();
 		PathMatcher &outputSet = outputSets->member<PathMatcherData>( it->first, /* throwExceptions = */ false, /* createIfMissing = */ true )->writable();
 
-		vector<string> inputPaths;
-		inputSet.paths( inputPaths );
-		for( vector<string>::const_iterator pIt = inputPaths.begin(), peIt = inputPaths.end(); pIt != peIt; ++pIt )
+		ScenePlug::ScenePath outputPath;
+		for( PathMatcher::Iterator pIt = inputSet.begin(), peIt = inputSet.end(); pIt != peIt; ++pIt )
 		{
-			const string &inputPath = *pIt;
-			if( inputPath.compare( 0, root.size(), root ) == 0 )
+			const ScenePlug::ScenePath &inputPath = *pIt;
+			if( boost::starts_with( inputPath, root ) )
 			{
-				std::string outputPath( inputPath, prefixSize );
+				outputPath.assign( inputPath.begin() + prefixSize, inputPath.end() );
 				outputSet.addPath( outputPath );
 			}
 		}

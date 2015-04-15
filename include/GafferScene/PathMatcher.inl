@@ -40,19 +40,173 @@
 namespace GafferScene
 {
 
-template<typename Iterator>
-PathMatcher::PathMatcher( Iterator pathsBegin, Iterator pathsEnd )
+//////////////////////////////////////////////////////////////////////////
+// PathMatcher
+//////////////////////////////////////////////////////////////////////////
+
+template<typename PathIterator>
+PathMatcher::PathMatcher( PathIterator pathsBegin, PathIterator pathsEnd )
 {
 	init( pathsBegin, pathsEnd );
 }
 
-template<typename Iterator>
-void PathMatcher::init( Iterator pathsBegin, Iterator pathsEnd )
+template<typename PathIterator>
+void PathMatcher::init( PathIterator pathsBegin, PathIterator pathsEnd )
 {
 	clear();
-	for( Iterator it = pathsBegin; it != pathsEnd; it++ )
+	for( PathIterator it = pathsBegin; it != pathsEnd; it++ )
 	{
 		addPath( *it );
+	}
+}
+
+//////////////////////////////////////////////////////////////////////////
+// RawIterator
+//////////////////////////////////////////////////////////////////////////
+
+inline void PathMatcher::RawIterator::prune()
+{
+	m_pruned = true;
+}
+
+inline const bool PathMatcher::RawIterator::exactMatch() const
+{
+	if( const Node *n = node() )
+	{
+		return n->terminator;
+	}
+	return false;
+}
+
+inline PathMatcher::RawIterator::RawIterator( const PathMatcher &matcher, bool atEnd )
+	:	m_nodeIfRoot( NULL ), m_pruned( false )
+{
+	if( atEnd )
+	{
+		m_stack.push_back( Level( matcher.m_root->children, matcher.m_root->children.end() ) );
+	}
+	else
+	{
+		m_stack.push_back( Level( matcher.m_root->children, matcher.m_root->children.begin() ) );
+		if( !matcher.isEmpty() )
+		{
+			m_nodeIfRoot = matcher.m_root.get();
+		}
+	}
+}
+
+inline void PathMatcher::RawIterator::increment()
+{
+	if( m_nodeIfRoot )
+	{
+		m_path.push_back( m_stack.back().it->first.name );
+		m_nodeIfRoot = NULL;
+		return;
+	}
+
+	const Node *node = m_stack.back().it->second;
+	if( !m_pruned && !node->children.empty() )
+	{
+		m_stack.push_back(
+			Level(
+				node->children,
+				node->children.begin()
+			)
+		);
+		m_path.push_back( m_stack.back().it->first.name );
+	}
+	else
+	{
+		++(m_stack.back().it);
+		while( m_stack.size() > 1 && m_stack.back().it == m_stack.back().end )
+		{
+			m_stack.pop_back();
+			m_path.pop_back();
+			++(m_stack.back().it);
+		}
+
+		if( m_stack.back().it != m_stack.back().end )
+		{
+			m_path.back() = m_stack.back().it->first.name;
+		}
+	}
+	m_pruned = false;
+}
+
+inline bool PathMatcher::RawIterator::equal( const RawIterator &other ) const
+{
+	return m_stack == other.m_stack && m_nodeIfRoot == other.m_nodeIfRoot;
+}
+
+inline const std::vector<IECore::InternedString> &PathMatcher::RawIterator::dereference() const
+{
+	return m_path;
+}
+
+inline const PathMatcher::Node *PathMatcher::RawIterator::node() const
+{
+	if( m_nodeIfRoot )
+	{
+		return m_nodeIfRoot;
+	}
+	else
+	{
+		if( m_stack.back().it != m_stack.back().end )
+		{
+			return m_stack.back().it->second;
+		}
+	}
+	return NULL;
+}
+
+inline PathMatcher::RawIterator::Level::Level( const Node::ChildMap &children, Node::ConstChildMapIterator it )
+	:	end( children.end() ), it( it )
+{
+}
+
+inline bool PathMatcher::RawIterator::Level::operator == ( const Level &other ) const
+{
+	return end == other.end && it == other.it;
+}
+
+//////////////////////////////////////////////////////////////////////////
+// Iterator
+//////////////////////////////////////////////////////////////////////////
+
+inline PathMatcher::Iterator::Iterator( const RawIterator &it )
+	: boost::iterator_adaptor<Iterator, PathMatcher::RawIterator>( it )
+{
+	satisfyTerminatorRequirement();
+}
+
+inline bool PathMatcher::Iterator::operator==( const RawIterator &rhs ) const
+{
+	return base() == rhs;
+}
+
+inline bool PathMatcher::Iterator::operator!=( const RawIterator &rhs ) const
+{
+	return base() != rhs;
+}
+
+inline void PathMatcher::Iterator::prune()
+{
+	base_reference().prune();
+}
+
+inline void PathMatcher::Iterator::increment()
+{
+	++base_reference();
+	satisfyTerminatorRequirement();
+}
+
+inline void PathMatcher::Iterator::satisfyTerminatorRequirement()
+{
+	const Node *node = base().node();
+	while( node && !node->terminator )
+	{
+		++base_reference();
+		node = base().node();
 	}
 }
 

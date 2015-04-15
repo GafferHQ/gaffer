@@ -38,180 +38,136 @@
 #include "Gaffer/StringAlgo.h"
 
 #include "GafferScene/PathMatcher.h"
+#include "GafferScene/ScenePlug.h"
 
 using namespace std;
 using namespace GafferScene;
+
+static IECore::InternedString g_ellipsis( "..." );
+
+//////////////////////////////////////////////////////////////////////////
+// Name implementation
+//////////////////////////////////////////////////////////////////////////
+
+inline PathMatcher::Name::Name( IECore::InternedString name )
+	: name( name ), type( name == g_ellipsis || Gaffer::hasWildcards( name.c_str() ) ? Wildcarded : Plain )
+{
+}
+
+inline PathMatcher::Name::Name( IECore::InternedString name, Type type )
+	: name( name ), type( type )
+{
+}
+
+inline bool PathMatcher::Name::operator < ( const Name &other ) const
+{
+	return type < other.type || ( ( type == other.type ) && name < other.name );
+}
 
 //////////////////////////////////////////////////////////////////////////
 // Node implementation
 //////////////////////////////////////////////////////////////////////////
 
-// Struct used to store the name for each node in the tree of paths.
-// This is just an InternedString with an extra flag to specify whether
-// or not the name contains wildcards (and will therefore need to
-// be used with `match()`).
-struct PathMatcher::Name
+PathMatcher::Node::Node()
+	:	terminator( false )
 {
+}
 
-	Name( IECore::InternedString name )
-		: name( name ), hasWildcards( Gaffer::hasWildcards( name.c_str() ) )
-	{
-	}
-
-	/// Allows explicit instantiation of the hasWildcards member -
-	/// use with care!
-	Name( IECore::InternedString name, bool hasWildcards )
-		: name( name ), hasWildcards( hasWildcards )
-	{
-	}
-
-	// Less than implemented to do a lexicographical comparison,
-	// first on hasWildcards and then on the name. The comparison
-	// of the name uses the InternedString operator which compares
-	// via pointer rather than string content, which gives improved
-	// performance.
-	bool operator < ( const Name &other ) const
-	{
-		return hasWildcards < other.hasWildcards || ( ( hasWildcards == other.hasWildcards ) && name < other.name );
-	}
-
-	const IECore::InternedString name;
-	const bool hasWildcards;
-
-};
-
-struct PathMatcher::Node
+PathMatcher::Node::Node( const Node &other )
+	:	terminator( other.terminator )
 {
-
-	// Container used to store all the children of the node.
-	// We need two things out of this structure - quick access
-	// to the child with a specific name, and also partitioning
-	// between names with wildcards and those without. This is
-	// achieved by using an ordered container, and having the
-	// less than operation for Names sort first on hasWildcards
-	// and second on the name.
-	typedef std::map<Name, Node *> ChildMap;
-	typedef ChildMap::iterator ChildMapIterator;
-	typedef ChildMap::value_type ChildMapValue;
-	typedef ChildMap::const_iterator ConstChildMapIterator;
-
-	Node()
-		:	terminator( false ), ellipsis( 0 )
+	ChildMapIterator hint = children.begin();
+	for( ConstChildMapIterator it = other.children.begin(), eIt = other.children.end(); it != eIt; it++ )
 	{
+		hint = children.insert( hint, ChildMapValue( it->first, new Node( *(it->second) ) ) );
+	}
+}
+
+PathMatcher::Node::~Node()
+{
+	clearChildren();
+}
+
+inline PathMatcher::Node::ConstChildMapIterator PathMatcher::Node::wildcardsBegin() const
+{
+	// The value for name used here will never be inserted in the map,
+	// but it marks the transition from non-wildcarded to wildcarded names.
+	return children.lower_bound( Name( IECore::InternedString(), Name::Boundary ) );
+}
+
+inline PathMatcher::Node *PathMatcher::Node::child( const Name &name )
+{
+	ChildMapIterator it = children.find( name );
+	if( it != children.end() )
+	{
+		return it->second;
+	}
+	return NULL;
+}
+
+inline const PathMatcher::Node *PathMatcher::Node::child( const Name &name ) const
+{
+	ConstChildMapIterator it = children.find( name );
+	if( it != children.end() )
+	{
+		return it->second;
+	}
+	return NULL;
+}
+
+bool PathMatcher::Node::operator == ( const Node &other ) const
+{
+	if( terminator != other.terminator )
+	{
+		return false;
 	}
 
-	Node( const Node &other )
-		:	terminator( other.terminator ), ellipsis( other.ellipsis ? new Node( *(other.ellipsis) ) : 0 )
+	if( children.size() != other.children.size() )
 	{
-		ChildMapIterator hint = children.begin();
-		for( ConstChildMapIterator it = other.children.begin(), eIt = other.children.end(); it != eIt; it++ )
-		{
-			hint = children.insert( hint, ChildMapValue( it->first, new Node( *(it->second) ) ) );
-		}
+		return false;
 	}
 
-	~Node()
+	for( ConstChildMapIterator it = children.begin(), eIt = children.end(); it != eIt; it++ )
 	{
-		clearChildren();
-	}
-
-	// Returns an iterator to the first child whose name contains wildcards.
-	// All children between here and children.end() will also contain wildcards.
-	ConstChildMapIterator wildcardsBegin() const
-	{
-		// The value for name used here will never be inserted in the map,
-		// but it marks the transition from non-wildcarded to wildcarded names.
-		return children.lower_bound( Name( IECore::InternedString(), true ) );
-	}
-
-	Node *child( const Name &name )
-	{
-		ChildMapIterator it = children.find( name );
-		if( it != children.end() )
-		{
-			return it->second;
-		}
-		return NULL;
-	}
-
-	bool operator == ( const Node &other ) const
-	{
-		if( terminator != other.terminator )
-		{
-			return false;
-		}
-
-		if( children.size() != other.children.size() )
+		ConstChildMapIterator oIt = other.children.find( it->first );
+		if( oIt == other.children.end() )
 		{
 			return false;
 		}
-
-		for( ConstChildMapIterator it = children.begin(), eIt = children.end(); it != eIt; it++ )
-		{
-			ConstChildMapIterator oIt = other.children.find( it->first );
-			if( oIt == other.children.end() )
-			{
-				return false;
-			}
-			if( !(*(it->second) == *(oIt->second) ) )
-			{
-				return false;
-			}
-		}
-
-		if( (bool)ellipsis != (bool)other.ellipsis )
+		if( !(*(it->second) == *(oIt->second) ) )
 		{
 			return false;
 		}
-		else if( ellipsis )
-		{
-			if( (*ellipsis) != (*other.ellipsis) )
-			{
-				return false;
-			}
-		}
-
-		return true;
 	}
 
-	bool operator != ( const Node &other )
+	return true;
+}
+
+bool PathMatcher::Node::operator != ( const Node &other )
+{
+	return !( *this == other );
+}
+
+bool PathMatcher::Node::clearChildren()
+{
+	const bool result = !children.empty();
+	ChildMap::iterator it, eIt;
+	for( it = children.begin(), eIt = children.end(); it != eIt; it++ )
 	{
-		return !( *this == other );
+		delete it->second;
 	}
+	children.clear();
+	return result;
+}
 
-	bool clearChildren()
-	{
-		const bool result = !children.empty() || ellipsis;
-		ChildMap::iterator it, eIt;
-		for( it = children.begin(), eIt = children.end(); it != eIt; it++ )
-		{
-			delete it->second;
-		}
-		children.clear();
-		delete ellipsis;
-		ellipsis = NULL;
-		return result;
-	}
-
-	bool isEmpty()
-	{
-		return !terminator && !ellipsis && children.empty();
-	}
-
-	bool terminator;
-	// map of child nodes
-	ChildMap children;
-	// child node for "...". this is stored separately as it uses
-	// a slightly different matching algorithm.
-	Node *ellipsis;
-
-};
+bool PathMatcher::Node::isEmpty()
+{
+	return !terminator && children.empty();
+}
 
 //////////////////////////////////////////////////////////////////////////
 // PathMatcher implementation
 //////////////////////////////////////////////////////////////////////////
-
-static IECore::InternedString g_ellipsis( "..." );
 
 PathMatcher::PathMatcher()
 {
@@ -235,7 +191,11 @@ bool PathMatcher::isEmpty() const
 
 void PathMatcher::paths( std::vector<std::string> &paths ) const
 {
-	pathsWalk( m_root.get(), "/", paths );
+	for( Iterator it = begin(), eIt = end(); it != eIt; ++it )
+	{
+		paths.push_back( std::string() );
+		ScenePlug::pathToString( *it, paths.back() );
+	}
 }
 
 bool PathMatcher::operator == ( const PathMatcher &other ) const
@@ -269,7 +229,7 @@ unsigned PathMatcher::match( const std::vector<IECore::InternedString> &path ) c
 }
 
 template<typename NameIterator>
-void PathMatcher::matchWalk( Node *node, const NameIterator &start, const NameIterator &end, unsigned &result ) const
+void PathMatcher::matchWalk( const Node *node, const NameIterator &start, const NameIterator &end, unsigned &result ) const
 {
 	// see if we've matched to the end of the path, and terminate the recursion if we have.
 	if( start == end )
@@ -282,10 +242,10 @@ void PathMatcher::matchWalk( Node *node, const NameIterator &start, const NameIt
 		{
 			result |= Filter::DescendantMatch;
 		}
-		if( node->ellipsis )
+		if( const Node *ellipsis = node->child( g_ellipsis ) )
 		{
 			result |= Filter::DescendantMatch;
-			if( node->ellipsis->terminator )
+			if( ellipsis->terminator )
 			{
 				result |= Filter::ExactMatch;
 			}
@@ -310,7 +270,7 @@ void PathMatcher::matchWalk( Node *node, const NameIterator &start, const NameIt
 	// not interested in finding a child with wildcards here - this avoids
 	// a call to hasWildcards() and gives us a decent little performance boost.
 
-	Node::ConstChildMapIterator childIt = node->children.find( Name( *start, false ) );
+	Node::ConstChildMapIterator childIt = node->children.find( Name( *start, Name::Plain ) );
 	const Node::ConstChildMapIterator childItEnd = node->children.end();
 	if( childIt != childItEnd )
 	{
@@ -325,11 +285,19 @@ void PathMatcher::matchWalk( Node *node, const NameIterator &start, const NameIt
 		}
 	}
 
-	// then check all the wildcarded children to see if they might match
+	// then check all the wildcarded children to see if they might match.
 
+	const Node *ellipsis = NULL;
 	for( childIt = node->wildcardsBegin(); childIt != childItEnd; ++childIt )
 	{
 		assert( childIt->first.hasWildcards );
+		if( childIt->first.name == g_ellipsis )
+		{
+			// store for use in next block.
+			ellipsis = childIt->second;
+			continue;
+		}
+
 		NameIterator newStart = start + 1;
 		if( Gaffer::match( start->c_str(), childIt->first.name.c_str() ) )
 		{
@@ -344,10 +312,10 @@ void PathMatcher::matchWalk( Node *node, const NameIterator &start, const NameIt
 	// finally check for ellipsis matches. we do this last, since it
 	// is the most expensive.
 
-	if( node->ellipsis )
+	if( ellipsis )
 	{
 		result |= Filter::DescendantMatch;
-		if( node->ellipsis->terminator )
+		if( ellipsis->terminator )
 		{
 			result |= Filter::ExactMatch;
 		}
@@ -355,7 +323,7 @@ void PathMatcher::matchWalk( Node *node, const NameIterator &start, const NameIt
 		NameIterator newStart = start;
 		while( newStart != end )
 		{
-			matchWalk( node->ellipsis, newStart, end, result );
+			matchWalk( ellipsis, newStart, end, result );
 			if( result == Filter::EveryMatch )
 			{
 				return;
@@ -383,25 +351,12 @@ bool PathMatcher::addPath( const NameIterator &start, const NameIterator &end )
 	Node *node = m_root.get();
 	for( NameIterator it = start; it != end; ++it )
 	{
-		Node *nextNode = 0;
 		const Name name( *it );
-		if( name.name == g_ellipsis )
+		Node *nextNode = node->child( name );
+		if( !nextNode )
 		{
-			nextNode = node->ellipsis;
-			if( !nextNode )
-			{
-				nextNode = new Node;
-				node->ellipsis = nextNode;
-			}
-		}
-		else
-		{
-			nextNode = node->child( name );
-			if( !nextNode )
-			{
-				nextNode = new Node;
-				node->children.insert( Node::ChildMapValue( name, nextNode ) );
-			}
+			nextNode = new Node;
+			node->children.insert( Node::ChildMapValue( name, nextNode ) );
 		}
 		node = nextNode;
 	}
@@ -449,6 +404,16 @@ bool PathMatcher::prune( const std::vector<IECore::InternedString> &path )
 	return result;
 }
 
+PathMatcher::RawIterator PathMatcher::begin() const
+{
+	return RawIterator( *this, false );
+}
+
+PathMatcher::RawIterator PathMatcher::end() const
+{
+	return RawIterator( *this, true );
+}
+
 template<typename NameIterator>
 void PathMatcher::removeWalk( Node *node, const NameIterator &start, const NameIterator &end, const bool prune, bool &removed )
 {
@@ -465,39 +430,20 @@ void PathMatcher::removeWalk( Node *node, const NameIterator &start, const NameI
 	}
 
 	const IECore::InternedString name( *start );
-	Node::ChildMapIterator childIt = node->children.end();
-	Node *childNode = 0;
-	if( name == g_ellipsis )
-	{
-		childNode = node->ellipsis;
-	}
-	else
-	{
-		childIt = node->children.find( name );
-		if( childIt != node->children.end() )
-		{
-			childNode = childIt->second;
-		}
-	}
-
-	if( !childNode )
+	Node::ChildMapIterator childIt = node->children.find( name );
+	if( childIt == node->children.end() )
 	{
 		return;
 	}
+
+	Node *childNode = childIt->second;
 
 	NameIterator childStart = start; childStart++;
 	removeWalk( childNode, childStart, end, prune, removed );
 	if( childNode->isEmpty() )
 	{
 		delete childNode;
-		if( childIt != node->children.end() )
-		{
-			node->children.erase( childIt );
-		}
-		else
-		{
-			node->ellipsis = 0;
-		}
+		node->children.erase( childIt );
 	}
 }
 
@@ -520,20 +466,6 @@ bool PathMatcher::addPathsWalk( Node *node, const Node *srcNode )
 		else
 		{
 			node->children.insert( Node::ChildMapValue( it->first, new Node( *srcChild ) ) );
-			result = true; // source node can only exist if it or a descendant is a terminator
-		}
-	}
-
-	if( srcNode->ellipsis )
-	{
-		if( node->ellipsis )
-		{
-			// result must be on right of ||, to avoid short-circuiting addPathsWalk().
-			result = addPathsWalk( node->ellipsis, srcNode->ellipsis ) || result;
-		}
-		else
-		{
-			node->ellipsis = new Node( *srcNode->ellipsis );
 			result = true; // source node can only exist if it or a descendant is a terminator
 		}
 	}
@@ -568,49 +500,6 @@ bool PathMatcher::removePathsWalk( Node *node, const Node *srcNode )
 		}
 	}
 
-	if( node->ellipsis && srcNode->ellipsis )
-	{
-		if( removePathsWalk( node->ellipsis, srcNode->ellipsis ) )
-		{
-			result = true;
-			if( node->ellipsis->isEmpty() )
-			{
-				delete node->ellipsis;
-				node->ellipsis = NULL;
-			}
-		}
-	}
-
 	return result;
 }
 
-void PathMatcher::pathsWalk( Node *node, const std::string &path, std::vector<std::string> &paths ) const
-{
-	if( node->terminator )
-	{
-		paths.push_back( path );
-	}
-
-	for( Node::ChildMapIterator it = node->children.begin(), eIt = node->children.end(); it != eIt; it++ )
-	{
-		std::string childPath = path;
-		if( node != m_root.get() )
-		{
-			childPath += "/";
-		}
-		childPath += it->first.name;
-		pathsWalk( it->second, childPath, paths );
-	}
-
-	if( node->ellipsis )
-	{
-		std::string childPath = path;
-		if( node != m_root.get() )
-		{
-			childPath += "/";
-		}
-		childPath += "...";
-		pathsWalk( node->ellipsis, childPath, paths );
-
-	}
-}

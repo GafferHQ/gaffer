@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,39 +34,15 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef GAFFERSCENETEST_PATHMATCHERTEST_H
+#define GAFFERSCENETEST_PATHMATCHERTEST_H
 
-#include "IECorePython/ScopedGILRelease.h"
-
-#include "GafferBindings/DependencyNodeBinding.h"
-
-#include "GafferSceneTest/CompoundObjectSource.h"
-#include "GafferSceneTest/TraverseScene.h"
-#include "GafferSceneTest/TestShader.h"
-#include "GafferSceneTest/TestLight.h"
-#include "GafferSceneTest/ScenePlugTest.h"
-#include "GafferSceneTest/PathMatcherTest.h"
-
-using namespace boost::python;
-using namespace GafferSceneTest;
-
-static void traverseSceneWrapper( GafferScene::ScenePlug *scenePlug, Gaffer::Context *context )
-{
-	IECorePython::ScopedGILRelease gilRelease;
-	traverseScene( scenePlug, context );
-}
-
-BOOST_PYTHON_MODULE( _GafferSceneTest )
+namespace GafferSceneTest
 {
 
-	GafferBindings::DependencyNodeClass<CompoundObjectSource>();
-	GafferBindings::NodeClass<TestShader>();
-	GafferBindings::NodeClass<TestLight>();
+void testPathMatcherRawIterator();
+void testPathMatcherIteratorPrune();
 
-	def( "traverseScene", &traverseSceneWrapper );
-	def( "testManyStringToPathCalls", &testManyStringToPathCalls );
+} // namespace GafferSceneTest
 
-	def( "testPathMatcherRawIterator", &testPathMatcherRawIterator );
-	def( "testPathMatcherIteratorPrune", &testPathMatcherIteratorPrune );
-
-}
+#endif // GAFFERSCENETEST_PATHMATCHERTEST_H

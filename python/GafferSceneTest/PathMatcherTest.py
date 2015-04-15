@@ -42,6 +42,7 @@ import IECore
 
 import Gaffer
 import GafferScene
+import GafferSceneTest
 
 class PathMatcherTest( unittest.TestCase ) :
 
@@ -711,6 +712,32 @@ class PathMatcherTest( unittest.TestCase ) :
 		] )
 
 		self.assertEqual( m.match( "/b"), GafferScene.Filter.Result.ExactMatch )
+
+	def testPathsWithRootTerminator( self ) :
+
+		m = GafferScene.PathMatcher()
+		m.addPath( "/" )
+		self.assertEqual( m.paths(), [ "/" ] )
+
+	def testPathsWithRootTerminatorAndDescendant( self ) :
+
+		m = GafferScene.PathMatcher()
+		m.addPath( "/" )
+		m.addPath( "/a/b/c" )
+		self.assertEqual( m.paths(), [ "/", "/a/b/c" ] )
+
+	def testEmptyPaths( self ) :
+
+		m = GafferScene.PathMatcher()
+		self.assertEqual( m.paths(), [] )
+
+	def testRawIterator( self ) :
+
+		GafferSceneTest.testPathMatcherRawIterator()
+
+	def testIteratorPrune( self ) :
+
+		GafferSceneTest.testPathMatcherIteratorPrune()
 
 if __name__ == "__main__":
 	unittest.main()

@@ -213,27 +213,53 @@ IECore::ConstCompoundObjectPtr Prune::computeGlobals( const Gaffer::Context *con
 
 	ContextPtr tmpContext = filterContext( context );
 	Context::Scope scopedContext( tmpContext.get() );
-	ScenePath path;
 
 	for( CompoundDataMap::const_iterator it = inputSets->readable().begin(), eIt = inputSets->readable().end(); it != eIt; ++it )
 	{
-		/// \todo This could be more efficient if PathMatcher exposed the internal nodes,
-		/// and allowed sharing between matchers. Then we could do a really lightweight copy
-		/// and just trim out the nodes we didn't want.
 		const PathMatcher &inputSet = static_cast<const PathMatcherData *>( it->second.get() )->readable();
 		PathMatcher &outputSet = outputSets->member<PathMatcherData>( it->first, /* throwExceptions = */ false, /* createIfMissing = */ true )->writable();
-
-		vector<string> inputPaths;
-		inputSet.paths( inputPaths );
-		for( vector<string>::const_iterator pIt = inputPaths.begin(), peIt = inputPaths.end(); pIt != peIt; ++pIt )
+		for( PathMatcher::RawIterator pIt = inputSet.begin(), peIt = inputSet.end(); pIt != peIt; )
 		{
-			path.clear();
-			ScenePlug::stringToPath( *pIt, path );
-
-			tmpContext->set( ScenePlug::scenePathContextName, path );
-			if( !(filterPlug()->getValue() & ( Filter::ExactMatch | Filter::AncestorMatch ) ) )
+			tmpContext->set( ScenePlug::scenePathContextName, *pIt );
+			const int m = filterPlug()->getValue();
+			if( m & ( Filter::ExactMatch | Filter::AncestorMatch ) )
 			{
-				outputSet.addPath( *pIt );
+				// This path and all below it are pruned, so we can
+				// ignore it and prune the traversal to the descendant
+				// paths.
+				pIt.prune();
+				++pIt;
+			}
+			else if( m & Filter::DescendantMatch )
+			{
+				// This path isn't pruned, so we add it, and then
+				// continue our traversal as normal to find out
+				// which descendants _are_ pruned.
+				if( pIt.exactMatch() )
+				{
+					outputSet.addPath( *pIt );
+				}
+				++pIt;
+			}
+			else
+			{
+				// This path isn't pruned, and neither is anything
+				// below it. We can avoid retesting the filter for
+				// all descendant paths, since we know they're not
+				// pruned.
+				/// \todo If PathMatcher could share nodes internally,
+				/// it could provide us with a method to just reference
+				/// the whole subtree here.
+				assert( m == Filter::NoMatch );
+				PathMatcher::RawIterator next = pIt; next.prune(); ++next;
+				while( pIt != next )
+				{
+					if( pIt.exactMatch() )
+					{
+						outputSet.addPath( *pIt );
+					}
+					++pIt;
+				}
 			}
 		}
 	}

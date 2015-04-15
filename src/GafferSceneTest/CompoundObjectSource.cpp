@@ -84,43 +84,16 @@ void CompoundObjectSource::hashBound( const ScenePath &path, const Gaffer::Conte
 	inPlug()->hash( h );
 }
 
+Imath::Box3f CompoundObjectSource::computeBound( const ScenePath &path, const Gaffer::Context *context, const GafferScene::ScenePlug *parent ) const
+{
+	return entryForPath( path )->member<Box3fData>( "bound", true /* throw exceptions */ )->readable();
+}
+
 void CompoundObjectSource::hashTransform( const ScenePath &path, const Gaffer::Context *context, const GafferScene::ScenePlug *parent, IECore::MurmurHash &h ) const
 {
 	SceneNode::hashTransform( path, context, parent, h );
 	h.append( &path.front(), path.size() );
 	inPlug()->hash( h );
-}
-
-void CompoundObjectSource::hashAttributes( const ScenePath &path, const Gaffer::Context *context, const GafferScene::ScenePlug *parent, IECore::MurmurHash &h ) const
-{
-	SceneNode::hashAttributes( path, context, parent, h );
-	h.append( &path.front(), path.size() );
-	inPlug()->hash( h );
-}
-
-void CompoundObjectSource::hashObject( const ScenePath &path, const Gaffer::Context *context, const GafferScene::ScenePlug *parent, IECore::MurmurHash &h ) const
-{
-	SceneNode::hashObject( path, context, parent, h );
-	h.append( &path.front(), path.size() );
-	inPlug()->hash( h );
-}
-
-void CompoundObjectSource::hashChildNames( const ScenePath &path, const Gaffer::Context *context, const GafferScene::ScenePlug *parent, IECore::MurmurHash &h ) const
-{
-	SceneNode::hashChildNames( path, context, parent, h );
-	h.append( &path.front(), path.size() );
-	inPlug()->hash( h );
-}
-
-void CompoundObjectSource::hashGlobals( const Gaffer::Context *context, const GafferScene::ScenePlug *parent, IECore::MurmurHash &h ) const
-{
-	SceneNode::hashGlobals( context, parent, h );
-	inPlug()->hash( h );
-}
-
-Imath::Box3f CompoundObjectSource::computeBound( const ScenePath &path, const Gaffer::Context *context, const GafferScene::ScenePlug *parent ) const
-{
-	return entryForPath( path )->member<Box3fData>( "bound", true /* throw exceptions */ )->readable();
 }
 
 Imath::M44f CompoundObjectSource::computeTransform( const ScenePath &path, const Gaffer::Context *context, const GafferScene::ScenePlug *parent ) const
@@ -131,6 +104,13 @@ Imath::M44f CompoundObjectSource::computeTransform( const ScenePath &path, const
 		return transform->readable();
 	}
 	return Imath::M44f();
+}
+
+void CompoundObjectSource::hashAttributes( const ScenePath &path, const Gaffer::Context *context, const GafferScene::ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	SceneNode::hashAttributes( path, context, parent, h );
+	h.append( &path.front(), path.size() );
+	inPlug()->hash( h );
 }
 
 IECore::ConstCompoundObjectPtr CompoundObjectSource::computeAttributes( const ScenePath &path, const Gaffer::Context *context, const GafferScene::ScenePlug *parent ) const
@@ -146,6 +126,13 @@ IECore::ConstCompoundObjectPtr CompoundObjectSource::computeAttributes( const Sc
 	}
 }
 
+void CompoundObjectSource::hashObject( const ScenePath &path, const Gaffer::Context *context, const GafferScene::ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	SceneNode::hashObject( path, context, parent, h );
+	h.append( &path.front(), path.size() );
+	inPlug()->hash( h );
+}
+
 IECore::ConstObjectPtr CompoundObjectSource::computeObject( const ScenePath &path, const Gaffer::Context *context, const GafferScene::ScenePlug *parent ) const
 {
 	ConstObjectPtr o = entryForPath( path )->member<Object>( "object" );
@@ -157,6 +144,13 @@ IECore::ConstObjectPtr CompoundObjectSource::computeObject( const ScenePath &pat
 	{
 		return outPlug()->objectPlug()->defaultValue();
 	}
+}
+
+void CompoundObjectSource::hashChildNames( const ScenePath &path, const Gaffer::Context *context, const GafferScene::ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	SceneNode::hashChildNames( path, context, parent, h );
+	h.append( &path.front(), path.size() );
+	inPlug()->hash( h );
 }
 
 IECore::ConstInternedStringVectorDataPtr CompoundObjectSource::computeChildNames( const ScenePath &path, const Gaffer::Context *context, const GafferScene::ScenePlug *parent ) const
@@ -175,8 +169,24 @@ IECore::ConstInternedStringVectorDataPtr CompoundObjectSource::computeChildNames
 	return result;
 }
 
+void CompoundObjectSource::hashGlobals( const Gaffer::Context *context, const GafferScene::ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	SceneNode::hashGlobals( context, parent, h );
+	inPlug()->hash( h );
+}
+
 IECore::ConstCompoundObjectPtr CompoundObjectSource::computeGlobals( const Gaffer::Context *context, const GafferScene::ScenePlug *parent ) const
 {
+	ConstCompoundObjectPtr compoundObject = runTimeCast<const CompoundObject>( inPlug()->getValue() );
+	if( !compoundObject )
+	{
+		throw Exception( "Input value is not a CompoundObject" );
+	}
+
+	if( ConstCompoundObjectPtr globals = compoundObject->member<CompoundObject>( "globals" ) )
+	{
+		return globals;
+	}
 	return outPlug()->globalsPlug()->defaultValue();
 }
 
@@ -185,7 +195,7 @@ IECore::ConstCompoundObjectPtr CompoundObjectSource::entryForPath( const ScenePa
 	ConstCompoundObjectPtr result = runTimeCast<const CompoundObject>( inPlug()->getValue() );
 	if( !result )
 	{
-		throw Exception( "Input plug has no value" );
+		throw Exception( "Input value is not a CompoundObject" );
 	}
 
 	for( ScenePath::const_iterator it=path.begin(); it!=path.end(); it++ )
