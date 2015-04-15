@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2013-2014, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2013-2015, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -117,7 +117,8 @@ class Dispatcher : public Node
 		//@}
 
 		/// Calls doDispatch, taking care to trigger the dispatch signals at the appropriate times.
-		/// Note that this will throw unless all of the nodes are either ExecutableNodes or Boxes.
+		/// Note that this will throw unless all of the nodes are either ExecutableNodes or Boxes,
+		/// and it will also throw if cycles are detected in the resulting TaskBatch graph.
 		void dispatch( const std::vector<NodePtr> &nodes ) const;
 
 		enum FramesMode
@@ -261,7 +262,7 @@ class Dispatcher : public Node
 		// Tasks with otherwise identical Contexts also be grouped into batches of frames. Nodes
 		// which require sequence execution will be grouped together as well.
 		static TaskBatchPtr batchTasks( const ExecutableNode::Tasks &tasks );
-		static void batchTasksWalk( TaskBatchPtr parent, const ExecutableNode::Task &task, BatchMap &currentBatches, TaskToBatchMap &tasksToBatches );
+		static void batchTasksWalk( TaskBatchPtr parent, const ExecutableNode::Task &task, BatchMap &currentBatches, TaskToBatchMap &tasksToBatches, std::set<const TaskBatch *> &ancestors );
 		static TaskBatchPtr acquireBatch( const ExecutableNode::Task &task, BatchMap &currentBatches, TaskToBatchMap &tasksToBatches );
 		static IECore::MurmurHash batchHash( const ExecutableNode::Task &task );
 
