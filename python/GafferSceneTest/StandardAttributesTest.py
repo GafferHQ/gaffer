@@ -105,5 +105,17 @@ class StandardAttributesTest( GafferSceneTest.SceneTestCase ) :
 		self.assertNotEqual( a["out"]["globals"].hash(), a["in"]["globals"].hash() )
 		self.assertEqual( a["out"]["globals"].getValue()["attribute:gaffer:transformBlurSegments"], IECore.IntData( 2 ) )
 
+	def testPassThroughs( self ) :
+
+		p = GafferScene.Plane()
+		p["sets"].setValue( "flatThings" )
+
+		a = GafferScene.StandardAttributes()
+		a["in"].setInput( p["out"] )
+
+		self.assertEqual( a["out"]["setNames"].hash(), p["out"]["setNames"].hash() )
+		self.assertEqual( a["out"].setHash( "flatThings" ), p["out"].setHash( "flatThings" ) )
+		self.assertTrue( a["out"].set( "flatThings", _copy=False ).isSame( p["out"].set( "flatThings", _copy=False ) ) )
+
 if __name__ == "__main__":
 	unittest.main()
