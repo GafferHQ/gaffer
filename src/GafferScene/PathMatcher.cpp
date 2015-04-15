@@ -66,13 +66,15 @@ struct PathMatcher::Name
 	}
 
 	// Less than implemented to do a lexicographical comparison,
-	// first on hasWildcards and then on the name. The comparison
-	// of the name uses the InternedString operator which compares
-	// via pointer rather than string content, which gives improved
-	// performance.
+	// first on hasWildcards and then on the name. All names are
+	// defined to be > the empty string, so Node::wildcardsBegin()
+	// gives consistent results (otherwise results would depend on
+	// the empty string's memory address). The comparison of the
+	// name uses the InternedString operator which compares via
+	// pointer rather than string content, which gives improved performance.
 	bool operator < ( const Name &other ) const
 	{
-		return hasWildcards < other.hasWildcards || ( ( hasWildcards == other.hasWildcards ) && name < other.name );
+		return hasWildcards < other.hasWildcards || ( ( hasWildcards == other.hasWildcards && other.name.c_str()[0] != '\0' ) && name < other.name );
 	}
 
 	const IECore::InternedString name;
