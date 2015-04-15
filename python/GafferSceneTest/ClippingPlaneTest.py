@@ -51,8 +51,7 @@ class ClippingPlaneTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertEqual( c["out"].bound( "/clippingPlane" ), IECore.Box3f( IECore.V3f( -0.5, -0.5, 0 ), IECore.V3f( 0.5 ) ) )
 
-		g = c["out"]["globals"].getValue()
-		s = g["gaffer:sets"]["__clippingPlanes"]
+		s = c["out"].set( "__clippingPlanes" )
 		self.assertEqual( s.value.paths(), [ "/clippingPlane" ] )
 
 	def testDirtyPropagation( self ) :
@@ -66,7 +65,7 @@ class ClippingPlaneTest( GafferSceneTest.SceneTestCase ) :
 		dirtied = GafferTest.CapturingSlot( c.plugDirtiedSignal() )
 		c["name"].setValue( "yupyup" )
 		self.failUnless( c["out"]["childNames"] in [ p[0] for p in dirtied ] )
-		self.failUnless( c["out"]["globals"] in [ p[0] for p in dirtied ] )
+		self.failUnless( c["out"]["set"] in [ p[0] for p in dirtied ] )
 
 if __name__ == "__main__":
 	unittest.main()

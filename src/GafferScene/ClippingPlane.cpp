@@ -45,6 +45,8 @@ using namespace Gaffer;
 using namespace GafferScene;
 using namespace Imath;
 
+static IECore::InternedString g_clippingPlanesSetName( "__clippingPlanes" );
+
 IE_CORE_DEFINERUNTIMETYPED( ClippingPlane );
 
 ClippingPlane::ClippingPlane( const std::string &name )
@@ -56,40 +58,6 @@ ClippingPlane::~ClippingPlane()
 {
 }
 
-void ClippingPlane::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
-{
-	ObjectSource::affects( input, outputs );
-
-	if( input == namePlug() )
-	{
-		outputs.push_back( outPlug()->globalsPlug() );
-	}
-}
-
-void ClippingPlane::hashGlobals( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
-{
-	ObjectSource::hashGlobals( context, parent, h );
-	namePlug()->hash( h );
-}
-
-IECore::ConstCompoundObjectPtr ClippingPlane::computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const
-{
-	IECore::CompoundObjectPtr result = new IECore::CompoundObject;
-
-	IECore::CompoundDataPtr sets = result->member<IECore::CompoundData>(
-		"gaffer:sets",
-		/* throwExceptions = */ false,
-		/* createIfMissing = */ true
-	);
-
-	PathMatcherDataPtr clippingPlaneSet = new PathMatcherData;
-	clippingPlaneSet->writable().addPath( "/" + namePlug()->getValue() );
-
-	sets->writable()["__clippingPlanes"] = clippingPlaneSet;
-
-	return result;
-}
-
 void ClippingPlane::hashSource( const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 }
@@ -97,4 +65,9 @@ void ClippingPlane::hashSource( const Gaffer::Context *context, IECore::MurmurHa
 IECore::ConstObjectPtr ClippingPlane::computeSource( const Context *context ) const
 {
 	return new IECore::ClippingPlane();
+}
+
+IECore::InternedString ClippingPlane::standardSetName() const
+{
+	return g_clippingPlanesSetName;
 }
