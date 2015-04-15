@@ -105,5 +105,15 @@ class LightTest( GafferSceneTest.SceneTestCase ) :
 		l["enabled"].setValue( False )
 		self.assertFalse( "gaffer:sets" in l["out"]["globals"].getValue() )
 
+	def testNonExistentSets( self ) :
+
+		l = GafferSceneTest.TestLight()
+		l["sets"].setValue( "A B")
+		self.assertEqual( l["out"]["setNames"].getValue(), IECore.InternedStringVectorData( [ "A", "B", "__lights" ] ) )
+
+		self.assertEqual( l["out"].set( "nonexistent1" ), GafferScene.PathMatcherData() )
+		self.assertEqual( l["out"].setHash( "nonexistent1" ), l["out"].setHash( "nonexistent2" ) )
+		self.assertTrue( l["out"].set( "nonexistent1", _copy = False ).isSame( l["out"].set( "nonexistent2", _copy = False ) ) )
+
 if __name__ == "__main__":
 	unittest.main()

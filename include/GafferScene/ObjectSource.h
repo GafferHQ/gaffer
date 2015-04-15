@@ -65,6 +65,9 @@ class ObjectSource : public SceneNode
 		Gaffer::StringPlug *namePlug();
 		const Gaffer::StringPlug *namePlug() const;
 
+		Gaffer::StringPlug *setsPlug();
+		const Gaffer::StringPlug *setsPlug() const;
+
 		Gaffer::TransformPlug *transformPlug();
 		const Gaffer::TransformPlug *transformPlug() const;
 
@@ -84,6 +87,8 @@ class ObjectSource : public SceneNode
 		virtual void hashObject( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const;
 		virtual void hashChildNames( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const;
 		virtual void hashGlobals( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const;
+		virtual void hashSetNames( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const;
+		virtual void hashSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const;
 
 		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const;
 		virtual Imath::Box3f computeBound( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
@@ -92,12 +97,20 @@ class ObjectSource : public SceneNode
 		virtual IECore::ConstObjectPtr computeObject( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
 		virtual IECore::ConstInternedStringVectorDataPtr computeChildNames( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
 		virtual IECore::ConstCompoundObjectPtr computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const;
+		virtual IECore::ConstInternedStringVectorDataPtr computeSetNames( const Gaffer::Context *context, const ScenePlug *parent ) const;
+		virtual GafferScene::ConstPathMatcherDataPtr computeSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent ) const;
 
 		/// Must be implemented by derived classes.
 		virtual void hashSource( const Gaffer::Context *context, IECore::MurmurHash &h ) const = 0;
 		virtual IECore::ConstObjectPtr computeSource( const Gaffer::Context *context ) const = 0;
 
+		/// May be reimplemented to returns the name of a set the object will always be a part of.
+		/// The value returned must be a constant.
+		virtual IECore::InternedString standardSetName() const;
+
 	private :
+
+		bool setNameValid( const IECore::InternedString &setName ) const;
 
 		static size_t g_firstPlugIndex;
 
