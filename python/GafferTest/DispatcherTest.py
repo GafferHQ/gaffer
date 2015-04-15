@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2013-2014, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2013-2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -358,18 +358,90 @@ class DispatcherTest( GafferTest.TestCase ) :
 		s["n2"]['requirements'][0].setInput( s["n2a"]['requirement'] )
 		s["n2"]['requirements'][1].setInput( s["n2b"]['requirement'] )
 
-		# Executing n1 should only execute once, because all tasks are identical
-		dispatcher.dispatch( [ s["n1"] ] )
-		shutil.rmtree( dispatcher.jobDirectory() )
-		self.assertEqual( op1.counter, 1 )
-		self.assertEqual( dispatcher.log, [ op1 ] )
+		# Executing n1 should throw, because all tasks are identical
+		self.assertRaises( RuntimeError, dispatcher.dispatch, [ s["n1"] ] )
+		self.assertEqual( op1.counter, 0 )
+		self.assertEqual( dispatcher.log, [] )
 
-		# Executing them all should still only execute one, because all tasks are identical
-		dispatcher.dispatch( [ s["n2"], s["n2b"], s["n1"], s["n2a"] ] )
-		shutil.rmtree( dispatcher.jobDirectory() )
-		self.assertEqual( op1.counter, 2 )
-		self.assertEqual( dispatcher.log, [ op1 ] )
+		# Executing them all should still throw, because all tasks are identical
+		self.assertRaises( RuntimeError, dispatcher.dispatch, [ s["n2"], s["n2b"], s["n1"], s["n2a"] ] )
+		self.assertEqual( op1.counter, 0 )
+		self.assertEqual( dispatcher.log, [] )
 
+	def testDirectCycle( self ) :
+		
+		dispatcher = Gaffer.Dispatcher.create( "testDispatcher" )
+		fileName = "/tmp/dispatcherTest/result.txt"
+
+		s = Gaffer.ScriptNode()
+		s["n1"] = GafferTest.TextWriter()
+		s["n1"]["mode"].setValue( "a" )
+		s["n1"]["fileName"].setValue( fileName )
+		s["n1"]["text"].setValue( "a${frame};" )
+		s["n2"] = GafferTest.TextWriter()
+		s["n2"]["mode"].setValue( "a" )
+		s["n2"]["fileName"].setValue( fileName )
+		s["n2"]["text"].setValue( "b${frame};" )
+		s["n3"] = GafferTest.TextWriter()
+		s["n3"]["mode"].setValue( "a" )
+		s["n3"]["fileName"].setValue( fileName )
+		s["n3"]["text"].setValue( "c${frame};" )
+		s["n4"] = GafferTest.TextWriter()
+		s["n4"]["mode"].setValue( "a" )
+		s["n4"]["fileName"].setValue( fileName )
+		s["n4"]["text"].setValue( "d${frame};" )
+		
+		s["n4"]['requirements'][0].setInput( s["n3"]['requirement'] )
+		s["n3"]['requirements'][0].setInput( s["n2"]['requirement'] )
+		s["n2"]['requirements'][0].setInput( s["n1"]['requirement'] )
+		s["n1"]['requirements'][0].setInput( s["n4"]['requirement'] )
+		
+		self.assertNotEqual( s["n1"].hash( s.context() ), s["n2"].hash( s.context() ) )
+		self.assertNotEqual( s["n2"].hash( s.context() ), s["n3"].hash( s.context() ) )
+		self.assertNotEqual( s["n3"].hash( s.context() ), s["n4"].hash( s.context() ) )
+		self.assertNotEqual( s["n1"].hash( s.context() ), s["n4"].hash( s.context() ) )
+		
+		self.assertEqual( os.path.isfile( fileName ), False )
+		self.assertRaises( RuntimeError, dispatcher.dispatch, [ s["n4"] ] )
+		self.assertEqual( os.path.isfile( fileName ), False )
+	
+	def testIndirectCycle( self ) :
+		
+		dispatcher = Gaffer.Dispatcher.create( "testDispatcher" )
+		fileName = "/tmp/dispatcherTest/result.txt"
+
+		s = Gaffer.ScriptNode()
+		s["n1"] = GafferTest.TextWriter()
+		s["n1"]["mode"].setValue( "a" )
+		s["n1"]["fileName"].setValue( fileName )
+		s["n1"]["text"].setValue( "a${frame};" )
+		s["n2"] = GafferTest.TextWriter()
+		s["n2"]["mode"].setValue( "a" )
+		s["n2"]["fileName"].setValue( fileName )
+		s["n2"]["text"].setValue( "b${frame};" )
+		s["n3"] = GafferTest.TextWriter()
+		s["n3"]["mode"].setValue( "a" )
+		s["n3"]["fileName"].setValue( fileName )
+		s["n3"]["text"].setValue( "c${frame};" )
+		s["n4"] = GafferTest.TextWriter()
+		s["n4"]["mode"].setValue( "a" )
+		s["n4"]["fileName"].setValue( fileName )
+		s["n4"]["text"].setValue( "a${frame};" )
+		
+		s["n4"]['requirements'][0].setInput( s["n3"]['requirement'] )
+		s["n3"]['requirements'][0].setInput( s["n2"]['requirement'] )
+		s["n2"]['requirements'][0].setInput( s["n1"]['requirement'] )
+		
+		self.assertNotEqual( s["n1"].hash( s.context() ), s["n2"].hash( s.context() ) )
+		self.assertNotEqual( s["n2"].hash( s.context() ), s["n3"].hash( s.context() ) )
+		self.assertNotEqual( s["n3"].hash( s.context() ), s["n4"].hash( s.context() ) )
+		# its a cycle because n1 and n4 are identical
+		self.assertEqual( s["n1"].hash( s.context() ), s["n4"].hash( s.context() ) )
+		
+		self.assertEqual( os.path.isfile( fileName ), False )
+		self.assertRaises( RuntimeError, dispatcher.dispatch, [ s["n4"] ] )
+		self.assertEqual( os.path.isfile( fileName ), False )
+	
 	def testNoTask( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -780,6 +852,104 @@ class DispatcherTest( GafferTest.TestCase ) :
 		self.assertEqual( op1.counter, len(frameList.asList()) )
 		self.assertNotEqual( op1.frames, frameList.asList() )
 		self.assertEqual( op1.frames, binaryFrames.asList() )
+	
+	def testRequirementsOverride( self ) :
+
+		class SelfRequiringNode( Gaffer.ExecutableNode ) :
+
+			def __init__( self ) :
+
+				Gaffer.ExecutableNode.__init__( self )
+				
+				self.addChild( Gaffer.IntPlug( "multiplier", defaultValue = 1 ) )
+				
+				self.preExecutionCount = 0
+				self.mainExecutionCount = 0
+
+			def requirements( self, context ) :
+				
+				if context.get( "selfExecutingNode:preExecute", None ) is None :
+					
+					customContext = Gaffer.Context( context )
+					customContext["selfExecutingNode:preExecute"] = True
+					requirements = [ Gaffer.ExecutableNode.Task( self, customContext ) ]
+				
+				else :
+					
+					# We need to evaluate our external requirements as well,
+					# and they need to be requirements of our preExecute task
+					# only, since that is the topmost branch of our internal
+					# requirement graph. We also need to use a Context which
+					# does not contain our internal preExecute entry, incase
+					# that has meaning for any of our external requirements.
+					customContext = Gaffer.Context( context )
+					del customContext["selfExecutingNode:preExecute"]
+					requirements = Gaffer.ExecutableNode.requirements( self, customContext )
+				
+				return requirements
+
+			def hash( self, context ) :
+
+				h = Gaffer.ExecutableNode.hash( self, context )
+				h.append( context.get( "selfExecutingNode:preExecute", False ) )
+				h.append( self["multiplier"].hash() )
+				return h
+
+			def execute( self ) :
+				
+				if Gaffer.Context.current().get( "selfExecutingNode:preExecute", False ) :
+					self.preExecutionCount += self["multiplier"].getValue()
+				else :
+					self.mainExecutionCount += self["multiplier"].getValue()
+		
+		IECore.registerRunTimeTyped( SelfRequiringNode )
+
+		s = Gaffer.ScriptNode()
+		s["e1"] = SelfRequiringNode()
+		s["e2"] = SelfRequiringNode()
+		s["e2"]["requirements"][0].setInput( s["e1"]['requirement'] )
+
+		c1 = s.context()
+		c2 = Gaffer.Context( s.context() )
+		c2["selfExecutingNode:preExecute"] = True
+
+		# e2 requires itself with a different context
+		self.assertEqual( s["e2"].requirements( c1 ), [ Gaffer.ExecutableNode.Task( s["e2"], c2 ) ] )
+		# e2 in the other context requires e1 with the original context
+		self.assertEqual( s["e2"].requirements( c2 ), [ Gaffer.ExecutableNode.Task( s["e1"], c1 ) ] )
+		# e1 requires itself with a different context
+		self.assertEqual( s["e1"].requirements( c1 ), [ Gaffer.ExecutableNode.Task( s["e1"], c2 ) ] )
+		# e1 in the other context has no requirements
+		self.assertEqual( s["e1"].requirements( c2 ), [] )
+		
+		self.assertEqual( s["e1"].preExecutionCount, 0 )
+		self.assertEqual( s["e1"].mainExecutionCount, 0 )
+		self.assertEqual( s["e2"].preExecutionCount, 0 )
+		self.assertEqual( s["e2"].mainExecutionCount, 0 )
+		
+		dispatcher = Gaffer.Dispatcher.create( "testDispatcher" )
+
+		dispatcher.dispatch( [ s["e1"] ] )
+		self.assertEqual( s["e1"].preExecutionCount, 1 )
+		self.assertEqual( s["e1"].mainExecutionCount, 1 )
+		self.assertEqual( s["e2"].preExecutionCount, 0 )
+		self.assertEqual( s["e2"].mainExecutionCount, 0 )
+		
+		# since e1 and e2 are exactly the same, the TaskBatch graph
+		# created by dispatching e2 is invalid.
+		self.assertRaises( RuntimeError, dispatcher.dispatch, [ s["e2"] ] )
+		self.assertEqual( s["e1"].preExecutionCount, 1 )
+		self.assertEqual( s["e1"].mainExecutionCount, 1 )
+		self.assertEqual( s["e2"].preExecutionCount, 0 )
+		self.assertEqual( s["e2"].mainExecutionCount, 0 )
+		
+		# if we make the 2 nodes different, then they both execute
+		s["e1"]["multiplier"].setValue( 2 )
+		dispatcher.dispatch( [ s["e2"] ] )
+		self.assertEqual( s["e1"].preExecutionCount, 3 )
+		self.assertEqual( s["e1"].mainExecutionCount, 3 )
+		self.assertEqual( s["e2"].preExecutionCount, 1 )
+		self.assertEqual( s["e2"].mainExecutionCount, 1 )
 	
 	def tearDown( self ) :
 
