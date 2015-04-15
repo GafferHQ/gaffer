@@ -51,10 +51,10 @@ def appendDefinitions( menuDefinition, prefix="" ) :
 	menuDefinition.append( prefix + "/Redo", { "command" : redo, "shortCut" : "Shift+Ctrl+Z", "active" : __redoAvailable } )
 	menuDefinition.append( prefix + "/UndoDivider", { "divider" : True } )
 
-	menuDefinition.append( prefix + "/Cut", { "command" : cut, "shortCut" : "Ctrl+X", "active" : __selectionAvailable } )
-	menuDefinition.append( prefix + "/Copy", { "command" : copy, "shortCut" : "Ctrl+C", "active" : __selectionAvailable } )
+	menuDefinition.append( prefix + "/Cut", { "command" : cut, "shortCut" : "Ctrl+X", "active" : selectionAvailable } )
+	menuDefinition.append( prefix + "/Copy", { "command" : copy, "shortCut" : "Ctrl+C", "active" : selectionAvailable } )
 	menuDefinition.append( prefix + "/Paste", { "command" : paste, "shortCut" : "Ctrl+V", "active" : __pasteAvailable } )
-	menuDefinition.append( prefix + "/Delete", { "command" : delete, "shortCut" : "Backspace, Delete", "active" : __selectionAvailable } )
+	menuDefinition.append( prefix + "/Delete", { "command" : delete, "shortCut" : "Backspace, Delete", "active" : selectionAvailable } )
 	menuDefinition.append( prefix + "/CutCopyPasteDeleteDivider", { "divider" : True } )
 
 	menuDefinition.append( prefix + "/Find...", { "command" : find, "shortCut" : "Ctrl+F" } )
@@ -64,25 +64,25 @@ def appendDefinitions( menuDefinition, prefix="" ) :
 	menuDefinition.append( prefix + "/ArrangeDivider", { "divider" : True } )
 
 	menuDefinition.append( prefix + "/Select All", { "command" : selectAll, "shortCut" : "Ctrl+A" } )
-	menuDefinition.append( prefix + "/Select None", { "command" : selectNone, "shortCut" : "Shift+Ctrl+A", "active" : __selectionAvailable } )
+	menuDefinition.append( prefix + "/Select None", { "command" : selectNone, "shortCut" : "Shift+Ctrl+A", "active" : selectionAvailable } )
 
-	menuDefinition.append( prefix + "/Select Connected/Inputs", { "command" : selectInputs, "active" : __selectionAvailable } )
-	menuDefinition.append( prefix + "/Select Connected/Add Inputs", { "command" : selectAddInputs, "active" : __selectionAvailable } )
+	menuDefinition.append( prefix + "/Select Connected/Inputs", { "command" : selectInputs, "active" : selectionAvailable } )
+	menuDefinition.append( prefix + "/Select Connected/Add Inputs", { "command" : selectAddInputs, "active" : selectionAvailable } )
 	menuDefinition.append( prefix + "/Select Connected/InputsDivider", { "divider" : True } )
 
-	menuDefinition.append( prefix + "/Select Connected/Upstream", { "command" : selectUpstream, "active" : __selectionAvailable } )
-	menuDefinition.append( prefix + "/Select Connected/Add Upstream", { "command" : selectAddUpstream, "active" : __selectionAvailable } )
+	menuDefinition.append( prefix + "/Select Connected/Upstream", { "command" : selectUpstream, "active" : selectionAvailable } )
+	menuDefinition.append( prefix + "/Select Connected/Add Upstream", { "command" : selectAddUpstream, "active" : selectionAvailable } )
 	menuDefinition.append( prefix + "/Select Connected/UpstreamDivider", { "divider" : True } )
 
-	menuDefinition.append( prefix + "/Select Connected/Outputs", { "command" : selectOutputs, "active" : __selectionAvailable } )
-	menuDefinition.append( prefix + "/Select Connected/Add Outputs", { "command" : selectAddOutputs, "active" : __selectionAvailable } )
+	menuDefinition.append( prefix + "/Select Connected/Outputs", { "command" : selectOutputs, "active" : selectionAvailable } )
+	menuDefinition.append( prefix + "/Select Connected/Add Outputs", { "command" : selectAddOutputs, "active" : selectionAvailable } )
 	menuDefinition.append( prefix + "/Select Connected/OutputsDivider", { "divider" : True } )
 
-	menuDefinition.append( prefix + "/Select Connected/Downstream", { "command" : selectDownstream, "active" : __selectionAvailable } )
-	menuDefinition.append( prefix + "/Select Connected/Add Downstream", { "command" : selectAddDownstream, "active" : __selectionAvailable } )
+	menuDefinition.append( prefix + "/Select Connected/Downstream", { "command" : selectDownstream, "active" : selectionAvailable } )
+	menuDefinition.append( prefix + "/Select Connected/Add Downstream", { "command" : selectAddDownstream, "active" : selectionAvailable } )
 	menuDefinition.append( prefix + "/Select Connected/DownstreamDivider", { "divider" : True } )
 
-	menuDefinition.append( prefix + "/Select Connected/Add All", { "command" : selectConnected, "active" : __selectionAvailable } )
+	menuDefinition.append( prefix + "/Select Connected/Add All", { "command" : selectConnected, "active" : selectionAvailable } )
 
 __Scope = collections.namedtuple( "Scope", [ "scriptWindow", "script", "parent", "nodeGraph" ] )
 
@@ -291,6 +291,11 @@ def selectConnected( menu ) :
 
 	__selectConnected( menu, Gaffer.Plug.Direction.Invalid, degreesOfSeparation = sys.maxint, add = True )
 
+## Returns a boolean value, who is the "selectionAvailable" state in the scope. It must
+# be invoked from a menu that has a ScriptWindow in its ancestry.
+def selectionAvailable( menu ) :
+
+	return True if scope( menu ).script.selection().size() else False
 
 def __selectConnected( menu, direction, degreesOfSeparation, add ) :
 
@@ -306,10 +311,6 @@ def __selectConnected( menu, direction, degreesOfSeparation, add ) :
 	if not add :
 		selection.clear()
 	selection.add( connected )
-
-def __selectionAvailable( menu ) :
-
-	return True if scope( menu ).script.selection().size() else False
 
 def __pasteAvailable( menu ) :
 
