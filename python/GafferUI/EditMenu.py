@@ -114,6 +114,13 @@ def scope( menu ) :
 
 	return __Scope( scriptWindow, scriptWindow.scriptNode(), parent, nodeGraph )
 
+## Returns True if nodes are currently selected in the scope returned by scope().
+# This can be used for the "active" field in a menu item definition to disable
+# a menu item when no nodes are selected.
+def selectionAvailable( menu ) :
+
+	return True if scope( menu ).script.selection().size() else False
+
 ## A function suitable as the command for an Edit/Undo menu item. It must
 # be invoked from a menu that has a ScriptWindow in its ancestry.
 def undo( menu ) :
@@ -290,12 +297,6 @@ def selectAddDownstream( menu ) :
 def selectConnected( menu ) :
 
 	__selectConnected( menu, Gaffer.Plug.Direction.Invalid, degreesOfSeparation = sys.maxint, add = True )
-
-## Returns a boolean value, who is the "selectionAvailable" state in the scope. It must
-# be invoked from a menu that has a ScriptWindow in its ancestry.
-def selectionAvailable( menu ) :
-
-	return True if scope( menu ).script.selection().size() else False
 
 def __selectConnected( menu, direction, degreesOfSeparation, add ) :
 
