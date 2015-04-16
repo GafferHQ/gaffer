@@ -175,6 +175,13 @@ IECore::CompoundObjectPtr fullAttributesWrapper( const ScenePlug &plug, const Sc
 	return plug.fullAttributes( scenePath );
 }
 
+PathMatcherDataPtr setWrapper( const ScenePlug &plug, const IECore::InternedString &setName, bool copy=true )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	ConstPathMatcherDataPtr s = plug.set( setName );
+	return copy ? s->copy() : boost::const_pointer_cast<PathMatcherData>( s );
+}
+
 IECore::MurmurHash boundHashWrapper( const ScenePlug &plug, const ScenePlug::ScenePath &scenePath )
 {
 	IECorePython::ScopedGILRelease gilRelease;
@@ -217,6 +224,12 @@ IECore::MurmurHash fullAttributesHashWrapper( const ScenePlug &plug, const Scene
 	return plug.fullAttributesHash( scenePath );
 }
 
+IECore::MurmurHash setHashWrapper( const ScenePlug &plug, const IECore::InternedString &setName )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return plug.setHash( setName );
+}
+
 IECore::InternedStringVectorDataPtr stringToPathWrapper( const char *s )
 {
 	IECore::InternedStringVectorDataPtr p = new IECore::InternedStringVectorData;
@@ -246,6 +259,7 @@ void GafferSceneBindings::bindScenePlug()
 		.def( "childNames", &childNamesWrapper, ( boost::python::arg_( "_copy" ) = true ) )
 		.def( "attributes", &attributesWrapper, ( boost::python::arg_( "_copy" ) = true ) )
 		.def( "fullAttributes", &fullAttributesWrapper )
+		.def( "set", &setWrapper, ( boost::python::arg_( "_copy" ) = true ) )
 		// hash accessors
 		.def( "boundHash", &boundHashWrapper )
 		.def( "transformHash", &transformHashWrapper )
@@ -254,6 +268,7 @@ void GafferSceneBindings::bindScenePlug()
 		.def( "childNamesHash", &childNamesHashWrapper )
 		.def( "attributesHash", &attributesHashWrapper )
 		.def( "fullAttributesHash", &fullAttributesHashWrapper )
+		.def( "setHash", &setHashWrapper )
 		// string utilities
 		.def( "stringToPath", &stringToPathWrapper )
 		.staticmethod( "stringToPath" )
