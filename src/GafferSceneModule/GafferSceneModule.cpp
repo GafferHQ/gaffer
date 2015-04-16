@@ -99,6 +99,7 @@
 #include "GafferSceneBindings/FilterSwitchBinding.h"
 #include "GafferSceneBindings/PointsTypeBinding.h"
 #include "GafferSceneBindings/ParametersBinding.h"
+#include "GafferSceneBindings/PathMatcherDataPlugBinding.h"
 
 using namespace boost::python;
 using namespace GafferScene;
@@ -179,5 +180,6 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	bindFilterSwitch();
 	bindPointsType();
 	bindParameters();
+	bindPathMatcherDataPlug();
 
 }
