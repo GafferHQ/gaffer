@@ -457,10 +457,31 @@ IECore::ConstInternedStringVectorDataPtr Grid::computeChildNames( const SceneNod
 
 void Grid::hashGlobals( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	SceneNode::hashGlobals( context, parent, h );
+	h = outPlug()->globalsPlug()->defaultValue()->Object::hash();
 }
 
 IECore::ConstCompoundObjectPtr Grid::computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	return outPlug()->globalsPlug()->defaultValue();
+}
+
+void Grid::hashSetNames( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	h = outPlug()->setNamesPlug()->defaultValue()->Object::hash();
+
+}
+
+IECore::ConstInternedStringVectorDataPtr Grid::computeSetNames( const Gaffer::Context *context, const ScenePlug *parent ) const
+{
+	return outPlug()->setNamesPlug()->defaultValue();
+}
+
+void Grid::hashSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	h = outPlug()->setPlug()->defaultValue()->Object::hash();
+}
+
+GafferScene::ConstPathMatcherDataPtr Grid::computeSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent ) const
+{
+	return outPlug()->setPlug()->defaultValue();
 }
