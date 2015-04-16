@@ -127,10 +127,10 @@ void AlembicSource::affects( const Plug *input, AffectedPlugsContainer &outputs 
 
 	if( input == fileNamePlug() || input == refreshCountPlug() )
 	{
-		for( ValuePlugIterator it( outPlug() ); it != it.end(); it++ )
-		{
-			outputs.push_back( it->get() );
-		}
+		outputs.push_back( outPlug()->boundPlug() );
+		outputs.push_back( outPlug()->transformPlug() );
+		outputs.push_back( outPlug()->objectPlug() );
+		outputs.push_back( outPlug()->childNamesPlug() );
 	}
 }
 
@@ -268,6 +268,27 @@ void AlembicSource::hashGlobals( const Gaffer::Context *context, const ScenePlug
 IECore::ConstCompoundObjectPtr AlembicSource::computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	return parent->globalsPlug()->defaultValue();
+}
+
+void AlembicSource::hashSetNames( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	h = parent->setNamesPlug()->defaultValue()->Object::hash();
+}
+
+IECore::ConstInternedStringVectorDataPtr AlembicSource::computeSetNames( const Gaffer::Context *context, const ScenePlug *parent ) const
+{
+	return parent->setNamesPlug()->defaultValue();
+}
+
+void AlembicSource::hashSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	h = parent->setPlug()->defaultValue()->Object::hash();
+}
+
+GafferScene::ConstPathMatcherDataPtr AlembicSource::computeSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent ) const
+{
+	/// \todo Support conversion from Alembic collections.
+	return parent->setPlug()->defaultValue();
 }
 
 IECoreAlembic::AlembicInputPtr AlembicSource::inputForPath( const ScenePath &path ) const
