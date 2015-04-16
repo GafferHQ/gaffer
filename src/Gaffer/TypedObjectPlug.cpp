@@ -36,79 +36,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "Gaffer/TypedObjectPlug.h"
-
-using namespace Gaffer;
-
-template<class T>
-const IECore::RunTimeTyped::TypeDescription<TypedObjectPlug<T> > TypedObjectPlug<T>::g_typeDescription;
-
-template<class T>
-TypedObjectPlug<T>::TypedObjectPlug(
-	const std::string &name,
-	Direction direction,
-	ConstValuePtr defaultValue,
-	unsigned flags
-)
-	:	ValuePlug( name, direction, defaultValue->copy(), flags )
-{
-}
-
-template<class T>
-TypedObjectPlug<T>::~TypedObjectPlug()
-{
-}
-
-template<class T>
-bool TypedObjectPlug<T>::acceptsInput( const Plug *input ) const
-{
-	if( !ValuePlug::acceptsInput( input ) )
-	{
-		return false;
-	}
-	if( input )
-	{
-		return input->isInstanceOf( staticTypeId() );
-	}
-	return true;
-}
-
-template<class T>
-PlugPtr TypedObjectPlug<T>::createCounterpart( const std::string &name, Direction direction ) const
-{
-	return new TypedObjectPlug<T>( name, direction, defaultValue(), getFlags() );
-}
-
-template<class T>
-const typename TypedObjectPlug<T>::ValueType *TypedObjectPlug<T>::defaultValue() const
-{
-	return static_cast<const ValueType *>( defaultObjectValue() );
-}
-
-template<class T>
-void TypedObjectPlug<T>::setValue( ConstValuePtr value )
-{
-	setObjectValue( value );
-}
-
-template<class T>
-typename TypedObjectPlug<T>::ConstValuePtr TypedObjectPlug<T>::getValue( const IECore::MurmurHash *precomputedHash ) const
-{
-	return boost::static_pointer_cast<const ValueType>( getObjectValue( precomputedHash ) );
-}
-
-template<class T>
-void TypedObjectPlug<T>::setFrom( const ValuePlug *other )
-{
-	const TypedObjectPlug<T> *tOther = IECore::runTimeCast<const TypedObjectPlug>( other );
-	if( tOther )
-	{
-		setValue( tOther->getValue() );
-	}
-	else
-	{
-		throw IECore::Exception( "Unsupported plug type" );
-	}
-}
+#include "Gaffer/TypedObjectPlug.inl"
 
 namespace Gaffer
 {
@@ -124,8 +52,6 @@ IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( Gaffer::Color3fVectorDataPlug,
 IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( Gaffer::ObjectVectorPlug, ObjectVectorPlugTypeId )
 IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( Gaffer::CompoundObjectPlug, CompoundObjectPlugTypeId )
 
-}
-
 // explicit instantiation
 template class TypedObjectPlug<IECore::Object>;
 template class TypedObjectPlug<IECore::BoolVectorData>;
@@ -137,3 +63,5 @@ template class TypedObjectPlug<IECore::V3fVectorData>;
 template class TypedObjectPlug<IECore::Color3fVectorData>;
 template class TypedObjectPlug<IECore::ObjectVector>;
 template class TypedObjectPlug<IECore::CompoundObject>;
+
+} // namespace Gaffer
