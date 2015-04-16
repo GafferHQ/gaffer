@@ -85,10 +85,10 @@ class _MenuBar( QtGui.QMenuBar ) :
 		QtGui.QMenuBar.__init__( self, parent )
 
 		self.setSizePolicy( QtGui.QSizePolicy( QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Fixed ) )
-		
+
 		# disable menu merging on mac
 		self.setNativeMenuBar( False )
-		
+
 	def showEvent( self, event ) :
 
 		# normally, Menus aren't populated with items until they're shown,
