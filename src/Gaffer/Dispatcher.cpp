@@ -314,45 +314,56 @@ Dispatcher::TaskBatchPtr Dispatcher::batchTasks( const ExecutableNode::Tasks &ta
 
 	BatchMap currentBatches;
 	TaskToBatchMap tasksToBatches;
+	std::set<const TaskBatch *> ancestors;
 
 	for ( ExecutableNode::Tasks::const_iterator it = tasks.begin(); it != tasks.end(); ++it )
 	{
-		batchTasksWalk( root, *it, currentBatches, tasksToBatches );
+		batchTasksWalk( root, *it, currentBatches, tasksToBatches, ancestors );
 	}
 
 	return root;
 }
 
-void Dispatcher::batchTasksWalk( Dispatcher::TaskBatchPtr parent, const ExecutableNode::Task &task, BatchMap &currentBatches, TaskToBatchMap &tasksToBatches )
+void Dispatcher::batchTasksWalk( Dispatcher::TaskBatchPtr parent, const ExecutableNode::Task &task, BatchMap &currentBatches, TaskToBatchMap &tasksToBatches, std::set<const TaskBatch *> &ancestors )
 {
 	TaskBatchPtr batch = acquireBatch( task, currentBatches, tasksToBatches );
 
 	TaskBatches &parentRequirements = parent->requirements();
-	if ( ( batch != parent ) && std::find( parentRequirements.begin(), parentRequirements.end(), batch ) == parentRequirements.end() )
+	if ( std::find( parentRequirements.begin(), parentRequirements.end(), batch ) == parentRequirements.end() )
 	{
+		if ( ancestors.find( batch.get() ) != ancestors.end() )
+		{
+			throw IECore::Exception( ( boost::format( "Dispatched nodes cannot have cyclic dependencies. %s and %s are involved in a cycle." ) % batch->node()->relativeName( batch->node()->scriptNode() ) % parent->node()->relativeName( parent->node()->scriptNode() ) ).str() );
+		}
+
 		parentRequirements.push_back( batch );
 	}
 
 	ExecutableNode::Tasks taskRequirements;
 	task.node()->requirements( task.context(), taskRequirements );
 
+	ancestors.insert( parent.get() );
+
 	for ( ExecutableNode::Tasks::const_iterator it = taskRequirements.begin(); it != taskRequirements.end(); ++it )
 	{
-		batchTasksWalk( batch, *it, currentBatches, tasksToBatches );
+		batchTasksWalk( batch, *it, currentBatches, tasksToBatches, ancestors );
 	}
+
+	ancestors.erase( parent.get() );
 }
 
 Dispatcher::TaskBatchPtr Dispatcher::acquireBatch( const ExecutableNode::Task &task, BatchMap &currentBatches, TaskToBatchMap &tasksToBatches )
 {
-	MurmurHash taskHash = task.hash();
-	TaskToBatchMap::iterator it = tasksToBatches.find( taskHash );
+	MurmurHash taskToBatchMapHash = task.hash();
+	taskToBatchMapHash.append( (uint64_t)task.node() );
+	TaskToBatchMap::iterator it = tasksToBatches.find( taskToBatchMapHash );
 	if ( it != tasksToBatches.end() )
 	{
 		return it->second;
 	}
 
-	MurmurHash hash = batchHash( task );
-	BatchMap::iterator bIt = currentBatches.find( hash );
+	MurmurHash batchMapHash = batchHash( task );
+	BatchMap::iterator bIt = currentBatches.find( batchMapHash );
 	if ( bIt != currentBatches.end() )
 	{
 		TaskBatchPtr batch = bIt->second;
@@ -379,22 +390,16 @@ Dispatcher::TaskBatchPtr Dispatcher::acquireBatch( const ExecutableNode::Task &t
 					}
 				}
 			}
-
-			if ( taskHash != MurmurHash() )
-			{
-				tasksToBatches[taskHash] = batch;
-			}
+			
+			tasksToBatches[taskToBatchMapHash] = batch;
 			
 			return batch;
 		}
 	}
 
 	TaskBatchPtr batch = new TaskBatch( task );
-	currentBatches[hash] = batch;
-	if ( taskHash != MurmurHash() )
-	{
-		tasksToBatches[taskHash] = batch;
-	}
+	currentBatches[batchMapHash] = batch;
+	tasksToBatches[taskToBatchMapHash] = batch;
 	
 	return batch;
 }
