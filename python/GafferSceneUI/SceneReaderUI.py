@@ -86,16 +86,6 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"sets" : [
-
-			"description",
-			"""
-			Specifies a list of tags to be loaded and converted
-			into gaffer sets.
-			""",
-
-		],
-
 	}
 
 )

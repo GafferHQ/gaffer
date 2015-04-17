@@ -436,36 +436,16 @@ class SceneReaderTest( GafferSceneTest.SceneTestCase ) :
 		s["fileName"].setValue( "/tmp/test.scc" )
 		s["refreshCount"].setValue( self.uniqueInt( "/tmp/test.scc" ) ) # account for our changing of file contents between tests
 
-		sets = s["out"]["globals"].getValue()["gaffer:sets"]
-		self.assertEqual( sets.keys(), [] )
+		self.assertEqual(
+			set( [ str( ss ) for ss in s["out"]["setNames"].getValue() ] ),
+			set( [ "ObjectType:SpherePrimitive", "wood", "chrome", "ObjectType:MeshPrimitive", "something" ] )
+		)
 
-		s["sets"].setValue( "chrome" )
-		sets = s["out"]["globals"].getValue()["gaffer:sets"]
-		self.assertEqual( len( sets ), 1 )
-		self.assertEqual( sets.keys(), [ "chrome" ] )
-		self.assertEqual( sets["chrome"].value.paths(), [ "/sphereGroup" ] )
-
-		s["sets"].setValue( "wood" )
-		sets = s["out"]["globals"].getValue()["gaffer:sets"]
-		self.assertEqual( len( sets ), 1 )
-		self.assertEqual( sets.keys(), [ "wood" ] )
-		self.assertEqual( sets["wood"].value.paths(), [ "/planeGroup/plane" ] )
-
-		s["sets"].setValue( "*e*" )
-		sets = s["out"]["globals"].getValue()["gaffer:sets"]
-		# we can't simply assert that we have only "something" and "chrome" because the pesky
-		# SceneCache inserts tags of its own behind our backs, and our wildcards might match them.
-		self.assertTrue( set( sets.keys() ).issuperset( set( [ "something", "chrome" ] ) ) )
-		self.assertTrue( "wood" not in sets )
-		self.assertEqual( sets["chrome"].value.paths(), [ "/sphereGroup" ] )
-		self.assertEqual( sets["something"].value.paths(), [ "/planeGroup/plane" ] )
-
-		s["sets"].setValue( "wood *e*" )
-		sets = s["out"]["globals"].getValue()["gaffer:sets"]
-		self.assertTrue( set( sets.keys() ).issuperset( set( [ "wood", "something", "chrome" ] ) ) )
-		self.assertEqual( sets["chrome"].value.paths(), [ "/sphereGroup" ] )
-		self.assertEqual( sets["wood"].value.paths(), [ "/planeGroup/plane" ] )
-		self.assertEqual( sets["something"].value.paths(), [ "/planeGroup/plane" ] )
+		self.assertEqual( s["out"].set( "chrome" ).value.paths(), [ "/sphereGroup" ] )
+		self.assertEqual( s["out"].set( "wood" ).value.paths(), [ "/planeGroup/plane" ] )
+		self.assertEqual( s["out"].set( "something" ).value.paths(), [ "/planeGroup/plane" ] )
+		self.assertEqual( s["out"].set( "ObjectType:SpherePrimitive" ).value.paths(), [ "/sphereGroup/sphere" ] )
+		self.assertEqual( s["out"].set( "ObjectType:MeshPrimitive" ).value.paths(), [ "/planeGroup/plane" ] )
 
 	def testInvalidFiles( self ) :
 
@@ -485,6 +465,22 @@ class SceneReaderTest( GafferSceneTest.SceneTestCase ) :
 
 		for i in range( 0, 10 ) :
 			self.assertRaises( RuntimeError, reader["out"].object, "/this/object/does/not/exist" )
+
+	def testGlobals( self ) :
+
+		self.writeAnimatedSCC()
+
+		r1 = GafferScene.SceneReader()
+
+		r2 = GafferScene.SceneReader()
+		r2["fileName"].setValue( self.__testFile )
+		r2["refreshCount"].setValue( self.uniqueInt( self.__testFile ) )
+
+		# Because globals aren't implemented, the globals should be the exact same
+		# across all SceneReaders.
+		self.assertEqual( r1["out"]["globals"].hash(), r2["out"]["globals"].hash() )
+		self.assertEqual( r1["out"]["globals"].getValue(), IECore.CompoundObject() )
+		self.assertTrue( r1["out"]["globals"].getValue( _copy = False ).isSame( r2["out"]["globals"].getValue( _copy = False ) ) )
 
 	def tearDown( self ) :
 

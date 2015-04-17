@@ -74,7 +74,6 @@ SceneReader::SceneReader( const std::string &name )
 	addChild( new StringPlug( "fileName" ) );
 	addChild( new IntPlug( "refreshCount" ) );
 	addChild( new StringPlug( "tags" ) );
-	addChild( new StringPlug( "sets" ) );
 	plugSetSignal().connect( boost::bind( &SceneReader::plugSet, this, ::_1 ) );
 }
 
@@ -112,35 +111,25 @@ const Gaffer::StringPlug *SceneReader::tagsPlug() const
 	return getChild<StringPlug>( g_firstPlugIndex + 2 );
 }
 
-Gaffer::StringPlug *SceneReader::setsPlug()
-{
-	return getChild<StringPlug>( g_firstPlugIndex + 3 );
-}
-
-const Gaffer::StringPlug *SceneReader::setsPlug() const
-{
-	return getChild<StringPlug>( g_firstPlugIndex + 3 );
-}
-
 void SceneReader::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	SceneNode::affects( input, outputs );
 
 	if( input == fileNamePlug() || input == refreshCountPlug() )
 	{
-		for( ValuePlugIterator it( outPlug() ); it != it.end(); it++ )
-		{
-			outputs.push_back( it->get() );
-		}
+		outputs.push_back( outPlug()->boundPlug() );
+		outputs.push_back( outPlug()->transformPlug() );
+		outputs.push_back( outPlug()->attributesPlug() );
+		outputs.push_back( outPlug()->objectPlug() );
+		outputs.push_back( outPlug()->childNamesPlug() );
+		// deliberately not adding globalsPlug(), since we don't
+		// load those from file.
+		outputs.push_back( outPlug()->setNamesPlug() );
+		outputs.push_back( outPlug()->setPlug() );
 	}
-
-	if( input == tagsPlug() )
+	else if( input == tagsPlug() )
 	{
 		outputs.push_back( outPlug()->childNamesPlug() );
-	}
-	else if( input == setsPlug() )
-	{
-		outputs.push_back( outPlug()->globalsPlug() );
 	}
 }
 
@@ -376,60 +365,54 @@ IECore::ConstInternedStringVectorDataPtr SceneReader::computeChildNames( const S
 
 void SceneReader::hashGlobals( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	SceneNode::hashGlobals( context, parent, h );
-
-	fileNamePlug()->hash( h );
-	refreshCountPlug()->hash( h );
-
-	setsPlug()->hash( h );
+	h = outPlug()->globalsPlug()->defaultValue()->Object::hash();
 }
 
-static void loadSetsWalk( const SceneInterface *s, const vector<InternedString> &tags, const vector<PathMatcher *> &sets, const vector<InternedString> &path )
+IECore::ConstCompoundObjectPtr SceneReader::computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	// For each tag we wish to load, we need to determine if it exists at the current
-	// location. The natural way to do this would be to call s->hasTag( tag ), but that
-	// actually has pretty poor performance when calling hasTag() for many tags. So
-	// we load all the local tags with readTags(), and then for each of them test to see
-	// if they exist in the list of tags we wish to load. We test the local tags against
-	// the tags because we're in control of the tags and can sort them beforehand for faster
-	// searching, whereas the localTags just come as-is. Using binary search over linear
-	// search isn't actually that big a win for a typical number of tags, simply because
-	// InternedString equality tests are so quick, but there's a very slight benefit, which
-	// should be more apparent should anyone create a very large number of tags at some point.
+	return outPlug()->globalsPlug()->defaultValue();
+}
 
-	vector<InternedString> sceneTags;
-	s->readTags( sceneTags, SceneInterface::LocalTag );
+void SceneReader::hashSetNames( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	SceneNode::hashSetNames( context, parent, h );
+	fileNamePlug()->hash( h );
+	refreshCountPlug()->hash( h );
+}
 
-	for( vector<InternedString>::const_iterator it = sceneTags.begin(), eIt = sceneTags.end(); it != eIt; ++it )
+IECore::ConstInternedStringVectorDataPtr SceneReader::computeSetNames( const Gaffer::Context *context, const ScenePlug *parent ) const
+{
+	ConstSceneInterfacePtr s = scene( ScenePath() );
+	if( !s )
 	{
-		vector<InternedString>::const_iterator t = lower_bound( tags.begin(), tags.end(), *it );
-		if( t != tags.end() && *t == *it )
-		{
-			/// \todo addPath() is doing a search to find the right node to insert at.
-			/// If nodes were exposed by the PathMatcher, we could provide the right
-			/// node to insert at by tracking it as we recurse the hierarchy.
-			sets[t - tags.begin()]->addPath( path );
-		}
+		return parent->setNamesPlug()->defaultValue();
+	}
+
+	InternedStringVectorDataPtr result = new InternedStringVectorData();
+	s->readTags( result->writable(), SceneInterface::LocalTag | SceneInterface::DescendantTag );
+
+	return result;
+}
+
+void SceneReader::hashSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	SceneNode::hashSet( setName, context, parent, h );
+	fileNamePlug()->hash( h );
+	refreshCountPlug()->hash( h );
+	h.append( setName );
+}
+
+static void loadSetWalk( const SceneInterface *s, const InternedString &setName, PathMatcher &set, const vector<InternedString> &path )
+{
+	if( s->hasTag( setName, SceneInterface::LocalTag ) )
+	{
+		set.addPath( path );
 	}
 
 	// Figure out if we need to recurse by querying descendant tags to see if they include
 	// anything we're interested in.
 
-	sceneTags.clear();
-	s->readTags( sceneTags, SceneInterface::DescendantTag );
-
-	bool recurse = false;
-	for( vector<InternedString>::const_iterator it = sceneTags.begin(), eIt = sceneTags.end(); it != eIt; ++it )
-	{
-		vector<InternedString>::const_iterator t = lower_bound( tags.begin(), tags.end(), *it );
-		if( t != tags.end() && *t == *it )
-		{
-			recurse = true;
-			break;
-		}
-	}
-
-	if( !recurse )
+	if( !s->hasTag( setName, SceneInterface::DescendantTag ) )
 	{
 		return;
 	}
@@ -443,66 +426,16 @@ static void loadSetsWalk( const SceneInterface *s, const vector<InternedString> 
 	for( SceneInterface::NameList::const_iterator it = childNames.begin(), eIt = childNames.end(); it != eIt; ++it )
 	{
 		ConstSceneInterfacePtr child = s->child( *it );
-		childPath[path.size()] = *it;
-		loadSetsWalk( child.get(), tags, sets, childPath );
+		childPath.back() = *it;
+		loadSetWalk( child.get(), setName, set, childPath );
 	}
 }
 
-IECore::ConstCompoundObjectPtr SceneReader::computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const
+GafferScene::ConstPathMatcherDataPtr SceneReader::computeSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	ConstSceneInterfacePtr s = scene( ScenePath() );
-	if( !s )
-	{
-		return parent->globalsPlug()->defaultValue();
-	}
-
-	CompoundObjectPtr result = new CompoundObject;
-
-	// figure out which tags we want to convert into sets
-
-	vector<InternedString> allTags;
-	s->readTags( allTags, SceneInterface::LocalTag | SceneInterface::DescendantTag );
-
-	const std::string setsString = setsPlug()->getValue();
-	Tokenizer setsTokenizer( setsString, boost::char_separator<char>( " " ) );
-
-	vector<InternedString> tagsToLoadAsSets;
-	for( vector<InternedString>::const_iterator tIt = allTags.begin(), tEIt = allTags.end(); tIt != tEIt; ++tIt )
-	{
-		for( Tokenizer::const_iterator sIt = setsTokenizer.begin(), sEIt = setsTokenizer.end(); sIt != sEIt; ++sIt )
-		{
-			if( match( tIt->value(), *sIt ) )
-			{
-				tagsToLoadAsSets.push_back( *tIt );
-			}
-		}
-	}
-
-	// sort so that we can use lower_bound() in loadSetsWalk().
-	sort( tagsToLoadAsSets.begin(), tagsToLoadAsSets.end() );
-
-	// make sets for each of them, and then defer to loadSetsWalk()
-	// to do the work.
-
-	IECore::CompoundDataPtr sets = result->member<IECore::CompoundData>(
-		"gaffer:sets",
-		/* throwExceptions = */ false,
-		/* createIfMissing = */ true
-	);
-
-	vector<PathMatcher *> pathMatchers;
-	for( vector<InternedString>::const_iterator it = tagsToLoadAsSets.begin(), eIt = tagsToLoadAsSets.end(); it != eIt; ++it )
-	{
-		PathMatcherDataPtr d = sets->member<PathMatcherData>(
-			*it,
-			/* throwExceptions = */ false,
-			/* createIfMissing = */ true
-		);
-		pathMatchers.push_back( &(d->writable()) );
-	}
-
-	loadSetsWalk( s.get(), tagsToLoadAsSets, pathMatchers, vector<InternedString>() );
-
+	PathMatcherDataPtr result = new PathMatcherData;
+	ConstSceneInterfacePtr rootScene = scene( ScenePath() );
+	loadSetWalk( rootScene.get(), setName, result->writable(), ScenePath() );
 	return result;
 }
 
