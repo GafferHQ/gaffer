@@ -51,6 +51,8 @@ GlobalsProcessor::GlobalsProcessor( const std::string &name )
 	outPlug()->attributesPlug()->setInput( inPlug()->attributesPlug() );
 	outPlug()->objectPlug()->setInput( inPlug()->objectPlug() );
 	outPlug()->childNamesPlug()->setInput( inPlug()->childNamesPlug() );
+	outPlug()->setNamesPlug()->setInput( inPlug()->setNamesPlug() );
+	outPlug()->setPlug()->setInput( inPlug()->setPlug() );
 }
 
 GlobalsProcessor::~GlobalsProcessor()
@@ -61,10 +63,9 @@ void GlobalsProcessor::affects( const Plug *input, AffectedPlugsContainer &outpu
 {
 	SceneProcessor::affects( input, outputs );
 
-	const ScenePlug *in = inPlug();
-	if( input->parent<ScenePlug>() == in )
+	if( input == inPlug()->globalsPlug() )
 	{
-		outputs.push_back( outPlug()->getChild<ValuePlug>( input->getName() ) );
+		outputs.push_back( outPlug()->globalsPlug() );
 	}
 }
 
