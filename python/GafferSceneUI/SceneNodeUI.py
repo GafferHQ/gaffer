@@ -115,19 +115,6 @@ GafferUI.PlugValueWidget.registerCreator(
 	)
 )
 
-# MeshType
-
-GafferUI.PlugValueWidget.registerCreator(
-	GafferScene.MeshType,
-	"meshType",
-	GafferUI.EnumPlugValueWidget,
-	labelsAndValues = (
-		( "Unchanged", "" ),
-		( "Poly", "linear" ),
-		( "Subdiv", "catmullClark" ),
-	),
-)
-
 # Plane
 
 Gaffer.Metadata.registerNodeDescription(
