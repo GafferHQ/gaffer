@@ -38,6 +38,64 @@ import Gaffer
 import GafferUI
 import GafferScene
 
+##########################################################################
+# Metadata
+##########################################################################
+
+Gaffer.Metadata.registerNode(
+
+	GafferScene.MapProjection,
+
+	"description",
+	"""
+	Applies texture coordinates to meshes via a camera projection.
+	In Gaffer, texture coordinates (commonly referred to as UVs)
+	are represented as primitive variables named "s" and "t".
+	""",
+
+	plugs = {
+
+		"camera" : [
+
+			"description",
+			"""
+			The location of the camera to use for the projection.
+			""",
+
+		],
+
+		"sName" : [
+
+			"description",
+			"""
+			The name of the primitive variable to store the s
+			coordinate of the projected texture coordinates.
+			This may be changed in order to store multiple
+			sets of texture coordinates on a single mesh.
+			""",
+
+		],
+
+		"tName" : [
+
+			"description",
+			"""
+			The name of the primitive variable to store the t
+			coordinate of the projected texture coordinates.
+			This may be changed in order to store multiple
+			sets of texture coordinates on a single mesh.
+			""",
+
+		],
+
+	}
+
+)
+
+##########################################################################
+# PlugValueWidgets
+##########################################################################
+
 GafferUI.PlugValueWidget.registerCreator(
 	GafferScene.MapProjection,
 	"camera",
