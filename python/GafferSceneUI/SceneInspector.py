@@ -65,6 +65,8 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 			self.__fullAttributes = None
 			self.__object = None
 			self.__globals = None
+			self.__setNames = None
+			self.__sets = {}
 
 		@property
 		def scene( self ) :
@@ -124,6 +126,20 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 				self.__globals = self.scene["globals"].getValue()
 
 			return self.__globals
+
+		def setNames( self ) :
+
+			if self.__setNames is None :
+				self.__setNames = self.scene["setNames"].getValue()
+
+			return self.__setNames
+
+		def set( self, setName ) :
+
+			if setName not in self.__sets :
+				self.__sets[setName] = self.scene.set( setName )
+
+			return self.__sets[setName]
 
 	## A list of Section instances may be passed to create a custom inspector,
 	# otherwise all registered Sections will be used.
@@ -1718,11 +1734,7 @@ class __SetMembershipSection( Section ) :
 			if target.path is None :
 				return None
 
-			globals = target.globals()
-			sets = globals.get( "gaffer:sets", {} )
-			set = sets.get( self.__setName )
-			if set is None :
-				return None
+			set = target.set( self.__setName )
 
 			m = set.value.match( target.path )
 			if m & GafferScene.Filter.Result.ExactMatch :
@@ -1738,8 +1750,8 @@ class __SetMembershipSection( Section ) :
 			if not target.path :
 				return []
 
-			sets = target.globals().get( "gaffer:sets", {} )
-			return [ self.__class__( setName ) for setName in sorted( sets.keys() ) ]
+			setNames = sorted( [ str( n ) for n in target.setNames() ] )
+			return [ self.__class__( setName ) for setName in setNames ]
 
 SceneInspector.registerSection( __SetMembershipSection, tab = "Selection" )
 
@@ -2029,14 +2041,12 @@ class _SetsSection( Section ) :
 
 		def __call__( self, target ) :
 
-			globals = target.globals()
-			sets = globals.get( "gaffer:sets", {} )
-			return sets.get( self.__setName )
+			return target.set( self.__setName )
 
 		def children( self, target ) :
 
-			sets = target.globals().get( "gaffer:sets", {} )
-			return [ self.__class__( setName ) for setName in sorted( sets.keys() ) ]
+			setNames = sorted( [ str( n ) for n in target.setNames() ] )
+			return [ self.__class__( setName ) for setName in setNames ]
 
 SceneInspector.SetsSection = _SetsSection
 
