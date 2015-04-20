@@ -57,7 +57,7 @@ PathFilter::PathFilter( const std::string &name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new StringVectorDataPlug( "paths", Plug::In, new StringVectorData ) );
-	addChild( new ObjectPlug( "__pathMatcher", Plug::Out, new PathMatcherData ) );
+	addChild( new PathMatcherDataPlug( "__pathMatcher", Plug::Out, new PathMatcherData ) );
 	
 	plugDirtiedSignal().connect( boost::bind( &PathFilter::plugDirtied, this, ::_1 ) );
 }
@@ -76,14 +76,14 @@ const Gaffer::StringVectorDataPlug *PathFilter::pathsPlug() const
 	return getChild<Gaffer::StringVectorDataPlug>( g_firstPlugIndex );
 }
 
-Gaffer::ObjectPlug *PathFilter::pathMatcherPlug()
+PathMatcherDataPlug *PathFilter::pathMatcherPlug()
 {
-	return getChild<Gaffer::ObjectPlug>( g_firstPlugIndex + 1 );
+	return getChild<PathMatcherDataPlug>( g_firstPlugIndex + 1 );
 }
 
-const Gaffer::ObjectPlug *PathFilter::pathMatcherPlug() const
+const PathMatcherDataPlug *PathFilter::pathMatcherPlug() const
 {
-	return getChild<Gaffer::ObjectPlug>( g_firstPlugIndex + 1 );
+	return getChild<PathMatcherDataPlug>( g_firstPlugIndex + 1 );
 }
 
 void PathFilter::plugDirtied( const Gaffer::Plug *plug )
@@ -142,7 +142,7 @@ void PathFilter::compute( Gaffer::ValuePlug *output, const Gaffer::Context *cont
 		ConstStringVectorDataPtr paths = pathsPlug()->getValue();
 		PathMatcherDataPtr pathMatcherData = new PathMatcherData;
 		pathMatcherData->writable().init( paths->readable().begin(), paths->readable().end() );
-		static_cast<ObjectPlug *>( output )->setValue( pathMatcherData );
+		static_cast<PathMatcherDataPlug *>( output )->setValue( pathMatcherData );
 		return;
 	}
 
@@ -171,7 +171,7 @@ unsigned PathFilter::computeMatch( const ScenePlug *scene, const Gaffer::Context
 		// we grab the PathMatcher from the intermediate plug (which is a bit more expensive
 		// as it involves graph evaluations):
 		
-		ConstPathMatcherDataPtr pathMatcher = m_pathMatcher ? m_pathMatcher : boost::static_pointer_cast<const PathMatcherData>( pathMatcherPlug()->getValue() );
+		ConstPathMatcherDataPtr pathMatcher = m_pathMatcher ? m_pathMatcher : pathMatcherPlug()->getValue();
 		return pathMatcher->readable().match( pathData->readable() );
 	}
 	return NoMatch;
