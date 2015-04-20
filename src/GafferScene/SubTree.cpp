@@ -57,6 +57,10 @@ SubTree::SubTree( const std::string &name )
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new StringPlug( "root", Plug::In, "" ) );
 	addChild( new BoolPlug( "includeRoot", Plug::In, false ) );
+
+	// Fast pass-throughs for things we don't modify.
+	outPlug()->globalsPlug()->setInput( inPlug()->globalsPlug() );
+	outPlug()->setNamesPlug()->setInput( inPlug()->setNamesPlug() );
 }
 
 SubTree::~SubTree()
@@ -93,10 +97,12 @@ void SubTree::affects( const Plug *input, AffectedPlugsContainer &outputs ) cons
 	}
 	else if( input == rootPlug() || input == includeRootPlug() )
 	{
-		for( ValuePlugIterator it( outPlug() ); it != it.end(); it++ )
-		{
-			outputs.push_back( it->get() );
-		}
+		outputs.push_back( outPlug()->boundPlug() );
+		outputs.push_back( outPlug()->transformPlug() );
+		outputs.push_back( outPlug()->attributesPlug() );
+		outputs.push_back( outPlug()->objectPlug() );
+		outputs.push_back( outPlug()->childNamesPlug() );
+		outputs.push_back( outPlug()->setPlug() );
 	}
 
 }
@@ -208,26 +214,22 @@ IECore::ConstInternedStringVectorDataPtr SubTree::computeChildNames( const Scene
 	}
 }
 
-void SubTree::hashGlobals( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+void SubTree::hashSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	SceneProcessor::hashGlobals( context, parent, h );
-	inPlug()->globalsPlug()->hash( h );
+	SceneProcessor::hashSet( setName, context, parent, h );
+	inPlug()->setPlug()->hash( h );
 	rootPlug()->hash( h );
 	includeRootPlug()->hash( h );
 }
 
-IECore::ConstCompoundObjectPtr SubTree::computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const
+GafferScene::ConstPathMatcherDataPtr SubTree::computeSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	ConstCompoundObjectPtr inputGlobals = inPlug()->globalsPlug()->getValue();
-	const CompoundData *inputSets = inputGlobals->member<CompoundData>( "gaffer:sets" );
-	if( !inputSets )
+	ConstPathMatcherDataPtr inputSetData = inPlug()->setPlug()->getValue();
+	const PathMatcher &inputSet = inputSetData->readable();
+	if( inputSet.isEmpty() )
 	{
-		return inputGlobals;
+		return inputSetData;
 	}
-
-	CompoundObjectPtr outputGlobals = inputGlobals->copy();
-	CompoundDataPtr outputSets = new CompoundData;
-	outputGlobals->members()["gaffer:sets"] = outputSets;
 
 	const std::string rootString = rootPlug()->getValue();
 	ScenePlug::ScenePath root;
@@ -239,27 +241,25 @@ IECore::ConstCompoundObjectPtr SubTree::computeGlobals( const Gaffer::Context *c
 		prefixSize--;
 	}
 
-	for( CompoundDataMap::const_iterator it = inputSets->readable().begin(), eIt = inputSets->readable().end(); it != eIt; ++it )
-	{
-		/// \todo This could be more efficient if PathMatcher exposed the internal nodes,
-		/// and allowed sharing between matchers. Then we could just pick the subtree within
-		/// the matcher that we wanted.
-		const PathMatcher &inputSet = static_cast<const PathMatcherData *>( it->second.get() )->readable();
-		PathMatcher &outputSet = outputSets->member<PathMatcherData>( it->first, /* throwExceptions = */ false, /* createIfMissing = */ true )->writable();
+	/// \todo This could be more efficient if PathMatcher exposed the internal nodes,
+	/// and allowed sharing between matchers. Then we could just pick the subtree within
+	/// the matcher that we wanted.
 
-		ScenePlug::ScenePath outputPath;
-		for( PathMatcher::Iterator pIt = inputSet.begin(), peIt = inputSet.end(); pIt != peIt; ++pIt )
+	PathMatcherDataPtr outputSetData = new PathMatcherData;
+	PathMatcher &outputSet = outputSetData->writable();
+
+	ScenePlug::ScenePath outputPath;
+	for( PathMatcher::Iterator pIt = inputSet.begin(), peIt = inputSet.end(); pIt != peIt; ++pIt )
+	{
+		const ScenePlug::ScenePath &inputPath = *pIt;
+		if( boost::starts_with( inputPath, root ) )
 		{
-			const ScenePlug::ScenePath &inputPath = *pIt;
-			if( boost::starts_with( inputPath, root ) )
-			{
-				outputPath.assign( inputPath.begin() + prefixSize, inputPath.end() );
-				outputSet.addPath( outputPath );
-			}
+			outputPath.assign( inputPath.begin() + prefixSize, inputPath.end() );
+			outputSet.addPath( outputPath );
 		}
 	}
 
-	return outputGlobals;
+	return outputSetData;
 }
 
 SceneNode::ScenePath SubTree::sourcePath( const ScenePath &outputPath, bool &createRoot ) const
