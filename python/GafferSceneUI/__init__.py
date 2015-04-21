@@ -102,6 +102,7 @@ import GroupUI
 import OpenGLRenderUI
 import DeletePrimitiveVariablesUI
 import MeshTypeUI
+import DeleteOutputsUI
 
 # then all the PathPreviewWidgets. note that the order
 # of import controls the order of display.
