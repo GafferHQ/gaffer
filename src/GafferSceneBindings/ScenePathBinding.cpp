@@ -35,6 +35,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/python.hpp"
+#include "boost/python/suite/indexing/container_utils.hpp"
 
 #include "Gaffer/Context.h"
 #include "Gaffer/PathFilter.h"
@@ -50,6 +51,18 @@ using namespace IECorePython;
 using namespace Gaffer;
 using namespace GafferBindings;
 using namespace GafferScene;
+
+namespace
+{
+
+PathFilterPtr createStandardFilter( list pythonSetNames, const std::string &setsLabel )
+{
+	std::vector<std::string> setNames;
+	boost::python::container_utils::extend_container( setNames, pythonSetNames );
+	return ScenePath::createStandardFilter( setNames, setsLabel );
+}
+
+} // namespace
 
 void GafferSceneBindings::bindScenePath()
 {
@@ -74,6 +87,12 @@ void GafferSceneBindings::bindScenePath()
 		.def( "getScene", (ScenePlug *(ScenePath::*)())&ScenePath::getScene, return_value_policy<CastToIntrusivePtr>() )
 		.def( "setContext", &ScenePath::setContext )
 		.def( "getContext", (Context *(ScenePath::*)())&ScenePath::getContext, return_value_policy<CastToIntrusivePtr>() )
+		.def( "createStandardFilter", &createStandardFilter, (
+				arg( "setNames" ) = list(),
+				arg( "setsLabel" ) = ""
+			)
+		)
+		.staticmethod( "createStandardFilter" )
 	;
 
 }

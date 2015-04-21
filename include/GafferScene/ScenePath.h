@@ -81,6 +81,8 @@ class ScenePath : public Gaffer::Path
 		virtual bool isLeaf() const;
 		virtual Gaffer::PathPtr copy() const;
 
+		static Gaffer::PathFilterPtr createStandardFilter( const std::vector<std::string> &setNames = std::vector<std::string>(), const std::string &setsLabel = "" );
+
 	protected :
 
 		virtual void doChildren( std::vector<Gaffer::PathPtr> &children ) const;

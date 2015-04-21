@@ -193,6 +193,21 @@ class ScenePathTest( unittest.TestCase ) :
 		s1["name"].setValue( "b" )
 		self.assertEqual( len( cs ), 0 )
 
+	def testStandardFilter( self ) :
+
+		camera = GafferScene.Camera()
+		plane = GafferScene.Plane()
+		parent = GafferScene.Parent()
+		parent["in"].setInput( camera["out"] )
+		parent["child"].setInput( plane["out"] )
+		parent["parent"].setValue( "/" )
+
+		path = GafferScene.ScenePath( parent["out"], Gaffer.Context(), "/" )
+		self.assertEqual( { str( c ) for c in path.children() }, { "/camera", "/plane" } )
+
+		path.setFilter( GafferScene.ScenePath.createStandardFilter( [ "__cameras" ] ) )
+		self.assertEqual( { str( c ) for c in path.children() }, { "/camera" } )
+
 if __name__ == "__main__":
 	unittest.main()
 
