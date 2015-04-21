@@ -104,6 +104,7 @@ import DeletePrimitiveVariablesUI
 import MeshTypeUI
 import DeleteOutputsUI
 import InstancerUI
+import ObjectToSceneUI
 
 # then all the PathPreviewWidgets. note that the order
 # of import controls the order of display.

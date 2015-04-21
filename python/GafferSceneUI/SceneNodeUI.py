@@ -73,10 +73,6 @@ GafferUI.PlugValueWidget.registerType( GafferScene.ScenePlug, None )
 
 Gaffer.Metadata.registerPlugValue( GafferScene.SceneNode, "enabled", "nodeUI:section", "Node" )
 
-# ObjectToScene
-
-GafferUI.Nodule.registerNodule( GafferScene.ObjectToScene, "object", GafferUI.StandardNodule )
-
 # BranchCreator
 
 GafferUI.PlugValueWidget.registerCreator(
