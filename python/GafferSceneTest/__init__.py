@@ -106,6 +106,7 @@ from ClippingPlaneTest import ClippingPlaneTest
 from FilterSwitchTest import FilterSwitchTest
 from PointsTypeTest import PointsTypeTest
 from ParametersTest import ParametersTest
+from SceneFilterPathFilterTest import SceneFilterPathFilterTest
 
 if __name__ == "__main__":
 	import unittest
