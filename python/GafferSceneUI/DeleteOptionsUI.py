@@ -41,16 +41,36 @@ import GafferScene
 # Metadata
 ##########################################################################
 
-Gaffer.Metadata.registerNodeDescription(
+Gaffer.Metadata.registerNode(
 
-GafferScene.DeleteOptions,
+	GafferScene.DeleteOptions,
 
-"""A node which removes options from the globals.""",
+	"description",
+	"""
+	A node which removes options from the globals.
+	""",
 
-"names",
-"The names of options to be removed.",
+	plugs = {
 
-"invertNames",
-"When on, matching names are kept, and non-matching names are removed.",
+		"names" : [
+
+			"description",
+			"""
+			The names of options to be removed. Names should be
+			separated by spaces and can use Gaffer's standard wildcards.
+			""",
+
+		],
+
+		"invertNames" : [
+
+			"description",
+			"""
+			When on, matching names are kept, and non-matching names are removed.
+			""",
+
+		],
+
+	}
 
 )
