@@ -87,7 +87,11 @@ void ParameterisedHolder<BaseType>::setParameterised( IECore::RunTimeTypedPtr pa
 		m_parameterHandler->restore( this );
 	}
 	m_parameterHandler->setupPlug( this );
-	if( !keepExistingValues )
+	if( keepExistingValues )
+	{
+		m_parameterHandler->setParameterValue();
+	}
+	else
 	{
 		m_parameterHandler->setPlugValue();
 	}
