@@ -162,6 +162,37 @@ class ScenePathTest( unittest.TestCase ) :
 		# trigger plug dirtied on the Box
 		box["p"].setValue( 10 )
 
+	def testSceneAccessors( self ) :
+
+		s1 = GafferScene.Plane()
+		s2 = GafferScene.Plane()
+
+		path = GafferScene.ScenePath( s1["out"], Gaffer.Context(), "/" )
+		self.assertTrue( path.getScene().isSame( s1["out"] ) )
+
+		cs = GafferTest.CapturingSlot( path.pathChangedSignal() )
+
+		s1["name"].setValue( "p" )
+		self.assertEqual( len( cs ), 1 )
+		del cs[:]
+
+		path.setScene( s1["out"] )
+		self.assertEqual( len( cs ), 0 )
+		self.assertTrue( path.getScene().isSame( s1["out"] ) )
+		s1["name"].setValue( "pp" )
+		self.assertEqual( len( cs ), 1 )
+		del cs[:]
+
+		path.setScene( s2["out"] )
+		self.assertEqual( len( cs ), 1 )
+		self.assertTrue( path.getScene().isSame( s2["out"] ) )
+		s2["name"].setValue( "a" )
+		self.assertEqual( len( cs ), 2 )
+		del cs[:]
+
+		s1["name"].setValue( "b" )
+		self.assertEqual( len( cs ), 0 )
+
 if __name__ == "__main__":
 	unittest.main()
 

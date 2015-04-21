@@ -69,6 +69,10 @@ class ScenePath : public Gaffer::Path
 
 		virtual ~ScenePath();
 
+		void setScene( ScenePlugPtr scene );
+		ScenePlug *getScene();
+		const ScenePlug *getScene() const;
+
 		void setContext( Gaffer::ContextPtr context );
 		Gaffer::Context *getContext();
 		const Gaffer::Context *getContext() const;

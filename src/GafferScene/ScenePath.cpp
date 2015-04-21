@@ -79,6 +79,39 @@ ScenePath::~ScenePath()
 	}
 }
 
+void ScenePath::setScene( ScenePlugPtr scene )
+{
+	if( m_scene == scene )
+	{
+		return;
+	}
+
+	if( havePathChangedSignal() )
+	{
+		m_node->plugDirtiedSignal().disconnect( boost::bind( &ScenePath::plugDirtied, this, ::_1 ) );
+	}
+
+	m_scene = scene;
+	m_node = scene->node();
+
+	if( m_node && havePathChangedSignal() )
+	{
+		m_node->plugDirtiedSignal().connect( boost::bind( &ScenePath::plugDirtied, this, ::_1 ) );
+	}
+
+	emitPathChanged();
+}
+
+ScenePlug *ScenePath::getScene()
+{
+	return m_scene.get();
+}
+
+const ScenePlug *ScenePath::getScene() const
+{
+	return m_scene.get();
+}
+
 void ScenePath::setContext( Gaffer::ContextPtr context )
 {
 	if( m_context == context )

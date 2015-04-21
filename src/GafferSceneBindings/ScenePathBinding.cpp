@@ -70,6 +70,8 @@ void GafferSceneBindings::bindScenePath()
 				arg( "filter" ) = object()
 			) )
 		)
+		.def( "setScene", &ScenePath::setScene )
+		.def( "getScene", (ScenePlug *(ScenePath::*)())&ScenePath::getScene, return_value_policy<CastToIntrusivePtr>() )
 		.def( "setContext", &ScenePath::setContext )
 		.def( "getContext", (Context *(ScenePath::*)())&ScenePath::getContext, return_value_policy<CastToIntrusivePtr>() )
 	;
