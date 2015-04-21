@@ -286,6 +286,25 @@ class PathTest( GafferTest.TestCase ) :
 		self.assertEqual( p.property( "name"), "c" )
 		self.assertEqual( p.property( "fullName"), "/a/b/c" )
 
+	def testDisconnectFromFilterChangedOnDestruct( self ) :
+
+		# make a path with a filter
+		f = Gaffer.FileNamePathFilter( [ "*.gfr" ] )
+		p = Gaffer.FileSystemPath( "/a/b/c", filter = f )
+
+		# force the path to connect to the
+		# filter's changed signal.
+		c = p.pathChangedSignal()
+
+		# delete the path
+		del p
+		del c
+
+		# edit the filter
+		f.setEnabled( False )
+
+		# we should not crash
+
 if __name__ == "__main__":
 	unittest.main()
 
