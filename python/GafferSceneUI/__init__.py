@@ -40,6 +40,8 @@ from _GafferSceneUI import *
 from SceneHierarchy import SceneHierarchy
 from SceneInspector import SceneInspector
 from FilterPlugValueWidget import FilterPlugValueWidget
+from ScenePathPlugValueWidget import ScenePathPlugValueWidget
+
 import SceneNodeUI
 import SceneReaderUI
 import SceneProcessorUI
