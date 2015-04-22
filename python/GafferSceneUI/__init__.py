@@ -106,6 +106,7 @@ import DeleteOutputsUI
 import InstancerUI
 import ObjectToSceneUI
 import FreezeTransformUI
+import SceneElementProcessorUI
 
 # then all the PathPreviewWidgets. note that the order
 # of import controls the order of display.
