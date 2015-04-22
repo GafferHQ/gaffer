@@ -39,6 +39,7 @@ import unittest
 import IECore
 
 import Gaffer
+import GafferTest
 import GafferScene
 import GafferSceneTest
 
@@ -51,24 +52,23 @@ class SetTest( GafferSceneTest.SceneTestCase ) :
 		s["in"].setInput( p["out"] )
 
 		s["paths"].setValue( IECore.StringVectorData( [ "/one", "/plane" ] ) )
-		g = s["out"]["globals"].getValue()
-		self.assertEqual( g.keys(), [ "gaffer:sets" ] )
-		self.assertEqual( g["gaffer:sets"].keys(), [ "set" ] )
-		self.assertEqual( set( g["gaffer:sets"]["set"].value.paths() ), set( [ "/one", "/plane" ] ) )
+
+		# Sets have nothing to do with globals.
+		self.assertEqual( s["out"]["globals"].getValue(), p["out"]["globals"].getValue() )
+		self.assertEqual( s["out"]["globals"].hash(), p["out"]["globals"].hash() )
+
+		self.assertEqual( s["out"]["setNames"].getValue(), IECore.InternedStringVectorData( [ "set" ] ) )
+		self.assertEqual( set( s["out"].set( "set" ).value.paths() ), set( [ "/one", "/plane" ] ) )
 
 		s["name"].setValue( "shinyThings" )
 
-		g = s["out"]["globals"].getValue()
-		self.assertEqual( g.keys(), [ "gaffer:sets" ] )
-		self.assertEqual( g["gaffer:sets"].keys(), [ "shinyThings" ] )
-		self.assertEqual( set( g["gaffer:sets"]["shinyThings"].value.paths() ), set( [ "/one", "/plane" ] ) )
+		self.assertEqual( s["out"]["setNames"].getValue(), IECore.InternedStringVectorData( [ "shinyThings" ] ) )
+		self.assertEqual( set( s["out"].set( "shinyThings" ).value.paths() ), set( [ "/one", "/plane" ] ) )
 
 		s["paths"].setValue( IECore.StringVectorData( [ "/two", "/sphere" ] ) )
 
-		g = s["out"]["globals"].getValue()
-		self.assertEqual( g.keys(), [ "gaffer:sets" ] )
-		self.assertEqual( g["gaffer:sets"].keys(), [ "shinyThings" ] )
-		self.assertEqual( set( g["gaffer:sets"]["shinyThings"].value.paths() ), set( [ "/two", "/sphere" ] ) )
+		self.assertEqual( s["out"]["setNames"].getValue(), IECore.InternedStringVectorData( [ "shinyThings" ] ) )
+		self.assertEqual( set( s["out"].set( "shinyThings" ).value.paths() ), set( [ "/two", "/sphere" ] ) )
 
 	def testInputNotModified( self ) :
 
@@ -81,20 +81,13 @@ class SetTest( GafferSceneTest.SceneTestCase ) :
 		s2["name"].setValue( "setTwo" )
 		s2["paths"].setValue( IECore.StringVectorData( [ "/two" ] ) )
 
-		g1 = s1["out"]["globals"].getValue( _copy = False )
-		self.assertEqual( g1.keys(), [ "gaffer:sets" ] )
-		self.assertEqual( g1["gaffer:sets"].keys(), [ "setOne" ] )
-		self.assertEqual( g1["gaffer:sets"]["setOne"].value.paths(), [ "/one" ] )
+		self.assertEqual( s1["out"]["setNames"].getValue(), IECore.InternedStringVectorData( [ "setOne" ] ) )
+		self.assertEqual( s1["out"].set( "setOne" ).value.paths(), [ "/one" ] )
 
-		g2 = s2["out"]["globals"].getValue( _copy = False )
-		self.assertEqual( g2.keys(), [ "gaffer:sets" ] )
-		self.assertEqual( set( g2["gaffer:sets"].keys() ), set( [ "setOne", "setTwo" ] ) )
-		self.assertEqual( g2["gaffer:sets"]["setOne"].value.paths(), [ "/one" ] )
-		self.assertEqual( g2["gaffer:sets"]["setTwo"].value.paths(), [ "/two" ] )
-
-		self.assertEqual( g1.keys(), [ "gaffer:sets" ] )
-		self.assertEqual( g1["gaffer:sets"].keys(), [ "setOne" ] )
-		self.assertEqual( g1["gaffer:sets"]["setOne"].value.paths(), [ "/one" ] )
+		self.assertEqual( s2["out"]["setNames"].getValue(), IECore.InternedStringVectorData( [ "setOne", "setTwo" ] ) )
+		self.assertEqual( s2["out"].set( "setOne" ).value.paths(), [ "/one" ] )
+		self.assertEqual( s2["out"].set( "setTwo" ).value.paths(), [ "/two" ] )
+		self.assertTrue( s2["out"].set( "setOne", _copy = False ).isSame( s1["out"].set( "setOne", _copy = False ) ) )
 
 	def testOverwrite( self ) :
 
@@ -105,15 +98,11 @@ class SetTest( GafferSceneTest.SceneTestCase ) :
 		s2["paths"].setValue( IECore.StringVectorData( [ "/new"] ) )
 		s2["in"].setInput( s1["out"] )
 
-		g1 = s1["out"]["globals"].getValue()
-		self.assertEqual( g1.keys(), [ "gaffer:sets" ] )
-		self.assertEqual( g1["gaffer:sets"].keys(), [ "set" ] )
-		self.assertEqual( set( g1["gaffer:sets"]["set"].value.paths() ), set( [ "/old" ] ) )
+		self.assertEqual( s1["out"]["setNames"].getValue(), IECore.InternedStringVectorData( [ "set" ] ) )
+		self.assertEqual( s1["out"].set( "set" ).value.paths(), [ "/old" ] )
 
-		g2 = s2["out"]["globals"].getValue()
-		self.assertEqual( g2.keys(), [ "gaffer:sets" ] )
-		self.assertEqual( g2["gaffer:sets"].keys(), [ "set" ] )
-		self.assertEqual( set( g2["gaffer:sets"]["set"].value.paths() ), set( [ "/new" ] ) )
+		self.assertEqual( s2["out"]["setNames"].getValue(), IECore.InternedStringVectorData( [ "set" ] ) )
+		self.assertEqual( s2["out"].set( "set" ).value.paths(), [ "/new" ] )
 
 	def testAdd( self ) :
 
@@ -125,17 +114,13 @@ class SetTest( GafferSceneTest.SceneTestCase ) :
 		s2["mode"].setValue( s2.Mode.Add )
 		s2["in"].setInput( s1["out"] )
 
-		g = s2["out"]["globals"].getValue()
-		self.assertEqual( g.keys(), [ "gaffer:sets" ] )
-		self.assertEqual( g["gaffer:sets"].keys(), [ "set" ] )
-		self.assertEqual( set( g["gaffer:sets"]["set"].value.paths() ), set( [ "/old", "/new" ] ) )
+		self.assertEqual( s2["out"]["setNames"].getValue(), IECore.InternedStringVectorData( [ "set" ] ) )
+		self.assertEqual( set( s2["out"].set( "set" ).value.paths() ), set( [ "/old", "/new" ] ) )
 
 		s1["enabled"].setValue( False )
 
-		g = s2["out"]["globals"].getValue()
-		self.assertEqual( g.keys(), [ "gaffer:sets" ] )
-		self.assertEqual( g["gaffer:sets"].keys(), [ "set" ] )
-		self.assertEqual( set( g["gaffer:sets"]["set"].value.paths() ), set( [ "/new" ] ) )
+		self.assertEqual( s2["out"]["setNames"].getValue(), IECore.InternedStringVectorData( [ "set" ] ) )
+		self.assertEqual( s2["out"].set( "set" ).value.paths(), [ "/new" ] )
 
 	def testRemove( self ) :
 
@@ -147,17 +132,13 @@ class SetTest( GafferSceneTest.SceneTestCase ) :
 		s2["mode"].setValue( s2.Mode.Remove )
 		s2["in"].setInput( s1["out"] )
 
-		g = s2["out"]["globals"].getValue()
-		self.assertEqual( g.keys(), [ "gaffer:sets" ] )
-		self.assertEqual( g["gaffer:sets"].keys(), [ "set" ] )
-		self.assertEqual( set( g["gaffer:sets"]["set"].value.paths() ), set( [ "/b" ] ) )
+		self.assertEqual( s2["out"]["setNames"].getValue(), IECore.InternedStringVectorData( [ "set" ] ) )
+		self.assertEqual( s2["out"].set( "set" ).value.paths(), [ "/b" ] )
 
 		s2["enabled"].setValue( False )
 
-		g = s2["out"]["globals"].getValue()
-		self.assertEqual( g.keys(), [ "gaffer:sets" ] )
-		self.assertEqual( g["gaffer:sets"].keys(), [ "set" ] )
-		self.assertEqual( set( g["gaffer:sets"]["set"].value.paths() ), set( [ "/a", "/b" ] ) )
+		self.assertEqual( s2["out"]["setNames"].getValue(), IECore.InternedStringVectorData( [ "set" ] ) )
+		self.assertEqual( set( s2["out"].set( "set" ).value.paths() ), set( [ "/a", "/b" ] ) )
 
 	def testRemoveFromNonExistentSet( self ) :
 
@@ -172,10 +153,41 @@ class SetTest( GafferSceneTest.SceneTestCase ) :
 		s2["mode"].setValue( s2.Mode.Remove )
 		s2["in"].setInput( s1["out"] )
 
-		g = s2["out"]["globals"].getValue()
-		self.assertEqual( g.keys(), [ "gaffer:sets" ] )
-		self.assertEqual( g["gaffer:sets"].keys(), [ "set" ] )
-		self.assertEqual( set( g["gaffer:sets"]["set"].value.paths() ), set( [ "/a", "/b" ] ) )
+		self.assertEqual( s2["out"]["setNames"].getValue(), IECore.InternedStringVectorData( [ "set" ] ) )
+		self.assertEqual( set( s2["out"].set( "set" ).value.paths() ), set( [ "/a", "/b" ] ) )
+
+	def testDisabled( self ) :
+
+		s1 = GafferScene.Set()
+		s1["paths"].setValue( IECore.StringVectorData( [ "/a" ] ) )
+
+		s2 = GafferScene.Set()
+		s2["in"].setInput( s1["out"] )
+		s2["paths"].setValue( IECore.StringVectorData( [ "/b" ] ) )
+		s2["enabled"].setValue( False )
+
+		self.assertEqual( s1["out"]["setNames"].hash(), s2["out"]["setNames"].hash() )
+		self.assertEqual( s1["out"]["setNames"].getValue(), s2["out"]["setNames"].getValue() )
+		self.assertEqual( s1["out"].setHash( "set" ), s2["out"].setHash( "set" ) )
+		self.assertEqual( s1["out"].set( "set" ), s2["out"].set( "set" ) )
+		self.assertEqual( s2["out"].set( "set" ).value.paths(), [ "/a" ] )
+
+	def testAffects( self ) :
+
+		s = GafferScene.Set()
+
+		cs = GafferTest.CapturingSlot( s.plugDirtiedSignal() )
+
+		s["name"].setValue( "a" )
+
+		self.assertTrue( s["out"]["setNames"] in [ p[0] for p in cs ] )
+		self.assertTrue( s["out"]["globals"] not in [ p[0] for p in cs ] )
+
+		del cs[:]
+		s["paths"].setValue( IECore.StringVectorData( [ "/a" ] ) )
+
+		self.assertTrue( s["out"]["set"] in [ p[0] for p in cs ] )
+		self.assertTrue( s["out"]["globals"] not in [ p[0] for p in cs ] )
 
 if __name__ == "__main__":
 	unittest.main()
