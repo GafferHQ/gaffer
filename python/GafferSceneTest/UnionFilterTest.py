@@ -150,7 +150,7 @@ class UnionFilterTest( GafferSceneTest.SceneTestCase ) :
 
 		s["paths"].setValue( IECore.StringVectorData( [ "/p*" ] ) )
 
-		self.assertTrue( a["out"]["globals"] in set( [ c[0] for c in cs ] ) )
+		self.assertTrue( a["out"]["set"] in set( [ c[0] for c in cs ] ) )
 		self.assertTrue( a["out"]["attributes"] not in set( [ c[0] for c in cs ] ) )
 
 		# Add on a SetFilter though, and we should get dirtiness signalled for
