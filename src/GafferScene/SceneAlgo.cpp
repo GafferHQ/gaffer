@@ -462,3 +462,10 @@ IECore::CameraPtr GafferScene::camera( const ScenePlug *scene, const ScenePlug::
 	applyCameraGlobals( camera.get(), globals );
 	return camera;
 }
+
+bool GafferScene::setExists( const ScenePlug *scene, const IECore::InternedString &setName )
+{
+	IECore::ConstInternedStringVectorDataPtr setNamesData = scene->setNamesPlug()->getValue();
+	const std::vector<IECore::InternedString> &setNames = setNamesData->readable();
+	return std::find( setNames.begin(), setNames.end(), setName ) != setNames.end();
+}

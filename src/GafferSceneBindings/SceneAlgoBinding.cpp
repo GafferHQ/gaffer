@@ -84,6 +84,7 @@ void bindSceneAlgo()
 		(IECore::CameraPtr (*)( const ScenePlug *, const ScenePlug::ScenePath &, const IECore::CompoundObject * ) )&camera,
 		( arg( "scene" ), args( "cameraPath" ), arg( "globals" ) = object() )
 	);
+	def( "setExists", &setExists );
 }
 
 } // namespace GafferSceneBindings

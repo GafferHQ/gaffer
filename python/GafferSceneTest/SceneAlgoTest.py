@@ -138,6 +138,17 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 		self.assertTrue( GafferScene.visible( attributes2["out"], "/group" ) )
 		self.assertTrue( GafferScene.visible( attributes2["out"], "/" ) )
 
+	def testSetExists( self ) :
+
+		plane = GafferScene.Plane()
+		plane["sets"].setValue( "A B" )
+
+		self.assertTrue( GafferScene.setExists( plane["out"], "A" ) )
+		self.assertTrue( GafferScene.setExists( plane["out"], "B" ) )
+		self.assertFalse( GafferScene.setExists( plane["out"], " " ) )
+		self.assertFalse( GafferScene.setExists( plane["out"], "" ) )
+		self.assertFalse( GafferScene.setExists( plane["out"], "C" ) )
+
 if __name__ == "__main__":
 	unittest.main()
 
