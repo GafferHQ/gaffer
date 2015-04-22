@@ -89,7 +89,7 @@ bool SetFilter::sceneAffectsMatch( const ScenePlug *scene, const Gaffer::ValuePl
 		return true;
 	}
 
-	return child == scene->globalsPlug();
+	return child == scene->setPlug();
 }
 
 void SetFilter::hashMatch( const ScenePlug *scene, const Gaffer::Context *context, IECore::MurmurHash &h ) const
@@ -102,8 +102,8 @@ void SetFilter::hashMatch( const ScenePlug *scene, const Gaffer::Context *contex
 	/// \todo It would be preferable to throw an exception if the scene path isn't
 	/// available, as we really do require it for computing a match. Currently we
 	/// can't do that because the Isolate and Prune must include the filter hash when
-	/// hashing their globals, because they will use the filter to remap sets when
-	/// computing those globals. In this case, we're lucky that the hash (minus the scene path)
+	/// hashing their sets, because they will use the filter to remap the sets as
+	/// a global operation. In this case, we're lucky that the hash (minus the scene path)
 	/// of the SetFilter is sufficient to uniquely identify the remapping that will occur - filters
 	/// which access scene data using the path would not have a valid hash in this scenario,
 	/// which is the reason we don't yet have AttributeFilter etc. If we had a hierarchyHash for
@@ -118,8 +118,7 @@ void SetFilter::hashMatch( const ScenePlug *scene, const Gaffer::Context *contex
 		h.append( &(path[0]), path.size() );
 	}
 
-	scene->globalsPlug()->hash( h );
-	setPlug()->hash( h );
+	h.append( scene->setHash( setPlug()->getValue() ) );
 }
 
 unsigned SetFilter::computeMatch( const ScenePlug *scene, const Gaffer::Context *context ) const
@@ -129,18 +128,7 @@ unsigned SetFilter::computeMatch( const ScenePlug *scene, const Gaffer::Context 
 		return NoMatch;
 	}
 
-	ConstCompoundObjectPtr globals = scene->globalsPlug()->getValue();
-	const CompoundData *sets = globals->member<CompoundData>( "gaffer:sets" );
-	if( !sets )
-	{
-		return NoMatch;
-	}
-
-	const PathMatcherData *set = sets->member<PathMatcherData>( setPlug()->getValue() );
-	if( !set )
-	{
-		return NoMatch;
-	}
+	ConstPathMatcherDataPtr set = scene->set( setPlug()->getValue() );
 
 	const ScenePlug::ScenePath &path = context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName );
 	return set->readable().match( path );

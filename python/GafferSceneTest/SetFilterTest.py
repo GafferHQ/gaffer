@@ -101,7 +101,7 @@ class SetFilterTest( GafferSceneTest.SceneTestCase ) :
 		cs = GafferTest.CapturingSlot( a.plugDirtiedSignal() )
 
 		s["paths"].setValue( IECore.StringVectorData( [ "/group" ] ) )
-		self.assertTrue( a["out"]["globals"] in set( [ c[0] for c in cs ] ) )
+		self.assertTrue( a["out"]["set"] in set( [ c[0] for c in cs ] ) )
 		self.assertTrue( a["out"]["attributes"] not in set( [ c[0] for c in cs ] ) )
 
 		# attach a filter - changing a set should affect the
@@ -114,7 +114,7 @@ class SetFilterTest( GafferSceneTest.SceneTestCase ) :
 
 		s["paths"].setValue( IECore.StringVectorData( [ "/group/plane" ] ) )
 
-		self.assertTrue( a["out"]["globals"] in set( [ c[0] for c in cs ] ) )
+		self.assertTrue( a["out"]["set"] in set( [ c[0] for c in cs ] ) )
 		self.assertTrue( a["out"]["attributes"] in set( [ c[0] for c in cs ] ) )
 
 	def testMultipleStreams( self ) :
@@ -183,9 +183,30 @@ class SetFilterTest( GafferSceneTest.SceneTestCase ) :
 		self.assertSceneValid( i["out"] )
 		self.assertEqual( i["out"].childNames( "/group" ), IECore.InternedStringVectorData( [ "plane" ] ) )
 
-		sets = i["out"]["globals"].getValue()["gaffer:sets"]
-		self.assertEqual( sets["set1"].value.paths(), [ "/group/plane" ] )
-		self.assertEqual( sets["set2"].value.paths(), [ "/group" ] )
+		self.assertEqual( i["out"].set( "set1" ).value.paths(), [ "/group/plane" ] )
+		self.assertEqual( i["out"].set( "set2" ).value.paths(), [ "/group" ] )
+
+	def testNonExistentSets( self ) :
+
+		p = GafferScene.Plane()
+		p["sets"].setValue( "flatThings" )
+
+		a = GafferScene.StandardAttributes()
+		a["in"].setInput( p["out"] )
+		a["attributes"]["doubleSided"]["enabled"].setValue( True )
+
+		self.assertTrue( "doubleSided" in a["out"].attributes( "/plane" ).keys() )
+
+		f = GafferScene.SetFilter()
+		a["filter"].setInput( f["out"] )
+
+		self.assertFalse( "doubleSided" in a["out"].attributes( "/plane" ).keys() )
+
+		f["set"].setValue( "nonExistent" )
+		self.assertFalse( "doubleSided" in a["out"].attributes( "/plane" ).keys() )
+
+		f["set"].setValue( "flatThings" )
+		self.assertTrue( "doubleSided" in a["out"].attributes( "/plane" ).keys() )
 
 if __name__ == "__main__":
 	unittest.main()
