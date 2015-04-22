@@ -953,17 +953,10 @@ void InteractiveRender::updateLights()
 void InteractiveRender::outputLightsInternal( const IECore::CompoundObject *globals, bool editing )
 {
 	// Get the paths to all the lights
-	const PathMatcherData *lightSet = NULL;
-	if( const CompoundData *sets = globals->member<CompoundData>( "gaffer:sets" ) )
-	{
-		lightSet = sets->member<PathMatcherData>( "__lights" );
-	}
+	ConstPathMatcherDataPtr lightSet = inPlug()->set( "__lights" );
 
 	std::vector<std::string> lightPaths;
-	if( lightSet )
-	{
-		lightSet->readable().paths( lightPaths );
-	}
+	lightSet->readable().paths( lightPaths );
 
 	// Create or update lights in the renderer as necessary
 
