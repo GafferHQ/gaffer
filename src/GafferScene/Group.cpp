@@ -66,6 +66,8 @@ Group::Group( const std::string &name )
 	addChild( new TransformPlug( "transform" ) );
 
 	addChild( new Gaffer::ObjectPlug( "__mapping", Gaffer::Plug::Out, new CompoundObject() ) );
+
+	outPlug()->globalsPlug()->setInput( inPlug()->globalsPlug() );
 }
 
 Group::~Group()
@@ -385,89 +387,106 @@ IECore::ConstInternedStringVectorDataPtr Group::computeChildNames( const ScenePa
 	}
 }
 
-void Group::hashGlobals( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+void Group::hashSetNames( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	SceneProcessor::hashGlobals( context, parent, h );
-
-	// all input globals affect the output, as does the mapping, because we use it to compute the sets
-	for( vector<ScenePlugPtr>::const_iterator it = m_inPlugs.inputs().begin(), eIt = m_inPlugs.inputs().end(); it!=eIt; it++ )
+	SceneProcessor::hashSetNames( context, parent, h );
+	for( vector<ScenePlugPtr>::const_iterator it = m_inPlugs.inputs().begin(), eIt = m_inPlugs.inputs().end(); it!=eIt; ++it )
 	{
-		(*it)->globalsPlug()->hash( h );
+		(*it)->setNamesPlug()->hash( h );
+	}
+}
+
+IECore::ConstInternedStringVectorDataPtr Group::computeSetNames( const Gaffer::Context *context, const ScenePlug *parent ) const
+{
+	InternedStringVectorDataPtr resultData = new InternedStringVectorData;
+	vector<InternedString> &result = resultData->writable();
+	for( vector<ScenePlugPtr>::const_iterator it = m_inPlugs.inputs().begin(), eIt = m_inPlugs.inputs().end(); it!=eIt; ++it )
+	{
+		// This naive approach to merging set names preserves the order of the incoming names,
+		// but at the expense of using linear search. We assume that the number of sets is small
+		// enough and the InternedString comparison fast enough that this is OK.
+		ConstInternedStringVectorDataPtr inputSetNamesData = (*it)->setNamesPlug()->getValue();
+		const vector<InternedString> &inputSetNames = inputSetNamesData->readable();
+		for( vector<InternedString>::const_iterator it = inputSetNames.begin(), eIt = inputSetNames.end(); it != eIt; ++it )
+		{
+			if( std::find( result.begin(), result.end(), *it ) == result.end() )
+			{
+				result.push_back( *it );
+			}
+		}
+	}
+
+	return resultData;
+}
+
+void Group::hashSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	SceneProcessor::hashSet( setName, context, parent, h );
+	for( vector<ScenePlugPtr>::const_iterator it = m_inPlugs.inputs().begin(), eIt = m_inPlugs.inputs().end(); it != eIt; ++it )
+	{
+		(*it)->setPlug()->hash( h );
 	}
 	mappingPlug()->hash( h );
 	namePlug()->hash( h );
 }
 
-IECore::ConstCompoundObjectPtr Group::computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const
+GafferScene::ConstPathMatcherDataPtr Group::computeSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	IECore::CompoundObjectPtr result = inPlug()->globalsPlug()->getValue()->copy();
-
 	InternedString groupName = namePlug()->getValue();
 
 	ConstCompoundObjectPtr mapping = boost::static_pointer_cast<const CompoundObject>( mappingPlug()->getValue() );
 	const ObjectVector *forwardMappings = mapping->member<ObjectVector>( "__GroupForwardMappings", true /* throw if missing */ );
 
-	CompoundDataPtr outputSets = new CompoundData;
-	result->members()["gaffer:sets"] = outputSets;
-
+	PathMatcherDataPtr resultData = new PathMatcherData;
+	PathMatcher &result = resultData->writable();
 	for( size_t i = 0, e = m_inPlugs.inputs().size(); i < e; i++ )
 	{
-		ConstCompoundObjectPtr inputGlobals = m_inPlugs.inputs()[i]->globalsPlug()->getValue();
-		const CompoundData *inputSets = inputGlobals->member<CompoundData>( "gaffer:sets", /* throwExceptions = */ false );
-		if( !inputSets )
-		{
-			continue;
-		}
+		ConstPathMatcherDataPtr inputSetData = m_inPlugs.inputs()[i]->setPlug()->getValue();
+		const PathMatcher &inputSet = inputSetData->readable();
 
 		const CompoundData *forwardMapping = static_cast<const IECore::CompoundData *>( forwardMappings->members()[i].get() );
 
-		for( CompoundDataMap::const_iterator it = inputSets->readable().begin(), eIt = inputSets->readable().end(); it != eIt; it++ )
+		/// \todo If PathMatcher allowed access to the internal nodes, and allowed them to be shared between
+		/// matchers, we could be much more efficient here by making a new matcher which referenced the contents
+		/// of the input matchers.
+		vector<InternedString> outputPath; outputPath.push_back( groupName );
+		for( PathMatcher::Iterator pIt = inputSet.begin(), peIt = inputSet.end(); pIt != peIt; ++pIt )
 		{
-			const PathMatcher &inputSet = static_cast<const PathMatcherData *>( it->second.get() )->readable();
-			PathMatcher &outputSet = outputSets->member<PathMatcherData>( it->first, /* throwExceptions = */ false, /* createIfMissing = */ true )->writable();
-
-			/// \todo If PathMatcher allowed access to the internal nodes, and allowed them to be shared between
-			/// matchers, we could be much more efficient here by making a new matcher which referenced the contents
-			/// of the input matchers.
-			vector<InternedString> outputPath; outputPath.push_back( groupName );
-			for( PathMatcher::Iterator pIt = inputSet.begin(), peIt = inputSet.end(); pIt != peIt; ++pIt )
+			const vector<InternedString> &inputPath = *pIt;
+			if( !inputPath.size() )
 			{
-				const vector<InternedString> &inputPath = *pIt;
-				if( !inputPath.size() )
-				{
-					continue;
-				}
-
-				const InternedStringData *outputName = forwardMapping->member<InternedStringData>( inputPath[0] );
-				if( !outputName )
-				{
-					// Getting here indicates either a bug in computeMapping() or an inconsistency in one
-					// of our inputs whereby a forward declaration has been made with a name which isn't
-					// in childNames( "/" ). The second case can occur in practice when an input is being
-					// connected or disconnected - because our inputs are CompoundPlugs, part way through
-					// the setInput() process the child connections for globalsPlug() and childNamesPlug()
-					// will not correspond, leading us here. This problem occurs in InteractiveRenderManRenderTest
-					// when the scene is being updated from a plugDirtiedSignal() which is emitted when one
-					// child plug has been disconnected, but before the other one has. The real solution to
-					// this would be to properly batch up dirty signals so that only a single signal is
-					// emitted for the parent after all signals for the children have been emitted. Then we
-					// would only ever be called in a consistent connection state.
-					/// \todo Now we have proper batching of dirty propagation we should remove this workaround,
-					/// reverting to a call to forwardMapping->member<InternedStringData>( inputName, true ),
-					/// which will throw when an error is detected.
-					continue;
-				}
-
-				outputPath.resize( 2 );
-				outputPath[1] = outputName->readable();
-				outputPath.insert( outputPath.end(), inputPath.begin() + 1, inputPath.end() );
-
-				outputSet.addPath( outputPath );
+				continue;
 			}
+
+			const InternedStringData *outputName = forwardMapping->member<InternedStringData>( inputPath[0] );
+			if( !outputName )
+			{
+				// Getting here indicates either a bug in computeMapping() or an inconsistency in one
+				// of our inputs whereby a forward declaration has been made with a name which isn't
+				// in childNames( "/" ). The second case can occur in practice when an input is being
+				// connected or disconnected - because our inputs are CompoundPlugs, part way through
+				// the setInput() process the child connections for globalsPlug() and childNamesPlug()
+				// will not correspond, leading us here. This problem occurs in InteractiveRenderManRenderTest
+				// when the scene is being updated from a plugDirtiedSignal() which is emitted when one
+				// child plug has been disconnected, but before the other one has. The real solution to
+				// this would be to properly batch up dirty signals so that only a single signal is
+				// emitted for the parent after all signals for the children have been emitted. Then we
+				// would only ever be called in a consistent connection state.
+				/// \todo Now we have proper batching of dirty propagation we should remove this workaround,
+				/// reverting to a call to forwardMapping->member<InternedStringData>( inputName, true ),
+				/// which will throw when an error is detected.
+				continue;
+			}
+
+			outputPath.resize( 2 );
+			outputPath[1] = outputName->readable();
+			outputPath.insert( outputPath.end(), inputPath.begin() + 1, inputPath.end() );
+
+			result.addPath( outputPath );
 		}
 	}
 
-	return result;
+	return resultData;
 }
 
 IECore::ObjectPtr Group::computeMapping( const Gaffer::Context *context ) const
