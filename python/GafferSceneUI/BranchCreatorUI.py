@@ -37,6 +37,7 @@
 import Gaffer
 import GafferUI
 import GafferScene
+import GafferSceneUI
 
 ##########################################################################
 # Metadata
@@ -64,8 +65,5 @@ Gaffer.Metadata.registerNode(
 GafferUI.PlugValueWidget.registerCreator(
 	GafferScene.BranchCreator,
 	"parent",
-	lambda plug : GafferUI.PathPlugValueWidget(
-		plug,
-		path = GafferScene.ScenePath( plug.node()["in"], plug.node().scriptNode().context(), "/" ),
-	),
+	GafferSceneUI.ScenePathPlugValueWidget
 )

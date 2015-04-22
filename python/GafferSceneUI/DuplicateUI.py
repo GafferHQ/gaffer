@@ -38,6 +38,7 @@ import Gaffer
 import GafferUI
 
 import GafferScene
+import GafferSceneUI
 
 ##########################################################################
 # Metadata
@@ -124,10 +125,7 @@ GafferUI.PlugValueWidget.registerCreator( GafferScene.Duplicate, "parent", None 
 GafferUI.PlugValueWidget.registerCreator(
 	GafferScene.Duplicate,
 	"target",
-	lambda plug : GafferUI.PathPlugValueWidget(
-		plug,
-		path = GafferScene.ScenePath( plug.node()["in"], plug.node().scriptNode().context(), "/" ),
-	),
+	GafferSceneUI.ScenePathPlugValueWidget
 )
 
 GafferUI.PlugValueWidget.registerCreator( GafferScene.Duplicate, "transform", GafferUI.TransformPlugValueWidget, collapsed=None )
