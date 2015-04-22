@@ -344,6 +344,12 @@ class InteractiveRender::ChildNamesUpdateTask : public tbb::task
 
 void InteractiveRender::plugDirtied( const Gaffer::Plug *plug )
 {
+	if( inPlug()->childNames( ScenePlug::ScenePath() )->readable().empty() )
+	{
+		stop();
+		return;
+	}
+
 	if(
 		plug == inPlug()->transformPlug() ||
 		plug == inPlug()->globalsPlug()
