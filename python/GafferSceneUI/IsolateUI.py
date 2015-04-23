@@ -43,14 +43,41 @@ import GafferScene
 # Metadata
 ##########################################################################
 
-Gaffer.Metadata.registerNodeDescription(
+Gaffer.Metadata.registerNode(
 
-GafferScene.Isolate,
+	GafferScene.Isolate,
 
-"""Isolates objects by removing paths not matching a filter from the scene.""",
+	"description",
+	"""
+	Isolates objects by removing paths not matching a filter from the scene.
+	""",
 
-"from",
-"The ancestor to isolate the objects from. Only locations below this will be removed.",
+	plugs = {
+
+		"from" : [
+
+			"description",
+			"""
+			The ancestor to isolate the objects from. Only locations below
+			this will be removed.
+			""",
+
+		],
+
+		"adjustBounds" : [
+
+			"description",
+			"""
+			By default, the bounding boxes of ancestor locations are
+			automatically updated when children are removed. This can
+			be turned off if necessary to get improved performance - in
+			this case the bounding boxes will still wholly contain the
+			contents at each location, but may be bigger than necessary.
+			""",
+
+		],
+
+	}
 
 )
 
