@@ -44,17 +44,59 @@ import GafferScene
 # Metadata
 ##########################################################################
 
-Gaffer.Metadata.registerNodeDescription(
+Gaffer.Metadata.registerNode(
 
-GafferScene.SceneReader,
+	GafferScene.SceneReader,
 
-"""Reads scenes in any of the formats supported by Cortex's SceneInterface.""",
+	"description",
+	"""
+	Reads scenes in any of the formats supported by Cortex's SceneInterface.
+	""",
 
-"tags",
-"Limits the parts of the scene loaded to only those with a specific set of tags.",
+	plugs = {
 
-"sets",
-"Specifies a list of tags to be loaded and converted into gaffer sets.",
+		"fileName" : [
+
+			"description",
+			"""
+			The name of the file to be loaded. The file can be
+			in any of the formats supported by Cortex's SceneInterfaces.
+			""",
+
+		],
+
+		"refreshCount" : [
+
+			"description",
+			"""
+			May be incremented to force a reload if the file has
+			changed on disk - otherwise old contents may still
+			be loaded via Gaffer's cache.
+			""",
+
+		],
+
+		"tags" : [
+
+			"description",
+			"""
+			Limits the parts of the scene loaded to only those
+			with a specific set of tags.
+			""",
+
+		],
+
+		"sets" : [
+
+			"description",
+			"""
+			Specifies a list of tags to be loaded and converted
+			into gaffer sets.
+			""",
+
+		],
+
+	}
 
 )
 
