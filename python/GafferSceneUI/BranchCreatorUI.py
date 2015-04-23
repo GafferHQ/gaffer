@@ -1,7 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2012, John Haddon. All rights reserved.
-#  Copyright (c) 2013-2014, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,92 +34,38 @@
 #
 ##########################################################################
 
-import fnmatch
-
-import IECore
-
 import Gaffer
 import GafferUI
-
 import GafferScene
-import GafferSceneUI
 
-# SceneNode
+##########################################################################
+# Metadata
+##########################################################################
 
-Gaffer.Metadata.registerNodeDescription(
+Gaffer.Metadata.registerNode(
 
-GafferScene.SceneNode,
+	GafferScene.BranchCreator,
 
-"""The base type for all nodes which are capable of generating a hierarchical scene.""",
+	"description",
+	"""
+	Base class for nodes creating a new branch in the scene hierarchy.
+	""",
 
-"out",
-"""The output scene.""",
-
-"enabled",
-"""The on/off state of the node. When it is off, the node outputs an empty scene.""",
+	# Deliberately not documenting parent plug, so that
+	# is given documentation more specific to each
+	# derived class.
 
 )
 
-def __noduleCreator( plug ) :
-
-	if isinstance( plug, GafferScene.ScenePlug ) :
-		return GafferUI.StandardNodule( plug )
-
-	return None
-
-GafferUI.Nodule.registerNodule( GafferScene.SceneNode, fnmatch.translate( "*" ), __noduleCreator )
-GafferUI.PlugValueWidget.registerType( GafferScene.ScenePlug, None )
-
-Gaffer.Metadata.registerPlugValue( GafferScene.SceneNode, "enabled", "nodeUI:section", "Node" )
-
-# Constraint
+##########################################################################
+# Widgets and nodules
+##########################################################################
 
 GafferUI.PlugValueWidget.registerCreator(
-	GafferScene.Constraint,
-	"target",
+	GafferScene.BranchCreator,
+	"parent",
 	lambda plug : GafferUI.PathPlugValueWidget(
 		plug,
 		path = GafferScene.ScenePath( plug.node()["in"], plug.node().scriptNode().context(), "/" ),
 	),
-)
-
-GafferUI.PlugValueWidget.registerCreator(
-	GafferScene.Constraint,
-	"targetMode",
-	GafferUI.EnumPlugValueWidget,
-	labelsAndValues = (
-		( "Origin", GafferScene.Constraint.TargetMode.Origin ),
-		( "BoundMin", GafferScene.Constraint.TargetMode.BoundMin ),
-		( "BoundMax", GafferScene.Constraint.TargetMode.BoundMax ),
-		( "BoundCenter", GafferScene.Constraint.TargetMode.BoundCenter ),
-	)
-)
-
-# Plane
-
-Gaffer.Metadata.registerNodeDescription(
-
-GafferScene.Plane,
-
-"""A node which produces scenes containing a plane.""",
-
-"dimensions",
-"Controls size of the plane in X and Y.",
-
-"divisions",
-"Controls tesselation of the plane.",
-
-)
-
-# Cube
-
-Gaffer.Metadata.registerNodeDescription(
-
-GafferScene.Cube,
-
-"""A node which produces scenes containing a cube.""",
-
-"dimensions",
-"Controls size of the cube.",
-
 )
