@@ -378,6 +378,10 @@ class _LineEdit( QtGui.QLineEdit ) :
 			QtGui.QSizePolicy.Expanding if self.__fixedCharacterWidth is None else QtGui.QSizePolicy.Fixed,
 			QtGui.QSizePolicy.Fixed
 		)
+		
+		# we need to make sure that the geometry is up-to-date with the current character width
+		if self.__fixedCharacterWidth is not None:
+			self.updateGeometry()
 
 	def getFixedCharacterWidth( self ) :
 
