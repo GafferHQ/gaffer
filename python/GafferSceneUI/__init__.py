@@ -110,6 +110,7 @@ import SceneElementProcessorUI
 import PointConstraintUI
 import SceneTimeWarpUI
 import FilterMixinBaseUI
+import SceneMixinBaseUI
 
 # then all the PathPreviewWidgets. note that the order
 # of import controls the order of display.
