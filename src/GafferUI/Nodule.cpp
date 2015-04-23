@@ -35,10 +35,11 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferUI/Nodule.h"
-
 #include "Gaffer/Plug.h"
 #include "Gaffer/Node.h"
+#include "Gaffer/Metadata.h"
+
+#include "GafferUI/Nodule.h"
 
 using namespace GafferUI;
 using namespace Imath;
@@ -140,10 +141,16 @@ std::string Nodule::getToolTip( const IECore::LineSegment3f &line ) const
 	}
 
 	result = m_plug->fullName();
-	Gaffer::NodePtr node = m_plug->ancestor<Gaffer::Node>();
-	if( node )
+	if( const Gaffer::Node *node = m_plug->node() )
 	{
 		result = m_plug->relativeName( node->parent<Gaffer::GraphComponent>() );
+	}
+
+	result = "<h3>" + result + "</h3>";
+	std::string description = Gaffer::Metadata::plugDescription( m_plug.get() );
+	if( description.size() )
+	{
+		result += "\n\n" + description;
 	}
 
 	return result;
