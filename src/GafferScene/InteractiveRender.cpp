@@ -344,6 +344,7 @@ class InteractiveRender::ChildNamesUpdateTask : public tbb::task
 
 void InteractiveRender::plugDirtied( const Gaffer::Plug *plug )
 {
+
 	if(
 		plug == inPlug()->transformPlug() ||
 		plug == inPlug()->globalsPlug()
@@ -401,6 +402,12 @@ void InteractiveRender::plugDirtied( const Gaffer::Plug *plug )
 	{
 		try
 		{
+			// no point doing an update if the scene's empty
+			if( inPlug()->childNames( ScenePlug::ScenePath() )->readable().empty() )
+			{
+				stop();
+				return;
+			}
 			update();
 		}
 		catch( const std::exception &e )

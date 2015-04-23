@@ -885,8 +885,8 @@ class InteractiveRenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 
 		for p in [
 			IECore.V2f( 0.5 ),
-			IECore.V2f( 0.1 ),
-			IECore.V2f( 0.9 ),
+			IECore.V2f( 0.15 ),
+			IECore.V2f( 0.85 ),
 		] :
 			c = self.__colorAtUV(
 				IECore.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
