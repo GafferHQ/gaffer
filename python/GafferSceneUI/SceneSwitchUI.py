@@ -34,7 +34,37 @@
 #
 ##########################################################################
 
+import Gaffer
 import GafferUI
 import GafferScene
+
+Gaffer.Metadata.registerNode(
+
+	GafferScene.SceneSwitch,
+
+	"description",
+	"""
+	Chooses between multiple input scene, passing through the
+	chosen input to the output.
+	""",
+
+	plugs = {
+
+		"index" : [
+
+			"description",
+			"""
+			The index of the input which is passed through. A value
+			of 0 chooses the first input, 1 the second and so on. Values
+			larger than the number of available inputs wrap back around to
+			the beginning.
+			"""
+
+		]
+
+	}
+
+)
+
 
 GafferUI.PlugValueWidget.registerCreator( GafferScene.SceneSwitch, "in[0-9]*", None )
