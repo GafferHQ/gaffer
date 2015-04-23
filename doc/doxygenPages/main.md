@@ -6,7 +6,7 @@ The C++ libraries and Python modules documented here form the basis of the [Gaff
 Gaffer
 ------
 
-This library provides the basis for creating node graphs using the Gaffer::Node and Gaffer::Plug classes. It provides a concrete node types, such as Gaffer::Expression and Gaffer::Random -but most nodes are implemented in libraries with a specific area of focus.
+This library provides the basis for creating node graphs using the Gaffer::Node and Gaffer::Plug classes. It provides a few concrete node types, such as Gaffer::Expression and Gaffer::Random - but most nodes are implemented in libraries with a specific area of focus.
 
 GafferImage
 -----------
