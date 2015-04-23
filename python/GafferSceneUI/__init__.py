@@ -112,6 +112,7 @@ import SceneTimeWarpUI
 import FilterMixinBaseUI
 import SceneMixinBaseUI
 import BranchCreatorUI
+import ConstraintUI
 
 # then all the PathPreviewWidgets. note that the order
 # of import controls the order of display.

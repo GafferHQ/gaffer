@@ -73,29 +73,6 @@ GafferUI.PlugValueWidget.registerType( GafferScene.ScenePlug, None )
 
 Gaffer.Metadata.registerPlugValue( GafferScene.SceneNode, "enabled", "nodeUI:section", "Node" )
 
-# Constraint
-
-GafferUI.PlugValueWidget.registerCreator(
-	GafferScene.Constraint,
-	"target",
-	lambda plug : GafferUI.PathPlugValueWidget(
-		plug,
-		path = GafferScene.ScenePath( plug.node()["in"], plug.node().scriptNode().context(), "/" ),
-	),
-)
-
-GafferUI.PlugValueWidget.registerCreator(
-	GafferScene.Constraint,
-	"targetMode",
-	GafferUI.EnumPlugValueWidget,
-	labelsAndValues = (
-		( "Origin", GafferScene.Constraint.TargetMode.Origin ),
-		( "BoundMin", GafferScene.Constraint.TargetMode.BoundMin ),
-		( "BoundMax", GafferScene.Constraint.TargetMode.BoundMax ),
-		( "BoundCenter", GafferScene.Constraint.TargetMode.BoundCenter ),
-	)
-)
-
 # Plane
 
 Gaffer.Metadata.registerNodeDescription(
