@@ -34,7 +34,33 @@
 #
 ##########################################################################
 
+import Gaffer
 import GafferUI
 import GafferScene
+
+Gaffer.Metadata.registerNode(
+
+	GafferScene.SceneContextVariables,
+
+	"description",
+	"""
+	Adds variables which can be referenced by upstream expressions.
+	""",
+
+	plugs = {
+
+		"variables" : [
+
+			"description",
+			"""
+			The variables to be added - arbitrary numbers of variables
+			can be added here.
+			"""
+
+		]
+
+	}
+
+)
 
 GafferUI.PlugValueWidget.registerCreator( GafferScene.SceneContextVariables, "variables", GafferUI.CompoundDataPlugValueWidget, collapsed=None )
