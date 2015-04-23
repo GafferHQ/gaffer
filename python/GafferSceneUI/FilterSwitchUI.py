@@ -48,6 +48,22 @@ Gaffer.Metadata.registerNode(
 	filter through to the output.
 	""",
 
+	plugs = {
+
+		"index" : [
+
+			"description",
+			"""
+			The index of the input which is passed through. A value
+			of 0 chooses the first input, 1 the second and so on. Values
+			larger than the number of available inputs wrap back around to
+			the beginning.
+			"""
+
+		],
+
+	},
+
 )
 
 GafferUI.Nodule.registerNodule( GafferScene.Filter, "index", lambda plug : None )
