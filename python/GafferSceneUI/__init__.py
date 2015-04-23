@@ -113,6 +113,7 @@ import FilterMixinBaseUI
 import SceneMixinBaseUI
 import BranchCreatorUI
 import ConstraintUI
+import PlaneUI
 
 # then all the PathPreviewWidgets. note that the order
 # of import controls the order of display.

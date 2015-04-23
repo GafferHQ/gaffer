@@ -1,7 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2012, John Haddon. All rights reserved.
-#  Copyright (c) 2013-2014, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,53 +34,39 @@
 #
 ##########################################################################
 
-import fnmatch
-
-import IECore
-
 import Gaffer
-import GafferUI
-
 import GafferScene
-import GafferSceneUI
 
-# SceneNode
+Gaffer.Metadata.registerNode(
 
-Gaffer.Metadata.registerNodeDescription(
+	GafferScene.Plane,
 
-GafferScene.SceneNode,
+	"description",
+	"""
+	Produces scenes containing a plane.
+	""",
 
-"""The base type for all nodes which are capable of generating a hierarchical scene.""",
+	plugs = {
 
-"out",
-"""The output scene.""",
+		"dimensions" : [
 
-"enabled",
-"""The on/off state of the node. When it is off, the node outputs an empty scene.""",
+			"description",
+			"""
+			The size of the plane in the X and Y directions.
+			""",
 
-)
+		],
 
-def __noduleCreator( plug ) :
+		"divisions" : [
 
-	if isinstance( plug, GafferScene.ScenePlug ) :
-		return GafferUI.StandardNodule( plug )
+			"description",
+			"""
+			The number of subdivisions of the plane in the
+			X and Y directions.
+			""",
 
-	return None
+		],
 
-GafferUI.Nodule.registerNodule( GafferScene.SceneNode, fnmatch.translate( "*" ), __noduleCreator )
-GafferUI.PlugValueWidget.registerType( GafferScene.ScenePlug, None )
-
-Gaffer.Metadata.registerPlugValue( GafferScene.SceneNode, "enabled", "nodeUI:section", "Node" )
-
-# Cube
-
-Gaffer.Metadata.registerNodeDescription(
-
-GafferScene.Cube,
-
-"""A node which produces scenes containing a cube.""",
-
-"dimensions",
-"Controls size of the cube.",
+	}
 
 )
