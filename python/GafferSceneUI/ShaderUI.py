@@ -49,30 +49,67 @@ import GafferScene
 # Metadata
 ##########################################################################
 
-Gaffer.Metadata.registerNodeDescription(
+Gaffer.Metadata.registerNode(
 
-GafferScene.Shader,
+	GafferScene.Shader,
 
-"""The base type for all nodes which create shaders. Use the ShaderAssignment node to assign them to objects in the scene.""",
+	"description",
+	"""
+	The base type for all nodes which create shaders. Use the
+	ShaderAssignment node to assign them to objects in the scene.
+	""",
 
-"name",
-{
-	"description" :
-	"""The name of the shader being represented. This should be considered read-only. Use the Shader.loadShader() method to load a shader.""",
-	"nodeUI:section" : "header",
-},
+	plugs = {
 
-"parameters",
-{
-	"description" : """Where the parameters for the shader are represented.""",
-	"nodeGadget:nodulePosition" : "left",
-},
+		"name" : [
 
-"out",
-{
-	"description" : """The output from the shader.""",
-	"nodeGadget:nodulePosition" : "right",
-},
+			"description",
+			"""
+			The name of the shader being represented. This should
+			be considered read-only. Use the Shader.loadShader()
+			method to load a shader.
+			""",
+
+			"nodeUI:section", "header",
+
+		],
+
+		"type" : [
+
+			"description",
+			"""
+			The type of the shader being represented. This should
+			be considered read-only. Use the Shader.loadShader()
+			method to load a shader.
+			""",
+
+			"nodeUI:section", "header",
+
+		],
+
+		"parameters" : [
+
+			"description",
+			"""
+			Where the parameters for the shader are represented.
+			""",
+
+			"nodeGadget:nodulePosition", "left",
+
+		],
+
+		"out" : [
+
+			"description",
+			"""
+			The output from the shader.
+			""",
+
+			"nodeGadget:nodulePosition", "right",
+
+		],
+
+	}
 
 )
 
