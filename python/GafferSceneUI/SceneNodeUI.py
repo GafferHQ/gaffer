@@ -37,27 +37,46 @@
 
 import fnmatch
 
-import IECore
-
 import Gaffer
 import GafferUI
 
 import GafferScene
-import GafferSceneUI
 
-# SceneNode
+Gaffer.Metadata.registerNode(
 
-Gaffer.Metadata.registerNodeDescription(
+	GafferScene.SceneNode,
 
-GafferScene.SceneNode,
+	"description",
+	"""
+	The base type for all nodes which are capable of generating a
+	hierarchical scene.
+	""",
 
-"""The base type for all nodes which are capable of generating a hierarchical scene.""",
+	plugs = {
 
-"out",
-"""The output scene.""",
+		"out" : [
 
-"enabled",
-"""The on/off state of the node. When it is off, the node outputs an empty scene.""",
+			"description",
+			"""
+			The output scene.
+			""",
+
+		],
+
+
+		"enabled" : [
+
+			"description",
+			"""
+			The on/off state of the node. When it is off, the node outputs
+			an empty scene.
+			""",
+
+			"nodeUI:section", "Node",
+
+		],
+
+	}
 
 )
 
@@ -70,5 +89,3 @@ def __noduleCreator( plug ) :
 
 GafferUI.Nodule.registerNodule( GafferScene.SceneNode, fnmatch.translate( "*" ), __noduleCreator )
 GafferUI.PlugValueWidget.registerType( GafferScene.ScenePlug, None )
-
-Gaffer.Metadata.registerPlugValue( GafferScene.SceneNode, "enabled", "nodeUI:section", "Node" )
