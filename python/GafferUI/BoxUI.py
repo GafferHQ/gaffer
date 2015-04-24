@@ -185,13 +185,13 @@ GafferUI.PlugValueWidget.registerCreator( Gaffer.Box, "user.*" , __plugValueWidg
 # whether or not we'll have future SubGraph subclasses that will want a different behaviour.
 GafferUI.PlugValueWidget.registerCreator( Gaffer.Reference, "user.*" , __plugValueWidgetCreator )
 
-# PlugValueWidget menu
+# Shared menu code
 ##########################################################################
 
-def __promoteToBox( box, plug ) :
+def __promoteToBox( box, plug, asUserPlug ) :
 
 	with Gaffer.UndoContext( box.ancestor( Gaffer.ScriptNode ) ) :
-		box.promotePlug( plug )
+		box.promotePlug( plug, asUserPlug )
 
 def __unpromoteFromBox( box, plug ) :
 
@@ -207,9 +207,8 @@ def __promoteToBoxEnabledPlug( box, plug ) :
 		box["enabled"] = enabledPlug
 		plug.setInput( enabledPlug )
 
-def __plugPopupMenu( menuDefinition, plugValueWidget ) :
+def __appendPlugPromotionMenuItems( menuDefinition, plug, readOnly = False, asUserPlug = True ) :
 
-	plug = plugValueWidget.getPlug()
 	node = plug.node()
 	if node is None :
 		return
@@ -220,17 +219,19 @@ def __plugPopupMenu( menuDefinition, plugValueWidget ) :
 
 	if box.canPromotePlug( plug ) :
 
-		menuDefinition.append( "/BoxDivider", { "divider" : True } )
+		if len( menuDefinition.items() ) :
+			menuDefinition.append( "/BoxDivider", { "divider" : True } )
+
 		menuDefinition.append( "/Promote to %s" % box.getName(), {
-			"command" : IECore.curry( __promoteToBox, box, plug ),
-			"active" : not plugValueWidget.getReadOnly(),
+			"command" : IECore.curry( __promoteToBox, box, plug, asUserPlug ),
+			"active" : not readOnly,
 		} )
 
 		if isinstance( node, Gaffer.DependencyNode ) :
 			if plug.isSame( node.enabledPlug() ) :
 				menuDefinition.append( "/Promote to %s.enabled" % box.getName(), {
 					"command" : IECore.curry( __promoteToBoxEnabledPlug, box, plug ),
-					"active" : not plugValueWidget.getReadOnly(),
+					"active" : not readOnly,
 				} )
 
 	elif box.plugIsPromoted( plug ) :
@@ -240,11 +241,20 @@ def __plugPopupMenu( menuDefinition, plugValueWidget ) :
 		with IECore.IgnoredExceptions( Exception ) :
 			menuDefinition.remove( "/Remove input" )
 
-		menuDefinition.append( "/BoxDivider", { "divider" : True } )
+		if len( menuDefinition.items() ) :
+			menuDefinition.append( "/BoxDivider", { "divider" : True } )
+
 		menuDefinition.append( "/Unpromote from %s" % box.getName(), {
 			"command" : IECore.curry( __unpromoteFromBox, box, plug ),
-			"active" : not plugValueWidget.getReadOnly(),
+			"active" : not readOnly,
 		} )
+
+# PlugValueWidget menu
+##########################################################################
+
+def __plugPopupMenu( menuDefinition, plugValueWidget ) :
+
+	__appendPlugPromotionMenuItems( menuDefinition, plugValueWidget.getPlug(), readOnly = plugValueWidget.getReadOnly() )
 
 __plugPopupMenuConnection = GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugPopupMenu )
 
@@ -269,11 +279,12 @@ def __deletePlug( plug ) :
 
 def __nodeGraphPlugContextMenu( nodeGraph, plug, menuDefinition ) :
 
-	if not isinstance( plug.node(), Gaffer.Box ) :
-		return
+	if isinstance( plug.node(), Gaffer.Box ) :
 
-	menuDefinition.append( "/Rename...", { "command" : IECore.curry( __renamePlug, nodeGraph, plug ) } )
-	menuDefinition.append( "/DeleteDivider", { "divider" : True } )
-	menuDefinition.append( "/Delete", { "command" : IECore.curry( __deletePlug, plug ) } )
+		menuDefinition.append( "/Rename...", { "command" : IECore.curry( __renamePlug, nodeGraph, plug ) } )
+		menuDefinition.append( "/DeleteDivider", { "divider" : True } )
+		menuDefinition.append( "/Delete", { "command" : IECore.curry( __deletePlug, plug ) } )
+
+	__appendPlugPromotionMenuItems( menuDefinition, plug, asUserPlug = False )
 
 __nodeGraphPlugContextMenuConnection = GafferUI.NodeGraph.plugContextMenuSignal().connect( __nodeGraphPlugContextMenu )
