@@ -71,7 +71,7 @@ void popHashNodes( HashStack &stack, size_t size, IECore::MurmurHash &h )
 {
 	while( stack.size() > size )
 	{
-		h.append( stack.top().size() );
+		h.append( (uint64_t)stack.top().size() );
 		std::sort( stack.top().begin(), stack.top().end() );
 		for( HashNodes::const_iterator nIt = stack.top().begin(), nEIt = stack.top().end(); nIt != nEIt; ++nIt )
 		{
