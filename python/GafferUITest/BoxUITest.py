@@ -86,6 +86,22 @@ class BoxUITest( GafferUITest.TestCase ) :
 		self.assertEqual( boxGadget2.noduleTangent( boxGadget2.nodule( box2["in"] ) ), IECore.V3f( -1, 0, 0 ) )
 		self.assertEqual( boxGadget2.noduleTangent( boxGadget2.nodule( box2["out"] ) ), IECore.V3f( 1, 0, 0 ) )
 
+	def testNodulePositionsForPromotedPlugs( self ) :
+	
+		s = Gaffer.ScriptNode()
+		g = GafferUI.GraphGadget( s )
+		
+		s["b"] = Gaffer.Box()
+		s["b"]["n"] = self.NodulePositionNode()
+		
+		boxGadget = g.nodeGadget( s["b"] )
+		
+		p1 = s["b"].promotePlug( s["b"]["n"]["op1"], asUserPlug = False )
+		p2 = s["b"].promotePlug( s["b"]["n"]["sum"], asUserPlug = False )
+
+		self.assertEqual( boxGadget.noduleTangent( boxGadget.nodule( p1 ) ), IECore.V3f( -1, 0, 0 ) )
+		self.assertEqual( boxGadget.noduleTangent( boxGadget.nodule( p2 ) ), IECore.V3f( 1, 0, 0 ) )
+
 	def testRenamingPlugs( self ) :
 
 		box = Gaffer.Box()

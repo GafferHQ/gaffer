@@ -96,6 +96,15 @@ Plug *Box::promotePlug( Plug *descendantPlug, bool asUserPlug )
 		}
 	}
 
+	// Copy over the metadata for nodule position, so the nodule appears in the expected spot.
+	// This must be done before parenting the new plug, as the nodule is created from childAddedSignal().
+	/// \todo Perhaps we should have a more general mechanism for mirroring all metadata?
+	/// If we could register a dynamic metadata value for "*", then we could just answer
+	/// all metadata queries on the fly - would that be a good idea? We'd need to figure
+	/// out how to make it compatible with Metadata::registeredPlugValues(), which needs to
+	/// know all valid names.
+	Metadata::registerPlugValue( externalPlug.get(), "nodeGadget:nodulePosition", Metadata::plugValue<IECore::Data>( descendantPlug, "nodeGadget:nodulePosition" ) );
+
 	if( asUserPlug )
 	{
 		userPlug()->addChild( externalPlug );
