@@ -36,6 +36,7 @@ script:
     - ./install/gaffer-*/bin/gaffer test GafferSceneTest
     - ./install/gaffer-*/bin/gaffer test GafferSceneUITest
     - ./install/gaffer-*/bin/gaffer test GafferOSLTest
+    - ./install/gaffer-*/bin/gaffer test GafferOSLUITest
     - ./install/gaffer-*/bin/gaffer test GafferRenderManTest
 
 compiler:
