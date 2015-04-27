@@ -43,14 +43,36 @@ import GafferScene
 # Metadata
 ##########################################################################
 
-Gaffer.Metadata.registerNodeDescription(
+Gaffer.Metadata.registerNode(
 
-GafferScene.Parent,
+	GafferScene.Parent,
 
-"""Parents one scene hierarchy into another.""",
+	"description",
+	"""
+	Parents one scene hierarchy into another.
+	""",
 
-"child",
-"The child hierarchy to be parented.",
+	plugs = {
+
+		"parent" : [
+
+			"description",
+			"""
+			The location which the child is parented under.
+			""",
+
+		],
+
+		"child" : [
+
+			"description",
+			"""
+			The child hierarchy to be parented.
+			""",
+
+		],
+
+	}
 
 )
 

@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,6 +35,8 @@
 ##########################################################################
 
 import Gaffer
+import GafferUI
+
 import GafferScene
 
 ##########################################################################
@@ -43,34 +45,65 @@ import GafferScene
 
 Gaffer.Metadata.registerNode(
 
-	GafferScene.DeleteOptions,
+	GafferScene.PathFilter,
 
 	"description",
 	"""
-	A node which removes options from the globals.
+	Chooses locations by matching them against a list of
+	paths.
 	""",
 
 	plugs = {
 
-		"names" : [
+		"paths" : [
 
 			"description",
 			"""
-			The names of options to be removed. Names should be
-			separated by spaces and can use Gaffer's standard wildcards.
-			""",
+			The list of paths to the locations to be matched by the filter.
+			A path is formed by a sequence of names separated by '/', and
+			specifies the hierarchical position of a location within the scene.
+			Paths may use Gaffer's standard wildcard characters to match
+			multiple locations.
 
-		],
+			The '*' wildcard matches any sequence of characters within
+			an individual name, but never matches across names separated
+			by a '/'.
 
-		"invertNames" : [
+			 - /robot/*Arm matches /robot/leftArm, /robot/rightArm and
+			   /robot/Arm. But does not match /robot/limbs/leftArm or
+			   /robot/arm.
 
-			"description",
-			"""
-			When on, matching names are kept, and non-matching names are removed.
+			The "..." wildcard matches any sequence of names, and can be
+			used to match locations no matter where they are parented in
+			the hierarchy.
+
+			 - /.../house matches /house, /street/house and /city/street/house.
 			""",
 
 		],
 
 	}
 
+)
+
+##########################################################################
+# Widgets and nodules
+##########################################################################
+
+def __pathsPlugWidgetCreator( plug ) :
+
+	result = GafferUI.VectorDataPlugValueWidget( plug )
+	result.vectorDataWidget().setDragPointer( "objects" )
+	return result
+
+GafferUI.PlugValueWidget.registerCreator(
+	GafferScene.PathFilter,
+	"paths",
+	__pathsPlugWidgetCreator,
+)
+
+GafferUI.Nodule.registerNodule(
+	GafferScene.PathFilter,
+	"paths",
+	lambda plug : None,
 )

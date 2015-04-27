@@ -43,18 +43,35 @@ import GafferOSL
 # Metadata
 ##########################################################################
 
-Gaffer.Metadata.registerNodeDescription(
+Gaffer.Metadata.registerNode(
 
-GafferOSL.OSLObject,
+	GafferOSL.OSLObject,
 
-"""Executes OSL shaders to perform object processing.""",
+	"description",
+	"""
+	Executes OSL shaders to perform object processing. Use the shaders from
+	the OSL/ObjectProcessing menu to read primitive variables from the input
+	object and then write primitive variables back to it.
+	""",
 
-"shader",
-{
-	"description" : "The shader to be executed - connect the output from an OSL network here.",
-	"nodeGadget:nodulePosition" : "left",
-}
+	plugs = {
 
+		"shader" : [
+		
+			"description",
+			"""
+			The shader to be executed - connect the output from an OSL network here.
+			A minimal shader network to process P would look like this :
+			
+				InPoint->ProcessingNodes->OutPoint->OutObject
+			""",
+			
+			"nodeGadget:nodulePosition", "left",
+	
+		],
+
+	}
+	
 )
 
 ##########################################################################

@@ -42,8 +42,53 @@ import GafferScene
 # Metadata
 ##########################################################################
 
-Gaffer.Metadata.registerPlugValue( GafferScene.Camera, "projection", "preset:Perspective", "perspective" )
-Gaffer.Metadata.registerPlugValue( GafferScene.Camera, "projection", "preset:Orthographic", "orthographic" )
+Gaffer.Metadata.registerNode(
+
+	GafferScene.Camera,
+
+	"description",
+	"""
+	Produces scenes containing a camera. To choose which camera is
+	used for rendering, use a StandardOptions node.
+	""",
+
+	plugs = {
+
+		"projection" : [
+
+			"description",
+			"""
+			The basic camera type.
+			""",
+
+			"preset:Perspective", "perspective",
+			"preset:Orthographic", "orthographic",
+
+		],
+
+		"fieldOfView" : [
+
+			"description",
+			"""
+			The field of view, specified in degrees, and interpreted
+			as defined in the RenderMan specification. This is only
+			relevant for perspective cameras.
+			""",
+
+		],
+
+		"clippingPlanes" : [
+
+			"description",
+			"""
+			The near and far clipping planes.
+			""",
+
+		],
+
+	}
+
+)
 
 ##########################################################################
 # Widgets and nodules

@@ -44,14 +44,42 @@ import GafferSceneUI
 # Metadata
 ##########################################################################
 
-Gaffer.Metadata.registerNodeDescription(
+Gaffer.Metadata.registerNode(
 
-GafferScene.SubTree,
+	GafferScene.SubTree,
 
-"""A node for extracting a specific branch from a scene.""",
+	"description",
+	"""A node for extracting a specific branch from a scene.""",
 
-"root",
-"""The location to become the new root for the output scene. All locations below this will be kept, and all others will be discarded.""",
+	plugs = {
+
+		"root" : [
+
+			"description",
+			"""
+			The location to become the new root for the output scene.
+			All locations below this will be kept, and all others will
+			be discarded.
+			""",
+
+		],
+
+		"includeRoot" : [
+
+			"description",
+			"""
+			Causes the root location to also be kept in the
+			output scene, in addition to its children. For
+			instance, if the scene contains only
+			/city/street/house and the root is set to /city/street,
+			then the new scene will by default contain only /house -
+			but the includeRoot setting will cause it to contain
+			/street/house instead.
+			""",
+
+		]
+
+	}
 
 )
 

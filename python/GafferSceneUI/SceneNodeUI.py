@@ -37,27 +37,46 @@
 
 import fnmatch
 
-import IECore
-
 import Gaffer
 import GafferUI
 
 import GafferScene
-import GafferSceneUI
 
-# SceneNode
+Gaffer.Metadata.registerNode(
 
-Gaffer.Metadata.registerNodeDescription(
+	GafferScene.SceneNode,
 
-GafferScene.SceneNode,
+	"description",
+	"""
+	The base type for all nodes which are capable of generating a
+	hierarchical scene.
+	""",
 
-"""The base type for all nodes which are capable of generating a hierarchical scene.""",
+	plugs = {
 
-"out",
-"""The output scene.""",
+		"out" : [
 
-"enabled",
-"""The on/off state of the node. When it is off, the node outputs an empty scene.""",
+			"description",
+			"""
+			The output scene.
+			""",
+
+		],
+
+
+		"enabled" : [
+
+			"description",
+			"""
+			The on/off state of the node. When it is off, the node outputs
+			an empty scene.
+			""",
+
+			"nodeUI:section", "Node",
+
+		],
+
+	}
 
 )
 
@@ -70,150 +89,3 @@ def __noduleCreator( plug ) :
 
 GafferUI.Nodule.registerNodule( GafferScene.SceneNode, fnmatch.translate( "*" ), __noduleCreator )
 GafferUI.PlugValueWidget.registerType( GafferScene.ScenePlug, None )
-
-Gaffer.Metadata.registerPlugValue( GafferScene.SceneNode, "enabled", "nodeUI:section", "Node" )
-
-# Instancer
-
-GafferUI.PlugValueWidget.registerCreator( GafferScene.Instancer, "instance", None )
-
-# ObjectToScene
-
-GafferUI.Nodule.registerNodule( GafferScene.ObjectToScene, "object", GafferUI.StandardNodule )
-
-# AlembicSource
-
-GafferUI.PlugValueWidget.registerCreator(
-	GafferScene.AlembicSource,
-	"fileName",
-	lambda plug : GafferUI.PathPlugValueWidget( plug,
-		path = Gaffer.FileSystemPath( "/", filter = Gaffer.FileSystemPath.createStandardFilter( extensions = [ "abc" ] ) ),
-		pathChooserDialogueKeywords = {
-			"bookmarks" : GafferUI.Bookmarks.acquire( plug, category = "sceneCache" ),
-			"leaf" : True,
-		},
-	)
-)
-
-GafferUI.PlugValueWidget.registerCreator(
-	GafferScene.AlembicSource,
-	"refreshCount",
-	GafferUI.IncrementingPlugValueWidget,
-	label = "Refresh",
-	undoable = False
-)
-
-# BranchCreator
-
-GafferUI.PlugValueWidget.registerCreator(
-	GafferScene.BranchCreator,
-	"parent",
-	lambda plug : GafferUI.PathPlugValueWidget(
-		plug,
-		path = GafferScene.ScenePath( plug.node()["in"], plug.node().scriptNode().context(), "/" ),
-	),
-)
-
-# Group
-
-GafferUI.PlugValueWidget.registerCreator( GafferScene.Group, "in[0-9]*", None )
-GafferUI.PlugValueWidget.registerCreator( GafferScene.Group, "transform", GafferUI.TransformPlugValueWidget, collapsed=None )
-
-# Constraint
-
-GafferUI.PlugValueWidget.registerCreator(
-	GafferScene.Constraint,
-	"target",
-	lambda plug : GafferUI.PathPlugValueWidget(
-		plug,
-		path = GafferScene.ScenePath( plug.node()["in"], plug.node().scriptNode().context(), "/" ),
-	),
-)
-
-GafferUI.PlugValueWidget.registerCreator(
-	GafferScene.Constraint,
-	"targetMode",
-	GafferUI.EnumPlugValueWidget,
-	labelsAndValues = (
-		( "Origin", GafferScene.Constraint.TargetMode.Origin ),
-		( "BoundMin", GafferScene.Constraint.TargetMode.BoundMin ),
-		( "BoundMax", GafferScene.Constraint.TargetMode.BoundMax ),
-		( "BoundCenter", GafferScene.Constraint.TargetMode.BoundCenter ),
-	)
-)
-
-# MeshType
-
-GafferUI.PlugValueWidget.registerCreator(
-	GafferScene.MeshType,
-	"meshType",
-	GafferUI.EnumPlugValueWidget,
-	labelsAndValues = (
-		( "Unchanged", "" ),
-		( "Poly", "linear" ),
-		( "Subdiv", "catmullClark" ),
-	),
-)
-
-# Plane
-
-Gaffer.Metadata.registerNodeDescription(
-
-GafferScene.Plane,
-
-"""A node which produces scenes containing a plane.""",
-
-"dimensions",
-"Controls size of the plane in X and Y.",
-
-"divisions",
-"Controls tesselation of the plane.",
-
-)
-
-# Cube
-
-Gaffer.Metadata.registerNodeDescription(
-
-GafferScene.Cube,
-
-"""A node which produces scenes containing a cube.""",
-
-"dimensions",
-"Controls size of the cube.",
-
-)
-
-# PathFilter
-
-def __pathsPlugWidgetCreator( plug ) :
-
-	result = GafferUI.VectorDataPlugValueWidget( plug )
-	result.vectorDataWidget().setDragPointer( "objects" )
-	return result
-
-GafferUI.PlugValueWidget.registerCreator(
-	GafferScene.PathFilter,
-	"paths",
-	__pathsPlugWidgetCreator,
-)
-
-GafferUI.Nodule.registerNodule(
-	GafferScene.PathFilter,
-	"paths",
-	lambda plug : None,
-)
-
-# UnionFilter
-
-GafferUI.PlugValueWidget.registerCreator(
-	GafferScene.UnionFilter,
-	"in",
-	None,
-)
-
-GafferUI.Nodule.registerNodule(
-	GafferScene.UnionFilter,
-	"in",
-	GafferUI.CompoundNodule
-)

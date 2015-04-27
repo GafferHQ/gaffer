@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,6 +35,7 @@
 ##########################################################################
 
 import Gaffer
+import GafferUI
 import GafferScene
 
 ##########################################################################
@@ -43,30 +44,55 @@ import GafferScene
 
 Gaffer.Metadata.registerNode(
 
-	GafferScene.DeleteOptions,
+	GafferScene.MeshType,
 
 	"description",
 	"""
-	A node which removes options from the globals.
+	Changes between polygon and subdivision representations
+	for mesh objects, and optionally recalculates vertex
+	normals for polygon meshes.
+
+	Note that currently the Gaffer viewport does not display
+	subdivision meshes with smoothing, so the results of using
+	this node will not be seen until a render is performed.
 	""",
 
 	plugs = {
 
-		"names" : [
+		"meshType" : [
 
 			"description",
 			"""
-			The names of options to be removed. Names should be
-			separated by spaces and can use Gaffer's standard wildcards.
+			The interpolation type to apply to the mesh.
+			""",
+
+			"preset:Unchanged", "",
+			"preset:Polygon", "linear",
+			"preset:Subdivision Surface", "catmullClark",
+
+		],
+
+		"calculatePolygonNormals" : [
+
+			"description",
+			"""
+			Causes new vertex normals to be calculated for
+			polygon meshes. Has no effect for subdivision
+			surfaces, since those are naturally smooth and do
+			not require surface normals. Vertex normals are
+			represented as primitive variables named "N".
 			""",
 
 		],
 
-		"invertNames" : [
+		"overwriteExistingNormals" : [
 
 			"description",
 			"""
-			When on, matching names are kept, and non-matching names are removed.
+			By default, vertex normals will only be calculated for
+			polygon meshes which don't already have them. Turning
+			this on will force new normals to be calculated even for
+			meshes which had them already.
 			""",
 
 		],
@@ -74,3 +100,9 @@ Gaffer.Metadata.registerNode(
 	}
 
 )
+
+##########################################################################
+# Widgets and nodules
+##########################################################################
+
+GafferUI.PlugValueWidget.registerCreator( GafferScene.MeshType, "meshType", GafferUI.PresetsPlugValueWidget )

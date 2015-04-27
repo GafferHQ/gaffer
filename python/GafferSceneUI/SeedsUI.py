@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,42 +35,75 @@
 ##########################################################################
 
 import Gaffer
+import GafferUI
 import GafferScene
-
-##########################################################################
-# Metadata
-##########################################################################
 
 Gaffer.Metadata.registerNode(
 
-	GafferScene.DeleteOptions,
+	GafferScene.Seeds,
 
 	"description",
 	"""
-	A node which removes options from the globals.
+	Scatters points evenly over the surface of meshes.
+	This can be particularly useful in conjunction with
+	the Instancer, which can then apply instances to
+	each point.
 	""",
 
 	plugs = {
 
-		"names" : [
+		"parent" : [
 
 			"description",
 			"""
-			The names of options to be removed. Names should be
-			separated by spaces and can use Gaffer's standard wildcards.
+			The location of the mesh to scatter the
+			points over. The generated points will
+			be parented under this location.
 			""",
 
 		],
 
-		"invertNames" : [
+		"name" : [
 
 			"description",
 			"""
-			When on, matching names are kept, and non-matching names are removed.
+			The name given to the object generated -
+			this will be placed under the parent in
+			the scene hierarchy.
 			""",
 
 		],
+
+		"density" : [
+
+			"description",
+			"""
+			The number of points per unit area of the mesh,
+			measured in object space.
+			""",
+
+		],
+
+		"pointType" : [
+
+			"description",
+			"""
+			The render type of the points. This defaults to
+			"gl:point" so that the points are rendered in a
+			lightweight manner in the viewport.
+			""",
+
+			"preset:GL Point", "gl:point",
+			"preset:Particle", "particle",
+			"preset:Sphere", "sphere",
+			"preset:Disk", "disk",
+			"preset:Patch", "patch",
+			"preset:Blobby", "blobby",
+
+		]
 
 	}
 
 )
+
+GafferUI.PlugValueWidget.registerCreator( GafferScene.Seeds, "pointType", GafferUI.PresetsPlugValueWidget )

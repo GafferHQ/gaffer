@@ -38,6 +38,191 @@ import Gaffer
 import GafferUI
 import GafferScene
 
+##########################################################################
+# Metadata
+##########################################################################
+
+Gaffer.Metadata.registerNode(
+
+	GafferScene.StandardOptions,
+
+	"description",
+	"""
+	Specifies the standard options (global settings) for the
+	scene. These should be respected by all renderers.
+	""",
+
+	plugs = {
+
+		# camera plugs
+
+		"options.renderCamera" : [
+
+			"description",
+			"""
+			The primary camera to be used for rendering. If this
+			is not specified, then a default orthographic camera
+			positioned at the origin is used.
+			""",
+
+		],
+
+		"options.renderResolution" : [
+
+			"description",
+			"""
+			The resolution of the image to be rendered. Use the
+			resolution multiplier as a convenient way to temporarily
+			render at multiples of this resolution.
+			""",
+
+		],
+
+		"options.pixelAspectRatio" : [
+
+			"description",
+			"""
+			The aspect ratio (x/y) of the pixels in the rendered image.
+			""",
+
+		],
+
+		"options.resolutionMultiplier" : [
+
+			"description",
+			"""
+			Multiplier applied to the render resolution.
+			""",
+
+		],
+
+		"options.renderCropWindow" : [
+
+			"description",
+			"""
+			Limits the render to a region of the image. The rendered
+			image will have the same resolution as usual, but areas
+			outside the crop will be rendered black. Coordinates
+			range from 0,0 at the top left of the image to 1,1 at the
+			bottom right. The crop window tool in the viewer may be
+			used to set this interactively.
+			""",
+
+		],
+
+		"options.overscan" : [
+
+			"description",
+			"""
+			Adds extra pixels to the sides of the rendered image.
+			This can be useful when camera shake or blur will be
+			added as a post process. This plug just enables overscan
+			as a whole - use the overscanTop, overscanBottom, overscanLeft
+			and overscanRight plugs to specify the amount of overscan
+			on each side of the image.
+			""",
+
+		],
+
+		"options.overscanTop" : [
+
+			"description",
+			"""
+			The amount of overscan at the top of the image. Specified
+			as a 0-1 proportion of the original image height.
+			""",
+
+		],
+
+		"options.overscanBottom" : [
+
+			"description",
+			"""
+			The amount of overscan at the bottom of the image. Specified
+			as a 0-1 proportion of the original image height.
+			""",
+
+		],
+
+		"options.overscanLeft" : [
+
+			"description",
+			"""
+			The amount of overscan at the left of the image. Specified
+			as a 0-1 proportion of the original image width.
+			""",
+
+		],
+
+		"options.overscanRight" : [
+
+			"description",
+			"""
+			The amount of overscan at the right of the image. Specified
+			as a 0-1 proportion of the original image width.
+			""",
+
+		],
+
+		# motion blur plugs
+
+		"options.cameraBlur" : [
+
+			"description",
+			"""
+			Whether or not camera motion is taken into
+			account in the renderered image. To specify the
+			number of segments to use for camera motion, use
+			a StandardAttributes node filtered for the camera.
+			""",
+
+		],
+
+		"options.transformBlur" : [
+
+			"description",
+			"""
+			Whether or not transform motion is taken into
+			account in the renderered image. To specify the
+			number of transform segments to use for each
+			object in the scene, use a StandardAttributes node
+			with appropriate filters.
+			""",
+
+		],
+
+		"options.deformationBlur" : [
+
+			"description",
+			"""
+			Whether or not deformation motion is taken into
+			account in the renderered image. To specify the
+			number of deformation segments to use for each
+			object in the scene, use a StandardAttributes node
+			with appropriate filters.
+			""",
+
+		],
+
+		"options.shutter" : [
+
+			"description",
+			"""
+			The interval over which the camera shutter is open.
+			Measured in frames, and specified relative to the
+			frame being rendered.
+			""",
+
+		],
+
+	}
+
+)
+
+##########################################################################
+# PlugValueWidgets
+##########################################################################
+
 ## \todo This is getting used in a few places now - maybe put it in one
 # place? Maybe a static method on NumericWidget?
 def __floatToString( f ) :

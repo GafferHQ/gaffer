@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -37,40 +37,17 @@
 import Gaffer
 import GafferScene
 
-##########################################################################
-# Metadata
-##########################################################################
-
 Gaffer.Metadata.registerNode(
 
-	GafferScene.DeleteOptions,
+	GafferScene.FreezeTransform,
 
 	"description",
 	"""
-	A node which removes options from the globals.
+	Resets the transforms at the specified scene locations,
+	baking the old transforms into the vertices of any child objects
+	so that they remain the same in world space. Essentially this
+	turns transforms in the hierarchy into rigid deformations of
+	the objects.
 	""",
-
-	plugs = {
-
-		"names" : [
-
-			"description",
-			"""
-			The names of options to be removed. Names should be
-			separated by spaces and can use Gaffer's standard wildcards.
-			""",
-
-		],
-
-		"invertNames" : [
-
-			"description",
-			"""
-			When on, matching names are kept, and non-matching names are removed.
-			""",
-
-		],
-
-	}
 
 )

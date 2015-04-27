@@ -1084,6 +1084,8 @@ libraries = {
 		"requiredOptions" : [ "OSL_SRC_DIR" ],
 	},
 
+	"GafferOSLUITest" : {},
+
 	"GafferAppleseed" : {
 		"envAppends" : {
 			"CPPPATH" : [ "$APPLESEED_INCLUDE_PATH" ],

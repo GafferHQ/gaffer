@@ -41,6 +41,48 @@ import GafferUI
 import GafferScene
 
 ##########################################################################
+# Metadata
+##########################################################################
+
+Gaffer.Metadata.registerNode(
+
+	GafferScene.DeleteGlobals,
+
+	"description",
+	"""
+	A node which removes named items from the globals.
+	To delete outputs or options specifically, prefer
+	the DeleteOutputs and DeleteOptions nodes respectively,
+	as they provide improved interfaces for their specific
+	tasks.
+	""",
+
+	plugs = {
+
+		"names" : [
+
+			"description",
+			"""
+			The names of globals to be removed. Names should be
+			separated by spaces and can use Gaffer's standard wildcards.
+			""",
+
+		],
+
+		"invertNames" : [
+
+			"description",
+			"""
+			When on, matching names are kept, and non-matching names are removed.
+			""",
+
+		],
+
+	}
+
+)
+
+##########################################################################
 # Right click menu for names
 ##########################################################################
 

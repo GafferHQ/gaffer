@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,6 +35,7 @@
 ##########################################################################
 
 import Gaffer
+import GafferUI
 import GafferScene
 
 ##########################################################################
@@ -43,34 +44,73 @@ import GafferScene
 
 Gaffer.Metadata.registerNode(
 
-	GafferScene.DeleteOptions,
+	GafferScene.Constraint,
 
 	"description",
 	"""
-	A node which removes options from the globals.
+	Base type for nodes which constrain objects to a target
+	object by manipulating their transform.
 	""",
 
 	plugs = {
 
-		"names" : [
+		"target" : [
 
 			"description",
 			"""
-			The names of options to be removed. Names should be
-			separated by spaces and can use Gaffer's standard wildcards.
+			The scene location to which the objects are constrained.
+			The world space transform of this location forms the basis
+			of the constraint target, but is modified by the targetMode
+			and targetOffset values before the constraint is applied.
 			""",
 
 		],
 
-		"invertNames" : [
+		"targetMode" : [
 
 			"description",
 			"""
-			When on, matching names are kept, and non-matching names are removed.
+			The precise location of the target transform - this can be
+			derived from the origin or bounding box of the target location.
+			""",
+
+			"preset:Origin", GafferScene.Constraint.TargetMode.Origin,
+			"preset:BoundMin", GafferScene.Constraint.TargetMode.BoundMin,
+			"preset:BoundMax", GafferScene.Constraint.TargetMode.BoundMax,
+			"preset:BoundCenter", GafferScene.Constraint.TargetMode.BoundCenter,
+
+		],
+
+		"targetOffset" : [
+
+			"description",
+			"""
+			An offset applied to the target transform before the constraint
+			is applied. The offset is measured in the object space of the
+			target location.
 			""",
 
 		],
 
-	}
+	},
 
+)
+
+##########################################################################
+# PlugValueWidgets
+##########################################################################
+
+GafferUI.PlugValueWidget.registerCreator(
+	GafferScene.Constraint,
+	"target",
+	lambda plug : GafferUI.PathPlugValueWidget(
+		plug,
+		path = GafferScene.ScenePath( plug.node()["in"], plug.node().scriptNode().context(), "/" ),
+	),
+)
+
+GafferUI.PlugValueWidget.registerCreator(
+	GafferScene.Constraint,
+	"targetMode",
+	GafferUI.PresetsPlugValueWidget,
 )

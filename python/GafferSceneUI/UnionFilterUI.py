@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,42 +35,43 @@
 ##########################################################################
 
 import Gaffer
+import GafferUI
 import GafferScene
-
-##########################################################################
-# Metadata
-##########################################################################
 
 Gaffer.Metadata.registerNode(
 
-	GafferScene.DeleteOptions,
+	GafferScene.UnionFilter,
 
 	"description",
 	"""
-	A node which removes options from the globals.
+	Combines several input filters, matching the union
+	of all the locations matched by them.
 	""",
 
 	plugs = {
 
-		"names" : [
+		"in" : [
 
 			"description",
 			"""
-			The names of options to be removed. Names should be
-			separated by spaces and can use Gaffer's standard wildcards.
-			""",
-
-		],
-
-		"invertNames" : [
-
-			"description",
-			"""
-			When on, matching names are kept, and non-matching names are removed.
+			The filters to be combined. Any number
+			of inputs may be added here.
 			""",
 
 		],
 
 	}
 
+)
+
+GafferUI.PlugValueWidget.registerCreator(
+	GafferScene.UnionFilter,
+	"in",
+	None,
+)
+
+GafferUI.Nodule.registerNodule(
+	GafferScene.UnionFilter,
+	"in",
+	GafferUI.CompoundNodule
 )

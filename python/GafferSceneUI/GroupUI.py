@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,6 +35,7 @@
 ##########################################################################
 
 import Gaffer
+import GafferUI
 import GafferScene
 
 ##########################################################################
@@ -43,30 +44,34 @@ import GafferScene
 
 Gaffer.Metadata.registerNode(
 
-	GafferScene.DeleteOptions,
+	GafferScene.Group,
 
 	"description",
 	"""
-	A node which removes options from the globals.
+	Groups together several input scenes under a new parent.
+	If the input scenes contain locations with identical names,
+	they are automatically renamed to make them unique in the
+	output scene.
 	""",
 
 	plugs = {
 
-		"names" : [
+		"name" : [
 
 			"description",
 			"""
-			The names of options to be removed. Names should be
-			separated by spaces and can use Gaffer's standard wildcards.
+			The name of the group to be created. All the input
+			scenes will be parented under this group.
 			""",
 
 		],
 
-		"invertNames" : [
+		"transform" : [
 
 			"description",
 			"""
-			When on, matching names are kept, and non-matching names are removed.
+			The transform for the group itself. This will be
+			inherited by the objects parented under it.
 			""",
 
 		],
@@ -74,3 +79,11 @@ Gaffer.Metadata.registerNode(
 	}
 
 )
+
+##########################################################################
+# Widgets and nodules
+##########################################################################
+
+
+GafferUI.PlugValueWidget.registerCreator( GafferScene.Group, "in[0-9]*", None )
+GafferUI.PlugValueWidget.registerCreator( GafferScene.Group, "transform", GafferUI.TransformPlugValueWidget, collapsed=None )

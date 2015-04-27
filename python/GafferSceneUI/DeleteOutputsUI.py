@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -43,11 +43,11 @@ import GafferScene
 
 Gaffer.Metadata.registerNode(
 
-	GafferScene.DeleteOptions,
+	GafferScene.DeleteOutputs,
 
 	"description",
 	"""
-	A node which removes options from the globals.
+	A node which removes outputs from the globals.
 	""",
 
 	plugs = {
@@ -56,7 +56,7 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			The names of options to be removed. Names should be
+			The names of outputs to be removed. Names should be
 			separated by spaces and can use Gaffer's standard wildcards.
 			""",
 

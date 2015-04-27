@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -37,36 +37,52 @@
 import Gaffer
 import GafferScene
 
-##########################################################################
-# Metadata
-##########################################################################
-
 Gaffer.Metadata.registerNode(
 
-	GafferScene.DeleteOptions,
+	GafferScene.PointConstraint,
 
 	"description",
 	"""
-	A node which removes options from the globals.
+	Translates objects so that they are constrained to
+	the world space position of the target. Leaves the
+	scale and orientation of the object untouched.
 	""",
 
 	plugs = {
 
-		"names" : [
+		"offset" : [
 
 			"description",
 			"""
-			The names of options to be removed. Names should be
-			separated by spaces and can use Gaffer's standard wildcards.
+			A world space translation offset applied on top
+			of the target position.
 			""",
 
 		],
 
-		"invertNames" : [
+		"xEnabled" : [
 
 			"description",
 			"""
-			When on, matching names are kept, and non-matching names are removed.
+			Enables the constraint in the world space x axis.
+			""",
+
+		],
+
+		"yEnabled" : [
+
+			"description",
+			"""
+			Enables the constraint in the world space y axis.
+			""",
+
+		],
+
+		"zEnabled" : [
+
+			"description",
+			"""
+			Enables the constraint in the world space z axis.
 			""",
 
 		],

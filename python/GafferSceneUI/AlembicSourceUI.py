@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,42 +35,73 @@
 ##########################################################################
 
 import Gaffer
+import GafferUI
 import GafferScene
-
-##########################################################################
-# Metadata
-##########################################################################
 
 Gaffer.Metadata.registerNode(
 
-	GafferScene.DeleteOptions,
+	GafferScene.AlembicSource,
 
 	"description",
 	"""
-	A node which removes options from the globals.
+	Loads Alembic caches. Please note that Gaffer requires
+	a bounding box to be computable for every location in the
+	scene. Alembic files can store such bounding boxes, but
+	in practice they often don't. In this case Gaffer must perform
+	a full scene traversal to compute the appropriate bounding box.
+	It is recommended that if performance is a priority, bounding
+	boxes should be stored explicitly in the Alembic cache, or the
+	Cortex SceneCache (.scc) format should be used instead, since it
+	always stores accurate bounds.
 	""",
 
 	plugs = {
 
-		"names" : [
+		"fileName" : [
 
 			"description",
 			"""
-			The names of options to be removed. Names should be
-			separated by spaces and can use Gaffer's standard wildcards.
+			The path to the .abc file to load. Both
+			older HDF5 and newer Ogawa caches are supported.
 			""",
 
 		],
 
-		"invertNames" : [
+		"refreshCount" : [
 
 			"description",
 			"""
-			When on, matching names are kept, and non-matching names are removed.
+			Can be incremented to invalidate Gaffer's memory
+			cache and force a reload if the .abc file is
+			changed on disk.
 			""",
 
 		],
 
 	}
 
+)
+
+##########################################################################
+# PlugValueWidgets
+##########################################################################
+
+GafferUI.PlugValueWidget.registerCreator(
+	GafferScene.AlembicSource,
+	"fileName",
+	lambda plug : GafferUI.PathPlugValueWidget( plug,
+		path = Gaffer.FileSystemPath( "/", filter = Gaffer.FileSystemPath.createStandardFilter( extensions = [ "abc" ] ) ),
+		pathChooserDialogueKeywords = {
+			"bookmarks" : GafferUI.Bookmarks.acquire( plug, category = "sceneCache" ),
+			"leaf" : True,
+		},
+	)
+)
+
+GafferUI.PlugValueWidget.registerCreator(
+	GafferScene.AlembicSource,
+	"refreshCount",
+	GafferUI.IncrementingPlugValueWidget,
+	label = "Refresh",
+	undoable = False
 )

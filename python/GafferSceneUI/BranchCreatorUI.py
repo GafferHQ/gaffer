@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,6 +35,7 @@
 ##########################################################################
 
 import Gaffer
+import GafferUI
 import GafferScene
 
 ##########################################################################
@@ -43,34 +44,28 @@ import GafferScene
 
 Gaffer.Metadata.registerNode(
 
-	GafferScene.DeleteOptions,
+	GafferScene.BranchCreator,
 
 	"description",
 	"""
-	A node which removes options from the globals.
+	Base class for nodes creating a new branch in the scene hierarchy.
 	""",
 
-	plugs = {
+	# Deliberately not documenting parent plug, so that
+	# is given documentation more specific to each
+	# derived class.
 
-		"names" : [
+)
 
-			"description",
-			"""
-			The names of options to be removed. Names should be
-			separated by spaces and can use Gaffer's standard wildcards.
-			""",
+##########################################################################
+# Widgets and nodules
+##########################################################################
 
-		],
-
-		"invertNames" : [
-
-			"description",
-			"""
-			When on, matching names are kept, and non-matching names are removed.
-			""",
-
-		],
-
-	}
-
+GafferUI.PlugValueWidget.registerCreator(
+	GafferScene.BranchCreator,
+	"parent",
+	lambda plug : GafferUI.PathPlugValueWidget(
+		plug,
+		path = GafferScene.ScenePath( plug.node()["in"], plug.node().scriptNode().context(), "/" ),
+	),
 )

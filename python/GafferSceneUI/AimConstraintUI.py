@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -37,36 +37,36 @@
 import Gaffer
 import GafferScene
 
-##########################################################################
-# Metadata
-##########################################################################
-
 Gaffer.Metadata.registerNode(
 
-	GafferScene.DeleteOptions,
+	GafferScene.AimConstraint,
 
 	"description",
 	"""
-	A node which removes options from the globals.
+	Transforms objects so that they are aimed at
+	a specified target.
 	""",
 
 	plugs = {
 
-		"names" : [
+		"aim" : [
 
 			"description",
 			"""
-			The names of options to be removed. Names should be
-			separated by spaces and can use Gaffer's standard wildcards.
+			The aim vector, specified in object space. The
+			object will be transformed so that this vector
+			points at the target.
 			""",
 
 		],
 
-		"invertNames" : [
+		"up" : [
 
 			"description",
 			"""
-			When on, matching names are kept, and non-matching names are removed.
+			The up vector, specified in object space. The
+			object will be transformed so that this vector
+			points up in world space, as far as is possible.
 			""",
 
 		],

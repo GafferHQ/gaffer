@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,6 +35,7 @@
 ##########################################################################
 
 import Gaffer
+import GafferUI
 import GafferScene
 
 ##########################################################################
@@ -43,30 +44,23 @@ import GafferScene
 
 Gaffer.Metadata.registerNode(
 
-	GafferScene.DeleteOptions,
+	GafferScene.ObjectToScene,
 
 	"description",
 	"""
-	A node which removes options from the globals.
+	Converts objects to be used with the nodes in the
+	GafferScene module. Typically these objects would
+	come from a GafferCortex OpHolder node or ObjectReader
+	node.
 	""",
 
 	plugs = {
 
-		"names" : [
+		"object" : [
 
 			"description",
 			"""
-			The names of options to be removed. Names should be
-			separated by spaces and can use Gaffer's standard wildcards.
-			""",
-
-		],
-
-		"invertNames" : [
-
-			"description",
-			"""
-			When on, matching names are kept, and non-matching names are removed.
+			The object to be placed in the output scene.
 			""",
 
 		],
@@ -74,3 +68,9 @@ Gaffer.Metadata.registerNode(
 	}
 
 )
+
+##########################################################################
+# Widgets and nodules
+##########################################################################
+
+GafferUI.Nodule.registerNodule( GafferScene.ObjectToScene, "object", GafferUI.StandardNodule )

@@ -43,6 +43,11 @@ namespace GafferScene
 {
 
 /// Applies texture coordinates via a camera projection.
+/// \todo At some point I suspect we should move to storing
+/// texture coordinates as a single V2fVectorData primitive
+/// variable. It would be better to replace sNamePlug() and
+/// tNamePlug() with a single plug specifying a prefix (now)
+/// and the name of the primitive variable itself (later).
 class MapProjection : public SceneElementProcessor
 {
 

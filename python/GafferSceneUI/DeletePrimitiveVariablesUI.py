@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -37,17 +37,14 @@
 import Gaffer
 import GafferScene
 
-##########################################################################
-# Metadata
-##########################################################################
-
 Gaffer.Metadata.registerNode(
 
-	GafferScene.DeleteOptions,
+	GafferScene.DeletePrimitiveVariables,
 
 	"description",
 	"""
-	A node which removes options from the globals.
+	Deletes primitive variables from objects. The primitive
+	variables to be deleted are chosen based on name.
 	""",
 
 	plugs = {
@@ -56,8 +53,9 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			The names of options to be removed. Names should be
-			separated by spaces and can use Gaffer's standard wildcards.
+			The names of the primitive variables to be deleted.
+			Names should be specified by spaces, and Gaffer's
+			standard wildcard characters may be used.
 			""",
 
 		],
@@ -66,7 +64,9 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			When on, matching names are kept, and non-matching names are removed.
+			When on, the primitive variables matched by names
+			are kept, and the non-matching primitive variables
+			are deleted.
 			""",
 
 		],

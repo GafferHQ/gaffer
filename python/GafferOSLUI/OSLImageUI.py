@@ -43,17 +43,34 @@ import GafferOSL
 # Metadata
 ##########################################################################
 
-Gaffer.Metadata.registerNodeDescription(
+Gaffer.Metadata.registerNode(
 
-GafferOSL.OSLImage,
+	GafferOSL.OSLImage,
 
-"""Executes OSL shaders to perform image processing.""",
+	"description",
+	"""
+	Executes OSL shaders to perform image processing. Use the shaders from
+	the OSL/ImageProcessing menu to read values from the input image and
+	then write values back to it.
+	""",
 
-"shader",
-{
-	"description" : "The shader to be executed - connect the output from an OSL network here.",
-	"nodeGadget:nodulePosition" : "left",
-}
+	plugs = {
+
+		"shader" : [
+
+			"description",
+			"""
+			The shader to be executed - connect the output from an OSL network here.
+			A typical shader network to process RGB would look like this :
+
+				InLayer->ProcessingNodes->OutLayer->OutImage
+			""",
+
+			"nodeGadget:nodulePosition", "left",
+
+		],
+
+	}
 
 )
 

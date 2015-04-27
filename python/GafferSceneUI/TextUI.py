@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,6 +35,7 @@
 ##########################################################################
 
 import Gaffer
+import GafferUI
 import GafferScene
 
 ##########################################################################
@@ -43,34 +44,54 @@ import GafferScene
 
 Gaffer.Metadata.registerNode(
 
-	GafferScene.DeleteOptions,
+	GafferScene.Text,
 
 	"description",
 	"""
-	A node which removes options from the globals.
+	Creates an object containing a polygon representation
+	of an arbitrary string of text.
 	""",
 
 	plugs = {
 
-		"names" : [
+		"text" : [
 
 			"description",
 			"""
-			The names of options to be removed. Names should be
-			separated by spaces and can use Gaffer's standard wildcards.
+			The text to output. This is triangulated into a mesh
+			representation using the specified font.
 			""",
 
 		],
 
-		"invertNames" : [
+		"font" : [
 
 			"description",
 			"""
-			When on, matching names are kept, and non-matching names are removed.
+			The font to use - this should be a .ttf font file which
+			is located on the paths specified by the IECORE_FONT_PATHS
+			environment variable.
 			""",
 
 		],
 
 	}
 
+)
+
+GafferUI.PlugValueWidget.registerCreator(
+	GafferScene.Text,
+	"font",
+	lambda plug : GafferUI.PathPlugValueWidget( plug,
+		path = Gaffer.FileSystemPath(
+			"/",
+			filter = Gaffer.FileSystemPath.createStandardFilter(
+				extensions = [ "ttf" ],
+			)
+		),
+		pathChooserDialogueKeywords = {
+			"bookmarks" : GafferUI.Bookmarks.acquire( plug, category = "font" ),
+			"leaf" : True,
+		},
+	)
 )
