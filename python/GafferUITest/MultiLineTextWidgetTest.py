@@ -107,5 +107,27 @@ class MultiLineTextWidgetTest( GafferUITest.TestCase ) :
 		w.insertText( "abc" )
 		self.assertEqual( w.getText(), "1abc2" )
 
+	def testFixedLineHeight( self ) :
+
+		window = GafferUI.Window()
+		widget = GafferUI.MultiLineTextWidget()
+		window.addChild( widget )
+		window.setVisible( True )
+		
+		# initial value
+		widget.setFixedLineHeight( 5 )
+		
+		oldHeight = widget.size().y
+		
+		# changing initial value		
+		widget.setFixedLineHeight( 2 )
+		
+		self.waitForIdle()
+		
+		newHeight = widget.size().y
+		
+		# checking if the geometry has been updated for the new line height
+		self.assertEqual( newHeight == oldHeight, False )
+
 if __name__ == "__main__":
 	unittest.main()
