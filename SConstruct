@@ -1477,7 +1477,7 @@ for modulePath in ( "python/Gaffer", "python/GafferUI", "python/GafferScene", "p
 	docEnv.Depends( docs, mungedModule )
 	docEnv.NoCache( mungedModule )
 
-docEnv.Depends( docs, glob.glob( "include/*/*.h" ) + glob.glob( "doc/src/*.dox" ) )
+docEnv.Depends( docs, glob.glob( "include/*/*.h" ) + glob.glob( "doc/doxygenPages/*.md" ) )
 
 docInstall = docEnv.Install( "$BUILD_DIR/doc/gaffer", "doc/html" )
 docEnv.Alias( "build", docInstall )
