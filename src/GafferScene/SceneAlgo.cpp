@@ -469,3 +469,4 @@ bool GafferScene::setExists( const ScenePlug *scene, const IECore::InternedStrin
 	const std::vector<IECore::InternedString> &setNames = setNamesData->readable();
 	return std::find( setNames.begin(), setNames.end(), setName ) != setNames.end();
 }
+
