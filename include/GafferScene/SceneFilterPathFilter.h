@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2013-2014, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,70 +34,47 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_SCENEPATH_H
-#define GAFFERSCENE_SCENEPATH_H
+#ifndef GAFFERSCENE_SCENEFILTERPATHFILTER_H
+#define GAFFERSCENE_SCENEFILTERPATHFILTER_H
 
-#include "Gaffer/Path.h"
+#include "Gaffer/PathFilter.h"
+#include "Gaffer/Plug.h"
 
 #include "GafferScene/TypeIds.h"
-
-namespace Gaffer
-{
-
-IE_CORE_FORWARDDECLARE( Context )
-IE_CORE_FORWARDDECLARE( Plug )
-IE_CORE_FORWARDDECLARE( Node )
-
-} // namespace Gaffer
 
 namespace GafferScene
 {
 
-IE_CORE_FORWARDDECLARE( ScenePlug )
+IE_CORE_FORWARDDECLARE( Filter )
 
-class ScenePath : public Gaffer::Path
+/// Filters a ScenePath using a GafferScene::Filter node.
+class SceneFilterPathFilter : public Gaffer::PathFilter
 {
 
 	public :
 
-		ScenePath( ScenePlugPtr scene, Gaffer::ContextPtr context, Gaffer::PathFilterPtr filter = NULL );
-		ScenePath( ScenePlugPtr scene, Gaffer::ContextPtr context, const std::string &path, Gaffer::PathFilterPtr filter = NULL );
-		ScenePath( ScenePlugPtr scene, Gaffer::ContextPtr context, const Names &names, const IECore::InternedString &root = "/", Gaffer::PathFilterPtr filter = NULL );
+		SceneFilterPathFilter( FilterPtr sceneFilter, IECore::CompoundDataPtr userData = NULL );
+		virtual ~SceneFilterPathFilter();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::ScenePath, ScenePathTypeId, Gaffer::Path );
-
-		virtual ~ScenePath();
-
-		void setScene( ScenePlugPtr scene );
-		ScenePlug *getScene();
-		const ScenePlug *getScene() const;
-
-		void setContext( Gaffer::ContextPtr context );
-		Gaffer::Context *getContext();
-		const Gaffer::Context *getContext() const;
-
-		virtual bool isValid() const;
-		virtual bool isLeaf() const;
-		virtual Gaffer::PathPtr copy() const;
-
-		static Gaffer::PathFilterPtr createStandardFilter( const std::vector<std::string> &setNames = std::vector<std::string>(), const std::string &setsLabel = "" );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::SceneFilterPathFilter, SceneFilterPathFilterTypeId, Gaffer::PathFilter );
 
 	protected :
 
-		virtual void doChildren( std::vector<Gaffer::PathPtr> &children ) const;
-		virtual void pathChangedSignalCreated();
+		virtual void doFilter( std::vector<Gaffer::PathPtr> &paths ) const;
 
 	private :
 
-		void contextChanged( const IECore::InternedString &key );
-		void plugDirtied( Gaffer::Plug *plug );
+		void plugDirtied( const Gaffer::Plug *plug );
 
-		Gaffer::NodePtr m_node;
-		ScenePlugPtr m_scene;
-		Gaffer::ContextPtr m_context;
+		struct Remove;
+
+		FilterPtr m_sceneFilter;
+		boost::signals::scoped_connection m_plugDirtiedConnection;
 
 };
 
+IE_CORE_DECLAREPTR( SceneFilterPathFilter )
+
 } // namespace GafferScene
 
-#endif // GAFFERSCENE_SCENEPATH_H
+#endif // GAFFERSCENE_SCENEFILTERPATHFILTER_H

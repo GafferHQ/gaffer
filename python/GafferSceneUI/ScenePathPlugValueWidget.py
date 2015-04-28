@@ -34,36 +34,53 @@
 #
 ##########################################################################
 
+import IECore
+
 import Gaffer
 import GafferUI
 import GafferScene
-import GafferSceneUI
 
-##########################################################################
-# Metadata
-##########################################################################
+class ScenePathPlugValueWidget( GafferUI.PathPlugValueWidget ) :
 
-Gaffer.Metadata.registerNode(
+	def __init__( self, plug, path = None, **kw ) :
 
-	GafferScene.BranchCreator,
+		if path is None :
 
-	"description",
-	"""
-	Base class for nodes creating a new branch in the scene hierarchy.
-	""",
+			filter = None
+			sets = Gaffer.Metadata.plugValue( plug, "scenePathPlugValueWidget:setNames" )
+			if sets :
+				filter = GafferScene.ScenePath.createStandardFilter(
+					list( sets ),
+					Gaffer.Metadata.plugValue( plug, "scenePathPlugValueWidget:setsLabel" )
+				)
 
-	# Deliberately not documenting parent plug, so that
-	# is given documentation more specific to each
-	# derived class.
+			path = GafferScene.ScenePath(
+				plug.node()["in"],
+				plug.node().scriptNode().context(),
+				"/",
+				filter = filter
+			)
 
-)
+		GafferUI.PathPlugValueWidget.__init__( self, plug, path, **kw )
 
-##########################################################################
-# Widgets and nodules
-##########################################################################
+	def _pathChooserDialogue( self ) :
 
-GafferUI.PlugValueWidget.registerCreator(
-	GafferScene.BranchCreator,
-	"parent",
-	GafferSceneUI.ScenePathPlugValueWidget
-)
+		dialogue = GafferUI.PathPlugValueWidget._pathChooserDialogue( self )
+
+		# Unsorted tree view with only a name column - like the SceneHierarchy.
+		dialogue.pathChooserWidget().pathListingWidget().setDisplayMode( GafferUI.PathListingWidget.DisplayMode.Tree )
+		dialogue.pathChooserWidget().pathListingWidget().setColumns( ( GafferUI.PathListingWidget.defaultNameColumn, ) )
+		dialogue.pathChooserWidget().pathListingWidget().setSortable( False )
+
+		# View relative to the root, rather than the current location.
+		## \todo The save/restore of pathNames is to work around the PathChooserWidget
+		# truncating the path when the root directory changes. I don't think that
+		# behaviour makes sense in tree view mode, so we should probably fix it there.
+		dirPath = dialogue.pathChooserWidget().directoryPathWidget().getPath()
+		if len( dirPath ) :
+			path = dialogue.pathChooserWidget().pathWidget().getPath()
+			pathNames = path[:]
+			del dirPath[:]
+			path[:] = pathNames
+
+		return dialogue

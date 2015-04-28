@@ -123,6 +123,7 @@ enum TypeId
 	FilterSwitchTypeId = 110578,
 	DeleteSetsTypeId = 110579,
 	ParametersTypeId = 110580,
+	SceneFilterPathFilterTypeId = 110581,
 
 	LastTypeId = 110650
 };

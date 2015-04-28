@@ -52,10 +52,10 @@ class MatchPatternPathFilterWidget( GafferUI.PathFilterWidget ) :
 			self.__enabledWidget = GafferUI.BoolWidget()
 			self.__enabledStateChangedConnection = self.__enabledWidget.stateChangedSignal().connect( Gaffer.WeakMethod( self.__enabledStateChanged ) )
 
-			self.__attributeButton = GafferUI.MenuButton(
+			self.__propertyButton = GafferUI.MenuButton(
 				image = "collapsibleArrowDown.png",
 				hasFrame = False,
-				menu = GafferUI.Menu( Gaffer.WeakMethod( self.__attributeMenuDefinition ) ),
+				menu = GafferUI.Menu( Gaffer.WeakMethod( self.__propertyMenuDefinition ) ),
 			)
 
 			self.__patternWidget = GafferUI.TextWidget()
@@ -76,7 +76,7 @@ class MatchPatternPathFilterWidget( GafferUI.PathFilterWidget ) :
 			editable = self.pathFilter().userData()["UI"]["editable"].value
 
 		self.__enabledWidget.setVisible( not editable )
-		self.__attributeButton.setVisible( editable )
+		self.__propertyButton.setVisible( editable )
 		self.__patternWidget.setVisible( editable )
 
 		label = str( self.pathFilter() )
@@ -129,29 +129,29 @@ class MatchPatternPathFilterWidget( GafferUI.PathFilterWidget ) :
 			self.pathFilter().setMatchPatterns( patterns )
 			self.pathFilter().setEnabled( len( patterns ) )
 
-	def __attributeMenuDefinition( self ) :
+	def __propertyMenuDefinition( self ) :
 
 		## \todo Make this configurable
-		attributesAndLabels = (
+		propertiesAndLabels = (
 			( "name", "Name" ),
 			( "fileSystem:owner", "Owner" ),
 		)
 
 		menuDefinition = IECore.MenuDefinition()
-		for attribute, label in attributesAndLabels :
+		for property, label in propertiesAndLabels :
 			menuDefinition.append(
 				"/" + label,
 				{
-					"command" : IECore.curry( Gaffer.WeakMethod( self.__setAttributeName ), attribute ),
-					"checkBox" : attribute == self.pathFilter().getAttributeName()
+					"command" : IECore.curry( Gaffer.WeakMethod( self.__setPropertyName ), property ),
+					"checkBox" : property == self.pathFilter().getPropertyName()
 				}
 			)
 
 		return menuDefinition
 
-	def __setAttributeName( self, attribute, checked ) :
+	def __setPropertyName( self, property, checked ) :
 
 		with Gaffer.BlockedConnection( self._pathFilterChangedConnection() ) :
-			self.pathFilter().setAttributeName( attribute )
+			self.pathFilter().setPropertyName( property )
 
 GafferUI.PathFilterWidget.registerType( Gaffer.MatchPatternPathFilter, MatchPatternPathFilterWidget )

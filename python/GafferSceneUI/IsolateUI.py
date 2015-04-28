@@ -38,6 +38,7 @@ import Gaffer
 import GafferUI
 
 import GafferScene
+import GafferSceneUI
 
 ##########################################################################
 # Metadata
@@ -88,8 +89,5 @@ Gaffer.Metadata.registerNode(
 GafferUI.PlugValueWidget.registerCreator(
 	GafferScene.Isolate,
 	"from",
-	lambda plug : GafferUI.PathPlugValueWidget(
-		plug,
-		path = GafferScene.ScenePath( plug.node()["in"], plug.node().scriptNode().context(), "/" ),
-	),
+	GafferSceneUI.ScenePathPlugValueWidget
 )

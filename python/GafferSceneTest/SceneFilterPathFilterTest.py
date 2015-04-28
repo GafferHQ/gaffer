@@ -34,36 +34,69 @@
 #
 ##########################################################################
 
+import unittest
+
+import IECore
+
 import Gaffer
-import GafferUI
+import GafferTest
 import GafferScene
-import GafferSceneUI
+import GafferSceneTest
 
-##########################################################################
-# Metadata
-##########################################################################
+class SceneFilterPathFilterTest( GafferSceneTest.SceneTestCase ) :
 
-Gaffer.Metadata.registerNode(
+	def test( self ) :
 
-	GafferScene.BranchCreator,
+		camera = GafferScene.Camera()
+		plane = GafferScene.Plane()
+		group = GafferScene.Group()
+		group["in"].setInput( camera["out"] )
+		group["in1"].setInput( plane["out"] )
 
-	"description",
-	"""
-	Base class for nodes creating a new branch in the scene hierarchy.
-	""",
+		path = GafferScene.ScenePath( group["out"], Gaffer.Context(), "/group" )
+		self.assertEqual( set( [ str( c ) for c in path.children() ] ), { "/group/camera", "/group/plane" } )
 
-	# Deliberately not documenting parent plug, so that
-	# is given documentation more specific to each
-	# derived class.
+		setFilter = GafferScene.SetFilter()
+		setFilter["set"].setValue( "__cameras" )
+		pathFilter = GafferScene.SceneFilterPathFilter( setFilter )
 
-)
+		path.setFilter( pathFilter )
+		self.assertEqual( set( [ str( c ) for c in path.children() ] ), { "/group/camera" } )
 
-##########################################################################
-# Widgets and nodules
-##########################################################################
+		cs = GafferTest.CapturingSlot( pathFilter.changedSignal() )
 
-GafferUI.PlugValueWidget.registerCreator(
-	GafferScene.BranchCreator,
-	"parent",
-	GafferSceneUI.ScenePathPlugValueWidget
-)
+		setFilter["set"].setValue( "" )
+		self.assertEqual( len( cs ), 1 )
+		self.assertEqual( path.children(), [] )
+
+	def testManyPaths( self ) :
+
+		plane = GafferScene.Plane()
+		plane["divisions"].setValue( IECore.V2i( 500 ) )
+
+		sphere = GafferScene.Sphere()
+
+		instancer = GafferScene.Instancer()
+		instancer["in"].setInput( plane["out"] )
+		instancer["parent"].setValue( "/plane" )
+		instancer["instance"].setInput( sphere["out"] )
+
+		scenePathFilter = GafferScene.PathFilter()
+		scenePathFilter["paths"].setValue( IECore.StringVectorData( [ "/plane/instances/*" ] ) )
+
+		path = GafferScene.ScenePath(
+			instancer["out"],
+			Gaffer.Context(),
+			"/plane/instances",
+			GafferScene.SceneFilterPathFilter( scenePathFilter )
+		)
+
+		t = IECore.Timer()
+		self.assertEqual( len( path.children() ), 251001 )
+
+		# This test can be useful when benchmarking SceneFilterPathFilter
+		# performance. Uncomment to get timing information.
+		# print t.stop()
+
+if __name__ == "__main__":
+	unittest.main()

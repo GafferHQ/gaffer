@@ -34,9 +34,12 @@
 #
 ##########################################################################
 
+import IECore
+
 import Gaffer
 import GafferUI
 import GafferScene
+import GafferSceneUI
 
 ##########################################################################
 # Metadata
@@ -99,8 +102,17 @@ Gaffer.Metadata.registerNode(
 GafferUI.PlugValueWidget.registerCreator(
 	GafferScene.MapProjection,
 	"camera",
-	lambda plug : GafferUI.PathPlugValueWidget(
-		plug,
-		path = GafferScene.ScenePath( plug.node()["in"], plug.node().scriptNode().context(), "/" ),
-	),
+	GafferSceneUI.ScenePathPlugValueWidget
+)
+
+Gaffer.Metadata.registerPlugValue(
+	GafferScene.MapProjection,
+	"camera",
+	"scenePathPlugValueWidget:setNames", IECore.StringVectorData( [ "__cameras" ] )
+)
+
+Gaffer.Metadata.registerPlugValue(
+	GafferScene.MapProjection,
+	"camera",
+	"scenePathPlugValueWidget:setsLabel", "Show only cameras"
 )

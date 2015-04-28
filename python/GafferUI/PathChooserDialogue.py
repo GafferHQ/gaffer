@@ -113,6 +113,10 @@ class PathChooserDialogue( GafferUI.Dialogue ) :
 
 		return None
 
+	def pathChooserWidget( self ) :
+
+		return self.__pathChooserWidget
+
 	def __result( self ) :
 
 		result = self.__pathChooserWidget.pathListingWidget().getSelectedPaths()

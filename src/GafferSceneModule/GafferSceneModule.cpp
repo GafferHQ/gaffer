@@ -94,6 +94,7 @@
 #include "GafferSceneBindings/ExternalProceduralBinding.h"
 #include "GafferSceneBindings/GroupBinding.h"
 #include "GafferSceneBindings/ScenePathBinding.h"
+#include "GafferSceneBindings/SceneFilterPathFilterBinding.h"
 #include "GafferSceneBindings/ClippingPlaneBinding.h"
 #include "GafferSceneBindings/FilterSwitchBinding.h"
 #include "GafferSceneBindings/PointsTypeBinding.h"
@@ -173,6 +174,7 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	bindCoordinateSystem();
 	bindExternalProcedural();
 	bindScenePath();
+	bindSceneFilterPathFilter();
 	bindClippingPlane();
 	bindFilterSwitch();
 	bindPointsType();

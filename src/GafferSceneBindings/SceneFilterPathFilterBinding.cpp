@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,64 +35,23 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/python.hpp"
-#include "boost/python/suite/indexing/container_utils.hpp"
 
-#include "Gaffer/Context.h"
-#include "Gaffer/PathFilter.h"
-#include "GafferBindings/PathBinding.h"
+#include "IECorePython/RunTimeTypedBinding.h"
 
-#include "GafferScene/ScenePath.h"
-#include "GafferScene/ScenePlug.h"
+#include "GafferScene/Filter.h"
+#include "GafferScene/SceneFilterPathFilter.h"
 
-#include "GafferSceneBindings/ScenePathBinding.h"
+#include "GafferSceneBindings/SceneFilterPathFilterBinding.h"
 
 using namespace boost::python;
 using namespace IECorePython;
-using namespace Gaffer;
-using namespace GafferBindings;
 using namespace GafferScene;
 
-namespace
+void GafferSceneBindings::bindSceneFilterPathFilter()
 {
 
-PathFilterPtr createStandardFilter( list pythonSetNames, const std::string &setsLabel )
-{
-	std::vector<std::string> setNames;
-	boost::python::container_utils::extend_container( setNames, pythonSetNames );
-	return ScenePath::createStandardFilter( setNames, setsLabel );
-}
-
-} // namespace
-
-void GafferSceneBindings::bindScenePath()
-{
-
-	PathClass<ScenePath>()
-		.def(
-			init<ScenePlugPtr, ContextPtr, PathFilterPtr>( (
-				arg( "scene" ),
-				arg( "context" ),
-				arg( "filter" ) = object()
-			) )
-		)
-		.def(
-			init<ScenePlugPtr, ContextPtr, const std::string &, PathFilterPtr>( (
-				arg( "scene" ),
-				arg( "context" ),
-				arg( "path" ),
-				arg( "filter" ) = object()
-			) )
-		)
-		.def( "setScene", &ScenePath::setScene )
-		.def( "getScene", (ScenePlug *(ScenePath::*)())&ScenePath::getScene, return_value_policy<CastToIntrusivePtr>() )
-		.def( "setContext", &ScenePath::setContext )
-		.def( "getContext", (Context *(ScenePath::*)())&ScenePath::getContext, return_value_policy<CastToIntrusivePtr>() )
-		.def( "createStandardFilter", &createStandardFilter, (
-				arg( "setNames" ) = list(),
-				arg( "setsLabel" ) = ""
-			)
-		)
-		.staticmethod( "createStandardFilter" )
+	RunTimeTypedClass<SceneFilterPathFilter>()
+		.def( init<FilterPtr, IECore::CompoundDataPtr>( ( arg( "filter" ), arg( "userData" ) = object() ) ) )
 	;
 
 }

@@ -41,10 +41,14 @@
 #include "Gaffer/Context.h"
 #include "Gaffer/PathFilter.h"
 #include "Gaffer/Node.h"
+#include "Gaffer/ArrayPlug.h"
 
 #include "GafferScene/ScenePlug.h"
 #include "GafferScene/ScenePath.h"
 #include "GafferScene/SceneAlgo.h"
+#include "GafferScene/SetFilter.h"
+#include "GafferScene/UnionFilter.h"
+#include "GafferScene/SceneFilterPathFilter.h"
 
 using namespace IECore;
 using namespace Gaffer;
@@ -77,6 +81,39 @@ ScenePath::~ScenePath()
 			m_node->plugDirtiedSignal().disconnect( boost::bind( &ScenePath::plugDirtied, this, ::_1 ) );
 		}
 	}
+}
+
+void ScenePath::setScene( ScenePlugPtr scene )
+{
+	if( m_scene == scene )
+	{
+		return;
+	}
+
+	if( havePathChangedSignal() )
+	{
+		m_node->plugDirtiedSignal().disconnect( boost::bind( &ScenePath::plugDirtied, this, ::_1 ) );
+	}
+
+	m_scene = scene;
+	m_node = scene->node();
+
+	if( m_node && havePathChangedSignal() )
+	{
+		m_node->plugDirtiedSignal().connect( boost::bind( &ScenePath::plugDirtied, this, ::_1 ) );
+	}
+
+	emitPathChanged();
+}
+
+ScenePlug *ScenePath::getScene()
+{
+	return m_scene.get();
+}
+
+const ScenePlug *ScenePath::getScene() const
+{
+	return m_scene.get();
 }
 
 void ScenePath::setContext( Gaffer::ContextPtr context )
@@ -167,4 +204,41 @@ void ScenePath::plugDirtied( Gaffer::Plug *plug )
 	{
 		emitPathChanged();
 	}
+}
+
+Gaffer::PathFilterPtr ScenePath::createStandardFilter( const std::vector<std::string> &setNames, const std::string &setsLabel )
+{
+	if( !setNames.size() )
+	{
+		return NULL;
+	}
+
+	UnionFilterPtr unionFilter = new UnionFilter;
+
+	std::string defaultLabel = "Show only ";
+	for( std::vector<std::string>::const_iterator it = setNames.begin(), eIt = setNames.end(); it != eIt; ++it )
+	{
+		SetFilterPtr setFilter = new SetFilter();
+		unionFilter->addChild( setFilter );
+		setFilter->setPlug()->setValue( *it );
+		unionFilter->inPlug()->getChild<Gaffer::Plug>( it - setNames.begin() )->setInput( setFilter->outPlug() );
+
+		if( it != setNames.begin() )
+		{
+			defaultLabel += ", ";
+		}
+		defaultLabel += *it;
+	}
+
+	SceneFilterPathFilterPtr setsFilter = new SceneFilterPathFilter( unionFilter );
+	CompoundDataPtr uiUserData = new CompoundData;
+	uiUserData->writable()["label"] = new StringData( setsLabel.size() ? setsLabel : defaultLabel );
+	setsFilter->userData()->writable()["UI"] = uiUserData;
+
+	/// \todo It'd be nice to add a MatchPatternPathFilter here for the user to type
+	/// in arbitrary match patterns, just as we do in FileSystemPath::createStandardFilter().
+	/// To be effective though, it makes most sense if such a filter applies only to leaf
+	/// paths, and at present no ScenePath is considered to be leaf.
+
+	return setsFilter;
 }

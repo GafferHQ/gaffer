@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,65 +34,14 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
-#include "boost/python/suite/indexing/container_utils.hpp"
+#ifndef GAFFERSCENEBINDINGS_SCENEFILTERPATHFILTERBINDING_H
+#define GAFFERSCENEBINDINGS_SCENEFILTERPATHFILTERBINDING_H
 
-#include "Gaffer/Context.h"
-#include "Gaffer/PathFilter.h"
-#include "GafferBindings/PathBinding.h"
-
-#include "GafferScene/ScenePath.h"
-#include "GafferScene/ScenePlug.h"
-
-#include "GafferSceneBindings/ScenePathBinding.h"
-
-using namespace boost::python;
-using namespace IECorePython;
-using namespace Gaffer;
-using namespace GafferBindings;
-using namespace GafferScene;
-
-namespace
+namespace GafferSceneBindings
 {
 
-PathFilterPtr createStandardFilter( list pythonSetNames, const std::string &setsLabel )
-{
-	std::vector<std::string> setNames;
-	boost::python::container_utils::extend_container( setNames, pythonSetNames );
-	return ScenePath::createStandardFilter( setNames, setsLabel );
-}
+void bindSceneFilterPathFilter();
 
-} // namespace
+} // namespace GafferSceneBindings
 
-void GafferSceneBindings::bindScenePath()
-{
-
-	PathClass<ScenePath>()
-		.def(
-			init<ScenePlugPtr, ContextPtr, PathFilterPtr>( (
-				arg( "scene" ),
-				arg( "context" ),
-				arg( "filter" ) = object()
-			) )
-		)
-		.def(
-			init<ScenePlugPtr, ContextPtr, const std::string &, PathFilterPtr>( (
-				arg( "scene" ),
-				arg( "context" ),
-				arg( "path" ),
-				arg( "filter" ) = object()
-			) )
-		)
-		.def( "setScene", &ScenePath::setScene )
-		.def( "getScene", (ScenePlug *(ScenePath::*)())&ScenePath::getScene, return_value_policy<CastToIntrusivePtr>() )
-		.def( "setContext", &ScenePath::setContext )
-		.def( "getContext", (Context *(ScenePath::*)())&ScenePath::getContext, return_value_policy<CastToIntrusivePtr>() )
-		.def( "createStandardFilter", &createStandardFilter, (
-				arg( "setNames" ) = list(),
-				arg( "setsLabel" ) = ""
-			)
-		)
-		.staticmethod( "createStandardFilter" )
-	;
-
-}
+#endif // GAFFERSCENEBINDINGS_SCENEFILTERPATHFILTERBINDING_H

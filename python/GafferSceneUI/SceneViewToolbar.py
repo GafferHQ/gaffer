@@ -98,9 +98,14 @@ class _LookThroughPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		with row :
 			self.__enabledWidget = GafferUI.BoolPlugValueWidget( plug["enabled"], displayMode=GafferUI.BoolWidget.DisplayMode.Switch )
-			self.__cameraWidget = GafferUI.PathPlugValueWidget(
+			self.__cameraWidget = GafferSceneUI.ScenePathPlugValueWidget(
 				plug["camera"],
-				path = GafferScene.ScenePath( plug.node()["in"], plug.node().getContext(), "/" ),
+				path = GafferScene.ScenePath(
+					plug.node()["in"],
+					plug.node().getContext(),
+					"/",
+					filter = GafferScene.ScenePath.createStandardFilter( [ "__cameras" ], "Show only cameras" )
+				),
 			)
 			self.__cameraWidget.pathWidget().setFixedCharacterWidth( 13 )
 			if hasattr( self.__cameraWidget.pathWidget()._qtWidget(), "setPlaceholderText" ) :
