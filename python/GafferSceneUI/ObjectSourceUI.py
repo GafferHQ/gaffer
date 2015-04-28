@@ -69,6 +69,16 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"sets" : [
+
+			"description",
+			"""
+			A list of sets to include the object in. The
+			names should be separated by spaces.
+			""",
+
+		],
+
 	}
 
 )
