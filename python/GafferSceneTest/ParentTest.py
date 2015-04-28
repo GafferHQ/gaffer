@@ -298,5 +298,23 @@ class ParentTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( p["out"]["globals"].hash(), g["out"]["globals"].hash() )
 		self.assertTrue( p["out"]["globals"].getValue( _copy = False ).isSame( g["out"]["globals"].getValue( _copy = False ) ) )
 
+	def testChangingInputSet( self ) :
+
+		c1 = GafferScene.Cube()
+		c2 = GafferScene.Cube()
+
+		p = GafferScene.Parent()
+		p["in"].setInput( c1["out"] )
+		p["parent"].setValue( "/" )
+		p["child"].setInput( c2["out"] )
+
+		h = p["out"].setHash( "test" )
+		self.assertEqual( p["out"].set( "test" ).value, GafferScene.PathMatcher() )
+
+		c1["sets"].setValue( "test" )
+
+		self.assertNotEqual( p["out"].setHash( "test" ), h )
+		self.assertEqual( p["out"].set( "test" ).value, GafferScene.PathMatcher( [ "/cube" ] ) )
+
 if __name__ == "__main__":
 	unittest.main()

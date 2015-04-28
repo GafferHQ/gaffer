@@ -398,7 +398,7 @@ void BranchCreator::hashSet( const IECore::InternedString &setName, const Gaffer
 	}
 
 	SceneProcessor::hashSet( setName, context, parent, h );
-	inPlug()->setHash( setName );
+	h.append( inPlug()->setHash( setName ) );
 	mapping->hash( h );
 	h.append( branchSetHash );
 }
