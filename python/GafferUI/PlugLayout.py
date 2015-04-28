@@ -42,12 +42,20 @@ import GafferUI
 
 ## A class for laying out widgets to represent all the plugs held on a particular parent.
 #
-# Supported metadata :
+# Per-plug metadata support :
 #
 #	- "layout:index" controls ordering of plugs within the layout
 #	- "layout:section" places the plug in a named section of the layout
 #	- "divider" specifies whether or not a plug should be followed by a divider
 #	- "layout:widgetType" the class name for the widget type of a particular plug
+#	- "layout:activator" the name of an activator to control editability
+#
+# Per-node metadata support :
+#
+#	- "layout:activator:activatorName" a dynamic boolean metadata entry to control
+#     the activation of plugs within the layout
+#	- "layout:activators" a dynamic metadata entry returning a CompoundData of booleans
+#     for several named activators.
 #
 class PlugLayout( GafferUI.Widget ) :
 
@@ -75,11 +83,18 @@ class PlugLayout( GafferUI.Widget ) :
 		# to changes in that metadata.
 		self.__metadataChangedConnection = Gaffer.Metadata.plugValueChangedSignal().connect( Gaffer.WeakMethod( self.__plugMetadataChanged ) )
 
+		# and since our activations are driven by plug values, we must respond
+		# when the plugs are dirtied.
+		self.__plugDirtiedConnection = self.__node().plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__plugDirtied ) )
+
 		# frequently events that trigger a ui update come in batches, so we
 		# only perform the update on idle events to avoid unnecessary
 		# repeated updates. this variable tracks whether or not such an update is
-		# scheduled.
+		# scheduled, and the dirty variables keep track of the work we'll need to
+		# do in the update.
 		self.__updatePending = False
+		self.__layoutDirty = True
+		self.__activationsDirty = True
 
 		self.__plugsToWidgets = {} # mapping from child plug to widget
 
@@ -93,8 +108,11 @@ class PlugLayout( GafferUI.Widget ) :
  			return
 
  		self.__readOnly = readOnly
- 		for widget in self.__plugsToWidgets.values() :
-			self.__applyReadOnly( widget )
+		if self.__readOnly :
+			for widget in self.__plugsToWidgets.values() :
+				self.__applyReadOnly( widget, self.__readOnly )
+		else :
+			self.__updateActivations()
 
 	## Returns a PlugValueWidget representing the specified child plug.
 	# Because the layout is built lazily on demand, this might return None due
@@ -130,6 +148,16 @@ class PlugLayout( GafferUI.Widget ) :
 		return [ x[1] for x in plugsAndIndices ]
 
 	def __update( self ) :
+
+		if self.__layoutDirty :
+			self.__updateLayout()
+			self.__layoutDirty = False
+
+		if self.__activationsDirty :
+			self.__updateActivations()
+			self.__activationsDirty = False
+
+	def __updateLayout( self ) :
 
 		# get the plugs we want to represent
 		plugs = self.__parent.children( Gaffer.Plug )
@@ -173,6 +201,26 @@ class PlugLayout( GafferUI.Widget ) :
 		# layout from the section definitions.
 		self.__layout.update( rootSection )
 
+	def __updateActivations( self ) :
+
+		if self.getReadOnly() :
+			return
+
+		activators = Gaffer.Metadata.nodeValue( self.__node(), "layout:activators" ) or {}
+		activators = { k : v.value for k, v in activators.items() } # convert CompoundData of BoolData to dict of booleans
+
+		for plug, widget in self.__plugsToWidgets.items() :
+			active = True
+			activatorName = Gaffer.Metadata.plugValue( plug, "layout:activator" )
+			if activatorName :
+				active = activators.get( activatorName )
+				if active is None :
+					active = Gaffer.Metadata.nodeValue( self.__node(), "layout:activator:" + activatorName )
+					active = active if active is not None else False
+					activators[activatorName] = active
+
+			self.__applyReadOnly( widget, not active )
+
  	def __createPlugWidget( self, plug ) :
 
 		widgetType = Gaffer.Metadata.plugValue( plug, "layout:widgetType" )
@@ -203,9 +251,13 @@ class PlugLayout( GafferUI.Widget ) :
 				QWIDGETSIZE_MAX = 16777215 # qt #define not exposed by PyQt or PySide
 				result.labelPlugValueWidget().label()._qtWidget().setFixedWidth( QWIDGETSIZE_MAX )
 
-		self.__applyReadOnly( result )
+		self.__applyReadOnly( result, self.getReadOnly() )
 
  		return result
+
+	def __node( self ) :
+
+		return self.__parent if isinstance( self.__parent, Gaffer.Node ) else self.__parent.node()
 
 	def __sectionPath( self, plug ) :
 
@@ -238,6 +290,7 @@ class PlugLayout( GafferUI.Widget ) :
 		# want to be rebuilding the ui for each individual event, so we
 		# add an idle callback to do the rebuild once the
 		# upheaval is over.
+		self.__layoutDirty = True
 		self.__scheduleUpdate()
 
 	def __scheduleUpdate( self ) :
@@ -255,32 +308,40 @@ class PlugLayout( GafferUI.Widget ) :
 
 		return False # removes the callback
 
-	def __applyReadOnly( self, widget ) :
+	def __applyReadOnly( self, widget, readOnly ) :
 
 		if widget is None :
 			return
 
 		if isinstance( widget, GafferUI.PlugValueWidget ) :
-			widget.setReadOnly( self.getReadOnly() )
+			widget.setReadOnly( readOnly )
 		elif isinstance(  widget, GafferUI.PlugWidget ) :
-			widget.labelPlugValueWidget().setReadOnly( self.getReadOnly() )
-			widget.plugValueWidget().setReadOnly( self.getReadOnly() )
+			widget.labelPlugValueWidget().setReadOnly( readOnly )
+			widget.plugValueWidget().setReadOnly( readOnly )
 		else :
-			widget.plugValueWidget().setReadOnly( self.getReadOnly() )
+			widget.plugValueWidget().setReadOnly( readOnly )
 
 	def __plugMetadataChanged( self, nodeTypeId, plugPath, key ) :
 
 		if not self.visible() :
 			return
 
-		node = self.__parent if isinstance( self.__parent, Gaffer.Node ) else self.__parent.node()
-		if not node.isInstanceOf( node.typeId() ) :
+		if not self.__node().isInstanceOf( nodeTypeId ) :
 			return
 
 		if key in ( "divider", "layout:index", "layout:section" ) :
 			# we often see sequences of several metadata changes - so
 			# we schedule an update on idle to batch them into one ui update.
+			self.__layoutDirty = True
 			self.__scheduleUpdate()
+
+	def __plugDirtied( self, plug ) :
+
+		if not self.visible() or plug.direction() != plug.Direction.In :
+			return
+
+		self.__activationsDirty = True
+		self.__scheduleUpdate()
 
 # The _Section class provides a simple abstract representation of a hierarchical
 # layout. Each section contains a list of widgets, and an OrderedDict of named
