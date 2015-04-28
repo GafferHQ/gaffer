@@ -40,12 +40,22 @@ import IECore
 
 import Gaffer
 import GafferUI
+import GafferCortex
 import GafferCortexUI
+
+__nodeTypes = (
+	GafferCortex.ParameterisedHolderNode,
+	GafferCortex.ParameterisedHolderComputeNode,
+	GafferCortex.ParameterisedHolderDependencyNode,
+	GafferCortex.ParameterisedHolderExecutableNode,
+)
 
 ## Supported userData entries :
 #
 # ["UI"]["password"]
 # ["UI"]["multiLine"]
+# ["UI"]["multiLineFixedLineHeight"]
+
 class StringParameterValueWidget( GafferCortexUI.ParameterValueWidget ) :
 
 	def __init__( self, parameterHandler, **kw ) :
@@ -56,6 +66,7 @@ class StringParameterValueWidget( GafferCortexUI.ParameterValueWidget ) :
 
 		if multiLine :
 			plugValueWidget = GafferUI.MultiLineStringPlugValueWidget( parameterHandler.plug() )
+		
 		else :
 			plugValueWidget = GafferUI.StringPlugValueWidget( parameterHandler.plug() )
 			with IECore.IgnoredExceptions( KeyError ) :
@@ -65,3 +76,31 @@ class StringParameterValueWidget( GafferCortexUI.ParameterValueWidget ) :
 		GafferCortexUI.ParameterValueWidget.__init__( self, plugValueWidget, parameterHandler, **kw )
 
 GafferCortexUI.ParameterValueWidget.registerType( IECore.StringParameter, StringParameterValueWidget )
+
+##########################################################################
+# Metadata
+##########################################################################
+
+def __fixedLineHeight( plug ) :
+
+	## \todo There should really be a method to map from plug to parameter.
+	# The logic exists in ParameterisedHolder.plugSet() but isn't public.
+	parameter = plug.node().parameterHandler().parameter()
+	for name in plug.relativeName( plug.node() ).split( "." )[1:] :
+		if not isinstance( parameter, IECore.CompoundParameter ) :
+			return None
+		else :
+			parameter = parameter[name]
+	
+	# by default the multi-line widget gets auto-expanded in the op interface which works nicely when
+	# the user has to insert a lot of text, but very often we just want to provide a multi-line text field
+	# for a brief description, for this reason we check by the user data "multiLineFixedLineHeight" which when set 
+	# forces the parameter to show an arbitrary number of lines
+	fixedLineHeight = None
+	with IECore.IgnoredExceptions( KeyError ) :
+		fixedLineHeight = parameter.userData()["UI"]["multiLineFixedLineHeight"].value
+	
+	return fixedLineHeight
+	
+for nodeType in __nodeTypes:
+	Gaffer.Metadata.registerPlugValue( nodeType, "*", "fixedLineHeight", __fixedLineHeight )

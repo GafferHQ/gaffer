@@ -47,7 +47,7 @@ class MultiLineTextWidget( GafferUI.Widget ) :
 
 	WrapMode = IECore.Enum.create( "None", "Word", "Character", "WordOrCharacter" )
 
-	def __init__( self, text="", editable=True, wrapMode=WrapMode.WordOrCharacter, **kw ) :
+	def __init__( self, text="", editable=True, wrapMode=WrapMode.WordOrCharacter, fixedLineHeight=None, **kw ) :
 
 		GafferUI.Widget.__init__( self, _PlainTextEdit(), **kw )
 
@@ -68,6 +68,7 @@ class MultiLineTextWidget( GafferUI.Widget ) :
 		self.setText( text )
 		self.setEditable( editable )
 		self.setWrapMode( wrapMode )
+		self.setFixedLineHeight( fixedLineHeight )
 
  		self.__dragEnterConnection = self.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ) )
  		self.__dragMoveConnection = self.dragMoveSignal().connect( Gaffer.WeakMethod( self.__dragMove ) )
@@ -131,6 +132,14 @@ class MultiLineTextWidget( GafferUI.Widget ) :
 			QtGui.QTextOption.WrapAnywhere : self.WrapMode.Character,
 			QtGui.QTextOption.WrapAtWordBoundaryOrAnywhere : self.WrapMode.WordOrCharacter,
 		}[self._qtWidget().wordWrapMode()]
+
+	def setFixedLineHeight( self, fixedLineHeight ) :
+
+		self._qtWidget().setFixedLineHeight( fixedLineHeight )
+		
+	def getFixedLineHeight( self ) :
+
+		return self._qtWidget().getFixedLineHeight()
 
 	def setCursorPosition( self, position ) :
 
@@ -319,8 +328,55 @@ class MultiLineTextWidget( GafferUI.Widget ) :
 class _PlainTextEdit( QtGui.QPlainTextEdit ) :
 
 	def __init__( self, parent = None ) :
-
 		QtGui.QPlainTextEdit.__init__( self, parent )
+		self.__fixedLineHeight = None
+		self.__widgetFullyBuilt = False
+		
+	def setFixedLineHeight( self, fixedLineHeight ) :
+		
+		self.__fixedLineHeight = fixedLineHeight
+
+		self.setSizePolicy(
+			self.sizePolicy().horizontalPolicy(),
+			QtGui.QSizePolicy.Expanding if self.__fixedLineHeight is None else QtGui.QSizePolicy.Fixed
+		)
+		
+		self.updateGeometry()
+
+	def getFixedLineHeight( self ) :
+
+		return self.__fixedLineHeight
+	
+	def __computeHeight( self, size ) :
+		
+		fixedLineHeight = self.getFixedLineHeight()
+		
+		# when the multiline is displaying fixed lines
+		if fixedLineHeight is not None :
+
+			# computing the font metrics based on the number of lines
+			height = self.fontMetrics().boundingRect( "M" ).height() * fixedLineHeight
+			
+			# also, we need to compute the widget margins to frame the fixed lines nicely 
+			margin = self.contentsMargins().top() + self.contentsMargins().bottom() + self.document().documentMargin()
+			
+			height += margin
+			
+			size.setHeight(height)
+			
+		return size
+			
+	def sizeHint( self ) :
+
+		size = QtGui.QPlainTextEdit.sizeHint( self )
+			
+		return self.__computeHeight( size )
+	
+	def minimumSizeHint( self ) :
+		
+		size = QtGui.QPlainTextEdit.minimumSizeHint( self )
+		
+		return self.__computeHeight( size )
 
 	def event( self, event ) :
 
