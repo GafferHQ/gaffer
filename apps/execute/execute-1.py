@@ -1,7 +1,7 @@
 ##########################################################################
 #  
 #  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2014-2015, Image Engine Design Inc. All rights reserved.
 #  
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,7 +35,7 @@
 #  
 ##########################################################################
 
-import os
+import os, sys, traceback
 
 import IECore
 
@@ -149,7 +149,16 @@ class execute( Gaffer.Application ) :
 				try :
 					node.executeSequence( frames )
 				except Exception as exception :
-					IECore.msg( IECore.Msg.Level.Error, "gaffer execute : executing %s" % node.relativeName( scriptNode ), str( exception ) )
+					IECore.msg(
+						IECore.Msg.Level.Debug,
+						"gaffer execute : executing %s" % node.relativeName( scriptNode ),
+						"".join( traceback.format_exception( *sys.exc_info() ) ),
+					)
+					IECore.msg(
+						IECore.Msg.Level.Error,
+						"gaffer execute : executing %s" % node.relativeName( scriptNode ),
+						"".join( traceback.format_exception_only( *sys.exc_info()[:2] ) ),
+					)
 					return 1
 
 		return 0
