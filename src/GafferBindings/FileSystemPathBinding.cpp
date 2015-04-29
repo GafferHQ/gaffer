@@ -50,7 +50,7 @@ using namespace GafferBindings;
 namespace
 {
 
-PathFilterPtr createStandardFilter( list pythonExtensions, const std::string &extensionsLabel )
+PathFilterPtr createStandardFilter( object pythonExtensions, const std::string &extensionsLabel )
 {
 	std::vector<std::string> extensions;
 	boost::python::container_utils::extend_container( extensions, pythonExtensions );

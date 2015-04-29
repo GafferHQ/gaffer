@@ -55,7 +55,7 @@ using namespace GafferScene;
 namespace
 {
 
-PathFilterPtr createStandardFilter( list pythonSetNames, const std::string &setsLabel )
+PathFilterPtr createStandardFilter( object pythonSetNames, const std::string &setsLabel )
 {
 	std::vector<std::string> setNames;
 	boost::python::container_utils::extend_container( setNames, pythonSetNames );
