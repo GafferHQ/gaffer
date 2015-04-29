@@ -40,6 +40,8 @@ import collections
 import Gaffer
 import GafferUI
 
+QtGui = GafferUI._qtImport( "QtGui" )
+
 ## A class for laying out widgets to represent all the plugs held on a particular parent.
 #
 # Per-plug metadata support :
@@ -49,6 +51,11 @@ import GafferUI
 #	- "divider" specifies whether or not a plug should be followed by a divider
 #	- "layout:widgetType" the class name for the widget type of a particular plug
 #	- "layout:activator" the name of an activator to control editability
+#
+# Per-parent metadata support :
+#
+#   - layout:section:sectionName:summary" dynamic metadata entry returning a
+#     string to be used as a summary for the section.
 #
 # Per-node metadata support :
 #
@@ -95,8 +102,10 @@ class PlugLayout( GafferUI.Widget ) :
 		self.__updatePending = False
 		self.__layoutDirty = True
 		self.__activationsDirty = True
+		self.__summariesDirty = True
 
 		self.__plugsToWidgets = {} # mapping from child plug to widget
+		self.__rootSection = _Section()
 
 	def getReadOnly( self ) :
 
@@ -157,6 +166,15 @@ class PlugLayout( GafferUI.Widget ) :
 			self.__updateActivations()
 			self.__activationsDirty = False
 
+		if self.__summariesDirty :
+			self.__updateSummariesWalk( self.__rootSection, "" )
+			self.__summariesDirty = False
+
+		# delegate to our layout class to create a concrete
+		# layout from the section definitions.
+
+		self.__layout.update( self.__rootSection )
+
 	def __updateLayout( self ) :
 
 		# get the plugs we want to represent
@@ -174,7 +192,7 @@ class PlugLayout( GafferUI.Widget ) :
 
 		# make (or reuse existing) widgets for each plug, and sort them into
 		# sections.
-		rootSection = _Section()
+		self.__rootSection.clear()
 		for plug in plugs :
 
 			if plug not in self.__plugsToWidgets :
@@ -186,9 +204,9 @@ class PlugLayout( GafferUI.Widget ) :
 			if widget is None :
 				continue
 
-			section = rootSection
+			section = self.__rootSection
 			for sectionName in self.__sectionPath( plug ) :
-				section = section.subsections.setdefault( sectionName, _Section() )
+				section = section.subsection( sectionName )
 
 			section.widgets.append( widget )
 
@@ -196,10 +214,6 @@ class PlugLayout( GafferUI.Widget ) :
 				section.widgets.append( GafferUI.Divider(
 					GafferUI.Divider.Orientation.Horizontal if self.__layout.orientation() == GafferUI.ListContainer.Orientation.Vertical else GafferUI.Divider.Orientation.Vertical
 				) )
-
-		# delegate to our layout class to create a concrete
-		# layout from the section definitions.
-		self.__layout.update( rootSection )
 
 	def __updateActivations( self ) :
 
@@ -220,6 +234,14 @@ class PlugLayout( GafferUI.Widget ) :
 					activators[activatorName] = active
 
 			self.__applyReadOnly( widget, not active )
+
+	def __updateSummariesWalk( self, section, sectionName ) :
+
+		section.summary = self.__parentMetadataValue( "layout:section:" + sectionName + ":summary" ) or ""
+
+		for name, subsection in section.subsections.items() :
+			subsectionName = sectionName + "." + name if sectionName else name
+			self.__updateSummariesWalk( subsection, subsectionName )
 
  	def __createPlugWidget( self, plug ) :
 
@@ -258,6 +280,13 @@ class PlugLayout( GafferUI.Widget ) :
 	def __node( self ) :
 
 		return self.__parent if isinstance( self.__parent, Gaffer.Node ) else self.__parent.node()
+
+	def __parentMetadataValue( self, name ) :
+
+		if isinstance( self.__parent, Gaffer.Node ) :
+			return Gaffer.Metadata.nodeValue( self.__parent, name )
+		else :
+			return Gaffer.Metadata.plugValue( self.__parent, name )
 
 	def __sectionPath( self, plug ) :
 
@@ -341,21 +370,39 @@ class PlugLayout( GafferUI.Widget ) :
 			return
 
 		self.__activationsDirty = True
+		self.__summariesDirty = True
 		self.__scheduleUpdate()
 
 # The _Section class provides a simple abstract representation of a hierarchical
-# layout. Each section contains a list of widgets, and an OrderedDict of named
-# subsections.
+# layout. Each section contains a list of widgets to be displayed in that section,
+# and an OrderedDict of named subsections.
 class _Section( object ) :
 
 	def __init__( self ) :
 
+		self.clear()
+
+	def subsection( self, name ) :
+
+		result = self.subsections.get( name )
+		if result is not None :
+			return result
+
+		result = _Section()
+		self.subsections[name] = result
+		return result
+
+	def clear( self ) :
+
 		self.widgets = []
 		self.subsections = collections.OrderedDict()
+		self.summary = ""
 
 # The PlugLayout class deals with all the details of plugs, metadata and
 # signals to define an abstract layout in terms of _Sections. It then
-# delegates to the _Layout classes to create an actual layout.
+# delegates to the _Layout classes to create an actual layout in terms
+# of Widgets. This allows us to present different layouts based on whether
+# or the parent is a node (tabbed layout) or a plug (collapsible layout).
 class _Layout( GafferUI.Widget ) :
 
 	def __init__( self, topLevelWidget, orientation, **kw ) :
@@ -428,11 +475,22 @@ class _CollapsibleLayout( _Layout ) :
 		widgets = list( section.widgets )
 
 		for name, subsection in section.subsections.items() :
+
 			collapsible = self.__collapsibles.get( name )
 			if collapsible is None :
+
 				collapsible = GafferUI.Collapsible( name, _CollapsibleLayout( self.orientation() ), borderWidth = 2, collapsed = True )
+				collapsible.setCornerWidget( GafferUI.Label(), True )
+				## \todo This is fighting the default sizing applied in the Label constructor. Really we need a standard
+				# way of controlling size behaviours for all widgets in the public API.
+				collapsible.getCornerWidget()._qtWidget().setSizePolicy( QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Fixed )
 				self.__collapsibles[name] = collapsible
+
 			collapsible.getChild().update( subsection )
+			collapsible.getCornerWidget().setText(
+				"<small>" + "&nbsp;( " + subsection.summary + " )</small>" if subsection.summary else ""
+			)
+
 			widgets.append( collapsible )
 
 		self.__column[:] = widgets
