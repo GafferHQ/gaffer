@@ -35,6 +35,7 @@
 #
 ##########################################################################
 
+import sys
 import collections
 
 import Gaffer
@@ -150,6 +151,7 @@ class PlugLayout( GafferUI.Widget ) :
 		for plugAndIndex in plugsAndIndices :
 			index = Gaffer.Metadata.plugValue( plugAndIndex[1], "layout:index" )
 			if index is not None :
+				index = index if index >= 0 else sys.maxint + index
 				plugAndIndex[0] = index
 
 		plugsAndIndices.sort( key = lambda x : x[0] )
