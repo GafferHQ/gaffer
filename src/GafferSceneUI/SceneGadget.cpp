@@ -477,15 +477,12 @@ class SceneGadget::SceneGraph
 
 		~SceneGraph()
 		{
-			deferReferenceRemoval( m_state );
-			deferReferenceRemoval( m_renderable );
-			deferReferenceRemoval( m_boundRenderable );
-			clearChildren();
+			clear();
 		}
 
 		void render( IECoreGL::State *currentState, IECoreGL::Selector *selector = NULL ) const
 		{
-			if( !m_visible )
+			if( !m_visible || !valid() )
 			{
 				return;
 			}
@@ -564,6 +561,22 @@ class SceneGadget::SceneGraph
 				}
 				return childSelectionBound;
 			}
+		}
+
+		bool valid() const
+		{
+			// Our m_state can be null if an exception occurred during update,
+			// in which case we're not valid.
+			return m_state;
+		}
+
+		void clear()
+		{
+			deferReferenceRemoval( m_state );
+			deferReferenceRemoval( m_renderable );
+			deferReferenceRemoval( m_boundRenderable );
+			clearChildren();
+			m_objectHash = m_attributesHash = IECore::MurmurHash();
 		}
 
 	private :
@@ -1124,6 +1137,13 @@ void SceneGadget::updateSceneGraph() const
 		return;
 	}
 
+	if( !m_sceneGraph->valid() )
+	{
+		// The previous attempt at an update failed - so
+		// we need to update everything this time.
+		m_dirtyFlags = UpdateTask::AllDirty;
+	}
+
 	try
 	{
 		UpdateTask *task = new( tbb::task::allocate_root() ) UpdateTask( this, m_sceneGraph.get(), m_dirtyFlags, ScenePlug::ScenePath() );
@@ -1136,9 +1156,16 @@ void SceneGadget::updateSceneGraph() const
 	}
 	catch( const std::exception& e )
 	{
+		m_sceneGraph->clear();
 		IECore::msg( IECore::Msg::Error, "SceneGadget::updateSceneGraph", e.what() );
 	}
 
+	// Even if an error occurred when updating the scene, we clear
+	// the dirty flags. This prevents us from repeating the same
+	// error over and over when nothing has been done to prevent it.
+	// When something is next dirtied we'll turn on all the dirty
+	// flags (see above) to ensure that the next update is a complete
+	// one.
 	m_dirtyFlags = UpdateTask::NothingDirty;
 }
 
