@@ -37,6 +37,8 @@
 import fnmatch
 import re
 import traceback
+import functools
+import warnings
 
 import IECore
 
@@ -90,8 +92,8 @@ def __parameterNoduleCreator( plug ) :
 GafferUI.Nodule.registerNodule( GafferRenderMan.RenderManShader, fnmatch.translate( "parameters.*" ), __parameterNoduleCreator )
 
 ##########################################################################
-# NodeUI - we implement a custom NodeUI so we can enable/disable
-# parameter uis using a plugSet callback.
+# NodeUI - this exists only for backwards compatibility, and will be
+# removed.
 ##########################################################################
 
 class RenderManShaderUI( GafferUI.StandardNodeUI ) :
@@ -100,156 +102,55 @@ class RenderManShaderUI( GafferUI.StandardNodeUI ) :
 
 		GafferUI.StandardNodeUI.__init__( self, node, displayMode, **kw )
 
-		self.__plugSetConnection = self.node().plugSetSignal().connect( Gaffer.WeakMethod( self.__plugSet ) )
-		self.__plugInputChangedConnection = self.node().plugInputChangedSignal().connect( Gaffer.WeakMethod( self.__plugInputChanged ) )
-
-		self.__updateActivations()
-
-	def setReadOnly( self, readOnly ) :
-
-		if readOnly == self.getReadOnly() :
-			return
-
-		GafferUI.StandardNodeUI.setReadOnly( self, readOnly )
-
-		if not readOnly :
-			self.__updateActivations()
-
-	def __plugSet( self, plug ) :
-
-		if plug.parent().isSame( self.node()["parameters"] ) :
-			self.__updateActivations()
-
-	def __plugInputChanged( self, plug ) :
-
-		if plug.parent().isSame( self.node()["parameters"] ) :
-			self.__updateActivations()
-
-	def __updateActivations( self ) :
-
-		if self.getReadOnly() :
-			# nothing should be activated, regardless
-			return
-
-		parametersPlug = self.node()["parameters"]
-
-		annotations = _shaderAnnotations( self.node() )
-		activators = {}
-		for name, value in annotations.items() :
-			if name.startswith( "activator." ) and name.endswith( ".expression" ) :
-				activator = activators.setdefault( name.split( "." )[1], {} )
-				activator["expression"] = value.value
-			elif name.endswith( ".activator" ) :
-				plugName = name.split( "." )[0]
-				plug = parametersPlug.getChild( plugName )
-				if plug is not None :
-					activator = activators.setdefault( value.value, {} )
-					activatorPlugs = activator.setdefault( "plugs", [] )
-					activatorPlugs.append( plug )
-
-		class ExpressionVariables :
-
-			def __init__( self, parametersPlug ) :
-
-				self.__parametersPlug = parametersPlug
-
-			def connected( self, key ) :
-
-				return self.__parametersPlug[key].getInput() is not None
-
-			def __getitem__( self, key ) :
-
-				if key == "connected" :
-					return self.connected
-				else :
-					return self.__parametersPlug[key].getValue()
-
-		for activator in activators.values() :
-
-			expression = activator.get( "expression", None )
-			if not expression :
-				continue
-
-			plugs = activator.get( "plugs", None )
-			if not plugs :
-				continue
-
-			try :
-				active = eval( expression, globals(), ExpressionVariables( parametersPlug ) )
-			except Exception, e :
-				IECore.msg( IECore.Msg.Level.Error, "Parameter activator", "".join( traceback.format_exception_only( type( e ), e ) ) )
-				continue
-
-			for plug in plugs :
-				plugValueWidget = self.plugValueWidget( plug, lazy=False )
-				if plugValueWidget is not None :
-					plugValueWidget.setReadOnly( not active )
-					plugWidget = plugValueWidget.ancestor( GafferUI.PlugWidget )
-					if plugWidget is not None :
-						plugWidget.labelPlugValueWidget().setReadOnly( not active )
-
-GafferUI.NodeUI.registerNodeUI( GafferRenderMan.RenderManShader, RenderManShaderUI )
-GafferUI.NodeUI.registerNodeUI( GafferRenderMan.RenderManLight, RenderManShaderUI )
+		warnings.warn( "RenderManShaderUI is deprecated, use either StandardNodeUI or LayoutPlugValueWidget.", DeprecationWarning, 2 )
 
 ##########################################################################
-# PlugValueWidget for the "parameters" compound. This is defined in order
-# to group shader parameters into sections according to the "page" metadata.
+# PlugValueWidget creator for the parameters plug itself.
 ##########################################################################
 
 def __parametersPlugValueWidgetCreator( plug ) :
 
-	shader = _shader( plug.node() )
-	annotations = _shaderAnnotations( plug.node() )
+	# Because we don't know the names of sections in advance,
+	# we must use this opportunity to do a just-in-time registration of
+	# metadata values for the collapsed status of each section. An
+	# alternative approach would perhaps allow Metadata to be registered
+	# with wildcards in the name, and with an associated method to return all
+	# matching names (so registeredPlugValues() could continue to work).
 
+	collapsedRe = re.compile( "^page\.(.+)\.collapsed" )
+
+	annotations = _shaderAnnotations( plug.node() )
+	for name, value in annotations.items() :
+		m = collapsedRe.match( name )
+		if m :
+			Gaffer.Metadata.registerPlugValue(
+				plug,
+				"layout:section:" + m.group( 1 ) + ":collapsed",
+				value in ( "True", "true", "1" ),
+				persistent = False,
+			)
+
+	shader = _shader( plug.node() )
 	if shader is not None :
 		# when shaders are reloaded after having new parameters added,
 		# the order of the plugs and the parameters don't match, so we
-		# use the parameter ordering to define the ui order.
+		# use the parameter ordering to define the ui order via metadata.
 		## \todo Ideally we'd get the plug ordering to match in
 		# RenderManShader::loadShader(), and then the ordering of
 		# connections in the node graph would be correct too.
 		orderedParameterNames = shader.blindData()["ri:orderedParameterNames"]
-		parameterNames = []
+		index = 0
 		for name in orderedParameterNames :
 			if name.endswith( "Values" ) and name[:-6] + "Positions" in shader.parameters :
 				name = name[:-6]
 			elif name.endswith( "Positions" ) and name[:-9] + "Values" in shader.parameters :
 				continue
 			if name in plug :
-				parameterNames.append( name )
-	else :
-		# we still want to present some sort of ui, even if we couldn't
-		# load the shader for some reason.
-		parameterNames = [ c.getName() for c in plug.children() ]
+				Gaffer.Metadata.registerPlugValue( plug[name], "layout:index", index, persistent = False )
+				index += 1
 
-	sections = []
-	namesToSections = {}
-	for name in parameterNames :
-		sectionName = annotations.get( name + ".page", None )
-		sectionName = sectionName.value if sectionName is not None else ""
-		if sectionName not in namesToSections :
-
-			if sectionName == "" :
-				collapsed = None
-			else :
-				collapsed = annotations.get( "page." + sectionName + ".collapsed", None )
-				if collapsed is not None :
-					collapsed = collapsed.value in ( "True", "true", "1" )
-				else :
-					collapsed = True
-
-			section = {
-				"label" : sectionName,
-				"collapsed" : collapsed,
-				"names" : [],
-			}
-			sections.append( section )
-			namesToSections[sectionName] = section
-
-		section = namesToSections[sectionName]
-		section["names"].append( name )
-
-	return GafferUI.SectionedCompoundPlugValueWidget( plug, sections )
+	# Now we've created the appropriate metadata, we can just defer to a standard LayoutPlugValueWidget
+	return GafferUI.LayoutPlugValueWidget( plug )
 
 GafferUI.PlugValueWidget.registerCreator( GafferRenderMan.RenderManShader, "parameters", __parametersPlugValueWidgetCreator )
 GafferUI.PlugValueWidget.registerCreator( GafferRenderMan.RenderManLight, "parameters", __parametersPlugValueWidgetCreator )
@@ -435,6 +336,37 @@ def __nodeColor( node ) :
 
 	return None
 
+def __nodeActivators( node ) :
+
+	class ExpressionVariables :
+
+		def connected( self, key ) :
+
+			return node["parameters"][key].getInput() is not None
+
+		def __getitem__( self, key ) :
+
+			if key == "connected" :
+				return self.connected
+			else :
+				return node["parameters"][key].getValue()
+
+	result = IECore.CompoundData()
+	for name, value in _shaderAnnotations( node ).items() :
+
+		if not name.startswith( "activator." ) or not name.endswith( ".expression" ) :
+			continue
+
+		active = False
+		try :
+			active = eval( value.value, globals(), ExpressionVariables() )
+		except Exception, e :
+			IECore.msg( IECore.Msg.Level.Error, "Parameter activator", "".join( traceback.format_exception_only( type( e ), e ) ) )
+
+		result[name.split( "." )[1]] = bool( active )
+
+	return result
+
 def __plugDescription( plug ) :
 
 	annotations = _shaderAnnotations( plug.node() )
@@ -468,18 +400,26 @@ def __plugVisibleDimensions( plug ) :
 	else :
 		return None
 
+def __plugSection( plug ) :
+
+	annotations = _shaderAnnotations( plug.node() )
+	return annotations.get( plug.getName() + ".page", None )
+
+def __plugActivator( plug ) :
+
+	annotations = _shaderAnnotations( plug.node() )
+	return annotations.get( plug.getName() + ".activator", None )
+
 Gaffer.Metadata.registerNodeDescription( GafferRenderMan.RenderManShader, __nodeDescription )
 
 Gaffer.Metadata.registerNodeValue( GafferRenderMan.RenderManShader, "nodeGadget:color", __nodeColor )
 
-Gaffer.Metadata.registerPlugDescription( GafferRenderMan.RenderManShader, "parameters.*", __plugDescription )
-Gaffer.Metadata.registerPlugDescription( GafferRenderMan.RenderManLight, "parameters.*", __plugDescription )
+for nodeType in( GafferRenderMan.RenderManShader, GafferRenderMan.RenderManLight ) :
 
-Gaffer.Metadata.registerPlugValue( GafferRenderMan.RenderManShader, "parameters.*", "label", __plugLabel )
-Gaffer.Metadata.registerPlugValue( GafferRenderMan.RenderManLight, "parameters.*", "label", __plugLabel )
-
-Gaffer.Metadata.registerPlugValue( GafferRenderMan.RenderManShader, "parameters.*", "divider", __plugDivider )
-Gaffer.Metadata.registerPlugValue( GafferRenderMan.RenderManLight, "parameters.*", "divider", __plugDivider )
-
-Gaffer.Metadata.registerPlugValue( GafferRenderMan.RenderManShader, "parameters.*", "ui:visibleDimensions", __plugVisibleDimensions )
-Gaffer.Metadata.registerPlugValue( GafferRenderMan.RenderManLight, "parameters.*", "ui:visibleDimensions", __plugVisibleDimensions )
+	Gaffer.Metadata.registerNodeValue( nodeType, "layout:activators", __nodeActivators )
+	Gaffer.Metadata.registerPlugDescription( nodeType, "parameters.*", __plugDescription )
+	Gaffer.Metadata.registerPlugValue( nodeType, "parameters.*", "label", __plugLabel )
+	Gaffer.Metadata.registerPlugValue( nodeType, "parameters.*", "divider", __plugDivider )
+	Gaffer.Metadata.registerPlugValue( nodeType, "parameters.*", "ui:visibleDimensions", __plugVisibleDimensions )
+	Gaffer.Metadata.registerPlugValue( nodeType, "parameters.*", "layout:section", __plugSection )
+	Gaffer.Metadata.registerPlugValue( nodeType, "parameters.*", "layout:activator", __plugActivator )
