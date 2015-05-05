@@ -157,111 +157,377 @@ def __systemSummary( plug ) :
 
 	return ", ".join( info )
 
-GafferUI.PlugValueWidget.registerCreator(
+Gaffer.Metadata.registerNode(
 
 	GafferAppleseed.AppleseedOptions,
-	"options",
-	GafferUI.SectionedCompoundDataPlugValueWidget,
-	sections = (
-		{
-			"label" : "Main",
-			"summary" : __mainSummary,
-			"namesAndLabels" : (
-				( "as:mesh_file_format", "Mesh File Format" ),
-				( "as:cfg:generic_frame_renderer:passes", "Passes" ),
-				( "as:cfg:sampling_mode", "Sampler" ),
-				( "as:cfg:uniform_pixel_renderer:samples", "AA Samples" ),
-				( "as:cfg:uniform_pixel_renderer:force_antialiasing", "Force Antialiasing" ),
-				( "as:cfg:uniform_pixel_renderer:decorrelate_pixels", "Decorrelate Pixels" ),
-				( "as:cfg:lighting_engine", "Lighting Engine" ),
-			),
-		},
-		{
-			"label" : "Environment",
-			"summary" : __environmentSummary,
-			"namesAndLabels" : (
-				( "as:environment_edf", "Environment Light" ),
-				( "as:environment_edf_background", "Visible in Background" ),
-			),
-		},
-		{
-			"label" : "Distribution Ray Tracer",
-			"summary" : __drtSummary,
-			"namesAndLabels" : (
-				( "as:cfg:drt:enable_ibl", "Image Based Lighting" ),
-				( "as:cfg:drt:max_path_lenght", "Max Bounces" ),
-				( "as:cfg:drt:rr_min_path_length", "RR Start Bounce" ),
-				( "as:cfg:drt:dl_light_samples", "Direct Lighing Samples" ),
-				( "as:cfg:drt:ibl_env_samples", "IBL Samples" ),
-			),
-		},
-		{
-			"label" : "Unidirectional Path Tracer",
-			"summary" : __ptSummary,
-			"namesAndLabels" : (
-				( "as:cfg:pt:enable_dl", "Direct Lighting" ),
-				( "as:cfg:pt:enable_ibl", "Image Based Lighting" ),
-				( "as:cfg:pt:enable_caustics", "Caustics" ),
-				( "as:cfg:pt:max_path_lenght", "Max Bounces" ),
-				( "as:cfg:pt:rr_min_path_length", "RR Start Bounce" ),
-				( "as:cfg:pt:next_event_estimation", "Next Event Estimation" ),
-				( "as:cfg:pt:dl_light_samples", "Direct Lighing Samples" ),
-				( "as:cfg:pt:ibl_env_samples", "IBL Samples" ),
-				( "as:cfg:pt:max_ray_intensity", "Max Ray Intensity" ),
-			),
-		},
-		{
-			"label" : "SPPM",
-			"summary" : __sppmSummary,
-			"namesAndLabels" : (
-				( "as:cfg:sppm:photon_type", "Photon Type" ),
-				( "as:cfg:sppm:dl_type", "Direct Lighting" ),
-				( "as:cfg:sppm:enable_ibl", "Image Based Lighting" ),
-				( "as:cfg:sppm:enable_caustics", "Caustics" ),
-				( "as:cfg:sppm:photon_tracing_max_path_length", "Max Photon Bounces" ),
-				( "as:cfg:sppm:photon_tracing_rr_min_path_length", "Photon RR Start Bounce" ),
-				( "as:cfg:sppm:path_tracing_max_path_length", "Max Path Bounces" ),
-				( "as:cfg:sppm:path_tracing_rr_min_path_length", "Path RR Start Bounce" ),
-				( "as:cfg:sppm:light_photons_per_pass", "Light Photons" ),
-				( "as:cfg:sppm:env_photons_per_pass", "Environment Photons" ),
-				( "as:cfg:sppm:initial_radius", "Initial Radius" ),
-				( "as:cfg:sppm:max_photons_per_estimate", "Max Photons" ),
-				( "as:cfg:sppm:alpha", "Alpha" ),
-			),
-		},
-		{
-			"label" : "System",
-			"summary" : __systemSummary,
-			"namesAndLabels" : (
-				( "as:searchpath", "Searchpath" ),
-				( "as:cfg:rendering_threads", "Threads" ),
-				( "as:cfg:progressive_frame_renderer:max_fps", "Interactive Render Fps" ),
-				( "as:cfg:texture_store:max_size", "Texture Cache Size" ),
-				( "as:cfg:generic_frame_renderer:tile_ordering", "Tile Ordering" ),
-			),
-		},
-	),
+
+	plugs = {
+
+		# Sections
+
+		"options" : [
+
+			"layout:section:Main:summary", __mainSummary,
+			"layout:section:Environment:summary", __environmentSummary,
+			"layout:section:Distribution Ray Tracer:summary", __drtSummary,
+			"layout:section:Unidirectional Path Tracer:summary", __ptSummary,
+			"layout:section:SPPM:summary", __sppmSummary,
+			"layout:section:System:summary", __systemSummary,
+
+		],
+
+		# Main
+
+		"options.renderPasses" : [
+
+			"layout:section", "Main",
+			"label", "Passes",
+
+		],
+
+		"options.sampler" : [
+
+			"layout:section", "Main",
+
+		],
+
+		"options.sampler.value" : [
+
+			"preset:Random", "rng",
+			"preset:QMC", "qmc",
+
+		],
+
+		"options.aaSamples" : [
+
+			"layout:section", "Main",
+			"label", "AA Samples",
+
+		],
+
+		"options.forceAA" : [
+
+			"layout:section", "Main",
+			"label", "Force Antialiasing",
+
+		],
+
+		"options.decorrelatePixels" : [
+
+			"layout:section", "Main",
+
+		],
+
+		"options.lightingEngine" : [
+
+			"layout:section", "Main",
+
+		],
+
+		"options.lightingEngine.value" : [
+
+			"preset:Distribution Ray Tracer", "drt",
+			"preset:Unidirectional Path Tracer", "pt",
+			"preset:SPPM", "sppm",
+
+		],
+
+		"options.meshFileFormat" : [
+
+			"layout:section", "Main",
+
+		],
+
+		"options.meshFileFormat.value" : [
+
+			"preset:BinaryMesh", "binarymesh",
+			"preset:Obj", "obj",
+
+		],
+
+		# Environment
+
+		"options.environmentEDF" : [
+
+			"layout:section", "Environment",
+			"label", "Environment Light",
+
+		],
+
+		"options.environmentEDFBackground" : [
+
+			"layout:section", "Environment",
+			"label", "Visible in Background",
+
+		],
+
+		# Distribution Ray Tracer
+
+		"options.drtIBL" : [
+
+			"layout:section", "Distribution Ray Tracer",
+			"label", "Image Based Lighting",
+
+		],
+
+		"options.drtMaxBounces" : [
+
+			"layout:section", "Distribution Ray Tracer",
+			"label", "Max Bounces",
+
+		],
+
+		"options.drtRRStartBounce" : [
+
+			"layout:section", "Distribution Ray Tracer",
+			"label", "RR Start Bounce",
+
+		],
+
+		"options.drtLighingSamples" : [
+
+			"layout:section", "Distribution Ray Tracer",
+			"label", "Direct Lighting Samples",
+
+		],
+
+		"options.drtIBLSamples" : [
+
+			"layout:section", "Distribution Ray Tracer",
+			"label", "IBL Samples",
+
+		],
+
+		# Unidirectional Path Tracer
+
+		"options.ptDirectLighting" : [
+
+			"layout:section", "Unidirectional Path Tracer",
+			"label", "Direct Lighting",
+
+		],
+
+		"options.ptIBL" : [
+
+			"layout:section", "Unidirectional Path Tracer",
+			"label", "Image Based Lighting",
+
+		],
+
+		"options.ptCaustics" : [
+
+			"layout:section", "Unidirectional Path Tracer",
+			"label", "Caustics",
+
+		],
+
+		"options.ptMaxBounces" : [
+
+			"layout:section", "Unidirectional Path Tracer",
+			"label", "Max Bounces",
+
+		],
+
+		"options.ptRRStartBounce" : [
+
+			"layout:section", "Unidirectional Path Tracer",
+			"label", "RR Start Bounce",
+
+		],
+
+		"options.ptNextEvent" : [
+
+			"layout:section", "Unidirectional Path Tracer",
+			"label", "Next Event Estimation",
+
+		],
+
+		"options.ptLighingSamples" : [
+
+			"layout:section", "Unidirectional Path Tracer",
+			"label", "Direct Lighting Samples",
+
+		],
+
+		"options.ptIBLSamples" : [
+
+			"layout:section", "Unidirectional Path Tracer",
+			"label", "IBL Samples",
+
+		],
+
+		"options.ptMaxRayIntensity" : [
+
+			"layout:section", "Unidirectional Path Tracer",
+			"label", "Max Ray Intensity",
+
+		],
+
+		# SPPM
+
+		"options.photonType" : [
+
+			"layout:section", "SPPM",
+			"label", "Photon Type",
+
+		],
+
+		"options.photonType.value" : [
+
+			"preset:Monochromatic", "mono",
+			"preset:Polychromatic", "poly",
+
+		],
+
+		"options.sppmDirectLighing" : [
+
+			"layout:section", "SPPM",
+			"label", "Direct Lighting",
+
+		],
+
+		"options.sppmDirectLighing.value" : [
+
+			"preset:Ray Tracing", "rt",
+			"preset:SPPM", "sppm",
+			"preset:None", "off",
+
+		],
+
+		"options.sppmIBL" : [
+
+			"layout:section", "SPPM",
+			"label", "Image Based Lighting",
+
+		],
+
+		"options.sppmCaustics" : [
+
+			"layout:section", "SPPM",
+			"label", "Caustics",
+
+		],
+
+		"options.sppmPhotonMaxBounces" : [
+
+			"layout:section", "SPPM",
+			"label", "Max Photon Bounces",
+
+		],
+
+		"options.sppmPhotonRRStartBounce" : [
+
+			"layout:section", "SPPM",
+			"label", "Photon RR Start Bounce",
+
+		],
+
+		"options.sppmPathMaxBounces" : [
+
+			"layout:section", "SPPM",
+			"label", "Max Path Bounces",
+
+		],
+
+		"options.sppmPathRRStartBounce" : [
+
+			"layout:section", "SPPM",
+			"label", "Path RR Start Bounce",
+
+		],
+
+		"options.sppmLightPhotons" : [
+
+			"layout:section", "SPPM",
+			"label", "Light Photons",
+
+		],
+
+		"options.sppmEnvPhotons" : [
+
+			"layout:section", "SPPM",
+			"label", "Environment Photons",
+
+		],
+
+		"options.sppmInitialRadius" : [
+
+			"layout:section", "SPPM",
+			"label", "Initial Radius",
+
+		],
+
+		"options.sppmMaxPhotons" : [
+
+			"layout:section", "SPPM",
+			"label", "Max Photons",
+
+		],
+
+		"options.sppmAlpha" : [
+
+			"layout:section", "SPPM",
+			"label", "Alpha",
+
+		],
+
+		# System
+
+		"options.searchPath" : [
+
+			"layout:section", "System",
+
+		],
+
+		"options.numThreads" : [
+
+			"layout:section", "System",
+			"label", "Threads",
+
+		],
+
+		"options.interactiveRenderFps" : [
+
+			"layout:section", "System",
+
+		],
+
+		"options.textureMem" : [
+
+			"layout:section", "System",
+			"label", "Texture Cache Size",
+
+		],
+
+		"options.tileOrdering" : [
+
+			"layout:section", "System",
+
+		],
+
+		"options.tileOrdering.value" : [
+
+			"preset:Linear", "linear",
+			"preset:Spiral", "spiral",
+			"preset:Hilbert", "hilbert",
+			"preset:Random", "random",
+
+		],
+
+	}
+
 )
 
 GafferUI.PlugValueWidget.registerCreator(
 	GafferAppleseed.AppleseedOptions,
 	"options.meshFileFormat.value",
-	GafferUI.EnumPlugValueWidget,
-	labelsAndValues = (
-		( "BinaryMesh", "binarymesh" ),
-		( "Obj", "obj" ),
-	),
+	GafferUI.PresetsPlugValueWidget,
 )
 
 GafferUI.PlugValueWidget.registerCreator(
 	GafferAppleseed.AppleseedOptions,
 	"options.lightingEngine.value",
-	GafferUI.EnumPlugValueWidget,
-	labelsAndValues = (
-		( "Distribution Ray Tracer", "drt" ),
-		( "Unidirectional Path Tracer", "pt" ),
-		( "SPPM", "sppm" ),
-	),
+	GafferUI.PresetsPlugValueWidget,
 )
 
 GafferUI.PlugValueWidget.registerCreator(
@@ -276,42 +542,23 @@ GafferUI.PlugValueWidget.registerCreator(
 GafferUI.PlugValueWidget.registerCreator(
 	GafferAppleseed.AppleseedOptions,
 	"options.photonType.value",
-	GafferUI.EnumPlugValueWidget,
-	labelsAndValues = (
-		( "Monochromatic", "mono" ),
-		( "Polychromatic", "poly" ),
-	),
+	GafferUI.PresetsPlugValueWidget,
 )
 
 GafferUI.PlugValueWidget.registerCreator(
 	GafferAppleseed.AppleseedOptions,
 	"options.sppmDirectLighing.value",
-	GafferUI.EnumPlugValueWidget,
-	labelsAndValues = (
-		( "Ray Tracing", "rt" ),
-		( "SPPM", "sppm" ),
-		( "None", "off" ),
-	),
+	GafferUI.PresetsPlugValueWidget,
 )
 
 GafferUI.PlugValueWidget.registerCreator(
 	GafferAppleseed.AppleseedOptions,
 	"options.tileOrdering.value",
-	GafferUI.EnumPlugValueWidget,
-	labelsAndValues = (
-		( "Linear", "linear" ),
-		( "Spiral", "spiral" ),
-		( "Hilbert", "hilbert" ),
-		( "Random", "random" ),
-	),
+	GafferUI.PresetsPlugValueWidget,
 )
 
 GafferUI.PlugValueWidget.registerCreator(
 	GafferAppleseed.AppleseedOptions,
 	"options.sampler.value",
-	GafferUI.EnumPlugValueWidget,
-	labelsAndValues = (
-		( "Random", "rng" ),
-		( "QMC", "qmc" ),
-	),
+	GafferUI.PresetsPlugValueWidget,
 )
