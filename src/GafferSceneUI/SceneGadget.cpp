@@ -45,6 +45,7 @@
 #include "IECore/VisibleRenderable.h"
 #include "IECore/AngleConversion.h"
 #include "IECore/CurvesPrimitive.h"
+#include "IECore/MessageHandler.h"
 
 #include "IECoreGL/Renderable.h"
 #include "IECoreGL/CachedConverter.h"
@@ -497,7 +498,7 @@ class SceneGadget::SceneGraph
 			}
 
 				{
-					IECoreGL::State::ScopedBinding scope( *m_state, *currentState );
+					IECoreGL::State::ScopedBinding scope( *m_state, *currentState, m_state.get() != NULL );
 					IECoreGL::State::ScopedBinding selectionScope( selectionState(), *currentState, m_selected );
 
 					if( selector )
@@ -1123,12 +1124,19 @@ void SceneGadget::updateSceneGraph() const
 		return;
 	}
 
-	UpdateTask *task = new( tbb::task::allocate_root() ) UpdateTask( this, m_sceneGraph.get(), m_dirtyFlags, ScenePlug::ScenePath() );
-	tbb::task::spawn_root_and_wait( *task );
-
-	if( m_dirtyFlags && UpdateTask::ChildNamesDirty )
+	try
 	{
-		m_sceneGraph->applySelection( m_selection->readable() );
+		UpdateTask *task = new( tbb::task::allocate_root() ) UpdateTask( this, m_sceneGraph.get(), m_dirtyFlags, ScenePlug::ScenePath() );
+		tbb::task::spawn_root_and_wait( *task );
+
+		if( m_dirtyFlags && UpdateTask::ChildNamesDirty )
+		{
+			m_sceneGraph->applySelection( m_selection->readable() );
+		}
+	}
+	catch( const std::exception& e )
+	{
+		IECore::msg( IECore::Msg::Error, "SceneGadget::updateSceneGraph", e.what() );
 	}
 
 	m_dirtyFlags = UpdateTask::NothingDirty;
@@ -1140,9 +1148,16 @@ void SceneGadget::renderSceneGraph( const IECoreGL::State *stateToBind ) const
 	glGetIntegerv( GL_CURRENT_PROGRAM, &prevProgram );
 	glPushAttrib( GL_ALL_ATTRIB_BITS );
 
+	try
+	{
 		IECoreGL::State::bindBaseState();
 		stateToBind->bind();
 		m_sceneGraph->render( const_cast<IECoreGL::State *>( stateToBind ), IECoreGL::Selector::currentSelector() );
+	}
+	catch( const std::exception& e )
+	{
+		IECore::msg( IECore::Msg::Error, "SceneGadget::renderSceneGraph", e.what() );
+	}
 
 	glPopAttrib();
 	glUseProgram( prevProgram );
