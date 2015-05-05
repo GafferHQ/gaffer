@@ -95,92 +95,179 @@ def __searchPathsSummary( plug ) :
 
 	return ", ".join( info )
 
-GafferUI.PlugValueWidget.registerCreator(
+Gaffer.Metadata.registerNode(
 
 	GafferRenderMan.RenderManOptions,
-	"options",
-	GafferUI.SectionedCompoundDataPlugValueWidget,
-	sections = (
 
-		{
-			"label" : "Quality",
-			"summary" : __qualitySummary,
-			"namesAndLabels" : (
-				( "ri:pixelSamples", "Pixel Samples" ),
-			),
-		},
+	plugs = {
 
-		{
-			"label" : "Hider",
-			"summary" : __hiderSummary,
-			"namesAndLabels" : (
-				( "ri:hider", "Hider" ),
-				( "ri:hider:depthfilter", "Depth Filter" ),
-				( "ri:hider:jitter", "Jitter" ),
-				( "ri:hider:samplemotion", "Sample Motion" ),
-				( "ri:hider:extrememotiondof", "Extreme Motion DOF" ),
-				( "ri:hider:progressive", "Progressive" ),
-			),
-		},
+		# Summaries
 
-		{
-			"label" : "Statistics",
-			"summary" : __statisticsSummary,
-			"namesAndLabels" : (
-				( "ri:statistics:endofframe", "Level" ),
-				( "ri:statistics:filename", "File Name" ),
-				( "ri:statistics:progress", "Progress" ),
-			),
-		},
+		"options" : [
 
-		{
-			"label" : "Search Paths",
-			"summary" : __searchPathsSummary,
-			"namesAndLabels" : (
-				( "ri:searchpath:shader", "Shaders" ),
-				( "ri:searchpath:texture", "Textures" ),
-				( "ri:searchpath:display", "Displays" ),
-				( "ri:searchpath:archive", "Archives" ),
-				( "ri:searchpath:procedural", "Procedurals" ),
-			),
-		},
+			"layout:section:Quality:summary", __qualitySummary,
+			"layout:section:Hider:summary", __hiderSummary,
+			"layout:section:Statistics:summary", __statisticsSummary,
+			"layout:section:Search Paths:summary", __searchPathsSummary,
 
-	),
+		],
+
+		# Quality
+
+		"options.pixelSamples" : [
+
+			"layout:section", "Quality",
+
+		],
+
+		# Hider
+
+		"options.hider" : [
+
+			"layout:section", "Hider",
+
+		],
+
+		"options.hider.value" : [
+
+			"preset:Hidden", "hidden",
+			"preset:Raytrace", "raytrace",
+
+		],
+
+		"options.hiderDepthFilter" : [
+
+			"layout:section", "Hider",
+			"label", "Depth Filter",
+
+		],
+
+		"options.hiderDepthFilter.value" : [
+
+			"preset:Min", "min",
+			"preset:Max", "max",
+			"preset:Average", "average",
+			"preset:Midpoint", "midpoint",
+
+		],
+
+		"options.hiderJitter" : [
+
+			"layout:section", "Hider",
+			"label", "Jitter",
+
+		],
+
+		"options.hiderSampleMotion" : [
+
+			"layout:section", "Hider",
+			"label", "Sample Motion",
+
+		],
+
+		"options.hiderExtremeMotionDOF" : [
+
+			"layout:section", "Hider",
+			"label", "Extreme Motion DOF",
+
+		],
+
+		"options.hiderProgressive" : [
+
+			"layout:section", "Hider",
+			"label", "Progressive",
+
+		],
+
+		# Statistics
+
+		"options.statisticsLevel" : [
+
+			"layout:section", "Statistics",
+			"label", "Level",
+
+		],
+
+		"options.statisticsLevel.value" : [
+
+			"preset:0 (Off)", 0,
+			"preset:1", 1,
+			"preset:2", 2,
+			"preset:3 (Most Verbose)", 3,
+
+		],
+
+		"options.statisticsFileName" : [
+
+			"layout:section", "Statistics",
+			"label", "File Name",
+
+		],
+
+		"options.statisticsProgress" : [
+
+			"layout:section", "Statistics",
+			"label", "Progress",
+
+		],
+
+		# Search Paths
+
+		"options.shaderSearchPath" : [
+
+			"layout:section", "Search Paths",
+			"label", "Shaders",
+
+		],
+
+		"options.textureSearchPath" : [
+
+			"layout:section", "Search Paths",
+			"label", "Textures",
+
+		],
+
+		"options.displaySearchPath" : [
+
+			"layout:section", "Search Paths",
+			"label", "Displays",
+
+		],
+
+		"options.archiveSearchPath" : [
+
+			"layout:section", "Search Paths",
+			"label", "Archives",
+
+		],
+
+		"options.proceduralSearchPath" : [
+
+			"layout:section", "Search Paths",
+			"label", "Procedurals",
+
+		],
+
+	}
 
 )
 
 GafferUI.PlugValueWidget.registerCreator(
 	GafferRenderMan.RenderManOptions,
 	"options.hider.value",
-	GafferUI.EnumPlugValueWidget,
-	labelsAndValues = (
-		( "Hidden", "hidden" ),
-		( "Raytrace", "raytrace" ),
-	),
+	GafferUI.PresetsPlugValueWidget,
 )
 
 GafferUI.PlugValueWidget.registerCreator(
 	GafferRenderMan.RenderManOptions,
 	"options.hiderDepthFilter.value",
-	GafferUI.EnumPlugValueWidget,
-	labelsAndValues = (
-		( "Min", "min" ),
-		( "Max", "max" ),
-		( "Average", "average" ),
-		( "Midpoint", "midpoint" ),
-	),
+	GafferUI.PresetsPlugValueWidget,
 )
 
 GafferUI.PlugValueWidget.registerCreator(
 	GafferRenderMan.RenderManOptions,
 	"options.statisticsLevel.value",
-	GafferUI.EnumPlugValueWidget,
-	labelsAndValues = (
-		( "0 (Off)", 0 ),
-		( "1", 1 ),
-		( "2", 2 ),
-		( "3 (Most Verbose)", 3 ),
-	),
+	GafferUI.PresetsPlugValueWidget,
 )
 
 GafferUI.PlugValueWidget.registerCreator(
