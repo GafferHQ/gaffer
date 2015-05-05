@@ -36,6 +36,7 @@
 ##########################################################################
 
 import sys
+import functools
 import collections
 
 import Gaffer
@@ -57,6 +58,8 @@ QtGui = GafferUI._qtImport( "QtGui" )
 #
 #   - layout:section:sectionName:summary" dynamic metadata entry returning a
 #     string to be used as a summary for the section.
+#   - layout:section:sectionName:collapsed" boolean indicating whether or
+#     not a section should be collapsed initially.
 #
 # Per-node metadata support :
 #
@@ -106,7 +109,7 @@ class PlugLayout( GafferUI.Widget ) :
 		self.__summariesDirty = True
 
 		self.__plugsToWidgets = {} # mapping from child plug to widget
-		self.__rootSection = _Section()
+		self.__rootSection = _Section( self.__parent )
 
 	def getReadOnly( self ) :
 
@@ -169,7 +172,7 @@ class PlugLayout( GafferUI.Widget ) :
 			self.__activationsDirty = False
 
 		if self.__summariesDirty :
-			self.__updateSummariesWalk( self.__rootSection, "" )
+			self.__updateSummariesWalk( self.__rootSection )
 			self.__summariesDirty = False
 
 		# delegate to our layout class to create a concrete
@@ -237,13 +240,11 @@ class PlugLayout( GafferUI.Widget ) :
 
 			self.__applyReadOnly( widget, not active )
 
-	def __updateSummariesWalk( self, section, sectionName ) :
+	def __updateSummariesWalk( self, section ) :
 
-		section.summary = self.__parentMetadataValue( "layout:section:" + sectionName + ":summary" ) or ""
-
-		for name, subsection in section.subsections.items() :
-			subsectionName = sectionName + "." + name if sectionName else name
-			self.__updateSummariesWalk( subsection, subsectionName )
+		section.summary = self.__parentMetadataValue( "layout:section:" + section.fullName + ":summary" ) or ""
+		for subsection in section.subsections.values() :
+			self.__updateSummariesWalk( subsection )
 
  	def __createPlugWidget( self, plug ) :
 
@@ -380,7 +381,10 @@ class PlugLayout( GafferUI.Widget ) :
 # and an OrderedDict of named subsections.
 class _Section( object ) :
 
-	def __init__( self ) :
+	def __init__( self, _parent, _fullName = "" ) :
+
+		self.__parent = _parent
+		self.fullName = _fullName
 
 		self.clear()
 
@@ -390,7 +394,11 @@ class _Section( object ) :
 		if result is not None :
 			return result
 
-		result = _Section()
+		result = _Section(
+			self.__parent,
+			self.fullName + "." + name if self.fullName else name
+		)
+
 		self.subsections[name] = result
 		return result
 
@@ -399,6 +407,24 @@ class _Section( object ) :
 		self.widgets = []
 		self.subsections = collections.OrderedDict()
 		self.summary = ""
+
+	def saveState( self, name, value ) :
+
+		if isinstance( self.__parent, Gaffer.Node ) :
+			Gaffer.Metadata.registerNodeValue( self.__parent, self.__stateName( name ), value, persistent = False )
+		else :
+			Gaffer.Metadata.registerPlugValue( self.__parent, self.__stateName( name ), value, persistent = False )
+
+	def restoreState( self, name ) :
+
+		if isinstance( self.__parent, Gaffer.Node ) :
+			return Gaffer.Metadata.nodeValue( self.__parent, self.__stateName( name ) )
+		else :
+			return Gaffer.Metadata.plugValue( self.__parent, self.__stateName( name ) )
+
+	def __stateName( self, name ) :
+
+		return "layout:section:" + self.fullName + ":" + name
 
 # The PlugLayout class deals with all the details of plugs, metadata and
 # signals to define an abstract layout in terms of _Sections. It then
@@ -433,8 +459,13 @@ class _TabLayout( _Layout ) :
 			self.__widgetsColumn = GafferUI.ListContainer( self.orientation(), spacing = 4, borderWidth = 4 )
 			self.__tabbedContainer = GafferUI.TabbedContainer()
 
+		self.__currentTabChangedConnection = self.__tabbedContainer.currentChangedSignal().connect(
+			Gaffer.WeakMethod( self.__currentTabChanged )
+		)
+
 	def update( self, section ) :
 
+		self.__section = section
 		self.__widgetsColumn[:] = section.widgets
 
 		existingTabs = collections.OrderedDict()
@@ -455,12 +486,22 @@ class _TabLayout( _Layout ) :
 			updatedTabs[name] = tab
 
 		if existingTabs.keys() != updatedTabs.keys() :
-			del self.__tabbedContainer[:]
-			for name, tab in updatedTabs.items() :
-				self.__tabbedContainer.append( tab, label = name )
+			with Gaffer.BlockedConnection( self.__currentTabChangedConnection ) :
+				del self.__tabbedContainer[:]
+				for name, tab in updatedTabs.items() :
+					self.__tabbedContainer.append( tab, label = name )
+
+		if not len( existingTabs ) :
+			currentTabIndex = self.__section.restoreState( "currentTab" ) or 0
+			if currentTabIndex < len( self.__tabbedContainer ) :
+				self.__tabbedContainer.setCurrent( self.__tabbedContainer[currentTabIndex] )
 
 		self.__widgetsColumn.setVisible( len( section.widgets ) )
 		self.__tabbedContainer.setVisible( len( self.__tabbedContainer ) )
+
+	def __currentTabChanged( self, tabbedContainer, currentTab ) :
+
+		self.__section.saveState( "currentTab", tabbedContainer.index( currentTab ) )
 
 class _CollapsibleLayout( _Layout ) :
 
@@ -482,10 +523,19 @@ class _CollapsibleLayout( _Layout ) :
 			if collapsible is None :
 
 				collapsible = GafferUI.Collapsible( name, _CollapsibleLayout( self.orientation() ), borderWidth = 2, collapsed = True )
+
 				collapsible.setCornerWidget( GafferUI.Label(), True )
 				## \todo This is fighting the default sizing applied in the Label constructor. Really we need a standard
 				# way of controlling size behaviours for all widgets in the public API.
 				collapsible.getCornerWidget()._qtWidget().setSizePolicy( QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Fixed )
+
+				if subsection.restoreState( "collapsed" ) is False :
+					collapsible.setCollapsed( False )
+
+				collapsible.__stateChangedConnection = collapsible.stateChangedSignal().connect(
+					functools.partial( Gaffer.WeakMethod( self.__collapsibleStateChanged ), subsection = subsection )
+				)
+
 				self.__collapsibles[name] = collapsible
 
 			collapsible.getChild().update( subsection )
@@ -496,3 +546,7 @@ class _CollapsibleLayout( _Layout ) :
 			widgets.append( collapsible )
 
 		self.__column[:] = widgets
+
+	def __collapsibleStateChanged( self, collapsible, subsection ) :
+
+		subsection.saveState( "collapsed", collapsible.getCollapsed() )
