@@ -71,44 +71,103 @@ def __subdivisionSummary( plug ) :
 
 	return ", ".join( info )
 
-GafferUI.PlugValueWidget.registerCreator(
+Gaffer.Metadata.registerNode(
 
 	GafferArnold.ArnoldAttributes,
-	"attributes",
-	GafferUI.SectionedCompoundDataPlugValueWidget,
-	sections = (
-		{
-			"label" : "Visibility",
-			"summary" : __visibilitySummary,
-			"namesAndLabels" : (
-				( "ai:visibility:camera", "Camera" ),
-				( "ai:visibility:shadow", "Shadow" ),
-				( "ai:visibility:reflected", "Reflections" ),
-				( "ai:visibility:refracted", "Refractions" ),
-				( "ai:visibility:diffuse", "Diffuse" ),
-				( "ai:visibility:glossy", "Glossy" ),
-			),
-		},
-		{
-			"label" : "Subdivision",
-			"summary" : __subdivisionSummary,
-			"namesAndLabels" : (
-				( "ai:polymesh:subdiv_iterations", "Iterations" ),
-				( "ai:polymesh:subdiv_pixel_error", "Pixel Error" ),
-				( "ai:polymesh:subdiv_adaptive_metric", "Adaptive Metric" ),
-			),
-		},
-	),
+
+	plugs = {
+
+		# Sections
+
+		"attributes" : [
+
+			"layout:section:Visibility:summary", __visibilitySummary,
+			"layout:section:Subdivision:summary", __subdivisionSummary,
+
+		],
+
+		# Visibility
+
+		"attributes.cameraVisibility" : [
+
+			"layout:section", "Visibility",
+			"label", "Camera",
+
+		],
+
+		"attributes.shadowVisibility" : [
+
+			"layout:section", "Visibility",
+			"label", "Shadow",
+
+		],
+
+		"attributes.reflectedVisibility" : [
+
+			"layout:section", "Visibility",
+			"label", "Reflections",
+
+		],
+
+		"attributes.refractedVisibility" : [
+
+			"layout:section", "Visibility",
+			"label", "Refractions",
+
+		],
+
+		"attributes.diffuseVisibility" : [
+
+			"layout:section", "Visibility",
+			"label", "Diffuse",
+
+		],
+
+		"attributes.glossyVisibility" : [
+
+			"layout:section", "Visibility",
+			"label", "Glossy",
+
+		],
+
+		# Subdivision
+
+		"attributes.subdivIterations" : [
+
+			"layout:section", "Subdivision",
+			"label", "Iterations",
+
+		],
+
+		"attributes.subdivPixelError" : [
+
+			"layout:section", "Subdivision",
+			"label", "Pixel Error",
+
+		],
+
+		"attributes.subdivAdaptiveMetric" : [
+
+			"layout:section", "Subdivision",
+			"label", "Adaptive Metric",
+
+		],
+
+
+		"attributes.subdivAdaptiveMetric.value" : [
+
+			"preset:Auto", "auto",
+			"preset:Edge Length", "edge_length",
+			"preset:Flatness", "flatness",
+
+		],
+
+	}
 
 )
 
 GafferUI.PlugValueWidget.registerCreator(
 	GafferArnold.ArnoldAttributes,
 	"attributes.subdivAdaptiveMetric.value",
-	GafferUI.EnumPlugValueWidget,
-	labelsAndValues = (
-		( "Auto", "auto" ),
-		( "Edge Length", "edge_length" ),
-		( "Flatness", "flatness" ),
-	),
+	GafferUI.PresetsPlugValueWidget
 )
