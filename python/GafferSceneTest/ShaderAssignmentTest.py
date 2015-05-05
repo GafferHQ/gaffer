@@ -35,6 +35,7 @@
 #
 ##########################################################################
 
+import os
 import unittest
 
 import IECore
@@ -254,6 +255,47 @@ class ShaderAssignmentTest( unittest.TestCase ) :
 		d.setup( s["out"] )
 
 		self.assertTrue( a["shader"].acceptsInput( d["out"] ) )
+
+	def testFilterInputAcceptanceFromReferences( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["b"] = Gaffer.Box()
+		s["b"]["a"] = GafferScene.ShaderAssignment()
+		p = s["b"].promotePlug( s["b"]["a"]["filter"], asUserPlug = False )
+		s["b"].exportForReference( "/tmp/test.grf" )
+
+		s["r"] = Gaffer.Reference()
+		s["r"].load( "/tmp/test.grf" )
+
+		self.assertTrue( s["r"]["a"]["filter"].getInput().isSame( s["r"][p.getName()] ) )
+
+		s["f"] = GafferScene.PathFilter()
+		s["r"][p.getName()].setInput( s["f"]["out"] )
+
+	def testFilterInputAcceptanceFromReferencesViaDot( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["b"] = Gaffer.Box()
+		s["b"]["a"] = GafferScene.ShaderAssignment()
+		s["b"]["d"] = Gaffer.Dot()
+		s["b"]["d"].setup( s["b"]["a"]["filter"] )
+		s["b"]["a"]["filter"].setInput( s["b"]["d"]["out"] )
+
+		p = s["b"].promotePlug( s["b"]["d"]["in"], asUserPlug = False )
+		s["b"].exportForReference( "/tmp/test.grf" )
+
+		s["r"] = Gaffer.Reference()
+		s["r"].load( "/tmp/test.grf" )
+
+		self.assertTrue( s["r"]["a"]["filter"].source().isSame( s["r"][p.getName()] ) )
+
+		s["f"] = GafferScene.PathFilter()
+		s["r"][p.getName()].setInput( s["f"]["out"] )
+
+	def tearDown( self ) :
+
+		if os.path.exists( "/tmp/test.grf" ) :
+			os.remove( "/tmp/test.grf" )
 
 if __name__ == "__main__":
 	unittest.main()
