@@ -38,104 +38,6 @@ import Gaffer
 import GafferUI
 import GafferScene
 
-##########################################################################
-# Metadata
-##########################################################################
-
-Gaffer.Metadata.registerNode(
-
-	GafferScene.StandardAttributes,
-
-	"description",
-	"""
-	Modifies the standard attributes on objects - these should
-	be respected by all renderers.
-	""",
-
-	plugs = {
-
-		# visibility plugs
-
-		"attributes.visibility" : [
-
-			"description",
-			"""
-			Whether or not the object can be seen - invisible objects are
-			not sent to the renderer at all. Typically more fine
-			grained (camera, reflection etc) visibility can be
-			specified using a renderer specific attributes node.
-			Note that making a parent location invisible will
-			always make all the children invisible too, regardless
-			of their visibility settings.
-			""",
-
-		],
-
-		"attributes.doubleSided" : [
-
-			"description",
-			"""
-			Whether or not the object can be seen from both sides.
-			Single sided objects appear invisible when seen from
-			the back.
-			""",
-
-		],
-
-		# motion blur plugs
-
-		"attributes.transformBlur" : [
-
-			"description",
-			"""
-			Whether or not transformation animation on the
-			object is taken into account in the rendered image.
-			Use the transformBlurSegments plug to specify the number
-			of segments used to represent the motion.
-			""",
-
-		],
-
-		"attributes.transformBlurSegments" : [
-
-			"description",
-			"""
-			The number of segments of transform animation to
-			pass to the renderer when transformBlur is on.
-			""",
-
-		],
-
-		"attributes.deformationBlur" : [
-
-			"description",
-			"""
-			Whether or not deformation animation on the
-			object is taken into account in the rendered image.
-			Use the deformationBlurSegments plug to specify the
-			number of segments used to represent the motion.
-			""",
-
-		],
-
-		"attributes.deformationBlurSegments" : [
-
-			"description",
-			"""
-			The number of segments of transform animation to
-			pass to the renderer when transformBlur is on.
-			""",
-
-		],
-
-	}
-
-)
-
-##########################################################################
-# PlugValueWidgets
-##########################################################################
-
 def __attributesSummary( plug ) :
 
 	info = []
@@ -162,33 +64,117 @@ def __motionBlurSummary( plug ) :
 
 	return ", ".join( info )
 
-GafferUI.PlugValueWidget.registerCreator(
+Gaffer.Metadata.registerNode(
 
 	GafferScene.StandardAttributes,
-	"attributes",
-	GafferUI.SectionedCompoundDataPlugValueWidget,
-	sections = (
 
-		{
-			"label" : "Attributes",
-			"summary" : __attributesSummary,
-			"namesAndLabels" : (
-				( "scene:visible", "Visibility" ),
-				( "doubleSided", "Double Sided" ),
-			),
-		},
+	"description",
+	"""
+	Modifies the standard attributes on objects - these should
+	be respected by all renderers.
+	""",
 
-		{
-			"label" : "Motion Blur",
-			"summary" : __motionBlurSummary,
-			"namesAndLabels" : (
-				( "gaffer:transformBlur", "Transform" ),
-				( "gaffer:transformBlurSegments", "Transform Segments" ),
-				( "gaffer:deformationBlur", "Deformation" ),
-				( "gaffer:deformationBlurSegments", "Deformation Segments" ),
-			),
-		},
+	plugs = {
 
-	),
+		# sections
+
+		"attributes" : [
+
+			"layout:section:Attributes:summary", __attributesSummary,
+			"layout:section:Motion Blur:summary", __motionBlurSummary,
+
+		],
+
+		# visibility plugs
+
+		"attributes.visibility" : [
+
+			"description",
+			"""
+			Whether or not the object can be seen - invisible objects are
+			not sent to the renderer at all. Typically more fine
+			grained (camera, reflection etc) visibility can be
+			specified using a renderer specific attributes node.
+			Note that making a parent location invisible will
+			always make all the children invisible too, regardless
+			of their visibility settings.
+			""",
+
+			"layout:section", "Attributes",
+
+		],
+
+		"attributes.doubleSided" : [
+
+			"description",
+			"""
+			Whether or not the object can be seen from both sides.
+			Single sided objects appear invisible when seen from
+			the back.
+			""",
+
+			"layout:section", "Attributes",
+
+		],
+
+		# motion blur plugs
+
+		"attributes.transformBlur" : [
+
+			"description",
+			"""
+			Whether or not transformation animation on the
+			object is taken into account in the rendered image.
+			Use the transformBlurSegments plug to specify the number
+			of segments used to represent the motion.
+			""",
+
+			"layout:section", "Motion Blur",
+			"label", "Transform",
+
+		],
+
+		"attributes.transformBlurSegments" : [
+
+			"description",
+			"""
+			The number of segments of transform animation to
+			pass to the renderer when transformBlur is on.
+			""",
+
+			"layout:section", "Motion Blur",
+			"label", "Transform Segments",
+
+		],
+
+		"attributes.deformationBlur" : [
+
+			"description",
+			"""
+			Whether or not deformation animation on the
+			object is taken into account in the rendered image.
+			Use the deformationBlurSegments plug to specify the
+			number of segments used to represent the motion.
+			""",
+
+			"layout:section", "Motion Blur",
+			"label", "Deformation",
+
+		],
+
+		"attributes.deformationBlurSegments" : [
+
+			"description",
+			"""
+			The number of segments of transform animation to
+			pass to the renderer when transformBlur is on.
+			""",
+
+			"layout:section", "Motion Blur",
+			"label", "Deformation Segments",
+
+		],
+
+	}
 
 )
