@@ -124,6 +124,31 @@ fi
 
 export PATH=$GAFFER_ROOT/bin:$PATH
 
+# If appleseed isn't configured in the environment, and we've been
+# shipped with it, then get that set up.
+##########################################################################
+
+if [[ -z $APPLESEED && -d $GAFFER_ROOT/appleseed ]] ; then
+
+	export APPLESEED=$GAFFER_ROOT/appleseed
+
+	if [[ `uname` = "Linux" ]] ; then
+		export LD_LIBRARY_PATH=$APPLESEED/lib:$LD_LIBRARY_PATH
+	else
+		export DYLD_LIBRARY_PATH=$APPLESEED/lib:$DYLD_LIBRARY_PATH
+	fi
+
+	# Using a glob to keep the wrapper agnostic of python version.
+	for appleseedPython in $APPLESEED/lib/python* ; do
+		export PYTHONPATH=$appleseedPython:$PYTHONPATH
+	done
+
+	export APPLESEED_SEARCHPATH=$APPLESEED/shaders:$GAFFER_ROOT/appleseedDisplays
+
+	export PATH=$APPLESEED/bin:$PATH
+
+fi
+
 # Run gaffer itself
 ##########################################################################
 
