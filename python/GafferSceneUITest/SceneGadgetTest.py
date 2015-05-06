@@ -198,6 +198,88 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 			s["p"]["dimensions"]["x"].setValue( i )
 			self.waitForIdle( 10 )
 
+	def testExceptionsDuringCompute( self ) :
+
+		# Make this scene
+		#
+		# - bigSphere
+		#	- littleSphere (with exception in attributes expression)
+
+		s = Gaffer.ScriptNode()
+
+		s["s1"] = GafferScene.Sphere()
+		s["s1"]["name"].setValue( "bigSphere" )
+
+		s["s2"] = GafferScene.Sphere()
+		s["s2"]["name"].setValue( "littleSphere" )
+		s["s2"]["radius"].setValue( 0.1 )
+
+		s["p"] = GafferScene.Parent()
+		s["p"]["in"].setInput( s["s1"]["out"] )
+		s["p"]["child"].setInput( s["s2"]["out"] )
+		s["p"]["parent"].setValue( "/bigSphere" )
+
+		s["a"] = GafferScene.StandardAttributes()
+		s["a"]["in"].setInput( s["p"]["out"] )
+		s["a"]["attributes"]["doubleSided"]["enabled"].setValue( True )
+
+		s["e"] = Gaffer.Expression()
+		s["e"]["engine"].setValue( "python" )
+		s["e"]["expression"].setValue( 'parent["a"]["attributes"]["doubleSided"]["value"] = context["nonexistent"]' )
+
+		s["f"] = GafferScene.PathFilter()
+		s["f"]["paths"].setValue( IECore.StringVectorData( [ "/bigSphere/littleSphere" ] ) )
+
+		s["a"]["filter"].setInput( s["f"]["out"] )
+
+		# Try to view it
+
+		sg = GafferSceneUI.SceneGadget()
+		sg.setScene( s["a"]["out"] )
+		sg.setMinimumExpansionDepth( 4 )
+
+		with GafferUI.Window() as w :
+			gw = GafferUI.GadgetWidget( sg )
+			gw.getViewportGadget().setCamera(
+				IECore.Camera( parameters = { "projection" : "perspective", } )
+			)
+
+		with IECore.CapturingMessageHandler() as mh :
+
+			w.setVisible( True )
+			self.waitForIdle( 1000 )
+
+			# Check we were told about the problem
+
+			self.assertEqual( len( mh.messages ), 1 )
+			self.assertEqual( mh.messages[0].level, mh.Level.Error )
+			self.assertTrue( "nonexistent" in mh.messages[0].message )
+
+			# And that there isn't some half-assed partial scene
+			# being displayed.
+
+			self.assertTrue( sg.bound().isEmpty() )
+			gw.getViewportGadget().frame( IECore.Box3f( IECore.V3f( -1 ), IECore.V3f( 1 ) ) )
+			self.assertObjectAt( sg, IECore.V2f( 0.5 ), None )
+
+			# And that redraws don't cause more fruitless attempts
+			# to compute the scene.
+
+			gw.getViewportGadget().frame( IECore.Box3f( IECore.V3f( -1.1 ), IECore.V3f( 1.1 ) ) )
+			self.waitForIdle( 1000 )
+
+			self.assertEqual( len( mh.messages ), 1 )
+			self.assertObjectAt( sg, IECore.V2f( 0.5 ), None )
+			self.assertTrue( sg.bound().isEmpty() )
+
+			# Fix the problem with the scene, and check that we can see something now
+
+			s["f"]["enabled"].setValue( False )
+
+			self.assertEqual( len( mh.messages ), 1 )
+			self.assertFalse( sg.bound().isEmpty() )
+			self.assertObjectAt( sg, IECore.V2f( 0.5 ), IECore.InternedStringVectorData( [ "bigSphere" ] ) )
+
 	def setUp( self ) :
 
 		GafferUITest.TestCase.setUp( self )

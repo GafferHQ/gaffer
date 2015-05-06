@@ -45,6 +45,7 @@
 #include "IECore/VisibleRenderable.h"
 #include "IECore/AngleConversion.h"
 #include "IECore/CurvesPrimitive.h"
+#include "IECore/MessageHandler.h"
 
 #include "IECoreGL/Renderable.h"
 #include "IECoreGL/CachedConverter.h"
@@ -476,15 +477,12 @@ class SceneGadget::SceneGraph
 
 		~SceneGraph()
 		{
-			deferReferenceRemoval( m_state );
-			deferReferenceRemoval( m_renderable );
-			deferReferenceRemoval( m_boundRenderable );
-			clearChildren();
+			clear();
 		}
 
 		void render( IECoreGL::State *currentState, IECoreGL::Selector *selector = NULL ) const
 		{
-			if( !m_visible )
+			if( !m_visible || !valid() )
 			{
 				return;
 			}
@@ -563,6 +561,22 @@ class SceneGadget::SceneGraph
 				}
 				return childSelectionBound;
 			}
+		}
+
+		bool valid() const
+		{
+			// Our m_state can be null if an exception occurred during update,
+			// in which case we're not valid.
+			return m_state;
+		}
+
+		void clear()
+		{
+			deferReferenceRemoval( m_state );
+			deferReferenceRemoval( m_renderable );
+			deferReferenceRemoval( m_boundRenderable );
+			clearChildren();
+			m_objectHash = m_attributesHash = IECore::MurmurHash();
 		}
 
 	private :
@@ -1123,14 +1137,35 @@ void SceneGadget::updateSceneGraph() const
 		return;
 	}
 
-	UpdateTask *task = new( tbb::task::allocate_root() ) UpdateTask( this, m_sceneGraph.get(), m_dirtyFlags, ScenePlug::ScenePath() );
-	tbb::task::spawn_root_and_wait( *task );
-
-	if( m_dirtyFlags && UpdateTask::ChildNamesDirty )
+	if( !m_sceneGraph->valid() )
 	{
-		m_sceneGraph->applySelection( m_selection->readable() );
+		// The previous attempt at an update failed - so
+		// we need to update everything this time.
+		m_dirtyFlags = UpdateTask::AllDirty;
 	}
 
+	try
+	{
+		UpdateTask *task = new( tbb::task::allocate_root() ) UpdateTask( this, m_sceneGraph.get(), m_dirtyFlags, ScenePlug::ScenePath() );
+		tbb::task::spawn_root_and_wait( *task );
+
+		if( m_dirtyFlags && UpdateTask::ChildNamesDirty )
+		{
+			m_sceneGraph->applySelection( m_selection->readable() );
+		}
+	}
+	catch( const std::exception& e )
+	{
+		m_sceneGraph->clear();
+		IECore::msg( IECore::Msg::Error, "SceneGadget::updateSceneGraph", e.what() );
+	}
+
+	// Even if an error occurred when updating the scene, we clear
+	// the dirty flags. This prevents us from repeating the same
+	// error over and over when nothing has been done to prevent it.
+	// When something is next dirtied we'll turn on all the dirty
+	// flags (see above) to ensure that the next update is a complete
+	// one.
 	m_dirtyFlags = UpdateTask::NothingDirty;
 }
 
@@ -1140,9 +1175,16 @@ void SceneGadget::renderSceneGraph( const IECoreGL::State *stateToBind ) const
 	glGetIntegerv( GL_CURRENT_PROGRAM, &prevProgram );
 	glPushAttrib( GL_ALL_ATTRIB_BITS );
 
+	try
+	{
 		IECoreGL::State::bindBaseState();
 		stateToBind->bind();
 		m_sceneGraph->render( const_cast<IECoreGL::State *>( stateToBind ), IECoreGL::Selector::currentSelector() );
+	}
+	catch( const std::exception& e )
+	{
+		IECore::msg( IECore::Msg::Error, "SceneGadget::renderSceneGraph", e.what() );
+	}
 
 	glPopAttrib();
 	glUseProgram( prevProgram );
