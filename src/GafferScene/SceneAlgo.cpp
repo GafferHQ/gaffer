@@ -36,6 +36,7 @@
 
 #include "tbb/spin_mutex.h"
 #include "tbb/task.h"
+#include "tbb/parallel_for.h"
 
 #include "IECore/MatrixMotionTransform.h"
 #include "IECore/Camera.h"
@@ -463,10 +464,62 @@ IECore::CameraPtr GafferScene::camera( const ScenePlug *scene, const ScenePlug::
 	return camera;
 }
 
+//////////////////////////////////////////////////////////////////////////
+// Sets Algo
+//////////////////////////////////////////////////////////////////////////
+
 bool GafferScene::setExists( const ScenePlug *scene, const IECore::InternedString &setName )
 {
 	IECore::ConstInternedStringVectorDataPtr setNamesData = scene->setNamesPlug()->getValue();
 	const std::vector<IECore::InternedString> &setNames = setNamesData->readable();
 	return std::find( setNames.begin(), setNames.end(), setName ) != setNames.end();
+}
+
+namespace
+{
+
+struct Sets
+{
+
+	Sets( const ScenePlug *scene, const std::vector<InternedString> &names, std::vector<GafferScene::ConstPathMatcherDataPtr> &sets )
+		:	m_scene( scene ), m_names( names ), m_sets( sets )
+	{
+	}
+
+	void operator()( const tbb::blocked_range<size_t> &r ) const
+	{
+		for( size_t i=r.begin(); i!=r.end(); ++i )
+		{
+			m_sets[i] = m_scene->set( m_names[i] );
+		}
+	}
+
+	private :
+
+		const ScenePlug *m_scene;
+		const std::vector<InternedString> &m_names;
+		std::vector<GafferScene::ConstPathMatcherDataPtr> &m_sets;
+
+} ;
+
+} // namespace
+
+IECore::ConstCompoundDataPtr GafferScene::sets( const ScenePlug *scene )
+{
+	ConstInternedStringVectorDataPtr setNamesData = scene->setNamesPlug()->getValue();
+	std::vector<GafferScene::ConstPathMatcherDataPtr> setsVector;
+	setsVector.resize( setNamesData->readable().size(), NULL );
+
+	Sets setsCompute( scene, setNamesData->readable(), setsVector );
+	parallel_for( tbb::blocked_range<size_t>( 0, setsVector.size() ), setsCompute );
+
+	CompoundDataPtr result = new CompoundData;
+	for( size_t i = 0, e = setsVector.size(); i < e; ++i )
+	{
+		// The const_pointer_cast is ok because we're just using it to put the set into
+		// a container that will be const on return - we never modify the set itself.
+		result->writable()[setNamesData->readable()[i]] = boost::const_pointer_cast<GafferScene::PathMatcherData>( setsVector[i] );
+	}
+	return result;
 }
 
