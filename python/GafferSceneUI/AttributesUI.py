@@ -40,26 +40,42 @@ import GafferUI
 import GafferScene
 
 
-Gaffer.Metadata.registerNodeDescription(
+Gaffer.Metadata.registerNode(
 
-GafferScene.Attributes,
+	GafferScene.Attributes,
 
-"""The base type for nodes that apply attributes to the scene.
-""",
+	"description",
+	"""
+	The base type for nodes that apply attributes to the scene.
+	""",
 
-"attributes",
-"""The attributes to be applied - arbitrary numbers of user defined attributes may be added
-as children of this plug via the user interface, or using the CompoundDataPlug API via
-python.""",
+	plugs = {
 
-"global",
-{
-	"description" : "Causes the attributes to be applied to the scene globals "
-	                "instead of the individual locations defined by the filter.",
-	"nodeUI:section" : "Filter",
-}
+		"attributes" : [
+
+			"description",
+			"""
+			The attributes to be applied - arbitrary numbers of user defined
+			attributes may be added as children of this plug via the user
+			interface, or using the CompoundDataPlug API via python.
+			""",
+
+		],
+
+		"global" : [
+
+			"description",
+			"""
+			Causes the attributes to be applied to the scene globals
+			instead of the individual locations defined by the filter.
+			""",
+
+			"nodeUI:section", "Filter",
+
+		]
+
+	}
 
 )
 
-
-GafferUI.PlugValueWidget.registerCreator( GafferScene.Attributes, "attributes", GafferUI.CompoundDataPlugValueWidget, collapsed=None )
+GafferUI.PlugValueWidget.registerCreator( GafferScene.Attributes, "attributes", GafferUI.LayoutPlugValueWidget )

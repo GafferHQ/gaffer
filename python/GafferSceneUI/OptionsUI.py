@@ -38,21 +38,30 @@ import Gaffer
 import GafferUI
 import GafferScene
 
+Gaffer.Metadata.registerNode(
 
-Gaffer.Metadata.registerNodeDescription(
+	GafferScene.Options,
 
-GafferScene.Options,
+	"description",
+	"""
+	The base type for nodes that apply options to the scene.
+	""",
 
-"""The base type for nodes that apply options to the scene.
-""",
+	plugs = {
 
-"options",
-"""The options to be applied - arbitrary numbers of user defined options may be added
-as children of this plug via the user interface, or using the CompoundDataPlug API via
-python.""",
+		"options" : [
+
+			"description",
+			"""
+			The options to be applied - arbitrary numbers of user defined options may be added
+			as children of this plug via the user interface, or using the CompoundDataPlug API via
+			python.
+			""",
+
+		],
+
+	}
 
 )
 
-
-
-GafferUI.PlugValueWidget.registerCreator( GafferScene.Options, "options", GafferUI.CompoundDataPlugValueWidget, collapsed=None )
+GafferUI.PlugValueWidget.registerCreator( GafferScene.Options, "options", GafferUI.LayoutPlugValueWidget )

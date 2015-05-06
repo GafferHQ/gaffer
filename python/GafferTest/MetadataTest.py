@@ -689,6 +689,39 @@ class MetadataTest( GafferTest.TestCase ) :
 		self.assertEqual( len( ncs ), 3 )
 		self.assertEqual( len( pcs ), 3 )
 
+	def testExactPreferredToWildcards( self ) :
+
+		class MetadataTestNodeD( Gaffer.Node ) :
+
+			def __init__( self, name = "MetadataTestNodeD" ) :
+
+				Gaffer.Node.__init__( self, name )
+
+				self["a"] = Gaffer.IntPlug()
+				self["b"] = Gaffer.IntPlug()
+
+		IECore.registerRunTimeTyped( MetadataTestNodeD )
+
+		Gaffer.Metadata.registerNode(
+
+			MetadataTestNodeD,
+
+			plugs = {
+				"*" : [
+					"test", "wildcard",
+				],
+				"a" :[
+					"test", "exact",
+				],
+			}
+
+		)
+
+		n = MetadataTestNodeD()
+
+		self.assertEqual( Gaffer.Metadata.plugValue( n["a"], "test" ), "exact" )
+		self.assertEqual( Gaffer.Metadata.plugValue( n["b"], "test" ), "wildcard" )
+
 if __name__ == "__main__":
 	unittest.main()
 

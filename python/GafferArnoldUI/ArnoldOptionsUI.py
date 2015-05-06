@@ -91,57 +91,168 @@ def __errorColorsSummary( plug ) :
 
 	return ", ".join( info )
 
-GafferUI.PlugValueWidget.registerCreator(
+Gaffer.Metadata.registerNode(
 
 	GafferArnold.ArnoldOptions,
-	"options",
-	GafferUI.SectionedCompoundDataPlugValueWidget,
-	sections = (
-		{
-			"label" : "Sampling",
-			"summary" : __samplingSummary,
-			"namesAndLabels" : (
-				( "ai:AA_samples", "AA Samples" ),
-				( "ai:GI_diffuse_samples", "Diffuse Samples" ),
-				( "ai:GI_glossy_samples", "Glossy Samples" ),
-				( "ai:GI_refraction_samples", "Refraction Samples" ),
-			),
-		},
-		{
-			"label" : "Features",
-			"summary" : __featuresSummary,
-			"namesAndLabels" : (
-				( "ai:ignore_textures", "Ignore Textures" ),
-				( "ai:ignore_shaders", "Ignore Shaders" ),
-				( "ai:ignore_atmosphere", "Ignore Atmosphere" ),
-				( "ai:ignore_lights", "Ignore Lights" ),
-				( "ai:ignore_shadows", "Ignore Shadows" ),
-				( "ai:ignore_subdivision", "Ignore Subdivision" ),
-				( "ai:ignore_displacement", "Ignore Displacement" ),
-				( "ai:ignore_bump", "Ignore Bump" ),
-				( "ai:ignore_motion_blur", "Ignore Motion Blur" ),
-				( "ai:ignore_sss", "Ignore SSS" ),
-			),
-		},
-		{
-			"label" : "Search Paths",
-			"summary" : __searchPathsSummary,
-			"namesAndLabels" : (
-				( "ai:texture_searchpath", "Textures" ),
-				( "ai:procedural_searchpath", "Procedurals" ),
-				( "ai:shader_searchpath", "Shaders" ),
-			),
-		},
-		{
-			"label" : "Error Colors",
-			"summary" : __errorColorsSummary,
-			"namesAndLabels" : (
-				( "ai:error_color_bad_texture", "Bad Texture" ),
-				( "ai:error_color_bad_mesh", "Bad Mesh" ),
-				( "ai:error_color_bad_pixel", "Bad Pixel" ),
-				( "ai:error_color_bad_shader", "Bad Shader" ),
-			),
-		},
-	),
+
+	plugs = {
+
+		# Sections
+
+		"options" : [
+
+			"layout:section:Sampling:summary", __samplingSummary,
+			"layout:section:Features:summary", __featuresSummary,
+			"layout:section:Search Paths:summary", __searchPathsSummary,
+			"layout:section:Error Colors:summary", __errorColorsSummary,
+
+		],
+
+		# Sampling
+
+		"options.aaSamples" : [
+
+			"layout:section", "Sampling",
+			"label", "AA Samples",
+
+		],
+
+		"options.giDiffuseSamples" : [
+
+			"layout:section", "Sampling",
+			"label", "Diffuse Samples",
+
+		],
+
+		"options.giGlossySamples" : [
+
+			"layout:section", "Sampling",
+			"label", "Glossy Samples",
+
+		],
+
+		"options.giRefractionSamples" : [
+
+			"layout:section", "Sampling",
+			"label", "Refraction Samples",
+
+		],
+
+		# Features
+
+		"options.ignoreTextures" : [
+
+			"layout:section", "Features",
+
+		],
+
+		"options.ignoreShaders" : [
+
+			"layout:section", "Features",
+
+		],
+
+		"options.ignoreAtmosphere" : [
+
+			"layout:section", "Features",
+
+		],
+
+		"options.ignoreLights" : [
+
+			"layout:section", "Features",
+
+		],
+
+		"options.ignoreShadows" : [
+
+			"layout:section", "Features",
+
+		],
+
+		"options.ignoreSubdivision" : [
+
+			"layout:section", "Features",
+
+		],
+
+		"options.ignoreDisplacement" : [
+
+			"layout:section", "Features",
+
+		],
+
+		"options.ignoreBump" : [
+
+			"layout:section", "Features",
+
+		],
+
+		"options.ignoreMotionBlur" : [
+
+			"layout:section", "Features",
+
+		],
+
+		"options.ignoreSSS" : [
+
+			"layout:section", "Features",
+
+		],
+
+		# Search Paths
+
+		"options.textureSearchPath" : [
+
+			"layout:section", "Search Paths",
+			"label", "Textures",
+
+		],
+
+		"options.proceduralSearchPath" : [
+
+			"layout:section", "Search Paths",
+			"label", "Procedurals",
+
+		],
+
+		"options.shaderSearchPath" : [
+
+			"layout:section", "Search Paths",
+			"label", "Shaders",
+
+		],
+
+		# Error Colors
+
+		"options.errorColorBadTexture" : [
+
+			"layout:section", "Error Colors",
+			"label", "Bad Texture",
+
+		],
+
+		"options.errorColorBadMesh" : [
+
+			"layout:section", "Error Colors",
+			"label", "Bad Mesh",
+
+		],
+
+		"options.errorColorBadPixel" : [
+
+			"layout:section", "Error Colors",
+			"label", "Bad Pixel",
+
+		],
+
+		"options.errorColorBadShader" : [
+
+			"layout:section", "Error Colors",
+			"label", "Bad Shader",
+
+		],
+
+	}
 
 )

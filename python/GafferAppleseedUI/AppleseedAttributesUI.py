@@ -87,48 +87,107 @@ def __photonsSummary( plug ) :
 
 	return ", ".join( info )
 
-GafferUI.PlugValueWidget.registerCreator(
+Gaffer.Metadata.registerNode(
 
 	GafferAppleseed.AppleseedAttributes,
-	"attributes",
-	GafferUI.SectionedCompoundDataPlugValueWidget,
-	sections = (
-		{
-			"label" : "Visibility",
-			"summary" : __visibilitySummary,
-			"namesAndLabels" : (
-				( "as:visibility:camera", "Camera" ),
-				( "as:visibility:light", "Light" ),
-				( "as:visibility:shadow" , "Shadow" ),
-				( "as:visibility:transparency" , "Transparency" ),
-				( "as:visibility:probe" , "Probe" ),
-				( "as:visibility:diffuse", "Diffuse" ),
-				( "as:visibility:specular", "Specular" ),
-				( "as:visibility:glossy", "Glossy" ),
-			),
-		},
-		{
-			"label" : "Shading",
-			"summary" : __shadingSummary,
-			"namesAndLabels" : (
-				( "as:shading_samples", "Shading Samples" ),
-			),
-		},
-		{
-			"label" : "Alpha Map",
-			"summary" : __alphaMapSummary,
-			"namesAndLabels" : (
-				( "as:alpha_map", "Alpha Map" ),
-			),
-		},
-		{
-			"label" : "Photons",
-			"summary" : __photonsSummary,
-			"namesAndLabels" : (
-				( "as:photon_target", "Photon Target" ),
-			),
-		},
-	),
+
+	plugs = {
+
+		# Sections
+
+		"attributes" : [
+
+			"layout:section:Visibility:summary", __visibilitySummary,
+			"layout:section:Shading:summary", __shadingSummary,
+			"layout:section:Alpha Map:summary", __alphaMapSummary,
+			"layout:section:Photons:summary", __photonsSummary,
+
+		],
+
+		# Visibility
+
+		"attributes.cameraVisibility" : [
+
+			"layout:section", "Visibility",
+			"label", "Camera",
+
+		],
+
+		"attributes.lightVisibility" : [
+
+			"layout:section", "Visibility",
+			"label", "Light",
+
+		],
+
+		"attributes.shadowVisibility" : [
+
+			"layout:section", "Visibility",
+			"label", "Shadow",
+
+		],
+
+		"attributes.transparencyVisibility" : [
+
+			"layout:section", "Visibility",
+			"label", "Transparency",
+
+		],
+
+		"attributes.probeVisibility" : [
+
+			"layout:section", "Visibility",
+			"label", "Probe",
+
+		],
+
+		"attributes.diffuseVisibility" : [
+
+			"layout:section", "Visibility",
+			"label", "Diffuse",
+
+		],
+
+		"attributes.specularVisibility" : [
+
+			"layout:section", "Visibility",
+			"label", "Specular",
+
+		],
+
+		"attributes.glossyVisibility" : [
+
+			"layout:section", "Visibility",
+			"label", "Glossy",
+
+		],
+
+		# Shading
+
+		"attributes.shadingSamples" : [
+
+			"layout:section", "Shading",
+
+		],
+
+		# Alpha Map
+
+		"attributes.alphaMap" : [
+
+			"layout:section", "Alpha Map",
+
+		],
+
+		# Photons
+
+		"attributes.photonTarget" : [
+
+			"layout:section", "Photons",
+
+		],
+
+	}
+
 )
 
 GafferUI.PlugValueWidget.registerCreator(

@@ -94,119 +94,228 @@ def __raytracingSummary( plug ) :
 
 	return ", ".join( info )
 
-GafferUI.PlugValueWidget.registerCreator(
+Gaffer.Metadata.registerNode(
 
 	GafferRenderMan.RenderManAttributes,
-	"attributes",
-	GafferUI.SectionedCompoundDataPlugValueWidget,
-	sections = (
 
-		{
-			"label" : "Visibility",
-			"summary" : __visibilitySummary,
-			"namesAndLabels" : (
-				( "ri:visibility:camera", "Camera" ),
-				( "ri:shade:camerahitmode", "Camera Mode" ),
+	"description",
+	"""
+	Applies RenderMan specific attributes to the scene.
+	""",
 
-				( "ri:visibility:transmission", "Transmission" ),
-				( "ri:shade:transmissionhitmode", "Transmission Mode" ),
+	plugs = {
 
-				( "ri:visibility:diffuse", "Diffuse" ),
-				( "ri:shade:diffusehitmode", "Diffuse Mode" ),
+		# Summaries
 
-				( "ri:visibility:specular", "Specular" ),
-				( "ri:shade:specularhitmode", "Specular Mode" ),
+		"attributes" : [
 
-				( "ri:visibility:photon", "Photon" ),
-				( "ri:shade:photonhitmode", "Photon Mode" ),
-			),
-		},
+			"layout:section:Visibility:summary", __visibilitySummary,
+			"layout:section:Shading:summary", __shadingSummary,
+			"layout:section:Raytracing:summary", __raytracingSummary,
 
-		{
-			"label" : "Shading",
-			"summary" : __shadingSummary,
-			"namesAndLabels" : (
-				( "ri:shadingRate", "Shading Rate" ),
-				( "ri:shade:relativeshadingrate", "Relative Shading Rate" ),
-				( "ri:matte", "Matte" ),
-				( "ri:displacementbound:sphere", "Displacement Bound" ),
-			),
-		},
+		],
 
-		{
-			"label" : "Raytracing",
-			"summary" : __raytracingSummary,
-			"namesAndLabels" : (
-				( "ri:trace:maxdiffusedepth", "Max Diffuse Depth" ),
-				( "ri:trace:maxspeculardepth", "Max Specular Depth" ),
-				( "ri:trace:displacements", "Trace Displacements" ),
-				( "ri:trace:bias", "Trace Bias" ),
-			),
-		},
+		# Visibility section
 
-	),
+		"attributes.cameraVisibility" : [
+
+			"layout:section", "Visibility",
+			"label", "Camera",
+
+		],
+
+		"attributes.cameraHitMode" : [
+
+			"layout:section", "Visibility",
+			"label", "Camera Mode",
+
+		],
+
+		"attributes.cameraHitMode.value" : [
+
+			"preset:Shader", "shader",
+			"preset:Primitive", "primitive",
+
+		],
+
+		"attributes.transmissionVisibility" : [
+
+			"layout:section", "Visibility",
+			"label", "Transmission",
+
+		],
+
+		"attributes.transmissionHitMode" : [
+
+			"layout:section", "Visibility",
+			"label", "Transmission Mode",
+
+		],
+
+		"attributes.transmissionHitMode.value" : [
+
+			"preset:Shader", "shader",
+			"preset:Primitive", "primitive",
+
+		],
+
+		"attributes.diffuseVisibility" : [
+
+			"layout:section", "Visibility",
+			"label", "Diffuse",
+
+		],
+
+		"attributes.diffuseHitMode" : [
+
+			"layout:section", "Visibility",
+			"label", "Diffuse Mode",
+
+		],
+
+		"attributes.diffuseHitMode.value" : [
+
+			"preset:Shader", "shader",
+			"preset:Primitive", "primitive",
+
+		],
+
+		"attributes.specularVisibility" : [
+
+			"layout:section", "Visibility",
+			"label", "Specular",
+
+		],
+
+		"attributes.specularHitMode" : [
+
+			"layout:section", "Visibility",
+			"label", "Specular Mode",
+
+		],
+
+		"attributes.specularHitMode.value" : [
+
+			"preset:Shader", "shader",
+			"preset:Primitive", "primitive",
+
+		],
+
+		"attributes.photonVisibility" : [
+
+			"layout:section", "Visibility",
+			"label", "Photon",
+
+		],
+
+		"attributes.photonHitMode" : [
+
+			"layout:section", "Visibility",
+			"label", "Photon Mode",
+
+		],
+
+		"attributes.photonHitMode.value" : [
+
+			"preset:Shader", "shader",
+			"preset:Primitive", "primitive",
+
+		],
+
+		# Shading section
+
+		"attributes.shadingRate" : [
+
+			"layout:section", "Shading",
+
+		],
+
+		"attributes.relativeShadingRate" : [
+
+			"layout:section", "Shading",
+
+		],
+
+		"attributes.matte" : [
+
+			"layout:section", "Shading",
+
+		],
+
+
+		"attributes.displacementBound" : [
+
+			"layout:section", "Shading",
+
+		],
+
+		# Raytracing section
+
+		"attributes.maxDiffuseDepth" : [
+
+			"layout:section", "Raytracing",
+
+		],
+
+		"attributes.maxSpecularDepth" : [
+
+			"layout:section", "Raytracing",
+
+		],
+
+		"attributes.traceDisplacements" : [
+
+			"layout:section", "Raytracing",
+
+		],
+
+		"attributes.traceBias" : [
+
+			"description",
+			"""
+			This bias value affects rays. It is an offset applied to the ray origin, moving it slightly away from the surface launch point in the ray direction. This offset can prevent blotchy artifacts resulting from the ray immediately finding an intersection with the surface it just left. Usually, 0.01 is the default scene value.
+			""",
+
+			"layout:section", "Raytracing",
+
+		],
+
+	}
 
 )
 
 GafferUI.PlugValueWidget.registerCreator(
 	GafferRenderMan.RenderManAttributes,
 	"attributes.cameraHitMode.value",
-	GafferUI.EnumPlugValueWidget,
-	labelsAndValues = (
-		( "Shader", "shader" ),
-		( "Primitive", "primitive" ),
-	),
+	GafferUI.PresetsPlugValueWidget
 )
 
 GafferUI.PlugValueWidget.registerCreator(
 	GafferRenderMan.RenderManAttributes,
 	"attributes.transmissionHitMode.value",
-	GafferUI.EnumPlugValueWidget,
-	labelsAndValues = (
-		( "Shader", "shader" ),
-		( "Primitive", "primitive" ),
-	),
+	GafferUI.PresetsPlugValueWidget
+)
+
+GafferUI.PlugValueWidget.registerCreator(
+	GafferRenderMan.RenderManAttributes,
+	"attributes.transmissionHitMode.value",
+	GafferUI.PresetsPlugValueWidget
 )
 
 GafferUI.PlugValueWidget.registerCreator(
 	GafferRenderMan.RenderManAttributes,
 	"attributes.diffuseHitMode.value",
-	GafferUI.EnumPlugValueWidget,
-	labelsAndValues = (
-		( "Shader", "shader" ),
-		( "Primitive", "primitive" ),
-	),
+	GafferUI.PresetsPlugValueWidget
 )
 
 GafferUI.PlugValueWidget.registerCreator(
 	GafferRenderMan.RenderManAttributes,
 	"attributes.specularHitMode.value",
-	GafferUI.EnumPlugValueWidget,
-	labelsAndValues = (
-		( "Shader", "shader" ),
-		( "Primitive", "primitive" ),
-	),
+	GafferUI.PresetsPlugValueWidget
 )
 
 GafferUI.PlugValueWidget.registerCreator(
 	GafferRenderMan.RenderManAttributes,
 	"attributes.photonHitMode.value",
-	GafferUI.EnumPlugValueWidget,
-	labelsAndValues = (
-		( "Shader", "shader" ),
-		( "Primitive", "primitive" ),
-	),
-)
-
-Gaffer.Metadata.registerNodeDescription(
-
-	GafferRenderMan.RenderManAttributes,
-
-	"""Apply render attributes to your scene.""",
-
-	"attributes.traceBias",
-	{
-		"description" : """This bias value affects rays. It is an offset applied to the ray origin, moving it slightly away from the surface launch point in the ray direction. This offset can prevent blotchy artifacts resulting from the ray immediately finding an intersection with the surface it just left. Usually, 0.01 is the default scene value.""",
-	}
-
+	GafferUI.PresetsPlugValueWidget
 )

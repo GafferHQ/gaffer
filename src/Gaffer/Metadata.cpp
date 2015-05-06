@@ -438,8 +438,20 @@ IECore::ConstDataPtr Metadata::plugValueInternal( const Plug *plug, IECore::Inte
 		NodeMetadataMap::const_iterator nIt = nodeMetadataMap().find( typeId );
 		if( nIt != nodeMetadataMap().end() )
 		{
-			NodeMetadata::PlugPathsToValues::const_iterator it, eIt;
-			for( it = nIt->second.plugPathsToValues.begin(), eIt = nIt->second.plugPathsToValues.end(); it != eIt; ++it )
+			// First do a direct lookup using the plug path.
+			NodeMetadata::PlugPathsToValues::const_iterator it = nIt->second.plugPathsToValues.find( plugPath );
+			const NodeMetadata::PlugPathsToValues::const_iterator eIt = nIt->second.plugPathsToValues.end();
+			if( it != eIt )
+			{
+				NodeMetadata::PlugValues::const_iterator vIt = it->second.find( key );
+				if( vIt != it->second.end() )
+				{
+					return vIt->second( plug );
+				}
+			}
+			// And only if the direct lookups fails, do a full search using
+			// wildcard matches.
+			for( it = nIt->second.plugPathsToValues.begin(); it != eIt; ++it )
 			{
 				if( match( plugPath, it->first ) )
 				{
