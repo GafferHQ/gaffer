@@ -401,9 +401,9 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		self.assertEqual( n.parameterMetadata( n["parameters"]["a"], "aFloatValues" ), IECore.FloatVectorData( [ 0.25, 0.5 ] ) )
 
 	@unittest.skipIf( GafferOSL.oslLibraryVersionCode() < 10600, "OSL doesn't support array metadata" )
-	def testMetadaReuse( self ) :
+	def testMetadataReuse( self ) :
 
-		s = self.compileShader( os.path.dirname( __file__ ) + "/shaders/metadata.osl" )
+		s = self.compileShader( os.path.dirname( __file__ ) + "/shaders/arrayMetadata.osl" )
 
 		n1 = GafferOSL.OSLShader()
 		n1.loadShader( s )
