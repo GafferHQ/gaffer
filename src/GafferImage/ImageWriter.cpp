@@ -194,23 +194,22 @@ TypeDesc typeDescFromData( const Data *data, const void *&basePointer )
 	}
 };
 
-void appendImageIOParameter( const std::string &name, const Data *data, ImageIOParameterList &paramList )
+void setImageSpecAttribute( const std::string &name, const Data *data, ImageSpec &spec )
 {
 	const void *value = NULL;
 	TypeDesc type = typeDescFromData( data, value );
 	if ( value )
 	{
-		ParamValue &param = paramList.grow();
-		param.init( name, type, 1, value );
+		spec.attribute( name, type, value );
 	}
 }
 
-void metadataToImageIOParameterList( const CompoundObject *metadata, ImageIOParameterList &paramList )
+void metadataToImageSpecAttributes( const CompoundObject *metadata, ImageSpec &spec )
 {
 	const CompoundObject::ObjectMap &members = metadata->members();
 	for ( CompoundObject::ObjectMap::const_iterator it = members.begin(); it != members.end(); ++it )
 	{
-		appendImageIOParameter( it->first, IECore::runTimeCast<const Data>( it->second.get() ), paramList );
+		setImageSpecAttribute( it->first, IECore::runTimeCast<const Data>( it->second.get() ), spec );
 	}
 }
 
@@ -425,15 +424,15 @@ void ImageWriter::execute() const
 
 	// Add common attribs to the spec
 	std::string software = ( boost::format( "Gaffer %d.%d.%d.%d" ) % GAFFER_MILESTONE_VERSION % GAFFER_MAJOR_VERSION % GAFFER_MINOR_VERSION % GAFFER_PATCH_VERSION ).str();
-	appendImageIOParameter( "Software", new StringData( software ), spec.extra_attribs );	
+	setImageSpecAttribute( "Software", new StringData( software ), spec );
 	struct utsname info;
 	if ( !uname( &info ) )
 	{
-		appendImageIOParameter( "HostComputer", new StringData( info.nodename ), spec.extra_attribs );
+		setImageSpecAttribute( "HostComputer", new StringData( info.nodename ), spec );
 	}
 	if ( const char *artist = getenv( "USER" ) )
 	{
-		appendImageIOParameter( "Artist", new StringData( artist ), spec.extra_attribs );
+		setImageSpecAttribute( "Artist", new StringData( artist ), spec );
 	}
 	std::string document = "untitled";
 	if ( const ScriptNode *script = ancestor<ScriptNode>() )
@@ -441,7 +440,7 @@ void ImageWriter::execute() const
 		const std::string scriptFile = script->fileNamePlug()->getValue();
 		document = ( scriptFile == "" ) ? document : scriptFile;
 	}
-	appendImageIOParameter( "DocumentName", new StringData( document ), spec.extra_attribs );
+	setImageSpecAttribute( "DocumentName", new StringData( document ), spec );
 	
 	// Add the metadata to the spec, removing metadata that could affect the resulting channel data
 	CompoundObjectPtr metadata = inPlug()->metadataPlug()->getValue()->copy();
@@ -460,10 +459,10 @@ void ImageWriter::execute() const
 		}
 	}
 	
-	metadataToImageIOParameterList( metadata.get(), spec.extra_attribs );
+	metadataToImageSpecAttributes( metadata.get(), spec );
 	
 	// PixelAspectRatio must be defined by the FormatPlug
-	appendImageIOParameter( "PixelAspectRatio", new FloatData( inPlug()->formatPlug()->getValue().getPixelAspect() ), spec.extra_attribs );
+	setImageSpecAttribute( "PixelAspectRatio", new FloatData( inPlug()->formatPlug()->getValue().getPixelAspect() ), spec );
 	
 	// create the directories before opening the file
 	boost::filesystem::path directory = boost::filesystem::path( fileName ).parent_path();
