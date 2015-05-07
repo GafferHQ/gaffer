@@ -34,7 +34,6 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/Context.h"
 #include "GafferImage/Sampler.h"
 
 using namespace Gaffer;

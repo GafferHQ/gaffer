@@ -37,7 +37,6 @@
 #include "IECore/BoxAlgo.h"
 #include "IECore/BoxOps.h"
 
-#include "Gaffer/Context.h"
 #include "GafferImage/Merge.h"
 
 using namespace IECore;

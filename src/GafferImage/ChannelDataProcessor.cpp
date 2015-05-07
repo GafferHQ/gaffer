@@ -35,7 +35,6 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/Context.h"
 #include "GafferImage/ChannelDataProcessor.h"
 
 using namespace Gaffer;
