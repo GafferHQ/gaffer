@@ -41,7 +41,6 @@
 #include "IECore/CoordinateSystem.h"
 #include "IECore/ClippingPlane.h"
 
-#include "Gaffer/Context.h"
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/TransformPlug.h"
 

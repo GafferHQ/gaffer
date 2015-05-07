@@ -41,6 +41,7 @@
 
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/StringPlug.h"
+#include "Gaffer/Context.h"
 
 #include "GafferScene/SceneWriter.h"
 
