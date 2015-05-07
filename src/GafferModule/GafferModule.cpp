@@ -139,6 +139,7 @@ BOOST_PYTHON_MODULE( _Gaffer )
 	bindConnection();
 	bindSignal();
 	bindGraphComponent();
+	bindContext();
 	bindNode();
 	bindDependencyNode();
 	bindComputeNode();
@@ -159,7 +160,6 @@ BOOST_PYTHON_MODULE( _Gaffer )
 	bindStandardSet();
 	bindChildSet();
 	bindPreferences();
-	bindContext();
 	bindBoxPlug();
 	bindExpression();
 	bindTransformPlug();

@@ -178,6 +178,56 @@ class StringPlugTest( GafferTest.TestCase ) :
 			self.assertNotEqual( n["out"].hash(), h )
 			self.assertEqual( n["out"].getValue(), "foo" )
 
+	def testExpansionMask( self ) :
+
+		n1 = GafferTest.StringInOutNode( substitutions = Gaffer.Context.Substitutions.AllSubstitutions )
+		n2 = GafferTest.StringInOutNode( substitutions = Gaffer.Context.Substitutions.AllSubstitutions & ~Gaffer.Context.Substitutions.FrameSubstitutions )
+
+		n1["in"].setValue( "hello.####.${ext}" )
+		n2["in"].setValue( "hello.####.${ext}" )
+		self.assertEqual( n1["out"].getValue(), os.path.expanduser( "hello.0001." ) )
+		self.assertEqual( n2["out"].getValue(), os.path.expanduser( "hello.####." ) )
+
+		c = Gaffer.Context()
+		c["ext"] = "cob"
+		c.setFrame( 10 )
+		with c :
+			self.assertEqual( n1["out"].getValue(), os.path.expanduser( "hello.0010.cob" ) )
+			self.assertEqual( n2["out"].getValue(), os.path.expanduser( "hello.####.cob" ) )
+
+	def testSubstitutionsSerialisation( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = Gaffer.Node()
+		s["n"]["p"] = Gaffer.StringPlug(
+			"p",
+			flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic,
+			substitutions = Gaffer.Context.Substitutions.AllSubstitutions & ~Gaffer.Context.Substitutions.FrameSubstitutions
+		)
+		self.assertEqual( s["n"]["p"].substitutions(), Gaffer.Context.Substitutions.AllSubstitutions & ~Gaffer.Context.Substitutions.FrameSubstitutions )
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+		self.assertEqual( s["n"]["p"].substitutions(), s2["n"]["p"].substitutions() )
+
+	def testSubstitutionsRepr( self ) :
+
+		p = Gaffer.StringPlug(
+			substitutions = Gaffer.Context.Substitutions.TildeSubstitutions | Gaffer.Context.Substitutions.FrameSubstitutions
+		)
+
+		p2 = eval( repr( p ) )
+		self.assertEqual( p.substitutions(), p2.substitutions() )
+
+	def testSubstitutionsCounterpart( self ) :
+
+		p = Gaffer.StringPlug(
+			substitutions = Gaffer.Context.Substitutions.TildeSubstitutions | Gaffer.Context.Substitutions.FrameSubstitutions
+		)
+
+		p2 = p.createCounterpart( "p2", p.Direction.In )
+		self.assertEqual( p.substitutions(), p2.substitutions() )
+
 if __name__ == "__main__":
 	unittest.main()
 

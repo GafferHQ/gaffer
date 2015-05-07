@@ -39,6 +39,7 @@
 #define GAFFER_STRINGPLUG_H
 
 #include "Gaffer/ValuePlug.h"
+#include "Gaffer/Context.h"
 
 namespace Gaffer
 {
@@ -56,9 +57,12 @@ class StringPlug : public ValuePlug
 			const std::string &name = defaultName<StringPlug>(),
 			Direction direction=In,
 			const std::string &defaultValue = "",
-			unsigned flags = Default
+			unsigned flags = Default,
+			unsigned substitutions = Context::AllSubstitutions
 		);
 		virtual ~StringPlug();
+
+		unsigned substitutions() const;
 
 		/// Accepts only instances of StringPlug or derived classes.
 		virtual bool acceptsInput( const Plug *input ) const;
@@ -79,6 +83,10 @@ class StringPlug : public ValuePlug
 		/// Ensures the method above doesn't mask
 		/// ValuePlug::hash( h )
 		using ValuePlug::hash;
+
+	private :
+
+		unsigned m_substitutions;
 
 };
 

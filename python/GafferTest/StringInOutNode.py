@@ -39,11 +39,11 @@ import Gaffer
 
 class StringInOutNode( Gaffer.ComputeNode ) :
 
-	def __init__( self, name="StringInOutNode", defaultValue="" ) :
+	def __init__( self, name="StringInOutNode", defaultValue="", substitutions = Gaffer.Context.Substitutions.AllSubstitutions ) :
 
 		Gaffer.ComputeNode.__init__( self, name )
 
-		self.addChild( Gaffer.StringPlug( "in", Gaffer.Plug.Direction.In, defaultValue ) )
+		self.addChild( Gaffer.StringPlug( "in", Gaffer.Plug.Direction.In, defaultValue, substitutions = substitutions ) )
 		self.addChild( Gaffer.StringPlug( "out", Gaffer.Plug.Direction.Out ) )
 
 		self.numHashCalls = 0

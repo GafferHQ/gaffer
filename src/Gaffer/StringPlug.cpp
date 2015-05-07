@@ -47,14 +47,20 @@ StringPlug::StringPlug(
 	const std::string &name,
 	Direction direction,
 	const std::string &defaultValue,
-	unsigned flags
+	unsigned flags,
+	unsigned substitutions
 )
-	:	ValuePlug( name, direction, new StringData( defaultValue ), flags )
+	:	ValuePlug( name, direction, new StringData( defaultValue ), flags ), m_substitutions( substitutions )
 {
 }
 
 StringPlug::~StringPlug()
 {
+}
+
+unsigned StringPlug::substitutions() const
+{
+	return m_substitutions;
 }
 
 bool StringPlug::acceptsInput( const Plug *input ) const
@@ -72,7 +78,7 @@ bool StringPlug::acceptsInput( const Plug *input ) const
 
 PlugPtr StringPlug::createCounterpart( const std::string &name, Direction direction ) const
 {
-	return new StringPlug( name, direction, defaultValue(), getFlags() );
+	return new StringPlug( name, direction, defaultValue(), getFlags(), substitutions() );
 }
 
 const std::string &StringPlug::defaultValue() const
@@ -95,12 +101,13 @@ std::string StringPlug::getValue( const IECore::MurmurHash *precomputedHash ) co
 	}
 
 	bool performSubstitution =
+		m_substitutions &&
 		direction()==Plug::In &&
 		inCompute() &&
 		Plug::getFlags( Plug::PerformsSubstitutions ) &&
 		Context::hasSubstitutions( s->readable() );
 
-	return performSubstitution ? Context::current()->substitute( s->readable() ) : s->readable();
+	return performSubstitution ? Context::current()->substitute( s->readable(), m_substitutions ) : s->readable();
 }
 
 void StringPlug::setFrom( const ValuePlug *other )
@@ -120,7 +127,7 @@ IECore::MurmurHash StringPlug::hash() const
 {
 	const StringPlug *p = source<StringPlug>();
 
-	const bool performSubstitution = p->direction()==Plug::In && p->getFlags( Plug::PerformsSubstitutions );
+	const bool performSubstitution = m_substitutions && p->direction()==Plug::In && p->getFlags( Plug::PerformsSubstitutions );
 	if( performSubstitution )
 	{
 		IECore::ConstObjectPtr o = p->getObjectValue();
@@ -133,7 +140,7 @@ IECore::MurmurHash StringPlug::hash() const
 		if( Context::hasSubstitutions( s->readable() ) )
 		{
 			IECore::MurmurHash result;
-			result.append( Context::current()->substitute( s->readable() ) );
+			result.append( Context::current()->substitute( s->readable(), m_substitutions ) );
 			return result;
 		}
 	}
