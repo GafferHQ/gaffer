@@ -36,6 +36,8 @@
 
 #include "boost/date_time/posix_time/posix_time.hpp"
 
+#include "Gaffer/StringPlug.h"
+
 #include "GafferCortex/DateTimeParameterHandler.h"
 
 using namespace GafferCortex;
