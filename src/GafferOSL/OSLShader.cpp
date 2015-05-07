@@ -44,6 +44,7 @@
 
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/CompoundNumericPlug.h"
+#include "Gaffer/StringPlug.h"
 
 #include "GafferOSL/OSLShader.h"
 #include "GafferOSL/OSLRenderer.h"

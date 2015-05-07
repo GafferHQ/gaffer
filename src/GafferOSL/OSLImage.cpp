@@ -40,6 +40,7 @@
 #include "Gaffer/Context.h"
 #include "Gaffer/Box.h"
 #include "Gaffer/Dot.h"
+#include "Gaffer/StringPlug.h"
 
 #include "GafferScene/ShaderSwitch.h"
 
