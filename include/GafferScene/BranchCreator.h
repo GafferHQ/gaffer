@@ -41,6 +41,13 @@
 #include "GafferScene/SceneProcessor.h"
 #include "GafferScene/Filter.h"
 
+namespace Gaffer
+{
+
+IE_CORE_FORWARDDECLARE( StringPlug )
+
+} // namespace Gaffer
+
 namespace GafferScene
 {
 

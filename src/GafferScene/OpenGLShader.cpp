@@ -45,6 +45,7 @@
 #include "Gaffer/CompoundDataPlug.h"
 #include "Gaffer/TypedPlug.h"
 #include "Gaffer/CompoundNumericPlug.h"
+#include "Gaffer/StringPlug.h"
 
 #include "GafferImage/ImagePlug.h"
 

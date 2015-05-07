@@ -42,10 +42,17 @@
 #include "IECore/Shader.h"
 
 #include "Gaffer/DependencyNode.h"
-#include "Gaffer/CompoundPlug.h"
 #include "Gaffer/TypedPlug.h"
 
 #include "GafferScene/TypeIds.h"
+
+namespace Gaffer
+{
+
+IE_CORE_FORWARDDECLARE( StringPlug )
+IE_CORE_FORWARDDECLARE( CompoundPlug )
+
+} // namespace Gaffer
 
 namespace GafferScene
 {

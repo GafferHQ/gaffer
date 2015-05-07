@@ -37,6 +37,7 @@
 #include "boost/algorithm/string/predicate.hpp"
 
 #include "Gaffer/StringAlgo.h"
+#include "Gaffer/StringPlug.h"
 
 #include "GafferScene/DeleteGlobals.h"
 

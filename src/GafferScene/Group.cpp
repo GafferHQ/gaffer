@@ -35,10 +35,6 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include <set>
-
-#include "boost/bind.hpp"
-#include "boost/regex.hpp"
 #include "boost/lexical_cast.hpp"
 
 #include "OpenEXR/ImathBoxAlgo.h"
@@ -46,7 +42,7 @@
 #include "IECore/CompoundObject.h"
 
 #include "Gaffer/Context.h"
-#include "Gaffer/BlockedConnection.h"
+#include "Gaffer/StringPlug.h"
 
 #include "GafferScene/Group.h"
 #include "GafferScene/PathMatcherData.h"

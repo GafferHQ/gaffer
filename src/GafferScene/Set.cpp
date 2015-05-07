@@ -34,6 +34,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include "Gaffer/StringPlug.h"
+
 #include "GafferScene/Set.h"
 #include "GafferScene/PathMatcherData.h"
 

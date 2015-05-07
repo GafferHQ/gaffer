@@ -42,6 +42,7 @@
 #include "Gaffer/PathFilter.h"
 #include "Gaffer/Node.h"
 #include "Gaffer/ArrayPlug.h"
+#include "Gaffer/StringPlug.h"
 
 #include "GafferScene/ScenePlug.h"
 #include "GafferScene/ScenePath.h"

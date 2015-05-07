@@ -39,6 +39,7 @@
 
 #include "Gaffer/Context.h"
 #include "Gaffer/StringAlgo.h"
+#include "Gaffer/StringPlug.h"
 
 #include "GafferScene/PathMatcherData.h"
 #include "GafferScene/BranchCreator.h"

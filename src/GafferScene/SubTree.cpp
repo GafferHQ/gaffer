@@ -38,6 +38,7 @@
 #include "boost/algorithm/string/predicate.hpp"
 
 #include "Gaffer/Context.h"
+#include "Gaffer/StringPlug.h"
 
 #include "GafferScene/SubTree.h"
 #include "GafferScene/PathMatcherData.h"

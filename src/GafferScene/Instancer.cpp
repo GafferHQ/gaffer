@@ -43,6 +43,7 @@
 #include "IECore/VectorTypedData.h"
 
 #include "Gaffer/Context.h"
+#include "Gaffer/StringPlug.h"
 
 #include "GafferScene/Instancer.h"
 

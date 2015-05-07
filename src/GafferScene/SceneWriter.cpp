@@ -40,6 +40,7 @@
 #include "IECore/Transform.h"
 
 #include "Gaffer/ScriptNode.h"
+#include "Gaffer/StringPlug.h"
 
 #include "GafferScene/SceneWriter.h"
 

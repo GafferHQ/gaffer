@@ -36,6 +36,8 @@
 
 #include "IECore/PointsPrimitive.h"
 
+#include "Gaffer/StringPlug.h"
+
 #include "GafferScene/PointsType.h"
 
 using namespace IECore;

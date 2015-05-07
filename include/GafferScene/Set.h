@@ -41,6 +41,13 @@
 
 #include "GafferScene/GlobalsProcessor.h"
 
+namespace Gaffer
+{
+
+IE_CORE_FORWARDDECLARE( StringPlug )
+
+} // namespace Gaffer
+
 namespace GafferScene
 {
 

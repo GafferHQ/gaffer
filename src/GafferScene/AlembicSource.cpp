@@ -40,6 +40,7 @@
 #include "IECore/LRUCache.h"
 
 #include "Gaffer/Context.h"
+#include "Gaffer/StringPlug.h"
 
 #include "GafferScene/AlembicSource.h"
 

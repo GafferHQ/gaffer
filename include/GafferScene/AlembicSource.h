@@ -42,6 +42,13 @@
 
 #include "GafferScene/SceneNode.h"
 
+namespace Gaffer
+{
+
+IE_CORE_FORWARDDECLARE( StringPlug )
+
+} // namespace Gaffer
+
 namespace GafferScene
 {
 

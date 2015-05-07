@@ -37,6 +37,8 @@
 
 #include "IECore/PointDistributionOp.h"
 
+#include "Gaffer/StringPlug.h"
+
 #include "GafferScene/Seeds.h"
 
 using namespace std;

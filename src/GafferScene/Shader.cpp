@@ -42,6 +42,7 @@
 #include "Gaffer/TypedPlug.h"
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/CompoundDataPlug.h"
+#include "Gaffer/StringPlug.h"
 
 #include "GafferScene/Shader.h"
 

@@ -36,9 +36,10 @@
 
 #include "boost/bind.hpp"
 
-#include "GafferScene/StandardAttributes.h"
-
 #include "Gaffer/BlockedConnection.h"
+#include "Gaffer/StringPlug.h"
+
+#include "GafferScene/StandardAttributes.h"
 
 using namespace GafferScene;
 

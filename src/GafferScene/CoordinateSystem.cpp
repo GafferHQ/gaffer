@@ -36,6 +36,8 @@
 
 #include "IECore/CoordinateSystem.h"
 
+#include "Gaffer/StringPlug.h"
+
 #include "GafferScene/CoordinateSystem.h"
 #include "GafferScene/PathMatcherData.h"
 

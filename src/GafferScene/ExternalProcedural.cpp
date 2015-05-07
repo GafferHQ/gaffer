@@ -36,6 +36,8 @@
 
 #include "IECore/ExternalProcedural.h"
 
+#include "Gaffer/StringPlug.h"
+
 #include "GafferScene/ExternalProcedural.h"
 
 using namespace Imath;

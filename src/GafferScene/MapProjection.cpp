@@ -40,6 +40,8 @@
 #include "IECore/Camera.h"
 #include "IECore/AngleConversion.h"
 
+#include "Gaffer/StringPlug.h"
+
 #include "GafferScene/MapProjection.h"
 
 using namespace std;

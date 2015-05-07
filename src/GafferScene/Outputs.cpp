@@ -41,6 +41,7 @@
 #include "boost/multi_index/member.hpp"
 
 #include "Gaffer/CompoundDataPlug.h"
+#include "Gaffer/StringPlug.h"
 
 #include "GafferScene/Outputs.h"
 

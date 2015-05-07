@@ -39,9 +39,16 @@
 #define GAFFERSCENE_OBJECTSOURCE_H
 
 #include "Gaffer/TypedObjectPlug.h"
-#include "Gaffer/TransformPlug.h"
 
 #include "GafferScene/SceneNode.h"
+
+namespace Gaffer
+{
+
+IE_CORE_FORWARDDECLARE( StringPlug )
+IE_CORE_FORWARDDECLARE( TransformPlug )
+
+} // namespace Gaffer
 
 namespace GafferScene
 {
