@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,15 +34,54 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferBindings/TypedPlugBinding.h"
+#include "IECorePython/ScopedGILRelease.h"
 
+#include "Gaffer/StringPlug.h"
+
+#include "GafferBindings/PlugBinding.h"
+#include "GafferBindings/StringPlugBinding.h"
+
+using namespace boost::python;
 using namespace Gaffer;
 
-void GafferBindings::bindTypedPlug()
+namespace
 {
-	TypedPlugClass<BoolPlug>();
-	TypedPlugClass<M33fPlug>();
-	TypedPlugClass<M44fPlug>();
-	TypedPlugClass<AtomicBox3fPlug>();
-	TypedPlugClass<AtomicBox2iPlug>();
+
+void setValue( StringPlug *plug, const char *value )
+{
+	// we use a GIL release here to prevent a lock in the case where this triggers a graph
+	// evaluation which decides to go back into python on another thread:
+	IECorePython::ScopedGILRelease r;
+	plug->setValue( value );
+}
+
+std::string getValue( const StringPlug *plug, const IECore::MurmurHash *precomputedHash )
+{
+	// Must release GIL in case computation spawns threads which need
+	// to reenter Python.
+	IECorePython::ScopedGILRelease r;
+	return plug->getValue( precomputedHash );
+}
+
+} // namespace
+
+void GafferBindings::bindStringPlug()
+{
+
+	PlugClass<StringPlug>()
+		.def(
+			boost::python::init<const std::string &, Gaffer::Plug::Direction, const std::string &, unsigned>(
+				(
+					boost::python::arg_( "name" )=Gaffer::GraphComponent::defaultName<StringPlug>(),
+					boost::python::arg_( "direction" )=Gaffer::Plug::In,
+					boost::python::arg_( "defaultValue" )="",
+					boost::python::arg_( "flags" )=Gaffer::Plug::Default
+				)
+			)
+		)
+		.def( "defaultValue", &StringPlug::defaultValue, return_value_policy<boost::python::copy_const_reference>() )
+		.def( "setValue", &setValue )
+		.def( "getValue", &getValue, ( boost::python::arg( "_precomputedHash" ) = object() ) )
+	;
+
 }

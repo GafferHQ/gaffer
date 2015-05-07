@@ -122,10 +122,4 @@ IECore::MurmurHash TypedPlug<T>::hash() const
 	return ValuePlug::hash();
 }
 
-template<class T>
-void TypedPlug<T>::hash( IECore::MurmurHash &h ) const
-{
-	ValuePlug::hash( h );
-}
-
 } // namespace Gaffer

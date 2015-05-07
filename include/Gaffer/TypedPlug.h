@@ -81,14 +81,12 @@ class TypedPlug : public ValuePlug
 
 		virtual void setFrom( const ValuePlug *other );
 
-		/// Implemented to perform automatic substitutions
-		/// for string plugs.
+		/// Implemented to just return ValuePlug::hash(),
+		/// but may be specialised in particular instantiations.
 		virtual IECore::MurmurHash hash() const;
-		/// Just calls ValuePlug::hash( h ) - only
-		/// exists to workaround the problem of the
-		/// function above masking this function on
-		/// the base class.
-		void hash( IECore::MurmurHash &h ) const;
+		/// Ensures the method above doesn't mask
+		/// ValuePlug::hash( h )
+		using ValuePlug::hash;
 
 	private :
 
@@ -100,14 +98,12 @@ class TypedPlug : public ValuePlug
 };
 
 typedef TypedPlug<bool> BoolPlug;
-typedef TypedPlug<std::string> StringPlug;
 typedef TypedPlug<Imath::M33f> M33fPlug;
 typedef TypedPlug<Imath::M44f> M44fPlug;
 typedef TypedPlug<Imath::Box3f> AtomicBox3fPlug;
 typedef TypedPlug<Imath::Box2i> AtomicBox2iPlug;
 
 IE_CORE_DECLAREPTR( BoolPlug );
-IE_CORE_DECLAREPTR( StringPlug );
 IE_CORE_DECLAREPTR( M33fPlug );
 IE_CORE_DECLAREPTR( M44fPlug );
 IE_CORE_DECLAREPTR( AtomicBox3fPlug );
@@ -116,10 +112,6 @@ IE_CORE_DECLAREPTR( AtomicBox2iPlug );
 typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, BoolPlug> > BoolPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::In, BoolPlug> > InputBoolPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::Out, BoolPlug> > OutputBoolPlugIterator;
-
-typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, StringPlug> > StringPlugIterator;
-typedef FilteredChildIterator<PlugPredicate<Plug::In, StringPlug> > InputStringPlugIterator;
-typedef FilteredChildIterator<PlugPredicate<Plug::Out, StringPlug> > OutputStringPlugIterator;
 
 typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, M33fPlug> > M33fPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::In, M33fPlug> > InputM33fPlugIterator;
@@ -140,10 +132,6 @@ typedef FilteredChildIterator<PlugPredicate<Plug::Out, AtomicBox2iPlug> > Output
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, BoolPlug>, PlugPredicate<> > RecursiveBoolPlugIterator;
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, BoolPlug>, PlugPredicate<> > RecursiveInputBoolPlugIterator;
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, BoolPlug>, PlugPredicate<> > RecursiveOutputBoolPlugIterator;
-
-typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, StringPlug>, PlugPredicate<> > RecursiveStringPlugIterator;
-typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, StringPlug>, PlugPredicate<> > RecursiveInputStringPlugIterator;
-typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, StringPlug>, PlugPredicate<> > RecursiveOutputStringPlugIterator;
 
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, M33fPlug>, PlugPredicate<> > RecursiveM33fPlugIterator;
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, M33fPlug>, PlugPredicate<> > RecursiveInputM33fPlugIterator;
