@@ -424,15 +424,15 @@ void ImageWriter::execute() const
 
 	// Add common attribs to the spec
 	std::string software = ( boost::format( "Gaffer %d.%d.%d.%d" ) % GAFFER_MILESTONE_VERSION % GAFFER_MAJOR_VERSION % GAFFER_MINOR_VERSION % GAFFER_PATCH_VERSION ).str();
-	setImageSpecAttribute( "Software", new StringData( software ), spec );
+	spec.attribute( "Software", software );
 	struct utsname info;
 	if ( !uname( &info ) )
 	{
-		setImageSpecAttribute( "HostComputer", new StringData( info.nodename ), spec );
+		spec.attribute( "HostComputer", info.nodename );
 	}
 	if ( const char *artist = getenv( "USER" ) )
 	{
-		setImageSpecAttribute( "Artist", new StringData( artist ), spec );
+		spec.attribute( "Artist", artist );
 	}
 	std::string document = "untitled";
 	if ( const ScriptNode *script = ancestor<ScriptNode>() )
@@ -440,7 +440,7 @@ void ImageWriter::execute() const
 		const std::string scriptFile = script->fileNamePlug()->getValue();
 		document = ( scriptFile == "" ) ? document : scriptFile;
 	}
-	setImageSpecAttribute( "DocumentName", new StringData( document ), spec );
+	spec.attribute( "DocumentName", document );
 	
 	// Add the metadata to the spec, removing metadata that could affect the resulting channel data
 	CompoundObjectPtr metadata = inPlug()->metadataPlug()->getValue()->copy();
@@ -462,7 +462,7 @@ void ImageWriter::execute() const
 	metadataToImageSpecAttributes( metadata.get(), spec );
 	
 	// PixelAspectRatio must be defined by the FormatPlug
-	setImageSpecAttribute( "PixelAspectRatio", new FloatData( inPlug()->formatPlug()->getValue().getPixelAspect() ), spec );
+	spec.attribute( "PixelAspectRatio", (float)inPlug()->formatPlug()->getValue().getPixelAspect() );
 	
 	// create the directories before opening the file
 	boost::filesystem::path directory = boost::filesystem::path( fileName ).parent_path();
