@@ -34,7 +34,6 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/Context.h"
 #include "Gaffer/CompoundDataPlug.h"
 #include "Gaffer/StringPlug.h"
 
