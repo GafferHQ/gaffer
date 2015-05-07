@@ -44,6 +44,7 @@ OIIO_NAMESPACE_USING
 
 #include "Gaffer/Context.h"
 #include "Gaffer/ScriptNode.h"
+#include "Gaffer/StringPlug.h"
 
 #include "GafferImage/ImageWriter.h"
 #include "GafferImage/ImagePlug.h"

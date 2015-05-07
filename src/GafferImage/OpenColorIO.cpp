@@ -41,6 +41,7 @@
 #include "OpenColorIO/OpenColorIO.h"
 
 #include "Gaffer/Context.h"
+#include "Gaffer/StringPlug.h"
 
 #include "GafferImage/OpenColorIO.h"
 

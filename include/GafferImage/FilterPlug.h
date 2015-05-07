@@ -37,7 +37,7 @@
 #ifndef GAFFERIMAGE_FILTERPLUG_H
 #define GAFFERIMAGE_FILTERPLUG_H
 
-#include "Gaffer/TypedPlug.h"
+#include "Gaffer/StringPlug.h"
 
 #include "GafferImage/TypeIds.h"
 #include "GafferImage/Filter.h"
