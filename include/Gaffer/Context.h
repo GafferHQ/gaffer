@@ -152,13 +152,34 @@ class Context : public IECore::RefCounted
 		bool operator == ( const Context &other ) const;
 		bool operator != ( const Context &other ) const;
 
+		/// Enum to specify what sort of substitutions may
+		/// be performed on a string.
+		enum Substitutions
+		{
+			NoSubstitutions = 0,
+			/// Substituting # with the frame number.
+			FrameSubstitutions = 1,
+			/// Substituting $name or ${name} with the
+			/// value of a variable of that name.
+			VariableSubstitutions = 2,
+			/// Escaping of special characters using a preceding '\'.
+			EscapeSubstitutions = 4,
+			/// Substituting ~ with the path to the user's home directory.
+			TildeSubstitutions = 8,
+			AllSubstitutions = FrameSubstitutions | VariableSubstitutions | EscapeSubstitutions | TildeSubstitutions
+		};
+
 		/// Performs variable substitution of $name, ${name} and ###
 		/// keys in input, using values from the context.
 		/// \todo I'm not entirely sure this belongs here. If we had
 		/// an abstract base class for dictionary-style access to things
 		/// then we could have a separate substitute() function capable
 		/// of accepting Contexts, CompoundData, CompoundObjects etc.
-		std::string substitute( const std::string &input ) const;
+		std::string substitute( const std::string &input, unsigned substitutions = AllSubstitutions ) const;
+		/// Returns a bitmask of Substitutions values containing the
+		/// sorts of substitutions contained in the string. If this returns
+		/// NoSubstitutions, it is guaranteed that substitute( input ) == input.
+		static unsigned substitutions( const std::string &input );
 		/// Returns true if the specified string contains substitutions
 		/// which can be performed by the substitute() method. If it returns
 		/// false, it is guaranteed that substitute( input ) == input.
@@ -183,7 +204,7 @@ class Context : public IECore::RefCounted
 
 	private :
 
-		void substituteInternal( const char *s, std::string &result, const int recursionDepth ) const;
+		void substituteInternal( const char *s, std::string &result, const int recursionDepth, unsigned substitutions ) const;
 
 		// Storage for each entry.
 		struct Storage
