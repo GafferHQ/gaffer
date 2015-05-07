@@ -35,6 +35,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include "Gaffer/StringPlug.h"
+
 #include "GafferArnold/ArnoldAttributes.h"
 
 using namespace Imath;

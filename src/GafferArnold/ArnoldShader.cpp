@@ -43,9 +43,9 @@
 
 #include "IECoreArnold/UniverseBlock.h"
 
-#include "Gaffer/TypedPlug.h"
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/CompoundNumericPlug.h"
+#include "Gaffer/StringPlug.h"
 
 #include "GafferArnold/ArnoldShader.h"
 #include "GafferArnold/ParameterHandler.h"

@@ -39,6 +39,7 @@
 
 #include "Gaffer/CompoundNumericPlug.h"
 #include "Gaffer/TypedPlug.h"
+#include "Gaffer/StringPlug.h"
 
 #include "GafferArnold/ParameterHandler.h"
 
