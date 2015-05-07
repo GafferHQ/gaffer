@@ -49,6 +49,7 @@
 #include "Gaffer/ApplicationRoot.h"
 #include "Gaffer/StandardSet.h"
 #include "Gaffer/CompoundDataPlug.h"
+#include "Gaffer/StringPlug.h"
 
 #include "GafferBindings/ScriptNodeBinding.h"
 #include "GafferBindings/SignalBinding.h"

@@ -44,6 +44,7 @@
 #include "Gaffer/Context.h"
 #include "Gaffer/Dispatcher.h"
 #include "Gaffer/ScriptNode.h"
+#include "Gaffer/StringPlug.h"
 
 using namespace IECore;
 using namespace Gaffer;

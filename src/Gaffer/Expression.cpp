@@ -45,6 +45,7 @@
 #include "Gaffer/CompoundPlug.h"
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/Context.h"
+#include "Gaffer/StringPlug.h"
 
 using namespace Gaffer;
 

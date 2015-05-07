@@ -41,6 +41,8 @@
 #include "IECorePython/ScopedGILLock.h"
 
 #include "Gaffer/Expression.h"
+#include "Gaffer/StringPlug.h"
+
 #include "GafferBindings/DependencyNodeBinding.h"
 #include "GafferBindings/ExpressionBinding.h"
 #include "GafferBindings/ExceptionAlgo.h"

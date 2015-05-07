@@ -44,6 +44,7 @@
 #include "Gaffer/CompoundDataPlug.h"
 #include "Gaffer/SplinePlug.h"
 #include "Gaffer/BoxPlug.h"
+#include "Gaffer/StringPlug.h"
 
 using namespace Imath;
 using namespace IECore;

@@ -37,6 +37,7 @@
 #include "boost/python.hpp" // must be the first include
 
 #include "Gaffer/Reference.h"
+#include "Gaffer/StringPlug.h"
 
 #include "GafferBindings/ReferenceBinding.h"
 #include "GafferBindings/NodeBinding.h"

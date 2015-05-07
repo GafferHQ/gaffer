@@ -44,6 +44,7 @@
 
 #include "Gaffer/BlockedConnection.h"
 #include "Gaffer/Metadata.h"
+#include "Gaffer/StringPlug.h"
 
 #include "GafferUI/BackdropNodeGadget.h"
 #include "GafferUI/GraphGadget.h"

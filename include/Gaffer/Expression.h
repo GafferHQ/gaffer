@@ -39,10 +39,11 @@
 #define GAFFER_EXPRESSION_H
 
 #include "Gaffer/ComputeNode.h"
-#include "Gaffer/TypedPlug.h"
 
 namespace Gaffer
 {
+
+IE_CORE_FORWARDDECLARE( StringPlug )
 
 class Expression : public ComputeNode
 {
