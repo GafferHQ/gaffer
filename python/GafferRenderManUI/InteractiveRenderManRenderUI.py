@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,11 +34,26 @@
 #
 ##########################################################################
 
-import RenderManRenderUI
-import RenderManAttributesUI
-import RenderManOptionsUI
-import InteractiveRenderManRenderUI
-from RenderManShaderUI import RenderManShaderUI
-import ShaderMenu
+import Gaffer
+import GafferRenderMan
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferRenderManUI" )
+Gaffer.Metadata.registerNode(
+
+	GafferRenderMan.InteractiveRenderManRender,
+
+	"description",
+	"""
+	Performs interactive renders using a RenderMan renderer
+	which supports interactive edits. In 3delight the following
+	edits are currently supported :
+
+	- Adding/removing lights
+	- Adjusting light parameters
+	- Moving the camera
+	- Moving coordinate systems
+	- Changing shader assignments
+	- Editing shader networks
+	- Editing shader parameters
+	""",
+
+)
