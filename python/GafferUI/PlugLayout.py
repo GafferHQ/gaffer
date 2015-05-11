@@ -144,11 +144,13 @@ class PlugLayout( GafferUI.Widget ) :
 		else :
 			return w.plugValueWidget()
 
-	## Takes a list of plugs and returns a new list, sorted into
-	# the order in which they'll be laid out, based on "layout:index"
-	# Metadata entries.
+	## Returns the child plugs of the parent in the order in which they
+	# will be laid out, based on "layout:index" Metadata entries.
 	@staticmethod
-	def layoutOrder( plugs ) :
+	def layoutOrder( parent ) :
+
+		plugs = parent.children( Gaffer.Plug )
+		plugs = [ plug for plug in plugs if not plug.getName().startswith( "__" ) ]
 
 		plugsAndIndices = [ list( x ) for x in enumerate( plugs ) ]
 		for plugAndIndex in plugsAndIndices :
@@ -182,12 +184,8 @@ class PlugLayout( GafferUI.Widget ) :
 
 	def __updateLayout( self ) :
 
-		# get the plugs we want to represent
-		plugs = self.__parent.children( Gaffer.Plug )
-		plugs = [ plug for plug in plugs if not plug.getName().startswith( "__" ) ]
-
-		# reorder them based on metadata
-		plugs = self.layoutOrder( plugs )
+		# get the plugs to lay out
+		plugs = self.layoutOrder( self.__parent )
 
 		# ditch widgets we don't need any more
 		plugsSet = set( plugs )

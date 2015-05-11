@@ -418,8 +418,7 @@ class _PlugListing( GafferUI.PathListingWidget ) :
 
 		# build an EntryPath to represent our child plugs.
 
-		plugs = self.__parent.children( Gaffer.Plug )
-		plugs = GafferUI.PlugLayout.layoutOrder( plugs )
+		plugs = GafferUI.PlugLayout.layoutOrder( self.__parent )
 
 		entries = [ self.Entry( plug, index ) for index, plug in enumerate( plugs ) ]
 		self.setPath( self.EntryPath( entries, "/" ) )
