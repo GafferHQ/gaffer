@@ -1061,6 +1061,8 @@ libraries = {
 		"additionalFiles" : glob.glob( "python/GafferRenderManTest/*/*" ),
 	},
 
+	"GafferRenderManUITest" : {},
+
 	"GafferOSL" : {
 		"envAppends" : {
 			"CPPPATH" : [ "$BUILD_DIR/include/OSL" ],
