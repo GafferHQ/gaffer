@@ -37,6 +37,8 @@
 #include "IECore/MeshPrimitive.h"
 #include "IECore/MeshNormalsOp.h"
 
+#include "Gaffer/StringPlug.h"
+
 #include "GafferScene/MeshType.h"
 
 using namespace IECore;

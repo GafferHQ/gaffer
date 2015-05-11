@@ -42,6 +42,7 @@
 
 #include "Gaffer/Random.h"
 #include "Gaffer/Context.h"
+#include "Gaffer/StringPlug.h"
 
 using namespace Gaffer;
 using namespace Imath;

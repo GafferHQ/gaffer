@@ -38,6 +38,8 @@
 #include "IECore/Camera.h"
 #include "IECore/Transform.h"
 
+#include "Gaffer/StringPlug.h"
+
 #include "GafferScene/Camera.h"
 #include "GafferScene/PathMatcherData.h"
 

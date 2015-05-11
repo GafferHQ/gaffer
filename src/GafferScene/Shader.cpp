@@ -42,6 +42,7 @@
 #include "Gaffer/TypedPlug.h"
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/CompoundDataPlug.h"
+#include "Gaffer/StringPlug.h"
 
 #include "GafferScene/Shader.h"
 
@@ -61,7 +62,7 @@ Shader::Shader( const std::string &name )
 	addChild( new StringPlug( "type" ) );
 	addChild( new CompoundPlug( "parameters", Plug::In, Plug::Default & ~Plug::AcceptsInputs ) );
 	addChild( new BoolPlug( "enabled", Gaffer::Plug::In, true ) );
-	addChild( new StringPlug( "__nodeName", Gaffer::Plug::In, name, Plug::Default & ~(Plug::Serialisable | Plug::AcceptsInputs | Plug::PerformsSubstitutions ) ) );
+	addChild( new StringPlug( "__nodeName", Gaffer::Plug::In, name, Plug::Default & ~(Plug::Serialisable | Plug::AcceptsInputs), Context::NoSubstitutions ) );
 
 	nameChangedSignal().connect( boost::bind( &Shader::nameChanged, this ) );
 }

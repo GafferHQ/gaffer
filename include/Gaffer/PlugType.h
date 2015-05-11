@@ -40,6 +40,8 @@
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/CompoundNumericPlug.h"
 #include "Gaffer/TypedPlug.h"
+#include "Gaffer/StringPlug.h"
+#include "Gaffer/BoxPlug.h"
 
 namespace Gaffer
 {
@@ -61,6 +63,7 @@ struct PlugType
 
 GAFFER_PLUGTYPE_SPECIALISE( float, FloatPlug )
 GAFFER_PLUGTYPE_SPECIALISE( int, IntPlug )
+GAFFER_PLUGTYPE_SPECIALISE( bool, BoolPlug )
 
 GAFFER_PLUGTYPE_SPECIALISE( Imath::V2f, V2fPlug )
 GAFFER_PLUGTYPE_SPECIALISE( Imath::V3f, V3fPlug )
@@ -76,6 +79,11 @@ GAFFER_PLUGTYPE_SPECIALISE( std::string, StringPlug )
 GAFFER_PLUGTYPE_SPECIALISE( Imath::M33f, M33fPlug )
 GAFFER_PLUGTYPE_SPECIALISE( Imath::M44f, M44fPlug )
 
+GAFFER_PLUGTYPE_SPECIALISE( Imath::Box2i, Box2iPlug )
+GAFFER_PLUGTYPE_SPECIALISE( Imath::Box3i, Box3iPlug )
+
+GAFFER_PLUGTYPE_SPECIALISE( Imath::Box2f, Box2fPlug )
+GAFFER_PLUGTYPE_SPECIALISE( Imath::Box3f, Box3fPlug )
 
 } // namespace Gaffer
 

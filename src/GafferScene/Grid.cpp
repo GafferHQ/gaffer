@@ -37,6 +37,8 @@
 #include "IECore/CurvesPrimitive.h"
 #include "IECore/Shader.h"
 
+#include "Gaffer/StringPlug.h"
+
 #include "GafferScene/Grid.h"
 
 using namespace std;

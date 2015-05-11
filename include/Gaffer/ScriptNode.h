@@ -41,7 +41,6 @@
 #include <stack>
 
 #include "Gaffer/Node.h"
-#include "Gaffer/TypedPlug.h"
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/Container.h"
 #include "Gaffer/Set.h"
@@ -59,6 +58,7 @@ IE_CORE_FORWARDDECLARE( ApplicationRoot );
 IE_CORE_FORWARDDECLARE( Context );
 IE_CORE_FORWARDDECLARE( StandardSet );
 IE_CORE_FORWARDDECLARE( CompoundDataPlug );
+IE_CORE_FORWARDDECLARE( StringPlug );
 
 typedef Container<GraphComponent, ScriptNode> ScriptContainer;
 IE_CORE_DECLAREPTR( ScriptContainer );

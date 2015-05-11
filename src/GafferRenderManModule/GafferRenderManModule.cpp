@@ -36,6 +36,8 @@
 
 #include "boost/python.hpp"
 
+#include "Gaffer/StringPlug.h"
+
 #include "GafferBindings/DependencyNodeBinding.h"
 #include "GafferBindings/NodeBinding.h"
 

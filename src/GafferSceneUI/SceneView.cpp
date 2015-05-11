@@ -49,6 +49,7 @@
 
 #include "Gaffer/Context.h"
 #include "Gaffer/BlockedConnection.h"
+#include "Gaffer/StringPlug.h"
 
 #include "GafferUI/Style.h"
 #include "GafferUI/Pointer.h"

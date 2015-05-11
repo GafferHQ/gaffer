@@ -43,6 +43,8 @@
 namespace Gaffer
 {
 
+IE_CORE_FORWARDDECLARE( StringPlug )
+
 /// The Backdrop node has no computational purpose - it is merely a placeholder
 /// for an organisation tool in the user interface, implemented in GafferUI::BackdropNodeGadget.
 class Backdrop : public Node

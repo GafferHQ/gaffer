@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2012-2014, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,51 +34,14 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERCORTEX_BOXPARAMETERHANDLER_H
-#define GAFFERCORTEX_BOXPARAMETERHANDLER_H
+#ifndef GAFFERBINDINGS_STRINGPLUGBINDING_H
+#define GAFFERBINDINGS_STRINGPLUGBINDING_H
 
-#include "IECore/TypedParameter.h"
-#include "IECore/BoxTraits.h"
-
-#include "Gaffer/BoxPlug.h"
-
-#include "GafferCortex/ParameterHandler.h"
-
-namespace GafferCortex
+namespace GafferBindings
 {
 
-template<typename T>
-class BoxParameterHandler : public ParameterHandler
-{
+void bindStringPlug();
 
-	public :
+} // namespace GafferBindings
 
-		IE_CORE_DECLAREMEMBERPTR( BoxParameterHandler<T> );
-
-		typedef IECore::TypedParameter<T> ParameterType;
-		typedef Gaffer::BoxPlug<T> PlugType;
-
-		BoxParameterHandler( typename ParameterType::Ptr parameter );
-		virtual ~BoxParameterHandler();
-
-		virtual IECore::Parameter *parameter();
-		virtual const IECore::Parameter *parameter() const;
-		virtual void restore( Gaffer::GraphComponent *plugParent );
-		virtual Gaffer::Plug *setupPlug( Gaffer::GraphComponent *plugParent, Gaffer::Plug::Direction direction=Gaffer::Plug::In, unsigned flags = Gaffer::Plug::Default | Gaffer::Plug::Dynamic );
-		virtual Gaffer::Plug *plug();
-		virtual const Gaffer::Plug *plug() const;
-		virtual void setParameterValue();
-		virtual void setPlugValue();
-
-	private :
-
-		typename ParameterType::Ptr m_parameter;
-		typename PlugType::Ptr m_plug;
-
-		static ParameterHandlerDescription<BoxParameterHandler<T>, ParameterType> g_description;
-
-};
-
-} // namespace GafferCortex
-
-#endif // GAFFERCORTEX_BOXPARAMETERHANDLER_H
+#endif // GAFFERBINDINGS_STRINGPLUGBINDING_H

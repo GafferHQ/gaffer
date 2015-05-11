@@ -42,7 +42,6 @@ using namespace Gaffer;
 void GafferBindings::bindTypedPlug()
 {
 	TypedPlugClass<BoolPlug>();
-	TypedPlugClass<StringPlug>();
 	TypedPlugClass<M33fPlug>();
 	TypedPlugClass<M44fPlug>();
 	TypedPlugClass<AtomicBox3fPlug>();

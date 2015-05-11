@@ -133,6 +133,15 @@ void GafferBindings::bindContext()
 		.value( "Borrowed", Context::Borrowed )
 	;
 
+	enum_<Context::Substitutions>( "Substitutions" )
+		.value( "NoSubstitutions", Context::NoSubstitutions )
+		.value( "FrameSubstitutions", Context::FrameSubstitutions )
+		.value( "VariableSubstitutions", Context::VariableSubstitutions )
+		.value( "EscapeSubstitutions", Context::EscapeSubstitutions )
+		.value( "TildeSubstitutions", Context::TildeSubstitutions )
+		.value( "AllSubstitutions", Context::AllSubstitutions )
+	;
+
 	contextClass
 		.def( init<>() )
 		.def( init<const Context &, Context::Ownership>( ( arg( "other" ), arg( "ownership" ) = Context::Copied ) ) )
@@ -160,7 +169,8 @@ void GafferBindings::bindContext()
 		.def( "hash", &Context::hash )
 		.def( self == self )
 		.def( self != self )
-		.def( "substitute", &Context::substitute )
+		.def( "substitute", &Context::substitute, ( arg( "input" ), arg( "substitutions" ) = Context::AllSubstitutions ) )
+		.def( "substitutions", &Context::substitutions ).staticmethod( "substitutions" )
 		.def( "hasSubstitutions", &Context::hasSubstitutions ).staticmethod( "hasSubstitutions" )
 		.def( "current", &current ).staticmethod( "current" )
 		;

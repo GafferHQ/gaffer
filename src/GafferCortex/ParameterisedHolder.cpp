@@ -41,7 +41,7 @@
 #include "IECore/ParameterisedInterface.h"
 #include "IECore/MessageHandler.h"
 
-#include "Gaffer/TypedPlug.h"
+#include "Gaffer/StringPlug.h"
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/BlockedConnection.h"
 

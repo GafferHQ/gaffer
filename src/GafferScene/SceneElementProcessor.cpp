@@ -37,8 +37,6 @@
 
 #include "IECore/Exception.h"
 
-#include "Gaffer/Context.h"
-
 #include "GafferScene/SceneElementProcessor.h"
 #include "GafferScene/Filter.h"
 

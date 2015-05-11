@@ -39,6 +39,8 @@
 #include "IECore/MeshPrimitive.h"
 #include "IECore/SearchPath.h"
 
+#include "Gaffer/StringPlug.h"
+
 #include "GafferScene/Text.h"
 
 using namespace Gaffer;

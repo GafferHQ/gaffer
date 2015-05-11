@@ -43,6 +43,7 @@
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/CompoundPlug.h"
 #include "Gaffer/Metadata.h"
+#include "Gaffer/StringPlug.h"
 
 using namespace IECore;
 using namespace Gaffer;

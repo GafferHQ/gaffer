@@ -36,7 +36,6 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/bind.hpp"
-#include "boost/tokenizer.hpp"
 
 #include "OpenEXR/half.h"
 
@@ -44,6 +43,7 @@
 OIIO_NAMESPACE_USING
 
 #include "Gaffer/Context.h"
+#include "Gaffer/StringPlug.h"
 
 #include "GafferImage/ImageReader.h"
 

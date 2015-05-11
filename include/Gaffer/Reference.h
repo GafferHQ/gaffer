@@ -42,6 +42,8 @@
 namespace Gaffer
 {
 
+IE_CORE_FORWARDDECLARE( StringPlug )
+
 class Reference : public SubGraph
 {
 

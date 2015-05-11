@@ -263,11 +263,49 @@ bool Context::operator != ( const Context &other ) const
 	return !( *this == other );
 }
 
-std::string Context::substitute( const std::string &s ) const
+std::string Context::substitute( const std::string &s, unsigned substitutions ) const
 {
 	std::string result;
 	result.reserve( s.size() ); // might need more or less, but this is a decent ballpark
-	substituteInternal( s.c_str(), result, 0 );
+	substituteInternal( s.c_str(), result, 0, substitutions );
+	return result;
+}
+
+unsigned Context::substitutions( const std::string &input )
+{
+	unsigned result = NoSubstitutions;
+	for( const char *c = input.c_str(); *c; )
+	{
+		switch( *c )
+		{
+			case '$' :
+				result |= VariableSubstitutions;
+				c++;
+				break;
+			case '#' :
+				result |= FrameSubstitutions;
+				c++;
+				break;
+			case '~' :
+				result |= TildeSubstitutions;
+				c++;
+				break;
+			case '\\' :
+				result |= EscapeSubstitutions;
+				c++;
+				if( *c )
+				{
+					c++;
+				}
+				break;
+			default :
+				c++;
+		}
+		if( result == AllSubstitutions )
+		{
+			return result;
+		}
+	}
 	return result;
 }
 
@@ -289,7 +327,7 @@ bool Context::hasSubstitutions( const std::string &input )
 	return false;
 }
 
-void Context::substituteInternal( const char *s, std::string &result, const int recursionDepth ) const
+void Context::substituteInternal( const char *s, std::string &result, const int recursionDepth, unsigned substitutions ) const
 {
 	if( recursionDepth > 8 )
 	{
@@ -302,90 +340,114 @@ void Context::substituteInternal( const char *s, std::string &result, const int 
 		{
 			case '\\' :
 			{
-				s++;
-				if( *s )
+				if( substitutions & EscapeSubstitutions )
 				{
+					s++;
+					if( *s )
+					{
+						result.push_back( *s++ );
+					}
+				}
+				else
+				{
+					// variable substitutions disabled
 					result.push_back( *s++ );
 				}
 				break;
 			}
 			case '$' :
 			{
-				s++; // skip $
-				bool bracketed = *s =='{';
-				const char *variableNameStart = NULL;
-				const char *variableNameEnd = NULL;
-				if( bracketed )
+				if( substitutions & VariableSubstitutions )
 				{
-					s++; // skip initial bracket
-					variableNameStart = s;
-					while( *s && *s != '}' )
+					s++; // skip $
+					bool bracketed = *s =='{';
+					const char *variableNameStart = NULL;
+					const char *variableNameEnd = NULL;
+					if( bracketed )
 					{
-						s++;
+						s++; // skip initial bracket
+						variableNameStart = s;
+						while( *s && *s != '}' )
+						{
+							s++;
+						}
+						variableNameEnd = s;
+						if( *s )
+						{
+							s++; // skip final bracket
+						}
 					}
-					variableNameEnd = s;
-					if( *s )
+					else
 					{
-						s++; // skip final bracket
+						variableNameStart = s;
+						while( isalnum( *s ) )
+						{
+							s++;
+						}
+						variableNameEnd = s;
+					}
+
+					InternedString variableName( variableNameStart, variableNameEnd - variableNameStart );
+					const IECore::Data *d = get<IECore::Data>( variableName, NULL );
+					if( d )
+					{
+						switch( d->typeId() )
+						{
+							case IECore::StringDataTypeId :
+								substituteInternal( static_cast<const IECore::StringData *>( d )->readable().c_str(), result, recursionDepth + 1, substitutions );
+								break;
+							case IECore::FloatDataTypeId :
+								result += boost::lexical_cast<std::string>(
+									static_cast<const IECore::FloatData *>( d )->readable()
+								);
+								break;
+							case IECore::IntDataTypeId :
+								result += boost::lexical_cast<std::string>(
+									static_cast<const IECore::IntData *>( d )->readable()
+								);
+								break;
+							default :
+								break;
+						}
+					}
+					else if( const char *v = g_environment.get( variableName ) )
+					{
+						// variable not in context - try environment
+						result += v;
 					}
 				}
 				else
 				{
-					variableNameStart = s;
-					while( isalnum( *s ) )
-					{
-						s++;
-					}
-					variableNameEnd = s;
-				}
-
-				InternedString variableName( variableNameStart, variableNameEnd - variableNameStart );
-				const IECore::Data *d = get<IECore::Data>( variableName, NULL );
-				if( d )
-				{
-					switch( d->typeId() )
-					{
-						case IECore::StringDataTypeId :
-							substituteInternal( static_cast<const IECore::StringData *>( d )->readable().c_str(), result, recursionDepth + 1 );
-							break;
-						case IECore::FloatDataTypeId :
-							result += boost::lexical_cast<std::string>(
-								static_cast<const IECore::FloatData *>( d )->readable()
-							);
-							break;
-						case IECore::IntDataTypeId :
-							result += boost::lexical_cast<std::string>(
-								static_cast<const IECore::IntData *>( d )->readable()
-							);
-							break;
-						default :
-							break;
-					}
-				}
-				else if( const char *v = g_environment.get( variableName ) )
-				{
-					// variable not in context - try environment
-					result += v;
+					// variable substitutions disabled
+					result.push_back( *s++ );
 				}
 				break;
 			}
 			case '#' :
 			{
-				int padding = 0;
-				while( *s == '#' )
+				if( substitutions & FrameSubstitutions )
 				{
-					padding++;
-					s++;
+					int padding = 0;
+					while( *s == '#' )
+					{
+						padding++;
+						s++;
+					}
+					int frame = (int)round( getFrame() );
+					std::ostringstream padder;
+					padder << std::setw( padding ) << std::setfill( '0' ) << frame;
+					result += padder.str();
 				}
-				int frame = (int)round( getFrame() );
-				std::ostringstream padder;
-				padder << std::setw( padding ) << std::setfill( '0' ) << frame;
-				result += padder.str();
+				else
+				{
+					// frame substitutions disabled
+					result.push_back( *s++ );
+				}
 				break;
 			}
 			case '~' :
 			{
-				if( result.size() == 0 )
+				if( substitutions & TildeSubstitutions && result.size() == 0 )
 				{
 					if( const char *v = getenv( "HOME" ) )
 					{
@@ -394,7 +456,12 @@ void Context::substituteInternal( const char *s, std::string &result, const int 
 					++s;
 					break;
 				}
-				// fall through
+				else
+				{
+					// tilde substitutions disabled
+					result.push_back( *s++ );
+				}
+				break;
 			}
 			default :
 				result.push_back( *s++ );

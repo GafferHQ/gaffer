@@ -40,8 +40,8 @@
 
 #include "IECoreArnold/UniverseBlock.h"
 
-#include "Gaffer/Context.h"
 #include "Gaffer/CompoundDataPlug.h"
+#include "Gaffer/StringPlug.h"
 
 #include "GafferArnold/ArnoldLight.h"
 #include "GafferArnold/ArnoldShader.h"

@@ -36,6 +36,8 @@
 
 #include "IECore/ClippingPlane.h"
 
+#include "Gaffer/StringPlug.h"
+
 #include "GafferScene/ClippingPlane.h"
 #include "GafferScene/PathMatcherData.h"
 

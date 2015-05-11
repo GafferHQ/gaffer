@@ -35,6 +35,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "Gaffer/Backdrop.h"
+#include "Gaffer/StringPlug.h"
 
 using namespace Gaffer;
 

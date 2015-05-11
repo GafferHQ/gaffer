@@ -39,7 +39,6 @@
 
 #include "IECore/SceneInterface.h"
 
-#include "Gaffer/Context.h"
 #include "Gaffer/ExecutableNode.h"
 #include "Gaffer/TypedPlug.h"
 

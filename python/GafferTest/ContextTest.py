@@ -245,6 +245,50 @@ class ContextTest( GafferTest.TestCase ) :
 		self.assertEqual( c.substitute( "$a/$dontExist/something.###.tif" ), "apple//something.020.tif" )
 		self.assertEqual( c.substitute( "${badlyFormed" ), "" )
 
+	def testSubstituteTildeInMiddle( self ) :
+
+		c = Gaffer.Context()
+		self.assertEqual( c.substitute( "a~b" ), "a~b" )
+
+	def testSubstituteWithMask( self ) :
+
+		c = Gaffer.Context()
+		c.setFrame( 20 )
+		c["a"] = "apple"
+		c["b"] = "bear"
+
+		self.assertEqual( c.substitute( "~", c.Substitutions.AllSubstitutions & ~c.Substitutions.TildeSubstitutions ), "~" )
+		self.assertEqual( c.substitute( "#", c.Substitutions.AllSubstitutions & ~c.Substitutions.FrameSubstitutions ), "#" )
+		self.assertEqual( c.substitute( "$a/${b}", c.Substitutions.AllSubstitutions & ~c.Substitutions.VariableSubstitutions ), "$a/${b}" )
+		self.assertEqual( c.substitute( "\\", c.Substitutions.AllSubstitutions & ~c.Substitutions.EscapeSubstitutions ), "\\" )
+		self.assertEqual( c.substitute( "\\$a", c.Substitutions.AllSubstitutions & ~c.Substitutions.EscapeSubstitutions ), "\\apple" )
+		self.assertEqual( c.substitute( "#${a}", c.Substitutions.AllSubstitutions & ~c.Substitutions.FrameSubstitutions ), "#apple" )
+		self.assertEqual( c.substitute( "#${a}", c.Substitutions.NoSubstitutions ), "#${a}" )
+
+	def testFrameAndVariableSubstitutionsAreDifferent( self ) :
+
+		c = Gaffer.Context()
+		c.setFrame( 3 )
+
+		# Turning off variable substitutions should have no effect on '#' substitutions.
+		self.assertEqual( c.substitute( "###.$frame" ), "003.3" )
+		self.assertEqual( c.substitute( "###.$frame", c.Substitutions.AllSubstitutions & ~c.Substitutions.VariableSubstitutions ), "003.$frame" )
+
+		# Turning off '#' substitutions should have no effect on variable substitutions.
+		self.assertEqual( c.substitute( "###.$frame" ), "003.3" )
+		self.assertEqual( c.substitute( "###.$frame", c.Substitutions.AllSubstitutions & ~c.Substitutions.FrameSubstitutions ), "###.3" )
+
+	def testSubstitutions( self ) :
+
+		c = Gaffer.Context
+		self.assertEqual( c.substitutions( "a"), c.Substitutions.NoSubstitutions )
+		self.assertEqual( c.substitutions( "~/something"), c.Substitutions.TildeSubstitutions )
+		self.assertEqual( c.substitutions( "$a"), c.Substitutions.VariableSubstitutions )
+		self.assertEqual( c.substitutions( "${a}"), c.Substitutions.VariableSubstitutions )
+		self.assertEqual( c.substitutions( "###"), c.Substitutions.FrameSubstitutions )
+		self.assertEqual( c.substitutions( "\#"), c.Substitutions.EscapeSubstitutions )
+		self.assertEqual( c.substitutions( "${a}.###"), c.Substitutions.VariableSubstitutions | c.Substitutions.FrameSubstitutions )
+
 	def testHasSubstitutions( self ) :
 
 		c = Gaffer.Context()

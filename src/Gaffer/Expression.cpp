@@ -45,6 +45,7 @@
 #include "Gaffer/CompoundPlug.h"
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/Context.h"
+#include "Gaffer/StringPlug.h"
 
 using namespace Gaffer;
 
@@ -65,7 +66,8 @@ Expression::Expression( const std::string &name )
 			"engine",
 			Plug::In,
 			"python",
-			Plug::Default & ~( Plug::AcceptsInputs | Plug::PerformsSubstitutions )
+			Plug::Default & ~( Plug::AcceptsInputs ),
+			Context::NoSubstitutions
 		)
 	);
 	addChild(
@@ -73,7 +75,8 @@ Expression::Expression( const std::string &name )
 			"expression",
 			Plug::In,
 			"",
-			Plug::Default & ~( Plug::AcceptsInputs | Plug::PerformsSubstitutions )
+			Plug::Default & ~( Plug::AcceptsInputs ),
+			Context::NoSubstitutions
 		)
 	);
 

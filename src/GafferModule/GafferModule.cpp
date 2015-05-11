@@ -50,6 +50,7 @@
 #include "GafferBindings/ValuePlugBinding.h"
 #include "GafferBindings/NumericPlugBinding.h"
 #include "GafferBindings/TypedPlugBinding.h"
+#include "GafferBindings/StringPlugBinding.h"
 #include "GafferBindings/TypedObjectPlugBinding.h"
 #include "GafferBindings/ScriptNodeBinding.h"
 #include "GafferBindings/ApplicationRootBinding.h"
@@ -138,6 +139,7 @@ BOOST_PYTHON_MODULE( _Gaffer )
 	bindConnection();
 	bindSignal();
 	bindGraphComponent();
+	bindContext();
 	bindNode();
 	bindDependencyNode();
 	bindComputeNode();
@@ -146,6 +148,7 @@ BOOST_PYTHON_MODULE( _Gaffer )
 	bindValuePlug();
 	bindNumericPlug();
 	bindTypedPlug();
+	bindStringPlug();
 	bindTypedObjectPlug();
 	bindScriptNode();
 	bindApplicationRoot();
@@ -157,7 +160,6 @@ BOOST_PYTHON_MODULE( _Gaffer )
 	bindStandardSet();
 	bindChildSet();
 	bindPreferences();
-	bindContext();
 	bindBoxPlug();
 	bindExpression();
 	bindTransformPlug();

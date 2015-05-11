@@ -49,7 +49,6 @@
 #include "IECore/RunTimeTyped.h"
 
 #include "Gaffer/NumericPlug.h"
-#include "Gaffer/TypedPlug.h"
 #include "Gaffer/ExecutableNode.h"
 
 #include "GafferBindings/DispatcherBinding.h" // to enable friend declaration for TaskBatch.
@@ -59,6 +58,7 @@ namespace Gaffer
 
 IE_CORE_FORWARDDECLARE( Dispatcher )
 IE_CORE_FORWARDDECLARE( CompoundPlug )
+IE_CORE_FORWARDDECLARE( StringPlug )
 
 namespace Detail
 {

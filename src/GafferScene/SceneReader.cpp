@@ -42,6 +42,7 @@
 
 #include "Gaffer/Context.h"
 #include "Gaffer/StringAlgo.h"
+#include "Gaffer/StringPlug.h"
 
 #include "GafferScene/SceneReader.h"
 #include "GafferScene/PathMatcherData.h"

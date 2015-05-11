@@ -42,8 +42,8 @@
 
 #include "IECore/Exception.h"
 
-#include "Gaffer/Context.h"
 #include "Gaffer/CompoundDataPlug.h"
+#include "Gaffer/StringPlug.h"
 
 #include "GafferAppleseed/AppleseedLight.h"
 

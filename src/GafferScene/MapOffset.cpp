@@ -36,6 +36,8 @@
 
 #include "IECore/Primitive.h"
 
+#include "Gaffer/StringPlug.h"
+
 #include "GafferScene/MapOffset.h"
 
 using namespace std;

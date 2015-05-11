@@ -47,6 +47,8 @@
 namespace Gaffer
 {
 
+IE_CORE_FORWARDDECLARE( StringPlug )
+
 /// This plug provides an easy means of building CompoundData containing
 /// arbitrary keys and values, where each key and value is represented
 /// by an individual child plug.

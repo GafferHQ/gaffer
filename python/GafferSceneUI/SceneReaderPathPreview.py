@@ -274,8 +274,7 @@ class _ObjectPreview( Gaffer.Node ) :
 
 		Gaffer.Node.__init__( self, name )
 
-		self["fileName"] = Gaffer.StringPlug( defaultValue = "" )
-		self["fileName"].setFlags( Gaffer.Plug.Flags.PerformsSubstitutions, False )
+		self["fileName"] = Gaffer.StringPlug( defaultValue = "", substitutions = Gaffer.Context.Substitutions.NoSubstitutions )
 		self["frameRate"] = Gaffer.FloatPlug( defaultValue = 24.0 )
 		self["samplesPerFrame"] = Gaffer.IntPlug( defaultValue = 1, minValue = 1 )
 

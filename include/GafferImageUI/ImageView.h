@@ -45,6 +45,13 @@
 #include "GafferImageUI/TypeIds.h"
 #include "GafferImageUIBindings/ImageViewBinding.h" // to enable friend declaration for bindImageView().
 
+namespace Gaffer
+{
+
+IE_CORE_FORWARDDECLARE( StringPlug )
+
+} // namespace Gaffer
+
 namespace GafferImage
 {
 
