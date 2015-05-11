@@ -157,7 +157,11 @@ class Context : public IECore::RefCounted
 		enum Substitutions
 		{
 			NoSubstitutions = 0,
-			/// Substituting # with the frame number.
+			/// Substituting one or more '#' characters with the frame
+			/// number, with the number of '#' characters determining
+			/// the padding. Note that this substitution is entirely
+			/// separate from ${frame} and $frame substitutions, which
+			/// are covered by the VariableSubstitutions flag.
 			FrameSubstitutions = 1,
 			/// Substituting $name or ${name} with the
 			/// value of a variable of that name.

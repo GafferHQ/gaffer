@@ -265,6 +265,19 @@ class ContextTest( GafferTest.TestCase ) :
 		self.assertEqual( c.substitute( "#${a}", c.Substitutions.AllSubstitutions & ~c.Substitutions.FrameSubstitutions ), "#apple" )
 		self.assertEqual( c.substitute( "#${a}", c.Substitutions.NoSubstitutions ), "#${a}" )
 
+	def testFrameAndVariableSubstitutionsAreDifferent( self ) :
+
+		c = Gaffer.Context()
+		c.setFrame( 3 )
+
+		# Turning off variable substitutions should have no effect on '#' substitutions.
+		self.assertEqual( c.substitute( "###.$frame" ), "003.3" )
+		self.assertEqual( c.substitute( "###.$frame", c.Substitutions.AllSubstitutions & ~c.Substitutions.VariableSubstitutions ), "003.$frame" )
+
+		# Turning off '#' substitutions should have no effect on variable substitutions.
+		self.assertEqual( c.substitute( "###.$frame" ), "003.3" )
+		self.assertEqual( c.substitute( "###.$frame", c.Substitutions.AllSubstitutions & ~c.Substitutions.FrameSubstitutions ), "###.3" )
+
 	def testSubstitutions( self ) :
 
 		c = Gaffer.Context
