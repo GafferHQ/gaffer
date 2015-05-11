@@ -48,7 +48,7 @@ using namespace GafferBindings;
 namespace
 {
 
-void setValue( StringPlug *plug, const char *value )
+void setValue( StringPlug *plug, const std::string& value )
 {
 	// we use a GIL release here to prevent a lock in the case where this triggers a graph
 	// evaluation which decides to go back into python on another thread:
