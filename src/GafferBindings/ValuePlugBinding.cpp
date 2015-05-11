@@ -67,7 +67,12 @@ static bool shouldResetPlugDefault( const Gaffer::Plug *plug, const Serialisatio
 	return Context::current()->get<bool>( "valuePlugSerialiser:resetParentPlugDefaults", false );
 }
 
-static std::string maskedRepr( const Plug *plug, unsigned flagsMask, const Serialisation *serialisation = NULL )
+static std::string repr( const ValuePlug *plug )
+{
+	return ValuePlugSerialiser::repr( plug );
+}
+
+std::string ValuePlugSerialiser::repr( const Gaffer::ValuePlug *plug, unsigned flagsMask, const std::string &extraArguments, const Serialisation *serialisation )
 {
 	std::string result = Serialisation::classPath( plug ) + "( \"" + plug->getName().string() + "\", ";
 
@@ -76,7 +81,7 @@ static std::string maskedRepr( const Plug *plug, unsigned flagsMask, const Seria
 		result += "direction = " + PlugSerialiser::directionRepr( plug->direction() ) + ", ";
 	}
 
-	object pythonPlug( PlugPtr( const_cast<Plug *>( plug ) ) );
+	object pythonPlug( PlugPtr( const_cast<ValuePlug *>( plug ) ) );
 	if( PyObject_HasAttrString( pythonPlug.ptr(), "defaultValue" ) )
 	{
 		object pythonDefaultValue;
@@ -134,15 +139,15 @@ static std::string maskedRepr( const Plug *plug, unsigned flagsMask, const Seria
 		result += "flags = " + PlugSerialiser::flagsRepr( flags ) + ", ";
 	}
 
+	if( extraArguments.size() )
+	{
+		result += extraArguments + " ";
+	}
+
 	result += ")";
 
 	return result;
 
-}
-
-static std::string repr( const Plug *plug )
-{
-	return maskedRepr( plug, Plug::All );
 }
 
 void ValuePlugSerialiser::moduleDependencies( const Gaffer::GraphComponent *graphComponent, std::set<std::string> &modules ) const
@@ -164,7 +169,7 @@ void ValuePlugSerialiser::moduleDependencies( const Gaffer::GraphComponent *grap
 
 std::string ValuePlugSerialiser::constructor( const Gaffer::GraphComponent *graphComponent, const Serialisation &serialisation ) const
 {
-	return maskedRepr( static_cast<const Plug *>( graphComponent ), Plug::All & ~Plug::ReadOnly, &serialisation );
+	return repr( static_cast<const ValuePlug *>( graphComponent ), Plug::All & ~Plug::ReadOnly, "", &serialisation );
 }
 
 std::string ValuePlugSerialiser::postConstructor( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const
