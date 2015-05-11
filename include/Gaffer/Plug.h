@@ -93,6 +93,8 @@ class Plug : public GraphComponent
 			/// If the PerformsSubstitutions flag is set then tokens from the plug value
 			/// will automatically be substituted with values from the context during
 			/// computation. Note that currently this only applies to the StringPlug.
+			/// \deprecated. Use the substitutions argument to the StringPlug constructor
+			/// instead - this provides finer grained control.
 			PerformsSubstitutions = 0x00000008,
 			/// If the Cacheable flag is set then values computed during getValue()
 			/// calls will be stored in a cache and reused if equivalent computations
