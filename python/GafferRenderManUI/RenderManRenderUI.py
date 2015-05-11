@@ -38,14 +38,72 @@ import Gaffer
 import GafferUI
 import GafferRenderMan
 
+Gaffer.Metadata.registerNode(
+
+	GafferRenderMan.RenderManRender,
+
+	"description",
+	"""
+	Performs offline batch rendering using a
+	RenderMan renderer. This is done in two
+	phases - first a RIB file is generated and
+	then the renderer is invoked to render it in
+	a separate process. Note though that the RIB
+	file is lightweight, and contains a single
+	procedural which will invoke Gaffer to generate
+	the scene on demand at runtime. The RIB therefore
+	requires very little disk space.
+	""",
+
+	plugs = {
+
+		"mode" : [
+
+
+			"description",
+			"""
+			When in "Render" mode, a RIB file is generated
+			and then renderered by running the renderer on
+			it. In "Generate RIB only" mode, only the RIB
+			is generated, and a subsequent node could be used
+			to post-process or launch the render in another
+			way - a SystemCommand node may be useful for this.
+			""",
+
+			"preset:Render", "render",
+			"preset:Generate RIB only", "generate",
+
+		],
+
+		"ribFileName" : [
+
+			"description",
+			"""
+			The name of the RIB file to be generated.
+			""",
+
+		],
+
+		"command" : [
+
+			"description",
+			"""
+			The system command used to invoke the renderer - this
+			can be edited to add any custom flags that are necessary,
+			or to use a different renderer. The rib filename is
+			automatically appended to the command before it is invoked.
+			""",
+
+		],
+
+	},
+
+)
+
 GafferUI.PlugValueWidget.registerCreator(
 	GafferRenderMan.RenderManRender,
 	"mode",
-	GafferUI.EnumPlugValueWidget,
-	labelsAndValues = (
-		( "Render", "render" ),
-		( "Generate RIB only", "generate" ),
-	),
+	GafferUI.PresetsPlugValueWidget,
 )
 
 GafferUI.PlugValueWidget.registerCreator(
