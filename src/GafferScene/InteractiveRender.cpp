@@ -362,6 +362,7 @@ void InteractiveRender::plugDirtied( const Gaffer::Plug *plug )
 		// as above.
 		m_lightsDirty = true;
 		m_camerasDirty = true;
+		m_coordinateSystemsDirty = true;
 	}
 	else if( plug == inPlug()->attributesPlug() )
 	{
