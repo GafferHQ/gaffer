@@ -35,6 +35,7 @@
 #
 ##########################################################################
 
+import re
 import sys
 import functools
 import collections
@@ -67,6 +68,22 @@ QtGui = GafferUI._qtImport( "QtGui" )
 #     the activation of plugs within the layout
 #	- "layout:activators" a dynamic metadata entry returning a CompoundData of booleans
 #     for several named activators.
+#
+# ## Custom widgets
+#
+# Custom widgets unassociated with any specific plugs may also be added to plug layouts.
+# This can be useful when customising user interfaces for a particular facility - for instance
+# to display asset management information for each node.
+#
+# A custom widget is specified using parent metadata entries starting with 
+# "layout:customWidget:Name:" prefixes, where "Name" is a unique identifier for the
+# custom widget :
+#
+#   - "layout:customWidget:Name:widgetType" specifies a string containing the fully qualified
+#     name of a python callable which will be used to create the widget. This callable will be passed
+#     the same parent GraphComponent (node or plug) that the PlugLayout is being created for.
+#   - "layout:customWidget:Name:*" as for the standard per-plug "layout:*" metadata, so custom
+#     widgets may be assigned to a section, reordered, given activators etc.
 #
 class PlugLayout( GafferUI.Widget ) :
 
@@ -108,7 +125,9 @@ class PlugLayout( GafferUI.Widget ) :
 		self.__activationsDirty = True
 		self.__summariesDirty = True
 
-		self.__plugsToWidgets = {} # mapping from child plug to widget
+		# mapping from layout item to widget, where the key is either a plug or
+		# the name of a custom widget (as returned by layoutOrder()).
+		self.__widgets = {}
 		self.__rootSection = _Section( self.__parent )
 
 	def getReadOnly( self ) :
@@ -122,7 +141,7 @@ class PlugLayout( GafferUI.Widget ) :
 
  		self.__readOnly = readOnly
 		if self.__readOnly :
-			for widget in self.__plugsToWidgets.values() :
+			for widget in self.__widgets.values() :
 				self.__applyReadOnly( widget, self.__readOnly )
 		else :
 			self.__updateActivations()
@@ -133,10 +152,10 @@ class PlugLayout( GafferUI.Widget ) :
 	# be passed to force the creation of the ui.
 	def plugValueWidget( self, childPlug, lazy=True ) :
 
-		if not lazy and len( self.__plugsToWidgets ) == 0 :
+		if not lazy and len( self.__widgets ) == 0 :
 			self.__update()
 
-		w = self.__plugsToWidgets.get( childPlug, None )
+		w = self.__widgets.get( childPlug, None )
 		if w is None :
 			return w
 		elif isinstance( w, GafferUI.PlugValueWidget ) :
@@ -144,24 +163,48 @@ class PlugLayout( GafferUI.Widget ) :
 		else :
 			return w.plugValueWidget()
 
+	## Returns the custom widget registered with the specified name.
+	# Because the layout is built lazily on demand, this might return None due
+	# to the user not having opened up the ui - in this case lazy=False may
+	# be passed to force the creation of the ui.
+	def customWidget( self, name, lazy=True ) :
+
+		if not lazy and len( self.__widgets ) == 0 :
+			self.__update()
+
+		return self.__widgets.get( name )
+
 	## Returns the child plugs of the parent in the order in which they
-	# will be laid out, based on "layout:index" Metadata entries.
-	@staticmethod
-	def layoutOrder( parent ) :
+	# will be laid out, based on "layout:index" Metadata entries. If
+	# includeCustomWidgets is True, then the positions of custom widgets
+	# are represented by the appearance of the names of the widgets as
+	# strings within the list.
+	@classmethod
+	def layoutOrder( cls, parent, includeCustomWidgets = False ) :
 
-		plugs = parent.children( Gaffer.Plug )
-		plugs = [ plug for plug in plugs if not plug.getName().startswith( "__" ) ]
+		items = parent.children( Gaffer.Plug )
+		items = [ plug for plug in items if not plug.getName().startswith( "__" ) ]
 
-		plugsAndIndices = [ list( x ) for x in enumerate( plugs ) ]
-		for plugAndIndex in plugsAndIndices :
-			index = Gaffer.Metadata.plugValue( plugAndIndex[1], "layout:index" )
+		if includeCustomWidgets :
+			if isinstance( parent, Gaffer.Node ) :
+				metadataNames = Gaffer.Metadata.registeredNodeValues( parent )
+			else :
+				metadataNames = Gaffer.Metadata.registeredPlugValues( parent )
+			for name in metadataNames :
+				m = re.match( "layout:customWidget:(.+):widgetType", name )
+				if m :
+					items.append( m.group( 1 ) )
+
+		itemsAndIndices = [ list( x ) for x in enumerate( items ) ]
+		for itemAndIndex in itemsAndIndices :
+			index = cls.__staticItemMetadataValue( itemAndIndex[1], "index", parent )
 			if index is not None :
 				index = index if index >= 0 else sys.maxint + index
-				plugAndIndex[0] = index
+				itemAndIndex[0] = index
 
-		plugsAndIndices.sort( key = lambda x : x[0] )
+		itemsAndIndices.sort( key = lambda x : x[0] )
 
-		return [ x[1] for x in plugsAndIndices ]
+		return [ x[1] for x in itemsAndIndices ]
 
 	def __update( self ) :
 
@@ -184,36 +227,38 @@ class PlugLayout( GafferUI.Widget ) :
 
 	def __updateLayout( self ) :
 
-		# get the plugs to lay out
-		plugs = self.layoutOrder( self.__parent )
+		# get the items to lay out - these are a combination
+		# of plugs and strings representing custom widgets.
+		items = self.layoutOrder( self.__parent, includeCustomWidgets = True )
 
 		# ditch widgets we don't need any more
-		plugsSet = set( plugs )
-		self.__plugsToWidgets = dict(
-			( plug, widget ) for plug, widget in self.__plugsToWidgets.items() if plug in plugsSet
-		)
 
-		# make (or reuse existing) widgets for each plug, and sort them into
+		itemsSet = set( items )
+		self.__widgets = { k : v for k, v in self.__widgets.items() if k in itemsSet }
+
+		# make (or reuse existing) widgets for each item, and sort them into
 		# sections.
 		self.__rootSection.clear()
-		for plug in plugs :
+		for item in items :
 
-			if plug not in self.__plugsToWidgets :
-				widget = self.__createPlugWidget( plug )
-				self.__plugsToWidgets[plug] = widget
+			if item not in self.__widgets :
+				if isinstance( item, Gaffer.Plug ) :
+					widget = self.__createPlugWidget( item )
+				else :
+					widget = self.__createCustomWidget( item )
+				self.__widgets[item] = widget
 			else :
-				widget = self.__plugsToWidgets[plug]
+				widget = self.__widgets[item]
 
 			if widget is None :
 				continue
 
 			section = self.__rootSection
-			for sectionName in self.__sectionPath( plug ) :
+			for sectionName in self.__sectionPath( item ) :
 				section = section.subsection( sectionName )
 
 			section.widgets.append( widget )
-
-			if Gaffer.Metadata.plugValue( plug, "divider" ) :
+			if self.__itemMetadataValue( item, "divider" ) :
 				section.widgets.append( GafferUI.Divider(
 					GafferUI.Divider.Orientation.Horizontal if self.__layout.orientation() == GafferUI.ListContainer.Orientation.Vertical else GafferUI.Divider.Orientation.Vertical
 				) )
@@ -226,9 +271,9 @@ class PlugLayout( GafferUI.Widget ) :
 		activators = Gaffer.Metadata.nodeValue( self.__node(), "layout:activators" ) or {}
 		activators = { k : v.value for k, v in activators.items() } # convert CompoundData of BoolData to dict of booleans
 
-		for plug, widget in self.__plugsToWidgets.items() :
+		for item, widget in self.__widgets.items() :
 			active = True
-			activatorName = Gaffer.Metadata.plugValue( plug, "layout:activator" )
+			activatorName = self.__itemMetadataValue( item, "activator" )
 			if activatorName :
 				active = activators.get( activatorName )
 				if active is None :
@@ -240,9 +285,18 @@ class PlugLayout( GafferUI.Widget ) :
 
 	def __updateSummariesWalk( self, section ) :
 
-		section.summary = self.__parentMetadataValue( "layout:section:" + section.fullName + ":summary" ) or ""
+		section.summary = self.__metadataValue( self.__parent, "layout:section:" + section.fullName + ":summary" ) or ""
 		for subsection in section.subsections.values() :
 			self.__updateSummariesWalk( subsection )
+
+	def __import( self, path ) :
+
+		path = path.split( "." )
+		result = __import__( path[0] )
+		for n in path[1:] :
+			result = getattr( result, n )
+
+		return result
 
  	def __createPlugWidget( self, plug ) :
 
@@ -252,10 +306,7 @@ class PlugLayout( GafferUI.Widget ) :
 			if widgetType == "None" :
 				return None
 			else :
-				widgetType = widgetType.split( "." )
-				widgetClass = __import__( widgetType[0] )
-				for n in widgetType[1:] :
-					widgetClass = getattr( widgetClass, n )
+				widgetClass = self.__import( widgetType )
 				result = widgetClass( plug )
 
 		else :
@@ -278,29 +329,52 @@ class PlugLayout( GafferUI.Widget ) :
 
  		return result
 
+	def __createCustomWidget( self, name ) :
+
+		widgetType = self.__itemMetadataValue( name, "widgetType" )
+		widgetClass = self.__import( widgetType )
+
+		return widgetClass( self.__parent )
+
 	def __node( self ) :
 
 		return self.__parent if isinstance( self.__parent, Gaffer.Node ) else self.__parent.node()
 
-	def __parentMetadataValue( self, name ) :
+	@classmethod
+	def __metadataValue( cls, plugOrNode, name ) :
 
-		if isinstance( self.__parent, Gaffer.Node ) :
-			return Gaffer.Metadata.nodeValue( self.__parent, name )
+		if isinstance( plugOrNode, Gaffer.Node ) :
+			return Gaffer.Metadata.nodeValue( plugOrNode, name )
 		else :
-			return Gaffer.Metadata.plugValue( self.__parent, name )
+			return Gaffer.Metadata.plugValue( plugOrNode, name )
 
-	def __sectionPath( self, plug ) :
+	@classmethod
+	def __staticItemMetadataValue( cls, item, name, parent ) :
+
+		if isinstance( item, Gaffer.Plug ) :
+			##\todo Update "divider" and "label" items to use prefix too
+			if name not in ( "divider", "label" ) :
+				name = "layout:" + name
+			return Gaffer.Metadata.plugValue( item, name )
+		else :
+			return cls.__metadataValue( parent, "layout:customWidget:" + item + ":" + name )
+
+	def __itemMetadataValue( self, item, name ) :
+
+		return self.__staticItemMetadataValue( item, name, parent = self.__parent )
+
+	def __sectionPath( self, item ) :
 
 		m = None
 		if isinstance( self.__parent, Gaffer.Node ) :
 			# Backwards compatibility with old metadata entry
 			## \todo Remove
-			m = Gaffer.Metadata.plugValue( plug, "nodeUI:section" )
+			m = self.__itemMetadataValue( item, "nodeUI:section" )
 			if m == "header" :
 				m = ""
 
 		if m is None :
-			m = Gaffer.Metadata.plugValue( plug, "layout:section" )
+			m = self.__itemMetadataValue( item, "section" )
 
 		return m.split( "." ) if m else []
 
@@ -343,12 +417,12 @@ class PlugLayout( GafferUI.Widget ) :
 		if widget is None :
 			return
 
-		if isinstance( widget, GafferUI.PlugValueWidget ) :
+		if hasattr( widget, "setReadOnly" ) :
 			widget.setReadOnly( readOnly )
 		elif isinstance(  widget, GafferUI.PlugWidget ) :
 			widget.labelPlugValueWidget().setReadOnly( readOnly )
 			widget.plugValueWidget().setReadOnly( readOnly )
-		else :
+		elif hasattr( widget, "plugValueWidget" ) :
 			widget.plugValueWidget().setReadOnly( readOnly )
 
 	def __plugMetadataChanged( self, nodeTypeId, plugPath, key ) :
