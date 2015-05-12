@@ -153,6 +153,7 @@ class TestCase( unittest.TestCase ) :
 			Gaffer.Box2iPlug, Gaffer.Box3iPlug,
 			Gaffer.Box2fPlug, Gaffer.Box3fPlug,
 			Gaffer.TransformPlug, Gaffer.Transform2DPlug,
+			Gaffer.CompoundDataPlug.MemberPlug,
 			additionalTerminalPlugTypes
 		)
 
