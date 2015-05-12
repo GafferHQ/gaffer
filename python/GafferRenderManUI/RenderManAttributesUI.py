@@ -119,12 +119,28 @@ Gaffer.Metadata.registerNode(
 
 		"attributes.cameraVisibility" : [
 
+			"description",
+			"""
+			Whether or not objects are visible to the camera.
+			An object can be invisible to the camera but still
+			appear in reflections and shadows etc. To make an
+			object totally invisible, prefer the visibility
+			setting provided by the StandardAttributes node.
+			""",
+
 			"layout:section", "Visibility",
 			"label", "Camera",
 
 		],
 
 		"attributes.cameraHitMode" : [
+
+			"description",
+			"""
+			Specifies if shading is performed when the object
+			is hit by a camera ray, or if the primitive colour
+			is used as an approximation instead.
+			""",
 
 			"layout:section", "Visibility",
 			"label", "Camera Mode",
@@ -140,12 +156,27 @@ Gaffer.Metadata.registerNode(
 
 		"attributes.transmissionVisibility" : [
 
+			"description",
+			"""
+			Whether or not objects are visible to
+			transmission rays. Objects that are
+			visible to transmission rays will cast
+			shadows, and those that aren't won't.
+			""",
+
 			"layout:section", "Visibility",
 			"label", "Transmission",
 
 		],
 
 		"attributes.transmissionHitMode" : [
+
+			"description",
+			"""
+			Specifies if shading is performed when the object
+			is hit by a tranmission ray, or if the primitive opacity
+			is used as an approximation instead.
+			""",
 
 			"layout:section", "Visibility",
 			"label", "Transmission Mode",
@@ -161,12 +192,26 @@ Gaffer.Metadata.registerNode(
 
 		"attributes.diffuseVisibility" : [
 
+			"description",
+			"""
+			Whether or not objects are visible to
+			diffuse rays - typically this means whether
+			or not they cast occlusion and bounce light.
+			""",
+
 			"layout:section", "Visibility",
 			"label", "Diffuse",
 
 		],
 
 		"attributes.diffuseHitMode" : [
+
+			"description",
+			"""
+			Specifies if shading is performed when the object
+			is hit by a diffuse ray, or if the primitive colour
+			is used as an approximation instead.
+			""",
 
 			"layout:section", "Visibility",
 			"label", "Diffuse Mode",
@@ -182,12 +227,27 @@ Gaffer.Metadata.registerNode(
 
 		"attributes.specularVisibility" : [
 
+			"description",
+			"""
+			Whether or not objects are visible to
+			specular rays - typically this means whether
+			or not they are visible in reflections and
+			refractions.
+			""",
+
 			"layout:section", "Visibility",
 			"label", "Specular",
 
 		],
 
 		"attributes.specularHitMode" : [
+
+			"description",
+			"""
+			Specifies if shading is performed when the object
+			is hit by a specular ray, or if the primitive colour
+			is used as an approximation instead.
+			""",
 
 			"layout:section", "Visibility",
 			"label", "Specular Mode",
@@ -203,12 +263,25 @@ Gaffer.Metadata.registerNode(
 
 		"attributes.photonVisibility" : [
 
+			"description",
+			"""
+			Whether or not objects are visible to
+			photons.
+			""",
+
 			"layout:section", "Visibility",
 			"label", "Photon",
 
 		],
 
 		"attributes.photonHitMode" : [
+
+			"description",
+			"""
+			Specifies if shading is performed when the object
+			is hit by a photon, or if the primitive colour
+			is used as an approximation instead.
+			""",
 
 			"layout:section", "Visibility",
 			"label", "Photon Mode",
@@ -226,11 +299,26 @@ Gaffer.Metadata.registerNode(
 
 		"attributes.shadingRate" : [
 
+			"description",
+			"""
+			Specifies how finely objects are diced before they
+			are shaded. Smaller values give higher quality but
+			slower rendering.
+			""",
+
 			"layout:section", "Shading",
 
 		],
 
 		"attributes.relativeShadingRate" : [
+
+			"description",
+			"""
+			Specifies a multiplier on the shading rate. Note that
+			if shading rate is specified at multiple locations above
+			an object in the hierarchy, they are multiplied together
+			to arrive at the final shading rate.
+			""",
 
 			"layout:section", "Shading",
 
@@ -238,12 +326,24 @@ Gaffer.Metadata.registerNode(
 
 		"attributes.matte" : [
 
+			"description",
+			"""
+			Matte objects don't appear in the render, but cut holes
+			in the alpha of all objects behind them.
+			""",
+
 			"layout:section", "Shading",
 
 		],
 
 
 		"attributes.displacementBound" : [
+
+			"description",
+			"""
+			Specifies the maximum amount the displacement shader will
+			displace by.
+			""",
 
 			"layout:section", "Shading",
 
@@ -253,17 +353,33 @@ Gaffer.Metadata.registerNode(
 
 		"attributes.maxDiffuseDepth" : [
 
+			"description",
+			"""
+			The maximum depth for diffuse ray bounces.
+			""",
+
 			"layout:section", "Raytracing",
 
 		],
 
 		"attributes.maxSpecularDepth" : [
 
+			"description",
+			"""
+			The maximum depth for specular (reflection) ray bounces.
+			""",
+
 			"layout:section", "Raytracing",
 
 		],
 
 		"attributes.traceDisplacements" : [
+
+			"description",
+			"""
+			Whether or not displacements are taken into account
+			when raytracing. This can be fairly expensive.
+			""",
 
 			"layout:section", "Raytracing",
 
