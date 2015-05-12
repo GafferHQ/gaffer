@@ -65,6 +65,16 @@ Gaffer.Metadata.registerNode(
 			The external script referenced by this node.
 			""",
 
+			"layout:section", "",
+
+		),
+
+		"user" : (
+
+			# Stopgap until we start parenting promoted plugs directly
+			# under the node as we want to (rather than as user plugs).
+			"layout:section", "Settings"
+
 		),
 
 	}
@@ -153,7 +163,6 @@ class __FileNamePlugValueWidget( GafferUI.PlugValueWidget ) :
 			self.getPlug().node().load( self.getPlug().getValue() )
 
 GafferUI.PlugValueWidget.registerCreator( Gaffer.Reference, "fileName", __FileNamePlugValueWidget )
-Gaffer.Metadata.registerPlugValue( Gaffer.Reference, "fileName", "nodeUI:section", "header" )
 
 GafferUI.PlugValueWidget.registerCreator( Gaffer.Reference, re.compile( "in[0-9]*" ), None )
 GafferUI.PlugValueWidget.registerCreator( Gaffer.Reference, re.compile( "out[0-9]*" ), None )
@@ -189,9 +198,3 @@ def _waitForFileName( initialFileName="", parentWindow=None ) :
 ##########################################################################
 
 GafferUI.Nodule.registerNodule( Gaffer.Reference, "fileName", lambda plug : None )
-
-##########################################################################
-# Metadata
-##########################################################################
-
-Gaffer.Metadata.registerPlugValue( Gaffer.Reference, "user", "nodeUI:section", "Settings" )

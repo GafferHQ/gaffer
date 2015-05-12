@@ -65,7 +65,7 @@ Gaffer.Metadata.registerNode(
 			The transform applied to the object.
 			""",
 
-			"nodeUI:section", "Transform",
+			"layout:section", "Transform",
 
 		],
 

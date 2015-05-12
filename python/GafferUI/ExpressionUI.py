@@ -58,7 +58,9 @@ Gaffer.Metadata.registerNode(
 			"description",
 			"""
 			The expression language to use.
-			"""
+			""",
+
+			"layout:section", "",
 
 		),
 
@@ -69,18 +71,15 @@ Gaffer.Metadata.registerNode(
 			"description",
 			"""
 			The expression to evaluate."
-			"""
+			""",
+
+			"layout:section", "",
 
 		),
 
 	}
 
 )
-
-# NodeUI registration
-##########################################################################
-
-GafferUI.NodeUI.registerNodeUI( Gaffer.Expression, lambda node : GafferUI.StandardNodeUI( node, displayMode = GafferUI.StandardNodeUI.DisplayMode.Simplified ) )
 
 # PlugValueWidget popup menu for creating expressions
 ##########################################################################
@@ -190,6 +189,12 @@ GafferUI.PlugValueWidget.registerCreator(
 GafferUI.PlugValueWidget.registerCreator(
 	Gaffer.Expression,
 	"out",
+	None
+)
+
+GafferUI.PlugValueWidget.registerCreator(
+	Gaffer.Expression,
+	"user",
 	None
 )
 

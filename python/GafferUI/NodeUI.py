@@ -58,8 +58,18 @@ Gaffer.Metadata.registerNode(
 			Container for user-defined plugs. Nodes
 			should never make their own plugs here,
 			so users are free to do as they wish.
-			"""
-		)
+			""",
+
+			"layout:index", -1, # Last
+			"layout:section", "User",
+
+		),
+
+		"*" : (
+
+			"layout:section", lambda plug : "Settings" if isinstance( plug.parent(), Gaffer.Node ) else ""
+
+		),
 
 	}
 
@@ -132,5 +142,3 @@ class NodeUI( GafferUI.Widget ) :
 		cls.__nodeUIs[nodeTypeId] = nodeUICreator
 
 GafferUI.Nodule.registerNodule( Gaffer.Node, "user", lambda plug : None )
-
-Gaffer.Metadata.registerPlugValue( Gaffer.Node, "user", "nodeUI:section", "User" )

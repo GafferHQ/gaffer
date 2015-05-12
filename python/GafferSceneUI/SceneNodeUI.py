@@ -72,8 +72,6 @@ Gaffer.Metadata.registerNode(
 			an empty scene.
 			""",
 
-			"nodeUI:section", "Node",
-
 		],
 
 	}

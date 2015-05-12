@@ -452,7 +452,7 @@ class __FrameRangePlugValueWidget( GafferUI.StringPlugValueWidget ) :
 # Metadata, PlugValueWidgets and Nodules
 ##########################################################################
 
-Gaffer.Metadata.registerPlugValue( Gaffer.ExecutableNode, "requirement", "nodeUI:section", "header" )
+Gaffer.Metadata.registerPlugValue( Gaffer.ExecutableNode, "requirement", "layout:section", "" )
 Gaffer.Metadata.registerPlugDescription( Gaffer.ExecutableNode, "dispatcher.batchSize", "Maximum number of frames to batch together when dispatching execution tasks." )
 
 GafferUI.PlugValueWidget.registerCreator(

@@ -39,28 +39,16 @@ import GafferUI
 
 Gaffer.Metadata.registerNode(
 
-	Gaffer.DependencyNode,
-
-	"description",
-	"""
-	Base class for nodes where input plugs have an
-	effect on output plugs.
-	""",
+	GafferUI.View,
 
 	plugs = {
 
-		"enabled" : (
+		"*" : [
 
-			"description",
-			"""
-			Turns the node on and off.
-			""",
+			"layout:section", "",
 
-			"layout:index", -2, # Last but one
-			"layout:section", "Node",
+		]
 
-		),
-
-	},
+	}
 
 )

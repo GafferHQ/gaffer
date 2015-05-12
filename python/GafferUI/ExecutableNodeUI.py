@@ -80,7 +80,8 @@ Gaffer.Metadata.registerNode(
 			control their behaviour.
 			""",
 
-			"nodeUI:section", "Dispatcher"
+			"layout:section", "Dispatcher",
+			"layout:index", -3, # Just before the node section
 
 		),
 

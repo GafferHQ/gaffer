@@ -73,5 +73,3 @@ def __noduleCreator( plug ) :
 
 GafferUI.Nodule.registerNodule( GafferImage.ImageNode, fnmatch.translate( "*" ), __noduleCreator )
 GafferUI.PlugValueWidget.registerType( GafferImage.ImagePlug, None )
-
-Gaffer.Metadata.registerPlugValue( GafferImage.ImageNode, "enabled", "nodeUI:section", "Node" )
