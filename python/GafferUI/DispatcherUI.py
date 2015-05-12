@@ -169,7 +169,7 @@ class DispatcherWindow( GafferUI.Window ) :
 				self.__dispatchButton = GafferUI.Button( "Dispatch" )
 				self.__dispatchClickedConnection = self.__dispatchButton.clickedSignal().connect( Gaffer.WeakMethod( self.__dispatchClicked ) )
 
-		self.__update()
+		self.__update( resizeToFit = True )
 
 	def setVisible( self, visible ) :
 
@@ -245,11 +245,16 @@ class DispatcherWindow( GafferUI.Window ) :
 		
 		return window
 	
-	def __update( self ) :
+	def __update( self, resizeToFit = False ) :
 		
 		nodeUI = GafferUI.NodeUI.create( self.__currentDispatcher )
 		self.__frame.setChild( nodeUI )
 		self.__updateTitle()
+
+		if resizeToFit :
+			# Force the node UI to build so we fit to the right contents
+			nodeUI.plugValueWidget( self.__currentDispatcher["framesMode"], lazy = False )
+			self.resizeToFitChild()
 
 	def __updateTitle( self ) :
 
