@@ -402,12 +402,6 @@ void InteractiveRender::plugDirtied( const Gaffer::Plug *plug )
 	{
 		try
 		{
-			// no point doing an update if the scene's empty
-			if( inPlug()->childNames( ScenePlug::ScenePath() )->readable().empty() )
-			{
-				stop();
-				return;
-			}
 			update();
 		}
 		catch( const std::exception &e )
@@ -874,6 +868,13 @@ void InteractiveRender::update()
 		{
 			return;
 		}
+	}
+
+	// no point doing an update if the scene's empty
+	if( inPlug()->childNames( ScenePlug::ScenePath() )->readable().empty() )
+	{
+		stop();
+		return;
 	}
 
 	// If we've got this far, we know we want to be running or paused.
