@@ -49,7 +49,7 @@ class StandardNodeUITest( GafferUITest.TestCase ) :
 
 		u = GafferUI.StandardNodeUI( n )
 
-		self.assertTrue( isinstance( u.plugValueWidget( n["c"] ), GafferUI.PlugValueWidget ) )
+		self.assertTrue( isinstance( u.plugValueWidget( n["c"], lazy=False ), GafferUI.PlugValueWidget ) )
 		self.assertTrue( u.plugValueWidget( n["c"] ).getPlug().isSame( n["c"] ) )
 
 		self.assertEqual( u.plugValueWidget( n["c"]["i"] ), None )

@@ -86,7 +86,7 @@ class SectionedCompoundDataPlugValueWidgetTest( GafferUITest.TestCase ) :
 		node = SectionedTestNode()
 		nodeUI = GafferUI.StandardNodeUI( node )
 
-		self.assertTrue( isinstance( nodeUI.plugValueWidget( node["p"] ), GafferUI.SectionedCompoundDataPlugValueWidget ) )
+		self.assertTrue( isinstance( nodeUI.plugValueWidget( node["p"], lazy = False ), GafferUI.SectionedCompoundDataPlugValueWidget ) )
 
 		for plugName in [
 			"p",
