@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,12 +34,21 @@
 #
 ##########################################################################
 
-import RenderManRenderUI
-import RenderManAttributesUI
-import RenderManOptionsUI
-import InteractiveRenderManRenderUI
-import RenderManLightUI
-from RenderManShaderUI import RenderManShaderUI
-import ShaderMenu
+import GafferUITest
+import GafferScene
+import GafferSceneUI
+import GafferRenderMan
+import GafferRenderManUI
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferRenderManUI" )
+class DocumentationTest( GafferUITest.TestCase ) :
+
+	def test( self ) :
+
+		self.maxDiff = None
+		self.assertNodesAreDocumented(
+			GafferRenderMan,
+			additionalTerminalPlugTypes = ( GafferScene.ScenePlug, )
+		)
+
+if __name__ == "__main__":
+	unittest.main()
