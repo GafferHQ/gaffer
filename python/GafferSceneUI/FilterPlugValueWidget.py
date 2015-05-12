@@ -46,7 +46,7 @@ class FilterPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plug, **kw ) :
 
-		self.__column = GafferUI.ListContainer()
+		self.__column = GafferUI.ListContainer( spacing = 8 )
 		GafferUI.PlugValueWidget.__init__( self, self.__column, plug, **kw )
 
 		row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
@@ -99,7 +99,7 @@ class FilterPlugValueWidget( GafferUI.PlugValueWidget ) :
 			if len( self.__column ) > 1 :
 				filterNodeUI = self.__column[1]
 			if filterNodeUI is None or not filterNodeUI.node().isSame( filterNode ) :
-				filterNodeUI = GafferUI.StandardNodeUI( filterNode, displayMode = GafferUI.StandardNodeUI.DisplayMode.Bare )
+				filterNodeUI = GafferUI.NodeUI.create( filterNode )
 			if len( self.__column ) > 1 :
 				self.__column[1] = filterNodeUI
 			else :
