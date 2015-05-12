@@ -172,6 +172,8 @@ if getOption( "RELEASE", "0" )=="0" :
 			os.path.join( os.path.expanduser( "~" ), "apps", "cortex", cortexVersion, IEEnv.platform(), targetApp, targetAppMajorVersion, "include" )
 		)
 
+APPLESEED_INCLUDE_PATH = ""
+
 ##########################################################################
 # get lib locations right
 ##########################################################################
@@ -215,6 +217,8 @@ if getOption( "RELEASE", "0" )=="0" :
 			0,
 			os.path.join( os.path.expanduser( "~" ), "apps", "cortex", cortexVersion, IEEnv.platform(), targetApp, targetAppMajorVersion, "lib" ),
 		)
+
+APPLESEED_LIB_PATH = ""
 
 ##########################################################################
 # get compiler set up

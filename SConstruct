@@ -355,13 +355,13 @@ options.Add(
 options.Add(
 	"APPLESEED_INCLUDE_PATH",
 	"The path to the appleseed include directory. Used to build Gafferseed",
-	"",
+	"$BUILD_DIR/appleseed/include",
 )
 
 options.Add(
 	"APPLESEED_LIB_PATH",
 	"The path to the appleseed lib directory. Used to build Gafferseed",
-	"",
+	"$BUILD_DIR/appleseed/lib",
 )
 
 options.Add(
