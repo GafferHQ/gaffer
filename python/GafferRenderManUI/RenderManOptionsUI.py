@@ -99,6 +99,13 @@ Gaffer.Metadata.registerNode(
 
 	GafferRenderMan.RenderManOptions,
 
+	"description",
+	"""
+	Sets global scene options applicable to RenderMan
+	renderers. Use the StandardOptions node to set
+	global options applicable to all renderers.
+	""",
+
 	plugs = {
 
 		# Summaries
@@ -116,6 +123,14 @@ Gaffer.Metadata.registerNode(
 
 		"options.pixelSamples" : [
 
+			"description",
+			"""
+			The number of primary samples to divide each pixel into
+			in the X and Y directions. For example, 3x3 gives a total of
+			9 samples per pixel. This is the primary quality control for
+			geometric antialiasing and motion blur.
+			""",
+
 			"layout:section", "Quality",
 
 		],
@@ -123,6 +138,13 @@ Gaffer.Metadata.registerNode(
 		# Hider
 
 		"options.hider" : [
+
+			"description",
+			"""
+			The "Hidden" hider means the classic REYES algorithm
+			is used, and the "Raytrace" hider means a more modern
+			raytraced algorithm is used.
+			""",
 
 			"layout:section", "Hider",
 
@@ -136,6 +158,13 @@ Gaffer.Metadata.registerNode(
 		],
 
 		"options.hiderDepthFilter" : [
+
+			"description",
+			"""
+			The filter used to compute a single depth
+			value per pixel from the depths in each
+			pixel sample.
+			""",
 
 			"layout:section", "Hider",
 			"label", "Depth Filter",
@@ -153,12 +182,33 @@ Gaffer.Metadata.registerNode(
 
 		"options.hiderJitter" : [
 
+			"description",
+			"""
+			Whether or not each pixel sample is
+			jittered about the centre of its subpixel
+			position, or if they're aligned in a
+			regular grid. If in doubt, leave this on.
+			""",
+
 			"layout:section", "Hider",
 			"label", "Jitter",
 
 		],
 
 		"options.hiderSampleMotion" : [
+
+			"description",
+			"""
+			May be turned off to disable the sampling of
+			motion blur, but keep motion vectors available
+			for use in shaders. This is useful for
+			rendering a motion vector pass to allow
+			2D motion blur to be applied as a post process.
+			If you simply wish to turn off motion blur
+			entirely, then use the motion blur settings
+			in the StandardOptions node.
+			""",
+
 
 			"layout:section", "Hider",
 			"label", "Sample Motion",
@@ -167,12 +217,28 @@ Gaffer.Metadata.registerNode(
 
 		"options.hiderExtremeMotionDOF" : [
 
+			"description",
+			"""
+			An alternative sampling algorithm which
+			is more expensive, but gives higher quality
+			results when objects are both moving quickly
+			and are out of focus.
+			""",
+
 			"layout:section", "Hider",
 			"label", "Extreme Motion DOF",
 
 		],
 
 		"options.hiderProgressive" : [
+
+			"description",
+			"""
+			Renders at progressively increasing levels
+			of quality, to give quick low quality feedback
+			at the start of an interactive render. Only
+			applies when the raytrace hider is used.
+			""",
 
 			"layout:section", "Hider",
 			"label", "Progressive",
@@ -182,6 +248,12 @@ Gaffer.Metadata.registerNode(
 		# Statistics
 
 		"options.statisticsLevel" : [
+
+			"description",
+			"""
+			Determines the verbosity of statistics
+			output.
+			""",
 
 			"layout:section", "Statistics",
 			"label", "Level",
@@ -199,12 +271,25 @@ Gaffer.Metadata.registerNode(
 
 		"options.statisticsFileName" : [
 
+			"description",
+			"""
+			The name of a file where the statistics
+			will be written.
+			""",
+
 			"layout:section", "Statistics",
 			"label", "File Name",
 
 		],
 
 		"options.statisticsProgress" : [
+
+			"description",
+			"""
+			Turning this on causes a render progress
+			percentage to be printed out continuously
+			during rendering.
+			""",
 
 			"layout:section", "Statistics",
 			"label", "Progress",
@@ -215,12 +300,26 @@ Gaffer.Metadata.registerNode(
 
 		"options.shaderSearchPath" : [
 
+			"description",
+			"""
+			The filesystem paths where shaders are
+			searched for. Paths should be separated
+			by ':'.
+			""",
+
 			"layout:section", "Search Paths",
 			"label", "Shaders",
 
 		],
 
 		"options.textureSearchPath" : [
+
+			"description",
+			"""
+			The filesystem paths where shaders are
+			located. Paths should be separated
+			by ':'.
+			""",
 
 			"layout:section", "Search Paths",
 			"label", "Textures",
@@ -229,6 +328,14 @@ Gaffer.Metadata.registerNode(
 
 		"options.displaySearchPath" : [
 
+			"description",
+			"""
+			The filesystem paths where display driver
+			plugins are located. These will be used when searching
+			for drivers specified using the Outputs
+			node. Paths should be separated by ':'.
+			""",
+
 			"layout:section", "Search Paths",
 			"label", "Displays",
 
@@ -236,12 +343,28 @@ Gaffer.Metadata.registerNode(
 
 		"options.archiveSearchPath" : [
 
+			"description",
+			"""
+			The filesystem paths where RIB archives
+			are located. These will be used when searching
+			for archives specified using the ExternalProcedural
+			node. Paths should be separated by ':'.
+			""",
+
 			"layout:section", "Search Paths",
 			"label", "Archives",
 
 		],
 
 		"options.proceduralSearchPath" : [
+
+			"description",
+			"""
+			The filesystem paths where DSO procedurals
+			are located. These will be used when searching
+			for procedurals specified using the ExternalProcedural
+			node. Paths should be separated by ':'.
+			""",
 
 			"layout:section", "Search Paths",
 			"label", "Procedurals",
