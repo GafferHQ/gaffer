@@ -118,6 +118,15 @@ void SetFilter::hashMatch( const ScenePlug *scene, const Gaffer::Context *contex
 		h.append( &(path[0]), path.size() );
 	}
 
+	// Remove unnecessary but frequently changed context entries. This
+	// makes us friendlier to the hash caching mechanism in ValuePlug,
+	// since it'll see fewer unnecessarily different contexts, and will
+	// therefore get more cache hits. We do the same in computeMatch().
+	ContextPtr tmpContext = new Context( *context, Context::Borrowed );
+	tmpContext->remove( Filter::inputSceneContextName );
+	tmpContext->remove( ScenePlug::scenePathContextName );
+	Context::Scope scopedContext( tmpContext.get() );
+
 	h.append( scene->setHash( setPlug()->getValue() ) );
 }
 
@@ -128,8 +137,15 @@ unsigned SetFilter::computeMatch( const ScenePlug *scene, const Gaffer::Context 
 		return NoMatch;
 	}
 
+	const ScenePlug::ScenePath &path = context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName );
+
+	// See explanatory comments in hashMatch().
+	ContextPtr tmpContext = new Context( *context, Context::Borrowed );
+	tmpContext->remove( Filter::inputSceneContextName );
+	tmpContext->remove( ScenePlug::scenePathContextName );
+	Context::Scope scopedContext( tmpContext.get() );
+
 	ConstPathMatcherDataPtr set = scene->set( setPlug()->getValue() );
 
-	const ScenePlug::ScenePath &path = context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName );
 	return set->readable().match( path );
 }
