@@ -64,21 +64,21 @@ class DeleteSetsTest( GafferSceneTest.SceneTestCase ) :
 		d["in"].setInput(s3["out"])
 
 		# no sets to delete, so everything should be intact:
-		self.assertEqual( set( d["out"]["globals"].getValue()["gaffer:sets"].keys() ), set( ['s1','s2','s3'] ) )
-		self.assertEqual( d["out"]["globals"].getValue()["gaffer:sets"]["s1"].value.paths(), ['/blah1'] )
-		self.assertEqual( d["out"]["globals"].getValue()["gaffer:sets"]["s2"].value.paths(), ['/blah2'] )
-		self.assertEqual( d["out"]["globals"].getValue()["gaffer:sets"]["s3"].value.paths(), ['/blah3'] )
+		self.assertEqual( d["out"]["setNames"].getValue(), IECore.InternedStringVectorData( ['s1','s2','s3'] ) )
+		self.assertEqual( d["out"].set( "s1" ).value.paths(), ['/blah1'] )
+		self.assertEqual( d["out"].set( "s2" ).value.paths(), ['/blah2'] )
+		self.assertEqual( d["out"].set( "s3" ).value.paths(), ['/blah3'] )
 
 		# delete s1 and s2:
 		d["names"].setValue( "s1 s2" )
-		self.assertEqual( set( d["out"]["globals"].getValue()["gaffer:sets"].keys() ), set( ['s3'] ) )
-		self.assertEqual( d["out"]["globals"].getValue()["gaffer:sets"]["s3"].value.paths(), ['/blah3'] )
+		self.assertEqual( d["out"]["setNames"].getValue(), IECore.InternedStringVectorData( ['s3'] ) )
+		self.assertEqual( d["out"].set( "s3" ).value.paths(), ['/blah3'] )
 
 		# invert:
 		d["invertNames"].setValue( True )
-		self.assertEqual( set( d["out"]["globals"].getValue()["gaffer:sets"].keys() ), set( ['s1', 's2'] ) )
-		self.assertEqual( d["out"]["globals"].getValue()["gaffer:sets"]["s1"].value.paths(), ['/blah1'] )
-		self.assertEqual( d["out"]["globals"].getValue()["gaffer:sets"]["s2"].value.paths(), ['/blah2'] )
+		self.assertEqual( d["out"]["setNames"].getValue(), IECore.InternedStringVectorData( ['s1','s2' ] ) )
+		self.assertEqual( d["out"].set( "s1" ).value.paths(), ['/blah1'] )
+		self.assertEqual( d["out"].set( "s2" ).value.paths(), ['/blah2'] )
 
 	def testWildcards( self ) :
 
@@ -100,27 +100,27 @@ class DeleteSetsTest( GafferSceneTest.SceneTestCase ) :
 		d = GafferScene.DeleteSets()
 		d["in"].setInput(s4["out"])
 
-		self.assertEqual( set( d["out"]["globals"].getValue()["gaffer:sets"].keys() ), set( [ "a1", "a2", "b1", "b2" ] ) )
+		self.assertEqual( d["out"]["setNames"].getValue(), IECore.InternedStringVectorData( [ "a1", "a2", "b1", "b2" ] ) )
 
 		d["names"].setValue( "a*" )
-		self.assertEqual( set( d["out"]["globals"].getValue()["gaffer:sets"].keys() ), set( [ "b1", "b2" ] ) )
+		self.assertEqual( d["out"]["setNames"].getValue(), IECore.InternedStringVectorData( [ "b1", "b2" ] ) )
 
 		d["names"].setValue( "*1" )
-		self.assertEqual( set( d["out"]["globals"].getValue()["gaffer:sets"].keys() ), set( [ "a2", "b2" ] ) )
+		self.assertEqual( d["out"]["setNames"].getValue(), IECore.InternedStringVectorData( [ "a2", "b2" ] ) )
 
 		d["names"].setValue( "*1 b2" )
-		self.assertEqual( set( d["out"]["globals"].getValue()["gaffer:sets"].keys() ), set( [ "a2" ] ) )
+		self.assertEqual( d["out"]["setNames"].getValue(), IECore.InternedStringVectorData( [ "a2" ] ) )
 
 		d["names"].setValue( "b2 a*" )
-		self.assertEqual( set( d["out"]["globals"].getValue()["gaffer:sets"].keys() ), set( [ "b1" ] ) )
+		self.assertEqual( d["out"]["setNames"].getValue(), IECore.InternedStringVectorData( [ "b1" ] ) )
 
 	def testAffects( self ) :
 
 		d = GafferScene.DeleteSets()
 
-		self.failUnless( d["out"]["globals"] in d.affects( d["in"]["globals"] ) )
-		self.failUnless( d["out"]["globals"] in d.affects( d["names"] ) )
-		self.failUnless( d["out"]["globals"] in d.affects( d["invertNames"] ) )
+		self.failUnless( d["out"]["setNames"] in d.affects( d["in"]["setNames"] ) )
+		self.failUnless( d["out"]["setNames"] in d.affects( d["names"] ) )
+		self.failUnless( d["out"]["setNames"] in d.affects( d["invertNames"] ) )
 
 if __name__ == "__main__":
 	unittest.main()

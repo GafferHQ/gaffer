@@ -190,6 +190,26 @@ IECore::ConstCompoundObjectPtr CompoundObjectSource::computeGlobals( const Gaffe
 	return outPlug()->globalsPlug()->defaultValue();
 }
 
+void CompoundObjectSource::hashSetNames( const Gaffer::Context *context, const GafferScene::ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	h = outPlug()->setNamesPlug()->defaultValue()->Object::hash();
+}
+
+IECore::ConstInternedStringVectorDataPtr CompoundObjectSource::computeSetNames( const Gaffer::Context *context, const GafferScene::ScenePlug *parent ) const
+{
+	return outPlug()->setNamesPlug()->defaultValue();
+}
+
+void CompoundObjectSource::hashSet( const IECore::InternedString &setName, const Gaffer::Context *context, const GafferScene::ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	h = outPlug()->setPlug()->defaultValue()->Object::hash();
+}
+
+GafferScene::ConstPathMatcherDataPtr CompoundObjectSource::computeSet( const IECore::InternedString &setName, const Gaffer::Context *context, const GafferScene::ScenePlug *parent ) const
+{
+	return outPlug()->setPlug()->defaultValue();
+}
+
 IECore::ConstCompoundObjectPtr CompoundObjectSource::entryForPath( const ScenePath &path ) const
 {
 	ConstCompoundObjectPtr result = runTimeCast<const CompoundObject>( inPlug()->getValue() );

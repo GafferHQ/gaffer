@@ -66,6 +66,8 @@ Group::Group( const std::string &name )
 	addChild( new TransformPlug( "transform" ) );
 
 	addChild( new Gaffer::ObjectPlug( "__mapping", Gaffer::Plug::Out, new CompoundObject() ) );
+
+	outPlug()->globalsPlug()->setInput( inPlug()->globalsPlug() );
 }
 
 Group::~Group()
@@ -168,6 +170,17 @@ void Group::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *contex
 	}
 }
 
+void Group::compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const
+{
+	if( output == mappingPlug() )
+	{
+		static_cast<Gaffer::ObjectPlug *>( output )->setValue( computeMapping( context ) );
+		return;
+	}
+
+	return SceneProcessor::compute( output, context );
+}
+
 void Group::hashBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
 	if( path.size() == 0 ) // "/"
@@ -199,6 +212,35 @@ void Group::hashBound( const ScenePath &path, const Gaffer::Context *context, co
 	}
 }
 
+Imath::Box3f Group::computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+{
+	std::string groupName = namePlug()->getValue();
+
+	if( path.size() <= 1 )
+	{
+		// either / or /groupName
+		Box3f combinedBound;
+		for( vector<ScenePlugPtr>::const_iterator it = m_inPlugs.inputs().begin(), eIt = m_inPlugs.inputs().end(); it!=eIt; it++ )
+		{
+			// we don't need to transform these bounds, because the SceneNode
+			// guarantees that the transform for root nodes is always identity.
+			Box3f bound = (*it)->bound( ScenePath() );
+			combinedBound.extendBy( bound );
+		}
+		if( path.size() == 0 )
+		{
+			combinedBound = transform( combinedBound, transformPlug()->matrix() );
+		}
+		return combinedBound;
+	}
+	else
+	{
+		ScenePlug *sourcePlug = 0;
+		ScenePath source = sourcePath( path, groupName, &sourcePlug );
+		return sourcePlug->bound( source );
+	}
+}
+
 void Group::hashTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
 	if( path.size() == 0 ) // "/"
@@ -219,6 +261,26 @@ void Group::hashTransform( const ScenePath &path, const Gaffer::Context *context
 	}
 }
 
+Imath::M44f Group::computeTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+{
+	std::string groupName = namePlug()->getValue();
+
+	if( path.size() == 0 )
+	{
+		return Imath::M44f();
+	}
+	else if( path.size() == 1 )
+	{
+		return transformPlug()->matrix();
+	}
+	else
+	{
+		ScenePlug *sourcePlug = 0;
+		ScenePath source = sourcePath( path, groupName, &sourcePlug );
+		return sourcePlug->transform( source );
+	}
+}
+
 void Group::hashAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
 	if( path.size() <= 1 ) // "/" or "/group"
@@ -234,6 +296,22 @@ void Group::hashAttributes( const ScenePath &path, const Gaffer::Context *contex
 	}
 }
 
+IECore::ConstCompoundObjectPtr Group::computeAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+{
+	std::string groupName = namePlug()->getValue();
+
+	if( path.size() <= 1 )
+	{
+		return parent->attributesPlug()->defaultValue();
+	}
+	else
+	{
+		ScenePlug *sourcePlug = 0;
+		ScenePath source = sourcePath( path, groupName, &sourcePlug );
+		return sourcePlug->attributes( source );
+	}
+}
+
 void Group::hashObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
 	if( path.size() <= 1 ) // "/" or "/group"
@@ -246,6 +324,22 @@ void Group::hashObject( const ScenePath &path, const Gaffer::Context *context, c
 		ScenePlug *sourcePlug = 0;
 		ScenePath source = sourcePath( path, namePlug()->getValue(), &sourcePlug );
 		h = sourcePlug->objectHash( source );
+	}
+}
+
+IECore::ConstObjectPtr Group::computeObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+{
+	std::string groupName = namePlug()->getValue();
+
+	if( path.size() <= 1 )
+	{
+		return parent->objectPlug()->defaultValue();
+	}
+	else
+	{
+		ScenePlug *sourcePlug = 0;
+		ScenePath source = sourcePath( path, groupName, &sourcePlug );
+		return sourcePlug->object( source );
 	}
 }
 
@@ -270,28 +364,129 @@ void Group::hashChildNames( const ScenePath &path, const Gaffer::Context *contex
 	}
 }
 
-void Group::hashGlobals( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+IECore::ConstInternedStringVectorDataPtr Group::computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	SceneProcessor::hashGlobals( context, parent, h );
+	std::string groupName = namePlug()->getValue();
 
-	// all input globals affect the output, as does the mapping, because we use it to compute the sets
-	for( vector<ScenePlugPtr>::const_iterator it = m_inPlugs.inputs().begin(), eIt = m_inPlugs.inputs().end(); it!=eIt; it++ )
+	if( path.size() == 0 )
 	{
-		(*it)->globalsPlug()->hash( h );
+		InternedStringVectorDataPtr result = new InternedStringVectorData();
+		result->writable().push_back( groupName );
+		return result;
+	}
+	else if( path.size() == 1 )
+	{
+		ConstCompoundObjectPtr mapping = boost::static_pointer_cast<const CompoundObject>( mappingPlug()->getValue() );
+		return mapping->member<InternedStringVectorData>( "__GroupChildNames" );
+	}
+	else
+	{
+		ScenePlug *sourcePlug = 0;
+		ScenePath source = sourcePath( path, groupName, &sourcePlug );
+		return sourcePlug->childNames( source );
+	}
+}
+
+void Group::hashSetNames( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	SceneProcessor::hashSetNames( context, parent, h );
+	for( vector<ScenePlugPtr>::const_iterator it = m_inPlugs.inputs().begin(), eIt = m_inPlugs.inputs().end(); it!=eIt; ++it )
+	{
+		(*it)->setNamesPlug()->hash( h );
+	}
+}
+
+IECore::ConstInternedStringVectorDataPtr Group::computeSetNames( const Gaffer::Context *context, const ScenePlug *parent ) const
+{
+	InternedStringVectorDataPtr resultData = new InternedStringVectorData;
+	vector<InternedString> &result = resultData->writable();
+	for( vector<ScenePlugPtr>::const_iterator it = m_inPlugs.inputs().begin(), eIt = m_inPlugs.inputs().end(); it!=eIt; ++it )
+	{
+		// This naive approach to merging set names preserves the order of the incoming names,
+		// but at the expense of using linear search. We assume that the number of sets is small
+		// enough and the InternedString comparison fast enough that this is OK.
+		ConstInternedStringVectorDataPtr inputSetNamesData = (*it)->setNamesPlug()->getValue();
+		const vector<InternedString> &inputSetNames = inputSetNamesData->readable();
+		for( vector<InternedString>::const_iterator it = inputSetNames.begin(), eIt = inputSetNames.end(); it != eIt; ++it )
+		{
+			if( std::find( result.begin(), result.end(), *it ) == result.end() )
+			{
+				result.push_back( *it );
+			}
+		}
+	}
+
+	return resultData;
+}
+
+void Group::hashSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	SceneProcessor::hashSet( setName, context, parent, h );
+	for( vector<ScenePlugPtr>::const_iterator it = m_inPlugs.inputs().begin(), eIt = m_inPlugs.inputs().end(); it != eIt; ++it )
+	{
+		(*it)->setPlug()->hash( h );
 	}
 	mappingPlug()->hash( h );
 	namePlug()->hash( h );
 }
 
-void Group::compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const
+GafferScene::ConstPathMatcherDataPtr Group::computeSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	if( output == mappingPlug() )
+	InternedString groupName = namePlug()->getValue();
+
+	ConstCompoundObjectPtr mapping = boost::static_pointer_cast<const CompoundObject>( mappingPlug()->getValue() );
+	const ObjectVector *forwardMappings = mapping->member<ObjectVector>( "__GroupForwardMappings", true /* throw if missing */ );
+
+	PathMatcherDataPtr resultData = new PathMatcherData;
+	PathMatcher &result = resultData->writable();
+	for( size_t i = 0, e = m_inPlugs.inputs().size(); i < e; i++ )
 	{
-		static_cast<Gaffer::ObjectPlug *>( output )->setValue( computeMapping( context ) );
-		return;
+		ConstPathMatcherDataPtr inputSetData = m_inPlugs.inputs()[i]->setPlug()->getValue();
+		const PathMatcher &inputSet = inputSetData->readable();
+
+		const CompoundData *forwardMapping = static_cast<const IECore::CompoundData *>( forwardMappings->members()[i].get() );
+
+		/// \todo If PathMatcher allowed access to the internal nodes, and allowed them to be shared between
+		/// matchers, we could be much more efficient here by making a new matcher which referenced the contents
+		/// of the input matchers.
+		vector<InternedString> outputPath; outputPath.push_back( groupName );
+		for( PathMatcher::Iterator pIt = inputSet.begin(), peIt = inputSet.end(); pIt != peIt; ++pIt )
+		{
+			const vector<InternedString> &inputPath = *pIt;
+			if( !inputPath.size() )
+			{
+				continue;
+			}
+
+			const InternedStringData *outputName = forwardMapping->member<InternedStringData>( inputPath[0] );
+			if( !outputName )
+			{
+				// Getting here indicates either a bug in computeMapping() or an inconsistency in one
+				// of our inputs whereby a forward declaration has been made with a name which isn't
+				// in childNames( "/" ). The second case can occur in practice when an input is being
+				// connected or disconnected - because our inputs are CompoundPlugs, part way through
+				// the setInput() process the child connections for globalsPlug() and childNamesPlug()
+				// will not correspond, leading us here. This problem occurs in InteractiveRenderManRenderTest
+				// when the scene is being updated from a plugDirtiedSignal() which is emitted when one
+				// child plug has been disconnected, but before the other one has. The real solution to
+				// this would be to properly batch up dirty signals so that only a single signal is
+				// emitted for the parent after all signals for the children have been emitted. Then we
+				// would only ever be called in a consistent connection state.
+				/// \todo Now we have proper batching of dirty propagation we should remove this workaround,
+				/// reverting to a call to forwardMapping->member<InternedStringData>( inputName, true ),
+				/// which will throw when an error is detected.
+				continue;
+			}
+
+			outputPath.resize( 2 );
+			outputPath[1] = outputName->readable();
+			outputPath.insert( outputPath.end(), inputPath.begin() + 1, inputPath.end() );
+
+			result.addPath( outputPath );
+		}
 	}
 
-	return SceneProcessor::compute( output, context );
+	return resultData;
 }
 
 IECore::ObjectPtr Group::computeMapping( const Gaffer::Context *context ) const
@@ -352,182 +547,6 @@ IECore::ObjectPtr Group::computeMapping( const Gaffer::Context *context ) const
 			entry->members()["n"] = new InternedStringData( *cIt );
 			entry->members()["i"] = new IntData( it - m_inPlugs.inputs().begin() );
 			result->members()[name] = entry;
-		}
-	}
-
-	return result;
-}
-
-Imath::Box3f Group::computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
-{
-	std::string groupName = namePlug()->getValue();
-
-	if( path.size() <= 1 )
-	{
-		// either / or /groupName
-		Box3f combinedBound;
-		for( vector<ScenePlugPtr>::const_iterator it = m_inPlugs.inputs().begin(), eIt = m_inPlugs.inputs().end(); it!=eIt; it++ )
-		{
-			// we don't need to transform these bounds, because the SceneNode
-			// guarantees that the transform for root nodes is always identity.
-			Box3f bound = (*it)->bound( ScenePath() );
-			combinedBound.extendBy( bound );
-		}
-		if( path.size() == 0 )
-		{
-			combinedBound = transform( combinedBound, transformPlug()->matrix() );
-		}
-		return combinedBound;
-	}
-	else
-	{
-		ScenePlug *sourcePlug = 0;
-		ScenePath source = sourcePath( path, groupName, &sourcePlug );
-		return sourcePlug->bound( source );
-	}
-}
-
-Imath::M44f Group::computeTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
-{
-	std::string groupName = namePlug()->getValue();
-
-	if( path.size() == 0 )
-	{
-		return Imath::M44f();
-	}
-	else if( path.size() == 1 )
-	{
-		return transformPlug()->matrix();
-	}
-	else
-	{
-		ScenePlug *sourcePlug = 0;
-		ScenePath source = sourcePath( path, groupName, &sourcePlug );
-		return sourcePlug->transform( source );
-	}
-}
-
-IECore::ConstCompoundObjectPtr Group::computeAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
-{
-	std::string groupName = namePlug()->getValue();
-
-	if( path.size() <= 1 )
-	{
-		return parent->attributesPlug()->defaultValue();
-	}
-	else
-	{
-		ScenePlug *sourcePlug = 0;
-		ScenePath source = sourcePath( path, groupName, &sourcePlug );
-		return sourcePlug->attributes( source );
-	}
-}
-
-IECore::ConstObjectPtr Group::computeObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
-{
-	std::string groupName = namePlug()->getValue();
-
-	if( path.size() <= 1 )
-	{
-		return parent->objectPlug()->defaultValue();
-	}
-	else
-	{
-		ScenePlug *sourcePlug = 0;
-		ScenePath source = sourcePath( path, groupName, &sourcePlug );
-		return sourcePlug->object( source );
-	}
-}
-
-IECore::ConstInternedStringVectorDataPtr Group::computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
-{
-	std::string groupName = namePlug()->getValue();
-
-	if( path.size() == 0 )
-	{
-		InternedStringVectorDataPtr result = new InternedStringVectorData();
-		result->writable().push_back( groupName );
-		return result;
-	}
-	else if( path.size() == 1 )
-	{
-		ConstCompoundObjectPtr mapping = boost::static_pointer_cast<const CompoundObject>( mappingPlug()->getValue() );
-		return mapping->member<InternedStringVectorData>( "__GroupChildNames" );
-	}
-	else
-	{
-		ScenePlug *sourcePlug = 0;
-		ScenePath source = sourcePath( path, groupName, &sourcePlug );
-		return sourcePlug->childNames( source );
-	}
-}
-
-IECore::ConstCompoundObjectPtr Group::computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const
-{
-	IECore::CompoundObjectPtr result = inPlug()->globalsPlug()->getValue()->copy();
-
-	InternedString groupName = namePlug()->getValue();
-
-	ConstCompoundObjectPtr mapping = boost::static_pointer_cast<const CompoundObject>( mappingPlug()->getValue() );
-	const ObjectVector *forwardMappings = mapping->member<ObjectVector>( "__GroupForwardMappings", true /* throw if missing */ );
-
-	CompoundDataPtr outputSets = new CompoundData;
-	result->members()["gaffer:sets"] = outputSets;
-
-	for( size_t i = 0, e = m_inPlugs.inputs().size(); i < e; i++ )
-	{
-		ConstCompoundObjectPtr inputGlobals = m_inPlugs.inputs()[i]->globalsPlug()->getValue();
-		const CompoundData *inputSets = inputGlobals->member<CompoundData>( "gaffer:sets", /* throwExceptions = */ false );
-		if( !inputSets )
-		{
-			continue;
-		}
-
-		const CompoundData *forwardMapping = static_cast<const IECore::CompoundData *>( forwardMappings->members()[i].get() );
-
-		for( CompoundDataMap::const_iterator it = inputSets->readable().begin(), eIt = inputSets->readable().end(); it != eIt; it++ )
-		{
-			const PathMatcher &inputSet = static_cast<const PathMatcherData *>( it->second.get() )->readable();
-			PathMatcher &outputSet = outputSets->member<PathMatcherData>( it->first, /* throwExceptions = */ false, /* createIfMissing = */ true )->writable();
-
-			/// \todo If PathMatcher allowed access to the internal nodes, and allowed them to be shared between
-			/// matchers, we could be much more efficient here by making a new matcher which referenced the contents
-			/// of the input matchers.
-			vector<InternedString> outputPath; outputPath.push_back( groupName );
-			for( PathMatcher::Iterator pIt = inputSet.begin(), peIt = inputSet.end(); pIt != peIt; ++pIt )
-			{
-				const vector<InternedString> &inputPath = *pIt;
-				if( !inputPath.size() )
-				{
-					continue;
-				}
-
-				const InternedStringData *outputName = forwardMapping->member<InternedStringData>( inputPath[0] );
-				if( !outputName )
-				{
-					// Getting here indicates either a bug in computeMapping() or an inconsistency in one
-					// of our inputs whereby a forward declaration has been made with a name which isn't
-					// in childNames( "/" ). The second case can occur in practice when an input is being
-					// connected or disconnected - because our inputs are CompoundPlugs, part way through
-					// the setInput() process the child connections for globalsPlug() and childNamesPlug()
-					// will not correspond, leading us here. This problem occurs in InteractiveRenderManRenderTest
-					// when the scene is being updated from a plugDirtiedSignal() which is emitted when one
-					// child plug has been disconnected, but before the other one has. The real solution to
-					// this would be to properly batch up dirty signals so that only a single signal is
-					// emitted for the parent after all signals for the children have been emitted. Then we
-					// would only ever be called in a consistent connection state.
-					/// \todo Now we have proper batching of dirty propagation we should remove this workaround,
-					/// reverting to a call to forwardMapping->member<InternedStringData>( inputName, true ),
-					/// which will throw when an error is detected.
-					continue;
-				}
-
-				outputPath.resize( 2 );
-				outputPath[1] = outputName->readable();
-				outputPath.insert( outputPath.end(), inputPath.begin() + 1, inputPath.end() );
-
-				outputSet.addPath( outputPath );
-			}
 		}
 	}
 

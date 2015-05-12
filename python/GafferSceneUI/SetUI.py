@@ -130,10 +130,10 @@ GafferUI.PlugValueWidget.registerCreator(
 # nodes too.
 ##########################################################################
 
-def __applySet( plug, setName ) :
+def __setValue( plug, value, *unused ) :
 
 	with Gaffer.UndoContext( plug.ancestor( Gaffer.ScriptNode ) ) :
-		plug.setValue( setName )
+		plug.setValue( value )
 
 def __setsPopupMenu( menuDefinition, plugValueWidget ) :
 
@@ -141,7 +141,9 @@ def __setsPopupMenu( menuDefinition, plugValueWidget ) :
 	if plug is None :
 		return
 
-	if not Gaffer.Metadata.plugValue( plug, "ui:scene:acceptsSetName" ) :
+	acceptsSetName = Gaffer.Metadata.plugValue( plug, "ui:scene:acceptsSetName" )
+	acceptsSetNames = Gaffer.Metadata.plugValue( plug, "ui:scene:acceptsSetNames" )
+	if not acceptsSetName and not acceptsSetNames :
 		return
 	
 	node = plug.node()
@@ -158,21 +160,33 @@ def __setsPopupMenu( menuDefinition, plugValueWidget ) :
 				if scenePlug.direction() != scenePlug.Direction.In :
 					continue
 				
-				globals = scenePlug["globals"].getValue()
-				if "gaffer:sets" not in globals :
-					continue
-				setNames.update( globals["gaffer:sets"].keys() )
+				setNames.update( [ str( n ) for n in scenePlug["setNames"].getValue() ] )
 
 	if not setNames :
 		return
 
 	menuDefinition.prepend( "/SetsDivider", { "divider" : True } )
 
+	with plugValueWidget.getContext() :
+		if acceptsSetNames :
+			currentNames = set( plug.getValue().split() )
+		else :
+			currentNames = set( [ plug.getValue() ] )
+
 	for setName in reversed( sorted( list( setNames ) ) ) :
+
+		newNames = set( currentNames ) if acceptsSetNames else set()
+
+		if setName not in currentNames :
+			newNames.add( setName )
+		else :
+			newNames.discard( setName )
+
 		menuDefinition.prepend(
 			"/Sets/%s" % setName,
 			{
-				"command" : functools.partial( __applySet, plug, setName ),
+				"command" : functools.partial( __setValue, plug, " ".join( sorted( newNames ) ) ),
+				"checkBox" : setName in currentNames,
 				"active" : plug.settable() and not plugValueWidget.getReadOnly(),
 			}
 		)

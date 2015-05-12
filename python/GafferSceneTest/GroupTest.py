@@ -441,9 +441,18 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 		g["in"].setInput( p["out"] )
 
 		self.assertSceneValid( g["out"] )
-		self.assertSceneHashesNotEqual( g["out"], p["out"], childPlugNames = ( "globals", ) )
 
 		self.assertPathHashesEqual( g["out"], "/group/plane", p["out"], "/plane" )
+
+	def testGlobalsPassThrough( self ) :
+
+		p = GafferScene.Plane()
+
+		g = GafferScene.Group()
+		g["in"].setInput( p["out"] )
+
+		self.assertEqual( g["out"]["globals"].hash(), p["out"]["globals"].hash() )
+		self.assertTrue( g["out"]["globals"].getValue( _copy = False ).isSame( p["out"]["globals"].getValue( _copy = False ) ) )
 
 	def testTransformHash( self ) :
 
@@ -556,7 +565,7 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 		g["in"].setInput( l1["out"] )
 		g["in1"].setInput( l2["out"] )
 
-		lightSet = g["out"]["globals"].getValue()["gaffer:sets"]["__lights"]
+		lightSet = g["out"].set( "__lights" )
 		self.assertEqual(
 			set( lightSet.value.paths() ),
 			set( [
@@ -570,7 +579,7 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 		g2 = GafferScene.Group()
 		g2["in"].setInput( g["out"] )
 
-		lightSet = g2["out"]["globals"].getValue()["gaffer:sets"]["__lights"]
+		lightSet = g2["out"].set( "__lights" )
 		self.assertEqual(
 			set( lightSet.value.paths() ),
 			set( [
@@ -617,13 +626,13 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 		lg2["name"].setValue( "lightGroup2" )
 		lg2["in"].setInput( l["out"] )
 
-		self.assertNotEqual( lg1["out"]["globals"].hash(), lg2["out"]["globals"].hash() )
+		self.assertEqual( lg1["out"]["globals"].hash(), lg2["out"]["globals"].hash() )
 
 		g = GafferScene.Group()
 		g["in"].setInput( lg1["out"] )
 		g["in1"].setInput( lg2["out"] )
 
-		lightSet = g["out"]["globals"].getValue()["gaffer:sets"]["__lights"]
+		lightSet = g["out"].set( "__lights" )
 		self.assertEqual(
 			set( lightSet.value.paths() ),
 			set( [
@@ -695,18 +704,16 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 		g["in"].setInput( s1["out"] )
 		g["in1"].setInput( s2["out"] )
 
-		sets = g["out"]["globals"].getValue()["gaffer:sets"]
+		self.assertEqual( g["out"]["setNames"].getValue(), IECore.InternedStringVectorData( [ "s1", "s2" ] ) )
 
 		self.assertEqual(
-			sets,
-			IECore.CompoundData( {
-				"s1" : GafferScene.PathMatcherData(
-					GafferScene.PathMatcher( [ "/group/plane" ] )
-				),
-				"s2" : GafferScene.PathMatcherData(
-					GafferScene.PathMatcher( [ "/group/plane1" ] )
-				),
-			} )
+			g["out"].set( "s1" ).value,
+			GafferScene.PathMatcher( [ "/group/plane" ] )
+		)
+
+		self.assertEqual(
+			g["out"].set( "s2" ).value,
+			GafferScene.PathMatcher( [ "/group/plane1" ] )
 		)
 
 	def testNextInPlug( self ) :
@@ -727,6 +734,30 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 
 		g["in"].setInput( None )
 		self.assertTrue( g.nextInPlug().isSame( g["in2"] ) )
+
+	def testUpdateWhenInputSetChanges( self ) :
+
+		p = GafferScene.Plane()
+		c = GafferScene.Cube()
+
+		g1 = GafferScene.Group()
+		g1["in"].setInput( p["out"] )
+		g1["in1"].setInput( c["out"] )
+
+		s = GafferScene.Set()
+		s["in"].setInput( g1["out"] )
+		s["paths"].setValue( IECore.StringVectorData( [ "/group/plane" ] ) )
+
+		g2 = GafferScene.Group()
+		g2["in"].setInput( s["out"] )
+
+		h = g2["out"].setHash( "set" )
+		self.assertEqual( g2["out"].set( "set" ).value.paths(), [ "/group/group/plane" ] )
+
+		s["paths"].setValue( IECore.StringVectorData( [ "/group/cube" ] ) )
+
+		self.assertNotEqual( g2["out"].setHash( "set" ), h )
+		self.assertEqual( g2["out"].set( "set" ).value.paths(), [ "/group/group/cube" ] )
 
 	def setUp( self ) :
 

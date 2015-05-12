@@ -162,7 +162,7 @@ class SubTreeTest( GafferSceneTest.SceneTestCase ) :
 		s["in"].setInput( g["out"] )
 		s["root"].setValue( "/group/lightGroup1" )
 
-		lightSet = s["out"]["globals"].getValue()["gaffer:sets"]["__lights"]
+		lightSet = s["out"].set( "__lights" )
 		self.assertEqual( lightSet.value.paths(), [ "/light" ] )
 
 		self.assertSetsValid( s["out"] )
@@ -171,7 +171,7 @@ class SubTreeTest( GafferSceneTest.SceneTestCase ) :
 
 		s["includeRoot"].setValue( True )
 
-		lightSet = s["out"]["globals"].getValue()["gaffer:sets"]["__lights"]
+		lightSet = s["out"].set( "__lights" )
 		self.assertEqual( lightSet.value.paths(), [ "/lightGroup1/light" ] )
 
 		self.assertSetsValid( s["out"] )
@@ -185,12 +185,12 @@ class SubTreeTest( GafferSceneTest.SceneTestCase ) :
 		s = GafferScene.SubTree()
 		s["in"].setInput( g["out"] )
 
-		lightSet = s["out"]["globals"].getValue()["gaffer:sets"]["__lights"]
+		lightSet = s["out"].set( "__lights" )
 		self.assertEqual( lightSet.value.paths(), [ "/group/light" ] )
 		self.assertSetsValid( s["out"] )
 
 		s["root"].setValue( "/" )
-		lightSet = s["out"]["globals"].getValue()["gaffer:sets"]["__lights"]
+		lightSet = s["out"].set( "__lights" )
 		self.assertEqual( lightSet.value.paths(), [ "/group/light" ] )
 		self.assertSetsValid( s["out"] )
 
@@ -199,12 +199,12 @@ class SubTreeTest( GafferSceneTest.SceneTestCase ) :
 		s["includeRoot"].setValue( True )
 
 		s["root"].setValue( "" )
-		lightSet = s["out"]["globals"].getValue()["gaffer:sets"]["__lights"]
+		lightSet = s["out"].set( "__lights" )
 		self.assertEqual( lightSet.value.paths(), [ "/group/light" ] )
 		self.assertSetsValid( s["out"] )
 
 		s["root"].setValue( "/" )
-		lightSet = s["out"]["globals"].getValue()["gaffer:sets"]["__lights"]
+		lightSet = s["out"].set( "__lights" )
 		self.assertEqual( lightSet.value.paths(), [ "/group/light" ] )
 		self.assertSetsValid( s["out"] )
 
@@ -285,7 +285,7 @@ class SubTreeTest( GafferSceneTest.SceneTestCase ) :
 		s["root"].setValue( "/group" )
 		s["includeRoot"].setValue( True )
 
-		lightSet = s["out"]["globals"].getValue()["gaffer:sets"]["__lights"]
+		lightSet = s["out"].set( "__lights" )
 		self.assertEqual( lightSet.value.paths(), [ "/group/light" ] )
 		self.assertSetsValid( s["out"] )
 
@@ -301,9 +301,25 @@ class SubTreeTest( GafferSceneTest.SceneTestCase ) :
 		s["in"].setInput( g["out"] )
 		s["root"].setValue( "group" )
 
-		lightSet = s["out"]["globals"].getValue()["gaffer:sets"]["__lights"]
+		lightSet = s["out"].set( "__lights" )
 		self.assertEqual( lightSet.value.paths(), [ "/light" ] )
 		self.assertSetsValid( s["out"] )
+
+	def testSetNamesAndGlobalsPassThrough( self ) :
+
+		l = GafferSceneTest.TestLight()
+		g = GafferScene.Group()
+		g["in"].setInput( l["out"] )
+
+		s = GafferScene.SubTree()
+		s["in"].setInput( g["out"] )
+		s["root"].setValue( "group" )
+
+		self.assertEqual( s["out"]["globals"].hash(), g["out"]["globals"].hash() )
+		self.assertTrue( s["out"]["globals"].getValue( _copy = False ).isSame( g["out"]["globals"].getValue( _copy = False ) ) )
+
+		self.assertEqual( s["out"]["setNames"].hash(), g["out"]["setNames"].hash() )
+		self.assertTrue( s["out"]["setNames"].getValue( _copy = False ).isSame( g["out"]["setNames"].getValue( _copy = False ) ) )
 
 if __name__ == "__main__":
 	unittest.main()

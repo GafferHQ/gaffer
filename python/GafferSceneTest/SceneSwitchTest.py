@@ -67,28 +67,16 @@ class SceneSwitchTest( GafferSceneTest.SceneTestCase ) :
 		switch["in1"].setInput( sphere["out"] )
 
 		for p in [ switch["in"], switch["in1"] ] :
-			for n in [ "globals", "object", "attributes", "transform", "bound", "childNames" ] :
+			for n in p.keys() :
 				a = switch.affects( p[n] )
 				self.assertEqual( len( a ), 1 )
 				self.assertTrue( a[0].isSame( switch["out"][n] ) )
 
-		a = set( [ plug.relativeName( plug.node() ) for plug in switch.affects( switch["enabled"] ) ] )
-		self.assertEqual(
-			a,
-			set( [
-				"out.globals", "out.object", "out.attributes",
-				"out.transform", "out.bound", "out.childNames"
-			] ),
-		)
+		a = set( switch.affects( switch["enabled"] ) )
+		self.assertEqual( a, set( switch["out"].children() ) )
 
-		a = set( [ plug.relativeName( plug.node() ) for plug in switch.affects( switch["index"] ) ] )
-		self.assertEqual(
-			a,
-			set( [
-				"out.globals", "out.object", "out.attributes",
-				"out.transform", "out.bound", "out.childNames"
-			] ),
-		)
+		a = set( switch.affects( switch["index"] ) )
+		self.assertEqual( a, set( switch["out"].children() ) )
 
 	def testSwitching( self ) :
 

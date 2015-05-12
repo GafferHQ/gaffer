@@ -86,16 +86,6 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"sets" : [
-
-			"description",
-			"""
-			Specifies a list of tags to be loaded and converted
-			into gaffer sets.
-			""",
-
-		],
-
 	}
 
 )
@@ -148,7 +138,7 @@ def __tagsPopupMenu( menuDefinition, plugValueWidget ) :
 	if not isinstance( node, GafferScene.SceneReader ) :
 		return
 
-	if plug != node["tags"] and plug != node["sets"] :
+	if plug != node["tags"] :
 		return
 
 	fileName = plugValueWidget.getContext().substitute( node["fileName"].getValue() )

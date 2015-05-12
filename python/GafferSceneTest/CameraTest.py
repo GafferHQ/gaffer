@@ -81,8 +81,9 @@ class CameraTest( GafferSceneTest.SceneTestCase ) :
 		c = Gaffer.Context()
 		with c :
 
+			c["scene:setName"] = IECore.InternedStringData( "__cameras" )
 			c["scene:path"] = IECore.InternedStringVectorData()
-			# we ignore the enabled plug because it isn't hashed (instead it's value
+			# we ignore the enabled plug because it isn't hashed (instead its value
 			# is used to decide how the hash should be computed). we ignore the transform
 			# plug because it isn't affected by any inputs when the path is "/".
 			self.assertHashesValid( p, inputsToIgnore = [ p["enabled"] ], outputsToIgnore = [ p["out"]["transform"] ] )
@@ -125,7 +126,7 @@ class CameraTest( GafferSceneTest.SceneTestCase ) :
 
 		c = GafferScene.Camera()
 
-		cameraSet = c["out"]["globals"].getValue()["gaffer:sets"]["__cameras"]
+		cameraSet = c["out"].set( "__cameras" )
 		self.assertEqual(
 			cameraSet,
 			GafferScene.PathMatcherData(
@@ -135,7 +136,7 @@ class CameraTest( GafferSceneTest.SceneTestCase ) :
 
 		c["name"].setValue( "renderCam" )
 
-		cameraSet = c["out"]["globals"].getValue()["gaffer:sets"]["__cameras"]
+		cameraSet = c["out"].set( "__cameras" )
 		self.assertEqual(
 			cameraSet,
 			GafferScene.PathMatcherData(
@@ -154,7 +155,7 @@ class CameraTest( GafferSceneTest.SceneTestCase ) :
 		dirtied = GafferTest.CapturingSlot( c.plugDirtiedSignal() )
 		c["name"].setValue( "renderCam" )
 		self.failUnless( c["out"]["childNames"] in [ p[0] for p in dirtied ] )
-		self.failUnless( c["out"]["globals"] in [ p[0] for p in dirtied ] )
+		self.failUnless( c["out"]["set"] in [ p[0] for p in dirtied ] )
 
 		dirtied = GafferTest.CapturingSlot( c.plugDirtiedSignal() )
 		c["projection"].setValue( "orthographic" )

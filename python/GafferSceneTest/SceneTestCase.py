@@ -102,21 +102,19 @@ class SceneTestCase( GafferTest.TestCase ) :
 	## Checks that all paths referenced by sets do exist.
 	def assertSetsValid( self, scenePlug ) :
 
-		globals = scenePlug["globals"].getValue()
-		if "gaffer:sets" in globals :
-			for s in globals["gaffer:sets"].values() :
-				for path in s.value.paths() :
-					self.assertPathExists( scenePlug, path )
+		for setName in scenePlug["setNames"].getValue() :
+			s = scenePlug.set( setName )
+			for path in s.value.paths() :
+				self.assertPathExists( scenePlug, path )
 
 	## Checks that all lights, coordinate systems and cameras
 	# in the scene are in the appropriate built-in sets.
 	def assertBuiltInSetsComplete( self, scenePlug ) :
 
-		globals = scenePlug["globals"].getValue()
-		sets = globals.get( "gaffer:sets", {} )
-		lightSet = sets.get( "__lights", GafferScene.PathMatcherData() )
-		cameraSet = sets.get( "__cameras", GafferScene.PathMatcherData() )
-		coordinateSystemSet = sets.get( "__coordinateSystems", GafferScene.PathMatcherData() )
+		setNames = scenePlug["setNames"].getValue()
+		lightSet = scenePlug.set( "__lights" ) if "__lights" in setNames else GafferScene.PathMatcherData()
+		cameraSet = scenePlug.set( "__cameras" ) if "__cameras" in setNames else GafferScene.PathMatcherData()
+		coordinateSystemSet = scenePlug.set( "__coordinateSystems" ) if "__coordinateSystems" in setNames else GafferScene.PathMatcherData()
 
 		def walkScene( scenePath ) :
 

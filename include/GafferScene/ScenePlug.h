@@ -44,6 +44,7 @@
 #include "Gaffer/BoxPlug.h"
 
 #include "GafferScene/TypeIds.h"
+#include "GafferScene/PathMatcherDataPlug.h"
 
 namespace GafferScene
 {
@@ -99,6 +100,18 @@ class ScenePlug : public Gaffer::CompoundPlug
 		/// to the "scene:path" context entry.
 		Gaffer::CompoundObjectPlug *globalsPlug();
 		const Gaffer::CompoundObjectPlug *globalsPlug() const;
+		/// The plug used to represent the names of available sets.
+		/// Note that this is not sensitive to the "scene:path" context
+		/// variable - sets are global to the scene. After retrieving
+		/// the available names, individual sets can be retrieved from the
+		/// setPlug().
+		Gaffer::InternedStringVectorDataPlug *setNamesPlug();
+		const Gaffer::InternedStringVectorDataPlug *setNamesPlug() const;
+		/// Used to represent an individual set. This is sensitive
+		/// to the scene:setName context variable which specifies
+		/// which set to compute.
+		PathMatcherDataPlug *setPlug();
+		const PathMatcherDataPlug *setPlug() const;
 		//@}
 
 		/// The type used to specify the current scene path in
@@ -110,11 +123,15 @@ class ScenePlug : public Gaffer::CompoundPlug
 		/// and quicker than constructing a new InternedString
 		/// each time.
 		static const IECore::InternedString scenePathContextName;
+		/// The name used to specify the name of the set to be
+		/// computed in a Context.
+		static const IECore::InternedString setNameContextName;
 
 		/// @name Convenience accessors
-		/// These functions create temporary Contexts specifying the scenePath
-		/// and then return the result of calling getValue() or hash() on the
-		/// appropriate child plug.
+		/// These functions create temporary Contexts specifying the necessary
+		/// variables and then return the result of calling getValue() or hash()
+		/// on the appropriate child plug.
+		/// \todo Move to SceneAlgo.h
 		////////////////////////////////////////////////////////////////////
 		//@{
 		Imath::Box3f bound( const ScenePath &scenePath ) const;
@@ -128,6 +145,7 @@ class ScenePlug : public Gaffer::CompoundPlug
 		IECore::CompoundObjectPtr fullAttributes( const ScenePath &scenePath ) const;
 		IECore::ConstObjectPtr object( const ScenePath &scenePath ) const;
 		IECore::ConstInternedStringVectorDataPtr childNames( const ScenePath &scenePath ) const;
+		ConstPathMatcherDataPtr set( const IECore::InternedString &setName ) const;
 
 		IECore::MurmurHash boundHash( const ScenePath &scenePath ) const;
 		IECore::MurmurHash transformHash( const ScenePath &scenePath ) const;
@@ -136,6 +154,7 @@ class ScenePlug : public Gaffer::CompoundPlug
 		IECore::MurmurHash fullAttributesHash( const ScenePath &scenePath ) const;
 		IECore::MurmurHash objectHash( const ScenePath &scenePath ) const;
 		IECore::MurmurHash childNamesHash( const ScenePath &scenePath ) const;
+		IECore::MurmurHash setHash( const IECore::InternedString &setName ) const;
 		//@}
 
 		/// Utility function to convert a string into a path by splitting on '/'.

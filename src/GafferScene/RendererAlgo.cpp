@@ -122,36 +122,26 @@ void outputOptions( const IECore::CompoundObject *globals, IECore::Renderer *ren
 
 void outputCameras( const ScenePlug *scene, const IECore::CompoundObject *globals, IECore::Renderer *renderer )
 {
-	const PathMatcherData *cameraSet = NULL;
-	if( const CompoundData *sets = globals->member<CompoundData>( "gaffer:sets" ) )
+	ConstPathMatcherDataPtr cameraSetData =  scene->set( "__cameras" );
+	const PathMatcher &cameraSet = cameraSetData->readable();
+
+	// Output all the cameras, skipping the primary one - we need to output this
+	// last, as that's how cortex determines the primary camera.
+	ScenePlug::ScenePath primaryCameraPath;
+	if( const StringData *primaryCameraPathData = globals->member<StringData>( "option:render:camera" ) )
 	{
-		cameraSet = sets->member<PathMatcherData>( "__cameras" );
+		ScenePlug::stringToPath( primaryCameraPathData->readable(), primaryCameraPath );
 	}
 
-	if( cameraSet )
+	for( PathMatcher::Iterator it = cameraSet.begin(), eIt = cameraSet.end(); it != eIt; ++it )
 	{
-		// Output all the cameras, skipping the primary one - we need to output this
-		// last, as that's how cortex determines the primary camera.
-		ScenePlug::ScenePath primaryCameraPath;
-		if( const StringData *primaryCameraPathData = globals->member<StringData>( "option:render:camera" ) )
+		if( *it != primaryCameraPath )
 		{
-			ScenePlug::stringToPath( primaryCameraPathData->readable(), primaryCameraPath );
-		}
-
-		vector<string> paths;
-		cameraSet->readable().paths( paths );
-		for( vector<string>::const_iterator it = paths.begin(), eIt = paths.end(); it != eIt; ++it )
-		{
-			ScenePlug::ScenePath path;
-			ScenePlug::stringToPath( *it, path );
-			if( path != primaryCameraPath )
-			{
-				outputCamera( scene, path, globals, renderer );
-			}
+			outputCamera( scene, *it, globals, renderer );
 		}
 	}
 
-	// output the primary camera, or a default if it doesn't exist.
+	// Output the primary camera, or a default if it doesn't exist.
 
 	outputCamera( scene, globals, renderer );
 
@@ -191,27 +181,12 @@ void outputGlobalAttributes( const IECore::CompoundObject *globals, IECore::Rend
 
 void outputLights( const ScenePlug *scene, const IECore::CompoundObject *globals, IECore::Renderer *renderer )
 {
-	const CompoundData *sets = globals->member<CompoundData>( "gaffer:sets" );
-	if( !sets )
-	{
-		return;
-	}
+	ConstPathMatcherDataPtr lightSetData = scene->set( "__lights" );
+	const PathMatcher &lightSet = lightSetData->readable();
 
-	const PathMatcherData *lightSet = sets->member<PathMatcherData>( "__lights" );
-	if( !lightSet )
+	for( PathMatcher::Iterator it = lightSet.begin(), eIt = lightSet.end(); it != eIt; ++it )
 	{
-		return;
-	}
-
-	vector<string> paths;
-	lightSet->readable().paths( paths );
-	for( vector<string>::const_iterator it = paths.begin(), eIt = paths.end(); it != eIt; ++it )
-	{
-		/// \todo We should be able to get paths out of the PathMatcher in
-		/// the first place, rather than have to convert from strings.
-		ScenePlug::ScenePath path;
-		ScenePlug::stringToPath( *it, path );
-		outputLight( scene, path, renderer );
+		outputLight( scene, *it, renderer );
 	}
 }
 
@@ -261,27 +236,12 @@ bool outputLight( const ScenePlug *scene, const ScenePlug::ScenePath &path, IECo
 
 void outputCoordinateSystems( const ScenePlug *scene, const IECore::CompoundObject *globals, IECore::Renderer *renderer )
 {
-	const CompoundData *sets = globals->member<CompoundData>( "gaffer:sets" );
-	if( !sets )
-	{
-		return;
-	}
+	ConstPathMatcherDataPtr coordinateSystemSetData = scene->set( "__coordinateSystems" );
+	const PathMatcher &coordinateSystemSet = coordinateSystemSetData->readable();
 
-	const PathMatcherData *coordinateSystemSet = sets->member<PathMatcherData>( "__coordinateSystems" );
-	if( !coordinateSystemSet )
+	for( PathMatcher::Iterator it = coordinateSystemSet.begin(), eIt = coordinateSystemSet.end(); it != eIt; ++it )
 	{
-		return;
-	}
-
-	vector<string> paths;
-	coordinateSystemSet->readable().paths( paths );
-	for( vector<string>::const_iterator it = paths.begin(), eIt = paths.end(); it != eIt; ++it )
-	{
-		/// \todo We should be able to get paths out of the PathMatcher in
-		/// the first place, rather than have to convert from strings.
-		ScenePlug::ScenePath path;
-		ScenePlug::stringToPath( *it, path );
-		outputCoordinateSystem( scene, path, renderer );
+		outputCoordinateSystem( scene, *it, renderer );
 	}
 }
 
@@ -317,27 +277,12 @@ bool outputCoordinateSystem( const ScenePlug *scene, const ScenePlug::ScenePath 
 
 void outputClippingPlanes( const ScenePlug *scene, const IECore::CompoundObject *globals, IECore::Renderer *renderer )
 {
-	const CompoundData *sets = globals->member<CompoundData>( "gaffer:sets" );
-	if( !sets )
-	{
-		return;
-	}
+	ConstPathMatcherDataPtr clippingPlanesSetData = scene->set( "__clippingPlanes" );
+	const PathMatcher &clippingPlanesSet = clippingPlanesSetData->readable();
 
-	const PathMatcherData *clippingPlanesSet = sets->member<PathMatcherData>( "__clippingPlanes" );
-	if( !clippingPlanesSet )
+	for( PathMatcher::Iterator it = clippingPlanesSet.begin(), eIt = clippingPlanesSet.end(); it != eIt; ++it )
 	{
-		return;
-	}
-
-	vector<string> paths;
-	clippingPlanesSet->readable().paths( paths );
-	for( vector<string>::const_iterator it = paths.begin(), eIt = paths.end(); it != eIt; ++it )
-	{
-		/// \todo We should be able to get paths out of the PathMatcher in
-		/// the first place, rather than have to convert from strings.
-		ScenePlug::ScenePath path;
-		ScenePlug::stringToPath( *it, path );
-		outputClippingPlane( scene, path, renderer );
+		outputClippingPlane( scene, *it, renderer );
 	}
 }
 

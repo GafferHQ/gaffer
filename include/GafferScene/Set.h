@@ -39,7 +39,7 @@
 
 #include "Gaffer/TypedObjectPlug.h"
 
-#include "GafferScene/GlobalsProcessor.h"
+#include "GafferScene/SceneProcessor.h"
 
 namespace Gaffer
 {
@@ -51,10 +51,9 @@ IE_CORE_FORWARDDECLARE( StringPlug )
 namespace GafferScene
 {
 
-/// This node defines sets of scene locations as PathMatcherData,
-/// placing them in the scene globals. It is not to be confused with the Gaffer::Set
-/// class which is for an entirely different purpose.
-class Set : public GlobalsProcessor
+/// Node to define sets of locations in the scene - not to be confused
+/// with the Gaffer::Set class which is for an entirely different purpose.
+class Set : public SceneProcessor
 {
 
 	public :
@@ -62,7 +61,7 @@ class Set : public GlobalsProcessor
 		Set( const std::string &name=defaultName<Set>() );
 		virtual ~Set();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::Set, SetTypeId, GlobalsProcessor );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::Set, SetTypeId, SceneProcessor );
 
 		enum Mode
 		{
@@ -87,13 +86,16 @@ class Set : public GlobalsProcessor
 		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const;
 
-		virtual void hashProcessedGlobals( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual IECore::ConstCompoundObjectPtr computeProcessedGlobals( const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputGlobals ) const;
+		virtual void hashSetNames( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const;
+		virtual void hashSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const;
+
+		virtual IECore::ConstInternedStringVectorDataPtr computeSetNames( const Gaffer::Context *context, const ScenePlug *parent ) const;
+		virtual ConstPathMatcherDataPtr computeSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent ) const;
 
 	private :
 
-		Gaffer::ObjectPlug *pathMatcherPlug();
-		const Gaffer::ObjectPlug *pathMatcherPlug() const;
+		PathMatcherDataPlug *pathMatcherPlug();
+		const PathMatcherDataPlug *pathMatcherPlug() const;
 
 		static size_t g_firstPlugIndex;
 

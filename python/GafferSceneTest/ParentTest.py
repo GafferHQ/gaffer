@@ -196,10 +196,8 @@ class ParentTest( GafferSceneTest.SceneTestCase ) :
 		self.assertSceneValid( p["out"] )
 		self.assertEqual( p["out"].childNames( "/" ), IECore.InternedStringVectorData( [ "light1", "light2" ] ) )
 
-		sets = p["out"]["globals"].getValue()["gaffer:sets"]
-		self.assertEqual( sets.keys(), [ "__lights" ] )
-
-		self.assertEqual( set( sets["__lights"].value.paths() ), set( [ "/light1", "/light2" ] ) )
+		self.assertEqual( p["out"]["setNames"].getValue(), IECore.InternedStringVectorData( [ "__lights" ] ) )
+		self.assertEqual( set( p["out"].set( "__lights" ).value.paths() ), set( [ "/light1", "/light2" ] ) )
 
 	def testSetsUniqueToChild( self ) :
 
@@ -214,10 +212,8 @@ class ParentTest( GafferSceneTest.SceneTestCase ) :
 		self.assertSceneValid( p["out"] )
 		self.assertEqual( p["out"].childNames( "/" ), IECore.InternedStringVectorData( [ "cube", "light" ] ) )
 
-		sets = p["out"]["globals"].getValue()["gaffer:sets"]
-		self.assertEqual( sets.keys(), [ "__lights" ] )
-
-		self.assertEqual( sets["__lights"].value.paths(), [ "/light" ] )
+		self.assertEqual( p["out"]["setNames"].getValue(), IECore.InternedStringVectorData( [ "__lights" ] ) )
+		self.assertEqual( p["out"].set( "__lights" ).value.paths(), [ "/light" ] )
 
 	def testSetsUniqueToParent( self ) :
 
@@ -232,10 +228,8 @@ class ParentTest( GafferSceneTest.SceneTestCase ) :
 		self.assertSceneValid( p["out"] )
 		self.assertEqual( p["out"].childNames( "/" ), IECore.InternedStringVectorData( [ "light", "cube" ] ) )
 
-		sets = p["out"]["globals"].getValue()["gaffer:sets"]
-		self.assertEqual( sets.keys(), [ "__lights" ] )
-
-		self.assertEqual( sets["__lights"].value.paths(), [ "/light" ] )
+		self.assertEqual( p["out"]["setNames"].getValue(), IECore.InternedStringVectorData( [ "__lights" ] ) )
+		self.assertEqual( p["out"].set( "__lights" ).value.paths(), [ "/light" ] )
 
 	def testSetsWithNonRootParent( self ) :
 
@@ -250,10 +244,8 @@ class ParentTest( GafferSceneTest.SceneTestCase ) :
 		self.assertSceneValid( p["out"] )
 		self.assertEqual( p["out"].childNames( "/cube" ), IECore.InternedStringVectorData( [ "light" ] ) )
 
-		sets = p["out"]["globals"].getValue()["gaffer:sets"]
-		self.assertEqual( sets.keys(), [ "__lights" ] )
-
-		self.assertEqual( sets["__lights"].value.paths(), [ "/cube/light" ] )
+		self.assertEqual( p["out"]["setNames"].getValue(), IECore.InternedStringVectorData( [ "__lights" ] ) )
+		self.assertEqual( p["out"].set( "__lights" ).value.paths(), [ "/cube/light" ] )
 
 	def testSetsWithDeepNesting( self ) :
 
@@ -272,10 +264,8 @@ class ParentTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertSceneValid( p["out"] )
 
-		sets = p["out"]["globals"].getValue()["gaffer:sets"]
-		self.assertEqual( sets.keys(), [ "__lights" ] )
-
-		self.assertEqual( sets["__lights"].value.paths(), [ "/cube/group/group/light" ] )
+		self.assertEqual( p["out"]["setNames"].getValue(), IECore.InternedStringVectorData( [ "__lights" ] ) )
+		self.assertEqual( p["out"].set( "__lights" ).value.paths(), [ "/cube/group/group/light" ] )
 
 	def testSetsWithWithRenaming( self ) :
 
@@ -290,10 +280,41 @@ class ParentTest( GafferSceneTest.SceneTestCase ) :
 		self.assertSceneValid( p["out"] )
 		self.assertEqual( p["out"].childNames( "/" ), IECore.InternedStringVectorData( [ "light", "light1" ] ) )
 
-		sets = p["out"]["globals"].getValue()["gaffer:sets"]
-		self.assertEqual( sets.keys(), [ "__lights" ] )
+		self.assertEqual( p["out"]["setNames"].getValue(), IECore.InternedStringVectorData( [ "__lights" ] ) )
+		self.assertEqual( set(  p["out"].set( "__lights" ).value.paths() ), set( [ "/light", "/light1" ] ) )
 
-		self.assertEqual( set( sets["__lights"].value.paths() ), set( [ "/light", "/light1" ] ) )
+	def testGlobalsPassThrough( self ) :
+
+		g = GafferScene.Group()
+		s = GafferScene.Sphere()
+
+		p = GafferScene.Parent()
+		p["in"].setInput( g["out"] )
+		p["parent"].setValue( "/group" )
+		p["child"].setInput( s["out"] )
+
+		self.assertSceneValid( p["out"] )
+
+		self.assertEqual( p["out"]["globals"].hash(), g["out"]["globals"].hash() )
+		self.assertTrue( p["out"]["globals"].getValue( _copy = False ).isSame( g["out"]["globals"].getValue( _copy = False ) ) )
+
+	def testChangingInputSet( self ) :
+
+		c1 = GafferScene.Cube()
+		c2 = GafferScene.Cube()
+
+		p = GafferScene.Parent()
+		p["in"].setInput( c1["out"] )
+		p["parent"].setValue( "/" )
+		p["child"].setInput( c2["out"] )
+
+		h = p["out"].setHash( "test" )
+		self.assertEqual( p["out"].set( "test" ).value, GafferScene.PathMatcher() )
+
+		c1["sets"].setValue( "test" )
+
+		self.assertNotEqual( p["out"].setHash( "test" ), h )
+		self.assertEqual( p["out"].set( "test" ).value, GafferScene.PathMatcher( [ "/cube" ] ) )
 
 if __name__ == "__main__":
 	unittest.main()

@@ -41,6 +41,7 @@
 #include "Gaffer/ComputeNode.h"
 
 #include "GafferScene/ScenePlug.h"
+#include "GafferScene/PathMatcherData.h"
 
 namespace GafferScene
 {
@@ -97,6 +98,8 @@ class SceneNode : public Gaffer::ComputeNode
 		virtual void hashObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const;
 		virtual void hashChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const;
 		virtual void hashGlobals( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const;
+		virtual void hashSetNames( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const;
+		virtual void hashSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const;
 
 		/// Implemented to call the compute*() methods below whenever output is part of a ScenePlug and the node is enabled.
 		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const;
@@ -109,6 +112,12 @@ class SceneNode : public Gaffer::ComputeNode
 		virtual IECore::ConstObjectPtr computeObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
 		virtual IECore::ConstInternedStringVectorDataPtr computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
 		virtual IECore::ConstCompoundObjectPtr computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const;
+		virtual IECore::ConstInternedStringVectorDataPtr computeSetNames( const Gaffer::Context *context, const ScenePlug *parent ) const;
+		/// Implementations of computeSet() must return an empty PathMatcherData when the setName would not be present
+		/// in the result of computeSetNames(), and the corresponding hashSet() method also needs to take this into
+		/// account. The rationale for this is that it frees other nodes from checking that a set exists before accessing
+		/// it, and that makes computation quicker, as we don't need to access setNamesPlug() at all in many common cases.
+		virtual GafferScene::ConstPathMatcherDataPtr computeSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent ) const;
 
 		/// Convenience function to compute the correct bounding box for a path from the bounding box and transforms of its
 		/// children. Using this from computeBound() should be a last resort, as it implies peeking inside children to determine

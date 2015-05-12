@@ -64,6 +64,8 @@ BranchCreator::BranchCreator( const std::string &name )
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new StringPlug( "parent" ) );
 	addChild( new Gaffer::ObjectPlug( "__mapping", Gaffer::Plug::Out, new CompoundData() ) );
+
+	outPlug()->globalsPlug()->setInput( inPlug()->globalsPlug() );
 }
 
 BranchCreator::~BranchCreator()
@@ -104,10 +106,15 @@ void BranchCreator::affects( const Plug *input, AffectedPlugsContainer &outputs 
 	}
 	else if( input == mappingPlug() )
 	{
-		for( ValuePlugIterator it( outPlug() ); it != it.end(); it++ )
-		{
-			outputs.push_back( it->get() );
-		}
+		outputs.push_back( outPlug()->boundPlug() );
+		outputs.push_back( outPlug()->transformPlug() );
+		outputs.push_back( outPlug()->attributesPlug() );
+		outputs.push_back( outPlug()->objectPlug() );
+		outputs.push_back( outPlug()->childNamesPlug() );
+		// Globals plug deliberately omitted - because
+		// it's just a pass-through connection.
+		outputs.push_back( outPlug()->setNamesPlug() );
+		outputs.push_back( outPlug()->setPlug() );
 	}
 }
 
@@ -312,93 +319,145 @@ IECore::ConstInternedStringVectorDataPtr BranchCreator::computeChildNames( const
 	}
 }
 
-void BranchCreator::hashGlobals( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+void BranchCreator::hashSetNames( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
 	ConstCompoundDataPtr mapping = boost::static_pointer_cast<const CompoundData>( mappingPlug()->getValue() );
 	if( !mapping->readable().size() )
 	{
-		h = inPlug()->globalsPlug()->hash();
+		h = inPlug()->setNamesPlug()->hash();
 		return;
 	}
 
-	MurmurHash branchGlobalsHash;
-	hashBranchGlobals( mapping->member<InternedStringVectorData>( g_parentKey )->readable(), context, branchGlobalsHash );
-	if( branchGlobalsHash == MurmurHash() )
+	MurmurHash branchSetNamesHash;
+	hashBranchSetNames( mapping->member<InternedStringVectorData>( g_parentKey )->readable(), context, branchSetNamesHash );
+	if( branchSetNamesHash == MurmurHash() )
 	{
-		h = inPlug()->globalsPlug()->hash();
+		h = inPlug()->setNamesPlug()->hash();
 		return;
 	}
 
-	SceneProcessor::hashGlobals( context, parent, h );
-	inPlug()->globalsPlug()->hash( h );
-	mapping->hash( h );
-	h.append( branchGlobalsHash );
+	SceneProcessor::hashSetNames( context, parent, h );
+	inPlug()->setNamesPlug()->hash( h );
+	h.append( branchSetNamesHash );
 }
 
-IECore::ConstCompoundObjectPtr BranchCreator::computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const
+IECore::ConstInternedStringVectorDataPtr BranchCreator::computeSetNames( const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	ConstCompoundObjectPtr inputGlobals = inPlug()->globalsPlug()->getValue();
+	ConstInternedStringVectorDataPtr inputSetNamesData = inPlug()->setNamesPlug()->getValue();
 
 	ConstCompoundDataPtr mapping = boost::static_pointer_cast<const CompoundData>( mappingPlug()->getValue() );
 	if( !mapping->readable().size() )
 	{
-		return inputGlobals;
+		return inputSetNamesData;
 	}
 
-	const CompoundData *branchSets = NULL;
-	ConstCompoundObjectPtr branchGlobals = computeBranchGlobals( mapping->member<InternedStringVectorData>( g_parentKey )->readable(), context );
-	if( branchGlobals )
+	ConstInternedStringVectorDataPtr branchSetNamesData = computeBranchSetNames( mapping->member<InternedStringVectorData>( g_parentKey )->readable(), context );
+	if( !branchSetNamesData )
 	{
-		branchSets = branchGlobals->member<CompoundData>( "gaffer:sets", /* throwExceptions = */ false );
-	}
-	if( !branchSets )
-	{
-		return inputGlobals;
+		return inputSetNamesData;
 	}
 
-	IECore::CompoundObjectPtr outputGlobals = new CompoundObject;
-	// Shallow copy of the input, because most of it will remain unchanged.
-	outputGlobals->members() = inputGlobals->members();
-	// Deep copy of the input sets, because we'll be modifying them.
-	const CompoundData *inputSets = inputGlobals->member<CompoundData>( "gaffer:sets", /* throwExeptions = */ false );
-	CompoundDataPtr outputSets = inputSets ? inputSets->copy() : new CompoundData;
-	outputGlobals->members()["gaffer:sets"] = outputSets;
-
-	const CompoundData *forwardMapping = mapping->member<CompoundData>( g_forwardMappingKey );
-	ScenePlug::ScenePath parentPath = mapping->member<InternedStringVectorData>( g_parentKey )->readable();
-
-	for( CompoundDataMap::const_iterator it = branchSets->readable().begin(), eIt = branchSets->readable().end(); it != eIt; ++it )
+	const vector<InternedString> &branchSetNames = branchSetNamesData->readable();
+	if( !branchSetNames.size() )
 	{
-		const PathMatcher &branchSet = static_cast<const PathMatcherData *>( it->second.get() )->readable();
-		PathMatcher &outputSet = outputSets->member<PathMatcherData>( it->first, /* throwExceptions = */ false, /* createIfMissing = */ true )->writable();
+		return inputSetNamesData;
+	}
 
-		/// \todo If PathMatcher allowed us to rename nodes and merge in other PathMatchers, this could
-		/// be much more efficient.
-		vector<InternedString> outputPath( parentPath );
-		for( PathMatcher::Iterator pIt = branchSet.begin(), peIt = branchSet.end(); pIt != peIt; ++pIt )
+	InternedStringVectorDataPtr resultData = inputSetNamesData->copy();
+	vector<InternedString> &result = resultData->writable();
+
+	// This naive approach to merging set names preserves the order of the incoming names,
+	// but at the expense of using linear search. We assume that the number of sets is small
+	// enough and the InternedString comparison fast enough that this is OK.
+	for( vector<InternedString>::const_iterator it = branchSetNames.begin(), eIt = branchSetNames.end(); it != eIt; ++it )
+	{
+		if( std::find( result.begin(), result.end(), *it ) == result.end() )
 		{
-			const ScenePlug::ScenePath &branchPath = *pIt;
-			if( !branchPath.size() )
-			{
-				continue;
-			}
-
-			const InternedStringData *outputName = forwardMapping->member<InternedStringData>( branchPath[0] );
-			if( !outputName )
-			{
-				// See comments in Group::computeGlobals().
-				continue;
-			}
-
-			outputPath.resize( parentPath.size() + 1 );
-			outputPath.back() = outputName->readable();
-			outputPath.insert( outputPath.end(), branchPath.begin() + 1, branchPath.end() );
-
-			outputSet.addPath( outputPath );
+			result.push_back( *it );
 		}
 	}
 
-	return outputGlobals;
+	return resultData;
+}
+
+void BranchCreator::hashSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	ConstCompoundDataPtr mapping = boost::static_pointer_cast<const CompoundData>( mappingPlug()->getValue() );
+	if( !mapping->readable().size() )
+	{
+		h = inPlug()->setPlug()->hash();
+		return;
+	}
+
+	MurmurHash branchSetHash;
+	hashBranchSet( mapping->member<InternedStringVectorData>( g_parentKey )->readable(), setName, context, branchSetHash );
+	if( branchSetHash == MurmurHash() )
+	{
+		h = inPlug()->setPlug()->hash();
+		return;
+	}
+
+	SceneProcessor::hashSet( setName, context, parent, h );
+	h.append( inPlug()->setHash( setName ) );
+	mapping->hash( h );
+	h.append( branchSetHash );
+}
+
+GafferScene::ConstPathMatcherDataPtr BranchCreator::computeSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent ) const
+{
+	ConstPathMatcherDataPtr inputSetData = inPlug()->set( setName );
+
+	ConstCompoundDataPtr mapping = boost::static_pointer_cast<const CompoundData>( mappingPlug()->getValue() );
+	if( !mapping->readable().size() )
+	{
+		return inputSetData;
+	}
+
+	ScenePlug::ScenePath parentPath = mapping->member<InternedStringVectorData>( g_parentKey )->readable();
+
+	ConstPathMatcherDataPtr branchSetData = computeBranchSet( parentPath, setName, context );
+	if( !branchSetData )
+	{
+		return inputSetData;
+	}
+
+	const PathMatcher &branchSet = branchSetData->readable();
+	if( branchSet.isEmpty() )
+	{
+		return inputSetData;
+	}
+
+	const CompoundData *forwardMapping = mapping->member<CompoundData>( g_forwardMappingKey );
+
+	PathMatcherDataPtr outputSetData = inputSetData->copy();
+	PathMatcher &outputSet = outputSetData->writable();
+
+	/// \todo If PathMatcher allowed us to rename nodes and merge in other PathMatchers, this could
+	/// be much more efficient.
+	vector<InternedString> outputPath( parentPath );
+	for( PathMatcher::Iterator pIt = branchSet.begin(), peIt = branchSet.end(); pIt != peIt; ++pIt )
+	{
+		const ScenePlug::ScenePath &branchPath = *pIt;
+		if( !branchPath.size() )
+		{
+			continue;
+		}
+
+		const InternedStringData *outputName = forwardMapping->member<InternedStringData>( branchPath[0] );
+		if( !outputName )
+		{
+			// See comments in Group::computeSet().
+			continue;
+		}
+
+		outputPath.resize( parentPath.size() + 1 );
+		outputPath.back() = outputName->readable();
+		outputPath.insert( outputPath.end(), branchPath.begin() + 1, branchPath.end() );
+
+		outputSet.addPath( outputPath );
+	}
+
+	return outputSetData;
 }
 
 void BranchCreator::hashBranchBound( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const
@@ -432,7 +491,7 @@ void BranchCreator::hashBranchChildNames( const ScenePath &parentPath, const Sce
 	}
 	else
 	{
-		// In the rare case that we're being called from from our own globals computation
+		// In the rare case that we're being called from from our own sets computation
 		// via hashMapping(), the full path isn't in the context, so we need to
 		// construct it ourselves.
 		ScenePath fullPath( parentPath );
@@ -441,15 +500,25 @@ void BranchCreator::hashBranchChildNames( const ScenePath &parentPath, const Sce
 	}
 }
 
-void BranchCreator::hashBranchGlobals( const ScenePath &parentPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void BranchCreator::hashBranchSetNames( const ScenePath &parentPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 }
 
-IECore::ConstCompoundObjectPtr BranchCreator::computeBranchGlobals( const ScenePath &parentPath, const Gaffer::Context *context ) const
+IECore::ConstInternedStringVectorDataPtr BranchCreator::computeBranchSetNames( const ScenePath &parentPath, const Gaffer::Context *context ) const
 {
 	// It's OK to return NULL, because the value returned from this method
 	// isn't used as the result of a compute(), and won't be stored on a plug.
-	// For the same reason, it's ok for hashBranchGlobals() to do nothing by default.
+	// For the same reason, it's ok for hashBranchSetNames() to do nothing by default
+	return NULL;
+}
+
+void BranchCreator::hashBranchSet( const ScenePath &parentPath, const IECore::InternedString &setName, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+}
+
+GafferScene::ConstPathMatcherDataPtr BranchCreator::computeBranchSet( const ScenePath &parentPath, const IECore::InternedString &setName, const Gaffer::Context *context ) const
+{
+	// See comments in computeBranchSetNames.
 	return NULL;
 }
 

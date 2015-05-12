@@ -45,6 +45,8 @@ using namespace Gaffer;
 using namespace GafferScene;
 using namespace Imath;
 
+static IECore::InternedString g_coordinateSystemsSetName( "__coordinateSystems" );
+
 IE_CORE_DEFINERUNTIMETYPED( CoordinateSystem );
 
 CoordinateSystem::CoordinateSystem( const std::string &name )
@@ -56,40 +58,6 @@ CoordinateSystem::~CoordinateSystem()
 {
 }
 
-void CoordinateSystem::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
-{
-	ObjectSource::affects( input, outputs );
-
-	if( input == namePlug() )
-	{
-		outputs.push_back( outPlug()->globalsPlug() );
-	}
-}
-
-void CoordinateSystem::hashGlobals( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
-{
-	ObjectSource::hashGlobals( context, parent, h );
-	namePlug()->hash( h );
-}
-
-IECore::ConstCompoundObjectPtr CoordinateSystem::computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const
-{
-	IECore::CompoundObjectPtr result = new IECore::CompoundObject;
-
-	IECore::CompoundDataPtr sets = result->member<IECore::CompoundData>(
-		"gaffer:sets",
-		/* throwExceptions = */ false,
-		/* createIfMissing = */ true
-	);
-
-	PathMatcherDataPtr coordinateSystemSet = new PathMatcherData;
-	coordinateSystemSet->writable().addPath( "/" + namePlug()->getValue() );
-
-	sets->writable()["__coordinateSystems"] = coordinateSystemSet;
-
-	return result;
-}
-
 void CoordinateSystem::hashSource( const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 }
@@ -97,4 +65,9 @@ void CoordinateSystem::hashSource( const Gaffer::Context *context, IECore::Murmu
 IECore::ConstObjectPtr CoordinateSystem::computeSource( const Context *context ) const
 {
 	return new IECore::CoordinateSystem();
+}
+
+IECore::InternedString CoordinateSystem::standardSetName() const
+{
+	return g_coordinateSystemsSetName;
 }

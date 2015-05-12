@@ -39,6 +39,7 @@
 
 #include "GafferScene/DeleteSets.h"
 
+using namespace IECore;
 using namespace Gaffer;
 using namespace GafferScene;
 
@@ -47,11 +48,20 @@ IE_CORE_DEFINERUNTIMETYPED( DeleteSets );
 size_t DeleteSets::g_firstPlugIndex(0);
 
 DeleteSets::DeleteSets( const std::string &name )
-	:	GlobalsProcessor( name )
+	:	SceneProcessor( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new StringPlug( "names" ) );
 	addChild( new BoolPlug( "invertNames" ) );
+
+	// Direct pass-through for stuff we don't touch.
+	outPlug()->boundPlug()->setInput( inPlug()->boundPlug() );
+	outPlug()->transformPlug()->setInput( inPlug()->transformPlug() );
+	outPlug()->attributesPlug()->setInput( inPlug()->attributesPlug() );
+	outPlug()->objectPlug()->setInput( inPlug()->objectPlug() );
+	outPlug()->childNamesPlug()->setInput( inPlug()->childNamesPlug() );
+	outPlug()->globalsPlug()->setInput( inPlug()->globalsPlug() );
+	outPlug()->setPlug()->setInput( inPlug()->setPlug() );
 }
 
 DeleteSets::~DeleteSets()
@@ -81,43 +91,44 @@ const Gaffer::BoolPlug *DeleteSets::invertNamesPlug() const
 
 void DeleteSets::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
 {
-	GlobalsProcessor::affects( input, outputs );
+	SceneProcessor::affects( input, outputs );
 
-	if( input == namesPlug() || input == invertNamesPlug() )
+	if( input == inPlug()->setNamesPlug() || input == namesPlug() || input == invertNamesPlug() )
 	{
-		outputs.push_back( outPlug()->globalsPlug() );
+		outputs.push_back( outPlug()->setNamesPlug() );
 	}
 }
 
-void DeleteSets::hashProcessedGlobals( const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void DeleteSets::hashSetNames( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	namesPlug()->hash(h);
-	invertNamesPlug()->hash(h);
+	SceneProcessor::hashSetNames( context, parent, h );
+	inPlug()->setNamesPlug()->hash( h );
+	namesPlug()->hash( h );
+	invertNamesPlug()->hash( h );
 }
 
-IECore::ConstCompoundObjectPtr DeleteSets::computeProcessedGlobals( const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputGlobals ) const
+IECore::ConstInternedStringVectorDataPtr DeleteSets::computeSetNames( const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	IECore::CompoundObjectPtr outputGlobals = new IECore::CompoundObject;
-	outputGlobals->members() = inputGlobals->members();
-
-	IECore::ConstCompoundDataPtr inSets = inputGlobals->member<IECore::CompoundData>("gaffer:sets");
-
-	if( inSets )
+	ConstInternedStringVectorDataPtr inputSetNamesData = inPlug()->setNamesPlug()->getValue();
+	const std::vector<InternedString> &inputSetNames = inputSetNamesData->readable();
+	if( inputSetNames.empty() )
 	{
-		IECore::CompoundData* outSets = new IECore::CompoundData;
-		outputGlobals->members()["gaffer:sets"] = outSets;
+		return inputSetNamesData;
+	}
 
-		const std::string names = namesPlug()->getValue();
+	InternedStringVectorDataPtr outputSetNamesData = new InternedStringVectorData;
+	std::vector<InternedString> &outputSetNames = outputSetNamesData->writable();
 
-		bool invert = invertNamesPlug()->getValue();
-		for( IECore::CompoundDataMap::const_iterator it = inSets->readable().begin(); it != inSets->readable().end(); ++it )
+	const std::string names = namesPlug()->getValue();
+	const bool invert = invertNamesPlug()->getValue();
+
+	for( std::vector<InternedString>::const_iterator it = inputSetNames.begin(); it != inputSetNames.end(); ++it )
+	{
+		if( matchMultiple( *it, names ) != (!invert) )
 		{
-			if( matchMultiple( it->first, names ) != (!invert) )
-			{
-				outSets->writable()[it->first] = const_cast<IECore::Data*>( it->second.get() );
-			}
+			outputSetNames.push_back( *it );
 		}
 	}
 
-	return outputGlobals;
+	return outputSetNamesData;
 }

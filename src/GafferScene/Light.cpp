@@ -42,6 +42,8 @@
 using namespace Gaffer;
 using namespace GafferScene;
 
+static IECore::InternedString g_lightsSetName( "__lights" );
+
 IE_CORE_DEFINERUNTIMETYPED( Light );
 
 size_t Light::g_firstPlugIndex = 0;
@@ -71,38 +73,10 @@ void Light::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs 
 {
 	ObjectSource::affects( input, outputs );
 
-	if( input == namePlug() )
-	{
-		outputs.push_back( outPlug()->globalsPlug() );
-	}
-	else if( parametersPlug()->isAncestorOf( input ) )
+	if( parametersPlug()->isAncestorOf( input ) )
 	{
 		outputs.push_back( sourcePlug() );
 	}
-}
-
-void Light::hashGlobals( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
-{
-	ObjectSource::hashGlobals( context, parent, h );
-	namePlug()->hash( h );
-}
-
-IECore::ConstCompoundObjectPtr Light::computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const
-{
-	IECore::CompoundObjectPtr result = new IECore::CompoundObject;
-
-	IECore::CompoundDataPtr sets = result->member<IECore::CompoundData>(
-		"gaffer:sets",
-		/* throwExceptions = */ false,
-		/* createIfMissing = */ true
-	);
-
-	PathMatcherDataPtr lightSet = new PathMatcherData;
-	lightSet->writable().addPath( "/" + namePlug()->getValue() );
-
-	sets->writable()["__lights"] = lightSet;
-
-	return result;
 }
 
 void Light::hashSource( const Gaffer::Context *context, IECore::MurmurHash &h ) const
@@ -113,4 +87,9 @@ void Light::hashSource( const Gaffer::Context *context, IECore::MurmurHash &h ) 
 IECore::ConstObjectPtr Light::computeSource( const Context *context ) const
 {
 	return computeLight( context );
+}
+
+IECore::InternedString Light::standardSetName() const
+{
+	return g_lightsSetName;
 }

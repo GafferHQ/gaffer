@@ -87,6 +87,14 @@ IECore::CameraPtr camera( const ScenePlug *scene, const IECore::CompoundObject *
 /// As above, but choosing a specific camera rather than the primary one.
 IECore::CameraPtr camera( const ScenePlug *scene, const ScenePlug::ScenePath &cameraPath, const IECore::CompoundObject *globals = NULL );
 
+/// Returns true if the specified set exists within the scene, and false otherwise.
+/// This simply searches for the set name in the result of scene->setNamesPlug()->getValue().
+bool setExists( const ScenePlug *scene, const IECore::InternedString &setName );
+
+/// Returns all the sets in the scene, indexed by name. Performs individual set
+/// computations in parallel for improved performance.
+IECore::ConstCompoundDataPtr sets( const ScenePlug *scene );
+
 } // namespace GafferScene
 
 #endif // GAFFERSCENE_SCENEALGO_H

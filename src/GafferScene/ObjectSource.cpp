@@ -43,10 +43,14 @@
 
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/TransformPlug.h"
+#include "Gaffer/StringAlgo.h"
 
 #include "GafferScene/ObjectSource.h"
+#include "GafferScene/SceneAlgo.h"
 
 using namespace GafferScene;
+
+static IECore::InternedString g_emptyString( "" );
 
 IE_CORE_DEFINERUNTIMETYPED( ObjectSource );
 
@@ -57,6 +61,7 @@ ObjectSource::ObjectSource( const std::string &name, const std::string &namePlug
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new Gaffer::StringPlug( "name", Gaffer::Plug::In, namePlugDefaultValue ) );
+	addChild( new Gaffer::StringPlug( "sets" ) );
 	addChild( new Gaffer::TransformPlug( "transform" ) );
 	addChild( new Gaffer::ObjectPlug( "__source", Gaffer::Plug::Out, IECore::NullObject::defaultNullObject() ) );
 }
@@ -75,14 +80,24 @@ const Gaffer::StringPlug *ObjectSource::namePlug() const
 	return getChild<Gaffer::StringPlug>( g_firstPlugIndex );
 }
 
+Gaffer::StringPlug *ObjectSource::setsPlug()
+{
+	return getChild<Gaffer::StringPlug>( g_firstPlugIndex + 1 );
+}
+
+const Gaffer::StringPlug *ObjectSource::setsPlug() const
+{
+	return getChild<Gaffer::StringPlug>( g_firstPlugIndex + 1 );
+}
+
 Gaffer::TransformPlug *ObjectSource::transformPlug()
 {
-	return getChild<Gaffer::TransformPlug>( g_firstPlugIndex + 1 );
+	return getChild<Gaffer::TransformPlug>( g_firstPlugIndex + 2 );
 }
 
 const Gaffer::TransformPlug *ObjectSource::transformPlug() const
 {
-	return getChild<Gaffer::TransformPlug>( g_firstPlugIndex + 1 );
+	return getChild<Gaffer::TransformPlug>( g_firstPlugIndex + 2 );
 }
 
 void ObjectSource::affects( const Gaffer::Plug *input, Gaffer::DependencyNode::AffectedPlugsContainer &outputs ) const
@@ -97,22 +112,27 @@ void ObjectSource::affects( const Gaffer::Plug *input, Gaffer::DependencyNode::A
 	else if( input == namePlug() )
 	{
 		outputs.push_back( outPlug()->childNamesPlug() );
+		outputs.push_back( outPlug()->setPlug() );
 	}
 	else if( transformPlug()->isAncestorOf( input ) )
 	{
 		outputs.push_back( outPlug()->transformPlug() );
+	}
+	else if( input == setsPlug() )
+	{
+		outputs.push_back( outPlug()->setNamesPlug() );
 	}
 
 }
 
 Gaffer::ObjectPlug *ObjectSource::sourcePlug()
 {
-	return getChild<Gaffer::ObjectPlug>( g_firstPlugIndex + 2 );
+	return getChild<Gaffer::ObjectPlug>( g_firstPlugIndex + 3 );
 }
 
 const Gaffer::ObjectPlug *ObjectSource::sourcePlug() const
 {
-	return getChild<Gaffer::ObjectPlug>( g_firstPlugIndex + 2 );
+	return getChild<Gaffer::ObjectPlug>( g_firstPlugIndex + 3 );
 }
 
 void ObjectSource::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
@@ -267,4 +287,66 @@ void ObjectSource::hashGlobals( const Gaffer::Context *context, const ScenePlug 
 IECore::ConstCompoundObjectPtr ObjectSource::computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	return parent->globalsPlug()->defaultValue();
+}
+
+void ObjectSource::hashSetNames( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	SceneNode::hashSetNames( context, parent, h );
+	setsPlug()->hash( h );
+}
+
+IECore::ConstInternedStringVectorDataPtr ObjectSource::computeSetNames( const Gaffer::Context *context, const ScenePlug *parent ) const
+{
+	IECore::InternedStringVectorDataPtr result = new IECore::InternedStringVectorData;
+	Gaffer::tokenize( setsPlug()->getValue(), ' ', result->writable() );
+	IECore::InternedString n = standardSetName();
+	if( n.string().size() )
+	{
+		result->writable().push_back( n );
+	}
+	return result;
+}
+
+void ObjectSource::hashSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	if( setNameValid( setName ) )
+	{
+		SceneNode::hashSet( setName, context, parent, h );
+		namePlug()->hash( h );
+	}
+	else
+	{
+		h = outPlug()->setPlug()->defaultValue()->Object::hash();
+	}
+}
+
+GafferScene::ConstPathMatcherDataPtr ObjectSource::computeSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent ) const
+{
+	if( setNameValid( setName ) )
+	{
+		PathMatcherDataPtr result = new PathMatcherData;
+		result->writable().addPath( namePlug()->getValue() );
+		return result;
+	}
+	else
+	{
+		return outPlug()->setPlug()->defaultValue();
+	}
+}
+
+IECore::InternedString ObjectSource::standardSetName() const
+{
+	return g_emptyString;
+}
+
+bool ObjectSource::setNameValid( const IECore::InternedString &setName ) const
+{
+	if( setName != g_emptyString && setName == standardSetName() )
+	{
+		return true;
+	}
+
+	std::vector<IECore::InternedString> setNames;
+	Gaffer::tokenize( setsPlug()->getValue(), ' ', setNames );
+	return std::find( setNames.begin(), setNames.end(), setName ) != setNames.end();
 }

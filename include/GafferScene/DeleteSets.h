@@ -37,7 +37,7 @@
 #ifndef GAFFERSCENE_DELETESETS_H
 #define GAFFERSCENE_DELETESETS_H
 
-#include "GafferScene/GlobalsProcessor.h"
+#include "GafferScene/SceneProcessor.h"
 
 namespace Gaffer
 {
@@ -49,7 +49,7 @@ IE_CORE_FORWARDDECLARE( StringPlug )
 namespace GafferScene
 {
 
-class DeleteSets : public GlobalsProcessor
+class DeleteSets : public SceneProcessor
 {
 
 	public :
@@ -57,7 +57,7 @@ class DeleteSets : public GlobalsProcessor
 		DeleteSets( const std::string &name=defaultName<DeleteSets>() );
 		virtual ~DeleteSets();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::DeleteSets, DeleteSetsTypeId, GlobalsProcessor );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::DeleteSets, DeleteSetsTypeId, SceneProcessor );
 
 		Gaffer::StringPlug *namesPlug();
 		const Gaffer::StringPlug *namesPlug() const;
@@ -69,8 +69,8 @@ class DeleteSets : public GlobalsProcessor
 
 	protected :
 
-		virtual void hashProcessedGlobals( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual IECore::ConstCompoundObjectPtr computeProcessedGlobals( const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputGlobals ) const;
+		virtual void hashSetNames( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const;
+		virtual IECore::ConstInternedStringVectorDataPtr computeSetNames( const Gaffer::Context *context, const ScenePlug *parent ) const;
 
 	private :
 

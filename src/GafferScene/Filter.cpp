@@ -43,7 +43,7 @@ using namespace Gaffer;
 
 IE_CORE_DEFINERUNTIMETYPED( Filter );
 
-const IECore::InternedString Filter::g_inputSceneContextName( "scene:filter:inputScene" );
+const IECore::InternedString Filter::inputSceneContextName( "scene:filter:inputScene" );
 size_t Filter::g_firstPlugIndex = 0;
 
 Filter::Filter( const std::string &name )
@@ -105,12 +105,12 @@ bool Filter::sceneAffectsMatch( const ScenePlug *scene, const Gaffer::ValuePlug 
 
 void Filter::setInputScene( Gaffer::Context *context, const ScenePlug *scenePlug )
 {
-	context->set( g_inputSceneContextName, (uint64_t)scenePlug );
+	context->set( inputSceneContextName, (uint64_t)scenePlug );
 }
 
 const ScenePlug *Filter::getInputScene( const Gaffer::Context *context )
 {
-	return (const ScenePlug *)( context->get<uint64_t>( g_inputSceneContextName, 0 ) );
+	return (const ScenePlug *)( context->get<uint64_t>( inputSceneContextName, 0 ) );
 }
 
 void Filter::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const

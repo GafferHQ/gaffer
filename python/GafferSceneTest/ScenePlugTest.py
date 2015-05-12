@@ -202,6 +202,16 @@ class ScenePlugTest( unittest.TestCase ) :
 
 		GafferSceneTest.testManyStringToPathCalls()
 
+	def testSetPlugs( self ) :
+
+		p = GafferScene.ScenePlug()
+
+		self.assertTrue( isinstance( p["setNames"], Gaffer.InternedStringVectorDataPlug ) )
+		self.assertEqual( p["setNames"].defaultValue(), IECore.InternedStringVectorData() )
+
+		self.assertTrue( isinstance( p["set"], GafferScene.PathMatcherDataPlug ) )
+		self.assertEqual( p["set"].defaultValue(), GafferScene.PathMatcherData() )
+
 if __name__ == "__main__":
 	unittest.main()
 

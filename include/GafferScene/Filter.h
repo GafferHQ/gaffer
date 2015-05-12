@@ -91,6 +91,8 @@ class Filter : public Gaffer::ComputeNode
 		static void setInputScene( Gaffer::Context *context, const ScenePlug *scenePlug );
 		/// Returns an input scene previously stored with setInputScene().
 		static const ScenePlug *getInputScene( const Gaffer::Context *context );
+		/// The name of the variable used to specify the input scene.
+		static const IECore::InternedString inputSceneContextName;
 
 	protected :
 
@@ -104,8 +106,6 @@ class Filter : public Gaffer::ComputeNode
 		virtual unsigned computeMatch( const ScenePlug *scene, const Gaffer::Context *context ) const = 0;
 
 	private :
-
-		static const IECore::InternedString g_inputSceneContextName;
 
 		static size_t g_firstPlugIndex;
 

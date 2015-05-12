@@ -35,137 +35,22 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
-
-#include "IECore/MessageHandler.h"
-#include "IECore/NullObject.h"
-#include "IECorePython/RunTimeTypedBinding.h"
-
 #include "Gaffer/TypedObjectPlug.h"
-#include "Gaffer/Node.h"
-
 #include "GafferBindings/TypedObjectPlugBinding.h"
-#include "GafferBindings/PlugBinding.h"
 
-using namespace boost::python;
-using namespace GafferBindings;
-using namespace Gaffer;
-
-// generally we copy the value when setting it from python, because the c++ side will
-// reference it directly, and subsequent modifications on the python side would be
-// disastrous. the copy parameter may be set to false by users who really know what
-// they're doing, but generally it should probably be avoided.
-template<typename T>
-static void setValue( typename T::Ptr p, typename T::ValuePtr v, bool copy=true )
-{
-	if( !v )
-	{
-		throw std::invalid_argument( "Value must not be None." );
-	}
-	if( copy )
-	{
-		v = v->copy();
-	}
-	p->setValue( v );
-}
-
-// Generally we copy the value when returning to python, because in C++
-// it's const, and we can only send non-const objects to python. Letting
-// someone modify the actual value in python could cause all sorts of problems,
-// because that value may be in the cache, and be returned as the result of
-// subsequent computations. The copy argument is provided mainly for the tests,
-// so that we can verify whether or not a returned value is shared with the
-// result of another computation. There might be a performance case for using it
-// in other scenarios, but in general copy==false should be avoided like the plague.
-//
-// Likewise, we expose the precomputedHash argument prefixed with an underscore to
-// discourage its use - again it is mainly exposed for use only in the tests.
-template<typename T>
-static IECore::ObjectPtr getValue( typename T::Ptr p, const IECore::MurmurHash *precomputedHash=NULL, bool copy=true )
-{
-	// Must release GIL in case computation spawns threads which need
-	// to reenter Python.
-	IECorePython::ScopedGILRelease r;
-	
-	typename IECore::ConstObjectPtr v = p->getValue( precomputedHash );
-	if( v )
-	{
-		if( copy )
-		{
-			return v->copy();
-		}
-		else
-		{
-			return boost::const_pointer_cast<IECore::Object>( v );
-		}
-	}
-	return 0;
-}
-
-template<typename T>
-static typename T::ValuePtr defaultValue( typename T::Ptr p )
-{
-	typename T::ConstValuePtr v = p->defaultValue();
-	if( v )
-	{
-		return v->copy();
-	}
-	return 0;
-}
-
-template<typename T>
-static typename T::Ptr construct(
-	const char *name,
-	Plug::Direction direction,
-	typename T::ValuePtr defaultValue,
-	unsigned flags
-)
-{
-	if( !defaultValue )
-	{
-		throw std::invalid_argument( "Default value must not be None." );
-	}
-	typename T::Ptr result = new T( name, direction, defaultValue, flags );
-	return result;
-}
-
-template<typename T>
-static void bind()
-{
-
-	scope s = PlugClass<T>()
-		.def( "__init__", make_constructor( construct<T>, default_call_policies(),
-				(
-					boost::python::arg_( "name" )=GraphComponent::defaultName<T>(),
-					boost::python::arg_( "direction" )=Plug::In,
-					boost::python::arg_( "defaultValue" ),
-					boost::python::arg_( "flags" )=Plug::Default
-				)
-			)
-		)
-		.def( "defaultValue", &defaultValue<T> )
-		.def( "setValue", setValue<T>, ( boost::python::arg_( "value" ), boost::python::arg_( "_copy" ) = true ) )
-		.def( "getValue", getValue<T>, ( boost::python::arg_( "_precomputedHash" ) = object(), boost::python::arg_( "_copy" ) = true ) )
-	;
-
-	PyTypeObject *valueType = boost::python::converter::registry::query(
-		boost::python::type_info( typeid( typename T::ValueType ) )
-	)->get_class_object();
-
-	s.attr( "ValueType" ) = object( handle<>( borrowed( valueType ) ) );
-
-}
+// Deliberately avoiding "using namespace" so that we can be sure
+// TypedPlugBinding uses full namespace qualification for all names.
 
 void GafferBindings::bindTypedObjectPlug()
 {
-	bind<ObjectPlug>();
-	bind<BoolVectorDataPlug>();
-	bind<IntVectorDataPlug>();
-	bind<FloatVectorDataPlug>();
-	bind<StringVectorDataPlug>();
-	bind<InternedStringVectorDataPlug>();
-	bind<V3fVectorDataPlug>();
-	bind<Color3fVectorDataPlug>();
-	bind<ObjectVectorPlug>();
-	bind<CompoundObjectPlug>();
+	GafferBindings::TypedObjectPlugClass<Gaffer::ObjectPlug>();
+	GafferBindings::TypedObjectPlugClass<Gaffer::BoolVectorDataPlug>();
+	GafferBindings::TypedObjectPlugClass<Gaffer::IntVectorDataPlug>();
+	GafferBindings::TypedObjectPlugClass<Gaffer::FloatVectorDataPlug>();
+	GafferBindings::TypedObjectPlugClass<Gaffer::StringVectorDataPlug>();
+	GafferBindings::TypedObjectPlugClass<Gaffer::InternedStringVectorDataPlug>();
+	GafferBindings::TypedObjectPlugClass<Gaffer::V3fVectorDataPlug>();
+	GafferBindings::TypedObjectPlugClass<Gaffer::Color3fVectorDataPlug>();
+	GafferBindings::TypedObjectPlugClass<Gaffer::ObjectVectorPlug>();
+	GafferBindings::TypedObjectPlugClass<Gaffer::CompoundObjectPlug>();
 }

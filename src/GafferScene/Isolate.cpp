@@ -62,6 +62,8 @@ Isolate::Isolate( const std::string &name )
 	outPlug()->transformPlug()->setInput( inPlug()->transformPlug() );
 	outPlug()->attributesPlug()->setInput( inPlug()->attributesPlug() );
 	outPlug()->objectPlug()->setInput( inPlug()->objectPlug() );
+	outPlug()->globalsPlug()->setInput( inPlug()->globalsPlug() );
+	outPlug()->setNamesPlug()->setInput( inPlug()->setNamesPlug() );
 }
 
 Isolate::~Isolate()
@@ -100,7 +102,7 @@ void Isolate::affects( const Gaffer::Plug *input, AffectedPlugsContainer &output
 	else if( input == filterPlug() || input == fromPlug() )
 	{
 		outputs.push_back( outPlug()->childNamesPlug() );
-		outputs.push_back( outPlug()->globalsPlug() );
+		outputs.push_back( outPlug()->setPlug() );
 	}
 	else if( input == adjustBoundsPlug() )
 	{
@@ -184,20 +186,20 @@ IECore::ConstInternedStringVectorDataPtr Isolate::computeChildNames( const Scene
 	}
 }
 
-void Isolate::hashGlobals( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+void Isolate::hashSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	FilteredSceneProcessor::hashGlobals( context, parent, h );
-	inPlug()->globalsPlug()->hash( h );
+	FilteredSceneProcessor::hashSet( setName, context, parent, h );
+	inPlug()->setPlug()->hash( h );
 	fromPlug()->hash( h );
 
-	// The globals themselves do not depend on the "scene:path"
+	// The sets themselves do not depend on the "scene:path"
 	// context entry - the whole point is that they're global.
 	// However, the PathFilter is dependent on scene:path, so
 	// we must remove the path before hashing in the filter in
 	// case we're computed from multiple contexts with different
 	// paths (from a SetFilter for instance). If we didn't do this,
 	// our different hashes would lead to huge numbers of redundant
-	// calls to computeGlobals() and a huge overhead in recomputing
+	// calls to computeSet() and a huge overhead in recomputing
 	// the same sets repeatedly.
 	//
 	// See further comments in FilteredSceneProcessor::affects().
@@ -207,18 +209,17 @@ void Isolate::hashGlobals( const Gaffer::Context *context, const ScenePlug *pare
 	filterPlug()->hash( h );
 }
 
-IECore::ConstCompoundObjectPtr Isolate::computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const
+GafferScene::ConstPathMatcherDataPtr Isolate::computeSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	ConstCompoundObjectPtr inputGlobals = inPlug()->globalsPlug()->getValue();
-	const CompoundData *inputSets = inputGlobals->member<CompoundData>( "gaffer:sets" );
-	if( !inputSets )
+	ConstPathMatcherDataPtr inputSetData = inPlug()->setPlug()->getValue();
+	const PathMatcher &inputSet = inputSetData->readable();
+	if( inputSet.isEmpty() )
 	{
-		return inputGlobals;
+		return inputSetData;
 	}
 
-	CompoundObjectPtr outputGlobals = inputGlobals->copy();
-	CompoundDataPtr outputSets = new CompoundData;
-	outputGlobals->members()["gaffer:sets"] = outputSets;
+	PathMatcherDataPtr outputSetData = new PathMatcherData;
+	PathMatcher &outputSet = outputSetData->writable();
 
 	ContextPtr tmpContext = filterContext( context );
 	Context::Scope scopedContext( tmpContext.get() );
@@ -226,64 +227,55 @@ IECore::ConstCompoundObjectPtr Isolate::computeGlobals( const Gaffer::Context *c
 	const std::string fromString = fromPlug()->getValue();
 	ScenePlug::ScenePath fromPath; ScenePlug::stringToPath( fromString, fromPath );
 
-	for( CompoundDataMap::const_iterator it = inputSets->readable().begin(), eIt = inputSets->readable().end(); it != eIt; ++it )
+	for( PathMatcher::RawIterator pIt = inputSet.begin(), peIt = inputSet.end(); pIt != peIt; )
 	{
-		/// \todo This could be more efficient if PathMatcher exposed the internal nodes,
-		/// and allowed sharing between matchers. Then we could do a really lightweight copy
-		/// and just trim out the nodes we didn't want.
-		const PathMatcher &inputSet = static_cast<const PathMatcherData *>( it->second.get() )->readable();
-		PathMatcher &outputSet = outputSets->member<PathMatcherData>( it->first, /* throwExceptions = */ false, /* createIfMissing = */ true )->writable();
-
-		for( PathMatcher::RawIterator pIt = inputSet.begin(), peIt = inputSet.end(); pIt != peIt; )
+		tmpContext->set( ScenePlug::scenePathContextName, *pIt );
+		const int m = filterPlug()->getValue();
+		if( m & ( Filter::ExactMatch | Filter::AncestorMatch ) )
 		{
-			tmpContext->set( ScenePlug::scenePathContextName, *pIt );
-			const int m = filterPlug()->getValue();
-			if( m & ( Filter::ExactMatch | Filter::AncestorMatch ) )
+			// We want to keep everything below this point, and
+			// we can speed things up by not checking the filter
+			// for our descendants.
+			PathMatcher::RawIterator next = pIt; next.prune(); ++next;
+			while( pIt != next )
 			{
-				// We want to keep everything below this point, and
-				// we can speed things up by not checking the filter
-				// for our descendants.
-				PathMatcher::RawIterator next = pIt; next.prune(); ++next;
-				while( pIt != next )
-				{
-					if( pIt.exactMatch() )
-					{
-						outputSet.addPath( *pIt );
-					}
-					++pIt;
-				}
-			}
-			else if( m & Filter::DescendantMatch )
-			{
-				// We might be removing things below here,
-				// so just continue our iteration normally
-				// so we can find out.
 				if( pIt.exactMatch() )
 				{
 					outputSet.addPath( *pIt );
 				}
 				++pIt;
 			}
-			else
+		}
+		else if( m & Filter::DescendantMatch )
+		{
+			// We might be removing things below here,
+			// so just continue our iteration normally
+			// so we can find out.
+			if( pIt.exactMatch() )
 			{
-				assert( m == Filter::NoMatch );
-				if( boost::starts_with( *pIt, fromPath ) )
-				{
-					// Not going to keep anything below
-					// here, so we can prune traversal
-					// entirely.
-					pIt.prune();
-				}
-				else if( pIt.exactMatch() )
-				{
-					outputSet.addPath( *pIt );
-				}
-				++pIt;
+				outputSet.addPath( *pIt );
 			}
+			++pIt;
+		}
+		else
+		{
+			assert( m == Filter::NoMatch );
+			if( boost::starts_with( *pIt, fromPath ) )
+			{
+				// Not going to keep anything below
+				// here, so we can prune traversal
+				// entirely.
+				pIt.prune();
+			}
+			else if( pIt.exactMatch() )
+			{
+				outputSet.addPath( *pIt );
+			}
+			++pIt;
 		}
 	}
 
-	return outputGlobals;
+	return outputSetData;
 }
 
 bool Isolate::mayPruneChildren( const ScenePath &path, unsigned filterValue ) const

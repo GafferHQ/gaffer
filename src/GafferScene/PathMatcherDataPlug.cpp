@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,47 +34,15 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_PRUNE_H
-#define GAFFERSCENE_PRUNE_H
+#include "GafferScene/PathMatcherDataPlug.h"
+#include "Gaffer/TypedObjectPlug.inl"
 
-#include "GafferScene/FilteredSceneProcessor.h"
-
-namespace GafferScene
+namespace Gaffer
 {
 
-class Prune : public FilteredSceneProcessor
-{
+IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( GafferScene::PathMatcherDataPlug, GafferScene::PathMatcherDataPlugTypeId )
 
-	public :
+// explicit instantiation
+template class TypedObjectPlug<GafferScene::PathMatcherData>;
 
-		Prune( const std::string &name=defaultName<Prune>() );
-		virtual ~Prune();
-
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::Prune, PruneTypeId, FilteredSceneProcessor );
-
-		Gaffer::BoolPlug *adjustBoundsPlug();
-		const Gaffer::BoolPlug *adjustBoundsPlug() const;
-
-		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
-
-	protected :
-
-		virtual void hashBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const;
-		virtual void hashChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const;
-		virtual void hashSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const;
-
-		virtual Imath::Box3f computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
-		virtual IECore::ConstInternedStringVectorDataPtr computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
-		virtual GafferScene::ConstPathMatcherDataPtr computeSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent ) const;
-
-	private :
-
-		static size_t g_firstPlugIndex;
-
-};
-
-IE_CORE_DECLAREPTR( Prune )
-
-} // namespace GafferScene
-
-#endif // GAFFERSCENE_PRUNE_H
+} // namespace Gaffer

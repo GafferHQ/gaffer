@@ -61,7 +61,8 @@ class LightTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( l["out"].transform( "/light" ), IECore.M44f() )
 		self.assertEqual( l["out"].childNames( "/light" ), IECore.InternedStringVectorData() )
 
-		lightSet = l["out"]["globals"].getValue()["gaffer:sets"]["__lights"]
+		self.assertEqual( l["out"]["setNames"].getValue(), IECore.InternedStringVectorData( [ "__lights" ] ) )
+		lightSet = l["out"].set( "__lights" )
 		self.assertEqual(
 			lightSet,
 			GafferScene.PathMatcherData(
@@ -77,7 +78,7 @@ class LightTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertSceneValid( g["out"] )
 
-		lightSet = g["out"]["globals"].getValue()["gaffer:sets"]["__lights"]
+		lightSet = g["out"].set( "__lights" )
 		self.assertEqual(
 			lightSet,
 			GafferScene.PathMatcherData(
@@ -100,10 +101,41 @@ class LightTest( GafferSceneTest.SceneTestCase ) :
 	def testDisabled( self ) :
 
 		l = GafferSceneTest.TestLight()
-		self.assertTrue( "gaffer:sets" in l["out"]["globals"].getValue() )
+		self.assertTrue( "__lights" in l["out"]["setNames"].getValue() )
 
 		l["enabled"].setValue( False )
-		self.assertFalse( "gaffer:sets" in l["out"]["globals"].getValue() )
+		self.assertFalse( "__lights" in l["out"]["setNames"].getValue() )
+
+	def testAdditionalSets( self ) :
+
+		l = GafferSceneTest.TestLight()
+		self.assertEqual( l["out"]["setNames"].getValue(), IECore.InternedStringVectorData( [ "__lights" ] ) )
+
+		l["sets"].setValue( "A B")
+		self.assertEqual( l["out"]["setNames"].getValue(), IECore.InternedStringVectorData( [ "A", "B", "__lights" ] ) )
+
+		self.assertTrue( l["out"].set( "A", _copy = False ).isSame( l["out"].set( "B", _copy = False ) ) )
+		self.assertTrue( l["out"].set( "B", _copy = False ).isSame( l["out"].set( "__lights", _copy = False ) ) )
+
+	def testDisabledHasNoSets( self ) :
+
+		l = GafferSceneTest.TestLight()
+		l["sets"].setValue( "A B")
+		self.assertEqual( l["out"]["setNames"].getValue(), IECore.InternedStringVectorData( [ "A", "B", "__lights" ] ) )
+
+		l["enabled"].setValue( False )
+		self.assertEqual( l["out"]["setNames"].getValue(), IECore.InternedStringVectorData() )
+		
+	def testNonExistentSets( self ) :
+
+		l = GafferSceneTest.TestLight()
+		l["sets"].setValue( "A B")
+		self.assertEqual( l["out"]["setNames"].getValue(), IECore.InternedStringVectorData( [ "A", "B", "__lights" ] ) )
+
+		self.assertEqual( l["out"].set( "" ), GafferScene.PathMatcherData() )
+		self.assertEqual( l["out"].set( "nonexistent1" ), GafferScene.PathMatcherData() )
+		self.assertEqual( l["out"].setHash( "nonexistent1" ), l["out"].setHash( "nonexistent2" ) )
+		self.assertTrue( l["out"].set( "nonexistent1", _copy = False ).isSame( l["out"].set( "nonexistent2", _copy = False ) ) )
 
 if __name__ == "__main__":
 	unittest.main()

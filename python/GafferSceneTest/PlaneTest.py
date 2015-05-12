@@ -90,10 +90,11 @@ class PlaneTest( GafferSceneTest.SceneTestCase ) :
 		s = GafferTest.CapturingSlot( p.plugDirtiedSignal() )
 
 		p["name"].setValue( "ground" )
-		self.assertEqual( len( s ), 3 )
+		self.assertEqual( len( s ), 4 )
 		self.failUnless( s[0][0].isSame( p["name"] ) )
 		self.failUnless( s[1][0].isSame( p["out"]["childNames"] ) )
-		self.failUnless( s[2][0].isSame( p["out"] ) )
+		self.failUnless( s[2][0].isSame( p["out"]["set"] ) )
+		self.failUnless( s[3][0].isSame( p["out"] ) )
 
 		del s[:]
 
@@ -148,6 +149,17 @@ class PlaneTest( GafferSceneTest.SceneTestCase ) :
 		s.redo()
 
 		self.assertTrue( isinstance( s["p"]["out"].object( "/plane" ), IECore.MeshPrimitive ) )
+
+	def testNonExistentSets( self ) :
+
+		p = GafferScene.Plane()
+		p["sets"].setValue( "A B")
+		self.assertEqual( p["out"]["setNames"].getValue(), IECore.InternedStringVectorData( [ "A", "B" ] ) )
+
+		self.assertEqual( p["out"].set( "" ), GafferScene.PathMatcherData() )
+		self.assertEqual( p["out"].set( "nonexistent1" ), GafferScene.PathMatcherData() )
+		self.assertEqual( p["out"].setHash( "nonexistent1" ), p["out"].setHash( "nonexistent2" ) )
+		self.assertTrue( p["out"].set( "nonexistent1", _copy = False ).isSame( p["out"].set( "nonexistent2", _copy = False ) ) )
 
 if __name__ == "__main__":
 	unittest.main()

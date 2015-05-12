@@ -138,6 +138,33 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 		self.assertTrue( GafferScene.visible( attributes2["out"], "/group" ) )
 		self.assertTrue( GafferScene.visible( attributes2["out"], "/" ) )
 
+	def testSetExists( self ) :
+
+		plane = GafferScene.Plane()
+		plane["sets"].setValue( "A B" )
+
+		self.assertTrue( GafferScene.setExists( plane["out"], "A" ) )
+		self.assertTrue( GafferScene.setExists( plane["out"], "B" ) )
+		self.assertFalse( GafferScene.setExists( plane["out"], " " ) )
+		self.assertFalse( GafferScene.setExists( plane["out"], "" ) )
+		self.assertFalse( GafferScene.setExists( plane["out"], "C" ) )
+
+	def testSets( self ) :
+
+		light = GafferSceneTest.TestLight()
+		light["sets"].setValue( "A B C" )
+
+		sets = GafferScene.sets( light["out"] )
+		self.assertEqual( set( sets.keys() ), { "__lights", "A", "B", "C" } )
+		for n in sets.keys() :
+			self.assertEqual( sets[n], light["out"].set( n ) )
+			self.assertFalse( sets[n].isSame( light["out"].set( n, _copy = False ) ) )
+
+		sets = GafferScene.sets( light["out"], _copy = False )
+		self.assertEqual( set( sets.keys() ), { "__lights", "A", "B", "C" } )
+		for n in sets.keys() :
+			self.assertTrue( sets[n].isSame( light["out"].set( n, _copy = False ) ) )
+
 if __name__ == "__main__":
 	unittest.main()
 

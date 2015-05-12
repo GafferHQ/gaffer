@@ -59,5 +59,41 @@ class PathMatcherDataTest( unittest.TestCase ) :
 		self.assertEqual( d.value, GafferScene.PathMatcher( [ "/a" ] ) )
 		self.assertEqual( dd.value, GafferScene.PathMatcher( [ "/a", "/b" ] ) )
 
+	def testHash( self ) :
+
+		d = GafferScene.PathMatcherData()
+
+		h = []
+		h.append( d.hash() )
+		self.assertNotEqual( h[0], IECore.MurmurHash() )
+
+		d.value.addPath( "/" )
+		h.append( d.hash() )
+		self.assertNotEqual( h[1], h[0] )
+
+		d.value.removePath( "/" )
+		h.append( d.hash() )
+		self.assertEqual( h[2], h[0] )
+
+		d.value.addPath( "/c/d" )
+		h.append( d.hash() )
+		self.assertNotEqual( h[3], h[2] )
+
+		d.value.addPath( "/c" )
+		h.append( d.hash() )
+		self.assertNotEqual( h[4], h[3] )
+
+	def testHierarchyAffectsHash( self ) :
+
+		d1 = GafferScene.PathMatcherData()
+		d1.value.addPath( "/b")
+		d1.value.addPath( "/b/a")
+
+		d2 = GafferScene.PathMatcherData()
+		d2.value.addPath( "/a")
+		d2.value.addPath( "/b")
+
+		self.assertNotEqual( d1.hash(), d2.hash() )
+
 if __name__ == "__main__":
 	unittest.main()

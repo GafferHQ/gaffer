@@ -212,27 +212,27 @@ class IsolateTest( GafferSceneTest.SceneTestCase ) :
 		group["in"].setInput( light1["out"] )
 		group["in1"].setInput( light2["out"] )
 
-		lightSet = group["out"]["globals"].getValue()["gaffer:sets"]["__lights"]
+		lightSet = group["out"].set( "__lights" )
 		self.assertEqual( set( lightSet.value.paths() ), set( [ "/group/light", "/group/light1" ] ) )
 
 		isolate = GafferScene.Isolate()
 		isolate["in"].setInput( group["out"] )
 
-		lightSet = isolate["out"]["globals"].getValue()["gaffer:sets"]["__lights"]
+		lightSet = isolate["out"].set( "__lights" )
 		self.assertEqual( set( lightSet.value.paths() ), set( [ "/group/light", "/group/light1" ] ) )
 
 		filter = GafferScene.PathFilter()
 		isolate["filter"].setInput( filter["out"] )
 
-		lightSet = isolate["out"]["globals"].getValue()["gaffer:sets"]["__lights"]
+		lightSet = isolate["out"].set( "__lights" )
 		self.assertEqual( set( lightSet.value.paths() ), set( [] ) )
 
 		filter["paths"].setValue( IECore.StringVectorData( [ "/group/light" ] ) )
-		lightSet = isolate["out"]["globals"].getValue()["gaffer:sets"]["__lights"]
+		lightSet = isolate["out"].set( "__lights" )
 		self.assertEqual( set( lightSet.value.paths() ), set( [ "/group/light" ] ) )
 
 		filter["paths"].setValue( IECore.StringVectorData( [ "/group/light*" ] ) )
-		lightSet = isolate["out"]["globals"].getValue()["gaffer:sets"]["__lights"]
+		lightSet = isolate["out"].set( "__lights" )
 		self.assertEqual( set( lightSet.value.paths() ), set( [ "/group/light", "/group/light1" ] ) )
 
 	def testGlobalsDoNotDependOnScenePath( self ) :

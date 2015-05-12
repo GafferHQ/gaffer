@@ -62,6 +62,8 @@ Gaffer.Metadata.registerNode(
 			Space separated list of set names to be removed.
 			""",
 
+			"ui:scene:acceptsSetNames", True,
+
 		),
 
 		"invertNames" : (
@@ -76,54 +78,3 @@ Gaffer.Metadata.registerNode(
 	},
 
 )
-
-
-##########################################################################
-# Right click menu for sets
-# This is driven by metadata so it can be used for plugs on other
-# nodes too.
-##########################################################################
-
-# \todo: Possibly merge this with the menu in SetUI.py
-
-def __addSet( plug, setName ) :
-
-	with Gaffer.UndoContext( plug.ancestor( Gaffer.ScriptNode ) ) :
-		if setName not in plug.getValue().split( " " ):
-			oldValue = plug.getValue()
-			plug.setValue( plug.getValue() + (" " if oldValue else "") + setName )
-
-def __deleteSetsPopupMenu( menuDefinition, plugValueWidget ) :
-
-	plug = plugValueWidget.getPlug()
-	if plug is None :
-		return
-
-	node = plug.node()
-	if not isinstance( node, GafferScene.DeleteSets ) :
-		return
-
-	if plug.getName() != "names":
-		return
-
-	globals = node["in"]["globals"].getValue()
-	if "gaffer:sets" not in globals :
-		return
-
-	setNames = globals["gaffer:sets"].keys()
-
-	if not setNames :
-		return
-
-	menuDefinition.prepend( "/SetsDivider", { "divider" : True } )
-
-	for setName in reversed( sorted( setNames ) ) :
-		menuDefinition.prepend(
-			"/Add Set/%s" % setName,
-			{
-				"command" : functools.partial( __addSet, plug, setName ),
-				"active" : plug.settable() and not plugValueWidget.getReadOnly(),
-			}
-		)
-
-__deleteSetsPopupMenuConnection = GafferUI.PlugValueWidget.popupMenuSignal().connect( __deleteSetsPopupMenu )

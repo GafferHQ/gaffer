@@ -209,27 +209,27 @@ class PruneTest( GafferSceneTest.SceneTestCase ) :
 		group["in"].setInput( light1["out"] )
 		group["in1"].setInput( light2["out"] )
 
-		lightSet = group["out"]["globals"].getValue()["gaffer:sets"]["__lights"]
+		lightSet = group["out"].set( "__lights" )
 		self.assertEqual( set( lightSet.value.paths() ), set( [ "/group/light", "/group/light1" ] ) )
 
 		prune = GafferScene.Prune()
 		prune["in"].setInput( group["out"] )
 
-		lightSet = prune["out"]["globals"].getValue()["gaffer:sets"]["__lights"]
+		lightSet = prune["out"].set( "__lights" )
 		self.assertEqual( set( lightSet.value.paths() ), set( [ "/group/light", "/group/light1" ] ) )
 
 		filter = GafferScene.PathFilter()
 		prune["filter"].setInput( filter["out"] )
 
-		lightSet = prune["out"]["globals"].getValue()["gaffer:sets"]["__lights"]
+		lightSet = prune["out"].set( "__lights" )
 		self.assertEqual( set( lightSet.value.paths() ), set( [ "/group/light", "/group/light1" ] ) )
 
 		filter["paths"].setValue( IECore.StringVectorData( [ "/group/light" ] ) )
-		lightSet = prune["out"]["globals"].getValue()["gaffer:sets"]["__lights"]
+		lightSet = prune["out"].set( "__lights" )
 		self.assertEqual( set( lightSet.value.paths() ), set( [ "/group/light1" ] ) )
 
 		filter["paths"].setValue( IECore.StringVectorData( [ "/group/light*" ] ) )
-		lightSet = prune["out"]["globals"].getValue()["gaffer:sets"]["__lights"]
+		lightSet = prune["out"].set( "__lights" )
 		self.assertEqual( lightSet.value.paths(), [] )
 
 	def testSetsWhenAncestorPruned( self ) :
@@ -247,7 +247,7 @@ class PruneTest( GafferSceneTest.SceneTestCase ) :
 		topGroup["in"].setInput( group1["out"] )
 		topGroup["in1"].setInput( group2["out"] )
 
-		lightSet = topGroup["out"]["globals"].getValue()["gaffer:sets"]["__lights"]
+		lightSet = topGroup["out"].set( "__lights" )
 		self.assertEqual( set( lightSet.value.paths() ), set( [ "/group/group/light", "/group/group1/light" ] ) )
 
 		filter = GafferScene.PathFilter()
@@ -257,7 +257,7 @@ class PruneTest( GafferSceneTest.SceneTestCase ) :
 		prune["in"].setInput( topGroup["out"] )
 		prune["filter"].setInput( filter["out"] )
 
-		lightSet = prune["out"]["globals"].getValue()["gaffer:sets"]["__lights"]
+		lightSet = prune["out"].set( "__lights" )
 		self.assertEqual( set( lightSet.value.paths() ), set( [ "/group/group1/light" ] ) )
 
 	def testFilterPromotion( self ) :
@@ -334,7 +334,7 @@ class PruneTest( GafferSceneTest.SceneTestCase ) :
 				prune["in"].setInput( setNode["out"] )
 				prune["filter"].setInput( pathFilter["out"] )
 
-				outputSet = set( prune["out"]["globals"].getValue()["gaffer:sets"]["set"].value.paths() )
+				outputSet = set( prune["out"].set( "set" ).value.paths() )
 				filterMatcher = GafferScene.PathMatcher( p )
 				for inputSetPath in s :
 					if filterMatcher.match( inputSetPath ) & ( pathFilter.Result.ExactMatch | pathFilter.Result.AncestorMatch ) :

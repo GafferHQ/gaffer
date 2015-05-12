@@ -61,6 +61,8 @@ FreezeTransform::FreezeTransform( const std::string &name )
 	outPlug()->attributesPlug()->setInput( inPlug()->attributesPlug() );
 	outPlug()->childNamesPlug()->setInput( inPlug()->childNamesPlug() );
 	outPlug()->globalsPlug()->setInput( inPlug()->globalsPlug() );
+	outPlug()->setNamesPlug()->setInput( inPlug()->setNamesPlug() );
+	outPlug()->setPlug()->setInput( inPlug()->setPlug() );
 }
 
 FreezeTransform::~FreezeTransform()

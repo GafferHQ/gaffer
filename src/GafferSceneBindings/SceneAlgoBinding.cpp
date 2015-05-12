@@ -50,22 +50,33 @@
 using namespace boost::python;
 using namespace GafferScene;
 
-namespace GafferSceneBindings
+namespace
 {
 
-static void matchingPathsHelper1( const Filter *filter, const ScenePlug *scene, PathMatcher &paths )
+void matchingPathsHelper1( const Filter *filter, const ScenePlug *scene, PathMatcher &paths )
 {
 	// gil release in case the scene traversal dips back into python:
 	IECorePython::ScopedGILRelease r;
 	matchingPaths( filter, scene, paths );
 }
 
-static void matchingPathsHelper2( const Gaffer::IntPlug *filterPlug, const ScenePlug *scene, PathMatcher &paths )
+void matchingPathsHelper2( const Gaffer::IntPlug *filterPlug, const ScenePlug *scene, PathMatcher &paths )
 {
 	// gil release in case the scene traversal dips back into python:
 	IECorePython::ScopedGILRelease r;
 	matchingPaths( filterPlug, scene, paths );
 }
+
+IECore::CompoundDataPtr setsHelper( const ScenePlug *scene, bool copy )
+{
+	IECore::ConstCompoundDataPtr result = sets( scene );
+	return copy ? result->copy() : boost::const_pointer_cast<IECore::CompoundData>( result );
+}
+
+} // namespace
+
+namespace GafferSceneBindings
+{
 
 void bindSceneAlgo()
 {
@@ -83,6 +94,12 @@ void bindSceneAlgo()
 		"camera",
 		(IECore::CameraPtr (*)( const ScenePlug *, const ScenePlug::ScenePath &, const IECore::CompoundObject * ) )&camera,
 		( arg( "scene" ), args( "cameraPath" ), arg( "globals" ) = object() )
+	);
+	def( "setExists", &setExists );
+	def(
+		"sets",
+		&setsHelper,
+		( arg( "scene" ), arg( "_copy" ) = true )
 	);
 }
 
