@@ -78,7 +78,9 @@ Gaffer.Metadata.registerNode(
 			"description",
 			"""
 			The frame range to be used when framedMode is "CustomRange".
-			"""
+			""",
+
+			"layout:activator", "customRange",
 
 		),
 
@@ -238,6 +240,7 @@ class DispatcherWindow( GafferUI.Window ) :
 			return window()
 		
 		window = DispatcherWindow()
+
 		applicationRoot._dispatcherWindow = weakref.ref( window )
 		
 		return window
@@ -363,16 +366,16 @@ class __FramesModePlugValueWidget( GafferUI.PlugValueWidget ) :
 		
 		label = selectionMenu.getSelection()[0]
 		value = self.__labelsAndValues[ selectionMenu.index( label ) ][1]
-		
+
+		Gaffer.Metadata.registerNodeValue(
+			self.getPlug().node(),
+			"layout:activator:customRange",
+			label == "CustomRange",
+		)
+
 		with Gaffer.BlockedConnection( self._plugConnections() ) :
 			self.getPlug().setValue( value )
-		
-		frameRangeWidget = self.__frameRangeWidget()
-		if frameRangeWidget :
-			## \todo: This should be managed by activator metadata once we've ported
-			# that functionality out of RenderManShaderUI and into PlugLayout.
-			frameRangeWidget.setReadOnly( label in [ "CurrentFrame", "FullRange", "PlaybackRange" ] )
-		
+
 		self.__updateFrameRangeConnection = None
 		
 		window = self.ancestor( GafferUI.ScriptWindow )
