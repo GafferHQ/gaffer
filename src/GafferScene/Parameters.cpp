@@ -103,29 +103,24 @@ IECore::ConstObjectPtr Parameters::computeProcessedObject( const ScenePath &path
 
 	ConstObjectPtr outputObject = inputObject;
 	CompoundData *outputParameters = NULL;
-	switch( inputObject->typeId() )
-	{
-		case IECore::CameraTypeId : {
-			CameraPtr camera = boost::static_pointer_cast<Camera>( inputObject->copy() );
-			outputObject = camera;
-			outputParameters = camera->parametersData();
-			break;
-		}
-		case IECore::LightTypeId : {
-			LightPtr light = boost::static_pointer_cast<Light>( inputObject->copy() );
-			outputObject = light;
-			outputParameters = light->parametersData().get();
-			break;
-		}
-		case IECore::ExternalProceduralTypeId : {
-			ExternalProceduralPtr procedural = boost::static_pointer_cast<ExternalProcedural>( inputObject->copy() );
-			outputObject = procedural;
-			outputParameters = procedural->parameters();
-			break;
-		}
 
-		default :
-			outputParameters = NULL;
+	if( const Camera *camera = runTimeCast<const Camera>( inputObject.get() ) )
+	{
+		CameraPtr cameraCopy = camera->copy();
+		outputParameters = cameraCopy->parametersData();
+		outputObject = cameraCopy;
+	}
+	else if( const Light *light = runTimeCast<const Light>( inputObject.get() ) )
+	{
+		LightPtr lightCopy = light->copy();
+		outputParameters = lightCopy->parametersData().get();
+		outputObject = lightCopy;
+	}
+	else if( const ExternalProcedural *procedural = runTimeCast<const ExternalProcedural>( inputObject.get() ) )
+	{
+		ExternalProceduralPtr proceduralCopy = procedural->copy();
+		outputParameters = proceduralCopy->parameters();
+		outputObject = proceduralCopy;
 	}
 
 	if( outputParameters )
