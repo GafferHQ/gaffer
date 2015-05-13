@@ -936,6 +936,10 @@ docEnv.Alias( "build", docInstall )
 # Installation
 #########################################################################################################
 
+## \todo I'm not convinced we need this manifest anymore. If everyone will be using
+# the gafferDependencies project to seed their builds, then BUILD_DIR will only contain
+# files from gafferDependencies (which has its own manifest) and files we explicitly
+# built and definitely want packaged.
 dependenciesManifest = [
 
 	"bin/python",
@@ -993,6 +997,8 @@ dependenciesManifest = [
 	"lib/QtCore.framework",
 	"lib/QtGui.framework",
 	"lib/QtOpenGL.framework",
+
+	"lib/libxerces-c*$SHLIBSUFFIX",
 
 	"fonts",
 	"ops",
