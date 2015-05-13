@@ -75,6 +75,17 @@ class NodeEditor( GafferUI.NodeSetEditor ) :
 
 		return self.__readOnly
 
+	__toolMenuSignal = Gaffer.Signal3()
+	## Returns a signal which is emitted to create the
+	# tool menu for a node in the editor. Slots may connect
+	# to this signal to edit the menu definition on the fly -
+	# the signature for the signal is ( nodeEditor, node, menuDefinition )
+	# and the menu definition should just be edited in place.
+	@classmethod
+	def toolMenuSignal( cls ) :
+
+		return cls.__toolMenuSignal
+
 	def __repr__( self ) :
 
 		return "GafferUI.NodeEditor( scriptNode )"
@@ -93,9 +104,11 @@ class NodeEditor( GafferUI.NodeSetEditor ) :
 
 		with self.__column :
 			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, borderWidth=8, spacing=4 ) :
+
 				GafferUI.Label( "<h4>Node Name</h4>" )
 				self.__nameWidget = GafferUI.NameWidget( node )
 				self.__nameWidget.setEditable( not self.getReadOnly() )
+
 				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing=4 ) as infoSection :
 					GafferUI.Label( "<h4>" + node.typeName().rpartition( ":" )[-1] + "</h4>" )
 					GafferUI.Image( "info.png" )
@@ -104,6 +117,12 @@ class NodeEditor( GafferUI.NodeSetEditor ) :
 				if description :
 					toolTip += "\n\n" + description
 				infoSection.setToolTip( toolTip )
+
+				GafferUI.MenuButton(
+					image = "gear.png",
+					hasFrame = False,
+					menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) )
+				)
 
 		frame = GafferUI.Frame( borderStyle=GafferUI.Frame.BorderStyle.None, borderWidth=0 )
 		self.__column.append( frame, expand=True )
@@ -114,5 +133,12 @@ class NodeEditor( GafferUI.NodeSetEditor ) :
 	def _titleFormat( self ) :
 
 		return GafferUI.NodeSetEditor._titleFormat( self, _maxNodes = 1, _reverseNodes = True, _ellipsis = False )
+
+	def __menuDefinition( self ) :
+
+		result = IECore.MenuDefinition()
+		self.toolMenuSignal()( self, self.nodeUI().node(), result )
+
+		return result
 
 GafferUI.EditorWidget.registerType( "NodeEditor", NodeEditor )
