@@ -194,6 +194,17 @@ class UIEditor( GafferUI.NodeSetEditor ) :
 		menuDefinition.append( "/UIEditorDivider", { "divider" : True } )
 		menuDefinition.append( "/Set Color...", { "command" : functools.partial( cls.__setColor, node = node ) } )
 
+	@classmethod
+	def appendNodeEditorToolMenuDefinitions( cls, nodeEditor, node, menuDefinition ) :
+
+		menuDefinition.append(
+			"/Edit UI...",
+			{
+				"command" : functools.partial( GafferUI.UIEditor.acquire, node ),
+				"active" : nodeEditor.nodeUI().plugValueWidget( node["user"] ) is not None
+			}
+		)
+
 	def _updateFromSet( self ) :
 
 		GafferUI.NodeSetEditor._updateFromSet( self )
