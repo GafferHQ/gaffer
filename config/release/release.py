@@ -37,13 +37,13 @@ if "GITHUB_RELEASE_TOKEN" not in os.environ	:
 
 # get tag and corresponding release
 
-tags = __query( "https://johnhaddon:abracadabra1@api.github.com/repos/ImageEngine/gaffer/tags" )
+tags = __query( "https://api.github.com/repos/ImageEngine/gaffer/tags" )
 tag = next( ( t for t in tags if t["name"] == args.tag ), None )
 
 if tag is None :
 	raise Exception( "Tag \"%s\" does not exist" % args.tag )
 
-releases = __query( "https://johnhaddon:abracadabra1@api.github.com/repos/ImageEngine/gaffer/releases" )
+releases = __query( "https://api.github.com/repos/ImageEngine/gaffer/releases" )
 release = next( ( r for r in releases if r["tag_name"] == args.tag ), None )
 
 if release is None :
