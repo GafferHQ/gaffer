@@ -75,6 +75,12 @@ Gaffer.Metadata.registerNode(
 
 	GafferArnold.ArnoldAttributes,
 
+	"description",
+	"""
+	Applies Arnold attributes to objects
+	in the scene.
+	""",
+
 	plugs = {
 
 		# Sections
@@ -90,12 +96,26 @@ Gaffer.Metadata.registerNode(
 
 		"attributes.cameraVisibility" : [
 
+			"description",
+			"""
+			Whether or not the object is visible to camera
+			rays. To hide an object completely, use the
+			visibility settings on the StandardAttributes
+			node instead.
+			""",
+
 			"layout:section", "Visibility",
 			"label", "Camera",
 
 		],
 
 		"attributes.shadowVisibility" : [
+
+			"description",
+			"""
+			Whether or not the object is visible to shadow
+			rays (whether or not it casts shadows).
+			""",
 
 			"layout:section", "Visibility",
 			"label", "Shadow",
@@ -104,12 +124,24 @@ Gaffer.Metadata.registerNode(
 
 		"attributes.reflectedVisibility" : [
 
+			"description",
+			"""
+			Whether or not the object is visible in
+			tight mirror reflections.
+			""",
+
 			"layout:section", "Visibility",
 			"label", "Reflections",
 
 		],
 
 		"attributes.refractedVisibility" : [
+
+			"description",
+			"""
+			Whether or not the object is visible in
+			refractions.
+			""",
 
 			"layout:section", "Visibility",
 			"label", "Refractions",
@@ -118,12 +150,24 @@ Gaffer.Metadata.registerNode(
 
 		"attributes.diffuseVisibility" : [
 
+			"description",
+			"""
+			Whether or not the object is visible to diffuse
+			rays - whether it casts bounce light or not.
+			""",
+
 			"layout:section", "Visibility",
 			"label", "Diffuse",
 
 		],
 
 		"attributes.glossyVisibility" : [
+
+			"description",
+			"""
+			Whether or not the object is visible in
+			soft specular reflections.
+			""",
 
 			"layout:section", "Visibility",
 			"label", "Glossy",
@@ -134,6 +178,20 @@ Gaffer.Metadata.registerNode(
 
 		"attributes.subdivIterations" : [
 
+			"description",
+			"""
+			The maximum number of subdivision
+			steps to apply when rendering subdivision
+			surface. To set an exact number of
+			subdivisions, set the pixel error to
+			0 so that the maximum becomes the
+			controlling factor.
+
+			Use the MeshType node to ensure that a
+			mesh is treated as a subdivision surface
+			in the first place.
+			""",
+
 			"layout:section", "Subdivision",
 			"label", "Iterations",
 
@@ -141,12 +199,42 @@ Gaffer.Metadata.registerNode(
 
 		"attributes.subdivPixelError" : [
 
+			"description",
+			"""
+			The maximum allowable deviation from the true
+			surface and the subdivided approximation. How
+			the error is measured is determined by the
+			metric below. Note also that the iterations
+			value above provides a hard limit on the maximum
+			number of subdivision steps, so if changing the
+			pixel error setting appears to have no effect,
+			you may need to raise the maximum.
+			""",
+
 			"layout:section", "Subdivision",
 			"label", "Pixel Error",
 
 		],
 
 		"attributes.subdivAdaptiveMetric" : [
+
+			"description",
+			"""
+			The metric used when performing adaptive
+			subdivision as specified by the pixel error.
+			The flatness metric ensures that the subdivided
+			surface doesn't deviate from the true surface
+			by more than the pixel error, and will tend to
+			increase detail in areas of high curvature. The
+			edge length metric ensures that the edge length
+			of a polygon is never longer than the pixel metric,
+			so will tend to subdivide evenly regardless of
+			curvature - this can be useful when applying a
+			displacement shader. The auto metric automatically
+			uses the flatness metric when no displacement
+			shader is applied, and the edge length metric when
+			a displacement shader is applied.
+			""",
 
 			"layout:section", "Subdivision",
 			"label", "Adaptive Metric",

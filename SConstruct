@@ -1043,6 +1043,8 @@ libraries = {
 
 	"GafferArnoldUI" : {},
 
+	"GafferArnoldUITest" : {},
+
 	"GafferRenderMan" : {
 		"envAppends" : {
 			"LIBS" : [ "Gaffer", "GafferScene", "IECoreRI$CORTEX_LIB_SUFFIX" ],

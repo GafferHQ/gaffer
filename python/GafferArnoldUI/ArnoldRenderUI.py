@@ -38,15 +38,78 @@ import Gaffer
 import GafferUI
 import GafferArnold
 
+Gaffer.Metadata.registerNode(
+
+	GafferArnold.ArnoldRender,
+
+	"description",
+	"""
+	Performs offline batch rendering using the
+	Arnold renderer. This is done in two phases -
+	first a .ass file is generated and then Arnold
+	is invoked to render it. Note though that the .ass
+	file is lightweight, and contains little more than
+	a procedural which will use Gaffer to generate the
+	scene at render time.
+	""",
+
+	plugs = {
+
+		"mode" : [
+
+			"description",
+			"""
+			When in the standard "Render" mode, an .ass
+			file is generated and then renderered in Arnold.
+			Alternatively, just the .ass file can be generated
+			and then another method can be used to post-process
+			it or launch the render - a SystemCommand node may
+			be useful for this. Finally, an expanded .ass file
+			may be generated - this will contain the entire
+			expanded scene rather than just a procedural, and can
+			be useful for debugging.
+			""",
+
+			"preset:Render", "render",
+			"preset:Generate .ass only", "generate",
+			"preset:Generate expanded .ass", "expand",
+
+		],
+
+		"fileName" : [
+
+			"description",
+			"""
+			The name of the .ass file to be generated.
+			""",
+
+		],
+
+		"verbosity" : [
+
+			"description",
+			"""
+			Controls the verbosity of the Arnold renderer output.
+			""",
+
+			"preset:0", 0,
+			"preset:1", 1,
+			"preset:2", 2,
+			"preset:3", 3,
+			"preset:4", 4,
+			"preset:5", 5,
+			"preset:6", 6,
+
+		],
+
+}
+
+)
+
 GafferUI.PlugValueWidget.registerCreator(
 	GafferArnold.ArnoldRender,
 	"mode",
-	GafferUI.EnumPlugValueWidget,
-	labelsAndValues = (
-		( "Render", "render" ),
-		( "Generate .ass only", "generate" ),
-		( "Generate expanded .ass", "expand" ),
-	),
+	GafferUI.PresetsPlugValueWidget,
 )
 
 GafferUI.PlugValueWidget.registerCreator(
@@ -64,16 +127,7 @@ GafferUI.PlugValueWidget.registerCreator(
 GafferUI.PlugValueWidget.registerCreator(
 	GafferArnold.ArnoldRender,
 	"verbosity",
-	GafferUI.EnumPlugValueWidget,
-	labelsAndValues = (
-		( "0", 0 ),
-		( "1", 1 ),
-		( "2", 2 ),
-		( "3", 3 ),
-		( "4", 4 ),
-		( "5", 5 ),
-		( "6", 6 ),
-	),
+	GafferUI.PresetsPlugValueWidget,
 )
 
 GafferUI.Nodule.registerNodule( GafferArnold.ArnoldRender, "mode", lambda plug : None )

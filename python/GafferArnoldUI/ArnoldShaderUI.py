@@ -36,6 +36,7 @@
 ##########################################################################
 
 import fnmatch
+import ctypes
 
 import arnold
 
@@ -45,15 +46,26 @@ import Gaffer
 import GafferUI
 import GafferArnold
 
-def __parameterNoduleCreator( plug ) :
+##########################################################################
+# Utilities to make it easier to work with the Arnold API, which has a
+# fairly bare wrapping using ctypes.
+##########################################################################
 
-	if isinstance( plug, ( Gaffer.BoolPlug, Gaffer.IntPlug, Gaffer.StringPlug ) ) :
-		return None
+def __aiMetadataGetStr( nodeEntry, paramName, name ) :
 
-	return GafferUI.StandardNodule( plug )
+	value = arnold.AtString()
+	if arnold.AiMetaDataGetStr( nodeEntry, paramName, name, value ) :
+		return value.value
 
-GafferUI.Nodule.registerNodule( GafferArnold.ArnoldShader, fnmatch.translate( "parameters.*" ), __parameterNoduleCreator )
+	return None
 
+##########################################################################
+# Build a registry of information retrieved from Arnold metadata. We fill this
+# once at startup, as we can only get it from within an AiUniverse block,
+# and we don't want to have to keep making those temporarily later.
+##########################################################################
+
+__descriptions = {}
 __plugValueWidgetCreators = {}
 
 with IECoreArnold.UniverseBlock() :
@@ -64,15 +76,24 @@ with IECoreArnold.UniverseBlock() :
 		nodeEntry = arnold.AiNodeEntryIteratorGetNext( nodeIt )
 		nodeName = arnold.AiNodeEntryGetName( nodeEntry )
 
+		description = __aiMetadataGetStr( nodeEntry, None, "desc" )
+		if description is not None :
+			__descriptions[nodeName] = description
+
 		paramIt = arnold.AiNodeEntryGetParamIterator( nodeEntry )
 		while not arnold.AiParamIteratorFinished( paramIt ) :
 
 			## \todo We could allow custom ui types to be specified using
 			# arnold metadata entries.
 			param = arnold.AiParamIteratorGetNext( paramIt )
-			paramPath = nodeName + "." + arnold.AiParamGetName( param )
-			paramType = arnold.AiParamGetType( param )
+			paramName = arnold.AiParamGetName( param )
+			paramPath = nodeName + "." + paramName
 
+			description = __aiMetadataGetStr( nodeEntry, paramName, "desc" )
+			if description is not None :
+				__descriptions[paramPath] = description
+
+			paramType = arnold.AiParamGetType( param )
 			if paramType == arnold.AI_TYPE_ENUM :
 
 				enum = arnold.AiParamGetEnum( param )
@@ -84,6 +105,43 @@ with IECoreArnold.UniverseBlock() :
 					namesAndValues.append( ( enumLabel, enumLabel ) )
 
 				__plugValueWidgetCreators[paramPath] = ( GafferUI.EnumPlugValueWidget, namesAndValues )
+
+##########################################################################
+# Gaffer Metadata queries. These are implemented using the preconstructed
+# registry above.
+##########################################################################
+
+def __nodeDescription( node ) :
+
+	shaderDefault = """Loads shaders for use in Arnold renderers. Use the ShaderAssignment node to assign shaders to objects in the scene."""
+	lightDefault = """Loads an Arnold light shader and uses it to output a scene with a single light."""
+
+	return __descriptions.get(
+		node["name"].getValue(),
+		shaderDefault if isinstance( node, GafferArnold.ArnoldShader ) else lightDefault
+	)
+
+def __plugDescription( plug ) :
+
+	return __descriptions.get( plug.node()["name"].getValue() + "." + plug.getName() )
+
+for nodeType in ( GafferArnold.ArnoldShader, GafferArnold.ArnoldLight ) :
+
+	Gaffer.Metadata.registerNodeValue( nodeType, "description", __nodeDescription )
+	Gaffer.Metadata.registerPlugValue( nodeType, "parameters.*", "description", __plugDescription )
+
+##########################################################################
+# Nodule and widget creators
+##########################################################################
+
+def __parameterNoduleCreator( plug ) :
+
+	if isinstance( plug, ( Gaffer.BoolPlug, Gaffer.IntPlug, Gaffer.StringPlug ) ) :
+		return None
+
+	return GafferUI.StandardNodule( plug )
+
+GafferUI.Nodule.registerNodule( GafferArnold.ArnoldShader, fnmatch.translate( "parameters.*" ), __parameterNoduleCreator )
 
 def __plugValueWidgetCreator( plug ) :
 
