@@ -189,5 +189,15 @@ class SetTest( GafferSceneTest.SceneTestCase ) :
 		self.assertTrue( s["out"]["set"] in [ p[0] for p in cs ] )
 		self.assertTrue( s["out"]["globals"] not in [ p[0] for p in cs ] )
 
+	def testNoWildcards( self ) :
+
+		s = GafferScene.Set()
+
+		s["paths"].setValue( IECore.StringVectorData( [ "/a/..." ] ) )
+		self.assertRaises( RuntimeError, s["out"].set, "set" )
+
+		s["paths"].setValue( IECore.StringVectorData( [ "/a/b*" ] ) )
+		self.assertRaises( RuntimeError, s["out"].set, "set" )
+
 if __name__ == "__main__":
 	unittest.main()

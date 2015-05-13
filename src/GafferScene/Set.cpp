@@ -35,12 +35,16 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "Gaffer/StringPlug.h"
+#include "Gaffer/StringAlgo.h"
 
 #include "GafferScene/Set.h"
 #include "GafferScene/PathMatcherData.h"
 
+using namespace std;
 using namespace IECore;
 using namespace GafferScene;
+
+static InternedString g_ellipsis( "..." );
 
 IE_CORE_DEFINERUNTIMETYPED( Set );
 
@@ -144,9 +148,27 @@ void Set::compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) c
 {
 	if( output == pathMatcherPlug() )
 	{
-		ConstStringVectorDataPtr paths = pathsPlug()->getValue();
+		ConstStringVectorDataPtr pathsData = pathsPlug()->getValue();
+		const vector<string> &paths = pathsData->readable();
+
 		PathMatcherDataPtr pathMatcherData = new PathMatcherData;
-		pathMatcherData->writable().init( paths->readable().begin(), paths->readable().end() );
+		PathMatcher &pathMatcher = pathMatcherData->writable();
+
+		vector<InternedString> tokenizedPath;
+		for( vector<string>::const_iterator it = paths.begin(), eIt = paths.end(); it != eIt; ++it )
+		{
+			tokenizedPath.clear();
+			Gaffer::tokenize( *it, '/', tokenizedPath );
+			for( vector<InternedString>::const_iterator nIt = tokenizedPath.begin(), neIt = tokenizedPath.end(); nIt != neIt; ++nIt )
+			{
+				if( Gaffer::hasWildcards( nIt->c_str() ) || *nIt == g_ellipsis )
+				{
+					throw IECore::Exception( "Path \"" + *it + "\" contains wildcards." );
+				}
+			}
+			pathMatcher.addPath( tokenizedPath );
+		}
+
 		static_cast<Gaffer::ObjectPlug *>( output )->setValue( pathMatcherData );
 		return;
 	}
