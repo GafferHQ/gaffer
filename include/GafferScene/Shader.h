@@ -43,6 +43,7 @@
 
 #include "Gaffer/DependencyNode.h"
 #include "Gaffer/TypedPlug.h"
+#include "Gaffer/CompoundNumericPlug.h"
 
 #include "GafferScene/TypeIds.h"
 
@@ -162,6 +163,7 @@ class Shader : public Gaffer::DependencyNode
 	private :
 
 		void nameChanged();
+		void nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore::InternedString key );
 
 		// We want to use the node name when computing the shader, so that we
 		// can generate more useful shader handles. It's illegal to use anything
@@ -171,6 +173,11 @@ class Shader : public Gaffer::DependencyNode
 		// when computing.
 		Gaffer::StringPlug *nodeNamePlug();
 		const Gaffer::StringPlug *nodeNamePlug() const;
+		// As above, we want to put the node colour in the shader for diagnostic
+		// use in the scene UI, so we must transfer it on to this plug to use
+		// during compute.
+		Gaffer::Color3fPlug *nodeColorPlug();
+		const Gaffer::Color3fPlug *nodeColorPlug() const;
 
 		static size_t g_firstPlugIndex;
 
