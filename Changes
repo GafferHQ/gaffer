@@ -1,3 +1,140 @@
+# 0.13.0.0
+==========
+
+Apps
+-----------------------------------------------------------------------
+
+- Improved error message for execute app.
+
+Core
+-----------------------------------------------------------------------
+
+- Improved Dispatcher
+  - Stopped merging of identical tasks from different nodes.
+    We decided that this auto-merging caused more confusion than it
+    was worth, and it may actually have prevented useful executable
+    graphs which would have been intentionally running identical
+    tasks at different points in the graph.
+  - Added cycle detection.
+
+UI
+-----------------------------------------------------------------------
+
+- Avoided unnecessary rebuilds of MenuBar menus. This can improve
+  performance for slow-to-build custom menus.
+- Added font file browser to the Text node.
+- Improved NodeGraph plug tooltips - they now contain the plug description.
+- Plugs may now be promoted to Box level via the right click plug
+  menu in the NodeGraph.
+- Fixed search box in file open dialogues.
+- Improved dialogues for picking scene paths
+  - Opened in tree mode rather than list mode
+  - Removed unnecessary columns
+  - Added filtering to display only cameras where appropriate
+- Improved error handling in the Viewer
+
+Scene
+-----------------------------------------------------------------------
+
+- InteractiveRender
+  - Fixed crash when deleting a running InteractiveRender.
+  - Fixed coordinate system update problem.
+- Fixed bug preventing filter plugs from being promoted to Boxes.
+- Improved set computation
+  - Separated the computation of sets from the computation of globals.
+    This should prevent delays caused when calculating large unneeded
+    sets along with the globals.
+  - Made sets compute individually on demand. This should reduce the
+    overhead of large unneeded sets.
+  - Added "sets" plug to source nodes, to allow set membership to
+    be defined at creation time.
+  - Optimised SetFilter hashing.
+  - Prevented wildcards from being used in the Set node (#1307).
+- Made Parameters node compatible with subclasses of Light/Camera/ExternalProcedural,
+  such as those used internally at IE.
+
+Documentation
+-----------------------------------------------------------------------
+
+- Improved doxyen documentation configuration.
+- Documented all GafferScene nodes.
+- Documented all GafferOSL nodes.
+- Documented all GafferRenderMan nodes.
+- Documented all GafferArnold nodes.
+- Added support for Arnold "desc" metadata items.
+
+API
+-----------------------------------------------------------------------
+
+- Refactored Node UI to provide all features via the PlugLayout and
+  Metadata entries.
+  - Added support for a "fixedLineHeight" metadata entry in
+    MultiLineStringPlugValueWidget.
+  - Added support for "layout:section" metadata - this allows the
+    layout to be split into sections, and will provide the basis for
+    replacing the Sectioned* widgets, adding support for sections in
+    the UIEditor, and replacing the section management code in the
+    StandardNodeUI.
+  - Added support for Metadata activators - these allow the editability
+    of a plug to be driven by the values of other plugs.
+  - Added support for section summaries driven by Metadata.
+  - Deprecated SectionedCompoundDataPlugValueWidget.
+  - Deprecated SectionedCompoundPlugValueWidget.
+- Fixed ExecutableNode::requirements() binding.
+- Added support for fixing the height (measured in number of lines)
+  of the MultiLineTextWidget.
+- Fixed support for functools.partial( classMethod ) commands in
+  Menus.
+- ScenePath : added setScene()/getScene() accessors.
+- Added SceneFilterPathFilter class. This tongue twister uses any of
+  the GafferScene::Filter nodes to implement a Gaffer::PathFilter to
+  filter the children of a GafferScene::ScenePath.
+- Added ScenePath::createStandardFilter() method.
+- Fixed crash when a Path is deleted before its PathFilter.
+- Added PathChooserDialogue.pathChooserWidget() method.
+- Added ScenePathPlugValueWidget.
+- Gave precedence to exact plug matches over wildcard matches in Metadata
+  queries.
+- Added addition controls over Context substitution methods.
+- Improved StringPlug with additional control over substitutions.
+- Improved PlugType to support box and bool plugs.
+- Added ValuePlugSerialiser::repr() method. This is intended to allow
+  derived class bindings to base their own `repr()` implementation on
+  the ValuePlug one.
+- Made TypedObjectPlug compatible with instantiation for new types
+  outside of Gaffer. This is achieved by moving the implementation into a
+  .inl file which may be included as necessary. Added TypedObjectPlugClass
+  to simplify binding such instantiations.
+- Implemented PathMatcherData::hash().
+- Added GafferScene::PathMatcherDataPlug.
+- Reimplemented SceneNode sets API.
+
+ Incompatibilities
+-----------------------------------------------------------------------
+
+- StringPlug
+  - Reimplemented as a standalone class
+  - TypedPlug<string> is no longer instantiated (binary incompatibility).
+  - Must now include "Gaffer/StringPlug.h" rather than "Gaffer/TypedPlug.h"
+    (source incompatibility).
+- GafferCortex
+  - Removed BoxParameterHandler and CompoundNumericParameterHandler. Their
+    functionality is now covered by TypedParameterHandler.
+- GafferScene
+  - Reimplemented sets API.
+  - Removed SceneReader "sets" plug.
+
+Build
+-----------------------------------------------------------------------
+
+- Updated default dependency versions
+  - OIIO 1.5.13
+  - OSL 1.6.3dev
+  - LLVM 3.4
+  - Alembic 1.5.8
+  - Cortex 9.0.0-b6
+- Added bundled Appleseed renderer
+
 # 0.12.1.0
 ==========
 
