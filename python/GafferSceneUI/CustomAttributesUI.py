@@ -39,21 +39,18 @@ import GafferUI
 
 import GafferScene
 
-Gaffer.Metadata.registerNodeDescription(
+Gaffer.Metadata.registerNode(
 
-GafferScene.CustomAttributes,
+	GafferScene.CustomAttributes,
 
-"""Applies arbitrary user-defined attributes to locations in the scene. Note
-that for most common cases the StandardAttributes, OpenGLAttributes, RenderManAttributes,
-and ArnoldAttributes nodes should be used in preference - they provide predefined
-sets of attributes with customised user interfaces. The CustomAttributes node is of most use when
-needing to set a custom attribute not supported by the specialised nodes.
-""",
-
-"attributes",
-"""The attributes to be applied - arbitrary numbers of user defined attributes may be added
-as children of this plug via the user interface, or using the CompoundDataPlug API via
-python.""",
+	"description",
+	"""
+	Applies arbitrary user-defined attributes to locations in the scene. Note
+	that for most common cases the StandardAttributes, OpenGLAttributes, RenderManAttributes,
+	and ArnoldAttributes nodes should be used in preference - they provide predefined
+	sets of attributes with customised user interfaces. The CustomAttributes node is of most use when
+	needing to set a custom attribute not supported by the specialised nodes.
+	""",
 
 )
 
