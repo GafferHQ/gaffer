@@ -46,6 +46,7 @@
 namespace GafferUI
 {
 
+/// \todo Remove this class, and use SceneView for everything.
 class ObjectView : public View3D
 {
 
