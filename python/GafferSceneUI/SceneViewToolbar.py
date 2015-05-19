@@ -35,12 +35,65 @@
 #
 ##########################################################################
 
+import functools
+
 import IECore
 
 import Gaffer
 import GafferUI
 import GafferScene
 import GafferSceneUI
+
+##########################################################################
+# Shading Mode
+##########################################################################
+
+class _ShadingModePlugValueWidget( GafferUI.PlugValueWidget ) :
+
+		def __init__( self, plug, **kw ) :
+
+			menuButton = GafferUI.MenuButton(
+				image = "shading.png",
+				menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) ),
+				hasFrame = False,
+			)
+
+			GafferUI.PlugValueWidget.__init__( self, menuButton, plug, **kw )
+
+		def hasLabel( self ) :
+
+			return True
+
+		def _updateFromPlug( self ) :
+
+			pass
+
+		def __menuDefinition( self ) :
+
+			m = IECore.MenuDefinition()
+
+			currentName = self.getPlug().getValue()
+			for name in [ "" ] + GafferSceneUI.SceneView.registeredShadingModes() :
+				m.append(
+					"/" + name if name else "Default",
+					{
+						"checkBox" : name == currentName,
+						"command" : functools.partial( Gaffer.WeakMethod( self.__setValue ), name if name != currentName else "" ),
+					}
+				)
+
+				if not name :
+					m.append( "/DefaultDivider", { "divider" : True } )
+
+			return m
+
+		def __setValue( self, value, *unused ) :
+
+			self.getPlug().setValue( value )
+
+Gaffer.Metadata.registerPlugValue( GafferSceneUI.SceneView, "shadingMode", "layout:index", 2 )
+Gaffer.Metadata.registerPlugValue( GafferSceneUI.SceneView, "shadingMode", "divider", True )
+GafferUI.PlugValueWidget.registerCreator( GafferSceneUI.SceneView, "shadingMode", _ShadingModePlugValueWidget )
 
 ##########################################################################
 # Expansion

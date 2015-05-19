@@ -73,6 +73,119 @@ using namespace GafferScene;
 using namespace GafferSceneUI;
 
 //////////////////////////////////////////////////////////////////////////
+// SceneView::ShadingMode implementation
+//////////////////////////////////////////////////////////////////////////
+
+class SceneView::ShadingMode
+{
+
+	public :
+
+		ShadingMode( SceneView *view )
+			:	m_view( view )
+		{
+			view->addChild( new StringPlug( "shadingMode" ) );
+
+			m_preprocessor = new SceneProcessor();
+			m_preprocessor->outPlug()->setInput( m_preprocessor->inPlug() );
+
+			view->plugSetSignal().connect( boost::bind( &ShadingMode::plugSet, this, ::_1 ) );
+		}
+
+		/// \todo This is exposed so that the SceneView can insert it into
+		/// the main preprocessor. We should modify the View base class so
+		/// that instead anyone can insert a preprocessor into a chain of preprocessors,
+		/// and then individual components like this one can be more self
+		/// sufficient.
+		SceneProcessor *preprocessor()
+		{
+			return m_preprocessor.get();
+		}
+
+		static void registerShadingMode( const std::string &name, ShadingModeCreator creator )
+		{
+			shadingModeCreators()[name] = creator;
+		}
+
+		static void registeredShadingModes( std::vector<std::string> &names )
+		{
+			const ShadingModeCreatorMap &m = shadingModeCreators();
+			names.clear();
+			for( ShadingModeCreatorMap::const_iterator it = m.begin(), eIt = m.end(); it != eIt; ++it )
+			{
+				names.push_back( it->first );
+			}
+		}
+
+	private :
+
+		Gaffer::StringPlug *shadingModePlug()
+		{
+			return m_view->getChild<StringPlug>( "shadingMode" );
+		}
+
+		const Gaffer::StringPlug *shadingModePlug() const
+		{
+			return m_view->getChild<StringPlug>( "shadingMode" );
+		}
+
+		void plugSet( const Plug *plug )
+		{
+			if( plug != shadingModePlug() )
+			{
+				return;
+			}
+
+			const std::string name = shadingModePlug()->getValue();
+
+			SceneProcessorPtr shadingMode = NULL;
+			ShadingModes::const_iterator it = m_shadingModes.find( name );
+			if( it != m_shadingModes.end() )
+			{
+				shadingMode = it->second;
+			}
+			else
+			{
+				ShadingModeCreatorMap &m = shadingModeCreators();
+				ShadingModeCreatorMap::const_iterator it = m.find( name );
+				if( it != m.end() )
+				{
+					shadingMode = it->second();
+				}
+				if( shadingMode )
+				{
+					m_shadingModes[name] = shadingMode;
+					m_preprocessor->addChild( shadingMode );
+				}
+			}
+
+			if( shadingMode )
+			{
+				shadingMode->inPlug()->setInput( m_preprocessor->inPlug() );
+				m_preprocessor->outPlug()->setInput( shadingMode->outPlug() );
+			}
+			else
+			{
+				m_preprocessor->outPlug()->setInput( m_preprocessor->inPlug() );
+			}
+		}
+
+		typedef std::map<std::string, SceneView::ShadingModeCreator> ShadingModeCreatorMap;
+		typedef std::map<std::string, SceneProcessorPtr> ShadingModes;
+
+		static ShadingModeCreatorMap &shadingModeCreators()
+		{
+			static ShadingModeCreatorMap g_creators;
+			return g_creators;
+		}
+
+		SceneView *m_view;
+		ShadingModes m_shadingModes;
+		SceneProcessorPtr m_preprocessor;
+
+};
+
+//////////////////////////////////////////////////////////////////////////
 // SceneView::Grid implementation
 //////////////////////////////////////////////////////////////////////////
 
@@ -847,6 +960,7 @@ SceneView::SceneView( const std::string &name )
 	m_lookThrough = boost::shared_ptr<LookThrough>( new LookThrough( this ) );
 	m_grid = boost::shared_ptr<Grid>( new Grid( this ) );
 	m_gnomon = boost::shared_ptr<Gnomon>( new Gnomon( this ) );
+	m_shadingMode = boost::shared_ptr<ShadingMode>( new ShadingMode( this ) );
 
 	//////////////////////////////////////////////////////////////////////////
 	// add a preprocessor which monkeys with the scene before it is displayed.
@@ -869,11 +983,16 @@ SceneView::SceneView( const std::string &name )
 	preprocessor->addChild( hideFilter );
 	hide->filterPlug()->setInput( hideFilter->outPlug() );
 
+	// add in the node from the ShadingMode
+
+	preprocessor->addChild( m_shadingMode->preprocessor() );
+	m_shadingMode->preprocessor()->inPlug()->setInput( hide->outPlug() );
+
 	// make the output for the preprocessor
 
 	ScenePlugPtr preprocessorOutput = new ScenePlug( "out", Plug::Out );
 	preprocessor->addChild( preprocessorOutput );
-	preprocessorOutput->setInput( hide->outPlug() );
+	preprocessorOutput->setInput( m_shadingMode->preprocessor()->outPlug() );
 
 	setPreprocessor( preprocessor );
 
@@ -946,6 +1065,16 @@ void SceneView::setContext( Gaffer::ContextPtr context )
 const Box2f &SceneView::resolutionGate() const
 {
 	return m_lookThrough->resolutionGate();
+}
+
+void SceneView::registerShadingMode( const std::string &name, ShadingModeCreator creator )
+{
+	ShadingMode::registerShadingMode( name, creator );
+}
+
+void SceneView::registeredShadingModes( std::vector<std::string> &names )
+{
+	ShadingMode::registeredShadingModes( names );
 }
 
 void SceneView::contextChanged( const IECore::InternedString &name )

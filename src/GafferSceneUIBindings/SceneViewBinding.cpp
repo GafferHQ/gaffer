@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2012-2013, John Haddon. All rights reserved.
+//  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,62 +35,72 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
-
 #include "GafferBindings/NodeBinding.h"
 
-#include "GafferUIBindings/GadgetBinding.h"
-
-#include "GafferSceneUI/SceneGadget.h"
-#include "GafferSceneUI/SelectionTool.h"
-#include "GafferSceneUI/CropWindowTool.h"
-
+#include "GafferScene/SceneProcessor.h"
+#include "GafferSceneUI/SceneView.h"
 #include "GafferSceneUIBindings/SceneViewBinding.h"
 
+using namespace std;
 using namespace boost::python;
 using namespace IECorePython;
+using namespace GafferScene;
 using namespace GafferSceneUI;
-using namespace GafferSceneUIBindings;
 
 namespace
 {
 
-IECore::InternedStringVectorDataPtr objectAt( SceneGadget &g, IECore::LineSegment3f &l )
+struct ShadingModeCreator
 {
-	IECore::InternedStringVectorDataPtr result = new IECore::InternedStringVectorData;
-	if( g.objectAt( l, result->writable() ) )
+
+	ShadingModeCreator( object fn )
+		:	m_fn( fn )
 	{
+	}
+
+	SceneProcessorPtr operator()()
+	{
+		IECorePython::ScopedGILLock gilLock;
+		SceneProcessorPtr result = extract<SceneProcessorPtr>( m_fn() );
 		return result;
 	}
-	return NULL;
+
+	private :
+
+		object m_fn;
+
+};
+
+void registerShadingMode( const std::string &name, object creator )
+{
+	SceneView::registerShadingMode( name, ShadingModeCreator( creator ) );
+}
+
+boost::python::list registeredShadingModes()
+{
+	vector<string> n;
+	SceneView::registeredShadingModes( n );
+	boost::python::list result;
+	for( vector<string>::const_iterator it = n.begin(), eIt = n.end(); it != eIt; ++it )
+	{
+		result.append( *it );
+	}
+
+	return result;
 }
 
 } // namespace
 
-BOOST_PYTHON_MODULE( _GafferSceneUI )
+void GafferSceneUIBindings::bindSceneView()
 {
 
-	bindSceneView();
-
-	GafferUIBindings::GadgetClass<SceneGadget>()
-		.def( init<>() )
-		.def( "setScene", &SceneGadget::setScene )
-		.def( "getScene", &SceneGadget::getScene, return_value_policy<CastToIntrusivePtr>() )
-		.def( "setContext", &SceneGadget::setContext )
-		.def( "getContext", (Gaffer::Context *(SceneGadget::*)())&SceneGadget::getContext, return_value_policy<CastToIntrusivePtr>() )
-		.def( "setExpandedPaths", &SceneGadget::setExpandedPaths )
-		.def( "getExpandedPaths", &SceneGadget::getExpandedPaths, return_value_policy<CastToIntrusivePtr>() )
-		.def( "setMinimumExpansionDepth", &SceneGadget::setMinimumExpansionDepth )
-		.def( "getMinimumExpansionDepth", &SceneGadget::getMinimumExpansionDepth )
-		.def( "baseState", &SceneGadget::baseState, return_value_policy<CastToIntrusivePtr>() )
-		.def( "objectAt", &objectAt )
-		.def( "objectsAt", &SceneGadget::objectsAt )
-		.def( "setSelection", &SceneGadget::setSelection )
-		.def( "getSelection", &SceneGadget::getSelection, return_value_policy<CastToIntrusivePtr>() )
-		.def( "selectionBound", &SceneGadget::selectionBound )
+	GafferBindings::NodeClass<SceneView>()
+		.def( "expandSelection", &SceneView::expandSelection, ( boost::python::arg_( "depth" ) = 1 ) )
+		.def( "collapseSelection", &SceneView::collapseSelection )
+		.def( "registerShadingMode", &registerShadingMode )
+		.staticmethod( "registerShadingMode" )
+		.def( "registeredShadingModes", &registeredShadingModes )
+		.staticmethod( "registeredShadingModes" )
 	;
-
-	GafferBindings::NodeClass<SelectionTool>( NULL, no_init );
-	GafferBindings::NodeClass<CropWindowTool>( NULL, no_init );
 
 }
