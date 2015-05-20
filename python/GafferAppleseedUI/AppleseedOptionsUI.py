@@ -78,8 +78,8 @@ def __drtSummary( plug ) :
 		info.append( "Max Bounces %d" % plug["drtMaxBounces"]["value"].getValue() )
 	if plug["drtRRStartBounce"]["enabled"].getValue() :
 		info.append( "Min Bounces %d" % plug["drtRRStartBounce"]["value"].getValue() )
-	if plug["drtLighingSamples"]["enabled"].getValue() :
-		info.append( "Lighting samples %d" % plug["drtLighingSamples"]["value"].getValue() )
+	if plug["drtLightingSamples"]["enabled"].getValue() :
+		info.append( "Lighting samples %d" % plug["drtLightingSamples"]["value"].getValue() )
 	if plug["drtIBLSamples"]["enabled"].getValue() :
 		info.append( "IBL samples %d" % plug["drtIBLSamples"]["value"].getValue() )
 
@@ -100,8 +100,8 @@ def __ptSummary( plug ) :
 		info.append( "Min Bounces %d" % plug["ptRRStartBounce"]["value"].getValue() )
 	if plug["ptNextEvent"]["enabled"].getValue() and plug["ptNextEvent"]["value"].getValue() :
 		info.append( "Next Event Estimation" )
-	if plug["ptLighingSamples"]["enabled"].getValue() :
-		info.append( "Lighting Samples %d" % plug["ptLighingSamples"]["value"].getValue() )
+	if plug["ptLightingSamples"]["enabled"].getValue() :
+		info.append( "Lighting Samples %d" % plug["ptLightingSamples"]["value"].getValue() )
 	if plug["ptIBLSamples"]["enabled"].getValue() :
 		info.append( "IBL Samples %d" % plug["ptIBLSamples"]["value"].getValue() )
 	if plug["ptMaxRayIntensity"]["enabled"].getValue() :
@@ -114,8 +114,8 @@ def __sppmSummary( plug ) :
 	info = []
 	if plug["photonType"]["enabled"].getValue() :
 		info.append( "Photon Type %s" % plug["photonType"]["value"].getValue() )
-	if plug["sppmDirectLighing"]["enabled"].getValue() and plug["sppmDirectLighing"]["value"].getValue() != 'off' :
-		info.append( "Direct Lighting %s" % plug["sppmDirectLighing"]["value"].getValue() )
+	if plug["sppmDirectLighting"]["enabled"].getValue() and plug["sppmDirectLighting"]["value"].getValue() != 'off' :
+		info.append( "Direct Lighting %s" % plug["sppmDirectLighting"]["value"].getValue() )
 	if plug["sppmIBL"]["enabled"].getValue() and plug["sppmIBL"]["value"].getValue() :
 		info.append( "IBL" )
 	if plug["sppmCaustics"]["enabled"].getValue() and plug["sppmCaustics"]["value"].getValue() :
@@ -284,7 +284,7 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"options.drtLighingSamples" : [
+		"options.drtLightingSamples" : [
 
 			"layout:section", "Distribution Ray Tracer",
 			"label", "Direct Lighting Samples",
@@ -342,7 +342,7 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"options.ptLighingSamples" : [
+		"options.ptLightingSamples" : [
 
 			"layout:section", "Unidirectional Path Tracer",
 			"label", "Direct Lighting Samples",
@@ -379,14 +379,14 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"options.sppmDirectLighing" : [
+		"options.sppmDirectLighting" : [
 
 			"layout:section", "SPPM",
 			"label", "Direct Lighting",
 
 		],
 
-		"options.sppmDirectLighing.value" : [
+		"options.sppmDirectLighting.value" : [
 
 			"preset:Ray Tracing", "rt",
 			"preset:SPPM", "sppm",
@@ -547,7 +547,7 @@ GafferUI.PlugValueWidget.registerCreator(
 
 GafferUI.PlugValueWidget.registerCreator(
 	GafferAppleseed.AppleseedOptions,
-	"options.sppmDirectLighing.value",
+	"options.sppmDirectLighting.value",
 	GafferUI.PresetsPlugValueWidget,
 )
 
