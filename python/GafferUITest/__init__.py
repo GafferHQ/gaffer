@@ -102,6 +102,7 @@ from ViewportGadgetTest import ViewportGadgetTest
 from VectorDataWidgetTest import VectorDataWidgetTest
 from DotNodeGadgetTest import DotNodeGadgetTest
 from DocumentationTest import DocumentationTest
+from LazyMethodTest import LazyMethodTest
 
 if __name__ == "__main__":
 	unittest.main()

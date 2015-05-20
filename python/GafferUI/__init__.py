@@ -170,6 +170,7 @@ from Divider import Divider
 import _Pointer
 from SplineWidget import SplineWidget
 from Bookmarks import Bookmarks
+from LazyMethod import LazyMethod
 
 # then all the PathPreviewWidgets. note that the order
 # of import controls the order of display.
