@@ -181,14 +181,7 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 				if tab is not None :
 					column.append( GafferUI.Spacer( IECore.V2i( 0 ) ), expand = True )
 
-		self.__visibilityChangedConnection = self.visibilityChangedSignal().connect( Gaffer.WeakMethod( self.__visibilityChanged ) )
-
-		self.__pendingUpdate = False
 		self.__targetPaths = None
-
-		self.__playback = None
-		self.__acquirePlayback()
-
 		self._updateFromSet()
 
 	## May be used to "pin" target paths into the editor, rather than
@@ -235,15 +228,13 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 				self.__plugDirtiedConnections.append( node.plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__plugDirtied ) ) )
 				self.__parentChangedConnections.append( outputScenePlugs[0].parentChangedSignal().connect( Gaffer.WeakMethod( self.__plugParentChanged ) ) )
 
-		self.__scheduleUpdate()
+		self.__updateLazily()
 
 	def _updateFromContext( self, modifiedItems ) :
 
-		self.__acquirePlayback() # if context was set to different instance, we need a new playback instance
-
 		for item in modifiedItems :
 			if not item.startswith( "ui:" ) or ( item == "ui:scene:selectedPaths" and self.__targetPaths is None ) :
-				self.__scheduleUpdate()
+				self.__updateLazily()
 				break
 
 	def _titleFormat( self ) :
@@ -253,7 +244,7 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 	def __plugDirtied( self, plug ) :
 
 		if isinstance( plug, GafferScene.ScenePlug ) and plug.direction() == Gaffer.Plug.Direction.Out :
-			self.__scheduleUpdate()
+			self.__updateLazily()
 
 	def __plugParentChanged( self, plug, oldParent ) :
 
@@ -262,27 +253,16 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 		# next suitable plug from the current node set.
 		self._updateFromSet()
 
-	def __scheduleUpdate( self ) :
+	@GafferUI.LazyMethod( deferUntilPlaybackStops = True )
+	def __updateLazily( self ) :
 
-		if self.__pendingUpdate :
-			return
-
-		self.__pendingUpdate = True
-		if self.visible() and self.__playback.getState() == GafferUI.Playback.State.Stopped :
-			GafferUI.EventLoop.addIdleCallback( Gaffer.WeakMethod( self.__update, fallbackResult = False ) )
-		else :
-			# we'll do the update in self.__visibilityChanged when
-			# we next become visible, or in self.__playbackStateChanged
-			# when playback stops
-			pass
+		self.__update()
 
 	def __update( self ) :
 
 		# The SceneInspector's internal context is not necessarily bound at this point, which can lead to errors
 		# if nodes in the graph are expecting special context variables, so we make sure it is:
 		with self.getContext():
-
-			self.__pendingUpdate = False
 
 			assert( len( self.__scenePlugs ) <= 2 )
 
@@ -314,26 +294,6 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 				section.update( targets )
 
 			return False # remove idle callback
-
-	def __visibilityChanged( self, widget ) :
-
-		assert( widget is self )
-
-		if self.__pendingUpdate and self.visible() :
-			self.__update()
-
-	def __acquirePlayback( self ) :
-
-		if self.__playback is None or not self.__playback.context().isSame( self.getContext() ) :
-			self.__playback = GafferUI.Playback.acquire( self.getContext() )
-			self.__playbackStateChangedConnection = self.__playback.stateChangedSignal().connect( Gaffer.WeakMethod( self.__playbackStateChanged ) )
-
-	def __playbackStateChanged( self, playback ) :
-
-		assert( playback is self.__playback )
-
-		if self.__pendingUpdate and self.visible() and playback.getState() == playback.State.Stopped :
-			self.__update()
 
 GafferUI.EditorWidget.registerType( "SceneInspector", SceneInspector )
 
