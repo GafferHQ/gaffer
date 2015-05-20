@@ -1,7 +1,7 @@
 ##########################################################################
 #
 #  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2014, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -100,6 +100,22 @@ def _qtAddress( o ) :
 	else :
 		import shiboken
 		return shiboken.getCppPointer( o )[0]
+
+##########################################################################
+# Function to return a wrapped Qt object from the given C++ address.
+# This can be useful if needing to implement part of the UI in C++ and
+# the rest in Python.
+##########################################################################
+
+def _qtObject( address, type ) :
+
+	global __qtModuleName
+	if "PyQt" in __qtModuleName :
+		import sip
+		return sip.wrapinstance( address, type )
+	else :
+		import shiboken
+		return shiboken.wrapInstance( address, type )
 
 ##########################################################################
 # now import our actual functionality

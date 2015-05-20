@@ -1,7 +1,7 @@
 ##########################################################################
 #
 #  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -426,10 +426,13 @@ class WidgetTest( GafferUITest.TestCase ) :
 
 		self.assertEqual( mouseGlobal, mouseLocal + b.bound().min )
 
-	def testAddress( self ) :
+	def testAddressAndObject( self ) :
 
-		w = GafferUI.Button()
-		self.assertTrue( isinstance( GafferUI._qtAddress( w._qtWidget() ), int ) )
+		button = GafferUI.Button()
+		address = GafferUI._qtAddress( button._qtWidget() )
+		self.assertTrue( isinstance( address, int ) )
+		widget = GafferUI._qtObject( address, QtGui.QPushButton )
+		self.assertTrue( isinstance( widget, QtGui.QPushButton ) )
 
 	def testSetVisibleWithNonBool( self ) :
 
