@@ -875,6 +875,7 @@ class DiffColumn( GafferUI.Widget ) :
 
 			self.__rowContainer = GafferUI.ListContainer()
 
+	@GafferUI.LazyMethod()
 	def update( self, targets ) :
 
 		inspectors = {}
