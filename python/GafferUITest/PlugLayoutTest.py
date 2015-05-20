@@ -98,5 +98,19 @@ class PlugLayoutTest( GafferUITest.TestCase ) :
 		self.assertTrue( isinstance( p.customWidget( "test", lazy = False ), self.CustomWidget ) )
 		self.assertTrue( p.customWidget( "test" ).node.isSame( n ) )
 
+	def testLazyBuilding( self ) :
+
+		n = Gaffer.Node()
+		n["a"] = Gaffer.IntPlug()
+
+		with GafferUI.Window() as window :
+			plugLayout = GafferUI.PlugLayout( n )
+
+		self.assertTrue( plugLayout.plugValueWidget( n["a"], lazy = True ) is None )
+
+		window.setVisible( True )
+
+		self.assertTrue( plugLayout.plugValueWidget( n["a"], lazy = True ) is not None )
+
 if __name__ == "__main__":
 	unittest.main()

@@ -103,10 +103,6 @@ class PlugLayout( GafferUI.Widget ) :
 		self.__childAddedConnection = parent.childAddedSignal().connect( Gaffer.WeakMethod( self.__childAddedOrRemoved ) )
  		self.__childRemovedConnection = parent.childRemovedSignal().connect( Gaffer.WeakMethod( self.__childAddedOrRemoved ) )
 
-		# building plug uis can be very expensive, and often we're initially hidden in a non-current tab
-		# or a collapsed section. so we defer our building until we become visible to avoid unnecessary overhead.
-		self.__visibilityChangedConnection = self.visibilityChangedSignal().connect( Gaffer.WeakMethod( self.__visibilityChanged ) )
-
 		# since our layout is driven by metadata, we must respond dynamically
 		# to changes in that metadata.
 		self.__metadataChangedConnection = Gaffer.Metadata.plugValueChangedSignal().connect( Gaffer.WeakMethod( self.__plugMetadataChanged ) )
@@ -116,11 +112,8 @@ class PlugLayout( GafferUI.Widget ) :
 		self.__plugDirtiedConnection = self.__node().plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__plugDirtied ) )
 
 		# frequently events that trigger a ui update come in batches, so we
-		# only perform the update on idle events to avoid unnecessary
-		# repeated updates. this variable tracks whether or not such an update is
-		# scheduled, and the dirty variables keep track of the work we'll need to
-		# do in the update.
-		self.__updatePending = False
+		# perform the update lazily using a LazyMethod. the dirty variables
+		# keep track of the work we'll need to do in the update.
 		self.__layoutDirty = True
 		self.__activationsDirty = True
 		self.__summariesDirty = True
@@ -129,6 +122,10 @@ class PlugLayout( GafferUI.Widget ) :
 		# the name of a custom widget (as returned by layoutOrder()).
 		self.__widgets = {}
 		self.__rootSection = _Section( self.__parent )
+
+		# schedule our first update, which will take place when we become
+		# visible for the first time.
+		self.__updateLazily()
 
 	def getReadOnly( self ) :
 
@@ -205,6 +202,11 @@ class PlugLayout( GafferUI.Widget ) :
 		itemsAndIndices.sort( key = lambda x : x[0] )
 
 		return [ x[1] for x in itemsAndIndices ]
+
+	@GafferUI.LazyMethod()
+	def __updateLazily( self ) :
+
+		self.__update()
 
 	def __update( self ) :
 
@@ -378,39 +380,13 @@ class PlugLayout( GafferUI.Widget ) :
 
 		return m.split( "." ) if m else []
 
-	def __visibilityChanged( self, widget ) :
-
-		assert( widget is self )
-		if self.visible() :
-			self.__update()
-			del self.__visibilityChangedConnection # only need to build once
-
 	def __childAddedOrRemoved( self, *unusedArgs ) :
 
-		if not self.visible() :
-			return
-
-		# typically many children are added and removed at once. we don't
-		# want to be rebuilding the ui for each individual event, so we
-		# add an idle callback to do the rebuild once the
+		# typically many children are added and removed at once, so
+		# we do a lazy update so we can batch up several changes into one.
 		# upheaval is over.
 		self.__layoutDirty = True
-		self.__scheduleUpdate()
-
-	def __scheduleUpdate( self ) :
-
-		if self.__updatePending :
-			return
-
-		GafferUI.EventLoop.addIdleCallback( Gaffer.WeakMethod( self.__idleUpdate, fallbackResult=False ) )
-		self.__updatePending = True
-
-	def __idleUpdate( self ) :
-
-		self.__update()
-		self.__updatePending = False
-
-		return False # removes the callback
+		self.__updateLazily()
 
 	def __applyReadOnly( self, widget, readOnly ) :
 
@@ -435,9 +411,9 @@ class PlugLayout( GafferUI.Widget ) :
 
 		if key in ( "divider", "layout:index", "layout:section" ) :
 			# we often see sequences of several metadata changes - so
-			# we schedule an update on idle to batch them into one ui update.
+			# we schedule a lazy update to batch them into one ui update.
 			self.__layoutDirty = True
-			self.__scheduleUpdate()
+			self.__updateLazily()
 
 	def __plugDirtied( self, plug ) :
 
@@ -446,7 +422,7 @@ class PlugLayout( GafferUI.Widget ) :
 
 		self.__activationsDirty = True
 		self.__summariesDirty = True
-		self.__scheduleUpdate()
+		self.__updateLazily()
 
 # The _Section class provides a simple abstract representation of a hierarchical
 # layout. Each section contains a list of widgets to be displayed in that section,
