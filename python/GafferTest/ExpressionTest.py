@@ -35,6 +35,7 @@
 #
 ##########################################################################
 
+import os
 import unittest
 
 import Gaffer
@@ -319,6 +320,16 @@ class ExpressionTest( GafferTest.TestCase ) :
 
 		self.failUnless( s2["e"].getChild("out1") is None )
 		self.failUnless( s2["e"].getChild("in1") is None )
+
+	def testLegacyLoading( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["fileName"].setValue( os.path.dirname( __file__ ) + "/scripts/legacyExpression.gfr" )
+		s.load()
+
+		s.context().setFrame( 3 )
+		with s.context() :
+			self.assertEqual( s["n"]["user"]["o"].getValue(), 6 )
 
 if __name__ == "__main__":
 	unittest.main()
