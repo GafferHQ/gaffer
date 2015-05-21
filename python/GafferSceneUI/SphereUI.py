@@ -51,6 +51,8 @@ Gaffer.Metadata.registerNode(
 	Produces scenes containing a sphere.
 	""",
 
+	"layout:activator:typeIsMesh", lambda node : node["type"].getValue() == GafferScene.Sphere.Type.Mesh,
+
 	plugs = {
 
 		"type" : [
@@ -113,6 +115,8 @@ Gaffer.Metadata.registerNode(
 			Controls tesselation of the sphere when type is Mesh.
 			""",
 
+			"layout:activator", "typeIsMesh",
+
 		],
 
 	}
@@ -124,6 +128,3 @@ Gaffer.Metadata.registerNode(
 ##########################################################################
 
 GafferUI.PlugValueWidget.registerCreator( GafferScene.Sphere, "type", GafferUI.PresetsPlugValueWidget )
-
-## \todo: Disable divisions when type is Primitive. There is a similar mechanism in RenderManShaderUI, which
-## could be generalized on StandardNodeUI and used here.

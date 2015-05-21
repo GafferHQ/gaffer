@@ -46,18 +46,33 @@ import GafferSceneUI
 # Metadata
 ##########################################################################
 
-Gaffer.Metadata.registerNodeDescription(
+Gaffer.Metadata.registerNode(
 
-GafferScene.FilteredSceneProcessor,
+	GafferScene.FilteredSceneProcessor,
 
-"""The base type for scene processors which use a Filter node to control which part of the scene is affected.""",
+	"description",
+	"""
+	The base type for scene processors which use a Filter node to control
+	which part of the scene is affected.
+	""",
 
-"filter",
-{
-	"description" : """The filter used to control which parts of the scene are processed. A Filter node should be connected here.""",
-	"nodeUI:section" : "Filter",
-	"nodeGadget:nodulePosition" : "right",
-}
+	plugs = {
+
+		"filter" : [
+
+			"description",
+			"""
+			The filter used to control which parts of the scene are
+			processed. A Filter node should be connected here.
+			""",
+
+			"layout:section", "Filter",
+			"nodeGadget:nodulePosition", "right",
+			"layout:index", -3, # Just before the enabled plug
+
+		],
+
+	},
 
 )
 

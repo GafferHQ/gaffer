@@ -78,7 +78,9 @@ Gaffer.Metadata.registerNode(
 			"description",
 			"""
 			The frame range to be used when framedMode is "CustomRange".
-			"""
+			""",
+
+			"layout:activator", "customRange",
 
 		),
 
@@ -167,7 +169,7 @@ class DispatcherWindow( GafferUI.Window ) :
 				self.__dispatchButton = GafferUI.Button( "Dispatch" )
 				self.__dispatchClickedConnection = self.__dispatchButton.clickedSignal().connect( Gaffer.WeakMethod( self.__dispatchClicked ) )
 
-		self.__update()
+		self.__update( resizeToFit = True )
 
 	def setVisible( self, visible ) :
 
@@ -238,15 +240,21 @@ class DispatcherWindow( GafferUI.Window ) :
 			return window()
 		
 		window = DispatcherWindow()
+
 		applicationRoot._dispatcherWindow = weakref.ref( window )
 		
 		return window
 	
-	def __update( self ) :
+	def __update( self, resizeToFit = False ) :
 		
 		nodeUI = GafferUI.NodeUI.create( self.__currentDispatcher )
 		self.__frame.setChild( nodeUI )
 		self.__updateTitle()
+
+		if resizeToFit :
+			# Force the node UI to build so we fit to the right contents
+			nodeUI.plugValueWidget( self.__currentDispatcher["framesMode"], lazy = False )
+			self.resizeToFitChild()
 
 	def __updateTitle( self ) :
 
@@ -363,16 +371,16 @@ class __FramesModePlugValueWidget( GafferUI.PlugValueWidget ) :
 		
 		label = selectionMenu.getSelection()[0]
 		value = self.__labelsAndValues[ selectionMenu.index( label ) ][1]
-		
+
+		Gaffer.Metadata.registerNodeValue(
+			self.getPlug().node(),
+			"layout:activator:customRange",
+			label == "CustomRange",
+		)
+
 		with Gaffer.BlockedConnection( self._plugConnections() ) :
 			self.getPlug().setValue( value )
-		
-		frameRangeWidget = self.__frameRangeWidget()
-		if frameRangeWidget :
-			## \todo: This should be managed by activator metadata once we've ported
-			# that functionality out of RenderManShaderUI and into PlugLayout.
-			frameRangeWidget.setReadOnly( label in [ "CurrentFrame", "FullRange", "PlaybackRange" ] )
-		
+
 		self.__updateFrameRangeConnection = None
 		
 		window = self.ancestor( GafferUI.ScriptWindow )
@@ -452,7 +460,7 @@ class __FrameRangePlugValueWidget( GafferUI.StringPlugValueWidget ) :
 # Metadata, PlugValueWidgets and Nodules
 ##########################################################################
 
-Gaffer.Metadata.registerPlugValue( Gaffer.ExecutableNode, "requirement", "nodeUI:section", "header" )
+Gaffer.Metadata.registerPlugValue( Gaffer.ExecutableNode, "requirement", "layout:section", "" )
 Gaffer.Metadata.registerPlugDescription( Gaffer.ExecutableNode, "dispatcher.batchSize", "Maximum number of frames to batch together when dispatching execution tasks." )
 
 GafferUI.PlugValueWidget.registerCreator(

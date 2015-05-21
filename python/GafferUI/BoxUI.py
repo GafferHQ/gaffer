@@ -36,6 +36,7 @@
 
 import re
 import os
+import functools
 
 import IECore
 
@@ -90,61 +91,40 @@ def appendNodeContextMenuDefinitions( nodeGraph, node, menuDefinition ) :
 	menuDefinition.append( "/BoxDivider", { "divider" : True } )
 	menuDefinition.append( "/Show Contents...", { "command" : IECore.curry( __showContents, nodeGraph, node ) } )
 
+## A callback suitable for use with NodeEditor.toolMenuSignal() - it provides
+# menu options specific to Boxes. We don't actually register it automatically,
+# but instead let the startup files for particular applications register
+# it if it suits their purposes.
+def appendNodeEditorToolMenuDefinitions( nodeEditor, node, menuDefinition ) :
+
+	if not isinstance( node, Gaffer.Box ) :
+		return
+
+	menuDefinition.append( "/BoxDivider", { "divider" : True } )
+	menuDefinition.append( "/Export for referencing...", { "command" : functools.partial( __exportForReferencing, node = node ) } )
+
 def __showContents( nodeGraph, box ) :
 
 	GafferUI.NodeGraph.acquire( box )
 
-# NodeUI
-##########################################################################
+def __exportForReferencing( menu, node ) :
 
-class BoxNodeUI( GafferUI.StandardNodeUI ) :
+	bookmarks = GafferUI.Bookmarks.acquire( node, category="reference" )
 
-	def __init__( self, node, displayMode = None, **kw ) :
+	path = Gaffer.FileSystemPath( bookmarks.getDefault( menu ) )
+	path.setFilter( Gaffer.FileSystemPath.createStandardFilter( [ "grf" ] ) )
 
-		GafferUI.StandardNodeUI.__init__( self, node, displayMode, **kw )
+	dialogue = GafferUI.PathChooserDialogue( path, title="Export for referencing", confirmLabel="Export", leaf=True, bookmarks=bookmarks )
+	path = dialogue.waitForPath( parentWindow = menu.ancestor( GafferUI.Window ) )
 
-		## \todo Maybe this should become a customisable part of the StandardNodeUI - if so then
-		# perhaps we need to integrate it with the existing presets menu in ParameterisedHolderNodeUI.
-		toolButton = GafferUI.MenuButton( image = "gear.png", hasFrame=False )
-		toolButton.setMenu( GafferUI.Menu( Gaffer.WeakMethod( self._toolMenuDefinition ) ) )
+	if not path :
+		return
 
-		self._tabbedContainer().setCornerWidget( toolButton )
+	path = str( path )
+	if not path.endswith( ".grf" ) :
+		path += ".grf"
 
-		self.__uiEditor = None
-
-	def _toolMenuDefinition( self ) :
-
-		result = IECore.MenuDefinition()
-		result.append( "/Edit UI...", { "command" : Gaffer.WeakMethod( self.__showUIEditor ) } )
-		result.append( "/Export Divider", { "divider" : True } )
-		result.append( "/Export for referencing...", { "command" : Gaffer.WeakMethod( self.__exportForReferencing ) } )
-
-		return result
-
-	def __exportForReferencing( self ) :
-
-		bookmarks = GafferUI.Bookmarks.acquire( self.node(), category="reference" )
-
-		path = Gaffer.FileSystemPath( bookmarks.getDefault( self ) )
-		path.setFilter( Gaffer.FileSystemPath.createStandardFilter( [ "grf" ] ) )
-
-		dialogue = GafferUI.PathChooserDialogue( path, title="Export for referencing", confirmLabel="Export", leaf=True, bookmarks=bookmarks )
-		path = dialogue.waitForPath( parentWindow = self.ancestor( GafferUI.Window ) )
-
-		if not path :
-			return
-
-		path = str( path )
-		if not path.endswith( ".grf" ) :
-			path += ".grf"
-
-		self.node().exportForReference( path )
-
-	def __showUIEditor( self ) :
-
-		GafferUI.UIEditor.acquire( self.node() )
-
-GafferUI.NodeUI.registerNodeUI( Gaffer.Box, BoxNodeUI )
+	node.exportForReference( path )
 
 # PlugValueWidget registrations
 ##########################################################################

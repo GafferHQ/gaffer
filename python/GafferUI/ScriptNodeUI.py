@@ -112,7 +112,9 @@ Gaffer.Metadata.registerNode(
 			"""
 			Container for user-defined variables which can
 			be used in expressions anywhere in the script.
-			"""
+			""",
+
+			"layout:section", "Variables",
 
 		),
 
@@ -136,11 +138,4 @@ GafferUI.PlugValueWidget.registerCreator(
 	Gaffer.ScriptNode,
 	"variables",
 	lambda plug : GafferUI.CompoundDataPlugValueWidget( plug, collapsed=None ),
-)
-
-Gaffer.Metadata.registerPlugValue(
-	Gaffer.ScriptNode,
-	"variables",
-	"nodeUI:section",
-	"Variables",
 )

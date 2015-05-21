@@ -35,6 +35,7 @@
 ##########################################################################
 
 import Gaffer
+import GafferTest
 import GafferUI
 import GafferUITest
 
@@ -57,6 +58,45 @@ class PlugLayoutTest( GafferUITest.TestCase ) :
 		self.assertTrue( w2 is not None )
 		self.assertTrue( w2 is w )
 		self.assertTrue( w2.getPlug().isSame( n["b"] ) )
+
+	def testLayoutOrder( self ) :
+
+		n = Gaffer.Node()
+		n["user"]["a"] = Gaffer.IntPlug()
+		n["user"]["b"] = Gaffer.IntPlug()
+		n["user"]["c"] = Gaffer.IntPlug()
+
+		self.assertEqual(
+			GafferUI.PlugLayout.layoutOrder( n["user"] ),
+			[ n["user"]["a"], n["user"]["b"], n["user"]["c"] ],
+		)
+
+		Gaffer.Metadata.registerPlugValue( n["user"]["a"], "layout:index", 3 )
+		Gaffer.Metadata.registerPlugValue( n["user"]["b"], "layout:index", 2 )
+		Gaffer.Metadata.registerPlugValue( n["user"]["c"], "layout:index", 1 )
+
+		self.assertEqual(
+			GafferUI.PlugLayout.layoutOrder( n["user"] ),
+			[ n["user"]["c"], n["user"]["b"], n["user"]["a"] ],
+		)
+
+	class CustomWidget( GafferUI.Widget ) :
+
+		def __init__( self, node ) :
+
+			GafferUI.Widget.__init__( self, GafferUI.Label( "Custom Widget" ) )
+
+			self.node = node
+
+	def testCustomWidgets( self ) :
+
+		n = Gaffer.Node()
+		Gaffer.Metadata.registerNodeValue( n, "layout:customWidget:test:widgetType", "GafferUITest.PlugLayoutTest.CustomWidget" )
+
+		p = GafferUI.PlugLayout( n )
+
+		self.assertTrue( isinstance( p.customWidget( "test", lazy = False ), self.CustomWidget ) )
+		self.assertTrue( p.customWidget( "test" ).node.isSame( n ) )
 
 if __name__ == "__main__":
 	unittest.main()

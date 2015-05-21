@@ -118,8 +118,11 @@ def preferences( menu ) :
 		saveButton = window._addButton( "Save" )
 		window.__saveButtonConnection = saveButton.clickedSignal().connect( __savePreferences )
 
-		nodeUI = GafferUI.NodeUI.create( application["preferences"] )
-		window._setWidget( nodeUI )
+		with GafferUI.ListContainer() as column :
+			GafferUI.NodeUI.create( application["preferences"] )
+			GafferUI.Spacer( IECore.V2i( 0 ), parenting = { "expand" : True } )
+
+		window._setWidget( column )
 
 		__preferencesWindows[application] = weakref.ref( window )
 

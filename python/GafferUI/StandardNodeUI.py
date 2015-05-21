@@ -45,47 +45,19 @@ import IECore
 import Gaffer
 import GafferUI
 
-## A standard UI which should do the job fairly well for most node types. It supports the
-# placement of plugs in different sections of the UI based on a "nodeUI:section" Metadata value
-# associated with the plug. A value of "header" places the plug above the tabs, and all
-# other values place the plug in a tab with the section name.
+## A standard UI which should do the job fairly well for most node types. It uses
+# the PlugLayout class to create the main layout - see documentation for PlugLayout
+# to see how the layout can be controlled using Metadata entries.
 class StandardNodeUI( GafferUI.NodeUI ) :
 
-	## Tabbed provides the full node UI, including a tab for user plugs.
-	#  Simplified shows only the contents of the main tab, including a scroll bar.
-	#  Bare shows only the contents of the main tab, without a scroll bar.
-	DisplayMode = IECore.Enum.create( "Tabbed", "Simplified", "Bare" )
-
-	__defaultSectionName = "Settings"
-	__currentTabPlugName = "__uiCurrentTab"
-
-	def __init__( self, node, displayMode = None, **kw ) :
+	def __init__( self, node, **kw ) :
 
 		self.__mainColumn = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical )
 
 		GafferUI.NodeUI.__init__( self, node, self.__mainColumn, **kw )
 
-		self.__displayMode = displayMode if displayMode is not None else self.DisplayMode.Tabbed
-
-		self.__sectionColumns = {}
-		if self.__displayMode == self.DisplayMode.Tabbed :
-
-			headerColumn = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, borderWidth = 4 )
-			self.__sectionColumns["header"] = headerColumn
-			self.__mainColumn.append( headerColumn )
-
-			self.__tabbedContainer = GafferUI.TabbedContainer()
-			self.__mainColumn.append( self.__tabbedContainer )
-
-		self.__buildPlugWidgets()
-
-		if self.__displayMode == self.DisplayMode.Tabbed :
-			if self.__currentTabPlugName in node :
-				tabIndex = min( node[self.__currentTabPlugName].getValue(), len( self.__tabbedContainer ) - 1 )
-			else :
-				tabIndex = 0
-			self.__tabbedContainer.setCurrent( self.__tabbedContainer[tabIndex] )
-			self.__currentTabChangedConnection = self.__tabbedContainer.currentChangedSignal().connect( Gaffer.WeakMethod( self.__currentTabChanged ) )
+		with self.__mainColumn :
+			self.__plugLayout = GafferUI.PlugLayout( node )
 
 	def plugValueWidget( self, plug, lazy=True ) :
 
@@ -94,16 +66,16 @@ class StandardNodeUI( GafferUI.NodeUI ) :
 			hierarchy.insert( 0, plug )
 			plug = plug.parent()
 
-		plugValueWidget = self.__plugValueWidgets.get( hierarchy[0].getName(), None )
-		if plugValueWidget is None :
+		widget = self.__plugLayout.plugValueWidget( hierarchy[0], lazy=lazy )
+		if widget is None :
 			return None
 
 		for i in range( 1, len( hierarchy ) ) :
-			plugValueWidget = plugValueWidget.childPlugValueWidget( hierarchy[i], lazy=lazy )
-			if plugValueWidget is None :
+			widget = widget.childPlugValueWidget( hierarchy[i], lazy=lazy )
+			if widget is None :
 				return None
 
-		return plugValueWidget
+		return widget
 
 	def setReadOnly( self, readOnly ) :
 
@@ -112,102 +84,6 @@ class StandardNodeUI( GafferUI.NodeUI ) :
 
 		GafferUI.NodeUI.setReadOnly( self, readOnly )
 
-		for plugValueWidget in self.__plugValueWidgets.values() :
-			## \todo Consider how this might interoperate better
-			# with the activator expressions in the RenderManShaderUI.
-			# I think perhaps we should promote activator expressions to
-			# be implemented here for all node types and then we'll be
-			# in a position to deal with the interaction of the two
-			# causes of read-onlyness.
-			plugValueWidget.setReadOnly( readOnly )
-			plugWidget = plugValueWidget.ancestor( GafferUI.PlugWidget )
-			if plugWidget is not None :
-				plugWidget.labelPlugValueWidget().setReadOnly( readOnly )
-
-	## The header for the ui is a vertical ListContainer. Derived classes may
-	# access it using this method in order to add their own header items.
-	def _header( self ) :
-
-		return self.__sectionColumns["header"]
-
-	## The main layout for the standard node ui is a tabbed container. Derived
-	# classes may access it using this function in order to add their own tabs
-	def _tabbedContainer( self ) :
-
-		return self.__tabbedContainer
-
-	def __sectionColumn( self, sectionName ) :
-
-		sectionColumn = self.__sectionColumns.get( sectionName, None )
-		if sectionColumn is None :
-
-			sectionColumn = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing=4 )
-
-			if self.__displayMode == self.DisplayMode.Bare :
-				sectionContainer = sectionColumn
-			else :
-				sectionContainer = GafferUI.ScrolledContainer( horizontalMode=GafferUI.ScrolledContainer.ScrollMode.Never, borderWidth=8 )
-				sectionContainer.setChild( sectionColumn )
-
-			if self.__displayMode == self.DisplayMode.Tabbed :
-				newTabIndex = 0
-				if len( self.__tabbedContainer ) and self.__tabbedContainer.getLabel( self.__tabbedContainer[0] )==self.__defaultSectionName :
-					# make sure the default tab always comes first
-					newTabIndex = 1
-				self.__tabbedContainer.insert( newTabIndex, sectionContainer, label = sectionName )
-			else :
-				self.__mainColumn.append( sectionContainer, expand = True )
-
-			self.__sectionColumns[sectionName] = sectionColumn
-
-		return sectionColumn
-
-	def __buildPlugWidgets( self ) :
-
-		# mapping from plug name to PlugValueWidget for use in plugValueWidget().
-		## \todo Using names makes us vulnerable to plug name changes - do better. We
-		# currently have the same problem in CompoundPlugValueWidget, where the problem is
-		# worse because the names are much more likely to change. See also StandardNodeToolbar,
-		# where there are some notes as to how this might be fixed.
-		self.__plugValueWidgets = {}
-
-		for plug in self.node().children( Gaffer.Plug ) :
-
-			if plug.getName().startswith( "__" ) :
-				continue
-
-			sectionName = Gaffer.Metadata.plugValue( plug, "nodeUI:section" ) or self.__defaultSectionName
-			if self.__displayMode != self.DisplayMode.Tabbed and sectionName != self.__defaultSectionName :
-				continue
-
-			widget = GafferUI.PlugValueWidget.create( plug )
-			if widget is None :
-				continue
-
-			self.__plugValueWidgets[plug.getName()] = widget
-
-			if isinstance( widget, GafferUI.PlugValueWidget ) and not widget.hasLabel() :
-				widget = GafferUI.PlugWidget( widget )
-
-			sectionColumn = self.__sectionColumn( sectionName )
-			sectionColumn.append( widget )
-
-			if Gaffer.Metadata.plugValue( plug, "divider" ) :
-				sectionColumn.append( GafferUI.Divider() )
-
-	def __currentTabChanged( self, tabbedContainer, current ) :
-
-		assert( tabbedContainer is self.__tabbedContainer )
-
-		if self.__currentTabPlugName in self.node() :
-			plug = self.node()[self.__currentTabPlugName]
-		else :
-			plug = Gaffer.IntPlug(
-				defaultValue = 0,
-				flags = Gaffer.Plug.Flags.Default & ~Gaffer.Plug.Flags.Serialisable,
-			)
-			self.node()[self.__currentTabPlugName] = plug
-
-		plug.setValue( self.__tabbedContainer.index( current ) )
+		self.__plugLayout.setReadOnly( readOnly )
 
 GafferUI.NodeUI.registerNodeUI( Gaffer.Node, StandardNodeUI )

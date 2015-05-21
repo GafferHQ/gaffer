@@ -58,8 +58,6 @@ Gaffer.Metadata.registerNode(
 			filter does not match any locations.
 			""",
 
-			"nodeUI:section", "Node",
-
 		],
 
 		"out" : [

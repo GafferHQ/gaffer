@@ -70,7 +70,7 @@ Gaffer.Metadata.registerNode(
 			method to load a shader.
 			""",
 
-			"nodeUI:section", "header",
+			"layout:section", "",
 
 		],
 
@@ -83,7 +83,7 @@ Gaffer.Metadata.registerNode(
 			method to load a shader.
 			""",
 
-			"nodeUI:section", "header",
+			"layout:section", "",
 
 		],
 
@@ -163,8 +163,6 @@ GafferUI.PlugValueWidget.registerCreator( GafferScene.Shader, "name", __ShaderNa
 GafferUI.PlugValueWidget.registerCreator( GafferScene.Shader, "parameters", GafferUI.LayoutPlugValueWidget )
 GafferUI.PlugValueWidget.registerCreator( GafferScene.Shader, "out", None )
 GafferUI.PlugValueWidget.registerCreator( GafferScene.Shader, "type", None )
-
-GafferUI.Metadata.registerPlugValue( GafferScene.Shader, "enabled", "nodeUI:section", "Node" )
 
 ##########################################################################
 # NodeGadgets and Nodules

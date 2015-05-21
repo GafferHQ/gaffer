@@ -194,6 +194,17 @@ class UIEditor( GafferUI.NodeSetEditor ) :
 		menuDefinition.append( "/UIEditorDivider", { "divider" : True } )
 		menuDefinition.append( "/Set Color...", { "command" : functools.partial( cls.__setColor, node = node ) } )
 
+	@classmethod
+	def appendNodeEditorToolMenuDefinitions( cls, nodeEditor, node, menuDefinition ) :
+
+		menuDefinition.append(
+			"/Edit UI...",
+			{
+				"command" : functools.partial( GafferUI.UIEditor.acquire, node ),
+				"active" : nodeEditor.nodeUI().plugValueWidget( node["user"] ) is not None
+			}
+		)
+
 	def _updateFromSet( self ) :
 
 		GafferUI.NodeSetEditor._updateFromSet( self )
@@ -418,8 +429,7 @@ class _PlugListing( GafferUI.PathListingWidget ) :
 
 		# build an EntryPath to represent our child plugs.
 
-		plugs = self.__parent.children( Gaffer.Plug )
-		plugs = GafferUI.PlugLayout.layoutOrder( plugs )
+		plugs = GafferUI.PlugLayout.layoutOrder( self.__parent )
 
 		entries = [ self.Entry( plug, index ) for index, plug in enumerate( plugs ) ]
 		self.setPath( self.EntryPath( entries, "/" ) )

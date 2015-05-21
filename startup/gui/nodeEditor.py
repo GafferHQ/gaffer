@@ -34,33 +34,9 @@
 #
 ##########################################################################
 
-import Gaffer
-import GafferUI
+def __toolMenu( nodeEditor, node, menuDefinition ) :
 
-Gaffer.Metadata.registerNode(
+	GafferUI.UIEditor.appendNodeEditorToolMenuDefinitions( nodeEditor, node, menuDefinition )
+	GafferUI.BoxUI.appendNodeEditorToolMenuDefinitions( nodeEditor, node, menuDefinition )
 
-	Gaffer.DependencyNode,
-
-	"description",
-	"""
-	Base class for nodes where input plugs have an
-	effect on output plugs.
-	""",
-
-	plugs = {
-
-		"enabled" : (
-
-			"description",
-			"""
-			Turns the node on and off.
-			""",
-
-			"layout:index", -2, # Last but one
-			"layout:section", "Node",
-
-		),
-
-	},
-
-)
+__nodeEditorToolMenuConnection = GafferUI.NodeEditor.toolMenuSignal().connect( __toolMenu )

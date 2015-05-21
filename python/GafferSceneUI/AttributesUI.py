@@ -70,7 +70,7 @@ Gaffer.Metadata.registerNode(
 			instead of the individual locations defined by the filter.
 			""",
 
-			"nodeUI:section", "Filter",
+			"layout:section", "Filter",
 
 		]
 
