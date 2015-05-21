@@ -37,6 +37,8 @@
 
 import ast
 
+import IECore
+
 import Gaffer
 
 class PythonExpressionEngine( Gaffer.Expression.Engine ) :
@@ -50,16 +52,14 @@ class PythonExpressionEngine( Gaffer.Expression.Engine ) :
 		parser = _Parser( expression )
 		if not parser.plugWrites :
 			raise Exception( "Expression does not write to a plug" )
-		elif len( parser.plugWrites ) > 1 :
-			raise Exception( "Expression may only write to a single plug" )
 
 		self.__inPlugs = parser.plugReads
-		self.__outPlug = parser.plugWrites[0]
+		self.__outPlugs = parser.plugWrites
 		self.__contextNames = parser.contextReads
 
-	def outPlug( self ) :
+	def outPlugs( self ) :
 
-		return self.__outPlug
+		return self.__outPlugs
 
 	def inPlugs( self ) :
 
@@ -69,7 +69,7 @@ class PythonExpressionEngine( Gaffer.Expression.Engine ) :
 
 		return self.__contextNames
 
-	def execute( self, context, inputs, output ) :
+	def execute( self, context, inputs ) :
 
 		plugDict = {}
 		for plugPath, plug in zip( self.__inPlugs, inputs ) :
@@ -79,16 +79,31 @@ class PythonExpressionEngine( Gaffer.Expression.Engine ) :
 				parentDict = parentDict.setdefault( p, {} )
 			parentDict[plugPathSplit[-1]] = plug.getValue()
 
-		outputPlugPathSplit = self.__outPlug.split( "." )
-		outputPlugDict = plugDict
-		for p in outputPlugPathSplit[:-1] :
-			outputPlugDict = outputPlugDict.setdefault( p, {} )
+		for plugPath in self.__outPlugs :
+			parentDict = plugDict
+			for p in plugPath.split( "." )[:-1] :
+				parentDict = parentDict.setdefault( p, {} )
 
 		executionDict = { "parent" : plugDict, "context" : context }
 
 		exec( self.__expression, executionDict, executionDict )
 
-		output.setValue( outputPlugDict[outputPlugPathSplit[-1]] )
+		result = IECore.ObjectVector()
+		for plugPath in self.__outPlugs :
+			parentDict = plugDict
+			plugPathSplit = plugPath.split( "." )
+			for p in plugPathSplit[:-1] :
+				parentDict = parentDict[p]
+			result.append( parentDict[plugPathSplit[-1]] )
+
+		return result
+
+	def setPlugValue( self, plug, value ) :
+
+		with IECore.IgnoredExceptions( AttributeError ) :
+			value = value.value
+
+		plug.setValue( value )
 
 class _Parser( ast.NodeVisitor ) :
 

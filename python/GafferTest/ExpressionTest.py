@@ -38,6 +38,8 @@
 import os
 import unittest
 
+import IECore
+
 import Gaffer
 import GafferTest
 
@@ -200,7 +202,7 @@ class ExpressionTest( GafferTest.TestCase ) :
 
 		s["e"]["expression"].setValue( "parent[\"m2\"][\"op1\"] = parent[\"m1\"][\"product\"] * 2" )
 
-		self.failUnless( s["m2"]["op1"].getInput().isSame( s["e"]["out"] ) )
+		self.failUnless( s["m2"]["op1"].getInput().node().isSame( s["e"] ) )
 		self.assertEqual( s["m2"]["product"].getValue(), 400 )
 
 		# deleting the expression text should just keep the connections and compute
@@ -208,7 +210,7 @@ class ExpressionTest( GafferTest.TestCase ) :
 		# and undo will fail.
 
 		s["e"]["expression"].setValue( "" )
-		self.failUnless( s["m2"]["op1"].getInput().isSame( s["e"]["out"] ) )
+		self.failUnless( s["m2"]["op1"].getInput().node().isSame( s["e"] ) )
 		self.assertEqual( s["m2"]["product"].getValue(), 0 )
 
 	def testContextGetFrameMethod( self ) :
@@ -330,6 +332,47 @@ class ExpressionTest( GafferTest.TestCase ) :
 		s.context().setFrame( 3 )
 		with s.context() :
 			self.assertEqual( s["n"]["user"]["o"].getValue(), 6 )
+
+	def testMultipleOutputs( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = Gaffer.Node()
+		s["n"]["user"].addChild( Gaffer.IntPlug( "p1", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+		s["n"]["user"].addChild( Gaffer.IntPlug( "p2", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+
+		s["e"] = Gaffer.Expression()
+		s["e"]["engine"].setValue( "python" )
+
+		s["e"]["expression"].setValue( 'parent["n"]["user"]["p1"] = 2; parent["n"]["user"]["p2"] = 3' )
+
+		self.assertEqual( s["n"]["user"]["p1"].getValue(), 2 )
+		self.assertEqual( s["n"]["user"]["p2"].getValue(), 3 )
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+
+		self.assertEqual( s2["n"]["user"]["p1"].getValue(), 2 )
+		self.assertEqual( s2["n"]["user"]["p2"].getValue(), 3 )
+
+	def testStringVectorDataPlug( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = Gaffer.Node()
+		s["n"]["user"].addChild( Gaffer.StringVectorDataPlug( "p", defaultValue = IECore.StringVectorData(), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+
+		s["e"] = Gaffer.Expression()
+		s["e"]["engine"].setValue( "python" )
+
+		s["e"]["expression"].setValue( 'import IECore; parent["n"]["user"]["p"] = IECore.StringVectorData( [ "one", "two" ] )' )
+
+		self.assertEqual( s["n"]["user"]["p"].getValue(), IECore.StringVectorData( [ "one", "two" ] ) )
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+
+		self.assertEqual( s2["n"]["user"]["p"].getValue(), IECore.StringVectorData( [ "one", "two" ] ) )
 
 if __name__ == "__main__":
 	unittest.main()

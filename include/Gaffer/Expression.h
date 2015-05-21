@@ -39,6 +39,7 @@
 #define GAFFER_EXPRESSION_H
 
 #include "Gaffer/ComputeNode.h"
+#include "Gaffer/TypedObjectPlug.h"
 
 namespace Gaffer
 {
@@ -70,20 +71,23 @@ class Expression : public ComputeNode
 
 				IE_CORE_DECLAREMEMBERPTR( Engine );
 
-				/// Must return a path to the plug the expression wishes to set.
+				/// Must fill plugPaths with paths to the plugs the expression wishes to set.
 				/// Paths should be of the form nodeName.plugName, and are expected to
-				/// be relative to the parent of the Expression.
-				virtual std::string outPlug() = 0;
-				/// Must fill plugs with paths to the plugs the expression wishes to read from.
+				/// be relative to the parent of the Expression node.
+				virtual void outPlugs( std::vector<std::string> &plugPaths ) = 0;
+				/// Must fill plugPaths with paths to the plugs the expression wishes to read from.
 				/// Paths should be of the form nodeName.plugName, and are expected to be relative to
-				/// the parent of the expression node.
+				/// the parent of the Expression node.
 				virtual void inPlugs( std::vector<std::string> &plugPaths ) = 0;
 				/// Must fill names with the names of all context values the expression
 				/// wishes to read.
 				virtual void contextNames( std::vector<IECore::InternedString> &names ) = 0;
 				/// Must execute the expression in the specified context, using the values
-				/// provided by proxyInputs and setting the result in proxyOutput.
-				virtual void execute( const Context *context, const std::vector<const ValuePlug *> &proxyInputs, ValuePlug *proxyOutput ) = 0;
+				/// provided by proxyInputs and returning an array containing a value for
+				/// each plug in outPlugs().
+				virtual IECore::ConstObjectVectorPtr execute( const Context *context, const std::vector<const ValuePlug *> &proxyInputs ) = 0;
+				/// Must set the plug to the value computed previously in execute().
+				virtual void setPlugValue( ValuePlug *plug, const IECore::Object *value ) = 0;
 
 				static EnginePtr create( const std::string engineType, const std::string &expression );
 
@@ -109,15 +113,29 @@ class Expression : public ComputeNode
 
 		static size_t g_firstPlugIndex;
 
+		// For each input to the expression, we add a child plug
+		// below this one, and connect it to the outside world.
 		ValuePlug *inPlug();
 		const ValuePlug *inPlug() const;
 
+		// For each output from the expression, we add a child plug
+		// below this one, and connect it to the outside world.
 		ValuePlug *outPlug();
 		const ValuePlug *outPlug() const;
 
+		// We want to allow an expression to write to multiple output
+		// plugs, but a compute() may only be performed for one child
+		// of outPlug() at a time. This intermediate plug is used to
+		// cache all the results of Engine::execute(), and then we
+		// can dole them out individually for each outPlug() child
+		// compute.
+		ObjectVectorPlug *executePlug();
+		const ObjectVectorPlug *executePlug() const;
+
 		void plugSet( Plug *plug );
 
-		void updatePlugs( const std::string &outPlugPath, std::vector<std::string> &inPlugPaths );
+		void updatePlugs( const std::vector<std::string> &inPlugPaths, const std::vector<std::string> &outPlugPaths );
+		void addPlug( ValuePlug *parentPlug, const std::string &plugPath );
 
 		EnginePtr m_engine;
 		std::vector<IECore::InternedString> m_contextNames;
