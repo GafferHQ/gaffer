@@ -57,7 +57,7 @@ class ValuePlug : public Plug
 	public :
 
 		/// Constructs a ValuePlug which can be used as a parent for other ValuePlugs.
-		ValuePlug( const std::string &name, Direction direction, unsigned flags );
+		ValuePlug( const std::string &name=defaultName<ValuePlug>(), Direction direction=In, unsigned flags=Default );
 		virtual ~ValuePlug();
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::ValuePlug, ValuePlugTypeId, Plug );
