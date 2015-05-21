@@ -205,14 +205,6 @@ const ValuePlug *Expression::outPlug() const
 
 void Expression::plugSet( Plug *plug )
 {
-	if( !parent<Node>() )
-	{
-		// typically this happens when a plug is set during the loading of a script,
-		// as at the point our plugs are set, we don't yet have a parent. instead
-		// we'll make an engine in our parentChanged slot.
-		return;
-	}
-
 	StringPlug *e = expressionPlug();
 	if( plug == e )
 	{
