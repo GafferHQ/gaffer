@@ -63,7 +63,7 @@ AppleseedOptions::AppleseedOptions( const std::string &name )
 	options->addOptionalMember( "as:cfg:drt:enable_ibl", new IECore::BoolData( true ), "drtIBL", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "as:cfg:drt:max_path_lenght", new IECore::IntData( 16 ), "drtMaxBounces", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "as:cfg:drt:rr_min_path_length", new IECore::IntData( 3 ), "drtRRStartBounce", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "as:cfg:drt:dl_light_samples", new IECore::IntData( 1.0f ), "drtLighingSamples", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "as:cfg:drt:dl_light_samples", new IECore::IntData( 1.0f ), "drtLightingSamples", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "as:cfg:drt:ibl_env_samples", new IECore::FloatData( 1.0f ), "drtIBLSamples", Gaffer::Plug::Default, false );
 
 	// path tracing
@@ -73,13 +73,13 @@ AppleseedOptions::AppleseedOptions( const std::string &name )
 	options->addOptionalMember( "as:cfg:pt:max_path_lenght", new IECore::IntData( 16 ), "ptMaxBounces", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "as:cfg:pt:rr_min_path_length", new IECore::IntData( 3 ), "ptRRStartBounce", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "as:cfg:pt:next_event_estimation", new IECore::BoolData( true ), "ptNextEvent", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "as:cfg:pt:dl_light_samples", new IECore::IntData( 1.0f ), "ptLighingSamples", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "as:cfg:pt:dl_light_samples", new IECore::IntData( 1.0f ), "ptLightingSamples", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "as:cfg:pt:ibl_env_samples", new IECore::FloatData( 1.0f ), "ptIBLSamples", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "as:cfg:pt:max_ray_intensity", new IECore::FloatData( 1.0f ), "ptMaxRayIntensity", Gaffer::Plug::Default, false );
 
 	// sppm
 	options->addOptionalMember( "as:cfg:sppm:photon_type", new IECore::StringData( "mono" ), "photonType", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "as:cfg:sppm:dl_type", new IECore::StringData( "rt" ), "sppmDirectLighing", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "as:cfg:sppm:dl_type", new IECore::StringData( "rt" ), "sppmDirectLighting", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "as:cfg:sppm:enable_ibl", new IECore::BoolData( true ), "sppmIBL", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "as:cfg:sppm:enable_caustics", new IECore::BoolData( true ), "sppmCaustics", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "as:cfg:sppm:photon_tracing_max_path_length", new IECore::IntData( 16 ), "sppmPhotonMaxBounces", Gaffer::Plug::Default, false );
