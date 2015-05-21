@@ -42,7 +42,6 @@
 #include "IECore/Exception.h"
 
 #include "Gaffer/Expression.h"
-#include "Gaffer/CompoundPlug.h"
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/Context.h"
 #include "Gaffer/StringPlug.h"
@@ -117,9 +116,9 @@ void Expression::affects( const Plug *input, AffectedPlugsContainer &outputs ) c
 
 	if( const ValuePlug *out = outPlug() )
 	{
-		const CompoundPlug *in = inPlug();
+		const ValuePlug *in = inPlug();
 		if(
-			( in && input->parent<CompoundPlug>() == in ) ||
+			( in && input->parent<ValuePlug>() == in ) ||
 			input == expressionPlug() ||
 			input == enginePlug()
 		)
@@ -136,7 +135,7 @@ void Expression::hash( const ValuePlug *output, const Context *context, IECore::
 	{
 		enginePlug()->hash( h );
 		expressionPlug()->hash( h );
-		const CompoundPlug *in = inPlug();
+		const ValuePlug *in = inPlug();
 		if( in )
 		{
 			in->hash( h );
@@ -165,7 +164,7 @@ void Expression::compute( ValuePlug *output, const Context *context ) const
 	{
 		if( m_engine )
 		{
-			const CompoundPlug *in = inPlug();
+			const ValuePlug *in = inPlug();
 			std::vector<const ValuePlug *> inputs;
 			for( ChildContainer::const_iterator it = in->children().begin(); it!=in->children().end(); it++ )
 			{
@@ -184,14 +183,14 @@ void Expression::compute( ValuePlug *output, const Context *context ) const
 	ComputeNode::compute( output, context );
 }
 
-CompoundPlug *Expression::inPlug()
+ValuePlug *Expression::inPlug()
 {
-	return getChild<CompoundPlug>( g_inPlugName );
+	return getChild<ValuePlug>( g_inPlugName );
 }
 
-const CompoundPlug *Expression::inPlug() const
+const ValuePlug *Expression::inPlug() const
 {
-	return getChild<CompoundPlug>( g_inPlugName );
+	return getChild<ValuePlug>( g_inPlugName );
 }
 
 ValuePlug *Expression::outPlug()
@@ -256,7 +255,7 @@ void Expression::updatePlugs( const std::string &dstPlugPath, std::vector<std::s
 	// if the expression was invalid, remove our plugs
 	if( !dstPlugPath.size() )
 	{
-		Plug *in = inPlug();
+		ValuePlug *in = inPlug();
 		if( in )
 		{
 			removeChild( in );
@@ -278,7 +277,7 @@ void Expression::updatePlugs( const std::string &dstPlugPath, std::vector<std::s
 		throw IECore::Exception( boost::str( boost::format( "Destination plug \"%s\" does not exist" ) % dstPlugPath ) );
 	}
 
-	CompoundPlugPtr inPlugs = new CompoundPlug( g_inPlugName, Plug::In, Plug::Default | Plug::Dynamic );
+	ValuePlugPtr inPlugs = new ValuePlug( g_inPlugName, Plug::In, Plug::Default | Plug::Dynamic );
 	setChild( g_inPlugName, inPlugs );
 	for( std::vector<std::string>::const_iterator it = srcPlugPaths.begin(); it!=srcPlugPaths.end(); it++ )
 	{
