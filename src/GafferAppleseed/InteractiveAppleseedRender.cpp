@@ -38,6 +38,7 @@
 
 #include "GafferAppleseed/InteractiveAppleseedRender.h"
 
+using namespace IECore;
 using namespace GafferScene;
 using namespace GafferAppleseed;
 
@@ -52,7 +53,7 @@ InteractiveAppleseedRender::~InteractiveAppleseedRender()
 {
 }
 
-IECore::RendererPtr InteractiveAppleseedRender::createRenderer() const
+RendererPtr InteractiveAppleseedRender::createRenderer() const
 {
 	return new IECoreAppleseed::Renderer();
 }

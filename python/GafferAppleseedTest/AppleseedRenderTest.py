@@ -214,8 +214,6 @@ class AppleseedRenderTest( GafferTest.TestCase ) :
 
 		s["fileName"].setValue( "/tmp/test.gfr" )
 
-		# check it can cope with everything already existing
-
 		with s.context() :
 			s["render"].execute()
 
