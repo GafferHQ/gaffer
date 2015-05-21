@@ -56,11 +56,15 @@ static IECore::InternedString g_outPlugName( "out" );
 // Expression implementation
 //////////////////////////////////////////////////////////////////////////
 
+size_t Expression::g_firstPlugIndex;
+
 IE_CORE_DEFINERUNTIMETYPED( Expression );
 
 Expression::Expression( const std::string &name )
 	:	ComputeNode( name ), m_engine( 0 )
 {
+	storeIndexOfNextChild( g_firstPlugIndex );
+
 	addChild(
 		new StringPlug(
 			"engine",
@@ -89,22 +93,22 @@ Expression::~Expression()
 
 StringPlug *Expression::enginePlug()
 {
-	return getChild<StringPlug>( "engine" );
+	return getChild<StringPlug>( g_firstPlugIndex );
 }
 
 const StringPlug *Expression::enginePlug() const
 {
-	return getChild<StringPlug>( "engine" );
+	return getChild<StringPlug>( g_firstPlugIndex );
 }
 
 StringPlug *Expression::expressionPlug()
 {
-	return getChild<StringPlug>( "expression" );
+	return getChild<StringPlug>( g_firstPlugIndex + 1 );
 }
 
 const StringPlug *Expression::expressionPlug() const
 {
-	return getChild<StringPlug>( "expression" );
+	return getChild<StringPlug>( g_firstPlugIndex + 1 );
 }
 
 void Expression::affects( const Plug *input, AffectedPlugsContainer &outputs ) const

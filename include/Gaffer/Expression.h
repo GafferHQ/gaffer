@@ -107,6 +107,8 @@ class Expression : public ComputeNode
 
 	private :
 
+		static size_t g_firstPlugIndex;
+
 		CompoundPlug *inPlug();
 		const CompoundPlug *inPlug() const;
 
