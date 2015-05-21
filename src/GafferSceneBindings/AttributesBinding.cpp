@@ -45,9 +45,11 @@
 #include "GafferScene/CustomAttributes.h"
 #include "GafferScene/AttributeProcessor.h"
 #include "GafferScene/DeleteAttributes.h"
+#include "GafferScene/AttributeVisualiser.h"
 
 #include "GafferSceneBindings/AttributesBinding.h"
 
+using namespace boost::python;
 using namespace GafferScene;
 
 void GafferSceneBindings::bindAttributes()
@@ -60,5 +62,14 @@ void GafferSceneBindings::bindAttributes()
 	GafferBindings::DependencyNodeClass<CustomAttributes>();
 	GafferBindings::DependencyNodeClass<AttributeProcessor>();
 	GafferBindings::DependencyNodeClass<DeleteAttributes>();
+
+	scope s = GafferBindings::DependencyNodeClass<AttributeVisualiser>();
+
+	enum_<AttributeVisualiser::Mode>( "Mode" )
+		.value( "Color", AttributeVisualiser::Color )
+		.value( "FalseColor", AttributeVisualiser::FalseColor )
+		.value( "Random", AttributeVisualiser::Random )
+		.value( "ShaderNodeColor", AttributeVisualiser::ShaderNodeColor )
+	;
 
 }

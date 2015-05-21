@@ -107,6 +107,7 @@ from FilterSwitchTest import FilterSwitchTest
 from PointsTypeTest import PointsTypeTest
 from ParametersTest import ParametersTest
 from SceneFilterPathFilterTest import SceneFilterPathFilterTest
+from AttributeVisualiserTest  import AttributeVisualiserTest
 
 if __name__ == "__main__":
 	import unittest

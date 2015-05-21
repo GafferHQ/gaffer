@@ -63,6 +63,8 @@ Gaffer.Metadata.registerNode(
 			separated by spaces and can use Gaffer's standard wildcards.
 			""",
 
+			"ui:scene:acceptsAttributeNames", True,
+
 		],
 
 		"invertNames" : [

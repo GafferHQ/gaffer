@@ -47,6 +47,13 @@
 #include "GafferSceneUI/TypeIds.h"
 #include "GafferSceneUI/SceneGadget.h"
 
+namespace GafferScene
+{
+
+IE_CORE_FORWARDDECLARE( SceneProcessor )
+
+} // namespace GafferScene
+
 namespace GafferSceneUI
 {
 
@@ -92,6 +99,11 @@ class SceneView : public GafferUI::View3D
 		/// empty bound.
 		const Imath::Box2f &resolutionGate() const;
 
+		typedef boost::function<GafferScene::SceneProcessorPtr ()> ShadingModeCreator;
+
+		static void registerShadingMode( const std::string &name, ShadingModeCreator );
+		static void registeredShadingModes( std::vector<std::string> &names );
+
 	protected :
 
 		virtual void contextChanged( const IECore::InternedString &name );
@@ -123,6 +135,8 @@ class SceneView : public GafferUI::View3D
 		boost::shared_ptr<Grid> m_grid;
 		class Gnomon;
 		boost::shared_ptr<Gnomon> m_gnomon;
+		class ShadingMode;
+		boost::shared_ptr<ShadingMode> m_shadingMode;
 
 		static size_t g_firstPlugIndex;
 		static ViewDescription<SceneView> g_viewDescription;

@@ -34,27 +34,106 @@
 #
 ##########################################################################
 
+import functools
+
 import Gaffer
 import GafferUI
 
 import GafferScene
 
-Gaffer.Metadata.registerNodeDescription(
+Gaffer.Metadata.registerNode(
 
-GafferScene.CustomAttributes,
+	GafferScene.CustomAttributes,
 
-"""Applies arbitrary user-defined attributes to locations in the scene. Note
-that for most common cases the StandardAttributes, OpenGLAttributes, RenderManAttributes,
-and ArnoldAttributes nodes should be used in preference - they provide predefined
-sets of attributes with customised user interfaces. The CustomAttributes node is of most use when
-needing to set a custom attribute not supported by the specialised nodes.
-""",
+	"description",
+	"""
+	Applies arbitrary user-defined attributes to locations in the scene. Note
+	that for most common cases the StandardAttributes, OpenGLAttributes, RenderManAttributes,
+	and ArnoldAttributes nodes should be used in preference - they provide predefined
+	sets of attributes with customised user interfaces. The CustomAttributes node is of most use when
+	needing to set a custom attribute not supported by the specialised nodes.
+	""",
 
-"attributes",
-"""The attributes to be applied - arbitrary numbers of user defined attributes may be added
-as children of this plug via the user interface, or using the CompoundDataPlug API via
-python.""",
+	plugs = {
+
+		"attributes.*.name" : [
+
+			"ui:scene:acceptsAttributeName", True,
+
+		],
+
+	}
 
 )
 
 GafferUI.PlugValueWidget.registerCreator( GafferScene.CustomAttributes, "attributes", GafferUI.CompoundDataPlugValueWidget, collapsed=None )
+
+##########################################################################
+# Right click menu for adding attribute names to plugs
+# This is driven by metadata so it can be used for plugs on other
+# nodes too.
+##########################################################################
+
+def __setValue( plug, value, *unused ) :
+
+	with Gaffer.UndoContext( plug.ancestor( Gaffer.ScriptNode ) ) :
+		plug.setValue( value )
+
+def __attributePopupMenu( menuDefinition, plugValueWidget ) :
+
+	plug = plugValueWidget.getPlug()
+	if plug is None :
+		return
+
+	acceptsAttributeName = Gaffer.Metadata.plugValue( plug, "ui:scene:acceptsAttributeName" )
+	acceptsAttributeNames = Gaffer.Metadata.plugValue( plug, "ui:scene:acceptsAttributeNames" )
+	if not acceptsAttributeName and not acceptsAttributeNames :
+		return
+
+	selectedPaths = plugValueWidget.getContext().get( "ui:scene:selectedPaths" )
+	if not selectedPaths :
+		return
+
+	node = plug.node()
+	if isinstance( node, GafferScene.Filter ) :
+		nodes = [ o.node() for o in node["out"].outputs() ]
+	else :
+		nodes = [ node ]
+
+	attributeNames = set()
+	with plugValueWidget.getContext() :
+
+		if acceptsAttributeNames :
+			currentNames = set( plug.getValue().split() )
+		else :
+			currentNames = set( [ plug.getValue() ] )
+
+		for node in nodes :
+			for path in selectedPaths :
+				attributes = node["in"].attributes( path, _copy=False )
+				attributeNames.update( attributes.keys() )
+
+	if not attributeNames :
+		return
+
+	menuDefinition.prepend( "/AttributesDivider", { "divider" : True } )
+
+	for attributeName in reversed( sorted( list( attributeNames ) ) ) :
+
+		newNames = set( currentNames ) if acceptsAttributeNames else set()
+
+		if attributeName not in currentNames :
+			newNames.add( attributeName )
+		else :
+			newNames.discard( attributeName )
+
+		menuDefinition.prepend(
+			"/Attributes/%s" % attributeName,
+			{
+				"command" : functools.partial( __setValue, plug, " ".join( sorted( newNames ) ) ),
+				"checkBox" : attributeName in currentNames,
+				"active" : plug.settable() and not plugValueWidget.getReadOnly(),
+			}
+		)
+
+__attributesPopupMenuConnection = GafferUI.PlugValueWidget.popupMenuSignal().connect( __attributePopupMenu )

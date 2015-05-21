@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012-2013, John Haddon. All rights reserved.
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,43 +34,14 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUI_OBJECTVIEW_H
-#define GAFFERUI_OBJECTVIEW_H
+#ifndef GAFFERSCENEUIBINDINGS_SCENEVIEWBINDING_H
+#define GAFFERSCENEUIBINDINGS_SCENEVIEWBINDING_H
 
-#include "Gaffer/TypedObjectPlug.h"
-
-#include "GafferUI/View3D.h"
-#include "GafferUI/RenderableGadget.h"
-
-namespace GafferUI
+namespace GafferSceneUIBindings
 {
 
-/// \todo Remove this class, and use SceneView for everything.
-class ObjectView : public View3D
-{
+void bindSceneView();
 
-	public :
+} // namespace GafferSceneUIBindings
 
-		ObjectView( const std::string &name = defaultName<ObjectView>() );
-
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::ObjectView, ObjectViewTypeId, View3D );
-
-	protected :
-
-		virtual void update();
-
-	private :
-
-		void baseStateChanged();
-
-		GafferUI::RenderableGadgetPtr m_renderableGadget;
-
-		static ViewDescription<ObjectView> g_viewDescription;
-
-};
-
-IE_CORE_DECLAREPTR( ObjectView );
-
-} // namespace GafferUI
-
-#endif // GAFFERUI_OBJECTVIEW_H
+#endif // GAFFERSCENEUIBINDINGS_SCENEVIEWBINDING_H

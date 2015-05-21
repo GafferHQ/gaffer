@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2012-2013, John Haddon. All rights reserved.
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,43 +35,72 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUI_OBJECTVIEW_H
-#define GAFFERUI_OBJECTVIEW_H
+#include "GafferBindings/NodeBinding.h"
 
-#include "Gaffer/TypedObjectPlug.h"
+#include "GafferScene/SceneProcessor.h"
+#include "GafferSceneUI/SceneView.h"
+#include "GafferSceneUIBindings/SceneViewBinding.h"
 
-#include "GafferUI/View3D.h"
-#include "GafferUI/RenderableGadget.h"
+using namespace std;
+using namespace boost::python;
+using namespace IECorePython;
+using namespace GafferScene;
+using namespace GafferSceneUI;
 
-namespace GafferUI
+namespace
 {
 
-/// \todo Remove this class, and use SceneView for everything.
-class ObjectView : public View3D
+struct ShadingModeCreator
 {
 
-	public :
+	ShadingModeCreator( object fn )
+		:	m_fn( fn )
+	{
+	}
 
-		ObjectView( const std::string &name = defaultName<ObjectView>() );
-
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::ObjectView, ObjectViewTypeId, View3D );
-
-	protected :
-
-		virtual void update();
+	SceneProcessorPtr operator()()
+	{
+		IECorePython::ScopedGILLock gilLock;
+		SceneProcessorPtr result = extract<SceneProcessorPtr>( m_fn() );
+		return result;
+	}
 
 	private :
 
-		void baseStateChanged();
-
-		GafferUI::RenderableGadgetPtr m_renderableGadget;
-
-		static ViewDescription<ObjectView> g_viewDescription;
+		object m_fn;
 
 };
 
-IE_CORE_DECLAREPTR( ObjectView );
+void registerShadingMode( const std::string &name, object creator )
+{
+	SceneView::registerShadingMode( name, ShadingModeCreator( creator ) );
+}
 
-} // namespace GafferUI
+boost::python::list registeredShadingModes()
+{
+	vector<string> n;
+	SceneView::registeredShadingModes( n );
+	boost::python::list result;
+	for( vector<string>::const_iterator it = n.begin(), eIt = n.end(); it != eIt; ++it )
+	{
+		result.append( *it );
+	}
 
-#endif // GAFFERUI_OBJECTVIEW_H
+	return result;
+}
+
+} // namespace
+
+void GafferSceneUIBindings::bindSceneView()
+{
+
+	GafferBindings::NodeClass<SceneView>()
+		.def( "expandSelection", &SceneView::expandSelection, ( boost::python::arg_( "depth" ) = 1 ) )
+		.def( "collapseSelection", &SceneView::collapseSelection )
+		.def( "registerShadingMode", &registerShadingMode )
+		.staticmethod( "registerShadingMode" )
+		.def( "registeredShadingModes", &registeredShadingModes )
+		.staticmethod( "registeredShadingModes" )
+	;
+
+}

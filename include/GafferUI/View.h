@@ -124,6 +124,10 @@ class View : public Gaffer::Node
 		/// internally to the view. A preprocessor must have an "in" plug
 		/// which will get it's input from inPlug(), and an "out" plug
 		/// which will be returned by preprocessedInPlug().
+		/// \todo Having just one preprocessor is pretty limiting. If we
+		/// allowed chains of preprocessors, and made the API public, then
+		/// we could make Views in a more modular manner, adding components
+		/// (each with their own preprocessors) to build up the view.
 		void setPreprocessor( Gaffer::NodePtr preprocessor );
 		/// Returns the node used for preprocessing, or 0 if no such
 		/// node has been specified (or if it is not of type T).

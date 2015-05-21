@@ -466,7 +466,7 @@ class TextDiff( SideBySideDiff ) :
 			return self.__formatMatrices( values )
 		elif isinstance( values[0], ( IECore.Box3f, IECore.Box3d, IECore.Box3i, IECore.Box2f, IECore.Box2d, IECore.Box2i ) ) :
 			return self.__formatBoxes( values )
-		elif isinstance( values[0], IECore.ObjectVector ) :
+		elif isinstance( values[0], ( IECore.Shader, IECore.ObjectVector ) ) :
 			return self.__formatShaders( values )
 		elif isinstance( values[0], ( float, int ) ) :
 			return self.__formatNumbers( values )
@@ -546,14 +546,28 @@ class TextDiff( SideBySideDiff ) :
 
 		formattedValues = []
 		for value in values :
-			shaderName = value[-1].name
-			nodeName = value[-1].blindData().get( "gaffer:nodeName", None )
-			if nodeName is not None and nodeName.value != shaderName :
-				formattedValues.append( "%s (%s)" % ( nodeName.value, shaderName ) )
-			else :
-				formattedValues.append( shaderName )
 
-		return self.__formatStrings( formattedValues )
+			shader = value[-1] if isinstance( value, IECore.ObjectVector ) else value
+			shaderName = shader.name
+			nodeName = shader.blindData().get( "gaffer:nodeName", None )
+
+			formattedValue = "<table cellspacing=2><tr>"
+			if nodeName is not None :
+				nodeColor = shader.blindData().get( "gaffer:nodeColor", None )
+				if nodeColor is not None :
+					nodeColor = GafferUI.Widget._qtColor( nodeColor.value ).name()
+				else :
+					nodeColor = "#000000"
+				formattedValue += "<td bgcolor=%s>%s</td>" % ( nodeColor, cgi.escape( nodeName.value ) )
+				formattedValue += "<td>(" + cgi.escape( shaderName ) + ")</td>"
+			else :
+				formattedValue += "<td>" + cgi.escape( shaderName ) + "</td>"
+
+			formattedValue += "</tr></table>"
+
+			formattedValues.append( formattedValue )
+
+		return formattedValues
 
 	def __formatStrings( self, strings ) :
 

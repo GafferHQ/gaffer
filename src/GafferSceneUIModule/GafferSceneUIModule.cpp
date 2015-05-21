@@ -40,14 +40,16 @@
 
 #include "GafferUIBindings/GadgetBinding.h"
 
-#include "GafferSceneUI/SceneView.h"
 #include "GafferSceneUI/SceneGadget.h"
 #include "GafferSceneUI/SelectionTool.h"
 #include "GafferSceneUI/CropWindowTool.h"
 
+#include "GafferSceneUIBindings/SceneViewBinding.h"
+
 using namespace boost::python;
 using namespace IECorePython;
 using namespace GafferSceneUI;
+using namespace GafferSceneUIBindings;
 
 namespace
 {
@@ -67,10 +69,7 @@ IECore::InternedStringVectorDataPtr objectAt( SceneGadget &g, IECore::LineSegmen
 BOOST_PYTHON_MODULE( _GafferSceneUI )
 {
 
-	GafferBindings::NodeClass<SceneView>()
-		.def( "expandSelection", &SceneView::expandSelection, ( boost::python::arg_( "depth" ) = 1 ) )
-		.def( "collapseSelection", &SceneView::collapseSelection )
-	;
+	bindSceneView();
 
 	GafferUIBindings::GadgetClass<SceneGadget>()
 		.def( init<>() )

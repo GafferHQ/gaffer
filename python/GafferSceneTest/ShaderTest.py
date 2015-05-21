@@ -96,6 +96,27 @@ class ShaderTest( unittest.TestCase ) :
 		self.assertEqual( s1[0].blindData()["gaffer:nodeName"], IECore.StringData( "node1" ) )
 		self.assertEqual( s2[0].blindData()["gaffer:nodeName"], IECore.StringData( "node2" ) )
 
+	def testNodeColorBlindData( self ) :
+
+		s = GafferSceneTest.TestShader()
+
+		h1 = s.stateHash()
+		s1 = s.state()
+
+		cs = GafferTest.CapturingSlot( s.plugDirtiedSignal() )
+
+		Gaffer.Metadata.registerNodeValue( s, "nodeGadget:color", IECore.Color3f( 1, 0, 0 ) )
+
+		self.assertTrue( s["out"] in [ x[0] for x in cs ] )
+
+		self.assertNotEqual( s.stateHash(), h1 )
+
+		s2 = s.state()
+		self.assertNotEqual( s2, s1 )
+
+		self.assertEqual( s1[0].blindData()["gaffer:nodeColor"], IECore.Color3fData( IECore.Color3f( 0 ) ) )
+		self.assertEqual( s2[0].blindData()["gaffer:nodeColor"], IECore.Color3fData( IECore.Color3f( 1, 0, 0 ) ) )
+
 	def testShaderTypesInState( self ) :
 
 		surface = GafferSceneTest.TestShader( "surface" )
