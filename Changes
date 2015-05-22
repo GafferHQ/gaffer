@@ -31,7 +31,24 @@ UI
   - Opened in tree mode rather than list mode
   - Removed unnecessary columns
   - Added filtering to display only cameras where appropriate
-- Improved error handling in the Viewer
+- CustomAttributes/DeleteAttributes
+  - Added right click menu for quickly adding attributes from the
+    currently selected object.
+- Viewer
+  - Added shading mode menu. This allows the default shading to be overridden
+    with another shader. Currently configured menu entries allow visualisation
+    of shader assignments and visibility for RenderMan, Arnold and Appleseed
+    (#1037).
+  - Improved error handling.
+- SceneInspector
+  - Improved shader display in attributes section. The node colour of the
+    assigned shader is used as the background colour.
+  - Improved performance (#1050).
+- Node UIs
+  - Added tool menu to NodeEditor
+  - Added support for metadata-driven activators.
+  - Added support for metadata-driven section summaries.
+  - Added support for metadata-driven custom widgets.
 
 Scene
 -----------------------------------------------------------------------
@@ -52,6 +69,16 @@ Scene
   - Prevented wildcards from being used in the Set node (#1307).
 - Made Parameters node compatible with subclasses of Light/Camera/ExternalProcedural,
   such as those used internally at IE.
+- Shader node now adds "gaffer:nodeColor" entry into the blind data
+  for the shader in the scene - this allows UI components to display
+  the colour as appropriate.
+- Added AttributeVisualiser node. This applies an OpenGL shader to
+  visualise the values of attributes and shader assignments.
+
+Appleseed
+-----------------------------------------------------------------------
+
+- Fixed typo in AppleseedOptions plug names.
 
 Documentation
 -----------------------------------------------------------------------
@@ -80,6 +107,12 @@ API
   - Added support for section summaries driven by Metadata.
   - Deprecated SectionedCompoundDataPlugValueWidget.
   - Deprecated SectionedCompoundPlugValueWidget.
+  - Improved layoutOrder() API. It now returns the ordered plugs
+    for a specific parent, rather than accepting a possibly unrelated
+    list of plugs.
+  - Added support for arbitrary custom widgets to be inserted into
+    layouts.
+  - Reimplemented StandardNodeUI using PlugLayout.
 - Fixed ExecutableNode::requirements() binding.
 - Added support for fixing the height (measured in number of lines)
   of the MultiLineTextWidget.
@@ -108,6 +141,8 @@ API
 - Implemented PathMatcherData::hash().
 - Added GafferScene::PathMatcherDataPlug.
 - Reimplemented SceneNode sets API.
+- Added GafferUI.LazyMethod for deferring widget method calls until
+  visible/idle.
 
  Incompatibilities
 -----------------------------------------------------------------------
@@ -123,6 +158,15 @@ API
 - GafferScene
   - Reimplemented sets API.
   - Removed SceneReader "sets" plug.
+- GafferAppleseed
+  - Fixed typo in AppleseedOptions plug names.
+- PlugLayout
+  - Changed layoutOrder() signature.
+- StandardNodeUI
+  - Removed DisplayMode enum.
+  - Removed displayMode constructor argument.
+  - Removed _header() method.
+  - Removed _tabbedContainer() method.
 
 Build
 -----------------------------------------------------------------------
