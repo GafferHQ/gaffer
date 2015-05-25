@@ -62,6 +62,8 @@ class Metadata
 
 	public :
 
+		/// Type for a singal emitted when new metadata is registered.
+		typedef boost::signal<void ( IECore::InternedString target, IECore::InternedString key ), CatchingSignalCombiner<void> > ValueChangedSignal;
 		/// Type for a signal emitted when new node metadata is registered. The
 		/// node argument will be NULL when generic (rather than per-instance)
 		/// metadata is registered.
@@ -71,8 +73,20 @@ class Metadata
 		/// metadata is registered.
 		typedef boost::signal<void ( IECore::TypeId nodeTypeId, const MatchPattern &plugPath, IECore::InternedString key, Gaffer::Plug *plug ), CatchingSignalCombiner<void> > PlugValueChangedSignal;
 
+		typedef boost::function<IECore::ConstDataPtr ()> ValueFunction;
 		typedef boost::function<IECore::ConstDataPtr ( const Node *node )> NodeValueFunction;
 		typedef boost::function<IECore::ConstDataPtr ( const Plug *plug )> PlugValueFunction;
+
+		/// Registers a static value.
+		static void registerValue( IECore::InternedString target, IECore::InternedString key, IECore::ConstDataPtr value );
+		/// Registers a dynamic value. Each time the data is retrieved, the ValueFunction will
+		/// be called to compute it.
+		static void registerValue( IECore::InternedString target, IECore::InternedString key, ValueFunction value );
+		/// Fills the keys vector with keys for all values registered with the methods above.
+		static void registeredValues( IECore::InternedString target, std::vector<IECore::InternedString> &keys );
+		/// Retrieves a value, returning NULL if none exists.
+		template<typename T>
+		static typename T::ConstPtr value( IECore::InternedString target, IECore::InternedString key );
 
 		/// Registers a static metadata value for the specified node type.
 		static void registerNodeValue( IECore::TypeId nodeTypeId, IECore::InternedString key, IECore::ConstDataPtr value );
@@ -157,6 +171,7 @@ class Metadata
 		/// when necessary.
 		////////////////////////////////////////////////////////////////////
 		//@{
+		static ValueChangedSignal &valueChangedSignal();
 		static NodeValueChangedSignal &nodeValueChangedSignal();
 		static PlugValueChangedSignal &plugValueChangedSignal();
 		//@}
@@ -174,6 +189,7 @@ class Metadata
 		friend class Plug;
 		static void clearInstanceMetadata( const GraphComponent *graphComponent );
 
+		static IECore::ConstDataPtr valueInternal( IECore::InternedString target, IECore::InternedString key );
 		static IECore::ConstDataPtr nodeValueInternal( const Node *node, IECore::InternedString key, bool inherit, bool instanceOnly );
 		static IECore::ConstDataPtr plugValueInternal( const Plug *plug, IECore::InternedString key, bool inherit, bool instanceOnly );
 

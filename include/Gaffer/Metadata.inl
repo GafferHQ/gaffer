@@ -41,6 +41,12 @@ namespace Gaffer
 {
 
 template<typename T>
+typename T::ConstPtr Metadata::value( IECore::InternedString target, IECore::InternedString key )
+{
+	return IECore::runTimeCast<const T>( valueInternal( target, key ) );
+}
+
+template<typename T>
 typename T::ConstPtr Metadata::nodeValue( const Node *node, IECore::InternedString key, bool inherit, bool instanceOnly )
 {
 	return IECore::runTimeCast<const T>( nodeValueInternal( node, key, inherit, instanceOnly ) );
