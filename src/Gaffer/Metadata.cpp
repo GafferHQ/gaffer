@@ -62,6 +62,26 @@ using namespace Gaffer;
 namespace
 {
 
+typedef std::pair<InternedString, Metadata::ValueFunction> NamedValue;
+
+typedef multi_index::multi_index_container<
+	NamedValue,
+	multi_index::indexed_by<
+		multi_index::ordered_unique<
+			multi_index::member<NamedValue, InternedString, &NamedValue::first>
+		>,
+		multi_index::sequenced<>
+	>
+> Values;
+
+typedef std::map<IECore::InternedString, Values> MetadataMap;
+
+MetadataMap &metadataMap()
+{
+	static MetadataMap m;
+	return m;
+}
+
 struct NodeMetadata
 {
 
@@ -271,6 +291,50 @@ void registeredInstanceValues( const GraphComponent *graphComponent, std::vector
 }
 
 } // namespace
+
+void Metadata::registerValue( IECore::InternedString target, IECore::InternedString key, IECore::ConstDataPtr value )
+{
+	registerValue( target, key, boost::lambda::constant( value ) );
+}
+
+void Metadata::registerValue( IECore::InternedString target, IECore::InternedString key, ValueFunction value )
+{
+	metadataMap()[target].insert( NamedValue( key, value ) );
+	valueChangedSignal()( target, key );
+}
+
+void Metadata::registeredValues( IECore::InternedString target, std::vector<IECore::InternedString> &keys )
+{
+	const MetadataMap &m = metadataMap();
+	MetadataMap::const_iterator it = m.find( target );
+	if( it == m.end() )
+	{
+		return;
+	}
+
+	const Values::nth_index<1>::type &index = it->second.get<1>();
+	for( Values::nth_index<1>::type::const_iterator it = index.begin(), eIt = index.end(); it != eIt; ++it )
+	{
+		keys.push_back( it->first );
+	}
+}
+
+IECore::ConstDataPtr Metadata::valueInternal( IECore::InternedString target, IECore::InternedString key )
+{
+	const MetadataMap &m = metadataMap();
+	MetadataMap::const_iterator it = m.find( target );
+	if( it == m.end() )
+	{
+		return NULL;
+	}
+
+	Values::const_iterator vIt = it->second.find( key );
+	if( vIt != it->second.end() )
+	{
+		return vIt->second();
+	}
+	return NULL;
+}
 
 void Metadata::registerNodeValue( IECore::TypeId nodeTypeId, IECore::InternedString key, IECore::ConstDataPtr value )
 {
@@ -627,6 +691,12 @@ std::vector<Plug*> Metadata::plugsWithMetadata( GraphComponent *root, IECore::In
 		}
 	}
 	return plugs;
+}
+
+Metadata::ValueChangedSignal &Metadata::valueChangedSignal()
+{
+	static ValueChangedSignal s;
+	return s;
 }
 
 Metadata::NodeValueChangedSignal &Metadata::nodeValueChangedSignal()
