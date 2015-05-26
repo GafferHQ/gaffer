@@ -89,7 +89,7 @@ void AimConstraint::hashConstraint( const Gaffer::Context *context, IECore::Murm
 	upPlug()->hash( h );
 }
 
-Imath::M44f AimConstraint::computeConstraint( const Imath::M44f &fullTargetTransform, const Imath::M44f &fullInputTransform ) const
+Imath::M44f AimConstraint::computeConstraint( const Imath::M44f &fullTargetTransform, const Imath::M44f &fullInputTransform, const Imath::M44f &inputTransform ) const
 {
 	// decompose into scale, shear, rotate and translate
 	V3f s, h, r, t;

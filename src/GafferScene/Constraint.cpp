@@ -176,7 +176,7 @@ Imath::M44f Constraint::computeProcessedTransform( const ScenePath &path, const 
 
 	fullTargetTransform.translate( targetOffsetPlug()->getValue() );
 
-	const M44f fullConstrainedTransform = computeConstraint( fullTargetTransform, fullInputTransform );
+	const M44f fullConstrainedTransform = computeConstraint( fullTargetTransform, fullInputTransform, inputTransform );
 	return fullConstrainedTransform * parentTransform.inverse();
 }
 
