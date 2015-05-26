@@ -1045,6 +1045,7 @@ dependenciesManifest = [
 	"renderMan",
 	"arnold",
 	"appleseed",
+	"appleseedDisplays",
 
 ]
 
