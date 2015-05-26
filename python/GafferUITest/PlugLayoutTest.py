@@ -130,5 +130,31 @@ class PlugLayoutTest( GafferUITest.TestCase ) :
 		Gaffer.Metadata.registerPlugValue( n["user"]["a"], "layout:index", 3 )
 		self.assertEqual( GafferUI.PlugLayout.layoutSections( n["user"] ), [ "B", "C", "A" ] )
 
+	def testLayoutOrderSectionArgument( self ) :
+
+		n = Gaffer.Node()
+		n["user"]["a"] = Gaffer.IntPlug()
+		n["user"]["b"] = Gaffer.IntPlug()
+		n["user"]["c"] = Gaffer.IntPlug()
+
+		self.assertEqual(
+			GafferUI.PlugLayout.layoutOrder( n["user"], section = "" ),
+			[ n["user"]["a"], n["user"]["b"], n["user"]["c"] ],
+		)
+
+		Gaffer.Metadata.registerPlugValue( n["user"]["a"], "layout:section", "AB" )
+		Gaffer.Metadata.registerPlugValue( n["user"]["b"], "layout:section", "AB" )
+		Gaffer.Metadata.registerPlugValue( n["user"]["c"], "layout:section", "C" )
+
+		self.assertEqual(
+			GafferUI.PlugLayout.layoutOrder( n["user"], section = "AB" ),
+			[ n["user"]["a"], n["user"]["b"] ],
+		)
+
+		self.assertEqual(
+			GafferUI.PlugLayout.layoutOrder( n["user"], section = "C" ),
+			[ n["user"]["c"] ],
+		)
+
 if __name__ == "__main__":
 	unittest.main()

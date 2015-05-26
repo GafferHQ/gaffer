@@ -189,9 +189,10 @@ class PlugLayout( GafferUI.Widget ) :
 	# will be laid out, based on "layout:index" Metadata entries. If
 	# includeCustomWidgets is True, then the positions of custom widgets
 	# are represented by the appearance of the names of the widgets as
-	# strings within the list.
+	# strings within the list. If a section name is specified, then the
+	# result will be filtered to include only items in that section.
 	@classmethod
-	def layoutOrder( cls, parent, includeCustomWidgets = False ) :
+	def layoutOrder( cls, parent, includeCustomWidgets = False, section = None ) :
 
 		items = parent.children( Gaffer.Plug )
 		items = [ plug for plug in items if not plug.getName().startswith( "__" ) ]
@@ -214,6 +215,10 @@ class PlugLayout( GafferUI.Widget ) :
 				itemAndIndex[0] = index
 
 		itemsAndIndices.sort( key = lambda x : x[0] )
+
+		if section is not None :
+			sectionPath = section.split( "." ) if section else []
+			itemsAndIndices = [ x for x in itemsAndIndices if cls.__staticSectionPath( x[1], parent ) == sectionPath ]
 
 		return [ x[1] for x in itemsAndIndices ]
 
