@@ -62,5 +62,3 @@ GafferUI.PlugValueWidget.registerCreator(
 		( "Object", GafferScene.Transform.Space.Object ),
 	)
 )
-
-GafferUI.PlugValueWidget.registerCreator( GafferScene.Transform, "transform", GafferUI.TransformPlugValueWidget, collapsed=None )

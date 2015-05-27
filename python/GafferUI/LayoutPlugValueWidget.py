@@ -34,6 +34,7 @@
 #
 ##########################################################################
 
+import Gaffer
 import GafferUI
 
 ## A PlugValueWidget which uses a PlugLayout to present all the child
@@ -65,3 +66,5 @@ class LayoutPlugValueWidget( GafferUI.PlugValueWidget ) :
 	def _updateFromPlug( self ) :
 
 		pass
+
+GafferUI.PlugValueWidget.registerType( Gaffer.TransformPlug, LayoutPlugValueWidget )
