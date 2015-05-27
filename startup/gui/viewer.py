@@ -71,7 +71,27 @@ def __createNode( nodeType, plugValues ) :
 
 	return node
 
-for name, nodeType, plugValues in [
+def __registerShadingModes( modes ) :
+
+	for name, nodeType, plugValues in modes :
+		GafferSceneUI.SceneView.registerShadingMode(
+			name,
+			functools.partial(
+				__createNode,
+				nodeType,
+				plugValues,
+			)
+		)
+
+with IECore.IgnoredExceptions( ImportError ) :
+
+	# If this import fails, then our "with" block will swallow the error
+	# and we'll not add any useless visualisation modes (because the code
+	# below won't be reached). We leave the actual error reporting to the
+	# startup/gui/menus.py config file.
+	import GafferRenderMan
+
+	__registerShadingModes( [
 
 		( "Diagnostic/RenderMan/Shader Assignment", GafferScene.AttributeVisualiser, { "attributeName" : "ri:surface", "mode" : GafferScene.AttributeVisualiser.Mode.ShaderNodeColor } ),
 		( "Diagnostic/RenderMan/Camera Visibility", GafferScene.AttributeVisualiser, { "attributeName" : "ri:visibility:camera" } ),
@@ -81,6 +101,14 @@ for name, nodeType, plugValues in [
 		( "Diagnostic/RenderMan/Photon Visibility", GafferScene.AttributeVisualiser, { "attributeName" : "ri:visibility:photon" } ),
 		( "Diagnostic/RenderMan/Matte", GafferScene.AttributeVisualiser, { "attributeName" : "ri:visibility:matte" } ),
 
+	] )
+
+with IECore.IgnoredExceptions( ImportError ) :
+
+	import GafferArnold
+
+	__registerShadingModes( [
+
 		( "Diagnostic/Arnold/Shader Assignment", GafferScene.AttributeVisualiser, { "attributeName" : "ai:surface", "mode" : GafferScene.AttributeVisualiser.Mode.ShaderNodeColor } ),
 		( "Diagnostic/Arnold/Camera Visibility", GafferScene.AttributeVisualiser, { "attributeName" : "ai:visibility:camera" } ),
 		( "Diagnostic/Arnold/Shadow Visibility", GafferScene.AttributeVisualiser, { "attributeName" : "ai:visibility:shadow" } ),
@@ -88,6 +116,14 @@ for name, nodeType, plugValues in [
 		( "Diagnostic/Arnold/Refraction Visibility", GafferScene.AttributeVisualiser, { "attributeName" : "ai:visibility:refracted" } ),
 		( "Diagnostic/Arnold/Diffuse Visibility", GafferScene.AttributeVisualiser, { "attributeName" : "ai:visibility:diffuse" } ),
 		( "Diagnostic/Arnold/Glossy Visibility", GafferScene.AttributeVisualiser, { "attributeName" : "ai:visibility:glossy" } ),
+
+	] )
+
+with IECore.IgnoredExceptions( ImportError ) :
+
+	import GafferAppleseed
+
+	__registerShadingModes( [
 
 		( "Diagnostic/Appleseed/Shader Assignment", GafferScene.AttributeVisualiser, { "attributeName" : "osl:surface", "mode" : GafferScene.AttributeVisualiser.Mode.ShaderNodeColor } ),
 		( "Diagnostic/Appleseed/Camera Visibility", GafferScene.AttributeVisualiser, { "attributeName" : "as:visibility:camera" } ),
@@ -97,13 +133,4 @@ for name, nodeType, plugValues in [
 		( "Diagnostic/Appleseed/Glossy Visibility", GafferScene.AttributeVisualiser, { "attributeName" : "as:visibility:glossy" } ),
 		( "Diagnostic/Appleseed/Photon Visibility", GafferScene.AttributeVisualiser, { "attributeName" : "as:visibility:light" } ),
 
-	] :
-
-	GafferSceneUI.SceneView.registerShadingMode(
-		name,
-		functools.partial(
-			__createNode,
-			nodeType,
-			plugValues,
-		)
-	)
+	] )
