@@ -307,7 +307,7 @@ class CompoundDataPlugTest( GafferTest.TestCase ) :
 		s["b"]["n"] = Gaffer.Node()
 		s["b"]["n"]["p"] = Gaffer.CompoundDataPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 
-		p = s["b"].promotePlug( s["b"]["n"]["p"], asUserPlug=False )
+		p = s["b"].promotePlug( s["b"]["n"]["p"] )
 		p.setName( "p" )
 
 		def assertPreconditions( script ) :

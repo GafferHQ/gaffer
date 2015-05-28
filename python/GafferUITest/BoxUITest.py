@@ -96,8 +96,8 @@ class BoxUITest( GafferUITest.TestCase ) :
 		
 		boxGadget = g.nodeGadget( s["b"] )
 		
-		p1 = s["b"].promotePlug( s["b"]["n"]["op1"], asUserPlug = False )
-		p2 = s["b"].promotePlug( s["b"]["n"]["sum"], asUserPlug = False )
+		p1 = s["b"].promotePlug( s["b"]["n"]["op1"] )
+		p2 = s["b"].promotePlug( s["b"]["n"]["sum"] )
 
 		self.assertEqual( boxGadget.noduleTangent( boxGadget.nodule( p1 ) ), IECore.V3f( -1, 0, 0 ) )
 		self.assertEqual( boxGadget.noduleTangent( boxGadget.nodule( p2 ) ), IECore.V3f( 1, 0, 0 ) )

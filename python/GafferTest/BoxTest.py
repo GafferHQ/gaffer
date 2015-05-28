@@ -305,7 +305,7 @@ class BoxTest( GafferTest.TestCase ) :
 
 		p = b.promotePlug( b["n1"]["op1"] )
 		self.assertEqual( p.getName(), "n1_op1" )
-		self.assertTrue( p.parent().isSame( b["user"] ) )
+		self.assertTrue( p.parent().isSame( b ) )
 		self.assertTrue( b["n1"]["op1"].getInput().isSame( p ) )
 		self.assertTrue( b.plugIsPromoted( b["n1"]["op1"] ) )
 		self.assertFalse( b.canPromotePlug( b["n1"]["op1"] ) )
@@ -363,8 +363,8 @@ class BoxTest( GafferTest.TestCase ) :
 		s = Gaffer.ScriptNode()
 		s.execute( ss )
 
-		self.assertTrue( isinstance( s["Box"]["user"]["n_c"], Gaffer.Color3fPlug ) )
-		self.assertTrue( s["Box"]["n"]["c"].getInput().isSame( s["Box"]["user"]["n_c"] ) )
+		self.assertTrue( isinstance( s["Box"]["n_c"], Gaffer.Color3fPlug ) )
+		self.assertTrue( s["Box"]["n"]["c"].getInput().isSame( s["Box"]["n_c"] ) )
 
 	def testCantPromoteNonSerialisablePlugs( self ) :
 
@@ -740,16 +740,15 @@ class BoxTest( GafferTest.TestCase ) :
 		b = Gaffer.Box()
 		b["n"] = GafferTest.AddNode()
 
-		self.assertFalse( b.canPromotePlug( b["n"]["sum"] ) )
-		self.assertTrue( b.canPromotePlug( b["n"]["sum"], asUserPlug=False ) )
+		self.assertTrue( b.canPromotePlug( b["n"]["sum"] ) )
 
-		sum = b.promotePlug( b["n"]["sum"], asUserPlug=False )
+		sum = b.promotePlug( b["n"]["sum"] )
 		self.assertTrue( b.isAncestorOf( sum ) )
 		self.assertTrue( sum.direction() == Gaffer.Plug.Direction.Out )
 		self.assertEqual( sum.getInput(), b["n"]["sum"] )
 		self.assertTrue( b.plugIsPromoted( b["n"]["sum"] ) )
-		self.assertFalse( b.canPromotePlug( b["n"]["sum"], asUserPlug=False ) )
-		self.assertRaises( RuntimeError, b.promotePlug, b["n"]["sum"], asUserPlug=False )
+		self.assertFalse( b.canPromotePlug( b["n"]["sum"] ) )
+		self.assertRaises( RuntimeError, b.promotePlug, b["n"]["sum"] )
 
 		b["n"]["op1"].setValue( 10 )
 		b["n"]["op2"].setValue( 12 )
@@ -759,8 +758,7 @@ class BoxTest( GafferTest.TestCase ) :
 		b.unpromotePlug( b["n"]["sum"] )
 		self.assertFalse( b.plugIsPromoted( b["n"]["sum"] ) )
 		self.assertTrue( sum.parent() is None )
-		self.assertFalse( b.canPromotePlug( b["n"]["sum"] ) )
-		self.assertTrue( b.canPromotePlug( b["n"]["sum"], asUserPlug=False ) )
+		self.assertTrue( b.canPromotePlug( b["n"]["sum"] ) )
 
 	def testDependencyNode( self ) :
 
@@ -773,14 +771,14 @@ class BoxTest( GafferTest.TestCase ) :
 		self.assertTrue( s["b"].isInstanceOf( Gaffer.DependencyNode.staticTypeId() ) )
 
 		s["b"]["n"] = GafferTest.AddNode()
-		outPromoted = s["b"].promotePlug( s["b"]["n"]["sum"], asUserPlug = False )
+		outPromoted = s["b"].promotePlug( s["b"]["n"]["sum"] )
 
 		# Wire it up to support enabledPlug() and correspondingInput()
 
 		self.assertEqual( s["b"].correspondingInput( outPromoted ), None )
 		self.assertEqual( s["b"].enabledPlug(), None )
 
-		inPromoted = s["b"].promotePlug( s["b"]["n"]["op1"], asUserPlug = False )
+		inPromoted = s["b"].promotePlug( s["b"]["n"]["op1"] )
 		s["b"]["n"]["op2"].setValue( 10 )
 
 		self.assertEqual( s["b"].correspondingInput( outPromoted ), None )
