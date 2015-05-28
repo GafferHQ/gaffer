@@ -168,6 +168,22 @@ GafferUI.PlugValueWidget.registerCreator( Gaffer.Reference, "user.*" , __plugVal
 # Shared menu code
 ##########################################################################
 
+def __deletePlug( plug ) :
+
+	with Gaffer.UndoContext( plug.ancestor( Gaffer.ScriptNode ) ) :
+		plug.parent().removeChild( plug )
+
+def __appendPlugDeletionMenuItems( menuDefinition, plug, readOnly = False ) :
+
+	if not isinstance( plug.node(), Gaffer.Box ) :
+		return
+
+	menuDefinition.append( "/DeleteDivider", { "divider" : True } )
+	menuDefinition.append( "/Delete", {
+		"command" : functools.partial( __deletePlug, plug ),
+		"active" : not readOnly,
+	} )
+
 def __promoteToBox( box, plug ) :
 
 	with Gaffer.UndoContext( box.ancestor( Gaffer.ScriptNode ) ) :
@@ -234,6 +250,7 @@ def __appendPlugPromotionMenuItems( menuDefinition, plug, readOnly = False ) :
 
 def __plugPopupMenu( menuDefinition, plugValueWidget ) :
 
+	__appendPlugDeletionMenuItems( menuDefinition, plugValueWidget.getPlug(), readOnly = plugValueWidget.getReadOnly() )
 	__appendPlugPromotionMenuItems( menuDefinition, plugValueWidget.getPlug(), readOnly = plugValueWidget.getReadOnly() )
 
 __plugPopupMenuConnection = GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugPopupMenu )
@@ -252,19 +269,12 @@ def __renamePlug( nodeGraph, plug ) :
 	with Gaffer.UndoContext( plug.ancestor( Gaffer.ScriptNode ) ) :
 		plug.setName( name )
 
-def __deletePlug( plug ) :
-
-	with Gaffer.UndoContext( plug.ancestor( Gaffer.ScriptNode ) ) :
-		plug.parent().removeChild( plug )
-
 def __nodeGraphPlugContextMenu( nodeGraph, plug, menuDefinition ) :
 
 	if isinstance( plug.node(), Gaffer.Box ) :
-
 		menuDefinition.append( "/Rename...", { "command" : IECore.curry( __renamePlug, nodeGraph, plug ) } )
-		menuDefinition.append( "/DeleteDivider", { "divider" : True } )
-		menuDefinition.append( "/Delete", { "command" : IECore.curry( __deletePlug, plug ) } )
 
+	__appendPlugDeletionMenuItems( menuDefinition, plug )
 	__appendPlugPromotionMenuItems( menuDefinition, plug )
 
 __nodeGraphPlugContextMenuConnection = GafferUI.NodeGraph.plugContextMenuSignal().connect( __nodeGraphPlugContextMenu )
