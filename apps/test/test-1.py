@@ -47,10 +47,10 @@ class test( Gaffer.Application ) :
 		self.parameters().addParameters(
 		
 			[
-				IECore.StringParameter(
-					name = "testCase",
-					description = "The name of a specific test case to run. If unspecified then all test cases are run.",
-					defaultValue = "",
+				IECore.StringVectorParameter(
+					name = "testCases",
+					description = "A list of names of specific test cases to run. If unspecified then all test cases are run.",
+					defaultValue = IECore.StringVectorData(),
 				),
 				
 				IECore.IntParameter(
@@ -64,7 +64,7 @@ class test( Gaffer.Application ) :
 		
 		self.parameters().userData()["parser"] = IECore.CompoundObject(
 			{
-				"flagless" : IECore.StringVectorData( [ "testCase" ] )
+				"flagless" : IECore.StringVectorData( [ "testCases" ] )
 			}
 		)
 				
@@ -73,10 +73,11 @@ class test( Gaffer.Application ) :
 		import unittest
 
 		testSuite = unittest.TestSuite()
-		if args["testCase"].value :
+		if args["testCases"] :
 		
-			testCase = unittest.defaultTestLoader.loadTestsFromName( args["testCase"].value )
-			testSuite.addTest( testCase )
+			for name in args["testCases"] :
+				testCase = unittest.defaultTestLoader.loadTestsFromName( name )
+				testSuite.addTest( testCase )
 			
 		else :
 		
