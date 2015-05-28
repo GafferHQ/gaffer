@@ -43,6 +43,7 @@
 #include "GafferBindings/BoxBinding.h"
 
 using namespace boost::python;
+using namespace IECorePython;
 using namespace Gaffer;
 
 namespace GafferBindings
@@ -71,18 +72,13 @@ class BoxSerialiser : public NodeSerialiser
 
 };
 
-static PlugPtr promotePlug( Box &b, Plug *descendantPlug, bool asUserPlug )
-{
-	return b.promotePlug( descendantPlug, asUserPlug );
-}
-
 void bindBox()
 {
 	typedef DependencyNodeWrapper<Box> BoxWrapper;
 
 	DependencyNodeClass<Box, BoxWrapper>()
-		.def( "canPromotePlug", &Box::canPromotePlug, ( arg( "descendantPlug" ), arg( "asUserPlug" ) = true ) )
-		.def( "promotePlug", &promotePlug, ( arg( "descendantPlug" ), arg( "asUserPlug" ) = true ) )
+		.def( "canPromotePlug", &Box::canPromotePlug, ( arg( "descendantPlug" ) ) )
+		.def( "promotePlug", &Box::promotePlug, ( arg( "descendantPlug" ) ), return_value_policy<CastToIntrusivePtr>() )
 		.def( "plugIsPromoted", &Box::plugIsPromoted )
 		.def( "unpromotePlug", &Box::unpromotePlug )
 		.def( "exportForReference", &Box::exportForReference )

@@ -60,14 +60,14 @@ Box::~Box()
 {
 }
 
-bool Box::canPromotePlug( const Plug *descendantPlug, bool asUserPlug ) const
+bool Box::canPromotePlug( const Plug *descendantPlug ) const
 {
-	return validatePromotability( descendantPlug, asUserPlug, false );
+	return validatePromotability( descendantPlug, /* throwExceptions = */ false );
 }
 
-Plug *Box::promotePlug( Plug *descendantPlug, bool asUserPlug )
+Plug *Box::promotePlug( Plug *descendantPlug )
 {
-	validatePromotability( descendantPlug, asUserPlug, true );
+	validatePromotability( descendantPlug, /* throwExceptions = */ true );
 
 	std::string externalPlugName = descendantPlug->relativeName( this );
 	boost::replace_all( externalPlugName, ".", "_" );
@@ -105,14 +105,7 @@ Plug *Box::promotePlug( Plug *descendantPlug, bool asUserPlug )
 	/// know all valid names.
 	Metadata::registerPlugValue( externalPlug.get(), "nodeGadget:nodulePosition", Metadata::plugValue<IECore::Data>( descendantPlug, "nodeGadget:nodulePosition" ) );
 
-	if( asUserPlug )
-	{
-		userPlug()->addChild( externalPlug );
-	}
-	else
-	{
-		addChild( externalPlug );
-	}
+	addChild( externalPlug );
 
 	if( externalPlug->direction() == Plug::In )
 	{
@@ -214,7 +207,7 @@ void Box::unpromotePlug( Plug *promotedDescendantPlug )
 	}
 }
 
-bool Box::validatePromotability( const Plug *descendantPlug, bool asUserPlug, bool throwExceptions, bool childPlug ) const
+bool Box::validatePromotability( const Plug *descendantPlug, bool throwExceptions, bool childPlug ) const
 {
 	if( !descendantPlug )
 	{
@@ -314,26 +307,6 @@ bool Box::validatePromotability( const Plug *descendantPlug, bool asUserPlug, bo
 			}
 		}
 	}
-	else
-	{
-		// descendantPlug->direction() == Plug::Out
-		if( asUserPlug )
-		{
-			if( !throwExceptions )
-			{
-				return false;
-			}
-			else
-			{
-				throw IECore::Exception(
-					boost::str(
-						boost::format( "Cannot promote plug \"%s\" to a user plug as it is an output." ) % descendantPlug->fullName()
-					)
-				);
-			}
-		}
-	}
-
 
 	if( !childPlug )
 	{
@@ -361,7 +334,7 @@ bool Box::validatePromotability( const Plug *descendantPlug, bool asUserPlug, bo
 	// check all the children of this plug too
 	for( RecursivePlugIterator it( descendantPlug ); it != it.end(); ++it )
 	{
-		if( !validatePromotability( it->get(), asUserPlug, throwExceptions, /* childPlug = */ true ) )
+		if( !validatePromotability( it->get(), throwExceptions, /* childPlug = */ true ) )
 		{
 			return false;
 		}
