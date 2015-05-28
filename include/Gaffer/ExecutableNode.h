@@ -98,11 +98,11 @@ class ExecutableNode : public Node
 		Plug *requirementPlug();
 		const Plug *requirementPlug() const;
 
-		/// Compound plug used by Dispatchers to expose per-node dispatcher settings.
+		/// Parent plug used by Dispatchers to expose per-node dispatcher settings.
 		/// See the "ExecutableNode Customization" section of the Gaffer::Dispatcher
 		/// documentation for more details.
-		CompoundPlug *dispatcherPlug();
-		const CompoundPlug *dispatcherPlug() const;
+		Plug *dispatcherPlug();
+		const Plug *dispatcherPlug() const;
 
 		/// Fills requirements with all Tasks that must be completed before execute
 		/// can be called with the given context. The default implementation collects

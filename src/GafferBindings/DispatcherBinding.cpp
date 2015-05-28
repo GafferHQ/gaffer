@@ -212,17 +212,14 @@ struct DispatcherHelper
 		return 0;
 	}
 	
-	void operator()( CompoundPlug *parentPlug )
+	void operator()( Plug *parentPlug )
 	{
+		IECorePython::ScopedGILLock gilLock;
 		if ( m_setupFn )
 		{
-			CompoundPlugPtr tmpPointer = parentPlug;
-			
-			IECorePython::ScopedGILLock gilLock;
-			
 			try
 			{
-				m_setupFn( tmpPointer );
+				m_setupFn( PlugPtr( parentPlug ) );
 			}
 			catch( const boost::python::error_already_set &e )
 			{
