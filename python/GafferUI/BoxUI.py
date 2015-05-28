@@ -168,10 +168,10 @@ GafferUI.PlugValueWidget.registerCreator( Gaffer.Reference, "user.*" , __plugVal
 # Shared menu code
 ##########################################################################
 
-def __promoteToBox( box, plug, asUserPlug ) :
+def __promoteToBox( box, plug ) :
 
 	with Gaffer.UndoContext( box.ancestor( Gaffer.ScriptNode ) ) :
-		box.promotePlug( plug, asUserPlug )
+		box.promotePlug( plug )
 
 def __unpromoteFromBox( box, plug ) :
 
@@ -187,7 +187,7 @@ def __promoteToBoxEnabledPlug( box, plug ) :
 		box["enabled"] = enabledPlug
 		plug.setInput( enabledPlug )
 
-def __appendPlugPromotionMenuItems( menuDefinition, plug, readOnly = False, asUserPlug = True ) :
+def __appendPlugPromotionMenuItems( menuDefinition, plug, readOnly = False ) :
 
 	node = plug.node()
 	if node is None :
@@ -203,7 +203,7 @@ def __appendPlugPromotionMenuItems( menuDefinition, plug, readOnly = False, asUs
 			menuDefinition.append( "/BoxDivider", { "divider" : True } )
 
 		menuDefinition.append( "/Promote to %s" % box.getName(), {
-			"command" : IECore.curry( __promoteToBox, box, plug, asUserPlug ),
+			"command" : IECore.curry( __promoteToBox, box, plug ),
 			"active" : not readOnly,
 		} )
 
@@ -265,6 +265,6 @@ def __nodeGraphPlugContextMenu( nodeGraph, plug, menuDefinition ) :
 		menuDefinition.append( "/DeleteDivider", { "divider" : True } )
 		menuDefinition.append( "/Delete", { "command" : IECore.curry( __deletePlug, plug ) } )
 
-	__appendPlugPromotionMenuItems( menuDefinition, plug, asUserPlug = False )
+	__appendPlugPromotionMenuItems( menuDefinition, plug )
 
 __nodeGraphPlugContextMenuConnection = GafferUI.NodeGraph.plugContextMenuSignal().connect( __nodeGraphPlugContextMenu )
