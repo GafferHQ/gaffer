@@ -435,11 +435,7 @@ class LocalDispatcher( Gaffer.Dispatcher ) :
 	@staticmethod
 	def _doSetupPlugs( parentPlug ) :
 
-		if "local" not in parentPlug :
-			localPlug = Gaffer.CompoundPlug( "local" )
-			parentPlug.addChild( localPlug )
-
-		parentPlug["local"].clearChildren()
+		parentPlug["local"] = Gaffer.Plug()
 
 		foregroundPlug = Gaffer.BoolPlug( "executeInForeground", defaultValue = False )
 		parentPlug["local"].addChild( foregroundPlug )

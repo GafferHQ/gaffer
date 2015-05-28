@@ -82,8 +82,36 @@ Gaffer.Metadata.registerNode(
 
 )
 
-Gaffer.Metadata.registerPlugDescription( Gaffer.ExecutableNode, "dispatcher.local", "Settings used by the local dispatcher." )
-Gaffer.Metadata.registerPlugDescription( Gaffer.ExecutableNode, "dispatcher.local.executeInForeground", "Forces the tasks from this node (and all preceding tasks) to execute on the current thread." )
+Gaffer.Metadata.registerNode(
+
+	Gaffer.ExecutableNode,
+
+	plugs = {
+
+		"dispatcher.local" : [
+
+			"description",
+			"""
+			Settings used by the local dispatcher.
+			""",
+
+			"layout:widgetType", "GafferUI.LayoutPlugValueWidget",
+			"layout:section", "Local",
+
+		],
+
+		"dispatcher.local.executeInForeground" : [
+
+			"description",
+			"""
+			Forces the tasks from this node (and all preceding tasks) to execute on the current thread.
+			"""
+
+		]
+
+	}
+
+)
 
 ##########################################################################
 # Public functions
