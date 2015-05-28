@@ -61,6 +61,18 @@ class SceneInspectorTest( GafferUITest.TestCase ) :
 		self.assertTrue( t.object().isSame( t.object() ) )
 		self.assertTrue( t.globals().isSame( t.globals() ) )
 
+	def testTargetPathsAccessors( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		inspector = GafferSceneUI.SceneInspector( script )
+		self.assertEqual( inspector.getTargetPaths(), None )
+
+		inspector.setTargetPaths( [ "/plane" ] )
+		self.assertEqual( inspector.getTargetPaths(), [ "/plane" ] )
+
+		self.assertRaises( Exception, inspector.setTargetPaths, [ "/too", "/many", "/paths" ] )
+
 if __name__ == "__main__":
 	unittest.main()
 
