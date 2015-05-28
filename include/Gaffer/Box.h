@@ -83,7 +83,7 @@ class Box : public SubGraph
 		/// Unpromotes a previously promoted plug, removing the
 		/// plug on the Box where possible.
 		/// \undoable
-		void unpromotePlug( Plug *promotedDescandantPlug );
+		void unpromotePlug( Plug *promotedDescendantPlug );
 
 		/// Exports the contents of the Box so that it can be referenced
 		/// by a Reference node.
