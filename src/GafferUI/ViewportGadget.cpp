@@ -613,9 +613,14 @@ static double currentTime()
 
 void ViewportGadget::trackDrag( const DragDropEvent &event )
 {
-	// early out if tracking is off for any reason.
+	// early out if tracking is off for any reason, or
+	// the drag didn't originate from within the viewport.
 
-	if( !getDragTracking() || !getCameraEditable() )
+	if(
+		!getDragTracking() ||
+		!getCameraEditable() ||
+		!this->isAncestorOf( event.sourceGadget.get() )
+	)
 	{
 		m_dragTrackingIdleConnection.disconnect();
 		return;
