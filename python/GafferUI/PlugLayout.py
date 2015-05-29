@@ -171,13 +171,28 @@ class PlugLayout( GafferUI.Widget ) :
 
 		return self.__widgets.get( name )
 
+	## Returns the list of section names that will be used when laying
+	# out the plugs of the specified parent. The sections are returned
+	# in the order in which they will be created.
+	@classmethod
+	def layoutSections( cls, parent, includeCustomWidgets = False ) :
+
+		d = collections.OrderedDict()
+		for item in cls.layoutOrder( parent, includeCustomWidgets ) :
+			sectionPath = cls.__staticSectionPath(item, parent)
+			sectionName = ".".join( sectionPath )
+			d[sectionName] = 1
+
+		return d.keys()
+
 	## Returns the child plugs of the parent in the order in which they
 	# will be laid out, based on "layout:index" Metadata entries. If
 	# includeCustomWidgets is True, then the positions of custom widgets
 	# are represented by the appearance of the names of the widgets as
-	# strings within the list.
+	# strings within the list. If a section name is specified, then the
+	# result will be filtered to include only items in that section.
 	@classmethod
-	def layoutOrder( cls, parent, includeCustomWidgets = False ) :
+	def layoutOrder( cls, parent, includeCustomWidgets = False, section = None ) :
 
 		items = parent.children( Gaffer.Plug )
 		items = [ plug for plug in items if not plug.getName().startswith( "__" ) ]
@@ -200,6 +215,10 @@ class PlugLayout( GafferUI.Widget ) :
 				itemAndIndex[0] = index
 
 		itemsAndIndices.sort( key = lambda x : x[0] )
+
+		if section is not None :
+			sectionPath = section.split( "." ) if section else []
+			itemsAndIndices = [ x for x in itemsAndIndices if cls.__staticSectionPath( x[1], parent ) == sectionPath ]
 
 		return [ x[1] for x in itemsAndIndices ]
 
@@ -365,20 +384,25 @@ class PlugLayout( GafferUI.Widget ) :
 
 		return self.__staticItemMetadataValue( item, name, parent = self.__parent )
 
-	def __sectionPath( self, item ) :
+	@classmethod
+	def __staticSectionPath( cls, item, parent ) :
 
 		m = None
-		if isinstance( self.__parent, Gaffer.Node ) :
+		if isinstance( parent, Gaffer.Node ) :
 			# Backwards compatibility with old metadata entry
 			## \todo Remove
-			m = self.__itemMetadataValue( item, "nodeUI:section" )
+			m = cls.__staticItemMetadataValue( item, "nodeUI:section", parent )
 			if m == "header" :
 				m = ""
 
 		if m is None :
-			m = self.__itemMetadataValue( item, "section" )
+			m = cls.__staticItemMetadataValue( item, "section", parent )
 
 		return m.split( "." ) if m else []
+
+	def __sectionPath( self, item ) :
+
+		return self.__staticSectionPath( item, parent = self.__parent )
 
 	def __childAddedOrRemoved( self, *unusedArgs ) :
 
