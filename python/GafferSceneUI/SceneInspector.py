@@ -195,7 +195,7 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 		assert( paths is None or len( paths ) == 1 or len( paths ) == 2 )
 
 		self.__targetPaths = paths
-		self.__scheduleUpdate()
+		self.__updateLazily()
 
 	## Returns the last value passed to setTargetPaths().
 	def getTargetPaths( self ) :
