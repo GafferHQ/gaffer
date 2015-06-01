@@ -50,7 +50,9 @@ using namespace std;
 
 IE_CORE_DEFINERUNTIMETYPED( CompoundNodule );
 
-CompoundNodule::CompoundNodule( Gaffer::CompoundPlugPtr plug, LinearContainer::Orientation orientation,
+Nodule::NoduleTypeDescription<CompoundNodule> CompoundNodule::g_noduleTypeDescription;
+
+CompoundNodule::CompoundNodule( Gaffer::PlugPtr plug, LinearContainer::Orientation orientation,
 	float spacing, LinearContainer::Direction direction )
 	:	Nodule( plug )
 {

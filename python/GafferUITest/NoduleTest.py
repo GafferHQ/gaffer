@@ -77,7 +77,7 @@ class NoduleTest( GafferUITest.TestCase ) :
 		self.failUnless( isinstance( ni, GafferUI.StandardNodule ) )
 		self.failUnless( isinstance( nc, GafferUI.StandardNodule ) )
 
-		GafferUI.Nodule.registerNodule( NoduleTestNode, "c", GafferUI.CompoundNodule )
+		Gaffer.Metadata.registerPlugValue( NoduleTestNode, "c", "nodule:type", "GafferUI::CompoundNodule" )
 
 		nc = GafferUI.Nodule.create( n["c"] )
 		self.failUnless( isinstance( nc, GafferUI.CompoundNodule ) )
