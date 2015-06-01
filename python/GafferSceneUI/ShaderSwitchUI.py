@@ -50,7 +50,15 @@ Gaffer.Metadata.registerNode(
 	incurred during shading.
 	""",
 
+	"nodeGadget:minWidth", 0.0,
+
 	plugs = {
+
+		"in*" : [
+
+			"nodeGadget:nodulePosition", "left",
+
+		],
 
 		"in" : [
 
@@ -69,22 +77,20 @@ Gaffer.Metadata.registerNode(
 			The output shader.
 			""",
 
+			"nodeGadget:nodulePosition", "right",
+
 		],
 
+		"index" : [
+
+			"nodule:type", "",
+
+		],
 
 	},
 
 )
 
-GafferUI.Nodule.registerNodule( GafferScene.ShaderSwitch, "enabled", lambda plug : None )
-GafferUI.Nodule.registerNodule( GafferScene.ShaderSwitch, "index", lambda plug : None )
-
-GafferUI.PlugValueWidget.registerCreator( GafferScene.ShaderSwitch, "enabled", None )
 GafferUI.PlugValueWidget.registerCreator( GafferScene.ShaderSwitch, "in", None )
 GafferUI.PlugValueWidget.registerCreator( GafferScene.ShaderSwitch, "in[0-9]*", None )
 GafferUI.PlugValueWidget.registerCreator( GafferScene.ShaderSwitch, "out", None )
-
-Gaffer.Metadata.registerNodeValue( GafferScene.ShaderSwitch, "nodeGadget:minWidth", 0.0 )
-
-Gaffer.Metadata.registerPlugValue( GafferScene.ShaderSwitch, "in*", "nodeGadget:nodulePosition", "left" )
-Gaffer.Metadata.registerPlugValue( GafferScene.ShaderSwitch, "out", "nodeGadget:nodulePosition", "right" )

@@ -84,6 +84,8 @@ Gaffer.Metadata.registerNode(
 			 - /.../house matches /house, /street/house and /city/street/house.
 			""",
 
+			"nodule:type", "",
+
 		],
 
 	}
@@ -91,7 +93,7 @@ Gaffer.Metadata.registerNode(
 )
 
 ##########################################################################
-# Widgets and nodules
+# Widgets
 ##########################################################################
 
 def __pathsPlugWidgetCreator( plug ) :
@@ -104,12 +106,6 @@ GafferUI.PlugValueWidget.registerCreator(
 	GafferScene.PathFilter,
 	"paths",
 	__pathsPlugWidgetCreator,
-)
-
-GafferUI.Nodule.registerNodule(
-	GafferScene.PathFilter,
-	"paths",
-	lambda plug : None,
 )
 
 ##########################################################################

@@ -58,6 +58,8 @@ Gaffer.Metadata.registerNode(
 			of inputs may be added here.
 			""",
 
+			"nodule:type", "GafferUI::CompoundNodule",
+
 		],
 
 	}
@@ -70,8 +72,3 @@ GafferUI.PlugValueWidget.registerCreator(
 	None,
 )
 
-GafferUI.Nodule.registerNodule(
-	GafferScene.UnionFilter,
-	"in",
-	GafferUI.CompoundNodule
-)

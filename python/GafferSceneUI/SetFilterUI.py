@@ -62,15 +62,10 @@ Gaffer.Metadata.registerNode(
 			""",
 			
 			"ui:scene:acceptsSetName", True,
+			"nodule:type", "",
 			
 		],
 		
 	}
 	
 )
-
-##########################################################################
-# Nodules
-##########################################################################
-
-GafferUI.Nodule.registerNodule( GafferScene.SetFilter, "set", lambda plug : None )

@@ -59,6 +59,8 @@ Gaffer.Metadata.registerNode(
 	ShaderAssignment node to assign them to objects in the scene.
 	""",
 
+	"nodeGadget:minWidth", 0.0,
+
 	plugs = {
 
 		"name" : [
@@ -71,6 +73,7 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"layout:section", "",
+			"nodule:type", "",
 
 		],
 
@@ -84,6 +87,7 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"layout:section", "",
+			"nodule:type", "",
 
 		],
 
@@ -95,6 +99,9 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"nodeGadget:nodulePosition", "left",
+			"nodule:type", "GafferUI::CompoundNodule",
+			"compoundNodule:orientation", "y",
+			"compoundNodule:spacing", 0.2,
 
 		],
 
@@ -112,8 +119,6 @@ Gaffer.Metadata.registerNode(
 	}
 
 )
-
-Gaffer.Metadata.registerNodeValue( GafferScene.Shader, "nodeGadget:minWidth", 0.0 )
 
 ##########################################################################
 # PlugValueWidgets
@@ -163,22 +168,6 @@ GafferUI.PlugValueWidget.registerCreator( GafferScene.Shader, "name", __ShaderNa
 GafferUI.PlugValueWidget.registerCreator( GafferScene.Shader, "parameters", GafferUI.LayoutPlugValueWidget )
 GafferUI.PlugValueWidget.registerCreator( GafferScene.Shader, "out", None )
 GafferUI.PlugValueWidget.registerCreator( GafferScene.Shader, "type", None )
-
-##########################################################################
-# NodeGadgets and Nodules
-##########################################################################
-
-def __parametersNoduleCreator( plug ) :
-
-	return GafferUI.CompoundNodule( plug, GafferUI.LinearContainer.Orientation.Y, spacing = 0.2 )
-
-GafferUI.Nodule.registerNodule( GafferScene.Shader, "parameters", __parametersNoduleCreator )
-GafferUI.Nodule.registerNodule( GafferScene.Shader, "name", lambda plug : None )
-GafferUI.Nodule.registerNodule( GafferScene.Shader, "type", lambda plug : None )
-GafferUI.Nodule.registerNodule( GafferScene.Shader, "enabled", lambda plug : None )
-
-# we leave it to the derived class uis to register creators for the parameters.* plugs, because only the derived classes know whether
-# or not networkability makes sense in each case.
 
 ##########################################################################
 # NodeFinderDialogue mode

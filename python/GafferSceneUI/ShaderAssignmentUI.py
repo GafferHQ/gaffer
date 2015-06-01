@@ -40,18 +40,28 @@ import GafferUI
 import GafferScene
 import GafferSceneUI
 
-Gaffer.Metadata.registerNodeDescription(
+Gaffer.Metadata.registerNode(
 
-GafferScene.ShaderAssignment,
+	GafferScene.ShaderAssignment,
 
-"""Assigns shaders to objects.""",
+	"description",
+	"""
+	Assigns shaders to objects.
+	""",
 
-"shader",
-{
-	"description" : """The shader to be assigned.""",
-	"nodeGadget:nodulePosition" : "left",
-}
+	plugs = {
 
+		"shader" : [
+
+			"description",
+			"""
+			The shader to be assigned.
+			""",
+
+			"nodeGadget:nodulePosition", "left",
+			"nodule:type", "GafferUI::StandardNodule",
+
+		]
+
+	}
 )
-
-GafferUI.Nodule.registerNodule( GafferScene.ShaderAssignment, "shader", GafferUI.StandardNodule )
