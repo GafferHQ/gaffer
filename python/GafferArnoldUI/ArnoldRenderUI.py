@@ -74,6 +74,8 @@ Gaffer.Metadata.registerNode(
 			"preset:Generate .ass only", "generate",
 			"preset:Generate expanded .ass", "expand",
 
+			"nodule:type", "",
+
 		],
 
 		"fileName" : [
@@ -82,6 +84,8 @@ Gaffer.Metadata.registerNode(
 			"""
 			The name of the .ass file to be generated.
 			""",
+
+			"nodule:type", "",
 
 		],
 
@@ -99,6 +103,8 @@ Gaffer.Metadata.registerNode(
 			"preset:4", 4,
 			"preset:5", 5,
 			"preset:6", 6,
+
+			"nodule:type", "",
 
 		],
 
@@ -129,7 +135,3 @@ GafferUI.PlugValueWidget.registerCreator(
 	"verbosity",
 	GafferUI.PresetsPlugValueWidget,
 )
-
-GafferUI.Nodule.registerNodule( GafferArnold.ArnoldRender, "mode", lambda plug : None )
-GafferUI.Nodule.registerNodule( GafferArnold.ArnoldRender, "fileName", lambda plug : None )
-GafferUI.Nodule.registerNodule( GafferArnold.ArnoldRender, "verbosity", lambda plug : None )
