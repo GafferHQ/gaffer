@@ -66,6 +66,7 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"layout:section", "",
+			"nodule:type", "",
 
 		),
 
@@ -183,9 +184,3 @@ def _waitForFileName( initialFileName="", parentWindow=None ) :
 		return ""
 
 	return str( path )
-
-##########################################################################
-# Nodules
-##########################################################################
-
-GafferUI.Nodule.registerNodule( Gaffer.Reference, "fileName", lambda plug : None )

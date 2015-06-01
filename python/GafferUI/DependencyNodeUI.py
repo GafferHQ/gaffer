@@ -58,6 +58,7 @@ Gaffer.Metadata.registerNode(
 
 			"layout:index", -2, # Last but one
 			"layout:section", "Node",
+			"nodule:type", "",
 
 		),
 

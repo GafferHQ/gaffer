@@ -480,9 +480,6 @@ GafferUI.PlugValueWidget.registerCreator( Gaffer.Dispatcher, "frameRange", __Fra
 GafferUI.PlugValueWidget.registerCreator( Gaffer.ExecutableNode, "requirement", __RequirementPlugValueWidget )
 GafferUI.PlugValueWidget.registerCreator( Gaffer.ExecutableNode, "dispatcher", GafferUI.LayoutPlugValueWidget )
 
-GafferUI.Nodule.registerNodule( Gaffer.Dispatcher, fnmatch.translate( "*" ), lambda plug : None )
-GafferUI.Nodule.registerNodule( Gaffer.ExecutableNode, "dispatcher", lambda plug : None )
-
 ##########################################################################
 # Implementation Details
 ##########################################################################

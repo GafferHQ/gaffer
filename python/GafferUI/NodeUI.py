@@ -62,6 +62,7 @@ Gaffer.Metadata.registerNode(
 
 			"layout:index", -1, # Last
 			"layout:section", "User",
+			"nodule:type", "",
 
 		),
 
@@ -140,5 +141,3 @@ class NodeUI( GafferUI.Widget ) :
 			nodeTypeId = nodeClassOrTypeId.staticTypeId()
 
 		cls.__nodeUIs[nodeTypeId] = nodeUICreator
-
-GafferUI.Nodule.registerNodule( Gaffer.Node, "user", lambda plug : None )
