@@ -104,7 +104,7 @@ class execute( Gaffer.Application ) :
 		
 	def _run( self, args ) :
 			
-		scriptNode = Gaffer.ScriptNode( os.path.splitext( os.path.basename( args["script"].value ) )[0] )
+		scriptNode = Gaffer.ScriptNode()
 		scriptNode["fileName"].setValue( os.path.abspath( args["script"].value ) )
 		try :
 			scriptNode.load( continueOnError = args["ignoreScriptLoadErrors"].value )

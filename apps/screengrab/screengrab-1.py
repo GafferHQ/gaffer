@@ -101,7 +101,7 @@ class screengrab( Gaffer.Application ) :
 		
 		#load the specified gfr file
 		fileName = str(args["script"])
-		script = Gaffer.ScriptNode( os.path.splitext( os.path.basename( fileName ) )[0] )
+		script = Gaffer.ScriptNode()
 		script["fileName"].setValue( os.path.abspath( fileName ) )
 		script.load()
 		self.root()["scripts"].addChild( script )
