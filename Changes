@@ -1,3 +1,39 @@
+Apps
+-----------------------------------------------------------------------
+
+- Test app can now run multiple named test cases, specified via the
+  "testCases" command line argument.
+
+UI
+-----------------------------------------------------------------------
+
+- Fixed unwanted viewport scrolling when dragging from one NodeGraph
+  into another, or from the NodeEditor across a NodeGraph (#1321).
+- Hid Viewer diagnostic modes for unavailable renderers.
+- Fixed SceneInspector inheritance and history windows, which were broken
+  in 0.13.0.0.
+- Fixed ObjectWriter UI, which was broken in 0.13.0.0.
+
+Houdini
+-----------------------------------------------------------------------
+
+- Added support for Houdini 14 (requires Cortex 9.0.0-b7).
+
+API
+-----------------------------------------------------------------------
+
+- Added GafferUI._qtObject method.
+- PlugLayout
+  - Added layoutSections() method.
+  - Added section argument to layoutOrder() method.
+
+Build
+-----------------------------------------------------------------------
+
+- Added support for Boost >= 1.54.
+- Fixed Appleseed packaging. We were omitting the directory containing
+  the Cortex display driver.
+
 # 0.13.0.0
 ==========
 
