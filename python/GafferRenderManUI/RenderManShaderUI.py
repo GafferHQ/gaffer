@@ -34,7 +34,6 @@
 #
 ##########################################################################
 
-import fnmatch
 import re
 import traceback
 import functools
@@ -72,24 +71,22 @@ def _shaderAnnotations( shaderNode ) :
 # Nodules
 ##########################################################################
 
-def __parameterNoduleCreator( plug ) :
+def __parameterNoduleType( plug ) :
 
 	# only coshader parameters should be connectable in the node
 	# graph.
 	if plug.typeId() == Gaffer.Plug.staticTypeId() :
-		return GafferUI.StandardNodule( plug )
+		return "GafferUI::StandardNodule"
 	elif plug.typeId() == Gaffer.ArrayPlug.staticTypeId() :
-		# coshader arrays tend to be used for layering, so we prefer to present the
-		# last entry at the top, hence the increasing direction.
-		return GafferUI.CompoundNodule(
-			plug,
-			GafferUI.LinearContainer.Orientation.Y,
-			direction = GafferUI.LinearContainer.Direction.Increasing
-		)
+		return "GafferUI::CompoundNodule"
 
-	return None
+	return ""
 
-GafferUI.Nodule.registerNodule( GafferRenderMan.RenderManShader, fnmatch.translate( "parameters.*" ), __parameterNoduleCreator )
+GafferUI.Metadata.registerPlugValue( GafferRenderMan.RenderManShader, "parameters.*", "nodule:type", __parameterNoduleType )
+GafferUI.Metadata.registerPlugValue( GafferRenderMan.RenderManShader, "parameters.*", "compoundNodule:orientation", "y" )
+# coshader arrays tend to be used for layering, so we prefer to present the
+# last entry at the top, hence the increasing direction.
+GafferUI.Metadata.registerPlugValue( GafferRenderMan.RenderManShader, "parameters.*", "compoundNodule:direction", "increasing" )
 
 ##########################################################################
 # NodeUI - this exists only for backwards compatibility, and will be
