@@ -336,7 +336,7 @@ class PlugLayout( GafferUI.Widget ) :
 			if result is None :
 				return result
 
- 		if not result.hasLabel() and Gaffer.Metadata.plugValue( plug, "label" ) != "" :
+		if isinstance( result, GafferUI.PlugValueWidget ) and not result.hasLabel() and Gaffer.Metadata.plugValue( plug, "label" ) != "" :
  			result = GafferUI.PlugWidget( result )
 			if self.__layout.orientation() == GafferUI.ListContainer.Orientation.Horizontal :
 				# undo the annoying fixed size the PlugWidget has applied
