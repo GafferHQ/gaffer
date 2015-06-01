@@ -55,13 +55,19 @@ IE_CORE_FORWARDDECLARE( LinearContainer );
 
 /// A Nodule subclass to represent each of the children of a
 /// Plug with their own nodule.
+///
+/// Supported plug metadata :
+///
+/// - "compoundNodule:orientation", with a value of "x", "y" or "z"
+/// - "compoundNodule:spacing", with a float value
+/// - "compoundNodule:direction", with a value of "increasing" or "decreasing"
 class CompoundNodule : public Nodule
 {
 
 	public :
 
-		/// The default value for direction causes increasing direction when oriented in X and decreasing when
-		/// oriented in Y, it may be overridden by explicitly specifying a direction.
+		/// \deprecated All arguments except the plug are deprecated -
+		/// use plug metadata instead.
 		CompoundNodule( Gaffer::PlugPtr plug, LinearContainer::Orientation orientation=LinearContainer::X,
 			float spacing = 0.0f, LinearContainer::Direction direction=LinearContainer::InvalidDirection );
 		virtual ~CompoundNodule();

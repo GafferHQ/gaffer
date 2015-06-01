@@ -35,27 +35,62 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include "boost/bind.hpp"
+#include "boost/bind/placeholders.hpp"
+
+#include "IECore/SimpleTypedData.h"
+
 #include "Gaffer/CompoundPlug.h"
 #include "Gaffer/PlugIterator.h"
+#include "Gaffer/Metadata.h"
 
 #include "GafferUI/CompoundNodule.h"
 #include "GafferUI/LinearContainer.h"
 
-#include "boost/bind.hpp"
-#include "boost/bind/placeholders.hpp"
-
-using namespace GafferUI;
-using namespace Imath;
 using namespace std;
+using namespace Imath;
+using namespace IECore;
+using namespace Gaffer;
+using namespace GafferUI;
 
 IE_CORE_DEFINERUNTIMETYPED( CompoundNodule );
 
 Nodule::NoduleTypeDescription<CompoundNodule> CompoundNodule::g_noduleTypeDescription;
 
+static IECore::InternedString g_orientationKey( "compoundNodule:orientation"  );
+static IECore::InternedString g_spacingKey( "compoundNodule:spacing"  );
+static IECore::InternedString g_directionKey( "compoundNodule:direction"  );
+
 CompoundNodule::CompoundNodule( Gaffer::PlugPtr plug, LinearContainer::Orientation orientation,
 	float spacing, LinearContainer::Direction direction )
 	:	Nodule( plug )
 {
+	if( ConstStringDataPtr orientationData = Metadata::plugValue<StringData>( plug.get(), g_orientationKey ) )
+	{
+		if( orientationData->readable() == "x" )
+		{
+			orientation = LinearContainer::X;
+		}
+		else if( orientationData->readable() == "y" )
+		{
+			orientation = LinearContainer::Y;
+		}
+		else
+		{
+			orientation = LinearContainer::Z;
+		}
+	}
+
+	if( ConstFloatDataPtr spacingData = Metadata::plugValue<FloatData>( plug.get(), g_spacingKey ) )
+	{
+		spacing = spacingData->readable();
+	}
+
+	if( ConstStringDataPtr directionData = Metadata::plugValue<StringData>( plug.get(), g_directionKey ) )
+	{
+		direction = directionData->readable() == "increasing" ? LinearContainer::Increasing : LinearContainer::Decreasing;
+	}
+
 	if( direction == LinearContainer::InvalidDirection )
 	{
 		direction = orientation == LinearContainer::X ? LinearContainer::Increasing : LinearContainer::Decreasing;
