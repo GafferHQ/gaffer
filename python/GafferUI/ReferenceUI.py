@@ -69,14 +69,6 @@ Gaffer.Metadata.registerNode(
 
 		),
 
-		"user" : (
-
-			# Stopgap until we start parenting promoted plugs directly
-			# under the node as we want to (rather than as user plugs).
-			"layout:section", "Settings"
-
-		),
-
 	}
 
 )
@@ -166,7 +158,6 @@ GafferUI.PlugValueWidget.registerCreator( Gaffer.Reference, "fileName", __FileNa
 
 GafferUI.PlugValueWidget.registerCreator( Gaffer.Reference, re.compile( "in[0-9]*" ), None )
 GafferUI.PlugValueWidget.registerCreator( Gaffer.Reference, re.compile( "out[0-9]*" ), None )
-GafferUI.PlugValueWidget.registerCreator( Gaffer.Reference, "user", GafferUI.UserPlugValueWidget, editable=False )
 
 ##########################################################################
 # Utilities
