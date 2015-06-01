@@ -92,6 +92,7 @@ class Box : public SubGraph
 	private :
 
 		bool validatePromotability( const Plug *descendantPlug, bool throwExceptions, bool childPlug = false ) const;
+		static void copyMetadata( const Plug *from, Plug *to );
 
 };
 

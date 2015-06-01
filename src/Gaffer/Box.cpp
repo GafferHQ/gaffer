@@ -98,12 +98,7 @@ Plug *Box::promotePlug( Plug *descendantPlug )
 
 	// Copy over the metadata for nodule position, so the nodule appears in the expected spot.
 	// This must be done before parenting the new plug, as the nodule is created from childAddedSignal().
-	/// \todo Perhaps we should have a more general mechanism for mirroring all metadata?
-	/// If we could register a dynamic metadata value for "*", then we could just answer
-	/// all metadata queries on the fly - would that be a good idea? We'd need to figure
-	/// out how to make it compatible with Metadata::registeredPlugValues(), which needs to
-	/// know all valid names.
-	Metadata::registerPlugValue( externalPlug.get(), "nodeGadget:nodulePosition", Metadata::plugValue<IECore::Data>( descendantPlug, "nodeGadget:nodulePosition" ) );
+	copyMetadata( descendantPlug, externalPlug.get() );
 
 	addChild( externalPlug );
 
@@ -425,7 +420,7 @@ BoxPtr Box::create( Node *parent, const Set *childNodes )
 						PlugPtr intermediateInput = plug->createCounterpart( "in", Plug::In );
 						// we want intermediate inputs to appear on the same side of the node as the
 						// equivalent internal plug, so we copy the relevant metadata over.
-						Metadata::registerPlugValue( intermediateInput.get(), "nodeGadget:nodulePosition", Metadata::plugValue<IECore::Data>( plug, "nodeGadget:nodulePosition" ) );
+						copyMetadata( plug, intermediateInput.get() );
 						intermediateInput->setFlags( Plug::Dynamic, true );
 						result->addChild( intermediateInput );
 						intermediateInput->setInput( input );
@@ -453,7 +448,7 @@ BoxPtr Box::create( Node *parent, const Set *childNodes )
 							if( mapIt == plugMap.end() )
 							{
 								PlugPtr intermediateOutput = plug->createCounterpart( "out", Plug::Out );
-								Metadata::registerPlugValue( intermediateOutput.get(), "nodeGadget:nodulePosition", Metadata::plugValue<IECore::Data>( plug, "nodeGadget:nodulePosition" ) );
+								copyMetadata( plug, intermediateOutput.get() );
 								intermediateOutput->setFlags( Plug::Dynamic, true );
 								result->addChild( intermediateOutput );
 								intermediateOutput->setInput( plug );
@@ -474,4 +469,18 @@ BoxPtr Box::create( Node *parent, const Set *childNodes )
 	}
 
 	return result;
+}
+
+void Box::copyMetadata( const Plug *from, Plug *to )
+{
+	/// \todo Perhaps we should have a more general mechanism for mirroring all metadata?
+	/// If we could register a dynamic metadata value for "*", then we could just answer
+	/// all metadata queries on the fly - would that be a good idea? We'd need to figure
+	/// out how to make it compatible with Metadata::registeredPlugValues(), which needs to
+	/// know all valid names.
+	Metadata::registerPlugValue( to, "nodeGadget:nodulePosition", Metadata::plugValue<IECore::Data>( from, "nodeGadget:nodulePosition" ) );
+	Metadata::registerPlugValue( to, "nodule:type", Metadata::plugValue<IECore::Data>( from, "nodule:type" ) );
+	Metadata::registerPlugValue( to, "compoundNodule:orientation", Metadata::plugValue<IECore::Data>( from, "compoundNodule:orientation" ) );
+	Metadata::registerPlugValue( to, "compoundNodule:spacing", Metadata::plugValue<IECore::Data>( from, "compoundNodule:spacing" ) );
+	Metadata::registerPlugValue( to, "compoundNodule:direction", Metadata::plugValue<IECore::Data>( from, "compoundNodule:direction" ) );
 }

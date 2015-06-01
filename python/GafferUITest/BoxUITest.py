@@ -54,6 +54,8 @@ class BoxUITest( GafferUITest.TestCase ) :
 	Gaffer.Metadata.registerPlugValue( NodulePositionNode, "op1", "nodeGadget:nodulePosition", "left" )
 	Gaffer.Metadata.registerPlugValue( NodulePositionNode, "sum", "nodeGadget:nodulePosition", "right" )
 
+	Gaffer.Metadata.registerPlugValue( NodulePositionNode, "op2", "nodule:type", "" )
+
 	def testNodulePositions( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -101,6 +103,19 @@ class BoxUITest( GafferUITest.TestCase ) :
 
 		self.assertEqual( boxGadget.noduleTangent( boxGadget.nodule( p1 ) ), IECore.V3f( -1, 0, 0 ) )
 		self.assertEqual( boxGadget.noduleTangent( boxGadget.nodule( p2 ) ), IECore.V3f( 1, 0, 0 ) )
+
+	def testDisabledNodulesForPromotedPlugs( self ) :
+
+		s = Gaffer.ScriptNode()
+		g = GafferUI.GraphGadget( s )
+
+		s["b"] = Gaffer.Box()
+		s["b"]["n"] = self.NodulePositionNode()
+
+		boxGadget = g.nodeGadget( s["b"] )
+
+		p = s["b"].promotePlug( s["b"]["n"]["op2"] )
+		self.assertEqual( boxGadget.nodule( p ), None )
 
 	def testRenamingPlugs( self ) :
 
