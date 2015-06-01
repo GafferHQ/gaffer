@@ -1,7 +1,7 @@
 ##########################################################################
 #
 #  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -76,7 +76,10 @@ class EventLoop() :
 
 			try :
 				import hou
-				self.__runStyle = self.__RunStyle.Houdini
+				if hou.applicationVersion()[0] < 14 :
+					self.__runStyle = self.__RunStyle.Houdini
+				else :
+					self.__runStyle = self.__RunStyle.AlreadyRunning
 			except ImportError :
 				pass
 
