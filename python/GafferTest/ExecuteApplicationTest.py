@@ -47,6 +47,8 @@ import GafferTest
 class ExecuteApplicationTest( GafferTest.TestCase ) :
 
 	__scriptFileName = "/tmp/executeScript.gfr"
+	__scriptFileNameWithSpecialCharacters = "/tmp/executeScript-10.tmp.gfr"
+	__outputTextFile = "/tmp/executeOutput.txt"
 	__outputFileSeq = IECore.FileSequence( "/tmp/sphere.####.cob" )
 
 	def testErrorReturnStatusForMissingScript( self ) :
@@ -227,9 +229,28 @@ class ExecuteApplicationTest( GafferTest.TestCase ) :
 		self.failUnless( "executing t" in error )
 		self.failUnless( p.returncode )
 
+	def testSpecialCharactersInScriptFileName( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["fileName"].setValue( self.__scriptFileNameWithSpecialCharacters )
+		s["t"] = GafferTest.TextWriter()
+		s["t"]["fileName"].setValue( self.__outputTextFile )
+		s.save()
+
+		p = subprocess.Popen(
+			"gaffer execute -script '%s'" % self.__scriptFileNameWithSpecialCharacters,
+			shell=True,
+			stderr = subprocess.PIPE,
+		)
+		p.wait()
+		print p.stderr.readlines()
+
+		self.assertEqual( p.returncode, 0 )
+		self.assertTrue( os.path.exists( self.__outputTextFile ) )
+
 	def tearDown( self ) :
 
-		files = [ self.__scriptFileName ]
+		files = [ self.__scriptFileName, self.__scriptFileNameWithSpecialCharacters, self.__outputTextFile ]
 		seq = IECore.ls( self.__outputFileSeq.fileName, minSequenceSize = 1 )
 		if seq :
 			files.extend( seq.fileNames() )
