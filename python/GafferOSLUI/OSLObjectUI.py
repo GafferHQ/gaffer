@@ -67,17 +67,11 @@ Gaffer.Metadata.registerNode(
 			""",
 			
 			"nodeGadget:nodulePosition", "left",
-	
+			"nodule:type", "GafferUI::StandardNodule",
+
 		],
 
 	}
 	
 )
-
-##########################################################################
-# Nodules
-##########################################################################
-
-GafferUI.Nodule.registerNodule( GafferOSL.OSLObject, "shader", GafferUI.StandardNodule )
-
 
