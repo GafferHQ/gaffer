@@ -131,5 +131,19 @@ class BoxUITest( GafferUITest.TestCase ) :
 		
 		self.assertTrue( isinstance( w, GafferUI.BoolPlugValueWidget ) )
 
+	def testUIForOutputPlugTypes( self ) :
+
+		box = Gaffer.Box()
+		box["node"] = Gaffer.Random()
+		p = box.promotePlug( box["node"]["outColor"] )
+
+		nodeUI = GafferUI.NodeUI.create( box["node"] )
+		boxUI = GafferUI.NodeUI.create( box )
+
+		nodeWidget = nodeUI.plugValueWidget( box["node"]["outColor"], lazy = False )
+		boxWidget = boxUI.plugValueWidget( p, lazy = False )
+
+		self.assertTrue( type( boxWidget ) is type( nodeWidget ) )
+
 if __name__ == "__main__":
 	unittest.main()
