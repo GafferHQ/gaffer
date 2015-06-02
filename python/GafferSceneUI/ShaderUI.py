@@ -105,6 +105,17 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"parameters.*" : [
+
+			# Although the parameters plug is positioned
+			# as we want above, we must also register
+			# appropriate values for each individual parameter,
+			# for the case where they get promoted to a box
+			# individually.
+			"nodeGadget:nodulePosition", "left",
+
+		],
+
 		"out" : [
 
 			"description",

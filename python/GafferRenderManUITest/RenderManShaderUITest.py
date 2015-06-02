@@ -34,8 +34,34 @@
 #
 ##########################################################################
 
-from DocumentationTest import DocumentationTest
-from RenderManShaderUITest import RenderManShaderUITest
+import os
+
+import IECore
+
+import Gaffer
+import GafferUI
+import GafferRenderMan
+import GafferRenderManTest
+import GafferRenderManUI
+
+class RenderManShaderUITest( GafferRenderManTest.RenderManTestCase ) :
+
+	def testPromotedArrayElementNodules( self ) :
+
+		shader = self.compileShader( os.path.expandvars( "$GAFFER_ROOT/python/GafferRenderManTest/shaders/coshaderArrayParameters.sl" ) )
+
+		script = Gaffer.ScriptNode()
+		graphGadget = GafferUI.GraphGadget( script )
+
+		script["b"] = Gaffer.Box()
+
+		script["b"]["s"] = GafferRenderMan.RenderManShader()
+		script["b"]["s"].loadShader( shader )
+
+		promotedCoshader = script["b"].promotePlug( script["b"]["s"]["parameters"]["fixedShaderArray"][0] )
+
+		nodeGadget = graphGadget.nodeGadget( script["b"] )
+		self.assertEqual( nodeGadget.noduleTangent( nodeGadget.nodule( promotedCoshader ) ), IECore.V3f( -1, 0, 0 ) )
 
 if __name__ == "__main__":
 	unittest.main()
