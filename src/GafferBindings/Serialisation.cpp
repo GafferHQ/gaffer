@@ -44,7 +44,6 @@
 #include "IECore/MessageHandler.h"
 
 #include "IECorePython/ScopedGILLock.h"
-#include "IECorePython/Wrapper.h"
 
 #include "Gaffer/Context.h"
 
@@ -361,13 +360,13 @@ bool Serialisation::Serialiser::childNeedsConstruction( const Gaffer::GraphCompo
 namespace
 {
 
-class SerialiserWrapper : public Serialisation::Serialiser, public IECorePython::Wrapper<Serialisation::Serialiser>
+class SerialiserWrapper : public IECorePython::RefCountedWrapper<Serialisation::Serialiser>
 {
 
 	public :
 
 		SerialiserWrapper( PyObject *self )
-			:	Serialisation::Serialiser(), IECorePython::Wrapper<Serialisation::Serialiser>( self, this )
+			:	IECorePython::RefCountedWrapper<Serialisation::Serialiser>( self )
 		{
 		}
 
@@ -376,7 +375,7 @@ class SerialiserWrapper : public Serialisation::Serialiser, public IECorePython:
 			if( this->isSubclassed() )
 			{
 				IECorePython::ScopedGILLock gilLock;
-				boost::python::override f = this->get_override( "moduleDependencies" );
+				boost::python::object f = this->methodOverride( "moduleDependencies" );
 				if( f )
 				{
 					object mo = f( GraphComponentPtr( const_cast<GraphComponent *>( graphComponent ) ) );
@@ -394,10 +393,12 @@ class SerialiserWrapper : public Serialisation::Serialiser, public IECorePython:
 			if( this->isSubclassed() )
 			{
 				IECorePython::ScopedGILLock gilLock;
-				boost::python::override f = this->get_override( "constructor" );
+				boost::python::object f = this->methodOverride( "constructor" );
 				if( f )
 				{
-					return f( GraphComponentPtr( const_cast<GraphComponent *>( graphComponent ) ), serialisation );
+					return boost::python::extract<std::string>(
+						f( GraphComponentPtr( const_cast<GraphComponent *>( graphComponent ) ), serialisation )
+					);
 				}
 			}
 			return Serialiser::constructor( graphComponent, serialisation );
@@ -408,10 +409,12 @@ class SerialiserWrapper : public Serialisation::Serialiser, public IECorePython:
 			if( this->isSubclassed() )
 			{
 				IECorePython::ScopedGILLock gilLock;
-				boost::python::override f = this->get_override( "postConstructor" );
+				boost::python::object f = this->methodOverride( "postConstructor" );
 				if( f )
 				{
-					return f( GraphComponentPtr( const_cast<GraphComponent *>( graphComponent ) ), identifier, serialisation );
+					return boost::python::extract<std::string>(
+						f( GraphComponentPtr( const_cast<GraphComponent *>( graphComponent ) ), identifier, serialisation )
+					);
 				}
 			}
 			return Serialiser::postConstructor( graphComponent, identifier, serialisation );
@@ -422,10 +425,12 @@ class SerialiserWrapper : public Serialisation::Serialiser, public IECorePython:
 			if( this->isSubclassed() )
 			{
 				IECorePython::ScopedGILLock gilLock;
-				boost::python::override f = this->get_override( "postHierarchy" );
+				boost::python::object f = this->methodOverride( "postHierarchy" );
 				if( f )
 				{
-					return f( GraphComponentPtr( const_cast<GraphComponent *>( graphComponent ) ), identifier, serialisation );
+					return boost::python::extract<std::string>(
+						f( GraphComponentPtr( const_cast<GraphComponent *>( graphComponent ) ), identifier, serialisation )
+					);
 				}
 			}
 			return Serialiser::postHierarchy( graphComponent, identifier, serialisation );
@@ -436,10 +441,12 @@ class SerialiserWrapper : public Serialisation::Serialiser, public IECorePython:
 			if( this->isSubclassed() )
 			{
 				IECorePython::ScopedGILLock gilLock;
-				boost::python::override f = this->get_override( "postScript" );
+				boost::python::object f = this->methodOverride( "postScript" );
 				if( f )
 				{
-					return f( GraphComponentPtr( const_cast<GraphComponent *>( graphComponent ) ), identifier, serialisation );
+					return boost::python::extract<std::string>(
+						f( GraphComponentPtr( const_cast<GraphComponent *>( graphComponent ) ), identifier, serialisation )
+					);
 				}
 			}
 			return Serialiser::postScript( graphComponent, identifier, serialisation );
@@ -450,7 +457,7 @@ class SerialiserWrapper : public Serialisation::Serialiser, public IECorePython:
 			if( this->isSubclassed() )
 			{
 				IECorePython::ScopedGILLock gilLock;
-				boost::python::override f = this->get_override( "childNeedsSerialisation" );
+				boost::python::object f = this->methodOverride( "childNeedsSerialisation" );
 				if( f )
 				{
 					return f( GraphComponentPtr( const_cast<GraphComponent *>( child ) ) );
@@ -464,7 +471,7 @@ class SerialiserWrapper : public Serialisation::Serialiser, public IECorePython:
 			if( this->isSubclassed() )
 			{
 				IECorePython::ScopedGILLock gilLock;
-				boost::python::override f = this->get_override( "childNeedsConstruction" );
+				boost::python::object f = this->methodOverride( "childNeedsConstruction" );
 				if( f )
 				{
 					return f( GraphComponentPtr( const_cast<GraphComponent *>( child ) ) );
