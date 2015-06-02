@@ -34,10 +34,30 @@
 #
 ##########################################################################
 
+import appleseed
+
 import Gaffer
 import GafferScene
 import GafferUI
 import GafferAppleseed
+
+# Get the render settings metadata dictionary from appleseed
+__optionsMetadata = appleseed.Configuration.get_metadata()
+
+def __getDescriptionString( key, extraInfo = None ):
+
+	keys = key.split( ":" )
+
+	try:
+		desc =  reduce( lambda d, k: d[k], keys, __optionsMetadata )["help"]
+
+		if extraInfo :
+
+			desc += '.' + extraInfo
+
+		return desc
+	except:
+		return ""
 
 def __mainSummary( plug ) :
 
@@ -147,6 +167,13 @@ Gaffer.Metadata.registerNode(
 
 	GafferAppleseed.AppleseedOptions,
 
+	"description",
+	"""
+	Sets global scene options applicable to the appleseed
+	renderer. Use the StandardOptions node to set
+	global options applicable to all renderers.
+	""",
+
 	plugs = {
 
 		# Sections
@@ -166,12 +193,24 @@ Gaffer.Metadata.registerNode(
 
 		"options.renderPasses" : [
 
+			"description",
+			__getDescriptionString( 
+				"generic_frame_renderer:passes",
+				"""
+				When using photon mapping this is the number of 
+				progressive refinement passes used.
+				"""
+			),
+
 			"layout:section", "Main",
 			"label", "Passes",
 
 		],
 
 		"options.sampler" : [
+
+			"description",
+			__getDescriptionString( "sampling_mode" ),
 
 			"layout:section", "Main",
 
@@ -186,12 +225,18 @@ Gaffer.Metadata.registerNode(
 
 		"options.aaSamples" : [
 
+			"description",
+			__getDescriptionString( "uniform_pixel_renderer:samples" ),
+
 			"layout:section", "Main",
 			"label", "AA Samples",
 
 		],
 
 		"options.lightingEngine" : [
+
+			"description",
+			__getDescriptionString( "lighting_engine" ),
 
 			"layout:section", "Main",
 
@@ -206,6 +251,12 @@ Gaffer.Metadata.registerNode(
 		],
 
 		"options.meshFileFormat" : [
+
+			"description",
+			"""
+			Mesh file format to use when exporting scenes to appleseed.
+			It is recommended to set it to BinaryMesh as it is more efficient than Obj.
+			""",
 
 			"layout:section", "Main",
 
@@ -222,12 +273,22 @@ Gaffer.Metadata.registerNode(
 
 		"options.environmentEDF" : [
 
+			"description",
+			"""
+			Light to use as the environment.
+			""",
+
 			"layout:section", "Environment",
 			"label", "Environment Light",
 
 		],
 
 		"options.environmentEDFBackground" : [
+
+			"description",
+			"""
+			Whether or not the environment is visible in the background.
+			""",
 
 			"layout:section", "Environment",
 			"label", "Visible in Background",
@@ -238,12 +299,21 @@ Gaffer.Metadata.registerNode(
 
 		"options.drtIBL" : [
 
+			"description",
+			__getDescriptionString( "drt:enable_ibl" ),
+
 			"layout:section", "Distribution Ray Tracer",
 			"label", "Image Based Lighting",
 
 		],
 
 		"options.drtMaxBounces" : [
+
+			"description",
+			__getDescriptionString(
+				"drt:max_path_length", 
+				"If set to zero, use an unlimited number of bounces"
+			),
 
 			"layout:section", "Distribution Ray Tracer",
 			"label", "Max Bounces",
@@ -252,12 +322,18 @@ Gaffer.Metadata.registerNode(
 
 		"options.drtLightingSamples" : [
 
+			"description",
+			__getDescriptionString( "drt:dl_light_samples" ),
+
 			"layout:section", "Distribution Ray Tracer",
 			"label", "Direct Lighting Samples",
 
 		],
 
 		"options.drtIBLSamples" : [
+
+			"description",
+			__getDescriptionString( "drt:ibl_env_samples" ),
 
 			"layout:section", "Distribution Ray Tracer",
 			"label", "IBL Samples",
@@ -268,12 +344,18 @@ Gaffer.Metadata.registerNode(
 
 		"options.ptDirectLighting" : [
 
+			"description",
+			__getDescriptionString( "pt:enable_dl" ),
+
 			"layout:section", "Unidirectional Path Tracer",
 			"label", "Direct Lighting",
 
 		],
 
 		"options.ptIBL" : [
+
+			"description",
+			__getDescriptionString( "pt:enable_ibl" ),
 
 			"layout:section", "Unidirectional Path Tracer",
 			"label", "Image Based Lighting",
@@ -282,12 +364,21 @@ Gaffer.Metadata.registerNode(
 
 		"options.ptCaustics" : [
 
+			"description",
+			__getDescriptionString( "pt:enable_caustics" ),
+
 			"layout:section", "Unidirectional Path Tracer",
 			"label", "Caustics",
 
 		],
 
 		"options.ptMaxBounces" : [
+
+			"description",
+			__getDescriptionString( 
+				"pt:max_path_length",
+				"If set to zero, use an unlimited number of bounces"
+			),
 
 			"layout:section", "Unidirectional Path Tracer",
 			"label", "Max Bounces",
@@ -296,6 +387,9 @@ Gaffer.Metadata.registerNode(
 
 		"options.ptLightingSamples" : [
 
+			"description",
+			__getDescriptionString( "pt:dl_light_samples" ),
+
 			"layout:section", "Unidirectional Path Tracer",
 			"label", "Direct Lighting Samples",
 
@@ -303,12 +397,21 @@ Gaffer.Metadata.registerNode(
 
 		"options.ptIBLSamples" : [
 
+			"description",
+			__getDescriptionString( "pt:ibl_env_samples" ),
+
 			"layout:section", "Unidirectional Path Tracer",
 			"label", "IBL Samples",
 
 		],
 
 		"options.ptMaxRayIntensity" : [
+
+			"description",
+			__getDescriptionString( 
+				"pt:max_ray_intensity",
+				"Set to zero to disable"
+			),
 
 			"layout:section", "Unidirectional Path Tracer",
 			"label", "Max Ray Intensity",
@@ -318,6 +421,9 @@ Gaffer.Metadata.registerNode(
 		# SPPM
 
 		"options.photonType" : [
+
+			"description",
+			__getDescriptionString( "sppm:photon_type" ),
 
 			"layout:section", "SPPM",
 			"label", "Photon Type",
@@ -332,6 +438,9 @@ Gaffer.Metadata.registerNode(
 		],
 
 		"options.sppmDirectLighting" : [
+
+			"description",
+			__getDescriptionString( "sppm:dl_type" ),
 
 			"layout:section", "SPPM",
 			"label", "Direct Lighting",
@@ -348,12 +457,18 @@ Gaffer.Metadata.registerNode(
 
 		"options.sppmIBL" : [
 
+			"description",
+			__getDescriptionString( "sppm:enable_ibl" ),
+
 			"layout:section", "SPPM",
 			"label", "Image Based Lighting",
 
 		],
 
 		"options.sppmCaustics" : [
+
+			"description",
+			__getDescriptionString( "sppm:enable_caustics" ),
 
 			"layout:section", "SPPM",
 			"label", "Caustics",
@@ -362,12 +477,24 @@ Gaffer.Metadata.registerNode(
 
 		"options.sppmPhotonMaxBounces" : [
 
+			"description",
+			__getDescriptionString( 
+				"sppm:photon_tracing_max_path_length",
+				"If set to zero, use an unlimited number of bounces"
+			),
+
 			"layout:section", "SPPM",
 			"label", "Max Photon Bounces",
 
 		],
 
 		"options.sppmPathMaxBounces" : [
+
+			"description",
+			__getDescriptionString( 
+				"sppm:path_tracing_max_path_length",
+				"If set to zero, use an unlimited number of bounces"
+			),
 
 			"layout:section", "SPPM",
 			"label", "Max Path Bounces",
@@ -376,12 +503,18 @@ Gaffer.Metadata.registerNode(
 
 		"options.sppmLightPhotons" : [
 
+			"description",
+			__getDescriptionString( "sppm:light_photons_per_pass" ),
+
 			"layout:section", "SPPM",
 			"label", "Light Photons",
 
 		],
 
 		"options.sppmEnvPhotons" : [
+
+			"description",
+			__getDescriptionString( "sppm:env_photons_per_pass" ),
 
 			"layout:section", "SPPM",
 			"label", "Environment Photons",
@@ -390,6 +523,9 @@ Gaffer.Metadata.registerNode(
 
 		"options.sppmInitialRadius" : [
 
+			"description",
+			__getDescriptionString( "sppm:initial_radius" ),
+
 			"layout:section", "SPPM",
 			"label", "Initial Radius",
 
@@ -397,12 +533,18 @@ Gaffer.Metadata.registerNode(
 
 		"options.sppmMaxPhotons" : [
 
+			"description",
+			__getDescriptionString( "sppm:max_photons_per_estimate" ),
+
 			"layout:section", "SPPM",
 			"label", "Max Photons",
 
 		],
 
 		"options.sppmAlpha" : [
+
+			"description",
+			__getDescriptionString( "sppm:alpha" ),
 
 			"layout:section", "SPPM",
 			"label", "Alpha",
@@ -413,11 +555,23 @@ Gaffer.Metadata.registerNode(
 
 		"options.searchPath" : [
 
+			"description",
+			"""
+			The filesystem paths where shaders and textures
+			are searched for.
+			""",
+
 			"layout:section", "System",
 
 		],
 
 		"options.numThreads" : [
+
+			"description",
+			__getDescriptionString(
+				"rendering_threads",
+				"Set to zero to use all CPU cores"
+			),
 
 			"layout:section", "System",
 			"label", "Threads",
@@ -426,11 +580,17 @@ Gaffer.Metadata.registerNode(
 
 		"options.interactiveRenderFps" : [
 
+			"description",
+			__getDescriptionString( "progressive_frame_renderer:max_fps" ),
+
 			"layout:section", "System",
 
 		],
 
 		"options.textureMem" : [
+
+			"description",
+			__getDescriptionString( "texture_store:max_size" ),
 
 			"layout:section", "System",
 			"label", "Texture Cache Size",
@@ -438,6 +598,9 @@ Gaffer.Metadata.registerNode(
 		],
 
 		"options.tileOrdering" : [
+
+			"description",
+			__getDescriptionString( "generic_frame_renderer:tile_ordering" ),
 
 			"layout:section", "System",
 

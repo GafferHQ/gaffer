@@ -34,9 +34,60 @@
 #
 ##########################################################################
 
+import appleseed
+
 import Gaffer
 import GafferUI
 import GafferAppleseed
+
+# Get the light and environments metadata dictionaries from appleseed
+__modelMetadata = appleseed.Light.get_model_metadata()
+__modelMetadata.update( appleseed.EnvironmentEDF.get_model_metadata() )
+__inputMetadata = appleseed.Light.get_input_metadata()
+__inputMetadata.update( appleseed.EnvironmentEDF.get_input_metadata() )
+
+def __nodeDescription( node ) :
+
+	model = node["__model"].getValue()
+
+	try:
+		return __modelMetadata[model]['help']
+	except:
+		return "Loads appleseed lights."
+
+def __plugDescription( plug ) :
+
+	model = plug.node()["__model"].getValue()
+	param = plug.getName()
+
+	# Special case for LatLong and MirrorBall environments.
+	if param == "radiance_map" :
+
+		param = "radiance"
+
+	try:
+		return __inputMetadata[model][param]['help']
+	except:
+		return param
+
+def __plugLabel( plug ) :
+
+	model = plug.node()["__model"].getValue()
+	param = plug.getName()
+
+	# Special case for LatLong and MirrorBall environments.
+	if param == "radiance_map" :
+
+		return "Radiance Map"
+
+	try:
+		return __inputMetadata[model][param]['label']
+	except:
+		return param
+
+Gaffer.Metadata.registerNodeValue( GafferAppleseed.AppleseedLight, "description", __nodeDescription )
+Gaffer.Metadata.registerPlugValue( GafferAppleseed.AppleseedLight, "parameters.*", "description", __plugDescription )
+Gaffer.Metadata.registerPlugValue( GafferAppleseed.AppleseedLight, "parameters.*", "label", __plugLabel )
 
 GafferUI.PlugValueWidget.registerCreator(
 	GafferAppleseed.AppleseedLight,

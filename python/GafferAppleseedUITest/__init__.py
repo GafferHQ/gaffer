@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2014, Esteban Tovagliari. All rights reserved.
+#  Copyright (c) 2015, Esteban Tovagliari. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,11 +34,7 @@
 #
 ##########################################################################
 
-import AppleseedAttributesUI
-import AppleseedLightUI
-import AppleseedOptionsUI
-import AppleseedRenderUI
-import InteractiveAppleseedRenderUI
-import LightMenu
+from DocumentationTest import DocumentationTest
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferAppleseedUI" )
+if __name__ == "__main__":
+	unittest.main()

@@ -594,6 +594,8 @@ libraries = {
 
 	"GafferAppleseedUI" : {},
 
+	"GafferAppleseedUITest" : {},
+
 	"apps" : {
 		"additionalFiles" : glob.glob( "apps/*/*-1.py" ),
 	},
