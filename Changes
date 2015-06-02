@@ -1,8 +1,12 @@
+# 0.13.1.0
+==========
+
 Apps
 -----------------------------------------------------------------------
 
 - Test app can now run multiple named test cases, specified via the
   "testCases" command line argument.
+- Fixed errors caused by special characters in .gfr filenames.
 
 UI
 -----------------------------------------------------------------------
@@ -13,6 +17,16 @@ UI
 - Fixed SceneInspector inheritance and history windows, which were broken
   in 0.13.0.0.
 - Fixed ObjectWriter UI, which was broken in 0.13.0.0.
+
+OSL
+-----------------------------------------------------------------------
+
+- Added utility shaders for float maths and noise.
+
+Image
+-----------------------------------------------------------------------
+
+- Fixed bug in DeleteChannels::hashChannelNames().
 
 Houdini
 -----------------------------------------------------------------------
