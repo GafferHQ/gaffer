@@ -36,6 +36,7 @@
 
 import weakref
 import functools
+import types
 
 import IECore
 
@@ -213,7 +214,7 @@ class UIEditor( GafferUI.NodeSetEditor ) :
 
 	def __setSelectedPlugInternal( self, plug, lazy=True ) :
 
-		assert( plug is None or self.__node["user"].isAncestorOf( plug ) )
+		assert( plug is None or self.__plugListing.getPlugParent().isSame( plug.parent() ) )
 
 		if lazy and plug == self.__selectedPlug :
 			return
@@ -235,11 +236,6 @@ class UIEditor( GafferUI.NodeSetEditor ) :
 	def __updateFromSetInternal( self, lazy=True ) :
 
 		node = self._lastAddedNode()
-		if isinstance( node, Gaffer.Reference ) :
-			# ui is defined before exporting,
-			# so we don't want to edit it after
-			# referencing.
-			node = None
 
 		if lazy and node == self.__node :
 			return
@@ -248,12 +244,22 @@ class UIEditor( GafferUI.NodeSetEditor ) :
 		self.__nodeNameWidget.setGraphComponent( self.__node )
 		self.__nodeTab.setEnabled( self.__node is not None )
 
-		self.__plugListing.setPlugParent( self.__node["user"] if self.__node is not None else None )
-
-		if self.__node is None or not len( self.__node["user"] ) :
+		if self.__node is None :
+			self.__plugListing.setPlugParent( None )
 			self.__setSelectedPlugInternal( None, lazy )
 		else :
-			self.__setSelectedPlugInternal( self.__node["user"][0], lazy )
+			plugParent = self.__node["user"]
+			if isinstance( self.__node, Gaffer.Box ) and not len( plugParent ) :
+				# For Boxes we want the user to edit the plugs directly
+				# parented to the Box, because that is where promoted plugs go,
+				# and because we want to leave the "user" plug empty so that it
+				# is available for use by the user on Reference nodes once a Box has
+				# been exported and referenced. We make a small concession to old-skool
+				# boxes (where we mistakenly used to promote to the "user" plug) by
+				# editing the user plugs instead if any exist.
+				plugParent = self.__node
+			self.__plugListing.setPlugParent( plugParent )
+			self.__setSelectedPlugInternal( plugParent[0] if len( plugParent ) else None, lazy )
 
 		for widget in self.__nodeMetadataWidgets :
 			widget.setTarget( self.__node )
@@ -308,11 +314,15 @@ def __plugPopupMenu( menuDefinition, plugValueWidget ) :
 
 	plug = plugValueWidget.getPlug()
 	node = plug.node()
-	if node is None or isinstance( node, Gaffer.Reference ):
+	if node is None :
 		return
 
-	if not plug.parent().isSame( node["user"] ) :
-		return
+	if isinstance( node, Gaffer.Box ) :
+		if not plug.parent().isSame( node ) :
+			return
+	else :
+		if not plug.parent().isSame( node["user"] ) :
+			return
 
 	menuDefinition.append( "/EditUIDivider", { "divider" : True } )
 	menuDefinition.append( "/Edit UI...", { "command" : IECore.curry( __editPlugUI, node, plug ), "active" : not plugValueWidget.getReadOnly() } )
@@ -401,6 +411,8 @@ class _PlugListing( GafferUI.PathListingWidget ) :
 		self.__metadataPlugValueChangedConnection = Gaffer.Metadata.plugValueChangedSignal().connect( Gaffer.WeakMethod( self.__plugMetadataChanged ) )
 
 	def setPlugParent( self, parent ) :
+
+		assert( isinstance( parent, ( Gaffer.Plug, Gaffer.Node, types.NoneType ) ) )
 
 		self.__parent = parent
 
@@ -533,7 +545,8 @@ class _PlugListing( GafferUI.PathListingWidget ) :
 		if self.__parent is None :
 			return
 
-		if not self.__parent.node().isInstanceOf( nodeTypeId ) :
+		node = self.__parent.node() if isinstance( self.__parent, Gaffer.Plug ) else self.__parent
+		if not node.isInstanceOf( nodeTypeId ) :
 			return
 
 		if key == "layout:index" :
