@@ -120,7 +120,7 @@ GafferImage::Format DeleteChannels::computeFormat( const Gaffer::Context *contex
 
 void DeleteChannels::hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	ImageProcessor::hash( output, context, h );
+	ImageProcessor::hashChannelNames( output, context, h );
 
 	inPlug()->channelNamesPlug()->hash( h );
 	modePlug()->hash( h );
