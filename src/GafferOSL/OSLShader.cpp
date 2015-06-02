@@ -250,7 +250,7 @@ static void transferConnectionOrValue( Plug *sourcePlug, Plug *destinationPlug )
 	}
 }
 
-static Plug *loadStringParameter( const OSLQuery::Parameter *parameter, Gaffer::CompoundPlug *parent )
+static Plug *loadStringParameter( const OSLQuery::Parameter *parameter, Gaffer::Plug *parent )
 {
 	string defaultValue;
 	if( parameter->sdefault.size() )
@@ -275,7 +275,7 @@ static Plug *loadStringParameter( const OSLQuery::Parameter *parameter, Gaffer::
 }
 
 template<typename PlugType>
-static Plug *loadNumericParameter( const OSLQuery::Parameter *parameter, Gaffer::CompoundPlug *parent )
+static Plug *loadNumericParameter( const OSLQuery::Parameter *parameter, Gaffer::Plug *parent )
 {
 	typedef typename PlugType::ValueType ValueType;
 
@@ -315,7 +315,7 @@ static Plug *loadNumericParameter( const OSLQuery::Parameter *parameter, Gaffer:
 }
 
 template <typename PlugType>
-static Plug *loadCompoundNumericParameter( const OSLQuery::Parameter *parameter, Gaffer::CompoundPlug *parent )
+static Plug *loadCompoundNumericParameter( const OSLQuery::Parameter *parameter, Gaffer::Plug *parent )
 {
 	typedef typename PlugType::ValueType ValueType;
 	typedef typename ValueType::BaseType BaseType;
@@ -369,7 +369,7 @@ static Plug *loadCompoundNumericParameter( const OSLQuery::Parameter *parameter,
 	return plug.get();
 }
 
-static Plug *loadClosureParameter( const OSLQuery::Parameter *parameter, Gaffer::CompoundPlug *parent )
+static Plug *loadClosureParameter( const OSLQuery::Parameter *parameter, Gaffer::Plug *parent )
 {
 	const string name = plugName( parameter );
 	Plug *existingPlug = parent->getChild<Plug>( name );
@@ -388,9 +388,9 @@ static Plug *loadClosureParameter( const OSLQuery::Parameter *parameter, Gaffer:
 }
 
 // forward declaration so loadStructParameter() can call it.
-static Plug *loadShaderParameter( const OSLQuery &query, const OSLQuery::Parameter *parameter, Gaffer::CompoundPlug *parent, bool keepExistingValues );
+static Plug *loadShaderParameter( const OSLQuery &query, const OSLQuery::Parameter *parameter, Gaffer::Plug *parent, bool keepExistingValues );
 
-static Plug *loadStructParameter( const OSLQuery &query, const OSLQuery::Parameter *parameter, Gaffer::CompoundPlug *parent, bool keepExistingValues )
+static Plug *loadStructParameter( const OSLQuery &query, const OSLQuery::Parameter *parameter, Gaffer::Plug *parent, bool keepExistingValues )
 {
 	CompoundPlug *result = NULL;
 
@@ -440,7 +440,7 @@ static Plug *loadStructParameter( const OSLQuery &query, const OSLQuery::Paramet
 	return result;
 }
 
-static Plug *loadShaderParameter( const OSLQuery &query, const OSLQuery::Parameter *parameter, Gaffer::CompoundPlug *parent, bool keepExistingValues )
+static Plug *loadShaderParameter( const OSLQuery &query, const OSLQuery::Parameter *parameter, Gaffer::Plug *parent, bool keepExistingValues )
 {
 	Plug *result = NULL;
 
@@ -505,7 +505,7 @@ static Plug *loadShaderParameter( const OSLQuery &query, const OSLQuery::Paramet
 	return result;
 }
 
-static void loadShaderParameters( const OSLQuery &query, Gaffer::CompoundPlug *parametersPlug, bool keepExistingValues )
+static void loadShaderParameters( const OSLQuery &query, Gaffer::Plug *parametersPlug, bool keepExistingValues )
 {
 
 	// if we're not preserving existing values then remove all existing parameter plugs - the various

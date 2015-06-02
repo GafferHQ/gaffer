@@ -77,8 +77,8 @@ class Shader : public Gaffer::DependencyNode
 		const Gaffer::StringPlug *typePlug() const;
 
 		/// Plug under which the shader parameters are defined.
-		Gaffer::CompoundPlug *parametersPlug();
-		const Gaffer::CompoundPlug *parametersPlug() const;
+		Gaffer::Plug *parametersPlug();
+		const Gaffer::Plug *parametersPlug() const;
 
 		/// Plug which defines the shader's output - this should
 		/// be connected to a ShaderAssignment::shaderPlug() or
