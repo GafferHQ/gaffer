@@ -37,6 +37,7 @@
 import weakref
 import functools
 import types
+import re
 
 import IECore
 
@@ -113,50 +114,13 @@ class UIEditor( GafferUI.NodeSetEditor ) :
 				self.__plugListing = _PlugListing()
 				self.__plugListingSelectionChangedConnection = self.__plugListing.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__plugListingSelectionChanged ) )
 
-				with GafferUI.GridContainer( spacing = 4, borderWidth = 8 ) as self.__plugEditor :
+				with GafferUI.TabbedContainer() as self.__plugAndSectionEditorsContainer :
 
-					GafferUI.Label(
-						"Name",
-						parenting = {
-							"index" : ( 0, 0 ),
-							"alignment" : ( GafferUI.HorizontalAlignment.Right, GafferUI.VerticalAlignment.Center )
-						}
-					)
+					self.__plugEditor = _PlugEditor()
+					self.__sectionEditor = _SectionEditor()
+					self.__sectionEditorNameChangedConnection = self.__sectionEditor.nameChangedSignal().connect( Gaffer.WeakMethod( self.__sectionEditorNameChanged ) )
 
-					self.__plugNameWidget = GafferUI.NameWidget( None, parenting = { "index" : ( 1, 0 ) } )
-
-					GafferUI.Label(
-						"Description",
-						parenting = {
-							"index" : ( 0, 1 ),
-							"alignment" : ( GafferUI.HorizontalAlignment.Right, GafferUI.VerticalAlignment.Top )
-						}
-					)
-
-					self.__plugMetadataWidgets.append(
-						_MultiLineStringMetadataWidget(
-							key = "description",
-							parenting = { "index" : ( 1, 1 ) }
-						)
-					)
-
-					GafferUI.Label(
-						"Divider",
-						parenting = {
-							"index" : ( 0, 2 ),
-							"alignment" : ( GafferUI.HorizontalAlignment.Right, GafferUI.VerticalAlignment.Center )
-						}
-					)
-
-					self.__plugMetadataWidgets.append(
-						_BoolMetadataWidget(
-							key = "divider",
-							parenting = {
-								"index" : ( 1, 2 ),
-								"alignment" : ( GafferUI.HorizontalAlignment.Left, GafferUI.VerticalAlignment.Center )
-							}
-						)
-					)
+				self.__plugAndSectionEditorsContainer.setTabsVisible( False )
 
 			self.__plugTab.setSizes( [ 0.3, 0.7 ] )
 
@@ -171,13 +135,14 @@ class UIEditor( GafferUI.NodeSetEditor ) :
 
 		self.__updateFromSetInternal( lazy=False )
 
-	def setSelectedPlug( self, plug ) :
+	# Selection can be None, a Plug, or the name of a section.
+	def setSelection( self, selection ) :
 
-		self.__setSelectedPlugInternal( plug )
+		self.__plugListing.setSelection( selection )
 
-	def getSelectedPlug( self ) :
+	def getSelection( self ) :
 
-		return self.__selectedPlug
+		return self.__plugListing.getSelection()
 
 	## Returns the widget layout responsible for editing the node as a whole.
 	def nodeEditor( self ) :
@@ -212,27 +177,6 @@ class UIEditor( GafferUI.NodeSetEditor ) :
 
 		self.__updateFromSetInternal()
 
-	def __setSelectedPlugInternal( self, plug, lazy=True ) :
-
-		assert( plug is None or self.__plugListing.getPlugParent().isSame( plug.parent() ) )
-
-		if lazy and plug == self.__selectedPlug :
-			return
-
-		self.__selectedPlug = plug
-		self.__plugNameWidget.setGraphComponent( self.__selectedPlug )
-		self.__plugEditor.setEnabled( self.__selectedPlug is not None )
-
-		if self.__selectedPlug is not None :
-			self.__plugListing.setSelectedPaths(
-				self.__plugListing.getPath().copy().setFromString( "/" + plug.getName() )
-			)
-		else :
-			self.__plugListing.setSelectedPaths( [] )
-
-		for widget in self.__plugMetadataWidgets :
-			widget.setTarget( self.__selectedPlug )
-
 	def __updateFromSetInternal( self, lazy=True ) :
 
 		node = self._lastAddedNode()
@@ -246,7 +190,7 @@ class UIEditor( GafferUI.NodeSetEditor ) :
 
 		if self.__node is None :
 			self.__plugListing.setPlugParent( None )
-			self.__setSelectedPlugInternal( None, lazy )
+			self.__sectionEditor.setPlugParent( None )
 		else :
 			plugParent = self.__node["user"]
 			if isinstance( self.__node, Gaffer.Box ) and not len( plugParent ) :
@@ -259,31 +203,29 @@ class UIEditor( GafferUI.NodeSetEditor ) :
 				# editing the user plugs instead if any exist.
 				plugParent = self.__node
 			self.__plugListing.setPlugParent( plugParent )
-			self.__setSelectedPlugInternal( plugParent[0] if len( plugParent ) else None, lazy )
+			self.__sectionEditor.setPlugParent( plugParent )
 
 		for widget in self.__nodeMetadataWidgets :
 			widget.setTarget( self.__node )
 
+		self.setSelection( None )
+
 	def __plugListingSelectionChanged( self, listing ) :
 
-		paths = listing.getSelectedPaths()
-		if not paths :
-			# the path might have been deselected automatically because the plug name
-			# changed. in this case we want to restore the old selection.
-			previousSelection = self.getSelectedPlug()
-			if (
-				previousSelection is not None and
-				self.__node is not None and
-				previousSelection.parent() is not None and
-				previousSelection.parent().isSame( self.__node["user"] )
-			) :
-				listing.setSelectedPaths(
-					listing.getPath().copy().setFromString( "/" + previousSelection.getName() )
-				)
-			else :
-				self.setSelectedPlug( None )
-		else :
-			self.setSelectedPlug( paths[0].entry().plug )
+		selection = listing.getSelection()
+		if selection is None or isinstance( selection, Gaffer.Plug ) :
+			self.__plugEditor.setPlug( selection )
+			self.__plugAndSectionEditorsContainer.setCurrent( self.__plugEditor )
+		elif isinstance( selection, basestring ) :
+			self.__plugEditor.setPlug( None )
+			self.__sectionEditor.setSection( selection )
+			self.__plugAndSectionEditorsContainer.setCurrent( self.__sectionEditor )
+
+	def __sectionEditorNameChanged( self, sectionEditor, oldName, newName ) :
+
+		# When the name changed, our plug listing will have lost its
+		# selection. So give it a helping hand.
+		self.__plugListing.setSelection( newName )
 
 	def __repr__( self ) :
 
@@ -301,13 +243,14 @@ class UIEditor( GafferUI.NodeSetEditor ) :
 
 GafferUI.EditorWidget.registerType( "UIEditor", UIEditor )
 
+##########################################################################
 # PlugValueWidget popup menu
 ##########################################################################
 
 def __editPlugUI( node, plug ) :
 
 	editor = GafferUI.UIEditor.acquire( node )
-	editor.setSelectedPlug( plug )
+	editor.setSelection( plug )
 	editor.plugEditor().reveal()
 
 def __plugPopupMenu( menuDefinition, plugValueWidget ) :
@@ -329,86 +272,216 @@ def __plugPopupMenu( menuDefinition, plugValueWidget ) :
 
 __plugPopupMenuConnection = GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugPopupMenu )
 
-# _PlugListing. This is used to list the plugs in the UIEditor.
+##########################################################################
+# Hierarchical representation of a plug layout, suitable for manipulating
+# by the _PlugListing.
 ##########################################################################
 
-class _PlugListing( GafferUI.PathListingWidget ) :
-
-	# Class used to represent a plug and its index within the listing.
-	class Entry( object ) :
-
-		__slots__ = ( "plug", "index" )
-
-		def __init__( self, plug, index ) :
-
-			self.plug = plug
-			self.index = index
-
-	# Class used to present Entry instances as Paths.
-	class EntryPath( Gaffer.Path ) :
-
-		def __init__( self, entries, path, root="/", filter = None ) :
-
-			Gaffer.Path.__init__( self, path, root, filter )
-
-			self.__entries = entries
-
-		def entry( self ) :
-
-			if len( self ) != 1 :
-				return None
-
-			for e in self.__entries :
-				if e.plug.getName() == self[0] :
-					return e
-
-			return None
-
-		def entries( self ) :
-
-			return self.__entries
-
-		def copy( self ) :
-
-			return self.__class__( self.__entries, self[:], self.root(), self.getFilter() )
-
-		def isLeaf( self ) :
-
-			return len( self ) > 0
-
-		def _children( self ) :
-
-			if len( self ) > 0 :
-				return []
-
-			e = sorted( self.__entries, key = lambda x : x.index )
-			return [
-				self.__class__( self.__entries, [ x.plug.getName() ], self.root(), self.getFilter() )
-				for x in e
-			]
+class _LayoutItem( object ) :
 
 	def __init__( self ) :
 
-		GafferUI.PathListingWidget.__init__(
-			self,
-			self.EntryPath( [], "/" ),
-			# listing displays the plug name and automatically sorts based on plug index
-			columns = ( GafferUI.PathListingWidget.defaultNameColumn, ),
-			displayMode = GafferUI.PathListingWidget.DisplayMode.Tree,
-		)
+		self.__parent = None
+		self.__children = []
+
+	def parent( self ) :
+
+		if self.__parent is None :
+			return None
+		else :
+			return self.__parent()
+
+	def child( self, name ) :
+
+		for c in self.__children :
+			if c.name() == name :
+				return c
+
+		return None
+
+	def isAncestorOf( self, item ) :
+
+		while item is not None :
+			parent = item.parent()
+			if parent is self :
+				return True
+			item = parent
+
+		return False
+
+	def append( self, child ) :
+
+		self.insert( len( self ), child )
+
+	def insert( self, index, child ) :
+
+		assert( child.parent() is None )
+		self.__children.insert( index, child )
+		child.__parent = weakref.ref( self )
+
+	def remove( self, child ) :
+
+		assert( child.parent() is self )
+
+		self.__children.remove( child )
+		child.__parent = None
+
+	def index( self, child ) :
+
+		return self.__children.index( child )
+
+	def name( self ) :
+
+		raise NotImplementedError
+
+	def fullName( self ) :
+
+		result = ""
+		item = self
+		while item.parent() is not None :
+			if result :
+				result = item.name() + "." + result
+			else :
+				result = item.name()
+			item = item.parent()
+
+		return result
+
+	def __len__( self ) :
+
+		return len( self.__children )
+
+	def __getitem__( self, index ) :
+
+		return self.__children[index]
+
+class _SectionLayoutItem( _LayoutItem ) :
+
+	def __init__( self, sectionName ) :
+
+		_LayoutItem.__init__( self )
+
+		self.__sectionName = sectionName
+
+	def name( self ) :
+
+		return self.__sectionName
+
+class _PlugLayoutItem( _LayoutItem ) :
+
+	def __init__( self, plug ) :
+
+		_LayoutItem.__init__( self )
+
+		self.plug = plug
+		self.__name = plug.getName()
+
+	def name( self ) :
+
+		return self.__name
+
+##########################################################################
+# _PlugListing. This is used to list the plugs in the UIEditor,
+# organised into their respective sections.
+##########################################################################
+
+class _PlugListing( GafferUI.Widget ) :
+
+	class __LayoutPath( Gaffer.Path ) :
+
+		def __init__( self, rootItem, path, root="/", filter = None ) :
+
+			Gaffer.Path.__init__( self, path, root, filter )
+
+			self.__rootItem = rootItem
+
+		def rootItem( self ) :
+
+			return self.__rootItem
+
+		def item( self ) :
+
+			result = self.__rootItem
+			for name in self :
+				result = result.child( name )
+				if result is None :
+					return None
+
+			return result
+
+		def copy( self ) :
+
+			return self.__class__( self.__rootItem, self[:], self.root(), self.getFilter() )
+
+		def isLeaf( self ) :
+
+			return not isinstance( self.item(), _SectionLayoutItem )
+
+		def isValid( self ) :
+
+			return self.item() is not None
+
+		def _children( self ) :
+
+			item = self.item()
+			if item is None :
+				return []
+
+			result = [
+				self.__class__( self.__rootItem, self[:] + [ c.name() ], self.root(), self.getFilter() )
+				for c in item
+			]
+
+			# Add a placeholder child into empty sections, to be used as a drag target
+			# in __dragMove()
+			if len( result ) == 0 and isinstance( item, _SectionLayoutItem ) :
+				result.append( self.__class__( self.__rootItem, self[:] + [ " " ], self.root(), self.getFilter() ) )
+
+			return result
+
+	def __init__( self, **kw ) :
+
+		column = GafferUI.ListContainer( spacing = 4 )
+		GafferUI.Widget.__init__( self, column )
+
+		with column :
+
+			self.__pathListing = GafferUI.PathListingWidget(
+				self.__LayoutPath( _SectionLayoutItem( "" ), "/" ),
+				# listing displays the plug name and automatically sorts based on plug index
+				columns = ( GafferUI.PathListingWidget.defaultNameColumn, ),
+				displayMode = GafferUI.PathListingWidget.DisplayMode.Tree,
+			)
+
+			self.__pathListing.setDragPointer( "" )
+			self.__pathListing.setSortable( False )
+			self.__pathListing.setHeaderVisible( False )
+
+			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
+
+				GafferUI.MenuButton(
+					image = "plus.png",
+					hasFrame = False,
+					menu = GafferUI.Menu(
+						definition = Gaffer.WeakMethod( self.__addMenuDefinition )
+					)
+				)
+
+				self.__deleteButton = GafferUI.Button( image = "minus.png", hasFrame = False )
+				self.__deleteButtonClickedConnection = self.__deleteButton.clickedSignal().connect( Gaffer.WeakMethod( self.__deleteButtonClicked ) )
 
 		self.__parent = None # the parent of the plugs we're listing
+		self.__dragItem = None
+		self.__selectionChangedSignal = Gaffer.Signal1()
 
-		self.setDragPointer( "" )
-		self.setSortable( False )
-		self.setHeaderVisible( False )
-
-		self.__dragEnterConnection = self.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ) )
-		self.__dragMoveConnection = self.dragMoveSignal().connect( Gaffer.WeakMethod( self.__dragMove ) )
-		self.__dragEndConnection = self.dragEndSignal().connect( Gaffer.WeakMethod( self.__dragEnd ) )
+		self.__dragEnterConnection = self.__pathListing.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ) )
+		self.__dragMoveConnection = self.__pathListing.dragMoveSignal().connect( Gaffer.WeakMethod( self.__dragMove ) )
+		self.__dragEndConnection = self.__pathListing.dragEndSignal().connect( Gaffer.WeakMethod( self.__dragEnd ) )
+		self.__selectionChangedConnection = self.__pathListing.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__selectionChanged ) )
 		self.__keyPressConnection = self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
 
-		self.__metadataPlugValueChangedConnection = Gaffer.Metadata.plugValueChangedSignal().connect( Gaffer.WeakMethod( self.__plugMetadataChanged ) )
+		self.__nodeMetadataChangedConnection = Gaffer.Metadata.nodeValueChangedSignal().connect( Gaffer.WeakMethod( self.__nodeMetadataChanged ) )
+		self.__plugMetadataChangedConnection = Gaffer.Metadata.plugValueChangedSignal().connect( Gaffer.WeakMethod( self.__plugMetadataChanged ) )
 
 	def setPlugParent( self, parent ) :
 
@@ -432,30 +505,148 @@ class _PlugListing( GafferUI.PathListingWidget ) :
 
 		return self.__parent
 
+	# Selection can be None, a Plug, or the name of a section.
+	def setSelection( self, selection ) :
+
+		self.__updatePathLazily.flush( self )
+
+		def findPlugPath( path, plug ) :
+
+			item = path.item()
+			if isinstance( item, _PlugLayoutItem ) and item.plug.isSame( plug ) :
+				return path
+			else :
+				for child in path.children() :
+					r = findPlugPath( child, plug )
+					if r is not None :
+						return r
+				return None
+
+		if isinstance( selection, Gaffer.Plug ) :
+			path = findPlugPath( self.__pathListing.getPath(), selection )
+			if path is None :
+				self.__pathListing.setSelectedPaths( [] )
+			else :
+				self.__pathListing.setSelectedPaths( [ path ] )
+		elif isinstance( selection, basestring ) :
+			path = self.__pathListing.getPath().copy()
+			path[:] = selection.split( "." )
+			self.__pathListing.setSelectedPaths( [ path ] )
+		else :
+			assert( selection is None )
+			self.__pathListing.setSelectedPaths( [] )
+
+	def getSelection( self ) :
+
+		paths = self.__pathListing.getSelectedPaths()
+		if not paths :
+			return None
+
+		if isinstance( paths[0].item(), _PlugLayoutItem ) :
+			return paths[0].item().plug
+		elif isinstance( paths[0].item(), _SectionLayoutItem ) :
+			return ".".join( paths[0][:] )
+		else :
+			return None
+
+	def selectionChangedSignal( self ) :
+
+		return self.__selectionChangedSignal
+
+	# Updates the path we show in the listing by building a layout based
+	# on the metadata.
 	def __updatePath( self ) :
 
 		if self.__parent is None :
 			# we have nothing to show - early out.
-			self.setPath( self.EntryPath( [], "/" ) )
+			self.__pathListing.setPath( self.__LayoutPath( _SectionLayoutItem( "" ), "/" ) )
 			return
 
-		# build an EntryPath to represent our child plugs.
+		def section( rootLayoutItem, sectionPath ) :
 
-		plugs = GafferUI.PlugLayout.layoutOrder( self.__parent )
+			sectionItem = rootLayoutItem
+			if sectionPath != "" :
+				for sectionName in sectionPath.split( "." ) :
+					childSectionItem = sectionItem.child( sectionName )
+					if childSectionItem is None :
+						childSectionItem = _SectionLayoutItem( sectionName )
+						sectionItem.append( childSectionItem )
+					sectionItem = childSectionItem
 
-		entries = [ self.Entry( plug, index ) for index, plug in enumerate( plugs ) ]
-		self.setPath( self.EntryPath( entries, "/" ) )
+			return sectionItem
+
+		layout = _SectionLayoutItem( "" )
+		for sectionPath in GafferUI.PlugLayout.layoutSections( self.__parent ) :
+			if sectionPath == "User" and isinstance( self.__parent, Gaffer.Node ) :
+				continue
+			sectionItem = section( layout, sectionPath )
+			for plug in GafferUI.PlugLayout.layoutOrder( self.__parent, section = sectionPath ) :
+				sectionItem.append( _PlugLayoutItem( plug ) )
+
+		emptySections = _metadata( self.getPlugParent(), "uiEditor:emptySections" )
+		emptySectionIndices = _metadata( self.getPlugParent(), "uiEditor:emptySectionIndices" )
+		if emptySections and emptySectionIndices :
+			for sectionPath, sectionIndex in zip( emptySections, emptySectionIndices ) :
+				parentPath, unused, sectionName = sectionPath.rpartition( "." )
+				parentSection = section( layout, parentPath )
+				parentSection.insert( sectionIndex, _SectionLayoutItem( sectionName ) )
+
+		expandedPaths = self.__pathListing.getExpandedPaths()
+		self.__pathListing.setPath( self.__LayoutPath( layout, "/" ) )
+		self.__pathListing.setExpandedPaths( expandedPaths )
+
+	@GafferUI.LazyMethod()
+	def __updatePathLazily( self ) :
+
+		self.__updatePath()
+
+	# Updates the metadata that controls the plug layout from the layout
+	# we show in the listing.
+	def __updateMetadata( self ) :
+
+		# Because sections only really exist by virtue of being requested
+		# by a plug, we must store empty sections separately for ourselves.
+
+		emptySections = IECore.StringVectorData()
+		emptySectionIndices = IECore.IntVectorData()
+		def walk( layoutItem, path = "", index = 0 ) :
+
+			for childItem in layoutItem :
+				if isinstance( childItem, _PlugLayoutItem ) :
+					Gaffer.Metadata.registerPlugValue( childItem.plug, "layout:section", path )
+					Gaffer.Metadata.registerPlugValue( childItem.plug, "layout:index", index )
+					index += 1
+				elif isinstance( childItem, _SectionLayoutItem ) :
+					childPath = path + "." + childItem.name() if path else childItem.name()
+					if len( childItem ) :
+						index = walk( childItem, childPath, index )
+					else :
+						emptySections.append( childPath )
+						emptySectionIndices.append( layoutItem.index( childItem ) )
+
+			return index
+
+		with Gaffer.BlockedConnection( self.__plugMetadataChangedConnection ) :
+			walk( self.__pathListing.getPath().copy().setFromString( "/" ).item() )
+			_registerMetadata( self.getPlugParent(), "uiEditor:emptySections", emptySections )
+			_registerMetadata( self.getPlugParent(), "uiEditor:emptySectionIndices", emptySectionIndices )
 
 	def __childAddedOrRemoved( self, parent, child ) :
 
 		assert( parent.isSame( self.__parent ) )
 
-		self.__updatePath()
 		self.__updateChildNameChangedConnection( child )
+		self.__updatePathLazily()
 
 	def __childNameChanged( self, child ) :
 
+		selection = self.getSelection()
 		self.__updatePath()
+		if isinstance( selection, Gaffer.Plug ) and child.isSame( selection ) :
+			# because the plug's name has changed. the path needed to
+			# keep it selected is different too, so we have to manually
+			# restore the selection.
+			self.setSelection( selection )
 
 	def __updateChildNameChangedConnection( self, child ) :
 
@@ -466,79 +657,117 @@ class _PlugListing( GafferUI.PathListingWidget ) :
 			if child in self.__childNameChangedConnections :
 				del self.__childNameChangedConnections[child]
 
-	def __dragValid( self, event ) :
-
-		if event.sourceWidget is not self :
-			return False
-		if not isinstance( event.data, IECore.StringVectorData ) :
-			return False
-
-		return True
-
 	def __dragEnter( self, listing, event ) :
 
 		# accept the drag if it originates with us,
 		# so __dragMove and __drop can implement
 		# drag and drop reordering of plugs.
-		if not self.__dragValid( event ) :
+		if event.sourceWidget is not self.__pathListing :
 			return False
+		if not isinstance( event.data, IECore.StringVectorData ) :
+			return False
+
+		dragPath = self.__pathListing.getPath().copy().setFromString( event.data[0] )
+		self.__dragItem = dragPath.item()
+
+		# dragging around entire open sections is a bit confusing, so don't
+		self.__pathListing.setPathExpanded( dragPath, False )
 
 		return True
 
 	def __dragMove( self, listing, event ) :
 
-		if not self.__dragValid( event ) :
+		if self.__dragItem is None :
 			return False
 
-		# figure out which index we're moving,
-		# and to where.
+		# update our layout structure to reflect the drag
+		#################################################
 
-		dragPath = self.getPath().copy().setFromString( event.data[0] )
-
-		oldIndex = dragPath.entry().index
-		targetPath = self.pathAt( event.line.p0 )
+		# find newParent and newIndex - variables specifying
+		# the new location for the dragged item.
+		targetPath = self.__pathListing.pathAt( event.line.p0 )
 		if targetPath is not None :
-			newIndex = targetPath.entry().index
-		else :
-			if event.line.p0.y < 1 :
-				newIndex = 0
+			targetItem = targetPath.item()
+			if targetItem is not None :
+				if isinstance( targetItem, _SectionLayoutItem ) and self.__pathListing.getPathExpanded( targetPath ) and targetItem.parent() is self.__dragItem.parent() :
+					newParent = targetItem
+					newIndex = 0
+				else :
+					newParent = targetItem.parent()
+					newIndex = newParent.index( targetItem )
 			else :
-				newIndex = len( self.getPath().entries() ) - 1
+				# target is a placeholder added into an empty
+				# section by __LayoutPath._children().
+				newParent = targetPath.copy().truncateUntilValid().item()
+				newIndex = 0
+		else :
+			# drag has gone above or below all listed items
+			newParent = self.__pathListing.getPath().rootItem()
+			newIndex = 0 if event.line.p0.y < 1 else len( newParent )
 
-		if newIndex == oldIndex :
-			return True
+		# disallow drags that would place a plug below a section
 
-		# edit our plug dictionary in place to apply the
-		# new ordering.
+		firstNonPlugIndex = next(
+			( x[0] for x in enumerate( newParent ) if not isinstance( x[1], _PlugLayoutItem ) ),
+			len( newParent )
+		)
+		if self.__dragItem.parent() is newParent and newParent.index( self.__dragItem ) < firstNonPlugIndex :
+			firstNonPlugIndex -= 1
 
-		for entry in self.getPath().entries() :
-			if entry.index > oldIndex and entry.index <= newIndex :
-				entry.index -= 1
-			elif entry.index == oldIndex :
-				entry.index = newIndex
-			elif entry.index >= newIndex and entry.index < oldIndex :
-				entry.index += 1
+		if isinstance( self.__dragItem, _PlugLayoutItem ) :
+			if newIndex > firstNonPlugIndex :
+				return True
+		else :
+			if newIndex < firstNonPlugIndex :
+				newIndex = max( newIndex, firstNonPlugIndex )
+
+		self.__dragItem.parent().remove( self.__dragItem )
+		newParent.insert( newIndex, self.__dragItem )
 
 		# let the listing know we've been monkeying behind the scenes.
+		# we need to update the selection, because when we reparented
+		# the drag item its path will have changed.
+		##############################################################
 
-		self.getPath().pathChangedSignal()( self.getPath() )
+		self.__pathListing.getPath().pathChangedSignal()( self.__pathListing.getPath() )
+
+		selection = self.__pathListing.getPath().copy()
+		selection[:] = self.__dragItem.fullName().split( "." )
+		self.__pathListing.setSelectedPaths( [ selection ], scrollToFirst = False, expandNonLeaf = False )
 
 		return True
 
 	def __dragEnd( self, listing, event ) :
 
-		if not self.__dragValid( event ) :
+		if self.__dragItem is None :
 			return False
 
-		# flush the changed indices into the metadata for the node,
-		# so that they actual PlugLayout will be updated to reflect
-		# the new ordering.
-
-		with Gaffer.UndoContext( self.getPlugParent().ancestor( Gaffer.ScriptNode ) ) :
-			for entry in self.getPath().entries() :
-				Gaffer.Metadata.registerPlugValue( entry.plug, "layout:index", entry.index )
+		with Gaffer.UndoContext( self.__parent.ancestor( Gaffer.ScriptNode ) ) :
+			self.__updateMetadata()
+		self.__dragItem = None
 
 		return True
+
+	def __selectionChanged( self, pathListing ) :
+
+		self.__deleteButton.setEnabled( bool( pathListing.getSelectedPaths() ) )
+		self.__selectionChangedSignal( self )
+
+	def __deleteButtonClicked( self, button ) :
+
+		self.__deleteSelected()
+
+	def __nodeMetadataChanged( self, nodeTypeId, key ) :
+
+		if self.__parent is None :
+			return
+
+		node = self.__parent.node() if isinstance( self.__parent, Gaffer.Plug ) else self.__parent
+		if not node.isInstanceOf( nodeTypeId ) :
+			return
+
+		if key in ( "uiEditor:emptySections", "uiEditor:emptySectionIndices" ) :
+			self.__updatePathLazily()
 
 	def __plugMetadataChanged( self, nodeTypeId, plugPath, key ) :
 
@@ -549,26 +778,234 @@ class _PlugListing( GafferUI.PathListingWidget ) :
 		if not node.isInstanceOf( nodeTypeId ) :
 			return
 
-		if key == "layout:index" :
-			self.__updatePath()
+		if key in ( "layout:index", "layout:section", "uiEditor:emptySections", "uiEditor:emptySectionIndices" ) :
+			self.__updatePathLazily()
 
 	def __keyPress( self, widget, event ) :
 
 		assert( widget is self )
 
 		if event.key == "Backspace" or event.key == "Delete" :
-
-			selectedPaths = self.getSelectedPaths()
-			if len( selectedPaths ) :
-				with Gaffer.UndoContext( self.__parent.ancestor( Gaffer.ScriptNode ) ) :
-					for path in selectedPaths :
-						plug = path.info()["dict:value"].plug
-						self.__parent.removeChild( plug )
+			self.__deleteSelected()
 
 			return True
 
 		return False
 
+	def __addMenuDefinition( self ) :
+
+		m = IECore.MenuDefinition()
+		m.append( "Add Section", { "command" : Gaffer.WeakMethod( self.__addSection ) } )
+
+		return m
+
+	def __addSection( self ) :
+
+		rootItem = self.__pathListing.getPath().rootItem()
+		existingSectionNames = set( c.name() for c in rootItem if isinstance( c, _SectionLayoutItem ) )
+
+		name = "New Section"
+		index = 1
+		while name in existingSectionNames :
+			name = "New Section %d" % index
+			index += 1
+
+		rootItem.append( _SectionLayoutItem( name ) )
+
+		self.__pathListing.getPath().pathChangedSignal()( self.__pathListing.getPath() )
+
+		with Gaffer.UndoContext( self.__parent.ancestor( Gaffer.ScriptNode ) ) :
+			self.__updateMetadata()
+
+		self.__pathListing.setSelectedPaths(
+			self.__pathListing.getPath().copy().setFromString( "/" + name )
+		)
+
+	def __deleteSelected( self ) :
+
+		selectedPaths = self.__pathListing.getSelectedPaths()
+		if not len( selectedPaths ) :
+			return
+
+		assert( len( selectedPaths ) == 1 )
+
+		selectedItem = selectedPaths[0].item()
+		selectedItem.parent().remove( selectedItem )
+
+		def deletePlugsWalk( item ) :
+
+			if isinstance( item, _PlugLayoutItem ) :
+				item.plug.parent().removeChild( item.plug )
+			else :
+				for childItem in item :
+					deletePlugsWalk( childItem )
+
+		with Gaffer.UndoContext( self.__parent.ancestor( Gaffer.ScriptNode ) ) :
+			deletePlugsWalk( selectedItem )
+			self.__updateMetadata()
+
+##########################################################################
+# _PlugEditor. This provides a panel for editing a specific plug's name,
+# description, etc.
+##########################################################################
+
+class _PlugEditor( GafferUI.Widget ) :
+
+	def __init__( self, **kw ) :
+
+		grid = GafferUI.GridContainer( spacing = 4, borderWidth = 8 )
+		GafferUI.Widget.__init__( self, grid, **kw )
+
+		self.__metadataWidgets = []
+
+		with grid :
+
+			GafferUI.Label(
+				"Name",
+				parenting = {
+					"index" : ( 0, 0 ),
+					"alignment" : ( GafferUI.HorizontalAlignment.Right, GafferUI.VerticalAlignment.Center )
+				}
+			)
+
+			self.__nameWidget = GafferUI.NameWidget( None, parenting = { "index" : ( 1, 0 ) } )
+
+			GafferUI.Label(
+				"Description",
+				parenting = {
+					"index" : ( 0, 1 ),
+					"alignment" : ( GafferUI.HorizontalAlignment.Right, GafferUI.VerticalAlignment.Top )
+				}
+			)
+
+			self.__metadataWidgets.append(
+				_MultiLineStringMetadataWidget(
+					key = "description",
+					parenting = { "index" : ( 1, 1 ) }
+				)
+			)
+
+			GafferUI.Label(
+				"Divider",
+				parenting = {
+					"index" : ( 0, 2 ),
+					"alignment" : ( GafferUI.HorizontalAlignment.Right, GafferUI.VerticalAlignment.Center )
+				}
+			)
+
+			self.__metadataWidgets.append(
+				_BoolMetadataWidget(
+					key = "divider",
+					parenting = {
+						"index" : ( 1, 2 ),
+						"alignment" : ( GafferUI.HorizontalAlignment.Left, GafferUI.VerticalAlignment.Center )
+					}
+				)
+			)
+
+		self.__plug = None
+
+	def setPlug( self, plug ) :
+
+		self.__plug = plug
+
+		self.__nameWidget.setGraphComponent( self.__plug )
+		for widget in self.__metadataWidgets :
+			widget.setTarget( self.__plug )
+
+		self.setEnabled( self.__plug is not None )
+
+	def getPlug( self ) :
+
+		return self.__plug
+
+##########################################################################
+# _SectionEditor. This provides a panel for editing the details of
+# a specific section.
+##########################################################################
+
+## \todo Add support for specifying section summaries.
+class _SectionEditor( GafferUI.Widget ) :
+
+	def __init__( self, **kw ) :
+
+		grid = GafferUI.GridContainer( spacing = 4, borderWidth = 8 )
+		GafferUI.Widget.__init__( self, grid, **kw )
+
+		with grid :
+
+			GafferUI.Label(
+				"Name",
+				parenting = {
+					"index" : ( 0, 0 ),
+					"alignment" : ( GafferUI.HorizontalAlignment.Right, GafferUI.VerticalAlignment.Center )
+				}
+			)
+
+			self.__nameWidget = GafferUI.TextWidget( None, parenting = { "index" : ( 1, 0 ) } )
+			self.__nameWidgetEditingFinishedConnection = self.__nameWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__nameWidgetEditingFinished ) )
+
+		self.__section = ""
+		self.__plugParent = None
+		self.__nameChangedSignal = Gaffer.Signal3()
+
+	def setPlugParent( self, plugParent ) :
+
+		self.__plugParent = plugParent
+
+	def getPlugParent( self ) :
+
+		return self.__plugParent
+
+	def setSection( self, section ) :
+
+		assert( isinstance( section, basestring ) )
+
+		self.__section = section
+		self.__nameWidget.setText( section.rpartition( "." )[-1] )
+
+	def getSection( self ) :
+
+		return self.__section
+
+	def nameChangedSignal( self ) :
+
+		return self.__nameChangedSignal
+
+	def __nameWidgetEditingFinished( self, nameWidget ) :
+
+		oldSectionPath = self.__section.split( "." )
+		newSectionPath = oldSectionPath[:]
+		newSectionPath[-1] = nameWidget.getText().replace( ".", "" )
+
+		if oldSectionPath == newSectionPath :
+			return
+
+		def newSection( oldSection ) :
+
+			s = oldSection.split( "." )
+			if s[:len(oldSectionPath)] == oldSectionPath :
+				s[:len(oldSectionPath)] = newSectionPath
+				return ".".join( s )
+			else :
+				return oldSection
+
+		with Gaffer.UndoContext( self.__plugParent.ancestor( Gaffer.ScriptNode ) ) :
+			for plug in self.__plugParent.children( Gaffer.Plug ) :
+				s = _metadata( plug, "layout:section" )
+				if s is not None :
+					_registerMetadata( plug, "layout:section", newSection( s ) )
+
+			emptySections = _metadata( self.getPlugParent(), "uiEditor:emptySections" )
+			if emptySections :
+				for i in range( 0, len( emptySections ) ) :
+					emptySections[i] = newSection( emptySections[i] )
+				_registerMetadata( self.getPlugParent(), "uiEditor:emptySections", emptySections )
+
+		self.setSection( ".".join( newSectionPath ) )
+		self.nameChangedSignal()( self, ".".join( oldSectionPath ), ".".join( newSectionPath ) )
+
+##########################################################################
 # MetadataValueWidgets. These display metadata values, allowing the user
 # to edit them.
 ##########################################################################
@@ -622,10 +1059,7 @@ class _MetadataWidget( GafferUI.Widget ) :
 			return
 
 		with Gaffer.UndoContext( self.__target.ancestor( Gaffer.ScriptNode ) ) :
-			if isinstance( self.__target, Gaffer.Plug ) :
-				Gaffer.Metadata.registerPlugValue( self.__target, self.__key, value )
-			else :
-				Gaffer.Metadata.registerNodeValue( self.__target, self.__key, value )
+			_registerMetadata( self.__target, self.__key, value )
 
 	def __update( self ) :
 
@@ -728,3 +1162,23 @@ class _ColorSwatchMetadataWidget( _MetadataWidget ) :
 
 		if color is not None :
 			self._updateFromWidget( color )
+
+# Metadata utility methods.
+# \todo We should change the Metadata API to provide overloads
+# rather than functions with distinct names, so we don't have to
+# do this hoop jumping ourselves.
+##########################################################################
+
+def _registerMetadata( target, name, value ) :
+
+	if isinstance( target, Gaffer.Node ) :
+		Gaffer.Metadata.registerNodeValue( target, name, value )
+	else :
+		Gaffer.Metadata.registerPlugValue( target, name, value )
+
+def _metadata( target, name ) :
+
+	if isinstance( target, Gaffer.Node ) :
+		return Gaffer.Metadata.nodeValue( target, name )
+	else :
+		return Gaffer.Metadata.plugValue( target, name )
