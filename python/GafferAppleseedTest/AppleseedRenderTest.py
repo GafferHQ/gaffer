@@ -103,6 +103,7 @@ class AppleseedRenderTest( GafferTest.TestCase ) :
 		s["render"]["fileName"].setValue( "/tmp/test.appleseed" )
 
 		s["fileName"].setValue( self.__scriptFileName )
+		s.save()
 
 		s["render"].execute()
 
@@ -211,8 +212,10 @@ class AppleseedRenderTest( GafferTest.TestCase ) :
 		self.assertFalse( os.path.exists( "/tmp/renderTests" ) )
 		self.assertFalse( os.path.exists( "/tmp/appleseedTests" ) )
 		self.assertFalse( os.path.exists( "/tmp/appleseedTests/test.0001.appleseed" ) )
+		self.assertFalse( os.path.exists( self.__scriptFileName ) )
 
-		s["fileName"].setValue( "/tmp/test.gfr" )
+		s["fileName"].setValue( self.__scriptFileName )
+		s.save()
 
 		with s.context() :
 			s["render"].execute()
@@ -220,6 +223,7 @@ class AppleseedRenderTest( GafferTest.TestCase ) :
 		self.assertTrue( os.path.exists( "/tmp/renderTests" ) )
 		self.assertTrue( os.path.exists( "/tmp/appleseedTests" ) )
 		self.assertTrue( os.path.exists( "/tmp/appleseedTests/test.0001.appleseed" ) )
+		self.assertTrue( os.path.exists( self.__scriptFileName ) )
 
 		# check it can cope with everything already existing
 
@@ -245,6 +249,7 @@ class AppleseedRenderTest( GafferTest.TestCase ) :
 			"/tmp/appleseedTests/test.0001.appleseed",
 			"/tmp/appleseedTests",
 			"/tmp/test.exr",
+			self.__scriptFileName
 		) :
 			if os.path.isfile( f ) :
 				os.remove( f )
