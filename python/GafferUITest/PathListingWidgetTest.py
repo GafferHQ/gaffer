@@ -252,6 +252,21 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 		w.setSortable( True )
 		self.assertTrue( w.getSortable() )
 
+	def testSetSelectedPathsAfterPathChange( self ) :
+
+		d = {}
+		p = Gaffer.DictPath( d, "/" )
+
+		w = GafferUI.PathListingWidget( p )
+
+		d["a"] = 10
+		p.pathChangedSignal()( p )
+		w.setSelectedPaths( [ p.copy().setFromString( "/a" ) ] )
+
+		s = w.getSelectedPaths()
+		self.assertEqual( len( s ), 1 )
+		self.assertEqual( str( s[0] ), "/a" )
+
 if __name__ == "__main__":
 	unittest.main()
 

@@ -301,6 +301,11 @@ class PathListingWidget( GafferUI.Widget ) :
 	# will be discarded, such that subsequent calls to getSelectedPaths will not include them.
 	def setSelectedPaths( self, pathOrPaths, scrollToFirst=True, expandNonLeaf=True ) :
 
+		# If there are pending changes to our path model, we must perform
+		# them now, so that the model is valid with respect to the paths
+		# we're trying to select.
+		self.__updateLazily.flush( self )
+
 		paths = pathOrPaths
 		if isinstance( pathOrPaths, Gaffer.Path ) :
 			paths = [ pathOrPaths ]
