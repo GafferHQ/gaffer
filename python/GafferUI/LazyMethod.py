@@ -111,6 +111,12 @@ class LazyMethod( object ) :
 
 				self.__doPendingCalls( widget, method )
 
+		def flush( widget ) :
+
+			self.__doPendingCalls( widget, method )
+
+		wrapper.flush = flush
+
 		return wrapper
 	
 	@classmethod
@@ -159,8 +165,10 @@ class LazyMethod( object ) :
 	@classmethod
 	def __doPendingCalls( cls, widget, method ) :
 
-		pendingCalls = getattr( widget, method.__name__ + "__PendingCalls" )
-		for pendingCall in pendingCalls :
-			method( widget, *pendingCall.args, **pendingCall.kw )
+		pendingCalls = getattr( widget, method.__name__ + "__PendingCalls", None )
+		if pendingCalls is None :
+			return
 
-		del pendingCalls[:]
+		while pendingCalls :
+			pendingCall = pendingCalls.pop( 0 )
+			method( widget, *pendingCall.args, **pendingCall.kw )
