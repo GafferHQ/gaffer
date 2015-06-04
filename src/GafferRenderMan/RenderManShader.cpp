@@ -349,7 +349,7 @@ IECore::CachedReader *RenderManShader::shaderLoader()
 }
 
 template <typename PlugType>
-static void loadParameter( Gaffer::CompoundPlug *parametersPlug, const std::string &name, const typename PlugType::ValueType &defaultValue )
+static void loadParameter( Gaffer::Plug *parametersPlug, const std::string &name, const typename PlugType::ValueType &defaultValue )
 {
 	PlugType *existingPlug = parametersPlug->getChild<PlugType>( name );
 	if( existingPlug && existingPlug->defaultValue() == defaultValue )
@@ -373,7 +373,7 @@ static void loadParameter( Gaffer::CompoundPlug *parametersPlug, const std::stri
 	parametersPlug->setChild( name, plug );
 }
 
-static void loadCoshaderParameter( Gaffer::CompoundPlug *parametersPlug, const std::string &name )
+static void loadCoshaderParameter( Gaffer::Plug *parametersPlug, const std::string &name )
 {
 	Plug *existingPlug = parametersPlug->getChild<Plug>( name );
 	if( existingPlug && existingPlug->typeId() == Plug::staticTypeId() )
@@ -390,7 +390,7 @@ static void loadCoshaderParameter( Gaffer::CompoundPlug *parametersPlug, const s
 	parametersPlug->setChild( name, plug );
 }
 
-static void loadCoshaderArrayParameter( Gaffer::CompoundPlug *parametersPlug, const std::string &name, const StringVectorData *defaultValue )
+static void loadCoshaderArrayParameter( Gaffer::Plug *parametersPlug, const std::string &name, const StringVectorData *defaultValue )
 {
 	const size_t minSize = std::max( defaultValue->readable().size(), (size_t)1 );
 	const size_t maxSize = defaultValue->readable().size() ? defaultValue->readable().size() : Imath::limits<size_t>::max();
@@ -432,7 +432,7 @@ static void loadCoshaderArrayParameter( Gaffer::CompoundPlug *parametersPlug, co
 }
 
 template <typename PlugType>
-static void loadNumericParameter( Gaffer::CompoundPlug *parametersPlug, const std::string &name, typename PlugType::ValueType defaultValue, const CompoundData *annotations )
+static void loadNumericParameter( Gaffer::Plug *parametersPlug, const std::string &name, typename PlugType::ValueType defaultValue, const CompoundData *annotations )
 {
 	typename PlugType::ValueType minValue( Imath::limits<typename PlugType::ValueType>::min() );
 	typename PlugType::ValueType maxValue( Imath::limits<typename PlugType::ValueType>::max() );
@@ -477,7 +477,7 @@ static void loadNumericParameter( Gaffer::CompoundPlug *parametersPlug, const st
 	parametersPlug->setChild( name, plug );
 }
 
-static void loadNumericParameter( Gaffer::CompoundPlug *parametersPlug, const std::string &name, float defaultValue, const CompoundData *annotations )
+static void loadNumericParameter( Gaffer::Plug *parametersPlug, const std::string &name, float defaultValue, const CompoundData *annotations )
 {
 	const StringData *typeData = annotations->member<StringData>( name + ".type" );
 	if( typeData && typeData->readable() == "float" )
@@ -506,7 +506,7 @@ static void loadNumericParameter( Gaffer::CompoundPlug *parametersPlug, const st
 }
 
 template <typename PlugType>
-static void loadCompoundNumericParameter( Gaffer::CompoundPlug *parametersPlug, const std::string &name, const typename PlugType::ValueType &defaultValue, const CompoundData *annotations )
+static void loadCompoundNumericParameter( Gaffer::Plug *parametersPlug, const std::string &name, const typename PlugType::ValueType &defaultValue, const CompoundData *annotations )
 {
 	typename PlugType::ValueType minValue( Imath::limits<float>::min() );
 	typename PlugType::ValueType maxValue( Imath::limits<float>::max() );
@@ -557,7 +557,7 @@ static void loadCompoundNumericParameter( Gaffer::CompoundPlug *parametersPlug, 
 }
 
 template<typename PlugType>
-static void loadArrayParameter( Gaffer::CompoundPlug *parametersPlug, const std::string &name, const Data *defaultValue, const CompoundData *annotations )
+static void loadArrayParameter( Gaffer::Plug *parametersPlug, const std::string &name, const Data *defaultValue, const CompoundData *annotations )
 {
 	const typename PlugType::ValueType *typedDefaultValue = static_cast<const typename PlugType::ValueType *>( defaultValue );
 
@@ -585,7 +585,7 @@ static void loadArrayParameter( Gaffer::CompoundPlug *parametersPlug, const std:
 }
 
 template<typename PlugType>
-static void loadSplineParameter( Gaffer::CompoundPlug *parametersPlug, const std::string &name, const FloatVectorData *defaultPositions, const Data *defaultValues )
+static void loadSplineParameter( Gaffer::Plug *parametersPlug, const std::string &name, const FloatVectorData *defaultPositions, const Data *defaultValues )
 {
 	PlugType *existingPlug = parametersPlug->getChild<PlugType>( name );
 	if( existingPlug )
@@ -728,7 +728,7 @@ static IECore::Color3fVectorDataPtr parseColors( const std::string &value )
 	return result;
 }
 
-void RenderManShader::loadShaderParameters( const IECore::Shader *shader, Gaffer::CompoundPlug *parametersPlug, bool keepExistingValues )
+void RenderManShader::loadShaderParameters( const IECore::Shader *shader, Gaffer::Plug *parametersPlug, bool keepExistingValues )
 {
 	const CompoundData *typeHints = shader->blindData()->member<CompoundData>( "ri:parameterTypeHints", true );
 

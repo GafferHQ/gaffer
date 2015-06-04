@@ -86,7 +86,7 @@ class RenderManShader : public GafferScene::Shader
 		/// \todo Perhaps some other code sharing mechanism makes more sense?
 		friend class RenderManLight;
 
-		static void loadShaderParameters( const IECore::Shader *shader, Gaffer::CompoundPlug *parametersPlug, bool keepExistingValues=false );
+		static void loadShaderParameters( const IECore::Shader *shader, Gaffer::Plug *parametersPlug, bool keepExistingValues=false );
 
 };
 

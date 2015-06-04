@@ -97,14 +97,14 @@ const Gaffer::StringPlug *Shader::typePlug() const
 	return getChild<StringPlug>( g_firstPlugIndex + 1 );
 }
 
-Gaffer::CompoundPlug *Shader::parametersPlug()
+Gaffer::Plug *Shader::parametersPlug()
 {
-	return getChild<CompoundPlug>( g_firstPlugIndex + 2 );
+	return getChild<Plug>( g_firstPlugIndex + 2 );
 }
 
-const Gaffer::CompoundPlug *Shader::parametersPlug() const
+const Gaffer::Plug *Shader::parametersPlug() const
 {
-	return getChild<CompoundPlug>( g_firstPlugIndex + 2 );
+	return getChild<Plug>( g_firstPlugIndex + 2 );
 }
 
 Gaffer::Plug *Shader::outPlug()
