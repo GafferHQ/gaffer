@@ -288,7 +288,7 @@ Dispatcher::PostDispatchSignal &Dispatcher::postDispatchSignal()
 	return g_postDispatchSignal;
 }
 
-void Dispatcher::setupPlugs( CompoundPlug *parentPlug )
+void Dispatcher::setupPlugs( Plug *parentPlug )
 {
 	if ( const ExecutableNode *node = parentPlug->ancestor<const ExecutableNode>() )
 	{
@@ -370,7 +370,7 @@ Dispatcher::TaskBatchPtr Dispatcher::acquireBatch( const ExecutableNode::Task &t
 		TaskBatchPtr batch = bIt->second;
 
 		std::vector<float> &frames = batch->frames();
-		const CompoundPlug *dispatcherPlug = task.node()->dispatcherPlug();
+		const Plug *dispatcherPlug = task.node()->dispatcherPlug();
 		const IntPlug *batchSizePlug = dispatcherPlug->getChild<const IntPlug>( g_batchSize );
 		size_t batchSize = ( batchSizePlug ) ? batchSizePlug->getValue() : 1;
 

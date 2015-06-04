@@ -97,7 +97,7 @@ ExecutableNode::ExecutableNode( const std::string &name )
 	addChild( new ArrayPlug( "requirements", Plug::In, new Plug( "requirement0" ) ) );
 	addChild( new Plug( "requirement", Plug::Out ) );
 
-	CompoundPlugPtr dispatcherPlug = new CompoundPlug( "dispatcher", Plug::In );
+	PlugPtr dispatcherPlug = new Plug( "dispatcher", Plug::In );
 	addChild( dispatcherPlug );
 
 	Dispatcher::setupPlugs( dispatcherPlug.get() );
@@ -127,14 +127,14 @@ const Plug *ExecutableNode::requirementPlug() const
 	return getChild<Plug>( g_firstPlugIndex + 1 );
 }
 
-CompoundPlug *ExecutableNode::dispatcherPlug()
+Plug *ExecutableNode::dispatcherPlug()
 {
-	return getChild<CompoundPlug>( g_firstPlugIndex + 2 );
+	return getChild<Plug>( g_firstPlugIndex + 2 );
 }
 
-const CompoundPlug *ExecutableNode::dispatcherPlug() const
+const Plug *ExecutableNode::dispatcherPlug() const
 {
-	return getChild<CompoundPlug>( g_firstPlugIndex + 2 );
+	return getChild<Plug>( g_firstPlugIndex + 2 );
 }
 
 void ExecutableNode::requirements( const Context *context, Tasks &requirements ) const

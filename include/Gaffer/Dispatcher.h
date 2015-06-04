@@ -57,7 +57,6 @@ namespace Gaffer
 {
 
 IE_CORE_FORWARDDECLARE( Dispatcher )
-IE_CORE_FORWARDDECLARE( CompoundPlug )
 IE_CORE_FORWARDDECLARE( StringPlug )
 
 namespace Detail
@@ -163,14 +162,14 @@ class Dispatcher : public Node
 		typedef boost::function<DispatcherPtr ()> Creator;
 		/// SetupPlugsFn may be registered along with a Dispatcher Creator. It will be called by setupPlugs,
 		/// along with all other registered SetupPlugsFns. It is recommended that each registered dispatcher
-		/// store its plugs contained within a dedicated CompoundPlug, named according to the registration
+		/// store its plugs contained within a dedicated parent Plug, named according to the registration
 		/// type. The SetupPlugsFn must be implemented in a way that gracefully accepts situations where the
 		/// plugs already exist (i.e. nodes loaded from a script may already have the necessary dispatcher plugs).
 		/// One way to avoid this issue is to always create non-dynamic plugs. Since setupPlugs is called from
 		/// the ExecutableNode constructor, the non-dynamic plugs will always be created according to the current
 		/// definition, and will not be serialized into scripts. The downside of using non-dynamic plugs is that
 		/// loading a script before all Dispatchers have been registered could result in lost settings.
-		typedef boost::function<void ( CompoundPlug *parentPlug )> SetupPlugsFn;
+		typedef boost::function<void ( Plug *parentPlug )> SetupPlugsFn;
 		
 		//! @name Registration
 		/// Utility functions for registering and retrieving Dispatchers.
@@ -241,8 +240,8 @@ class Dispatcher : public Node
 		/// Dispatchers are able to create custom plugs on ExecutableNodes when they are constructed.
 		/////////////////////////////////////////////////////////////////////////////////////////////
 		//@{
-		/// Adds the custom plugs from all registered Dispatchers to the given CompoundPlug.
-		static void setupPlugs( CompoundPlug *parentPlug );
+		/// Adds the custom plugs from all registered Dispatchers to the given parent Plug.
+		static void setupPlugs( Plug *parentPlug );
 		//@}
 
 	private :
