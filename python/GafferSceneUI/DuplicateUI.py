@@ -127,5 +127,3 @@ GafferUI.PlugValueWidget.registerCreator(
 	"target",
 	GafferSceneUI.ScenePathPlugValueWidget
 )
-
-GafferUI.PlugValueWidget.registerCreator( GafferScene.Duplicate, "transform", GafferUI.TransformPlugValueWidget, collapsed=None )

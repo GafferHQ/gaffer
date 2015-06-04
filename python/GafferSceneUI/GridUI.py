@@ -160,5 +160,3 @@ Gaffer.Metadata.registerNode(
 	}
 
 )
-
-GafferUI.PlugValueWidget.registerCreator( GafferScene.Grid, "transform", GafferUI.TransformPlugValueWidget, collapsed=None )

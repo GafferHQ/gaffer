@@ -69,10 +69,3 @@ Gaffer.Metadata.registerNode(
 	}
 
 )
-
-##########################################################################
-# Widgets and nodules
-##########################################################################
-
-GafferUI.PlugValueWidget.registerCreator( GafferScene.ParentConstraint, "relativeTransform", GafferUI.TransformPlugValueWidget, collapsed=None )
-

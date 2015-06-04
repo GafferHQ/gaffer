@@ -82,5 +82,3 @@ Gaffer.Metadata.registerNode(
 	}
 
 )
-
-GafferUI.PlugValueWidget.registerCreator( GafferScene.ObjectSource, "transform", GafferUI.TransformPlugValueWidget, collapsed=None )

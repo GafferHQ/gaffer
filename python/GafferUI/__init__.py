@@ -253,7 +253,6 @@ import DispatcherUI
 from DispatcherUI import DispatcherWindow
 import LocalDispatcherUI
 import ExecutableNodeUI
-from TransformPlugValueWidget import TransformPlugValueWidget
 from IncrementingPlugValueWidget import IncrementingPlugValueWidget
 from SectionedCompoundPlugValueWidget import SectionedCompoundPlugValueWidget
 from UserPlugValueWidget import UserPlugValueWidget
