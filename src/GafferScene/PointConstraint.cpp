@@ -117,7 +117,7 @@ void PointConstraint::hashConstraint( const Gaffer::Context *context, IECore::Mu
 	zEnabledPlug()->hash( h );
 }
 
-Imath::M44f PointConstraint::computeConstraint( const Imath::M44f &fullTargetTransform, const Imath::M44f &fullInputTransform ) const
+Imath::M44f PointConstraint::computeConstraint( const Imath::M44f &fullTargetTransform, const Imath::M44f &fullInputTransform, const Imath::M44f &inputTransform ) const
 {
 	const V3f worldPosition = fullTargetTransform.translation() + offsetPlug()->getValue();
 	M44f result = fullInputTransform;

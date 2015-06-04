@@ -91,7 +91,7 @@ class Constraint : public SceneElementProcessor
 		virtual void hashConstraint( const Gaffer::Context *context, IECore::MurmurHash &h ) const = 0;
 		/// Must be implemented to return a new full (absolute in world space) transform constraining fullInputTransform to
 		/// fullTargetTransform in some way.
-		virtual Imath::M44f computeConstraint( const Imath::M44f &fullTargetTransform, const Imath::M44f &fullInputTransform ) const = 0;
+		virtual Imath::M44f computeConstraint( const Imath::M44f &fullTargetTransform, const Imath::M44f &fullInputTransform, const Imath::M44f &inputTransform ) const = 0;
 
 	private :
 

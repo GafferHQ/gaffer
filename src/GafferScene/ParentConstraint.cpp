@@ -74,7 +74,7 @@ void ParentConstraint::hashConstraint( const Gaffer::Context *context, IECore::M
 	relativeTransformPlug()->hash( h );
 }
 
-Imath::M44f ParentConstraint::computeConstraint( const Imath::M44f &fullTargetTransform, const Imath::M44f &fullInputTransform ) const
+Imath::M44f ParentConstraint::computeConstraint( const Imath::M44f &fullTargetTransform, const Imath::M44f &fullInputTransform, const Imath::M44f &inputTransform ) const
 {
-	return relativeTransformPlug()->matrix() * fullTargetTransform;
+	return inputTransform * relativeTransformPlug()->matrix() * fullTargetTransform;
 }

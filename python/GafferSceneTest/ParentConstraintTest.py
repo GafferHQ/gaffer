@@ -131,5 +131,35 @@ class ParentConstraintTest( GafferSceneTest.SceneTestCase ) :
 			set( plugs )
 		)
 
+	def testParentNodeEquivalence( self ) :
+
+		plane1 = GafferScene.Plane()
+		plane1["name"].setValue( "target" )
+
+		plane2 = GafferScene.Plane()
+		plane2["name"].setValue( "constrained" )
+
+		plane1["transform"]["rotate"]["y"].setValue( 45 )
+		plane2["transform"]["translate"]["x"].setValue( 1 )
+
+		parent = GafferScene.Parent()
+		parent["in"].setInput( plane1["out"] )
+		parent["parent"].setValue( "/target" )
+		parent["child"].setInput( plane2["out"] )
+
+		group = GafferScene.Group()
+		group["in"].setInput( plane1["out"] )
+		group["in1"].setInput( plane2["out"] )
+
+		constraint = GafferScene.ParentConstraint()
+		constraint["in"].setInput( group["out"] )
+		constraint["target"].setValue( "/group/target" )
+
+		filter = GafferScene.PathFilter()
+		filter["paths"].setValue( IECore.StringVectorData( [ "/group/constrained" ] ) )
+		constraint["filter"].setInput( filter["out"] )
+
+		self.assertEqual( parent["out"].fullTransform( "/target/constrained" ), constraint["out"].fullTransform( "/group/constrained" ) )
+
 if __name__ == "__main__":
 	unittest.main()
