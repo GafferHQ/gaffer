@@ -147,7 +147,6 @@ class PathListingWidget( GafferUI.Widget ) :
 
 		self.__path = path
 		self.__pathChangedConnection = self.__path.pathChangedSignal().connect( Gaffer.WeakMethod( self.__pathChanged ) )
-		self.__pathChangedUpdatePending = False
 		self.__currentDir = None
 		self.__currentPath = ""
 		self.__update()
@@ -391,6 +390,11 @@ class PathListingWidget( GafferUI.Widget ) :
 
 		self.__currentPath = str( self.__path )
 
+	@GafferUI.LazyMethod()
+	def __updateLazily( self ) :
+
+		self.__update()
+
 	def __dirPath( self ) :
 
 		p = self.__path.copy()
@@ -435,16 +439,9 @@ class PathListingWidget( GafferUI.Widget ) :
 
 	def __pathChanged( self, path ) :
 
-		if not self.__pathChangedUpdatePending :
-			self.__pathChangedUpdatePending = True
-			GafferUI.EventLoop.addIdleCallback( Gaffer.WeakMethod( self.__pathChangedUpdate, fallbackResult = False ) )
-
-	def __pathChangedUpdate( self ) :
-
-		self.__pathChangedUpdatePending = False
-		self.__update()
-
-		return False # cause this idle callback to run once only
+		# Updates can be expensive, so we coalesce and
+		# defer them until the last minute.
+		self.__updateLazily()
 
 	def __indexForPath( self, path ) :
 
