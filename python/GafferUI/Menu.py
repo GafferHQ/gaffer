@@ -135,7 +135,7 @@ class Menu( GafferUI.Widget ) :
 		if isinstance( function, types.FunctionType ) :
 			return inspect.getargspec( function )[0]
 		elif isinstance( function, types.MethodType ) :
-			return inspect.getargspec( function )[0][1:]
+			return self.__argNames( function.im_func )[1:]
 		elif isinstance( function, Gaffer.WeakMethod ) :
 			return inspect.getargspec( function.method() )[0][1:]
 		elif isinstance( function, functools.partial ) :
