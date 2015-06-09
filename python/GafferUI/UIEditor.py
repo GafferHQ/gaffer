@@ -275,6 +275,10 @@ __plugPopupMenuConnection = GafferUI.PlugValueWidget.popupMenuSignal().connect( 
 ##########################################################################
 # Hierarchical representation of a plug layout, suitable for manipulating
 # by the _PlugListing.
+# \todo Consider sharing this data structure with the PlugLayout itself,
+# rather than each using a different internal representation. If we did
+# this then the data structure itself should take care of the mapping
+# to/from metadata.
 ##########################################################################
 
 class _LayoutItem( object ) :
