@@ -100,86 +100,19 @@ bool GafferScene::visible( const ScenePlug *scene, const ScenePlug::ScenePath &p
 namespace
 {
 
-/// \todo If we find similar usage patterns, we could make a parallelTraverse()
-/// method in SceneAlgo.h. This would hide the details of traversing using tasks,
-/// simply calling a functor in the right context for each location in the scene.
-class MatchingPathsTask : public tbb::task
+struct ThreadablePathAccumulator
 {
+	ThreadablePathAccumulator( GafferScene::PathMatcher &result): m_result( result ){}
 
-	public :
+	bool operator()( const GafferScene::ScenePlug *scene, const GafferScene::ScenePlug::ScenePath &path )
+	{
+		tbb::spin_mutex::scoped_lock lock( m_mutex );
+		m_result.addPath( path );
+		return true;
+	}
 
-		typedef tbb::spin_mutex PathMatcherMutex;
-
-		MatchingPathsTask(
-			const Gaffer::IntPlug *filter,
-			const ScenePlug *scene,
-			const Gaffer::Context *context,
-			PathMatcherMutex &pathMatcherMutex,
-			PathMatcher &pathMatcher
-		)
-			:	m_filter( filter ), m_scene( scene ), m_context( context ), m_pathMatcherMutex( pathMatcherMutex ), m_pathMatcher( pathMatcher )
-		{
-		}
-
-		virtual ~MatchingPathsTask()
-		{
-		}
-
-		virtual task *execute()
-		{
-
-			ContextPtr context = new Context( *m_context, Context::Borrowed );
-			context->set( ScenePlug::scenePathContextName, m_path );
-			Context::Scope scopedContext( context.get() );
-
-			const Filter::Result match = (Filter::Result)m_filter->getValue();
-			if( match & Filter::ExactMatch )
-			{
-				PathMatcherMutex::scoped_lock lock( m_pathMatcherMutex );
-				m_pathMatcher.addPath( m_path );
-			}
-
-			if( match & Filter::DescendantMatch )
-			{
-				ConstInternedStringVectorDataPtr childNamesData = m_scene->childNamesPlug()->getValue();
-				const vector<InternedString> &childNames = childNamesData->readable();
-
-				set_ref_count( 1 + childNames.size() );
-
-				ScenePlug::ScenePath childPath = m_path;
-				childPath.push_back( InternedString() ); // space for the child name
-				for( vector<InternedString>::const_iterator it = childNames.begin(), eIt = childNames.end(); it != eIt; it++ )
-				{
-					childPath[m_path.size()] = *it;
-					MatchingPathsTask *t = new( allocate_child() ) MatchingPathsTask( *this, childPath );
-					spawn( *t );
-				}
-				wait_for_all();
-			}
-
-			return NULL;
-		}
-
-	protected :
-
-		MatchingPathsTask( const MatchingPathsTask &other, const ScenePlug::ScenePath &path )
-			:	m_filter( other.m_filter ),
-				m_scene( other.m_scene ),
-				m_context( other.m_context ),
-				m_pathMatcherMutex( other.m_pathMatcherMutex ),
-				m_pathMatcher( other.m_pathMatcher ),
-				m_path( path )
-		{
-		}
-
-	private :
-
-		const IntPlug *m_filter;
-		const ScenePlug *m_scene;
-		const Context *m_context;
-		PathMatcherMutex &m_pathMatcherMutex;
-		PathMatcher &m_pathMatcher;
-		ScenePlug::ScenePath m_path;
+	tbb::spin_mutex m_mutex;
+	GafferScene::PathMatcher &m_result;
 
 };
 
@@ -192,11 +125,8 @@ void GafferScene::matchingPaths( const Filter *filter, const ScenePlug *scene, P
 
 void GafferScene::matchingPaths( const Gaffer::IntPlug *filterPlug, const ScenePlug *scene, PathMatcher &paths )
 {
-	ContextPtr context = new Context( *Context::current(), Context::Borrowed );
-	Filter::setInputScene( context.get(), scene );
-	MatchingPathsTask::PathMatcherMutex mutex;
-	MatchingPathsTask *task = new( tbb::task::allocate_root() ) MatchingPathsTask( filterPlug, scene, context.get(), mutex, paths );
-	tbb::task::spawn_root_and_wait( *task );
+	ThreadablePathAccumulator f( paths );
+	GafferScene::filteredParallelTraverse( scene, filterPlug, f );
 }
 
 Imath::V2f GafferScene::shutter( const IECore::CompoundObject *globals )

@@ -40,7 +40,6 @@
 #include "OpenEXR/ImathVec.h"
 
 #include "Gaffer/NumericPlug.h"
-
 #include "GafferScene/ScenePlug.h"
 
 namespace IECore
@@ -73,6 +72,20 @@ void matchingPaths( const Filter *filter, const ScenePlug *scene, PathMatcher &p
 /// FilteredSceneProcessor::filterPlug() would be passed.
 void matchingPaths( const Gaffer::IntPlug *filterPlug, const ScenePlug *scene, PathMatcher &paths );
 
+/// Calls a functor on all paths in the scene
+/// The functor must take ( const ScenePlug*, const ScenePlug::ScenePath& ), and can return false to prune traversal
+template <class ThreadableFunctor>
+void parallelTraverse( const ScenePlug *scene, ThreadableFunctor &f );
+
+/// Calls a functor on all paths in the scene that are matched by the filter.
+/// The functor must take ( const ScenePlug*, const ScenePlug::ScenePath& ), and can return false to prune traversal
+template <class ThreadableFunctor>
+void filteredParallelTraverse( const ScenePlug *scene, const Gaffer::IntPlug *filterPlug, ThreadableFunctor &f );
+/// As above, but specifying the filter as a plug - typically Filter::outPlug() or
+/// FilteredSceneProcessor::filterPlug() would be passed.
+template <class ThreadableFunctor>
+void filteredParallelTraverse( const ScenePlug *scene, const Gaffer::IntPlug *filterPlug, ThreadableFunctor &f );
+
 /// Calculates the shutter specified by the globals.
 Imath::V2f shutter( const IECore::CompoundObject *globals );
 
@@ -96,5 +109,7 @@ bool setExists( const ScenePlug *scene, const IECore::InternedString &setName );
 IECore::ConstCompoundDataPtr sets( const ScenePlug *scene );
 
 } // namespace GafferScene
+
+#include "GafferScene/SceneAlgo.inl"
 
 #endif // GAFFERSCENE_SCENEALGO_H

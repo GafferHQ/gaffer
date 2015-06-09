@@ -34,9 +34,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "tbb/task.h"
-
 #include "GafferSceneTest/TraverseScene.h"
+#include "GafferScene/SceneAlgo.h"
 
 using namespace std;
 using namespace IECore;
@@ -48,65 +47,24 @@ namespace GafferSceneTest
 namespace Detail
 {
 
-class SceneTraversalTask : public tbb::task
+struct SceneEvaluateFunctor
 {
-
-	public :
-
-		SceneTraversalTask( ScenePlug *scenePlug, Gaffer::Context *context, const ScenePlug::ScenePath &scenePath )
-			:	m_scenePlug( scenePlug ), m_context( context ), m_scenePath( scenePath )
-		{
-		}
-
-		virtual ~SceneTraversalTask()
-		{
-		}
-
-		virtual task *execute()
-		{
-
-			ContextPtr context = new Context( *m_context, Context::Borrowed );
-			context->set( ScenePlug::scenePathContextName, m_scenePath );
-			Context::Scope scopedContext( context.get() );
-
-			m_scenePlug->transformPlug()->getValue();
-			m_scenePlug->boundPlug()->getValue();
-			m_scenePlug->attributesPlug()->getValue();
-			m_scenePlug->objectPlug()->getValue();
-
-			ConstInternedStringVectorDataPtr childNamesData = m_scenePlug->childNamesPlug()->getValue();
-			const vector<InternedString> &childNames = childNamesData->readable();
-
-			set_ref_count( 1 + childNames.size() );
-
-			ScenePlug::ScenePath childPath = m_scenePath;
-			childPath.push_back( InternedString() ); // space for the child name
-			for( vector<InternedString>::const_iterator it = childNames.begin(), eIt = childNames.end(); it != eIt; it++ )
-			{
-				childPath[m_scenePath.size()] = *it;
-				SceneTraversalTask *t = new( allocate_child() ) SceneTraversalTask( m_scenePlug, m_context, childPath );
-				spawn( *t );
-			}
-
-			wait_for_all();
-
-			return 0;
-		}
-
-	private :
-
-		ScenePlug *m_scenePlug;
-		Context *m_context;
-		ScenePlug::ScenePath m_scenePath;
-
+    bool operator()( const GafferScene::ScenePlug *scene, const GafferScene::ScenePlug::ScenePath &path )
+    {
+		scene->transformPlug()->getValue();
+		scene->boundPlug()->getValue();
+		scene->attributesPlug()->getValue();
+		scene->objectPlug()->getValue();
+        return true;
+    }
 };
 
 } // namespace Detail
 
-void traverseScene( GafferScene::ScenePlug *scenePlug, Gaffer::Context *context )
+void traverseScene( GafferScene::ScenePlug *scenePlug )
 {
-	Detail::SceneTraversalTask *task = new( tbb::task::allocate_root() ) Detail::SceneTraversalTask( scenePlug, context, ScenePlug::ScenePath() );
-	tbb::task::spawn_root_and_wait( *task );
+	Detail::SceneEvaluateFunctor f;
+	parallelTraverse( scenePlug, f );
 }
 
 } // namespace GafferSceneTest

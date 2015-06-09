@@ -46,7 +46,7 @@ namespace GafferSceneTest
 /// Traverses the entire scene once, evaluating every aspect of the scene, using parallel
 /// threads to process different children. It's useful to use this in test cases to exercise
 /// any thread related crashes, and also in profiling for performance improvement.
-void traverseScene( GafferScene::ScenePlug *scenePlug, Gaffer::Context *context );
+void traverseScene( GafferScene::ScenePlug *scenePlug );
 
 } // namespace GafferSceneTest
 
