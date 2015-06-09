@@ -47,6 +47,7 @@
 #include "GafferSceneTest/TestLight.h"
 #include "GafferSceneTest/ScenePlugTest.h"
 #include "GafferSceneTest/PathMatcherTest.h"
+#include "GafferSceneTest/SceneAlgoTest.h"
 
 using namespace boost::python;
 using namespace GafferSceneTest;
@@ -56,6 +57,22 @@ static void traverseSceneWrapper( GafferScene::ScenePlug *scenePlug, Gaffer::Con
 	IECorePython::ScopedGILRelease gilRelease;
 	traverseScene( scenePlug, context );
 }
+
+void matchingPathsUsingTraverseWrapper1( const Gaffer::IntPlug *filterPlug, const GafferScene::ScenePlug *scene, GafferScene::PathMatcher &paths )
+{
+    // gil release in case the scene traversal dips back into python:
+    IECorePython::ScopedGILRelease r;
+    matchingPathsUsingTraverse( filterPlug, scene, paths );
+}
+
+void matchingPathsUsingTraverseWrapper2( const GafferScene::Filter *filter, const GafferScene::ScenePlug *scene, GafferScene::PathMatcher &paths )
+{
+    // gil release in case the scene traversal dips back into python:
+    IECorePython::ScopedGILRelease r;
+    matchingPathsUsingTraverse( filter, scene, paths );
+}
+
+
 
 BOOST_PYTHON_MODULE( _GafferSceneTest )
 {
@@ -69,5 +86,8 @@ BOOST_PYTHON_MODULE( _GafferSceneTest )
 
 	def( "testPathMatcherRawIterator", &testPathMatcherRawIterator );
 	def( "testPathMatcherIteratorPrune", &testPathMatcherIteratorPrune );
+
+	def( "matchingPathsUsingTraverse", &matchingPathsUsingTraverseWrapper1 );
+	def( "matchingPathsUsingTraverse", &matchingPathsUsingTraverseWrapper2 );
 
 }

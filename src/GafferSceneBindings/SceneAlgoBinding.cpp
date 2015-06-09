@@ -88,18 +88,18 @@ void bindSceneAlgo()
 	def(
 		"camera",
 		(IECore::CameraPtr (*)( const ScenePlug *, const IECore::CompoundObject * ) )&camera,
-		( arg( "scene" ), arg( "globals" ) = object() )
+		( boost::python::arg( "scene" ), boost::python::arg( "globals" ) = object() )
 	);
 	def(
 		"camera",
 		(IECore::CameraPtr (*)( const ScenePlug *, const ScenePlug::ScenePath &, const IECore::CompoundObject * ) )&camera,
-		( arg( "scene" ), args( "cameraPath" ), arg( "globals" ) = object() )
+		( boost::python::arg( "scene" ), boost::python::args( "cameraPath" ), boost::python::arg( "globals" ) = object() )
 	);
 	def( "setExists", &setExists );
 	def(
 		"sets",
 		&setsHelper,
-		( arg( "scene" ), arg( "_copy" ) = true )
+		( boost::python::arg( "scene" ), boost::python::arg( "_copy" ) = true )
 	);
 }
 

@@ -73,6 +73,15 @@ void matchingPaths( const Filter *filter, const ScenePlug *scene, PathMatcher &p
 /// FilteredSceneProcessor::filterPlug() would be passed.
 void matchingPaths( const Gaffer::IntPlug *filterPlug, const ScenePlug *scene, PathMatcher &paths );
 
+/// Finds all the paths in the scene that are matched by the filter, and adds them into the PathMatcher.
+template <class ThreadableFunctor>
+void filteredParallelTraverse( const Filter *filter, const ScenePlug *scene, ThreadableFunctor &f );
+
+/// As above, but specifying the filter as a plug - typically Filter::outPlug() or
+/// FilteredSceneProcessor::filterPlug() would be passed.
+template <class ThreadableFunctor>
+void filteredParallelTraverse( const Gaffer::IntPlug *filterPlug, const ScenePlug *scene, ThreadableFunctor &f );
+
 /// Calculates the shutter specified by the globals.
 Imath::V2f shutter( const IECore::CompoundObject *globals );
 
@@ -96,5 +105,7 @@ bool setExists( const ScenePlug *scene, const IECore::InternedString &setName );
 IECore::ConstCompoundDataPtr sets( const ScenePlug *scene );
 
 } // namespace GafferScene
+
+#include "GafferScene/SceneAlgo.inl"
 
 #endif // GAFFERSCENE_SCENEALGO_H

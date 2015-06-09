@@ -70,6 +70,15 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( matchingPaths.match( "/plane/instances/1121/group/plane" ), GafferScene.Filter.Result.ExactMatch )
 		self.assertEqual( matchingPaths.match( "/plane/instances/1121/group/sphere" ), GafferScene.Filter.Result.NoMatch )
 
+		# Test that we can also find matching paths using the parallel traversal code, and get the same result, in order to test parallel traversal
+		matchingPaths2 = GafferScene.PathMatcher()
+		GafferSceneTest.matchingPathsUsingTraverse( filter, instancer["out"], matchingPaths2 )
+
+		self.assertEqual( len( matchingPaths2.paths() ), 1000 )
+		self.assertEqual( matchingPaths2.match( "/plane/instances/1/group/plane" ), GafferScene.Filter.Result.ExactMatch )
+		self.assertEqual( matchingPaths2.match( "/plane/instances/1121/group/plane" ), GafferScene.Filter.Result.ExactMatch )
+		self.assertEqual( matchingPaths2.match( "/plane/instances/1121/group/sphere" ), GafferScene.Filter.Result.NoMatch )
+
 	def testExists( self ) :
 
 		sphere = GafferScene.Sphere()
