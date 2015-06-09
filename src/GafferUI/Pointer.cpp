@@ -142,7 +142,7 @@ const Pointer *Pointer::getCurrent()
 
 void Pointer::registerPointer( const std::string &name, ConstPointerPtr pointer )
 {
-	registry()["contextMenu"] = new Pointer( "pointerContextMenu.png", Imath::V2i( 1 ) );
+	registry()[name] = pointer;
 }
 
 Pointer::ChangedSignal &Pointer::changedSignal()
