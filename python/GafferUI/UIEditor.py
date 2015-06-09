@@ -538,14 +538,13 @@ class _PlugListing( GafferUI.Widget ) :
 
 	def getSelection( self ) :
 
-		paths = self.__pathListing.getSelectedPaths()
-		if not paths :
+		item = self.__selectedItem()
+		if item is None :
 			return None
-
-		if isinstance( paths[0].item(), _PlugLayoutItem ) :
-			return paths[0].item().plug
-		elif isinstance( paths[0].item(), _SectionLayoutItem ) :
-			return ".".join( paths[0][:] )
+		elif isinstance( item, _PlugLayoutItem ) :
+			return item.plug
+		elif isinstance( item, _SectionLayoutItem ) :
+			return item.fullName()
 		else :
 			return None
 
@@ -589,7 +588,8 @@ class _PlugListing( GafferUI.Widget ) :
 			for sectionPath, sectionIndex in zip( emptySections, emptySectionIndices ) :
 				parentPath, unused, sectionName = sectionPath.rpartition( "." )
 				parentSection = section( layout, parentPath )
-				parentSection.insert( sectionIndex, _SectionLayoutItem( sectionName ) )
+				if parentSection.child( sectionName ) is None :
+					parentSection.insert( sectionIndex, _SectionLayoutItem( sectionName ) )
 
 		expandedPaths = self.__pathListing.getExpandedPaths()
 		self.__pathListing.setPath( self.__LayoutPath( layout, "/" ) )
@@ -795,9 +795,53 @@ class _PlugListing( GafferUI.Widget ) :
 	def __addMenuDefinition( self ) :
 
 		m = IECore.MenuDefinition()
-		m.append( "Add Section", { "command" : Gaffer.WeakMethod( self.__addSection ) } )
+
+		m.append( "/Add Plug/Bool", { "command" : functools.partial( Gaffer.WeakMethod( self.__addPlug ), Gaffer.BoolPlug ) } )
+		m.append( "/Add Plug/Float", { "command" : functools.partial( Gaffer.WeakMethod( self.__addPlug ), Gaffer.FloatPlug ) } )
+		m.append( "/Add Plug/Int", { "command" : functools.partial( Gaffer.WeakMethod( self.__addPlug ), Gaffer.IntPlug ) } )
+		m.append( "/Add Plug/NumericDivider", { "divider" : True } )
+
+		m.append( "/Add Plug/String", { "command" : functools.partial( Gaffer.WeakMethod( self.__addPlug ), Gaffer.StringPlug ) } )
+		m.append( "/Add Plug/StringDivider", { "divider" : True } )
+
+		m.append( "/Add Plug/V2i", { "command" : functools.partial( Gaffer.WeakMethod( self.__addPlug ), Gaffer.V2iPlug ) } )
+		m.append( "/Add Plug/V3i", { "command" : functools.partial( Gaffer.WeakMethod( self.__addPlug ), Gaffer.V3iPlug ) } )
+		m.append( "/Add Plug/V2f", { "command" : functools.partial( Gaffer.WeakMethod( self.__addPlug ), Gaffer.V2fPlug ) } )
+		m.append( "/Add Plug/V3f", { "command" : functools.partial( Gaffer.WeakMethod( self.__addPlug ), Gaffer.V3fPlug  ) } )
+		m.append( "/Add Plug/VectorDivider", { "divider" : True } )
+
+		m.append( "/Add Plug/Color3f", { "command" : functools.partial( Gaffer.WeakMethod( self.__addPlug ), Gaffer.Color3fPlug ) } )
+		m.append( "/Add Plug/Color4f", { "command" : functools.partial( Gaffer.WeakMethod( self.__addPlug ), Gaffer.Color4fPlug ) } )
+
+		m.append( "/Add Plug Divider", { "divider" : True } )
+
+		m.append( "/Add Section", { "command" : Gaffer.WeakMethod( self.__addSection ) } )
 
 		return m
+
+	def __addPlug( self, plugType ) :
+
+		plug = plugType( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		_registerMetadata( plug, "nodule:type", "" )
+
+		parentItem = self.__selectedItem()
+		if parentItem is not None :
+			while not isinstance( parentItem, _SectionLayoutItem ) :
+				parentItem = parentItem.parent()
+		else :
+			parentItem = self.__pathListing.getPath().rootItem()
+			parentItem = next(
+				( c for c in parentItem if isinstance( c, _SectionLayoutItem ) ),
+				parentItem
+			)
+
+		_registerMetadata( plug, "layout:section", parentItem.fullName() )
+
+		with Gaffer.UndoContext( self.__parent.ancestor( Gaffer.ScriptNode ) ) :
+			self.getPlugParent().addChild( plug )
+
+		self.__updatePathLazily.flush( self )
+		self.setSelection( plug )
 
 	def __addSection( self ) :
 
@@ -821,15 +865,22 @@ class _PlugListing( GafferUI.Widget ) :
 			self.__pathListing.getPath().copy().setFromString( "/" + name )
 		)
 
-	def __deleteSelected( self ) :
+	def __selectedItem( self ) :
 
 		selectedPaths = self.__pathListing.getSelectedPaths()
 		if not len( selectedPaths ) :
-			return
+			return None
 
 		assert( len( selectedPaths ) == 1 )
 
-		selectedItem = selectedPaths[0].item()
+		return selectedPaths[0].item()
+
+	def __deleteSelected( self ) :
+
+		selectedItem = self.__selectedItem()
+		if selectedItem is None :
+			return
+
 		selectedItem.parent().remove( selectedItem )
 
 		def deletePlugsWalk( item ) :
