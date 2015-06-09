@@ -905,6 +905,9 @@ class _EventFilter( QtCore.QObject ) :
 
 	def __keyPress( self, qObject, qEvent ) :
 
+		if self.__updateDragModifiers( qObject, qEvent ) :
+			return True
+
 		widget = Widget._owner( qObject )
 		if widget._keyPressSignal is not None :
 
@@ -918,6 +921,9 @@ class _EventFilter( QtCore.QObject ) :
 		return False
 
 	def __keyRelease( self, qObject, qEvent ) :
+
+		if self.__updateDragModifiers( qObject, qEvent ) :
+			return True
 
 		widget = Widget._owner( qObject )
 		if widget._keyReleaseSignal is not None :
@@ -1189,6 +1195,25 @@ class _EventFilter( QtCore.QObject ) :
 			cursorPos = IECore.V2i( qEvent.globalPos().x(), qEvent.globalPos().y() )
 			self.__dragDropEvent.line = self.__positionToLine( cursorPos - dst.bound().min )
 
+			dst._dragMoveSignal( dst, self.__dragDropEvent )
+
+		return True
+
+	def __updateDragModifiers( self, qObject, qEvent ) :
+
+		if self.__dragDropEvent is None :
+			return False
+
+		modifiers = Widget._modifiers( qEvent.modifiers() )
+		if modifiers == self.__dragDropEvent.modifiers :
+			return False
+
+		dst = self.__dragDropEvent.destinationWidget
+		if dst is None :
+			return False
+
+		self.__dragDropEvent.modifiers = modifiers
+		if dst._dragMoveSignal :
 			dst._dragMoveSignal( dst, self.__dragDropEvent )
 
 		return True
