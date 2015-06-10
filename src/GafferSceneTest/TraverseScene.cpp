@@ -61,10 +61,9 @@ struct SceneEvaluateFunctor
 
 } // namespace Detail
 
-void traverseScene( GafferScene::ScenePlug *scenePlug, Gaffer::Context *context )
+void traverseScene( GafferScene::ScenePlug *scenePlug )
 {
 	Detail::SceneEvaluateFunctor f;
-	Context::Scope scopedContext( context );
 	parallelTraverse( scenePlug, f );
 }
 
