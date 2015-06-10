@@ -997,7 +997,7 @@ class _SectionEditor( GafferUI.Widget ) :
 				}
 			)
 
-			self.__nameWidget = GafferUI.TextWidget( None, parenting = { "index" : ( 1, 0 ) } )
+			self.__nameWidget = GafferUI.TextWidget( parenting = { "index" : ( 1, 0 ) } )
 			self.__nameWidgetEditingFinishedConnection = self.__nameWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__nameWidgetEditingFinished ) )
 
 		self.__section = ""
