@@ -123,3 +123,15 @@ def appendNodeContextMenuDefinitions( nodeGraph, node, menuDefinition ) :
 
 	menuDefinition.append( "/FilteredSceneProcessorDivider", { "divider" : True } )
 	menuDefinition.append( "/Select Affected Objects", { "command" : IECore.curry( __selectAffected, node, nodeGraph.getContext() ) } )
+
+##########################################################################
+# NodeEditor tool menu
+##########################################################################
+
+def appendNodeEditorToolMenuDefinitions( nodeEditor, node, menuDefinition ) :
+
+	if not isinstance( node, ( GafferScene.FilteredSceneProcessor, GafferScene.Filter ) ) :
+		return
+
+	menuDefinition.append( "/FilteredSceneProcessorDivider", { "divider" : True } )
+	menuDefinition.append( "/Select Affected Objects", { "command" : IECore.curry( __selectAffected, node, nodeEditor.getContext() ) } )
