@@ -94,15 +94,44 @@ GafferUI.Nodule.registerNodule( GafferScene.FilteredSceneProcessor, "filter", Ga
 
 def __selectAffected( node, context ) :
 
+	if isinstance( node, GafferScene.FilteredSceneProcessor ) :
+		filter = node["filter"]
+		scenes = [ node["in"] ]
+	else :
+		filter = node
+		scenes = []
+		def walkOutputs( plug ) :
+			for output in plug.outputs() :
+				node = output.node()
+				if isinstance( node, GafferScene.FilteredSceneProcessor ) and output.isSame( node["filter"] ) :
+					scenes.append( node["in"] )
+				walkOutputs( output )
+
+		walkOutputs( filter["out"] )
+
+	pathMatcher = GafferScene.PathMatcher()
 	with context :
-		pathMatcher = GafferScene.PathMatcher()
-		GafferScene.matchingPaths( node["filter"], node["in"], pathMatcher )
-		context["ui:scene:selectedPaths"] = IECore.StringVectorData( pathMatcher.paths() )
+		for scene in scenes :
+			GafferScene.matchingPaths( filter, scene, pathMatcher )
+
+	context["ui:scene:selectedPaths"] = IECore.StringVectorData( pathMatcher.paths() )
 
 def appendNodeContextMenuDefinitions( nodeGraph, node, menuDefinition ) :
 
-	if not isinstance( node, GafferScene.FilteredSceneProcessor ) :
+	if not isinstance( node, ( GafferScene.FilteredSceneProcessor, GafferScene.Filter ) ) :
 		return
 
 	menuDefinition.append( "/FilteredSceneProcessorDivider", { "divider" : True } )
 	menuDefinition.append( "/Select Affected Objects", { "command" : IECore.curry( __selectAffected, node, nodeGraph.getContext() ) } )
+
+##########################################################################
+# NodeEditor tool menu
+##########################################################################
+
+def appendNodeEditorToolMenuDefinitions( nodeEditor, node, menuDefinition ) :
+
+	if not isinstance( node, ( GafferScene.FilteredSceneProcessor, GafferScene.Filter ) ) :
+		return
+
+	menuDefinition.append( "/FilteredSceneProcessorDivider", { "divider" : True } )
+	menuDefinition.append( "/Select Affected Objects", { "command" : IECore.curry( __selectAffected, node, nodeEditor.getContext() ) } )
