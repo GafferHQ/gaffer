@@ -287,10 +287,31 @@ def __renamePlug( nodeGraph, plug ) :
 	with Gaffer.UndoContext( plug.ancestor( Gaffer.ScriptNode ) ) :
 		plug.setName( name )
 
+def __setPlugMetadata( plug, key, value ) :
+
+	with Gaffer.UndoContext( plug.ancestor( Gaffer.ScriptNode ) ) :
+		Gaffer.Metadata.registerPlugValue( plug, key, value )
+
 def __nodeGraphPlugContextMenu( nodeGraph, plug, menuDefinition ) :
 
 	if isinstance( plug.node(), Gaffer.Box ) :
+
 		menuDefinition.append( "/Rename...", { "command" : IECore.curry( __renamePlug, nodeGraph, plug ) } )
+
+		menuDefinition.append( "/MoveDivider", { "divider" : True } )
+
+		currentEdge = Gaffer.Metadata.plugValue( plug, "nodeGadget:nodulePosition" )
+		if not currentEdge :
+			currentEdge = "top" if plug.direction() == plug.Direction.In else "bottom"
+
+		for edge in ( "top", "bottom", "left", "right" ) :
+			menuDefinition.append(
+				"/Move To/" + edge.capitalize(),
+				{
+					"command" : functools.partial( __setPlugMetadata, plug, "nodeGadget:nodulePosition", edge ),
+					"active" : edge != currentEdge,
+				}
+			)
 
 	__appendPlugDeletionMenuItems( menuDefinition, plug )
 	__appendPlugPromotionMenuItems( menuDefinition, plug )
