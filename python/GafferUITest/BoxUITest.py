@@ -160,5 +160,24 @@ class BoxUITest( GafferUITest.TestCase ) :
 
 		self.assertTrue( type( boxWidget ) is type( nodeWidget ) )
 
+	def testDisabledNodulesAfterCutAndPaste( self ) :
+
+		s = Gaffer.ScriptNode()
+		g = GafferUI.GraphGadget( s )
+
+		s["b"] = Gaffer.Box()
+		s["b"]["n"] = self.NodulePositionNode()
+
+		g = GafferUI.GraphGadget( s )
+
+		p = s["b"].promotePlug( s["b"]["n"]["op2"] )
+		p.setName( "p" )
+
+		self.assertEqual( g.nodeGadget( s["b"] ).nodule( s["b"]["p"] ), None )
+
+		s.execute( s.serialise( filter = Gaffer.StandardSet( [ s["b"] ] ) ) )
+
+		self.assertEqual( g.nodeGadget( s["b1"] ).nodule( s["b1"]["p"] ), None )
+
 if __name__ == "__main__":
 	unittest.main()

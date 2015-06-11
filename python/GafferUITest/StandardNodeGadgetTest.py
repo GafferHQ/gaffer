@@ -175,6 +175,17 @@ class StandardNodeGadgetTest( GafferUITest.TestCase ) :
 		Gaffer.Metadata.registerPlugValue( n["op2"], "nodeGadget:nodulePosition", "left" )
 		self.assertEqual( g.noduleTangent( g.nodule( n["op2"] ) ), IECore.V3f( -1, 0, 0 ) )
 
+	def testRemoveNoduleAfterCreation( self ) :
+
+		n = Gaffer.Node()
+		n["p"] = Gaffer.IntPlug()
+
+		g = GafferUI.StandardNodeGadget( n )
+		self.assertEqual( g.noduleTangent( g.nodule( n["p"] ) ), IECore.V3f( 0, 1, 0 ) )
+
+		Gaffer.Metadata.registerPlugValue( n["p"], "nodule:type", "" )
+		self.assertEqual( g.nodule( n["p"] ), None )
+
 if __name__ == "__main__":
 	unittest.main()
 

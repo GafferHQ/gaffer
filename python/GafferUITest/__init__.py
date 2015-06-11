@@ -103,6 +103,7 @@ from VectorDataWidgetTest import VectorDataWidgetTest
 from DotNodeGadgetTest import DotNodeGadgetTest
 from DocumentationTest import DocumentationTest
 from LazyMethodTest import LazyMethodTest
+from ReferenceUITest import ReferenceUITest
 
 if __name__ == "__main__":
 	unittest.main()
