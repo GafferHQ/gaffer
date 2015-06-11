@@ -56,9 +56,8 @@ class SignalsTest( GafferTest.TestCase ) :
 
 		s = Gaffer.Signal1()
 		c = s.connect( f )
-		self.assertEqual( c.blocked(), False )
 		self.assertEqual( c.connected(), True )
-		self.assert_( c.slot() is f )
+		self.assertEqual( c.blocked(), False )
 
 		self.assertEqual( s( 5.5 ), 5 )
 
@@ -358,6 +357,44 @@ class SignalsTest( GafferTest.TestCase ) :
 		del c
 		self.assertTrue( s.empty() )
 		self.assertEqual( s.num_slots(), 0 )
+
+	def testNonScopedConnection( self ) :
+
+		self.numCalls = 0
+		def f() :
+			self.numCalls += 1
+
+		s = Gaffer.Signal0()
+		c = s.connect( f, scoped = False )
+
+		self.assertEqual( self.numCalls, 0 )
+		s()
+		self.assertEqual( self.numCalls, 1 )
+
+		c.block( True )
+		s()
+		self.assertEqual( self.numCalls, 1 )
+		c.block( False )
+		s()
+		self.assertEqual( self.numCalls, 2 )
+
+		# If we drop our reference to the slot,
+		# it should still be alive because the
+		# signal is referencing it (because it
+		# is connected).
+		w = weakref.ref( f )
+		del f
+		self.assertTrue( w() is not None )
+
+		# And it should still be triggered when
+		# we call the signal.
+		s()
+		self.assertEqual( self.numCalls, 3 )
+
+		# And it should finally die when the
+		# signal dies.
+		del s
+		self.assertTrue( w() is None )
 
 if __name__ == "__main__":
 	unittest.main()

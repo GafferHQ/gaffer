@@ -36,6 +36,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/python.hpp"
+#include "boost/signals.hpp"
 
 #include "IECorePython/ScopedGILLock.h"
 
@@ -190,7 +191,37 @@ struct UnusableFromNone
 
 } // namespace
 
-void GafferBindings::bindSignal()
+namespace GafferBindings
+{
+
+namespace Detail
+{
+
+boost::python::object pythonConnection( const boost::signals::connection &connection, bool scoped )
+{
+	if( scoped )
+	{
+		// Simply returning `object( scoped_connection( connection ) )`
+		// doesn't work - somehow the scoped_connection dies and the
+		// connection is disconnected before we get into python. So
+		// we construct via the python-bound copy constructor which
+		// avoids the problem.
+		PyTypeObject *type = boost::python::converter::registry::query(
+			boost::python::type_info( typeid( boost::signals::scoped_connection ) )
+		)->get_class_object();
+
+		boost::python::object oType( boost::python::handle<>( boost::python::borrowed( type ) ) );
+		return oType( boost::python::object( connection ) );
+	}
+	else
+	{
+		return boost::python::object( connection );
+	}
+}
+
+} // namespace Detail
+
+void bindSignal()
 {
 
 	typedef boost::signal<object (), PythonResultCombiner > Signal0;
@@ -206,3 +237,5 @@ void GafferBindings::bindSignal()
 	UnusableFromNone();
 
 }
+
+} // namespace GafferBindings

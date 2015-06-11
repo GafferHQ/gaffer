@@ -35,58 +35,28 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include "boost/python.hpp"
+#include "boost/signals.hpp"
+
 #include "GafferBindings/ConnectionBinding.h"
 
+using namespace boost::signals;
 using namespace boost::python;
 using namespace GafferBindings;
 
-Connection::Connection()
-{
-}
-
-Connection::~Connection()
-{
-	disconnect();
-}
-
-void Connection::disconnect() const
-{
-	m_connection.disconnect();
-}
-
-bool Connection::connected() const
-{
-	return m_connection.connected();
-}
-
-void Connection::block()
-{
-	m_connection.block();
-}
-
-void Connection::unblock()
-{
-	m_connection.unblock();
-}
-
-bool Connection::blocked() const
-{
-	return m_connection.blocked();
-}
-
-boost::python::object Connection::slot()
-{
-	return m_slot;
-}
-
 void GafferBindings::bindConnection()
 {
-	class_<Connection, boost::noncopyable>( "Connection", no_init )
-		.def( "disconnect", &Connection::disconnect )
-		.def( "connected", &Connection::connected )
-		.def( "block", &Connection::block )
-		.def( "unblock", &Connection::unblock )
-		.def( "blocked", &Connection::blocked )
-		.def( "slot", &Connection::slot )
+
+	class_<connection>( "Connection", no_init )
+		.def( "disconnect", &connection::disconnect )
+		.def( "connected", &connection::connected )
+		.def( "block", &connection::block, ( arg( "should_block" ) = true ) )
+		.def( "unblock", &connection::unblock )
+		.def( "blocked", &connection::blocked )
 	;
+
+	class_<scoped_connection, bases<connection> >( "ScopedConnection", no_init )
+		.def( init<const connection &>() )
+	;
+
 }

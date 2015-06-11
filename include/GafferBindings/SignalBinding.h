@@ -38,6 +38,8 @@
 #ifndef GAFFERBINDINGS_SIGNALBINDING_H
 #define GAFFERBINDINGS_SIGNALBINDING_H
 
+#include "boost/python.hpp"
+
 #include "GafferBindings/ConnectionBinding.h"
 
 namespace GafferBindings
@@ -45,6 +47,9 @@ namespace GafferBindings
 
 template<typename Signal>
 struct DefaultSignalCaller;
+
+template<typename Signal>
+struct DefaultSlotCaller;
 
 /// This template structure is used to bind boost::signal types specified
 /// by the Signal template parameter. The SignalCaller template parameter is

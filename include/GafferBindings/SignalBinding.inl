@@ -39,12 +39,18 @@
 #define GAFFERBINDINGS_SIGNALBINDING_INL
 
 #include "boost/version.hpp"
+#include "boost/signals.hpp"
 
 #include "IECorePython/ScopedGILRelease.h"
+#include "IECorePython/ScopedGILLock.h"
 
 #include "GafferBindings/ConnectionBinding.h"
+#include "GafferBindings/ExceptionAlgo.h"
 
 namespace GafferBindings
+{
+
+namespace Detail
 {
 
 template<int Arity, typename Signal>
@@ -102,10 +108,218 @@ struct DefaultSignalCallerBase<3, Signal>
 	}
 };
 
+template<int Arity, typename Signal>
+struct DefaultSlotCallerBase;
+
 template<typename Signal>
-struct DefaultSignalCaller : public DefaultSignalCallerBase<Signal::slot_function_type::arity, Signal>
+struct DefaultSlotCallerBase<0, Signal>
+{
+	typename Signal::slot_result_type operator()( boost::python::object slot )
+	{
+		return boost::python::extract<typename Signal::slot_result_type>( slot() )();
+	}
+};
+
+template<typename Signal>
+struct DefaultSlotCallerBase<1, Signal>
+{
+#if BOOST_VERSION < 103900
+	typename Signal::slot_result_type operator()( boost::python::object slot, typename Signal::arg2_type a1 )
+#else
+	typename Signal::slot_result_type operator()( boost::python::object slot, typename Signal::arg1_type a1 )
+#endif
+	{
+		return boost::python::extract<typename Signal::slot_result_type>( slot( a1 ) )();
+	}
+};
+
+template<typename Signal>
+struct DefaultSlotCallerBase<2, Signal>
+{
+#if BOOST_VERSION < 103900
+	typename Signal::slot_result_type operator()( boost::python::object slot, typename Signal::arg2_type a1, typename Signal::arg3_type a2 )
+#else
+	typename Signal::slot_result_type operator()( boost::python::object slot, typename Signal::arg1_type a1, typename Signal::arg2_type a2 )
+#endif
+	{
+		return boost::python::extract<typename Signal::slot_result_type>( slot( a1, a2 ) )();
+	}
+};
+
+template<typename Signal>
+struct DefaultSlotCallerBase<3, Signal>
+{
+#if BOOST_VERSION < 103900
+	typename Signal::slot_result_type operator()( boost::python::object slot, typename Signal::arg2_type a1, typename Signal::arg3_type a2, typename Signal::arg4_type a3 )
+#else
+	typename Signal::slot_result_type operator()( boost::python::object slot, typename Signal::arg1_type a1, typename Signal::arg2_type a2, typename Signal::arg3_type a3 )
+#endif
+	{
+		return boost::python::extract<typename Signal::slot_result_type>( slot( a1, a2, a3 ) )();
+	}
+};
+
+template<int Arity, typename Signal, typename Caller>
+struct SlotBase;
+
+template<typename Signal, typename Caller>
+struct SlotBase<0, Signal, Caller>
+{
+	SlotBase( boost::python::object slot )
+		:	m_slot( boost::python::borrowed( slot.ptr() ) )
+	{
+	}
+	~SlotBase()
+	{
+		IECorePython::ScopedGILLock gilLock;
+		m_slot.reset();
+	}
+	typename Signal::slot_result_type operator()()
+	{
+		IECorePython::ScopedGILLock gilLock;
+		try
+		{
+			return Caller()( boost::python::object( m_slot ) );
+		}
+		catch( const boost::python::error_already_set& e )
+		{
+			translatePythonException();
+		}
+		return typename Signal::slot_result_type();
+	}
+	boost::python::handle<PyObject> m_slot;
+};
+
+template<typename Signal, typename Caller>
+struct SlotBase<1, Signal, Caller>
+{
+	SlotBase( boost::python::object slot )
+		:	m_slot( boost::python::borrowed( slot.ptr() ) )
+	{
+	}
+	~SlotBase()
+	{
+		IECorePython::ScopedGILLock gilLock;
+		m_slot.reset();
+	}
+#if BOOST_VERSION < 103900
+	typename Signal::slot_result_type operator()( typename Signal::arg2_type a1 )
+#else
+	typename Signal::slot_result_type operator()( typename Signal::arg1_type a1 )
+#endif
+	{
+		IECorePython::ScopedGILLock gilLock;
+		try
+		{
+			return Caller()( boost::python::object( m_slot ), a1 );
+		}
+		catch( const boost::python::error_already_set& e )
+		{
+			translatePythonException();
+		}
+		return typename Signal::slot_result_type();
+	}
+	boost::python::handle<PyObject> m_slot;
+};
+
+template<typename Signal, typename Caller>
+struct SlotBase<2, Signal, Caller>
+{
+	SlotBase( boost::python::object slot )
+		:	m_slot( boost::python::borrowed( slot.ptr() ) )
+	{
+	}
+	~SlotBase()
+	{
+		IECorePython::ScopedGILLock gilLock;
+		m_slot.reset();
+	}
+#if BOOST_VERSION < 103900
+	typename Signal::slot_result_type operator()( typename Signal::arg2_type a1, typename Signal::arg3_type a2 )
+#else
+	typename Signal::slot_result_type operator()( typename Signal::arg1_type a1, typename Signal::arg2_type a2 )
+#endif
+	{
+		IECorePython::ScopedGILLock gilLock;
+		try
+		{
+			return Caller()( boost::python::object( m_slot ), a1, a2 );
+		}
+		catch( const boost::python::error_already_set& e )
+		{
+			translatePythonException();
+		}
+		return typename Signal::slot_result_type();
+	}
+	boost::python::handle<PyObject> m_slot;
+};
+
+template<typename Signal, typename Caller>
+struct SlotBase<3, Signal, Caller>
+{
+	SlotBase( boost::python::object slot )
+		:	m_slot( boost::python::borrowed( slot.ptr() ) )
+	{
+	}
+	~SlotBase()
+	{
+		IECorePython::ScopedGILLock gilLock;
+		m_slot.reset();
+	}
+#if BOOST_VERSION < 103900
+	typename Signal::slot_result_type operator()( typename Signal::arg2_type a1, typename Signal::arg3_type a2, typename Signal::arg4_type a3 )
+#else
+	typename Signal::slot_result_type operator()( typename Signal::arg1_type a1, typename Signal::arg2_type a2, typename Signal::arg3_type a3 )
+#endif
+	{
+		IECorePython::ScopedGILLock gilLock;
+		try
+		{
+			return Caller()( boost::python::object( m_slot ), a1, a2, a3 );
+		}
+		catch( const boost::python::error_already_set& e )
+		{
+			translatePythonException();
+		}
+		return typename Signal::slot_result_type();
+	}
+	boost::python::handle<PyObject> m_slot;
+};
+
+template<typename Signal, typename Caller>
+struct Slot : public SlotBase<Signal::slot_function_type::arity, Signal, Caller>
+{
+	Slot( boost::python::object slot )
+		:	SlotBase<Signal::slot_function_type::arity, Signal, Caller>( slot )
+	{
+	}
+};
+
+boost::python::object pythonConnection( const boost::signals::connection &connection, bool scoped );
+
+template<typename Signal, typename SlotCaller>
+boost::python::object connect( Signal &s, boost::python::object &slot, bool scoped )
+{
+	return pythonConnection( s.connect( Slot<Signal, SlotCaller>( slot ) ), scoped );
+}
+
+template<typename Signal, typename SlotCaller>
+boost::python::object connectInGroup( Signal &s, int group, boost::python::object &slot, bool scoped )
+{
+	return pythonConnection( s.connect( group, Slot<Signal, SlotCaller>( slot ) ), scoped );
+}
+
+} // namespace Detail
+
+template<typename Signal>
+struct DefaultSignalCaller : public Detail::DefaultSignalCallerBase<Signal::slot_function_type::arity, Signal>
 {
 
+};
+
+template<typename Signal>
+struct DefaultSlotCaller : public Detail::DefaultSlotCallerBase<Signal::slot_function_type::arity, Signal>
+{
 };
 
 template<typename Signal, typename SignalCaller, typename SlotCaller>
@@ -113,8 +327,8 @@ boost::python::class_<Signal, boost::noncopyable> SignalBinder<Signal, SignalCal
 {
 
 	boost::python::class_<Signal, boost::noncopyable> c( className );
-		c.def( "connect", &Connection::create<Signal, SlotCaller>, boost::python::return_value_policy<boost::python::manage_new_object>() )
-		.def( "connect", &Connection::createInGroup<Signal, SlotCaller>, boost::python::return_value_policy<boost::python::manage_new_object>() )
+		c.def( "connect", &Detail::connect<Signal, SlotCaller>, ( boost::python::arg( "slot" ), boost::python::arg( "scoped" ) = true ) )
+		.def( "connect", &Detail::connectInGroup<Signal, SlotCaller>, ( boost::python::arg( "group" ), boost::python::arg( "slot" ), boost::python::arg( "scoped" ) = true ) )
 		.def( "num_slots", &Signal::num_slots )
 		.def( "empty", &Signal::empty )
 		.def( "__call__", &SignalCaller::call )
