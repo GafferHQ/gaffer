@@ -121,7 +121,7 @@ void bindSet()
 		.def( "memberRemovedSignal", &Set::memberRemovedSignal, boost::python::return_internal_reference<1>() )
 	;
 
-	SignalBinder<Set::MemberSignal, DefaultSignalCaller<Set::MemberSignal>, MemberSignalSlotCaller>::bind( "MemberSignal" );
+	SignalClass<Set::MemberSignal, DefaultSignalCaller<Set::MemberSignal>, MemberSignalSlotCaller>( "MemberSignal" );
 
 }
 

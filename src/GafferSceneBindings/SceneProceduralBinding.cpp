@@ -72,5 +72,5 @@ void GafferSceneBindings::bindSceneProcedural()
 		.def( "allRenderedSignal", &SceneProcedural::allRenderedSignal, boost::python::return_value_policy<reference_existing_object>() ).staticmethod( "allRenderedSignal" )
 	;
 	
-	SignalBinder<SceneProcedural::AllRenderedSignal>::bind( "AllRenderedSignal" );
+	SignalClass<SceneProcedural::AllRenderedSignal>( "AllRenderedSignal" );
 }

@@ -76,6 +76,6 @@ void GafferUIBindings::bindPointer()
 		.staticmethod( "changedSignal" )
 	;
 
-	SignalBinder<Pointer::ChangedSignal>::bind( "ChangedSignal" );
+	SignalClass<Pointer::ChangedSignal>( "ChangedSignal" );
 
 }

@@ -144,9 +144,9 @@ template<typename Signal>
 void bind( const char *name )
 {
 
-	// bind using the standard SignalBinder, and add a constructor allowing a custom
+	// bind using the standard SignalClass, and add a constructor allowing a custom
 	// result combiner to be passed.
-	scope s = SignalBinder<Signal>::bind( name )
+	scope s = SignalClass<Signal>( name )
 		.def( "__init__", make_constructor( &construct<Signal>, default_call_policies() ) )
 	;
 

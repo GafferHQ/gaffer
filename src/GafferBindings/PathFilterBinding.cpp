@@ -126,5 +126,5 @@ void GafferBindings::bindPathFilter()
 		.def( "changedSignal", &PathFilter::changedSignal, return_internal_reference<1>() )
 	;
 
-	SignalBinder<PathFilter::ChangedSignal, DefaultSignalCaller<PathFilter::ChangedSignal>, ChangedSlotCaller>::bind( "PathChangedSignal" );
+	SignalClass<PathFilter::ChangedSignal, DefaultSignalCaller<PathFilter::ChangedSignal>, ChangedSlotCaller>( "PathChangedSignal" );
 }

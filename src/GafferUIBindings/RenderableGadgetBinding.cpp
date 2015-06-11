@@ -110,6 +110,6 @@ void GafferUIBindings::bindRenderableGadget()
 		.def( "selectionBound", (Imath::Box3f (RenderableGadget::*)() const)&RenderableGadget::selectionBound )
 	;
 
-	SignalBinder<RenderableGadget::SelectionChangedSignal>::bind( "SelectionChangedSignal" );
+	SignalClass<RenderableGadget::SelectionChangedSignal>( "SelectionChangedSignal" );
 
 }

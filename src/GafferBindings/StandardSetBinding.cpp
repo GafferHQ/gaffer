@@ -110,7 +110,7 @@ void bindStandardSet()
 		.def( "memberAcceptanceSignal", &StandardSet::memberAcceptanceSignal, boost::python::return_internal_reference<1>() )
 	;
 
-	SignalBinder<StandardSet::MemberAcceptanceSignal, DefaultSignalCaller<StandardSet::MemberAcceptanceSignal>, Detail::MemberAcceptanceSlotCaller>::bind( "MemberAcceptanceSignal" );
+	SignalClass<StandardSet::MemberAcceptanceSignal, DefaultSignalCaller<StandardSet::MemberAcceptanceSignal>, Detail::MemberAcceptanceSlotCaller>( "MemberAcceptanceSignal" );
 
 }
 

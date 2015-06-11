@@ -334,6 +334,6 @@ void GafferBindings::bindDispatcher()
 		.def( "blindData", &DispatcherWrapper::taskBatchGetBlindData )
 	;
 
-	SignalBinder<Dispatcher::PreDispatchSignal, DefaultSignalCaller<Dispatcher::PreDispatchSignal>, PreDispatchSlotCaller >::bind( "PreDispatchSignal" );
-	SignalBinder<Dispatcher::PostDispatchSignal, DefaultSignalCaller<Dispatcher::PostDispatchSignal>, PostDispatchSlotCaller >::bind( "PostDispatchSignal" );
+	SignalClass<Dispatcher::PreDispatchSignal, DefaultSignalCaller<Dispatcher::PreDispatchSignal>, PreDispatchSlotCaller >( "PreDispatchSignal" );
+	SignalClass<Dispatcher::PostDispatchSignal, DefaultSignalCaller<Dispatcher::PostDispatchSignal>, PostDispatchSlotCaller >( "PostDispatchSignal" );
 }

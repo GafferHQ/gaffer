@@ -155,8 +155,7 @@ void bindFormat()
 		.def( "defaultFormatContextName", &defaultFormatContextName ).staticmethod( "defaultFormatContextName" )
 	;
 
-	SignalBinder<Format::UnaryFormatSignal, DefaultSignalCaller<Format::UnaryFormatSignal>, UnaryFormatSlotCaller >
-	::bind( "UnaryFormatSignal" );
+	SignalClass<Format::UnaryFormatSignal, DefaultSignalCaller<Format::UnaryFormatSignal>, UnaryFormatSlotCaller >( "UnaryFormatSignal" );
 
 }
 
