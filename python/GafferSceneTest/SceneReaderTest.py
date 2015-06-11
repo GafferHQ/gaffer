@@ -453,7 +453,7 @@ class SceneReaderTest( GafferSceneTest.SceneTestCase ) :
 		reader["fileName"].setValue( "iDontExist.scc" )
 
 		for i in range( 0, 10 ) :
-			self.assertRaises( RuntimeError, GafferSceneTest.traverseScene, reader["out"], Gaffer.Context() )
+			self.assertRaises( RuntimeError, GafferSceneTest.traverseScene, reader["out"] )
 
 	def testInvalidPaths( self ) :
 

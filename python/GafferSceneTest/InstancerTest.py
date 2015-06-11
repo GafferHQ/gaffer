@@ -157,7 +157,7 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		instancer["parent"].setValue( "/seeds" )
 		instancer["name"].setValue( "instances" )
 
-		GafferSceneTest.traverseScene( instancer["out"], Gaffer.Context() )
+		GafferSceneTest.traverseScene( instancer["out"] )
 
 	def testNamePlugDefaultValue( self ) :
 
