@@ -122,12 +122,7 @@ GafferUI.Pointer.registerPointer( "replaceObjects", GafferUI.Pointer( "replaceOb
 
 __DropMode = IECore.Enum.create( "None", "Add", "Remove", "Replace" )
 
-# Ideally we'd store these as attributes on the relevant NodeGadgets,
-# but the attributes would get lost due to IECorePython's RefCounted
-# binding not guaranteeing a one-to-one mapping between C++ and Python
-# objects.
 __originalDragPointer = None
-__connections = []
 
 def __dropMode( nodeGadget, event ) :
 
@@ -229,10 +224,10 @@ def __drop( nodeGadget, event ) :
 
 def addObjectDropTarget( nodeGadget ) :
 
-	__connections.append( nodeGadget.dragEnterSignal().connect( __dragEnter ) )
-	__connections.append( nodeGadget.dragLeaveSignal().connect( __dragLeave ) )
-	__connections.append( nodeGadget.dragMoveSignal().connect( __dragMove ) )
-	__connections.append( nodeGadget.dropSignal().connect( __drop ) )
+	nodeGadget.dragEnterSignal().connect( __dragEnter, scoped = False )
+	nodeGadget.dragLeaveSignal().connect( __dragLeave, scoped = False )
+	nodeGadget.dragMoveSignal().connect( __dragMove, scoped = False )
+	nodeGadget.dropSignal().connect( __drop, scoped = False )
 
 def __nodeGadget( pathFilter ) :
 
