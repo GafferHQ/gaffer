@@ -112,18 +112,21 @@ class TraverseTask : public tbb::task
 template <class ThreadableFunctor>
 struct ThreadableFilteredFunctor
 {
-    ThreadableFilteredFunctor( ThreadableFunctor &f, const Gaffer::IntPlug *filter ): m_f( f ), m_filter( filter ){}
+	ThreadableFilteredFunctor( ThreadableFunctor &f, const Gaffer::IntPlug *filter ): m_f( f ), m_filter( filter ){}
 
-    bool operator()( const GafferScene::ScenePlug *scene, const GafferScene::ScenePlug::ScenePath &path )
-    {
+	bool operator()( const GafferScene::ScenePlug *scene, const GafferScene::ScenePlug::ScenePath &path )
+	{
 		const GafferScene::Filter::Result match = (GafferScene::Filter::Result)m_filter->getValue();
 		if( match & GafferScene::Filter::ExactMatch )
 		{
-			if( !m_f( scene, path ) ) return false;
+			if( !m_f( scene, path ) )
+			{
+				return false;
+			}
 		}
 
 		return ( match & GafferScene::Filter::DescendantMatch ) != 0;
-    }
+	}
 
 	ThreadableFunctor &m_f;
 	const Gaffer::IntPlug *m_filter;

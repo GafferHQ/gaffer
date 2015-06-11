@@ -49,14 +49,14 @@ namespace Detail
 
 struct SceneEvaluateFunctor
 {
-    bool operator()( const GafferScene::ScenePlug *scene, const GafferScene::ScenePlug::ScenePath &path )
-    {
+	bool operator()( const GafferScene::ScenePlug *scene, const GafferScene::ScenePlug::ScenePath &path )
+	{
 		scene->transformPlug()->getValue();
 		scene->boundPlug()->getValue();
 		scene->attributesPlug()->getValue();
 		scene->objectPlug()->getValue();
-        return true;
-    }
+		return true;
+	}
 };
 
 } // namespace Detail

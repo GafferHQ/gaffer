@@ -80,7 +80,7 @@ void parallelTraverse( const ScenePlug *scene, ThreadableFunctor &f );
 /// Calls a functor on all paths in the scene that are matched by the filter.
 /// The functor must take ( const ScenePlug*, const ScenePlug::ScenePath& ), and can return false to prune traversal
 template <class ThreadableFunctor>
-void filteredParallelTraverse( const ScenePlug *scene, const Gaffer::IntPlug *filterPlug, ThreadableFunctor &f );
+void filteredParallelTraverse( const ScenePlug *scene, const GafferScene::Filter *filter, ThreadableFunctor &f );
 /// As above, but specifying the filter as a plug - typically Filter::outPlug() or
 /// FilteredSceneProcessor::filterPlug() would be passed.
 template <class ThreadableFunctor>
