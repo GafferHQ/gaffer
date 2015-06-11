@@ -243,7 +243,6 @@ class ExecuteApplicationTest( GafferTest.TestCase ) :
 			stderr = subprocess.PIPE,
 		)
 		p.wait()
-		print p.stderr.readlines()
 
 		self.assertEqual( p.returncode, 0 )
 		self.assertTrue( os.path.exists( self.__outputTextFile ) )
