@@ -326,11 +326,11 @@ template<typename Signal, typename SignalCaller, typename SlotCaller>
 SignalClass<Signal, SignalCaller, SlotCaller>::SignalClass( const char *className, const char *docString )
 	:	boost::python::class_<Signal, boost::noncopyable>( className, docString )
 {
-	def( "connect", &Detail::connect<Signal, SlotCaller>, ( boost::python::arg( "slot" ), boost::python::arg( "scoped" ) = true ) );
-	def( "connect", &Detail::connectInGroup<Signal, SlotCaller>, ( boost::python::arg( "group" ), boost::python::arg( "slot" ), boost::python::arg( "scoped" ) = true ) );
-	def( "num_slots", &Signal::num_slots );
-	def( "empty", &Signal::empty );
-	def( "__call__", &SignalCaller::call );
+	this->def( "connect", &Detail::connect<Signal, SlotCaller>, ( boost::python::arg( "slot" ), boost::python::arg( "scoped" ) = true ) );
+	this->def( "connect", &Detail::connectInGroup<Signal, SlotCaller>, ( boost::python::arg( "group" ), boost::python::arg( "slot" ), boost::python::arg( "scoped" ) = true ) );
+	this->def( "num_slots", &Signal::num_slots );
+	this->def( "empty", &Signal::empty );
+	this->def( "__call__", &SignalCaller::call );
 }
 
 template<typename Signal, typename SignalCaller, typename SlotCaller>
