@@ -276,10 +276,10 @@ __plugPopupMenuConnection = GafferUI.PlugValueWidget.popupMenuSignal().connect( 
 # NodeGraph plug context menu
 ##########################################################################
 
-def __renamePlug( nodeGraph, plug ) :
+def __renamePlug( menu, plug ) :
 
 	d = GafferUI.TextInputDialogue( initialText = plug.getName(), title = "Enter name", confirmLabel = "Rename" )
-	name = d.waitForText( parentWindow = nodeGraph.ancestor( GafferUI.Window ) )
+	name = d.waitForText( parentWindow = menu.ancestor( GafferUI.Window ) )
 
 	if not name :
 		return
@@ -296,7 +296,7 @@ def __nodeGraphPlugContextMenu( nodeGraph, plug, menuDefinition ) :
 
 	if isinstance( plug.node(), Gaffer.Box ) :
 
-		menuDefinition.append( "/Rename...", { "command" : IECore.curry( __renamePlug, nodeGraph, plug ) } )
+		menuDefinition.append( "/Rename...", { "command" : functools.partial( __renamePlug, plug = plug ) } )
 
 		menuDefinition.append( "/MoveDivider", { "divider" : True } )
 
