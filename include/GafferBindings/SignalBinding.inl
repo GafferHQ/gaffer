@@ -108,6 +108,20 @@ struct DefaultSignalCallerBase<3, Signal>
 	}
 };
 
+template<typename Signal>
+struct DefaultSignalCallerBase<4, Signal>
+{
+#if BOOST_VERSION < 103900
+	static typename Signal::result_type call( Signal &s, typename Signal::arg2_type a1, typename Signal::arg3_type a2, typename Signal::arg4_type a3, typename Signal::arg5_type a4 )
+#else
+	static typename Signal::result_type call( Signal &s, typename Signal::arg1_type a1, typename Signal::arg2_type a2, typename Signal::arg3_type a3, typename Signal::arg4_type a4 )
+#endif
+	{
+		IECorePython::ScopedGILRelease gilRelease;
+		return s( a1, a2, a3, a4 );
+	}
+};
+
 template<int Arity, typename Signal>
 struct DefaultSlotCallerBase;
 
@@ -156,6 +170,19 @@ struct DefaultSlotCallerBase<3, Signal>
 #endif
 	{
 		return boost::python::extract<typename Signal::slot_result_type>( slot( a1, a2, a3 ) )();
+	}
+};
+
+template<typename Signal>
+struct DefaultSlotCallerBase<4, Signal>
+{
+#if BOOST_VERSION < 103900
+	typename Signal::slot_result_type operator()( boost::python::object slot, typename Signal::arg2_type a1, typename Signal::arg3_type a2, typename Signal::arg4_type a3, typename Signal::arg5_type a4 )
+#else
+	typename Signal::slot_result_type operator()( boost::python::object slot, typename Signal::arg1_type a1, typename Signal::arg2_type a2, typename Signal::arg3_type a3, typename Signal::arg4_type a4 )
+#endif
+	{
+		return boost::python::extract<typename Signal::slot_result_type>( slot( a1, a2, a3, a4 ) )();
 	}
 };
 
@@ -276,6 +303,38 @@ struct SlotBase<3, Signal, Caller>
 		try
 		{
 			return Caller()( boost::python::object( m_slot ), a1, a2, a3 );
+		}
+		catch( const boost::python::error_already_set& e )
+		{
+			translatePythonException();
+		}
+		return typename Signal::slot_result_type();
+	}
+	boost::python::handle<PyObject> m_slot;
+};
+
+template<typename Signal, typename Caller>
+struct SlotBase<4, Signal, Caller>
+{
+	SlotBase( boost::python::object slot )
+		:	m_slot( boost::python::borrowed( slot.ptr() ) )
+	{
+	}
+	~SlotBase()
+	{
+		IECorePython::ScopedGILLock gilLock;
+		m_slot.reset();
+	}
+#if BOOST_VERSION < 103900
+	typename Signal::slot_result_type operator()( typename Signal::arg2_type a1, typename Signal::arg3_type a2, typename Signal::arg4_type a3, typename Signal::arg5_type a4 )
+#else
+	typename Signal::slot_result_type operator()( typename Signal::arg1_type a1, typename Signal::arg2_type a2, typename Signal::arg3_type a3, typename Signal::arg4_type a4 )
+#endif
+	{
+		IECorePython::ScopedGILLock gilLock;
+		try
+		{
+			return Caller()( boost::python::object( m_slot ), a1, a2, a3, a4 );
 		}
 		catch( const boost::python::error_already_set& e )
 		{
