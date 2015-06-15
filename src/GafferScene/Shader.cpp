@@ -70,7 +70,7 @@ Shader::Shader( const std::string &name )
 	nodeColorPlug()->setFlags( Plug::Serialisable | Plug::AcceptsInputs, false );
 
 	nameChangedSignal().connect( boost::bind( &Shader::nameChanged, this ) );
-	Metadata::nodeValueChangedSignal().connect( boost::bind( &Shader::nodeMetadataChanged, this, ::_1, ::_2 ) );
+	Metadata::nodeValueChangedSignal().connect( boost::bind( &Shader::nodeMetadataChanged, this, ::_1, ::_2, ::_3 ) );
 }
 
 Shader::~Shader()
@@ -267,8 +267,13 @@ void Shader::nameChanged()
 	nodeNamePlug()->setValue( getName() );
 }
 
-void Shader::nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore::InternedString key )
+void Shader::nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore::InternedString key, const Gaffer::Node *node )
 {
+	if( node && node != this )
+	{
+		return;
+	}
+
 	if( key == g_nodeColorMetadataName && this->isInstanceOf( nodeTypeId ) )
 	{
 		IECore::ConstColor3fDataPtr d = Metadata::nodeValue<const IECore::Color3fData>( this, g_nodeColorMetadataName );
