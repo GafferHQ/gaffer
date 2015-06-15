@@ -170,6 +170,7 @@ class BoxUITest( GafferUITest.TestCase ) :
 
 		g = GafferUI.GraphGadget( s )
 
+		s["b"].promotePlug( s["b"]["n"]["op1"] )
 		p = s["b"].promotePlug( s["b"]["n"]["op2"] )
 		p.setName( "p" )
 

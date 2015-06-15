@@ -186,6 +186,42 @@ class StandardNodeGadgetTest( GafferUITest.TestCase ) :
 		Gaffer.Metadata.registerPlugValue( n["p"], "nodule:type", "" )
 		self.assertEqual( g.nodule( n["p"] ), None )
 
+	def testPlugReferences( self ) :
+
+		n = Gaffer.Node()
+		p = Gaffer.Plug()
+		r = p.refCount()
+
+		g = GafferUI.StandardNodeGadget( n )
+		n["p"] = p
+		self.assertTrue( g.nodule( p ) is not None )
+
+		del n["p"]
+		self.assertTrue( g.nodule( p ) is None )
+
+		# The StandardNodeGadget should retain no references
+		# to the plug once it has been removed.
+		self.assertEqual( p.refCount(), r )
+
+	def testChangeNoduleType( self ) :
+
+		n = Gaffer.Node()
+		n["p1"] = Gaffer.Plug()
+		n["p2"] = Gaffer.Plug()
+
+		g = GafferUI.StandardNodeGadget( n )
+		n1 = g.nodule( n["p1"] )
+		n2 = g.nodule( n["p2"] )
+
+		self.assertTrue( isinstance( n1, GafferUI.StandardNodule ) )
+		self.assertTrue( isinstance( n2, GafferUI.StandardNodule ) )
+
+		Gaffer.Metadata.registerPlugValue( n["p1"], "nodule:type", "GafferUI::CompoundNodule" )
+
+		self.assertTrue( isinstance( g.nodule( n["p1"] ), GafferUI.CompoundNodule ) )
+		self.assertTrue( g.nodule( n["p2"] ).isSame( n2 ) )
+		self.assertTrue( n1.parent() is None )
+
 if __name__ == "__main__":
 	unittest.main()
 
