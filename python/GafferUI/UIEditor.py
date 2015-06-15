@@ -761,21 +761,26 @@ class _PlugListing( GafferUI.Widget ) :
 
 		self.__deleteSelected()
 
-	def __nodeMetadataChanged( self, nodeTypeId, key ) :
+	def __nodeMetadataChanged( self, nodeTypeId, key, node ) :
 
 		if self.__parent is None :
 			return
 
-		node = self.__parent.node() if isinstance( self.__parent, Gaffer.Plug ) else self.__parent
-		if not node.isInstanceOf( nodeTypeId ) :
+		if node is not None and not self.__parent.isSame( node ) :
+			return
+
+		if not self.__parent.isInstanceOf( nodeTypeId ) :
 			return
 
 		if key in ( "uiEditor:emptySections", "uiEditor:emptySectionIndices" ) :
 			self.__updatePathLazily()
 
-	def __plugMetadataChanged( self, nodeTypeId, plugPath, key ) :
+	def __plugMetadataChanged( self, nodeTypeId, plugPath, key, plug ) :
 
 		if self.__parent is None :
+			return
+
+		if plug is not None and not self.__parent.isSame( plug.parent() ) :
 			return
 
 		node = self.__parent.node() if isinstance( self.__parent, Gaffer.Plug ) else self.__parent
@@ -1125,18 +1130,22 @@ class _MetadataWidget( GafferUI.Widget ) :
 		else :
 			self._updateFromValue( None )
 
-	def __nodeMetadataChanged( self, nodeTypeId, key ) :
+	def __nodeMetadataChanged( self, nodeTypeId, key, node ) :
 
 		if self.__key != key :
+			return
+		if node is not None and not node.isSame( self.__target ) :
 			return
 		if not self.__target.isInstanceOf( nodeTypeId ) :
 			return
 
 		self.__update()
 
-	def __plugMetadataChanged( self, nodeTypeId, plugPath, key ) :
+	def __plugMetadataChanged( self, nodeTypeId, plugPath, key, plug ) :
 
 		if self.__key != key :
+			return
+		if plug is not None and not plug.isSame( self.__target ) :
 			return
 		if not self.__target.node().isInstanceOf( nodeTypeId ) :
 			return

@@ -295,8 +295,8 @@ StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node, LinearContainer::O
 		c->leaveSignal().connect( boost::bind( &StandardNodeGadget::leave, this, ::_1 ) );
 	}
 
-	Metadata::plugValueChangedSignal().connect( boost::bind( &StandardNodeGadget::plugMetadataChanged, this, ::_1, ::_2, ::_3 ) );
-	Metadata::nodeValueChangedSignal().connect( boost::bind( &StandardNodeGadget::nodeMetadataChanged, this, ::_1, ::_2 ) );
+	Metadata::plugValueChangedSignal().connect( boost::bind( &StandardNodeGadget::plugMetadataChanged, this, ::_1, ::_2, ::_3, ::_4 ) );
+	Metadata::nodeValueChangedSignal().connect( boost::bind( &StandardNodeGadget::nodeMetadataChanged, this, ::_1, ::_2, ::_3 ) );
 
 	// do our first update
 	////////////////////////////////////////////////////////
@@ -633,8 +633,13 @@ bool StandardNodeGadget::drop( GadgetPtr gadget, const DragDropEvent &event )
 	return result;
 }
 
-void StandardNodeGadget::plugMetadataChanged( IECore::TypeId nodeTypeId, const Gaffer::MatchPattern &plugPath, IECore::InternedString key )
+void StandardNodeGadget::plugMetadataChanged( IECore::TypeId nodeTypeId, const Gaffer::MatchPattern &plugPath, IECore::InternedString key, const Gaffer::Plug *plug )
 {
+	if( plug && plug->parent<Node>() != node() )
+	{
+		return;
+	}
+
 	if( !node()->isInstanceOf( nodeTypeId ) )
 	{
 		return;
@@ -687,9 +692,14 @@ bool StandardNodeGadget::noduleIsCompatible( const Nodule *nodule, const DragDro
 	}
 }
 
-void StandardNodeGadget::nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore::InternedString key )
+void StandardNodeGadget::nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore::InternedString key, const Gaffer::Node *node )
 {
-	if( !node()->isInstanceOf( nodeTypeId ) )
+	if( node && node != this->node() )
+	{
+		return;
+	}
+
+	if( !this->node()->isInstanceOf( nodeTypeId ) )
 	{
 		return;
 	}

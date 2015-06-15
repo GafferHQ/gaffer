@@ -70,7 +70,7 @@ StandardConnectionGadget::StandardConnectionGadget( GafferUI::NodulePtr srcNodul
 	dragMoveSignal().connect( boost::bind( &StandardConnectionGadget::dragMove, this, ::_1, ::_2 ) );
 	dragEndSignal().connect( boost::bind( &StandardConnectionGadget::dragEnd, this, ::_1, ::_2 ) );
 
-	Metadata::plugValueChangedSignal().connect( boost::bind( &StandardConnectionGadget::plugMetadataChanged, this, ::_1, ::_2, ::_3 ) );
+	Metadata::plugValueChangedSignal().connect( boost::bind( &StandardConnectionGadget::plugMetadataChanged, this, ::_1, ::_2, ::_3, ::_4 ) );
 
 	updateUserColor();
 }
@@ -327,14 +327,19 @@ bool StandardConnectionGadget::nodeSelected( const Nodule *nodule ) const
 	return script && script->selection()->contains( node );
 }
 
-void StandardConnectionGadget::plugMetadataChanged( IECore::TypeId nodeTypeId, const Gaffer::MatchPattern &plugPath, IECore::InternedString key )
+void StandardConnectionGadget::plugMetadataChanged( IECore::TypeId nodeTypeId, const Gaffer::MatchPattern &plugPath, IECore::InternedString key, const Gaffer::Plug *plug )
 {
-	const Plug *plug = dstNodule()->plug();
-	const Node *node = plug->node();
+	const Plug *dstPlug = dstNodule()->plug();
+	if( plug && plug != dstPlug )
+	{
+		return;
+	}
+
+	const Node *node = dstPlug->node();
 	if(
 		key != g_colorKey ||
 		!node->isInstanceOf( nodeTypeId ) ||
-		!match( plug->relativeName( node ), plugPath )
+		!match( dstPlug->relativeName( node ), plugPath )
 	)
 	{
 		return;

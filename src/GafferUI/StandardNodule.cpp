@@ -78,7 +78,7 @@ StandardNodule::StandardNodule( Gaffer::PlugPtr plug )
 
 	dropSignal().connect( boost::bind( &StandardNodule::drop, this, ::_1, ::_2 ) );
 
-	Metadata::plugValueChangedSignal().connect( boost::bind( &StandardNodule::plugMetadataChanged, this, ::_1, ::_2, ::_3 ) );
+	Metadata::plugValueChangedSignal().connect( boost::bind( &StandardNodule::plugMetadataChanged, this, ::_1, ::_2, ::_3, ::_4 ) );
 
 	updateUserColor();
 }
@@ -420,13 +420,18 @@ void StandardNodule::setCompatibleLabelsVisible( const DragDropEvent &event, boo
 	}
 }
 
-void StandardNodule::plugMetadataChanged( IECore::TypeId nodeTypeId, const Gaffer::MatchPattern &plugPath, IECore::InternedString key )
+void StandardNodule::plugMetadataChanged( IECore::TypeId nodeTypeId, const Gaffer::MatchPattern &plugPath, IECore::InternedString key, const Gaffer::Plug *plug )
 {
-	const Node *node = plug()->node();
+	if( plug && plug != this->plug() )
+	{
+		return;
+	}
+
+	const Node *node = this->plug()->node();
 	if(
 		key != g_colorKey ||
 		!node->isInstanceOf( nodeTypeId ) ||
-		!match( plug()->relativeName( node ), plugPath )
+		!match( this->plug()->relativeName( node ), plugPath )
 	)
 	{
 		return;

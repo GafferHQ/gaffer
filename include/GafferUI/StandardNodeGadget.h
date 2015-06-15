@@ -146,8 +146,8 @@ class StandardNodeGadget : public NodeGadget
 		Nodule *closestCompatibleNodule( const DragDropEvent &event );
 		bool noduleIsCompatible( const Nodule *nodule, const DragDropEvent &event );
 
-		void plugMetadataChanged( IECore::TypeId nodeTypeId, const Gaffer::MatchPattern &plugPath, IECore::InternedString key );
-		void nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore::InternedString key );
+		void plugMetadataChanged( IECore::TypeId nodeTypeId, const Gaffer::MatchPattern &plugPath, IECore::InternedString key, const Gaffer::Plug *plug );
+		void nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore::InternedString key, const Gaffer::Node *node );
 
 		Nodule *updateNodule( Gaffer::Plug *plug );
 		void updateNoduleLayout();
