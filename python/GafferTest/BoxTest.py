@@ -635,7 +635,7 @@ class BoxTest( GafferTest.TestCase ) :
 		Gaffer.Metadata.registerPlugValue( p, "description", "hello" )
 
 		self.assertEqual( len( cs ), 1 )
-		self.assertEqual( cs[0], ( Gaffer.Box.staticTypeId(), p.relativeName( b ), "description" ) )
+		self.assertEqual( cs[0], ( Gaffer.Box.staticTypeId(), p.relativeName( b ), "description", p ) )
 
 	def testNodeMetadata( self ) :
 
@@ -650,7 +650,7 @@ class BoxTest( GafferTest.TestCase ) :
 		self.assertEqual( Gaffer.Metadata.nodeValue( s["b"], "description" ), "aaa" )
 
 		self.assertEqual( len( cs ), 1 )
-		self.assertEqual( cs[0], ( Gaffer.Box.staticTypeId(), "description" ) )
+		self.assertEqual( cs[0], ( Gaffer.Box.staticTypeId(), "description", s["b"] ) )
 
 		s2 = Gaffer.ScriptNode()
 		s2.execute( s.serialise() )
@@ -673,8 +673,8 @@ class BoxTest( GafferTest.TestCase ) :
 
 		self.assertEqual( len( ncs ), 1 )
 		self.assertEqual( len( pcs ), 1 )
-		self.assertEqual( ncs[0], ( Gaffer.Box.staticTypeId(), "description" ) )
-		self.assertEqual( pcs[0], ( Gaffer.Box.staticTypeId(), p.relativeName( b ), "description" ) )
+		self.assertEqual( ncs[0], ( Gaffer.Box.staticTypeId(), "description", b ) )
+		self.assertEqual( pcs[0], ( Gaffer.Box.staticTypeId(), p.relativeName( b ), "description", p ) )
 
 		Gaffer.Metadata.registerNodeValue( b, "description", "t" )
 		Gaffer.Metadata.registerPlugValue( p, "description", "tt" )
@@ -687,8 +687,8 @@ class BoxTest( GafferTest.TestCase ) :
 
 		self.assertEqual( len( ncs ), 2 )
 		self.assertEqual( len( pcs ), 2 )
-		self.assertEqual( ncs[1], ( Gaffer.Box.staticTypeId(), "description" ) )
-		self.assertEqual( pcs[1], ( Gaffer.Box.staticTypeId(), p.relativeName( b ), "description" ) )
+		self.assertEqual( ncs[1], ( Gaffer.Box.staticTypeId(), "description", b ) )
+		self.assertEqual( pcs[1], ( Gaffer.Box.staticTypeId(), p.relativeName( b ), "description", p ) )
 
 	def testMetadataUndo( self ) :
 

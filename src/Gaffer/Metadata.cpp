@@ -173,7 +173,7 @@ const Data *instanceValue( const GraphComponent *instance, InternedString key, b
 	return NULL;
 }
 
-void registerInstanceValueAction( const GraphComponent *instance, InternedString key, IECore::ConstDataPtr value, bool persistent )
+void registerInstanceValueAction( GraphComponent *instance, InternedString key, IECore::ConstDataPtr value, bool persistent )
 {
 	InstanceValues *m = instanceMetadata( instance, /* createIfMissing = */ value != NULL );
 	if( !m )
@@ -193,15 +193,15 @@ void registerInstanceValueAction( const GraphComponent *instance, InternedString
 		m->replace( it, namedValue );
 	}
 	
-	if( const Node *node = runTimeCast<const Node>( instance ) )
+	if( Node *node = runTimeCast<Node>( instance ) )
 	{
-		Metadata::nodeValueChangedSignal()( node->typeId(), key );
+		Metadata::nodeValueChangedSignal()( node->typeId(), key, node );
 	}
-	else if( const Plug *plug = runTimeCast<const Plug>( instance ) )
+	else if( Plug *plug = runTimeCast<Plug>( instance ) )
 	{
 		if( const Node *node = plug->node() )
 		{
-			Metadata::plugValueChangedSignal()( node->typeId(), plug->relativeName( node ), key );
+			Metadata::plugValueChangedSignal()( node->typeId(), plug->relativeName( node ), key, plug );
 		}
 	}
 }
@@ -268,7 +268,7 @@ void Metadata::registerNodeValue( IECore::TypeId nodeTypeId, IECore::InternedStr
 		m.replace( it, namedValue );
 	}
 
-	nodeValueChangedSignal()( nodeTypeId, key );
+	nodeValueChangedSignal()( nodeTypeId, key, NULL );
 }
 
 void Metadata::registerNodeValue( Node *node, IECore::InternedString key, IECore::ConstDataPtr value, bool persistent )
@@ -370,7 +370,7 @@ void Metadata::registerPlugValue( IECore::TypeId nodeTypeId, const MatchPattern 
 		plugValues.replace( it, namedValue );
 	}
 	
-	plugValueChangedSignal()( nodeTypeId, plugPath, key );
+	plugValueChangedSignal()( nodeTypeId, plugPath, key, NULL );
 }
 
 void Metadata::registerPlugValue( Plug *plug, IECore::InternedString key, IECore::ConstDataPtr value, bool persistent )

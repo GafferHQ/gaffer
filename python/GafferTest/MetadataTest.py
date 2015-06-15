@@ -161,13 +161,13 @@ class MetadataTest( GafferTest.TestCase ) :
 
 		self.assertEqual( len( ps ), 0 )
 		self.assertEqual( len( ns ), 1 )
-		self.assertEqual( ns[0], ( GafferTest.AddNode.staticTypeId(), "k" ) )
+		self.assertEqual( ns[0], ( GafferTest.AddNode.staticTypeId(), "k", None ) )
 
 		Gaffer.Metadata.registerNodeValue( GafferTest.AddNode, "k", "somethingElse" )
 
 		self.assertEqual( len( ps ), 0 )
 		self.assertEqual( len( ns ), 2 )
-		self.assertEqual( ns[1], ( GafferTest.AddNode.staticTypeId(), "k" ) )
+		self.assertEqual( ns[1], ( GafferTest.AddNode.staticTypeId(), "k", None ) )
 
 	def testPlugSignals( self ) :
 
@@ -178,13 +178,13 @@ class MetadataTest( GafferTest.TestCase ) :
 
 		self.assertEqual( len( ps ), 1 )
 		self.assertEqual( len( ns ), 0 )
-		self.assertEqual( ps[0], ( GafferTest.AddNode.staticTypeId(), "op1", "k" ) )
+		self.assertEqual( ps[0], ( GafferTest.AddNode.staticTypeId(), "op1", "k", None ) )
 
 		Gaffer.Metadata.registerPlugValue( GafferTest.AddNode, "op1", "k", "somethingElse" )
 
 		self.assertEqual( len( ps ), 2 )
 		self.assertEqual( len( ns ), 0 )
-		self.assertEqual( ps[1], ( GafferTest.AddNode.staticTypeId(), "op1", "k" ) )
+		self.assertEqual( ps[1], ( GafferTest.AddNode.staticTypeId(), "op1", "k", None ) )
 
 	def testSignalsDontExposeInternedStrings( self ) :
 
@@ -273,8 +273,8 @@ class MetadataTest( GafferTest.TestCase ) :
 
 		self.assertEqual( len( ncs ), 1 )
 		self.assertEqual( len( pcs ), 1 )
-		self.assertEqual( ncs[0], ( GafferTest.AddNode.staticTypeId(), "signalTest" ) )
-		self.assertEqual( pcs[0], ( GafferTest.AddNode.staticTypeId(), "op1", "signalTest" ) )
+		self.assertEqual( ncs[0], ( GafferTest.AddNode.staticTypeId(), "signalTest", n ) )
+		self.assertEqual( pcs[0], ( GafferTest.AddNode.staticTypeId(), "op1", "signalTest", n["op1"] ) )
 
 		Gaffer.Metadata.registerNodeValue( n, "signalTest", 1 )
 		Gaffer.Metadata.registerPlugValue( n["op1"], "signalTest", 1 )
@@ -287,8 +287,8 @@ class MetadataTest( GafferTest.TestCase ) :
 
 		self.assertEqual( len( ncs ), 2 )
 		self.assertEqual( len( pcs ), 2 )
-		self.assertEqual( ncs[1], ( GafferTest.AddNode.staticTypeId(), "signalTest" ) )
-		self.assertEqual( pcs[1], ( GafferTest.AddNode.staticTypeId(), "op1", "signalTest" ) )
+		self.assertEqual( ncs[1], ( GafferTest.AddNode.staticTypeId(), "signalTest", n ) )
+		self.assertEqual( pcs[1], ( GafferTest.AddNode.staticTypeId(), "op1", "signalTest", n["op1"] ) )
 
 	def testSerialisation( self ) :
 
@@ -489,12 +489,12 @@ class MetadataTest( GafferTest.TestCase ) :
 
 	def testBadSlotsDontAffectGoodSlots( self ) :
 			
-		def badSlot( nodeTypeId, key ) :
+		def badSlot( nodeTypeId, key, node ) :
 		
 			raise Exception( "Oops" )
 			
 		self.__goodSlotExecuted = False
-		def goodSlot( nodeTypeId, key ) :
+		def goodSlot( nodeTypeId, key, node ) :
 		
 			self.__goodSlotExecuted = True
 			
