@@ -183,7 +183,7 @@ class FileSystemPathTest( GafferTest.TestCase ) :
 
 		mt = p.property( "fileSystem:modificationTime" )
 		self.assertTrue( isinstance( mt, datetime.datetime ) )
-		self.assertTrue( (mt - datetime.datetime.now()).total_seconds() < 0.1 )
+		self.assertTrue( (datetime.datetime.utcnow() - mt).total_seconds() < 1 )
 
 		time.sleep( 1 )
 
@@ -192,7 +192,7 @@ class FileSystemPathTest( GafferTest.TestCase ) :
 
 		mt = p.property( "fileSystem:modificationTime" )
 		self.assertTrue( isinstance( mt, datetime.datetime ) )
-		self.assertTrue( (mt - datetime.datetime.now()).total_seconds() < 0.1 )
+		self.assertTrue( (datetime.datetime.utcnow() - mt).total_seconds() < 1 )
 
 	def testOwner( self ) :
 

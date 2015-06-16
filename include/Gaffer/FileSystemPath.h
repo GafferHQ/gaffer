@@ -59,6 +59,12 @@ class FileSystemPath : public Path
 		virtual bool isValid() const;
 		virtual bool isLeaf() const;
 		virtual void propertyNames( std::vector<IECore::InternedString> &names ) const;
+		/// Supported properties :
+		///
+		/// "fileSystem:owner" -> StringData
+		/// "fileSystem:group" -> StringData
+		/// "fileSystem:modificationTime" -> DateTimeData, in UTC time
+		/// "fileSystem:size" -> UInt64Data, in bytes
 		virtual IECore::ConstRunTimeTypedPtr property( const IECore::InternedString &name ) const;
 		virtual PathPtr copy() const;
 
