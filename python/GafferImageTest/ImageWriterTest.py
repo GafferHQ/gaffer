@@ -89,11 +89,11 @@ class ImageWriterTest( unittest.TestCase ) :
 		self.failUnless( w["in"].acceptsInput( p ) )
 
 	def testTiffWrite( self ) :
-		self.__testExtension( "tif", supportsIPTC = True )
+		self.__testExtension( "tif" )
 
 	@unittest.expectedFailure
 	def testJpgWrite( self ) :
-		self.__testExtension( "jpg", supportsIPTC = True, metadataToIgnore = [ "DocumentName", "HostComputer" ] )
+		self.__testExtension( "jpg", metadataToIgnore = [ "DocumentName", "HostComputer" ] )
 
 	@unittest.expectedFailure
 	def testTgaWrite( self ) :
@@ -136,7 +136,7 @@ class ImageWriterTest( unittest.TestCase ) :
 
 
 	# Write an RGBA image that has a data window to various supported formats and in both scanline and tile modes.
-	def __testExtension( self, ext, supportsIPTC = False, metadataToIgnore = [] ) :
+	def __testExtension( self, ext, metadataToIgnore = [] ) :
 
 		r = GafferImage.ImageReader()
 		r["fileName"].setValue( self.__rgbFilePath+".exr" )
@@ -187,9 +187,11 @@ class ImageWriterTest( unittest.TestCase ) :
 			
 			# some formats support IPTC standards, and some of the standard metadata
 			# is translated automatically by OpenImageIO.
-			if supportsIPTC :
-				expectedMetadata["IPTC:OriginatingProgram"] = expectedMetadata["Software"]
-				expectedMetadata["IPTC:Creator"] = expectedMetadata["Artist"]
+			for key in writerMetadata.keys() :
+				if key.startswith( "IPTC:" ) :
+					expectedMetadata["IPTC:OriginatingProgram"] = expectedMetadata["Software"]
+					expectedMetadata["IPTC:Creator"] = expectedMetadata["Artist"]
+					break
 			
 			# some input files don't contain all the metadata that the ImageWriter
 			# will create, and some output files don't support all the metadata
@@ -341,7 +343,7 @@ class ImageWriterTest( unittest.TestCase ) :
 		result["refreshCount"].setValue( result["refreshCount"].getValue() + 1 )
 		self.assertEqual( result["out"]["metadata"].getValue()["DocumentName"].value, "/my/gaffer/script.gfr" )
 	
-	def __testMetadataDoesNotAffectPixels( self, ext, supportsIPTC = False ) :
+	def __testMetadataDoesNotAffectPixels( self, ext ) :
 		
 		r = GafferImage.ImageReader()
 		r["fileName"].setValue( self.__rgbFilePath+"."+ext )
@@ -419,9 +421,11 @@ class ImageWriterTest( unittest.TestCase ) :
 		expectedMetadata["DocumentName"] = IECore.StringData( "untitled" )
 		# some formats support IPTC standards, and some of the standard metadata
 		# is translated automatically by OpenImageIO.
-		if supportsIPTC :
-			expectedMetadata["IPTC:OriginatingProgram"] = expectedMetadata["Software"]
-			expectedMetadata["IPTC:Creator"] = expectedMetadata["Artist"]
+		for key in afterMetadata.keys() :
+			if key.startswith( "IPTC:" ) :
+				expectedMetadata["IPTC:OriginatingProgram"] = expectedMetadata["Software"]
+				expectedMetadata["IPTC:Creator"] = expectedMetadata["Artist"]
+				break
 		
 		self.assertEqual( afterMetadata, expectedMetadata )
 		self.assertEqual( afterMetadata, beforeMetadata )
@@ -432,7 +436,7 @@ class ImageWriterTest( unittest.TestCase ) :
 	
 	def testTiffMetadata( self ) :
 		
-		self.__testMetadataDoesNotAffectPixels( "tif", supportsIPTC = True )
+		self.__testMetadataDoesNotAffectPixels( "tif" )
 	
 	def testPixelAspectRatio( self ) :
 
