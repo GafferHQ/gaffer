@@ -54,12 +54,28 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			The space in which the transform is applied.
+			The space in which the transformation is specified.
 			""",
 
 			"preset:World", GafferScene.Transform.Space.World,
 			"preset:Parent", GafferScene.Transform.Space.Parent,
 			"preset:Object", GafferScene.Transform.Space.Object,
+
+		],
+
+		"mode" : [
+
+			"description",
+			"""
+			Relative mode combines the specified transform with
+			the existing transform, so that the movement of an object
+			is relative to its original position. Absolute mode replaces
+			the existing transformation, so that the transform positions
+			the object absolutely with respect to the chosen space.
+			""",
+
+			"preset:Relative", GafferScene.Transform.Mode.Relative,
+			"preset:Absolute", GafferScene.Transform.Mode.Absolute,
 
 		],
 
@@ -79,5 +95,11 @@ Gaffer.Metadata.registerNode(
 GafferUI.PlugValueWidget.registerCreator(
 	GafferScene.Transform,
 	"space",
+	GafferUI.PresetsPlugValueWidget,
+)
+
+GafferUI.PlugValueWidget.registerCreator(
+	GafferScene.Transform,
+	"mode",
 	GafferUI.PresetsPlugValueWidget,
 )

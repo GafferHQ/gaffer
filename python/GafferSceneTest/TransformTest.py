@@ -35,6 +35,7 @@
 ##########################################################################
 
 import unittest
+import math
 
 import IECore
 
@@ -162,6 +163,7 @@ class TransformTest( GafferSceneTest.SceneTestCase ) :
 		transform["filter"].setInput( filter["out"] )
 
 		self.assertEqual( transform["space"].getValue(), GafferScene.Transform.Space.World )
+		self.assertEqual( transform["mode"].getValue(), GafferScene.Transform.Mode.Relative )
 		self.assertSceneValid( transform["out"] )
 
 		transform["transform"]["rotate"]["y"].setValue( 90 )
@@ -232,6 +234,83 @@ class TransformTest( GafferSceneTest.SceneTestCase ) :
 				IECore.V3f( 0 ) * transform["out"].fullTransform( "/group/sphere" ),
 				0.000001
 			)
+		)
+
+	def testAbsoluteMode( self ) :
+
+		sphere = GafferScene.Sphere()
+		sphere["transform"]["translate"].setValue( IECore.V3f( 1, 0, 0 ) )
+
+		group = GafferScene.Group()
+		group["in"].setInput( sphere["out"] )
+		group["transform"]["translate"].setValue( IECore.V3f( 1, 0, 0 ) )
+
+		transform = GafferScene.Transform()
+		transform["in"].setInput( group["out"] )
+		transform["transform"]["rotate"]["y"].setValue( 90 )
+		transform["mode"].setValue( GafferScene.Transform.Mode.Absolute )
+
+		filter = GafferScene.PathFilter()
+		filter["paths"].setValue( IECore.StringVectorData( [ "/group/sphere" ] ) )
+		transform["filter"].setInput( filter["out"] )
+
+		# Parent space
+
+		transform["space"].setValue( GafferScene.Transform.Space.Parent )
+		self.assertSceneValid( transform["out"] )
+		self.assertTrue(
+			IECore.V3f( 0, 0, 0 ).equalWithAbsError(
+				IECore.V3f( 0 ) * transform["out"].fullTransform( "/group/sphere" ),
+				0.000001
+			)
+		)
+		self.assertTrue(
+			IECore.V3f( 1, 0, 0 ).equalWithAbsError(
+				IECore.V3f( 0, 0, 1 ) * transform["out"].fullTransform( "/group/sphere" ),
+				0.000001
+			)
+		)
+
+		# Object space
+
+		transform["space"].setValue( GafferScene.Transform.Space.Object )
+		self.assertSceneValid( transform["out"] )
+		self.assertTrue(
+			IECore.V3f( 1, 0, 0 ).equalWithAbsError(
+				IECore.V3f( 0 ) * transform["out"].fullTransform( "/group/sphere" ),
+				0.000001
+			)
+		)
+		self.assertTrue(
+			IECore.V3f( 2, 0, 0 ).equalWithAbsError(
+				IECore.V3f( 0, 0, 1 ) * transform["out"].fullTransform( "/group/sphere" ),
+				0.000001
+			)
+		)
+		self.assertEqual(
+			transform["out"].transform( "/group/sphere" ),
+			IECore.M44f.createRotated( IECore.V3f( 0, math.radians( 90 ), 0 ) )
+		)
+
+		# World space
+
+		transform["space"].setValue( GafferScene.Transform.Space.World )
+		self.assertSceneValid( transform["out"] )
+		self.assertTrue(
+			IECore.V3f( 0, 0, 0 ).equalWithAbsError(
+				IECore.V3f( 0 ) * transform["out"].fullTransform( "/group/sphere" ),
+				0.000001
+			)
+		)
+		self.assertTrue(
+			IECore.V3f( 1, 0, 0 ).equalWithAbsError(
+				IECore.V3f( 0, 0, 1 ) * transform["out"].fullTransform( "/group/sphere" ),
+				0.000001
+			)
+		)
+		self.assertEqual(
+			transform["out"].fullTransform( "/group/sphere" ),
+			IECore.M44f.createRotated( IECore.V3f( 0, math.radians( 90 ), 0 ) )
 		)
 
 if __name__ == "__main__":

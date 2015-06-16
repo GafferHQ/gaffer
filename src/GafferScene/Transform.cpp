@@ -49,6 +49,7 @@ Transform::Transform( const std::string &name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new IntPlug( "space", Plug::In, World, World, Parent ) );
+	addChild( new IntPlug( "mode", Plug::In, Relative, Relative, Absolute ) );
 	addChild( new TransformPlug( "transform" ) );
 	
 	// Fast pass-throughs for things we don't modify
@@ -70,21 +71,35 @@ const Gaffer::IntPlug *Transform::spacePlug() const
 	return getChild<Gaffer::IntPlug>( g_firstPlugIndex );
 }
 
+Gaffer::IntPlug *Transform::modePlug()
+{
+	return getChild<Gaffer::IntPlug>( g_firstPlugIndex + 1 );
+}
+
+const Gaffer::IntPlug *Transform::modePlug() const
+{
+	return getChild<Gaffer::IntPlug>( g_firstPlugIndex + 1 );
+}
+
 Gaffer::TransformPlug *Transform::transformPlug()
 {
-	return getChild<Gaffer::TransformPlug>( g_firstPlugIndex + 1 );
+	return getChild<Gaffer::TransformPlug>( g_firstPlugIndex + 2 );
 }
 
 const Gaffer::TransformPlug *Transform::transformPlug() const
 {
-	return getChild<Gaffer::TransformPlug>( g_firstPlugIndex + 1 );
+	return getChild<Gaffer::TransformPlug>( g_firstPlugIndex + 2 );
 }
 
 void Transform::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	SceneElementProcessor::affects( input, outputs );
 
-	if( input == spacePlug() || transformPlug()->isAncestorOf( input ) )
+	if(
+		input == spacePlug() ||
+		input == modePlug() ||
+		transformPlug()->isAncestorOf( input )
+	)
 	{
 		outputs.push_back( outPlug()->transformPlug() );
 		outputs.push_back( outPlug()->boundPlug() );
@@ -99,7 +114,9 @@ bool Transform::processesTransform() const
 void Transform::hashProcessedTransform( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	const Space space = static_cast<Space>( spacePlug()->getValue() );
+	const Mode mode = static_cast<Mode>( modePlug()->getValue() );
 	h.append( space );
+	h.append( mode );
 	transformPlug()->hash( h );
 
 	if( space == World )
@@ -108,25 +125,55 @@ void Transform::hashProcessedTransform( const ScenePath &path, const Gaffer::Con
 		parentPath.pop_back();
 		h.append( inPlug()->fullTransformHash( parentPath ) );
 	}
+	else if( space == Parent && mode == Absolute )
+	{
+		ScenePath parentPath = path;
+		parentPath.pop_back();
+		h.append( inPlug()->transformHash( parentPath ) );
+	}
 }
 
 Imath::M44f Transform::computeProcessedTransform( const ScenePath &path, const Gaffer::Context *context, const Imath::M44f &inputTransform ) const
 {
 	const Space space = static_cast<Space>( spacePlug()->getValue() );
+	const Mode mode = static_cast<Mode>( modePlug()->getValue() );
 	const Imath::M44f matrix = transformPlug()->matrix();
 	if( space == World )
 	{
 		ScenePath parentPath = path;
 		parentPath.pop_back();
 		const Imath::M44f parentMatrix = inPlug()->fullTransform( parentPath );
-		return inputTransform * parentMatrix  * matrix * parentMatrix.inverse();
+		if( mode == Relative )
+		{
+			return inputTransform * parentMatrix  * matrix * parentMatrix.inverse();
+		}
+		else
+		{
+			return matrix * parentMatrix.inverse();
+		}
 	}
 	else if( space == Parent )
 	{
-		return inputTransform * matrix;
+		if( mode == Relative )
+		{
+			return inputTransform * matrix;
+		}
+		else
+		{
+			ScenePath parentPath = path;
+			parentPath.pop_back();
+			return matrix * inPlug()->transform( parentPath ).inverse();
+		}
 	}
 	else
 	{
-		return matrix * inputTransform;
+		if( mode == Relative )
+		{
+			return matrix * inputTransform;
+		}
+		else
+		{
+			return matrix;
+		}
 	}
 }

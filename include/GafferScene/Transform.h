@@ -61,8 +61,17 @@ class Transform : public SceneElementProcessor
 			Parent
 		};
 
+		enum Mode
+		{
+			Relative,
+			Absolute
+		};
+
 		Gaffer::IntPlug *spacePlug();
 		const Gaffer::IntPlug *spacePlug() const;
+
+		Gaffer::IntPlug *modePlug();
+		const Gaffer::IntPlug *modePlug() const;
 
 		Gaffer::TransformPlug *transformPlug();
 		const Gaffer::TransformPlug *transformPlug() const;
