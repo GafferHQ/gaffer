@@ -39,26 +39,45 @@ import GafferUI
 
 import GafferScene
 
-Gaffer.Metadata.registerNodeDescription(
+Gaffer.Metadata.registerNode(
 
-GafferScene.Transform,
+	GafferScene.Transform,
 
-"""Modifies the transforms of all locations matched by the filter.""",
+	"description",
+	"""
+	Modifies the transforms of all locations matched by the filter.
+	""",
 
-"space",
-"""The space in which the transform is applied.""",
+	plugs = {
 
-"transform",
-"""The transform to be applied.""",
+		"space" : [
+
+			"description",
+			"""
+			The space in which the transform is applied.
+			""",
+
+			"preset:World", GafferScene.Transform.Space.World,
+			"preset:Parent", GafferScene.Transform.Space.Parent,
+			"preset:Object", GafferScene.Transform.Space.Object,
+
+		],
+
+		"transform" : [
+
+			"description",
+			"""
+			The transform to be applied.
+			""",
+
+		]
+
+	}
 
 )
 
 GafferUI.PlugValueWidget.registerCreator(
 	GafferScene.Transform,
 	"space",
-	GafferUI.EnumPlugValueWidget,
-	labelsAndValues = (
-		( "World", GafferScene.Transform.Space.World ),
-		( "Object", GafferScene.Transform.Space.Object ),
-	)
+	GafferUI.PresetsPlugValueWidget,
 )
