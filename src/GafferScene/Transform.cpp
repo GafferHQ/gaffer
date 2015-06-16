@@ -48,7 +48,7 @@ Transform::Transform( const std::string &name )
 	:	SceneElementProcessor( name, Filter::NoMatch )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
-	addChild( new IntPlug( "space", Plug::In, World, World, Object ) );
+	addChild( new IntPlug( "space", Plug::In, World, World, Parent ) );
 	addChild( new TransformPlug( "transform" ) );
 	
 	// Fast pass-throughs for things we don't modify
@@ -98,15 +98,30 @@ bool Transform::processesTransform() const
 
 void Transform::hashProcessedTransform( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	spacePlug()->hash( h );
+	const Space space = static_cast<Space>( spacePlug()->getValue() );
+	h.append( space );
 	transformPlug()->hash( h );
+
+	if( space == World )
+	{
+		ScenePath parentPath = path;
+		parentPath.pop_back();
+		h.append( inPlug()->fullTransformHash( parentPath ) );
+	}
 }
 
 Imath::M44f Transform::computeProcessedTransform( const ScenePath &path, const Gaffer::Context *context, const Imath::M44f &inputTransform ) const
 {
-	Space space = static_cast<Space>( spacePlug()->getValue() );
-	Imath::M44f matrix = transformPlug()->matrix();
+	const Space space = static_cast<Space>( spacePlug()->getValue() );
+	const Imath::M44f matrix = transformPlug()->matrix();
 	if( space == World )
+	{
+		ScenePath parentPath = path;
+		parentPath.pop_back();
+		const Imath::M44f parentMatrix = inPlug()->fullTransform( parentPath );
+		return inputTransform * parentMatrix  * matrix * parentMatrix.inverse();
+	}
+	else if( space == Parent )
 	{
 		return inputTransform * matrix;
 	}

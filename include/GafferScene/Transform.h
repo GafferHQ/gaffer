@@ -57,7 +57,8 @@ class Transform : public SceneElementProcessor
 		enum Space
 		{
 			World,
-			Object
+			Object,
+			Parent
 		};
 
 		Gaffer::IntPlug *spacePlug();
