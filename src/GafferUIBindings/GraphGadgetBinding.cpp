@@ -195,6 +195,6 @@ void GafferUIBindings::bindGraphGadget()
 		.def( "connectionGadgetAt", &connectionGadgetAt )
 	;
 
-	GafferBindings::SignalBinder<GraphGadget::RootChangedSignal, GafferBindings::DefaultSignalCaller<GraphGadget::RootChangedSignal>, RootChangedSlotCaller>::bind( "RootChangedSignal" );
+	GafferBindings::SignalClass<GraphGadget::RootChangedSignal, GafferBindings::DefaultSignalCaller<GraphGadget::RootChangedSignal>, RootChangedSlotCaller>( "RootChangedSignal" );
 
 }

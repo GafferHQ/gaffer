@@ -138,6 +138,6 @@ void GafferBindings::bindApplicationRoot()
 		.def( "preferencesLocation", &ApplicationRoot::preferencesLocation )
 	;
 
-	SignalBinder<ApplicationRoot::ClipboardSignal, DefaultSignalCaller<ApplicationRoot::ClipboardSignal>, ClipboardSlotCaller>::bind( "ClipboardSignal" );
+	SignalClass<ApplicationRoot::ClipboardSignal, DefaultSignalCaller<ApplicationRoot::ClipboardSignal>, ClipboardSlotCaller>( "ClipboardSignal" );
 
 }

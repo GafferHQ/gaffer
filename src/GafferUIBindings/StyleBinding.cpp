@@ -103,6 +103,6 @@ void GafferUIBindings::bindStyle()
 		.value( "BodyText", Style::BodyText )
 	;
 
-	SignalBinder<Style::UnarySignal, DefaultSignalCaller<Style::UnarySignal>, UnarySlotCaller>::bind( "UnarySignal" );
+	SignalClass<Style::UnarySignal, DefaultSignalCaller<Style::UnarySignal>, UnarySlotCaller>( "UnarySignal" );
 
 }

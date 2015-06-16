@@ -449,5 +449,5 @@ void GafferBindings::bindPath()
 		.def( "_emitPathChanged", &Path::emitPathChanged )
 	;
 
-	SignalBinder<Path::PathChangedSignal, DefaultSignalCaller<Path::PathChangedSignal>, PathChangedSlotCaller>::bind( "PathChangedSignal" );
+	SignalClass<Path::PathChangedSignal, DefaultSignalCaller<Path::PathChangedSignal>, PathChangedSlotCaller>( "PathChangedSignal" );
 }

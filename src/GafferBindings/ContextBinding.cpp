@@ -175,7 +175,7 @@ void GafferBindings::bindContext()
 		.def( "current", &current ).staticmethod( "current" )
 		;
 
-	SignalBinder<Context::ChangedSignal, DefaultSignalCaller<Context::ChangedSignal>, ChangedSlotCaller>::bind( "ChangedSignal" );
+	SignalClass<Context::ChangedSignal, DefaultSignalCaller<Context::ChangedSignal>, ChangedSlotCaller>( "ChangedSignal" );
 
 	class_<Context::Scope, boost::noncopyable>( "_Scope", init<Context *>() )
 	;

@@ -88,6 +88,15 @@ GafferUI.PlugValueWidget.registerCreator(
 
 GafferUI.Nodule.registerNodule( GafferScene.FilteredSceneProcessor, "filter", GafferUI.StandardNodule )
 
+def __nodeGadget( node ) :
+
+	nodeGadget = GafferUI.StandardNodeGadget( node )
+	GafferSceneUI.PathFilterUI.addObjectDropTarget( nodeGadget )
+
+	return nodeGadget
+
+GafferUI.NodeGadget.registerNodeGadget( GafferScene.FilteredSceneProcessor, __nodeGadget )
+
 ##########################################################################
 # NodeGraph context menu
 ##########################################################################

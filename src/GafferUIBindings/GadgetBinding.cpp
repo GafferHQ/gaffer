@@ -226,13 +226,13 @@ void GafferUIBindings::bindGadget()
 		.def( "select", &Gadget::select ).staticmethod( "select" )
 	;
 
-	SignalBinder<Gadget::RenderRequestSignal, DefaultSignalCaller<Gadget::RenderRequestSignal>, RenderRequestSlotCaller>::bind( "RenderRequestSignal" );
-	SignalBinder<Gadget::ButtonSignal, DefaultSignalCaller<Gadget::ButtonSignal>, ButtonSlotCaller>::bind( "ButtonSignal" );
-	SignalBinder<Gadget::KeySignal, DefaultSignalCaller<Gadget::KeySignal>, KeySlotCaller>::bind( "KeySignal" );
-	SignalBinder<Gadget::DragBeginSignal, DefaultSignalCaller<Gadget::DragBeginSignal>, DragBeginSlotCaller>::bind( "DragBeginSignal" );
-	SignalBinder<Gadget::DragDropSignal, DefaultSignalCaller<Gadget::DragDropSignal>, DragDropSlotCaller>::bind( "DragDropSignal" );
-	SignalBinder<Gadget::EnterLeaveSignal, DefaultSignalCaller<Gadget::EnterLeaveSignal>, EnterLeaveSlotCaller>::bind( "EnterLeaveSignal" );
-	SignalBinder<Gadget::IdleSignal>::bind( "IdleSignal" );
-	SignalBinder<Gadget::ExecuteOnUIThreadSignal, DefaultSignalCaller<Gadget::EnterLeaveSignal>, ExecuteOnUIThreadSlotCaller>::bind( "ExecuteOnUIThreadSignal" );
+	SignalClass<Gadget::RenderRequestSignal, DefaultSignalCaller<Gadget::RenderRequestSignal>, RenderRequestSlotCaller>( "RenderRequestSignal" );
+	SignalClass<Gadget::ButtonSignal, DefaultSignalCaller<Gadget::ButtonSignal>, ButtonSlotCaller>( "ButtonSignal" );
+	SignalClass<Gadget::KeySignal, DefaultSignalCaller<Gadget::KeySignal>, KeySlotCaller>( "KeySignal" );
+	SignalClass<Gadget::DragBeginSignal, DefaultSignalCaller<Gadget::DragBeginSignal>, DragBeginSlotCaller>( "DragBeginSignal" );
+	SignalClass<Gadget::DragDropSignal, DefaultSignalCaller<Gadget::DragDropSignal>, DragDropSlotCaller>( "DragDropSignal" );
+	SignalClass<Gadget::EnterLeaveSignal, DefaultSignalCaller<Gadget::EnterLeaveSignal>, EnterLeaveSlotCaller>( "EnterLeaveSignal" );
+	SignalClass<Gadget::IdleSignal>( "IdleSignal" );
+	SignalClass<Gadget::ExecuteOnUIThreadSignal, DefaultSignalCaller<Gadget::EnterLeaveSignal>, ExecuteOnUIThreadSlotCaller>( "ExecuteOnUIThreadSignal" );
 
 }
