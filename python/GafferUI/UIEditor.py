@@ -709,6 +709,11 @@ class _PlugListing( GafferUI.Widget ) :
 			newParent = self.__pathListing.getPath().rootItem()
 			newIndex = 0 if event.line.p0.y < 1 else len( newParent )
 
+		# skip any attempted circular reparenting
+
+		if newParent is self.__dragItem or self.__dragItem.isAncestorOf( newParent ) :
+			return True
+
 		# disallow drags that would place a plug below a section
 
 		firstNonPlugIndex = next(
