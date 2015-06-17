@@ -113,7 +113,15 @@ def __editExpression( plug ) :
 def __popupMenu( menuDefinition, plugValueWidget ) :
 
 	plug = plugValueWidget.getPlug()
-	if not isinstance( plug, ( Gaffer.FloatPlug, Gaffer.IntPlug, Gaffer.StringPlug, Gaffer.BoolPlug ) ) :
+	if not isinstance( plug, (
+		Gaffer.FloatPlug, Gaffer.IntPlug,
+		Gaffer.StringPlug, Gaffer.BoolPlug,
+		Gaffer.V3fPlug, Gaffer.V3iPlug,
+		Gaffer.V2fPlug, Gaffer.V2iPlug,
+		Gaffer.Color3fPlug, Gaffer.Color4fPlug,
+		Gaffer.Box2fPlug, Gaffer.Box2iPlug,
+		Gaffer.Box3fPlug, Gaffer.Box3iPlug,
+	) ) :
 		return
 
 	node = plug.node()

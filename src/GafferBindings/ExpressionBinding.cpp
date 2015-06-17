@@ -63,17 +63,19 @@ class EngineWrapper : public IECorePython::RefCountedWrapper<Expression::Engine>
 		{
 		}
 
-		virtual std::string outPlug()
+		virtual void outPlugs( std::vector<std::string> &plugs )
 		{
 			if( isSubclassed() )
 			{
 				IECorePython::ScopedGILLock gilLock;
 				try
 				{
-					object f = this->methodOverride( "outPlug" );
+					object f = this->methodOverride( "outPlugs" );
 					if( f )
 					{
-						return extract<std::string>( f() );
+						list pythonPlugs = extract<list>( f() );
+						container_utils::extend_container( plugs, pythonPlugs );
+						return;
 					}
 				}
 				catch( const error_already_set &e )
@@ -81,9 +83,8 @@ class EngineWrapper : public IECorePython::RefCountedWrapper<Expression::Engine>
 					translatePythonException();
 				}
 			}
-			
-			msg( IECore::Msg::Error, "EngineWrapper::outPlug", "outPlug method not defined in python." );
-			return "";
+
+			throw IECore::Exception( "Engine::outPlugs() python method not defined" );
 		}
 
 		virtual void inPlugs( std::vector<std::string> &plugs )
@@ -107,7 +108,7 @@ class EngineWrapper : public IECorePython::RefCountedWrapper<Expression::Engine>
 				}
 			}
 
-			msg( IECore::Msg::Error, "EngineWrapper::inPlugs", "inPlugs method not defined in python." );
+			throw IECore::Exception( "Engine::inPlugs() python method not defined" );
 		}
 
 		virtual void contextNames( std::vector<IECore::InternedString> &names )
@@ -131,10 +132,10 @@ class EngineWrapper : public IECorePython::RefCountedWrapper<Expression::Engine>
 				}
 			}
 
-			msg( IECore::Msg::Error, "EngineWrapper::contextNames", "contextNames method not defined in python." );
+			throw IECore::Exception( "Engine::contextNames() python method not defined" );
 		}
 
-		virtual void execute( const Context *context, const std::vector<const ValuePlug *> &proxyInputs, ValuePlug *proxyOutput )
+		virtual IECore::ConstObjectVectorPtr execute( const Context *context, const std::vector<const ValuePlug *> &proxyInputs )
 		{
 			if( isSubclassed() )
 			{
@@ -150,7 +151,30 @@ class EngineWrapper : public IECorePython::RefCountedWrapper<Expression::Engine>
 							pythonProxyInputs.append( PlugPtr( const_cast<ValuePlug *>( *it ) ) );
 						}
 
-						f( ContextPtr( const_cast<Context *>( context ) ), pythonProxyInputs, ValuePlugPtr( proxyOutput ) );
+						object result = f( ContextPtr( const_cast<Context *>( context ) ), pythonProxyInputs );
+						return extract<IECore::ConstObjectVectorPtr>( result );
+					}
+				}
+				catch( const error_already_set &e )
+				{
+					translatePythonException();
+				}
+			}
+
+			throw IECore::Exception( "Engine::execute() python method not defined" );
+		}
+
+		virtual void setPlugValue( ValuePlug *plug, const IECore::Object *value )
+		{
+			if( isSubclassed() )
+			{
+				IECorePython::ScopedGILLock gilLock;
+				try
+				{
+					object f = this->methodOverride( "setPlugValue" );
+					if( f )
+					{
+						f( ValuePlugPtr( plug ), IECore::ObjectPtr( const_cast<IECore::Object *>( value ) ) );
 						return;
 					}
 				}
@@ -160,7 +184,7 @@ class EngineWrapper : public IECorePython::RefCountedWrapper<Expression::Engine>
 				}
 			}
 			
-			msg( IECore::Msg::Error, "EngineWrapper::execute", "execute method not defined in python." );
+			throw IECore::Exception( "Engine::setPlugValue() python method not defined" );
 		}
 
 };

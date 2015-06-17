@@ -37,6 +37,8 @@
 
 import ast
 
+import IECore
+
 import Gaffer
 
 class PythonExpressionEngine( Gaffer.Expression.Engine ) :
@@ -50,16 +52,14 @@ class PythonExpressionEngine( Gaffer.Expression.Engine ) :
 		parser = _Parser( expression )
 		if not parser.plugWrites :
 			raise Exception( "Expression does not write to a plug" )
-		elif len( parser.plugWrites ) > 1 :
-			raise Exception( "Expression may only write to a single plug" )
 
-		self.__inPlugs = parser.plugReads
-		self.__outPlug = parser.plugWrites[0]
-		self.__contextNames = parser.contextReads
+		self.__inPlugs = list( parser.plugReads )
+		self.__outPlugs = list( parser.plugWrites )
+		self.__contextNames = list( parser.contextReads )
 
-	def outPlug( self ) :
+	def outPlugs( self ) :
 
-		return self.__outPlug
+		return self.__outPlugs
 
 	def inPlugs( self ) :
 
@@ -69,7 +69,7 @@ class PythonExpressionEngine( Gaffer.Expression.Engine ) :
 
 		return self.__contextNames
 
-	def execute( self, context, inputs, output ) :
+	def execute( self, context, inputs ) :
 
 		plugDict = {}
 		for plugPath, plug in zip( self.__inPlugs, inputs ) :
@@ -79,16 +79,35 @@ class PythonExpressionEngine( Gaffer.Expression.Engine ) :
 				parentDict = parentDict.setdefault( p, {} )
 			parentDict[plugPathSplit[-1]] = plug.getValue()
 
-		outputPlugPathSplit = self.__outPlug.split( "." )
-		outputPlugDict = plugDict
-		for p in outputPlugPathSplit[:-1] :
-			outputPlugDict = outputPlugDict.setdefault( p, {} )
+		for plugPath in self.__outPlugs :
+			parentDict = plugDict
+			for p in plugPath.split( "." )[:-1] :
+				parentDict = parentDict.setdefault( p, {} )
 
-		executionDict = { "parent" : plugDict, "context" : context }
+		executionDict = { "IECore" : IECore, "parent" : plugDict, "context" : context }
 
 		exec( self.__expression, executionDict, executionDict )
 
-		output.setValue( outputPlugDict[outputPlugPathSplit[-1]] )
+		result = IECore.ObjectVector()
+		for plugPath in self.__outPlugs :
+			parentDict = plugDict
+			plugPathSplit = plugPath.split( "." )
+			for p in plugPathSplit[:-1] :
+				parentDict = parentDict[p]
+			result.append( parentDict.get( plugPathSplit[-1], IECore.NullObject.defaultNullObject() ) )
+
+		return result
+
+	def setPlugValue( self, plug, value ) :
+
+		_setPlugValue( plug, value )
+
+Gaffer.Expression.Engine.registerEngine( "python", PythonExpressionEngine )
+
+##########################################################################
+# Parser. This is used to figure out what plugs an expression wants
+# to read from and write to, and what context variables it wants to read.
+##########################################################################
 
 class _Parser( ast.NodeVisitor ) :
 
@@ -96,9 +115,9 @@ class _Parser( ast.NodeVisitor ) :
 
 		ast.NodeVisitor.__init__( self )
 
-		self.plugWrites = []
-		self.plugReads = []
-		self.contextReads = []
+		self.plugWrites = set()
+		self.plugReads = set()
+		self.contextReads = set()
 
 		self.visit( ast.parse( expression ) )
 
@@ -108,7 +127,7 @@ class _Parser( ast.NodeVisitor ) :
 			if isinstance( node.targets[0], ast.Subscript ) :
 				plugPath = self.__plugPath( self.__path( node.targets[0] ) )
 				if plugPath :
-					self.plugWrites.append( plugPath )
+					self.plugWrites.add( plugPath )
 
 		self.visit( node.value )
 
@@ -118,11 +137,11 @@ class _Parser( ast.NodeVisitor ) :
 			path = self.__path( node )
 			plugPath = self.__plugPath( path )
 			if plugPath :
-				self.plugReads.append( plugPath )
+				self.plugReads.add( plugPath )
 			else :
 				contextName = self.__contextName( path )
 				if contextName :
-					self.contextReads.append( contextName )
+					self.contextReads.add( contextName )
 
 	def visit_Call( self, node ) :
 
@@ -131,11 +150,11 @@ class _Parser( ast.NodeVisitor ) :
 				if node.func.value.id == "context" :
 					# it's a method call on the context
 					if node.func.attr == "getFrame" :
-						self.contextReads.append( "frame" )
+						self.contextReads.add( "frame" )
 					elif node.func.attr == "get" :
 						if not isinstance( node.args[0], ast.Str ) :
 							raise SyntaxError( "Context name must be a string" )
-						self.contextReads.append( node.args[0].s )
+						self.contextReads.add( node.args[0].s )
 
 		ast.NodeVisitor.generic_visit( self, node )
 
@@ -172,4 +191,59 @@ class _Parser( ast.NodeVisitor ) :
 		else :
 			return path[1]
 
-Gaffer.Expression.Engine.registerEngine( "python", PythonExpressionEngine )
+##########################################################################
+# Functions for setting plug values.
+##########################################################################
+
+def __simpleTypedDataSetter( plug, value ) :
+
+	plug.setValue( value.value )
+
+def __compoundNumericDataSetter( plug, value ) :
+
+	index = plug.parent().children().index( plug )
+	plug.setValue( value.value[index] )
+
+def __boxDataSetter( plug, value ) :
+
+	value = value.value
+
+	vectorPlug = plug.parent()
+	boxPlug = vectorPlug.parent()
+
+	vector = value.min if vectorPlug.getName() == "min" else value.max
+	index = vectorPlug.children().index( plug )
+
+	plug.setValue( vector[index] )
+
+def __nullObjectSetter( plug, value ) :
+
+	# NullObject signifies that the expression didn't
+	# provide a value at all - set the plug to its default.
+	plug.setToDefault()
+
+def __defaultSetter( plug, value ) :
+
+	plug.setValue( value )
+
+_setters = {
+	IECore.IntData : __simpleTypedDataSetter,
+	IECore.FloatData : __simpleTypedDataSetter,
+	IECore.StringData : __simpleTypedDataSetter,
+	IECore.BoolData : __simpleTypedDataSetter,
+	IECore.V2fData : __compoundNumericDataSetter,
+	IECore.V2iData : __compoundNumericDataSetter,
+	IECore.V3fData : __compoundNumericDataSetter,
+	IECore.V3iData : __compoundNumericDataSetter,
+	IECore.Color3fData : __compoundNumericDataSetter,
+	IECore.Color4fData : __compoundNumericDataSetter,
+	IECore.Box2fData : __boxDataSetter,
+	IECore.Box2iData : __boxDataSetter,
+	IECore.Box3fData : __boxDataSetter,
+	IECore.Box3iData : __boxDataSetter,
+	IECore.NullObject : __nullObjectSetter,
+}
+
+def _setPlugValue( plug, value ) :
+
+	_setters.get( type( value ), __defaultSetter )( plug, value )

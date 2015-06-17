@@ -42,25 +42,26 @@
 #include "IECore/Exception.h"
 
 #include "Gaffer/Expression.h"
-#include "Gaffer/CompoundPlug.h"
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/Context.h"
 #include "Gaffer/StringPlug.h"
 
+using namespace IECore;
 using namespace Gaffer;
-
-static IECore::InternedString g_inPlugName( "in" );
-static IECore::InternedString g_outPlugName( "out" );
 
 //////////////////////////////////////////////////////////////////////////
 // Expression implementation
 //////////////////////////////////////////////////////////////////////////
+
+size_t Expression::g_firstPlugIndex;
 
 IE_CORE_DEFINERUNTIMETYPED( Expression );
 
 Expression::Expression( const std::string &name )
 	:	ComputeNode( name ), m_engine( 0 )
 {
+	storeIndexOfNextChild( g_firstPlugIndex );
+
 	addChild(
 		new StringPlug(
 			"engine",
@@ -80,6 +81,10 @@ Expression::Expression( const std::string &name )
 		)
 	);
 
+	addChild( new ValuePlug( "__in" ) );
+	addChild( new ValuePlug( "__out", Plug::Out ) );
+	addChild( new ObjectVectorPlug( "__execute", Plug::Out, new ObjectVector ) );
+
 	plugSetSignal().connect( boost::bind( &Expression::plugSet, this, ::_1 ) );
 }
 
@@ -89,38 +94,74 @@ Expression::~Expression()
 
 StringPlug *Expression::enginePlug()
 {
-	return getChild<StringPlug>( "engine" );
+	return getChild<StringPlug>( g_firstPlugIndex );
 }
 
 const StringPlug *Expression::enginePlug() const
 {
-	return getChild<StringPlug>( "engine" );
+	return getChild<StringPlug>( g_firstPlugIndex );
 }
 
 StringPlug *Expression::expressionPlug()
 {
-	return getChild<StringPlug>( "expression" );
+	return getChild<StringPlug>( g_firstPlugIndex + 1 );
 }
 
 const StringPlug *Expression::expressionPlug() const
 {
-	return getChild<StringPlug>( "expression" );
+	return getChild<StringPlug>( g_firstPlugIndex + 1 );
+}
+
+ValuePlug *Expression::inPlug()
+{
+	return getChild<ValuePlug>( g_firstPlugIndex + 2 );
+}
+
+const ValuePlug *Expression::inPlug() const
+{
+	return getChild<ValuePlug>( g_firstPlugIndex + 2 );
+}
+
+ValuePlug *Expression::outPlug()
+{
+	return getChild<ValuePlug>( g_firstPlugIndex + 3 );
+}
+
+const ValuePlug *Expression::outPlug() const
+{
+	return getChild<ValuePlug>( g_firstPlugIndex + 3 );
+}
+
+ObjectVectorPlug *Expression::executePlug()
+{
+	return getChild<ObjectVectorPlug>( g_firstPlugIndex + 4 );
+}
+
+const ObjectVectorPlug *Expression::executePlug() const
+{
+	return getChild<ObjectVectorPlug>( g_firstPlugIndex + 4 );
 }
 
 void Expression::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	ComputeNode::affects( input, outputs );
 
-	if( const ValuePlug *out = outPlug() )
+	if(
+		inPlug()->isAncestorOf( input ) ||
+		input == expressionPlug() ||
+		input == enginePlug()
+	)
 	{
-		const CompoundPlug *in = inPlug();
-		if(
-			( in && input->parent<CompoundPlug>() == in ) ||
-			input == expressionPlug() ||
-			input == enginePlug()
-		)
+		outputs.push_back( executePlug() );
+	}
+	else if( input == executePlug() )
+	{
+		for( RecursiveValuePlugIterator it( outPlug() ); it != it.end(); ++it )
 		{
-			outputs.push_back( out );
+			if( !(*it)->children().size() )
+			{
+				outputs.push_back( it->get() );
+			}
 		}
 	}
 }
@@ -128,15 +169,13 @@ void Expression::affects( const Plug *input, AffectedPlugsContainer &outputs ) c
 void Expression::hash( const ValuePlug *output, const Context *context, IECore::MurmurHash &h ) const
 {
 	ComputeNode::hash( output, context, h );
-	if( output == outPlug() )
+
+	if( output == executePlug() )
 	{
 		enginePlug()->hash( h );
 		expressionPlug()->hash( h );
-		const CompoundPlug *in = inPlug();
-		if( in )
-		{
-			in->hash( h );
-		}
+		inPlug()->hash( h );
+
 		if( m_engine )
 		{
 			for( std::vector<IECore::InternedString>::const_iterator it = m_contextNames.begin(); it != m_contextNames.end(); it++ )
@@ -153,22 +192,59 @@ void Expression::hash( const ValuePlug *output, const Context *context, IECore::
 			}
 		}
 	}
+	else if( outPlug()->isAncestorOf( output ) )
+	{
+		executePlug()->hash( h );
+	}
 }
 
 void Expression::compute( ValuePlug *output, const Context *context ) const
 {
-	if( output == outPlug() )
+	if( output == executePlug() )
 	{
 		if( m_engine )
 		{
-			const CompoundPlug *in = inPlug();
 			std::vector<const ValuePlug *> inputs;
-			for( ChildContainer::const_iterator it = in->children().begin(); it!=in->children().end(); it++ )
+			for( ValuePlugIterator it( inPlug() ); it != it.end(); ++it )
 			{
-				inputs.push_back( static_cast<const ValuePlug *>( (*it).get() ) );
+				inputs.push_back( it->get() );
 			}
+			static_cast<ObjectVectorPlug *>( output )->setValue( m_engine->execute( context, inputs ) );
+		}
+		else
+		{
+			output->setToDefault();
+		}
+		return;
+	}
 
-			m_engine->execute( context, inputs, output );
+	// See if we're computing a descendant of outPlug(),
+	// and if we are, get the immediate child of outPlug()
+	// that is its parent.
+	const Plug *outPlugChild = output;
+	while( outPlugChild )
+	{
+		const Plug *p = outPlugChild->parent<Plug>();
+		if( p == outPlug() )
+		{
+			break;
+		}
+		outPlugChild = p;
+	}
+
+	// If we've found such a plug, we can defer to the engine
+	// to do the work of setting it.
+	if( outPlugChild )
+	{
+		ConstObjectVectorPtr values = executePlug()->getValue();
+		size_t index = 0;
+		for( ValuePlugIterator it( outPlug() ); it != it.end() && *it != outPlugChild; ++it )
+		{
+			index++;
+		}
+		if( index < values->members().size() )
+		{
+			m_engine->setPlugValue( output, values->members()[index].get() );
 		}
 		else
 		{
@@ -180,119 +256,85 @@ void Expression::compute( ValuePlug *output, const Context *context ) const
 	ComputeNode::compute( output, context );
 }
 
-CompoundPlug *Expression::inPlug()
-{
-	return getChild<CompoundPlug>( g_inPlugName );
-}
-
-const CompoundPlug *Expression::inPlug() const
-{
-	return getChild<CompoundPlug>( g_inPlugName );
-}
-
-ValuePlug *Expression::outPlug()
-{
-	return getChild<ValuePlug>( g_outPlugName );
-}
-
-const ValuePlug *Expression::outPlug() const
-{
-	return getChild<ValuePlug>( g_outPlugName );
-}
-
 void Expression::plugSet( Plug *plug )
 {
-	if( !parent<Node>() )
+	if( plug == expressionPlug() )
 	{
-		// typically this happens when a plug is set during the loading of a script,
-		// as at the point our plugs are set, we don't yet have a parent. instead
-		// we'll make an engine in our parentChanged slot.
-		return;
-	}
+		m_engine = NULL;
+		m_contextNames.clear();
 
-	StringPlug *e = expressionPlug();
-	if( plug == e )
-	{
-		m_engine = 0;
-
-		try {
-			std::string newExpression = e->getValue();
+		try
+		{
+			std::string newExpression = expressionPlug()->getValue();
 			if( newExpression.size() )
 			{
 				m_engine = Engine::create( enginePlug()->getValue(), newExpression );
-
 				std::vector<std::string> inPlugPaths;
-				std::string outPlugPath;
+				std::vector<std::string> outPlugPaths;
 
 				if( m_engine )
 				{
 					m_engine->inPlugs( inPlugPaths );
-					outPlugPath = m_engine->outPlug();
-					m_contextNames.clear();
+					m_engine->outPlugs( outPlugPaths );
 					m_engine->contextNames( m_contextNames );
 				}
 
-				updatePlugs( outPlugPath, inPlugPaths );
+				updatePlugs( inPlugPaths, outPlugPaths );
 			}
 		}
 		catch( const std::exception &e )
 		{
 			/// \todo Report error to user somehow - error signal on Node?
 			IECore::msg( IECore::Msg::Error, "Expression::plugSet", e.what() );
-			m_engine = 0;
+			m_engine = NULL;
 		}
 
 	}
 }
 
-void Expression::updatePlugs( const std::string &dstPlugPath, std::vector<std::string> &srcPlugPaths )
+void Expression::updatePlugs( const std::vector<std::string> &inPlugPaths, const std::vector<std::string> &outPlugPaths )
+{
+	/// \todo Reuse existing plugs where possible.
+	inPlug()->clearChildren();
+	outPlug()->removeOutputs();
+	outPlug()->clearChildren();
+
+	for( std::vector<std::string>::const_iterator it = inPlugPaths.begin(); it!=inPlugPaths.end(); ++it )
+	{
+		addPlug( inPlug(), *it );
+	}
+
+	for( std::vector<std::string>::const_iterator it = outPlugPaths.begin(); it!=outPlugPaths.end(); ++it )
+	{
+		addPlug( outPlug(), *it );
+	}
+}
+
+void Expression::addPlug( ValuePlug *parentPlug, const std::string &plugPath )
 {
 	Node *p = parent<Node>();
-
-	// if the expression was invalid, remove our plugs
-	if( !dstPlugPath.size() )
+	if( !p )
 	{
-		Plug *in = inPlug();
-		if( in )
-		{
-			removeChild( in );
-		}
-		Plug *out = outPlug();
-		if( out )
-		{
-			removeChild( out );
-		}
-		return;
+		throw IECore::Exception( "No parent" );
 	}
 
-	// otherwise try to create connections to the plugs the expression wants
-	/// \todo Early out if the plugs we have are already suitable.
-
-	ValuePlug *dstPlug = p->descendant<ValuePlug>( dstPlugPath );
-	if( !dstPlug )
+	ValuePlug *plug = p->descendant<ValuePlug>( plugPath );
+	if( !plug )
 	{
-		throw IECore::Exception( boost::str( boost::format( "Destination plug \"%s\" does not exist" ) % dstPlugPath ) );
+		throw IECore::Exception( boost::str( boost::format( "Plug \"%s\" does not exist" ) % plugPath ) );
 	}
 
-	CompoundPlugPtr inPlugs = new CompoundPlug( g_inPlugName, Plug::In, Plug::Default | Plug::Dynamic );
-	setChild( g_inPlugName, inPlugs );
-	for( std::vector<std::string>::const_iterator it = srcPlugPaths.begin(); it!=srcPlugPaths.end(); it++ )
+	PlugPtr childPlug = plug->createCounterpart( "p0", parentPlug->direction() );
+	childPlug->setFlags( Plug::Dynamic, true );
+	parentPlug->addChild( childPlug );
+	if( childPlug->direction() == Plug::In )
 	{
-		ValuePlug *srcPlug = p->descendant<ValuePlug>( *it );
-		if( !srcPlug )
-		{
-			throw IECore::Exception( boost::str( boost::format( "Source plug \"%s\" does not exist" ) % *it ) );
-		}
-		PlugPtr inPlug = srcPlug->createCounterpart( "plug", Plug::In );
-		inPlug->setFlags( Plug::Dynamic, true );
-		inPlugs->addChild( inPlug );
-		inPlug->setInput( srcPlug );
+		childPlug->setInput( plug );
 	}
-
-	PlugPtr outPlug = dstPlug->createCounterpart( g_outPlugName, Plug::Out );
-	outPlug->setFlags( Plug::Dynamic, true );
-	setChild( g_outPlugName, outPlug );
-	dstPlug->setInput( outPlug );
+	else
+	{
+		plug->setInput( childPlug );
+	}
 }
 
 //////////////////////////////////////////////////////////////////////////
