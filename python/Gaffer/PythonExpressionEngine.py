@@ -84,7 +84,7 @@ class PythonExpressionEngine( Gaffer.Expression.Engine ) :
 			for p in plugPath.split( "." )[:-1] :
 				parentDict = parentDict.setdefault( p, {} )
 
-		executionDict = { "parent" : plugDict, "context" : context }
+		executionDict = { "IECore" : IECore, "parent" : plugDict, "context" : context }
 
 		exec( self.__expression, executionDict, executionDict )
 
