@@ -254,6 +254,13 @@ void Expression::hash( const ValuePlug *output, const Context *context, IECore::
 			// types may yield a different result from Engine::execute().
 			h.append( (*it)->typeId() );
 		}
+		for( ValuePlugIterator it( outPlug() ); it!=it.end(); it++ )
+		{
+			// We also need to hash the types of the output plugs,
+			// because an identical expression with different output
+			// types may yield a different result from Engine::execute().
+			h.append( (*it)->typeId() );
+		}
 
 		for( std::vector<IECore::InternedString>::const_iterator it = m_contextNames.begin(); it != m_contextNames.end(); it++ )
 		{

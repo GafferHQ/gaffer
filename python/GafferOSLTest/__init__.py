@@ -39,6 +39,7 @@ from OSLShaderTest import OSLShaderTest
 from OSLRendererTest import OSLRendererTest
 from OSLImageTest import OSLImageTest
 from OSLObjectTest import OSLObjectTest
+from OSLExpressionEngineTest import OSLExpressionEngineTest
 from ModuleTest import ModuleTest
 
 if __name__ == "__main__":
