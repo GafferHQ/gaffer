@@ -374,5 +374,81 @@ class ExpressionTest( GafferTest.TestCase ) :
 
 		self.assertEqual( s2["n"]["user"]["p"].getValue(), IECore.StringVectorData( [ "one", "two" ] ) )
 
+	def testVectorAndColourOutputs( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = Gaffer.Node()
+		s["n"]["user"].addChild( Gaffer.V2fPlug( "v2f", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+		s["n"]["user"].addChild( Gaffer.V2iPlug( "v2i", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+		s["n"]["user"].addChild( Gaffer.V3fPlug( "v3f", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+		s["n"]["user"].addChild( Gaffer.V3iPlug( "v3i", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+		s["n"]["user"].addChild( Gaffer.Color3fPlug( "c3f", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+		s["n"]["user"].addChild( Gaffer.Color4fPlug( "c4f", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+
+		s["e"] = Gaffer.Expression()
+		s["e"]["engine"].setValue( "python" )
+
+		s["e"]["expression"].setValue(
+			'import IECore;'
+			'parent["n"]["user"]["v2f"] = IECore.V2f( 1, 2 );'
+			'parent["n"]["user"]["v2i"] = IECore.V2i( 3, 4 );'
+			'parent["n"]["user"]["v3f"] = IECore.V3f( 4, 5, 6 );'
+			'parent["n"]["user"]["v3i"] = IECore.V3i( 6, 7, 8 );'
+			'parent["n"]["user"]["c3f"] = IECore.Color3f( 9, 10, 11 );'
+			'parent["n"]["user"]["c4f"] = IECore.Color4f( 12, 13, 14, 15 );'
+		)
+
+		def assertExpectedValues( script ) :
+
+			self.assertEqual( script["n"]["user"]["v2f"].getValue(), IECore.V2f( 1, 2 ) )
+			self.assertEqual( script["n"]["user"]["v2i"].getValue(), IECore.V2i( 3, 4 ) )
+			self.assertEqual( script["n"]["user"]["v3f"].getValue(), IECore.V3f( 4, 5, 6 ) )
+			self.assertEqual( script["n"]["user"]["v3i"].getValue(), IECore.V3i( 6, 7, 8 ) )
+			self.assertEqual( script["n"]["user"]["c3f"].getValue(), IECore.Color3f( 9, 10, 11 ) )
+			self.assertEqual( script["n"]["user"]["c4f"].getValue(), IECore.Color4f( 12, 13, 14, 15 ) )
+
+		assertExpectedValues( s )
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+
+		assertExpectedValues( s2 )
+
+	def testBoxOutputs( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = Gaffer.Node()
+		s["n"]["user"].addChild( Gaffer.Box2fPlug( "b2f", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+		s["n"]["user"].addChild( Gaffer.Box2iPlug( "b2i", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+		s["n"]["user"].addChild( Gaffer.Box3fPlug( "b3f", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+		s["n"]["user"].addChild( Gaffer.Box3iPlug( "b3i", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+
+		s["e"] = Gaffer.Expression()
+		s["e"]["engine"].setValue( "python" )
+
+		s["e"]["expression"].setValue(
+			'import IECore;'
+			'parent["n"]["user"]["b2f"] = IECore.Box2f( IECore.V2f( 1, 2 ), IECore.V2f( 3, 4 ) );'
+			'parent["n"]["user"]["b2i"] = IECore.Box2i( IECore.V2i( 5, 6 ), IECore.V2i( 7, 8 ) );'
+			'parent["n"]["user"]["b3f"] = IECore.Box3f( IECore.V3f( 9, 10, 11 ), IECore.V3f( 12, 13, 14 ) );'
+			'parent["n"]["user"]["b3i"] = IECore.Box3i( IECore.V3i( 15, 16, 17 ), IECore.V3i( 18, 19, 20 ) );'
+		)
+
+		def assertExpectedValues( script ) :
+
+			self.assertEqual( script["n"]["user"]["b2f"].getValue(), IECore.Box2f( IECore.V2f( 1, 2 ), IECore.V2f( 3, 4 ) ) )
+			self.assertEqual( script["n"]["user"]["b2i"].getValue(), IECore.Box2i( IECore.V2i( 5, 6 ), IECore.V2i( 7, 8 ) ) )
+			self.assertEqual( script["n"]["user"]["b3f"].getValue(), IECore.Box3f( IECore.V3f( 9, 10, 11 ), IECore.V3f( 12, 13, 14 ) ) )
+			self.assertEqual( script["n"]["user"]["b3i"].getValue(), IECore.Box3i( IECore.V3i( 15, 16, 17 ), IECore.V3i( 18, 19, 20 ) ) )
+
+		assertExpectedValues( s )
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+
+		assertExpectedValues( s2 )
+
 if __name__ == "__main__":
 	unittest.main()

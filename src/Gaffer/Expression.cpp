@@ -192,7 +192,7 @@ void Expression::hash( const ValuePlug *output, const Context *context, IECore::
 			}
 		}
 	}
-	else if( outPlug() == output->parent<ValuePlug>() )
+	else if( outPlug()->isAncestorOf( output ) )
 	{
 		executePlug()->hash( h );
 	}
@@ -217,11 +217,28 @@ void Expression::compute( ValuePlug *output, const Context *context ) const
 		}
 		return;
 	}
-	else if( outPlug() == output->parent<ValuePlug>() )
+
+	// See if we're computing a descendant of outPlug(),
+	// and if we are, get the immediate child of outPlug()
+	// that is its parent.
+	const Plug *outPlugChild = output;
+	while( outPlugChild )
+	{
+		const Plug *p = outPlugChild->parent<Plug>();
+		if( p == outPlug() )
+		{
+			break;
+		}
+		outPlugChild = p;
+	}
+
+	// If we've found such a plug, we can defer to the engine
+	// to do the work of setting it.
+	if( outPlugChild )
 	{
 		ConstObjectVectorPtr values = executePlug()->getValue();
 		size_t index = 0;
-		for( ValuePlugIterator it( outPlug() ); it != it.end() && *it != output; ++it )
+		for( ValuePlugIterator it( outPlug() ); it != it.end() && *it != outPlugChild; ++it )
 		{
 			index++;
 		}

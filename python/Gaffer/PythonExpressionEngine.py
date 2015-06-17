@@ -100,10 +100,14 @@ class PythonExpressionEngine( Gaffer.Expression.Engine ) :
 
 	def setPlugValue( self, plug, value ) :
 
-		with IECore.IgnoredExceptions( AttributeError ) :
-			value = value.value
+		_setPlugValue( plug, value )
 
-		plug.setValue( value )
+Gaffer.Expression.Engine.registerEngine( "python", PythonExpressionEngine )
+
+##########################################################################
+# Parser. This is used to figure out what plugs an expression wants
+# to read from and write to, and what context variables it wants to read.
+##########################################################################
 
 class _Parser( ast.NodeVisitor ) :
 
@@ -187,4 +191,52 @@ class _Parser( ast.NodeVisitor ) :
 		else :
 			return path[1]
 
-Gaffer.Expression.Engine.registerEngine( "python", PythonExpressionEngine )
+##########################################################################
+# Functions for setting plug values.
+##########################################################################
+
+def __simpleTypedDataSetter( plug, value ) :
+
+	plug.setValue( value.value )
+
+def __compoundNumericDataSetter( plug, value ) :
+
+	index = plug.parent().children().index( plug )
+	plug.setValue( value.value[index] )
+
+def __boxDataSetter( plug, value ) :
+
+	value = value.value
+
+	vectorPlug = plug.parent()
+	boxPlug = vectorPlug.parent()
+
+	vector = value.min if vectorPlug.getName() == "min" else value.max
+	index = vectorPlug.children().index( plug )
+
+	plug.setValue( vector[index] )
+
+def __defaultSetter( plug, value ) :
+
+	plug.setValue( value )
+
+_setters = {
+	IECore.IntData : __simpleTypedDataSetter,
+	IECore.FloatData : __simpleTypedDataSetter,
+	IECore.StringData : __simpleTypedDataSetter,
+	IECore.BoolData : __simpleTypedDataSetter,
+	IECore.V2fData : __compoundNumericDataSetter,
+	IECore.V2iData : __compoundNumericDataSetter,
+	IECore.V3fData : __compoundNumericDataSetter,
+	IECore.V3iData : __compoundNumericDataSetter,
+	IECore.Color3fData : __compoundNumericDataSetter,
+	IECore.Color4fData : __compoundNumericDataSetter,
+	IECore.Box2fData : __boxDataSetter,
+	IECore.Box2iData : __boxDataSetter,
+	IECore.Box3fData : __boxDataSetter,
+	IECore.Box3iData : __boxDataSetter,
+}
+
+def _setPlugValue( plug, value ) :
+
+	_setters.get( type( value ), __defaultSetter )( plug, value )

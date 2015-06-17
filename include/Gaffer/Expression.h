@@ -86,7 +86,10 @@ class Expression : public ComputeNode
 				/// provided by proxyInputs and returning an array containing a value for
 				/// each plug in outPlugs().
 				virtual IECore::ConstObjectVectorPtr execute( const Context *context, const std::vector<const ValuePlug *> &proxyInputs ) = 0;
-				/// Must set the plug to the value computed previously in execute().
+				/// Must set the plug using the value computed previously in execute().
+				/// Note that if a compound plug is returned in outPlugs(), setPlugValue()
+				/// will be called for each of the children of the compound, and it is the
+				/// responsibility of the engine to decompose the value for each plug suitably.
 				virtual void setPlugValue( ValuePlug *plug, const IECore::Object *value ) = 0;
 
 				static EnginePtr create( const std::string engineType, const std::string &expression );
