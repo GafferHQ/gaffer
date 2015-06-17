@@ -94,7 +94,7 @@ class PythonExpressionEngine( Gaffer.Expression.Engine ) :
 			plugPathSplit = plugPath.split( "." )
 			for p in plugPathSplit[:-1] :
 				parentDict = parentDict[p]
-			result.append( parentDict[plugPathSplit[-1]] )
+			result.append( parentDict.get( plugPathSplit[-1], IECore.NullObject.defaultNullObject() ) )
 
 		return result
 
@@ -216,6 +216,12 @@ def __boxDataSetter( plug, value ) :
 
 	plug.setValue( vector[index] )
 
+def __nullObjectSetter( plug, value ) :
+
+	# NullObject signifies that the expression didn't
+	# provide a value at all - set the plug to its default.
+	plug.setToDefault()
+
 def __defaultSetter( plug, value ) :
 
 	plug.setValue( value )
@@ -235,6 +241,7 @@ _setters = {
 	IECore.Box2iData : __boxDataSetter,
 	IECore.Box3fData : __boxDataSetter,
 	IECore.Box3iData : __boxDataSetter,
+	IECore.NullObject : __nullObjectSetter,
 }
 
 def _setPlugValue( plug, value ) :

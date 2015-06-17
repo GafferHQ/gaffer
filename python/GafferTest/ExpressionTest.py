@@ -36,6 +36,7 @@
 ##########################################################################
 
 import os
+import inspect
 import unittest
 
 import IECore
@@ -449,6 +450,57 @@ class ExpressionTest( GafferTest.TestCase ) :
 		s2.execute( s.serialise() )
 
 		assertExpectedValues( s2 )
+
+	def testAssignOutputOnBranch( self ) :
+
+		expressions = [
+
+			"""
+			if context.getFrame() > 10 :
+				parent["n"]["user"]["b"] = True
+			else :
+				parent["n"]["user"]["b"] = False
+			""",
+
+			"""
+			parent["n"]["user"]["b"] = False
+			if context.getFrame() > 10 :
+				parent["n"]["user"]["b"] = True
+			""",
+
+			"""
+			if context.getFrame() > 10 :
+				parent["n"]["user"]["b"] = True
+			""",
+
+		]
+
+		for e in expressions :
+
+			s = Gaffer.ScriptNode()
+
+			s["n"] = Gaffer.Node()
+			s["n"]["user"]["b"] = Gaffer.BoolPlug( defaultValue = False, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+			s["e"] = Gaffer.Expression()
+			s["e"]["engine"].setValue( "python" )
+			s["e"]["expression"].setValue( inspect.cleandoc( e ) )
+
+			def assertExpectedValues( script ) :
+
+				c = Gaffer.Context( script.context() )
+				with c :
+					c.setFrame( 1 )
+					self.assertEqual( script["n"]["user"]["b"].getValue(), False )
+					c.setFrame( 11 )
+					self.assertEqual( script["n"]["user"]["b"].getValue(), True )
+
+			assertExpectedValues( s )
+
+			s2 = Gaffer.ScriptNode()
+			s2.execute( s.serialise() )
+
+			assertExpectedValues( s2 )
 
 if __name__ == "__main__":
 	unittest.main()
