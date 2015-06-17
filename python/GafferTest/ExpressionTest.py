@@ -502,5 +502,28 @@ class ExpressionTest( GafferTest.TestCase ) :
 
 			assertExpectedValues( s2 )
 
+	def testMultipleReadsAndWrites( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = Gaffer.Node()
+		s["n"]["user"]["a"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["n"]["user"]["b"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		s["e"] = Gaffer.Expression()
+		s["e"]["engine"].setValue( "python" )
+		s["e"]["expression"].setValue( inspect.cleandoc(
+			"""
+			if context.getFrame() > 10 :
+				parent["n"]["user"]["a"] = parent["n"]["user"]["b"]
+			else :
+				parent["n"]["user"]["a"] = parent["n"]["user"]["b"] * 2
+			"""
+		) )
+
+		self.assertEqual( len( s["n"]["user"]["b"].outputs() ), 1 )
+		self.assertEqual( len( s["e"]["__in"] ), 1 )
+		self.assertEqual( len( s["e"]["__out"] ), 1 )
+
 if __name__ == "__main__":
 	unittest.main()

@@ -53,9 +53,9 @@ class PythonExpressionEngine( Gaffer.Expression.Engine ) :
 		if not parser.plugWrites :
 			raise Exception( "Expression does not write to a plug" )
 
-		self.__inPlugs = parser.plugReads
-		self.__outPlugs = parser.plugWrites
-		self.__contextNames = parser.contextReads
+		self.__inPlugs = list( parser.plugReads )
+		self.__outPlugs = list( parser.plugWrites )
+		self.__contextNames = list( parser.contextReads )
 
 	def outPlugs( self ) :
 
@@ -115,9 +115,9 @@ class _Parser( ast.NodeVisitor ) :
 
 		ast.NodeVisitor.__init__( self )
 
-		self.plugWrites = []
-		self.plugReads = []
-		self.contextReads = []
+		self.plugWrites = set()
+		self.plugReads = set()
+		self.contextReads = set()
 
 		self.visit( ast.parse( expression ) )
 
@@ -127,7 +127,7 @@ class _Parser( ast.NodeVisitor ) :
 			if isinstance( node.targets[0], ast.Subscript ) :
 				plugPath = self.__plugPath( self.__path( node.targets[0] ) )
 				if plugPath :
-					self.plugWrites.append( plugPath )
+					self.plugWrites.add( plugPath )
 
 		self.visit( node.value )
 
@@ -137,11 +137,11 @@ class _Parser( ast.NodeVisitor ) :
 			path = self.__path( node )
 			plugPath = self.__plugPath( path )
 			if plugPath :
-				self.plugReads.append( plugPath )
+				self.plugReads.add( plugPath )
 			else :
 				contextName = self.__contextName( path )
 				if contextName :
-					self.contextReads.append( contextName )
+					self.contextReads.add( contextName )
 
 	def visit_Call( self, node ) :
 
@@ -150,11 +150,11 @@ class _Parser( ast.NodeVisitor ) :
 				if node.func.value.id == "context" :
 					# it's a method call on the context
 					if node.func.attr == "getFrame" :
-						self.contextReads.append( "frame" )
+						self.contextReads.add( "frame" )
 					elif node.func.attr == "get" :
 						if not isinstance( node.args[0], ast.Str ) :
 							raise SyntaxError( "Context name must be a string" )
-						self.contextReads.append( node.args[0].s )
+						self.contextReads.add( node.args[0].s )
 
 		ast.NodeVisitor.generic_visit( self, node )
 
