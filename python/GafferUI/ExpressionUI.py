@@ -63,6 +63,9 @@ Gaffer.Metadata.registerNode(
 			"layout:section", "",
 			"nodule:type", "",
 
+			"presetNames", lambda plug : IECore.StringVectorData( [ IECore.CamelCase.toSpaced( e ) for e in Gaffer.Expression.Engine.registeredEngines() ] ),
+			"presetValues", lambda plug : IECore.StringVectorData( Gaffer.Expression.Engine.registeredEngines() ),
+
 		),
 
 		"expression" : (
@@ -178,10 +181,7 @@ class _ExpressionPlugValueWidget( GafferUI.MultiLineStringPlugValueWidget ) :
 GafferUI.PlugValueWidget.registerCreator(
 	Gaffer.Expression,
 	"engine",
-	GafferUI.EnumPlugValueWidget,
-	labelsAndValues = [
-		( IECore.CamelCase.toSpaced( e ), e ) for e in Gaffer.Expression.Engine.registeredEngines()
-	]
+	GafferUI.PresetsPlugValueWidget,
 )
 
 GafferUI.PlugValueWidget.registerCreator(
