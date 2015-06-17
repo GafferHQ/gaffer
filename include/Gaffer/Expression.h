@@ -98,6 +98,15 @@ class Expression : public ComputeNode
 				static void registerEngine( const std::string engineType, Creator creator );
 				static void registeredEngines( std::vector<std::string> &engineTypes );
 
+			protected :
+
+				template<class T>
+				struct EngineDescription
+				{
+					EngineDescription( const std::string &engineType ) { registerEngine( engineType, &creator ); };
+					static EnginePtr creator( const std::string &expression ) { return new T( expression ); };
+				};
+
 			private :
 
 				typedef std::map<std::string, Creator> CreatorMap;
