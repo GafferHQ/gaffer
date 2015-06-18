@@ -1,4 +1,4 @@
-#!/usr/bin/env iePython2.6
+#!/usr/bin/env iePython2.7
 
 import IEEnv
 import os, sys, subprocess
@@ -15,7 +15,7 @@ def build( extraArgs = [] ) :
 	
 		raise RuntimeError( "Error : " + " ".join( buildArgs ) )
 
-if IEEnv.platform() == "cent6.x86_64" :
+if IEEnv.platform() in ( "cent6.x86_64", "cent7.x86_64" ) :
 
 	# standalone build
 	build()
