@@ -1,3 +1,100 @@
+# 0.14.0.0
+==========
+
+UI
+-----------------------------------------------------------------------
+
+- NodeGraph
+  - Improved "Select Affected Objects" menu item. This is now available
+    on filters as well as on scene processors.
+  - Added support for dragging objects from the Viewer and SceneHierarchy
+    and dropping them onto scene processors and PathFilters, to specify
+    the affected objects.
+      - Dragging onto a node replaces the current paths.
+      - Shift+Drag adds to the current paths.
+      - Control+Drag removes from the current paths.
+  - Added plug context menu for moving promoted plugs on Boxes.
+- NodeEditor
+  - Added "Select Affected Objects" menu item in the tool menu for
+    filters and scene processors.
+- UIEditor
+  - Added + button for adding plugs, and - button for deleting them.
+  - Added the ability to create nested sections and drag+drop plugs
+    between them.
+- Viewer
+  - Fixed grid and gnomon menus.
+
+Core
+-----------------------------------------------------------------------
+
+- Expression
+  - Added support for setting multiple plugs from one
+    expression (#1315).
+  - Added support for vector, color and box outputs (#1315).
+  - Added support for assigning to plugs within conditional
+    branches (#1349).
+
+Scene
+-----------------------------------------------------------------------
+
+- Improved ParentConstraint so it is acts more like the equivalent
+  parenting operation, and maintains the local transforms of the
+  objects being constrained. Note that this is a change of behaviour,
+  but one that we feel is much for the better.
+- Fixed ShaderAssignment to allow referencing of promoted shader input
+  plugs.
+
+API
+-----------------------------------------------------------------------
+
+- Added `parallelTraverse()` and `filteredParallelTraverse()` methods
+  to SceneAlgo. These make it trivial to traverse all locations in a
+  scene using multiple threads.
+- Added inputTransform argument to `Constraint::computeConstraint()`.
+- Removed TransformPlugValueWidget.
+- Used Plug rather than CompoundPlug in several places. CompoundPlug
+  is being phased out because the Plug base class is now perfectly
+  capable of having child plugs.
+    - `ExecutableNode::dispatcherPlug()`
+    - LocalDispatcher dispatcher plug
+    - `Shader::parametersPlug()`
+- Fixed support for boost python object methods as menu commands.
+- Pointer
+  - Fixed `registerPointer()` method.
+  - Added binding for `registerPointer()`.
+- Added `scoped` argument to `Signal.connect()` python bindings.
+- Added `SignalClass` for binding signals, and deprecated the old
+  `SignalBinder`.
+- Added support for binding signals with 4 arguments.
+- Added `LazyMethod.flush()` method.
+- Fixed update bug in `PathListingWidget.setSelectedPaths()`.
+- Added support for "nodule:type" metadata to control the type
+  of nodule created for a plug. This should be used in preference
+  to `Nodule::registerNodule()`, which has been deprecated.
+- Added support for modifying CompoundNodule orientation, spacing
+  and direction using plug metadata.
+- Improved signalling of instance metadata changes.
+- Added default arguments for ValuePlug constructor arguments.
+
+ Incompatibilities
+-----------------------------------------------------------------------
+
+- Changed Constraint::computeConstraint() function signature.
+- Changed ParentConstraint behaviour to include the local transform of the constrained object.
+- Removed TransformPlugValueWidget.
+- Changed plug type returned by ExecutableNode::dispatcherPlug().
+- Changed Dispatcher::SetupPlugsFn signature.
+- Changed ExecutableNode::dispatcherPlug() signature.
+- Changed Shader::parametersPlug() to Plug rather than CompoundPlug.
+- Removed asUserPlug arguments from Box promotion methods. Plugs are
+  now always promoted directly under a box, and never as user plugs.
+- Changed signature of `Nodule::registerNodule()` when registering a subclass.
+- Changed signature of CompoundNodule constructor, which now accepts a Plug
+  rather than CompoundPlug.
+- Replaced UIEditor setSelectedPlug()/getSelectedPlug() methods with
+  setSelection()/getSelection().
+- Added arguments to Metadata signals.
+
 # 0.13.1.0
 ==========
 
