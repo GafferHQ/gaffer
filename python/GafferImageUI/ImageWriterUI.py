@@ -72,6 +72,8 @@ Gaffer.Metadata.registerNode(
 			as a placeholder for the frame numbers.
 			""",
 
+			"nodule:type", "",
+
 		],
 
 		"writeMode" : [
@@ -88,6 +90,8 @@ Gaffer.Metadata.registerNode(
 			"preset:Scanline", 0,
 			"preset:Tile", 1,
 
+			"nodule:type", "",
+
 		],
 
 		"channels" : [
@@ -97,6 +101,8 @@ Gaffer.Metadata.registerNode(
 			The channels to be written to the file.
 			""",
 
+			"nodule:type", "",
+
 		],
 
 		"out" : [
@@ -105,6 +111,8 @@ Gaffer.Metadata.registerNode(
 			"""
 			A pass-through of the input image.
 			""",
+
+			"nodule:type", "",
 
 		]
 
@@ -132,8 +140,3 @@ GafferUI.PlugValueWidget.registerCreator(
 
 GafferUI.PlugValueWidget.registerCreator( GafferImage.ImageWriter, "channels", GafferImageUI.ChannelMaskPlugValueWidget, inputImagePlug = "in" )
 GafferUI.PlugValueWidget.registerCreator( GafferImage.ImageWriter, "writeMode", GafferUI.PresetsPlugValueWidget )
-
-GafferUI.Nodule.registerNodule( GafferImage.ImageWriter, "fileName", lambda plug : None )
-GafferUI.Nodule.registerNodule( GafferImage.ImageWriter, "channels", lambda plug : None )
-GafferUI.Nodule.registerNodule( GafferImage.ImageWriter, "writeMode", lambda plug : None )
-GafferUI.Nodule.registerNodule( GafferImage.ImageWriter, "out", lambda plug : None )

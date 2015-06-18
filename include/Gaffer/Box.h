@@ -64,26 +64,21 @@ class Box : public SubGraph
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::Box, BoxTypeId, SubGraph );
 
-		/// Returns true if it would be valid to call promotePlug( descendantPlug, asUserPlug ),
+		/// Returns true if it would be valid to call promotePlug( descendantPlug ),
 		/// and false otherwise.
-		bool canPromotePlug( const Plug *descendantPlug, bool asUserPlug = true ) const;
+		bool canPromotePlug( const Plug *descendantPlug ) const;
 		/// Promotes the internal descendantPlug so that it is represented
 		/// as an external plug on the Box. The descendantPlug must belong
 		/// to one of the nodes contained in the box.
 		/// Returns the newly created plug.
 		/// \undoable
-		/// \note If asUserPlug is true, then the external plug will be parented
-		/// under userPlug(), otherwise it will be parented directly to the Box.
-		/// The asUserPlug parameter will be removed in a future version, and
-		/// promoted plugs will always be parented directly under the Box -
-		/// see issue #801 for further information.
-		Plug *promotePlug( Plug *descendantPlug, bool asUserPlug = true );
+		Plug *promotePlug( Plug *descendantPlug );
 		/// Returns true if the descendantPlug has been promoted.
 		bool plugIsPromoted( const Plug *descendantPlug ) const;
 		/// Unpromotes a previously promoted plug, removing the
 		/// plug on the Box where possible.
 		/// \undoable
-		void unpromotePlug( Plug *promotedDescandantPlug );
+		void unpromotePlug( Plug *promotedDescendantPlug );
 
 		/// Exports the contents of the Box so that it can be referenced
 		/// by a Reference node.
@@ -96,7 +91,8 @@ class Box : public SubGraph
 
 	private :
 
-		bool validatePromotability( const Plug *descendantPlug, bool asUserPlug, bool throwExceptions, bool childPlug = false ) const;
+		bool validatePromotability( const Plug *descendantPlug, bool throwExceptions, bool childPlug = false ) const;
+		static void copyMetadata( const Plug *from, Plug *to );
 
 };
 

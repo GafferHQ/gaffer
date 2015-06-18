@@ -178,7 +178,7 @@ class _RandomColorPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def _updateFromPlug( self ) :
 
-		node = self.getPlug().node()
+		node = self.getPlug().source().node()
 		seed = node["seed"].getValue()
 
 		gridSize = self.__grid.gridSize()

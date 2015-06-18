@@ -160,6 +160,27 @@ class LazyMethodTest( GafferUITest.TestCase ) :
 		self.assertEqual( len( cs ), 2 )
 		self.assertEqual( w.getText(), "s" )
 
+	def testFlush( self ) :
+
+		w = self.LazyWidget()
+		cs = GafferTest.CapturingSlot( w.textChangedSignal() )
+
+		self.LazyWidget.setTextLazily.flush( w )
+		self.assertEqual( len( cs ), 0 )
+		self.assertEqual( w.getText(), "" )
+
+		w.setTextLazily( "t" )
+		self.assertEqual( len( cs ), 0 )
+		self.assertEqual( w.getText(), "" )
+
+		self.LazyWidget.setTextLazily.flush( w )
+		self.assertEqual( len( cs ), 1 )
+		self.assertEqual( w.getText(), "t" )
+
+		self.LazyWidget.setTextLazily.flush( w )
+		self.assertEqual( len( cs ), 1 )
+		self.assertEqual( w.getText(), "t" )
+
 if __name__ == "__main__":
 	unittest.main()
 

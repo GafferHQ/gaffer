@@ -61,6 +61,7 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"layout:section", "",
+			"nodule:type", "",
 
 		),
 
@@ -74,6 +75,7 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"layout:section", "",
+			"nodule:type", "",
 
 		),
 
@@ -205,8 +207,3 @@ GafferUI.PlugValueWidget.registerCreator(
 	"user",
 	None
 )
-
-# Nodule deregistrations
-##########################################################################
-
-GafferUI.Nodule.registerNodule( Gaffer.Expression, fnmatch.translate( "*" ), lambda plug : None )

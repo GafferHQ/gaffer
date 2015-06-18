@@ -261,7 +261,7 @@ class ShaderAssignmentTest( unittest.TestCase ) :
 		s = Gaffer.ScriptNode()
 		s["b"] = Gaffer.Box()
 		s["b"]["a"] = GafferScene.ShaderAssignment()
-		p = s["b"].promotePlug( s["b"]["a"]["filter"], asUserPlug = False )
+		p = s["b"].promotePlug( s["b"]["a"]["filter"] )
 		s["b"].exportForReference( "/tmp/test.grf" )
 
 		s["r"] = Gaffer.Reference()
@@ -281,7 +281,7 @@ class ShaderAssignmentTest( unittest.TestCase ) :
 		s["b"]["d"].setup( s["b"]["a"]["filter"] )
 		s["b"]["a"]["filter"].setInput( s["b"]["d"]["out"] )
 
-		p = s["b"].promotePlug( s["b"]["d"]["in"], asUserPlug = False )
+		p = s["b"].promotePlug( s["b"]["d"]["in"] )
 		s["b"].exportForReference( "/tmp/test.grf" )
 
 		s["r"] = Gaffer.Reference()
@@ -291,6 +291,21 @@ class ShaderAssignmentTest( unittest.TestCase ) :
 
 		s["f"] = GafferScene.PathFilter()
 		s["r"][p.getName()].setInput( s["f"]["out"] )
+
+	def testShaderInputAcceptanceFromReferences( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["b"] = Gaffer.Box()
+		s["b"]["a"] = GafferScene.ShaderAssignment()
+		p = s["b"].promotePlug( s["b"]["a"]["shader"] )
+
+		s["b"].exportForReference( "/tmp/test.grf" )
+
+		s["r"] = Gaffer.Reference()
+		s["r"].load( "/tmp/test.grf" )
+
+		self.assertTrue( s["r"]["a"]["shader"].getInput().node().isSame( s["r"] ) )
 
 	def tearDown( self ) :
 

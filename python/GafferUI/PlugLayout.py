@@ -425,11 +425,14 @@ class PlugLayout( GafferUI.Widget ) :
 		elif hasattr( widget, "plugValueWidget" ) :
 			widget.plugValueWidget().setReadOnly( readOnly )
 
-	def __plugMetadataChanged( self, nodeTypeId, plugPath, key ) :
+	def __plugMetadataChanged( self, nodeTypeId, plugPath, key, plug ) :
 
 		if not self.visible() :
 			return
 
+		if plug is not None and not self.__parent.isSame( plug.parent() ) :
+			return
+			
 		if not self.__node().isInstanceOf( nodeTypeId ) :
 			return
 

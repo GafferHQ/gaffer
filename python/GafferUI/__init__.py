@@ -132,6 +132,7 @@ from _GafferUI import *
 
 from Enums import *
 from Widget import Widget
+from LazyMethod import LazyMethod
 from Menu import Menu
 from ContainerWidget import ContainerWidget
 from Window import Window
@@ -186,7 +187,6 @@ from Divider import Divider
 import _Pointer
 from SplineWidget import SplineWidget
 from Bookmarks import Bookmarks
-from LazyMethod import LazyMethod
 
 # then all the PathPreviewWidgets. note that the order
 # of import controls the order of display.

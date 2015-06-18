@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2013-2014, John Haddon. All rights reserved.
+#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,44 +34,34 @@
 #
 ##########################################################################
 
+import os
+
+import IECore
+
 import Gaffer
 import GafferUI
+import GafferRenderMan
+import GafferRenderManTest
+import GafferRenderManUI
 
-import GafferOSL
+class RenderManShaderUITest( GafferRenderManTest.RenderManTestCase ) :
 
-##########################################################################
-# Metadata
-##########################################################################
+	def testPromotedArrayElementNodules( self ) :
 
-Gaffer.Metadata.registerNode(
+		shader = self.compileShader( os.path.expandvars( "$GAFFER_ROOT/python/GafferRenderManTest/shaders/coshaderArrayParameters.sl" ) )
 
-	GafferOSL.OSLObject,
+		script = Gaffer.ScriptNode()
+		graphGadget = GafferUI.GraphGadget( script )
 
-	"description",
-	"""
-	Executes OSL shaders to perform object processing. Use the shaders from
-	the OSL/ObjectProcessing menu to read primitive variables from the input
-	object and then write primitive variables back to it.
-	""",
+		script["b"] = Gaffer.Box()
 
-	plugs = {
+		script["b"]["s"] = GafferRenderMan.RenderManShader()
+		script["b"]["s"].loadShader( shader )
 
-		"shader" : [
-		
-			"description",
-			"""
-			The shader to be executed - connect the output from an OSL network here.
-			A minimal shader network to process P would look like this :
-			
-				InPoint->ProcessingNodes->OutPoint->OutObject
-			""",
-			
-			"nodeGadget:nodulePosition", "left",
-			"nodule:type", "GafferUI::StandardNodule",
+		promotedCoshader = script["b"].promotePlug( script["b"]["s"]["parameters"]["fixedShaderArray"][0] )
 
-		],
+		nodeGadget = graphGadget.nodeGadget( script["b"] )
+		self.assertEqual( nodeGadget.noduleTangent( nodeGadget.nodule( promotedCoshader ) ), IECore.V3f( -1, 0, 0 ) )
 
-	}
-	
-)
-
+if __name__ == "__main__":
+	unittest.main()

@@ -69,16 +69,22 @@ class Nodule : public Gadget
 		/// and tangent for the connection as the drag progresses within the destination.
 		virtual void updateDragEndPoint( const Imath::V3f position, const Imath::V3f &tangent );
 
-		/// Creates a Nodule for the specified plug.
+		/// Creates a Nodule for the specified plug. The type of nodule created can be
+		/// controlled by registering a "nodule:type" metadata value for the plug. Note
+		/// that registering a value of "" suppresses the creation of a Nodule, and in
+		/// this case NULL will be returned.
 		static NodulePtr create( Gaffer::PlugPtr plug );
 
 		typedef boost::function<NodulePtr ( Gaffer::PlugPtr )> NoduleCreator;
-		/// Registers a function which will return a Nodule instance for a plug of a specific
-		/// type.
-		static void registerNodule( IECore::TypeId plugType, NoduleCreator creator );
+		/// Registers a Nodule subclass, optionally registering it as the default
+		/// nodule type for a particular type of plug.
+		static void registerNodule( const std::string &noduleTypeName, NoduleCreator creator, IECore::TypeId plugType = IECore::InvalidTypeId );
+
 		/// Registers a function which will return a Nodule instance for plugs with specific names on
 		/// a specific type of node. Nodules registered in this way will take precedence over those registered above.
 		/// Note that a creator may return 0 to suppress the creation of a Nodule.
+		/// \deprecated Register a "nodule:type" Metadata value instead.
+		/// \todo Remove.
 		static void registerNodule( const IECore::TypeId nodeType, const std::string &plugPathRegex, NoduleCreator creator );
 
 		virtual std::string getToolTip( const IECore::LineSegment3f &line ) const;
@@ -91,7 +97,7 @@ class Nodule : public Gadget
 		template<class T>
 		struct NoduleTypeDescription
 		{
-			NoduleTypeDescription( IECore::TypeId plugType ) { Nodule::registerNodule( plugType, &creator ); };
+			NoduleTypeDescription( IECore::TypeId plugType = IECore::InvalidTypeId ) { Nodule::registerNodule( T::staticTypeName(), &creator, plugType ); };
 			static NodulePtr creator( Gaffer::PlugPtr plug ) { return new T( plug ); };
 		};
 
@@ -99,8 +105,11 @@ class Nodule : public Gadget
 
 		Gaffer::PlugPtr m_plug;
 
-		typedef std::map<IECore::TypeId, NoduleCreator> CreatorMap;
-		static CreatorMap &creators();
+		typedef std::map<std::string, NoduleCreator> TypeNameCreatorMap;
+		static TypeNameCreatorMap &typeNameCreators();
+
+		typedef std::map<IECore::TypeId, NoduleCreator> PlugCreatorMap;
+		static PlugCreatorMap &plugCreators();
 
 		typedef std::pair<boost::regex, NoduleCreator> RegexAndCreator;
 		typedef std::vector<RegexAndCreator> RegexAndCreatorVector;

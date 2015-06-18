@@ -35,7 +35,6 @@
 ##########################################################################
 
 import os
-import fnmatch
 import string
 
 import IECore
@@ -63,20 +62,17 @@ Gaffer.Metadata.registerNode(
 	scene.
 	""",
 
+	plugs = {
+
+		"parameters.*" : [
+
+			"nodule:type", lambda plug : "GafferUI::StandardNodule" if isinstance( plug, GafferImage.ImagePlug ) else ""
+
+		],
+
+	},
+
 )
-
-##########################################################################
-# Nodules
-##########################################################################
-
-def __parameterNoduleCreator( plug ) :
-
-	if isinstance( plug, ( GafferImage.ImagePlug ) ) :
-		return GafferUI.StandardNodule( plug )
-
-	return None
-
-GafferUI.Nodule.registerNodule( GafferScene.OpenGLShader, fnmatch.translate( "parameters.*" ), __parameterNoduleCreator )
 
 ##########################################################################
 # Shader menu

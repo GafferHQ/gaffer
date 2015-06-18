@@ -60,7 +60,9 @@ Gaffer.Metadata.registerNode(
 			image sequences, many scene formats write animation into
 			a single file, so using # characters to specify a frame
 			number is generally not necessary.
-			"""
+			""",
+
+			"nodule:type", "",
 
 		],
 
@@ -78,7 +80,9 @@ Gaffer.Metadata.registerNode(
 			"description",
 			"""
 			A direct pass-through of the input scene.
-			"""
+			""",
+
+			"nodule:type", "",
 
 		],
 
@@ -103,6 +107,3 @@ GafferUI.PlugValueWidget.registerCreator(
 		},
 	),
 )
-
-GafferUI.Nodule.registerNodule( GafferScene.SceneWriter, "fileName", lambda plug: None )
-GafferUI.Nodule.registerNodule( GafferScene.SceneWriter, "out", lambda plug : None )

@@ -35,8 +35,6 @@
 #
 ##########################################################################
 
-import fnmatch
-
 import IECore
 
 import Gaffer
@@ -72,6 +70,8 @@ Gaffer.Metadata.registerNode(
 			The name of the file to write.
 			""",
 
+			"nodule:type", "",
+
 		],
 
 		"parameters" : [
@@ -82,6 +82,8 @@ Gaffer.Metadata.registerNode(
 			file being written. These are created automatically
 			based on the extension when the fileName is specified.
 			""",
+
+			"nodule:type", "",
 
 		],
 
@@ -118,10 +120,3 @@ GafferUI.PlugValueWidget.registerCreator(
 
 GafferUI.PlugValueWidget.registerCreator( GafferCortex.ObjectWriter, "parameters", __createParameterWidget )
 GafferUI.PlugValueWidget.registerCreator( GafferCortex.ObjectWriter, "in", None )
-
-##########################################################################
-# Nodules
-##########################################################################
-
-GafferUI.Nodule.registerNodule( GafferCortex.ObjectWriter, fnmatch.translate( "parameter*" ), lambda plug : None )
-GafferUI.Nodule.registerNodule( GafferCortex.ObjectWriter, "fileName", lambda plug : None )

@@ -131,11 +131,10 @@ Gaffer.Metadata.registerPlugValue( GafferOSL.OSLShader, "parameters.*", "layout:
 # Nodules
 ##########################################################################
 
-def __outPlugNoduleCreator( plug ) :
+def __outPlugNoduleType( plug ) :
 
-	if isinstance( plug, Gaffer.CompoundPlug ) :
-		return GafferUI.CompoundNodule( plug, GafferUI.LinearContainer.Orientation.Y, spacing = 0.2 )
-	else :
-		return GafferUI.StandardNodule( plug )
+	return "GafferUI::CompoundNodule" if len( plug ) else "GafferUI::StandardNodule"
 
-GafferUI.Nodule.registerNodule( GafferOSL.OSLShader, "out", __outPlugNoduleCreator )
+Gaffer.Metadata.registerPlugValue( GafferOSL.OSLShader, "out", "nodule:type", __outPlugNoduleType )
+Gaffer.Metadata.registerPlugValue( GafferOSL.OSLShader, "out", "compoundNodule:spacing", 0.2 )
+Gaffer.Metadata.registerPlugValue( GafferOSL.OSLShader, "out", "compoundNodule:orientation", "y" )

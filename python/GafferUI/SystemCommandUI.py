@@ -56,6 +56,8 @@ Gaffer.Metadata.registerNode(
 			from substitutions with '{substitutionName}' syntax.
 			""",
 
+			"nodule:type", "",
+
 		),
 
 		"substitutions" : (
@@ -64,7 +66,9 @@ Gaffer.Metadata.registerNode(
 			"""
 			An arbitrary set of name/value pairs which can be
 			referenced in command with '{substitutionsName}' syntax.
-			"""
+			""",
+
+			"nodule:type", "",
 
 		),
 
@@ -76,12 +80,10 @@ Gaffer.Metadata.registerNode(
 			environment variables when running the command.
 			""",
 
+			"nodule:type", "",
+
 		)
 
 	}
 
 )
-
-GafferUI.Nodule.registerNodule( Gaffer.SystemCommand, "command", lambda plug : None )
-GafferUI.Nodule.registerNodule( Gaffer.SystemCommand, "substitutions", lambda plug : None )
-GafferUI.Nodule.registerNodule( Gaffer.SystemCommand, "environmentVariables", lambda plug : None )

@@ -70,9 +70,15 @@ void Nodule::updateDragEndPoint( const Imath::V3f position, const Imath::V3f &ta
 {
 }
 
-Nodule::CreatorMap &Nodule::creators()
+Nodule::TypeNameCreatorMap &Nodule::typeNameCreators()
 {
-	static CreatorMap m;
+	static TypeNameCreatorMap m;
+	return m;
+}
+
+Nodule::PlugCreatorMap &Nodule::plugCreators()
+{
+	static PlugCreatorMap m;
 	return m;
 }
 
@@ -84,6 +90,25 @@ Nodule::NamedCreatorMap &Nodule::namedCreators()
 
 NodulePtr Nodule::create( Gaffer::PlugPtr plug )
 {
+	IECore::ConstStringDataPtr noduleType = Gaffer::Metadata::plugValue<IECore::StringData>( plug.get(), "nodule:type" );
+	if( noduleType )
+	{
+		if( noduleType->readable() == "" )
+		{
+			return NULL;
+		}
+		const TypeNameCreatorMap &m = typeNameCreators();
+		TypeNameCreatorMap::const_iterator it = m.find( noduleType->readable() );
+		if( it != m.end() )
+		{
+			return it->second( plug );
+		}
+		else
+		{
+			IECore::msg( IECore::Msg::Warning, "Nodule::create", boost::format( "Nonexistent nodule type \"%s\" requested for plug \"%s\"" ) % noduleType->readable() % plug->fullName() );
+		}
+	}
+
 	const Gaffer::Node *node = plug->node();
 	if( node )
 	{
@@ -107,11 +132,11 @@ NodulePtr Nodule::create( Gaffer::PlugPtr plug )
 		}
 	}
 
-	CreatorMap &m = creators();
+	const PlugCreatorMap &m = plugCreators();
 	IECore::TypeId t = plug->typeId();
 	while( t!=IECore::InvalidTypeId )
 	{
-		CreatorMap::const_iterator it = m.find( t );
+		PlugCreatorMap::const_iterator it = m.find( t );
 		if( it!=m.end() )
 		{
 			return it->second( plug );
@@ -122,9 +147,13 @@ NodulePtr Nodule::create( Gaffer::PlugPtr plug )
 	return 0;
 }
 
-void Nodule::registerNodule( IECore::TypeId plugType, NoduleCreator creator )
+void Nodule::registerNodule( const std::string &noduleTypeName, NoduleCreator creator, IECore::TypeId plugType )
 {
-	creators()[plugType] = creator;
+	typeNameCreators()[noduleTypeName] = creator;
+	if( plugType != IECore::InvalidTypeId )
+	{
+		plugCreators()[plugType] = creator;
+	}
 }
 
 void Nodule::registerNodule( const IECore::TypeId nodeType, const std::string &plugPath, NoduleCreator creator )

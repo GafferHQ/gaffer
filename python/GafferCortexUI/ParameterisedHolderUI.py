@@ -152,18 +152,13 @@ class _InfoButton( GafferUI.Button ) :
 # Nodules
 ##########################################################################
 
-def __parameterNoduleCreator( plug ) :
+def __parameterNoduleType( plug ) :
 
-	if isinstance( plug, Gaffer.ObjectPlug ) :
-		return GafferUI.StandardNodule( plug )
-	else :
-		return None
+	return "GafferUI::StandardNodule" if isinstance( plug, Gaffer.ObjectPlug ) else ""
 
 for nodeType in __nodeTypes :
-	GafferUI.Nodule.registerNodule( nodeType, "parameters", GafferUI.CompoundNodule )
-
-for nodeType in __nodeTypes :
-	GafferUI.Nodule.registerNodule( nodeType, fnmatch.translate( "parameters.*" ), __parameterNoduleCreator )
+	GafferUI.Metadata.registerPlugValue( nodeType, "parameters", "nodule:type", "GafferUI::CompoundNodule" )
+	GafferUI.Metadata.registerPlugValue( nodeType, "parameters.*", "nodule:type", __parameterNoduleType )
 
 ##########################################################################
 # Metadata

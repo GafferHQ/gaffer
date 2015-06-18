@@ -162,6 +162,7 @@ static IECore::InternedString g_verticalNoduleSpacingKey( "nodeGadget:verticalNo
 static IECore::InternedString g_minWidthKey( "nodeGadget:minWidth"  );
 static IECore::InternedString g_paddingKey( "nodeGadget:padding"  );
 static IECore::InternedString g_nodulePositionKey( "nodeGadget:nodulePosition" );
+static IECore::InternedString g_noduleTypeKey( "nodule:type" );
 static IECore::InternedString g_colorKey( "nodeGadget:color" );
 static IECore::InternedString g_errorGadgetName( "__error" );
 
@@ -265,13 +266,6 @@ StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node, LinearContainer::O
 	addChild( column );
 	setContents( new NameGadget( node ) );
 
-	// nodules for all current plugs
-
-	for( Gaffer::PlugIterator it( node.get() ); it!=it.end(); it++ )
-	{
-		addNodule( *it );
-	}
-
 	// connect to the signals we need in order to operate
 	////////////////////////////////////////////////////////
 
@@ -301,9 +295,13 @@ StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node, LinearContainer::O
 		c->leaveSignal().connect( boost::bind( &StandardNodeGadget::leave, this, ::_1 ) );
 	}
 
-	Metadata::plugValueChangedSignal().connect( boost::bind( &StandardNodeGadget::plugMetadataChanged, this, ::_1, ::_2, ::_3 ) );
-	Metadata::nodeValueChangedSignal().connect( boost::bind( &StandardNodeGadget::nodeMetadataChanged, this, ::_1, ::_2 ) );
+	Metadata::plugValueChangedSignal().connect( boost::bind( &StandardNodeGadget::plugMetadataChanged, this, ::_1, ::_2, ::_3, ::_4 ) );
+	Metadata::nodeValueChangedSignal().connect( boost::bind( &StandardNodeGadget::nodeMetadataChanged, this, ::_1, ::_2, ::_3 ) );
 
+	// do our first update
+	////////////////////////////////////////////////////////
+
+	updateNoduleLayout();
 	updateUserColor();
 	updatePadding();
 }
@@ -364,7 +362,7 @@ Nodule *StandardNodeGadget::nodule( const Gaffer::Plug *plug )
 		NoduleMap::iterator it = m_nodules.find( plug );
 		if( it != m_nodules.end() )
 		{
-			return it->second;
+			return it->second.nodule.get();
 		}
 		return 0;
 	}
@@ -436,39 +434,6 @@ StandardNodeGadget::Edge StandardNodeGadget::plugEdge( const Gaffer::Plug *plug 
 	return edge;
 }
 
-NodulePtr StandardNodeGadget::addNodule( Gaffer::PlugPtr plug )
-{
-	// create a Nodule if we actually want one
-
-	if( plug->getName().string().compare( 0, 2, "__" )==0 )
-	{
-		return 0;
-	}
-
-	NodulePtr nodule = Nodule::create( plug );
-	if( !nodule )
-	{
-		return 0;
-	}
-
-	// decide which nodule container to put it in
-
-	LinearContainer *container = noduleContainer( plugEdge( plug.get() ) );
-
-	// remove the spacer at the end, add the nodule, and replace the spacer at the end
-
-	GadgetPtr endGadget = container->getChild<Gadget>( container->children().size() - 1 );
-	container->removeChild( endGadget );
-	container->addChild( nodule );
-	container->addChild( endGadget );
-
-	// remember our nodule
-
-	m_nodules[plug.get()] = nodule.get();
-
-	return nodule;
-}
-
 LinearContainer *StandardNodeGadget::noduleContainer( Edge edge )
 {
 	Gadget *column = getChild<Gadget>( 0 );
@@ -516,7 +481,7 @@ void StandardNodeGadget::childAdded( Gaffer::GraphComponent *parent, Gaffer::Gra
 	Gaffer::Plug *p = IECore::runTimeCast<Gaffer::Plug>( child );
 	if( p )
 	{
-		addNodule( p );
+		updateNoduleLayout();
 	}
 }
 
@@ -525,12 +490,7 @@ void StandardNodeGadget::childRemoved( Gaffer::GraphComponent *parent, Gaffer::G
 	Gaffer::Plug *p = IECore::runTimeCast<Gaffer::Plug>( child );
 	if( p )
 	{
-		Nodule *n = nodule( p );
-		if( n )
-		{
-			n->parent<Gaffer::GraphComponent>()->removeChild( n );
-			m_nodules.erase( p );
-		}
+		updateNoduleLayout();
 	}
 }
 
@@ -673,34 +633,21 @@ bool StandardNodeGadget::drop( GadgetPtr gadget, const DragDropEvent &event )
 	return result;
 }
 
-void StandardNodeGadget::plugMetadataChanged( IECore::TypeId nodeTypeId, const Gaffer::MatchPattern &plugPath, IECore::InternedString key )
+void StandardNodeGadget::plugMetadataChanged( IECore::TypeId nodeTypeId, const Gaffer::MatchPattern &plugPath, IECore::InternedString key, const Gaffer::Plug *plug )
 {
-	if(
-		key != g_nodulePositionKey ||
-		!node()->isInstanceOf( nodeTypeId )
-	)
+	if( plug && plug->parent<Node>() != node() )
 	{
 		return;
 	}
 
-	for( NoduleMap::const_iterator it = m_nodules.begin(), eIt = m_nodules.end(); it != eIt; ++it )
+	if( !node()->isInstanceOf( nodeTypeId ) )
 	{
-		const Gaffer::Plug *plug = it->first;
-		if( match( plug->relativeName( node() ), plugPath ) )
-		{
-			Nodule *n = nodule( plug );
-			if( !n )
-			{
-				continue;
-			}
+		return;
+	}
 
-			LinearContainer *container = noduleContainer( plugEdge( plug ) );
-
-			GadgetPtr endGadget = container->getChild<Gadget>( container->children().size() - 1 );
-			container->removeChild( endGadget );
-			container->addChild( n );
-			container->addChild( endGadget );
-		}
+	if( key == g_nodulePositionKey || key == g_noduleTypeKey )
+	{
+		updateNoduleLayout();
 	}
 }
 
@@ -745,9 +692,14 @@ bool StandardNodeGadget::noduleIsCompatible( const Nodule *nodule, const DragDro
 	}
 }
 
-void StandardNodeGadget::nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore::InternedString key )
+void StandardNodeGadget::nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore::InternedString key, const Gaffer::Node *node )
 {
-	if( !node()->isInstanceOf( nodeTypeId ) )
+	if( node && node != this->node() )
+	{
+		return;
+	}
+
+	if( !this->node()->isInstanceOf( nodeTypeId ) )
 	{
 		return;
 	}
@@ -762,6 +714,71 @@ void StandardNodeGadget::nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore:
 	else if( key == g_paddingKey )
 	{
 		updatePadding();
+	}
+}
+
+Nodule *StandardNodeGadget::updateNodule( Gaffer::Plug *plug )
+{
+	if( plug->getName().string().compare( 0, 2, "__" )==0 )
+	{
+		return NULL;
+	}
+
+	IECore::ConstStringDataPtr typeData = Metadata::plugValue<IECore::StringData>( plug, g_noduleTypeKey );
+	IECore::InternedString type = typeData ? typeData->readable() : "GafferUI::StandardNodule";
+	NoduleMap::iterator it = m_nodules.find( plug );
+	if( it != m_nodules.end() && it->second.type == type )
+	{
+		return it->second.nodule.get();
+	}
+
+	NodulePtr n = Nodule::create( plug );
+	m_nodules[plug] = TypeAndNodule( type, n );
+	return n.get();
+}
+
+void StandardNodeGadget::updateNoduleLayout()
+{
+	// Clear the nodule containers for each edge,
+	// and remember the end gadget for each.
+	LinearContainer *edgeContainers[NumEdges];
+	GadgetPtr endGadgets[NumEdges];
+	for( int edge = FirstEdge; edge < NumEdges; ++edge )
+	{
+		edgeContainers[edge] = noduleContainer( (Edge)edge );
+		endGadgets[edge] = boost::static_pointer_cast<Gadget>( edgeContainers[edge]->children().back() );
+		while( edgeContainers[edge]->children().size() > 1 )
+		{
+			edgeContainers[edge]->removeChild( edgeContainers[edge]->children().back() );
+		}
+	}
+
+	for( PlugIterator it( node() ); it != it.end(); ++it )
+	{
+		if( Nodule *n = updateNodule( it->get() ) )
+		{
+			edgeContainers[plugEdge( it->get() )]->addChild( n );
+		}
+	}
+
+	// Put back the end gadgets
+	for( int edge = FirstEdge; edge < NumEdges; ++edge )
+	{
+		edgeContainers[edge]->addChild( endGadgets[edge] );
+	}
+
+	// Remove any unused nodules
+	for( NoduleMap::iterator it = m_nodules.begin(); it != m_nodules.end(); )
+	{
+		NoduleMap::iterator next = it; next++;
+		if(
+			it->first->parent<Node>() != node() ||
+			(it->second.nodule && !it->second.nodule->parent<Gadget>())
+		)
+		{
+			m_nodules.erase( it );
+		}
+		it = next;
 	}
 }
 

@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2013-2014, John Haddon. All rights reserved.
+#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,44 +34,42 @@
 #
 ##########################################################################
 
+import os
+import unittest
+
 import Gaffer
 import GafferUI
+import GafferUITest
 
-import GafferOSL
+class ReferenceUITest( GafferUITest.TestCase ) :
 
-##########################################################################
-# Metadata
-##########################################################################
+	def testHiddenNodules( self ) :
 
-Gaffer.Metadata.registerNode(
+		s = Gaffer.ScriptNode()
 
-	GafferOSL.OSLObject,
+		s["b"] = Gaffer.Box()
+		s["b"]["n"] = Gaffer.Node()
+		s["b"]["n"]["p"] = Gaffer.Plug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 
-	"description",
-	"""
-	Executes OSL shaders to perform object processing. Use the shaders from
-	the OSL/ObjectProcessing menu to read primitive variables from the input
-	object and then write primitive variables back to it.
-	""",
+		Gaffer.Metadata.registerPlugValue( s["b"]["n"]["p"], "nodule:type", "" )
 
-	plugs = {
+		p = s["b"].promotePlug( s["b"]["n"]["p"] )
+		p.setName( "p" )
 
-		"shader" : [
-		
-			"description",
-			"""
-			The shader to be executed - connect the output from an OSL network here.
-			A minimal shader network to process P would look like this :
-			
-				InPoint->ProcessingNodes->OutPoint->OutObject
-			""",
-			
-			"nodeGadget:nodulePosition", "left",
-			"nodule:type", "GafferUI::StandardNodule",
+		g = GafferUI.GraphGadget( s )
+		self.assertTrue( g.nodeGadget( s["b"] ).nodule( s["b"]["p"] ) is None )
 
-		],
+		s["b"].exportForReference( "/tmp/test.grf" )
+		s["r"] = Gaffer.Reference()
+		s["r"].load( "/tmp/test.grf" )
 
-	}
-	
-)
+		self.assertTrue( g.nodeGadget( s["r"] ).nodule( s["r"]["p"] ) is None )
+
+	def tearDown( self ) :
+
+		if os.path.exists( "/tmp/test.grf" ) :
+			os.remove( "/tmp/test.grf" )
+
+if __name__ == "__main__":
+	unittest.main()
 

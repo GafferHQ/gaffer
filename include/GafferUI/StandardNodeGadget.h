@@ -72,6 +72,7 @@ class StandardNodeGadget : public NodeGadget
 			RightEdge,
 			FirstEdge = TopEdge,
 			LastEdge = RightEdge,
+			NumEdges,
 			InvalidEdge
 		};
 
@@ -111,7 +112,6 @@ class StandardNodeGadget : public NodeGadget
 	private :
 
 		Edge plugEdge( const Gaffer::Plug *plug );
-		NodulePtr addNodule( Gaffer::PlugPtr plug );
 
 		LinearContainer *noduleContainer( Edge edge );
 		const LinearContainer *noduleContainer( Edge edge ) const;
@@ -121,7 +121,14 @@ class StandardNodeGadget : public NodeGadget
 
 		static NodeGadgetTypeDescription<StandardNodeGadget> g_nodeGadgetTypeDescription;
 
-		typedef std::map<const Gaffer::Plug *, Nodule *> NoduleMap;
+		struct TypeAndNodule
+		{
+			TypeAndNodule() {}
+			TypeAndNodule( IECore::InternedString type, NodulePtr nodule ) : type( type ), nodule( nodule ) {}
+			IECore::InternedString type;
+			NodulePtr nodule;
+		};
+		typedef std::map<const Gaffer::Plug *, TypeAndNodule> NoduleMap;
 		NoduleMap m_nodules;
 
 		void childAdded( Gaffer::GraphComponent *parent, Gaffer::GraphComponent *child );
@@ -139,9 +146,11 @@ class StandardNodeGadget : public NodeGadget
 		Nodule *closestCompatibleNodule( const DragDropEvent &event );
 		bool noduleIsCompatible( const Nodule *nodule, const DragDropEvent &event );
 
-		void plugMetadataChanged( IECore::TypeId nodeTypeId, const Gaffer::MatchPattern &plugPath, IECore::InternedString key );
-		void nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore::InternedString key );
+		void plugMetadataChanged( IECore::TypeId nodeTypeId, const Gaffer::MatchPattern &plugPath, IECore::InternedString key, const Gaffer::Plug *plug );
+		void nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore::InternedString key, const Gaffer::Node *node );
 
+		Nodule *updateNodule( Gaffer::Plug *plug );
+		void updateNoduleLayout();
 		bool updateUserColor();
 		void updatePadding();
 

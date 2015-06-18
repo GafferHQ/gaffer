@@ -58,6 +58,8 @@ Gaffer.Metadata.registerNode(
 			filter does not match any locations.
 			""",
 
+			"nodule:type", "",
+
 		],
 
 		"out" : [
@@ -74,5 +76,4 @@ Gaffer.Metadata.registerNode(
 
 )
 
-GafferUI.Nodule.registerNodule( GafferScene.Filter, "enabled", lambda plug : None )
 GafferUI.PlugValueWidget.registerCreator( GafferScene.Filter, "out", None )

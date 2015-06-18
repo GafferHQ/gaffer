@@ -35,7 +35,6 @@
 #
 ##########################################################################
 
-import fnmatch
 import ctypes
 
 import arnold
@@ -134,14 +133,14 @@ for nodeType in ( GafferArnold.ArnoldShader, GafferArnold.ArnoldLight ) :
 # Nodule and widget creators
 ##########################################################################
 
-def __parameterNoduleCreator( plug ) :
+def __parameterNoduleType( plug ) :
 
 	if isinstance( plug, ( Gaffer.BoolPlug, Gaffer.IntPlug, Gaffer.StringPlug ) ) :
-		return None
+		return ""
 
-	return GafferUI.StandardNodule( plug )
+	return "GafferUI::StandardNodule"
 
-GafferUI.Nodule.registerNodule( GafferArnold.ArnoldShader, fnmatch.translate( "parameters.*" ), __parameterNoduleCreator )
+GafferUI.Metadata.registerPlugValue( GafferArnold.ArnoldShader, "parameters.*", "nodule:type", __parameterNoduleType )
 
 def __plugValueWidgetCreator( plug ) :
 

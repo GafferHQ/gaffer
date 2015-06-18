@@ -44,22 +44,37 @@ import GafferScene
 # Metadata
 ##########################################################################
 
-Gaffer.Metadata.registerNodeDescription(
+Gaffer.Metadata.registerNode(
 
-GafferScene.ExecutableRender,
+	GafferScene.ExecutableRender,
 
-"""Base class for nodes which perform batch rendering.""",
+	"description",
+	"""
+	Base class for nodes which perform batch rendering.
+	""",
 
-"in",
-"The scene to be rendered.",
+	plugs = {
 
-"out",
-"A pass-through of the input scene.",
+		"in" : [
+
+			"description",
+			"""
+			The scene to be rendered.
+			""",
+
+		],
+
+		"out" : [
+
+			"description",
+			"""
+			A pass-through of the input scene.
+			""",
+
+			"nodule:type", ""
+
+		],
+
+	}
 
 )
-
-##########################################################################
-# Nodules
-##########################################################################
-
-GafferUI.Nodule.registerNodule( GafferScene.ExecutableRender, "out", lambda plug : None )

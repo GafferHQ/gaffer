@@ -34,8 +34,6 @@
 #
 ##########################################################################
 
-import fnmatch
-
 import Gaffer
 import GafferUI
 import GafferImage
@@ -51,6 +49,12 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
+		"*" : [
+
+			"nodule:type", lambda plug : "GafferUI::StandardNodule" if isinstance( plug, GafferImage.ImagePlug ) else "",
+
+		],
+
 		"out" : [
 
 			"description",
@@ -64,12 +68,4 @@ Gaffer.Metadata.registerNode(
 
 )
 
-def __noduleCreator( plug ) :
-
-	if isinstance( plug, GafferImage.ImagePlug ) :
-		return GafferUI.StandardNodule( plug )
-
-	return None
-
-GafferUI.Nodule.registerNodule( GafferImage.ImageNode, fnmatch.translate( "*" ), __noduleCreator )
 GafferUI.PlugValueWidget.registerType( GafferImage.ImagePlug, None )

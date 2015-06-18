@@ -240,15 +240,15 @@ void registerPlugDescription( IECore::TypeId nodeTypeId, const char *plugPath, o
 struct ValueChangedSlotCaller
 {
 
-	boost::signals::detail::unusable operator()( boost::python::object slot, IECore::TypeId nodeTypeId, IECore::InternedString key )
+	boost::signals::detail::unusable operator()( boost::python::object slot, IECore::TypeId nodeTypeId, IECore::InternedString key, Node *node )
 	{
-		slot( nodeTypeId, key.c_str() );
+		slot( nodeTypeId, key.c_str(), NodePtr( node ) );
 		return boost::signals::detail::unusable();
 	}
 
-	boost::signals::detail::unusable operator()( boost::python::object slot, IECore::TypeId nodeTypeId, const MatchPattern &plugPath, IECore::InternedString key )
+	boost::signals::detail::unusable operator()( boost::python::object slot, IECore::TypeId nodeTypeId, const MatchPattern &plugPath, IECore::InternedString key, Plug *plug )
 	{
-		slot( nodeTypeId, plugPath.c_str(), key.c_str() );
+		slot( nodeTypeId, plugPath.c_str(), key.c_str(), PlugPtr( plug ) );
 		return boost::signals::detail::unusable();
 	}
 

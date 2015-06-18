@@ -66,14 +66,7 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"layout:section", "",
-
-		),
-
-		"user" : (
-
-			# Stopgap until we start parenting promoted plugs directly
-			# under the node as we want to (rather than as user plugs).
-			"layout:section", "Settings"
+			"nodule:type", "",
 
 		),
 
@@ -166,7 +159,6 @@ GafferUI.PlugValueWidget.registerCreator( Gaffer.Reference, "fileName", __FileNa
 
 GafferUI.PlugValueWidget.registerCreator( Gaffer.Reference, re.compile( "in[0-9]*" ), None )
 GafferUI.PlugValueWidget.registerCreator( Gaffer.Reference, re.compile( "out[0-9]*" ), None )
-GafferUI.PlugValueWidget.registerCreator( Gaffer.Reference, "user", GafferUI.UserPlugValueWidget, editable=False )
 
 ##########################################################################
 # Utilities
@@ -192,9 +184,3 @@ def _waitForFileName( initialFileName="", parentWindow=None ) :
 		return ""
 
 	return str( path )
-
-##########################################################################
-# Nodules
-##########################################################################
-
-GafferUI.Nodule.registerNodule( Gaffer.Reference, "fileName", lambda plug : None )

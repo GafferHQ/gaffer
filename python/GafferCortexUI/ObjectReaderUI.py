@@ -34,8 +34,6 @@
 #
 ##########################################################################
 
-import fnmatch
-
 import IECore
 
 import Gaffer
@@ -63,6 +61,8 @@ Gaffer.Metadata.registerNode(
 			The file to load.
 			""",
 
+			"nodule:type", "",
+
 		],
 
 		"out" : [
@@ -79,13 +79,6 @@ Gaffer.Metadata.registerNode(
 	}
 
 )
-
-##########################################################################
-# Nodules
-##########################################################################
-
-GafferUI.Nodule.registerNodule( GafferCortex.ObjectReader, fnmatch.translate( "*" ), lambda plug : None )
-GafferUI.Nodule.registerNodule( GafferCortex.ObjectReader, "out", GafferUI.StandardNodule )
 
 ##########################################################################
 # PlugValueWidgets

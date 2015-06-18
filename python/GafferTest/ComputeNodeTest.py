@@ -418,7 +418,7 @@ class ComputeNodeTest( GafferTest.TestCase ) :
 		csb = GafferTest.CapturingSlot( s["b"].errorSignal() )
 		csbb = GafferTest.CapturingSlot( s["b"]["b"].errorSignal() )
 
-		p = s["b"].promotePlug( s["b"]["a"]["sum"], asUserPlug = False )
+		p = s["b"].promotePlug( s["b"]["a"]["sum"] )
 
 		self.assertRaises( RuntimeError, p.getValue )
 		self.assertEqual( len( css ), 0 )

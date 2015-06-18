@@ -68,6 +68,8 @@ Gaffer.Metadata.registerNode(
 			The names of the channels to be analysed.
 			""",
 
+			"nodule:type", "",
+
 		],
 
 		"regionOfInterest" : [
@@ -76,6 +78,8 @@ Gaffer.Metadata.registerNode(
 			"""
 			The region of the image to be analysed.
 			""",
+
+			"nodule:type", "",
 
 		],
 
@@ -111,6 +115,3 @@ Gaffer.Metadata.registerNode(
 )
 
 GafferUI.PlugValueWidget.registerCreator( GafferImage.ImageStats, "channels", GafferImageUI.ChannelMaskPlugValueWidget, inputImagePlug = "in" )
-
-GafferUI.Nodule.registerNodule( GafferImage.ImageStats, "channels", lambda x : None )
-GafferUI.Nodule.registerNodule( GafferImage.ImageStats, "regionOfInterest", lambda x : None )

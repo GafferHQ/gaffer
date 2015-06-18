@@ -58,15 +58,15 @@ Gaffer.Metadata.registerNode(
 			of 0 chooses the first input, 1 the second and so on. Values
 			larger than the number of available inputs wrap back around to
 			the beginning.
-			"""
+			""",
+
+			"nodule:type", "",
 
 		],
 
 	},
 
 )
-
-GafferUI.Nodule.registerNodule( GafferScene.Filter, "index", lambda plug : None )
 
 GafferUI.PlugValueWidget.registerCreator( GafferScene.Filter, "in", None )
 GafferUI.PlugValueWidget.registerCreator( GafferScene.Filter, "in[0-9]*", None )

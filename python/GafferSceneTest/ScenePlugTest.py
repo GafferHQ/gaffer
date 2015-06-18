@@ -169,11 +169,11 @@ class ScenePlugTest( unittest.TestCase ) :
 		b = Gaffer.Box()
 		b["n"] = GafferScene.StandardAttributes()
 
-		self.assertTrue( b.canPromotePlug( b["n"]["in"], asUserPlug=False ) )
-		self.assertTrue( b.canPromotePlug( b["n"]["out"], asUserPlug=False ) )
+		self.assertTrue( b.canPromotePlug( b["n"]["in"] ) )
+		self.assertTrue( b.canPromotePlug( b["n"]["out"] ) )
 
-		i = b.promotePlug( b["n"]["in"], asUserPlug=False )
-		o = b.promotePlug( b["n"]["out"], asUserPlug=False )
+		i = b.promotePlug( b["n"]["in"] )
+		o = b.promotePlug( b["n"]["out"] )
 
 		self.assertEqual( b["n"]["in"].getInput(), i )
 		self.assertEqual( o.getInput(), b["n"]["out"] )

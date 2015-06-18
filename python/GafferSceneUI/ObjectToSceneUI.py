@@ -63,14 +63,10 @@ Gaffer.Metadata.registerNode(
 			The object to be placed in the output scene.
 			""",
 
+			"nodule:type", "GafferUI::StandardNodule",
+
 		],
 
 	}
 
 )
-
-##########################################################################
-# Widgets and nodules
-##########################################################################
-
-GafferUI.Nodule.registerNodule( GafferScene.ObjectToScene, "object", GafferUI.StandardNodule )

@@ -85,7 +85,7 @@ class StandardConnectionGadget : public ConnectionGadget
 
 		bool nodeSelected( const Nodule *nodule ) const;
 
-		void plugMetadataChanged( IECore::TypeId nodeTypeId, const Gaffer::MatchPattern &plugPath, IECore::InternedString key );
+		void plugMetadataChanged( IECore::TypeId nodeTypeId, const Gaffer::MatchPattern &plugPath, IECore::InternedString key, const Gaffer::Plug *plug );
 
 		bool updateUserColor();
 

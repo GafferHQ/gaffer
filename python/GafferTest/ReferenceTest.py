@@ -87,10 +87,10 @@ class ReferenceTest( GafferTest.TestCase ) :
 		s["r"].load( "/tmp/test.grf" )
 
 		self.assertTrue( "n1" in s["r"] )
-		self.assertTrue( s["r"]["n1"]["op1"].getInput().isSame( s["r"]["user"]["n1_op1"] ) )
+		self.assertTrue( s["r"]["n1"]["op1"].getInput().isSame( s["r"]["n1_op1"] ) )
 		self.assertTrue( s["r"]["out"].getInput().isSame( s["r"]["n1"]["sum"] ) )
 
-		s["r"]["user"]["n1_op1"].setValue( 25 )
+		s["r"]["n1_op1"].setValue( 25 )
 		self.assertEqual( s["r"]["out"].getValue(), 25 )
 
 		ss = s.serialise()
@@ -130,13 +130,13 @@ class ReferenceTest( GafferTest.TestCase ) :
 		s2["r"].load( "/tmp/test.grf" )
 
 		s2["r"]["in"].setInput( s2["n1"]["sum"] )
-		s2["r"]["user"]["n2_op2"].setValue( 1001 )
+		s2["r"]["n2_op2"].setValue( 1001 )
 		s2["n3"]["op1"].setInput( s2["r"]["out"] )
 
 		self.assertTrue( "n2" in s2["r"] )
 		self.assertTrue( s2["r"]["n2"]["op1"].getInput().isSame( s2["r"]["in"] ) )
-		self.assertTrue( s2["r"]["n2"]["op2"].getInput().isSame( s2["r"]["user"]["n2_op2"] ) )
-		self.assertEqual( s2["r"]["user"]["n2_op2"].getValue(), 1001 )
+		self.assertTrue( s2["r"]["n2"]["op2"].getInput().isSame( s2["r"]["n2_op2"] ) )
+		self.assertEqual( s2["r"]["n2_op2"].getValue(), 1001 )
 		self.assertTrue( s2["r"]["out"].getInput().isSame( s2["r"]["n2"]["sum"] ) )
 		self.assertTrue( s2["r"]["in"].getInput().isSame( s2["n1"]["sum"] ) )
 		self.assertTrue( s2["n3"]["op1"].getInput().isSame( s2["r"]["out"] ) )
@@ -149,11 +149,11 @@ class ReferenceTest( GafferTest.TestCase ) :
 		s2["r"].load( "/tmp/test.grf" )
 
 		self.assertTrue( "n2" in s2["r"] )
-		self.assertEqual( set( s2["r"].keys() ), set( originalReferencedNames + [ "anotherNode" ] ) )
+		self.assertEqual( set( s2["r"].keys() ), set( originalReferencedNames + [ "anotherNode", "anotherNode_op2" ] ) )
 		self.assertTrue( s2["r"]["n2"]["op1"].getInput().isSame( s2["r"]["in"] ) )
-		self.assertTrue( s2["r"]["n2"]["op2"].getInput().isSame( s2["r"]["user"]["n2_op2"] ) )
-		self.assertEqual( s2["r"]["user"]["n2_op2"].getValue(), 1001 )
-		self.assertTrue( s2["r"]["anotherNode"]["op2"].getInput().isSame( s2["r"]["user"]["anotherNode_op2"] ) )
+		self.assertTrue( s2["r"]["n2"]["op2"].getInput().isSame( s2["r"]["n2_op2"] ) )
+		self.assertEqual( s2["r"]["n2_op2"].getValue(), 1001 )
+		self.assertTrue( s2["r"]["anotherNode"]["op2"].getInput().isSame( s2["r"]["anotherNode_op2"] ) )
 		self.assertTrue( s2["r"]["out"].getInput().isSame( s2["r"]["n2"]["sum"] ) )
 		self.assertTrue( s2["r"]["in"].getInput().isSame( s2["n1"]["sum"] ) )
 		self.assertTrue( s2["n3"]["op1"].getInput().isSame( s2["r"]["out"] ) )
@@ -200,13 +200,11 @@ class ReferenceTest( GafferTest.TestCase ) :
 		s2["r"].load( "/tmp/test.grf" )
 		s2["a"] = GafferTest.AddNode()
 
-		s2["r"]["user"]["n2_op2"].setValue( 123 )
+		s2["r"]["n2_op2"].setValue( 123 )
 		s2["r"]["in"].setInput( s2["a"]["sum"] )
 
-		self.assertTrue( "n2_op2" in s2["r"]["user"] )
 		self.assertTrue( "n2" in s2["r"] )
 		self.assertTrue( "out" in s2["r"] )
-		self.assertEqual( s2["r"]["user"]["n2_op2"].getValue(), 123 )
 		self.assertTrue( s2["r"]["in"].getInput().isSame( s2["a"]["sum"] ) )
 
 		s2["fileName"].setValue( "/tmp/test.gfr" )
@@ -218,7 +216,7 @@ class ReferenceTest( GafferTest.TestCase ) :
 
 		self.assertEqual( s3["r"].keys(), s2["r"].keys() )
 		self.assertEqual( s3["r"]["user"].keys(), s2["r"]["user"].keys() )
-		self.assertEqual( s3["r"]["user"]["n2_op2"].getValue(), 123 )
+		self.assertEqual( s3["r"]["n2_op2"].getValue(), 123 )
 		self.assertTrue( s3["r"]["in"].getInput().isSame( s3["a"]["sum"] ) )
 
 	def testReferenceExportCustomPlugsFromBoxes( self ) :
@@ -434,7 +432,7 @@ class ReferenceTest( GafferTest.TestCase ) :
 		# create a box with a promoted output:
 		s["b"] = Gaffer.Box()
 		s["b"]["n"] = GafferTest.AddNode()
-		s["b"].promotePlug( s["b"]["n"]["sum"], asUserPlug = False )
+		s["b"].promotePlug( s["b"]["n"]["sum"] )
 		s["b"].exportForReference( "/tmp/test.grf" )
 		
 		# load onto reference:
@@ -443,7 +441,7 @@ class ReferenceTest( GafferTest.TestCase ) :
 		self.assertEqual( s["r"].enabledPlug(), None )
 		
 		# Wire it up to support enabledPlug() and correspondingInput()
-		s["b"].promotePlug( s["b"]["n"]["op1"], asUserPlug = False )
+		s["b"].promotePlug( s["b"]["n"]["op1"] )
 		s["b"]["n"]["op2"].setValue( 10 )
 		s["b"].exportForReference( "/tmp/test.grf" )
 		

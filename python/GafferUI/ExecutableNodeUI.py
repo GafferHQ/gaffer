@@ -60,6 +60,9 @@ Gaffer.Metadata.registerNode(
 			executed before this node.
 			""",
 
+			"nodule:type", "GafferUI::CompoundNodule",
+			"compoundNodule:spacing", 0.4,
+
 		),
 
 		"requirement" : (
@@ -81,7 +84,8 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"layout:section", "Dispatcher",
-			"layout:index", -3, # Just before the node section
+			"layout:index", -3, # Just before the node section,
+			"nodule:type", "",
 
 		),
 
@@ -94,5 +98,3 @@ Gaffer.Metadata.registerNode(
 ##########################################################################
 
 GafferUI.PlugValueWidget.registerCreator( Gaffer.ExecutableNode, "requirements", None )
-
-GafferUI.Nodule.registerNodule( Gaffer.ExecutableNode, "requirements", lambda plug : GafferUI.CompoundNodule( plug, spacing = 0.4 ) )

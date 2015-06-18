@@ -73,6 +73,8 @@ Gaffer.Metadata.registerNode(
 			"preset:Render", "render",
 			"preset:Generate RIB only", "generate",
 
+			"nodule:type", "",
+
 		],
 
 		"ribFileName" : [
@@ -81,6 +83,8 @@ Gaffer.Metadata.registerNode(
 			"""
 			The name of the RIB file to be generated.
 			""",
+
+			"nodule:type", "",
 
 		],
 
@@ -93,6 +97,8 @@ Gaffer.Metadata.registerNode(
 			or to use a different renderer. The rib filename is
 			automatically appended to the command before it is invoked.
 			""",
+
+			"nodule:type", "",
 
 		],
 
@@ -117,7 +123,3 @@ GafferUI.PlugValueWidget.registerCreator(
 		},
 	),
 )
-
-GafferUI.Nodule.registerNodule( GafferRenderMan.RenderManRender, "mode", lambda plug : None )
-GafferUI.Nodule.registerNodule( GafferRenderMan.RenderManRender, "ribFileName", lambda plug : None )
-GafferUI.Nodule.registerNodule( GafferRenderMan.RenderManRender, "command", lambda plug : None )

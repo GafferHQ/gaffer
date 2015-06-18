@@ -56,12 +56,20 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
+		"*" : [
+
+			"nodule:type", "",
+
+		],
+
 		"in" : [
 
 			"description",
 			"""
 			The scene to be rendered.
 			""",
+
+			"nodule:type", "GafferUI::StandardNodule",
 
 		],
 
@@ -133,7 +141,7 @@ Gaffer.Metadata.registerNode(
 )
 
 ##########################################################################
-# Widgets and nodules
+# Widgets
 ##########################################################################
 
 ## \todo Make a custom UI with play/pause/stop/restart buttons.
@@ -142,6 +150,3 @@ GafferUI.PlugValueWidget.registerCreator(
 	"state",
 	GafferUI.PresetsPlugValueWidget,
 )
-
-GafferUI.Nodule.registerNodule( GafferScene.InteractiveRender, fnmatch.translate( "*" ), lambda plug : None )
-GafferUI.Nodule.registerNodule( GafferScene.InteractiveRender, "in", GafferUI.StandardNodule )

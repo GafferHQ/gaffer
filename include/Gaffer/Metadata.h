@@ -61,8 +61,14 @@ class Metadata
 
 	public :
 
-		typedef boost::signal<void ( IECore::TypeId nodeTypeId, IECore::InternedString key ), CatchingSignalCombiner<void> > NodeValueChangedSignal;
-		typedef boost::signal<void ( IECore::TypeId nodeTypeId, const MatchPattern &plugPath, IECore::InternedString key ), CatchingSignalCombiner<void> > PlugValueChangedSignal;
+		/// Type for a signal emitted when new node metadata is registered. The
+		/// node argument will be NULL when generic (rather than per-instance)
+		/// metadata is registered.
+		typedef boost::signal<void ( IECore::TypeId nodeTypeId, IECore::InternedString key, Gaffer::Node *node ), CatchingSignalCombiner<void> > NodeValueChangedSignal;
+		/// Type for a signal emitted when new plug metadata is registered. The
+		/// plug argument will be NULL when generic (rather than per-instance)
+		/// metadata is registered.
+		typedef boost::signal<void ( IECore::TypeId nodeTypeId, const MatchPattern &plugPath, IECore::InternedString key, Gaffer::Plug *plug ), CatchingSignalCombiner<void> > PlugValueChangedSignal;
 
 		typedef boost::function<IECore::ConstDataPtr ( const Node *node )> NodeValueFunction;
 		typedef boost::function<IECore::ConstDataPtr ( const Plug *plug )> PlugValueFunction;
