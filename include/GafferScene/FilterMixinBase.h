@@ -42,7 +42,14 @@
 namespace GafferScene
 {
 
-/// See SceneMixinBase for details.
+/// \todo Turn this into a FilterProcessor which can form the base for
+/// UnionFilter and also FilterSwitch - this way it will match the way
+/// we now implement mix-ins for SceneProcessors and ImageProcessors.
+/// The main obstacle to doing this is that UnionFilter::inPlug() is an
+/// ArrayPlug, but Switch expects a non-array inPlug(). We want to make
+/// SceneProcessor::inPlug() and ImageProcessor::inPlug() to return
+/// ArrayPlugs anyway though, so we should be able to do all that
+/// refactoring at the same time.
 class FilterMixinBase : public Filter
 {
 
