@@ -47,4 +47,4 @@ IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( GafferImage::ImageContextVaria
 }
 
 // explicit instantiation
-template class Gaffer::ContextVariables<ImageMixinBase>;
+template class Gaffer::ContextVariables<ImageProcessor>;

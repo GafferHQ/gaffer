@@ -50,7 +50,6 @@ using namespace GafferImage;
 void GafferImageBindings::bindMixin()
 {
 
-	GafferBindings::DependencyNodeClass<ImageMixinBase>();
 	GafferBindings::DependencyNodeClass<ImageContextProcessor>();
 	GafferBindings::DependencyNodeClass<ImageTimeWarp>();
 	GafferBindings::DependencyNodeClass<ImageContextVariables>();

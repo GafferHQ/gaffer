@@ -38,12 +38,12 @@
 #define GAFFERIMAGE_IMAGETIMEWARP_H
 
 #include "Gaffer/TimeWarp.h"
-#include "GafferImage/ImageMixinBase.h"
+#include "GafferImage/ImageProcessor.h"
 
 namespace GafferImage
 {
 
-typedef Gaffer::TimeWarp<ImageMixinBase> ImageTimeWarp;
+typedef Gaffer::TimeWarp<ImageProcessor> ImageTimeWarp;
 IE_CORE_DECLAREPTR( ImageTimeWarp )
 
 } // namespace GafferImage

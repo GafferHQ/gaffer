@@ -47,4 +47,4 @@ IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( GafferImage::ImageContextProce
 }
 
 // explicit instantiation
-template class Gaffer::ContextProcessor<ImageMixinBase>;
+template class Gaffer::ContextProcessor<ImageProcessor>;

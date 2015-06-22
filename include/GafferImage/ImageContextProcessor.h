@@ -38,12 +38,12 @@
 #define GAFFERIMAGE_IMAGECONTEXTPROCESSOR_H
 
 #include "Gaffer/ContextProcessor.h"
-#include "GafferImage/ImageMixinBase.h"
+#include "GafferImage/ImageProcessor.h"
 
 namespace GafferImage
 {
 
-typedef Gaffer::ContextProcessor<ImageMixinBase> ImageContextProcessor;
+typedef Gaffer::ContextProcessor<ImageProcessor> ImageContextProcessor;
 IE_CORE_DECLAREPTR( ImageContextProcessor )
 
 } // namespace GafferImage
