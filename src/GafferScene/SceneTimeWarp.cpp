@@ -47,4 +47,4 @@ IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( GafferScene::SceneTimeWarp, Sc
 }
 
 // explicit instantiation
-template class Gaffer::TimeWarp<SceneMixinBase>;
+template class Gaffer::TimeWarp<SceneProcessor>;

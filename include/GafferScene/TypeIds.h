@@ -53,7 +53,7 @@ enum TypeId
 	PrimitiveVariableProcessorTypeId = 110508,
 	DeletePrimitiveVariablesTypeId = 110509,
 	GroupTypeId = 110510,
-	SceneMixinBaseTypeId = 110511,
+	SceneMixinBaseTypeId = 110511,  // obsolete, available for reuse
 	SceneContextProcessorTypeId = 110512,
 	SceneTimeWarpTypeId = 110513,
 	ObjectSourceTypeId = 110514,

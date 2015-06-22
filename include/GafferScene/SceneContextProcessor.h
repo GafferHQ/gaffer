@@ -38,12 +38,12 @@
 #define GAFFERSCENE_SCENECONTEXTPROCESSOR_H
 
 #include "Gaffer/ContextProcessor.h"
-#include "GafferScene/SceneMixinBase.h"
+#include "GafferScene/SceneProcessor.h"
 
 namespace GafferScene
 {
 
-typedef Gaffer::ContextProcessor<SceneMixinBase> SceneContextProcessor;
+typedef Gaffer::ContextProcessor<SceneProcessor> SceneContextProcessor;
 IE_CORE_DECLAREPTR( SceneContextProcessor )
 
 } // namespace GafferScene
