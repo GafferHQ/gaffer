@@ -216,8 +216,8 @@ class MetadataTest( GafferTest.TestCase ) :
 		Gaffer.Metadata.registerNodeValue( n, "imt", None )
 		Gaffer.Metadata.registerPlugValue( n["op1"], "imt", None )
 
-		self.assertEqual( Gaffer.Metadata.nodeValue( n, "imt" ), "globalNodeValue" )
-		self.assertEqual( Gaffer.Metadata.plugValue( n["op1"], "imt" ), "globalPlugValue" )
+		self.assertEqual( Gaffer.Metadata.nodeValue( n, "imt" ), None )
+		self.assertEqual( Gaffer.Metadata.plugValue( n["op1"], "imt" ), None )
 
 	def testInstanceMetadataUndo( self ) :
 
@@ -721,6 +721,41 @@ class MetadataTest( GafferTest.TestCase ) :
 
 		self.assertEqual( Gaffer.Metadata.plugValue( n["a"], "test" ), "exact" )
 		self.assertEqual( Gaffer.Metadata.plugValue( n["b"], "test" ), "wildcard" )
+
+	def testNoSerialiseAfterUndo( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = Gaffer.Node()
+
+		self.assertFalse( "Metadata" in s.serialise() )
+
+		with Gaffer.UndoContext( s ) :
+			Gaffer.Metadata.registerNodeValue( s["n"], "test", 1 )
+
+		self.assertTrue( "Metadata" in s.serialise() )
+
+		s.undo()
+		self.assertFalse( "Metadata" in s.serialise() )
+
+	def testNoneMasksOthers( self ) :
+
+		n = GafferTest.AddNode()
+		self.assertEqual( Gaffer.Metadata.nodeValue( n, "maskTest" ), None )
+
+		Gaffer.Metadata.registerNodeValue( Gaffer.DependencyNode, "maskTest", 10 )
+		self.assertEqual( Gaffer.Metadata.nodeValue( n, "maskTest" ), 10 )
+
+		Gaffer.Metadata.registerNodeValue( Gaffer.ComputeNode, "maskTest", None )
+		self.assertEqual( Gaffer.Metadata.nodeValue( n, "maskTest" ), None )
+
+		Gaffer.Metadata.registerNodeValue( GafferTest.AddNode, "maskTest", 20 )
+		self.assertEqual( Gaffer.Metadata.nodeValue( n, "maskTest" ), 20 )
+
+		Gaffer.Metadata.registerNodeValue( n, "maskTest", 30 )
+		self.assertEqual( Gaffer.Metadata.nodeValue( n, "maskTest" ), 30 )
+
+		Gaffer.Metadata.registerNodeValue( n, "maskTest", None )
+		self.assertEqual( Gaffer.Metadata.nodeValue( n, "maskTest" ), None )
 
 if __name__ == "__main__":
 	unittest.main()
