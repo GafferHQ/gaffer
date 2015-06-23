@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2015, John Haddon. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,27 +34,16 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#include "Gaffer/Loop.inl"
 
-#include "GafferBindings/DependencyNodeBinding.h"
-
-#include "GafferScene/SceneContextProcessor.h"
-#include "GafferScene/SceneContextVariables.h"
-#include "GafferScene/SceneSwitch.h"
-#include "GafferScene/SceneTimeWarp.h"
 #include "GafferScene/SceneLoop.h"
 
-#include "GafferSceneBindings/MixinBinding.h"
-
-using namespace GafferScene;
-
-void GafferSceneBindings::bindMixin()
+namespace Gaffer
 {
 
-	GafferBindings::DependencyNodeClass<SceneContextProcessor>();
-	GafferBindings::DependencyNodeClass<SceneTimeWarp>();
-	GafferBindings::DependencyNodeClass<SceneContextVariables>();
-	GafferBindings::DependencyNodeClass<SceneSwitch>();
-	GafferBindings::DependencyNodeClass<SceneLoop>();
+IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( GafferScene::SceneLoop, GafferScene::SceneLoopTypeId )
 
 }
+
+// explicit instantiation
+template class Gaffer::Loop<GafferScene::SceneProcessor>;

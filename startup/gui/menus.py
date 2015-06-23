@@ -256,6 +256,7 @@ nodeMenu.append( "/Scene/Transform/Aim Constraint", GafferScene.AimConstraint, s
 nodeMenu.append( "/Scene/Transform/Parent Constraint", GafferScene.ParentConstraint, searchText = "ParentConstraint" )
 nodeMenu.append( "/Scene/Context/Time Warp", GafferScene.SceneTimeWarp, searchText = "SceneTimeWarp" )
 nodeMenu.append( "/Scene/Context/Variables", GafferScene.SceneContextVariables, searchText = "SceneContextVariables" )
+nodeMenu.append( "/Scene/Context/Loop", GafferScene.SceneLoop, searchText = "SceneLoop"  )
 nodeMenu.append( "/Scene/Globals/Outputs", GafferScene.Outputs )
 nodeMenu.append( "/Scene/Globals/Delete Outputs", GafferScene.DeleteOutputs, searchText = "DeleteOutputs" )
 nodeMenu.append( "/Scene/Globals/Delete Sets", GafferScene.DeleteSets, searchText = "DeleteSets" )

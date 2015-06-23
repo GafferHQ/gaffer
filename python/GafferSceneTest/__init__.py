@@ -108,6 +108,7 @@ from PointsTypeTest import PointsTypeTest
 from ParametersTest import ParametersTest
 from SceneFilterPathFilterTest import SceneFilterPathFilterTest
 from AttributeVisualiserTest  import AttributeVisualiserTest
+from SceneLoopTest import SceneLoopTest
 
 if __name__ == "__main__":
 	import unittest
