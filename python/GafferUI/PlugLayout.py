@@ -566,6 +566,10 @@ class _TabLayout( _Layout ) :
 				for name, tab in updatedTabs.items() :
 					self.__tabbedContainer.append( tab, label = name )
 
+		for index, subsection in enumerate( section.subsections.values() ) :
+			## \todo Consider how/if we should add a public tooltip API to TabbedContainer.
+			self.__tabbedContainer._qtWidget().setTabToolTip( index, subsection.summary )
+
 		if not len( existingTabs ) :
 			currentTabIndex = self.__section.restoreState( "currentTab" ) or 0
 			if currentTabIndex < len( self.__tabbedContainer ) :
