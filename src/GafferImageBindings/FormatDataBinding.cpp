@@ -37,6 +37,7 @@
 #include "boost/python.hpp"
 
 #include "IECorePython/RunTimeTypedBinding.h"
+#include "IECorePython/SimpleTypedDataBinding.h"
 
 #include "GafferImage/FormatData.h"
 
@@ -55,6 +56,8 @@ void bindFormatData()
 		.add_property( "value", make_function( &FormatData::writable, return_internal_reference<1>() ) )
 		.def( "hasBase", &FormatData::hasBase ).staticmethod( "hasBase" )
 	;
+
+	IECorePython::TypedDataFromType<FormatData>();
 
 }
 

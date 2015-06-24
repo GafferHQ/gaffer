@@ -81,5 +81,13 @@ class FormatDataTest( unittest.TestCase ) :
 		self.assertEqual( fd2, fd )
 		self.assertEqual( fd2.value, f )
 
+	def testAutoConstructFromFormat( self ) :
+
+		f = GafferImage.Format( IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 200, 100 ) ), 0.5 )
+
+		d = IECore.CompoundData()
+		d["f"] = f
+		self.assertEqual( d["f"], GafferImage.FormatData( f ) )
+
 if __name__ == "__main__":
 	unittest.main()
