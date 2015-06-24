@@ -221,18 +221,23 @@ void registerInstanceValueAction( GraphComponent *instance, InternedString key, 
 	}
 }
 
-void registerInstanceValue( GraphComponent *instance, IECore::InternedString key, IECore::ConstDataPtr value, bool persistent )
+void registerInstanceValue( GraphComponent *instance, IECore::InternedString key, OptionalData value, bool persistent )
 {
 	bool currentPersistent = true;
-	OptionalData optionalCurrentValue = instanceValue( instance, key, &currentPersistent );
-	if( optionalCurrentValue && persistent == currentPersistent )
+	OptionalData currentValue = instanceValue( instance, key, &currentPersistent );
+	if( !value && !currentValue )
+	{
+		// we can early out if we didn't have a value before and we don't
+		// want one now.
+		return;
+	}
+	else if( value && currentValue && persistent == currentPersistent )
 	{
 		// if we already had a value, we can early out if it's the same as
 		// the new one.
-		ConstDataPtr currentValue = *optionalCurrentValue;
 		if(
-			( !currentValue && !value ) ||
-			( currentValue && value && currentValue->isEqualTo( value.get() ) )
+			( *currentValue == *value ) ||
+			( *currentValue && *value && (*currentValue)->isEqualTo( value->get() ) )
 		)
 		{
 			return;
@@ -244,7 +249,7 @@ void registerInstanceValue( GraphComponent *instance, IECore::InternedString key
 		// ok to bind raw pointers to instance, because enact() guarantees
 		// the lifetime of the subject.
 		boost::bind( &registerInstanceValueAction, instance, key, value, persistent ),
-		boost::bind( &registerInstanceValueAction, instance, key, optionalCurrentValue, currentPersistent )
+		boost::bind( &registerInstanceValueAction, instance, key, currentValue, currentPersistent )
 	);
 }
 
@@ -345,6 +350,25 @@ IECore::ConstDataPtr Metadata::nodeValueInternal( const Node *node, IECore::Inte
 		typeId = inherit ? RunTimeTyped::baseTypeId( typeId ) : InvalidTypeId;
 	}
 	return NULL;
+}
+
+void Metadata::deregisterNodeValue( IECore::TypeId nodeTypeId, IECore::InternedString key )
+{
+	NodeMetadata::NodeValues &m = nodeMetadataMap()[nodeTypeId].nodeValues;
+
+	NodeMetadata::NodeValues::const_iterator it = m.find( key );
+	if( it == m.end() )
+	{
+		return;
+	}
+
+	m.erase( it );
+	nodeValueChangedSignal()( nodeTypeId, key, NULL );
+}
+
+void Metadata::deregisterNodeValue( Node *node, IECore::InternedString key )
+{
+	registerInstanceValue( node, key, OptionalData(), /* persistent = */ false );
 }
 
 void Metadata::registerNodeDescription( IECore::TypeId nodeTypeId, const std::string &description )
@@ -484,6 +508,26 @@ IECore::ConstDataPtr Metadata::plugValueInternal( const Plug *plug, IECore::Inte
 		typeId = inherit ? RunTimeTyped::baseTypeId( typeId ) : InvalidTypeId;
 	}
 	return NULL;
+}
+
+void Metadata::deregisterPlugValue( IECore::TypeId nodeTypeId, const MatchPattern &plugPath, IECore::InternedString key )
+{
+	NodeMetadata &nodeMetadata = nodeMetadataMap()[nodeTypeId];
+	NodeMetadata::PlugValues &plugValues = nodeMetadata.plugPathsToValues[plugPath];
+
+	NodeMetadata::PlugValues::const_iterator it = plugValues.find( key );
+	if( it == plugValues.end() )
+	{
+		return;
+	}
+
+	plugValues.erase( it );
+	plugValueChangedSignal()( nodeTypeId, plugPath, key, NULL );
+}
+
+void Metadata::deregisterPlugValue( Plug *plug, IECore::InternedString key )
+{
+	registerInstanceValue( plug, key, OptionalData(), /* persistent = */ false );
 }
 
 void Metadata::registerPlugDescription( IECore::TypeId nodeTypeId, const MatchPattern &plugPath, const std::string &description )

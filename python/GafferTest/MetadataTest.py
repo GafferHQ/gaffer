@@ -757,6 +757,99 @@ class MetadataTest( GafferTest.TestCase ) :
 		Gaffer.Metadata.registerNodeValue( n, "maskTest", None )
 		self.assertEqual( Gaffer.Metadata.nodeValue( n, "maskTest" ), None )
 
+	def testDeregisterNodeValue( self ) :
+
+		n = GafferTest.AddNode()
+		self.assertEqual( Gaffer.Metadata.nodeValue( n, "deleteMe" ), None )
+
+		Gaffer.Metadata.registerNodeValue( Gaffer.Node, "deleteMe", 10 )
+		self.assertEqual( Gaffer.Metadata.nodeValue( n, "deleteMe" ), 10 )
+
+		Gaffer.Metadata.registerNodeValue( Gaffer.ComputeNode, "deleteMe", 20 )
+		self.assertEqual( Gaffer.Metadata.nodeValue( n, "deleteMe" ), 20 )
+
+		Gaffer.Metadata.deregisterNodeValue( Gaffer.ComputeNode, "deleteMe" )
+		self.assertEqual( Gaffer.Metadata.nodeValue( n, "deleteMe" ), 10 )
+
+		Gaffer.Metadata.deregisterNodeValue( Gaffer.Node, "deleteMe" )
+		self.assertEqual( Gaffer.Metadata.nodeValue( n, "deleteMe" ), None )
+
+	def testDeregisterNodeInstanceValue( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = GafferTest.AddNode()
+
+		self.assertEqual( Gaffer.Metadata.nodeValue( s["n"], "deleteMe" ), None )
+
+		Gaffer.Metadata.registerNodeValue( GafferTest.AddNode, "deleteMe", 10 )
+		self.assertEqual( Gaffer.Metadata.nodeValue( s["n"], "deleteMe" ), 10 )
+
+		Gaffer.Metadata.registerNodeValue( s["n"], "deleteMe", 20 )
+		self.assertEqual( Gaffer.Metadata.nodeValue( s["n"], "deleteMe" ), 20 )
+		self.assertTrue( "Metadata" in s.serialise() )
+
+		with Gaffer.UndoContext( s ) :
+			Gaffer.Metadata.deregisterNodeValue( s["n"], "deleteMe" )
+			self.assertTrue( "Metadata" not in s.serialise() )
+			self.assertEqual( Gaffer.Metadata.nodeValue( s["n"], "deleteMe" ), 10 )
+
+		s.undo()
+		self.assertEqual( Gaffer.Metadata.nodeValue( s["n"], "deleteMe" ), 20 )
+		self.assertTrue( "Metadata" in s.serialise() )
+
+		s.redo()
+		self.assertEqual( Gaffer.Metadata.nodeValue( s["n"], "deleteMe" ), 10 )
+		self.assertTrue( "Metadata" not in s.serialise() )
+
+		Gaffer.Metadata.deregisterNodeValue( GafferTest.AddNode, "deleteMe" )
+		self.assertEqual( Gaffer.Metadata.nodeValue( s["n"], "deleteMe" ), None )
+
+		self.assertTrue( "Metadata" not in s.serialise() )
+
+	def testDeregisterPlugValue( self ) :
+
+		n = GafferTest.AddNode()
+		self.assertEqual( Gaffer.Metadata.plugValue( n["op1"], "deleteMe" ), None )
+
+		Gaffer.Metadata.registerPlugValue( Gaffer.Node, "op1", "deleteMe", 10 )
+		self.assertEqual( Gaffer.Metadata.plugValue( n["op1"], "deleteMe" ), 10 )
+
+		Gaffer.Metadata.deregisterPlugValue( Gaffer.Node, "op1", "deleteMe" )
+		self.assertEqual( Gaffer.Metadata.plugValue( n["op1"], "deleteMe" ), None )
+
+	def testDeregisterPlugInstanceValue( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = GafferTest.AddNode()
+
+		self.assertEqual( Gaffer.Metadata.plugValue( s["n"]["op1"], "deleteMe" ), None )
+
+		Gaffer.Metadata.registerPlugValue( GafferTest.AddNode, "op1", "deleteMe", 10 )
+		self.assertEqual( Gaffer.Metadata.plugValue( s["n"]["op1"], "deleteMe" ), 10 )
+		self.assertTrue( "Metadata" not in s.serialise() )
+
+		Gaffer.Metadata.registerPlugValue( s["n"]["op1"], "deleteMe", 20 )
+		self.assertEqual( Gaffer.Metadata.plugValue( s["n"]["op1"], "deleteMe" ), 20 )
+		self.assertTrue( "Metadata" in s.serialise() )
+
+		with Gaffer.UndoContext( s ) :
+			Gaffer.Metadata.deregisterPlugValue( s["n"]["op1"], "deleteMe" )
+			self.assertTrue( "Metadata" not in s.serialise() )
+			self.assertEqual( Gaffer.Metadata.plugValue( s["n"]["op1"], "deleteMe" ), 10 )
+
+		s.undo()
+		self.assertEqual( Gaffer.Metadata.plugValue( s["n"]["op1"], "deleteMe" ), 20 )
+		self.assertTrue( "Metadata" in s.serialise() )
+
+		s.redo()
+		self.assertEqual( Gaffer.Metadata.plugValue( s["n"]["op1"], "deleteMe" ), 10 )
+		self.assertTrue( "Metadata" not in s.serialise() )
+
+		Gaffer.Metadata.deregisterPlugValue( GafferTest.AddNode, "op1", "deleteMe" )
+		self.assertEqual( Gaffer.Metadata.plugValue( s["n"]["op1"], "deleteMe" ), None )
+
+		self.assertTrue( "Metadata" not in s.serialise() )
+
 if __name__ == "__main__":
 	unittest.main()
 
