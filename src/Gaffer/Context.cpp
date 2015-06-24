@@ -475,7 +475,7 @@ void Context::substituteInternal( const char *s, std::string &result, const int 
 //////////////////////////////////////////////////////////////////////////
 
 typedef std::stack<const Context *> ContextStack;
-typedef tbb::enumerable_thread_specific<ContextStack> ThreadSpecificContextStack;
+typedef tbb::enumerable_thread_specific<ContextStack, tbb::cache_aligned_allocator<ContextStack>, tbb::ets_key_per_instance> ThreadSpecificContextStack;
 
 static ThreadSpecificContextStack g_threadContexts;
 static ContextPtr g_defaultContext = new Context;

@@ -446,7 +446,7 @@ class ValuePlug::Computation
 			const Plug *errorSource;
 		};
 
-		static tbb::enumerable_thread_specific<ThreadData> g_threadData;
+		static tbb::enumerable_thread_specific<ThreadData, tbb::cache_aligned_allocator<ThreadData>, tbb::ets_key_per_instance > g_threadData;
 
 		const ValuePlug *m_resultPlug;
 		const IECore::MurmurHash *m_precomputedHash;
@@ -467,7 +467,7 @@ class ValuePlug::Computation
 
 };
 
-tbb::enumerable_thread_specific<ValuePlug::Computation::ThreadData> ValuePlug::Computation::g_threadData;
+tbb::enumerable_thread_specific<ValuePlug::Computation::ThreadData, tbb::cache_aligned_allocator<ValuePlug::Computation::ThreadData>, tbb::ets_key_per_instance > ValuePlug::Computation::g_threadData;
 ValuePlug::Computation::ValueCache ValuePlug::Computation::g_valueCache( nullGetter, 1024 * 1024 * 500 );
 
 //////////////////////////////////////////////////////////////////////////
