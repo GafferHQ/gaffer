@@ -224,6 +224,9 @@ def __nullObjectSetter( plug, value ) :
 
 def __defaultSetter( plug, value ) :
 
+	with IECore.IgnoredExceptions( AttributeError ) :
+		value = value.value
+
 	plug.setValue( value )
 
 _setters = {
