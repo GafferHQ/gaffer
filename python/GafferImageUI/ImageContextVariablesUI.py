@@ -35,6 +35,7 @@
 ##########################################################################
 
 import Gaffer
+import GafferUI
 import GafferImage
 
 Gaffer.Metadata.registerNode(
@@ -61,3 +62,5 @@ Gaffer.Metadata.registerNode(
 	}
 
 )
+
+GafferUI.PlugValueWidget.registerCreator( GafferImage.ImageContextVariables, "variables", GafferUI.CompoundDataPlugValueWidget, collapsed=None )

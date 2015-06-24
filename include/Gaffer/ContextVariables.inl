@@ -58,11 +58,7 @@ ContextVariables<BaseType>::ContextVariables( const std::string &name )
 {
 	BaseType::storeIndexOfNextChild( g_firstPlugIndex );
 	ContextProcessor<BaseType>::addChild(
-		new CompoundDataPlug(
-			"variables",
-			Plug::In,
-			Plug::Default | Plug::Dynamic
-		)
+		new CompoundDataPlug( "variables" )
 	);
 }
 

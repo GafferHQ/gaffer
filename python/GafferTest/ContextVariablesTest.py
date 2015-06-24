@@ -85,6 +85,28 @@ class ContextVariablesTest( GafferTest.TestCase ) :
 		c["variables"].removeChild(c["variables"]["member1"])
 		self.failUnless( c["out"] in [ p[0] for p in dirtied ] )
 
+	def testSerialisation( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = GafferTest.StringInOutNode()
+
+		s["c"] = Gaffer.ContextVariablesComputeNode()
+		s["c"]["in"] = Gaffer.StringPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["c"]["out"] = Gaffer.StringPlug( direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["c"]["in"].setInput( s["n"]["out"] )
+
+		s["n"]["in"].setValue( "$a" )
+		self.assertEqual( s["c"]["out"].getValue(), "" )
+
+		s["c"]["variables"].addMember( "a", IECore.StringData( "A" ) )
+		self.assertEqual( s["c"]["out"].getValue(), "A" )
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+
+		self.assertEqual( s2["c"].keys(), s["c"].keys() )
+		self.assertEqual( s2["c"]["out"].getValue(), "A" )
+
 if __name__ == "__main__":
 	unittest.main()
 
