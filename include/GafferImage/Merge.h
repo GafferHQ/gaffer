@@ -128,8 +128,6 @@ class Merge : public ImageProcessor
 
 IE_CORE_DECLAREPTR( Merge )
 
-#include "Merge.inl"
-
 } // namespace GafferImage
 
 #endif // GAFFERIMAGE_MERGE_H
