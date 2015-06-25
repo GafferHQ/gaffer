@@ -66,47 +66,29 @@ class UIEditor( GafferUI.NodeSetEditor ) :
 		with self.__tabbedContainer :
 
 			# Node tab
-			with GafferUI.GridContainer( spacing = 4, borderWidth = 8, parenting = { "label" : "Node" } ) as self.__nodeTab :
+			with GafferUI.ListContainer( spacing = 4, borderWidth = 8, parenting = { "label" : "Node" } ) as self.__nodeTab :
 
-				GafferUI.Label(
-					"Name",
-					parenting = {
-						"index" : ( 0, 0 ),
-						"alignment" : ( GafferUI.HorizontalAlignment.Right, GafferUI.VerticalAlignment.Center )
-					}
-				)
+				with _Row() :
 
-				self.__nodeNameWidget = GafferUI.NameWidget( None, parenting = { "index" : ( 1, 0 ) } )
+					_Label( "Name" )
 
-				GafferUI.Label(
-					"Description",
-					parenting = {
-						"index" : ( 0, 1 ),
-						"alignment" : ( GafferUI.HorizontalAlignment.Right, GafferUI.VerticalAlignment.Top )
-					}
-				)
+					self.__nodeNameWidget = GafferUI.NameWidget( None )
 
-				self.__nodeMetadataWidgets.append(
-					_MultiLineStringMetadataWidget(
-						key = "description",
-						parenting = { "index" : ( 1, 1 ) }
+				with _Row() :
+
+					_Label( "Description", parenting = { "verticalAlignment" : GafferUI.ListContainer.VerticalAlignment.Top } )
+
+					self.__nodeMetadataWidgets.append(
+						_MultiLineStringMetadataWidget( key = "description" )
 					)
-				)
 
-				GafferUI.Label(
-					"Color",
-					parenting = {
-						"index" : ( 0, 2 ),
-						"alignment" : ( GafferUI.HorizontalAlignment.Right, GafferUI.VerticalAlignment.Top )
-					}
-				)
+				with _Row() :
 
-				self.__nodeMetadataWidgets.append(
-					_ColorSwatchMetadataWidget(
-						key = "nodeGadget:color",
-						parenting = { "index" : ( 1, 2 ) }
+					_Label( "Color" )
+
+					self.__nodeMetadataWidgets.append(
+						_ColorSwatchMetadataWidget( key = "nodeGadget:color" )
 					)
-				)
 
 			# Plugs tab
 			with GafferUI.SplitContainer( orientation=GafferUI.SplitContainer.Orientation.Horizontal, borderWidth = 8, parenting = { "label" : "Plugs" } ) as self.__plugTab :
@@ -271,6 +253,28 @@ def __plugPopupMenu( menuDefinition, plugValueWidget ) :
 	menuDefinition.append( "/Edit UI...", { "command" : IECore.curry( __editPlugUI, node, plug ), "active" : not plugValueWidget.getReadOnly() } )
 
 __plugPopupMenuConnection = GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugPopupMenu )
+
+##########################################################################
+# Simple fixed width label and row classes
+##########################################################################
+
+class _Label( GafferUI.Label ) :
+
+	def __init__( self, *args, **kw ) :
+
+		GafferUI.Label.__init__(
+			self,
+			horizontalAlignment = GafferUI.Label.HorizontalAlignment.Right,
+			*args, **kw
+		)
+
+		self._qtWidget().setFixedWidth( 75 )
+
+class _Row( GafferUI.ListContainer ) :
+
+	def __init__( self, *args, **kw ) :
+
+		GafferUI.ListContainer.__init__( self, GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
 
 ##########################################################################
 # Hierarchical representation of a plug layout, suitable for manipulating
@@ -918,55 +922,34 @@ class _PlugEditor( GafferUI.Widget ) :
 
 	def __init__( self, **kw ) :
 
-		grid = GafferUI.GridContainer( spacing = 4, borderWidth = 8 )
-		GafferUI.Widget.__init__( self, grid, **kw )
+		column = GafferUI.ListContainer( spacing = 4, borderWidth = 8 )
+		GafferUI.Widget.__init__( self, column, **kw )
 
 		self.__metadataWidgets = []
 
-		with grid :
+		with column :
 
-			GafferUI.Label(
-				"Name",
-				parenting = {
-					"index" : ( 0, 0 ),
-					"alignment" : ( GafferUI.HorizontalAlignment.Right, GafferUI.VerticalAlignment.Center )
-				}
-			)
+			with _Row() :
 
-			self.__nameWidget = GafferUI.NameWidget( None, parenting = { "index" : ( 1, 0 ) } )
+				_Label( "Name" )
 
-			GafferUI.Label(
-				"Description",
-				parenting = {
-					"index" : ( 0, 1 ),
-					"alignment" : ( GafferUI.HorizontalAlignment.Right, GafferUI.VerticalAlignment.Top )
-				}
-			)
+				self.__nameWidget = GafferUI.NameWidget( None )
 
-			self.__metadataWidgets.append(
-				_MultiLineStringMetadataWidget(
-					key = "description",
-					parenting = { "index" : ( 1, 1 ) }
+			with _Row() :
+
+				_Label( "Description", parenting = { "verticalAlignment" : GafferUI.ListContainer.VerticalAlignment.Top } )
+
+				self.__metadataWidgets.append(
+					_MultiLineStringMetadataWidget( key = "description" )
 				)
-			)
 
-			GafferUI.Label(
-				"Divider",
-				parenting = {
-					"index" : ( 0, 2 ),
-					"alignment" : ( GafferUI.HorizontalAlignment.Right, GafferUI.VerticalAlignment.Center )
-				}
-			)
+			with _Row() :
 
-			self.__metadataWidgets.append(
-				_BoolMetadataWidget(
-					key = "divider",
-					parenting = {
-						"index" : ( 1, 2 ),
-						"alignment" : ( GafferUI.HorizontalAlignment.Left, GafferUI.VerticalAlignment.Center )
-					}
+				_Label( "Divider" )
+
+				self.__metadataWidgets.append(
+					_BoolMetadataWidget( key = "divider" )
 				)
-			)
 
 		self.__plug = None
 
@@ -993,34 +976,23 @@ class _SectionEditor( GafferUI.Widget ) :
 
 	def __init__( self, **kw ) :
 
-		grid = GafferUI.GridContainer( spacing = 4, borderWidth = 8 )
-		GafferUI.Widget.__init__( self, grid, **kw )
+		column = GafferUI.ListContainer( spacing = 4, borderWidth = 8 )
+		GafferUI.Widget.__init__( self, column, **kw )
 
-		with grid :
+		with column :
 
-			GafferUI.Label(
-				"Name",
-				parenting = {
-					"index" : ( 0, 0 ),
-					"alignment" : ( GafferUI.HorizontalAlignment.Right, GafferUI.VerticalAlignment.Center )
-				}
-			)
+			with _Row() :
 
-			self.__nameWidget = GafferUI.TextWidget( parenting = { "index" : ( 1, 0 ) } )
-			self.__nameWidgetEditingFinishedConnection = self.__nameWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__nameWidgetEditingFinished ) )
+				_Label( "Name" )
 
-			GafferUI.Label(
-				"Summary",
-				parenting = {
-					"index" : ( 0, 1 ),
-					"alignment" : ( GafferUI.HorizontalAlignment.Right, GafferUI.VerticalAlignment.Top )
-				}
-			)
+				self.__nameWidget = GafferUI.TextWidget()
+				self.__nameWidgetEditingFinishedConnection = self.__nameWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__nameWidgetEditingFinished ) )
 
-			self.__summaryMetadataWidget = _MultiLineStringMetadataWidget(
-				key = "",
-				parenting = { "index" : ( 1, 1 ) }
-			)
+			with _Row() :
+
+				_Label( "Summary", parenting = { "verticalAlignment" : GafferUI.ListContainer.VerticalAlignment.Top } )
+
+				self.__summaryMetadataWidget = _MultiLineStringMetadataWidget( key = "" )
 
 		self.__section = ""
 		self.__plugParent = None
