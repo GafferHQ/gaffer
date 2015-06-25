@@ -86,6 +86,21 @@ class PlugValueWidgetTest( unittest.TestCase ) :
 		w = GafferUI.PlugValueWidget.create( n["p"] )
 		self.assertEqual( w, None )
 
+	def testCreate( self ) :
+
+		n = Gaffer.Node()
+		n["p"] = Gaffer.IntPlug()
+
+		w = GafferUI.PlugValueWidget.create( n["p"] )
+		self.assertTrue( isinstance( w, GafferUI.NumericPlugValueWidget ) )
+		self.assertTrue( w.getPlug().isSame( n["p"] ) )
+
+		Gaffer.Metadata.registerPlugValue( n["p"], "plugValueWidget:type", "GafferUI.ConnectionPlugValueWidget" )
+
+		w = GafferUI.PlugValueWidget.create( n["p"] )
+		self.assertTrue( isinstance( w, GafferUI.ConnectionPlugValueWidget ) )
+		self.assertTrue( w.getPlug().isSame( n["p"] ) )
+
 if __name__ == "__main__":
 	unittest.main()
 

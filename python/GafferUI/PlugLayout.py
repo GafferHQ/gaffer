@@ -52,7 +52,6 @@ QtGui = GafferUI._qtImport( "QtGui" )
 #	- "layout:index" controls ordering of plugs within the layout
 #	- "layout:section" places the plug in a named section of the layout
 #	- "divider" specifies whether or not a plug should be followed by a divider
-#	- "layout:widgetType" the class name for the widget type of a particular plug
 #	- "layout:activator" the name of an activator to control editability
 #
 # Per-parent metadata support :
@@ -321,20 +320,9 @@ class PlugLayout( GafferUI.Widget ) :
 
  	def __createPlugWidget( self, plug ) :
 
-		widgetType = Gaffer.Metadata.plugValue( plug, "layout:widgetType" )
-		if widgetType is not None :
-
-			if widgetType == "None" :
-				return None
-			else :
-				widgetClass = self.__import( widgetType )
-				result = widgetClass( plug )
-
-		else :
-
-			result = GafferUI.PlugValueWidget.create( plug )
-			if result is None :
-				return result
+		result = GafferUI.PlugValueWidget.create( plug )
+		if result is None :
+			return result
 
 		if isinstance( result, GafferUI.PlugValueWidget ) and not result.hasLabel() and Gaffer.Metadata.plugValue( plug, "label" ) != "" :
  			result = GafferUI.PlugWidget( result )
