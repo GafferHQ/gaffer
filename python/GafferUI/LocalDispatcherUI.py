@@ -95,7 +95,7 @@ Gaffer.Metadata.registerNode(
 			Settings used by the local dispatcher.
 			""",
 
-			"layout:widgetType", "GafferUI.LayoutPlugValueWidget",
+			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
 			"layout:section", "Local",
 
 		],
