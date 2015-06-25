@@ -230,11 +230,15 @@ IECore::MurmurHash Context::hash() const
 		/// \todo Perhaps at some point the UI should use a different container for
 		/// these "not computationally important" values, so we wouldn't have to skip
 		/// them here.
-		if( it->first.string().compare( 0, 3, "ui:" ) )
+		// Using a hardcoded comparison of the first three characters because
+		// it's quicker than `string::compare( 0, 3, "ui:" )`.
+		const std::string &name = it->first.string();
+		if(	name.size() > 2 && name[0] == 'u' && name[1] == 'i' && name[2] == ':' )
 		{
-			m_hash.append( it->first );
-			it->second.data->hash( m_hash );
+			continue;
 		}
+		m_hash.append( it->first );
+		it->second.data->hash( m_hash );
 	}
 	m_hashValid = true;
 	return m_hash;
