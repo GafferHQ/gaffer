@@ -91,6 +91,7 @@ Gaffer.Metadata.registerNode(
 			"preset:Tile", 1,
 
 			"nodule:type", "",
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 
 		],
 
@@ -139,4 +140,3 @@ GafferUI.PlugValueWidget.registerCreator(
 )
 
 GafferUI.PlugValueWidget.registerCreator( GafferImage.ImageWriter, "channels", GafferImageUI.ChannelMaskPlugValueWidget, inputImagePlug = "in" )
-GafferUI.PlugValueWidget.registerCreator( GafferImage.ImageWriter, "writeMode", GafferUI.PresetsPlugValueWidget )

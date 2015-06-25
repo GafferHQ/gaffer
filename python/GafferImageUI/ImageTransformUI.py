@@ -62,6 +62,8 @@ Gaffer.Metadata.registerNode(
 			value is specified in degrees.
 			""",
 
+			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
+
 		],
 
 		"filter" : [
@@ -78,5 +80,3 @@ Gaffer.Metadata.registerNode(
 	}
 
 )
-
-GafferUI.PlugValueWidget.registerCreator( GafferImage.ImageTransform, "transform", GafferUI.LayoutPlugValueWidget )
