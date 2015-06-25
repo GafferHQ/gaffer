@@ -254,37 +254,32 @@ template< typename F >
 IECore::ConstFloatVectorDataPtr Merge::doMergeOperation( F f, std::vector< IECore::ConstFloatVectorDataPtr > &inData, std::vector< IECore::ConstFloatVectorDataPtr > &inAlpha, const Imath::V2i &tileOrigin ) const
 {
 	// Allocate the new tile
-	Imath::Box2i tile( tileOrigin, Imath::V2i( tileOrigin.x + ImagePlug::tileSize() - 1, tileOrigin.y + ImagePlug::tileSize() - 1 ) );
 	IECore::FloatVectorDataPtr outDataPtr = inData.back()->copy();
 	std::vector<float> &outData = outDataPtr->writable();
 
-	// Allocate a temporary tile that will hold the intermediate values of the alpha channel.
-	IECore::FloatVectorDataPtr aOut = inAlpha.back()->copy();
-	std::vector<float> &outAlpha = aOut->writable();
+	// Allocate a temporary buffer that will hold the intermediate values of the alpha channel.
+	std::vector<float> outAlpha = inAlpha.back()->readable();
 
 	// Perform the operation.
 	unsigned int nIterations( inData.size() -1 );
 	for( unsigned int i = nIterations; i > 0; --i )
 	{
-		for( int y = tile.min.y; y<=tile.max.y; y++ )
+		// Compute the data values and afterwards, the intermediate alpha values.
+		const float *dIn1 = &(outData[0]);
+		const float *dIn2 = &(inData[i-1]->readable()[0]);
+		const float *aIn1 = &(outAlpha[0]);
+		const float *aIn2 = &(inAlpha[i-1]->readable()[0]);
+
+		float *dOut = &(outData[0]);
+		float *aOut = &(outAlpha[0]);
+
+		const float *end = dOut + outData.size();
+		while( dOut != end )
 		{
-			// Compute the data values and afterwards, the intermediate alpha values.
-			const float *dIn1 = &(outData[0]) + ( y - tileOrigin.y ) * ImagePlug::tileSize() + (tile.min.x - tileOrigin.x);
-			const float *dIn2 = &(inData[i-1]->readable()[0]) + (y - tileOrigin.y) * ImagePlug::tileSize() + (tile.min.x - tileOrigin.x);
-			const float *aIn1 = &(outAlpha[0]) + ( y - tileOrigin.y ) * ImagePlug::tileSize() + (tile.min.x - tileOrigin.x);
-			const float *aIn2 = &(inAlpha[i-1]->readable()[0]) + (y - tileOrigin.y) * ImagePlug::tileSize() + (tile.min.x - tileOrigin.x);
-
-			float *dOut = &(outData[0]) + ( y - tileOrigin.y ) * ImagePlug::tileSize() + (tile.min.x - tileOrigin.x);
-			float *aOut = &(outAlpha[0]) + ( y - tileOrigin.y ) * ImagePlug::tileSize() + (tile.min.x - tileOrigin.x);
-
-			const float *END = dOut+(tile.max.x-tile.min.x)+1;
-			while( dOut != END )
-			{
-				*dOut++ = f( *dIn1++, *dIn2++, *aIn1, *aIn2 );
-				*aOut++ = f( *aIn1, *aIn2, *aIn1, *aIn2 );
-				++aIn1;
-				++aIn2;
-			}
+			*dOut++ = f( *dIn1++, *dIn2++, *aIn1, *aIn2 );
+			*aOut++ = f( *aIn1, *aIn2, *aIn1, *aIn2 );
+			++aIn1;
+			++aIn2;
 		}
 	}
 	return outDataPtr;
