@@ -156,5 +156,38 @@ class PlugLayoutTest( GafferUITest.TestCase ) :
 			[ n["user"]["c"] ],
 		)
 
+	def testChangingWidgetType( self ) :
+
+		n = Gaffer.Node()
+		n["p1"] = Gaffer.IntPlug()
+		n["p2"] = Gaffer.IntPlug()
+
+		l = GafferUI.PlugLayout( n )
+		self.assertTrue( isinstance( l.plugValueWidget( n["p1"], lazy = False ), GafferUI.NumericPlugValueWidget ) )
+		w2 = l.plugValueWidget( n["p2"], lazy = False )
+		self.assertTrue( isinstance( w2, GafferUI.NumericPlugValueWidget ) )
+
+		Gaffer.Metadata.registerPlugValue( n["p1"], "plugValueWidget:type", "GafferUI.ConnectionPlugValueWidget" )
+		self.assertTrue( isinstance( l.plugValueWidget( n["p1"], lazy = False ), GafferUI.ConnectionPlugValueWidget ) )
+		self.assertTrue( w2 is l.plugValueWidget( n["p2"], lazy = False ) )
+
+		Gaffer.Metadata.deregisterPlugValue( n["p1"], "plugValueWidget:type" )
+		self.assertTrue( isinstance( l.plugValueWidget( n["p1"], lazy = False ), GafferUI.NumericPlugValueWidget ) )
+		self.assertTrue( w2 is l.plugValueWidget( n["p2"], lazy = False ) )
+
+	def testRemovingAndAddingWidget( self ) :
+
+		n = Gaffer.Node()
+		n["p"] = Gaffer.IntPlug()
+
+		l = GafferUI.PlugLayout( n )
+		self.assertTrue( isinstance( l.plugValueWidget( n["p"], lazy = False ), GafferUI.NumericPlugValueWidget ) )
+
+		Gaffer.Metadata.registerPlugValue( n["p"], "plugValueWidget:type", "" )
+		self.assertTrue( l.plugValueWidget( n["p"], lazy = False ) is None )
+
+		Gaffer.Metadata.deregisterPlugValue( n["p"], "plugValueWidget:type" )
+		self.assertTrue( isinstance( l.plugValueWidget( n["p"], lazy = False ), GafferUI.NumericPlugValueWidget ) )
+
 if __name__ == "__main__":
 	unittest.main()

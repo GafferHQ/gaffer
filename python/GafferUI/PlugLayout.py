@@ -148,8 +148,8 @@ class PlugLayout( GafferUI.Widget ) :
 	# be passed to force the creation of the ui.
 	def plugValueWidget( self, childPlug, lazy=True ) :
 
-		if not lazy and len( self.__widgets ) == 0 :
-			self.__update()
+		if not lazy :
+			self.__updateLazily.flush( self )
 
 		w = self.__widgets.get( childPlug, None )
 		if w is None :
@@ -165,8 +165,8 @@ class PlugLayout( GafferUI.Widget ) :
 	# be passed to force the creation of the ui.
 	def customWidget( self, name, lazy=True ) :
 
-		if not lazy and len( self.__widgets ) == 0 :
-			self.__update()
+		if not lazy :
+			self.__updateLazily.flush( self )
 
 		return self.__widgets.get( name )
 
@@ -256,6 +256,12 @@ class PlugLayout( GafferUI.Widget ) :
 		itemsSet = set( items )
 		self.__widgets = { k : v for k, v in self.__widgets.items() if k in itemsSet }
 
+		# ditch widgets whose metadata type has changed - we must recreate these.
+		self.__widgets = {
+			k : v for k, v in self.__widgets.items()
+			if isinstance( k, str ) or v is not None and Gaffer.Metadata.plugValue( k, "plugValueWidget:type" ) == v.__plugValueWidgetType
+		}
+
 		# make (or reuse existing) widgets for each item, and sort them into
 		# sections.
 		self.__rootSection.clear()
@@ -336,6 +342,10 @@ class PlugLayout( GafferUI.Widget ) :
 
 		self.__applyReadOnly( result, self.getReadOnly() )
 
+		# Store the metadata value that controlled the type created, so we can compare to it
+		# in the future to determine if we can reuse the widget.
+		result.__plugValueWidgetType = Gaffer.Metadata.plugValue( plug, "plugValueWidget:type" )
+
  		return result
 
 	def __createCustomWidget( self, name ) :
@@ -415,16 +425,13 @@ class PlugLayout( GafferUI.Widget ) :
 
 	def __plugMetadataChanged( self, nodeTypeId, plugPath, key, plug ) :
 
-		if not self.visible() :
-			return
-
 		if plug is not None and not self.__parent.isSame( plug ) and not self.__parent.isSame( plug.parent() ) :
 			return
 			
 		if not self.__node().isInstanceOf( nodeTypeId ) :
 			return
 
-		if key in ( "divider", "layout:index", "layout:section" ) :
+		if key in ( "divider", "layout:index", "layout:section", "plugValueWidget:type" ) :
 			# we often see sequences of several metadata changes - so
 			# we schedule a lazy update to batch them into one ui update.
 			self.__layoutDirty = True
