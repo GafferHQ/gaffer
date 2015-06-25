@@ -430,7 +430,7 @@ class PlugLayout( GafferUI.Widget ) :
 		if not self.visible() :
 			return
 
-		if plug is not None and not self.__parent.isSame( plug.parent() ) :
+		if plug is not None and not self.__parent.isSame( plug ) and not self.__parent.isSame( plug.parent() ) :
 			return
 			
 		if not self.__node().isInstanceOf( nodeTypeId ) :
@@ -440,6 +440,9 @@ class PlugLayout( GafferUI.Widget ) :
 			# we often see sequences of several metadata changes - so
 			# we schedule a lazy update to batch them into one ui update.
 			self.__layoutDirty = True
+			self.__updateLazily()
+		elif re.match( "layout:section:.*:summary", key ) :
+			self.__summariesDirty = True
 			self.__updateLazily()
 
 	def __plugDirtied( self, plug ) :
