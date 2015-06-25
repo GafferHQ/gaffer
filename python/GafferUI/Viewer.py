@@ -230,11 +230,3 @@ class Viewer( GafferUI.NodeSetEditor ) :
 		return result
 
 GafferUI.EditorWidget.registerType( "Viewer", Viewer )
-
-##########################################################################
-# PlugValueWidget and Toolbar registrations
-##########################################################################
-
-GafferUI.NodeToolbar.registerCreator( GafferUI.View, GafferUI.StandardNodeToolbar )
-GafferUI.PlugValueWidget.registerCreator( GafferUI.View, "in", None )
-GafferUI.PlugValueWidget.registerCreator( GafferUI.View, "user", None )

@@ -141,6 +141,8 @@ Gaffer.Metadata.registerNode(
 			and float range plugs.
 			""",
 
+			"plugValueWidget:type", "",
+
 		],
 
 		"outColor" : [
@@ -151,12 +153,13 @@ Gaffer.Metadata.registerNode(
 			colour, hue, saturation and value plugs.
 			""",
 
+			"plugValueWidget:type", "GafferUI.RandomUI._RandomColorPlugValueWidget",
+
 		]
 
 	}
 
 )
-
 
 # PlugValueWidget registrations
 ##########################################################################
@@ -186,9 +189,6 @@ class _RandomColorPlugValueWidget( GafferUI.PlugValueWidget ) :
 			for y in range( 0, gridSize.y ) :
 				self.__grid[x,y].setColor( node.randomColor( seed ) )
 				seed += 1
-
-GafferUI.PlugValueWidget.registerCreator( Gaffer.Random, "outColor", _RandomColorPlugValueWidget )
-GafferUI.PlugValueWidget.registerCreator( Gaffer.Random, "outFloat", None )
 
 # PlugValueWidget popup menu
 ##########################################################################

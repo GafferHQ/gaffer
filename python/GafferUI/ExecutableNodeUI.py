@@ -63,6 +63,8 @@ Gaffer.Metadata.registerNode(
 			"nodule:type", "GafferUI::CompoundNodule",
 			"compoundNodule:spacing", 0.4,
 
+			"plugValueWidget:type", "",
+
 		),
 
 		"requirement" : (
@@ -92,9 +94,3 @@ Gaffer.Metadata.registerNode(
 	}
 
 )
-
-##########################################################################
-# Metadata, PlugValueWidgets and Nodules
-##########################################################################
-
-GafferUI.PlugValueWidget.registerCreator( Gaffer.ExecutableNode, "requirements", None )

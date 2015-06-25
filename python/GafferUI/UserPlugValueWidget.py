@@ -108,8 +108,6 @@ class UserPlugValueWidget( GafferUI.PlugValueWidget ) :
 			plug = plugType( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 			self.getPlug().addChild( plug )
 
-GafferUI.PlugValueWidget.registerCreator( Gaffer.Node, "user", UserPlugValueWidget )
-
 ##########################################################################
 # Plug menu
 ##########################################################################

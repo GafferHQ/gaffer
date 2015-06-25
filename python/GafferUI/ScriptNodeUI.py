@@ -67,6 +67,8 @@ Gaffer.Metadata.registerNode(
 			modified since it was last saved.
 			""",
 
+			"plugValueWidget:type", "",
+
 		),
 
 		"frameRange" : (
@@ -79,6 +81,8 @@ Gaffer.Metadata.registerNode(
 			ranges, and by the UI to define the range of the
 			time slider.
 			""",
+
+			"plugValueWidget:type", "GafferUI.CompoundNumericPlugValueWidget",
 
 		),
 
@@ -120,18 +124,6 @@ Gaffer.Metadata.registerNode(
 
 	},
 
-)
-
-GafferUI.PlugValueWidget.registerCreator(
-	Gaffer.ScriptNode,
-	"unsavedChanges",
-	None
-)
-
-GafferUI.PlugValueWidget.registerCreator(
-	Gaffer.ScriptNode,
-	"frameRange",
-	GafferUI.CompoundNumericPlugValueWidget
 )
 
 GafferUI.PlugValueWidget.registerCreator(
