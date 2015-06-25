@@ -38,6 +38,7 @@ import weakref
 import functools
 import types
 import re
+import collections
 
 import IECore
 
@@ -914,6 +915,233 @@ class _PlugListing( GafferUI.Widget ) :
 			self.__updateMetadata()
 
 ##########################################################################
+# _PresetsEditor. This provides a ui for editing the presets for a plug.
+##########################################################################
+
+class _PresetsEditor( GafferUI.Widget ) :
+
+	def __init__( self, **kw ) :
+
+		row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 8 )
+		GafferUI.Widget.__init__( self, row, **kw )
+
+		with row :
+
+			with GafferUI.ListContainer( spacing = 4 ) :
+
+				self.__pathListing = GafferUI.PathListingWidget(
+					Gaffer.DictPath( collections.OrderedDict(), "/" ),
+					columns = ( GafferUI.PathListingWidget.defaultNameColumn, ),
+				)
+				self.__pathListing.setDragPointer( "" )
+				self.__pathListing.setSortable( False )
+				self.__pathListing.setHeaderVisible( False )
+				self.__pathListing._qtWidget().setFixedWidth( 200 )
+
+				self.__pathListingSelectionChangedConnection = self.__pathListing.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__selectionChanged ) )
+				self.__dragEnterConnection = self.__pathListing.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ) )
+				self.__dragMoveConnection = self.__pathListing.dragMoveSignal().connect( Gaffer.WeakMethod( self.__dragMove ) )
+				self.__dragEndConnection = self.__pathListing.dragEndSignal().connect( Gaffer.WeakMethod( self.__dragEnd ) )
+
+				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
+
+					self.__addButton = GafferUI.Button( image = "plus.png", hasFrame = False )
+					self.__addButtonClickedConnection = self.__addButton.clickedSignal().connect( Gaffer.WeakMethod( self.__addButtonClicked ) )
+
+					self.__deleteButton = GafferUI.Button( image = "minus.png", hasFrame = False )
+					self.__deleteButtonClickedConnection = self.__deleteButton.clickedSignal().connect( Gaffer.WeakMethod( self.__deleteButtonClicked ) )
+
+			with GafferUI.ListContainer( spacing = 4 ) as self.__editingColumn :
+
+				GafferUI.Label( "Name" )
+
+				self.__nameWidget = GafferUI.TextWidget()
+				self.__nameEditingFinishedConnection = self.__nameWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__nameEditingFinished ) )
+
+				GafferUI.Spacer( IECore.V2i( 4 ), maximumSize = IECore.V2i( 4 ) )
+
+				GafferUI.Label( "Value" )
+
+		# We make a UI for editing preset values by copying the plug
+		# onto this node and then making a PlugValueWidget for it.
+		self.__valueNode = Gaffer.Node( "PresetEditor" )
+		self.__valuePlugSetConnection = self.__valueNode.plugSetSignal().connect( Gaffer.WeakMethod( self.__valuePlugSet ) )
+
+	def setPlug( self, plug ) :
+
+		self.__plug = plug
+
+		self.__plugMetadataChangedConnection = None
+		del self.__editingColumn[4:]
+
+		if self.__plug is not None :
+			self.__plugMetadataChangedConnection = Gaffer.Metadata.plugValueChangedSignal().connect( Gaffer.WeakMethod( self.__plugMetadataChanged ) )
+			self.__valueNode["presetValue"] = plug.createCounterpart( "presetValue", plug.Direction.In )
+			self.__editingColumn.append( GafferUI.PlugValueWidget.create( self.__valueNode["presetValue"], useTypeOnly = True ) )
+		else :
+			self.__editingColumn.append( GafferUI.TextWidget() )
+
+		self.__editingColumn.append( GafferUI.Spacer( IECore.V2i( 0 ), expand = True ) )
+
+		self.__updatePath()
+
+		self.__addButton.setEnabled( hasattr( self.__plug, "getValue" ) )
+
+	def getPlug( self ) :
+
+		return self.__plug
+
+	def __updatePath( self ) :
+
+		d = self.__pathListing.getPath().dict()
+		d.clear()
+		if self.__plug is not None :
+			for name in _registeredMetadata( self.__plug, instanceOnly = True, persistentOnly = True ) :
+				if name.startswith( "preset:" ) :
+					d[name[7:]] = _metadata( self.__plug, name )
+
+		self.__pathListing.getPath().pathChangedSignal()( self.__pathListing.getPath() )
+
+	def __plugMetadataChanged( self, nodeTypeId, plugPath, key, plug ) :
+
+		if plug is None or not plug.isSame( self.__plug ) :
+			return
+
+		if key.startswith( "preset:" ) :
+			self.__updatePath()
+
+	def __selectionChanged( self, listing ) :
+
+		selectedPaths = listing.getSelectedPaths()
+
+		self.__nameWidget.setText( selectedPaths[0][0] if selectedPaths else "" )
+		self.__editingColumn.setEnabled( bool( selectedPaths ) )
+		self.__deleteButton.setEnabled( bool( selectedPaths ) )
+
+	def __dragEnter( self, listing, event ) :
+
+		if event.sourceWidget is not self.__pathListing :
+			return False
+		if not isinstance( event.data, IECore.StringVectorData ) :
+			return False
+
+		return True
+
+	def __dragMove( self, listing, event ) :
+
+		d = self.__pathListing.getPath().dict()
+
+		srcPath = self.__pathListing.getPath().copy().setFromString( event.data[0] )
+		srcIndex = d.keys().index( srcPath[0] )
+
+		targetPath = self.__pathListing.pathAt( event.line.p0 )
+		if targetPath is not None :
+			targetIndex = d.keys().index( targetPath[0] )
+		else :
+			targetIndex = 0 if event.line.p0.y < 1 else len( d )
+
+		if srcIndex == targetIndex :
+			return True
+
+		items = d.items()
+		item = items[srcIndex]
+		del items[srcIndex]
+		items.insert( targetIndex, item )
+
+		d.clear()
+		d.update( items )
+
+		self.__pathListing.getPath().pathChangedSignal()( self.__pathListing.getPath() )
+
+		return True
+
+	def __dragEnd( self, listing, event ) :
+
+		d = self.__pathListing.getPath().dict()
+		with Gaffer.BlockedConnection( self.__plugMetadataChangedConnection ) :
+			with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
+				# reorder by removing everything and reregistering in the order we want
+				for item in d.items() :
+					Gaffer.Metadata.deregisterPlugValue( self.getPlug(), "preset:" + item[0] )
+				for item in d.items() :
+					Gaffer.Metadata.registerPlugValue( self.getPlug(), "preset:" + item[0], item[1] )
+
+		self.__updatePath()
+
+		return True
+
+	def __addButtonClicked( self, button ) :
+
+		existingNames = [ p[0] for p in self.__pathListing.getPath().children() ]
+
+		name = "New Preset"
+		index = 1
+		while name in existingNames :
+			name = "New Preset %d" % index
+			index += 1
+
+		with Gaffer.UndoContext( self.__plug.ancestor( Gaffer.ScriptNode ) ) :
+			Gaffer.Metadata.registerPlugValue( self.__plug, "preset:" + name, self.__plug.getValue() )
+
+		self.__pathListing.setSelectedPaths(
+			self.__pathListing.getPath().copy().setFromString( "/" + name )
+		)
+
+		self.__nameWidget.grabFocus()
+		self.__nameWidget.setSelection( 0, len( name ) )
+
+		return True
+
+	def __deleteButtonClicked( self, button ) :
+
+		paths = self.__pathListing.getPath().children()
+		selectedPreset = self.__pathListing.getSelectedPaths()[0][0]
+		selectedIndex = [ p[0] for p in paths ].index( selectedPreset )
+
+		with Gaffer.UndoContext( self.__plug.ancestor( Gaffer.ScriptNode ) ) :
+			Gaffer.Metadata.deregisterPlugValue( self.__plug, "preset:" + selectedPreset )
+
+		del paths[selectedIndex]
+		if len( paths ) :
+			self.__pathListing.setSelectedPaths( [ paths[min(selectedIndex,len( paths )-1)] ] )
+
+		return True
+
+	def __nameEditingFinished( self, nameWidget ) :
+
+		selectedPaths = self.__pathListing.getSelectedPaths()
+		if not len( selectedPaths ) :
+			return True
+
+		oldName = selectedPaths[0][0]
+		newName = nameWidget.getText()
+
+		items = self.__pathListing.getPath().dict().items()
+		with Gaffer.BlockedConnection( self.__plugMetadataChangedConnection ) :
+			with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
+				# retain order by removing and reregistering everything
+				for item in items :
+					Gaffer.Metadata.deregisterPlugValue( self.getPlug(), "preset:" + item[0] )
+				for item in items :
+					Gaffer.Metadata.registerPlugValue( self.getPlug(), "preset:" + (item[0] if item[0] != oldName else newName), item[1] )
+
+		self.__updatePath()
+		self.__pathListing.setSelectedPaths( [ self.__pathListing.getPath().copy().setFromString( "/" + newName ) ] )
+
+		return True
+
+	def __valuePlugSet( self, plug ) :
+
+		if not plug.isSame( self.__valueNode["presetValue"] ) :
+			return
+
+		selectedPaths = self.__pathListing.getSelectedPaths()
+		preset = selectedPaths[0][0]
+
+		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
+			Gaffer.Metadata.registerPlugValue( self.getPlug(), "preset:" + preset, plug.getValue() )
+
+##########################################################################
 # _PlugEditor. This provides a panel for editing a specific plug's name,
 # description, etc.
 ##########################################################################
@@ -951,6 +1179,15 @@ class _PlugEditor( GafferUI.Widget ) :
 					_BoolMetadataWidget( key = "divider" )
 				)
 
+			with GafferUI.Collapsible( "Presets", collapsed = True ) :
+
+				with _Row() :
+
+					_Label( "" )
+					self.__presetsEditor = _PresetsEditor()
+
+			GafferUI.Spacer( IECore.V2i( 0 ), parenting = { "expand" : True } )
+
 		self.__plug = None
 
 	def setPlug( self, plug ) :
@@ -960,6 +1197,8 @@ class _PlugEditor( GafferUI.Widget ) :
 		self.__nameWidget.setGraphComponent( self.__plug )
 		for widget in self.__metadataWidgets :
 			widget.setTarget( self.__plug )
+
+		self.__presetsEditor.setPlug( plug )
 
 		self.setEnabled( self.__plug is not None )
 
