@@ -34,6 +34,10 @@
 #
 ##########################################################################
 
+import functools
+
+import IECore
+
 import Gaffer
 import GafferUI
 
@@ -41,29 +45,58 @@ class PresetsPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plug, **kw ) :
 
-		self.__selectionMenu = GafferUI.MultiSelectionMenu( allowMultipleSelection = False, allowEmptySelection = False )
-		GafferUI.PlugValueWidget.__init__( self, self.__selectionMenu, plug, **kw )
-
-		for n in Gaffer.NodeAlgo.presets( plug ) :
-			self.__selectionMenu.append( n )
+		self.__menuButton = GafferUI.MenuButton( "", menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) ) )
+		GafferUI.PlugValueWidget.__init__( self, self.__menuButton, plug, **kw )
 		
-		self.__selectionChangedConnection = self.__selectionMenu.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__selectionChanged ) )
+		self.__plugMetadataChangedConnection = Gaffer.Metadata.plugValueChangedSignal().connect( Gaffer.WeakMethod( self.__plugMetadataChanged ) )
 
-		self._addPopupMenu( self.__selectionMenu )
-
+		self._addPopupMenu( self.__menuButton )
 		self._updateFromPlug()
 
 	def _updateFromPlug( self ) :
 
-		self.__selectionMenu.setEnabled( self._editable() )
+		self.__menuButton.setEnabled( self._editable() )
 
+		text = ""
 		if self.getPlug() is not None :
 			with self.getContext() :
-				with Gaffer.BlockedConnection( self.__selectionChangedConnection ) :
-					self.__selectionMenu.setSelection( Gaffer.NodeAlgo.currentPreset( self.getPlug() ) )
+				text = Gaffer.NodeAlgo.currentPreset( self.getPlug() ) or "Invalid"
 
-	def __selectionChanged( self, selectionMenu ) :
+		self.__menuButton.setText( text )
+
+	def __menuDefinition( self ) :
+
+		result = IECore.MenuDefinition()
+		if self.getPlug() is None :
+			return result
+
+		currentPreset = Gaffer.NodeAlgo.currentPreset( self.getPlug() )
+		for n in Gaffer.NodeAlgo.presets( self.getPlug() ) :
+			result.append(
+				"/" + n,
+				{
+					"command" : functools.partial( Gaffer.WeakMethod( self.__applyPreset ), preset = n ),
+					"checkBox" : n == currentPreset,
+				}
+			)
+
+		return result
+
+	def __applyPreset( self, unused, preset ) :
 
 		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
-			name = selectionMenu.getSelection()[0]
-			Gaffer.NodeAlgo.applyPreset( self.getPlug(), name )
+			Gaffer.NodeAlgo.applyPreset( self.getPlug(), preset )
+
+	def __plugMetadataChanged( self, nodeTypeId, plugPath, key, plug ) :
+
+		if self.getPlug() is None :
+			return
+
+		if plug is not None and not plug.isSame( self.getPlug() ) :
+			return
+
+		if not self.getPlug().node().isInstanceOf( nodeTypeId ) :
+			return
+
+		if key.startswith( "preset:" ) :
+			self._updateFromPlug()
