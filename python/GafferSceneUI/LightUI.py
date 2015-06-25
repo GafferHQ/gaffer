@@ -39,15 +39,28 @@ import GafferUI
 
 import GafferScene
 
-Gaffer.Metadata.registerNodeDescription(
+Gaffer.Metadata.registerNode(
 
-GafferScene.Light,
+	GafferScene.Light,
 
-"""Creates a scene with a single light in it.""",
+	"description",
+	"""
+	Creates a scene with a single light in it.
+	""",
 
-"parameters",
-"""The parameters of the light shader - these will vary based on the light type.""",
+	plugs = {
+
+		"parameters" : [
+
+			"description",
+			"""
+			The parameters of the light shader - these will vary based on the light type.
+			""",
+
+			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
+
+		],
+
+	}
 
 )
-
-GafferUI.PlugValueWidget.registerCreator( GafferScene.Light, "parameters", GafferUI.LayoutPlugValueWidget )

@@ -299,6 +299,8 @@ Gaffer.Metadata.registerNode(
 			"preset:For Particles And Disks", "forParticlesAndDisks",
 			"preset:For All", "forAll",
 
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
 		],
 
 		"attributes.pointsPrimitiveGLPointWidth" : [
@@ -362,14 +364,4 @@ Gaffer.Metadata.registerNode(
 
 	}
 
-)
-
-##########################################################################
-# PlugValueWidgets
-##########################################################################
-
-GafferUI.PlugValueWidget.registerCreator(
-	GafferScene.OpenGLAttributes,
-	"attributes.pointsPrimitiveUseGLPoints.value",
-	GafferUI.PresetsPlugValueWidget
 )

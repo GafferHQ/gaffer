@@ -76,6 +76,8 @@ Gaffer.Metadata.registerNode(
 			"preset:Add", GafferScene.Set.Mode.Add,
 			"preset:Remove", GafferScene.Set.Mode.Remove,
 
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
 		],
 
 		"name" : [
@@ -105,12 +107,6 @@ Gaffer.Metadata.registerNode(
 
 # PlugValueWidget registrations
 ##########################################################################
-
-GafferUI.PlugValueWidget.registerCreator(
-	GafferScene.Set,
-	"mode",
-	GafferUI.PresetsPlugValueWidget,
-)
 
 def __pathsPlugWidgetCreator( plug ) :
 

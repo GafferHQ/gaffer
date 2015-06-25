@@ -124,6 +124,14 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"options.renderCamera.value" : [
+
+			"plugValueWidget:type", "GafferSceneUI.ScenePathPlugValueWidget",
+			"scenePathPlugValueWidget:setNames", IECore.StringVectorData( [ "__cameras" ] ),
+			"scenePathPlugValueWidget:setsLabel", "Show only cameras",
+
+		],
+
 		"options.renderResolution" : [
 
 			"description",
@@ -305,26 +313,4 @@ Gaffer.Metadata.registerNode(
 
 	}
 
-)
-
-##########################################################################
-# PlugValueWidgets
-##########################################################################
-
-GafferUI.PlugValueWidget.registerCreator(
-	GafferScene.StandardOptions,
-	"options.renderCamera.value",
-	GafferSceneUI.ScenePathPlugValueWidget
-)
-
-Gaffer.Metadata.registerPlugValue(
-	GafferScene.StandardOptions,
-	"options.renderCamera.value",
-	"scenePathPlugValueWidget:setNames", IECore.StringVectorData( [ "__cameras" ] )
-)
-
-Gaffer.Metadata.registerPlugValue(
-	GafferScene.StandardOptions,
-	"options.renderCamera.value",
-	"scenePathPlugValueWidget:setsLabel", "Show only cameras"
 )

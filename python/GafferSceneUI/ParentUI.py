@@ -70,15 +70,10 @@ Gaffer.Metadata.registerNode(
 			The child hierarchy to be parented.
 			""",
 
+			"plugValueWidget:type", ""
+
 		],
 
 	}
 
 )
-
-##########################################################################
-# Widgets and nodules
-##########################################################################
-
-GafferUI.PlugValueWidget.registerCreator( GafferScene.Parent, "child", None )
-

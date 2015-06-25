@@ -101,14 +101,10 @@ Gaffer.Metadata.registerNode(
 			variations.
 			""",
 
+			"plugValueWidget:type", "",
+
 		],
 
 	}
 
 )
-
-##########################################################################
-# Widgets and nodules
-##########################################################################
-
-GafferUI.PlugValueWidget.registerCreator( GafferScene.Instancer, "instance", None )

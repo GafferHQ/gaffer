@@ -65,6 +65,8 @@ Gaffer.Metadata.registerNode(
 			and targetOffset values before the constraint is applied.
 			""",
 
+			"plugValueWidget:type", "GafferSceneUI.ScenePathPlugValueWidget",
+
 		],
 
 		"targetMode" : [
@@ -79,6 +81,8 @@ Gaffer.Metadata.registerNode(
 			"preset:BoundMin", GafferScene.Constraint.TargetMode.BoundMin,
 			"preset:BoundMax", GafferScene.Constraint.TargetMode.BoundMax,
 			"preset:BoundCenter", GafferScene.Constraint.TargetMode.BoundCenter,
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 
 		],
 
@@ -95,20 +99,4 @@ Gaffer.Metadata.registerNode(
 
 	},
 
-)
-
-##########################################################################
-# PlugValueWidgets
-##########################################################################
-
-GafferUI.PlugValueWidget.registerCreator(
-	GafferScene.Constraint,
-	"target",
-	GafferSceneUI.ScenePathPlugValueWidget
-)
-
-GafferUI.PlugValueWidget.registerCreator(
-	GafferScene.Constraint,
-	"targetMode",
-	GafferUI.PresetsPlugValueWidget,
 )

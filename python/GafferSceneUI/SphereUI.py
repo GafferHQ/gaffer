@@ -65,6 +65,8 @@ Gaffer.Metadata.registerNode(
 			"preset:Primitive", GafferScene.Sphere.Type.Primitive,
 			"preset:Mesh", GafferScene.Sphere.Type.Mesh,
 
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
 		],
 
 		"radius" : [
@@ -122,9 +124,3 @@ Gaffer.Metadata.registerNode(
 	}
 
 )
-
-##########################################################################
-# Widgets and nodules
-##########################################################################
-
-GafferUI.PlugValueWidget.registerCreator( GafferScene.Sphere, "type", GafferUI.PresetsPlugValueWidget )

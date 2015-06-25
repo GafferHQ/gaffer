@@ -70,6 +70,7 @@ Gaffer.Metadata.registerNode(
 			"nodeGadget:nodulePosition", "right",
 			"layout:index", -3, # Just before the enabled plug,
 			"nodule:type", "GafferUI::StandardNodule",
+			"plugValueWidget:type", "GafferSceneUI.FilterPlugValueWidget",
 
 		],
 
@@ -78,14 +79,8 @@ Gaffer.Metadata.registerNode(
 )
 
 ##########################################################################
-# Widgets and Gadgets
+# Gadgets
 ##########################################################################
-
-GafferUI.PlugValueWidget.registerCreator(
-	GafferScene.FilteredSceneProcessor,
-	"filter",
-	GafferSceneUI.FilterPlugValueWidget,
-)
 
 def __nodeGadget( node ) :
 

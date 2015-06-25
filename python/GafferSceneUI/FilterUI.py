@@ -70,10 +70,10 @@ Gaffer.Metadata.registerNode(
 			the "filter" plug of a FilteredSceneProcessor.
 			""",
 
+			"plugValueWidget:type", "",
+
 		]
 
 	}
 
 )
-
-GafferUI.PlugValueWidget.registerCreator( GafferScene.Filter, "out", None )

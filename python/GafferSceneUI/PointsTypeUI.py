@@ -65,9 +65,9 @@ Gaffer.Metadata.registerNode(
 			"preset:Patch", "patch",
 			"preset:Blobby", "blobby",
 
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
 		],
 
 	}
 )
-
-GafferUI.PlugValueWidget.registerCreator( GafferScene.PointsType, "type", GafferUI.PresetsPlugValueWidget )
