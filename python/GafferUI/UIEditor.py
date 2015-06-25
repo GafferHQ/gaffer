@@ -1173,6 +1173,14 @@ class _PlugEditor( GafferUI.Widget ) :
 
 			with _Row() :
 
+				_Label( "Widget" )
+
+				self.__widgetMenu = GafferUI.MenuButton(
+					menu = GafferUI.Menu( Gaffer.WeakMethod( self.__widgetMenuDefinition ) )
+				)
+
+			with _Row() :
+
 				_Label( "Divider" )
 
 				self.__metadataWidgets.append(
@@ -1188,6 +1196,8 @@ class _PlugEditor( GafferUI.Widget ) :
 
 			GafferUI.Spacer( IECore.V2i( 0 ), parenting = { "expand" : True } )
 
+		self.__plugMetadataChangedConnection = Gaffer.Metadata.plugValueChangedSignal().connect( Gaffer.WeakMethod( self.__plugMetadataChanged ) )
+
 		self.__plug = None
 
 	def setPlug( self, plug ) :
@@ -1198,6 +1208,7 @@ class _PlugEditor( GafferUI.Widget ) :
 		for widget in self.__metadataWidgets :
 			widget.setTarget( self.__plug )
 
+		self.__updateWidgetMenuText()
 		self.__presetsEditor.setPlug( plug )
 
 		self.setEnabled( self.__plug is not None )
@@ -1205,6 +1216,74 @@ class _PlugEditor( GafferUI.Widget ) :
 	def getPlug( self ) :
 
 		return self.__plug
+
+	def __plugMetadataChanged( self, nodeTypeId, plugPath, key, plug ) :
+
+		if self.getPlug() is None :
+			return
+
+		if plug is not None and not plug.isSame( self.getPlug() ) :
+			return
+
+		if not self.getPlug().node().isInstanceOf( nodeTypeId ) :
+			return
+
+		if key == "plugValueWidget:type" :
+			self.__updateWidgetMenuText()
+
+	def __updateWidgetMenuText( self ) :
+
+		if self.getPlug() is None :
+			self.__widgetMenu.setText( "" )
+			return
+
+		metadata = Gaffer.Metadata.plugValue( self.getPlug(), "plugValueWidget:type" )
+		for w in self.__widgetDefinitions :
+			if w.metadata == metadata :
+				self.__widgetMenu.setText( w.label )
+				return
+
+		self.__widgetMenu.setText( metadata )
+
+	def __widgetMenuDefinition( self ) :
+
+		result = IECore.MenuDefinition()
+		if self.getPlug() is None :
+			return result
+
+		metadata = Gaffer.Metadata.plugValue( self.getPlug(), "plugValueWidget:type" )
+		for w in self.__widgetDefinitions :
+			if not isinstance( self.getPlug(), w.plugType ) :
+				continue
+
+			result.append(
+				"/" + w.label,
+				{
+					"command" : functools.partial( Gaffer.WeakMethod( self.__registerWidgetType ), type = w.metadata ),
+					"checkBox" : metadata == w.metadata,
+				}
+			)
+
+		return result
+
+	def __registerWidgetType( self, unused, type ) :
+
+		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
+			if type is not None :
+				Gaffer.Metadata.registerPlugValue( self.getPlug(), "plugValueWidget:type", type )
+			else :
+				Gaffer.Metadata.deregisterPlugValue( self.getPlug(), "plugValueWidget:type" )
+
+	__WidgetDefinition = collections.namedtuple( "Widget", ( "label", "plugType", "metadata" ) )
+	__widgetDefinitions = (
+		__WidgetDefinition( "Default", Gaffer.Plug, None ),
+		__WidgetDefinition( "Checkbox", Gaffer.IntPlug, "GafferUI.BoolPlugValueWidget" ),
+		__WidgetDefinition( "Text Region", Gaffer.StringPlug, "GafferUI.MultiLineStringPlugValueWidget" ),
+		__WidgetDefinition( "File Chooser", Gaffer.StringPlug, "GafferUI.PathPlugValueWidget" ),
+		__WidgetDefinition( "Presets Menu", Gaffer.ValuePlug, "GafferUI.PresetsPlugValueWidget" ),
+		__WidgetDefinition( "Connection", Gaffer.Plug, "GafferUI.ConnectionPlugValueWidget" ),
+		__WidgetDefinition( "None", Gaffer.Plug, "" ),
+	)
 
 ##########################################################################
 # _SectionEditor. This provides a panel for editing the details of
