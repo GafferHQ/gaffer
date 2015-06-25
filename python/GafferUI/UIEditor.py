@@ -989,7 +989,6 @@ class _PlugEditor( GafferUI.Widget ) :
 # a specific section.
 ##########################################################################
 
-## \todo Add support for specifying section summaries.
 class _SectionEditor( GafferUI.Widget ) :
 
 	def __init__( self, **kw ) :
@@ -1010,6 +1009,19 @@ class _SectionEditor( GafferUI.Widget ) :
 			self.__nameWidget = GafferUI.TextWidget( parenting = { "index" : ( 1, 0 ) } )
 			self.__nameWidgetEditingFinishedConnection = self.__nameWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__nameWidgetEditingFinished ) )
 
+			GafferUI.Label(
+				"Summary",
+				parenting = {
+					"index" : ( 0, 1 ),
+					"alignment" : ( GafferUI.HorizontalAlignment.Right, GafferUI.VerticalAlignment.Top )
+				}
+			)
+
+			self.__summaryMetadataWidget = _MultiLineStringMetadataWidget(
+				key = "",
+				parenting = { "index" : ( 1, 1 ) }
+			)
+
 		self.__section = ""
 		self.__plugParent = None
 		self.__nameChangedSignal = Gaffer.Signal3()
@@ -1017,6 +1029,7 @@ class _SectionEditor( GafferUI.Widget ) :
 	def setPlugParent( self, plugParent ) :
 
 		self.__plugParent = plugParent
+		self.__summaryMetadataWidget.setTarget( self.__plugParent )
 
 	def getPlugParent( self ) :
 
@@ -1028,6 +1041,7 @@ class _SectionEditor( GafferUI.Widget ) :
 
 		self.__section = section
 		self.__nameWidget.setText( section.rpartition( "." )[-1] )
+		self.__summaryMetadataWidget.setKey( "layout:section:" + self.__section + ":summary" )
 
 	def getSection( self ) :
 
@@ -1056,6 +1070,7 @@ class _SectionEditor( GafferUI.Widget ) :
 				return oldSection
 
 		with Gaffer.UndoContext( self.__plugParent.ancestor( Gaffer.ScriptNode ) ) :
+
 			for plug in self.__plugParent.children( Gaffer.Plug ) :
 				s = _metadata( plug, "layout:section" )
 				if s is not None :
@@ -1066,6 +1081,17 @@ class _SectionEditor( GafferUI.Widget ) :
 				for i in range( 0, len( emptySections ) ) :
 					emptySections[i] = newSection( emptySections[i] )
 				_registerMetadata( self.getPlugParent(), "uiEditor:emptySections", emptySections )
+
+			for name in _registeredMetadata( self.getPlugParent(), instanceOnly = True, persistentOnly = True ) :
+				m = re.match( "(layout:section:)(.*)(:.*)", name )
+				if m :
+					if newSection( m.group( 2 ) ) != m.group( 2 ) :
+						_registerMetadata(
+							self.getPlugParent(),
+							m.group( 1 ) + newSection( m.group( 2 ) ) + m.group( 3 ),
+							_metadata( self.getPlugParent(), name )
+						)
+						_deregisterMetadata( self.getPlugParent(), name )
 
 		self.setSection( ".".join( newSectionPath ) )
 		self.nameChangedSignal()( self, ".".join( oldSectionPath ), ".".join( newSectionPath ) )
@@ -1109,6 +1135,18 @@ class _MetadataWidget( GafferUI.Widget ) :
 	def getTarget( self ) :
 
 		return self.__target
+
+	def setKey( self, key ) :
+
+		if key == self.__key :
+			return
+
+		self.__key = key
+		self.__update()
+
+	def getKey( self, key ) :
+
+		return self.__key
 
 	## Must be implemented in derived classes to update
 	# the widget from the value.
@@ -1245,9 +1283,23 @@ def _registerMetadata( target, name, value ) :
 	else :
 		Gaffer.Metadata.registerPlugValue( target, name, value )
 
+def _registeredMetadata( target, inherit = True, instanceOnly = False, persistentOnly = False ) :
+
+	if isinstance( target, Gaffer.Node ) :
+		return Gaffer.Metadata.registeredNodeValues( target, inherit, instanceOnly, persistentOnly )
+	else :
+		return Gaffer.Metadata.registeredPlugValues( target, inherit, instanceOnly, persistentOnly )
+
 def _metadata( target, name ) :
 
 	if isinstance( target, Gaffer.Node ) :
 		return Gaffer.Metadata.nodeValue( target, name )
 	else :
 		return Gaffer.Metadata.plugValue( target, name )
+
+def _deregisterMetadata( target, name ) :
+
+	if isinstance( target, Gaffer.Node ) :
+		return Gaffer.Metadata.deregisterNodeValue( target, name )
+	else :
+		return Gaffer.Metadata.deregisterPlugValue( target, name )
