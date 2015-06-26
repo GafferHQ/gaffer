@@ -47,4 +47,4 @@ IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( GafferImage::ImageTimeWarp, Im
 }
 
 // explicit instantiation
-template class Gaffer::TimeWarp<ImageMixinBase>;
+template class Gaffer::TimeWarp<ImageProcessor>;

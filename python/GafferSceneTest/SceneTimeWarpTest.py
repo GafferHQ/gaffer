@@ -59,7 +59,6 @@ class SceneTimeWarpTest( unittest.TestCase ) :
 		n = GafferScene.SceneTimeWarp()
 		self.failUnless( n.isInstanceOf( GafferScene.SceneTimeWarp.staticTypeId() ) )
 		self.failUnless( n.isInstanceOf( GafferScene.SceneContextProcessor.staticTypeId() ) )
-		self.failUnless( n.isInstanceOf( GafferScene.SceneMixinBase.staticTypeId() ) )
 		self.failUnless( n.isInstanceOf( GafferScene.SceneProcessor.staticTypeId() ) )
 		self.failUnless( n.isInstanceOf( GafferScene.SceneNode.staticTypeId() ) )
 		self.failUnless( n.isInstanceOf( Gaffer.Node.staticTypeId() ) )
@@ -67,7 +66,6 @@ class SceneTimeWarpTest( unittest.TestCase ) :
 		baseTypeIds = IECore.RunTimeTyped.baseTypeIds( n.typeId() )
 
 		self.failUnless( GafferScene.SceneContextProcessor.staticTypeId() in baseTypeIds )
-		self.failUnless( GafferScene.SceneMixinBase.staticTypeId() in baseTypeIds )
 		self.failUnless( GafferScene.SceneProcessor.staticTypeId() in baseTypeIds )
 		self.failUnless( GafferScene.SceneNode.staticTypeId() in baseTypeIds )
 		self.failUnless( Gaffer.Node.staticTypeId() in baseTypeIds )

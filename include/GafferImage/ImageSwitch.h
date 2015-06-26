@@ -38,12 +38,12 @@
 #define GAFFERIMAGE_IMAGESWITCH_H
 
 #include "Gaffer/Switch.h"
-#include "GafferImage/ImageMixinBase.h"
+#include "GafferImage/ImageProcessor.h"
 
 namespace GafferImage
 {
 
-typedef Gaffer::Switch<ImageMixinBase> ImageSwitch;
+typedef Gaffer::Switch<ImageProcessor> ImageSwitch;
 IE_CORE_DECLAREPTR( ImageSwitch )
 
 } // namespace GafferImage

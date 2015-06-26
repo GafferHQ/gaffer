@@ -46,5 +46,5 @@ IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( GafferImage::ImageSwitch, Gaff
 }
 
 // explicit instantiation
-template class Gaffer::Switch<GafferImage::ImageMixinBase>;
+template class Gaffer::Switch<GafferImage::ImageProcessor>;
 

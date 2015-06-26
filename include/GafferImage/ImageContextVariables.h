@@ -38,12 +38,12 @@
 #define GAFFERIMAGE_IMAGECONTEXTVARIABLES_H
 
 #include "Gaffer/ContextVariables.h"
-#include "GafferImage/ImageMixinBase.h"
+#include "GafferImage/ImageProcessor.h"
 
 namespace GafferImage
 {
 
-typedef Gaffer::ContextVariables<ImageMixinBase> ImageContextVariables;
+typedef Gaffer::ContextVariables<ImageProcessor> ImageContextVariables;
 IE_CORE_DECLAREPTR( ImageContextVariables )
 
 } // namespace GafferImage

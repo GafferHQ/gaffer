@@ -81,7 +81,7 @@ enum TypeId
 	DeleteChannelsTypeId = 110785,
 	ColorProcessorTypeId = 110786,
 	ClampTypeId = 110787,
-	ImageMixinBaseTypeId = 110788,
+	ImageMixinBaseTypeId = 110788, // obsolete, available for reuse
 	ImageContextProcessorTypeId = 110789,
 	ImageTimeWarpTypeId = 110790,
 	ImageContextVariablesTypeId = 110791,

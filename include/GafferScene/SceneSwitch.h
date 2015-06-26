@@ -39,12 +39,12 @@
 
 #include "Gaffer/Switch.h"
 
-#include "GafferScene/SceneContextProcessor.h"
+#include "GafferScene/SceneProcessor.h"
 
 namespace GafferScene
 {
 
-typedef Gaffer::Switch<SceneMixinBase> SceneSwitch;
+typedef Gaffer::Switch<SceneProcessor> SceneSwitch;
 IE_CORE_DECLAREPTR( SceneSwitch )
 
 } // namespace GafferScene

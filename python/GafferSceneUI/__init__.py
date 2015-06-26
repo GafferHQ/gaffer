@@ -112,7 +112,6 @@ import SceneElementProcessorUI
 import PointConstraintUI
 import SceneTimeWarpUI
 import FilterMixinBaseUI
-import SceneMixinBaseUI
 import BranchCreatorUI
 import ConstraintUI
 import PlaneUI
