@@ -104,6 +104,7 @@ import GroupUI
 import OpenGLRenderUI
 import DeletePrimitiveVariablesUI
 import MeshTypeUI
+import CurvesTypeUI
 import DeleteOutputsUI
 import InstancerUI
 import ObjectToSceneUI
