@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import IECore
+
 import Gaffer
 import GafferUI
 import GafferArnold
@@ -75,6 +77,7 @@ Gaffer.Metadata.registerNode(
 			"preset:Generate expanded .ass", "expand",
 
 			"nodule:type", "",
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 
 		],
 
@@ -86,6 +89,10 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"nodule:type", "",
+			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
+			"pathPlugValueWidget:bookmarks", "ass",
+			"pathPlugValueWidget:leaf", True,
+			"fileSystemPathPlugValueWidget:extensions", IECore.StringVectorData( [ "ass" ] ),
 
 		],
 
@@ -105,33 +112,10 @@ Gaffer.Metadata.registerNode(
 			"preset:6", 6,
 
 			"nodule:type", "",
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 
 		],
 
-}
+	}
 
-)
-
-GafferUI.PlugValueWidget.registerCreator(
-	GafferArnold.ArnoldRender,
-	"mode",
-	GafferUI.PresetsPlugValueWidget,
-)
-
-GafferUI.PlugValueWidget.registerCreator(
-	GafferArnold.ArnoldRender,
-	"fileName",
-	lambda plug : GafferUI.PathPlugValueWidget( plug,
-		path = Gaffer.FileSystemPath( "/", filter = Gaffer.FileSystemPath.createStandardFilter() ),
-		pathChooserDialogueKeywords = {
-			"bookmarks" : GafferUI.Bookmarks.acquire( plug, category = "ass" ),
-			"leaf" : True,
-		},
-	),
-)
-
-GafferUI.PlugValueWidget.registerCreator(
-	GafferArnold.ArnoldRender,
-	"verbosity",
-	GafferUI.PresetsPlugValueWidget,
 )
