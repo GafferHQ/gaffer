@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import os
+
 import IECore
 
 import Gaffer
@@ -168,6 +170,32 @@ class OSLObjectTest( GafferOSLTest.OSLTestCase ) :
 
 		self.assertTrue( o["out"]["object"] in set( x[0] for x in cs ) )
 		self.assertTrue( o["out"]["bound"] in set( x[0] for x in cs ) )
+
+	def testReferencePromotedPlug( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["b"] = Gaffer.Box()
+		s["b"]["o"] = GafferOSL.OSLObject()
+		p = s["b"].promotePlug( s["b"]["o"]["shader"] )
+		p.setName( "p" )
+
+		s["b"].exportForReference( "/tmp/test.grf" )
+
+		s["r"] = Gaffer.Reference()
+		s["r"].load( "/tmp/test.grf" )
+
+		s["s"] = GafferOSL.OSLShader()
+		s["s"].loadShader( "ObjectProcessing/OutObject" )
+
+		s["r"]["p"].setInput( s["s"]["out"] )
+
+	def tearDown( self ) :
+
+		GafferOSLTest.OSLTestCase.tearDown( self )
+
+		if os.path.exists( "/tmp/test.grf" ) :
+			os.remove( "/tmp/test.grf" )
 
 if __name__ == "__main__":
 	unittest.main()
