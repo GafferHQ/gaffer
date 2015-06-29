@@ -34,6 +34,7 @@
 #
 ##########################################################################
 
+import os
 import unittest
 
 import IECore
@@ -353,6 +354,31 @@ class ExecutableNodeTest( GafferTest.TestCase ) :
 		d1["in"].setInput( e1["requirement"] )
 
 		self.assertTrue( e2["requirements"][0].acceptsInput( d1["out"] ) )
+
+	def testReferencePromotedRequirementPlug( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["b"] = Gaffer.Box()
+		s["b"]["e"] = GafferTest.TextWriter()
+		p = s["b"].promotePlug( s["b"]["e"]["requirements"][0] )
+		p.setName( "p" )
+
+		s["b"].exportForReference( "/tmp/test.grf" )
+
+		s["r"] = Gaffer.Reference()
+		s["r"].load( "/tmp/test.grf" )
+
+		s["e"] = GafferTest.TextWriter()
+
+		s["r"]["p"].setInput( s["e"]["requirement"] )
+
+	def tearDown( self ) :
+
+		GafferTest.TestCase.tearDown( self )
+
+		if os.path.exists( "/tmp/test.grf" ) :
+			os.remove( "/tmp/test.grf" )
 
 if __name__ == "__main__":
 	unittest.main()

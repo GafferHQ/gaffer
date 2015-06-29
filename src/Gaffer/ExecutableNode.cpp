@@ -34,7 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/Box.h"
+#include "Gaffer/SubGraph.h"
 #include "Gaffer/Dot.h"
 #include "Gaffer/Context.h"
 #include "Gaffer/ArrayPlug.h"
@@ -199,10 +199,10 @@ bool ExecutableNode::acceptsInput( const Plug *plug, const Plug *inputPlug ) con
 		}
 
 		// we only really want to accept connections from ExecutableNodes, because we can't require
-		// anything else, but we also accept the unconnected inputs and outputs of boxes, so you
+		// anything else, but we also accept the unconnected inputs and outputs of subgraphs, so you
 		// can wrap ExecutableNodes in boxes prior to connecting the other side. likewise, we accept
 		// connections from dots.
-		return runTimeCast<const Box>( sourceNode ) || runTimeCast<const Dot>( sourceNode );
+		return runTimeCast<const SubGraph>( sourceNode ) || runTimeCast<const Dot>( sourceNode );
 	}
 
 	return true;
