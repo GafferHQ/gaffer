@@ -63,6 +63,13 @@ Gaffer.Metadata.registerNode(
 			in any of the formats supported by Cortex's SceneInterfaces.
 			""",
 
+			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
+			"pathPlugValueWidget:leaf", True,
+			"pathPlugValueWidget:valid", True,
+			"pathPlugValueWidget:bookmarks", "sceneCache",
+			"fileSystemPathPlugValueWidget:extensions", lambda plug : IECore.StringVectorData( IECore.SceneInterface.supportedExtensions() ),
+			"fileSystemPathPlugValueWidget:extensionsLabel", "Show only cache files",
+
 		],
 
 		"refreshCount" : [
@@ -93,18 +100,6 @@ Gaffer.Metadata.registerNode(
 ##########################################################################
 # Widgets
 ##########################################################################
-
-GafferUI.PlugValueWidget.registerCreator(
-	GafferScene.SceneReader,
-	"fileName",
-	lambda plug : GafferUI.PathPlugValueWidget( plug,
-		path = Gaffer.FileSystemPath( "/", filter = Gaffer.FileSystemPath.createStandardFilter( extensions = IECore.SceneInterface.supportedExtensions() ) ),
-		pathChooserDialogueKeywords = {
-			"bookmarks" : GafferUI.Bookmarks.acquire( plug, category = "sceneCache" ),
-			"leaf" : True,
-		},
-	)
-)
 
 GafferUI.PlugValueWidget.registerCreator(
 	GafferScene.SceneReader,

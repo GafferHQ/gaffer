@@ -85,6 +85,15 @@ Gaffer.Metadata.registerNode(
 			"preset:16 bit", IECore.IntVectorData( [ 0, 65535, 0, 65535 ] ),
 			"preset:Float", IECore.IntVectorData( [ 0, 0, 0, 0 ] ),
 
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
+		],
+
+		"outputs.*.fileName" : [
+
+			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
+			"pathPlugValueWidget:bookmarks", "image",
+			"pathPlugValueWidget:leaf", True,
 
 		],
 
@@ -254,22 +263,4 @@ GafferUI.PlugValueWidget.registerCreator(
 	"outputs.*.active",
 	GafferUI.BoolPlugValueWidget,
 	displayMode = GafferUI.BoolWidget.DisplayMode.Switch,
-)
-
-GafferUI.PlugValueWidget.registerCreator(
-	GafferScene.Outputs,
-	re.compile( "outputs.*.parameters.quantize" ),
-	GafferUI.PresetsPlugValueWidget
-)
-
-GafferUI.PlugValueWidget.registerCreator(
-	GafferScene.Outputs,
-	"outputs.*.name",
-	lambda plug : GafferUI.PathPlugValueWidget( plug,
-		path = Gaffer.FileSystemPath( "/", filter = Gaffer.FileSystemPath.createStandardFilter() ),
-		pathChooserDialogueKeywords = {
-			"bookmarks" : GafferUI.Bookmarks.acquire( plug, category = "image" ),
-			"leaf" : True,
-		},
-	)
 )

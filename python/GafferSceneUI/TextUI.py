@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import IECore
+
 import Gaffer
 import GafferUI
 import GafferScene
@@ -73,25 +75,14 @@ Gaffer.Metadata.registerNode(
 			environment variable.
 			""",
 
+			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
+			"pathPlugValueWidget:bookmarks", "font",
+			"pathPlugValueWidget:leaf", True,
+			"pathPlugValueWidget:valid", True,
+			"fileSystemPathPlugValueWidget:extensions", IECore.StringVectorData( [ "ttf" ] ),
+
 		],
 
 	}
 
-)
-
-GafferUI.PlugValueWidget.registerCreator(
-	GafferScene.Text,
-	"font",
-	lambda plug : GafferUI.PathPlugValueWidget( plug,
-		path = Gaffer.FileSystemPath(
-			"/",
-			filter = Gaffer.FileSystemPath.createStandardFilter(
-				extensions = [ "ttf" ],
-			)
-		),
-		pathChooserDialogueKeywords = {
-			"bookmarks" : GafferUI.Bookmarks.acquire( plug, category = "font" ),
-			"leaf" : True,
-		},
-	)
 )

@@ -63,6 +63,11 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"nodule:type", "",
+			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
+			"pathPlugValueWidget:leaf", True,
+			"pathPlugValueWidget:bookmarks", "sceneCache",
+			"fileSystemPathPlugValueWidget:extensions", lambda plug : IECore.StringVectorData( IECore.SceneInterface.supportedExtensions( IECore.IndexedIO.OpenMode.Write ) ),
+			"fileSystemPathPlugValueWidget:extensionsLabel", "Show only cache files",
 
 		],
 
@@ -88,22 +93,4 @@ Gaffer.Metadata.registerNode(
 
 	}
 
-)
-
-GafferUI.PlugValueWidget.registerCreator(
-	GafferScene.SceneWriter,
-	"fileName",
-	lambda plug : GafferUI.PathPlugValueWidget(
-		plug,
-		path = Gaffer.FileSystemPath(
-			"/",
-			filter = Gaffer.FileSystemPath.createStandardFilter(
-				extensions = IECore.SceneInterface.supportedExtensions( IECore.IndexedIO.OpenMode.Write )
-			)
-		),
-		pathChooserDialogueKeywords = {
-			"bookmarks" : GafferUI.Bookmarks.acquire( plug, category = "sceneCache" ),
-			"leaf" : True,
-		},
-	),
 )
