@@ -34,6 +34,7 @@
 #
 ##########################################################################
 
+import os
 import unittest
 
 import IECore
@@ -191,6 +192,31 @@ class UnionFilterTest( GafferSceneTest.SceneTestCase ) :
 
 		dot2["in"].setInput( None )
 		self.assertTrue( uf["in"][0].acceptsInput( dot2["out"] ) )
+
+	def testReferencePromotedPlug( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["b"] = Gaffer.Box()
+		s["b"]["f"] = GafferScene.UnionFilter()
+		p = s["b"].promotePlug( s["b"]["f"]["in"][0] )
+		p.setName( "p" )
+
+		s["b"].exportForReference( "/tmp/test.grf" )
+
+		s["r"] = Gaffer.Reference()
+		s["r"].load( "/tmp/test.grf" )
+
+		s["f"] = GafferScene.PathFilter()
+
+		s["r"]["p"].setInput( s["f"]["out"] )
+
+	def tearDown( self ) :
+
+		GafferSceneTest.SceneTestCase.tearDown( self )
+
+		if os.path.exists( "/tmp/test.grf" ) :
+			os.remove( "/tmp/test.grf" )
 
 if __name__ == "__main__":
 	unittest.main()

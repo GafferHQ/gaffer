@@ -1616,5 +1616,37 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 
 		self.assertEqual( shaderNode['type'].getValue(), "ri:overrideType" )
 
+	def testReferencePromotedCoshader( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/coshaderParameter.sl" )
+		coshader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/coshader.sl" )
+
+		s["b"] = Gaffer.Box()
+		s["b"]["s"] = GafferRenderMan.RenderManShader()
+		s["b"]["s"].loadShader( shader )
+		p = s["b"].promotePlug( s["b"]["s"]["parameters"]["coshaderParameter"] )
+		p.setName( "p" )
+
+		s["c"] = GafferRenderMan.RenderManShader()
+		s["c"].loadShader( coshader )
+
+		self.assertTrue( s["b"]["p"].acceptsInput( s["c"]["out"] ) )
+
+		s["b"].exportForReference( "/tmp/test.grf" )
+
+		s["r"] = Gaffer.Reference()
+		s["r"].load( "/tmp/test.grf" )
+
+		self.assertTrue( s["r"]["p"].acceptsInput( s["c"]["out"] ) )
+
+	def tearDown( self ) :
+
+		GafferRenderManTest.RenderManTestCase.tearDown( self )
+
+		if os.path.exists( "/tmp/test.grf" ) :
+			os.remove( "/tmp/test.grf" )
+
 if __name__ == "__main__":
 	unittest.main()

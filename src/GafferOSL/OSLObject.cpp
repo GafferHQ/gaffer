@@ -34,7 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/Box.h"
+#include "Gaffer/SubGraph.h"
 #include "Gaffer/Dot.h"
 #include "Gaffer/StringPlug.h"
 
@@ -114,10 +114,10 @@ bool OSLObject::acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inpu
 		}
 		else
 		{
-			// as for the GafferScene::ShaderAssignment, we accept Box and ShaderSwitch
+			// as for the GafferScene::ShaderAssignment, we accept SubGraph and ShaderSwitch
 			// and Dot inputs as an indirect means of later getting a connection to a Shader.
 			if(
-				runTimeCast<const Gaffer::Box>( sourceNode ) ||
+				runTimeCast<const Gaffer::SubGraph>( sourceNode ) ||
 				runTimeCast<const ShaderSwitch>( sourceNode ) ||
 				runTimeCast<const Dot>( sourceNode )
 			)

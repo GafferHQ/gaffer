@@ -220,5 +220,31 @@ class OSLImageTest( GafferOSLTest.OSLTestCase ) :
 		self.assertEqual( image["out"]["dataWindow"].getValue(), reader["out"]["dataWindow"].getValue() )
 		self.assertEqual( image["out"]["metadata"].getValue(), reader["out"]["metadata"].getValue() )
 
+	def testReferencePromotedPlug( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["b"] = Gaffer.Box()
+		s["b"]["i"] = GafferOSL.OSLImage()
+		p = s["b"].promotePlug( s["b"]["i"]["shader"] )
+		p.setName( "p" )
+
+		s["b"].exportForReference( "/tmp/test.grf" )
+
+		s["r"] = Gaffer.Reference()
+		s["r"].load( "/tmp/test.grf" )
+
+		s["s"] = GafferOSL.OSLShader()
+		s["s"].loadShader( "ImageProcessing/OutImage" )
+
+		s["r"]["p"].setInput( s["s"]["out"] )
+
+	def tearDown( self ) :
+
+		GafferOSLTest.OSLTestCase.tearDown( self )
+
+		if os.path.exists( "/tmp/test.grf" ) :
+			os.remove( "/tmp/test.grf" )
+
 if __name__ == "__main__":
 	unittest.main()

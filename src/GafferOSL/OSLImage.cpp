@@ -38,7 +38,7 @@
 #include "IECore/CompoundData.h"
 
 #include "Gaffer/Context.h"
-#include "Gaffer/Box.h"
+#include "Gaffer/SubGraph.h"
 #include "Gaffer/Dot.h"
 #include "Gaffer/StringPlug.h"
 
@@ -138,10 +138,10 @@ bool OSLImage::acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *input
 		}
 		else
 		{
-			// as for the GafferScene::ShaderAssignment, we accept Box and ShaderSwitch
+			// as for the GafferScene::ShaderAssignment, we accept SubGraph and ShaderSwitch
 			// and Dot inputs as an indirect means of later getting a connection to a Shader.
 			if(
-				runTimeCast<const Gaffer::Box>( sourceNode ) ||
+				runTimeCast<const Gaffer::SubGraph>( sourceNode ) ||
 				runTimeCast<const GafferScene::ShaderSwitch>( sourceNode ) ||
 				runTimeCast<const Dot>( sourceNode )
 			)
