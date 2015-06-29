@@ -738,6 +738,44 @@ class ReferenceTest( GafferTest.TestCase ) :
 		self.assertEqual( s["r"]["user"]["promoted"].defaultValue(), False )
 		self.assertEqual( s["r"]["user"]["promoted"].getValue(), False )
 
+	def testSerialiseWithoutLoading( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["r"] = Gaffer.Reference()
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+
+	def testUserPlugMetadata( self ) :
+
+		# People should be able to do what they want with the user plug,
+		# and anything they do should be serialised appropriately.
+
+		s = Gaffer.ScriptNode()
+		s["r"] = Gaffer.Reference()
+		s["r"]["user"]["p"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		Gaffer.Metadata.registerPlugValue( s["r"]["user"], "testPersistent", 1, persistent = True )
+		Gaffer.Metadata.registerPlugValue( s["r"]["user"], "testNonPersistent", 2, persistent = False )
+
+		Gaffer.Metadata.registerPlugValue( s["r"]["user"]["p"], "testPersistent", 3, persistent = True )
+		Gaffer.Metadata.registerPlugValue( s["r"]["user"]["p"], "testNonPersistent", 4, persistent = False )
+
+		self.assertEqual( Gaffer.Metadata.plugValue( s["r"]["user"], "testPersistent" ), 1 )
+		self.assertEqual( Gaffer.Metadata.plugValue( s["r"]["user"], "testNonPersistent" ), 2 )
+
+		self.assertEqual( Gaffer.Metadata.plugValue( s["r"]["user"]["p"], "testPersistent" ), 3 )
+		self.assertEqual( Gaffer.Metadata.plugValue( s["r"]["user"]["p"], "testNonPersistent" ), 4 )
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+
+		self.assertEqual( Gaffer.Metadata.plugValue( s2["r"]["user"], "testPersistent" ), 1 )
+		self.assertEqual( Gaffer.Metadata.plugValue( s2["r"]["user"], "testNonPersistent" ), None )
+
+		self.assertEqual( Gaffer.Metadata.plugValue( s2["r"]["user"]["p"], "testPersistent" ), 3 )
+		self.assertEqual( Gaffer.Metadata.plugValue( s2["r"]["user"]["p"], "testNonPersistent" ), None )
+
 	def tearDown( self ) :
 
 		GafferTest.SphereNode = self.__SphereNode
