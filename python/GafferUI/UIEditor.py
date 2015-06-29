@@ -408,6 +408,10 @@ class _StringMetadataWidget( _MetadataWidget ) :
 			Gaffer.WeakMethod( self.__editingFinished )
 		)
 
+	def textWidget( self ) :
+
+		return self.__textWidget
+
 	def _updateFromValue( self, value ) :
 
 		self.__textWidget.setText( value if value is not None else "" )
@@ -426,6 +430,10 @@ class _MultiLineStringMetadataWidget( _MetadataWidget ) :
 		self.__editingFinishedConnection = self.__textWidget.editingFinishedSignal().connect(
 			Gaffer.WeakMethod( self.__editingFinished )
 		)
+
+	def textWidget( self ) :
+
+		return self.__textWidget
 
 	def _updateFromValue( self, value ) :
 
@@ -1130,6 +1138,7 @@ class _PresetsEditor( GafferUI.Widget ) :
 				self.__pathListing.setSortable( False )
 				self.__pathListing.setHeaderVisible( False )
 				self.__pathListing._qtWidget().setFixedWidth( 200 )
+				self.__pathListing._qtWidget().setFixedHeight( 200 )
 
 				self.__pathListingSelectionChangedConnection = self.__pathListing.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__selectionChanged ) )
 				self.__dragEnterConnection = self.__pathListing.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ) )
@@ -1343,12 +1352,13 @@ class _PlugEditor( GafferUI.Widget ) :
 
 	def __init__( self, **kw ) :
 
-		column = GafferUI.ListContainer( spacing = 4, borderWidth = 8 )
-		GafferUI.Widget.__init__( self, column, **kw )
+		scrolledContainer = GafferUI.ScrolledContainer( horizontalMode = GafferUI.ScrolledContainer.ScrollMode.Never, borderWidth = 8 )
+		GafferUI.Widget.__init__( self, scrolledContainer, **kw )
 
 		self.__metadataWidgets = {}
 
-		with column :
+		scrolledContainer.setChild( GafferUI.ListContainer( spacing = 4 ) )
+		with scrolledContainer.getChild() :
 
 			with _Row() :
 
@@ -1360,6 +1370,7 @@ class _PlugEditor( GafferUI.Widget ) :
 
 				_Label( "Description", parenting = { "verticalAlignment" : GafferUI.ListContainer.VerticalAlignment.Top } )
 				self.__metadataWidgets["description"] = _MultiLineStringMetadataWidget( key = "description" )
+				self.__metadataWidgets["description"].textWidget().setFixedLineHeight( 10 )
 
 			with _Row() :
 
