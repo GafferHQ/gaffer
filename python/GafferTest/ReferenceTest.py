@@ -738,6 +738,14 @@ class ReferenceTest( GafferTest.TestCase ) :
 		self.assertEqual( s["r"]["user"]["promoted"].defaultValue(), False )
 		self.assertEqual( s["r"]["user"]["promoted"].getValue(), False )
 
+	def testSerialiseWithoutLoading( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["r"] = Gaffer.Reference()
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+
 	def tearDown( self ) :
 
 		GafferTest.SphereNode = self.__SphereNode
