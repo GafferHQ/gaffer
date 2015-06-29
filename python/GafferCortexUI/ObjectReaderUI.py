@@ -62,6 +62,12 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"nodule:type", "",
+			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
+			"pathPlugValueWidget:leaf", True,
+			"pathPlugValueWidget:valid", True,
+			"pathPlugValueWidget:bookmarks", "cortex",
+			"fileSystemPathPlugValueWidget:extensions", IECore.StringVectorData( IECore.Reader.supportedExtensions() ),
+			"fileSystemPathPlugValueWidget:extensionsLabel", "Show only supported files",
 
 		],
 
@@ -74,6 +80,8 @@ Gaffer.Metadata.registerNode(
 			module.
 			""",
 
+			"plugValueWidget:type", "",
+
 		]
 
 	}
@@ -84,28 +92,8 @@ Gaffer.Metadata.registerNode(
 # PlugValueWidgets
 ##########################################################################
 
-GafferUI.PlugValueWidget.registerCreator(
-	GafferCortex.ObjectReader,
-	"fileName",
-	lambda plug : GafferUI.PathPlugValueWidget(
-		plug,
-		path = Gaffer.FileSystemPath(
-			"/",
-			filter = Gaffer.FileSystemPath.createStandardFilter(
-				extensions = IECore.Reader.supportedExtensions(),
-				extensionsLabel = "Show only supported files",
-			),
-		),
-		pathChooserDialogueKeywords = {
-			"bookmarks" : GafferUI.Bookmarks.acquire( plug, category = "cortex" ),
-			"leaf" : True,
-		},
-	),
-)
-
 def __createParameterWidget( plug ) :
 
 	return GafferCortexUI.CompoundParameterValueWidget( plug.node().parameterHandler(), collapsible=False )
 
 GafferUI.PlugValueWidget.registerCreator( GafferCortex.ObjectReader, "parameters", __createParameterWidget )
-GafferUI.PlugValueWidget.registerCreator( GafferCortex.ObjectReader, "out", None )
