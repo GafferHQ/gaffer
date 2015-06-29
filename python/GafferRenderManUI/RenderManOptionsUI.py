@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import IECore
+
 import Gaffer
 import GafferUI
 import GafferRenderMan
@@ -155,6 +157,8 @@ Gaffer.Metadata.registerNode(
 			"preset:Hidden", "hidden",
 			"preset:Raytrace", "raytrace",
 
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
 		],
 
 		"options.hiderDepthFilter" : [
@@ -177,6 +181,8 @@ Gaffer.Metadata.registerNode(
 			"preset:Max", "max",
 			"preset:Average", "average",
 			"preset:Midpoint", "midpoint",
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 
 		],
 
@@ -267,6 +273,8 @@ Gaffer.Metadata.registerNode(
 			"preset:2", 2,
 			"preset:3 (Most Verbose)", 3,
 
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
 		],
 
 		"options.statisticsFileName" : [
@@ -279,6 +287,15 @@ Gaffer.Metadata.registerNode(
 
 			"layout:section", "Statistics",
 			"label", "File Name",
+
+		],
+
+		"options.statisticsFileName.value" : [
+
+			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
+			"pathPlugValueWidget:leaf", True,
+			"pathPlugValueWidget:bookmarks", "statistics",
+			"fileSystemPathPlugValueWidget:extensions", IECore.StringVectorData( [ "htm", "html", "txt", "stats" ] ),
 
 		],
 
@@ -373,34 +390,4 @@ Gaffer.Metadata.registerNode(
 
 	}
 
-)
-
-GafferUI.PlugValueWidget.registerCreator(
-	GafferRenderMan.RenderManOptions,
-	"options.hider.value",
-	GafferUI.PresetsPlugValueWidget,
-)
-
-GafferUI.PlugValueWidget.registerCreator(
-	GafferRenderMan.RenderManOptions,
-	"options.hiderDepthFilter.value",
-	GafferUI.PresetsPlugValueWidget,
-)
-
-GafferUI.PlugValueWidget.registerCreator(
-	GafferRenderMan.RenderManOptions,
-	"options.statisticsLevel.value",
-	GafferUI.PresetsPlugValueWidget,
-)
-
-GafferUI.PlugValueWidget.registerCreator(
-	GafferRenderMan.RenderManOptions,
-	"options.statisticsFileName.value",
-	lambda plug : GafferUI.PathPlugValueWidget( plug,
-		path = Gaffer.FileSystemPath( "/", filter = Gaffer.FileSystemPath.createStandardFilter( extensions = ( "htm", "html", "txt", "stats" ) ) ),
-		pathChooserDialogueKeywords = {
-			"bookmarks" : GafferUI.Bookmarks.acquire( plug, category = "statistics" ),
-			"leaf" : True,
-		},
-	)
 )
