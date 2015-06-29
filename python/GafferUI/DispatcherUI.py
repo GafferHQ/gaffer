@@ -98,7 +98,10 @@ Gaffer.Metadata.registerNode(
 			"description",
 			"""
 			A directory to store temporary files used by the dispatcher.
-			"""
+			""",
+
+			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
+			"pathPlugValueWidget:leaf", False,
 
 		),
 
@@ -462,17 +465,6 @@ class __FrameRangePlugValueWidget( GafferUI.StringPlugValueWidget ) :
 
 Gaffer.Metadata.registerPlugValue( Gaffer.ExecutableNode, "requirement", "layout:section", "" )
 Gaffer.Metadata.registerPlugDescription( Gaffer.ExecutableNode, "dispatcher.batchSize", "Maximum number of frames to batch together when dispatching execution tasks." )
-
-GafferUI.PlugValueWidget.registerCreator(
-	Gaffer.Dispatcher,
-	"jobsDirectory",
-	lambda plug : GafferUI.PathPlugValueWidget( plug,
-		path = Gaffer.FileSystemPath( "/", filter = Gaffer.FileSystemPath.createStandardFilter( [ "gfr" ] ) ),
-		pathChooserDialogueKeywords = {
-			"leaf" : False,
-		},
-	)
-)
 
 GafferUI.PlugValueWidget.registerCreator( Gaffer.Dispatcher, "user", None )
 GafferUI.PlugValueWidget.registerCreator( Gaffer.Dispatcher, "framesMode", __FramesModePlugValueWidget )
