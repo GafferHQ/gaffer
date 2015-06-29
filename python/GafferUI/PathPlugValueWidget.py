@@ -38,26 +38,27 @@
 from __future__ import with_statement
 
 import os
+import warnings
 
 import IECore
 
 import Gaffer
 import GafferUI
 
+## Supported plug metadata - used to provide arguments to a
+# PathChooserDialogue :
+#
+# - "pathPlugValueWidget:leaf"
+# - "pathPlugValueWidget:valid"
+# - "pathPlugValueWidget:bookmarks"
 class PathPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	## path should be an instance of Gaffer.Path, optionally with
 	# filters applied. It will be updated with the contents of the plug.
 	#
-	# The pathChooserDialogueKeywords are passed to the PathChooserDialogue
-	# that is opened when the user wishes to browse for a new path - they can
-	# be specified to customise the path chooser appropriately. They may be
-	# passed either as a dictionary, or as a callable which returns a dictionary -
-	# in the latter case the callable will be evaluated just prior to opening
-	# the dialogue each time.
-	#
-	# \todo Migrate the uses of pathChooserDialogueKeywords into Metadata.
-	def __init__( self, plug, path=None, pathChooserDialogueKeywords={}, **kw ) :
+	# \deprecated The pathChooserDialogueKeywords argument will be removed
+	# in a future version - use metadata instead.
+	def __init__( self, plug, path=None, pathChooserDialogueKeywords=None, **kw ) :
 
 		self.__row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
 
@@ -110,12 +111,24 @@ class PathPlugValueWidget( GafferUI.PlugValueWidget ) :
 		pathCopy = self.__path.copy()
 
 		# get the keywords for the dialogue constructor
-		pathChooserDialogueKeywords = self.__pathChooserDialogueKeywords
-		if callable( pathChooserDialogueKeywords ) :
-			pathChooserDialogueKeywords = pathChooserDialogueKeywords()
+		# from the plug metadata.
+		pathChooserDialogueKeywords = {}
+		pathChooserDialogueKeywords["leaf"] = Gaffer.Metadata.plugValue( self.getPlug(), "pathPlugValueWidget:leaf" )
+		pathChooserDialogueKeywords["valid"] = Gaffer.Metadata.plugValue( self.getPlug(), "pathPlugValueWidget:valid" )
 
+		bookmarks = Gaffer.Metadata.plugValue( self.getPlug(), "pathPlugValueWidget:bookmarks" )
+		if bookmarks is not None :
+			pathChooserDialogueKeywords["bookmarks"] = GafferUI.Bookmarks.acquire( self.getPlug(), type( pathCopy ), bookmarks )
+
+		# support deprecated keywords passed to our constructor
+		if self.__pathChooserDialogueKeywords is not None :
+			if callable( self.__pathChooserDialogueKeywords ) :
+				pathChooserDialogueKeywords.update( self.__pathChooserDialogueKeywords() )
+			else :
+				pathChooserDialogueKeywords.update( self.__pathChooserDialogueKeywords )
+
+		# choose a sensible starting location if the path is empty.
 		if pathCopy.isEmpty() :
-			# choose a sensible starting location if the path is empty.
 			bookmarks = pathChooserDialogueKeywords.get( "bookmarks", None )
 			if bookmarks is not None :
 				pathCopy.setFromString( bookmarks.getDefault() )
