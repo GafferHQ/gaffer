@@ -205,6 +205,7 @@ from StringPlugValueWidget import StringPlugValueWidget
 from NumericPlugValueWidget import NumericPlugValueWidget
 from BoolPlugValueWidget import BoolPlugValueWidget
 from PathPlugValueWidget import PathPlugValueWidget
+from FileSystemPathPlugValueWidget import FileSystemPathPlugValueWidget
 from VectorDataPlugValueWidget import VectorDataPlugValueWidget
 from PathVectorDataPlugValueWidget import PathVectorDataPlugValueWidget
 from PlugWidget import PlugWidget
