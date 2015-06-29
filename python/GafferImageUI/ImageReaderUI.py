@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import IECore
+
 import Gaffer
 import GafferUI
 import GafferImage
@@ -59,6 +61,12 @@ Gaffer.Metadata.registerNode(
 			as a placeholder for the frame numbers.
 			""",
 
+			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
+			"pathPlugValueWidget:leaf", True,
+			"pathPlugValueWidget:bookmarks", "image",
+			"fileSystemPathPlugValueWidget:extensions", IECore.StringVectorData( GafferImage.ImageReader.supportedExtensions() ),
+			"fileSystemPathPlugValueWidget:extensionsLabel", "Show only image files",
+
 		],
 
 		"refreshCount" : [
@@ -74,24 +82,6 @@ Gaffer.Metadata.registerNode(
 
 	}
 
-)
-
-GafferUI.PlugValueWidget.registerCreator(
-	GafferImage.ImageReader,
-	"fileName",
-	lambda plug : GafferUI.PathPlugValueWidget( plug,
-		path = Gaffer.FileSystemPath(
-			"/",
-			filter = Gaffer.FileSystemPath.createStandardFilter(
-				extensions = GafferImage.ImageReader.supportedExtensions(),
-				extensionsLabel = "Show only image files",
-			)
-		),
-		pathChooserDialogueKeywords = {
-			"bookmarks" : GafferUI.Bookmarks.acquire( plug, category = "image" ),
-			"leaf" : True,
-		},
-	)
 )
 
 GafferUI.PlugValueWidget.registerCreator( GafferImage.ImageReader, "refreshCount", GafferUI.IncrementingPlugValueWidget, label = "Refresh", undoable = False )
