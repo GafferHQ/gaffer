@@ -137,82 +137,42 @@ void Loop<BaseType>::affects( const Plug *input, DependencyNode::AffectedPlugsCo
 template<typename BaseType>
 void Loop<BaseType>::hash( const ValuePlug *output, const Context *context, IECore::MurmurHash &h ) const
 {
-
-	std::vector<IECore::InternedString> relativeName;
-	const ValuePlug *ancestor = ancestorPlug( output, relativeName );
-
-	if( ancestor == previousPlug() )
+	int index = -1;
+	if( const ValuePlug *plug = sourcePlug( output, context, index ) )
 	{
-		const int index = context->get<int>( "loop:index", 0 );
-		if( index >= 1 )
+		if( index >= 0 )
 		{
 			ContextPtr tmpContext = new Context( *context, Context::Borrowed );
-			tmpContext->set<int>( "loop:index", index - 1 );
+			tmpContext->set<int>( "loop:index", index );
 			Context::Scope scopedContext( tmpContext.get() );
-			h = descendantPlug( nextPlug(), relativeName )->hash();
+			h = plug->hash();
 		}
 		else
 		{
-			h = descendantPlug( inPlugInternal(), relativeName )->hash();
-		}
-		return;
-	}
-	else if( ancestor == outPlugInternal() )
-	{
-		const int iterations = iterationsPlug()->getValue();
-		if( iterations == 0 )
-		{
-			h = descendantPlug( inPlugInternal(), relativeName )->hash();
-		}
-		else
-		{
-			ContextPtr tmpContext = new Context( *context, Context::Borrowed );
-			tmpContext->set<int>( "loop:index", iterations - 1 );
-			Context::Scope scopedContext( tmpContext.get() );
-			h = descendantPlug( nextPlug(), relativeName )->hash();
+			h = plug->hash();
 		}
 		return;
 	}
 
 	BaseType::hash( output, context, h );
-
 }
 
 template<typename BaseType>
 void Loop<BaseType>::compute( ValuePlug *output, const Context *context ) const
 {
-	std::vector<IECore::InternedString> relativeName;
-	const ValuePlug *ancestor = ancestorPlug( output, relativeName );
-
-	if( ancestor == previousPlug() )
+	int index = -1;
+	if( const ValuePlug *plug = sourcePlug( output, context, index ) )
 	{
-		const int index = context->get<int>( "loop:index", 0 );
-		if( index >= 1 )
+		if( index >= 0 )
 		{
 			ContextPtr tmpContext = new Context( *context, Context::Borrowed );
-			tmpContext->set<int>( "loop:index", index - 1 );
+			tmpContext->set<int>( "loop:index", index );
 			Context::Scope scopedContext( tmpContext.get() );
-			output->setFrom( descendantPlug( nextPlug(), relativeName ) );
+			output->setFrom( plug );
 		}
 		else
 		{
-			output->setFrom( descendantPlug( inPlugInternal(), relativeName ) );
-		}
-		return;
-	}
-	else if( ancestor == outPlugInternal() )
-	{
-		const int iterations = iterationsPlug()->getValue();
-		if( iterations == 0 )
-		{
-			output->setFrom( descendantPlug( inPlugInternal(), relativeName ) );
-		}
-		else
-		{
-			ContextPtr tmpContext = new Context( *context, Context::Borrowed );
-			tmpContext->set<int>( "loop:index", iterations - 1 );
-			Context::Scope scopedContext( tmpContext.get() );
-			output->setFrom( descendantPlug( nextPlug(), relativeName ) );
+			output->setFrom( plug );
 		}
 		return;
 	}
@@ -320,6 +280,44 @@ const ValuePlug *Loop<BaseType>::descendantPlug( const ValuePlug *plug, const st
 		plug = plug->getChild<ValuePlug>( *it );
 	}
 	return plug;
+}
+
+template<typename BaseType>
+const ValuePlug *Loop<BaseType>::sourcePlug( const ValuePlug *output, const Context *context, int &sourceLoopIndex ) const
+{
+	sourceLoopIndex = -1;
+
+	std::vector<IECore::InternedString> relativeName;
+	const ValuePlug *ancestor = ancestorPlug( output, relativeName );
+
+	if( ancestor == previousPlug() )
+	{
+		const int index = context->get<int>( "loop:index", 0 );
+		if( index >= 1 )
+		{
+			sourceLoopIndex = index - 1;
+			return descendantPlug( nextPlug(), relativeName );
+		}
+		else
+		{
+			return descendantPlug( inPlugInternal(), relativeName );
+		}
+	}
+	else if( ancestor == outPlugInternal() )
+	{
+		const int iterations = iterationsPlug()->getValue();
+		if( iterations == 0 )
+		{
+			return descendantPlug( inPlugInternal(), relativeName );
+		}
+		else
+		{
+			sourceLoopIndex = iterations - 1;
+			return descendantPlug( nextPlug(), relativeName );
+		}
+	}
+
+	return NULL;
 }
 
 } // namespace Gaffer

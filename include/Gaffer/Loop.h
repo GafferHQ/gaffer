@@ -94,6 +94,7 @@ class Loop : public BaseType
 
 		const ValuePlug *ancestorPlug( const ValuePlug *plug, std::vector<IECore::InternedString> &relativeName ) const;
 		const ValuePlug *descendantPlug( const ValuePlug *plug, const std::vector<IECore::InternedString> &relativeName ) const;
+		const ValuePlug *sourcePlug( const ValuePlug *output, const Context *context, int &sourceLoopIndex ) const;
 
 		IE_CORE_DECLARERUNTIMETYPEDDESCRIPTION( Loop<BaseType> );
 
