@@ -41,6 +41,7 @@
 #include "Gaffer/ContextVariables.h"
 #include "Gaffer/Backdrop.h"
 #include "Gaffer/Switch.h"
+#include "Gaffer/Loop.h"
 
 #include "GafferBindings/ConnectionBinding.h"
 #include "GafferBindings/SignalBinding.h"
@@ -190,6 +191,7 @@ BOOST_PYTHON_MODULE( _Gaffer )
 	DependencyNodeClass<ContextVariablesComputeNode>();
 	DependencyNodeClass<SwitchDependencyNode>();
 	DependencyNodeClass<SwitchComputeNode>();
+	DependencyNodeClass<LoopComputeNode>();
 
 	object tsi = class_<TaskSchedulerInitWrapper, boost::noncopyable>( "_tbb_task_scheduler_init", no_init )
 		.def( init<int>( arg( "max_threads" ) = int( tbb::task_scheduler_init::automatic ) ) )

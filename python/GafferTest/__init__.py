@@ -131,6 +131,7 @@ from DotTest import DotTest
 from ApplicationTest import ApplicationTest
 from LeafPathFilterTest import LeafPathFilterTest
 from MatchPatternPathFilterTest import MatchPatternPathFilterTest
+from LoopTest import LoopTest
 
 if __name__ == "__main__":
 	import unittest
