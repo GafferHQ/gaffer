@@ -50,6 +50,12 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
+		"in*" : [
+
+			"plugValueWidget:type", "",
+
+		],
+
 		"index" : [
 
 			"description",
@@ -58,13 +64,12 @@ Gaffer.Metadata.registerNode(
 			of 0 chooses the first input, 1 the second and so on. Values
 			larger than the number of available inputs wrap back around to
 			the beginning.
-			"""
+			""",
+
+			"plugValueWidget:type", "GafferUI.NumericPlugValueWidget",
 
 		]
 
 	}
 
 )
-
-
-GafferUI.PlugValueWidget.registerCreator( GafferScene.SceneSwitch, "in[0-9]*", None )

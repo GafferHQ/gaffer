@@ -34,7 +34,7 @@
 #
 ##########################################################################
 
-import fnmatch
+import IECore
 
 import Gaffer
 import GafferUI
@@ -73,6 +73,11 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"nodule:type", "",
+			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
+			"pathPlugValueWidget:leaf", True,
+			"pathPlugValueWidget:bookmarks", "image",
+			"fileSystemPathPlugValueWidget:extensions", IECore.StringVectorData( GafferImage.ImageReader.supportedExtensions() ),
+			"fileSystemPathPlugValueWidget:extensionsLabel", "Show only image files",
 
 		],
 
@@ -91,6 +96,7 @@ Gaffer.Metadata.registerNode(
 			"preset:Tile", 1,
 
 			"nodule:type", "",
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 
 		],
 
@@ -120,23 +126,4 @@ Gaffer.Metadata.registerNode(
 
 )
 
-GafferUI.PlugValueWidget.registerCreator(
-	GafferImage.ImageWriter,
-	"fileName",
-	lambda plug : GafferUI.PathPlugValueWidget( plug,
-		path = Gaffer.FileSystemPath(
-			"/",
-			filter = Gaffer.FileSystemPath.createStandardFilter(
-				extensions = GafferImage.ImageReader.supportedExtensions(),
-				extensionsLabel = "Show only image files",
-			)
-		),
-		pathChooserDialogueKeywords = {
-			"bookmarks" : GafferUI.Bookmarks.acquire( plug, category = "image" ),
-			"leaf" : True,
-		},
-	)
-)
-
 GafferUI.PlugValueWidget.registerCreator( GafferImage.ImageWriter, "channels", GafferImageUI.ChannelMaskPlugValueWidget, inputImagePlug = "in" )
-GafferUI.PlugValueWidget.registerCreator( GafferImage.ImageWriter, "writeMode", GafferUI.PresetsPlugValueWidget )

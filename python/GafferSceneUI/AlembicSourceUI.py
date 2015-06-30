@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import IECore
+
 import Gaffer
 import GafferUI
 import GafferScene
@@ -65,6 +67,12 @@ Gaffer.Metadata.registerNode(
 			older HDF5 and newer Ogawa caches are supported.
 			""",
 
+			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
+			"pathPlugValueWidget:leaf", True,
+			"pathPlugValueWidget:valid", True,
+			"pathPlugValueWidget:bookmarks", "sceneCache",
+			"fileSystemPathPlugValueWidget:extensions", IECore.StringVectorData( [ "abc" ] ),
+
 		],
 
 		"refreshCount" : [
@@ -85,18 +93,6 @@ Gaffer.Metadata.registerNode(
 ##########################################################################
 # PlugValueWidgets
 ##########################################################################
-
-GafferUI.PlugValueWidget.registerCreator(
-	GafferScene.AlembicSource,
-	"fileName",
-	lambda plug : GafferUI.PathPlugValueWidget( plug,
-		path = Gaffer.FileSystemPath( "/", filter = Gaffer.FileSystemPath.createStandardFilter( extensions = [ "abc" ] ) ),
-		pathChooserDialogueKeywords = {
-			"bookmarks" : GafferUI.Bookmarks.acquire( plug, category = "sceneCache" ),
-			"leaf" : True,
-		},
-	)
-)
 
 GafferUI.PlugValueWidget.registerCreator(
 	GafferScene.AlembicSource,

@@ -50,6 +50,12 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
+		"in*" : [
+
+			"plugValueWidget:type", "",
+
+		],
+
 		"index" : [
 
 			"description",
@@ -61,12 +67,10 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"nodule:type", "",
+			"plugValueWidget:type", "GafferUI.NumericPlugValueWidget",
 
 		],
 
 	},
 
 )
-
-GafferUI.PlugValueWidget.registerCreator( GafferScene.Filter, "in", None )
-GafferUI.PlugValueWidget.registerCreator( GafferScene.Filter, "in[0-9]*", None )

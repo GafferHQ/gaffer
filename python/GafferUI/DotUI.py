@@ -57,16 +57,35 @@ def connect( applicationRoot ) :
 # Metadata
 ##########################################################################
 
-Gaffer.Metadata.registerNodeDescription(
+Gaffer.Metadata.registerNode(
 
-Gaffer.Dot,
+	Gaffer.Dot,
 
-"""A utility node which can be used for organising large graphs.""",
+	"description",
+	"""
+	A utility node which can be used for organising large graphs.
+	""",
+
+	"nodeGadget:minWidth", 0.0,
+	"nodeGadget:padding", 0.5,
+
+	plugs = {
+
+		"in" : [
+
+			"plugValueWidget:type", ""
+
+		],
+
+		"out" : [
+
+			"plugValueWidget:type", ""
+
+		],
+
+	},
 
 )
-
-Gaffer.Metadata.registerNodeValue( Gaffer.Dot, "nodeGadget:minWidth", 0.0 )
-Gaffer.Metadata.registerNodeValue( Gaffer.Dot, "nodeGadget:padding", 0.5 )
 
 ##########################################################################
 # NodeGraph menus
@@ -117,10 +136,3 @@ def __connectionContextMenu( nodeGraph, destinationPlug, menuDefinition ) :
 	)
 
 __connectionContextMenuConnection = GafferUI.NodeGraph.connectionContextMenuSignal().connect( __connectionContextMenu )
-
-##########################################################################
-# PlugValueWidget registrations
-##########################################################################
-
-GafferUI.PlugValueWidget.registerCreator( Gaffer.Dot, "in", None )
-GafferUI.PlugValueWidget.registerCreator( Gaffer.Dot, "out", None )

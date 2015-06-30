@@ -93,6 +93,12 @@ class Metadata
 		template<typename T>
 		static typename T::ConstPtr nodeValue( const Node *node, IECore::InternedString key, bool inherit = true, bool instanceOnly = false );
 
+		/// Deregisters a previously registered node value.
+		static void deregisterNodeValue( IECore::TypeId nodeTypeId, IECore::InternedString key );
+		/// Deregisters a previously registered node value.
+		/// \undoable
+		static void deregisterNodeValue( Node *node, IECore::InternedString key );
+
 		/// Utility method calling registerNodeValue( nodeTypeId, "description", description ).
 		static void registerNodeDescription( IECore::TypeId nodeTypeId, const std::string &description );
 		static void registerNodeDescription( IECore::TypeId nodeTypeId, NodeValueFunction description );
@@ -119,6 +125,12 @@ class Metadata
 		/// then the search falls through to the base classes of the node if the node itself doesn't have a value.
 		template<typename T>
 		static typename T::ConstPtr plugValue( const Plug *plug, IECore::InternedString key, bool inherit = true, bool instanceOnly = false );
+
+		/// Deregisters a previously registered plug value.
+		static void deregisterPlugValue( IECore::TypeId nodeTypeId, const MatchPattern &plugPath, IECore::InternedString key );
+		/// Deregisters a previously registered plug value.
+		/// \undoable
+		static void deregisterPlugValue( Plug *plug, IECore::InternedString key );
 
 		/// Utility function calling registerPlugValue( nodeTypeId, plugPath, "description", description )
 		static void registerPlugDescription( IECore::TypeId nodeTypeId, const MatchPattern &plugPath, const std::string &description );

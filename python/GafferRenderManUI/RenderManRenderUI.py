@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import IECore
+
 import Gaffer
 import GafferUI
 import GafferRenderMan
@@ -74,6 +76,8 @@ Gaffer.Metadata.registerNode(
 			"preset:Generate RIB only", "generate",
 
 			"nodule:type", "",
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
 
 		],
 
@@ -85,6 +89,10 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"nodule:type", "",
+			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
+			"pathPlugValueWidget:leaf", True,
+			"pathPlugValueWidget:bookmarks", "rib",
+			"fileSystemPathPlugValueWidget:extensions", IECore.StringVectorData( [ "rib" ] ),
 
 		],
 
@@ -104,22 +112,4 @@ Gaffer.Metadata.registerNode(
 
 	},
 
-)
-
-GafferUI.PlugValueWidget.registerCreator(
-	GafferRenderMan.RenderManRender,
-	"mode",
-	GafferUI.PresetsPlugValueWidget,
-)
-
-GafferUI.PlugValueWidget.registerCreator(
-	GafferRenderMan.RenderManRender,
-	"ribFileName",
-	lambda plug : GafferUI.PathPlugValueWidget( plug,
-		path = Gaffer.FileSystemPath( "/", filter = Gaffer.FileSystemPath.createStandardFilter() ),
-		pathChooserDialogueKeywords = {
-			"bookmarks" : GafferUI.Bookmarks.acquire( plug, category = "rib" ),
-			"leaf" : True,
-		},
-	),
 )

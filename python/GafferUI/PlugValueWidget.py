@@ -38,6 +38,7 @@
 import re
 import fnmatch
 import functools
+import warnings
 
 import IECore
 
@@ -319,15 +320,37 @@ class PlugValueWidget( GafferUI.Widget ) :
 
 		return cls.__popupMenuSignal
 
-	## Returns a PlugValueWidget suitable for representing the specified plug. If
-	# useTypeOnly is True, then custom registrations made by registerCreator() will
-	# be ignored and only the plug type will be taken into account in creating a
-	# PlugValueWidget.
+	## Returns a PlugValueWidget suitable for representing the specified plug.
+	# The type of plug returned may be customised on a per-widget basis by a
+	# "plugValueWidget:type" metadata value, specifying the fully qualified
+	# python type name for a widget class. To suppress the creation of a widget,
+	# a value of "" may be registered - in this case None will be returned from
+	# create(). If useTypeOnly is True, then custom registrations made by
+	# registerCreator() will be ignored and only the plug type will be taken into
+	# account in creating a PlugValueWidget.
 	@classmethod
 	def create( cls, plug, useTypeOnly=False ) :
 
 		# first try to create one using a creator registered for the specific plug
 		if not useTypeOnly :
+
+			widgetType = Gaffer.Metadata.plugValue( plug, "plugValueWidget:type" )
+			if widgetType is None :
+				widgetType = Gaffer.Metadata.plugValue( plug, "layout:widgetType" )
+				if widgetType is not None :
+					warnings.warn( "The \"layout:widgetType\" metadata entry is deprecated, use \"plugValueWidget:type\" instead.", DeprecationWarning )
+					if widgetType == "None" :
+						return None
+
+			if widgetType is not None :
+				if widgetType == "" :
+					return None
+				path = widgetType.split( "." )
+				widgetClass = __import__( path[0] )
+				for n in path[1:] :
+					widgetClass = getattr( widgetClass, n )
+				return widgetClass( plug )
+
 			node = plug.node()
 			if node is not None :
 				plugPath = plug.relativeName( node )
@@ -354,10 +377,7 @@ class PlugValueWidget( GafferUI.Widget ) :
 
 		return None
 
-	## Registers a PlugValueWidget type for a specific Plug type. Note
-	# that the registerCreator function below provides the
-	# opportunity to further customise the type of Widget used for specific
-	# plug instances based on the node type and plug name.
+	## Registers a PlugValueWidget type for a specific Plug type.
 	@classmethod
 	def registerType( cls, plugClassOrTypeId, creator ) :
 
@@ -368,9 +388,8 @@ class PlugValueWidget( GafferUI.Widget ) :
 
 		cls.__plugTypesToCreators[plugTypeId] = creator
 
-	## Registers a function to create a PlugWidget. None may be passed as creator, to
-	# disable the creation of uis for specific plugs.
-	## \todo Use PlugLayout and "layout:widgetType" metadata everywhere instead of
+	## \deprecated
+	## \todo Use "plugValueWidget:type" metadata everywhere instead of
 	# using this. Then remove this method.
 	@classmethod
 	def registerCreator( cls, nodeClassOrTypeId, plugPath, creator, **creatorKeywordArgs ) :

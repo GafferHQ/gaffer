@@ -44,37 +44,56 @@ import GafferScene
 # Metadata
 ##########################################################################
 
-Gaffer.Metadata.registerNodeDescription(
+Gaffer.Metadata.registerNode(
 
-GafferScene.ExternalProcedural,
+	GafferScene.ExternalProcedural,
 
-"""References external geometry procedurals and archives.""",
+	"description",
+	"""
+	References external geometry procedurals and archives.
+	""",
 
-"fileName",
-"The path to the external procedural or archive.",
+	plugs = {
 
-"bound",
-"The bounding box of the external procedural or archive.",
+		"fileName" : [
 
-"parameters",
-"An arbitrary set of parameters to be passed to the external procedural."
+			"description",
+			"""
+			The path to the external procedural or archive.
+			""",
+
+			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
+			"pathPlugValueWidget:leaf", True,
+			"pathPlugValueWidget:bookmarks", "procedurals",
+
+
+		],
+
+		"bound" : [
+
+			"description",
+			"""
+			The bounding box of the external procedural or archive.
+			""",
+
+		],
+
+
+		"parameters" : [
+
+			"description",
+			"""
+			An arbitrary set of parameters to be passed to the external procedural.
+			""",
+
+		],
+
+	}
 
 )
 
 ##########################################################################
 # Widgets
 ##########################################################################
-
-GafferUI.PlugValueWidget.registerCreator(
-	GafferScene.ExternalProcedural,
-	"fileName",
-	lambda plug : GafferUI.PathPlugValueWidget( plug,
-		path = Gaffer.FileSystemPath( "/", filter = Gaffer.FileSystemPath.createStandardFilter() ),
-		pathChooserDialogueKeywords = {
-			"bookmarks" : GafferUI.Bookmarks.acquire( plug, category = "procedurals" ),
-			"leaf" : True,
-		},
-	)
-)
 
 GafferUI.PlugValueWidget.registerCreator( GafferScene.ExternalProcedural, "parameters", GafferUI.CompoundDataPlugValueWidget, collapsed=None )

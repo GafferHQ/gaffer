@@ -62,6 +62,8 @@ Gaffer.Metadata.registerNode(
 			be discarded.
 			""",
 
+			"plugValueWidget:type", "GafferSceneUI.ScenePathPlugValueWidget",
+
 		],
 
 		"includeRoot" : [
@@ -81,14 +83,4 @@ Gaffer.Metadata.registerNode(
 
 	}
 
-)
-
-##########################################################################
-# Widgets and Gadgets
-##########################################################################
-
-GafferUI.PlugValueWidget.registerCreator(
-	GafferScene.SubTree,
-	"root",
-	GafferSceneUI.ScenePathPlugValueWidget
 )

@@ -74,6 +74,7 @@ Gaffer.Metadata.registerNode(
 
 			"layout:section", "",
 			"nodule:type", "",
+			"plugValueWidget:type", "GafferSceneUI.ShaderUI._ShaderNamePlugValueWidget",
 
 		],
 
@@ -88,6 +89,7 @@ Gaffer.Metadata.registerNode(
 
 			"layout:section", "",
 			"nodule:type", "",
+			"plugValueWidget:type", "",
 
 		],
 
@@ -102,6 +104,7 @@ Gaffer.Metadata.registerNode(
 			"nodule:type", "GafferUI::CompoundNodule",
 			"compoundNodule:orientation", "y",
 			"compoundNodule:spacing", 0.2,
+			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
 
 		],
 
@@ -124,6 +127,7 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"nodeGadget:nodulePosition", "right",
+			"plugValueWidget:type", "",
 
 		],
 
@@ -135,7 +139,7 @@ Gaffer.Metadata.registerNode(
 # PlugValueWidgets
 ##########################################################################
 
-class __ShaderNamePlugValueWidget( GafferUI.PlugValueWidget ) :
+class _ShaderNamePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plug, **kw ) :
 
@@ -174,11 +178,6 @@ class __ShaderNamePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		with Gaffer.UndoContext( node.ancestor( Gaffer.ScriptNode ) ) :
 			node.loadShader( node["name"].getValue(), keepExistingValues = True )
-
-GafferUI.PlugValueWidget.registerCreator( GafferScene.Shader, "name", __ShaderNamePlugValueWidget )
-GafferUI.PlugValueWidget.registerCreator( GafferScene.Shader, "parameters", GafferUI.LayoutPlugValueWidget )
-GafferUI.PlugValueWidget.registerCreator( GafferScene.Shader, "out", None )
-GafferUI.PlugValueWidget.registerCreator( GafferScene.Shader, "type", None )
 
 ##########################################################################
 # NodeFinderDialogue mode

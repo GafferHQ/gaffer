@@ -319,6 +319,10 @@ void bindMetadata()
 		)
 		.staticmethod( "nodeValue" )
 
+		.def( "deregisterNodeValue", (void (*)( IECore::TypeId, InternedString ))&Metadata::deregisterNodeValue )
+		.def( "deregisterNodeValue", (void (*)( Node *, InternedString ))&Metadata::deregisterNodeValue )
+		.staticmethod( "deregisterNodeValue" )
+
 		.def( "registerNodeDescription", boost::python::raw_function( &registerNodeDescription, 2 ) )
 		.staticmethod( "registerNodeDescription" )
 
@@ -363,6 +367,10 @@ void bindMetadata()
 			)
 		)
 		.staticmethod( "plugValue" )
+
+		.def( "deregisterPlugValue", (void (*)( IECore::TypeId, const MatchPattern &, InternedString ))&Metadata::deregisterPlugValue )
+		.def( "deregisterPlugValue", (void (*)( Plug *, InternedString ))&Metadata::deregisterPlugValue )
+		.staticmethod( "deregisterPlugValue" )
 
 		.def( "registerPlugDescription", &registerPlugDescription )
 		.staticmethod( "registerPlugDescription" )

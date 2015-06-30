@@ -104,18 +104,9 @@ class UserPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __addPlug( self, plugType ) :
 
-		d = GafferUI.TextInputDialogue( initialText = "unnamed", title = "Enter name", confirmLabel = "Create" )
-		name = d.waitForText( parentWindow = self.ancestor( GafferUI.Window ) )
-		d.setVisible( False )
-
-		if not name :
-			return
-
 		with Gaffer.UndoContext( self.getPlug().node().scriptNode() ) :
-			plug = plugType( name, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+			plug = plugType( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 			self.getPlug().addChild( plug )
-
-GafferUI.PlugValueWidget.registerCreator( Gaffer.Node, "user", UserPlugValueWidget )
 
 ##########################################################################
 # Plug menu

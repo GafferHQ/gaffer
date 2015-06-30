@@ -59,16 +59,10 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"nodule:type", "GafferUI::CompoundNodule",
+			"plugValueWidget:type", "",
 
 		],
 
 	}
 
 )
-
-GafferUI.PlugValueWidget.registerCreator(
-	GafferScene.UnionFilter,
-	"in",
-	None,
-)
-

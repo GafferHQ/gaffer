@@ -63,6 +63,7 @@ Gaffer.Metadata.registerNode(
 			"layout:index", -1, # Last
 			"layout:section", "User",
 			"nodule:type", "",
+			"plugValueWidget:type", "GafferUI.UserPlugValueWidget",
 
 		),
 

@@ -64,6 +64,8 @@ Gaffer.Metadata.registerNode(
 			"preset:Perspective", "perspective",
 			"preset:Orthographic", "orthographic",
 
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
 		],
 
 		"fieldOfView" : [
@@ -89,9 +91,3 @@ Gaffer.Metadata.registerNode(
 	}
 
 )
-
-##########################################################################
-# Widgets and nodules
-##########################################################################
-
-GafferUI.PlugValueWidget.registerCreator( GafferScene.Camera, "projection", GafferUI.PresetsPlugValueWidget )

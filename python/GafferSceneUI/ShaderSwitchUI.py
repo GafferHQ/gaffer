@@ -57,6 +57,7 @@ Gaffer.Metadata.registerNode(
 		"in*" : [
 
 			"nodeGadget:nodulePosition", "left",
+			"plugValueWidget:type", "",
 
 		],
 
@@ -78,19 +79,17 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"nodeGadget:nodulePosition", "right",
+			"plugValueWidget:type", "",
 
 		],
 
 		"index" : [
 
 			"nodule:type", "",
+			"plugValueWidget:type", "GafferUI.NumericPlugValueWidget",
 
 		],
 
 	},
 
 )
-
-GafferUI.PlugValueWidget.registerCreator( GafferScene.ShaderSwitch, "in", None )
-GafferUI.PlugValueWidget.registerCreator( GafferScene.ShaderSwitch, "in[0-9]*", None )
-GafferUI.PlugValueWidget.registerCreator( GafferScene.ShaderSwitch, "out", None )

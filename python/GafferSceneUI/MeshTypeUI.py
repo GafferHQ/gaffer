@@ -70,6 +70,8 @@ Gaffer.Metadata.registerNode(
 			"preset:Polygon", "linear",
 			"preset:Subdivision Surface", "catmullClark",
 
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
 		],
 
 		"calculatePolygonNormals" : [
@@ -100,9 +102,3 @@ Gaffer.Metadata.registerNode(
 	}
 
 )
-
-##########################################################################
-# Widgets and nodules
-##########################################################################
-
-GafferUI.PlugValueWidget.registerCreator( GafferScene.MeshType, "meshType", GafferUI.PresetsPlugValueWidget )

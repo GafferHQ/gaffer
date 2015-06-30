@@ -52,18 +52,17 @@ Gaffer.Metadata.registerNode(
 	Base class for nodes creating a new branch in the scene hierarchy.
 	""",
 
-	# Deliberately not documenting parent plug, so that
-	# is given documentation more specific to each
-	# derived class.
+	plugs = {
 
-)
+		"parent" : [
 
-##########################################################################
-# Widgets and nodules
-##########################################################################
+			# Deliberately not documenting parent plug, so that
+			# it is given documentation more specific to each
+			# derived class.
 
-GafferUI.PlugValueWidget.registerCreator(
-	GafferScene.BranchCreator,
-	"parent",
-	GafferSceneUI.ScenePathPlugValueWidget
+			"plugValueWidget:type", "GafferSceneUI.ScenePathPlugValueWidget",
+
+		],
+
+	}
 )

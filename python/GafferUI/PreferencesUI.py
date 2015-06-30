@@ -56,7 +56,7 @@ Gaffer.Metadata.registerNode(
 
 		"user" : [
 
-			"layout:widgetType", "None",
+			"plugValueWidget:type", "",
 
 		],
 

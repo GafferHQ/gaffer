@@ -63,6 +63,8 @@ Gaffer.Metadata.registerNode(
 			this will be removed.
 			""",
 
+			"plugValueWidget:type", "GafferSceneUI.ScenePathPlugValueWidget",
+
 		],
 
 		"adjustBounds" : [
@@ -80,14 +82,4 @@ Gaffer.Metadata.registerNode(
 
 	}
 
-)
-
-##########################################################################
-# Widgets and nodules
-##########################################################################
-
-GafferUI.PlugValueWidget.registerCreator(
-	GafferScene.Isolate,
-	"from",
-	GafferSceneUI.ScenePathPlugValueWidget
 )

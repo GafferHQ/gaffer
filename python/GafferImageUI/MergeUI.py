@@ -101,10 +101,10 @@ Gaffer.Metadata.registerNode(
 			"preset:Subtract", GafferImage.Merge.Operation.Subtract,
 			"preset:Under", GafferImage.Merge.Operation.Under,
 
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
 		],
 
 	}
 
 )
-
-GafferUI.PlugValueWidget.registerCreator( GafferImage.Merge, "operation", GafferUI.PresetsPlugValueWidget )

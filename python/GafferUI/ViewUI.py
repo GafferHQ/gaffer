@@ -47,8 +47,22 @@ Gaffer.Metadata.registerNode(
 
 			"layout:section", "",
 
-		]
+		],
+
+		"in" : [
+
+			"plugValueWidget:type", "",
+
+		],
+
+		"user" : [
+
+			"plugValueWidget:type", "",
+
+		],
 
 	}
 
 )
+
+GafferUI.NodeToolbar.registerCreator( GafferUI.View, GafferUI.StandardNodeToolbar )

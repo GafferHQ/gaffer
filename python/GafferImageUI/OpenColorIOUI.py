@@ -78,6 +78,8 @@ Gaffer.Metadata.registerNode(
 			"presetNames", __colorSpacePresetNames,
 			"presetValues", __colorSpacePresetValues,
 
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
 		],
 
 		"outputSpace" : [
@@ -90,15 +92,10 @@ Gaffer.Metadata.registerNode(
 			"presetNames", __colorSpacePresetNames,
 			"presetValues", __colorSpacePresetValues,
 
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
 		]
 
 	}
 
 )
-
-for plugName in ( "inputSpace", "outputSpace" ) :
-	GafferUI.PlugValueWidget.registerCreator(
-		GafferImage.OpenColorIO,
-		plugName,
-		GafferUI.PresetsPlugValueWidget,
-	)

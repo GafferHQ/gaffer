@@ -52,7 +52,6 @@ QtGui = GafferUI._qtImport( "QtGui" )
 #	- "layout:index" controls ordering of plugs within the layout
 #	- "layout:section" places the plug in a named section of the layout
 #	- "divider" specifies whether or not a plug should be followed by a divider
-#	- "layout:widgetType" the class name for the widget type of a particular plug
 #	- "layout:activator" the name of an activator to control editability
 #
 # Per-parent metadata support :
@@ -149,8 +148,8 @@ class PlugLayout( GafferUI.Widget ) :
 	# be passed to force the creation of the ui.
 	def plugValueWidget( self, childPlug, lazy=True ) :
 
-		if not lazy and len( self.__widgets ) == 0 :
-			self.__update()
+		if not lazy :
+			self.__updateLazily.flush( self )
 
 		w = self.__widgets.get( childPlug, None )
 		if w is None :
@@ -166,8 +165,8 @@ class PlugLayout( GafferUI.Widget ) :
 	# be passed to force the creation of the ui.
 	def customWidget( self, name, lazy=True ) :
 
-		if not lazy and len( self.__widgets ) == 0 :
-			self.__update()
+		if not lazy :
+			self.__updateLazily.flush( self )
 
 		return self.__widgets.get( name )
 
@@ -257,6 +256,12 @@ class PlugLayout( GafferUI.Widget ) :
 		itemsSet = set( items )
 		self.__widgets = { k : v for k, v in self.__widgets.items() if k in itemsSet }
 
+		# ditch widgets whose metadata type has changed - we must recreate these.
+		self.__widgets = {
+			k : v for k, v in self.__widgets.items()
+			if isinstance( k, str ) or v is not None and Gaffer.Metadata.plugValue( k, "plugValueWidget:type" ) == v.__plugValueWidgetType
+		}
+
 		# make (or reuse existing) widgets for each item, and sort them into
 		# sections.
 		self.__rootSection.clear()
@@ -321,20 +326,9 @@ class PlugLayout( GafferUI.Widget ) :
 
  	def __createPlugWidget( self, plug ) :
 
-		widgetType = Gaffer.Metadata.plugValue( plug, "layout:widgetType" )
-		if widgetType is not None :
-
-			if widgetType == "None" :
-				return None
-			else :
-				widgetClass = self.__import( widgetType )
-				result = widgetClass( plug )
-
-		else :
-
-			result = GafferUI.PlugValueWidget.create( plug )
-			if result is None :
-				return result
+		result = GafferUI.PlugValueWidget.create( plug )
+		if result is None :
+			return result
 
 		if isinstance( result, GafferUI.PlugValueWidget ) and not result.hasLabel() and Gaffer.Metadata.plugValue( plug, "label" ) != "" :
  			result = GafferUI.PlugWidget( result )
@@ -347,6 +341,10 @@ class PlugLayout( GafferUI.Widget ) :
 				result.labelPlugValueWidget().label()._qtWidget().setFixedWidth( QWIDGETSIZE_MAX )
 
 		self.__applyReadOnly( result, self.getReadOnly() )
+
+		# Store the metadata value that controlled the type created, so we can compare to it
+		# in the future to determine if we can reuse the widget.
+		result.__plugValueWidgetType = Gaffer.Metadata.plugValue( plug, "plugValueWidget:type" )
 
  		return result
 
@@ -427,19 +425,19 @@ class PlugLayout( GafferUI.Widget ) :
 
 	def __plugMetadataChanged( self, nodeTypeId, plugPath, key, plug ) :
 
-		if not self.visible() :
-			return
-
-		if plug is not None and not self.__parent.isSame( plug.parent() ) :
+		if plug is not None and not self.__parent.isSame( plug ) and not self.__parent.isSame( plug.parent() ) :
 			return
 			
 		if not self.__node().isInstanceOf( nodeTypeId ) :
 			return
 
-		if key in ( "divider", "layout:index", "layout:section" ) :
+		if key in ( "divider", "layout:index", "layout:section", "plugValueWidget:type" ) :
 			# we often see sequences of several metadata changes - so
 			# we schedule a lazy update to batch them into one ui update.
 			self.__layoutDirty = True
+			self.__updateLazily()
+		elif re.match( "layout:section:.*:summary", key ) :
+			self.__summariesDirty = True
 			self.__updateLazily()
 
 	def __plugDirtied( self, plug ) :
@@ -565,6 +563,10 @@ class _TabLayout( _Layout ) :
 				del self.__tabbedContainer[:]
 				for name, tab in updatedTabs.items() :
 					self.__tabbedContainer.append( tab, label = name )
+
+		for index, subsection in enumerate( section.subsections.values() ) :
+			## \todo Consider how/if we should add a public tooltip API to TabbedContainer.
+			self.__tabbedContainer._qtWidget().setTabToolTip( index, subsection.summary )
 
 		if not len( existingTabs ) :
 			currentTabIndex = self.__section.restoreState( "currentTab" ) or 0

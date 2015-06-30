@@ -64,6 +64,10 @@ Gaffer.Metadata.registerNode(
 			For internal use only.
 			""",
 
+			# we hide the parent (which comes from the base class) because
+			# the value for it is computed from the target plug automatically.
+			"plugValueWidget:type", "",
+
 		],
 
 		"target" : [
@@ -72,6 +76,8 @@ Gaffer.Metadata.registerNode(
 			"""
 			The part of the scene to be duplicated.
 			""",
+
+			"plugValueWidget:type", "GafferSceneUI.ScenePathPlugValueWidget",
 
 		],
 
@@ -112,18 +118,4 @@ Gaffer.Metadata.registerNode(
 		],
 
 	}
-)
-
-##########################################################################
-# Widgets and nodules
-##########################################################################
-
-# we hide the parent (which comes from the base class) because the value for it is
-# computed from the target plug automatically.
-GafferUI.PlugValueWidget.registerCreator( GafferScene.Duplicate, "parent", None )
-
-GafferUI.PlugValueWidget.registerCreator(
-	GafferScene.Duplicate,
-	"target",
-	GafferSceneUI.ScenePathPlugValueWidget
 )

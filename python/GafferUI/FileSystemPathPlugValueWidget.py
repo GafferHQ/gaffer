@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,69 +34,30 @@
 #
 ##########################################################################
 
-import functools
-
-import IECore
-
 import Gaffer
 import GafferUI
 
-class PresetsPlugValueWidget( GafferUI.PlugValueWidget ) :
+## Supported plug metadata :
+#
+# - "fileSystemPathPlugValueWidget:extensions"
+# - "fileSystemPathPlugValueWidget:extensionsLabel"
+class FileSystemPathPlugValueWidget( GafferUI.PathPlugValueWidget ) :
 
 	def __init__( self, plug, **kw ) :
 
-		self.__menuButton = GafferUI.MenuButton( "", menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) ) )
-		GafferUI.PlugValueWidget.__init__( self, self.__menuButton, plug, **kw )
-		
-		self.__plugMetadataChangedConnection = Gaffer.Metadata.plugValueChangedSignal().connect( Gaffer.WeakMethod( self.__plugMetadataChanged ) )
+		extensions = Gaffer.Metadata.plugValue( plug, "fileSystemPathPlugValueWidget:extensions" ) or []
+		if isinstance( extensions, str ) :
+			extensions = extensions.split()
 
-		self._addPopupMenu( self.__menuButton )
-		self._updateFromPlug()
-
-	def _updateFromPlug( self ) :
-
-		self.__menuButton.setEnabled( self._editable() )
-
-		text = ""
-		if self.getPlug() is not None :
-			with self.getContext() :
-				text = Gaffer.NodeAlgo.currentPreset( self.getPlug() ) or "Invalid"
-
-		self.__menuButton.setText( text )
-
-	def __menuDefinition( self ) :
-
-		result = IECore.MenuDefinition()
-		if self.getPlug() is None :
-			return result
-
-		currentPreset = Gaffer.NodeAlgo.currentPreset( self.getPlug() )
-		for n in Gaffer.NodeAlgo.presets( self.getPlug() ) :
-			result.append(
-				"/" + n,
-				{
-					"command" : functools.partial( Gaffer.WeakMethod( self.__applyPreset ), preset = n ),
-					"checkBox" : n == currentPreset,
-				}
-			)
-
-		return result
-
-	def __applyPreset( self, unused, preset ) :
-
-		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
-			Gaffer.NodeAlgo.applyPreset( self.getPlug(), preset )
-
-	def __plugMetadataChanged( self, nodeTypeId, plugPath, key, plug ) :
-
-		if self.getPlug() is None :
-			return
-
-		if plug is not None and not plug.isSame( self.getPlug() ) :
-			return
-
-		if not self.getPlug().node().isInstanceOf( nodeTypeId ) :
-			return
-
-		if key.startswith( "preset:" ) :
-			self._updateFromPlug()
+		GafferUI.PathPlugValueWidget.__init__(
+			self,
+			plug,
+			Gaffer.FileSystemPath(
+				"/",
+				filter =  Gaffer.FileSystemPath.createStandardFilter(
+					list( extensions ),
+					Gaffer.Metadata.plugValue( plug, "fileSystemPathPlugValueWidget:extensionsLabel" ) or ""
+				)
+			),
+			**kw
+		)

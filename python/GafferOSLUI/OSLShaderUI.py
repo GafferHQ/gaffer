@@ -125,7 +125,7 @@ Gaffer.Metadata.registerPlugValue( GafferOSL.OSLShader, "parameters.*", "label",
 Gaffer.Metadata.registerPlugValue( GafferOSL.OSLShader, "parameters.*", "divider", __plugDivider )
 Gaffer.Metadata.registerPlugValue( GafferOSL.OSLShader, "parameters.*", "presetNames", __plugPresetNames )
 Gaffer.Metadata.registerPlugValue( GafferOSL.OSLShader, "parameters.*", "presetValues", __plugPresetValues )
-Gaffer.Metadata.registerPlugValue( GafferOSL.OSLShader, "parameters.*", "layout:widgetType", __plugWidgetType )
+Gaffer.Metadata.registerPlugValue( GafferOSL.OSLShader, "parameters.*", "plugValueWidget:type", __plugWidgetType )
 
 ##########################################################################
 # Nodules

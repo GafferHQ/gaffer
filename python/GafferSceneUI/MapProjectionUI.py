@@ -65,6 +65,10 @@ Gaffer.Metadata.registerNode(
 			The location of the camera to use for the projection.
 			""",
 
+			"plugValueWidget:type", "GafferSceneUI.ScenePathPlugValueWidget",
+			"scenePathPlugValueWidget:setNames", IECore.StringVectorData( [ "__cameras" ] ),
+			"scenePathPlugValueWidget:setsLabel", "Show only cameras",
+
 		],
 
 		"sName" : [
@@ -93,26 +97,4 @@ Gaffer.Metadata.registerNode(
 
 	}
 
-)
-
-##########################################################################
-# PlugValueWidgets
-##########################################################################
-
-GafferUI.PlugValueWidget.registerCreator(
-	GafferScene.MapProjection,
-	"camera",
-	GafferSceneUI.ScenePathPlugValueWidget
-)
-
-Gaffer.Metadata.registerPlugValue(
-	GafferScene.MapProjection,
-	"camera",
-	"scenePathPlugValueWidget:setNames", IECore.StringVectorData( [ "__cameras" ] )
-)
-
-Gaffer.Metadata.registerPlugValue(
-	GafferScene.MapProjection,
-	"camera",
-	"scenePathPlugValueWidget:setsLabel", "Show only cameras"
 )

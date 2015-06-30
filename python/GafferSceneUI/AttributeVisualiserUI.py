@@ -89,6 +89,8 @@ Gaffer.Metadata.registerNode(
 			"preset:Random", GafferScene.AttributeVisualiser.Mode.Random,
 			"preset:Shader Node Color", GafferScene.AttributeVisualiser.Mode.ShaderNodeColor,
 
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
 		],
 
 		"min" : [
@@ -170,5 +172,3 @@ Gaffer.Metadata.registerNode(
 	}
 
 )
-
-GafferUI.PlugValueWidget.registerCreator( GafferScene.AttributeVisualiser, "mode", GafferUI.PresetsPlugValueWidget )

@@ -93,6 +93,9 @@ Gaffer.Metadata.registerNode(
 			"preset:Running", GafferScene.InteractiveRender.State.Running,
 			"preset:Paused", GafferScene.InteractiveRender.State.Paused,
 
+			## \todo Make a custom UI with play/pause/stop/restart buttons.
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
 		],
 
 		"updateLights" : [
@@ -138,15 +141,4 @@ Gaffer.Metadata.registerNode(
 		],
 
 	}
-)
-
-##########################################################################
-# Widgets
-##########################################################################
-
-## \todo Make a custom UI with play/pause/stop/restart buttons.
-GafferUI.PlugValueWidget.registerCreator(
-	GafferScene.InteractiveRender,
-	"state",
-	GafferUI.PresetsPlugValueWidget,
 )
