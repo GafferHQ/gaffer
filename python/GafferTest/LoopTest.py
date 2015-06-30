@@ -129,8 +129,37 @@ class LoopTest( GafferTest.TestCase ) :
 		cs = GafferTest.CapturingSlot( n.plugDirtiedSignal() )
 
 		a["op2"].setValue( 2 )
-
 		self.assertEqual( set( [ s[0] for s in cs ] ), { n["next"], n["out"], n["previous"] } )
+
+		del cs[:]
+		n["iterations"].setValue( 100 )
+		self.assertEqual( set( [ s[0] for s in cs ] ), { n["iterations"], n["out"] } )
+
+		del cs[:]
+		n["indexVariable"].setValue( "myIndex" )
+		self.assertEqual( set( [ s[0] for s in cs ] ), { n["indexVariable"], n["out"], n["previous"], n["next"] } )
+
+	def testCustomLoopIndex( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = self.intLoop()
+		s["n"]["indexVariable"].setValue( "myIndex" )
+		s["a"] = GafferTest.AddNode()
+
+		s["n"]["in"].setValue( 0 )
+		s["n"]["next"].setInput( s["a"]["sum"] )
+		s["a"]["op1"].setInput( s["n"]["previous"] )
+
+		s["e"] = Gaffer.Expression()
+		s["e"]["engine"].setValue( "python" )
+		s["e"]["expression"].setValue( 'parent["a"]["op2"] = context.get( "myIndex", 0 )' )
+
+		s["n"]["iterations"].setValue( 4 )
+		self.assertEqual( s["n"]["out"].getValue(), 1 + 2 + 3 )
+
+		s["n"]["iterations"].setValue( 5 )
+		self.assertEqual( s["n"]["out"].getValue(), 1 + 2 + 3 + 4 )
 
 if __name__ == "__main__":
 	unittest.main()

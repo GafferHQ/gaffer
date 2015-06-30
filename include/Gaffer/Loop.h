@@ -70,6 +70,9 @@ class Loop : public BaseType
 		IntPlug *iterationsPlug();
 		const IntPlug *iterationsPlug() const;
 
+		StringPlug *indexVariablePlug();
+		const StringPlug *indexVariablePlug() const;
+
 		void affects( const Plug *input, DependencyNode::AffectedPlugsContainer &outputs ) const;
 
 	protected :
@@ -92,9 +95,10 @@ class Loop : public BaseType
 		ValuePlug *outPlugInternal();
 		const ValuePlug *outPlugInternal() const;
 
+		void addAffectedPlug( const ValuePlug *output, DependencyNode::AffectedPlugsContainer &outputs ) const;
 		const ValuePlug *ancestorPlug( const ValuePlug *plug, std::vector<IECore::InternedString> &relativeName ) const;
 		const ValuePlug *descendantPlug( const ValuePlug *plug, const std::vector<IECore::InternedString> &relativeName ) const;
-		const ValuePlug *sourcePlug( const ValuePlug *output, const Context *context, int &sourceLoopIndex ) const;
+		const ValuePlug *sourcePlug( const ValuePlug *output, const Context *context, int &sourceLoopIndex, IECore::InternedString &indexVariable ) const;
 
 		IE_CORE_DECLARERUNTIMETYPEDDESCRIPTION( Loop<BaseType> );
 

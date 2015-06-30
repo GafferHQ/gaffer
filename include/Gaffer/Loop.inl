@@ -100,27 +100,30 @@ const IntPlug *Loop<BaseType>::iterationsPlug() const
 }
 
 template<typename BaseType>
+StringPlug *Loop<BaseType>::indexVariablePlug()
+{
+	return m_firstPlugIndex ? BaseType::template getChild<StringPlug>( m_firstPlugIndex + 3 ) : NULL;
+}
+
+template<typename BaseType>
+const StringPlug *Loop<BaseType>::indexVariablePlug() const
+{
+	return m_firstPlugIndex ? BaseType::template getChild<StringPlug>( m_firstPlugIndex + 3 ) : NULL;
+}
+
+template<typename BaseType>
 void Loop<BaseType>::affects( const Plug *input, DependencyNode::AffectedPlugsContainer &outputs ) const
 {
 	BaseType::affects( input, outputs );
 
 	if( input == iterationsPlug() )
 	{
-		const Plug *out = outPlugInternal();
-		if( out->children().size() )
-		{
-			for( RecursiveOutputPlugIterator it( out ); it != it.end(); ++it )
-			{
-				if( !(*it)->children().size() )
-				{
-					outputs.push_back( it->get() );
-				}
-			}
-		}
-		else
-		{
-			outputs.push_back( out );
-		}
+		addAffectedPlug( outPlugInternal(), outputs );
+	}
+	else if( input == indexVariablePlug() )
+	{
+		addAffectedPlug( outPlugInternal(), outputs );
+		addAffectedPlug( previousPlug(), outputs );
 	}
 	else if( const ValuePlug *inputValuePlug = IECore::runTimeCast<const ValuePlug>( input ) )
 	{
@@ -138,12 +141,13 @@ template<typename BaseType>
 void Loop<BaseType>::hash( const ValuePlug *output, const Context *context, IECore::MurmurHash &h ) const
 {
 	int index = -1;
-	if( const ValuePlug *plug = sourcePlug( output, context, index ) )
+	IECore::InternedString indexVariable;
+	if( const ValuePlug *plug = sourcePlug( output, context, index, indexVariable ) )
 	{
 		if( index >= 0 )
 		{
 			ContextPtr tmpContext = new Context( *context, Context::Borrowed );
-			tmpContext->set<int>( "loop:index", index );
+			tmpContext->set<int>( indexVariable, index );
 			Context::Scope scopedContext( tmpContext.get() );
 			h = plug->hash();
 		}
@@ -161,12 +165,13 @@ template<typename BaseType>
 void Loop<BaseType>::compute( ValuePlug *output, const Context *context ) const
 {
 	int index = -1;
-	if( const ValuePlug *plug = sourcePlug( output, context, index ) )
+	IECore::InternedString indexVariable;
+	if( const ValuePlug *plug = sourcePlug( output, context, index, indexVariable ) )
 	{
 		if( index >= 0 )
 		{
 			ContextPtr tmpContext = new Context( *context, Context::Borrowed );
-			tmpContext->set<int>( "loop:index", index );
+			tmpContext->set<int>( indexVariable, index );
 			Context::Scope scopedContext( tmpContext.get() );
 			output->setFrom( plug );
 		}
@@ -204,10 +209,11 @@ bool Loop<BaseType>::setupPlugs()
 	BaseType::addChild( in->createCounterpart( "next", Plug::In ) );
 	BaseType::addChild( out->createCounterpart( "previous", Plug::Out ) );
 	BaseType::addChild( new IntPlug( "iterations", Gaffer::Plug::In, 10, 0 ) );
+	BaseType::addChild( new StringPlug( "indexVariable", Gaffer::Plug::In, "loop:index" ) );
 
 	// Only assign after adding all plugs, because our plug accessors
 	// use a non-zero value to indicate that all plugs are now available.
-	m_firstPlugIndex = BaseType::children().size() - 3;
+	m_firstPlugIndex = BaseType::children().size() - 4;
 
 	// The in/out plugs might be dynamic in the case of
 	// LoopComputeNode, but because we create the next/previous
@@ -254,6 +260,25 @@ const ValuePlug *Loop<BaseType>::outPlugInternal() const
 }
 
 template<typename BaseType>
+void Loop<BaseType>::addAffectedPlug( const ValuePlug *output, DependencyNode::AffectedPlugsContainer &outputs ) const
+{
+	if( output->children().size() )
+	{
+		for( RecursiveOutputPlugIterator it( output ); it != it.end(); ++it )
+		{
+			if( !(*it)->children().size() )
+			{
+				outputs.push_back( it->get() );
+			}
+		}
+	}
+	else
+	{
+		outputs.push_back( output );
+	}
+}
+
+template<typename BaseType>
 const ValuePlug *Loop<BaseType>::ancestorPlug( const ValuePlug *plug, std::vector<IECore::InternedString> &relativeName ) const
 {
 	while( plug )
@@ -283,16 +308,18 @@ const ValuePlug *Loop<BaseType>::descendantPlug( const ValuePlug *plug, const st
 }
 
 template<typename BaseType>
-const ValuePlug *Loop<BaseType>::sourcePlug( const ValuePlug *output, const Context *context, int &sourceLoopIndex ) const
+const ValuePlug *Loop<BaseType>::sourcePlug( const ValuePlug *output, const Context *context, int &sourceLoopIndex, IECore::InternedString &indexVariable ) const
 {
 	sourceLoopIndex = -1;
+
+	indexVariable = indexVariablePlug()->getValue();
 
 	std::vector<IECore::InternedString> relativeName;
 	const ValuePlug *ancestor = ancestorPlug( output, relativeName );
 
 	if( ancestor == previousPlug() )
 	{
-		const int index = context->get<int>( "loop:index", 0 );
+		const int index = context->get<int>( indexVariable, 0 );
 		if( index >= 1 )
 		{
 			sourceLoopIndex = index - 1;
