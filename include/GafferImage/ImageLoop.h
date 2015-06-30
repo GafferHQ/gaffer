@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2015, John Haddon. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,27 +34,18 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef GAFFERIMAGE_IMAGELOOP_H
+#define GAFFERIMAGE_IMAGELOOP_H
 
-#include "GafferBindings/DependencyNodeBinding.h"
+#include "Gaffer/Loop.h"
+#include "GafferImage/ImageProcessor.h"
 
-#include "GafferImage/ImageContextProcessor.h"
-#include "GafferImage/ImageContextVariables.h"
-#include "GafferImage/ImageSwitch.h"
-#include "GafferImage/ImageTimeWarp.h"
-#include "GafferImage/ImageLoop.h"
-
-#include "GafferImageBindings/MixinBinding.h"
-
-using namespace GafferImage;
-
-void GafferImageBindings::bindMixin()
+namespace GafferImage
 {
 
-	GafferBindings::DependencyNodeClass<ImageContextProcessor>();
-	GafferBindings::DependencyNodeClass<ImageTimeWarp>();
-	GafferBindings::DependencyNodeClass<ImageContextVariables>();
-	GafferBindings::DependencyNodeClass<ImageSwitch>();
-	GafferBindings::DependencyNodeClass<ImageLoop>();
+typedef Gaffer::Loop<ImageProcessor> ImageLoop;
+IE_CORE_DECLAREPTR( ImageLoop )
 
-}
+} // namespace GafferImage
+
+#endif // GAFFERIMAGE_IMAGELOOP_H

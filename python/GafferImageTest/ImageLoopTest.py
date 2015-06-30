@@ -1,7 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2012, John Haddon. All rights reserved.
-#  Copyright (c) 2013-2015, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,37 +34,56 @@
 #
 ##########################################################################
 
-from _GafferImageTest import *
+import unittest
 
-from ImagePlugTest import ImagePlugTest
-from ImageReaderTest import ImageReaderTest
-from OpenColorIOTest import OpenColorIOTest
-from ObjectToImageTest import ObjectToImageTest
-from FormatTest import FormatTest
-from FormatPlugTest import FormatPlugTest
-from MergeTest import MergeTest
-from GradeTest import GradeTest
-from ConstantTest import ConstantTest
-from ImageWriterTest import ImageWriterTest
-from ChannelMaskPlugTest import ChannelMaskPlugTest
-from SamplerTest import SamplerTest
-from ReformatTest import ReformatTest
-from FilterTest import FilterTest
-from DisplayTest import DisplayTest
-from ImageStatsTest import ImageStatsTest
-from ImageTransformTest import ImageTransformTest
-from DeleteChannelsTest import DeleteChannelsTest
-from ClampTest import ClampTest
-from ImageSwitchTest import ImageSwitchTest
-from ImageTimeWarpTest import ImageTimeWarpTest
-from ImageSamplerTest import ImageSamplerTest
-from ImageNodeTest import ImageNodeTest
-from FormatDataTest import FormatDataTest
-from ImageMetadataTest import ImageMetadataTest
-from DeleteImageMetadataTest import DeleteImageMetadataTest
-from CopyImageMetadataTest import CopyImageMetadataTest
-from ImageLoopTest import ImageLoopTest
+import IECore
+
+import Gaffer
+import GafferTest
+import GafferImage
+
+class ImageLoopTest( GafferTest.TestCase ) :
+
+	def testDefaultName( self ) :
+
+		l = GafferImage.ImageLoop()
+		self.assertEqual( l.getName(), "ImageLoop" )
+
+	def testLoop( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["c"] = GafferImage.Constant()
+		script["loop"] = GafferImage.ImageLoop()
+		script["loop"]["in"].setInput( script["c"]["out"] )
+
+		script["grade"] = GafferImage.Grade()
+		script["grade"]["offset"].setValue( IECore.Color3f( .1 ) )
+		script["grade"]["in"].setInput( script["loop"]["previous"] )
+		script["loop"]["next"].setInput( script["grade"]["out"] )
+
+		script["sampler"] = GafferImage.ImageSampler()
+		script["sampler"]["pixel"].setValue( IECore.V2f( 10 ) )
+		script["sampler"]["image"].setInput( script["loop"]["out"] )
+
+		with script.context() :
+			
+			script["loop"]["iterations"].setValue( 2 )
+			self.assertAlmostEqual( script["sampler"]["color"]["r"].getValue(), .2 )
+			
+			script["loop"]["iterations"].setValue( 4 )
+			self.assertAlmostEqual( script["sampler"]["color"]["r"].getValue(), .4 )
+
+		script2 = Gaffer.ScriptNode()
+		script2.execute( script.serialise() )
+
+		with script2.context() :
+			
+			script2["loop"]["iterations"].setValue( 3 )
+			self.assertAlmostEqual( script2["sampler"]["color"]["r"].getValue(), .3 )
+			
+			script2["loop"]["iterations"].setValue( 5 )
+			self.assertAlmostEqual( script2["sampler"]["color"]["r"].getValue(), .5 )
 
 if __name__ == "__main__":
-	import unittest
 	unittest.main()
