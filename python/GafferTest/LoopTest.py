@@ -161,5 +161,24 @@ class LoopTest( GafferTest.TestCase ) :
 		s["n"]["iterations"].setValue( 5 )
 		self.assertEqual( s["n"]["out"].getValue(), 1 + 2 + 3 + 4 )
 
+	def testEnabled( self ) :
+
+		n = self.intLoop()
+		a = GafferTest.AddNode()
+
+		n["in"].setValue( 0 )
+		n["next"].setInput( a["sum"] )
+
+		a["op1"].setInput( n["previous"] )
+		a["op2"].setValue( 1 )
+
+		n["iterations"].setValue( 4 )
+		self.assertEqual( n["out"].getValue(), 4 )
+
+		n["enabled"].setValue( False )
+		self.assertEqual( n["out"].getValue(), 0 )
+
+		self.assertTrue( n.correspondingInput( n["out"] ).isSame( n["in"] ) )
+
 if __name__ == "__main__":
 	unittest.main()

@@ -81,6 +81,33 @@ class SceneLoopTest( GafferSceneTest.SceneTestCase ) :
 		script2["loop"]["iterations"].setValue( 5 )
 		self.assertEqual( script2["loop"]["out"].transform( "/sphere" ), IECore.M44f.createTranslated( IECore.V3f( 5, 0, 0 ) ) )
 
+	def testEnabled( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["sphere"] = GafferScene.Sphere()
+		script["loop"] = GafferScene.SceneLoop()
+		script["loop"]["in"].setInput( script["sphere"]["out"] )
+
+		script["filter"] = GafferScene.PathFilter()
+		script["filter"]["paths"].setValue( IECore.StringVectorData( [ "/sphere" ] ) )
+
+		script["transform"] = GafferScene.Transform()
+		script["transform"]["transform"]["translate"]["x"].setValue( 1 )
+		script["transform"]["in"].setInput( script["loop"]["previous"] )
+		script["transform"]["filter"].setInput( script["filter"]["out"] )
+		script["loop"]["next"].setInput( script["transform"]["out"] )
+
+		script["loop"]["iterations"].setValue( 2 )
+		self.assertEqual( script["loop"]["out"].transform( "/sphere" ), IECore.M44f.createTranslated( IECore.V3f( 2, 0, 0 ) ) )
+
+		script["loop"]["enabled"].setValue( False )
+		self.assertEqual( script["loop"]["out"].transform( "/sphere" ), IECore.M44f() )
+
+		self.assertScenesEqual( script["loop"]["out"], script["sphere"]["out"] )
+		self.assertSceneHashesEqual( script["loop"]["out"], script["sphere"]["out"] )
+
+		self.assertTrue( script["loop"].correspondingInput( script["loop"]["out"] ).isSame( script["loop"]["in"] ) )
 
 if __name__ == "__main__":
 	unittest.main()

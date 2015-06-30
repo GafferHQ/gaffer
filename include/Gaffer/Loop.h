@@ -73,6 +73,12 @@ class Loop : public BaseType
 		StringPlug *indexVariablePlug();
 		const StringPlug *indexVariablePlug() const;
 
+		virtual Gaffer::BoolPlug *enabledPlug();
+		virtual const Gaffer::BoolPlug *enabledPlug() const;
+
+		virtual Gaffer::Plug *correspondingInput( const Gaffer::Plug *output );
+		virtual const Gaffer::Plug *correspondingInput( const Gaffer::Plug *output ) const;
+
 		void affects( const Plug *input, DependencyNode::AffectedPlugsContainer &outputs ) const;
 
 	protected :

@@ -112,6 +112,46 @@ const StringPlug *Loop<BaseType>::indexVariablePlug() const
 }
 
 template<typename BaseType>
+Gaffer::BoolPlug *Loop<BaseType>::enabledPlug()
+{
+	if( BoolPlug *p = BaseType::enabledPlug() )
+	{
+		return p;
+	}
+	return m_firstPlugIndex ? BaseType::template getChild<BoolPlug>( m_firstPlugIndex + 4 ) : NULL;
+}
+
+template<typename BaseType>
+const Gaffer::BoolPlug *Loop<BaseType>::enabledPlug() const
+{
+	if( const BoolPlug *p = BaseType::enabledPlug() )
+	{
+		return p;
+	}
+	return m_firstPlugIndex ? BaseType::template getChild<BoolPlug>( m_firstPlugIndex + 4 ) : NULL;
+}
+
+template<typename BaseType>
+Gaffer::Plug *Loop<BaseType>::correspondingInput( const Gaffer::Plug *output )
+{
+	if( Plug *p = BaseType::correspondingInput( output ) )
+	{
+		return p;
+	}
+	return output == outPlugInternal() ? inPlugInternal() : NULL;
+}
+
+template<typename BaseType>
+const Gaffer::Plug *Loop<BaseType>::correspondingInput( const Gaffer::Plug *output ) const
+{
+	if( const Plug *p = BaseType::correspondingInput( output ) )
+	{
+		return p;
+	}
+	return output == outPlugInternal() ? inPlugInternal() : NULL;
+}
+
+template<typename BaseType>
 void Loop<BaseType>::affects( const Plug *input, DependencyNode::AffectedPlugsContainer &outputs ) const
 {
 	BaseType::affects( input, outputs );
@@ -120,7 +160,10 @@ void Loop<BaseType>::affects( const Plug *input, DependencyNode::AffectedPlugsCo
 	{
 		addAffectedPlug( outPlugInternal(), outputs );
 	}
-	else if( input == indexVariablePlug() )
+	else if(
+		input == indexVariablePlug() ||
+		input == enabledPlug()
+	)
 	{
 		addAffectedPlug( outPlugInternal(), outputs );
 		addAffectedPlug( previousPlug(), outputs );
@@ -206,14 +249,20 @@ bool Loop<BaseType>::setupPlugs()
 	m_inPlugIndex = std::find( BaseType::children().begin(), BaseType::children().end(), in ) - BaseType::children().begin();
 	m_outPlugIndex = std::find( BaseType::children().begin(), BaseType::children().end(), out ) - BaseType::children().begin();
 
+	const size_t firstPlugIndex = BaseType::children().size();
 	BaseType::addChild( in->createCounterpart( "next", Plug::In ) );
 	BaseType::addChild( out->createCounterpart( "previous", Plug::Out ) );
 	BaseType::addChild( new IntPlug( "iterations", Gaffer::Plug::In, 10, 0 ) );
 	BaseType::addChild( new StringPlug( "indexVariable", Gaffer::Plug::In, "loop:index" ) );
 
+	if( !BaseType::enabledPlug() )
+	{
+		BaseType::addChild( new BoolPlug( "enabled", Gaffer::Plug::In, true ) );
+	}
+
 	// Only assign after adding all plugs, because our plug accessors
 	// use a non-zero value to indicate that all plugs are now available.
-	m_firstPlugIndex = BaseType::children().size() - 4;
+	m_firstPlugIndex = firstPlugIndex;
 
 	// The in/out plugs might be dynamic in the case of
 	// LoopComputeNode, but because we create the next/previous
@@ -320,7 +369,7 @@ const ValuePlug *Loop<BaseType>::sourcePlug( const ValuePlug *output, const Cont
 	if( ancestor == previousPlug() )
 	{
 		const int index = context->get<int>( indexVariable, 0 );
-		if( index >= 1 )
+		if( index >= 1 && enabledPlug()->getValue() )
 		{
 			sourceLoopIndex = index - 1;
 			return descendantPlug( nextPlug(), relativeName );
@@ -333,14 +382,14 @@ const ValuePlug *Loop<BaseType>::sourcePlug( const ValuePlug *output, const Cont
 	else if( ancestor == outPlugInternal() )
 	{
 		const int iterations = iterationsPlug()->getValue();
-		if( iterations == 0 )
-		{
-			return descendantPlug( inPlugInternal(), relativeName );
-		}
-		else
+		if( iterations > 0 && enabledPlug()->getValue() )
 		{
 			sourceLoopIndex = iterations - 1;
 			return descendantPlug( nextPlug(), relativeName );
+		}
+		else
+		{
+			return descendantPlug( inPlugInternal(), relativeName );
 		}
 	}
 
