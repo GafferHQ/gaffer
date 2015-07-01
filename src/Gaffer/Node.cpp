@@ -36,7 +36,6 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "Gaffer/Node.h"
-#include "Gaffer/CompoundPlug.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/Metadata.h"
 
@@ -50,7 +49,7 @@ Node::Node( const std::string &name )
 	:	GraphComponent( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
-	addChild( new CompoundPlug( "user" ) );
+	addChild( new Plug( "user" ) );
 }
 
 Node::~Node()
@@ -78,14 +77,14 @@ Node::UnaryPlugSignal &Node::plugDirtiedSignal()
 	return m_plugDirtiedSignal;
 }
 
-Gaffer::CompoundPlug *Node::userPlug()
+Gaffer::Plug *Node::userPlug()
 {
-	return getChild<CompoundPlug>( g_firstPlugIndex );
+	return getChild<Plug>( g_firstPlugIndex );
 }
 
-const Gaffer::CompoundPlug *Node::userPlug() const
+const Gaffer::Plug *Node::userPlug() const
 {
-	return getChild<CompoundPlug>( g_firstPlugIndex );
+	return getChild<Plug>( g_firstPlugIndex );
 }
 
 ScriptNode *Node::scriptNode()
