@@ -38,6 +38,7 @@
 #ifndef GAFFERUI_VIEW_INL
 #define GAFFERUI_VIEW_INL
 
+#include "Gaffer/Plug.h"
 #include "GafferUI/IndividualContainer.h"
 
 namespace GafferUI

@@ -38,6 +38,7 @@
 #define GAFFERUI_TOOL_H
 
 #include "Gaffer/Node.h"
+#include "Gaffer/TypedPlug.h"
 
 #include "GafferUI/TypeIds.h"
 

@@ -39,6 +39,7 @@
 #include "boost/lambda/lambda.hpp"
 #include "boost/format.hpp"
 
+#include "IECore/SimpleTypedData.h"
 #include "IECorePython/ScopedGILLock.h"
 
 #include "Gaffer/Plug.h"

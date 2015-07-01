@@ -39,6 +39,7 @@
 #define GAFFER_DEPENDENCYNODE_H
 
 #include "Gaffer/Node.h"
+#include "Gaffer/TypedPlug.h"
 
 namespace Gaffer
 {
