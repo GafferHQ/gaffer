@@ -66,6 +66,8 @@ Gaffer.Metadata.registerNode(
 			"presetNames", lambda plug : IECore.StringVectorData( [ IECore.CamelCase.toSpaced( e ) for e in Gaffer.Expression.Engine.registeredEngines() ] ),
 			"presetValues", lambda plug : IECore.StringVectorData( Gaffer.Expression.Engine.registeredEngines() ),
 
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
 		),
 
 		"expression" : (
@@ -79,6 +81,25 @@ Gaffer.Metadata.registerNode(
 
 			"layout:section", "",
 			"nodule:type", "",
+			"plugValueWidget:type", "GafferUI.ExpressionUI._ExpressionPlugValueWidget",
+
+		),
+
+		"user" : (
+
+			"plugValueWidget:type", "",
+
+		),
+
+		"in" : (
+
+			"plugValueWidget:type", "",
+
+		),
+
+		"out" : (
+
+			"plugValueWidget:type", "",
 
 		),
 
@@ -174,36 +195,3 @@ class _ExpressionPlugValueWidget( GafferUI.MultiLineStringPlugValueWidget ) :
 				return None
 
 		return None
-
-# PlugValueWidget registrations
-##########################################################################
-
-GafferUI.PlugValueWidget.registerCreator(
-	Gaffer.Expression,
-	"engine",
-	GafferUI.PresetsPlugValueWidget,
-)
-
-GafferUI.PlugValueWidget.registerCreator(
-	Gaffer.Expression,
-	"expression",
-	_ExpressionPlugValueWidget,
-)
-
-GafferUI.PlugValueWidget.registerCreator(
-	Gaffer.Expression,
-	"in",
-	None
-)
-
-GafferUI.PlugValueWidget.registerCreator(
-	Gaffer.Expression,
-	"out",
-	None
-)
-
-GafferUI.PlugValueWidget.registerCreator(
-	Gaffer.Expression,
-	"user",
-	None
-)
