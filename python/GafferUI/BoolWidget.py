@@ -51,13 +51,11 @@ class BoolWidget( GafferUI.Widget ) :
 		GafferUI.Widget.__init__( self, QtGui.QCheckBox( text ), **kw )
 
 		self.setState( checked )
+		self.setDisplayMode( displayMode )
 
 		self.__stateChangedSignal = GafferUI.WidgetSignal()
 
 		self._qtWidget().stateChanged.connect( Gaffer.WeakMethod( self.__stateChanged ) )
-
-		if displayMode == self.DisplayMode.Switch :
-			self._qtWidget().setObjectName( "gafferBoolWidgetSwitch" )
 
 	def setText( self, text ) :
 
@@ -74,6 +72,14 @@ class BoolWidget( GafferUI.Widget ) :
 	def getState( self ) :
 
 		return self._qtWidget().checkState() == QtCore.Qt.Checked
+
+	def setDisplayMode( self, displayMode ) :
+
+		self._qtWidget().setObjectName( "gafferBoolWidgetSwitch" if displayMode == self.DisplayMode.Switch else "" )
+
+	def getDisplayMode( self ) :
+
+		return self.DisplayMode.Switch if self._qtWidget().objectName() == "gafferBoolWidgetSwitch" else self.DisplayMode.CheckBox
 
 	def stateChangedSignal( self ) :
 

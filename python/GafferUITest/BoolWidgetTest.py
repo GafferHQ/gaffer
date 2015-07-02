@@ -88,5 +88,19 @@ class BoolWidgetTest( GafferUITest.TestCase ) :
 
 		self.failUnless( isinstance( w.getText(), basestring ) )
 
+	def testDisplayMode( self ) :
+
+		w = GafferUI.BoolWidget()
+		self.assertEqual( w.getDisplayMode(), w.DisplayMode.CheckBox )
+
+		w.setDisplayMode( w.DisplayMode.Switch )
+		self.assertEqual( w.getDisplayMode(), w.DisplayMode.Switch )
+
+		w.setDisplayMode( w.DisplayMode.CheckBox )
+		self.assertEqual( w.getDisplayMode(), w.DisplayMode.CheckBox )
+
+		w = GafferUI.BoolWidget( displayMode = GafferUI.BoolWidget.DisplayMode.Switch )
+		self.assertEqual( w.getDisplayMode(), w.DisplayMode.Switch )
+
 if __name__ == "__main__":
 	unittest.main()
