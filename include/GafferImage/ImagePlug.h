@@ -40,7 +40,6 @@
 
 #include "IECore/ImagePrimitive.h"
 
-#include "Gaffer/CompoundPlug.h"
 #include "Gaffer/TypedObjectPlug.h"
 #include "Gaffer/TypedPlug.h"
 
@@ -76,7 +75,7 @@ namespace GafferImage
 /// Some notes on color space:
 /// GafferImage nodes expect to operate in linear space, with associated alpha. Users are responsible
 /// for meeting that expectation (or knowing what they're doing when they don't).
-class ImagePlug : public Gaffer::CompoundPlug
+class ImagePlug : public Gaffer::ValuePlug
 {
 
 	public :
@@ -84,7 +83,7 @@ class ImagePlug : public Gaffer::CompoundPlug
 		ImagePlug( const std::string &name=defaultName<ImagePlug>(), Direction direction=In, unsigned flags=Default );
 		virtual ~ImagePlug();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::ImagePlug, ImagePlugTypeId, CompoundPlug );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::ImagePlug, ImagePlugTypeId, ValuePlug );
 
 		virtual bool acceptsChild( const Gaffer::GraphComponent *potentialChild ) const;
 		virtual Gaffer::PlugPtr createCounterpart( const std::string &name, Direction direction ) const;

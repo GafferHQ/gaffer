@@ -52,7 +52,7 @@ const IECore::InternedString ScenePlug::scenePathContextName( "scene:path" );
 const IECore::InternedString ScenePlug::setNameContextName( "scene:setName" );
 
 ScenePlug::ScenePlug( const std::string &name, Direction direction, unsigned flags )
-	:	CompoundPlug( name, direction, flags )
+	:	ValuePlug( name, direction, flags )
 {
 	// we don't want the children to be serialised in any way - we always create
 	// them ourselves in this constructor so they aren't Dynamic, and we don't ever
@@ -140,6 +140,10 @@ ScenePlug::~ScenePlug()
 
 bool ScenePlug::acceptsChild( const GraphComponent *potentialChild ) const
 {
+	if( !ValuePlug::acceptsChild( potentialChild ) )
+	{
+		return false;
+	}
 	return children().size() != 8;
 }
 
@@ -150,7 +154,7 @@ Gaffer::PlugPtr ScenePlug::createCounterpart( const std::string &name, Direction
 
 bool ScenePlug::acceptsInput( const Gaffer::Plug *input ) const
 {
-	if( !CompoundPlug::acceptsInput( input ) )
+	if( !ValuePlug::acceptsInput( input ) )
 	{
 		return false;
 	}

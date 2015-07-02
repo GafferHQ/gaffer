@@ -143,7 +143,7 @@ const IECore::InternedString ImagePlug::tileOriginContextName = "image:tileOrigi
 size_t ImagePlug::g_firstPlugIndex = 0;
 
 ImagePlug::ImagePlug( const std::string &name, Direction direction, unsigned flags )
-	:	CompoundPlug( name, direction, flags )
+	:	ValuePlug( name, direction, flags )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 
@@ -224,12 +224,16 @@ const IECore::FloatVectorData *ImagePlug::blackTile()
 
 bool ImagePlug::acceptsChild( const GraphComponent *potentialChild ) const
 {
+	if( !ValuePlug::acceptsChild( potentialChild ) )
+	{
+		return false;
+	}
 	return children().size() != 5;
 }
 
 bool ImagePlug::acceptsInput( const Gaffer::Plug *input ) const
 {
-	if( !CompoundPlug::acceptsInput( input ) )
+	if( !ValuePlug::acceptsInput( input ) )
 	{
 		return false;
 	}

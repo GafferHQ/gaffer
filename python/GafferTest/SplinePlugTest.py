@@ -545,6 +545,87 @@ class SplinePlugTest( GafferTest.TestCase ) :
 		self.assertEqual( p.getValue(), truncatedDefaultValue )
 		self.assertFalse( p.isSetToDefault() )
 
+	def testConnectionSerialisation( self ) :
+
+		s = IECore.Splineff(
+			IECore.CubicBasisf.catmullRom(),
+			(
+				( 0, 0 ),
+				( 0, 0 ),
+				( 0.2, 0.3 ),
+				( 0.4, 0.9 ),
+				( 1, 1 ),
+				( 1, 1 ),
+			)
+		)
+
+		script = Gaffer.ScriptNode()
+		script["n"] = Gaffer.Node()
+		script["n"]["user"]["p1"] = Gaffer.SplineffPlug( defaultValue=s, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		script["n"]["user"]["p2"] = Gaffer.SplineffPlug( defaultValue=s, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		script["n"]["user"]["p2"].setInput( script["n"]["user"]["p1"] )
+
+		def assertConnection( script ) :
+
+			self.assertTrue( script["n"]["user"]["p2"].getInput().isSame( script["n"]["user"]["p1"] ) )
+			self.assertTrue( script["n"]["user"]["p2"]["basis"].getInput().isSame( script["n"]["user"]["p1"]["basis"] ) )
+			for i in range( 0, 4 ) :
+				self.assertTrue( script["n"]["user"]["p2"].pointPlug( i ).getInput().isSame( script["n"]["user"]["p1"].pointPlug( i ) ) )
+
+		assertConnection( script )
+
+		script2 = Gaffer.ScriptNode()
+		script2.execute( script.serialise() )
+
+		assertConnection( script2 )
+
+	def testPartialConnectionSerialisation( self ) :
+
+		s = IECore.Splineff(
+			IECore.CubicBasisf.catmullRom(),
+			(
+				( 0, 0 ),
+				( 0, 0 ),
+				( 0.2, 0.3 ),
+				( 0.4, 0.9 ),
+				( 1, 1 ),
+				( 1, 1 ),
+			)
+		)
+
+		script = Gaffer.ScriptNode()
+		script["n"] = Gaffer.Node()
+		script["n"]["user"]["s"] = Gaffer.SplineffPlug( defaultValue=s, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		script["n"]["user"]["x"] = Gaffer.FloatPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		script["n"]["user"]["y"] = Gaffer.FloatPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		script["n"]["user"]["s"].pointXPlug( 0 ).setInput( script["n"]["user"]["x"] )
+		script["n"]["user"]["s"].pointYPlug( 2 ).setInput( script["n"]["user"]["y"] )
+
+		def assertConnection( script ) :
+
+			self.assertTrue( script["n"]["user"]["s"].getInput() is None )
+			self.assertTrue( script["n"]["user"]["s"]["basis"].getInput() is None )
+			for i in range( 0, 4 ) :
+
+				if i == 0 :
+					self.assertTrue( script["n"]["user"]["s"].pointXPlug( i ).getInput().isSame( script["n"]["user"]["x"] ) )
+				else :
+					self.assertTrue( script["n"]["user"]["s"].pointXPlug( i ).getInput() is None )
+
+				if i == 2 :
+					self.assertTrue( script["n"]["user"]["s"].pointYPlug( i ).getInput().isSame( script["n"]["user"]["y"] ) )
+				else :
+					self.assertTrue( script["n"]["user"]["s"].pointYPlug( i ).getInput() is None )
+
+		assertConnection( script )
+
+		script2 = Gaffer.ScriptNode()
+		script2.execute( script.serialise() )
+
+		assertConnection( script2 )
+
 if __name__ == "__main__":
 	unittest.main()
 

@@ -40,7 +40,6 @@
 
 #include "IECore/Spline.h"
 
-#include "Gaffer/CompoundPlug.h"
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/TypedPlug.h"
 #include "Gaffer/PlugType.h"
@@ -61,7 +60,7 @@ namespace Gaffer
 /// endPointMultiplicity plug. When calling getValue(), the
 /// endPointMultiplicity is then used to restore the duplicate endpoints.
 template<typename T>
-class SplinePlug : public CompoundPlug
+class SplinePlug : public ValuePlug
 {
 
 	public :
@@ -70,7 +69,7 @@ class SplinePlug : public CompoundPlug
 		typedef typename PlugType<typename T::XType>::Type XPlugType;
 		typedef typename PlugType<typename T::YType>::Type YPlugType;
 
-		IECORE_RUNTIMETYPED_DECLARETEMPLATE( SplinePlug<T>, CompoundPlug );
+		IECORE_RUNTIMETYPED_DECLARETEMPLATE( SplinePlug<T>, ValuePlug );
 		IE_CORE_DECLARERUNTIMETYPEDDESCRIPTION( SplinePlug<T> );
 
 		SplinePlug(
@@ -99,8 +98,8 @@ class SplinePlug : public CompoundPlug
 		/// from the basis, points and endPointMultiplicity plugs.
 		T getValue() const;
 
-		CompoundPlug *basisPlug();
-		const CompoundPlug *basisPlug() const;
+		ValuePlug *basisPlug();
+		const ValuePlug *basisPlug() const;
 		M44fPlug *basisMatrixPlug();
 		const M44fPlug *basisMatrixPlug() const;
 		IntPlug *basisStepPlug();
@@ -118,8 +117,8 @@ class SplinePlug : public CompoundPlug
 		/// \undoable
 		void clearPoints();
 
-		CompoundPlug *pointPlug( unsigned pointIndex );
-		const CompoundPlug *pointPlug( unsigned pointIndex ) const;
+		ValuePlug *pointPlug( unsigned pointIndex );
+		const ValuePlug *pointPlug( unsigned pointIndex ) const;
 		XPlugType *pointXPlug( unsigned pointIndex );
 		const XPlugType *pointXPlug( unsigned pointIndex ) const;
 		YPlugType *pointYPlug( unsigned pointIndex );
@@ -131,6 +130,7 @@ class SplinePlug : public CompoundPlug
 	private :
 
 		size_t endPointMultiplicity( const T &value ) const;
+		void childAddedOrRemoved();
 
 		T m_defaultValue;
 

@@ -37,7 +37,7 @@
 
 #include "Gaffer/SplinePlug.h"
 
-#include "boost/format.hpp"
+#include "boost/bind.hpp"
 
 using namespace Gaffer;
 
@@ -46,9 +46,9 @@ const IECore::RunTimeTyped::TypeDescription<SplinePlug<T> > SplinePlug<T>::g_typ
 
 template<typename T>
 SplinePlug<T>::SplinePlug( const std::string &name, Direction direction, const T &defaultValue, unsigned flags )
-	:	CompoundPlug( name, direction, flags ), m_defaultValue( defaultValue )
+	:	ValuePlug( name, direction, flags ), m_defaultValue( defaultValue )
 {
-	CompoundPlugPtr basis = new CompoundPlug( "basis", direction );
+	ValuePlugPtr basis = new ValuePlug( "basis", direction );
 	M44fPlugPtr basisMatrix = new M44fPlug( "matrix", direction, defaultValue.basis.matrix );
 	IntPlugPtr basisStep = new IntPlug( "step", direction, defaultValue.basis.step );
 	basis->addChild( basisMatrix );
@@ -58,6 +58,9 @@ SplinePlug<T>::SplinePlug( const std::string &name, Direction direction, const T
 	addChild( new IntPlug( "endPointMultiplicity", direction, endPointMultiplicity( defaultValue ), 1 ) );
 
 	setValue( defaultValue );
+
+	childAddedSignal().connect( boost::bind( &SplinePlug::childAddedOrRemoved, this ) );
+	childRemovedSignal().connect( boost::bind( &SplinePlug::childAddedOrRemoved, this ) );
 }
 
 template<typename T>
@@ -74,7 +77,7 @@ bool SplinePlug<T>::acceptsChild( const GraphComponent *potentialChild ) const
 		return true;
 	}
 
-	ConstCompoundPlugPtr c = IECore::runTimeCast<const CompoundPlug>( potentialChild );
+	const ValuePlug *c = IECore::runTimeCast<const ValuePlug>( potentialChild );
 	if( !c )
 	{
 		return false;
@@ -193,15 +196,15 @@ T SplinePlug<T>::getValue() const
 }
 
 template<typename T>
-CompoundPlug *SplinePlug<T>::basisPlug()
+ValuePlug *SplinePlug<T>::basisPlug()
 {
-	return getChild<CompoundPlug>( "basis" );
+	return getChild<ValuePlug>( "basis" );
 }
 
 template<typename T>
-const CompoundPlug *SplinePlug<T>::basisPlug() const
+const ValuePlug *SplinePlug<T>::basisPlug() const
 {
-	return getChild<CompoundPlug>( "basis" );
+	return getChild<ValuePlug>( "basis" );
 }
 
 template<typename T>
@@ -238,7 +241,7 @@ template<typename T>
 unsigned SplinePlug<T>::addPoint()
 {
 	const unsigned n = numPoints();
-	CompoundPlugPtr p = new CompoundPlug( "p0", direction() );
+	ValuePlugPtr p = new ValuePlug( "p0", direction() );
 	p->setFlags( Plug::Dynamic, true );
 
 	typename XPlugType::Ptr x = new XPlugType( "x", direction(), typename T::XType( 0 ) );
@@ -275,23 +278,23 @@ void SplinePlug<T>::clearPoints()
 }
 
 template<typename T>
-CompoundPlug *SplinePlug<T>::pointPlug( unsigned pointIndex )
+ValuePlug *SplinePlug<T>::pointPlug( unsigned pointIndex )
 {
 	if( pointIndex >= numPoints() )
 	{
 		throw IECore::Exception( "Point index out of range." );
 	}
-	return getChild<CompoundPlug>( pointIndex + 2 ); // plus two is to skip basis and endPointMultiplicity plugs
+	return getChild<ValuePlug>( pointIndex + 2 ); // plus two is to skip basis and endPointMultiplicity plugs
 }
 
 template<typename T>
-const CompoundPlug *SplinePlug<T>::pointPlug( unsigned pointIndex ) const
+const ValuePlug *SplinePlug<T>::pointPlug( unsigned pointIndex ) const
 {
 	if( pointIndex >= numPoints() )
 	{
 		throw IECore::Exception( "Point index out of range." );
 	}
-	return getChild<CompoundPlug>( pointIndex + 2 ); // plus two is to skip basis and endPointMultiplicity plugs
+	return getChild<ValuePlug>( pointIndex + 2 ); // plus two is to skip basis and endPointMultiplicity plugs
 }
 
 template<typename T>
@@ -381,6 +384,13 @@ size_t SplinePlug<T>::endPointMultiplicity( const T &value ) const
 	{
 		return 1;
 	}
+}
+
+template<typename T>
+void SplinePlug<T>::childAddedOrRemoved()
+{
+	// adding or removing points sets our value.
+	emitPlugSet();
 }
 
 namespace Gaffer

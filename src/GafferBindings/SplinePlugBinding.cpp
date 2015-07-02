@@ -45,7 +45,7 @@
 
 #include "GafferBindings/SplinePlugBinding.h"
 #include "GafferBindings/PlugBinding.h"
-#include "GafferBindings/CompoundPlugBinding.h"
+#include "GafferBindings/ValuePlugBinding.h"
 
 using namespace boost::python;
 using namespace GafferBindings;
@@ -54,7 +54,7 @@ using namespace Gaffer;
 namespace
 {
 
-class SplinePlugSerialiser : public CompoundPlugSerialiser
+class SplinePlugSerialiser : public ValuePlugSerialiser
 {
 
 	public :
@@ -65,13 +65,13 @@ class SplinePlugSerialiser : public CompoundPlugSerialiser
 			// default value - so we get rid of those so the real value can be loaded appropriately (using the usual mechanism for
 			// dynamic plugs). the alternative would be to have a special private SplinePlug constructor used only by the serialisation,
 			// which wouldn't make the plugs in the first place.
-			return CompoundPlugSerialiser::postConstructor( child, identifier, serialisation ) + identifier + ".clearPoints()\n";
+			return ValuePlugSerialiser::postConstructor( child, identifier, serialisation ) + identifier + ".clearPoints()\n";
 		}
 
 };
 
 template<typename T>
-CompoundPlugPtr pointPlug( T &s, size_t index )
+ValuePlugPtr pointPlug( T &s, size_t index )
 {
 	return s.pointPlug( index );
 }
