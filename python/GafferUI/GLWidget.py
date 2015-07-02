@@ -101,7 +101,7 @@ class GLWidget( GafferUI.Widget ) :
 		self.__overlay = overlay
 		self.__overlay._setStyleSheet()
 
-		item = self.__graphicsScene.addWidget( self.__overlay._qtWidget() )
+		item = self.__graphicsScene.addOverlay( self.__overlay )
 
 	## Called whenever the widget is resized. May be reimplemented by derived
 	# classes if necessary. The appropriate OpenGL context will already be current
@@ -376,14 +376,15 @@ class _GLGraphicsScene( QtGui.QGraphicsScene ) :
 		self.__backgroundDrawFunction = backgroundDrawFunction
 		self.sceneRectChanged.connect( self.__sceneRectChanged )
 
-	def addWidget( self, widget ) :
+	def addOverlay( self, widget ) :
 
-		if widget.layout() is not None :
+		self.__widget = widget
+		if widget._qtWidget().layout() is not None :
 			# removing the size constraint is necessary to keep the widget the
 			# size we tell it to be in __updateItemGeometry.
-			widget.layout().setSizeConstraint( QtGui.QLayout.SetNoConstraint )
+			widget._qtWidget().layout().setSizeConstraint( QtGui.QLayout.SetNoConstraint )
 
-		item = QtGui.QGraphicsScene.addWidget( self, widget )
+		item = QtGui.QGraphicsScene.addWidget( self, widget._qtWidget() )
 		self.__updateItemGeometry( item, self.sceneRect() )
 
 		return item
