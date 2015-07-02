@@ -1,7 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2012, John Haddon. All rights reserved.
-#  Copyright (c) 2012-2015, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,36 +34,69 @@
 #
 ##########################################################################
 
-from _GafferImageUI import *
+import Gaffer
+import GafferScene
 
-import DisplayUI
-from FormatPlugValueWidget import FormatPlugValueWidget
-from FilterPlugValueWidget import FilterPlugValueWidget
-from ChannelMaskPlugValueWidget import ChannelMaskPlugValueWidget
+Gaffer.Metadata.registerNode(
 
-import ImageReaderUI
-import ImageViewToolbar
-import ImageTransformUI
-import ConstantUI
-import ImageSwitchUI
-import OpenColorIOUI
-import ImageContextVariablesUI
-import ImageStatsUI
-import DeleteChannelsUI
-import ReformatUI
-import ObjectToImageUI
-import ClampUI
-import ImageWriterUI
-import GradeUI
-import ImageTimeWarpUI
-import ImageSamplerUI
-import MergeUI
-import ImageNodeUI
-import ChannelDataProcessorUI
-import ImageProcessorUI
-import ImageMetadataUI
-import DeleteImageMetadataUI
-import CopyImageMetadataUI
-import ImageLoopUI
+	GafferScene.SceneLoop,
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferImageUI" )
+	"description",
+	"""
+	Applies a user defined processing loop to a scene. The content
+	of the loop is defined by the node network placed between the
+	previous and next plugs. The input scene is sent around this
+	loop for a set number of iterations and then emerges as the
+	output scene.
+	""",
+
+	plugs = {
+
+		"previous" : [
+
+			"description",
+			"""
+			The result from the previous iteration of the loop, or
+			the input scene if no iterations have been performed yet.
+			The content of the loop is defined by feeding this previous
+			result through the scene processing nodes of choice and back
+			around into the next plug.
+			""",
+
+		],
+
+		"next" : [
+
+			"description",
+			"""
+			The scene to be used as the start of the next iteration of
+			the loop.
+			""",
+
+		],
+
+		"iterations" : [
+
+			"description",
+			"""
+			The number of times the loop is applied to form the output
+			scene.
+			""",
+
+		],
+
+		"indexVariable" : [
+
+			"description",
+			"""
+			The name of a context variable used to specify the index
+			of the current iteration. This can be referenced from
+			expressions within the loop network to modify the operations
+			performed during each iteration of the loop.
+			"""
+
+		],
+
+	}
+
+)
