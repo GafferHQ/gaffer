@@ -161,8 +161,8 @@ std::string PlugSerialiser::directionRepr( Plug::Direction direction )
 
 std::string PlugSerialiser::flagsRepr( unsigned flags )
 {
-	static const Plug::Flags values[] = { Plug::Dynamic, Plug::Serialisable, Plug::AcceptsInputs, Plug::PerformsSubstitutions, Plug::Cacheable, Plug::ReadOnly, Plug::None };
-	static const char *names[] = { "Dynamic", "Serialisable", "AcceptsInputs", "PerformsSubstitutions", "Cacheable", "ReadOnly", 0 };
+	static const Plug::Flags values[] = { Plug::Dynamic, Plug::Serialisable, Plug::AcceptsInputs, Plug::PerformsSubstitutions, Plug::Cacheable, Plug::ReadOnly, Plug::AcceptsDependencyCycles, Plug::None };
+	static const char *names[] = { "Dynamic", "Serialisable", "AcceptsInputs", "PerformsSubstitutions", "Cacheable", "ReadOnly", "AcceptsDependencyCycles", 0 };
 
 	int defaultButOffCount = 0;
 	std::string defaultButOff;
@@ -248,6 +248,7 @@ void GafferBindings::bindPlug()
 			.value( "PerformsSubstitutions", Plug::PerformsSubstitutions )
 			.value( "Cacheable", Plug::Cacheable )
 			.value( "ReadOnly", Plug::ReadOnly )
+			.value( "AcceptsDependencyCycles", Plug::AcceptsDependencyCycles )
 			.value( "Default", Plug::Default )
 			.value( "All", Plug::All )
 		;

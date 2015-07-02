@@ -1,7 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2012, John Haddon. All rights reserved.
-#  Copyright (c) 2013-2015, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,37 +34,69 @@
 #
 ##########################################################################
 
-from _GafferImageTest import *
+import Gaffer
+import GafferImage
 
-from ImagePlugTest import ImagePlugTest
-from ImageReaderTest import ImageReaderTest
-from OpenColorIOTest import OpenColorIOTest
-from ObjectToImageTest import ObjectToImageTest
-from FormatTest import FormatTest
-from FormatPlugTest import FormatPlugTest
-from MergeTest import MergeTest
-from GradeTest import GradeTest
-from ConstantTest import ConstantTest
-from ImageWriterTest import ImageWriterTest
-from ChannelMaskPlugTest import ChannelMaskPlugTest
-from SamplerTest import SamplerTest
-from ReformatTest import ReformatTest
-from FilterTest import FilterTest
-from DisplayTest import DisplayTest
-from ImageStatsTest import ImageStatsTest
-from ImageTransformTest import ImageTransformTest
-from DeleteChannelsTest import DeleteChannelsTest
-from ClampTest import ClampTest
-from ImageSwitchTest import ImageSwitchTest
-from ImageTimeWarpTest import ImageTimeWarpTest
-from ImageSamplerTest import ImageSamplerTest
-from ImageNodeTest import ImageNodeTest
-from FormatDataTest import FormatDataTest
-from ImageMetadataTest import ImageMetadataTest
-from DeleteImageMetadataTest import DeleteImageMetadataTest
-from CopyImageMetadataTest import CopyImageMetadataTest
-from ImageLoopTest import ImageLoopTest
+Gaffer.Metadata.registerNode(
 
-if __name__ == "__main__":
-	import unittest
-	unittest.main()
+	GafferImage.ImageLoop,
+
+	"description",
+	"""
+	Applies a user defined processing loop to an image. The content
+	of the loop is defined by the node network placed between the
+	previous and next plugs. The input image is sent around this
+	loop for a set number of iterations and then emerges as the
+	output image.
+	""",
+
+	plugs = {
+
+		"previous" : [
+
+			"description",
+			"""
+			The result from the previous iteration of the loop, or
+			the input image if no iterations have been performed yet.
+			The content of the loop is defined by feeding this previous
+			result through the image processing nodes of choice and back
+			around into the next plug.
+			""",
+
+		],
+
+		"next" : [
+
+			"description",
+			"""
+			The image to be used as the start of the next iteration of
+			the loop.
+			""",
+
+		],
+
+		"iterations" : [
+
+			"description",
+			"""
+			The number of times the loop is applied to form the output
+			image.
+			""",
+
+		],
+
+		"indexVariable" : [
+
+			"description",
+			"""
+			The name of a context variable used to specify the index
+			of the current iteration. This can be referenced from
+			expressions within the loop network to modify the operations
+			performed during each iteration of the loop.
+			"""
+
+		],
+
+	}
+
+)

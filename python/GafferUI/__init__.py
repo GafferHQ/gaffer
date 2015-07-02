@@ -283,6 +283,7 @@ import SubGraphUI
 import SwitchUI
 import ContextVariablesUI
 import TimeWarpUI
+import LoopUI
 
 # backwards compatibility
 ## \todo Remove me

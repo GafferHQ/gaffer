@@ -727,6 +727,18 @@ class Plug::DirtyPlugs
 						// cast is ok - AffectedPlugsContainer only holds const pointers so that
 						// affects() can be const to discourage implementations from having side effects.
 						VertexDescriptor affectedVertex = insertInternal( const_cast<Plug *>( *it ) );
+
+						if( (*it)->getFlags( Plug::AcceptsDependencyCycles ) )
+						{
+							// Skip making an edge to avoid a cycle in emit() - we still propagated
+							// dirtiness onwards with the call to insertInternal() above though, so the
+							// only thing lost is a guarantee of emission ordering. It might be more
+							// accurate to make the edge and then wait until emit() to see if a cycle
+							// has actually been created in practice, and then remove it. But this is
+							// simpler, and it seems reasonable to assume that the existence of the
+							// flag indicates a definite intention to create a cycle.
+							continue;
+						}
 						add_edge( affectedVertex, result, m_graph );
 					}
 				}

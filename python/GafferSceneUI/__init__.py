@@ -117,6 +117,7 @@ import ConstraintUI
 import PlaneUI
 import CubeUI
 import AttributeVisualiserUI
+import SceneLoopUI
 
 # then all the PathPreviewWidgets. note that the order
 # of import controls the order of display.

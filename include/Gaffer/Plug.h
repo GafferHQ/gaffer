@@ -105,10 +105,20 @@ class Plug : public GraphComponent
 			/// not valid to make an output plug read only - in the case of an attempt to
 			/// do so an exception will be thrown from setFlags().
 			ReadOnly = 0x00000020,
+			/// Generally it is an error to have cyclic dependencies between plugs,
+			/// and creating them will cause an exception to be thrown during dirty
+			/// propagation. However, it is possible to design nodes that create
+			/// pseudo-cycles, where the evaluation of a plug leads to the evaluation
+			/// of the very same plug, but in a different context. This is
+			/// permissible so long as the context is managed such that the cycle is
+			/// not infinite. Because dirty propagation is performed independent of context,
+			/// this flag must be used by such nodes to indicate that the cycle is
+			/// intentional in this case, and is guaranteed to terminate during compute.
+			AcceptsDependencyCycles = 0x00000040,
 			/// When adding values, don't forget to update the Default and All values below,
 			/// and to update PlugBinding.cpp too!
 			Default = Serialisable | AcceptsInputs | PerformsSubstitutions | Cacheable,
-			All = Dynamic | Serialisable | AcceptsInputs | PerformsSubstitutions | Cacheable | ReadOnly
+			All = Dynamic | Serialisable | AcceptsInputs | PerformsSubstitutions | Cacheable | ReadOnly | AcceptsDependencyCycles
 		};
 
 		Plug( const std::string &name=defaultName<Plug>(), Direction direction=In, unsigned flags=Default );

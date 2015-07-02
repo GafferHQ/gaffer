@@ -91,6 +91,7 @@ enum TypeId
 	ImageMetadataTypeId = 110795,
 	DeleteImageMetadataTypeId = 110796,
 	CopyImageMetadataTypeId = 110797,
+	ImageLoopTypeId = 110798,
 
 	LastTypeId = 110849
 };
