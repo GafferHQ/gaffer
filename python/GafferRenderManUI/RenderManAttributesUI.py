@@ -152,6 +152,8 @@ Gaffer.Metadata.registerNode(
 			"preset:Shader", "shader",
 			"preset:Primitive", "primitive",
 
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
 		],
 
 		"attributes.transmissionVisibility" : [
@@ -188,6 +190,8 @@ Gaffer.Metadata.registerNode(
 			"preset:Shader", "shader",
 			"preset:Primitive", "primitive",
 
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
 		],
 
 		"attributes.diffuseVisibility" : [
@@ -222,6 +226,8 @@ Gaffer.Metadata.registerNode(
 
 			"preset:Shader", "shader",
 			"preset:Primitive", "primitive",
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 
 		],
 
@@ -259,6 +265,8 @@ Gaffer.Metadata.registerNode(
 			"preset:Shader", "shader",
 			"preset:Primitive", "primitive",
 
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
 		],
 
 		"attributes.photonVisibility" : [
@@ -292,6 +300,8 @@ Gaffer.Metadata.registerNode(
 
 			"preset:Shader", "shader",
 			"preset:Primitive", "primitive",
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 
 		],
 
@@ -398,40 +408,4 @@ Gaffer.Metadata.registerNode(
 
 	}
 
-)
-
-GafferUI.PlugValueWidget.registerCreator(
-	GafferRenderMan.RenderManAttributes,
-	"attributes.cameraHitMode.value",
-	GafferUI.PresetsPlugValueWidget
-)
-
-GafferUI.PlugValueWidget.registerCreator(
-	GafferRenderMan.RenderManAttributes,
-	"attributes.transmissionHitMode.value",
-	GafferUI.PresetsPlugValueWidget
-)
-
-GafferUI.PlugValueWidget.registerCreator(
-	GafferRenderMan.RenderManAttributes,
-	"attributes.transmissionHitMode.value",
-	GafferUI.PresetsPlugValueWidget
-)
-
-GafferUI.PlugValueWidget.registerCreator(
-	GafferRenderMan.RenderManAttributes,
-	"attributes.diffuseHitMode.value",
-	GafferUI.PresetsPlugValueWidget
-)
-
-GafferUI.PlugValueWidget.registerCreator(
-	GafferRenderMan.RenderManAttributes,
-	"attributes.specularHitMode.value",
-	GafferUI.PresetsPlugValueWidget
-)
-
-GafferUI.PlugValueWidget.registerCreator(
-	GafferRenderMan.RenderManAttributes,
-	"attributes.photonHitMode.value",
-	GafferUI.PresetsPlugValueWidget
 )

@@ -100,27 +100,12 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"ui:scene:acceptsPaths", True,
+			"vectorDataPlugValueWidget:dragPointer", "objects",
 
 		],
 
 	}
 
-)
-
-
-# PlugValueWidget registrations
-##########################################################################
-
-def __pathsPlugWidgetCreator( plug ) :
-
-	result = GafferUI.VectorDataPlugValueWidget( plug )
-	result.vectorDataWidget().setDragPointer( "objects" )
-	return result
-
-GafferUI.PlugValueWidget.registerCreator(
-	GafferScene.Set,
-	"paths",
-	__pathsPlugWidgetCreator,
 )
 
 ##########################################################################

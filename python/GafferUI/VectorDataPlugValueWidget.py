@@ -40,6 +40,9 @@ from __future__ import with_statement
 import Gaffer
 import GafferUI
 
+## Supported plug metadata :
+#
+# "vectorDataPlugValueWidget:dragPointer"
 class VectorDataPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plug, **kw ) :
@@ -72,6 +75,10 @@ class VectorDataPlugValueWidget( GafferUI.PlugValueWidget ) :
 					# so we'll make an empty data of the right type.
 					plugValue = plug.ValueType()
 				self.__dataWidget.setData( plugValue )
+
+			dragPointer = Gaffer.Metadata.plugValue( plug, "vectorDataPlugValueWidget:dragPointer" )
+			if dragPointer is not None :
+				self.__dataWidget.setDragPointer( dragPointer )
 
 		self.__dataWidget.setEditable( self._editable() )
 
