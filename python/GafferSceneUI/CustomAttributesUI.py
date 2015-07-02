@@ -56,6 +56,12 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
+		"attributes" : [
+
+			"compoundDataPlugValueWidget:editable", True,
+
+		],
+
 		"attributes.*.name" : [
 
 			"ui:scene:acceptsAttributeName", True,
@@ -65,8 +71,6 @@ Gaffer.Metadata.registerNode(
 	}
 
 )
-
-GafferUI.PlugValueWidget.registerCreator( GafferScene.CustomAttributes, "attributes", GafferUI.CompoundDataPlugValueWidget, collapsed=None )
 
 ##########################################################################
 # Right click menu for adding attribute names to plugs

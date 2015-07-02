@@ -125,9 +125,3 @@ Gaffer.Metadata.registerNode(
 	},
 
 )
-
-GafferUI.PlugValueWidget.registerCreator(
-	Gaffer.ScriptNode,
-	"variables",
-	lambda plug : GafferUI.CompoundDataPlugValueWidget( plug, collapsed=None ),
-)

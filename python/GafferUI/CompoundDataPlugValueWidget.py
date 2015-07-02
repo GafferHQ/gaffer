@@ -42,44 +42,60 @@ import IECore
 import Gaffer
 import GafferUI
 
-## \todo Refactor to derive from LayoutPlugValueWidget. Before we can do this we need
-# to stop relying on the _label() and _childPlugWidget() methods to define labels - this
-# is currently overridden in SectionedCompoundDataPlugValueWidget, but we can use metadata
-# to define labels instead.
-class CompoundDataPlugValueWidget( GafferUI.CompoundPlugValueWidget ) :
+## Supported plug metadata :
+#
+# "compoundDataPlugValueWidget:editable"
+class CompoundDataPlugValueWidget( GafferUI.PlugValueWidget ) :
 
-	def __init__( self, plug, collapsed=True, label=None, summary=None, editable=True, **kw ) :
+	def __init__( self, plug, **kw ) :
 
-		GafferUI.CompoundPlugValueWidget.__init__( self, plug, collapsed, label, summary, **kw )
+		self.__column = GafferUI.ListContainer( spacing = 6 )
 
-		self.__editable = True
-		self.__footerWidget = None
+		GafferUI.PlugValueWidget.__init__( self, self.__column, plug, **kw )
 
-	def _childPlugWidget( self, childPlug ) :
+		with self.__column :
 
-		return _MemberPlugValueWidget( childPlug, self._label( childPlug ) )
+			self.__layout = GafferUI.PlugLayout( plug )
 
-	def _footerWidget( self ) :
+			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal ) as self.__editRow :
 
-		if self.__footerWidget is not None :
-			return self.__footerWidget
+				GafferUI.Spacer( IECore.V2i( GafferUI.PlugWidget.labelWidth(), 1 ) )
 
-		if self.__class__ is CompoundDataPlugValueWidget : # slight hack so that SectionedCompoundDataPlugValueWidget doesn't get a plus button
-			self.__footerWidget = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal )
-			self.__footerWidget.append( GafferUI.Spacer( IECore.V2i( GafferUI.PlugWidget.labelWidth(), 1 ) ) )
-			self.__footerWidget.append(
-				GafferUI.MenuButton( image="plus.png", hasFrame=False, menu=GafferUI.Menu( self.__addMenuDefinition() ) )
-			)
-			self.__footerWidget.append( GafferUI.Spacer( IECore.V2i( 1 ), IECore.V2i( 999999, 1 ) ), expand = True )
+				GafferUI.MenuButton(
+					image = "plus.png",
+					hasFrame = False,
+					menu = GafferUI.Menu( Gaffer.WeakMethod( self.__addMenuDefinition ) )
+				)
 
-		return self.__footerWidget
+				GafferUI.Spacer( IECore.V2i( 1 ), IECore.V2i( 999999, 1 ), parenting = { "expand" : True } )
 
-	def _label( self, childPlug ) :
+		self._updateFromPlug()
 
-		if not childPlug.getFlags( Gaffer.Plug.Flags.Dynamic ) :
-			return childPlug["name"].getValue()
+	def hasLabel( self ) :
 
-		return None
+		return True
+
+	def setReadOnly( self, readOnly ) :
+
+		if readOnly == self.getReadOnly() :
+			return
+
+		GafferUI.PlugValueWidget.setReadOnly( self, readOnly )
+
+		self.__layout.setReadOnly( readOnly )
+
+	def childPlugValueWidget( self, childPlug, lazy=True ) :
+
+		return self.__layout.plugValueWidget( childPlug, lazy )
+
+	def _updateFromPlug( self ) :
+
+		editable = True
+		if self.getPlug() is not None :
+			editable = Gaffer.Metadata.plugValue( self.getPlug(), "compoundDataPlugValueWidget:editable" )
+			editable = editable if editable is not None else True
+
+		self.__editRow.setVisible( editable )
 
 	def __addMenuDefinition( self ) :
 

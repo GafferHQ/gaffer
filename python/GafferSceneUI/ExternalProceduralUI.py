@@ -91,9 +91,3 @@ Gaffer.Metadata.registerNode(
 	}
 
 )
-
-##########################################################################
-# Widgets
-##########################################################################
-
-GafferUI.PlugValueWidget.registerCreator( GafferScene.ExternalProcedural, "parameters", GafferUI.CompoundDataPlugValueWidget, collapsed=None )

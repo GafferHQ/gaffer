@@ -58,10 +58,10 @@ Gaffer.Metadata.registerNode(
 			python.
 			""",
 
+			"compoundDataPlugValueWidget:editable", False,
+
 		],
 
 	}
 
 )
-
-GafferUI.PlugValueWidget.registerCreator( GafferScene.Options, "options", GafferUI.LayoutPlugValueWidget )

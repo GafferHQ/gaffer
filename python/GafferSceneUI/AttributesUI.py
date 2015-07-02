@@ -39,7 +39,6 @@ import GafferUI
 
 import GafferScene
 
-
 Gaffer.Metadata.registerNode(
 
 	GafferScene.Attributes,
@@ -60,6 +59,8 @@ Gaffer.Metadata.registerNode(
 			interface, or using the CompoundDataPlug API via python.
 			""",
 
+			"compoundDataPlugValueWidget:editable", False,
+
 		],
 
 		"global" : [
@@ -77,5 +78,3 @@ Gaffer.Metadata.registerNode(
 	}
 
 )
-
-GafferUI.PlugValueWidget.registerCreator( GafferScene.Attributes, "attributes", GafferUI.LayoutPlugValueWidget )
