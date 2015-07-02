@@ -126,6 +126,7 @@ enum TypeId
 	SceneFilterPathFilterTypeId = 110581,
 	PathMatcherDataPlugTypeId = 110582,
 	AttributeVisualiserTypeId = 110583,
+	CurvesTypeTypeId = 110584,
 
 	LastTypeId = 110650
 };

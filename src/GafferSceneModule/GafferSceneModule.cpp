@@ -47,6 +47,7 @@
 #include "GafferScene/DeletePrimitiveVariables.h"
 #include "GafferScene/DeleteSets.h"
 #include "GafferScene/MeshType.h"
+#include "GafferScene/CurvesType.h"
 #include "GafferScene/Plane.h"
 #include "GafferScene/Seeds.h"
 #include "GafferScene/Instancer.h"
@@ -114,6 +115,7 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	GafferBindings::DependencyNodeClass<FilteredSceneProcessor>();
 	GafferBindings::DependencyNodeClass<SceneElementProcessor>();
 	GafferBindings::DependencyNodeClass<MeshType>();
+	GafferBindings::DependencyNodeClass<CurvesType>();
 	GafferBindings::DependencyNodeClass<ObjectSource>();
 	GafferBindings::DependencyNodeClass<Cube>();
 	GafferBindings::DependencyNodeClass<Plane>();
