@@ -85,6 +85,7 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"nodule:type", "",
+			"ui:scene:acceptsPaths", True,
 
 		],
 
@@ -120,9 +121,17 @@ __DropMode = IECore.Enum.create( "None", "Add", "Remove", "Replace" )
 
 __originalDragPointer = None
 
+def __pathsPlug( node ) :
+
+	for plug in node.children( Gaffer.Plug ) :
+		if Gaffer.Metadata.plugValue( plug, "ui:scene:acceptsPaths" ) :
+			return plug
+
+	return None
+
 def __dropMode( nodeGadget, event ) :
 
-	if not isinstance( nodeGadget.node(), GafferScene.PathFilter ) :
+	if __pathsPlug( nodeGadget.node() ) is None :
 		filter = None
 		if nodeGadget.node()["filter"].getInput() is not None :
 			filter = nodeGadget.node()["filter"].source().node()
@@ -182,27 +191,25 @@ def __drop( nodeGadget, event ) :
 	if __originalDragPointer is None :
 		return False
 
-	pathFilter = None
-	if isinstance( nodeGadget.node(), GafferScene.PathFilter ) :
-		pathFilter = nodeGadget.node()
-	elif nodeGadget.node()["filter"].getInput() :
-		pathFilter = nodeGadget.node()["filter"].source().node()
+	pathsPlug = __pathsPlug( nodeGadget.node() )
+	if pathsPlug is None :
+		pathsPlug = __pathsPlug( nodeGadget.node()["filter"].source().node() )
 
 	dropMode = __dropMode( nodeGadget, event )
 	if dropMode == __DropMode.Replace :
 		paths = sorted( event.data )
 	elif dropMode == __DropMode.Add :
-		paths = set( pathFilter["paths"].getValue() )
+		paths = set( pathsPlug.getValue() )
 		paths.update( event.data )
 		paths = sorted( paths )
 	else :
-		paths = set( pathFilter["paths"].getValue() )
+		paths = set( pathsPlug.getValue() )
 		paths.difference_update( event.data )
 		paths = sorted( paths )
 
 	with Gaffer.UndoContext( nodeGadget.node().ancestor( Gaffer.ScriptNode ) ) :
 		
-		if pathFilter is None :
+		if pathsPlug is None :
 		
 			pathFilter = GafferScene.PathFilter()
 			nodeGadget.node().parent().addChild( pathFilter )
@@ -211,7 +218,9 @@ def __drop( nodeGadget, event ) :
 			graphGadget = nodeGadget.ancestor( GafferUI.GraphGadget )
 			graphGadget.getLayout().positionNode( graphGadget, pathFilter )
 
-		pathFilter["paths"].setValue( IECore.StringVectorData( paths ) )
+			pathsPlug = pathFilter["paths"]
+
+		pathsPlug.setValue( IECore.StringVectorData( paths ) )
 
 	GafferUI.Pointer.setCurrent( __originalDragPointer )
 	__originalDragPointer = None

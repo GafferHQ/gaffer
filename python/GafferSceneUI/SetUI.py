@@ -40,6 +40,7 @@ import Gaffer
 import GafferUI
 
 import GafferScene
+import GafferSceneUI
 
 Gaffer.Metadata.registerNode(
 
@@ -97,6 +98,8 @@ Gaffer.Metadata.registerNode(
 			"""
 			The paths to be added to or removed from the set.
 			""",
+
+			"ui:scene:acceptsPaths", True,
 
 		],
 
@@ -189,3 +192,15 @@ def __setsPopupMenu( menuDefinition, plugValueWidget ) :
 
 __setsPopupMenuConnection = GafferUI.PlugValueWidget.popupMenuSignal().connect( __setsPopupMenu )
 
+##########################################################################
+# Gadgets
+##########################################################################
+
+def __nodeGadget( node ) :
+
+	nodeGadget = GafferUI.StandardNodeGadget( node )
+	GafferSceneUI.PathFilterUI.addObjectDropTarget( nodeGadget )
+
+	return nodeGadget
+
+GafferUI.NodeGadget.registerNodeGadget( GafferScene.Set, __nodeGadget )
