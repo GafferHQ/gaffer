@@ -87,26 +87,12 @@ Gaffer.Metadata.registerNode(
 			"nodule:type", "",
 			"ui:scene:acceptsPaths", True,
 
+			"vectorDataPlugValueWidget:dragPointer", "objects",
+
 		],
 
 	}
 
-)
-
-##########################################################################
-# Widgets
-##########################################################################
-
-def __pathsPlugWidgetCreator( plug ) :
-
-	result = GafferUI.VectorDataPlugValueWidget( plug )
-	result.vectorDataWidget().setDragPointer( "objects" )
-	return result
-
-GafferUI.PlugValueWidget.registerCreator(
-	GafferScene.PathFilter,
-	"paths",
-	__pathsPlugWidgetCreator,
 )
 
 ##########################################################################
