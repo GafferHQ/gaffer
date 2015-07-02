@@ -49,8 +49,8 @@ class ScenePlugTest( unittest.TestCase ) :
 
 		p = GafferScene.ScenePlug()
 
-		self.failUnless( p.isInstanceOf( Gaffer.CompoundPlug.staticTypeId() ) )
-		self.assertEqual( IECore.RunTimeTyped.baseTypeId( p.typeId() ), Gaffer.CompoundPlug.staticTypeId() )
+		self.failUnless( p.isInstanceOf( Gaffer.ValuePlug.staticTypeId() ) )
+		self.assertEqual( IECore.RunTimeTyped.baseTypeId( p.typeId() ), Gaffer.ValuePlug.staticTypeId() )
 
 	def testDynamicSerialisation( self ) :
 
