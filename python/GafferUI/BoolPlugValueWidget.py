@@ -40,8 +40,9 @@ from __future__ import with_statement
 import Gaffer
 import GafferUI
 
-QtGui = GafferUI._qtImport( "QtGui" )
-
+## Supported plug metadata :
+#
+# - "boolPlugValueWidget:displayMode", with a value of "checkBox" or "switch"
 class BoolPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plug, displayMode=GafferUI.BoolWidget.DisplayMode.CheckBox, **kw ) :
@@ -64,9 +65,14 @@ class BoolPlugValueWidget( GafferUI.PlugValueWidget ) :
 	def _updateFromPlug( self ) :
 
 		if self.getPlug() is not None :
+
 			with self.getContext() :
 				with Gaffer.BlockedConnection( self.__stateChangedConnection ) :
 					self.__boolWidget.setState( self.getPlug().getValue() )
+
+			displayMode = Gaffer.Metadata.plugValue( self.getPlug(), "boolPlugValueWidget:displayMode" )
+			if displayMode is not None :
+				self.__boolWidget.setDisplayMode( self.__boolWidget.DisplayMode.Switch if displayMode == "switch" else self.__boolWidget.DisplayMode.CheckBox )
 
 		self.__boolWidget.setEnabled( self._editable() )
 
