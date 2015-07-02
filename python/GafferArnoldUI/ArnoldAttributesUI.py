@@ -248,14 +248,10 @@ Gaffer.Metadata.registerNode(
 			"preset:Edge Length", "edge_length",
 			"preset:Flatness", "flatness",
 
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
 		],
 
 	}
 
-)
-
-GafferUI.PlugValueWidget.registerCreator(
-	GafferArnold.ArnoldAttributes,
-	"attributes.subdivAdaptiveMetric.value",
-	GafferUI.PresetsPlugValueWidget
 )
