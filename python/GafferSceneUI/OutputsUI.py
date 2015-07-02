@@ -200,7 +200,7 @@ class _ChildPlugWidget( GafferUI.PlugValueWidget ) :
 				GafferUI.PlugWidget( self.__fileNamePlug() )
 				GafferUI.PlugWidget( childPlug["type"] )
 				GafferUI.PlugWidget( childPlug["data"] )
-				GafferUI.CompoundDataPlugValueWidget( childPlug["parameters"], collapsed=None )
+				GafferUI.CompoundDataPlugValueWidget( childPlug["parameters"] )
 
 				GafferUI.Divider( GafferUI.Divider.Orientation.Horizontal )
 

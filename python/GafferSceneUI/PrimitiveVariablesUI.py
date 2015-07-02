@@ -52,5 +52,3 @@ as children of this plug via the user interface, or using the CompoundDataPlug A
 python.""",
 
 )
-
-GafferUI.PlugValueWidget.registerCreator( GafferScene.PrimitiveVariables, "primitiveVariables", GafferUI.CompoundDataPlugValueWidget, collapsed=None )

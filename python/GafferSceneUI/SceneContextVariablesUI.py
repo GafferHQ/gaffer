@@ -62,5 +62,3 @@ Gaffer.Metadata.registerNode(
 	}
 
 )
-
-GafferUI.PlugValueWidget.registerCreator( GafferScene.SceneContextVariables, "variables", GafferUI.CompoundDataPlugValueWidget, collapsed=None )

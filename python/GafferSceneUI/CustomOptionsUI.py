@@ -38,25 +38,35 @@ import Gaffer
 import GafferUI
 import GafferScene
 
-Gaffer.Metadata.registerNodeDescription(
+Gaffer.Metadata.registerNode(
 
-GafferScene.CustomOptions,
+	GafferScene.CustomOptions,
 
-"""Applies arbitrary user-defined options to the root of the scene. Note
-that for most common cases the StandardOptions, OpenGLOptions, RenderManOptions,
-and ArnoldOptions nodes should be used in preference - they provide predefined
-sets of options with customised user interfaces. The CustomOptions node is of most use when
-needing to set a custom option not supported by the specialised nodes.
-""",
+	"description",
 
-"options",
-"""The options to be applied - arbitrary numbers of user defined options may be added
-as children of this plug via the user interface, or using the CompoundDataPlug API via
-python.""",
+	"""
+	Applies arbitrary user-defined options to the root of the scene. Note
+	that for most common cases the StandardOptions, OpenGLOptions, RenderManOptions,
+	and ArnoldOptions nodes should be used in preference - they provide predefined
+	sets of options with customised user interfaces. The CustomOptions node is of most use when
+	needing to set a custom option not supported by the specialised nodes.
+	""",
 
+	plugs = {
+
+		"options" : [
+
+			"description",
+			"""
+			The options to be applied - arbitrary numbers of user defined options may be added
+			as children of this plug via the user interface, or using the CompoundDataPlug API via
+			python.
+			""",
+
+			"compoundDataPlugValueWidget:editable", True,
+
+		],
+
+	}
 
 )
-
-
-
-GafferUI.PlugValueWidget.registerCreator( GafferScene.CustomOptions, "options", GafferUI.CompoundDataPlugValueWidget, collapsed=None )
