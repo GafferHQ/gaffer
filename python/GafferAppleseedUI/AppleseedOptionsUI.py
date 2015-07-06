@@ -59,6 +59,18 @@ def __getDescriptionString( key, extraInfo = None ):
 	except:
 		return ""
 
+def __getShadingOverridesPresets():
+
+	modes = appleseed.SurfaceShader.get_input_metadata()['diagnostic_surface_shader']['mode']['items']
+	presets = ["preset:No Override", "no_override"]
+
+	for k in modes.keys():
+
+		presets.append( "preset:" + k)
+		presets.append( modes[k])
+
+	return presets
+
 def __mainSummary( plug ) :
 
 	info = []
@@ -268,6 +280,22 @@ Gaffer.Metadata.registerNode(
 			"preset:Obj", "obj",
 
 		],
+
+		"options.shadingOverride" : [
+
+			"description",
+			"""
+			Replaces all shaders in the scene by special
+			diagnostics shaders that can visualize uvs, normals, ...
+			Useful for debugging scenes.
+			""",
+
+			"layout:section", "Main",
+			"label", "Shading Override",
+
+		],
+
+		"options.shadingOverride.value" : __getShadingOverridesPresets(),
 
 		# Environment
 
@@ -621,6 +649,18 @@ Gaffer.Metadata.registerNode(
 
 GafferUI.PlugValueWidget.registerCreator(
 	GafferAppleseed.AppleseedOptions,
+	"options.sampler.value",
+	GafferUI.PresetsPlugValueWidget,
+)
+
+GafferUI.PlugValueWidget.registerCreator(
+	GafferAppleseed.AppleseedOptions,
+	"options.shadingOverride.value",
+	GafferUI.PresetsPlugValueWidget,
+)
+
+GafferUI.PlugValueWidget.registerCreator(
+	GafferAppleseed.AppleseedOptions,
 	"options.meshFileFormat.value",
 	GafferUI.PresetsPlugValueWidget,
 )
@@ -655,11 +695,5 @@ GafferUI.PlugValueWidget.registerCreator(
 GafferUI.PlugValueWidget.registerCreator(
 	GafferAppleseed.AppleseedOptions,
 	"options.tileOrdering.value",
-	GafferUI.PresetsPlugValueWidget,
-)
-
-GafferUI.PlugValueWidget.registerCreator(
-	GafferAppleseed.AppleseedOptions,
-	"options.sampler.value",
 	GafferUI.PresetsPlugValueWidget,
 )
