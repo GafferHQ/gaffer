@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import os
+
 import IECore
 import Gaffer
 
@@ -53,6 +55,18 @@ class TextWriter( Gaffer.ExecutableNode ) :
 
 		context = Gaffer.Context.current()
 		fileName = context.substitute( self["fileName"].getValue() )
+
+		directory = os.path.dirname( fileName )
+		if directory :
+			try :
+				os.makedirs( directory )
+			except OSError :
+				# makedirs very unhelpfully raises an exception if
+				# the directory already exists, but it might also
+				# raise if it fails. we reraise only in the latter case.
+				if not os.path.isdir( directory ) :
+					raise
+
 		text = self.__processText( context )
 		with file( fileName, self["mode"].getValue() ) as f :
 			f.write( text )
