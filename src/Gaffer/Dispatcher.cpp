@@ -341,7 +341,10 @@ void Dispatcher::batchTasksWalk( Dispatcher::TaskBatchPtr parent, const Executab
 	}
 
 	ExecutableNode::Tasks taskRequirements;
-	task.node()->requirements( task.context(), taskRequirements );
+	{
+		Context::Scope scopedTaskContext( task.context() );
+		task.node()->requirements( task.context(), taskRequirements );
+	}
 
 	ancestors.insert( parent.get() );
 

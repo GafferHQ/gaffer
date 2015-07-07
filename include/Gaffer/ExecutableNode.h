@@ -107,12 +107,14 @@ class ExecutableNode : public Node
 		/// Fills requirements with all Tasks that must be completed before execute
 		/// can be called with the given context. The default implementation collects
 		/// the Tasks defined by the inputs of the requirementsPlug().
+		/// \todo Remove the context argument and use the current context instead.
 		virtual void requirements( const Context *context, Tasks &requirements ) const;
 
 		/// Returns a hash that uniquely represents the side effects (e.g. files created)
 		/// of calling execute with the given context. Derived nodes should call the base
 		/// implementation and append to the returned hash. Nodes can indicate that they
 		/// don't cause side effects for the given context by returning a default hash.
+		/// \todo Remove the context argument and use the current context instead.
 		virtual IECore::MurmurHash hash( const Context *context ) const = 0;
 
 		/// Executes this node using the current Context.
