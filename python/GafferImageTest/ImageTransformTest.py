@@ -252,6 +252,13 @@ class ImageTransformTest( unittest.TestCase ) :
 		self.assertEqual( t["out"]["metadata"].getValue(), c["out"]["metadata"].getValue() )
 		self.assertEqual( t["out"]["channelNames"].getValue(), c["out"]["channelNames"].getValue() )
 
+	def testCopyPaste( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["t"] = GafferImage.ImageTransform()
+
+		script.execute( script.serialise( filter = Gaffer.StandardSet( [ script["t"] ] ) ) )
+
 if __name__ == "__main__":
 	unittest.main()
 
