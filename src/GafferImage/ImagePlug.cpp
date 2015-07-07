@@ -108,17 +108,16 @@ class CopyTiles
 						
 						Box2i tileBound( V2i( tileOriginX, tileOriginY ), V2i( tileOriginX + m_tileSize - 1, tileOriginY + m_tileSize - 1 ) );
 						Box2i b = boxIntersection( tileBound, operationWindow );
-
+						size_t tileStrideSize = sizeof(float) * ( b.size().x + 1 );
+						
 						ConstFloatVectorDataPtr tileData = m_channelDataPlug->getValue();
+						const float *tileDataBegin = &(tileData->readable()[0]);
 
 						for( int y = b.min.y; y<=b.max.y; y++ )
 						{
-							const float *tilePtr = &(tileData->readable()[0]) + (y - tileOriginY) * m_tileSize + (b.min.x - tileOriginX);
+							const float *tilePtr = tileDataBegin + (y - tileOriginY) * m_tileSize + (b.min.x - tileOriginX);
 							float *channelPtr = channelBegin + ( m_dataWindow.size().y - ( y - m_dataWindow.min.y ) ) * imageStride + (b.min.x - m_dataWindow.min.x);
-							for( int x = b.min.x; x <= b.max.x; x++ )
-							{
-								*channelPtr++ = *tilePtr++;
-							}
+							std::memcpy( channelPtr, tilePtr, tileStrideSize );
 						}
 					}
 				}
