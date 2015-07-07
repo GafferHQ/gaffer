@@ -85,7 +85,7 @@ class CopyTiles
 				m_tileSize( tileSize )
 		{}
 
-		void operator()( const blocked_range2d<size_t>& r ) const
+		void operator()( const blocked_range3d<size_t>& r ) const
 		{
 			ContextPtr context = new Context( *m_parentContext, Context::Borrowed );
 			Context::Scope scope( context.get() );
@@ -95,10 +95,10 @@ class CopyTiles
 			V2i maxTileOrigin = ImagePlug::tileOrigin( operationWindow.max );
 			size_t imageStride = m_dataWindow.size().x + 1;
 			
-			for( vector<string>::const_iterator it = m_channelNames.begin(), eIt = m_channelNames.end(); it != eIt; it++ )
+			for( size_t channelIndex = r.pages().begin(); channelIndex < r.pages().end(); ++channelIndex )
 			{
-				context->set( ImagePlug::channelNameContextName, *it );
-				float *channelBegin = m_imageChannelData[ it - m_channelNames.begin() ];
+				context->set( ImagePlug::channelNameContextName, m_channelNames[channelIndex] );
+				float *channelBegin = m_imageChannelData[channelIndex];
 				
 				for( int tileOriginY = minTileOrigin.y; tileOriginY <= maxTileOrigin.y; tileOriginY += m_tileSize )
 				{
@@ -359,7 +359,7 @@ IECore::ImagePrimitivePtr ImagePlug::image() const
 		imageChannelData.push_back( &(c[0]) );
 	}
 
-	parallel_for( blocked_range2d<size_t>( 0, dataWindow.size().x+1, tileSize(), 0, dataWindow.size().y+1, tileSize() ),
+	parallel_for( blocked_range3d<size_t>( 0, imageChannelData.size(), 1, 0, dataWindow.size().x+1, tileSize(), 0, dataWindow.size().y+1, tileSize() ),
 		      GafferImage::Detail::CopyTiles( imageChannelData, channelNames, channelDataPlug(), dataWindow, Context::current(), tileSize()) );
 
 	return result;
