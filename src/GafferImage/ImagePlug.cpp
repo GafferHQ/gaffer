@@ -87,21 +87,25 @@ class CopyTiles
 
 		void operator()( const blocked_range2d<size_t>& r ) const
 		{
-			ContextPtr context = new Context( *m_parentContext );
+			ContextPtr context = new Context( *m_parentContext, Context::Borrowed );
+			Context::Scope scope( context.get() );
+			
 			const Box2i operationWindow( V2i( r.rows().begin()+m_dataWindow.min.x, r.cols().begin()+m_dataWindow.min.y ), V2i( r.rows().end()+m_dataWindow.min.x-1, r.cols().end()+m_dataWindow.min.y-1 ) );
 			V2i minTileOrigin = ImagePlug::tileOrigin( operationWindow.min );
 			V2i maxTileOrigin = ImagePlug::tileOrigin( operationWindow.max );
 			size_t imageStride = m_dataWindow.size().x + 1;
-
-			for( int tileOriginY = minTileOrigin.y; tileOriginY <= maxTileOrigin.y; tileOriginY += m_tileSize )
+			
+			for( vector<string>::const_iterator it = m_channelNames.begin(), eIt = m_channelNames.end(); it != eIt; it++ )
 			{
-				for( int tileOriginX = minTileOrigin.x; tileOriginX <= maxTileOrigin.x; tileOriginX += m_tileSize )
+				context->set( ImagePlug::channelNameContextName, *it );
+				float *channelBegin = m_imageChannelData[ it - m_channelNames.begin() ];
+				
+				for( int tileOriginY = minTileOrigin.y; tileOriginY <= maxTileOrigin.y; tileOriginY += m_tileSize )
 				{
-					for( vector<string>::const_iterator it = m_channelNames.begin(), eIt = m_channelNames.end(); it != eIt; it++ )
+					for( int tileOriginX = minTileOrigin.x; tileOriginX <= maxTileOrigin.x; tileOriginX += m_tileSize )
 					{
-						context->set( ImagePlug::channelNameContextName, *it );
 						context->set( ImagePlug::tileOriginContextName, V2i( tileOriginX, tileOriginY ) );
-						Context::Scope scope( context.get() );
+						
 						Box2i tileBound( V2i( tileOriginX, tileOriginY ), V2i( tileOriginX + m_tileSize - 1, tileOriginY + m_tileSize - 1 ) );
 						Box2i b = boxIntersection( tileBound, operationWindow );
 
@@ -110,7 +114,7 @@ class CopyTiles
 						for( int y = b.min.y; y<=b.max.y; y++ )
 						{
 							const float *tilePtr = &(tileData->readable()[0]) + (y - tileOriginY) * m_tileSize + (b.min.x - tileOriginX);
-							float *channelPtr = m_imageChannelData[it-m_channelNames.begin()] + ( m_dataWindow.size().y - ( y - m_dataWindow.min.y ) ) * imageStride + (b.min.x - m_dataWindow.min.x);
+							float *channelPtr = channelBegin + ( m_dataWindow.size().y - ( y - m_dataWindow.min.y ) ) * imageStride + (b.min.x - m_dataWindow.min.x);
 							for( int x = b.min.x; x <= b.max.x; x++ )
 							{
 								*channelPtr++ = *tilePtr++;
