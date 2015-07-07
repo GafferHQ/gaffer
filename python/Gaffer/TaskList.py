@@ -34,9 +34,6 @@
 #
 ##########################################################################
 
-import os
-import subprocess32 as subprocess
-
 import IECore
 
 import Gaffer
