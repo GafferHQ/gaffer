@@ -160,9 +160,9 @@ void Implementation::affects( const Gaffer::Plug *input, AffectedPlugsContainer 
 	{
 		outputs.push_back( outPlug()->dataWindowPlug() );
 	}
-	else if( input == inPlug()->channelNamesPlug() )
+	else if( input == inPlug()->channelDataPlug() )
 	{
-		outputs.push_back( outPlug()->channelNamesPlug() );
+		outputs.push_back( outPlug()->channelDataPlug() );
 	}
 	else if ( input == outputFormatPlug() )
 	{

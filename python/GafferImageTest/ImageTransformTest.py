@@ -259,6 +259,17 @@ class ImageTransformTest( unittest.TestCase ) :
 
 		script.execute( script.serialise( filter = Gaffer.StandardSet( [ script["t"] ] ) ) )
 
+	def testAffects( self ) :
+
+		c = GafferImage.Constant()
+		t = GafferImage.ImageTransform()
+		t["in"].setInput( c["out"] )
+
+		cs = GafferTest.CapturingSlot( t.plugDirtiedSignal() )
+		c["color"]["r"].setValue( .25 )
+
+		self.assertTrue( t["out"]["channelData"] in set( s[0] for s in cs ) )
+
 if __name__ == "__main__":
 	unittest.main()
 
