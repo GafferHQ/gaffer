@@ -107,6 +107,7 @@ from ComputeNodeTest import ComputeNodeTest
 from BoxPlugTest import BoxPlugTest
 from BoxTest import BoxTest
 from OutputRedirectionTest import OutputRedirectionTest
+from CountingExecutableNode import CountingExecutableNode
 from ExecutableNodeTest import ExecutableNodeTest
 from DispatcherTest import DispatcherTest
 from TextWriter import TextWriter
