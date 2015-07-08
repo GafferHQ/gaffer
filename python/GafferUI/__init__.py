@@ -284,6 +284,7 @@ import SwitchUI
 import ContextVariablesUI
 import TimeWarpUI
 import LoopUI
+import WedgeUI
 
 # backwards compatibility
 ## \todo Remove me
