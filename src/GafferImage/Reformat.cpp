@@ -102,21 +102,21 @@ void Reformat::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outpu
 	}
 }
 
-bool Reformat::enabled() const
-{
-	if ( !ImageProcessor::enabled() )
-	{
-		return false;
-	}
-
-	Format inFormat( inPlug()->formatPlug()->getValue() );
-	Format outFormat( formatPlug()->getValue() );
-
-	return inFormat != outFormat;
-}
-
 void Reformat::hashFormat( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
+	Format inFormat = inPlug()->formatPlug()->getValue();
+	Format format = formatPlug()->getValue();
+	if ( inFormat == format )
+	{
+		// early out because this is a no-op
+		// this seems like more work than just
+		// hashing the format every time, but we
+		// have test cases verifying that the
+		// hash is an identical pass-through.
+		h = inPlug()->formatPlug()->hash();
+		return;
+	}
+	
 	ImageProcessor::hashFormat( parent, context, h );
 	formatPlug()->hash( h );
 }
@@ -128,13 +128,19 @@ GafferImage::Format Reformat::computeFormat( const Gaffer::Context *context, con
 
 void Reformat::hashDataWindow( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
+	Format inFormat = inPlug()->formatPlug()->getValue();
+	Format format = formatPlug()->getValue();
+	if ( inFormat == format )
+	{
+		// early out because this is a no-op
+		h = inPlug()->dataWindowPlug()->hash();
+		return;
+	}
+	
 	ImageProcessor::hashDataWindow( parent, context, h );
 
-	Format format = formatPlug()->getValue();
 	h.append( format.getDisplayWindow() );
 	h.append( format.getPixelAspect() );
-
-	Format inFormat = inPlug()->formatPlug()->getValue();
 	h.append( inFormat.getDisplayWindow() );
 	h.append( inFormat.getPixelAspect() );
 
@@ -143,12 +149,20 @@ void Reformat::hashDataWindow( const GafferImage::ImagePlug *parent, const Gaffe
 
 Imath::Box2i Reformat::computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
+	Format format = formatPlug()->getValue();
+	Format inFormat = inPlug()->formatPlug()->getValue();
+	if ( inFormat == format )
+	{
+		// early out because this is a no-op
+		return inPlug()->dataWindowPlug()->getValue();
+	}
+	
 	// Work out the scale factor of the output image and scale the input data window.
-	Imath::V2d s( scale() );
+	Imath::V2d s = scale( inFormat, format );
 	Imath::Box2i inDataWindow( inPlug()->dataWindowPlug()->getValue() );
 
-	Imath::V2d inFormatOffset( inPlug()->formatPlug()->getValue().getDisplayWindow().min );
-	Imath::V2d outFormatOffset( formatPlug()->getValue().getDisplayWindow().min );
+	Imath::V2d inFormatOffset( inFormat.getDisplayWindow().min );
+	Imath::V2d outFormatOffset( format.getDisplayWindow().min );
 
 	Imath::Box2i outDataWindow(
 		Imath::V2i(
@@ -164,10 +178,8 @@ Imath::Box2i Reformat::computeDataWindow( const Gaffer::Context *context, const 
 	return outDataWindow;
 }
 
-Imath::V2d Reformat::scale() const
+Imath::V2d Reformat::scale( const Format &inFormat, const Format &outFormat ) const
 {
-	Format inFormat( inPlug()->formatPlug()->getValue() );
-	Format outFormat( formatPlug()->getValue() );
 	Imath::V2d inWH = Imath::V2d( inFormat.getDisplayWindow().size() ) + Imath::V2d(1.);
 	Imath::V2d outWH = Imath::V2d( outFormat.getDisplayWindow().size() ) + Imath::V2d(1.);
 	Imath::V2d scale( double( outWH.x ) / ( inWH.x ), double( outWH.y ) / inWH.y );
@@ -182,6 +194,15 @@ struct Contribution
 
 void Reformat::hashChannelData( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
+	Format inFormat = inPlug()->formatPlug()->getValue();
+	Format format = formatPlug()->getValue();
+	if ( inFormat == format )
+	{
+		// early out because this is a no-op
+		h = inPlug()->channelDataPlug()->hash();
+		return;
+	}
+	
 	ImageProcessor::hashChannelData( parent, context, h );
 
 	inPlug()->channelDataPlug()->hash( h );
@@ -189,26 +210,31 @@ void Reformat::hashChannelData( const GafferImage::ImagePlug *parent, const Gaff
 
 	h.append( inPlug()->dataWindowPlug()->getValue() );
 
-	Format format = formatPlug()->getValue();
 	h.append( format.getDisplayWindow() );
 	h.append( format.getPixelAspect() );
-
-	Format inFormat = inPlug()->formatPlug()->getValue();
 	h.append( inFormat.getDisplayWindow() );
 	h.append( inFormat.getPixelAspect() );
 }
 
 IECore::ConstFloatVectorDataPtr Reformat::computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const
 {
+	Format format = formatPlug()->getValue();
+	Format inFormat = inPlug()->formatPlug()->getValue();
+	if ( inFormat == format )
+	{
+		// early out because this is a no-op
+		return inPlug()->channelDataPlug()->getValue();
+	}
+	
 	// Allocate the new tile
 	FloatVectorDataPtr outDataPtr = new FloatVectorData;
 	std::vector<float> &out = outDataPtr->writable();
 	out.resize( ImagePlug::tileSize() * ImagePlug::tileSize() );
 
 	// Create some useful variables...
-	Imath::V2f scaleFactor( scale() );
-	Imath::V2d inFormatOffset( inPlug()->formatPlug()->getValue().getDisplayWindow().min );
-	Imath::V2d outFormatOffset( formatPlug()->getValue().getDisplayWindow().min );
+	Imath::V2f scaleFactor( scale( inFormat, format ) );
+	Imath::V2d inFormatOffset( inFormat.getDisplayWindow().min );
+	Imath::V2d outFormatOffset( format.getDisplayWindow().min );
 
 	Imath::Box2i outTile( tileOrigin, Imath::V2i( tileOrigin.x + ImagePlug::tileSize() - 1, tileOrigin.y + ImagePlug::tileSize() - 1 ) );
 
