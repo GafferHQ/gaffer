@@ -53,6 +53,7 @@ from OutputRedirection import OutputRedirection
 from LocalDispatcher import LocalDispatcher
 from SystemCommand import SystemCommand
 from TaskList import TaskList
+from Wedge import Wedge
 import NodeAlgo
 
 __import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "Gaffer" )

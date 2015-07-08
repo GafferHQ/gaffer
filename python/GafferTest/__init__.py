@@ -133,6 +133,7 @@ from ApplicationTest import ApplicationTest
 from LeafPathFilterTest import LeafPathFilterTest
 from MatchPatternPathFilterTest import MatchPatternPathFilterTest
 from LoopTest import LoopTest
+from WedgeTest import WedgeTest
 
 if __name__ == "__main__":
 	import unittest
