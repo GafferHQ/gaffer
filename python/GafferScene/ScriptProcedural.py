@@ -72,6 +72,17 @@ class ScriptProcedural( IECore.ParameterisedProcedural ) :
 					defaultValue = 1,
 				),
 
+				IECore.StringVectorParameter(
+					name = "context",
+					description = "Additional context entries to be used during rendering.",
+					defaultValue = IECore.StringVectorData( [] ),
+					userData = {
+						"parser" : {
+							"acceptFlags" : IECore.BoolData( True ),
+						},
+					},
+				),
+
 			]
 
 		)
@@ -130,6 +141,10 @@ class ScriptProcedural( IECore.ParameterisedProcedural ) :
 
 		context = Gaffer.Context( self.__scriptNode.context() )
 		context.setFrame( args["frame"].value )
+
+		for i in range( 0, len(args["context"]), 2 ) :
+			entry = args["context"][i].lstrip( "-" )
+			context[entry] = eval( args["context"][i+1] )
 
 		return node["out"], context
 
