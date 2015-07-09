@@ -91,9 +91,7 @@ class Wedge( Gaffer.ExecutableNode ) :
 		self["ints"] = Gaffer.IntVectorDataPlug( defaultValue = IECore.IntVectorData() )
 		self["strings"] = Gaffer.StringVectorDataPlug( defaultValue = IECore.StringVectorData() )
 
-	def requirements( self, context ) :
-
-		# get the values for the wedge variable
+	def values( self ) :
 
 		mode = self.Mode( self["mode"].getValue() )
 		if mode in ( self.Mode.FloatRange, self.Mode.IntRange ) :
@@ -126,7 +124,7 @@ class Wedge( Gaffer.ExecutableNode ) :
 
 			spline = self["ramp"].getValue()
 			steps = self["colorSteps"].getValue()
-			values = [ IECore.Color3fData( spline( i / float( steps - 1 ) ) ) for i in range( 0, steps ) ]
+			values = [ spline( i / float( steps - 1 ) ) for i in range( 0, steps ) ]
 
 		elif mode == self.Mode.FloatList :
 
@@ -140,13 +138,17 @@ class Wedge( Gaffer.ExecutableNode ) :
 
 			values = self["strings"].getValue()
 
+		return values
+
+	def requirements( self, context ) :
+
 		# make a context for each of the wedge values
 
 		variable = self["variable"].getValue()
 		indexVariable = self["indexVariable"].getValue()
 
 		contexts = []
-		for index, value in enumerate( values ) :
+		for index, value in enumerate( self.values() ) :
 			contexts.append( Gaffer.Context( context ) )
 			contexts[-1][variable] = value
 			contexts[-1][indexVariable] = index
