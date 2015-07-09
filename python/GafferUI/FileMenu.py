@@ -100,6 +100,7 @@ def __open( currentScript, fileName ) :
 
 	addRecentFile( application, fileName )
 
+	removeCurrentScript = False
 	if not currentScript["fileName"].getValue() and not currentScript["unsavedChanges"].getValue() :
 		# the current script is empty - the user will think of the operation as loading
 		# the new script into the current window, rather than adding a new window. so make it
@@ -109,11 +110,7 @@ def __open( currentScript, fileName ) :
 		## \todo We probably want a way of querying and setting geometry in the public API
 		newWindow._qtWidget().restoreGeometry( currentWindow._qtWidget().saveGeometry() )
 		currentWindow.setVisible( False )
-
-		# We must defer the removal of the old script because otherwise we trigger a crash bug
-		# in PySide - I think this is because the menu item that invokes us is a child of
-		# currentWindow, and that will get deleted immediately when the script is removed.
-		GafferUI.EventLoop.addIdleCallback( IECore.curry( __removeScript, application, currentScript ) )
+		removeCurrentScript = True
 
 	if sum( [ messageWidget.messageCount( level ) for level in ( IECore.Msg.Level.Error, IECore.Msg.Level.Warning ) ] ) :
 		dialogue = GafferUI.Dialogue( "Errors Occurred During Loading" )
@@ -121,6 +118,12 @@ def __open( currentScript, fileName ) :
 		dialogue._setWidget( messageWidget )
 		dialogue._addButton( "Oy vey" )
 		dialogue.waitForButton( parentWindow=GafferUI.ScriptWindow.acquire( currentScript ) )
+
+	# We must defer the removal of the old script because otherwise we trigger a crash bug
+	# in PySide - I think this is because the menu item that invokes us is a child of
+	# currentWindow, and that will get deleted immediately when the script is removed.
+	if removeCurrentScript :
+		GafferUI.EventLoop.addIdleCallback( IECore.curry( __removeScript, application, currentScript ) )
 
 def __removeScript( application, script ) :
 
