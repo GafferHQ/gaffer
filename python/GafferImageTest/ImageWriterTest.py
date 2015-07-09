@@ -229,9 +229,8 @@ class ImageWriterTest( unittest.TestCase ) :
 			w["in"].setInput( c["out"] )
 			w["fileName"].setValue( testFile )
 
-			# Execute
-			with Gaffer.Context() :
-				w.execute()
+			w.execute()
+			
 			self.failUnless( os.path.exists( testFile ) )
 			i = IECore.Reader.create( testFile ).read()
 			i.blindData().clear()

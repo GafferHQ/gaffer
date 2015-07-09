@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2012-2015, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -61,7 +61,7 @@ Format FormatPlug::getValue( const IECore::MurmurHash *precomputedHash ) const
 		throw IECore::Exception( "FormatPlug::getObjectValue() didn't return FormatData - is the hash being computed correctly?" );
 	}
 	Format result = d->readable();
-	if( result.getDisplayWindow().isEmpty() && inCompute() )
+	if( direction() == Plug::In && result.getDisplayWindow().isEmpty() && inCompute() )
 	{
 		return Context::current()->get<Format>( Format::defaultFormatContextName, Format() );
 	}
@@ -71,40 +71,32 @@ Format FormatPlug::getValue( const IECore::MurmurHash *precomputedHash ) const
 template<>
 IECore::MurmurHash FormatPlug::hash() const
 {
-	IECore::MurmurHash result;
-
-	if( direction()==Plug::In && !getInput<ValuePlug>() )
+	const FormatPlug *p = source<FormatPlug>();
+	
+	if( p->direction() == Plug::In )
 	{
-		Format v = getValue();
+		IECore::ConstObjectPtr o = p->getObjectValue();
+		const GafferImage::FormatData *d = IECore::runTimeCast<const GafferImage::FormatData>( o.get() );
+		if( !d )
+		{
+			throw IECore::Exception( "FormatPlug::getObjectValue() didn't return FormatData - is the hash being computed correctly?" );
+		}
+		
+		Format v = d->readable();
 		if( v.getDisplayWindow().isEmpty() )
 		{
-			const Gaffer::Node *n( node() );
-			if( n )
-			{
-				const Gaffer::ScriptNode *s( n->scriptNode() );
-				if ( s )
-				{
-					const GafferImage::FormatPlug *p( s->getChild<FormatPlug>( GafferImage::Format::defaultFormatPlugName ) );
-					if ( p )
-					{
-						v = p->getValue();
-					}
-				}
-			}
+			v = Context::current()->get<Format>( Format::defaultFormatContextName, Format() );
 		}
 
-		result.append( v.getDisplayWindow().min );
-		result.append( v.getDisplayWindow().max );
+		IECore::MurmurHash result;
+		result.append( v.getDisplayWindow() );
 		result.append( v.getPixelAspect() );
+		return result;
 	}
-	else
-	{
-		result = ValuePlug::hash();
-	}
-
-	return result;
-} // namespace Gaffer
+	
+	return p->ValuePlug::hash();
+}
 
 template class TypedPlug<GafferImage::Format>;
 
-}
+} // namespace Gaffer
