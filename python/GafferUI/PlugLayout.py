@@ -53,6 +53,7 @@ QtGui = GafferUI._qtImport( "QtGui" )
 #	- "layout:section" places the plug in a named section of the layout
 #	- "divider" specifies whether or not a plug should be followed by a divider
 #	- "layout:activator" the name of an activator to control editability
+#	- "layout:visibilityActivator" the name of an activator to control visibility
 #
 # Per-parent metadata support :
 #
@@ -297,17 +298,22 @@ class PlugLayout( GafferUI.Widget ) :
 		activators = Gaffer.Metadata.nodeValue( self.__node(), "layout:activators" ) or {}
 		activators = { k : v.value for k, v in activators.items() } # convert CompoundData of BoolData to dict of booleans
 
-		for item, widget in self.__widgets.items() :
-			active = True
-			activatorName = self.__itemMetadataValue( item, "activator" )
-			if activatorName :
-				active = activators.get( activatorName )
-				if active is None :
-					active = Gaffer.Metadata.nodeValue( self.__node(), "layout:activator:" + activatorName )
-					active = active if active is not None else False
-					activators[activatorName] = active
+		def active( activatorName ) :
 
-			self.__applyReadOnly( widget, not active )
+			result = True
+			if activatorName :
+				result = activators.get( activatorName )
+				if result is None :
+					result = Gaffer.Metadata.nodeValue( self.__node(), "layout:activator:" + activatorName )
+					result = result if result is not None else False
+					activators[activatorName] = result
+
+			return result
+
+		for item, widget in self.__widgets.items() :
+			self.__applyReadOnly( widget, not active( self.__itemMetadataValue( item, "activator" ) ) )
+			if widget is not None :
+				widget.setVisible( active( self.__itemMetadataValue( item, "visibilityActivator" ) ) )
 
 	def __updateSummariesWalk( self, section ) :
 
