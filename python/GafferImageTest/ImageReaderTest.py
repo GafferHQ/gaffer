@@ -166,7 +166,7 @@ class ImageReaderTest( unittest.TestCase ) :
 		# OIIO, so doing any caching on top of that would be wasteful.
 		self.failIf( t1.isSame( t2 ) )
 
-	def testNonexistentFile( self ) :
+	def testUnspecifiedFilename( self ) :
 
 		n = GafferImage.ImageReader()
 		n["out"]["channelNames"].getValue()
@@ -264,25 +264,33 @@ class ImageReaderTest( unittest.TestCase ) :
 	def testFileRefresh( self ) :
 		
 		testFile = self.__testDir + "/refresh.exr"
+		shutil.copyfile( self.fileName, testFile )
+		
 		reader = GafferImage.ImageReader()
 		reader["fileName"].setValue( testFile )
-		dataWindow = reader["out"]["dataWindow"].getValue()
-		
-		shutil.copyfile( self.fileName, testFile )
-		# the default image is cached
-		self.assertEqual( dataWindow, reader["out"]["dataWindow"].getValue() )
+		image1 = reader["out"].image()
+
+		# even though we've change the image on disk, gaffer will
+		# still have the old one in its cache.
+		shutil.copyfile( self.offsetDataWindowFileName, testFile )
+		self.assertEqual( reader["out"].image(), image1 )
+
 		# until we force a refresh
 		reader["refreshCount"].setValue( reader["refreshCount"].getValue() + 1 )
-		newDataWindow = reader["out"]["dataWindow"].getValue()
-		self.assertNotEqual( dataWindow, newDataWindow )
-		
-		shutil.copyfile( self.circlesExrFileName, testFile )
-		# the old file is cached
-		self.assertEqual( newDataWindow, reader["out"]["dataWindow"].getValue() )
-		# until we force a refresh
-		reader["refreshCount"].setValue( reader["refreshCount"].getValue() + 1 )
-		self.assertNotEqual( newDataWindow, reader["out"]["dataWindow"].getValue() )
+		self.assertNotEqual( reader["out"].image(), image1 )
 	
+	def testNonexistentFiles( self ) :
+
+		reader = GafferImage.ImageReader()
+		reader["fileName"].setValue( "wellIDontExist.exr" )
+
+		self.assertRaisesRegexp( RuntimeError, ".*wellIDontExist.exr.*", reader["out"].image )
+		self.assertRaisesRegexp( RuntimeError, ".*wellIDontExist.exr.*", reader["out"]["format"].getValue )
+		self.assertRaisesRegexp( RuntimeError, ".*wellIDontExist.exr.*", reader["out"]["dataWindow"].getValue )
+		self.assertRaisesRegexp( RuntimeError, ".*wellIDontExist.exr.*", reader["out"]["metadata"].getValue )
+		self.assertRaisesRegexp( RuntimeError, ".*wellIDontExist.exr.*", reader["out"]["channelNames"].getValue )
+		self.assertRaisesRegexp( RuntimeError, ".*wellIDontExist.exr.*", reader["out"].channelData, "R", IECore.V2i( 0 ) )
+
 	def setUp( self ) :
 		
 		os.mkdir( self.__testDir )

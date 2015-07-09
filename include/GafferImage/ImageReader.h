@@ -75,7 +75,6 @@ class ImageReader : public ImageNode
 		const Gaffer::IntPlug *refreshCountPlug() const;
 		
 		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
-		virtual bool enabled() const;
 
 		static size_t supportedExtensions( std::vector<std::string> &extensions );
 

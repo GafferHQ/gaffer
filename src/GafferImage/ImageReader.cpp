@@ -62,8 +62,11 @@ using namespace Gaffer;
 // The OIIO image cache is designed for exactly this scenario.
 //////////////////////////////////////////////////////////////////////////
 
+namespace
+{
+
 spin_rw_mutex g_imageCacheMutex;
-static ImageCache *imageCache()
+ImageCache *imageCache()
 {
 	spin_rw_mutex::scoped_lock lock( g_imageCacheMutex, false );
 	static ImageCache *cache = 0;
@@ -85,6 +88,26 @@ static ImageCache *imageCache()
 	}
 	return cache;
 }
+
+// Returns the OIIO ImageSpec for the given filename in the current
+// context. Throws if the file is invalid, and returns NULL if
+// the filename is empty.
+const ImageSpec *imageSpec( ustring fileName )
+{
+	if( fileName.empty() )
+	{
+		return NULL;
+	}
+	ImageCache *cache = imageCache();
+	const ImageSpec *spec = cache->imagespec( ustring( fileName.c_str() ) );
+	if( !spec )
+	{
+		throw( IECore::Exception( cache->geterror() ) );
+	}
+	return spec;
+}
+
+} // namespace
 
 //////////////////////////////////////////////////////////////////////////
 // Utility for converting OIIO::TypeDesc types to IECore::Data types.
@@ -313,28 +336,6 @@ const Gaffer::IntPlug *ImageReader::refreshCountPlug() const
 	return getChild<IntPlug>( g_firstPlugIndex + 1 );
 }
 
-bool ImageReader::enabled() const
-{
-	std::string fileName = fileNamePlug()->getValue();
-	
-	/// \todo We get the spec here, and then we go and get it again in the
-	/// hash()/compute() functions if we turn out to be enabled. This overhead
-	/// is a fundamental problem with the whole enabled() mechanism - we should
-	/// stop using it, and just deal with missing files in the various methods
-	/// that try to access them.
-	/// \todo This is swallowing errors when we should be reporting them via
-	/// exceptions. Fix it.
-	const ImageSpec *spec = imageCache()->imagespec( ustring( fileName.c_str() ) );
-	if( spec == 0 )
-	{
-		// clear error on failure to prevent error buffer overflow crash.
-		imageCache()->geterror();
-		return false;
-	}
-	
-	return ImageNode::enabled();
-}
-
 size_t ImageReader::supportedExtensions( std::vector<std::string> &extensions )
 {
 	std::string attr;
@@ -381,8 +382,11 @@ void ImageReader::hashFormat( const GafferImage::ImagePlug *output, const Gaffer
 
 GafferImage::Format ImageReader::computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
-	std::string fileName = fileNamePlug()->getValue();
-	const ImageSpec *spec = imageCache()->imagespec( ustring( fileName.c_str() ) );
+	const ImageSpec *spec = imageSpec( ustring( fileNamePlug()->getValue() ) );
+	if( !spec )
+	{
+		return context->get<Format>( Format::defaultFormatContextName, Format() );
+	}
 
 	return GafferImage::Format(
 		Imath::Box2i(
@@ -402,8 +406,11 @@ void ImageReader::hashDataWindow( const GafferImage::ImagePlug *output, const Ga
 
 Imath::Box2i ImageReader::computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
-	std::string fileName = fileNamePlug()->getValue();
-	const ImageSpec *spec = imageCache()->imagespec( ustring( fileName.c_str() ) );
+	const ImageSpec *spec = imageSpec( ustring( fileNamePlug()->getValue() ) );
+	if( !spec )
+	{
+		return Box2i();
+	}
 
 	Format format( Imath::Box2i( Imath::V2i( spec->full_x, spec->full_y ), Imath::V2i( spec->full_width + spec->full_x - 1, spec->full_height + spec->full_y - 1 ) ) );
 	Imath::Box2i dataWindow( Imath::V2i( spec->x, spec->y ), Imath::V2i( spec->width + spec->x - 1, spec->height + spec->y - 1 ) );
@@ -420,8 +427,11 @@ void ImageReader::hashMetadata( const GafferImage::ImagePlug *output, const Gaff
 
 IECore::ConstCompoundObjectPtr ImageReader::computeMetadata( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
-	std::string fileName = fileNamePlug()->getValue();
-	const ImageSpec *spec = imageCache()->imagespec( ustring( fileName.c_str() ) );
+	const ImageSpec *spec = imageSpec( ustring( fileNamePlug()->getValue() ) );
+	if( !spec )
+	{
+		return parent->metadataPlug()->defaultValue();
+	}
 	
 	CompoundObjectPtr result = new CompoundObject;
 	oiioParameterListToMetadata( spec->extra_attribs, result.get() );
@@ -438,8 +448,12 @@ void ImageReader::hashChannelNames( const GafferImage::ImagePlug *output, const 
 
 IECore::ConstStringVectorDataPtr ImageReader::computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
-	std::string fileName = fileNamePlug()->getValue();
-	const ImageSpec *spec = imageCache()->imagespec( ustring( fileName.c_str() ) );
+	const ImageSpec *spec = imageSpec( ustring( fileNamePlug()->getValue() ) );
+	if( !spec )
+	{
+		return parent->channelNamesPlug()->defaultValue();
+	}
+
 	StringVectorDataPtr result = new StringVectorData();
 	result->writable() = spec->channelnames;
 	return result;
@@ -456,9 +470,12 @@ void ImageReader::hashChannelData( const GafferImage::ImagePlug *output, const G
 
 IECore::ConstFloatVectorDataPtr ImageReader::computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const
 {
-	std::string fileName = fileNamePlug()->getValue();
-	ustring uFileName( fileName.c_str() );
-	const ImageSpec *spec = imageCache()->imagespec( uFileName );
+	ustring fileName( fileNamePlug()->getValue() );
+	const ImageSpec *spec = imageSpec( fileName );
+	if( !spec )
+	{
+		return parent->channelDataPlug()->defaultValue();
+	}
 
 	vector<string>::const_iterator channelIt = find( spec->channelnames.begin(), spec->channelnames.end(), channelName );
 	if( channelIt == spec->channelnames.end() )
@@ -474,7 +491,7 @@ IECore::ConstFloatVectorDataPtr ImageReader::computeChannelData( const std::stri
 	std::vector<float> channelData( ImagePlug::tileSize() * ImagePlug::tileSize() );
 	size_t channelIndex = channelIt - spec->channelnames.begin();
 	imageCache()->get_pixels(
-		uFileName,
+		fileName,
 		0, 0, // subimage, miplevel
 		tileOrigin.x, tileOrigin.x + ImagePlug::tileSize(),
 		newY, newY + ImagePlug::tileSize(),

@@ -52,7 +52,7 @@ using namespace GafferImage;
 IE_CORE_DEFINERUNTIMETYPED( ImageTransform );
 
 //////////////////////////////////////////////////////////////////////////
-// Implementation of ImageTransform::Implementation
+// Internal implementation details
 //////////////////////////////////////////////////////////////////////////
 
 namespace GafferImage
@@ -160,9 +160,9 @@ void Implementation::affects( const Gaffer::Plug *input, AffectedPlugsContainer 
 	{
 		outputs.push_back( outPlug()->dataWindowPlug() );
 	}
-	else if( input == inPlug()->channelNamesPlug() )
+	else if( input == inPlug()->channelDataPlug() )
 	{
-		outputs.push_back( outPlug()->channelNamesPlug() );
+		outputs.push_back( outPlug()->channelDataPlug() );
 	}
 	else if ( input == outputFormatPlug() )
 	{
@@ -351,9 +351,9 @@ Imath::Box2i Implementation::transformBox( const Imath::M33f &m, const Imath::Bo
 	return Imath::Box2i( Imath::V2i( minX, minY ), Imath::V2i( maxX-1, maxY-1 ) );
 }
 
-}; // namespace Detail
+} // namespace Detail
 
-}; // namespace GafferImage
+} // namespace GafferImage
 
 //////////////////////////////////////////////////////////////////////////
 // Implementation of ImageTransform
@@ -374,19 +374,16 @@ ImageTransform::ImageTransform( const std::string &name )
 	addChild( new GafferImage::FormatPlug( "__scaledFormat", Gaffer::Plug::Out ) );
 
 	// Create the internal implementation of our transform and connect it up the our plugs.
-	GafferImage::Reformat *r = new GafferImage::Reformat( std::string( boost::str( boost::format( "__%sReformat" )  % name  ) ) );
+	GafferImage::Reformat *r = new GafferImage::Reformat( "__reformat" );
 	r->inPlug()->setInput( inPlug() );
 	r->filterPlug()->setInput( filterPlug );
 	r->formatPlug()->setInput( formatPlug() );
 	r->enabledPlug()->setInput( enabledPlug() );
 	addChild( r );
 
-	GafferImage::Detail::Implementation *t = new GafferImage::Detail::Implementation( std::string( boost::str( boost::format( "__%sImplementation" )  % name  ) ) );
+	Detail::Implementation *t = new Detail::Implementation( "__implementation" );
 	t->inPlug()->setInput( r->outPlug() );
-	t->transformPlug()->pivotPlug()->setInput( transformPlug()->pivotPlug() );
-	t->transformPlug()->scalePlug()->setInput( transformPlug()->scalePlug() );
-	t->transformPlug()->rotatePlug()->setInput( transformPlug()->rotatePlug() );
-	t->transformPlug()->translatePlug()->setInput( transformPlug()->translatePlug() );
+	t->transformPlug()->setInput( transformPlug() );
 	t->outputFormatPlug()->setInput( inPlug()->formatPlug() );
 	t->filterPlug()->setInput( filterPlug );
 	t->enabledPlug()->setInput( enabledPlug() );
