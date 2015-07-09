@@ -713,8 +713,8 @@ class RenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		visibleStats = GafferImage.ImageStats()
 		visibleStats["in"].setInput( visible["out"] )
 
-		self.assertTrue( hiddenStats["average"].getValue()[0] < 0.05 )
-		self.assertTrue( visibleStats["average"].getValue()[0] > .35 )
+		self.assertLess( hiddenStats["average"].getValue()[0], 0.05 )
+		self.assertGreater( visibleStats["average"].getValue()[0], .35 )
 
 	def setUp( self ) :
 
