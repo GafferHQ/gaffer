@@ -41,12 +41,31 @@
 
 #include "GafferBindings/ReferenceBinding.h"
 #include "GafferBindings/NodeBinding.h"
+#include "GafferBindings/ExceptionAlgo.h"
+#include "GafferBindings/SignalBinding.h"
 
 using namespace boost::python;
 using namespace Gaffer;
+using namespace GafferBindings;
 
-namespace GafferBindings
+namespace
 {
+
+struct ReferenceLoadedSlotCaller
+{
+	boost::signals::detail::unusable operator()( boost::python::object slot, ReferencePtr r )
+	{
+		try
+		{
+			slot( r );
+		}
+		catch( const error_already_set &e )
+		{
+			translatePythonException();
+		}
+		return boost::signals::detail::unusable();
+	}
+};
 
 class ReferenceSerialiser : public NodeSerialiser
 {
@@ -55,7 +74,7 @@ class ReferenceSerialiser : public NodeSerialiser
 	{
 		const Reference *r = static_cast<const Reference *>( graphComponent );
 
-		const std::string fileName = r->fileNamePlug()->getValue();
+		const std::string &fileName = r->fileName();
 		if( fileName.empty() )
 		{
 			return "";
@@ -66,14 +85,18 @@ class ReferenceSerialiser : public NodeSerialiser
 
 };
 
-void bindReference()
+} // namespace
+
+void GafferBindings::bindReference()
 {
 	NodeClass<Reference>()
 		.def( "load", &Reference::load )
+		.def( "fileName", &Reference::fileName, return_value_policy<copy_const_reference>() )
+		.def( "referenceLoadedSignal", &Reference::referenceLoadedSignal, return_internal_reference<1>() )
 	;
+
+	SignalClass<Reference::ReferenceLoadedSignal, DefaultSignalCaller<Reference::ReferenceLoadedSignal>, ReferenceLoadedSlotCaller >( "ReferenceLoadedSignal" );
 
 	Serialisation::registerSerialiser( Reference::staticTypeId(), new ReferenceSerialiser );
 
 }
-
-} // namespace GafferBindings

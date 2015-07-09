@@ -35,6 +35,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/algorithm/string/predicate.hpp"
+#include "boost/bind.hpp"
 
 #include "IECore/Exception.h"
 #include "IECore/MessageHandler.h"
@@ -50,27 +51,13 @@ using namespace Gaffer;
 
 IE_CORE_DEFINERUNTIMETYPED( Reference );
 
-size_t Reference::g_firstPlugIndex = 0;
-
 Reference::Reference( const std::string &name )
 	:	SubGraph( name )
 {
-	storeIndexOfNextChild( g_firstPlugIndex );
-	addChild( new StringPlug( "fileName", Plug::In, "", Plug::Default & ~Plug::AcceptsInputs ) );
 }
 
 Reference::~Reference()
 {
-}
-
-StringPlug *Reference::fileNamePlug()
-{
-	return getChild<StringPlug>( g_firstPlugIndex );
-}
-
-const StringPlug *Reference::fileNamePlug() const
-{
-	return getChild<StringPlug>( g_firstPlugIndex );
 }
 
 void Reference::load( const std::string &fileName )
@@ -80,6 +67,32 @@ void Reference::load( const std::string &fileName )
 	{
 		throw IECore::Exception( "Reference::load called without ScriptNode" );
 	}
+
+	Action::enact(
+		this,
+		boost::bind( &Reference::loadInternal, ReferencePtr( this ), fileName ),
+		boost::bind( &Reference::loadInternal, ReferencePtr( this ), m_fileName )
+	);
+}
+
+const std::string &Reference::fileName() const
+{
+	return m_fileName;
+}
+
+Reference::ReferenceLoadedSignal &Reference::referenceLoadedSignal()
+{
+	return m_referenceLoadedSignal;
+}
+
+void Reference::loadInternal( const std::string &fileName )
+{
+	ScriptNode *script = scriptNode();
+
+	// Disable undo for the actions we perform, because we ourselves
+	// are undoable anyway and will take care of everything as a whole
+	// when we are undone.
+	UndoContext undoDisabler( script, UndoContext::Disabled );
 
 	// if we're doing a reload, then we want to maintain any values and
 	// connections that our external plugs might have. but we also need to
@@ -124,8 +137,11 @@ void Reference::load( const std::string &fileName )
 	// the case where ScriptNode::load( continueOnError = true ) will ignore the
 	// exception that we throw.
 
-	const bool errors = script->executeFile( fileName, this, /* continueOnError = */ true );
-	fileNamePlug()->setValue( fileName );
+	bool errors = false;
+	if( !fileName.empty() )
+	{
+		errors = script->executeFile( fileName, this, /* continueOnError = */ true );
+	}
 
 	// figure out what version of gaffer was used to save the reference. prior to
 	// version 0.9.0.0, references could contain setValue() calls for promoted plugs,
@@ -208,10 +224,14 @@ void Reference::load( const std::string &fileName )
 		}
 	}
 
+	m_fileName = fileName;
+	referenceLoadedSignal()( this );
+
 	if( errors )
 	{
 		throw Exception( boost::str( boost::format( "Error loading reference \"%s\"" ) % fileName ) );
 	}
+
 }
 
 bool Reference::isReferencePlug( const Plug *plug ) const
@@ -243,9 +263,9 @@ bool Reference::isReferencePlug( const Plug *plug ) const
 		return false;
 	}
 	
-	// we know these two don't come from a reference,
-	// because they're made during construction.
-	if( plug == fileNamePlug() || plug == userPlug() )
+	// we know this doesn't come from a reference,
+	// because it's made during construction.
+	if( plug == userPlug() )
 	{
 		return false;
 	}
