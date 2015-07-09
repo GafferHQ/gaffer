@@ -405,21 +405,10 @@ class NodeGraph( GafferUI.EditorWidget ) :
 		# save/restore the current framing so jumping in
 		# and out of Boxes isn't a confusing experience.
 
-		def __framePlug( node, createIfMissing = False ) :
+		Gaffer.Metadata.registerNodeValue( previousRoot, "ui:nodeGraph:framing", self.__currentFrame(), persistent = False )
 
-			plugName = "__nodeGraphFraming%d" % id( self )
-			result = node.getChild( plugName )
-			if result is None and createIfMissing :
-				result = Gaffer.Box2fPlug( plugName, flags = Gaffer.Plug.Flags.Default & ( ~Gaffer.Plug.Flags.Serialisable ) )
-				node.addChild( result )
-
-			return result
-
-		__framePlug( previousRoot, True ).setValue( self.__currentFrame() )
-
-		newFramePlug = __framePlug( self.graphGadget().getRoot() )
-		if newFramePlug is not None :
-			frame = newFramePlug.getValue()
+		frame = Gaffer.Metadata.nodeValue( self.graphGadget().getRoot(), "ui:nodeGraph:framing" )
+		if frame is not None :
 			self.graphGadgetWidget().getViewportGadget().frame(
 				IECore.Box3f( IECore.V3f( frame.min.x, frame.min.y, 0 ), IECore.V3f( frame.max.x, frame.max.y, 0 ) )
 			)
