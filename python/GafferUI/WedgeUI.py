@@ -126,7 +126,7 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"nodule:type", "",
-			"layout:activator", "modeIsFloatRange",
+			"layout:visibilityActivator", "modeIsFloatRange",
 
 		],
 
@@ -140,7 +140,7 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"nodule:type", "",
-			"layout:activator", "modeIsFloatRange",
+			"layout:visibilityActivator", "modeIsFloatRange",
 
 		],
 
@@ -158,7 +158,7 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"nodule:type", "",
-			"layout:activator", "modeIsFloatRange",
+			"layout:visibilityActivator", "modeIsFloatRange",
 
 		],
 
@@ -174,7 +174,7 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"nodule:type", "",
-			"layout:activator", "modeIsIntRange",
+			"layout:visibilityActivator", "modeIsIntRange",
 
 		],
 
@@ -188,7 +188,7 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"nodule:type", "",
-			"layout:activator", "modeIsIntRange",
+			"layout:visibilityActivator", "modeIsIntRange",
 
 		],
 
@@ -206,7 +206,7 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"nodule:type", "",
-			"layout:activator", "modeIsIntRange",
+			"layout:visibilityActivator", "modeIsIntRange",
 
 		],
 
@@ -222,7 +222,7 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"nodule:type", "",
-			"layout:activator", "modeIsColorRange",
+			"layout:visibilityActivator", "modeIsColorRange",
 
 		],
 
@@ -238,7 +238,7 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"nodule:type", "",
-			"layout:activator", "modeIsColorRange",
+			"layout:visibilityActivator", "modeIsColorRange",
 
 		],
 
@@ -253,7 +253,7 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"nodule:type", "",
-			"layout:activator", "modeIsFloatList",
+			"layout:visibilityActivator", "modeIsFloatList",
 
 		],
 
@@ -266,7 +266,7 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"nodule:type", "",
-			"layout:activator", "modeIsIntList",
+			"layout:visibilityActivator", "modeIsIntList",
 
 		],
 
@@ -279,7 +279,7 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"nodule:type", "",
-			"layout:activator", "modeIsStringList",
+			"layout:visibilityActivator", "modeIsStringList",
 
 		],
 
