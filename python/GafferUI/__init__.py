@@ -254,7 +254,6 @@ from DispatcherUI import DispatcherWindow
 import LocalDispatcherUI
 import ExecutableNodeUI
 from IncrementingPlugValueWidget import IncrementingPlugValueWidget
-from SectionedCompoundPlugValueWidget import SectionedCompoundPlugValueWidget
 from UserPlugValueWidget import UserPlugValueWidget
 import PreferencesUI
 from SplinePlugValueWidget import SplinePlugValueWidget
