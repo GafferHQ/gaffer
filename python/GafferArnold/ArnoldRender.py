@@ -92,31 +92,41 @@ class ArnoldRender( GafferScene.ExecutableRender ) :
 
 	def _outputWorldProcedural( self, scenePlug, renderer ) :
 
-		import arnold
-
-		node = arnold.AiNode( "procedural" )
-		arnold.AiNodeSetStr( node, "dso", "ieProcedural.so" )
-
-		arnold.AiNodeSetPnt( node, "min", -1e30, -1e30, -1e30 )
-		arnold.AiNodeSetPnt( node, "max", 1e30, 1e30, 1e30 )
-
-		arnold.AiNodeDeclare( node, "className", "constant STRING" )
-		arnold.AiNodeDeclare( node, "classVersion", "constant INT" )
-		arnold.AiNodeDeclare( node, "parameterValues", "constant ARRAY STRING" )
-
-		arnold.AiNodeSetStr( node, "className", "gaffer/script" )
-		arnold.AiNodeSetInt( node, "classVersion", 1 )
-
+		# Create the ScriptProcedural that we want to load at render time.
 		scriptNode = scenePlug.node().scriptNode()
-		parameterValues = [
-			"-fileName", scriptNode["fileName"].getValue(),
-			"-node", scenePlug.node().relativeName( scriptNode ),
-			"-frame", str( Gaffer.Context.current().getFrame() ),
-		]
-		stringArray = arnold.AiArrayAllocate( len( parameterValues ), 1, arnold.AI_TYPE_STRING )
-		for i in range( 0, len( parameterValues ) ) :
-			arnold.AiArraySetStr( stringArray, i, parameterValues[i] )
-		arnold.AiNodeSetArray( node, "parameterValues", stringArray )
+		scriptContext = scriptNode.context()
+		currentContext = Gaffer.Context.current()
+
+		procedural = GafferScene.ScriptProcedural()
+		procedural["fileName"].setTypedValue( scriptNode["fileName"].getValue() )
+		procedural["node"].setTypedValue( scenePlug.node().relativeName( scriptNode ) )
+		procedural["frame"].setNumericValue( currentContext.getFrame() )
+
+		contextArgs = IECore.StringVectorData()
+		for entry in [ k for k in currentContext.keys() if k != "frame" and not k.startswith( "ui:" ) ] :
+			if entry not in scriptContext.keys() or currentContext[entry] != scriptContext[entry] :
+				contextArgs.extend( [
+					"-" + entry,
+					 repr( currentContext[entry] )
+				] )
+
+		procedural["context"].setValue( contextArgs )
+
+		# Output an ExternalProcedural that will load the ScriptProcedural.
+
+		externalProcedural = IECore.Renderer.ExternalProcedural(
+			"ieProcedural.so",
+			IECore.Box3f( IECore.V3f( -1e30 ), IECore.V3f( 1e30 ) ),
+			{
+				"className" : "gaffer/script",
+				"classVersion" : 1,
+				"parameterValues" : IECore.StringVectorData(
+					IECore.ParameterParser().serialise( procedural.parameters(), procedural.parameters().getValue() )
+				)
+			}
+		)
+
+		renderer.procedural( externalProcedural )
 
 	def _command( self ) :
 
