@@ -90,7 +90,7 @@ class RenderManRender( GafferScene.ExecutableRender ) :
 
 	def _outputWorldProcedural( self, scenePlug, renderer ) :
 
-		# enable all visibility types - maybe this is something which'll
+		# Enable all visibility types - maybe this is something which'll
 		# get dealt with using attributes at the root level at some point.
 		renderer.setAttribute( "ri:visibility:camera", IECore.BoolData( True ) )
 		renderer.setAttribute( "ri:visibility:transmission", IECore.BoolData( True ) )
@@ -98,23 +98,36 @@ class RenderManRender( GafferScene.ExecutableRender ) :
 		renderer.setAttribute( "ri:visibility:specular", IECore.BoolData( True ) )
 		renderer.setAttribute( "ri:visibility:photon", IECore.BoolData( True ) )
 
+		# Create the ScriptProcedural that we want to load at render time.
 		scriptNode = scenePlug.node().scriptNode()
+		scriptContext = scriptNode.context()
+		currentContext = Gaffer.Context.current()
 
-		pythonString = "IECoreRI.executeProcedural( 'gaffer/script', 1, [ '-fileName', '%s', '-node', '%s', '-frame', '%f' ] )" % (
-			scriptNode["fileName"].getValue(),
-			scenePlug.node().relativeName( scriptNode ),
-			Gaffer.Context.current().getFrame()
-		)
+		procedural = GafferScene.ScriptProcedural()
+		procedural["fileName"].setTypedValue( scriptNode["fileName"].getValue() )
+		procedural["node"].setTypedValue( scenePlug.node().relativeName( scriptNode ) )
+		procedural["frame"].setNumericValue( currentContext.getFrame() )
 
-		dynamicLoadCommand = "Procedural \"DynamicLoad\" [ \"iePython\" \"%s\" ] [ -1e30 1e30 -1e30 1e30 -1e30 1e30 ]\n" % pythonString
+		contextArgs = IECore.StringVectorData()
+		for entry in [ k for k in currentContext.keys() if k != "frame" and not k.startswith( "ui:" ) ] :
+			if entry not in scriptContext.keys() or currentContext[entry] != scriptContext[entry] :
+				contextArgs.extend( [
+					"-" + entry,
+					 repr( currentContext[entry] )
+				] )
 
-		renderer.command(
-			"ri:archiveRecord",
+		procedural["context"].setValue( contextArgs )
+
+		# Output an ExternalProcedural that will load the ScriptProcedural.
+		pythonString = "IECoreRI.executeProcedural( \"gaffer/script\", 1, %s )" % str( IECore.ParameterParser().serialise( procedural.parameters(), procedural.parameters().getValue() ) )
+		externalProcedural = IECore.Renderer.ExternalProcedural(
+			"iePython",
+			IECore.Box3f( IECore.V3f( -1e30 ), IECore.V3f( 1e30 ) ),
 			{
-				"type" : "verbatim",
-				"record" : dynamicLoadCommand
+				"ri:data" : pythonString,
 			}
 		)
+		renderer.procedural( externalProcedural )
 
 	def _command( self ) :
 
