@@ -63,6 +63,9 @@ class RenderManLight : public GafferScene::Light
 
 	private :
 
+		Gaffer::StringPlug *shaderNamePlug();
+		const Gaffer::StringPlug *shaderNamePlug() const;
+
 		static size_t g_firstPlugIndex;
 
 };
