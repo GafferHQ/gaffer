@@ -48,6 +48,7 @@ MetadataProcessor::MetadataProcessor( const std::string &name )
 	:	ImageProcessor( name )
 {
 	// Direct pass-through for the things we don't ever change.
+	outPlug()->formatPlug()->setInput( inPlug()->formatPlug() );
 	outPlug()->dataWindowPlug()->setInput( inPlug()->dataWindowPlug() );
 	outPlug()->channelNamesPlug()->setInput( inPlug()->channelNamesPlug() );
 	outPlug()->channelDataPlug()->setInput( inPlug()->channelDataPlug() );
@@ -65,16 +66,6 @@ void MetadataProcessor::affects( const Gaffer::Plug *input, AffectedPlugsContain
 	{
 		outputs.push_back( outPlug()->metadataPlug() );
 	}
-}
-
-void MetadataProcessor::hashFormat( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
-{
-	h = inPlug()->formatPlug()->hash();
-}
-
-GafferImage::Format MetadataProcessor::computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const
-{
-	return inPlug()->formatPlug()->getValue();
 }
 
 void MetadataProcessor::hashMetadata( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const

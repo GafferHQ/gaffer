@@ -70,12 +70,6 @@ class ChannelDataProcessor : public ImageProcessor
 		/// This implementation queries whether or not the requested channel is masked by the channelMaskPlug().
 		virtual bool channelEnabled( const std::string &channel ) const;
 
-		// Reimplemented to assign directly from the input. Format cannot be a direct connection
-		// because it needs to update when the default format changes.
-		/// \todo: make this a direct pass-through once FormatPlug supports it.
-		virtual void hashFormat( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual GafferImage::Format computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const;
-		
 		/// Implemented to initialize the output tile and then call processChannelData()
 		/// All other ImagePlug children are passed through via direct connection to the input values.
 		virtual IECore::ConstFloatVectorDataPtr computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const;

@@ -102,12 +102,6 @@ class Merge : public ImageProcessor
 		/// Reimplementated to check that at least two of the inputs are connected
 		virtual bool enabled() const;
 		
-		// Reimplemented to assign directly from the first input. Format cannot be a direct connection
-		// because it needs to update when the default format changes.
-		/// \todo: make this a direct pass-through once FormatPlug supports it.
-		virtual void hashFormat( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual GafferImage::Format computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const;
-		
 		/// Reimplemented to hash the connected input plugs
 		virtual void hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual void hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;

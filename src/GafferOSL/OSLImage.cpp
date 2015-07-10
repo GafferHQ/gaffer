@@ -74,6 +74,7 @@ OSLImage::OSLImage( const std::string &name )
 	outPlug()->channelDataPlug()->setFlags( Plug::Cacheable, false );
 	
 	// We don't ever want to change these, so we make pass-through connections.
+	outPlug()->formatPlug()->setInput( inPlug()->formatPlug() );
 	outPlug()->dataWindowPlug()->setInput( inPlug()->dataWindowPlug() );
 	outPlug()->metadataPlug()->setInput( inPlug()->metadataPlug() );
 }
@@ -186,16 +187,6 @@ void OSLImage::compute( Gaffer::ValuePlug *output, const Gaffer::Context *contex
 	}
 
 	ImageProcessor::compute( output, context );
-}
-
-void OSLImage::hashFormat( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
-{
-	h = inPlug()->formatPlug()->hash();
-}
-
-GafferImage::Format OSLImage::computeFormat( const Gaffer::Context *context, const GafferImage::ImagePlug *parent ) const
-{
-	return inPlug()->formatPlug()->getValue();
 }
 
 void OSLImage::hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const

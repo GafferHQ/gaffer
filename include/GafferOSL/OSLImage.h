@@ -72,12 +72,6 @@ class OSLImage : public GafferImage::ImageProcessor
 		virtual Imath::Box2i computeDataWindow( const Gaffer::Context *context, const GafferImage::ImagePlug *parent ) const;
 		virtual IECore::ConstCompoundObjectPtr computeMetadata( const Gaffer::Context *context, const GafferImage::ImagePlug *parent ) const;
 
-		// Reimplemented to assign directly from the input. Format cannot be a direct connection
-		// because it needs to update when the default format changes.
-		/// \todo: make this a direct pass-through once FormatPlug supports it.
-		virtual void hashFormat( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual GafferImage::Format computeFormat( const Gaffer::Context *context, const GafferImage::ImagePlug *parent ) const;
-		
 		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual void hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual void hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
