@@ -65,6 +65,9 @@ class AppleseedLight : public GafferScene::Light
 
 	private :
 
+		Gaffer::StringPlug *modelPlug();
+		const Gaffer::StringPlug *modelPlug() const;
+
 		void setupPlugs( const std::string &shaderName, const foundation::DictionaryArray &metadata );
 
 		static size_t g_firstPlugIndex;
