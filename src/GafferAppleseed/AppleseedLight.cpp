@@ -92,7 +92,7 @@ void AppleseedLight::loadShader( const std::string &shaderName )
 	}
 
 	setupPlugs( shaderName, metadata );
-	getChild<StringPlug>( "__model" )->setValue( shaderName );
+	modelPlug()->setValue( shaderName );
 }
 
 void AppleseedLight::hashLight( const Gaffer::Context *context, IECore::MurmurHash &h ) const
@@ -101,17 +101,27 @@ void AppleseedLight::hashLight( const Gaffer::Context *context, IECore::MurmurHa
 	{
 		(*it)->hash( h );
 	}
-	getChild<StringPlug>( "__model" )->hash( h );
+	modelPlug()->hash( h );
 }
 
 IECore::LightPtr AppleseedLight::computeLight( const Gaffer::Context *context ) const
 {
-	IECore::LightPtr result = new IECore::Light( getChild<StringPlug>( "__model" )->getValue() );
+	IECore::LightPtr result = new IECore::Light( "as:" + modelPlug()->getValue() );
 	for( InputValuePlugIterator it( parametersPlug() ); it!=it.end(); it++ )
 	{
 		result->parameters()[(*it)->getName()] = CompoundDataPlug::extractDataFromPlug( it->get() );
 	}
 	return result;
+}
+
+Gaffer::StringPlug *AppleseedLight::modelPlug()
+{
+	return getChild<StringPlug>( g_firstPlugIndex );
+}
+
+const Gaffer::StringPlug *AppleseedLight::modelPlug() const
+{
+	return getChild<StringPlug>( g_firstPlugIndex );
 }
 
 void AppleseedLight::setupPlugs( const std::string &shaderName, const asf::DictionaryArray &metadata )

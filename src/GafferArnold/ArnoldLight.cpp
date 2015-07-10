@@ -77,7 +77,7 @@ void ArnoldLight::loadShader( const std::string &shaderName )
 
 	ParameterHandler::setupPlugs( shader, parametersPlug() );
 
-	getChild<StringPlug>( "__shaderName" )->setValue( shaderName );
+	shaderNamePlug()->setValue( shaderName );
 }
 
 void ArnoldLight::hashLight( const Gaffer::Context *context, IECore::MurmurHash &h ) const
@@ -86,15 +86,25 @@ void ArnoldLight::hashLight( const Gaffer::Context *context, IECore::MurmurHash 
 	{
 		(*it)->hash( h );
 	}
-	getChild<StringPlug>( "__shaderName" )->hash( h );
+	shaderNamePlug()->hash( h );
 }
 
 IECore::LightPtr ArnoldLight::computeLight( const Gaffer::Context *context ) const
 {
-	IECore::LightPtr result = new IECore::Light( getChild<StringPlug>( "__shaderName" )->getValue() );
+	IECore::LightPtr result = new IECore::Light( "ai:" + shaderNamePlug()->getValue() );
 	for( InputValuePlugIterator it( parametersPlug() ); it!=it.end(); it++ )
 	{
 		result->parameters()[(*it)->getName()] = CompoundDataPlug::extractDataFromPlug( it->get() );
 	}
 	return result;
+}
+
+Gaffer::StringPlug *ArnoldLight::shaderNamePlug()
+{
+	return getChild<StringPlug>( g_firstPlugIndex );
+}
+
+const Gaffer::StringPlug *ArnoldLight::shaderNamePlug() const
+{
+	return getChild<StringPlug>( g_firstPlugIndex );
 }
