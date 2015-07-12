@@ -1496,6 +1496,11 @@ class __ObjectSection( Section ) :
 		with self._mainColumn() :
 
 			DiffColumn(
+				self.__LightInspector(),
+				label = "Light"
+			)
+
+			DiffColumn(
 				self.__TopologyInspector(),
 				label = "Topology"
 			)
@@ -1530,6 +1535,40 @@ class __ObjectSection( Section ) :
 			return typeNames[0] if typeNames[0] != "None" else ""
 		else :
 			return " / ".join( typeNames )
+
+	class __LightInspector( Inspector ) :
+
+		def __init__( self, property = None ) :
+
+			Inspector.__init__( self )
+
+			self.__property = property
+
+		def name( self ) :
+
+			return self.__property
+
+		def __call__( self, target ) :
+
+			if target.path is None :
+				return None
+
+			object = target.object()
+			if not isinstance( object, IECore.Light ) :
+				return None
+
+			if self.__property is not None :
+				return getattr( object, self.__property )
+			else :
+				return None
+
+		def children( self, target ) :
+
+			object = target.object()
+			if not isinstance( object, IECore.Light ) :
+				return []
+
+			return [ self.__class__( "name" ) ]
 
 	class __TopologyInspector( Inspector ) :
 
