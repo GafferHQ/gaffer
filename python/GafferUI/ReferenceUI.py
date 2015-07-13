@@ -56,21 +56,7 @@ Gaffer.Metadata.registerNode(
 	node and then export it for referencing.
 	""",
 
-	plugs = {
-
-		"fileName" : (
-
-			"description",
-			"""
-			The external script referenced by this node.
-			""",
-
-			"layout:section", "",
-			"nodule:type", "",
-
-		),
-
-	}
+	"layout:customWidget:fileName:widgetType", "GafferUI.ReferenceUI._FileNameWidget"
 
 )
 
@@ -98,22 +84,25 @@ def nodeMenuCreateCommand( menu ) :
 	return node
 
 ##########################################################################
-# PlugValueWidget for the filename - this forms the header for the node ui.
+# Custom widget for the filename - this forms the header for the node ui.
 ##########################################################################
 
-class __FileNamePlugValueWidget( GafferUI.PlugValueWidget ) :
+class _FileNameWidget( GafferUI.Widget ) :
 
-	def __init__( self, plug, **kw ) :
+	def __init__( self, node, **kw ) :
 
 		row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
 
-		GafferUI.PlugValueWidget.__init__( self, row, plug, **kw )
+		GafferUI.Widget.__init__( self, row, **kw )
+
+		self.__node = node
 
 		with row :
 
-			self.__label = GafferUI.Label( "" )
+			label = GafferUI.Label( "File", horizontalAlignment = GafferUI.Label.HorizontalAlignment.Right )
+			label._qtWidget().setFixedWidth( GafferUI.PlugWidget.labelWidth() )
 
-			GafferUI.Spacer( IECore.V2i( 1, 30 ), parenting = { "expand" : True } )
+			self.__textWidget = GafferUI.TextWidget( node.fileName(), editable = False )
 
 			loadButton = GafferUI.Button( image = "pathChooser.png", hasFrame=False )
 			loadButton.setToolTip( "Load" )
@@ -123,42 +112,25 @@ class __FileNamePlugValueWidget( GafferUI.PlugValueWidget ) :
 			self.__reloadButton.setToolTip( "Reload" )
 			self.__reloadButtonClickedConnection = self.__reloadButton.clickedSignal().connect( Gaffer.WeakMethod( self.__reloadClicked ) )
 
-		self._updateFromPlug()
-
-	def hasLabel( self ) :
-
-		return True
-
-	def _updateFromPlug( self ) :
-
-		with self.getContext() :
-
-			fileName = self.getPlug().getValue()
-			self.__label.setText( "<h4>Filename : <small>" + fileName + "</small></h4>" )
-
-			self.__reloadButton.setEnabled( True if fileName != "" else False )
+		self.__referenceLoadedConnection = node.referenceLoadedSignal().connect( Gaffer.WeakMethod( self.__referenceLoaded ) )
 
 	def __loadClicked( self, button ) :
 
-		with self.getContext() :
-			fileName = self.getPlug().getValue()
-
-		fileName = _waitForFileName( fileName, parentWindow = self.ancestor( GafferUI.Window ) )
+		fileName = _waitForFileName( self.__node.fileName(), parentWindow = self.ancestor( GafferUI.Window ) )
 		if not fileName :
 			return
 
-		with Gaffer.UndoContext( self.getPlug().node().scriptNode() ) :
-			self.getPlug().node().load( fileName )
+		with Gaffer.UndoContext( self.__node.scriptNode() ) :
+			self.__node.load( fileName )
 
 	def __reloadClicked( self, button ) :
 
-		with Gaffer.UndoContext( self.getPlug().node().scriptNode() ) :
-			self.getPlug().node().load( self.getPlug().getValue() )
+		with Gaffer.UndoContext( self.__node.scriptNode() ) :
+			self.__node.load( self.__node.fileName() )
 
-GafferUI.PlugValueWidget.registerCreator( Gaffer.Reference, "fileName", __FileNamePlugValueWidget )
+	def __referenceLoaded( self, node ) :
 
-GafferUI.PlugValueWidget.registerCreator( Gaffer.Reference, re.compile( "in[0-9]*" ), None )
-GafferUI.PlugValueWidget.registerCreator( Gaffer.Reference, re.compile( "out[0-9]*" ), None )
+		self.__textWidget.setText( node.fileName() )
 
 ##########################################################################
 # Utilities
