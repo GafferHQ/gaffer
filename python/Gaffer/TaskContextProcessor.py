@@ -1,7 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2014, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,26 +34,48 @@
 #
 ##########################################################################
 
-from _Gaffer import *
-from About import About
-from Application import Application
-from WeakMethod import WeakMethod
-from BlockedConnection import BlockedConnection
-from FileNamePathFilter import FileNamePathFilter
-from UndoContext import UndoContext
-from Context import Context
-from InfoPathFilter import InfoPathFilter
-from LazyModule import lazyImport, LazyModule
-from DictPath import DictPath
-from PythonExpressionEngine import PythonExpressionEngine
-from SequencePath import SequencePath
-from GraphComponentPath import GraphComponentPath
-from OutputRedirection import OutputRedirection
-from LocalDispatcher import LocalDispatcher
-from SystemCommand import SystemCommand
-from TaskList import TaskList
-from TaskContextProcessor import TaskContextProcessor
-from Wedge import Wedge
-import NodeAlgo
+import IECore
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "Gaffer" )
+import Gaffer
+
+class TaskContextProcessor( Gaffer.ExecutableNode ) :
+
+	def __init__( self, name = "TaskContextProcessor" ) :
+
+		Gaffer.ExecutableNode.__init__( self, name )
+
+	def requirements( self, context ) :
+
+		contexts = self._processedContexts( context )
+		
+		result = []
+		for plug in self["requirements"] :
+
+			node = plug.source().node()
+			if node.isSame( self ) or not isinstance( node, Gaffer.ExecutableNode ):
+				continue
+
+			result.extend( [ self.Task( node, c ) for c in contexts ] )
+
+		return result
+
+	def hash( self, context ) :
+
+		# Our hash is empty to signify that we don't do
+		# anything in execute().
+		return IECore.MurmurHash()
+
+	def execute( self ) :
+
+		# We don't need to do anything here because our
+		# sole purpose is to manipulate the context
+		# in which our requirements are executed.
+		pass
+
+	## Must be implemented by derived classes to return
+	# a list of contexts to be used by upstream tasks.
+	def _processedContexts( self, context ) :
+
+		raise NotImplementedError
+
+IECore.registerRunTimeTyped( TaskContextProcessor, typeName = "Gaffer::TaskContextProcessor" )

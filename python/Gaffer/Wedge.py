@@ -40,13 +40,13 @@ import IECore
 
 import Gaffer
 
-class Wedge( Gaffer.ExecutableNode ) :
+class Wedge( Gaffer.TaskContextProcessor ) :
 
 	Mode = IECore.Enum.create( "FloatRange", "IntRange", "ColorRange", "FloatList", "IntList", "StringList" )
 
 	def __init__( self, name = "Wedge" ) :
 
-		Gaffer.ExecutableNode.__init__( self, name )
+		Gaffer.TaskContextProcessor.__init__( self, name )
 
 		self["variable"] = Gaffer.StringPlug( defaultValue = "wedge:value" )
 		self["indexVariable"] = Gaffer.StringPlug( defaultValue = "wedge:index" )
@@ -140,7 +140,7 @@ class Wedge( Gaffer.ExecutableNode ) :
 
 		return values
 
-	def requirements( self, context ) :
+	def _processedContexts( self, context ) :
 
 		# make a context for each of the wedge values
 
@@ -153,30 +153,6 @@ class Wedge( Gaffer.ExecutableNode ) :
 			contexts[-1][variable] = value
 			contexts[-1][indexVariable] = index
 
-		# request each input once for each of our contexts
-
-		result = []
-		for plug in self["requirements"] :
-
-			node = plug.source().node()
-			if node.isSame( self ) or not isinstance( node, Gaffer.ExecutableNode ):
-				continue
-
-			result.extend( [ self.Task( node, c ) for c in contexts ] )
-
-		return result
-
-	def hash( self, context ) :
-
-		# Our hash is empty to signify that we don't do
-		# anything in execute().
-		return IECore.MurmurHash()
-
-	def execute( self ) :
-
-		# We don't need to do anything here because our
-		# sole purpose is to manipulate the environment
-		# in which our requirements are executed.
-		pass
+		return contexts
 
 IECore.registerRunTimeTyped( Wedge, typeName = "Gaffer::Wedge" )
