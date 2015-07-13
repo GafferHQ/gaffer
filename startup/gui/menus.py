@@ -344,6 +344,7 @@ GafferCortexUI.ParameterisedHolderUI.appendParameterisedHolders(
 nodeMenu.append( "/Dispatch/System Command", Gaffer.SystemCommand, searchText = "SystemCommand" )
 nodeMenu.append( "/Dispatch/Task List", Gaffer.TaskList, searchText = "TaskList" )
 nodeMenu.append( "/Dispatch/Wedge", Gaffer.Wedge )
+nodeMenu.append( "/Dispatch/Variables", Gaffer.TaskContextVariables, searchText = "TaskContextVariables" )
 
 # Utility nodes
 
