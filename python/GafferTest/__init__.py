@@ -134,6 +134,7 @@ from LeafPathFilterTest import LeafPathFilterTest
 from MatchPatternPathFilterTest import MatchPatternPathFilterTest
 from LoopTest import LoopTest
 from WedgeTest import WedgeTest
+from TaskContextVariablesTest import TaskContextVariablesTest
 
 if __name__ == "__main__":
 	import unittest

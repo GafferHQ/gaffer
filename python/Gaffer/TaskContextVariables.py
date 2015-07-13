@@ -1,7 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2014, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,28 +34,26 @@
 #
 ##########################################################################
 
-from _Gaffer import *
-from About import About
-from Application import Application
-from WeakMethod import WeakMethod
-from BlockedConnection import BlockedConnection
-from FileNamePathFilter import FileNamePathFilter
-from UndoContext import UndoContext
-from Context import Context
-from InfoPathFilter import InfoPathFilter
-from LazyModule import lazyImport, LazyModule
-from DictPath import DictPath
-from PythonExpressionEngine import PythonExpressionEngine
-from SequencePath import SequencePath
-from GraphComponentPath import GraphComponentPath
-from OutputRedirection import OutputRedirection
-from LocalDispatcher import LocalDispatcher
-from SystemCommand import SystemCommand
-from TaskList import TaskList
-from TaskContextProcessor import TaskContextProcessor
-from Wedge import Wedge
-from TaskContextVariables import TaskContextVariables
+import IECore
 
-import NodeAlgo
+import Gaffer
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "Gaffer" )
+class TaskContextVariables( Gaffer.TaskContextProcessor ) :
+
+	def __init__( self, name = "TaskContextVariables" ) :
+
+		Gaffer.TaskContextProcessor.__init__( self, name )
+
+		self["variables"] = Gaffer.CompoundDataPlug()
+
+	def _processedContexts( self, context ) :
+
+		context = Gaffer.Context( context )
+		for variable in self["variables"].values() :
+			data, name = self["variables"].memberDataAndName( variable )
+			if data is not None :
+				context[name] = data
+
+		return [ context ]
+
+IECore.registerRunTimeTyped( TaskContextVariables, typeName = "Gaffer::TaskContextVariables" )
