@@ -138,7 +138,7 @@ class Expression : public ComputeNode
 		void plugSet( Plug *plug );
 
 		void updatePlugs( const std::vector<std::string> &inPlugPaths, const std::vector<std::string> &outPlugPaths );
-		void addPlug( ValuePlug *parentPlug, const std::string &plugPath );
+		void updatePlug( ValuePlug *parentPlug, size_t childIndex, const std::string &plugPath );
 
 		EnginePtr m_engine;
 		std::vector<IECore::InternedString> m_contextNames;
