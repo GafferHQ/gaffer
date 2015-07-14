@@ -494,6 +494,38 @@ class ImageWriterTest( unittest.TestCase ) :
 		s2 = Gaffer.ScriptNode()
 		s2.execute( s.serialise() )
 
+	def testUndoSetFileName( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["w"] = GafferImage.ImageWriter()
+
+		with Gaffer.UndoContext( s ) :
+			s["w"]["fileName"].setValue( "test.tif" )
+
+		self.assertEqual( s["w"]["fileName"].getValue(), "test.tif" )
+
+		s.undo()
+		self.assertEqual( s["w"]["fileName"].getValue(), "" )
+
+		s.redo()
+		self.assertEqual( s["w"]["fileName"].getValue(), "test.tif" )
+
+	def testFileNamesWithSubstitutions( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["c"] = GafferImage.Constant()
+		s["w"] = GafferImage.ImageWriter()
+		s["w"]["in"].setInput( s["c"]["out"] )
+		s["w"]["fileName"].setValue( self.__testDir + "/test.${ext}" )
+
+		context = Gaffer.Context( s.context() )
+		context["ext"] = "tif"
+		with context :
+			s["w"].execute()
+
+		self.assertTrue( os.path.isfile( self.__testDir + "/test.tif" ) )
+
 	def tearDown( self ) :
 
 		if os.path.isdir( self.__testDir ) :

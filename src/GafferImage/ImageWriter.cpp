@@ -36,7 +36,6 @@
 
 #include <sys/utsname.h>
 
-#include "boost/bind.hpp"
 #include "boost/filesystem.hpp"
 
 #include "OpenImageIO/imageio.h"
@@ -241,39 +240,6 @@ ImageWriter::ImageWriter( const std::string &name )
 	);
 	addChild( new ImagePlug( "out", Plug::Out, Plug::Default & ~Plug::Serialisable ) );
 	outPlug()->setInput( inPlug() );
-
-	Node::plugSetSignal().connect( boost::bind( &GafferImage::ImageWriter::plugSet, this, ::_1 ) );
-}
-
-void ImageWriter::plugSet( Gaffer::Plug *plug )
-{
-	if ( plug == fileNamePlug() )
-	{
-		std::string fileName = fileNamePlug()->getValue();
-		fileName = Context::current()->substitute( fileName );
-		ImageOutput *out = ImageOutput::create( fileName.c_str() );
-
-		if ( !out )
-		{
-			throw IECore::Exception( boost::str( boost::format( "Invalid filename: %s" ) % fileName ) );
-			return;
-		}
-
-		unsigned flags = writeModePlug()->getFlags();
-		if ( out->supports( "tiles" ) )
-		{
-			writeModePlug()->setFlags( flags & ~Gaffer::Plug::ReadOnly );
-		}
-		else
-		{
-			if ( !(flags & Gaffer::Plug::ReadOnly) )
-			{
-				writeModePlug()->setValue( Scanline );
-			}
-			writeModePlug()->setFlags( flags | Gaffer::Plug::ReadOnly );
-		}
-
-	}
 }
 
 ImageWriter::~ImageWriter()
