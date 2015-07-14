@@ -61,13 +61,13 @@ class Wedge( Gaffer.TaskContextProcessor ) :
 
 		self["floatMin"] = Gaffer.FloatPlug( defaultValue = 0 )
 		self["floatMax"] = Gaffer.FloatPlug( defaultValue = 1 )
-		self["floatStep"] = Gaffer.FloatPlug( defaultValue = 0.25 )
+		self["floatSteps"] = Gaffer.IntPlug( minValue = 2, defaultValue = 11 )
 
 		# int range
 
 		self["intMin"] = Gaffer.IntPlug( defaultValue = 0 )
 		self["intMax"] = Gaffer.IntPlug( defaultValue = 5 )
-		self["intStep"] = Gaffer.IntPlug( defaultValue = 1 )
+		self["intStep"] = Gaffer.IntPlug( minValue = 1, defaultValue = 1 )
 
 		# color range
 
@@ -94,16 +94,22 @@ class Wedge( Gaffer.TaskContextProcessor ) :
 	def values( self ) :
 
 		mode = self.Mode( self["mode"].getValue() )
-		if mode in ( self.Mode.FloatRange, self.Mode.IntRange ) :
+		if mode == self.Mode.FloatRange :
 
-			if mode == self.Mode.FloatRange :
-				min = self["floatMin"].getValue()
-				max = self["floatMax"].getValue()
-				step = self["floatStep"].getValue()
-			else :
-				min = self["intMin"].getValue()
-				max = self["intMax"].getValue()
-				step = self["intStep"].getValue()
+			min = self["floatMin"].getValue()
+			max = self["floatMax"].getValue()
+			steps = self["floatSteps"].getValue()
+
+			values = []
+			for i in range( 0, steps ) :
+				t = float( i ) / ( steps - 1 )
+				values.append( min + t * ( max - min ) )
+				
+		elif mode == self.Mode.IntRange :
+
+			min = self["intMin"].getValue()
+			max = self["intMax"].getValue()
+			step = self["intStep"].getValue()	
 
 			if max < min :
 				min, max = max, min

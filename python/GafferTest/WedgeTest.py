@@ -171,7 +171,7 @@ class WedgeTest( GafferTest.TestCase ) :
 		script["wedge"]["mode"].setValue( int( Gaffer.Wedge.Mode.FloatRange ) )
 		script["wedge"]["floatMin"].setValue( 0 )
 		script["wedge"]["floatMax"].setValue( 1 )
-		script["wedge"]["floatStep"].setValue( .25 )
+		script["wedge"]["floatSteps"].setValue( 5 )
 
 		self.__dispatcher().dispatch( [ script["wedge"] ] )
 
@@ -191,6 +191,52 @@ class WedgeTest( GafferTest.TestCase ) :
 		self.assertEqual( next( open( "/tmp/gafferWedgeTest/2.txt" ) ), "0.5" )
 		self.assertEqual( next( open( "/tmp/gafferWedgeTest/3.txt" ) ), "0.75" )
 		self.assertEqual( next( open( "/tmp/gafferWedgeTest/4.txt" ) ), "1" )
+
+	def testFloatByPointOne( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["writer"] = GafferTest.TextWriter()
+		script["writer"]["fileName"].setValue( "/tmp/gafferWedgeTest/${wedge:index}.txt" )
+		script["writer"]["text"].setValue( "${wedge:value}" )
+
+		script["wedge"] = Gaffer.Wedge()
+		script["wedge"]["requirements"][0].setInput( script["writer"]["requirement"] )
+		script["wedge"]["mode"].setValue( int( Gaffer.Wedge.Mode.FloatRange ) )
+		script["wedge"]["floatMin"].setValue( 0 )
+		script["wedge"]["floatMax"].setValue( 1 )
+		script["wedge"]["floatSteps"].setValue( 11 )
+
+		self.__dispatcher().dispatch( [ script["wedge"] ] )
+
+		self.assertEqual(
+			set( glob.glob( "/tmp/gafferWedgeTest/*.txt" ) ),
+			{
+				"/tmp/gafferWedgeTest/0.txt",
+				"/tmp/gafferWedgeTest/1.txt",
+				"/tmp/gafferWedgeTest/2.txt",
+				"/tmp/gafferWedgeTest/3.txt",
+				"/tmp/gafferWedgeTest/4.txt",
+				"/tmp/gafferWedgeTest/5.txt",
+				"/tmp/gafferWedgeTest/6.txt",
+				"/tmp/gafferWedgeTest/7.txt",
+				"/tmp/gafferWedgeTest/8.txt",
+				"/tmp/gafferWedgeTest/9.txt",
+				"/tmp/gafferWedgeTest/10.txt",
+			}
+		)
+
+		self.assertAlmostEqual( float( next( open( "/tmp/gafferWedgeTest/0.txt" ) ) ), 0 )
+		self.assertAlmostEqual( float( next( open( "/tmp/gafferWedgeTest/1.txt" ) ) ), 0.1 )
+		self.assertAlmostEqual( float( next( open( "/tmp/gafferWedgeTest/2.txt" ) ) ), 0.2 )
+		self.assertAlmostEqual( float( next( open( "/tmp/gafferWedgeTest/3.txt" ) ) ), 0.3 )
+		self.assertAlmostEqual( float( next( open( "/tmp/gafferWedgeTest/4.txt" ) ) ), 0.4 )	
+		self.assertAlmostEqual( float( next( open( "/tmp/gafferWedgeTest/5.txt" ) ) ), 0.5 )	
+		self.assertAlmostEqual( float( next( open( "/tmp/gafferWedgeTest/6.txt" ) ) ), 0.6 )	
+		self.assertAlmostEqual( float( next( open( "/tmp/gafferWedgeTest/7.txt" ) ) ), 0.7 )	
+		self.assertAlmostEqual( float( next( open( "/tmp/gafferWedgeTest/8.txt" ) ) ), 0.8 )	
+		self.assertAlmostEqual( float( next( open( "/tmp/gafferWedgeTest/9.txt" ) ) ), 0.9 )	
+		self.assertAlmostEqual( float( next( open( "/tmp/gafferWedgeTest/10.txt" ) ) ), 1 )	
 
 	def testColorRange( self ) :
 
