@@ -211,7 +211,7 @@ class ImageWriterTest( unittest.TestCase ) :
 			)
 			self.assertFalse( res.value )
 
-	def testOffsetDisplayWinodowWrite( self ) :
+	def testOffsetDisplayWindowWrite( self ) :
 
 		s = Gaffer.ScriptNode()
 		c = GafferImage.Constant()
