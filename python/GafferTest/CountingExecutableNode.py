@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2013-2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,42 +34,25 @@
 #
 ##########################################################################
 
-import os
-
 import IECore
+
 import Gaffer
+import GafferTest
 
-class TextWriter( Gaffer.ExecutableNode ) :
+class CountingExecutableNode( Gaffer.ExecutableNode ) :
 
-	def __init__( self, name="TextWriter", requiresSequenceExecution = False ) :
+	def __init__( self, name = "CountingExecutableNode", withHash = True, requiresSequenceExecution = False ) :
 
 		Gaffer.ExecutableNode.__init__( self, name )
 
 		self.__requiresSequenceExecution = requiresSequenceExecution
+		self.__withHash = withHash
 
-		self.addChild( Gaffer.StringPlug( "fileName", Gaffer.Plug.Direction.In ) )
-		self.addChild( Gaffer.StringPlug( "mode", defaultValue = "w", direction = Gaffer.Plug.Direction.In ) )
-		self.addChild( Gaffer.StringPlug( "text", Gaffer.Plug.Direction.In ) )
+		self.executionCount = 0
 
 	def execute( self ) :
 
-		context = Gaffer.Context.current()
-		fileName = context.substitute( self["fileName"].getValue() )
-
-		directory = os.path.dirname( fileName )
-		if directory :
-			try :
-				os.makedirs( directory )
-			except OSError :
-				# makedirs very unhelpfully raises an exception if
-				# the directory already exists, but it might also
-				# raise if it fails. we reraise only in the latter case.
-				if not os.path.isdir( directory ) :
-					raise
-
-		text = self.__processText( context )
-		with file( fileName, self["mode"].getValue() ) as f :
-			f.write( text )
+		self.executionCount += 1
 
 	def executeSequence( self, frames ) :
 
@@ -77,39 +60,19 @@ class TextWriter( Gaffer.ExecutableNode ) :
 			Gaffer.ExecutableNode.executeSequence( self, frames )
 			return
 
-		context = Gaffer.Context( Gaffer.Context.current() )
-		fileName = context.substitute( self["fileName"].getValue() )
-
-		with file( fileName, self["mode"].getValue() ) as f :
-			with context :
-				for frame in frames :
-					context.setFrame( frame )
-					text = self.__processText( context )
-					f.write( text )
+		self.executionCount += 1
 
 	def hash( self, context ) :
 
+		if not self.__withHash :
+			return IECore.MurmurHash()
+
 		h = Gaffer.ExecutableNode.hash( self, context )
 		h.append( context.getFrame() )
-		h.append( context.get( "textWriter:replace", IECore.StringVectorData() ) )
-		h.append( context.substitute( self["fileName"].getValue() ) )
-		h.append( self["mode"].getValue() )
-		h.append( context.substitute( self["text"].getValue() ) )
-
 		return h
 
 	def requiresSequenceExecution( self ) :
 
 		return self.__requiresSequenceExecution
 
-	def __processText( self, context ) :
-
-		text = context.substitute( self["text"].getValue() )
-
-		replace = context.get( "textWriter:replace", IECore.StringVectorData() )
-		if replace and len(replace) == 2 :
-			text = text.replace( replace[0], replace[1] )
-
-		return text
-
-IECore.registerRunTimeTyped( TextWriter, typeName = "GafferTest::TextWriter" )
+IECore.registerRunTimeTyped( CountingExecutableNode, typeName = "GafferTest::CountingExecutableNode" )

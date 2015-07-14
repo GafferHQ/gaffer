@@ -13,9 +13,9 @@ before_install:
 
 install:
     - python ./config/travis/installDependencies.py
-    - export DELIGHT_PACKAGE=3delight-11.0.85-Linux-x86_64
-    - curl -A Mozilla/4.0 http://www.3delight.com/downloads/free/$DELIGHT_PACKAGE.tar.gz > $DELIGHT_PACKAGE.tar.gz
-    - tar -xf $DELIGHT_PACKAGE.tar.gz
+    - export DELIGHT_PACKAGE=3delight-12.0.12-Linux-x86_64
+    - curl -A Mozilla/4.0 http://www.3delight.com/downloads/free/$DELIGHT_PACKAGE.tar.xz > $DELIGHT_PACKAGE.tar.xz
+    - tar -xf $DELIGHT_PACKAGE.tar.xz
     - export DELIGHT=`pwd`/$DELIGHT_PACKAGE/3delight/Linux-x86_64
     - export LD_LIBRARY_PATH=$DELIGHT/lib:$LD_LIBRARY_PATH
     - export DL_SHADERS_PATH=$DELIGHT/shaders

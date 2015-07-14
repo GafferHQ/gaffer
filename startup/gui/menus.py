@@ -339,6 +339,13 @@ GafferCortexUI.ParameterisedHolderUI.appendParameterisedHolders(
 	nodeMenu.definition(), "/Cortex/Procedurals", "IECORE_PROCEDURAL_PATHS", GafferCortex.ProceduralHolder
 )
 
+# Dispatch nodes
+
+nodeMenu.append( "/Dispatch/System Command", Gaffer.SystemCommand, searchText = "SystemCommand" )
+nodeMenu.append( "/Dispatch/Task List", Gaffer.TaskList, searchText = "TaskList" )
+nodeMenu.append( "/Dispatch/Wedge", Gaffer.Wedge )
+nodeMenu.append( "/Dispatch/Variables", Gaffer.TaskContextVariables, searchText = "TaskContextVariables" )
+
 # Utility nodes
 
 nodeMenu.append( "/Utility/Expression", Gaffer.Expression )
@@ -348,8 +355,6 @@ nodeMenu.append( "/Utility/Box", GafferUI.BoxUI.nodeMenuCreateCommand )
 nodeMenu.append( "/Utility/Reference", GafferUI.ReferenceUI.nodeMenuCreateCommand )
 nodeMenu.definition().append( "/Utility/Backdrop", { "command" : GafferUI.BackdropUI.nodeMenuCreateCommand } )
 nodeMenu.append( "/Utility/Dot", Gaffer.Dot )
-nodeMenu.append( "/Utility/System Command", Gaffer.SystemCommand, searchText = "SystemCommand" )
-nodeMenu.append( "/Utility/Task List", Gaffer.TaskList, searchText = "TaskList" )
 
 # appleseed uses GafferOSL shaders so  we need to 
 # add the paths to them to OSL_SHADER_PATHS environment var.

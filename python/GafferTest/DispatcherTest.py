@@ -941,6 +941,56 @@ class DispatcherTest( GafferTest.TestCase ) :
 		self.assertEqual( s["e2"].preExecutionCount, 1 )
 		self.assertEqual( s["e2"].mainExecutionCount, 1 )
 	
+	def testContextChange( self ) :
+
+		class ContextChangingExecutable( Gaffer.ExecutableNode ) :
+
+			def __init__( self, name = "ContextChangingExecutable" ) :
+
+				Gaffer.ExecutableNode.__init__( self, name )
+
+			def requirements( self, context ) :
+
+				assert( context.isSame( Gaffer.Context.current() ) )
+
+				upstreamContext = Gaffer.Context( context )
+				upstreamContext["myText"] = "testing 123"
+				upstreamContext.setFrame( 10 )
+
+				result = []
+				for plug in self["requirements"] :
+					node = plug.source().node()
+					if node.isSame( self ) or not isinstance( node, Gaffer.ExecutableNode ):
+						continue
+
+					result.append( self.Task( node, upstreamContext ) )
+
+				return result
+
+			def hash( self, context ) :
+
+				return IECore.MurmurHash()
+
+			def execute( self ) :
+
+				pass
+
+		s = Gaffer.ScriptNode()
+
+		s["w"] = GafferTest.TextWriter()
+		s["w"]["fileName"].setValue( "/tmp/dispatcherTest/test.####.txt" )
+
+		s["e"] = Gaffer.Expression()
+		s["e"]["engine"].setValue( "python" )
+		s["e"]["expression"].setValue( 'parent["w"]["text"] = context["myText"]' )
+
+		s["c"] = ContextChangingExecutable()
+		s["c"]["requirements"][0].setInput( s["w"]["requirement"] )
+
+		Gaffer.Dispatcher.create( "testDispatcher" ).dispatch( [ s["c"] ] )
+
+		self.assertEqual( next( open( "/tmp/dispatcherTest/test.0010.txt" ) ), "testing 123" )
+
 	def tearDown( self ) :
 
 		shutil.rmtree( "/tmp/dispatcherTest", ignore_errors = True )

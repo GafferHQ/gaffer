@@ -36,6 +36,7 @@
 ##########################################################################
 
 import os
+import shutil
 import unittest
 import subprocess32 as subprocess
 
@@ -43,6 +44,7 @@ import IECore
 
 import Gaffer
 import GafferTest
+import GafferImage
 import GafferScene
 import GafferArnold
 import GafferArnoldTest
@@ -230,6 +232,69 @@ class ArnoldRenderTest( GafferTest.TestCase ) :
 		self.assertTrue( os.path.exists( "/tmp/assTests" ) )
 		self.assertTrue( os.path.exists( "/tmp/assTests/test.0001.ass" ) )
 
+	def testWedge( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["sphere"] = GafferScene.Sphere()
+		s["sphere"]["sets"].setValue( "${wedge:value}" )
+
+		s["filter"] = GafferScene.SetFilter()
+		s["filter"]["set"].setValue( "hidden" )
+
+		s["attributes"] = GafferScene.StandardAttributes()
+		s["attributes"]["attributes"]["visibility"]["enabled"].setValue( True )
+		s["attributes"]["attributes"]["visibility"]["value"].setValue( False )
+		s["attributes"]["filter"].setInput( s["filter"]["out"] )
+		s["attributes"]["in"].setInput( s["sphere"]["out"] )
+
+		s["outputs"] = GafferScene.Outputs()
+		s["outputs"].addOutput(
+			"beauty",
+			IECore.Display(
+				"/tmp/${wedge:value}.tif",
+				"tiff",
+				"rgba",
+				{
+				}
+			)
+		)
+		s["outputs"]["in"].setInput( s["attributes"]["out"] )
+
+		s["render"] = GafferArnold.ArnoldRender()
+		s["render"]["fileName"].setValue( "/tmp/test.####.ass" )
+		s["render"]["in"].setInput( s["outputs"]["out"] )
+
+		s["wedge"] = Gaffer.Wedge()
+		s["wedge"]["mode"].setValue( int( s["wedge"].Mode.StringList ) )
+		s["wedge"]["strings"].setValue( IECore.StringVectorData( [ "visible", "hidden" ] ) )
+		s["wedge"]["requirements"][0].setInput( s["render"]["requirement"] )
+
+		s["fileName"].setValue( "/tmp/test.gfr" )
+		s.save()
+
+		dispatcher = Gaffer.LocalDispatcher()
+		dispatcher["jobsDirectory"].setValue( "/tmp/testJobDirectory" )
+		dispatcher["framesMode"].setValue( Gaffer.Dispatcher.FramesMode.CurrentFrame )
+		dispatcher["executeInBackground"].setValue( False )
+
+		dispatcher.dispatch( [ s["wedge"] ] )
+
+		hidden = GafferImage.ImageReader()
+		hidden["fileName"].setValue( "/tmp/hidden.tif" )
+
+		visible = GafferImage.ImageReader()
+		visible["fileName"].setValue( "/tmp/visible.tif" )
+
+		hiddenStats = GafferImage.ImageStats()
+		hiddenStats["in"].setInput( hidden["out"] )
+
+		visibleStats = GafferImage.ImageStats()
+		visibleStats["in"].setInput( visible["out"] )
+
+		self.assertTrue( hiddenStats["average"].getValue()[0] < 0.05 )
+		self.assertTrue( visibleStats["average"].getValue()[0] > .35 )
+
 	def setUp( self ) :
 
 		for i in range( 1, 4 ) :
@@ -245,11 +310,14 @@ class ArnoldRenderTest( GafferTest.TestCase ) :
 			"/tmp/assTests/test.0001.ass",
 			"/tmp/assTests",
 			"/tmp/test.tif",
+			"/tmp/testJobDirectory",
+			"/tmp/hidden.tif",
+			"/tmp/visible.tif",
 		) :
 			if os.path.isfile( f ) :
 				os.remove( f )
 			elif os.path.isdir( f ) :
-				os.rmdir( f )
+				shutil.rmtree( f )
 
 	def tearDown( self ) :
 

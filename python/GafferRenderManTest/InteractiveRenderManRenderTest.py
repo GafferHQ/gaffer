@@ -205,19 +205,13 @@ class InteractiveRenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		s["c"] = GafferScene.Camera()
 		s["c"]["transform"]["translate"]["z"].setValue( 1 )
 
-		s["l"] = GafferRenderMan.RenderManLight()
-		s["l"].loadShader( "ambientlight" )
-
 		s["g"] = GafferScene.Group()
 		s["g"]["in"].setInput( s["p"]["out"] )
 		s["g"]["in1"].setInput( s["c"]["out"] )
-		s["g"]["in2"].setInput( s["l"]["out"] )
 
 		s["s"] = GafferRenderMan.RenderManShader()
-		s["s"].loadShader( "checker" )
-		s["s"]["parameters"]["blackcolor"].setValue( IECore.Color3f( 1, 0.5, 0.25 ) )
-		s["s"]["parameters"]["Ka"].setValue( 1 )
-		s["s"]["parameters"]["frequency"].setValue( 1 )
+		s["s"].loadShader( self.compileShader( os.path.dirname( __file__ ) + "/shaders/flat.sl" ) )
+		s["s"]["parameters"]["c"].setValue( IECore.Color3f( 1, 0.5, 0.25 ) )
 
 		s["a"] = GafferScene.ShaderAssignment()
 		s["a"]["in"].setInput( s["g"]["out"] )
@@ -261,7 +255,7 @@ class InteractiveRenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 
 		# adjust a shader parameter, wait, and check that it changed
 
-		s["s"]["parameters"]["blackcolor"].setValue( IECore.Color3f( 1, 1, 1 ) )
+		s["s"]["parameters"]["c"].setValue( IECore.Color3f( 1, 1, 1 ) )
 		time.sleep( 1 )
 		c = self.__colorAtUV(
 			IECore.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
@@ -272,7 +266,7 @@ class InteractiveRenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		# turn off shader updates, do the same, and check that it hasn't changed
 
 		s["r"]["updateAttributes"].setValue( False )
-		s["s"]["parameters"]["blackcolor"].setValue( IECore.Color3f( 0.5 ) )
+		s["s"]["parameters"]["c"].setValue( IECore.Color3f( 0.5 ) )
 		time.sleep( 1 )
 		c = self.__colorAtUV(
 			IECore.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
@@ -303,20 +297,14 @@ class InteractiveRenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		s["c"] = GafferScene.Camera()
 		s["c"]["transform"]["translate"]["z"].setValue( 2 )
 
-		s["l"] = GafferRenderMan.RenderManLight()
-		s["l"].loadShader( "ambientlight" )
-
 		s["g"] = GafferScene.Group()
 		s["g"]["in"].setInput( s["p"]["out"] )
 		s["g"]["in1"].setInput( s["p1"]["out"] )
 		s["g"]["in2"].setInput( s["c"]["out"] )
-		s["g"]["in3"].setInput( s["l"]["out"] )
 
 		s["s"] = GafferRenderMan.RenderManShader()
-		s["s"].loadShader( "checker" )
-		s["s"]["parameters"]["blackcolor"].setValue( IECore.Color3f( 1, 0, 0 ) )
-		s["s"]["parameters"]["Ka"].setValue( 1 )
-		s["s"]["parameters"]["frequency"].setValue( 1 )
+		s["s"].loadShader(  self.compileShader( os.path.dirname( __file__ ) + "/shaders/flat.sl" ) )
+		s["s"]["parameters"]["c"].setValue( IECore.Color3f( 1, 0, 0 ) )
 
 		s["f"] = GafferScene.PathFilter()
 		s["f"]["paths"].setValue( IECore.StringVectorData( [ "/group/plane" ] ) )
@@ -379,7 +367,7 @@ class InteractiveRenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		# on the left changed. check that the plane on the right didn't
 		# change at all.
 
-		s["s"]["parameters"]["blackcolor"].setValue( IECore.Color3f( 0, 1, 0 ) )
+		s["s"]["parameters"]["c"].setValue( IECore.Color3f( 0, 1, 0 ) )
 		time.sleep( 2 )
 
 		c = self.__colorAtUV(

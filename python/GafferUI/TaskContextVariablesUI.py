@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -37,20 +37,29 @@
 import IECore
 
 import Gaffer
+import GafferUI
 
-# Used to collect Executable tasks for dispatching all at once
-class TaskList( Gaffer.ExecutableNode ) :
-	
-	def __init__( self, name = "TaskList" ) :
-		
-		Gaffer.ExecutableNode.__init__( self, name )
-	
-	def hash( self, context ) :
-		
-		return IECore.MurmurHash()
-	
-	def execute( self ) :
-		
-		pass
+Gaffer.Metadata.registerNode(
 
-IECore.registerRunTimeTyped( TaskList, typeName = "Gaffer::TaskList" )
+	Gaffer.TaskContextVariables,
+
+	"description",
+	"""
+	Adds variables which can be referenced by upstream expressions.
+	""",
+
+	plugs = {
+
+		"variables" : [
+
+			"description",
+			"""
+			The variables to be added - arbitrary numbers of variables
+			can be added here.
+			"""
+
+		]
+
+	}
+
+)

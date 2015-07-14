@@ -653,10 +653,76 @@ class RenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		rib = "\n".join( file( "/tmp/test.rib" ).readlines() )
 		self.assertTrue( "ClippingPlane" in rib )
 
+	@unittest.skipIf( "TRAVIS" in os.environ, "Unknown problem running on Travis" )
+	def testWedge( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["sphere"] = GafferScene.Sphere()
+		s["sphere"]["sets"].setValue( "${wedge:value}" )
+
+		s["filter"] = GafferScene.SetFilter()
+		s["filter"]["set"].setValue( "hidden" )
+
+		s["attributes"] = GafferScene.StandardAttributes()
+		s["attributes"]["attributes"]["visibility"]["enabled"].setValue( True )
+		s["attributes"]["attributes"]["visibility"]["value"].setValue( False )
+		s["attributes"]["filter"].setInput( s["filter"]["out"] )
+		s["attributes"]["in"].setInput( s["sphere"]["out"] )
+
+		s["outputs"] = GafferScene.Outputs()
+		s["outputs"].addOutput(
+			"beauty",
+			IECore.Display(
+				"/tmp/${wedge:value}.tif",
+				"tiff",
+				"rgba",
+				{
+				}
+			)
+		)
+		s["outputs"]["in"].setInput( s["attributes"]["out"] )
+
+		s["render"] = GafferRenderMan.RenderManRender()
+		s["render"]["ribFileName"].setValue( "/tmp/test.rib" )
+		s["render"]["in"].setInput( s["outputs"]["out"] )
+
+		s["wedge"] = Gaffer.Wedge()
+		s["wedge"]["mode"].setValue( int( s["wedge"].Mode.StringList ) )
+		s["wedge"]["strings"].setValue( IECore.StringVectorData( [ "visible", "hidden" ] ) )
+		s["wedge"]["requirements"][0].setInput( s["render"]["requirement"] )
+
+		s["fileName"].setValue( "/tmp/test.gfr" )
+		s.save()
+
+		dispatcher = Gaffer.LocalDispatcher()
+		dispatcher["jobsDirectory"].setValue( "/tmp/testJobDirectory" )
+		dispatcher["framesMode"].setValue( Gaffer.Dispatcher.FramesMode.CurrentFrame )
+		dispatcher["executeInBackground"].setValue( False )
+
+		dispatcher.dispatch( [ s["wedge"] ] )
+
+		hidden = GafferImage.ImageReader()
+		hidden["fileName"].setValue( "/tmp/hidden.tif" )
+
+		visible = GafferImage.ImageReader()
+		visible["fileName"].setValue( "/tmp/visible.tif" )
+
+		hiddenStats = GafferImage.ImageStats()
+		hiddenStats["in"].setInput( hidden["out"] )
+
+		visibleStats = GafferImage.ImageStats()
+		visibleStats["in"].setInput( visible["out"] )
+
+		self.assertLess( hiddenStats["average"].getValue()[0], 0.05 )
+		self.assertGreater( visibleStats["average"].getValue()[0], .35 )
+
 	def setUp( self ) :
 
 		for f in (
 			"/tmp/test.tif",
+			"/tmp/hidden.tif",
+			"/tmp/visible.tif",
 			"/tmp/test.rib",
 			"/tmp/test.gfr",
 			"/tmp/renderTests",

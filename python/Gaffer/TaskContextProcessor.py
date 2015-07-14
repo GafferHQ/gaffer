@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -38,19 +38,44 @@ import IECore
 
 import Gaffer
 
-# Used to collect Executable tasks for dispatching all at once
-class TaskList( Gaffer.ExecutableNode ) :
-	
-	def __init__( self, name = "TaskList" ) :
-		
+class TaskContextProcessor( Gaffer.ExecutableNode ) :
+
+	def __init__( self, name = "TaskContextProcessor" ) :
+
 		Gaffer.ExecutableNode.__init__( self, name )
-	
+
+	def requirements( self, context ) :
+
+		contexts = self._processedContexts( context )
+		
+		result = []
+		for plug in self["requirements"] :
+
+			node = plug.source().node()
+			if node.isSame( self ) or not isinstance( node, Gaffer.ExecutableNode ):
+				continue
+
+			result.extend( [ self.Task( node, c ) for c in contexts ] )
+
+		return result
+
 	def hash( self, context ) :
-		
+
+		# Our hash is empty to signify that we don't do
+		# anything in execute().
 		return IECore.MurmurHash()
-	
+
 	def execute( self ) :
-		
+
+		# We don't need to do anything here because our
+		# sole purpose is to manipulate the context
+		# in which our requirements are executed.
 		pass
 
-IECore.registerRunTimeTyped( TaskList, typeName = "Gaffer::TaskList" )
+	## Must be implemented by derived classes to return
+	# a list of contexts to be used by upstream tasks.
+	def _processedContexts( self, context ) :
+
+		raise NotImplementedError
+
+IECore.registerRunTimeTyped( TaskContextProcessor, typeName = "Gaffer::TaskContextProcessor" )

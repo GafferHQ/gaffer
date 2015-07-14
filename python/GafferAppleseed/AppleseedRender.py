@@ -92,21 +92,9 @@ class AppleseedRender( GafferScene.ExecutableRender ) :
 
 	def _outputWorldProcedural( self, scenePlug, renderer ) :
 
-		scriptNode = scenePlug.node().scriptNode()
-
-		args = [ '-fileName',
-				str( scriptNode["fileName"].getValue() ),
-				'-node',
-				str( scenePlug.node().relativeName( scriptNode ) ),
-				'-frame',
-				str( Gaffer.Context.current().getFrame() ) ]
-
-		procedural = IECore.ClassLoader.defaultProceduralLoader().load( 'gaffer/script', 1, )()
-
-		if procedural :
-
-			IECore.ParameterParser().parse( args, procedural.parameters() )
-			procedural.render( renderer, inAttributeBlock=False, withState=False, withGeometry=True, immediateGeometry=True )
+		# Since Appleseed doesn't yet support deferred-load procedurals, we just
+		# output the entire scene immediately rather than output a ScriptProcedural.
+		GafferScene.SceneProcedural( scenePlug, Gaffer.Context().current(), "/" ).render( renderer )
 
 	def _command( self ) :
 		if self["mode"].getValue() == "render" :

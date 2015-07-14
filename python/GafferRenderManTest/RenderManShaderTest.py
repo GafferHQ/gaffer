@@ -115,7 +115,7 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 	def testShaderHash( self ) :
 
 		n = GafferRenderMan.RenderManShader()
-		n.loadShader( "checker" )
+		n.loadShader( "matte" )
 		h1 = n.stateHash()
 
 		n["parameters"]["Kd"].setValue( 0.25 )

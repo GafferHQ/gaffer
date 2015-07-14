@@ -107,6 +107,7 @@ from ComputeNodeTest import ComputeNodeTest
 from BoxPlugTest import BoxPlugTest
 from BoxTest import BoxTest
 from OutputRedirectionTest import OutputRedirectionTest
+from CountingExecutableNode import CountingExecutableNode
 from ExecutableNodeTest import ExecutableNodeTest
 from DispatcherTest import DispatcherTest
 from TextWriter import TextWriter
@@ -132,6 +133,8 @@ from ApplicationTest import ApplicationTest
 from LeafPathFilterTest import LeafPathFilterTest
 from MatchPatternPathFilterTest import MatchPatternPathFilterTest
 from LoopTest import LoopTest
+from WedgeTest import WedgeTest
+from TaskContextVariablesTest import TaskContextVariablesTest
 
 if __name__ == "__main__":
 	import unittest
