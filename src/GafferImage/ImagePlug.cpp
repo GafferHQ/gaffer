@@ -341,6 +341,14 @@ IECore::ImagePrimitivePtr ImagePlug::image() const
 		newDataWindow = format.yDownToFormatSpace( dataWindow );
 	}
 
+	// use the default format if we don't have an explicit one.
+	/// \todo: remove this once FormatPlug is handling it for
+	/// us during ExecutableNode::execute (see issue #887).
+	if( format.getDisplayWindow().isEmpty() )
+	{
+		format = Context::current()->get<Format>( Format::defaultFormatContextName, Format() );
+	}
+	
 	ImagePrimitivePtr result = new ImagePrimitive( newDataWindow, format.getDisplayWindow() );
 	
 	ConstCompoundObjectPtr metadata = metadataPlug()->getValue();
