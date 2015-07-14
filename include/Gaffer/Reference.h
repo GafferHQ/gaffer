@@ -54,23 +54,28 @@ class Reference : public SubGraph
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::Reference, ReferenceTypeId, SubGraph );
 
-		/// The plugs that stores the name of the file being
-		/// referenced. This should be considered read-only, and the
-		/// load() method should be used to set it.
-		StringPlug *fileNamePlug();
-		const StringPlug *fileNamePlug() const;
-
 		/// Loads the specified script, which should have been exported
 		/// using Box::exportForReference().
+		/// \undoable.
 		void load( const std::string &fileName );
+		/// Returns the name of the script currently being referenced.
+		const std::string &fileName() const;
+		
+		typedef boost::signal<void ( Reference * )> ReferenceLoadedSignal;
+		/// Emitted when a reference is loaded (or unloaded following an undo).
+		ReferenceLoadedSignal &referenceLoadedSignal();
 
 	private :
 
+		void loadInternal( const std::string &fileName );
 		bool isReferencePlug( const Plug *plug ) const;
 
-		static size_t g_firstPlugIndex;
+		std::string m_fileName;
+		ReferenceLoadedSignal m_referenceLoadedSignal;
 
 };
+
+IE_CORE_DECLAREPTR( Reference )
 
 typedef FilteredChildIterator<TypePredicate<Reference> > ReferenceIterator;
 typedef FilteredRecursiveChildIterator<TypePredicate<Reference> > RecursiveReferenceIterator;

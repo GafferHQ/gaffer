@@ -36,6 +36,8 @@
 
 import os
 import unittest
+import shutil
+import collections
 
 import IECore
 
@@ -775,6 +777,101 @@ class ReferenceTest( GafferTest.TestCase ) :
 
 		self.assertEqual( Gaffer.Metadata.plugValue( s2["r"]["user"]["p"], "testPersistent" ), 3 )
 		self.assertEqual( Gaffer.Metadata.plugValue( s2["r"]["user"]["p"], "testNonPersistent" ), None )
+
+	def testNamespaceIsClear( self ) :
+
+		# We need the namespace of the node to be empty, so
+		# that people can call plugs anything they want when
+		# authoring references.
+
+		r = Gaffer.Reference()
+		n = Gaffer.Node()
+		self.assertEqual( r.keys(), n.keys() )
+
+	def testPlugCalledFileName( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["b"] = Gaffer.Box()
+		s["b"]["fileName"] = Gaffer.StringPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["b"]["fileName"].setValue( "iAmUsingThisForMyOwnPurposes" )
+		s["b"].exportForReference( "/tmp/test.grf" )
+
+		s["r"] = Gaffer.Reference()
+		s["r"].load( "/tmp/test.grf" )
+
+		self.assertEqual( s["r"]["fileName"].getValue(), "iAmUsingThisForMyOwnPurposes" )
+
+	def testLoadScriptWithReferenceFromVersion0_14( self ) :
+
+		shutil.copyfile(
+			os.path.dirname( __file__ ) + "/references/version-0.14.0.0.grf",
+			"/tmp/test.grf"
+		)
+
+		s = Gaffer.ScriptNode()
+		s["fileName"].setValue( os.path.dirname( __file__ ) + "/scripts/referenceVersion-0.14.0.0.gfr" )
+		
+		with IECore.CapturingMessageHandler() as mh :
+			s.load( continueOnError = True )
+
+		# Although we expect it to load OK, we do also expect to receive a
+		# warning message because we removed the fileName plug after version 0.14.
+		self.assertEqual( len( mh.messages ), 1 )
+		self.assertTrue( "KeyError: 'fileName'" in mh.messages[0].message )
+
+		self.assertEqual( s["Reference"]["testPlug"].getValue(), 2 )
+
+	def testFileNameAccessor( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["b"] = Gaffer.Box()
+		s["b"]["p"] = Gaffer.Plug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["b"].exportForReference( "/tmp/test.grf" )
+
+		s["r"] = Gaffer.Reference()
+		self.assertEqual( s["r"].fileName(), "" )
+
+		s["r"].load( "/tmp/test.grf" )
+		self.assertEqual( s["r"].fileName(), "/tmp/test.grf" )
+
+	def testUndo( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["b"] = Gaffer.Box()
+		s["b"]["p"] = Gaffer.Plug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["b"].exportForReference( "/tmp/test.grf" )
+
+		s["r"] = Gaffer.Reference()
+		self.assertEqual( s["r"].fileName(), "" )
+		self.assertTrue( "p" not in s["r"] )
+
+		State = collections.namedtuple( "State", [ "keys", "fileName" ] )
+		states = []
+		def referenceLoaded( node ) :
+			states.append( State( keys = node.keys(), fileName = node.fileName() ) )
+
+		c = s["r"].referenceLoadedSignal().connect( referenceLoaded )
+
+		with Gaffer.UndoContext( s ) :
+			s["r"].load( "/tmp/test.grf" )
+
+		self.assertTrue( "p" in s["r"] )
+		self.assertEqual( s["r"].fileName(), "/tmp/test.grf" )
+		self.assertTrue( len( states ), 1 )
+		self.assertEqual( states[0], State( [ "user", "p" ], "/tmp/test.grf" ) )
+
+		s.undo()
+		self.assertEqual( s["r"].fileName(), "" )
+		self.assertTrue( "p" not in s["r"] )
+		self.assertTrue( len( states ), 2 )
+		self.assertEqual( states[1], State( [ "user" ], "" ) )
+
+		s.redo()
+		self.assertTrue( "p" in s["r"] )
+		self.assertEqual( s["r"].fileName(), "/tmp/test.grf" )
+		self.assertTrue( len( states ), 3 )
+		self.assertEqual( states[2], State( [ "user", "p" ], "/tmp/test.grf" ) )
 
 	def tearDown( self ) :
 
