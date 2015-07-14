@@ -1176,12 +1176,14 @@ class _PresetsEditor( GafferUI.Widget ) :
 		self.__plugMetadataChangedConnection = None
 		del self.__editingColumn[4:]
 
+		plugValueWidget = None
 		if self.__plug is not None :
 			self.__plugMetadataChangedConnection = Gaffer.Metadata.plugValueChangedSignal().connect( Gaffer.WeakMethod( self.__plugMetadataChanged ) )
 			self.__valueNode["presetValue"] = plug.createCounterpart( "presetValue", plug.Direction.In )
-			self.__editingColumn.append( GafferUI.PlugValueWidget.create( self.__valueNode["presetValue"], useTypeOnly = True ) )
-		else :
-			self.__editingColumn.append( GafferUI.TextWidget() )
+			if hasattr( self.__plug, "getValue" ) :
+				plugValueWidget = GafferUI.PlugValueWidget.create( self.__valueNode["presetValue"], useTypeOnly = True )
+
+		self.__editingColumn.append( plugValueWidget if plugValueWidget is not None else GafferUI.TextWidget() )
 
 		self.__editingColumn.append( GafferUI.Spacer( IECore.V2i( 0 ), expand = True ) )
 
