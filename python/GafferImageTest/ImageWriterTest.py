@@ -211,7 +211,7 @@ class ImageWriterTest( unittest.TestCase ) :
 			)
 			self.assertFalse( res.value )
 
-	def testOffsetDisplayWinodowWrite( self ) :
+	def testOffsetDisplayWindowWrite( self ) :
 
 		s = Gaffer.ScriptNode()
 		c = GafferImage.Constant()
@@ -471,6 +471,80 @@ class ImageWriterTest( unittest.TestCase ) :
 		# the metadata reflects this as well
 		self.assertEqual( after["out"]["metadata"].getValue()["PixelAspectRatio"], IECore.FloatData( 2 ) )
 	
+	def testFileNameExpression( self ) :
+
+		# this test was distilled down from a production example, where
+		# serialising and reloading a script similar to this would throw
+		# an exception.
+
+		s = Gaffer.ScriptNode()
+
+		s["b"] = Gaffer.Box()
+
+		s["b"]["w"] = GafferImage.ImageWriter()
+		s["b"]["w"]["user"]["s"] = Gaffer.StringPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic)
+
+		s["b"]["p1"] = Gaffer.StringPlug( defaultValue = "test.tif", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["b"]["p2"] = Gaffer.StringPlug( defaultValue = "test.tif", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		s["b"]["e"] = Gaffer.Expression( "Expression" )
+
+		s["b"]["e"]["expression"].setValue( 'parent["w"]["user"]["s"] = parent["p1"]; parent["w"]["fileName"] = parent["p2"]' )
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+
+	def testUndoSetFileName( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["w"] = GafferImage.ImageWriter()
+
+		with Gaffer.UndoContext( s ) :
+			s["w"]["fileName"].setValue( "test.tif" )
+
+		self.assertEqual( s["w"]["fileName"].getValue(), "test.tif" )
+
+		s.undo()
+		self.assertEqual( s["w"]["fileName"].getValue(), "" )
+
+		s.redo()
+		self.assertEqual( s["w"]["fileName"].getValue(), "test.tif" )
+
+	def testFileNamesWithSubstitutions( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["c"] = GafferImage.Constant()
+		s["w"] = GafferImage.ImageWriter()
+		s["w"]["in"].setInput( s["c"]["out"] )
+		s["w"]["fileName"].setValue( self.__testDir + "/test.${ext}" )
+
+		context = Gaffer.Context( s.context() )
+		context["ext"] = "tif"
+		with context :
+			s["w"].execute()
+
+		self.assertTrue( os.path.isfile( self.__testDir + "/test.tif" ) )
+
+	def testErrorMessages( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["c"] = GafferImage.Constant()
+		s["w"] = GafferImage.ImageWriter()
+		s["w"]["in"].setInput( s["c"]["out"] )
+		s["w"]["fileName"].setValue( self.__testDir + "/test.unsupportedExtension" )
+
+		with s.context() :
+
+			self.assertRaisesRegexp( RuntimeError, "could not find a format writer for", s["w"].execute )
+
+			s["w"]["fileName"].setValue( self.__testDir + "/test.tif" )
+			s["w"].execute()
+
+			os.chmod( self.__testDir + "/test.tif", 0o444 )
+			self.assertRaisesRegexp( RuntimeError, "Could not open", s["w"].execute )
+
 	def tearDown( self ) :
 
 		if os.path.isdir( self.__testDir ) :

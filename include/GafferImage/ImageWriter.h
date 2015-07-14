@@ -85,8 +85,6 @@ class ImageWriter : public Gaffer::ExecutableNode
 
 	private :
 
-		void plugSet( Gaffer::Plug *plug );
-
 		static size_t g_firstPlugIndex;
 
 };

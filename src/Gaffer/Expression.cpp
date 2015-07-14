@@ -294,23 +294,18 @@ void Expression::plugSet( Plug *plug )
 
 void Expression::updatePlugs( const std::vector<std::string> &inPlugPaths, const std::vector<std::string> &outPlugPaths )
 {
-	/// \todo Reuse existing plugs where possible.
-	inPlug()->clearChildren();
-	outPlug()->removeOutputs();
-	outPlug()->clearChildren();
-
-	for( std::vector<std::string>::const_iterator it = inPlugPaths.begin(); it!=inPlugPaths.end(); ++it )
+	for( size_t i = 0, e = inPlugPaths.size(); i < e; ++i )
 	{
-		addPlug( inPlug(), *it );
+		updatePlug( inPlug(), i, inPlugPaths[i] );
 	}
 
-	for( std::vector<std::string>::const_iterator it = outPlugPaths.begin(); it!=outPlugPaths.end(); ++it )
+	for( size_t i = 0, e = outPlugPaths.size(); i < e; ++i )
 	{
-		addPlug( outPlug(), *it );
+		updatePlug( outPlug(), i, outPlugPaths[i] );
 	}
 }
 
-void Expression::addPlug( ValuePlug *parentPlug, const std::string &plugPath )
+void Expression::updatePlug( ValuePlug *parentPlug, size_t childIndex, const std::string &plugPath )
 {
 	Node *p = parent<Node>();
 	if( !p )
@@ -323,6 +318,32 @@ void Expression::addPlug( ValuePlug *parentPlug, const std::string &plugPath )
 	{
 		throw IECore::Exception( boost::str( boost::format( "Plug \"%s\" does not exist" ) % plugPath ) );
 	}
+
+	if( parentPlug->children().size() > childIndex )
+	{
+		// See if we can reuse the existing plug
+		Plug *existingChildPlug = parentPlug->getChild<Plug>( childIndex );
+		if(
+			( existingChildPlug->direction() == Plug::In && existingChildPlug->getInput<Plug>() == plug ) ||
+			( existingChildPlug->direction() == Plug::Out && plug->getInput<Plug>() == existingChildPlug )
+		)
+		{
+			return;
+		}
+	}
+
+	// Existing plug not OK, so we need to create one. First we must remove all
+	// plugs from childIndex onwards, so that when we add the new plug it gets
+	// the right index. We do this backwards, because children() is a vector and
+	// it's therefore cheaper to remove from the end.
+	for( int i = (int)(parentPlug->children().size() ) - 1; i >= (int)childIndex; --i )
+	{
+		Plug *toRemove = parentPlug->getChild<Plug>( i );
+		toRemove->removeOutputs();
+		parentPlug->removeChild( toRemove );
+	}
+
+	// Finally we can add the plug we need.
 
 	PlugPtr childPlug = plug->createCounterpart( "p0", parentPlug->direction() );
 	childPlug->setFlags( Plug::Dynamic, true );

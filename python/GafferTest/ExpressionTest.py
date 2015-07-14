@@ -525,5 +525,65 @@ class ExpressionTest( GafferTest.TestCase ) :
 		self.assertEqual( len( s["e"]["__in"] ), 1 )
 		self.assertEqual( len( s["e"]["__out"] ), 1 )
 
+	def testNoUnecessaryRewiring( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = Gaffer.Node()
+		s["n"]["user"]["a"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["n"]["user"]["b"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		s["e"] = Gaffer.Expression()
+		s["e"]["engine"].setValue( "python" )
+		s["e"]["expression"].setValue( 'parent["n"]["user"]["a"] = parent["n"]["user"]["b"] + 1' )
+		
+		self.assertEqual( s["n"]["user"]["a"].getValue(), 1 )
+
+		ic = GafferTest.CapturingSlot( s["n"].plugInputChangedSignal() )
+		ps = GafferTest.CapturingSlot( s["n"].plugSetSignal() )
+
+		s["e"]["expression"].setValue( 'parent["n"]["user"]["a"] = parent["n"]["user"]["b"] + 2' )
+		self.assertEqual( s["n"]["user"]["a"].getValue(), 2 )
+
+		self.assertEqual( len( ic ), 0 )
+		self.assertEqual( len( ps ), 0 )
+
+	def testUndo( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = Gaffer.Node()
+		s["n"]["user"]["a"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["n"]["user"]["b"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["n"]["user"]["c"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		s["e"] = Gaffer.Expression()
+		s["e"]["engine"].setValue( "python" )
+		s["e"]["expression"].setValue( 'parent["n"]["user"]["a"] = 1; parent["n"]["user"]["b"] = 2; parent["n"]["user"]["c"] = 3' )
+		
+		self.assertEqual( s["n"]["user"]["a"].getValue(), 1 )
+		self.assertEqual( s["n"]["user"]["b"].getValue(), 2 )
+		self.assertEqual( s["n"]["user"]["c"].getValue(), 3 )
+
+		with Gaffer.UndoContext( s ) :
+
+			s["e"]["expression"].setValue( 'parent["n"]["user"]["c"] = 1; parent["n"]["user"]["b"] = 2; parent["n"]["user"]["a"] = 3' )
+
+		self.assertEqual( s["n"]["user"]["a"].getValue(), 3 )
+		self.assertEqual( s["n"]["user"]["b"].getValue(), 2 )
+		self.assertEqual( s["n"]["user"]["c"].getValue(), 1 )
+
+		s.undo()
+
+		self.assertEqual( s["n"]["user"]["a"].getValue(), 1 )
+		self.assertEqual( s["n"]["user"]["b"].getValue(), 2 )
+		self.assertEqual( s["n"]["user"]["c"].getValue(), 3 )
+
+		s.redo()
+
+		self.assertEqual( s["n"]["user"]["a"].getValue(), 3 )
+		self.assertEqual( s["n"]["user"]["b"].getValue(), 2 )
+		self.assertEqual( s["n"]["user"]["c"].getValue(), 1 )
+
 if __name__ == "__main__":
 	unittest.main()
