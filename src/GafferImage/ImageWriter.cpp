@@ -327,10 +327,10 @@ void ImageWriter::execute() const
 	std::string fileName = fileNamePlug()->getValue();
 	fileName = Context::current()->substitute( fileName );
 
-	boost::shared_ptr< ImageOutput > out( ImageOutput::create( fileName.c_str() ) );
-	if ( !out )
+	boost::shared_ptr<ImageOutput> out( ImageOutput::create( fileName.c_str() ) );
+	if( !out )
 	{
-		throw IECore::Exception( boost::str( boost::format( "Invalid filename: %s" ) % fileName ) );
+		throw IECore::Exception( OpenImageIO::geterror() );
 	}
 
 	// Grab the intersection of the channels from the "channels" plug and the image input to see which channels we are to write out.

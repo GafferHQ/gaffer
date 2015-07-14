@@ -526,6 +526,25 @@ class ImageWriterTest( unittest.TestCase ) :
 
 		self.assertTrue( os.path.isfile( self.__testDir + "/test.tif" ) )
 
+	def testErrorMessages( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["c"] = GafferImage.Constant()
+		s["w"] = GafferImage.ImageWriter()
+		s["w"]["in"].setInput( s["c"]["out"] )
+		s["w"]["fileName"].setValue( self.__testDir + "/test.unsupportedExtension" )
+
+		with s.context() :
+
+			self.assertRaisesRegexp( RuntimeError, "could not find a format writer for", s["w"].execute )
+
+			s["w"]["fileName"].setValue( self.__testDir + "/test.tif" )
+			s["w"].execute()
+
+			os.chmod( self.__testDir + "/test.tif", 0o444 )
+			self.assertRaisesRegexp( RuntimeError, "Could not open", s["w"].execute )
+
 	def tearDown( self ) :
 
 		if os.path.isdir( self.__testDir ) :
