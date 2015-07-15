@@ -46,7 +46,7 @@ class TaskContextVariablesTest( GafferTest.TestCase ) :
 
 	def __dispatcher( self, frameRange = None ) :
 
-		result = Gaffer.LocalDispatcher()
+		result = Gaffer.LocalDispatcher( jobPool = Gaffer.LocalDispatcher.JobPool() )
 		result["jobsDirectory"].setValue( "/tmp/gafferTaskContextVariablesTest/jobs" )
 
 		return result
@@ -91,6 +91,31 @@ class TaskContextVariablesTest( GafferTest.TestCase ) :
 			{
 				"/tmp/gafferTaskContextVariablesTest/bob.txt",
 				
+			}
+		)
+
+	def testBackgroundDispatch( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["writer"] = GafferTest.TextWriter()
+		script["writer"]["fileName"].setValue( "/tmp/gafferTaskContextVariablesTest/${name}.txt" )
+
+		script["variables"] = Gaffer.TaskContextVariables()
+		script["variables"]["requirements"][0].setInput( script["writer"]["requirement"] )
+		script["variables"]["variables"].addMember( "name", "jimbob" )
+
+		dispatcher = self.__dispatcher()
+		dispatcher["executeInBackground"].setValue( True )
+		dispatcher.dispatch( [ script["variables"] ] )
+
+		dispatcher.jobPool().waitForAll()
+		self.assertEqual( len( dispatcher.jobPool().failedJobs() ), 0 )
+
+		self.assertEqual(
+			set( glob.glob( "/tmp/gafferTaskContextVariablesTest/*.txt" ) ),
+			{
+				"/tmp/gafferTaskContextVariablesTest/jimbob.txt",
 			}
 		)
 
