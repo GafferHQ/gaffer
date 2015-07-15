@@ -40,9 +40,12 @@ from __future__ import with_statement
 import Gaffer
 import GafferUI
 
+## Supported Metadata :
+#
+# - "multiLineStringPlugValueWidget:continuousUpdate"
 class MultiLineStringPlugValueWidget( GafferUI.PlugValueWidget ) :
 
-	def __init__( self, plug, continuousUpdate=False, **kw ) :
+	def __init__( self, plug, **kw ) :
 
 		self.__textWidget = GafferUI.MultiLineTextWidget()
 
@@ -53,8 +56,7 @@ class MultiLineStringPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__keyPressConnection = self.__textWidget.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
 		self.__activatedConnection = self.__textWidget.activatedSignal().connect( Gaffer.WeakMethod( self.__setPlugValue ) )
 		self.__editingFinishedConnection = self.__textWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__setPlugValue ) )
-		if continuousUpdate :
-			self.__textChangedConnection = self.__textWidget.textChangedSignal().connect( Gaffer.WeakMethod( self.__setPlugValue ) )
+		self.__textChangedConnection = self.__textWidget.textChangedSignal().connect( Gaffer.WeakMethod( self.__setPlugValue ) )
 
 		self._updateFromPlug()
 
@@ -70,6 +72,10 @@ class MultiLineStringPlugValueWidget( GafferUI.PlugValueWidget ) :
 				
 			fixedLineHeight = Gaffer.Metadata.plugValue( self.getPlug(), "fixedLineHeight" )
 			self.__textWidget.setFixedLineHeight( fixedLineHeight )
+
+			self.__textChangedConnection.block(
+				not Gaffer.Metadata.plugValue( self.getPlug(), "multiLineStringPlugValueWidget:continuousUpdate" )
+			)
 
 		self.__textWidget.setEditable( self._editable() )
 
