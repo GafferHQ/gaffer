@@ -47,7 +47,7 @@ IE_CORE_DEFINERUNTIMETYPED( TransformPlug );
 size_t TransformPlug::g_firstPlugIndex = 0;
 
 TransformPlug::TransformPlug( const std::string &name, Direction direction, unsigned flags )
-	:	CompoundPlug( name, direction, flags )
+	:	ValuePlug( name, direction, flags )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 
