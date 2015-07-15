@@ -504,6 +504,12 @@ _styleSheet = string.Template(
 		font-weight: bold;
 	}
 
+	QCheckBox#gafferCollapsibleToggle:disabled {
+
+		color: $foregroundFaded;
+
+	}
+
 	QCheckBox#gafferCollapsibleToggle::indicator {
 
 		width: 12px;
