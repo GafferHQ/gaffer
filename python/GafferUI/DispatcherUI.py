@@ -35,8 +35,8 @@
 #
 ##########################################################################
 
-import fnmatch
 import weakref
+import functools
 
 import IECore
 
@@ -57,6 +57,12 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
+		"user" : (
+
+			"plugValueWidget:type", "",
+
+		),
+
 		"framesMode" : (
 
 			"description",
@@ -69,7 +75,9 @@ Gaffer.Metadata.registerNode(
 			    (i.e. the full range of the script).
 			  - CustomRange uses a user defined range, as specified by
 			    the frameRange plug.
-			"""
+			""",
+
+			"plugValueWidget:type", "GafferUI.DispatcherUI._FramesModePlugValueWidget",
 
 		),
 
@@ -81,6 +89,7 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"layout:activator", "customRange",
+			"plugValueWidget:type", "GafferUI.DispatcherUI._FrameRangePlugValueWidget",
 
 		),
 
@@ -102,6 +111,31 @@ Gaffer.Metadata.registerNode(
 
 			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
 			"pathPlugValueWidget:leaf", False,
+
+		),
+
+	}
+
+)
+
+##########################################################################
+# Additional Metadata for ExecutableNode
+##########################################################################
+
+Gaffer.Metadata.registerNode(
+
+	Gaffer.ExecutableNode,
+
+	"layout:customWidget:dispatchButton:widgetType", "GafferUI.DispatcherUI._DispatchButton",
+
+	plugs = {
+
+		"dispatcher.batchSize" : (
+
+			"description",
+			"""
+			Maximum number of frames to batch together when dispatching tasks.
+			""",
 
 		),
 
@@ -278,35 +312,21 @@ class DispatcherWindow( GafferUI.Window ) :
 		self.__update()
 
 ##################################################################################
-# PlugValueWidget for execution - this forms the header for the ExecutableNode ui.
+# Button for dispatching - this forms the header for the ExecutableNode ui.
 ##################################################################################
 
-class __RequirementPlugValueWidget( GafferUI.PlugValueWidget ) :
+class _DispatchButton( GafferUI.Button ) :
 
-	def __init__( self, plug, **kw ) :
+	def __init__( self, node, **kw ) :
 
-		row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal )
+		GafferUI.Button.__init__( self, "Execute", **kw )
 
-		GafferUI.PlugValueWidget.__init__( self, row, plug, **kw )
+		self.__node = node
+		self.__clickedConnection = self.clickedSignal().connect( Gaffer.WeakMethod( self.__clicked ) )
 
-		with row :
+	def __clicked( self, button ) :
 
-			executeButton = GafferUI.Button( "Execute" )
-			executeButton.setToolTip( "Execute" )
-			self.__executeClickedConnection = executeButton.clickedSignal().connect( Gaffer.WeakMethod( self.__executeClicked ) )
-
-	def hasLabel( self ) :
-
-		return True
-
-	def _updateFromPlug( self ) :
-
-		pass
-
-	def __executeClicked( self, button ) :
-
-		_showDispatcherWindow( [ self.getPlug().node() ] )
-
+		_showDispatcherWindow( [ self.__node ] )
 
 ########################################
 # PlugValueWidgets for frame range plugs
@@ -314,7 +334,7 @@ class __RequirementPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 # Much of this is copied from EnumPlugValueWidget, but we're not deriving because we
 # want the ability to add in menu items that don't correspond to plug values directly.
-class __FramesModePlugValueWidget( GafferUI.PlugValueWidget ) :
+class _FramesModePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plug, **kw ) :
 		
@@ -446,7 +466,7 @@ class __FramesModePlugValueWidget( GafferUI.PlugValueWidget ) :
 			with self.getContext() :
 				Gaffer.Metadata.registerPlugValue( self.getPlug(), "dispatcherWindow:frameRange", plug.getValue() )
 
-class __FrameRangePlugValueWidget( GafferUI.StringPlugValueWidget ) :
+class _FrameRangePlugValueWidget( GafferUI.StringPlugValueWidget ) :
 	
 	def _updateFromPlug( self ) :
 		
@@ -458,19 +478,6 @@ class __FrameRangePlugValueWidget( GafferUI.StringPlugValueWidget ) :
 			GafferUI.StringPlugValueWidget._updateFromPlug( self )
 		
 		self.textWidget().setEditable( self._editable() )
-
-##########################################################################
-# Metadata, PlugValueWidgets and Nodules
-##########################################################################
-
-Gaffer.Metadata.registerPlugValue( Gaffer.ExecutableNode, "requirement", "layout:section", "" )
-Gaffer.Metadata.registerPlugDescription( Gaffer.ExecutableNode, "dispatcher.batchSize", "Maximum number of frames to batch together when dispatching execution tasks." )
-
-GafferUI.PlugValueWidget.registerCreator( Gaffer.Dispatcher, "user", None )
-GafferUI.PlugValueWidget.registerCreator( Gaffer.Dispatcher, "framesMode", __FramesModePlugValueWidget )
-GafferUI.PlugValueWidget.registerCreator( Gaffer.Dispatcher, "frameRange", __FrameRangePlugValueWidget )
-GafferUI.PlugValueWidget.registerCreator( Gaffer.ExecutableNode, "requirement", __RequirementPlugValueWidget )
-GafferUI.PlugValueWidget.registerCreator( Gaffer.ExecutableNode, "dispatcher", GafferUI.LayoutPlugValueWidget )
 
 ##########################################################################
 # Implementation Details

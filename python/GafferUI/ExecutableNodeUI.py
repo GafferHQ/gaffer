@@ -75,6 +75,8 @@ Gaffer.Metadata.registerNode(
 			not be executed until after this node.
 			""",
 
+			"plugValueWidget:type", "",
+
 		),
 
 		"dispatcher" : (
@@ -85,6 +87,7 @@ Gaffer.Metadata.registerNode(
 			control their behaviour.
 			""",
 
+			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
 			"layout:section", "Dispatcher",
 			"layout:index", -3, # Just before the node section,
 			"nodule:type", "",
