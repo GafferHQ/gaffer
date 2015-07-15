@@ -65,31 +65,54 @@ def nodeMenuCreateCommand( menu ) :
 # Metadata
 ##########################################################################
 
-Gaffer.Metadata.registerNodeDescription(
+Gaffer.Metadata.registerNode(
 
-Gaffer.Backdrop,
+	Gaffer.Backdrop,
 
-"""A utility node which allows the positioning of other nodes on a coloured backdrop with optional text. Selecting a backdrop in the ui selects all the nodes positioned on it, and moving it moves them with it.""",
+	"description",
+	"""
+	A utility node which allows the positioning of other nodes on a
+	coloured backdrop with optional text. Selecting a backdrop in the
+	ui selects all the nodes positioned on it, and moving it moves
+	them with it.
+	""",
 
-"title",
-"The title for the backdrop - this will be displayed at the top of the backdrop.",
+	plugs = {
 
-"scale",
-"Controls the size of the backdrop text.",
+		"title" : [
 
-"description",
-"Text describing the contents of the backdrop - this will be displayed below the title.",
+			"description",
+			"""
+			The title for the backdrop - this will be displayed at
+			the top of the backdrop.
+			""",
 
-)
+			"stringPlugValueWidget:continuousUpdate", True,
 
-##########################################################################
-# PlugValueWidget registrations
-##########################################################################
+		],
 
-GafferUI.PlugValueWidget.registerCreator(
-	Gaffer.Backdrop, "title", GafferUI.StringPlugValueWidget, continuousUpdate=True
-)
+		"scale" : [
 
-GafferUI.PlugValueWidget.registerCreator(
-	Gaffer.Backdrop, "description", GafferUI.MultiLineStringPlugValueWidget, continuousUpdate=True
+			"description",
+			"""
+			Controls the size of the backdrop text.
+			""",
+
+		],
+
+		"description" : [
+
+			"description",
+			"""
+			Text describing the contents of the backdrop -
+			this will be displayed below the title.
+			""",
+
+			"plugValueWidget:type", "GafferUI.MultiLineStringPlugValueWidget",
+			"multiLineStringPlugValueWidget:continuousUpdate", True,
+
+		],
+
+	}
+
 )
