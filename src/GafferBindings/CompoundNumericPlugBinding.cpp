@@ -43,8 +43,8 @@
 
 #include "Gaffer/CompoundNumericPlug.h"
 
+#include "GafferBindings/ValuePlugBinding.h"
 #include "GafferBindings/CompoundNumericPlugBinding.h"
-#include "GafferBindings/CompoundPlugBinding.h"
 
 using namespace boost::python;
 using namespace GafferBindings;
@@ -60,7 +60,7 @@ std::string compoundNumericPlugRepr( const T *plug )
 }
 
 template<typename T>
-class CompoundNumericPlugSerialiser : public CompoundPlugSerialiser
+class CompoundNumericPlugSerialiser : public ValuePlugSerialiser
 {
 
 	protected :

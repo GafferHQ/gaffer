@@ -198,11 +198,11 @@ class CompoundNumericPlugTest( GafferTest.TestCase ) :
 	def testRunTimeTyped( self ) :
 
 		p = Gaffer.Color3fPlug()
-		self.failUnless( p.isInstanceOf( Gaffer.CompoundPlug.staticTypeId() ) )
+		self.failUnless( p.isInstanceOf( Gaffer.ValuePlug.staticTypeId() ) )
 		self.failUnless( p.isInstanceOf( Gaffer.Plug.staticTypeId() ) )
 
 		t = p.typeId()
-		self.assertEqual( IECore.RunTimeTyped.baseTypeId( t ), Gaffer.CompoundPlug.staticTypeId() )
+		self.assertEqual( IECore.RunTimeTyped.baseTypeId( t ), Gaffer.ValuePlug.staticTypeId() )
 
 	def testSetToDefault( self ) :
 
