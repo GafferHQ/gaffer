@@ -42,7 +42,7 @@
 namespace Gaffer
 {
 
-class Transform2DPlug : public CompoundPlug
+class Transform2DPlug : public ValuePlug
 {
 
 	public :
@@ -50,7 +50,7 @@ class Transform2DPlug : public CompoundPlug
 		Transform2DPlug( const std::string &name = defaultName<Transform2DPlug>(), Direction direction=In, unsigned flags = Default );
 		virtual ~Transform2DPlug();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::Transform2DPlug, Transform2DPlugTypeId, CompoundPlug );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::Transform2DPlug, Transform2DPlugTypeId, ValuePlug );
 
 		virtual bool acceptsChild( const GraphComponent *potentialChild ) const;
 		virtual PlugPtr createCounterpart( const std::string &name, Direction direction ) const;

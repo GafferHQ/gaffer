@@ -114,8 +114,8 @@ class Transform2DPlugTest( GafferTest.TestCase ) :
 	def testRunTimeTyped( self ) :
 
 		p = Gaffer.Transform2DPlug()
-		self.failIf( p.typeId() == Gaffer.CompoundPlug.staticTypeId() )
-		self.failUnless( p.isInstanceOf( Gaffer.CompoundPlug.staticTypeId() ) )
+		self.failIf( p.typeId() == Gaffer.ValuePlug.staticTypeId() )
+		self.failUnless( p.isInstanceOf( Gaffer.ValuePlug.staticTypeId() ) )
 
 if __name__ == "__main__":
 	unittest.main()
