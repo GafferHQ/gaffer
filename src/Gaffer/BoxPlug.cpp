@@ -49,7 +49,7 @@ BoxPlug<T>::BoxPlug(
 	T defaultValue,
 	unsigned flags
 )
-	:	CompoundPlug( name, direction, flags )
+	:	ValuePlug( name, direction, flags )
 {
 	const unsigned childFlags = flags & ~Dynamic;
 	addChild(
@@ -82,7 +82,7 @@ BoxPlug<T>::BoxPlug(
 	const PointType &maxValue,
 	unsigned flags
 )
-	:	CompoundPlug( name, direction, flags )
+	:	ValuePlug( name, direction, flags )
 {
 	const unsigned childFlags = flags & ~Dynamic;
 	addChild(

@@ -48,7 +48,7 @@ namespace Gaffer
 {
 
 template<typename T>
-class BoxPlug : public CompoundPlug
+class BoxPlug : public ValuePlug
 {
 
 	public :
@@ -57,7 +57,7 @@ class BoxPlug : public CompoundPlug
 		typedef typename IECore::BoxTraits<T>::BaseType PointType;
 		typedef CompoundNumericPlug<PointType> ChildType;
 
-		IECORE_RUNTIMETYPED_DECLARETEMPLATE( BoxPlug<T>, CompoundPlug );
+		IECORE_RUNTIMETYPED_DECLARETEMPLATE( BoxPlug<T>, ValuePlug );
 
 		BoxPlug(
 			const std::string &name = defaultName<BoxPlug>(),
