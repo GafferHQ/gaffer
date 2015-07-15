@@ -64,6 +64,7 @@ DeleteChannels::DeleteChannels( const std::string &name )
 	// Direct pass-through for the things we don't ever change.
 	// This not only simplifies our implementation, but it is also
 	// faster to compute.
+	outPlug()->formatPlug()->setInput( inPlug()->formatPlug() );
 	outPlug()->dataWindowPlug()->setInput( inPlug()->dataWindowPlug() );
 	outPlug()->metadataPlug()->setInput( inPlug()->metadataPlug() );
 	outPlug()->channelDataPlug()->setInput( inPlug()->channelDataPlug() );
@@ -106,16 +107,6 @@ void DeleteChannels::affects( const Gaffer::Plug *input, AffectedPlugsContainer 
 	{
 		outputs.push_back( outPlug()->channelNamesPlug() );
 	}
-}
-
-void DeleteChannels::hashFormat( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
-{
-	h = inPlug()->formatPlug()->hash();
-}
-
-GafferImage::Format DeleteChannels::computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const
-{
-	return inPlug()->formatPlug()->getValue();
 }
 
 void DeleteChannels::hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const

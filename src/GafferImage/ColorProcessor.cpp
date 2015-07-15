@@ -68,6 +68,7 @@ ColorProcessor::ColorProcessor( const std::string &name )
 	outPlug()->channelDataPlug()->setFlags( Plug::Cacheable, false );
 	
 	// We don't ever want to change the these, so we make pass-through connections.
+	outPlug()->formatPlug()->setInput( inPlug()->formatPlug() );
 	outPlug()->dataWindowPlug()->setInput( inPlug()->dataWindowPlug() );
 	outPlug()->metadataPlug()->setInput( inPlug()->metadataPlug() );
 	outPlug()->channelNamesPlug()->setInput( inPlug()->channelNamesPlug() );
@@ -154,16 +155,6 @@ void ColorProcessor::compute( Gaffer::ValuePlug *output, const Gaffer::Context *
 	}
 
 	ImageProcessor::compute( output, context );
-}
-
-void ColorProcessor::hashFormat( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
-{
-	h = inPlug()->formatPlug()->hash();
-}
-
-GafferImage::Format ColorProcessor::computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const
-{
-	return inPlug()->formatPlug()->getValue();
 }
 
 void ColorProcessor::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const

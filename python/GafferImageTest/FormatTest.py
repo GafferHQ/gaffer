@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012-2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -114,14 +114,16 @@ class FormatTest( unittest.TestCase ) :
 		s = Gaffer.ScriptNode()
 		s.addChild( n )
 
-		h1 = n["out"]["format"].hash()
+		with s.context() :
+			h1 = n["out"]["format"].hash()
 
 		# Change the default format.
 		GafferImage.Format.registerFormat( self.__testFormatValue(), self.__testFormatName() )
 		GafferImage.Format.setDefaultFormat( s, self.__testFormatValue() )
 
 		# Check that the hash has changed.
-		h2 = n["out"]["format"].hash()
+		with s.context() :
+			h2 = n["out"]["format"].hash()
 
 		# we want to assert h1 != h2, but we get a more useful failure message this way
 		if h1 == h2 :

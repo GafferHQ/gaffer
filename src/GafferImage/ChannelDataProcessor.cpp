@@ -59,6 +59,7 @@ ChannelDataProcessor::ChannelDataProcessor( const std::string &name )
 	);
 	
 	// We don't ever want to change these, so we make pass-through connections.
+	outPlug()->formatPlug()->setInput( inPlug()->formatPlug() );
 	outPlug()->dataWindowPlug()->setInput( inPlug()->dataWindowPlug() );
 	outPlug()->metadataPlug()->setInput( inPlug()->metadataPlug() );
 	outPlug()->channelNamesPlug()->setInput( inPlug()->channelNamesPlug() );
@@ -110,14 +111,4 @@ IECore::ConstFloatVectorDataPtr ChannelDataProcessor::computeChannelData( const 
 	IECore::FloatVectorDataPtr outData = inPlug()->channelData( channelName, tileOrigin )->copy();
 	processChannelData( context, parent, channelName, outData );
 	return outData;
-}
-
-void ChannelDataProcessor::hashFormat( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
-{
-	h = inPlug()->formatPlug()->hash();
-}
-
-GafferImage::Format ChannelDataProcessor::computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const
-{
-	return inPlug()->formatPlug()->getValue();
 }

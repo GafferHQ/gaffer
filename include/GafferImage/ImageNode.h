@@ -107,8 +107,6 @@ class ImageNode : public Gaffer::ComputeNode
 		///
 		///    * Make an input connection into the corresponding plug, so that the hash and compute methods
 		///      are never called for it.
-		///	\todo The connection option is not currently valid for the FormatPlug, because it prevents
-		///	hashes from updating when the ScriptNode's default format changes.
 		virtual void hashFormat( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual void hashDataWindow( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual void hashMetadata( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const;

@@ -64,7 +64,6 @@ class Reformat : public ImageProcessor
 		const GafferImage::FilterPlug *filterPlug() const;
 
 		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
-		virtual bool enabled() const;
 
 	protected :
 
@@ -81,10 +80,10 @@ class Reformat : public ImageProcessor
 		/// This process is repeated once for the vertical and horizontal passes and the final result is written into the output buffer.
 		virtual IECore::ConstFloatVectorDataPtr computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const;
 
-		// Computes the output scale factor from the input and output formats.
-		Imath::V2d scale() const;
-
 	private :
+
+		// Computes the output scale factor from the input and output formats.
+		Imath::V2d scale( const Format &inFormat, const Format &outFormat ) const;
 
 		static size_t g_firstPlugIndex;
 

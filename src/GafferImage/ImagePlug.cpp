@@ -85,36 +85,39 @@ class CopyTiles
 				m_tileSize( tileSize )
 		{}
 
-		void operator()( const blocked_range2d<size_t>& r ) const
+		void operator()( const blocked_range3d<size_t>& r ) const
 		{
-			ContextPtr context = new Context( *m_parentContext );
+			ContextPtr context = new Context( *m_parentContext, Context::Borrowed );
+			Context::Scope scope( context.get() );
+			
 			const Box2i operationWindow( V2i( r.rows().begin()+m_dataWindow.min.x, r.cols().begin()+m_dataWindow.min.y ), V2i( r.rows().end()+m_dataWindow.min.x-1, r.cols().end()+m_dataWindow.min.y-1 ) );
 			V2i minTileOrigin = ImagePlug::tileOrigin( operationWindow.min );
 			V2i maxTileOrigin = ImagePlug::tileOrigin( operationWindow.max );
 			size_t imageStride = m_dataWindow.size().x + 1;
-
-			for( int tileOriginY = minTileOrigin.y; tileOriginY <= maxTileOrigin.y; tileOriginY += m_tileSize )
+			
+			for( size_t channelIndex = r.pages().begin(); channelIndex < r.pages().end(); ++channelIndex )
 			{
-				for( int tileOriginX = minTileOrigin.x; tileOriginX <= maxTileOrigin.x; tileOriginX += m_tileSize )
+				context->set( ImagePlug::channelNameContextName, m_channelNames[channelIndex] );
+				float *channelBegin = m_imageChannelData[channelIndex];
+				
+				for( int tileOriginY = minTileOrigin.y; tileOriginY <= maxTileOrigin.y; tileOriginY += m_tileSize )
 				{
-					for( vector<string>::const_iterator it = m_channelNames.begin(), eIt = m_channelNames.end(); it != eIt; it++ )
+					for( int tileOriginX = minTileOrigin.x; tileOriginX <= maxTileOrigin.x; tileOriginX += m_tileSize )
 					{
-						context->set( ImagePlug::channelNameContextName, *it );
 						context->set( ImagePlug::tileOriginContextName, V2i( tileOriginX, tileOriginY ) );
-						Context::Scope scope( context.get() );
+						
 						Box2i tileBound( V2i( tileOriginX, tileOriginY ), V2i( tileOriginX + m_tileSize - 1, tileOriginY + m_tileSize - 1 ) );
 						Box2i b = boxIntersection( tileBound, operationWindow );
-
+						size_t tileStrideSize = sizeof(float) * ( b.size().x + 1 );
+						
 						ConstFloatVectorDataPtr tileData = m_channelDataPlug->getValue();
+						const float *tileDataBegin = &(tileData->readable()[0]);
 
 						for( int y = b.min.y; y<=b.max.y; y++ )
 						{
-							const float *tilePtr = &(tileData->readable()[0]) + (y - tileOriginY) * m_tileSize + (b.min.x - tileOriginX);
-							float *channelPtr = m_imageChannelData[it-m_channelNames.begin()] + ( m_dataWindow.size().y - ( y - m_dataWindow.min.y ) ) * imageStride + (b.min.x - m_dataWindow.min.x);
-							for( int x = b.min.x; x <= b.max.x; x++ )
-							{
-								*channelPtr++ = *tilePtr++;
-							}
+							const float *tilePtr = tileDataBegin + (y - tileOriginY) * m_tileSize + (b.min.x - tileOriginX);
+							float *channelPtr = channelBegin + ( m_dataWindow.size().y - ( y - m_dataWindow.min.y ) ) * imageStride + (b.min.x - m_dataWindow.min.x);
+							std::memcpy( channelPtr, tilePtr, tileStrideSize );
 						}
 					}
 				}
@@ -338,6 +341,14 @@ IECore::ImagePrimitivePtr ImagePlug::image() const
 		newDataWindow = format.yDownToFormatSpace( dataWindow );
 	}
 
+	// use the default format if we don't have an explicit one.
+	/// \todo: remove this once FormatPlug is handling it for
+	/// us during ExecutableNode::execute (see issue #887).
+	if( format.getDisplayWindow().isEmpty() )
+	{
+		format = Context::current()->get<Format>( Format::defaultFormatContextName, Format() );
+	}
+	
 	ImagePrimitivePtr result = new ImagePrimitive( newDataWindow, format.getDisplayWindow() );
 	
 	ConstCompoundObjectPtr metadata = metadataPlug()->getValue();
@@ -356,7 +367,7 @@ IECore::ImagePrimitivePtr ImagePlug::image() const
 		imageChannelData.push_back( &(c[0]) );
 	}
 
-	parallel_for( blocked_range2d<size_t>( 0, dataWindow.size().x+1, tileSize(), 0, dataWindow.size().y+1, tileSize() ),
+	parallel_for( blocked_range3d<size_t>( 0, imageChannelData.size(), 1, 0, dataWindow.size().x+1, tileSize(), 0, dataWindow.size().y+1, tileSize() ),
 		      GafferImage::Detail::CopyTiles( imageChannelData, channelNames, channelDataPlug(), dataWindow, Context::current(), tileSize()) );
 
 	return result;

@@ -78,8 +78,7 @@ template<>
 void SimpleDataHolder<GafferImage::Format>::hash( MurmurHash &h ) const
 {
 	GafferImage::Format f = readable();
-	h.append( f.getDisplayWindow().min );
-	h.append( f.getDisplayWindow().max );
+	h.append( f.getDisplayWindow() );
 	h.append( f.getPixelAspect() );
 }
 

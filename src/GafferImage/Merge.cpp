@@ -78,6 +78,7 @@ Merge::Merge( const std::string &name )
 	);
 
 	// We don't ever want to change these, so we make pass-through connections.
+	outPlug()->formatPlug()->setInput( inPlug()->formatPlug() );
 	outPlug()->metadataPlug()->setInput( inPlug()->metadataPlug() );
 }
 
@@ -121,16 +122,6 @@ bool Merge::enabled() const
 	}
 
 	return ( m_inputs.nConnectedInputs() >= 2 );
-}
-
-void Merge::hashFormat( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
-{
-	h = inPlug()->formatPlug()->hash();
-}
-
-GafferImage::Format Merge::computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const
-{
-	return inPlug()->formatPlug()->getValue();
 }
 
 void Merge::hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
