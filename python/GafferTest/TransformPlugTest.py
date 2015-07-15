@@ -101,8 +101,8 @@ class TransformPlugTest( GafferTest.TestCase ) :
 	def testRunTimeTyped( self ) :
 
 		p = Gaffer.TransformPlug()
-		self.failIf( p.typeId() == Gaffer.CompoundPlug.staticTypeId() )
-		self.failUnless( p.isInstanceOf( Gaffer.CompoundPlug.staticTypeId() ) )
+		self.failIf( p.typeId() == Gaffer.ValuePlug.staticTypeId() )
+		self.failUnless( p.isInstanceOf( Gaffer.ValuePlug.staticTypeId() ) )
 
 	def testPivot( self ) :
 
