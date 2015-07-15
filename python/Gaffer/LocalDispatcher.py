@@ -248,7 +248,12 @@ class LocalDispatcher( Gaffer.Dispatcher ) :
 				self.__reportCompleted( batch )
 				return True
 			
-			if isinstance( batch.node(), Gaffer.TaskList ) :
+			if len( batch.frames() ) == 0 :
+				# This case occurs for nodes like TaskList and TaskContextProcessors,
+				# because they don't do anything in execute (they have empty hashes).
+				# Their batches exist only to depend on upstream batches. We don't need
+				# to do any work here, but we still signal completion for the task to
+				# provide progress feedback to the user.
 				self.__setStatus( batch, LocalDispatcher.Job.Status.Complete )
 				IECore.msg( IECore.MessageHandler.Level.Info, self.__messageTitle, "Finished " + batch.blindData()["nodeName"].value )
 				return True
