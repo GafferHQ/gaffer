@@ -40,7 +40,6 @@
 
 #include "Gaffer/Context.h"
 #include "Gaffer/Dispatcher.h"
-#include "Gaffer/CompoundPlug.h"
 #include "Gaffer/ScriptNode.h"
 
 #include "GafferBindings/DispatcherBinding.h"

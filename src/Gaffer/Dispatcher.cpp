@@ -40,7 +40,6 @@
 #include "IECore/MessageHandler.h"
 
 #include "Gaffer/Box.h"
-#include "Gaffer/CompoundPlug.h"
 #include "Gaffer/Context.h"
 #include "Gaffer/Dispatcher.h"
 #include "Gaffer/ScriptNode.h"
