@@ -37,7 +37,7 @@
 #ifndef GAFFER_ARRAYPLUG_H
 #define GAFFER_ARRAYPLUG_H
 
-#include "Gaffer/CompoundPlug.h"
+#include "Gaffer/Plug.h"
 #include "Gaffer/Behaviours/InputGenerator.h"
 
 namespace Gaffer
@@ -46,9 +46,9 @@ namespace Gaffer
 /// The ArrayPlug maintains a sequence of identically-typed child
 /// plugs, automatically adding new plugs when all existing plugs
 /// have connections.
-/// \todo Consider using this everywhere in preference to
-/// InputGenerator, and removing the InputGenerator class.
-class ArrayPlug : public CompoundPlug
+/// \todo Use this everywhere in preference to InputGenerator,
+/// and remove the InputGenerator class.
+class ArrayPlug : public Plug
 {
 
 	public :
@@ -71,7 +71,7 @@ class ArrayPlug : public CompoundPlug
 
 		virtual ~ArrayPlug();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::ArrayPlug, ArrayPlugTypeId, CompoundPlug );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::ArrayPlug, ArrayPlugTypeId, Plug );
 
 		virtual bool acceptsChild( const GraphComponent *potentialChild ) const;
 		virtual PlugPtr createCounterpart( const std::string &name, Direction direction ) const;
