@@ -46,7 +46,6 @@
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/TypedPlug.h"
-#include "Gaffer/CompoundPlug.h"
 #include "Gaffer/StandardSet.h"
 #include "Gaffer/CompoundNumericPlug.h"
 #include "Gaffer/RecursiveChildIterator.h"
@@ -1488,10 +1487,7 @@ void GraphGadget::addConnectionGadgets( Gaffer::GraphComponent *plugParent )
 			}
 		}
 
-		if( (*pIt)->isInstanceOf( Gaffer::CompoundPlug::staticTypeId() ) )
-		{
-			addConnectionGadgets( pIt->get() );
-		}
+		addConnectionGadgets( pIt->get() );
 	}
 
 }
@@ -1570,10 +1566,7 @@ void GraphGadget::removeConnectionGadgets( const Gaffer::GraphComponent *plugPar
 			}
 		}
 
-		if( (*pIt)->isInstanceOf( Gaffer::CompoundPlug::staticTypeId() ) )
-		{
-			removeConnectionGadgets( pIt->get() );
-		}
+		removeConnectionGadgets( pIt->get() );
 	}
 
 }
