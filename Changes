@@ -1,3 +1,114 @@
+# 0.15.0.0
+==========
+
+UI
+-----------------------------------------------------------------------
+
+- UI Editor
+  - Added dropdown menu for choosing widget type (#739).
+  - Added section for specifying additional widget settings (#739).
+  - Added preset editor (#739).
+  - Added section for editing section summaries.
+- Added drag and drop of objects onto Set nodes in the NodeGraph.
+- Fixed crash which could occur when opening recent files.
+- Fixed crash which could occur when using OpenGL widgets within Maya.
+- Added support for summary tooltips on node UI tabs (#332).
+
+Core
+-----------------------------------------------------------------------
+
+- Added Wedge node. This allows tasks to be dispatched multiple times
+  using a range of values (#1372).
+- Added TaskContextVariables node. This allows variables to be defined
+  within the tree of tasks (renders etc) executed by a dispatcher.
+- Added Loop node. This takes an input and loops it N times through an
+  external graph before outputting it again. This provides the user with
+  the ability to do things with the graph which were previously only
+  achievable with code.
+- Reference
+  - Fixed serialisation of empty reference.
+  - Fixed serialisation of user plug metadata.
+  - Fixed referencing of promoted plugs
+    - ExecutableNode requirements plug
+    - UnionFilter filter inputs
+    - OSLImage and OSLObject shader plugs.
+    - RenderManShader coshader plugs (#1358).
+- Expression
+  - Fixed support for setting GafferImage FormatPlugs.
+- ContextVariables
+  - Fixed serialisation bug where additional plugs were added on
+    save/load and copy/paste.
+- Improved Context and ValuePlug performance.
+
+Image
+-----------------------------------------------------------------------
+
+- Added ImageLoop node.
+- Performance
+  - Improved Reformat performance.
+  - Improved threading peformance for small images.
+- ImageWriter
+  - Improved error messages.
+  - Fixed bugs with empty filenames and filenames using
+    substitutions.
+- ImageTransform
+  - Fixed copy/paste.
+  - Fixed dirty propagation bug which could prevent the viewer
+    updating at the right time.
+- ImageReader
+  - Added error reporting for missing files.
+
+Scene
+-----------------------------------------------------------------------
+
+- Added SceneLoop node.
+
+API
+-----------------------------------------------------------------------
+
+- Pass-through connections may now be made for FormatPlug (#1250).
+- Added TaskContextProcessor base class. This enables the development
+  of ExecutableNodes which request their input requirements in different
+  contexts.
+- Added support for directly setting Color3f context values from Python.
+- UI Metadata additions. Many additions were made to the metadata supported
+  by the Node UIs, and the existing UIs were ported to make use of it.
+  - "layout:visibilityActivator"
+  - "plugValueWidget:type"
+  - "compoundDataPlugValueWidget:editable"
+  - "boolPlugValueWidget:displayMode"
+  - "vectorDataPlugValueWidget:dragPointer"
+  - "pathPlugValueWidget:leaf"
+  - "pathPlugValueWidget:valid"
+  - "pathPlugValueWidget:bookmarks"
+  - "fileSystemPathPlugValueWidget:extensions"
+  - "fileSystemPathPlugValueWidget:extensionsLabel"
+- ScriptProcedural
+  - Added context parameter.
+- BoolWidget
+  - Added setDisplayMode()/getDisplayMode() accessors.
+- Added AcceptsDependencyCycles Plug flag. See the Loop node for an
+  example of use.
+- Added FileSystemPathPlugValueWidget.
+- Metadata
+  - Fixed inconsistent handling of NULL values.
+  - Added methods for deregistering values.
+
+Incompatibilies
+-----------------------------------------------------------------------
+
+- Removed `Reference::fileNamePlug()` (#801). Use `Reference::fileName()`
+  instead. Use `continueOnError = True` when loading old scripts.
+- Removed arguments from CompoundDataPlugValueWidget constructor. Use
+  Metadata instead.
+- Removed SectionedCompoundDataPlugVlueWidget. Use LayoutPlugValueWidget
+  and metadata instead.
+- Changed base class for ImagePlug.
+- Changed base class for ScenePlug.
+- Changed base class for SplinePlug.
+- Removed ImageMixinBase. Use ImageProcessor instead.
+- Removed SceneMixinBase. Use SceneProcessor instead.
+
 # 0.14.0.0
 ==========
 
