@@ -119,10 +119,11 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		valueChanged = plug.getInput() is not None
 		if not valueChanged and isinstance( plug, Gaffer.ValuePlug ) :
-			if Gaffer.NodeAlgo.hasUserDefault( plug ) :
-				valueChanged = valueChanged or not Gaffer.NodeAlgo.isSetToUserDefault( plug )
-			else :
-				valueChanged = valueChanged or not plug.isSetToDefault()
+			with self.getContext() :
+				if Gaffer.NodeAlgo.hasUserDefault( plug ) :
+					valueChanged = not Gaffer.NodeAlgo.isSetToUserDefault( plug )
+				else :
+					valueChanged = not plug.isSetToDefault()
 		self.__setValueChanged( valueChanged )
 
 	# Sets whether or not the label be rendered in a ValueChanged state.
