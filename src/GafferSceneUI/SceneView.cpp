@@ -199,7 +199,7 @@ class SceneView::Grid
 		{
 			m_node->transformPlug()->rotatePlug()->setValue( V3f( 90, 0, 0 ) );
 
-			CompoundPlugPtr plug = new CompoundPlug( "grid" );
+			ValuePlugPtr plug = new ValuePlug( "grid" );
 			view->addChild( plug );
 
 			plug->addChild( new BoolPlug( "visible", Plug::In, true ) );
@@ -223,14 +223,14 @@ class SceneView::Grid
 			update();
 		}
 
-		Gaffer::CompoundPlug *plug()
+		Gaffer::ValuePlug *plug()
 		{
-			return m_view->getChild<Gaffer::CompoundPlug>( "grid" );
+			return m_view->getChild<Gaffer::ValuePlug>( "grid" );
 		}
 
-		const Gaffer::CompoundPlug *plug() const
+		const Gaffer::ValuePlug *plug() const
 		{
-			return m_view->getChild<Gaffer::CompoundPlug>( "grid" );
+			return m_view->getChild<Gaffer::ValuePlug>( "grid" );
 		}
 
 		Gadget *gadget()
@@ -406,7 +406,7 @@ class SceneView::Gnomon
 		Gnomon( SceneView *view )
 			:	m_view( view ), m_gadget( new GnomonGadget() )
 		{
-			CompoundPlugPtr plug = new CompoundPlug( "gnomon" );
+			ValuePlugPtr plug = new ValuePlug( "gnomon" );
 			view->addChild( plug );
 
 			plug->addChild( new BoolPlug( "visible", Plug::In, true ) );
@@ -433,14 +433,14 @@ class SceneView::Gnomon
 			update();
 		}
 
-		Gaffer::CompoundPlug *plug()
+		Gaffer::ValuePlug *plug()
 		{
-			return m_view->getChild<Gaffer::CompoundPlug>( "gnomon" );
+			return m_view->getChild<Gaffer::ValuePlug>( "gnomon" );
 		}
 
-		const Gaffer::CompoundPlug *plug() const
+		const Gaffer::ValuePlug *plug() const
 		{
-			return m_view->getChild<Gaffer::CompoundPlug>( "gnomon" );
+			return m_view->getChild<Gaffer::ValuePlug>( "gnomon" );
 		}
 
 		Gadget *gadget()
@@ -650,7 +650,7 @@ class SceneView::LookThrough
 
 			// Set up our plugs
 
-			CompoundPlugPtr lookThrough = new CompoundPlug( "lookThrough", Plug::In, Plug::Default & ~Plug::AcceptsInputs );
+			ValuePlugPtr lookThrough = new ValuePlug( "lookThrough", Plug::In, Plug::Default & ~Plug::AcceptsInputs );
 			lookThrough->addChild( new BoolPlug( "enabled", Plug::In, false, Plug::Default & ~Plug::AcceptsInputs ) );
 			lookThrough->addChild( new StringPlug( "camera", Plug::In, "", Plug::Default & ~Plug::AcceptsInputs ) );
 			view->addChild( lookThrough );
@@ -689,14 +689,14 @@ class SceneView::LookThrough
 
 		}
 
-		Gaffer::CompoundPlug *plug()
+		Gaffer::ValuePlug *plug()
 		{
-			return m_view->getChild<Gaffer::CompoundPlug>( "lookThrough" );
+			return m_view->getChild<Gaffer::ValuePlug>( "lookThrough" );
 		}
 
-		const Gaffer::CompoundPlug *plug() const
+		const Gaffer::ValuePlug *plug() const
 		{
-			return m_view->getChild<Gaffer::CompoundPlug>( "lookThrough" );
+			return m_view->getChild<Gaffer::ValuePlug>( "lookThrough" );
 		}
 
 		const Imath::Box2f &resolutionGate() const
@@ -1016,32 +1016,32 @@ const Gaffer::IntPlug *SceneView::minimumExpansionDepthPlug() const
 	return getChild<IntPlug>( g_firstPlugIndex );
 }
 
-Gaffer::CompoundPlug *SceneView::lookThroughPlug()
+Gaffer::ValuePlug *SceneView::lookThroughPlug()
 {
 	return m_lookThrough->plug();
 }
 
-const Gaffer::CompoundPlug *SceneView::lookThroughPlug() const
+const Gaffer::ValuePlug *SceneView::lookThroughPlug() const
 {
 	return m_lookThrough->plug();
 }
 
-Gaffer::CompoundPlug *SceneView::gridPlug()
+Gaffer::ValuePlug *SceneView::gridPlug()
 {
 	return m_grid->plug();
 }
 
-const Gaffer::CompoundPlug *SceneView::gridPlug() const
+const Gaffer::ValuePlug *SceneView::gridPlug() const
 {
 	return m_grid->plug();
 }
 
-Gaffer::CompoundPlug *SceneView::gnomonPlug()
+Gaffer::ValuePlug *SceneView::gnomonPlug()
 {
 	return m_gnomon->plug();
 }
 
-const Gaffer::CompoundPlug *SceneView::gnomonPlug() const
+const Gaffer::ValuePlug *SceneView::gnomonPlug() const
 {
 	return m_gnomon->plug();
 }

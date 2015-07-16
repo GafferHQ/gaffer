@@ -77,14 +77,14 @@ class SceneView : public GafferUI::View3D
 		Gaffer::IntPlug *minimumExpansionDepthPlug();
 		const Gaffer::IntPlug *minimumExpansionDepthPlug() const;
 
-		Gaffer::CompoundPlug *lookThroughPlug();
-		const Gaffer::CompoundPlug *lookThroughPlug() const;
+		Gaffer::ValuePlug *lookThroughPlug();
+		const Gaffer::ValuePlug *lookThroughPlug() const;
 
-		Gaffer::CompoundPlug *gridPlug();
-		const Gaffer::CompoundPlug *gridPlug() const;
+		Gaffer::ValuePlug *gridPlug();
+		const Gaffer::ValuePlug *gridPlug() const;
 
-		Gaffer::CompoundPlug *gnomonPlug();
-		const Gaffer::CompoundPlug *gnomonPlug() const;
+		Gaffer::ValuePlug *gnomonPlug();
+		const Gaffer::ValuePlug *gnomonPlug() const;
 
 		void expandSelection( size_t depth = 1 );
 		void collapseSelection();
