@@ -37,7 +37,7 @@
 
 #include "boost/python.hpp"
 
-#include "Gaffer/CompoundPlug.h"
+#include "Gaffer/Plug.h"
 
 #include "GafferUI/CompoundNodule.h"
 
@@ -51,6 +51,6 @@ using namespace GafferUI;
 void GafferUIBindings::bindCompoundNodule()
 {
 	GadgetClass<CompoundNodule>()
-		.def( init<Gaffer::CompoundPlugPtr, LinearContainer::Orientation, float, LinearContainer::Direction>( ( arg( "plug" ), arg( "orientation" )=LinearContainer::X, arg( "spacing" ) = 0.0f, arg( "direction" )=LinearContainer::InvalidDirection ) ) )
+		.def( init<Gaffer::PlugPtr, LinearContainer::Orientation, float, LinearContainer::Direction>( ( arg( "plug" ), arg( "orientation" )=LinearContainer::X, arg( "spacing" ) = 0.0f, arg( "direction" )=LinearContainer::InvalidDirection ) ) )
 	;
 }
