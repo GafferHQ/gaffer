@@ -130,7 +130,6 @@ class SplinePlug : public ValuePlug
 	private :
 
 		size_t endPointMultiplicity( const T &value ) const;
-		void childAddedOrRemoved();
 
 		T m_defaultValue;
 

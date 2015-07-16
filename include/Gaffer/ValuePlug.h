@@ -173,6 +173,7 @@ class ValuePlug : public Plug
 		class SetValueAction;
 
 		void setValueInternal( IECore::ConstObjectPtr value, bool propagateDirtiness );
+		void childAddedOrRemoved();
 
 		IECore::ConstObjectPtr m_defaultValue;
 		/// For holding the value of input plugs with no input connections.
