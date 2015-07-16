@@ -57,7 +57,7 @@ using namespace Gaffer;
 IE_CORE_DEFINERUNTIMETYPED( CompoundDataPlug::MemberPlug );
 
 CompoundDataPlug::MemberPlug::MemberPlug( const std::string &name, Direction direction, unsigned flags )
-	:	CompoundPlug( name, direction, flags )
+	:	ValuePlug( name, direction, flags )
 {
 }
 
@@ -83,7 +83,7 @@ const BoolPlug *CompoundDataPlug::MemberPlug::enabledPlug() const
 
 bool CompoundDataPlug::MemberPlug::acceptsChild( const Gaffer::GraphComponent *potentialChild ) const
 {
-	if( !CompoundPlug::acceptsChild( potentialChild ) )
+	if( !ValuePlug::acceptsChild( potentialChild ) )
 	{
 		return false;
 	}
@@ -133,7 +133,7 @@ PlugPtr CompoundDataPlug::MemberPlug::createCounterpart( const std::string &name
 IE_CORE_DEFINERUNTIMETYPED( CompoundDataPlug )
 
 CompoundDataPlug::CompoundDataPlug( const std::string &name, Direction direction, unsigned flags )
-	:	CompoundPlug( name, direction, flags )
+	:	ValuePlug( name, direction, flags )
 {
 }
 
@@ -143,7 +143,7 @@ CompoundDataPlug::~CompoundDataPlug()
 
 bool CompoundDataPlug::acceptsChild( const GraphComponent *potentialChild ) const
 {
-	if( !CompoundPlug::acceptsChild( potentialChild ) )
+	if( !ValuePlug::acceptsChild( potentialChild ) )
 	{
 		return false;
 	}

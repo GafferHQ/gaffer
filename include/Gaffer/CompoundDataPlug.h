@@ -41,7 +41,6 @@
 #include "IECore/CompoundData.h"
 #include "IECore/CompoundObject.h"
 
-#include "Gaffer/CompoundPlug.h"
 #include "Gaffer/TypedPlug.h"
 
 namespace Gaffer
@@ -52,7 +51,7 @@ IE_CORE_FORWARDDECLARE( StringPlug )
 /// This plug provides an easy means of building CompoundData containing
 /// arbitrary keys and values, where each key and value is represented
 /// by an individual child plug.
-class CompoundDataPlug : public Gaffer::CompoundPlug
+class CompoundDataPlug : public Gaffer::ValuePlug
 {
 
 	public :
@@ -64,19 +63,19 @@ class CompoundDataPlug : public Gaffer::CompoundPlug
 		);
 		virtual ~CompoundDataPlug();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::CompoundDataPlug, CompoundDataPlugTypeId, Gaffer::CompoundPlug );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::CompoundDataPlug, CompoundDataPlugTypeId, Gaffer::ValuePlug );
 
 		/// Accepts only children that can generate values for the CompoundData.
 		virtual bool acceptsChild( const Gaffer::GraphComponent *potentialChild ) const;
 		virtual PlugPtr createCounterpart( const std::string &name, Direction direction ) const;
 
 		/// The plug type used to represent the data members.
-		class MemberPlug : public CompoundPlug
+		class MemberPlug : public ValuePlug
 		{
 
 			public :
 
-				IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::CompoundDataPlug::MemberPlug, CompoundDataMemberPlugTypeId, Gaffer::CompoundPlug );
+				IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::CompoundDataPlug::MemberPlug, CompoundDataMemberPlugTypeId, Gaffer::ValuePlug );
 
 				MemberPlug( const std::string &name=defaultName<MemberPlug>(), Direction direction=In, unsigned flags=Default );
 
@@ -101,7 +100,7 @@ class CompoundDataPlug : public Gaffer::CompoundPlug
 		typedef Gaffer::FilteredChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::Invalid, MemberPlug> > MemberPlugIterator;
 		IE_CORE_DECLAREPTR( MemberPlug )
 
-		/// Adds a CompoundPlug to represent a CompoundData member with the specified name and default value.
+		/// Adds a plug to represent a CompoundData member with the specified name and default value.
 		/// \todo Consider replacing all these add*Member() methods with convenience constructors on MemberPlug,
 		/// and a simple addChild( new MemberPlug( ... ) ).
 		MemberPlug *addMember( const std::string &name, const IECore::Data *defaultValue, const std::string &plugName = "member1", unsigned plugFlags = Plug::Default | Plug::Dynamic );
