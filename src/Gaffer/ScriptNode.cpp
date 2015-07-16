@@ -49,7 +49,6 @@
 #include "Gaffer/Action.h"
 #include "Gaffer/ApplicationRoot.h"
 #include "Gaffer/Context.h"
-#include "Gaffer/CompoundPlug.h"
 #include "Gaffer/StandardSet.h"
 #include "Gaffer/DependencyNode.h"
 #include "Gaffer/CompoundDataPlug.h"
@@ -206,7 +205,7 @@ ScriptNode::ScriptNode( const std::string &name )
 	addChild( new StringPlug( "fileName", Plug::In, "", Plug::Default & ~Plug::Serialisable ) );
 	addChild( new BoolPlug( "unsavedChanges", Plug::In, false, Plug::Default & ~Plug::Serialisable ) );
 
-	CompoundPlugPtr frameRangePlug = new CompoundPlug( "frameRange", Plug::In );
+	ValuePlugPtr frameRangePlug = new ValuePlug( "frameRange", Plug::In );
 	IntPlugPtr frameStartPlug = new IntPlug( "start", Plug::In, 1 );
 	IntPlugPtr frameEndPlug = new IntPlug( "end", Plug::In, 100 );
 	frameRangePlug->addChild( frameStartPlug );
@@ -602,22 +601,22 @@ const CompoundDataPlug *ScriptNode::variablesPlug() const
 
 IntPlug *ScriptNode::frameStartPlug()
 {
-	return getChild<CompoundPlug>( g_firstPlugIndex + 2 )->getChild<IntPlug>( 0 );
+	return getChild<ValuePlug>( g_firstPlugIndex + 2 )->getChild<IntPlug>( 0 );
 }
 
 const IntPlug *ScriptNode::frameStartPlug() const
 {
-	return getChild<CompoundPlug>( g_firstPlugIndex + 2 )->getChild<IntPlug>( 0 );
+	return getChild<ValuePlug>( g_firstPlugIndex + 2 )->getChild<IntPlug>( 0 );
 }
 
 IntPlug *ScriptNode::frameEndPlug()
 {
-	return getChild<CompoundPlug>( g_firstPlugIndex + 2 )->getChild<IntPlug>( 1 );
+	return getChild<ValuePlug>( g_firstPlugIndex + 2 )->getChild<IntPlug>( 1 );
 }
 
 const IntPlug *ScriptNode::frameEndPlug() const
 {
-	return getChild<CompoundPlug>( g_firstPlugIndex + 2 )->getChild<IntPlug>( 1 );
+	return getChild<ValuePlug>( g_firstPlugIndex + 2 )->getChild<IntPlug>( 1 );
 }
 
 void ScriptNode::plugSet( Plug *plug )
