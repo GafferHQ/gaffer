@@ -44,7 +44,6 @@
 
 #include "IECoreGL/Primitive.h"
 
-#include "Gaffer/CompoundPlug.h"
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/TypedPlug.h"
 
@@ -69,25 +68,25 @@ View3D::View3D( const std::string &name, Gaffer::PlugPtr inPlug )
 
 	// plugs
 
-	CompoundPlugPtr baseState = new CompoundPlug( "baseState" );
+	ValuePlugPtr baseState = new ValuePlug( "baseState" );
 	addChild( baseState );
 
-	CompoundPlugPtr solid = new CompoundPlug( "solid" );
+	ValuePlugPtr solid = new ValuePlug( "solid" );
 	baseState->addChild( solid );
 	solid->addChild( new BoolPlug( "enabled", Plug::In, true ) );
 	solid->addChild( new BoolPlug( "override" ) );
 
-	CompoundPlugPtr wireframe = new CompoundPlug( "wireframe" );
+	ValuePlugPtr wireframe = new ValuePlug( "wireframe" );
 	baseState->addChild( wireframe );
 	wireframe->addChild( new BoolPlug( "enabled" ) );
 	wireframe->addChild( new BoolPlug( "override" ) );
 
-	CompoundPlugPtr points = new CompoundPlug( "points" );
+	ValuePlugPtr points = new ValuePlug( "points" );
 	baseState->addChild( points );
 	points->addChild( new BoolPlug( "enabled" ) );
 	points->addChild( new BoolPlug( "override" ) );
 
-	CompoundPlugPtr bound = new CompoundPlug( "bound" );
+	ValuePlugPtr bound = new ValuePlug( "bound" );
 	baseState->addChild( bound );
 	bound->addChild( new BoolPlug( "enabled" ) );
 	bound->addChild( new BoolPlug( "override" ) );
@@ -136,27 +135,27 @@ void View3D::plugSet( const Gaffer::Plug *plug )
 
 void View3D::updateBaseState()
 {
-	const CompoundPlug *baseState = getChild<CompoundPlug>( "baseState" );
+	const ValuePlug *baseState = getChild<ValuePlug>( "baseState" );
 
-	const CompoundPlug *solid = baseState->getChild<CompoundPlug>( "solid" );
+	const ValuePlug *solid = baseState->getChild<ValuePlug>( "solid" );
 	m_baseState->add(
 		new Primitive::DrawSolid( solid->getChild<BoolPlug>( "enabled" )->getValue() ),
 		solid->getChild<BoolPlug>( "override" )->getValue()
 	);
 
-	const CompoundPlug *wireframe = baseState->getChild<CompoundPlug>( "wireframe" );
+	const ValuePlug *wireframe = baseState->getChild<ValuePlug>( "wireframe" );
 	m_baseState->add(
 		new Primitive::DrawWireframe( wireframe->getChild<BoolPlug>( "enabled" )->getValue() ),
 		wireframe->getChild<BoolPlug>( "override" )->getValue()
 	);
 
-	const CompoundPlug *points = baseState->getChild<CompoundPlug>( "points" );
+	const ValuePlug *points = baseState->getChild<ValuePlug>( "points" );
 	m_baseState->add(
 		new Primitive::DrawPoints( points->getChild<BoolPlug>( "enabled" )->getValue() ),
 		points->getChild<BoolPlug>( "override" )->getValue()
 	);
 
-	const CompoundPlug *bound = baseState->getChild<CompoundPlug>( "bound" );
+	const ValuePlug *bound = baseState->getChild<ValuePlug>( "bound" );
 	m_baseState->add(
 		new Primitive::DrawBound( bound->getChild<BoolPlug>( "enabled" )->getValue() ),
 		bound->getChild<BoolPlug>( "override" )->getValue()
