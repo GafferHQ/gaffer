@@ -45,7 +45,7 @@ using namespace boost;
 IE_CORE_DEFINERUNTIMETYPED( ArrayPlug )
 
 ArrayPlug::ArrayPlug( const std::string &name, Direction direction, PlugPtr element, size_t minSize, size_t maxSize, unsigned flags )
-	:	CompoundPlug( name, direction, flags ), m_minSize( minSize ), m_maxSize( maxSize )
+	:	Plug( name, direction, flags ), m_minSize( minSize ), m_maxSize( maxSize )
 {
 	if( direction == Plug::Out )
 	{
@@ -76,7 +76,7 @@ ArrayPlug::~ArrayPlug()
 
 bool ArrayPlug::acceptsChild( const GraphComponent *potentialChild ) const
 {
-	if( !CompoundPlug::acceptsChild( potentialChild ) )
+	if( !Plug::acceptsChild( potentialChild ) )
 	{
 		return false;
 	}
