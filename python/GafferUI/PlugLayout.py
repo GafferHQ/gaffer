@@ -61,13 +61,13 @@ QtGui = GafferUI._qtImport( "QtGui" )
 #     string to be used as a summary for the section.
 #   - layout:section:sectionName:collapsed" boolean indicating whether or
 #     not a section should be collapsed initially.
+#   - "layout:activator:activatorName" a dynamic boolean metadata entry to control
+#     the activation of plugs within the layout
+#   - "layout:activators" a dynamic metadata entry returning a CompoundData of booleans
+#     for several named activators.
 #
 # Per-node metadata support :
 #
-#	- "layout:activator:activatorName" a dynamic boolean metadata entry to control
-#     the activation of plugs within the layout
-#	- "layout:activators" a dynamic metadata entry returning a CompoundData of booleans
-#     for several named activators.
 #
 # ## Custom widgets
 #
@@ -295,7 +295,7 @@ class PlugLayout( GafferUI.Widget ) :
 		if self.getReadOnly() :
 			return
 
-		activators = Gaffer.Metadata.nodeValue( self.__node(), "layout:activators" ) or {}
+		activators = self.__metadataValue( self.__parent, "layout:activators" ) or {}
 		activators = { k : v.value for k, v in activators.items() } # convert CompoundData of BoolData to dict of booleans
 
 		def active( activatorName ) :
@@ -304,7 +304,7 @@ class PlugLayout( GafferUI.Widget ) :
 			if activatorName :
 				result = activators.get( activatorName )
 				if result is None :
-					result = Gaffer.Metadata.nodeValue( self.__node(), "layout:activator:" + activatorName )
+					result = self.__metadataValue( self.__parent, "layout:activator:" + activatorName )
 					result = result if result is not None else False
 					activators[activatorName] = result
 

@@ -333,7 +333,9 @@ def __nodeColor( node ) :
 
 	return None
 
-def __nodeActivators( node ) :
+def __parameterActivators( parent ) :
+
+	node = parent.node()
 
 	class ExpressionVariables :
 
@@ -413,7 +415,7 @@ Gaffer.Metadata.registerNodeValue( GafferRenderMan.RenderManShader, "nodeGadget:
 
 for nodeType in( GafferRenderMan.RenderManShader, GafferRenderMan.RenderManLight ) :
 
-	Gaffer.Metadata.registerNodeValue( nodeType, "layout:activators", __nodeActivators )
+	Gaffer.Metadata.registerPlugValue( nodeType, "parameters", "layout:activators", __parameterActivators )
 	Gaffer.Metadata.registerPlugDescription( nodeType, "parameters.*", __plugDescription )
 	Gaffer.Metadata.registerPlugValue( nodeType, "parameters.*", "label", __plugLabel )
 	Gaffer.Metadata.registerPlugValue( nodeType, "parameters.*", "divider", __plugDivider )
