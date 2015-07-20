@@ -66,9 +66,6 @@ QtGui = GafferUI._qtImport( "QtGui" )
 #   - "layout:activators" a dynamic metadata entry returning a CompoundData of booleans
 #     for several named activators.
 #
-# Per-node metadata support :
-#
-#
 # ## Custom widgets
 #
 # Custom widgets unassociated with any specific plugs may also be added to plug layouts.
