@@ -84,6 +84,9 @@ QtGui = GafferUI._qtImport( "QtGui" )
 #
 class PlugLayout( GafferUI.Widget ) :
 
+	# We use this when we can't find a ScriptNode to provide the context.
+	__fallbackContext = Gaffer.Context()
+
 	def __init__( self, parent, orientation = GafferUI.ListContainer.Orientation.Vertical, **kw ) :
 
 		assert( isinstance( parent, ( Gaffer.Node, Gaffer.Plug ) ) )
@@ -120,6 +123,10 @@ class PlugLayout( GafferUI.Widget ) :
 		self.__widgets = {}
 		self.__rootSection = _Section( self.__parent )
 
+		# set up an appropriate default context in which to view the plugs.
+		scriptNode = self.__node() if isinstance( self.__node(), Gaffer.ScriptNode ) else self.__node().scriptNode()
+		self.setContext( scriptNode.context() if scriptNode is not None else self.__fallbackContext )
+
 		# schedule our first update, which will take place when we become
 		# visible for the first time.
 		self.__updateLazily()
@@ -139,6 +146,18 @@ class PlugLayout( GafferUI.Widget ) :
 				self.__applyReadOnly( widget, self.__readOnly )
 		else :
 			self.__updateActivations()
+
+	def getContext( self ) :
+
+		return self.__context
+
+	def setContext( self, context ) :
+
+		self.__context = context
+		self.__contextChangedConnection = self.__context.changedSignal().connect( Gaffer.WeakMethod( self.__contextChanged ) )
+
+		for widget in self.__widgets.values() :
+			self.__applyContext( widget, context )
 
 	## Returns a PlugValueWidget representing the specified child plug.
 	# Because the layout is built lazily on demand, this might return None due
@@ -292,7 +311,11 @@ class PlugLayout( GafferUI.Widget ) :
 		if self.getReadOnly() :
 			return
 
-		activators = self.__metadataValue( self.__parent, "layout:activators" ) or {}
+		with self.getContext() :
+			# Must scope the context when getting activators, because they are typically
+			# computed from the plug values, and may therefore trigger a compute.
+			activators = self.__metadataValue( self.__parent, "layout:activators" ) or {}
+
 		activators = { k : v.value for k, v in activators.items() } # convert CompoundData of BoolData to dict of booleans
 
 		def active( activatorName ) :
@@ -301,7 +324,8 @@ class PlugLayout( GafferUI.Widget ) :
 			if activatorName :
 				result = activators.get( activatorName )
 				if result is None :
-					result = self.__metadataValue( self.__parent, "layout:activator:" + activatorName )
+					with self.getContext() :
+						result = self.__metadataValue( self.__parent, "layout:activator:" + activatorName )
 					result = result if result is not None else False
 					activators[activatorName] = result
 
@@ -314,7 +338,12 @@ class PlugLayout( GafferUI.Widget ) :
 
 	def __updateSummariesWalk( self, section ) :
 
-		section.summary = self.__metadataValue( self.__parent, "layout:section:" + section.fullName + ":summary" ) or ""
+		with self.getContext() :
+			# Must scope the context because summaries are typically
+			# generated from plug values, and may therefore trigger
+			# a compute.
+			section.summary = self.__metadataValue( self.__parent, "layout:section:" + section.fullName + ":summary" ) or ""
+
 		for subsection in section.subsections.values() :
 			self.__updateSummariesWalk( subsection )
 
@@ -344,6 +373,7 @@ class PlugLayout( GafferUI.Widget ) :
 				result.labelPlugValueWidget().label()._qtWidget().setFixedWidth( QWIDGETSIZE_MAX )
 
 		self.__applyReadOnly( result, self.getReadOnly() )
+		self.__applyContext( result, self.getContext() )
 
 		# Store the metadata value that controlled the type created, so we can compare to it
 		# in the future to determine if we can reuse the widget.
@@ -426,6 +456,16 @@ class PlugLayout( GafferUI.Widget ) :
 		elif hasattr( widget, "plugValueWidget" ) :
 			widget.plugValueWidget().setReadOnly( readOnly )
 
+	def __applyContext( self, widget, context ) :
+
+		if hasattr( widget, "setContext" ) :
+			widget.setContext( context )
+		elif isinstance(  widget, GafferUI.PlugWidget ) :
+			widget.labelPlugValueWidget().setContext( context )
+			widget.plugValueWidget().setContext( context )
+		elif hasattr( widget, "plugValueWidget" ) :
+			widget.plugValueWidget().setContext( context )
+
 	def __plugMetadataChanged( self, nodeTypeId, plugPath, key, plug ) :
 
 		if plug is not None and not self.__parent.isSame( plug ) and not self.__parent.isSame( plug.parent() ) :
@@ -447,6 +487,12 @@ class PlugLayout( GafferUI.Widget ) :
 
 		if not self.visible() or plug.direction() != plug.Direction.In :
 			return
+
+		self.__activationsDirty = True
+		self.__summariesDirty = True
+		self.__updateLazily()
+
+	def __contextChanged( self, context, name ) :
 
 		self.__activationsDirty = True
 		self.__summariesDirty = True
