@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import IECore
+
 import Gaffer
 import GafferTest
 import GafferUI
@@ -188,6 +190,82 @@ class PlugLayoutTest( GafferUITest.TestCase ) :
 
 		Gaffer.Metadata.deregisterPlugValue( n["p"], "plugValueWidget:type" )
 		self.assertTrue( isinstance( l.plugValueWidget( n["p"], lazy = False ), GafferUI.NumericPlugValueWidget ) )
+
+	def testContext( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = Gaffer.Node()
+		s["n"]["p"] = Gaffer.IntPlug()
+
+		l = GafferUI.PlugLayout( s["n"] )
+		self.assertTrue( l.getContext().isSame( s.context() ) )
+		self.assertTrue( l.plugValueWidget( s["n"]["p"], lazy = False ).getContext().isSame( s.context() ) )
+
+		c = Gaffer.Context()
+		l.setContext( c )
+		self.assertTrue( l.getContext().isSame( c ) )
+		self.assertTrue( l.plugValueWidget( s["n"]["p"] ).getContext().isSame( c ) )
+
+		l = GafferUI.PlugLayout( s )
+		self.assertTrue( l.getContext().isSame( s.context() ) )
+
+	def testContextWithoutScriptNode( self ) :
+
+		n = Gaffer.Node()
+		n["p"] = Gaffer.Plug()
+
+		l = GafferUI.PlugLayout( n )
+		self.assertTrue( isinstance( l.getContext(), Gaffer.Context ) )
+
+		l = GafferUI.PlugLayout( n["p"] )
+		self.assertTrue( isinstance( l.getContext(), Gaffer.Context ) )
+
+	def testContextSensitiveSummariesAndActivators( self ) :
+
+		class SummaryAndActivatorTestNode( Gaffer.Node ) :
+
+			def __init__( self, name = "SummaryAndActivatorTestNode" ) :
+
+				Gaffer.Node.__init__( self, name )
+
+				self["b"] = Gaffer.BoolPlug()
+				self["s"] = Gaffer.StringPlug()
+
+		IECore.registerRunTimeTyped( SummaryAndActivatorTestNode )
+
+		Gaffer.Metadata.registerNode(
+
+			SummaryAndActivatorTestNode,
+
+			"layout:activator:bIsOn", lambda node : node["b"].getValue(),
+			"layout:section:Settings:summary", lambda node : str( node["b"].getValue() ) + " " + node["s"].getValue(),
+
+			plugs = {
+
+				"s" : [
+
+					"layout:activator", "bIsOn",
+
+				]
+
+			},
+
+		)
+
+		s = Gaffer.ScriptNode()
+		p = s["variables"].addMember( "bVariable", False )
+
+		s["n"] = SummaryAndActivatorTestNode()
+
+		s["e"] = Gaffer.Expression()
+		s["e"]["engine"].setValue( "python" )
+		s["e"]["expression"].setValue( 'parent["n"]["b"] = context["bVariable"]' )
+
+		l = GafferUI.PlugLayout( s["n"] )
+		self.assertEqual( l.plugValueWidget( s["n"]["s"], lazy = False ).getReadOnly(), True )
+
+		p["value"].setValue( True )
+		self.assertEqual( l.plugValueWidget( s["n"]["s"], lazy = False ).getReadOnly(), False )
 
 if __name__ == "__main__":
 	unittest.main()
