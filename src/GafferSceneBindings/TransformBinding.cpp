@@ -52,5 +52,11 @@ void GafferSceneBindings::bindTransform()
 	enum_<Transform::Space>( "Space" )
 		.value( "World", Transform::World )
 		.value( "Object", Transform::Object )
+		.value( "Parent", Transform::Parent )
+	;
+
+	enum_<Transform::Mode>( "Mode" )
+		.value( "Relative", Transform::Relative )
+		.value( "Absolute", Transform::Absolute )
 	;
 }
