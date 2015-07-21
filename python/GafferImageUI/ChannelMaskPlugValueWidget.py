@@ -43,28 +43,26 @@ import GafferImageUI
 
 class ChannelMaskPlugValueWidget( GafferUI.PlugValueWidget ) :
 
-	## \todo The inputImagePlug argument should take a Plug, not the name of a plug.
-	# It should default to None, and in this case look for an input ImagePlug called "in".
-	# We should then be able to remove all the specific registrations of this class with
-	# PlugValueWidget, and instead rely on the one at the bottom of this file, which is
-	# currently useless.
-	def __init__( self, plug, inputImagePlug, **kw ) :
+	# The imagePlug provides the available channel names which are
+	# presented in the UI. The default value causes the "in" plug
+	# from the same node as the main plug to be used.
+	def __init__( self, plug, imagePlug = None, **kw ) :
 
 		self.__multiSelectionMenu = GafferUI.MultiSelectionMenu( allowMultipleSelection = True, alwaysHaveASelection=False )
 		GafferUI.PlugValueWidget.__init__( self, self.__multiSelectionMenu, plug, **kw )
-		self.__selectionChangedConnection = self.__multiSelectionMenu.selectionChangedSignal().connect( Gaffer.WeakMethod( self._updateFromSelection ) )
-		self.__inputPlug = None
 
-		if inputImagePlug != None :
-			p = plug.node()[inputImagePlug]
-			if p.direction() != Gaffer.Plug.Direction.In :
-				raise RuntimeError("Image plug is not an input. Please connect an input image plug.")
-			else:
-				self.__inputPlug = p
-				self.__inputChangedConnection = self.__inputPlug.node().plugInputChangedSignal().connect( Gaffer.WeakMethod( self._updateFromImagePlug ) )
-				self._updateFromImagePlug( self.__inputPlug )
+		self.__selectionChangedConnection = self.__multiSelectionMenu.selectionChangedSignal().connect( Gaffer.WeakMethod( self._updateFromSelection ) )
+
+		if imagePlug is not None :
+			self.__imagePlug = imagePlug
 		else :
-			raise RuntimeError("Failed to find an input image plug. Please ensure that one has been assigned in the ChannelMaskPlugValueWidget's constructor.")
+			self.__imagePlug = plug.node()["in"]
+
+		assert( isinstance( self.__imagePlug, GafferImage.ImagePlug ) )
+
+		## \todo If anything, we should be connecting to plugDirtiedSignal() here.
+		self.__inputChangedConnection = self.__imagePlug.node().plugInputChangedSignal().connect( Gaffer.WeakMethod( self._updateFromImagePlug ) )
+		self._updateFromImagePlug( self.__imagePlug )
 
 		self._updateFromPlug()
 
@@ -120,14 +118,12 @@ class ChannelMaskPlugValueWidget( GafferUI.PlugValueWidget ) :
 	## channel which doesn't exist on the input, it is disabled (but still displayed).
 	def _updateFromImagePlug( self, inputPlug ) :
 
-		if not inputPlug.isSame( self.__inputPlug ) and not self.__inputPlug == None :
+		if not inputPlug.isSame( self.__imagePlug ) :
 			return
-
-		input = self.__inputPlug
 
 		# Get the new channels from the input plug.
 		with self.getContext() :
-			channels = list( input['channelNames'].getValue() )
+			channels = list( self.__imagePlug['channelNames'].getValue() )
 		channels = [ channel.replace( ".", "/" ) for channel in channels ]
 
 		# Get the currently selected channels from the input plug.
