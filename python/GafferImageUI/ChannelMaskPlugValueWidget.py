@@ -34,129 +34,94 @@
 #
 ##########################################################################
 
-from __future__ import with_statement
+import functools
+
+import IECore
 
 import Gaffer
 import GafferImage
 import GafferUI
 import GafferImageUI
-from IECore import StringVectorData
 
 class ChannelMaskPlugValueWidget( GafferUI.PlugValueWidget ) :
 
-	## \todo The inputImagePlug argument should take a Plug, not the name of a plug.
-	# It should default to None, and in this case look for an input ImagePlug called "in".
-	# We should then be able to remove all the specific registrations of this class with
-	# PlugValueWidget, and instead rely on the one at the bottom of this file, which is
-	# currently useless.
-	def __init__( self, plug, inputImagePlug, **kw ) :
+	# The imagePlug provides the available channel names which are
+	# presented in the UI. The default value causes the "in" plug
+	# from the same node as the main plug to be used.
+	def __init__( self, plug, imagePlug = None, **kw ) :
 
-		self.__multiSelectionMenu = GafferUI.MultiSelectionMenu( allowMultipleSelection = True, alwaysHaveASelection=False )
-		GafferUI.PlugValueWidget.__init__( self, self.__multiSelectionMenu, plug, **kw )
-		self.__selectionChangedConnection = self.__multiSelectionMenu.selectionChangedSignal().connect( Gaffer.WeakMethod( self._updateFromSelection ) )
-		self.__inputPlug = None
+		self.__menuButton = GafferUI.MenuButton( menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) ) )
 
-		if inputImagePlug != None :
-			p = plug.node()[inputImagePlug]
-			if p.direction() != Gaffer.Plug.Direction.In :
-				raise RuntimeError("Image plug is not an input. Please connect an input image plug.")
-			else:
-				self.__inputPlug = p
-				self.__inputChangedConnection = self.__inputPlug.node().plugInputChangedSignal().connect( Gaffer.WeakMethod( self._updateFromImagePlug ) )
-				self._updateFromImagePlug( self.__inputPlug )
+		GafferUI.PlugValueWidget.__init__( self, self.__menuButton, plug, **kw )
+
+		if imagePlug is not None :
+			self.__imagePlug = imagePlug
 		else :
-			raise RuntimeError("Failed to find an input image plug. Please ensure that one has been assigned in the ChannelMaskPlugValueWidget's constructor.")
+			self.__imagePlug = plug.node()["in"]
+
+		assert( isinstance( self.__imagePlug, GafferImage.ImagePlug ) )
 
 		self._updateFromPlug()
 
-	def _displayText( self ) :
-
-		selected = self.__multiSelectionMenu.getSelection()
-		nSelected = len( selected )
-		nEntries = len( self.__multiSelectionMenu )
-
-		if nEntries == 0 :
-			return "none"
-		elif nSelected == nEntries :
-			return "all"
-		elif nSelected == 0 :
-			return "none"
-
-		text = ""
-		for i in range( 0, nSelected ) :
-			if i < 4 :
-				text = text + selected[i][-1]
-			elif i == 4 :
-				text = text + "..."
-				break
-
-		return text
-
-	def _updateFromSelection( self, widget ) :
-
-		plug = self.getPlug()
-		if plug is not None :
-			with Gaffer.UndoContext( plug.ancestor( Gaffer.ScriptNode ) ) :
-				selection = StringVectorData( self.__multiSelectionMenu.getSelection() )
-				self.__multiSelectionMenu.setText( self._displayText() )
-				selection = [ channel.replace( "/", "." ) for channel in selection ]
-				plug.setValue( StringVectorData( selection ) )
-
 	def _updateFromPlug( self ) :
 
-		# Get the value from the plug and select those channels from the menu.
-		plug = self.getPlug()
-		if plug is not None :
+		value = None
+		if self.getPlug() is not None :
 			with self.getContext() :
-				plugValue = plug.getValue()
-				if plugValue is None :
-					plugValue = plug.ValueType()
-				else :
-					plugValue = [ channel.replace( ".", "/" ) for channel in plugValue ]
-				self.__multiSelectionMenu.setSelection( plugValue )
-		self.__multiSelectionMenu.setEnabled( True )
+				try :
+					value = self.getPlug().getValue()
+				except :
+					# Leave it to other parts of the UI
+					# to display the error.
+					pass
 
-	## Populates the menu with the channels found on the inputPlug.
-	## When populating the menu, if the current plug value is trying to mask a
-	## channel which doesn't exist on the input, it is disabled (but still displayed).
-	def _updateFromImagePlug( self, inputPlug ) :
+		text = ""
+		if value is not None :
+			if not len( value ) :
+				text = "None"
+			else :
+				## \todo Improve display for when we have long
+				# channel names.
+				text = "".join( value )
 
-		if not inputPlug.isSame( self.__inputPlug ) and not self.__inputPlug == None :
-			return
+		self.__menuButton.setText( text )
+		self.__menuButton.setEnabled( self._editable() )
 
-		input = self.__inputPlug
+	def __menuDefinition( self ) :
 
-		# Get the new channels from the input plug.
 		with self.getContext() :
-			channels = list( input['channelNames'].getValue() )
-		channels = [ channel.replace( ".", "/" ) for channel in channels ]
+			try :
+				selectedChannels = self.getPlug().getValue()
+			except :
+				selectedChannels = IECore.StringVectorData()
+			try :
+				availableChannels = self.__imagePlug["channelNames"].getValue()
+			except :
+				availableChannels = IECore.StringVectorData()
 
-		# Get the currently selected channels from the input plug.
-		plug = self.getPlug()
-		if plug is not None :
-			with self.getContext() :
-				plugValue = plug.getValue()
+		result = IECore.MenuDefinition()
+		for channel in availableChannels :
 
-		selected = []
-		for item in plugValue :
-			selected.append( item )
+			channelSelected = channel in selectedChannels
+			if channelSelected :
+				newValue = IECore.StringVectorData( [ c for c in selectedChannels if c != channel ] )
+			else :
+				newValue = IECore.StringVectorData( [ c for c in availableChannels if c in selectedChannels or c == channel ] )
 
-		# Merge the selected channels and the input's channels.
-		# We do this by creating a list of unique channels which are also ordered so that
-		# any channels that were selected but don't belong to the input's channels are
-		# appended to the end.
-		seen = set()
-		seen_add = seen.add
-		newChannels = [ x for x in channels + selected if x not in seen and not seen_add(x)]
-		self.__multiSelectionMenu[:] = newChannels
+			result.append(
+				"/" + channel.replace( ".", "/" ),
+				{
+					"command" : functools.partial( Gaffer.WeakMethod( self.__setValue ), value = newValue ),
+					"checkBox" : channelSelected,
+				}
+			)
 
-		# Now disable the channels that don't exist on the input.
-		disabled = set( selected ) - set( channels )
+		return result
 
-		self.__multiSelectionMenu.setSelection( selected )
-		if len( disabled ) > 0 :
-			enabled = set(self.__multiSelectionMenu.getEnabledItems()) - disabled
-			self.__multiSelectionMenu.setEnabledItems( enabled )
+	def __setValue( self, unused, value ) :
+
+		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
+			self.getPlug().setValue( value )
 
 GafferUI.PlugValueWidget.registerType( GafferImage.ChannelMaskPlug, ChannelMaskPlugValueWidget )
 
