@@ -106,7 +106,8 @@ class PlugLayout( GafferUI.Widget ) :
 
 		# since our layout is driven by metadata, we must respond dynamically
 		# to changes in that metadata.
-		self.__metadataChangedConnection = Gaffer.Metadata.plugValueChangedSignal().connect( Gaffer.WeakMethod( self.__plugMetadataChanged ) )
+		self.__nodeMetadataChangedConnection = Gaffer.Metadata.nodeValueChangedSignal().connect( Gaffer.WeakMethod( self.__nodeMetadataChanged ) )
+		self.__plugMetadataChangedConnection = Gaffer.Metadata.plugValueChangedSignal().connect( Gaffer.WeakMethod( self.__plugMetadataChanged ) )
 
 		# and since our activations are driven by plug values, we must respond
 		# when the plugs are dirtied.
@@ -503,6 +504,15 @@ class PlugLayout( GafferUI.Widget ) :
 		elif hasattr( widget, "plugValueWidget" ) :
 			widget.plugValueWidget().setContext( context )
 
+	def __nodeMetadataChanged( self, nodeTypeId, key, node ) :
+
+		if node is not None and not node.isSame( self.__parent ) :
+			return
+		if not self.__parent.isInstanceOf( nodeTypeId ) :
+			return
+
+		self.__metadataChanged( key )
+
 	def __plugMetadataChanged( self, nodeTypeId, plugPath, key, plug ) :
 
 		if plug is not None and not self.__parent.isSame( plug ) and not self.__parent.isSame( plug.parent() ) :
@@ -510,6 +520,10 @@ class PlugLayout( GafferUI.Widget ) :
 			
 		if not self.__node().isInstanceOf( nodeTypeId ) :
 			return
+
+		self.__metadataChanged( key )
+
+	def __metadataChanged( self, key ) :
 
 		if key in ( "divider", "layout:index", "layout:section", "plugValueWidget:type" ) :
 			# we often see sequences of several metadata changes - so
