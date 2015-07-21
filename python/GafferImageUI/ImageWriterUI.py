@@ -125,5 +125,3 @@ Gaffer.Metadata.registerNode(
 	}
 
 )
-
-GafferUI.PlugValueWidget.registerCreator( GafferImage.ImageWriter, "channels", GafferImageUI.ChannelMaskPlugValueWidget, inputImagePlug = "in" )
