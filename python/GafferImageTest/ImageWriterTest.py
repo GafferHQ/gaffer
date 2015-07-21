@@ -266,11 +266,6 @@ class ImageWriterTest( unittest.TestCase ) :
 		writer["fileName"].setValue( "/tmp/test.#.exr" )
 		self.assertNotEqual( writer.hash( c ), writer.hash( c2 ) )
 
-		# also varies by input image
-		current = writer.hash( c )
-		constant['format'].setValue( GafferImage.Format( IECore.Box2i( IECore.V2i( -5 ), IECore.V2i( 5 ) ), 1. ) )
-		self.assertNotEqual( writer.hash( c ), current )
-
 		# other plugs matter too
 		current = writer.hash( c )
 		writer["writeMode"].setValue( 1 ) # tile mode
@@ -543,6 +538,43 @@ class ImageWriterTest( unittest.TestCase ) :
 
 			os.chmod( self.__testDir + "/test.tif", 0o444 )
 			self.assertRaisesRegexp( RuntimeError, "Could not open", s["w"].execute )
+
+	def testWriteIntermediateFile( self ) :
+
+		# This tests a fairly common usage pattern whereby
+		# an ImageReader loads an image generated higher
+		# up the task tree, some processing is done, and
+		# then an ImageWriter is used to write out the modified
+		# image. A good example of this is a render node being
+		# used to generate an image which is then pushed through
+		# a slapcomp process. Because the rendered image to be
+		# read/written doesn't exist at the point of dispatch
+		# we have to make sure this doesn't cause problems.
+
+		s = Gaffer.ScriptNode()
+
+		s["c"] = GafferImage.Constant()
+
+		s["w1"] = GafferImage.ImageWriter()
+		s["w1"]["in"].setInput( s["c"]["out"] )
+		s["w1"]["fileName"].setValue( self.__testDir + "/test1.exr" )
+
+		s["r"] = GafferImage.ImageReader()
+		s["r"]["fileName"].setValue( self.__testDir + "/test1.exr" )
+
+		s["w2"] = GafferImage.ImageWriter()
+		s["w2"]["in"].setInput( s["r"]["out"] )
+		s["w2"]["fileName"].setValue( self.__testDir + "/test2.exr" )
+		s["w2"]["requirements"][0].setInput( s["w1"]["requirement"] )
+
+		d = Gaffer.LocalDispatcher()
+		d["jobsDirectory"].setValue( self.__testDir + "/jobs" )
+
+		with s.context() :
+			d.dispatch( [ s["w2"] ] )
+
+		self.assertTrue( os.path.isfile( s["w1"]["fileName"].getValue() ) )
+		self.assertTrue( os.path.isfile( s["w2"]["fileName"].getValue() ) )
 
 	def tearDown( self ) :
 
