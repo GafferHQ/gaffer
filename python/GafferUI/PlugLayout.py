@@ -37,6 +37,7 @@
 
 import re
 import sys
+import types
 import functools
 import collections
 
@@ -324,8 +325,11 @@ class PlugLayout( GafferUI.Widget ) :
 			if activatorName :
 				result = activators.get( activatorName )
 				if result is None :
+
 					with self.getContext() :
 						result = self.__metadataValue( self.__parent, "layout:activator:" + activatorName )
+						result = self.__evaluateMetadataValue( result )
+
 					result = result if result is not None else False
 					activators[activatorName] = result
 
@@ -415,6 +419,39 @@ class PlugLayout( GafferUI.Widget ) :
 
 		return self.__staticItemMetadataValue( item, name, parent = self.__parent )
 
+	def __evaluateMetadataValue( self, value ) :
+
+		# This is non-ideal. What we're doing is detecting
+		# metadata values which contain the text of a Python
+		# function, and evaluating that function and returning
+		# the result. This is a workaround for the fact that
+		# we can't register dynamically computed metadata values
+		# for specific plug/node instances - that is only supported
+		# for non-instance metadata. The reason it is not supported
+		# is that we don't have a way of serialising such functions.
+		# But we want the user to be able to define custom activators
+		# in the UIEditor, so we work around this problem here for
+		# now.
+		#
+		# This is intended purely for use by the UIEditor - if you
+		# find yourself writing code that relies on this behaviour,
+		# stop.
+		#
+		## \todo Investigate a means of serialising function-like
+		# metadata values for instances.
+
+		if not isinstance( value, str ) :
+			return value
+
+		scope = {}
+		try :
+			exec value in scope, scope
+			for f in scope.values() :
+				if isinstance( f, types.FunctionType ) :
+					return f( self.__parent )
+		except Exception as e :
+			return value
+
 	@classmethod
 	def __staticSectionPath( cls, item, parent ) :
 
@@ -481,6 +518,9 @@ class PlugLayout( GafferUI.Widget ) :
 			self.__updateLazily()
 		elif re.match( "layout:section:.*:summary", key ) :
 			self.__summariesDirty = True
+			self.__updateLazily()
+		elif key.startswith( "layout:activator" ) or key == "layout:visibilityActivator" :
+			self.__activationsDirty = True
 			self.__updateLazily()
 
 	def __plugDirtied( self, plug ) :
