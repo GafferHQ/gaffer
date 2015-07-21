@@ -308,7 +308,6 @@ IECore::MurmurHash ImageWriter::hash( const Context *context ) const
 	h.append( fileNamePlug()->hash() );
 	h.append( writeModePlug()->hash() );
 	h.append( channelsPlug()->hash() );
-	h.append( inPlug()->imageHash() );
 	return h;
 }
 
