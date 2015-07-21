@@ -34,13 +34,12 @@
 #
 ##########################################################################
 
-from __future__ import with_statement
+import IECore
 
 import Gaffer
 import GafferImage
 import GafferUI
 import GafferImageUI
-from IECore import StringVectorData
 
 class ChannelMaskPlugValueWidget( GafferUI.PlugValueWidget ) :
 
@@ -97,10 +96,10 @@ class ChannelMaskPlugValueWidget( GafferUI.PlugValueWidget ) :
 		plug = self.getPlug()
 		if plug is not None :
 			with Gaffer.UndoContext( plug.ancestor( Gaffer.ScriptNode ) ) :
-				selection = StringVectorData( self.__multiSelectionMenu.getSelection() )
+				selection = IECore.StringVectorData( self.__multiSelectionMenu.getSelection() )
 				self.__multiSelectionMenu.setText( self._displayText() )
 				selection = [ channel.replace( "/", "." ) for channel in selection ]
-				plug.setValue( StringVectorData( selection ) )
+				plug.setValue( IECore.StringVectorData( selection ) )
 
 	def _updateFromPlug( self ) :
 
