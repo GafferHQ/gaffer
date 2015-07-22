@@ -40,12 +40,12 @@ from __future__ import with_statement
 import Gaffer
 import GafferUI
 
-## User docs :
+## Supported Metadata :
 #
-# Return commits any changes onto the plug.
+# - "stringPlugValueWidget:continuousUpdate"
 class StringPlugValueWidget( GafferUI.PlugValueWidget ) :
 
-	def __init__( self, plug, continuousUpdate=False, **kw ) :
+	def __init__( self, plug, **kw ) :
 
 		self.__textWidget = GafferUI.TextWidget()
 
@@ -55,8 +55,7 @@ class StringPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self.__keyPressConnection = self.__textWidget.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
 		self.__editingFinishedConnection = self.__textWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__textChanged ) )
-		if continuousUpdate :
-			self.__textChangedConnection = self.__textWidget.textChangedSignal().connect( Gaffer.WeakMethod( self.__textChanged ) )
+		self.__textChangedConnection = self.__textWidget.textChangedSignal().connect( Gaffer.WeakMethod( self.__textChanged ) )
 
 		self._updateFromPlug()
 
@@ -89,6 +88,10 @@ class StringPlugValueWidget( GafferUI.PlugValueWidget ) :
 					self.__textWidget.setText( value )
 
 			self.__textWidget.setErrored( value is None )
+
+			self.__textChangedConnection.block(
+				not Gaffer.Metadata.plugValue( self.getPlug(), "stringPlugValueWidget:continuousUpdate" )
+			)
 
 		self.__textWidget.setEditable( self._editable() )
 

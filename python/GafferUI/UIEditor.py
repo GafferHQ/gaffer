@@ -451,7 +451,7 @@ class _ColorSwatchMetadataWidget( _MetadataWidget ) :
 
 		_MetadataWidget.__init__( self, self.__swatch, key, target, **kw )
 
-		self.__swatch._qtWidget().setMaximumHeight( 20 )
+		self.__swatch._qtWidget().setFixedHeight( 18 )
 		self.__swatch._qtWidget().setMaximumWidth( 40 )
 		self.__value = None
 
@@ -477,6 +477,49 @@ class _ColorSwatchMetadataWidget( _MetadataWidget ) :
 
 		if color is not None :
 			self._updateFromWidget( color )
+
+class _MenuMetadataWidget( _MetadataWidget ) :
+
+	def __init__( self, key, labelsAndValues, target = None, **kw ) :
+
+		self.__menuButton = GafferUI.MenuButton(
+			menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) )
+		)
+
+		self.__labelsAndValues = labelsAndValues
+		self.__currentValue = None
+
+		_MetadataWidget.__init__( self, self.__menuButton, key, target, **kw )
+
+	def _updateFromValue( self, value ) :
+
+		self.__currentValue = value
+
+		buttonText = str( value )
+		for label, value in self.__labelsAndValues :
+			if value == self.__currentValue :
+				buttonText = label
+				break
+
+		self.__menuButton.setText( buttonText )
+
+	def __menuDefinition( self ) :
+
+		result = IECore.MenuDefinition()
+		for label, value in self.__labelsAndValues :
+			result.append(
+				"/" + label,
+				{
+					"command" : functools.partial( Gaffer.WeakMethod( self.__setValue ), value = value ),
+					"checkBox" : value == self.__currentValue
+				}
+			)
+
+		return result
+
+	def __setValue( self, unused, value ) :
+
+		self._updateFromWidget( value )
 
 ##########################################################################
 # Hierarchical representation of a plug layout, suitable for manipulating
@@ -1176,12 +1219,14 @@ class _PresetsEditor( GafferUI.Widget ) :
 		self.__plugMetadataChangedConnection = None
 		del self.__editingColumn[4:]
 
+		plugValueWidget = None
 		if self.__plug is not None :
 			self.__plugMetadataChangedConnection = Gaffer.Metadata.plugValueChangedSignal().connect( Gaffer.WeakMethod( self.__plugMetadataChanged ) )
 			self.__valueNode["presetValue"] = plug.createCounterpart( "presetValue", plug.Direction.In )
-			self.__editingColumn.append( GafferUI.PlugValueWidget.create( self.__valueNode["presetValue"], useTypeOnly = True ) )
-		else :
-			self.__editingColumn.append( GafferUI.TextWidget() )
+			if hasattr( self.__plug, "getValue" ) :
+				plugValueWidget = GafferUI.PlugValueWidget.create( self.__valueNode["presetValue"], useTypeOnly = True )
+
+		self.__editingColumn.append( plugValueWidget if plugValueWidget is not None else GafferUI.TextWidget() )
 
 		self.__editingColumn.append( GafferUI.Spacer( IECore.V2i( 0 ), expand = True ) )
 
@@ -1402,6 +1447,41 @@ class _PlugEditor( GafferUI.Widget ) :
 							_Label( m.label )
 							self.__metadataWidgets[m.key] = m.metadataWidgetType( key = m.key )
 
+			with GafferUI.Collapsible( "Node Graph", collapsed = True ) :
+
+				with GafferUI.ListContainer( spacing = 4 ) as self.__nodeGraphSection :
+
+					with _Row() :
+
+						_Label( "Gadget" )
+						self.__gadgetMenu = GafferUI.MenuButton(
+							menu = GafferUI.Menu( Gaffer.WeakMethod( self.__gadgetMenuDefinition ) )
+						)
+
+					with _Row() :
+
+						_Label( "Position" )
+						self.__metadataWidgets["nodeGadget:nodulePosition"] = _MenuMetadataWidget(
+							key = "nodeGadget:nodulePosition",
+							labelsAndValues = [
+								( "Default", None ),
+								( "Top", "top" ),
+								( "Bottom", "bottom" ),
+								( "Left", "left" ),
+								( "Right", "right" ),
+							]
+						)
+
+					with _Row() :
+
+						_Label( "Color" )
+						self.__metadataWidgets["nodule:color"] = _ColorSwatchMetadataWidget( key = "nodule:color" )
+
+					with _Row() :
+
+						_Label( "Connection Color" )
+						self.__metadataWidgets["connectionGadget:color"] = _ColorSwatchMetadataWidget( key = "connectionGadget:color" )
+
 			GafferUI.Spacer( IECore.V2i( 0 ), parenting = { "expand" : True } )
 
 		self.__plugMetadataChangedConnection = Gaffer.Metadata.plugValueChangedSignal().connect( Gaffer.WeakMethod( self.__plugMetadataChanged ) )
@@ -1418,7 +1498,9 @@ class _PlugEditor( GafferUI.Widget ) :
 
 		self.__updateWidgetMenuText()
 		self.__updateWidgetSettings()
+		self.__updateGadgetMenuText()
 		self.__presetsEditor.setPlug( plug )
+		self.__nodeGraphSection.setEnabled( self.__plug is not None and self.__plug.parent().isSame( self.__plug.node() ) )
 
 		self.setEnabled( self.__plug is not None )
 
@@ -1440,6 +1522,8 @@ class _PlugEditor( GafferUI.Widget ) :
 		if key == "plugValueWidget:type" :
 			self.__updateWidgetMenuText()
 			self.__updateWidgetSettings()
+		elif key == "nodule:type" :
+			self.__updateGadgetMenuText()
 
 	def __updateWidgetMenuText( self ) :
 
@@ -1465,6 +1549,10 @@ class _PlugEditor( GafferUI.Widget ) :
 			widget = self.__metadataWidgets[m.key]
 			widget.parent().setEnabled( m.plugValueWidgetType == widgetType )
 
+		self.__metadataWidgets["connectionGadget:color"].parent().setEnabled(
+			self.getPlug() is not None and self.getPlug().direction() == Gaffer.Plug.Direction.In
+		)
+
 	def __widgetMenuDefinition( self ) :
 
 		result = IECore.MenuDefinition()
@@ -1479,20 +1567,56 @@ class _PlugEditor( GafferUI.Widget ) :
 			result.append(
 				"/" + w.label,
 				{
-					"command" : functools.partial( Gaffer.WeakMethod( self.__registerWidgetType ), type = w.metadata ),
+					"command" : functools.partial( Gaffer.WeakMethod( self.__registerOrDeregisterMetadata ), key = "plugValueWidget:type", value = w.metadata ),
 					"checkBox" : metadata == w.metadata,
 				}
 			)
 
 		return result
 
-	def __registerWidgetType( self, unused, type ) :
+	def __updateGadgetMenuText( self ) :
+
+		if self.getPlug() is None :
+			self.__gadgetMenu.setText( "" )
+			return
+
+		metadata = Gaffer.Metadata.plugValue( self.getPlug(), "nodule:type" )
+		metadata = None if metadata == "GafferUI::StandardNodule" else metadata
+		for g in self.__gadgetDefinitions :
+			if g.metadata == metadata :
+				self.__gadgetMenu.setText( g.label )
+				return
+
+		self.__gadgetMenu.setText( metadata )
+
+	def __gadgetMenuDefinition( self ) :
+
+		result = IECore.MenuDefinition()
+		if self.getPlug() is None :
+			return result
+
+		metadata = Gaffer.Metadata.plugValue( self.getPlug(), "nodule:type" )
+		for g in self.__gadgetDefinitions :
+			if not isinstance( self.getPlug(), g.plugType ) :
+				continue
+
+			result.append(
+				"/" + g.label,
+				{
+					"command" : functools.partial( Gaffer.WeakMethod( self.__registerOrDeregisterMetadata ), key = "nodule:type", value = g.metadata ),
+					"checkBox" : metadata == g.metadata,
+				}
+			)
+
+		return result
+
+	def __registerOrDeregisterMetadata( self, unused, key, value ) :
 
 		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
-			if type is not None :
-				Gaffer.Metadata.registerPlugValue( self.getPlug(), "plugValueWidget:type", type )
+			if value is not None :
+				Gaffer.Metadata.registerPlugValue( self.getPlug(), key, value )
 			else :
-				Gaffer.Metadata.deregisterPlugValue( self.getPlug(), "plugValueWidget:type" )
+				Gaffer.Metadata.deregisterPlugValue( self.getPlug(), key )
 
 	__WidgetDefinition = collections.namedtuple( "WidgetDefinition", ( "label", "plugType", "metadata" ) )
 	__widgetDefinitions = (
@@ -1511,6 +1635,13 @@ class _PlugEditor( GafferUI.Widget ) :
 		__MetadataDefinition( "pathPlugValueWidget:bookmarks", "Bookmarks Category", _StringMetadataWidget, "GafferUI.FileSystemPathPlugValueWidget" ),
 		__MetadataDefinition( "pathPlugValueWidget:valid", "File Must Exist", _BoolMetadataWidget, "GafferUI.FileSystemPathPlugValueWidget" ),
 		__MetadataDefinition( "pathPlugValueWidget:leaf", "No Directories", _BoolMetadataWidget, "GafferUI.FileSystemPathPlugValueWidget" ),
+	)
+
+	__GadgetDefinition = collections.namedtuple( "GadgetDefinition", ( "label", "plugType", "metadata" ) )
+	__gadgetDefinitions = (
+		__GadgetDefinition( "Default", Gaffer.Plug, None ),
+		__GadgetDefinition( "Array", Gaffer.ArrayPlug, "GafferUI::CompoundNodule" ),
+		__GadgetDefinition( "None", Gaffer.Plug, "" ),
 	)
 
 ##########################################################################
