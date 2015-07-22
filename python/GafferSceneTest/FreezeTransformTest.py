@@ -101,5 +101,10 @@ class FreezeTransformTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( t["out"].bound( "/group/plane" ), IECore.Box3f( IECore.V3f( 1.5, 1.5, 3 ), IECore.V3f( 2.5, 2.5, 3 ) ) )
 		self.assertEqual( t["out"].bound( "/group/plane1" ), IECore.Box3f( IECore.V3f( 0.5, -0.5, 0 ), IECore.V3f( 1.5, 0.5, 0 ) ) )
 
+	def testAffects( self ) :
+
+		t = GafferScene.FreezeTransform()
+		self.assertEqual( set( t.affects( t["in"]["object"] ) ), set( [ t["out"]["object"] ] ) )
+
 if __name__ == "__main__":
 	unittest.main()
