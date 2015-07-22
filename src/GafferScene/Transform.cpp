@@ -34,6 +34,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include "Gaffer/Context.h"
+
 #include "GafferScene/Transform.h"
 
 using namespace IECore;
@@ -48,7 +50,7 @@ Transform::Transform( const std::string &name )
 	:	SceneElementProcessor( name, Filter::NoMatch )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
-	addChild( new IntPlug( "space", Plug::In, World, World, Object ) );
+	addChild( new IntPlug( "space", Plug::In, Local, Local, ResetWorld ) );
 	addChild( new TransformPlug( "transform" ) );
 	
 	// Fast pass-throughs for things we don't modify
@@ -98,20 +100,145 @@ bool Transform::processesTransform() const
 
 void Transform::hashProcessedTransform( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	spacePlug()->hash( h );
+	const Space space = static_cast<Space>( spacePlug()->getValue() );
+	h.append( space );
 	transformPlug()->hash( h );
+
+	switch( space )
+	{
+		case Local :
+		case Parent :
+			// No special hashing needed
+			break;
+		case World :
+			h.append( relativeParentTransformHash( path, context ) );
+			break;
+		case ResetLocal :
+			// No special hashing needed
+			break;
+		case ResetWorld :
+			h.append( relativeParentTransformHash( path, context ) );
+			break;
+	}
 }
 
 Imath::M44f Transform::computeProcessedTransform( const ScenePath &path, const Gaffer::Context *context, const Imath::M44f &inputTransform ) const
 {
-	Space space = static_cast<Space>( spacePlug()->getValue() );
-	Imath::M44f matrix = transformPlug()->matrix();
-	if( space == World )
+	const Space space = static_cast<Space>( spacePlug()->getValue() );
+	const Imath::M44f matrix = transformPlug()->matrix();
+
+	switch( space )
 	{
-		return inputTransform * matrix;
+		case Local :
+			return matrix * inputTransform;
+		case Parent :
+			return inputTransform * matrix;
+		case World :
+		{
+			bool matchingAncestorFound = false;
+			const Imath::M44f parentMatrix = relativeParentTransform( path, context, matchingAncestorFound );
+			if( matchingAncestorFound )
+			{
+				// The ancestor will have the relative world matrix applied,
+				// and we will inherit it, so we don't need to do anything at all.
+				return inputTransform;
+			}
+			else
+			{
+				// We're all on our own, so we invert the parent
+				// matrix to get back to world space, apply the matrix
+				// we want to get a new world space, and then reapply
+				// all of our original transform.
+				return inputTransform * parentMatrix * matrix * parentMatrix.inverse();
+			}
+		}
+		case ResetLocal :
+			return matrix;
+		case ResetWorld :
+		{
+			bool matchingAncestorFound = false;
+			const Imath::M44f parentMatrix = relativeParentTransform( path, context, matchingAncestorFound );
+			if( matchingAncestorFound )
+			{
+				// We will be giving the ancestor the absolute
+				// world space matrix we want, so we just have to
+				// cancel out the relative matrix between us and
+				// that ancestor.
+				return parentMatrix.inverse();
+			}
+			else
+			{
+				// We're all on our own, so we invert the parent
+				// matrix to get back to world space, and then
+				// apply the world space matrix we want.
+				return matrix * parentMatrix.inverse();
+			}
+
+		}
+		default :
+			// Should never get here.
+			return Imath::M44f();
 	}
-	else
+}
+
+Imath::M44f Transform::fullParentTransform( const ScenePath &path ) const
+{
+	ScenePath parentPath = path;
+	parentPath.pop_back();
+	return inPlug()->fullTransform( parentPath );
+}
+
+IECore::MurmurHash Transform::fullParentTransformHash( const ScenePath &path ) const
+{
+	ScenePath parentPath = path;
+	parentPath.pop_back();
+	return inPlug()->fullTransformHash( parentPath );
+}
+
+Imath::M44f Transform::relativeParentTransform( const ScenePath &path, const Gaffer::Context *context, bool &matchingAncestorFound ) const
+{
+	ContextPtr tmpContext = filterContext( context );
+	Context::Scope scopedContext( tmpContext.get() );
+
+	Imath::M44f result;
+	matchingAncestorFound = false;
+
+	ScenePath ancestorPath( path );
+	while( ancestorPath.size() ) // Root transform is always identity so can be ignored
 	{
-		return matrix * inputTransform;
+		ancestorPath.pop_back();
+		tmpContext->set( ScenePlug::scenePathContextName, ancestorPath );
+		if( filterPlug()->getValue() & Filter::ExactMatch )
+		{
+			matchingAncestorFound = true;
+			return result;
+		}
+		result = result * inPlug()->transformPlug()->getValue();
 	}
+
+	return result;
+}
+
+IECore::MurmurHash Transform::relativeParentTransformHash( const ScenePath &path, const Gaffer::Context *context ) const
+{
+	ContextPtr tmpContext = filterContext( context );
+	Context::Scope scopedContext( tmpContext.get() );
+
+	IECore::MurmurHash result;
+
+	ScenePath ancestorPath( path );
+	while( ancestorPath.size() ) // Root transform is always identity so can be ignored
+	{
+		ancestorPath.pop_back();
+		tmpContext->set( ScenePlug::scenePathContextName, ancestorPath );
+		if( filterPlug()->getValue() & Filter::ExactMatch )
+		{
+			result.append( true );
+			return result;
+		}
+		result.append( false );
+		inPlug()->transformPlug()->hash( result );
+	}
+
+	return result;
 }
