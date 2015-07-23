@@ -39,6 +39,7 @@
 
 #include "GafferScene/SceneElementProcessor.h"
 #include "GafferScene/Filter.h"
+#include "GafferScene/SceneAlgo.h"
 
 using namespace IECore;
 using namespace Gaffer;
@@ -91,14 +92,26 @@ void SceneElementProcessor::hashBound( const ScenePath &path, const Gaffer::Cont
 {
 	switch( boundMethod( context ) )
 	{
-		case Direct :
+		case Processed :
 			FilteredSceneProcessor::hashBound( path, context, parent, h );
 			inPlug()->boundPlug()->hash( h );
 			hashProcessedBound( path, context, h );
 			break;
 		case Union :
-			h = hashOfTransformedChildBounds( path, outPlug() );
+		{
+			ConstInternedStringVectorDataPtr childNames = inPlug()->childNamesPlug()->getValue();
+			if( childNames->readable().size() )
+			{
+				FilteredSceneProcessor::hashBound( path, context, parent, h );
+				h.append( hashOfTransformedChildBounds( path, outPlug(), childNames.get() ) );
+				inPlug()->objectPlug()->hash( h );
+			}
+			else
+			{
+				h = inPlug()->boundPlug()->hash();
+			}
 			break;
+		}
 		case PassThrough :
 			h = inPlug()->boundPlug()->hash();
 			break;
@@ -109,10 +122,33 @@ Imath::Box3f SceneElementProcessor::computeBound( const ScenePath &path, const G
 {
 	switch( boundMethod( context ) )
 	{
-		case Direct :
+		case Processed :
 			return computeProcessedBound( path, context, inPlug()->boundPlug()->getValue() );
 		case Union :
-			return unionOfTransformedChildBounds( path, outPlug() );
+		{
+			// We want to return the union of all the transformed child bounds and the
+			// bound for the object at this location. But we want to avoid computing the
+			// object itself at all costs for obvious reasons - a bound should be a thing
+			// you compute cheaply before deciding if you want the object or not.
+			Imath::Box3f result;
+			ConstInternedStringVectorDataPtr childNames = inPlug()->childNamesPlug()->getValue();
+			if( childNames->readable().size() )
+			{
+				result = unionOfTransformedChildBounds( path, outPlug(), childNames.get() );
+				// We do have to resort to computing the object here, but its exceedingly
+				// rare to have an object at a location which also has children, so typically
+				// we should be receiving a NullObject cheaply.
+				result.extendBy( bound( inPlug()->objectPlug()->getValue().get() ) );
+			}
+			else
+			{
+				// Because there are no children, we know that the input bound is the
+				// bound of the input object on its own, and can just pass that through
+				// directly.
+				result = inPlug()->boundPlug()->getValue();
+			}
+			return result;
+		}
 		default :
 			return inPlug()->boundPlug()->getValue();
 	}
@@ -273,7 +309,6 @@ IECore::ConstObjectPtr SceneElementProcessor::computeProcessedObject( const Scen
 	return inputObject;
 }
 
-/// \todo This needs updating to return a bitmask now that filters return a bitmask.
 SceneElementProcessor::BoundMethod SceneElementProcessor::boundMethod( const Gaffer::Context *context ) const
 {
 	const bool pBound = processesBound();
@@ -282,19 +317,12 @@ SceneElementProcessor::BoundMethod SceneElementProcessor::boundMethod( const Gaf
 	if( pBound || pTransform )
 	{
 		const Filter::Result f = filterValue( context );
-		if( f & Filter::ExactMatch )
+		if( pBound && (f & Filter::ExactMatch) )
 		{
-			if( pBound )
-			{
-				return Direct;
-			}
-			else
-			{
-				// changing only the transform at a matched location has no effect
-				// on the bound of that location - fall through to default case.
-			}
+			return Processed;
 		}
-		else if( f & Filter::DescendantMatch )
+
+		if( f & Filter::DescendantMatch )
 		{
 			return Union;
 		}

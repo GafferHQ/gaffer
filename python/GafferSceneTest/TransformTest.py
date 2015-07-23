@@ -372,5 +372,20 @@ class TransformTest( GafferSceneTest.SceneTestCase ) :
 			IECore.M44f.createTranslated( IECore.V3f( 1, 2, 3 ) )
 		)
 
+	def testObjectBoundIncludedWhenDescendantsMatch( self ) :
+
+		s = GafferScene.Cube()
+
+		f = GafferScene.PathFilter()
+		f["paths"].setValue( IECore.StringVectorData( [ "/..." ] ) ) # the dread ellipsis!
+
+		t = GafferScene.Transform()
+		t["in"].setInput( s["out"] )
+		t["filter"].setInput( f["out"] )
+		t["transform"]["translate"].setValue( IECore.V3f( 1 ) )
+
+		self.assertSceneValid( t["out"] )
+		self.assertEqual( t["out"].bound( "/" ), IECore.Box3f( IECore.V3f( 0.5 ), IECore.V3f( 1.5 ) ) )
+
 if __name__ == "__main__":
 	unittest.main()
