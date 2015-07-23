@@ -52,6 +52,7 @@ AppleseedOptions::AppleseedOptions( const std::string &name )
 	options->addOptionalMember( "as:cfg:uniform_pixel_renderer:samples", new IECore::IntData( 64 ), "aaSamples", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "as:cfg:lighting_engine", new IECore::StringData( "pt" ), "lightingEngine", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "as:mesh_file_format", new IECore::StringData( "binarymesh" ), "meshFileFormat", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "as:cfg:shading_engine:override_shading:mode", new IECore::StringData( "no_override" ), "shadingOverride", Gaffer::Plug::Default, false );
 
 	// environment
 	options->addOptionalMember( "as:environment_edf", new IECore::StringData(), "environmentEDF", Gaffer::Plug::Default, false );

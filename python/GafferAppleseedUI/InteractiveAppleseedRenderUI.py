@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2014, Esteban Tovagliari. All rights reserved.
+#  Copyright (c) 2015, Esteban Tovagliari. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,11 +34,24 @@
 #
 ##########################################################################
 
-import AppleseedAttributesUI
-import AppleseedLightUI
-import AppleseedOptionsUI
-import AppleseedRenderUI
-import InteractiveAppleseedRenderUI
-import LightMenu
+import Gaffer
+import GafferAppleseed
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferAppleseedUI" )
+Gaffer.Metadata.registerNode(
+
+	GafferAppleseed.InteractiveAppleseedRender,
+
+	"description",
+	"""
+	Performs interactive renders using the appleseed renderer.
+	The following edits are currently supported :
+
+	- Adding/removing lights
+	- Adjusting light parameters
+	- Moving the camera
+	- Changing shader assignments
+	- Editing shader networks
+	- Editing shader parameters
+	""",
+
+)

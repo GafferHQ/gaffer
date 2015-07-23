@@ -80,6 +80,12 @@ Gaffer.Metadata.registerNode(
 
 	GafferAppleseed.AppleseedAttributes,
 
+	"description",
+	"""
+	Applies appleseed attributes to objects
+	in the scene.
+	""",
+
 	plugs = {
 
 		# Sections
@@ -96,12 +102,26 @@ Gaffer.Metadata.registerNode(
 
 		"attributes.cameraVisibility" : [
 
+			"description",
+			"""
+			Whether or not the object is visible to camera
+			rays. To hide an object completely, use the
+			visibility settings on the StandardAttributes
+			node instead.
+			""",
+
 			"layout:section", "Visibility",
 			"label", "Camera",
 
 		],
 
 		"attributes.lightVisibility" : [
+
+			"description",
+			"""
+			Whether or not the object is visible to light
+			rays (whether or not it is visible to photons).
+			""",
 
 			"layout:section", "Visibility",
 			"label", "Light",
@@ -110,12 +130,24 @@ Gaffer.Metadata.registerNode(
 
 		"attributes.shadowVisibility" : [
 
+			"description",
+			"""
+			Whether or not the object is visible to shadow
+			rays (whether or not it casts shadows).
+			""",
+
 			"layout:section", "Visibility",
 			"label", "Shadow",
 
 		],
 
 		"attributes.diffuseVisibility" : [
+
+			"description",
+			"""
+			Whether or not the object is visible to diffuse
+			rays - whether it casts bounce light or not.
+			""",
 
 			"layout:section", "Visibility",
 			"label", "Diffuse",
@@ -124,12 +156,24 @@ Gaffer.Metadata.registerNode(
 
 		"attributes.specularVisibility" : [
 
+			"description",
+			"""
+			Whether or not the object is visible in
+			tight mirror reflections and refractions.
+			""",
+
 			"layout:section", "Visibility",
 			"label", "Specular",
 
 		],
 
 		"attributes.glossyVisibility" : [
+
+			"description",
+			"""
+			Whether or not the object is visible in
+			soft specular reflections and refractions.
+			""",
 
 			"layout:section", "Visibility",
 			"label", "Glossy",
@@ -140,6 +184,11 @@ Gaffer.Metadata.registerNode(
 
 		"attributes.shadingSamples" : [
 
+			"description",
+			"""
+			Number of samples to use when computing shading for the object.
+			""",
+
 			"layout:section", "Shading",
 
 		],
@@ -147,6 +196,12 @@ Gaffer.Metadata.registerNode(
 		# Alpha Map
 
 		"attributes.alphaMap" : [
+
+			"description",
+			"""
+			Specifies a grayscale texture than can be used to efficiently discard 
+			unwanted parts of the surface of the object while computing ray intersections.
+			""",
 
 			"layout:section", "Alpha Map",
 
