@@ -113,9 +113,13 @@ void outputOptions( const IECore::CompoundObject *globals, IECore::Renderer *ren
 		{
 			renderer->setOption( it->first.c_str() + 7, d );
 		}
+		else if( const PreWorldRenderable *r = runTimeCast<PreWorldRenderable>( it->second.get() ) )
+		{
+			r->render( renderer );
+		}
 		else
 		{
-			throw IECore::Exception( "Global \"" + it->first.string() + "\" is not IECore::Data" );
+			throw IECore::Exception( "Global \"" + it->first.string() + "\" is not IECore::Data or an IECore::PreWorldRenderable" );
 		}
 	}
 }

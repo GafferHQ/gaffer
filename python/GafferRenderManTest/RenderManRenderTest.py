@@ -717,6 +717,46 @@ class RenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		self.assertLess( hiddenStats["average"].getValue()[0], 0.05 )
 		self.assertGreater( visibleStats["average"].getValue()[0], .35 )
 
+	def testPreWorldRenderables( self ):
+
+		class GeneratePreWorldRenderable( Gaffer.ComputeNode ) :
+
+			def __init__( self, name="Out" ) :
+
+				Gaffer.ComputeNode.__init__( self, name )
+				self.addChild( GafferScene.ScenePlug( "out", Gaffer.Plug.Direction.Out ) )
+
+			def hash( self, output, context, h ) :
+
+				h.append( "test" )
+
+			def compute( self, plug, context ) :
+
+				if plug.getName() == "globals" :
+					# must be computing out.globals():
+					outObject = IECore.CompoundObject( {
+						"option:user:blah" : IECore.ClippingPlane()
+					} )
+					plug.setValue( outObject )
+				else:
+					plug.setValue( plug.defaultValue() )
+		
+		s = Gaffer.ScriptNode()
+
+		s["g"] = GeneratePreWorldRenderable()
+
+		s["r"] = GafferRenderMan.RenderManRender()
+		s["r"]["mode"].setValue( "generate" )
+		s["r"]["ribFileName"].setValue( "/tmp/test.rib" )
+		s["r"]["in"].setInput( s["g"]["out"] )
+
+		s["r"].execute()
+
+		# node should have inserted a ClippingPlane into the rib by putting it
+		# in the options:
+		rib = "\n".join( file( "/tmp/test.rib" ).readlines() )
+		self.assertTrue( "ClippingPlane" in rib )
+		
 	def setUp( self ) :
 
 		for f in (
