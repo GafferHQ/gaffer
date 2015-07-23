@@ -37,9 +37,6 @@
 #include "OpenEXR/ImathBoxAlgo.h"
 
 #include "IECore/NullObject.h"
-#include "IECore/Camera.h"
-#include "IECore/CoordinateSystem.h"
-#include "IECore/ClippingPlane.h"
 
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/TransformPlug.h"
@@ -178,29 +175,8 @@ void ObjectSource::hashBound( const SceneNode::ScenePath &path, const Gaffer::Co
 
 Imath::Box3f ObjectSource::computeBound( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	Imath::Box3f result;
 	IECore::ConstObjectPtr object = sourcePlug()->getValue();
-
-	if( const IECore::VisibleRenderable *renderable = IECore::runTimeCast<const IECore::VisibleRenderable>( object.get() ) )
-	{
-		result = renderable->bound();
-	}
-	else if( object->isInstanceOf( IECore::Camera::staticTypeId() ) )
-	{
-		result = Imath::Box3f( Imath::V3f( -0.5, -0.5, 0 ), Imath::V3f( 0.5, 0.5, 2.0 ) );
-	}
-	else if( object->isInstanceOf( IECore::CoordinateSystem::staticTypeId() ) )
-	{
-		result = Imath::Box3f( Imath::V3f( 0 ), Imath::V3f( 1 ) );
-	}
-	else if( object->isInstanceOf( IECore::ClippingPlane::staticTypeId() ) )
-	{
-		result = Imath::Box3f( Imath::V3f( -0.5, -0.5, 0 ), Imath::V3f( 0.5 ) );
-	}
-	else
-	{
-		result = Imath::Box3f( Imath::V3f( -0.5 ), Imath::V3f( 0.5 ) );
-	}
+	Imath::Box3f result = bound( object.get() );
 
 	if( path.size() == 0 )
 	{

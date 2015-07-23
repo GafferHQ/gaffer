@@ -108,6 +108,11 @@ bool setExists( const ScenePlug *scene, const IECore::InternedString &setName );
 /// computations in parallel for improved performance.
 IECore::ConstCompoundDataPtr sets( const ScenePlug *scene );
 
+/// Returns a bounding box for the specified object. Typically
+/// this is provided by the VisibleRenderable::bound() method, but
+/// for other object types we must return a synthetic bound.
+Imath::Box3f bound( const IECore::Object *object );
+
 } // namespace GafferScene
 
 #include "GafferScene/SceneAlgo.inl"
