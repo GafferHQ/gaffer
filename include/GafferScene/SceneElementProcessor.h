@@ -45,6 +45,10 @@ namespace GafferScene
 
 /// The SceneElementProcessor class provides a base class for modifying elements of an input
 /// scene while leaving the scene hierarchy unchanged.
+/// \todo This "all in one" base class for modifying bounds/transforms/attributes/objects
+/// is feeling a bit unwieldy, and it seems that typical derived classes only ever modify
+/// one thing anyway. Perhaps we'd be better off with individual TransformProcessor,
+/// AttributeProcessor, ObjectProcessor and Deformer base classes.
 class SceneElementProcessor : public FilteredSceneProcessor
 {
 
@@ -101,6 +105,8 @@ class SceneElementProcessor : public FilteredSceneProcessor
 		virtual void hashProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual IECore::ConstCompoundObjectPtr computeProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputAttributes ) const;
 
+		/// Note that if you implement processesObject() in such a way as to deform the object, you /must/ also
+		/// implement processesBound() appropriately.
 		virtual bool processesObject() const;
 		virtual void hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual IECore::ConstObjectPtr computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const;
@@ -111,7 +117,7 @@ class SceneElementProcessor : public FilteredSceneProcessor
 		enum BoundMethod
 		{
 			PassThrough = 0,
-			Direct = 1,
+			Processed = 1,
 			Union = 2
 		};
 

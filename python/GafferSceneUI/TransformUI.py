@@ -39,26 +39,71 @@ import GafferUI
 
 import GafferScene
 
-Gaffer.Metadata.registerNodeDescription(
+Gaffer.Metadata.registerNode(
 
-GafferScene.Transform,
-
-"""Modifies the transforms of all locations matched by the filter.""",
-
-"space",
-"""The space in which the transform is applied.""",
-
-"transform",
-"""The transform to be applied.""",
-
-)
-
-GafferUI.PlugValueWidget.registerCreator(
 	GafferScene.Transform,
-	"space",
-	GafferUI.EnumPlugValueWidget,
-	labelsAndValues = (
-		( "World", GafferScene.Transform.Space.World ),
-		( "Object", GafferScene.Transform.Space.Object ),
-	)
+
+	"description",
+	"""
+	Applies a transformation to the local matrix
+	of all locations matched by the filter.
+	""",
+
+	plugs = {
+
+		"space" : [
+
+			"description",
+			"""
+			The space in which the transformation is specified.
+			Note that no matter which space is chosen, only the
+			local matrices of the filtered locations are ever modified.
+			They are simply modified in such as way as to emulate a
+			modification in the chosen space.
+
+			Local
+			:	The transformation is specified in local space and
+				is therefore post-multiplied onto the local matrix.
+
+			Parent
+			:	The transformation is specified in parent space and
+				is therefore pre-multiplied onto the local matrix.
+
+			World
+			:	The transformation is specified in world space and
+				will therefore be applied as if the whole world was
+				moved. This effect is then applied on a per-location
+				basis to each of the filtered locations.
+
+			Reset Local
+			:	The local matrix is replaced with the specified transform.
+
+			Reset World
+			:	The transformation is specified as an absolute matrix
+				in world space. Each of the filtered locations will
+				be moved to this absolute position.
+			""",
+
+			"preset:Local", GafferScene.Transform.Space.Local,
+			"preset:Parent", GafferScene.Transform.Space.Parent,
+			"preset:World", GafferScene.Transform.Space.World,
+			"preset:Reset Local", GafferScene.Transform.Space.ResetLocal,
+			"preset:Reset World", GafferScene.Transform.Space.ResetWorld,
+
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
+		],
+
+		"transform" : [
+
+			"description",
+			"""
+			The transform to be applied.
+			""",
+
+		]
+
+	}
+
 )

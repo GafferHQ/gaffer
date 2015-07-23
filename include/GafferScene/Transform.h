@@ -56,8 +56,11 @@ class Transform : public SceneElementProcessor
 
 		enum Space
 		{
+			Local,
+			Parent,
 			World,
-			Object
+			ResetLocal,
+			ResetWorld
 		};
 
 		Gaffer::IntPlug *spacePlug();
@@ -75,6 +78,15 @@ class Transform : public SceneElementProcessor
 		virtual Imath::M44f computeProcessedTransform( const ScenePath &path, const Gaffer::Context *context, const Imath::M44f &inputTransform ) const;
 
 	private :
+
+		Imath::M44f fullParentTransform( const ScenePath &path ) const;
+		IECore::MurmurHash fullParentTransformHash( const ScenePath &path ) const;
+		// Returns the transform of the parent of path, either relative to an ancestor matched
+		// by the filter or to the root if no matching ancestor is found. This is useful for
+		// the world reset mode because when a matching ancestor is found we know what its output
+		// transform will be already.
+		Imath::M44f relativeParentTransform( const ScenePath &path, const Gaffer::Context *context, bool &matchingAncestorFound ) const;
+		IECore::MurmurHash relativeParentTransformHash( const ScenePath &path, const Gaffer::Context *context ) const;
 
 		static size_t g_firstPlugIndex;
 

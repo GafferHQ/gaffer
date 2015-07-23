@@ -40,6 +40,9 @@
 
 #include "IECore/MatrixMotionTransform.h"
 #include "IECore/Camera.h"
+#include "IECore/CoordinateSystem.h"
+#include "IECore/ClippingPlane.h"
+#include "IECore/NullObject.h"
 
 #include "Gaffer/Context.h"
 
@@ -453,3 +456,30 @@ IECore::ConstCompoundDataPtr GafferScene::sets( const ScenePlug *scene )
 	return result;
 }
 
+Imath::Box3f GafferScene::bound( const IECore::Object *object )
+{
+	if( const IECore::VisibleRenderable *renderable = IECore::runTimeCast<const IECore::VisibleRenderable>( object ) )
+	{
+		return renderable->bound();
+	}
+	else if( object->isInstanceOf( IECore::Camera::staticTypeId() ) )
+	{
+		return Imath::Box3f( Imath::V3f( -0.5, -0.5, 0 ), Imath::V3f( 0.5, 0.5, 2.0 ) );
+	}
+	else if( object->isInstanceOf( IECore::CoordinateSystem::staticTypeId() ) )
+	{
+		return Imath::Box3f( Imath::V3f( 0 ), Imath::V3f( 1 ) );
+	}
+	else if( object->isInstanceOf( IECore::ClippingPlane::staticTypeId() ) )
+	{
+		return Imath::Box3f( Imath::V3f( -0.5, -0.5, 0 ), Imath::V3f( 0.5 ) );
+	}
+	else if( !object->isInstanceOf( IECore::NullObject::staticTypeId() ) )
+	{
+		return Imath::Box3f( Imath::V3f( -0.5 ), Imath::V3f( 0.5 ) );
+	}
+	else
+	{
+		return Imath::Box3f();
+	}
+}

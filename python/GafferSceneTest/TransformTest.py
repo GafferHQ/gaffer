@@ -35,6 +35,7 @@
 ##########################################################################
 
 import unittest
+import math
 
 import IECore
 
@@ -120,9 +121,19 @@ class TransformTest( GafferSceneTest.SceneTestCase ) :
 		filter["paths"].setValue( IECore.StringVectorData( [ "/sphere" ] ) )
 		transform["filter"].setInput( filter["out"] )
 
-		self.assertEqual( transform["space"].getValue(), GafferScene.Transform.Space.World )
-
+		self.assertEqual( transform["space"].getValue(), GafferScene.Transform.Space.Local )
 		transform["transform"]["rotate"]["y"].setValue( 90 )
+
+		self.assertSceneValid( transform["out"] )
+
+		self.assertTrue(
+			IECore.V3f( 1, 0, 0 ).equalWithAbsError(
+				IECore.V3f( 0 ) * transform["out"].fullTransform( "/sphere" ),
+				0.000001
+			)
+		)
+
+		transform["space"].setValue( GafferScene.Transform.Space.Parent )
 		self.assertTrue(
 			IECore.V3f( 0, 0, -1 ).equalWithAbsError(
 				IECore.V3f( 0 ) * transform["out"].fullTransform( "/sphere" ),
@@ -130,12 +141,251 @@ class TransformTest( GafferSceneTest.SceneTestCase ) :
 			)
 		)
 
-		transform["space"].setValue( GafferScene.Transform.Space.Object )
+		transform["space"].setValue( GafferScene.Transform.Space.World )
 		self.assertTrue(
-			IECore.V3f( 1, 0, 0 ).equalWithAbsError(
+			IECore.V3f( 0, 0, -1 ).equalWithAbsError(
 				IECore.V3f( 0 ) * transform["out"].fullTransform( "/sphere" ),
 				0.000001
 			)
 		)
+
+	def testSpaceWithNestedHierarchy( self ) :
+
+		sphere = GafferScene.Sphere()
+
+		group = GafferScene.Group()
+		group["in"].setInput( sphere["out"] )
+		group["transform"]["translate"].setValue( IECore.V3f( 1, 0, 0 ) )
+
+		transform = GafferScene.Transform()
+		transform["in"].setInput( group["out"] )
+
+		filter = GafferScene.PathFilter()
+		filter["paths"].setValue( IECore.StringVectorData( [ "/group/sphere" ] ) )
+		transform["filter"].setInput( filter["out"] )
+
+		self.assertEqual( transform["space"].getValue(), GafferScene.Transform.Space.Local )
+		self.assertSceneValid( transform["out"] )
+		self.assertTrue(
+			IECore.V3f( 1, 0, 0 ).equalWithAbsError(
+				IECore.V3f( 0 ) * transform["out"].fullTransform( "/group/sphere" ),
+				0.000001
+			)
+		)
+
+		transform["space"].setValue( GafferScene.Transform.Space.Parent )
+		self.assertSceneValid( transform["out"] )
+		self.assertTrue(
+			IECore.V3f( 1, 0, 0 ).equalWithAbsError(
+				IECore.V3f( 0 ) * transform["out"].fullTransform( "/group/sphere" ),
+				0.000001
+			)
+		)
+
+		transform["space"].setValue( GafferScene.Transform.Space.World )
+		transform["transform"]["rotate"]["y"].setValue( 90 )
+		self.assertTrue(
+			IECore.V3f( 0, 0, -1 ).equalWithAbsError(
+				IECore.V3f( 0 ) * transform["out"].fullTransform( "/group/sphere" ),
+				0.000001
+			)
+		)
+
+	def testResetLocal( self ) :
+
+		sphere = GafferScene.Sphere()
+		sphere["transform"]["translate"].setValue( IECore.V3f( 1, 0, 0 ) )
+
+		group = GafferScene.Group()
+		group["in"].setInput( sphere["out"] )
+		group["transform"]["translate"].setValue( IECore.V3f( 1, 0, 0 ) )
+
+		transform = GafferScene.Transform()
+		transform["in"].setInput( group["out"] )
+		transform["transform"]["rotate"]["y"].setValue( 90 )
+
+		filter = GafferScene.PathFilter()
+		filter["paths"].setValue( IECore.StringVectorData( [ "/group/sphere" ] ) )
+		transform["filter"].setInput( filter["out"] )
+
+		transform["space"].setValue( GafferScene.Transform.Space.ResetLocal )
+		self.assertSceneValid( transform["out"] )
+		self.assertTrue(
+			IECore.V3f( 1, 0, 0 ).equalWithAbsError(
+				IECore.V3f( 0 ) * transform["out"].fullTransform( "/group/sphere" ),
+				0.000001
+			)
+		)
+		self.assertTrue(
+			IECore.V3f( 2, 0, 0 ).equalWithAbsError(
+				IECore.V3f( 0, 0, 1 ) * transform["out"].fullTransform( "/group/sphere" ),
+				0.000001
+			)
+		)
+		self.assertEqual(
+			transform["out"].transform( "/group/sphere" ),
+			IECore.M44f.createRotated( IECore.V3f( 0, math.radians( 90 ), 0 ) )
+		)
+
+	def testResetWorld( self ) :
+
+		sphere = GafferScene.Sphere()
+		sphere["transform"]["translate"].setValue( IECore.V3f( 1, 0, 0 ) )
+
+		group = GafferScene.Group()
+		group["in"].setInput( sphere["out"] )
+		group["transform"]["translate"].setValue( IECore.V3f( 1, 0, 0 ) )
+
+		transform = GafferScene.Transform()
+		transform["in"].setInput( group["out"] )
+		transform["transform"]["rotate"]["y"].setValue( 90 )
+
+		filter = GafferScene.PathFilter()
+		filter["paths"].setValue( IECore.StringVectorData( [ "/group/sphere" ] ) )
+		transform["filter"].setInput( filter["out"] )
+
+		transform["space"].setValue( GafferScene.Transform.Space.ResetWorld )
+		self.assertSceneValid( transform["out"] )
+		self.assertTrue(
+			IECore.V3f( 0, 0, 0 ).equalWithAbsError(
+				IECore.V3f( 0 ) * transform["out"].fullTransform( "/group/sphere" ),
+				0.000001
+			)
+		)
+		self.assertTrue(
+			IECore.V3f( 1, 0, 0 ).equalWithAbsError(
+				IECore.V3f( 0, 0, 1 ) * transform["out"].fullTransform( "/group/sphere" ),
+				0.000001
+			)
+		)
+		self.assertEqual(
+			transform["out"].fullTransform( "/group/sphere" ),
+			IECore.M44f.createRotated( IECore.V3f( 0, math.radians( 90 ), 0 ) )
+		)
+
+	def testWorldWithMatchingAncestors( self ) :
+
+		b = GafferScene.Sphere()
+		b["name"].setValue( "b" )
+
+		a = GafferScene.Group()
+		a["in"].setInput( b["out"] )
+		a["name"].setValue( "a" )
+
+		t = GafferScene.Transform()
+		t["in"].setInput( b["out"] )
+		t["transform"]["translate"].setValue( IECore.V3f( 1, 2, 3 ) )
+		t["space"].setValue( t.Space.World )
+
+		f = GafferScene.PathFilter()
+		f["paths"].setValue( IECore.StringVectorData( [ "/a", "/a/b" ] ) )
+		t["filter"].setInput( f["out"] )
+
+		self.assertSceneValid( t["out"] )
+		self.assertEqual(
+			t["out"].fullTransform( "/a" ),
+			IECore.M44f.createTranslated( IECore.V3f( 1, 2, 3 ) )
+		)
+
+		# We want it to be as if /a/b has been transformed
+		# independently in world space, and not inherit the
+		# additional transform also applied to /a.
+
+		self.assertEqual(
+			t["out"].fullTransform( "/a/b" ),
+			IECore.M44f.createTranslated( IECore.V3f( 1, 2, 3 ) )
+		)
+
+		b["transform"]["translate"].setValue( IECore.V3f( 4, 5, 6 ) )
+		self.assertSceneValid( t["out"] )
+		self.assertEqual(
+			t["out"].fullTransform( "/a/b" ),
+			IECore.M44f.createTranslated( IECore.V3f( 5, 7, 9 ) )
+		)
+
+	def testResetWorldWithMatchingAncestors( self ) :
+
+		c = GafferScene.Sphere()
+		c["name"].setValue( "c" )
+
+		b = GafferScene.Group()
+		b["in"].setInput( c["out"] )
+		b["name"].setValue( "b" )
+
+		a = GafferScene.Group()
+		a["in"].setInput( b["out"] )
+		a["name"].setValue( "a" )
+
+		t = GafferScene.Transform()
+		t["in"].setInput( a["out"] )
+		t["transform"]["translate"].setValue( IECore.V3f( 1, 2, 3 ) )
+		t["space"].setValue( t.Space.ResetWorld )
+
+		# Apply to /a and /a/b/c so that we must take into
+		# account the changing parent transform of /a/b/c
+		# to get it's absolute position in world space
+		# right.
+
+		f = GafferScene.PathFilter()
+		f["paths"].setValue( IECore.StringVectorData( [ "/a", "/a/b/c" ] ) )
+		t["filter"].setInput( f["out"] )
+
+		# Check that we're good.
+
+		self.assertSceneValid( t["out"] )
+
+		self.assertEqual(
+			t["out"].fullTransform( "/a" ),
+			IECore.M44f.createTranslated( IECore.V3f( 1, 2, 3 ) )
+		)
+
+		self.assertEqual(
+			t["out"].fullTransform( "/a/b" ),
+			IECore.M44f.createTranslated( IECore.V3f( 1, 2, 3 ) )
+		)
+
+		self.assertEqual(
+			t["out"].fullTransform( "/a/b/c" ),
+			IECore.M44f.createTranslated( IECore.V3f( 1, 2, 3 ) )
+		)
+
+		# Change the transform on /a/b, and check that it is
+		# retained, but that /a/b/c adjusts for it and maintains
+		# the required absolute transform.
+
+		b["transform"]["translate"].setValue( IECore.V3f( 9, 7, 5 ) )
+
+		self.assertSceneValid( t["out"] )
+
+		self.assertEqual(
+			t["out"].fullTransform( "/a" ),
+			IECore.M44f.createTranslated( IECore.V3f( 1, 2, 3 ) )
+		)
+
+		self.assertEqual(
+			t["out"].fullTransform( "/a/b" ),
+			IECore.M44f.createTranslated( IECore.V3f( 10, 9, 8 ) )
+		)
+
+		self.assertEqual(
+			t["out"].fullTransform( "/a/b/c" ),
+			IECore.M44f.createTranslated( IECore.V3f( 1, 2, 3 ) )
+		)
+
+	def testObjectBoundIncludedWhenDescendantsMatch( self ) :
+
+		s = GafferScene.Cube()
+
+		f = GafferScene.PathFilter()
+		f["paths"].setValue( IECore.StringVectorData( [ "/..." ] ) ) # the dread ellipsis!
+
+		t = GafferScene.Transform()
+		t["in"].setInput( s["out"] )
+		t["filter"].setInput( f["out"] )
+		t["transform"]["translate"].setValue( IECore.V3f( 1 ) )
+
+		self.assertSceneValid( t["out"] )
+		self.assertEqual( t["out"].bound( "/" ), IECore.Box3f( IECore.V3f( 0.5 ), IECore.V3f( 1.5 ) ) )
+
 if __name__ == "__main__":
 	unittest.main()

@@ -50,7 +50,10 @@ void GafferSceneBindings::bindTransform()
 	scope s = GafferBindings::DependencyNodeClass<Transform>();
 
 	enum_<Transform::Space>( "Space" )
+		.value( "Local", Transform::Local )
+		.value( "Parent", Transform::Parent )
 		.value( "World", Transform::World )
-		.value( "Object", Transform::Object )
+		.value( "ResetLocal", Transform::ResetLocal )
+		.value( "ResetWorld", Transform::ResetWorld )
 	;
 }
