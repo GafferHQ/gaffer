@@ -9,10 +9,14 @@ UI
   - Added section for specifying additional widget settings (#739).
   - Added preset editor (#739).
   - Added section for editing section summaries.
+  - Added NodeGraph section.
 - Added drag and drop of objects onto Set nodes in the NodeGraph.
 - Fixed crash which could occur when opening recent files.
 - Fixed crash which could occur when using OpenGL widgets within Maya.
 - Added support for summary tooltips on node UI tabs (#332).
+- Fixed bugs which could cause a blank NodeEditor if an expression
+  referenced a script variable.
+- Fixed bugs in channel mask menus on image processing nodes.
 
 Core
 -----------------------------------------------------------------------
@@ -62,6 +66,27 @@ Scene
 -----------------------------------------------------------------------
 
 - Added SceneLoop node.
+- Transform
+  - Fixed bugs in World mode.
+  - Added Parent, Local Reset and World Reset modes.
+  - Renamed Object space to Local.
+  - Changed default space to Local.
+  - Note that these are backwards incompatible changes, necessary to
+    fix an important bug and get the Transform node on a solid footing
+    for the future. To get the same results as the old World mode, use
+    the new Parent mode.
+- FreezeTransform
+  - Fixed bug which prevented the UI updating when the input object
+    was changed.
+- Fixed bugs which could cause incorrect bounds to be computed.
+
+Appleseed
+-----------------------------------------------------------------------
+
+- Removed options and attributes that are not useful in Gaffer.
+- Fixed default values for some options and attributes.
+- Documented all nodes.
+- Added support for shading overrides.
 
 API
 -----------------------------------------------------------------------
@@ -93,6 +118,22 @@ API
 - Metadata
   - Fixed inconsistent handling of NULL values.
   - Added methods for deregistering values.
+- Removed GafferUI.SectionedCompoundPlugValueWidget.
+- Activator expressions are now attached to the parent of the plug, rather than always being on the node.
+- Removed StringPlugValueWidget continuousUpdate constructor argument. Use metadata instead.
+- Removed MultiLineStringPlugValueWidget continuousUpdate constructor argument. Use metadata instead.
+- SceneNode
+  - Added childNames argument to bounds union methods.
+- SceneAlgo
+  - Added `bound( const IECore::Object * )` function.
+
+Build
+-----------------------------------------------------------------------
+
+- Updated to Cortex 9.0.0.
+- Updated to OIIO 1.5.17.
+- Updated to OSL 1.6.8.
+- Updated to 1.2.0-beta.
 
 Incompatibilies
 -----------------------------------------------------------------------
@@ -108,6 +149,10 @@ Incompatibilies
 - Changed base class for SplinePlug.
 - Removed ImageMixinBase. Use ImageProcessor instead.
 - Removed SceneMixinBase. Use SceneProcessor instead.
+- Removed GafferUI.SectionedCompoundPlugValueWidget. Use LayoutPlugValueWidget instead.
+- Activator expressions are now attached to the parent of the plug, rather than always being on the node.
+- Changed ChannelMaskPlugValueWidget constructor arguments.
+- Changed Transform behaviour to fix bug in world space mode, add new modes and change the default mode to local. If you need the old world space behaviour, use the new parent space mode.
 
 # 0.14.0.0
 ==========
