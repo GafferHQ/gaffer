@@ -48,8 +48,6 @@ def __visibilitySummary( plug ) :
 		( "camera", "Camera" ),
 		( "light", "Light" ),
 		( "shadow", "Shadow" ),
-		( "transparency", "Transparency" ),
-		( "probe", "Probe" ),
 		( "diffuse", "Diffuse" ),
 		( "specular", "Specular" ),
 		( "glossy", "Glossy" ),
@@ -78,15 +76,6 @@ def __alphaMapSummary( plug ) :
 
 	return ", ".join( info )
 
-def __photonsSummary( plug ) :
-
-	info = []
-	if plug["photonTarget"]["enabled"].getValue() :
-		if plug["photonTarget"]["value"].getValue() :
-			info.append( "Photon Target" )
-
-	return ", ".join( info )
-
 Gaffer.Metadata.registerNode(
 
 	GafferAppleseed.AppleseedAttributes,
@@ -100,7 +89,6 @@ Gaffer.Metadata.registerNode(
 			"layout:section:Visibility:summary", __visibilitySummary,
 			"layout:section:Shading:summary", __shadingSummary,
 			"layout:section:Alpha Map:summary", __alphaMapSummary,
-			"layout:section:Photons:summary", __photonsSummary,
 
 		],
 
@@ -124,20 +112,6 @@ Gaffer.Metadata.registerNode(
 
 			"layout:section", "Visibility",
 			"label", "Shadow",
-
-		],
-
-		"attributes.transparencyVisibility" : [
-
-			"layout:section", "Visibility",
-			"label", "Transparency",
-
-		],
-
-		"attributes.probeVisibility" : [
-
-			"layout:section", "Visibility",
-			"label", "Probe",
 
 		],
 
@@ -175,14 +149,6 @@ Gaffer.Metadata.registerNode(
 		"attributes.alphaMap" : [
 
 			"layout:section", "Alpha Map",
-
-		],
-
-		# Photons
-
-		"attributes.photonTarget" : [
-
-			"layout:section", "Photons",
 
 		],
 

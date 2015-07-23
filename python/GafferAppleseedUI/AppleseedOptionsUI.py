@@ -48,10 +48,6 @@ def __mainSummary( plug ) :
 		info.append( "Sampler %s" % plug["sampler"]["value"].getValue() )
 	if plug["aaSamples"]["enabled"].getValue() :
 		info.append( "AA Samples %d" % plug["aaSamples"]["value"].getValue() )
-	if plug["forceAA"]["enabled"].getValue() and plug["forceAA"]["value"].getValue() :
-		info.append( "Force AA" )
-	if plug["decorrelatePixels"]["enabled"].getValue() and plug["decorrelatePixels"]["value"].getValue() :
-		info.append( "Decorrelate Pixels" )
 	if plug["lightingEngine"]["enabled"].getValue() :
 		info.append( "Lighting Engine %s" % plug["lightingEngine"]["value"].getValue() )
 	if plug["meshFileFormat"]["enabled"].getValue() :
@@ -76,12 +72,10 @@ def __drtSummary( plug ) :
 		info.append( "IBL" )
 	if plug["drtMaxBounces"]["enabled"].getValue() :
 		info.append( "Max Bounces %d" % plug["drtMaxBounces"]["value"].getValue() )
-	if plug["drtRRStartBounce"]["enabled"].getValue() :
-		info.append( "Min Bounces %d" % plug["drtRRStartBounce"]["value"].getValue() )
 	if plug["drtLightingSamples"]["enabled"].getValue() :
-		info.append( "Lighting samples %d" % plug["drtLightingSamples"]["value"].getValue() )
+		info.append( "Lighting samples %f" % plug["drtLightingSamples"]["value"].getValue() )
 	if plug["drtIBLSamples"]["enabled"].getValue() :
-		info.append( "IBL samples %d" % plug["drtIBLSamples"]["value"].getValue() )
+		info.append( "IBL samples %f" % plug["drtIBLSamples"]["value"].getValue() )
 
 	return ", ".join( info )
 
@@ -96,14 +90,10 @@ def __ptSummary( plug ) :
 		info.append( "Caustics" )
 	if plug["ptMaxBounces"]["enabled"].getValue() :
 		info.append( "Max Bounces %d" % plug["ptMaxBounces"]["value"].getValue() )
-	if plug["ptRRStartBounce"]["enabled"].getValue() :
-		info.append( "Min Bounces %d" % plug["ptRRStartBounce"]["value"].getValue() )
-	if plug["ptNextEvent"]["enabled"].getValue() and plug["ptNextEvent"]["value"].getValue() :
-		info.append( "Next Event Estimation" )
 	if plug["ptLightingSamples"]["enabled"].getValue() :
-		info.append( "Lighting Samples %d" % plug["ptLightingSamples"]["value"].getValue() )
+		info.append( "Lighting Samples %f" % plug["ptLightingSamples"]["value"].getValue() )
 	if plug["ptIBLSamples"]["enabled"].getValue() :
-		info.append( "IBL Samples %d" % plug["ptIBLSamples"]["value"].getValue() )
+		info.append( "IBL Samples %f" % plug["ptIBLSamples"]["value"].getValue() )
 	if plug["ptMaxRayIntensity"]["enabled"].getValue() :
 		info.append( "Max Ray Intensity %f" % plug["ptMaxRayIntensity"]["value"].getValue() )
 
@@ -122,12 +112,8 @@ def __sppmSummary( plug ) :
 		info.append( "Caustics" )
 	if plug["sppmPhotonMaxBounces"]["enabled"].getValue() :
 		info.append( "Max Photon Bounces %d" % plug["sppmPhotonMaxBounces"]["value"].getValue() )
-	if plug["sppmPhotonRRStartBounce"]["enabled"].getValue() :
-		info.append( "Min Photon Bounces %d" % plug["sppmPhotonRRStartBounce"]["value"].getValue() )
 	if plug["sppmPathMaxBounces"]["enabled"].getValue() :
 		info.append( "Max Path Bounces %d" % plug["sppmPathMaxBounces"]["value"].getValue() )
-	if plug["sppmPathRRStartBounce"]["enabled"].getValue() :
-		info.append( "Min Path Bounces %d" % plug["sppmPathRRStartBounce"]["value"].getValue() )
 	if plug["sppmLightPhotons"]["enabled"].getValue() :
 		info.append( "Light Photons %d" % plug["sppmLightPhotons"]["value"].getValue() )
 	if plug["sppmEnvPhotons"]["enabled"].getValue() :
@@ -151,7 +137,7 @@ def __systemSummary( plug ) :
 	if plug["interactiveRenderFps"]["enabled"].getValue() :
 		info.append( "Interactive Render Fps %d" % plug["interactiveRenderFps"]["value"].getValue() )
 	if plug["textureMem"]["enabled"].getValue() :
-		info.append( "Texture Mem %d Kb" % plug["textureMem"]["value"].getValue() )
+		info.append( "Texture Mem %d bytes" % plug["textureMem"]["value"].getValue() )
 	if plug["tileOrdering"]["enabled"].getValue() :
 		info.append( "Tile Ordering %s" % plug["tileOrdering"]["value"].getValue().capitalize() )
 
@@ -202,19 +188,6 @@ Gaffer.Metadata.registerNode(
 
 			"layout:section", "Main",
 			"label", "AA Samples",
-
-		],
-
-		"options.forceAA" : [
-
-			"layout:section", "Main",
-			"label", "Force Antialiasing",
-
-		],
-
-		"options.decorrelatePixels" : [
-
-			"layout:section", "Main",
 
 		],
 
@@ -277,13 +250,6 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"options.drtRRStartBounce" : [
-
-			"layout:section", "Distribution Ray Tracer",
-			"label", "RR Start Bounce",
-
-		],
-
 		"options.drtLightingSamples" : [
 
 			"layout:section", "Distribution Ray Tracer",
@@ -325,20 +291,6 @@ Gaffer.Metadata.registerNode(
 
 			"layout:section", "Unidirectional Path Tracer",
 			"label", "Max Bounces",
-
-		],
-
-		"options.ptRRStartBounce" : [
-
-			"layout:section", "Unidirectional Path Tracer",
-			"label", "RR Start Bounce",
-
-		],
-
-		"options.ptNextEvent" : [
-
-			"layout:section", "Unidirectional Path Tracer",
-			"label", "Next Event Estimation",
 
 		],
 
@@ -415,24 +367,10 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"options.sppmPhotonRRStartBounce" : [
-
-			"layout:section", "SPPM",
-			"label", "Photon RR Start Bounce",
-
-		],
-
 		"options.sppmPathMaxBounces" : [
 
 			"layout:section", "SPPM",
 			"label", "Max Path Bounces",
-
-		],
-
-		"options.sppmPathRRStartBounce" : [
-
-			"layout:section", "SPPM",
-			"label", "Path RR Start Bounce",
 
 		],
 
