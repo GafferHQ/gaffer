@@ -432,12 +432,12 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 			"fixedStringArray" : IECore.StringVectorData( [ "hello", "goodbye" ] ),
 			"dynamicColorArray" : IECore.Color3fVectorData( [ IECore.Color3f( 1 ), IECore.Color3f( 2 ) ] ),
 			"fixedColorArray" : IECore.Color3fVectorData( [ IECore.Color3f( 1 ), IECore.Color3f( 2 ) ] ),
-			"dynamicVectorArray" : IECore.V3fVectorData( [] ),
-			"fixedVectorArray" : IECore.V3fVectorData( [ IECore.V3f( x ) for x in range( 1, 6 ) ] ),
-			"dynamicPointArray" : IECore.V3fVectorData( [] ),
-			"fixedPointArray" : IECore.V3fVectorData( [ IECore.V3f( x ) for x in range( 1, 6 ) ] ),
-			"dynamicNormalArray" : IECore.V3fVectorData( [] ),
-			"fixedNormalArray" : IECore.V3fVectorData( [ IECore.V3f( x ) for x in range( 1, 6 ) ] ),
+			"dynamicVectorArray" : IECore.V3fVectorData( [], IECore.GeometricData.Interpretation.Vector ),
+			"fixedVectorArray" : IECore.V3fVectorData( [ IECore.V3f( x ) for x in range( 1, 6 ) ], IECore.GeometricData.Interpretation.Vector ),
+			"dynamicPointArray" : IECore.V3fVectorData( [], IECore.GeometricData.Interpretation.Point ),
+			"fixedPointArray" : IECore.V3fVectorData( [ IECore.V3f( x ) for x in range( 1, 6 ) ], IECore.GeometricData.Interpretation.Point ),
+			"dynamicNormalArray" : IECore.V3fVectorData( [], IECore.GeometricData.Interpretation.Normal ),
+			"fixedNormalArray" : IECore.V3fVectorData( [ IECore.V3f( x ) for x in range( 1, 6 ) ], IECore.GeometricData.Interpretation.Normal ),
 		}
 
 		self.assertEqual( set( n["parameters"].keys() ), set( expected.keys() ) )
