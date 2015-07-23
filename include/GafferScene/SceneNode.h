@@ -121,10 +121,12 @@ class SceneNode : public Gaffer::ComputeNode
 
 		/// Convenience function to compute the correct bounding box for a path from the bounding box and transforms of its
 		/// children. Using this from computeBound() should be a last resort, as it implies peeking inside children to determine
-		/// information about the parent - the last thing we want to be doing when defining large scenes procedurally.
-		Imath::Box3f unionOfTransformedChildBounds( const ScenePath &path, const ScenePlug *out ) const;
+		/// information about the parent - the last thing we want to be doing when defining large scenes procedurally. If
+		/// `out->childNames()` has been computed already for some reason, then it may be passed to avoid recomputing it
+		/// internally.
+		Imath::Box3f unionOfTransformedChildBounds( const ScenePath &path, const ScenePlug *out, const IECore::InternedStringVectorData *childNames = NULL ) const;
 		/// A hash for the result of the computation in unionOfTransformedChildBounds().
-		IECore::MurmurHash hashOfTransformedChildBounds( const ScenePath &path, const ScenePlug *out ) const;
+		IECore::MurmurHash hashOfTransformedChildBounds( const ScenePath &path, const ScenePlug *out, const IECore::InternedStringVectorData *childNames = NULL ) const;
 
 	private :
 
