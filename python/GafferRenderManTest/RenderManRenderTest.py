@@ -43,6 +43,7 @@ import IECore
 import Gaffer
 import GafferImage
 import GafferScene
+import GafferSceneTest
 import GafferRenderMan
 import GafferRenderManTest
 
@@ -718,32 +719,18 @@ class RenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		self.assertGreater( visibleStats["average"].getValue()[0], .35 )
 
 	def testPreWorldRenderables( self ):
-
-		class GeneratePreWorldRenderable( Gaffer.ComputeNode ) :
-
-			def __init__( self, name="Out" ) :
-
-				Gaffer.ComputeNode.__init__( self, name )
-				self.addChild( GafferScene.ScenePlug( "out", Gaffer.Plug.Direction.Out ) )
-
-			def hash( self, output, context, h ) :
-
-				h.append( "test" )
-
-			def compute( self, plug, context ) :
-
-				if plug.getName() == "globals" :
-					# must be computing out.globals():
-					outObject = IECore.CompoundObject( {
-						"option:user:blah" : IECore.ClippingPlane()
-					} )
-					plug.setValue( outObject )
-				else:
-					plug.setValue( plug.defaultValue() )
 		
 		s = Gaffer.ScriptNode()
 
-		s["g"] = GeneratePreWorldRenderable()
+		s["g"] = GafferSceneTest.CompoundObjectSource()
+		s["g"]["in"].setValue(
+			IECore.CompoundObject( {
+				"bound" : IECore.Box3fData( IECore.Box3f() ),
+				"globals" : {
+					"option:user:blah" : IECore.ClippingPlane(),
+				},
+			} )
+		)
 
 		s["r"] = GafferRenderMan.RenderManRender()
 		s["r"]["mode"].setValue( "generate" )
