@@ -207,18 +207,14 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"attributes.alphaMap.value" : [
+
+			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
+			"pathPlugValueWidget:leaf", True,
+			"pathPlugValueWidget:bookmarks", "texture",
+
+		],
+
 	}
 
-)
-
-GafferUI.PlugValueWidget.registerCreator(
-	GafferAppleseed.AppleseedAttributes,
-	"attributes.alphaMap.value",
-	lambda plug : GafferUI.PathPlugValueWidget( plug,
-		path = Gaffer.FileSystemPath( "/", filter = Gaffer.FileSystemPath.createStandardFilter() ),
-		pathChooserDialogueKeywords = {
-			"bookmarks" : GafferUI.Bookmarks.acquire( plug, category = "appleseed" ),
-			"leaf" : True,
-		},
-	),
 )

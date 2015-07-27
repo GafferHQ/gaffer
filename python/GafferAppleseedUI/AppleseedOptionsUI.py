@@ -36,6 +36,8 @@
 
 import appleseed
 
+import IECore
+
 import Gaffer
 import GafferScene
 import GafferUI
@@ -233,6 +235,8 @@ Gaffer.Metadata.registerNode(
 			"preset:Random", "rng",
 			"preset:QMC", "qmc",
 
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
 		],
 
 		"options.aaSamples" : [
@@ -260,6 +264,8 @@ Gaffer.Metadata.registerNode(
 			"preset:Unidirectional Path Tracer", "pt",
 			"preset:SPPM", "sppm",
 
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
 		],
 
 		"options.meshFileFormat" : [
@@ -279,6 +285,8 @@ Gaffer.Metadata.registerNode(
 			"preset:BinaryMesh", "binarymesh",
 			"preset:Obj", "obj",
 
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
 		],
 
 		"options.shadingOverride" : [
@@ -295,7 +303,12 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"options.shadingOverride.value" : __getShadingOverridesPresets(),
+		"options.shadingOverride.value" : [
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
+		] + __getShadingOverridesPresets(),
+
 
 		# Environment
 
@@ -308,6 +321,15 @@ Gaffer.Metadata.registerNode(
 
 			"layout:section", "Environment",
 			"label", "Environment Light",
+
+		],
+
+		"options.environmentEDF.value" : [
+
+			"plugValueWidget:type", "GafferSceneUI.ScenePathPlugValueWidget",
+			"pathPlugValueWidget:valid", True,
+			"scenePathPlugValueWidget:setNames", IECore.StringVectorData( [ "__lights" ] ),
+			"scenePathPlugValueWidget:setsLabel", "Show only lights",
 
 		],
 
@@ -463,6 +485,8 @@ Gaffer.Metadata.registerNode(
 			"preset:Monochromatic", "mono",
 			"preset:Polychromatic", "poly",
 
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
 		],
 
 		"options.sppmDirectLighting" : [
@@ -480,6 +504,8 @@ Gaffer.Metadata.registerNode(
 			"preset:Ray Tracing", "rt",
 			"preset:SPPM", "sppm",
 			"preset:None", "off",
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 
 		],
 
@@ -641,59 +667,10 @@ Gaffer.Metadata.registerNode(
 			"preset:Hilbert", "hilbert",
 			"preset:Random", "random",
 
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
 		],
 
 	}
 
-)
-
-GafferUI.PlugValueWidget.registerCreator(
-	GafferAppleseed.AppleseedOptions,
-	"options.sampler.value",
-	GafferUI.PresetsPlugValueWidget,
-)
-
-GafferUI.PlugValueWidget.registerCreator(
-	GafferAppleseed.AppleseedOptions,
-	"options.shadingOverride.value",
-	GafferUI.PresetsPlugValueWidget,
-)
-
-GafferUI.PlugValueWidget.registerCreator(
-	GafferAppleseed.AppleseedOptions,
-	"options.meshFileFormat.value",
-	GafferUI.PresetsPlugValueWidget,
-)
-
-GafferUI.PlugValueWidget.registerCreator(
-	GafferAppleseed.AppleseedOptions,
-	"options.lightingEngine.value",
-	GafferUI.PresetsPlugValueWidget,
-)
-
-GafferUI.PlugValueWidget.registerCreator(
-	GafferAppleseed.AppleseedOptions,
-	"options.environmentEDF.value",
-	lambda plug : GafferUI.PathPlugValueWidget(
-		plug,
-		path = GafferScene.ScenePath( plug.node()["in"], plug.node().scriptNode().context(), "/" ),
-	),
-)
-
-GafferUI.PlugValueWidget.registerCreator(
-	GafferAppleseed.AppleseedOptions,
-	"options.photonType.value",
-	GafferUI.PresetsPlugValueWidget,
-)
-
-GafferUI.PlugValueWidget.registerCreator(
-	GafferAppleseed.AppleseedOptions,
-	"options.sppmDirectLighting.value",
-	GafferUI.PresetsPlugValueWidget,
-)
-
-GafferUI.PlugValueWidget.registerCreator(
-	GafferAppleseed.AppleseedOptions,
-	"options.tileOrdering.value",
-	GafferUI.PresetsPlugValueWidget,
 )
