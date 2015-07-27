@@ -43,6 +43,7 @@ import IECore
 import Gaffer
 import GafferImage
 import GafferScene
+import GafferSceneTest
 import GafferRenderMan
 import GafferRenderManTest
 
@@ -717,6 +718,32 @@ class RenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		self.assertLess( hiddenStats["average"].getValue()[0], 0.05 )
 		self.assertGreater( visibleStats["average"].getValue()[0], .35 )
 
+	def testPreWorldRenderables( self ):
+		
+		s = Gaffer.ScriptNode()
+
+		s["g"] = GafferSceneTest.CompoundObjectSource()
+		s["g"]["in"].setValue(
+			IECore.CompoundObject( {
+				"bound" : IECore.Box3fData( IECore.Box3f() ),
+				"globals" : {
+					"option:user:blah" : IECore.ClippingPlane(),
+				},
+			} )
+		)
+
+		s["r"] = GafferRenderMan.RenderManRender()
+		s["r"]["mode"].setValue( "generate" )
+		s["r"]["ribFileName"].setValue( "/tmp/test.rib" )
+		s["r"]["in"].setInput( s["g"]["out"] )
+
+		s["r"].execute()
+
+		# node should have inserted a ClippingPlane into the rib by putting it
+		# in the options:
+		rib = "\n".join( file( "/tmp/test.rib" ).readlines() )
+		self.assertTrue( "ClippingPlane" in rib )
+		
 	def setUp( self ) :
 
 		for f in (
