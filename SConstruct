@@ -832,17 +832,24 @@ def buildGraphics( target, source, env ) :
 	if not os.path.isdir( dir ) :
 		os.makedirs( dir )
 
-	objects, stderr = subprocess.Popen( env["INKSCAPE"] + " --query-all " + str( source[0] ), stdout=subprocess.PIPE, shell=True ).communicate()
+	queryCommand = env["INKSCAPE"] + " --query-all " + str( source[0] )
+	inkscape = subprocess.Popen( queryCommand, stdout=subprocess.PIPE, shell=True )
+	objects, stderr = inkscape.communicate()
+	if inkscape.returncode :
+		raise subprocess.CalledProcessError( inkscape.returncode, queryCommand )
+
 	for object in objects.split( "\n" ) :
 		tokens = object.split( "," )
 		if tokens[0].startswith( "forExport:" ) :
-			os.system( env["INKSCAPE"] + " --export-png=%s/%s.png --export-id=%s --export-width=%d --export-height=%d %s --export-background-opacity=0" % (
+			subprocess.check_call(
+				env["INKSCAPE"] + " --export-png=%s/%s.png --export-id=%s --export-width=%d --export-height=%d %s --export-background-opacity=0" % (
 					dir,
 					tokens[0].split( ":" )[-1],
 					tokens[0],
 					int( round( float( tokens[3] ) ) ), int( round( float( tokens[4] ) ) ),
 					str( source[0] ),
-				)
+				),
+				shell = True,
 			)
 
 for source, target in (
