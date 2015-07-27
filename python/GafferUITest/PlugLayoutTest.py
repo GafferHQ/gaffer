@@ -262,10 +262,10 @@ class PlugLayoutTest( GafferUITest.TestCase ) :
 		s["e"]["expression"].setValue( 'parent["n"]["b"] = context["bVariable"]' )
 
 		l = GafferUI.PlugLayout( s["n"] )
-		self.assertEqual( l.plugValueWidget( s["n"]["s"], lazy = False ).getReadOnly(), True )
+		self.assertEqual( l.plugValueWidget( s["n"]["s"], lazy = False ).enabled(), False )
 
 		p["value"].setValue( True )
-		self.assertEqual( l.plugValueWidget( s["n"]["s"], lazy = False ).getReadOnly(), False )
+		self.assertEqual( l.plugValueWidget( s["n"]["s"], lazy = False ).enabled(), True )
 
 if __name__ == "__main__":
 	unittest.main()
