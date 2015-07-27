@@ -141,11 +141,8 @@ class PlugLayout( GafferUI.Widget ) :
  			return
 
  		self.__readOnly = readOnly
-		if self.__readOnly :
-			for widget in self.__widgets.values() :
-				self.__applyReadOnly( widget, self.__readOnly )
-		else :
-			self.__updateActivations()
+		for widget in self.__widgets.values() :
+			self.__applyReadOnly( widget, self.__readOnly )
 
 	def getContext( self ) :
 
@@ -308,9 +305,6 @@ class PlugLayout( GafferUI.Widget ) :
 
 	def __updateActivations( self ) :
 
-		if self.getReadOnly() :
-			return
-
 		with self.getContext() :
 			# Must scope the context when getting activators, because they are typically
 			# computed from the plug values, and may therefore trigger a compute.
@@ -332,8 +326,8 @@ class PlugLayout( GafferUI.Widget ) :
 			return result
 
 		for item, widget in self.__widgets.items() :
-			self.__applyReadOnly( widget, not active( self.__itemMetadataValue( item, "activator" ) ) )
 			if widget is not None :
+				widget.setEnabled( active( self.__itemMetadataValue( item, "activator" ) ) )
 				widget.setVisible( active( self.__itemMetadataValue( item, "visibilityActivator" ) ) )
 
 	def __updateSummariesWalk( self, section ) :
