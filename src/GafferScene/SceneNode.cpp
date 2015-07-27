@@ -355,13 +355,17 @@ IECore::MurmurHash SceneNode::hashOfTransformedChildBounds( const ScenePath &pat
 	IECore::MurmurHash result;
 	if( childNames.size() )
 	{
+		ContextPtr tmpContext = new Context( *Context::current(), Context::Borrowed );
+		Context::Scope scopedContext( tmpContext.get() );
+
 		ScenePath childPath( path );
 		childPath.push_back( InternedString() ); // room for the child name
 		for( vector<InternedString>::const_iterator it = childNames.begin(); it != childNames.end(); it++ )
 		{
 			childPath[path.size()] = *it;
-			result.append( out->boundHash( childPath ) );
-			result.append( out->transformHash( childPath ) );
+			tmpContext->set( ScenePlug::scenePathContextName, childPath );
+			out->boundPlug()->hash( result );
+			out->transformPlug()->hash( result );
 		}
 	}
 	else
@@ -385,13 +389,17 @@ Imath::Box3f SceneNode::unionOfTransformedChildBounds( const ScenePath &path, co
 	Box3f result;
 	if( childNames.size() )
 	{
+		ContextPtr tmpContext = new Context( *Context::current(), Context::Borrowed );
+		Context::Scope scopedContext( tmpContext.get() );
+
 		ScenePath childPath( path );
 		childPath.push_back( InternedString() ); // room for the child name
 		for( vector<InternedString>::const_iterator it = childNames.begin(); it != childNames.end(); it++ )
 		{
 			childPath[path.size()] = *it;
-			Box3f childBound = out->bound( childPath );
-			childBound = transform( childBound, out->transform( childPath ) );
+			tmpContext->set( ScenePlug::scenePathContextName, childPath );
+			Box3f childBound = out->boundPlug()->getValue();
+			childBound = transform( childBound, out->transformPlug()->getValue() );
 			result.extendBy( childBound );
 		}
 	}
