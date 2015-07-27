@@ -43,6 +43,8 @@ script:
     - ./install/gaffer-*/bin/gaffer test GafferOSLUITest
     - ./install/gaffer-*/bin/gaffer test GafferRenderManTest
     - ./install/gaffer-*/bin/gaffer test GafferRenderManUITest
+    - ./install/gaffer-*/bin/gaffer test GafferAppleseedTest
+    - ./install/gaffer-*/bin/gaffer test GafferAppleseedUITest
 
 compiler:
     - gcc
