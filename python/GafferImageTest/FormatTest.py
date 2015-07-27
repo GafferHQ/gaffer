@@ -38,12 +38,16 @@ import unittest
 import random
 
 import IECore
+
 import Gaffer
+import GafferTest
 
 import GafferImage
 
-class FormatTest( unittest.TestCase ) :
+class FormatTest( GafferTest.TestCase ) :
+
 	def testAddRemoveFormat( self ) :
+
 		# Get any existing format names
 		existingFormatNames = GafferImage.Format.formatNames()
 
@@ -67,6 +71,7 @@ class FormatTest( unittest.TestCase ) :
 		self.assertEqual( set( existingFormatNames ), set( GafferImage.Format.formatNames() ) )
 
 	def testDefaultFormatPlugExists( self ) :
+
 		# Create a node to make sure that we have a default format...
 		s = Gaffer.ScriptNode()
 		n = GafferImage.Grade()
@@ -79,6 +84,7 @@ class FormatTest( unittest.TestCase ) :
 			self.assertTrue(False)
 
 	def testOffsetDisplayWindow( self ) :
+
 		box = IECore.Box2i( IECore.V2i( 6, -4 ), IECore.V2i( 49, 149 ) )
 		f = GafferImage.Format( box, 1.1 )
 		self.assertEqual( f.getDisplayWindow(), box )
@@ -87,12 +93,14 @@ class FormatTest( unittest.TestCase ) :
 		self.assertEqual( f.getPixelAspect(), 1.1 )
 
 	def testBoxAspectConstructor( self ) :
+
 		f = GafferImage.Format( IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 49, 149 ) ), 1.3 )
 		self.assertEqual( f.width(), 50 )
 		self.assertEqual( f.height(), 150 )
 		self.assertEqual( f.getPixelAspect(), 1.3 )
 
 	def testWH( self ) :
+
 		f = GafferImage.Format( 101, 102, 1. )
 		self.assertEqual( f.width(), 101 )
 		self.assertEqual( f.height(), 102 )
@@ -102,6 +110,7 @@ class FormatTest( unittest.TestCase ) :
 		self.assertEqual( f.height(), 0 )
 
 	def testDefaultFormatContext( self ) :
+
 		# Create a node to make sure that we have a default format...
 		s = Gaffer.ScriptNode()
 		n = GafferImage.Grade()
@@ -109,6 +118,7 @@ class FormatTest( unittest.TestCase ) :
 		s.context().get("image:defaultFormat")
 
 	def __hashChanged( self, cls ) :
+
 		# Create the node and check that the format changes if it is unconnected.
 		n = cls()
 		s = Gaffer.ScriptNode()
@@ -150,6 +160,7 @@ class FormatTest( unittest.TestCase ) :
 			self.__hashChanged( cls )
 	
 	def testDefaultFormatChanged( self ) :
+
 		# Create a grade node and check that the format changes if it is unconnected.
 		n = GafferImage.Grade()
 		s = Gaffer.ScriptNode()
@@ -171,6 +182,7 @@ class FormatTest( unittest.TestCase ) :
 			self.assertNotEqual( f1, f2 )
 
 	def testAddRemoveFormatByValue( self ) :
+
 		# Get any existing format names
 		existingFormatNames = GafferImage.Format.formatNames()
 
@@ -209,18 +221,26 @@ class FormatTest( unittest.TestCase ) :
 			pDown = f.formatToYDownSpace( p )
 			self.assertEqual( f.yDownToFormatSpace( pDown ), p )
 
-	def __assertTestFormat( self, testFormat ):
+	def tearDown( self ) :
+
+		GafferTest.TestCase.tearDown( self )
+
+		GafferImage.Format.removeFormat( self.__testFormatName() )
+
+	def __assertTestFormat( self, testFormat ) :
+
 		self.assertEqual( testFormat.getPixelAspect(), 1.4 )
 		self.assertEqual( testFormat.width(), 1234 )
 		self.assertEqual( testFormat.height(), 5678 )
 		self.assertEqual( testFormat.getDisplayWindow(), IECore.Box2i( IECore.V2i( 0, 0 ), IECore.V2i( 1233, 5677 ) ) )
 
 	def __testFormatValue( self ) :
+
 		return GafferImage.Format( 1234, 5678, 1.4 )
 
 	def __testFormatName( self ) :
-		return '1234x5678 1.400'
 
+		return '1234x5678 1.400'
 
 if __name__ == "__main__":
 	unittest.main()
