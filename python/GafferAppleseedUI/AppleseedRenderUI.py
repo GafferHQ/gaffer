@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import IECore
+
 import Gaffer
 import GafferUI
 import GafferAppleseed
@@ -67,6 +69,9 @@ Gaffer.Metadata.registerNode(
 			"preset:Render", "render",
 			"preset:Generate .appleseed only", "generate",
 
+			"nodule:type", "",
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
 		],
 
 		"fileName" : [
@@ -75,6 +80,12 @@ Gaffer.Metadata.registerNode(
 			"""
 			The name of the appleseed project file to be generated.
 			""",
+
+			"nodule:type", "",
+			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
+			"pathPlugValueWidget:leaf", True,
+			"pathPlugValueWidget:bookmarks", "appleseed",
+			"fileSystemPathPlugValueWidget:extensions", IECore.StringVectorData( [ "appleseed" ] ),
 
 		],
 
@@ -91,37 +102,11 @@ Gaffer.Metadata.registerNode(
 			"preset:Debug", "debug",
 			"preset:Info", "info",
 
+			"nodule:type", "",
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
 		],
 
-}
+	}
 
 )
-
-GafferUI.PlugValueWidget.registerCreator(
-	GafferAppleseed.AppleseedRender,
-	"mode",
-	GafferUI.PresetsPlugValueWidget,
-)
-
-GafferUI.PlugValueWidget.registerCreator(
-	GafferAppleseed.AppleseedRender,
-	"fileName",
-	lambda plug : GafferUI.PathPlugValueWidget( plug,
-		path = Gaffer.FileSystemPath( "/", filter = Gaffer.FileSystemPath.createStandardFilter() ),
-		pathChooserDialogueKeywords = {
-			"bookmarks" : GafferUI.Bookmarks.acquire( plug, category = "appleseed" ),
-			"leaf" : True,
-		},
-	),
-)
-
-GafferUI.PlugValueWidget.registerCreator(
-	GafferAppleseed.AppleseedRender,
-	"verbosity",
-	GafferUI.PresetsPlugValueWidget,
-)
-
-GafferUI.Nodule.registerNodule( GafferAppleseed.AppleseedRender, "mode", lambda plug : None )
-GafferUI.Nodule.registerNodule( GafferAppleseed.AppleseedRender, "fileName", lambda plug : None )
-GafferUI.Nodule.registerNodule( GafferAppleseed.AppleseedRender, "verbosity", lambda plug : None )
-

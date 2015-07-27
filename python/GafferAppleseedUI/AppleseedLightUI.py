@@ -85,18 +85,29 @@ def __plugLabel( plug ) :
 	except:
 		return param
 
-Gaffer.Metadata.registerNodeValue( GafferAppleseed.AppleseedLight, "description", __nodeDescription )
-Gaffer.Metadata.registerPlugValue( GafferAppleseed.AppleseedLight, "parameters.*", "description", __plugDescription )
-Gaffer.Metadata.registerPlugValue( GafferAppleseed.AppleseedLight, "parameters.*", "label", __plugLabel )
+Gaffer.Metadata.registerNode(
 
-GafferUI.PlugValueWidget.registerCreator(
 	GafferAppleseed.AppleseedLight,
-	"parameters.radiance_map",
-	lambda plug : GafferUI.PathPlugValueWidget( plug,
-		path = Gaffer.FileSystemPath( "/", filter = Gaffer.FileSystemPath.createStandardFilter() ),
-		pathChooserDialogueKeywords = {
-			"bookmarks" : GafferUI.Bookmarks.acquire( plug, category = "image" ),
-			"leaf" : True,
-		},
-	),
+
+	"description", __nodeDescription,
+
+	plugs = {
+
+		"parameters.*" : [
+
+			"description", __plugDescription,
+			"label", __plugLabel,
+
+		],
+
+		"parameters.radiance_map" : [
+
+			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
+			"pathPlugValueWidget:leaf", True,
+			"pathPlugValueWidget:bookmarks", "image",
+
+		],
+
+	},
+
 )
