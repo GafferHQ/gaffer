@@ -38,11 +38,13 @@ import unittest
 import random
 
 import IECore
+
 import Gaffer
+import GafferTest
 
 import GafferImage
 
-class FormatTest( unittest.TestCase ) :
+class FormatTest( GafferTest.TestCase ) :
 	def testAddRemoveFormat( self ) :
 		# Get any existing format names
 		existingFormatNames = GafferImage.Format.formatNames()
@@ -208,6 +210,12 @@ class FormatTest( unittest.TestCase ) :
 			p = IECore.V2i( int( random.uniform( -500, 500 ) ), int( random.uniform( -500, 500 ) ) )
 			pDown = f.formatToYDownSpace( p )
 			self.assertEqual( f.yDownToFormatSpace( pDown ), p )
+
+	def tearDown( self ) :
+
+		GafferTest.TestCase.tearDown( self )
+
+		GafferImage.Format.removeFormat( self.__testFormatName() )
 
 	def __assertTestFormat( self, testFormat ):
 		self.assertEqual( testFormat.getPixelAspect(), 1.4 )
