@@ -66,5 +66,6 @@ import ImageMetadataUI
 import DeleteImageMetadataUI
 import CopyImageMetadataUI
 import ImageLoopUI
+import ShuffleUI
 
 __import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferImageUI" )
