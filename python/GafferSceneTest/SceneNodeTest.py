@@ -190,6 +190,90 @@ class SceneNodeTest( GafferTest.TestCase ) :
 
 		self.assertNodesConstructWithDefaultValues( GafferScene )
 
+	def testDerivingInPython( self ) :
+
+		# We allow deriving in Python for use as a "shell" node containing
+		# an internal node network which provides the implementation. But
+		# we don't allow the overriding of the compute*() and hash*() methods
+		# because the performance would be abysmal.
+
+		class SphereOrCube( GafferScene.SceneNode ) :
+
+			Type = IECore.Enum.create( "Sphere", "Cube" )
+
+			def __init__( self, name = "SphereOrCube" ) :
+
+				GafferScene.SceneNode.__init__( self, name )
+
+				self["type"] = Gaffer.IntPlug(
+					defaultValue = int( self.Type.Sphere ),
+					minValue = int( self.Type.Sphere ),
+					maxValue = int( self.Type.Cube ),
+				)
+
+				self["__sphere"] = GafferScene.Sphere()
+				self["__sphere"]["enabled"].setInput( self["enabled"] )
+
+				self["__cube"] = GafferScene.Cube()
+				self["__cube"]["enabled"].setInput( self["enabled"] )
+
+				self["__primitiveSwitch"] = GafferScene.SceneSwitch()
+				self["__primitiveSwitch"]["index"].setInput( self["type"] )
+				self["__primitiveSwitch"]["in"].setInput( self["__sphere"]["out"] )
+				self["__primitiveSwitch"]["in1"].setInput( self["__cube"]["out"] )
+
+				self["out"].setInput( self["__primitiveSwitch"]["out"] )
+
+		IECore.registerRunTimeTyped( SphereOrCube )
+
+		Gaffer.Metadata.registerNode(
+
+			SphereOrCube,
+
+			"description",
+			"""
+			A little test node
+			""",
+
+			plugs = {
+
+				"type" : [
+
+					"description",
+					"""
+					Pick yer lovely primitive here.
+					""",
+
+					"preset:Sphere", int( SphereOrCube.Type.Sphere ),
+					"preset:Cube", int( SphereOrCube.Type.Cube ),
+
+				]
+
+			}
+
+		)
+
+		n = SphereOrCube()
+		self.assertEqual( n["out"].childNames( "/"), IECore.InternedStringVectorData( [ "sphere" ] ) )
+
+		n["type"].setValue( int( n.Type.Cube ) )
+		self.assertEqual( n["out"].childNames( "/"), IECore.InternedStringVectorData( [ "cube" ] ) )
+
+		n["enabled"].setValue( False )
+		self.assertEqual( n["out"].childNames( "/"), IECore.InternedStringVectorData() )
+
+		self.assertEqual(
+			Gaffer.Metadata.nodeValue( n, "description" ),
+			"A little test node",
+		)
+
+		self.assertEqual(
+			Gaffer.Metadata.plugValue( n["type"], "description" ),
+			"Pick yer lovely primitive here.",
+		)
+
+		self.assertEqual( Gaffer.NodeAlgo.presets( n["type"] ), [ "Sphere", "Cube" ] )
+
 	def setUp( self ) :
 
 		self.__previousCacheMemoryLimit = Gaffer.ValuePlug.getCacheMemoryLimit()

@@ -42,9 +42,7 @@
 #include "GafferBindings/DependencyNodeBinding.h"
 #include "GafferBindings/ExecutableNodeBinding.h"
 
-#include "GafferImage/ImageNode.h"
 #include "GafferImage/Display.h"
-#include "GafferImage/ImageProcessor.h"
 #include "GafferImage/ChannelDataProcessor.h"
 #include "GafferImage/OpenColorIO.h"
 #include "GafferImage/ObjectToImage.h"
@@ -61,6 +59,8 @@
 #include "GafferImage/DeleteImageMetadata.h"
 #include "GafferImage/CopyImageMetadata.h"
 
+#include "GafferImageBindings/ImageNodeBinding.h"
+#include "GafferImageBindings/ImageProcessorBinding.h"
 #include "GafferImageBindings/FormatBinding.h"
 #include "GafferImageBindings/FormatPlugBinding.h"
 #include "GafferImageBindings/SamplerBinding.h"
@@ -111,13 +111,13 @@ BOOST_PYTHON_MODULE( _GafferImage )
 		.def( "tileOrigin", &ImagePlug::tileOrigin ).staticmethod( "tileOrigin" )
 	;
 
-	GafferBindings::DependencyNodeClass<ImageNode>();
+	GafferImageBindings::bindImageNode();
+	GafferImageBindings::bindImageProcessor();
 	GafferBindings::DependencyNodeClass<ImagePrimitiveNode>();
 	GafferBindings::DependencyNodeClass<Display>()
 		.def( "dataReceivedSignal", &Display::dataReceivedSignal, return_value_policy<reference_existing_object>() ).staticmethod( "dataReceivedSignal" )
 		.def( "imageReceivedSignal", &Display::imageReceivedSignal, return_value_policy<reference_existing_object>() ).staticmethod( "imageReceivedSignal" )
 	;
-	GafferBindings::DependencyNodeClass<ImageProcessor>();
 	GafferBindings::DependencyNodeClass<ChannelDataProcessor>();
 	GafferBindings::DependencyNodeClass<ColorProcessor>();
 	GafferBindings::DependencyNodeClass<OpenColorIO>();
