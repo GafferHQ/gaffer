@@ -1,7 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2012, John Haddon. All rights reserved.
-#  Copyright (c) 2013-2015, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,38 +34,63 @@
 #
 ##########################################################################
 
-from _GafferImageTest import *
+import unittest
 
-from ImagePlugTest import ImagePlugTest
-from ImageReaderTest import ImageReaderTest
-from OpenColorIOTest import OpenColorIOTest
-from ObjectToImageTest import ObjectToImageTest
-from FormatTest import FormatTest
-from FormatPlugTest import FormatPlugTest
-from MergeTest import MergeTest
-from GradeTest import GradeTest
-from ConstantTest import ConstantTest
-from ImageWriterTest import ImageWriterTest
-from ChannelMaskPlugTest import ChannelMaskPlugTest
-from SamplerTest import SamplerTest
-from ReformatTest import ReformatTest
-from FilterTest import FilterTest
-from DisplayTest import DisplayTest
-from ImageStatsTest import ImageStatsTest
-from ImageTransformTest import ImageTransformTest
-from DeleteChannelsTest import DeleteChannelsTest
-from ClampTest import ClampTest
-from ImageSwitchTest import ImageSwitchTest
-from ImageTimeWarpTest import ImageTimeWarpTest
-from ImageSamplerTest import ImageSamplerTest
-from ImageNodeTest import ImageNodeTest
-from FormatDataTest import FormatDataTest
-from ImageMetadataTest import ImageMetadataTest
-from DeleteImageMetadataTest import DeleteImageMetadataTest
-from CopyImageMetadataTest import CopyImageMetadataTest
-from ImageLoopTest import ImageLoopTest
-from ImageProcessorTest import ImageProcessorTest
+import IECore
+
+import Gaffer
+import GafferTest
+import GafferImage
+
+class ImageProcessorTest( GafferTest.TestCase ) :
+
+	def testDerivingInPython( self ) :
+
+		# We allow deriving in Python for use as a "shell" node containing
+		# an internal node network which provides the implementation. But
+		# we don't allow the overriding of the compute*() and hash*() methods
+		# because the performance would be abysmal.
+
+		class DeleteAlpha( GafferImage.ImageProcessor ) :
+
+			def __init__( self, name = "DeleteAlpha" ) :
+
+				GafferImage.ImageProcessor.__init__( self, name )
+
+				self["__deleteChannels"] = GafferImage.DeleteChannels()
+				self["__deleteChannels"]["in"].setInput( self["in"] )
+				self["__deleteChannels"]["enabled"].setInput( self["enabled"] )
+				self["__deleteChannels"]["channels"].setValue( IECore.StringVectorData( [ "A" ] ) )
+
+				self["out"].setInput( self["__deleteChannels"]["out"] )
+
+		IECore.registerRunTimeTyped( DeleteAlpha )
+
+		Gaffer.Metadata.registerNode(
+
+			DeleteAlpha,
+
+			"description",
+			"""
+			Deletes the alpha channel.
+			""",
+
+		)
+
+		c = GafferImage.Constant()
+		self.assertTrue( "A" in c["out"]["channelNames"].getValue() )
+
+		n = DeleteAlpha()
+		n["in"].setInput( c["out"] )
+		self.assertFalse( "A" in n["out"]["channelNames"].getValue() )
+
+		n["enabled"].setValue( False )
+		self.assertTrue( "A" in n["out"]["channelNames"].getValue() )
+
+		self.assertEqual(
+			Gaffer.Metadata.nodeValue( n, "description" ),
+			"Deletes the alpha channel.",
+		)
 
 if __name__ == "__main__":
-	import unittest
 	unittest.main()
