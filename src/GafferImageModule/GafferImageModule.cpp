@@ -73,6 +73,7 @@
 #include "GafferImageBindings/MixinBinding.h"
 #include "GafferImageBindings/FormatDataBinding.h"
 #include "GafferImageBindings/ImageReaderBinding.h"
+#include "GafferImageBindings/ShuffleBinding.h"
 
 using namespace boost::python;
 using namespace GafferImage;
@@ -116,6 +117,7 @@ BOOST_PYTHON_MODULE( _GafferImage )
 	GafferImageBindings::bindFormatData();
 	GafferImageBindings::bindImageReader();
 	GafferImageBindings::bindMerge();
+	GafferImageBindings::bindShuffle();
 
 	GafferBindings::ExecutableNodeClass<ImageWriter>();
 }
