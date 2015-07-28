@@ -35,18 +35,17 @@
 #
 ##########################################################################
 
-import os
 import unittest
 
 import IECore
 
 import Gaffer
 import GafferImage
-import sys
 
 class ConstantTest( unittest.TestCase ) :
 
 	def testDefaultFormatHash( self ) :
+
 		s = Gaffer.ScriptNode()
 		n = GafferImage.Constant()
 		s.addChild( n )
@@ -60,6 +59,7 @@ class ConstantTest( unittest.TestCase ) :
 			self.assertNotEqual( h, h2 )
 
 	def testColourHash( self ) :
+
 		# Check that the hash changes when the colour does.
 		s = Gaffer.ScriptNode()
 		n = GafferImage.Constant()
@@ -74,6 +74,7 @@ class ConstantTest( unittest.TestCase ) :
 			self.assertNotEqual( h, h2 )
 
 	def testFormatHash( self ) :
+
 		# Check that the data hash doesn't change when the format does.
 		c = GafferImage.Constant()
 		c["format"].setValue( GafferImage.Format( 2048, 1156, 1. ) )
@@ -83,6 +84,7 @@ class ConstantTest( unittest.TestCase ) :
 		self.assertEqual( h1, h2 )
 
 	def testTileHashes( self ) :
+
 		# Test that two tiles within the image have the same hash.
 		c = GafferImage.Constant()
 		c["format"].setValue( GafferImage.Format( 2048, 1156, 1. ) )
