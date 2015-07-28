@@ -95,6 +95,27 @@ class ConstantTest( unittest.TestCase ) :
 			c["out"].channelDataHash( "R", IECore.V2i( GafferImage.ImagePlug().tileSize() ) ),
 		)
 
+	def testTileIdentity( self ) :
+
+		c = GafferImage.Constant()
+		c["format"].setValue( GafferImage.Format( 2048, 1156, 1. ) )
+
+		# The channelData() binding returns a copy by default, so we wouldn't
+		# expect two tiles to be referencing the same object.
+		self.assertFalse(
+			c["out"].channelData( "R", IECore.V2i( 0 ) ).isSame(
+				c["out"].channelData( "R", IECore.V2i( GafferImage.ImagePlug.tileSize() ) )
+			)
+		)
+
+		# But behind the scenes we do want them to be the same, so
+		# check that that is the case.
+		self.assertTrue(
+			c["out"].channelData( "R", IECore.V2i( 0 ), _copy = False ).isSame(
+				c["out"].channelData( "R", IECore.V2i( GafferImage.ImagePlug.tileSize() ), _copy = False )
+			)
+		)
+
 	def testEnableBehaviour( self ) :
 
 		c = GafferImage.Constant()

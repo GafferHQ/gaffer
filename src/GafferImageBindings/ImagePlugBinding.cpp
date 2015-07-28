@@ -49,10 +49,11 @@ using namespace GafferImage;
 namespace
 {
 
-IECore::FloatVectorDataPtr channelData( const ImagePlug &plug,  const std::string &channelName, const Imath::V2i &tile  )
+IECore::FloatVectorDataPtr channelData( const ImagePlug &plug,  const std::string &channelName, const Imath::V2i &tile, bool copy  )
 {
+	IECorePython::ScopedGILRelease gilRelease;
 	IECore::ConstFloatVectorDataPtr d = plug.channelData( channelName, tile );
-	return d ? d->copy() : 0;
+	return copy ? d->copy() : boost::const_pointer_cast<IECore::FloatVectorData>( d );
 }
 
 IECore::ImagePrimitivePtr image( const ImagePlug &plug )
@@ -66,7 +67,7 @@ IECore::ImagePrimitivePtr image( const ImagePlug &plug )
 void GafferImageBindings::bindImagePlug()
 {
 
-	IECorePython::RunTimeTypedClass<ImagePlug>()
+	PlugClass<ImagePlug>()
 		.def(
 			init< const std::string &, Gaffer::Plug::Direction, unsigned >
 			(
@@ -77,7 +78,7 @@ void GafferImageBindings::bindImagePlug()
 				)
 			)
 		)
-		.def( "channelData", &channelData )
+		.def( "channelData", &channelData, ( arg( "_copy" ) = true ) )
 		.def( "channelDataHash", &ImagePlug::channelDataHash )
 		.def( "image", &image )
 		.def( "imageHash", &ImagePlug::imageHash )
