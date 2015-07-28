@@ -40,9 +40,7 @@
 #include "GafferBindings/ComputeNodeBinding.h"
 #include "GafferBindings/ExecutableNodeBinding.h"
 
-#include "GafferScene/SceneNode.h"
 #include "GafferScene/SceneProcedural.h"
-#include "GafferScene/SceneProcessor.h"
 #include "GafferScene/PrimitiveVariableProcessor.h"
 #include "GafferScene/DeletePrimitiveVariables.h"
 #include "GafferScene/DeleteSets.h"
@@ -69,6 +67,8 @@
 #include "GafferScene/MapOffset.h"
 
 #include "GafferSceneBindings/ScenePlugBinding.h"
+#include "GafferSceneBindings/SceneNodeBinding.h"
+#include "GafferSceneBindings/SceneProcessorBinding.h"
 #include "GafferSceneBindings/OutputsBinding.h"
 #include "GafferSceneBindings/PathMatcherBinding.h"
 #include "GafferSceneBindings/SceneProceduralBinding.h"
@@ -102,6 +102,7 @@
 #include "GafferSceneBindings/PathMatcherDataPlugBinding.h"
 
 using namespace boost::python;
+using namespace GafferBindings;
 using namespace GafferScene;
 using namespace GafferSceneBindings;
 
@@ -109,8 +110,8 @@ BOOST_PYTHON_MODULE( _GafferScene )
 {
 
 	bindScenePlug();
-	GafferBindings::DependencyNodeClass<SceneNode>();
-	GafferBindings::DependencyNodeClass<SceneProcessor>();
+	bindSceneNode();
+	bindSceneProcessor();
 	GafferBindings::DependencyNodeClass<FilteredSceneProcessor>();
 	GafferBindings::DependencyNodeClass<SceneElementProcessor>();
 	GafferBindings::DependencyNodeClass<MeshType>();
