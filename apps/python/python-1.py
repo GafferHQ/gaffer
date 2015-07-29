@@ -62,6 +62,11 @@ class python( Gaffer.Application ) :
 					description = "An arbitrary list of arguments which will be provided to "
 						"the python script in a variable called argv.",
 					defaultValue = IECore.StringVectorData(),
+					userData = {
+						"parser" : {
+							"acceptFlags" : IECore.BoolData( True ),
+						},
+					},
 				),
 				
 			]
