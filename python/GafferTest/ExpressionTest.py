@@ -640,5 +640,82 @@ class ExpressionTest( GafferTest.TestCase ) :
 		self.assertTrue( s2["n"]["user"]["a"].getInput() is None )
 		self.assertEqual( s2["n"]["user"]["a"].getValue(), 0 )
 
+	def testRenamePlugs( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = Gaffer.Node()
+		s["n"]["user"]["a"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["n"]["user"]["b"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		s["n"]["user"]["a"].setValue( 20 )
+
+		s["e"] = Gaffer.Expression()
+		s["e"]["engine"].setValue( "python" )
+		s["e"]["expression"].setValue( 'parent["n"]["user"]["b"] = parent["n"]["user"]["a"] * 2' )
+
+		self.assertEqual( s["n"]["user"]["a"].getValue(), 20 )
+		self.assertEqual( s["n"]["user"]["b"].getValue(), 40 )
+
+		s["n"]["user"]["a"].setName( "A" )
+		s["n"]["user"]["b"].setName( "B" )
+
+		self.assertEqual( s["n"]["user"]["A"].getValue(), 20 )
+		self.assertEqual( s["n"]["user"]["B"].getValue(), 40 )
+
+		s["n"]["user"]["A"].setValue( 30 )
+
+		self.assertEqual( s["n"]["user"]["A"].getValue(), 30 )
+		self.assertEqual( s["n"]["user"]["B"].getValue(), 60 )
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+
+		self.assertEqual( s2["n"]["user"]["A"].getValue(), 30 )
+		self.assertEqual( s2["n"]["user"]["B"].getValue(), 60 )
+
+		s2["n"]["user"]["A"].setValue( 10 )
+
+		self.assertEqual( s2["n"]["user"]["A"].getValue(), 10 )
+		self.assertEqual( s2["n"]["user"]["B"].getValue(), 20 )
+
+	def testRenameNode( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = Gaffer.Node()
+		s["n"]["user"]["a"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["n"]["user"]["b"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		s["n"]["user"]["a"].setValue( 20 )
+
+		s["e"] = Gaffer.Expression()
+		s["e"]["engine"].setValue( "python" )
+		s["e"]["expression"].setValue( 'parent["n"]["user"]["b"] = parent["n"]["user"]["a"] * 2' )
+
+		self.assertEqual( s["n"]["user"]["a"].getValue(), 20 )
+		self.assertEqual( s["n"]["user"]["b"].getValue(), 40 )
+
+		s["n"].setName( "N" )
+
+		self.assertEqual( s["N"]["user"]["a"].getValue(), 20 )
+		self.assertEqual( s["N"]["user"]["b"].getValue(), 40 )
+
+		s["N"]["user"]["a"].setValue( 30 )
+
+		self.assertEqual( s["N"]["user"]["a"].getValue(), 30 )
+		self.assertEqual( s["N"]["user"]["b"].getValue(), 60 )
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+
+		self.assertEqual( s2["N"]["user"]["a"].getValue(), 30 )
+		self.assertEqual( s2["N"]["user"]["b"].getValue(), 60 )
+
+		s2["N"]["user"]["a"].setValue( 10 )
+
+		self.assertEqual( s2["N"]["user"]["a"].getValue(), 10 )
+		self.assertEqual( s2["N"]["user"]["b"].getValue(), 20 )
+
 if __name__ == "__main__":
 	unittest.main()
