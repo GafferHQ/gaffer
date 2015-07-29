@@ -62,6 +62,11 @@ class python( Gaffer.Application ) :
 					description = "An arbitrary list of arguments which will be provided to "
 						"the python script in a variable called argv.",
 					defaultValue = IECore.StringVectorData(),
+					userData = {
+						"parser" : {
+							"acceptFlags" : IECore.BoolData( True ),
+						},
+					},
 				),
 				
 			]
@@ -100,7 +105,13 @@ class python( Gaffer.Application ) :
 		try:
 			sys.argv = [ args[ "file" ].value ] + list( args[ "arguments" ] )
 			try :
-				execfile( args["file"].value, { "argv" : args["arguments"] } )
+				execfile(
+					args["file"].value,
+					{
+						"argv" : args["arguments"],
+						"__name__" : "__main__",
+					}
+				)
 				return 0
 			except SystemExit as e :
 				# don't print traceback when a sys.exit was called, but return the exit code as the result
