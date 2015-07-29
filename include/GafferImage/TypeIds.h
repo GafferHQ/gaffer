@@ -57,9 +57,9 @@ enum TypeId
 	FormatPlugTypeId = 110761,
 	MergeTypeId = 110762,
 	GradeTypeId = 110763,
-	FilterProcessorTypeId = 110764, // obsolete, available for reuse
+	ShuffleTypeId = 110764,
 	ConstantTypeId = 110765,
-	SelectTypeId = 110766, // obsolete, available for reuse
+	ShuffleChannelPlugTypeId = 110766,
 	ChannelMaskPlugTypeId = 110767,
 	ReformatTypeId = 110768,
 	FilterPlugTypeId = 110769,

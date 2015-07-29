@@ -44,6 +44,10 @@
 namespace GafferImage
 {
 
+/// \todo Consider removing this plug type entirely. It seems to add
+/// little over StringVectorDataPlug, and what it does add likely
+/// needs rethinking and moving to something like ImageAlgo or
+/// ChannelAlgo anyway.
 class ChannelMaskPlug : public Gaffer::StringVectorDataPlug
 {
 	public:

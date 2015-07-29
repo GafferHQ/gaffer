@@ -66,6 +66,7 @@ from DeleteImageMetadataTest import DeleteImageMetadataTest
 from CopyImageMetadataTest import CopyImageMetadataTest
 from ImageLoopTest import ImageLoopTest
 from ImageProcessorTest import ImageProcessorTest
+from ShuffleTest import ShuffleTest
 
 if __name__ == "__main__":
 	import unittest
