@@ -48,7 +48,7 @@ Gaffer.Metadata.registerNode(
 	"description",
 	"""
 	Writes image files to disk using OpenImageIO. All file
-	types supported by OpenImageUI are supported by the
+	types supported by OpenImageIO are supported by the
 	ImageWriter.
 	""",
 
