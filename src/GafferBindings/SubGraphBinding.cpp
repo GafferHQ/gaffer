@@ -49,7 +49,8 @@ namespace GafferBindings
 
 void bindSubGraph()
 {
-	DependencyNodeClass<SubGraph>();
+	typedef DependencyNodeWrapper<SubGraph> Wrapper;
+	DependencyNodeClass<SubGraph, Wrapper>();
 }
 
 } // namespace GafferBindings
