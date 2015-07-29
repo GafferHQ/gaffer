@@ -617,5 +617,28 @@ class ExpressionTest( GafferTest.TestCase ) :
 			IECore.Box3f( IECore.V3f( 1, 2, 3 ), IECore.V3f( 4, 5, 6 ) )
 		)
 
+	def testDisconnect( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = Gaffer.Node()
+		s["n"]["user"]["a"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		s["e"] = Gaffer.Expression()
+		s["e"]["engine"].setValue( "python" )
+		s["e"]["expression"].setValue( 'parent["n"]["user"]["a"] = 10' )
+
+		self.assertEqual( s["n"]["user"]["a"].getValue(), 10 )
+
+		s["n"]["user"]["a"].setInput( None )
+		self.assertTrue( s["n"]["user"]["a"].getInput() is None )
+		self.assertEqual( s["n"]["user"]["a"].getValue(), 0 )
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+
+		self.assertTrue( s2["n"]["user"]["a"].getInput() is None )
+		self.assertEqual( s2["n"]["user"]["a"].getValue(), 0 )
+
 if __name__ == "__main__":
 	unittest.main()
