@@ -140,8 +140,8 @@ GafferUI.PlugValueWidget.registerType( GafferImage.Shuffle.ChannelPlug, _Shuffle
 
 ## \todo This probably makes sense as a public part of GafferImageUI
 # so it can be used by other nodes which want to select individual channels.
-# When doing this we'll need to drive the extra White/Black fields using
-# metadata somehow.
+# When doing this we'll need to drive the extra White/Black fields and
+# whether or not new channels can be created using metadata.
 class _ChannelPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plug, imagePlug = None, **kw ) :
@@ -188,6 +188,10 @@ class _ChannelPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		if self.getPlug().getName() == "in" :
 			availableChannels.extend( [ "__white", "__black" ] )
+		else :
+			for channel in ( "R", "G", "B", "A" ) :
+				if channel not in availableChannels :
+					availableChannels.append( channel )
 
 		result = IECore.MenuDefinition()
 		for channel in availableChannels :
