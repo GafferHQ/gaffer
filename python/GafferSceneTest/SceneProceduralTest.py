@@ -90,8 +90,7 @@ class SceneProceduralTest( unittest.TestCase ) :
 		script["plane"] = GafferScene.Plane()
 
 		script["expression"] = Gaffer.Expression()
-		script["expression"]["engine"].setValue( "python" )
-		script["expression"]["expression"].setValue( 'parent["plane"]["transform"]["translate"]["x"] = iDontExist["andNorDoI"]' )
+		script["expression"].setExpression( 'parent["plane"]["transform"]["translate"]["x"] = iDontExist["andNorDoI"]' )
 
 		renderer = IECoreGL.Renderer()
 		renderer.setOption( "gl:mode", IECore.StringData( "deferred" ) )
@@ -108,12 +107,10 @@ class SceneProceduralTest( unittest.TestCase ) :
 		script["plane"] = GafferScene.Plane()
 
 		script["expression1"] = Gaffer.Expression()
-		script["expression1"]["engine"].setValue( "python" )
-		script["expression1"]["expression"].setValue( 'parent["plane"]["transform"]["translate"]["x"] = context.getFrame()' )
+		script["expression1"].setExpression( 'parent["plane"]["transform"]["translate"]["x"] = context.getFrame()' )
 
 		script["expression2"] = Gaffer.Expression()
-		script["expression2"]["engine"].setValue( "python" )
-		script["expression2"]["expression"].setValue( 'parent["plane"]["dimensions"]["x"] = 1 + context.getFrame()' )
+		script["expression2"].setExpression( 'parent["plane"]["dimensions"]["x"] = 1 + context.getFrame()' )
 
 		script["options"] = GafferScene.StandardOptions()
 		script["options"]["in"].setInput( script["plane"]["out"] )

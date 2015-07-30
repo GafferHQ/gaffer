@@ -169,8 +169,7 @@ class PathFilterTest( unittest.TestCase ) :
 		s["f"] = GafferScene.PathFilter()
 
 		s["e"] = Gaffer.Expression()
-		s["e"]["engine"].setValue( "python" )
-		s["e"]["expression"].setValue(
+		s["e"].setExpression(
 			"import IECore\n"
 			"passName = context.get( 'passName', '' )\n"
 			"if passName == 'foreground' :\n"
