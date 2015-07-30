@@ -163,8 +163,7 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 		s["g"]["in"][2].setInput( s["p"]["out"] )
 
 		s["e"] = Gaffer.Expression()
-		s["e"]["engine"].setValue( "python" )
-		s["e"]["expression"].setValue( "parent['p']['dimensions']['x'] = 1 + context.getFrame() * 0.1" )
+		s["e"].setExpression( "parent['p']['dimensions']['x'] = 1 + context.getFrame() * 0.1" )
 
 		g = GafferSceneUI.SceneGadget()
 		g.setScene( s["g"]["out"] )
@@ -224,8 +223,7 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 		s["a"]["attributes"]["doubleSided"]["enabled"].setValue( True )
 
 		s["e"] = Gaffer.Expression()
-		s["e"]["engine"].setValue( "python" )
-		s["e"]["expression"].setValue( 'parent["a"]["attributes"]["doubleSided"]["value"] = context["nonexistent"]' )
+		s["e"].setExpression( 'parent["a"]["attributes"]["doubleSided"]["value"] = context["nonexistent"]' )
 
 		s["f"] = GafferScene.PathFilter()
 		s["f"]["paths"].setValue( IECore.StringVectorData( [ "/bigSphere/littleSphere" ] ) )
