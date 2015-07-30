@@ -67,8 +67,7 @@ class ArnoldRenderTest( GafferTest.TestCase ) :
 		s["render"]["in"].setInput( s["plane"]["out"] )
 
 		s["expression"] = Gaffer.Expression()
-		s["expression"]["engine"].setValue( "python" )
-		s["expression"]["expression"].setValue( "parent['render']['fileName'] = '" + self.temporaryDirectory() + "/test.%d.ass' % int( context['frame'] )" )
+		s["expression"].setExpression( "parent['render']['fileName'] = '" + self.temporaryDirectory() + "/test.%d.ass' % int( context['frame'] )" )
 
 		s["fileName"].setValue( self.__scriptFileName )
 		s.save()
