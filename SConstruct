@@ -287,6 +287,49 @@ if env["BUILD_CACHEDIR"] != "" :
 	CacheDir( env["BUILD_CACHEDIR"] )
 
 ###############################################################################################
+# Checks for doxygen and inkscape requirements
+###############################################################################################
+
+def checkExecutable(executable):
+    def is_exe(fpath):
+        return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
+
+    fpath, fname = os.path.split(executable)
+    if fpath:
+        if is_exe(executable):
+            return True
+    else:
+        for path in os.environ["PATH"].split(os.pathsep):
+            path = path.strip('"')
+            exe_file = os.path.join(path, executable)
+            if is_exe(exe_file):
+                return True
+
+    return False
+
+def checkDoxygen(context):
+	context.Message('Checking for Doxygen... ')
+	result = checkExecutable(context.sconf.env['DOXYGEN'])
+	context.Result(result)
+	return result
+
+def checkInkscape(context):
+	context.Message('Checking for Inkscape... ')
+	result = checkExecutable(context.sconf.env['INKSCAPE'])
+	context.Result(result)
+	return result
+
+conf = Configure(env, custom_tests = {'checkDoxygen' : checkDoxygen, 'checkInkscape' : checkInkscape})
+
+if not conf.checkDoxygen():
+	print 'Doxygen is not installed!'
+	Exit(1)
+
+if not conf.checkInkscape():
+	print 'Inkscape is not installed!'
+	Exit(1)
+
+###############################################################################################
 # An environment for running commands with access to the applications we've built
 ###############################################################################################
 
@@ -681,7 +724,7 @@ for library in ( "GafferUI", ) :
 	else :
 		libraries[library]["pythonEnvAppends"]["LIBS"].append( "QtCore" )
 		libraries[library]["pythonEnvAppends"]["LIBS"].append( "QtGui" )
-		
+
 
 ###############################################################################################
 # The stuff that actually builds the libraries and python modules
