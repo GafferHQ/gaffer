@@ -139,8 +139,7 @@ class FormatPlugTest( unittest.TestCase ) :
 		s["n2"]["user"]["f"] = GafferImage.FormatPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 
 		s["e"] = Gaffer.Expression()
-		s["e"]["engine"].setValue( "python" )
-		s["e"]["expression"].setValue( 'f = parent["n1"]["user"]["f"]; b = f.getDisplayWindow(); b.min -= IECore.V2i( 10 ); b.max += IECore.V2i( 20 ); f.setPixelAspect( 0.5 ); f.setDisplayWindow( b ); parent["n2"]["user"]["f"] = f')
+		s["e"].setExpression( 'f = parent["n1"]["user"]["f"]; b = f.getDisplayWindow(); b.min -= IECore.V2i( 10 ); b.max += IECore.V2i( 20 ); f.setPixelAspect( 0.5 ); f.setDisplayWindow( b ); parent["n2"]["user"]["f"] = f')
 
 		s["n1"]["user"]["f"].setValue( GafferImage.Format( IECore.Box2i( IECore.V2i( 20, 30 ), IECore.V2i( 100, 110 ) ), 1 ) )
 
