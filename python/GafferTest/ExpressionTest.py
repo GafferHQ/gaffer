@@ -717,5 +717,14 @@ class ExpressionTest( GafferTest.TestCase ) :
 		self.assertEqual( s2["N"]["user"]["a"].getValue(), 10 )
 		self.assertEqual( s2["N"]["user"]["b"].getValue(), 20 )
 
+	def testLoadScriptFromVersion0_15( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["fileName"].setValue( os.path.dirname( __file__ ) + "/scripts/expressionVersion-0.15.0.0.gfr" )
+		s.load()
+
+		self.assertEqual( s["n"]["user"]["b"].getValue(), 2 )
+		self.assertTrue( s["n"]["user"]["b"].getInput().node().isSame( s["e"] ) )
+
 if __name__ == "__main__":
 	unittest.main()
