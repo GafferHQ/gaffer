@@ -45,6 +45,7 @@
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/Context.h"
 #include "Gaffer/StringPlug.h"
+#include "Gaffer/BlockedConnection.h"
 
 using namespace IECore;
 using namespace Gaffer;
@@ -58,13 +59,13 @@ size_t Expression::g_firstPlugIndex;
 IE_CORE_DEFINERUNTIMETYPED( Expression );
 
 Expression::Expression( const std::string &name )
-	:	ComputeNode( name ), m_engine( 0 )
+	:	ComputeNode( name ), m_engine( NULL )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 
 	addChild(
 		new StringPlug(
-			"engine",
+			"__engine",
 			Plug::In,
 			"python",
 			Plug::Default & ~( Plug::AcceptsInputs ),
@@ -73,7 +74,7 @@ Expression::Expression( const std::string &name )
 	);
 	addChild(
 		new StringPlug(
-			"expression",
+			"__expression",
 			Plug::In,
 			"",
 			Plug::Default & ~( Plug::AcceptsInputs ),
@@ -85,11 +86,48 @@ Expression::Expression( const std::string &name )
 	addChild( new ValuePlug( "__out", Plug::Out ) );
 	addChild( new ObjectVectorPlug( "__execute", Plug::Out, new ObjectVector ) );
 
-	plugSetSignal().connect( boost::bind( &Expression::plugSet, this, ::_1 ) );
+	m_plugSetConnection = plugSetSignal().connect( boost::bind( &Expression::plugSet, this, ::_1 ) );
 }
 
 Expression::~Expression()
 {
+}
+
+void Expression::setExpression( const std::string &expression, const std::string &engine )
+{
+	if(
+		expression == expressionPlug()->getValue() &&
+		engine == enginePlug()->getValue()
+	)
+	{
+		return;
+	}
+
+	m_engine = NULL;
+	m_contextNames.clear();
+
+	m_engine = Engine::create( engine, expression );
+	std::vector<std::string> inPlugPaths;
+	std::vector<std::string> outPlugPaths;
+
+	if( m_engine )
+	{
+		m_engine->inPlugs( inPlugPaths );
+		m_engine->outPlugs( outPlugPaths );
+		m_engine->contextNames( m_contextNames );
+	}
+
+	updatePlugs( inPlugPaths, outPlugPaths );
+
+	BlockedConnection blockedConnection( m_plugSetConnection );
+	enginePlug()->setValue( engine );
+	expressionPlug()->setValue( expression );
+}
+
+std::string Expression::getExpression( std::string &engine ) const
+{
+	engine = enginePlug()->getValue();
+	return expressionPlug()->getValue();
 }
 
 StringPlug *Expression::enginePlug()
@@ -242,6 +280,7 @@ void Expression::compute( ValuePlug *output, const Context *context ) const
 		{
 			index++;
 		}
+
 		if( index < values->members().size() )
 		{
 			m_engine->setPlugValue( output, values->members()[index].get() );
@@ -260,35 +299,24 @@ void Expression::plugSet( Plug *plug )
 {
 	if( plug == expressionPlug() )
 	{
+		// We use this to restore the engine appropriately when
+		// an Expression node is loaded from serialised form. We
+		// don't do all the updatePlugs() work that we do in
+		// setExpression() because we know that the serialisation
+		// will have rebuild the structure for us - we just need
+		// to recreate the engine.
+		/// \todo Perhaps it would be better if we serialised
+		/// a setExpression() call and then used that in our
+		/// serialisation.
+		const std::string engineType = enginePlug()->getValue();
+		const std::string expression = expressionPlug()->getValue();
 		m_engine = NULL;
 		m_contextNames.clear();
-
-		try
+		if( !engineType.empty() && !expression.empty() )
 		{
-			std::string newExpression = expressionPlug()->getValue();
-			if( newExpression.size() )
-			{
-				m_engine = Engine::create( enginePlug()->getValue(), newExpression );
-				std::vector<std::string> inPlugPaths;
-				std::vector<std::string> outPlugPaths;
-
-				if( m_engine )
-				{
-					m_engine->inPlugs( inPlugPaths );
-					m_engine->outPlugs( outPlugPaths );
-					m_engine->contextNames( m_contextNames );
-				}
-
-				updatePlugs( inPlugPaths, outPlugPaths );
-			}
+			m_engine = Engine::create( engineType, expression );
+			m_engine->contextNames( m_contextNames );
 		}
-		catch( const std::exception &e )
-		{
-			/// \todo Report error to user somehow - error signal on Node?
-			IECore::msg( IECore::Msg::Error, "Expression::plugSet", e.what() );
-			m_engine = NULL;
-		}
-
 	}
 }
 
@@ -368,7 +396,7 @@ Expression::EnginePtr Expression::Engine::create( const std::string engineType, 
 	CreatorMap::const_iterator it = m.find( engineType );
 	if( it == m.end() )
 	{
-		return 0;
+		return NULL;
 	}
 	return it->second( expression );
 }

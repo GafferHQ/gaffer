@@ -56,11 +56,14 @@ class Expression : public ComputeNode
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::Expression, ExpressionTypeId, ComputeNode );
 
-		StringPlug *enginePlug();
-		const StringPlug *enginePlug() const;
-
-		StringPlug *expressionPlug();
-		const StringPlug *expressionPlug() const;
+		/// Sets the node up to evaluate the given expression in the given language.
+		/// This is achieved by creating local plugs which are connected to the plugs
+		/// referenced by the expression, and executing the expression to provide
+		/// output values on demand in compute().
+		/// \undoable
+		void setExpression( const std::string &expression, const std::string &language );
+		/// Returns the expression this node is currently set up to evaluate.
+		std::string getExpression( std::string &language ) const;
 
 		IE_CORE_FORWARDDECLARE( Engine )
 
@@ -125,6 +128,14 @@ class Expression : public ComputeNode
 
 		static size_t g_firstPlugIndex;
 
+		/// Private plug for storing the type of the engine.
+		StringPlug *enginePlug();
+		const StringPlug *enginePlug() const;
+
+		/// Private plug for storing the expression text.
+		StringPlug *expressionPlug();
+		const StringPlug *expressionPlug() const;
+
 		// For each input to the expression, we add a child plug
 		// below this one, and connect it to the outside world.
 		ValuePlug *inPlug();
@@ -145,6 +156,7 @@ class Expression : public ComputeNode
 		const ObjectVectorPlug *executePlug() const;
 
 		void plugSet( Plug *plug );
+		boost::signals::scoped_connection m_plugSetConnection;
 
 		void updatePlugs( const std::vector<std::string> &inPlugPaths, const std::vector<std::string> &outPlugPaths );
 		void updatePlug( ValuePlug *parentPlug, size_t childIndex, const std::string &plugPath );

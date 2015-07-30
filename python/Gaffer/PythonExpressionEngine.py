@@ -50,8 +50,6 @@ class PythonExpressionEngine( Gaffer.Expression.Engine ) :
 		self.__expression = expression
 
 		parser = _Parser( expression )
-		if not parser.plugWrites :
-			raise Exception( "Expression does not write to a plug" )
 
 		self.__inPlugs = list( parser.plugReads )
 		self.__outPlugs = list( parser.plugWrites )

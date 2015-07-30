@@ -54,6 +54,19 @@ using namespace Gaffer;
 namespace
 {
 
+void setExpression( Expression &e, const std::string &expression, const std::string &engine )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	e.setExpression( expression, engine );
+}
+
+tuple getExpression( Expression &e )
+{
+	std::string engine;
+	std::string expression = e.getExpression( engine );
+	return make_tuple( expression, engine );
+}
+
 class EngineWrapper : public IECorePython::RefCountedWrapper<Expression::Engine>
 {
 	public :
@@ -226,60 +239,20 @@ tuple registeredEnginesWrapper()
 	return boost::python::tuple( l );
 }
 
-class ExpressionSerialiser : public NodeSerialiser
-{
-
-	virtual bool childNeedsSerialisation( const Gaffer::GraphComponent *child ) const
-	{
-		const Expression *expression = child->parent<Expression>();
-		if( child == expression->expressionPlug() )
-		{
-			// We'll serialise this manually ourselves in
-			// postScript() - see comments there.
-			return false;
-		}
-		return NodeSerialiser::childNeedsSerialisation( child );
-	}
-
-	virtual std::string postScript( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const
-	{
-		std::string result = NodeSerialiser::postScript( graphComponent, identifier, serialisation );
-
-		// When the expression plug is set, the Expression node creates an engine,
-		// parses the expression, and connects itself up in the graph. We must therefore
-		// delay the setting of the expression until the whole graph has been created,
-		// otherwise we'll be hunting for plugs referenced in the expression which have
-		// not yet been created. The sad thing about all this is that the serialisation
-		// has already reproduced the network we need anyway - the Expression node doesn't
-		// even need to do anything.
-		//
-		/// \todo We could consider not using plugSetSignal() to trigger expression
-		/// parsing, instead using an explicit method on the Expression class. In that
-		/// case we wouldn't need any custom serialisation at all, but the UI code and
-		/// scripts creating expressions would need to be updated to use the method
-		/// rather than to just set the plug.
-		const Expression *expression = static_cast<const Expression *>( graphComponent );
-		const Serialiser *s = Serialisation::acquireSerialiser( expression->expressionPlug() );
-		result += s->postConstructor( expression->expressionPlug(), serialisation.identifier( expression->expressionPlug() ), serialisation );
-
-		return result;
-	}
-
-};
-
 } // namespace
 
 void GafferBindings::bindExpression()
 {
 
-	scope s = DependencyNodeClass<Expression>();
+	scope s = DependencyNodeClass<Expression>()
+		.def( "setExpression", &setExpression, ( arg( "expression" ), arg( "engine" ) = "python" ) )
+		.def( "getExpression", &getExpression )
+	;
 
 	IECorePython::RefCountedClass<Expression::Engine, IECore::RefCounted, EngineWrapper>( "Engine" )
 		.def( init<>() )
 		.def( "registerEngine", &registerEngine ).staticmethod( "registerEngine" )
 		.def( "registeredEngines", &registeredEnginesWrapper ).staticmethod( "registeredEngines" )
 	;
-
-	Serialisation::registerSerialiser( Expression::staticTypeId(), new ExpressionSerialiser );
 
 }

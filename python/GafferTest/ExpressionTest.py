@@ -58,9 +58,10 @@ class ExpressionTest( GafferTest.TestCase ) :
 		s["m2"]["op2"].setValue( 1 )
 
 		s["e"] = Gaffer.Expression()
-		s["e"]["engine"].setValue( "python" )
-
-		s["e"]["expression"].setValue( "parent[\"m2\"][\"op1\"] = parent[\"m1\"][\"product\"] * 2" )
+		s["e"].setExpression(
+			"parent[\"m2\"][\"op1\"] = parent[\"m1\"][\"product\"] * 2",
+			"python",
+		)
 
 		self.assertEqual( s["m2"]["product"].getValue(), 400 )
 
@@ -72,23 +73,15 @@ class ExpressionTest( GafferTest.TestCase ) :
 		s["m"]["op1"].setValue( 1 )
 
 		s["e"] = Gaffer.Expression()
-		s["e"]["engine"].setValue( "python" )
-		s["e"]["expression"].setValue( "parent[\"m\"][\"op2\"] = int( context[\"frame\"] * 2 )" )
+		s["e"].setExpression(
+			"parent[\"m\"][\"op2\"] = int( context[\"frame\"] * 2 )",
+			"python"
+		)
 
 		context = Gaffer.Context()
 		context.setFrame( 10 )
 		with context :
 			self.assertEqual( s["m"]["product"].getValue(), 20 )
-
-	def testSetExpressionWithNoEngine( self ) :
-
-		s = Gaffer.ScriptNode()
-
-		s["m"] = GafferTest.MultiplyNode()
-
-		s["e"] = Gaffer.Expression()
-		s["e"]["engine"].setValue( "" )
-		s["e"]["expression"].setValue( "parent[\"m\"][\"op2\"] = int( context[\"frame\"] * 2 )" )
 
 	def testSerialisation( self ) :
 
@@ -102,11 +95,13 @@ class ExpressionTest( GafferTest.TestCase ) :
 		s["m2"]["op2"].setValue( 1 )
 
 		s["e"] = Gaffer.Expression()
-		s["e"]["engine"].setValue( "python" )
-
-		s["e"]["expression"].setValue( "parent[\"m2\"][\"op1\"] = parent[\"m1\"][\"product\"] * 2" )
+		s["e"].setExpression(
+			"parent[\"m2\"][\"op1\"] = parent[\"m1\"][\"product\"] * 2",
+			"python",
+		)
 
 		self.assertEqual( s["m2"]["product"].getValue(), 400 )
+		self.assertTrue( s["m2"]["op1"].getInput().node().isSame( s["e"] ) )
 
 		ss = s.serialise()
 
@@ -114,6 +109,12 @@ class ExpressionTest( GafferTest.TestCase ) :
 		s2.execute( ss )
 
 		self.assertEqual( s2["m2"]["product"].getValue(), 400 )
+		self.assertTrue( s2["m2"]["op1"].getInput().node().isSame( s2["e"] ) )
+
+		self.assertEqual(
+			s2["e"].getExpression(),
+			( "parent[\"m2\"][\"op1\"] = parent[\"m1\"][\"product\"] * 2", "python" ),
+		)
 
 	def testStringOutput( self ) :
 
@@ -123,8 +124,10 @@ class ExpressionTest( GafferTest.TestCase ) :
 		s["n"]["p"] = Gaffer.StringPlug()
 
 		s["e"] = Gaffer.Expression()
-		s["e"]["engine"].setValue( "python" )
-		s["e"]["expression"].setValue( "parent['n']['p'] = '#%d' % int( context['frame'] )" )
+		s["e"].setExpression(
+			"parent['n']['p'] = '#%d' % int( context['frame'] )",
+			"python",
+		)
 
 		context = Gaffer.Context()
 		for i in range( 0, 10 ) :
@@ -137,11 +140,6 @@ class ExpressionTest( GafferTest.TestCase ) :
 		e = Gaffer.Expression.Engine.registeredEngines()
 		self.failUnless( isinstance( e, tuple ) )
 		self.failUnless( "python" in e )
-
-	def testDefaultEngine( self ) :
-
-		e = Gaffer.Expression()
-		self.assertEqual( e["engine"].getValue(), "python" )
 
 	def testCreateExpressionWithWatchers( self ) :
 
@@ -156,7 +154,10 @@ class ExpressionTest( GafferTest.TestCase ) :
 		c = s["m1"].plugDirtiedSignal().connect( f )
 
 		s["e"] = Gaffer.Expression()
-		s["e"]["expression"].setValue( "parent[\"m1\"][\"op1\"] = 2" )
+		s["e"].setExpression(
+			"parent[\"m1\"][\"op1\"] = 2",
+			"python"
+		)
 
 	def testCompoundNumericPlugs( self ) :
 
@@ -166,7 +167,10 @@ class ExpressionTest( GafferTest.TestCase ) :
 		s["n"]["v"] = Gaffer.V2fPlug()
 
 		s["e"] = Gaffer.Expression()
-		s["e"]["expression"].setValue( 'parent["n"]["v"]["x"] = parent["n"]["v"]["y"]' )
+		s["e"].setExpression(
+			'parent["n"]["v"]["x"] = parent["n"]["v"]["y"]',
+			"python"
+		)
 
 		s["n"]["v"]["y"].setValue( 21 )
 
@@ -181,7 +185,10 @@ class ExpressionTest( GafferTest.TestCase ) :
 		s["n"]["i2"] = Gaffer.IntPlug()
 
 		s["e"] = Gaffer.Expression()
-		s["e"]["expression"].setValue( 'parent["n"]["i1"] = parent["n"]["i2"]' )
+		s["e"].setExpression(
+			'parent["n"]["i1"] = parent["n"]["i2"]',
+			"python",
+		)
 
 		s["n"]["i2"].setValue( 11 )
 
@@ -222,8 +229,10 @@ class ExpressionTest( GafferTest.TestCase ) :
 		s["n"]["op1"].setValue( 0 )
 
 		s["e"] = Gaffer.Expression()
-		s["e"]["engine"].setValue( "python" )
-		s["e"]["expression"].setValue( "parent['n']['op2'] = int( context.getFrame() )" )
+		s["e"].setExpression(
+			"parent['n']['op2'] = int( context.getFrame() )",
+			"python",
+		)
 
 		with Gaffer.Context() as c :
 			for i in range( 0, 10 ) :
@@ -238,8 +247,10 @@ class ExpressionTest( GafferTest.TestCase ) :
 		s["n"]["op1"].setValue( 0 )
 
 		s["e"] = Gaffer.Expression()
-		s["e"]["engine"].setValue( "python" )
-		s["e"]["expression"].setValue( "parent['n']['op2'] = int( context.get( 'frame' ) )" )
+		s["e"].setExpression(
+			"parent['n']['op2'] = int( context.get( 'frame' ) )",
+			"python"
+		)
 
 		with Gaffer.Context() as c :
 			for i in range( 0, 10 ) :
@@ -254,8 +265,10 @@ class ExpressionTest( GafferTest.TestCase ) :
 		s["n"]["op1"].setValue( 0 )
 
 		s["e"] = Gaffer.Expression()
-		s["e"]["engine"].setValue( "python" )
-		s["e"]["expression"].setValue( "parent['n']['op2'] = context.get( 'iDontExist', 101 )" )
+		s["e"].setExpression(
+			"parent['n']['op2'] = context.get( 'iDontExist', 101 )",
+			"python"
+		)
 
 		self.assertEqual( s["n"]["sum"].getValue(), 101 )
 
@@ -267,17 +280,18 @@ class ExpressionTest( GafferTest.TestCase ) :
 		s["n"]["op1"].setValue( 0 )
 
 		s["e"] = Gaffer.Expression()
-		
-		s["e"]["engine"].setValue( "python" )
-		
+
 		dirtied = GafferTest.CapturingSlot( s["n"].plugDirtiedSignal() )
-		s["e"]["expression"].setValue( "parent['n']['op2'] = context.get( 'iDontExist', 101 )" )
+		s["e"].setExpression(
+			"parent['n']['op2'] = context.get( 'iDontExist', 101 )",
+			"python"
+		)
 		self.failUnless( s["n"]["sum"] in [ p[0] for p in dirtied ] )
-		
+
 		dirtied = GafferTest.CapturingSlot( s["n"].plugDirtiedSignal() )
-		s["e"]["expression"].setValue( "" )
+		s["e"].setExpression( "", "python" )
 		self.failUnless( s["n"]["sum"] in [ p[0] for p in dirtied ] )
-		
+
 	def testSerialisationCreationOrder( self ) :
 
 		# Create a script where the expression node is created before the nodes it's targeting,
@@ -293,7 +307,10 @@ class ExpressionTest( GafferTest.TestCase ) :
 		s["m2"] = GafferTest.MultiplyNode()
 		s["m2"]["op2"].setValue( 1 )
 
-		s["e"]["expression"].setValue( "parent[\"m2\"][\"op1\"] = parent[\"m1\"][\"product\"] * 2" )
+		s["e"].setExpression(
+			"parent[\"m2\"][\"op1\"] = parent[\"m1\"][\"product\"] * 2",
+			"python"
+		)
 		self.assertEqual( s["m2"]["product"].getValue(), 400 )
 
 		s2 = Gaffer.ScriptNode()
@@ -308,9 +325,7 @@ class ExpressionTest( GafferTest.TestCase ) :
 		s["n"]["user"].addChild( Gaffer.FloatPlug( "f", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
 
 		s["e"] = Gaffer.Expression()
-		s["e"]["engine"].setValue( "python" )
-
-		s["e"]["expression"].setValue( "parent[\"n\"][\"user\"][\"f\"] = 2" )
+		s["e"].setExpression( "parent[\"n\"][\"user\"][\"f\"] = 2" )
 
 		self.assertEqual( s["n"]["user"]["f"].getValue(), 2 )
 
@@ -343,9 +358,10 @@ class ExpressionTest( GafferTest.TestCase ) :
 		s["n"]["user"].addChild( Gaffer.IntPlug( "p2", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
 
 		s["e"] = Gaffer.Expression()
-		s["e"]["engine"].setValue( "python" )
-
-		s["e"]["expression"].setValue( 'parent["n"]["user"]["p1"] = 2; parent["n"]["user"]["p2"] = 3' )
+		s["e"].setExpression(
+			'parent["n"]["user"]["p1"] = 2; parent["n"]["user"]["p2"] = 3',
+			"python",
+		)
 
 		self.assertEqual( s["n"]["user"]["p1"].getValue(), 2 )
 		self.assertEqual( s["n"]["user"]["p2"].getValue(), 3 )
@@ -364,9 +380,9 @@ class ExpressionTest( GafferTest.TestCase ) :
 		s["n"]["user"].addChild( Gaffer.StringVectorDataPlug( "p", defaultValue = IECore.StringVectorData(), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
 
 		s["e"] = Gaffer.Expression()
-		s["e"]["engine"].setValue( "python" )
-
-		s["e"]["expression"].setValue( 'import IECore; parent["n"]["user"]["p"] = IECore.StringVectorData( [ "one", "two" ] )' )
+		s["e"].setExpression(
+			'import IECore; parent["n"]["user"]["p"] = IECore.StringVectorData( [ "one", "two" ] )'
+		)
 
 		self.assertEqual( s["n"]["user"]["p"].getValue(), IECore.StringVectorData( [ "one", "two" ] ) )
 
@@ -388,9 +404,7 @@ class ExpressionTest( GafferTest.TestCase ) :
 		s["n"]["user"].addChild( Gaffer.Color4fPlug( "c4f", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
 
 		s["e"] = Gaffer.Expression()
-		s["e"]["engine"].setValue( "python" )
-
-		s["e"]["expression"].setValue(
+		s["e"].setExpression(
 			'import IECore;'
 			'parent["n"]["user"]["v2f"] = IECore.V2f( 1, 2 );'
 			'parent["n"]["user"]["v2i"] = IECore.V2i( 3, 4 );'
@@ -427,9 +441,7 @@ class ExpressionTest( GafferTest.TestCase ) :
 		s["n"]["user"].addChild( Gaffer.Box3iPlug( "b3i", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
 
 		s["e"] = Gaffer.Expression()
-		s["e"]["engine"].setValue( "python" )
-
-		s["e"]["expression"].setValue(
+		s["e"].setExpression(
 			'import IECore;'
 			'parent["n"]["user"]["b2f"] = IECore.Box2f( IECore.V2f( 1, 2 ), IECore.V2f( 3, 4 ) );'
 			'parent["n"]["user"]["b2i"] = IECore.Box2i( IECore.V2i( 5, 6 ), IECore.V2i( 7, 8 ) );'
@@ -483,8 +495,7 @@ class ExpressionTest( GafferTest.TestCase ) :
 			s["n"]["user"]["b"] = Gaffer.BoolPlug( defaultValue = False, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 
 			s["e"] = Gaffer.Expression()
-			s["e"]["engine"].setValue( "python" )
-			s["e"]["expression"].setValue( inspect.cleandoc( e ) )
+			s["e"].setExpression( inspect.cleandoc( e ) )
 
 			def assertExpectedValues( script ) :
 
@@ -511,8 +522,7 @@ class ExpressionTest( GafferTest.TestCase ) :
 		s["n"]["user"]["b"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 
 		s["e"] = Gaffer.Expression()
-		s["e"]["engine"].setValue( "python" )
-		s["e"]["expression"].setValue( inspect.cleandoc(
+		s["e"].setExpression( inspect.cleandoc(
 			"""
 			if context.getFrame() > 10 :
 				parent["n"]["user"]["a"] = parent["n"]["user"]["b"]
@@ -534,15 +544,14 @@ class ExpressionTest( GafferTest.TestCase ) :
 		s["n"]["user"]["b"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 
 		s["e"] = Gaffer.Expression()
-		s["e"]["engine"].setValue( "python" )
-		s["e"]["expression"].setValue( 'parent["n"]["user"]["a"] = parent["n"]["user"]["b"] + 1' )
-		
+		s["e"].setExpression( 'parent["n"]["user"]["a"] = parent["n"]["user"]["b"] + 1' )
+
 		self.assertEqual( s["n"]["user"]["a"].getValue(), 1 )
 
 		ic = GafferTest.CapturingSlot( s["n"].plugInputChangedSignal() )
 		ps = GafferTest.CapturingSlot( s["n"].plugSetSignal() )
 
-		s["e"]["expression"].setValue( 'parent["n"]["user"]["a"] = parent["n"]["user"]["b"] + 2' )
+		s["e"].setExpression( 'parent["n"]["user"]["a"] = parent["n"]["user"]["b"] + 2' )
 		self.assertEqual( s["n"]["user"]["a"].getValue(), 2 )
 
 		self.assertEqual( len( ic ), 0 )
@@ -558,16 +567,15 @@ class ExpressionTest( GafferTest.TestCase ) :
 		s["n"]["user"]["c"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 
 		s["e"] = Gaffer.Expression()
-		s["e"]["engine"].setValue( "python" )
-		s["e"]["expression"].setValue( 'parent["n"]["user"]["a"] = 1; parent["n"]["user"]["b"] = 2; parent["n"]["user"]["c"] = 3' )
-		
+		s["e"].setExpression( 'parent["n"]["user"]["a"] = 1; parent["n"]["user"]["b"] = 2; parent["n"]["user"]["c"] = 3' )
+
 		self.assertEqual( s["n"]["user"]["a"].getValue(), 1 )
 		self.assertEqual( s["n"]["user"]["b"].getValue(), 2 )
 		self.assertEqual( s["n"]["user"]["c"].getValue(), 3 )
 
 		with Gaffer.UndoContext( s ) :
 
-			s["e"]["expression"].setValue( 'parent["n"]["user"]["c"] = 1; parent["n"]["user"]["b"] = 2; parent["n"]["user"]["a"] = 3' )
+			s["e"].setExpression( 'parent["n"]["user"]["c"] = 1; parent["n"]["user"]["b"] = 2; parent["n"]["user"]["a"] = 3' )
 
 		self.assertEqual( s["n"]["user"]["a"].getValue(), 3 )
 		self.assertEqual( s["n"]["user"]["b"].getValue(), 2 )
@@ -625,8 +633,7 @@ class ExpressionTest( GafferTest.TestCase ) :
 		s["n"]["user"]["a"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 
 		s["e"] = Gaffer.Expression()
-		s["e"]["engine"].setValue( "python" )
-		s["e"]["expression"].setValue( 'parent["n"]["user"]["a"] = 10' )
+		s["e"].setExpression( 'parent["n"]["user"]["a"] = 10' )
 
 		self.assertEqual( s["n"]["user"]["a"].getValue(), 10 )
 
@@ -651,8 +658,7 @@ class ExpressionTest( GafferTest.TestCase ) :
 		s["n"]["user"]["a"].setValue( 20 )
 
 		s["e"] = Gaffer.Expression()
-		s["e"]["engine"].setValue( "python" )
-		s["e"]["expression"].setValue( 'parent["n"]["user"]["b"] = parent["n"]["user"]["a"] * 2' )
+		s["e"].setExpression( 'parent["n"]["user"]["b"] = parent["n"]["user"]["a"] * 2' )
 
 		self.assertEqual( s["n"]["user"]["a"].getValue(), 20 )
 		self.assertEqual( s["n"]["user"]["b"].getValue(), 40 )
@@ -690,8 +696,7 @@ class ExpressionTest( GafferTest.TestCase ) :
 		s["n"]["user"]["a"].setValue( 20 )
 
 		s["e"] = Gaffer.Expression()
-		s["e"]["engine"].setValue( "python" )
-		s["e"]["expression"].setValue( 'parent["n"]["user"]["b"] = parent["n"]["user"]["a"] * 2' )
+		s["e"].setExpression( 'parent["n"]["user"]["b"] = parent["n"]["user"]["a"] * 2' )
 
 		self.assertEqual( s["n"]["user"]["a"].getValue(), 20 )
 		self.assertEqual( s["n"]["user"]["b"].getValue(), 40 )
