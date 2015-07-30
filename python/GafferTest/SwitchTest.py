@@ -228,8 +228,7 @@ class SwitchTest( GafferTest.TestCase ) :
 		self.assertTrue( script["s"]["out"].getInput() is not None )
 
 		script["expression"] = Gaffer.Expression()
-		script["expression"]["engine"].setValue( "python" )
-		script["expression"]["expression"].setValue( 'parent["s"]["index"] = int( context.getFrame() )' )
+		script["expression"].setExpression( 'parent["s"]["index"] = int( context.getFrame() )' )
 
 		# Should not be using an internal connection, because the result
 		# varies with context.

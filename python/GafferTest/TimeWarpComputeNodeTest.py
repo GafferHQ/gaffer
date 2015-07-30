@@ -50,8 +50,7 @@ class TimeWarpComputeNodeTest( GafferTest.TestCase ) :
 		s["m"]["op2"].setValue( 1 )
 
 		s["e"] = Gaffer.Expression()
-		s["e"]["engine"].setValue( "python" )
-		s["e"]["expression"].setValue( "parent[\"m\"][\"op1\"] = int( context[\"frame\"] )" )
+		s["e"].setExpression( "parent[\"m\"][\"op1\"] = int( context[\"frame\"] )" )
 
 		s["w"] = Gaffer.TimeWarpComputeNode()
 		s["w"]["in"] = Gaffer.IntPlug()
@@ -80,8 +79,7 @@ class TimeWarpComputeNodeTest( GafferTest.TestCase ) :
 		s["m"]["op2"].setValue( 1 )
 
 		s["e"] = Gaffer.Expression()
-		s["e"]["engine"].setValue( "python" )
-		s["e"]["expression"].setValue( "parent[\"m\"][\"op1\"] = int( context[\"frame\"] )" )
+		s["e"].setExpression( "parent[\"m\"][\"op1\"] = int( context[\"frame\"] )" )
 
 		s["w"] = Gaffer.TimeWarpComputeNode()
 		s["w"]["in"] = Gaffer.IntPlug()
@@ -123,8 +121,7 @@ class TimeWarpComputeNodeTest( GafferTest.TestCase ) :
 		s["m"]["op2"].setValue( 1 )
 
 		s["e"] = Gaffer.Expression()
-		s["e"]["engine"].setValue( "python" )
-		s["e"]["expression"].setValue( "parent[\"m\"][\"op1\"] = int( context[\"frame\"] )" )
+		s["e"].setExpression( "parent[\"m\"][\"op1\"] = int( context[\"frame\"] )" )
 
 		s["w"] = Gaffer.TimeWarpComputeNode()
 		s["w"]["in"] = Gaffer.IntPlug()

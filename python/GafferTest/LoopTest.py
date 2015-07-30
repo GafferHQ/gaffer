@@ -85,8 +85,7 @@ class LoopTest( GafferTest.TestCase ) :
 		s["a"]["op1"].setInput( s["n"]["previous"] )
 
 		s["e"] = Gaffer.Expression()
-		s["e"]["engine"].setValue( "python" )
-		s["e"]["expression"].setValue( 'parent["a"]["op2"] = context.get( "loop:index", 0 )' )
+		s["e"].setExpression( 'parent["a"]["op2"] = context.get( "loop:index", 0 )' )
 
 		s["n"]["iterations"].setValue( 4 )
 		self.assertEqual( s["n"]["out"].getValue(), 1 + 2 + 3 )
@@ -152,8 +151,7 @@ class LoopTest( GafferTest.TestCase ) :
 		s["a"]["op1"].setInput( s["n"]["previous"] )
 
 		s["e"] = Gaffer.Expression()
-		s["e"]["engine"].setValue( "python" )
-		s["e"]["expression"].setValue( 'parent["a"]["op2"] = context.get( "myIndex", 0 )' )
+		s["e"].setExpression( 'parent["a"]["op2"] = context.get( "myIndex", 0 )' )
 
 		s["n"]["iterations"].setValue( 4 )
 		self.assertEqual( s["n"]["out"].getValue(), 1 + 2 + 3 )

@@ -208,17 +208,13 @@ class ExpressionTest( GafferTest.TestCase ) :
 		s["e"] = Gaffer.Expression()
 		s["e"]["engine"].setValue( "python" )
 
-		s["e"]["expression"].setValue( "parent[\"m2\"][\"op1\"] = parent[\"m1\"][\"product\"] * 2" )
+		s["e"].setExpression( "parent[\"m2\"][\"op1\"] = parent[\"m1\"][\"product\"] * 2" )
 
 		self.failUnless( s["m2"]["op1"].getInput().node().isSame( s["e"] ) )
 		self.assertEqual( s["m2"]["product"].getValue(), 400 )
 
-		# deleting the expression text should just keep the connections and compute
-		# a default value (no exceptions thrown). otherwise the ui will have a hard time
-		# and undo will fail.
-
-		s["e"]["expression"].setValue( "" )
-		self.failUnless( s["m2"]["op1"].getInput().node().isSame( s["e"] ) )
+		s["e"].setExpression( "" )
+		self.failUnless( s["m2"]["op1"].getInput() is None )
 		self.assertEqual( s["m2"]["product"].getValue(), 0 )
 
 	def testContextGetFrameMethod( self ) :
@@ -603,11 +599,10 @@ class ExpressionTest( GafferTest.TestCase ) :
 		s["n"]["user"]["b3f"] = Gaffer.AtomicBox3fPlug()
 
 		s["e"] = Gaffer.Expression()
-		s["e"]["engine"].setValue( "python" )
-		s["e"]["expression"].setValue(
+		s["e"].setExpression(
 			'parent["n"]["user"]["b2i"] = IECore.Box2i( IECore.V2i( 1, 2 ), IECore.V2i( 3, 4 ) );'
 			'parent["n"]["user"]["b2f"] = IECore.Box2f( IECore.V2f( 1, 2 ), IECore.V2f( 3, 4 ) );'
-			'parent["n"]["user"]["b3f"] = IECore.Box3f( IECore.V3f( 1, 2, 3 ), IECore.V3f( 4, 5, 6 ) );'
+			'parent["n"]["user"]["b3f"] = IECore.Box3f( IECore.V3f( 1, 2, 3 ), IECore.V3f( 4, 5, 6 ) );',
 		)
 
 		self.assertEqual(

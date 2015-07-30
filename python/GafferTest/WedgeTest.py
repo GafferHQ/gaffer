@@ -246,8 +246,7 @@ class WedgeTest( GafferTest.TestCase ) :
 		script["writer"]["fileName"].setValue( "/tmp/gafferWedgeTest/${wedge:index}.txt" )
 
 		script["expression"] = Gaffer.Expression()
-		script["expression"]["engine"].setValue( "python" )
-		script["expression"]["expression"].setValue( 'c = context["wedge:value"]; parent["writer"]["text"] = "%.1f %.1f %.1f" % ( c[0], c[1], c[2] )' )
+		script["expression"].setExpression( 'c = context["wedge:value"]; parent["writer"]["text"] = "%.1f %.1f %.1f" % ( c[0], c[1], c[2] )' )
 
 		script["wedge"] = Gaffer.Wedge()
 		script["wedge"]["requirements"][0].setInput( script["writer"]["requirement"] )
