@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,23 +34,57 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp" // must be the first include
+#include "boost/python.hpp"
 
-#include "Gaffer/SubGraph.h"
+#include "GafferBindings/PlugBinding.h"
 
-#include "GafferBindings/SubGraphBinding.h"
-#include "GafferBindings/DependencyNodeBinding.h"
+#include "GafferImage/ImagePlug.h"
+
+#include "GafferImageBindings/ImagePlugBinding.h"
 
 using namespace boost::python;
-using namespace Gaffer;
+using namespace GafferBindings;
+using namespace GafferImage;
 
-namespace GafferBindings
+namespace
 {
 
-void bindSubGraph()
+IECore::FloatVectorDataPtr channelData( const ImagePlug &plug,  const std::string &channelName, const Imath::V2i &tile, bool copy  )
 {
-	typedef DependencyNodeWrapper<SubGraph> Wrapper;
-	DependencyNodeClass<SubGraph, Wrapper>();
+	IECorePython::ScopedGILRelease gilRelease;
+	IECore::ConstFloatVectorDataPtr d = plug.channelData( channelName, tile );
+	return copy ? d->copy() : boost::const_pointer_cast<IECore::FloatVectorData>( d );
 }
 
-} // namespace GafferBindings
+IECore::ImagePrimitivePtr image( const ImagePlug &plug )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return plug.image();
+}
+
+} // namespace
+
+void GafferImageBindings::bindImagePlug()
+{
+
+	PlugClass<ImagePlug>()
+		.def(
+			init< const std::string &, Gaffer::Plug::Direction, unsigned >
+			(
+				(
+					arg( "name" ) = Gaffer::GraphComponent::defaultName<ImagePlug>(),
+					arg( "direction" ) = Gaffer::Plug::In,
+					arg( "flags" ) = Gaffer::Plug::Default
+				)
+			)
+		)
+		.def( "channelData", &channelData, ( arg( "_copy" ) = true ) )
+		.def( "channelDataHash", &ImagePlug::channelDataHash )
+		.def( "image", &image )
+		.def( "imageHash", &ImagePlug::imageHash )
+		.def( "tileSize", &ImagePlug::tileSize ).staticmethod( "tileSize" )
+		.def( "tileBound", &ImagePlug::tileBound ).staticmethod( "tileBound" )
+		.def( "tileOrigin", &ImagePlug::tileOrigin ).staticmethod( "tileOrigin" )
+	;
+
+}

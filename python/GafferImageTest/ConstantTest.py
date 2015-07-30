@@ -35,18 +35,17 @@
 #
 ##########################################################################
 
-import os
 import unittest
 
 import IECore
 
 import Gaffer
 import GafferImage
-import sys
 
 class ConstantTest( unittest.TestCase ) :
 
 	def testDefaultFormatHash( self ) :
+
 		s = Gaffer.ScriptNode()
 		n = GafferImage.Constant()
 		s.addChild( n )
@@ -60,6 +59,7 @@ class ConstantTest( unittest.TestCase ) :
 			self.assertNotEqual( h, h2 )
 
 	def testColourHash( self ) :
+
 		# Check that the hash changes when the colour does.
 		s = Gaffer.ScriptNode()
 		n = GafferImage.Constant()
@@ -74,6 +74,7 @@ class ConstantTest( unittest.TestCase ) :
 			self.assertNotEqual( h, h2 )
 
 	def testFormatHash( self ) :
+
 		# Check that the data hash doesn't change when the format does.
 		c = GafferImage.Constant()
 		c["format"].setValue( GafferImage.Format( 2048, 1156, 1. ) )
@@ -83,6 +84,7 @@ class ConstantTest( unittest.TestCase ) :
 		self.assertEqual( h1, h2 )
 
 	def testTileHashes( self ) :
+
 		# Test that two tiles within the image have the same hash.
 		c = GafferImage.Constant()
 		c["format"].setValue( GafferImage.Format( 2048, 1156, 1. ) )
@@ -91,6 +93,27 @@ class ConstantTest( unittest.TestCase ) :
 		self.assertEqual(
 			c["out"].channelDataHash( "R", IECore.V2i( 0 ) ),
 			c["out"].channelDataHash( "R", IECore.V2i( GafferImage.ImagePlug().tileSize() ) ),
+		)
+
+	def testTileIdentity( self ) :
+
+		c = GafferImage.Constant()
+		c["format"].setValue( GafferImage.Format( 2048, 1156, 1. ) )
+
+		# The channelData() binding returns a copy by default, so we wouldn't
+		# expect two tiles to be referencing the same object.
+		self.assertFalse(
+			c["out"].channelData( "R", IECore.V2i( 0 ) ).isSame(
+				c["out"].channelData( "R", IECore.V2i( GafferImage.ImagePlug.tileSize() ) )
+			)
+		)
+
+		# But behind the scenes we do want them to be the same, so
+		# check that that is the case.
+		self.assertTrue(
+			c["out"].channelData( "R", IECore.V2i( 0 ), _copy = False ).isSame(
+				c["out"].channelData( "R", IECore.V2i( GafferImage.ImagePlug.tileSize() ), _copy = False )
+			)
 		)
 
 	def testEnableBehaviour( self ) :

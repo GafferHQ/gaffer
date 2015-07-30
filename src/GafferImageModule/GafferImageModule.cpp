@@ -61,6 +61,7 @@
 
 #include "GafferImageBindings/ImageNodeBinding.h"
 #include "GafferImageBindings/ImageProcessorBinding.h"
+#include "GafferImageBindings/ImagePlugBinding.h"
 #include "GafferImageBindings/FormatBinding.h"
 #include "GafferImageBindings/FormatPlugBinding.h"
 #include "GafferImageBindings/SamplerBinding.h"
@@ -72,44 +73,15 @@
 #include "GafferImageBindings/MixinBinding.h"
 #include "GafferImageBindings/FormatDataBinding.h"
 #include "GafferImageBindings/ImageReaderBinding.h"
+#include "GafferImageBindings/ShuffleBinding.h"
 
 using namespace boost::python;
 using namespace GafferImage;
 
-static IECore::FloatVectorDataPtr channelData( const ImagePlug &plug,  const std::string &channelName, const Imath::V2i &tile  )
-{
-	IECore::ConstFloatVectorDataPtr d = plug.channelData( channelName, tile );
-	return d ? d->copy() : 0;
-}
-
-static IECore::ImagePrimitivePtr image( const ImagePlug &plug )
-{
-	IECorePython::ScopedGILRelease gilRelease;
-	return plug.image();
-}
-
 BOOST_PYTHON_MODULE( _GafferImage )
 {
 
-	IECorePython::RunTimeTypedClass<ImagePlug>()
-		.def(
-			init< const std::string &, Gaffer::Plug::Direction, unsigned >
-			(
-				(
-					arg( "name" ) = Gaffer::GraphComponent::defaultName<ImagePlug>(),
-					arg( "direction" ) = Gaffer::Plug::In,
-					arg( "flags" ) = Gaffer::Plug::Default
-				)
-			)
-		)
-		.def( "channelData", &channelData )
-		.def( "channelDataHash", &ImagePlug::channelDataHash )
-		.def( "image", &image )
-		.def( "imageHash", &ImagePlug::imageHash )
-		.def( "tileSize", &ImagePlug::tileSize ).staticmethod( "tileSize" )
-		.def( "tileBound", &ImagePlug::tileBound ).staticmethod( "tileBound" )
-		.def( "tileOrigin", &ImagePlug::tileOrigin ).staticmethod( "tileOrigin" )
-	;
+	GafferImageBindings::bindImagePlug();
 
 	GafferImageBindings::bindImageNode();
 	GafferImageBindings::bindImageProcessor();
@@ -145,6 +117,7 @@ BOOST_PYTHON_MODULE( _GafferImage )
 	GafferImageBindings::bindFormatData();
 	GafferImageBindings::bindImageReader();
 	GafferImageBindings::bindMerge();
+	GafferImageBindings::bindShuffle();
 
 	GafferBindings::ExecutableNodeClass<ImageWriter>();
 }

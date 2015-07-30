@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2011, John Haddon. All rights reserved.
+#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,38 +34,41 @@
 #
 ##########################################################################
 
-import os
-import subprocess32 as subprocess
 import unittest
 
+import IECore
+
+import Gaffer
 import GafferTest
 
-class PythonApplicationTest( GafferTest.TestCase ) :
+class SubGraphTest( GafferTest.TestCase ) :
 
-	def testVariableScope( self ) :
+	def testDerivingInPython( self ) :
 
-		s = os.system( "gaffer python " + os.path.dirname( __file__ ) + "/pythonScripts/variableScope.py" )
-		self.assertEqual( s, 0 )
+		class MySubGraph( Gaffer.SubGraph ) :
 
-	def testErrorReturnStatus( self ) :
+			def __init__( self, name = "MySubGraph" ) :
 
-		p = subprocess.Popen(
-			"gaffer python " + os.path.dirname( __file__ ) + "/pythonScripts/exception.py",
-			shell=True,
-			stderr = subprocess.PIPE,
+				Gaffer.SubGraph.__init__( self, name )
+
+		IECore.registerRunTimeTyped( MySubGraph )
+
+		Gaffer.Metadata.registerNode(
+
+			MySubGraph,
+
+			"description",
+			"""
+			If you're retrieving this, the subclassing has worked.
+			""",
+
 		)
-		p.wait()
 
-		self.failUnless( "RuntimeError" in "".join( p.stderr.readlines() ) )
-		self.failUnless( p.returncode )
-
-	def testFlagArguments( self ) :
-
-		subprocess.check_call( "gaffer python " + os.path.dirname( __file__ ) + "/pythonScripts/flagArguments.py -arguments -flag1 -flag2", shell = True )
-
-	def testName( self ) :
-
-		subprocess.check_call( "gaffer python " + os.path.dirname( __file__ ) + "/pythonScripts/name.py", shell = True )
+		n = MySubGraph()
+		self.assertEqual(
+			Gaffer.Metadata.nodeValue( n, "description" ),
+			"If you're retrieving this, the subclassing has worked."
+		)
 
 if __name__ == "__main__":
 	unittest.main()

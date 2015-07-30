@@ -17,6 +17,13 @@
    sodipodi:docname="graphics.svg">
   <defs
      id="defs4">
+    <inkscape:perspective
+       sodipodi:type="inkscape:persp3d"
+       inkscape:vp_x="0 : 500 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_z="1000 : 500 : 1"
+       inkscape:persp3d-origin="500 : 333.33333 : 1"
+       id="perspective391" />
     <clipPath
        clipPathUnits="userSpaceOnUse"
        id="clipPath4107">
@@ -42,19 +49,19 @@
      borderopacity="1"
      inkscape:pageopacity="1"
      inkscape:pageshadow="2"
-     inkscape:zoom="2.8284271"
-     inkscape:cx="454.66187"
-     inkscape:cy="800.80311"
+     inkscape:zoom="32"
+     inkscape:cx="441.79469"
+     inkscape:cy="984.44871"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="true"
-     inkscape:window-width="1622"
-     inkscape:window-height="881"
-     inkscape:window-x="294"
+     inkscape:window-width="1703"
+     inkscape:window-height="943"
+     inkscape:window-x="203"
      inkscape:window-y="25"
      inkscape:window-maximized="0"
      inkscape:snap-global="true"
-     inkscape:snap-nodes="false"
+     inkscape:snap-nodes="true"
      inkscape:snap-bbox="true"
      inkscape:object-nodes="true"
      inkscape:snap-object-midpoints="false"
@@ -178,7 +185,7 @@
        inkscape:export-ydpi="10">
       <path
          transform="matrix(0,-0.65333366,0.646633,0,-363.80332,137.72889)"
-         d="M 120.71429,584.26237 110,578.07648 l 10.71429,-6.1859 z"
+         d="M 120.71429,584.26237 110,578.07648 l 10.71429,-6.1859 0,12.37179 z"
          inkscape:randomized="0"
          inkscape:rounded="0"
          inkscape:flatsided="true"
@@ -234,7 +241,7 @@
          inkscape:flatsided="true"
          inkscape:rounded="0"
          inkscape:randomized="0"
-         d="M 120.71429,584.26237 110,578.07648 l 10.71429,-6.1859 z"
+         d="M 120.71429,584.26237 110,578.07648 l 10.71429,-6.1859 0,12.37179 z"
          transform="matrix(0,-0.65333366,0.646633,0,-363.80333,137.72891)" />
       <rect
          style="fill:none;stroke:none"
@@ -282,7 +289,7 @@
        inkscape:export-ydpi="10">
       <path
          transform="matrix(0,-0.65333366,0.646633,0,-363.80333,137.22889)"
-         d="M 120.71429,584.26237 110,578.07648 l 10.71429,-6.1859 z"
+         d="M 120.71429,584.26237 110,578.07648 l 10.71429,-6.1859 0,12.37179 z"
          inkscape:randomized="0"
          inkscape:rounded="0"
          inkscape:flatsided="true"
@@ -373,7 +380,7 @@
        inkscape:flatsided="true"
        inkscape:rounded="0"
        inkscape:randomized="0"
-       d="M 120.71429,584.26237 110,578.07648 l 10.71429,-6.1859 z"
+       d="M 120.71429,584.26237 110,578.07648 l 10.71429,-6.1859 0,12.37179 z"
        transform="matrix(0,-0.65333366,-0.646633,0,423.30333,137.72889)"
        inkscape:label="#path2847" />
     <rect
@@ -1686,7 +1693,7 @@
        inkscape:flatsided="false"
        inkscape:rounded="0"
        inkscape:randomized="0"
-       d="m 302.30138,18.423424 -3.43097,-2.443491 -3.44073,2.429728 1.26367,-4.018128 -3.37406,-2.521504 4.21197,-0.03985 1.35545,-3.9881025 1.33946,3.9935005 4.21177,0.05672 -3.38412,2.507967 z"
+       d="m 302.30138,18.423424 -3.43097,-2.443491 -3.44073,2.429728 1.26367,-4.018128 -3.37406,-2.521504 4.21197,-0.03985 1.35545,-3.9881025 1.33946,3.9935005 4.21177,0.05672 -3.38412,2.507967 1.24756,4.023158 z"
        transform="matrix(1.2498253,0,0,1.2508721,-71.090254,52.672228)"
        inkscape:label="#path3064" />
     <rect
@@ -2723,5 +2730,21 @@
          d="m 459.5,329.36218 0,-14.5 10,11 -4,0 2,3.5 0,2.5 -2.5,0 -2.5,-5 z"
          style="fill:#000000;fill-opacity:1;stroke:#ffffff;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:round;stroke-opacity:1" />
     </g>
+    <path
+       inkscape:connector-curvature="0"
+       style="fill:#787878;fill-opacity:0.99215686;fill-rule:evenodd;stroke:#3c3c3c;stroke-opacity:0.99215686"
+       d="m 448,72.862183 -8.5,0 0,3 -7,-6 7,-6 0,3 8.5,0"
+       id="gfsdf"
+       sodipodi:nodetypes="ccccccs"
+       inkscape:label="#rect2859" />
+    <rect
+       style="opacity:0.50000000000000000;fill:none;fill-opacity:0.99215686000000003;stroke:none"
+       id="forExport:shuffleArrow"
+       width="20"
+       height="15"
+       x="430"
+       y="10"
+       transform="translate(0,52.362183)"
+       inkscape:label="#rect3197" />
   </g>
 </svg>

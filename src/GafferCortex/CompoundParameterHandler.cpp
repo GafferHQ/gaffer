@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2011-2014, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2015, Image Engine Design Inc. All rights reserved.
 //  Copyright (c) 2011, John Haddon. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
@@ -185,10 +185,15 @@ void CompoundParameterHandler::setPlugValue()
 	const CompoundParameter::ParameterVector &children = m_parameter->orderedParameters();
 	for( CompoundParameter::ParameterVector::const_iterator it = children.begin(); it!=children.end(); it++ )
 	{
-		ParameterHandler *h = handler( it->get() );
-		if( h && !h->plug()->getFlags( Gaffer::Plug::ReadOnly ) )
+		if( ParameterHandler *h = handler( it->get() ) )
 		{
-			h->setPlugValue();
+			if( Gaffer::ValuePlug *plug = IECore::runTimeCast<Gaffer::ValuePlug>( h->plug() ) )
+			{
+				if( plug->settable() )
+				{
+					h->setPlugValue();
+				}
+			}
 		}
 	}
 }

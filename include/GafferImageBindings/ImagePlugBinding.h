@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,23 +34,14 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp" // must be the first include
+#ifndef GAFFERIMAGEBINDINGS_IMAGEPLUGBINDING_H
+#define GAFFERIMAGEBINDINGS_IMAGEPLUGBINDING_H
 
-#include "Gaffer/SubGraph.h"
-
-#include "GafferBindings/SubGraphBinding.h"
-#include "GafferBindings/DependencyNodeBinding.h"
-
-using namespace boost::python;
-using namespace Gaffer;
-
-namespace GafferBindings
+namespace GafferImageBindings
 {
 
-void bindSubGraph()
-{
-	typedef DependencyNodeWrapper<SubGraph> Wrapper;
-	DependencyNodeClass<SubGraph, Wrapper>();
-}
+void bindImagePlug();
 
-} // namespace GafferBindings
+} // namespace GafferImageBindings
+
+#endif // GAFFERIMAGEBINDINGS_IMAGEPLUGBINDING_H

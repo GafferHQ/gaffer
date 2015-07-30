@@ -35,6 +35,8 @@
 #
 ##########################################################################
 
+__import__( "IECore" )
+
 from _Gaffer import *
 from About import About
 from Application import Application

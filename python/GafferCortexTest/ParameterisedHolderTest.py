@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2015, Image Engine Design Inc. All rights reserved.
 #  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -1002,6 +1002,53 @@ class ParameterisedHolderTest( GafferTest.TestCase ) :
 		self.assertEqual( ph["parameters"]["i"].getFlags( Gaffer.Plug.Flags.ReadOnly ), True )
 		# the plug was made read only, so should not have accepted the new parameter value
 		self.assertEqual( ph["parameters"]["i"].getValue(), 1 )
+
+	def testConections( self ) :
+
+		p = IECore.Parameterised( "" )
+
+		p.parameters().addParameters(
+
+			[
+				IECore.IntParameter(
+					"a",
+					"",
+					1,
+				),
+				IECore.IntParameter(
+					"b",
+					"",
+					2,
+				)
+			]
+
+		)
+
+		ph = GafferCortex.ParameterisedHolderNode()
+		ph.setParameterised( p )
+
+		self.failUnless( "parameters" in ph )
+		self.failUnless( "a" in ph["parameters"] )
+		self.failUnless( "b" in ph["parameters"] )
+		self.assertEqual( ph["parameters"]["a"].getValue(), 1 )
+		self.assertEqual( ph["parameters"]["b"].getValue(), 2 )
+		self.assertEqual( ph["parameters"]["b"].getInput(), None )
+		
+		ph["parameters"]["b"].setInput( ph["parameters"]["a"] )
+		self.assertTrue( ph["parameters"]["b"].getInput().isSame( ph["parameters"]["a"] ) )
+		self.assertEqual( ph["parameters"]["b"].getValue(), 1 )
+		
+		ph["parameters"]["a"].setValue( 2 )
+		self.assertEqual( ph["parameters"]["b"].getValue(), 2 )
+		
+		messageHandler = IECore.CapturingMessageHandler()
+		with messageHandler :
+			with ph.parameterModificationContext() :
+				p.parameters()["a"].setNumericValue( 3 )
+		
+		self.assertEqual( ph["parameters"]["a"].getValue(), 3 )
+		self.assertEqual( ph["parameters"]["b"].getValue(), 3 )
+		self.assertEqual( messageHandler.messages, [] )
 
 	def testExceptionInParameterChanged( self ) :
 
