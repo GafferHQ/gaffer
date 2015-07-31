@@ -355,8 +355,22 @@ void ImageWriter::execute() const
 		imageIsBlack = true;
 	}
 
-	int dataWindowWidth = dataWindow.size().x+1;
-	int dataWindowHeight = dataWindow.size().y+1;
+	bool supportsDisplayWindow = out->supports( "displaywindow" );
+	bool resizeDataArea = false;
+
+	int dataWindowWidth;
+	int dataWindowHeight;
+
+	if ( supportsDisplayWindow )
+	{
+		dataWindowWidth = dataWindow.size().x+1;
+		dataWindowHeight = dataWindow.size().y+1;
+	}
+	else
+	{
+		dataWindowWidth = displayWindow.size().x+1;
+		dataWindowHeight = displayWindow.size().y+1;
+	}
 
 	// Create the image header.
 	ImageSpec spec( dataWindowWidth, dataWindowHeight, nChannels, TypeDesc::FLOAT );
@@ -385,8 +399,19 @@ void ImageWriter::execute() const
 	spec.full_y = displayWindow.min.y;
 	spec.full_width = displayWindowWidth;
 	spec.full_height = displayWindowHeight;
-	spec.x = dataWindow.min.x;
-	spec.y = dataWindow.min.y;
+
+	if ( supportsDisplayWindow )
+	{
+		spec.x = dataWindow.min.x;
+		spec.y = dataWindow.min.y;
+	}
+	else
+	{
+		spec.x = displayWindow.min.x;
+		spec.y = displayWindow.min.y;
+
+		resizeDataArea = (displayWindow != dataWindow);
+	}
 
 	// Add common attribs to the spec
 	std::string software = ( boost::format( "Gaffer %d.%d.%d.%d" ) % GAFFER_MILESTONE_VERSION % GAFFER_MAJOR_VERSION % GAFFER_MINOR_VERSION % GAFFER_PATCH_VERSION ).str();
@@ -449,6 +474,7 @@ void ImageWriter::execute() const
 	{
 		// Create a buffer for the scanline.
 		float scanline[ nChannels*dataWindowWidth ];
+		bool scanlineIsBlack = false;
 
 		if ( imageIsBlack )
 		{
@@ -465,23 +491,71 @@ void ImageWriter::execute() const
 		else
 		{
 			// Interleave the channel data and write it by scanline to the file.
-			for ( int y = spec.y; y < spec.y + dataWindowHeight; ++y )
+			if ( resizeDataArea )
 			{
-				for ( std::vector<const float *>::iterator channelDataIt( channelPtrs.begin() ); channelDataIt != channelPtrs.end(); channelDataIt++ )
+				if ( dataWindow.min.x > 0 || dataWindow.max.x < dataWindowWidth )
 				{
-					float *outPtr = &scanline[0] + (channelDataIt - channelPtrs.begin()); // The pointer that we are writing to.
-					// The row that we are reading from is flipped (in the Y) as we use a different image space internally to OpenEXR and OpenImageIO.
-					const float *inRowPtr = (*channelDataIt) + ( y - spec.y ) * dataWindowWidth;
-					const int inc = channelPtrs.size();
-					for ( int x = 0; x < dataWindowWidth; ++x, outPtr += inc )
-					{
-						*outPtr = *inRowPtr++;
-					}
+					memset( scanline, 0, sizeof(float) * nChannels*dataWindowWidth );
+					scanlineIsBlack = true;
 				}
 
-				if ( !out->write_scanline( y, 0, TypeDesc::FLOAT, &scanline[0] ) )
+				for ( int y = 0; y < dataWindowHeight; ++y )
 				{
-					throw IECore::Exception( boost::str( boost::format( "Could not write scanline to \"%s\", error = %s" ) % fileName % out->geterror() ) );
+					if ( y < dataWindow.min.y || y > dataWindow.max.y )
+					{
+						if ( !scanlineIsBlack )
+						{
+							memset( scanline, 0, sizeof(float) * nChannels*dataWindowWidth );
+							scanlineIsBlack = true;
+						}
+					}
+					else
+					{
+						for ( std::vector<const float *>::iterator channelDataIt( channelPtrs.begin() ); channelDataIt != channelPtrs.end(); channelDataIt++ )
+						{
+							scanlineIsBlack = false;
+							float *outPtr = &scanline[0] + (channelDataIt - channelPtrs.begin()); // The pointer that we are writing to.
+							// The row that we are reading from is flipped (in the Y) as we use a different image space internally to OpenEXR and OpenImageIO.
+							const float *inRowPtr = (*channelDataIt) + ( y - dataWindow.min.y ) * (dataWindow.max.x - dataWindow.min.x + 1);
+							const int inc = channelPtrs.size();
+
+							outPtr += (inc * dataWindow.min.x);
+
+							// Because scanline was initalised as black, we never need to set the pixels either side
+							// of the data window, as they will remain black
+							for ( int x = dataWindow.min.x; x < min(dataWindow.max.x+1, dataWindowWidth); ++x, outPtr += inc )
+							{
+								*outPtr = *inRowPtr++;
+							}
+						}
+					}
+
+					if ( !out->write_scanline( y, 0, TypeDesc::FLOAT, &scanline[0] ) )
+					{
+						throw IECore::Exception( boost::str( boost::format( "Could not write scanline to \"%s\", error = %s" ) % fileName % out->geterror() ) );
+					}
+				}
+			}
+			else
+			{
+				for ( int y = dataWindow.min.y; y <= dataWindow.max.y; ++y )
+				{
+					for ( std::vector<const float *>::iterator channelDataIt( channelPtrs.begin() ); channelDataIt != channelPtrs.end(); channelDataIt++ )
+					{
+						float *outPtr = &scanline[0] + (channelDataIt - channelPtrs.begin()); // The pointer that we are writing to.
+						// The row that we are reading from is flipped (in the Y) as we use a different image space internally to OpenEXR and OpenImageIO.
+						const float *inRowPtr = (*channelDataIt) + ( y - spec.y ) * dataWindowWidth;
+						const int inc = channelPtrs.size();
+						for ( int x = 0; x < dataWindowWidth; ++x, outPtr += inc )
+						{
+							*outPtr = *inRowPtr++;
+						}
+					}
+
+					if ( !out->write_scanline( y, 0, TypeDesc::FLOAT, &scanline[0] ) )
+					{
+						throw IECore::Exception( boost::str( boost::format( "Could not write scanline to \"%s\", error = %s" ) % fileName % out->geterror() ) );
+					}
 				}
 			}
 		}
@@ -500,7 +574,7 @@ void ImageWriter::execute() const
 			{
 				for ( int tileX = 0; tileX < dataWindowWidth; tileX += tileSize )
 				{
-					if ( !out->write_tile( tileX+dataWindow.min.x, tileY+spec.y, 0, TypeDesc::FLOAT, &tile[0] ) )
+					if ( !out->write_tile( tileX+spec.x, tileY+spec.y, 0, TypeDesc::FLOAT, &tile[0] ) )
 					{
 						throw IECore::Exception( boost::str( boost::format( "Could not write tile to \"%s\", error = %s" ) % fileName % out->geterror() ) );
 					}
@@ -509,32 +583,38 @@ void ImageWriter::execute() const
 		}
 		else
 		{
-			// Interleave the channel data and write it to the file tile-by-tile.
-			for ( int tileY = 0; tileY < dataWindowHeight; tileY += tileSize )
+			if ( resizeDataArea )
 			{
-				for ( int tileX = 0; tileX < dataWindowWidth; tileX += tileSize )
+			}
+			else
+			{
+				// Interleave the channel data and write it to the file tile-by-tile.
+				for ( int tileY = 0; tileY < dataWindowHeight; tileY += tileSize )
 				{
-					float *outPtr = &tile[0];
-
-					const int r = std::min( tileSize+tileX, dataWindowWidth );
-					const int t = std::min( tileSize+tileY, dataWindowHeight );
-
-					for ( int y = 0; y < t; ++y )
+					for ( int tileX = 0; tileX < dataWindowWidth; tileX += tileSize )
 					{
-						for ( std::vector<const float *>::iterator channelDataIt( channelPtrs.begin() ); channelDataIt != channelPtrs.end(); channelDataIt++ )
+						float *outPtr = &tile[0];
+
+						const int r = std::min( tileSize+tileX, dataWindowWidth );
+						const int t = std::min( tileSize+tileY, dataWindowHeight );
+
+						for ( int y = 0; y < t; ++y )
 						{
-							const int inc = channelPtrs.size();
-							const float *inRowPtr = (*channelDataIt) + ( tileY + t - y - 1 ) * dataWindowWidth;
-							for ( int x = 0; x < r; ++x, outPtr += inc )
+							for ( std::vector<const float *>::iterator channelDataIt( channelPtrs.begin() ); channelDataIt != channelPtrs.end(); channelDataIt++ )
 							{
-								*outPtr = *inRowPtr+(tileX+x);
+								const int inc = channelPtrs.size();
+								const float *inRowPtr = (*channelDataIt) + ( tileY + t - y - 1 ) * dataWindowWidth;
+								for ( int x = 0; x < r; ++x, outPtr += inc )
+								{
+									*outPtr = *inRowPtr+(tileX+x);
+								}
 							}
 						}
-					}
 
-					if ( !out->write_tile( tileX+dataWindow.min.x, tileY+spec.y, 0, TypeDesc::FLOAT, &tile[0] ) )
-					{
-						throw IECore::Exception( boost::str( boost::format( "Could not write tile to \"%s\", error = %s" ) % fileName % out->geterror() ) );
+						if ( !out->write_tile( tileX+spec.x, tileY+spec.y, 0, TypeDesc::FLOAT, &tile[0] ) )
+						{
+							throw IECore::Exception( boost::str( boost::format( "Could not write tile to \"%s\", error = %s" ) % fileName % out->geterror() ) );
+						}
 					}
 				}
 			}
