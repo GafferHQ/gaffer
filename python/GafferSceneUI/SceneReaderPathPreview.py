@@ -213,7 +213,6 @@ class _Camera( Gaffer.Node ) :
 		self["cameraRotate"] = GafferScene.Transform()
 		self["cameraRotate"]["in"].setInput( self["parentConstraint"]["out"] )
 		self["cameraRotate"]["transform"]["rotate"]["y"].setInput( self["angle"] )
-		self["cameraRotate"]["space"].setValue( self["cameraRotate"].Space.Object )
 		self["cameraRotate"]["filter"].setInput( self["cameraFilter"]["out"] )
 
 		self["elevationExpression"] = Gaffer.Expression()
@@ -223,7 +222,6 @@ class _Camera( Gaffer.Node ) :
 		self["cameraTranslate"] = GafferScene.Transform()
 		self["cameraTranslate"]["in"].setInput( self["cameraRotate"]["out"] )
 		self["cameraTranslate"]["transform"]["translate"]["z"].setInput( self["depth"] )
-		self["cameraTranslate"]["space"].setValue( self["cameraRotate"].Space.Object )
 		self["cameraTranslate"]["filter"].setInput( self["cameraFilter"]["out"] )
 
 		self["options"] = GafferScene.StandardOptions()
