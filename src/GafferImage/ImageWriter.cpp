@@ -355,8 +355,27 @@ void ImageWriter::execute() const
 		imageIsBlack = true;
 	}
 
+	// Formats supporting displaywindow, as of OpenImageIO at 2015-08-01
+	//    dpx
+	//    exr
+	//    rla
+	//    tiff
+	//
+	// Formats supporting tiles, as of OpenImageIO at 2015-08-01
+	//    field3d
+	//    iff
+	//    exr
+	//    ptex
+	//    tiff
+	//
+	// Formats to test display window capability
+	//    png : No tiles
+	//    iff : Tiles
+
 	bool supportsDisplayWindow = out->supports( "displaywindow" );
 	bool resizeDataArea = false;
+
+	// supportsDisplayWindow = false;
 
 	int dataWindowWidth;
 	int dataWindowHeight;
@@ -450,26 +469,31 @@ void ImageWriter::execute() const
 		}
 	}
 	
+	// Only allow tiled output if our file format supports it.
+	int writeMode = writeModePlug()->getValue() & out->supports( "tiles" );
+
 	metadataToImageSpecAttributes( metadata.get(), spec );
-	
+
 	// PixelAspectRatio must be defined by the FormatPlug
 	spec.attribute( "PixelAspectRatio", (float)inPlug()->formatPlug()->getValue().getPixelAspect() );
-	
+
+	if ( writeMode == Tile )
+	{
+		spec.tile_width = spec.tile_height = ImagePlug::tileSize();
+	}
+
 	// create the directories before opening the file
 	boost::filesystem::path directory = boost::filesystem::path( fileName ).parent_path();
 	if( !directory.empty() )
 	{
 		boost::filesystem::create_directories( directory );
 	}
-	
+
 	if ( !out->open( fileName, spec ) )
 	{
 		throw IECore::Exception( boost::str( boost::format( "Could not open \"%s\", error = %s" ) % fileName % out->geterror() ) );
 	}
-
-	// Only allow tiled output if our file format supports it.
-	int writeMode = writeModePlug()->getValue() & out->supports( "tile" );
-
+	
 	if ( writeMode == Scanline )
 	{
 		// Create a buffer for the scanline.
@@ -564,15 +588,15 @@ void ImageWriter::execute() const
 	else
 	{
 		// Create a buffer for the tile.
-		const int tileSize = ImagePlug::tileSize();
-		float tile[ nChannels*tileSize*tileSize ];
+		float tile[ nChannels*spec.tile_width*spec.tile_height ];
+		bool tileIsBlack = false;
 
 		if ( imageIsBlack )
 		{
-			memset( tile, 0,  sizeof(float) * nChannels*tileSize*tileSize );
-			for ( int tileY = 0; tileY < dataWindowHeight; tileY += tileSize )
+			memset( tile, 0, sizeof(float) * nChannels * spec.tile_width * spec.tile_height );
+			for ( int tileY = 0; tileY < dataWindowHeight; tileY += spec.tile_height )
 			{
-				for ( int tileX = 0; tileX < dataWindowWidth; tileX += tileSize )
+				for ( int tileX = 0; tileX < dataWindowWidth; tileX += spec.tile_width )
 				{
 					if ( !out->write_tile( tileX+spec.x, tileY+spec.y, 0, TypeDesc::FLOAT, &tile[0] ) )
 					{
@@ -583,38 +607,71 @@ void ImageWriter::execute() const
 		}
 		else
 		{
-			if ( resizeDataArea )
+			// If we are writing tiled data, we are going to need to pad it
+			// at some point, unless the resolution of the image is an exact
+			// multiple of the tile size. Because of this, the code does not
+			// branch based on whether the data area needs resizing or not
+
+			// Interleave the channel data and write it to the file tile-by-tile.
+			for ( int tileY = spec.y; tileY < spec.height; tileY += spec.tile_height )
 			{
-			}
-			else
-			{
-				// Interleave the channel data and write it to the file tile-by-tile.
-				for ( int tileY = 0; tileY < dataWindowHeight; tileY += tileSize )
+				for ( int tileX = spec.x; tileX < spec.width; tileX += spec.tile_width )
 				{
-					for ( int tileX = 0; tileX < dataWindowWidth; tileX += tileSize )
+					if ( tileX + spec.tile_width <= dataWindow.min.x ||
+					     tileY + spec.tile_height <= dataWindow.min.y ||
+					     tileX > dataWindow.max.x ||
+					     tileY > dataWindow.max.y )
 					{
-						float *outPtr = &tile[0];
+						if ( !tileIsBlack )
+						{
+							memset( tile, 0, sizeof(float) * nChannels * spec.tile_width * spec.tile_height );
+							tileIsBlack = true;
+						}
+					}
+					else
+					{
+						const int r = tileX + spec.tile_width;
+						const int t = tileY + spec.tile_height;
 
-						const int r = std::min( tileSize+tileX, dataWindowWidth );
-						const int t = std::min( tileSize+tileY, dataWindowHeight );
-
-						for ( int y = 0; y < t; ++y )
+						for ( int y = tileY; y < t; ++y )
 						{
 							for ( std::vector<const float *>::iterator channelDataIt( channelPtrs.begin() ); channelDataIt != channelPtrs.end(); channelDataIt++ )
 							{
 								const int inc = channelPtrs.size();
-								const float *inRowPtr = (*channelDataIt) + ( tileY + t - y - 1 ) * dataWindowWidth;
-								for ( int x = 0; x < r; ++x, outPtr += inc )
+								float *outPtr = &tile[0] + ((y - tileY) * spec.tile_width * inc) + (channelDataIt - channelPtrs.begin());
+
+								if ( y < dataWindow.min.y || y > dataWindow.max.y )
 								{
-									*outPtr = *inRowPtr+(tileX+x);
+									for ( int x = tileX; x < r; ++x, outPtr += inc )
+									{
+										*outPtr = 0.0f;
+									}
+								}
+								else
+								{
+							 		const float *inRowPtr = (*channelDataIt) + ( y - dataWindow.min.y ) * (dataWindow.max.x - dataWindow.min.x + 1);
+
+									for ( int x = tileX; x < std::min(r, dataWindow.min.x); ++x, outPtr += inc )
+									{
+										*outPtr = 0.0f;
+									}
+									for ( int x = std::max(tileX, std::min(r, dataWindow.min.x)); x < std::min(r, dataWindow.max.x+1); ++x, outPtr += inc )
+									{
+										*outPtr = *(inRowPtr+x-dataWindow.min.x);
+										tileIsBlack = false;
+									}
+									for ( int x = std::max(tileX, std::min(r, dataWindow.max.x+1)); x < r; ++x, outPtr += inc )
+									{
+										*outPtr = 0.0f;
+									}
 								}
 							}
 						}
+					}
 
-						if ( !out->write_tile( tileX+spec.x, tileY+spec.y, 0, TypeDesc::FLOAT, &tile[0] ) )
-						{
-							throw IECore::Exception( boost::str( boost::format( "Could not write tile to \"%s\", error = %s" ) % fileName % out->geterror() ) );
-						}
+					if ( !out->write_tile( tileX, tileY, 0, TypeDesc::FLOAT, &tile[0] ) )
+					{
+						throw IECore::Exception( boost::str( boost::format( "Could not write tile to \"%s\", error = %s" ) % fileName % out->geterror() ) );
 					}
 				}
 			}
