@@ -97,11 +97,24 @@ class ScriptWindow( GafferUI.Window ) :
 		f = f.rpartition( "/" )[2] if f else "untitled"
 
 		dialogue = GafferUI.ConfirmationDialogue(
-			"Discard Unsaved Changes?",
-			"The file %s has unsaved changes. Do you want to discard them?" % f,
-			confirmLabel = "Discard"
+			"Unsaved Changes.",
+			"The file %s has unsaved changes. Do you want to save them or discard them?" % f,
+			buttonLabels = [ "Cancel", "Discard", "Save" ],
+			defaultButton = 2
 		)
-		return dialogue.waitForConfirmation( parentWindow=self )
+		result = dialogue.waitForConfirmation( parentWindow=self )
+
+		if result == 2 :
+			menuBar = self.__listContainer[0]
+			GafferUI.FileMenu.save( menuBar )
+
+			if not self.__script["unsavedChanges"].getValue():
+				return True
+
+		elif result == 1 :
+			return True
+
+		return False
 
 	def __closed( self, widget ) :
 
