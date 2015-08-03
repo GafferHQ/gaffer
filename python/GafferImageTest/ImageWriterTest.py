@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 ##########################################################################
 #
 #  Copyright (c) 2013-2015, Image Engine Design Inc. All rights reserved.
@@ -53,6 +55,8 @@ class ImageWriterTest( unittest.TestCase ) :
 	__testDir = "/tmp/testImageWriter/"
 	__testFilePath = __testDir + "test"
 	__writeModes = [ ("scanline", 0), ("tile", 1) ]
+
+	longMessage = True
 
 	# Test that we can select which channels to write.
 	def testChannelMask( self ) :
@@ -160,7 +164,7 @@ class ImageWriterTest( unittest.TestCase ) :
 			testFile = self.__testFile( name, "RGBA", ext )
 			expectedFile = self.__rgbFilePath+"."+ext
 
-			self.failIf( os.path.exists( testFile ) )
+			self.failIf( os.path.exists( testFile ), "Temporary file already exists : {}".format( testFile ) )
 
 			# Setup the writer.
 			w["in"].setInput( r["out"] )
@@ -172,7 +176,7 @@ class ImageWriterTest( unittest.TestCase ) :
 			# Execute
 			with Gaffer.Context() :
 				w.execute()
-			self.failUnless( os.path.exists( testFile ) )
+			self.failUnless( os.path.exists( testFile ), "Failed to create file : {} ({}) : {}".format( ext, name, testFile ) )
 
 			# Check the output.
 			expectedOutput = GafferImage.ImageReader()
@@ -211,14 +215,14 @@ class ImageWriterTest( unittest.TestCase ) :
 				if name in expectedMetadata :
 					del expectedMetadata[name]
 			
-			self.assertEqual( expectedMetadata, writerMetadata )
+			self.assertEqual( expectedMetadata, writerMetadata, "Metadata does not match : {} ({})".format(ext, name) )
 			
 			op = IECore.ImageDiffOp()
 			res = op(
 				imageA = expectedOutput["out"].image(),
 				imageB = writerOutput["out"].image()
 			)
-			self.assertFalse( res.value )
+			self.assertFalse( res.value, "Image data does not match : {} ({})".format(ext, name) )
 
 	def testPadDataWindowToDisplayWindowScanline ( self ) :
 		self.__testAdjustDataWindowToDisplayWindow( "png", ("scanline", 0) , self.__rgbFilePath )
@@ -244,9 +248,7 @@ class ImageWriterTest( unittest.TestCase ) :
 		testFile = self.__testFile( os.path.basename(filePath), "RGBA", ext )
 		expectedFile = filePath+"."+ext
 
-		if os.path.exists( testFile ):
-			os.remove( testFile )
-		# self.failIf( os.path.exists( testFile ) )
+		self.failIf( os.path.exists( testFile ), "Temporary file already exists : {}".format( testFile ) )
 
 		# Setup the writer.
 		w["in"].setInput( r["out"] )
@@ -258,7 +260,7 @@ class ImageWriterTest( unittest.TestCase ) :
 		# Execute
 		with Gaffer.Context() :
 			w.execute()
-		self.failUnless( os.path.exists( testFile ) )
+		self.failUnless( os.path.exists( testFile ), "Failed to create file : {} ({}) : {}".format( ext, name, testFile ) )
 
 		# Check the output.
 		expectedOutput = GafferImage.ImageReader()
@@ -272,7 +274,7 @@ class ImageWriterTest( unittest.TestCase ) :
 			imageA = expectedOutput["out"].image(),
 			imageB = writerOutput["out"].image()
 		)
-		self.assertFalse( res.value )
+		self.assertFalse( res.value, "Image data does not match : {} ({})".format(ext, name) )
 
 
 	def testOffsetDisplayWindowWrite( self ) :
