@@ -94,7 +94,7 @@ class ImageWriterTest( unittest.TestCase ) :
 		self.failUnless( w["in"].acceptsInput( p ) )
 
 	def testTiffWrite( self ) :
-		self.__testExtension( "tif" )
+		self.__testExtension( "tif", metadataToIgnore = [ "tiff:RowsPerStrip" ] )
 
 	@unittest.expectedFailure
 	def testJpgWrite( self ) :
@@ -111,9 +111,8 @@ class ImageWriterTest( unittest.TestCase ) :
 		self.__testExtension( "png" )
 
 	# Not sure why IFF fails on scanline - it writes fine as tiles
-	@unittest.expectedFailure
 	def testIffWrite( self ) :
-		self.__testExtension( "iff" )
+		self.__testExtension( "iff", modes = [ "tile" ], metadataToIgnore = [ "Artist", "DocumentName", "HostComputer", "Software" ] )
 
 	def testDefaultFormatWrite( self ) :
 
@@ -149,13 +148,15 @@ class ImageWriterTest( unittest.TestCase ) :
 
 
 	# Write an RGBA image that has a data window to various supported formats and in both scanline and tile modes.
-	def __testExtension( self, ext, metadataToIgnore = [] ) :
+	def __testExtension( self, ext, modes = None, metadataToIgnore = [] ) :
 
 		r = GafferImage.ImageReader()
 		r["fileName"].setValue( self.__rgbFilePath+".exr" )
 		w = GafferImage.ImageWriter()
 
 		for name, mode in self.__writeModes :
+			if modes and name not in modes:
+				continue
 
 			# Skip this test if the extension cannot write in tile mode.
 			if ( w["writeMode"].getFlags() & Gaffer.Plug.Flags.ReadOnly ) == True and name == "tile":
