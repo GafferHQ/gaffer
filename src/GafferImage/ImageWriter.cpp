@@ -375,8 +375,6 @@ void ImageWriter::execute() const
 	bool supportsDisplayWindow = out->supports( "displaywindow" );
 	bool resizeDataArea = false;
 
-	// supportsDisplayWindow = false;
-
 	int dataWindowWidth;
 	int dataWindowHeight;
 
