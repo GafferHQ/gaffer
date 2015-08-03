@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 ##########################################################################
 #
 #  Copyright (c) 2013-2015, Image Engine Design Inc. All rights reserved.
@@ -48,10 +50,13 @@ import GafferImage
 class ImageWriterTest( unittest.TestCase ) :
 
 	__rgbFilePath = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/rgb.100x100" )
+	__negativeDataWindowFilePath = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/checkerWithNegativeDataWindow.200x150" )
 	__defaultFormatFile = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/defaultNegativeDisplayWindow.exr" )
 	__testDir = "/tmp/testImageWriter/"
 	__testFilePath = __testDir + "test"
 	__writeModes = [ ("scanline", 0), ("tile", 1) ]
+
+	longMessage = True
 
 	# Test that we can select which channels to write.
 	def testChannelMask( self ) :
@@ -89,7 +94,7 @@ class ImageWriterTest( unittest.TestCase ) :
 		self.failUnless( w["in"].acceptsInput( p ) )
 
 	def testTiffWrite( self ) :
-		self.__testExtension( "tif" )
+		self.__testExtension( "tif", metadataToIgnore = [ "tiff:RowsPerStrip" ] )
 
 	@unittest.expectedFailure
 	def testJpgWrite( self ) :
@@ -101,6 +106,13 @@ class ImageWriterTest( unittest.TestCase ) :
 
 	def testExrWrite( self ) :
 		self.__testExtension( "exr" )
+
+	def testPngWrite( self ) :
+		self.__testExtension( "png" )
+
+	# Not sure why IFF fails on scanline - it writes fine as tiles
+	def testIffWrite( self ) :
+		self.__testExtension( "iff", modes = [ "tile" ], metadataToIgnore = [ "Artist", "DocumentName", "HostComputer", "Software" ] )
 
 	def testDefaultFormatWrite( self ) :
 
@@ -136,13 +148,15 @@ class ImageWriterTest( unittest.TestCase ) :
 
 
 	# Write an RGBA image that has a data window to various supported formats and in both scanline and tile modes.
-	def __testExtension( self, ext, metadataToIgnore = [] ) :
+	def __testExtension( self, ext, modes = None, metadataToIgnore = [] ) :
 
 		r = GafferImage.ImageReader()
 		r["fileName"].setValue( self.__rgbFilePath+".exr" )
 		w = GafferImage.ImageWriter()
 
 		for name, mode in self.__writeModes :
+			if modes and name not in modes:
+				continue
 
 			# Skip this test if the extension cannot write in tile mode.
 			if ( w["writeMode"].getFlags() & Gaffer.Plug.Flags.ReadOnly ) == True and name == "tile":
@@ -151,7 +165,7 @@ class ImageWriterTest( unittest.TestCase ) :
 			testFile = self.__testFile( name, "RGBA", ext )
 			expectedFile = self.__rgbFilePath+"."+ext
 
-			self.failIf( os.path.exists( testFile ) )
+			self.failIf( os.path.exists( testFile ), "Temporary file already exists : {}".format( testFile ) )
 
 			# Setup the writer.
 			w["in"].setInput( r["out"] )
@@ -163,7 +177,7 @@ class ImageWriterTest( unittest.TestCase ) :
 			# Execute
 			with Gaffer.Context() :
 				w.execute()
-			self.failUnless( os.path.exists( testFile ) )
+			self.failUnless( os.path.exists( testFile ), "Failed to create file : {} ({}) : {}".format( ext, name, testFile ) )
 
 			# Check the output.
 			expectedOutput = GafferImage.ImageReader()
@@ -202,14 +216,67 @@ class ImageWriterTest( unittest.TestCase ) :
 				if name in expectedMetadata :
 					del expectedMetadata[name]
 			
-			self.assertEqual( expectedMetadata, writerMetadata )
+			self.assertEqual( expectedMetadata, writerMetadata, "Metadata does not match : {} ({})".format(ext, name) )
 			
 			op = IECore.ImageDiffOp()
 			res = op(
 				imageA = expectedOutput["out"].image(),
 				imageB = writerOutput["out"].image()
 			)
-			self.assertFalse( res.value )
+			self.assertFalse( res.value, "Image data does not match : {} ({})".format(ext, name) )
+
+	def testPadDataWindowToDisplayWindowScanline ( self ) :
+		self.__testAdjustDataWindowToDisplayWindow( "png", ("scanline", 0) , self.__rgbFilePath )
+
+	def testCropDataWindowToDisplayWindowScanline ( self ) :
+		self.__testAdjustDataWindowToDisplayWindow( "png", ("scanline", 0) , self.__negativeDataWindowFilePath )
+
+	# @unittest.expectedFailure
+	def testPadDataWindowToDisplayWindowTile ( self ) :
+		self.__testAdjustDataWindowToDisplayWindow( "iff", ("tile", 1) , self.__rgbFilePath )
+
+	# @unittest.expectedFailure
+	def testCropDataWindowToDisplayWindowTile ( self ) :
+		self.__testAdjustDataWindowToDisplayWindow( "iff", ("tile", 1) , self.__negativeDataWindowFilePath )
+
+	def __testAdjustDataWindowToDisplayWindow( self, ext, writeMode, filePath ) :
+		r = GafferImage.ImageReader()
+		r["fileName"].setValue( filePath+".exr" )
+		w = GafferImage.ImageWriter()
+
+		name, mode = writeMode
+
+		testFile = self.__testFile( os.path.basename(filePath), "RGBA", ext )
+		expectedFile = filePath+"."+ext
+
+		self.failIf( os.path.exists( testFile ), "Temporary file already exists : {}".format( testFile ) )
+
+		# Setup the writer.
+		w["in"].setInput( r["out"] )
+		w["fileName"].setValue( testFile )
+		w["channels"].setValue( IECore.StringVectorData( r["out"]["channelNames"].getValue() ) )
+		if ( w["writeMode"].getFlags() & Gaffer.Plug.Flags.ReadOnly ) == False :
+			w["writeMode"].setValue( mode )
+
+		# Execute
+		with Gaffer.Context() :
+			w.execute()
+		self.failUnless( os.path.exists( testFile ), "Failed to create file : {} ({}) : {}".format( ext, name, testFile ) )
+
+		# Check the output.
+		expectedOutput = GafferImage.ImageReader()
+		expectedOutput["fileName"].setValue( expectedFile )
+
+		writerOutput = GafferImage.ImageReader()
+		writerOutput["fileName"].setValue( testFile )
+
+		op = IECore.ImageDiffOp()
+		res = op(
+			imageA = expectedOutput["out"].image(),
+			imageB = writerOutput["out"].image()
+		)
+		self.assertFalse( res.value, "Image data does not match : {} ({})".format(ext, name) )
+
 
 	def testOffsetDisplayWindowWrite( self ) :
 
