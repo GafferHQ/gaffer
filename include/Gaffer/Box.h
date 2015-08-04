@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2013-2015, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -92,6 +92,7 @@ class Box : public SubGraph
 	private :
 
 		bool validatePromotability( const Plug *descendantPlug, bool throwExceptions, bool childPlug = false ) const;
+		std::string promotedCounterpartName( const Plug *plug ) const;
 		static void copyMetadata( const Plug *from, Plug *to );
 
 };

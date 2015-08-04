@@ -69,10 +69,7 @@ Plug *Box::promotePlug( Plug *descendantPlug )
 {
 	validatePromotability( descendantPlug, /* throwExceptions = */ true );
 
-	std::string externalPlugName = descendantPlug->relativeName( this );
-	boost::replace_all( externalPlugName, ".", "_" );
-
-	PlugPtr externalPlug = descendantPlug->createCounterpart( externalPlugName, descendantPlug->direction() );
+	PlugPtr externalPlug = descendantPlug->createCounterpart( promotedCounterpartName( descendantPlug ), descendantPlug->direction() );
 	externalPlug->setFlags( Plug::Dynamic, true );
 	// flags are not automatically propagated to the children of compound plugs,
 	// so we need to do that ourselves.
@@ -468,6 +465,13 @@ BoxPtr Box::create( Node *parent, const Set *childNodes )
 		result->addChild( childNode );
 	}
 
+	return result;
+}
+
+std::string Box::promotedCounterpartName( const Plug *plug ) const
+{
+	std::string result = plug->relativeName( this );
+	boost::replace_all( result, ".", "_" );
 	return result;
 }
 
