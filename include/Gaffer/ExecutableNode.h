@@ -90,13 +90,33 @@ class ExecutableNode : public Node
 		ExecutableNode( const std::string &name=defaultName<ExecutableNode>() );
 		virtual ~ExecutableNode();
 
+		/// The plug type used to connect ExecutableNodes
+		/// together to define order of execution.
+		class RequirementPlug : public Plug
+		{
+
+			public :
+
+				IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::ExecutableNode::RequirementPlug, ExecutableNodeRequirementPlugTypeId, Gaffer::Plug );
+
+				RequirementPlug( const std::string &name=defaultName<RequirementPlug>(), Direction direction=In, unsigned flags=Default );
+
+				virtual bool acceptsChild( const Gaffer::GraphComponent *potentialChild ) const;
+				virtual bool acceptsInput( const Plug *input ) const;
+				virtual PlugPtr createCounterpart( const std::string &name, Direction direction ) const;
+
+		};
+
+		typedef Gaffer::FilteredChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::Invalid, RequirementPlug> > RequirementPlugIterator;
+		IE_CORE_DECLAREPTR( RequirementPlug )
+
 		/// Array of ExecutableNodes which must be executed before this node can execute successfully.
 		ArrayPlug *requirementsPlug();
 		const ArrayPlug *requirementsPlug() const;
 
 		/// Output plug used by other ExecutableNodes to declare this node as a requirement.
-		Plug *requirementPlug();
-		const Plug *requirementPlug() const;
+		RequirementPlug *requirementPlug();
+		const RequirementPlug *requirementPlug() const;
 
 		/// Parent plug used by Dispatchers to expose per-node dispatcher settings.
 		/// See the "ExecutableNode Customization" section of the Gaffer::Dispatcher
@@ -129,12 +149,6 @@ class ExecutableNode : public Node
 		/// Returns true if the node must execute a sequence of frames all at once.
 		/// The default implementation returns false.
 		virtual bool requiresSequenceExecution() const;
-
-	protected :
-
-		/// Implemented to deny inputs to requirementsPlug() which do not come from
-		/// the requirementPlug() of another ExecutableNode.
-		virtual bool acceptsInput( const Plug *plug, const Plug *inputPlug ) const;
 
 	private :
 

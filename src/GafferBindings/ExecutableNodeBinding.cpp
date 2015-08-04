@@ -41,6 +41,7 @@
 #include "Gaffer/ExecutableNode.h"
 
 #include "GafferBindings/ExecutableNodeBinding.h"
+#include "GafferBindings/PlugBinding.h"
 
 using namespace boost::python;
 using namespace IECore;
@@ -98,4 +99,19 @@ void GafferBindings::bindExecutableNode()
 		.def("__eq__", &ExecutableNode::Task::operator== )
 		.def("__hash__", &taskHash )
 	;
+
+	PlugClass<ExecutableNode::RequirementPlug>()
+		.def( init<const char *, Plug::Direction, unsigned>(
+				(
+					boost::python::arg_( "name" )=GraphComponent::defaultName<ExecutableNode::RequirementPlug>(),
+					boost::python::arg_( "direction" )=Plug::In,
+					boost::python::arg_( "flags" )=Plug::Default
+				)
+			)
+		)
+		// Adjusting the name so that it correctly reflects
+		// the nesting, and can be used by the PlugSerialiser.
+		.attr( "__name__" ) = "ExecutableNode.RequirementPlug"
+	;
+
 }
