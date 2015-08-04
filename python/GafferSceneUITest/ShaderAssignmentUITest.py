@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2013-2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -62,7 +62,7 @@ class ShaderAssignmentUITest( GafferUITest.TestCase ) :
 		boxGadget = g.nodeGadget( box )
 
 		self.assertEqual( boxGadget.noduleTangent( boxGadget.nodule( box["in"] ) ), IECore.V3f( 0, 1, 0 ) )
-		self.assertEqual( boxGadget.noduleTangent( boxGadget.nodule( box["in1"] ) ), IECore.V3f( -1, 0, 0 ) )
+		self.assertEqual( boxGadget.noduleTangent( boxGadget.nodule( box["shader"] ) ), IECore.V3f( -1, 0, 0 ) )
 
 if __name__ == "__main__":
 	unittest.main()

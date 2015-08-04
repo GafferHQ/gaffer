@@ -414,7 +414,7 @@ BoxPtr Box::create( Node *parent, const Set *childNodes )
 					PlugMap::const_iterator mapIt = plugMap.find( input );
 					if( mapIt == plugMap.end() )
 					{
-						PlugPtr intermediateInput = plug->createCounterpart( "in", Plug::In );
+						PlugPtr intermediateInput = plug->createCounterpart( result->promotedCounterpartName( plug ), Plug::In );
 						// we want intermediate inputs to appear on the same side of the node as the
 						// equivalent internal plug, so we copy the relevant metadata over.
 						copyMetadata( plug, intermediateInput.get() );
@@ -444,7 +444,7 @@ BoxPtr Box::create( Node *parent, const Set *childNodes )
 							PlugMap::const_iterator mapIt = plugMap.find( plug );
 							if( mapIt == plugMap.end() )
 							{
-								PlugPtr intermediateOutput = plug->createCounterpart( "out", Plug::Out );
+								PlugPtr intermediateOutput = plug->createCounterpart( result->promotedCounterpartName( plug ), Plug::Out );
 								copyMetadata( plug, intermediateOutput.get() );
 								intermediateOutput->setFlags( Plug::Dynamic, true );
 								result->addChild( intermediateOutput );
@@ -470,7 +470,7 @@ BoxPtr Box::create( Node *parent, const Set *childNodes )
 
 std::string Box::promotedCounterpartName( const Plug *plug ) const
 {
-	std::string result = plug->relativeName( this );
+	std::string result = plug->relativeName( plug->node() );
 	boost::replace_all( result, ".", "_" );
 	return result;
 }

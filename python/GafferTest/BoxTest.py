@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2013-2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -304,7 +304,7 @@ class BoxTest( GafferTest.TestCase ) :
 		self.assertFalse( b.plugIsPromoted( s["n2"]["op1"] ) )
 
 		p = b.promotePlug( b["n1"]["op1"] )
-		self.assertEqual( p.getName(), "n1_op1" )
+		self.assertEqual( p.getName(), "op1" )
 		self.assertTrue( p.parent().isSame( b ) )
 		self.assertTrue( b["n1"]["op1"].getInput().isSame( p ) )
 		self.assertTrue( b.plugIsPromoted( b["n1"]["op1"] ) )
@@ -363,8 +363,8 @@ class BoxTest( GafferTest.TestCase ) :
 		s = Gaffer.ScriptNode()
 		s.execute( ss )
 
-		self.assertTrue( isinstance( s["Box"]["n_c"], Gaffer.Color3fPlug ) )
-		self.assertTrue( s["Box"]["n"]["c"].getInput().isSame( s["Box"]["n_c"] ) )
+		self.assertTrue( isinstance( s["Box"]["c"], Gaffer.Color3fPlug ) )
+		self.assertTrue( s["Box"]["n"]["c"].getInput().isSame( s["Box"]["c"] ) )
 
 	def testCantPromoteNonSerialisablePlugs( self ) :
 
@@ -528,15 +528,15 @@ class BoxTest( GafferTest.TestCase ) :
 
 		b = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["a2"] ] ) )
 
-		self.assertEqual( Gaffer.Metadata.plugValue( b["in"], "description" ), None )
+		self.assertEqual( Gaffer.Metadata.plugValue( b["op1"], "description" ), None )
 
-		Gaffer.Metadata.registerPlugValue( b["in"], "description", "hello" )
-		self.assertEqual( Gaffer.Metadata.plugValue( b["in"], "description" ), "hello" )
+		Gaffer.Metadata.registerPlugValue( b["op1"], "description", "hello" )
+		self.assertEqual( Gaffer.Metadata.plugValue( b["op1"], "description" ), "hello" )
 
 		s2 = Gaffer.ScriptNode()
 		s2.execute( s.serialise() )
 
-		self.assertEqual( Gaffer.Metadata.plugValue( s2["Box"]["in"], "description" ), "hello" )
+		self.assertEqual( Gaffer.Metadata.plugValue( s2["Box"]["op1"], "description" ), "hello" )
 
 	def testCantPromoteReadOnlyPlug( self ) :
 
