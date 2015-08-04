@@ -286,15 +286,14 @@ class ExecutableNodeTest( GafferTest.TestCase ) :
 		self.assertTrue( s["b"]["a"]["requirements"][0].acceptsInput( s["b"]["in"] ) )
 		self.assertTrue( s["a"]["requirements"][0].acceptsInput( s["b"]["out"] ) )
 
-		# but should reject connections to connected box inputs and outputs if they're unsuitable.
+		# But the promoted plugs shouldn't accept any old inputs.
 
-		s["b"]["in"].setInput( s["n"]["requirement"] )
-		self.assertFalse( s["b"]["a"]["requirements"][0].acceptsInput( s["b"]["in"] ) )
+		self.assertFalse( s["b"]["in"].acceptsInput( s["n"]["requirement"] ) )
+		self.assertFalse( s["b"]["out"].acceptsInput( s["b"]["n"]["requirement"] ) )
 
-		s["b"]["out"].setInput( s["b"]["n"]["requirement"] )
-		self.assertFalse( s["a"]["requirements"][0].acceptsInput( s["b"]["out"] ) )
+		# We should be able to connect them up only to other appropriate requirement plugs.
 
-		# and accept them again if they provide indirect access to an ExecutableNode
+		self.assertTrue( s["a"]["requirements"][0].acceptsInput( s["b"]["out"] ) )
 
 		s["c"] = GafferTest.TextWriter()
 		s["b"]["in"].setInput( s["c"]["requirement"] )
@@ -334,6 +333,26 @@ class ExecutableNodeTest( GafferTest.TestCase ) :
 		s["e"] = GafferTest.TextWriter()
 
 		s["r"]["p"].setInput( s["e"]["requirement"] )
+
+	def testReferencePromotedRequirementsPlug( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["b"] = Gaffer.Box()
+		s["b"]["e"] = GafferTest.TextWriter()
+		p = s["b"].promotePlug( s["b"]["e"]["requirements"] )
+		p.setName( "p" )
+
+		s["b"].exportForReference( "/tmp/test.grf" )
+
+		s["r"] = Gaffer.Reference()
+		s["r"].load( "/tmp/test.grf" )
+
+		s["e"] = GafferTest.TextWriter()
+
+		s["r"]["p"][0].setInput( s["e"]["requirement"] )
+
+		self.assertTrue( s["r"]["e"]["requirements"][0].source().isSame( s["e"]["requirement"] ) )
 
 	def tearDown( self ) :
 

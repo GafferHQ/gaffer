@@ -144,8 +144,8 @@ BOOST_PYTHON_MODULE( _Gaffer )
 	bindNode();
 	bindDependencyNode();
 	bindComputeNode();
-	bindExecutableNode();
 	bindPlug();
+	bindExecutableNode();
 	bindValuePlug();
 	bindNumericPlug();
 	bindTypedPlug();
