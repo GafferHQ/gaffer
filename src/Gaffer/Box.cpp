@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2013-2015, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -480,6 +480,8 @@ void Box::copyMetadata( const Plug *from, Plug *to )
 	/// know all valid names.
 	Metadata::registerPlugValue( to, "nodeGadget:nodulePosition", Metadata::plugValue<IECore::Data>( from, "nodeGadget:nodulePosition" ) );
 	Metadata::registerPlugValue( to, "nodule:type", Metadata::plugValue<IECore::Data>( from, "nodule:type" ) );
+	Metadata::registerPlugValue( to, "nodule:color", Metadata::plugValue<IECore::Data>( from, "nodule:color" ) );
+	Metadata::registerPlugValue( to, "connectionGadget:color", Metadata::plugValue<IECore::Data>( from, "connectionGadget:color" ) );
 	Metadata::registerPlugValue( to, "compoundNodule:orientation", Metadata::plugValue<IECore::Data>( from, "compoundNodule:orientation" ) );
 	Metadata::registerPlugValue( to, "compoundNodule:spacing", Metadata::plugValue<IECore::Data>( from, "compoundNodule:spacing" ) );
 	Metadata::registerPlugValue( to, "compoundNodule:direction", Metadata::plugValue<IECore::Data>( from, "compoundNodule:direction" ) );
