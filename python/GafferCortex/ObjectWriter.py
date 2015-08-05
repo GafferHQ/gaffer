@@ -1,7 +1,7 @@
 ##########################################################################
 #
 #  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2013-2014, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2013-2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -60,7 +60,7 @@ class ObjectWriter( Gaffer.ExecutableNode ) :
 
 		self.__writer = None
 		self.__writerExtension = ""
-		self.__exposedParameters = IECore.CompoundParameter()
+		self.__exposedParameters = IECore.CompoundParameter( description = "Additional parameters specific to the format of the file being written. These are created automatically based on the extension when the fileName is specified." )
 		self.__parameterHandler = GafferCortex.CompoundParameterHandler( self.__exposedParameters )
 		self.__parameterHandler.setupPlug( self )
 
