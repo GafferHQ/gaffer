@@ -973,8 +973,8 @@ SceneView::SceneView( const std::string &name )
 	// add a node for hiding things
 
 	StandardAttributesPtr hide = new StandardAttributes( "hide" );
-	hide->attributesPlug()->getChild<CompoundPlug>( "visibility" )->getChild<BoolPlug>( "enabled" )->setValue( true );
-	hide->attributesPlug()->getChild<CompoundPlug>( "visibility" )->getChild<BoolPlug>( "value" )->setValue( false );
+	hide->attributesPlug()->getChild<ValuePlug>( "visibility" )->getChild<BoolPlug>( "enabled" )->setValue( true );
+	hide->attributesPlug()->getChild<ValuePlug>( "visibility" )->getChild<BoolPlug>( "value" )->setValue( false );
 
 	preprocessor->addChild( hide );
 	hide->inPlug()->setInput( preprocessorInput );
