@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2011-2014, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2015, Image Engine Design Inc. All rights reserved.
 //  Copyright (c) 2011, John Haddon. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
@@ -88,6 +88,9 @@ class ParameterHandler : public IECore::RefCounted
 
 		/// Should be called by derived classes in setupPlug().
 		void setupPlugFlags( Gaffer::Plug *plug, unsigned flags );
+
+		/// Should be called by derived classes in setupPlug().
+		void setupPlugMetadata( Gaffer::Plug *plug, const IECore::Parameter *parameter );
 
 		/// Create a static instance of this to automatically register a derived class
 		/// with the factory mechanism. Derived class must have a constructor of the form

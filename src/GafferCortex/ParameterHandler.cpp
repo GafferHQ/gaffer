@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2011-2014, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2015, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -38,6 +38,7 @@
 #include "IECore/SimpleTypedData.h"
 
 #include "Gaffer/GraphComponent.h"
+#include "Gaffer/Metadata.h"
 
 #include "GafferCortex/ParameterHandler.h"
 
@@ -66,6 +67,11 @@ void ParameterHandler::setupPlugFlags( Gaffer::Plug *plug, unsigned flags )
 			plug->setFlags( Gaffer::Plug::ReadOnly, readOnly->readable() );
 		}
 	}
+}
+
+void ParameterHandler::setupPlugMetadata( Gaffer::Plug *plug, const IECore::Parameter *parameter )
+{
+	Gaffer::Metadata::registerPlugValue( plug, "description", new IECore::StringData( parameter->description() ) );
 }
 
 ParameterHandlerPtr ParameterHandler::create( IECore::ParameterPtr parameter )
