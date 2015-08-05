@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2013-2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -70,7 +70,7 @@ class ReferenceTest( GafferTest.TestCase ) :
 		s["r"].load( "/tmp/test.grf" )
 
 		self.assertTrue( "n1" in s["r"] )
-		self.assertTrue( s["r"]["out"].getInput().isSame( s["r"]["n1"]["sum"] ) )
+		self.assertTrue( s["r"]["sum"].getInput().isSame( s["r"]["n1"]["sum"] ) )
 
 	def testSerialisation( self ) :
 
@@ -89,11 +89,11 @@ class ReferenceTest( GafferTest.TestCase ) :
 		s["r"].load( "/tmp/test.grf" )
 
 		self.assertTrue( "n1" in s["r"] )
-		self.assertTrue( s["r"]["n1"]["op1"].getInput().isSame( s["r"]["n1_op1"] ) )
-		self.assertTrue( s["r"]["out"].getInput().isSame( s["r"]["n1"]["sum"] ) )
+		self.assertTrue( s["r"]["n1"]["op1"].getInput().isSame( s["r"]["op1"] ) )
+		self.assertTrue( s["r"]["sum"].getInput().isSame( s["r"]["n1"]["sum"] ) )
 
-		s["r"]["n1_op1"].setValue( 25 )
-		self.assertEqual( s["r"]["out"].getValue(), 25 )
+		s["r"]["op1"].setValue( 25 )
+		self.assertEqual( s["r"]["sum"].getValue(), 25 )
 
 		ss = s.serialise()
 
@@ -102,14 +102,14 @@ class ReferenceTest( GafferTest.TestCase ) :
 		self.assertTrue( "AddNode" not in ss )
 		# but the values of user plugs should be stored, so
 		# they can override the values from the reference.
-		self.assertTrue( "\"n1_op1\"" in ss )
+		self.assertTrue( "\"op1\"" in ss )
 
 		s2 = Gaffer.ScriptNode()
 		s2.execute( ss )
 
 		self.assertTrue( "n1" in s2["r"] )
-		self.assertTrue( s2["r"]["out"].getInput().isSame( s2["r"]["n1"]["sum"] ) )
-		self.assertEqual( s2["r"]["out"].getValue(), 25 )
+		self.assertTrue( s2["r"]["sum"].getInput().isSame( s2["r"]["n1"]["sum"] ) )
+		self.assertEqual( s2["r"]["sum"].getValue(), 25 )
 
 	def testReload( self ) :
 
@@ -131,17 +131,17 @@ class ReferenceTest( GafferTest.TestCase ) :
 		s2["r"] = Gaffer.Reference()
 		s2["r"].load( "/tmp/test.grf" )
 
-		s2["r"]["in"].setInput( s2["n1"]["sum"] )
-		s2["r"]["n2_op2"].setValue( 1001 )
-		s2["n3"]["op1"].setInput( s2["r"]["out"] )
+		s2["r"]["op1"].setInput( s2["n1"]["sum"] )
+		s2["r"]["op2"].setValue( 1001 )
+		s2["n3"]["op1"].setInput( s2["r"]["sum"] )
 
 		self.assertTrue( "n2" in s2["r"] )
-		self.assertTrue( s2["r"]["n2"]["op1"].getInput().isSame( s2["r"]["in"] ) )
-		self.assertTrue( s2["r"]["n2"]["op2"].getInput().isSame( s2["r"]["n2_op2"] ) )
-		self.assertEqual( s2["r"]["n2_op2"].getValue(), 1001 )
-		self.assertTrue( s2["r"]["out"].getInput().isSame( s2["r"]["n2"]["sum"] ) )
-		self.assertTrue( s2["r"]["in"].getInput().isSame( s2["n1"]["sum"] ) )
-		self.assertTrue( s2["n3"]["op1"].getInput().isSame( s2["r"]["out"] ) )
+		self.assertTrue( s2["r"]["n2"]["op1"].getInput().isSame( s2["r"]["op1"] ) )
+		self.assertTrue( s2["r"]["n2"]["op2"].getInput().isSame( s2["r"]["op2"] ) )
+		self.assertEqual( s2["r"]["op2"].getValue(), 1001 )
+		self.assertTrue( s2["r"]["sum"].getInput().isSame( s2["r"]["n2"]["sum"] ) )
+		self.assertTrue( s2["r"]["op1"].getInput().isSame( s2["n1"]["sum"] ) )
+		self.assertTrue( s2["n3"]["op1"].getInput().isSame( s2["r"]["sum"] ) )
 		originalReferencedNames = s2["r"].keys()
 
 		b["anotherNode"] = GafferTest.AddNode()
@@ -151,14 +151,14 @@ class ReferenceTest( GafferTest.TestCase ) :
 		s2["r"].load( "/tmp/test.grf" )
 
 		self.assertTrue( "n2" in s2["r"] )
-		self.assertEqual( set( s2["r"].keys() ), set( originalReferencedNames + [ "anotherNode", "anotherNode_op2" ] ) )
-		self.assertTrue( s2["r"]["n2"]["op1"].getInput().isSame( s2["r"]["in"] ) )
-		self.assertTrue( s2["r"]["n2"]["op2"].getInput().isSame( s2["r"]["n2_op2"] ) )
-		self.assertEqual( s2["r"]["n2_op2"].getValue(), 1001 )
-		self.assertTrue( s2["r"]["anotherNode"]["op2"].getInput().isSame( s2["r"]["anotherNode_op2"] ) )
-		self.assertTrue( s2["r"]["out"].getInput().isSame( s2["r"]["n2"]["sum"] ) )
-		self.assertTrue( s2["r"]["in"].getInput().isSame( s2["n1"]["sum"] ) )
-		self.assertTrue( s2["n3"]["op1"].getInput().isSame( s2["r"]["out"] ) )
+		self.assertEqual( set( s2["r"].keys() ), set( originalReferencedNames + [ "anotherNode", "op3" ] ) )
+		self.assertTrue( s2["r"]["n2"]["op1"].getInput().isSame( s2["r"]["op1"] ) )
+		self.assertTrue( s2["r"]["n2"]["op2"].getInput().isSame( s2["r"]["op2"] ) )
+		self.assertEqual( s2["r"]["op2"].getValue(), 1001 )
+		self.assertTrue( s2["r"]["anotherNode"]["op2"].getInput().isSame( s2["r"]["op3"] ) )
+		self.assertTrue( s2["r"]["sum"].getInput().isSame( s2["r"]["n2"]["sum"] ) )
+		self.assertTrue( s2["r"]["op1"].getInput().isSame( s2["n1"]["sum"] ) )
+		self.assertTrue( s2["n3"]["op1"].getInput().isSame( s2["r"]["sum"] ) )
 
 	def testReloadDoesntRemoveCustomPlugs( self ) :
 
@@ -202,12 +202,12 @@ class ReferenceTest( GafferTest.TestCase ) :
 		s2["r"].load( "/tmp/test.grf" )
 		s2["a"] = GafferTest.AddNode()
 
-		s2["r"]["n2_op2"].setValue( 123 )
-		s2["r"]["in"].setInput( s2["a"]["sum"] )
+		s2["r"]["op2"].setValue( 123 )
+		s2["r"]["op1"].setInput( s2["a"]["sum"] )
 
 		self.assertTrue( "n2" in s2["r"] )
-		self.assertTrue( "out" in s2["r"] )
-		self.assertTrue( s2["r"]["in"].getInput().isSame( s2["a"]["sum"] ) )
+		self.assertTrue( "sum" in s2["r"] )
+		self.assertTrue( s2["r"]["op1"].getInput().isSame( s2["a"]["sum"] ) )
 
 		s2["fileName"].setValue( "/tmp/test.gfr" )
 		s2.save()
@@ -218,8 +218,8 @@ class ReferenceTest( GafferTest.TestCase ) :
 
 		self.assertEqual( s3["r"].keys(), s2["r"].keys() )
 		self.assertEqual( s3["r"]["user"].keys(), s2["r"]["user"].keys() )
-		self.assertEqual( s3["r"]["n2_op2"].getValue(), 123 )
-		self.assertTrue( s3["r"]["in"].getInput().isSame( s3["a"]["sum"] ) )
+		self.assertEqual( s3["r"]["op2"].getValue(), 123 )
+		self.assertTrue( s3["r"]["op1"].getInput().isSame( s3["a"]["sum"] ) )
 
 	def testReferenceExportCustomPlugsFromBoxes( self ) :
 
@@ -439,7 +439,7 @@ class ReferenceTest( GafferTest.TestCase ) :
 		
 		# load onto reference:
 		s["r"].load( "/tmp/test.grf" )
-		self.assertEqual( s["r"].correspondingInput( s["r"]["n_sum"] ), None )
+		self.assertEqual( s["r"].correspondingInput( s["r"]["sum"] ), None )
 		self.assertEqual( s["r"].enabledPlug(), None )
 		
 		# Wire it up to support enabledPlug() and correspondingInput()
@@ -449,7 +449,7 @@ class ReferenceTest( GafferTest.TestCase ) :
 		
 		# reload reference and test:
 		s["r"].load( "/tmp/test.grf" )
-		self.assertEqual( s["r"].correspondingInput( s["r"]["n_sum"] ), None )
+		self.assertEqual( s["r"].correspondingInput( s["r"]["sum"] ), None )
 		self.assertEqual( s["r"].enabledPlug(), None )
 		
 		# add an enabled plug:
@@ -458,7 +458,7 @@ class ReferenceTest( GafferTest.TestCase ) :
 		
 		# reload reference and test that's now visible via enabledPlug():
 		s["r"].load( "/tmp/test.grf" )
-		self.assertEqual( s["r"].correspondingInput( s["r"]["n_sum"] ), None )
+		self.assertEqual( s["r"].correspondingInput( s["r"]["sum"] ), None )
 		self.assertTrue( s["r"].enabledPlug().isSame( s["r"]["enabled"] ) )
 		
 		# hook up the enabled plug inside the box:
@@ -468,15 +468,15 @@ class ReferenceTest( GafferTest.TestCase ) :
 		# reload reference and test that's now visible via enabledPlug():
 		s["r"].load( "/tmp/test.grf" )
 		self.assertTrue( s["r"].enabledPlug().isSame( s["r"]["enabled"] ) )
-		self.assertTrue( s["r"].correspondingInput( s["r"]["n_sum"] ).isSame( s["r"]["n_op1"] ) )
+		self.assertTrue( s["r"].correspondingInput( s["r"]["sum"] ).isSame( s["r"]["op1"] ) )
 		
 		
 		# Connect it into a network, delete it, and check that we get nice auto-reconnect behaviour
 		s["a"] = GafferTest.AddNode()
-		s["r"]["n_op1"].setInput( s["a"]["sum"] )
+		s["r"]["op1"].setInput( s["a"]["sum"] )
 
 		s["c"] = GafferTest.AddNode()
-		s["c"]["op1"].setInput( s["r"]["n_sum"] )
+		s["c"]["op1"].setInput( s["r"]["sum"] )
 
 		s.deleteNodes( filter = Gaffer.StandardSet( [ s["r"] ] ) )
 

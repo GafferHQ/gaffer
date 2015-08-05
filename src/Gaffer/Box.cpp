@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2013-2015, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -69,10 +69,7 @@ Plug *Box::promotePlug( Plug *descendantPlug )
 {
 	validatePromotability( descendantPlug, /* throwExceptions = */ true );
 
-	std::string externalPlugName = descendantPlug->relativeName( this );
-	boost::replace_all( externalPlugName, ".", "_" );
-
-	PlugPtr externalPlug = descendantPlug->createCounterpart( externalPlugName, descendantPlug->direction() );
+	PlugPtr externalPlug = descendantPlug->createCounterpart( promotedCounterpartName( descendantPlug ), descendantPlug->direction() );
 	externalPlug->setFlags( Plug::Dynamic, true );
 	// flags are not automatically propagated to the children of compound plugs,
 	// so we need to do that ourselves.
@@ -417,7 +414,7 @@ BoxPtr Box::create( Node *parent, const Set *childNodes )
 					PlugMap::const_iterator mapIt = plugMap.find( input );
 					if( mapIt == plugMap.end() )
 					{
-						PlugPtr intermediateInput = plug->createCounterpart( "in", Plug::In );
+						PlugPtr intermediateInput = plug->createCounterpart( result->promotedCounterpartName( plug ), Plug::In );
 						// we want intermediate inputs to appear on the same side of the node as the
 						// equivalent internal plug, so we copy the relevant metadata over.
 						copyMetadata( plug, intermediateInput.get() );
@@ -447,7 +444,7 @@ BoxPtr Box::create( Node *parent, const Set *childNodes )
 							PlugMap::const_iterator mapIt = plugMap.find( plug );
 							if( mapIt == plugMap.end() )
 							{
-								PlugPtr intermediateOutput = plug->createCounterpart( "out", Plug::Out );
+								PlugPtr intermediateOutput = plug->createCounterpart( result->promotedCounterpartName( plug ), Plug::Out );
 								copyMetadata( plug, intermediateOutput.get() );
 								intermediateOutput->setFlags( Plug::Dynamic, true );
 								result->addChild( intermediateOutput );
@@ -471,6 +468,13 @@ BoxPtr Box::create( Node *parent, const Set *childNodes )
 	return result;
 }
 
+std::string Box::promotedCounterpartName( const Plug *plug ) const
+{
+	std::string result = plug->relativeName( plug->node() );
+	boost::replace_all( result, ".", "_" );
+	return result;
+}
+
 void Box::copyMetadata( const Plug *from, Plug *to )
 {
 	/// \todo Perhaps we should have a more general mechanism for mirroring all metadata?
@@ -480,6 +484,8 @@ void Box::copyMetadata( const Plug *from, Plug *to )
 	/// know all valid names.
 	Metadata::registerPlugValue( to, "nodeGadget:nodulePosition", Metadata::plugValue<IECore::Data>( from, "nodeGadget:nodulePosition" ) );
 	Metadata::registerPlugValue( to, "nodule:type", Metadata::plugValue<IECore::Data>( from, "nodule:type" ) );
+	Metadata::registerPlugValue( to, "nodule:color", Metadata::plugValue<IECore::Data>( from, "nodule:color" ) );
+	Metadata::registerPlugValue( to, "connectionGadget:color", Metadata::plugValue<IECore::Data>( from, "connectionGadget:color" ) );
 	Metadata::registerPlugValue( to, "compoundNodule:orientation", Metadata::plugValue<IECore::Data>( from, "compoundNodule:orientation" ) );
 	Metadata::registerPlugValue( to, "compoundNodule:spacing", Metadata::plugValue<IECore::Data>( from, "compoundNodule:spacing" ) );
 	Metadata::registerPlugValue( to, "compoundNodule:direction", Metadata::plugValue<IECore::Data>( from, "compoundNodule:direction" ) );

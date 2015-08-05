@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2013-2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -72,8 +72,8 @@ class BoxUITest( GafferUITest.TestCase ) :
 
 		boxGadget = g.nodeGadget( box )
 
-		self.assertEqual( boxGadget.noduleTangent( boxGadget.nodule( box["in"] ) ), IECore.V3f( -1, 0, 0 ) )
-		self.assertEqual( boxGadget.noduleTangent( boxGadget.nodule( box["out"] ) ), IECore.V3f( 1, 0, 0 ) )
+		self.assertEqual( boxGadget.noduleTangent( boxGadget.nodule( box["op1"] ) ), IECore.V3f( -1, 0, 0 ) )
+		self.assertEqual( boxGadget.noduleTangent( boxGadget.nodule( box["sum"] ) ), IECore.V3f( 1, 0, 0 ) )
 
 		# Now test that a copy/paste of the box maintains the tangents in the copy.
 
@@ -85,8 +85,8 @@ class BoxUITest( GafferUITest.TestCase ) :
 		box2 = s2[box.getName()]
 		boxGadget2 = g2.nodeGadget( box2 )
 
-		self.assertEqual( boxGadget2.noduleTangent( boxGadget2.nodule( box2["in"] ) ), IECore.V3f( -1, 0, 0 ) )
-		self.assertEqual( boxGadget2.noduleTangent( boxGadget2.nodule( box2["out"] ) ), IECore.V3f( 1, 0, 0 ) )
+		self.assertEqual( boxGadget2.noduleTangent( boxGadget2.nodule( box2["op1"] ) ), IECore.V3f( -1, 0, 0 ) )
+		self.assertEqual( boxGadget2.noduleTangent( boxGadget2.nodule( box2["sum"] ) ), IECore.V3f( 1, 0, 0 ) )
 
 	def testNodulePositionsForPromotedPlugs( self ) :
 	
