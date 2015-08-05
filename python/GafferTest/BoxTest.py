@@ -366,6 +366,33 @@ class BoxTest( GafferTest.TestCase ) :
 		self.assertTrue( isinstance( s["Box"]["n_c"], Gaffer.Color3fPlug ) )
 		self.assertTrue( s["Box"]["n"]["c"].getInput().isSame( s["Box"]["n_c"] ) )
 
+	def testPromoteNonDynamicColorPlugAndSerialise( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["b"] = Gaffer.Box()
+		s["b"]["n"] = Gaffer.Random()
+
+		p = s["b"].promotePlug( s["b"]["n"]["baseColor"] )
+		p.setValue( IECore.Color3f( 1, 2, 3 ) )
+		p.setName( "c" )
+
+		self.assertTrue( isinstance( s["b"]["c"], Gaffer.Color3fPlug ) )
+		self.assertTrue( s["b"]["n"]["baseColor"].getInput().isSame( s["b"]["c"] ) )
+		self.assertTrue( s["b"]["n"]["baseColor"]["r"].getInput().isSame( s["b"]["c"]["r"] ) )
+		self.assertTrue( s["b"]["n"]["baseColor"]["g"].getInput().isSame( s["b"]["c"]["g"] ) )
+		self.assertTrue( s["b"]["n"]["baseColor"]["b"].getInput().isSame( s["b"]["c"]["b"] ) )
+		self.assertEqual( s["b"]["c"].getValue(), IECore.Color3f( 1, 2, 3 ) )
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+
+		self.assertTrue( isinstance( s2["b"]["c"], Gaffer.Color3fPlug ) )
+		self.assertTrue( s2["b"]["n"]["baseColor"].getInput().isSame( s2["b"]["c"] ) )
+		self.assertTrue( s2["b"]["n"]["baseColor"]["r"].getInput().isSame( s2["b"]["c"]["r"] ) )
+		self.assertTrue( s2["b"]["n"]["baseColor"]["g"].getInput().isSame( s2["b"]["c"]["g"] ) )
+		self.assertTrue( s2["b"]["n"]["baseColor"]["b"].getInput().isSame( s2["b"]["c"]["b"] ) )
+		self.assertEqual( s2["b"]["c"].getValue(), IECore.Color3f( 1, 2, 3 ) )
+
 	def testCantPromoteNonSerialisablePlugs( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -824,6 +851,91 @@ class BoxTest( GafferTest.TestCase ) :
 		self.assertTrue( "n" in s["b2"] )
 		self.assertEqual( Gaffer.Metadata.nodeValue( s["b2"], "description" ), None )
 		self.assertEqual( Gaffer.Metadata.nodeValue( s["b2"], "nodeGadget:color" ), None )
+
+	def testPromoteDynamicBoxPlugAndSerialise( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["b"] = Gaffer.Box()
+		s["b"]["n"] = Gaffer.Node()
+		s["b"]["n"]["p"] = Gaffer.Box2iPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		p = s["b"].promotePlug( s["b"]["n"]["p"] )
+		p.setValue( IECore.Box2i( IECore.V2i( 1, 2 ), IECore.V2i( 3, 4 ) ) )
+		p.setName( "c" )
+
+		self.assertTrue( isinstance( s["b"]["c"], Gaffer.Box2iPlug ) )
+		self.assertTrue( s["b"]["n"]["p"].getInput().isSame( s["b"]["c"] ) )
+		self.assertTrue( s["b"]["n"]["p"]["min"].getInput().isSame( s["b"]["c"]["min"] ) )
+		self.assertTrue( s["b"]["n"]["p"]["max"].getInput().isSame( s["b"]["c"]["max"] ) )
+		self.assertEqual( s["b"]["c"].getValue(), IECore.Box2i( IECore.V2i( 1, 2 ), IECore.V2i( 3, 4 ) ) )
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+
+		self.assertTrue( isinstance( s2["b"]["c"], Gaffer.Box2iPlug ) )
+		self.assertTrue( s2["b"]["n"]["p"].getInput().isSame( s2["b"]["c"] ) )
+		self.assertTrue( s2["b"]["n"]["p"]["min"].getInput().isSame( s2["b"]["c"]["min"] ) )
+		self.assertTrue( s2["b"]["n"]["p"]["max"].getInput().isSame( s2["b"]["c"]["max"] ) )
+		self.assertEqual( s2["b"]["c"].getValue(), IECore.Box2i( IECore.V2i( 1, 2 ), IECore.V2i( 3, 4 ) ) )
+
+	def testPromoteStaticPlugsWithChildren( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["b"] = Gaffer.Box()
+		s["b"]["n"] = GafferTest.CompoundPlugNode()
+		s["b"]["n"]["valuePlug"]["i"].setValue( 10 )
+
+		p = s["b"].promotePlug( s["b"]["n"]["valuePlug"] )
+		p.setName( "p" )
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+
+		self.assertEqual( s2["b"]["n"]["valuePlug"]["i"].getValue(), 10 )
+		self.assertTrue( s2["b"]["n"]["valuePlug"]["i"].getInput().isSame( s2["b"]["p"]["i"] ) )
+
+	def testPromoteDynamicPlugsWithChildren( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["b"] = Gaffer.Box()
+		s["b"]["n"] = Gaffer.Node()
+
+		s["b"]["n"]["user"]["p"] = Gaffer.Plug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["b"]["n"]["user"]["p"]["p"] = Gaffer.Plug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["b"]["n"]["user"]["p"]["p"]["i"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		s["b"]["n"]["user"]["v"] = Gaffer.ValuePlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["b"]["n"]["user"]["v"]["v"] = Gaffer.ValuePlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["b"]["n"]["user"]["v"]["v"]["i"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		p = s["b"].promotePlug( s["b"]["n"]["user"]["p"] )
+		p.setName( "p" )
+		p["p"]["i"].setValue( 10 )
+
+		v = s["b"].promotePlug( s["b"]["n"]["user"]["v"] )
+		v.setName( "v" )
+		v["v"]["i"].setValue( 20 )
+
+		def assertValid( script ) :
+
+			self.assertEqual( script["b"]["n"]["user"]["p"]["p"]["i"].getValue(), 10 )
+			self.assertTrue( script["b"]["n"]["user"]["p"]["p"]["i"].getInput().isSame( script["b"]["p"]["p"]["i"] ) )
+			self.assertTrue( script["b"]["n"]["user"]["p"]["p"].getInput().isSame( script["b"]["p"]["p"] ) )
+			self.assertTrue( script["b"]["n"]["user"]["p"].getInput().isSame( script["b"]["p"] ) )
+
+			self.assertEqual( script["b"]["n"]["user"]["v"]["v"]["i"].getValue(), 20 )
+			self.assertTrue( script["b"]["n"]["user"]["v"]["v"]["i"].getInput().isSame( script["b"]["v"]["v"]["i"] ) )
+			self.assertTrue( script["b"]["n"]["user"]["v"]["v"].getInput().isSame( script["b"]["v"]["v"] ) )
+			self.assertTrue( script["b"]["n"]["user"]["v"].getInput().isSame( script["b"]["v"] ) )
+
+		assertValid( s )
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+
+		assertValid( s2 )
 
 if __name__ == "__main__":
 	unittest.main()
