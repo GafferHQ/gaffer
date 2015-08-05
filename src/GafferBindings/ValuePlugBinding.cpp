@@ -175,54 +175,52 @@ std::string ValuePlugSerialiser::constructor( const Gaffer::GraphComponent *grap
 std::string ValuePlugSerialiser::postConstructor( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const
 {
 	const ValuePlug *plug = static_cast<const ValuePlug *>( graphComponent );
-	if( valueNeedsSerialisation( plug, serialisation ) )
+	if( !valueNeedsSerialisation( plug, serialisation ) )
 	{
-		object pythonPlug( ValuePlugPtr( const_cast<ValuePlug *>( plug ) ) );
-		if( PyObject_HasAttrString( pythonPlug.ptr(), "getValue" ) )
-		{
-			object pythonValue = pythonPlug.attr( "getValue" )();
+		return "";
+	}
+
+	object pythonPlug( ValuePlugPtr( const_cast<ValuePlug *>( plug ) ) );
+	object pythonValue = pythonPlug.attr( "getValue" )();
 			
-			bool omitDefaultValue = true;
-			if( const Reference *reference = IECore::runTimeCast<const Reference>( plug->node() ) )
-			{
-				// Prior to version 0.9.0.0, `.grf` files created with `Box::exportForReference()`
-				// could contain setValue() calls for promoted plugs like this one. When such
-				// files have been loaded on a Reference node, we must always serialise the plug values
-				// from the Reference node, lest they should get clobbered by the setValue() calls
-				// in the `.grf` file.
-				int milestoneVersion = 0;
-				int majorVersion = 0;
-				if( IECore::ConstIntDataPtr v = Metadata::nodeValue<IECore::IntData>( reference, "serialiser:milestoneVersion" ) )
-				{
-					milestoneVersion = v->readable();
-				}
-				if( IECore::ConstIntDataPtr v = Metadata::nodeValue<IECore::IntData>( reference, "serialiser:majorVersion" ) )
-				{
-					majorVersion = v->readable();
-				}
-				omitDefaultValue = milestoneVersion > 0 || majorVersion > 8;
-				/// \todo Consider whether or not we might like to have a plug flag
-				/// to control this behaviour, so that ValuePlugSerialiser doesn't
-				/// need explicit knowledge of Reference Nodes. On the one hand, reducing
-				/// coupling between this and the Reference node seems good, but on the other,
-				/// it'd be nice to keep the plug flags as simple as possible, and we don't have
-				/// another worthwhile use case.
-			}
+	bool omitDefaultValue = true;
+	if( const Reference *reference = IECore::runTimeCast<const Reference>( plug->node() ) )
+	{
+		// Prior to version 0.9.0.0, `.grf` files created with `Box::exportForReference()`
+		// could contain setValue() calls for promoted plugs like this one. When such
+		// files have been loaded on a Reference node, we must always serialise the plug values
+		// from the Reference node, lest they should get clobbered by the setValue() calls
+		// in the `.grf` file.
+		int milestoneVersion = 0;
+		int majorVersion = 0;
+		if( IECore::ConstIntDataPtr v = Metadata::nodeValue<IECore::IntData>( reference, "serialiser:milestoneVersion" ) )
+		{
+			milestoneVersion = v->readable();
+		}
+		if( IECore::ConstIntDataPtr v = Metadata::nodeValue<IECore::IntData>( reference, "serialiser:majorVersion" ) )
+		{
+			majorVersion = v->readable();
+		}
+		omitDefaultValue = milestoneVersion > 0 || majorVersion > 8;
+		/// \todo Consider whether or not we might like to have a plug flag
+		/// to control this behaviour, so that ValuePlugSerialiser doesn't
+		/// need explicit knowledge of Reference Nodes. On the one hand, reducing
+		/// coupling between this and the Reference node seems good, but on the other,
+		/// it'd be nice to keep the plug flags as simple as possible, and we don't have
+		/// another worthwhile use case.
+	}
 
-			if( omitDefaultValue && PyObject_HasAttrString( pythonPlug.ptr(), "defaultValue" ) )
-			{
-				object pythonDefaultValue = pythonPlug.attr( "defaultValue" )();
-				if( pythonValue == pythonDefaultValue )
-				{
-					return "";
-				}
-			}
-
-			std::string value = extract<std::string>( pythonValue.attr( "__repr__" )() );
-			return identifier + ".setValue( " + value + " )\n";
+	if( omitDefaultValue && PyObject_HasAttrString( pythonPlug.ptr(), "defaultValue" ) )
+	{
+		object pythonDefaultValue = pythonPlug.attr( "defaultValue" )();
+		if( pythonValue == pythonDefaultValue )
+		{
+			return "";
 		}
 	}
-	return "";
+
+	std::string value = extract<std::string>( pythonValue.attr( "__repr__" )() );
+	return identifier + ".setValue( " + value + " )\n";
 }
 
 bool ValuePlugSerialiser::valueNeedsSerialisation( const Gaffer::ValuePlug *plug, const Serialisation &serialisation ) const
@@ -240,6 +238,12 @@ bool ValuePlugSerialiser::valueNeedsSerialisation( const Gaffer::ValuePlug *plug
 	{
 		// There's no point in serialising the value if we're
 		// turning it into the default value anyway.
+		return false;
+	}
+
+	object pythonPlug( ValuePlugPtr( const_cast<ValuePlug *>( plug ) ) );
+	if( !PyObject_HasAttrString( pythonPlug.ptr(), "getValue" ) )
+	{
 		return false;
 	}
 
