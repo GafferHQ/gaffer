@@ -271,6 +271,19 @@ class ValuePlugTest( GafferTest.TestCase ) :
 		self.assertEqual( n.numHashCalls, numHashCalls )
 		self.assertTrue( a3.isSame( a1 ) )
 
+	def testSerialisationOfChildValues( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = Gaffer.Node()
+		s["n"]["user"]["v"] = Gaffer.ValuePlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["n"]["user"]["v"]["i"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["n"]["user"]["v"]["i"].setValue( 10 )
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+
+		self.assertEqual( s2["n"]["user"]["v"]["i"].getValue(), 10 )
+
 	def setUp( self ) :
 
 		self.__originalCacheMemoryLimit = Gaffer.ValuePlug.getCacheMemoryLimit()

@@ -355,6 +355,12 @@ class CompoundNumericPlugTest( GafferTest.TestCase ) :
 		ss = s.serialise( filter = Gaffer.StandardSet( [ s["n"] ] ) )
 		self.assertEqual( ss.count( "setValue" ), 1 )
 
+		s["n"]["p"]["z"].setInput( s["n"]["p"]["y"] )
+
+		ss = s.serialise( filter = Gaffer.StandardSet( [ s["n"] ] ) )
+		self.assertEqual( ss.count( "setValue" ), 2 )
+		self.assertEqual( ss.count( "setInput" ), 1 )
+
 	def testUndoMerging( self ) :
 
 		s = Gaffer.ScriptNode()
