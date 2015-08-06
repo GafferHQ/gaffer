@@ -44,16 +44,23 @@ Gaffer.Metadata.registerNode(
 
 	"description",
 	"""
-	Divides all channels by the alpha
+	Divides selected channels by a specified alpha channel.
+	If the alpha channel on a pixel is 0, then that pixel will remain
+	the same as the input.
 	""",
 
 	plugs = {
 
-		"byChannel" : [
+		"alphaChannel" : [
 
 			"description",
 			"""
-			The channel to divide by
+			The channel to use as the alpha channel.
+			The selected channel does not have to be 'A', but whichever
+			channel is chosen will act as the alpha for the sake of this
+			node.
+			This channel will never be divided by itself - it will
+			remain the same as the input.
 			""",
 
 		],

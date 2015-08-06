@@ -47,24 +47,6 @@ class UnpremultiplyTest( unittest.TestCase ) :
 
 	checkerFile = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/rgbOverChecker.100x100.exr" )
 
-	def testChannelDataHashes( self ) :
-		# Create an unpremult node and save the hash of a tile from each channel.
-		i = GafferImage.ImageReader()
-		i["fileName"].setValue( self.checkerFile )
-
-		unpremult = GafferImage.Unpremultiply()
-		unpremult["in"].setInput(i["out"])
-
-		h1 = unpremult["out"].channelData( "R", IECore.V2i( 0 ) ).hash()
-		h2 = unpremult["out"].channelData( "R", IECore.V2i( GafferImage.ImagePlug().tileSize() ) ).hash()
-		self.assertNotEqual( h1, h2 )
-
-		# Test that two tiles within the same image have the same hash when disabled.
-		unpremult["enabled"].setValue(False)
-		h1 = unpremult["out"].channelData( "R", IECore.V2i( 0 ) ).hash()
-		h2 = unpremult["out"].channelData( "R", IECore.V2i( GafferImage.ImagePlug().tileSize() ) ).hash()
-		self.assertNotEqual( h1, h2 )
-
 	def testByChannel( self ) :
 		# Test that changing the channel to multiply by changes the hash
 		i = GafferImage.ImageReader()
@@ -73,10 +55,10 @@ class UnpremultiplyTest( unittest.TestCase ) :
 		unpremult = GafferImage.Unpremultiply()
 		unpremult["in"].setInput(i["out"])
 
-		unpremult["byChannel"].setValue("R")
+		unpremult["alphaChannel"].setValue("R")
 		h1 = unpremult["out"].channelData( "R", IECore.V2i( 0 ) ).hash()
 
-		unpremult["byChannel"].setValue("B")
+		unpremult["alphaChannel"].setValue("B")
 		h2 = unpremult["out"].channelData( "R", IECore.V2i( 0 ) ).hash()
 		self.assertNotEqual( h1, h2 )
 
@@ -87,7 +69,7 @@ class UnpremultiplyTest( unittest.TestCase ) :
 		self.assertTrue( g.correspondingInput( g["out"] ).isSame( g["in"] ) )
 		self.assertEqual( g.correspondingInput( g["in"] ), None )
 		self.assertEqual( g.correspondingInput( g["enabled"] ), None )
-		self.assertEqual( g.correspondingInput( g["byChannel"] ), None )
+		self.assertEqual( g.correspondingInput( g["alphaChannel"] ), None )
 
 	def testPassThrough( self ) :
 		
@@ -106,3 +88,30 @@ class UnpremultiplyTest( unittest.TestCase ) :
 		self.assertEqual( i["out"]["dataWindow"].getValue(), g["out"]["dataWindow"].getValue() )
 		self.assertEqual( i["out"]["metadata"].getValue(), g["out"]["metadata"].getValue() )
 		self.assertEqual( i["out"]["channelNames"].getValue(), g["out"]["channelNames"].getValue() )
+
+	def testDivideValue( self ) :
+		# Test the image results when multiplying by each channel in turn
+
+		color = { "R": 1.0, "G": 2.0, "B": 0.0, "A": 0.5 }
+		s = Gaffer.ScriptNode()
+		s["c"] = GafferImage.Constant()
+		s["c"]["color"].setValue( IECore.Color4f( color["R"], color["G"], color["B"], color["A"] ) )
+		s["u"] = GafferImage.Unpremultiply()
+		s["u"]["in"].setInput( s["c"]["out"] )
+		s["u"]["channels"].setValue( IECore.StringVectorData( [ 'R', 'G', 'B', 'A' ] ) )
+
+		for alphaChannelName in color.keys() :
+			s["u"]["alphaChannel"].setValue(alphaChannelName)
+
+			for channelName in color.keys():
+				c = Gaffer.Context( s.context() )
+				c["image:channelName"] = channelName
+				c["image:tileOrigin"] = IECore.V2i( 0 )
+				with c :
+					result = s["u"]["out"]["channelData"].getValue()[0]
+
+					if channelName == alphaChannelName or color[alphaChannelName] == 0.0:
+						self.assertEqual( result, color[channelName] )
+					else:
+						self.assertEqual( result, color[channelName] / color[alphaChannelName] )
+

@@ -59,8 +59,8 @@ class Unpremultiply : public ChannelDataProcessor
 		/// Returns a pointer to the node's plugs.
 		//////////////////////////////////////////////////////////////
 		//@{
-		Gaffer::StringPlug *byChannelPlug();
-		const Gaffer::StringPlug *byChannelPlug() const;
+		Gaffer::StringPlug *alphaChannelPlug();
+		const Gaffer::StringPlug *alphaChannelPlug() const;
 		//@}
 
 		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;

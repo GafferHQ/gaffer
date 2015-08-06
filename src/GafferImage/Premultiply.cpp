@@ -53,19 +53,19 @@ Premultiply::Premultiply( const std::string &name )
 	:	ChannelDataProcessor( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
-	addChild( new StringPlug( "byChannel", Gaffer::Plug::In, "A" ) );
+	addChild( new StringPlug( "alphaChannel", Gaffer::Plug::In, "A" ) );
 }
 
 Premultiply::~Premultiply()
 {
 }
 
-Gaffer::StringPlug *Premultiply::byChannelPlug()
+Gaffer::StringPlug *Premultiply::alphaChannelPlug()
 {
 	return getChild<StringPlug>( g_firstPlugIndex );
 }
 
-const Gaffer::StringPlug *Premultiply::byChannelPlug() const
+const Gaffer::StringPlug *Premultiply::alphaChannelPlug() const
 {
 	return getChild<StringPlug>( g_firstPlugIndex );
 }
@@ -75,44 +75,55 @@ void Premultiply::affects( const Gaffer::Plug *input, AffectedPlugsContainer &ou
 	ChannelDataProcessor::affects( input, outputs );
 
 	if( input == inPlug()->channelDataPlug() ||
-	    input == byChannelPlug() )
+	    input == alphaChannelPlug() )
 	{
 		outputs.push_back( outPlug()->channelDataPlug() );
 	}
-
 }
 
 void Premultiply::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
+	std::string alphaChannel = alphaChannelPlug()->getValue();
+
 	ChannelDataProcessor::hashChannelData( output, context, h );
 
 	inPlug()->channelDataPlug()->hash( h );
-	byChannelPlug()->hash( h );
+	alphaChannelPlug()->hash( h );
+
+	ContextPtr tmpContext = new Context( *context, Context::Borrowed );
+	tmpContext->set( ImagePlug::channelNameContextName, alphaChannel );
+	Context::Scope scopedContext( tmpContext.get() );
+
+	inPlug()->channelDataPlug()->hash( h );
 }
 
 void Premultiply::processChannelData( const Gaffer::Context *context, const ImagePlug *parent, const std::string &channel, FloatVectorDataPtr outData ) const
 {
-	if ( channel == byChannelPlug()->getValue() ) return;
+	std::string alphaChannel = alphaChannelPlug()->getValue();
 
-	ConstStringVectorDataPtr inChannelsData = inPlug()->channelNamesPlug()->getValue();
-	const std::vector<std::string> &inChannels = inChannelsData->readable();
+	if ( channel == alphaChannel )
+	{
+		return;
+	}
 
-	if ( std::find( inChannels.begin(), inChannels.end(), byChannelPlug()->getValue() ) == inChannels.end() )
+	ConstStringVectorDataPtr inChannelNamesPtr = inPlug()->channelNamesPlug()->getValue();
+	const std::vector<std::string> &inChannelNames = inChannelNamesPtr->readable();
+	if ( std::find( inChannelNames.begin(), inChannelNames.end(), alphaChannel ) == inChannelNames.end() )
 	{
 		std::ostringstream channelError;
-		channelError << "Channel '" << byChannelPlug()->getValue() << "' does not exist";
+		channelError << "Channel '" << alphaChannel << "' does not exist";
 		throw( IECore::Exception( channelError.str() ) );
 	}
 
 	ContextPtr tmpContext = new Context( *context, Context::Borrowed );
-	tmpContext->set( ImagePlug::channelNameContextName, byChannelPlug()->getValue() );
+	tmpContext->set( ImagePlug::channelNameContextName, alphaChannel );
 	Context::Scope scopedContext( tmpContext.get() );
 
 	const std::vector<float> &a = inPlug()->channelDataPlug()->getValue()->readable();
 	std::vector<float> &out = outData->writable();
 
 	std::vector<float>::const_iterator aIt = a.begin();
-	for ( std::vector<float>::iterator outIt = out.begin(); (outIt != out.end()) && (aIt != a.end()); outIt++, aIt++ )
+	for ( std::vector<float>::iterator outIt = out.begin(), outItEnd = out.end(); outIt != outItEnd; ++outIt, ++aIt )
 	{
 		*outIt *= *aIt;
 	}

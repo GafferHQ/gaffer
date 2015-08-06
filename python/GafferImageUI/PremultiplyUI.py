@@ -44,16 +44,21 @@ Gaffer.Metadata.registerNode(
 
 	"description",
 	"""
-	Multiplies all channels by the alpha
+	Multiplies selected channels by a specified alpha channel.
 	""",
 
 	plugs = {
 
-		"byChannel" : [
+		"alphaChannel" : [
 
 			"description",
 			"""
-			The channel to multiply by
+			The channel to use as the alpha channel.
+			The selected channel does not have to be 'A', but whichever
+			channel is chosen will act as the alpha for the sake of this
+			node.
+			This channel will never be multiplied by itself - it will
+			remain the same as the input.
 			""",
 
 		],
