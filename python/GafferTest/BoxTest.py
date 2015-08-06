@@ -937,5 +937,29 @@ class BoxTest( GafferTest.TestCase ) :
 
 		assertValid( s2 )
 
+	def testPromoteArrayPlug( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["a"] = GafferTest.AddNode()
+
+		s["b"] = Gaffer.Box()
+		s["b"]["n"] = GafferTest.ArrayPlugNode()
+
+		p = s["b"].promotePlug( s["b"]["n"]["in"] )
+		p.setName( "p" )
+
+		s["b"]["p"][0].setInput( s["a"]["sum"] )
+		s["b"]["p"][1].setInput( s["a"]["sum"] )
+
+		self.assertEqual( len( s["b"]["n"]["in"] ), 3 )
+		self.assertTrue( s["b"]["n"]["in"].getInput().isSame( s["b"]["p"] ) )
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+
+		self.assertEqual( len( s2["b"]["n"]["in"] ), 3 )
+		self.assertTrue( s2["b"]["n"]["in"].getInput().isSame( s2["b"]["p"] ) )
+
 if __name__ == "__main__":
 	unittest.main()

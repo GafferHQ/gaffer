@@ -79,9 +79,12 @@ Plug *Box::promotePlug( Plug *descendantPlug )
 	// so we need to do that ourselves. We don't want to propagate them to the
 	// children of plug types which create the children themselves during
 	// construction though, hence the typeId checks for the base classes
-	// which add no children during construction.
-	const Gaffer::TypeId compoundTypes[] = { PlugTypeId, ValuePlugTypeId, CompoundPlugTypeId };
-	const Gaffer::TypeId *compoundTypesEnd = compoundTypes + 3;
+	// which add no children during construction. I'm not sure this approach is
+	// necessarily the best - the alternative would be to set everything dynamic
+	// unconditionally and then implement Serialiser::childNeedsConstruction()
+	// for types like CompoundNumericPlug that create children in their constructors.
+	const Gaffer::TypeId compoundTypes[] = { PlugTypeId, ValuePlugTypeId, CompoundPlugTypeId, ArrayPlugTypeId };
+	const Gaffer::TypeId *compoundTypesEnd = compoundTypes + 4;
 	if( find( compoundTypes, compoundTypesEnd, externalPlug->typeId() ) != compoundTypesEnd )
 	{
 		for( RecursivePlugIterator it( externalPlug.get() ); it != it.end(); ++it )
