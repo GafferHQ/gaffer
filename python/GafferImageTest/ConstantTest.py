@@ -57,6 +57,28 @@ class ConstantTest( unittest.TestCase ) :
 			for value in channelData :
 				self.assertEqual( value, expectedValue )
 
+	def testChannelDataHash( self ) :
+
+		# The hash for each individual channel should only
+		# be affected by that particular channel of the colour plug.
+
+		constant = GafferImage.Constant()
+		constant["format"].setValue( GafferImage.Format( IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 511 ) ), 1 ) )
+		constant["color"].setValue( IECore.Color4f( 0 ) )
+
+		channels = [ "R", "G", "B", "A" ]
+		for i, channel in enumerate( channels ) :
+
+			h1 = [ constant["out"].channelDataHash( c, IECore.V2i( 0 ) ) for c in channels ]
+			constant["color"][i].setValue( constant["color"][i].getValue() + .1 )
+			h2 = [ constant["out"].channelDataHash( c, IECore.V2i( 0 ) ) for c in channels ]
+
+			for j in range( 0, len( channels ) ) :
+				if j == i :
+					self.assertNotEqual( h1[j], h2[j] )
+				else :
+					self.assertEqual( h1[j], h2[j] )
+
 	def testFormatHash( self ) :
 
 		# Check that the data hash doesn't change when the format does.
