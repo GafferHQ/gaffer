@@ -52,21 +52,21 @@ Light::Light( const std::string &name )
 	:	ObjectSource( name, "light" )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
-	addChild( new CompoundPlug( "parameters" ) );
+	addChild( new Plug( "parameters" ) );
 }
 
 Light::~Light()
 {
 }
 
-Gaffer::CompoundPlug *Light::parametersPlug()
+Gaffer::Plug *Light::parametersPlug()
 {
-	return getChild<CompoundPlug>( g_firstPlugIndex );
+	return getChild<Plug>( g_firstPlugIndex );
 }
 
-const Gaffer::CompoundPlug *Light::parametersPlug() const
+const Gaffer::Plug *Light::parametersPlug() const
 {
-	return getChild<CompoundPlug>( g_firstPlugIndex );
+	return getChild<Plug>( g_firstPlugIndex );
 }
 
 void Light::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
