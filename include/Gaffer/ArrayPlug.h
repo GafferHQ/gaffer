@@ -74,6 +74,7 @@ class ArrayPlug : public Plug
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::ArrayPlug, ArrayPlugTypeId, Plug );
 
 		virtual bool acceptsChild( const GraphComponent *potentialChild ) const;
+		virtual void setInput( PlugPtr input );
 		virtual PlugPtr createCounterpart( const std::string &name, Direction direction ) const;
 
 		size_t minSize() const;
@@ -81,15 +82,13 @@ class ArrayPlug : public Plug
 
 	private :
 
-		void childAdded();
 		void parentChanged();
+		void inputChanged( Gaffer::Plug *plug );
 
 		size_t m_minSize;
 		size_t m_maxSize;
 
-		typedef Behaviours::InputGenerator<Plug> InputGenerator;
-		typedef boost::shared_ptr<InputGenerator> InputGeneratorPtr;
-		InputGeneratorPtr m_inputGenerator;
+		boost::signals::scoped_connection m_inputChangedConnection;
 
 };
 
