@@ -41,13 +41,6 @@
 #include "GafferUI/Nodule.h"
 #include "GafferUI/LinearContainer.h"
 
-namespace Gaffer
-{
-
-IE_CORE_FORWARDDECLARE( CompoundPlug )
-
-} // namespace Gaffer
-
 namespace GafferUI
 {
 
@@ -78,7 +71,7 @@ class CompoundNodule : public Nodule
 
 		virtual bool acceptsChild( const Gaffer::GraphComponent *potentialChild ) const;
 
-		/// Returns a Nodule for a child of the CompoundPlug being represented.
+		/// Returns a Nodule for a child of the plug being represented.
 		Nodule *nodule( const Gaffer::Plug *plug );
 		const Nodule *nodule( const Gaffer::Plug *plug ) const;
 
