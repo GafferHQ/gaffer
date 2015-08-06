@@ -367,6 +367,12 @@ class ArrayPlugTest( GafferTest.TestCase ) :
 		self.assertEqual( len( n["a"] ), 3 )
 		assertInput( n["b"], n["a"] )
 
+	def testOnlyOneChildType( self ) :
+
+		p = Gaffer.ArrayPlug( element = Gaffer.IntPlug() )
+		self.assertTrue( p.acceptsChild( Gaffer.IntPlug() ) )
+		self.assertFalse( p.acceptsChild( Gaffer.FloatPlug() ) )
+
 	def tearDown( self ) :
 
 		# some bugs in the InputGenerator only showed themselves when
