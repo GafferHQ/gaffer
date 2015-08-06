@@ -354,6 +354,12 @@ class ExecutableNodeTest( GafferTest.TestCase ) :
 
 		self.assertTrue( s["r"]["e"]["requirements"][0].source().isSame( s["e"]["requirement"] ) )
 
+	def testLoadPromotedRequirementsFromVersion0_15( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["fileName"].setValue( os.path.dirname( __file__ ) + "/scripts/promotedRequirementsVersion-0.15.0.0.gfr" )
+		s.load()
+
 	def tearDown( self ) :
 
 		GafferTest.TestCase.tearDown( self )

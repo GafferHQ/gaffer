@@ -111,7 +111,25 @@ bool ExecutableNode::RequirementPlug::acceptsInput( const Plug *input ) const
 		return true;
 	}
 
-	return input->isInstanceOf( staticTypeId() );
+	if( input->isInstanceOf( staticTypeId() ) )
+	{
+		return true;
+	}
+
+	// Ideally we'd return false right now, but we must
+	// provide backwards compatibility with old scripts
+	// where the requirement plugs were just represented
+	// as standard Plugs, and may have been promoted to
+	// Boxes and Dots in that form.
+	if( input->typeId() == Plug::staticTypeId() )
+	{
+		const Plug *sourcePlug = input->source<Plug>();
+		const Node *sourceNode = sourcePlug->node();
+		return runTimeCast<const SubGraph>( sourceNode ) || runTimeCast<const Dot>( sourceNode );
+	}
+
+	return false;
+
 }
 
 PlugPtr ExecutableNode::RequirementPlug::createCounterpart( const std::string &name, Direction direction ) const
