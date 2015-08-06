@@ -51,7 +51,6 @@ namespace Gaffer
 {
 
 IE_CORE_FORWARDDECLARE( StringPlug )
-IE_CORE_FORWARDDECLARE( CompoundPlug )
 
 } // namespace Gaffer
 
