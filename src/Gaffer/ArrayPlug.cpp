@@ -38,14 +38,15 @@
 #include "boost/bind/placeholders.hpp"
 
 #include "Gaffer/ArrayPlug.h"
+#include "Gaffer/BlockedConnection.h"
 
-using namespace Gaffer;
 using namespace boost;
+using namespace Gaffer;
 
 IE_CORE_DEFINERUNTIMETYPED( ArrayPlug )
 
 ArrayPlug::ArrayPlug( const std::string &name, Direction direction, PlugPtr element, size_t minSize, size_t maxSize, unsigned flags )
-	:	Plug( name, direction, flags ), m_minSize( minSize ), m_maxSize( maxSize )
+	:	Plug( name, direction, flags ), m_minSize( std::max( minSize, size_t( 1 ) ) ), m_maxSize( std::max( maxSize, m_minSize ) )
 {
 	if( direction == Plug::Out )
 	{
@@ -56,17 +57,20 @@ ArrayPlug::ArrayPlug( const std::string &name, Direction direction, PlugPtr elem
 	{
 		// If we're dynamic ourselves, then serialisations will include a constructor
 		// for us, but it will have element==None. In this case we make sure the first
-		// element is dynamic, so that it too will have a constructor written out (and then
-		// we'll capture it in childAdded()). But if we're not dynamic, we expect to be
-		// passed the element again upon reconstruction, so we don't need a constructor
-		// to be serialised for the element, and therefore we must set it to be non-dynamic.
+		// element is dynamic, so that it too will have a constructor written out. But
+		// if we're not dynamic, we expect to be passed the element again upon reconstruction,
+		// so we don't need a constructor to be serialised for the element, and therefore
+		// we must set it to be non-dynamic.
 		element->setFlags( Gaffer::Plug::Dynamic, getFlags( Gaffer::Plug::Dynamic ) );
 		addChild( element );
+
+		for( size_t i = 1; i < m_minSize; ++i )
+		{
+			PlugPtr p = element->createCounterpart( element->getName(), Plug::In );
+			addChild( p );
+		}
 	}
-	else
-	{
-		childAddedSignal().connect( boost::bind( &ArrayPlug::childAdded, this ) );
-	}
+
 	parentChangedSignal().connect( boost::bind( &ArrayPlug::parentChanged, this ) );
 }
 
@@ -82,6 +86,15 @@ bool ArrayPlug::acceptsChild( const GraphComponent *potentialChild ) const
 	}
 
 	return children().size() == 0 || potentialChild->typeId() == children()[0]->typeId();
+}
+
+void ArrayPlug::setInput( PlugPtr input )
+{
+	// Plug::setInput() will be managing the inputs of our children,
+	// and we don't want to be fighting with it in inputChanged(), so
+	// we disable our connection while it does its work.
+	BlockedConnection blockedConnection( m_inputChangedConnection );
+	Plug::setInput( input );
 }
 
 PlugPtr ArrayPlug::createCounterpart( const std::string &name, Direction direction ) const
@@ -104,33 +117,71 @@ size_t ArrayPlug::maxSize() const
 	return m_maxSize;
 }
 
-void ArrayPlug::childAdded()
-{
-	assert( children().size() == 1 );
-	childAddedSignal().disconnect( boost::bind( &ArrayPlug::childAdded, this ) );
-	if( node() )
-	{
-		// this code path is triggered when loading a dynamic ArrayPlug from a script,
-		// and the first child is just being added. unfortunately the InputGenerator
-		// constructor will generate m_minSize extra inputs when we construct it, even
-		// though the rest of the necessary inputs are about to be loaded from the script.
-		// here we avoid that in the simple minSize==maxSize case (where we don't need
-		// an InputGenerator anyway). to avoid it in the general case would be a little
-		// trickier and isn't yet necessary for our use cases. fixing the problem would
-		// probably be cleaner without using an InputGenerator, so perhaps it could be
-		// addressed if and when we replace all InputGenerator use with ArrayPlugs.
-		if( m_minSize != m_maxSize )
-		{
-			m_inputGenerator = InputGeneratorPtr( new InputGenerator( this, boost::static_pointer_cast<Plug>( children()[0] ), m_minSize, m_maxSize ) );
-		}
-	}
-}
-
 void ArrayPlug::parentChanged()
 {
-	if( node() && !m_inputGenerator && children().size() )
+	if( !node() )
 	{
-		m_inputGenerator = InputGeneratorPtr( new InputGenerator( this, boost::static_pointer_cast<Plug>( children()[0] ), m_minSize, m_maxSize ) );
+		return;
 	}
-	parentChangedSignal().disconnect( boost::bind( &ArrayPlug::parentChanged, this ) );
+
+	m_inputChangedConnection = node()->plugInputChangedSignal().connect( boost::bind( &ArrayPlug::inputChanged, this, ::_1 ) );
+}
+
+void ArrayPlug::inputChanged( Gaffer::Plug *plug )
+{
+	if( plug->parent<ArrayPlug>() != this )
+	{
+		return;
+	}
+
+	if( getInput<Plug>() )
+	{
+		// When we ourselves have an input, we don't do any automatic addition or
+		// removal of children, because the Plug base class itself manages
+		// children to maintain the connection.
+		return;
+	}
+
+	if( const ScriptNode *script = ancestor<ScriptNode>() )
+	{
+		if( script->currentActionStage() == Action::Undo ||
+		    script->currentActionStage() == Action::Redo
+		)
+		{
+			// If we're currently in an undo or redo, we don't
+			// need to do anything, because our previous actions
+			// will be in the undo queue and will be being replayed
+			// for us automatically.
+			return;
+		}
+	}
+
+	if( plug->getInput<Plug>() )
+	{
+		// Connection made. If it's the last plug
+		// then we need to add one more.
+		if( plug == children().back() && children().size() < m_maxSize )
+		{
+			PlugPtr p = getChild<Plug>( 0 )->createCounterpart( getChild<Plug>( 0 )->getName(), Plug::In );
+			p->setFlags( Gaffer::Plug::Dynamic, true );
+			addChild( p );
+		}
+	}
+	else
+	{
+		// Connection broken. We need to remove any
+		// unneeded unconnected plugs so that we have
+		// only one unconnected plug at the end.
+		for( size_t i = children().size() - 1; i > m_minSize - 1; --i )
+		{
+			if( !getChild<Plug>( i )->getInput<Plug>() && !getChild<Plug>( i - 1 )->getInput<Plug>() )
+			{
+				removeChild( getChild<Plug>( i ) );
+			}
+			else
+			{
+				break;
+			}
+		}
+	}
 }
