@@ -44,35 +44,6 @@ import GafferImage
 
 class ConstantTest( unittest.TestCase ) :
 
-	def testDefaultFormatHash( self ) :
-
-		s = Gaffer.ScriptNode()
-		n = GafferImage.Constant()
-		s.addChild( n )
-
-		with s.context():
-			h = n["out"].image().hash()
-			n["color"][0].setValue( .5 )
-			n["color"][1].setValue( .1 )
-			n["color"][2].setValue( .8 )
-			h2 = n["out"].image().hash()
-			self.assertNotEqual( h, h2 )
-
-	def testColourHash( self ) :
-
-		# Check that the hash changes when the colour does.
-		s = Gaffer.ScriptNode()
-		n = GafferImage.Constant()
-		s.addChild( n )
-
-		with s.context():
-			h = n["out"].image().hash()
-			n["color"][0].setValue( .5 )
-			n["color"][1].setValue( .1 )
-			n["color"][2].setValue( .8 )
-			h2 = n["out"].image().hash()
-			self.assertNotEqual( h, h2 )
-
 	def testFormatHash( self ) :
 
 		# Check that the data hash doesn't change when the format does.
