@@ -97,7 +97,10 @@ void AppleseedLight::loadShader( const std::string &shaderName )
 
 void AppleseedLight::hashLight( const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	parametersPlug()->hash( h );
+	for( ValuePlugIterator it( parametersPlug() ); it != it.end(); ++it )
+	{
+		(*it)->hash( h );
+	}
 	getChild<StringPlug>( "__model" )->hash( h );
 }
 

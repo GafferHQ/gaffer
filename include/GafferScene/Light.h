@@ -54,8 +54,8 @@ class Light : public ObjectSource
 		Light( const std::string &name=defaultName<Light>() );
 		virtual ~Light();
 
-		Gaffer::CompoundPlug *parametersPlug();
-		const Gaffer::CompoundPlug *parametersPlug() const;
+		Gaffer::Plug *parametersPlug();
+		const Gaffer::Plug *parametersPlug() const;
 
 		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
 
