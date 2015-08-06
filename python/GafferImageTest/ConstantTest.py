@@ -44,6 +44,19 @@ import GafferImage
 
 class ConstantTest( unittest.TestCase ) :
 
+	def testChannelData( self ) :
+
+		constant = GafferImage.Constant()
+		constant["format"].setValue( GafferImage.Format( IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 511 ) ), 1 ) )
+		constant["color"].setValue( IECore.Color4f( 0, 0.25, 0.5, 1 ) )
+
+		for i, channel in enumerate( [ "R", "G", "B", "A" ] ) :
+			channelData = constant["out"].channelData( channel, IECore.V2i( 0 ) )
+			self.assertEqual( len( channelData ), constant["out"].tileSize() * constant["out"].tileSize() )
+			expectedValue = constant["color"][i].getValue()
+			for value in channelData :
+				self.assertEqual( value, expectedValue )
+
 	def testFormatHash( self ) :
 
 		# Check that the data hash doesn't change when the format does.
