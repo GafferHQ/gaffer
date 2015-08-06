@@ -55,12 +55,12 @@ class Outputs : public GlobalsProcessor
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::Outputs, OutputsTypeId, GlobalsProcessor );
 
-		Gaffer::CompoundPlug *outputsPlug();
-		const Gaffer::CompoundPlug *outputsPlug() const;
+		Gaffer::ValuePlug *outputsPlug();
+		const Gaffer::ValuePlug *outputsPlug() const;
 
 		/// Add an output previously registered with registerOutput().
-		Gaffer::CompoundPlug *addOutput( const std::string &name );
-		Gaffer::CompoundPlug *addOutput( const std::string &name, const IECore::Display *output );
+		Gaffer::ValuePlug *addOutput( const std::string &name );
+		Gaffer::ValuePlug *addOutput( const std::string &name, const IECore::Display *output );
 
 		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
 

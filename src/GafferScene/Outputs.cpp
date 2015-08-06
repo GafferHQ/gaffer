@@ -89,24 +89,24 @@ Outputs::Outputs( const std::string &name )
 	:	GlobalsProcessor( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
-	addChild( new CompoundPlug( "outputs" ) );
+	addChild( new ValuePlug( "outputs" ) );
 }
 
 Outputs::~Outputs()
 {
 }
 
-Gaffer::CompoundPlug *Outputs::outputsPlug()
+Gaffer::ValuePlug *Outputs::outputsPlug()
 {
-	return getChild<CompoundPlug>( g_firstPlugIndex );
+	return getChild<ValuePlug>( g_firstPlugIndex );
 }
 
-const Gaffer::CompoundPlug *Outputs::outputsPlug() const
+const Gaffer::ValuePlug *Outputs::outputsPlug() const
 {
-	return getChild<CompoundPlug>( g_firstPlugIndex );
+	return getChild<ValuePlug>( g_firstPlugIndex );
 }
 
-Gaffer::CompoundPlug *Outputs::addOutput( const std::string &name )
+Gaffer::ValuePlug *Outputs::addOutput( const std::string &name )
 {
 	OutputMap::nth_index<0>::type &index = outputMap().get<0>();
 	OutputMap::const_iterator it = index.find( name );
@@ -117,9 +117,9 @@ Gaffer::CompoundPlug *Outputs::addOutput( const std::string &name )
 	return addOutput( it->first, it->second.get() );
 }
 
-Gaffer::CompoundPlug *Outputs::addOutput( const std::string &name, const IECore::Display *output )
+Gaffer::ValuePlug *Outputs::addOutput( const std::string &name, const IECore::Display *output )
 {
-	CompoundPlugPtr outputPlug = new CompoundPlug( "output1" );
+	ValuePlugPtr outputPlug = new ValuePlug( "output1" );
 	outputPlug->setFlags( Plug::Dynamic, true );
 
 	StringPlugPtr namePlug = new StringPlug( "name" );
@@ -173,7 +173,7 @@ void Outputs::hashProcessedGlobals( const Gaffer::Context *context, IECore::Murm
 
 IECore::ConstCompoundObjectPtr Outputs::computeProcessedGlobals( const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputGlobals ) const
 {
-	const CompoundPlug *dsp = outputsPlug();
+	const ValuePlug *dsp = outputsPlug();
 	if( !dsp->children().size() )
 	{
 		return inputGlobals;
@@ -187,9 +187,9 @@ IECore::ConstCompoundObjectPtr Outputs::computeProcessedGlobals( const Gaffer::C
 	result->members() = inputGlobals->members();
 
 	// add our outputs to the result
-	for( InputCompoundPlugIterator it( dsp ); it != it.end(); it++ )
+	for( InputValuePlugIterator it( dsp ); it != it.end(); it++ )
 	{
-		const CompoundPlug *outputPlug = it->get();
+		const ValuePlug *outputPlug = it->get();
 		if( outputPlug->getChild<BoolPlug>( "active" )->getValue() )
 		{
 			// backwards compatibility with old plug layout
