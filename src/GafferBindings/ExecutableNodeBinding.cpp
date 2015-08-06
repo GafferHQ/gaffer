@@ -48,13 +48,16 @@ using namespace IECorePython;
 using namespace GafferBindings;
 using namespace Gaffer;
 
-static unsigned long taskHash( const ExecutableNode::Task &t )
+namespace
+{
+
+unsigned long taskHash( const ExecutableNode::Task &t )
 {
 	const IECore::MurmurHash h = t.hash();
 	return tbb::tbb_hasher( h.toString() );
 }
 
-static ContextPtr taskContext( const ExecutableNode::Task &t, bool copy = true )
+ContextPtr taskContext( const ExecutableNode::Task &t, bool copy = true )
 {
 	if ( ConstContextPtr context = t.context() )
 	{
@@ -69,7 +72,7 @@ static ContextPtr taskContext( const ExecutableNode::Task &t, bool copy = true )
 	return 0;
 }
 
-static ExecutableNodePtr taskNode( const ExecutableNode::Task &t )
+ExecutableNodePtr taskNode( const ExecutableNode::Task &t )
 {
 	if ( ConstExecutableNodePtr node = t.node() )
 	{
@@ -78,6 +81,8 @@ static ExecutableNodePtr taskNode( const ExecutableNode::Task &t )
 
 	return 0;
 }
+
+} // namespace
 
 void GafferBindings::bindExecutableNode()
 {
