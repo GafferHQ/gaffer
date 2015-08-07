@@ -41,10 +41,8 @@ import traceback
 import IECore
 
 import Gaffer
-import GafferCortex
 import GafferScene
 import GafferUI
-import GafferCortexUI
 import GafferSceneUI
 
 # ScriptWindow menu
@@ -325,20 +323,6 @@ if moduleSearchPath.find( "GafferOSL" ) :
 			"command" : IECore.curry( GafferUI.showURL, os.path.expandvars( "$GAFFER_ROOT/doc/osl/osl-languagespec.pdf" ) ),
 		}
 	)
-
-# Cortex nodes
-
-nodeMenu.append( "/Cortex/File/Reader", GafferCortex.ObjectReader, searchText = "ObjectReader" )
-nodeMenu.append( "/Cortex/File/Writer", GafferCortex.ObjectWriter, searchText = "ObjectWriter" )
-
-# \todo have a method for dynamically choosing between Gaffer.OpHolder and Gaffer.ExecutableOpHolder
-GafferCortexUI.ParameterisedHolderUI.appendParameterisedHolders(
-	nodeMenu.definition(), "/Cortex/Ops", "IECORE_OP_PATHS", GafferCortex.OpHolder
-)
-
-GafferCortexUI.ParameterisedHolderUI.appendParameterisedHolders(
-	nodeMenu.definition(), "/Cortex/Procedurals", "IECORE_PROCEDURAL_PATHS", GafferCortex.ProceduralHolder
-)
 
 # Dispatch nodes
 
