@@ -38,6 +38,7 @@
 #include "Gaffer/Context.h"
 
 #include "GafferImage/Constant.h"
+#include "GafferImage/ChannelMaskPlug.h"
 
 using namespace std;
 using namespace Imath;
@@ -155,24 +156,17 @@ void Constant::hashChannelData( const GafferImage::ImagePlug *output, const Gaff
 	ImageNode::hashChannelData( output, context, h );
 	// Don't bother hashing the format or tile origin here as we couldn't care less about the
 	// position on the canvas, only the colour!
-	h.append( context->get<std::string>( ImagePlug::channelNameContextName ) );
-	colorPlug()->hash( h );
+	const int channelIndex = ChannelMaskPlug::channelIndex( context->get<std::string>( ImagePlug::channelNameContextName ) );
+	colorPlug()->getChild( channelIndex )->hash( h );
 }
 
 IECore::ConstFloatVectorDataPtr Constant::computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const
 {
-	FloatVectorDataPtr resultData = new FloatVectorData;
-	vector<float> &result = resultData->writable();
-	result.resize( ImagePlug::tileSize() * ImagePlug::tileSize() );
+	const int channelIndex = ChannelMaskPlug::channelIndex( channelName );
+	const float value = colorPlug()->getChild( channelIndex )->getValue();
 
-	int idx = channelName == "R" ? 0 : channelName == "G" ? 1 : channelName == "B" ? 2 : 3;
-	const float v = colorPlug()->getValue()[idx];
+	FloatVectorDataPtr result = new FloatVectorData;
+	result->writable().resize( ImagePlug::tileSize() * ImagePlug::tileSize(), value );
 
-	float *ptr = &result[0];
-	for( int i = 0; i < ImagePlug::tileSize() * ImagePlug::tileSize(); i++ )
-	{
-		*ptr++ = v;
-	}
-
-	return resultData;
+	return result;
 }

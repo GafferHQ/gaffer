@@ -44,34 +44,40 @@ import GafferImage
 
 class ConstantTest( unittest.TestCase ) :
 
-	def testDefaultFormatHash( self ) :
+	def testChannelData( self ) :
 
-		s = Gaffer.ScriptNode()
-		n = GafferImage.Constant()
-		s.addChild( n )
+		constant = GafferImage.Constant()
+		constant["format"].setValue( GafferImage.Format( IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 511 ) ), 1 ) )
+		constant["color"].setValue( IECore.Color4f( 0, 0.25, 0.5, 1 ) )
 
-		with s.context():
-			h = n["out"].image().hash()
-			n["color"][0].setValue( .5 )
-			n["color"][1].setValue( .1 )
-			n["color"][2].setValue( .8 )
-			h2 = n["out"].image().hash()
-			self.assertNotEqual( h, h2 )
+		for i, channel in enumerate( [ "R", "G", "B", "A" ] ) :
+			channelData = constant["out"].channelData( channel, IECore.V2i( 0 ) )
+			self.assertEqual( len( channelData ), constant["out"].tileSize() * constant["out"].tileSize() )
+			expectedValue = constant["color"][i].getValue()
+			for value in channelData :
+				self.assertEqual( value, expectedValue )
 
-	def testColourHash( self ) :
+	def testChannelDataHash( self ) :
 
-		# Check that the hash changes when the colour does.
-		s = Gaffer.ScriptNode()
-		n = GafferImage.Constant()
-		s.addChild( n )
+		# The hash for each individual channel should only
+		# be affected by that particular channel of the colour plug.
 
-		with s.context():
-			h = n["out"].image().hash()
-			n["color"][0].setValue( .5 )
-			n["color"][1].setValue( .1 )
-			n["color"][2].setValue( .8 )
-			h2 = n["out"].image().hash()
-			self.assertNotEqual( h, h2 )
+		constant = GafferImage.Constant()
+		constant["format"].setValue( GafferImage.Format( IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 511 ) ), 1 ) )
+		constant["color"].setValue( IECore.Color4f( 0 ) )
+
+		channels = [ "R", "G", "B", "A" ]
+		for i, channel in enumerate( channels ) :
+
+			h1 = [ constant["out"].channelDataHash( c, IECore.V2i( 0 ) ) for c in channels ]
+			constant["color"][i].setValue( constant["color"][i].getValue() + .1 )
+			h2 = [ constant["out"].channelDataHash( c, IECore.V2i( 0 ) ) for c in channels ]
+
+			for j in range( 0, len( channels ) ) :
+				if j == i :
+					self.assertNotEqual( h1[j], h2[j] )
+				else :
+					self.assertEqual( h1[j], h2[j] )
 
 	def testFormatHash( self ) :
 
