@@ -37,6 +37,8 @@
 #include "IECore/BoxAlgo.h"
 #include "IECore/BoxOps.h"
 
+#include "Gaffer/ArrayPlug.h"
+
 #include "GafferImage/Merge.h"
 
 using namespace IECore;
@@ -64,7 +66,7 @@ IE_CORE_DEFINERUNTIMETYPED( Merge );
 size_t Merge::g_firstPlugIndex = 0;
 
 Merge::Merge( const std::string &name )
-	:	ImageProcessor( name ), m_inputs( this, inPlug(), 2, Imath::limits<int>::max() )
+	:	ImageProcessor( name, 2 )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild(
@@ -104,10 +106,9 @@ void Merge::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs 
 	{
 		outputs.push_back( outPlug()->channelDataPlug() );
 	}
-	else if( const ImagePlug *p = input->parent<ImagePlug>() )
+	else if( const ImagePlug *inputImage = input->parent<ImagePlug>() )
 	{
-		const ImagePlugList &inputs( m_inputs.inputs() );
-		if( std::find( inputs.begin(), inputs.end(), p ) != inputs.end() )
+		if( inputImage->parent<ArrayPlug>() == inPlugs() )
 		{
 			outputs.push_back( outPlug()->getChild<ValuePlug>( input->getName() ) );
 		}
@@ -116,21 +117,28 @@ void Merge::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs 
 
 bool Merge::enabled() const
 {
-	if ( !ImageProcessor::enabled() )
+	if( !ImageProcessor::enabled() )
 	{
 		return false;
 	}
 
-	return ( m_inputs.nConnectedInputs() >= 2 );
+	int numConnected = 0;
+	for( ImagePlugIterator it( inPlugs() ); it != it.end(); ++it )
+	{
+		if( (*it)->getInput<Plug>() )
+		{
+			numConnected++;
+		}
+	}
+
+	return numConnected >= 2;
 }
 
 void Merge::hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	ImageProcessor::hashDataWindow( output, context, h );
 
-	const ImagePlugList &inputs( m_inputs.inputs() );
-	const ImagePlugList::const_iterator end( m_inputs.endIterator() );
-	for ( ImagePlugList::const_iterator it( inputs.begin() ); it != end; ++it )
+	for( ImagePlugIterator it( inPlugs() ); it != it.end(); ++it )
 	{
 		if ( (*it)->getInput<ValuePlug>() )
 		{
@@ -142,9 +150,7 @@ void Merge::hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::
 Imath::Box2i Merge::computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
 	Imath::Box2i dataWindow = inPlug()->dataWindowPlug()->getValue();
-	const ImagePlugList &inputs( m_inputs.inputs() );
-	const ImagePlugList::const_iterator end( m_inputs.endIterator() );
-	for ( ImagePlugList::const_iterator it( inputs.begin() ); it != end; ++it )
+	for( ImagePlugIterator it( inPlugs() ); it != it.end(); ++it )
 	{
 		// We don't need to check that the plug is connected here as unconnected plugs don't have data windows.
 		IECore::boxExtend( dataWindow, (*it)->dataWindowPlug()->getValue() );
@@ -157,11 +163,9 @@ void Merge::hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer
 {
 	ImageProcessor::hashChannelNames( output, context, h );
 
-	const ImagePlugList &inputs( m_inputs.inputs() );
-	const ImagePlugList::const_iterator end( m_inputs.endIterator() );
-	for ( ImagePlugList::const_iterator it( inputs.begin() ); it != end; ++it )
+	for( ImagePlugIterator it( inPlugs() ); it != it.end(); ++it )
 	{
-		if ( (*it)->getInput<ValuePlug>() )
+		if( (*it)->getInput<ValuePlug>() )
 		{
 			(*it)->channelNamesPlug()->hash( h );
 		}
@@ -173,12 +177,9 @@ IECore::ConstStringVectorDataPtr Merge::computeChannelNames( const Gaffer::Conte
 	IECore::StringVectorDataPtr outChannelStrVectorData( new IECore::StringVectorData() );
 	std::vector<std::string> &outChannels( outChannelStrVectorData->writable() );
 
-	// Iterate over the connected inputs.
-	const ImagePlugList& inputs( m_inputs.inputs() );
-	const ImagePlugList::const_iterator end( m_inputs.endIterator() );
-	for ( ImagePlugList::const_iterator it( inputs.begin() ); it != end; ++it )
+	for( ImagePlugIterator it( inPlugs() ); it != it.end(); ++it )
 	{
-		if ( (*it)->getInput<ValuePlug>() )
+		if( (*it)->getInput<ValuePlug>() )
 		{
 			IECore::ConstStringVectorDataPtr inChannelStrVectorData((*it)->channelNamesPlug()->getValue() );
 			const std::vector<std::string> &inChannels( inChannelStrVectorData->readable() );
@@ -204,11 +205,9 @@ void Merge::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer:
 {
 	ImageProcessor::hashChannelData( output, context, h );
 	
-	const ImagePlugList &inputs( m_inputs.inputs() );
-	const ImagePlugList::const_iterator end( m_inputs.endIterator() );
-	for ( ImagePlugList::const_iterator it( inputs.begin() ); it != end; ++it )
+	for( ImagePlugIterator it( inPlugs() ); it != it.end(); ++it )
 	{
-		if ( (*it)->getInput<ValuePlug>() )
+		if( (*it)->getInput<ValuePlug>() )
 		{
 			(*it)->channelDataPlug()->hash( h );
 		}
@@ -222,10 +221,9 @@ IECore::ConstFloatVectorDataPtr Merge::computeChannelData( const std::string &ch
 	std::vector< ConstFloatVectorDataPtr > inData;
 	std::vector< ConstFloatVectorDataPtr > inAlpha;
 
-	const ImagePlugList::const_iterator end( m_inputs.endIterator() );
-	for( ImagePlugList::const_iterator it( m_inputs.inputs().begin() ); it != end; it++ )
+	for( ImagePlugIterator it( inPlugs() ); it != it.end(); ++it )
 	{
-		if ( (*it)->getInput<ValuePlug>() )
+		if( (*it)->getInput<ValuePlug>() )
 		{
 			inData.push_back( (*it)->channelData( channelName, tileOrigin ) );
 			inAlpha.push_back( (*it)->channelData( "A", tileOrigin ) );
