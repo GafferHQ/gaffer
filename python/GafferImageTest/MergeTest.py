@@ -39,6 +39,7 @@ import unittest
 
 import IECore
 
+import Gaffer
 import GafferTest
 import GafferImage
 
@@ -240,6 +241,17 @@ class MergeTest( GafferTest.TestCase ) :
 		
 		self.assertEqual( m["out"]["format"].getValue(), d["out"]["format"].getValue() )
 		self.assertEqual( m["out"]["metadata"].getValue(), d["out"]["metadata"].getValue() )
+
+	def testFileCompatibilityWithVersion0_15( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["fileName"].setValue( os.path.dirname( __file__ ) + "/scripts/mergeVersion-0.15.0.0.gfr" )
+		s.load()
+
+		self.assertTrue( s["m"]["in"][0].getInput().isSame( s["c1"]["out"] ) )
+		self.assertTrue( s["m"]["in"][1].getInput().isSame( s["c2"]["out"] ) )
+
+		self.assertEqual( s["m"]["out"].channelData( "R", IECore.V2i( 0 ) )[0], 0.75 )
 
 if __name__ == "__main__":
 	unittest.main()
