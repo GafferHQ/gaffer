@@ -92,5 +92,34 @@ class ImageProcessorTest( GafferTest.TestCase ) :
 			"Deletes the alpha channel.",
 		)
 
+	def testNumberOfInputs( self ) :
+
+		n = GafferImage.ImageProcessor()
+		self.assertTrue( isinstance( n["in"], GafferImage.ImagePlug ) )
+
+		n = GafferImage.ImageProcessor( minInputs = 2, maxInputs = 2 )
+		self.assertTrue( isinstance( n["in"], Gaffer.ArrayPlug ) )
+		self.assertEqual( len( n["in"] ), 2 )
+		self.assertTrue( isinstance( n["in"][0], GafferImage.ImagePlug ) )
+		self.assertTrue( isinstance( n["in"][1], GafferImage.ImagePlug ) )
+		self.assertEqual( n["in"].minSize(), 2 )
+		self.assertEqual( n["in"].maxSize(), 2 )
+
+		n = GafferImage.ImageProcessor( minInputs = 2, maxInputs = 1000 )
+		self.assertTrue( isinstance( n["in"], Gaffer.ArrayPlug ) )
+		self.assertTrue( isinstance( n["in"][0], GafferImage.ImagePlug ) )
+		self.assertTrue( isinstance( n["in"][1], GafferImage.ImagePlug ) )
+		self.assertEqual( len( n["in"] ), 2 )
+		self.assertEqual( n["in"].minSize(), 2 )
+		self.assertEqual( n["in"].maxSize(), 1000 )
+
+		n = GafferImage.ImageProcessor( minInputs = 2 )
+		self.assertTrue( isinstance( n["in"], Gaffer.ArrayPlug ) )
+		self.assertTrue( isinstance( n["in"][0], GafferImage.ImagePlug ) )
+		self.assertTrue( isinstance( n["in"][1], GafferImage.ImagePlug ) )
+		self.assertEqual( len( n["in"] ), 2 )
+		self.assertEqual( n["in"].minSize(), 2 )
+		self.assertEqual( n["in"].maxSize(), Gaffer.ArrayPlug().maxSize() )
+
 if __name__ == "__main__":
 	unittest.main()
