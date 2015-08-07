@@ -52,10 +52,11 @@ Gaffer.Metadata.registerNode(
 
 		"in" : [
 
-			"description",
-			"""
-			The input image.
-			""",
+			"description", lambda plug : "The input image" + ( "s" if isinstance( plug, Gaffer.ArrayPlug ) else "" ),
+
+			"plugValueWidget:type", "",
+			"nodule:type", lambda plug : "GafferUI::CompoundNodule" if isinstance( plug, Gaffer.ArrayPlug ) else "GafferUI::StandardNodule",
+			"compoundNodule:spacing", 2.0,
 
 		],
 
