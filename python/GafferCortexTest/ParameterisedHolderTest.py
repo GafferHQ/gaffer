@@ -285,7 +285,7 @@ class ParameterisedHolderTest( GafferTest.TestCase ) :
 		ph = GafferCortex.ParameterisedHolderNode()
 		ph.setParameterised( p )
 
-		self.failUnless( isinstance( ph["parameters"]["b"], Gaffer.CompoundPlug ) )
+		self.failUnless( isinstance( ph["parameters"]["b"], Gaffer.Box3iPlug ) )
 		self.failUnless( isinstance( ph["parameters"]["b"]["min"], Gaffer.V3iPlug ) )
 		self.failUnless( isinstance( ph["parameters"]["b"]["max"], Gaffer.V3iPlug ) )
 
