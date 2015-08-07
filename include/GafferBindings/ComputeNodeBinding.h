@@ -64,6 +64,18 @@ class ComputeNodeWrapper : public DependencyNodeWrapper<WrappedType>
 		{
 		}
 
+		template<typename Arg1, typename Arg2>
+		ComputeNodeWrapper( PyObject *self, Arg1 arg1, Arg2 arg2 )
+			:	DependencyNodeWrapper<WrappedType>( self, arg1, arg2 )
+		{
+		}
+
+		template<typename Arg1, typename Arg2, typename Arg3>
+		ComputeNodeWrapper( PyObject *self, Arg1 arg1, Arg2 arg2, Arg3 arg3 )
+			:	DependencyNodeWrapper<WrappedType>( self, arg1, arg2, arg3 )
+		{
+		}
+
 		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 		{
 			WrappedType::hash( output, context, h );
