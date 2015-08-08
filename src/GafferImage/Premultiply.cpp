@@ -88,7 +88,6 @@ void Premultiply::hashChannelData( const GafferImage::ImagePlug *output, const G
 	ChannelDataProcessor::hashChannelData( output, context, h );
 
 	inPlug()->channelDataPlug()->hash( h );
-	alphaChannelPlug()->hash( h );
 
 	ContextPtr tmpContext = new Context( *context, Context::Borrowed );
 	tmpContext->set( ImagePlug::channelNameContextName, alphaChannel );

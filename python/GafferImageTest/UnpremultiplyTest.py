@@ -47,8 +47,8 @@ class UnpremultiplyTest( unittest.TestCase ) :
 
 	checkerFile = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/rgbOverChecker.100x100.exr" )
 
-	def testByChannel( self ) :
-		# Test that changing the channel to multiply by changes the hash
+	def testAlphaChannel( self ) :
+		# Test that changing the channel to use as the alpha channel changes the hash
 		i = GafferImage.ImageReader()
 		i["fileName"].setValue( self.checkerFile )
 
@@ -72,18 +72,18 @@ class UnpremultiplyTest( unittest.TestCase ) :
 		self.assertEqual( g.correspondingInput( g["alphaChannel"] ), None )
 
 	def testPassThrough( self ) :
-		
+
 		i = GafferImage.ImageReader()
 		i["fileName"].setValue( self.checkerFile )
 
 		g = GafferImage.Unpremultiply()
 		g["in"].setInput( i["out"] )
-		
+
 		self.assertEqual( i["out"]["format"].hash(), g["out"]["format"].hash() )
 		self.assertEqual( i["out"]["dataWindow"].hash(), g["out"]["dataWindow"].hash() )
 		self.assertEqual( i["out"]["metadata"].hash(), g["out"]["metadata"].hash() )
 		self.assertEqual( i["out"]["channelNames"].hash(), g["out"]["channelNames"].hash() )
-		
+
 		self.assertEqual( i["out"]["format"].getValue(), g["out"]["format"].getValue() )
 		self.assertEqual( i["out"]["dataWindow"].getValue(), g["out"]["dataWindow"].getValue() )
 		self.assertEqual( i["out"]["metadata"].getValue(), g["out"]["metadata"].getValue() )

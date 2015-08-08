@@ -47,8 +47,8 @@ class PremultiplyTest( unittest.TestCase ) :
 
 	checkerFile = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/rgbOverChecker.100x100.exr" )
 
-	def testByChannel( self ) :
-		# Test that changing the channel to multiply by changes the hash
+	def testAlphaChannel( self ) :
+		# Test that changing the channel to use as the alpha channel changes the hash
 		i = GafferImage.ImageReader()
 		i["fileName"].setValue( self.checkerFile )
 
