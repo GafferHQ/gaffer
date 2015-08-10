@@ -40,20 +40,44 @@ import GafferUI
 import GafferScene
 import GafferSceneUI
 
-Gaffer.Metadata.registerNodeDescription(
+Gaffer.Metadata.registerNode(
 
-GafferScene.SceneProcessor,
+	GafferScene.SceneProcessor,
 
-"""The base type for all nodes which take an input scene and process it in some way.""",
+	"description",
+	"""
+	The base type for all nodes which take an input scene and process it in some way.
+	""",
 
-"in",
-"""The input scene.""",
+	plugs = {
 
-"out",
-"""The processed output scene.""",
+		"in" : [
 
-"enabled",
-"""The on/off state of the node. When it is off, the node outputs the input scene unchanged.""",
+			"description", lambda plug : "The input scene" + ( "s" if isinstance( plug, Gaffer.ArrayPlug ) else "" ),
+			"nodule:type", lambda plug : "GafferUI::CompoundNodule" if isinstance( plug, Gaffer.ArrayPlug ) else "GafferUI::StandardNodule",
+			"compoundNodule:spacing", 2.0,
+
+		],
+
+		"out" : [
+
+			"description",
+			"""
+			The processed output scene.
+			""",
+
+		],
+
+		"enabled" : [
+
+			"description",
+			"""
+			The on/off state of the node. When it is off, the node outputs the input scene unchanged.
+			""",
+
+		],
+
+	},
 
 )
 
