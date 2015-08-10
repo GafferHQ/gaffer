@@ -101,9 +101,25 @@ class Filter : public Gaffer::ComputeNode
 		/// Implemented to call computeMatch() below when computing the value of outPlug().
 		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const;
 
-		/// Must be implemented by derived classes.
-		virtual void hashMatch( const ScenePlug *scene, const Gaffer::Context *context, IECore::MurmurHash &h ) const = 0;
-		virtual unsigned computeMatch( const ScenePlug *scene, const Gaffer::Context *context ) const = 0;
+		/// Hash method for outPlug(). A derived class must either :
+		///
+		///    * Implement the method to call the base class implementation and then append to the hash.
+		///
+		/// or :
+		///
+		///    * Implement the method to assign directly to the hash from some input hash to signify that
+		///      an input will be passed through unchanged by the corresponding computeMatch() method. Note
+		///      that if you wish to pass through an input unconditionally, regardless of context, it is
+		///      faster to use a connection as described below.
+		///
+		/// or :
+		///
+		///    * Make an input connection into outPlug(), so that the hash and compute methods
+		///      are never called for it.
+		virtual void hashMatch( const ScenePlug *scene, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		/// Must be implemented by derived classes to compute the result of the filter, or
+		/// an input connection must be made into outPlug(), so that the method is not called.
+		virtual unsigned computeMatch( const ScenePlug *scene, const Gaffer::Context *context ) const;
 
 	private :
 
