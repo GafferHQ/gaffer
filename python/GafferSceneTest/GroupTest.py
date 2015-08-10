@@ -70,7 +70,7 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 		)
 
 		group = GafferScene.Group()
-		group["in"].setInput( input["out"] )
+		group["in"][0].setInput( input["out"] )
 		group["name"].setValue( "topLevel" )
 
 		self.assertEqual( group["name"].getValue(), "topLevel" )
@@ -116,7 +116,7 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 		)
 
 		group = GafferScene.Group()
-		group["in"].setInput( input["out"] )
+		group["in"][0].setInput( input["out"] )
 		group["transform"]["translate"].setValue( IECore.V3f( 0, 1, 0 ) )
 
 		self.assertEqual( group["name"].getValue(), "group" )
@@ -150,10 +150,10 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 		g["in"][0].setInput( p["out"] )
 		self.assertEqual( len( g["in"] ), 2 )
 
- 		g["in1"].setInput( p["out"] )
+ 		g["in"][1].setInput( p["out"] )
 		self.assertEqual( len( g["in"] ), 3 )
 
- 		g["in1"].setInput( None )
+ 		g["in"][1].setInput( None )
 		self.assertEqual( len( g["in"] ), 2 )
 
 		g["in"][0].setInput( None )
@@ -162,7 +162,7 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 		g["in"][0].setInput( p["out"] )
 		self.assertEqual( len( g["in"] ), 2 )
 
- 		g["in1"].setInput( p["out"] )
+ 		g["in"][1].setInput( p["out"] )
 		self.assertEqual( len( g["in"] ), 3 )
 
 		g["in"].setInput( None )
@@ -213,8 +213,8 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 
 		group = GafferScene.Group()
 		group["name"].setValue( "topLevel" )
-		group["in"].setInput( input1["out"] )
-		group["in1"].setInput( input2["out"] )
+		group["in"][0].setInput( input1["out"] )
+		group["in"][1].setInput( input2["out"] )
 
 		self.assertEqual( group["out"].object( "/" ), IECore.NullObject() )
 		self.assertEqual( group["out"].transform( "/" ), IECore.M44f() )
@@ -281,8 +281,8 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 
 		group = GafferScene.Group()
 		group["name"].setValue( "topLevel" )
-		group["in"].setInput( input1["out"] )
-		group["in1"].setInput( input2["out"] )
+		group["in"][0].setInput( input1["out"] )
+		group["in"][1].setInput( input2["out"] )
 
 		self.assertEqual( group["out"].object( "/" ), IECore.NullObject() )
 		self.assertEqual( group["out"].transform( "/" ), IECore.M44f() )
@@ -309,11 +309,11 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 		s = Gaffer.ScriptNode()
 		s["c"] = GafferScene.Camera()
 		s["g"] = GafferScene.Group()
-		s["g"]["in"].setInput( s["c"]["out"] )
-		s["g"]["in1"].setInput( s["c"]["out"] )
+		s["g"]["in"][0].setInput( s["c"]["out"] )
+		s["g"]["in"][1].setInput( s["c"]["out"] )
 
 		self.assertEqual( len( s["g"]["in"] ), 3 )
-		self.assertEqual( s["g"]["in2"].getInput(), None )
+		self.assertEqual( s["g"]["in"][2].getInput(), None )
 
 		ss = s.serialise()
 
@@ -321,9 +321,9 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 		s.execute( ss )
 
 		self.failUnless( s["g"]["in"][0].getInput().isSame( s["c"]["out"] ) )
-		self.failUnless( s["g"]["in1"].getInput().isSame( s["c"]["out"] ) )
+		self.failUnless( s["g"]["in"][1].getInput().isSame( s["c"]["out"] ) )
 		self.assertEqual( len( s["g"]["in"] ), 3 )
-		self.assertEqual( s["g"]["in2"].getInput(), None )
+		self.assertEqual( s["g"]["in"][2].getInput(), None )
 
 	def testNameClashesWithNumericSuffixes( self ) :
 
@@ -360,8 +360,8 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 
 		group = GafferScene.Group()
 		group["name"].setValue( "topLevel" )
-		group["in"].setInput( input1["out"] )
-		group["in1"].setInput( input2["out"] )
+		group["in"][0].setInput( input1["out"] )
+		group["in"][1].setInput( input2["out"] )
 
 		self.assertEqual( group["out"].object( "/" ), IECore.NullObject() )
 		self.assertEqual( group["out"].transform( "/" ), IECore.M44f() )
@@ -415,8 +415,8 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 
 		group = GafferScene.Group()
 		group["name"].setValue( "topLevel" )
-		group["in"].setInput( input1["out"] )
-		group["in1"].setInput( input2["out"] )
+		group["in"][0].setInput( input1["out"] )
+		group["in"][1].setInput( input2["out"] )
 
 		sceneProcedural = GafferScene.SceneProcedural( group["out"], Gaffer.Context(), "/" )
 
@@ -435,7 +435,7 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 		p = GafferScene.Plane()
 
 		g = GafferScene.Group()
-		g["in"].setInput( p["out"] )
+		g["in"][0].setInput( p["out"] )
 
 		self.assertSceneValid( g["out"] )
 
@@ -446,7 +446,7 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 		p = GafferScene.Plane()
 
 		g = GafferScene.Group()
-		g["in"].setInput( p["out"] )
+		g["in"][0].setInput( p["out"] )
 
 		self.assertEqual( g["out"]["globals"].hash(), p["out"]["globals"].hash() )
 		self.assertTrue( g["out"]["globals"].getValue( _copy = False ).isSame( p["out"]["globals"].getValue( _copy = False ) ) )
@@ -456,10 +456,10 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 		p = GafferScene.Plane()
 
 		g1 = GafferScene.Group()
-		g1["in"].setInput( p["out"] )
+		g1["in"][0].setInput( p["out"] )
 
 		g2 = GafferScene.Group()
- 		g2["in"].setInput( p["out"] )
+ 		g2["in"][0].setInput( p["out"] )
 
  		self.assertSceneHashesEqual( g1["out"], g2["out"] )
 
@@ -476,10 +476,10 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 		p = GafferScene.Plane()
 
 		g1 = GafferScene.Group()
-		g1["in"].setInput( p["out"] )
+		g1["in"][0].setInput( p["out"] )
 
 		g2 = GafferScene.Group()
- 		g2["in"].setInput( p["out"] )
+ 		g2["in"][0].setInput( p["out"] )
 
  		self.assertSceneHashesEqual( g1["out"], g2["out"] )
 
@@ -507,7 +507,7 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 		p = GafferScene.Plane()
 
 		g1 = GafferScene.Group()
-		g1["in"].setInput( p["out"] )
+		g1["in"][0].setInput( p["out"] )
 
 		self.assertSceneValid( g1["out"] )
 
@@ -515,7 +515,7 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 
 		p = GafferScene.Plane()
 		g = GafferScene.Group()
-		g["in"].setInput( p["out"] )
+		g["in"][0].setInput( p["out"] )
 
 		for c in g["in"][0].children() :
 			a = g.affects( c )
@@ -530,8 +530,8 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 		s["g1"] = GafferScene.Group()
 		s["g2"] = GafferScene.Group()
 
-		s["g1"]["in"].setInput( s["p"]["out"] )
-		s["g2"]["in"].setInput( s["g1"]["out"] )
+		s["g1"]["in"][0].setInput( s["p"]["out"] )
+		s["g2"]["in"][0].setInput( s["g1"]["out"] )
 
 		s.selection().add( s["g1"] )
 		b = Gaffer.Box.create( s, s.selection() )
@@ -559,8 +559,8 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 		l2 = GafferSceneTest.TestLight()
 
 		g = GafferScene.Group()
-		g["in"].setInput( l1["out"] )
-		g["in1"].setInput( l2["out"] )
+		g["in"][0].setInput( l1["out"] )
+		g["in"][1].setInput( l2["out"] )
 
 		lightSet = g["out"].set( "__lights" )
 		self.assertEqual(
@@ -574,7 +574,7 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 		self.assertSceneValid( g["out"] )
 
 		g2 = GafferScene.Group()
-		g2["in"].setInput( g["out"] )
+		g2["in"][0].setInput( g["out"] )
 
 		lightSet = g2["out"].set( "__lights" )
 		self.assertEqual(
@@ -591,8 +591,8 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 		p2 = GafferScene.Plane()
 
 		g = GafferScene.Group()
-		g["in"].setInput( p1["out"] )
-		g["in1"].setInput( p2["out"] )
+		g["in"][0].setInput( p1["out"] )
+		g["in"][1].setInput( p2["out"] )
 
 		self.assertSceneValid( g["out"] )
 		self.assertEqual( g["out"].childNames( "/" ), IECore.InternedStringVectorData( [ "group" ] ) )
@@ -617,17 +617,17 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 
 		lg1 = GafferScene.Group()
 		lg1["name"].setValue( "lightGroup1" )
-		lg1["in"].setInput( l["out"] )
+		lg1["in"][0].setInput( l["out"] )
 
 		lg2 = GafferScene.Group()
 		lg2["name"].setValue( "lightGroup2" )
-		lg2["in"].setInput( l["out"] )
+		lg2["in"][0].setInput( l["out"] )
 
 		self.assertEqual( lg1["out"]["globals"].hash(), lg2["out"]["globals"].hash() )
 
 		g = GafferScene.Group()
-		g["in"].setInput( lg1["out"] )
-		g["in1"].setInput( lg2["out"] )
+		g["in"][0].setInput( lg1["out"] )
+		g["in"][1].setInput( lg2["out"] )
 
 		lightSet = g["out"].set( "__lights" )
 		self.assertEqual(
@@ -647,7 +647,7 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 		s["g"]["__customPlug"] = Gaffer.V2fPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 
 		with Gaffer.UndoContext( s ) :
-			s["g"]["in"].setInput( s["c"]["out"] )
+			s["g"]["in"][0].setInput( s["c"]["out"] )
 
 		self.assertTrue( "__customPlug" in s["g"] )
 		self.assertEqual( len( s["g"]["in"] ), 2 )
@@ -668,11 +668,11 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 		s["p1"] = GafferScene.Plane()
 
 		s["g"] = GafferScene.Group()
-		s["g"]["in"].setInput( s["s"]["out"] )
-		s["g"]["in1"].setInput( s["c"]["out"] )
-		s["g"]["in2"].setInput( s["p"]["out"] )
-		s["g"]["in3"].setInput( s["t"]["out"] )
-		s["g"]["in4"].setInput( s["p1"]["out"] )
+		s["g"]["in"][0].setInput( s["s"]["out"] )
+		s["g"]["in"][1].setInput( s["c"]["out"] )
+		s["g"]["in"][2].setInput( s["p"]["out"] )
+		s["g"]["in"][3].setInput( s["t"]["out"] )
+		s["g"]["in"][4].setInput( s["p1"]["out"] )
 
 		s.deleteNodes( filter = Gaffer.StandardSet( [ s["s"], s["p"], s["p1"] ] ) )
 
@@ -696,8 +696,8 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 		s2["in"].setInput( p2["out"] )
 
 		g = GafferScene.Group()
-		g["in"].setInput( s1["out"] )
-		g["in1"].setInput( s2["out"] )
+		g["in"][0].setInput( s1["out"] )
+		g["in"][1].setInput( s2["out"] )
 
 		self.assertEqual( g["out"]["setNames"].getValue(), IECore.InternedStringVectorData( [ "s1", "s2" ] ) )
 
@@ -717,18 +717,18 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 		self.assertTrue( g.nextInPlug().isSame( g["in"][0] ) )
 
 		p = GafferScene.Plane()
-		g["in"].setInput( p["out"] )
-		self.assertTrue( g.nextInPlug().isSame( g["in1"] ) )
+		g["in"][0].setInput( p["out"] )
+		self.assertTrue( g.nextInPlug().isSame( g["in"][1] ) )
 
 		g["in"][0].setInput( None )
 		self.assertTrue( g.nextInPlug().isSame( g["in"][0] ) )
 
-		g["in"].setInput( p["out"] )
-		g["in1"].setInput( p["out"] )
-		self.assertTrue( g.nextInPlug().isSame( g["in2"] ) )
+		g["in"][0].setInput( p["out"] )
+		g["in"][1].setInput( p["out"] )
+		self.assertTrue( g.nextInPlug().isSame( g["in"][2] ) )
 
-		g["in"].setInput( None )
-		self.assertTrue( g.nextInPlug().isSame( g["in2"] ) )
+		g["in"][0].setInput( None )
+		self.assertTrue( g.nextInPlug().isSame( g["in"][2] ) )
 
 	def testUpdateWhenInputSetChanges( self ) :
 
@@ -736,15 +736,15 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 		c = GafferScene.Cube()
 
 		g1 = GafferScene.Group()
-		g1["in"].setInput( p["out"] )
-		g1["in1"].setInput( c["out"] )
+		g1["in"][0].setInput( p["out"] )
+		g1["in"][1].setInput( c["out"] )
 
 		s = GafferScene.Set()
 		s["in"].setInput( g1["out"] )
 		s["paths"].setValue( IECore.StringVectorData( [ "/group/plane" ] ) )
 
 		g2 = GafferScene.Group()
-		g2["in"].setInput( s["out"] )
+		g2["in"][0].setInput( s["out"] )
 
 		h = g2["out"].setHash( "set" )
 		self.assertEqual( g2["out"].set( "set" ).value.paths(), [ "/group/group/plane" ] )

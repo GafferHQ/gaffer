@@ -56,7 +56,7 @@ class PointsTypeTest( GafferSceneTest.SceneTestCase ) :
 		objectToScene["object"].setValue( points )
 
 		group = GafferScene.Group()
-		group["in"].setInput( objectToScene["out"] )
+		group["in"][0].setInput( objectToScene["out"] )
 
 		filter = GafferScene.PathFilter()
 		filter["paths"].setValue( IECore.StringVectorData( [ "/group/object" ] ) )

@@ -63,7 +63,7 @@ class RenderTest( GafferSceneTest.SceneTestCase ) :
 
 		s["l"] = GafferSceneTest.TestLight()
 		s["g"] = GafferScene.Group()
-		s["g"]["in"].setInput( s["l"]["out"] )
+		s["g"]["in"][0].setInput( s["l"]["out"] )
 
 		self.assertSceneValid( s["g"]["out"] )
 
@@ -88,7 +88,7 @@ class RenderTest( GafferSceneTest.SceneTestCase ) :
 
 		s["l"] = GafferSceneTest.TestLight()
 		s["g"] = GafferScene.Group()
-		s["g"]["in"].setInput( s["l"]["out"] )
+		s["g"]["in"][0].setInput( s["l"]["out"] )
 
 		s["v"] = GafferScene.StandardAttributes()
 		s["v"]["in"].setInput( s["g"]["out"] )
@@ -151,7 +151,7 @@ class RenderTest( GafferSceneTest.SceneTestCase ) :
 
 		s["l"] = GafferSceneTest.TestLight()
 		s["g"] = GafferScene.Group()
-		s["g"]["in"].setInput( s["l"]["out"] )
+		s["g"]["in"][0].setInput( s["l"]["out"] )
 
 		self.assertSceneValid( s["g"]["out"] )
 
@@ -173,8 +173,8 @@ class RenderTest( GafferSceneTest.SceneTestCase ) :
 		s["c"] = GafferScene.Camera()
 		s["s"] = GafferScene.Sphere()
 		s["g"] = GafferScene.Group()
-		s["g"]["in"].setInput( s["c"]["out"] )
-		s["g"]["in1"].setInput( s["s"]["out"] )
+		s["g"]["in"][0].setInput( s["c"]["out"] )
+		s["g"]["in"][1].setInput( s["s"]["out"] )
 
 		s["o"] = GafferScene.StandardOptions()
 		s["o"]["in"].setInput( s["g"]["out"] )

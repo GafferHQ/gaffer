@@ -206,8 +206,8 @@ class PruneTest( GafferSceneTest.SceneTestCase ) :
 		light2 = GafferSceneTest.TestLight()
 
 		group = GafferScene.Group()
-		group["in"].setInput( light1["out"] )
-		group["in1"].setInput( light2["out"] )
+		group["in"][0].setInput( light1["out"] )
+		group["in"][1].setInput( light2["out"] )
 
 		lightSet = group["out"].set( "__lights" )
 		self.assertEqual( set( lightSet.value.paths() ), set( [ "/group/light", "/group/light1" ] ) )
@@ -240,12 +240,12 @@ class PruneTest( GafferSceneTest.SceneTestCase ) :
 		group1 = GafferScene.Group()
 		group2 = GafferScene.Group()
 
-		group1["in"].setInput( light1["out"] )
-		group2["in"].setInput( light1["out"] )
+		group1["in"][0].setInput( light1["out"] )
+		group2["in"][0].setInput( light1["out"] )
 
 		topGroup = GafferScene.Group()
-		topGroup["in"].setInput( group1["out"] )
-		topGroup["in1"].setInput( group2["out"] )
+		topGroup["in"][0].setInput( group1["out"] )
+		topGroup["in"][1].setInput( group2["out"] )
 
 		lightSet = topGroup["out"].set( "__lights" )
 		self.assertEqual( set( lightSet.value.paths() ), set( [ "/group/group/light", "/group/group1/light" ] ) )

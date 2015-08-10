@@ -68,8 +68,8 @@ class FreezeTransformTest( GafferSceneTest.SceneTestCase ) :
 
 		g = GafferScene.Group()
 		g["transform"]["translate"].setValue( IECore.V3f( 1, 0, 0 ) )
-		g["in"].setInput( p1["out"] )
-		g["in1"].setInput( p2["out"] )
+		g["in"][0].setInput( p1["out"] )
+		g["in"][1].setInput( p2["out"] )
 
 		f = GafferScene.PathFilter()
 		f["paths"].setValue( IECore.StringVectorData( [ "/group/plane" ] ) )

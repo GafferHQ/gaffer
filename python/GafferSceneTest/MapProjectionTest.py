@@ -53,8 +53,8 @@ class MapProjectionTest( GafferSceneTest.SceneTestCase ) :
 		camera["transform"]["translate"]["z"].setValue( 2 )
 
 		group = GafferScene.Group()
-		group["in"].setInput( cube["out"] )
-		group["in1"].setInput( camera["out"] )
+		group["in"][0].setInput( cube["out"] )
+		group["in"][1].setInput( camera["out"] )
 
 		map = GafferScene.MapProjection()
 		map["in"].setInput( group["out"] )
@@ -84,8 +84,8 @@ class MapProjectionTest( GafferSceneTest.SceneTestCase ) :
 		camera = GafferScene.Camera()
 
 		group = GafferScene.Group()
-		group["in"].setInput( cube["out"] )
-		group["in1"].setInput( camera["out"] )
+		group["in"][0].setInput( cube["out"] )
+		group["in"][1].setInput( camera["out"] )
 
 		map = GafferScene.MapProjection()
 		map["in"].setInput( group["out"] )
@@ -111,8 +111,8 @@ class MapProjectionTest( GafferSceneTest.SceneTestCase ) :
 		camera = GafferScene.Camera()
 
 		group = GafferScene.Group()
-		group["in"].setInput( cube["out"] )
-		group["in1"].setInput( camera["out"] )
+		group["in"][0].setInput( cube["out"] )
+		group["in"][1].setInput( camera["out"] )
 
 		map = GafferScene.MapProjection()
 		map["in"].setInput( group["out"] )

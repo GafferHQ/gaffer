@@ -73,7 +73,7 @@ class ScenePathTest( unittest.TestCase ) :
 
 		plane = GafferScene.Plane()
 		group = GafferScene.Group()
-		group["in"].setInput( plane["out"] )
+		group["in"][0].setInput( plane["out"] )
 
 		p = GafferScene.ScenePath( group["out"], Gaffer.Context(), "/" )
 		self.assertTrue( p.isValid() )

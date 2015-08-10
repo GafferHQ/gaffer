@@ -47,8 +47,8 @@ class ParentTest( GafferSceneTest.SceneTestCase ) :
 		c = GafferScene.Cube()
 
 		g = GafferScene.Group()
-		g["in"].setInput( s["out"] )
-		g["in1"].setInput( c["out"] )
+		g["in"][0].setInput( s["out"] )
+		g["in"][1].setInput( c["out"] )
 
 		p = GafferScene.Parent()
 		p["in"].setInput( g["out"] )
@@ -66,8 +66,8 @@ class ParentTest( GafferSceneTest.SceneTestCase ) :
 		c = GafferScene.Cube()
 
 		g = GafferScene.Group()
-		g["in"].setInput( s["out"] )
-		g["in1"].setInput( c["out"] )
+		g["in"][0].setInput( s["out"] )
+		g["in"][1].setInput( c["out"] )
 
 		p = GafferScene.Parent()
 		p["in"].setInput( g["out"] )
@@ -102,8 +102,8 @@ class ParentTest( GafferSceneTest.SceneTestCase ) :
 		c = GafferScene.Cube()
 
 		g = GafferScene.Group()
-		g["in"].setInput( c["out"] )
-		g["in1"].setInput( c["out"] )
+		g["in"][0].setInput( c["out"] )
+		g["in"][1].setInput( c["out"] )
 
 		p = GafferScene.Parent()
 		p["in"].setInput( g["out"] )
@@ -121,7 +121,7 @@ class ParentTest( GafferSceneTest.SceneTestCase ) :
 		cSmall["dimensions"].setValue( IECore.V3f( 0.1 ) )
 
 		g = GafferScene.Group()
-		g["in"].setInput( c["out"] )
+		g["in"][0].setInput( c["out"] )
 
 		p = GafferScene.Parent()
 		p["in"].setInput( g["out"] )
@@ -138,7 +138,7 @@ class ParentTest( GafferSceneTest.SceneTestCase ) :
 		cLarge["dimensions"].setValue( IECore.V3f( 10 ) )
 
 		g = GafferScene.Group()
-		g["in"].setInput( c["out"] )
+		g["in"][0].setInput( c["out"] )
 
 		p = GafferScene.Parent()
 		p["in"].setInput( g["out"] )
@@ -152,7 +152,7 @@ class ParentTest( GafferSceneTest.SceneTestCase ) :
 		c = GafferScene.Cube()
 
 		g = GafferScene.Group()
-		g["in"].setInput( c["out"] )
+		g["in"][0].setInput( c["out"] )
 
 		p = GafferScene.Parent()
 		p["in"].setInput( g["out"] )
@@ -253,9 +253,9 @@ class ParentTest( GafferSceneTest.SceneTestCase ) :
 
 		l = GafferSceneTest.TestLight()
 		g1 = GafferScene.Group()
-		g1["in"].setInput( l["out"] )
+		g1["in"][0].setInput( l["out"] )
 		g2 = GafferScene.Group()
-		g2["in"].setInput( g1["out"] )
+		g2["in"][0].setInput( g1["out"] )
 
 		p = GafferScene.Parent()
 		p["in"].setInput( c["out"] )

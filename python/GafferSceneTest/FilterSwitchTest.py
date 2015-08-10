@@ -63,8 +63,8 @@ class FilterSwitchTest( GafferSceneTest.SceneTestCase ) :
 		script["plane"] = GafferScene.Plane()
 		script["sphere"] = GafferScene.Sphere()
 		script["group"] = GafferScene.Group()
-		script["group"]["in"].setInput( script["plane"]["out"] )
-		script["group"]["in1"].setInput( script["sphere"]["out"] )
+		script["group"]["in"][0].setInput( script["plane"]["out"] )
+		script["group"]["in"][1].setInput( script["sphere"]["out"] )
 
 		script["planeSet"] = GafferScene.Set()
 		script["planeSet"]["paths"].setValue( IECore.StringVectorData( [ "/group/plane" ] ) )

@@ -54,7 +54,7 @@ class SceneWriterTest( GafferSceneTest.SceneTestCase ) :
 		s = GafferScene.Sphere()
 
 		g = GafferScene.Group()
-		g["in"].setInput( s["out"] )
+		g["in"][0].setInput( s["out"] )
 
 		g["transform"]["translate"]["x"].setValue( 5 )
 		g["transform"]["translate"]["z"].setValue( 2 )
@@ -79,7 +79,7 @@ class SceneWriterTest( GafferSceneTest.SceneTestCase ) :
 		script = Gaffer.ScriptNode()
 		script["sphere"] = GafferScene.Sphere()
 		script["group"] = GafferScene.Group()
-		script["group"]["in"].setInput( script["sphere"]["out"] )
+		script["group"]["in"][0].setInput( script["sphere"]["out"] )
 		script["xExpression"] = Gaffer.Expression()
 		script["xExpression"]["expression"].setValue( 'parent["group"]["transform"]["translate"]["x"] = context.getFrame()' )
 		script["zExpression"] = Gaffer.Expression()

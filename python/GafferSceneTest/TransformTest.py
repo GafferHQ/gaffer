@@ -154,7 +154,7 @@ class TransformTest( GafferSceneTest.SceneTestCase ) :
 		sphere = GafferScene.Sphere()
 
 		group = GafferScene.Group()
-		group["in"].setInput( sphere["out"] )
+		group["in"][0].setInput( sphere["out"] )
 		group["transform"]["translate"].setValue( IECore.V3f( 1, 0, 0 ) )
 
 		transform = GafferScene.Transform()
@@ -197,7 +197,7 @@ class TransformTest( GafferSceneTest.SceneTestCase ) :
 		sphere["transform"]["translate"].setValue( IECore.V3f( 1, 0, 0 ) )
 
 		group = GafferScene.Group()
-		group["in"].setInput( sphere["out"] )
+		group["in"][0].setInput( sphere["out"] )
 		group["transform"]["translate"].setValue( IECore.V3f( 1, 0, 0 ) )
 
 		transform = GafferScene.Transform()
@@ -233,7 +233,7 @@ class TransformTest( GafferSceneTest.SceneTestCase ) :
 		sphere["transform"]["translate"].setValue( IECore.V3f( 1, 0, 0 ) )
 
 		group = GafferScene.Group()
-		group["in"].setInput( sphere["out"] )
+		group["in"][0].setInput( sphere["out"] )
 		group["transform"]["translate"].setValue( IECore.V3f( 1, 0, 0 ) )
 
 		transform = GafferScene.Transform()
@@ -269,7 +269,7 @@ class TransformTest( GafferSceneTest.SceneTestCase ) :
 		b["name"].setValue( "b" )
 
 		a = GafferScene.Group()
-		a["in"].setInput( b["out"] )
+		a["in"][0].setInput( b["out"] )
 		a["name"].setValue( "a" )
 
 		t = GafferScene.Transform()
@@ -309,11 +309,11 @@ class TransformTest( GafferSceneTest.SceneTestCase ) :
 		c["name"].setValue( "c" )
 
 		b = GafferScene.Group()
-		b["in"].setInput( c["out"] )
+		b["in"][0].setInput( c["out"] )
 		b["name"].setValue( "b" )
 
 		a = GafferScene.Group()
-		a["in"].setInput( b["out"] )
+		a["in"][0].setInput( b["out"] )
 		a["name"].setValue( "a" )
 
 		t = GafferScene.Transform()

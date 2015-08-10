@@ -51,8 +51,8 @@ class SetFilterTest( GafferSceneTest.SceneTestCase ) :
 		p2 = GafferScene.Plane()
 		g = GafferScene.Group()
 
-		g["in"].setInput( p1["out"] )
-		g["in1"].setInput( p2["out"] )
+		g["in"][0].setInput( p1["out"] )
+		g["in"][1].setInput( p2["out"] )
 
 		s = GafferScene.Set()
 		s["in"].setInput( g["out"] )
@@ -86,8 +86,8 @@ class SetFilterTest( GafferSceneTest.SceneTestCase ) :
 		p2 = GafferScene.Plane()
 		g = GafferScene.Group()
 
-		g["in"].setInput( p1["out"] )
-		g["in1"].setInput( p2["out"] )
+		g["in"][0].setInput( p1["out"] )
+		g["in"][1].setInput( p2["out"] )
 
 		s = GafferScene.Set()
 		s["in"].setInput( g["out"] )
@@ -121,14 +121,14 @@ class SetFilterTest( GafferSceneTest.SceneTestCase ) :
 
 		p1 = GafferScene.Plane()
 		g1 = GafferScene.Group()
-		g1["in"].setInput( p1["out"] )
+		g1["in"][0].setInput( p1["out"] )
 		s1 = GafferScene.Set()
 		s1["in"].setInput( g1["out"] )
 		s1["paths"].setValue( IECore.StringVectorData( [ "/group" ] ) )
 
 		p2 = GafferScene.Plane()
 		g2 = GafferScene.Group()
-		g2["in"].setInput( p2["out"] )
+		g2["in"][0].setInput( p2["out"] )
 		s2 = GafferScene.Set()
 		s2["in"].setInput( g2["out"] )
 		s2["paths"].setValue( IECore.StringVectorData( [ "/group/plane" ] ) )
@@ -160,8 +160,8 @@ class SetFilterTest( GafferSceneTest.SceneTestCase ) :
 		p1 = GafferScene.Plane()
 		p2 = GafferScene.Plane()
 		g = GafferScene.Group()
-		g["in"].setInput( p1["out"] )
-		g["in1"].setInput( p2["out"] )
+		g["in"][0].setInput( p1["out"] )
+		g["in"][1].setInput( p2["out"] )
 
 		s1 = GafferScene.Set()
 		s1["name"].setValue( "set1" )
