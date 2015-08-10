@@ -36,8 +36,8 @@
 ##########################################################################
 
 import unittest
-import threading
 import gc
+import os
 
 import IECore
 
@@ -145,31 +145,28 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 		g = GafferScene.Group()
 		p = GafferScene.Plane()
 
-		def scenePlugNames() :
-			return [ plug.getName() for plug in g.children() if isinstance( plug, GafferScene.ScenePlug ) and plug.direction() == Gaffer.Plug.Direction.In ]
+		self.assertEqual( len( g["in"] ), 1 )
 
-		self.assertEqual( scenePlugNames(), [ "in"] )
-
-		g["in"].setInput( p["out"] )
-		self.assertEqual( scenePlugNames(), [ "in", "in1"] )
+		g["in"][0].setInput( p["out"] )
+		self.assertEqual( len( g["in"] ), 2 )
 
  		g["in1"].setInput( p["out"] )
- 		self.assertEqual( scenePlugNames(), [ "in", "in1", "in2" ] )
+		self.assertEqual( len( g["in"] ), 3 )
 
  		g["in1"].setInput( None )
- 		self.assertEqual( scenePlugNames(), [ "in", "in1" ] )
+		self.assertEqual( len( g["in"] ), 2 )
 
- 		g["in"].setInput( None )
- 		self.assertEqual( scenePlugNames(), [ "in" ] )
+		g["in"][0].setInput( None )
+		self.assertEqual( len( g["in"] ), 1 )
 
- 		g["in"].setInput( p["out"] )
- 		self.assertEqual( scenePlugNames(), [ "in", "in1"] )
+		g["in"][0].setInput( p["out"] )
+		self.assertEqual( len( g["in"] ), 2 )
 
  		g["in1"].setInput( p["out"] )
- 		self.assertEqual( scenePlugNames(), [ "in", "in1", "in2" ] )
+		self.assertEqual( len( g["in"] ), 3 )
 
 		g["in"].setInput( None )
-		self.assertEqual( scenePlugNames(), [ "in", "in1", "in2" ] )
+		self.assertEqual( len( g["in"] ), 3 )
 
 	def testMerge( self ) :
 
@@ -315,7 +312,7 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 		s["g"]["in"].setInput( s["c"]["out"] )
 		s["g"]["in1"].setInput( s["c"]["out"] )
 
-		self.failUnless( "in2" in s["g"] )
+		self.assertEqual( len( s["g"]["in"] ), 3 )
 		self.assertEqual( s["g"]["in2"].getInput(), None )
 
 		ss = s.serialise()
@@ -323,9 +320,9 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 		s = Gaffer.ScriptNode()
 		s.execute( ss )
 
-		self.failUnless( s["g"]["in"].getInput().isSame( s["c"]["out"] ) )
+		self.failUnless( s["g"]["in"][0].getInput().isSame( s["c"]["out"] ) )
 		self.failUnless( s["g"]["in1"].getInput().isSame( s["c"]["out"] ) )
-		self.failUnless( "in2" in s["g"] )
+		self.assertEqual( len( s["g"]["in"] ), 3 )
 		self.assertEqual( s["g"]["in2"].getInput(), None )
 
 	def testNameClashesWithNumericSuffixes( self ) :
@@ -520,7 +517,7 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 		g = GafferScene.Group()
 		g["in"].setInput( p["out"] )
 
-		for c in g["in"].children() :
+		for c in g["in"][0].children() :
 			a = g.affects( c )
 			self.assertEqual( len( a ), 1 if c.getName() != "childNames" else 2 )
 			self.assertEqual( a[0].fullName(), "Group.out." + c.getName() )
@@ -541,10 +538,10 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertEqual( len( b ), 4 ) # one for the user plug, one for the child, one for the input and one for the output
 
-		self.assertTrue( b["g1"]["in"].getInput().isSame( b["in"] ) )
-		self.assertTrue( b["in"].getInput().isSame( s["p"]["out"] ) )
+		self.assertTrue( b["g1"]["in"][0].getInput().isSame( b["in_in0"] ) )
+		self.assertTrue( b["in_in0"].getInput().isSame( s["p"]["out"] ) )
 
-		self.assertTrue( s["g2"]["in"].getInput().isSame( b["out"] ) )
+		self.assertTrue( s["g2"]["in"][0].getInput().isSame( b["out"] ) )
 		self.assertTrue( b["out"].getInput().isSame( b["g1"]["out"] ) )
 
 		# this test was causing crashes elsewhere when the script
@@ -653,14 +650,12 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 			s["g"]["in"].setInput( s["c"]["out"] )
 
 		self.assertTrue( "__customPlug" in s["g"] )
-		self.assertTrue( "in" in s["g"] )
-		self.assertTrue( "in1" in s["g"] )
+		self.assertEqual( len( s["g"]["in"] ), 2 )
 
 		s.undo()
 
 		self.assertTrue( "__customPlug" in s["g"] )
-		self.assertTrue( "in" in s["g"] )
-		self.assertFalse( "in1" in s["g"] )
+		self.assertEqual( len( s["g"]["in"] ), 1 )
 
 	def testDeleteInputsAndSerialise( self ) :
 
@@ -719,14 +714,14 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 	def testNextInPlug( self ) :
 
 		g = GafferScene.Group()
-		self.assertTrue( g.nextInPlug().isSame( g["in"] ) )
+		self.assertTrue( g.nextInPlug().isSame( g["in"][0] ) )
 
 		p = GafferScene.Plane()
 		g["in"].setInput( p["out"] )
 		self.assertTrue( g.nextInPlug().isSame( g["in1"] ) )
 
-		g["in"].setInput( None )
-		self.assertTrue( g.nextInPlug().isSame( g["in"] ) )
+		g["in"][0].setInput( None )
+		self.assertTrue( g.nextInPlug().isSame( g["in"][0] ) )
 
 		g["in"].setInput( p["out"] )
 		g["in1"].setInput( p["out"] )
@@ -758,6 +753,17 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertNotEqual( g2["out"].setHash( "set" ), h )
 		self.assertEqual( g2["out"].set( "set" ).value.paths(), [ "/group/group/cube" ] )
+
+	def testFileCompatibilityWithVersion0_15( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["fileName"].setValue( os.path.dirname( __file__ ) + "/scripts/groupVersion-0.15.0.0.gfr" )
+		s.load()
+
+		self.assertTrue( s["g"]["in"][0].getInput().isSame( s["p"]["out"] ) )
+		self.assertTrue( s["g"]["in"][1].getInput().isSame( s["s"]["out"] ) )
+
+		self.assertEqual( s["g"]["out"].childNames( "/group" ), IECore.InternedStringVectorData( [ "plane", "sphere" ] ) )
 
 	def setUp( self ) :
 
