@@ -74,9 +74,9 @@ class RenderManLightTest( unittest.TestCase ) :
 		s["c"]["transform"]["translate"]["z"].setValue( 1 )
 
 		s["g"] = GafferScene.Group()
-		s["g"]["in"].setInput( s["l"]["out"] )
-		s["g"]["in1"].setInput( s["p"]["out"] )
-		s["g"]["in2"].setInput( s["c"]["out"] )
+		s["g"]["in"][0].setInput( s["l"]["out"] )
+		s["g"]["in"][1].setInput( s["p"]["out"] )
+		s["g"]["in"][2].setInput( s["c"]["out"] )
 
 		s["s"] = GafferRenderMan.RenderManShader()
 		s["s"].loadShader( "matte" )

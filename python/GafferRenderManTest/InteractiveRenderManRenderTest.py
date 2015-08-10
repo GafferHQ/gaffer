@@ -76,9 +76,9 @@ class InteractiveRenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		s["c"]["transform"]["translate"]["z"].setValue( 1 )
 
 		s["g"] = GafferScene.Group()
-		s["g"]["in"].setInput( s["l"]["out"] )
-		s["g"]["in1"].setInput( s["p"]["out"] )
-		s["g"]["in2"].setInput( s["c"]["out"] )
+		s["g"]["in"][0].setInput( s["l"]["out"] )
+		s["g"]["in"][1].setInput( s["p"]["out"] )
+		s["g"]["in"][2].setInput( s["c"]["out"] )
 
 		s["s"] = GafferRenderMan.RenderManShader()
 		s["s"].loadShader( "matte" )
@@ -206,8 +206,8 @@ class InteractiveRenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		s["c"]["transform"]["translate"]["z"].setValue( 1 )
 
 		s["g"] = GafferScene.Group()
-		s["g"]["in"].setInput( s["p"]["out"] )
-		s["g"]["in1"].setInput( s["c"]["out"] )
+		s["g"]["in"][0].setInput( s["p"]["out"] )
+		s["g"]["in"][1].setInput( s["c"]["out"] )
 
 		s["s"] = GafferRenderMan.RenderManShader()
 		s["s"].loadShader( self.compileShader( os.path.dirname( __file__ ) + "/shaders/flat.sl" ) )
@@ -298,9 +298,9 @@ class InteractiveRenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		s["c"]["transform"]["translate"]["z"].setValue( 2 )
 
 		s["g"] = GafferScene.Group()
-		s["g"]["in"].setInput( s["p"]["out"] )
-		s["g"]["in1"].setInput( s["p1"]["out"] )
-		s["g"]["in2"].setInput( s["c"]["out"] )
+		s["g"]["in"][0].setInput( s["p"]["out"] )
+		s["g"]["in"][1].setInput( s["p1"]["out"] )
+		s["g"]["in"][2].setInput( s["c"]["out"] )
 
 		s["s"] = GafferRenderMan.RenderManShader()
 		s["s"].loadShader(  self.compileShader( os.path.dirname( __file__ ) + "/shaders/flat.sl" ) )
@@ -416,9 +416,9 @@ class InteractiveRenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		s["c"]["transform"]["translate"]["z"].setValue( 1 )
 
 		s["g"] = GafferScene.Group()
-		s["g"]["in"].setInput( s["l"]["out"] )
-		s["g"]["in1"].setInput( s["p"]["out"] )
-		s["g"]["in2"].setInput( s["c"]["out"] )
+		s["g"]["in"][0].setInput( s["l"]["out"] )
+		s["g"]["in"][1].setInput( s["p"]["out"] )
+		s["g"]["in"][2].setInput( s["c"]["out"] )
 
 		s["s"] = GafferRenderMan.RenderManShader()
 		s["s"].loadShader( "matte" )
@@ -469,7 +469,7 @@ class InteractiveRenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		s["l2"]["parameters"]["lightcolor"].setValue( IECore.Color3f( 0, 1, 0 ) )
 		s["l2"]["transform"]["translate"]["z"].setValue( 1 )
 
-		s["g"]["in3"].setInput( s["l2"]["out"] )
+		s["g"]["in"][3].setInput( s["l2"]["out"] )
 
 		# give it time to update, and check the output
 
@@ -495,9 +495,9 @@ class InteractiveRenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		s["c"]["transform"]["translate"]["z"].setValue( 1 )
 
 		s["g"] = GafferScene.Group()
-		s["g"]["in"].setInput( s["l"]["out"] )
-		s["g"]["in1"].setInput( s["p"]["out"] )
-		s["g"]["in2"].setInput( s["c"]["out"] )
+		s["g"]["in"][0].setInput( s["l"]["out"] )
+		s["g"]["in"][1].setInput( s["p"]["out"] )
+		s["g"]["in"][2].setInput( s["c"]["out"] )
 
 		s["s"] = GafferRenderMan.RenderManShader()
 		s["s"].loadShader( "matte" )
@@ -581,9 +581,9 @@ class InteractiveRenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		s["c"]["transform"]["translate"]["z"].setValue( 1 )
 
 		s["g"] = GafferScene.Group()
-		s["g"]["in"].setInput( s["v"]["out"] )
-		s["g"]["in1"].setInput( s["p"]["out"] )
-		s["g"]["in2"].setInput( s["c"]["out"] )
+		s["g"]["in"][0].setInput( s["v"]["out"] )
+		s["g"]["in"][1].setInput( s["p"]["out"] )
+		s["g"]["in"][2].setInput( s["c"]["out"] )
 
 		s["s"] = GafferRenderMan.RenderManShader()
 		s["s"].loadShader( "matte" )
@@ -658,8 +658,8 @@ class InteractiveRenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		s["c"]["transform"]["translate"]["z"].setValue( 1 )
 
 		s["g"] = GafferScene.Group()
-		s["g"]["in"].setInput( s["p"]["out"] )
-		s["g"]["in1"].setInput( s["c"]["out"] )
+		s["g"]["in"][0].setInput( s["p"]["out"] )
+		s["g"]["in"][1].setInput( s["c"]["out"] )
 
 		s["d"] = GafferScene.Outputs()
 		s["d"].addOutput(
@@ -722,8 +722,8 @@ class InteractiveRenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		s["c"]["transform"]["translate"]["z"].setValue( 1 )
 
 		s["g"] = GafferScene.Group()
-		s["g"]["in"].setInput( s["p"]["out"] )
-		s["g"]["in1"].setInput( s["c"]["out"] )
+		s["g"]["in"][0].setInput( s["p"]["out"] )
+		s["g"]["in"][1].setInput( s["c"]["out"] )
 
 		s["d"] = GafferScene.Outputs()
 		s["d"].addOutput(
@@ -807,9 +807,9 @@ class InteractiveRenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		s["coordSys"] = GafferScene.CoordinateSystem()
 
 		s["g"] = GafferScene.Group()
-		s["g"]["in"].setInput( s["shaderAssignment"]["out"] )
-		s["g"]["in1"].setInput( s["camera"]["out"] )
-		s["g"]["in2"].setInput( s["coordSys"]["out"] )
+		s["g"]["in"][0].setInput( s["shaderAssignment"]["out"] )
+		s["g"]["in"][1].setInput( s["camera"]["out"] )
+		s["g"]["in"][2].setInput( s["coordSys"]["out"] )
 
 		s["d"] = GafferScene.Outputs()
 		s["d"].addOutput(
@@ -892,8 +892,8 @@ class InteractiveRenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		s["c"]["transform"]["translate"]["z"].setValue( 1 )
 
 		s["g"] = GafferScene.Group()
-		s["g"]["in"].setInput( s["p"]["out"] )
-		s["g"]["in1"].setInput( s["c"]["out"] )
+		s["g"]["in"][0].setInput( s["p"]["out"] )
+		s["g"]["in"][1].setInput( s["c"]["out"] )
 
 		s["d"] = GafferScene.Outputs()
 		s["d"].addOutput(
@@ -937,8 +937,8 @@ class InteractiveRenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		s["c"]["transform"]["translate"]["z"].setValue( 1 )
 
 		s["g"] = GafferScene.Group()
-		s["g"]["in"].setInput( s["p"]["out"] )
-		s["g"]["in1"].setInput( s["c"]["out"] )
+		s["g"]["in"][0].setInput( s["p"]["out"] )
+		s["g"]["in"][1].setInput( s["c"]["out"] )
 
 		s["d"] = GafferScene.Outputs()
 		s["d"].addOutput(
