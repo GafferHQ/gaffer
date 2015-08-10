@@ -62,7 +62,7 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"in" : [
+		"in.in0" : [
 
 			"description",
 			"""
@@ -71,7 +71,7 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"in1" : [
+		"in.in1" : [
 
 			"description",
 			"""
