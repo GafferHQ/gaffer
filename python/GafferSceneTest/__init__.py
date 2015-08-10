@@ -109,6 +109,7 @@ from ParametersTest import ParametersTest
 from SceneFilterPathFilterTest import SceneFilterPathFilterTest
 from AttributeVisualiserTest  import AttributeVisualiserTest
 from SceneLoopTest import SceneLoopTest
+from SceneProcessorTest import SceneProcessorTest
 
 if __name__ == "__main__":
 	import unittest
