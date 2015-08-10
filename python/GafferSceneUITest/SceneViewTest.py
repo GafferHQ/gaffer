@@ -69,16 +69,16 @@ class SceneViewTest( GafferUITest.TestCase ) :
 		C = GafferScene.Group()
 		C["name"].setValue( "C" )
 
-		C["in"].setInput( D["out"] )
-		C["in1"].setInput( E["out"] )
+		C["in"][0].setInput( D["out"] )
+		C["in"][1].setInput( E["out"] )
 
 		B = GafferScene.Sphere()
 		B["name"].setValue( "B" )
 
 		A = GafferScene.Group()
 		A["name"].setValue( "A" )
-		A["in"].setInput( B["out"] )
-		A["in1"].setInput( C["out"] )
+		A["in"][0].setInput( B["out"] )
+		A["in"][1].setInput( C["out"] )
 
 		view = GafferUI.View.create( A["out"] )
 

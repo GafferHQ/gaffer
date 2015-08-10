@@ -60,7 +60,7 @@ class SceneHierarchyTest( GafferUITest.TestCase ) :
 		
 		script["plane"] = GafferScene.Plane()
 		script["group"] = GafferScene.Group()
-		script["group"]["in"].setInput( script["plane"]["out"] )
+		script["group"]["in"][0].setInput( script["plane"]["out"] )
 
 		sceneHierarchy = GafferSceneUI.SceneHierarchy( script )
 		script.selection().add( script["group"] )
