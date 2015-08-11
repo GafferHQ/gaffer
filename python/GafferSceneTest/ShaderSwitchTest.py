@@ -89,7 +89,7 @@ class ShaderSwitchTest( GafferSceneTest.SceneTestCase ) :
 
 		script2.execute( script.serialise() )
 
-		self.assertTrue( script2["switch"]["in"].getInput().isSame( script2["shader1"]["out"] ) )
+		self.assertTrue( script2["switch"]["in"][0].getInput().isSame( script2["shader1"]["out"] ) )
 		self.assertTrue( script2["switch"]["in1"].getInput().isSame( script2["shader2"]["out"] ) )
 		self.assertTrue( script2["switch"]["in2"].getInput() is None )
 		self.assertFalse( "in3" in script2["switch"] )
@@ -98,7 +98,7 @@ class ShaderSwitchTest( GafferSceneTest.SceneTestCase ) :
 	def testCorrespondingInput( self ) :
 
 		s = GafferScene.ShaderSwitch()
-		self.assertTrue( s.correspondingInput( s["out"] ).isSame( s["in"] ) )
+		self.assertTrue( s.correspondingInput( s["out"] ).isSame( s["in"][0] ) )
 
 if __name__ == "__main__":
 	unittest.main()

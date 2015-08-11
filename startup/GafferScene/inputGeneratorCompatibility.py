@@ -44,3 +44,4 @@ import GafferScene
 GafferScene.Group.enableInputGeneratorCompatibility = True
 GafferScene.SceneSwitch.enableInputGeneratorCompatibility = True
 GafferScene.FilterSwitch.enableInputGeneratorCompatibility = True
+GafferScene.ShaderSwitch.enableInputGeneratorCompatibility = True
