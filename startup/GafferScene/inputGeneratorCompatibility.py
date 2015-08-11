@@ -42,3 +42,4 @@ import GafferScene
 # details of how this works.
 
 GafferScene.Group.enableInputGeneratorCompatibility = True
+GafferScene.SceneSwitch.enableInputGeneratorCompatibility = True

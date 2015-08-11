@@ -66,7 +66,7 @@ class SceneSwitchTest( GafferSceneTest.SceneTestCase ) :
 		switch["in"].setInput( plane["out"] )
 		switch["in1"].setInput( sphere["out"] )
 
-		for p in [ switch["in"], switch["in1"] ] :
+		for p in [ switch["in"][0], switch["in1"] ] :
 			for n in p.keys() :
 				a = switch.affects( p[n] )
 				self.assertEqual( len( a ), 1 )
@@ -114,7 +114,7 @@ class SceneSwitchTest( GafferSceneTest.SceneTestCase ) :
 		script2 = Gaffer.ScriptNode()
 		script2.execute( script.serialise() )
 
-		self.assertTrue( script2["switch"]["in"].getInput().isSame( script2["plane"]["out"] ) )
+		self.assertTrue( script2["switch"]["in"][0].getInput().isSame( script2["plane"]["out"] ) )
 		self.assertTrue( script2["switch"]["in1"].getInput().isSame( script2["sphere"]["out"] ) )
 		self.assertTrue( script2["switch"]["in2"].getInput() is None )
 
