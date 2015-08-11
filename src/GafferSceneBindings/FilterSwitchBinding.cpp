@@ -47,7 +47,6 @@ using namespace boost::python;
 void GafferSceneBindings::bindFilterSwitch()
 {
 
-	GafferBindings::DependencyNodeClass<GafferScene::FilterMixinBase>();
 	GafferBindings::DependencyNodeClass<GafferScene::FilterSwitch>();
 
 }

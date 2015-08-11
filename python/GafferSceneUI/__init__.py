@@ -111,7 +111,6 @@ import FreezeTransformUI
 import SceneElementProcessorUI
 import PointConstraintUI
 import SceneTimeWarpUI
-import FilterMixinBaseUI
 import BranchCreatorUI
 import ConstraintUI
 import PlaneUI
