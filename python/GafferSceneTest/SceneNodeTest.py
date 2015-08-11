@@ -219,8 +219,8 @@ class SceneNodeTest( GafferTest.TestCase ) :
 
 				self["__primitiveSwitch"] = GafferScene.SceneSwitch()
 				self["__primitiveSwitch"]["index"].setInput( self["type"] )
-				self["__primitiveSwitch"]["in"].setInput( self["__sphere"]["out"] )
-				self["__primitiveSwitch"]["in1"].setInput( self["__cube"]["out"] )
+				self["__primitiveSwitch"]["in"][0].setInput( self["__sphere"]["out"] )
+				self["__primitiveSwitch"]["in"][1].setInput( self["__cube"]["out"] )
 
 				self["out"].setInput( self["__primitiveSwitch"]["out"] )
 
