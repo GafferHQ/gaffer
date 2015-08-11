@@ -42,3 +42,4 @@ import GafferImage
 # details of how this works.
 
 GafferImage.Merge.enableInputGeneratorCompatibility = True
+GafferImage.ImageSwitch.enableInputGeneratorCompatibility = True
