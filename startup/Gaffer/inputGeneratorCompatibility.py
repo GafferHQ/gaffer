@@ -84,6 +84,20 @@ def __arrayPlugGetItem( self, key ) :
 
 	return Gaffer.ArrayPlug.__originalGetItem( self, key )
 
+def __arrayPlugHash( self ) :
+
+	if getattr( self, "enableInputGeneratorCompatibility", False ) :
+		return self[0].hash()
+
+	raise AttributeError( "'ArrayPlug' object has no attribute 'hash'" )
+
+def __arrayPlugGetValue( self ) :
+
+	if getattr( self, "enableInputGeneratorCompatibility", False ) :
+		return self[0].getValue()
+
+	raise AttributeError( "'ArrayPlug' object has no attribute 'getValue'" )
+
 if not hasattr( Gaffer.Node, "__originalGetItem" ) :
 
 	Gaffer.Node.__originalGetItem = Gaffer.Node.__getitem__
@@ -94,3 +108,9 @@ if not hasattr( Gaffer.Node, "__originalGetItem" ) :
 
 	Gaffer.ArrayPlug.__originalGetItem = Gaffer.ArrayPlug.__getitem__
 	Gaffer.ArrayPlug.__getitem__ = __arrayPlugGetItem
+
+	Gaffer.ArrayPlug.hash = __arrayPlugHash
+	Gaffer.ArrayPlug.getValue = __arrayPlugGetValue
+
+Gaffer.SwitchDependencyNode.enableInputGeneratorCompatibility = True
+Gaffer.SwitchComputeNode.enableInputGeneratorCompatibility = True

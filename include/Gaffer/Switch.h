@@ -39,8 +39,6 @@
 
 #include "boost/utility/enable_if.hpp"
 
-#include "Gaffer/Behaviours/InputGenerator.h"
-
 #include "Gaffer/ComputeNode.h"
 #include "Gaffer/NumericPlug.h"
 
@@ -49,9 +47,8 @@ namespace Gaffer
 
 /// The Switch provides a generic base class to implement nodes which choose
 /// between many input branches, feeding only one of them to the output.
-/// The series of input branches are represented by plugs of identical type
-/// and called "in", "in1", "in2" etc, and the output is a plug of the same
-/// type named "out".
+/// The series of input branches are represented by an ArrayPlug called "in",
+/// and the output is a plug named "out".
 ///
 /// Switches can be instantiated in either of two ways :
 ///
@@ -62,10 +59,6 @@ namespace Gaffer
 /// - By adding dynamic "in" and "out" plugs to a generic Switch node after
 /// construction. This method can be seen in the GafferTest.SwitchTest
 /// test cases.
-///
-/// \todo It would be better to use an ArrayPlug for the inputs, but because
-/// this class must be useable with the SceneProcessor and ImageProcessor classes
-/// we must wait until those classes themselves use ArrayPlugs.
 template<typename BaseType>
 class Switch : public BaseType
 {
@@ -122,6 +115,7 @@ class Switch : public BaseType
 		void plugSet( Plug *plug );
 		void plugInputChanged( Plug *plug );
 		size_t inputIndex() const;
+
 		// Returns the input corresponding to the output and vice versa. Returns NULL
 		// if plug is not meaningful to the switching process.
 		const Plug *oppositePlug( const Plug *plug, size_t inputIndex = 0 ) const;
@@ -129,8 +123,6 @@ class Switch : public BaseType
 		bool variesWithContext( const Plug *plug ) const;
 
 		void updateInternalConnection();
-
-		boost::shared_ptr<Gaffer::Behaviours::InputGenerator<Plug> > m_inputGenerator;
 
 		IE_CORE_DECLARERUNTIMETYPEDDESCRIPTION( Switch<BaseType> );
 		static size_t g_firstPlugIndex;

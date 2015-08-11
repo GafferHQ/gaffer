@@ -45,7 +45,7 @@ class SwitchTest( GafferTest.TestCase ) :
 	def intSwitch( self ) :
 
 		result = Gaffer.SwitchComputeNode()
-		result["in"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		result["in"] = Gaffer.ArrayPlug( element = Gaffer.IntPlug(), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		result["out"] = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic  )
 
 		return result
@@ -53,7 +53,7 @@ class SwitchTest( GafferTest.TestCase ) :
 	def colorSwitch( self ) :
 
 		result = Gaffer.SwitchComputeNode()
-		result["in"] = Gaffer.Color3fPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		result["in"] = Gaffer.ArrayPlug( element = Gaffer.Color3fPlug(), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		result["out"] = Gaffer.Color3fPlug( direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 
 		return result
@@ -102,7 +102,7 @@ class SwitchTest( GafferTest.TestCase ) :
 	def testCorrespondingInput( self ) :
 
 		n = self.intSwitch()
-		self.assertTrue( n.correspondingInput( n["out"] ).isSame( n["in"] ) )
+		self.assertTrue( n.correspondingInput( n["out"] ).isSame( n["in"][0] ) )
 
 	def testDisabling( self ) :
 
@@ -132,8 +132,8 @@ class SwitchTest( GafferTest.TestCase ) :
 		n["in"].setInput( self.intPlug( 0 ) )
 		n["in1"].setInput( self.intPlug( 0 ) )
 
-		for name in [ "enabled", "index", "in", "in1" ] :
-			a = n.affects( n[name] )
+		for plug in [ n["enabled"], n["index"], n["in"][0], n["in"][1] ] :
+			a = n.affects( plug )
 			self.assertEqual( len( a ), 1 )
 			self.assertTrue( a[0].isSame( n["out"] ) )
 
@@ -207,10 +207,7 @@ class SwitchTest( GafferTest.TestCase ) :
 		script2 = Gaffer.ScriptNode()
 		script2.execute( script.serialise() )
 
-		self.assertTrue( "in" in script2["s"] )
-		self.assertTrue( "in1" in script2["s"] )
-		self.assertTrue( "in2" in script2["s"] )
-		self.assertFalse( "in3" in script2["s"] )
+		self.assertEqual( len( script2["s"]["in"] ), 3 )
 
 		self.assertEqual( script2["s"]["out"].getValue(), 1 )
 		script2["s"]["index"].setValue( 1 )
@@ -253,10 +250,10 @@ class SwitchTest( GafferTest.TestCase ) :
 	def testDependencyNodeSwitch( self ) :
 
 		n = Gaffer.SwitchDependencyNode()
-		n["in"] = Gaffer.Plug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		n["in"] = Gaffer.ArrayPlug( element = Gaffer.Plug(), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		n["out"] = Gaffer.Plug( direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic  )
 
-		self.assertTrue( n["out"].source().isSame( n["in"] ) )
+		self.assertTrue( n["out"].source().isSame( n["in"][0] ) )
 
 		input0 = Gaffer.Plug()
 		input1 = Gaffer.Plug()
@@ -307,7 +304,7 @@ class SwitchTest( GafferTest.TestCase ) :
 	def testDependencyNodeConnectedIndex( self ) :
 
 		n = Gaffer.SwitchDependencyNode()
-		n["in"] = Gaffer.Plug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		n["in"] = Gaffer.ArrayPlug( element = Gaffer.Plug(), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		n["out"] = Gaffer.Plug( direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic  )
 
 		input0 = Gaffer.Plug()
