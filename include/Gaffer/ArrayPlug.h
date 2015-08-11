@@ -37,8 +37,10 @@
 #ifndef GAFFER_ARRAYPLUG_H
 #define GAFFER_ARRAYPLUG_H
 
+#include "OpenEXR/ImathLimits.h"
+
 #include "Gaffer/Plug.h"
-#include "Gaffer/Behaviours/InputGenerator.h"
+#include "Gaffer/PlugIterator.h"
 
 namespace Gaffer
 {
@@ -46,8 +48,6 @@ namespace Gaffer
 /// The ArrayPlug maintains a sequence of identically-typed child
 /// plugs, automatically adding new plugs when all existing plugs
 /// have connections.
-/// \todo Use this everywhere in preference to InputGenerator,
-/// and remove the InputGenerator class.
 class ArrayPlug : public Plug
 {
 

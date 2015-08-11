@@ -36,6 +36,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/lexical_cast.hpp"
+#include "boost/regex.hpp"
 
 #include "OpenEXR/ImathBoxAlgo.h"
 
