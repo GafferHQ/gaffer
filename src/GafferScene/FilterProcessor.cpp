@@ -104,6 +104,24 @@ const Gaffer::ArrayPlug *FilterProcessor::inPlugs() const
 	return getChild<Gaffer::ArrayPlug>( g_firstPlugIndex );
 }
 
+bool FilterProcessor::sceneAffectsMatch( const ScenePlug *scene, const Gaffer::ValuePlug *child ) const
+{
+	for( IntPlugIterator it( inPlugs() ); it != it.end(); ++it )
+	{
+		if( Plug *source = (*it)->source<Plug>() )
+		{
+			if( Filter *filter = runTimeCast<Filter>( source->node() ) )
+			{
+				if( filter != this && source == filter->outPlug() && filter->sceneAffectsMatch( scene, child ) )
+				{
+					return true;
+				}
+			}
+		}
+	}
+	return false;
+}
+
 bool FilterProcessor::acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const
 {
 	if( !Filter::acceptsInput( plug, inputPlug ) )

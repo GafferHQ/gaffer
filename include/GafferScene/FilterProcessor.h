@@ -81,6 +81,8 @@ class FilterProcessor : public Filter
 		Gaffer::ArrayPlug *inPlugs();
 		const Gaffer::ArrayPlug *inPlugs() const;
 
+		virtual bool sceneAffectsMatch( const ScenePlug *scene, const Gaffer::ValuePlug *child ) const;
+
 	protected :
 
 		virtual bool acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const;

@@ -46,4 +46,4 @@ IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( GafferScene::FilterSwitch, Gaf
 }
 
 // explicit instantiation
-template class Gaffer::Switch<GafferScene::FilterMixinBase>;
+template class Gaffer::Switch<GafferScene::FilterProcessor>;
