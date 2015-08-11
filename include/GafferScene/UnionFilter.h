@@ -54,7 +54,6 @@ class UnionFilter : public FilterProcessor
 		virtual ~UnionFilter();
 
 		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
-		virtual bool sceneAffectsMatch( const ScenePlug *scene, const Gaffer::ValuePlug *child ) const;
 
 	protected :
 

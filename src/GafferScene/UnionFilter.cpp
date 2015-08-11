@@ -63,20 +63,6 @@ void UnionFilter::affects( const Gaffer::Plug *input, AffectedPlugsContainer &ou
 	}
 }
 
-
-bool UnionFilter::sceneAffectsMatch( const ScenePlug *scene, const Gaffer::ValuePlug *child ) const
-{
-	for( InputIntPlugIterator it( inPlugs() ); it != it.end(); ++it )
-	{
-		const Filter *filter = IECore::runTimeCast<const Filter>( (*it)->source<Plug>()->node() );
-		if( filter && filter != this && filter->sceneAffectsMatch( scene, child ) )
-		{
-			return true;
-		}
-	}
-	return false;
-}
-
 void UnionFilter::hashMatch( const ScenePlug *scene, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	for( InputIntPlugIterator it( inPlugs() ); it != it.end(); ++it )
