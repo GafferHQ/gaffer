@@ -52,6 +52,11 @@ namespace Behaviours
 /// The OrphanRemover removes GraphComponent members from a set
 /// when they no longer have a parent - it is primarily of use
 /// in removing deleted Nodes from a Set.
+/// \todo This class hasn't really proved generally useful enough
+/// to justify the Behaviours namespace, nor have we come up with
+/// other classes that would belong in such a namespace. Just build
+/// this behaviour into the StandardSet anyway, and remove the whole
+/// behaviours namespace.
 class OrphanRemover : public Behaviour
 {
 
