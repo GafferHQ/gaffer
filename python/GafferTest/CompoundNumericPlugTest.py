@@ -198,11 +198,11 @@ class CompoundNumericPlugTest( GafferTest.TestCase ) :
 	def testRunTimeTyped( self ) :
 
 		p = Gaffer.Color3fPlug()
-		self.failUnless( p.isInstanceOf( Gaffer.CompoundPlug.staticTypeId() ) )
+		self.failUnless( p.isInstanceOf( Gaffer.ValuePlug.staticTypeId() ) )
 		self.failUnless( p.isInstanceOf( Gaffer.Plug.staticTypeId() ) )
 
 		t = p.typeId()
-		self.assertEqual( IECore.RunTimeTyped.baseTypeId( t ), Gaffer.CompoundPlug.staticTypeId() )
+		self.assertEqual( IECore.RunTimeTyped.baseTypeId( t ), Gaffer.ValuePlug.staticTypeId() )
 
 	def testSetToDefault( self ) :
 
@@ -354,6 +354,12 @@ class CompoundNumericPlugTest( GafferTest.TestCase ) :
 
 		ss = s.serialise( filter = Gaffer.StandardSet( [ s["n"] ] ) )
 		self.assertEqual( ss.count( "setValue" ), 1 )
+
+		s["n"]["p"]["z"].setInput( s["n"]["p"]["y"] )
+
+		ss = s.serialise( filter = Gaffer.StandardSet( [ s["n"] ] ) )
+		self.assertEqual( ss.count( "setValue" ), 2 )
+		self.assertEqual( ss.count( "setInput" ), 1 )
 
 	def testUndoMerging( self ) :
 

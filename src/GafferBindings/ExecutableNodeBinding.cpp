@@ -41,6 +41,7 @@
 #include "Gaffer/ExecutableNode.h"
 
 #include "GafferBindings/ExecutableNodeBinding.h"
+#include "GafferBindings/PlugBinding.h"
 
 using namespace boost::python;
 using namespace IECore;
@@ -48,13 +49,16 @@ using namespace IECorePython;
 using namespace GafferBindings;
 using namespace Gaffer;
 
-static unsigned long taskHash( const ExecutableNode::Task &t )
+namespace
+{
+
+unsigned long taskHash( const ExecutableNode::Task &t )
 {
 	const IECore::MurmurHash h = t.hash();
 	return tbb::tbb_hasher( h.toString() );
 }
 
-static ContextPtr taskContext( const ExecutableNode::Task &t, bool copy = true )
+ContextPtr taskContext( const ExecutableNode::Task &t, bool copy = true )
 {
 	if ( ConstContextPtr context = t.context() )
 	{
@@ -69,7 +73,7 @@ static ContextPtr taskContext( const ExecutableNode::Task &t, bool copy = true )
 	return 0;
 }
 
-static ExecutableNodePtr taskNode( const ExecutableNode::Task &t )
+ExecutableNodePtr taskNode( const ExecutableNode::Task &t )
 {
 	if ( ConstExecutableNodePtr node = t.node() )
 	{
@@ -78,6 +82,8 @@ static ExecutableNodePtr taskNode( const ExecutableNode::Task &t )
 
 	return 0;
 }
+
+} // namespace
 
 void GafferBindings::bindExecutableNode()
 {
@@ -93,4 +99,19 @@ void GafferBindings::bindExecutableNode()
 		.def("__eq__", &ExecutableNode::Task::operator== )
 		.def("__hash__", &taskHash )
 	;
+
+	PlugClass<ExecutableNode::RequirementPlug>()
+		.def( init<const char *, Plug::Direction, unsigned>(
+				(
+					boost::python::arg_( "name" )=GraphComponent::defaultName<ExecutableNode::RequirementPlug>(),
+					boost::python::arg_( "direction" )=Plug::In,
+					boost::python::arg_( "flags" )=Plug::Default
+				)
+			)
+		)
+		// Adjusting the name so that it correctly reflects
+		// the nesting, and can be used by the PlugSerialiser.
+		.attr( "__name__" ) = "ExecutableNode.RequirementPlug"
+	;
+
 }

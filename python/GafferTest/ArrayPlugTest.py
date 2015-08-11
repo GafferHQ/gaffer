@@ -337,6 +337,42 @@ class ArrayPlugTest( GafferTest.TestCase ) :
 		self.assertEqual( len( n["a"] ), 2 )
 		self.assertTrue( isinstance( n["a"][1], PythonElement ) )
 
+	def testTopLevelConnection( self ) :
+
+		n = Gaffer.Node()
+
+		n["a"] = Gaffer.ArrayPlug( element = Gaffer.IntPlug() )
+		n["b"] = Gaffer.ArrayPlug( element = Gaffer.IntPlug() )
+		n["b"].setInput( n["a"] )
+
+		def assertInput( plug, input ) :
+
+			self.assertEqual( len( plug ), len( input ) )
+			for i in range( 0, len( plug ) ) :
+				self.assertTrue( plug[i].getInput().isSame( input[i] ) )
+
+		assertInput( n["b"], n["a"] )
+
+		a = GafferTest.AddNode()
+
+		n["a"][0].setInput( a["sum"] )
+		self.assertEqual( len( n["a"] ), 2 )
+		assertInput( n["b"], n["a"] )
+
+		n["a"][1].setInput( a["sum"] )
+		self.assertEqual( len( n["a"] ), 3 )
+		assertInput( n["b"], n["a"] )
+
+		n["a"][0].setInput( None )
+		self.assertEqual( len( n["a"] ), 3 )
+		assertInput( n["b"], n["a"] )
+
+	def testOnlyOneChildType( self ) :
+
+		p = Gaffer.ArrayPlug( element = Gaffer.IntPlug() )
+		self.assertTrue( p.acceptsChild( Gaffer.IntPlug() ) )
+		self.assertFalse( p.acceptsChild( Gaffer.FloatPlug() ) )
+
 	def tearDown( self ) :
 
 		# some bugs in the InputGenerator only showed themselves when

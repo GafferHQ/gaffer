@@ -461,7 +461,7 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 
 		self.assertEqual( n["parameters"].keys(), [ "dynamicShaderArray", "fixedShaderArray" ] )
 
-		self.assertTrue( isinstance( n["parameters"]["fixedShaderArray"], Gaffer.CompoundPlug ) )
+		self.assertTrue( isinstance( n["parameters"]["fixedShaderArray"], Gaffer.ArrayPlug ) )
 
 		self.assertEqual( len( n["parameters"]["fixedShaderArray"] ), 4 )
 		self.assertTrue( isinstance( n["parameters"]["fixedShaderArray"]["fixedShaderArray0"], Gaffer.Plug ) )

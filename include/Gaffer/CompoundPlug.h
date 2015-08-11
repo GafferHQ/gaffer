@@ -62,10 +62,6 @@ class CompoundPlug : public ValuePlug
 
 		virtual PlugPtr createCounterpart( const std::string &name, Direction direction ) const;
 
-	private :
-
-		void childAddedOrRemoved();
-
 };
 
 IE_CORE_DECLAREPTR( CompoundPlug );

@@ -764,24 +764,6 @@ class DispatcherTest( GafferTest.TestCase ) :
 		expectedText = "n1 on 2;n1 on 4;n1 on 6;n3 on 2;n3 on 4;n3 on 6;"
 		self.assertEqual( text, expectedText )
 
-		# connecting it to a non-executable doesn't do anything either
-
-		s["b"]["n5"] = Gaffer.Node()
-		s["b"]["n5"]["requirement"] = Gaffer.Plug( direction = Gaffer.Plug.Direction.Out )
-		s["b"]["out2"].setInput( s["b"]["n5"]["requirement"] )
-
-		os.remove( fileName )
-		self.assertEqual( os.path.isfile( fileName ), False )
-		dispatcher.dispatch( [ s["b"] ] )
-		shutil.rmtree( dispatcher.jobDirectory() )
-		self.assertEqual( os.path.isfile( fileName ), True )
-		with file( fileName, "r" ) as f :
-			text = f.read()
-
-		# all frames of n1, followed by the n3 sequence
-		expectedText = "n1 on 2;n1 on 4;n1 on 6;n3 on 2;n3 on 4;n3 on 6;"
-		self.assertEqual( text, expectedText )
-
 		# multiple promoted requirements will dispatch
 
 		s["b"]["out3"] = s["b"]["n2"]['requirement'].createCounterpart( "out3", Gaffer.Plug.Direction.Out )

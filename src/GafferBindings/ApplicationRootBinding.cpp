@@ -46,7 +46,6 @@
 #include "IECorePython/Wrapper.h"
 
 #include "Gaffer/ApplicationRoot.h"
-#include "Gaffer/CompoundPlug.h"
 #include "Gaffer/Preferences.h"
 
 #include "GafferBindings/ApplicationRootBinding.h"

@@ -550,6 +550,11 @@ ValuePlug::ValuePlug( const std::string &name, Direction direction,
 ValuePlug::ValuePlug( const std::string &name, Direction direction, unsigned flags )
 	:	Plug( name, direction, flags ), m_defaultValue( NULL ), m_staticValue( NULL )
 {
+	// We expect to have children added/removed, so arrange to deal with that
+	// appropriately. The other constructor above is for leaf plugs (this is
+	// enforced in acceptsChild()) so we don't need to connect there.
+	childAddedSignal().connect( boost::bind( &ValuePlug::childAddedOrRemoved, this ) );
+	childRemovedSignal().connect( boost::bind( &ValuePlug::childAddedOrRemoved, this ) );
 }
 
 ValuePlug::~ValuePlug()
@@ -795,6 +800,15 @@ void ValuePlug::setValueInternal( IECore::ConstObjectPtr value, bool propagateDi
 	{
 		Plug::propagateDirtiness( this );
 	}
+}
+
+void ValuePlug::childAddedOrRemoved()
+{
+	// Addition or removal of a child is considered to change its value,
+	// so we emit the appropriate signal. This is mostly of use for the
+	// SplinePlug and CompoundDataPlug, where points and data members
+	// are added and removed by adding and removing plugs.
+	emitPlugSet();
 }
 
 void ValuePlug::emitPlugSet()

@@ -37,7 +37,6 @@
 
 #include "Gaffer/ComputeNode.h"
 #include "Gaffer/ValuePlug.h"
-#include "Gaffer/CompoundPlug.h"
 
 using namespace Gaffer;
 

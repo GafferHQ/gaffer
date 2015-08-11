@@ -182,7 +182,7 @@ void Shader::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs
 		const Plug *out = outPlug();
 		if( out )
 		{
-			if( out->isInstanceOf( CompoundPlug::staticTypeId() ) )
+			if( out->children().size() )
 			{
 				for( RecursivePlugIterator it( out ); it != it.end(); it++ )
 				{

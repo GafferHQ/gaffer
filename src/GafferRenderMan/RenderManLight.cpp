@@ -67,7 +67,10 @@ void RenderManLight::loadShader( const std::string &shaderName )
 
 void RenderManLight::hashLight( const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	parametersPlug()->hash( h );
+	for( ValuePlugIterator it( parametersPlug() ); it != it.end(); ++it )
+	{
+		(*it)->hash( h );
+	}
 	getChild<StringPlug>( "__shaderName" )->hash( h );
 }
 

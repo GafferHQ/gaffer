@@ -47,6 +47,7 @@
 #include "Gaffer/Metadata.h"
 #include "Gaffer/Context.h"
 
+using namespace std;
 using namespace Gaffer;
 
 IE_CORE_DEFINERUNTIMETYPED( Box );
@@ -71,14 +72,22 @@ Plug *Box::promotePlug( Plug *descendantPlug )
 
 	PlugPtr externalPlug = descendantPlug->createCounterpart( promotedCounterpartName( descendantPlug ), descendantPlug->direction() );
 	externalPlug->setFlags( Plug::Dynamic, true );
-	// flags are not automatically propagated to the children of compound plugs,
-	// so we need to do that ourselves.
-	if( externalPlug->typeId() == Gaffer::CompoundPlug::staticTypeId() )
+	// Flags are not automatically propagated to the children of compound plugs,
+	// so we need to do that ourselves. We don't want to propagate them to the
+	// children of plug types which create the children themselves during
+	// construction though, hence the typeId checks for the base classes
+	// which add no children during construction. I'm not sure this approach is
+	// necessarily the best - the alternative would be to set everything dynamic
+	// unconditionally and then implement Serialiser::childNeedsConstruction()
+	// for types like CompoundNumericPlug that create children in their constructors.
+	const Gaffer::TypeId compoundTypes[] = { PlugTypeId, ValuePlugTypeId, CompoundPlugTypeId, ArrayPlugTypeId };
+	const Gaffer::TypeId *compoundTypesEnd = compoundTypes + 4;
+	if( find( compoundTypes, compoundTypesEnd, externalPlug->typeId() ) != compoundTypesEnd )
 	{
 		for( RecursivePlugIterator it( externalPlug.get() ); it != it.end(); ++it )
 		{
 			(*it)->setFlags( Plug::Dynamic, true );
-			if( (*it)->typeId() != Gaffer::CompoundPlug::staticTypeId() )
+			if( find( compoundTypes, compoundTypesEnd, (*it)->typeId() ) != compoundTypesEnd )
 			{
 				it.prune();
 			}

@@ -40,7 +40,7 @@
 #include "IECorePython/RunTimeTypedBinding.h"
 
 #include "Gaffer/ArrayPlug.h"
-#include "GafferBindings/CompoundPlugBinding.h"
+#include "GafferBindings/PlugBinding.h"
 #include "GafferBindings/ArrayPlugBinding.h"
 
 using namespace boost::python;
@@ -83,7 +83,7 @@ static std::string repr( const ArrayPlug *plug )
 	return maskedRepr( plug, Plug::All );
 }
 
-class ArrayPlugSerialiser : public CompoundPlugSerialiser
+class ArrayPlugSerialiser : public PlugSerialiser
 {
 
 	public :

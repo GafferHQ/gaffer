@@ -51,7 +51,7 @@ CompoundNumericPlug<T>::CompoundNumericPlug(
 	T maxValue,
 	unsigned flags
 )
-	:	CompoundPlug( name, direction, flags )
+	:	ValuePlug( name, direction, flags )
 {
 	const char **n = childNames();
 	unsigned childFlags = flags & ~Dynamic;

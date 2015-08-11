@@ -63,6 +63,10 @@ class CompoundPlugNode( Gaffer.DependencyNode ) :
 		# for CompoundPlugTest.testSerialisationOfDynamicPlugsOnNondynamicParent().
 		self.addChild( Gaffer.CompoundPlug( name = "nonDynamicParent" ) )
 
+		# For BoxTest.testPromoteStaticPlugsWithChildren
+		self["valuePlug"] = Gaffer.ValuePlug()
+		self["valuePlug"]["i"] = Gaffer.IntPlug()
+
 	def affects( self, inputPlug ) :
 
 		outputs = Gaffer.DependencyNode.affects( self, inputPlug )

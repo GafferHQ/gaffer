@@ -84,6 +84,60 @@ bool ExecutableNode::Task::operator < ( const Task &rhs ) const
 }
 
 //////////////////////////////////////////////////////////////////////////
+// RequirementPlug implementation.
+//////////////////////////////////////////////////////////////////////////
+
+IE_CORE_DEFINERUNTIMETYPED( ExecutableNode::RequirementPlug );
+
+ExecutableNode::RequirementPlug::RequirementPlug( const std::string &name, Direction direction, unsigned flags )
+	:	Plug( name, direction, flags )
+{
+}
+
+bool ExecutableNode::RequirementPlug::acceptsChild( const Gaffer::GraphComponent *potentialChild ) const
+{
+	return false;
+}
+
+bool ExecutableNode::RequirementPlug::acceptsInput( const Plug *input ) const
+{
+	if( !Plug::acceptsInput( input ) )
+	{
+		return false;
+	}
+
+	if( !input )
+	{
+		return true;
+	}
+
+	if( input->isInstanceOf( staticTypeId() ) )
+	{
+		return true;
+	}
+
+	// Ideally we'd return false right now, but we must
+	// provide backwards compatibility with old scripts
+	// where the requirement plugs were just represented
+	// as standard Plugs, and may have been promoted to
+	// Boxes and Dots in that form.
+	if( input->typeId() == Plug::staticTypeId() )
+	{
+		const Plug *sourcePlug = input->source<Plug>();
+		const Node *sourceNode = sourcePlug->node();
+		return runTimeCast<const SubGraph>( sourceNode ) || runTimeCast<const Dot>( sourceNode );
+	}
+
+	return false;
+
+}
+
+PlugPtr ExecutableNode::RequirementPlug::createCounterpart( const std::string &name, Direction direction ) const
+{
+	return new RequirementPlug( name, direction, getFlags() );
+}
+
+//////////////////////////////////////////////////////////////////////////
 // ExecutableNode implementation
 //////////////////////////////////////////////////////////////////////////
 
@@ -95,8 +149,8 @@ ExecutableNode::ExecutableNode( const std::string &name )
 	:	Node( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
-	addChild( new ArrayPlug( "requirements", Plug::In, new Plug( "requirement0" ) ) );
-	addChild( new Plug( "requirement", Plug::Out ) );
+	addChild( new ArrayPlug( "requirements", Plug::In, new RequirementPlug( "requirement0" ) ) );
+	addChild( new RequirementPlug( "requirement", Plug::Out ) );
 
 	PlugPtr dispatcherPlug = new Plug( "dispatcher", Plug::In );
 	addChild( dispatcherPlug );
@@ -118,14 +172,14 @@ const ArrayPlug *ExecutableNode::requirementsPlug() const
 	return getChild<ArrayPlug>( g_firstPlugIndex );
 }
 
-Plug *ExecutableNode::requirementPlug()
+ExecutableNode::RequirementPlug *ExecutableNode::requirementPlug()
 {
-	return getChild<Plug>( g_firstPlugIndex + 1 );
+	return getChild<RequirementPlug>( g_firstPlugIndex + 1 );
 }
 
-const Plug *ExecutableNode::requirementPlug() const
+const ExecutableNode::RequirementPlug *ExecutableNode::requirementPlug() const
 {
-	return getChild<Plug>( g_firstPlugIndex + 1 );
+	return getChild<RequirementPlug>( g_firstPlugIndex + 1 );
 }
 
 Plug *ExecutableNode::dispatcherPlug()
@@ -182,30 +236,3 @@ bool ExecutableNode::requiresSequenceExecution() const
 {
 	return false;
 }
-
-bool ExecutableNode::acceptsInput( const Plug *plug, const Plug *inputPlug ) const
-{
-	if( !Node::acceptsInput( plug, inputPlug ) )
-	{
-		return false;
-	}
-
-	if( plug->parent<ArrayPlug>() == requirementsPlug() )
-	{
-		const Plug *sourcePlug = inputPlug->source<Plug>();
-		const Node *sourceNode = sourcePlug->node();
-		if ( const ExecutableNode *executable = runTimeCast<const ExecutableNode>( sourceNode ) )
-		{
-			return sourcePlug == executable->requirementPlug();
-		}
-
-		// we only really want to accept connections from ExecutableNodes, because we can't require
-		// anything else, but we also accept the unconnected inputs and outputs of subgraphs, so you
-		// can wrap ExecutableNodes in boxes prior to connecting the other side. likewise, we accept
-		// connections from dots.
-		return runTimeCast<const SubGraph>( sourceNode ) || runTimeCast<const Dot>( sourceNode );
-	}
-
-	return true;
-}
-

@@ -92,6 +92,7 @@ class NodeWrapper : public GraphComponentWrapper<T>
 			if(
 				typeId == (IECore::TypeId)Gaffer::ScriptNodeTypeId ||
 				typeId == (IECore::TypeId)Gaffer::PlugTypeId ||
+				typeId == (IECore::TypeId)Gaffer::ValuePlugTypeId ||
 				typeId == (IECore::TypeId)Gaffer::CompoundPlugTypeId
 			)
 			{

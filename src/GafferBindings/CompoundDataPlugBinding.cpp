@@ -41,7 +41,7 @@
 
 #include "Gaffer/CompoundDataPlug.h"
 
-#include "GafferBindings/CompoundPlugBinding.h"
+#include "GafferBindings/ValuePlugBinding.h"
 #include "GafferBindings/CompoundDataPlugBinding.h"
 
 using namespace boost::python;
@@ -124,7 +124,7 @@ static void fillCompoundObject( const CompoundDataPlug &p, IECore::CompoundObjec
 	p.fillCompoundObject( o->members() );
 }
 
-class MemberPlugSerialiser : public CompoundPlugSerialiser
+class MemberPlugSerialiser : public ValuePlugSerialiser
 {
 
 	public :

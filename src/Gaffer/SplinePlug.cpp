@@ -58,9 +58,6 @@ SplinePlug<T>::SplinePlug( const std::string &name, Direction direction, const T
 	addChild( new IntPlug( "endPointMultiplicity", direction, endPointMultiplicity( defaultValue ), 1 ) );
 
 	setValue( defaultValue );
-
-	childAddedSignal().connect( boost::bind( &SplinePlug::childAddedOrRemoved, this ) );
-	childRemovedSignal().connect( boost::bind( &SplinePlug::childAddedOrRemoved, this ) );
 }
 
 template<typename T>
@@ -384,13 +381,6 @@ size_t SplinePlug<T>::endPointMultiplicity( const T &value ) const
 	{
 		return 1;
 	}
-}
-
-template<typename T>
-void SplinePlug<T>::childAddedOrRemoved()
-{
-	// adding or removing points sets our value.
-	emitPlugSet();
 }
 
 namespace Gaffer

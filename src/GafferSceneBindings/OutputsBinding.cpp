@@ -46,19 +46,10 @@
 
 using namespace std;
 using namespace boost::python;
+using namespace IECorePython;
 using namespace Gaffer;
 using namespace GafferBindings;
 using namespace GafferScene;
-
-static Gaffer::CompoundPlugPtr addOutputWrapper1( Outputs &outputs, const std::string &name )
-{
-	return outputs.addOutput( name );
-}
-
-static Gaffer::CompoundPlugPtr addOutputWrapper2( Outputs &outputs, const std::string &name, const IECore::Display *d )
-{
-	return outputs.addOutput( name, d );
-}
 
 static tuple registeredOutputsWrapper()
 {
@@ -75,8 +66,8 @@ static tuple registeredOutputsWrapper()
 void GafferSceneBindings::bindOutputs()
 {
 	DependencyNodeClass<Outputs>()
-		.def( "addOutput", &addOutputWrapper1 )
-		.def( "addOutput", &addOutputWrapper2 )
+		.def( "addOutput", (ValuePlug *(Outputs::*)( const std::string & ))&Outputs::addOutput, return_value_policy<CastToIntrusivePtr>() )
+		.def( "addOutput", (ValuePlug *(Outputs::*)( const std::string &, const IECore::Display * ))&Outputs::addOutput, return_value_policy<CastToIntrusivePtr>() )
 		.def( "registerOutput", &Outputs::registerOutput ).staticmethod( "registerOutput" )
 		.def( "registeredOutputs", &registeredOutputsWrapper ).staticmethod( "registeredOutputs" )
 	;

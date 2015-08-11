@@ -43,7 +43,6 @@
 #include "IECoreGL/Selector.h"
 
 #include "Gaffer/TypedObjectPlug.h"
-#include "Gaffer/CompoundPlug.h"
 #include "Gaffer/StandardSet.h"
 #include "Gaffer/DependencyNode.h"
 #include "Gaffer/Metadata.h"

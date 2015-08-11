@@ -48,7 +48,7 @@ namespace Gaffer
 {
 
 template<typename T>
-class CompoundNumericPlug : public CompoundPlug
+class CompoundNumericPlug : public ValuePlug
 {
 
 	public :
@@ -56,7 +56,7 @@ class CompoundNumericPlug : public CompoundPlug
 		typedef T ValueType;
 		typedef NumericPlug<typename T::BaseType> ChildType;
 
-		IECORE_RUNTIMETYPED_DECLARETEMPLATE( CompoundNumericPlug<T>, CompoundPlug );
+		IECORE_RUNTIMETYPED_DECLARETEMPLATE( CompoundNumericPlug<T>, ValuePlug );
 
 		CompoundNumericPlug(
 			const std::string &name = defaultName<CompoundNumericPlug>(),

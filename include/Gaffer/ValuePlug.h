@@ -157,13 +157,6 @@ class ValuePlug : public Plug
 		/// if we are inside Node::compute().
 		bool inCompute() const;
 
-		/// Emits the appropriate Node::plugSetSignal() for this plug and all its
-		/// ancestors, then does the same for its output plugs. This is called
-		/// automatically by setObjectValue() where appropriate, and typically shouldn't
-		/// need to be called manually. It is exposed so that CompoundPlug can
-		/// simulate the behaviour of a plug being set when a child is added or removed.
-		void emitPlugSet();
-
 		/// Reimplemented for cache management.
 		virtual void dirty();
 
@@ -173,9 +166,13 @@ class ValuePlug : public Plug
 		class SetValueAction;
 
 		void setValueInternal( IECore::ConstObjectPtr value, bool propagateDirtiness );
+		void childAddedOrRemoved();
+		// Emits the appropriate Node::plugSetSignal() for this plug and all its
+		// ancestors, then does the same for its output plugs.
+		void emitPlugSet();
 
 		IECore::ConstObjectPtr m_defaultValue;
-		/// For holding the value of input plugs with no input connections.
+		// For holding the value of input plugs with no input connections.
 		IECore::ConstObjectPtr m_staticValue;
 
 };
