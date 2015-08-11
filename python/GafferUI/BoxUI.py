@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2013-2014, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2013-2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -241,6 +241,12 @@ def __appendPlugPromotionMenuItems( menuDefinition, plug, readOnly = False ) :
 			"active" : not readOnly,
 		} )
 
+		if isinstance( plug.parent(), Gaffer.ArrayPlug ) and box.canPromotePlug( plug.parent() ) :
+			menuDefinition.append( "/Promote %s array to %s" % ( plug.parent().getName(), box.getName() ), {
+				"command" : IECore.curry( __promoteToBox, box, plug.parent() ),
+				"active" : not readOnly,
+			} )
+
 		if isinstance( node, Gaffer.DependencyNode ) :
 			if plug.isSame( node.enabledPlug() ) :
 				menuDefinition.append( "/Promote to %s.enabled" % box.getName(), {
@@ -258,10 +264,18 @@ def __appendPlugPromotionMenuItems( menuDefinition, plug, readOnly = False ) :
 		if len( menuDefinition.items() ) :
 			menuDefinition.append( "/BoxDivider", { "divider" : True } )
 
-		menuDefinition.append( "/Unpromote from %s" % box.getName(), {
-			"command" : IECore.curry( __unpromoteFromBox, box, plug ),
-			"active" : not readOnly,
-		} )
+		if isinstance( plug.parent(), Gaffer.ArrayPlug ) and box.plugIsPromoted( plug.parent() ) :
+			menuDefinition.append( "/Unpromote %s array from %s" % ( plug.parent().getName(), box.getName() ), {
+				"command" : IECore.curry( __unpromoteFromBox, box, plug.parent() ),
+				"active" : not readOnly,
+			} )
+		else :
+			# we dont want to allow unpromoting for children of promoted arrays as it
+			# causes unpredicted behaviour, and it doesn't seem useful in general.
+			menuDefinition.append( "/Unpromote from %s" % box.getName(), {
+				"command" : IECore.curry( __unpromoteFromBox, box, plug ),
+				"active" : not readOnly,
+			} )
 
 # PlugValueWidget menu
 ##########################################################################
