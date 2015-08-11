@@ -51,8 +51,14 @@ template<typename BaseType>
 size_t Switch<BaseType>::g_firstPlugIndex = 0;
 
 template<typename BaseType>
-Switch<BaseType>::Switch( const std::string &name )
-	:	BaseType( name )
+Switch<BaseType>::Switch( const std::string &name)
+	:	BaseType( name, 1 ) // ArrayPlug version of *Processor constructor
+{
+	init( /* expectBaseClassPlugs = */ true );
+}
+
+template<typename BaseType>
+void Switch<BaseType>::init( bool expectBaseClassPlugs )
 {
 	BaseType::storeIndexOfNextChild( g_firstPlugIndex );
 	BaseType::addChild( new IntPlug( "index", Gaffer::Plug::In, 0, 0 ) );
@@ -63,10 +69,11 @@ Switch<BaseType>::Switch( const std::string &name )
 		BaseType::addChild( new BoolPlug( "enabled", Gaffer::Plug::In, true ) );
 	}
 
-	if( ArrayPlug *inPlugs = BaseType::template getChild<ArrayPlug>( "in") )
+	if( expectBaseClassPlugs )
 	{
 		// We need to react to addition/removal of inputs, so connect to
 		// the childAdded signal on our input array.
+		ArrayPlug *inPlugs = BaseType::template getChild<ArrayPlug>( "in");
 		inPlugs->childAddedSignal().connect( boost::bind( &Switch::childAdded, this, ::_2 ) );
 	}
 	else

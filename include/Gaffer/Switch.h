@@ -97,6 +97,8 @@ class Switch : public BaseType
 
 	private :
 
+		void init( bool expectBaseClassPlugs );
+
 		// The internal implementation for hash(). Does nothing when BaseType is not a ComputeNode,
 		// and passes through the hash from the appropriate input when it is.
 		template<typename T>
