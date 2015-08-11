@@ -93,6 +93,7 @@ enum TypeId
 	CopyImageMetadataTypeId = 110797,
 	ImageLoopTypeId = 110798,
 	PremultiplyTypeId = 110799,
+	CropTypeId = 110800,
 
 	LastTypeId = 110849
 };
