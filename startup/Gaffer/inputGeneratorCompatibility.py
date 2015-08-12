@@ -40,27 +40,25 @@ import Gaffer
 
 # Backwards compatibility for nodes which have migrated from using
 # an InputGenerator into using an ArrayPlug instead. This is requested
-# on a per-node basis by setting an "enableInputGeneratorCompatibility"
-# attribute to True. See startup/GafferImage/inputGeneratorCompatibility.py for
-# an example.
+# by calling `ArrayPlug.enableInputGeneratorCompatibility( nodeType )`
+# for a particular node type.
 
 def __nodeGetItem( self, key ) :
 
-	if getattr( self, "enableInputGeneratorCompatibility", False ) :
-		if key == "in" :
-			# We now have an ArrayPlug where we used to have an ImagePlug.
-			# Enable the required compatibility methods.
-			result = Gaffer.Node.__originalGetItem( self, key )
-			result.enableInputGeneratorCompatibility = True
-			return result
+	if key == "in" :
+		# We now have an ArrayPlug where we used to have an element plug.
+		# Enable the required compatibility methods.
+		result = self.__originalGetItem( key )
+		result.enableInputGeneratorCompatibility = True
+		return result
 
-		m = re.match( "^in([0-9]+)$", key )
-		if m :
-			# These were originally plugs parented directly to the node,
-			# and are now children of the array plug.
-			return Gaffer.Node.__originalGetItem( self, "in" )[int( m.group( 1 ) )]
+	m = re.match( "^in([0-9]+)$", key )
+	if m :
+		# These were originally plugs parented directly to the node,
+		# and are now children of the array plug.
+		return self.__originalGetItem( "in" )[int( m.group( 1 ) )]
 		
-	return Gaffer.Node.__originalGetItem( self, key )
+	return self.__originalGetItem( key )
 
 def __arrayPlugSetInput( self, input ) :
 
@@ -98,10 +96,15 @@ def __arrayPlugGetValue( self ) :
 
 	raise AttributeError( "'ArrayPlug' object has no attribute 'getValue'" )
 
-if not hasattr( Gaffer.Node, "__originalGetItem" ) :
+@staticmethod
+def __enableInputGeneratorCompatibility( nodeType ) :
 
-	Gaffer.Node.__originalGetItem = Gaffer.Node.__getitem__
-	Gaffer.Node.__getitem__ = __nodeGetItem
+	if not hasattr( nodeType, "__originalGetItem" ) :
+
+		nodeType.__originalGetItem = nodeType.__getitem__
+		nodeType.__getitem__ = __nodeGetItem
+
+if not hasattr( Gaffer.ArrayPlug, "__originalGetItem" ) :
 
 	Gaffer.ArrayPlug.__originalSetInput = Gaffer.ArrayPlug.setInput
 	Gaffer.ArrayPlug.setInput = __arrayPlugSetInput
@@ -112,5 +115,7 @@ if not hasattr( Gaffer.Node, "__originalGetItem" ) :
 	Gaffer.ArrayPlug.hash = __arrayPlugHash
 	Gaffer.ArrayPlug.getValue = __arrayPlugGetValue
 
-Gaffer.SwitchDependencyNode.enableInputGeneratorCompatibility = True
-Gaffer.SwitchComputeNode.enableInputGeneratorCompatibility = True
+	Gaffer.ArrayPlug.enableInputGeneratorCompatibility = __enableInputGeneratorCompatibility
+
+Gaffer.ArrayPlug.enableInputGeneratorCompatibility( Gaffer.SwitchDependencyNode )
+Gaffer.ArrayPlug.enableInputGeneratorCompatibility( Gaffer.SwitchComputeNode )

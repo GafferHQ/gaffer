@@ -34,6 +34,7 @@
 #
 ##########################################################################
 
+import Gaffer
 import GafferImage
 
 # Backwards compatibility for old nodes which originally
@@ -41,5 +42,5 @@ import GafferImage
 # See startup/Gaffer/inputGeneratorCompatibility.py for
 # details of how this works.
 
-GafferImage.Merge.enableInputGeneratorCompatibility = True
-GafferImage.ImageSwitch.enableInputGeneratorCompatibility = True
+Gaffer.ArrayPlug.enableInputGeneratorCompatibility( GafferImage.Merge )
+Gaffer.ArrayPlug.enableInputGeneratorCompatibility( GafferImage.ImageSwitch )

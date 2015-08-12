@@ -34,6 +34,7 @@
 #
 ##########################################################################
 
+import Gaffer
 import GafferScene
 
 # Backwards compatibility for old nodes which originally
@@ -41,7 +42,7 @@ import GafferScene
 # See startup/Gaffer/inputGeneratorCompatibility.py for
 # details of how this works.
 
-GafferScene.Group.enableInputGeneratorCompatibility = True
-GafferScene.SceneSwitch.enableInputGeneratorCompatibility = True
-GafferScene.FilterSwitch.enableInputGeneratorCompatibility = True
-GafferScene.ShaderSwitch.enableInputGeneratorCompatibility = True
+Gaffer.ArrayPlug.enableInputGeneratorCompatibility( GafferScene.Group )
+Gaffer.ArrayPlug.enableInputGeneratorCompatibility( GafferScene.SceneSwitch )
+Gaffer.ArrayPlug.enableInputGeneratorCompatibility( GafferScene.FilterSwitch )
+Gaffer.ArrayPlug.enableInputGeneratorCompatibility( GafferScene.ShaderSwitch )
