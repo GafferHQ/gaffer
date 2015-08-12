@@ -69,6 +69,7 @@ from ImageProcessorTest import ImageProcessorTest
 from ShuffleTest import ShuffleTest
 from PremultiplyTest import PremultiplyTest
 from UnpremultiplyTest import UnpremultiplyTest
+from CropTest import CropTest
 
 if __name__ == "__main__":
 	import unittest
