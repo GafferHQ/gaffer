@@ -124,6 +124,10 @@ bool ExecutableNode::RequirementPlug::acceptsInput( const Plug *input ) const
 	if( input->typeId() == Plug::staticTypeId() )
 	{
 		const Plug *sourcePlug = input->source<Plug>();
+		if( sourcePlug->isInstanceOf( staticTypeId() ) )
+		{
+			return true;
+		}
 		const Node *sourceNode = sourcePlug->node();
 		return runTimeCast<const SubGraph>( sourceNode ) || runTimeCast<const Dot>( sourceNode );
 	}

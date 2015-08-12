@@ -69,6 +69,7 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"nodule:type", "",
+			"layout:section", "Settings.Substitutions",
 
 		),
 
@@ -81,6 +82,7 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"nodule:type", "",
+			"layout:section", "Settings.Environment Variables",
 
 		)
 
