@@ -38,6 +38,10 @@
 #define GAFFERSCENEUI_STANDARDLIGHTVISUALISER_H
 
 #include "GafferSceneUI/LightVisualiser.h"
+#include "IECore/Light.h"
+#include "IECore/SimpleTypedData.h"
+#include "IECoreGL/Group.h"
+
 
 namespace GafferSceneUI
 {
@@ -57,17 +61,22 @@ class StandardLightVisualiser : public LightVisualiser
 		StandardLightVisualiser();
 		virtual ~StandardLightVisualiser();
 
-		virtual IECoreGL::ConstRenderablePtr visualise( const IECore::Object *object ) const;
+		virtual IECoreGL::ConstRenderablePtr visualise( const IECore::ObjectVector *shaderVector, IECoreGL::State &state ) const;
 
 	protected :
+		static void addEnvLightVisualiser( IECoreGL::GroupPtr &output, IECoreGL::State &state, const std::string &metadataTarget, const IECore::Light *lightShader, Imath::Color3f multiplier );
+		static void addAreaLightVisualiser( IECoreGL::State &state, const std::string &metadataTarget, const IECore::Light *lightShader, Imath::Color3f multiplier );
+		static void addBasicLightVisualiser( IECore::ConstStringDataPtr type, IECoreGL::GroupPtr &output, IECoreGL::State &state, const std::string &metadataTarget, const IECore::Light *lightShader, Imath::Color3f multiplier );
 
 		static const char *faceCameraVertexSource();
+		static const char *environmentLightDrawFragSource();
+		static const char *areaLightDrawVertexSource();
+		static const char *areaLightDrawFragSource();
 
 		static IECoreGL::ConstRenderablePtr ray();
 		static IECoreGL::ConstRenderablePtr pointRays();
 		static IECoreGL::ConstRenderablePtr spotlightCone( float innerAngle, float outerAngle );
-		static IECoreGL::ConstRenderablePtr colorIndicator( const Imath::Color3f &color, float intensity );
-
+		static IECoreGL::ConstRenderablePtr colorIndicator( const Imath::Color3f &color, bool indicatorFaceCamera = true );
 };
 
 IE_CORE_DECLAREPTR( StandardLightVisualiser )
