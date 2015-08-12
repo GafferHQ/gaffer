@@ -34,32 +34,11 @@
 #
 ##########################################################################
 
-import Gaffer
-import GafferUI
 import GafferImage
 
-Gaffer.Metadata.registerNode(
+# Backwards compatibility for old nodes which originally
+# used InputGenerators and now use ArrayPlugs instead.
+# See startup/Gaffer/inputGeneratorCompatibility.py for
+# details of how this works.
 
-	GafferImage.ImageProcessor,
-
-	"description",
-	"""
-	Base class for nodes which process an input image to
-	to generate an output image.
-	""",
-
-	plugs = {
-
-		"in" : [
-
-			"description", lambda plug : "The input image" + ( "s" if isinstance( plug, Gaffer.ArrayPlug ) else "" ),
-
-			"plugValueWidget:type", "",
-			"nodule:type", lambda plug : "GafferUI::CompoundNodule" if isinstance( plug, Gaffer.ArrayPlug ) else "GafferUI::StandardNodule",
-			"compoundNodule:spacing", 2.0,
-
-		],
-
-	}
-
-)
+GafferImage.Merge.enableInputGeneratorCompatibility = True

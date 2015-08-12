@@ -40,24 +40,46 @@
 
 #include "GafferImage/ImageNode.h"
 
+namespace Gaffer
+{
+
+IE_CORE_FORWARDDECLARE( ArrayPlug )
+
+} // namespace Gaffer
+
 namespace GafferImage
 {
 
-/// The ImageProcessor class provides a base class for nodes which will take an image input
-/// and modify it in some way.
+/// A base class for nodes which will take a number of input images and
+/// process them in some way to generate an output image.
 class ImageProcessor : public ImageNode
 {
 
 	public :
 
+		/// Constructs with a single input ImagePlug named "in". Use inPlug()
+		/// to access this plug.
 		ImageProcessor( const std::string &name=defaultName<ImageProcessor>() );
+
+		/// Constructs with an ArrayPlug called "in". Use inPlug() as a
+		/// convenience for accessing the first child in the array, and use
+		/// inPlugs() to access the array itself.
+		ImageProcessor( const std::string &name, size_t minInputs, size_t maxInputs = Imath::limits<size_t>::max() );
 		virtual ~ImageProcessor();
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::ImageProcessor, ImageProcessorTypeId, ImageNode );
 
-		/// Images enter the node through inPlug() and are output in processed form on ImageNode::outPlug()
+		/// Returns the primary image input. For nodes with multiple inputs
+		/// this will be the first child of the inPlugs() array. For nodes
+		/// with a single input, it will be a plug parented directly to the
+		/// node.
 		ImagePlug *inPlug();
 		const ImagePlug *inPlug() const;
+
+		/// For nodes with multiple inputs, returns the ArrayPlug which
+		/// hosts them. For single input nodes, returns NULL;
+		Gaffer::ArrayPlug *inPlugs();
+		const Gaffer::ArrayPlug *inPlugs() const;
 
 		virtual Gaffer::Plug *correspondingInput( const Gaffer::Plug *output );
 		virtual const Gaffer::Plug *correspondingInput( const Gaffer::Plug *output ) const;
