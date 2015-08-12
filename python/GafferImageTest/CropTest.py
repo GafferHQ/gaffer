@@ -1,6 +1,7 @@
 ##########################################################################
 #
 #  Copyright (c) 2013-2015, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2015, Nvizible Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,25 +36,12 @@
 ##########################################################################
 
 import unittest
+import os
 
 import IECore
 import Gaffer
-import GafferImage
 import GafferTest
-import os
-
-"""
-Tests:
-
-Channel data passes through
-
-Data Window doesn't affect Display Window
-Display Window doesn't affect Data Window
-Data window intersects
-source = Data Window
-source = Display Window
-source = Custom
-"""
+import GafferImage
 
 class CropTest( unittest.TestCase ) :
 
@@ -64,10 +52,10 @@ class CropTest( unittest.TestCase ) :
 
 		crop = GafferImage.Crop()
 
-		self.assertEqual( crop["areaSource"].getValue(), GafferImage.Crop.AreaType.DisplayWindow )
+		self.assertEqual( crop["areaSource"].getValue(), GafferImage.Crop.AreaSource.Custom )
 		self.assertTrue( crop["area"].getValue().isEmpty() )
 		self.assertEqual( crop["affectDataWindow"].getValue(), True )
-		self.assertEqual( crop["affectDisplayWindow"].getValue(), False )
+		self.assertEqual( crop["affectDisplayWindow"].getValue(), True )
 
 	def testPassThrough( self ) :
 
@@ -76,7 +64,7 @@ class CropTest( unittest.TestCase ) :
 
 		crop = GafferImage.Crop()
 		crop["in"].setInput(i["out"])
-		crop["areaSource"].setValue( GafferImage.Crop.AreaType.Custom )
+		crop["areaSource"].setValue( GafferImage.Crop.AreaSource.Custom )
 		crop["area"].setValue( IECore.Box2i( IECore.V2i( 40 ), IECore.V2i( 50 ) ) )
 		crop["affectDataWindow"].setValue( True )
 		crop["affectDisplayWindow"].setValue( True )
@@ -111,7 +99,7 @@ class CropTest( unittest.TestCase ) :
 
 		crop = GafferImage.Crop()
 		crop["in"].setInput(i["out"])
-		crop["areaSource"].setValue( GafferImage.Crop.AreaType.Custom )
+		crop["areaSource"].setValue( GafferImage.Crop.AreaSource.Custom )
 		crop["area"].setValue( IECore.Box2i( IECore.V2i( 40 ), IECore.V2i( 50 ) ) )
 		crop["affectDataWindow"].setValue( True )
 		crop["affectDisplayWindow"].setValue( False )
@@ -126,7 +114,7 @@ class CropTest( unittest.TestCase ) :
 
 		crop = GafferImage.Crop()
 		crop["in"].setInput(i["out"])
-		crop["areaSource"].setValue( GafferImage.Crop.AreaType.Custom )
+		crop["areaSource"].setValue( GafferImage.Crop.AreaSource.Custom )
 		crop["area"].setValue( IECore.Box2i( IECore.V2i( 40 ), IECore.V2i( 50 ) ) )
 		crop["affectDataWindow"].setValue( False )
 		crop["affectDisplayWindow"].setValue( True )
@@ -141,7 +129,7 @@ class CropTest( unittest.TestCase ) :
 
 		crop = GafferImage.Crop()
 		crop["in"].setInput(i["out"])
-		crop["areaSource"].setValue( GafferImage.Crop.AreaType.Custom )
+		crop["areaSource"].setValue( GafferImage.Crop.AreaSource.Custom )
 		crop["area"].setValue( IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 50 ) ) )
 		crop["affectDataWindow"].setValue( True )
 		crop["affectDisplayWindow"].setValue( False )
@@ -155,7 +143,7 @@ class CropTest( unittest.TestCase ) :
 
 		crop = GafferImage.Crop()
 		crop["in"].setInput(i["out"])
-		crop["areaSource"].setValue( GafferImage.Crop.AreaType.DataWindow )
+		crop["areaSource"].setValue( GafferImage.Crop.AreaSource.DataWindow )
 		crop["affectDataWindow"].setValue( False )
 		crop["affectDisplayWindow"].setValue( True )
 
@@ -168,7 +156,7 @@ class CropTest( unittest.TestCase ) :
 
 		crop = GafferImage.Crop()
 		crop["in"].setInput(i["out"])
-		crop["areaSource"].setValue( GafferImage.Crop.AreaType.DisplayWindow )
+		crop["areaSource"].setValue( GafferImage.Crop.AreaSource.DisplayWindow )
 		crop["affectDataWindow"].setValue( True )
 		crop["affectDisplayWindow"].setValue( False )
 
