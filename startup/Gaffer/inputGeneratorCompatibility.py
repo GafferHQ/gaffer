@@ -60,6 +60,17 @@ def __nodeGetItem( self, key ) :
 		
 	return self.__originalGetItem( key )
 
+def __nodeAddChild( self, child ) :
+
+	if re.match( "^in([0-9]+)$", child.getName() ) :
+		# This was an old input created by an InputGenerator.
+		# We're automatically redirecting accesses to these
+		# to the new ArrayPlug, so we just want to avoid adding
+		# them at all.
+		return
+
+	self.__originalAddChild( child )
+
 def __arrayPlugSetInput( self, input ) :
 
 	if getattr( self, "enableInputGeneratorCompatibility", False ) :
@@ -103,6 +114,9 @@ def __enableInputGeneratorCompatibility( nodeType ) :
 
 		nodeType.__originalGetItem = nodeType.__getitem__
 		nodeType.__getitem__ = __nodeGetItem
+
+		nodeType.__originalAddChild = nodeType.addChild
+		nodeType.addChild = __nodeAddChild
 
 if not hasattr( Gaffer.ArrayPlug, "__originalGetItem" ) :
 

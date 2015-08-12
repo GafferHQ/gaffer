@@ -257,6 +257,9 @@ class MergeTest( GafferTest.TestCase ) :
 		self.assertTrue( s["m"]["in"][0].getInput().isSame( s["c1"]["out"] ) )
 		self.assertTrue( s["m"]["in"][1].getInput().isSame( s["c2"]["out"] ) )
 
+		self.assertTrue( "in1" not in s["m"] )
+		self.assertTrue( "in2" not in s["m"] )
+
 		self.assertEqual( s["m"]["out"].channelData( "R", IECore.V2i( 0 ) )[0], 0.75 )
 
 if __name__ == "__main__":

@@ -763,6 +763,9 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 		self.assertTrue( s["g"]["in"][0].getInput().isSame( s["p"]["out"] ) )
 		self.assertTrue( s["g"]["in"][1].getInput().isSame( s["s"]["out"] ) )
 
+		self.assertTrue( "in1" not in s["g"] )
+		self.assertTrue( "in2" not in s["g"] )
+
 		self.assertEqual( s["g"]["out"].childNames( "/group" ), IECore.InternedStringVectorData( [ "plane", "sphere" ] ) )
 
 	def setUp( self ) :
