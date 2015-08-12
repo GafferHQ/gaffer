@@ -38,6 +38,9 @@
 #define GAFFERSCENEUI_STANDARDLIGHTVISUALISER_H
 
 #include "GafferSceneUI/LightVisualiser.h"
+#include "IECore/SimpleTypedData.h"
+#include "IECoreGL/Group.h"
+
 
 namespace GafferSceneUI
 {
@@ -57,17 +60,27 @@ class StandardLightVisualiser : public LightVisualiser
 		StandardLightVisualiser();
 		virtual ~StandardLightVisualiser();
 
-		virtual IECoreGL::ConstRenderablePtr visualise( const IECore::Object *object ) const;
+		virtual IECoreGL::ConstRenderablePtr visualise( const IECore::ObjectVector *shaderVector, IECoreGL::ConstStatePtr &state ) const;
 
 	protected :
-
 		static const char *faceCameraVertexSource();
 
 		static IECoreGL::ConstRenderablePtr ray();
 		static IECoreGL::ConstRenderablePtr pointRays();
 		static IECoreGL::ConstRenderablePtr spotlightCone( float innerAngle, float outerAngle );
-		static IECoreGL::ConstRenderablePtr colorIndicator( const Imath::Color3f &color, float intensity );
+		static IECoreGL::ConstRenderablePtr colorIndicator( const Imath::Color3f &color, bool indicatorFaceCamera = true );
 
+	private:
+		/// These methods are private because we haven't yet completely nailed down the API for this stuff
+		static const char *environmentLightDrawFragSource();
+		static const char *areaLightDrawVertexSource();
+		static const char *areaLightDrawFragSource();
+
+		static void addEnvLightVisualiser( IECoreGL::GroupPtr &output, Imath::Color3f multiplier, const std::string &textureName );
+		static void addAreaLightVisualiser( IECoreGL::ConstStatePtr &state, Imath::Color3f multiplier, const std::string &textureName, bool flipNormal, bool doubleSided, bool sphericalProjection, const Imath::M44f &projectionTransform );
+		static void addBasicLightVisualiser( IECore::ConstStringDataPtr type, IECoreGL::GroupPtr &output, Imath::Color3f multiplier, float coneAngle, float penumbraAngle, const std::string *penumbraType );
+
+		
 };
 
 IE_CORE_DECLAREPTR( StandardLightVisualiser )
