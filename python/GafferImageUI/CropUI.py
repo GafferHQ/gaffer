@@ -1,6 +1,7 @@
 ##########################################################################
 #
 #  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2015, Nvizible Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -41,12 +42,12 @@ import GafferUI
 
 ## A command suitable for use with NodeMenu.definition().append(), to add a menu
 # item for the creation of a crop node
-def postCreateCrop( node, script, menu ) :
+def postCreateCrop( node, menu ) :
 
 	if node['in'].getInput() :
 		cropFormat = node['in']['format'].getValue()
 	else:
-		cropFormat = script['defaultFormat'].getValue()
+		cropFormat = node.scriptNode()['defaultFormat'].getValue()
 
 	cropArea = cropFormat.getDisplayWindow()
 	cropArea.max += IECore.V2i( 1 )
@@ -65,7 +66,7 @@ Gaffer.Metadata.registerNode(
 	or Display Window.
 	""",
 
-	"layout:activator:areaSourceIsCustom", lambda node : node["areaSource"].getValue() == GafferImage.Crop.AreaType.Custom,
+	"layout:activator:areaSourceIsCustom", lambda node : node["areaSource"].getValue() == GafferImage.Crop.AreaSource.Custom,
 
 	plugs = {
 
@@ -93,9 +94,9 @@ Gaffer.Metadata.registerNode(
 			the Area plug.
 			""",
 
-			"preset:DataWindow", GafferImage.Crop.AreaType.DataWindow,
-			"preset:DisplayWindow", GafferImage.Crop.AreaType.DisplayWindow,
-			"preset:Custom", GafferImage.Crop.AreaType.Custom,
+			"preset:DataWindow", GafferImage.Crop.AreaSource.DataWindow,
+			"preset:DisplayWindow", GafferImage.Crop.AreaSource.DisplayWindow,
+			"preset:Custom", GafferImage.Crop.AreaSource.Custom,
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 
