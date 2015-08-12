@@ -360,6 +360,12 @@ class ExecutableNodeTest( GafferTest.TestCase ) :
 		s["fileName"].setValue( os.path.dirname( __file__ ) + "/scripts/promotedRequirementsVersion-0.15.0.0.gfr" )
 		s.load()
 
+	def testLoadPromotedRequirementsNetworkFromVersion0_15( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["fileName"].setValue( os.path.dirname( __file__ ) + "/scripts/promotedRequirementsNetworkVersion-0.15.0.0.gfr" )
+		s.load()	
+
 	def tearDown( self ) :
 
 		GafferTest.TestCase.tearDown( self )
