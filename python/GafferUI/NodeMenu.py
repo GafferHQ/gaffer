@@ -147,6 +147,6 @@ class NodeMenu :
 			nodeGraph.frame( [ node ], extend = True )
 
 			if postCreator is not None :
-				postCreator( node, script, menu )
+				postCreator( node, menu )
 
 		return f
