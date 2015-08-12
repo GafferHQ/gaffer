@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2013-2015, Image Engine Design Inc. All rights reserved.
-//  Copyright (c) 2013, Luke Goddard. All rights reserved.
 //  Copyright (c) 2015, Nvizible Ltd. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
@@ -36,10 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/bind.hpp"
-
 #include "GafferImage/Crop.h"
-#include "GafferImage/Sampler.h"
 
 using namespace Gaffer;
 using namespace IECore;
@@ -53,10 +49,10 @@ Crop::Crop( const std::string &name )
 	:   ImageProcessor( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
-	addChild( new IntPlug( "areaSource", Gaffer::Plug::In, Crop::DisplayWindow ) );
+	addChild( new IntPlug( "areaSource", Gaffer::Plug::In, Crop::Custom, Crop::Custom, Crop::DisplayWindow ) );
 	addChild( new Box2iPlug( "area" ) );
 	addChild( new BoolPlug( "affectDataWindow", Gaffer::Plug::In, true ) );
-	addChild( new BoolPlug( "affectDisplayWindow", Gaffer::Plug::In, false ) );
+	addChild( new BoolPlug( "affectDisplayWindow", Gaffer::Plug::In, true ) );
 
 	addChild( new AtomicBox2iPlug( "__cropWindow", Gaffer::Plug::Out ) );
 
@@ -125,7 +121,9 @@ void Crop::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs )
 	ImageProcessor::affects( input, outputs );
 
 	if ( areaPlug()->isAncestorOf( input ) ||
-	     input == areaSourcePlug() )
+	     input == areaSourcePlug() ||
+	     input == inPlug()->dataWindowPlug() ||
+	     input == inPlug()->formatPlug() )
 	{
 		outputs.push_back( cropWindowPlug() );
 	}
@@ -141,59 +139,38 @@ void Crop::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs )
 
 void Crop::hashFormat( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	bool affectDisplayWindow = affectDisplayWindowPlug()->getValue();
-
-	if ( ! affectDisplayWindow )
+	if ( ! affectDisplayWindowPlug()->getValue() )
 	{
 		// No-op because we are not applying this
 		// crop to the display window
-		h = inPlug()->formatPlug()->hash();
-		return;
-	}
-
-	Format inFormat = inPlug()->formatPlug()->getValue();
-
-	Imath::Box2i cropWindow = cropWindowPlug()->getValue();
-
-	Format newFormat( cropWindow, inFormat.getPixelAspect() );
-
-	if ( inFormat == newFormat )
-	{
-		// No-op because the resulting format will
-		// be identical to the input format
 		h = inPlug()->formatPlug()->hash();
 		return;
 	}
 
 	ImageProcessor::hashFormat( parent, context, h );
 
+	inPlug()->formatPlug()->hash( h );
 	cropWindowPlug()->hash( h );
 }
 
 GafferImage::Format Crop::computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
-	bool affectDisplayWindow = affectDisplayWindowPlug()->getValue();
-
-	if ( ! affectDisplayWindow )
+	if ( ! affectDisplayWindowPlug()->getValue() )
 	{
 		// No-op because we are not applying this
 		// crop to the display window
 		return inPlug()->formatPlug()->getValue();
 	}
 
-	Format inFormat = inPlug()->formatPlug()->getValue();
-
 	Imath::Box2i cropWindow = cropWindowPlug()->getValue();
 
-	return Format( cropWindow, inFormat.getPixelAspect() );
+	return Format( cropWindow, inPlug()->formatPlug()->getValue().getPixelAspect() );
 }
 
 
 void Crop::hashDataWindow( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	bool affectDataWindow = affectDataWindowPlug()->getValue();
-
-	if ( ! affectDataWindow )
+	if ( ! affectDataWindowPlug()->getValue() )
 	{
 		// No-op because we are not applying this
 		// crop to the data window
@@ -201,30 +178,15 @@ void Crop::hashDataWindow( const GafferImage::ImagePlug *parent, const Gaffer::C
 		return;
 	}
 
-	Imath::Box2i cropWindow = cropWindowPlug()->getValue();
-	Imath::Box2i dataWindow = inPlug()->dataWindowPlug()->getValue();
-
-	if ( dataWindow.min.x >= cropWindow.min.x &&
-		 dataWindow.min.y >= cropWindow.min.y &&
-		 dataWindow.max.x <= cropWindow.max.x &&
-		 dataWindow.max.y <= cropWindow.max.y )
-	{
-		// No-op because the data window is wholly
-		// contained inside the specified area
-		h = inPlug()->dataWindowPlug()->hash();
-		return;
-	}
-
 	ImageProcessor::hashDataWindow( parent, context, h );
 
+	inPlug()->dataWindowPlug()->hash( h );
 	cropWindowPlug()->hash( h );
 }
 
 Imath::Box2i Crop::computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
-	bool affectDataWindow = affectDataWindowPlug()->getValue();
-
-	if ( ! affectDataWindow )
+	if ( ! affectDataWindowPlug()->getValue() )
 	{
 		// No-op because we are not applying this
 		// crop to the data window
@@ -242,6 +204,8 @@ Imath::Box2i Crop::computeDataWindow( const Gaffer::Context *context, const Imag
 
 void Crop::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
+	ImageProcessor::hash( output, context, h );
+
 	if ( output == cropWindowPlug() )
 	{
 		int areaSource = areaSourcePlug()->getValue();
@@ -264,10 +228,6 @@ void Crop::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context
 				break;
 			}
 		}
-	}
-	else
-	{
-		ImageProcessor::hash( output, context, h );
 	}
 }
 

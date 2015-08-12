@@ -38,16 +38,12 @@
 #ifndef GAFFERIMAGE_CROP_H
 #define GAFFERIMAGE_CROP_H
 
-#include "GafferImage/ImageProcessor.h"
 #include "Gaffer/BoxPlug.h"
+#include "GafferImage/ImageProcessor.h"
 
 namespace GafferImage
 {
 
-
-/// Reformats the input image to a new resolution using a resampling filter.
-/// \todo: Add support for changing the pixelAspect of the image.
-/// \todo Reimplement in terms of a network of simpler atomic operations.
 class Crop : public ImageProcessor
 {
 	public :
@@ -57,7 +53,7 @@ class Crop : public ImageProcessor
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::Crop, CropTypeId, ImageProcessor );
 
-		enum AreaType
+		enum AreaSource
 		{
 			Custom = 0,
 			DataWindow = 1,
@@ -73,8 +69,6 @@ class Crop : public ImageProcessor
 		const Gaffer::BoolPlug *affectDataWindowPlug() const;
 		Gaffer::BoolPlug *affectDisplayWindowPlug();
 		const Gaffer::BoolPlug *affectDisplayWindowPlug() const;
-		Gaffer::AtomicBox2iPlug *cropWindowPlug();
-		const Gaffer::AtomicBox2iPlug *cropWindowPlug() const;
 
 		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
 
@@ -90,6 +84,9 @@ class Crop : public ImageProcessor
 		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const;
 
 	private :
+
+		Gaffer::AtomicBox2iPlug *cropWindowPlug();
+		const Gaffer::AtomicBox2iPlug *cropWindowPlug() const;
 
 		static size_t g_firstPlugIndex;
 };
