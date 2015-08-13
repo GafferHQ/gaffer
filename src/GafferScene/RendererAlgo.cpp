@@ -48,6 +48,7 @@
 #include "IECore/ClippingPlane.h"
 
 #include "Gaffer/Context.h"
+#include "Gaffer/Metadata.h"
 
 #include "GafferScene/RendererAlgo.h"
 #include "GafferScene/SceneProcedural.h"
@@ -229,6 +230,13 @@ bool outputLight( const ScenePlug *scene, const ScenePlug::ScenePath &path, IECo
 		outputAttributes( attributes.get(), renderer );
 
 		renderer->concatTransform( transform );
+
+		InternedString metadataTarget = "light:" + constLight->getName();
+		ConstM44fDataPtr orientation = Metadata::value<M44fData>( metadataTarget, "renderOrientation" );
+		if( orientation )
+		{
+			renderer->concatTransform( orientation->readable() );
+		}
 
 		light->render( renderer );
 	}
