@@ -45,6 +45,7 @@ namespace Gaffer
 IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( Gaffer::BoolPlug, BoolPlugTypeId )
 IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( Gaffer::M33fPlug, M33fPlugTypeId )
 IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( Gaffer::M44fPlug, M44fPlugTypeId )
+IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( Gaffer::AtomicBox2fPlug, AtomicBox2fPlugTypeId )
 IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( Gaffer::AtomicBox3fPlug, AtomicBox3fPlugTypeId )
 IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( Gaffer::AtomicBox2iPlug, AtomicBox2iPlugTypeId )
 
@@ -89,6 +90,7 @@ void BoolPlug::setFrom( const ValuePlug *other )
 template class TypedPlug<bool>;
 template class TypedPlug<Imath::M33f>;
 template class TypedPlug<Imath::M44f>;
+template class TypedPlug<Imath::Box2f>;
 template class TypedPlug<Imath::Box3f>;
 template class TypedPlug<Imath::Box2i>;
 
