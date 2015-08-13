@@ -82,12 +82,12 @@ Plug *Box::promotePlug( Plug *descendantPlug )
 	// for types like CompoundNumericPlug that create children in their constructors.
 	const Gaffer::TypeId compoundTypes[] = { PlugTypeId, ValuePlugTypeId, CompoundPlugTypeId, ArrayPlugTypeId };
 	const Gaffer::TypeId *compoundTypesEnd = compoundTypes + 4;
-	if( find( compoundTypes, compoundTypesEnd, externalPlug->typeId() ) != compoundTypesEnd )
+	if( find( compoundTypes, compoundTypesEnd, (Gaffer::TypeId)externalPlug->typeId() ) != compoundTypesEnd )
 	{
 		for( RecursivePlugIterator it( externalPlug.get() ); it != it.end(); ++it )
 		{
 			(*it)->setFlags( Plug::Dynamic, true );
-			if( find( compoundTypes, compoundTypesEnd, (*it)->typeId() ) != compoundTypesEnd )
+			if( find( compoundTypes, compoundTypesEnd, (Gaffer::TypeId)(*it)->typeId() ) != compoundTypesEnd )
 			{
 				it.prune();
 			}
