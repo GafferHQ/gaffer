@@ -196,10 +196,16 @@ Imath::Box2i Crop::computeDataWindow( const Gaffer::Context *context, const Imag
 	Imath::Box2i cropWindow = cropWindowPlug()->getValue();
 	Imath::Box2i dataWindow = inPlug()->dataWindowPlug()->getValue();
 
-	return Imath::Box2i( Imath::V2i( std::max( dataWindow.min.x, cropWindow.min.x ),
-									 std::max( dataWindow.min.y, cropWindow.min.y ) ),
-						 Imath::V2i( std::min( dataWindow.max.x, cropWindow.max.x ),
-									 std::min( dataWindow.max.y, cropWindow.max.y ) ) );
+	return Imath::Box2i(
+		Imath::V2i(
+			std::max( dataWindow.min.x, cropWindow.min.x ),
+			std::max( dataWindow.min.y, cropWindow.min.y )
+		),
+		Imath::V2i(
+			std::min( dataWindow.max.x, cropWindow.max.x ),
+			std::min( dataWindow.max.y, cropWindow.max.y )
+		)
+	);
 }
 
 void Crop::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
