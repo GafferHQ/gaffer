@@ -271,6 +271,8 @@ nodeMenu.append( "/Scene/OpenGL/Render", GafferScene.OpenGLRender, searchText = 
 import GafferImage
 import GafferImageUI
 
+
+
 nodeMenu.append( "/Image/Source/Display", GafferImage.Display )
 nodeMenu.append( "/Image/Source/Reader", GafferImage.ImageReader, searchText = "ImageReader" )
 nodeMenu.append( "/Image/Source/Writer", GafferImage.ImageWriter, searchText = "ImageWriter" )
@@ -284,6 +286,7 @@ nodeMenu.append( "/Image/Merge/Merge", GafferImage.Merge )
 nodeMenu.append( "/Image/Merge/Switch", GafferImage.ImageSwitch, searchText = "ImageSwitch" )
 nodeMenu.append( "/Image/Transform/Reformat", GafferImage.Reformat )
 nodeMenu.append( "/Image/Transform/Transform", GafferImage.ImageTransform, searchText = "ImageTransform" )
+nodeMenu.append( "/Image/Transform/Crop", GafferImage.Crop, postCreator = GafferImageUI.CropUI.postCreateCrop )
 nodeMenu.append( "/Image/Channels/Shuffle", GafferImageUI.ShuffleUI.nodeMenuCreateCommand, searchText = "Shuffle" )
 nodeMenu.append( "/Image/Channels/Delete", GafferImage.DeleteChannels, searchText = "DeleteChannels" )
 nodeMenu.append( "/Image/Context/Time Warp", GafferImage.ImageTimeWarp, searchText = "ImageTimeWarp" )
@@ -343,9 +346,9 @@ nodeMenu.append( "/Utility/Reference", GafferUI.ReferenceUI.nodeMenuCreateComman
 nodeMenu.definition().append( "/Utility/Backdrop", { "command" : GafferUI.BackdropUI.nodeMenuCreateCommand } )
 nodeMenu.append( "/Utility/Dot", Gaffer.Dot )
 
-# appleseed uses GafferOSL shaders so  we need to 
+# appleseed uses GafferOSL shaders so  we need to
 # add the paths to them to OSL_SHADER_PATHS environment var.
-# this has to happen after GafferOSL is initialized otherwise 
+# this has to happen after GafferOSL is initialized otherwise
 # appleseed shaders also show on the OSL menu.
 if "APPLESEED" in os.environ :
 

@@ -69,5 +69,6 @@ import ImageLoopUI
 import ShuffleUI
 import PremultiplyUI
 import UnpremultiplyUI
+import CropUI
 
 __import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferImageUI" )

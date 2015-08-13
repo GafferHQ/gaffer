@@ -60,6 +60,7 @@
 #include "GafferImage/CopyImageMetadata.h"
 #include "GafferImage/Premultiply.h"
 #include "GafferImage/Unpremultiply.h"
+#include "GafferImage/Crop.h"
 
 #include "GafferImageBindings/ImageNodeBinding.h"
 #include "GafferImageBindings/ImageProcessorBinding.h"
@@ -76,6 +77,7 @@
 #include "GafferImageBindings/FormatDataBinding.h"
 #include "GafferImageBindings/ImageReaderBinding.h"
 #include "GafferImageBindings/ShuffleBinding.h"
+#include "GafferImageBindings/CropBinding.h"
 
 using namespace boost::python;
 using namespace GafferImage;
@@ -122,6 +124,7 @@ BOOST_PYTHON_MODULE( _GafferImage )
 	GafferImageBindings::bindImageReader();
 	GafferImageBindings::bindMerge();
 	GafferImageBindings::bindShuffle();
+	GafferImageBindings::bindCrop();
 
 	GafferBindings::ExecutableNodeClass<ImageWriter>();
 }
