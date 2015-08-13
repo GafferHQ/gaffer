@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012, John Haddon. All rights reserved.
 //  Copyright (c) 2013-2015, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2015, Nvizible Ltd. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,69 +35,64 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_TYPEIDS_H
-#define GAFFERIMAGE_TYPEIDS_H
+#ifndef GAFFERIMAGE_CROP_H
+#define GAFFERIMAGE_CROP_H
+
+#include "Gaffer/BoxPlug.h"
+#include "GafferImage/ImageProcessor.h"
 
 namespace GafferImage
 {
 
-enum TypeId
+class Crop : public ImageProcessor
 {
-	ImagePlugTypeId = 110750,
-	ImageNodeTypeId = 110751,
-	ImageReaderTypeId = 110752,
-	ImagePrimitiveNodeTypeId = 110753,
-	DisplayTypeId = 110754,
-	GafferDisplayDriverTypeId = 110755,
-	ImageProcessorTypeId = 110756,
-	ChannelDataProcessorTypeId = 110757,
-	OpenColorIOTypeId = 110758,
-	ObjectToImageTypeId = 110759,
-	FormatDataTypeId = 110760,
-	FormatPlugTypeId = 110761,
-	MergeTypeId = 110762,
-	GradeTypeId = 110763,
-	ShuffleTypeId = 110764,
-	ConstantTypeId = 110765,
-	ShuffleChannelPlugTypeId = 110766,
-	ChannelMaskPlugTypeId = 110767,
-	ReformatTypeId = 110768,
-	FilterPlugTypeId = 110769,
-	ImageWriterTypeId = 110770,
-	ImageTransformTypeId = 110771,
-	FilterTypeId = 110772,
-	BoxFilterTypeId = 110773,
-	BilinearFilterTypeId = 110774,
-	SplineFilterTypeId = 110775,
-	BSplineFilterTypeId = 110776,
-	HermiteFilterTypeId = 110777,
-	CubicFilterTypeId = 110778,
-	MitchellFilterTypeId = 110779,
-	CatmullRomFilterTypeId = 110780,
-	SincFilterTypeId = 110781,
-	LanczosFilterTypeId = 110782,
-	ImageStatsTypeId = 110783,
-	ImageTransformImplementationTypeId = 110784,
-	DeleteChannelsTypeId = 110785,
-	ColorProcessorTypeId = 110786,
-	ClampTypeId = 110787,
-	UnpremultiplyTypeId = 110788,
-	ImageContextProcessorTypeId = 110789,
-	ImageTimeWarpTypeId = 110790,
-	ImageContextVariablesTypeId = 110791,
-	ImageSwitchTypeId = 110792,
-	ImageSamplerTypeId = 110793,
-	MetadataProcessorTypeId = 110794,
-	ImageMetadataTypeId = 110795,
-	DeleteImageMetadataTypeId = 110796,
-	CopyImageMetadataTypeId = 110797,
-	ImageLoopTypeId = 110798,
-	PremultiplyTypeId = 110799,
-	CropTypeId = 110800,
+	public :
 
-	LastTypeId = 110849
+		Crop( const std::string &name=defaultName<Crop>() );
+		virtual ~Crop();
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::Crop, CropTypeId, ImageProcessor );
+
+		enum AreaSource
+		{
+			Custom = 0,
+			DataWindow = 1,
+			DisplayWindow = 2
+		};
+
+		/// Plug accessors.
+		Gaffer::IntPlug *areaSourcePlug();
+		const Gaffer::IntPlug *areaSourcePlug() const;
+		Gaffer::Box2iPlug *areaPlug();
+		const Gaffer::Box2iPlug *areaPlug() const;
+		Gaffer::BoolPlug *affectDataWindowPlug();
+		const Gaffer::BoolPlug *affectDataWindowPlug() const;
+		Gaffer::BoolPlug *affectDisplayWindowPlug();
+		const Gaffer::BoolPlug *affectDisplayWindowPlug() const;
+
+		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
+
+	protected :
+
+		virtual void hashFormat( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual void hashDataWindow( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+
+		virtual GafferImage::Format computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const;
+		virtual Imath::Box2i computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const;
+
+		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const;
+
+	private :
+
+		Gaffer::AtomicBox2iPlug *cropWindowPlug();
+		const Gaffer::AtomicBox2iPlug *cropWindowPlug() const;
+
+		static size_t g_firstPlugIndex;
 };
+
+IE_CORE_DECLAREPTR( Crop )
 
 } // namespace GafferImage
 
-#endif // GAFFERIMAGE_TYPEIDS_H
+#endif // GAFFERIMAGE_CROP_H
