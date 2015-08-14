@@ -208,13 +208,19 @@ def __boxDataSetter( plug, value ) :
 
 	value = value.value
 
-	vectorPlug = plug.parent()
-	boxPlug = vectorPlug.parent()
+	if isinstance( plug, ( Gaffer.FloatPlug, Gaffer.IntPlug ) ) :
 
-	vector = value.min if vectorPlug.getName() == "min" else value.max
-	index = vectorPlug.children().index( plug )
+		vectorPlug = plug.parent()
+		boxPlug = vectorPlug.parent()
 
-	plug.setValue( vector[index] )
+		vector = value.min if vectorPlug.getName() == "min" else value.max
+		index = vectorPlug.children().index( plug )
+
+		plug.setValue( vector[index] )
+
+	else :
+
+		plug.setValue( value )
 
 def __nullObjectSetter( plug, value ) :
 
