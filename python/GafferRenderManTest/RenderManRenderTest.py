@@ -514,9 +514,9 @@ class RenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		s["camera3"]["name"].setValue( "camera3" )
 
 		s["group"] = GafferScene.Group()
-		s["group"]["in"].setInput( s["camera1"]["out"] )
-		s["group"]["in1"].setInput( s["camera2"]["out"] )
-		s["group"]["in2"].setInput( s["camera3"]["out"] )
+		s["group"]["in"][0].setInput( s["camera1"]["out"] )
+		s["group"]["in"][1].setInput( s["camera2"]["out"] )
+		s["group"]["in"][2].setInput( s["camera3"]["out"] )
 
 		s["options"] = GafferScene.StandardOptions()
 		s["options"]["in"].setInput( s["group"]["out"] )
@@ -552,7 +552,7 @@ class RenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		s["c"]["name"].setValue( "myCoordSys" )
 
 		s["g"] = GafferScene.Group()
-		s["g"]["in"].setInput( s["c"]["out"] )
+		s["g"]["in"][0].setInput( s["c"]["out"] )
 
 		s["f1"] = GafferScene.PathFilter()
 		s["f2"] = GafferScene.PathFilter()
@@ -600,7 +600,7 @@ class RenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		s["l"].loadShader( "pointlight" )
 
 		s["g"] = GafferScene.Group()
-		s["g"]["in"].setInput( s["l"]["out"] )
+		s["g"]["in"][0].setInput( s["l"]["out"] )
 
 		s["f1"] = GafferScene.PathFilter()
 		s["f2"] = GafferScene.PathFilter()

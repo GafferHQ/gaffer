@@ -111,13 +111,13 @@ import FreezeTransformUI
 import SceneElementProcessorUI
 import PointConstraintUI
 import SceneTimeWarpUI
-import FilterMixinBaseUI
 import BranchCreatorUI
 import ConstraintUI
 import PlaneUI
 import CubeUI
 import AttributeVisualiserUI
 import SceneLoopUI
+import FilterProcessorUI
 
 # then all the PathPreviewWidgets. note that the order
 # of import controls the order of display.

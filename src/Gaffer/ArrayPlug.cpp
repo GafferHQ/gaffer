@@ -39,6 +39,7 @@
 
 #include "Gaffer/ArrayPlug.h"
 #include "Gaffer/BlockedConnection.h"
+#include "Gaffer/ScriptNode.h"
 
 using namespace boost;
 using namespace Gaffer;

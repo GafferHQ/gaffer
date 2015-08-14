@@ -75,6 +75,7 @@ void GafferSceneBindings::bindFilter()
 	}
 
 	GafferBindings::DependencyNodeClass<PathFilter>();
+	GafferBindings::DependencyNodeClass<FilterProcessor>();
 	GafferBindings::DependencyNodeClass<UnionFilter>();
 	GafferBindings::DependencyNodeClass<SetFilter>();
 }

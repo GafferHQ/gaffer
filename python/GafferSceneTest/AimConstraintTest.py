@@ -59,8 +59,8 @@ class AimConstraintTest( GafferSceneTest.SceneTestCase ) :
 		plane2["name"].setValue( "constrained" )
 
 		group = GafferScene.Group()
-		group["in"].setInput( plane1["out"] )
-		group["in1"].setInput( plane2["out"] )
+		group["in"][0].setInput( plane1["out"] )
+		group["in"][1].setInput( plane2["out"] )
 
 		self.assertSceneValid( group["out"] )
 
@@ -95,8 +95,8 @@ class AimConstraintTest( GafferSceneTest.SceneTestCase ) :
 		plane2["name"].setValue( "constrained" )
 
 		group = GafferScene.Group()
-		group["in"].setInput( plane1["out"] )
-		group["in1"].setInput( plane2["out"] )
+		group["in"][0].setInput( plane1["out"] )
+		group["in"][1].setInput( plane2["out"] )
 
 		self.assertSceneValid( group["out"] )
 
@@ -130,8 +130,8 @@ class AimConstraintTest( GafferSceneTest.SceneTestCase ) :
 		plane2["name"].setValue( "constrained" )
 
 		group = GafferScene.Group()
-		group["in"].setInput( plane1["out"] )
-		group["in1"].setInput( plane2["out"] )
+		group["in"][0].setInput( plane1["out"] )
+		group["in"][1].setInput( plane2["out"] )
 
 		self.assertSceneValid( group["out"] )
 
@@ -178,8 +178,8 @@ class AimConstraintTest( GafferSceneTest.SceneTestCase ) :
 		plane2["name"].setValue( "constrained" )
 
 		group = GafferScene.Group()
-		group["in"].setInput( plane1["out"] )
-		group["in1"].setInput( plane2["out"] )
+		group["in"][0].setInput( plane1["out"] )
+		group["in"][1].setInput( plane2["out"] )
 
 		self.assertSceneValid( group["out"] )
 

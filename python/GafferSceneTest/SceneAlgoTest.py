@@ -48,8 +48,8 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 		sphere = GafferScene.Sphere()
 		plane = GafferScene.Plane()
 		group = GafferScene.Group()
-		group["in"].setInput( sphere["out"] )
-		group["in1"].setInput( plane["out"] )
+		group["in"][0].setInput( sphere["out"] )
+		group["in"][1].setInput( plane["out"] )
 
 		plane2 = GafferScene.Plane()
 		plane2["divisions"].setValue( IECore.V2i( 99, 99 ) ) # 10000 instances
@@ -75,8 +75,8 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 		sphere = GafferScene.Sphere()
 		plane = GafferScene.Plane()
 		group = GafferScene.Group()
-		group["in"].setInput( sphere["out"] )
-		group["in1"].setInput( plane["out"] )
+		group["in"][0].setInput( sphere["out"] )
+		group["in"][1].setInput( plane["out"] )
 
 		self.assertTrue( GafferScene.exists( group["out"], "/" ) )
 		self.assertTrue( GafferScene.exists( group["out"], "/group" ) )
@@ -92,9 +92,9 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 
 		sphere = GafferScene.Sphere()
 		group = GafferScene.Group()
-		group["in"].setInput( sphere["out"] )
+		group["in"][0].setInput( sphere["out"] )
 		group2 = GafferScene.Group()
-		group2["in"].setInput( group["out"] )
+		group2["in"][0].setInput( group["out"] )
 
 		visibleFilter = GafferScene.PathFilter()
 

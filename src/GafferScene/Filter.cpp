@@ -148,3 +148,13 @@ void Filter::compute( ValuePlug *output, const Context *context ) const
 
 	ComputeNode::compute( output, context );
 }
+
+void Filter::hashMatch( const ScenePlug *scene, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	/// \todo See comments in hash() method.
+}
+
+unsigned Filter::computeMatch( const ScenePlug *scene, const Gaffer::Context *context ) const
+{
+	return NoMatch;
+}

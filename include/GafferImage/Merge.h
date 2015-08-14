@@ -37,7 +37,7 @@
 #ifndef GAFFERIMAGE_MERGE_H
 #define GAFFERIMAGE_MERGE_H
 
-#include "Gaffer/Behaviours/InputGenerator.h"
+#include "Gaffer/NumericPlug.h"
 
 #include "GafferImage/ImageProcessor.h"
 
@@ -47,14 +47,10 @@ namespace GafferImage
 /// A node for Merging two or more images. Merge will use the displayWindow and metadata from the first input;
 /// expand the dataWindow to the union of all dataWindows from the connected inputs; create a union of
 /// channelNames from all the connected inputs, and will merge the channelData according to the operation mode.
-/// \todo Ideally ImageProcessor will be capable of having multiple inputs via an ArrayPlug called "in", at
-/// which point we can remove this custom InputGenerator behaviour.
 class Merge : public ImageProcessor
 {
 
 	public :
-
-		typedef std::vector<Gaffer::Behaviours::InputGenerator<GafferImage::ImagePlug>::PlugClassPtr> ImagePlugList;
 
 		Merge( const std::string &name=defaultName<Merge>() );
 		virtual ~Merge();
@@ -113,9 +109,6 @@ class Merge : public ImageProcessor
 		virtual IECore::ConstStringVectorDataPtr computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const;
 		/// Implemented to call doMergeOperation according to operationPlug()
 		virtual IECore::ConstFloatVectorDataPtr computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const;
-
-		// A helper class that manages our ImagePlug inputs.
-		Gaffer::Behaviours::InputGenerator<ImagePlug> m_inputs;
 
 	private :
 

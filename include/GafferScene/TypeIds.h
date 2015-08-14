@@ -45,7 +45,7 @@ enum TypeId
 {
 	ScenePlugTypeId = 110501,
 	SceneNodeTypeId = 110502,
-	FileSourceTypeId = 110503, // obsolete, available for reuse
+	FilterProcessorTypeId = 110503,
 	SetFilterTypeId = 110504,
 	SceneProcessorTypeId = 110505,
 	SceneElementProcessorTypeId = 110506,
@@ -119,7 +119,7 @@ enum TypeId
 	DeleteOutputsTypeId = 110574,
 	ExternalProceduralTypeId = 110575,
 	ScenePathTypeId = 110576,
-	FilterMixinBaseTypeId = 110577,
+	FilterMixinBaseTypeId = 110577,  // obsolete, available for reuse
 	FilterSwitchTypeId = 110578,
 	DeleteSetsTypeId = 110579,
 	ParametersTypeId = 110580,

@@ -160,8 +160,8 @@ class SceneNodeTest( GafferTest.TestCase ) :
 		p2["divisions"].setValue( IECore.V2i( 51 ) )
 
 		g = GafferScene.Group()
-		g["in"].setInput( p1["out"] )
-		g["in1"].setInput( p2["out"] )
+		g["in"][0].setInput( p1["out"] )
+		g["in"][1].setInput( p2["out"] )
 
 		# not enough for both objects - will cause cache thrashing
 		Gaffer.ValuePlug.setCacheMemoryLimit( p1["out"].object( "/plane" ).memoryUsage() )
@@ -219,8 +219,8 @@ class SceneNodeTest( GafferTest.TestCase ) :
 
 				self["__primitiveSwitch"] = GafferScene.SceneSwitch()
 				self["__primitiveSwitch"]["index"].setInput( self["type"] )
-				self["__primitiveSwitch"]["in"].setInput( self["__sphere"]["out"] )
-				self["__primitiveSwitch"]["in1"].setInput( self["__cube"]["out"] )
+				self["__primitiveSwitch"]["in"][0].setInput( self["__sphere"]["out"] )
+				self["__primitiveSwitch"]["in"][1].setInput( self["__cube"]["out"] )
 
 				self["out"].setInput( self["__primitiveSwitch"]["out"] )
 

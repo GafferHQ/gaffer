@@ -34,45 +34,67 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_FILTERMIXINBASE_H
-#define GAFFERSCENE_FILTERMIXINBASE_H
+#ifndef GAFFERSCENE_FILTERPROCESSOR_H
+#define GAFFERSCENE_FILTERPROCESSOR_H
 
 #include "GafferScene/Filter.h"
+
+namespace Gaffer
+{
+
+IE_CORE_FORWARDDECLARE( ArrayPlug )
+
+} // namespace Gaffer
 
 namespace GafferScene
 {
 
-/// \todo Turn this into a FilterProcessor which can form the base for
-/// UnionFilter and also FilterSwitch - this way it will match the way
-/// we now implement mix-ins for SceneProcessors and ImageProcessors.
-/// The main obstacle to doing this is that UnionFilter::inPlug() is an
-/// ArrayPlug, but Switch expects a non-array inPlug(). We want to make
-/// SceneProcessor::inPlug() and ImageProcessor::inPlug() to return
-/// ArrayPlugs anyway though, so we should be able to do all that
-/// refactoring at the same time.
-class FilterMixinBase : public Filter
+/// A base class for filters which operate by processing one
+/// or more input filters.
+class FilterProcessor : public Filter
 {
 
 	public :
 
-		FilterMixinBase( const std::string &name=defaultName<FilterMixinBase>() );
-		virtual ~FilterMixinBase();
+		/// Constructs with a single input filter plug named "in". Use inPlug()
+		/// to access this plug.
+		FilterProcessor( const std::string &name=defaultName<FilterProcessor>() );
+		/// Constructs with an ArrayPlug called "in". Use inPlug() as a
+		/// convenience for accessing the first child in the array, and use
+		/// inPlugs() to access the array itself.
+		FilterProcessor( const std::string &name, size_t minInputs, size_t maxInputs = Imath::limits<size_t>::max() );
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::FilterMixinBase, FilterMixinBaseTypeId, Filter );
+		virtual ~FilterProcessor();
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::FilterProcessor, FilterProcessorTypeId, Filter );
+
+		/// Returns the primary filter input. For nodes with multiple inputs
+		/// this will be the first child of the inPlugs() array. For nodes
+		/// with a single input, it will be a plug parented directly to the
+		/// node. If the node is disabled via enabledPlug(), then the inPlug()
+		/// is automatically passed through directly to the outPlug().
+		Gaffer::IntPlug *inPlug();
+		const Gaffer::IntPlug *inPlug() const;
+
+		/// For nodes with multiple inputs, returns the ArrayPlug which
+		/// hosts them. For single input nodes, returns NULL;
+		Gaffer::ArrayPlug *inPlugs();
+		const Gaffer::ArrayPlug *inPlugs() const;
 
 		virtual bool sceneAffectsMatch( const ScenePlug *scene, const Gaffer::ValuePlug *child ) const;
 
+	protected :
+
+		virtual bool acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const;
+
 	private :
 
-		/// These stubs should never be called, because the mixed-in class should implement hash() and compute()
-		/// totally. If they are called, they throw to highlight the fact that something is amiss.
-		virtual void hashMatch( const ScenePlug *scene, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual unsigned computeMatch( const ScenePlug *scene, const Gaffer::Context *context ) const;
+		static size_t g_firstPlugIndex;
 
 };
 
-IE_CORE_DECLAREPTR( FilterMixinBase )
+IE_CORE_DECLAREPTR( FilterProcessor )
 
 } // namespace GafferScene
 
-#endif // GAFFERSCENE_FILTERMIXINBASE_H
+#endif // GAFFERSCENE_FILTERPROCESSOR_H

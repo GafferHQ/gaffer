@@ -80,7 +80,7 @@ class SubTreeTest( GafferSceneTest.SceneTestCase ) :
 
 		l = GafferSceneTest.TestLight()
 		g = GafferScene.Group()
-		g["in"].setInput( l["out"] )
+		g["in"][0].setInput( l["out"] )
 
 		self.assertSetsValid( g["out"] )
 
@@ -107,7 +107,7 @@ class SubTreeTest( GafferSceneTest.SceneTestCase ) :
 
 		p = GafferScene.Plane()
 		g = GafferScene.Group()
-		g["in"].setInput( p["out"] )
+		g["in"][0].setInput( p["out"] )
 
 		s = GafferScene.SubTree()
 		s["in"].setInput( g["out"] )
@@ -134,25 +134,25 @@ class SubTreeTest( GafferSceneTest.SceneTestCase ) :
 
 		lg1 = GafferScene.Group()
 		lg1["name"].setValue( "lightGroup1" )
-		lg1["in"].setInput( l["out"] )
+		lg1["in"][0].setInput( l["out"] )
 
 		lg2 = GafferScene.Group()
 		lg2["name"].setValue( "lightGroup2" )
-		lg2["in"].setInput( l["out"] )
+		lg2["in"][0].setInput( l["out"] )
 
 		lg3 = GafferScene.Group()
 		lg3["name"].setValue( "lightGroup" )
-		lg3["in"].setInput( l["out"] )
+		lg3["in"][0].setInput( l["out"] )
 
 		lg4 = GafferScene.Group()
 		lg4["name"].setValue( "lightGroup10" )
-		lg4["in"].setInput( l["out"] )
+		lg4["in"][0].setInput( l["out"] )
 
 		g = GafferScene.Group()
-		g["in"].setInput( lg1["out"] )
-		g["in1"].setInput( lg2["out"] )
-		g["in2"].setInput( lg3["out"] )
-		g["in3"].setInput( lg4["out"] )
+		g["in"][0].setInput( lg1["out"] )
+		g["in"][1].setInput( lg2["out"] )
+		g["in"][2].setInput( lg3["out"] )
+		g["in"][3].setInput( lg4["out"] )
 
 		self.assertSetsValid( g["out"] )
 
@@ -180,7 +180,7 @@ class SubTreeTest( GafferSceneTest.SceneTestCase ) :
 
 		l = GafferSceneTest.TestLight()
 		g = GafferScene.Group()
-		g["in"].setInput( l["out"] )
+		g["in"][0].setInput( l["out"] )
 
 		s = GafferScene.SubTree()
 		s["in"].setInput( g["out"] )
@@ -276,7 +276,7 @@ class SubTreeTest( GafferSceneTest.SceneTestCase ) :
 
 		l = GafferSceneTest.TestLight()
 		g = GafferScene.Group()
-		g["in"].setInput( l["out"] )
+		g["in"][0].setInput( l["out"] )
 
 		self.assertSetsValid( g["out"] )
 
@@ -293,7 +293,7 @@ class SubTreeTest( GafferSceneTest.SceneTestCase ) :
 
 		l = GafferSceneTest.TestLight()
 		g = GafferScene.Group()
-		g["in"].setInput( l["out"] )
+		g["in"][0].setInput( l["out"] )
 
 		self.assertSetsValid( g["out"] )
 
@@ -309,7 +309,7 @@ class SubTreeTest( GafferSceneTest.SceneTestCase ) :
 
 		l = GafferSceneTest.TestLight()
 		g = GafferScene.Group()
-		g["in"].setInput( l["out"] )
+		g["in"][0].setInput( l["out"] )
 
 		s = GafferScene.SubTree()
 		s["in"].setInput( g["out"] )

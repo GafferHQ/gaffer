@@ -42,6 +42,6 @@ import GafferScene
 def __getItem( self, key ) :
 
 	key = "out" if key == "match" else key
-	return Gaffer.GraphComponent.__getitem__( self, key )
+	return Gaffer.ComputeNode.__getitem__( self, key )
 
 GafferScene.Filter.__getitem__ = __getItem

@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,49 +35,12 @@
 ##########################################################################
 
 import Gaffer
-import GafferUI
+import GafferImage
 
-import GafferScene
-import GafferSceneUI
+# Backwards compatibility for old nodes which originally
+# used InputGenerators and now use ArrayPlugs instead.
+# See startup/Gaffer/inputGeneratorCompatibility.py for
+# details of how this works.
 
-Gaffer.Metadata.registerNode(
-
-	GafferScene.SceneProcessor,
-
-	"description",
-	"""
-	The base type for all nodes which take an input scene and process it in some way.
-	""",
-
-	plugs = {
-
-		"in" : [
-
-			"description", lambda plug : "The input scene" + ( "s" if isinstance( plug, Gaffer.ArrayPlug ) else "" ),
-			"nodule:type", lambda plug : "GafferUI::CompoundNodule" if isinstance( plug, Gaffer.ArrayPlug ) else "GafferUI::StandardNodule",
-			"compoundNodule:spacing", 2.0,
-
-		],
-
-		"out" : [
-
-			"description",
-			"""
-			The processed output scene.
-			""",
-
-		],
-
-		"enabled" : [
-
-			"description",
-			"""
-			The on/off state of the node. When it is off, the node outputs the input scene unchanged.
-			""",
-
-		],
-
-	},
-
-)
-
+Gaffer.ArrayPlug.enableInputGeneratorCompatibility( GafferImage.Merge )
+Gaffer.ArrayPlug.enableInputGeneratorCompatibility( GafferImage.ImageSwitch )

@@ -35,6 +35,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include "Gaffer/ArrayPlug.h"
+
 #include "GafferScene/SceneProcessor.h"
 
 using namespace Gaffer;
@@ -51,18 +53,53 @@ SceneProcessor::SceneProcessor( const std::string &name )
 	addChild( new ScenePlug( "in", Gaffer::Plug::In ) );
 }
 
+SceneProcessor::SceneProcessor( const std::string &name, size_t minInputs, size_t maxInputs )
+	:	SceneNode( name )
+{
+	storeIndexOfNextChild( g_firstPlugIndex );
+	addChild(
+		new ArrayPlug( "in", Gaffer::Plug::In, new ScenePlug( "in0" ), minInputs, maxInputs )
+	);
+}
+
 SceneProcessor::~SceneProcessor()
 {
 }
 
 ScenePlug *SceneProcessor::inPlug()
 {
-	return getChild<ScenePlug>( g_firstPlugIndex );
+	GraphComponent *p = getChild<GraphComponent>( g_firstPlugIndex );
+	if( ScenePlug *s = IECore::runTimeCast<ScenePlug>( p ) )
+	{
+		return s;
+	}
+	else
+	{
+		return static_cast<ArrayPlug *>( p )->getChild<ScenePlug>( 0 );
+	}
 }
 
 const ScenePlug *SceneProcessor::inPlug() const
 {
-	return getChild<ScenePlug>( g_firstPlugIndex );
+	const GraphComponent *p = getChild<GraphComponent>( g_firstPlugIndex );
+	if( const ScenePlug *s = IECore::runTimeCast<const ScenePlug>( p ) )
+	{
+		return s;
+	}
+	else
+	{
+		return static_cast<const ArrayPlug *>( p )->getChild<ScenePlug>( 0 );
+	}
+}
+
+Gaffer::ArrayPlug *SceneProcessor::inPlugs()
+{
+	return getChild<Gaffer::ArrayPlug>( g_firstPlugIndex );
+}
+
+const Gaffer::ArrayPlug *SceneProcessor::inPlugs() const
+{
+	return getChild<Gaffer::ArrayPlug>( g_firstPlugIndex );
 }
 
 Plug *SceneProcessor::correspondingInput( const Plug *output )

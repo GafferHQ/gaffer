@@ -183,8 +183,8 @@ class SeedsTest( GafferSceneTest.SceneTestCase ) :
 		l = GafferSceneTest.TestLight()
 
 		g = GafferScene.Group()
-		g["in"].setInput( p["out"] )
-		g["in1"].setInput( l["out"] )
+		g["in"][0].setInput( p["out"] )
+		g["in"][1].setInput( l["out"] )
 
 		s = GafferScene.Seeds()
 		s["in"].setInput( g["out"] )

@@ -39,6 +39,24 @@
 namespace Gaffer
 {
 
+// Specialisations of the constructor for when the base
+// class is DependencyNode or ComputeNode. This is needed
+// because those base classes don't have the ArrayPlug constructor
+// that we use in the standard constructor in Switch.inl.
+template<>
+Switch<DependencyNode>::Switch( const std::string &name )
+	:	DependencyNode( name )
+{
+	init( /* expectBaseClassPlugs = */ false );
+}
+
+template<>
+Switch<ComputeNode>::Switch( const std::string &name )
+	:	ComputeNode( name )
+{
+	init( /* expectBaseClassPlugs = */ false );
+}
+
 IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( Gaffer::SwitchDependencyNode, SwitchDependencyNodeTypeId )
 IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( Gaffer::SwitchComputeNode, SwitchComputeNodeTypeId )
 

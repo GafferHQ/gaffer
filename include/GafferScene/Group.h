@@ -38,10 +38,15 @@
 #ifndef GAFFERSCENE_GROUP_H
 #define GAFFERSCENE_GROUP_H
 
-#include "Gaffer/TransformPlug.h"
-#include "Gaffer/Behaviours/InputGenerator.h"
-
 #include "GafferScene/SceneProcessor.h"
+
+namespace Gaffer
+{
+
+IE_CORE_FORWARDDECLARE( StringPlug )
+IE_CORE_FORWARDDECLARE( TransformPlug )
+
+} // namespace Gaffer
 
 namespace GafferScene
 {
@@ -56,12 +61,7 @@ class Group : public SceneProcessor
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::Group, GroupTypeId, SceneProcessor );
 
-		/// The Group adds new input plugs as needed as the existing
-		/// ones receive input connections. This method returns the
-		/// most recently added plug - the one that should be used
-		/// to connect a new input.
-		/// \todo If SceneProcessor::inPlug() was an ArrayPlug as
-		/// per #996, we wouldn't need this method.
+		/// \deprecated. Use inPlugs() instead.
 		ScenePlug *nextInPlug();
 		const ScenePlug *nextInPlug() const;
 
@@ -94,14 +94,12 @@ class Group : public SceneProcessor
 		virtual IECore::ConstInternedStringVectorDataPtr computeSetNames( const Gaffer::Context *context, const ScenePlug *parent ) const;
 		virtual GafferScene::ConstPathMatcherDataPtr computeSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent ) const;
 
-		ScenePath sourcePath( const ScenePath &outputPath, const std::string &groupName, ScenePlug **source ) const;
+		ScenePath sourcePath( const ScenePath &outputPath, const std::string &groupName, const ScenePlug **source ) const;
 
 	private :
 
 		Gaffer::ObjectPlug *mappingPlug();
 		const Gaffer::ObjectPlug *mappingPlug() const;
-
-		Gaffer::Behaviours::InputGenerator<ScenePlug> m_inPlugs;
 
 		static size_t g_firstPlugIndex;
 

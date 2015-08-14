@@ -39,6 +39,7 @@ import unittest
 
 import IECore
 
+import Gaffer
 import GafferTest
 import GafferImage
 
@@ -63,16 +64,17 @@ class MergeTest( GafferTest.TestCase ) :
 		##########################################
 		# Test to see if the hash changes.
 		##########################################
+
 		merge = GafferImage.Merge()
 		merge["operation"].setValue( GafferImage.Merge.Operation.Over )
 
-		merge["in"].setInput(r1["out"])
-		merge["in1"].setInput(r2["out"])
+		merge["in"][0].setInput( r1["out"] )
+		merge["in"][1].setInput( r2["out"] )
 		h1 = merge["out"].image().hash()
 
 		# Switch the inputs.
-		merge["in1"].setInput(r1["out"])
-		merge["in"].setInput(r2["out"])
+		merge["in"][1].setInput( r1["out"] )
+		merge["in"][0].setInput( r2["out"] )
 		h2 = merge["out"].image().hash()
 
 		self.assertNotEqual( h1, h2 )
@@ -82,20 +84,21 @@ class MergeTest( GafferTest.TestCase ) :
 		# when the output should be the same but the
 		# input plugs used are not.
 		##########################################
+
 		merge = GafferImage.Merge()
 		merge["operation"].setValue( GafferImage.Merge.Operation.Over )
 
 		expectedHash = h1
 
 		# Connect up a load of inputs ...
-		merge["in"].setInput(r1["out"])
-		merge["in1"].setInput(r1["out"])
-		merge["in2"].setInput(r1["out"])
-		merge["in3"].setInput(r2["out"])
+		merge["in"][0].setInput( r1["out"] )
+		merge["in"][1].setInput( r1["out"] )
+		merge["in"][2].setInput( r1["out"] )
+		merge["in"][3].setInput( r2["out"] )
 
 		# but then disconnect two so that the result should still be the same...
-		merge["in1"].setInput( None )
-		merge["in2"].setInput( None )
+		merge["in"][1].setInput( None )
+		merge["in"][2].setInput( None )
 		h1 = merge["out"].image().hash()
 
 		self.assertEqual( h1, expectedHash )
@@ -109,11 +112,12 @@ class MergeTest( GafferTest.TestCase ) :
 		# Test to see if the input has is always passed
 		# through if only the first input is connected.
 		##########################################
+
 		merge = GafferImage.Merge()
 		merge["operation"].setValue( GafferImage.Merge.Operation.Over )
 
 		expectedHash = r1["out"].image().hash()
-		merge["in"].setInput(r1["out"])
+		merge["in"][0].setInput( r1["out"] )
 		h1 = merge["out"].image().hash()
 
 		self.assertEqual( h1, expectedHash )
@@ -121,14 +125,15 @@ class MergeTest( GafferTest.TestCase ) :
 		##########################################
 		# Test that if we disable the node the hash gets passed through.
 		##########################################
+		
 		merge["enabled"].setValue(False)
 		h1 = merge["out"].image().hash()
 
 		self.assertEqual( h1, expectedHash )
 
-
 	# Overlay a red, green and blue tile of different data window sizes and check the data window is expanded on the result and looks as we expect.
 	def testOverRGBA( self ) :
+		
 		r = GafferImage.ImageReader()
 		r["fileName"].setValue( self.rPath )
 
@@ -140,9 +145,9 @@ class MergeTest( GafferTest.TestCase ) :
 
 		merge = GafferImage.Merge()
 		merge["operation"].setValue( GafferImage.Merge.Operation.Over )
-		merge["in"].setInput(r["out"])
-		merge["in1"].setInput(g["out"])
-		merge["in2"].setInput(b["out"])
+		merge["in"][0].setInput( r["out"] )
+		merge["in"][1].setInput( g["out"] )
+		merge["in"][2].setInput( b["out"] )
 
 		mergeResult = merge["out"].image()
 		expected = IECore.Reader.create( self.rgbPath ).read()
@@ -166,10 +171,10 @@ class MergeTest( GafferTest.TestCase ) :
 
 		merge = GafferImage.Merge()
 		merge["operation"].setValue( GafferImage.Merge.Operation.Over )
-		merge["in"].setInput(c["out"])
-		merge["in1"].setInput(r["out"])
-		merge["in2"].setInput(g["out"])
-		merge["in3"].setInput(b["out"])
+		merge["in"][0].setInput( c["out"] )
+		merge["in"][1].setInput( r["out"] )
+		merge["in"][2].setInput( g["out"] )
+		merge["in"][3].setInput( b["out"] )
 
 		mergeResult = merge["out"].image()
 		expected = IECore.Reader.create( self.checkerRGBPath ).read()
@@ -182,28 +187,30 @@ class MergeTest( GafferTest.TestCase ) :
 		c2 = GafferImage.Constant()
 
 		m = GafferImage.Merge()
-		m["in"].setInput( c1["out"] )
-		m["in1"].setInput( c2["out"] )
+		m["in"][0].setInput( c1["out"] )
+		m["in"][1].setInput( c2["out"] )
 
 		cs = GafferTest.CapturingSlot( m.plugDirtiedSignal() )
 
 		c1["color"]["r"].setValue( 0.1 )
 
-		self.assertEqual( len( cs ), 4 )
-		self.assertTrue( cs[0][0].isSame( m["in"]["channelData"] ) )
-		self.assertTrue( cs[1][0].isSame( m["in"] ) )
-		self.assertTrue( cs[2][0].isSame( m["out"]["channelData"] ) )
-		self.assertTrue( cs[3][0].isSame( m["out"] ) )
+		self.assertEqual( len( cs ), 5 )
+		self.assertTrue( cs[0][0].isSame( m["in"][0]["channelData"] ) )
+		self.assertTrue( cs[1][0].isSame( m["in"][0] ) )
+		self.assertTrue( cs[2][0].isSame( m["in"] ) )
+		self.assertTrue( cs[3][0].isSame( m["out"]["channelData"] ) )
+		self.assertTrue( cs[4][0].isSame( m["out"] ) )
 
 		del cs[:]
 
 		c2["color"]["g"].setValue( 0.2 )
 
-		self.assertEqual( len( cs ), 4 )
-		self.assertTrue( cs[0][0].isSame( m["in1"]["channelData"] ) )
-		self.assertTrue( cs[1][0].isSame( m["in1"] ) )
-		self.assertTrue( cs[2][0].isSame( m["out"]["channelData"] ) )
-		self.assertTrue( cs[3][0].isSame( m["out"] ) )
+		self.assertEqual( len( cs ), 5 )
+		self.assertTrue( cs[0][0].isSame( m["in"][1]["channelData"] ) )
+		self.assertTrue( cs[1][0].isSame( m["in"][1] ) )
+		self.assertTrue( cs[2][0].isSame( m["in"] ) )
+		self.assertTrue( cs[3][0].isSame( m["out"]["channelData"] ) )
+		self.assertTrue( cs[4][0].isSame( m["out"] ) )
 
 	def testEnabledAffects( self ) :
 
@@ -223,8 +230,8 @@ class MergeTest( GafferTest.TestCase ) :
 		d["in"].setInput( f["out"] )
 		
 		m = GafferImage.Merge()
-		m["in"].setInput( c["out"] )
-		m["in1"].setInput( d["out"] )
+		m["in"][0].setInput( c["out"] )
+		m["in"][1].setInput( d["out"] )
 
 		self.assertEqual( m["out"]["format"].hash(), c["out"]["format"].hash() )
 		self.assertEqual( m["out"]["metadata"].hash(), c["out"]["metadata"].hash() )
@@ -232,14 +239,28 @@ class MergeTest( GafferTest.TestCase ) :
 		self.assertEqual( m["out"]["format"].getValue(), c["out"]["format"].getValue() )
 		self.assertEqual( m["out"]["metadata"].getValue(), c["out"]["metadata"].getValue() )
 		
-		m["in"].setInput( d["out"] )
-		m["in1"].setInput( c["out"] )
+		m["in"][0].setInput( d["out"] )
+		m["in"][1].setInput( c["out"] )
 		
 		self.assertEqual( m["out"]["format"].hash(), d["out"]["format"].hash() )
 		self.assertEqual( m["out"]["metadata"].hash(), d["out"]["metadata"].hash() )
 		
 		self.assertEqual( m["out"]["format"].getValue(), d["out"]["format"].getValue() )
 		self.assertEqual( m["out"]["metadata"].getValue(), d["out"]["metadata"].getValue() )
+
+	def testFileCompatibilityWithVersion0_15( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["fileName"].setValue( os.path.dirname( __file__ ) + "/scripts/mergeVersion-0.15.0.0.gfr" )
+		s.load()
+
+		self.assertTrue( s["m"]["in"][0].getInput().isSame( s["c1"]["out"] ) )
+		self.assertTrue( s["m"]["in"][1].getInput().isSame( s["c2"]["out"] ) )
+
+		self.assertTrue( "in1" not in s["m"] )
+		self.assertTrue( "in2" not in s["m"] )
+
+		self.assertEqual( s["m"]["out"].channelData( "R", IECore.V2i( 0 ) )[0], 0.75 )
 
 if __name__ == "__main__":
 	unittest.main()

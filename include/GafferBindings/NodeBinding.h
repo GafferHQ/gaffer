@@ -74,6 +74,18 @@ class NodeWrapper : public GraphComponentWrapper<T>
 		{
 		}
 
+		template<typename Arg1, typename Arg2>
+		NodeWrapper( PyObject *self, Arg1 arg1, Arg2 arg2 )
+			:	GraphComponentWrapper<WrappedType>( self, arg1, arg2 )
+		{
+		}
+
+		template<typename Arg1, typename Arg2, typename Arg3>
+		NodeWrapper( PyObject *self, Arg1 arg1, Arg2 arg2, Arg3 arg3 )
+			:	GraphComponentWrapper<WrappedType>( self, arg1, arg2, arg3 )
+		{
+		}
+
 		virtual bool isInstanceOf( IECore::TypeId typeId ) const
 		{
 			// Optimise for common queries we know should fail.

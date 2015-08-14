@@ -36,6 +36,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "Gaffer/Context.h"
+#include "Gaffer/ArrayPlug.h"
 
 #include "GafferImage/ImageProcessor.h"
 
@@ -53,18 +54,53 @@ ImageProcessor::ImageProcessor( const std::string &name )
 	addChild( new ImagePlug( "in", Gaffer::Plug::In ) );
 }
 
+ImageProcessor::ImageProcessor( const std::string &name, size_t minInputs, size_t maxInputs )
+	:	ImageNode( name )
+{
+	storeIndexOfNextChild( g_firstPlugIndex );
+	addChild(
+		new ArrayPlug( "in", Gaffer::Plug::In, new ImagePlug( "in0" ), minInputs, maxInputs )
+	);
+}
+
 ImageProcessor::~ImageProcessor()
 {
 }
 
 ImagePlug *ImageProcessor::inPlug()
 {
-	return getChild<ImagePlug>( g_firstPlugIndex );
+	GraphComponent *p = getChild<GraphComponent>( g_firstPlugIndex );
+	if( ImagePlug *i = IECore::runTimeCast<ImagePlug>( p ) )
+	{
+		return i;
+	}
+	else
+	{
+		return static_cast<ArrayPlug *>( p )->getChild<ImagePlug>( 0 );
+	}
 }
 
 const ImagePlug *ImageProcessor::inPlug() const
 {
-	return getChild<ImagePlug>( g_firstPlugIndex );
+	const GraphComponent *p = getChild<GraphComponent>( g_firstPlugIndex );
+	if( const ImagePlug *i = IECore::runTimeCast<const ImagePlug>( p ) )
+	{
+		return i;
+	}
+	else
+	{
+		return static_cast<const ArrayPlug *>( p )->getChild<ImagePlug>( 0 );
+	}
+}
+
+Gaffer::ArrayPlug *ImageProcessor::inPlugs()
+{
+	return getChild<Gaffer::ArrayPlug>( g_firstPlugIndex );
+}
+
+const Gaffer::ArrayPlug *ImageProcessor::inPlugs() const
+{
+	return getChild<Gaffer::ArrayPlug>( g_firstPlugIndex );
 }
 
 Plug *ImageProcessor::correspondingInput( const Plug *output )

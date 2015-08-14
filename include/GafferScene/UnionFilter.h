@@ -37,43 +37,28 @@
 #ifndef GAFFERSCENE_UNIONFILTER_H
 #define GAFFERSCENE_UNIONFILTER_H
 
-#include "GafferScene/Filter.h"
-
-namespace Gaffer
-{
-
-IE_CORE_FORWARDDECLARE( ArrayPlug )
-
-} // namespace Gaffer
+#include "GafferScene/FilterProcessor.h"
 
 namespace GafferScene
 {
 
 /// \todo Investigate whether or not caching is actually beneficial for this node
-class UnionFilter : public Filter
+class UnionFilter : public FilterProcessor
 {
 
 	public :
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::UnionFilter, UnionFilterTypeId, Filter );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::UnionFilter, UnionFilterTypeId, FilterProcessor );
 
 		UnionFilter( const std::string &name=defaultName<UnionFilter>() );
 		virtual ~UnionFilter();
 
-		Gaffer::ArrayPlug *inPlug();
-		const Gaffer::ArrayPlug *inPlug() const;
-
 		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
-		virtual bool sceneAffectsMatch( const ScenePlug *scene, const Gaffer::ValuePlug *child ) const;
 
 	protected :
 
-		virtual bool acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const;
-
 		virtual void hashMatch( const ScenePlug *scene, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual unsigned computeMatch( const ScenePlug *scene, const Gaffer::Context *context ) const;
-
-		static size_t g_firstPlugIndex;
 
 };
 

@@ -34,6 +34,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include "Gaffer/ArrayPlug.h"
+
 #include "GafferScene/ShaderSwitch.h"
 
 using namespace Gaffer;
@@ -44,10 +46,10 @@ IE_CORE_DEFINERUNTIMETYPED( ShaderSwitch );
 ShaderSwitch::ShaderSwitch( const std::string &name )
 	:	SwitchDependencyNode( name )
 {
-	// we don't need to do anything other than create an example input
+	// We don't need to do anything other than create an input
 	// plug and an output plug - the SwitchDependencyNode takes care of
 	// everything else.
-	addChild( new Plug( "in" ) );
+	addChild( new ArrayPlug( "in", Plug::In, new Plug( "in0" ) ) );
 	addChild( new Plug( "out", Plug::Out ) );
 }
 

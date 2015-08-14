@@ -37,26 +37,12 @@
 import Gaffer
 import GafferScene
 
-Gaffer.Metadata.registerNode(
+# Backwards compatibility for old nodes which originally
+# used InputGenerators and now use ArrayPlugs instead.
+# See startup/Gaffer/inputGeneratorCompatibility.py for
+# details of how this works.
 
-	GafferScene.FilterMixinBase,
-
-	"description",
-	"""
-	Base class used for implementing FilterSwitch.
-	""",
-
-	plugs = {
-
-		"in" : [
-
-			"description",
-			"""
-			The input filter.
-			""",
-
-		]
-
-	}
-
-)
+Gaffer.ArrayPlug.enableInputGeneratorCompatibility( GafferScene.Group )
+Gaffer.ArrayPlug.enableInputGeneratorCompatibility( GafferScene.SceneSwitch )
+Gaffer.ArrayPlug.enableInputGeneratorCompatibility( GafferScene.FilterSwitch )
+Gaffer.ArrayPlug.enableInputGeneratorCompatibility( GafferScene.ShaderSwitch )

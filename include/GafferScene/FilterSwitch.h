@@ -39,12 +39,12 @@
 
 #include "Gaffer/Switch.h"
 
-#include "GafferScene/FilterMixinBase.h"
+#include "GafferScene/FilterProcessor.h"
 
 namespace GafferScene
 {
 
-typedef Gaffer::Switch<FilterMixinBase> FilterSwitch;
+typedef Gaffer::Switch<FilterProcessor> FilterSwitch;
 IE_CORE_DECLAREPTR( FilterSwitch )
 
 } // namespace GafferScene

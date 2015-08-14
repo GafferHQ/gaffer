@@ -50,8 +50,8 @@ class SceneFilterPathFilterTest( GafferSceneTest.SceneTestCase ) :
 		camera = GafferScene.Camera()
 		plane = GafferScene.Plane()
 		group = GafferScene.Group()
-		group["in"].setInput( camera["out"] )
-		group["in1"].setInput( plane["out"] )
+		group["in"][0].setInput( camera["out"] )
+		group["in"][1].setInput( plane["out"] )
 
 		path = GafferScene.ScenePath( group["out"], Gaffer.Context(), "/group" )
 		self.assertEqual( set( [ str( c ) for c in path.children() ] ), { "/group/camera", "/group/plane" } )

@@ -42,6 +42,8 @@
 
 #include "GafferSceneBindings/SceneProcessorBinding.h"
 
+using namespace boost::python;
+using namespace Gaffer;
 using namespace GafferBindings;
 using namespace GafferScene;
 
@@ -49,6 +51,15 @@ void GafferSceneBindings::bindSceneProcessor()
 {
 
 	typedef ComputeNodeWrapper<SceneProcessor> Wrapper;
-	GafferBindings::DependencyNodeClass<SceneProcessor, Wrapper>();
+	GafferBindings::DependencyNodeClass<SceneProcessor, Wrapper>()
+	.def( init<const std::string &, size_t, size_t>(
+				(
+					arg( "name" ) = GraphComponent::defaultName<SceneProcessor>(),
+					arg( "minInputs" ),
+					arg( "maxInputs" ) = Imath::limits<size_t>::max()
+				)
+			)
+		)
+	;
 
 }

@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -42,38 +42,20 @@ import GafferSceneUI
 
 Gaffer.Metadata.registerNode(
 
-	GafferScene.SceneProcessor,
+	GafferScene.FilterProcessor,
 
 	"description",
 	"""
-	The base type for all nodes which take an input scene and process it in some way.
+	The base type for all filters which operate using one or more input filters.
 	""",
 
 	plugs = {
 
 		"in" : [
 
-			"description", lambda plug : "The input scene" + ( "s" if isinstance( plug, Gaffer.ArrayPlug ) else "" ),
+			"description", lambda plug : "The input filter" + ( "s" if isinstance( plug, Gaffer.ArrayPlug ) else "" ),
 			"nodule:type", lambda plug : "GafferUI::CompoundNodule" if isinstance( plug, Gaffer.ArrayPlug ) else "GafferUI::StandardNodule",
 			"compoundNodule:spacing", 2.0,
-
-		],
-
-		"out" : [
-
-			"description",
-			"""
-			The processed output scene.
-			""",
-
-		],
-
-		"enabled" : [
-
-			"description",
-			"""
-			The on/off state of the node. When it is off, the node outputs the input scene unchanged.
-			""",
 
 		],
 

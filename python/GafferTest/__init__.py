@@ -117,8 +117,6 @@ from FilteredRecursiveChildIteratorTest import FilteredRecursiveChildIteratorTes
 from ReferenceTest import ReferenceTest
 from OrphanRemoverTest import OrphanRemoverTest
 from GraphComponentPathTest import GraphComponentPathTest
-from InputGeneratorNode import InputGeneratorNode
-from InputGeneratorTest import InputGeneratorTest
 from ArrayPlugNode import ArrayPlugNode
 from ArrayPlugTest import ArrayPlugTest
 from SerialisationTest import SerialisationTest

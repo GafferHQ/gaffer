@@ -209,8 +209,8 @@ class IsolateTest( GafferSceneTest.SceneTestCase ) :
 		light2 = GafferSceneTest.TestLight()
 
 		group = GafferScene.Group()
-		group["in"].setInput( light1["out"] )
-		group["in1"].setInput( light2["out"] )
+		group["in"][0].setInput( light1["out"] )
+		group["in"][1].setInput( light2["out"] )
 
 		lightSet = group["out"].set( "__lights" )
 		self.assertEqual( set( lightSet.value.paths() ), set( [ "/group/light", "/group/light1" ] ) )
@@ -278,10 +278,10 @@ class IsolateTest( GafferSceneTest.SceneTestCase ) :
 		group2 = GafferScene.Group()
 		group2["name"].setValue( "group2" )
 
-		group1["in"].setInput( group2["out"] )
-		group1["in1"].setInput( light3["out"] )
-		group2["in"].setInput( light1["out"] )
-		group2["in1"].setInput( light2["out"] )
+		group1["in"][0].setInput( group2["out"] )
+		group1["in"][1].setInput( light3["out"] )
+		group2["in"][0].setInput( light1["out"] )
+		group2["in"][1].setInput( light2["out"] )
 
 		plane = GafferScene.Plane()
 

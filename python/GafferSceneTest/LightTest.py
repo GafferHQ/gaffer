@@ -74,7 +74,7 @@ class LightTest( GafferSceneTest.SceneTestCase ) :
 
 		l = GafferSceneTest.TestLight()
 		g = GafferScene.Group()
-		g["in"].setInput( l["out"] )
+		g["in"][0].setInput( l["out"] )
 
 		self.assertSceneValid( g["out"] )
 

@@ -51,9 +51,9 @@ class ParametersTest( GafferSceneTest.SceneTestCase ) :
 		procedural = GafferScene.ExternalProcedural()
 		group = GafferScene.Group()
 
-		group["in"].setInput( light["out"] )
-		group["in1"].setInput( camera["out"] )
-		group["in2"].setInput( procedural["out"] )
+		group["in"][0].setInput( light["out"] )
+		group["in"][1].setInput( camera["out"] )
+		group["in"][2].setInput( procedural["out"] )
 
 		parameters = GafferScene.Parameters()
 		parameters["in"].setInput( group["out"] )

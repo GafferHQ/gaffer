@@ -35,8 +35,6 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "Gaffer/ArrayPlug.h"
-#include "Gaffer/SubGraph.h"
-#include "Gaffer/Dot.h"
 
 #include "GafferScene/UnionFilter.h"
 
@@ -46,75 +44,28 @@ using namespace GafferScene;
 
 IE_CORE_DEFINERUNTIMETYPED( UnionFilter );
 
-size_t UnionFilter::g_firstPlugIndex = 0;
-
 UnionFilter::UnionFilter( const std::string &name )
-	:	Filter( name )
+	:	FilterProcessor( name, 1 )
 {
-	storeIndexOfNextChild( g_firstPlugIndex );
-	addChild( new ArrayPlug(
-		"in",
-		Plug::In,
-		outPlug()->createCounterpart( "in", Plug::In )
-	) );
 }
 
 UnionFilter::~UnionFilter()
 {
 }
 
-Gaffer::ArrayPlug *UnionFilter::inPlug()
-{
-	return getChild<Gaffer::ArrayPlug>( g_firstPlugIndex );
-}
-
-const Gaffer::ArrayPlug *UnionFilter::inPlug() const
-{
-	return getChild<Gaffer::ArrayPlug>( g_firstPlugIndex );
-}
-
 void UnionFilter::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	Filter::affects( input, outputs );
 
-	if( input->parent<ArrayPlug>() == inPlug() )
+	if( input->parent<ArrayPlug>() == inPlugs() )
 	{
 		outputs.push_back( outPlug() );
 	}
 }
 
-bool UnionFilter::sceneAffectsMatch( const ScenePlug *scene, const Gaffer::ValuePlug *child ) const
-{
-	for( InputIntPlugIterator it( inPlug() ); it != it.end(); ++it )
-	{
-		const Filter *filter = IECore::runTimeCast<const Filter>( (*it)->source<Plug>()->node() );
-		if( filter && filter != this && filter->sceneAffectsMatch( scene, child ) )
-		{
-			return true;
-		}
-	}
-	return false;
-}
-
-bool UnionFilter::acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const
-{
-	if( !Filter::acceptsInput( plug, inputPlug ) )
-	{
-		return false;
-	}
-
-	if( plug->parent<ArrayPlug>() == inPlug() && inputPlug )
-	{
-		const Node *n = inputPlug->source<Plug>()->node();
-		return runTimeCast<const Filter>( n ) || runTimeCast<const SubGraph>( n ) || runTimeCast<const Dot>( n );
-	}
-
-	return true;
-}
-
 void UnionFilter::hashMatch( const ScenePlug *scene, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	for( InputIntPlugIterator it( inPlug() ); it != it.end(); ++it )
+	for( InputIntPlugIterator it( inPlugs() ); it != it.end(); ++it )
 	{
 		(*it)->hash( h );
 	}
@@ -123,7 +74,7 @@ void UnionFilter::hashMatch( const ScenePlug *scene, const Gaffer::Context *cont
 unsigned UnionFilter::computeMatch( const ScenePlug *scene, const Gaffer::Context *context ) const
 {
 	unsigned result = NoMatch;
-	for( InputIntPlugIterator it( inPlug() ); it != it.end(); ++it )
+	for( InputIntPlugIterator it( inPlugs() ); it != it.end(); ++it )
 	{
 		result |= (*it)->getValue();
 	}

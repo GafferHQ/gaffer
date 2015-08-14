@@ -42,6 +42,8 @@
 
 #include "GafferImageBindings/ImageProcessorBinding.h"
 
+using namespace boost::python;
+using namespace Gaffer;
 using namespace GafferBindings;
 using namespace GafferImage;
 
@@ -49,6 +51,15 @@ void GafferImageBindings::bindImageProcessor()
 {
 
 	typedef ComputeNodeWrapper<ImageProcessor> Wrapper;
-	GafferBindings::DependencyNodeClass<ImageProcessor, Wrapper>();
+	GafferBindings::DependencyNodeClass<ImageProcessor, Wrapper>()
+		.def( init<const std::string &, size_t, size_t>(
+				(
+					arg( "name" ) = GraphComponent::defaultName<ImageProcessor>(),
+					arg( "minInputs" ),
+					arg( "maxInputs" ) = Imath::limits<size_t>::max()
+				)
+			)
+		)
+	;
 
 }

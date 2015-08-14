@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2015, Scene Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,20 +34,44 @@
 #
 ##########################################################################
 
+import unittest
+
 import IECore
 
 import Gaffer
+import GafferTest
+import GafferScene
 
-class InputGeneratorNode( Gaffer.Node ) :
+class SceneProcessorTest( GafferTest.TestCase ) :
 
-	def __init__( self, name = "InputGeneratorNode" ) :
+	def testNumberOfInputs( self ) :
 
-		Gaffer.Node.__init__( self, name )
+		n = GafferScene.SceneProcessor()
+		self.assertTrue( isinstance( n["in"], GafferScene.ScenePlug ) )
 
-		self.inputs = Gaffer.Behaviours.InputGenerator(
-			self,
-			Gaffer.IntPlug( "in", minValue=0, maxValue=10 ),
-			maxInputs = 6
-		)
+		n = GafferScene.SceneProcessor( minInputs = 2, maxInputs = 2 )
+		self.assertTrue( isinstance( n["in"], Gaffer.ArrayPlug ) )
+		self.assertEqual( len( n["in"] ), 2 )
+		self.assertTrue( isinstance( n["in"][0], GafferScene.ScenePlug ) )
+		self.assertTrue( isinstance( n["in"][1], GafferScene.ScenePlug ) )
+		self.assertEqual( n["in"].minSize(), 2 )
+		self.assertEqual( n["in"].maxSize(), 2 )
 
-IECore.registerRunTimeTyped( InputGeneratorNode, typeName="GafferTest::InputGeneratorNode" )
+		n = GafferScene.SceneProcessor( minInputs = 2, maxInputs = 1000 )
+		self.assertTrue( isinstance( n["in"], Gaffer.ArrayPlug ) )
+		self.assertTrue( isinstance( n["in"][0], GafferScene.ScenePlug ) )
+		self.assertTrue( isinstance( n["in"][1], GafferScene.ScenePlug ) )
+		self.assertEqual( len( n["in"] ), 2 )
+		self.assertEqual( n["in"].minSize(), 2 )
+		self.assertEqual( n["in"].maxSize(), 1000 )
+
+		n = GafferScene.SceneProcessor( minInputs = 2 )
+		self.assertTrue( isinstance( n["in"], Gaffer.ArrayPlug ) )
+		self.assertTrue( isinstance( n["in"][0], GafferScene.ScenePlug ) )
+		self.assertTrue( isinstance( n["in"][1], GafferScene.ScenePlug ) )
+		self.assertEqual( len( n["in"] ), 2 )
+		self.assertEqual( n["in"].minSize(), 2 )
+		self.assertEqual( n["in"].maxSize(), Gaffer.ArrayPlug().maxSize() )
+
+if __name__ == "__main__":
+	unittest.main()
