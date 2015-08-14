@@ -70,5 +70,6 @@ import ShuffleUI
 import PremultiplyUI
 import UnpremultiplyUI
 import CropUI
+import ResizeUI
 
 __import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferImageUI" )
