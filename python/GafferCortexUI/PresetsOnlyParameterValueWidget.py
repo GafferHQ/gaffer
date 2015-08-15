@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -36,6 +36,8 @@
 
 from __future__ import with_statement
 
+import functools
+
 import IECore
 
 import Gaffer
@@ -55,30 +57,55 @@ class PresetsOnlyParameterValueWidget( GafferCortexUI.ParameterValueWidget ) :
 
 GafferCortexUI.ParameterValueWidget.registerType( IECore.Parameter, PresetsOnlyParameterValueWidget, "presets" )
 
-# The actual ui is more easily implemented as a PlugValueWidget, because
-# we get _addPopupMenu() and the machinery for updating on plug changes for free.
+# The actual ui is essentially a duplicate of PresetsPlugValueWidget,
+# but is overridden here to allow for dynamic changes Parameter presets.
 class _PlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, parameterHandler, **kw ) :
 
-		self.__row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
-
-		GafferUI.PlugValueWidget.__init__( self, self.__row, parameterHandler.plug(), **kw )
-
-		self.__row.append( GafferUI.Image( "collapsibleArrowDownHover.png" ) )
-		self.__label = GafferUI.Label( "" )
-		self.__row.append( self.__label )
-
-		self._addPopupMenu( buttons = GafferUI.ButtonEvent.Buttons.All )
-
 		self.__parameterHandler = parameterHandler
 
+		self.__menuButton = GafferUI.MenuButton( "", menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) ) )
+		GafferUI.PlugValueWidget.__init__( self, self.__menuButton, self.__parameterHandler.plug(), **kw )
+
+		self._addPopupMenu( self.__menuButton )
 		self._updateFromPlug()
 
 	def _updateFromPlug( self ) :
 
 		with self.getContext() :
 			self.__parameterHandler.setParameterValue()
-			self.__label.setText( self.__parameterHandler.parameter().getCurrentPresetName() )
 
-		self.setEnabled( self._editable() )
+		self.__menuButton.setEnabled( self._editable() )
+
+		text = ""
+		if self.getPlug() is not None :
+			with self.getContext() :
+				text = self.__parameterHandler.parameter().getCurrentPresetName() or "Invalid"
+
+		self.__menuButton.setText( text )
+
+	def __menuDefinition( self ) :
+
+		result = IECore.MenuDefinition()
+		if self.getPlug() is None :
+			return result
+
+		currentPreset = self.__parameterHandler.parameter().getCurrentPresetName()
+		for n in self.__parameterHandler.parameter().presets().keys() :
+			result.append(
+				"/" + n,
+				{
+					"command" : functools.partial( Gaffer.WeakMethod( self.__applyPreset ), preset = n ),
+					"checkBox" : n == currentPreset,
+				}
+			)
+
+		return result
+
+	def __applyPreset( self, unused, preset ) :
+
+		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
+
+			self.__parameterHandler.parameter().setValue( self.__parameterHandler.parameter().presets()[preset] )
+			self.__parameterHandler.setPlugValue()
