@@ -56,7 +56,7 @@ inline Format::Format( int width, int height, double pixelAspect )
 {
 	width = std::max( 0, width );
 	height = std::max( 0, height );
-	m_displayWindow = Imath::Box2i( Imath::V2i( 0, 0 ), Imath::V2i( width-1, height-1 ) );
+	m_displayWindow = Imath::Box2i( Imath::V2i( 0, 0 ), Imath::V2i( width, height ) );
 }
 
 inline const Imath::Box2i &Format::getDisplayWindow() const
@@ -75,7 +75,7 @@ inline int Format::width() const
 	{
 		return 0;
 	}
-	return m_displayWindow.max.x - m_displayWindow.min.x + 1;
+	return m_displayWindow.max.x - m_displayWindow.min.x;
 }
 
 inline int Format::height() const
@@ -84,7 +84,7 @@ inline int Format::height() const
 	{
 		return 0;
 	}
-	return m_displayWindow.max.y - m_displayWindow.min.y + 1;
+	return m_displayWindow.max.y - m_displayWindow.min.y;
 }
 
 inline double Format::getPixelAspect() const
@@ -110,7 +110,7 @@ inline bool Format::operator != ( const Format& rhs ) const
 inline int Format::yDownToFormatSpace( int yDown ) const
 {
 	const int distanceFromTop = yDown - m_displayWindow.min.y;
-	return m_displayWindow.max.y - distanceFromTop;
+	return m_displayWindow.max.y - 1 - distanceFromTop;
 }
 
 inline Imath::V2i Format::yDownToFormatSpace( const Imath::V2i &yDown ) const
@@ -122,13 +122,14 @@ inline Imath::Box2i Format::yDownToFormatSpace( const Imath::Box2i &yDown ) cons
 {
 	Imath::Box2i result;
 	result.extendBy( yDownToFormatSpace( yDown.min ) );
-	result.extendBy( yDownToFormatSpace( yDown.max ) );
+	result.extendBy( yDownToFormatSpace( yDown.max - Imath::V2i( 0, 1 ) ) );
+	result.max += Imath::V2i( 0, 1 );
 	return result;
 }
 
 inline int Format::formatToYDownSpace( int yUp ) const
 {
-	const int distanceFromTop = m_displayWindow.max.y - yUp;
+	const int distanceFromTop = m_displayWindow.max.y - 1 - yUp;
 	return m_displayWindow.min.y + distanceFromTop;
 }
 
@@ -141,7 +142,8 @@ inline Imath::Box2i Format::formatToYDownSpace( const Imath::Box2i &yUp ) const
 {
 	Imath::Box2i result;
 	result.extendBy( formatToYDownSpace( yUp.min ) );
-	result.extendBy( formatToYDownSpace( yUp.max ) );
+	result.extendBy( formatToYDownSpace( yUp.max - Imath::V2i( 0, 1 ) ) );
+	result.max += Imath::V2i( 0, 1 );
 	return result;
 }
 
