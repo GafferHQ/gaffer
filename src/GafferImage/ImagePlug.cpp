@@ -89,34 +89,37 @@ class CopyTiles
 		{
 			ContextPtr context = new Context( *m_parentContext, Context::Borrowed );
 			Context::Scope scope( context.get() );
-			
-			const Box2i operationWindow( V2i( r.rows().begin()+m_dataWindow.min.x, r.cols().begin()+m_dataWindow.min.y ), V2i( r.rows().end()+m_dataWindow.min.x-1, r.cols().end()+m_dataWindow.min.y-1 ) );
+
+			const Box2i operationWindow( V2i( r.rows().begin()+m_dataWindow.min.x, r.cols().begin()+m_dataWindow.min.y ), V2i( r.rows().end()+m_dataWindow.min.x, r.cols().end()+m_dataWindow.min.y ) );
+
 			V2i minTileOrigin = ImagePlug::tileOrigin( operationWindow.min );
-			V2i maxTileOrigin = ImagePlug::tileOrigin( operationWindow.max );
-			size_t imageStride = m_dataWindow.size().x + 1;
-			
+			V2i maxTileOrigin = ImagePlug::tileOrigin( operationWindow.max - V2i( 1 ) );
+
+			size_t imageStride = m_dataWindow.size().x;
+
 			for( size_t channelIndex = r.pages().begin(); channelIndex < r.pages().end(); ++channelIndex )
 			{
 				context->set( ImagePlug::channelNameContextName, m_channelNames[channelIndex] );
 				float *channelBegin = m_imageChannelData[channelIndex];
-				
+
 				for( int tileOriginY = minTileOrigin.y; tileOriginY <= maxTileOrigin.y; tileOriginY += m_tileSize )
 				{
 					for( int tileOriginX = minTileOrigin.x; tileOriginX <= maxTileOrigin.x; tileOriginX += m_tileSize )
 					{
 						context->set( ImagePlug::tileOriginContextName, V2i( tileOriginX, tileOriginY ) );
-						
-						Box2i tileBound( V2i( tileOriginX, tileOriginY ), V2i( tileOriginX + m_tileSize - 1, tileOriginY + m_tileSize - 1 ) );
+
+						Box2i tileBound( V2i( tileOriginX, tileOriginY ), V2i( tileOriginX + m_tileSize, tileOriginY + m_tileSize ) );
 						Box2i b = boxIntersection( tileBound, operationWindow );
-						size_t tileStrideSize = sizeof(float) * ( b.size().x + 1 );
-						
+
+						size_t tileStrideSize = sizeof(float) * b.size().x;
+
 						ConstFloatVectorDataPtr tileData = m_channelDataPlug->getValue();
 						const float *tileDataBegin = &(tileData->readable()[0]);
 
-						for( int y = b.min.y; y<=b.max.y; y++ )
+						for( int y = b.min.y; y<b.max.y; y++ )
 						{
 							const float *tilePtr = tileDataBegin + (y - tileOriginY) * m_tileSize + (b.min.x - tileOriginX);
-							float *channelPtr = channelBegin + ( m_dataWindow.size().y - ( y - m_dataWindow.min.y ) ) * imageStride + (b.min.x - m_dataWindow.min.x);
+							float *channelPtr = channelBegin + ( m_dataWindow.size().y - ( 1 + y - m_dataWindow.min.y ) ) * imageStride + (b.min.x - m_dataWindow.min.x);
 							std::memcpy( channelPtr, tilePtr, tileStrideSize );
 						}
 					}
@@ -182,7 +185,7 @@ ImagePlug::ImagePlug( const std::string &name, Direction direction, unsigned fla
 			childFlags
 		)
 	);
-	
+
 	IECore::StringVectorDataPtr channelStrVectorData( new IECore::StringVectorData() );
 	std::vector<std::string> &channelStrVector( channelStrVectorData->writable() );
 	channelStrVector.push_back("R");
@@ -331,6 +334,7 @@ IECore::ImagePrimitivePtr ImagePlug::image() const
 	Format format = formatPlug()->getValue();
 	Box2i dataWindow = dataWindowPlug()->getValue();
 	Box2i newDataWindow( Imath::V2i(0) );
+	Box2i newDisplayWindow = format.getDisplayWindow();
 
 	if( dataWindow.isEmpty() )
 	{
@@ -347,13 +351,19 @@ IECore::ImagePrimitivePtr ImagePlug::image() const
 	if( format.getDisplayWindow().isEmpty() )
 	{
 		format = Context::current()->get<Format>( Format::defaultFormatContextName, Format() );
+		newDisplayWindow = format.getDisplayWindow();
 	}
-	
-	ImagePrimitivePtr result = new ImagePrimitive( newDataWindow, format.getDisplayWindow() );
-	
+
+	// Convert data and display windows to be inclusive bounds
+	// rather than the exclusive (max) bounds of Gaffer
+	newDataWindow.max -= V2i( 1 );
+	newDisplayWindow.max -= V2i( 1 );
+
+	ImagePrimitivePtr result = new ImagePrimitive( newDataWindow, newDisplayWindow );
+
 	ConstCompoundObjectPtr metadata = metadataPlug()->getValue();
 	compoundObjectToCompoundData( metadata.get(), result->blindData() );
-	
+
 	ConstStringVectorDataPtr channelNamesData = channelNamesPlug()->getValue();
 	const vector<string> &channelNames = channelNamesData->readable();
 
@@ -367,7 +377,7 @@ IECore::ImagePrimitivePtr ImagePlug::image() const
 		imageChannelData.push_back( &(c[0]) );
 	}
 
-	parallel_for( blocked_range3d<size_t>( 0, imageChannelData.size(), 1, 0, dataWindow.size().x+1, tileSize(), 0, dataWindow.size().y+1, tileSize() ),
+	parallel_for( blocked_range3d<size_t>( 0, imageChannelData.size(), 1, 0, dataWindow.size().x, tileSize(), 0, dataWindow.size().y, tileSize() ),
 		      GafferImage::Detail::CopyTiles( imageChannelData, channelNames, channelDataPlug(), dataWindow, Context::current(), tileSize()) );
 
 	return result;
@@ -389,7 +399,7 @@ IECore::MurmurHash ImagePlug::imageHash() const
 
 	ContextPtr context = new Context( *Context::current(), Context::Borrowed );
 	Context::Scope scope( context.get() );
-	
+
 	for( vector<string>::const_iterator it = channelNames.begin(), eIt = channelNames.end(); it!=eIt; it++ )
 	{
 		context->set( ImagePlug::channelNameContextName, *it );
