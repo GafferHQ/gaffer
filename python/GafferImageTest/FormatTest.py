@@ -85,7 +85,7 @@ class FormatTest( GafferTest.TestCase ) :
 
 	def testOffsetDisplayWindow( self ) :
 
-		box = IECore.Box2i( IECore.V2i( 6, -4 ), IECore.V2i( 49, 149 ) )
+		box = IECore.Box2i( IECore.V2i( 6, -4 ), IECore.V2i( 50, 150 ) )
 		f = GafferImage.Format( box, 1.1 )
 		self.assertEqual( f.getDisplayWindow(), box )
 		self.assertEqual( f.width(), 44 )
@@ -94,7 +94,7 @@ class FormatTest( GafferTest.TestCase ) :
 
 	def testBoxAspectConstructor( self ) :
 
-		f = GafferImage.Format( IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 49, 149 ) ), 1.3 )
+		f = GafferImage.Format( IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 50, 150 ) ), 1.3 )
 		self.assertEqual( f.width(), 50 )
 		self.assertEqual( f.height(), 150 )
 		self.assertEqual( f.getPixelAspect(), 1.3 )
@@ -207,13 +207,25 @@ class FormatTest( GafferTest.TestCase ) :
 
 	def testCoordinateSystemTransforms( self ) :
 
-		f = GafferImage.Format( IECore.Box2i( IECore.V2i( -100, -200 ), IECore.V2i( 500, 300 ) ), 1 )
+		f = GafferImage.Format( IECore.Box2i( IECore.V2i( -100, -200 ), IECore.V2i( 501, 301 ) ), 1 )
 
 		self.assertEqual( f.yDownToFormatSpace( IECore.V2i( -100, -200 ) ), IECore.V2i( -100, 300 ) )
 		self.assertEqual( f.yDownToFormatSpace( IECore.V2i( -100, 300 ) ), IECore.V2i( -100, -200 ) )
 
 		self.assertEqual( f.formatToYDownSpace( IECore.V2i( -100, -200 ) ), IECore.V2i( -100, 300 ) )
 		self.assertEqual( f.formatToYDownSpace( IECore.V2i( -100, 300 ) ), IECore.V2i( -100, -200 ) )
+
+		self.assertEqual( f.formatToYDownSpace(
+				IECore.Box2i( IECore.V2i( -100, -200 ), IECore.V2i( 501, 301 ) ) ),
+				IECore.Box2i( IECore.V2i( -100, -200 ), IECore.V2i( 501, 301 ) ) )
+
+		self.assertEqual( f.formatToYDownSpace(
+				IECore.Box2i( IECore.V2i( -100, -100 ), IECore.V2i( 501, 301 ) ) ),
+				IECore.Box2i( IECore.V2i( -100, -200 ), IECore.V2i( 501, 201 ) ) )
+
+		self.assertEqual( f.formatToYDownSpace(
+				IECore.Box2i( IECore.V2i( -100, -200 ), IECore.V2i( 501, -100 ) ) ),
+				IECore.Box2i( IECore.V2i( -100, 201 ), IECore.V2i( 501, 301 ) ) )
 
 		for i in range( 0, 1000 ) :
 
@@ -236,7 +248,7 @@ class FormatTest( GafferTest.TestCase ) :
 		self.assertEqual( testFormat.getPixelAspect(), 1.4 )
 		self.assertEqual( testFormat.width(), 1234 )
 		self.assertEqual( testFormat.height(), 5678 )
-		self.assertEqual( testFormat.getDisplayWindow(), IECore.Box2i( IECore.V2i( 0, 0 ), IECore.V2i( 1233, 5677 ) ) )
+		self.assertEqual( testFormat.getDisplayWindow(), IECore.Box2i( IECore.V2i( 0, 0 ), IECore.V2i( 1234, 5678 ) ) )
 
 	def __testFormatValue( self ) :
 
