@@ -47,7 +47,7 @@
 #include "IECore/BoxOps.h"
 #include "IECore/BoxAlgo.h"
 
-#include "IECoreGL/ToGLTextureConverter.h"
+#include "IECoreGL/ColorTexture.h"
 #include "IECoreGL/TextureLoader.h"
 #include "IECoreGL/Texture.h"
 #include "IECoreGL/ShaderLoader.h"
@@ -127,19 +127,22 @@ class ImageViewGadget : public GafferUI::Gadget
 				m_imageSampler( imageSampler ),
 				m_context( context )
 		{
-			V2f displayWindowCenter( ( m_displayWindow.min + m_displayWindow.max + V2f( 1 ) ) / Imath::V2f( 2. ) );
-			V2f dataWindowCenter( ( m_dataWindow.min + m_dataWindow.max + V2f( 1 ) ) / Imath::V2f( 2. ) );
+			m_displayWindow.max += Imath::V2i( 1 );
+			m_dataWindow.max += Imath::V2i( 1 );
+
+			V2f displayWindowCenter( ( m_displayWindow.min + m_displayWindow.max ) / Imath::V2f( 2. ) );
+			V2f dataWindowCenter( ( m_dataWindow.min + m_dataWindow.max ) / Imath::V2f( 2. ) );
 			V2f offset( dataWindowCenter.x - displayWindowCenter.x, displayWindowCenter.y - dataWindowCenter.y );
 
 			m_dataBound = Box3f(
 				V3f(
-					offset.x - ( m_dataWindow.size().x + 1 ) / 2.,
-					offset.y - ( m_dataWindow.size().y + 1 ) / 2.,
+					offset.x - ( m_dataWindow.size().x ) / 2.,
+					offset.y - ( m_dataWindow.size().y ) / 2.,
 					0.f
 				),
 				V3f(
-					offset.x + ( m_dataWindow.size().x + 1 ) / 2.,
-					offset.y + ( m_dataWindow.size().y + 1 ) / 2.,
+					offset.x + ( m_dataWindow.size().x ) / 2.,
+					offset.y + ( m_dataWindow.size().y ) / 2.,
 					0.f
 				)
 			);
@@ -375,11 +378,11 @@ class ImageViewGadget : public GafferUI::Gadget
 		V2f rasterToDisplaySpace( const V2f &point ) const
 		{
 			Box2f dispRasterBox( displayRasterBox() );
-			V2f wh( ( dispRasterBox.max.x - dispRasterBox.min.x ) + 1.f, ( dispRasterBox.min.y - dispRasterBox.max.y ) + 1.f );
+			V2f wh( ( dispRasterBox.max.x - dispRasterBox.min.x ), ( dispRasterBox.min.y - dispRasterBox.max.y ) );
 			V2f t( ( point[0] - dispRasterBox.min.x ) / wh[0], ( point[1] - dispRasterBox.max.y ) / wh[1] );
 			return V2f(
-				float( m_displayWindow.min.x ) + t.x * ( m_displayWindow.size().x + 1.f ),
-				float( m_displayWindow.max.y + 1.f ) - ( t.y * ( m_displayWindow.size().y + 1.f ) )
+				float( m_displayWindow.min.x ) + ( t.x * ( m_displayWindow.size().x ) ),
+				float( m_displayWindow.max.y ) - ( t.y * ( m_displayWindow.size().y ) )
 			);
 		}
 
@@ -499,8 +502,8 @@ class ImageViewGadget : public GafferUI::Gadget
 						fastFloatRound( roif.min.y )
 					),
 					V2i(
-						fastFloatRound( roif.max.x ) - 1,
-						fastFloatRound( roif.max.y ) - 1
+						fastFloatRound( roif.max.x ),
+						fastFloatRound( roif.max.y )
 					)
 				);
 				m_imageStats->regionOfInterestPlug()->setValue( roi );
@@ -611,12 +614,10 @@ class ImageViewGadget : public GafferUI::Gadget
 
 		virtual void doRender( const Style *style ) const
 		{
-
-			if( !m_texture )
+			if( !m_texture && m_dataWindow.hasVolume() )
 			{
 				// convert image to texture
-				ToGLTextureConverterPtr converter = new ToGLTextureConverter( boost::static_pointer_cast<const ImagePrimitive>( m_image ), true );
-				m_texture = IECore::runTimeCast<IECoreGL::Texture>( converter->convert() );
+				m_texture = new IECoreGL::ColorTexture( m_image.get(), /* mipMap = */ false );
 
 				{
 					Texture::ScopedBinding scope( *m_texture );
@@ -644,6 +645,7 @@ class ImageViewGadget : public GafferUI::Gadget
 			}
 
 			// Draw the image data.
+			if ( m_texture )
 			{
 				// Get the bounds of the data window in Gadget space.
 				Box2f b( V2f( m_dataBound.min.x, m_dataBound.min.y ), V2f( m_dataBound.max.x, m_dataBound.max.y ) );
@@ -706,7 +708,7 @@ class ImageViewGadget : public GafferUI::Gadget
 
 			///\todo: How do we handle looking up the format here when we have a pixel aspect other than 1?
 			/// Does the IECore::ImagePrimitive have a pixel aspect?
-			GafferImage::Format f( m_displayWindow.size().x+1, m_displayWindow.size().y+1, 1. );
+			GafferImage::Format f( m_displayWindow.size().x, m_displayWindow.size().y, 1. );
 			std::string formatName( Format::formatName( f ) ) ;
 
 			style->renderText( Style::LabelText, formatName );
@@ -720,7 +722,7 @@ class ImageViewGadget : public GafferUI::Gadget
 
 				Format format( m_displayWindow );
 				Box2i dataWindow( format.yDownToFormatSpace( m_dataWindow ) );
-				drawWindow( dataRasterBox, dataWindow.min, dataWindow.max + V2i( 1 ), style );
+				drawWindow( dataRasterBox, dataWindow.min, dataWindow.max, style );
 			}
 
 			/// Draw the selection window.
