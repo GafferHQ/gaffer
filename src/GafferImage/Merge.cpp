@@ -250,6 +250,41 @@ IECore::ConstFloatVectorDataPtr Merge::computeChannelData( const std::string &ch
 	throw Exception( "Merge::computeChannelData : Invalid operation mode." );
 }
 
+template< typename F >
+IECore::ConstFloatVectorDataPtr Merge::doMergeOperation( F f, std::vector< IECore::ConstFloatVectorDataPtr > &inData, std::vector< IECore::ConstFloatVectorDataPtr > &inAlpha, const Imath::V2i &tileOrigin ) const
+{
+	// Allocate the new tile
+	IECore::FloatVectorDataPtr outDataPtr = inData.back()->copy();
+	std::vector<float> &outData = outDataPtr->writable();
+
+	// Allocate a temporary buffer that will hold the intermediate values of the alpha channel.
+	std::vector<float> outAlpha = inAlpha.back()->readable();
+
+	// Perform the operation.
+	unsigned int nIterations( inData.size() -1 );
+	for( unsigned int i = nIterations; i > 0; --i )
+	{
+		// Compute the data values and afterwards, the intermediate alpha values.
+		const float *dIn1 = &(outData[0]);
+		const float *dIn2 = &(inData[i-1]->readable()[0]);
+		const float *aIn1 = &(outAlpha[0]);
+		const float *aIn2 = &(inAlpha[i-1]->readable()[0]);
+
+		float *dOut = &(outData[0]);
+		float *aOut = &(outAlpha[0]);
+
+		const float *end = dOut + outData.size();
+		while( dOut != end )
+		{
+			*dOut++ = f( *dIn1++, *dIn2++, *aIn1, *aIn2 );
+			*aOut++ = f( *aIn1, *aIn2, *aIn1, *aIn2 );
+			++aIn1;
+			++aIn2;
+		}
+	}
+	return outDataPtr;
+}
+
 bool Merge::hasAlpha( ConstStringVectorDataPtr channelNamesData ) const
 {
 	const std::vector<std::string> &channelNames = channelNamesData->readable();
