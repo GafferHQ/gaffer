@@ -103,6 +103,7 @@ from DotNodeGadgetTest import DotNodeGadgetTest
 from DocumentationTest import DocumentationTest
 from LazyMethodTest import LazyMethodTest
 from ReferenceUITest import ReferenceUITest
+from CompoundDataPlugValueWidgetTest import CompoundDataPlugValueWidgetTest
 
 if __name__ == "__main__":
 	unittest.main()
