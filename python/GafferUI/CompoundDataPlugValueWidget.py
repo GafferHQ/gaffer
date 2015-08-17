@@ -75,6 +75,13 @@ class CompoundDataPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		return True
 
+	def setPlug( self, plug ) :
+
+		GafferUI.PlugValueWidget.setPlug( self, plug )
+
+		self.__layout = GafferUI.PlugLayout( plug )
+		self.__column[0] = self.__layout
+
 	def setReadOnly( self, readOnly ) :
 
 		if readOnly == self.getReadOnly() :
