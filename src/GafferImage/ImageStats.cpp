@@ -332,9 +332,9 @@ void ImageStats::compute( ValuePlug *output, const Context *context ) const
 	float average = 0.f;
 
 	double sum = 0.;
-	for( int y = regionOfInterest.min.y; y <= regionOfInterest.max.y; ++y )
+	for( int y = regionOfInterest.min.y; y < regionOfInterest.max.y; ++y )
 	{
-		for( int x = regionOfInterest.min.x; x <= regionOfInterest.max.x; ++x )
+		for( int x = regionOfInterest.min.x; x < regionOfInterest.max.x; ++x )
 		{
 			float v = s.sample( x, y );
 			min = std::min( v, min );
@@ -342,7 +342,7 @@ void ImageStats::compute( ValuePlug *output, const Context *context ) const
 			sum += v;
 		}
 	}
-	average = sum / double( (regionOfInterest.size().x+1) * (regionOfInterest.size().y+1) );
+	average = sum / double( (regionOfInterest.size().x) * (regionOfInterest.size().y) );
 
 	if ( minPlug()->getChild( channelIndex ) == output )
 	{
