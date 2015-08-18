@@ -88,12 +88,19 @@ class GafferDisplayDriver : public IECore::DisplayDriver
 
 		GafferDisplayDriver( const Imath::Box2i &displayWindow, const Imath::Box2i &dataWindow,
 			const vector<string> &channelNames, ConstCompoundDataPtr parameters )
-			:	DisplayDriver( displayWindow, dataWindow, channelNames, parameters ),
-				m_gafferFormat( displayWindow, 1 ),
-				m_gafferDataWindow( m_gafferFormat.yDownToFormatSpace( dataWindow ) )
+			:	DisplayDriver( displayWindow, dataWindow, channelNames, parameters )
 		{
+			Box2i gafferDisplayWindow = displayWindow;
+			gafferDisplayWindow.max += Imath::V2i( 1 );
+
+			m_gafferFormat = GafferImage::Format(gafferDisplayWindow, 1);
+
+			m_gafferDataWindow = dataWindow;
+			m_gafferDataWindow.max += Imath::V2i( 1 );
+			m_gafferDataWindow = m_gafferFormat.yDownToFormatSpace( m_gafferDataWindow );
+
 			const V2i dataWindowMinTileIndex = ImagePlug::tileOrigin( m_gafferDataWindow.min ) / ImagePlug::tileSize();
-			const V2i dataWindowMaxTileIndex = ImagePlug::tileOrigin( m_gafferDataWindow.max ) / ImagePlug::tileSize();
+			const V2i dataWindowMaxTileIndex = ImagePlug::tileOrigin( m_gafferDataWindow.max - Imath::V2i( 1 ) ) / ImagePlug::tileSize();
 
 			m_tiles.resize(
 				TileArray::extent_gen()
@@ -127,9 +134,13 @@ class GafferDisplayDriver : public IECore::DisplayDriver
 
 		virtual void imageData( const Imath::Box2i &box, const float *data, size_t dataSize )
 		{
-			Box2i yUpBox = m_gafferFormat.yDownToFormatSpace( box );
+			Box2i exclusiveBox( box );
+			exclusiveBox.max += Imath::V2i( 1 );
+
+			Box2i yUpBox = m_gafferFormat.yDownToFormatSpace( exclusiveBox );
+
 			const V2i boxMinTileOrigin = ImagePlug::tileOrigin( yUpBox.min );
-			const V2i boxMaxTileOrigin = ImagePlug::tileOrigin( yUpBox.max );
+			const V2i boxMaxTileOrigin = ImagePlug::tileOrigin( yUpBox.max - Imath::V2i( 1 ) );
 			for( int tileOriginY = boxMinTileOrigin.y; tileOriginY <= boxMaxTileOrigin.y; tileOriginY += ImagePlug::tileSize() )
 			{
 				for( int tileOriginX = boxMinTileOrigin.x; tileOriginX <= boxMaxTileOrigin.x; tileOriginX += ImagePlug::tileSize() )
@@ -150,15 +161,16 @@ class GafferDisplayDriver : public IECore::DisplayDriver
 						FloatVectorDataPtr updatedTileData = tileData->copy();
 						vector<float> &updatedTile = updatedTileData->writable();
 
-						const Box2i tileBound( tileOrigin, tileOrigin + Imath::V2i( GafferImage::ImagePlug::tileSize() - 1 ) );
+						const Box2i tileBound( tileOrigin, tileOrigin + Imath::V2i( GafferImage::ImagePlug::tileSize() ) );
 						const Box2i transferBound = IECore::boxIntersection( tileBound, yUpBox );
-						for( int y = transferBound.min.y; y<=transferBound.max.y; ++y )
+
+						for( int y = transferBound.min.y; y<transferBound.max.y; ++y )
 						{
 							int srcY = m_gafferFormat.formatToYDownSpace( y );
-							size_t srcIndex = ( ( srcY - box.min.y ) * ( box.size().x + 1 ) + ( transferBound.min.x - box.min.x ) ) * numChannels + channelIndex;
+							size_t srcIndex = ( ( srcY - exclusiveBox.min.y ) * ( exclusiveBox.size().x ) + ( transferBound.min.x - exclusiveBox.min.x ) ) * numChannels + channelIndex;
 							size_t dstIndex = ( y - tileBound.min.y ) * ImagePlug::tileSize() + transferBound.min.x - tileBound.min.x;
-							const size_t srcEndIndex = srcIndex + transferBound.size().x * numChannels;
-							while( srcIndex <= srcEndIndex )
+							const size_t srcEndIndex = srcIndex + ( transferBound.size().x ) * numChannels;
+							while( srcIndex < srcEndIndex )
 							{
 								updatedTile[dstIndex] = data[srcIndex];
 								srcIndex += numChannels;
@@ -171,7 +183,7 @@ class GafferDisplayDriver : public IECore::DisplayDriver
 				}
 			}
 
-			dataReceivedSignal()( this, box );
+			dataReceivedSignal()( this, exclusiveBox );
 		}
 
 		virtual void imageClose()
