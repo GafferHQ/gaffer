@@ -122,7 +122,7 @@ void oiioParameterListToMetadata( const ImageIOParameterList &paramList, Compoun
 	for ( ImageIOParameterList::const_iterator it = paramList.begin(); it != paramList.end(); ++it )
 	{
 		ObjectPtr value = NULL;
-		
+
 		const TypeDesc &type = it->type();
 		switch ( type.basetype )
 		{
@@ -278,7 +278,7 @@ void oiioParameterListToMetadata( const ImageIOParameterList &paramList, Compoun
 				break;
 			}
 		}
-		
+
 		if ( value )
 		{
 			members[ it->name().string() ] = value;
@@ -308,7 +308,7 @@ ImageReader::ImageReader( const std::string &name )
 	{
 		(*it)->setFlags( Plug::Cacheable, false );
 	}
-	
+
 	plugSetSignal().connect( boost::bind( &ImageReader::plugSet, this, ::_1 ) );
 }
 
@@ -391,7 +391,7 @@ GafferImage::Format ImageReader::computeFormat( const Gaffer::Context *context, 
 	return GafferImage::Format(
 		Imath::Box2i(
 			Imath::V2i( spec->full_x, spec->full_y ),
-			Imath::V2i( spec->full_x + spec->full_width - 1, spec->full_y + spec->full_height - 1 )
+			Imath::V2i( spec->full_x + spec->full_width, spec->full_y + spec->full_height )
 		),
 		spec->get_float_attribute( "PixelAspectRatio", 1.0f )
 	);
@@ -412,8 +412,8 @@ Imath::Box2i ImageReader::computeDataWindow( const Gaffer::Context *context, con
 		return Box2i();
 	}
 
-	Format format( Imath::Box2i( Imath::V2i( spec->full_x, spec->full_y ), Imath::V2i( spec->full_width + spec->full_x - 1, spec->full_height + spec->full_y - 1 ) ) );
-	Imath::Box2i dataWindow( Imath::V2i( spec->x, spec->y ), Imath::V2i( spec->width + spec->x - 1, spec->height + spec->y - 1 ) );
+	Format format( Imath::Box2i( Imath::V2i( spec->full_x, spec->full_y ), Imath::V2i( spec->full_width + spec->full_x, spec->full_height + spec->full_y ) ) );
+	Imath::Box2i dataWindow( Imath::V2i( spec->x, spec->y ), Imath::V2i( spec->width + spec->x, spec->height + spec->y ) );
 
 	return format.yDownToFormatSpace( dataWindow );
 }
@@ -432,10 +432,10 @@ IECore::ConstCompoundObjectPtr ImageReader::computeMetadata( const Gaffer::Conte
 	{
 		return parent->metadataPlug()->defaultValue();
 	}
-	
+
 	CompoundObjectPtr result = new CompoundObject;
 	oiioParameterListToMetadata( spec->extra_attribs, result.get() );
-	
+
 	return result;
 }
 
@@ -485,7 +485,7 @@ IECore::ConstFloatVectorDataPtr ImageReader::computeChannelData( const std::stri
 		}
 	}
 
-	Format format( Imath::Box2i( Imath::V2i( spec->full_x, spec->full_y ), Imath::V2i( spec->full_width + spec->full_x - 1, spec->full_height + spec->full_y - 1 ) ) );
+	Format format( Imath::Box2i( Imath::V2i( spec->full_x, spec->full_y ), Imath::V2i( spec->full_width + spec->full_x, spec->full_height + spec->full_y ) ) );
 	const int newY = format.formatToYDownSpace( tileOrigin.y + ImagePlug::tileSize() - 1 );
 
 	std::vector<float> channelData( ImagePlug::tileSize() * ImagePlug::tileSize() );
