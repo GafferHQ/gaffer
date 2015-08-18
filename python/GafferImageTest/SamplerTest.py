@@ -114,12 +114,12 @@ class SamplerTest( unittest.TestCase ) :
 		testCases = [
 			( bounds.min.x-1, bounds.min.y ),
 			( bounds.min.x, bounds.min.y-1 ),
-			( bounds.max.x, bounds.max.y+1 ),
-			( bounds.max.x+1, bounds.max.y ),
-			( bounds.min.x-1, bounds.max.y ),
-			( bounds.min.x, bounds.max.y+1 ),
-			( bounds.max.x+1, bounds.min.y ),
-			( bounds.max.x, bounds.min.y-1 )
+			( bounds.max.x-1, bounds.max.y ),
+			( bounds.max.x, bounds.max.y-1 ),
+			( bounds.min.x-1, bounds.max.y-1 ),
+			( bounds.min.x, bounds.max.y ),
+			( bounds.max.x, bounds.min.y ),
+			( bounds.max.x-1, bounds.min.y-1 )
 		]
 
 		self.assertTrue( "Box" in GafferImage.Filter.filters() )
@@ -132,9 +132,9 @@ class SamplerTest( unittest.TestCase ) :
 
 			# Check that the bounding pixels are non zero.
 			self.assertNotEqual( s.sample( bounds.min.x+.5, bounds.min.y+.5 ), 0. )
-			self.assertNotEqual( s.sample( bounds.max.x+.5, bounds.max.y+.5 ), 0. )
-			self.assertNotEqual( s.sample( bounds.min.x+.5, bounds.max.y+.5 ), 0. )
-			self.assertNotEqual( s.sample( bounds.max.x+.5, bounds.min.y+.5 ), 0. )
+			self.assertNotEqual( s.sample( bounds.max.x-.5, bounds.max.y-.5 ), 0. )
+			self.assertNotEqual( s.sample( bounds.min.x+.5, bounds.max.y-.5 ), 0. )
+			self.assertNotEqual( s.sample( bounds.max.x-.5, bounds.min.y+.5 ), 0. )
 
 			# Sample out of bounds and assert that a zero is returned.
 			for x, y in testCases :
@@ -161,19 +161,19 @@ class SamplerTest( unittest.TestCase ) :
 
 			# Get the values of the corner pixels.
 			bl = s.sample( bounds.min.x+.5, bounds.min.y+.5 )
-			br = s.sample( bounds.max.x+.5, bounds.min.y+.5 )
-			tr = s.sample( bounds.max.x+.5, bounds.max.y+.5 )
-			tl = s.sample( bounds.min.x+.5, bounds.max.y+.5 )
+			br = s.sample( bounds.max.x-.5, bounds.min.y+.5 )
+			tr = s.sample( bounds.max.x-.5, bounds.max.y-.5 )
+			tl = s.sample( bounds.min.x+.5, bounds.max.y-.5 )
 
 			# Sample out of bounds and assert that the same value as the nearest pixel is returned.
 			self.assertEqual( s.sample( bounds.min.x-1, bounds.min.y ), bl )
 			self.assertEqual( s.sample( bounds.min.x, bounds.min.y-1 ), bl )
-			self.assertEqual( s.sample( bounds.max.x, bounds.max.y+1 ), tr )
-			self.assertEqual( s.sample( bounds.max.x+1, bounds.max.y ), tr )
-			self.assertEqual( s.sample( bounds.min.x-1, bounds.max.y ), tl )
-			self.assertEqual( s.sample( bounds.min.x, bounds.max.y+1 ), tl )
-			self.assertEqual( s.sample( bounds.max.x+1, bounds.min.y ), br )
-			self.assertEqual( s.sample( bounds.max.x, bounds.min.y-1 ), br )
+			self.assertEqual( s.sample( bounds.max.x-1, bounds.max.y ), tr )
+			self.assertEqual( s.sample( bounds.max.x, bounds.max.y-1 ), tr )
+			self.assertEqual( s.sample( bounds.min.x-1, bounds.max.y-1 ), tl )
+			self.assertEqual( s.sample( bounds.min.x, bounds.max.y ), tl )
+			self.assertEqual( s.sample( bounds.max.x, bounds.min.y ), br )
+			self.assertEqual( s.sample( bounds.max.x-1, bounds.min.y-1 ), br )
 
 	# Test that the hash() method accumulates all of the hashes of the tiles within the sample area
 	# for a large number of different sample areas.
@@ -217,11 +217,10 @@ class SamplerTest( unittest.TestCase ) :
 		# Get the hash from the tiles within our desired sample area.
 		with c :
 			y = box.min.y
-			while y <= box.max.y :
+			while y < box.max.y :
 				x = box.min.x
-				while x <= box.max.x :
+				while x < box.max.x :
 					tileOrigin = GafferImage.ImagePlug.tileOrigin( IECore.V2i( x, y ) )
-					tile = IECore.Box2i( tileOrigin, tileOrigin + IECore.V2i( GafferImage.ImagePlug.tileSize()-1 ) )
 					h2.append( plug.channelDataHash( channel, tileOrigin ) )
 					x += GafferImage.ImagePlug.tileSize()
 				y += GafferImage.ImagePlug.tileSize()
