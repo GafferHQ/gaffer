@@ -104,7 +104,7 @@ class CropTest( unittest.TestCase ) :
 		crop["affectDataWindow"].setValue( True )
 		crop["affectDisplayWindow"].setValue( False )
 
-		self.assertEqual( crop["out"]["dataWindow"].getValue(), IECore.Box2i( IECore.V2i( 40 ), IECore.V2i( 49 ) ) )
+		self.assertEqual( crop["out"]["dataWindow"].getValue(), IECore.Box2i( IECore.V2i( 40 ), IECore.V2i( 50 ) ) )
 		self.assertEqual( i["out"]["format"].getValue(), crop["out"]["format"].getValue() )
 
 	def testAffectDisplayWindow( self ) :
@@ -119,7 +119,7 @@ class CropTest( unittest.TestCase ) :
 		crop["affectDataWindow"].setValue( False )
 		crop["affectDisplayWindow"].setValue( True )
 
-		self.assertEqual( crop["out"]["format"].getValue().getDisplayWindow(), IECore.Box2i( IECore.V2i( 40 ), IECore.V2i( 49 ) ) )
+		self.assertEqual( crop["out"]["format"].getValue().getDisplayWindow(), IECore.Box2i( IECore.V2i( 40 ), IECore.V2i( 50 ) ) )
 		self.assertEqual( i["out"]["dataWindow"].getValue(), crop["out"]["dataWindow"].getValue() )
 
 	def testIntersectDataWindow( self ) :
@@ -134,7 +134,7 @@ class CropTest( unittest.TestCase ) :
 		crop["affectDataWindow"].setValue( True )
 		crop["affectDisplayWindow"].setValue( False )
 
-		self.assertEqual( crop["out"]["dataWindow"].getValue(), IECore.Box2i( IECore.V2i( 30 ), IECore.V2i( 49 ) ) )
+		self.assertEqual( crop["out"]["dataWindow"].getValue(), IECore.Box2i( IECore.V2i( 30 ), IECore.V2i( 50 ) ) )
 
 	def testDataWindowToDisplayWindow( self ) :
 
