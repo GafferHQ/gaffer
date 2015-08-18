@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2014-2015, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -64,13 +64,22 @@ void GafferBindings::bindFileSystemPath()
 
 	PathClass<FileSystemPath>()
 		.def(
-			init<PathFilterPtr>( arg( "filter" ) = object() )
+			init<PathFilterPtr, bool>( (
+				arg( "filter" ) = object(),
+				arg( "includeSequences" ) = false
+			) )
 		)
 		.def(
-			init<const std::string &, PathFilterPtr>( (
+			init<const std::string &, PathFilterPtr, bool>( (
 				arg( "path" ),
-				arg( "filter" ) = object()
+				arg( "filter" ) = object(),
+				arg( "includeSequences" ) = false
 			) )
+		)
+		.def( "includeSequences", &FileSystemPath::includeSequences )
+		.def( "fileSequence", &FileSystemPath::fileSequence, (
+				arg( "ls" ) = false
+			)
 		)
 		.def( "createStandardFilter", &createStandardFilter, (
 				arg( "extensions" ) = list(),

@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2012-2014, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2012-2015, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -46,6 +46,7 @@
 
 #include "IECore/SimpleTypedData.h"
 #include "IECore/DateTimeData.h"
+#include "IECore/FileSequenceFunctions.h"
 
 #include "Gaffer/PathFilter.h"
 #include "Gaffer/FileSystemPath.h"
@@ -65,19 +66,20 @@ static InternedString g_ownerPropertyName( "fileSystem:owner" );
 static InternedString g_groupPropertyName( "fileSystem:group" );
 static InternedString g_modificationTimePropertyName( "fileSystem:modificationTime" );
 static InternedString g_sizePropertyName( "fileSystem:size" );
+static InternedString g_frameRangePropertyName( "fileSystem:frameRange" );
 
-FileSystemPath::FileSystemPath( PathFilterPtr filter )
-	:	Path( filter )
+FileSystemPath::FileSystemPath( PathFilterPtr filter, bool includeSequences )
+	:	Path( filter ), m_includeSequences( includeSequences )
 {
 }
 
-FileSystemPath::FileSystemPath( const std::string &path, PathFilterPtr filter )
-	:	Path( path, filter )
+FileSystemPath::FileSystemPath( const std::string &path, PathFilterPtr filter, bool includeSequences )
+	:	Path( path, filter ), m_includeSequences( includeSequences )
 {
 }
 
-FileSystemPath::FileSystemPath( const Names &names, const IECore::InternedString &root, PathFilterPtr filter )
-	:	Path( names, root, filter )
+FileSystemPath::FileSystemPath( const Names &names, const IECore::InternedString &root, PathFilterPtr filter, bool includeSequences )
+	:	Path( names, root, filter ), m_includeSequences( includeSequences )
 {
 }
 
@@ -87,13 +89,53 @@ FileSystemPath::~FileSystemPath()
 
 bool FileSystemPath::isValid() const
 {
+	if( !Path::isValid() )
+	{
+		return false;
+	}
+
+	if( m_includeSequences && fileSequence() != NULL )
+	{
+		return true;
+	}
+	
 	const file_type t = symlink_status( path( this->string() ) ).type();
-	return Path::isValid() && t != status_error && t != file_not_found;
+	return t != status_error && t != file_not_found;
 }
 
 bool FileSystemPath::isLeaf() const
 {
 	return isValid() && !is_directory( path( this->string() ) );
+}
+
+bool FileSystemPath::includeSequences() const
+{
+	return m_includeSequences;
+}
+
+FileSequencePtr FileSystemPath::fileSequence( bool ls ) const
+{
+	if( !m_includeSequences || is_directory( path( this->string() ) ) )
+	{
+		return NULL;
+	}
+	
+	if( ls )
+	{
+		FileSequencePtr sequence = 0;
+		IECore::ls( this->string(), sequence, /* minSequenceSize = */ 1 );
+		return sequence;
+	}
+
+	try
+	{
+		return new FileSequence( this->string() );
+	}
+	catch( ... )
+	{
+	}
+
+	return NULL;
 }
 
 void FileSystemPath::propertyNames( std::vector<IECore::InternedString> &names ) const
@@ -104,12 +146,46 @@ void FileSystemPath::propertyNames( std::vector<IECore::InternedString> &names )
 	names.push_back( g_groupPropertyName );
 	names.push_back( g_modificationTimePropertyName );
 	names.push_back( g_sizePropertyName );
+	
+	if( m_includeSequences )
+	{
+		names.push_back( g_frameRangePropertyName );
+	}
 }
 
 IECore::ConstRunTimeTypedPtr FileSystemPath::property( const IECore::InternedString &name ) const
 {
 	if( name == g_ownerPropertyName )
 	{
+		if( m_includeSequences )
+		{
+			FileSequencePtr sequence = fileSequence( /* ls = */ true );
+			if( sequence )
+			{
+				std::vector<std::string> files;
+				sequence->fileNames( files );
+
+				size_t maxCount = 0;
+				std::string mostCommon = "";
+				std::map<std::string,size_t> ownerCounter;
+				for( std::vector<std::string>::iterator it = files.begin(); it != files.end(); ++it )
+				{
+					struct stat s;
+					stat( it->c_str(), &s );
+					struct passwd *pw = getpwuid( s.st_uid );
+					std::string value = pw ? pw->pw_name : "";
+					std::pair<std::map<std::string,size_t>::iterator,bool> oIt = ownerCounter.insert( std::pair<std::string,size_t>( value, 0 ) );
+					oIt.first->second++;
+					if( oIt.first->second > maxCount )
+					{
+						mostCommon = value;
+					}
+				}
+
+				return new StringData( mostCommon );
+			}
+		}
+		
 		std::string n = this->string();
 		struct stat s;
 		stat( n.c_str(), &s );
@@ -118,6 +194,35 @@ IECore::ConstRunTimeTypedPtr FileSystemPath::property( const IECore::InternedStr
 	}
 	else if( name == g_groupPropertyName )
 	{
+		if( m_includeSequences )
+		{
+			FileSequencePtr sequence = fileSequence( /* ls = */ true );
+			if( sequence )
+			{
+				std::vector<std::string> files;
+				sequence->fileNames( files );
+
+				size_t maxCount = 0;
+				std::string mostCommon = "";
+				std::map<std::string,size_t> ownerCounter;
+				for( std::vector<std::string>::iterator it = files.begin(); it != files.end(); ++it )
+				{
+					struct stat s;
+					stat( it->c_str(), &s );
+					struct group *gr = getgrgid( s.st_gid );
+					std::string value = gr ? gr->gr_name : "";
+					std::pair<std::map<std::string,size_t>::iterator,bool> oIt = ownerCounter.insert( std::pair<std::string,size_t>( value, 0 ) );
+					oIt.first->second++;
+					if( oIt.first->second > maxCount )
+					{
+						mostCommon = value;
+					}
+				}
+
+				return new StringData( mostCommon );
+			}
+		}
+
 		std::string n = this->string();
 		struct stat s;
 		stat( n.c_str(), &s );
@@ -127,22 +232,78 @@ IECore::ConstRunTimeTypedPtr FileSystemPath::property( const IECore::InternedStr
 	else if( name == g_modificationTimePropertyName )
 	{
 		boost::system::error_code e;
+		
+		if( m_includeSequences )
+		{
+			FileSequencePtr sequence = fileSequence( /* ls = */ true );
+			if( sequence )
+			{
+				std::vector<std::string> files;
+				sequence->fileNames( files );
+
+				std::time_t newest = 0;
+				for( std::vector<std::string>::iterator it = files.begin(); it != files.end(); ++it )
+				{
+					std::time_t t = last_write_time( path( *it ), e );
+					if( t > newest )
+					{
+						newest = t;
+					}
+				}
+
+				return new DateTimeData( from_time_t( newest ) );
+			}
+		}
+
 		std::time_t t = last_write_time( path( this->string() ), e );
 		return new DateTimeData( from_time_t( t ) );
 	}
 	else if( name == g_sizePropertyName )
 	{
 		boost::system::error_code e;
+		
+		if( m_includeSequences )
+		{
+			FileSequencePtr sequence = fileSequence( /* ls = */ true );
+			if( sequence )
+			{
+				std::vector<std::string> files;
+				sequence->fileNames( files );
+
+				uintmax_t total = 0;
+				for( std::vector<std::string>::iterator it = files.begin(); it != files.end(); ++it )
+				{
+					uintmax_t s = file_size( path( *it ), e );
+					if( !e )
+					{
+						total += s;
+					}
+				}
+
+				return new UInt64Data( total );
+			}
+		}
+
 		uintmax_t s = file_size( path( this->string() ), e );
 		return new UInt64Data( !e ? s : 0 );
 	}
-
+	else if( name == g_frameRangePropertyName )
+	{
+		FileSequencePtr sequence = fileSequence( /* ls = */ true );
+		if( sequence )
+		{
+			return new StringData( sequence->getFrameList()->asString() );
+		}
+		
+		return new StringData;
+	}
+	
 	return Path::property( name );
 }
 
 PathPtr FileSystemPath::copy() const
 {
-	return new FileSystemPath( names(), root(), const_cast<PathFilter *>( getFilter() ) );
+	return new FileSystemPath( names(), root(), const_cast<PathFilter *>( getFilter() ), m_includeSequences );
 }
 
 void FileSystemPath::doChildren( std::vector<PathPtr> &children ) const
@@ -156,7 +317,22 @@ void FileSystemPath::doChildren( std::vector<PathPtr> &children ) const
 
 	for( directory_iterator it( p ), eIt; it != eIt; ++it )
 	{
-		children.push_back( new FileSystemPath( it->path().string(), const_cast<PathFilter *>( getFilter() ) ) );
+		children.push_back( new FileSystemPath( it->path().string(), const_cast<PathFilter *>( getFilter() ), m_includeSequences ) );
+	}
+	
+	if( m_includeSequences )
+	{
+		std::vector<FileSequencePtr> sequences;
+		IECore::ls( p.string(), sequences, /* minSequenceSize */ 1 );
+		for( std::vector<FileSequencePtr>::iterator it = sequences.begin(); it != sequences.end(); ++it )
+		{
+			std::vector<FrameList::Frame> frames;
+			(*it)->getFrameList()->asList( frames );
+			if ( !is_directory( path( (*it)->fileNameForFrame( frames[0] ) ) ) )
+			{
+				children.push_back( new FileSystemPath( path( p / (*it)->getFileName() ).string(), const_cast<PathFilter *>( getFilter() ), m_includeSequences ) );
+			}
+		}
 	}
 }
 
