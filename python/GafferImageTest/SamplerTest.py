@@ -228,3 +228,39 @@ class SamplerTest( unittest.TestCase ) :
 
 		self.assertEqual( h, h2 )
 
+	def test2x2Checker( self ) :
+
+		reader = GafferImage.ImageReader()
+		reader["fileName"].setValue( os.path.dirname( __file__ ) + "/images/checker2x2.exr" )
+
+		# As long as the sample region includes the valid range of our image,
+		# it should have not effect on our sampling. So test with a few such ranges.
+		sampleRegions = [
+			IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( GafferImage.ImagePlug.tileSize() ) ),
+			IECore.Box2i( -IECore.V2i( GafferImage.ImagePlug.tileSize() ), IECore.V2i( GafferImage.ImagePlug.tileSize() ) ),
+			IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 2 ) ),
+		]
+
+		# List of positions inside and outside of the image, along
+		# with expected values if outside points are clamped inside.
+		samples = [
+			( IECore.V2i( 0, 0 ), 1 ),
+			( IECore.V2i( 1, 0 ), 0 ),
+			( IECore.V2i( 1, 1 ), 1 ),
+			( IECore.V2i( 0, 1 ), 0 ),
+			( IECore.V2i( -1, 0 ), 1 ),
+			( IECore.V2i( 2, 0 ), 0 ),
+			( IECore.V2i( 0, 3 ), 0 ),
+			( IECore.V2i( 0, -1 ), 1 ),
+			( IECore.V2i( 3, 3 ), 1 ),
+			( IECore.V2i( -1, -1 ), 1 ),
+			( IECore.V2i( -1, 2 ), 0 ),
+			( IECore.V2i( 2, 2 ), 1 ),
+			( IECore.V2f( 1, 1 ), 0.5 ),
+		]
+
+		# Assert all is as expected for all combos of region and sample.
+		for region in sampleRegions :
+			sampler = GafferImage.Sampler( reader["out"], "R", region, boundingMode = GafferImage.Sampler.BoundingMode.Clamp )
+			for position, value in samples :
+				self.assertEqual( sampler.sample( position.x, position.y ), value )

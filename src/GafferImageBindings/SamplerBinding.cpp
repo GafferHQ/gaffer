@@ -78,8 +78,8 @@ void bindSampler()
 		.def( "setSampleWindow", &Sampler::setSampleWindow )
 		.def( "getSampleWindow", &Sampler::getSampleWindow )
 		.def( "hash", &Sampler::hash )
-		.def( "sample", (float (Sampler::*)( int, int ) )&Sampler::sample )
 		.def( "sample", (float (Sampler::*)( float, float ) )&Sampler::sample )
+		.def( "sample", (float (Sampler::*)( int, int ) )&Sampler::sample )
 	;
 }
 
