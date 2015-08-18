@@ -70,6 +70,7 @@ from ShuffleTest import ShuffleTest
 from PremultiplyTest import PremultiplyTest
 from UnpremultiplyTest import UnpremultiplyTest
 from CropTest import CropTest
+from ResampleTest import ResampleTest
 
 if __name__ == "__main__":
 	import unittest
