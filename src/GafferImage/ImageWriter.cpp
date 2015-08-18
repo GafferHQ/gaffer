@@ -224,15 +224,15 @@ ImageSpec createImageSpec( const ImageWriter *node, const boost::shared_ptr<Imag
 	// Specify the display window.
 	spec.full_x = displayWindow.min.x;
 	spec.full_y = displayWindow.min.y;
-	spec.full_width = displayWindow.size().x+1;
-	spec.full_height = displayWindow.size().y+1;
+	spec.full_width = displayWindow.size().x + 1;
+	spec.full_height = displayWindow.size().y + 1;
 
 	if ( supportsDisplayWindow && dataWindow.hasVolume() )
 	{
 		spec.x = dataWindow.min.x;
 		spec.y = dataWindow.min.y;
-		spec.width = dataWindow.size().x+1;
-		spec.height = dataWindow.size().y+1;
+		spec.width = dataWindow.size().x + 1;
+		spec.height = dataWindow.size().y + 1;
 	}
 	else
 	{
