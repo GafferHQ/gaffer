@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012-2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -69,7 +69,7 @@ class CompoundPathFilterWidget( GafferUI.PathFilterWidget ) :
 
 			self.__grid[gridPos.x, gridPos.y] = filterWidget
 
-			if gridPos.x < 2 :
+			if gridPos.x < 3 :
 				gridPos.x += 1
 			else :
 				gridPos.x = 0
