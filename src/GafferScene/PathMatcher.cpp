@@ -290,7 +290,7 @@ void PathMatcher::matchWalk( const Node *node, const NameIterator &start, const 
 	const Node *ellipsis = NULL;
 	for( childIt = node->wildcardsBegin(); childIt != childItEnd; ++childIt )
 	{
-		assert( childIt->first.hasWildcards );
+		assert( childIt->first.type == Name::Wildcarded );
 		if( childIt->first.name == g_ellipsis )
 		{
 			// store for use in next block.
