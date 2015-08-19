@@ -38,6 +38,7 @@
 #define GAFFERIMAGE_RESAMPLE_H
 
 #include "Gaffer/NumericPlug.h"
+#include "Gaffer/CompoundNumericPlug.h"
 
 #include "GafferImage/ImageProcessor.h"
 
@@ -73,6 +74,9 @@ class Resample : public ImageProcessor
 
 		Gaffer::StringPlug *filterPlug();
 		const Gaffer::StringPlug *filterPlug() const;
+
+		Gaffer::V2fPlug *filterWidthPlug();
+		const Gaffer::V2fPlug *filterWidthPlug() const;
 
 		Gaffer::IntPlug *boundingModePlug();
 		const Gaffer::IntPlug *boundingModePlug() const;

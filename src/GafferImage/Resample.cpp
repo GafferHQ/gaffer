@@ -94,7 +94,7 @@ Box2i inputRegion( const V2i &tileOrigin, const V2f &ratio, const V2f &offset, c
 }
 
 typedef boost::shared_ptr<OIIO::Filter2D> Filter2DPtr;
-Filter2DPtr createFilter( const std::string &name, const V2f &ratio )
+Filter2DPtr createFilter( const std::string &name, const V2f &filterWidth, const V2f &ratio )
 {
 	const char *filterName = name.c_str();
 	if( name == "" )
@@ -120,11 +120,15 @@ Filter2DPtr createFilter( const std::string &name, const V2f &ratio )
 		OIIO::Filter2D::get_filterdesc( i, &fd );
 		if( !strcmp( fd.name, filterName ) )
 		{
+			// Filter width is specified in number of pixels in the output image.
+			// When a specific width is requested, it is assumed to already be in
+			// that space, but when we're using a default filter width we must apply
+			// the appropriate scaling.
 			return Filter2DPtr(
 				OIIO::Filter2D::create(
 					filterName,
-					fd.width * std::max( 1.0f, ratio.x ),
-					fd.width * std::max( 1.0f, ratio.y )
+					filterWidth.x > 0 ? filterWidth.x : ( fd.width * std::max( 1.0f, ratio.x ) ),
+					filterWidth.y > 0 ? filterWidth.y : ( fd.width * std::max( 1.0f, ratio.y ) )
 				),
 				OIIO::Filter2D::destroy
 			);
@@ -150,6 +154,7 @@ Resample::Resample( const std::string &name )
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new AtomicBox2fPlug( "dataWindow" ) );
 	addChild( new StringPlug( "filter" ) );
+	addChild( new V2fPlug( "filterWidth", Plug::In, V2f( 0 ), V2f( 0 ) ) );
 	addChild( new IntPlug( "boundingMode", Plug::In, Sampler::Black, Sampler::Black, Sampler::Clamp ) );
 
 	// We don't ever want to change these, so we make pass-through connections.
@@ -182,14 +187,24 @@ const Gaffer::StringPlug *Resample::filterPlug() const
 	return getChild<StringPlug>( g_firstPlugIndex + 1 );
 }
 
+Gaffer::V2fPlug *Resample::filterWidthPlug()
+{
+	return getChild<V2fPlug>( g_firstPlugIndex + 2 );
+}
+
+const Gaffer::V2fPlug *Resample::filterWidthPlug() const
+{
+	return getChild<V2fPlug>( g_firstPlugIndex + 2 );
+}
+
 Gaffer::IntPlug *Resample::boundingModePlug()
 {
-	return getChild<IntPlug>( g_firstPlugIndex + 2 );
+	return getChild<IntPlug>( g_firstPlugIndex + 3 );
 }
 
 const Gaffer::IntPlug *Resample::boundingModePlug() const
 {
-	return getChild<IntPlug>( g_firstPlugIndex + 2 );
+	return getChild<IntPlug>( g_firstPlugIndex + 3 );
 }
 
 void Resample::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
@@ -205,7 +220,8 @@ void Resample::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outpu
 		input == inPlug()->dataWindowPlug() ||
 		input == dataWindowPlug() ||
 		input == filterPlug() ||
-		input == boundingModePlug()
+		input == boundingModePlug() ||
+		input->parent<V2fPlug>() == filterWidthPlug()
 	)
 	{
 		outputs.push_back( outPlug()->channelDataPlug() );
@@ -237,7 +253,7 @@ void Resample::hashChannelData( const GafferImage::ImagePlug *parent, const Gaff
 
 	const V2i tileOrigin = context->get<V2i>( ImagePlug::tileOriginContextName );
 
-	const Filter2DPtr filter = createFilter( filterPlug()->getValue(), ratio );
+	const Filter2DPtr filter = createFilter( filterPlug()->getValue(), filterWidthPlug()->getValue(), ratio );
 	h.append( filter->name().c_str() );
 	h.append( filter->width() );
 	h.append( filter->height() );
@@ -261,7 +277,7 @@ IECore::ConstFloatVectorDataPtr Resample::computeChannelData( const std::string 
 	V2f ratio, offset;
 	ratioAndOffset( dataWindowPlug()->getValue(), inPlug()->dataWindowPlug()->getValue(), ratio, offset );
 
-	Filter2DPtr filter = createFilter( filterPlug()->getValue(), ratio );
+	Filter2DPtr filter = createFilter( filterPlug()->getValue(), filterWidthPlug()->getValue(), ratio );
 
 	const V2i filterRadius(
 		ceilf( filter->width() / ( 2.0f * ratio.x ) ),
