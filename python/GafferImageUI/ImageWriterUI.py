@@ -78,6 +78,7 @@ Gaffer.Metadata.registerNode(
 			"pathPlugValueWidget:bookmarks", "image",
 			"fileSystemPathPlugValueWidget:extensions", IECore.StringVectorData( GafferImage.ImageReader.supportedExtensions() ),
 			"fileSystemPathPlugValueWidget:extensionsLabel", "Show only image files",
+			"fileSystemPathPlugValueWidget:includeSequences", True,
 
 		],
 
