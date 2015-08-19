@@ -85,11 +85,14 @@ class DisplayTest( unittest.TestCase ) :
 		node = GafferImage.Display()
 		node["port"].setValue( 2500 )
 
-		displayWindow = IECore.Box2i( IECore.V2i( -100, -200 ), IECore.V2i( 302, 556 ) )
-		dataWindow = displayWindow
+		externalDisplayWindow = gafferDisplayWindow = IECore.Box2i( IECore.V2i( -100, -200 ), IECore.V2i( 303, 557 ) )
+		externalDisplayWindow.max -= IECore.V2i( 1 )
+
+		externalDataWindow = externalDisplayWindow
+		gafferDataWindow = gafferDisplayWindow
 		driver = IECore.ClientDisplayDriver(
-			displayWindow,
-			dataWindow,
+			externalDisplayWindow,
+			externalDataWindow,
 			[ "Y" ],
 			{
 				"displayHost" : "localHost",
@@ -103,28 +106,32 @@ class DisplayTest( unittest.TestCase ) :
 			h1 = self.__tileHashes( node, "Y" )
 			t1 = self.__tiles( node, "Y" )
 
-			bucketWindow = IECore.Box2i()
+			externalBucketWindow = IECore.Box2i()
 			for j in range( 0, 2 ) :
-				bucketWindow.extendBy(
+				externalBucketWindow.extendBy(
 					IECore.V2i(
-						int( random.uniform( displayWindow.min.x, displayWindow.max.x ) ),
-						int( random.uniform( displayWindow.min.y, displayWindow.max.y ) ),
+						int( random.uniform( externalDisplayWindow.min.x, externalDisplayWindow.max.x ) ),
+						int( random.uniform( externalDisplayWindow.min.y, externalDisplayWindow.max.y ) ),
 					)
 				)
 
-			numPixels = ( bucketWindow.size().x + 1 ) * ( bucketWindow.size().y + 1 )
+			gafferBucketWindow = externalBucketWindow
+			gafferBucketWindow.max += IECore.V2i( 1 )
+
+			numPixels = ( externalBucketWindow.size().x + 1 ) * ( externalBucketWindow.size().y + 1 )
 			bucketData = IECore.FloatVectorData()
 			bucketData.resize( numPixels, i + 1 )
-			driver.imageData( bucketWindow, bucketData )
+			driver.imageData( externalBucketWindow, bucketData )
 
 			self.__dataReceivedSemaphore.acquire()
 
 			h2 = self.__tileHashes( node, "Y" )
 			t2 = self.__tiles( node, "Y" )
 
-			bucketWindowYUp = GafferImage.Format( displayWindow, 1 ).yDownToFormatSpace( bucketWindow )
-			self.__assertTilesChangedInRegion( t1, t2, bucketWindowYUp )
-			self.__assertTilesChangedInRegion( h1, h2, bucketWindowYUp )
+			gafferBucketWindow = GafferImage.Format( gafferDisplayWindow, 1 ).yDownToFormatSpace( gafferBucketWindow )
+
+			self.__assertTilesChangedInRegion( t1, t2, gafferBucketWindow )
+			self.__assertTilesChangedInRegion( h1, h2, gafferBucketWindow )
 
 		driver.imageClose()
 
@@ -160,9 +167,16 @@ class DisplayTest( unittest.TestCase ) :
 		node = GafferImage.Display()
 		node["port"].setValue( 2500 )
 
+		externalDisplayWindow = gafferDisplayWindow = imageReader["out"]["format"].getValue().getDisplayWindow()
+		externalDisplayWindow.max -= IECore.V2i( 1 )
+
+		gafferDataWindow = imageReader["out"]["dataWindow"].getValue()
+		externalDataWindow = imageReader["out"]["format"].getValue().formatToYDownSpace( gafferDataWindow )
+		externalDataWindow.max -= IECore.V2i( 1 )
+
 		driver = IECore.ClientDisplayDriver(
-			imageReader["out"]["format"].getValue().getDisplayWindow(),
-			imageReader["out"]["format"].getValue().formatToYDownSpace( imageReader["out"]["dataWindow"].getValue() ),
+			externalDisplayWindow,
+			externalDataWindow,
 			list( imageReader["out"]["channelNames"].getValue() ),
 			{
 				"displayHost" : "localHost",
@@ -171,10 +185,9 @@ class DisplayTest( unittest.TestCase ) :
 			}
 		)
 
-		dataWindow = imageReader["out"]["dataWindow"].getValue()
 		tileSize = GafferImage.ImagePlug.tileSize()
-		minTileOrigin = GafferImage.ImagePlug.tileOrigin( dataWindow.min )
-		maxTileOrigin = GafferImage.ImagePlug.tileOrigin( dataWindow.max )
+		minTileOrigin = GafferImage.ImagePlug.tileOrigin( gafferDataWindow.min )
+		maxTileOrigin = GafferImage.ImagePlug.tileOrigin( gafferDataWindow.max - IECore.V2i( 1 ) )
 		for y in range( minTileOrigin.y, maxTileOrigin.y + 1, tileSize ) :
 			for x in range( minTileOrigin.x, maxTileOrigin.x + 1, tileSize ) :
 				tileOrigin = IECore.V2i( x, y )
@@ -188,8 +201,9 @@ class DisplayTest( unittest.TestCase ) :
 						for c in channelData :
 							bucketData.append( c[i] )
 
-				bucketBound = IECore.Box2i( tileOrigin, tileOrigin + IECore.V2i( GafferImage.ImagePlug.tileSize() - 1 ) )
+				bucketBound = IECore.Box2i( tileOrigin, tileOrigin + IECore.V2i( GafferImage.ImagePlug.tileSize() ) )
 				bucketBound = imageReader["out"]["format"].getValue().formatToYDownSpace( bucketBound )
+				bucketBound.max -= IECore.V2i( 1 )
 				driver.imageData( bucketBound, bucketData )
 
 		driver.imageClose()
