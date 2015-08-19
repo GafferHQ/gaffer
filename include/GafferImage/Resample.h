@@ -66,6 +66,13 @@ class Resample : public ImageProcessor
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::Resample, ResampleTypeId, ImageProcessor );
 
+		enum Debug
+		{
+			Off,
+			HorizontalPass,
+			SinglePass
+		};
+
 		/// Atomic plug, since values for this will most
 		/// commonly be computed by a wrapping class, rather
 		/// than set directly by a user.
@@ -81,6 +88,9 @@ class Resample : public ImageProcessor
 		Gaffer::IntPlug *boundingModePlug();
 		const Gaffer::IntPlug *boundingModePlug() const;
 
+		Gaffer::IntPlug *debugPlug();
+		const Gaffer::IntPlug *debugPlug() const;
+
 		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
 
 	protected :
@@ -92,6 +102,9 @@ class Resample : public ImageProcessor
 		virtual IECore::ConstFloatVectorDataPtr computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const;
 
 	private :
+
+		ImagePlug *horizontalPassPlug();
+		const ImagePlug *horizontalPassPlug() const;
 
 		static size_t g_firstPlugIndex;
 

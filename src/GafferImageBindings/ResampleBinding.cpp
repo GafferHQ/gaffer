@@ -48,7 +48,13 @@ namespace GafferImageBindings
 
 void bindResample()
 {
-	GafferBindings::DependencyNodeClass<Resample>();
+	scope s = GafferBindings::DependencyNodeClass<Resample>();
+
+	enum_<Resample::Debug>( "Debug")
+		.value( "Off", Resample::Off )
+		.value( "HorizontalPass", Resample::HorizontalPass )
+		.value( "SinglePass", Resample::SinglePass )
+	;
 }
 
 } // namespace GafferImageBindings
