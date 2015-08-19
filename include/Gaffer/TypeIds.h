@@ -126,6 +126,7 @@ enum TypeId
 	MatchPatternPathFilterTypeId = 110079,
 	FileSystemPathTypeId = 110080,
 	LoopComputeNodeTypeId = 110081,
+	FileSequencePathFilterTypeId = 110082,
 
 	LastTypeId = 110180,
 
