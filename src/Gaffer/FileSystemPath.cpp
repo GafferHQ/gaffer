@@ -50,6 +50,7 @@
 
 #include "Gaffer/PathFilter.h"
 #include "Gaffer/FileSystemPath.h"
+#include "Gaffer/FileSequencePathFilter.h"
 #include "Gaffer/CompoundPathFilter.h"
 #include "Gaffer/MatchPatternPathFilter.h"
 
@@ -336,7 +337,7 @@ void FileSystemPath::doChildren( std::vector<PathPtr> &children ) const
 	}
 }
 
-PathFilterPtr FileSystemPath::createStandardFilter( const std::vector<std::string> &extensions, const std::string &extensionsLabel )
+PathFilterPtr FileSystemPath::createStandardFilter( const std::vector<std::string> &extensions, const std::string &extensionsLabel, bool includeSequenceFilter )
 {
 	CompoundPathFilterPtr result = new CompoundPathFilter();
 
@@ -369,6 +370,18 @@ PathFilterPtr FileSystemPath::createStandardFilter( const std::vector<std::strin
 		fileNameFilter->userData()->writable()["UI"] = uiUserData;
 
 		result->addFilter( fileNameFilter );
+	}
+
+	// Filter for sequences
+	if( includeSequenceFilter )
+	{
+		FileSequencePathFilterPtr sequenceFilter = new FileSequencePathFilter( /* mode = */ FileSequencePathFilter::Concise );
+
+		CompoundDataPtr sequenceUIUserData = new CompoundData;
+		sequenceUIUserData->writable()["label"] = new StringData( "Show sequences" );
+		sequenceFilter->userData()->writable()["UI"] = sequenceUIUserData;
+
+		result->addFilter( sequenceFilter );
 	}
 
 	// Filter for hidden files

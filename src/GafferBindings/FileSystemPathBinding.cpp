@@ -50,11 +50,11 @@ using namespace GafferBindings;
 namespace
 {
 
-PathFilterPtr createStandardFilter( object pythonExtensions, const std::string &extensionsLabel )
+PathFilterPtr createStandardFilter( object pythonExtensions, const std::string &extensionsLabel, bool includeSequences )
 {
 	std::vector<std::string> extensions;
 	boost::python::container_utils::extend_container( extensions, pythonExtensions );
-	return FileSystemPath::createStandardFilter( extensions, extensionsLabel );
+	return FileSystemPath::createStandardFilter( extensions, extensionsLabel, includeSequences );
 }
 
 } // namespace
@@ -83,7 +83,8 @@ void GafferBindings::bindFileSystemPath()
 		)
 		.def( "createStandardFilter", &createStandardFilter, (
 				arg( "extensions" ) = list(),
-				arg( "extensionsLabel" ) = ""
+				arg( "extensionsLabel" ) = "",
+				arg( "includeSequenceFilter" ) = false
 			)
 		)
 		.staticmethod( "createStandardFilter" )

@@ -79,7 +79,7 @@ class FileSystemPath : public Path
 		// with the FrameList that exists on disk.
 		IECore::FileSequencePtr fileSequence( bool ls = false ) const;
 
-		static PathFilterPtr createStandardFilter( const std::vector<std::string> &extensions = std::vector<std::string>(), const std::string &extensionsLabel = "" );
+		static PathFilterPtr createStandardFilter( const std::vector<std::string> &extensions = std::vector<std::string>(), const std::string &extensionsLabel = "", bool includeSequenceFilter = false );
 
 	protected :
 
