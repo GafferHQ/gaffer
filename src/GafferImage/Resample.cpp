@@ -487,7 +487,6 @@ IECore::ConstFloatVectorDataPtr Resample::computeChannelData( const std::string 
 		V2i oP; // output pixel position
 		float iX; // input pixel x coordinate (floating point)
 		int iXI; // input pixel position (floored to int)
-		float iXF; // fractional part of input pixel position after flooring
 
 		for( oP.y = tileBound.min.y; oP.y < tileBound.max.y; ++oP.y )
 		{
@@ -496,7 +495,7 @@ IECore::ConstFloatVectorDataPtr Resample::computeChannelData( const std::string 
 			{
 
 				iX = ( oP.x + 0.5 ) / ratio.x + offset.x;
-				iXF = OIIO::floorfrac( iX, &iXI );
+				OIIO::floorfrac( iX, &iXI );
 
 				int fX; // relative filter position
 				float v = 0.0f;
@@ -527,7 +526,6 @@ IECore::ConstFloatVectorDataPtr Resample::computeChannelData( const std::string 
 		V2i oP; // output pixel position
 		float iY; // input pixel position (floating point)
 		int iYI; // input pixel position (floored to int)
-		float iYF; // fractional part of input pixel position after flooring
 
 		// Pixels in the same row share the same filter weights, so
 		// we precompute the weights now to avoid repeating work later.
@@ -537,7 +535,7 @@ IECore::ConstFloatVectorDataPtr Resample::computeChannelData( const std::string 
 		for( oP.y = tileBound.min.y; oP.y < tileBound.max.y; ++oP.y )
 		{
 			iY = ( oP.y + 0.5 ) / ratio.y + offset.y;
-			iYF = OIIO::floorfrac( iY, &iYI );
+			OIIO::floorfrac( iY, &iYI );
 
 			for( oP.x = tileBound.min.x; oP.x < tileBound.max.x; ++oP.x )
 			{
