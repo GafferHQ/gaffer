@@ -93,6 +93,16 @@ std::string formatRepr( const GafferImage::Format &format )
 	{
 		return std::string( "GafferImage.Format()" );
 	}
+	else if ( format.getDisplayWindow().min == Imath::V2i( 0 ) )
+	{
+		Imath::Box2i box( format.getDisplayWindow() );
+		return std::string(
+			boost::str( boost::format(
+				"GafferImage.Format( %d, %d, %.3f )" )
+				% box.max.x % box.max.y % format.getPixelAspect()
+			)
+		);
+	}
 	else
 	{
 		Imath::Box2i box( format.getDisplayWindow() );
