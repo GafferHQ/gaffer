@@ -172,6 +172,36 @@ Filter2DPtr createFilter( const std::string &name, const V2f &filterWidth, const
 	throw Exception( boost::str( boost::format( "Unknown filter \"%s\"" ) % filterName ) );
 }
 
+// Precomputes all the filter weights for a whole row or column of a tile. For separable
+// filters these weights can then be reused across all rows/columns in the same tile.
+/// \todo The weights computed for a particular tile could also be reused for all
+/// tiles in the same tile column or row. We could achieve this by outputting
+/// the weights on an internal plug, and using Gaffer's caching to ensure they are
+/// only computed once and then reused. At the time of writing, profiles indicate that
+/// accessing pixels via the Sampler is the main bottleneck, but once that is optimised
+/// perhaps cached filter weights could have a benefit.
+void filterWeights( const OIIO::Filter2D *filter, const int filterRadius, const int x, const float ratio, const float offset, Passes pass, std::vector<float> &weights )
+{
+	weights.reserve( ( 2 * filterRadius + 1 ) * ImagePlug::tileSize() );
+
+	float iX; // input pixel position (floating point)
+	int iXI; // input pixel position (floored to int)
+	float iXF; // fractional part of input pixel position after flooring
+	for( int oX = x, eX = x + ImagePlug::tileSize(); oX < eX; ++oX )
+	{
+		iX = ( oX + 0.5 ) / ratio + offset;
+		iXF = OIIO::floorfrac( iX, &iXI );
+
+		int fX; // relative filter position
+		for( fX = -filterRadius; fX<= filterRadius; ++fX )
+		{
+			const float f = ratio * (fX - ( iXF - 0.5f ) );
+			const float w = pass == Horizontal ? filter->xfilt( f ) : filter->yfilt( f );
+			weights.push_back( w );
+		}
+	}
+}
+
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -449,6 +479,11 @@ IECore::ConstFloatVectorDataPtr Resample::computeChannelData( const std::string 
 		// it is cached for use in the vertical pass. The HorizontalPass
 		// debug mode causes this pass to be output directly for inspection.
 
+		// Pixels in the same column share the same filter weights, so
+		// we precompute the weights now to avoid repeating work later.
+		std::vector<float> weights;
+		filterWeights( filter.get(), filterRadius.x, tileBound.min.x, ratio.x, offset.x, Horizontal, weights );
+
 		V2i oP; // output pixel position
 		float iX; // input pixel x coordinate (floating point)
 		int iXI; // input pixel position (floored to int)
@@ -456,8 +491,10 @@ IECore::ConstFloatVectorDataPtr Resample::computeChannelData( const std::string 
 
 		for( oP.y = tileBound.min.y; oP.y < tileBound.max.y; ++oP.y )
 		{
+			std::vector<float>::const_iterator wIt = weights.begin();
 			for( oP.x = tileBound.min.x; oP.x < tileBound.max.x; ++oP.x )
 			{
+
 				iX = ( oP.x + 0.5 ) / ratio.x + offset.x;
 				iXF = OIIO::floorfrac( iX, &iXI );
 
@@ -466,7 +503,7 @@ IECore::ConstFloatVectorDataPtr Resample::computeChannelData( const std::string 
 				float totalW = 0.0f;
 				for( fX = -filterRadius.x; fX<= filterRadius.x; ++fX )
 				{
-					const float w = filter->xfilt( ratio.x * (fX - ( iXF - 0.5f ) ) );
+					const float w = *wIt++;
 					if( w == 0.0f )
 					{
 						continue;
@@ -492,6 +529,11 @@ IECore::ConstFloatVectorDataPtr Resample::computeChannelData( const std::string 
 		int iYI; // input pixel position (floored to int)
 		float iYF; // fractional part of input pixel position after flooring
 
+		// Pixels in the same row share the same filter weights, so
+		// we precompute the weights now to avoid repeating work later.
+		std::vector<float> weights;
+		filterWeights( filter.get(), filterRadius.y, tileBound.min.y, ratio.y, offset.y, Vertical, weights );
+
 		for( oP.y = tileBound.min.y; oP.y < tileBound.max.y; ++oP.y )
 		{
 			iY = ( oP.y + 0.5 ) / ratio.y + offset.y;
@@ -502,9 +544,10 @@ IECore::ConstFloatVectorDataPtr Resample::computeChannelData( const std::string 
 				int fY; // relative filter position
 				float v = 0.0f;
 				float totalW = 0.0f;
+				std::vector<float>::const_iterator wIt = weights.begin() + ( oP.y - tileBound.min.y ) * ( filterRadius.y * 2 + 1);
 				for( fY = -filterRadius.y; fY<= filterRadius.y; ++fY )
 				{
-					const float w = filter->yfilt( ratio.y * (fY - ( iYF - 0.5f ) ) );
+					const float w = *wIt++;
 					if( w == 0.0f )
 					{
 						continue;
