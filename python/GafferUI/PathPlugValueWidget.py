@@ -80,6 +80,15 @@ class PathPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self._updateFromPlug()
 
+	def getPath( self ) :
+
+		return self.__path
+
+	def setPath( self, path ) :
+
+		self.__path = path.copy()
+		self.pathWidget().setPath( self.__path )
+
 	## Returns the PathWidget used to display the path.
 	def pathWidget( self ) :
 
