@@ -39,11 +39,11 @@
 #include "IECore/FrameRange.h"
 #include "IECore/MessageHandler.h"
 
-#include "Gaffer/Box.h"
 #include "Gaffer/Context.h"
 #include "Gaffer/Dispatcher.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/StringPlug.h"
+#include "Gaffer/SubGraph.h"
 
 using namespace IECore;
 using namespace Gaffer;
@@ -145,9 +145,9 @@ void Dispatcher::dispatch( const std::vector<NodePtr> &nodes ) const
 		{
 			executables.push_back( executable );
 		}
-		else if ( const Box *box = runTimeCast<const Box>( nIt->get() ) )
+		else if ( const SubGraph *subGraph = runTimeCast<const SubGraph>( nIt->get() ) )
 		{
-			for ( RecursiveOutputPlugIterator plugIt( box ); plugIt != plugIt.end(); ++plugIt )
+			for ( RecursiveOutputPlugIterator plugIt( subGraph ); plugIt != plugIt.end(); ++plugIt )
 			{
 				Node *sourceNode = plugIt->get()->source<Plug>()->node();
 				if ( ExecutableNode *executable = runTimeCast<ExecutableNode>( sourceNode ) )
@@ -158,7 +158,7 @@ void Dispatcher::dispatch( const std::vector<NodePtr> &nodes ) const
 		}
 		else
 		{
-			throw IECore::Exception( getName().string() + ": Dispatched nodes must be ExecutableNodes or Boxes containing ExecutableNodes." );
+			throw IECore::Exception( getName().string() + ": Dispatched nodes must be ExecutableNodes or SubGraphs containing ExecutableNodes." );
 		}
 	}
 
