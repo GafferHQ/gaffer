@@ -1636,6 +1636,7 @@ class _PlugEditor( GafferUI.Widget ) :
 		__MetadataDefinition( "pathPlugValueWidget:valid", "File Must Exist", _BoolMetadataWidget, "GafferUI.FileSystemPathPlugValueWidget" ),
 		__MetadataDefinition( "pathPlugValueWidget:leaf", "No Directories", _BoolMetadataWidget, "GafferUI.FileSystemPathPlugValueWidget" ),
 		__MetadataDefinition( "fileSystemPathPlugValueWidget:includeSequences", "Allow sequences", _BoolMetadataWidget, "GafferUI.FileSystemPathPlugValueWidget" ),
+		__MetadataDefinition( "fileSystemPathPlugValueWidget:includeSequenceFrameRange", "Sequences include frame range", _BoolMetadataWidget, "GafferUI.FileSystemPathPlugValueWidget" ),
 	)
 
 	__GadgetDefinition = collections.namedtuple( "GadgetDefinition", ( "label", "plugType", "metadata" ) )

@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import IECore
+
 import Gaffer
 import GafferUI
 
@@ -42,6 +44,7 @@ import GafferUI
 # - "fileSystemPathPlugValueWidget:extensions"
 # - "fileSystemPathPlugValueWidget:extensionsLabel"
 # - "fileSystemPathPlugValueWidget:includeSequences"
+# - "fileSystemPathPlugValueWidget:includeSequenceFrameRange"
 class FileSystemPathPlugValueWidget( GafferUI.PathPlugValueWidget ) :
 
 	def __init__( self, plug, **kw ) :
@@ -90,6 +93,17 @@ class FileSystemPathPlugValueWidget( GafferUI.PathPlugValueWidget ) :
 				includeSequences = includeSequences,
 			)
 		)
+
+	def _setPlugFromPath( self, path ) :
+
+		if Gaffer.Metadata.plugValue( self.getPlug(), "fileSystemPathPlugValueWidget:includeSequenceFrameRange" ) :
+			sequence = path.fileSequence()
+			if sequence :
+				sequence.frameList = IECore.FrameList.parse( path.property( "fileSystem:frameRange" ) )
+				self.getPlug().setValue( str(sequence) )
+				return
+
+		GafferUI.PathPlugValueWidget._setPlugFromPath( self, path )
 
 	def __plugMetadataChanged( self, nodeTypeId, plugPath, key, plug ) :
 
