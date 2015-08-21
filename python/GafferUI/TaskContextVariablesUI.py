@@ -56,7 +56,9 @@ Gaffer.Metadata.registerNode(
 			"""
 			The variables to be added - arbitrary numbers of variables
 			can be added here.
-			"""
+			""",
+
+			"nodule:type", lambda plug : "",
 
 		]
 
