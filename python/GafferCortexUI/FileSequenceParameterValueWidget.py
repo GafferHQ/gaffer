@@ -46,6 +46,10 @@ class FileSequenceParameterValueWidget( GafferCortexUI.PathParameterValueWidget 
 
 		GafferCortexUI.PathParameterValueWidget.__init__( self, parameterHandler, **kw )
 
+		path = self._path()
+		path.setFromString( str( self.plugValueWidget().getPath() ) )
+		self.plugValueWidget().setPath( path )
+
 	def _path( self ) :
 
 		return Gaffer.FileSystemPath( "/", filter = self._filter(), includeSequences = True )
