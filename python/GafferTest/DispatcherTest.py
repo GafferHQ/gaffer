@@ -1010,6 +1010,26 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 		self.assertEqual( next( open( "/tmp/dispatcherTest/test.0010.txt" ) ), "testing 123" )
 
+	def testBatchesCanAccessJobDirectory( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["w"] = GafferTest.TextWriter()
+		s["w"]["fileName"].setValue( "${dispatcher:jobDirectory}/test.####.txt" )
+		s["w"]["text"].setValue( "w on ${frame} from ${dispatcher:jobDirectory}" )
+
+		dispatcher = Gaffer.Dispatcher.create( "testDispatcher" )
+		dispatcher["framesMode"].setValue( Gaffer.Dispatcher.FramesMode.CustomRange )
+		frameList = IECore.FrameList.parse( "2-6x2" )
+		dispatcher["frameRange"].setValue( str(frameList) )
+		dispatcher.dispatch( [ s["w"] ] )
+
+		# a single dispatch should have the same job directory for all batches
+		jobDir = dispatcher.jobDirectory()
+		self.assertEqual( next( open( "%s/test.0002.txt" % jobDir ) ), "w on 2 from %s" % jobDir )
+		self.assertEqual( next( open( "%s/test.0004.txt" % jobDir ) ), "w on 4 from %s" % jobDir )
+		self.assertEqual( next( open( "%s/test.0006.txt" % jobDir ) ), "w on 6 from %s" % jobDir )
+
 	def tearDown( self ) :
 
 		shutil.rmtree( "/tmp/dispatcherTest", ignore_errors = True )

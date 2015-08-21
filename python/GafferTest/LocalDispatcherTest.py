@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2014-2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -667,6 +667,28 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		dispatcher.jobPool().waitForAll()
 
 		self.assertTrue( os.path.isfile( "/tmp/dispatcherTest/scriptLoadErrorTest.txt" ) )
+
+	def testBackgroundBatchesCanAccessJobDirectory( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["w"] = GafferTest.TextWriter()
+		s["w"]["fileName"].setValue( "${dispatcher:jobDirectory}/test.####.txt" )
+		s["w"]["text"].setValue( "w on ${frame} from ${dispatcher:jobDirectory}" )
+
+		dispatcher = Gaffer.Dispatcher.create( "LocalTest" )
+		dispatcher["executeInBackground"].setValue( True )
+		dispatcher["framesMode"].setValue( Gaffer.Dispatcher.FramesMode.CustomRange )
+		frameList = IECore.FrameList.parse( "2-6x2" )
+		dispatcher["frameRange"].setValue( str(frameList) )
+		dispatcher.dispatch( [ s["w"] ] )
+		dispatcher.jobPool().waitForAll()
+
+		# a single dispatch should have the same job directory for all batches
+		jobDir = dispatcher.jobDirectory()
+		self.assertEqual( next( open( "%s/test.0002.txt" % jobDir ) ), "w on 2 from %s" % jobDir )
+		self.assertEqual( next( open( "%s/test.0004.txt" % jobDir ) ), "w on 4 from %s" % jobDir )
+		self.assertEqual( next( open( "%s/test.0006.txt" % jobDir ) ), "w on 6 from %s" % jobDir )
 
 	def tearDown( self ) :
 

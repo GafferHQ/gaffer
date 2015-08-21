@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2013-2014, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2013-2015, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -50,6 +50,7 @@ using namespace Gaffer;
 
 static InternedString g_frame( "frame" );
 static InternedString g_batchSize( "batchSize" );
+static InternedString g_jobDirectoryContextEntry( "dispatcher:jobDirectory" );
 
 size_t Dispatcher::g_firstPlugIndex = 0;
 Dispatcher::PreDispatchSignal Dispatcher::g_preDispatchSignal;
@@ -163,8 +164,9 @@ void Dispatcher::dispatch( const std::vector<NodePtr> &nodes ) const
 	}
 
 	// create the job directory now, so it's available in preDispatchSignal().
-	const Context *context = Context::current();
-	m_jobDirectory = createJobDirectory( context );
+	ContextPtr context = new Context( *Context::current(), Context::Borrowed );
+	m_jobDirectory = createJobDirectory( context.get() );
+	context->set( g_jobDirectoryContextEntry, m_jobDirectory );
 
 	// this object calls this->preDispatchSignal() in its constructor and this->postDispatchSignal()
 	// in its destructor, thereby guaranteeing that we always call this->postDispatchSignal().
@@ -176,7 +178,7 @@ void Dispatcher::dispatch( const std::vector<NodePtr> &nodes ) const
 	}
 
 	std::vector<FrameList::Frame> frames;
-	FrameListPtr frameList = frameRange( script, context );
+	FrameListPtr frameList = frameRange( script, context.get() );
 	frameList->asList( frames );
 
 	size_t i = 0;
