@@ -46,6 +46,12 @@ class FileSequenceParameterValueWidget( GafferCortexUI.PathParameterValueWidget 
 
 		GafferCortexUI.PathParameterValueWidget.__init__( self, parameterHandler, **kw )
 
+		includeFrameRange = True
+		with IECore.IgnoredExceptions( KeyError ) :
+			includeFrameRange = self.parameterHandler().parameter().userData()["UI"]["includeFrameRange"].value
+
+		Gaffer.Metadata.registerPlugValue( self.plug(), "fileSystemPathPlugValueWidget:includeSequenceFrameRange", includeFrameRange )
+
 		path = self._path()
 		path.setFromString( str( self.plugValueWidget().getPath() ) )
 		self.plugValueWidget().setPath( path )
