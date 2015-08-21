@@ -697,13 +697,11 @@ class DispatcherTest( GafferTest.TestCase ) :
 		s["n4"]["mode"].setValue( "a" )
 		s["n4"]["fileName"].setValue( fileName )
 		s["n4"]["text"].setValue( "n4 on ${frame};" )
-		s["b"]["in"] = s["b"]["n3"]["requirements"][0].createCounterpart( "in", Gaffer.Plug.Direction.In )
-		s["b"]["n3"]["requirements"][0].setInput( s["b"]["in"] )
-		s["b"]["in"].setInput( s["n1"]['requirement'] )
+		s["b"].promotePlug( s["b"]["n3"]["requirements"]["requirement0"] )
+		s["b"]["requirements_requirement0"].setInput( s["n1"]['requirement'] )
 		s["b"]["n3"]["requirements"][1].setInput( s["b"]["n2"]['requirement'] )
-		s["b"]["out"] = s["b"]["n3"]['requirement'].createCounterpart( "out", Gaffer.Plug.Direction.Out )
-		s["b"]["out"].setInput( s["b"]["n3"]["requirement"] )
-		s["n4"]['requirements'][0].setInput( s["b"]['out'] )
+		s["b"].promotePlug( s["b"]["n3"]['requirement'] )
+		s["n4"]['requirements'][0].setInput( s["b"]['requirement'] )
 
 		# dispatch an Executable that requires a Box
 
