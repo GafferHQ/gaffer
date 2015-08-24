@@ -98,7 +98,8 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 	def setUp( self ) :
 
-		os.makedirs( "/tmp/dispatcherTest" )
+		if not os.path.exists( "/tmp/dispatcherTest" ) :
+			os.makedirs( "/tmp/dispatcherTest" )
 		
 		if not "testDispatcher" in Gaffer.Dispatcher.registeredDispatchers():
 			IECore.registerRunTimeTyped( DispatcherTest.MyDispatcher )
@@ -671,7 +672,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		expectedText = "n1 on 2;n1 on 4;n2 on 2;n2 on 4;n2 on 6;n1 on 6;n3 on 2;n3 on 4;n3 on 6;n4 on 2;n4 on 4;n4 on 6;"
 		self.assertEqual( text, expectedText )
 
-	def testDispatchThroughABox( self ) :
+	def testDispatchThroughSubgraphs( self ) :
 
 		dispatcher = Gaffer.Dispatcher.create( "testDispatcher" )
 		dispatcher["framesMode"].setValue( Gaffer.Dispatcher.FramesMode.CustomRange )
@@ -697,13 +698,16 @@ class DispatcherTest( GafferTest.TestCase ) :
 		s["n4"]["mode"].setValue( "a" )
 		s["n4"]["fileName"].setValue( fileName )
 		s["n4"]["text"].setValue( "n4 on ${frame};" )
-		s["b"]["in"] = s["b"]["n3"]["requirements"][0].createCounterpart( "in", Gaffer.Plug.Direction.In )
-		s["b"]["n3"]["requirements"][0].setInput( s["b"]["in"] )
-		s["b"]["in"].setInput( s["n1"]['requirement'] )
+		s["b"].promotePlug( s["b"]["n3"]["requirements"]["requirement0"] )
+		s["b"]["requirements_requirement0"].setInput( s["n1"]['requirement'] )
 		s["b"]["n3"]["requirements"][1].setInput( s["b"]["n2"]['requirement'] )
-		s["b"]["out"] = s["b"]["n3"]['requirement'].createCounterpart( "out", Gaffer.Plug.Direction.Out )
-		s["b"]["out"].setInput( s["b"]["n3"]["requirement"] )
-		s["n4"]['requirements'][0].setInput( s["b"]['out'] )
+		s["b"].promotePlug( s["b"]["n3"]['requirement'] )
+		s["n4"]['requirements'][0].setInput( s["b"]['requirement'] )
+		# export a reference too
+		s["b"].exportForReference( "/tmp/dispatcherTest/test.grf" )
+		s["r"] = Gaffer.Reference()
+		s["r"].load( "/tmp/dispatcherTest/test.grf" )
+		s["r"]["requirements_requirement0"].setInput( s["n1"]['requirement'] )
 
 		# dispatch an Executable that requires a Box
 
@@ -779,6 +783,39 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 		# all frames of n1, followed by the n3 sequence, followed by all frames of n2
 		expectedText = "n1 on 2;n1 on 4;n1 on 6;n3 on 2;n3 on 4;n3 on 6;n2 on 2;n2 on 4;n2 on 6;"
+		self.assertEqual( text, expectedText )
+
+		# dispatch an Executable that requires a Reference
+
+		os.remove( fileName )
+		s["n4"]['requirements'][0].setInput( s["r"]['requirement'] )
+		self.assertEqual( os.path.isfile( fileName ), False )
+		dispatcher.dispatch( [ s["n4"] ] )
+		shutil.rmtree( dispatcher.jobDirectory() )
+		self.assertEqual( os.path.isfile( fileName ), True )
+		with file( fileName, "r" ) as f :
+			text = f.read()
+
+		# all frames of n1, n2, n3, and n4 interleaved
+		# note that n3 is now interleaved because TextWriter isn't serializing
+		# the requiresSequenceExecution value, so s['r']['n3'] is now parallel.
+		expectedText = "n1 on 2;n2 on 2;n3 on 2;n4 on 2;n1 on 4;n2 on 4;n3 on 4;n4 on 4;n1 on 6;n2 on 6;n3 on 6;n4 on 6;"
+		self.assertEqual( text, expectedText )
+
+		# dispatch the Reference directly
+
+		os.remove( fileName )
+		self.assertEqual( os.path.isfile( fileName ), False )
+		dispatcher.dispatch( [ s["r"] ] )
+		shutil.rmtree( dispatcher.jobDirectory() )
+		self.assertEqual( os.path.isfile( fileName ), True )
+		with file( fileName, "r" ) as f :
+			text = f.read()
+
+		# all frames of n1, n2, and n3 interleaved
+		# note that n3 is now interleaved because TextWriter isn't serializing
+		# the requiresSequenceExecution value, so s['r']['n3'] is now parallel.
+		expectedText = "n1 on 2;n2 on 2;n3 on 2;n1 on 4;n2 on 4;n3 on 4;n1 on 6;n2 on 6;n3 on 6;"
 		self.assertEqual( text, expectedText )
 
 	def testDefaultDispatcher( self ) :
@@ -972,6 +1009,26 @@ class DispatcherTest( GafferTest.TestCase ) :
 		Gaffer.Dispatcher.create( "testDispatcher" ).dispatch( [ s["c"] ] )
 
 		self.assertEqual( next( open( "/tmp/dispatcherTest/test.0010.txt" ) ), "testing 123" )
+
+	def testBatchesCanAccessJobDirectory( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["w"] = GafferTest.TextWriter()
+		s["w"]["fileName"].setValue( "${dispatcher:jobDirectory}/test.####.txt" )
+		s["w"]["text"].setValue( "w on ${frame} from ${dispatcher:jobDirectory}" )
+
+		dispatcher = Gaffer.Dispatcher.create( "testDispatcher" )
+		dispatcher["framesMode"].setValue( Gaffer.Dispatcher.FramesMode.CustomRange )
+		frameList = IECore.FrameList.parse( "2-6x2" )
+		dispatcher["frameRange"].setValue( str(frameList) )
+		dispatcher.dispatch( [ s["w"] ] )
+
+		# a single dispatch should have the same job directory for all batches
+		jobDir = dispatcher.jobDirectory()
+		self.assertEqual( next( open( "%s/test.0002.txt" % jobDir ) ), "w on 2 from %s" % jobDir )
+		self.assertEqual( next( open( "%s/test.0004.txt" % jobDir ) ), "w on 4 from %s" % jobDir )
+		self.assertEqual( next( open( "%s/test.0006.txt" % jobDir ) ), "w on 6 from %s" % jobDir )
 
 	def tearDown( self ) :
 
