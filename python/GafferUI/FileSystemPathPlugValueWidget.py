@@ -47,12 +47,12 @@ import GafferUI
 # - "fileSystemPathPlugValueWidget:includeSequenceFrameRange"
 class FileSystemPathPlugValueWidget( GafferUI.PathPlugValueWidget ) :
 
-	def __init__( self, plug, **kw ) :
+	def __init__( self, plug, path=None, **kw ) :
 
 		GafferUI.PathPlugValueWidget.__init__(
 			self,
 			plug,
-			Gaffer.FileSystemPath( "/" ),
+			path,
 			**kw
 		)
 
@@ -82,17 +82,15 @@ class FileSystemPathPlugValueWidget( GafferUI.PathPlugValueWidget ) :
 
 		includeSequences = Gaffer.Metadata.plugValue( self.getPlug(), "fileSystemPathPlugValueWidget:includeSequences" ) or False
 
-		self.setPath(
-			Gaffer.FileSystemPath(
-				str(self.getPath()),
-				filter =  Gaffer.FileSystemPath.createStandardFilter(
-					list( extensions ),
-					Gaffer.Metadata.plugValue( self.getPlug(), "fileSystemPathPlugValueWidget:extensionsLabel" ) or "",
-					includeSequenceFilter = includeSequences,
-				),
-				includeSequences = includeSequences,
+		self.path().setFilter(
+			Gaffer.FileSystemPath.createStandardFilter(
+				list( extensions ),
+				Gaffer.Metadata.plugValue( self.getPlug(), "fileSystemPathPlugValueWidget:extensionsLabel" ) or "",
+				includeSequenceFilter = includeSequences,
 			)
 		)
+
+		self.path().setIncludeSequences( includeSequences )
 
 	def _setPlugFromPath( self, path ) :
 

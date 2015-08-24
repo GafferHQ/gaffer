@@ -48,9 +48,9 @@ class PathParameterValueWidget( GafferCortexUI.ParameterValueWidget ) :
 
 		self.__pathWidget = GafferUI.FileSystemPathPlugValueWidget(
 			parameterHandler.plug(),
+			self._path(),
 			pathChooserDialogueKeywords = Gaffer.WeakMethod( self._pathChooserDialogueKeywords ),
 		)
-		self.__pathWidget.setPath( self._path() )
 		
 		GafferCortexUI.ParameterValueWidget.__init__(
 
