@@ -95,7 +95,7 @@ bool FileSystemPath::isValid() const
 		return false;
 	}
 
-	if( m_includeSequences && fileSequence() != NULL )
+	if( m_includeSequences && isFileSequence() )
 	{
 		return true;
 	}
@@ -109,23 +109,21 @@ bool FileSystemPath::isLeaf() const
 	return isValid() && !is_directory( path( this->string() ) );
 }
 
-bool FileSystemPath::includeSequences() const
+bool FileSystemPath::getIncludeSequences() const
 {
 	return m_includeSequences;
 }
 
-FileSequencePtr FileSystemPath::fileSequence( bool ls ) const
+void FileSystemPath::setIncludeSequences( bool includeSequences )
+{
+	m_includeSequences = includeSequences;
+}
+
+bool FileSystemPath::isFileSequence() const
 {
 	if( !m_includeSequences || is_directory( path( this->string() ) ) )
 	{
-		return NULL;
-	}
-	
-	if( ls )
-	{
-		FileSequencePtr sequence = 0;
-		IECore::ls( this->string(), sequence, /* minSequenceSize = */ 1 );
-		return sequence;
+		return false;
 	}
 
 	try
@@ -135,8 +133,20 @@ FileSequencePtr FileSystemPath::fileSequence( bool ls ) const
 	catch( ... )
 	{
 	}
-
+	
 	return NULL;
+}
+
+FileSequencePtr FileSystemPath::fileSequence() const
+{
+	if( !m_includeSequences || is_directory( path( this->string() ) ) )
+	{
+		return NULL;
+	}
+	
+	FileSequencePtr sequence = NULL;
+	IECore::ls( this->string(), sequence, /* minSequenceSize = */ 1 );
+	return sequence;
 }
 
 void FileSystemPath::propertyNames( std::vector<IECore::InternedString> &names ) const
@@ -160,7 +170,7 @@ IECore::ConstRunTimeTypedPtr FileSystemPath::property( const IECore::InternedStr
 	{
 		if( m_includeSequences )
 		{
-			FileSequencePtr sequence = fileSequence( /* ls = */ true );
+			FileSequencePtr sequence = fileSequence();
 			if( sequence )
 			{
 				std::vector<std::string> files;
@@ -197,7 +207,7 @@ IECore::ConstRunTimeTypedPtr FileSystemPath::property( const IECore::InternedStr
 	{
 		if( m_includeSequences )
 		{
-			FileSequencePtr sequence = fileSequence( /* ls = */ true );
+			FileSequencePtr sequence = fileSequence();
 			if( sequence )
 			{
 				std::vector<std::string> files;
@@ -236,7 +246,7 @@ IECore::ConstRunTimeTypedPtr FileSystemPath::property( const IECore::InternedStr
 		
 		if( m_includeSequences )
 		{
-			FileSequencePtr sequence = fileSequence( /* ls = */ true );
+			FileSequencePtr sequence = fileSequence();
 			if( sequence )
 			{
 				std::vector<std::string> files;
@@ -265,7 +275,7 @@ IECore::ConstRunTimeTypedPtr FileSystemPath::property( const IECore::InternedStr
 		
 		if( m_includeSequences )
 		{
-			FileSequencePtr sequence = fileSequence( /* ls = */ true );
+			FileSequencePtr sequence = fileSequence();
 			if( sequence )
 			{
 				std::vector<std::string> files;
@@ -290,7 +300,7 @@ IECore::ConstRunTimeTypedPtr FileSystemPath::property( const IECore::InternedStr
 	}
 	else if( name == g_frameRangePropertyName )
 	{
-		FileSequencePtr sequence = fileSequence( /* ls = */ true );
+		FileSequencePtr sequence = fileSequence();
 		if( sequence )
 		{
 			return new StringData( sequence->getFrameList()->asString() );

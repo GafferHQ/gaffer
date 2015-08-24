@@ -242,7 +242,7 @@ class FileSystemPathTest( GafferTest.TestCase ) :
 				f.write( "AAAA" )
 
 		p = Gaffer.FileSystemPath( self.__dir, includeSequences = True )
-		self.assertTrue( p.includeSequences() )
+		self.assertTrue( p.getIncludeSequences() )
 
 		c = p.children()
 		self.assertEqual( len( c ), 8 )
@@ -267,6 +267,8 @@ class FileSystemPathTest( GafferTest.TestCase ) :
 			self.assertEqual( x.property( "fileSystem:group" ), grp.getgrgid( os.stat( str( p ) ).st_gid ).gr_name )
 			self.assertTrue( (datetime.datetime.utcnow() - x.property( "fileSystem:modificationTime" )).total_seconds() < 1 )
 			if "###" not in str(x) :
+				self.assertFalse( x.isFileSequence() )
+				self.assertEqual( x.fileSequence(), None )
 				self.assertEqual( x.property( "fileSystem:frameRange" ), "" )
 				if os.path.isdir( str(x) ) :
 					self.assertEqual( x.property( "fileSystem:size" ), 0 )
@@ -274,25 +276,25 @@ class FileSystemPathTest( GafferTest.TestCase ) :
 					self.assertEqual( x.property( "fileSystem:size" ), 4 )
 
 		self.assertEqual( s[0].property( "fileSystem:frameRange" ), "1-2,4" )
+		self.assertTrue( s[0].isFileSequence() )
 		self.assertTrue( isinstance( s[0].fileSequence(), IECore.FileSequence ) )
-		self.assertEqual( s[0].fileSequence(), IECore.FileSequence( str(s[0]), IECore.EmptyFrameList() ) )
-		self.assertEqual( s[0].fileSequence( ls = True ), IECore.FileSequence( str(s[0]), IECore.frameListFromList( [ 1, 2, 4 ] ) ) )
+		self.assertEqual( s[0].fileSequence(), IECore.FileSequence( str(s[0]), IECore.frameListFromList( [ 1, 2, 4 ] ) ) )
 		self.assertEqual( s[0].property( "fileSystem:size" ), 4 * 3 )
 
 		self.assertEqual( s[4].property( "fileSystem:frameRange" ), "3" )
+		self.assertTrue( s[4].isFileSequence() )
 		self.assertTrue( isinstance( s[4].fileSequence(), IECore.FileSequence ) )
-		self.assertEqual( s[4].fileSequence(), IECore.FileSequence( str(s[4]), IECore.EmptyFrameList() ) )
-		self.assertEqual( s[4].fileSequence( ls = True ), IECore.FileSequence( str(s[4]), IECore.frameListFromList( [ 3 ] ) ) )
+		self.assertEqual( s[4].fileSequence(), IECore.FileSequence( str(s[4]), IECore.frameListFromList( [ 3 ] ) ) )
 		self.assertEqual( s[4].property( "fileSystem:size" ), 4 )
 
 		# make sure we can copy
 		p2 = p.copy()
-		self.assertTrue( p2.includeSequences() )
+		self.assertTrue( p2.getIncludeSequences() )
 		self.assertEqual( len( p2.children() ), 8 )
 
 		# make sure we can still exclude the sequences
 		p = Gaffer.FileSystemPath( self.__dir, includeSequences = False )
-		self.assertFalse( p.includeSequences() )
+		self.assertFalse( p.getIncludeSequences() )
 
 		c = p.children()
 		self.assertEqual( len( c ), 6 )
@@ -304,6 +306,13 @@ class FileSystemPathTest( GafferTest.TestCase ) :
 		self.assertEqual( str(s[3]), self.__dir + "/b.003.txt" )
 		self.assertEqual( str(s[4]), self.__dir + "/dir" )
 		self.assertEqual( str(s[5]), self.__dir + "/singleFile.txt" )
+		
+		# and we can include them again
+		p.setIncludeSequences( True )
+		self.assertTrue( p.getIncludeSequences() )
+
+		c = p.children()
+		self.assertEqual( len( c ), 8 )
 
 	def setUp( self ) :
 

@@ -292,9 +292,9 @@ class FileIconColumn : public Column
 
 				if( const FileSystemPath *fileSystemPath = IECore::runTimeCast<const FileSystemPath>( path ) )
 				{
-					if( fileSystemPath->includeSequences() )
+					if( fileSystemPath->getIncludeSequences() )
 					{
-						IECore::FileSequencePtr seq = fileSystemPath->fileSequence( /* ls = */ true );
+						IECore::FileSequencePtr seq = fileSystemPath->fileSequence();
 						if( seq )
 						{
 							std::vector<IECore::FrameList::Frame> frames;

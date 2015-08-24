@@ -99,7 +99,6 @@ class FileSystemPathPlugValueWidget( GafferUI.PathPlugValueWidget ) :
 		if Gaffer.Metadata.plugValue( self.getPlug(), "fileSystemPathPlugValueWidget:includeSequenceFrameRange" ) :
 			sequence = path.fileSequence()
 			if sequence :
-				sequence.frameList = IECore.FrameList.parse( path.property( "fileSystem:frameRange" ) )
 				self.getPlug().setValue( str(sequence) )
 				return
 

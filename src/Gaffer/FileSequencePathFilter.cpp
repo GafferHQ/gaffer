@@ -101,7 +101,7 @@ bool FileSequencePathFilter::remove( PathPtr path ) const
 		return false;
 	}
 
-	if( ( m_mode & Sequences ) && ( fileSystemPath->fileSequence() != NULL ) )
+	if( ( m_mode & Sequences ) && ( fileSystemPath->isFileSequence() ) )
 	{
 		// its a valid sequence, so keep it
 		return false;

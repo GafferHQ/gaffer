@@ -76,11 +76,10 @@ void GafferBindings::bindFileSystemPath()
 				arg( "includeSequences" ) = false
 			) )
 		)
-		.def( "includeSequences", &FileSystemPath::includeSequences )
-		.def( "fileSequence", &FileSystemPath::fileSequence, (
-				arg( "ls" ) = false
-			)
-		)
+		.def( "getIncludeSequences", &FileSystemPath::getIncludeSequences )
+		.def( "setIncludeSequences", &FileSystemPath::setIncludeSequences )
+		.def( "isFileSequence", &FileSystemPath::isFileSequence )
+		.def( "fileSequence", &FileSystemPath::fileSequence )
 		.def( "createStandardFilter", &createStandardFilter, (
 				arg( "extensions" ) = list(),
 				arg( "extensionsLabel" ) = "",

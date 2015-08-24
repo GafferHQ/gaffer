@@ -71,13 +71,16 @@ class FileSystemPath : public Path
 		virtual IECore::ConstRunTimeTypedPtr property( const IECore::InternedString &name ) const;
 		virtual PathPtr copy() const;
 
-		// returns true if this FileSystemPath includes FileSequences
-		bool includeSequences() const;
-		// returns the FileSequence that represents the current leaf
+		// Returns true if this FileSystemPath includes FileSequences
+		bool getIncludeSequences() const;
+		// Determines whether this FileSystemPath includes FileSequences
+		void setIncludeSequences( bool includeSequences );
+		// Returns true if the path represents a FileSequence.
+		bool isFileSequence() const;
+		// Returns the FileSequence that represents the current leaf
 		// or NULL if this path is not a leaf, or does not represent
-		// a FileSequnce. Use ls = true to retrieve the FileSequnce
-		// with the FrameList that exists on disk.
-		IECore::FileSequencePtr fileSequence( bool ls = false ) const;
+		// a FileSequence.
+		IECore::FileSequencePtr fileSequence() const;
 
 		static PathFilterPtr createStandardFilter( const std::vector<std::string> &extensions = std::vector<std::string>(), const std::string &extensionsLabel = "", bool includeSequenceFilter = false );
 
