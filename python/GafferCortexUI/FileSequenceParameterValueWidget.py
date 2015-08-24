@@ -37,6 +37,8 @@
 import IECore
 
 import Gaffer
+import GafferCortex
+
 import GafferUI
 import GafferCortexUI
 
@@ -45,12 +47,6 @@ class FileSequenceParameterValueWidget( GafferCortexUI.PathParameterValueWidget 
 	def __init__( self, parameterHandler, **kw ) :
 
 		GafferCortexUI.PathParameterValueWidget.__init__( self, parameterHandler, **kw )
-
-		includeFrameRange = True
-		with IECore.IgnoredExceptions( KeyError ) :
-			includeFrameRange = self.parameterHandler().parameter().userData()["UI"]["includeFrameRange"].value
-
-		Gaffer.Metadata.registerPlugValue( self.plug(), "fileSystemPathPlugValueWidget:includeSequenceFrameRange", includeFrameRange )
 
 		path = self._path()
 		path.setFromString( str( self.plugValueWidget().getPath() ) )
@@ -65,3 +61,49 @@ class FileSequenceParameterValueWidget( GafferCortexUI.PathParameterValueWidget 
 		return Gaffer.FileSystemPath.createStandardFilter( includeSequenceFilter = True )
 
 GafferCortexUI.ParameterValueWidget.registerType( IECore.FileSequenceParameter, FileSequenceParameterValueWidget )
+
+# we've copied this list of node types from
+# ParameterisedHolderUI because it seemed
+# better to keep this FileSequence metadata
+# logic self contained in this file.
+__nodeTypes = (
+	GafferCortex.ParameterisedHolderNode,
+	GafferCortex.ParameterisedHolderComputeNode,
+	GafferCortex.ParameterisedHolderDependencyNode,
+	GafferCortex.ParameterisedHolderExecutableNode,
+)
+
+def __isFileSequence( plug ) :
+
+	handler = plug.node().parameterHandler()
+	if not handler :
+		return None
+
+	parameter = handler.parameter()
+	for p in plug.relativeName( plug.node() ).split( "." )[1:] :
+		parameter = parameter[p]
+
+	return isinstance( parameter, IECore.FileSequenceParameter )
+
+def __includeFrameRange( plug ) :
+
+	handler = plug.node().parameterHandler()
+	if not handler :
+		return None
+
+	parameter = handler.parameter()
+	for p in plug.relativeName( plug.node() ).split( "." )[1:] :
+		parameter = parameter[p]
+
+	if not isinstance( parameter, IECore.FileSequenceParameter ) :
+		return None
+
+	includeFrameRange = True
+	with IECore.IgnoredExceptions( KeyError ) :
+		includeFrameRange = parameter.userData()["UI"]["includeFrameRange"].value
+
+	return includeFrameRange
+
+for nodeType in __nodeTypes :
+	Gaffer.Metadata.registerPlugValue( nodeType, "parameters.*", "fileSystemPathPlugValueWidget:includeSequences", __isFileSequence )
+	Gaffer.Metadata.registerPlugValue( nodeType, "parameters.*", "fileSystemPathPlugValueWidget:includeSequenceFrameRange", __includeFrameRange )
