@@ -124,6 +124,28 @@ class ResizeTest( GafferTest.TestCase ) :
 		r["fitMode"].setValue( r.FitMode.Distort )
 		self.assertEqual( r["out"]["dataWindow"].getValue(), displayWindow )
 
+	def testMismatchedDataWindow( self ) :
+
+		constant = GafferImage.Constant()
+		## \todo Adjust for #1438.
+		constant["format"].setValue( GafferImage.Format( IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 255, 255 ) ), 1 ) )
+
+		crop = GafferImage.Crop()
+		crop["in"].setInput( constant["out"] )
+		crop["areaSource"].setValue( crop.AreaSource.Custom )
+		crop["area"].setValue( IECore.Box2i( IECore.V2i( 64 ), IECore.V2i( 128 ) ) )
+		crop["affectDisplayWindow"].setValue( False )
+		crop["affectDataWindow"].setValue( True )
+
+		resize = GafferImage.Resize()
+		resize["in"].setInput( crop["out"] )
+		resize["format"].setValue( GafferImage.Format( IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 511, 511 ) ), 1 ) )
+
+		self.assertEqual(
+			resize["out"]["dataWindow"].getValue(),
+			IECore.Box2i( IECore.V2i( 128 ), IECore.V2i( 255 ) )
+		)
+
 	def testFilterAffectsChannelData( self ) :
 
 		 r = GafferImage.Resize()
