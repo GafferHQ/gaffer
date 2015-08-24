@@ -58,7 +58,7 @@ Gaffer.Metadata.registerNode(
 			can be added here.
 			""",
 
-			"nodule:type", lambda plug : "",
+			"nodule:type", "",
 
 		]
 
