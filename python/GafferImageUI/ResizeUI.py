@@ -60,7 +60,7 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"fit" : [
+		"fitMode" : [
 
 			"description",
 			"""
@@ -80,7 +80,7 @@ Gaffer.Metadata.registerNode(
 				height of the output resolution and aspect ratio
 				is preserved.
 
-			Best
+			Fit
 			:	Automatically picks Horizontal or Vertical such
 				that all of the input image is contained within
 				the output image. Padding is applied top and
@@ -99,11 +99,11 @@ Gaffer.Metadata.registerNode(
 				window.
 			""",
 
-			"preset:Horizontal", GafferImage.Resize.Fit.Horizontal,
-			"preset:Vertical", GafferImage.Resize.Fit.Vertical,
-			"preset:Best", GafferImage.Resize.Fit.Best,
-			"preset:Fill", GafferImage.Resize.Fit.Fill,
-			"preset:Distort", GafferImage.Resize.Fit.Distort,
+			"preset:Horizontal", GafferImage.Resize.FitMode.Horizontal,
+			"preset:Vertical", GafferImage.Resize.FitMode.Vertical,
+			"preset:Fit", GafferImage.Resize.FitMode.Fit,
+			"preset:Fill", GafferImage.Resize.FitMode.Fill,
+			"preset:Distort", GafferImage.Resize.FitMode.Distort,
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 

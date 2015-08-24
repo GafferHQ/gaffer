@@ -50,10 +50,10 @@ void bindResize()
 {
 	scope s = GafferBindings::DependencyNodeClass<Resize>();
 
-	enum_<Resize::Fit>( "Fit" )
+	enum_<Resize::FitMode>( "FitMode" )
 		.value( "Horizontal", Resize::Horizontal )
 		.value( "Vertical", Resize::Vertical )
-		.value( "Best", Resize::Best )
+		.value( "Fit", Resize::Fit )
 		.value( "Fill", Resize::Fill )
 		.value( "Distort", Resize::Distort )
 	;

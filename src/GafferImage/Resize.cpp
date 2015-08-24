@@ -54,7 +54,7 @@ Resize::Resize( const std::string &name )
 	storeIndexOfNextChild( g_firstPlugIndex );
 
 	addChild( new FormatPlug( "format" ) );
-	addChild( new IntPlug( "fit", Plug::In, Horizontal, Horizontal, Distort ) );
+	addChild( new IntPlug( "fitMode", Plug::In, Horizontal, Horizontal, Distort ) );
 	addChild( new StringPlug( "filter" ) );
 	addChild( new AtomicBox2fPlug( "__dataWindow", Plug::Out ) );
 
@@ -90,12 +90,12 @@ const GafferImage::FormatPlug *Resize::formatPlug() const
 	return getChild<FormatPlug>( g_firstPlugIndex );
 }
 
-Gaffer::IntPlug *Resize::fitPlug()
+Gaffer::IntPlug *Resize::fitModePlug()
 {
 	return getChild<IntPlug>( g_firstPlugIndex + 1 );
 }
 
-const Gaffer::IntPlug *Resize::fitPlug() const
+const Gaffer::IntPlug *Resize::fitModePlug() const
 {
 	return getChild<IntPlug>( g_firstPlugIndex + 1 );
 }
@@ -141,7 +141,7 @@ void Resize::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs
 	}
 	else if(
 		input == inPlug()->formatPlug() ||
-		input == fitPlug() ||
+		input == fitModePlug() ||
 		input == inPlug()->dataWindowPlug()
 	)
 	{
@@ -163,7 +163,7 @@ void Resize::hash( const ValuePlug *output, const Context *context, IECore::Murm
 	if( output == dataWindowPlug() )
 	{
 		formatPlug()->hash( h );
-		fitPlug()->hash( h );
+		fitModePlug()->hash( h );
 		inPlug()->formatPlug()->hash( h );
 		inPlug()->dataWindowPlug()->hash( h );
 	}
@@ -181,7 +181,7 @@ void Resize::compute( ValuePlug *output, const Context *context ) const
 		const V2f formatScale = outSize / inSize;
 
 		V2f dataWindowScale( 1 );
-		switch( (Fit)fitPlug()->getValue() )
+		switch( (FitMode)fitModePlug()->getValue() )
 		{
 			case Horizontal :
 				dataWindowScale = V2f( formatScale.x );
@@ -189,7 +189,7 @@ void Resize::compute( ValuePlug *output, const Context *context ) const
 			case Vertical :
 				dataWindowScale = V2f( formatScale.y );
 				break;
-			case Best :
+			case Fit :
 				dataWindowScale = V2f( std::min( formatScale.x, formatScale.y ) );
 				break;
 			case Fill :

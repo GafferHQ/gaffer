@@ -62,11 +62,11 @@ class Resize : public ImageProcessor
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::Resize, ResizeTypeId, ImageProcessor );
 
-		enum Fit
+		enum FitMode
 		{
 			Horizontal,
 			Vertical,
-			Best,
+			Fit,
 			Fill,
 			Distort
 		};
@@ -74,8 +74,8 @@ class Resize : public ImageProcessor
 		GafferImage::FormatPlug *formatPlug();
 		const GafferImage::FormatPlug *formatPlug() const;
 
-		Gaffer::IntPlug *fitPlug();
-		const Gaffer::IntPlug *fitPlug() const;
+		Gaffer::IntPlug *fitModePlug();
+		const Gaffer::IntPlug *fitModePlug() const;
 
 		Gaffer::StringPlug *filterPlug();
 		const Gaffer::StringPlug *filterPlug() const;

@@ -97,7 +97,7 @@ class ResizeTest( GafferTest.TestCase ) :
 		r["in"].setInput( c["out"] )
 		r["format"].setValue( GafferImage.Format( IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 1024, 256 ) ), 1 ) )
 
-		self.assertEqual( r["fit"].getValue(), r.Fit.Horizontal )
+		self.assertEqual( r["fitMode"].getValue(), r.FitMode.Horizontal )
 
 		horizontalDataWindow = r["out"]["dataWindow"].getValue()
 		displayWindow = r["format"].getValue().getDisplayWindow()
@@ -107,7 +107,7 @@ class ResizeTest( GafferTest.TestCase ) :
 		self.assertTrue( horizontalDataWindow.min.y < displayWindow.min.y )
 		self.assertTrue( horizontalDataWindow.max.y > displayWindow.max.y )
 
-		r["fit"].setValue( r.Fit.Vertical )
+		r["fitMode"].setValue( r.FitMode.Vertical )
 		verticalDataWindow = r["out"]["dataWindow"].getValue()
 
 		self.assertTrue( verticalDataWindow.min.x > displayWindow.min.x )
@@ -115,13 +115,13 @@ class ResizeTest( GafferTest.TestCase ) :
 		self.assertEqual( verticalDataWindow.min.y, displayWindow.min.y )
 		self.assertEqual( verticalDataWindow.max.y, displayWindow.max.y )
 
-		r["fit"].setValue( r.Fit.Best )
+		r["fitMode"].setValue( r.FitMode.Fit )
 		self.assertEqual( r["out"]["dataWindow"].getValue(), verticalDataWindow )
 
-		r["fit"].setValue( r.Fit.Fill )
+		r["fitMode"].setValue( r.FitMode.Fill )
 		self.assertEqual( r["out"]["dataWindow"].getValue(), horizontalDataWindow )
 
-		r["fit"].setValue( r.Fit.Distort )
+		r["fitMode"].setValue( r.FitMode.Distort )
 		self.assertEqual( r["out"]["dataWindow"].getValue(), displayWindow )
 
 	def testFilterAffectsChannelData( self ) :
