@@ -1,0 +1,6 @@
+import Gaffer
+
+Gaffer.Metadata.registerNodeValue( parent, "serialiser:milestoneVersion", 0, persistent=False )
+Gaffer.Metadata.registerNodeValue( parent, "serialiser:majorVersion", 14, persistent=False )
+Gaffer.Metadata.registerNodeValue( parent, "serialiser:minorVersion", 0, persistent=False )
+Gaffer.Metadata.registerNodeValue( parent, "serialiser:patchVersion", 0, persistent=False )
