@@ -196,9 +196,9 @@ class FileSequencePathFilterTest( GafferTest.TestCase ) :
 	def testNoSequences( self ) :
 
 		# it doesn't really make sense to do this,
-		# as we're using a sequecne filter on a
+		# as we're using a sequence filter on a
 		# path that by definition has no sequences,
-		# but we may as well verifyt that it works.
+		# but we may as well verify that it works.
 
 		p = Gaffer.FileSystemPath( self.__dir, includeSequences = False )
 		self.assertFalse( p.includeSequences() )
@@ -306,7 +306,8 @@ class FileSequencePathFilterTest( GafferTest.TestCase ) :
 
 	def tearDown( self ) :
 
-		os.chdir( self.__originalCWD )
+		if os.path.exists( self.__dir ) :
+			shutil.rmtree( self.__dir )
 
 if __name__ == "__main__":
 	unittest.main()
