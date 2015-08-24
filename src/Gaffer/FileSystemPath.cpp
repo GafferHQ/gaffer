@@ -134,7 +134,7 @@ bool FileSystemPath::isFileSequence() const
 	{
 	}
 	
-	return NULL;
+	return false;
 }
 
 FileSequencePtr FileSystemPath::fileSequence() const
