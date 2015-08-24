@@ -375,13 +375,7 @@ PathFilterPtr FileSystemPath::createStandardFilter( const std::vector<std::strin
 	// Filter for sequences
 	if( includeSequenceFilter )
 	{
-		FileSequencePathFilterPtr sequenceFilter = new FileSequencePathFilter( /* mode = */ FileSequencePathFilter::Concise );
-
-		CompoundDataPtr sequenceUIUserData = new CompoundData;
-		sequenceUIUserData->writable()["label"] = new StringData( "Show sequences" );
-		sequenceFilter->userData()->writable()["UI"] = sequenceUIUserData;
-
-		result->addFilter( sequenceFilter );
+		result->addFilter( new FileSequencePathFilter( /* mode = */ FileSequencePathFilter::Concise ) );
 	}
 
 	// Filter for hidden files

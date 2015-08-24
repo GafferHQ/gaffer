@@ -34,10 +34,6 @@
 #
 ##########################################################################
 
-import re
-import time
-import fnmatch
-
 import IECore
 
 import Gaffer
@@ -57,10 +53,7 @@ class FileSequencePathFilterWidget( GafferUI.PathFilterWidget ) :
 
 	def _updateFromPathFilter( self ) :
 
-		label = str( self.pathFilter() )
-		with IECore.IgnoredExceptions( KeyError ) :
-			label = self.pathFilter().userData()["UI"]["label"].value
-		self.__checkBox.setText( label )
+		self.__checkBox.setText( "Show sequences" )
 		self.__checkBox.setState( self.pathFilter().getMode() == Gaffer.FileSequencePathFilter.Keep.Concise )
 
 	def __stateChanged( self, checkBox ) :
