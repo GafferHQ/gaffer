@@ -146,6 +146,28 @@ class ResizeTest( GafferTest.TestCase ) :
 			IECore.Box2i( IECore.V2i( 128 ), IECore.V2i( 255 ) )
 		)
 
+	def testDataWindowRounding( self ) :
+
+		constant = GafferImage.Constant()
+		## \todo Adjust for #1438.
+		constant["format"].setValue( GafferImage.Format( IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 199, 149 ) ), 1 ) )
+
+		resize = GafferImage.Resize()
+		resize["in"].setInput( constant["out"] )
+
+		for width in range( 1, 2000 ) :
+			resize["format"].setValue( GafferImage.Format( width, 150, 1 ) )
+			dataWindow = resize["out"]["dataWindow"].getValue()
+			self.assertEqual( dataWindow.min.x, 0 )
+			self.assertEqual( dataWindow.max.x, width - 1 )
+
+		resize["fitMode"].setValue( resize.FitMode.Vertical )
+		for height in range( 1, 2000 ) :
+			resize["format"].setValue( GafferImage.Format( 200, height, 1 ) )
+			dataWindow = resize["out"]["dataWindow"].getValue()
+			self.assertEqual( dataWindow.min.y, 0 )
+			self.assertEqual( dataWindow.max.y, height - 1 )
+
 	def testFilterAffectsChannelData( self ) :
 
 		 r = GafferImage.Resize()

@@ -203,11 +203,36 @@ void Resize::compute( ValuePlug *output, const Context *context ) const
 
 		const V2f dataWindowOffset = ( outSize - ( inSize * dataWindowScale ) ) / 2.0f;
 		const Box2i inDataWindow = inPlug()->dataWindowPlug()->getValue();
-		const Box2f outDataWindow(
+		Box2f outDataWindow(
 			V2f( inDataWindow.min ) * dataWindowScale + dataWindowOffset,
 			/// \todo Adjust for #1438
 			V2f( inDataWindow.max + V2i( 1 ) ) * dataWindowScale + dataWindowOffset - V2f( 1.0f )
 		);
+
+		// It's important that we use floating point data windows in the Resample node
+		// so we can accurately represent scaling which produces border pixels without full
+		// coverage. In this case, the Resample outputs an integer data window expanded to
+		// cover the floating point one fully, and samples the edges appropriately. But
+		// floating point error can mean that our data window is a tiny bit above or below the
+		// exact integer values the user expects, so we must detect this case and adjust
+		// accordingly.
+		const float eps = 1e-4;
+		if( ceilf( outDataWindow.min.x ) - outDataWindow.min.x < eps )
+		{
+			outDataWindow.min.x = ceilf( outDataWindow.min.x );
+		}
+		if( outDataWindow.max.x - floorf( outDataWindow.max.x ) < eps )
+		{
+			outDataWindow.max.x = floorf( outDataWindow.max.x );
+		}
+		if( ceilf( outDataWindow.min.y ) - outDataWindow.min.y < eps )
+		{
+			outDataWindow.min.y = ceilf( outDataWindow.min.y );
+		}
+		if( outDataWindow.max.y - floorf( outDataWindow.max.y ) < eps )
+		{
+			outDataWindow.max.y = floorf( outDataWindow.max.y );
+		}
 
 		static_cast<AtomicBox2fPlug *>( output )->setValue( outDataWindow );
 	}
