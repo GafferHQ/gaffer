@@ -112,9 +112,17 @@ class ResampleTest( GafferTest.TestCase ) :
 				).value
 			)
 
-			if False : # Enable to write out images for visual comparison with OIIO
+			# Enable to write out images for visual comparison with OIIO.
+			# The images will appear in a "resampleComparison" subdirectory
+			# of the current directory.
+			if False :
 
-				oiioOutputFileName = "/tmp/gafferImageResampleTest/oiio_%s_%dx%d_%s.exr" % ( os.path.splitext( fileName )[0], size.x, size.y, filter )
+				if not os.path.exists( "resampleComparison" ) :
+					os.makedirs( "resampleComparison" )
+
+				shutil.copyfile( outputFileName, "resampleComparison/gaffer_" + os.path.basename( outputFileName ) )
+
+				oiioOutputFileName = "resampleComparison/oiio_%s_%dx%d_%s.exr" % ( os.path.splitext( fileName )[0], size.x, size.y, filter )
 
 				subprocess.check_call(
 					"oiiotool --threads 1 %s --ch R,G,B --resize:filter=%s %dx%d  -o %s" %
