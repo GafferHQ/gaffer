@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import IECore
+
 import Gaffer
 import GafferUI
 
@@ -41,23 +43,78 @@ import GafferUI
 #
 # - "fileSystemPathPlugValueWidget:extensions"
 # - "fileSystemPathPlugValueWidget:extensionsLabel"
+# - "fileSystemPathPlugValueWidget:includeSequences"
+# - "fileSystemPathPlugValueWidget:includeSequenceFrameRange"
+#	Note that includeSequenceFrameRange is primarily used
+#	by GafferCortex. Think twice before using it elsewhere
+#	as it may not exist in the future. 
 class FileSystemPathPlugValueWidget( GafferUI.PathPlugValueWidget ) :
 
-	def __init__( self, plug, **kw ) :
-
-		extensions = Gaffer.Metadata.plugValue( plug, "fileSystemPathPlugValueWidget:extensions" ) or []
-		if isinstance( extensions, str ) :
-			extensions = extensions.split()
+	def __init__( self, plug, path=None, **kw ) :
 
 		GafferUI.PathPlugValueWidget.__init__(
 			self,
 			plug,
-			Gaffer.FileSystemPath(
-				"/",
-				filter =  Gaffer.FileSystemPath.createStandardFilter(
-					list( extensions ),
-					Gaffer.Metadata.plugValue( plug, "fileSystemPathPlugValueWidget:extensionsLabel" ) or ""
-				)
-			),
+			path,
 			**kw
 		)
+
+		self._updateFromPlug()
+
+		self.__plugMetadataChangedConnection = Gaffer.Metadata.plugValueChangedSignal().connect( Gaffer.WeakMethod( self.__plugMetadataChanged ) )
+
+	def _pathChooserDialogue( self ) :
+
+		dialogue = GafferUI.PathPlugValueWidget._pathChooserDialogue( self )
+
+		if Gaffer.Metadata.plugValue( self.getPlug(), "fileSystemPathPlugValueWidget:includeSequences" ) :
+
+			columns = dialogue.pathChooserWidget().pathListingWidget().getColumns()
+			columns.append( GafferUI.PathListingWidget.StandardColumn( "Frame Range", "fileSystem:frameRange" ) )
+			dialogue.pathChooserWidget().pathListingWidget().setColumns( columns )
+
+		return dialogue
+
+	def _updateFromPlug( self ) :
+
+		GafferUI.PathPlugValueWidget._updateFromPlug( self )
+
+		extensions = Gaffer.Metadata.plugValue( self.getPlug(), "fileSystemPathPlugValueWidget:extensions" ) or []
+		if isinstance( extensions, str ) :
+			extensions = extensions.split()
+
+		includeSequences = Gaffer.Metadata.plugValue( self.getPlug(), "fileSystemPathPlugValueWidget:includeSequences" ) or False
+
+		self.path().setFilter(
+			Gaffer.FileSystemPath.createStandardFilter(
+				list( extensions ),
+				Gaffer.Metadata.plugValue( self.getPlug(), "fileSystemPathPlugValueWidget:extensionsLabel" ) or "",
+				includeSequenceFilter = includeSequences,
+			)
+		)
+
+		self.path().setIncludeSequences( includeSequences )
+
+	def _setPlugFromPath( self, path ) :
+
+		if Gaffer.Metadata.plugValue( self.getPlug(), "fileSystemPathPlugValueWidget:includeSequenceFrameRange" ) :
+			sequence = path.fileSequence()
+			if sequence :
+				self.getPlug().setValue( str(sequence) )
+				return
+
+		GafferUI.PathPlugValueWidget._setPlugFromPath( self, path )
+
+	def __plugMetadataChanged( self, nodeTypeId, plugPath, key, plug ) :
+
+		if self.getPlug() is None :
+			return
+
+		if plug is not None and not plug.isSame( self.getPlug() ) :
+			return
+
+		if not self.getPlug().node().isInstanceOf( nodeTypeId ) :
+			return
+
+		if key.startswith( "fileSystemPathPlugValueWidget:" ) :
+			self._updateFromPlug()

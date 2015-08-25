@@ -57,6 +57,7 @@
 #include "IECorePython/ScopedGILLock.h"
 
 #include "Gaffer/Path.h"
+#include "Gaffer/FileSystemPath.h"
 
 #include "GafferUIBindings/PathListingWidgetBinding.h"
 
@@ -288,6 +289,21 @@ class FileIconColumn : public Column
 			if( role == Qt::DecorationRole )
 			{
 				std::string s = path->string();
+
+				if( const FileSystemPath *fileSystemPath = IECore::runTimeCast<const FileSystemPath>( path ) )
+				{
+					if( fileSystemPath->getIncludeSequences() )
+					{
+						IECore::FileSequencePtr seq = fileSystemPath->fileSequence();
+						if( seq )
+						{
+							std::vector<IECore::FrameList::Frame> frames;
+							seq->getFrameList()->asList( frames );
+							s = seq->fileNameForFrame( *frames.begin() );
+						}
+					}
+				}
+
 				QString qs( s.c_str() );
 				return m_iconProvider.icon( QFileInfo( qs ) );
 			}

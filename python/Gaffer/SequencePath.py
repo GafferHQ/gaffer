@@ -40,6 +40,7 @@ import IECore
 
 import Gaffer
 
+## \deprecated: Use FileSystemPath and FileSequencePathFilter instead.
 class SequencePath( Gaffer.Path ) :
 
 	def __init__( self, path, root="/", minSequenceSize=1, filter=None ) :

@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2014-2015, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,59 +34,14 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
-#include "boost/python/suite/indexing/container_utils.hpp"
+#ifndef GAFFERBINDINGS_FILESEQUENCEPATHFILTERBINDING_H
+#define GAFFERBINDINGS_FILESEQUENCEPATHFILTERBINDING_H
 
-#include "Gaffer/PathFilter.h"
-#include "Gaffer/FileSystemPath.h"
-#include "GafferBindings/PathBinding.h"
-#include "GafferBindings/FileSystemPathBinding.h"
-
-using namespace boost::python;
-using namespace IECorePython;
-using namespace Gaffer;
-using namespace GafferBindings;
-
-namespace
+namespace GafferBindings
 {
 
-PathFilterPtr createStandardFilter( object pythonExtensions, const std::string &extensionsLabel, bool includeSequences )
-{
-	std::vector<std::string> extensions;
-	boost::python::container_utils::extend_container( extensions, pythonExtensions );
-	return FileSystemPath::createStandardFilter( extensions, extensionsLabel, includeSequences );
-}
+void bindFileSequencePathFilter();
 
-} // namespace
+} // namespace GafferBindings
 
-void GafferBindings::bindFileSystemPath()
-{
-
-	PathClass<FileSystemPath>()
-		.def(
-			init<PathFilterPtr, bool>( (
-				arg( "filter" ) = object(),
-				arg( "includeSequences" ) = false
-			) )
-		)
-		.def(
-			init<const std::string &, PathFilterPtr, bool>( (
-				arg( "path" ),
-				arg( "filter" ) = object(),
-				arg( "includeSequences" ) = false
-			) )
-		)
-		.def( "getIncludeSequences", &FileSystemPath::getIncludeSequences )
-		.def( "setIncludeSequences", &FileSystemPath::setIncludeSequences )
-		.def( "isFileSequence", &FileSystemPath::isFileSequence )
-		.def( "fileSequence", &FileSystemPath::fileSequence )
-		.def( "createStandardFilter", &createStandardFilter, (
-				arg( "extensions" ) = list(),
-				arg( "extensionsLabel" ) = "",
-				arg( "includeSequenceFilter" ) = false
-			)
-		)
-		.staticmethod( "createStandardFilter" )
-	;
-
-}
+#endif // GAFFERBINDINGS_FILESEQUENCEPATHFILTERBINDING_H

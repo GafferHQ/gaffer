@@ -1,7 +1,7 @@
 ##########################################################################
 #
 #  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012-2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -229,6 +229,90 @@ class FileSystemPathTest( GafferTest.TestCase ) :
 		self.assertTrue( "fileSystem:owner" in a )
 		self.assertTrue( "fileSystem:modificationTime" in a )
 		self.assertTrue( "fileSystem:size" in a )
+		
+		self.assertTrue( "fileSystem:frameRange" not in a )
+		p = Gaffer.FileSystemPath( self.__dir, includeSequences = True )
+		self.assertTrue( "fileSystem:frameRange" in p.propertyNames() )
+
+	def testSequences( self ) :
+
+		os.mkdir( self.__dir + "/dir" )
+		for n in [ "singleFile.txt", "a.001.txt", "a.002.txt", "a.004.txt", "b.003.txt" ] :
+			with open( self.__dir + "/" + n, "w" ) as f :
+				f.write( "AAAA" )
+
+		p = Gaffer.FileSystemPath( self.__dir, includeSequences = True )
+		self.assertTrue( p.getIncludeSequences() )
+
+		c = p.children()
+		self.assertEqual( len( c ), 8 )
+
+		s = sorted( c, key=str )
+		self.assertEqual( str(s[0]), self.__dir + "/a.###.txt" )
+		self.assertEqual( str(s[1]), self.__dir + "/a.001.txt" )
+		self.assertEqual( str(s[2]), self.__dir + "/a.002.txt" )
+		self.assertEqual( str(s[3]), self.__dir + "/a.004.txt" )
+		self.assertEqual( str(s[4]), self.__dir + "/b.###.txt" )
+		self.assertEqual( str(s[5]), self.__dir + "/b.003.txt" )
+		self.assertEqual( str(s[6]), self.__dir + "/dir" )
+		self.assertEqual( str(s[7]), self.__dir + "/singleFile.txt" )
+
+		for x in s :
+
+			self.assertTrue( x.isValid() )
+			if not os.path.isdir( str(x) ) :
+				self.assertTrue( x.isLeaf() )
+
+			self.assertEqual( x.property( "fileSystem:owner" ), pwd.getpwuid( os.stat( str( p ) ).st_uid ).pw_name )
+			self.assertEqual( x.property( "fileSystem:group" ), grp.getgrgid( os.stat( str( p ) ).st_gid ).gr_name )
+			self.assertTrue( (datetime.datetime.utcnow() - x.property( "fileSystem:modificationTime" )).total_seconds() < 1 )
+			if "###" not in str(x) :
+				self.assertFalse( x.isFileSequence() )
+				self.assertEqual( x.fileSequence(), None )
+				self.assertEqual( x.property( "fileSystem:frameRange" ), "" )
+				if os.path.isdir( str(x) ) :
+					self.assertEqual( x.property( "fileSystem:size" ), 0 )
+				else :
+					self.assertEqual( x.property( "fileSystem:size" ), 4 )
+
+		self.assertEqual( s[0].property( "fileSystem:frameRange" ), "1-2,4" )
+		self.assertTrue( s[0].isFileSequence() )
+		self.assertTrue( isinstance( s[0].fileSequence(), IECore.FileSequence ) )
+		self.assertEqual( s[0].fileSequence(), IECore.FileSequence( str(s[0]), IECore.frameListFromList( [ 1, 2, 4 ] ) ) )
+		self.assertEqual( s[0].property( "fileSystem:size" ), 4 * 3 )
+
+		self.assertEqual( s[4].property( "fileSystem:frameRange" ), "3" )
+		self.assertTrue( s[4].isFileSequence() )
+		self.assertTrue( isinstance( s[4].fileSequence(), IECore.FileSequence ) )
+		self.assertEqual( s[4].fileSequence(), IECore.FileSequence( str(s[4]), IECore.frameListFromList( [ 3 ] ) ) )
+		self.assertEqual( s[4].property( "fileSystem:size" ), 4 )
+
+		# make sure we can copy
+		p2 = p.copy()
+		self.assertTrue( p2.getIncludeSequences() )
+		self.assertEqual( len( p2.children() ), 8 )
+
+		# make sure we can still exclude the sequences
+		p = Gaffer.FileSystemPath( self.__dir, includeSequences = False )
+		self.assertFalse( p.getIncludeSequences() )
+
+		c = p.children()
+		self.assertEqual( len( c ), 6 )
+
+		s = sorted( c, key=str )
+		self.assertEqual( str(s[0]), self.__dir + "/a.001.txt" )
+		self.assertEqual( str(s[1]), self.__dir + "/a.002.txt" )
+		self.assertEqual( str(s[2]), self.__dir + "/a.004.txt" )
+		self.assertEqual( str(s[3]), self.__dir + "/b.003.txt" )
+		self.assertEqual( str(s[4]), self.__dir + "/dir" )
+		self.assertEqual( str(s[5]), self.__dir + "/singleFile.txt" )
+		
+		# and we can include them again
+		p.setIncludeSequences( True )
+		self.assertTrue( p.getIncludeSequences() )
+
+		c = p.children()
+		self.assertEqual( len( c ), 8 )
 
 	def setUp( self ) :
 

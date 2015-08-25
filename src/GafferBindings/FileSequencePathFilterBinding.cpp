@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2014-2015, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,58 +35,40 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/python.hpp"
-#include "boost/python/suite/indexing/container_utils.hpp"
 
-#include "Gaffer/PathFilter.h"
-#include "Gaffer/FileSystemPath.h"
-#include "GafferBindings/PathBinding.h"
-#include "GafferBindings/FileSystemPathBinding.h"
+#include "IECorePython/RunTimeTypedBinding.h"
+
+#include "Gaffer/FileSequencePathFilter.h"
+#include "GafferBindings/FileSequencePathFilterBinding.h"
 
 using namespace boost::python;
+using namespace IECore;
 using namespace IECorePython;
 using namespace Gaffer;
-using namespace GafferBindings;
 
-namespace
+void GafferBindings::bindFileSequencePathFilter()
 {
+	RunTimeTypedClass<FileSequencePathFilter> filterClass( "FileSequencePathFilter" );
+	scope s = filterClass;
 
-PathFilterPtr createStandardFilter( object pythonExtensions, const std::string &extensionsLabel, bool includeSequences )
-{
-	std::vector<std::string> extensions;
-	boost::python::container_utils::extend_container( extensions, pythonExtensions );
-	return FileSystemPath::createStandardFilter( extensions, extensionsLabel, includeSequences );
-}
+	enum_<FileSequencePathFilter::Keep>( "Keep" )
+		.value( "Files", FileSequencePathFilter::Files )
+		.value( "SequentialFiles", FileSequencePathFilter::SequentialFiles )
+		.value( "Sequences", FileSequencePathFilter::Sequences )
+		.value( "Concise", FileSequencePathFilter::Concise )
+		.value( "Verbose", FileSequencePathFilter::Verbose )
+		.value( "All", FileSequencePathFilter::All )
+	;
 
-} // namespace
-
-void GafferBindings::bindFileSystemPath()
-{
-
-	PathClass<FileSystemPath>()
-		.def(
-			init<PathFilterPtr, bool>( (
-				arg( "filter" ) = object(),
-				arg( "includeSequences" ) = false
-			) )
-		)
-		.def(
-			init<const std::string &, PathFilterPtr, bool>( (
-				arg( "path" ),
-				arg( "filter" ) = object(),
-				arg( "includeSequences" ) = false
-			) )
-		)
-		.def( "getIncludeSequences", &FileSystemPath::getIncludeSequences )
-		.def( "setIncludeSequences", &FileSystemPath::setIncludeSequences )
-		.def( "isFileSequence", &FileSystemPath::isFileSequence )
-		.def( "fileSequence", &FileSystemPath::fileSequence )
-		.def( "createStandardFilter", &createStandardFilter, (
-				arg( "extensions" ) = list(),
-				arg( "extensionsLabel" ) = "",
-				arg( "includeSequenceFilter" ) = false
+	filterClass
+		.def( init<FileSequencePathFilter::Keep, CompoundDataPtr>(
+			(
+				arg( "mode" ) = FileSequencePathFilter::Concise,
+				arg( "userData" ) = object()
 			)
-		)
-		.staticmethod( "createStandardFilter" )
+		) )
+		.def( "getMode", &FileSequencePathFilter::getMode )
+		.def( "setMode", &FileSequencePathFilter::setMode )
 	;
 
 }

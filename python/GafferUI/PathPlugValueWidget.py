@@ -80,6 +80,10 @@ class PathPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self._updateFromPlug()
 
+	def path( self ) :
+
+		return self.__path
+
 	## Returns the PathWidget used to display the path.
 	def pathWidget( self ) :
 
@@ -146,13 +150,17 @@ class PathPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.pathWidget().setEditable( self._editable() )
 		self.__row[1].setEnabled( self._editable() ) # button
 
+	def _setPlugFromPath( self, path ) :
+
+		self.getPlug().setValue( str( self.__path ) )
+
 	def __setPlugValue( self, *args ) :
 
 		if not self._editable() :
 			return
 
 		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
-			self.getPlug().setValue( str( self.__path ) )
+			self._setPlugFromPath( self.__path )
 
 		# now we've transferred the text changes to the global undo queue, we remove them
 		# from the widget's private text editing undo queue. it will then ignore undo shortcuts,

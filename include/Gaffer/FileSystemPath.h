@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2012-2014, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2012-2015, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -38,6 +38,8 @@
 #ifndef GAFFER_FILESYSTEMPATH_H
 #define GAFFER_FILESYSTEMPATH_H
 
+#include "IECore/FileSequence.h"
+
 #include "Gaffer/Path.h"
 
 namespace Gaffer
@@ -48,9 +50,9 @@ class FileSystemPath : public Path
 
 	public :
 
-		FileSystemPath( PathFilterPtr filter = NULL );
-		FileSystemPath( const std::string &path, PathFilterPtr filter = NULL );
-		FileSystemPath( const Names &names, const IECore::InternedString &root = "/", PathFilterPtr filter = NULL );
+		FileSystemPath( PathFilterPtr filter = NULL, bool includeSequences = false );
+		FileSystemPath( const std::string &path, PathFilterPtr filter = NULL, bool includeSequences = false );
+		FileSystemPath( const Names &names, const IECore::InternedString &root = "/", PathFilterPtr filter = NULL, bool includeSequences = false );
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::FileSystemPath, FileSystemPathTypeId, Path );
 
@@ -65,14 +67,30 @@ class FileSystemPath : public Path
 		/// "fileSystem:group" -> StringData
 		/// "fileSystem:modificationTime" -> DateTimeData, in UTC time
 		/// "fileSystem:size" -> UInt64Data, in bytes
+		/// "fileSystem:frameRange" -> StringData
 		virtual IECore::ConstRunTimeTypedPtr property( const IECore::InternedString &name ) const;
 		virtual PathPtr copy() const;
 
-		static PathFilterPtr createStandardFilter( const std::vector<std::string> &extensions = std::vector<std::string>(), const std::string &extensionsLabel = "" );
+		// Returns true if this FileSystemPath includes FileSequences
+		bool getIncludeSequences() const;
+		// Determines whether this FileSystemPath includes FileSequences
+		void setIncludeSequences( bool includeSequences );
+		// Returns true if the path represents a FileSequence.
+		bool isFileSequence() const;
+		// Returns the FileSequence that represents the current leaf
+		// or NULL if this path is not a leaf, or does not represent
+		// a FileSequence.
+		IECore::FileSequencePtr fileSequence() const;
+
+		static PathFilterPtr createStandardFilter( const std::vector<std::string> &extensions = std::vector<std::string>(), const std::string &extensionsLabel = "", bool includeSequenceFilter = false );
 
 	protected :
 
 		virtual void doChildren( std::vector<PathPtr> &children ) const;
+	
+	private :
+		
+		bool m_includeSequences;
 
 };
 

@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2012-2015, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -39,42 +39,30 @@ import IECore
 import Gaffer
 import GafferUI
 
-class CompoundPathFilterWidget( GafferUI.PathFilterWidget ) :
+class FileSequencePathFilterWidget( GafferUI.PathFilterWidget ) :
 
 	def __init__( self, pathFilter, **kw ) :
 
-		self.__grid = GafferUI.GridContainer( spacing=4 )
+		self.__checkBox = GafferUI.BoolWidget( str( pathFilter ) )
 
-		GafferUI.PathFilterWidget.__init__( self, self.__grid, pathFilter, **kw )
+		GafferUI.PathFilterWidget.__init__( self, self.__checkBox, pathFilter )
 
-		self.__filters = []
+		self.__stateChangedConnection = self.__checkBox.stateChangedSignal().connect( Gaffer.WeakMethod( self.__stateChanged ) )
+
 		self._updateFromPathFilter()
 
-	## Must be implemented by subclasses to update the UI when the filter
-	# changes in some way.
 	def _updateFromPathFilter( self ) :
 
-		if self.pathFilter().getFilters() == self.__filters :
-			return
+		self.__checkBox.setText( "Show sequences" )
+		self.__checkBox.setState( self.pathFilter().getMode() == Gaffer.FileSequencePathFilter.Keep.Concise )
 
-		for y in range( self.__grid.gridSize().y - 1, -1, -1 ) :
-			self.__grid.removeRow( y )
+	def __stateChanged( self, checkBox ) :
 
-		gridPos = IECore.V2i( 0 )
-		for filter in self.pathFilter().getFilters() :
+		if checkBox.getState() :
+			mode = Gaffer.FileSequencePathFilter.Keep.Concise
+		else :
+			mode = Gaffer.FileSequencePathFilter.Keep.Verbose
 
-			filterWidget = GafferUI.PathFilterWidget.create( filter )
-			if filterWidget is None :
-				continue
+		self.pathFilter().setMode( mode )
 
-			self.__grid[gridPos.x, gridPos.y] = filterWidget
-
-			if gridPos.x < 3 :
-				gridPos.x += 1
-			else :
-				gridPos.x = 0
-				gridPos.y += 1
-
-		self.__filters = self.pathFilter().getFilters()
-
-GafferUI.PathFilterWidget.registerType( Gaffer.CompoundPathFilter, CompoundPathFilterWidget )
+GafferUI.PathFilterWidget.registerType( Gaffer.FileSequencePathFilter, FileSequencePathFilterWidget )

@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2014-2015, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,59 +34,61 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
-#include "boost/python/suite/indexing/container_utils.hpp"
+#ifndef GAFFER_FILESEQUENCEPATHFILTER_H
+#define GAFFER_FILESEQUENCEPATHFILTER_H
 
 #include "Gaffer/PathFilter.h"
-#include "Gaffer/FileSystemPath.h"
-#include "GafferBindings/PathBinding.h"
-#include "GafferBindings/FileSystemPathBinding.h"
+#include "Gaffer/TypeIds.h"
 
-using namespace boost::python;
-using namespace IECorePython;
-using namespace Gaffer;
-using namespace GafferBindings;
-
-namespace
+namespace Gaffer
 {
 
-PathFilterPtr createStandardFilter( object pythonExtensions, const std::string &extensionsLabel, bool includeSequences )
-{
-	std::vector<std::string> extensions;
-	boost::python::container_utils::extend_container( extensions, pythonExtensions );
-	return FileSystemPath::createStandardFilter( extensions, extensionsLabel, includeSequences );
-}
+IE_CORE_FORWARDDECLARE( FileSequencePathFilter )
 
-} // namespace
-
-void GafferBindings::bindFileSystemPath()
+/// FileSequencePathFilters can filter the results
+/// of FileSystemPath::children() to provide a masked view
+/// that either includes or excludes FileSequences
+class FileSequencePathFilter : public PathFilter
 {
 
-	PathClass<FileSystemPath>()
-		.def(
-			init<PathFilterPtr, bool>( (
-				arg( "filter" ) = object(),
-				arg( "includeSequences" ) = false
-			) )
-		)
-		.def(
-			init<const std::string &, PathFilterPtr, bool>( (
-				arg( "path" ),
-				arg( "filter" ) = object(),
-				arg( "includeSequences" ) = false
-			) )
-		)
-		.def( "getIncludeSequences", &FileSystemPath::getIncludeSequences )
-		.def( "setIncludeSequences", &FileSystemPath::setIncludeSequences )
-		.def( "isFileSequence", &FileSystemPath::isFileSequence )
-		.def( "fileSequence", &FileSystemPath::fileSequence )
-		.def( "createStandardFilter", &createStandardFilter, (
-				arg( "extensions" ) = list(),
-				arg( "extensionsLabel" ) = "",
-				arg( "includeSequenceFilter" ) = false
-			)
-		)
-		.staticmethod( "createStandardFilter" )
-	;
+	public :
 
-}
+		/// Defines which child paths should remain after the filter runs.
+		enum Keep
+		{
+			/// Leaf paths which are not valid as files in an IECore::FileSequence
+			Files = 0x00000001,
+			/// Leaf paths which are valid as files in an IECore::FileSequence
+			SequentialFiles = 0x00000002,
+			/// Leaf paths which are themselves valid IECore::FileSequences
+			Sequences = 0x00000004,
+			Concise = Files | Sequences,
+			Verbose = Files | SequentialFiles,
+			All = Files | SequentialFiles | Sequences,
+		};
+		
+		FileSequencePathFilter( Keep mode = Concise, IECore::CompoundDataPtr userData = NULL );
+		virtual ~FileSequencePathFilter();
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::FileSequencePathFilter, FileSequencePathFilterTypeId, Gaffer::PathFilter );
+		
+		Keep getMode() const;
+		void setMode( Keep mode );
+
+	protected :
+
+		virtual void doFilter( std::vector<PathPtr> &paths ) const;
+	
+	private :
+		
+		bool remove( PathPtr path ) const;
+		
+		Keep m_mode;
+
+};
+
+IE_CORE_DECLAREPTR( FileSequencePathFilter )
+
+} // namespace Gaffer
+
+#endif // GAFFER_FILESEQUENCEPATHFILTER_H
