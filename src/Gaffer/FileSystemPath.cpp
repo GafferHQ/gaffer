@@ -128,7 +128,7 @@ bool FileSystemPath::isFileSequence() const
 
 	try
 	{
-		return new FileSequence( this->string() );
+		return boost::regex_match( this->string(), FileSequence::fileNameValidator() );
 	}
 	catch( ... )
 	{
