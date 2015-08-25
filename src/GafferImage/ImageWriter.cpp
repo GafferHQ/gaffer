@@ -41,6 +41,8 @@
 #include "OpenImageIO/imageio.h"
 OIIO_NAMESPACE_USING
 
+#include "IECore/MessageHandler.h"
+
 #include "Gaffer/Context.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/StringPlug.h"
@@ -437,7 +439,11 @@ void ImageWriter::execute() const
 		boost::filesystem::create_directories( directory );
 	}
 	
-	if ( !out->open( fileName, spec ) )
+	if ( out->open( fileName, spec ) )
+	{
+		IECore::msg( IECore::MessageHandler::Info, this->relativeName( this->scriptNode() ), "Writing " + fileName );
+	}
+	else
 	{
 		throw IECore::Exception( boost::str( boost::format( "Could not open \"%s\", error = %s" ) % fileName % out->geterror() ) );
 	}
