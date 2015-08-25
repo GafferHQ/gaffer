@@ -36,52 +36,23 @@
 
 import unittest
 
-import IECore
 import Gaffer
 import GafferUI
+import GafferUITest
 import GafferImage
 import GafferImageUI
 
-class FormatPlugValueWidgetTest( unittest.TestCase ) :
+class FormatPlugValueWidgetTest( GafferUITest.TestCase ) :
 
 	def testCreation( self ):
 
-		# Create a node to make sure that we have a default format...
 		s = Gaffer.ScriptNode()
-		n = GafferImage.Grade()
-		s.addChild( n )
+		s["n"] = GafferImage.Constant()
 
-		# Get the format names
-		formatNames = GafferImage.Format.formatNames()
+		w = GafferUI.PlugValueWidget.create( s["n"]["format"] )
 
-		# Create the plug's ui element.
-		fw = GafferImageUI.FormatPlugValueWidget( s["defaultFormat"], lazy=False )
-
-		# Now compare the format names against those in the UI element.
-		self.assertEqual( len( fw ), len( formatNames ) )
-
-	def testAccessors( self ) :
-
-		# Create a node to make sure that we have a default format...
-		s = Gaffer.ScriptNode()
-		n = GafferImage.Grade()
-		s.addChild( n )
-
-		# Create the plug's ui element.
-		fw = GafferImageUI.FormatPlugValueWidget( s["defaultFormat"], lazy=False )
-
-		# Test the accessors
-		formatNameAndValue = fw[0]
-		self.assertTrue( isinstance( formatNameAndValue[0], str ) )
-		self.assertTrue( isinstance( formatNameAndValue[1], GafferImage.Format ) )
-		self.assertEqual( fw[ formatNameAndValue[0] ], formatNameAndValue[1] )
-		self.assertEqual( fw[ formatNameAndValue[1] ], formatNameAndValue[0] )
-
-	def __testFormatValue( self ) :
-		return GafferImage.Format( 1234, 5678, 1.4 )
-
-	def __testFormatName( self ) :
-		return '1234x5678 1.400'
+		self.assertTrue( isinstance( w, GafferUI.PlugValueWidget ) )
+		self.assertTrue( w.getPlug().isSame( s["n"]["format"] ) )
 
 if __name__ == "__main__":
 	unittest.main()
