@@ -128,8 +128,13 @@ void Prune::hashChildNames( const ScenePath &path, const Gaffer::Context *contex
 {
 	ContextPtr tmpContext = filterContext( context );
 	Context::Scope scopedContext( tmpContext.get() );
+	Filter::Result m = (Filter::Result)filterPlug()->getValue();
 
-	if( filterPlug()->getValue() & Filter::DescendantMatch )
+	if( m & Filter::ExactMatch )
+	{
+		inPlug()->childNamesPlug()->defaultValue()->hash( h );
+	}
+	else if( m & Filter::DescendantMatch )
 	{
 		// we might be computing new childnames for this level.
 		FilteredSceneProcessor::hashChildNames( path, context, parent, h );
@@ -147,8 +152,13 @@ IECore::ConstInternedStringVectorDataPtr Prune::computeChildNames( const ScenePa
 {
 	ContextPtr tmpContext = filterContext( context );
 	Context::Scope scopedContext( tmpContext.get() );
+	Filter::Result m = (Filter::Result)filterPlug()->getValue();
 
-	if( filterPlug()->getValue() & Filter::DescendantMatch )
+	if( m & Filter::ExactMatch  )
+	{
+		return inPlug()->childNamesPlug()->defaultValue();
+	}
+	else if( m & Filter::DescendantMatch )
 	{
 		// we may need to delete one or more of our children
 		ConstInternedStringVectorDataPtr inputChildNamesData = inPlug()->childNamesPlug()->getValue();

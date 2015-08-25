@@ -260,6 +260,22 @@ class PruneTest( GafferSceneTest.SceneTestCase ) :
 		lightSet = prune["out"].set( "__lights" )
 		self.assertEqual( set( lightSet.value.paths() ), set( [ "/group/group1/light" ] ) )
 
+	def testPruneRoot( self ) :
+
+		sphere = GafferScene.Sphere()
+		sphere["sets"].setValue("sphereSet")
+
+		p = GafferScene.Prune()
+		p["in"].setInput( sphere["out"] )
+		pathFilter = GafferScene.PathFilter()
+		p["filter"].setInput( pathFilter["out"] )
+
+		self.assertEqual( p["out"].childNames("/"), IECore.InternedStringVectorData( [ "sphere" ] ) )
+		self.assertEqual( p["out"].set( "sphereSet" ).value.paths(), ["/sphere"] )
+		pathFilter["paths"].setValue( IECore.StringVectorData( ["/"] ) )
+		self.assertEqual( p["out"].set( "sphereSet" ).value.paths(), [] )
+		self.assertEqual( p["out"].childNames("/"), IECore.InternedStringVectorData() )
+
 	def testFilterPromotion( self ) :
 
 		b = Gaffer.Box()
