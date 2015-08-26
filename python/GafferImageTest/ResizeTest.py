@@ -127,8 +127,7 @@ class ResizeTest( GafferTest.TestCase ) :
 	def testMismatchedDataWindow( self ) :
 
 		constant = GafferImage.Constant()
-		## \todo Adjust for #1438.
-		constant["format"].setValue( GafferImage.Format( IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 255, 255 ) ), 1 ) )
+		constant["format"].setValue( GafferImage.Format( IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 256, 256 ) ), 1 ) )
 
 		crop = GafferImage.Crop()
 		crop["in"].setInput( constant["out"] )
@@ -139,18 +138,17 @@ class ResizeTest( GafferTest.TestCase ) :
 
 		resize = GafferImage.Resize()
 		resize["in"].setInput( crop["out"] )
-		resize["format"].setValue( GafferImage.Format( IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 511, 511 ) ), 1 ) )
+		resize["format"].setValue( GafferImage.Format( IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 512, 512 ) ), 1 ) )
 
 		self.assertEqual(
 			resize["out"]["dataWindow"].getValue(),
-			IECore.Box2i( IECore.V2i( 128 ), IECore.V2i( 255 ) )
+			IECore.Box2i( IECore.V2i( 128 ), IECore.V2i( 256 ) )
 		)
 
 	def testDataWindowRounding( self ) :
 
 		constant = GafferImage.Constant()
-		## \todo Adjust for #1438.
-		constant["format"].setValue( GafferImage.Format( IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 199, 149 ) ), 1 ) )
+		constant["format"].setValue( GafferImage.Format( IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 200, 150 ) ), 1 ) )
 
 		resize = GafferImage.Resize()
 		resize["in"].setInput( constant["out"] )
@@ -159,14 +157,14 @@ class ResizeTest( GafferTest.TestCase ) :
 			resize["format"].setValue( GafferImage.Format( width, 150, 1 ) )
 			dataWindow = resize["out"]["dataWindow"].getValue()
 			self.assertEqual( dataWindow.min.x, 0 )
-			self.assertEqual( dataWindow.max.x, width - 1 )
+			self.assertEqual( dataWindow.max.x, width )
 
 		resize["fitMode"].setValue( resize.FitMode.Vertical )
 		for height in range( 1, 2000 ) :
 			resize["format"].setValue( GafferImage.Format( 200, height, 1 ) )
 			dataWindow = resize["out"]["dataWindow"].getValue()
 			self.assertEqual( dataWindow.min.y, 0 )
-			self.assertEqual( dataWindow.max.y, height - 1 )
+			self.assertEqual( dataWindow.max.y, height )
 
 	def testFilterAffectsChannelData( self ) :
 
