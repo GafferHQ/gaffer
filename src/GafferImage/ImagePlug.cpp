@@ -334,7 +334,6 @@ IECore::ImagePrimitivePtr ImagePlug::image() const
 	Format format = formatPlug()->getValue();
 	Box2i dataWindow = dataWindowPlug()->getValue();
 	Box2i newDataWindow( Imath::V2i(0) );
-	Box2i newDisplayWindow = format.getDisplayWindow();
 
 	if( dataWindow.isEmpty() )
 	{
@@ -342,7 +341,7 @@ IECore::ImagePrimitivePtr ImagePlug::image() const
 	}
 	else
 	{
-		newDataWindow = format.yDownToFormatSpace( dataWindow );
+		newDataWindow = format.toEXRSpace( dataWindow );
 	}
 
 	// use the default format if we don't have an explicit one.
@@ -351,13 +350,9 @@ IECore::ImagePrimitivePtr ImagePlug::image() const
 	if( format.getDisplayWindow().isEmpty() )
 	{
 		format = Context::current()->get<Format>( Format::defaultFormatContextName, Format() );
-		newDisplayWindow = format.getDisplayWindow();
 	}
 
-	// Convert data and display windows to be inclusive bounds
-	// rather than the exclusive (max) bounds of Gaffer
-	newDataWindow.max -= V2i( 1 );
-	newDisplayWindow.max -= V2i( 1 );
+	Box2i newDisplayWindow = format.toEXRSpace( format.getDisplayWindow() );
 
 	ImagePrimitivePtr result = new ImagePrimitive( newDataWindow, newDisplayWindow );
 
