@@ -48,7 +48,7 @@ Scene
 -----------------------------------------------------------------------
 
 - Fixed bug in Isolate which meant that a filter which matched nothing
-  at all had no effect. It not removes the entire scene as expected.
+  at all had no effect. It now removes the entire scene as expected.
 - Fixed bug in Prune which meant that a filter which matched the root
   was not removing the entire scene.
 - Added support for arbitrary IECore::PreWorldRenderables in global
@@ -65,7 +65,7 @@ API
 -----------------------------------------------------------------------
 
 - Replaced all InputGenerators with ArrayPlugs, and removed InputGenerator
-  class. ImageProcessor and SceneProcessor may not provide an array of
+  class. ImageProcessor and SceneProcessor may now provide an array of
   inputs for any derived class to use.
 - Paths
   - Added sequence support to FileSystemPath.
