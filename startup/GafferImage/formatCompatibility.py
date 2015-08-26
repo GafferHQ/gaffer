@@ -44,7 +44,7 @@ import GafferImage
 __currentlyLoadingScript = None
 
 def __getSerialisedGafferVersion( scriptNode ) :
-	
+
 	return (
 		Gaffer.Metadata.nodeValue( scriptNode, "serialiser:milestoneVersion" ),
 		Gaffer.Metadata.nodeValue( scriptNode, "serialiser:majorVersion" ),
@@ -62,7 +62,7 @@ def __convertFormat( fmt ):
 
 	# TODO : Determine which version of Gaffer inclusive image bounds
 	# will be included in. Presuming 0.16.0.0 for now.
-	if ( gafferVersion < ( 0, 16, 0, 0 ) ) :
+	if ( gafferVersion < ( 0, 17, 0, 0 ) ) :
 		displayWindow = fmt.getDisplayWindow()
 		displayWindow.max += IECore.V2i( 1 )
 
