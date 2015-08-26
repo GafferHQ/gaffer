@@ -233,9 +233,32 @@ class FormatTest( GafferTest.TestCase ) :
 			pDown = f.formatToYDownSpace( p )
 			self.assertEqual( f.yDownToFormatSpace( pDown ), p )
 
-	def testDefaultFormatContextName( self ) :
+			b = IECore.Box2i()
+			b.extendBy( IECore.V2i( int( random.uniform( -500, 500 ) ), int( random.uniform( -500, 500 ) ) ) )
+			b.extendBy( IECore.V2i( int( random.uniform( -500, 500 ) ), int( random.uniform( -500, 500 ) ) ) )
 
-		self.assertEqual( GafferImage.Format.defaultFormatContextName, "image:defaultFormat" )
+			bDown = f.formatToYDownSpace( b )
+			self.assertEqual( f.yDownToFormatSpace( bDown ), b )
+
+	def testDisplayWindowCoordinateSystemTransforms( self ) :
+
+		f = GafferImage.Format( 10, 10, 1.0 )
+
+		self.assertEqual( f.formatToYDownSpace( 0 ), 9 )
+		self.assertEqual( f.formatToYDownSpace( 9 ), 0 )
+
+		self.assertEqual( f.yDownToFormatSpace( 9 ), 0 )
+		self.assertEqual( f.yDownToFormatSpace( 0 ), 9 )
+
+		self.assertEqual(
+			f.formatToYDownSpace( f.getDisplayWindow() ),
+			IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 10 ) )
+		)
+
+		self.assertEqual(
+			f.yDownToFormatSpace( IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 10 ) ) ),
+			f.getDisplayWindow()
+		)
 
 	def tearDown( self ) :
 
