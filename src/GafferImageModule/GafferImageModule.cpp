@@ -44,7 +44,7 @@
 
 #include "GafferImage/Display.h"
 #include "GafferImage/ChannelDataProcessor.h"
-#include "GafferImage/OpenColorIO.h"
+#include "GafferImage/ColorSpace.h"
 #include "GafferImage/ObjectToImage.h"
 #include "GafferImage/Grade.h"
 #include "GafferImage/Clamp.h"
@@ -98,7 +98,7 @@ BOOST_PYTHON_MODULE( _GafferImage )
 	;
 	GafferBindings::DependencyNodeClass<ChannelDataProcessor>();
 	GafferBindings::DependencyNodeClass<ColorProcessor>();
-	GafferBindings::DependencyNodeClass<OpenColorIO>();
+	GafferBindings::DependencyNodeClass<ColorSpace>();
 	GafferBindings::DependencyNodeClass<ObjectToImage>();
 	GafferBindings::DependencyNodeClass<Grade>();
 	GafferBindings::DependencyNodeClass<Clamp>();

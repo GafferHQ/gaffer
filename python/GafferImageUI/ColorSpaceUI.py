@@ -1,7 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2012, John Haddon. All rights reserved.
-#  Copyright (c) 2013-2015, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,44 +34,68 @@
 #
 ##########################################################################
 
-from _GafferImageTest import *
+import PyOpenColorIO
 
-from ImagePlugTest import ImagePlugTest
-from ImageReaderTest import ImageReaderTest
-from ColorSpaceTest import ColorSpaceTest
-from ObjectToImageTest import ObjectToImageTest
-from FormatTest import FormatTest
-from FormatPlugTest import FormatPlugTest
-from MergeTest import MergeTest
-from GradeTest import GradeTest
-from ConstantTest import ConstantTest
-from ImageWriterTest import ImageWriterTest
-from ChannelMaskPlugTest import ChannelMaskPlugTest
-from SamplerTest import SamplerTest
-from ReformatTest import ReformatTest
-from FilterTest import FilterTest
-from DisplayTest import DisplayTest
-from ImageStatsTest import ImageStatsTest
-from ImageTransformTest import ImageTransformTest
-from DeleteChannelsTest import DeleteChannelsTest
-from ClampTest import ClampTest
-from ImageSwitchTest import ImageSwitchTest
-from ImageTimeWarpTest import ImageTimeWarpTest
-from ImageSamplerTest import ImageSamplerTest
-from ImageNodeTest import ImageNodeTest
-from FormatDataTest import FormatDataTest
-from ImageMetadataTest import ImageMetadataTest
-from DeleteImageMetadataTest import DeleteImageMetadataTest
-from CopyImageMetadataTest import CopyImageMetadataTest
-from ImageLoopTest import ImageLoopTest
-from ImageProcessorTest import ImageProcessorTest
-from ShuffleTest import ShuffleTest
-from PremultiplyTest import PremultiplyTest
-from UnpremultiplyTest import UnpremultiplyTest
-from CropTest import CropTest
-from ResampleTest import ResampleTest
-from ResizeTest import ResizeTest
+import IECore
 
-if __name__ == "__main__":
-	import unittest
-	unittest.main()
+import Gaffer
+import GafferUI
+import GafferImage
+
+def __colorSpacePresetNames( plug ) :
+
+	config = PyOpenColorIO.GetCurrentConfig()
+
+	return IECore.StringVectorData( [ "None" ] + [ cs.getName() for cs in config.getColorSpaces() ] )
+
+def __colorSpacePresetValues( plug ) :
+
+	config = PyOpenColorIO.GetCurrentConfig()
+
+	return IECore.StringVectorData( [ "" ] + [ cs.getName() for cs in config.getColorSpaces() ] )
+
+Gaffer.Metadata.registerNode(
+
+	GafferImage.ColorSpace,
+
+	"description",
+	"""
+	Applies colour transformations provided by
+	OpenColorIO. Configs are loaded from the
+	configuration specified by the OCIO environment
+	variable.
+	""",
+
+	plugs = {
+
+		"inputSpace" : [
+
+			"description",
+			"""
+			The colour space of the input image.
+			""",
+
+			"presetNames", __colorSpacePresetNames,
+			"presetValues", __colorSpacePresetValues,
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
+		],
+
+		"outputSpace" : [
+
+			"description",
+			"""
+			The colour space of the output image.
+			""",
+
+			"presetNames", __colorSpacePresetNames,
+			"presetValues", __colorSpacePresetValues,
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
+		]
+
+	}
+
+)

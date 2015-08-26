@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2012-2015, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,8 +35,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_OPENCOLORIO_H
-#define GAFFERIMAGE_OPENCOLORIO_H
+#ifndef GAFFERIMAGE_COLORSPACE_H
+#define GAFFERIMAGE_COLORSPACE_H
 
 #include "GafferImage/ColorProcessor.h"
 
@@ -50,15 +50,15 @@ IE_CORE_FORWARDDECLARE( StringPlug )
 namespace GafferImage
 {
 
-class OpenColorIO : public ColorProcessor
+class ColorSpace : public ColorProcessor
 {
 
 	public :
 
-		OpenColorIO( const std::string &name=defaultName<OpenColorIO>() );
-		virtual ~OpenColorIO();
+		ColorSpace( const std::string &name=defaultName<ColorSpace>() );
+		virtual ~ColorSpace();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::OpenColorIO, OpenColorIOTypeId, ColorProcessor );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::ColorSpace, ColorSpaceTypeId, ColorProcessor );
 
 		Gaffer::StringPlug *inputSpacePlug();
 		const Gaffer::StringPlug *inputSpacePlug() const;
@@ -82,8 +82,8 @@ class OpenColorIO : public ColorProcessor
 
 };
 
-IE_CORE_DECLAREPTR( OpenColorIO )
+IE_CORE_DECLAREPTR( ColorSpace )
 
 } // namespace GafferImage
 
-#endif // GAFFERIMAGE_OPENCOLORIO_H
+#endif // GAFFERIMAGE_COLORSPACE_H

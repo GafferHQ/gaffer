@@ -51,7 +51,7 @@ enum TypeId
 	GafferDisplayDriverTypeId = 110755,
 	ImageProcessorTypeId = 110756,
 	ChannelDataProcessorTypeId = 110757,
-	OpenColorIOTypeId = 110758,
+	ColorSpaceTypeId = 110758,
 	ObjectToImageTypeId = 110759,
 	FormatDataTypeId = 110760,
 	FormatPlugTypeId = 110761,

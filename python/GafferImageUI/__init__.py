@@ -47,7 +47,7 @@ import ImageViewToolbar
 import ImageTransformUI
 import ConstantUI
 import ImageSwitchUI
-import OpenColorIOUI
+import ColorSpaceUI
 import ImageContextVariablesUI
 import ImageStatsUI
 import DeleteChannelsUI

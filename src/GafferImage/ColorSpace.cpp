@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2012-2015, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -42,7 +42,7 @@
 
 #include "Gaffer/StringPlug.h"
 
-#include "GafferImage/OpenColorIO.h"
+#include "GafferImage/ColorSpace.h"
 
 using namespace std;
 using namespace IECore;
@@ -73,11 +73,11 @@ static OCIOMutex g_ocioMutex;
 
 } // namespace Detail
 
-IE_CORE_DEFINERUNTIMETYPED( OpenColorIO );
+IE_CORE_DEFINERUNTIMETYPED( ColorSpace );
 
-size_t OpenColorIO::g_firstPlugIndex = 0;
+size_t ColorSpace::g_firstPlugIndex = 0;
 
-OpenColorIO::OpenColorIO( const std::string &name )
+ColorSpace::ColorSpace( const std::string &name )
 	:	ColorProcessor( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
@@ -85,31 +85,31 @@ OpenColorIO::OpenColorIO( const std::string &name )
 	addChild( new StringPlug( "outputSpace" ) );
 }
 
-OpenColorIO::~OpenColorIO()
+ColorSpace::~ColorSpace()
 {
 }
 
-Gaffer::StringPlug *OpenColorIO::inputSpacePlug()
-{
-	return getChild<StringPlug>( g_firstPlugIndex );
-}
-
-const Gaffer::StringPlug *OpenColorIO::inputSpacePlug() const
+Gaffer::StringPlug *ColorSpace::inputSpacePlug()
 {
 	return getChild<StringPlug>( g_firstPlugIndex );
 }
 
-Gaffer::StringPlug *OpenColorIO::outputSpacePlug()
+const Gaffer::StringPlug *ColorSpace::inputSpacePlug() const
+{
+	return getChild<StringPlug>( g_firstPlugIndex );
+}
+
+Gaffer::StringPlug *ColorSpace::outputSpacePlug()
 {
 	return getChild<StringPlug>( g_firstPlugIndex + 1 );
 }
 
-const Gaffer::StringPlug *OpenColorIO::outputSpacePlug() const
+const Gaffer::StringPlug *ColorSpace::outputSpacePlug() const
 {
 	return getChild<StringPlug>( g_firstPlugIndex + 1 );
 }
 
-bool OpenColorIO::enabled() const
+bool ColorSpace::enabled() const
 {
 	if( !ColorProcessor::enabled() )
 	{
@@ -124,7 +124,7 @@ bool OpenColorIO::enabled() const
 		inSpaceString.size();
 }
 
-bool OpenColorIO::affectsColorData( const Gaffer::Plug *input ) const
+bool ColorSpace::affectsColorData( const Gaffer::Plug *input ) const
 {
 	if( ColorProcessor::affectsColorData( input ) )
 	{
@@ -133,7 +133,7 @@ bool OpenColorIO::affectsColorData( const Gaffer::Plug *input ) const
 	return input == inputSpacePlug() || input == outputSpacePlug();
 }
 
-void OpenColorIO::hashColorData( const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void ColorSpace::hashColorData( const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	ColorProcessor::hashColorData( context, h );
 
@@ -141,7 +141,7 @@ void OpenColorIO::hashColorData( const Gaffer::Context *context, IECore::MurmurH
 	outputSpacePlug()->hash( h );
 }
 
-void OpenColorIO::processColorData( const Gaffer::Context *context, IECore::FloatVectorData *r, IECore::FloatVectorData *g, IECore::FloatVectorData *b ) const
+void ColorSpace::processColorData( const Gaffer::Context *context, IECore::FloatVectorData *r, IECore::FloatVectorData *g, IECore::FloatVectorData *b ) const
 {
 	string inputSpace( inputSpacePlug()->getValue() );
 	string outputSpace( outputSpacePlug()->getValue() );

@@ -34,68 +34,7 @@
 #
 ##########################################################################
 
-import PyOpenColorIO
-
-import IECore
-
-import Gaffer
-import GafferUI
 import GafferImage
 
-def __colorSpacePresetNames( plug ) :
-
-	config = PyOpenColorIO.GetCurrentConfig()
-
-	return IECore.StringVectorData( [ "None" ] + [ cs.getName() for cs in config.getColorSpaces() ] )
-
-def __colorSpacePresetValues( plug ) :
-
-	config = PyOpenColorIO.GetCurrentConfig()
-
-	return IECore.StringVectorData( [ "" ] + [ cs.getName() for cs in config.getColorSpaces() ] )
-
-Gaffer.Metadata.registerNode(
-
-	GafferImage.OpenColorIO,
-
-	"description",
-	"""
-	Applies colour transformations provided by
-	OpenColorIO. Configs are loaded from the
-	configuration specified by the OCIO environment
-	variable.
-	""",
-
-	plugs = {
-
-		"inputSpace" : [
-
-			"description",
-			"""
-			The colour space of the input image.
-			""",
-
-			"presetNames", __colorSpacePresetNames,
-			"presetValues", __colorSpacePresetValues,
-
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-
-		],
-
-		"outputSpace" : [
-
-			"description",
-			"""
-			The colour space of the output image.
-			""",
-
-			"presetNames", __colorSpacePresetNames,
-			"presetValues", __colorSpacePresetValues,
-
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-
-		]
-
-	}
-
-)
+# Backwards compatibility for the OpenColorIO -> ColorSpace rename
+GafferImage.OpenColorIO = GafferImage.ColorSpace

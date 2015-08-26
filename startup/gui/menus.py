@@ -279,7 +279,7 @@ nodeMenu.append( "/Image/Source/Writer", GafferImage.ImageWriter, searchText = "
 nodeMenu.append( "/Image/Color/Clamp", GafferImage.Clamp )
 nodeMenu.append( "/Image/Color/Constant", GafferImage.Constant )
 nodeMenu.append( "/Image/Color/Grade", GafferImage.Grade )
-nodeMenu.append( "/Image/Color/OpenColorIO", GafferImage.OpenColorIO, searchText = "OpenColorIO" )
+nodeMenu.append( "/Image/Color/ColorSpace", GafferImage.ColorSpace, searchText = "ColorSpace" )
 nodeMenu.append( "/Image/Color/Premultiply", GafferImage.Premultiply )
 nodeMenu.append( "/Image/Color/Unpremultiply", GafferImage.Unpremultiply )
 nodeMenu.append( "/Image/Merge/Merge", GafferImage.Merge )

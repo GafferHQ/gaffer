@@ -44,7 +44,7 @@ import Gaffer
 import GafferTest
 import GafferImage
 
-class OpenColorIOTest( unittest.TestCase ) :
+class ColorSpaceTest( unittest.TestCase ) :
 
 	fileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/checker.exr" )
 
@@ -53,7 +53,7 @@ class OpenColorIOTest( unittest.TestCase ) :
 		n = GafferImage.ImageReader()
 		n["fileName"].setValue( self.fileName )
 
-		o = GafferImage.OpenColorIO()
+		o = GafferImage.ColorSpace()
 		o["in"].setInput( n["out"] )
 
 		self.assertEqual( n["out"].image(), o["out"].image() )
@@ -68,7 +68,7 @@ class OpenColorIOTest( unittest.TestCase ) :
 		n = GafferImage.ImageReader()
 		n["fileName"].setValue( self.fileName )
 
-		o = GafferImage.OpenColorIO()
+		o = GafferImage.ColorSpace()
 		o["in"].setInput( n["out"] )
 
 		self.assertEqual( n["out"].image(), o["out"].image() )
@@ -101,7 +101,7 @@ class OpenColorIOTest( unittest.TestCase ) :
 		i = GafferImage.ImageReader()
 		i["fileName"].setValue( self.fileName )
 
-		o = GafferImage.OpenColorIO()
+		o = GafferImage.ColorSpace()
 		o["in"].setInput( i["out"] )
 
 		self.assertEqual( i["out"].imageHash(), o["out"].imageHash() )
@@ -116,7 +116,7 @@ class OpenColorIOTest( unittest.TestCase ) :
 		i = GafferImage.ImageReader()
 		i["fileName"].setValue( os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/circles.exr" ) )
 
-		o = GafferImage.OpenColorIO()
+		o = GafferImage.ColorSpace()
 		o["in"].setInput( i["out"] )
 
 		o["inputSpace"].setValue( "linear" )
@@ -137,7 +137,7 @@ class OpenColorIOTest( unittest.TestCase ) :
 		i = GafferImage.ImageReader()
 		i["fileName"].setValue( self.fileName )
 
-		o = GafferImage.OpenColorIO()
+		o = GafferImage.ColorSpace()
 		o["in"].setInput( i["out"] )
 		o["inputSpace"].setValue( "linear" )
 		o["outputSpace"].setValue( "sRGB" )
