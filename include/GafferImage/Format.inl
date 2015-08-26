@@ -124,6 +124,10 @@ inline Imath::Box2i Format::yDownToFormatSpace( const Imath::Box2i &yDown ) cons
 	result.extendBy( yDownToFormatSpace( yDown.min ) );
 	result.extendBy( yDownToFormatSpace( yDown.max - Imath::V2i( 0, 1 ) ) );
 	result.max += Imath::V2i( 0, 1 );
+	if( yDown.max.y == yDown.min.y )
+	{
+		result.max.y = result.min.y;
+	}
 	return result;
 }
 
@@ -144,6 +148,10 @@ inline Imath::Box2i Format::formatToYDownSpace( const Imath::Box2i &yUp ) const
 	result.extendBy( formatToYDownSpace( yUp.min ) );
 	result.extendBy( formatToYDownSpace( yUp.max - Imath::V2i( 0, 1 ) ) );
 	result.max += Imath::V2i( 0, 1 );
+	if( yUp.max.y == yUp.min.y )
+	{
+		result.max.y = result.min.y;
+	}
 	return result;
 }
 
