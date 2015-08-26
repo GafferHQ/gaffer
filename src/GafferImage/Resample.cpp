@@ -406,8 +406,8 @@ IECore::ConstFloatVectorDataPtr Resample::computeChannelData( const std::string 
 	);
 
 	const V2i filterRadius(
-		ceilf( filter->width() / ( 2.0f * ratio.x ) ),
-		ceilf( filter->height() / ( 2.0f * ratio.y ) )
+		(int)ceilf( filter->width() / ( 2.0f * ratio.x ) ),
+		(int)ceilf( filter->height() / ( 2.0f * ratio.y ) )
 	);
 
 	const Box2i tileBound( tileOrigin, tileOrigin + V2i( ImagePlug::tileSize() ) );
