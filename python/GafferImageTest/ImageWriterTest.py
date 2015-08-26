@@ -115,34 +115,48 @@ class ImageWriterTest( unittest.TestCase ) :
 	def testDefaultFormatWrite( self ) :
 
 		s = Gaffer.ScriptNode()
-		w = GafferImage.ImageWriter()
+		w1 = GafferImage.ImageWriter()
+		w2 = GafferImage.ImageWriter()
 		g = GafferImage.Grade()
 
 		s.addChild( g )
-		s.addChild( w )
+		s.addChild( w2 )
 
-		testFile = self.__testFilePath + "testBlack.exr"
-		self.failIf( os.path.exists( testFile ) )
+		testScanlineFile = self.__testFilePath + ".testBlack.scanline.exr"
+		testTileFile = self.__testFilePath + ".testBlack.tile.exr"
+		self.failIf( os.path.exists( testScanlineFile ) )
+		self.failIf( os.path.exists( testTileFile ) )
 
 		GafferImage.Format.setDefaultFormat( s, GafferImage.Format( IECore.Box2i( IECore.V2i( -7, -2 ), IECore.V2i( 22, 24 ) ), 1. ) )
-		w["in"].setInput( g["out"] )
-		w["fileName"].setValue( testFile )
-		w["channels"].setValue( IECore.StringVectorData( g["out"]["channelNames"].getValue() ) )
+		w1["in"].setInput( g["out"] )
+		w1["fileName"].setValue( testScanlineFile )
+		w1["channels"].setValue( IECore.StringVectorData( g["out"]["channelNames"].getValue() ) )
+
+		w2["in"].setInput( g["out"] )
+		w2["fileName"].setValue( testTileFile )
+		w2["channels"].setValue( IECore.StringVectorData( g["out"]["channelNames"].getValue() ) )
+		w2["writeMode"].setValue( 1 )
 
 		# Try to execute. In older versions of the ImageWriter this would throw an exception.
 		with s.context() :
-			w.execute()
-		self.failUnless( os.path.exists( testFile ) )
+			w1.execute()
+			w2.execute()
+		self.failUnless( os.path.exists( testScanlineFile ) )
+		self.failUnless( os.path.exists( testTileFile ) )
 
 		# Check the output.
 		expectedFile = self.__defaultFormatFile
 		expectedOutput = IECore.Reader.create( expectedFile ).read()
 		expectedOutput.blindData().clear()
 
-		writerOutput = IECore.Reader.create( testFile ).read()
-		writerOutput.blindData().clear()
+		writerScanlineOutput = IECore.Reader.create( testScanlineFile ).read()
+		writerScanlineOutput.blindData().clear()
 
-		self.assertEqual( writerOutput, expectedOutput )
+		writerTileOutput = IECore.Reader.create( testTileFile ).read()
+		writerTileOutput.blindData().clear()
+
+		self.assertEqual( writerScanlineOutput, expectedOutput )
+		self.assertEqual( writerTileOutput, expectedOutput )
 
 
 	# Write an RGBA image that has a data window to various supported formats and in both scanline and tile modes.
