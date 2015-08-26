@@ -413,9 +413,9 @@ Imath::Box2i ImageReader::computeDataWindow( const Gaffer::Context *context, con
 	}
 
 	Format format( Imath::Box2i( Imath::V2i( spec->full_x, spec->full_y ), Imath::V2i( spec->full_width + spec->full_x, spec->full_height + spec->full_y ) ) );
-	Imath::Box2i dataWindow( Imath::V2i( spec->x, spec->y ), Imath::V2i( spec->width + spec->x, spec->height + spec->y ) );
+	Imath::Box2i dataWindow( Imath::V2i( spec->x, spec->y ), Imath::V2i( spec->width + spec->x - 1, spec->height + spec->y - 1 ) );
 
-	return format.yDownToFormatSpace( dataWindow );
+	return format.fromEXRSpace( dataWindow );
 }
 
 void ImageReader::hashMetadata( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
@@ -486,7 +486,7 @@ IECore::ConstFloatVectorDataPtr ImageReader::computeChannelData( const std::stri
 	}
 
 	Format format( Imath::Box2i( Imath::V2i( spec->full_x, spec->full_y ), Imath::V2i( spec->full_width + spec->full_x, spec->full_height + spec->full_y ) ) );
-	const int newY = format.formatToYDownSpace( tileOrigin.y + ImagePlug::tileSize() - 1 );
+	const int newY = format.toEXRSpace( tileOrigin.y + ImagePlug::tileSize() - 1 );
 
 	std::vector<float> channelData( ImagePlug::tileSize() * ImagePlug::tileSize() );
 	size_t channelIndex = channelIt - spec->channelnames.begin();
