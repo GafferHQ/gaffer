@@ -545,7 +545,7 @@ libraries = {
 		"pythonEnvAppends" : {
 			"LIBS" : [ "GafferImageTest", "GafferImageBindings" ],
 		},
-		"additionalFiles" : glob.glob( "python/GafferImageTest/scripts/*" ),
+		"additionalFiles" : glob.glob( "python/GafferImageTest/scripts/*" ) + glob.glob( "python/GafferImageTest/images/*" ),
 	},
 
 	"GafferImageUITest" : {},

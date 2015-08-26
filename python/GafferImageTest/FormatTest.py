@@ -221,6 +221,10 @@ class FormatTest( GafferTest.TestCase ) :
 			pDown = f.formatToYDownSpace( p )
 			self.assertEqual( f.yDownToFormatSpace( pDown ), p )
 
+	def testDefaultFormatContextName( self ) :
+
+		self.assertEqual( GafferImage.Format.defaultFormatContextName, "image:defaultFormat" )
+
 	def tearDown( self ) :
 
 		GafferTest.TestCase.tearDown( self )

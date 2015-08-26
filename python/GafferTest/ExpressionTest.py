@@ -585,5 +585,37 @@ class ExpressionTest( GafferTest.TestCase ) :
 		self.assertEqual( s["n"]["user"]["b"].getValue(), 2 )
 		self.assertEqual( s["n"]["user"]["c"].getValue(), 1 )
 
+	def testAtomicBoxPlugs( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = Gaffer.Node()
+		s["n"]["user"]["b2i"] = Gaffer.AtomicBox2iPlug()
+		s["n"]["user"]["b2f"] = Gaffer.AtomicBox2fPlug()
+		s["n"]["user"]["b3f"] = Gaffer.AtomicBox3fPlug()
+
+		s["e"] = Gaffer.Expression()
+		s["e"]["engine"].setValue( "python" )
+		s["e"]["expression"].setValue(
+			'parent["n"]["user"]["b2i"] = IECore.Box2i( IECore.V2i( 1, 2 ), IECore.V2i( 3, 4 ) );'
+			'parent["n"]["user"]["b2f"] = IECore.Box2f( IECore.V2f( 1, 2 ), IECore.V2f( 3, 4 ) );'
+			'parent["n"]["user"]["b3f"] = IECore.Box3f( IECore.V3f( 1, 2, 3 ), IECore.V3f( 4, 5, 6 ) );'
+		)
+
+		self.assertEqual(
+			s["n"]["user"]["b2i"].getValue(),
+			IECore.Box2i( IECore.V2i( 1, 2 ), IECore.V2i( 3, 4 ) )
+		)
+
+		self.assertEqual(
+			s["n"]["user"]["b2f"].getValue(),
+			IECore.Box2f( IECore.V2f( 1, 2 ), IECore.V2f( 3, 4 ) )
+		)
+
+		self.assertEqual(
+			s["n"]["user"]["b3f"].getValue(),
+			IECore.Box3f( IECore.V3f( 1, 2, 3 ), IECore.V3f( 4, 5, 6 ) )
+		)
+
 if __name__ == "__main__":
 	unittest.main()

@@ -94,6 +94,8 @@ enum TypeId
 	ImageLoopTypeId = 110798,
 	PremultiplyTypeId = 110799,
 	CropTypeId = 110800,
+	ResampleTypeId = 110801,
+	ResizeTypeId = 110802,
 
 	LastTypeId = 110849
 };

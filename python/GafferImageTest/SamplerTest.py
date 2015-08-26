@@ -55,7 +55,7 @@ class SamplerTest( unittest.TestCase ) :
 		bounds = r["out"]["dataWindow"].getValue();
 
 		cubicFilter = GafferImage.Filter.create( "Cubic" )
-		sampler = GafferImage.Sampler( r["out"], "R", bounds, cubicFilter, GafferImage.BoundingMode.Black )
+		sampler = GafferImage.Sampler( r["out"], "R", bounds, cubicFilter, GafferImage.Sampler.BoundingMode.Black )
 
 		# Test the getter
 		self.assertEqual( sampler.getSampleWindow(), bounds )
@@ -86,10 +86,10 @@ class SamplerTest( unittest.TestCase ) :
 		bounds = r["out"]["dataWindow"].getValue();
 
 		# Check that the default sampler is the same as a sampler with the default filter.
-		defaultSampler = GafferImage.Sampler( r["out"], "R", bounds, GafferImage.BoundingMode.Black )
+		defaultSampler = GafferImage.Sampler( r["out"], "R", bounds, GafferImage.Sampler.BoundingMode.Black )
 
 		defaultFilter = GafferImage.Filter.create( GafferImage.Filter.defaultFilter() )
-		sampler = GafferImage.Sampler( r["out"], "R", bounds, defaultFilter, GafferImage.BoundingMode.Black )
+		sampler = GafferImage.Sampler( r["out"], "R", bounds, defaultFilter, GafferImage.Sampler.BoundingMode.Black )
 
 		c = Gaffer.Context()
 		c["image:channelName"] = 'R'
@@ -128,7 +128,7 @@ class SamplerTest( unittest.TestCase ) :
 		with c :
 
 			self.assertTrue( "R" in r["out"]["channelNames"].getValue() )
-			s = GafferImage.Sampler( r["out"], "R", bounds, f, GafferImage.BoundingMode.Black )
+			s = GafferImage.Sampler( r["out"], "R", bounds, f, GafferImage.Sampler.BoundingMode.Black )
 
 			# Check that the bounding pixels are non zero.
 			self.assertNotEqual( s.sample( bounds.min.x+.5, bounds.min.y+.5 ), 0. )
@@ -157,7 +157,7 @@ class SamplerTest( unittest.TestCase ) :
 		with c :
 
 			self.assertTrue( "R" in r["out"]["channelNames"].getValue() )
-			s = GafferImage.Sampler( r["out"], "R", bounds, f, GafferImage.BoundingMode.Clamp )
+			s = GafferImage.Sampler( r["out"], "R", bounds, f, GafferImage.Sampler.BoundingMode.Clamp )
 
 			# Get the values of the corner pixels.
 			bl = s.sample( bounds.min.x+.5, bounds.min.y+.5 )
@@ -211,7 +211,7 @@ class SamplerTest( unittest.TestCase ) :
 		# Get the hash from the sampler.
 		with c :
 			f = GafferImage.Filter.create( "Box" )
-			s = GafferImage.Sampler( plug, channel, box, f, GafferImage.BoundingMode.Clamp )
+			s = GafferImage.Sampler( plug, channel, box, f, GafferImage.Sampler.BoundingMode.Clamp )
 			s.hash( h )
 
 		# Get the hash from the tiles within our desired sample area.
@@ -228,3 +228,39 @@ class SamplerTest( unittest.TestCase ) :
 
 		self.assertEqual( h, h2 )
 
+	def test2x2Checker( self ) :
+
+		reader = GafferImage.ImageReader()
+		reader["fileName"].setValue( os.path.dirname( __file__ ) + "/images/checker2x2.exr" )
+
+		# As long as the sample region includes the valid range of our image,
+		# it should have not effect on our sampling. So test with a few such ranges.
+		sampleRegions = [
+			IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( GafferImage.ImagePlug.tileSize() ) ),
+			IECore.Box2i( -IECore.V2i( GafferImage.ImagePlug.tileSize() ), IECore.V2i( GafferImage.ImagePlug.tileSize() ) ),
+			IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 2 ) ),
+		]
+
+		# List of positions inside and outside of the image, along
+		# with expected values if outside points are clamped inside.
+		samples = [
+			( IECore.V2i( 0, 0 ), 1 ),
+			( IECore.V2i( 1, 0 ), 0 ),
+			( IECore.V2i( 1, 1 ), 1 ),
+			( IECore.V2i( 0, 1 ), 0 ),
+			( IECore.V2i( -1, 0 ), 1 ),
+			( IECore.V2i( 2, 0 ), 0 ),
+			( IECore.V2i( 0, 3 ), 0 ),
+			( IECore.V2i( 0, -1 ), 1 ),
+			( IECore.V2i( 3, 3 ), 1 ),
+			( IECore.V2i( -1, -1 ), 1 ),
+			( IECore.V2i( -1, 2 ), 0 ),
+			( IECore.V2i( 2, 2 ), 1 ),
+			( IECore.V2f( 1, 1 ), 0.5 ),
+		]
+
+		# Assert all is as expected for all combos of region and sample.
+		for region in sampleRegions :
+			sampler = GafferImage.Sampler( reader["out"], "R", region, boundingMode = GafferImage.Sampler.BoundingMode.Clamp )
+			for position, value in samples :
+				self.assertEqual( sampler.sample( position.x, position.y ), value )

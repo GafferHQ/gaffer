@@ -100,12 +100,14 @@ class TypedPlug : public ValuePlug
 typedef TypedPlug<bool> BoolPlug;
 typedef TypedPlug<Imath::M33f> M33fPlug;
 typedef TypedPlug<Imath::M44f> M44fPlug;
+typedef TypedPlug<Imath::Box2f> AtomicBox2fPlug;
 typedef TypedPlug<Imath::Box3f> AtomicBox3fPlug;
 typedef TypedPlug<Imath::Box2i> AtomicBox2iPlug;
 
 IE_CORE_DECLAREPTR( BoolPlug );
 IE_CORE_DECLAREPTR( M33fPlug );
 IE_CORE_DECLAREPTR( M44fPlug );
+IE_CORE_DECLAREPTR( AtomicBox2fPlug );
 IE_CORE_DECLAREPTR( AtomicBox3fPlug );
 IE_CORE_DECLAREPTR( AtomicBox2iPlug );
 
@@ -120,6 +122,10 @@ typedef FilteredChildIterator<PlugPredicate<Plug::Out, M33fPlug> > OutputM33fPlu
 typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, M44fPlug> > M44fPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::In, M44fPlug> > InputM44fPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::Out, M44fPlug> > OutputM44fPlugIterator;
+
+typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, AtomicBox2fPlug> > AtomicBox2fPlugIterator;
+typedef FilteredChildIterator<PlugPredicate<Plug::In, AtomicBox2fPlug> > InputAtomicBox2fPlugIterator;
+typedef FilteredChildIterator<PlugPredicate<Plug::Out, AtomicBox2fPlug> > OutputAtomicBox2fPlugIterator;
 
 typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, AtomicBox3fPlug> > AtomicBox3fPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::In, AtomicBox3fPlug> > InputAtomicBox3fPlugIterator;
@@ -140,6 +146,10 @@ typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, M33fPlug>, PlugP
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, M44fPlug>, PlugPredicate<> > RecursiveM44fPlugIterator;
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, M44fPlug>, PlugPredicate<> > RecursiveInputM44fPlugIterator;
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, M44fPlug>, PlugPredicate<> > RecursiveOutputM44fPlugIterator;
+
+typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, AtomicBox2fPlug>, PlugPredicate<> > RecursiveAtomicBox2fPlugIterator;
+typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, AtomicBox2fPlug>, PlugPredicate<> > RecursiveInputAtomicBox2fPlugIterator;
+typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, AtomicBox2fPlug>, PlugPredicate<> > RecursiveOutputAtomicBox2fPlugIterator;
 
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, AtomicBox3fPlug>, PlugPredicate<> > RecursiveAtomicBox3fPlugIterator;
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, AtomicBox3fPlug>, PlugPredicate<> > RecursiveInputAtomicBox3fPlugIterator;

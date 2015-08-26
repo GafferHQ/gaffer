@@ -78,6 +78,8 @@
 #include "GafferImageBindings/ImageReaderBinding.h"
 #include "GafferImageBindings/ShuffleBinding.h"
 #include "GafferImageBindings/CropBinding.h"
+#include "GafferImageBindings/ResampleBinding.h"
+#include "GafferImageBindings/ResizeBinding.h"
 
 using namespace boost::python;
 using namespace GafferImage;
@@ -125,6 +127,8 @@ BOOST_PYTHON_MODULE( _GafferImage )
 	GafferImageBindings::bindMerge();
 	GafferImageBindings::bindShuffle();
 	GafferImageBindings::bindCrop();
+	GafferImageBindings::bindResample();
+	GafferImageBindings::bindResize();
 
 	GafferBindings::ExecutableNodeClass<ImageWriter>();
 }

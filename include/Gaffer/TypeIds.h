@@ -68,7 +68,7 @@ enum TypeId
 	M33fPlugTypeId = 110021,
 	M44fPlugTypeId = 110022,
 	BoolPlugTypeId = 110023,
-	ParameterisedHolderNodeTypeId = 110024, // obsolete - available for reuse
+	AtomicBox2fPlugTypeId = 110024,
 	IntVectorDataPlugTypeId = 110025,
 	FloatVectorDataPlugTypeId = 110026,
 	StringVectorDataPlugTypeId = 110027,

@@ -82,7 +82,8 @@ class Sampler
 		/// Sub-samples the image using a filter.
 		inline float sample( float x, float y );
 
-		/// Accumulates the hashes of the tiles that it accesses.
+		/// Computes the hash of the sample area, including the effects
+		/// of the bounding mode.
 		void hash( IECore::MurmurHash &h ) const;
 
 	private:

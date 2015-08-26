@@ -152,7 +152,7 @@ void bindFormat()
 		.def( "formatNames", &formatNamesList ).staticmethod( "formatNames" )
 		.def( "__eq__", &Format::operator== )
 		.def( "__repr__", &formatRepr )
-		.def( "defaultFormatContextName", &defaultFormatContextName ).staticmethod( "defaultFormatContextName" )
+		.add_static_property( "defaultFormatContextName", &defaultFormatContextName )
 	;
 
 	SignalClass<Format::UnaryFormatSignal, DefaultSignalCaller<Format::UnaryFormatSignal>, UnaryFormatSlotCaller >( "UnaryFormatSignal" );

@@ -94,5 +94,6 @@ void Sampler::hash( IECore::MurmurHash &h ) const
 			h.append( m_plug->channelDataHash( m_channelName, Imath::V2i( x, y ) ) );
 		}
 	}
+	h.append( m_boundingMode );
 }
 
