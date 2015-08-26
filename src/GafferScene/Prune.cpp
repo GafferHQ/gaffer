@@ -128,10 +128,11 @@ void Prune::hashChildNames( const ScenePath &path, const Gaffer::Context *contex
 {
 	ContextPtr tmpContext = filterContext( context );
 	Context::Scope scopedContext( tmpContext.get() );
-	Filter::Result m = (Filter::Result)filterPlug()->getValue();
+	const Filter::Result m = (Filter::Result)filterPlug()->getValue();
 
 	if( m & Filter::ExactMatch )
 	{
+		h = IECore::MurmurHash();
 		inPlug()->childNamesPlug()->defaultValue()->hash( h );
 	}
 	else if( m & Filter::DescendantMatch )
@@ -152,7 +153,7 @@ IECore::ConstInternedStringVectorDataPtr Prune::computeChildNames( const ScenePa
 {
 	ContextPtr tmpContext = filterContext( context );
 	Context::Scope scopedContext( tmpContext.get() );
-	Filter::Result m = (Filter::Result)filterPlug()->getValue();
+	const Filter::Result m = (Filter::Result)filterPlug()->getValue();
 
 	if( m & Filter::ExactMatch  )
 	{
