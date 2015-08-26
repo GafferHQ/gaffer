@@ -106,18 +106,11 @@ void Expression::setExpression( const std::string &expression, const std::string
 	m_engine = NULL;
 	m_contextNames.clear();
 
-	m_engine = Engine::create( engine, expression );
-	std::vector<std::string> inPlugPaths;
-	std::vector<std::string> outPlugPaths;
+	m_engine = Engine::create( engine );
 
-	if( m_engine )
-	{
-		m_engine->inPlugs( inPlugPaths );
-		m_engine->outPlugs( outPlugPaths );
-		m_engine->contextNames( m_contextNames );
-	}
-
-	updatePlugs( inPlugPaths, outPlugPaths );
+	std::vector<ValuePlug *> inPlugs, outPlugs;
+	m_engine->parse( this, expression, inPlugs, outPlugs, m_contextNames );
+	updatePlugs( inPlugs, outPlugs );
 
 	BlockedConnection blockedConnection( m_plugSetConnection );
 	enginePlug()->setValue( engine );
@@ -283,7 +276,7 @@ void Expression::compute( ValuePlug *output, const Context *context ) const
 
 		if( index < values->members().size() )
 		{
-			m_engine->setPlugValue( output, values->members()[index].get() );
+			m_engine->apply( output, values->members()[index].get() );
 		}
 		else
 		{
@@ -314,39 +307,28 @@ void Expression::plugSet( Plug *plug )
 		m_contextNames.clear();
 		if( !engineType.empty() && !expression.empty() )
 		{
-			m_engine = Engine::create( engineType, expression );
-			m_engine->contextNames( m_contextNames );
+			m_engine = Engine::create( engineType );
+			std::vector<ValuePlug *> inPlugs, outPlugs;
+			m_engine->parse( this, expression, inPlugs, outPlugs, m_contextNames );
 		}
 	}
 }
 
-void Expression::updatePlugs( const std::vector<std::string> &inPlugPaths, const std::vector<std::string> &outPlugPaths )
+void Expression::updatePlugs( const std::vector<ValuePlug *> &inPlugs, const std::vector<ValuePlug *> &outPlugs )
 {
-	for( size_t i = 0, e = inPlugPaths.size(); i < e; ++i )
+	for( size_t i = 0, e = inPlugs.size(); i < e; ++i )
 	{
-		updatePlug( inPlug(), i, inPlugPaths[i] );
+		updatePlug( inPlug(), i, inPlugs[i] );
 	}
 
-	for( size_t i = 0, e = outPlugPaths.size(); i < e; ++i )
+	for( size_t i = 0, e = outPlugs.size(); i < e; ++i )
 	{
-		updatePlug( outPlug(), i, outPlugPaths[i] );
+		updatePlug( outPlug(), i, outPlugs[i] );
 	}
 }
 
-void Expression::updatePlug( ValuePlug *parentPlug, size_t childIndex, const std::string &plugPath )
+void Expression::updatePlug( ValuePlug *parentPlug, size_t childIndex, ValuePlug *plug )
 {
-	Node *p = parent<Node>();
-	if( !p )
-	{
-		throw IECore::Exception( "No parent" );
-	}
-
-	ValuePlug *plug = p->descendant<ValuePlug>( plugPath );
-	if( !plug )
-	{
-		throw IECore::Exception( boost::str( boost::format( "Plug \"%s\" does not exist" ) % plugPath ) );
-	}
-
 	if( parentPlug->children().size() > childIndex )
 	{
 		// See if we can reuse the existing plug
@@ -390,7 +372,7 @@ void Expression::updatePlug( ValuePlug *parentPlug, size_t childIndex, const std
 // Expression::Engine implementation
 //////////////////////////////////////////////////////////////////////////
 
-Expression::EnginePtr Expression::Engine::create( const std::string engineType, const std::string &expression )
+Expression::EnginePtr Expression::Engine::create( const std::string engineType )
 {
 	const CreatorMap &m = creators();
 	CreatorMap::const_iterator it = m.find( engineType );
@@ -398,7 +380,7 @@ Expression::EnginePtr Expression::Engine::create( const std::string engineType, 
 	{
 		return NULL;
 	}
-	return it->second( expression );
+	return it->second();
 }
 
 void Expression::Engine::registerEngine( const std::string engineType, Creator creator )

@@ -76,18 +76,22 @@ class EngineWrapper : public IECorePython::RefCountedWrapper<Expression::Engine>
 		{
 		}
 
-		virtual void outPlugs( std::vector<std::string> &plugs )
+		virtual void parse( Expression *node, const std::string &expression, std::vector<ValuePlug *> &inputs, std::vector<ValuePlug *> &outputs, std::vector<IECore::InternedString> &contextVariables )
 		{
 			if( isSubclassed() )
 			{
 				IECorePython::ScopedGILLock gilLock;
 				try
 				{
-					object f = this->methodOverride( "outPlugs" );
+					object f = this->methodOverride( "parse" );
 					if( f )
 					{
-						list pythonPlugs = extract<list>( f() );
-						container_utils::extend_container( plugs, pythonPlugs );
+						list pythonInputs, pythonOutputs, pythonContextVariables;
+						f( ExpressionPtr( node ), expression, pythonInputs, pythonOutputs, pythonContextVariables );
+
+						container_utils::extend_container( inputs, pythonInputs );
+						container_utils::extend_container( outputs, pythonOutputs );
+						container_utils::extend_container( contextVariables, pythonContextVariables );
 						return;
 					}
 				}
@@ -97,55 +101,7 @@ class EngineWrapper : public IECorePython::RefCountedWrapper<Expression::Engine>
 				}
 			}
 
-			throw IECore::Exception( "Engine::outPlugs() python method not defined" );
-		}
-
-		virtual void inPlugs( std::vector<std::string> &plugs )
-		{
-			if( isSubclassed() )
-			{
-				IECorePython::ScopedGILLock gilLock;
-				try
-				{
-					object f = this->methodOverride( "inPlugs" );
-					if( f )
-					{
-						list pythonPlugs = extract<list>( f() );
-						container_utils::extend_container( plugs, pythonPlugs );
-						return;
-					}
-				}
-				catch( const error_already_set &e )
-				{
-					translatePythonException();
-				}
-			}
-
-			throw IECore::Exception( "Engine::inPlugs() python method not defined" );
-		}
-
-		virtual void contextNames( std::vector<IECore::InternedString> &names )
-		{
-			if( isSubclassed() )
-			{
-				IECorePython::ScopedGILLock gilLock;
-				try
-				{
-					object f = this->methodOverride( "contextNames" );
-					if( f )
-					{
-						list pythonNames = extract<list>( f() );
-						container_utils::extend_container( names, pythonNames );
-						return;
-					}
-				}
-				catch( const error_already_set &e )
-				{
-					translatePythonException();
-				}
-			}
-
-			throw IECore::Exception( "Engine::contextNames() python method not defined" );
+			throw IECore::Exception( "Engine::parse() python method not defined" );
 		}
 
 		virtual IECore::ConstObjectVectorPtr execute( const Context *context, const std::vector<const ValuePlug *> &proxyInputs )
@@ -177,14 +133,14 @@ class EngineWrapper : public IECorePython::RefCountedWrapper<Expression::Engine>
 			throw IECore::Exception( "Engine::execute() python method not defined" );
 		}
 
-		virtual void setPlugValue( ValuePlug *plug, const IECore::Object *value )
+		virtual void apply( ValuePlug *plug, const IECore::Object *value )
 		{
 			if( isSubclassed() )
 			{
 				IECorePython::ScopedGILLock gilLock;
 				try
 				{
-					object f = this->methodOverride( "setPlugValue" );
+					object f = this->methodOverride( "apply" );
 					if( f )
 					{
 						f( ValuePlugPtr( plug ), IECore::ObjectPtr( const_cast<IECore::Object *>( value ) ) );
@@ -197,7 +153,7 @@ class EngineWrapper : public IECorePython::RefCountedWrapper<Expression::Engine>
 				}
 			}
 			
-			throw IECore::Exception( "Engine::setPlugValue() python method not defined" );
+			throw IECore::Exception( "Engine::apply() python method not defined" );
 		}
 
 };
@@ -209,10 +165,10 @@ struct ExpressionEngineCreator
 	{
 	}
 
-	Expression::EnginePtr operator()( const std::string &expression )
+	Expression::EnginePtr operator()()
 	{
 		IECorePython::ScopedGILLock gilLock;
-		Expression::EnginePtr result = extract<Expression::EnginePtr>( m_fn( expression ) );
+		Expression::EnginePtr result = extract<Expression::EnginePtr>( m_fn() );
 		return result;
 	}
 

@@ -43,41 +43,33 @@ import Gaffer
 
 class PythonExpressionEngine( Gaffer.Expression.Engine ) :
 
-	def __init__( self, expression ) :
+	def __init__( self ) :
 
 		Gaffer.Expression.Engine.__init__( self )
 
-		self.__expression = expression
+	def parse( self, node, expression, inPlugs, outPlugs, contextNames ) :
 
 		parser = _Parser( expression )
 
-		self.__inPlugs = list( parser.plugReads )
-		self.__outPlugs = list( parser.plugWrites )
-		self.__contextNames = list( parser.contextReads )
+		self.__expression = expression
+		self.__inPlugPaths = list( parser.plugReads )
+		self.__outPlugPaths = list( parser.plugWrites )
 
-	def outPlugs( self ) :
-
-		return self.__outPlugs
-
-	def inPlugs( self ) :
-
-		return self.__inPlugs
-
-	def contextNames( self ) :
-
-		return self.__contextNames
+		inPlugs.extend( [ node.parent().descendant( n ) for n in self.__inPlugPaths ] )
+		outPlugs.extend( [ node.parent().descendant( n ) for n in self.__outPlugPaths ] )
+		contextNames.extend( parser.contextReads )
 
 	def execute( self, context, inputs ) :
 
 		plugDict = {}
-		for plugPath, plug in zip( self.__inPlugs, inputs ) :
+		for plugPath, plug in zip( self.__inPlugPaths, inputs ) :
 			parentDict = plugDict
 			plugPathSplit = plugPath.split( "." )
 			for p in plugPathSplit[:-1] :
 				parentDict = parentDict.setdefault( p, {} )
 			parentDict[plugPathSplit[-1]] = plug.getValue()
 
-		for plugPath in self.__outPlugs :
+		for plugPath in self.__outPlugPaths :
 			parentDict = plugDict
 			for p in plugPath.split( "." )[:-1] :
 				parentDict = parentDict.setdefault( p, {} )
@@ -87,7 +79,7 @@ class PythonExpressionEngine( Gaffer.Expression.Engine ) :
 		exec( self.__expression, executionDict, executionDict )
 
 		result = IECore.ObjectVector()
-		for plugPath in self.__outPlugs :
+		for plugPath in self.__outPlugPaths :
 			parentDict = plugDict
 			plugPathSplit = plugPath.split( "." )
 			for p in plugPathSplit[:-1] :
@@ -96,7 +88,7 @@ class PythonExpressionEngine( Gaffer.Expression.Engine ) :
 
 		return result
 
-	def setPlugValue( self, plug, value ) :
+	def apply( self, plug, value ) :
 
 		_setPlugValue( plug, value )
 

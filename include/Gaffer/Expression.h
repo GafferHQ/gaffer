@@ -74,30 +74,26 @@ class Expression : public ComputeNode
 
 				IE_CORE_DECLAREMEMBERPTR( Engine );
 
-				/// Must fill plugPaths with paths to the plugs the expression wishes to set.
-				/// Paths should be of the form nodeName.plugName, and are expected to
-				/// be relative to the parent of the Expression node.
-				virtual void outPlugs( std::vector<std::string> &plugPaths ) = 0;
-				/// Must fill plugPaths with paths to the plugs the expression wishes to read from.
-				/// Paths should be of the form nodeName.plugName, and are expected to be relative to
-				/// the parent of the Expression node.
-				virtual void inPlugs( std::vector<std::string> &plugPaths ) = 0;
-				/// Must fill names with the names of all context values the expression
-				/// wishes to read.
-				virtual void contextNames( std::vector<IECore::InternedString> &names ) = 0;
-				/// Must execute the expression in the specified context, using the values
+				/// Parses the given expression to prepare the Engine for execution.
+				/// Implementations must fill the inputs and outputs array with plugs
+				/// that are read from and written to by the expression, and the
+				/// contextVariables array with the names of context variables the
+				/// expression will access.
+				virtual void parse( Expression *node, const std::string &expression, std::vector<ValuePlug *> &inputs, std::vector<ValuePlug *> &outputs, std::vector<IECore::InternedString> &contextVariables ) = 0;
+				/// Executes the last parsed expression in the specified context, using the values
 				/// provided by proxyInputs and returning an array containing a value for
-				/// each plug in outPlugs().
+				/// each output plug.
 				virtual IECore::ConstObjectVectorPtr execute( const Context *context, const std::vector<const ValuePlug *> &proxyInputs ) = 0;
-				/// Must set the plug using the value computed previously in execute().
-				/// Note that if a compound plug is returned in outPlugs(), setPlugValue()
+				/// Sets the plug using the value computed previously in execute().
+				/// Note that if a compound plug is written to by the expression, setPlugValue()
 				/// will be called for each of the children of the compound, and it is the
-				/// responsibility of the engine to decompose the value for each plug suitably.
-				virtual void setPlugValue( ValuePlug *plug, const IECore::Object *value ) = 0;
+				/// responsibility of the engine to decompose the value for each child plug suitably.
+				virtual void apply( ValuePlug *plug, const IECore::Object *value ) = 0;
 
-				static EnginePtr create( const std::string engineType, const std::string &expression );
+				/// Creates an engine of the specified type.
+				static EnginePtr create( const std::string engineType );
 
-				typedef boost::function<EnginePtr ( const std::string &expression )> Creator;
+				typedef boost::function<EnginePtr ()> Creator;
 				static void registerEngine( const std::string engineType, Creator creator );
 				static void registeredEngines( std::vector<std::string> &engineTypes );
 
@@ -107,7 +103,7 @@ class Expression : public ComputeNode
 				struct EngineDescription
 				{
 					EngineDescription( const std::string &engineType ) { registerEngine( engineType, &creator ); };
-					static EnginePtr creator( const std::string &expression ) { return new T( expression ); };
+					static EnginePtr creator() { return new T; };
 				};
 
 			private :
@@ -158,13 +154,15 @@ class Expression : public ComputeNode
 		void plugSet( Plug *plug );
 		boost::signals::scoped_connection m_plugSetConnection;
 
-		void updatePlugs( const std::vector<std::string> &inPlugPaths, const std::vector<std::string> &outPlugPaths );
-		void updatePlug( ValuePlug *parentPlug, size_t childIndex, const std::string &plugPath );
+		void updatePlugs( const std::vector<ValuePlug *> &inPlugs, const std::vector<ValuePlug *> &outPlugs );
+		void updatePlug( ValuePlug *parentPlug, size_t childIndex, ValuePlug *plug );
 
 		EnginePtr m_engine;
 		std::vector<IECore::InternedString> m_contextNames;
 
 };
+
+IE_CORE_DECLAREPTR( Expression )
 
 } // namespace Gaffer
 
