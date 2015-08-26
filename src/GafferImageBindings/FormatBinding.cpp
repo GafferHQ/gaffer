@@ -137,13 +137,13 @@ void bindFormat()
 		.def( "getDisplayWindow", &Format::getDisplayWindow, return_value_policy<copy_const_reference>() )
 		.def( "setDisplayWindow", &Format::setDisplayWindow )
 
-		.def( "yDownToFormatSpace", ( int (Format::*)( int ) const )&Format::yDownToFormatSpace )
-		.def( "yDownToFormatSpace", ( Imath::V2i (Format::*)( const Imath::V2i & ) const )&Format::yDownToFormatSpace )
-		.def( "yDownToFormatSpace", ( Imath::Box2i (Format::*)( const Imath::Box2i & ) const )&Format::yDownToFormatSpace )
+		.def( "fromEXRSpace", ( int (Format::*)( int ) const )&Format::fromEXRSpace )
+		.def( "fromEXRSpace", ( Imath::V2i (Format::*)( const Imath::V2i & ) const )&Format::fromEXRSpace )
+		.def( "fromEXRSpace", ( Imath::Box2i (Format::*)( const Imath::Box2i & ) const )&Format::fromEXRSpace )
 
-		.def( "formatToYDownSpace", ( int (Format::*)( int ) const )&Format::formatToYDownSpace )
-		.def( "formatToYDownSpace", ( Imath::V2i (Format::*)( const Imath::V2i & ) const )&Format::formatToYDownSpace )
-		.def( "formatToYDownSpace", ( Imath::Box2i (Format::*)( const Imath::Box2i & ) const )&Format::formatToYDownSpace )
+		.def( "toEXRSpace", ( int (Format::*)( int ) const )&Format::toEXRSpace )
+		.def( "toEXRSpace", ( Imath::V2i (Format::*)( const Imath::V2i & ) const )&Format::toEXRSpace )
+		.def( "toEXRSpace", ( Imath::Box2i (Format::*)( const Imath::Box2i & ) const )&Format::toEXRSpace )
 
 		// Static bindings
 		.def( "formatAddedSignal", &Format::formatAddedSignal, return_value_policy<reference_existing_object>() ).staticmethod( "formatAddedSignal" )
