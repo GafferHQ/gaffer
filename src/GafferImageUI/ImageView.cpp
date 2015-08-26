@@ -721,7 +721,8 @@ class ImageViewGadget : public GafferUI::Gadget
 				glColor( color );
 
 				Format format( m_displayWindow );
-				Box2i dataWindow( format.yDownToFormatSpace( m_dataWindow ) );
+				Box2i dataWindow( format.toEXRSpace( m_dataWindow ) );
+				dataWindow.max += Imath::V2i( 1 );
 				drawWindow( dataRasterBox, dataWindow.min, dataWindow.max, style );
 			}
 
