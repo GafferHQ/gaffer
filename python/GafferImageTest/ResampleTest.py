@@ -76,8 +76,7 @@ class ResampleTest( GafferTest.TestCase ) :
 
 			resample = GafferImage.Resample()
 			resample["in"].setInput( reader["out"] )
-			## \todo Adjust for #1438
-			resample["dataWindow"].setValue( IECore.Box2f( IECore.V2f( 0 ), IECore.V2f( size.x, size.y ) - IECore.V2f( 1 ) ) )
+			resample["dataWindow"].setValue( IECore.Box2f( IECore.V2f( 0 ), IECore.V2f( size.x, size.y ) ) )
 			resample["filter"].setValue( filter )
 			resample["boundingMode"].setValue( GafferImage.Sampler.BoundingMode.Clamp )
 
