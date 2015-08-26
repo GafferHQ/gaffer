@@ -215,6 +215,152 @@ void metadataToImageSpecAttributes( const CompoundObject *metadata, ImageSpec &s
 	}
 }
 
+ImageSpec createImageSpec( const ImageWriter *node, const boost::shared_ptr<ImageOutput> &out, const Imath::Box2i &dataWindow, const Imath::Box2i &displayWindow )
+{
+	const bool supportsDisplayWindow = out->supports( "displaywindow" );
+
+	ImageSpec spec( TypeDesc::FLOAT );
+
+	// Specify the display window.
+	spec.full_x = displayWindow.min.x;
+	spec.full_y = displayWindow.min.y;
+	spec.full_width = displayWindow.size().x+1;
+	spec.full_height = displayWindow.size().y+1;
+
+	if ( supportsDisplayWindow && dataWindow.hasVolume() )
+	{
+		spec.x = dataWindow.min.x;
+		spec.y = dataWindow.min.y;
+		spec.width = dataWindow.size().x+1;
+		spec.height = dataWindow.size().y+1;
+	}
+	else
+	{
+		spec.x = spec.full_x;
+		spec.y = spec.full_y;
+		spec.width = spec.full_width;
+		spec.height = spec.full_height;
+	}
+
+	// Add common attribs to the spec
+	std::string software = ( boost::format( "Gaffer %d.%d.%d.%d" ) % GAFFER_MILESTONE_VERSION % GAFFER_MAJOR_VERSION % GAFFER_MINOR_VERSION % GAFFER_PATCH_VERSION ).str();
+	spec.attribute( "Software", software );
+	struct utsname info;
+	if ( !uname( &info ) )
+	{
+		spec.attribute( "HostComputer", info.nodename );
+	}
+	if ( const char *artist = getenv( "USER" ) )
+	{
+		spec.attribute( "Artist", artist );
+	}
+	std::string document = "untitled";
+	if ( const ScriptNode *script = node->ancestor<ScriptNode>() )
+	{
+		const std::string scriptFile = script->fileNamePlug()->getValue();
+		document = ( scriptFile == "" ) ? document : scriptFile;
+	}
+	spec.attribute( "DocumentName", document );
+
+	// Add the metadata to the spec, removing metadata that could affect the resulting channel data
+	CompoundObjectPtr metadata = node->inPlug()->metadataPlug()->getValue()->copy();
+	CompoundObject::ObjectMap &members = metadata->members();
+
+	std::vector<InternedString> oiioSpecifics;
+	oiioSpecifics.push_back( "oiio:ColorSpace" );
+	oiioSpecifics.push_back( "oiio:Gamma" );
+	oiioSpecifics.push_back( "oiio:UnassociatedAlpha" );
+	for ( std::vector<InternedString>::iterator it = oiioSpecifics.begin(); it != oiioSpecifics.end(); ++it )
+	{
+		CompoundObject::ObjectMap::iterator mIt = members.find( *it );
+		if ( mIt != members.end() )
+		{
+			members.erase( mIt );
+		}
+	}
+
+	metadataToImageSpecAttributes( metadata.get(), spec );
+
+	// PixelAspectRatio must be defined by the FormatPlug
+	spec.attribute( "PixelAspectRatio", (float)node->inPlug()->formatPlug()->getValue().getPixelAspect() );
+
+	return spec;
+}
+
+void writeImageScanlines( const ImageWriter *node, boost::shared_ptr<ImageOutput> &out, std::vector<const float*> &channelPtrs, const ImageSpec &spec, const Imath::Box2i &dataWindow, const std::string &fileName )
+{
+	// Create a buffer for the scanline.
+	float scanline[ spec.nchannels*spec.width ];
+
+	for ( int y = spec.y; y < spec.height + spec.y; ++y )
+	{
+		memset( scanline, 0, sizeof(float) * spec.nchannels*spec.width );
+
+		if ( y >= dataWindow.min.y && y <= dataWindow.max.y )
+		{
+			for ( std::vector<const float *>::iterator channelDataIt( channelPtrs.begin() ); channelDataIt != channelPtrs.end(); channelDataIt++ )
+			{
+				const int inc = channelPtrs.size();
+				// The row that we are reading from is flipped (in the Y) as we use a different image space internally to OpenEXR and OpenImageIO.
+				const float *inRowPtr = (*channelDataIt) + ( y - dataWindow.min.y ) * (dataWindow.max.x - dataWindow.min.x + 1) + std::max( 0, ( spec.x - dataWindow.min.x ) );
+				float *outPtr = &scanline[0] + ( std::max( 0, ( dataWindow.min.x - spec.x ) ) * inc ) + (channelDataIt - channelPtrs.begin()); // The pointer that we are writing to.
+
+				// Because scanline was initalised as black, we never need to set the pixels either side
+				// of the data window, as they will remain black
+				for ( int x = std::max( dataWindow.min.x, spec.x ); x < std::min( dataWindow.max.x + 1, spec.width + spec.x ); ++x, outPtr += inc )
+				{
+					*outPtr = *inRowPtr++;
+				}
+			}
+		}
+
+		if ( !out->write_scanline( y, 0, TypeDesc::FLOAT, &scanline[0] ) )
+		{
+			throw IECore::Exception( boost::str( boost::format( "Could not write scanline to \"%s\", error = %s" ) % fileName % out->geterror() ) );
+		}
+	}
+}
+
+void writeImageTiles( const ImageWriter *node, boost::shared_ptr<ImageOutput> &out, std::vector<const float*> &channelPtrs, const ImageSpec &spec, const Imath::Box2i &dataWindow, const std::string &fileName )
+{
+	// Create a buffer for the tile.
+	float tile[ spec.nchannels*spec.tile_width*spec.tile_height ];
+
+	// Interleave the channel data and write it to the file tile-by-tile.
+	for ( int tileY = spec.y; tileY < spec.height; tileY += spec.tile_height )
+	{
+		for ( int tileX = spec.x; tileX < spec.width; tileX += spec.tile_width )
+		{
+			memset( tile, 0, sizeof(float) * spec.nchannels * spec.tile_width * spec.tile_height );
+			const int r = tileX + spec.tile_width;
+			const int t = tileY + spec.tile_height;
+
+			for ( int y = std::max( tileY, std::min( t, dataWindow.min.y ) ); y < std::min( t, dataWindow.max.y + 1 ); ++y )
+			{
+				for ( std::vector<const float *>::iterator channelDataIt( channelPtrs.begin() ); channelDataIt != channelPtrs.end(); channelDataIt++ )
+				{
+					const int inc = channelPtrs.size();
+					float *outPtr = &tile[0] + ( ( ( ( y - tileY ) * spec.tile_width ) + ( std::max( tileX, std::min( r, dataWindow.min.x ) ) - tileX ) ) * inc ) + ( channelDataIt - channelPtrs.begin() );
+
+					if ( y >= dataWindow.min.y && y <= dataWindow.max.y )
+					{
+						const float *inRowPtr = (*channelDataIt) + ( y - dataWindow.min.y ) * (dataWindow.max.x - dataWindow.min.x + 1);
+						for ( int x = std::max( tileX, std::min( r, dataWindow.min.x ) ); x < std::min( r, dataWindow.max.x + 1 ); ++x, outPtr += inc )
+						{
+							*outPtr = *(inRowPtr + x - dataWindow.min.x);
+						}
+					}
+				}
+			}
+
+			if ( !out->write_tile( tileX, tileY, 0, TypeDesc::FLOAT, &tile[0] ) )
+			{
+				throw IECore::Exception( boost::str( boost::format( "Could not write tile to \"%s\", error = %s" ) % fileName % out->geterror() ) );
+			}
+		}
+	}
+}
+
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -325,8 +471,7 @@ void ImageWriter::execute() const
 		throw IECore::Exception( "No input image." );
 	}
 
-	std::string fileName = fileNamePlug()->getValue();
-	fileName = Context::current()->substitute( fileName );
+	std::string fileName = Context::current()->substitute( fileNamePlug()->getValue() );
 
 	boost::shared_ptr<ImageOutput> out( ImageOutput::create( fileName.c_str() ) );
 	if( !out )
@@ -345,23 +490,12 @@ void ImageWriter::execute() const
 
 	// Get the image's display window.
 	const Imath::Box2i displayWindow( imagePtr->getDisplayWindow() );
-	const int displayWindowWidth = displayWindow.size().x+1;
-	const int displayWindowHeight = displayWindow.size().y+1;
+	const Imath::Box2i dataWindow( imagePtr->getDataWindow() );
 
-	// Get the image's data window and if it then set a flag.
-	bool imageIsBlack = false;
-	Imath::Box2i dataWindow( imagePtr->getDataWindow() );
-	if ( inPlug()->dataWindowPlug()->getValue().isEmpty() )
-	{
-		dataWindow = displayWindow;
-		imageIsBlack = true;
-	}
+	ImageSpec spec = createImageSpec( this, out, dataWindow, displayWindow );
 
-	int dataWindowWidth = dataWindow.size().x+1;
-	int dataWindowHeight = dataWindow.size().y+1;
-
-	// Create the image header.
-	ImageSpec spec( dataWindowWidth, dataWindowHeight, nChannels, TypeDesc::FLOAT );
+	spec.nchannels = nChannels;
+	spec.default_channel_names();
 
 	// Add the channel names to the header whilst getting pointers to the channel data.
 	std::vector<const float*> channelPtrs;
@@ -382,63 +516,21 @@ void ImageWriter::execute() const
 		}
 	}
 
-	// Specify the display window.
-	spec.full_x = displayWindow.min.x;
-	spec.full_y = displayWindow.min.y;
-	spec.full_width = displayWindowWidth;
-	spec.full_height = displayWindowHeight;
-	spec.x = dataWindow.min.x;
-	spec.y = dataWindow.min.y;
-
-	// Add common attribs to the spec
-	std::string software = ( boost::format( "Gaffer %d.%d.%d.%d" ) % GAFFER_MILESTONE_VERSION % GAFFER_MAJOR_VERSION % GAFFER_MINOR_VERSION % GAFFER_PATCH_VERSION ).str();
-	spec.attribute( "Software", software );
-	struct utsname info;
-	if ( !uname( &info ) )
-	{
-		spec.attribute( "HostComputer", info.nodename );
-	}
-	if ( const char *artist = getenv( "USER" ) )
-	{
-		spec.attribute( "Artist", artist );
-	}
-	std::string document = "untitled";
-	if ( const ScriptNode *script = ancestor<ScriptNode>() )
-	{
-		const std::string scriptFile = script->fileNamePlug()->getValue();
-		document = ( scriptFile == "" ) ? document : scriptFile;
-	}
-	spec.attribute( "DocumentName", document );
-	
-	// Add the metadata to the spec, removing metadata that could affect the resulting channel data
-	CompoundObjectPtr metadata = inPlug()->metadataPlug()->getValue()->copy();
-	CompoundObject::ObjectMap &members = metadata->members();
-	
-	std::vector<InternedString> oiioSpecifics;
-	oiioSpecifics.push_back( "oiio:ColorSpace" );
-	oiioSpecifics.push_back( "oiio:Gamma" );
-	oiioSpecifics.push_back( "oiio:UnassociatedAlpha" );
-	for ( std::vector<InternedString>::iterator it = oiioSpecifics.begin(); it != oiioSpecifics.end(); ++it )
-	{
-		CompoundObject::ObjectMap::iterator mIt = members.find( *it );
-		if ( mIt != members.end() )
-		{
-			members.erase( mIt );
-		}
-	}
-	
-	metadataToImageSpecAttributes( metadata.get(), spec );
-	
-	// PixelAspectRatio must be defined by the FormatPlug
-	spec.attribute( "PixelAspectRatio", (float)inPlug()->formatPlug()->getValue().getPixelAspect() );
-	
 	// create the directories before opening the file
 	boost::filesystem::path directory = boost::filesystem::path( fileName ).parent_path();
 	if( !directory.empty() )
 	{
 		boost::filesystem::create_directories( directory );
 	}
-	
+
+	// Only allow tiled output if our file format supports it.
+	const int writeMode = writeModePlug()->getValue() & out->supports( "tiles" );
+
+	if ( writeMode == Tile )
+	{
+		spec.tile_width = spec.tile_height = ImagePlug::tileSize();
+	}
+
 	if ( out->open( fileName, spec ) )
 	{
 		IECore::msg( IECore::MessageHandler::Info, this->relativeName( this->scriptNode() ), "Writing " + fileName );
@@ -448,105 +540,14 @@ void ImageWriter::execute() const
 		throw IECore::Exception( boost::str( boost::format( "Could not open \"%s\", error = %s" ) % fileName % out->geterror() ) );
 	}
 
-	// Only allow tiled output if our file format supports it.
-	int writeMode = writeModePlug()->getValue() & out->supports( "tile" );
-
 	if ( writeMode == Scanline )
 	{
-		// Create a buffer for the scanline.
-		float scanline[ nChannels*dataWindowWidth ];
-
-		if ( imageIsBlack )
-		{
-			memset( scanline, 0, sizeof(float) * nChannels*dataWindowWidth );
-
-			for ( int y = spec.y; y < spec.y + dataWindowHeight; ++y )
-			{
-				if ( !out->write_scanline( y, 0, TypeDesc::FLOAT, &scanline[0] ) )
-				{
-					throw IECore::Exception( boost::str( boost::format( "Could not write scanline to \"%s\", error = %s" ) % fileName % out->geterror() ) );
-				}
-			}
-		}
-		else
-		{
-			// Interleave the channel data and write it by scanline to the file.
-			for ( int y = spec.y; y < spec.y + dataWindowHeight; ++y )
-			{
-				for ( std::vector<const float *>::iterator channelDataIt( channelPtrs.begin() ); channelDataIt != channelPtrs.end(); channelDataIt++ )
-				{
-					float *outPtr = &scanline[0] + (channelDataIt - channelPtrs.begin()); // The pointer that we are writing to.
-					// The row that we are reading from is flipped (in the Y) as we use a different image space internally to OpenEXR and OpenImageIO.
-					const float *inRowPtr = (*channelDataIt) + ( y - spec.y ) * dataWindowWidth;
-					const int inc = channelPtrs.size();
-					for ( int x = 0; x < dataWindowWidth; ++x, outPtr += inc )
-					{
-						*outPtr = *inRowPtr++;
-					}
-				}
-
-				if ( !out->write_scanline( y, 0, TypeDesc::FLOAT, &scanline[0] ) )
-				{
-					throw IECore::Exception( boost::str( boost::format( "Could not write scanline to \"%s\", error = %s" ) % fileName % out->geterror() ) );
-				}
-			}
-		}
+		writeImageScanlines( this, out, channelPtrs, spec, dataWindow, fileName );
 	}
-	// Tiled output
 	else
 	{
-		// Create a buffer for the tile.
-		const int tileSize = ImagePlug::tileSize();
-		float tile[ nChannels*tileSize*tileSize ];
-
-		if ( imageIsBlack )
-		{
-			memset( tile, 0,  sizeof(float) * nChannels*tileSize*tileSize );
-			for ( int tileY = 0; tileY < dataWindowHeight; tileY += tileSize )
-			{
-				for ( int tileX = 0; tileX < dataWindowWidth; tileX += tileSize )
-				{
-					if ( !out->write_tile( tileX+dataWindow.min.x, tileY+spec.y, 0, TypeDesc::FLOAT, &tile[0] ) )
-					{
-						throw IECore::Exception( boost::str( boost::format( "Could not write tile to \"%s\", error = %s" ) % fileName % out->geterror() ) );
-					}
-				}
-			}
-		}
-		else
-		{
-			// Interleave the channel data and write it to the file tile-by-tile.
-			for ( int tileY = 0; tileY < dataWindowHeight; tileY += tileSize )
-			{
-				for ( int tileX = 0; tileX < dataWindowWidth; tileX += tileSize )
-				{
-					float *outPtr = &tile[0];
-
-					const int r = std::min( tileSize+tileX, dataWindowWidth );
-					const int t = std::min( tileSize+tileY, dataWindowHeight );
-
-					for ( int y = 0; y < t; ++y )
-					{
-						for ( std::vector<const float *>::iterator channelDataIt( channelPtrs.begin() ); channelDataIt != channelPtrs.end(); channelDataIt++ )
-						{
-							const int inc = channelPtrs.size();
-							const float *inRowPtr = (*channelDataIt) + ( tileY + t - y - 1 ) * dataWindowWidth;
-							for ( int x = 0; x < r; ++x, outPtr += inc )
-							{
-								*outPtr = *inRowPtr+(tileX+x);
-							}
-						}
-					}
-
-					if ( !out->write_tile( tileX+dataWindow.min.x, tileY+spec.y, 0, TypeDesc::FLOAT, &tile[0] ) )
-					{
-						throw IECore::Exception( boost::str( boost::format( "Could not write tile to \"%s\", error = %s" ) % fileName % out->geterror() ) );
-					}
-				}
-			}
-		}
+		writeImageTiles( this, out, channelPtrs, spec, dataWindow, fileName );
 	}
 
 	out->close();
 }
-
