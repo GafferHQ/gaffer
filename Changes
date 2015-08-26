@@ -1,3 +1,129 @@
+# 0.16.0.0
+==========
+
+Apps
+-----------------------------------------------------------------------
+
+- Python
+  - Sets __name__ to "__main__" to conform more closely to a standard
+    python interpreter (#1405).
+  - Fixed to accepts -flag arguments (#1406).
+- GUI
+  - Removed cortex nodes from the node menu. They can be reintroduced
+    with an appropriate config file, but our intention is that Cortex
+    play only a "behind the scenes" role in Gaffer in the future.
+
+Core
+-----------------------------------------------------------------------
+
+- Added version metadata to all saved files (#1436).
+- Fixed dispatching of nodes inside References.
+- Python expressions can now write to AtomicBoxPlugs.
+- Added support for promoting ArrayPlugs to boxes.
+
+UI
+-----------------------------------------------------------------------
+
+- Fixed image format menu to make changes undoable.
+- Added sequence browsing to the relevant file choosers.
+- Hid TaskContextVariables.variables plug in the NodeGraph.
+- Fixed editability of promoted CompoundDataPlugs.
+- Box promotion now tranfers nodule and connection colours.
+
+Image
+-----------------------------------------------------------------------
+
+- Added a Resize node. This will replace the Reformat node over time.
+- Added a Crop node.
+- Added a Shuffle node (#1380).
+- Added Premultiply and Unpremultiply nodes.
+- ImageWriter
+    - Fixed writing to image formats which don't support separate
+      display and data windows - the full display window is now written,
+      padded with black as necessary.
+    - Added progress message.
+    - Fixed tiled writing (previously scanlines were always written).
+
+Scene
+-----------------------------------------------------------------------
+
+- Fixed bug in Isolate which meant that a filter which matched nothing
+  at all had no effect. It not removes the entire scene as expected.
+- Fixed bug in Prune which meant that a filter which matched the root
+  was not removing the entire scene.
+- Added support for arbitrary IECore::PreWorldRenderables in global
+  options.
+- Improved performance of bounds propagation (around 7% improvement
+  for a Transform node and a complex filter).
+
+Cortex
+-----------------------------------------------------------------------
+
+- Fixed bug which caused errors with read-only parameter plugs.
+
+API
+-----------------------------------------------------------------------
+
+- Replaced all InputGenerators with ArrayPlugs, and removed InputGenerator
+  class. ImageProcessor and SceneProcessor may not provide an array of
+  inputs for any derived class to use.
+- Paths
+  - Added sequence support to FileSystemPath.
+  - Added FileSequencePathFilter class for filtering sequences from
+    FileSystemPath.
+  - FileSequencePathPlugValueWidget supports metadata for sequence
+    display.
+  - Deprecated SequencePath.
+- Added Resample node to GafferImage, for use in node internals.
+- Dispatcher
+  - The current job directory is added to the context for use
+    by Executable nodes.
+- Sampler
+  - Fixed binding of sample( int, int )
+- Added AtomicBox2fPlug.
+- Made SceneNode and SceneProcessor subclassable in Python.
+- Made ImageNode and ImageProcessor subclassable in Python.
+- Made SubGraph subclassable in Python.
+- Added _copy argument to ImagePlug.channelData() method.
+- CompoundPlug deprecation
+  - Rederived the following plugs from ValuePlug or Plug in preparation
+    for removal of CompoundPlug :
+      - BoxPlug
+      - CompoundNumericPlug
+      - Transform2DPlug
+      - TransformPlug
+      - CompoundDataPlug
+      - ArrayPlug
+  - Replaced use of CompoundPlug in the following nodes
+    - Light
+    - Outputs
+- Added support for extra constructor arguments in node wrappers.
+
+Incompatibilities
+-----------------------------------------------------------------------
+
+The scene and image processing nodes have been overhauled to allow any
+node to use an array of inputs. While full backwards compatibility with
+old scenes is expected, please let us know if you have any problems
+loading an old scene. Please also update any dependent code to the new
+APIs as soon as possible.
+
+- Removed InputGenerator. Use ArrayPlug instead.
+- Removed FilterMixinBase. Use FilterProcessor instead.
+- SwitchComputeNode and SwitchDependencyNode now require that the "in"
+  plug is an ArrayPlug.
+- Changed base classes for many plugs, breaking binary compatibility
+  but in most cases not source compatibility.
+
+
+Build
+-----------------------------------------------------------------------
+
+- Added checks for doxygen and inkscape prior to building.
+- Fixed non-reporting of graphics build errors (#1395).
+- Updated to faster container-based testing on Travis.
+- Added appleseed unit tests to Travis setup.
+
 # 0.15.0.0
 ==========
 
