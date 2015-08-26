@@ -322,5 +322,25 @@ class IsolateTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( isolate["out"].childNames( "/group1" ), IECore.InternedStringVectorData( [ "group2", "light3" ] ) )
 		self.assertEqual( isolate["out"].childNames( "/group1/group2" ), IECore.InternedStringVectorData( [ "light1" ] ) )
 
+	def testIsolateNothing( self ) :
+
+		sphere = GafferScene.Sphere()
+		sphere["sets"].setValue("sphereSet")
+
+		i = GafferScene.Isolate()
+		i["in"].setInput( sphere["out"] )
+		pathFilter = GafferScene.PathFilter()
+		i["filter"].setInput( pathFilter["out"] )
+		pathFilter["paths"].setValue( IECore.StringVectorData( [ "/sphere" ] ) )
+
+		self.assertEqual( i["out"].childNames("/"), IECore.InternedStringVectorData( [ "sphere" ] ) )
+		self.assertEqual( i["out"].set( "sphereSet" ).value.paths(), ["/sphere"] )
+
+		pathFilter["paths"].setValue( IECore.StringVectorData() )
+
+		self.assertEqual( i["out"].set( "sphereSet" ).value.paths(), [] )
+		self.assertEqual( i["out"].childNames("/"), IECore.InternedStringVectorData() )
+
+
 if __name__ == "__main__":
 	unittest.main()

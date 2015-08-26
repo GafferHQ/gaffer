@@ -287,5 +287,5 @@ bool Isolate::mayPruneChildren( const ScenePath &path, unsigned filterValue ) co
 		return false;
 	}
 
-	return filterValue == Filter::DescendantMatch;
+	return filterValue == Filter::DescendantMatch || filterValue == Filter::NoMatch;
 }
