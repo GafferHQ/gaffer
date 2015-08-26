@@ -85,8 +85,10 @@ class DisplayTest( unittest.TestCase ) :
 		node = GafferImage.Display()
 		node["port"].setValue( 2500 )
 
-		externalDisplayWindow = gafferDisplayWindow = IECore.Box2i( IECore.V2i( -100, -200 ), IECore.V2i( 303, 557 ) )
-		externalDisplayWindow.max -= IECore.V2i( 1 )
+		gafferDisplayWindow = IECore.Box2i( IECore.V2i( -100, -200 ), IECore.V2i( 303, 557 ) )
+		gafferFormat = GafferImage.Format( gafferDisplayWindow, 1.0 )
+
+		externalDisplayWindow = gafferFormat.toEXRSpace( gafferDisplayWindow )
 
 		externalDataWindow = externalDisplayWindow
 		gafferDataWindow = gafferDisplayWindow
@@ -115,9 +117,6 @@ class DisplayTest( unittest.TestCase ) :
 					)
 				)
 
-			gafferBucketWindow = externalBucketWindow
-			gafferBucketWindow.max += IECore.V2i( 1 )
-
 			numPixels = ( externalBucketWindow.size().x + 1 ) * ( externalBucketWindow.size().y + 1 )
 			bucketData = IECore.FloatVectorData()
 			bucketData.resize( numPixels, i + 1 )
@@ -128,7 +127,7 @@ class DisplayTest( unittest.TestCase ) :
 			h2 = self.__tileHashes( node, "Y" )
 			t2 = self.__tiles( node, "Y" )
 
-			gafferBucketWindow = GafferImage.Format( gafferDisplayWindow, 1 ).yDownToFormatSpace( gafferBucketWindow )
+			gafferBucketWindow = gafferFormat.fromEXRSpace( externalBucketWindow )
 
 			self.__assertTilesChangedInRegion( t1, t2, gafferBucketWindow )
 			self.__assertTilesChangedInRegion( h1, h2, gafferBucketWindow )
@@ -171,8 +170,7 @@ class DisplayTest( unittest.TestCase ) :
 		externalDisplayWindow.max -= IECore.V2i( 1 )
 
 		gafferDataWindow = imageReader["out"]["dataWindow"].getValue()
-		externalDataWindow = imageReader["out"]["format"].getValue().formatToYDownSpace( gafferDataWindow )
-		externalDataWindow.max -= IECore.V2i( 1 )
+		externalDataWindow = imageReader["out"]["format"].getValue().toEXRSpace( gafferDataWindow )
 
 		driver = IECore.ClientDisplayDriver(
 			externalDisplayWindow,
@@ -202,8 +200,7 @@ class DisplayTest( unittest.TestCase ) :
 							bucketData.append( c[i] )
 
 				bucketBound = IECore.Box2i( tileOrigin, tileOrigin + IECore.V2i( GafferImage.ImagePlug.tileSize() ) )
-				bucketBound = imageReader["out"]["format"].getValue().formatToYDownSpace( bucketBound )
-				bucketBound.max -= IECore.V2i( 1 )
+				bucketBound = imageReader["out"]["format"].getValue().toEXRSpace( bucketBound )
 				driver.imageData( bucketBound, bucketData )
 
 		driver.imageClose()
@@ -248,13 +245,17 @@ class DisplayTest( unittest.TestCase ) :
 
 	def __assertTilesChangedInRegion( self, t1, t2, region ) :
 
+		# Box2i.intersect assumes inclusive bounds, so make region inclusive
+		inclusiveRegion = IECore.Box2i( region.min, region.max - IECore.V2i( 1 ) )
+
 		for tileOriginTuple in t1.keys() :
 			tileOrigin = IECore.V2i( *tileOriginTuple )
 			tileRegion = IECore.Box2i( tileOrigin, tileOrigin + IECore.V2i( GafferImage.ImagePlug.tileSize() - 1 ) )
-			if tileRegion.intersects( region ) :
-				self.assertNotEqual( t1[tileOriginTuple], t2[tileOriginTuple] )
+
+			if tileRegion.intersects( inclusiveRegion ) :
+				self.assertNotEqual( t1[tileOriginTuple], t2[tileOriginTuple], "REMOVE BEFORE RELEASE" )
 			else :
-				self.assertEqual( t1[tileOriginTuple], t2[tileOriginTuple] )
+				self.assertEqual( t1[tileOriginTuple], t2[tileOriginTuple], "REMOVE BEFORE RELEASE" )
 
 if __name__ == "__main__":
 	unittest.main()
