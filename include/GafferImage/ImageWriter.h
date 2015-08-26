@@ -86,7 +86,6 @@ class ImageWriter : public Gaffer::ExecutableNode
 	private :
 
 		static size_t g_firstPlugIndex;
-
 };
 
 IE_CORE_DECLAREPTR( ImageWriter )
