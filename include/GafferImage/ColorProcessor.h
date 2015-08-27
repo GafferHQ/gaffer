@@ -61,8 +61,6 @@ class ColorProcessor : public ImageProcessor
 
 	protected :
 
-		virtual bool channelEnabled( const std::string &channel ) const;
-
 		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual void hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		
