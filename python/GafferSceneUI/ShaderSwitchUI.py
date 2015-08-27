@@ -54,20 +54,19 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"in*" : [
-
-			"nodeGadget:nodulePosition", "left",
-			"plugValueWidget:type", "",
-
-		],
-
 		"in" : [
 
 			"description",
 			"""
-			The first input shader - the one passed through when
-			the index is 0.
+			The input shaders - the index plug decides
+			which of these is passed through to the output.
 			""",
+
+			"plugValueWidget:type", "",
+			"nodule:type", "GafferUI::CompoundNodule",
+			"nodeGadget:nodulePosition", "left",
+			"compoundNodule:orientation", "y",
+			"compoundNodule:spacing", 0.2,
 
 		],
 

@@ -54,6 +54,7 @@ Gaffer.Metadata.registerNode(
 		"in" : [
 
 			"description", lambda plug : "The input scene" + ( "s" if isinstance( plug, Gaffer.ArrayPlug ) else "" ),
+			"plugValueWidget:type", "",
 			"nodule:type", lambda plug : "GafferUI::CompoundNodule" if isinstance( plug, Gaffer.ArrayPlug ) else "GafferUI::StandardNodule",
 			"compoundNodule:spacing", 2.0,
 
