@@ -56,12 +56,6 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"in*" : [
-
-			"plugValueWidget:type", "",
-
-		],
-
 		"name" : [
 
 			"description",
