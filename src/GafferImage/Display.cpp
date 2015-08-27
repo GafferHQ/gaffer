@@ -164,7 +164,7 @@ class GafferDisplayDriver : public IECore::DisplayDriver
 							int srcY = m_gafferFormat.toEXRSpace( y );
 							size_t srcIndex = ( ( srcY - box.min.y ) * ( box.size().x + 1 ) + ( transferBound.min.x - box.min.x ) ) * numChannels + channelIndex;
 							size_t dstIndex = ( y - tileBound.min.y ) * ImagePlug::tileSize() + transferBound.min.x - tileBound.min.x;
-							const size_t srcEndIndex = srcIndex + ( transferBound.size().x ) * numChannels;
+							const size_t srcEndIndex = srcIndex + transferBound.size().x * numChannels;
 							while( srcIndex < srcEndIndex )
 							{
 								updatedTile[dstIndex] = data[srcIndex];
