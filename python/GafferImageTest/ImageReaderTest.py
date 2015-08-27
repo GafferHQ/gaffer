@@ -62,16 +62,19 @@ class ImageReaderTest( unittest.TestCase ) :
 		exrDisplayWindow = image.displayWindow
 		exrDataWindow = image.dataWindow
 
-		exrDisplayWindow.max += IECore.V2i( 1 )
-		exrDataWindow.max += IECore.V2i( 1 )
-
 		n = GafferImage.ImageReader()
 		n["fileName"].setValue( self.negativeDataWindowFileName )
-		internalDisplayWindow = n["out"]["format"].getValue().getDisplayWindow()
-		internalDataWindow = n["out"]["dataWindow"].getValue()
-		expectedDataWindow = IECore.Box2i( IECore.V2i( exrDataWindow.min.x, exrDisplayWindow.max.y - exrDataWindow.max.y ), IECore.V2i( exrDataWindow.max.x, exrDisplayWindow.max.y - exrDataWindow.min.y ) )
-		self.assertEqual( internalDisplayWindow, exrDisplayWindow )
-		self.assertEqual( internalDataWindow, expectedDataWindow )
+		gafferFormat = n["out"]["format"].getValue()
+
+		self.assertEqual(
+			gafferFormat.toEXRSpace( gafferFormat.getDisplayWindow() ),
+			exrDisplayWindow,
+		)
+
+		self.assertEqual(
+			gafferFormat.toEXRSpace( n["out"]["dataWindow"].getValue() ),
+			exrDataWindow,
+		)
 
 	def test( self ) :
 
