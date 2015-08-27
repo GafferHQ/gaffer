@@ -121,8 +121,9 @@ inline Imath::V2i Format::fromEXRSpace( const Imath::V2i &exrSpace ) const
 inline Imath::Box2i Format::fromEXRSpace( const Imath::Box2i &exrSpace ) const
 {
 	return Imath::Box2i(
-			Imath::V2i( exrSpace.min.x, fromEXRSpace( exrSpace.max.y ) ),
-			Imath::V2i( exrSpace.max.x + 1, fromEXRSpace( exrSpace.min.y ) + 1 ) );
+		Imath::V2i( exrSpace.min.x, fromEXRSpace( exrSpace.max.y ) ),
+		Imath::V2i( exrSpace.max.x + 1, fromEXRSpace( exrSpace.min.y ) + 1 )
+	);
 }
 
 inline int Format::toEXRSpace( int internalSpace ) const
@@ -139,8 +140,9 @@ inline Imath::V2i Format::toEXRSpace( const Imath::V2i &internalSpace ) const
 inline Imath::Box2i Format::toEXRSpace( const Imath::Box2i &internalSpace ) const
 {
 	return Imath::Box2i(
-			Imath::V2i( internalSpace.min.x, toEXRSpace( internalSpace.max.y - 1 ) ),
-			Imath::V2i( internalSpace.max.x - 1, toEXRSpace( internalSpace.min.y ) ) );
+		Imath::V2i( internalSpace.min.x, toEXRSpace( internalSpace.max.y - 1 ) ),
+		Imath::V2i( internalSpace.max.x - 1, toEXRSpace( internalSpace.min.y ) )
+	);
 }
 
 } // namespace GafferImage
