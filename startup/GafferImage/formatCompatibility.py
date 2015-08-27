@@ -34,10 +34,8 @@
 #
 ##########################################################################
 
-import re
-import inspect
-
 import IECore
+
 import Gaffer
 import GafferImage
 
@@ -50,8 +48,7 @@ def __getSerialisedGafferVersion( scriptNode ) :
 		Gaffer.Metadata.nodeValue( scriptNode, "serialiser:majorVersion" ),
 		Gaffer.Metadata.nodeValue( scriptNode, "serialiser:minorVersion" ),
 		Gaffer.Metadata.nodeValue( scriptNode, "serialiser:patchVersion" )
-		)
-
+	)
 
 def __convertFormat( fmt ):
 
@@ -60,8 +57,6 @@ def __convertFormat( fmt ):
 
 	gafferVersion = __getSerialisedGafferVersion( __currentlyLoadingScript )
 
-	# TODO : Determine which version of Gaffer inclusive image bounds
-	# will be included in. Presuming 0.16.0.0 for now.
 	if ( gafferVersion < ( 0, 17, 0, 0 ) ) :
 		displayWindow = fmt.getDisplayWindow()
 		displayWindow.max += IECore.V2i( 1 )
@@ -70,21 +65,21 @@ def __convertFormat( fmt ):
 
 	return fmt
 
-def __FormatPlug__setValue( self, *args, **kwargs ) :
+def __formatPlugSetValue( self, *args, **kwargs ) :
 
 	if args and isinstance( args[0], GafferImage.Format ) :
 		args = ( __convertFormat( args[0] ), ) + args[1:]
 
 	return self.__originalSetValue( *args, **kwargs )
 
-def __Format__registerFormat( *args, **kwargs ) :
+def __formatRegisterFormat( *args, **kwargs ) :
 
 	if args and isinstance( args[0], GafferImage.Format ) :
 		args = ( __convertFormat( args[0] ), ) + args[1:]
 
 	return GafferImage.Format.__originalRegisterFormat( *args, **kwargs )
 
-def __ScriptNode__load( self, *args, **kwargs ) :
+def __scriptNodeLoad( self, *args, **kwargs ) :
 
 	global __currentlyLoadingScript
 	__currentlyLoadingScript = self
@@ -95,10 +90,10 @@ def __ScriptNode__load( self, *args, **kwargs ) :
 		__currentlyLoadingScript = None
 
 Gaffer.ScriptNode.__originalLoad = Gaffer.ScriptNode.load
-Gaffer.ScriptNode.load = __ScriptNode__load
+Gaffer.ScriptNode.load = __scriptNodeLoad
 
 GafferImage.FormatPlug.__originalSetValue = GafferImage.FormatPlug.setValue
-GafferImage.FormatPlug.setValue = __FormatPlug__setValue
+GafferImage.FormatPlug.setValue = __formatPlugSetValue
 
 GafferImage.Format.__originalRegisterFormat = GafferImage.Format.registerFormat
-GafferImage.Format.registerFormat = __Format__registerFormat
+GafferImage.Format.registerFormat = __formatRegisterFormat
