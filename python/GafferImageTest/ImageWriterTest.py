@@ -691,6 +691,27 @@ class ImageWriterTest( unittest.TestCase ) :
 		self.assertTrue( os.path.isfile( s["w1"]["fileName"].getValue() ) )
 		self.assertTrue( os.path.isfile( s["w2"]["fileName"].getValue() ) )
 
+	def testBackgroundDispatch( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["c"] = GafferImage.Constant()
+
+		s["w"] = GafferImage.ImageWriter()
+		s["w"]["in"].setInput( s["c"]["out"] )
+		s["w"]["fileName"].setValue( self.__testDir + "/test.exr" )
+
+		d = Gaffer.LocalDispatcher()
+		d["jobsDirectory"].setValue( self.__testDir + "/jobs" )
+		d["executeInBackground"].setValue( True )
+
+		with s.context() :
+			d.dispatch( [ s["w"] ] )
+
+		d.jobPool().waitForAll()
+
+		self.assertTrue( os.path.isfile( s["w"]["fileName"].getValue() ) )
+
 	def tearDown( self ) :
 
 		if os.path.isdir( self.__testDir ) :

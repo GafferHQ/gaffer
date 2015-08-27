@@ -89,11 +89,17 @@ def __scriptNodeLoad( self, *args, **kwargs ) :
 	finally:
 		__currentlyLoadingScript = None
 
-Gaffer.ScriptNode.__originalLoad = Gaffer.ScriptNode.load
-Gaffer.ScriptNode.load = __scriptNodeLoad
+# We shouldn't need this conditional, but IECore.loadConfig() will happily load
+# the same file twice if the same path has been included twice. That would cause
+# havoc for us, because injecting the methods twice means infinite recursion when
+# calling the "original" methods.
+if not hasattr( GafferImage.Format, "__originalRegisterFormat" ) :
 
-GafferImage.FormatPlug.__originalSetValue = GafferImage.FormatPlug.setValue
-GafferImage.FormatPlug.setValue = __formatPlugSetValue
+	Gaffer.ScriptNode.__originalLoad = Gaffer.ScriptNode.load
+	Gaffer.ScriptNode.load = __scriptNodeLoad
 
-GafferImage.Format.__originalRegisterFormat = GafferImage.Format.registerFormat
-GafferImage.Format.registerFormat = __formatRegisterFormat
+	GafferImage.FormatPlug.__originalSetValue = GafferImage.FormatPlug.setValue
+	GafferImage.FormatPlug.setValue = __formatPlugSetValue
+
+	GafferImage.Format.__originalRegisterFormat = GafferImage.Format.registerFormat
+	GafferImage.Format.registerFormat = __formatRegisterFormat
