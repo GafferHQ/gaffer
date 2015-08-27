@@ -260,6 +260,10 @@ class FormatTest( GafferTest.TestCase ) :
 			f.getDisplayWindow()
 		)
 
+	def testDefaultFormatContextName( self ) :
+
+		self.assertEqual( GafferImage.Format.defaultFormatContextName, "image:defaultFormat" )
+
 	def tearDown( self ) :
 
 		GafferTest.TestCase.tearDown( self )
