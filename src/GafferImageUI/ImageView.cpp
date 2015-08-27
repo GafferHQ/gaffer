@@ -47,7 +47,7 @@
 #include "IECore/BoxOps.h"
 #include "IECore/BoxAlgo.h"
 
-#include "IECoreGL/ColorTexture.h"
+#include "IECoreGL/ToGLTextureConverter.h"
 #include "IECoreGL/TextureLoader.h"
 #include "IECoreGL/Texture.h"
 #include "IECoreGL/ShaderLoader.h"
@@ -617,8 +617,8 @@ class ImageViewGadget : public GafferUI::Gadget
 			if( !m_texture && m_dataWindow.hasVolume() )
 			{
 				// convert image to texture
-				m_texture = new IECoreGL::ColorTexture( m_image.get(), /* mipMap = */ false );
-
+				ToGLTextureConverterPtr converter = new ToGLTextureConverter( boost::static_pointer_cast<const ImagePrimitive>( m_image ), true );
+				m_texture = IECore::runTimeCast<IECoreGL::Texture>( converter->convert() );
 				{
 					Texture::ScopedBinding scope( *m_texture );
 					glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
