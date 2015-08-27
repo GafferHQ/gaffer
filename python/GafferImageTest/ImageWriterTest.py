@@ -312,15 +312,15 @@ class ImageWriterTest( unittest.TestCase ) :
 
 			self.failUnless( os.path.exists( testFile ) )
 			i = IECore.Reader.create( testFile ).read()
-			i.blindData().clear()
 
-			# Because i.displayWindow is straight from IECore,
-			# it will be inclusive, so add 1 to the max value
-			# to make it line up with the Gaffer standard
-			expectedDisplayWindow = i.displayWindow
-			expectedDisplayWindow.max += IECore.V2i( 1 )
+			# Cortex uses the EXR convention, which differs
+			# from Gaffer's, so we use the conversion methods to
+			# check that the image windows are as expected.
 
-			self.assertEqual( expectedDisplayWindow, format.getDisplayWindow() )
+			self.assertEqual(
+				format.toEXRSpace( format.getDisplayWindow() ),
+				i.displayWindow
+			)
 
 	def testHash( self ) :
 
