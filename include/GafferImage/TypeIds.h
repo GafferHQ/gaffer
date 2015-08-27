@@ -96,6 +96,7 @@ enum TypeId
 	CropTypeId = 110800,
 	ResampleTypeId = 110801,
 	ResizeTypeId = 110802,
+	OpenColorIOTransformTypeId = 110803,
 
 	LastTypeId = 110849
 };
