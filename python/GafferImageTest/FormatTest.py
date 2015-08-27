@@ -215,17 +215,26 @@ class FormatTest( GafferTest.TestCase ) :
 		self.assertEqual( f.toEXRSpace( IECore.V2i( -100, -200 ) ), IECore.V2i( -100, 300 ) )
 		self.assertEqual( f.toEXRSpace( IECore.V2i( -100, 300 ) ), IECore.V2i( -100, -200 ) )
 
-		self.assertEqual( f.toEXRSpace(
-				IECore.Box2i( IECore.V2i( -100, -200 ), IECore.V2i( 501, 301 ) ) ),
-				IECore.Box2i( IECore.V2i( -100, -200 ), IECore.V2i( 500, 300 ) ) )
+		self.assertEqual(
+			f.toEXRSpace(
+				IECore.Box2i( IECore.V2i( -100, -200 ), IECore.V2i( 501, 301 ) )
+			),
+			IECore.Box2i( IECore.V2i( -100, -200 ), IECore.V2i( 500, 300 ) )
+		)
 
-		self.assertEqual( f.toEXRSpace(
-				IECore.Box2i( IECore.V2i( -100, -100 ), IECore.V2i( 501, 301 ) ) ),
-				IECore.Box2i( IECore.V2i( -100, -200 ), IECore.V2i( 500, 200 ) ) )
+		self.assertEqual(
+			f.toEXRSpace(
+				IECore.Box2i( IECore.V2i( -100, -100 ), IECore.V2i( 501, 301 ) )
+			),
+			IECore.Box2i( IECore.V2i( -100, -200 ), IECore.V2i( 500, 200 ) )
+		)
 
-		self.assertEqual( f.toEXRSpace(
-				IECore.Box2i( IECore.V2i( -100, -200 ), IECore.V2i( 501, -100 ) ) ),
-				IECore.Box2i( IECore.V2i( -100, 201 ), IECore.V2i( 500, 300 ) ) )
+		self.assertEqual(
+			f.toEXRSpace(
+				IECore.Box2i( IECore.V2i( -100, -200 ), IECore.V2i( 501, -100 ) )
+			),
+			IECore.Box2i( IECore.V2i( -100, 201 ), IECore.V2i( 500, 300 ) )
+		)
 
 		for i in range( 0, 1000 ) :
 
