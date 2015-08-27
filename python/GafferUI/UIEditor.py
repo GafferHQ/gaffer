@@ -1262,6 +1262,12 @@ class _PresetsEditor( GafferUI.Widget ) :
 		selectedPaths = listing.getSelectedPaths()
 
 		self.__nameWidget.setText( selectedPaths[0][0] if selectedPaths else "" )
+		if selectedPaths :
+			with Gaffer.BlockedConnection( self.__valuePlugSetConnection ) :
+				self.__valueNode["presetValue"].setValue(
+					Gaffer.Metadata.plugValue( self.getPlug(), "preset:" + selectedPaths[0][0] )
+				)
+
 		self.__editingColumn.setEnabled( bool( selectedPaths ) )
 		self.__deleteButton.setEnabled( bool( selectedPaths ) )
 
