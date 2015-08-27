@@ -38,7 +38,7 @@
 #ifndef GAFFERIMAGE_COLORSPACE_H
 #define GAFFERIMAGE_COLORSPACE_H
 
-#include "GafferImage/ColorProcessor.h"
+#include "GafferImage/OpenColorIOTransform.h"
 
 namespace Gaffer
 {
@@ -50,7 +50,7 @@ IE_CORE_FORWARDDECLARE( StringPlug )
 namespace GafferImage
 {
 
-class ColorSpace : public ColorProcessor
+class ColorSpace : public OpenColorIOTransform
 {
 
 	public :
@@ -58,7 +58,7 @@ class ColorSpace : public ColorProcessor
 		ColorSpace( const std::string &name=defaultName<ColorSpace>() );
 		virtual ~ColorSpace();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::ColorSpace, ColorSpaceTypeId, ColorProcessor );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::ColorSpace, ColorSpaceTypeId, OpenColorIOTransform );
 
 		Gaffer::StringPlug *inputSpacePlug();
 		const Gaffer::StringPlug *inputSpacePlug() const;
@@ -68,13 +68,9 @@ class ColorSpace : public ColorProcessor
 
 	protected :
 
-		/// Overrides the default implementation to disable the node when the input color space is
-		/// the same as the output color space.
-		virtual bool enabled() const;
-
-		virtual bool affectsColorData( const Gaffer::Plug *input ) const;
-		virtual void hashColorData( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual void processColorData( const Gaffer::Context *context, IECore::FloatVectorData *r, IECore::FloatVectorData *g, IECore::FloatVectorData *b ) const;
+		virtual bool affectsTransform( const Gaffer::Plug *input ) const;
+		virtual void hashTransform( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual OpenColorIO::ConstTransformRcPtr transform() const;
 
 	private :
 
