@@ -73,6 +73,7 @@ from CropTest import CropTest
 from ResampleTest import ResampleTest
 from ResizeTest import ResizeTest
 from LUTTest import LUTTest
+from CDLTest import CDLTest
 
 if __name__ == "__main__":
 	import unittest

@@ -62,6 +62,7 @@
 #include "GafferImage/Premultiply.h"
 #include "GafferImage/Unpremultiply.h"
 #include "GafferImage/Crop.h"
+#include "GafferImage/CDL.h"
 
 #include "GafferImageBindings/ImageNodeBinding.h"
 #include "GafferImageBindings/ImageProcessorBinding.h"
@@ -102,6 +103,7 @@ BOOST_PYTHON_MODULE( _GafferImage )
 	GafferBindings::DependencyNodeClass<ColorProcessor>();
 	GafferBindings::DependencyNodeClass<OpenColorIOTransform>();
 	GafferBindings::DependencyNodeClass<ColorSpace>();
+	GafferBindings::DependencyNodeClass<CDL>();
 	GafferBindings::DependencyNodeClass<ObjectToImage>();
 	GafferBindings::DependencyNodeClass<Grade>();
 	GafferBindings::DependencyNodeClass<Clamp>();

@@ -98,6 +98,7 @@ enum TypeId
 	ResizeTypeId = 110802,
 	OpenColorIOTransformTypeId = 110803,
 	LUTTypeId = 110804,
+	CDLTypeId = 110805,
 
 	LastTypeId = 110849
 };

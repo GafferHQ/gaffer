@@ -279,6 +279,7 @@ nodeMenu.append( "/Image/Source/Writer", GafferImage.ImageWriter, searchText = "
 nodeMenu.append( "/Image/Color/Clamp", GafferImage.Clamp )
 nodeMenu.append( "/Image/Color/Constant", GafferImage.Constant )
 nodeMenu.append( "/Image/Color/Grade", GafferImage.Grade )
+nodeMenu.append( "/Image/Color/CDL", GafferImage.CDL )
 nodeMenu.append( "/Image/Color/ColorSpace", GafferImage.ColorSpace, searchText = "ColorSpace" )
 nodeMenu.append( "/Image/Color/LUT", GafferImage.LUT )
 nodeMenu.append( "/Image/Color/Premultiply", GafferImage.Premultiply )
