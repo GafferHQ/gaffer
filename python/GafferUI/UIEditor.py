@@ -176,14 +176,12 @@ class UIEditor( GafferUI.NodeSetEditor ) :
 			self.__sectionEditor.setPlugParent( None )
 		else :
 			plugParent = self.__node["user"]
-			if isinstance( self.__node, Gaffer.Box ) and not len( plugParent ) :
+			if isinstance( self.__node, Gaffer.Box ) :
 				# For Boxes we want the user to edit the plugs directly
 				# parented to the Box, because that is where promoted plugs go,
 				# and because we want to leave the "user" plug empty so that it
 				# is available for use by the user on Reference nodes once a Box has
-				# been exported and referenced. We make a small concession to old-skool
-				# boxes (where we mistakenly used to promote to the "user" plug) by
-				# editing the user plugs instead if any exist.
+				# been exported and referenced.
 				plugParent = self.__node
 			self.__plugListing.setPlugParent( plugParent )
 			self.__sectionEditor.setPlugParent( plugParent )
