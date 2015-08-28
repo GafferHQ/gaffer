@@ -205,8 +205,7 @@ void Resize::compute( ValuePlug *output, const Context *context ) const
 		const Box2i inDataWindow = inPlug()->dataWindowPlug()->getValue();
 		Box2f outDataWindow(
 			V2f( inDataWindow.min ) * dataWindowScale + dataWindowOffset,
-			/// \todo Adjust for #1438
-			V2f( inDataWindow.max + V2i( 1 ) ) * dataWindowScale + dataWindowOffset - V2f( 1.0f )
+			V2f( inDataWindow.max ) * dataWindowScale + dataWindowOffset
 		);
 
 		// It's important that we use floating point data windows in the Resample node

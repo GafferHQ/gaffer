@@ -93,6 +93,16 @@ std::string formatRepr( const GafferImage::Format &format )
 	{
 		return std::string( "GafferImage.Format()" );
 	}
+	else if ( format.getDisplayWindow().min == Imath::V2i( 0 ) )
+	{
+		Imath::Box2i box( format.getDisplayWindow() );
+		return std::string(
+			boost::str( boost::format(
+				"GafferImage.Format( %d, %d, %.3f )" )
+				% box.max.x % box.max.y % format.getPixelAspect()
+			)
+		);
+	}
 	else
 	{
 		Imath::Box2i box( format.getDisplayWindow() );
@@ -115,10 +125,26 @@ void bindFormat()
 	static void (*setDefaultFormatPtr1)( ScriptNode *scriptNode, const Format & ) (&Format::setDefaultFormat);
 	static void (*setDefaultFormatPtr2)( ScriptNode *scriptNode, const std::string & ) (&Format::setDefaultFormat);
 
-	class_<Format>( "Format", init<int, int, double>() )
+	class_<Format>( "Format" )
 
-		.def( init< const Imath::Box2i &, double >() )
-		.def( init<>() )
+		.def(
+			init<int, int, double>(
+				(
+					boost::python::arg( "width" ),
+					boost::python::arg( "height" ),
+					boost::python::arg( "pixelAspect" ) = 1.0f
+				)
+			)
+		)
+		.def(
+			init<const Imath::Box2i &, double, bool>(
+				(
+					boost::python::arg( "displayWindow" ),
+					boost::python::arg( "pixelAspect" ) = 1.0f,
+					boost::python::arg( "fromEXRSpace" ) = false
+				)
+			)
+		)
 
 		.def( "width", &Format::width )
 		.def( "height", &Format::height )
@@ -127,13 +153,13 @@ void bindFormat()
 		.def( "getDisplayWindow", &Format::getDisplayWindow, return_value_policy<copy_const_reference>() )
 		.def( "setDisplayWindow", &Format::setDisplayWindow )
 
-		.def( "yDownToFormatSpace", ( int (Format::*)( int ) const )&Format::yDownToFormatSpace )
-		.def( "yDownToFormatSpace", ( Imath::V2i (Format::*)( const Imath::V2i & ) const )&Format::yDownToFormatSpace )
-		.def( "yDownToFormatSpace", ( Imath::Box2i (Format::*)( const Imath::Box2i & ) const )&Format::yDownToFormatSpace )
+		.def( "fromEXRSpace", ( int (Format::*)( int ) const )&Format::fromEXRSpace )
+		.def( "fromEXRSpace", ( Imath::V2i (Format::*)( const Imath::V2i & ) const )&Format::fromEXRSpace )
+		.def( "fromEXRSpace", ( Imath::Box2i (Format::*)( const Imath::Box2i & ) const )&Format::fromEXRSpace )
 
-		.def( "formatToYDownSpace", ( int (Format::*)( int ) const )&Format::formatToYDownSpace )
-		.def( "formatToYDownSpace", ( Imath::V2i (Format::*)( const Imath::V2i & ) const )&Format::formatToYDownSpace )
-		.def( "formatToYDownSpace", ( Imath::Box2i (Format::*)( const Imath::Box2i & ) const )&Format::formatToYDownSpace )
+		.def( "toEXRSpace", ( int (Format::*)( int ) const )&Format::toEXRSpace )
+		.def( "toEXRSpace", ( Imath::V2i (Format::*)( const Imath::V2i & ) const )&Format::toEXRSpace )
+		.def( "toEXRSpace", ( Imath::Box2i (Format::*)( const Imath::Box2i & ) const )&Format::toEXRSpace )
 
 		// Static bindings
 		.def( "formatAddedSignal", &Format::formatAddedSignal, return_value_policy<reference_existing_object>() ).staticmethod( "formatAddedSignal" )

@@ -71,7 +71,7 @@ namespace GafferImage
 /// will modify the metadata are the Metadata specific nodes. Other image processing may occur which
 /// causes the implied meaning of certain metadata entries to become invalid (such as oiio:ColorSpace)
 /// but those nodes will not alter the metadata, nor behave differently based on its value.
-/// 
+///
 /// Some notes on color space:
 /// GafferImage nodes expect to operate in linear space, with associated alpha. Users are responsible
 /// for meeting that expectation (or knowing what they're doing when they don't).
@@ -136,7 +136,6 @@ class ImagePlug : public Gaffer::ValuePlug
 		//@}
 
 		static int tileSize() { return 64; };
-		static Imath::Box2i tileBound( const Imath::V2i &tileOrigin ) { return Imath::Box2i( tileOrigin * tileSize(), ( tileOrigin + Imath::V2i( 1 ) ) * tileSize() - Imath::V2i( 1 ) ); }
 		static const IECore::FloatVectorData *blackTile();
 		static const IECore::FloatVectorData *whiteTile();
 
@@ -152,7 +151,7 @@ class ImagePlug : public Gaffer::ValuePlug
 	private :
 
 		static void compoundObjectToCompoundData( const IECore::CompoundObject *object, IECore::CompoundData *data );
-		
+
 		static size_t g_firstPlugIndex;
 };
 

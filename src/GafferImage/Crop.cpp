@@ -259,10 +259,6 @@ void Crop::compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) 
 			default:
 			{
 				cropWindow = areaPlug()->getValue();
-				// Because we are treating the areaPlug as exclusive, but the
-				// cropWindow is inclusive, need to subtract 1 from the max
-				// values.
-				cropWindow.max -= Imath::V2i( 1 );
 				break;
 			}
 		}

@@ -112,7 +112,7 @@ Implementation::Implementation( const std::string &name )
 	addChild( new Gaffer::Transform2DPlug( "transform" ) );
 	addChild( new GafferImage::FilterPlug( "filter" ) );
 	addChild( new GafferImage::FormatPlug( "outputFormat" ) );
-	
+
 	// We don't ever want to change these, so we make pass-through connections.
 	outPlug()->metadataPlug()->setInput( inPlug()->metadataPlug() );
 	outPlug()->channelNamesPlug()->setInput( inPlug()->channelNamesPlug() );
@@ -260,7 +260,7 @@ IECore::ConstFloatVectorDataPtr Implementation::computeChannelData( const std::s
 	out.resize( ImagePlug::tileSize() * ImagePlug::tileSize() );
 
 	// Work out the bounds of the tile that we are outputting to.
-	Imath::Box2i tile( tileOrigin, Imath::V2i( tileOrigin.x + ImagePlug::tileSize() - 1, tileOrigin.y + ImagePlug::tileSize() - 1 ) );
+	Imath::Box2i tile( tileOrigin, Imath::V2i( tileOrigin.x + ImagePlug::tileSize(), tileOrigin.y + ImagePlug::tileSize() ) );
 
 	// Work out the sample area that we require to compute this tile.
 
@@ -292,8 +292,8 @@ Imath::M33f Implementation::computeAdjustedMatrix() const
 
 	// The actual scale factor that the reformat node has resized the input to.
 	Imath::V2f trueScale = Imath::V2f(
-		float( inFormat.getDisplayWindow().size().x+1 ) / ( outFormat.getDisplayWindow().size().x+1 ),
-		float( inFormat.getDisplayWindow().size().y+1 ) / ( outFormat.getDisplayWindow().size().y+1 )
+		float( inFormat.getDisplayWindow().size().x ) / ( outFormat.getDisplayWindow().size().x ),
+		float( inFormat.getDisplayWindow().size().y ) / ( outFormat.getDisplayWindow().size().y )
 	);
 
 	// To transform the image correctly we need to first move the image to the pivot point.
@@ -330,9 +330,9 @@ Imath::Box2i Implementation::transformBox( const Imath::M33f &m, const Imath::Bo
 {
 	Imath::V3f pt[4];
 	pt[0] = Imath::V3f( box.min.x, box.min.y, 1. );
-	pt[1] = Imath::V3f( box.max.x+1, box.max.y+1, 1. );
-	pt[2] = Imath::V3f( box.max.x+1, box.min.y, 1. );
-	pt[3] = Imath::V3f( box.min.x, box.max.y+1, 1. );
+	pt[1] = Imath::V3f( box.max.x-1, box.max.y-1, 1. );
+	pt[2] = Imath::V3f( box.max.x-1, box.min.y, 1. );
+	pt[3] = Imath::V3f( box.min.x, box.max.y-1, 1. );
 
 	int maxX = std::numeric_limits<int>::min();
 	int maxY = std::numeric_limits<int>::min();
@@ -348,7 +348,7 @@ Imath::Box2i Implementation::transformBox( const Imath::M33f &m, const Imath::Bo
 		minY = std::min( int( floor( pt[i].y ) ), minY );
 	}
 
-	return Imath::Box2i( Imath::V2i( minX, minY ), Imath::V2i( maxX-1, maxY-1 ) );
+	return Imath::Box2i( Imath::V2i( minX, minY ), Imath::V2i( maxX, maxY ) + Imath::V2i( 1 ) );
 }
 
 } // namespace Detail
@@ -469,7 +469,7 @@ void ImageTransform::compute( ValuePlug *output, const Context *context ) const
 
 		Imath::Box2i newDisplayWindow(
 			Imath::V2i( IECore::fastFloatFloor( f.getDisplayWindow().min.x * scale.x ), IECore::fastFloatFloor( f.getDisplayWindow().min.y * scale.y ) ),
-			Imath::V2i( IECore::fastFloatCeil( f.getDisplayWindow().max.x * scale.x ), IECore::fastFloatCeil( f.getDisplayWindow().max.y * scale.y ) )
+			Imath::V2i( IECore::fastFloatCeil( ( f.getDisplayWindow().max.x - 1 ) * scale.x ) + 1, IECore::fastFloatCeil( ( f.getDisplayWindow().max.y - 1 ) * scale.y ) + 1 )
 		);
 
 		static_cast<FormatPlug *>( output )->setValue( GafferImage::Format( newDisplayWindow, 1.f ) );

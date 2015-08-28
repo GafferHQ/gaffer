@@ -155,7 +155,7 @@ void ImageSampler::compute( Gaffer::ValuePlug *output, const Gaffer::Context *co
 			V2f pixel = pixelPlug()->getValue();
 			Box2i sampleWindow;
 			sampleWindow.extendBy( V2i( pixel ) - V2i( 1 ) );
-			sampleWindow.extendBy( V2i( pixel ) + V2i( 1 ) );
+			sampleWindow.extendBy( V2i( pixel ) );
 			Sampler sampler( imagePlug(), channel, sampleWindow, Filter::create( filterPlug()->getValue() ) );
 			sample = sampler.sample( pixel.x, pixel.y );
 		}

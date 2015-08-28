@@ -97,9 +97,8 @@ Box2i box2fToBox2i( const Box2f &b )
 // coordinates to input coordinates.
 void ratioAndOffset( const Box2f &dstDataWindow, const Box2i &srcDataWindow, V2f &ratio, V2f &offset )
 {
-	/// \todo Adjust for #1438.
-	const V2f dstSize = dstDataWindow.size() + V2i( 1 );
-	const V2f srcSize = srcDataWindow.size() + V2i( 1 );
+	const V2f dstSize = dstDataWindow.size();
+	const V2f srcSize = srcDataWindow.size();
 
 	ratio = dstSize / srcSize;
 	offset = srcDataWindow.min - dstDataWindow.min / ratio;

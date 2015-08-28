@@ -98,20 +98,20 @@ float Sampler::sample( int x, int y )
 	// Return 0 for pixels outside of our sample window.
 	if ( m_boundingMode == Black )
 	{
-		if ( p.x < m_sampleWindow.min.x || p.x > m_sampleWindow.max.x )
+		if ( p.x < m_sampleWindow.min.x || p.x >= m_sampleWindow.max.x )
 		{
 			return 0.;
 		}
 
-		if ( p.y < m_sampleWindow.min.y || p.y > m_sampleWindow.max.y )
+		if ( p.y < m_sampleWindow.min.y || p.y >= m_sampleWindow.max.y )
 		{
 			return 0.;
 		}
 	}
 	else if ( m_boundingMode == Clamp )
 	{
-		p.x = std::max( std::min( p.x, m_sampleWindow.max.x ), m_sampleWindow.min.x );
-		p.y = std::max( std::min( p.y, m_sampleWindow.max.y ), m_sampleWindow.min.y );
+		p.x = std::max( std::min( p.x, m_sampleWindow.max.x - 1 ), m_sampleWindow.min.x );
+		p.y = std::max( std::min( p.y, m_sampleWindow.max.y - 1 ), m_sampleWindow.min.y );
 	}
 
 	const float *tileData;

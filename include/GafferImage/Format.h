@@ -62,7 +62,7 @@ class Format
 		typedef boost::signal<void (const std::string&)> UnaryFormatSignal;
 
 		inline Format();
-		inline explicit Format( const Imath::Box2i &displayWindow, double pixelAspect = 1. );
+		inline explicit Format( const Imath::Box2i &displayWindow, double pixelAspect = 1., bool fromEXRSpace = false );
 		inline Format( int width, int height, double pixelAspect = 1. );
 
 		inline const Imath::Box2i &getDisplayWindow() const;
@@ -79,26 +79,25 @@ class Format
 
 		/// @name Coordinate system conversions.
 		/// The image coordinate system used by Gaffer has the origin at the
-		/// bottom, with increasing Y coordinates going up. The Cortex and OpenEXR
-		/// coordinate systems have the origin at the top with increasing Y
-		/// coordinates going down. These methods assist in converting between
-		/// the two coordinate systems. They assume that the format has been
-		/// constructed using exactly the same display window as is being
-		/// used in the corresponding Y-down space - note that this means it
-		/// is not necessary to perform any conversion on the display window
-		/// itself.
+		/// bottom, with increasing Y coordinates going up. It also considers
+		/// image bounds to be exclusive at the max end.
+		/// The Cortex and OpenEXR coordinate systems have the origin at the
+		/// top with increasing Y coordinates going down. They use inclusive
+		/// image bounds.
+		/// These methods assist in converting between the two coordinate
+		/// systems.
 		////////////////////////////////////////////////////////////////////
 		//@{
-		/// Converts from the Y-down coordinate space to the Y-up space of
+		/// Converts from the EXR coordinate space to the internal space of
 		/// the Format.
-		inline int yDownToFormatSpace( int yDown ) const;
-		inline Imath::V2i yDownToFormatSpace( const Imath::V2i &yDown ) const;
-		inline Imath::Box2i yDownToFormatSpace( const Imath::Box2i &yDown ) const;
-		/// Converts from the Y-up space of the format to the Y-down
+		inline int fromEXRSpace( int exrSpace ) const;
+		inline Imath::V2i fromEXRSpace( const Imath::V2i &exrSpace ) const;
+		inline Imath::Box2i fromEXRSpace( const Imath::Box2i &exrSpace ) const;
+		/// Converts from the internal space of the format to the EXR
 		/// coordinate space.
-		inline int formatToYDownSpace( int yUp ) const;
-		inline Imath::V2i formatToYDownSpace( const Imath::V2i &yUp ) const;
-		inline Imath::Box2i formatToYDownSpace( const Imath::Box2i &yUp ) const;
+		inline int toEXRSpace( int internalSpace ) const;
+		inline Imath::V2i toEXRSpace( const Imath::V2i &internalSpace ) const;
+		inline Imath::Box2i toEXRSpace( const Imath::Box2i &internalSpace ) const;
 		//@}
 
 		/// @name Default Format methods

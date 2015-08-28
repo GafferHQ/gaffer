@@ -61,21 +61,28 @@ class ImageReaderTest( unittest.TestCase ) :
 		image = r.read()
 		exrDisplayWindow = image.displayWindow
 		exrDataWindow = image.dataWindow
+
 		n = GafferImage.ImageReader()
 		n["fileName"].setValue( self.negativeDataWindowFileName )
-		internalDisplayWindow = n["out"]["format"].getValue().getDisplayWindow()
-		internalDataWindow = n["out"]["dataWindow"].getValue()
-		expectedDataWindow = IECore.Box2i( IECore.V2i( exrDataWindow.min.x, exrDisplayWindow.max.y - exrDataWindow.max.y ), IECore.V2i( exrDataWindow.max.x, exrDisplayWindow.max.y - exrDataWindow.min.y ) )
-		self.assertEqual( internalDisplayWindow, exrDisplayWindow )
-		self.assertEqual( internalDataWindow, expectedDataWindow )
+		gafferFormat = n["out"]["format"].getValue()
+
+		self.assertEqual(
+			gafferFormat.toEXRSpace( gafferFormat.getDisplayWindow() ),
+			exrDisplayWindow,
+		)
+
+		self.assertEqual(
+			gafferFormat.toEXRSpace( n["out"]["dataWindow"].getValue() ),
+			exrDataWindow,
+		)
 
 	def test( self ) :
 
 		n = GafferImage.ImageReader()
 		n["fileName"].setValue( self.fileName )
 
-		self.assertEqual( n["out"]["dataWindow"].getValue(), IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 199, 149 ) ) )
-		self.assertEqual( n["out"]["format"].getValue().getDisplayWindow(), IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 199, 149 ) ) )
+		self.assertEqual( n["out"]["dataWindow"].getValue(), IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 200, 150 ) ) )
+		self.assertEqual( n["out"]["format"].getValue().getDisplayWindow(), IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 200, 150 ) ) )
 
 		expectedMetadata = IECore.CompoundObject( {
 			"oiio:ColorSpace" : IECore.StringData( 'Linear' ),
@@ -107,8 +114,8 @@ class ImageReaderTest( unittest.TestCase ) :
 		n["fileName"].setValue( self.negativeDisplayWindowFileName )
 		f = n["out"]["format"].getValue()
 		d = n["out"]["dataWindow"].getValue()
-		self.assertEqual( f.getDisplayWindow(), IECore.Box2i( IECore.V2i( -5, -5 ), IECore.V2i( 20, 20 ) ) )
-		self.assertEqual( d, IECore.Box2i( IECore.V2i( 2, -14 ), IECore.V2i( 35, 19 ) ) )
+		self.assertEqual( f.getDisplayWindow(), IECore.Box2i( IECore.V2i( -5, -5 ), IECore.V2i( 21, 21 ) ) )
+		self.assertEqual( d, IECore.Box2i( IECore.V2i( 2, -14 ), IECore.V2i( 36, 20 ) ) )
 
 		expectedImage = IECore.Reader.create( self.negativeDisplayWindowFileName ).read()
 		outImage = n["out"].image()
@@ -120,8 +127,8 @@ class ImageReaderTest( unittest.TestCase ) :
 
 		n = GafferImage.ImageReader()
 		n["fileName"].setValue( self.negativeDataWindowFileName )
-		self.assertEqual( n["out"]["dataWindow"].getValue(), IECore.Box2i( IECore.V2i( -25, -30 ), IECore.V2i( 174, 119 ) ) )
-		self.assertEqual( n["out"]["format"].getValue().getDisplayWindow(), IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 199, 149 ) ) )
+		self.assertEqual( n["out"]["dataWindow"].getValue(), IECore.Box2i( IECore.V2i( -25, -30 ), IECore.V2i( 175, 120 ) ) )
+		self.assertEqual( n["out"]["format"].getValue().getDisplayWindow(), IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 200, 150 ) ) )
 
 		channelNames = n["out"]["channelNames"].getValue()
 		self.failUnless( isinstance( channelNames, IECore.StringVectorData ) )

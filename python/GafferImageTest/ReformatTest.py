@@ -92,7 +92,7 @@ class ReformatTest( unittest.TestCase ) :
 		reformat["format"].setValue( GafferImage.Format( 150, 125, 1. ) )
 		reformat["in"].setInput( read["out"] )
 		reformatWindow = reformat["out"]["dataWindow"].getValue()
-		self.assertEqual( reformatWindow, IECore.Box2i( IECore.V2i( 45, 37 ), IECore.V2i( 119, 99 )  ) )
+		self.assertEqual( reformatWindow, IECore.Box2i( IECore.V2i( 45, 37 ), IECore.V2i( 120, 100 )  ) )
 
 	def testNegativeDisplayWindowReformat( self ) :
 
@@ -101,7 +101,7 @@ class ReformatTest( unittest.TestCase ) :
 
 		# Resize the image and check the size of the output data window.
 		reformat = GafferImage.Reformat()
-		f = GafferImage.Format( IECore.Box2i( IECore.V2i( -22, -13 ), IECore.V2i( 33, 58 ) ), 1. )
+		f = GafferImage.Format( IECore.Box2i( IECore.V2i( -22, -13 ), IECore.V2i( 34, 59 ) ), 1. )
 		reformat["format"].setValue( f )
 		reformat["in"].setInput( read["out"] )
 		reformat["filter"].setValue( "Bilinear" )
@@ -110,7 +110,7 @@ class ReformatTest( unittest.TestCase ) :
 		reformatFormat = reformat["out"]["format"].getValue()
 
 		# Check the data and display windows.
-		self.assertEqual( reformatDataWindow, IECore.Box2i( IECore.V2i( -66, -97 ), IECore.V2i( 365, 319 ) ) )
+		self.assertEqual( reformatDataWindow, IECore.Box2i( IECore.V2i( -66, -97 ), IECore.V2i( 366, 320 ) ) )
 		self.assertEqual( reformatFormat, f )
 
 		# Check the image data.

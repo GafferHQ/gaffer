@@ -52,7 +52,7 @@ Reformat::Reformat( const std::string &name )
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new FormatPlug( "format" ) );
 	addChild( new FilterPlug( "filter" ) );
-	
+
 	// We don't ever want to change these, so we make pass-through connections.
 	outPlug()->metadataPlug()->setInput( inPlug()->metadataPlug() );
 	outPlug()->channelNamesPlug()->setInput( inPlug()->channelNamesPlug() );
@@ -116,7 +116,7 @@ void Reformat::hashFormat( const GafferImage::ImagePlug *parent, const Gaffer::C
 		h = inPlug()->formatPlug()->hash();
 		return;
 	}
-	
+
 	ImageProcessor::hashFormat( parent, context, h );
 	formatPlug()->hash( h );
 }
@@ -136,7 +136,7 @@ void Reformat::hashDataWindow( const GafferImage::ImagePlug *parent, const Gaffe
 		h = inPlug()->dataWindowPlug()->hash();
 		return;
 	}
-	
+
 	ImageProcessor::hashDataWindow( parent, context, h );
 
 	h.append( format.getDisplayWindow() );
@@ -156,7 +156,7 @@ Imath::Box2i Reformat::computeDataWindow( const Gaffer::Context *context, const 
 		// early out because this is a no-op
 		return inPlug()->dataWindowPlug()->getValue();
 	}
-	
+
 	// Work out the scale factor of the output image and scale the input data window.
 	Imath::V2d s = scale( inFormat, format );
 	Imath::Box2i inDataWindow( inPlug()->dataWindowPlug()->getValue() );
@@ -170,8 +170,8 @@ Imath::Box2i Reformat::computeDataWindow( const Gaffer::Context *context, const 
 			IECore::fastFloatFloor( double( inDataWindow.min.y - inFormatOffset.y ) * s.y + outFormatOffset.y )
 		),
 		Imath::V2i(
-			IECore::fastFloatCeil( double( inDataWindow.max.x - inFormatOffset.x + 1. ) * s.x + outFormatOffset.x - 1. ),
-			IECore::fastFloatCeil( double( inDataWindow.max.y - inFormatOffset.y + 1. ) * s.y + outFormatOffset.y - 1. )
+			IECore::fastFloatCeil( double( inDataWindow.max.x - inFormatOffset.x ) * s.x + outFormatOffset.x ),
+			IECore::fastFloatCeil( double( inDataWindow.max.y - inFormatOffset.y ) * s.y + outFormatOffset.y )
 		)
 	);
 
@@ -180,8 +180,8 @@ Imath::Box2i Reformat::computeDataWindow( const Gaffer::Context *context, const 
 
 Imath::V2d Reformat::scale( const Format &inFormat, const Format &outFormat ) const
 {
-	Imath::V2d inWH = Imath::V2d( inFormat.getDisplayWindow().size() ) + Imath::V2d(1.);
-	Imath::V2d outWH = Imath::V2d( outFormat.getDisplayWindow().size() ) + Imath::V2d(1.);
+	Imath::V2d inWH = Imath::V2d( inFormat.getDisplayWindow().size() );
+	Imath::V2d outWH = Imath::V2d( outFormat.getDisplayWindow().size() );
 	Imath::V2d scale( double( outWH.x ) / ( inWH.x ), double( outWH.y ) / inWH.y );
 	return scale;
 }
@@ -202,7 +202,7 @@ void Reformat::hashChannelData( const GafferImage::ImagePlug *parent, const Gaff
 		h = inPlug()->channelDataPlug()->hash();
 		return;
 	}
-	
+
 	ImageProcessor::hashChannelData( parent, context, h );
 
 	inPlug()->channelDataPlug()->hash( h );
@@ -225,7 +225,7 @@ IECore::ConstFloatVectorDataPtr Reformat::computeChannelData( const std::string 
 		// early out because this is a no-op
 		return inPlug()->channelDataPlug()->getValue();
 	}
-	
+
 	// Allocate the new tile
 	FloatVectorDataPtr outDataPtr = new FloatVectorData;
 	std::vector<float> &out = outDataPtr->writable();
@@ -236,7 +236,7 @@ IECore::ConstFloatVectorDataPtr Reformat::computeChannelData( const std::string 
 	Imath::V2d inFormatOffset( inFormat.getDisplayWindow().min );
 	Imath::V2d outFormatOffset( format.getDisplayWindow().min );
 
-	Imath::Box2i outTile( tileOrigin, Imath::V2i( tileOrigin.x + ImagePlug::tileSize() - 1, tileOrigin.y + ImagePlug::tileSize() - 1 ) );
+	Imath::Box2i outTile( tileOrigin, Imath::V2i( tileOrigin.x + ImagePlug::tileSize(), tileOrigin.y + ImagePlug::tileSize() ) );
 
 	Imath::Box2f inTile(
 		Imath::V2f(
@@ -244,8 +244,8 @@ IECore::ConstFloatVectorDataPtr Reformat::computeChannelData( const std::string 
 			double( outTile.min.y - outFormatOffset.y ) / scaleFactor.y + inFormatOffset.y
 		),
 		Imath::V2f(
-			double( outTile.max.x - outFormatOffset.x + 1. ) / scaleFactor.x + inFormatOffset.x - 1.,
-			double( outTile.max.y - outFormatOffset.y + 1. ) / scaleFactor.y + inFormatOffset.y - 1.
+			double( outTile.max.x - outFormatOffset.x ) / scaleFactor.x + inFormatOffset.x,
+			double( outTile.max.y - outFormatOffset.y ) / scaleFactor.y + inFormatOffset.y
 		)
 	);
 
@@ -262,9 +262,9 @@ IECore::ConstFloatVectorDataPtr Reformat::computeChannelData( const std::string 
 		);
 
 		Sampler sampler( inPlug(), channelName, sampleBox, f, Sampler::Clamp );
-		for ( int y = outTile.min.y, ty = 0; y <= outTile.max.y; ++y, ++ty )
+		for ( int y = outTile.min.y, ty = 0; y < outTile.max.y; ++y, ++ty )
 		{
-			for ( int x = outTile.min.x, tx = 0; x <= outTile.max.x; ++x, ++tx )
+			for ( int x = outTile.min.x, tx = 0; x < outTile.max.x; ++x, ++tx )
 			{
 				float value = sampler.sample( float( ( x + .5f - outFormatOffset.x ) / scaleFactor.x + inFormatOffset.x ), float( ( y + .5f - outFormatOffset.y ) / scaleFactor.y + inFormatOffset.y ) );
 				out[ tx + ImagePlug::tileSize() * ty ] = value;
@@ -290,8 +290,8 @@ IECore::ConstFloatVectorDataPtr Reformat::computeChannelData( const std::string 
 		Imath::V2i( sampleMaxX + fWidth, sampleMaxY + fHeight )
 	);
 
-	int sampleBoxWidth = sampleBox.size().x + 1;
-	int sampleBoxHeight = sampleBox.size().y + 1;
+	int sampleBoxWidth = sampleBox.size().x;
+	int sampleBoxHeight = sampleBox.size().y;
 
 	// Create a temporary buffer that we can write the result of the first pass to.
 	// We extend the buffer vertically as we will need additional information in the

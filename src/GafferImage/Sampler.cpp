@@ -75,21 +75,22 @@ void Sampler::setSampleWindow( const Imath::Box2i &window )
 	m_sampleWindow = boxIntersection( dataWindow, m_sampleWindow );
 
 	// The area that we actually have in the cache.
+	// Exclusive, so max value points at the next tile over
 	m_cacheWindow = Imath::Box2i(
 		Imath::V2i( ImagePlug::tileOrigin( m_sampleWindow.min ) ),
-		Imath::V2i( ImagePlug::tileOrigin( m_sampleWindow.max ) )
+		Imath::V2i( ImagePlug::tileOrigin( m_sampleWindow.max - Imath::V2i( 1 ) ) + Imath::V2i( ImagePlug::tileSize() ) )
 	);
 
-	m_cacheWidth = ( m_cacheWindow.max.x - m_cacheWindow.min.x ) / ImagePlug::tileSize() + 1;
-	int cacheHeight = ( m_cacheWindow.max.y - m_cacheWindow.min.y ) / ImagePlug::tileSize() + 1;
+	m_cacheWidth = int( ceil( float( m_cacheWindow.size().x ) / ImagePlug::tileSize() ) );
+	int cacheHeight = int( ceil( float( m_cacheWindow.size().y ) / ImagePlug::tileSize() ) );
 	m_dataCache.resize( m_cacheWidth * cacheHeight, NULL );
 }
 
 void Sampler::hash( IECore::MurmurHash &h ) const
 {
-	for ( int x = m_cacheWindow.min.x; x <= m_cacheWindow.max.x; x += GafferImage::ImagePlug::tileSize() )
+	for ( int x = m_cacheWindow.min.x; x < m_cacheWindow.max.x; x += GafferImage::ImagePlug::tileSize() )
 	{
-		for ( int y = m_cacheWindow.min.y; y <= m_cacheWindow.max.y; y += GafferImage::ImagePlug::tileSize() )
+		for ( int y = m_cacheWindow.min.y; y < m_cacheWindow.max.y; y += GafferImage::ImagePlug::tileSize() )
 		{
 			h.append( m_plug->channelDataHash( m_channelName, Imath::V2i( x, y ) ) );
 		}

@@ -49,11 +49,7 @@ def postCreateCrop( node, menu ) :
 	else:
 		cropFormat = node.scriptNode()['defaultFormat'].getValue()
 
-	cropArea = cropFormat.getDisplayWindow()
-	cropArea.max += IECore.V2i( 1 )
-
-	node['area'].setValue( cropArea )
-
+	node['area'].setValue( cropFormat.getDisplayWindow() )
 
 Gaffer.Metadata.registerNode(
 

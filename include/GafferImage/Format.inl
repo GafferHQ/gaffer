@@ -45,10 +45,14 @@ inline Format::Format()
 {
 }
 
-inline Format::Format( const Imath::Box2i &displayWindow, double pixelAspect )
+inline Format::Format( const Imath::Box2i &displayWindow, double pixelAspect, bool fromEXRSpace )
 	:	m_displayWindow( displayWindow ),
 		m_pixelAspect( pixelAspect )
 {
+	if( fromEXRSpace )
+	{
+		m_displayWindow.max += Imath::V2i( 1 );
+	}
 }
 
 inline Format::Format( int width, int height, double pixelAspect )
@@ -56,7 +60,7 @@ inline Format::Format( int width, int height, double pixelAspect )
 {
 	width = std::max( 0, width );
 	height = std::max( 0, height );
-	m_displayWindow = Imath::Box2i( Imath::V2i( 0, 0 ), Imath::V2i( width-1, height-1 ) );
+	m_displayWindow = Imath::Box2i( Imath::V2i( 0, 0 ), Imath::V2i( width, height ) );
 }
 
 inline const Imath::Box2i &Format::getDisplayWindow() const
@@ -75,7 +79,7 @@ inline int Format::width() const
 	{
 		return 0;
 	}
-	return m_displayWindow.max.x - m_displayWindow.min.x + 1;
+	return m_displayWindow.max.x - m_displayWindow.min.x;
 }
 
 inline int Format::height() const
@@ -84,7 +88,7 @@ inline int Format::height() const
 	{
 		return 0;
 	}
-	return m_displayWindow.max.y - m_displayWindow.min.y + 1;
+	return m_displayWindow.max.y - m_displayWindow.min.y;
 }
 
 inline double Format::getPixelAspect() const
@@ -107,42 +111,42 @@ inline bool Format::operator != ( const Format& rhs ) const
 	return m_displayWindow != rhs.m_displayWindow || m_pixelAspect != rhs.m_pixelAspect;
 }
 
-inline int Format::yDownToFormatSpace( int yDown ) const
+inline int Format::fromEXRSpace( int exrSpace ) const
 {
-	const int distanceFromTop = yDown - m_displayWindow.min.y;
-	return m_displayWindow.max.y - distanceFromTop;
+	const int distanceFromTop = exrSpace - m_displayWindow.min.y;
+	return m_displayWindow.max.y - 1 - distanceFromTop;
 }
 
-inline Imath::V2i Format::yDownToFormatSpace( const Imath::V2i &yDown ) const
+inline Imath::V2i Format::fromEXRSpace( const Imath::V2i &exrSpace ) const
 {
-	return Imath::V2i( yDown.x, yDownToFormatSpace( yDown.y ) );
+	return Imath::V2i( exrSpace.x, fromEXRSpace( exrSpace.y ) );
 }
 
-inline Imath::Box2i Format::yDownToFormatSpace( const Imath::Box2i &yDown ) const
+inline Imath::Box2i Format::fromEXRSpace( const Imath::Box2i &exrSpace ) const
 {
-	Imath::Box2i result;
-	result.extendBy( yDownToFormatSpace( yDown.min ) );
-	result.extendBy( yDownToFormatSpace( yDown.max ) );
-	return result;
+	return Imath::Box2i(
+		Imath::V2i( exrSpace.min.x, fromEXRSpace( exrSpace.max.y ) ),
+		Imath::V2i( exrSpace.max.x + 1, fromEXRSpace( exrSpace.min.y ) + 1 )
+	);
 }
 
-inline int Format::formatToYDownSpace( int yUp ) const
+inline int Format::toEXRSpace( int internalSpace ) const
 {
-	const int distanceFromTop = m_displayWindow.max.y - yUp;
+	const int distanceFromTop = m_displayWindow.max.y - 1 - internalSpace;
 	return m_displayWindow.min.y + distanceFromTop;
 }
 
-inline Imath::V2i Format::formatToYDownSpace( const Imath::V2i &yUp ) const
+inline Imath::V2i Format::toEXRSpace( const Imath::V2i &internalSpace ) const
 {
-	return Imath::V2i( yUp.x, formatToYDownSpace( yUp.y ) );
+	return Imath::V2i( internalSpace.x, toEXRSpace( internalSpace.y ) );
 }
 
-inline Imath::Box2i Format::formatToYDownSpace( const Imath::Box2i &yUp ) const
+inline Imath::Box2i Format::toEXRSpace( const Imath::Box2i &internalSpace ) const
 {
-	Imath::Box2i result;
-	result.extendBy( formatToYDownSpace( yUp.min ) );
-	result.extendBy( formatToYDownSpace( yUp.max ) );
-	return result;
+	return Imath::Box2i(
+		Imath::V2i( internalSpace.min.x, toEXRSpace( internalSpace.max.y - 1 ) ),
+		Imath::V2i( internalSpace.max.x - 1, toEXRSpace( internalSpace.min.y ) )
+	);
 }
 
 } // namespace GafferImage
