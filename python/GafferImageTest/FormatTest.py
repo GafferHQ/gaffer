@@ -122,6 +122,26 @@ class FormatTest( GafferTest.TestCase ) :
 		f = GafferImage.Format( IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 99 ) ), 1.0, True )
 		self.assertEqual( f.width(), 100 )
 		self.assertEqual( f.height(), 100 )
+		self.assertEqual(
+			f.toEXRSpace( f.getDisplayWindow() ),
+			IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 99 ) ),
+		)
+
+		f = GafferImage.Format( IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 99 ) ), 1.0, fromEXRSpace = True )
+		self.assertEqual( f.width(), 100 )
+		self.assertEqual( f.height(), 100 )
+		self.assertEqual(
+			f.toEXRSpace( f.getDisplayWindow() ),
+			IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 99 ) ),
+		)
+
+		f = GafferImage.Format( IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 100 ) ), 1.0, fromEXRSpace = False )
+		self.assertEqual( f.width(), 100 )
+		self.assertEqual( f.height(), 100 )
+		self.assertEqual(
+			f.getDisplayWindow(),
+			IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 100 ) ),
+		)
 
 	def testDefaultFormatContext( self ) :
 
