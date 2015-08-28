@@ -1,0 +1,152 @@
+//////////////////////////////////////////////////////////////////////////
+//
+//  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
+//
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are
+//  met:
+//
+//      * Redistributions of source code must retain the above
+//        copyright notice, this list of conditions and the following
+//        disclaimer.
+//
+//      * Redistributions in binary form must reproduce the above
+//        copyright notice, this list of conditions and the following
+//        disclaimer in the documentation and/or other materials provided with
+//        the distribution.
+//
+//      * Neither the name of John Haddon nor the names of
+//        any other contributors to this software may be used to endorse or
+//        promote products derived from this software without specific prior
+//        written permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+//  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+//  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+//  PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+//  CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+//  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+//  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+//  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+//  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+//  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+//  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+//////////////////////////////////////////////////////////////////////////
+
+#include "Gaffer/StringPlug.h"
+
+#include "GafferImage/LUT.h"
+
+using namespace std;
+using namespace IECore;
+using namespace Gaffer;
+using namespace GafferImage;
+
+IE_CORE_DEFINERUNTIMETYPED( LUT );
+
+size_t LUT::g_firstPlugIndex = 0;
+
+LUT::LUT( const std::string &name )
+	:	OpenColorIOTransform( name )
+{
+	storeIndexOfNextChild( g_firstPlugIndex );
+	addChild( new StringPlug( "fileName" ) );
+
+	addChild( new IntPlug(
+		"interpolation", Plug::In,
+		OpenColorIO::INTERP_BEST,
+		OpenColorIO::INTERP_NEAREST,
+		OpenColorIO::INTERP_BEST
+	) );
+
+	addChild( new IntPlug(
+		"direction", Plug::In,
+		OpenColorIO::TRANSFORM_DIR_FORWARD,
+		OpenColorIO::TRANSFORM_DIR_FORWARD,
+		OpenColorIO::TRANSFORM_DIR_INVERSE
+	) );
+
+}
+
+LUT::~LUT()
+{
+}
+
+Gaffer::StringPlug *LUT::fileNamePlug()
+{
+	return getChild<StringPlug>( g_firstPlugIndex );
+}
+
+const Gaffer::StringPlug *LUT::fileNamePlug() const
+{
+	return getChild<StringPlug>( g_firstPlugIndex );
+}
+
+Gaffer::IntPlug *LUT::interpolationPlug()
+{
+	return getChild<IntPlug>( g_firstPlugIndex + 1 );
+}
+
+const Gaffer::IntPlug *LUT::interpolationPlug() const
+{
+	return getChild<IntPlug>( g_firstPlugIndex + 1 );
+}
+
+Gaffer::IntPlug *LUT::directionPlug()
+{
+	return getChild<IntPlug>( g_firstPlugIndex + 2 );
+}
+
+const Gaffer::IntPlug *LUT::directionPlug() const
+{
+	return getChild<IntPlug>( g_firstPlugIndex + 2 );
+}
+
+size_t LUT::supportedExtensions( std::vector<std::string> &extensions )
+{
+	extensions.reserve( OpenColorIO::FileTransform::getNumFormats() );
+	for( int i = 0; i < OpenColorIO::FileTransform::getNumFormats(); ++i )
+	{
+		extensions.push_back( OpenColorIO::FileTransform::getFormatExtensionByIndex( i ) );
+	}
+
+	return extensions.size();
+}
+
+bool LUT::affectsTransform( const Gaffer::Plug *input ) const
+{
+	return ( input == fileNamePlug() || input == directionPlug() || input == interpolationPlug() );
+}
+
+void LUT::hashTransform( const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	if( fileNamePlug()->getValue().empty() )
+	{
+		h = MurmurHash();
+		return;
+	}
+
+	fileNamePlug()->hash( h );
+	directionPlug()->hash( h );
+	interpolationPlug()->hash( h );
+}
+
+OpenColorIO::ConstTransformRcPtr LUT::transform() const
+{
+	std::string fileName = fileNamePlug()->getValue();
+
+	// no need to run the processor if we don't
+	// have a valid LUT file.
+	if( fileName.empty() )
+	{
+		return OpenColorIO::FileTransformRcPtr();
+	}
+
+	OpenColorIO::FileTransformRcPtr result = OpenColorIO::FileTransform::Create();
+	result->setSrc( fileName.c_str() );
+	result->setDirection( (OpenColorIO::TransformDirection)directionPlug()->getValue() );
+	result->setInterpolation( (OpenColorIO::Interpolation)interpolationPlug()->getValue() );
+
+	return result;
+}

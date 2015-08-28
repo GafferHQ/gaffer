@@ -72,6 +72,7 @@ from UnpremultiplyTest import UnpremultiplyTest
 from CropTest import CropTest
 from ResampleTest import ResampleTest
 from ResizeTest import ResizeTest
+from LUTTest import LUTTest
 
 if __name__ == "__main__":
 	import unittest

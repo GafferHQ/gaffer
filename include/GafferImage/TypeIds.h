@@ -97,6 +97,7 @@ enum TypeId
 	ResampleTypeId = 110801,
 	ResizeTypeId = 110802,
 	OpenColorIOTransformTypeId = 110803,
+	LUTTypeId = 110804,
 
 	LastTypeId = 110849
 };
