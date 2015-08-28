@@ -333,15 +333,15 @@ IECore::ImagePrimitivePtr ImagePlug::image() const
 {
 	Format format = formatPlug()->getValue();
 	Box2i dataWindow = dataWindowPlug()->getValue();
-	Box2i newDataWindow( Imath::V2i(0) );
+	Box2i newDataWindow( Imath::V2i( 0 ) );
 
-	if( dataWindow.isEmpty() )
+	if( dataWindow.hasVolume() )
 	{
-		dataWindow = Box2i( Imath::V2i(0) );
+		newDataWindow = format.toEXRSpace( dataWindow );
 	}
 	else
 	{
-		newDataWindow = format.toEXRSpace( dataWindow );
+		dataWindow = newDataWindow;
 	}
 
 	// use the default format if we don't have an explicit one.
