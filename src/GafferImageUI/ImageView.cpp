@@ -614,7 +614,7 @@ class ImageViewGadget : public GafferUI::Gadget
 
 		virtual void doRender( const Style *style ) const
 		{
-			if( !m_texture && m_dataWindow.hasVolume() )
+			if( !m_texture )
 			{
 				// convert image to texture
 				ToGLTextureConverterPtr converter = new ToGLTextureConverter( boost::static_pointer_cast<const ImagePrimitive>( m_image ), true );
@@ -645,7 +645,6 @@ class ImageViewGadget : public GafferUI::Gadget
 			}
 
 			// Draw the image data.
-			if ( m_texture )
 			{
 				// Get the bounds of the data window in Gadget space.
 				Box2f b( V2f( m_dataBound.min.x, m_dataBound.min.y ), V2f( m_dataBound.max.x, m_dataBound.max.y ) );
@@ -715,7 +714,7 @@ class ImageViewGadget : public GafferUI::Gadget
 			glLoadIdentity();
 
 			// Draw the data window if it is different to the display window.
-			if ( m_dataWindow != m_displayWindow && m_dataWindow.hasVolume() )
+			if ( m_dataWindow != m_displayWindow && m_dataWindow.size() != Imath::V2i( 1 ) )
 			{
 				color = Color4f( .2f, .2f, .2f, 1.f );
 				glColor( color );
