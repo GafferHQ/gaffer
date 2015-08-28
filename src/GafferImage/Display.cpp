@@ -88,15 +88,10 @@ class GafferDisplayDriver : public IECore::DisplayDriver
 
 		GafferDisplayDriver( const Imath::Box2i &displayWindow, const Imath::Box2i &dataWindow,
 			const vector<string> &channelNames, ConstCompoundDataPtr parameters )
-			:	DisplayDriver( displayWindow, dataWindow, channelNames, parameters )
+			:	DisplayDriver( displayWindow, dataWindow, channelNames, parameters ),
+				m_gafferFormat( displayWindow, 1, /* fromEXRSpace = */ true ),
+				m_gafferDataWindow( m_gafferFormat.fromEXRSpace( dataWindow ) )
 		{
-			Box2i gafferDisplayWindow = displayWindow;
-			gafferDisplayWindow.max += Imath::V2i( 1 );
-
-			m_gafferFormat = GafferImage::Format(gafferDisplayWindow, 1);
-
-			m_gafferDataWindow = m_gafferFormat.fromEXRSpace( dataWindow );
-
 			const V2i dataWindowMinTileIndex = ImagePlug::tileOrigin( m_gafferDataWindow.min ) / ImagePlug::tileSize();
 			const V2i dataWindowMaxTileIndex = ImagePlug::tileOrigin( m_gafferDataWindow.max - Imath::V2i( 1 ) ) / ImagePlug::tileSize();
 
