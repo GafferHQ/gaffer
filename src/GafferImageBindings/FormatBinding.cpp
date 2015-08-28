@@ -125,9 +125,12 @@ void bindFormat()
 	static void (*setDefaultFormatPtr1)( ScriptNode *scriptNode, const Format & ) (&Format::setDefaultFormat);
 	static void (*setDefaultFormatPtr2)( ScriptNode *scriptNode, const std::string & ) (&Format::setDefaultFormat);
 
-	class_<Format>( "Format", init<int, int, double>() )
+	class_<Format>( "Format", init<int, int >() )
 
+		.def( init< int, int, double >() )
+		.def( init< const Imath::Box2i & >() )
 		.def( init< const Imath::Box2i &, double >() )
+		.def( init< const Imath::Box2i &, double, bool >() )
 		.def( init<>() )
 
 		.def( "width", &Format::width )
