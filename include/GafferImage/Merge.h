@@ -47,6 +47,15 @@ namespace GafferImage
 /// A node for Merging two or more images. Merge will use the displayWindow and metadata from the first input;
 /// expand the dataWindow to the union of all dataWindows from the connected inputs; create a union of
 /// channelNames from all the connected inputs, and will merge the channelData according to the operation mode.
+/// \todo Optimise. Things to consider :
+///
+/// - For some operations (multiply for instance) our output data window could be the intersection
+///   of all input windows, rather than the union.
+/// - For some operations (add for instance) we could entirely skip invalid input tiles, and tiles
+///   where channelData == ImagePlug::blackTile().
+/// - For some operations we do not need to track the intermediate alpha values at all.
+/// - We could improve our masking of invalid pixels with special cases for wholly valid tiles,
+///   wholly invalid tiles, and by chunking the work on the valid sections.
 class Merge : public ImageProcessor
 {
 
