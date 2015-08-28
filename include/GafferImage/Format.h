@@ -62,7 +62,7 @@ class Format
 		typedef boost::signal<void (const std::string&)> UnaryFormatSignal;
 
 		inline Format();
-		inline explicit Format( const Imath::Box2i &displayWindow, double pixelAspect = 1. );
+		inline explicit Format( const Imath::Box2i &displayWindow, double pixelAspect = 1., bool fromEXRSpace = false );
 		inline Format( int width, int height, double pixelAspect = 1. );
 
 		inline const Imath::Box2i &getDisplayWindow() const;

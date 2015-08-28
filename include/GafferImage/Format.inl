@@ -45,10 +45,14 @@ inline Format::Format()
 {
 }
 
-inline Format::Format( const Imath::Box2i &displayWindow, double pixelAspect )
+inline Format::Format( const Imath::Box2i &displayWindow, double pixelAspect, bool fromEXRSpace )
 	:	m_displayWindow( displayWindow ),
 		m_pixelAspect( pixelAspect )
 {
+	if( fromEXRSpace )
+	{
+		m_displayWindow.max += Imath::V2i( 1 );
+	}
 }
 
 inline Format::Format( int width, int height, double pixelAspect )
