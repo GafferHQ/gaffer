@@ -99,6 +99,14 @@ class FormatTest( GafferTest.TestCase ) :
 		self.assertEqual( f.height(), 150 )
 		self.assertEqual( f.getPixelAspect(), 1.3 )
 
+	def testDefaultPixelAspect( self ) :
+
+		f = GafferImage.Format( 100, 100 )
+		self.assertEqual( f.getPixelAspect(), 1. )
+
+		f = GafferImage.Format( IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 100, 100 ) ) )
+		self.assertEqual( f.getPixelAspect(), 1. )
+
 	def testWH( self ) :
 
 		f = GafferImage.Format( 101, 102, 1. )
@@ -108,6 +116,12 @@ class FormatTest( GafferTest.TestCase ) :
 		f = GafferImage.Format( 0, 0, 1. )
 		self.assertEqual( f.width(), 0 )
 		self.assertEqual( f.height(), 0 )
+
+	def testEXRSpaceFormat( self ) :
+
+		f = GafferImage.Format( IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 99 ) ), 1.0, True )
+		self.assertEqual( f.width(), 100 )
+		self.assertEqual( f.height(), 100 )
 
 	def testDefaultFormatContext( self ) :
 
