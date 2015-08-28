@@ -260,7 +260,89 @@ class MergeTest( GafferTest.TestCase ) :
 		self.assertTrue( "in1" not in s["m"] )
 		self.assertTrue( "in2" not in s["m"] )
 
-		self.assertEqual( s["m"]["out"].channelData( "R", IECore.V2i( 0 ) )[0], 0.75 )
+		with s.context() :
+			self.assertEqual( s["m"]["out"].channelData( "R", IECore.V2i( 0 ) )[0], 0.75 )
+
+	def testSmallDataWindowOverLarge( self ) :
+
+		b = GafferImage.Constant()
+		b["format"].setValue( GafferImage.Format( 500, 500, 1.0 ) )
+		b["color"].setValue( IECore.Color4f( 1, 0, 0, 1 ) )
+
+		a = GafferImage.Constant()
+		a["format"].setValue( GafferImage.Format( 500, 500, 1.0 ) )
+		a["color"].setValue( IECore.Color4f( 0, 1, 0, 1 ) )
+
+		aCrop = GafferImage.Crop()
+		aCrop["in"].setInput( a["out"] )
+		aCrop["areaSource"].setValue( aCrop.AreaSource.Custom )
+		aCrop["area"].setValue( IECore.Box2i( IECore.V2i( 50 ), IECore.V2i( 162 ) ) )
+
+		m = GafferImage.Merge()
+		m["operation"].setValue( m.Operation.Over )
+		m["in"][0].setInput( b["out"] )
+		m["in"][1].setInput( aCrop["out"] )
+
+		redSampler = GafferImage.Sampler( m["out"], "R", m["out"]["format"].getValue().getDisplayWindow() )
+		greenSampler = GafferImage.Sampler( m["out"], "G", m["out"]["format"].getValue().getDisplayWindow() )
+		blueSampler = GafferImage.Sampler( m["out"], "B", m["out"]["format"].getValue().getDisplayWindow() )
+
+		def sample( x, y ) :
+
+			return IECore.Color3f(
+				redSampler.sample( x, y ),
+				greenSampler.sample( x, y ),
+				blueSampler.sample( x, y ),
+			)
+
+		# We should only have overed green in areas which are inside
+		# the data window of aCrop. Everywhere else we should have
+		# red still.
+
+		self.assertEqual( sample( 49, 49 ), IECore.Color3f( 1, 0, 0 ) )
+		self.assertEqual( sample( 50, 50 ), IECore.Color3f( 0, 1, 0 ) )
+		self.assertEqual( sample( 161, 161 ), IECore.Color3f( 0, 1, 0 ) )
+		self.assertEqual( sample( 162, 162 ), IECore.Color3f( 1, 0, 0 ) )
+
+	def testLargeDataWindowAddedToSmall( self ) :
+
+		b = GafferImage.Constant()
+		b["format"].setValue( GafferImage.Format( 500, 500, 1.0 ) )
+		b["color"].setValue( IECore.Color4f( 1, 0, 0, 1 ) )
+
+		a = GafferImage.Constant()
+		a["format"].setValue( GafferImage.Format( 500, 500, 1.0 ) )
+		a["color"].setValue( IECore.Color4f( 0, 1, 0, 1 ) )
+
+		bCrop = GafferImage.Crop()
+		bCrop["in"].setInput( b["out"] )
+		bCrop["areaSource"].setValue( bCrop.AreaSource.Custom )
+		bCrop["area"].setValue( IECore.Box2i( IECore.V2i( 50 ), IECore.V2i( 162 ) ) )
+
+		m = GafferImage.Merge()
+		m["operation"].setValue( m.Operation.Add )
+		m["in"][0].setInput( bCrop["out"] )
+		m["in"][1].setInput( a["out"] )
+
+		redSampler = GafferImage.Sampler( m["out"], "R", m["out"]["format"].getValue().getDisplayWindow() )
+		greenSampler = GafferImage.Sampler( m["out"], "G", m["out"]["format"].getValue().getDisplayWindow() )
+		blueSampler = GafferImage.Sampler( m["out"], "B", m["out"]["format"].getValue().getDisplayWindow() )
+
+		def sample( x, y ) :
+
+			return IECore.Color3f(
+				redSampler.sample( x, y ),
+				greenSampler.sample( x, y ),
+				blueSampler.sample( x, y ),
+			)
+
+		# We should only have yellow in areas where the background exists,
+		# and should have just green everywhere else.
+
+		self.assertEqual( sample( 49, 49 ), IECore.Color3f( 0, 1, 0 ) )
+		self.assertEqual( sample( 50, 50 ), IECore.Color3f( 1, 1, 0 ) )
+		self.assertEqual( sample( 161, 161 ), IECore.Color3f( 1, 1, 0 ) )
+		self.assertEqual( sample( 162, 162 ), IECore.Color3f( 0, 1, 0 ) )
 
 if __name__ == "__main__":
 	unittest.main()
