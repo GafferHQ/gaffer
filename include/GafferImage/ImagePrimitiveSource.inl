@@ -130,11 +130,7 @@ GafferImage::Format ImagePrimitiveSource<BaseType>::computeFormat( const Gaffer:
 	IECore::ConstImagePrimitivePtr image = IECore::runTimeCast<const IECore::ImagePrimitive>( inputImagePrimitivePlug()->getValue() );
 	if( image )
 	{
-		/// \todo Stop ignoring the origin - just return the display window as-is,
-		/// then use the space conversion methods in Format to implement computeDataWindow()
-		/// and computeChannelData() appropriately.
-		result = image->getDisplayWindow();
-		return GafferImage::Format( result.size().x + 1, result.size().y + 1 );
+		return GafferImage::Format( image->getDisplayWindow(), 1.0f, /* fromEXRSpace = */ true );
 	}
 	return GafferImage::Format();
 }
@@ -149,19 +145,13 @@ void ImagePrimitiveSource<BaseType>::hashDataWindow( const GafferImage::ImagePlu
 template<typename BaseType>
 Imath::Box2i ImagePrimitiveSource<BaseType>::computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
-	Imath::Box2i result;
 	IECore::ConstImagePrimitivePtr image = IECore::runTimeCast<const IECore::ImagePrimitive>( inputImagePrimitivePlug()->getValue() );
 	if( image )
 	{
-		Imath::Box2i displayWindow = image->getDisplayWindow();
-		result = image->getDataWindow();
-		const int yOffset = displayWindow.min.y + ( displayWindow.size().y ) - result.min.y;
-		result.min.y = yOffset - ( result.size().y );
-		result.max.y = yOffset;
-
-		result.max += Imath::V2i( 1 );
+		const Format format( image->getDisplayWindow(), 1.0f, /* fromEXRSpace = */ true );
+		return format.fromEXRSpace( image->getDataWindow() );
 	}
-	return result;
+	return Imath::Box2i();
 }
 
 template<typename BaseType>
@@ -241,19 +231,16 @@ IECore::ConstFloatVectorDataPtr ImagePrimitiveSource<BaseType>::computeChannelDa
 	std::vector<float> &result = resultData->writable();
 	result.resize( ImagePlug::tileSize() * ImagePlug::tileSize(), 0.0f );
 
-	Imath::Box2i displayWindow = image->getDisplayWindow();
-	Imath::Box2i dataWindow = image->getDataWindow();
-	const int yOffset = displayWindow.min.y + ( displayWindow.size().y ) - dataWindow.min.y;
-	dataWindow.min.y = yOffset - ( dataWindow.size().y );
-	dataWindow.max.y = yOffset;
-	dataWindow.max += Imath::V2i( 1 );
+	const Format format( image->getDisplayWindow(), 1.0f, /* fromEXRSpace = */ true );
+	const Imath::Box2i exrDataWindow = image->getDataWindow();
+	const Imath::Box2i dataWindow = format.fromEXRSpace( exrDataWindow );
 
 	Imath::Box2i tileBound( tileOrigin, tileOrigin + Imath::V2i( GafferImage::ImagePlug::tileSize() ) );
 	Imath::Box2i bound = IECore::boxIntersection( tileBound, dataWindow );
 
 	for( int y = bound.min.y; y<bound.max.y; y++ )
 	{
-		size_t srcIndex = ( dataWindow.size().y - ( y - dataWindow.min.y + 1 ) ) * ( dataWindow.size().x ) + bound.min.x - dataWindow.min.x;
+		size_t srcIndex = ( format.toEXRSpace( y ) - exrDataWindow.min.y ) * dataWindow.size().x + bound.min.x - exrDataWindow.min.x;
 		size_t dstIndex = ( y - tileBound.min.y ) * GafferImage::ImagePlug::tileSize() + bound.min.x - tileBound.min.x;
 		const size_t srcEndIndex = srcIndex + bound.size().x;
 		while( srcIndex < srcEndIndex )
