@@ -34,18 +34,14 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECore/BoxAlgo.h"
-#include "IECore/BoxOps.h"
-
 #include "Gaffer/ArrayPlug.h"
 
 #include "GafferImage/Merge.h"
 
 using namespace IECore;
 using namespace Gaffer;
+using namespace GafferImage;
 
-// Create a set of functions to perform the different operations.
-typedef float (*Op)( float A, float B, float a, float b );
 float opAdd( float A, float B, float a, float b){ return A + B; }
 float opAtop( float A, float B, float a, float b){ return A*b + B*(1.-a); }
 float opDivide( float A, float B, float a, float b){ return A / B; }
@@ -57,9 +53,6 @@ float opMultiply( float A, float B, float a, float b){ return A * B; }
 float opOver( float A, float B, float a, float b){ return A + B*(1.-a); }
 float opSubtract( float A, float B, float a, float b){ return A - B; }
 float opUnder( float A, float B, float a, float b){ return A*(1.-b) + B; }
-
-namespace GafferImage
-{
 
 IE_CORE_DEFINERUNTIMETYPED( Merge );
 
@@ -153,7 +146,7 @@ Imath::Box2i Merge::computeDataWindow( const Gaffer::Context *context, const Ima
 	for( ImagePlugIterator it( inPlugs() ); it != it.end(); ++it )
 	{
 		// We don't need to check that the plug is connected here as unconnected plugs don't have data windows.
-		IECore::boxExtend( dataWindow, (*it)->dataWindowPlug()->getValue() );
+		dataWindow.extendBy( (*it)->dataWindowPlug()->getValue() );
 	}
 	
 	return dataWindow;
@@ -284,12 +277,3 @@ IECore::ConstFloatVectorDataPtr Merge::doMergeOperation( F f, std::vector< IECor
 	}
 	return outDataPtr;
 }
-
-bool Merge::hasAlpha( ConstStringVectorDataPtr channelNamesData ) const
-{
-	const std::vector<std::string> &channelNames = channelNamesData->readable();
-	std::vector<std::string>::const_iterator channelIt = std::find( channelNames.begin(), channelNames.end(), "A" );
-	return channelIt != channelNames.end();
-}
-
-} // namespace GafferImage

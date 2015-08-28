@@ -57,36 +57,20 @@ class Merge : public ImageProcessor
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::Merge, MergeTypeId, ImageProcessor );
 
-		//! @name Operations
-		/// The available operations used to merge the channelData.
-		//////////////////////////////////////////////////////////////
-		//@{
-		/// 	Add: A + B
-		/// 	Atop: Ab + B(1-a)
-		/// 	Divide: A / B
-		/// 	In: Ab
-		/// 	Out: A(1-b)
-		/// 	Mask: Ba
-		/// 	Matte: Aa + B(1.-a)
-		/// 	Multiply: AB
-		/// 	Over: A + B(1-a)
-		/// 	Subtract: A - B
-		/// 	Under: A(1-b) + B
 		enum Operation
 		{
-			Add,
-			Atop,
-			Divide,
-			In,
-			Out,
-			Mask,
-			Matte,
-			Multiply,
-			Over,
-			Subtract,
-			Under
+			Add,       // A + B
+			Atop,      // Ab + B(1-a)
+			Divide,    // A / B
+			In,        // Ab
+			Out,       // A(1-b)
+			Mask,      // Ba
+			Matte,     // Aa + B(1-a)
+			Multiply,  // AB
+			Over,      // A + B(1-a)
+			Subtract,  // A - B
+			Under      // A(1-b) + B
 		};
-		//@}
 
 		Gaffer::IntPlug *operationPlug();
 		const Gaffer::IntPlug *operationPlug() const;
@@ -112,15 +96,10 @@ class Merge : public ImageProcessor
 
 	private :
 
-		// A convenience method to return an index for a channel that can be used to address Color4f plugs.
-		inline int channelIndex( const std::string &channelName ) const { return channelName == "R" ? 0 : channelName == "G" ? 1 : channelName == "B" ? 2 : 3; };
-
 		/// Performs the merge operation using the functor 'F'.
 		template< typename F >
 		IECore::ConstFloatVectorDataPtr doMergeOperation( F f, std::vector< IECore::ConstFloatVectorDataPtr > &inData, std::vector< IECore::ConstFloatVectorDataPtr > &inAlpha, const Imath::V2i &tileOrigin ) const;
 
-		/// A useful method which returns true if the StringVector contains the channel "A".
-		inline bool hasAlpha( IECore::ConstStringVectorDataPtr channelNamesData ) const;
 
 		static size_t g_firstPlugIndex;
 
