@@ -961,5 +961,28 @@ class BoxTest( GafferTest.TestCase ) :
 		self.assertEqual( len( s2["b"]["n"]["in"] ), 3 )
 		self.assertTrue( s2["b"]["n"]["in"].getInput().isSame( s2["b"]["p"] ) )
 
+	def testPromotionIncludesArbitraryMetadata( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["b"] = Gaffer.Box()
+		s["b"]["n"] = Gaffer.Node()
+		s["b"]["n"]["user"]["p"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		Gaffer.Metadata.registerPlugValue( s["b"]["n"]["user"]["p"], "testInt", 10 )
+		Gaffer.Metadata.registerPlugValue( s["b"]["n"]["user"]["p"], "testString", "test" )
+
+		p = s["b"].promotePlug( s["b"]["n"]["user"]["p"] )
+		p.setName( "p" )
+
+		self.assertEqual( Gaffer.Metadata.plugValue( p, "testInt" ), 10 )
+		self.assertEqual( Gaffer.Metadata.plugValue( p, "testString" ), "test" )
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+
+		self.assertEqual( Gaffer.Metadata.plugValue( s2["b"]["p"], "testInt" ), 10 )
+		self.assertEqual( Gaffer.Metadata.plugValue( s2["b"]["p"], "testString" ), "test" )
+
 if __name__ == "__main__":
 	unittest.main()
