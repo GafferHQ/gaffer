@@ -63,11 +63,7 @@ class Sampler
 		/// @param boundingMode The method of handling samples that fall out of the sample window.
 		Sampler( const GafferImage::ImagePlug *plug, const std::string &channelName, const Imath::Box2i &sampleWindow, BoundingMode boundingMode = Black );
 
-		/// Sampler Constructor (with a filter)
-		/// @param plug The image plug to sample from.
-		/// @param channelName The channel to sample.
-		/// @param filter The bounds which we wish to sample from. The actual sample area includes all valid tiles that sampleWindow contains or intersects.
-		/// @param boundingMode The method of handling samples that fall out of the sample window.
+		/// \deprecated We are phasing out use of GafferImage::Filter.
 		Sampler( const GafferImage::ImagePlug *plug, const std::string &channelName, const Imath::Box2i &sampleWindow, GafferImage::ConstFilterPtr filter, BoundingMode boundingMode = Black );
 
 		/// Sets the sample area that the sampler can access.
