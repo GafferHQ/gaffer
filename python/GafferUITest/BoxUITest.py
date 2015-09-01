@@ -180,5 +180,18 @@ class BoxUITest( GafferUITest.TestCase ) :
 
 		self.assertEqual( g.nodeGadget( s["b1"] ).nodule( s["b1"]["p"] ), None )
 
+	def testPromotionIgnoresLayoutSection( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["b"] = Gaffer.Box()
+		s["b"]["n"] = Gaffer.Node()
+
+		s["b"]["n"]["user"]["p"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		Gaffer.Metadata.registerPlugValue( s["b"]["n"]["user"]["p"], "layout:section", "SomeWeirdSection" )
+
+		p = s["b"].promotePlug( s["b"]["n"]["user"]["p"] )
+		self.assertNotEqual( Gaffer.Metadata.plugValue( p, "layout:section" ), "SomeWeirdSection" )
+
 if __name__ == "__main__":
 	unittest.main()
