@@ -344,5 +344,25 @@ class MergeTest( GafferTest.TestCase ) :
 		self.assertEqual( sample( 161, 161 ), IECore.Color3f( 1, 1, 0 ) )
 		self.assertEqual( sample( 162, 162 ), IECore.Color3f( 0, 1, 0 ) )
 
+	def testCrashWithResizedInput( self ) :
+
+		b = GafferImage.Constant()
+		b["format"].setValue( GafferImage.Format( 2048, 1556 ) )
+
+		bResized = GafferImage.Resize()
+		bResized["in"].setInput( b["out"] )
+		bResized["format"].setValue( GafferImage.Format( 1920, 1080 ) )
+		bResized["fitMode"].setValue( bResized.FitMode.Fit )
+		
+		a = GafferImage.Constant()
+		a["format"].setValue( GafferImage.Format( 1920, 1080 ) )
+
+		merge = GafferImage.Merge()
+		merge["operation"].setValue( merge.Operation.Over )
+		merge["in"][0].setInput( bResized["out"] )
+		merge["in"][1].setInput( a["out"] )
+
+		merge["out"].image()
+
 if __name__ == "__main__":
 	unittest.main()

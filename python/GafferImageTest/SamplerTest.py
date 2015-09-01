@@ -263,3 +263,23 @@ class SamplerTest( unittest.TestCase ) :
 			sampler = GafferImage.Sampler( reader["out"], "R", region, boundingMode = GafferImage.Sampler.BoundingMode.Clamp )
 			for position, value in samples :
 				self.assertEqual( sampler.sample( position.x, position.y ), value )
+
+	def testSampleOutsideDataWindow( self ) :
+
+		constant = GafferImage.Constant()
+		constant["format"].setValue( GafferImage.Format( 1000, 1000 ) )
+		constant["color"].setValue( IECore.Color4f( 1 ) )
+		
+		crop = GafferImage.Crop()
+		crop["in"].setInput( constant["out"] )
+		crop["areaSource"].setValue( crop.AreaSource.Custom )
+		crop["area"].setValue( IECore.Box2i( IECore.V2i( 135 ), IECore.V2i( 214 ) ) )
+
+		sampler = GafferImage.Sampler( crop["out"], "R", IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 50 ) ), boundingMode = GafferImage.Sampler.BoundingMode.Clamp )
+		self.assertEqual( sampler.sample( 0, 0 ), 1 )
+
+		sampler = GafferImage.Sampler( crop["out"], "R", IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 50 ) ), boundingMode = GafferImage.Sampler.BoundingMode.Black )
+		self.assertEqual( sampler.sample( 0, 0 ), 0 )
+
+if __name__ == "__main__":
+	unittest.main()
