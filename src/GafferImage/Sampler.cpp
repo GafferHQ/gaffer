@@ -40,37 +40,37 @@ using namespace Gaffer;
 using namespace IECore;
 using namespace GafferImage;
 
-Sampler::Sampler( const GafferImage::ImagePlug *plug, const std::string &channelName, const Imath::Box2i &window, BoundingMode boundingMode )
+Sampler::Sampler( const GafferImage::ImagePlug *plug, const std::string &channelName, const Imath::Box2i &sampleWindow, BoundingMode boundingMode )
 	: m_plug( plug ),
 	m_channelName( channelName ),
 	m_boundingMode( boundingMode ),
 	m_filter( Filter::create( Filter::defaultFilter() ) )
 {
-	setSampleWindow( window );
+	init( sampleWindow );
 }
 
-Sampler::Sampler( const GafferImage::ImagePlug *plug, const std::string &channelName, const Imath::Box2i &window, ConstFilterPtr filter, BoundingMode boundingMode )
+Sampler::Sampler( const GafferImage::ImagePlug *plug, const std::string &channelName, const Imath::Box2i &sampleWindow, ConstFilterPtr filter, BoundingMode boundingMode )
 	: m_plug( plug ),
 	m_channelName( channelName ),
 	m_boundingMode( boundingMode ),
 	m_filter( filter )
 {
-	setSampleWindow( window );
+	init( sampleWindow );
 }
 
-void Sampler::setSampleWindow( const Imath::Box2i &window )
+void Sampler::init( const Imath::Box2i &sampleWindow )
 {
 	// The area that we actually need to sample the area requested.
 	const int filterRadius = int( ceil( m_filter->width() / 2. ) );
 
 	// The userSampleWindow is the area within which we can sample and have image data returned.
 	Imath::Box2i dataWindow( m_plug->dataWindowPlug()->getValue() );
-	m_userSampleWindow = boxIntersection( dataWindow, window );
+	m_userSampleWindow = boxIntersection( dataWindow, sampleWindow );
 
 	// Work the area we need to sample in order to be able to do sub-pixel sampling.
 	m_sampleWindow = Imath::Box2i(
-		Imath::V2i( window.min.x - filterRadius, window.min.y - filterRadius ),
-		Imath::V2i( window.max.x + filterRadius, window.max.y + filterRadius )
+		Imath::V2i( sampleWindow.min.x - filterRadius, sampleWindow.min.y - filterRadius ),
+		Imath::V2i( sampleWindow.max.x + filterRadius, sampleWindow.max.y + filterRadius )
 	);
 	m_sampleWindow = boxIntersection( dataWindow, m_sampleWindow );
 

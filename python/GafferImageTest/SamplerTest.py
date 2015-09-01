@@ -45,36 +45,6 @@ class SamplerTest( unittest.TestCase ) :
 
 	fileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/checker.exr" )
 
-	def testSampleWindowAccessors( self ) :
-
-		s = Gaffer.ScriptNode()
-		r = GafferImage.ImageReader()
-		s.addChild( r )
-		r["fileName"].setValue( self.fileName )
-
-		bounds = r["out"]["dataWindow"].getValue();
-
-		cubicFilter = GafferImage.Filter.create( "Cubic" )
-		sampler = GafferImage.Sampler( r["out"], "R", bounds, cubicFilter, GafferImage.Sampler.BoundingMode.Black )
-
-		# Test the getter
-		self.assertEqual( sampler.getSampleWindow(), bounds )
-
-		c = Gaffer.Context()
-		c["image:channelName"] = 'R'
-		c["image:tileOrigin"] = IECore.V2i( 0 )
-		with c:
-			sample = sampler.sample( bounds.min.x+8.5, bounds.max.y-8.5 )
-			self.assertTrue( round( sample - 0.5, 6 ) == 0 ) # Assert that sample == .5 (to 6 decimal places).
-
-			# Set the sample window, sample outside of it and check that the result is 0.
-			sampler.setSampleWindow( IECore.Box2i( IECore.V2i( 20 ), IECore.V2i( 40 ) ) )
-			self.assertEqual( sampler.getSampleWindow(), IECore.Box2i( IECore.V2i( 20 ), IECore.V2i( 40 ) ) )
-
-			sample = sampler.sample( bounds.min.x+8.5, bounds.max.y-8.5 )
-			self.assertAlmostEqual( sample, 0. )
-
-
 	def testConstructors( self ) :
 
 		s = Gaffer.ScriptNode()

@@ -66,12 +66,6 @@ class Sampler
 		/// \deprecated We are phasing out use of GafferImage::Filter.
 		Sampler( const GafferImage::ImagePlug *plug, const std::string &channelName, const Imath::Box2i &sampleWindow, GafferImage::ConstFilterPtr filter, BoundingMode boundingMode = Black );
 
-		/// Sets the sample area that the sampler can access.
-		void setSampleWindow( const Imath::Box2i &window );
-
-		/// Returns the valid sample area.
-		inline Imath::Box2i getSampleWindow() const;
-
 		/// Samples a colour value from the channel at x, y.
 		inline float sample( int x, int y );
 
@@ -83,6 +77,9 @@ class Sampler
 		void hash( IECore::MurmurHash &h ) const;
 
 	private:
+
+		// Initialisation required by both constructors.
+		void init( const Imath::Box2i &sampleWindow );
 
 		/// Cached data access
 		/// @param p Any point within the cache that we wish to retrieve the data for.

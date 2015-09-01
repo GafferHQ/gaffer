@@ -40,11 +40,6 @@
 namespace GafferImage
 {
 
-Imath::Box2i Sampler::getSampleWindow() const
-{
-	return m_userSampleWindow;
-}
-
 float Sampler::sample( float x, float y )
 {
 	// Perform an early-out for the box filter.
