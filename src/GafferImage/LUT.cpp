@@ -55,16 +55,16 @@ LUT::LUT( const std::string &name )
 
 	addChild( new IntPlug(
 		"interpolation", Plug::In,
-		OpenColorIO::INTERP_BEST,
-		OpenColorIO::INTERP_NEAREST,
-		OpenColorIO::INTERP_BEST
+		Best,
+		Best,
+		Tetrahedral
 	) );
 
 	addChild( new IntPlug(
 		"direction", Plug::In,
-		OpenColorIO::TRANSFORM_DIR_FORWARD,
-		OpenColorIO::TRANSFORM_DIR_FORWARD,
-		OpenColorIO::TRANSFORM_DIR_INVERSE
+		Forward,
+		Forward,
+		Inverse
 	) );
 
 }
@@ -145,8 +145,44 @@ OpenColorIO::ConstTransformRcPtr LUT::transform() const
 
 	OpenColorIO::FileTransformRcPtr result = OpenColorIO::FileTransform::Create();
 	result->setSrc( fileName.c_str() );
-	result->setDirection( (OpenColorIO::TransformDirection)directionPlug()->getValue() );
-	result->setInterpolation( (OpenColorIO::Interpolation)interpolationPlug()->getValue() );
+
+	switch( (Direction)directionPlug()->getValue() )
+	{
+		case Forward :
+		{
+			result->setDirection( OpenColorIO::TRANSFORM_DIR_FORWARD );
+			break;
+		}
+		case Inverse :
+		{
+			result->setDirection( OpenColorIO::TRANSFORM_DIR_INVERSE );
+			break;
+		}
+	}
+	
+	switch( (Interpolation)interpolationPlug()->getValue() )
+	{
+		case Best :
+		{
+			result->setInterpolation( OpenColorIO::INTERP_BEST );
+			break;
+		}
+		case Nearest :
+		{
+			result->setInterpolation( OpenColorIO::INTERP_NEAREST );
+			break;
+		}
+		case Linear :
+		{
+			result->setInterpolation( OpenColorIO::INTERP_LINEAR );
+			break;
+		}
+		case Tetrahedral :
+		{
+			result->setInterpolation( OpenColorIO::INTERP_TETRAHEDRAL );
+			break;
+		}
+	}
 
 	return result;
 }

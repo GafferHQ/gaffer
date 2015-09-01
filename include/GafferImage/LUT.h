@@ -61,6 +61,20 @@ class LUT : public OpenColorIOTransform
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::LUT, LUTTypeId, OpenColorIOTransform );
 
+		enum Interpolation
+		{
+			Best = 0,
+			Nearest,
+			Linear,
+			Tetrahedral
+		};
+
+		enum Direction
+		{
+			Forward = 0,
+			Inverse
+		};
+
 		Gaffer::StringPlug *fileNamePlug();
 		const Gaffer::StringPlug *fileNamePlug() const;
 

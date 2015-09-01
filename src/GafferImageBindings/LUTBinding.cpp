@@ -63,8 +63,20 @@ static boost::python::list supportedExtensions()
 void bindLUT()
 {
 
-	GafferBindings::DependencyNodeClass<LUT>()
+	scope s = GafferBindings::DependencyNodeClass<LUT>()
 		.def( "supportedExtensions", &supportedExtensions ).staticmethod( "supportedExtensions" )
+	;
+
+	enum_<LUT::Interpolation>( "Interpolation" )
+		.value( "Best", LUT::Best )
+		.value( "Nearest", LUT::Nearest )
+		.value( "Linear", LUT::Linear )
+		.value( "Tetrahedral", LUT::Tetrahedral )
+	;
+
+	enum_<LUT::Direction>( "Direction" )
+		.value( "Forward", LUT::Forward )
+		.value( "Inverse", LUT::Inverse )
 	;
 
 }

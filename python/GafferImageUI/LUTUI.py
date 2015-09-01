@@ -78,10 +78,10 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-			## \todo: is there a way to query the Interpolation enum from OpenColorIO directly?
-			"preset:Linear", 2,
-			"preset:Tetrahedral", 3,
-			"preset:Best", 255,
+			"preset:Best", GafferImage.LUT.Interpolation.Best,
+			"preset:Nearest", GafferImage.LUT.Interpolation.Nearest,
+			"preset:Linear", GafferImage.LUT.Interpolation.Linear,
+			"preset:Tetrahedral", GafferImage.LUT.Interpolation.Tetrahedral,
 
 		],
 
@@ -93,9 +93,8 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-			## \todo: is there a way to query the TransformDirection enum from OpenColorIO directly?
-			"preset:Forward", 1,
-			"preset:Inverse", 2,
+			"preset:Forward", GafferImage.LUT.Direction.Forward,
+			"preset:Inverse", GafferImage.LUT.Direction.Inverse,
 
 		],
 

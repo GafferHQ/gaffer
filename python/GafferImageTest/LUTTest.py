@@ -59,17 +59,17 @@ class LUTTest( unittest.TestCase ) :
 		self.assertEqual( n["out"].image(), o["out"].image() )
 		
 		o["fileName"].setValue( self.lut )
-		o["interpolation"].setValue( 2 ) # linear
+		o["interpolation"].setValue( GafferImage.LUT.Interpolation.Linear )
 		
 		forward = o["out"].image()
 		self.assertNotEqual( n["out"].image(), forward )
 		
-		o["direction"].setValue( 2 ) # inverse
+		o["direction"].setValue( GafferImage.LUT.Direction.Inverse )
 		inverse = o["out"].image()
 		self.assertNotEqual( n["out"].image(), inverse )
 		self.assertNotEqual( forward, inverse )
 		
-		o["interpolation"].setValue( 1 ) # nearest
+		o["interpolation"].setValue( GafferImage.LUT.Interpolation.Nearest )
 		tet = o["out"].image()
 		self.assertNotEqual( n["out"].image(), tet )
 		self.assertNotEqual( forward, tet )
@@ -93,7 +93,7 @@ class LUTTest( unittest.TestCase ) :
 		o = GafferImage.LUT()
 		o["in"].setInput( n["out"] )
 		o["fileName"].setValue( self.lut )
-		o["interpolation"].setValue( 3 ) # tetrahedral
+		o["interpolation"].setValue( GafferImage.LUT.Interpolation.Tetrahedral )
 		self.assertRaises( o["out"].image )
 
 	def testHashPassThrough( self ) :
