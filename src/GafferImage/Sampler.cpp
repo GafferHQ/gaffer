@@ -36,8 +36,9 @@
 
 #include "GafferImage/Sampler.h"
 
-using namespace Gaffer;
 using namespace IECore;
+using namespace Imath;
+using namespace Gaffer;
 using namespace GafferImage;
 
 Sampler::Sampler( const GafferImage::ImagePlug *plug, const std::string &channelName, const Imath::Box2i &sampleWindow, BoundingMode boundingMode )
@@ -60,25 +61,43 @@ Sampler::Sampler( const GafferImage::ImagePlug *plug, const std::string &channel
 
 void Sampler::init( const Imath::Box2i &sampleWindow )
 {
-	// The area that we actually need to sample the area requested.
-	const int filterRadius = int( ceil( m_filter->width() / 2. ) );
+	m_dataWindow = m_plug->dataWindowPlug()->getValue();
 
-	// The userSampleWindow is the area within which we can sample and have image data returned.
-	Imath::Box2i dataWindow( m_plug->dataWindowPlug()->getValue() );
-	m_userSampleWindow = boxIntersection( dataWindow, sampleWindow );
+	// We only store the sample window to be able to perform
+	// validation of the calls made to sample() in debug builds.
+	// The filtered sample() call generates additional lookups
+	// around the central pixel though, so we must also expand the
+	// stored sample window to take that into account.
+	m_sampleWindow = sampleWindow;
+	const V2i filterRadius( ceil( m_filter->width() / 2. ) );
+	m_sampleWindow.min -= filterRadius;
+	m_sampleWindow.max += filterRadius;
 
-	// Work the area we need to sample in order to be able to do sub-pixel sampling.
-	m_sampleWindow = Imath::Box2i(
-		Imath::V2i( sampleWindow.min.x - filterRadius, sampleWindow.min.y - filterRadius ),
-		Imath::V2i( sampleWindow.max.x + filterRadius, sampleWindow.max.y + filterRadius )
-	);
-	m_sampleWindow = boxIntersection( dataWindow, m_sampleWindow );
+	// Compute the area we need to cache in order to
+	// be able to service calls within m_sampleWindow
+	// when taking into account m_boundingMode and m_dataWindow.
 
-	// The area that we actually have in the cache.
-	// Exclusive, so max value points at the next tile over
+	m_cacheWindow = intersection( m_sampleWindow, m_dataWindow );
+	if( empty( m_cacheWindow ) && m_boundingMode == Clamp )
+	{
+		// The area being sampled is entirely outside the
+		// data window, but we still need to cache the region
+		// into which we will clamp the queries.
+		m_cacheWindow = Box2i();
+		m_cacheWindow.extendBy( clamp( m_sampleWindow.min, m_dataWindow ) );
+		m_cacheWindow.extendBy( clamp( m_sampleWindow.max, m_dataWindow ) );
+		m_cacheWindow.extendBy( clamp( V2i( m_sampleWindow.min.x, m_sampleWindow.max.y ), m_dataWindow ) );
+		m_cacheWindow.extendBy( clamp( V2i( m_sampleWindow.max.x, m_sampleWindow.min.y ), m_dataWindow ) );
+		m_cacheWindow.max += V2i( 1 ); // max is exclusive.
+	}
+
+	// Our cache is composed of tiles, so the window for
+	// the cache contents needs expanding to the nearest
+	// tile boundary. As elsewhere in GafferImage, max is
+	// exclusive, so is actually inside the next tile over.
 	m_cacheWindow = Imath::Box2i(
-		Imath::V2i( ImagePlug::tileOrigin( m_sampleWindow.min ) ),
-		Imath::V2i( ImagePlug::tileOrigin( m_sampleWindow.max - Imath::V2i( 1 ) ) + Imath::V2i( ImagePlug::tileSize() ) )
+		Imath::V2i( ImagePlug::tileOrigin( m_cacheWindow.min ) ),
+		Imath::V2i( ImagePlug::tileOrigin( m_cacheWindow.max - Imath::V2i( 1 ) ) + Imath::V2i( ImagePlug::tileSize() ) )
 	);
 
 	m_cacheWidth = int( ceil( float( m_cacheWindow.size().x ) / ImagePlug::tileSize() ) );
