@@ -231,7 +231,6 @@ void Merge::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer:
 		// input data windows, we may be using/revealing the invalid parts of a tile. We
 		// deal with this in computeChannelData() by treating the invalid parts as black,
 		// and must therefore hash in the valid bound here to take that into account.
-		const Box2i dataWindow = (*it)->dataWindowPlug()->getValue();
 		const Box2i validBound = boxIntersection( tileBound, (*it)->dataWindowPlug()->getValue() );
 		h.append( validBound );
 	}
