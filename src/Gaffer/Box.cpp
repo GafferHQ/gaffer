@@ -36,6 +36,7 @@
 
 #include "boost/format.hpp"
 #include "boost/algorithm/string/replace.hpp"
+#include "boost/algorithm/string/predicate.hpp"
 #include "boost/regex.hpp"
 
 #include "Gaffer/Box.h"
@@ -485,16 +486,21 @@ std::string Box::promotedCounterpartName( const Plug *plug ) const
 
 void Box::copyMetadata( const Plug *from, Plug *to )
 {
-	/// \todo Perhaps we should have a more general mechanism for mirroring all metadata?
+	/// \todo Perhaps we should have a more dynamic mechanism for mirroring all metadata?
 	/// If we could register a dynamic metadata value for "*", then we could just answer
 	/// all metadata queries on the fly - would that be a good idea? We'd need to figure
 	/// out how to make it compatible with Metadata::registeredPlugValues(), which needs to
-	/// know all valid names.
-	Metadata::registerPlugValue( to, "nodeGadget:nodulePosition", Metadata::plugValue<IECore::Data>( from, "nodeGadget:nodulePosition" ) );
-	Metadata::registerPlugValue( to, "nodule:type", Metadata::plugValue<IECore::Data>( from, "nodule:type" ) );
-	Metadata::registerPlugValue( to, "nodule:color", Metadata::plugValue<IECore::Data>( from, "nodule:color" ) );
-	Metadata::registerPlugValue( to, "connectionGadget:color", Metadata::plugValue<IECore::Data>( from, "connectionGadget:color" ) );
-	Metadata::registerPlugValue( to, "compoundNodule:orientation", Metadata::plugValue<IECore::Data>( from, "compoundNodule:orientation" ) );
-	Metadata::registerPlugValue( to, "compoundNodule:spacing", Metadata::plugValue<IECore::Data>( from, "compoundNodule:spacing" ) );
-	Metadata::registerPlugValue( to, "compoundNodule:direction", Metadata::plugValue<IECore::Data>( from, "compoundNodule:direction" ) );
+	/// know all valid names. We'd also need to put a lot of thought into how we allowed the
+	/// user to delete values which were being mirrored dynamically.
+	vector<IECore::InternedString> keys;
+	Metadata::registeredPlugValues( from, keys, /* inherit = */ true, /* instanceOnly = */ false, /* persistentOnly = */ true );
+	for( vector<IECore::InternedString>::const_iterator it = keys.begin(), eIt = keys.end(); it != eIt; ++it )
+	{
+		if( boost::starts_with( it->string(), "layout:" ) )
+		{
+			// Don't want to copy layout metadata because the user will be making their own layout.
+			continue;
+		}
+		Metadata::registerPlugValue( to, *it, Metadata::plugValue<IECore::Data>( from, *it ) );
+	}
 }
