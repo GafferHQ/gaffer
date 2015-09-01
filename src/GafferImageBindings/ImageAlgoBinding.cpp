@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,52 +34,23 @@
 
 #include "boost/python.hpp"
 
-#include "GafferImage/Filter.h"
-#include "GafferImageBindings/SamplerBinding.h"
+#include "GafferImage/ImageAlgo.h"
+#include "GafferImageBindings/ImageAlgoBinding.h"
 
 using namespace boost::python;
-using namespace IECore;
-using namespace GafferImage;
 
 namespace GafferImageBindings
 {
 
-void bindSampler()
+void bindImageAlgo()
 {
+	
+	def( "empty", &GafferImage::empty );
+	def( "intersects", &GafferImage::intersects );
+	def( "intersection", &GafferImage::intersection );
+	def( "contains", &GafferImage::contains );
+	def( "clamp", &GafferImage::clamp );
 
-	class_<Sampler> cls( "Sampler", no_init );
-
-	{
-		// Must bind the BoundingMode first, so that it can be used in the default
-		// arguments to the init methods.
-		scope s = cls;
-		enum_<Sampler::BoundingMode>( "BoundingMode" )
-			.value( "Black", Sampler::Black )
-			.value( "Clamp", Sampler::Clamp )
-		;
-	}
-
-	cls.def(
-		init< const GafferImage::ImagePlug *, const std::string &, const Imath::Box2i &, ConstFilterPtr, Sampler::BoundingMode >
-			(
-				(
-					arg( "boundingMode" ) = Sampler::Black
-				)
-			)
-		)
-		.def(
-			init<const GafferImage::ImagePlug *, const std::string &, const Imath::Box2i &, Sampler::BoundingMode>
-			(
-				(
-					arg( "boundingMode" ) = Sampler::Black
-				)
-			)
-		)
-		.def( "hash", (IECore::MurmurHash (Sampler::*)() const)&Sampler::hash )
-		.def( "hash", (void (Sampler::*)( IECore::MurmurHash & ) const)&Sampler::hash )
-		.def( "sample", (float (Sampler::*)( float, float ) )&Sampler::sample )
-		.def( "sample", (float (Sampler::*)( int, int ) )&Sampler::sample )
-	;
 }
 
-}; // namespace IECorePython
+} // namespace GafferImageBindings

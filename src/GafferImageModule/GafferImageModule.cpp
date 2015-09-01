@@ -83,6 +83,7 @@
 #include "GafferImageBindings/ResampleBinding.h"
 #include "GafferImageBindings/ResizeBinding.h"
 #include "GafferImageBindings/LUTBinding.h"
+#include "GafferImageBindings/ImageAlgoBinding.h"
 
 using namespace boost::python;
 using namespace GafferImage;
@@ -135,6 +136,7 @@ BOOST_PYTHON_MODULE( _GafferImage )
 	GafferImageBindings::bindResample();
 	GafferImageBindings::bindResize();
 	GafferImageBindings::bindLUT();
+	GafferImageBindings::bindImageAlgo();
 
 	GafferBindings::ExecutableNodeClass<ImageWriter>();
 }

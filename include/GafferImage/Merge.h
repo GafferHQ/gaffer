@@ -47,6 +47,15 @@ namespace GafferImage
 /// A node for Merging two or more images. Merge will use the displayWindow and metadata from the first input;
 /// expand the dataWindow to the union of all dataWindows from the connected inputs; create a union of
 /// channelNames from all the connected inputs, and will merge the channelData according to the operation mode.
+/// \todo Optimise. Things to consider :
+///
+/// - For some operations (multiply for instance) our output data window could be the intersection
+///   of all input windows, rather than the union.
+/// - For some operations (add for instance) we could entirely skip invalid input tiles, and tiles
+///   where channelData == ImagePlug::blackTile().
+/// - For some operations we do not need to track the intermediate alpha values at all.
+/// - We could improve our masking of invalid pixels with special cases for wholly valid tiles,
+///   wholly invalid tiles, and by chunking the work on the valid sections.
 class Merge : public ImageProcessor
 {
 
@@ -57,36 +66,20 @@ class Merge : public ImageProcessor
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::Merge, MergeTypeId, ImageProcessor );
 
-		//! @name Operations
-		/// The available operations used to merge the channelData.
-		//////////////////////////////////////////////////////////////
-		//@{
-		/// 	Add: A + B
-		/// 	Atop: Ab + B(1-a)
-		/// 	Divide: A / B
-		/// 	In: Ab
-		/// 	Out: A(1-b)
-		/// 	Mask: Ba
-		/// 	Matte: Aa + B(1.-a)
-		/// 	Multiply: AB
-		/// 	Over: A + B(1-a)
-		/// 	Subtract: A - B
-		/// 	Under: A(1-b) + B
 		enum Operation
 		{
-			Add,
-			Atop,
-			Divide,
-			In,
-			Out,
-			Mask,
-			Matte,
-			Multiply,
-			Over,
-			Subtract,
-			Under
+			Add,       // A + B
+			Atop,      // Ab + B(1-a)
+			Divide,    // A / B
+			In,        // Ab
+			Out,       // A(1-b)
+			Mask,      // Ba
+			Matte,     // Aa + B(1-a)
+			Multiply,  // AB
+			Over,      // A + B(1-a)
+			Subtract,  // A - B
+			Under      // A(1-b) + B
 		};
-		//@}
 
 		Gaffer::IntPlug *operationPlug();
 		const Gaffer::IntPlug *operationPlug() const;
@@ -112,15 +105,9 @@ class Merge : public ImageProcessor
 
 	private :
 
-		// A convenience method to return an index for a channel that can be used to address Color4f plugs.
-		inline int channelIndex( const std::string &channelName ) const { return channelName == "R" ? 0 : channelName == "G" ? 1 : channelName == "B" ? 2 : 3; };
-
-		/// Performs the merge operation using the functor 'F'.
-		template< typename F >
-		IECore::ConstFloatVectorDataPtr doMergeOperation( F f, std::vector< IECore::ConstFloatVectorDataPtr > &inData, std::vector< IECore::ConstFloatVectorDataPtr > &inAlpha, const Imath::V2i &tileOrigin ) const;
-
-		/// A useful method which returns true if the StringVector contains the channel "A".
-		inline bool hasAlpha( IECore::ConstStringVectorDataPtr channelNamesData ) const;
+		// Performs the merge operation using the functor 'F'.
+		template<typename F>
+		IECore::ConstFloatVectorDataPtr merge( F f, const Imath::V2i &tileOrigin ) const;
 
 		static size_t g_firstPlugIndex;
 

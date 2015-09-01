@@ -45,48 +45,60 @@
 namespace GafferImage
 {
 
-/// A utility class for pixel access of an image plug.
+/// Utility class for sampling pixel values from an image. It
+/// abstracts away the underlying tiles and instead provides
+/// access via pixel coordinates, dealing with pixels outside
+/// the data window by either clamping or returning black.
+///
+/// The Sampler is sensitive to the Context which is current
+/// during its operation, so a sampler should only be used in
+/// the context in which it is constructed.
 class Sampler
 {
 
 	public :
 
+		/// Defines how values are sampled for pixels
+		/// outside the data window.
 		enum BoundingMode
 		{
+			/// Returns 0
 			Black = 0,
+			/// Returns the value of the closest pixel
+			/// inside the data window.
 			Clamp = 1
 		};
 
 		/// Sampler Constructor
 		/// @param plug The image plug to sample from.
 		/// @param channelName The channel to sample.
-		/// @param boundingMode The method of handling samples that fall out of the sample window.
+		/// @param sampleWindow The area from which samples may be requested. It is an error to request samples outside this area.
+		/// @param boundingMode The method of handling samples that fall outside the data window.
 		Sampler( const GafferImage::ImagePlug *plug, const std::string &channelName, const Imath::Box2i &sampleWindow, BoundingMode boundingMode = Black );
 
-		/// Sampler Constructor (with a filter)
-		/// @param plug The image plug to sample from.
-		/// @param channelName The channel to sample.
-		/// @param filter The bounds which we wish to sample from. The actual sample area includes all valid tiles that sampleWindow contains or intersects.
-		/// @param boundingMode The method of handling samples that fall out of the sample window.
+		/// \deprecated We are phasing out use of GafferImage::Filter.
 		Sampler( const GafferImage::ImagePlug *plug, const std::string &channelName, const Imath::Box2i &sampleWindow, GafferImage::ConstFilterPtr filter, BoundingMode boundingMode = Black );
 
-		/// Sets the sample area that the sampler can access.
-		void setSampleWindow( const Imath::Box2i &window );
-
-		/// Returns the valid sample area.
-		inline Imath::Box2i getSampleWindow() const;
-
 		/// Samples a colour value from the channel at x, y.
+		/// It is the caller's responsibility to ensure that
+		/// this point is contained within the sample window
+		/// passed to the constructor.
 		inline float sample( int x, int y );
 
 		/// Sub-samples the image using a filter.
 		inline float sample( float x, float y );
 
-		/// Computes the hash of the sample area, including the effects
-		/// of the bounding mode.
+		/// Appends a hash that represent all the pixel
+		/// values within the requested sample area.
 		void hash( IECore::MurmurHash &h ) const;
+		/// Convenience function to append into an
+		/// empty hash object and return it.
+		IECore::MurmurHash hash() const;
 
 	private:
+
+		// Initialisation required by both constructors.
+		void init( const Imath::Box2i &sampleWindow );
 
 		/// Cached data access
 		/// @param p Any point within the cache that we wish to retrieve the data for.
@@ -98,7 +110,7 @@ class Sampler
 		const ImagePlug *m_plug;
 		const std::string m_channelName;
 		Imath::Box2i m_sampleWindow;
-		Imath::Box2i m_userSampleWindow;
+		Imath::Box2i m_dataWindow;
 
 		std::vector< IECore::ConstFloatVectorDataPtr > m_dataCache;
 		Imath::Box2i m_cacheWindow;

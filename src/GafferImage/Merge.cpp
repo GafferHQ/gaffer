@@ -34,18 +34,22 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECore/BoxAlgo.h"
 #include "IECore/BoxOps.h"
 
 #include "Gaffer/ArrayPlug.h"
+#include "Gaffer/Context.h"
 
 #include "GafferImage/Merge.h"
 
+using namespace std;
+using namespace Imath;
 using namespace IECore;
 using namespace Gaffer;
+using namespace GafferImage;
 
-// Create a set of functions to perform the different operations.
-typedef float (*Op)( float A, float B, float a, float b );
+namespace
+{
+
 float opAdd( float A, float B, float a, float b){ return A + B; }
 float opAtop( float A, float B, float a, float b){ return A*b + B*(1.-a); }
 float opDivide( float A, float B, float a, float b){ return A / B; }
@@ -58,8 +62,7 @@ float opOver( float A, float B, float a, float b){ return A + B*(1.-a); }
 float opSubtract( float A, float B, float a, float b){ return A - B; }
 float opUnder( float A, float B, float a, float b){ return A*(1.-b) + B; }
 
-namespace GafferImage
-{
+} // namespace
 
 IE_CORE_DEFINERUNTIMETYPED( Merge );
 
@@ -153,7 +156,7 @@ Imath::Box2i Merge::computeDataWindow( const Gaffer::Context *context, const Ima
 	for( ImagePlugIterator it( inPlugs() ); it != it.end(); ++it )
 	{
 		// We don't need to check that the plug is connected here as unconnected plugs don't have data windows.
-		IECore::boxExtend( dataWindow, (*it)->dataWindowPlug()->getValue() );
+		dataWindow.extendBy( (*it)->dataWindowPlug()->getValue() );
 	}
 	
 	return dataWindow;
@@ -204,13 +207,32 @@ IECore::ConstStringVectorDataPtr Merge::computeChannelNames( const Gaffer::Conte
 void Merge::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	ImageProcessor::hashChannelData( output, context, h );
+
+	const V2i tileOrigin = context->get<V2i>( ImagePlug::tileOriginContextName );
+	const Box2i tileBound( tileOrigin, tileOrigin + V2i( ImagePlug::tileSize() ) );
 	
 	for( ImagePlugIterator it( inPlugs() ); it != it.end(); ++it )
 	{
-		if( (*it)->getInput<ValuePlug>() )
+		if( !(*it)->getInput<ValuePlug>() )
 		{
-			(*it)->channelDataPlug()->hash( h );
+			continue;
 		}
+
+		(*it)->channelDataPlug()->hash( h );
+		h.append( (*it)->channelDataHash( "A", tileOrigin ) );
+
+		// The hash of the channel data we include above represents just the data in
+		// the tile itself, and takes no account of the possibility that parts of the
+		// tile may be outside of the data window. This simplifies the implementation of
+		// nodes like Constant (where all tiles are identical, even the edge tiles) and
+		// Crop (which does no processing of tiles at all). For most nodes this doesn't
+		// matter, because they don't change the data window, or they use a Sampler to
+		// deal with invalid pixels. But because our data window is the union of all
+		// input data windows, we may be using/revealing the invalid parts of a tile. We
+		// deal with this in computeChannelData() by treating the invalid parts as black,
+		// and must therefore hash in the valid bound here to take that into account.
+		const Box2i validBound = boxIntersection( tileBound, (*it)->dataWindowPlug()->getValue() );
+		h.append( validBound );
 	}
 	
 	operationPlug()->hash( h );
@@ -218,78 +240,101 @@ void Merge::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer:
 
 IECore::ConstFloatVectorDataPtr Merge::computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const
 {
-	std::vector< ConstFloatVectorDataPtr > inData;
-	std::vector< ConstFloatVectorDataPtr > inAlpha;
-
-	for( ImagePlugIterator it( inPlugs() ); it != it.end(); ++it )
+	switch( operationPlug()->getValue() )
 	{
-		if( (*it)->getInput<ValuePlug>() )
-		{
-			inData.push_back( (*it)->channelData( channelName, tileOrigin ) );
-			inAlpha.push_back( (*it)->channelData( "A", tileOrigin ) );
-		}
-	}
-
-	// Get a pointer to the operation that we wish to perform.
-	Operation operation = (Operation)operationPlug()->getValue();
-	switch( operation )
-	{
-		case( Add ): return doMergeOperation( opAdd, inData, inAlpha, tileOrigin ); break;
-		case( Atop ): return doMergeOperation( opAtop, inData, inAlpha, tileOrigin ); break;
-		case( Divide ): return doMergeOperation( opDivide, inData, inAlpha, tileOrigin ); break;
-		case( In ): return doMergeOperation( opIn, inData, inAlpha, tileOrigin ); break;
-		case( Out ): return doMergeOperation( opOut, inData, inAlpha, tileOrigin ); break;
-		case( Mask ): return doMergeOperation( opMask, inData, inAlpha, tileOrigin ); break;
-		case( Matte ): return doMergeOperation( opMatte, inData, inAlpha, tileOrigin ); break;
-		case( Multiply ): return doMergeOperation( opMultiply, inData, inAlpha, tileOrigin ); break;
-		case( Over ): return doMergeOperation( opOver, inData, inAlpha, tileOrigin ); break;
-		case( Subtract ): return doMergeOperation( opSubtract, inData, inAlpha, tileOrigin ); break;
-		case( Under ): return doMergeOperation( opUnder, inData, inAlpha, tileOrigin ); break;
+		case Add :
+			return merge( opAdd, tileOrigin );
+		case Atop :
+			return merge( opAtop, tileOrigin );
+		case Divide :
+			return merge( opDivide, tileOrigin );
+		case In :
+			return merge( opIn, tileOrigin );
+		case Out :
+			return merge( opOut, tileOrigin );
+		case Mask :
+			return merge( opMask, tileOrigin );
+		case Matte :
+			return merge( opMatte, tileOrigin );
+		case Multiply :
+			return merge( opMultiply, tileOrigin );
+		case Over :
+			return merge( opOver, tileOrigin );
+		case Subtract :
+			return merge( opSubtract, tileOrigin );
+		case Under :
+			return merge( opUnder, tileOrigin );
 	}
 	
 	throw Exception( "Merge::computeChannelData : Invalid operation mode." );
 }
 
-template< typename F >
-IECore::ConstFloatVectorDataPtr Merge::doMergeOperation( F f, std::vector< IECore::ConstFloatVectorDataPtr > &inData, std::vector< IECore::ConstFloatVectorDataPtr > &inAlpha, const Imath::V2i &tileOrigin ) const
+template<typename F>
+IECore::ConstFloatVectorDataPtr Merge::merge( F f, const Imath::V2i &tileOrigin ) const
 {
-	// Allocate the new tile
-	IECore::FloatVectorDataPtr outDataPtr = inData.back()->copy();
-	std::vector<float> &outData = outDataPtr->writable();
+	FloatVectorDataPtr resultData = NULL;
+	// Temporary buffer for computing the alpha of intermediate composited layers.
+	FloatVectorDataPtr resultAlphaData = NULL;
 
-	// Allocate a temporary buffer that will hold the intermediate values of the alpha channel.
-	std::vector<float> outAlpha = inAlpha.back()->readable();
-
-	// Perform the operation.
-	unsigned int nIterations( inData.size() -1 );
-	for( unsigned int i = nIterations; i > 0; --i )
+	const Box2i tileBound( tileOrigin, tileOrigin + V2i( ImagePlug::tileSize() ) );
+	for( ImagePlugIterator it( inPlugs() ); it != it.end(); ++it )
 	{
-		// Compute the data values and afterwards, the intermediate alpha values.
-		const float *dIn1 = &(outData[0]);
-		const float *dIn2 = &(inData[i-1]->readable()[0]);
-		const float *aIn1 = &(outAlpha[0]);
-		const float *aIn2 = &(inAlpha[i-1]->readable()[0]);
-
-		float *dOut = &(outData[0]);
-		float *aOut = &(outAlpha[0]);
-
-		const float *end = dOut + outData.size();
-		while( dOut != end )
+		if( !(*it)->getInput<ValuePlug>() )
 		{
-			*dOut++ = f( *dIn1++, *dIn2++, *aIn1, *aIn2 );
-			*aOut++ = f( *aIn1, *aIn2, *aIn1, *aIn2 );
-			++aIn1;
-			++aIn2;
+			continue;
+		}
+
+		const Box2i validBound = boxIntersection( tileBound, (*it)->dataWindowPlug()->getValue() );
+
+		if( !resultData )
+		{
+			// The first connected layer, with which we must initialise our result.
+			// There's no guarantee that this layer actually covers the full data
+			// window though (the data window could have been expanded by the upper
+			// layers) so we must take care to mask out any invalid areas of the input.
+			resultData = (*it)->channelDataPlug()->getValue()->copy();
+			resultAlphaData = (*it)->channelData( "A", tileOrigin )->copy();
+			float *B = &resultData->writable().front();
+			float *b = &resultAlphaData->writable().front();
+			for( int y = tileBound.min.y; y < tileBound.max.y; ++y )
+			{
+				const bool yValid = y >= validBound.min.y && y < validBound.max.y;
+				for( int x = tileBound.min.x; x < tileBound.max.x; ++x )
+				{
+					if( !yValid || x < validBound.min.x || x >= validBound.max.x )
+					{
+						*B = *b = 0.0f;
+					}
+					++B; ++b;
+				}
+			}
+		}
+		else
+		{
+			// A higher layer (A) which must be composited over the result (B).
+			ConstFloatVectorDataPtr channelData = (*it)->channelDataPlug()->getValue();
+			ConstFloatVectorDataPtr alphaData = (*it)->channelData( "A", tileOrigin );
+
+			const float *A = &channelData->readable().front();
+			float *B = &resultData->writable().front();
+			const float *a = &alphaData->readable().front();
+			float *b = &resultAlphaData->writable().front();
+
+			for( int y = tileBound.min.y; y < tileBound.max.y; ++y )
+			{
+				const bool yValid = y >= validBound.min.y && y < validBound.max.y;
+				for( int x = tileBound.min.x; x < tileBound.max.x; ++x )
+				{
+					const bool valid = yValid && x >= validBound.min.x && x < validBound.max.x;
+
+					*B = f( valid ? *A : 0.0f, *B, valid ? *a : 0.0f, *b );
+					*b = f( valid ? *a : 0.0f, *b, valid ? *a : 0.0f, *b );
+
+					++A; ++B; ++a; ++b;
+				}
+			}
 		}
 	}
-	return outDataPtr;
-}
 
-bool Merge::hasAlpha( ConstStringVectorDataPtr channelNamesData ) const
-{
-	const std::vector<std::string> &channelNames = channelNamesData->readable();
-	std::vector<std::string>::const_iterator channelIt = std::find( channelNames.begin(), channelNames.end(), "A" );
-	return channelIt != channelNames.end();
+	return resultData;
 }
-
-} // namespace GafferImage

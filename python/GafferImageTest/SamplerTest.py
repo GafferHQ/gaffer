@@ -45,36 +45,6 @@ class SamplerTest( unittest.TestCase ) :
 
 	fileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/checker.exr" )
 
-	def testSampleWindowAccessors( self ) :
-
-		s = Gaffer.ScriptNode()
-		r = GafferImage.ImageReader()
-		s.addChild( r )
-		r["fileName"].setValue( self.fileName )
-
-		bounds = r["out"]["dataWindow"].getValue();
-
-		cubicFilter = GafferImage.Filter.create( "Cubic" )
-		sampler = GafferImage.Sampler( r["out"], "R", bounds, cubicFilter, GafferImage.Sampler.BoundingMode.Black )
-
-		# Test the getter
-		self.assertEqual( sampler.getSampleWindow(), bounds )
-
-		c = Gaffer.Context()
-		c["image:channelName"] = 'R'
-		c["image:tileOrigin"] = IECore.V2i( 0 )
-		with c:
-			sample = sampler.sample( bounds.min.x+8.5, bounds.max.y-8.5 )
-			self.assertTrue( round( sample - 0.5, 6 ) == 0 ) # Assert that sample == .5 (to 6 decimal places).
-
-			# Set the sample window, sample outside of it and check that the result is 0.
-			sampler.setSampleWindow( IECore.Box2i( IECore.V2i( 20 ), IECore.V2i( 40 ) ) )
-			self.assertEqual( sampler.getSampleWindow(), IECore.Box2i( IECore.V2i( 20 ), IECore.V2i( 40 ) ) )
-
-			sample = sampler.sample( bounds.min.x+8.5, bounds.max.y-8.5 )
-			self.assertAlmostEqual( sample, 0. )
-
-
 	def testConstructors( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -263,3 +233,48 @@ class SamplerTest( unittest.TestCase ) :
 			sampler = GafferImage.Sampler( reader["out"], "R", region, boundingMode = GafferImage.Sampler.BoundingMode.Clamp )
 			for position, value in samples :
 				self.assertEqual( sampler.sample( position.x, position.y ), value )
+
+	def testSampleOutsideDataWindow( self ) :
+
+		constant = GafferImage.Constant()
+		constant["format"].setValue( GafferImage.Format( 1000, 1000 ) )
+		constant["color"].setValue( IECore.Color4f( 1 ) )
+		
+		crop = GafferImage.Crop()
+		crop["in"].setInput( constant["out"] )
+		crop["areaSource"].setValue( crop.AreaSource.Custom )
+		crop["area"].setValue( IECore.Box2i( IECore.V2i( 135 ), IECore.V2i( 214 ) ) )
+
+		sampler = GafferImage.Sampler( crop["out"], "R", IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 50 ) ), boundingMode = GafferImage.Sampler.BoundingMode.Clamp )
+		self.assertEqual( sampler.sample( 0, 0 ), 1 )
+
+		sampler = GafferImage.Sampler( crop["out"], "R", IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 50 ) ), boundingMode = GafferImage.Sampler.BoundingMode.Black )
+		self.assertEqual( sampler.sample( 0, 0 ), 0 )
+
+	def testHashIncludesBlackPixels( self ) :
+
+		constant = GafferImage.Constant()
+		constant["format"].setValue( GafferImage.Format( 1000, 1000 ) )
+		constant["color"].setValue( IECore.Color4f( 1 ) )
+
+		crop = GafferImage.Crop()
+		crop["in"].setInput( constant["out"] )
+		crop["areaSource"].setValue( crop.AreaSource.Custom )
+		crop["area"].setValue( IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 200 ) ) )
+		crop["affectDisplayWindow"].setValue( False )
+		crop["affectDataWindow"].setValue( False )
+
+		# Samples the whole data window
+		sampler1 = GafferImage.Sampler( crop["out"], "R", IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 200 ) ), boundingMode = GafferImage.Sampler.BoundingMode.Black )
+		# Samples the whole data window and then some.
+		sampler2 = GafferImage.Sampler( crop["out"], "R", IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 210 ) ), boundingMode = GafferImage.Sampler.BoundingMode.Black )
+		# Samples the whole data window and then some and then some more.
+		sampler3 = GafferImage.Sampler( crop["out"], "R", IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 220 ) ), boundingMode = GafferImage.Sampler.BoundingMode.Black )
+
+		# The hashes must take account of the additional pixels being sampled.
+		self.assertNotEqual( sampler1.hash(), sampler2.hash() )
+		self.assertNotEqual( sampler2.hash(), sampler3.hash() )
+		self.assertNotEqual( sampler3.hash(), sampler1.hash() )
+
+if __name__ == "__main__":
+	unittest.main()

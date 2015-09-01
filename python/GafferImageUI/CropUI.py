@@ -44,10 +44,11 @@ import GafferUI
 # item for the creation of a crop node
 def postCreateCrop( node, menu ) :
 
-	if node['in'].getInput() :
-		cropFormat = node['in']['format'].getValue()
-	else:
-		cropFormat = node.scriptNode()['defaultFormat'].getValue()
+	with node.scriptNode().context() :
+		if node["in"].getInput() :
+			cropFormat = node["in"]["format"].getValue()
+		else:
+			cropFormat = node.scriptNode()["defaultFormat"].getValue()
 
 	node['area'].setValue( cropFormat.getDisplayWindow() )
 
