@@ -251,5 +251,30 @@ class SamplerTest( unittest.TestCase ) :
 		sampler = GafferImage.Sampler( crop["out"], "R", IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 50 ) ), boundingMode = GafferImage.Sampler.BoundingMode.Black )
 		self.assertEqual( sampler.sample( 0, 0 ), 0 )
 
+	def testHashIncludesBlackPixels( self ) :
+
+		constant = GafferImage.Constant()
+		constant["format"].setValue( GafferImage.Format( 1000, 1000 ) )
+		constant["color"].setValue( IECore.Color4f( 1 ) )
+
+		crop = GafferImage.Crop()
+		crop["in"].setInput( constant["out"] )
+		crop["areaSource"].setValue( crop.AreaSource.Custom )
+		crop["area"].setValue( IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 200 ) ) )
+		crop["affectDisplayWindow"].setValue( False )
+		crop["affectDataWindow"].setValue( False )
+
+		# Samples the whole data window
+		sampler1 = GafferImage.Sampler( crop["out"], "R", IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 200 ) ), boundingMode = GafferImage.Sampler.BoundingMode.Black )
+		# Samples the whole data window and then some.
+		sampler2 = GafferImage.Sampler( crop["out"], "R", IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 210 ) ), boundingMode = GafferImage.Sampler.BoundingMode.Black )
+		# Samples the whole data window and then some and then some more.
+		sampler3 = GafferImage.Sampler( crop["out"], "R", IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 220 ) ), boundingMode = GafferImage.Sampler.BoundingMode.Black )
+
+		# The hashes must take account of the additional pixels being sampled.
+		self.assertNotEqual( sampler1.hash(), sampler2.hash() )
+		self.assertNotEqual( sampler2.hash(), sampler3.hash() )
+		self.assertNotEqual( sampler3.hash(), sampler1.hash() )
+
 if __name__ == "__main__":
 	unittest.main()

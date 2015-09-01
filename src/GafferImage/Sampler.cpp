@@ -115,5 +115,14 @@ void Sampler::hash( IECore::MurmurHash &h ) const
 		}
 	}
 	h.append( m_boundingMode );
+	h.append( m_dataWindow );
+	h.append( m_sampleWindow );
+}
+
+IECore::MurmurHash Sampler::hash() const
+{
+	IECore::MurmurHash h;
+	hash( h );
+	return h;
 }
 

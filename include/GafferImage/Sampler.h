@@ -88,9 +88,12 @@ class Sampler
 		/// Sub-samples the image using a filter.
 		inline float sample( float x, float y );
 
-		/// Computes the hash of the sample area, including the effects
-		/// of the bounding mode.
+		/// Appends a hash that represent all the pixel
+		/// values within the requested sample area.
 		void hash( IECore::MurmurHash &h ) const;
+		/// Convenience function to append into an
+		/// empty hash object and return it.
+		IECore::MurmurHash hash() const;
 
 	private:
 
