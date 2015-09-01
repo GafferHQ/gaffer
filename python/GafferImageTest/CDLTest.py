@@ -1,7 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2012, John Haddon. All rights reserved.
-#  Copyright (c) 2012-2015, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -44,38 +43,64 @@ import Gaffer
 import GafferTest
 import GafferImage
 
-class OpenColorIOTest( unittest.TestCase ) :
+class CDLTest( unittest.TestCase ) :
 
-	fileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/checker.exr" )
+	imageFile = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/checker.exr" )
 
 	def test( self ) :
 
 		n = GafferImage.ImageReader()
-		n["fileName"].setValue( self.fileName )
+		n["fileName"].setValue( self.imageFile )
+		orig = n["out"].image()
 
-		o = GafferImage.OpenColorIO()
+		o = GafferImage.CDL()
 		o["in"].setInput( n["out"] )
-
+		
 		self.assertEqual( n["out"].image(), o["out"].image() )
 		
-		o["inputSpace"].setValue( "linear" )
-		o["outputSpace"].setValue( "sRGB" )
+		o['slope'].setValue( IECore.Color3f( 1, 2, 3 ) )
+		
+		slope = o["out"].image()
+		self.assertNotEqual( orig, slope )
+		
+		o["offset"].setValue( IECore.Color3f( 1, 2, 3 ) )
+		offset = o["out"].image()
+		self.assertNotEqual( orig, offset )
+		self.assertNotEqual( slope, offset )
+		
+		o["power"].setValue( IECore.Color3f( 1, 2, 3 ) )
+		power = o["out"].image()
+		self.assertNotEqual( orig, power )
+		self.assertNotEqual( slope, power )
+		self.assertNotEqual( offset, power )
+		
+		o["saturation"].setValue( 0.5 )
+		saturation = o["out"].image()
+		self.assertNotEqual( orig, saturation )
+		self.assertNotEqual( slope, saturation )
+		self.assertNotEqual( offset, saturation )
+		self.assertNotEqual( power, saturation )
 
-		self.assertNotEqual( n["out"].image(), o["out"].image() )
+		o["direction"].setValue( 2 ) # inverse
+		inverse = o["out"].image()
+		self.assertNotEqual( orig, inverse )
+		self.assertNotEqual( slope, inverse )
+		self.assertNotEqual( offset, inverse )
+		self.assertNotEqual( power, inverse )
+		self.assertNotEqual( saturation, inverse )
 
 	def testHashPassThrough( self ) :
 
 		n = GafferImage.ImageReader()
-		n["fileName"].setValue( self.fileName )
+		n["fileName"].setValue( self.imageFile )
 
-		o = GafferImage.OpenColorIO()
+		o = GafferImage.CDL()
 		o["in"].setInput( n["out"] )
 
 		self.assertEqual( n["out"].image(), o["out"].image() )
 		
-		o["inputSpace"].setValue( "linear" )
-		o["outputSpace"].setValue( "sRGB" )
-
+		o['slope'].setValue( IECore.Color3f( 1, 2, 3 ) )
+		
 		self.assertNotEqual( n["out"].image(), o["out"].image() )
 		
 		o["enabled"].setValue( False )
@@ -87,9 +112,7 @@ class OpenColorIOTest( unittest.TestCase ) :
 		self.assertEqual( n["out"]['channelNames'].hash(), o["out"]['channelNames'].hash() )
 
 		o["enabled"].setValue( True )
-
-		o["inputSpace"].setValue( "linear" )
-		o["outputSpace"].setValue( "linear" )
+		o['slope'].setValue( o['slope'].defaultValue() )
 		self.assertEqual( n["out"].image(), o["out"].image() )
 		self.assertEqual( n["out"]['format'].hash(), o["out"]['format'].hash() )
 		self.assertEqual( n["out"]['dataWindow'].hash(), o["out"]['dataWindow'].hash() )
@@ -99,15 +122,14 @@ class OpenColorIOTest( unittest.TestCase ) :
 	def testImageHashPassThrough( self ) :
 
 		i = GafferImage.ImageReader()
-		i["fileName"].setValue( self.fileName )
+		i["fileName"].setValue( self.imageFile )
 
-		o = GafferImage.OpenColorIO()
+		o = GafferImage.CDL()
 		o["in"].setInput( i["out"] )
 
 		self.assertEqual( i["out"].imageHash(), o["out"].imageHash() )
 
-		o["inputSpace"].setValue( "linear" )
-		o["outputSpace"].setValue( "sRGB" )
+		o['slope'].setValue( IECore.Color3f( 1, 2, 3 ) )
 
 		self.assertNotEqual( i["out"].imageHash(), o["out"].imageHash() )
 
@@ -116,11 +138,9 @@ class OpenColorIOTest( unittest.TestCase ) :
 		i = GafferImage.ImageReader()
 		i["fileName"].setValue( os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/circles.exr" ) )
 
-		o = GafferImage.OpenColorIO()
+		o = GafferImage.CDL()
 		o["in"].setInput( i["out"] )
-
-		o["inputSpace"].setValue( "linear" )
-		o["outputSpace"].setValue( "sRGB" )
+		o['slope'].setValue( IECore.Color3f( 1, 2, 3 ) )
 
 		self.assertNotEqual(
 			o["out"].channelDataHash( "R", IECore.V2i( 0 ) ),
@@ -135,19 +155,20 @@ class OpenColorIOTest( unittest.TestCase ) :
 	def testPassThrough( self ) :
 		
 		i = GafferImage.ImageReader()
-		i["fileName"].setValue( self.fileName )
+		i["fileName"].setValue( self.imageFile )
 
-		o = GafferImage.OpenColorIO()
+		o = GafferImage.CDL()
 		o["in"].setInput( i["out"] )
-		o["inputSpace"].setValue( "linear" )
-		o["outputSpace"].setValue( "sRGB" )
-		
+		o['slope'].setValue( IECore.Color3f( 1, 2, 3 ) )
+
 		self.assertEqual( i["out"]["format"].hash(), o["out"]["format"].hash() )
 		self.assertEqual( i["out"]["dataWindow"].hash(), o["out"]["dataWindow"].hash() )
+		self.assertEqual( i["out"]["metadata"].getValue(), o["out"]["metadata"].getValue() )
 		self.assertEqual( i["out"]["channelNames"].hash(), o["out"]["channelNames"].hash() )
 				
 		self.assertEqual( i["out"]["format"].getValue(), o["out"]["format"].getValue() )
 		self.assertEqual( i["out"]["dataWindow"].getValue(), o["out"]["dataWindow"].getValue() )
+		self.assertEqual( i["out"]["metadata"].getValue(), o["out"]["metadata"].getValue() )
 		self.assertEqual( i["out"]["channelNames"].getValue(), o["out"]["channelNames"].getValue() )
 
 if __name__ == "__main__":

@@ -42,59 +42,61 @@ import Gaffer
 import GafferUI
 import GafferImage
 
-def __colorSpacePresetNames( plug ) :
-
-	config = PyOpenColorIO.GetCurrentConfig()
-
-	return IECore.StringVectorData( [ "None" ] + [ cs.getName() for cs in config.getColorSpaces() ] )
-
-def __colorSpacePresetValues( plug ) :
-
-	config = PyOpenColorIO.GetCurrentConfig()
-
-	return IECore.StringVectorData( [ "" ] + [ cs.getName() for cs in config.getColorSpaces() ] )
-
 Gaffer.Metadata.registerNode(
 
-	GafferImage.OpenColorIO,
+	GafferImage.LUT,
 
 	"description",
 	"""
-	Applies colour transformations provided by
-	OpenColorIO. Configs are loaded from the
-	configuration specified by the OCIO environment
-	variable.
+	Applies color transformations provided by
+	OpenColorIO via a LUT file and OCIO FileTransform.
 	""",
 
 	plugs = {
 
-		"inputSpace" : [
+		"fileName" : [
 
 			"description",
 			"""
-			The colour space of the input image.
+			The name of the LUT file to be read. Only OpenColorIO
+			supported files will function as expected.
 			""",
 
-			"presetNames", __colorSpacePresetNames,
-			"presetValues", __colorSpacePresetValues,
-
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
+			"pathPlugValueWidget:leaf", True,
+			"pathPlugValueWidget:bookmarks", "color",
+			"fileSystemPathPlugValueWidget:extensions", IECore.StringVectorData( GafferImage.LUT.supportedExtensions() ),
+			"fileSystemPathPlugValueWidget:extensionsLabel", "Show only LUT files",
 
 		],
 
-		"outputSpace" : [
+		"interpolation" : [
 
 			"description",
 			"""
-			The colour space of the output image.
+			The interpolation mode for the color transformation.
 			""",
 
-			"presetNames", __colorSpacePresetNames,
-			"presetValues", __colorSpacePresetValues,
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"preset:Best", GafferImage.LUT.Interpolation.Best,
+			"preset:Nearest", GafferImage.LUT.Interpolation.Nearest,
+			"preset:Linear", GafferImage.LUT.Interpolation.Linear,
+			"preset:Tetrahedral", GafferImage.LUT.Interpolation.Tetrahedral,
+
+		],
+
+		"direction" : [
+
+			"description",
+			"""
+			The direction to perform the color transformation.
+			""",
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"preset:Forward", GafferImage.LUT.Direction.Forward,
+			"preset:Inverse", GafferImage.LUT.Direction.Inverse,
 
-		]
+		],
 
 	}
 

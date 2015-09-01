@@ -1,0 +1,96 @@
+//////////////////////////////////////////////////////////////////////////
+//
+//  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
+//
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are
+//  met:
+//
+//      * Redistributions of source code must retain the above
+//        copyright notice, this list of conditions and the following
+//        disclaimer.
+//
+//      * Redistributions in binary form must reproduce the above
+//        copyright notice, this list of conditions and the following
+//        disclaimer in the documentation and/or other materials provided with
+//        the distribution.
+//
+//      * Neither the name of John Haddon nor the names of
+//        any other contributors to this software may be used to endorse or
+//        promote products derived from this software without specific prior
+//        written permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+//  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+//  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+//  PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+//  CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+//  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+//  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+//  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+//  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+//  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+//  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+//////////////////////////////////////////////////////////////////////////
+
+#ifndef GAFFERIMAGE_OPENCOLORIOTRANSFORM_H
+#define GAFFERIMAGE_OPENCOLORIOTRANSFORM_H
+
+#include "OpenColorIO/OpenColorIO.h"
+
+#include "GafferImage/ColorProcessor.h"
+
+namespace GafferImage
+{
+
+/// Abstract base class for nodes which apply an OpenColorIO Transform
+class OpenColorIOTransform : public ColorProcessor
+{
+
+	public :
+
+		OpenColorIOTransform( const std::string &name=defaultName<OpenColorIOTransform>() );
+		virtual ~OpenColorIOTransform();
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::OpenColorIOTransform, OpenColorIOTransformTypeId, ColorProcessor );
+
+	protected :
+
+		/// Implemented to return true if hashTransform() has
+		/// an affect. Derived classed should implement
+		/// hashTransform() to return a default hash if the
+		/// node should be in a disabled state.
+		/// \todo: rework ColorProcessor so we can remove this.
+		virtual bool enabled() const;
+		
+		/// Implemented to call affectsTransform() if the base class
+		/// does not affect the color data for this input. Derived
+		/// classes should implement affectsTransform() instead.
+		virtual bool affectsColorData( const Gaffer::Plug *input ) const;
+		/// Implemented to call hashTransform() after hashing the
+		/// affect of the base class. Derived classes should
+		/// implement hashTransform() instead.
+		virtual void hashColorData( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		/// Implemented to fetch an OpenColorIO Processor from the
+		/// OpenColorIO Config and apply it to the output channels.
+		/// Derived classes should implement transform() instead.
+		virtual void processColorData( const Gaffer::Context *context, IECore::FloatVectorData *r, IECore::FloatVectorData *g, IECore::FloatVectorData *b ) const;
+		
+		/// Derived classes must implement this to return true if the specified input
+		/// is used in transform().
+		virtual bool affectsTransform( const Gaffer::Plug *input ) const = 0;
+		/// Derived classes must implement this to compute the hash for the transform.
+		virtual void hashTransform( const Gaffer::Context *context, IECore::MurmurHash &h ) const = 0;
+		/// Derived classes must implement this to return a valid OpenColorIO
+		/// Transform which can be used by an OpenColorIO Processor or a null
+		/// pointer if no processing should take place.
+		virtual OpenColorIO::ConstTransformRcPtr transform() const = 0;
+
+};
+
+IE_CORE_DECLAREPTR( OpenColorIOTransform )
+
+} // namespace GafferImage
+
+#endif // GAFFERIMAGE_OPENCOLORIOTRANSFORM_H

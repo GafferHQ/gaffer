@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2012-2015, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,14 +35,9 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "tbb/mutex.h"
-#include "tbb/null_mutex.h"
-
-#include "OpenColorIO/OpenColorIO.h"
-
 #include "Gaffer/StringPlug.h"
 
-#include "GafferImage/OpenColorIO.h"
+#include "GafferImage/ColorSpace.h"
 
 using namespace std;
 using namespace IECore;
@@ -53,116 +48,79 @@ using namespace Gaffer;
 namespace GafferImage
 {
 
-namespace Detail
-{
+IE_CORE_DEFINERUNTIMETYPED( ColorSpace );
 
-// Although the OpenColorIO library is advertised as threadsafe,
-// it seems to crash regularly on OS X in getProcessor(), while
-// mucking around with the locale(). we mutex the call to getProcessor()
-// but still do the actual processing in parallel - this seems to
-// have negligible performance impact but a nice not-crashing impact.
-// On other platforms we use a null_mutex so there should be no
-// performance impact at all.
-#ifdef __APPLE__
-typedef tbb::mutex OCIOMutex;
-#else
-typedef tbb::null_mutex OCIOMutex;
-#endif
+size_t ColorSpace::g_firstPlugIndex = 0;
 
-static OCIOMutex g_ocioMutex;
-
-} // namespace Detail
-
-IE_CORE_DEFINERUNTIMETYPED( OpenColorIO );
-
-size_t OpenColorIO::g_firstPlugIndex = 0;
-
-OpenColorIO::OpenColorIO( const std::string &name )
-	:	ColorProcessor( name )
+ColorSpace::ColorSpace( const std::string &name )
+	:	OpenColorIOTransform( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new StringPlug( "inputSpace" ) );
 	addChild( new StringPlug( "outputSpace" ) );
 }
 
-OpenColorIO::~OpenColorIO()
+ColorSpace::~ColorSpace()
 {
 }
 
-Gaffer::StringPlug *OpenColorIO::inputSpacePlug()
+Gaffer::StringPlug *ColorSpace::inputSpacePlug()
 {
 	return getChild<StringPlug>( g_firstPlugIndex );
 }
 
-const Gaffer::StringPlug *OpenColorIO::inputSpacePlug() const
+const Gaffer::StringPlug *ColorSpace::inputSpacePlug() const
 {
 	return getChild<StringPlug>( g_firstPlugIndex );
 }
 
-Gaffer::StringPlug *OpenColorIO::outputSpacePlug()
+Gaffer::StringPlug *ColorSpace::outputSpacePlug()
 {
 	return getChild<StringPlug>( g_firstPlugIndex + 1 );
 }
 
-const Gaffer::StringPlug *OpenColorIO::outputSpacePlug() const
+const Gaffer::StringPlug *ColorSpace::outputSpacePlug() const
 {
 	return getChild<StringPlug>( g_firstPlugIndex + 1 );
 }
 
-bool OpenColorIO::enabled() const
+bool ColorSpace::affectsTransform( const Gaffer::Plug *input ) const
 {
-	if( !ColorProcessor::enabled() )
-	{
-		return false;
-	}
-
-	std::string outSpaceString( outputSpacePlug()->getValue() );
-	std::string inSpaceString( inputSpacePlug()->getValue() );
-
-	return outSpaceString != inSpaceString &&
-		outSpaceString.size() &&
-		inSpaceString.size();
+	return ( input == inputSpacePlug() || input == outputSpacePlug() );
 }
 
-bool OpenColorIO::affectsColorData( const Gaffer::Plug *input ) const
+void ColorSpace::hashTransform( const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	if( ColorProcessor::affectsColorData( input ) )
-	{
-		return true;
-	}
-	return input == inputSpacePlug() || input == outputSpacePlug();
-}
+	std::string inSpace = inputSpacePlug()->getValue();
+	std::string outSpace = outputSpacePlug()->getValue();
 
-void OpenColorIO::hashColorData( const Gaffer::Context *context, IECore::MurmurHash &h ) const
-{
-	ColorProcessor::hashColorData( context, h );
+	if( inSpace == outSpace || inSpace.empty() || outSpace.empty() )
+	{
+		h = MurmurHash();
+		return;
+	}
 
 	inputSpacePlug()->hash( h );
 	outputSpacePlug()->hash( h );
 }
 
-void OpenColorIO::processColorData( const Gaffer::Context *context, IECore::FloatVectorData *r, IECore::FloatVectorData *g, IECore::FloatVectorData *b ) const
+OpenColorIO::ConstTransformRcPtr ColorSpace::transform() const
 {
 	string inputSpace( inputSpacePlug()->getValue() );
 	string outputSpace( outputSpacePlug()->getValue() );
 
-	::OpenColorIO::ConstProcessorRcPtr processor;
+	// no need to run the processor if we're not
+	// actually changing the color space.
+	if( ( inputSpace == outputSpace ) || inputSpace.empty() || outputSpace.empty() )
 	{
-		Detail::OCIOMutex::scoped_lock lock( Detail::g_ocioMutex );
-		::OpenColorIO::ConstConfigRcPtr config = ::OpenColorIO::GetCurrentConfig();
-		processor = config->getProcessor( inputSpace.c_str(), outputSpace.c_str() );
+		return OpenColorIO::ColorSpaceTransformRcPtr();
 	}
 
-	::OpenColorIO::PlanarImageDesc image(
-		r->baseWritable(),
-		g->baseWritable(),
-		b->baseWritable(),
-		0, // alpha
-		ImagePlug::tileSize(), // width
-		ImagePlug::tileSize() // height
-	);
+	OpenColorIO::ColorSpaceTransformRcPtr result = OpenColorIO::ColorSpaceTransform::Create();
+	result->setSrc( inputSpace.c_str() );
+	result->setDst( outputSpace.c_str() );
 
-	processor->apply( image );
+	return result;
 }
 
 } // namespace GafferImage

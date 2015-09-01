@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,10 +34,13 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_OPENCOLORIO_H
-#define GAFFERIMAGE_OPENCOLORIO_H
+#ifndef GAFFERIMAGE_CDL_H
+#define GAFFERIMAGE_CDL_H
 
-#include "GafferImage/ColorProcessor.h"
+#include "Gaffer/CompoundNumericPlug.h"
+#include "Gaffer/NumericPlug.h"
+
+#include "GafferImage/OpenColorIOTransform.h"
 
 namespace Gaffer
 {
@@ -50,31 +52,36 @@ IE_CORE_FORWARDDECLARE( StringPlug )
 namespace GafferImage
 {
 
-class OpenColorIO : public ColorProcessor
+class CDL : public OpenColorIOTransform
 {
 
 	public :
 
-		OpenColorIO( const std::string &name=defaultName<OpenColorIO>() );
-		virtual ~OpenColorIO();
+		CDL( const std::string &name=defaultName<CDL>() );
+		virtual ~CDL();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::OpenColorIO, OpenColorIOTypeId, ColorProcessor );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::CDL, CDLTypeId, OpenColorIOTransform );
 
-		Gaffer::StringPlug *inputSpacePlug();
-		const Gaffer::StringPlug *inputSpacePlug() const;
+		Gaffer::Color3fPlug *slopePlug();
+		const Gaffer::Color3fPlug *slopePlug() const;
 
-		Gaffer::StringPlug *outputSpacePlug();
-		const Gaffer::StringPlug *outputSpacePlug() const;
+		Gaffer::Color3fPlug *offsetPlug();
+		const Gaffer::Color3fPlug *offsetPlug() const;
+
+		Gaffer::Color3fPlug *powerPlug();
+		const Gaffer::Color3fPlug *powerPlug() const;
+
+		Gaffer::FloatPlug *saturationPlug();
+		const Gaffer::FloatPlug *saturationPlug() const;
+
+		Gaffer::IntPlug *directionPlug();
+		const Gaffer::IntPlug *directionPlug() const;
 
 	protected :
 
-		/// Overrides the default implementation to disable the node when the input color space is
-		/// the same as the output color space.
-		virtual bool enabled() const;
-
-		virtual bool affectsColorData( const Gaffer::Plug *input ) const;
-		virtual void hashColorData( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual void processColorData( const Gaffer::Context *context, IECore::FloatVectorData *r, IECore::FloatVectorData *g, IECore::FloatVectorData *b ) const;
+		virtual bool affectsTransform( const Gaffer::Plug *input ) const;
+		virtual void hashTransform( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual OpenColorIO::ConstTransformRcPtr transform() const;
 
 	private :
 
@@ -82,8 +89,8 @@ class OpenColorIO : public ColorProcessor
 
 };
 
-IE_CORE_DECLAREPTR( OpenColorIO )
+IE_CORE_DECLAREPTR( CDL )
 
 } // namespace GafferImage
 
-#endif // GAFFERIMAGE_OPENCOLORIO_H
+#endif // GAFFERIMAGE_CDL_H

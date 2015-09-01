@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2013-2015, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2012-2015, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,74 +35,51 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_TYPEIDS_H
-#define GAFFERIMAGE_TYPEIDS_H
+#ifndef GAFFERIMAGE_COLORSPACE_H
+#define GAFFERIMAGE_COLORSPACE_H
+
+#include "GafferImage/OpenColorIOTransform.h"
+
+namespace Gaffer
+{
+
+IE_CORE_FORWARDDECLARE( StringPlug )
+
+} // namespace Gaffer
 
 namespace GafferImage
 {
 
-enum TypeId
+class ColorSpace : public OpenColorIOTransform
 {
-	ImagePlugTypeId = 110750,
-	ImageNodeTypeId = 110751,
-	ImageReaderTypeId = 110752,
-	ImagePrimitiveNodeTypeId = 110753,
-	DisplayTypeId = 110754,
-	GafferDisplayDriverTypeId = 110755,
-	ImageProcessorTypeId = 110756,
-	ChannelDataProcessorTypeId = 110757,
-	ColorSpaceTypeId = 110758,
-	ObjectToImageTypeId = 110759,
-	FormatDataTypeId = 110760,
-	FormatPlugTypeId = 110761,
-	MergeTypeId = 110762,
-	GradeTypeId = 110763,
-	ShuffleTypeId = 110764,
-	ConstantTypeId = 110765,
-	ShuffleChannelPlugTypeId = 110766,
-	ChannelMaskPlugTypeId = 110767,
-	ReformatTypeId = 110768,
-	FilterPlugTypeId = 110769,
-	ImageWriterTypeId = 110770,
-	ImageTransformTypeId = 110771,
-	FilterTypeId = 110772,
-	BoxFilterTypeId = 110773,
-	BilinearFilterTypeId = 110774,
-	SplineFilterTypeId = 110775,
-	BSplineFilterTypeId = 110776,
-	HermiteFilterTypeId = 110777,
-	CubicFilterTypeId = 110778,
-	MitchellFilterTypeId = 110779,
-	CatmullRomFilterTypeId = 110780,
-	SincFilterTypeId = 110781,
-	LanczosFilterTypeId = 110782,
-	ImageStatsTypeId = 110783,
-	ImageTransformImplementationTypeId = 110784,
-	DeleteChannelsTypeId = 110785,
-	ColorProcessorTypeId = 110786,
-	ClampTypeId = 110787,
-	UnpremultiplyTypeId = 110788,
-	ImageContextProcessorTypeId = 110789,
-	ImageTimeWarpTypeId = 110790,
-	ImageContextVariablesTypeId = 110791,
-	ImageSwitchTypeId = 110792,
-	ImageSamplerTypeId = 110793,
-	MetadataProcessorTypeId = 110794,
-	ImageMetadataTypeId = 110795,
-	DeleteImageMetadataTypeId = 110796,
-	CopyImageMetadataTypeId = 110797,
-	ImageLoopTypeId = 110798,
-	PremultiplyTypeId = 110799,
-	CropTypeId = 110800,
-	ResampleTypeId = 110801,
-	ResizeTypeId = 110802,
-	OpenColorIOTransformTypeId = 110803,
-	LUTTypeId = 110804,
-	CDLTypeId = 110805,
 
-	LastTypeId = 110849
+	public :
+
+		ColorSpace( const std::string &name=defaultName<ColorSpace>() );
+		virtual ~ColorSpace();
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::ColorSpace, ColorSpaceTypeId, OpenColorIOTransform );
+
+		Gaffer::StringPlug *inputSpacePlug();
+		const Gaffer::StringPlug *inputSpacePlug() const;
+
+		Gaffer::StringPlug *outputSpacePlug();
+		const Gaffer::StringPlug *outputSpacePlug() const;
+
+	protected :
+
+		virtual bool affectsTransform( const Gaffer::Plug *input ) const;
+		virtual void hashTransform( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual OpenColorIO::ConstTransformRcPtr transform() const;
+
+	private :
+
+		static size_t g_firstPlugIndex;
+
 };
+
+IE_CORE_DECLAREPTR( ColorSpace )
 
 } // namespace GafferImage
 
-#endif // GAFFERIMAGE_TYPEIDS_H
+#endif // GAFFERIMAGE_COLORSPACE_H
