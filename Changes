@@ -1,3 +1,12 @@
+# 0.16.0.2
+==========
+
+UI
+-----------------------------------------------------------------------
+
+- Box : Copy all metadata when promoting plugs.
+- UIEditor : Never edit user plug for Box nodes.
+
 # 0.16.0.1
 ==========
 
