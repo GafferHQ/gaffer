@@ -194,6 +194,10 @@ void CompoundParameterHandler::setPlugValue()
 					h->setPlugValue();
 				}
 			}
+			else
+			{
+				h->setPlugValue();
+			}
 		}
 	}
 }
