@@ -35,15 +35,19 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include <sys/utsname.h>
+#include <zlib.h>
 
 #include "boost/filesystem.hpp"
 
 #include "OpenImageIO/imageio.h"
 OIIO_NAMESPACE_USING
 
+#include <OpenEXR/ImfCRgbaFile.h>  // JUST to get symbols to figure out version!
+
 #include "IECore/MessageHandler.h"
 
 #include "Gaffer/Context.h"
+#include "Gaffer/Metadata.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/StringPlug.h"
 
@@ -56,6 +60,12 @@ using namespace Imath;
 using namespace IECore;
 using namespace GafferImage;
 using namespace Gaffer;
+
+static InternedString g_modePlugName( "mode" );
+static InternedString g_compressionPlugName( "compression" );
+static InternedString g_compressionQualityPlugName( "compressionQuality" );
+static InternedString g_compressionLevelPlugName( "compressionLevel" );
+static InternedString g_dataTypePlugName( "dataType" );
 
 //////////////////////////////////////////////////////////////////////////
 // Utility for converting IECore::Data types to OIIO::TypeDesc types.
@@ -217,9 +227,108 @@ void metadataToImageSpecAttributes( const CompoundObject *metadata, ImageSpec &s
 
 ImageSpec createImageSpec( const ImageWriter *node, const boost::shared_ptr<ImageOutput> &out, const Imath::Box2i &dataWindow, const Imath::Box2i &displayWindow )
 {
-	const bool supportsDisplayWindow = out->supports( "displaywindow" );
+	const std::string formatName = out->format_name();
+	const bool supportsDisplayWindow = out->supports( "displaywindow" ) && formatName != "dpx";
 
-	ImageSpec spec( TypeDesc::FLOAT );
+	ImageSpec spec( TypeDesc::UNKNOWN );
+
+	const ValuePlug *optionsPlug = node->getChild<ValuePlug>( formatName );
+
+	if( optionsPlug != NULL)
+	{
+		const StringPlug *dataTypePlug = optionsPlug->getChild<StringPlug>( g_dataTypePlugName );
+		std::string dataType;
+
+		if( dataTypePlug != NULL )
+		{
+			dataType = dataTypePlug->getValue();
+
+			if( dataType == "int8" )
+			{
+				spec.set_format( TypeDesc::INT8 );
+			}
+			else if( dataType == "int16" )
+			{
+				spec.set_format( TypeDesc::INT16 );
+			}
+			else if( dataType == "int32" )
+			{
+				spec.set_format( TypeDesc::INT32 );
+			}
+			else if( dataType == "int64" )
+			{
+				spec.set_format( TypeDesc::INT64 );
+			}
+			else if( dataType == "uint8" )
+			{
+				spec.set_format( TypeDesc::UINT8 );
+			}
+			else if( dataType == "uint16" )
+			{
+				spec.set_format( TypeDesc::UINT16 );
+			}
+			else if( dataType == "uint32" )
+			{
+				spec.set_format( TypeDesc::UINT32 );
+			}
+			else if( dataType == "uint64" )
+			{
+				spec.set_format( TypeDesc::UINT64 );
+			}
+			else if( dataType == "half" )
+			{
+				spec.set_format( TypeDesc::HALF );
+			}
+			else if( dataType == "float" )
+			{
+				spec.set_format( TypeDesc::FLOAT );
+			}
+			else if( dataType == "double" )
+			{
+				spec.set_format( TypeDesc::DOUBLE );
+			}
+		}
+
+		const IntPlug *modePlug = optionsPlug->getChild<IntPlug>( g_modePlugName );
+
+		if( modePlug != NULL && modePlug->getValue() == ImageWriter::Tile )
+		{
+			spec.tile_width = spec.tile_height = ImagePlug::tileSize();
+		}
+
+		const StringPlug *compressionPlug = optionsPlug->getChild<StringPlug>( g_compressionPlugName );
+
+		if( compressionPlug != NULL )
+		{
+			spec.attribute( "compression", compressionPlug->getValue() );
+		}
+
+		if( formatName == "jpeg" )
+		{
+			spec.attribute( "CompressionQuality", optionsPlug->getChild<IntPlug>( g_compressionQualityPlugName )->getValue() );
+		}
+		else if( formatName == "dpx" )
+		{
+			if( dataType == "int10" )
+			{
+				spec.set_format( TypeDesc::INT16 );
+				spec.attribute ("oiio:BitsPerSample", 10);
+			}
+			else if( dataType == "int12" )
+			{
+				spec.set_format( TypeDesc::INT16 );
+				spec.attribute ("oiio:BitsPerSample", 12);
+			}
+		}
+		else if( formatName == "png" )
+		{
+			spec.attribute( "png:compressionLevel", optionsPlug->getChild<IntPlug>( g_compressionLevelPlugName )->getValue() );
+		}
+		else if( formatName == "webp" )
+		{
+			spec.attribute( "CompressionQuality", optionsPlug->getChild<IntPlug>( g_compressionQualityPlugName )->getValue() );
+		}
+	}
 
 	// Specify the display window.
 	spec.full_x = displayWindow.min.x;
@@ -377,7 +486,6 @@ ImageWriter::ImageWriter( const std::string &name )
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new ImagePlug( "in" ) );
 	addChild( new StringPlug( "fileName" ) );
-	addChild( new IntPlug( "writeMode" ) );
 	addChild(
 		new ChannelMaskPlug(
 			"channels",
@@ -388,10 +496,73 @@ ImageWriter::ImageWriter( const std::string &name )
 	);
 	addChild( new ImagePlug( "out", Plug::Out, Plug::Default & ~Plug::Serialisable ) );
 	outPlug()->setInput( inPlug() );
+
+	createFormatOptionsPlugs();
 }
 
 ImageWriter::~ImageWriter()
 {
+}
+
+void ImageWriter::createFormatOptionsPlugs()
+{
+	ValuePlug *dpxOptionsPlug = new ValuePlug( "dpx" );
+	addChild( dpxOptionsPlug );
+	dpxOptionsPlug->addChild( new StringPlug( g_dataTypePlugName, Plug::In, "int10" ) );
+
+	ValuePlug *f3dOptionsPlug = new ValuePlug( "field3d" );
+	addChild( f3dOptionsPlug );
+	f3dOptionsPlug->addChild( new IntPlug( g_modePlugName, Plug::In, 0 ) );
+	f3dOptionsPlug->addChild( new StringPlug( g_dataTypePlugName, Plug::In, "float" ) );
+
+	ValuePlug *fitsOptionsPlug = new ValuePlug( "fits" );
+	addChild( fitsOptionsPlug );
+	fitsOptionsPlug->addChild( new StringPlug( g_dataTypePlugName, Plug::In, "float" ) );
+
+	ValuePlug *iffOptionsPlug = new ValuePlug( "iff" );
+	addChild( iffOptionsPlug );
+	iffOptionsPlug->addChild( new IntPlug( g_modePlugName, Plug::In, 1 ) );
+
+	ValuePlug *jpgOptionsPlug = new ValuePlug( "jpeg" );
+	addChild( jpgOptionsPlug );
+	jpgOptionsPlug->addChild( new IntPlug( g_compressionQualityPlugName, Plug::In, 98, 0, 100 ) );
+
+	ValuePlug *jpeg2000OptionsPlug = new ValuePlug( "jpeg2000" );
+	addChild( jpeg2000OptionsPlug );
+	jpeg2000OptionsPlug->addChild( new StringPlug( g_dataTypePlugName, Plug::In, "uint8" ) );
+
+	ValuePlug *exrOptionsPlug = new ValuePlug( "openexr" );
+	addChild( exrOptionsPlug );
+	exrOptionsPlug->addChild( new IntPlug( g_modePlugName, Plug::In, 0 ) );
+	exrOptionsPlug->addChild( new StringPlug( g_compressionPlugName, Plug::In, "zip" ) );
+	exrOptionsPlug->addChild( new StringPlug( g_dataTypePlugName, Plug::In, "half" ) );
+
+	ValuePlug *pngOptionsPlug = new ValuePlug( "png" );
+	addChild( pngOptionsPlug );
+	pngOptionsPlug->addChild( new StringPlug( g_compressionPlugName, Plug::In, "filtered" ) );
+	pngOptionsPlug->addChild( new IntPlug( g_compressionLevelPlugName, Plug::In, 6, Z_NO_COMPRESSION, Z_BEST_COMPRESSION ) );
+
+	ValuePlug *rlaOptionsPlug = new ValuePlug( "rla" );
+	addChild( rlaOptionsPlug );
+	rlaOptionsPlug->addChild( new StringPlug( g_dataTypePlugName, Plug::In, "uint8" ) );
+
+	ValuePlug *sgiOptionsPlug = new ValuePlug( "sgi" );
+	addChild( sgiOptionsPlug );
+	sgiOptionsPlug->addChild( new StringPlug( g_dataTypePlugName, Plug::In, "uint8" ) );
+
+	ValuePlug *targaOptionsPlug = new ValuePlug( "targa" );
+	addChild( targaOptionsPlug );
+	targaOptionsPlug->addChild( new StringPlug( g_compressionPlugName, Plug::In, "rle" ) );
+
+	ValuePlug *tifOptionsPlug = new ValuePlug( "tiff" );
+	addChild( tifOptionsPlug );
+	tifOptionsPlug->addChild( new IntPlug( g_modePlugName, Plug::In, 0 ) );
+	tifOptionsPlug->addChild( new StringPlug( g_compressionPlugName, Plug::In, "zip" ) );
+	tifOptionsPlug->addChild( new StringPlug( g_dataTypePlugName, Plug::In, "uint8" ) );
+
+	ValuePlug *webpOptionsPlug = new ValuePlug( "webp" );
+	addChild( webpOptionsPlug );
+	webpOptionsPlug->addChild( new IntPlug( g_compressionQualityPlugName, Plug::In, 100, 0, 100 ) );
 }
 
 GafferImage::ImagePlug *ImageWriter::inPlug()
@@ -414,34 +585,48 @@ const Gaffer::StringPlug *ImageWriter::fileNamePlug() const
 	return getChild<StringPlug>( g_firstPlugIndex+1 );
 }
 
-Gaffer::IntPlug *ImageWriter::writeModePlug()
-{
-	return getChild<IntPlug>( g_firstPlugIndex+2 );
-}
-
-const Gaffer::IntPlug *ImageWriter::writeModePlug() const
-{
-	return getChild<IntPlug>( g_firstPlugIndex+2 );
-}
-
 GafferImage::ChannelMaskPlug *ImageWriter::channelsPlug()
 {
-	return getChild<ChannelMaskPlug>( g_firstPlugIndex+3 );
+	return getChild<ChannelMaskPlug>( g_firstPlugIndex+2 );
 }
 
 const GafferImage::ChannelMaskPlug *ImageWriter::channelsPlug() const
 {
-	return getChild<ChannelMaskPlug>( g_firstPlugIndex+3 );
+	return getChild<ChannelMaskPlug>( g_firstPlugIndex+2 );
 }
 
 GafferImage::ImagePlug *ImageWriter::outPlug()
 {
-	return getChild<ImagePlug>( g_firstPlugIndex + 4 );
+	return getChild<ImagePlug>( g_firstPlugIndex+3 );
 }
 
 const GafferImage::ImagePlug *ImageWriter::outPlug() const
 {
-	return getChild<ImagePlug>( g_firstPlugIndex + 4 );
+	return getChild<ImagePlug>( g_firstPlugIndex+3 );
+}
+
+Gaffer::ValuePlug *ImageWriter::formatSettingsPlug( const std::string &format )
+{
+	return getChild<ValuePlug>( format );
+}
+
+const Gaffer::ValuePlug *ImageWriter::formatSettingsPlug( const std::string &format ) const
+{
+	return getChild<ValuePlug>( format );
+}
+
+const std::string ImageWriter::getCurrentFileFormat() const
+{
+	const std::string fileName = Context::current()->substitute( fileNamePlug()->getValue() );
+	boost::shared_ptr<ImageOutput> out( ImageOutput::create( fileName.c_str() ) );
+	if( out != NULL )
+	{
+		return out->format_name();
+	}
+	else
+	{
+		return "";
+	}
 }
 
 IECore::MurmurHash ImageWriter::hash( const Context *context ) const
@@ -454,8 +639,34 @@ IECore::MurmurHash ImageWriter::hash( const Context *context ) const
 
 	IECore::MurmurHash h = ExecutableNode::hash( context );
 	h.append( fileNamePlug()->hash() );
-	h.append( writeModePlug()->hash() );
 	h.append( channelsPlug()->hash() );
+	const std::string fileFormat = getCurrentFileFormat();
+
+	if( fileFormat != "" )
+	{
+		const ValuePlug *fmtSettingsPlug = formatSettingsPlug( fileFormat );
+		if( fmtSettingsPlug != NULL )
+		{
+			h.append( fmtSettingsPlug->hash() );
+		}
+	}
+	else
+	{
+		h.append( formatSettingsPlug( "openexr" )->hash() );
+		h.append( formatSettingsPlug( "tiff" )->hash() );
+		h.append( formatSettingsPlug( "jpeg" )->hash() );
+		h.append( formatSettingsPlug( "dpx" )->hash() );
+		h.append( formatSettingsPlug( "field3d" )->hash() );
+		h.append( formatSettingsPlug( "fits" )->hash() );
+		h.append( formatSettingsPlug( "iff" )->hash() );
+		h.append( formatSettingsPlug( "jpeg2000" )->hash() );
+		h.append( formatSettingsPlug( "png" )->hash() );
+		h.append( formatSettingsPlug( "rla" )->hash() );
+		h.append( formatSettingsPlug( "sgi" )->hash() );
+		h.append( formatSettingsPlug( "targa" )->hash() );
+		h.append( formatSettingsPlug( "webp" )->hash() );
+	}
+
 	return h;
 }
 
@@ -523,14 +734,6 @@ void ImageWriter::execute() const
 		boost::filesystem::create_directories( directory );
 	}
 
-	// Only allow tiled output if our file format supports it.
-	const int writeMode = writeModePlug()->getValue() & out->supports( "tiles" );
-
-	if ( writeMode == Tile )
-	{
-		spec.tile_width = spec.tile_height = ImagePlug::tileSize();
-	}
-
 	if ( out->open( fileName, spec ) )
 	{
 		IECore::msg( IECore::MessageHandler::Info, this->relativeName( this->scriptNode() ), "Writing " + fileName );
@@ -540,7 +743,7 @@ void ImageWriter::execute() const
 		throw IECore::Exception( boost::str( boost::format( "Could not open \"%s\", error = %s" ) % fileName % out->geterror() ) );
 	}
 
-	if ( writeMode == Scanline )
+	if ( spec.tile_width == 0 )
 	{
 		writeImageScanlines( this, out, channelPtrs, spec, dataWindow, fileName );
 	}

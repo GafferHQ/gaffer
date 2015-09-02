@@ -39,6 +39,7 @@
 
 #include "Gaffer/ExecutableNode.h"
 #include "Gaffer/NumericPlug.h"
+#include "Gaffer/StringPlug.h"
 
 #include "GafferImage/TypeIds.h"
 
@@ -73,17 +74,21 @@ class ImageWriter : public Gaffer::ExecutableNode
 		const GafferImage::ChannelMaskPlug *channelsPlug() const;
 		GafferImage::ChannelMaskPlug *channelsPlug();
 
-		Gaffer::IntPlug *writeModePlug();
-		const Gaffer::IntPlug *writeModePlug() const;
-
 		GafferImage::ImagePlug *outPlug();
 		const GafferImage::ImagePlug *outPlug() const;
+
+		Gaffer::ValuePlug *formatSettingsPlug( const std::string &format );
+		const Gaffer::ValuePlug *formatSettingsPlug( const std::string &format ) const;
 
 		virtual IECore::MurmurHash hash( const Gaffer::Context *context ) const;
 
 		virtual void execute() const;
 
+		const std::string getCurrentFileFormat() const;
+
 	private :
+
+		void createFormatOptionsPlugs();
 
 		static size_t g_firstPlugIndex;
 };
