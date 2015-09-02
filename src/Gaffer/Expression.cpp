@@ -205,27 +205,34 @@ void Expression::hash( const ValuePlug *output, const Context *context, IECore::
 	{
 		enginePlug()->hash( h );
 		expressionPlug()->hash( h );
-		inPlug()->hash( h );
-
-		if( m_engine )
+		for( ValuePlugIterator it( inPlug() ); it!=it.end(); it++ )
 		{
-			for( std::vector<IECore::InternedString>::const_iterator it = m_contextNames.begin(); it != m_contextNames.end(); it++ )
+			(*it)->hash( h );
+			// We must hash the types of the input plugs, because
+			// an identical expression but with different input plug
+			// types may yield a different result from Engine::execute().
+			h.append( (*it)->typeId() );
+		}
+
+		for( std::vector<IECore::InternedString>::const_iterator it = m_contextNames.begin(); it != m_contextNames.end(); it++ )
+		{
+			const IECore::Data *d = context->get<IECore::Data>( *it, 0 );
+			if( d )
 			{
-				const IECore::Data *d = context->get<IECore::Data>( *it, 0 );
-				if( d )
-				{
-					d->hash( h );
-				}
-				else
-				{
-					h.append( 0 );
-				}
+				d->hash( h );
+			}
+			else
+			{
+				h.append( 0 );
 			}
 		}
 	}
 	else if( outPlug()->isAncestorOf( output ) )
 	{
 		executePlug()->hash( h );
+		// We must hash the type of the output plug, to account for
+		// Engine::apply() performing conversion based on plug type.
+		h.append( output->typeId() );
 	}
 }
 

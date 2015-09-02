@@ -755,6 +755,35 @@ class ExpressionTest( GafferTest.TestCase ) :
 		self.assertEqual( len( s["e"]["__in"] ), 1 )
 		self.assertEqual( len( s["e"]["__out"] ), 1 )
 
+	def testIdenticalExpressionWithDifferentPlugTypes( self ) :
+
+		# IntPlug -> FloatPlug
+
+		s1 = Gaffer.ScriptNode()
+
+		s1["n"] = Gaffer.Node()
+		s1["n"]["user"]["a"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s1["n"]["user"]["b"] = Gaffer.FloatPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		s1["e"] = Gaffer.Expression()
+		s1["e"].setExpression( 'parent["n"]["user"]["b"] = parent["n"]["user"]["a"]' )
+
+		s1["n"]["user"]["a"].setValue( 1001 )
+		self.assertEqual( s1["n"]["user"]["b"].getValue(), 1001 )
+
+		# IntPlug -> IntPlug
+
+		s2 = Gaffer.ScriptNode()
+
+		s2["n"] = Gaffer.Node()
+		s2["n"]["user"]["a"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s2["n"]["user"]["b"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		s2["e"] = Gaffer.Expression()
+		s2["e"].setExpression( 'parent["n"]["user"]["b"] = parent["n"]["user"]["a"]' )
+
+		s2["n"]["user"]["a"].setValue( 1001 )
+		self.assertEqual( s2["n"]["user"]["b"].getValue(), 1001 )
 
 if __name__ == "__main__":
 	unittest.main()
