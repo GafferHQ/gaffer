@@ -104,12 +104,22 @@ void ratioAndOffset( const Box2f &dstDataWindow, const Box2i &srcDataWindow, V2f
 	offset = srcDataWindow.min - dstDataWindow.min / ratio;
 }
 
+// The radius for the filter is specified in the output space. This
+// method returns it as a number of pixels in the input space.
+V2i inputFilterRadius( const OIIO::Filter2D *filter, const V2f &ratio )
+{
+	return V2i(
+		(int)ceilf( filter->width() / ( 2.0f * ratio.x ) ),
+		(int)ceilf( filter->height() / ( 2.0f * ratio.y ) )
+	);
+}
+
 // Returns the input region that will need to be sampled when
 // generating a given output tile.
 Box2i inputRegion( const V2i &tileOrigin, unsigned passes, const V2f &ratio, const V2f &offset, const OIIO::Filter2D *filter )
 {
 	Box2f outputRegion( V2f( tileOrigin ), tileOrigin + V2f( ImagePlug::tileSize() ) );
-	V2f filterRadius( filter->width() / 2.0f, filter->height() / 2.0f );
+	V2i filterRadius = inputFilterRadius( filter, ratio );
 
 	Box2f result = outputRegion;
 	if( passes & Horizontal )
@@ -404,11 +414,7 @@ IECore::ConstFloatVectorDataPtr Resample::computeChannelData( const std::string 
 		(Sampler::BoundingMode)boundingModePlug()->getValue()
 	);
 
-	const V2i filterRadius(
-		(int)ceilf( filter->width() / ( 2.0f * ratio.x ) ),
-		(int)ceilf( filter->height() / ( 2.0f * ratio.y ) )
-	);
-
+	const V2i filterRadius = inputFilterRadius( filter.get(), ratio );
 	const Box2i tileBound( tileOrigin, tileOrigin + V2i( ImagePlug::tileSize() ) );
 
 	FloatVectorDataPtr resultData = new FloatVectorData;

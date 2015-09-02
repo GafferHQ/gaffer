@@ -570,13 +570,13 @@ class Plug::DirtyPlugs
 	public :
 
 		DirtyPlugs()
-			:	m_scopeCount( 0 ), m_clearing( false )
+			:	m_scopeCount( 0 ), m_emitting( false )
 		{
 		}
 
 		void insert( Plug *plugToDirty )
 		{
-			if( !m_clearing ) // see comment in clear()
+			if( !m_emitting ) // see comment in emit()
 			{
 				insertInternal( plugToDirty );
 			}
@@ -592,10 +592,9 @@ class Plug::DirtyPlugs
 			assert( m_scopeCount );
 			if( --m_scopeCount == 0 )
 			{
-				if( !m_clearing ) // see comment in clear()
+				if( !m_emitting ) // see comment in emit()
 				{
 					emit();
-					clear();
 				}
 			}
 		}
@@ -627,7 +626,7 @@ class Plug::DirtyPlugs
 			// We need to hold a reference to the plug, because otherwise
 			// it might be deleted between now and emit(). But if there is
 			// no reference yet, the plug is still being constructed, and
-			// we'd end up deleting it in clear() since we'd have sole
+			// we'd end up deleting it in emit() since we'd have sole
 			// ownership. Nobody wants that. If we had weak pointers, this
 			// would make for an ideal use.
 			assert( plugToDirty->refCount() );
@@ -657,7 +656,7 @@ class Plug::DirtyPlugs
 					// because it calls setValue() in its constructor.
 					// We don't want to increment the reference count on
 					// an in-construction plug, because then we'll destroy
-					// it in clear(). And there's no point signalling dirtiness
+					// it in emit(). And there's no point signalling dirtiness
 					// because the plug has no parent and therefore can have
 					// no observers.
 					break;
@@ -749,6 +748,28 @@ class Plug::DirtyPlugs
 
 		void emit()
 		{
+			// Because we hold a reference to the plugs via m_graph,
+			// we may be the last owner. This means that when we clear
+			// the graph below, those plugs may be destroyed, which can
+			// trigger another dirty propagation as their child plugs are
+			// removed etc.
+			//
+			// Additionally, emitting plugDirtiedSignal() can cause
+			// ill-behaved code to trigger another dirty propagation
+			// phase while we're emitting this one. This is explicitly
+			// disallowed in the documentation for the Node class, but
+			// unfortunately we can't control what the python interpreter
+			// does - entering python via plugDirtiedSignal() can
+			// trigger a garbage collection which might delete plugs
+			// and trigger dirty propagation again as their children
+			// and inputs are removed.
+			//
+			// We use the m_emitting flag to disable these unwanted
+			// secondary propagations during emit(), since they're not
+			// needed, and can cause crashes.
+
+			ScopedAssignment<bool> scopedAssignment( m_emitting, true );
+
 			std::vector<VertexDescriptor> sorted;
 			topological_sort( m_graph, std::back_inserter( sorted ) );
 			for( std::vector<VertexDescriptor>::const_iterator it = sorted.begin(), eIt = sorted.end(); it != eIt; ++it )
@@ -760,20 +781,7 @@ class Plug::DirtyPlugs
 					node->plugDirtiedSignal()( plug );
 				}
 			}
-		}
 
-		void clear()
-		{
-			// Because we hold a reference to the plugs via the graph,
-			// we may be the last owner. This means that when we call
-			// clear, those plugs may be destroyed, which can trigger
-			// a dirty propagation as their child plugs are removed
-			// etc. We use the m_clearing flag to disable this propagation,
-			// since it's not needed, and can cause crashes. In an ideal
-			// world we'd have weak pointers, and could use those in
-			// the graph, so that we'd have no ownership of the plugs at
-			// all.
-			ScopedAssignment<bool> scopedAssignment( m_clearing, true );
 			m_graph.clear();
 			m_plugs.clear();
 		}
@@ -781,7 +789,7 @@ class Plug::DirtyPlugs
 		Graph m_graph;
 		PlugMap m_plugs;
 		size_t m_scopeCount;
-		bool m_clearing;
+		bool m_emitting;
 
 };
 

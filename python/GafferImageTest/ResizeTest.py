@@ -174,5 +174,34 @@ class ResizeTest( GafferTest.TestCase ) :
 
 		 self.assertTrue( r["out"]["channelData"] in set( c[0] for c in cs ) )
 
+	def testSamplerBoundsViolationCrash( self ) :
+
+		c = GafferImage.Constant()
+		c["format"].setValue( GafferImage.Format( 3792, 3160 ) )
+
+		r = GafferImage.Resize()
+		r["in"].setInput( c["out"] )
+		r["format"].setValue( GafferImage.Format( 1920, 1080 ) )
+		r["fitMode"].setValue( r.FitMode.Vertical )
+
+		r["out"].image()
+
+	def testDownsizingSamplerBounds( self ) :
+
+		c = GafferImage.Constant()
+		c["format"].setValue( GafferImage.Format( 50, 53 ) )
+
+		r = GafferImage.Resize()
+		r["in"].setInput( c["out"] )
+		r["fitMode"].setValue( r.FitMode.Distort )
+
+		# Downsize to every single size smaller than the input,
+		# to check for sampler bounds violations similar to those
+		# which motivated the test above.
+		for width in range( 1, 50 ) :
+			for height in range( 1, 53 ) :
+				r["format"].setValue( GafferImage.Format( width, height ) )
+				r["out"].image()
+
 if __name__ == "__main__":
 	unittest.main()
