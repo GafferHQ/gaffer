@@ -34,9 +34,20 @@
 #
 ##########################################################################
 
-from DocumentationTest import DocumentationTest
-from RenderManShaderUITest import RenderManShaderUITest
-from RenderManAttributesUITest import RenderManAttributesUITest
+import Gaffer
+import GafferRenderMan
+import GafferRenderManTest
+import GafferRenderManUI
+
+class RenderManAttributesUITest( GafferRenderManTest.RenderManTestCase ) :
+
+	def testPromotedCameraHitMode( self ) :
+
+		b = Gaffer.Box()
+		b["a"] = GafferRenderMan.RenderManAttributes()
+
+		p = b.promotePlug( b["a"]["attributes"]["cameraHitMode"] )
+		self.assertEqual( Gaffer.NodeAlgo.presets( p["value" ] ), [ "Shader", "Primitive" ] )
 
 if __name__ == "__main__":
 	unittest.main()

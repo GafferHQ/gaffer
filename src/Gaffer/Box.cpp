@@ -503,4 +503,12 @@ void Box::copyMetadata( const Plug *from, Plug *to )
 		}
 		Metadata::registerPlugValue( to, *it, Metadata::plugValue<IECore::Data>( from, *it ) );
 	}
+
+	for( PlugIterator it( from ); it != it.end(); ++it )
+	{
+		if( Plug *childTo = to->getChild<Plug>( (*it)->getName() ) )
+		{
+			copyMetadata( it->get(), childTo );
+		}
+	}
 }
