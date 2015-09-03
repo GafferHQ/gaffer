@@ -75,6 +75,7 @@ from ResizeTest import ResizeTest
 from LUTTest import LUTTest
 from CDLTest import CDLTest
 from ImageAlgoTest import ImageAlgoTest
+from DisplayTransformTest import DisplayTransformTest
 
 if __name__ == "__main__":
 	import unittest

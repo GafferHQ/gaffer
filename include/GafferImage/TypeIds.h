@@ -99,6 +99,7 @@ enum TypeId
 	OpenColorIOTransformTypeId = 110803,
 	LUTTypeId = 110804,
 	CDLTypeId = 110805,
+	DisplayTransformTypeId = 110806,
 
 	LastTypeId = 110849
 };
