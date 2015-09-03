@@ -785,5 +785,22 @@ class ExpressionTest( GafferTest.TestCase ) :
 		s2["n"]["user"]["a"].setValue( 1001 )
 		self.assertEqual( s2["n"]["user"]["b"].getValue(), 1001 )
 
+	def testYDrivingX( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = Gaffer.Node()
+		s["n"]["user"]["v"] = Gaffer.V2fPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		s["e"] = Gaffer.Expression()
+		s["e"].setExpression( 'parent["n"]["user"]["v"]["x"] = parent["n"]["user"]["v"]["y"] * 2' )
+
+		s["n"]["user"]["v"]["y"].setValue( 2 )
+		self.assertEqual( s["n"]["user"]["v"]["x"].getValue(), 4 )
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+		self.assertEqual( s2["n"]["user"]["v"]["x"].getValue(), 4 )
+
 if __name__ == "__main__":
 	unittest.main()
