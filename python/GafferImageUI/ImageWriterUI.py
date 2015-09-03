@@ -52,6 +52,7 @@ Gaffer.Metadata.registerNode(
 	ImageWriter.
 	""",
 
+
 	plugs = {
 
 		"in" : [
@@ -68,7 +69,6 @@ Gaffer.Metadata.registerNode(
 			"description",
 			"""
 			The name of the file to be written. File sequences with
-			arbitrary padding may be specified using the '#' character
 			as a placeholder for the frame numbers.
 			""",
 
@@ -79,25 +79,6 @@ Gaffer.Metadata.registerNode(
 			"fileSystemPathPlugValueWidget:extensions", IECore.StringVectorData( GafferImage.ImageReader.supportedExtensions() ),
 			"fileSystemPathPlugValueWidget:extensionsLabel", "Show only image files",
 			"fileSystemPathPlugValueWidget:includeSequences", True,
-
-		],
-
-		"writeMode" : [
-
-			"description",
-			"""
-			Whether the image is written using tiles or scanlines.
-			Not all file formats support both modes - in the case
-			of the specified mode being unsupported, a fallback mode
-			is chosen automatically.
-			""",
-
-			# \todo Bind the enum and don't hardcode values.
-			"preset:Scanline", 0,
-			"preset:Tile", 1,
-
-			"nodule:type", "",
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 
 		],
 
@@ -121,7 +102,391 @@ Gaffer.Metadata.registerNode(
 
 			"nodule:type", "",
 
-		]
+		],
+
+		"dpx" : [
+			"description",
+			"""
+			Format options specific to DPX files.
+			""",
+
+			"nodule:type", "",
+			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
+			"layout:section", "Settings.DPX",
+
+		],
+
+		"dpx.dataType" : [
+			"description",
+			"""
+			The data type to be written to the DPX file.
+			""",
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"preset:8-bit", "int8",
+			"preset:10-bit", "int10",
+			"preset:12-bit", "int12",
+			"preset:16-bit", "int16",
+
+		],
+
+		"field3d" : [
+			"description",
+			"""
+			Format options specific to Field3D files.
+			""",
+
+			"nodule:type", "",
+			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
+			"layout:section", "Settings.Field3D",
+
+		],
+
+		"field3d.mode" : [
+			"description",
+			"""
+			The write mode for the Field3D file - scanline or tiled data.
+			""",
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"preset:Scanline", 0,
+			"preset:Tile", 1,
+
+		],
+
+		"field3d.dataType" : [
+			"description",
+			"""
+			The data type to be written to the Field3D file.
+			""",
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"preset:half", "half",
+			"preset:float", "float",
+			"preset:double", "double",
+			
+		],
+
+		"fits" : [
+			"description",
+			"""
+			Format options specific to FITS files.
+			""",
+
+			"nodule:type", "",
+			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
+			"layout:section", "Settings.FITS",
+		],
+
+		"fits.dataType" : [
+			"description",
+			"""
+			The data type to be written to the FITS file.
+			""",
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"preset:8-bit", "uint8",
+			"preset:16-bit", "uint16",
+			"preset:32-bit", "uint32",
+			"preset:float", "float",
+			"preset:double", "double",
+		],
+
+		"iff" : [
+			"description",
+			"""
+			Format options specific to IFF files.
+			""",
+
+			"nodule:type", "",
+			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
+			"layout:section", "Settings.IFF",
+		],
+
+		"iff.mode" : [
+			"description",
+			"""
+			The write mode for the IFF file - scanline or tiled data.
+			""",
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"preset:Scanline", 0,
+			"preset:Tile", 1,
+
+		],
+
+		"jpeg" : [
+			"description",
+			"""
+			Format options specific to Jpeg files.
+			""",
+
+			"nodule:type", "",
+			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
+			"layout:section", "Settings.Jpeg",
+
+		],
+
+		"jpeg.compressionQuality" : [
+			"description",
+			"""
+			The compression quality for the Jpeg file to be written.
+			A value between 0 (low quality, high compression) and
+			100 (high quality, low compression).
+			""",
+
+		],
+
+		"jpeg2000" : [
+			"description",
+			"""
+			Format options specific to Jpeg2000 files.
+			""",
+
+			"nodule:type", "",
+			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
+			"layout:section", "Settings.Jpeg2000",
+		],
+
+		"jpeg2000.dataType" : [
+			"description",
+			"""
+			The data type to be written to the Jpeg2000 file.
+			""",
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"preset:8-bit", "uint8",
+			"preset:16-bit", "uint16",
+		],
+
+		"openexr" : [
+			"description",
+			"""
+			Format options specific to OpenEXR files.
+			""",
+
+			"nodule:type", "",
+			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
+			"layout:section", "Settings.OpenEXR",
+
+		],
+
+		"openexr.mode" : [
+			"description",
+			"""
+			The write mode for the OpenEXR file - scanline or tiled data.
+			""",
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"preset:Scanline", 0,
+			"preset:Tile", 1,
+
+		],
+
+		"openexr.compression" : [
+			"description",
+			"""
+			The compression method to use when writing the OpenEXR file.
+			""",
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"preset:None", "none",
+			"preset:Zip", "zip",
+			"preset:Zip Scanline", "zips",
+			"preset:RLE", "rle",
+			"preset:Piz", "piz",
+			"preset:PXR24", "pxr24",
+			"preset:B44", "b44",
+			"preset:B44A", "b44a",
+
+		],
+
+		"openexr.dataType" : [
+			"description",
+			"""
+			The data type to be written to the OpenEXR file.
+			""",
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"preset:Float", "float",
+			"preset:Half Float", "half",
+
+		],
+
+		"png" : [
+			"description",
+			"""
+			Format options specific to PNG files.
+			""",
+
+			"nodule:type", "",
+			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
+			"layout:section", "Settings.PNG",
+		],
+
+		"png.compression" : [
+			"description",
+			"""
+			The compression method to use when writing the PNG file.
+			""",
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"preset:default", "default",
+			"preset:filtered", "filtered",
+			"preset:huffman", "huffman",
+			"preset:rle", "rle",
+			"preset:fixed", "fixed",
+		],
+
+		"png.compressionLevel" : [
+			"description",
+			"""
+			The compression level of the PNG file. This is a value between
+			0 (no compression) and 9 (most compression).
+			""",
+		],
+		
+		"rla" : [
+			"description",
+			"""
+			Format options specific to RLA files.
+			""",
+
+			"nodule:type", "",
+			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
+			"layout:section", "Settings.RLA",
+		],
+
+		"rla.dataType" : [
+			"description",
+			"""
+			The data type to be written to the RLA file.
+			""",
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"preset:8-bit", "uint8",
+			"preset:16-bit", "uint16",
+			"preset:float", "float",
+		],
+
+		"sgi" : [
+			"description",
+			"""
+			Format options specific to SGI files.
+			""",
+
+			"nodule:type", "",
+			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
+			"layout:section", "Settings.SGI",
+		],
+
+		"sgi.dataType" : [
+			"description",
+			"""
+			The data type to be written to the SGI file.
+			""",
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"preset:8-bit", "uint8",
+			"preset:16-bit", "uint16",
+		],
+
+		"targa" : [
+			"description",
+			"""
+			Format options specific to Targa files.
+			""",
+
+			"nodule:type", "",
+			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
+			"layout:section", "Settings.Targa",
+		],
+
+		"targa.compression" : [
+			"description",
+			"""
+			The compression method to use when writing the Targa file.
+			""",
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"preset:none", "none",
+			"preset:rle", "rle",
+		],
+
+		"tiff" : [
+			"description",
+			"""
+			Format options specific to Tiff files.
+			""",
+
+			"nodule:type", "",
+			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
+			"layout:section", "Settings.Tiff",
+
+		],
+
+		"tiff.mode" : [
+			"description",
+			"""
+			The write mode for the Tiff file - scanline or tiled data.
+			""",
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"preset:Scanline", 0,
+			"preset:Tile", 1,
+
+		],
+
+		"tiff.compression" : [
+			"description",
+			"""
+			The compression method to use when writing the Tiff file.
+			""",
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"preset:None", "none",
+			"preset:LZW", "lzw",
+			"preset:Zip", "zip",
+			"preset:Deflate", "deflate",
+			"preset:Pack Bits", "packbits",
+			"preset:CCITT RLE", "ccittrle",
+
+		],
+
+		"tiff.dataType" : [
+			"description",
+			"""
+			The data type to be written to the Tiff file.
+			""",
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"preset:Unsigned Int (8-bit)", "uint8",
+			"preset:Unsigned Int (16-bit)", "uint16",
+			"preset:Half Float", "half",
+			"preset:Float", "float",
+
+		],
+
+		"webp" : [
+			"description",
+			"""
+			Format options specific to WebP files.
+			""",
+
+			"nodule:type", "",
+			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
+			"layout:section", "Settings.WebP",
+		],
+
+		"webp.compressionQuality" : [
+			"description",
+			"""
+			The compression quality for the WebP file to be written.
+			A value between 0 (low quality, high compression) and
+			100 (high quality, low compression).
+			""",
+		],
+		
 
 	}
 
