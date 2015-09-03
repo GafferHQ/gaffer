@@ -124,7 +124,7 @@ class EngineWrapper : public IECorePython::RefCountedWrapper<Expression::Engine>
 			throw IECore::Exception( "Engine::parse() python method not defined" );
 		}
 
-		virtual IECore::ConstObjectVectorPtr execute( const Context *context, const std::vector<const ValuePlug *> &proxyInputs )
+		virtual IECore::ConstObjectVectorPtr execute( const Context *context, const std::vector<const ValuePlug *> &proxyInputs ) const
 		{
 			if( isSubclassed() )
 			{
@@ -153,7 +153,7 @@ class EngineWrapper : public IECorePython::RefCountedWrapper<Expression::Engine>
 			throw IECore::Exception( "Engine::execute() python method not defined" );
 		}
 
-		virtual void apply( ValuePlug *plug, const IECore::Object *value )
+		virtual void apply( ValuePlug *plug, const IECore::Object *value ) const
 		{
 			if( isSubclassed() )
 			{

@@ -92,12 +92,14 @@ class Expression : public ComputeNode
 				/// Executes the last parsed expression in the specified context, using the values
 				/// provided by proxyInputs and returning an array containing a value for
 				/// each output plug.
-				virtual IECore::ConstObjectVectorPtr execute( const Context *context, const std::vector<const ValuePlug *> &proxyInputs ) = 0;
+				/// \threading This function may be called concurrently.
+				virtual IECore::ConstObjectVectorPtr execute( const Context *context, const std::vector<const ValuePlug *> &proxyInputs ) const = 0;
 				/// Sets the plug using the value computed previously in execute().
 				/// Note that if a compound plug is written to by the expression, setPlugValue()
 				/// will be called for each of the children of the compound, and it is the
 				/// responsibility of the engine to decompose the value for each child plug suitably.
-				virtual void apply( ValuePlug *plug, const IECore::Object *value ) = 0;
+				/// \threading This function may be called concurrently.
+				virtual void apply( ValuePlug *plug, const IECore::Object *value ) const = 0;
 
 				/// Creates an engine of the specified type.
 				static EnginePtr create( const std::string engineType );
