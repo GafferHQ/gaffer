@@ -401,8 +401,8 @@ void Plug::updateInputFromChildInputs( Plug *checkFirst )
 		return;
 	}
 
-	Plug *commonParent = input->parent<Plug>();
-	if( !acceptsInput( commonParent ) )
+	Plug *candidateInput = input->parent<Plug>();
+	if( !acceptsInput( candidateInput ) )
 	{
 		// if we're never going to accept the candidate input anyway, then
 		// don't even bother checking to see if all the candidate's children
@@ -411,17 +411,16 @@ void Plug::updateInputFromChildInputs( Plug *checkFirst )
 		return;
 	}
 
-	for( PlugIterator it( this ); it!=it.end(); ++it )
+	for( PlugIterator it1( this ), it2( candidateInput ); it1 != it1.end(); ++it1, ++it2 )
 	{
-		input = (*it)->getInput<Plug>();
-		if( !input || input->parent<Plug>()!=commonParent )
+		if( (*it1)->getInput<Plug>() != it2->get() )
 		{
 			setInput( NULL, /* setChildInputs = */ false, /* updateParentInput = */ true );
 			return;
 		}
 	}
 
-	setInput( commonParent, /* setChildInputs = */ false, /* updateParentInput = */ true );
+	setInput( candidateInput, /* setChildInputs = */ false, /* updateParentInput = */ true );
 }
 
 void Plug::removeOutputs()
