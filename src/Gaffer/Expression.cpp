@@ -93,6 +93,11 @@ Expression::~Expression()
 {
 }
 
+void Expression::languages( std::vector<std::string> &languages )
+{
+	Engine::registeredEngines( languages );
+}
+
 void Expression::setExpression( const std::string &expression, const std::string &engine )
 {
 	if(

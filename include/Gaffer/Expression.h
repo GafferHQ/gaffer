@@ -56,6 +56,9 @@ class Expression : public ComputeNode
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::Expression, ExpressionTypeId, ComputeNode );
 
+		/// Fills the vector with the names of all currently available languages.
+		static void languages( std::vector<std::string> &languages );
+
 		/// Sets the node up to evaluate the given expression in the given language.
 		/// This is achieved by creating local plugs which are connected to the plugs
 		/// referenced by the expression, and executing the expression to provide
@@ -67,12 +70,18 @@ class Expression : public ComputeNode
 
 		IE_CORE_FORWARDDECLARE( Engine )
 
+		/// Abstract base class for adding languages
+		/// for use in the Expression node. All methods
+		/// are protected as Engines are for the internal
+		/// use of the Expression node only.
 		class Engine : public IECore::RefCounted
 		{
 
 			public :
 
 				IE_CORE_DECLAREMEMBERPTR( Engine );
+
+			protected :
 
 				/// Parses the given expression to prepare the Engine for execution.
 				/// Implementations must fill the inputs and outputs array with plugs
@@ -97,8 +106,6 @@ class Expression : public ComputeNode
 				static void registerEngine( const std::string engineType, Creator creator );
 				static void registeredEngines( std::vector<std::string> &engineTypes );
 
-			protected :
-
 				template<class T>
 				struct EngineDescription
 				{
@@ -107,6 +114,8 @@ class Expression : public ComputeNode
 				};
 
 			private :
+
+				friend class Expression;
 
 				typedef std::map<std::string, Creator> CreatorMap;
 				static CreatorMap &creators();

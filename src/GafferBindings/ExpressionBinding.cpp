@@ -54,18 +54,38 @@ using namespace Gaffer;
 namespace
 {
 
-void setExpression( Expression &e, const std::string &expression, const std::string &engine )
+void setExpression( Expression &e, const std::string &expression, const std::string &language )
 {
 	IECorePython::ScopedGILRelease gilRelease;
-	e.setExpression( expression, engine );
+	e.setExpression( expression, language );
 }
 
 tuple getExpression( Expression &e )
 {
-	std::string engine;
-	std::string expression = e.getExpression( engine );
-	return make_tuple( expression, engine );
+	std::string language;
+	std::string expression = e.getExpression( language );
+	return make_tuple( expression, language );
 }
+
+struct ExpressionEngineCreator
+{
+	ExpressionEngineCreator( object fn )
+		:	m_fn( fn )
+	{
+	}
+
+	Expression::EnginePtr operator()()
+	{
+		IECorePython::ScopedGILLock gilLock;
+		Expression::EnginePtr result = extract<Expression::EnginePtr>( m_fn() );
+		return result;
+	}
+
+	private :
+
+		object m_fn;
+
+};
 
 class EngineWrapper : public IECorePython::RefCountedWrapper<Expression::Engine>
 {
@@ -152,43 +172,35 @@ class EngineWrapper : public IECorePython::RefCountedWrapper<Expression::Engine>
 					translatePythonException();
 				}
 			}
-			
+
 			throw IECore::Exception( "Engine::apply() python method not defined" );
+		}
+
+		static void registerEngine( const std::string &engineType, object creator )
+		{
+			Expression::Engine::registerEngine( engineType, ExpressionEngineCreator( creator ) );
+		}
+
+		static tuple registeredEngines()
+		{
+			std::vector<std::string> engineTypes;
+			Expression::Engine::registeredEngines( engineTypes );
+			boost::python::list l;
+			for( std::vector<std::string>::const_iterator it = engineTypes.begin(); it!=engineTypes.end(); it++ )
+			{
+				l.append( *it );
+			}
+			return boost::python::tuple( l );
 		}
 
 };
 
-struct ExpressionEngineCreator
+static tuple languages()
 {
-	ExpressionEngineCreator( object fn )
-		:	m_fn( fn )
-	{
-	}
-
-	Expression::EnginePtr operator()()
-	{
-		IECorePython::ScopedGILLock gilLock;
-		Expression::EnginePtr result = extract<Expression::EnginePtr>( m_fn() );
-		return result;
-	}
-
-	private :
-
-		object m_fn;
-
-};
-
-void registerEngine( const std::string &engineType, object creator )
-{
-	Expression::Engine::registerEngine( engineType, ExpressionEngineCreator( creator ) );
-}
-
-tuple registeredEnginesWrapper()
-{
-	std::vector<std::string> engineTypes;
-	Expression::Engine::registeredEngines( engineTypes );
+	std::vector<std::string> languages;
+	Expression::languages( languages );
 	boost::python::list l;
-	for( std::vector<std::string>::const_iterator it = engineTypes.begin(); it!=engineTypes.end(); it++ )
+	for( std::vector<std::string>::const_iterator it = languages.begin(); it!=languages.end(); it++ )
 	{
 		l.append( *it );
 	}
@@ -201,14 +213,15 @@ void GafferBindings::bindExpression()
 {
 
 	scope s = DependencyNodeClass<Expression>()
-		.def( "setExpression", &setExpression, ( arg( "expression" ), arg( "engine" ) = "python" ) )
+		.def( "setExpression", &setExpression, ( arg( "expression" ), arg( "language" ) = "python" ) )
 		.def( "getExpression", &getExpression )
+		.def( "languages", &languages ).staticmethod( "languages" )
 	;
 
 	IECorePython::RefCountedClass<Expression::Engine, IECore::RefCounted, EngineWrapper>( "Engine" )
 		.def( init<>() )
-		.def( "registerEngine", &registerEngine ).staticmethod( "registerEngine" )
-		.def( "registeredEngines", &registeredEnginesWrapper ).staticmethod( "registeredEngines" )
+		.def( "registerEngine", &EngineWrapper::registerEngine ).staticmethod( "registerEngine" )
+		.def( "registeredEngines", &EngineWrapper::registeredEngines ).staticmethod( "registeredEngines" )
 	;
 
 }

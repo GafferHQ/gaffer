@@ -135,11 +135,11 @@ class ExpressionTest( GafferTest.TestCase ) :
 			with context :
 				self.assertEqual( s["n"]["p"].getValue(), "#%d" % i )
 
-	def testRegisteredEngines( self ) :
+	def testLanguages( self ) :
 
-		e = Gaffer.Expression.Engine.registeredEngines()
-		self.failUnless( isinstance( e, tuple ) )
-		self.failUnless( "python" in e )
+		l = Gaffer.Expression.languages()
+		self.failUnless( isinstance( l, tuple ) )
+		self.failUnless( "python" in l )
 
 	def testCreateExpressionWithWatchers( self ) :
 
