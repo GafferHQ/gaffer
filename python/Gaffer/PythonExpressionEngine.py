@@ -93,11 +93,20 @@ class PythonExpressionEngine( Gaffer.Expression.Engine ) :
 
 		_setPlugValue( plug, value )
 
+	def identifier( self, node, plug ) :
+
+		if node.isAncestorOf( plug ) :
+			relativeName = plug.relativeName( node )
+		else :
+			relativeName = plug.relativeName( node.parent() )
+
+		return 'parent' + "".join( [ '["%s"]' % n for n in relativeName.split( "." ) ] )
+
 	def replace( self, node, expression, oldPlugs, newPlugs ) :
 
 		for oldPlug, newPlug in zip( oldPlugs, newPlugs ) :
-			expression = self.__plugRegex( oldPlug, node ).sub(
-				self.__plugIdentifier( newPlug, node ), expression
+			expression = self.__plugRegex( node, oldPlug ).sub(
+				self.identifier( node, newPlug ), expression
 			)
 
 		return expression
@@ -127,20 +136,9 @@ class PythonExpressionEngine( Gaffer.Expression.Engine ) :
 
 		return result
 
-	@classmethod
-	def __plugIdentifier( cls, plug, node ) :
+	def __plugRegex( self, node, plug ) :
 
-		if node.isAncestorOf( plug ) :
-			relativeName = plug.relativeName( node )
-		else :
-			relativeName = plug.relativeName( node.parent() )
-
-		return 'parent' + "".join( [ '["%s"]' % n for n in relativeName.split( "." ) ] )
-
-	@classmethod
-	def __plugRegex( cls, plug, node ) :
-
-		identifier = cls.__plugIdentifier( plug, node )
+		identifier = self.identifier( node, plug )
 		regex = identifier.replace( "[", "\[" )
 		regex = regex.replace( "]", "\]" )
 		regex = regex.replace( '"', "['\"']" )

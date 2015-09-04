@@ -193,6 +193,29 @@ class EngineWrapper : public IECorePython::RefCountedWrapper<Expression::Engine>
 			throw IECore::Exception( "Engine::apply() python method not defined" );
 		}
 
+		virtual std::string identifier( const Expression *node, const ValuePlug *plug ) const
+		{
+			if( isSubclassed() )
+			{
+				IECorePython::ScopedGILLock gilLock;
+				try
+				{
+					object f = this->methodOverride( "identifier" );
+					if( f )
+					{
+						object result = f( ExpressionPtr( const_cast<Expression *>( node ) ), ValuePlugPtr( const_cast<ValuePlug *>( plug ) ) );
+						return extract<std::string>( result );
+					}
+				}
+				catch( const error_already_set &e )
+				{
+					translatePythonException();
+				}
+			}
+
+			throw IECore::Exception( "Engine::identifier() python method not defined" );
+		}
+
 		virtual std::string replace( const Expression *node, const std::string &expression, const std::vector<const ValuePlug *> &oldPlugs, const std::vector<const ValuePlug *> &newPlugs ) const
 		{
 			if( isSubclassed() )
@@ -247,8 +270,6 @@ class EngineWrapper : public IECorePython::RefCountedWrapper<Expression::Engine>
 			}
 
 			throw IECore::Exception( "Engine::defaultExpression() python method not defined" );
-
-
 		}
 
 
@@ -294,6 +315,7 @@ void GafferBindings::bindExpression()
 		.def( "setExpression", &setExpression, ( arg( "expression" ), arg( "language" ) = "python" ) )
 		.def( "getExpression", &getExpression )
 		.def( "expressionChangedSignal", &Expression::expressionChangedSignal, return_internal_reference<1>() )
+		.def( "identifier", &Expression::identifier )
 	;
 
 	IECorePython::RefCountedClass<Expression::Engine, IECore::RefCounted, EngineWrapper>( "Engine" )

@@ -158,6 +158,15 @@ Expression::ExpressionChangedSignal &Expression::expressionChangedSignal()
 	return m_expressionChangedSignal;
 }
 
+std::string Expression::identifier( const ValuePlug *plug ) const
+{
+	if( !m_engine )
+	{
+		return "";
+	}
+	return m_engine->identifier( this, plug );
+}
+
 StringPlug *Expression::enginePlug()
 {
 	return getChild<StringPlug>( g_firstPlugIndex );

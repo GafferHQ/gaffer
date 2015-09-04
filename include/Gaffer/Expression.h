@@ -77,6 +77,11 @@ class Expression : public ComputeNode
 		/// Signal emitted whenever the expression has changed.
 		ExpressionChangedSignal &expressionChangedSignal();
 
+		/// Returns a string which can be used to refer to the
+		/// plug in the current expression. Returns "" if the
+		/// plug cannot be supported.
+		std::string identifier( const ValuePlug *plug ) const;
+
 		IE_CORE_FORWARDDECLARE( Engine )
 
 		/// Abstract base class for adding languages
@@ -129,6 +134,8 @@ class Expression : public ComputeNode
 				/// responsibility of the engine to decompose the value for each child plug suitably.
 				/// \threading This function may be called concurrently.
 				virtual void apply( ValuePlug *plug, const IECore::Object *value ) const = 0;
+				/// Used to implement Expression::identifier.
+				virtual std::string identifier( const Expression *node, const ValuePlug *plug ) const = 0;
 				/// Returns a new expression, equivalent to the original but now acting on the
 				/// new plugs rather than the old ones. Note that this should not modify
 				/// the current engine in any way, but just return a new expression.
