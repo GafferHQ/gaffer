@@ -46,6 +46,7 @@
 #include "GafferBindings/DependencyNodeBinding.h"
 #include "GafferBindings/ExpressionBinding.h"
 #include "GafferBindings/ExceptionAlgo.h"
+#include "GafferBindings/SignalBinding.h"
 
 using namespace boost::python;
 using namespace GafferBindings;
@@ -85,6 +86,22 @@ struct ExpressionEngineCreator
 
 		object m_fn;
 
+};
+
+struct ExpressionChangedSlotCaller
+{
+	boost::signals::detail::unusable operator()( boost::python::object slot, ExpressionPtr e )
+	{
+		try
+		{
+			slot( e );
+		}
+		catch( const error_already_set &e )
+		{
+			translatePythonException();
+		}
+		return boost::signals::detail::unusable();
+	}
 };
 
 class EngineWrapper : public IECorePython::RefCountedWrapper<Expression::Engine>
@@ -246,9 +263,10 @@ void GafferBindings::bindExpression()
 {
 
 	scope s = DependencyNodeClass<Expression>()
+		.def( "languages", &languages ).staticmethod( "languages" )
 		.def( "setExpression", &setExpression, ( arg( "expression" ), arg( "language" ) = "python" ) )
 		.def( "getExpression", &getExpression )
-		.def( "languages", &languages ).staticmethod( "languages" )
+		.def( "expressionChangedSignal", &Expression::expressionChangedSignal, return_internal_reference<1>() )
 	;
 
 	IECorePython::RefCountedClass<Expression::Engine, IECore::RefCounted, EngineWrapper>( "Engine" )
@@ -256,5 +274,7 @@ void GafferBindings::bindExpression()
 		.def( "registerEngine", &EngineWrapper::registerEngine ).staticmethod( "registerEngine" )
 		.def( "registeredEngines", &EngineWrapper::registeredEngines ).staticmethod( "registeredEngines" )
 	;
+
+	SignalClass<Expression::ExpressionChangedSignal, DefaultSignalCaller<Expression::ExpressionChangedSignal>, ExpressionChangedSlotCaller >( "ExpressionChangedSignal" );
 
 }

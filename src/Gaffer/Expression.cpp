@@ -46,6 +46,7 @@
 #include "Gaffer/Context.h"
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/BlockedConnection.h"
+#include "Gaffer/Action.h"
 
 using namespace IECore;
 using namespace Gaffer;
@@ -67,7 +68,7 @@ Expression::Expression( const std::string &name )
 		new StringPlug(
 			"__engine",
 			Plug::In,
-			"python",
+			"",
 			Plug::Default & ~( Plug::AcceptsInputs ),
 			Context::NoSubstitutions
 		)
@@ -100,6 +101,19 @@ void Expression::languages( std::vector<std::string> &languages )
 
 void Expression::setExpression( const std::string &expression, const std::string &engine )
 {
+	// The setExpression() method is undoable by virtue of being
+	// implemented entirely using other undoable functions - all
+	// except for emitting expressionChangedSignal(). When doing,
+	// we need to emit after the work is done, but we don't want
+	// to emit just before it is undone - we want to emit after it
+	// has been undone. We therefore have two emit actions, one at
+	// the start with no doer and one at the end with no undoer.
+	Action::enact(
+		this,
+		Action::Function(), // does nothing
+		boost::bind( boost::ref( expressionChangedSignal() ), this )
+	);
+
 	m_engine = NULL;
 	m_contextNames.clear();
 
@@ -119,12 +133,23 @@ void Expression::setExpression( const std::string &expression, const std::string
 	// to the external form.
 
 	expressionPlug()->setValue( transcribe( expression, /* toInternalForm = */ true ) );
+
+	Action::enact(
+		this,
+		boost::bind( boost::ref( expressionChangedSignal() ), this ),
+		Action::Function() // does nothing
+	);
 }
 
 std::string Expression::getExpression( std::string &engine ) const
 {
 	engine = enginePlug()->getValue();
 	return transcribe( expressionPlug()->getValue(), /* toInternalForm = */ false );
+}
+
+Expression::ExpressionChangedSignal &Expression::expressionChangedSignal()
+{
+	return m_expressionChangedSignal;
 }
 
 StringPlug *Expression::enginePlug()

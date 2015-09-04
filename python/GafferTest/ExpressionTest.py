@@ -871,5 +871,35 @@ class ExpressionTest( GafferTest.TestCase ) :
 		s2.execute( s.serialise() )
 		self.assertEqual( s2["n"]["user"]["v"]["x"].getValue(), 4 )
 
+	def testExpressionChangedSignal( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = Gaffer.Node()
+		s["n"]["user"]["p"] = Gaffer.FloatPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		expressions = []
+		def f( node ) :
+
+			expressions.append( node.getExpression() )
+
+		s["e"] = Gaffer.Expression()
+		self.assertEqual( s["e"].getExpression(), ( "", "" ) )
+
+		c = s["e"].expressionChangedSignal().connect( f )
+
+		with Gaffer.UndoContext( s ) :
+			s["e"].setExpression( 'parent["n"]["user"]["p"] = 10' )
+			self.assertEqual( len( expressions ), 1 )
+			self.assertEqual( expressions[0], ( 'parent["n"]["user"]["p"] = 10', "python" ) )
+
+		s.undo()
+		self.assertEqual( len( expressions ), 2 )
+		self.assertEqual( expressions[1], ( "", "" ) )
+
+		s.redo()
+		self.assertEqual( len( expressions ), 3 )
+		self.assertEqual( expressions[2], expressions[0] )
+
 if __name__ == "__main__":
 	unittest.main()

@@ -68,6 +68,10 @@ class Expression : public ComputeNode
 		/// Returns the expression this node is currently set up to evaluate.
 		std::string getExpression( std::string &language ) const;
 
+		typedef boost::signal<void (Expression *)> ExpressionChangedSignal;
+		/// Signal emitted whenever the expression has changed.
+		ExpressionChangedSignal &expressionChangedSignal();
+
 		IE_CORE_FORWARDDECLARE( Engine )
 
 		/// Abstract base class for adding languages
@@ -177,6 +181,8 @@ class Expression : public ComputeNode
 
 		EnginePtr m_engine;
 		std::vector<IECore::InternedString> m_contextNames;
+
+		ExpressionChangedSignal m_expressionChangedSignal;
 
 };
 
