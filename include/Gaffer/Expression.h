@@ -92,6 +92,15 @@ class Expression : public ComputeNode
 
 			protected :
 
+				/// @name Parsing and execution
+				///
+				/// These methods are used to set up a particular expression on
+				/// this Engine instance and later execute it. They rely on the
+				/// Engine maintaining internal state to represent the last
+				/// parsed expression.
+				///
+				////////////////////////////////////////////////////////////////////
+				//@{
 				/// Parses the given expression to prepare the Engine for execution.
 				/// Implementations must fill the inputs and outputs array with plugs
 				/// that are read from and written to by the expression, and the
@@ -100,23 +109,33 @@ class Expression : public ComputeNode
 				virtual void parse( Expression *node, const std::string &expression, std::vector<ValuePlug *> &inputs, std::vector<ValuePlug *> &outputs, std::vector<IECore::InternedString> &contextVariables ) = 0;
 				/// Executes the last parsed expression in the specified context, using the values
 				/// provided by proxyInputs and returning an array containing a value for
-				/// each output plug.
+				/// each output plug. The results returned will later be passed to apply()
+				/// to apply them to each of the individual output plugs.
 				/// \threading This function may be called concurrently.
 				virtual IECore::ConstObjectVectorPtr execute( const Context *context, const std::vector<const ValuePlug *> &proxyInputs ) const = 0;
-				/// Sets the plug using the value computed previously in execute().
+				//@}
+
+				/// @name Language utilities
+				///
+				/// These methods provide general utilities pertaining to the language
+				/// the engine implements, and should not depend on any particular
+				/// expression state.
+				///
+				////////////////////////////////////////////////////////////////////
+				//@{
+				/// Sets the plug using a value computed previously in execute().
 				/// Note that if a compound plug is written to by the expression, setPlugValue()
 				/// will be called for each of the children of the compound, and it is the
 				/// responsibility of the engine to decompose the value for each child plug suitably.
 				/// \threading This function may be called concurrently.
 				virtual void apply( ValuePlug *plug, const IECore::Object *value ) const = 0;
-
 				/// Returns a new expression, equivalent to the original but now acting on the
 				/// new plugs rather than the old ones. Note that this should not modify
 				/// the current engine in any way, but just return a new expression.
 				virtual std::string replace( const Expression *node, const std::string &expression, const std::vector<const ValuePlug *> &oldPlugs, const std::vector<const ValuePlug *> &newPlugs ) const = 0;
-
 				/// Used to implement Expression::defaultExpression().
 				virtual std::string defaultExpression( const ValuePlug *output ) const = 0;
+				//@}
 
 				/// Creates an engine of the specified type.
 				static EnginePtr create( const std::string engineType );
