@@ -35,6 +35,7 @@
 #
 ##########################################################################
 
+import re
 import ast
 
 import IECore
@@ -91,6 +92,35 @@ class PythonExpressionEngine( Gaffer.Expression.Engine ) :
 	def apply( self, plug, value ) :
 
 		_setPlugValue( plug, value )
+
+	def replace( self, node, expression, oldPlugs, newPlugs ) :
+
+		for oldPlug, newPlug in zip( oldPlugs, newPlugs ) :
+			expression = self.__plugRegex( oldPlug, node ).sub(
+				self.__plugIdentifier( newPlug, node ), expression
+			)
+
+		return expression
+
+	@classmethod
+	def __plugIdentifier( cls, plug, node ) :
+
+		if node.isAncestorOf( plug ) :
+			relativeName = plug.relativeName( node )
+		else :
+			relativeName = plug.relativeName( node.parent() )
+
+		return 'parent' + "".join( [ '["%s"]' % n for n in relativeName.split( "." ) ] )
+
+	@classmethod
+	def __plugRegex( cls, plug, node ) :
+
+		identifier = cls.__plugIdentifier( plug, node )
+		regex = identifier.replace( "[", "\[" )
+		regex = regex.replace( "]", "\]" )
+		regex = regex.replace( '"', "['\"']" )
+
+		return re.compile( regex )
 
 Gaffer.Expression.Engine.registerEngine( "python", PythonExpressionEngine )
 

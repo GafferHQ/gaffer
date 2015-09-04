@@ -101,6 +101,11 @@ class Expression : public ComputeNode
 				/// \threading This function may be called concurrently.
 				virtual void apply( ValuePlug *plug, const IECore::Object *value ) const = 0;
 
+				/// Returns a new expression, equivalent to the original but now acting on the
+				/// new plugs rather than the old ones. Note that this should not modify
+				/// the current engine in any way, but just return a new expression.
+				virtual std::string replace( const Expression *node, const std::string &expression, const std::vector<const ValuePlug *> &oldPlugs, const std::vector<const ValuePlug *> &newPlugs ) const = 0;
+
 				/// Creates an engine of the specified type.
 				static EnginePtr create( const std::string engineType );
 
@@ -167,6 +172,8 @@ class Expression : public ComputeNode
 
 		void updatePlugs( const std::vector<ValuePlug *> &inPlugs, const std::vector<ValuePlug *> &outPlugs );
 		void updatePlug( ValuePlug *parentPlug, size_t childIndex, ValuePlug *plug );
+
+		std::string transcribe( const std::string &expression, bool toInternalForm ) const;
 
 		EnginePtr m_engine;
 		std::vector<IECore::InternedString> m_contextNames;

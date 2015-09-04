@@ -176,6 +176,39 @@ class EngineWrapper : public IECorePython::RefCountedWrapper<Expression::Engine>
 			throw IECore::Exception( "Engine::apply() python method not defined" );
 		}
 
+		virtual std::string replace( const Expression *node, const std::string &expression, const std::vector<const ValuePlug *> &oldPlugs, const std::vector<const ValuePlug *> &newPlugs ) const
+		{
+			if( isSubclassed() )
+			{
+				IECorePython::ScopedGILLock gilLock;
+				try
+				{
+					object f = this->methodOverride( "replace" );
+					if( f )
+					{
+						list pythonOldPlugs, pythonNewPlugs;
+						for( std::vector<const ValuePlug *>::const_iterator it = oldPlugs.begin(); it!=oldPlugs.end(); it++ )
+						{
+							pythonOldPlugs.append( PlugPtr( const_cast<ValuePlug *>( *it ) ) );
+						}
+						for( std::vector<const ValuePlug *>::const_iterator it = newPlugs.begin(); it!=newPlugs.end(); it++ )
+						{
+							pythonNewPlugs.append( PlugPtr( const_cast<ValuePlug *>( *it ) ) );
+						}
+
+						object result = f( ExpressionPtr( const_cast<Expression *>( node ) ), expression, pythonOldPlugs, pythonNewPlugs );
+						return extract<std::string>( result );
+					}
+				}
+				catch( const error_already_set &e )
+				{
+					translatePythonException();
+				}
+			}
+
+			throw IECore::Exception( "Engine::replace() python method not defined" );
+		}
+
 		static void registerEngine( const std::string &engineType, object creator )
 		{
 			Expression::Engine::registerEngine( engineType, ExpressionEngineCreator( creator ) );

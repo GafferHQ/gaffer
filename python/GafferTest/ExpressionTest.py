@@ -669,6 +669,11 @@ class ExpressionTest( GafferTest.TestCase ) :
 		self.assertEqual( s["n"]["user"]["A"].getValue(), 30 )
 		self.assertEqual( s["n"]["user"]["B"].getValue(), 60 )
 
+		self.assertEqual(
+			s["e"].getExpression(),
+			( 'parent["n"]["user"]["B"] = parent["n"]["user"]["A"] * 2', "python" )
+		)
+
 		s2 = Gaffer.ScriptNode()
 		s2.execute( s.serialise() )
 
@@ -679,6 +684,11 @@ class ExpressionTest( GafferTest.TestCase ) :
 
 		self.assertEqual( s2["n"]["user"]["A"].getValue(), 10 )
 		self.assertEqual( s2["n"]["user"]["B"].getValue(), 20 )
+
+		self.assertEqual(
+			s2["e"].getExpression(),
+			( 'parent["n"]["user"]["B"] = parent["n"]["user"]["A"] * 2', "python" )
+		)
 
 	def testRenameNode( self ) :
 
@@ -701,6 +711,11 @@ class ExpressionTest( GafferTest.TestCase ) :
 		self.assertEqual( s["N"]["user"]["a"].getValue(), 20 )
 		self.assertEqual( s["N"]["user"]["b"].getValue(), 40 )
 
+		self.assertEqual(
+			s["e"].getExpression(),
+			( 'parent["N"]["user"]["b"] = parent["N"]["user"]["a"] * 2', "python" )
+		)
+
 		s["N"]["user"]["a"].setValue( 30 )
 
 		self.assertEqual( s["N"]["user"]["a"].getValue(), 30 )
@@ -716,6 +731,60 @@ class ExpressionTest( GafferTest.TestCase ) :
 
 		self.assertEqual( s2["N"]["user"]["a"].getValue(), 10 )
 		self.assertEqual( s2["N"]["user"]["b"].getValue(), 20 )
+
+		self.assertEqual(
+			s2["e"].getExpression(),
+			( 'parent["N"]["user"]["b"] = parent["N"]["user"]["a"] * 2', "python" )
+		)
+
+	def testSingleQuotedNames( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = Gaffer.Node()
+		s["n"]["user"]["a"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["n"]["user"]["b"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		s["n"]["user"]["a"].setValue( 20 )
+
+		s["e"] = Gaffer.Expression()
+		s["e"].setExpression( "parent['n']['user']['b'] = parent['n']['user']['a'] * 2" )
+
+		self.assertEqual( s["n"]["user"]["a"].getValue(), 20 )
+		self.assertEqual( s["n"]["user"]["b"].getValue(), 40 )
+
+		s["n"].setName( "N" )
+		s["N"]["user"]["a"].setName( "A" )
+		s["N"]["user"]["b"].setName( "B" )
+
+		self.assertEqual( s["N"]["user"]["A"].getValue(), 20 )
+		self.assertEqual( s["N"]["user"]["B"].getValue(), 40 )
+
+		self.assertEqual(
+			s["e"].getExpression(),
+			( 'parent["N"]["user"]["B"] = parent["N"]["user"]["A"] * 2', "python" )
+		)
+
+		s["N"]["user"]["A"].setValue( 30 )
+
+		self.assertEqual( s["N"]["user"]["A"].getValue(), 30 )
+		self.assertEqual( s["N"]["user"]["B"].getValue(), 60 )
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+
+		self.assertEqual( s2["N"]["user"]["A"].getValue(), 30 )
+		self.assertEqual( s2["N"]["user"]["B"].getValue(), 60 )
+
+		s2["N"]["user"]["A"].setValue( 10 )
+
+		self.assertEqual( s2["N"]["user"]["A"].getValue(), 10 )
+		self.assertEqual( s2["N"]["user"]["B"].getValue(), 20 )
+
+		self.assertEqual(
+			s2["e"].getExpression(),
+			( 'parent["N"]["user"]["B"] = parent["N"]["user"]["A"] * 2', "python" )
+		)
 
 	def testLoadScriptFromVersion0_15( self ) :
 

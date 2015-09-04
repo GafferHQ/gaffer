@@ -100,14 +100,6 @@ void Expression::languages( std::vector<std::string> &languages )
 
 void Expression::setExpression( const std::string &expression, const std::string &engine )
 {
-	if(
-		expression == expressionPlug()->getValue() &&
-		engine == enginePlug()->getValue()
-	)
-	{
-		return;
-	}
-
 	m_engine = NULL;
 	m_contextNames.clear();
 
@@ -119,13 +111,20 @@ void Expression::setExpression( const std::string &expression, const std::string
 
 	BlockedConnection blockedConnection( m_plugSetConnection );
 	enginePlug()->setValue( engine );
-	expressionPlug()->setValue( expression );
+
+	// We store the expression in a processed form, referencing
+	// the intermediate plugs on this node rather than the plugs
+	// out in the wild. This allows us to account for changes to
+	// node/plug names in getExpression(), where we convert back
+	// to the external form.
+
+	expressionPlug()->setValue( transcribe( expression, /* toInternalForm = */ true ) );
 }
 
 std::string Expression::getExpression( std::string &engine ) const
 {
 	engine = enginePlug()->getValue();
-	return expressionPlug()->getValue();
+	return transcribe( expressionPlug()->getValue(), /* toInternalForm = */ false );
 }
 
 StringPlug *Expression::enginePlug()
@@ -377,6 +376,44 @@ void Expression::updatePlug( ValuePlug *parentPlug, size_t childIndex, ValuePlug
 	else
 	{
 		plug->setInput( childPlug );
+	}
+}
+
+std::string Expression::transcribe( const std::string &expression, bool toInternalForm ) const
+{
+	if( !m_engine )
+	{
+		return expression;
+	}
+
+	std::vector<const ValuePlug *> internalPlugs, externalPlugs;
+	for( ValuePlugIterator it( inPlug() ); it != it.end(); ++it )
+	{
+		internalPlugs.push_back( it->get() );
+		const ValuePlug *input = (*it)->getInput<ValuePlug>();
+		externalPlugs.push_back( input ? input : it->get() );
+	}
+
+	for( ValuePlugIterator it( outPlug() ); it != it.end(); ++it )
+	{
+		internalPlugs.push_back( it->get() );
+		if( !(*it)->outputs().empty() )
+		{
+			externalPlugs.push_back( static_cast<const ValuePlug *>( (*it)->outputs().front() ) );
+		}
+		else
+		{
+			externalPlugs.push_back( it->get() );
+		}
+	}
+
+	if( toInternalForm )
+	{
+		return m_engine->replace( this, expression, externalPlugs, internalPlugs );
+	}
+	else
+	{
+		return m_engine->replace( this, expression, internalPlugs, externalPlugs );
 	}
 }
 
