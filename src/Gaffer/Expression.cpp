@@ -99,6 +99,12 @@ void Expression::languages( std::vector<std::string> &languages )
 	Engine::registeredEngines( languages );
 }
 
+std::string Expression::defaultExpression( const ValuePlug *output, const std::string &language )
+{
+	EnginePtr e = Engine::create( language );
+	return e->defaultExpression( output );
+}
+
 void Expression::setExpression( const std::string &expression, const std::string &engine )
 {
 	// The setExpression() method is undoable by virtue of being

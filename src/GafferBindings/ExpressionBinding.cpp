@@ -226,6 +226,32 @@ class EngineWrapper : public IECorePython::RefCountedWrapper<Expression::Engine>
 			throw IECore::Exception( "Engine::replace() python method not defined" );
 		}
 
+		virtual std::string defaultExpression( const ValuePlug *output ) const
+		{
+			if( isSubclassed() )
+			{
+				IECorePython::ScopedGILLock gilLock;
+				try
+				{
+					object f = this->methodOverride( "defaultExpression" );
+					if( f )
+					{
+						object result = f( ValuePlugPtr( const_cast<ValuePlug *>( output ) ) );
+						return extract<std::string>( result );
+					}
+				}
+				catch( const error_already_set &e )
+				{
+					translatePythonException();
+				}
+			}
+
+			throw IECore::Exception( "Engine::defaultExpression() python method not defined" );
+
+
+		}
+
+
 		static void registerEngine( const std::string &engineType, object creator )
 		{
 			Expression::Engine::registerEngine( engineType, ExpressionEngineCreator( creator ) );
@@ -264,6 +290,7 @@ void GafferBindings::bindExpression()
 
 	scope s = DependencyNodeClass<Expression>()
 		.def( "languages", &languages ).staticmethod( "languages" )
+		.def( "defaultExpression", &Expression::defaultExpression ).staticmethod( "defaultExpression" )
 		.def( "setExpression", &setExpression, ( arg( "expression" ), arg( "language" ) = "python" ) )
 		.def( "getExpression", &getExpression )
 		.def( "expressionChangedSignal", &Expression::expressionChangedSignal, return_internal_reference<1>() )

@@ -102,6 +102,31 @@ class PythonExpressionEngine( Gaffer.Expression.Engine ) :
 
 		return expression
 
+	def defaultExpression( self, plug ) :
+
+		if not isinstance( plug, (
+			Gaffer.FloatPlug, Gaffer.IntPlug,
+			Gaffer.StringPlug, Gaffer.BoolPlug,
+			Gaffer.V3fPlug, Gaffer.V3iPlug,
+			Gaffer.V2fPlug, Gaffer.V2iPlug,
+			Gaffer.Color3fPlug, Gaffer.Color4fPlug,
+			Gaffer.Box2fPlug, Gaffer.Box2iPlug,
+			Gaffer.Box3fPlug, Gaffer.Box3iPlug,
+		) ) :
+			return ""
+
+		parentNode = plug.node().ancestor( Gaffer.Node )
+		if parentNode is None :
+			return ""
+
+		result = "parent[\""
+		result += plug.relativeName( parentNode ).replace( ".", "\"][\"" )
+		result += "\"] = "
+
+		result += repr( plug.getValue() )
+
+		return result
+
 	@classmethod
 	def __plugIdentifier( cls, plug, node ) :
 

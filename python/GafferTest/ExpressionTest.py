@@ -901,5 +901,21 @@ class ExpressionTest( GafferTest.TestCase ) :
 		self.assertEqual( len( expressions ), 3 )
 		self.assertEqual( expressions[2], expressions[0] )
 
+	def testDefaultExpression( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = Gaffer.Node()
+		s["n"]["user"]["p"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["n"]["user"]["p"].setValue( 10 )
+
+		expression = Gaffer.Expression.defaultExpression( s["n"]["user"]["p"], "python" )
+		s["n"]["user"]["p"].setValue( 0 )
+
+		s["e"] = Gaffer.Expression()
+		s["e"].setExpression( expression, "python" )
+
+		self.assertEqual( s["n"]["user"]["p"].getValue(), 10 )
+
 if __name__ == "__main__":
 	unittest.main()

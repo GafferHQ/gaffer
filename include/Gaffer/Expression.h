@@ -59,6 +59,11 @@ class Expression : public ComputeNode
 		/// Fills the vector with the names of all currently available languages.
 		static void languages( std::vector<std::string> &languages );
 
+		/// Returns an identity expression which will set the plug to
+		/// its current value using the specified language. Returns ""
+		/// if the language does not support the plug.
+		static std::string defaultExpression( const ValuePlug *output, const std::string &language );
+
 		/// Sets the node up to evaluate the given expression in the given language.
 		/// This is achieved by creating local plugs which are connected to the plugs
 		/// referenced by the expression, and executing the expression to provide
@@ -109,6 +114,9 @@ class Expression : public ComputeNode
 				/// new plugs rather than the old ones. Note that this should not modify
 				/// the current engine in any way, but just return a new expression.
 				virtual std::string replace( const Expression *node, const std::string &expression, const std::vector<const ValuePlug *> &oldPlugs, const std::vector<const ValuePlug *> &newPlugs ) const = 0;
+
+				/// Used to implement Expression::defaultExpression().
+				virtual std::string defaultExpression( const ValuePlug *output ) const = 0;
 
 				/// Creates an engine of the specified type.
 				static EnginePtr create( const std::string engineType );
