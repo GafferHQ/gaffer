@@ -35,7 +35,7 @@
 #
 ##########################################################################
 
-import fnmatch
+import functools
 
 import IECore
 import Gaffer
@@ -51,53 +51,31 @@ Gaffer.Metadata.registerNode(
 	scripted expressions.
 	""",
 
+	"layout:customWidget:Expression:widgetType", "GafferUI.ExpressionUI._ExpressionWidget",
+
 	plugs = {
 
+		# This plug is added by the expressionCompatibility.py
+		# config file to provide compatibility for loading old
+		# files, so we must hide it.
 		"engine" : (
 
-			"description",
-			"""
-			The expression language to use.
-			""",
-
-			"layout:section", "",
+			"plugValueWidget:type", "",
 			"nodule:type", "",
-
-			"presetNames", lambda plug : IECore.StringVectorData( [ IECore.CamelCase.toSpaced( e ) for e in Gaffer.Expression.Engine.registeredEngines() ] ),
-			"presetValues", lambda plug : IECore.StringVectorData( Gaffer.Expression.Engine.registeredEngines() ),
-
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 
 		),
 
+		# This plug is added by the expressionCompatibility.py
+		# config file to provide compatibility for loading old
+		# files, so we must hide it.
 		"expression" : (
 
-			## \todo We need better help here, specific to the
-			# different engines themselves.
-			"description",
-			"""
-			The expression to evaluate."
-			""",
-
-			"layout:section", "",
+			"plugValueWidget:type", "",
 			"nodule:type", "",
-			"plugValueWidget:type", "GafferUI.ExpressionUI._ExpressionPlugValueWidget",
 
 		),
 
 		"user" : (
-
-			"plugValueWidget:type", "",
-
-		),
-
-		"in" : (
-
-			"plugValueWidget:type", "",
-
-		),
-
-		"out" : (
 
 			"plugValueWidget:type", "",
 
@@ -110,7 +88,7 @@ Gaffer.Metadata.registerNode(
 # PlugValueWidget popup menu for creating expressions
 ##########################################################################
 
-def __createExpression( plug ) :
+def __createExpression( plug, language ) :
 
 	node = plug.node()
 	parentNode = node.ancestor( Gaffer.Node )
@@ -120,13 +98,10 @@ def __createExpression( plug ) :
 		expressionNode = Gaffer.Expression()
 		parentNode.addChild( expressionNode )
 
-		expression = "parent['"
-		expression += plug.relativeName( parentNode ).replace( ".", "']['" )
-		expression += "'] = "
-
-		expression += repr( plug.getValue() )
-
-		expressionNode["expression"].setValue( expression )
+		expressionNode.setExpression(
+			Gaffer.Expression.defaultExpression( plug, language ),
+			language
+		)
 
 	__editExpression( plug )
 
@@ -139,55 +114,111 @@ def __editExpression( plug ) :
 def __popupMenu( menuDefinition, plugValueWidget ) :
 
 	plug = plugValueWidget.getPlug()
-	if not isinstance( plug, (
-		Gaffer.FloatPlug, Gaffer.IntPlug,
-		Gaffer.StringPlug, Gaffer.BoolPlug,
-		Gaffer.V3fPlug, Gaffer.V3iPlug,
-		Gaffer.V2fPlug, Gaffer.V2iPlug,
-		Gaffer.Color3fPlug, Gaffer.Color4fPlug,
-		Gaffer.Box2fPlug, Gaffer.Box2iPlug,
-		Gaffer.Box3fPlug, Gaffer.Box3iPlug,
-	) ) :
-		return
-
 	node = plug.node()
 	if node is None or node.parent() is None :
 		return
 
 	input = plug.getInput()
-	if input is None and plugValueWidget._editable() :
-		menuDefinition.prepend( "/ExpressionDivider", { "divider" : True } )
-		menuDefinition.prepend( "/Create Expression...", { "command" : IECore.curry( __createExpression, plug ) } )
+	if input is not None or not plugValueWidget._editable() :
+		return
+
+	languages = [ l for l in Gaffer.Expression.languages() if Gaffer.Expression.defaultExpression( plug, l ) ]
+	if not languages :
+		return
+
+	menuDefinition.prepend( "/ExpressionDivider", { "divider" : True } )
+	for language in languages :
+		menuDefinition.prepend(
+			"/Create " + IECore.CamelCase.toSpaced( language ) + " Expression...",
+			{
+				"command" : functools.partial( __createExpression, plug, language )
+			}
+		)
 
 __popupMenuConnection = GafferUI.PlugValueWidget.popupMenuSignal().connect( __popupMenu )
 
 # _ExpressionPlugValueWidget
 ##########################################################################
 
-class _ExpressionPlugValueWidget( GafferUI.MultiLineStringPlugValueWidget ) :
+class _ExpressionWidget( GafferUI.Widget ) :
 
-	def __init__( self, plug, **kw ) :
+	def __init__( self, node, **kw ) :
 
-		GafferUI.MultiLineStringPlugValueWidget.__init__( self, plug, **kw )
+		column = GafferUI.ListContainer( spacing = 4 )
+		GafferUI.Widget.__init__( self, column )
 
-		self.__dropTextConnection = self.textWidget().dropTextSignal().connect( Gaffer.WeakMethod( self.__dropText ) )
+		self.__node = node
 
-	def hasLabel( self ) :
+		with column :
 
-		# strictly speaking we don't have a label, but i think it's pretty obvious
-		# what we are - what else is a giant text input box in an expression ui
-		# going to be?
-		return True
+			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
+
+				GafferUI.Label( "Language" )
+				self.__languageMenu = GafferUI.MenuButton( "", menu = GafferUI.Menu( Gaffer.WeakMethod( self.__languageMenuDefinition ) ) )
+
+			self.__textWidget = GafferUI.MultiLineTextWidget()
+			self.__activatedConnection = self.__textWidget.activatedSignal().connect( Gaffer.WeakMethod( self.__activated ) )
+			self.__editingFinishedConnection = self.__textWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__editingFinished ) )
+			self.__dropTextConnection = self.__textWidget.dropTextSignal().connect( Gaffer.WeakMethod( self.__dropText ) )
+
+		self.__expressionChangedConnection = self.__node.expressionChangedSignal().connect( Gaffer.WeakMethod( self.__expressionChanged ) )
+
+		self.__update()
+
+	def __update( self ) :
+
+		expression = self.__node.getExpression()
+
+		self.__textWidget.setText( expression[0] )
+		self.__languageMenu.setText( IECore.CamelCase.toSpaced( expression[1] ) )
+
+	def __languageMenuDefinition( self ) :
+
+		currentLanguage = self.__node.getExpression()[1]
+
+		result = IECore.MenuDefinition()
+		for language in self.__node.languages() :
+			result.append(
+				"/" + IECore.CamelCase.toSpaced( language ),
+				{
+					"command" : functools.partial( Gaffer.WeakMethod( self.__changeLanguage ), language = language ),
+					"checkBox" : language == currentLanguage,
+				}
+			)
+
+		return result
+
+	def __changeLanguage( self, unused, language ) :
+
+		## \todo Can we do better? Maybe start with the default expression
+		# for the current output plugs?
+		self.__node.setExpression( "", language )
+
+	def __setExpression( self ) :
+
+		language = self.__node.getExpression()[1]
+		with Gaffer.UndoContext( self.__node.scriptNode() ) :
+			self.__node.setExpression( self.__textWidget.getText(), language )
+
+	def __expressionChanged( self, node ) :
+
+		self.__update()
+
+	def __activated( self, widget ) :
+
+		self.__setExpression()
+
+	def __editingFinished( self, widget ) :
+
+		self.__setExpression()
 
 	def __dropText( self, widget, dragData ) :
 
 		if isinstance( dragData, IECore.StringVectorData ) :
 			return repr( list( dragData ) )
-		elif isinstance( dragData, Gaffer.GraphComponent ) :
-			name = dragData.relativeName( self.getPlug().node().parent() )
-			if not name :
-				return None
-			return "parent" + "".join( [ "['" + n + "']" for n in name.split( "." ) ] )
+		elif isinstance( dragData, Gaffer.Plug ) :
+			name = self.__node.identifier( dragData )
+			return name if name else None
 		elif isinstance( dragData, Gaffer.Set ) :
 			if len( dragData ) == 1 :
 				return self.__dropText( widget, dragData[0] )
