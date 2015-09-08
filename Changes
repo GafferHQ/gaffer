@@ -1,3 +1,18 @@
+# 0.16.0.3
+==========
+
+UI
+-----------------------------------------------------------------------
+
+- fixed a problem whereby presets were not being transferred when
+  promoting a compound plug on a RenderManAttributes node.
+
+Core
+-----------------------------------------------------------------------
+
+- Fixed issue where non-ValuePlugs were not syncing during
+  setPlugValue().
+
 # 0.16.0.2
 ==========
 
