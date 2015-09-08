@@ -56,8 +56,8 @@ class PythonExpressionEngine( Gaffer.Expression.Engine ) :
 		self.__inPlugPaths = list( parser.plugReads )
 		self.__outPlugPaths = list( parser.plugWrites )
 
-		inPlugs.extend( [ node.parent().descendant( n ) for n in self.__inPlugPaths ] )
-		outPlugs.extend( [ node.parent().descendant( n ) for n in self.__outPlugPaths ] )
+		inPlugs.extend( [ self.__plug( node, p ) for p in self.__inPlugPaths ] )
+		outPlugs.extend( [ self.__plug( node, p ) for p in self.__outPlugPaths ] )
 		contextNames.extend( parser.contextReads )
 
 	def execute( self, context, inputs ) :
@@ -135,6 +135,17 @@ class PythonExpressionEngine( Gaffer.Expression.Engine ) :
 		result += repr( plug.getValue() )
 
 		return result
+
+	def __plug( self, node, plugPath ) :
+
+		plug = node.parent().descendant( plugPath )
+		if isinstance( plug, Gaffer.ValuePlug ) :
+			return plug
+
+		if plug is None :
+			raise RuntimeError( "\"%s\" does not exist" % plugPath )
+		else :
+			raise RuntimeError( "\"%s\" is not a ValuePlug" % plugPath )
 
 	def __plugRegex( self, node, plug ) :
 

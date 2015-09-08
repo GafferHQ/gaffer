@@ -917,5 +917,12 @@ class ExpressionTest( GafferTest.TestCase ) :
 
 		self.assertEqual( s["n"]["user"]["p"].getValue(), 10 )
 
+	def testInvalidExpression( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["e"] = Gaffer.Expression()
+		self.assertRaisesRegexp( RuntimeError, ".*does not exist.*", s["e"].setExpression, 'parent["notANode"]["notAPlug"] = 2' )
+
 if __name__ == "__main__":
 	unittest.main()
