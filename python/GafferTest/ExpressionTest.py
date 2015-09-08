@@ -992,5 +992,23 @@ class ExpressionTest( GafferTest.TestCase ) :
 		self.assertEqual( s["n"]["user"]["a1"].getValue(), 0 )
 		self.assertEqual( s["n"]["user"]["a2"].getValue(), 2 )
 
+	def testReplaceFloatWithInt( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = Gaffer.Node()
+		s["n"]["user"]["f"] = Gaffer.FloatPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["n"]["user"]["i"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		s["e"] = Gaffer.Expression()
+
+		s["e"].setExpression( 'parent["n"]["user"]["f"] = 10' )
+		self.assertEqual( s["n"]["user"]["f"].getValue(), 10 )
+		self.assertEqual( s["n"]["user"]["i"].getValue(), 0 )
+
+		s["e"].setExpression( 'parent["n"]["user"]["i"] = 10' )
+		self.assertEqual( s["n"]["user"]["f"].getValue(), 0 )
+		self.assertEqual( s["n"]["user"]["i"].getValue(), 10 )
+
 if __name__ == "__main__":
 	unittest.main()
