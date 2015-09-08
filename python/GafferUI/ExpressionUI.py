@@ -161,7 +161,10 @@ class _ExpressionWidget( GafferUI.Widget ) :
 			self.__editingFinishedConnection = self.__textWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__editingFinished ) )
 			self.__dropTextConnection = self.__textWidget.dropTextSignal().connect( Gaffer.WeakMethod( self.__dropText ) )
 
+			self.__messageWidget = GafferUI.MessageWidget()
+
 		self.__expressionChangedConnection = self.__node.expressionChangedSignal().connect( Gaffer.WeakMethod( self.__expressionChanged ) )
+		self.__errorConnection = self.__node.errorSignal().connect( Gaffer.WeakMethod( self.__error ) )
 
 		self.__update()
 
@@ -171,6 +174,9 @@ class _ExpressionWidget( GafferUI.Widget ) :
 
 		self.__textWidget.setText( expression[0] )
 		self.__languageMenu.setText( IECore.CamelCase.toSpaced( expression[1] ) )
+
+		self.__messageWidget.clear()
+		self.__messageWidget.setVisible( False )
 
 	def __languageMenuDefinition( self ) :
 
@@ -198,7 +204,14 @@ class _ExpressionWidget( GafferUI.Widget ) :
 
 		language = self.__node.getExpression()[1]
 		with Gaffer.UndoContext( self.__node.scriptNode() ) :
-			self.__node.setExpression( self.__textWidget.getText(), language )
+			try :
+				self.__node.setExpression( self.__textWidget.getText(), language )
+			except Exception as e :
+				self.__messageWidget.clear()
+				self.__messageWidget.setVisible( True )
+				self.__messageWidget.messageHandler().handle(
+					IECore.Msg.Level.Error, "Parse error", str( e )
+				)
 
 	def __expressionChanged( self, node ) :
 
@@ -226,3 +239,8 @@ class _ExpressionWidget( GafferUI.Widget ) :
 				return None
 
 		return None
+
+	def __error( self, plug, source, error ) :
+
+		self.__messageWidget.setVisible( True )
+		self.__messageWidget.messageHandler().handle( IECore.Msg.Level.Error, "Execution error", error )
