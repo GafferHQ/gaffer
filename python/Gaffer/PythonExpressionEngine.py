@@ -105,8 +105,16 @@ class PythonExpressionEngine( Gaffer.Expression.Engine ) :
 	def replace( self, node, expression, oldPlugs, newPlugs ) :
 
 		for oldPlug, newPlug in zip( oldPlugs, newPlugs ) :
+			if newPlug is not None :
+				replacement = self.identifier( node, newPlug )
+			else :
+				if oldPlug.direction() == Gaffer.Plug.Direction.In :
+					replacement = repr( oldPlug.defaultValue() )
+				else :
+					replacement = "__disconnected"
+
 			expression = self.__plugRegex( node, oldPlug ).sub(
-				self.identifier( node, newPlug ), expression
+				replacement, expression
 			)
 
 		return expression

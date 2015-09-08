@@ -409,8 +409,7 @@ std::string Expression::transcribe( const std::string &expression, bool toIntern
 	for( ValuePlugIterator it( inPlug() ); it != it.end(); ++it )
 	{
 		internalPlugs.push_back( it->get() );
-		const ValuePlug *input = (*it)->getInput<ValuePlug>();
-		externalPlugs.push_back( input ? input : it->get() );
+		externalPlugs.push_back( (*it)->getInput<ValuePlug>() );
 	}
 
 	for( ValuePlugIterator it( outPlug() ); it != it.end(); ++it )
@@ -422,7 +421,7 @@ std::string Expression::transcribe( const std::string &expression, bool toIntern
 		}
 		else
 		{
-			externalPlugs.push_back( it->get() );
+			externalPlugs.push_back( NULL );
 		}
 	}
 

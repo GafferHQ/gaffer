@@ -137,7 +137,8 @@ class Expression : public ComputeNode
 				/// Used to implement Expression::identifier.
 				virtual std::string identifier( const Expression *node, const ValuePlug *plug ) const = 0;
 				/// Returns a new expression, equivalent to the original but now acting on the
-				/// new plugs rather than the old ones. Note that this should not modify
+				/// new plugs rather than the old ones. New plugs may be null in the event that
+				/// a user has manually disconnected plugs. Note that this should not modify
 				/// the current engine in any way, but just return a new expression.
 				virtual std::string replace( const Expression *node, const std::string &expression, const std::vector<const ValuePlug *> &oldPlugs, const std::vector<const ValuePlug *> &newPlugs ) const = 0;
 				/// Used to implement Expression::defaultExpression().
