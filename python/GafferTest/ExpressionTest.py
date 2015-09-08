@@ -924,5 +924,47 @@ class ExpressionTest( GafferTest.TestCase ) :
 		s["e"] = Gaffer.Expression()
 		self.assertRaisesRegexp( RuntimeError, ".*does not exist.*", s["e"].setExpression, 'parent["notANode"]["notAPlug"] = 2' )
 
+	def testRemoveOneOutputOfTwo( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = Gaffer.Node()
+		s["n"]["user"]["a1"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["n"]["user"]["a2"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["n"]["user"]["b1"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["n"]["user"]["b2"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["n"]["user"]["b1"].setValue( 1 )
+		s["n"]["user"]["b2"].setValue( 2 )
+
+		a1Expr = 'parent["n"]["user"]["a1"] = parent["n"]["user"]["b1"]'
+		a2Expr = 'parent["n"]["user"]["a2"] = parent["n"]["user"]["b2"]'
+
+		s["e"] = Gaffer.Expression()
+		s["e"].setExpression( a1Expr + "\n" + a2Expr )
+
+		self.assertTrue( s["n"]["user"]["a1"].getInput().node().isSame( s["e"] ) )
+		self.assertTrue( s["n"]["user"]["a2"].getInput().node().isSame( s["e"] ) )
+		self.assertEqual( s["n"]["user"]["a1"].getValue(), 1 )
+		self.assertEqual( s["n"]["user"]["a2"].getValue(), 2 )
+
+		s["e"].setExpression( a1Expr )
+		self.assertTrue( s["n"]["user"]["a1"].getInput().node().isSame( s["e"] ) )
+		self.assertTrue( s["n"]["user"]["a2"].getInput() is None )
+		self.assertEqual( s["n"]["user"]["a1"].getValue(), 1 )
+		self.assertEqual( s["n"]["user"]["a2"].getValue(), 0 )
+
+		s["e"].setExpression( a2Expr + "\n" + a1Expr )
+
+		self.assertTrue( s["n"]["user"]["a1"].getInput().node().isSame( s["e"] ) )
+		self.assertTrue( s["n"]["user"]["a2"].getInput().node().isSame( s["e"] ) )
+		self.assertEqual( s["n"]["user"]["a1"].getValue(), 1 )
+		self.assertEqual( s["n"]["user"]["a2"].getValue(), 2 )
+
+		s["e"].setExpression( a2Expr )
+		self.assertTrue( s["n"]["user"]["a1"].getInput() is None )
+		self.assertTrue( s["n"]["user"]["a2"].getInput().node().isSame( s["e"] ) )
+		self.assertEqual( s["n"]["user"]["a1"].getValue(), 0 )
+		self.assertEqual( s["n"]["user"]["a2"].getValue(), 2 )
+
 if __name__ == "__main__":
 	unittest.main()

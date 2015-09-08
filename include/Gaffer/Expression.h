@@ -207,6 +207,7 @@ class Expression : public ComputeNode
 
 		void updatePlugs( const std::vector<ValuePlug *> &inPlugs, const std::vector<ValuePlug *> &outPlugs );
 		void updatePlug( ValuePlug *parentPlug, size_t childIndex, ValuePlug *plug );
+		void removeChildren( ValuePlug *parentPlug, size_t startChildIndex );
 
 		std::string transcribe( const std::string &expression, bool toInternalForm ) const;
 

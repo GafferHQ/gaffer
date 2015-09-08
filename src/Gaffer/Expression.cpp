@@ -342,11 +342,13 @@ void Expression::updatePlugs( const std::vector<ValuePlug *> &inPlugs, const std
 	{
 		updatePlug( inPlug(), i, inPlugs[i] );
 	}
+	removeChildren( inPlug(), inPlugs.size() );
 
 	for( size_t i = 0, e = outPlugs.size(); i < e; ++i )
 	{
 		updatePlug( outPlug(), i, outPlugs[i] );
 	}
+	removeChildren( outPlug(), outPlugs.size() );
 }
 
 void Expression::updatePlug( ValuePlug *parentPlug, size_t childIndex, ValuePlug *plug )
@@ -366,14 +368,8 @@ void Expression::updatePlug( ValuePlug *parentPlug, size_t childIndex, ValuePlug
 
 	// Existing plug not OK, so we need to create one. First we must remove all
 	// plugs from childIndex onwards, so that when we add the new plug it gets
-	// the right index. We do this backwards, because children() is a vector and
-	// it's therefore cheaper to remove from the end.
-	for( int i = (int)(parentPlug->children().size() ) - 1; i >= (int)childIndex; --i )
-	{
-		Plug *toRemove = parentPlug->getChild<Plug>( i );
-		toRemove->removeOutputs();
-		parentPlug->removeChild( toRemove );
-	}
+	// the right index.
+	removeChildren( parentPlug, childIndex );
 
 	// Finally we can add the plug we need.
 
@@ -387,6 +383,18 @@ void Expression::updatePlug( ValuePlug *parentPlug, size_t childIndex, ValuePlug
 	else
 	{
 		plug->setInput( childPlug );
+	}
+}
+
+void Expression::removeChildren( ValuePlug *parentPlug, size_t startChildIndex )
+{
+	// Remove backwards, because children() is a vector and
+	// it's therefore cheaper to remove from the end.
+	for( int i = (int)(parentPlug->children().size() ) - 1; i >= (int)startChildIndex; --i )
+	{
+		Plug *toRemove = parentPlug->getChild<Plug>( i );
+		toRemove->removeOutputs();
+		parentPlug->removeChild( toRemove );
 	}
 }
 
