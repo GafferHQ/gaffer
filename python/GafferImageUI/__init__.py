@@ -74,5 +74,6 @@ import ResizeUI
 import ResampleUI
 import LUTUI
 import CDLUI
+import DisplayTransformUI
 
 __import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferImageUI" )

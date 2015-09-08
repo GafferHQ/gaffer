@@ -68,9 +68,11 @@ GafferUI.PlugValueWidget.registerCreator(
 
 def __setDisplayTransform() :
 
-	view = preferences["displayColorSpace"]["view"].getValue()
-	colorSpace = config.getDisplayColorSpaceName( defaultDisplay, view )
-	processor = config.getProcessor( OCIO.Constants.ROLE_SCENE_LINEAR, colorSpace )
+	d = OCIO.DisplayTransform()
+	d.setInputColorSpaceName( OCIO.Constants.ROLE_SCENE_LINEAR )
+	d.setDisplay( defaultDisplay )
+	d.setView( preferences["displayColorSpace"]["view"].getValue() )
+	processor = config.getProcessor( d )
 
 	def f( c ) :
 
@@ -97,9 +99,10 @@ application.__ocioPlugSetConnection = preferences.plugSetSignal().connect( __plu
 
 def __displayTransformCreator( name ) :
 
-	result = GafferImage.ColorSpace()
-	result["inputSpace"].setValue( config.getColorSpace( OCIO.Constants.ROLE_SCENE_LINEAR ).getName() )
-	result["outputSpace"].setValue( config.getDisplayColorSpaceName( defaultDisplay, name ) )
+	result = GafferImage.DisplayTransform()
+	result["inputColorSpace"].setValue( config.getColorSpace( OCIO.Constants.ROLE_SCENE_LINEAR ).getName() )
+	result["display"].setValue( defaultDisplay )
+	result["view"].setValue( name )
 
 	return result
 
@@ -114,14 +117,15 @@ __defaultDisplayTransforms = []
 def __updateDefaultDisplayTransforms() :
 
 	view = preferences["displayColorSpace"]["view"].getValue()
-	colorSpace = config.getDisplayColorSpaceName( defaultDisplay, view )
 	for node in __defaultDisplayTransforms :
-		node["outputSpace"].setValue( colorSpace )
+		node["view"].setValue( view )
 
 def __defaultDisplayTransformCreator() :
 
-	result = GafferImage.ColorSpace()
-	result["inputSpace"].setValue( config.getColorSpace( OCIO.Constants.ROLE_SCENE_LINEAR ).getName() )
+	result = GafferImage.DisplayTransform()
+	result["inputColorSpace"].setValue( config.getColorSpace( OCIO.Constants.ROLE_SCENE_LINEAR ).getName() )
+	result["display"].setValue( defaultDisplay )
+	result["view"].setValue( config.getDefaultView( defaultDisplay ) )
 
 	__defaultDisplayTransforms.append( result )
 	__updateDefaultDisplayTransforms()
