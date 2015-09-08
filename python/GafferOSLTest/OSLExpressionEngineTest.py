@@ -37,10 +37,13 @@
 import unittest
 import inspect
 import math
+import os
+import shutil
 
 import IECore
 
 import Gaffer
+import GafferTest
 import GafferOSL
 import GafferOSLTest
 
@@ -309,6 +312,32 @@ class OSLExpressionEngineTest( GafferOSLTest.OSLTestCase ) :
 		s["e"].setExpression( "parent.n.user.f = M_PI", "OSL" )
 
 		self.assertAlmostEqual( s["n"]["user"]["f"].getValue(), math.pi, 4 )
+
+	def testBackgroundDispatch( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["writer"] = GafferTest.TextWriter()
+
+		script["expression"] = Gaffer.Expression()
+		script["expression"].setExpression( 'parent.writer.fileName = "/tmp/gafferOSLExpressionEngineTest/test.txt"', "OSL" )
+
+		dispatcher = Gaffer.LocalDispatcher()
+		dispatcher["jobsDirectory"].setValue( "/tmp/gafferOSLExpressionEngineTest/jobs" )
+		dispatcher["executeInBackground"].setValue( True )
+		dispatcher.dispatch( [ script["writer"] ] )
+
+		dispatcher.jobPool().waitForAll()
+		self.assertEqual( len( dispatcher.jobPool().failedJobs() ), 0 )
+
+		self.assertTrue( os.path.exists( "/tmp/gafferOSLExpressionEngineTest/test.txt" ) )
+
+	def tearDown( self ) :
+
+		GafferOSLTest.OSLTestCase.tearDown( self )
+
+		if os.path.exists( "/tmp/gafferOSLExpressionEngineTest" ) :
+			shutil.rmtree( "/tmp/gafferOSLExpressionEngineTest" )
 
 if __name__ == "__main__":
 	unittest.main()

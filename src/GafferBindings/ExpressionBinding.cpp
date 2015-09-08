@@ -307,6 +307,19 @@ static tuple languages()
 class ExpressionSerialiser : public NodeSerialiser
 {
 
+	virtual void moduleDependencies( const Gaffer::GraphComponent *graphComponent, std::set<std::string> &modules ) const
+	{
+		const Expression *e = static_cast<const Expression *>( graphComponent );
+		std::string language;
+		e->getExpression( language );
+		if( !language.empty() && language != "python" )
+		{
+			/// \todo Consider a virtual method on the Engine
+			/// to provide this information.
+			modules.insert( "Gaffer" + language );
+		}
+	}
+
 	virtual std::string postScript( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const
 	{
 		const Expression *e = static_cast<const Expression *>( graphComponent );
