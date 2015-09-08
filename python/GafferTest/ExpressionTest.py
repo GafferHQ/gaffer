@@ -1010,5 +1010,24 @@ class ExpressionTest( GafferTest.TestCase ) :
 		self.assertEqual( s["n"]["user"]["f"].getValue(), 0 )
 		self.assertEqual( s["n"]["user"]["i"].getValue(), 10 )
 
+	def testSetExpressionShortcuts( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = Gaffer.Node()
+		s["n"]["user"]["i"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		s["e"] = Gaffer.Expression()
+		cs = GafferTest.CapturingSlot( s["e"].expressionChangedSignal() )
+
+		s["e"].setExpression( 'parent["n"]["user"]["i"] = 10' )
+		self.assertEqual( len( cs ), 1 )
+
+		s["e"].setExpression( 'parent["n"]["user"]["i"] = 10' )
+		self.assertEqual( len( cs ), 1 )
+
+		s["e"].setExpression( 'parent["n"]["user"]["i"] = 20' )
+		self.assertEqual( len( cs ), 2 )
+
 if __name__ == "__main__":
 	unittest.main()

@@ -105,6 +105,13 @@ std::string Expression::defaultExpression( const ValuePlug *output, const std::s
 
 void Expression::setExpression( const std::string &expression, const std::string &engine )
 {
+	std::string currentEngine;
+	const std::string currentExpression = getExpression( currentEngine );
+	if( expression == currentExpression && engine == currentEngine )
+	{
+		return;
+	}
+
 	// The setExpression() method is undoable by virtue of being
 	// implemented entirely using other undoable functions - all
 	// except for emitting expressionChangedSignal(). When doing,
