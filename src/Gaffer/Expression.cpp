@@ -69,7 +69,7 @@ Expression::Expression( const std::string &name )
 			"__engine",
 			Plug::In,
 			"",
-			Plug::Default & ~( Plug::AcceptsInputs ),
+			Plug::Default & ~( Plug::AcceptsInputs | Plug::Serialisable ),
 			Context::NoSubstitutions
 		)
 	);
@@ -78,7 +78,7 @@ Expression::Expression( const std::string &name )
 			"__expression",
 			Plug::In,
 			"",
-			Plug::Default & ~( Plug::AcceptsInputs ),
+			Plug::Default & ~( Plug::AcceptsInputs | Plug::Serialisable ),
 			Context::NoSubstitutions
 		)
 	);
@@ -86,8 +86,6 @@ Expression::Expression( const std::string &name )
 	addChild( new ValuePlug( "__in" ) );
 	addChild( new ValuePlug( "__out", Plug::Out ) );
 	addChild( new ObjectVectorPlug( "__execute", Plug::Out, new ObjectVector ) );
-
-	m_plugSetConnection = plugSetSignal().connect( boost::bind( &Expression::plugSet, this, ::_1 ) );
 }
 
 Expression::~Expression()
@@ -129,7 +127,6 @@ void Expression::setExpression( const std::string &expression, const std::string
 	m_engine->parse( this, expression, inPlugs, outPlugs, m_contextNames );
 	updatePlugs( inPlugs, outPlugs );
 
-	BlockedConnection blockedConnection( m_plugSetConnection );
 	enginePlug()->setValue( engine );
 
 	// We store the expression in a processed form, referencing
@@ -337,32 +334,6 @@ void Expression::compute( ValuePlug *output, const Context *context ) const
 	}
 
 	ComputeNode::compute( output, context );
-}
-
-void Expression::plugSet( Plug *plug )
-{
-	if( plug == expressionPlug() )
-	{
-		// We use this to restore the engine appropriately when
-		// an Expression node is loaded from serialised form. We
-		// don't do all the updatePlugs() work that we do in
-		// setExpression() because we know that the serialisation
-		// will have rebuild the structure for us - we just need
-		// to recreate the engine.
-		/// \todo Perhaps it would be better if we serialised
-		/// a setExpression() call and then used that in our
-		/// serialisation.
-		const std::string engineType = enginePlug()->getValue();
-		const std::string expression = expressionPlug()->getValue();
-		m_engine = NULL;
-		m_contextNames.clear();
-		if( !engineType.empty() && !expression.empty() )
-		{
-			m_engine = Engine::create( engineType );
-			std::vector<ValuePlug *> inPlugs, outPlugs;
-			m_engine->parse( this, expression, inPlugs, outPlugs, m_contextNames );
-		}
-	}
 }
 
 void Expression::updatePlugs( const std::vector<ValuePlug *> &inPlugs, const std::vector<ValuePlug *> &outPlugs )

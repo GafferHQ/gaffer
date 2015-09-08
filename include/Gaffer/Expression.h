@@ -205,9 +205,6 @@ class Expression : public ComputeNode
 		ObjectVectorPlug *executePlug();
 		const ObjectVectorPlug *executePlug() const;
 
-		void plugSet( Plug *plug );
-		boost::signals::scoped_connection m_plugSetConnection;
-
 		void updatePlugs( const std::vector<ValuePlug *> &inPlugs, const std::vector<ValuePlug *> &outPlugs );
 		void updatePlug( ValuePlug *parentPlug, size_t childIndex, ValuePlug *plug );
 

@@ -304,6 +304,24 @@ static tuple languages()
 	return boost::python::tuple( l );
 }
 
+class ExpressionSerialiser : public NodeSerialiser
+{
+
+	virtual std::string postScript( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const
+	{
+		const Expression *e = static_cast<const Expression *>( graphComponent );
+
+		std::string language;
+		const std::string expression = e->getExpression( language );
+
+		object pythonExpression( expression );
+		std::string quotedExpression = extract<std::string>( pythonExpression.attr( "__repr__" )() );
+
+		return identifier + ".setExpression( " + quotedExpression + ", \"" + language + "\" )\n";
+	}
+
+};
+
 } // namespace
 
 void GafferBindings::bindExpression()
@@ -325,5 +343,7 @@ void GafferBindings::bindExpression()
 	;
 
 	SignalClass<Expression::ExpressionChangedSignal, DefaultSignalCaller<Expression::ExpressionChangedSignal>, ExpressionChangedSlotCaller >( "ExpressionChangedSignal" );
+
+	Serialisation::registerSerialiser( Expression::staticTypeId(), new ExpressionSerialiser );
 
 }
