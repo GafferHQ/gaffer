@@ -44,31 +44,31 @@ import GafferTest
 
 class CopyImageMetadataTest( GafferTest.TestCase ) :
 
-	checkerFile = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/checker.exr" )
+	checkerFile = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/checker.exr" )
 
 	def test( self ) :
 
 		r = GafferImage.ImageReader()
 		r["fileName"].setValue( self.checkerFile )
 		inMetadata = r["out"]["metadata"].getValue()
-		
+
 		d = GafferImage.DeleteImageMetadata()
 		d["in"].setInput( r["out"] )
 		d["names"].setValue( "*" )
-		
+
 		m = GafferImage.CopyImageMetadata()
 		m["in"].setInput( d["out"] )
 		m["copyFrom"].setInput( r["out"] )
 		m["names"].setValue( "" )
-		
+
 		# check that the image is passed through
 
 		metadata = m["out"]["metadata"].getValue()
 		self.assertEqual( m["out"]["metadata"].getValue(), IECore.CompoundObject() )
 		self.assertEqual( m["out"].image(), d["out"].image() )
-		
+
 		# check that we can copy specific metadata
-		
+
 		m["names"].setValue( "screen* compression" )
 		metadata = m["out"]["metadata"].getValue()
 		expected = set([ "screenWindowWidth", "screenWindowCenter", "compression" ])
@@ -77,27 +77,27 @@ class CopyImageMetadataTest( GafferTest.TestCase ) :
 			self.assertEqual( metadata[key], inMetadata[key] )
 
 		# check that we can invert the selection
-		
+
 		m["invertNames"].setValue( True )
 		metadata = m["out"]["metadata"].getValue()
 		expected = set([ "PixelAspectRatio", "oiio:ColorSpace" ])
 		self.assertEqual( set(metadata.keys()), expected )
 		for key in metadata.keys() :
 			self.assertEqual( metadata[key], inMetadata[key] )
-	
+
 	def testOverwrite( self ) :
-		
+
 		r = GafferImage.ImageReader()
 		r["fileName"].setValue( self.checkerFile )
 		inMetadata = r["out"]["metadata"].getValue()
-		
+
 		a = GafferImage.ImageMetadata()
 		a["metadata"].addMember( "compression", IECore.StringData( "extraFancyCompressor" ) )
-		
+
 		m = GafferImage.CopyImageMetadata()
 		m["in"].setInput( r["out"] )
 		m["copyFrom"].setInput( a["out"] )
-		
+
 		# check that the image is passed through
 
 		m["names"].setValue( "" )
@@ -105,32 +105,32 @@ class CopyImageMetadataTest( GafferTest.TestCase ) :
 		self.assertEqual( metadata["compression"], IECore.StringData( "zips" ) )
 		self.assertEqual( m["out"]["metadata"].getValue(), inMetadata )
 		self.assertEqual( m["out"].image(), r["out"].image() )
-		
+
 		# check that we can overwrite certain metadata
-		
+
 		m["names"].setValue( "compression" )
 		metadata = m["out"]["metadata"].getValue()
 		self.assertTrue( "compression" in metadata.keys() )
 		self.assertEqual( metadata["compression"], IECore.StringData( "extraFancyCompressor" ) )
-	
+
 	def testDirtyPropogation( self ) :
-		
+
 		c = GafferImage.Constant()
 		r = GafferImage.ImageReader()
 		r["fileName"].setValue( self.checkerFile )
 		inMetadata = r["out"]["metadata"].getValue()
-		
+
 		m = GafferImage.CopyImageMetadata()
 		m["in"].setInput( c["out"] )
 		m["copyFrom"].setInput( r["out"] )
-		
+
 		cs = GafferTest.CapturingSlot( m.plugDirtiedSignal() )
 
 		m["copyFrom"].setInput( c["out"] )
 		self.assertTrue( m["out"]["metadata"] in set( e[0] for e in cs ) )
 
 		del cs[:]
-		
+
 		m["names"].setValue( "test" )
 		self.assertTrue( m["out"]["metadata"] in set( e[0] for e in cs ) )
 
@@ -140,7 +140,7 @@ class CopyImageMetadataTest( GafferTest.TestCase ) :
 		self.assertTrue( m["out"]["metadata"] in set( e[0] for e in cs ) )
 
 	def testPassThrough( self ) :
-		
+
 		c = GafferImage.Constant()
 		i = GafferImage.ImageReader()
 		i["fileName"].setValue( self.checkerFile )
@@ -148,15 +148,15 @@ class CopyImageMetadataTest( GafferTest.TestCase ) :
 		m = GafferImage.CopyImageMetadata()
 		m["in"].setInput( i["out"] )
 		m["names"].setValue( "*" )
-		
+
 		self.assertEqual( i["out"]["format"].hash(), m["out"]["format"].hash() )
 		self.assertEqual( i["out"]["dataWindow"].hash(), m["out"]["dataWindow"].hash() )
 		self.assertEqual( i["out"]["channelNames"].hash(), m["out"]["channelNames"].hash() )
-				
+
 		self.assertEqual( i["out"]["format"].getValue(), m["out"]["format"].getValue() )
 		self.assertEqual( i["out"]["dataWindow"].getValue(), m["out"]["dataWindow"].getValue() )
 		self.assertEqual( i["out"]["channelNames"].getValue(), m["out"]["channelNames"].getValue() )
-		
+
 		context = Gaffer.Context()
 		context["image:tileOrigin"] = IECore.V2i( 0 )
 		with context :
