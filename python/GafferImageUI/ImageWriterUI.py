@@ -69,6 +69,7 @@ Gaffer.Metadata.registerNode(
 			"description",
 			"""
 			The name of the file to be written. File sequences with
+			arbitrary padding may be specified using the '#' character
 			as a placeholder for the frame numbers.
 			""",
 
@@ -123,10 +124,10 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-			"preset:8-bit", "int8",
-			"preset:10-bit", "int10",
-			"preset:12-bit", "int12",
-			"preset:16-bit", "int16",
+			"preset:8-bit", "uint8",
+			"preset:10-bit", "uint10",
+			"preset:12-bit", "uint12",
+			"preset:16-bit", "uint16",
 
 		],
 
@@ -161,9 +162,9 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-			"preset:half", "half",
-			"preset:float", "float",
-			"preset:double", "double",
+			"preset:Half", "half",
+			"preset:Float", "float",
+			"preset:Double", "double",
 			
 		],
 
@@ -188,8 +189,8 @@ Gaffer.Metadata.registerNode(
 			"preset:8-bit", "uint8",
 			"preset:16-bit", "uint16",
 			"preset:32-bit", "uint32",
-			"preset:float", "float",
-			"preset:double", "double",
+			"preset:Float", "float",
+			"preset:Double", "double",
 		],
 
 		"iff" : [
@@ -331,11 +332,11 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-			"preset:default", "default",
-			"preset:filtered", "filtered",
-			"preset:huffman", "huffman",
-			"preset:rle", "rle",
-			"preset:fixed", "fixed",
+			"preset:Default", "default",
+			"preset:Filtered", "filtered",
+			"preset:Huffman", "huffman",
+			"preset:RLE", "rle",
+			"preset:Fixed", "fixed",
 		],
 
 		"png.compressionLevel" : [
@@ -366,7 +367,7 @@ Gaffer.Metadata.registerNode(
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 			"preset:8-bit", "uint8",
 			"preset:16-bit", "uint16",
-			"preset:float", "float",
+			"preset:Float", "float",
 		],
 
 		"sgi" : [
@@ -409,26 +410,26 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-			"preset:none", "none",
-			"preset:rle", "rle",
+			"preset:None", "none",
+			"preset:RLE", "rle",
 		],
 
 		"tiff" : [
 			"description",
 			"""
-			Format options specific to Tiff files.
+			Format options specific to TIFF files.
 			""",
 
 			"nodule:type", "",
 			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
-			"layout:section", "Settings.Tiff",
+			"layout:section", "Settings.TIFF",
 
 		],
 
 		"tiff.mode" : [
 			"description",
 			"""
-			The write mode for the Tiff file - scanline or tiled data.
+			The write mode for the TIFF file - scanline or tiled data.
 			""",
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
@@ -440,7 +441,7 @@ Gaffer.Metadata.registerNode(
 		"tiff.compression" : [
 			"description",
 			"""
-			The compression method to use when writing the Tiff file.
+			The compression method to use when writing the TIFF file.
 			""",
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
@@ -456,13 +457,12 @@ Gaffer.Metadata.registerNode(
 		"tiff.dataType" : [
 			"description",
 			"""
-			The data type to be written to the Tiff file.
+			The data type to be written to the TIFF file.
 			""",
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-			"preset:Unsigned Int (8-bit)", "uint8",
-			"preset:Unsigned Int (16-bit)", "uint16",
-			"preset:Half Float", "half",
+			"preset:8-bit", "uint8",
+			"preset:16-bit", "uint16",
 			"preset:Float", "float",
 
 		],
