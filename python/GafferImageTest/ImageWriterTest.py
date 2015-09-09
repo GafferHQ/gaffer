@@ -489,7 +489,10 @@ class ImageWriterTest( unittest.TestCase ) :
 		m = GafferImage.ImageMetadata()
 		m["in"].setInput( d["out"] )
 		# lets tell a few lies
-		d["names"].setValue( "IPTC:*" )
+		# IPTC:Creator will have the current username appended to the end of
+		# the existing one, creating a list of creators. Blank it out for
+		# this test
+		d["names"].setValue( "IPTC:Creator" )
 		m["metadata"].addMember( "PixelAspectRatio", IECore.FloatData( 2 ) )
 		m["metadata"].addMember( "oiio:ColorSpace", IECore.StringData( "Rec709" ) )
 		m["metadata"].addMember( "oiio:BitsPerSample", IECore.IntData( 8 ) )
