@@ -90,49 +90,130 @@ class ImageWriterTest( unittest.TestCase ) :
 
 	def testTiffWrite( self ) :
 		options = {}
-		options['mode'] = [ 0, 1 ]
-		options['compression'] = [ "none", "lzw", "zip", "deflate", "packbits", "ccittrle" ]
-		options['dataType'] = [ "uint8", "uint16", "half", "float" ]
+		options['maxError'] = 0.1
+		options['plugs'] = {}
+		options['plugs']['mode'] = [
+				{ 'value': 0 },
+				{ 'value': 1 },
+			]
+		options['plugs']['compression'] = [
+				{ 'value': "none" },
+				{ 'value': "lzw" },
+				{ 'value': "zip" },
+				{ 'value': "deflate" },
+				{ 'value': "packbits" },
+				{ 'value': "ccittrle" },
+			]
+		options['plugs']['dataType'] = [
+				{ 'value': "uint8", 'metadata': { 'oiio:BitsPerSample': IECore.IntData( 8 ) }, 'maxError': 0.0 },
+				{ 'value': "uint16", 'metadata': { 'oiio:BitsPerSample': IECore.IntData( 16 ) } },
+				{ 'value': "float", 'metadata': { 'oiio:BitsPerSample': IECore.IntData( 32 ) } },
+			]
 
 		self.__testExtension( "tif", "tiff", options = options, metadataToIgnore = [ "tiff:RowsPerStrip" ] )
 
 	@unittest.expectedFailure
 	def testJpgWrite( self ) :
 		options = {}
-		options['compressionQuality'] = [ 10, 20, 30, 40, 50, 60, 70, 80, 90, 100 ]
+		options['maxError'] = 0.1
+		options['plugs'] = {}
+		options['plugs']['compressionQuality'] = [
+				{ 'value': 10 },
+				{ 'value': 20 },
+				{ 'value': 30 },
+				{ 'value': 40 },
+				{ 'value': 50 },
+				{ 'value': 60 },
+				{ 'value': 70 },
+				{ 'value': 80 },
+				{ 'value': 90 },
+				{ 'value': 100 },
+			]
 
 		self.__testExtension( "jpg", "jpeg", options = options, metadataToIgnore = [ "DocumentName", "HostComputer" ] )
 
 	def testTgaWrite( self ) :
 		options = {}
-		options['compression'] = [ "none", "rle" ]
+		options['maxError'] = 1.1
+		options['plugs'] = {}
+		options['plugs']['compression'] = [
+				{ 'value': "none" },
+				{ 'value': "rle" },
+			]
 
 		self.__testExtension( "tga", "targa", options = options, metadataToIgnore = [ "compression", "HostComputer", "Software" ] )
 
 	def testExrWrite( self ) :
 		options = {}
-		options['mode'] = [ 0, 1 ]
-		options['compression'] = [ "none", "zip", "zips", "rle", "piz", "pxr24", "b44", "b44a" ]
-		options['dataType'] = [ "float", "half" ]
+		options['maxError'] = 0.0
+		options['plugs'] = {}
+		options['plugs']['mode'] = [
+				{ 'value': 0 },
+				{ 'value': 1 },
+			]
+		options['plugs']['compression'] = [
+				{ 'value': "none" },
+				{ 'value': "zip" },
+				{ 'value': "zips" },
+				{ 'value': "rle" },
+				{ 'value': "piz" },
+				{ 'value': "pxr24" },
+				{ 'value': "b44" },
+				{ 'value': "b44a" },
+			]
+		options['plugs']['dataType'] = [
+				{ 'value': "float" },
+				{ 'value': "half" },
+			]
 
 		self.__testExtension( "exr", "openexr", options = options )
 
 	def testPngWrite( self ) :
 		options = {}
-		options['compression'] = [ "default", "filtered", "huffman", "rle", "fixed" ]
-		options['compressionLevel'] = range( 10 )
+		options['maxError'] = 0.1
+		options['plugs'] = {}
+		options['plugs']['compression'] = [
+				{ 'value': "default" },
+				{ 'value': "filtered" },
+				{ 'value': "huffman" },
+				{ 'value': "rle" },
+				{ 'value': "fixed" },
+			]
+		options['plugs']['compressionLevel'] = [
+				{ 'value': 0 },
+				{ 'value': 1 },
+				{ 'value': 2 },
+				{ 'value': 3 },
+				{ 'value': 4 },
+				{ 'value': 5 },
+				{ 'value': 6 },
+				{ 'value': 7 },
+				{ 'value': 8 },
+				{ 'value': 9 },
+			]
 
 		self.__testExtension( "png", "png", options = options )
 
 	def testDpxWrite( self ) :
 		options = {}
-		options['dataType'] = [ "int8", "int10", "int12", "int16" ]
+		options['maxError'] = 0.1
+		options['plugs'] = {}
+		options['plugs']['dataType'] = [
+				{ 'value': "uint8", 'metadata': { 'oiio:BitsPerSample': IECore.IntData( 8 ) } },
+				{ 'value': "uint10" },
+				{ 'value': "uint12", 'metadata': { 'oiio:BitsPerSample': IECore.IntData( 12 ), 'dpx:Packing': IECore.StringData( "Packed" ) } },
+				{ 'value': "uint16", 'metadata': { 'oiio:BitsPerSample': IECore.IntData( 16 ) } },
+			]
 
 		self.__testExtension( "dpx", "dpx", options = options, metadataToIgnore = [ "Artist", "DocumentName", "HostComputer", "Software" ] )
 
 	def testIffWrite( self ) :
 		options = {}
-		options['mode'] = [ 1 ]
+		options['maxError'] = 0.1
+		options['plugs'] = {}
+		options['mode'] = [
+				{ 'value': 1 },
+			]
 
 		self.__testExtension( "iff", "iff", options = options, metadataToIgnore = [ "Artist", "DocumentName", "HostComputer", "Software" ] )
 
@@ -186,7 +267,7 @@ class ImageWriterTest( unittest.TestCase ) :
 	def testDefaultFormatOptionPlugValues( self ) :
 		w = GafferImage.ImageWriter()
 
-		self.assertEqual( w["dpx"]["dataType"].getValue(), "int10" )
+		self.assertEqual( w["dpx"]["dataType"].getValue(), "uint10" )
 
 		self.assertEqual( w["field3d"]["mode"].getValue(), 0 )
 		self.assertEqual( w["field3d"]["dataType"].getValue(), "float" )
@@ -224,18 +305,21 @@ class ImageWriterTest( unittest.TestCase ) :
 		r = GafferImage.ImageReader()
 		r["fileName"].setValue( self.__rgbFilePath+".exr" )
 
-		tests = [ {'name': "default", 'options': {} } ]
+		expectedFile = self.__rgbFilePath+"."+ext
 
-		for optName in options :
-			for optVal in options[optName] :
-				name = "{}_{}".format(optName, optVal)
-				tests.append( { 'name': name, 'options': { optName: optVal } } )
+		tests = [ {'name': "default", 'plugs': {}, 'metadata': {}, 'maxError': options['maxError'] } ]
+
+		for optPlugName in options['plugs'] :
+			for optPlugVal in options['plugs'][optPlugName] :
+				name = "{}_{}".format(optPlugName, optPlugVal['value'])
+				tests.append( { 'name': name, 'plugs': { optPlugName: optPlugVal['value'] }, 'metadata': optPlugVal.get( "metadata", {} ), 'maxError': optPlugVal.get( "maxError", options['maxError'] ) } )
 
 		for test in tests:
 			name = test['name']
+			maxError = test['maxError']
+			overrideMetadata = test['metadata']
 
 			testFile = self.__testFile( name, "RGBA", ext )
-			expectedFile = self.__rgbFilePath+"."+name+"."+ext
 
 			self.failIf( os.path.exists( testFile ), "Temporary file already exists : {}".format( testFile ) )
 
@@ -245,13 +329,15 @@ class ImageWriterTest( unittest.TestCase ) :
 			w["fileName"].setValue( testFile )
 			w["channels"].setValue( IECore.StringVectorData( r["out"]["channelNames"].getValue() ) )
 
-			for opt in test['options']:
-				w[formatName][opt].setValue( test['options'][opt] )
+			for opt in test['plugs']:
+				w[formatName][opt].setValue( test['plugs'][opt] )
 
 			# Execute
 			with Gaffer.Context() :
 				w.execute()
 			self.failUnless( os.path.exists( testFile ), "Failed to create file : {} ({}) : {}".format( ext, name, testFile ) )
+
+			# os.system("cp {} ~/gaffer_test_images/".format(testFile))
 
 			# Check the output.
 			expectedOutput = GafferImage.ImageReader()
@@ -273,6 +359,9 @@ class ImageWriterTest( unittest.TestCase ) :
 			expectedMetadata["Artist"] = IECore.StringData( os.getlogin() )
 			expectedMetadata["DocumentName"] = IECore.StringData( "untitled" )
 
+			for key in overrideMetadata :
+				expectedMetadata[key] = overrideMetadata[key]
+
 			# some formats support IPTC standards, and some of the standard metadata
 			# is translated automatically by OpenImageIO.
 			for key in writerMetadata.keys() :
@@ -293,6 +382,7 @@ class ImageWriterTest( unittest.TestCase ) :
 			self.assertEqual( expectedMetadata, writerMetadata, "Metadata does not match : {} ({})".format(ext, name) )
 
 			op = IECore.ImageDiffOp()
+			op["maxError"].setValue(maxError)
 			res = op(
 				imageA = expectedOutput["out"].image(),
 				imageB = writerOutput["out"].image()
