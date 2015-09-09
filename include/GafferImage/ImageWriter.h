@@ -38,10 +38,13 @@
 #define GAFFERIMAGE_IMAGEWRITER_H
 
 #include "Gaffer/ExecutableNode.h"
-#include "Gaffer/NumericPlug.h"
-#include "Gaffer/StringPlug.h"
 
 #include "GafferImage/TypeIds.h"
+
+namespace Gaffer
+{
+	IE_CORE_FORWARDDECLARE( StringPlug )
+} // namespace Gaffer
 
 namespace GafferImage
 {
@@ -77,18 +80,18 @@ class ImageWriter : public Gaffer::ExecutableNode
 		GafferImage::ImagePlug *outPlug();
 		const GafferImage::ImagePlug *outPlug() const;
 
-		Gaffer::ValuePlug *formatSettingsPlug( const std::string &format );
-		const Gaffer::ValuePlug *formatSettingsPlug( const std::string &format ) const;
+		Gaffer::ValuePlug *fileFormatSettingsPlug( const std::string &fileFormat );
+		const Gaffer::ValuePlug *fileFormatSettingsPlug( const std::string &fileFormat ) const;
 
 		virtual IECore::MurmurHash hash( const Gaffer::Context *context ) const;
 
 		virtual void execute() const;
 
-		const std::string getCurrentFileFormat() const;
+		const std::string currentFileFormat() const;
 
 	private :
 
-		void createFormatOptionsPlugs();
+		void createFileFormatOptionsPlugs();
 
 		static size_t g_firstPlugIndex;
 };
