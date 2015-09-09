@@ -56,7 +56,7 @@ class OpenGLRenderTest( unittest.TestCase ) :
 		s["plane"]["transform"]["translate"].setValue( IECore.V3f( 0, 0, -5 ) )
 
 		s["image"] = GafferImage.ImageReader()
-		s["image"]["fileName"].setValue( os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/checker.exr" ) )
+		s["image"]["fileName"].setValue( os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/checker.exr" ) )
 
 		s["shader"] = GafferScene.OpenGLShader()
 		s["shader"].loadShader( "Texture" )
