@@ -43,7 +43,7 @@ import os
 
 class SamplerTest( unittest.TestCase ) :
 
-	fileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/checker.exr" )
+	fileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/checker.exr" )
 
 	def testConstructors( self ) :
 
@@ -239,7 +239,7 @@ class SamplerTest( unittest.TestCase ) :
 		constant = GafferImage.Constant()
 		constant["format"].setValue( GafferImage.Format( 1000, 1000 ) )
 		constant["color"].setValue( IECore.Color4f( 1 ) )
-		
+
 		crop = GafferImage.Crop()
 		crop["in"].setInput( constant["out"] )
 		crop["areaSource"].setValue( crop.AreaSource.Custom )
