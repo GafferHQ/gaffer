@@ -44,14 +44,14 @@ import GafferTest
 
 class DeleteImageMetadataTest( GafferTest.TestCase ) :
 
-	checkerFile = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/checker.exr" )
+	checkerFile = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/checker.exr" )
 
 	def test( self ) :
 
 		i = GafferImage.ImageReader()
 		i["fileName"].setValue( self.checkerFile )
 		inMetadata = i["out"]["metadata"].getValue()
-		
+
 		m = GafferImage.DeleteImageMetadata()
 		m["in"].setInput( i["out"] )
 
@@ -65,7 +65,7 @@ class DeleteImageMetadataTest( GafferTest.TestCase ) :
 		self.assertTrue( "compression" in metadata )
 
 		# check that we can delete metadata
-		
+
 		m["names"].setValue( "screen* compression" )
 		metadata = m["out"]["metadata"].getValue()
 		self.assertFalse( "screenWindowWidth" in metadata )
@@ -75,14 +75,14 @@ class DeleteImageMetadataTest( GafferTest.TestCase ) :
 			self.assertEqual( metadata[key], inMetadata[key] )
 
 		# check that we can invert the deletion
-		
+
 		m["invertNames"].setValue( True )
 		metadata = m["out"]["metadata"].getValue()
 		expected = set([ "screenWindowWidth", "screenWindowCenter", "compression" ])
 		self.assertEqual( set(metadata.keys()), expected )
 		for key in metadata.keys() :
 			self.assertEqual( metadata[key], inMetadata[key] )
-		
+
 		# test dirty propagation
 
 		cs = GafferTest.CapturingSlot( m.plugDirtiedSignal() )
