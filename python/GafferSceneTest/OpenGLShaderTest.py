@@ -63,7 +63,7 @@ class OpenGLShaderTest( GafferSceneTest.SceneTestCase ) :
 		s["parameters"]["tint"].setValue( IECore.Color4f( 1, 0.5, 0.25, 1 ) )
 
 		i = GafferImage.ImageReader()
-		i["fileName"].setValue( os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/checker.exr" ) )
+		i["fileName"].setValue( os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/checker.exr" ) )
 		s["parameters"]["texture"].setInput( i["out"] )
 
 		ss = s.state()
