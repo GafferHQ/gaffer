@@ -80,6 +80,23 @@ class ImageWriterTest( unittest.TestCase ) :
 		self.failUnless( "B" in channelNames )
 		self.failUnless( not "A" in channelNames )
 
+	def testWriteModePlugCompatibility( self ) :
+		w = GafferImage.ImageWriter()
+
+		w['writeMode'].setValue( 0 )
+
+		self.assertEqual( w['openexr']['mode'].getValue(), 0 )
+		self.assertEqual( w['tiff']['mode'].getValue(), 0 )
+		self.assertEqual( w['field3d']['mode'].getValue(), 0 )
+		self.assertEqual( w['iff']['mode'].getValue(), 0 )
+
+		w['writeMode'].setValue( 1 )
+
+		self.assertEqual( w['openexr']['mode'].getValue(), 1 )
+		self.assertEqual( w['tiff']['mode'].getValue(), 1 )
+		self.assertEqual( w['field3d']['mode'].getValue(), 1 )
+		self.assertEqual( w['iff']['mode'].getValue(), 1 )
+
 	def testAcceptsInput( self ) :
 
 		w = GafferImage.ImageWriter()
