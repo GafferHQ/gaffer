@@ -76,7 +76,7 @@ class OSLImageTest( GafferOSLTest.OSLTestCase ) :
 		imageShader["parameters"]["in0"].setInput( outRGB["out"]["layer"] )
 
 		reader = GafferImage.ImageReader()
-		reader["fileName"].setValue( os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/rgb.100x100.exr" ) )
+		reader["fileName"].setValue( os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/rgb.100x100.exr" ) )
 
 		image = GafferOSL.OSLImage()
 		image["in"].setInput( reader["out"] )
@@ -181,7 +181,7 @@ class OSLImageTest( GafferOSLTest.OSLTestCase ) :
 		imageShader["parameters"]["in0"].setInput( outR["out"]["channel"] )
 
 		reader = GafferImage.ImageReader()
-		reader["fileName"].setValue( os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/rgb.100x100.exr" ) )
+		reader["fileName"].setValue( os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/rgb.100x100.exr" ) )
 
 		image = GafferOSL.OSLImage()
 		image["in"].setInput( reader["out"] )
@@ -195,7 +195,7 @@ class OSLImageTest( GafferOSLTest.OSLTestCase ) :
 		self.assertEqual( outputImage["B"].data, inputImage["B"].data )
 
 	def testPassThrough( self ) :
-		
+
 		outR = GafferOSL.OSLShader()
 		outR.loadShader( "ImageProcessing/OutChannel" )
 		outR["parameters"]["channelName"].setValue( "R" )
@@ -206,16 +206,16 @@ class OSLImageTest( GafferOSLTest.OSLTestCase ) :
 		imageShader["parameters"]["in0"].setInput( outR["out"]["channel"] )
 
 		reader = GafferImage.ImageReader()
-		reader["fileName"].setValue( os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/rgb.100x100.exr" ) )
+		reader["fileName"].setValue( os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/rgb.100x100.exr" ) )
 
 		image = GafferOSL.OSLImage()
 		image["in"].setInput( reader["out"] )
 		image["shader"].setInput( imageShader["out"] )
-		
+
 		self.assertEqual( image["out"]["format"].hash(), reader["out"]["format"].hash() )
 		self.assertEqual( image["out"]["dataWindow"].hash(), reader["out"]["dataWindow"].hash() )
 		self.assertEqual( image["out"]["metadata"].hash(), reader["out"]["metadata"].hash() )
-		
+
 		self.assertEqual( image["out"]["format"].getValue(), reader["out"]["format"].getValue() )
 		self.assertEqual( image["out"]["dataWindow"].getValue(), reader["out"]["dataWindow"].getValue() )
 		self.assertEqual( image["out"]["metadata"].getValue(), reader["out"]["metadata"].getValue() )
