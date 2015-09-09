@@ -34,6 +34,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include "Gaffer/Context.h"
+
 #include "GafferBindings/ExecutableNodeBinding.h"
 
 #include "GafferImage/ImageWriter.h"
@@ -46,7 +48,7 @@ void GafferImageBindings::bindImageWriter()
 {
 
 	GafferBindings::ExecutableNodeClass<ImageWriter>()
-		.def( "getCurrentFileFormat", &ImageWriter::getCurrentFileFormat )
+		.def( "currentFileFormat", &ImageWriter::currentFileFormat )
 	;
 
 }
