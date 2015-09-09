@@ -45,12 +45,12 @@ import GafferImage
 
 class MergeTest( GafferTest.TestCase ) :
 
-	rPath = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/redWithDataWindow.100x100.exr" )
-	gPath = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/greenWithDataWindow.100x100.exr" )
-	bPath = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/blueWithDataWindow.100x100.exr" )
-	checkerPath = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/checkerboard.100x100.exr" )
-	checkerRGBPath = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/rgbOverChecker.100x100.exr" )
-	rgbPath = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/rgb.100x100.exr" )
+	rPath = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/redWithDataWindow.100x100.exr" )
+	gPath = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/greenWithDataWindow.100x100.exr" )
+	bPath = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/blueWithDataWindow.100x100.exr" )
+	checkerPath = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/checkerboard.100x100.exr" )
+	checkerRGBPath = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/rgbOverChecker.100x100.exr" )
+	rgbPath = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/rgb.100x100.exr" )
 
 	# Do several tests to check the cache is working correctly:
 	def testHashes( self ) :
@@ -125,7 +125,7 @@ class MergeTest( GafferTest.TestCase ) :
 		##########################################
 		# Test that if we disable the node the hash gets passed through.
 		##########################################
-		
+
 		merge["enabled"].setValue(False)
 		h1 = merge["out"].image().hash()
 
@@ -133,7 +133,7 @@ class MergeTest( GafferTest.TestCase ) :
 
 	# Overlay a red, green and blue tile of different data window sizes and check the data window is expanded on the result and looks as we expect.
 	def testOverRGBA( self ) :
-		
+
 		r = GafferImage.ImageReader()
 		r["fileName"].setValue( self.rPath )
 
@@ -228,23 +228,23 @@ class MergeTest( GafferTest.TestCase ) :
 		d = GafferImage.ImageMetadata()
 		d["metadata"].addMember( "comment", IECore.StringData( "reformated and metadata updated" ) )
 		d["in"].setInput( f["out"] )
-		
+
 		m = GafferImage.Merge()
 		m["in"][0].setInput( c["out"] )
 		m["in"][1].setInput( d["out"] )
 
 		self.assertEqual( m["out"]["format"].hash(), c["out"]["format"].hash() )
 		self.assertEqual( m["out"]["metadata"].hash(), c["out"]["metadata"].hash() )
-		
+
 		self.assertEqual( m["out"]["format"].getValue(), c["out"]["format"].getValue() )
 		self.assertEqual( m["out"]["metadata"].getValue(), c["out"]["metadata"].getValue() )
-		
+
 		m["in"][0].setInput( d["out"] )
 		m["in"][1].setInput( c["out"] )
-		
+
 		self.assertEqual( m["out"]["format"].hash(), d["out"]["format"].hash() )
 		self.assertEqual( m["out"]["metadata"].hash(), d["out"]["metadata"].hash() )
-		
+
 		self.assertEqual( m["out"]["format"].getValue(), d["out"]["format"].getValue() )
 		self.assertEqual( m["out"]["metadata"].getValue(), d["out"]["metadata"].getValue() )
 
@@ -353,7 +353,7 @@ class MergeTest( GafferTest.TestCase ) :
 		bResized["in"].setInput( b["out"] )
 		bResized["format"].setValue( GafferImage.Format( 1920, 1080 ) )
 		bResized["fitMode"].setValue( bResized.FitMode.Fit )
-		
+
 		a = GafferImage.Constant()
 		a["format"].setValue( GafferImage.Format( 1920, 1080 ) )
 
