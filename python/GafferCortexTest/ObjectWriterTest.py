@@ -52,7 +52,7 @@ class ObjectWriterTest( GafferTest.TestCase ) :
 
 	def test( self ) :
 
-		checker = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/checker.exr" )
+		checker = os.path.expandvars( "$GAFFER_ROOT/python/GafferCortexTest/images/checker.exr" )
 		checker = IECore.Reader.create( checker ).read()
 
 		node = GafferCortex.ObjectWriter()
@@ -85,7 +85,7 @@ class ObjectWriterTest( GafferTest.TestCase ) :
 
 	def testChangingFileType( self ) :
 
-		checker = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/checker.exr" )
+		checker = os.path.expandvars( "$GAFFER_ROOT/python/GafferCortexTest/images/checker.exr" )
 		checker = IECore.Reader.create( checker ).read()
 
 		node = GafferCortex.ObjectWriter()
@@ -119,7 +119,7 @@ class ObjectWriterTest( GafferTest.TestCase ) :
 
 	def testStringSubstitutions( self ) :
 
-		checker = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/checker.exr" )
+		checker = os.path.expandvars( "$GAFFER_ROOT/python/GafferCortexTest/images/checker.exr" )
 		checker = IECore.Reader.create( checker ).read()
 
 		node = GafferCortex.ObjectWriter()
