@@ -116,11 +116,13 @@ Environment g_environment;
 //////////////////////////////////////////////////////////////////////////
 
 static InternedString g_frame( "frame" );
+static InternedString g_framesPerSecond( "framesPerSecond" );
 
 Context::Context()
 	:	m_changedSignal( NULL ), m_hashValid( false )
 {
 	set( g_frame, 1.0f );
+	set( g_framesPerSecond, 24.0f );
 }
 
 Context::Context( const Context &other, Ownership ownership )
@@ -200,6 +202,26 @@ float Context::getFrame() const
 void Context::setFrame( float frame )
 {
 	set( g_frame, frame );
+}
+
+float Context::getFramesPerSecond() const
+{
+	return get<float>( g_framesPerSecond );
+}
+
+void Context::setFramesPerSecond( float framesPerSecond )
+{
+	set<float>( g_framesPerSecond, framesPerSecond );
+}
+
+float Context::getTime() const
+{
+	return getFrame() / getFramesPerSecond();
+}
+
+void Context::setTime( float timeInSeconds )
+{
+	setFrame( timeInSeconds * getFramesPerSecond() );
 }
 
 Context::ChangedSignal &Context::changedSignal()

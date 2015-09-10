@@ -128,10 +128,10 @@ class Context : public IECore::RefCounted
 		/// an Exception.
 		template<typename T>
 		typename Accessor<T>::ResultType get( const IECore::InternedString &name, typename Accessor<T>::ResultType defaultValue ) const;
-		
+
 		/// Removes an entry from the context if it exists
 		void remove( const IECore::InternedString& name );
-		
+
 		/// When a Shared or Borrowed value is changed behind the scenes, this method
 		/// must be called to notify the Context of the change.
 		void changed( const IECore::InternedString &name );
@@ -139,10 +139,34 @@ class Context : public IECore::RefCounted
 		/// Fills the specified vector with the names of all items in the Context.
 		void names( std::vector<IECore::InternedString> &names ) const;
 
-		/// Convenience method returning get<float>( "frame" ).
+		/// @name Time
+		/// Contexts give special meaning to a couple of variables in
+		/// order to represent time. Because Gaffer is primarily used for
+		/// the generation of image sequences, time is stored as a
+		/// floating point frame number in a context variable called "frame".
+		/// A second context variable called "framesPerSecond" allows this
+		/// value to be mapped to and from time in seconds. The methods below
+		/// provide convenient access for setting the variables, and for
+		/// dealing with time in seconds rather than frames. It is strongly
+		/// recommended that these methods be used in preference to direct
+		/// variable access.
+		////////////////////////////////////////////////////////////////////
+		//@{
+		/// Convenience method returning `get<float>( "frame" )`.
 		float getFrame() const;
-		/// Convenience method calling set<float>( "frame", frame ).
+		/// Convenience method calling `set<float>( "frame", frame )`.
 		void setFrame( float frame );
+		/// Convenience method returning `get<float>( "framesPerSecond" )`.
+		float getFramesPerSecond() const;
+		/// Convenience method calling `set<float>( "framesPerSecond", framesPerSecond )`.
+		void setFramesPerSecond( float framesPerSecond );
+		/// Convenience method for getting the time in seconds. Returns
+		/// `getFrame() / getFramesPerSecond()`.
+		float getTime() const;
+		/// Convenience method for setting the frame variable from a time in
+		/// seconds. Calls `setFrame( timeInSeconds * getFramesPerSecond() )`.
+		void setTime( float timeInSeconds );
+		//@}
 
 		/// A signal emitted when an element of the context is changed.
 		ChangedSignal &changedSignal();
