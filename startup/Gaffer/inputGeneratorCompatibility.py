@@ -57,16 +57,15 @@ def __nodeGetItem( self, key ) :
 		# These were originally plugs parented directly to the node,
 		# and are now children of the array plug.
 		return self.__originalGetItem( "in" )[int( m.group( 1 ) )]
-		
+
 	return self.__originalGetItem( key )
 
 def __nodeAddChild( self, child ) :
 
 	if re.match( "^in([0-9]+)$", child.getName() ) :
 		# This was an old input created by an InputGenerator.
-		# We're automatically redirecting accesses to these
-		# to the new ArrayPlug, so we just want to avoid adding
-		# them at all.
+		# Add it to the new array plug instead.
+		self["in"].addChild( child )
 		return
 
 	self.__originalAddChild( child )
@@ -86,10 +85,14 @@ def __arrayPlugGetItem( self, key ) :
 		try :
 			return Gaffer.ArrayPlug.__originalGetItem( self, key )
 		except KeyError :
-			try :
+			if key == self.getName() :
+				# Some nodes (I'm looking at you UnionFilter) used to
+				# name their first child without a numeric suffix.
+				return Gaffer.ArrayPlug.__originalGetItem( self, 0 )
+			else :
+				# Simulate access to the child of the first plug in an
+				# old InputGenerator.
 				return Gaffer.ArrayPlug.__originalGetItem( self, 0 )[key]
-			except :
-				raise e
 
 	return Gaffer.ArrayPlug.__originalGetItem( self, key )
 

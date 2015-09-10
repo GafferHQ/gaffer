@@ -34,14 +34,38 @@
 #
 ##########################################################################
 
+import types
+
 import Gaffer
 import GafferScene
 
 # Provides backwards compatibility by allowing access to "out" plug
 # using its old name of "match".
-def __getItem( self, key ) :
+def __filterGetItem( self, key ) :
 
 	key = "out" if key == "match" else key
 	return Gaffer.ComputeNode.__getitem__( self, key )
 
-GafferScene.Filter.__getitem__ = __getItem
+# Provides backwards compatibility for internal connection
+# between an old input generator input and "out".
+def __filterSwitchGetItem( self, key ) :
+
+	result = __filterGetItem( self, key )
+	if key in ( "out", "match" ) :
+		result.setInput = types.MethodType( __filterSwitchSetInput, result )
+
+	return result
+
+def __filterSwitchSetInput( self, input ) :
+
+	if isinstance( input, Gaffer.ArrayPlug ) :
+		# An old file is attempting to connect "in",
+		# which was once the first plug of an input
+		# generator and is now an ArrayPlug, into
+		# "out".
+		input = input[0]
+
+	Gaffer.Plug.setInput( self, input )
+
+GafferScene.Filter.__getitem__ = __filterGetItem
+GafferScene.FilterSwitch.__getitem__ = __filterSwitchGetItem
