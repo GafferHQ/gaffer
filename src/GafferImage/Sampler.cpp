@@ -69,7 +69,7 @@ void Sampler::init( const Imath::Box2i &sampleWindow )
 	// around the central pixel though, so we must also expand the
 	// stored sample window to take that into account.
 	m_sampleWindow = sampleWindow;
-	const V2i filterRadius( ceil( m_filter->width() / 2. ) );
+	const V2i filterRadius( int(ceil( m_filter->width() / 2. )) );
 	m_sampleWindow.min -= filterRadius;
 	m_sampleWindow.max += filterRadius;
 
