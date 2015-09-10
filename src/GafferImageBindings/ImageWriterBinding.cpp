@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2013-2014, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -15,7 +15,7 @@
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
 //
-//      * Neither the name of Image Engine Design nor the names of
+//      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
@@ -34,71 +34,21 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_IMAGEWRITER_H
-#define GAFFERIMAGE_IMAGEWRITER_H
+#include "Gaffer/Context.h"
 
-#include "Gaffer/ExecutableNode.h"
+#include "GafferBindings/ExecutableNodeBinding.h"
 
-#include "GafferImage/TypeIds.h"
+#include "GafferImage/ImageWriter.h"
 
-namespace Gaffer
-{
-	IE_CORE_FORWARDDECLARE( StringPlug )
-} // namespace Gaffer
+#include "GafferImageBindings/ImageWriterBinding.h"
 
-namespace GafferImage
+using namespace GafferImage;
+
+void GafferImageBindings::bindImageWriter()
 {
 
-IE_CORE_FORWARDDECLARE( ChannelMaskPlug )
-IE_CORE_FORWARDDECLARE( ImagePlug )
+	GafferBindings::ExecutableNodeClass<ImageWriter>()
+		.def( "currentFileFormat", &ImageWriter::currentFileFormat )
+	;
 
-class ImageWriter : public Gaffer::ExecutableNode
-{
-
-	public :
-
-		enum
-		{
-			Scanline = 0,
-			Tile = 1
-		};
-
-		ImageWriter( const std::string &name=defaultName<ImageWriter>() );
-		virtual ~ImageWriter();
-
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::ImageWriter, ImageWriterTypeId, ExecutableNode );
-
-		Gaffer::StringPlug *fileNamePlug();
-		const Gaffer::StringPlug *fileNamePlug() const;
-
-		GafferImage::ImagePlug *inPlug();
-		const GafferImage::ImagePlug *inPlug() const;
-
-		const GafferImage::ChannelMaskPlug *channelsPlug() const;
-		GafferImage::ChannelMaskPlug *channelsPlug();
-
-		GafferImage::ImagePlug *outPlug();
-		const GafferImage::ImagePlug *outPlug() const;
-
-		Gaffer::ValuePlug *fileFormatSettingsPlug( const std::string &fileFormat );
-		const Gaffer::ValuePlug *fileFormatSettingsPlug( const std::string &fileFormat ) const;
-
-		virtual IECore::MurmurHash hash( const Gaffer::Context *context ) const;
-
-		virtual void execute() const;
-
-		const std::string currentFileFormat() const;
-
-	private :
-
-		void createFileFormatOptionsPlugs();
-
-		static size_t g_firstPlugIndex;
-};
-
-IE_CORE_DECLAREPTR( ImageWriter )
-
-} // namespace GafferImage
-
-#endif // GAFFERIMAGE_IMAGEWRITER_H
-
+}

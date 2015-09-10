@@ -51,7 +51,6 @@
 #include "GafferImage/Clamp.h"
 #include "GafferImage/Constant.h"
 #include "GafferImage/Reformat.h"
-#include "GafferImage/ImageWriter.h"
 #include "GafferImage/ImageTransform.h"
 #include "GafferImage/ImageStats.h"
 #include "GafferImage/ImageSampler.h"
@@ -79,6 +78,7 @@
 #include "GafferImageBindings/MixinBinding.h"
 #include "GafferImageBindings/FormatDataBinding.h"
 #include "GafferImageBindings/ImageReaderBinding.h"
+#include "GafferImageBindings/ImageWriterBinding.h"
 #include "GafferImageBindings/ShuffleBinding.h"
 #include "GafferImageBindings/CropBinding.h"
 #include "GafferImageBindings/ResampleBinding.h"
@@ -132,6 +132,7 @@ BOOST_PYTHON_MODULE( _GafferImage )
 	GafferImageBindings::bindMixin();
 	GafferImageBindings::bindFormatData();
 	GafferImageBindings::bindImageReader();
+	GafferImageBindings::bindImageWriter();
 	GafferImageBindings::bindMerge();
 	GafferImageBindings::bindShuffle();
 	GafferImageBindings::bindCrop();
@@ -139,7 +140,5 @@ BOOST_PYTHON_MODULE( _GafferImage )
 	GafferImageBindings::bindResize();
 	GafferImageBindings::bindLUT();
 	GafferImageBindings::bindImageAlgo();
-
-	GafferBindings::ExecutableNodeClass<ImageWriter>();
 }
 
