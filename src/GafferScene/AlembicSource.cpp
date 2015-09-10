@@ -150,7 +150,7 @@ void AlembicSource::hashBound( const ScenePath &path, const Gaffer::Context *con
 	refreshCountPlug()->hash( h );
 
 	h.append( &(path[0]), path.size() );
-	h.append( context->getFrame() );
+	h.append( context->getTime() );
 }
 
 Imath::Box3f AlembicSource::computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
@@ -159,7 +159,7 @@ Imath::Box3f AlembicSource::computeBound( const ScenePath &path, const Gaffer::C
 	{
 		if( i->hasStoredBound() )
 		{
-			Box3d b = i->boundAtTime( context->getFrame() / fps() );
+			Box3d b = i->boundAtTime( context->getTime() );
 			return Box3f( b.min, b.max );
 		}
 		else
@@ -178,7 +178,7 @@ void AlembicSource::hashTransform( const ScenePath &path, const Gaffer::Context 
 	refreshCountPlug()->hash( h );
 
 	h.append( &(path[0]), path.size() );
-	h.append( context->getFrame() );
+	h.append( context->getTime() );
 }
 
 Imath::M44f AlembicSource::computeTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
@@ -186,7 +186,7 @@ Imath::M44f AlembicSource::computeTransform( const ScenePath &path, const Gaffer
 	M44f result;
 	if( AlembicInputPtr i = inputForPath( path ) )
 	{
-		M44d t = i->transformAtTime( context->getFrame() /fps() );
+		M44d t = i->transformAtTime( context->getTime() );
 		/// \todo Maybe we should be using doubles for bounds and transforms anyway?
 		result = M44f(
 			t[0][0], t[0][1], t[0][2], t[0][3],
@@ -217,7 +217,7 @@ void AlembicSource::hashObject( const ScenePath &path, const Gaffer::Context *co
 	refreshCountPlug()->hash( h );
 
 	h.append( &(path[0]), path.size() );
-	h.append( context->getFrame() );
+	h.append( context->getTime() );
 }
 
 IECore::ConstObjectPtr AlembicSource::computeObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
@@ -226,7 +226,7 @@ IECore::ConstObjectPtr AlembicSource::computeObject( const ScenePath &path, cons
 	if( AlembicInputPtr i = inputForPath( path ) )
 	{
 		/// \todo Maybe template objectAtTime and then we don't need the cast.
-		ConstRenderablePtr renderable = runTimeCast<Renderable>( i->objectAtTime( context->getFrame() / fps(), IECore::RenderableTypeId ) );
+		ConstRenderablePtr renderable = runTimeCast<Renderable>( i->objectAtTime( context->getTime(), IECore::RenderableTypeId ) );
 		if( renderable )
 		{
 			result = renderable;
@@ -306,9 +306,4 @@ IECoreAlembic::AlembicInputPtr AlembicSource::inputForPath( const ScenePath &pat
 	}
 
 	return result;
-}
-
-float AlembicSource::fps() const
-{
-	return 24.0f;
 }
