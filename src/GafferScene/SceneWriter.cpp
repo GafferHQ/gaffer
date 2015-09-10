@@ -52,9 +52,6 @@ using namespace GafferScene;
 
 IE_CORE_DEFINERUNTIMETYPED( SceneWriter );
 
-/// \todo hard coded framerate should be replaced with a getTime() method on Gaffer::Context or something
-const double SceneWriter::g_frameRate( 24 );
-
 size_t SceneWriter::g_firstPlugIndex = 0;
 
 SceneWriter::SceneWriter( const std::string &name )
@@ -143,8 +140,7 @@ void SceneWriter::executeSequence( const std::vector<float> &frames ) const
 	for ( std::vector<float>::const_iterator it = frames.begin(); it != frames.end(); ++it )
 	{
 		context->setFrame( *it );
-		double time = *it / g_frameRate;
-		writeLocation( scene, ScenePlug::ScenePath(), context.get(), output.get(), time );
+		writeLocation( scene, ScenePlug::ScenePath(), context.get(), output.get(), context->getTime() );
 	}
 }
 
