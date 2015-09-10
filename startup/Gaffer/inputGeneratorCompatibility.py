@@ -64,9 +64,8 @@ def __nodeAddChild( self, child ) :
 
 	if re.match( "^in([0-9]+)$", child.getName() ) :
 		# This was an old input created by an InputGenerator.
-		# We're automatically redirecting accesses to these
-		# to the new ArrayPlug, so we just want to avoid adding
-		# them at all.
+		# Add it to the new array plug instead.
+		self["in"].addChild( child )
 		return
 
 	self.__originalAddChild( child )
