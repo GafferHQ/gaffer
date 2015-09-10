@@ -41,12 +41,25 @@
 
 using namespace GafferSceneUI;
 
+namespace {
+	// TODO - An ugly hack I don't entirely understand in order to get the Python binding to work
+	// To my understanding, there isn't really such a thing in Python as a const class,
+	// so I think if you modify the result of visualise(), this will cause Bad Things to happen
+	static IECoreGL::RenderablePtr visualise( const Visualiser &v, const IECore::Object *object )
+	{
+		return boost::const_pointer_cast<IECoreGL::Renderable>( v.visualise( object ) );
+	}
+}
+
 void GafferSceneUIBindings::bindVisualiser()
 {
 
 	IECorePython::RefCountedClass<Visualiser, IECore::RefCounted>( "Visualiser" )
+		.def( "visualise", &visualise )
 		.def( "registerVisualiser", &Visualiser::registerVisualiser )
 		.staticmethod( "registerVisualiser" )
+		.def( "acquire", &Visualiser::acquire, boost::python::return_internal_reference<>() )
+		.staticmethod( "acquire" )
 	;
 
 }
