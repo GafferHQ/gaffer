@@ -91,6 +91,7 @@
 #include "GafferBindings/MatchPatternPathFilterBinding.h"
 #include "GafferBindings/FileSystemPathBinding.h"
 #include "GafferBindings/FileSequencePathFilterBinding.h"
+#include "GafferBindings/AnimationBinding.h"
 
 using namespace boost::python;
 using namespace Gaffer;
@@ -185,6 +186,7 @@ BOOST_PYTHON_MODULE( _Gaffer )
 	bindMatchPatternPathFilter();
 	bindFileSystemPath();
 	bindFileSequencePathFilter();
+	bindAnimation();
 
 	NodeClass<Backdrop>();
 
