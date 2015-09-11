@@ -331,6 +331,17 @@ void createDisplayDirectories( const IECore::CompoundObject *globals )
 
 void outputAttributes( const IECore::CompoundObject *attributes, IECore::Renderer *renderer )
 {
+	// Output attributes before other state
+	// This covers a special case in 3delight:  when reading attributes in the construct() of a shader, they will only be visible
+	// if they are declared before the shader
+	for( CompoundObject::ObjectMap::const_iterator it = attributes->members().begin(), eIt = attributes->members().end(); it != eIt; it++ )
+	{
+		if( const Data *d = runTimeCast<const Data>( it->second.get() ) )
+		{
+			renderer->setAttribute( it->first, d );
+		}
+	}
+
 	for( CompoundObject::ObjectMap::const_iterator it = attributes->members().begin(), eIt = attributes->members().end(); it != eIt; it++ )
 	{
 		if( const StateRenderable *s = runTimeCast<const StateRenderable>( it->second.get() ) )
@@ -347,10 +358,6 @@ void outputAttributes( const IECore::CompoundObject *attributes, IECore::Rendere
 					s->render( renderer );
 				}
 			}
-		}
-		else if( const Data *d = runTimeCast<const Data>( it->second.get() ) )
-		{
-			renderer->setAttribute( it->first, d );
 		}
 	}
 }
