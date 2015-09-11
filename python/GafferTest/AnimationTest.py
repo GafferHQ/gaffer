@@ -265,5 +265,33 @@ class AnimationTest( GafferTest.TestCase ) :
 		curve.addKey( Gaffer.Animation.Key( 1, 1 ) )
 		self.assertTrue( s["n"]["user"]["f"] in set( [ c[0] for c in cs ] ) )
 
+	def testSerialisation( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = Gaffer.Node()
+		s["n"]["user"]["f"] = Gaffer.FloatPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		curve = Gaffer.Animation.acquire( s["n"]["user"]["f"] )
+		curve.addKey( Gaffer.Animation.Key( 0, 0, Gaffer.Animation.Type.Linear ) )
+		curve.addKey( Gaffer.Animation.Key( 1, 1, Gaffer.Animation.Type.Linear ) )
+
+		def assertAnimation( script ) :
+
+			curve = Gaffer.Animation.acquire( script["n"]["user"]["f"] )
+			self.assertEqual( curve.getKey( 0 ),  Gaffer.Animation.Key( 0, 0, Gaffer.Animation.Type.Linear ) )
+			self.assertEqual( curve.getKey( 1 ),  Gaffer.Animation.Key( 1, 1, Gaffer.Animation.Type.Linear ) )
+			with Gaffer.Context() as c :
+				for i in range( 0, 10 ) :
+					c.setTime( i / 9.0 )
+					self.assertAlmostEqual( script["n"]["user"]["f"].getValue(), c.getTime() )
+
+		assertAnimation( s )
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+
+		assertAnimation( s2 )
+
 if __name__ == "__main__":
 	unittest.main()

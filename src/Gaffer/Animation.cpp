@@ -108,7 +108,7 @@ bool Animation::CurvePlug::hasKey( float time ) const
 
 Animation::Key Animation::CurvePlug::getKey( float time ) const
 {
-	set<Key>::const_iterator it = m_keys.find( time );
+	Keys::const_iterator it = m_keys.find( time );
 	if( it == m_keys.end() )
 	{
 		return Key();
@@ -123,7 +123,7 @@ Animation::Key Animation::CurvePlug::closestKey( float time ) const
 		return Key();
 	}
 
-	set<Key>::const_iterator rightIt = m_keys.lower_bound( time );
+	Keys::const_iterator rightIt = m_keys.lower_bound( time );
 	if( rightIt == m_keys.end() )
 	{
 		return *m_keys.rbegin();
@@ -134,7 +134,7 @@ Animation::Key Animation::CurvePlug::closestKey( float time ) const
 	}
 	else
 	{
-		set<Key>::const_iterator leftIt = rightIt; leftIt--;
+		Keys::const_iterator leftIt = rightIt; leftIt--;
 		return fabs( time - leftIt->time ) < fabs( time - rightIt->time ) ? *leftIt : *rightIt;
 	}
 }
@@ -144,6 +144,11 @@ void Animation::CurvePlug::removeKey( float time )
 	m_keys.erase( time );
 }
 
+const Animation::CurvePlug::Keys &Animation::CurvePlug::keys() const
+{
+	return m_keys;
+}
+
 float Animation::CurvePlug::evaluate( float time ) const
 {
 	if( m_keys.empty() )
@@ -151,7 +156,7 @@ float Animation::CurvePlug::evaluate( float time ) const
 		return 0;
 	}
 
-	set<Key>::const_iterator right = m_keys.lower_bound( time );
+	Keys::const_iterator right = m_keys.lower_bound( time );
 	if( right == m_keys.end() )
 	{
 		return m_keys.rbegin()->value;
@@ -162,7 +167,7 @@ float Animation::CurvePlug::evaluate( float time ) const
 		return right->value;
 	}
 
-	set<Key>::const_iterator left = right; left--;
+	Keys::const_iterator left = right; left--;
 	if( right->type == Linear )
 	{
 		const float t = ( time - left->time ) / ( right->time - left->time );
@@ -302,7 +307,7 @@ Animation::CurvePlug *Animation::acquire( ValuePlug *plug )
 	// Add a curve to the animation, and hook it up to
 	// the target plug.
 
-	CurvePlugPtr curve = new CurvePlug( "curve0" );
+	CurvePlugPtr curve = new CurvePlug( "curve0", Plug::In, Plug::Default | Plug::Dynamic );
 	animation->curvesPlug()->addChild( curve );
 
 	plug->setInput( curve->outPlug() );

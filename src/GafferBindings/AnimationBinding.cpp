@@ -40,7 +40,7 @@
 #include "Gaffer/Animation.h"
 
 #include "GafferBindings/DependencyNodeBinding.h"
-#include "GafferBindings/PlugBinding.h"
+#include "GafferBindings/ValuePlugBinding.h"
 #include "GafferBindings/AnimationBinding.h"
 
 using namespace boost::python;
@@ -73,6 +73,26 @@ std::string keyRepr( const Animation::Key &k )
 	return boost::str(
 		boost::format( "Gaffer.Animation.Key( %f, %f, %s )" ) % k.time % k.value % typeRepr( k.type )
 	);
+};
+
+class CurvePlugSerialiser : public ValuePlugSerialiser
+{
+
+	public :
+
+		virtual std::string postConstructor( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const
+		{
+			std::string result = ValuePlugSerialiser::postConstructor( graphComponent, identifier, serialisation );
+			const Animation::CurvePlug *curve = static_cast<const Animation::CurvePlug *>( graphComponent );
+
+			for( std::set<Animation::Key>::const_iterator it = curve->keys().begin(), eIt = curve->keys().end(); it != eIt; ++it )
+			{
+				result += identifier + ".addKey( " + keyRepr( *it ) + " )\n";
+			}
+
+			return result;
+		}
+
 };
 
 } // namespace
@@ -133,5 +153,7 @@ void GafferBindings::bindAnimation()
 		// the nesting, and can be used by the PlugSerialiser.
 		.attr( "__name__" ) = "Animation.CurvePlug"
 	;
+
+	Serialisation::registerSerialiser( Gaffer::Animation::CurvePlug::staticTypeId(), new CurvePlugSerialiser );
 
 }

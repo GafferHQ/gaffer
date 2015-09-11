@@ -111,6 +111,9 @@ class Animation : public ComputeNode
 				Key closestKey( float time ) const;
 				void removeKey( float time );
 
+				typedef std::set<Key> Keys;
+				const Keys &keys() const;
+
 				float evaluate( float time ) const;
 
 				/// Output plug for evaluating the curve
@@ -121,7 +124,7 @@ class Animation : public ComputeNode
 
 			private :
 
-				std::set<Key> m_keys;
+				Keys m_keys;
 
 		};
 
