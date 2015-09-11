@@ -76,8 +76,8 @@ enum TypeId
 	StandardSetTypeId = 110029,
 	ChildSetTypeId = 110030,
 	BoolVectorDataPlugTypeId = 110031,
-	OpHolderTypeId = 110032, // obsolete - available for reuse
-	ProceduralHolderTypeId = 110033, // obsolete - available for reuse
+	AnimationTypeId = 110032,
+	AnimationCurvePlugTypeId = 110033,
 	PreferencesTypeId = 110034,
 	ObjectVectorPlugTypeId = 110035,
 	Box2iPlugTypeId = 110036,
