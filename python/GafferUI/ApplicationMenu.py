@@ -68,7 +68,7 @@ def quit( menu ) :
 			"The following files have unsaved changes : \n\n" +
 			"\n".join( [ " - " + n for n in unsavedNames ] ) +
 			"\n\nDo you want to discard the changes and quit?",
-			confirmLabel = "Discard and Quit"
+			buttonLabels = [ "Cancel", "Discard and Quit" ]
 		)
 
 		if not dialogue.waitForConfirmation( parentWindow=scriptWindow ) :
