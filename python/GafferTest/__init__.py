@@ -135,6 +135,7 @@ from WedgeTest import WedgeTest
 from TaskContextVariablesTest import TaskContextVariablesTest
 from SubGraphTest import SubGraphTest
 from FileSequencePathFilterTest import FileSequencePathFilterTest
+from AnimationTest import AnimationTest
 
 if __name__ == "__main__":
 	import unittest
