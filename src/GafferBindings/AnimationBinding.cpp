@@ -146,8 +146,10 @@ void GafferBindings::bindAnimation()
 		.def( "addKey", &Animation::CurvePlug::addKey )
 		.def( "hasKey", &Animation::CurvePlug::hasKey )
 		.def( "getKey", &Animation::CurvePlug::getKey )
-		.def( "closestKey", &Animation::CurvePlug::closestKey )
 		.def( "removeKey", &Animation::CurvePlug::removeKey )
+		.def( "closestKey", &Animation::CurvePlug::closestKey )
+		.def( "previousKey", &Animation::CurvePlug::previousKey )
+		.def( "nextKey", &Animation::CurvePlug::nextKey )
 		.def( "evaluate", &Animation::CurvePlug::evaluate )
 		// Adjusting the name so that it correctly reflects
 		// the nesting, and can be used by the PlugSerialiser.

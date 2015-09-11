@@ -146,6 +146,26 @@ Animation::Key Animation::CurvePlug::closestKey( float time ) const
 	}
 }
 
+Animation::Key Animation::CurvePlug::previousKey( float time ) const
+{
+	Keys::const_iterator rightIt = m_keys.lower_bound( time );
+	if( rightIt == m_keys.begin() )
+	{
+		return Key();
+	}
+	return *(--rightIt);
+}
+
+Animation::Key Animation::CurvePlug::nextKey( float time ) const
+{
+	Keys::const_iterator rightIt = m_keys.upper_bound( time );
+	if( rightIt == m_keys.end() )
+	{
+		return Key();
+	}
+	return *rightIt;
+}
+
 void Animation::CurvePlug::removeKey( float time )
 {
 	Key existingKey = getKey( time );

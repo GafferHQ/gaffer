@@ -367,5 +367,36 @@ class AnimationTest( GafferTest.TestCase ) :
 		s.redo()
 		self.assertFalse( curve.hasKey( key.time ) )
 
+	def testNextAndPreviousKeys( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = Gaffer.Node()
+		s["n"]["user"]["f"] = Gaffer.FloatPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		key1 = Gaffer.Animation.Key( 0, 0 )
+		key2 = Gaffer.Animation.Key( 1, 1 )
+		key3 = Gaffer.Animation.Key( 2, 2 )
+
+		curve = Gaffer.Animation.acquire( s["n"]["user"]["f"] )
+		curve.addKey( key1 )
+		curve.addKey( key2 )
+		curve.addKey( key3 )
+
+		self.assertEqual( curve.nextKey( -1 ), key1 )
+		self.assertEqual( curve.nextKey( 0 ), key2 )
+		self.assertEqual( curve.nextKey( 0.5 ), key2 )
+		self.assertEqual( curve.nextKey( 1 ), key3 )
+		self.assertEqual( curve.nextKey( 1.5 ), key3 )
+		self.assertFalse( curve.nextKey( 2 ) )
+
+		self.assertFalse( curve.previousKey( -1 ) )
+		self.assertFalse( curve.previousKey( 0 ) )
+		self.assertEqual( curve.previousKey( 0.5 ), key1 )
+		self.assertEqual( curve.previousKey( 1 ), key1 )
+		self.assertEqual( curve.previousKey( 1.5 ), key2 )
+		self.assertEqual( curve.previousKey( 2 ), key2 )
+		self.assertEqual( curve.previousKey( 2.5 ), key3 )
+
 if __name__ == "__main__":
 	unittest.main()

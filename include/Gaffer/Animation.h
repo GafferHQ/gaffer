@@ -109,9 +109,12 @@ class Animation : public ComputeNode
 				void addKey( const Key &key );
 				bool hasKey( float time ) const;
 				Key getKey( float time ) const;
-				Key closestKey( float time ) const;
 				/// \undoable
 				void removeKey( float time );
+
+				Key closestKey( float time ) const;
+				Key previousKey( float time ) const;
+				Key nextKey( float time ) const;
 
 				typedef std::set<Key> Keys;
 				const Keys &keys() const;
