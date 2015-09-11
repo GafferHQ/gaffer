@@ -293,5 +293,79 @@ class AnimationTest( GafferTest.TestCase ) :
 
 		assertAnimation( s2 )
 
+	def testUndoAcquire( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = Gaffer.Node()
+		s["n"]["user"]["f"] = Gaffer.FloatPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		self.assertEqual( len( s.children( Gaffer.Node ) ), 1 )
+
+		with Gaffer.UndoContext( s ) :
+			curve = Gaffer.Animation.acquire( s["n"]["user"]["f"] )
+			self.assertEqual( len( s.children( Gaffer.Node ) ), 2 )
+
+		s.undo()
+		self.assertEqual( len( s.children( Gaffer.Node ) ), 1 )
+
+		s.redo()
+		self.assertEqual( len( s.children( Gaffer.Node ) ), 2 )
+
+	def testUndoAddKey( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = Gaffer.Node()
+		s["n"]["user"]["f"] = Gaffer.FloatPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		curve = Gaffer.Animation.acquire( s["n"]["user"]["f"] )
+		self.assertFalse( curve.getKey( 0 ) )
+
+		key1 = Gaffer.Animation.Key( 1, 0 )
+		key2 = Gaffer.Animation.Key( 1, 1 )
+
+		with Gaffer.UndoContext( s ) :
+			curve.addKey( key1 )
+			self.assertEqual( curve.getKey( 1 ), key1 )
+
+		with Gaffer.UndoContext( s ) :
+			curve.addKey( key2 )
+			self.assertEqual( curve.getKey( 1 ), key2 )
+
+		s.undo()
+		self.assertEqual( curve.getKey( 1 ), key1 )
+
+		s.undo()
+		self.assertFalse( curve.getKey( 1 ) )
+
+		s.redo()
+		self.assertEqual( curve.getKey( 1 ), key1 )
+
+		s.redo()
+		self.assertEqual( curve.getKey( 1 ), key2 )
+
+	def testUndoRemoveKey( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = Gaffer.Node()
+		s["n"]["user"]["f"] = Gaffer.FloatPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		curve = Gaffer.Animation.acquire( s["n"]["user"]["f"] )
+		key = Gaffer.Animation.Key( 0, 0 )
+		curve.addKey( key )
+		self.assertEqual( curve.getKey( key.time ), key )
+
+		with Gaffer.UndoContext( s ) :
+			curve.removeKey( key.time )
+			self.assertFalse( curve.hasKey( key.time ) )
+
+		s.undo()
+		self.assertEqual( curve.getKey( key.time ), key )
+
+		s.redo()
+		self.assertFalse( curve.hasKey( key.time ) )
+
 if __name__ == "__main__":
 	unittest.main()

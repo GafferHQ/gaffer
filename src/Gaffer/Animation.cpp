@@ -34,10 +34,13 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include "boost/bind.hpp"
+
 #include "OpenEXR/ImathFun.h"
 
 #include "Gaffer/Animation.h"
 #include "Gaffer/Context.h"
+#include "Gaffer/Action.h"
 
 using namespace std;
 using namespace Imath;
@@ -97,8 +100,12 @@ Animation::CurvePlug::CurvePlug( const std::string &name, Direction direction, u
 
 void Animation::CurvePlug::addKey( const Key &key )
 {
-	m_keys.insert( key );
-	propagateDirtiness( outPlug() );
+	Key existingKey = getKey( key.time );
+	Action::enact(
+		this,
+		boost::bind( &CurvePlug::addOrRemoveKeyInternal, this, key ),
+		boost::bind( &CurvePlug::addOrRemoveKeyInternal, this, existingKey )
+	);
 }
 
 bool Animation::CurvePlug::hasKey( float time ) const
@@ -111,7 +118,7 @@ Animation::Key Animation::CurvePlug::getKey( float time ) const
 	Keys::const_iterator it = m_keys.find( time );
 	if( it == m_keys.end() )
 	{
-		return Key();
+		return Key( time, 0.0f, Animation::Invalid );
 	}
 	return *it;
 }
@@ -141,7 +148,17 @@ Animation::Key Animation::CurvePlug::closestKey( float time ) const
 
 void Animation::CurvePlug::removeKey( float time )
 {
-	m_keys.erase( time );
+	Key existingKey = getKey( time );
+	if( !existingKey )
+	{
+		return;
+	}
+
+	Action::enact(
+		this,
+		boost::bind( &CurvePlug::addOrRemoveKeyInternal, this, Key( time, 0.0f, Animation::Invalid ) ),
+		boost::bind( &CurvePlug::addOrRemoveKeyInternal, this, existingKey )
+	);
 }
 
 const Animation::CurvePlug::Keys &Animation::CurvePlug::keys() const
@@ -190,6 +207,20 @@ FloatPlug *Animation::CurvePlug::outPlug()
 const FloatPlug *Animation::CurvePlug::outPlug() const
 {
 	return getChild<FloatPlug>( 0 );
+}
+
+void Animation::CurvePlug::addOrRemoveKeyInternal( const Key &key )
+{
+	if( !key )
+	{
+		m_keys.erase( key );
+	}
+	else
+	{
+		m_keys.erase( key );
+		m_keys.insert( key );
+	}
+	propagateDirtiness( outPlug() );
 }
 
 //////////////////////////////////////////////////////////////////////////

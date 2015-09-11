@@ -105,10 +105,12 @@ class Animation : public ComputeNode
 
 				CurvePlug( const std::string &name = defaultName<CurvePlug>(), Direction direction = Plug::In, unsigned flags = Plug::Default );
 
+				/// \undoable
 				void addKey( const Key &key );
 				bool hasKey( float time ) const;
 				Key getKey( float time ) const;
 				Key closestKey( float time ) const;
+				/// \undoable
 				void removeKey( float time );
 
 				typedef std::set<Key> Keys;
@@ -123,6 +125,8 @@ class Animation : public ComputeNode
 				const FloatPlug *outPlug() const;
 
 			private :
+
+				void addOrRemoveKeyInternal( const Key &key );
 
 				Keys m_keys;
 
@@ -141,7 +145,7 @@ class Animation : public ComputeNode
 
 		/// Acquires a curve for use in applying animation
 		/// to the specified plug. The methods of the curve
-		/// may then be used to define a new animtion or edit
+		/// may then be used to define a new animation or edit
 		/// a preexisting one.
 		///
 		/// It is recommended that acquire() be used in
