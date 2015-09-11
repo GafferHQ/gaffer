@@ -41,22 +41,22 @@ import GafferUI
 
 class ConfirmationDialogue( GafferUI.Dialogue ) :
 
-	def __init__( self, title, message, cancelLabel="Cancel", confirmLabel="OK", sizeMode=GafferUI.Window.SizeMode.Automatic, **kw ) :
+    def __init__( self, title, message, buttonLabels = [ "Cancel", "OK" ], defaultButton = 1, sizeMode=GafferUI.Window.SizeMode.Automatic, **kw ) :
 
-		GafferUI.Dialogue.__init__( self, title, sizeMode=sizeMode, **kw )
+        GafferUI.Dialogue.__init__( self, title, sizeMode=sizeMode, **kw )
 
-		self._setWidget( GafferUI.Label( message ) )
+        self._setWidget( GafferUI.Label( message ) )
 
-		self._addButton( cancelLabel )
-		self.__confirmButton = self._addButton( confirmLabel )
+        self.__defaultButton = defaultButton if defaultButton < len(buttonLabels) else (len(buttonLabels)-1)
 
-	## Causes the dialogue to enter a modal state, returning True if the confirm
-	# button was pressed, and False otherwise.
-	def waitForConfirmation( self, **kw ) :
+        self.__buttons = []
+        for buttonLabel in buttonLabels:
+            self.__buttons.append( self._addButton( buttonLabel ) )
 
-		self.__confirmButton._qtWidget().setFocus()
-		button = self.waitForButton( **kw )
-		if button is self.__confirmButton :
-			return True
+    ## Causes the dialogue to enter a modal state, returning the ID of the
+    # button that was pressed
+    def waitForConfirmation( self, **kw ) :
 
-		return False
+        self.__buttons[self.__defaultButton]._qtWidget().setFocus()
+        button = self.waitForButton( **kw )
+        return self.__buttons.index(button)
