@@ -195,6 +195,8 @@ DataPtr dataFromTypeDesc( TypeDesc type, void *&basePointer )
 	return NULL;
 }
 
+
+
 //////////////////////////////////////////////////////////////////////////
 // OSLRenderer::RenderState
 //////////////////////////////////////////////////////////////////////////
@@ -287,6 +289,20 @@ class OSLRenderer::RenderState
 
 };
 
+struct OSLRenderer::TraceData
+{
+	bool        m_traced;
+	bool        m_hit;
+	float       m_hit_distance;
+	OSL::Vec3   m_P;
+	OSL::Vec3   m_N;
+	OSL::Vec3   m_Ng;
+	float       m_u;
+	float       m_v;
+};
+
+
+
 //////////////////////////////////////////////////////////////////////////
 // OSLRenderer::RendererServices
 //////////////////////////////////////////////////////////////////////////
@@ -309,6 +325,17 @@ class OSLRenderer::RenderState
 	#define SHADERGLOBALS_ARGUMENT void *sg
 	#define ACQUIRE_RENDERSTATE static_cast<RenderState *>( sg )
 #endif
+
+namespace {
+	OIIO::ustring g_trace_ustr("trace");
+    OIIO::ustring g_hit_ustr("hit");
+    OIIO::ustring g_hitdist_ustr("hitdist");
+    OIIO::ustring g_N_ustr("N");
+    OIIO::ustring g_Ng_ustr("Ng");
+    OIIO::ustring g_P_ustr("P");
+    OIIO::ustring g_u_ustr("u");
+    OIIO::ustring g_v_ustr("v");
+}
 
 class OSLRenderer::RendererServices : public OSL::RendererServices
 {
@@ -375,6 +402,80 @@ class OSLRenderer::RendererServices : public OSL::RendererServices
 			}
 			return renderState->userData( name, type, NULL );
 		}
+
+		virtual bool trace(
+			TraceOpt&               options,
+			OSL::ShaderGlobals*     sg,
+			const OSL::Vec3&        P,
+			const OSL::Vec3&        dPdx,
+			const OSL::Vec3&        dPdy,
+			const OSL::Vec3&        R,
+			const OSL::Vec3&        dRdx,
+			const OSL::Vec3&        dRdy)
+		{
+
+			TraceData* trace_data = reinterpret_cast<TraceData*>(sg->tracedata);
+
+			trace_data->m_traced = true;
+
+			if( P.length() > 1 ) return false;
+			else
+			{
+				trace_data->m_hit = true;
+				trace_data->m_P = P;
+				trace_data->m_hit_distance = 0;
+				trace_data->m_N = P.normalized();
+				trace_data->m_Ng = P.normalized();
+				trace_data->m_u = 0;
+				trace_data->m_v = 0;
+				return true;
+			}
+
+		}
+
+		virtual bool getmessage(
+			OSL::ShaderGlobals*     sg,
+			OIIO::ustring           source,
+			OIIO::ustring           name,
+			OIIO::TypeDesc          type,
+			void*                   val,
+			bool                    derivatives)
+		{
+			const TraceData* trace_data =
+				reinterpret_cast<TraceData*>(sg->tracedata);
+
+			if (trace_data->m_traced)
+			{
+				if (source == g_trace_ustr)
+				{
+					if (name == g_hit_ustr && type == OIIO::TypeDesc::TypeInt)
+						reinterpret_cast<int*>(val)[0] = trace_data->m_hit ? 1 : 0;
+					else if (name == g_hitdist_ustr && type == OIIO::TypeDesc::TypeFloat)
+						reinterpret_cast<float*>(val)[0] = trace_data->m_hit_distance;
+					else if (name == g_N_ustr && type == OIIO::TypeDesc::TypeNormal)
+						*reinterpret_cast<OSL::Vec3*>(val) = trace_data->m_N;
+					else if (name == g_Ng_ustr && type == OIIO::TypeDesc::TypeNormal)
+						*reinterpret_cast<OSL::Vec3*>(val) = trace_data->m_Ng;
+					else if (name == g_P_ustr && type == OIIO::TypeDesc::TypePoint)
+						*reinterpret_cast<OSL::Vec3*>(val) = trace_data->m_P;
+					else if (name == g_u_ustr && type == OIIO::TypeDesc::TypeFloat)
+						reinterpret_cast<float*>(val)[0] = trace_data->m_u;
+					else if (name == g_v_ustr && type == OIIO::TypeDesc::TypeFloat)
+						reinterpret_cast<float*>(val)[0] = trace_data->m_v;
+					else
+						return false;
+
+					// For now, set derivatives to zero.
+					if (derivatives)
+						memset(reinterpret_cast<char*>(val) + type.size(), 0, 2 * type.size());
+
+					return true;
+				}
+			}
+
+			return false;
+		}
+		
 
 };
 
@@ -1026,6 +1127,10 @@ IECore::CompoundDataPtr OSLRenderer::ShadingEngine::shade( const IECore::Compoun
 
 	RenderState renderState( points );
 	shaderGlobals.renderstate = &renderState;
+
+	TraceData traceData;
+	shaderGlobals.tracedata = &traceData;
+	
 
 	// get pointers to varying data, we'll use these to
 	// update the shaderGlobals as we iterate over our points.

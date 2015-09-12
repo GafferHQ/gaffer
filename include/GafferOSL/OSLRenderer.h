@@ -153,6 +153,7 @@ class OSLRenderer : public IECore::Renderer
 	private :
 
 		class RenderState;
+		class TraceData;
 		class RendererServices;
 		class ShadingResults;
 
