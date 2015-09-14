@@ -482,6 +482,12 @@ class SceneReaderTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( r1["out"]["globals"].getValue(), IECore.CompoundObject() )
 		self.assertTrue( r1["out"]["globals"].getValue( _copy = False ).isSame( r2["out"]["globals"].getValue( _copy = False ) ) )
 
+	def testComputeSetInEmptyScene( self ) :
+
+		# this used to cause a crash:
+		r1 = GafferScene.SceneReader()
+		self.assertEqual( r1["out"].set( "blahblah" ).value.paths(), [] )
+
 	def tearDown( self ) :
 
 		if os.path.exists( self.__testFile ) :
