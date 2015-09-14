@@ -357,10 +357,7 @@ class _NumericValuesPreview( _ValuesPreview ) :
 				self.__textWidget.setText( str( e ) )
 				return
 
-		if len( values ) and isinstance( values[0], float ) :
-			values = [ ( "%.4f" % v ).rstrip( '0' ).rstrip( '.' ) for v in values ]
-		else :
-			values = [ str( v ) for v in values ]
+		values = [ GafferUI.NumericWidget.valueToString( v ) for v in values ]
 
 		self.__textWidget.setText( ", ".join( values ) )
 

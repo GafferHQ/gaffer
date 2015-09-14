@@ -45,12 +45,6 @@ import GafferSceneUI
 # Metadata
 ##########################################################################
 
-## \todo This is getting used in a few places now - maybe put it in one
-# place? Maybe a static method on NumericWidget?
-def __floatToString( f ) :
-
-	return ( "%.4f" % f ).rstrip( '0' ).rstrip( '.' )
-
 def __cameraSummary( plug ) :
 
 	info = []
@@ -61,13 +55,13 @@ def __cameraSummary( plug ) :
 		info.append( "%dx%d" % ( resolution[0], resolution[1] ) )
 	if plug["pixelAspectRatio"]["enabled"].getValue() :
 		pixelAspectRatio = plug["pixelAspectRatio"]["value"].getValue()
-		info.append( "Aspect %s" % __floatToString( pixelAspectRatio ) )
+		info.append( "Aspect %s" % GafferUI.NumericWidget.valueToString( pixelAspectRatio ) )
 	if plug["resolutionMultiplier"]["enabled"].getValue() :
 		resolutionMultiplier = plug["resolutionMultiplier"]["value"].getValue()
-		info.append( "Mult %s" % __floatToString( resolutionMultiplier ) )
+		info.append( "Mult %s" % GafferUI.NumericWidget.valueToString( resolutionMultiplier ) )
 	if plug["renderCropWindow"]["enabled"].getValue() :
 		crop = plug["renderCropWindow"]["value"].getValue()
-		info.append( "Crop %s,%s-%s,%s" % tuple( __floatToString( x ) for x in ( crop.min.x, crop.min.y, crop.max.x, crop.max.y ) ) )
+		info.append( "Crop %s,%s-%s,%s" % tuple( GafferUI.NumericWidget.valueToString( x ) for x in ( crop.min.x, crop.min.y, crop.max.x, crop.max.y ) ) )
 	if plug["overscan"]["enabled"].getValue() :
 		info.append( "Overscan %s" % ( "On" if plug["overscan"]["value"].getValue() else "Off" ) )
 
