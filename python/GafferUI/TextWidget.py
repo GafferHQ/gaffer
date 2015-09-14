@@ -265,12 +265,7 @@ class TextWidget( GafferUI.Widget ) :
 
 	def __textChanged( self, text ) :
 
-		try :
-			signal = self.__textChangedSignal
-		except :
-			return
-
-		signal( self )
+		self.__textChangedSignal( self )
 
 	def __returnPressed( self ) :
 
