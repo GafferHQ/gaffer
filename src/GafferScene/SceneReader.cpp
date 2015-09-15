@@ -435,7 +435,10 @@ GafferScene::ConstPathMatcherDataPtr SceneReader::computeSet( const IECore::Inte
 {
 	PathMatcherDataPtr result = new PathMatcherData;
 	ConstSceneInterfacePtr rootScene = scene( ScenePath() );
-	loadSetWalk( rootScene.get(), setName, result->writable(), ScenePath() );
+	if( rootScene )
+	{
+		loadSetWalk( rootScene.get(), setName, result->writable(), ScenePath() );
+	}
 	return result;
 }
 
