@@ -1,3 +1,14 @@
+# 0.16.0.4
+==========
+
+Scene
+-----------------------------------------------------------------------
+- Output attributes to the renderer before other state to fix some inconsistent behaviour
+
+Build
+-----------------------------------------------------------------------
+- Updated IE internal build options
+
 # 0.16.0.3
 ==========
 
