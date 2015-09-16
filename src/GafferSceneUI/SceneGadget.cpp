@@ -567,7 +567,7 @@ class SceneGadget::SceneGraph
 		{
 			// Our m_state can be null if an exception occurred during update,
 			// in which case we're not valid.
-			return m_state;
+			return (bool)m_state;
 		}
 
 		void clear()

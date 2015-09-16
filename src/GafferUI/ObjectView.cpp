@@ -70,7 +70,7 @@ void ObjectView::update()
 		renderable = runTimeCast<const VisibleRenderable>( View3D::preprocessedInPlug<ObjectPlug>()->getValue() );
 	}
 
-	bool hadRenderable = m_renderableGadget->getRenderable();
+	bool hadRenderable = (bool)m_renderableGadget->getRenderable();
 	m_renderableGadget->setRenderable( renderable );
 	if( !hadRenderable && renderable )
 	{
