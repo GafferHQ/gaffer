@@ -44,7 +44,7 @@ import GafferImage
 
 class GradeTest( unittest.TestCase ) :
 
-	checkerFile = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/checker.exr" )
+	checkerFile = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/checker.exr" )
 
 	# Test that when gamma == 0 that the coresponding channel isn't modified.
 	def testChannelEnable( self ) :
@@ -99,24 +99,24 @@ class GradeTest( unittest.TestCase ) :
 		self.assertEqual( g.correspondingInput( g["gain"] ), None )
 
 	def testPassThrough( self ) :
-		
+
 		i = GafferImage.ImageReader()
 		i["fileName"].setValue( self.checkerFile )
 
 		g = GafferImage.Grade()
 		g["in"].setInput( i["out"] )
 		g["gain"].setValue( IECore.Color3f( 2., 2., 2. ) )
-		
+
 		self.assertEqual( i["out"]["format"].hash(), g["out"]["format"].hash() )
 		self.assertEqual( i["out"]["dataWindow"].hash(), g["out"]["dataWindow"].hash() )
 		self.assertEqual( i["out"]["metadata"].hash(), g["out"]["metadata"].hash() )
 		self.assertEqual( i["out"]["channelNames"].hash(), g["out"]["channelNames"].hash() )
-		
+
 		self.assertEqual( i["out"]["format"].getValue(), g["out"]["format"].getValue() )
 		self.assertEqual( i["out"]["dataWindow"].getValue(), g["out"]["dataWindow"].getValue() )
 		self.assertEqual( i["out"]["metadata"].getValue(), g["out"]["metadata"].getValue() )
 		self.assertEqual( i["out"]["channelNames"].getValue(), g["out"]["channelNames"].getValue() )
-	
+
 	def testChannelDataHashesAreIndependent( self ) :
 
 		# changing only one channel of any of the grading plugs should not

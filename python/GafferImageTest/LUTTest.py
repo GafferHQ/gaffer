@@ -45,7 +45,7 @@ import GafferImage
 
 class LUTTest( unittest.TestCase ) :
 
-	imageFile = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/checker.exr" )
+	imageFile = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/checker.exr" )
 	lut = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/luts/slog10.spi1d" )
 
 	def test( self ) :
@@ -57,18 +57,18 @@ class LUTTest( unittest.TestCase ) :
 		o["in"].setInput( n["out"] )
 
 		self.assertEqual( n["out"].image(), o["out"].image() )
-		
+
 		o["fileName"].setValue( self.lut )
 		o["interpolation"].setValue( GafferImage.LUT.Interpolation.Linear )
-		
+
 		forward = o["out"].image()
 		self.assertNotEqual( n["out"].image(), forward )
-		
+
 		o["direction"].setValue( GafferImage.LUT.Direction.Inverse )
 		inverse = o["out"].image()
 		self.assertNotEqual( n["out"].image(), inverse )
 		self.assertNotEqual( forward, inverse )
-		
+
 		o["interpolation"].setValue( GafferImage.LUT.Interpolation.Nearest )
 		tet = o["out"].image()
 		self.assertNotEqual( n["out"].image(), tet )
@@ -76,7 +76,7 @@ class LUTTest( unittest.TestCase ) :
 		self.assertNotEqual( inverse, tet )
 
 	def testBadFileName( self ) :
-		
+
 		n = GafferImage.ImageReader()
 		n["fileName"].setValue( self.imageFile )
 
@@ -84,9 +84,9 @@ class LUTTest( unittest.TestCase ) :
 		o["in"].setInput( n["out"] )
 		o["fileName"].setValue( "/not/a/real.cube" )
 		self.assertRaises( o["out"].image )
-	
+
 	def testBadInterpolation( self ) :
-		
+
 		n = GafferImage.ImageReader()
 		n["fileName"].setValue( self.imageFile )
 
@@ -105,11 +105,11 @@ class LUTTest( unittest.TestCase ) :
 		o["in"].setInput( n["out"] )
 
 		self.assertEqual( n["out"].image(), o["out"].image() )
-		
+
 		o["fileName"].setValue( self.lut )
 
 		self.assertNotEqual( n["out"].image(), o["out"].image() )
-		
+
 		o["enabled"].setValue( False )
 
 		self.assertEqual( n["out"].image(), o["out"].image() )
@@ -144,7 +144,7 @@ class LUTTest( unittest.TestCase ) :
 	def testChannelsAreSeparate( self ) :
 
 		i = GafferImage.ImageReader()
-		i["fileName"].setValue( os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/circles.exr" ) )
+		i["fileName"].setValue( os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/circles.exr" ) )
 
 		o = GafferImage.LUT()
 		o["in"].setInput( i["out"] )
@@ -162,19 +162,19 @@ class LUTTest( unittest.TestCase ) :
 		)
 
 	def testPassThrough( self ) :
-		
+
 		i = GafferImage.ImageReader()
 		i["fileName"].setValue( self.imageFile )
 
 		o = GafferImage.LUT()
 		o["in"].setInput( i["out"] )
 		o["fileName"].setValue( self.lut )
-		
+
 		self.assertEqual( i["out"]["format"].hash(), o["out"]["format"].hash() )
 		self.assertEqual( i["out"]["dataWindow"].hash(), o["out"]["dataWindow"].hash() )
 		self.assertEqual( i["out"]["metadata"].getValue(), o["out"]["metadata"].getValue() )
 		self.assertEqual( i["out"]["channelNames"].hash(), o["out"]["channelNames"].hash() )
-				
+
 		self.assertEqual( i["out"]["format"].getValue(), o["out"]["format"].getValue() )
 		self.assertEqual( i["out"]["dataWindow"].getValue(), o["out"]["dataWindow"].getValue() )
 		self.assertEqual( i["out"]["metadata"].getValue(), o["out"]["metadata"].getValue() )

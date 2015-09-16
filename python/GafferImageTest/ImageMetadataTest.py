@@ -44,27 +44,27 @@ import GafferTest
 
 class ImageMetadataTest( GafferTest.TestCase ) :
 
-	checkerFile = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/checker.exr" )
-	
+	checkerFile = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/checker.exr" )
+
 	def test( self ) :
 
 		i = GafferImage.ImageReader()
 		i["fileName"].setValue( self.checkerFile )
 		inMetadata = i["out"]["metadata"].getValue()
-		
+
 		m = GafferImage.ImageMetadata()
 		m["in"].setInput( i["out"] )
-		
+
 		# check that the image is passed through
 
 		self.assertEqual( m["out"]["metadata"].getValue(), inMetadata )
 		self.assertEqual( m["out"].image(), i["out"].image() )
-		
+
 		# check that we can make metadata
 
 		m["metadata"].addMember( "comment", IECore.StringData( "my favorite image!" ) )
 		m["metadata"].addOptionalMember( "range", IECore.V2iData( IECore.V2i( 5, 10 ) ), enabled = True )
-		
+
 		metadata = m["out"]["metadata"].getValue()
 		self.assertEqual( len(metadata), len(inMetadata) + 2 )
 		self.assertEqual( metadata["comment"], IECore.StringData( "my favorite image!" ) )
@@ -72,9 +72,9 @@ class ImageMetadataTest( GafferTest.TestCase ) :
 		del metadata["comment"]
 		del metadata["range"]
 		self.assertEqual( metadata, inMetadata )
-		
+
 		# check disabling optional metadata
-		
+
 		m["metadata"]["member2"]["enabled"].setValue( False )
 		metadata = m["out"]["metadata"].getValue()
 		self.assertEqual( len(metadata), len(inMetadata) + 1 )
@@ -84,18 +84,18 @@ class ImageMetadataTest( GafferTest.TestCase ) :
 		self.assertEqual( metadata, inMetadata )
 
 		# check disabling the node entirely metadata
-		
+
 		m["enabled"].setValue( False )
 		self.assertEqual( m["out"]["metadata"].hash(), i["out"]["metadata"].hash() )
 		self.assertEqual( m["out"]["metadata"].getValue(), inMetadata )
 		self.assertEqual( m["out"].image(), i["out"].image() )
-	
+
 	def testSubstitution( self ) :
 
 		s = Gaffer.ScriptNode()
 		s["m"] = GafferImage.ImageMetadata()
 		s["m"]["metadata"].addMember( "comment", IECore.StringData( "${foo}" ) )
-		
+
 		self.assertEqual( s["m"]["out"]["metadata"].getValue()["comment"], IECore.StringData( "" ) )
 		h = s["m"]["out"]["metadata"].hash()
 
@@ -105,7 +105,7 @@ class ImageMetadataTest( GafferTest.TestCase ) :
 		with c :
 			self.assertNotEqual( s["m"]["out"]["metadata"].hash(), h )
 			self.assertEqual( s["m"]["out"]["metadata"].getValue()["comment"], IECore.StringData( "foo" ) )
-	
+
 	def testSerialisation( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -113,7 +113,7 @@ class ImageMetadataTest( GafferTest.TestCase ) :
 		s["m"]["metadata"].addMember( "comment", IECore.StringData( "my favorite image!" ) )
 		s["m"]["metadata"].addOptionalMember( "range", IECore.V2iData( IECore.V2i( 5, 10 ) ), enabled = True )
 		names = s["m"]["metadata"].keys()
-		
+
 		s2 = Gaffer.ScriptNode()
 		s2.execute( s.serialise() )
 
@@ -143,7 +143,7 @@ class ImageMetadataTest( GafferTest.TestCase ) :
 			s["Box"]["m"]["metadata"].memberDataAndName( s["Box"]["m"]["metadata"]["member1"] ),
 			memberDataAndName,
 		)
-		
+
 		self.assertEqual(
 			s["Box"]["m"]["metadata"].memberDataAndName( s["Box"]["m"]["metadata"]["member2"] ),
 			memberDataAndName2,
@@ -156,14 +156,14 @@ class ImageMetadataTest( GafferTest.TestCase ) :
 			s2["Box"]["m"]["metadata"].memberDataAndName( s2["Box"]["m"]["metadata"]["member1"] ),
 			memberDataAndName
 		)
-		
+
 		self.assertEqual(
 			s2["Box"]["m"]["metadata"].memberDataAndName( s2["Box"]["m"]["metadata"]["member2"] ),
 			memberDataAndName2,
 		)
 
 	def testPassThrough( self ) :
-		
+
 		i = GafferImage.ImageReader()
 		i["fileName"].setValue( self.checkerFile )
 
@@ -171,15 +171,15 @@ class ImageMetadataTest( GafferTest.TestCase ) :
 		m["in"].setInput( i["out"] )
 		m["metadata"].addMember( "comment", IECore.StringData( "my favorite image!" ) )
 		m["metadata"].addOptionalMember( "range", IECore.V2iData( IECore.V2i( 5, 10 ) ), enabled = True )
-		
+
 		self.assertEqual( i["out"]["format"].hash(), m["out"]["format"].hash() )
 		self.assertEqual( i["out"]["dataWindow"].hash(), m["out"]["dataWindow"].hash() )
 		self.assertEqual( i["out"]["channelNames"].hash(), m["out"]["channelNames"].hash() )
-				
+
 		self.assertEqual( i["out"]["format"].getValue(), m["out"]["format"].getValue() )
 		self.assertEqual( i["out"]["dataWindow"].getValue(), m["out"]["dataWindow"].getValue() )
 		self.assertEqual( i["out"]["channelNames"].getValue(), m["out"]["channelNames"].getValue() )
-		
+
 		context = Gaffer.Context()
 		context["image:tileOrigin"] = IECore.V2i( 0 )
 		with context :

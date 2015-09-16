@@ -45,7 +45,7 @@ import GafferImage
 
 class CDLTest( unittest.TestCase ) :
 
-	imageFile = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/checker.exr" )
+	imageFile = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/checker.exr" )
 
 	def test( self ) :
 
@@ -55,25 +55,25 @@ class CDLTest( unittest.TestCase ) :
 
 		o = GafferImage.CDL()
 		o["in"].setInput( n["out"] )
-		
+
 		self.assertEqual( n["out"].image(), o["out"].image() )
-		
+
 		o['slope'].setValue( IECore.Color3f( 1, 2, 3 ) )
-		
+
 		slope = o["out"].image()
 		self.assertNotEqual( orig, slope )
-		
+
 		o["offset"].setValue( IECore.Color3f( 1, 2, 3 ) )
 		offset = o["out"].image()
 		self.assertNotEqual( orig, offset )
 		self.assertNotEqual( slope, offset )
-		
+
 		o["power"].setValue( IECore.Color3f( 1, 2, 3 ) )
 		power = o["out"].image()
 		self.assertNotEqual( orig, power )
 		self.assertNotEqual( slope, power )
 		self.assertNotEqual( offset, power )
-		
+
 		o["saturation"].setValue( 0.5 )
 		saturation = o["out"].image()
 		self.assertNotEqual( orig, saturation )
@@ -98,11 +98,11 @@ class CDLTest( unittest.TestCase ) :
 		o["in"].setInput( n["out"] )
 
 		self.assertEqual( n["out"].image(), o["out"].image() )
-		
+
 		o['slope'].setValue( IECore.Color3f( 1, 2, 3 ) )
-		
+
 		self.assertNotEqual( n["out"].image(), o["out"].image() )
-		
+
 		o["enabled"].setValue( False )
 
 		self.assertEqual( n["out"].image(), o["out"].image() )
@@ -136,7 +136,7 @@ class CDLTest( unittest.TestCase ) :
 	def testChannelsAreSeparate( self ) :
 
 		i = GafferImage.ImageReader()
-		i["fileName"].setValue( os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/circles.exr" ) )
+		i["fileName"].setValue( os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/circles.exr" ) )
 
 		o = GafferImage.CDL()
 		o["in"].setInput( i["out"] )
@@ -153,7 +153,7 @@ class CDLTest( unittest.TestCase ) :
 		)
 
 	def testPassThrough( self ) :
-		
+
 		i = GafferImage.ImageReader()
 		i["fileName"].setValue( self.imageFile )
 
@@ -165,7 +165,7 @@ class CDLTest( unittest.TestCase ) :
 		self.assertEqual( i["out"]["dataWindow"].hash(), o["out"]["dataWindow"].hash() )
 		self.assertEqual( i["out"]["metadata"].getValue(), o["out"]["metadata"].getValue() )
 		self.assertEqual( i["out"]["channelNames"].hash(), o["out"]["channelNames"].hash() )
-				
+
 		self.assertEqual( i["out"]["format"].getValue(), o["out"]["format"].getValue() )
 		self.assertEqual( i["out"]["dataWindow"].getValue(), o["out"]["dataWindow"].getValue() )
 		self.assertEqual( i["out"]["metadata"].getValue(), o["out"]["metadata"].getValue() )

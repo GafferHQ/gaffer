@@ -46,7 +46,7 @@ import GafferImage
 
 class ColorSpaceTest( unittest.TestCase ) :
 
-	fileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/checker.exr" )
+	fileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/checker.exr" )
 
 	def test( self ) :
 
@@ -57,7 +57,7 @@ class ColorSpaceTest( unittest.TestCase ) :
 		o["in"].setInput( n["out"] )
 
 		self.assertEqual( n["out"].image(), o["out"].image() )
-		
+
 		o["inputSpace"].setValue( "linear" )
 		o["outputSpace"].setValue( "sRGB" )
 
@@ -72,12 +72,12 @@ class ColorSpaceTest( unittest.TestCase ) :
 		o["in"].setInput( n["out"] )
 
 		self.assertEqual( n["out"].image(), o["out"].image() )
-		
+
 		o["inputSpace"].setValue( "linear" )
 		o["outputSpace"].setValue( "sRGB" )
 
 		self.assertNotEqual( n["out"].image(), o["out"].image() )
-		
+
 		o["enabled"].setValue( False )
 
 		self.assertEqual( n["out"].image(), o["out"].image() )
@@ -114,7 +114,7 @@ class ColorSpaceTest( unittest.TestCase ) :
 	def testChannelsAreSeparate( self ) :
 
 		i = GafferImage.ImageReader()
-		i["fileName"].setValue( os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/circles.exr" ) )
+		i["fileName"].setValue( os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/circles.exr" ) )
 
 		o = GafferImage.ColorSpace()
 		o["in"].setInput( i["out"] )
@@ -133,7 +133,7 @@ class ColorSpaceTest( unittest.TestCase ) :
 		)
 
 	def testPassThrough( self ) :
-		
+
 		i = GafferImage.ImageReader()
 		i["fileName"].setValue( self.fileName )
 
@@ -141,11 +141,11 @@ class ColorSpaceTest( unittest.TestCase ) :
 		o["in"].setInput( i["out"] )
 		o["inputSpace"].setValue( "linear" )
 		o["outputSpace"].setValue( "sRGB" )
-		
+
 		self.assertEqual( i["out"]["format"].hash(), o["out"]["format"].hash() )
 		self.assertEqual( i["out"]["dataWindow"].hash(), o["out"]["dataWindow"].hash() )
 		self.assertEqual( i["out"]["channelNames"].hash(), o["out"]["channelNames"].hash() )
-				
+
 		self.assertEqual( i["out"]["format"].getValue(), o["out"]["format"].getValue() )
 		self.assertEqual( i["out"]["dataWindow"].getValue(), o["out"]["dataWindow"].getValue() )
 		self.assertEqual( i["out"]["channelNames"].getValue(), o["out"]["channelNames"].getValue() )

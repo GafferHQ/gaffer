@@ -44,7 +44,7 @@ import os
 
 class ReformatTest( unittest.TestCase ) :
 
-	path = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/" )
+	path = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/" )
 
 	# Check that the hash changes when a new format is supplied.
 	def testFormatHash( self ) :
@@ -188,6 +188,6 @@ class ReformatTest( unittest.TestCase ) :
 
 		self.assertEqual( r["out"]["metadata"].hash(), c["out"]["metadata"].hash() )
 		self.assertEqual( r["out"]["channelNames"].hash(), c["out"]["channelNames"].hash() )
-		
+
 		self.assertEqual( r["out"]["metadata"].getValue(), c["out"]["metadata"].getValue() )
 		self.assertEqual( r["out"]["channelNames"].getValue(), c["out"]["channelNames"].getValue() )

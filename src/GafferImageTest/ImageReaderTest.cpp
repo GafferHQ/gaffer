@@ -132,7 +132,7 @@ void GafferImageTest::testOIIOJpgRead()
 	const char *root = std::getenv( "GAFFER_ROOT" );
 	if( root )
 	{
-		std::string fileName = boost::str( boost::format( "%s/python/GafferTest/images/circles.jpg" ) % std::string( root ) );
+		std::string fileName = boost::str( boost::format( "%s/python/GafferImageTest/images/circles.jpg" ) % std::string( root ) );
 		compareOIIOGetPixelFunctions( fileName );
 	}
 	else
@@ -146,7 +146,7 @@ void GafferImageTest::testOIIOExrRead()
 	const char *root = std::getenv( "GAFFER_ROOT" );
 	if( root )
 	{
-		std::string fileName = boost::str( boost::format( "%s/python/GafferTest/images/circles.exr" ) % std::string( root ) );
+		std::string fileName = boost::str( boost::format( "%s/python/GafferImageTest/images/circles.exr" ) % std::string( root ) );
 		compareOIIOGetPixelFunctions( fileName );
 	}
 	else

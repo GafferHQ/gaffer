@@ -48,12 +48,12 @@ import GafferImageTest
 class ImageReaderTest( unittest.TestCase ) :
 
 	__testDir = "/tmp/imageReaderTest"
-	fileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/checker.exr" )
-	offsetDataWindowFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/rgb.100x100.exr" )
-	negativeDataWindowFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/checkerWithNegativeDataWindow.200x150.exr" )
-	negativeDisplayWindowFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/negativeDisplayWindow.exr" )
-	circlesExrFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/circles.exr" )
-	circlesJpgFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/circles.jpg" )
+	fileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/checker.exr" )
+	offsetDataWindowFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/rgb.100x100.exr" )
+	negativeDataWindowFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/checkerWithNegativeDataWindow.200x150.exr" )
+	negativeDisplayWindowFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/negativeDisplayWindow.exr" )
+	circlesExrFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/circles.exr" )
+	circlesJpgFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/circles.jpg" )
 
 	def testInternalImageSpaceConversion( self ) :
 
@@ -92,7 +92,7 @@ class ImageReaderTest( unittest.TestCase ) :
 			"screenWindowWidth" : IECore.FloatData( 1 ),
 		} )
 		self.assertEqual( n["out"]["metadata"].getValue(), expectedMetadata )
-		
+
 		channelNames = n["out"]["channelNames"].getValue()
 		self.failUnless( isinstance( channelNames, IECore.StringVectorData ) )
 		self.failUnless( "R" in channelNames )
@@ -102,7 +102,7 @@ class ImageReaderTest( unittest.TestCase ) :
 
 		image = n["out"].image()
 		self.assertEqual( image.blindData(), IECore.CompoundData( dict(expectedMetadata) ) )
-		
+
 		image2 = IECore.Reader.create( self.fileName ).read()
 		image.blindData().clear()
 		image2.blindData().clear()
@@ -267,12 +267,12 @@ class ImageReaderTest( unittest.TestCase ) :
 		self.assertTrue( "png" in e )
 		self.assertTrue( "cin" in e )
 		self.assertTrue( "dpx" in e )
-	
+
 	def testFileRefresh( self ) :
-		
+
 		testFile = self.__testDir + "/refresh.exr"
 		shutil.copyfile( self.fileName, testFile )
-		
+
 		reader = GafferImage.ImageReader()
 		reader["fileName"].setValue( testFile )
 		image1 = reader["out"].image()
@@ -285,7 +285,7 @@ class ImageReaderTest( unittest.TestCase ) :
 		# until we force a refresh
 		reader["refreshCount"].setValue( reader["refreshCount"].getValue() + 1 )
 		self.assertNotEqual( reader["out"].image(), image1 )
-	
+
 	def testNonexistentFiles( self ) :
 
 		reader = GafferImage.ImageReader()
@@ -299,11 +299,11 @@ class ImageReaderTest( unittest.TestCase ) :
 		self.assertRaisesRegexp( RuntimeError, ".*wellIDontExist.exr.*", reader["out"].channelData, "R", IECore.V2i( 0 ) )
 
 	def setUp( self ) :
-		
+
 		os.mkdir( self.__testDir )
-	
+
 	def tearDown( self ) :
-		
+
 		if os.path.isdir( self.__testDir ) :
 			shutil.rmtree( self.__testDir )
 

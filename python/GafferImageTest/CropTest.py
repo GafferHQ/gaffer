@@ -45,8 +45,8 @@ import GafferImage
 
 class CropTest( unittest.TestCase ) :
 
-	imageFileUndersizeDataWindow = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/blueWithDataWindow.100x100.exr" )
-	imageFileOversizeDataWindow = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/checkerWithNegWindows.200x150.exr" )
+	imageFileUndersizeDataWindow = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/blueWithDataWindow.100x100.exr" )
+	imageFileOversizeDataWindow = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/checkerWithNegWindows.200x150.exr" )
 
 	def testDefaultState( self ) :
 
@@ -148,7 +148,7 @@ class CropTest( unittest.TestCase ) :
 		crop["affectDisplayWindow"].setValue( True )
 
 		self.assertEqual( i["out"]["dataWindow"].getValue(), crop["out"]["format"].getValue().getDisplayWindow() )
-	
+
 	def testDisplayWindowToDataWindow( self ) :
 
 		i = GafferImage.ImageReader()
@@ -162,6 +162,6 @@ class CropTest( unittest.TestCase ) :
 
 		self.assertEqual( i["out"]["format"].getValue().getDisplayWindow(), crop["out"]["dataWindow"].getValue() )
 
-	
+
 if __name__ == "__main__":
 	unittest.main()

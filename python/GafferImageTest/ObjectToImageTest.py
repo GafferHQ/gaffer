@@ -44,13 +44,13 @@ import GafferImage
 
 class ObjectToImageTest( unittest.TestCase ) :
 
-	fileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/checker.exr" )
-	negFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/checkerWithNegativeDataWindow.200x150.exr" )
+	fileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/checker.exr" )
+	negFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/checkerWithNegativeDataWindow.200x150.exr" )
 
 	def test( self ) :
 
 		i = IECore.Reader.create( self.fileName ).read()
-		
+
 		n = GafferImage.ObjectToImage()
 		n["object"].setValue( i )
 
@@ -59,7 +59,7 @@ class ObjectToImageTest( unittest.TestCase ) :
 	def testImageWithANegativeDataWindow( self ) :
 
 		i = IECore.Reader.create( self.negFileName ).read()
-		
+
 		n = GafferImage.ObjectToImage()
 		n["object"].setValue( i )
 

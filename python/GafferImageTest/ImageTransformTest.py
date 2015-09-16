@@ -44,8 +44,8 @@ import GafferImage
 
 class ImageTransformTest( unittest.TestCase ) :
 
-	fileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/checker.exr" )
-	path = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/" )
+	fileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/checker.exr" )
+	path = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/" )
 
 	def testIdentityHash( self ) :
 
@@ -225,7 +225,7 @@ class ImageTransformTest( unittest.TestCase ) :
 		filteredImage = t["out"].image()
 		filteredImage.blindData().clear()
 
-		file = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/transformedChecker" + filter + ".200x150.exr" )
+		file = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/transformedChecker" + filter + ".200x150.exr" )
 		expectedOutput = GafferImage.ImageReader()
 		expectedOutput["fileName"].setValue( os.path.join( self.path, file ) )
 		expectedImage = expectedOutput['out'].image()
@@ -245,10 +245,10 @@ class ImageTransformTest( unittest.TestCase ) :
 		t = GafferImage.ImageTransform()
 		t["in"].setInput( c["out"] )
 		t["transform"]["translate"].setValue( IECore.V2f( 1, 0 ) )
-		
+
 		self.assertEqual( t["out"]["metadata"].hash(), c["out"]["metadata"].hash() )
 		self.assertEqual( t["out"]["channelNames"].hash(), c["out"]["channelNames"].hash() )
-		
+
 		self.assertEqual( t["out"]["metadata"].getValue(), c["out"]["metadata"].getValue() )
 		self.assertEqual( t["out"]["channelNames"].getValue(), c["out"]["channelNames"].getValue() )
 

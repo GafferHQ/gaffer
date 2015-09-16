@@ -45,7 +45,7 @@ import math
 
 class ImageStatsTest( unittest.TestCase ) :
 
-	__rgbFilePath = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/rgb.100x100.exr" )
+	__rgbFilePath = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/rgb.100x100.exr" )
 
 	def testHash( self ) :
 		pass

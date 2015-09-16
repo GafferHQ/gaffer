@@ -47,7 +47,7 @@ class ClampTest( unittest.TestCase ) :
 	def testClamp( self ) :
 
 		i = GafferImage.ImageReader()
-		i["fileName"].setValue( os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/colorbars_half_max.exr" ) )
+		i["fileName"].setValue( os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/colorbars_half_max.exr" ) )
 
 		clamp = GafferImage.Clamp()
 		clamp["in"].setInput(i["out"])
@@ -58,7 +58,7 @@ class ClampTest( unittest.TestCase ) :
 	def testPerChannelHash( self ) :
 
 		i = GafferImage.ImageReader()
-		i["fileName"].setValue( os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/colorbars_half_max.exr" ) )
+		i["fileName"].setValue( os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/colorbars_half_max.exr" ) )
 
 		clamp = GafferImage.Clamp()
 		clamp["in"].setInput(i["out"])
@@ -82,7 +82,7 @@ class ClampTest( unittest.TestCase ) :
 	def testDisconnectedDirty( self ) :
 
 		r = GafferImage.ImageReader()
-		r["fileName"].setValue( os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/colorbars_half_max.exr" ) )
+		r["fileName"].setValue( os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/colorbars_half_max.exr" ) )
 		clamp = GafferImage.Clamp()
 		clamp["in"].setInput( r["out"] )
 
@@ -102,7 +102,7 @@ class ClampTest( unittest.TestCase ) :
 	def testClampWithMaxTo( self ) :
 
 		i = GafferImage.ImageReader()
-		i["fileName"].setValue( os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/colorbars_max_clamp.exr" ) )
+		i["fileName"].setValue( os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/colorbars_max_clamp.exr" ) )
 
 		clamp = GafferImage.Clamp()
 		clamp["in"].setInput(i["out"])
@@ -129,7 +129,7 @@ class ClampTest( unittest.TestCase ) :
 	def testEnabledBypass( self ) :
 
 		i = GafferImage.ImageReader()
-		i["fileName"].setValue( os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/colorbars_half_max.exr" ) )
+		i["fileName"].setValue( os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/colorbars_half_max.exr" ) )
 
 		clamp = GafferImage.Clamp()
 		clamp["in"].setInput(i["out"])
@@ -150,21 +150,21 @@ class ClampTest( unittest.TestCase ) :
 		self.assertEqual( clamp.correspondingInput( clamp["in"] ), None )
 		self.assertEqual( clamp.correspondingInput( clamp["enabled"] ), None )
 		self.assertEqual( clamp.correspondingInput( clamp["min"] ), None )
-	
+
 	def testPassThrough( self ) :
-		
+
 		i = GafferImage.ImageReader()
-		i["fileName"].setValue( os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/images/colorbars_half_max.exr" ) )
+		i["fileName"].setValue( os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/colorbars_half_max.exr" ) )
 
 		c = GafferImage.Clamp()
 		c["in"].setInput( i["out"] )
 		c["max"].setValue( IECore.Color4f( .5, .5, .5, .5 ) )
-		
+
 		self.assertEqual( i["out"]["format"].hash(), c["out"]["format"].hash() )
 		self.assertEqual( i["out"]["dataWindow"].hash(), c["out"]["dataWindow"].hash() )
 		self.assertEqual( i["out"]["metadata"].hash(), c["out"]["metadata"].hash() )
 		self.assertEqual( i["out"]["channelNames"].hash(), c["out"]["channelNames"].hash() )
-				
+
 		self.assertEqual( i["out"]["format"].getValue(), c["out"]["format"].getValue() )
 		self.assertEqual( i["out"]["dataWindow"].getValue(), c["out"]["dataWindow"].getValue() )
 		self.assertEqual( i["out"]["metadata"].getValue(), c["out"]["metadata"].getValue() )
