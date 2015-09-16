@@ -145,8 +145,28 @@ class NumericWidget( GafferUI.TextWidget ) :
 
 		self.__setValueInternal( value, self.ValueChangedReason.Increment )
 
-		# adjust the cursor position to be in the same column as before
 		newText = self.getText()
+
+		# add any required leading or trailing 0 to ensure that
+		# keyboard increments are consistent
+
+		oldLengthBefore, oldHasPeriod, oldLengthAfter = [ len( item ) for item in text.lstrip( "-" ).partition( "." ) ]
+		newLengthBefore, newHasPeriod, newLengthAfter = [ len( item ) for item in newText.lstrip( "-" ).partition( "." ) ]
+
+		headPadding = "0" * max(0, oldLengthBefore - newLengthBefore )
+		tailPadding = "0" * max(0, oldLengthAfter - newLengthAfter )
+
+		if not newHasPeriod and tailPadding :
+			tailPadding = "." + tailPadding
+
+		if newText[0] == "-" :
+			newText = "-" + headPadding + newText[1:] + tailPadding
+		else:
+			newText = headPadding + newText + tailPadding
+
+		self.setText( newText )
+
+		# adjust the cursor position to be in the same column as before
 		if '.' in newText :
 			newDecimalIndex = newText.find( "." )
 			newIndex = newDecimalIndex - powIndex
@@ -222,6 +242,7 @@ class NumericWidget( GafferUI.TextWidget ) :
 
 		assert( widget is self )
 
+		self.setText( self.__valueToText( self.getValue() ) )
 		self.__emitValueChanged( self.ValueChangedReason.Edit )
 
 	def __setValueInternal( self, value, reason ) :
