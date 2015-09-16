@@ -92,7 +92,7 @@ class _PlugValueWidget( GafferUI.PlugValueWidget ) :
 			return result
 
 		currentPreset = self.__parameterHandler.parameter().getCurrentPresetName()
-		for n in self.__parameterHandler.parameter().presets().keys() :
+		for n in self.__parameterHandler.parameter().presetNames() :
 			result.append(
 				"/" + n,
 				{
