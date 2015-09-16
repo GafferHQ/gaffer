@@ -51,7 +51,7 @@ using namespace Gaffer;
 using namespace GafferBindings;
 using namespace GafferScene;
 
-static tuple registeredOutputsWrapper()
+static boost::python::tuple registeredOutputsWrapper()
 {
 	vector<string> names;
 	Outputs::registeredOutputs( names );
