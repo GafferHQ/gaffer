@@ -38,7 +38,7 @@
 
 #include "tbb/task.h"
 #include "tbb/task_scheduler_init.h"
-#include "tbb/compat/thread"
+#include "tbb/tbb_thread.h"
 
 #include "IECore/WorldBlock.h"
 #include "IECore/EditBlock.h"
@@ -841,7 +841,7 @@ void InteractiveRender::outputScene( bool update )
 	p.add_filter( output );
 
 	 // Another thread initiates execution of the pipeline
-	std::thread pipelineThread( runPipeline, &p );
+	tbb::tbb_thread pipelineThread( runPipeline, &p );
 
 	// Process the SceneGraphOutputFilter with the current thread:
 	while( output.process_item() != tbb::thread_bound_filter::end_of_stream )
