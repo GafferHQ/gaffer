@@ -44,6 +44,8 @@
 
 #include "IECore/MessageHandler.h"
 #include "IECore/SimpleTypedData.h"
+#include "IECore/MeshPrimitive.h"
+#include "IECore/TriangulateOp.h"
 
 #include "GafferOSL/OSLRenderer.h"
 
@@ -328,13 +330,13 @@ struct OSLRenderer::TraceData
 
 namespace {
 	OIIO::ustring g_trace_ustr("trace");
-    OIIO::ustring g_hit_ustr("hit");
-    OIIO::ustring g_hitdist_ustr("hitdist");
-    OIIO::ustring g_N_ustr("N");
-    OIIO::ustring g_Ng_ustr("Ng");
-    OIIO::ustring g_P_ustr("P");
-    OIIO::ustring g_u_ustr("u");
-    OIIO::ustring g_v_ustr("v");
+	OIIO::ustring g_hit_ustr("hit");
+	OIIO::ustring g_hitdist_ustr("hitdist");
+	OIIO::ustring g_N_ustr("N");
+	OIIO::ustring g_Ng_ustr("Ng");
+	OIIO::ustring g_P_ustr("P");
+	OIIO::ustring g_u_ustr("u");
+	OIIO::ustring g_v_ustr("v");
 }
 
 class OSLRenderer::RendererServices : public OSL::RendererServices
@@ -342,8 +344,14 @@ class OSLRenderer::RendererServices : public OSL::RendererServices
 
 	public :
 
-		RendererServices()
+		RendererServices():
+			m_traceEngine( NULL )
 		{
+		}
+
+		void setTraceEngine( TraceEngine *traceEngine )
+		{
+			m_traceEngine = traceEngine;
 		}
 
 		virtual bool get_matrix( GETMATRIX_SHADERGLOBALS_ARGUMENT OSL::Matrix44 &result, TransformationPtr xform, float time )
@@ -418,19 +426,34 @@ class OSLRenderer::RendererServices : public OSL::RendererServices
 
 			trace_data->m_traced = true;
 
-			if( P.length() > 1 ) return false;
+			if( m_traceEngine )
+			{
+				Imath::V3f pos( P[0], P[1], P[2] );
+				Imath::V3f dir( R[0], R[1], R[2] );
+				Imath::V3f offset_pos = pos + dir * options.mindist;
+				m_traceEngine->trace(
+					offset_pos, dir,
+					trace_data, options.maxdist - options.mindist );
+
+				trace_data->m_hit_distance -= options.mindist;
+				return trace_data->m_hit;
+			}
 			else
 			{
-				trace_data->m_hit = true;
-				trace_data->m_P = P;
-				trace_data->m_hit_distance = 0;
-				trace_data->m_N = P.normalized();
-				trace_data->m_Ng = P.normalized();
-				trace_data->m_u = 0;
-				trace_data->m_v = 0;
-				return true;
+				// TODO - should just return false
+				if( P.length() > 1 ) return false;
+				else
+				{
+					trace_data->m_hit = true;
+					trace_data->m_P = P;
+					trace_data->m_hit_distance = 0;
+					trace_data->m_N = P.normalized();
+					trace_data->m_Ng = P.normalized();
+					trace_data->m_u = 0;
+					trace_data->m_v = 0;
+					return true;
+				}
 			}
-
 		}
 
 		virtual bool getmessage(
@@ -475,8 +498,9 @@ class OSLRenderer::RendererServices : public OSL::RendererServices
 
 			return false;
 		}
-		
 
+	private:
+		OSLRenderer::TraceEngine *m_traceEngine;		
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -518,7 +542,7 @@ ustring OSLRenderer::DebugParameters::typeAttrKey( "type" );
 ustring OSLRenderer::DebugParameters::valueAttrKey( "value" );
 
 OSLRenderer::OSLRenderer()
-	:	m_shadingSystem( ShadingSystem::create( new OSLRenderer::RendererServices ), ShadingSystem::destroy )
+	:	m_rendererServices( new OSLRenderer::RendererServices ), m_shadingSystem( ShadingSystem::create( m_rendererServices ), ShadingSystem::destroy )
 {
 	struct ClosureDefinition{
 		const char *name;
@@ -561,10 +585,13 @@ OSLRenderer::OSLRenderer()
 #endif
 		);
 	}
+
+	m_transformStack.push( M44f() );
 }
 
 OSLRenderer::~OSLRenderer()
 {
+	delete m_rendererServices;
 }
 
 void OSLRenderer::setOption( const std::string &name, IECore::ConstDataPtr value )
@@ -613,6 +640,18 @@ void OSLRenderer::worldBegin()
 		return;
 	}
 	m_stateStack.push( State() );
+
+	// reset transform stack
+	if( m_transformStack.size() > 1 )
+	{
+		msg( Msg::Warning, "OSLRenderer::worldBegin", "Missing transformEnd() call detected." );
+		while( m_transformStack.size() > 1 )
+		{
+			m_transformStack.pop();
+		}
+		m_transformStack.top() = M44f();
+	}
+
 }
 
 void OSLRenderer::worldEnd()
@@ -627,23 +666,33 @@ void OSLRenderer::worldEnd()
 
 void OSLRenderer::transformBegin()
 {
+	m_transformStack.push( ( m_transformStack.top() ) );
 }
 
 void OSLRenderer::transformEnd()
 {
+	if( m_transformStack.size() <= 1 )
+	{
+		msg( Msg::Warning, "OSLRenderer::transformEnd", "No matching transformBegin() call." );
+		return;
+	}
+
+	m_transformStack.pop();
 }
 
 void OSLRenderer::setTransform( const Imath::M44f &m )
 {
+	m_transformStack.top() = m;
 }
 
 void OSLRenderer::setTransform( const std::string &coordinateSystem )
 {
+	msg( Msg::Warning, "OSLRenderer::setTransform", "Not implemented" );
 }
 
 Imath::M44f OSLRenderer::getTransform() const
 {
-	return M44f();
+	return m_transformStack.top();
 }
 
 Imath::M44f OSLRenderer::getTransform( const std::string &coordinateSystem ) const
@@ -653,6 +702,12 @@ Imath::M44f OSLRenderer::getTransform( const std::string &coordinateSystem ) con
 
 void OSLRenderer::concatTransform( const Imath::M44f &m )
 {
+	if( !m_transformStack.size() )
+	{
+		std::cerr << "Bad Transform Stack\n";
+		return;
+	}
+	m_transformStack.top() = m * m_transformStack.top();
 }
 
 void OSLRenderer::coordinateSystem( const std::string &name )
@@ -744,8 +799,16 @@ void OSLRenderer::image( const Imath::Box2i &dataWindow, const Imath::Box2i &dis
 {
 }
 
+void OSLRenderer::addPrimitive( const IECore::PrimitivePtr primitive )
+{
+	m_primitiveList.push_back( PrimitiveListEntry( primitive, m_transformStack.top() ));
+}
+
 void OSLRenderer::mesh( IECore::ConstIntVectorDataPtr vertsPerFace, IECore::ConstIntVectorDataPtr vertIds, const std::string &interpolation, const IECore::PrimitiveVariableMap &primVars )
 {
+	IECore::MeshPrimitivePtr mesh = new IECore::MeshPrimitive( vertsPerFace, vertIds, interpolation );
+	mesh->variables = primVars;
+	addPrimitive( mesh.get() );
 }
 
 void OSLRenderer::nurbs( int uOrder, IECore::ConstFloatVectorDataPtr uKnot, float uMin, float uMax, int vOrder, IECore::ConstFloatVectorDataPtr vKnot, float vMin, float vMax, const IECore::PrimitiveVariableMap &primVars )
@@ -762,6 +825,7 @@ void OSLRenderer::geometry( const std::string &type, const IECore::CompoundDataM
 
 void OSLRenderer::procedural( IECore::Renderer::ProceduralPtr proc )
 {
+	proc->render( this );
 }
 
 void OSLRenderer::instanceBegin( const std::string &name, const IECore::CompoundDataMap &parameters )
@@ -873,6 +937,12 @@ OSLRenderer::ShadingEnginePtr OSLRenderer::shadingEngine() const
 
 	return new ShadingEngine( this, m_shadingSystem->state() );
 }
+
+OSLRenderer::TraceEnginePtr OSLRenderer::traceEngine() const
+{
+	return new OSLRenderer::TraceEngine( m_primitiveList );
+}
+
 
 //////////////////////////////////////////////////////////////////////////
 // OSLRenderer::ShadingResults
@@ -1077,7 +1147,7 @@ static const T *varyingValue( const IECore::CompoundData *points, const char *na
 	}
 }
 
-IECore::CompoundDataPtr OSLRenderer::ShadingEngine::shade( const IECore::CompoundData *points ) const
+IECore::CompoundDataPtr OSLRenderer::ShadingEngine::shade( const IECore::CompoundData *points, TraceEnginePtr traceEngine ) const
 {
 	// get the data for "P" - this determines the number of points to be shaded.
 
@@ -1098,7 +1168,7 @@ IECore::CompoundDataPtr OSLRenderer::ShadingEngine::shade( const IECore::Compoun
 	// been provided.
 
 	ShaderGlobals shaderGlobals;
-    memset( &shaderGlobals, 0, sizeof( ShaderGlobals ) );
+	memset( &shaderGlobals, 0, sizeof( ShaderGlobals ) );
 
 	shaderGlobals.dPdx = uniformValue<V3f>( points, "dPdx" );
 	shaderGlobals.dPdy = uniformValue<V3f>( points, "dPdy" );
@@ -1147,6 +1217,8 @@ IECore::CompoundDataPtr OSLRenderer::ShadingEngine::shade( const IECore::Compoun
 
 	// iterate over the input points, doing the shading as we go
 
+	m_renderer->m_rendererServices->setTraceEngine( traceEngine.get() );
+
 	ShadingContext *shadingContext = m_renderer->m_shadingSystem->get_context();
 	for( size_t i = 0; i < numPoints; ++i )
 	{
@@ -1174,4 +1246,59 @@ IECore::CompoundDataPtr OSLRenderer::ShadingEngine::shade( const IECore::Compoun
 	m_renderer->m_shadingSystem->release_context( shadingContext );
 
 	return results.results();
+}
+
+//////////////////////////////////////////////////////////////////////////
+// OSLRenderer::TraceEngine
+//////////////////////////////////////////////////////////////////////////
+
+OSLRenderer::TraceEngine::TraceEngine( const OSLRenderer::PrimitiveList &primitiveList )
+{
+	m_primitiveIntersectorList.resize( primitiveList.size() );
+	for( unsigned int i = 0; i < primitiveList.size(); i++ )
+	{
+		IECore::PrimitivePtr prim = primitiveList[i].primitive;
+		IECore::MeshPrimitivePtr meshPrim = IECore::runTimeCast<MeshPrimitive>( prim.get() );
+		if( meshPrim )
+		{
+			IECore::TriangulateOpPtr op = new TriangulateOp();
+			op->inputParameter()->setValue( meshPrim );
+			op->throwExceptionsParameter()->setTypedValue( false ); // it's better to see something than nothing
+			op->copyParameter()->setTypedValue( false );
+			op->operate();
+		}
+		
+		m_primitiveIntersectorList[i].primitiveEvaluator =
+			IECore::PrimitiveEvaluator::create( primitiveList[i].primitive );
+		m_primitiveIntersectorList[i].transform = primitiveList[i].transform;
+		
+	}
+}
+
+
+bool OSLRenderer::TraceEngine::trace( Imath::V3f &origin, Imath::V3f &direction, OSLRenderer::TraceData *result, float maxDistance ) const
+{
+	bool hit = false;
+	for( unsigned int i = 0; i < m_primitiveIntersectorList.size(); i++ )
+	{
+		IECore::PrimitiveEvaluator::ResultPtr evaluatorResult = m_primitiveIntersectorList[i].primitiveEvaluator->createResult();
+
+		if( m_primitiveIntersectorList[i].primitiveEvaluator->intersectionPoint( origin, direction, evaluatorResult.get(), maxDistance ) )
+		{
+			hit = true;
+			Imath::V3f P = evaluatorResult->point();
+			Imath::V3f N = evaluatorResult->normal().normalized();
+			float hit_distance = (P - origin).length();
+			maxDistance = hit_distance;
+	
+			result->m_hit_distance = hit_distance;
+			result->m_P = OSL::Vec3( P[0], P[1], P[2] );
+			result->m_N = OSL::Vec3( N[0], N[1], N[2] );
+			result->m_Ng = OSL::Vec3( N[0], N[1], N[2] );
+			result->m_u = evaluatorResult->uv()[0];
+			result->m_v = evaluatorResult->uv()[1];
+		}
+	}
+	result->m_hit = hit;
+	return hit;
 }
