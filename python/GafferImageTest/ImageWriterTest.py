@@ -129,7 +129,6 @@ class ImageWriterTest( unittest.TestCase ) :
 
 		self.__testExtension( "tif", "tiff", options = options, metadataToIgnore = [ "tiff:RowsPerStrip" ] )
 
-	@unittest.expectedFailure
 	def testJpgWrite( self ) :
 		options = {}
 		options['maxError'] = 0.1
@@ -324,12 +323,20 @@ class ImageWriterTest( unittest.TestCase ) :
 
 		expectedFile = self.__rgbFilePath+"."+ext
 
-		tests = [ {'name': "default", 'plugs': {}, 'metadata': {}, 'maxError': options['maxError'] } ]
+		tests = [ {
+			'name': "default",
+			'plugs': {},
+			'metadata': options.get( "metadata", {} ),
+			'maxError': options.get( "maxError", 0.0 ) } ]
 
 		for optPlugName in options['plugs'] :
 			for optPlugVal in options['plugs'][optPlugName] :
 				name = "{}_{}".format(optPlugName, optPlugVal['value'])
-				tests.append( { 'name': name, 'plugs': { optPlugName: optPlugVal['value'] }, 'metadata': optPlugVal.get( "metadata", {} ), 'maxError': optPlugVal.get( "maxError", options['maxError'] ) } )
+				tests.append( {
+					'name': name,
+					'plugs': { optPlugName: optPlugVal['value'] },
+					'metadata': optPlugVal.get( "metadata", {} ),
+					'maxError': optPlugVal.get( "maxError", options['maxError'] ) } )
 
 		for test in tests:
 			name = test['name']
@@ -353,8 +360,6 @@ class ImageWriterTest( unittest.TestCase ) :
 			with Gaffer.Context() :
 				w.execute()
 			self.failUnless( os.path.exists( testFile ), "Failed to create file : {} ({}) : {}".format( ext, name, testFile ) )
-
-			# os.system("cp {} ~/gaffer_test_images/".format(testFile))
 
 			# Check the output.
 			expectedOutput = GafferImage.ImageReader()

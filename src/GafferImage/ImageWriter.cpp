@@ -662,9 +662,6 @@ IECore::MurmurHash ImageWriter::hash( const Context *context ) const
 
 ///\todo: We are currently computing all of the channels regardless of whether or not we are outputting them.
 /// Change the execute() method to only compute the channels that are masked by the channelsPlug().
-
-///\todo: It seems that if a JPG is written with RGBA channels the output is wrong but it should be supported. Find out why and fix it.
-/// There is a test case in ImageWriterTest which checks the output of the jpg writer against an incorrect image and it will fail if it is equal to the writer output.
 void ImageWriter::execute() const
 {
 	if( !inPlug()->getInput<ImagePlug>() )
@@ -684,6 +681,32 @@ void ImageWriter::execute() const
 	IECore::ConstStringVectorDataPtr channelNamesData = inPlug()->channelNamesPlug()->getValue();
 	std::vector<std::string> maskChannels = channelNamesData->readable();
 	channelsPlug()->maskChannels( maskChannels );
+
+	if ( !out->supports( "nchannels" ) )
+	{
+		std::vector<std::string>::iterator cIt( maskChannels.begin() );
+		while ( cIt != maskChannels.end() )
+		{
+			if ( (*cIt) != "R" && (*cIt) != "G" && (*cIt) != "B" && (*cIt) != "A" )
+			{
+				cIt = maskChannels.erase( cIt );
+			}
+			else
+			{
+				++cIt;
+			}
+		}
+	}
+
+	if ( !out->supports( "alpha" ) )
+	{
+		std::vector<std::string>::iterator alphaChannel( std::find( maskChannels.begin(), maskChannels.end(), "A" ) );
+		if ( alphaChannel != maskChannels.end() )
+		{
+			maskChannels.erase( alphaChannel );
+		}
+	}
+
 	const int nChannels = maskChannels.size();
 
 	// Get the image channel data.
