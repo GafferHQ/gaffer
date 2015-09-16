@@ -488,7 +488,7 @@ libraries = {
 	},
 
 	"GafferCortexTest" : {
-		"additionalFiles" : glob.glob( "python/GafferTest/*/*" ) + glob.glob( "python/GafferCortexTest/*/*/*" ),
+		"additionalFiles" : glob.glob( "python/GafferTest/*/*" ) + glob.glob( "python/GafferCortexTest/*/*/*" ) + glob.glob( "python/GafferCortexTest/images/*" ),
 	},
 
 	"GafferCortexUI" : {},
