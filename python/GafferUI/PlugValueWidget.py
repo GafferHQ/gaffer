@@ -239,12 +239,12 @@ class PlugValueWidget( GafferUI.Widget ) :
 		# but we try to cover all our bases by connecting to both.
 
 		self.__popupMenuConnections.append(
-			widget.buttonPressSignal().connect( IECore.curry( Gaffer.WeakMethod( self.__buttonPress ), buttonMask = buttons ) )
+			widget.buttonPressSignal().connect( functools.partial( Gaffer.WeakMethod( self.__buttonPress ), buttonMask = buttons ) )
 		)
 
 		if buttons & GafferUI.ButtonEvent.Buttons.Right :
 			self.__popupMenuConnections.append(
-				widget.contextMenuSignal().connect( IECore.curry( Gaffer.WeakMethod( self.__contextMenu ) ) )
+				widget.contextMenuSignal().connect( functools.partial( Gaffer.WeakMethod( self.__contextMenu ) ) )
 			)
 
 	## Returns a definition for the popup menu - this is called each time the menu is displayed
@@ -289,7 +289,7 @@ class PlugValueWidget( GafferUI.Widget ) :
 		if hasattr( self.getPlug(), "defaultValue" ) and self.getPlug().direction() == Gaffer.Plug.Direction.In :
 			menuDefinition.append(
 				"/Default", {
-					"command" : IECore.curry( Gaffer.WeakMethod( self.__setValue ), self.getPlug().defaultValue() ),
+					"command" : functools.partial( Gaffer.WeakMethod( self.__setValue ), self.getPlug().defaultValue() ),
 					"active" : self._editable()
 				}
 			)
@@ -571,7 +571,7 @@ class PlugValueWidget( GafferUI.Widget ) :
 		for presetName in Gaffer.NodeAlgo.presets( self.getPlug() ) :
 			result.append(
 				presetName, {
-					"command" : IECore.curry( Gaffer.WeakMethod( self.__applyPreset ), presetName ),
+					"command" : functools.partial( Gaffer.WeakMethod( self.__applyPreset ), presetName ),
 					"active" : self._editable(),
 					"checkBox" : presetName == currentPreset,
 				}
