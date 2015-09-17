@@ -112,11 +112,6 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		plug = self.getPlug()
 
-		self.__label.setEnabled(
-			plug is not None and
-			not plug.getFlags( Gaffer.Plug.Flags.ReadOnly )
-		)
-
 		valueChanged = plug.getInput() is not None
 		if not valueChanged and isinstance( plug, Gaffer.ValuePlug ) :
 			with self.getContext() :
