@@ -146,10 +146,11 @@ class Plug : public GraphComponent
 		/// Returns true if all the flags passed are currently set.
 		bool getFlags( unsigned flags ) const;
 		/// Sets the current state of the flags.
-		/// \todo I suspect we need to make this undoable.
+		/// \undoable
 		void setFlags( unsigned flags );
 		/// Sets or unsets the specified flags depending on the enable
 		/// parameter. All other flags remain at their current values.
+		/// \undoable
 		void setFlags( unsigned flags, bool enable );
 
 		/// @name Connections
@@ -223,6 +224,8 @@ class Plug : public GraphComponent
 
 		void parentChanged();
 		static void propagateDirtinessForParentChange( Plug *plugToDirty );
+
+		void setFlagsInternal( unsigned flags );
 
 		void setInput( PlugPtr input, bool setChildInputs, bool updateParentInput );
 		void setInputInternal( PlugPtr input, bool emit );
