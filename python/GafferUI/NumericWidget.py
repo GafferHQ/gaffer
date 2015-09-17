@@ -62,6 +62,7 @@ class NumericWidget( GafferUI.TextWidget ) :
 		self.__dragEnterConnection = self.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ) )
 		self.__dragMoveConnection = self.dragMoveSignal().connect( Gaffer.WeakMethod( self.__dragMove ) )
 		self.__dragEndConnection = self.dragEndSignal().connect( Gaffer.WeakMethod( self.__dragEnd ) )
+		self.__editingFinishedConnection = self.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__editingFinished ) )
 
 		self.__numericType = None
 		self.setValue( value )
@@ -83,7 +84,6 @@ class NumericWidget( GafferUI.TextWidget ) :
 			return self.__valueChangedSignal
 		except AttributeError :
 			self.__valueChangedSignal = Gaffer.Signal2()
-			self.__editingFinishedConnection = self.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__editingFinished ) )
 
 		return self.__valueChangedSignal
 
@@ -242,7 +242,12 @@ class NumericWidget( GafferUI.TextWidget ) :
 
 		assert( widget is self )
 
+		# In __incrementIndex we temporarily pad with leading
+		# zeroes in order to achieve consistent editing. Revert
+		# back to our standard form now so we don't leave it in
+		# this state.
 		self.setText( self.__valueToText( self.getValue() ) )
+
 		self.__emitValueChanged( self.ValueChangedReason.Edit )
 
 	def __setValueInternal( self, value, reason ) :
