@@ -310,6 +310,18 @@ class PlugValueWidget( GafferUI.Widget ) :
 				}
 			)
 
+		if len( menuDefinition.items() ) :
+			menuDefinition.append( "/LockDivider", { "divider" : True } )
+
+		readOnlyFlagSet = self.getPlug().getFlags( Gaffer.Plug.Flags.ReadOnly )
+		menuDefinition.append(
+			"/Unlock" if readOnlyFlagSet else "/Lock",
+			{
+				"command" : functools.partial( Gaffer.WeakMethod( self.__applyReadOnly ), not readOnlyFlagSet ),
+				"active" : not self.getReadOnly()
+			}
+		)
+
 		self.popupMenuSignal()( menuDefinition, self )
 
 		return menuDefinition
@@ -571,6 +583,16 @@ class PlugValueWidget( GafferUI.Widget ) :
 
 		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
 			Gaffer.NodeAlgo.applyPreset( self.getPlug(), presetName )
+
+	def __applyReadOnly( self, readOnly ) :
+
+		def apply( plug ) :
+			plug.setFlags( Gaffer.Plug.Flags.ReadOnly, readOnly )
+			for child in plug.children() :
+				apply( child )
+
+		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
+			apply( self.getPlug() )
 
 	# drag and drop stuff
 
