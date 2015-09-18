@@ -38,7 +38,6 @@ import unittest
 import inspect
 import math
 import os
-import shutil
 
 import IECore
 
@@ -320,7 +319,7 @@ class OSLExpressionEngineTest( GafferOSLTest.OSLTestCase ) :
 		script["writer"] = GafferTest.TextWriter()
 
 		script["expression"] = Gaffer.Expression()
-		script["expression"].setExpression( 'parent.writer.fileName = "/tmp/gafferOSLExpressionEngineTest/test.txt"', "OSL" )
+		script["expression"].setExpression( 'parent.writer.fileName = "' + self.temporaryDirectory() + '/test.txt"', "OSL" )
 
 		dispatcher = Gaffer.LocalDispatcher()
 		dispatcher["jobsDirectory"].setValue( "/tmp/gafferOSLExpressionEngineTest/jobs" )
@@ -330,14 +329,7 @@ class OSLExpressionEngineTest( GafferOSLTest.OSLTestCase ) :
 		dispatcher.jobPool().waitForAll()
 		self.assertEqual( len( dispatcher.jobPool().failedJobs() ), 0 )
 
-		self.assertTrue( os.path.exists( "/tmp/gafferOSLExpressionEngineTest/test.txt" ) )
-
-	def tearDown( self ) :
-
-		GafferOSLTest.OSLTestCase.tearDown( self )
-
-		if os.path.exists( "/tmp/gafferOSLExpressionEngineTest" ) :
-			shutil.rmtree( "/tmp/gafferOSLExpressionEngineTest" )
+		self.assertTrue( os.path.exists( self.temporaryDirectory() + "/test.txt" ) )
 
 if __name__ == "__main__":
 	unittest.main()
