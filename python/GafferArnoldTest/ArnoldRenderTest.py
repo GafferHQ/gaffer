@@ -36,7 +36,6 @@
 ##########################################################################
 
 import os
-import shutil
 import unittest
 import subprocess32 as subprocess
 

@@ -37,7 +37,6 @@
 import os
 import unittest
 import subprocess32 as subprocess
-import shutil
 
 import IECore
 
