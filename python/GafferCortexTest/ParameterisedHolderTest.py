@@ -105,10 +105,10 @@ class ParameterisedHolderTest( GafferTest.TestCase ) :
 		with n.parameterModificationContext() as parameters :
 
 			parameters["multiply"].setNumericValue( 10 )
-			parameters["dst"].setTypedValue( "/tmp/s.####.exr" )
+			parameters["dst"].setTypedValue( self.temporaryDirectory() + "/s.####.exr" )
 
 		self.assertEqual( n["parameters"]["multiply"].getValue(), 10 )
-		self.assertEqual( n["parameters"]["dst"].getValue(), "/tmp/s.####.exr" )
+		self.assertEqual( n["parameters"]["dst"].getValue(), self.temporaryDirectory() + "/s.####.exr" )
 
 		n["parameters"]["multiply"].setValue( 20 )
 		n["parameters"]["dst"].setValue( "lalalal.##.tif" )
