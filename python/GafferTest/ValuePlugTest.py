@@ -286,9 +286,13 @@ class ValuePlugTest( GafferTest.TestCase ) :
 
 	def setUp( self ) :
 
+		GafferTest.TestCase.setUp( self )
+
 		self.__originalCacheMemoryLimit = Gaffer.ValuePlug.getCacheMemoryLimit()
 
 	def tearDown( self ) :
+
+		GafferTest.TestCase.tearDown( self )
 
 		Gaffer.ValuePlug.setCacheMemoryLimit( self.__originalCacheMemoryLimit )
 

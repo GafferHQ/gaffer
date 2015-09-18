@@ -51,6 +51,8 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 
 	def setUp( self ) :
 
+		GafferTest.TestCase.setUp( self )
+
 		ScriptNodeTest.lastNode = None
 		ScriptNodeTest.lastScript = None
 		ScriptNodeTest.lastResult = None

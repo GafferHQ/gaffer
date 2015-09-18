@@ -52,8 +52,6 @@ import GafferTest
 
 class FileSystemPathTest( GafferTest.TestCase ) :
 
-	__dir = "/tmp/gafferFileSystemPathTest"
-
 	def test( self ) :
 
 		p = Gaffer.FileSystemPath( __file__ )
@@ -83,15 +81,15 @@ class FileSystemPathTest( GafferTest.TestCase ) :
 
 	def testBrokenSymbolicLinks( self ) :
 
-		os.symlink( self.__dir + "/nonExistent", self.__dir + "/broken" )
+		os.symlink( self.temporaryDirectory() + "/nonExistent", self.temporaryDirectory() + "/broken" )
 
 		# we do want symlinks to appear in children, even if they're broken
-		d = Gaffer.FileSystemPath( self.__dir )
+		d = Gaffer.FileSystemPath( self.temporaryDirectory() )
 		c = d.children()
 		self.assertEqual( len( c ), 1 )
 
 		l = c[0]
-		self.assertEqual( str( l ), self.__dir + "/broken" )
+		self.assertEqual( str( l ), self.temporaryDirectory() + "/broken" )
 
 		# we also want broken symlinks to report themselves as "valid",
 		# because having a path return a child and then claim the child
@@ -105,15 +103,15 @@ class FileSystemPathTest( GafferTest.TestCase ) :
 
 	def testSymLinkInfo( self ) :
 
-		with open( self.__dir + "/a", "w" ) as f :
+		with open( self.temporaryDirectory() + "/a", "w" ) as f :
 			f.write( "AAAA" )
 
-		os.symlink( self.__dir + "/a", self.__dir + "/l" )
+		os.symlink( self.temporaryDirectory() + "/a", self.temporaryDirectory() + "/l" )
 
 		# symlinks should report the info for the file
 		# they point to.
-		a = Gaffer.FileSystemPath( self.__dir + "/a" )
-		l = Gaffer.FileSystemPath( self.__dir + "/l" )
+		a = Gaffer.FileSystemPath( self.temporaryDirectory() + "/a" )
+		l = Gaffer.FileSystemPath( self.temporaryDirectory() + "/l" )
 		aInfo = a.info()
 		self.assertEqual( aInfo["fileSystem:size"], l.info()["fileSystem:size"] )
 		# unless they're broken
@@ -122,7 +120,7 @@ class FileSystemPathTest( GafferTest.TestCase ) :
 
 	def testCopy( self ) :
 
-		p = Gaffer.FileSystemPath( self.__dir )
+		p = Gaffer.FileSystemPath( self.temporaryDirectory() )
 		p2 = p.copy()
 
 		self.assertEqual( p, p2 )
@@ -137,9 +135,9 @@ class FileSystemPathTest( GafferTest.TestCase ) :
 
 	def testRelativePath( self ) :
 
-		os.chdir( self.__dir )
+		os.chdir( self.temporaryDirectory() )
 
-		with open( self.__dir + "/a", "w" ) as f :
+		with open( self.temporaryDirectory() + "/a", "w" ) as f :
 			f.write( "AAAA" )
 
 		p = Gaffer.FileSystemPath( "a" )
@@ -156,9 +154,9 @@ class FileSystemPathTest( GafferTest.TestCase ) :
 
 	def testRelativePathChildren( self ) :
 
-		os.chdir( self.__dir )
+		os.chdir( self.temporaryDirectory() )
 		os.mkdir( "dir" )
-		with open( self.__dir + "/dir/a", "w" ) as f :
+		with open( self.temporaryDirectory() + "/dir/a", "w" ) as f :
 			f.write( "AAAA" )
 
 		p = Gaffer.FileSystemPath( "dir" )
@@ -175,7 +173,7 @@ class FileSystemPathTest( GafferTest.TestCase ) :
 
 	def testModificationTimes( self ) :
 
-		p = Gaffer.FileSystemPath( self.__dir )
+		p = Gaffer.FileSystemPath( self.temporaryDirectory() )
 		p.append( "t" )
 
 		with open( str( p ), "w" ) as f :
@@ -196,7 +194,7 @@ class FileSystemPathTest( GafferTest.TestCase ) :
 
 	def testOwner( self ) :
 
-		p = Gaffer.FileSystemPath( self.__dir )
+		p = Gaffer.FileSystemPath( self.temporaryDirectory() )
 		p.append( "t" )
 
 		with open( str( p ), "w" ) as f :
@@ -208,7 +206,7 @@ class FileSystemPathTest( GafferTest.TestCase ) :
 
 	def testGroup( self ) :
 
-		p = Gaffer.FileSystemPath( self.__dir )
+		p = Gaffer.FileSystemPath( self.temporaryDirectory() )
 		p.append( "t" )
 
 		with open( str( p ), "w" ) as f :
@@ -220,7 +218,7 @@ class FileSystemPathTest( GafferTest.TestCase ) :
 
 	def testPropertyNames( self ) :
 
-		p = Gaffer.FileSystemPath( self.__dir )
+		p = Gaffer.FileSystemPath( self.temporaryDirectory() )
 
 		a = p.propertyNames()
 		self.assertTrue( isinstance( a, list ) )
@@ -229,33 +227,33 @@ class FileSystemPathTest( GafferTest.TestCase ) :
 		self.assertTrue( "fileSystem:owner" in a )
 		self.assertTrue( "fileSystem:modificationTime" in a )
 		self.assertTrue( "fileSystem:size" in a )
-		
+
 		self.assertTrue( "fileSystem:frameRange" not in a )
-		p = Gaffer.FileSystemPath( self.__dir, includeSequences = True )
+		p = Gaffer.FileSystemPath( self.temporaryDirectory(), includeSequences = True )
 		self.assertTrue( "fileSystem:frameRange" in p.propertyNames() )
 
 	def testSequences( self ) :
 
-		os.mkdir( self.__dir + "/dir" )
+		os.mkdir( self.temporaryDirectory() + "/dir" )
 		for n in [ "singleFile.txt", "a.001.txt", "a.002.txt", "a.004.txt", "b.003.txt" ] :
-			with open( self.__dir + "/" + n, "w" ) as f :
+			with open( self.temporaryDirectory() + "/" + n, "w" ) as f :
 				f.write( "AAAA" )
 
-		p = Gaffer.FileSystemPath( self.__dir, includeSequences = True )
+		p = Gaffer.FileSystemPath( self.temporaryDirectory(), includeSequences = True )
 		self.assertTrue( p.getIncludeSequences() )
 
 		c = p.children()
 		self.assertEqual( len( c ), 8 )
 
 		s = sorted( c, key=str )
-		self.assertEqual( str(s[0]), self.__dir + "/a.###.txt" )
-		self.assertEqual( str(s[1]), self.__dir + "/a.001.txt" )
-		self.assertEqual( str(s[2]), self.__dir + "/a.002.txt" )
-		self.assertEqual( str(s[3]), self.__dir + "/a.004.txt" )
-		self.assertEqual( str(s[4]), self.__dir + "/b.###.txt" )
-		self.assertEqual( str(s[5]), self.__dir + "/b.003.txt" )
-		self.assertEqual( str(s[6]), self.__dir + "/dir" )
-		self.assertEqual( str(s[7]), self.__dir + "/singleFile.txt" )
+		self.assertEqual( str(s[0]), self.temporaryDirectory() + "/a.###.txt" )
+		self.assertEqual( str(s[1]), self.temporaryDirectory() + "/a.001.txt" )
+		self.assertEqual( str(s[2]), self.temporaryDirectory() + "/a.002.txt" )
+		self.assertEqual( str(s[3]), self.temporaryDirectory() + "/a.004.txt" )
+		self.assertEqual( str(s[4]), self.temporaryDirectory() + "/b.###.txt" )
+		self.assertEqual( str(s[5]), self.temporaryDirectory() + "/b.003.txt" )
+		self.assertEqual( str(s[6]), self.temporaryDirectory() + "/dir" )
+		self.assertEqual( str(s[7]), self.temporaryDirectory() + "/singleFile.txt" )
 
 		for x in s :
 
@@ -293,20 +291,20 @@ class FileSystemPathTest( GafferTest.TestCase ) :
 		self.assertEqual( len( p2.children() ), 8 )
 
 		# make sure we can still exclude the sequences
-		p = Gaffer.FileSystemPath( self.__dir, includeSequences = False )
+		p = Gaffer.FileSystemPath( self.temporaryDirectory(), includeSequences = False )
 		self.assertFalse( p.getIncludeSequences() )
 
 		c = p.children()
 		self.assertEqual( len( c ), 6 )
 
 		s = sorted( c, key=str )
-		self.assertEqual( str(s[0]), self.__dir + "/a.001.txt" )
-		self.assertEqual( str(s[1]), self.__dir + "/a.002.txt" )
-		self.assertEqual( str(s[2]), self.__dir + "/a.004.txt" )
-		self.assertEqual( str(s[3]), self.__dir + "/b.003.txt" )
-		self.assertEqual( str(s[4]), self.__dir + "/dir" )
-		self.assertEqual( str(s[5]), self.__dir + "/singleFile.txt" )
-		
+		self.assertEqual( str(s[0]), self.temporaryDirectory() + "/a.001.txt" )
+		self.assertEqual( str(s[1]), self.temporaryDirectory() + "/a.002.txt" )
+		self.assertEqual( str(s[2]), self.temporaryDirectory() + "/a.004.txt" )
+		self.assertEqual( str(s[3]), self.temporaryDirectory() + "/b.003.txt" )
+		self.assertEqual( str(s[4]), self.temporaryDirectory() + "/dir" )
+		self.assertEqual( str(s[5]), self.temporaryDirectory() + "/singleFile.txt" )
+
 		# and we can include them again
 		p.setIncludeSequences( True )
 		self.assertTrue( p.getIncludeSequences() )
@@ -316,15 +314,13 @@ class FileSystemPathTest( GafferTest.TestCase ) :
 
 	def setUp( self ) :
 
+		GafferTest.TestCase.setUp( self )
+
 		self.__originalCWD = os.getcwd()
 
-		# clear out old files and make empty directory
-		# to work in
-		if os.path.exists( self.__dir ) :
-			shutil.rmtree( self.__dir )
-		os.mkdir( self.__dir )
-
 	def tearDown( self ) :
+
+		GafferTest.TestCase.tearDown( self )
 
 		os.chdir( self.__originalCWD )
 
