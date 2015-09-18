@@ -206,6 +206,7 @@ class _ExpressionWidget( GafferUI.Widget ) :
 		with Gaffer.UndoContext( self.__node.scriptNode() ) :
 			try :
 				self.__node.setExpression( self.__textWidget.getText(), language )
+				self.__messageWidget.setVisible( False )
 			except Exception as e :
 				self.__messageWidget.clear()
 				self.__messageWidget.setVisible( True )
