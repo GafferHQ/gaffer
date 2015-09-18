@@ -41,10 +41,6 @@ import GafferRenderMan
 
 class RenderManTestCase( GafferSceneTest.SceneTestCase ) :
 
-	def setUp( self ) :
-
-		self.__compiledShaders = set()
-
 	def compileShader( self, sourceFileName, shaderName=None ) :
 
 		# perhaps one day we'll need to implement this for other renderman
@@ -53,16 +49,8 @@ class RenderManTestCase( GafferSceneTest.SceneTestCase ) :
 
 		if shaderName is None :
 			shaderName = os.path.splitext( os.path.basename( sourceFileName ) )[0]
-		outputFileName = "/tmp/" + shaderName + ".sdl"
+		outputFileName = self.temporaryDirectory() + "/" + shaderName + ".sdl"
 
 		os.system( "shaderdl -o %s %s" % ( outputFileName, sourceFileName ) )
 
-		self.__compiledShaders.add( outputFileName )
-
 		return os.path.splitext( outputFileName )[0]
-
-	def tearDown( self ) :
-
-		for f in self.__compiledShaders :
-			if os.path.exists( f ) :
-				os.remove( f )
