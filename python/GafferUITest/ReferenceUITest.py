@@ -59,16 +59,11 @@ class ReferenceUITest( GafferUITest.TestCase ) :
 		g = GafferUI.GraphGadget( s )
 		self.assertTrue( g.nodeGadget( s["b"] ).nodule( s["b"]["p"] ) is None )
 
-		s["b"].exportForReference( "/tmp/test.grf" )
+		s["b"].exportForReference( self.temporaryDirectory() + "/test.grf" )
 		s["r"] = Gaffer.Reference()
-		s["r"].load( "/tmp/test.grf" )
+		s["r"].load( self.temporaryDirectory() + "/test.grf" )
 
 		self.assertTrue( g.nodeGadget( s["r"] ).nodule( s["r"]["p"] ) is None )
-
-	def tearDown( self ) :
-
-		if os.path.exists( "/tmp/test.grf" ) :
-			os.remove( "/tmp/test.grf" )
 
 if __name__ == "__main__":
 	unittest.main()
