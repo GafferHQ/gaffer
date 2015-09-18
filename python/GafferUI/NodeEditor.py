@@ -137,8 +137,47 @@ class NodeEditor( GafferUI.NodeSetEditor ) :
 	def __menuDefinition( self ) :
 
 		result = IECore.MenuDefinition()
+
+		result.append(
+			"/Revert to Defaults",
+			{
+				"command" : Gaffer.WeakMethod( self.__revertToDefaults ),
+			}
+		)
+
 		self.toolMenuSignal()( self, self.nodeUI().node(), result )
 
 		return result
+
+	def __revertToDefaults( self ) :
+
+		def applyDefaults( graphComponent ) :
+
+			if isinstance( graphComponent, Gaffer.Plug ) :
+
+				plug = graphComponent
+				if plug.direction() == plug.Direction.Out :
+					return
+				if plug.isSame( plug.node()["user"] ) :
+					# Not much sense reverting user plugs, since we
+					# don't expect the user to have gone to the trouble
+					# of giving them defaults.
+					return
+				elif plug.getName().startswith( "__" ) :
+					# Private plugs are none of our business.
+					return
+
+				if isinstance( plug, Gaffer.ValuePlug ) :
+					if plug.settable() :
+						plug.setToDefault()
+					return
+
+			for c in graphComponent.children( Gaffer.Plug ) :
+				applyDefaults( c )
+
+		node = self.nodeUI().node()
+		with Gaffer.UndoContext( node.ancestor( Gaffer.ScriptNode ) ) :
+			applyDefaults( node )
+			Gaffer.NodeAlgo.applyUserDefaults( node )
 
 GafferUI.EditorWidget.registerType( "NodeEditor", NodeEditor )
