@@ -398,5 +398,49 @@ class AnimationTest( GafferTest.TestCase ) :
 		self.assertEqual( curve.previousKey( 2 ), key2 )
 		self.assertEqual( curve.previousKey( 2.5 ), key3 )
 
+	def testAnimationWithinAReference( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["b"] = Gaffer.Box()
+		s["b"]["n"] = Gaffer.Node()
+		s["b"]["n"] = GafferTest.AddNode()
+
+		s["b"].promotePlug( s["b"]["n"]["op1"] )
+		s["b"].promotePlug( s["b"]["n"]["sum"] )
+
+		self.assertTrue( s["b"].canPromotePlug( s["b"]["n"]["op2"] ) )
+
+		op2Curve = Gaffer.Animation.acquire( s["b"]["n"]["op2"] )
+
+		# Cannot promote an animated plug, because it has an input.
+		self.assertFalse( s["b"].canPromotePlug( s["b"]["n"]["op2"] ) )
+
+		op2Curve.addKey( Gaffer.Animation.Key( 0, 0, Gaffer.Animation.Type.Step ) )
+		op2Curve.addKey( Gaffer.Animation.Key( 1, 1, Gaffer.Animation.Type.Step ) )
+
+		with Gaffer.Context() as c :
+			self.assertEqual( s["b"]["sum"].getValue(), 0 )
+			c.setTime( 1 )
+			self.assertEqual( s["b"]["sum"].getValue(), 1 )
+
+		fileName = self.temporaryDirectory() + "/reference.grf"
+		s["b"].exportForReference( fileName )
+
+		s["r"] = Gaffer.Reference()
+		s["r"].load( fileName )
+
+		with Gaffer.Context() as c :
+			self.assertEqual( s["r"]["sum"].getValue(), 0 )
+			c.setTime( 1 )
+			self.assertEqual( s["r"]["sum"].getValue(), 1 )
+
+		s["r"]["op1"].setValue( 2 )
+
+		with Gaffer.Context() as c :
+			self.assertEqual( s["r"]["sum"].getValue(), 2 )
+			c.setTime( 1 )
+			self.assertEqual( s["r"]["sum"].getValue(), 3 )
+
 if __name__ == "__main__":
 	unittest.main()
