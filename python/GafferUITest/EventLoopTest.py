@@ -208,6 +208,8 @@ class EventLoopTest( GafferUITest.TestCase ) :
 
 	def setUp( self ) :
 
+		GafferUITest.TestCase.setUp( self )
+
 		self.__uiThreadFunctionCalled = False
 		self.__uiThreadCalledOnCorrectThread = False
 		self.__uiThreadResult = None
