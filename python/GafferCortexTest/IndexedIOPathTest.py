@@ -45,9 +45,11 @@ import GafferCortex
 
 class IndexedIOPathTest( GafferTest.TestCase ) :
 
-	__fileName = "/tmp/test.fio"
-
 	def setUp( self ) :
+
+		GafferTest.TestCase.setUp( self )
+
+		self.__fileName = self.temporaryDirectory() + "/test.fio"
 
 		f = IECore.FileIndexedIO( self.__fileName, IECore.IndexedIO.OpenMode.Write )
 		d1 = f.subdirectory( "d1", IECore.FileIndexedIO.MissingBehaviour.CreateIfMissing )
@@ -144,11 +146,6 @@ class IndexedIOPathTest( GafferTest.TestCase ) :
 
 		p = GafferCortex.IndexedIOPath( self.__fileName, "/d1/d2" )
 		self.assertEqual( p.property( "indexedIO:entryType" ), IECore.IndexedIO.EntryType.Directory )
-
-	def tearDown( self ) :
-
-		if os.path.exists( self.__fileName ) :
-			os.remove( self.__fileName )
 
 if __name__ == "__main__":
 	unittest.main()
