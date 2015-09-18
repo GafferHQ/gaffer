@@ -90,9 +90,13 @@ class ImageNodeTest( GafferTest.TestCase ) :
 
 	def setUp( self ) :
 
+		GafferTest.TestCase.setUp( self )
+
 		self.__previousCacheMemoryLimit = Gaffer.ValuePlug.getCacheMemoryLimit()
 
 	def tearDown( self ) :
+
+		GafferTest.TestCase.tearDown( self )
 
 		Gaffer.ValuePlug.setCacheMemoryLimit( self.__previousCacheMemoryLimit )
 
