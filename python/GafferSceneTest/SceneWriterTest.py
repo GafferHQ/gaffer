@@ -47,8 +47,6 @@ import GafferSceneTest
 
 class SceneWriterTest( GafferSceneTest.SceneTestCase ) :
 
-	__testFile = "/tmp/test.scc"
-
 	def testWrite( self ) :
 
 		s = GafferScene.Sphere()
@@ -64,11 +62,11 @@ class SceneWriterTest( GafferSceneTest.SceneTestCase ) :
 		writer = GafferScene.SceneWriter()
 		script["writer"] = writer
 		writer["in"].setInput( g["out"] )
-		writer["fileName"].setValue( self.__testFile )
+		writer["fileName"].setValue( self.temporaryDirectory() + "/test.scc" )
 
 		writer.execute()
 
-		sc = IECore.SceneCache( self.__testFile, IECore.IndexedIO.OpenMode.Read )
+		sc = IECore.SceneCache( self.temporaryDirectory() + "/test.scc", IECore.IndexedIO.OpenMode.Read )
 
 		t = sc.child( "group" )
 
@@ -86,12 +84,12 @@ class SceneWriterTest( GafferSceneTest.SceneTestCase ) :
 		script["zExpression"]["expression"].setValue( 'parent["group"]["transform"]["translate"]["z"] = context.getFrame() * 2' )
 		script["writer"] = GafferScene.SceneWriter()
 		script["writer"]["in"].setInput( script["group"]["out"] )
-		script["writer"]["fileName"].setValue( self.__testFile )
+		script["writer"]["fileName"].setValue( self.temporaryDirectory() + "/test.scc" )
 
 		with Gaffer.Context() :
 			script["writer"].executeSequence( [ 1, 1.5, 2 ] )
 
-		sc = IECore.SceneCache( self.__testFile, IECore.IndexedIO.OpenMode.Read )
+		sc = IECore.SceneCache( self.temporaryDirectory() + "/test.scc", IECore.IndexedIO.OpenMode.Read )
 		t = sc.child( "group" )
 
 		self.assertEqual( t.readTransformAsMatrix( 0 ), IECore.M44d.createTranslated( IECore.V3d( 1, 0, 2 ) ) )
@@ -101,7 +99,7 @@ class SceneWriterTest( GafferSceneTest.SceneTestCase ) :
 
 	def testSceneCacheRoundtrip( self ) :
 
-		scene = IECore.SceneCache( "/tmp/fromPython.scc", IECore.IndexedIO.OpenMode.Write )
+		scene = IECore.SceneCache( self.temporaryDirectory() + "/fromPython.scc", IECore.IndexedIO.OpenMode.Write )
 		sc = scene.createChild( "a" )
 		sc.writeObject( IECore.MeshPrimitive.createBox(IECore.Box3f(IECore.V3f(0),IECore.V3f(1))), 0 )
 		matrix = IECore.M44d.createTranslated( IECore.V3d( 1, 0, 0 ) ).rotate( IECore.V3d( 0, 0, IECore.degreesToRadians( -30 ) ) )
@@ -130,20 +128,20 @@ class SceneWriterTest( GafferSceneTest.SceneTestCase ) :
 			self.failUnless( isinstance( c.readObject( 0 ), IECore.MeshPrimitive ) )
 			self.failUnless( c.readTransformAsMatrix( 0 ).equalWithAbsError( matrix, 1e-6 ) )
 
-		testCacheFile( "/tmp/fromPython.scc" )
+		testCacheFile( self.temporaryDirectory() + "/fromPython.scc" )
 
 		reader = GafferScene.SceneReader()
-		reader["fileName"].setValue( "/tmp/fromPython.scc" )
+		reader["fileName"].setValue( self.temporaryDirectory() + "/fromPython.scc" )
 
 		script = Gaffer.ScriptNode()
 		writer = GafferScene.SceneWriter()
 		script["writer"] = writer
 		writer["in"].setInput( reader["out"] )
-		writer["fileName"].setValue( self.__testFile )
+		writer["fileName"].setValue( self.temporaryDirectory() + "/test.scc" )
 		writer.execute()
-		os.remove( "/tmp/fromPython.scc" )
+		os.remove( self.temporaryDirectory() + "/fromPython.scc" )
 
-		testCacheFile( self.__testFile )
+		testCacheFile( self.temporaryDirectory() + "/test.scc" )
 
 	def testHash( self ) :
 
@@ -159,7 +157,7 @@ class SceneWriterTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( writer.hash( c ), IECore.MurmurHash() )
 
 		# no input scene produces no effect
-		writer["fileName"].setValue( "/tmp/test.scc" )
+		writer["fileName"].setValue( self.temporaryDirectory() + "/test.scc" )
 		self.assertEqual( writer.hash( c ), IECore.MurmurHash() )
 
 		# now theres a file and a scene, we get some output
@@ -172,17 +170,17 @@ class SceneWriterTest( GafferSceneTest.SceneTestCase ) :
 
 		# output varies by file name
 		current = writer.hash( c )
-		writer["fileName"].setValue( "/tmp/test2.scc" )
+		writer["fileName"].setValue( self.temporaryDirectory() + "/test2.scc" )
 		self.assertNotEqual( writer.hash( c ), current )
 
 		# output varies by new Context entries
 		current = writer.hash( c )
-		c["renderDirectory"] = "/tmp/sceneWriterTest"
+		c["renderDirectory"] = self.temporaryDirectory() + "/sceneWriterTest"
 		self.assertNotEqual( writer.hash( c ), current )
 
 		# output varies by changed Context entries
 		current = writer.hash( c )
-		c["renderDirectory"] = "/tmp/sceneWriterTest2"
+		c["renderDirectory"] = self.temporaryDirectory() + "/sceneWriterTest2"
 		self.assertNotEqual( writer.hash( c ), current )
 
 		# output doesn't vary by ui Context entries
@@ -213,11 +211,6 @@ class SceneWriterTest( GafferSceneTest.SceneTestCase ) :
 
 		ss = s.serialise()
 		self.assertFalse( "out" in ss )
-
-	def tearDown( self ) :
-
-		if os.path.exists( self.__testFile ) :
-			os.remove( self.__testFile )
 
 if __name__ == "__main__":
 	unittest.main()

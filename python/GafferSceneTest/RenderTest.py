@@ -59,7 +59,7 @@ class RenderTest( GafferSceneTest.SceneTestCase ) :
 	def testLightOutput( self ) :
 
 		s = Gaffer.ScriptNode()
-		s["fileName"].setValue( "/tmp/test.gfr" )
+		s["fileName"].setValue( self.temporaryDirectory() + "/test.gfr" )
 
 		s["l"] = GafferSceneTest.TestLight()
 		s["g"] = GafferScene.Group()
@@ -84,7 +84,7 @@ class RenderTest( GafferSceneTest.SceneTestCase ) :
 	def testLightVisibility( self ) :
 
 		s = Gaffer.ScriptNode()
-		s["fileName"].setValue( "/tmp/test.gfr" )
+		s["fileName"].setValue( self.temporaryDirectory() + "/test.gfr" )
 
 		s["l"] = GafferSceneTest.TestLight()
 		s["g"] = GafferScene.Group()
@@ -122,7 +122,7 @@ class RenderTest( GafferSceneTest.SceneTestCase ) :
 	def testLightAttributes( self ) :
 
 		s = Gaffer.ScriptNode()
-		s["fileName"].setValue( "/tmp/test.gfr" )
+		s["fileName"].setValue( self.temporaryDirectory() + "/test.gfr" )
 
 		s["l"] = GafferSceneTest.TestLight()
 
@@ -147,7 +147,7 @@ class RenderTest( GafferSceneTest.SceneTestCase ) :
 	def testLightName( self ) :
 
 		s = Gaffer.ScriptNode()
-		s["fileName"].setValue( "/tmp/test.gfr" )
+		s["fileName"].setValue( self.temporaryDirectory() + "/test.gfr" )
 
 		s["l"] = GafferSceneTest.TestLight()
 		s["g"] = GafferScene.Group()
@@ -216,7 +216,7 @@ class RenderTest( GafferSceneTest.SceneTestCase ) :
 	def testOptions( self ) :
 
 		s = Gaffer.ScriptNode()
-		s["fileName"].setValue( "/tmp/test.gfr" )
+		s["fileName"].setValue( self.temporaryDirectory() + "/test.gfr" )
 
 		s["p"] = GafferScene.Plane()
 		s["o"] = GafferScene.CustomOptions()

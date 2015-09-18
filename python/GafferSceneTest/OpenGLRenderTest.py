@@ -42,13 +42,14 @@ import IECore
 import Gaffer
 import GafferImage
 import GafferScene
+import GafferSceneTest
 
 @unittest.skipIf( "TRAVIS" in os.environ, "OpenGL not set up on Travis" )
-class OpenGLRenderTest( unittest.TestCase ) :
+class OpenGLRenderTest( GafferSceneTest.SceneTestCase ) :
 
 	def test( self ) :
 
-		self.assertFalse( os.path.exists( "/tmp/test.exr" ) )
+		self.assertFalse( os.path.exists( self.temporaryDirectory() + "/test.exr" ) )
 
 		s = Gaffer.ScriptNode()
 
@@ -72,7 +73,7 @@ class OpenGLRenderTest( unittest.TestCase ) :
 		s["outputs"].addOutput(
 			"beauty",
 			IECore.Display(
-				"/tmp/test.exr",
+				self.temporaryDirectory() + "/test.exr",
 				"exr",
 				"rgba",
 				{}
@@ -83,14 +84,14 @@ class OpenGLRenderTest( unittest.TestCase ) :
 		s["render"] = GafferScene.OpenGLRender()
 		s["render"]["in"].setInput( s["outputs"]["out"] )
 
-		s["fileName"].setValue( "/tmp/test.gfr" )
+		s["fileName"].setValue( self.temporaryDirectory() + "/test.gfr" )
 		s.save()
 
 		s["render"].execute()
 
-		self.assertTrue( os.path.exists( "/tmp/test.exr" ) )
+		self.assertTrue( os.path.exists( self.temporaryDirectory() + "/test.exr" ) )
 
-		i = IECore.EXRImageReader( "/tmp/test.exr" ).read()
+		i = IECore.EXRImageReader( self.temporaryDirectory() + "/test.exr" ).read()
 		e = IECore.ImagePrimitiveEvaluator( i )
 		r = e.createResult()
 		e.pointAtUV( IECore.V2f( 0.5 ), r )
@@ -101,7 +102,7 @@ class OpenGLRenderTest( unittest.TestCase ) :
 	def testOutputDirectoryCreation( self ) :
 
 		s = Gaffer.ScriptNode()
-		s["variables"].addMember( "renderDirectory", "/tmp/openGLRenderTest" )
+		s["variables"].addMember( "renderDirectory", self.temporaryDirectory() + "/openGLRenderTest" )
 
 		s["plane"] = GafferScene.Plane()
 
@@ -120,16 +121,16 @@ class OpenGLRenderTest( unittest.TestCase ) :
 		s["render"] = GafferScene.OpenGLRender()
 		s["render"]["in"].setInput( s["outputs"]["out"] )
 
-		self.assertFalse( os.path.exists( "/tmp/openGLRenderTest" ) )
-		self.assertFalse( os.path.exists( "/tmp/openGLRenderTest/test.0001.exr" ) )
+		self.assertFalse( os.path.exists( self.temporaryDirectory() + "/openGLRenderTest" ) )
+		self.assertFalse( os.path.exists( self.temporaryDirectory() + "/openGLRenderTest/test.0001.exr" ) )
 
 		s["fileName"].setValue( "/tmp/test.gfr" )
 
 		with s.context() :
 			s["render"].execute()
 
-		self.assertTrue( os.path.exists( "/tmp/openGLRenderTest" ) )
-		self.assertTrue( os.path.exists( "/tmp/openGLRenderTest/test.0001.exr" ) )
+		self.assertTrue( os.path.exists( self.temporaryDirectory() + "/openGLRenderTest" ) )
+		self.assertTrue( os.path.exists( self.temporaryDirectory() + "/openGLRenderTest/test.0001.exr" ) )
 
 	def testHash( self ) :
 
@@ -157,12 +158,12 @@ class OpenGLRenderTest( unittest.TestCase ) :
 
 		# output varies by new Context entries
 		current = s["render"].hash( c )
-		c["renderDirectory"] = "/tmp/openGLRenderTest"
+		c["renderDirectory"] = self.temporaryDirectory() + "/openGLRenderTest"
 		self.assertNotEqual( s["render"].hash( c ), current )
 
 		# output varies by changed Context entries
 		current = s["render"].hash( c )
-		c["renderDirectory"] = "/tmp/openGLRenderTest2"
+		c["renderDirectory"] = self.temporaryDirectory() + "/openGLRenderTest2"
 		self.assertNotEqual( s["render"].hash( c ), current )
 
 		# output doesn't vary by ui Context entries
@@ -174,23 +175,6 @@ class OpenGLRenderTest( unittest.TestCase ) :
 		current = s["render"].hash( c )
 		s["render"]["in"].setInput( s["plane"]["out"] )
 		self.assertNotEqual( s["render"].hash( c ), current )
-
-	def setUp( self ) :
-
-		for f in (
-			"/tmp/test.exr",
-			"/tmp/test.gfr",
-			"/tmp/openGLRenderTest/test.0001.exr",
-			"/tmp/openGLRenderTest",
-		) :
-			if os.path.isfile( f ) :
-				os.remove( f )
-			elif os.path.isdir( f ) :
-				os.rmdir( f )
-
-	def tearDown( self ) :
-
-		self.setUp()
 
 if __name__ == "__main__":
 	unittest.main()

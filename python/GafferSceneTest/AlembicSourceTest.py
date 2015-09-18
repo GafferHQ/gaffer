@@ -112,25 +112,24 @@ class AlembicSourceTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( a["out"].fullTransform( "/group1/pCube1" ), IECore.M44f.createTranslated( IECore.V3f( -1, 0, 0 ) )  * a["out"].fullTransform( "/group1" ) )
 		self.assertEqual( a["out"].fullTransform( "/group1/pCube1/pCubeShape1" ), a["out"].fullTransform( "/group1/pCube1" ) )
 
-	__refreshTestFileName = "/tmp/refreshTest.abc"
-
 	def testRefresh( self ) :
 
-		shutil.copyfile( os.path.dirname( __file__ ) + "/alembicFiles/cube.abc", self.__refreshTestFileName )
+		fileName = self.temporaryDirectory() + "/refreshTest.abc"
+		shutil.copyfile( os.path.dirname( __file__ ) + "/alembicFiles/cube.abc", fileName )
 
 		a = GafferScene.AlembicSource()
-		a["fileName"].setValue( self.__refreshTestFileName )
-		a["refreshCount"].setValue( self.uniqueInt( self.__refreshTestFileName ) )
+		a["fileName"].setValue( fileName )
+		a["refreshCount"].setValue( self.uniqueInt( fileName ) )
 
 		self.assertSceneValid( a["out"] )
 		self.assertEqual( a["out"].childNames( "/" ), IECore.InternedStringVectorData( [ "group1" ] ) )
 
-		shutil.copyfile( os.path.dirname( __file__ ) + "/alembicFiles/animatedCube.abc", self.__refreshTestFileName )
+		shutil.copyfile( os.path.dirname( __file__ ) + "/alembicFiles/animatedCube.abc", fileName )
 
 		self.assertSceneValid( a["out"] )
 		self.assertEqual( a["out"].childNames( "/" ), IECore.InternedStringVectorData( [ "group1" ] ) )
 
-		a["refreshCount"].setValue( self.uniqueInt( self.__refreshTestFileName ) )
+		a["refreshCount"].setValue( self.uniqueInt( fileName ) )
 
 		# We have to skip the test of built in sets, because our alembic file contains cameras
 		# and alembic doesn't provide a means of flagging them upfront.
@@ -151,14 +150,6 @@ class AlembicSourceTest( GafferSceneTest.SceneTestCase ) :
 		a["fileName"].setValue( "nonexistent.abc" )
 
 		self.assertRaises( RuntimeError, a["out"].childNames, "/" )
-
-	def tearDown( self ) :
-
-		for f in [
-			self.__refreshTestFileName,
-		] :
-			if os.path.exists( f ) :
-				os.remove( f )
 
 if __name__ == "__main__":
 	unittest.main()

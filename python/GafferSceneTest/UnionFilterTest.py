@@ -202,10 +202,10 @@ class UnionFilterTest( GafferSceneTest.SceneTestCase ) :
 		p = s["b"].promotePlug( s["b"]["f"]["in"][0] )
 		p.setName( "p" )
 
-		s["b"].exportForReference( "/tmp/test.grf" )
+		s["b"].exportForReference( self.temporaryDirectory() + "/test.grf" )
 
 		s["r"] = Gaffer.Reference()
-		s["r"].load( "/tmp/test.grf" )
+		s["r"].load( self.temporaryDirectory() + "/test.grf" )
 
 		s["f"] = GafferScene.PathFilter()
 
@@ -220,13 +220,6 @@ class UnionFilterTest( GafferSceneTest.SceneTestCase ) :
 		self.assertTrue( s["UnionFilter"]["in"][0].getInput().isSame( s["PathFilter"]["out"] ) )
 		self.assertTrue( s["UnionFilter"]["in"][1].getInput().isSame( s["PathFilter1"]["out"] ) )
 		self.assertTrue( s["UnionFilter"]["in"][2].getInput().isSame( s["PathFilter2"]["out"] ) )
-
-	def tearDown( self ) :
-
-		GafferSceneTest.SceneTestCase.tearDown( self )
-
-		if os.path.exists( "/tmp/test.grf" ) :
-			os.remove( "/tmp/test.grf" )
 
 if __name__ == "__main__":
 	unittest.main()
