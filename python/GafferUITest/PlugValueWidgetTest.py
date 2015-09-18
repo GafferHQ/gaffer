@@ -50,8 +50,7 @@ class PlugValueWidgetTest( unittest.TestCase ) :
 		s = Gaffer.ScriptNode()
 		s["m"] = GafferTest.MultiplyNode()
 		s["e"] = Gaffer.Expression()
-		s["e"]["engine"].setValue( "python" )
-		s["e"]["expression"].setValue( "parent[\"m\"][\"op1\"] = int( context[\"frame\"] )" )
+		s["e"].setExpression( "parent[\"m\"][\"op1\"] = int( context[\"frame\"] )" )
 
 		w = GafferUI.NumericPlugValueWidget( s["m"]["op1"] )
 		self.failUnless( w.getContext().isSame( s.context() ) )

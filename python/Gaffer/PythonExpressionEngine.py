@@ -35,6 +35,7 @@
 #
 ##########################################################################
 
+import re
 import ast
 
 import IECore
@@ -43,43 +44,33 @@ import Gaffer
 
 class PythonExpressionEngine( Gaffer.Expression.Engine ) :
 
-	def __init__( self, expression ) :
+	def __init__( self ) :
 
 		Gaffer.Expression.Engine.__init__( self )
 
-		self.__expression = expression
+	def parse( self, node, expression, inPlugs, outPlugs, contextNames ) :
 
 		parser = _Parser( expression )
-		if not parser.plugWrites :
-			raise Exception( "Expression does not write to a plug" )
 
-		self.__inPlugs = list( parser.plugReads )
-		self.__outPlugs = list( parser.plugWrites )
-		self.__contextNames = list( parser.contextReads )
+		self.__expression = expression
+		self.__inPlugPaths = list( parser.plugReads )
+		self.__outPlugPaths = list( parser.plugWrites )
 
-	def outPlugs( self ) :
-
-		return self.__outPlugs
-
-	def inPlugs( self ) :
-
-		return self.__inPlugs
-
-	def contextNames( self ) :
-
-		return self.__contextNames
+		inPlugs.extend( [ self.__plug( node, p ) for p in self.__inPlugPaths ] )
+		outPlugs.extend( [ self.__plug( node, p ) for p in self.__outPlugPaths ] )
+		contextNames.extend( parser.contextReads )
 
 	def execute( self, context, inputs ) :
 
 		plugDict = {}
-		for plugPath, plug in zip( self.__inPlugs, inputs ) :
+		for plugPath, plug in zip( self.__inPlugPaths, inputs ) :
 			parentDict = plugDict
 			plugPathSplit = plugPath.split( "." )
 			for p in plugPathSplit[:-1] :
 				parentDict = parentDict.setdefault( p, {} )
 			parentDict[plugPathSplit[-1]] = plug.getValue()
 
-		for plugPath in self.__outPlugs :
+		for plugPath in self.__outPlugPaths :
 			parentDict = plugDict
 			for p in plugPath.split( "." )[:-1] :
 				parentDict = parentDict.setdefault( p, {} )
@@ -89,7 +80,7 @@ class PythonExpressionEngine( Gaffer.Expression.Engine ) :
 		exec( self.__expression, executionDict, executionDict )
 
 		result = IECore.ObjectVector()
-		for plugPath in self.__outPlugs :
+		for plugPath in self.__outPlugPaths :
 			parentDict = plugDict
 			plugPathSplit = plugPath.split( "." )
 			for p in plugPathSplit[:-1] :
@@ -98,9 +89,80 @@ class PythonExpressionEngine( Gaffer.Expression.Engine ) :
 
 		return result
 
-	def setPlugValue( self, plug, value ) :
+	def apply( self, plug, value ) :
 
 		_setPlugValue( plug, value )
+
+	def identifier( self, node, plug ) :
+
+		if node.isAncestorOf( plug ) :
+			relativeName = plug.relativeName( node )
+		else :
+			relativeName = plug.relativeName( node.parent() )
+
+		return 'parent' + "".join( [ '["%s"]' % n for n in relativeName.split( "." ) ] )
+
+	def replace( self, node, expression, oldPlugs, newPlugs ) :
+
+		for oldPlug, newPlug in zip( oldPlugs, newPlugs ) :
+			if newPlug is not None :
+				replacement = self.identifier( node, newPlug )
+			else :
+				if oldPlug.direction() == Gaffer.Plug.Direction.In :
+					replacement = repr( oldPlug.defaultValue() )
+				else :
+					replacement = "__disconnected"
+
+			expression = self.__plugRegex( node, oldPlug ).sub(
+				replacement, expression
+			)
+
+		return expression
+
+	def defaultExpression( self, plug ) :
+
+		if not isinstance( plug, (
+			Gaffer.FloatPlug, Gaffer.IntPlug,
+			Gaffer.StringPlug, Gaffer.BoolPlug,
+			Gaffer.V3fPlug, Gaffer.V3iPlug,
+			Gaffer.V2fPlug, Gaffer.V2iPlug,
+			Gaffer.Color3fPlug, Gaffer.Color4fPlug,
+			Gaffer.Box2fPlug, Gaffer.Box2iPlug,
+			Gaffer.Box3fPlug, Gaffer.Box3iPlug,
+		) ) :
+			return ""
+
+		parentNode = plug.node().ancestor( Gaffer.Node )
+		if parentNode is None :
+			return ""
+
+		result = "parent[\""
+		result += plug.relativeName( parentNode ).replace( ".", "\"][\"" )
+		result += "\"] = "
+
+		result += repr( plug.getValue() )
+
+		return result
+
+	def __plug( self, node, plugPath ) :
+
+		plug = node.parent().descendant( plugPath )
+		if isinstance( plug, Gaffer.ValuePlug ) :
+			return plug
+
+		if plug is None :
+			raise RuntimeError( "\"%s\" does not exist" % plugPath )
+		else :
+			raise RuntimeError( "\"%s\" is not a ValuePlug" % plugPath )
+
+	def __plugRegex( self, node, plug ) :
+
+		identifier = self.identifier( node, plug )
+		regex = identifier.replace( "[", "\[" )
+		regex = regex.replace( "]", "\]" )
+		regex = regex.replace( '"', "['\"']" )
+
+		return re.compile( regex )
 
 Gaffer.Expression.Engine.registerEngine( "python", PythonExpressionEngine )
 

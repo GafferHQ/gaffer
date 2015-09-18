@@ -45,6 +45,8 @@
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/Context.h"
 #include "Gaffer/StringPlug.h"
+#include "Gaffer/BlockedConnection.h"
+#include "Gaffer/Action.h"
 
 using namespace IECore;
 using namespace Gaffer;
@@ -58,25 +60,25 @@ size_t Expression::g_firstPlugIndex;
 IE_CORE_DEFINERUNTIMETYPED( Expression );
 
 Expression::Expression( const std::string &name )
-	:	ComputeNode( name ), m_engine( 0 )
+	:	ComputeNode( name ), m_engine( NULL )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 
 	addChild(
 		new StringPlug(
-			"engine",
+			"__engine",
 			Plug::In,
-			"python",
-			Plug::Default & ~( Plug::AcceptsInputs ),
+			"",
+			Plug::Default & ~( Plug::AcceptsInputs | Plug::Serialisable ),
 			Context::NoSubstitutions
 		)
 	);
 	addChild(
 		new StringPlug(
-			"expression",
+			"__expression",
 			Plug::In,
 			"",
-			Plug::Default & ~( Plug::AcceptsInputs ),
+			Plug::Default & ~( Plug::AcceptsInputs | Plug::Serialisable ),
 			Context::NoSubstitutions
 		)
 	);
@@ -84,12 +86,89 @@ Expression::Expression( const std::string &name )
 	addChild( new ValuePlug( "__in" ) );
 	addChild( new ValuePlug( "__out", Plug::Out ) );
 	addChild( new ObjectVectorPlug( "__execute", Plug::Out, new ObjectVector ) );
-
-	plugSetSignal().connect( boost::bind( &Expression::plugSet, this, ::_1 ) );
 }
 
 Expression::~Expression()
 {
+}
+
+void Expression::languages( std::vector<std::string> &languages )
+{
+	Engine::registeredEngines( languages );
+}
+
+std::string Expression::defaultExpression( const ValuePlug *output, const std::string &language )
+{
+	EnginePtr e = Engine::create( language );
+	return e->defaultExpression( output );
+}
+
+void Expression::setExpression( const std::string &expression, const std::string &engine )
+{
+	std::string currentEngine;
+	const std::string currentExpression = getExpression( currentEngine );
+	if( expression == currentExpression && engine == currentEngine )
+	{
+		return;
+	}
+
+	// The setExpression() method is undoable by virtue of being
+	// implemented entirely using other undoable functions - all
+	// except for emitting expressionChangedSignal(). When doing,
+	// we need to emit after the work is done, but we don't want
+	// to emit just before it is undone - we want to emit after it
+	// has been undone. We therefore have two emit actions, one at
+	// the start with no doer and one at the end with no undoer.
+	Action::enact(
+		this,
+		Action::Function(), // does nothing
+		boost::bind( boost::ref( expressionChangedSignal() ), this )
+	);
+
+	m_engine = NULL;
+	m_contextNames.clear();
+
+	m_engine = Engine::create( engine );
+
+	std::vector<ValuePlug *> inPlugs, outPlugs;
+	m_engine->parse( this, expression, inPlugs, outPlugs, m_contextNames );
+	updatePlugs( inPlugs, outPlugs );
+
+	enginePlug()->setValue( engine );
+
+	// We store the expression in a processed form, referencing
+	// the intermediate plugs on this node rather than the plugs
+	// out in the wild. This allows us to account for changes to
+	// node/plug names in getExpression(), where we convert back
+	// to the external form.
+
+	expressionPlug()->setValue( transcribe( expression, /* toInternalForm = */ true ) );
+
+	Action::enact(
+		this,
+		boost::bind( boost::ref( expressionChangedSignal() ), this ),
+		Action::Function() // does nothing
+	);
+}
+
+std::string Expression::getExpression( std::string &engine ) const
+{
+	engine = enginePlug()->getValue();
+	return transcribe( expressionPlug()->getValue(), /* toInternalForm = */ false );
+}
+
+Expression::ExpressionChangedSignal &Expression::expressionChangedSignal()
+{
+	return m_expressionChangedSignal;
+}
+
+std::string Expression::identifier( const ValuePlug *plug ) const
+{
+	if( !m_engine )
+	{
+		return "";
+	}
+	return m_engine->identifier( this, plug );
 }
 
 StringPlug *Expression::enginePlug()
@@ -174,27 +253,41 @@ void Expression::hash( const ValuePlug *output, const Context *context, IECore::
 	{
 		enginePlug()->hash( h );
 		expressionPlug()->hash( h );
-		inPlug()->hash( h );
-
-		if( m_engine )
+		for( ValuePlugIterator it( inPlug() ); it!=it.end(); it++ )
 		{
-			for( std::vector<IECore::InternedString>::const_iterator it = m_contextNames.begin(); it != m_contextNames.end(); it++ )
+			(*it)->hash( h );
+			// We must hash the types of the input plugs, because
+			// an identical expression but with different input plug
+			// types may yield a different result from Engine::execute().
+			h.append( (*it)->typeId() );
+		}
+		for( ValuePlugIterator it( outPlug() ); it!=it.end(); it++ )
+		{
+			// We also need to hash the types of the output plugs,
+			// because an identical expression with different output
+			// types may yield a different result from Engine::execute().
+			h.append( (*it)->typeId() );
+		}
+
+		for( std::vector<IECore::InternedString>::const_iterator it = m_contextNames.begin(); it != m_contextNames.end(); it++ )
+		{
+			const IECore::Data *d = context->get<IECore::Data>( *it, 0 );
+			if( d )
 			{
-				const IECore::Data *d = context->get<IECore::Data>( *it, 0 );
-				if( d )
-				{
-					d->hash( h );
-				}
-				else
-				{
-					h.append( 0 );
-				}
+				d->hash( h );
+			}
+			else
+			{
+				h.append( 0 );
 			}
 		}
 	}
 	else if( outPlug()->isAncestorOf( output ) )
 	{
 		executePlug()->hash( h );
+		// We must hash the type of the output plug, to account for
+		// Engine::apply() performing conversion based on plug type.
+		h.append( output->typeId() );
 	}
 }
 
@@ -242,9 +335,10 @@ void Expression::compute( ValuePlug *output, const Context *context ) const
 		{
 			index++;
 		}
+
 		if( index < values->members().size() )
 		{
-			m_engine->setPlugValue( output, values->members()[index].get() );
+			m_engine->apply( output, values->members()[index].get() );
 		}
 		else
 		{
@@ -256,69 +350,23 @@ void Expression::compute( ValuePlug *output, const Context *context ) const
 	ComputeNode::compute( output, context );
 }
 
-void Expression::plugSet( Plug *plug )
+void Expression::updatePlugs( const std::vector<ValuePlug *> &inPlugs, const std::vector<ValuePlug *> &outPlugs )
 {
-	if( plug == expressionPlug() )
+	for( size_t i = 0, e = inPlugs.size(); i < e; ++i )
 	{
-		m_engine = NULL;
-		m_contextNames.clear();
-
-		try
-		{
-			std::string newExpression = expressionPlug()->getValue();
-			if( newExpression.size() )
-			{
-				m_engine = Engine::create( enginePlug()->getValue(), newExpression );
-				std::vector<std::string> inPlugPaths;
-				std::vector<std::string> outPlugPaths;
-
-				if( m_engine )
-				{
-					m_engine->inPlugs( inPlugPaths );
-					m_engine->outPlugs( outPlugPaths );
-					m_engine->contextNames( m_contextNames );
-				}
-
-				updatePlugs( inPlugPaths, outPlugPaths );
-			}
-		}
-		catch( const std::exception &e )
-		{
-			/// \todo Report error to user somehow - error signal on Node?
-			IECore::msg( IECore::Msg::Error, "Expression::plugSet", e.what() );
-			m_engine = NULL;
-		}
-
+		updatePlug( inPlug(), i, inPlugs[i] );
 	}
+	removeChildren( inPlug(), inPlugs.size() );
+
+	for( size_t i = 0, e = outPlugs.size(); i < e; ++i )
+	{
+		updatePlug( outPlug(), i, outPlugs[i] );
+	}
+	removeChildren( outPlug(), outPlugs.size() );
 }
 
-void Expression::updatePlugs( const std::vector<std::string> &inPlugPaths, const std::vector<std::string> &outPlugPaths )
+void Expression::updatePlug( ValuePlug *parentPlug, size_t childIndex, ValuePlug *plug )
 {
-	for( size_t i = 0, e = inPlugPaths.size(); i < e; ++i )
-	{
-		updatePlug( inPlug(), i, inPlugPaths[i] );
-	}
-
-	for( size_t i = 0, e = outPlugPaths.size(); i < e; ++i )
-	{
-		updatePlug( outPlug(), i, outPlugPaths[i] );
-	}
-}
-
-void Expression::updatePlug( ValuePlug *parentPlug, size_t childIndex, const std::string &plugPath )
-{
-	Node *p = parent<Node>();
-	if( !p )
-	{
-		throw IECore::Exception( "No parent" );
-	}
-
-	ValuePlug *plug = p->descendant<ValuePlug>( plugPath );
-	if( !plug )
-	{
-		throw IECore::Exception( boost::str( boost::format( "Plug \"%s\" does not exist" ) % plugPath ) );
-	}
-
 	if( parentPlug->children().size() > childIndex )
 	{
 		// See if we can reuse the existing plug
@@ -334,14 +382,8 @@ void Expression::updatePlug( ValuePlug *parentPlug, size_t childIndex, const std
 
 	// Existing plug not OK, so we need to create one. First we must remove all
 	// plugs from childIndex onwards, so that when we add the new plug it gets
-	// the right index. We do this backwards, because children() is a vector and
-	// it's therefore cheaper to remove from the end.
-	for( int i = (int)(parentPlug->children().size() ) - 1; i >= (int)childIndex; --i )
-	{
-		Plug *toRemove = parentPlug->getChild<Plug>( i );
-		toRemove->removeOutputs();
-		parentPlug->removeChild( toRemove );
-	}
+	// the right index.
+	removeChildren( parentPlug, childIndex );
 
 	// Finally we can add the plug we need.
 
@@ -358,19 +400,68 @@ void Expression::updatePlug( ValuePlug *parentPlug, size_t childIndex, const std
 	}
 }
 
+void Expression::removeChildren( ValuePlug *parentPlug, size_t startChildIndex )
+{
+	// Remove backwards, because children() is a vector and
+	// it's therefore cheaper to remove from the end.
+	for( int i = (int)(parentPlug->children().size() ) - 1; i >= (int)startChildIndex; --i )
+	{
+		Plug *toRemove = parentPlug->getChild<Plug>( i );
+		toRemove->removeOutputs();
+		parentPlug->removeChild( toRemove );
+	}
+}
+
+std::string Expression::transcribe( const std::string &expression, bool toInternalForm ) const
+{
+	if( !m_engine )
+	{
+		return expression;
+	}
+
+	std::vector<const ValuePlug *> internalPlugs, externalPlugs;
+	for( ValuePlugIterator it( inPlug() ); it != it.end(); ++it )
+	{
+		internalPlugs.push_back( it->get() );
+		externalPlugs.push_back( (*it)->getInput<ValuePlug>() );
+	}
+
+	for( ValuePlugIterator it( outPlug() ); it != it.end(); ++it )
+	{
+		internalPlugs.push_back( it->get() );
+		if( !(*it)->outputs().empty() )
+		{
+			externalPlugs.push_back( static_cast<const ValuePlug *>( (*it)->outputs().front() ) );
+		}
+		else
+		{
+			externalPlugs.push_back( NULL );
+		}
+	}
+
+	if( toInternalForm )
+	{
+		return m_engine->replace( this, expression, externalPlugs, internalPlugs );
+	}
+	else
+	{
+		return m_engine->replace( this, expression, internalPlugs, externalPlugs );
+	}
+}
+
 //////////////////////////////////////////////////////////////////////////
 // Expression::Engine implementation
 //////////////////////////////////////////////////////////////////////////
 
-Expression::EnginePtr Expression::Engine::create( const std::string engineType, const std::string &expression )
+Expression::EnginePtr Expression::Engine::create( const std::string engineType )
 {
 	const CreatorMap &m = creators();
 	CreatorMap::const_iterator it = m.find( engineType );
 	if( it == m.end() )
 	{
-		return 0;
+		return NULL;
 	}
-	return it->second( expression );
+	return it->second();
 }
 
 void Expression::Engine::registerEngine( const std::string engineType, Creator creator )

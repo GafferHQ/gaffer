@@ -723,6 +723,42 @@ class PlugTest( GafferTest.TestCase ) :
 		self.assertTrue( s["n"]["user"]["p"].getFlags( Gaffer.Plug.Flags.ReadOnly ) )
 		self.assertEqual( len( cs ), 3 )
 
+	def testParentConnectionIgnoresOutOfOrderChildConnections( self ) :
+
+		p1 = Gaffer.V2fPlug()
+		p2 = Gaffer.V2fPlug()
+
+		# p1.x -> p2.x, p1.y -> p2.y
+		#
+		# The parent should connect automatically too, because
+		# the equivalent child connections have been performed
+		# manually. By equivalent, we mean the same connections
+		# which would have been made had we connected p1 -> p2.
+		p2["x"].setInput( p1["x"] )
+		p2["y"].setInput( p1["y"] )
+		self.assertTrue( p2.getInput().isSame( p1 ) )
+
+		p2.setInput( None )
+
+		# p1.x -> p2.x, p1.x ->p2.y
+		#
+		# The parent should not connect automatically. Although
+		# both children of p2 are driven from a child of p1,
+		# they are not driven by the same plugs a call to
+		# p2.setInput( p1 ) would have made.
+		p2["x"].setInput( p1["x"] )
+		p2["y"].setInput( p1["x"] )
+		self.assertTrue( p2.getInput() is None )
+
+		# p1.y -> p2.x, p1.x ->p2.y
+		#
+		# As above, parent should not connect automatically, because
+		# the child connections are not equivalent to those which
+		# would have been made by connecting the parent (order is wrong).
+		p2["x"].setInput( p1["y"] )
+		p2["y"].setInput( p1["x"] )
+		self.assertTrue( p2.getInput() is None )
+
 if __name__ == "__main__":
 	unittest.main()
 

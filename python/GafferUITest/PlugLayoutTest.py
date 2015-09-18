@@ -258,8 +258,7 @@ class PlugLayoutTest( GafferUITest.TestCase ) :
 		s["n"] = SummaryAndActivatorTestNode()
 
 		s["e"] = Gaffer.Expression()
-		s["e"]["engine"].setValue( "python" )
-		s["e"]["expression"].setValue( 'parent["n"]["b"] = context["bVariable"]' )
+		s["e"].setExpression( 'parent["n"]["b"] = context["bVariable"]' )
 
 		l = GafferUI.PlugLayout( s["n"] )
 		self.assertEqual( l.plugValueWidget( s["n"]["s"], lazy = False ).enabled(), False )

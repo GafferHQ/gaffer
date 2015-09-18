@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2013-2014, John Haddon. All rights reserved.
+#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,14 +34,36 @@
 #
 ##########################################################################
 
-from OSLTestCase import OSLTestCase
-from OSLShaderTest import OSLShaderTest
-from OSLRendererTest import OSLRendererTest
-from OSLImageTest import OSLImageTest
-from OSLObjectTest import OSLObjectTest
-from OSLExpressionEngineTest import OSLExpressionEngineTest
-from ModuleTest import ModuleTest
+import Gaffer
 
-if __name__ == "__main__":
-	import unittest
-	unittest.main()
+class __ExpressionPlug( Gaffer.Plug ) :
+
+	def __init__( self ) :
+
+		Gaffer.Plug.__init__(
+			self,
+			flags = Gaffer.Plug.Flags.Default & ~Gaffer.Plug.Flags.Serialisable
+		)
+
+	def setValue( self, value ) :
+
+		engine = "python"
+		if "engine" in self.node() :
+			engine = self.node()["engine"].getValue()
+
+		self.node().setExpression( value, engine )
+
+## In prior versions of Gaffer, public "engine" and "expression"
+# plugs were used to specify the expression to execute. These were
+# then replaced with a setExpression() method. Here we emulate the
+# old API for any old files or scripts which need it.
+def __getItem( self, name ) :
+
+	if name == "engine" and name not in self :
+		self["engine"] = Gaffer.StringPlug( flags = Gaffer.Plug.Flags.Default & ~Gaffer.Plug.Flags.Serialisable )
+	elif name == "expression" and name not in self :
+		self["expression"] = __ExpressionPlug()
+
+	return Gaffer.Node.__getitem__( self, name )
+	
+Gaffer.Expression.__getitem__ = __getItem

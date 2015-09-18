@@ -216,8 +216,7 @@ class _Camera( Gaffer.Node ) :
 		self["cameraRotate"]["filter"].setInput( self["cameraFilter"]["out"] )
 
 		self["elevationExpression"] = Gaffer.Expression()
-		self["elevationExpression"]["engine"].setValue( "python" )
-		self["elevationExpression"]["expression"].setValue( 'parent["cameraRotate"]["transform"]["rotate"]["x"] = -parent["elevation"]' )
+		self["elevationExpression"].setExpression( 'parent["cameraRotate"]["transform"]["rotate"]["x"] = -parent["elevation"]' )
 
 		self["cameraTranslate"] = GafferScene.Transform()
 		self["cameraTranslate"]["in"].setInput( self["cameraRotate"]["out"] )
@@ -279,7 +278,7 @@ class _ObjectPreview( Gaffer.Node ) :
 		# single object scenes using Reader ops behind the scenes?
 		self["ObjectReader"] = Gaffer.ObjectReader()
 		self["ObjectReaderExpression"] = Gaffer.Expression( "Expression" )
-		self["ObjectReaderExpression"]["expression"].setValue(
+		self["ObjectReaderExpression"].setExpression(
 '''
 import IECore
 
@@ -299,7 +298,6 @@ except :
 parent['ObjectReader']['fileName'] = result
 '''
 		)
-		self["ObjectReader"]["fileName"].setInput( self["ObjectReaderExpression"]["out"] )
 		self["ObjectToScene"] = GafferScene.ObjectToScene( "ObjectToScene" )
 		self["ObjectToScene"]["object"].setInput( self["ObjectReader"]["out"] )
 

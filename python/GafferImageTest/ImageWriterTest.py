@@ -774,7 +774,7 @@ class ImageWriterTest( unittest.TestCase ) :
 
 		s["b"]["e"] = Gaffer.Expression( "Expression" )
 
-		s["b"]["e"]["expression"].setValue( 'parent["w"]["user"]["s"] = parent["p1"]; parent["w"]["fileName"] = parent["p2"]' )
+		s["b"]["e"].setExpression( 'parent["w"]["user"]["s"] = parent["p1"]; parent["w"]["fileName"] = parent["p2"]' )
 
 		s2 = Gaffer.ScriptNode()
 		s2.execute( s.serialise() )

@@ -150,13 +150,19 @@ class SimpleAction : public Action
 		void doAction()
 		{
 			Action::doAction();
-			m_doFn();
+			if( !m_doFn.empty() )
+			{
+				m_doFn();
+			}
 		}
 
 		void undoAction()
 		{
 			Action::undoAction();
-			m_undoFn();
+			if( !m_undoFn.empty() )
+			{
+				m_undoFn();
+			}
 		}
 
 		bool canMerge( const Action *other ) const

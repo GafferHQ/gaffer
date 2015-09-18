@@ -90,6 +90,8 @@ export GAFFER_STARTUP_PATHS=~/gaffer/startup:$GAFFER_ROOT/startup${GAFFER_STARTU
 
 export GAFFERUI_IMAGE_PATHS=$GAFFER_ROOT/graphics${GAFFERUI_IMAGE_PATHS:+:}${GAFFERUI_IMAGE_PATHS:-}
 
+export OSLHOME=$GAFFER_ROOT
+
 # Get python set up properly
 ##########################################################################
 

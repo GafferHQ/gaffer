@@ -124,8 +124,7 @@ class FilterSwitchTest( GafferSceneTest.SceneTestCase ) :
 		# Now check that we can use expressions successfully on the index.
 
 		script["expression"] = Gaffer.Expression()
-		script["expression"]["engine"].setValue( "python" )
-		script["expression"]["expression"].setValue( 'parent["switchFilter"]["index"] = int( context.getFrame() )' )
+		script["expression"].setExpression( 'parent["switchFilter"]["index"] = int( context.getFrame() )' )
 
 		with script.context() :
 

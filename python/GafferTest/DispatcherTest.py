@@ -1002,8 +1002,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		s["w"]["fileName"].setValue( "/tmp/dispatcherTest/test.####.txt" )
 
 		s["e"] = Gaffer.Expression()
-		s["e"]["engine"].setValue( "python" )
-		s["e"]["expression"].setValue( 'parent["w"]["text"] = context["myText"]' )
+		s["e"].setExpression( 'parent["w"]["text"] = context["myText"]' )
 
 		s["c"] = ContextChangingExecutable()
 		s["c"]["requirements"][0].setInput( s["w"]["requirement"] )

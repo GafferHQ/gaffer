@@ -56,14 +56,38 @@ class Expression : public ComputeNode
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::Expression, ExpressionTypeId, ComputeNode );
 
-		StringPlug *enginePlug();
-		const StringPlug *enginePlug() const;
+		/// Fills the vector with the names of all currently available languages.
+		static void languages( std::vector<std::string> &languages );
 
-		StringPlug *expressionPlug();
-		const StringPlug *expressionPlug() const;
+		/// Returns an identity expression which will set the plug to
+		/// its current value using the specified language. Returns ""
+		/// if the language does not support the plug.
+		static std::string defaultExpression( const ValuePlug *output, const std::string &language );
+
+		/// Sets the node up to evaluate the given expression in the given language.
+		/// This is achieved by creating local plugs which are connected to the plugs
+		/// referenced by the expression, and executing the expression to provide
+		/// output values on demand in compute().
+		/// \undoable
+		void setExpression( const std::string &expression, const std::string &language );
+		/// Returns the expression this node is currently set up to evaluate.
+		std::string getExpression( std::string &language ) const;
+
+		typedef boost::signal<void (Expression *)> ExpressionChangedSignal;
+		/// Signal emitted whenever the expression has changed.
+		ExpressionChangedSignal &expressionChangedSignal();
+
+		/// Returns a string which can be used to refer to the
+		/// plug in the current expression. Returns "" if the
+		/// plug cannot be supported.
+		std::string identifier( const ValuePlug *plug ) const;
 
 		IE_CORE_FORWARDDECLARE( Engine )
 
+		/// Abstract base class for adding languages
+		/// for use in the Expression node. All methods
+		/// are protected as Engines are for the internal
+		/// use of the Expression node only.
 		class Engine : public IECore::RefCounted
 		{
 
@@ -71,34 +95,73 @@ class Expression : public ComputeNode
 
 				IE_CORE_DECLAREMEMBERPTR( Engine );
 
-				/// Must fill plugPaths with paths to the plugs the expression wishes to set.
-				/// Paths should be of the form nodeName.plugName, and are expected to
-				/// be relative to the parent of the Expression node.
-				virtual void outPlugs( std::vector<std::string> &plugPaths ) = 0;
-				/// Must fill plugPaths with paths to the plugs the expression wishes to read from.
-				/// Paths should be of the form nodeName.plugName, and are expected to be relative to
-				/// the parent of the Expression node.
-				virtual void inPlugs( std::vector<std::string> &plugPaths ) = 0;
-				/// Must fill names with the names of all context values the expression
-				/// wishes to read.
-				virtual void contextNames( std::vector<IECore::InternedString> &names ) = 0;
-				/// Must execute the expression in the specified context, using the values
+			protected :
+
+				/// @name Parsing and execution
+				///
+				/// These methods are used to set up a particular expression on
+				/// this Engine instance and later execute it. They rely on the
+				/// Engine maintaining internal state to represent the last
+				/// parsed expression.
+				///
+				////////////////////////////////////////////////////////////////////
+				//@{
+				/// Parses the given expression to prepare the Engine for execution.
+				/// Implementations must fill the inputs and outputs array with plugs
+				/// that are read from and written to by the expression, and the
+				/// contextVariables array with the names of context variables the
+				/// expression will access.
+				virtual void parse( Expression *node, const std::string &expression, std::vector<ValuePlug *> &inputs, std::vector<ValuePlug *> &outputs, std::vector<IECore::InternedString> &contextVariables ) = 0;
+				/// Executes the last parsed expression in the specified context, using the values
 				/// provided by proxyInputs and returning an array containing a value for
-				/// each plug in outPlugs().
-				virtual IECore::ConstObjectVectorPtr execute( const Context *context, const std::vector<const ValuePlug *> &proxyInputs ) = 0;
-				/// Must set the plug using the value computed previously in execute().
-				/// Note that if a compound plug is returned in outPlugs(), setPlugValue()
+				/// each output plug. The results returned will later be passed to apply()
+				/// to apply them to each of the individual output plugs.
+				/// \threading This function may be called concurrently.
+				virtual IECore::ConstObjectVectorPtr execute( const Context *context, const std::vector<const ValuePlug *> &proxyInputs ) const = 0;
+				//@}
+
+				/// @name Language utilities
+				///
+				/// These methods provide general utilities pertaining to the language
+				/// the engine implements, and should not depend on any particular
+				/// expression state.
+				///
+				////////////////////////////////////////////////////////////////////
+				//@{
+				/// Sets the plug using a value computed previously in execute().
+				/// Note that if a compound plug is written to by the expression, setPlugValue()
 				/// will be called for each of the children of the compound, and it is the
-				/// responsibility of the engine to decompose the value for each plug suitably.
-				virtual void setPlugValue( ValuePlug *plug, const IECore::Object *value ) = 0;
+				/// responsibility of the engine to decompose the value for each child plug suitably.
+				/// \threading This function may be called concurrently.
+				virtual void apply( ValuePlug *plug, const IECore::Object *value ) const = 0;
+				/// Used to implement Expression::identifier.
+				virtual std::string identifier( const Expression *node, const ValuePlug *plug ) const = 0;
+				/// Returns a new expression, equivalent to the original but now acting on the
+				/// new plugs rather than the old ones. New plugs may be null in the event that
+				/// a user has manually disconnected plugs. Note that this should not modify
+				/// the current engine in any way, but just return a new expression.
+				virtual std::string replace( const Expression *node, const std::string &expression, const std::vector<const ValuePlug *> &oldPlugs, const std::vector<const ValuePlug *> &newPlugs ) const = 0;
+				/// Used to implement Expression::defaultExpression().
+				virtual std::string defaultExpression( const ValuePlug *output ) const = 0;
+				//@}
 
-				static EnginePtr create( const std::string engineType, const std::string &expression );
+				/// Creates an engine of the specified type.
+				static EnginePtr create( const std::string engineType );
 
-				typedef boost::function<EnginePtr ( const std::string &expression )> Creator;
+				typedef boost::function<EnginePtr ()> Creator;
 				static void registerEngine( const std::string engineType, Creator creator );
 				static void registeredEngines( std::vector<std::string> &engineTypes );
 
+				template<class T>
+				struct EngineDescription
+				{
+					EngineDescription( const std::string &engineType ) { registerEngine( engineType, &creator ); };
+					static EnginePtr creator() { return new T; };
+				};
+
 			private :
+
+				friend class Expression;
 
 				typedef std::map<std::string, Creator> CreatorMap;
 				static CreatorMap &creators();
@@ -115,6 +178,14 @@ class Expression : public ComputeNode
 	private :
 
 		static size_t g_firstPlugIndex;
+
+		/// Private plug for storing the type of the engine.
+		StringPlug *enginePlug();
+		const StringPlug *enginePlug() const;
+
+		/// Private plug for storing the expression text.
+		StringPlug *expressionPlug();
+		const StringPlug *expressionPlug() const;
 
 		// For each input to the expression, we add a child plug
 		// below this one, and connect it to the outside world.
@@ -135,15 +206,20 @@ class Expression : public ComputeNode
 		ObjectVectorPlug *executePlug();
 		const ObjectVectorPlug *executePlug() const;
 
-		void plugSet( Plug *plug );
+		void updatePlugs( const std::vector<ValuePlug *> &inPlugs, const std::vector<ValuePlug *> &outPlugs );
+		void updatePlug( ValuePlug *parentPlug, size_t childIndex, ValuePlug *plug );
+		void removeChildren( ValuePlug *parentPlug, size_t startChildIndex );
 
-		void updatePlugs( const std::vector<std::string> &inPlugPaths, const std::vector<std::string> &outPlugPaths );
-		void updatePlug( ValuePlug *parentPlug, size_t childIndex, const std::string &plugPath );
+		std::string transcribe( const std::string &expression, bool toInternalForm ) const;
 
 		EnginePtr m_engine;
 		std::vector<IECore::InternedString> m_contextNames;
 
+		ExpressionChangedSignal m_expressionChangedSignal;
+
 };
+
+IE_CORE_DECLAREPTR( Expression )
 
 } // namespace Gaffer
 

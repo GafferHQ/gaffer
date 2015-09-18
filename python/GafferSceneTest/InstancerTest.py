@@ -276,8 +276,7 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		script["sphere"] = GafferScene.Sphere()
 		
 		script["expression"] = Gaffer.Expression()
-		script["expression"]["engine"].setValue( "python" )
-		script["expression"]["expression"].setValue( "parent['sphere']['radius'] = context.getFrame() + float( context['instancer:id'] )" )
+		script["expression"].setExpression( "parent['sphere']['radius'] = context.getFrame() + float( context['instancer:id'] )" )
 		
 		script["instancer"] = GafferScene.Instancer()
 		script["instancer"]["in"].setInput( script["plane"]["out"] )

@@ -46,6 +46,7 @@
 #include "GafferBindings/DependencyNodeBinding.h"
 #include "GafferBindings/ExpressionBinding.h"
 #include "GafferBindings/ExceptionAlgo.h"
+#include "GafferBindings/SignalBinding.h"
 
 using namespace boost::python;
 using namespace GafferBindings;
@@ -53,6 +54,55 @@ using namespace Gaffer;
 
 namespace
 {
+
+void setExpression( Expression &e, const std::string &expression, const std::string &language )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	e.setExpression( expression, language );
+}
+
+tuple getExpression( Expression &e )
+{
+	std::string language;
+	std::string expression = e.getExpression( language );
+	return make_tuple( expression, language );
+}
+
+struct ExpressionEngineCreator
+{
+	ExpressionEngineCreator( object fn )
+		:	m_fn( fn )
+	{
+	}
+
+	Expression::EnginePtr operator()()
+	{
+		IECorePython::ScopedGILLock gilLock;
+		Expression::EnginePtr result = extract<Expression::EnginePtr>( m_fn() );
+		return result;
+	}
+
+	private :
+
+		object m_fn;
+
+};
+
+struct ExpressionChangedSlotCaller
+{
+	boost::signals::detail::unusable operator()( boost::python::object slot, ExpressionPtr e )
+	{
+		try
+		{
+			slot( e );
+		}
+		catch( const error_already_set &e )
+		{
+			translatePythonException();
+		}
+		return boost::signals::detail::unusable();
+	}
+};
 
 class EngineWrapper : public IECorePython::RefCountedWrapper<Expression::Engine>
 {
@@ -63,18 +113,22 @@ class EngineWrapper : public IECorePython::RefCountedWrapper<Expression::Engine>
 		{
 		}
 
-		virtual void outPlugs( std::vector<std::string> &plugs )
+		virtual void parse( Expression *node, const std::string &expression, std::vector<ValuePlug *> &inputs, std::vector<ValuePlug *> &outputs, std::vector<IECore::InternedString> &contextVariables )
 		{
 			if( isSubclassed() )
 			{
 				IECorePython::ScopedGILLock gilLock;
 				try
 				{
-					object f = this->methodOverride( "outPlugs" );
+					object f = this->methodOverride( "parse" );
 					if( f )
 					{
-						list pythonPlugs = extract<list>( f() );
-						container_utils::extend_container( plugs, pythonPlugs );
+						list pythonInputs, pythonOutputs, pythonContextVariables;
+						f( ExpressionPtr( node ), expression, pythonInputs, pythonOutputs, pythonContextVariables );
+
+						container_utils::extend_container( inputs, pythonInputs );
+						container_utils::extend_container( outputs, pythonOutputs );
+						container_utils::extend_container( contextVariables, pythonContextVariables );
 						return;
 					}
 				}
@@ -84,58 +138,10 @@ class EngineWrapper : public IECorePython::RefCountedWrapper<Expression::Engine>
 				}
 			}
 
-			throw IECore::Exception( "Engine::outPlugs() python method not defined" );
+			throw IECore::Exception( "Engine::parse() python method not defined" );
 		}
 
-		virtual void inPlugs( std::vector<std::string> &plugs )
-		{
-			if( isSubclassed() )
-			{
-				IECorePython::ScopedGILLock gilLock;
-				try
-				{
-					object f = this->methodOverride( "inPlugs" );
-					if( f )
-					{
-						list pythonPlugs = extract<list>( f() );
-						container_utils::extend_container( plugs, pythonPlugs );
-						return;
-					}
-				}
-				catch( const error_already_set &e )
-				{
-					translatePythonException();
-				}
-			}
-
-			throw IECore::Exception( "Engine::inPlugs() python method not defined" );
-		}
-
-		virtual void contextNames( std::vector<IECore::InternedString> &names )
-		{
-			if( isSubclassed() )
-			{
-				IECorePython::ScopedGILLock gilLock;
-				try
-				{
-					object f = this->methodOverride( "contextNames" );
-					if( f )
-					{
-						list pythonNames = extract<list>( f() );
-						container_utils::extend_container( names, pythonNames );
-						return;
-					}
-				}
-				catch( const error_already_set &e )
-				{
-					translatePythonException();
-				}
-			}
-
-			throw IECore::Exception( "Engine::contextNames() python method not defined" );
-		}
-
-		virtual IECore::ConstObjectVectorPtr execute( const Context *context, const std::vector<const ValuePlug *> &proxyInputs )
+		virtual IECore::ConstObjectVectorPtr execute( const Context *context, const std::vector<const ValuePlug *> &proxyInputs ) const
 		{
 			if( isSubclassed() )
 			{
@@ -164,14 +170,14 @@ class EngineWrapper : public IECorePython::RefCountedWrapper<Expression::Engine>
 			throw IECore::Exception( "Engine::execute() python method not defined" );
 		}
 
-		virtual void setPlugValue( ValuePlug *plug, const IECore::Object *value )
+		virtual void apply( ValuePlug *plug, const IECore::Object *value ) const
 		{
 			if( isSubclassed() )
 			{
 				IECorePython::ScopedGILLock gilLock;
 				try
 				{
-					object f = this->methodOverride( "setPlugValue" );
+					object f = this->methodOverride( "apply" );
 					if( f )
 					{
 						f( ValuePlugPtr( plug ), IECore::ObjectPtr( const_cast<IECore::Object *>( value ) ) );
@@ -183,43 +189,115 @@ class EngineWrapper : public IECorePython::RefCountedWrapper<Expression::Engine>
 					translatePythonException();
 				}
 			}
-			
-			throw IECore::Exception( "Engine::setPlugValue() python method not defined" );
+
+			throw IECore::Exception( "Engine::apply() python method not defined" );
+		}
+
+		virtual std::string identifier( const Expression *node, const ValuePlug *plug ) const
+		{
+			if( isSubclassed() )
+			{
+				IECorePython::ScopedGILLock gilLock;
+				try
+				{
+					object f = this->methodOverride( "identifier" );
+					if( f )
+					{
+						object result = f( ExpressionPtr( const_cast<Expression *>( node ) ), ValuePlugPtr( const_cast<ValuePlug *>( plug ) ) );
+						return extract<std::string>( result );
+					}
+				}
+				catch( const error_already_set &e )
+				{
+					translatePythonException();
+				}
+			}
+
+			throw IECore::Exception( "Engine::identifier() python method not defined" );
+		}
+
+		virtual std::string replace( const Expression *node, const std::string &expression, const std::vector<const ValuePlug *> &oldPlugs, const std::vector<const ValuePlug *> &newPlugs ) const
+		{
+			if( isSubclassed() )
+			{
+				IECorePython::ScopedGILLock gilLock;
+				try
+				{
+					object f = this->methodOverride( "replace" );
+					if( f )
+					{
+						list pythonOldPlugs, pythonNewPlugs;
+						for( std::vector<const ValuePlug *>::const_iterator it = oldPlugs.begin(); it!=oldPlugs.end(); it++ )
+						{
+							pythonOldPlugs.append( PlugPtr( const_cast<ValuePlug *>( *it ) ) );
+						}
+						for( std::vector<const ValuePlug *>::const_iterator it = newPlugs.begin(); it!=newPlugs.end(); it++ )
+						{
+							pythonNewPlugs.append( PlugPtr( const_cast<ValuePlug *>( *it ) ) );
+						}
+
+						object result = f( ExpressionPtr( const_cast<Expression *>( node ) ), expression, pythonOldPlugs, pythonNewPlugs );
+						return extract<std::string>( result );
+					}
+				}
+				catch( const error_already_set &e )
+				{
+					translatePythonException();
+				}
+			}
+
+			throw IECore::Exception( "Engine::replace() python method not defined" );
+		}
+
+		virtual std::string defaultExpression( const ValuePlug *output ) const
+		{
+			if( isSubclassed() )
+			{
+				IECorePython::ScopedGILLock gilLock;
+				try
+				{
+					object f = this->methodOverride( "defaultExpression" );
+					if( f )
+					{
+						object result = f( ValuePlugPtr( const_cast<ValuePlug *>( output ) ) );
+						return extract<std::string>( result );
+					}
+				}
+				catch( const error_already_set &e )
+				{
+					translatePythonException();
+				}
+			}
+
+			throw IECore::Exception( "Engine::defaultExpression() python method not defined" );
+		}
+
+
+		static void registerEngine( const std::string &engineType, object creator )
+		{
+			Expression::Engine::registerEngine( engineType, ExpressionEngineCreator( creator ) );
+		}
+
+		static tuple registeredEngines()
+		{
+			std::vector<std::string> engineTypes;
+			Expression::Engine::registeredEngines( engineTypes );
+			boost::python::list l;
+			for( std::vector<std::string>::const_iterator it = engineTypes.begin(); it!=engineTypes.end(); it++ )
+			{
+				l.append( *it );
+			}
+			return boost::python::tuple( l );
 		}
 
 };
 
-struct ExpressionEngineCreator
+static tuple languages()
 {
-	ExpressionEngineCreator( object fn )
-		:	m_fn( fn )
-	{
-	}
-
-	Expression::EnginePtr operator()( const std::string &expression )
-	{
-		IECorePython::ScopedGILLock gilLock;
-		Expression::EnginePtr result = extract<Expression::EnginePtr>( m_fn( expression ) );
-		return result;
-	}
-
-	private :
-
-		object m_fn;
-
-};
-
-void registerEngine( const std::string &engineType, object creator )
-{
-	Expression::Engine::registerEngine( engineType, ExpressionEngineCreator( creator ) );
-}
-
-tuple registeredEnginesWrapper()
-{
-	std::vector<std::string> engineTypes;
-	Expression::Engine::registeredEngines( engineTypes );
+	std::vector<std::string> languages;
+	Expression::languages( languages );
 	boost::python::list l;
-	for( std::vector<std::string>::const_iterator it = engineTypes.begin(); it!=engineTypes.end(); it++ )
+	for( std::vector<std::string>::const_iterator it = languages.begin(); it!=languages.end(); it++ )
 	{
 		l.append( *it );
 	}
@@ -229,40 +307,30 @@ tuple registeredEnginesWrapper()
 class ExpressionSerialiser : public NodeSerialiser
 {
 
-	virtual bool childNeedsSerialisation( const Gaffer::GraphComponent *child ) const
+	virtual void moduleDependencies( const Gaffer::GraphComponent *graphComponent, std::set<std::string> &modules ) const
 	{
-		const Expression *expression = child->parent<Expression>();
-		if( child == expression->expressionPlug() )
+		const Expression *e = static_cast<const Expression *>( graphComponent );
+		std::string language;
+		e->getExpression( language );
+		if( !language.empty() && language != "python" )
 		{
-			// We'll serialise this manually ourselves in
-			// postScript() - see comments there.
-			return false;
+			/// \todo Consider a virtual method on the Engine
+			/// to provide this information.
+			modules.insert( "Gaffer" + language );
 		}
-		return NodeSerialiser::childNeedsSerialisation( child );
 	}
 
 	virtual std::string postScript( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const
 	{
-		std::string result = NodeSerialiser::postScript( graphComponent, identifier, serialisation );
+		const Expression *e = static_cast<const Expression *>( graphComponent );
 
-		// When the expression plug is set, the Expression node creates an engine,
-		// parses the expression, and connects itself up in the graph. We must therefore
-		// delay the setting of the expression until the whole graph has been created,
-		// otherwise we'll be hunting for plugs referenced in the expression which have
-		// not yet been created. The sad thing about all this is that the serialisation
-		// has already reproduced the network we need anyway - the Expression node doesn't
-		// even need to do anything.
-		//
-		/// \todo We could consider not using plugSetSignal() to trigger expression
-		/// parsing, instead using an explicit method on the Expression class. In that
-		/// case we wouldn't need any custom serialisation at all, but the UI code and
-		/// scripts creating expressions would need to be updated to use the method
-		/// rather than to just set the plug.
-		const Expression *expression = static_cast<const Expression *>( graphComponent );
-		const Serialiser *s = Serialisation::acquireSerialiser( expression->expressionPlug() );
-		result += s->postConstructor( expression->expressionPlug(), serialisation.identifier( expression->expressionPlug() ), serialisation );
+		std::string language;
+		const std::string expression = e->getExpression( language );
 
-		return result;
+		object pythonExpression( expression );
+		std::string quotedExpression = extract<std::string>( pythonExpression.attr( "__repr__" )() );
+
+		return identifier + ".setExpression( " + quotedExpression + ", \"" + language + "\" )\n";
 	}
 
 };
@@ -272,13 +340,22 @@ class ExpressionSerialiser : public NodeSerialiser
 void GafferBindings::bindExpression()
 {
 
-	scope s = DependencyNodeClass<Expression>();
+	scope s = DependencyNodeClass<Expression>()
+		.def( "languages", &languages ).staticmethod( "languages" )
+		.def( "defaultExpression", &Expression::defaultExpression ).staticmethod( "defaultExpression" )
+		.def( "setExpression", &setExpression, ( arg( "expression" ), arg( "language" ) = "python" ) )
+		.def( "getExpression", &getExpression )
+		.def( "expressionChangedSignal", &Expression::expressionChangedSignal, return_internal_reference<1>() )
+		.def( "identifier", &Expression::identifier )
+	;
 
 	IECorePython::RefCountedClass<Expression::Engine, IECore::RefCounted, EngineWrapper>( "Engine" )
 		.def( init<>() )
-		.def( "registerEngine", &registerEngine ).staticmethod( "registerEngine" )
-		.def( "registeredEngines", &registeredEnginesWrapper ).staticmethod( "registeredEngines" )
+		.def( "registerEngine", &EngineWrapper::registerEngine ).staticmethod( "registerEngine" )
+		.def( "registeredEngines", &EngineWrapper::registeredEngines ).staticmethod( "registeredEngines" )
 	;
+
+	SignalClass<Expression::ExpressionChangedSignal, DefaultSignalCaller<Expression::ExpressionChangedSignal>, ExpressionChangedSlotCaller >( "ExpressionChangedSignal" );
 
 	Serialisation::registerSerialiser( Expression::staticTypeId(), new ExpressionSerialiser );
 
