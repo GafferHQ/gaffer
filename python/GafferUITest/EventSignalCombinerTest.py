@@ -64,6 +64,8 @@ class EventSignalCombinerTest( GafferUITest.TestCase ) :
 
 	def setUp( self ) :
 
+		GafferUITest.TestCase.setUp( self )
+
 		self.falseSlotCalled = False
 		self.trueSlotCalled = False
 		self.exceptionSlotCalled = False

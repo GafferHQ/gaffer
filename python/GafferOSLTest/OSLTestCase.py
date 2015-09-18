@@ -40,19 +40,10 @@ import GafferSceneTest
 
 class OSLTestCase( GafferSceneTest.SceneTestCase ) :
 
-	def setUp( self ) :
-
-		self.__compiledShaders = set()
-
 	def compileShader( self, sourceFileName ) :
 
-		outputFileName = "/tmp/" + os.path.splitext( os.path.basename( sourceFileName ) )[0] + ".oso"
+		outputFileName = self.temporaryDirectory() + "/" + os.path.splitext( os.path.basename( sourceFileName ) )[0] + ".oso"
 		os.system( "oslc -q -o %s %s" % ( outputFileName, sourceFileName ) )
 
 		return os.path.splitext( outputFileName )[0]
 
-	def tearDown( self ) :
-
-		for f in self.__compiledShaders :
-			if os.path.exists( f ) :
-				os.remove( f )

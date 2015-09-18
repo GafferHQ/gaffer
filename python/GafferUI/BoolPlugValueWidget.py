@@ -74,7 +74,7 @@ class BoolPlugValueWidget( GafferUI.PlugValueWidget ) :
 			if displayMode is not None :
 				self.__boolWidget.setDisplayMode( self.__boolWidget.DisplayMode.Switch if displayMode == "switch" else self.__boolWidget.DisplayMode.CheckBox )
 
-		self.__boolWidget.setEnabled( self._editable() )
+		self.__boolWidget.setEnabled( self._editable( canEditAnimation = True ) )
 
 	def __stateChanged( self, widget ) :
 
@@ -86,6 +86,16 @@ class BoolPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
 
-			self.getPlug().setValue( self.__boolWidget.getState() )
+			if Gaffer.Animation.isAnimated( self.getPlug() ) :
+				curve = Gaffer.Animation.acquire( self.getPlug() )
+				curve.addKey(
+					Gaffer.Animation.Key(
+						time = self.getContext().getTime(),
+						value = self.__boolWidget.getState(),
+						type = Gaffer.Animation.Type.Step
+					)
+				)
+			else :
+				self.getPlug().setValue( self.__boolWidget.getState() )
 
 GafferUI.PlugValueWidget.registerType( Gaffer.BoolPlug, BoolPlugValueWidget )

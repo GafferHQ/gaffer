@@ -42,11 +42,14 @@ import threading
 import IECore
 
 import Gaffer
+import GafferTest
 import GafferImage
 
-class DisplayTest( unittest.TestCase ) :
+class DisplayTest( GafferTest.TestCase ) :
 
 	def setUp( self ) :
+
+		GafferTest.TestCase.setUp( self )
 
 		self.__dataReceivedSemaphore = threading.Semaphore( 0 )
 		self.__dataReceivedConnection = GafferImage.Display.dataReceivedSignal().connect( Gaffer.WeakMethod( self.__dataReceived ) )

@@ -65,7 +65,7 @@ def __subdivisionSummary( plug ) :
 	if plug["subdivIterations"]["enabled"].getValue() :
 		info.append( "Iterations %d" % plug["subdivIterations"]["value"].getValue() )
 	if plug["subdivPixelError"]["enabled"].getValue() :
-		info.append( ( "Error %.4f" % plug["subdivPixelError"]["value"].getValue() ).rstrip( '0' ).rstrip( '.' ) )
+		info.append( "Error %s" % GafferUI.NumericWidget.valueToString( plug["subdivPixelError"]["value"].getValue() ) )
 	if plug["subdivAdaptiveMetric"]["enabled"].getValue() :
 		info.append( string.capwords( plug["subdivAdaptiveMetric"]["value"].getValue().replace( "_", " " ) ) + " Metric" )
 

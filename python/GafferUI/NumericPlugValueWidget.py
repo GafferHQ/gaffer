@@ -107,7 +107,14 @@ class NumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 			self.__numericWidget.setErrored( value is None )
 
-		self.__numericWidget.setEditable( self._editable() )
+			## \todo Perhaps this styling should be provided by the NumericWidget itself?
+			animated = Gaffer.Animation.isAnimated( plug )
+			widgetAnimated = GafferUI._Variant.fromVariant( self.__numericWidget._qtWidget().property( "gafferAnimated" ) ) or False
+			if widgetAnimated != animated :
+				self.__numericWidget._qtWidget().setProperty( "gafferAnimated", GafferUI._Variant.toVariant( bool( animated ) ) )
+				self.__numericWidget._repolish()
+
+		self.__numericWidget.setEditable( self._editable( canEditAnimation = True ) )
 
 	def __keyPress( self, widget, event ) :
 
@@ -125,7 +132,7 @@ class NumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __valueChanged( self, widget, reason ) :
 
-		if self._editable() :
+		if self._editable( canEditAnimation = True ) :
 
 			if not widget.changesShouldBeMerged( self.__lastChangedReason, reason ) :
 				self.__mergeGroupId += 1
@@ -140,10 +147,21 @@ class NumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode ), mergeGroup=mergeGroup ) :
 
 			with Gaffer.BlockedConnection( self._plugConnections() ) :
-				try :
-					self.getPlug().setValue( self.__numericWidget.getValue() )
-				except :
-					pass
+				if Gaffer.Animation.isAnimated( self.getPlug() ) :
+					curve = Gaffer.Animation.acquire( self.getPlug() )
+					if self.__numericWidget.getText() != self.__numericWidget.valueToString( curve.evaluate( self.getContext().getTime() ) ) :
+						curve.addKey(
+							Gaffer.Animation.Key(
+								self.getContext().getTime(),
+								self.__numericWidget.getValue(),
+								Gaffer.Animation.Type.Linear
+							)
+						)
+				else :
+					try :
+						self.getPlug().setValue( self.__numericWidget.getValue() )
+					except :
+						pass
 
 			# now any changes that were made in the numeric widget have been transferred
 			# into the global undo queue, we remove the text editing changes from the

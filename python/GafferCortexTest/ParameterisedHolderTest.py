@@ -1033,19 +1033,19 @@ class ParameterisedHolderTest( GafferTest.TestCase ) :
 		self.assertEqual( ph["parameters"]["a"].getValue(), 1 )
 		self.assertEqual( ph["parameters"]["b"].getValue(), 2 )
 		self.assertEqual( ph["parameters"]["b"].getInput(), None )
-		
+
 		ph["parameters"]["b"].setInput( ph["parameters"]["a"] )
 		self.assertTrue( ph["parameters"]["b"].getInput().isSame( ph["parameters"]["a"] ) )
 		self.assertEqual( ph["parameters"]["b"].getValue(), 1 )
-		
+
 		ph["parameters"]["a"].setValue( 2 )
 		self.assertEqual( ph["parameters"]["b"].getValue(), 2 )
-		
+
 		messageHandler = IECore.CapturingMessageHandler()
 		with messageHandler :
 			with ph.parameterModificationContext() :
 				p.parameters()["a"].setNumericValue( 3 )
-		
+
 		self.assertEqual( ph["parameters"]["a"].getValue(), 3 )
 		self.assertEqual( ph["parameters"]["b"].getValue(), 3 )
 		self.assertEqual( messageHandler.messages, [] )
@@ -1131,6 +1131,8 @@ class ParameterisedHolderTest( GafferTest.TestCase ) :
 		self.assertTypeNamesArePrefixed( GafferCortexTest )
 
 	def setUp( self ) :
+
+		GafferTest.TestCase.setUp( self )
 
 		os.environ["GAFFERCORTEXTEST_CLASS_PATHS"] = os.path.dirname( __file__ ) + "/classes"
 

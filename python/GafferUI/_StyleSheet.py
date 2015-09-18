@@ -209,6 +209,12 @@ _styleSheet = string.Template(
 
 	}
 
+	QLineEdit[gafferAnimated="true"] {
+
+		background-color: $animatedColor;
+
+	}
+
 	QLineEdit:focus, QPlainTextEdit[readOnly="false"]:focus, QLineEdit[gafferHighlighted=\"true\"] {
 
 		border: 2px solid $brightColor;
@@ -1013,5 +1019,6 @@ _styleSheet = string.Template(
 	"foregroundFaded" : "#999999",
 	"alternateColor" : "#454545",
 	"errorColor" : "#ff5555",
+	"animatedColor" : "#80985e",
 
 } )

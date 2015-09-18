@@ -125,7 +125,14 @@ bool Plug::acceptsChild( const GraphComponent *potentialChild ) const
 	{
 		return false;
 	}
-	return p->direction()==direction();
+	/// \todo Having children of a different direction is useful,
+	/// but we're currently only allowing it if the parent doesn't
+	/// accept inputs. Figure out the correct logic for propagating
+	/// connections from parents to children (and vice versa), and
+	/// free things up to always allow differing directions. Should
+	/// a child with a different direction be connected in the
+	/// opposite direction?
+	return p->direction() == direction() || !getFlags( AcceptsInputs );
 }
 
 bool Plug::acceptsParent( const GraphComponent *potentialParent ) const

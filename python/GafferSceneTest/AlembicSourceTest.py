@@ -97,7 +97,7 @@ class AlembicSourceTest( GafferSceneTest.SceneTestCase ) :
 		for i in range( 0, numSamples * 2 ) :
 			time = startTime + ( endTime - startTime ) * float( i ) / ( numSamples * 2 - 1 )
 			c = Gaffer.Context()
-			c.setFrame( time * 24 )
+			c.setTime( time )
 			with c :
 				self.assertBoxesAlmostEqual( a["out"].bound( "/" ), b.boundAtTime( time ), 6 )
 				self.assertBoxesAlmostEqual( a["out"].bound( "/pCube1/pCubeShape1" ), b.boundAtTime( time ), 6 )

@@ -173,19 +173,23 @@ class PlugValueWidget( GafferUI.Widget ) :
 		]
 
 	## Returns True if the plug value is editable as far as this ui is concerned
-	# - that plug.settable() is True and self.getReadOnly() is False.
-	def _editable( self ) :
+	# - that plug.settable() is True and self.getReadOnly() is False. By default,
+	# an animated plug is considered to be non-editable because it has an input
+	# connection. Subclasses which support animation editing may pass
+	# `canEditAnimation = True` to have animated plugs considered as editable.
+	def _editable( self, canEditAnimation = False ) :
 
 		plug = self.getPlug()
 
 		if plug is None :
 			return False
 
-		if hasattr(plug, 'settable') and not plug.settable():
-			return False
-
 		if self.__readOnly :
 			return False
+
+		if hasattr( plug, "settable" ) and not plug.settable() :
+			if not canEditAnimation or not Gaffer.Animation.isAnimated( plug ) :
+				return False
 
 		return True
 
@@ -263,7 +267,7 @@ class PlugValueWidget( GafferUI.Widget ) :
 			pasteValue = None
 			if applicationRoot is not None :
 				pasteValue = self._convertValue( applicationRoot.getClipboardContents() )
-			
+
 			menuDefinition.append(
 				"/Paste Value", {
 					"command" : functools.partial( Gaffer.WeakMethod( self.__setValue ), pasteValue ),
@@ -297,7 +301,7 @@ class PlugValueWidget( GafferUI.Widget ) :
 					"active" : self._editable()
 				}
 			)
-		
+
 		if Gaffer.NodeAlgo.presets( self.getPlug() ) :
 			menuDefinition.append(
 				"/Preset", {
@@ -305,7 +309,7 @@ class PlugValueWidget( GafferUI.Widget ) :
 					"active" : self._editable()
 				}
 			)
-		
+
 		self.popupMenuSignal()( menuDefinition, self )
 
 		return menuDefinition
@@ -564,9 +568,9 @@ class PlugValueWidget( GafferUI.Widget ) :
 		return result
 
 	def __applyPreset( self, presetName, *unused ) :
-	
+
 		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
-			Gaffer.NodeAlgo.applyPreset( self.getPlug(), presetName )					
+			Gaffer.NodeAlgo.applyPreset( self.getPlug(), presetName )
 
 	# drag and drop stuff
 
@@ -609,4 +613,4 @@ class PlugValueWidget( GafferUI.Widget ) :
 				self.getPlug().setValue( self._convertValue( event.data ) )
 
 		return True
-		
+

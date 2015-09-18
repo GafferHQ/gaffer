@@ -61,8 +61,6 @@ IE_CORE_DEFINERUNTIMETYPED( SceneReader );
 // SceneReader implementation
 //////////////////////////////////////////////////////////////////////////
 
-/// \todo hard coded framerate should be replaced with a getTime() method on Gaffer::Context or something
-const double SceneReader::g_frameRate( 24 );
 size_t SceneReader::g_firstPlugIndex = 0;
 
 static IECore::BoolDataPtr g_trueBoolData = new IECore::BoolData( true );
@@ -152,7 +150,7 @@ void SceneReader::hashBound( const ScenePath &path, const Gaffer::Context *conte
 		return;
 	}
 
-	s->hash( SceneInterface::BoundHash, context->getFrame() / g_frameRate, h );
+	s->hash( SceneInterface::BoundHash, context->getTime(), h );
 
 }
 
@@ -164,7 +162,7 @@ Imath::Box3f SceneReader::computeBound( const ScenePath &path, const Gaffer::Con
 		return Box3f();
 	}
 
-	Box3d b = s->readBound( context->getFrame() / g_frameRate );
+	Box3d b = s->readBound( context->getTime() );
 
 	if( b.isEmpty() )
 	{
@@ -187,7 +185,7 @@ void SceneReader::hashTransform( const ScenePath &path, const Gaffer::Context *c
 		return;
 	}
 
-	s->hash( SceneInterface::TransformHash, context->getFrame() / g_frameRate, h );
+	s->hash( SceneInterface::TransformHash, context->getTime(), h );
 }
 
 Imath::M44f SceneReader::computeTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
@@ -198,7 +196,7 @@ Imath::M44f SceneReader::computeTransform( const ScenePath &path, const Gaffer::
 		return M44f();
 	}
 
-	M44d t = s->readTransformAsMatrix( context->getFrame() / g_frameRate );
+	M44d t = s->readTransformAsMatrix( context->getTime() );
 
 	return M44f(
 		t[0][0], t[0][1], t[0][2], t[0][3],
@@ -222,7 +220,7 @@ void SceneReader::hashAttributes( const ScenePath &path, const Gaffer::Context *
 	fileNamePlug()->hash( h );
 	refreshCountPlug()->hash( h );
 
-	s->hash( SceneInterface::AttributesHash, context->getFrame() / g_frameRate, h );
+	s->hash( SceneInterface::AttributesHash, context->getTime(), h );
 }
 
 IECore::ConstCompoundObjectPtr SceneReader::computeAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
@@ -253,7 +251,7 @@ IECore::ConstCompoundObjectPtr SceneReader::computeAttributes( const ScenePath &
 
 		// the const cast is ok, because we're only using it to put the object into a CompoundObject that will
 		// be treated as forever const after being returned from this function.
-		result->members()[ std::string( *it ) ] = boost::const_pointer_cast<Object>( s->readAttribute( *it, context->getFrame() / g_frameRate ) );
+		result->members()[ std::string( *it ) ] = boost::const_pointer_cast<Object>( s->readAttribute( *it, context->getTime() ) );
 	}
 
 	return result;
@@ -275,7 +273,7 @@ void SceneReader::hashObject( const ScenePath &path, const Gaffer::Context *cont
 	fileNamePlug()->hash( h );
 	refreshCountPlug()->hash( h );
 
-	s->hash( SceneInterface::ObjectHash, context->getFrame() / g_frameRate, h );
+	s->hash( SceneInterface::ObjectHash, context->getTime(), h );
 }
 
 IECore::ConstObjectPtr SceneReader::computeObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
@@ -286,7 +284,7 @@ IECore::ConstObjectPtr SceneReader::computeObject( const ScenePath &path, const 
 		return parent->objectPlug()->defaultValue();
 	}
 
-	return s->readObject( context->getFrame() / g_frameRate );
+	return s->readObject( context->getTime() );
 }
 
 void SceneReader::hashChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
@@ -306,7 +304,7 @@ void SceneReader::hashChildNames( const ScenePath &path, const Gaffer::Context *
 	// append a hash of the tags plug, as restricting the tags can affect the hierarchy
 	tagsPlug()->hash( h );
 
-	s->hash( SceneInterface::ChildNamesHash, context->getFrame() / g_frameRate, h );
+	s->hash( SceneInterface::ChildNamesHash, context->getTime(), h );
 }
 
 IECore::ConstInternedStringVectorDataPtr SceneReader::computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const

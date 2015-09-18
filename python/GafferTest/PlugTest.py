@@ -694,6 +694,12 @@ class PlugTest( GafferTest.TestCase ) :
 
 		assertPostconditions()
 
+	def testMixedInputsAndOutputsAsChildren( self ) :
+
+		p = Gaffer.Plug( flags = Gaffer.Plug.Flags.Default & ~Gaffer.Plug.Flags.AcceptsInputs )
+		p["in"] = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.In )
+		p["out"] = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.Out )
+
 if __name__ == "__main__":
 	unittest.main()
 

@@ -38,6 +38,8 @@ import sys
 import unittest
 import inspect
 import types
+import shutil
+import tempfile
 
 import IECore
 
@@ -45,6 +47,10 @@ import Gaffer
 
 ## A useful base class for creating test cases for nodes.
 class TestCase( unittest.TestCase ) :
+
+	def setUp( self ) :
+
+		self.__temporaryDirectory = None
 
 	def tearDown( self ) :
 
@@ -62,6 +68,19 @@ class TestCase( unittest.TestCase ) :
 			sys.exc_info()[1].exc_info = ( None, None, None )
 
 		sys.exc_clear()
+
+		if self.__temporaryDirectory is not None :
+			shutil.rmtree( self.__temporaryDirectory )
+
+	## Returns a path to a directory the test may use for temporary
+	# storage. This will be cleaned up automatically after the test
+	# has been run.
+	def temporaryDirectory( self ) :
+
+		if self.__temporaryDirectory is None :
+			 self.__temporaryDirectory = tempfile.mkdtemp( prefix = "gafferTest" )
+
+		return self.__temporaryDirectory
 
 	## Attempts to ensure that the hashes for a node
 	# are reasonable by jiggling around input values

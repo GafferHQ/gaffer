@@ -214,7 +214,7 @@ class TextWidget( GafferUI.Widget ) :
 			return self.__editingFinishedSignal
 		except :
 			self.__editingFinishedSignal = GafferUI.WidgetSignal()
-			self._qtWidget().editingFinished.connect( IECore.curry( TextWidget.__editingFinished, weakref.ref( self._qtWidget() ) ) )
+			self._qtWidget().editingFinished.connect( Gaffer.WeakMethod( self.__editingFinished, fallbackResult = None ) )
 
 		return self.__editingFinishedSignal
 
@@ -265,34 +265,15 @@ class TextWidget( GafferUI.Widget ) :
 
 	def __textChanged( self, text ) :
 
-		try :
-			signal = self.__textChangedSignal
-		except :
-			return
-
-		signal( self )
+		self.__textChangedSignal( self )
 
 	def __returnPressed( self ) :
 
 		self.__activatedSignal( self )
 
-	@staticmethod
-	def __editingFinished( qtWidgetWeakRef ) :
+	def __editingFinished( self ) :
 
-		# We're handling editingFinished slightly differently than the other
-		# qt signals we use to emit our own signals. Instead of connecting the qt
-		# editingFinished signal to a method of the TextWidget via WeakMethod,
-		# we're connecting to a staticmethod instead, and passing a weak reference to
-		# the QWidget, and using that to recover the owning Widget. When closing Gaffer,
-		# it seems that sometimes Qt will send editingFinished for a QWidget that no
-		# longer has a Widget owner, in which case the WeakMethod approach would raise.
-		# Possibly this approach may be needed in other cases, but we're just using it
-		# in this one case for now, as that's the only one to rear its ugly head so far.
-
-		qtWidget = qtWidgetWeakRef()
-		widget = GafferUI.Widget._owner( qtWidget )
-		if widget is not None :
-			widget.__editingFinishedSignal( widget )
+		self.__editingFinishedSignal( self )
 
 	def __selectionChanged( self ) :
 
@@ -378,7 +359,7 @@ class _LineEdit( QtGui.QLineEdit ) :
 			QtGui.QSizePolicy.Expanding if self.__fixedCharacterWidth is None else QtGui.QSizePolicy.Fixed,
 			QtGui.QSizePolicy.Fixed
 		)
-		
+
 		# we need to make sure that the geometry is up-to-date with the current character width
 		if self.__fixedCharacterWidth is not None:
 			self.updateGeometry()

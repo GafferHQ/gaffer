@@ -45,10 +45,11 @@ import GafferCortex
 
 class OpMatcherTest( GafferTest.TestCase ) :
 
-	__sequence = IECore.FileSequence( "/tmp/a.#.exr 1-10" )
-
 	def setUp( self ) :
 
+		GafferTest.TestCase.setUp( self )
+
+		self.__sequence = IECore.FileSequence( self.temporaryDirectory() + "/a.#.exr 1-10" )
 		for f in self.__sequence.fileNames() :
 			os.system( "touch %s" % f )
 
@@ -91,12 +92,6 @@ class OpMatcherTest( GafferTest.TestCase ) :
 
 		self.failUnless( GafferCortex.OpMatcher.defaultInstance( alternativeClassLoader ) is GafferCortex.OpMatcher.defaultInstance( alternativeClassLoader ) )
 		self.failUnless( GafferCortex.OpMatcher.defaultInstance( alternativeClassLoader ) is not GafferCortex.OpMatcher.defaultInstance() )
-
-	def tearDown( self ) :
-
-		for f in self.__sequence.fileNames() :
-			if os.path.exists( f ) :
-				os.remove( f )
 
 if __name__ == "__main__":
 	unittest.main()

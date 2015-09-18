@@ -301,17 +301,17 @@ class ContextTest( GafferTest.TestCase ) :
 	def testNames( self ) :
 
 		c = Gaffer.Context()
-		self.assertEqual( set( c.names() ), set( [ "frame" ] ) )
+		self.assertEqual( set( c.names() ), set( [ "frame", "framesPerSecond" ] ) )
 
 		c["a"] = 10
-		self.assertEqual( set( c.names() ), set( [ "frame", "a" ] ) )
+		self.assertEqual( set( c.names() ), set( [ "frame", "framesPerSecond", "a" ] ) )
 
 		cc = Gaffer.Context( c )
-		self.assertEqual( set( cc.names() ), set( [ "frame", "a" ] ) )
+		self.assertEqual( set( cc.names() ), set( [ "frame", "framesPerSecond", "a" ] ) )
 
 		cc["b"] = 20
-		self.assertEqual( set( cc.names() ), set( [ "frame", "a", "b" ] ) )
-		self.assertEqual( set( c.names() ), set( [ "frame", "a" ] ) )
+		self.assertEqual( set( cc.names() ), set( [ "frame", "framesPerSecond", "a", "b" ] ) )
+		self.assertEqual( set( c.names() ), set( [ "frame", "framesPerSecond", "a" ] ) )
 
 		self.assertEqual( cc.names(), cc.keys() )
 
@@ -533,28 +533,28 @@ class ContextTest( GafferTest.TestCase ) :
 
 		self.assertTrue( c.hasSubstitutions( "\\" ) ) # must return true, because escaping affects substitution
 		self.assertTrue( c.hasSubstitutions( "\\\\" ) ) # must return true, because escaping affects substitution
-	
+
 	def testRemove( self ) :
-	
+
 		c = Gaffer.Context()
 		c["a"] = "apple"
 		c["b"] = "bear"
 		c["c"] = "cat"
-		
+
 		h = c.hash()
-		self.assertEqual( set( c.names() ), set( [ "a", "b", "c", "frame" ] ) )
-		
+		self.assertEqual( set( c.names() ), set( [ "a", "b", "c", "frame", "framesPerSecond" ] ) )
+
 		# test Context.remove()
 		c.remove( "a" )
 		self.assertNotEqual( c.hash(), h )
-		self.assertEqual( set( c.names() ), set( [ "b", "c", "frame" ] ) )
+		self.assertEqual( set( c.names() ), set( [ "b", "c", "frame", "framesPerSecond" ] ) )
 		h = c.hash()
-		
+
 		# test Context.__delitem__()
 		del c[ "c" ]
 		self.assertNotEqual( c.hash(), h )
-		self.assertEqual( set( c.names() ), set( [ "b", "frame" ] ) )
-		
+		self.assertEqual( set( c.names() ), set( [ "b", "frame", "framesPerSecond" ] ) )
+
 		self.assertEqual( c["b"], "bear" )
 
 	def testContains( self ) :
@@ -566,11 +566,29 @@ class ContextTest( GafferTest.TestCase ) :
 		c["a"] = 1
 		self.assertTrue( "a" in c )
 		self.assertFalse( "a" not in c )
-		
+
 		del c["a"]
 		self.assertFalse( "a" in c )
 		self.assertTrue( "a" not in c )
-		
+
+	def testTime( self ) :
+
+		c = Gaffer.Context()
+
+		self.assertEqual( c.getFrame(), 1.0 )
+		self.assertEqual( c.getFramesPerSecond(), 24.0 )
+		self.assertAlmostEqual( c.getTime(), 1.0 / 24.0 )
+
+		c.setFrame( 12.0 )
+		self.assertEqual( c.getFrame(), 12.0 )
+		self.assertEqual( c.getFramesPerSecond(), 24.0 )
+		self.assertAlmostEqual( c.getTime(), 12.0 / 24.0 )
+
+		c.setFramesPerSecond( 48.0 )
+		self.assertEqual( c.getFrame(), 12.0 )
+		self.assertEqual( c.getFramesPerSecond(), 48.0 )
+		self.assertAlmostEqual( c.getTime(), 12.0 / 48.0 )
+
 if __name__ == "__main__":
 	unittest.main()
 

@@ -48,6 +48,8 @@ class ReferenceTest( GafferTest.TestCase ) :
 
 	def setUp( self ) :
 
+		GafferTest.TestCase.setUp( self )
+
 		# stash the SphereNode so we can restore it in
 		# tearDown() - we're going to mischievously delete
 		# it from the GafferTest module to induce errors
@@ -418,7 +420,7 @@ class ReferenceTest( GafferTest.TestCase ) :
 
 		self.assertTrue( "a" in s3["r"] )
 		self.assertTrue( isinstance( s3["r"]["a"], GafferTest.AddNode ) )
-	
+
 	def testDependencyNode( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -430,37 +432,37 @@ class ReferenceTest( GafferTest.TestCase ) :
 		self.assertTrue( s["r"].isInstanceOf( Gaffer.DependencyNode.staticTypeId() ) )
 		self.assertTrue( isinstance( s["r"], Gaffer.SubGraph ) )
 		self.assertTrue( s["r"].isInstanceOf( Gaffer.SubGraph.staticTypeId() ) )
-		
+
 		# create a box with a promoted output:
 		s["b"] = Gaffer.Box()
 		s["b"]["n"] = GafferTest.AddNode()
 		s["b"].promotePlug( s["b"]["n"]["sum"] )
 		s["b"].exportForReference( "/tmp/test.grf" )
-		
+
 		# load onto reference:
 		s["r"].load( "/tmp/test.grf" )
 		self.assertEqual( s["r"].correspondingInput( s["r"]["sum"] ), None )
 		self.assertEqual( s["r"].enabledPlug(), None )
-		
+
 		# Wire it up to support enabledPlug() and correspondingInput()
 		s["b"].promotePlug( s["b"]["n"]["op1"] )
 		s["b"]["n"]["op2"].setValue( 10 )
 		s["b"].exportForReference( "/tmp/test.grf" )
-		
+
 		# reload reference and test:
 		s["r"].load( "/tmp/test.grf" )
 		self.assertEqual( s["r"].correspondingInput( s["r"]["sum"] ), None )
 		self.assertEqual( s["r"].enabledPlug(), None )
-		
+
 		# add an enabled plug:
 		s["b"]["enabled"] = Gaffer.BoolPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		s["b"].exportForReference( "/tmp/test.grf" )
-		
+
 		# reload reference and test that's now visible via enabledPlug():
 		s["r"].load( "/tmp/test.grf" )
 		self.assertEqual( s["r"].correspondingInput( s["r"]["sum"] ), None )
 		self.assertTrue( s["r"].enabledPlug().isSame( s["r"]["enabled"] ) )
-		
+
 		# hook up the enabled plug inside the box:
 		s["b"]["n"]["enabled"].setInput( s["b"]["enabled"] )
 		s["b"].exportForReference( "/tmp/test.grf" )
@@ -469,8 +471,8 @@ class ReferenceTest( GafferTest.TestCase ) :
 		s["r"].load( "/tmp/test.grf" )
 		self.assertTrue( s["r"].enabledPlug().isSame( s["r"]["enabled"] ) )
 		self.assertTrue( s["r"].correspondingInput( s["r"]["sum"] ).isSame( s["r"]["op1"] ) )
-		
-		
+
+
 		# Connect it into a network, delete it, and check that we get nice auto-reconnect behaviour
 		s["a"] = GafferTest.AddNode()
 		s["r"]["op1"].setInput( s["a"]["sum"] )
@@ -686,17 +688,17 @@ class ReferenceTest( GafferTest.TestCase ) :
 		s = Gaffer.ScriptNode()
 		s["r"] = Gaffer.Reference()
 		s["r"].load( os.path.dirname( __file__ ) + "/references/version-0.8.0.0.grf" )
-		
+
 		self.assertEqual( s["r"]["user"]["promoted"].defaultValue(), False )
 		self.assertEqual( s["r"]["user"]["promoted"].getValue(), True )
-		
+
 		s["r"]["user"]["promoted"].setValue( False )
 		self.assertEqual( s["r"]["user"]["promoted"].defaultValue(), False )
 		self.assertEqual( s["r"]["user"]["promoted"].getValue(), False )
-		
+
 		s2 = Gaffer.ScriptNode()
 		s2.execute( s.serialise() )
-		
+
 		self.assertEqual( s2["r"]["user"]["promoted"].defaultValue(), False )
 		self.assertEqual( s2["r"]["user"]["promoted"].getValue(), False )
 
@@ -811,7 +813,7 @@ class ReferenceTest( GafferTest.TestCase ) :
 
 		s = Gaffer.ScriptNode()
 		s["fileName"].setValue( os.path.dirname( __file__ ) + "/scripts/referenceVersion-0.14.0.0.gfr" )
-		
+
 		with IECore.CapturingMessageHandler() as mh :
 			s.load( continueOnError = True )
 
@@ -874,6 +876,8 @@ class ReferenceTest( GafferTest.TestCase ) :
 		self.assertEqual( states[2], State( [ "user", "p" ], "/tmp/test.grf" ) )
 
 	def tearDown( self ) :
+
+		GafferTest.TestCase.tearDown( self )
 
 		GafferTest.SphereNode = self.__SphereNode
 

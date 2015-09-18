@@ -104,13 +104,18 @@ class NumericWidget( GafferUI.TextWidget ) :
 			( cls.ValueChangedReason.Increment, cls.ValueChangedReason.Increment ),
 		)
 
-	def __valueToText( self, value ) :
+	## Returns the string used to display the given value.
+	@staticmethod
+	def valueToString( value ) :
 
-		value = self.__numericType( value )
-		if self.__numericType is int :
+		if type( value ) is int :
 			return str( value )
 		else :
 			return ( "%.4f" % value ).rstrip( '0' ).rstrip( '.' )
+
+	def __valueToString( self, value ) :
+
+		return self.valueToString( self.__numericType( value ) )
 
 	def __keyPress( self, widget, event ) :
 
@@ -246,7 +251,7 @@ class NumericWidget( GafferUI.TextWidget ) :
 		# zeroes in order to achieve consistent editing. Revert
 		# back to our standard form now so we don't leave it in
 		# this state.
-		self.setText( self.__valueToText( self.getValue() ) )
+		self.setText( self.__valueToString( self.getValue() ) )
 
 		self.__emitValueChanged( self.ValueChangedReason.Edit )
 
@@ -269,7 +274,7 @@ class NumericWidget( GafferUI.TextWidget ) :
 			self._qtWidget().setValidator( validator )
 
 		# update our textual value
-		text = self.__valueToText( value )
+		text = self.__valueToString( value )
 		dragBeginOrEnd = reason in ( self.ValueChangedReason.DragBegin, self.ValueChangedReason.DragEnd )
 
 		if text == self.getText() and not dragBeginOrEnd :

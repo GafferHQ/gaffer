@@ -42,12 +42,12 @@ import unittest
 import IECore
 
 import Gaffer
+import GafferTest
 import GafferImage
 import GafferImageTest
 
-class ImageReaderTest( unittest.TestCase ) :
+class ImageReaderTest( GafferTest.TestCase ) :
 
-	__testDir = "/tmp/imageReaderTest"
 	fileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/checker.exr" )
 	offsetDataWindowFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/rgb.100x100.exr" )
 	negativeDataWindowFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/checkerWithNegativeDataWindow.200x150.exr" )
@@ -270,7 +270,7 @@ class ImageReaderTest( unittest.TestCase ) :
 
 	def testFileRefresh( self ) :
 
-		testFile = self.__testDir + "/refresh.exr"
+		testFile = self.temporaryDirectory() + "/refresh.exr"
 		shutil.copyfile( self.fileName, testFile )
 
 		reader = GafferImage.ImageReader()
@@ -297,16 +297,6 @@ class ImageReaderTest( unittest.TestCase ) :
 		self.assertRaisesRegexp( RuntimeError, ".*wellIDontExist.exr.*", reader["out"]["metadata"].getValue )
 		self.assertRaisesRegexp( RuntimeError, ".*wellIDontExist.exr.*", reader["out"]["channelNames"].getValue )
 		self.assertRaisesRegexp( RuntimeError, ".*wellIDontExist.exr.*", reader["out"].channelData, "R", IECore.V2i( 0 ) )
-
-	def setUp( self ) :
-
-		os.mkdir( self.__testDir )
-
-	def tearDown( self ) :
-
-		if os.path.isdir( self.__testDir ) :
-			shutil.rmtree( self.__testDir )
-
 
 if __name__ == "__main__":
 	unittest.main()

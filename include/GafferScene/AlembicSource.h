@@ -97,9 +97,8 @@ class AlembicSource : public SceneNode
 
 		IECoreAlembic::AlembicInputPtr inputForPath( const ScenePath &path ) const;
 
-		float fps() const;
-
 		static size_t g_firstPlugIndex;
+
 };
 
 IE_CORE_DECLAREPTR( AlembicSource )
