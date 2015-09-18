@@ -34,7 +34,6 @@
 #
 ##########################################################################
 
-import os
 import unittest
 
 import IECore
@@ -51,20 +50,10 @@ class TaskListTest( GafferTest.TestCase ) :
 		c2 = Gaffer.Context()
 		c2["frame"] = 10.0
 		self.assertEqual( n.hash( c ), n.hash( c2 ) )
-		
+
 		n2 = Gaffer.TaskList( "TaskList2" )
 		self.assertEqual( n.hash( c ), n2.hash( c ) )
 		self.assertEqual( n.hash( c2 ), n2.hash( c2 ) )
-	
-	def setUp( self ) :
-
-		for f in [ "/tmp/systemCommandTest.txt" ] :
-			if os.path.exists( f ) :
-				os.remove( f )
-
-	def tearDown( self ) :
-
-		self.setUp()
 
 if __name__ == "__main__":
 	unittest.main()

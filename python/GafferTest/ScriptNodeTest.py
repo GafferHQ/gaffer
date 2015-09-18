@@ -190,11 +190,11 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 		s["a2"]["op1"].setInput( s["a1"]["sum"] )
 		s["a2"]["op2"].setValue( 10 )
 
-		s["fileName"].setValue( "/tmp/test.gfr" )
+		s["fileName"].setValue( self.temporaryDirectory() + "/test.gfr" )
 		s.save()
 
 		s2 = Gaffer.ScriptNode()
-		s2["fileName"].setValue( "/tmp/test.gfr" )
+		s2["fileName"].setValue( self.temporaryDirectory() + "/test.gfr" )
 		s2.load()
 
 		self.assert_( s2["a2"]["op1"].getInput().isSame( s2["a1"]["sum"] ) )
@@ -204,7 +204,7 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 		s = Gaffer.ScriptNode()
 		s["a1"] = GafferTest.AddNode()
 
-		s["fileName"].setValue( "/tmp/test.gfr" )
+		s["fileName"].setValue( self.temporaryDirectory() + "/test.gfr" )
 		s.save()
 
 		s.load()
@@ -406,11 +406,11 @@ a = A()"""
 		self.assertEqual( s["frameRange"]["start"].getValue(), 110 )
 		self.assertEqual( s["frameRange"]["end"].getValue(), 200 )
 
-		s["fileName"].setValue( "/tmp/test.gfr" )
+		s["fileName"].setValue( self.temporaryDirectory() + "/test.gfr" )
 		s.save()
 
 		s2 = Gaffer.ScriptNode()
-		s2["fileName"].setValue( "/tmp/test.gfr" )
+		s2["fileName"].setValue( self.temporaryDirectory() + "/test.gfr" )
 		s2.load()
 
 		self.assertEqual( s2["frameRange"]["start"].getValue(), 110 )
@@ -624,11 +624,11 @@ a = A()"""
 		s["customSetting"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		s["customSetting"].setValue( 100 )
 
-		s["fileName"].setValue( "/tmp/test.gfr" )
+		s["fileName"].setValue( self.temporaryDirectory() + "/test.gfr" )
 		s.save()
 
 		s2 = Gaffer.ScriptNode()
-		s2["fileName"].setValue( "/tmp/test.gfr" )
+		s2["fileName"].setValue( self.temporaryDirectory() + "/test.gfr" )
 		s2.load()
 
 		self.assertEqual( s2["customSetting"].getValue(), 100 )
@@ -829,16 +829,16 @@ a = A()"""
 		s = Gaffer.ScriptNode()
 		s["n"] = Gaffer.Node()
 
-		s["fileName"].setValue( "/tmp/test.gfr" )
+		s["fileName"].setValue( self.temporaryDirectory() + "/test.gfr" )
 		s.save()
 
-		shutil.move( "/tmp/test.gfr", "/tmp/test2.gfr" )
+		shutil.move( self.temporaryDirectory() + "/test.gfr", self.temporaryDirectory() + "/test2.gfr" )
 
 		s = Gaffer.ScriptNode()
-		s["fileName"].setValue( "/tmp/test2.gfr" )
+		s["fileName"].setValue( self.temporaryDirectory() + "/test2.gfr" )
 		s.load()
 
-		self.assertEqual( s["fileName"].getValue(), "/tmp/test2.gfr" )
+		self.assertEqual( s["fileName"].getValue(), self.temporaryDirectory() + "/test2.gfr" )
 
 	def testUnsavedChanges( self ) :
 
@@ -856,7 +856,7 @@ a = A()"""
 			s["node"] = GafferTest.AddNode()
 		self.assertEqual( s["unsavedChanges"].getValue(), True )
 
-		s["fileName"].setValue( "/tmp/test.gfr" )
+		s["fileName"].setValue( self.temporaryDirectory() + "/test.gfr" )
 		s.save()
 		self.assertEqual( s["unsavedChanges"].getValue(), False )
 
@@ -911,20 +911,20 @@ a = A()"""
 		s["n2"] = GafferTest.AddNode()
 		s["n2"]["op1"].setInput( s["n1"]["sum"] )
 
-		s.serialiseToFile( "/tmp/test.gfr" )
+		s.serialiseToFile( self.temporaryDirectory() + "/test.gfr" )
 
 		s2 = Gaffer.ScriptNode()
-		s2["fileName"].setValue( "/tmp/test.gfr" )
+		s2["fileName"].setValue( self.temporaryDirectory() + "/test.gfr" )
 		s2.load()
 
 		self.assertTrue( "n1" in s2 )
 		self.assertTrue( "n2" in s2 )
 		self.assertTrue( s2["n2"]["op1"].getInput().isSame( s2["n1"]["sum"] ) )
 
-		s.serialiseToFile( "/tmp/test.gfr", filter = Gaffer.StandardSet( [ s["n2"] ] ) )
+		s.serialiseToFile( self.temporaryDirectory() + "/test.gfr", filter = Gaffer.StandardSet( [ s["n2"] ] ) )
 
 		s3 = Gaffer.ScriptNode()
-		s3["fileName"].setValue( "/tmp/test.gfr" )
+		s3["fileName"].setValue( self.temporaryDirectory() + "/test.gfr" )
 		s3.load()
 
 		self.assertTrue( "n1" not in s3 )
@@ -938,13 +938,13 @@ a = A()"""
 		s["n2"] = GafferTest.AddNode()
 		s["n2"]["op1"].setInput( s["n1"]["sum"] )
 
-		s.serialiseToFile( "/tmp/test.gfr" )
+		s.serialiseToFile( self.temporaryDirectory() + "/test.gfr" )
 
 		s2 = Gaffer.ScriptNode()
 
 		self.assertRaises( RuntimeError, s2.executeFile, "thisFileDoesntExist.gfr" )
 
-		s2.executeFile( "/tmp/test.gfr" )
+		s2.executeFile( self.temporaryDirectory() + "/test.gfr" )
 
 		self.assertTrue( s2["n2"]["op1"].getInput().isSame( s2["n1"]["sum"] ) )
 
@@ -1010,11 +1010,11 @@ a = A()"""
 		p["value"].setValue( 20 )
 		self.assertEqual( s.context().get( "test" ), 20 )
 
-		s["fileName"].setValue( "/tmp/test.gfr" )
+		s["fileName"].setValue( self.temporaryDirectory() + "/test.gfr" )
 		s.save()
 
 		s2 = Gaffer.ScriptNode()
-		s2["fileName"].setValue( "/tmp/test.gfr" )
+		s2["fileName"].setValue( self.temporaryDirectory() + "/test.gfr" )
 		s2.load()
 
 		self.assertEqual( s2["variables"][p.getName()]["value"].getValue(), 20 )
@@ -1025,7 +1025,7 @@ a = A()"""
 		s = Gaffer.ScriptNode()
 		self.assertEqual( s.context().get( "script:name" ), "" )
 
-		s["fileName"].setValue( "/tmp/test.gfr" )
+		s["fileName"].setValue( self.temporaryDirectory() + "/test.gfr" )
 		self.assertEqual( s.context().get( "script:name" ), "test" )
 
 	def testReloadWithCustomVariables( self ) :
@@ -1033,7 +1033,7 @@ a = A()"""
 		s = Gaffer.ScriptNode()
 		s["variables"].addMember( "test", IECore.IntData( 10 ) )
 
-		s["fileName"].setValue( "/tmp/test.gfr" )
+		s["fileName"].setValue( self.temporaryDirectory() + "/test.gfr" )
 		s.save()
 
 		s["variables"][0]["value"].setValue( 100 )
@@ -1049,11 +1049,11 @@ a = A()"""
 		p = s["variables"].addMember( "test", IECore.IntData( 10 ) )
 		self.assertEqual( s.context().get( "test" ), 10 )
 
-		s["fileName"].setValue( "/tmp/test.gfr" )
+		s["fileName"].setValue( self.temporaryDirectory() + "/test.gfr" )
 		s.save()
 
 		s2 = Gaffer.ScriptNode()
-		s2["fileName"].setValue( "/tmp/test.gfr" )
+		s2["fileName"].setValue( self.temporaryDirectory() + "/test.gfr" )
 		s2.load()
 
 		self.assertEqual( s2["variables"][p.getName()]["value"].getValue(), 10 )
@@ -1192,7 +1192,7 @@ a = A()"""
 		self.assertEqual( Gaffer.Metadata.nodeValue( s, "serialiser:minorVersion" ), None )
 		self.assertEqual( Gaffer.Metadata.nodeValue( s, "serialiser:patchVersion" ), None )
 
-		s.serialiseToFile( "/tmp/test.gfr" )
+		s.serialiseToFile( self.temporaryDirectory() + "/test.gfr" )
 
 		self.assertEqual( Gaffer.Metadata.nodeValue( s, "serialiser:milestoneVersion" ), None )
 		self.assertEqual( Gaffer.Metadata.nodeValue( s, "serialiser:majorVersion" ), None )
@@ -1200,7 +1200,7 @@ a = A()"""
 		self.assertEqual( Gaffer.Metadata.nodeValue( s, "serialiser:patchVersion" ), None )
 
 		s2 = Gaffer.ScriptNode()
-		s2["fileName"].setValue( "/tmp/test.gfr" )
+		s2["fileName"].setValue( self.temporaryDirectory() + "/test.gfr" )
 		s2.load()
 
 		self.assertEqual( Gaffer.Metadata.nodeValue( s2, "serialiser:milestoneVersion" ), Gaffer.About.milestoneVersion() )
@@ -1208,7 +1208,7 @@ a = A()"""
 		self.assertEqual( Gaffer.Metadata.nodeValue( s2, "serialiser:minorVersion" ), Gaffer.About.minorVersion() )
 		self.assertEqual( Gaffer.Metadata.nodeValue( s2, "serialiser:patchVersion" ), Gaffer.About.patchVersion() )
 
-		s["fileName"].setValue( "/tmp/test.gfr" )
+		s["fileName"].setValue( self.temporaryDirectory() + "/test.gfr" )
 		s.save()
 
 		s2.load()
@@ -1229,26 +1229,17 @@ a = A()"""
 		self.assertEqual( Gaffer.Metadata.nodeValue( s, "serialiser:minorVersion" ), 0 )
 		self.assertEqual( Gaffer.Metadata.nodeValue( s, "serialiser:patchVersion" ), 0 )
 
-		s["fileName"].setValue( "/tmp/test.gfr" )
+		s["fileName"].setValue( self.temporaryDirectory() + "/test.gfr" )
 		s.save()
 
 		s2 = Gaffer.ScriptNode()
-		s2["fileName"].setValue( "/tmp/test.gfr" )
+		s2["fileName"].setValue( self.temporaryDirectory() + "/test.gfr" )
 		s2.load()
 
 		self.assertEqual( Gaffer.Metadata.nodeValue( s2, "serialiser:milestoneVersion" ), Gaffer.About.milestoneVersion() )
 		self.assertEqual( Gaffer.Metadata.nodeValue( s2, "serialiser:majorVersion" ), Gaffer.About.majorVersion() )
 		self.assertEqual( Gaffer.Metadata.nodeValue( s2, "serialiser:minorVersion" ), Gaffer.About.minorVersion() )
 		self.assertEqual( Gaffer.Metadata.nodeValue( s2, "serialiser:patchVersion" ), Gaffer.About.patchVersion() )
-
-	def tearDown( self ) :
-
-		for f in (
-			"/tmp/test.gfr",
-			"/tmp/test2.gfr",
-		) :
-			if os.path.exists( f ) :
-				os.remove( f )
 
 if __name__ == "__main__":
 	unittest.main()
