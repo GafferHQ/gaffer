@@ -65,7 +65,7 @@ tuple getExpression( Expression &e )
 {
 	std::string language;
 	std::string expression = e.getExpression( language );
-	return make_tuple( expression, language );
+	return boost::python::make_tuple( expression, language );
 }
 
 struct ExpressionEngineCreator
