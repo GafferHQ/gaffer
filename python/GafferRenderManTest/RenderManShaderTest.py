@@ -1634,19 +1634,12 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 
 		self.assertTrue( s["b"]["p"].acceptsInput( s["c"]["out"] ) )
 
-		s["b"].exportForReference( "/tmp/test.grf" )
+		s["b"].exportForReference( self.temporaryDirectory() + "/test.grf" )
 
 		s["r"] = Gaffer.Reference()
-		s["r"].load( "/tmp/test.grf" )
+		s["r"].load( self.temporaryDirectory() + "/test.grf" )
 
 		self.assertTrue( s["r"]["p"].acceptsInput( s["c"]["out"] ) )
-
-	def tearDown( self ) :
-
-		GafferRenderManTest.RenderManTestCase.tearDown( self )
-
-		if os.path.exists( "/tmp/test.grf" ) :
-			os.remove( "/tmp/test.grf" )
 
 if __name__ == "__main__":
 	unittest.main()

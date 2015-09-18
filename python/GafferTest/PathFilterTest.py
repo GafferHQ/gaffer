@@ -36,9 +36,7 @@
 ##########################################################################
 
 import unittest
-import shutil
 import glob
-import os
 
 import IECore
 

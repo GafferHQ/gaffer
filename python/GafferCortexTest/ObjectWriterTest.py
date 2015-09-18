@@ -46,9 +46,13 @@ import GafferTest
 
 class ObjectWriterTest( GafferTest.TestCase ) :
 
-	__exrFileName = "/tmp/checker.exr"
-	__tifFileName = "/tmp/checker.tif"
-	__exrSequence = IECore.FileSequence( "/tmp/checker.####.exr 1-4" )
+	def setUp( self ) :
+
+		GafferTest.TestCase.setUp( self )
+
+		self.__exrFileName = self.temporaryDirectory() + "/checker.exr"
+		self.__tifFileName = self.temporaryDirectory() + "/checker.tif"
+		self.__exrSequence = IECore.FileSequence( self.temporaryDirectory() + "/checker.####.exr 1-4" )
 
 	def test( self ) :
 
@@ -164,15 +168,6 @@ class ObjectWriterTest( GafferTest.TestCase ) :
 		# output varies by time since the file name does
 		s["n"]["fileName"].setValue( self.__exrSequence.fileName )
 		self.assertNotEqual( s["n"].hash( c ), s["n"].hash( c2 ) )
-
-	def tearDown( self ) :
-
-		for f in [
-			self.__tifFileName,
-			self.__exrFileName,
-		] + self.__exrSequence.fileNames() :
-			if os.path.exists( f ) :
-				os.remove( f )
 
 if __name__ == "__main__":
 	unittest.main()

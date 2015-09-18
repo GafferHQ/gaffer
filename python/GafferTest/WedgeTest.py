@@ -36,7 +36,6 @@
 
 import os
 import glob
-import shutil
 import unittest
 
 import IECore
@@ -49,7 +48,7 @@ class WedgeTest( GafferTest.TestCase ) :
 	def __dispatcher( self, frameRange = None ) :
 
 		result = Gaffer.LocalDispatcher()
-		result["jobsDirectory"].setValue( "/tmp/gafferWedgeTest/jobs" )
+		result["jobsDirectory"].setValue( self.temporaryDirectory() + "/jobs" )
 
 		if frameRange is not None :
 			result["framesMode"].setValue( result.FramesMode.CustomRange )
@@ -62,7 +61,7 @@ class WedgeTest( GafferTest.TestCase ) :
 		script = Gaffer.ScriptNode()
 
 		script["writer"] = GafferTest.TextWriter()
-		script["writer"]["fileName"].setValue( "/tmp/gafferWedgeTest/${name}.txt" )
+		script["writer"]["fileName"].setValue( self.temporaryDirectory() + "/${name}.txt" )
 
 		script["wedge"] = Gaffer.Wedge()
 		script["wedge"]["requirements"][0].setInput( script["writer"]["requirement"] )
@@ -73,11 +72,11 @@ class WedgeTest( GafferTest.TestCase ) :
 		self.__dispatcher().dispatch( [ script["wedge"] ] )
 
 		self.assertEqual(
-			set( glob.glob( "/tmp/gafferWedgeTest/*.txt" ) ),
+			set( glob.glob( self.temporaryDirectory() + "/*.txt" ) ),
 			{
-				"/tmp/gafferWedgeTest/tom.txt",
-				"/tmp/gafferWedgeTest/dick.txt",
-				"/tmp/gafferWedgeTest/harry.txt",
+				self.temporaryDirectory() + "/tom.txt",
+				self.temporaryDirectory() + "/dick.txt",
+				self.temporaryDirectory() + "/harry.txt",
 			}
 		)
 
@@ -86,7 +85,7 @@ class WedgeTest( GafferTest.TestCase ) :
 		script = Gaffer.ScriptNode()
 
 		script["writer"] = GafferTest.TextWriter()
-		script["writer"]["fileName"].setValue( "/tmp/gafferWedgeTest/${wedge:value}.txt" )
+		script["writer"]["fileName"].setValue( self.temporaryDirectory() + "/${wedge:value}.txt" )
 
 		script["wedge"] = Gaffer.Wedge()
 		script["wedge"]["requirements"][0].setInput( script["writer"]["requirement"] )
@@ -96,11 +95,11 @@ class WedgeTest( GafferTest.TestCase ) :
 		self.__dispatcher().dispatch( [ script["wedge"] ] )
 
 		self.assertEqual(
-			set( glob.glob( "/tmp/gafferWedgeTest/*.txt" ) ),
+			set( glob.glob( self.temporaryDirectory() + "/*.txt" ) ),
 			{
-				"/tmp/gafferWedgeTest/1.txt",
-				"/tmp/gafferWedgeTest/21.txt",
-				"/tmp/gafferWedgeTest/44.txt",
+				self.temporaryDirectory() + "/1.txt",
+				self.temporaryDirectory() + "/21.txt",
+				self.temporaryDirectory() + "/44.txt",
 			}
 		)
 
@@ -109,7 +108,7 @@ class WedgeTest( GafferTest.TestCase ) :
 		script = Gaffer.ScriptNode()
 
 		script["writer"] = GafferTest.TextWriter()
-		script["writer"]["fileName"].setValue( "/tmp/gafferWedgeTest/${wedge:index}.txt" )
+		script["writer"]["fileName"].setValue( self.temporaryDirectory() + "/${wedge:index}.txt" )
 		script["writer"]["text"].setValue( "${wedge:value}" )
 
 		script["wedge"] = Gaffer.Wedge()
@@ -120,24 +119,24 @@ class WedgeTest( GafferTest.TestCase ) :
 		self.__dispatcher().dispatch( [ script["wedge"] ] )
 
 		self.assertEqual(
-			set( glob.glob( "/tmp/gafferWedgeTest/*.txt" ) ),
+			set( glob.glob( self.temporaryDirectory() + "/*.txt" ) ),
 			{
-				"/tmp/gafferWedgeTest/0.txt",
-				"/tmp/gafferWedgeTest/1.txt",
-				"/tmp/gafferWedgeTest/2.txt",
+				self.temporaryDirectory() + "/0.txt",
+				self.temporaryDirectory() + "/1.txt",
+				self.temporaryDirectory() + "/2.txt",
 			}
 		)
 
-		self.assertEqual( next( open( "/tmp/gafferWedgeTest/0.txt" ) ), "1.25" )
-		self.assertEqual( next( open( "/tmp/gafferWedgeTest/1.txt" ) ), "2.75" )
-		self.assertEqual( next( open( "/tmp/gafferWedgeTest/2.txt" ) ), "44" )
+		self.assertEqual( next( open( self.temporaryDirectory() + "/0.txt" ) ), "1.25" )
+		self.assertEqual( next( open( self.temporaryDirectory() + "/1.txt" ) ), "2.75" )
+		self.assertEqual( next( open( self.temporaryDirectory() + "/2.txt" ) ), "44" )
 
 	def testIntRange( self ) :
 
 		script = Gaffer.ScriptNode()
 
 		script["writer"] = GafferTest.TextWriter()
-		script["writer"]["fileName"].setValue( "/tmp/gafferWedgeTest/${number}.txt" )
+		script["writer"]["fileName"].setValue( self.temporaryDirectory() + "/${number}.txt" )
 
 		script["wedge"] = Gaffer.Wedge()
 		script["wedge"]["requirements"][0].setInput( script["writer"]["requirement"] )
@@ -150,11 +149,11 @@ class WedgeTest( GafferTest.TestCase ) :
 		self.__dispatcher().dispatch( [ script["wedge"] ] )
 
 		self.assertEqual(
-			set( glob.glob( "/tmp/gafferWedgeTest/*.txt" ) ),
+			set( glob.glob( self.temporaryDirectory() + "/*.txt" ) ),
 			{
-				"/tmp/gafferWedgeTest/3.txt",
-				"/tmp/gafferWedgeTest/5.txt",
-				"/tmp/gafferWedgeTest/7.txt",
+				self.temporaryDirectory() + "/3.txt",
+				self.temporaryDirectory() + "/5.txt",
+				self.temporaryDirectory() + "/7.txt",
 			}
 		)
 
@@ -163,7 +162,7 @@ class WedgeTest( GafferTest.TestCase ) :
 		script = Gaffer.ScriptNode()
 
 		script["writer"] = GafferTest.TextWriter()
-		script["writer"]["fileName"].setValue( "/tmp/gafferWedgeTest/${wedge:index}.txt" )
+		script["writer"]["fileName"].setValue( self.temporaryDirectory() + "/${wedge:index}.txt" )
 		script["writer"]["text"].setValue( "${wedge:value}" )
 
 		script["wedge"] = Gaffer.Wedge()
@@ -176,28 +175,28 @@ class WedgeTest( GafferTest.TestCase ) :
 		self.__dispatcher().dispatch( [ script["wedge"] ] )
 
 		self.assertEqual(
-			set( glob.glob( "/tmp/gafferWedgeTest/*.txt" ) ),
+			set( glob.glob( self.temporaryDirectory() + "/*.txt" ) ),
 			{
-				"/tmp/gafferWedgeTest/0.txt",
-				"/tmp/gafferWedgeTest/1.txt",
-				"/tmp/gafferWedgeTest/2.txt",
-				"/tmp/gafferWedgeTest/3.txt",
-				"/tmp/gafferWedgeTest/4.txt",
+				self.temporaryDirectory() + "/0.txt",
+				self.temporaryDirectory() + "/1.txt",
+				self.temporaryDirectory() + "/2.txt",
+				self.temporaryDirectory() + "/3.txt",
+				self.temporaryDirectory() + "/4.txt",
 			}
 		)
 
-		self.assertEqual( next( open( "/tmp/gafferWedgeTest/0.txt" ) ), "0" )
-		self.assertEqual( next( open( "/tmp/gafferWedgeTest/1.txt" ) ), "0.25" )
-		self.assertEqual( next( open( "/tmp/gafferWedgeTest/2.txt" ) ), "0.5" )
-		self.assertEqual( next( open( "/tmp/gafferWedgeTest/3.txt" ) ), "0.75" )
-		self.assertEqual( next( open( "/tmp/gafferWedgeTest/4.txt" ) ), "1" )
+		self.assertEqual( next( open( self.temporaryDirectory() + "/0.txt" ) ), "0" )
+		self.assertEqual( next( open( self.temporaryDirectory() + "/1.txt" ) ), "0.25" )
+		self.assertEqual( next( open( self.temporaryDirectory() + "/2.txt" ) ), "0.5" )
+		self.assertEqual( next( open( self.temporaryDirectory() + "/3.txt" ) ), "0.75" )
+		self.assertEqual( next( open( self.temporaryDirectory() + "/4.txt" ) ), "1" )
 
 	def testFloatByPointOne( self ) :
 
 		script = Gaffer.ScriptNode()
 
 		script["writer"] = GafferTest.TextWriter()
-		script["writer"]["fileName"].setValue( "/tmp/gafferWedgeTest/${wedge:index}.txt" )
+		script["writer"]["fileName"].setValue( self.temporaryDirectory() + "/${wedge:index}.txt" )
 		script["writer"]["text"].setValue( "${wedge:value}" )
 
 		script["wedge"] = Gaffer.Wedge()
@@ -210,40 +209,40 @@ class WedgeTest( GafferTest.TestCase ) :
 		self.__dispatcher().dispatch( [ script["wedge"] ] )
 
 		self.assertEqual(
-			set( glob.glob( "/tmp/gafferWedgeTest/*.txt" ) ),
+			set( glob.glob( self.temporaryDirectory() + "/*.txt" ) ),
 			{
-				"/tmp/gafferWedgeTest/0.txt",
-				"/tmp/gafferWedgeTest/1.txt",
-				"/tmp/gafferWedgeTest/2.txt",
-				"/tmp/gafferWedgeTest/3.txt",
-				"/tmp/gafferWedgeTest/4.txt",
-				"/tmp/gafferWedgeTest/5.txt",
-				"/tmp/gafferWedgeTest/6.txt",
-				"/tmp/gafferWedgeTest/7.txt",
-				"/tmp/gafferWedgeTest/8.txt",
-				"/tmp/gafferWedgeTest/9.txt",
-				"/tmp/gafferWedgeTest/10.txt",
+				self.temporaryDirectory() + "/0.txt",
+				self.temporaryDirectory() + "/1.txt",
+				self.temporaryDirectory() + "/2.txt",
+				self.temporaryDirectory() + "/3.txt",
+				self.temporaryDirectory() + "/4.txt",
+				self.temporaryDirectory() + "/5.txt",
+				self.temporaryDirectory() + "/6.txt",
+				self.temporaryDirectory() + "/7.txt",
+				self.temporaryDirectory() + "/8.txt",
+				self.temporaryDirectory() + "/9.txt",
+				self.temporaryDirectory() + "/10.txt",
 			}
 		)
 
-		self.assertAlmostEqual( float( next( open( "/tmp/gafferWedgeTest/0.txt" ) ) ), 0 )
-		self.assertAlmostEqual( float( next( open( "/tmp/gafferWedgeTest/1.txt" ) ) ), 0.1 )
-		self.assertAlmostEqual( float( next( open( "/tmp/gafferWedgeTest/2.txt" ) ) ), 0.2 )
-		self.assertAlmostEqual( float( next( open( "/tmp/gafferWedgeTest/3.txt" ) ) ), 0.3 )
-		self.assertAlmostEqual( float( next( open( "/tmp/gafferWedgeTest/4.txt" ) ) ), 0.4 )	
-		self.assertAlmostEqual( float( next( open( "/tmp/gafferWedgeTest/5.txt" ) ) ), 0.5 )	
-		self.assertAlmostEqual( float( next( open( "/tmp/gafferWedgeTest/6.txt" ) ) ), 0.6 )	
-		self.assertAlmostEqual( float( next( open( "/tmp/gafferWedgeTest/7.txt" ) ) ), 0.7 )	
-		self.assertAlmostEqual( float( next( open( "/tmp/gafferWedgeTest/8.txt" ) ) ), 0.8 )	
-		self.assertAlmostEqual( float( next( open( "/tmp/gafferWedgeTest/9.txt" ) ) ), 0.9 )	
-		self.assertAlmostEqual( float( next( open( "/tmp/gafferWedgeTest/10.txt" ) ) ), 1 )	
+		self.assertAlmostEqual( float( next( open( self.temporaryDirectory() + "//0.txt" ) ) ), 0 )
+		self.assertAlmostEqual( float( next( open( self.temporaryDirectory() + "//1.txt" ) ) ), 0.1 )
+		self.assertAlmostEqual( float( next( open( self.temporaryDirectory() + "//2.txt" ) ) ), 0.2 )
+		self.assertAlmostEqual( float( next( open( self.temporaryDirectory() + "//3.txt" ) ) ), 0.3 )
+		self.assertAlmostEqual( float( next( open( self.temporaryDirectory() + "//4.txt" ) ) ), 0.4 )
+		self.assertAlmostEqual( float( next( open( self.temporaryDirectory() + "//5.txt" ) ) ), 0.5 )
+		self.assertAlmostEqual( float( next( open( self.temporaryDirectory() + "//6.txt" ) ) ), 0.6 )
+		self.assertAlmostEqual( float( next( open( self.temporaryDirectory() + "//7.txt" ) ) ), 0.7 )
+		self.assertAlmostEqual( float( next( open( self.temporaryDirectory() + "//8.txt" ) ) ), 0.8 )
+		self.assertAlmostEqual( float( next( open( self.temporaryDirectory() + "//9.txt" ) ) ), 0.9 )
+		self.assertAlmostEqual( float( next( open( self.temporaryDirectory() + "//10.txt" ) ) ), 1 )
 
 	def testColorRange( self ) :
 
 		script = Gaffer.ScriptNode()
 
 		script["writer"] = GafferTest.TextWriter()
-		script["writer"]["fileName"].setValue( "/tmp/gafferWedgeTest/${wedge:index}.txt" )
+		script["writer"]["fileName"].setValue( self.temporaryDirectory() + "/${wedge:index}.txt" )
 
 		script["expression"] = Gaffer.Expression()
 		script["expression"].setExpression( 'c = context["wedge:value"]; parent["writer"]["text"] = "%.1f %.1f %.1f" % ( c[0], c[1], c[2] )' )
@@ -256,24 +255,24 @@ class WedgeTest( GafferTest.TestCase ) :
 		self.__dispatcher().dispatch( [ script["wedge"] ] )
 
 		self.assertEqual(
-			set( glob.glob( "/tmp/gafferWedgeTest/*.txt" ) ),
+			set( glob.glob( self.temporaryDirectory() + "/*.txt" ) ),
 			{
-				"/tmp/gafferWedgeTest/0.txt",
-				"/tmp/gafferWedgeTest/1.txt",
-				"/tmp/gafferWedgeTest/2.txt",
+				self.temporaryDirectory() + "/0.txt",
+				self.temporaryDirectory() + "/1.txt",
+				self.temporaryDirectory() + "/2.txt",
 			}
 		)
 
-		self.assertEqual( next( open( "/tmp/gafferWedgeTest/0.txt" ) ), "0.0 0.0 0.0" )
-		self.assertEqual( next( open( "/tmp/gafferWedgeTest/1.txt" ) ), "0.5 0.5 0.5" )
-		self.assertEqual( next( open( "/tmp/gafferWedgeTest/2.txt" ) ), "1.0 1.0 1.0" )
+		self.assertEqual( next( open( self.temporaryDirectory() + "/0.txt" ) ), "0.0 0.0 0.0" )
+		self.assertEqual( next( open( self.temporaryDirectory() + "/1.txt" ) ), "0.5 0.5 0.5" )
+		self.assertEqual( next( open( self.temporaryDirectory() + "/2.txt" ) ), "1.0 1.0 1.0" )
 
 	def test2DRange( self ) :
 
 		script = Gaffer.ScriptNode()
 
 		script["writer"] = GafferTest.TextWriter()
-		script["writer"]["fileName"].setValue( "/tmp/gafferWedgeTest/${wedge:x}.${wedge:y}.txt" )
+		script["writer"]["fileName"].setValue( self.temporaryDirectory() + "/${wedge:x}.${wedge:y}.txt" )
 
 		script["wedgeX"] = Gaffer.Wedge()
 		script["wedgeX"]["requirements"][0].setInput( script["writer"]["requirement"] )
@@ -294,14 +293,14 @@ class WedgeTest( GafferTest.TestCase ) :
 		self.__dispatcher().dispatch( [ script["wedgeY"] ] )
 
 		self.assertEqual(
-			set( glob.glob( "/tmp/gafferWedgeTest/*.txt" ) ),
+			set( glob.glob( self.temporaryDirectory() + "/*.txt" ) ),
 			{
-				"/tmp/gafferWedgeTest/1.1.txt",
-				"/tmp/gafferWedgeTest/1.2.txt",
-				"/tmp/gafferWedgeTest/2.1.txt",
-				"/tmp/gafferWedgeTest/2.2.txt",
-				"/tmp/gafferWedgeTest/3.1.txt",
-				"/tmp/gafferWedgeTest/3.2.txt",
+				self.temporaryDirectory() + "/1.1.txt",
+				self.temporaryDirectory() + "/1.2.txt",
+				self.temporaryDirectory() + "/2.1.txt",
+				self.temporaryDirectory() + "/2.2.txt",
+				self.temporaryDirectory() + "/3.1.txt",
+				self.temporaryDirectory() + "/3.2.txt",
 			}
 		)
 
@@ -310,7 +309,7 @@ class WedgeTest( GafferTest.TestCase ) :
 		script = Gaffer.ScriptNode()
 
 		script["writer"] = GafferTest.TextWriter()
-		script["writer"]["fileName"].setValue( "/tmp/gafferWedgeTest/${name}.####.txt" )
+		script["writer"]["fileName"].setValue( self.temporaryDirectory() + "/${name}.####.txt" )
 
 		script["wedge"] = Gaffer.Wedge()
 		script["wedge"]["requirements"][0].setInput( script["writer"]["requirement"] )
@@ -321,14 +320,14 @@ class WedgeTest( GafferTest.TestCase ) :
 		self.__dispatcher( frameRange = "21-22" ).dispatch( [ script["wedge"] ] )
 
 		self.assertEqual(
-			set( glob.glob( "/tmp/gafferWedgeTest/*.txt" ) ),
+			set( glob.glob( self.temporaryDirectory() + "/*.txt" ) ),
 			{
-				"/tmp/gafferWedgeTest/tom.0021.txt",
-				"/tmp/gafferWedgeTest/tom.0022.txt",
-				"/tmp/gafferWedgeTest/dick.0021.txt",
-				"/tmp/gafferWedgeTest/dick.0022.txt",
-				"/tmp/gafferWedgeTest/harry.0021.txt",
-				"/tmp/gafferWedgeTest/harry.0022.txt",
+				self.temporaryDirectory() + "/tom.0021.txt",
+				self.temporaryDirectory() + "/tom.0022.txt",
+				self.temporaryDirectory() + "/dick.0021.txt",
+				self.temporaryDirectory() + "/dick.0022.txt",
+				self.temporaryDirectory() + "/harry.0021.txt",
+				self.temporaryDirectory() + "/harry.0022.txt",
 			}
 		)
 
@@ -340,7 +339,7 @@ class WedgeTest( GafferTest.TestCase ) :
 
 		script["writer"] = GafferTest.TextWriter()
 		script["writer"]["requirements"][0].setInput( script["constant"]["requirement"] )
-		script["writer"]["fileName"].setValue( "/tmp/gafferWedgeTest/${name}.txt" )
+		script["writer"]["fileName"].setValue( self.temporaryDirectory() + "/${name}.txt" )
 
 		script["wedge"] = Gaffer.Wedge()
 		script["wedge"]["requirements"][0].setInput( script["writer"]["requirement"] )
@@ -351,11 +350,11 @@ class WedgeTest( GafferTest.TestCase ) :
 		self.__dispatcher().dispatch( [ script["wedge"] ] )
 
 		self.assertEqual(
-			set( glob.glob( "/tmp/gafferWedgeTest/*.txt" ) ),
+			set( glob.glob( self.temporaryDirectory() + "/*.txt" ) ),
 			{
-				"/tmp/gafferWedgeTest/tom.txt",
-				"/tmp/gafferWedgeTest/dick.txt",
-				"/tmp/gafferWedgeTest/harry.txt",
+				self.temporaryDirectory() + "/tom.txt",
+				self.temporaryDirectory() + "/dick.txt",
+				self.temporaryDirectory() + "/harry.txt",
 			}
 		)
 
@@ -363,13 +362,6 @@ class WedgeTest( GafferTest.TestCase ) :
 		# it should only execute once because it doesn't reference
 		# the wedge variable at all.
 		self.assertEqual( script["constant"].executionCount, 1 )
-
-	def tearDown( self ) :
-
-		GafferTest.TestCase.tearDown( self )
-
-		if os.path.exists( "/tmp/gafferWedgeTest" ) :
-			shutil.rmtree( "/tmp/gafferWedgeTest" )
 
 if __name__ == "__main__":
 	unittest.main()

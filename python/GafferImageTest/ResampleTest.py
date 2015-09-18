@@ -84,7 +84,7 @@ class ResampleTest( GafferTest.TestCase ) :
 			crop["in"].setInput( resample["out"] )
 			crop["area"].setValue( IECore.Box2i( IECore.V2i( 0 ), size ) )
 
-			outputFileName = "/tmp/gafferImageResampleTest/%s_%dx%d_%s.exr" % ( os.path.splitext( fileName )[0], size.x, size.y, filter )
+			outputFileName = self.temporaryDirectory() + "/%s_%dx%d_%s.exr" % ( os.path.splitext( fileName )[0], size.x, size.y, filter )
 			writer = GafferImage.ImageWriter()
 			writer["in"].setInput( crop["out"] )
 			writer["fileName"].setValue( outputFileName )
@@ -143,11 +143,6 @@ class ResampleTest( GafferTest.TestCase ) :
 
 		for args in tests :
 			__test( *args )
-
-	def tearDown( self ) :
-
-		if os.path.isdir( "/tmp/gafferImageResampleTest" ) :
-			shutil.rmtree( "/tmp/gafferImageResampleTest" )
 
 if __name__ == "__main__":
 	unittest.main()

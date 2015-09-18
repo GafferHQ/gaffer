@@ -47,32 +47,32 @@ class SystemCommandTest( GafferTest.TestCase ) :
 	def test( self ) :
 
 		n = Gaffer.SystemCommand()
-		n["command"].setValue( "touch /tmp/systemCommandTest.txt" )
+		n["command"].setValue( "touch " + self.temporaryDirectory() + "/systemCommandTest.txt" )
 
 		n.execute()
 
-		self.assertTrue( os.path.exists( "/tmp/systemCommandTest.txt" ) )
+		self.assertTrue( os.path.exists( self.temporaryDirectory() + "/systemCommandTest.txt" ) )
 
 	def testEnvironmentVariables( self ) :
 
 		n = Gaffer.SystemCommand()
-		n["command"].setValue( "env > /tmp/systemCommandTest.txt" )
+		n["command"].setValue( "env > " + self.temporaryDirectory() + "/systemCommandTest.txt" )
 		n["environmentVariables"].addMember( "GAFFER_SYSTEMCOMMAND_TEST", IECore.StringData( "test" ) )
 
 		n.execute()
 
-		env = "".join( open( "/tmp/systemCommandTest.txt" ).readlines() )
+		env = "".join( open( self.temporaryDirectory() + "/systemCommandTest.txt" ).readlines() )
 		self.assertTrue( "GAFFER_SYSTEMCOMMAND_TEST=test" in env )
 
 	def testSubstitutions( self ) :
 
 		n = Gaffer.SystemCommand()
-		n["command"].setValue( "echo {adjective} {noun} > /tmp/systemCommandTest.txt" )
+		n["command"].setValue( "echo {adjective} {noun} > " + self.temporaryDirectory() + "/systemCommandTest.txt" )
 		n["substitutions"].addMember( "adjective", IECore.StringData( "red" ) )
 		n["substitutions"].addMember( "noun", IECore.StringData( "truck" ) )
 
 		n.execute()
-		self.assertEqual( "red truck\n", open( "/tmp/systemCommandTest.txt" ).readlines()[0] )
+		self.assertEqual( "red truck\n", open( self.temporaryDirectory() + "/systemCommandTest.txt" ).readlines()[0] )
 
 	def testHash( self ) :
 
@@ -95,16 +95,6 @@ class SystemCommandTest( GafferTest.TestCase ) :
 
 		# check that all hashes are unique
 		self.assertEqual( len( hashes ), len( set( hashes ) ) )
-
-	def setUp( self ) :
-
-		for f in [ "/tmp/systemCommandTest.txt" ] :
-			if os.path.exists( f ) :
-				os.remove( f )
-
-	def tearDown( self ) :
-
-		self.setUp()
 
 if __name__ == "__main__":
 	unittest.main()

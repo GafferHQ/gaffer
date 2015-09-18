@@ -45,7 +45,11 @@ import GafferSceneTest
 
 class SceneReaderTest( GafferSceneTest.SceneTestCase ) :
 
-	__testFile = "/tmp/test.scc"
+	def setUp( self ) :
+
+		GafferSceneTest.SceneTestCase.setUp( self )
+
+		self.__testFile = self.temporaryDirectory() + "/test.scc"
 
 	def testFileRefreshProblem( self ) :
 
@@ -487,11 +491,6 @@ class SceneReaderTest( GafferSceneTest.SceneTestCase ) :
 		# this used to cause a crash:
 		r1 = GafferScene.SceneReader()
 		self.assertEqual( r1["out"].set( "blahblah" ).value.paths(), [] )
-
-	def tearDown( self ) :
-
-		if os.path.exists( self.__testFile ) :
-			os.remove( self.__testFile )
 
 if __name__ == "__main__":
 	unittest.main()

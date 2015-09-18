@@ -36,22 +36,20 @@
 
 import os
 import platform
-import shutil
 import sys
 import unittest
 
 import IECore
 
 import Gaffer
+import GafferTest
 import GafferImage
 
-class ImageWriterTest( unittest.TestCase ) :
+class ImageWriterTest( GafferTest.TestCase ) :
 
 	__rgbFilePath = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/rgb.100x100" )
 	__negativeDataWindowFilePath = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/checkerWithNegativeDataWindow.200x150" )
 	__defaultFormatFile = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/defaultNegativeDisplayWindow.exr" )
-	__testDir = "/tmp/testImageWriter/"
-	__testFilePath = __testDir + "test"
 
 	longMessage = True
 
@@ -243,8 +241,8 @@ class ImageWriterTest( unittest.TestCase ) :
 		s.addChild( g )
 		s.addChild( w2 )
 
-		testScanlineFile = self.__testFilePath + ".defaultFormat.scanline.exr"
-		testTileFile = self.__testFilePath + ".defaultFormat.tile.exr"
+		testScanlineFile = self.temporaryDirectory() + "/test.defaultFormat.scanline.exr"
+		testTileFile = self.temporaryDirectory() + "/test.defaultFormat.tile.exr"
 		self.failIf( os.path.exists( testScanlineFile ) )
 		self.failIf( os.path.exists( testTileFile ) )
 
@@ -506,7 +504,7 @@ class ImageWriterTest( unittest.TestCase ) :
 		self.assertEqual( writer.hash( c ), IECore.MurmurHash() )
 
 		# no input image produces no effect
-		writer["fileName"].setValue( "/tmp/test.exr" )
+		writer["fileName"].setValue( self.temporaryDirectory() + "/test.exr" )
 		self.assertEqual( writer.hash( c ), IECore.MurmurHash() )
 
 		# now theres a file and an image, we get some output
@@ -518,7 +516,7 @@ class ImageWriterTest( unittest.TestCase ) :
 		self.assertEqual( writer.hash( c ), writer.hash( c2 ) )
 
 		# now it does vary
-		writer["fileName"].setValue( "/tmp/test.#.exr" )
+		writer["fileName"].setValue( self.temporaryDirectory() + "/test.#.exr" )
 		self.assertNotEqual( writer.hash( c ), writer.hash( c2 ) )
 
 		# other plugs matter too
@@ -802,14 +800,14 @@ class ImageWriterTest( unittest.TestCase ) :
 		s["c"] = GafferImage.Constant()
 		s["w"] = GafferImage.ImageWriter()
 		s["w"]["in"].setInput( s["c"]["out"] )
-		s["w"]["fileName"].setValue( self.__testDir + "/test.${ext}" )
+		s["w"]["fileName"].setValue( self.temporaryDirectory() + "/test.${ext}" )
 
 		context = Gaffer.Context( s.context() )
 		context["ext"] = "tif"
 		with context :
 			s["w"].execute()
 
-		self.assertTrue( os.path.isfile( self.__testDir + "/test.tif" ) )
+		self.assertTrue( os.path.isfile( self.temporaryDirectory() + "/test.tif" ) )
 
 	def testErrorMessages( self ) :
 
@@ -818,16 +816,16 @@ class ImageWriterTest( unittest.TestCase ) :
 		s["c"] = GafferImage.Constant()
 		s["w"] = GafferImage.ImageWriter()
 		s["w"]["in"].setInput( s["c"]["out"] )
-		s["w"]["fileName"].setValue( self.__testDir + "/test.unsupportedExtension" )
+		s["w"]["fileName"].setValue( self.temporaryDirectory() + "/test.unsupportedExtension" )
 
 		with s.context() :
 
 			self.assertRaisesRegexp( RuntimeError, "could not find a format writer for", s["w"].execute )
 
-			s["w"]["fileName"].setValue( self.__testDir + "/test.tif" )
+			s["w"]["fileName"].setValue( self.temporaryDirectory() + "/test.tif" )
 			s["w"].execute()
 
-			os.chmod( self.__testDir + "/test.tif", 0o444 )
+			os.chmod( self.temporaryDirectory() + "/test.tif", 0o444 )
 			self.assertRaisesRegexp( RuntimeError, "Could not open", s["w"].execute )
 
 	def testWriteIntermediateFile( self ) :
@@ -848,18 +846,18 @@ class ImageWriterTest( unittest.TestCase ) :
 
 		s["w1"] = GafferImage.ImageWriter()
 		s["w1"]["in"].setInput( s["c"]["out"] )
-		s["w1"]["fileName"].setValue( self.__testDir + "/test1.exr" )
+		s["w1"]["fileName"].setValue( self.temporaryDirectory() + "/test1.exr" )
 
 		s["r"] = GafferImage.ImageReader()
-		s["r"]["fileName"].setValue( self.__testDir + "/test1.exr" )
+		s["r"]["fileName"].setValue( self.temporaryDirectory() + "/test1.exr" )
 
 		s["w2"] = GafferImage.ImageWriter()
 		s["w2"]["in"].setInput( s["r"]["out"] )
-		s["w2"]["fileName"].setValue( self.__testDir + "/test2.exr" )
+		s["w2"]["fileName"].setValue( self.temporaryDirectory() + "/test2.exr" )
 		s["w2"]["requirements"][0].setInput( s["w1"]["requirement"] )
 
 		d = Gaffer.LocalDispatcher()
-		d["jobsDirectory"].setValue( self.__testDir + "/jobs" )
+		d["jobsDirectory"].setValue( self.temporaryDirectory() + "/jobs" )
 
 		with s.context() :
 			d.dispatch( [ s["w2"] ] )
@@ -875,10 +873,10 @@ class ImageWriterTest( unittest.TestCase ) :
 
 		s["w"] = GafferImage.ImageWriter()
 		s["w"]["in"].setInput( s["c"]["out"] )
-		s["w"]["fileName"].setValue( self.__testDir + "/test.exr" )
+		s["w"]["fileName"].setValue( self.temporaryDirectory() + "/test.exr" )
 
 		d = Gaffer.LocalDispatcher()
-		d["jobsDirectory"].setValue( self.__testDir + "/jobs" )
+		d["jobsDirectory"].setValue( self.temporaryDirectory() + "/jobs" )
 		d["executeInBackground"].setValue( True )
 
 		with s.context() :
@@ -888,14 +886,9 @@ class ImageWriterTest( unittest.TestCase ) :
 
 		self.assertTrue( os.path.isfile( s["w"]["fileName"].getValue() ) )
 
-	def tearDown( self ) :
-
-		if os.path.isdir( self.__testDir ) :
-			shutil.rmtree( self.__testDir )
-
 	def __testFile( self, mode, channels, ext ) :
 
-		return self.__testFilePath+"."+channels+"."+str( mode )+"."+str( ext )
+		return self.temporaryDirectory() + "/test." + channels + "." + str( mode ) + "." + str( ext )
 
 if __name__ == "__main__":
 	unittest.main()

@@ -46,10 +46,14 @@ import GafferTest
 
 class ExecuteApplicationTest( GafferTest.TestCase ) :
 
-	__scriptFileName = "/tmp/executeScript.gfr"
-	__scriptFileNameWithSpecialCharacters = "/tmp/executeScript-10.tmp.gfr"
-	__outputTextFile = "/tmp/executeOutput.txt"
-	__outputFileSeq = IECore.FileSequence( "/tmp/sphere.####.cob" )
+	def setUp( self ) :
+
+		GafferTest.TestCase.setUp( self )
+
+		self.__scriptFileName = self.temporaryDirectory() + "/executeScript.gfr"
+		self.__scriptFileNameWithSpecialCharacters = self.temporaryDirectory() + "/executeScript-10.tmp.gfr"
+		self.__outputTextFile = self.temporaryDirectory() + "/executeOutput.txt"
+		self.__outputFileSeq = IECore.FileSequence( self.temporaryDirectory() + "/sphere.####.cob" )
 
 	def testErrorReturnStatusForMissingScript( self ) :
 
@@ -244,17 +248,6 @@ class ExecuteApplicationTest( GafferTest.TestCase ) :
 
 		self.assertEqual( p.returncode, 0 )
 		self.assertTrue( os.path.exists( self.__outputTextFile ) )
-
-	def tearDown( self ) :
-
-		files = [ self.__scriptFileName, self.__scriptFileNameWithSpecialCharacters, self.__outputTextFile ]
-		seq = IECore.ls( self.__outputFileSeq.fileName, minSequenceSize = 1 )
-		if seq :
-			files.extend( seq.fileNames() )
-
-		for f in files :
-			if os.path.exists( f ) :
-				os.remove( f )
 
 if __name__ == "__main__":
 	unittest.main()

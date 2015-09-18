@@ -38,7 +38,6 @@
 from __future__ import with_statement
 
 import unittest
-import shutil
 import time
 import datetime
 import pwd

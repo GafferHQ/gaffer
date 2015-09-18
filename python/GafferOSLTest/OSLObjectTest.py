@@ -180,22 +180,15 @@ class OSLObjectTest( GafferOSLTest.OSLTestCase ) :
 		p = s["b"].promotePlug( s["b"]["o"]["shader"] )
 		p.setName( "p" )
 
-		s["b"].exportForReference( "/tmp/test.grf" )
+		s["b"].exportForReference( self.temporaryDirectory() + "/test.grf" )
 
 		s["r"] = Gaffer.Reference()
-		s["r"].load( "/tmp/test.grf" )
+		s["r"].load( self.temporaryDirectory() + "/test.grf" )
 
 		s["s"] = GafferOSL.OSLShader()
 		s["s"].loadShader( "ObjectProcessing/OutObject" )
 
 		s["r"]["p"].setInput( s["s"]["out"] )
-
-	def tearDown( self ) :
-
-		GafferOSLTest.OSLTestCase.tearDown( self )
-
-		if os.path.exists( "/tmp/test.grf" ) :
-			os.remove( "/tmp/test.grf" )
 
 if __name__ == "__main__":
 	unittest.main()

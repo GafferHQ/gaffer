@@ -325,10 +325,10 @@ class ExecutableNodeTest( GafferTest.TestCase ) :
 		p = s["b"].promotePlug( s["b"]["e"]["requirements"][0] )
 		p.setName( "p" )
 
-		s["b"].exportForReference( "/tmp/test.grf" )
+		s["b"].exportForReference( self.temporaryDirectory() + "/test.grf" )
 
 		s["r"] = Gaffer.Reference()
-		s["r"].load( "/tmp/test.grf" )
+		s["r"].load( self.temporaryDirectory() + "/test.grf" )
 
 		s["e"] = GafferTest.TextWriter()
 
@@ -343,10 +343,10 @@ class ExecutableNodeTest( GafferTest.TestCase ) :
 		p = s["b"].promotePlug( s["b"]["e"]["requirements"] )
 		p.setName( "p" )
 
-		s["b"].exportForReference( "/tmp/test.grf" )
+		s["b"].exportForReference( self.temporaryDirectory() + "/test.grf" )
 
 		s["r"] = Gaffer.Reference()
-		s["r"].load( "/tmp/test.grf" )
+		s["r"].load( self.temporaryDirectory() + "/test.grf" )
 
 		s["e"] = GafferTest.TextWriter()
 
@@ -364,14 +364,7 @@ class ExecutableNodeTest( GafferTest.TestCase ) :
 
 		s = Gaffer.ScriptNode()
 		s["fileName"].setValue( os.path.dirname( __file__ ) + "/scripts/promotedRequirementsNetworkVersion-0.15.0.0.gfr" )
-		s.load()	
-
-	def tearDown( self ) :
-
-		GafferTest.TestCase.tearDown( self )
-
-		if os.path.exists( "/tmp/test.grf" ) :
-			os.remove( "/tmp/test.grf" )
+		s.load()
 
 if __name__ == "__main__":
 	unittest.main()

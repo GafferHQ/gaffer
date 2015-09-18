@@ -35,7 +35,6 @@
 #
 ##########################################################################
 
-import os
 import unittest
 
 import IECore
@@ -45,7 +44,7 @@ import GafferTest
 import GafferScene
 import GafferSceneTest
 
-class ShaderAssignmentTest( unittest.TestCase ) :
+class ShaderAssignmentTest( GafferSceneTest.SceneTestCase ) :
 
 	def testFilter( self ) :
 
@@ -262,10 +261,10 @@ class ShaderAssignmentTest( unittest.TestCase ) :
 		s["b"] = Gaffer.Box()
 		s["b"]["a"] = GafferScene.ShaderAssignment()
 		p = s["b"].promotePlug( s["b"]["a"]["filter"] )
-		s["b"].exportForReference( "/tmp/test.grf" )
+		s["b"].exportForReference( self.temporaryDirectory() + "/test.grf" )
 
 		s["r"] = Gaffer.Reference()
-		s["r"].load( "/tmp/test.grf" )
+		s["r"].load( self.temporaryDirectory() + "/test.grf" )
 
 		self.assertTrue( s["r"]["a"]["filter"].getInput().isSame( s["r"][p.getName()] ) )
 
@@ -282,10 +281,10 @@ class ShaderAssignmentTest( unittest.TestCase ) :
 		s["b"]["a"]["filter"].setInput( s["b"]["d"]["out"] )
 
 		p = s["b"].promotePlug( s["b"]["d"]["in"] )
-		s["b"].exportForReference( "/tmp/test.grf" )
+		s["b"].exportForReference( self.temporaryDirectory() + "/test.grf" )
 
 		s["r"] = Gaffer.Reference()
-		s["r"].load( "/tmp/test.grf" )
+		s["r"].load( self.temporaryDirectory() + "/test.grf" )
 
 		self.assertTrue( s["r"]["a"]["filter"].source().isSame( s["r"][p.getName()] ) )
 
@@ -300,17 +299,12 @@ class ShaderAssignmentTest( unittest.TestCase ) :
 		s["b"]["a"] = GafferScene.ShaderAssignment()
 		p = s["b"].promotePlug( s["b"]["a"]["shader"] )
 
-		s["b"].exportForReference( "/tmp/test.grf" )
+		s["b"].exportForReference( self.temporaryDirectory() + "/test.grf" )
 
 		s["r"] = Gaffer.Reference()
-		s["r"].load( "/tmp/test.grf" )
+		s["r"].load( self.temporaryDirectory() + "/test.grf" )
 
 		self.assertTrue( s["r"]["a"]["shader"].getInput().node().isSame( s["r"] ) )
-
-	def tearDown( self ) :
-
-		if os.path.exists( "/tmp/test.grf" ) :
-			os.remove( "/tmp/test.grf" )
 
 if __name__ == "__main__":
 	unittest.main()

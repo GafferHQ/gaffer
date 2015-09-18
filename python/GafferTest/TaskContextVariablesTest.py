@@ -34,9 +34,7 @@
 #
 ##########################################################################
 
-import os
 import glob
-import shutil
 import unittest
 
 import Gaffer
@@ -47,7 +45,7 @@ class TaskContextVariablesTest( GafferTest.TestCase ) :
 	def __dispatcher( self, frameRange = None ) :
 
 		result = Gaffer.LocalDispatcher( jobPool = Gaffer.LocalDispatcher.JobPool() )
-		result["jobsDirectory"].setValue( "/tmp/gafferTaskContextVariablesTest/jobs" )
+		result["jobsDirectory"].setValue( self.temporaryDirectory() + "/jobs" )
 
 		return result
 
@@ -56,7 +54,7 @@ class TaskContextVariablesTest( GafferTest.TestCase ) :
 		script = Gaffer.ScriptNode()
 
 		script["writer"] = GafferTest.TextWriter()
-		script["writer"]["fileName"].setValue( "/tmp/gafferTaskContextVariablesTest/${name}.txt" )
+		script["writer"]["fileName"].setValue( self.temporaryDirectory() + "/${name}.txt" )
 
 		script["variables"] = Gaffer.TaskContextVariables()
 		script["variables"]["requirements"][0].setInput( script["writer"]["requirement"] )
@@ -65,10 +63,10 @@ class TaskContextVariablesTest( GafferTest.TestCase ) :
 		self.__dispatcher().dispatch( [ script["variables"] ] )
 
 		self.assertEqual(
-			set( glob.glob( "/tmp/gafferTaskContextVariablesTest/*.txt" ) ),
+			set( glob.glob( self.temporaryDirectory() + "/*.txt" ) ),
 			{
-				"/tmp/gafferTaskContextVariablesTest/jimbob.txt",
-				
+				self.temporaryDirectory() + "/jimbob.txt",
+
 			}
 		)
 
@@ -77,7 +75,7 @@ class TaskContextVariablesTest( GafferTest.TestCase ) :
 		script = Gaffer.ScriptNode()
 
 		script["writer"] = GafferTest.TextWriter()
-		script["writer"]["fileName"].setValue( "/tmp/gafferTaskContextVariablesTest/${name1}${name2}.txt" )
+		script["writer"]["fileName"].setValue( self.temporaryDirectory() + "/${name1}${name2}.txt" )
 
 		script["variables"] = Gaffer.TaskContextVariables()
 		script["variables"]["requirements"][0].setInput( script["writer"]["requirement"] )
@@ -87,10 +85,10 @@ class TaskContextVariablesTest( GafferTest.TestCase ) :
 		self.__dispatcher().dispatch( [ script["variables"] ] )
 
 		self.assertEqual(
-			set( glob.glob( "/tmp/gafferTaskContextVariablesTest/*.txt" ) ),
+			set( glob.glob( self.temporaryDirectory() + "/*.txt" ) ),
 			{
-				"/tmp/gafferTaskContextVariablesTest/bob.txt",
-				
+				self.temporaryDirectory() + "/bob.txt",
+
 			}
 		)
 
@@ -99,7 +97,7 @@ class TaskContextVariablesTest( GafferTest.TestCase ) :
 		script = Gaffer.ScriptNode()
 
 		script["writer"] = GafferTest.TextWriter()
-		script["writer"]["fileName"].setValue( "/tmp/gafferTaskContextVariablesTest/${name}.txt" )
+		script["writer"]["fileName"].setValue( self.temporaryDirectory() + "/${name}.txt" )
 
 		script["variables"] = Gaffer.TaskContextVariables()
 		script["variables"]["requirements"][0].setInput( script["writer"]["requirement"] )
@@ -113,18 +111,11 @@ class TaskContextVariablesTest( GafferTest.TestCase ) :
 		self.assertEqual( len( dispatcher.jobPool().failedJobs() ), 0 )
 
 		self.assertEqual(
-			set( glob.glob( "/tmp/gafferTaskContextVariablesTest/*.txt" ) ),
+			set( glob.glob( self.temporaryDirectory() + "/*.txt" ) ),
 			{
-				"/tmp/gafferTaskContextVariablesTest/jimbob.txt",
+				self.temporaryDirectory() + "/jimbob.txt",
 			}
 		)
-
-	def tearDown( self ) :
-
-		GafferTest.TestCase.tearDown( self )
-
-		if os.path.exists( "/tmp/gafferTaskContextVariablesTest" ) :
-			shutil.rmtree( "/tmp/gafferTaskContextVariablesTest" )
 
 if __name__ == "__main__":
 	unittest.main()
