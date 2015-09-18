@@ -182,6 +182,9 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		assert( label is self.__label )
 
+		if self.getPlug().getFlags( Gaffer.Plug.Flags.ReadOnly ) :
+			return
+
 		if self.__editableLabel is None :
 			self.__editableLabel = GafferUI.NameWidget( self.getPlug() )
 			self.__editableLabel._qtWidget().setMinimumSize( self.label()._qtWidget().minimumSize() )
