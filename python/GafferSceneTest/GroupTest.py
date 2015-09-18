@@ -770,9 +770,13 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 
 	def setUp( self ) :
 
+		GafferSceneTest.SceneTestCase.setUp( self )
+
 		self.__originalCacheMemoryLimit = Gaffer.ValuePlug.getCacheMemoryLimit()
 
 	def tearDown( self ) :
+
+		GafferSceneTest.SceneTestCase.tearDown( self )
 
 		Gaffer.ValuePlug.setCacheMemoryLimit( self.__originalCacheMemoryLimit )
 

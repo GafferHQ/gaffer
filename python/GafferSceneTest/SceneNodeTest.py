@@ -45,7 +45,7 @@ import GafferTest
 import GafferScene
 import GafferSceneTest
 
-class SceneNodeTest( GafferTest.TestCase ) :
+class SceneNodeTest( GafferSceneTest.SceneTestCase ) :
 
 	def testRootConstraints( self ) :
 
@@ -276,9 +276,13 @@ class SceneNodeTest( GafferTest.TestCase ) :
 
 	def setUp( self ) :
 
+		GafferSceneTest.SceneTestCase.setUp( self )
+
 		self.__previousCacheMemoryLimit = Gaffer.ValuePlug.getCacheMemoryLimit()
 
 	def tearDown( self ) :
+
+		GafferSceneTest.SceneTestCase.tearDown( self )
 
 		Gaffer.ValuePlug.setCacheMemoryLimit( self.__previousCacheMemoryLimit )
 
