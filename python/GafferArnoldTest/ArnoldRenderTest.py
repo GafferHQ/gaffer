@@ -51,7 +51,11 @@ import GafferArnoldTest
 
 class ArnoldRenderTest( GafferTest.TestCase ) :
 
-	__scriptFileName = "/tmp/test.gfr"
+	def setUp( self ) :
+
+		GafferTest.TestCase.setUp( self )
+
+		self.__scriptFileName = self.temporaryDirectory() + "/test.gfr"
 
 	def testExecute( self ) :
 
@@ -64,7 +68,7 @@ class ArnoldRenderTest( GafferTest.TestCase ) :
 
 		s["expression"] = Gaffer.Expression()
 		s["expression"]["engine"].setValue( "python" )
-		s["expression"]["expression"].setValue( "parent['render']['fileName'] = '/tmp/test.%d.ass' % int( context['frame'] )" )
+		s["expression"]["expression"].setValue( "parent['render']['fileName'] = '" + self.temporaryDirectory() + "/test.%d.ass' % int( context['frame'] )" )
 
 		s["fileName"].setValue( self.__scriptFileName )
 		s.save()
@@ -78,7 +82,7 @@ class ArnoldRenderTest( GafferTest.TestCase ) :
 		self.failIf( p.returncode )
 
 		for i in range( 1, 4 ) :
-			self.failUnless( os.path.exists( "/tmp/test.%d.ass" % i ) )
+			self.failUnless( os.path.exists( self.temporaryDirectory() + "/test.%d.ass" % i ) )
 
 	def testWaitForImage( self ) :
 
@@ -90,7 +94,7 @@ class ArnoldRenderTest( GafferTest.TestCase ) :
 		s["outputs"].addOutput(
 			"beauty",
 			IECore.Display(
-				"/tmp/test.tif",
+				self.temporaryDirectory() + "/test.tif",
 				"tiff",
 				"rgba",
 				{}
@@ -102,13 +106,13 @@ class ArnoldRenderTest( GafferTest.TestCase ) :
 		s["render"]["in"].setInput( s["outputs"]["out"] )
 
 		s["render"]["verbosity"].setValue( 1 )
-		s["render"]["fileName"].setValue( "/tmp/test.ass" )
+		s["render"]["fileName"].setValue( self.temporaryDirectory() + "/test.ass" )
 
 		s["fileName"].setValue( self.__scriptFileName )
 
 		s["render"].execute()
 
-		self.failUnless( os.path.exists( "/tmp/test.tif" ) )
+		self.failUnless( os.path.exists( self.temporaryDirectory() + "/test.tif" ) )
 
 	def testExecuteWithStringSubstitutions( self ) :
 
@@ -118,7 +122,7 @@ class ArnoldRenderTest( GafferTest.TestCase ) :
 		s["render"] = GafferArnold.ArnoldRender()
 		s["render"]["mode"].setValue( "generate" )
 		s["render"]["in"].setInput( s["plane"]["out"] )
-		s["render"]["fileName"].setValue( "/tmp/test.####.ass" )
+		s["render"]["fileName"].setValue( self.temporaryDirectory() + "/test.####.ass" )
 
 		s["fileName"].setValue( self.__scriptFileName )
 		s.save()
@@ -132,7 +136,7 @@ class ArnoldRenderTest( GafferTest.TestCase ) :
 		self.failIf( p.returncode )
 
 		for i in range( 1, 4 ) :
-			self.failUnless( os.path.exists( "/tmp/test.%04d.ass" % i ) )
+			self.failUnless( os.path.exists( self.temporaryDirectory() + "/test.%04d.ass" % i ) )
 
 	def testImageOutput( self ) :
 
@@ -144,7 +148,7 @@ class ArnoldRenderTest( GafferTest.TestCase ) :
 		s["outputs"].addOutput(
 			"beauty",
 			IECore.Display(
-				"/tmp/test.####.tif",
+				self.temporaryDirectory() + "/test.####.tif",
 				"tiff",
 				"rgba",
 				{}
@@ -156,7 +160,7 @@ class ArnoldRenderTest( GafferTest.TestCase ) :
 		s["render"]["in"].setInput( s["outputs"]["out"] )
 
 		s["render"]["verbosity"].setValue( 1 )
-		s["render"]["fileName"].setValue( "/tmp/test.####.ass" )
+		s["render"]["fileName"].setValue( self.temporaryDirectory() + "/test.####.ass" )
 
 		s["fileName"].setValue( self.__scriptFileName )
 		s.save()
@@ -168,7 +172,7 @@ class ArnoldRenderTest( GafferTest.TestCase ) :
 				s["render"].execute()
 
 		for i in range( 1, 4 ) :
-			self.failUnless( os.path.exists( "/tmp/test.%04d.tif" % i ) )
+			self.failUnless( os.path.exists( self.temporaryDirectory() + "/test.%04d.tif" % i ) )
 
 	def testTypeNamePrefixes( self ) :
 
@@ -188,8 +192,8 @@ class ArnoldRenderTest( GafferTest.TestCase ) :
 	def testDirectoryCreation( self ) :
 
 		s = Gaffer.ScriptNode()
-		s["variables"].addMember( "renderDirectory", "/tmp/renderTests" )
-		s["variables"].addMember( "assDirectory", "/tmp/assTests" )
+		s["variables"].addMember( "renderDirectory", self.temporaryDirectory() + "/renderTests" )
+		s["variables"].addMember( "assDirectory", self.temporaryDirectory() + "/assTests" )
 
 		s["plane"] = GafferScene.Plane()
 
@@ -210,27 +214,27 @@ class ArnoldRenderTest( GafferTest.TestCase ) :
 		s["render"]["fileName"].setValue( "$assDirectory/test.####.ass" )
 		s["render"]["mode"].setValue( "generate" )
 
-		self.assertFalse( os.path.exists( "/tmp/renderTests" ) )
-		self.assertFalse( os.path.exists( "/tmp/assTests" ) )
-		self.assertFalse( os.path.exists( "/tmp/assTests/test.0001.ass" ) )
+		self.assertFalse( os.path.exists( self.temporaryDirectory() + "/renderTests" ) )
+		self.assertFalse( os.path.exists( self.temporaryDirectory() + "/assTests" ) )
+		self.assertFalse( os.path.exists( self.temporaryDirectory() + "/assTests/test.0001.ass" ) )
 
-		s["fileName"].setValue( "/tmp/test.gfr" )
+		s["fileName"].setValue( self.temporaryDirectory() + "/test.gfr" )
 
 		with s.context() :
 			s["render"].execute()
 
-		self.assertTrue( os.path.exists( "/tmp/renderTests" ) )
-		self.assertTrue( os.path.exists( "/tmp/assTests" ) )
-		self.assertTrue( os.path.exists( "/tmp/assTests/test.0001.ass" ) )
+		self.assertTrue( os.path.exists( self.temporaryDirectory() + "/renderTests" ) )
+		self.assertTrue( os.path.exists( self.temporaryDirectory() + "/assTests" ) )
+		self.assertTrue( os.path.exists( self.temporaryDirectory() + "/assTests/test.0001.ass" ) )
 
 		# check it can cope with everything already existing
 
 		with s.context() :
 			s["render"].execute()
 
-		self.assertTrue( os.path.exists( "/tmp/renderTests" ) )
-		self.assertTrue( os.path.exists( "/tmp/assTests" ) )
-		self.assertTrue( os.path.exists( "/tmp/assTests/test.0001.ass" ) )
+		self.assertTrue( os.path.exists( self.temporaryDirectory() + "/renderTests" ) )
+		self.assertTrue( os.path.exists( self.temporaryDirectory() + "/assTests" ) )
+		self.assertTrue( os.path.exists( self.temporaryDirectory() + "/assTests/test.0001.ass" ) )
 
 	def testWedge( self ) :
 
@@ -252,7 +256,7 @@ class ArnoldRenderTest( GafferTest.TestCase ) :
 		s["outputs"].addOutput(
 			"beauty",
 			IECore.Display(
-				"/tmp/${wedge:value}.tif",
+				self.temporaryDirectory() + "/${wedge:value}.tif",
 				"tiff",
 				"rgba",
 				{
@@ -262,7 +266,7 @@ class ArnoldRenderTest( GafferTest.TestCase ) :
 		s["outputs"]["in"].setInput( s["attributes"]["out"] )
 
 		s["render"] = GafferArnold.ArnoldRender()
-		s["render"]["fileName"].setValue( "/tmp/test.####.ass" )
+		s["render"]["fileName"].setValue( self.temporaryDirectory() + "/test.####.ass" )
 		s["render"]["in"].setInput( s["outputs"]["out"] )
 
 		s["wedge"] = Gaffer.Wedge()
@@ -270,21 +274,21 @@ class ArnoldRenderTest( GafferTest.TestCase ) :
 		s["wedge"]["strings"].setValue( IECore.StringVectorData( [ "visible", "hidden" ] ) )
 		s["wedge"]["requirements"][0].setInput( s["render"]["requirement"] )
 
-		s["fileName"].setValue( "/tmp/test.gfr" )
+		s["fileName"].setValue( self.temporaryDirectory() + "/test.gfr" )
 		s.save()
 
 		dispatcher = Gaffer.LocalDispatcher()
-		dispatcher["jobsDirectory"].setValue( "/tmp/testJobDirectory" )
+		dispatcher["jobsDirectory"].setValue( self.temporaryDirectory() + "/testJobDirectory" )
 		dispatcher["framesMode"].setValue( Gaffer.Dispatcher.FramesMode.CurrentFrame )
 		dispatcher["executeInBackground"].setValue( False )
 
 		dispatcher.dispatch( [ s["wedge"] ] )
 
 		hidden = GafferImage.ImageReader()
-		hidden["fileName"].setValue( "/tmp/hidden.tif" )
+		hidden["fileName"].setValue( self.temporaryDirectory() + "/hidden.tif" )
 
 		visible = GafferImage.ImageReader()
-		visible["fileName"].setValue( "/tmp/visible.tif" )
+		visible["fileName"].setValue( self.temporaryDirectory() + "/visible.tif" )
 
 		hiddenStats = GafferImage.ImageStats()
 		hiddenStats["in"].setInput( hidden["out"] )
@@ -294,34 +298,6 @@ class ArnoldRenderTest( GafferTest.TestCase ) :
 
 		self.assertTrue( hiddenStats["average"].getValue()[0] < 0.05 )
 		self.assertTrue( visibleStats["average"].getValue()[0] > .35 )
-
-	def setUp( self ) :
-
-		for i in range( 1, 4 ) :
-			if os.path.exists( "/tmp/test.%d.ass" % i ) :
-				os.remove( "/tmp/test.%d.ass" % i )
-			if os.path.exists( "/tmp/test.%04d.ass" % i ) :
-				os.remove( "/tmp/test.%04d.ass" % i )
-			if os.path.exists( "/tmp/test.%04d.tif" % i ) :
-				os.remove( "/tmp/test.%04d.tif" % i )
-
-		for f in (
-			"/tmp/renderTests",
-			"/tmp/assTests/test.0001.ass",
-			"/tmp/assTests",
-			"/tmp/test.tif",
-			"/tmp/testJobDirectory",
-			"/tmp/hidden.tif",
-			"/tmp/visible.tif",
-		) :
-			if os.path.isfile( f ) :
-				os.remove( f )
-			elif os.path.isdir( f ) :
-				shutil.rmtree( f )
-
-	def tearDown( self ) :
-
-		self.setUp()
 
 if __name__ == "__main__":
 	unittest.main()
