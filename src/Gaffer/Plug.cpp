@@ -181,17 +181,41 @@ void Plug::setFlags( unsigned flags )
 		throw IECore::Exception( "Output plug cannot be read only" );
 	}
 
-	m_flags = flags;
-
-	if( Node *n = node() )
+	if( !refCount() )
 	{
-		n->plugFlagsChangedSignal()( this );
+		// No references to us - chances are we're being called
+		// from the constructor. We can't implement undo (if we
+		// have no references, we have no ScriptNode ancestor),
+		// and Action::enact will add and remove a reference and
+		// cause our premature destruction. Just set the flags
+		// directly.
+		setFlagsInternal( flags );
+	}
+	else
+	{
+		// We have references to us, so should implement things
+		// in an undoable manner.
+		Action::enact(
+			this,
+			boost::bind( &Plug::setFlagsInternal, this, flags ),
+			boost::bind( &Plug::setFlagsInternal, this, m_flags )
+		);
 	}
 }
 
 void Plug::setFlags( unsigned flags, bool enable )
 {
 	setFlags( (m_flags & ~flags) | ( enable ? flags : 0 ) );
+}
+
+void Plug::setFlagsInternal( unsigned flags )
+{
+	m_flags = flags;
+
+	if( Node *n = node() )
+	{
+		n->plugFlagsChangedSignal()( this );
+	}
 }
 
 bool Plug::acceptsInput( const Plug *input ) const

@@ -112,11 +112,6 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		plug = self.getPlug()
 
-		self.__label.setEnabled(
-			plug is not None and
-			not plug.getFlags( Gaffer.Plug.Flags.ReadOnly )
-		)
-
 		valueChanged = plug.getInput() is not None
 		if not valueChanged and isinstance( plug, Gaffer.ValuePlug ) :
 			with self.getContext() :
@@ -186,6 +181,9 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 	def __labelDoubleClicked( self, label, event ) :
 
 		assert( label is self.__label )
+
+		if self.getPlug().getFlags( Gaffer.Plug.Flags.ReadOnly ) :
+			return
 
 		if self.__editableLabel is None :
 			self.__editableLabel = GafferUI.NameWidget( self.getPlug() )

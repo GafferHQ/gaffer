@@ -239,12 +239,12 @@ class PlugValueWidget( GafferUI.Widget ) :
 		# but we try to cover all our bases by connecting to both.
 
 		self.__popupMenuConnections.append(
-			widget.buttonPressSignal().connect( IECore.curry( Gaffer.WeakMethod( self.__buttonPress ), buttonMask = buttons ) )
+			widget.buttonPressSignal().connect( functools.partial( Gaffer.WeakMethod( self.__buttonPress ), buttonMask = buttons ) )
 		)
 
 		if buttons & GafferUI.ButtonEvent.Buttons.Right :
 			self.__popupMenuConnections.append(
-				widget.contextMenuSignal().connect( IECore.curry( Gaffer.WeakMethod( self.__contextMenu ) ) )
+				widget.contextMenuSignal().connect( functools.partial( Gaffer.WeakMethod( self.__contextMenu ) ) )
 			)
 
 	## Returns a definition for the popup menu - this is called each time the menu is displayed
@@ -289,7 +289,7 @@ class PlugValueWidget( GafferUI.Widget ) :
 		if hasattr( self.getPlug(), "defaultValue" ) and self.getPlug().direction() == Gaffer.Plug.Direction.In :
 			menuDefinition.append(
 				"/Default", {
-					"command" : IECore.curry( Gaffer.WeakMethod( self.__setValue ), self.getPlug().defaultValue() ),
+					"command" : functools.partial( Gaffer.WeakMethod( self.__setValue ), self.getPlug().defaultValue() ),
 					"active" : self._editable()
 				}
 			)
@@ -309,6 +309,18 @@ class PlugValueWidget( GafferUI.Widget ) :
 					"active" : self._editable()
 				}
 			)
+
+		if len( menuDefinition.items() ) :
+			menuDefinition.append( "/LockDivider", { "divider" : True } )
+
+		readOnlyFlagSet = self.getPlug().getFlags( Gaffer.Plug.Flags.ReadOnly )
+		menuDefinition.append(
+			"/Unlock" if readOnlyFlagSet else "/Lock",
+			{
+				"command" : functools.partial( Gaffer.WeakMethod( self.__applyReadOnly ), not readOnlyFlagSet ),
+				"active" : not self.getReadOnly()
+			}
+		)
 
 		self.popupMenuSignal()( menuDefinition, self )
 
@@ -559,7 +571,7 @@ class PlugValueWidget( GafferUI.Widget ) :
 		for presetName in Gaffer.NodeAlgo.presets( self.getPlug() ) :
 			result.append(
 				presetName, {
-					"command" : IECore.curry( Gaffer.WeakMethod( self.__applyPreset ), presetName ),
+					"command" : functools.partial( Gaffer.WeakMethod( self.__applyPreset ), presetName ),
 					"active" : self._editable(),
 					"checkBox" : presetName == currentPreset,
 				}
@@ -571,6 +583,16 @@ class PlugValueWidget( GafferUI.Widget ) :
 
 		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
 			Gaffer.NodeAlgo.applyPreset( self.getPlug(), presetName )
+
+	def __applyReadOnly( self, readOnly ) :
+
+		def apply( plug ) :
+			plug.setFlags( Gaffer.Plug.Flags.ReadOnly, readOnly )
+			for child in plug.children() :
+				apply( child )
+
+		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
+			apply( self.getPlug() )
 
 	# drag and drop stuff
 

@@ -700,6 +700,29 @@ class PlugTest( GafferTest.TestCase ) :
 		p["in"] = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.In )
 		p["out"] = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.Out )
 
+	def testUndoSetFlags( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = Gaffer.Node()
+		s["n"]["user"]["p"] = Gaffer.IntPlug()
+
+		self.assertFalse( s["n"]["user"]["p"].getFlags( Gaffer.Plug.Flags.ReadOnly ) )
+
+		cs = GafferTest.CapturingSlot( s["n"].plugFlagsChangedSignal() )
+		with Gaffer.UndoContext( s["n"]["user"]["p"].ancestor( Gaffer.ScriptNode ) ) :
+			s["n"]["user"]["p"].setFlags( Gaffer.Plug.Flags.ReadOnly, True )
+			self.assertTrue( s["n"]["user"]["p"].getFlags( Gaffer.Plug.Flags.ReadOnly ) )
+			self.assertEqual( len( cs ), 1 )
+
+		s.undo()
+		self.assertFalse( s["n"]["user"]["p"].getFlags( Gaffer.Plug.Flags.ReadOnly ) )
+		self.assertEqual( len( cs ), 2 )
+
+		s.redo()
+		self.assertTrue( s["n"]["user"]["p"].getFlags( Gaffer.Plug.Flags.ReadOnly ) )
+		self.assertEqual( len( cs ), 3 )
+
 if __name__ == "__main__":
 	unittest.main()
 
