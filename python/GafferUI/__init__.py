@@ -226,6 +226,7 @@ from NodeMenu import NodeMenu
 import FileMenu
 import LayoutMenu
 import EditMenu
+import UserPlugs
 from Frame import Frame
 from CompoundNumericPlugValueWidget import CompoundNumericPlugValueWidget
 from BoxPlugValueWidget import BoxPlugValueWidget
