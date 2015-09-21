@@ -355,7 +355,8 @@ class OSLExpressionEngine : public Gaffer::Expression::Engine
 			m_shaderGroup = shaderGroup( shaderName, source, outParameters );
 
 			// Build the list of all context queries the shader performs.
-			// These arrive in the form of getattribute() calls.
+			// These arrive in the form of getattribute() calls and reads
+			// from the global time variable.
 
 			OSL::ShadingSystem *shadingSys = shadingSystem();
 
@@ -384,6 +385,23 @@ class OSLExpressionEngine : public Gaffer::Expression::Engine
 				}
 			}
 
+			int numGlobals = 0;
+			shadingSys->getattribute( m_shaderGroup.get(), "num_globals_needed", numGlobals );
+			if( numGlobals )
+			{
+				ustring *globalNames = NULL;
+				shadingSys->getattribute( m_shaderGroup.get(), "globals_needed", TypeDesc::PTR, &globalNames );
+				for( int i = 0; i < numGlobals; ++i )
+				{
+					if( globalNames[i] == "time" )
+					{
+						contextVariables.push_back( "frame" );
+						contextVariables.push_back( "framesPerSecond" );
+						break;
+					}
+				}
+			}
+
 			// Grab the symbols for each of the output parameters so we can
 			// query their values in execute().
 			for( vector<ustring>::const_iterator it = outParameters.begin(), eIt = outParameters.end(); it != eIt; ++it )
@@ -400,6 +418,8 @@ class OSLExpressionEngine : public Gaffer::Expression::Engine
 
 		    OSL::ShaderGlobals shaderGlobals;
 			memset( &shaderGlobals, 0, sizeof( ShaderGlobals ) );
+
+			shaderGlobals.time = context->getTime();
 
 			RenderState renderState;
 			renderState.inParameters = &m_inParameters;
