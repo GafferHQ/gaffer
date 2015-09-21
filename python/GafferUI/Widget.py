@@ -39,6 +39,7 @@ import weakref
 import os
 import math
 import inspect
+import warnings
 
 import IECore
 
@@ -66,6 +67,34 @@ QtGui = GafferUI._qtImport( "QtGui" )
 # of the GafferUI module without learning all the Qt API. To enforce this separation,
 # GafferUI classes must not derive from Qt classes.
 #
+# # Layout definition using `with`
+#
+# The default parent for new widgets can be defined using the python `with` statement.
+# This makes it possible to structure the code to closely resemble the structure of the
+# layout itself, greatly aiding readability.
+#
+# ```
+# with GafferUI.Window( "Example" ) as window :
+#
+# 	with GafferUI.TabbedContainer() :
+#
+# 		with GafferUI.ListContainer( parenting = { "label" : "Buttons" } ) :
+#
+# 			GafferUI.Button( "Button 1" )
+# 			GafferUI.Button( "Button 2" )
+#
+# 		GafferUI.MultiLineTextWidget( "Enter text here...", parenting = { "label" : "Text" } )
+#
+# window.setVisible( True )
+# GafferUI.EventLoop.mainEventLoop().start()
+# ```
+#
+# Behind the scenes, newly constructed widgets are automatically added to the
+# parent widget using a call to `parent.addChild( widget, **parenting )`. This allows
+# optional arguments to `addChild()` to be specified during layout creation - above
+# we use this to define the names for the tabs corresponding to each child of the
+# TabbedContainer.
+#
 # \todo Consider how this relates to the Gadget class. Currently I'm aiming to have the two classes
 # have identical signatures in as many places as possible, with the possibility of perhaps having
 # a common base class in the future. Right now the signatures are the same for the event signals and
@@ -81,11 +110,13 @@ class Widget( object ) :
 	# QWidget can be accessed at any time using the _qtWidget() method. Note that this is
 	# protected to encourage non-reliance on knowledge of the Qt backend.
 	#
-	# All subclass __init__ methods /must/ accept keyword arguments as **kw, and pass them
-	# to their base class constructor. These arguments are used to specify arguments to
-	# Container.addChild() when using the automatic parenting mechanism. Keyword arguments
-	# must not be used for any other purpose.
-	def __init__( self, topLevelWidget, toolTip="", **kw ) :
+	# If a current parent has been defined using the `with` syntax described above,
+	# the parenting argument provides optional keywords for the automatic
+	# `parent.addChild()` call.
+	#
+	# \deprecated The arbitrary keyword arguments (**kw) will be removed in
+	# a future version.
+	def __init__( self, topLevelWidget, toolTip="", parenting = {}, **kw ) :
 
 		assert( isinstance( topLevelWidget, ( QtGui.QWidget, Widget ) ) )
 
@@ -141,12 +172,15 @@ class Widget( object ) :
 		# hardcoding stuff here.
 		if len( self.__parentStack ) and not isinstance( self, GafferUI.Menu ) :
 			if self.__initNesting() == self.__parentStack[-1][1] + 1 :
-				addChildKW = kw
-				if "parenting" in addChildKW :
-					assert( len( addChildKW ) == 1 )
+				addChildKW = parenting
+				if len( kw ) :
 					addChildKW = addChildKW.copy()
-					addChildKW.update( addChildKW["parenting"] )
-					del addChildKW["parenting"]
+					addChildKW.update( kw )
+					warnings.warn(
+						"Arbitrary keyword arguments are deprecated - use the `parenting` argument instead.",
+						DeprecationWarning,
+						self.__keywordArgumentDeprecationNesting()
+					)
 				self.__parentStack[-1][0].addChild( self, **addChildKW )
 
 		self.__eventFilterInstalled = False
@@ -670,6 +704,24 @@ class Widget( object ) :
 		return len( widgetsInInit )
 
 	__parentStack = []
+
+	## We detect the use of deprecated keyword arguments in Widget.__init__,
+	# but the actual call site using those arguments can be at an arbitrary
+	# distance away on the stack - this function finds the location so we
+	# can provide an accurate error.
+	def __keywordArgumentDeprecationNesting( self ) :
+
+		frame = inspect.currentframe( 1 )
+		result = 1
+		frameIndex = 1
+		while frame :
+			if frame.f_code.co_name=="__init__" :
+				if frame.f_locals[frame.f_code.co_varnames[0]] is self :
+					result = frameIndex
+			frame = frame.f_back
+			frameIndex += 1
+
+		return result + 1
 
 	## Converts a Qt key code into a string
 	@classmethod
