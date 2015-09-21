@@ -35,6 +35,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include "boost/iterator/counting_iterator.hpp"
+
 #include "Gaffer/Context.h"
 
 #include "GafferImage/ImagePlug.h"
@@ -108,6 +110,14 @@ struct HashTile
 
 	typedef MurmurHash Result;
 
+	// If the class is called with a channel name, then we know that
+	// we want to hash channelDataPlug, and if it is called without
+	// a channel name then we want to hash sampleOffsetsPlug.
+	Result operator()( const ImagePlug *imagePlug, const V2i &tileOrigin )
+	{
+		return imagePlug->sampleOffsetsPlug()->hash();
+	}
+
 	Result operator()( const ImagePlug *imagePlug, const string &channelName, const V2i &tileOrigin )
 	{
 		return imagePlug->channelDataPlug()->hash();
@@ -121,6 +131,11 @@ struct AppendHash
 	AppendHash( MurmurHash &hash )
 		:	m_hash( hash )
 	{
+	}
+
+	void operator()( const ImagePlug *imagePlug, const V2i &tileOrigin, const IECore::MurmurHash &tileHash )
+	{
+		m_hash.append( tileHash );
 	}
 
 	void operator()( const ImagePlug *imagePlug, const string &channelName, const V2i &tileOrigin, const IECore::MurmurHash &tileHash )
@@ -183,6 +198,26 @@ ImagePlug::ImagePlug( const std::string &name, Direction direction, unsigned fla
 		)
 	);
 
+	addChild(
+		new IntPlug(
+			"deepState",
+			direction,
+			Flat,
+			Messy,
+			Flat,
+			childFlags
+		)
+	);
+
+	addChild(
+		new IntVectorDataPlug(
+			"sampleOffsets",
+			direction,
+			flatTileSampleOffsets(),
+			childFlags
+		)
+	);
+
 	IECore::StringVectorDataPtr channelStrVectorData( new IECore::StringVectorData() );
 	std::vector<std::string> &channelStrVector( channelStrVectorData->writable() );
 	channelStrVector.push_back("R");
@@ -206,12 +241,31 @@ ImagePlug::ImagePlug( const std::string &name, Direction direction, unsigned fla
 			childFlags
 		)
 	);
-
 }
 
 ImagePlug::~ImagePlug()
 {
 }
+
+const IECore::IntVectorData *ImagePlug::flatTileSampleOffsets()
+{
+	static boost::counting_iterator<int> begin( 1 ), end( ImagePlug::tileSize()*ImagePlug::tileSize() + 1 );
+	static IECore::ConstIntVectorDataPtr g_flatTileSampleOffsets( new IECore::IntVectorData( std::vector<int>( begin, end ) ) );
+
+	return g_flatTileSampleOffsets.get();
+};
+
+const IECore::IntVectorData *ImagePlug::emptyTileSampleOffsets()
+{
+	static IECore::ConstIntVectorDataPtr g_emptyTileSampleOffsets( new IECore::IntVectorData( std::vector<int>( ImagePlug::tileSize()*ImagePlug::tileSize(), 0 ) ) );
+	return g_emptyTileSampleOffsets.get();
+};
+
+const IECore::FloatVectorData *ImagePlug::emptyTile()
+{
+	static IECore::ConstFloatVectorDataPtr g_emptyTile( new IECore::FloatVectorData() );
+	return g_emptyTile.get();
+};
 
 const IECore::FloatVectorData *ImagePlug::whiteTile()
 {
@@ -231,7 +285,7 @@ bool ImagePlug::acceptsChild( const GraphComponent *potentialChild ) const
 	{
 		return false;
 	}
-	return children().size() != 5;
+	return children().size() != 7;
 }
 
 bool ImagePlug::acceptsInput( const Gaffer::Plug *input ) const
@@ -282,24 +336,44 @@ const Gaffer::CompoundObjectPlug *ImagePlug::metadataPlug() const
 	return getChild<CompoundObjectPlug>( g_firstPlugIndex+2 );
 }
 
+Gaffer::IntPlug *ImagePlug::deepStatePlug()
+{
+	return getChild<IntPlug>( g_firstPlugIndex+3 );
+}
+
+const Gaffer::IntPlug *ImagePlug::deepStatePlug() const
+{
+	return getChild<IntPlug>( g_firstPlugIndex+3 );
+}
+
+Gaffer::IntVectorDataPlug *ImagePlug::sampleOffsetsPlug()
+{
+	return getChild<IntVectorDataPlug>( g_firstPlugIndex+4 );
+}
+
+const Gaffer::IntVectorDataPlug *ImagePlug::sampleOffsetsPlug() const
+{
+	return getChild<IntVectorDataPlug>( g_firstPlugIndex+4 );
+}
+
 Gaffer::StringVectorDataPlug *ImagePlug::channelNamesPlug()
 {
-	return getChild<StringVectorDataPlug>( g_firstPlugIndex+3 );
+	return getChild<StringVectorDataPlug>( g_firstPlugIndex+5 );
 }
 
 const Gaffer::StringVectorDataPlug *ImagePlug::channelNamesPlug() const
 {
-	return getChild<StringVectorDataPlug>( g_firstPlugIndex+3 );
+	return getChild<StringVectorDataPlug>( g_firstPlugIndex+5 );
 }
 
 Gaffer::FloatVectorDataPlug *ImagePlug::channelDataPlug()
 {
-	return getChild<FloatVectorDataPlug>( g_firstPlugIndex+4 );
+	return getChild<FloatVectorDataPlug>( g_firstPlugIndex+6 );
 }
 
 const Gaffer::FloatVectorDataPlug *ImagePlug::channelDataPlug() const
 {
-	return getChild<FloatVectorDataPlug>( g_firstPlugIndex+4 );
+	return getChild<FloatVectorDataPlug>( g_firstPlugIndex+6 );
 }
 
 IECore::ConstFloatVectorDataPtr ImagePlug::channelData( const std::string &channelName, const Imath::V2i &tile ) const
@@ -326,8 +400,35 @@ IECore::MurmurHash ImagePlug::channelDataHash( const std::string &channelName, c
 	return channelDataPlug()->hash();
 }
 
+IECore::ConstIntVectorDataPtr ImagePlug::sampleOffsets( const Imath::V2i &tile ) const
+{
+	if( direction()==In && !getInput<Plug>() )
+	{
+		return sampleOffsetsPlug()->defaultValue();
+	}
+
+	ContextPtr tmpContext = new Context( *Context::current(), Context::Borrowed );
+	tmpContext->set( ImagePlug::tileOriginContextName, tile );
+	Context::Scope scopedContext( tmpContext.get() );
+
+	return sampleOffsetsPlug()->getValue();
+}
+
+IECore::MurmurHash ImagePlug::sampleOffsetsHash( const Imath::V2i &tile ) const
+{
+	ContextPtr tmpContext = new Context( *Context::current(), Context::Borrowed );
+	tmpContext->set( ImagePlug::tileOriginContextName, tile );
+	Context::Scope scopedContext( tmpContext.get() );
+	return sampleOffsetsPlug()->hash();
+}
+
 IECore::ImagePrimitivePtr ImagePlug::image() const
 {
+	if( deepStatePlug()->getValue() != Flat )
+	{
+		throw( IECore::Exception( "ImagePlug::image() only works on Flat image data ") );
+	}
+
 	Format format = formatPlug()->getValue();
 	Box2i dataWindow = dataWindowPlug()->getValue();
 	Box2i newDataWindow( Imath::V2i( 0 ) );
@@ -377,9 +478,15 @@ IECore::MurmurHash ImagePlug::imageHash() const
 	result.append( dataWindowPlug()->hash() );
 	result.append( metadataPlug()->hash() );
 	result.append( channelNamesPlug()->hash() );
+	result.append( deepStatePlug()->hash() );
 
 	HashTile hashTile;
 	AppendHash appendHash( result );
+
+	// Parallel gather hashes of sampleOffsetsPlug.
+	parallelGatherTiles( this, hashTile, appendHash, dataWindow, BottomToTop );
+
+	// Parallel gather hashes of channelDataPlug.
 	parallelGatherTiles( this, channelNames, hashTile, appendHash, dataWindow, BottomToTop );
 
 	return result;
