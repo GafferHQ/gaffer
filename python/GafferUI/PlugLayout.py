@@ -72,7 +72,7 @@ QtGui = GafferUI._qtImport( "QtGui" )
 # This can be useful when customising user interfaces for a particular facility - for instance
 # to display asset management information for each node.
 #
-# A custom widget is specified using parent metadata entries starting with 
+# A custom widget is specified using parent metadata entries starting with
 # "layout:customWidget:Name:" prefixes, where "Name" is a unique identifier for the
 # custom widget :
 #
@@ -217,7 +217,7 @@ class PlugLayout( GafferUI.Widget ) :
 				metadataNames = Gaffer.Metadata.registeredPlugValues( parent )
 			for name in metadataNames :
 				m = re.match( "layout:customWidget:(.+):widgetType", name )
-				if m :
+				if m and cls.__metadataValue( parent, name ) :
 					items.append( m.group( 1 ) )
 
 		itemsAndIndices = [ list( x ) for x in enumerate( items ) ]
@@ -464,7 +464,7 @@ class PlugLayout( GafferUI.Widget ) :
 
 		if plug is not None and not self.__parent.isSame( plug ) and not self.__parent.isSame( plug.parent() ) :
 			return
-			
+
 		if not self.__node().isInstanceOf( nodeTypeId ) :
 			return
 
