@@ -63,7 +63,10 @@ Gaffer.Metadata.registerNode(
 			"layout:index", -1, # Last
 			"layout:section", "User",
 			"nodule:type", "",
-			"plugValueWidget:type", "GafferUI.UserPlugValueWidget",
+			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
+
+			"layout:customWidget:addButton:widgetType", "GafferUI.UserPlugs.plugCreationWidget",
+			"layout:customWidget:addButton:index", -1, # Last
 
 		),
 
@@ -144,3 +147,22 @@ class NodeUI( GafferUI.Widget ) :
 			nodeTypeId = nodeClassOrTypeId.staticTypeId()
 
 		cls.__nodeUIs[nodeTypeId] = nodeUICreator
+
+##########################################################################
+# Plug menu
+##########################################################################
+
+def __deletePlug( plug ) :
+
+	with Gaffer.UndoContext( plug.ancestor( Gaffer.ScriptNode ) ) :
+		plug.parent().removeChild( plug )
+
+def __plugPopupMenu( menuDefinition, plugValueWidget ) :
+
+	plug = plugValueWidget.getPlug()
+	node = plug.node()
+	if plug.parent().isSame( node["user"] ) :
+		menuDefinition.append( "/DeleteDivider", { "divider" : True } )
+		menuDefinition.append( "/Delete", { "command" : IECore.curry( __deletePlug, plug ), "active" : not plugValueWidget.getReadOnly() } )
+
+__plugPopupMenuConnection = GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugPopupMenu )
