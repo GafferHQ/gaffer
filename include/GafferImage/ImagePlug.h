@@ -35,14 +35,15 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_IMAGEPLUG_H
-#define GAFFER_IMAGEPLUG_H
+#ifndef GAFFERIMAGE_IMAGEPLUG_H
+#define GAFFERIMAGE_IMAGEPLUG_H
 
 #include "GafferImage/AtomicFormatPlug.h"
 #include "GafferImage/Export.h"
 #include "GafferImage/TypeIds.h"
 
 #include "Gaffer/Context.h"
+#include "Gaffer/NumericPlug.h"
 #include "Gaffer/TypedObjectPlug.h"
 #include "Gaffer/TypedPlug.h"
 
@@ -103,6 +104,10 @@ class GAFFERIMAGE_API ImagePlug : public Gaffer::ValuePlug
 		const Gaffer::AtomicBox2iPlug *dataWindowPlug() const;
 		Gaffer::AtomicCompoundDataPlug *metadataPlug();
 		const Gaffer::AtomicCompoundDataPlug *metadataPlug() const;
+		Gaffer::BoolPlug *deepPlug();
+		const Gaffer::BoolPlug *deepPlug() const;
+		Gaffer::IntVectorDataPlug *sampleOffsetsPlug();
+		const Gaffer::IntVectorDataPlug *sampleOffsetsPlug() const;
 		Gaffer::StringVectorDataPlug *channelNamesPlug();
 		const Gaffer::StringVectorDataPlug *channelNamesPlug() const;
 		Gaffer::FloatVectorDataPlug *channelDataPlug();
@@ -120,6 +125,7 @@ class GAFFERIMAGE_API ImagePlug : public Gaffer::ValuePlug
 		/// InternedStrings on every lookup.
 		static const IECore::InternedString channelNameContextName;
 		static const IECore::InternedString tileOriginContextName;
+
 		/// Utility class to scope a temporary copy of a context,
 		/// with tile/channel specific variables removed. This can be used
 		/// when evaluating plugs which must be global to the whole image,
@@ -172,11 +178,22 @@ class GAFFERIMAGE_API ImagePlug : public Gaffer::ValuePlug
 		IECore::ConstCompoundDataPtr metadata() const;
 		/// Calls `metadataPlug()->hash()` using a GlobalScope.
 		IECore::MurmurHash metadataHash() const;
+		/// Calls `deepPlug()->getValue()` using a GlobalScope.
+		bool deep() const;
+		/// Calls `deepPlug()->hash()` using a GlobalScope.
+		IECore::MurmurHash deepHash() const;
+		/// Calls `sampleOffsetsPlug()->getValue()` using a ChannelDataScope.
+		IECore::ConstIntVectorDataPtr sampleOffsets( const Imath::V2i &tileOrigin ) const;
+		/// Calls `sampleOffsetsPlug()->hash()` using a ChannelDataScope.
+		IECore::MurmurHash sampleOffsetsHash( const Imath::V2i &tileOrigin ) const;
 		//@}
 
 		/// @name Tile utilities
 		////////////////////////////////////////////////////////////////////
 		//@{
+		static const IECore::IntVectorData *emptyTileSampleOffsets();
+		static const IECore::IntVectorData *flatTileSampleOffsets();
+		static const IECore::FloatVectorData *emptyTile();
 		static const IECore::FloatVectorData *blackTile();
 		static const IECore::FloatVectorData *whiteTile();
 
@@ -224,4 +241,4 @@ typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::PlugPredicate<Gaffer::Plu
 
 } // namespace GafferImage
 
-#endif // GAFFER_IMAGEPLUG_H
+#endif // GAFFERIMAGE_IMAGEPLUG_H

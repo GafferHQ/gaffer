@@ -35,6 +35,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include "boost/iterator/counting_iterator.hpp"
+
 #include "GafferImage/ImagePlug.h"
 
 #include "GafferImage/BufferAlgo.h"
@@ -105,6 +107,24 @@ ImagePlug::ImagePlug( const std::string &name, Direction direction, unsigned fla
 		)
 	);
 
+	addChild(
+		new BoolPlug(
+			"deep",
+			direction,
+			false,
+			childFlags
+		)
+	);
+
+	addChild(
+		new IntVectorDataPlug(
+			"sampleOffsets",
+			direction,
+			flatTileSampleOffsets(),
+			childFlags
+		)
+	);
+
 	/// \todo Default value should be empty.
 	IECore::StringVectorDataPtr channelStrVectorData( new IECore::StringVectorData() );
 	std::vector<std::string> &channelStrVector( channelStrVectorData->writable() );
@@ -129,22 +149,47 @@ ImagePlug::ImagePlug( const std::string &name, Direction direction, unsigned fla
 			childFlags
 		)
 	);
-
 }
 
 ImagePlug::~ImagePlug()
 {
 }
 
+const IECore::IntVectorData *ImagePlug::flatTileSampleOffsets()
+{
+	static boost::counting_iterator<int> begin( 1 ), end( ImagePlug::tilePixels() + 1 );
+	// counting_iterator syntax is a tad funny looking, but this does create N samples
+	// from 1, ... , N, where N = tilePixels
+	static IECore::ConstIntVectorDataPtr g_flatTileSampleOffsets(
+		new IECore::IntVectorData( std::vector<int>( begin, end ) )
+	);
+
+	return g_flatTileSampleOffsets.get();
+};
+
+const IECore::IntVectorData *ImagePlug::emptyTileSampleOffsets()
+{
+	static IECore::ConstIntVectorDataPtr g_emptyTileSampleOffsets(
+		new IECore::IntVectorData( std::vector<int>( ImagePlug::tilePixels(), 0 ) )
+	);
+	return g_emptyTileSampleOffsets.get();
+};
+
+const IECore::FloatVectorData *ImagePlug::emptyTile()
+{
+	static IECore::ConstFloatVectorDataPtr g_emptyTile( new IECore::FloatVectorData() );
+	return g_emptyTile.get();
+};
+
 const IECore::FloatVectorData *ImagePlug::whiteTile()
 {
-	static IECore::ConstFloatVectorDataPtr g_whiteTile( new IECore::FloatVectorData( std::vector<float>( ImagePlug::tileSize()*ImagePlug::tileSize(), 1. ) ) );
+	static IECore::ConstFloatVectorDataPtr g_whiteTile( new IECore::FloatVectorData( std::vector<float>( ImagePlug::tilePixels(), 1. ) ) );
 	return g_whiteTile.get();
 };
 
 const IECore::FloatVectorData *ImagePlug::blackTile()
 {
-	static IECore::ConstFloatVectorDataPtr g_blackTile( new IECore::FloatVectorData( std::vector<float>( ImagePlug::tileSize()*ImagePlug::tileSize(), 0. ) ) );
+	static IECore::ConstFloatVectorDataPtr g_blackTile( new IECore::FloatVectorData( std::vector<float>( ImagePlug::tilePixels(), 0. ) ) );
 	return g_blackTile.get();
 };
 
@@ -154,7 +199,7 @@ bool ImagePlug::acceptsChild( const GraphComponent *potentialChild ) const
 	{
 		return false;
 	}
-	return children().size() != 5;
+	return children().size() != 7;
 }
 
 bool ImagePlug::acceptsInput( const Gaffer::Plug *input ) const
@@ -205,24 +250,44 @@ const Gaffer::AtomicCompoundDataPlug *ImagePlug::metadataPlug() const
 	return getChild<AtomicCompoundDataPlug>( g_firstPlugIndex+2 );
 }
 
+Gaffer::BoolPlug *ImagePlug::deepPlug()
+{
+	return getChild<BoolPlug>( g_firstPlugIndex+3 );
+}
+
+const Gaffer::BoolPlug *ImagePlug::deepPlug() const
+{
+	return getChild<BoolPlug>( g_firstPlugIndex+3 );
+}
+
+Gaffer::IntVectorDataPlug *ImagePlug::sampleOffsetsPlug()
+{
+	return getChild<IntVectorDataPlug>( g_firstPlugIndex+4 );
+}
+
+const Gaffer::IntVectorDataPlug *ImagePlug::sampleOffsetsPlug() const
+{
+	return getChild<IntVectorDataPlug>( g_firstPlugIndex+4 );
+}
+
 Gaffer::StringVectorDataPlug *ImagePlug::channelNamesPlug()
 {
-	return getChild<StringVectorDataPlug>( g_firstPlugIndex+3 );
+	return getChild<StringVectorDataPlug>( g_firstPlugIndex+5 );
 }
 
 const Gaffer::StringVectorDataPlug *ImagePlug::channelNamesPlug() const
 {
-	return getChild<StringVectorDataPlug>( g_firstPlugIndex+3 );
+	return getChild<StringVectorDataPlug>( g_firstPlugIndex+5 );
 }
 
 Gaffer::FloatVectorDataPlug *ImagePlug::channelDataPlug()
 {
-	return getChild<FloatVectorDataPlug>( g_firstPlugIndex+4 );
+	return getChild<FloatVectorDataPlug>( g_firstPlugIndex+6 );
 }
 
 const Gaffer::FloatVectorDataPlug *ImagePlug::channelDataPlug() const
 {
-	return getChild<FloatVectorDataPlug>( g_firstPlugIndex+4 );
+	return getChild<FloatVectorDataPlug>( g_firstPlugIndex+6 );
 }
 
 ImagePlug::GlobalScope::GlobalScope( const Gaffer::Context *context )
@@ -322,4 +387,30 @@ IECore::MurmurHash ImagePlug::metadataHash() const
 {
 	GlobalScope globalScope( Context::current() );
 	return metadataPlug()->hash();
+}
+
+bool ImagePlug::deep() const
+{
+	GlobalScope globalScope( Context::current() );
+	return deepPlug()->getValue();
+}
+
+IECore::MurmurHash ImagePlug::deepHash() const
+{
+	GlobalScope globalScope( Context::current() );
+	return deepPlug()->hash();
+}
+
+IECore::ConstIntVectorDataPtr ImagePlug::sampleOffsets( const Imath::V2i &tile ) const
+{
+	ChannelDataScope channelDataScope( Context::current() );
+	channelDataScope.setTileOrigin( tile );
+	return sampleOffsetsPlug()->getValue();
+}
+
+IECore::MurmurHash ImagePlug::sampleOffsetsHash( const Imath::V2i &tile ) const
+{
+	ChannelDataScope channelDataScope( Context::current() );
+	channelDataScope.setTileOrigin( tile );
+	return sampleOffsetsPlug()->hash();
 }
