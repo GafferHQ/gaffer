@@ -150,7 +150,7 @@ class UIEditor( GafferUI.NodeSetEditor ) :
 			"/Edit UI...",
 			{
 				"command" : functools.partial( GafferUI.UIEditor.acquire, node ),
-				"active" : nodeEditor.nodeUI().plugValueWidget( node["user"] ) is not None
+				"active" : isinstance( node, Gaffer.Box ) or nodeEditor.nodeUI().plugValueWidget( node["user"] ) is not None
 			}
 		)
 
