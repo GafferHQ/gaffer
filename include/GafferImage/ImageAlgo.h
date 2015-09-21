@@ -38,6 +38,7 @@
 #define GAFFERIMAGE_IMAGEALGO_H
 
 #include <vector>
+#include "boost/range.hpp"
 #include "OpenEXR/ImathBox.h"
 
 namespace GafferImage
@@ -130,6 +131,47 @@ void parallelGatherTiles(
 	const Imath::Box2i &window = Imath::Box2i(), // Uses dataWindow if not specified.
 	TileOrder tileOrder = Unordered
 );
+
+
+template <typename T>
+struct SampleRange
+{
+    typedef boost::iterator_range<typename std::vector<T>::iterator> Type;
+};
+
+template <typename T>
+struct ConstSampleRange
+{
+    typedef boost::iterator_range<typename std::vector<T>::const_iterator> Type;
+};
+
+typedef SampleRange<float>::Type FloatSampleRange;
+typedef SampleRange<int>::Type IntSampleRange;
+
+typedef ConstSampleRange<float>::Type ConstFloatSampleRange;
+typedef ConstSampleRange<int>::Type ConstIntSampleRange;
+
+/// Get the number of samples that are in a specific pixel
+inline int sampleCount( const std::vector<int>::const_iterator &sampleOffset, const std::vector<int>::const_iterator &sampleOffsetBegin );
+inline int sampleCount( const std::vector<int> &sampleOffsets, const Imath::V2i &tilePos );
+
+/// Get an iterator range for the samples defined by the pixel ID.
+template<typename T>
+inline typename SampleRange<T>::Type sampleRange( std::vector<T> &channelData, const std::vector<int>::const_iterator &sampleOffset, const std::vector<int>::const_iterator &sampleOffsetBegin );
+template<typename T>
+inline typename SampleRange<T>::Type sampleRange( std::vector<T> &channelData, const std::vector<int> &sampleOffsets, const Imath::V2i &tilePos );
+
+template<typename T>
+inline typename ConstSampleRange<T>::Type sampleRange( const std::vector<T> &channelData, const std::vector<int>::const_iterator &sampleOffset, const std::vector<int>::const_iterator &sampleOffsetBegin );
+template<typename T>
+inline typename ConstSampleRange<T>::Type sampleRange( const std::vector<T> &channelData, const std::vector<int> &sampleOffsets, const Imath::V2i &tilePos );
+
+/// Get the existing channel from channelNames that should be used as the associated
+/// alpha channel for channelName. If this returns an empty string, then there is either
+/// no alpha channel in channelNames or channelName is an alpha or depth channel.
+inline std::string channelAlpha( const std::string &channelName, const std::vector<std::string> &channelNames );
+
+inline int tileIndex( const Imath::V2i &tilePos );
 
 } // namespace GafferImage
 

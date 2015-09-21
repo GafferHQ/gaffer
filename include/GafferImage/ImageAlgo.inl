@@ -600,6 +600,149 @@ void parallelGatherTiles( const ImagePlug *imagePlug, const std::vector<std::str
 	);
 }
 
+inline int sampleCount( const std::vector<int>::const_iterator &sampleOffset, const std::vector<int>::const_iterator &sampleOffsetBegin )
+{
+	if( sampleOffset == sampleOffsetBegin )
+	{
+		return (*sampleOffset);
+	}
+	else
+	{
+		return (*sampleOffset) - (*(sampleOffset-1));
+	}
+}
+
+inline int sampleCount( const std::vector<int> &sampleOffsets, const Imath::V2i &tilePos )
+{
+	return sampleCount( sampleOffsets.begin() + tileIndex( tilePos ), sampleOffsets.begin() );
+}
+
+template<class T>
+inline typename SampleRange<T>::Type sampleRange( std::vector<T> &channelData, const std::vector<int>::const_iterator &sampleOffset, const std::vector<int>::const_iterator &sampleOffsetBegin )
+{
+	if( sampleOffset == sampleOffsetBegin )
+	{
+		return boost::make_iterator_range(channelData.begin(), channelData.begin() + (*sampleOffset));
+	}
+	else
+	{
+		return boost::make_iterator_range(channelData.begin() + (*(sampleOffset-1)), channelData.begin() + (*sampleOffset));
+	}
+}
+
+template<class T>
+inline typename SampleRange<T>::Type sampleRange( std::vector<T> &channelData, const std::vector<int> &sampleOffsets, const Imath::V2i &tilePos )
+{
+	return sampleRange( channelData, sampleOffsets.begin() + tileIndex( tilePos ), sampleOffsets.begin() );
+}
+
+template<class T>
+inline typename ConstSampleRange<T>::Type sampleRange( const std::vector<T> &channelData, const std::vector<int>::const_iterator &sampleOffset, const std::vector<int>::const_iterator &sampleOffsetBegin )
+{
+	if( sampleOffset == sampleOffsetBegin )
+	{
+		return boost::make_iterator_range(channelData.begin(), channelData.begin() + (*sampleOffset));
+	}
+	else
+	{
+		return boost::make_iterator_range(channelData.begin() + (*(sampleOffset-1)), channelData.begin() + (*sampleOffset));
+	}
+}
+
+template<class T>
+inline typename ConstSampleRange<T>::Type sampleRange( const std::vector<T> &channelData, const std::vector<int> &sampleOffsets, const Imath::V2i &tilePos )
+{
+	return sampleRange( channelData, sampleOffsets.begin() + tileIndex( tilePos ), sampleOffsets.begin() );
+}
+
+inline std::string channelAlpha( const std::string &channelName, const std::vector<std::string> &channelNames )
+{
+	std::vector<std::string> layers;
+	std::string layerName, baseName, alphaName;
+
+	std::size_t layerSplit = channelName.find_last_of( "." );
+
+	std::string chan;
+
+	if( layerSplit == std::string::npos )
+	{
+		baseName = channelName;
+	}
+	else
+	{
+		baseName = channelName.substr( layerSplit+1 );
+
+		while( layerSplit != std::string::npos )
+		{
+			layers.push_back( channelName.substr( 0, layerSplit ) );
+			layerSplit = channelName.find_last_of( ".", layerSplit );
+		}
+	}
+
+	// These base channels do not have associated alpha channels.
+	if( baseName == "A" ||
+		baseName == "AR" ||
+		baseName == "AG" ||
+		baseName == "AB" ||
+		baseName == "Z" ||
+		baseName == "ZBack" )
+	{
+		return "";
+	}
+	else if( baseName == "R" )
+	{
+		alphaName = "AR";
+	}
+	else if( baseName == "G" )
+	{
+		alphaName = "AG";
+	}
+	else if( baseName == "B" )
+	{
+		alphaName = "AB";
+	}
+
+	for( std::vector<std::string>::iterator layerIt = layers.begin(); layerIt != layers.end(); ++layerIt )
+	{
+		if( ! alphaName.empty() )
+		{
+			chan = (*layerIt) + "." + alphaName;
+			if( std::find( channelNames.begin(), channelNames.end(), chan ) != channelNames.end() )
+			{
+				return chan;
+			}
+		}
+
+		chan = (*layerIt) + ".A";
+		if( std::find( channelNames.begin(), channelNames.end(), chan ) != channelNames.end() )
+		{
+			return chan;
+		}
+	}
+
+	if( ! alphaName.empty() )
+	{
+		chan = alphaName;
+		if( std::find( channelNames.begin(), channelNames.end(), chan ) != channelNames.end() )
+		{
+			return chan;
+		}
+	}
+
+	chan = "A";
+	if( std::find( channelNames.begin(), channelNames.end(), chan ) != channelNames.end() )
+	{
+		return chan;
+	}
+
+	return "";
+}
+
+inline int tileIndex( const Imath::V2i &tilePos )
+{
+	return tilePos.x + ( tilePos.y * ImagePlug::tileSize() );
+}
+
 } // namespace GafferImage
 
 #endif // GAFFERIMAGE_IMAGEALGO_INL
