@@ -213,6 +213,11 @@ class _Parser( ast.NodeVisitor ) :
 					# it's a method call on the context
 					if node.func.attr == "getFrame" :
 						self.contextReads.add( "frame" )
+					elif node.func.attr == "getTime" :
+						self.contextReads.add( "frame" )
+						self.contextReads.add( "framesPerSecond" )
+					elif node.func.attr == "getFramesPerSecond" :
+						self.contextReads.add( "framesPerSecond" )
 					elif node.func.attr == "get" :
 						if not isinstance( node.args[0], ast.Str ) :
 							raise SyntaxError( "Context name must be a string" )

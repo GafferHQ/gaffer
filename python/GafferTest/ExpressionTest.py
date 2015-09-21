@@ -1029,5 +1029,55 @@ class ExpressionTest( GafferTest.TestCase ) :
 		s["e"].setExpression( 'parent["n"]["user"]["i"] = 20' )
 		self.assertEqual( len( cs ), 2 )
 
+	def testTime( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = Gaffer.Node()
+		s["n"]["user"]["f"] = Gaffer.FloatPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		s["e"] = Gaffer.Expression()
+		s["e"].setExpression( 'parent["n"]["user"]["f"] = context.getTime()' )
+
+		with Gaffer.Context() as c :
+			c.setTime( 1 )
+			self.assertEqual( s["n"]["user"]["f"].getValue(), 1 )
+			c.setTime( 2 )
+			self.assertEqual( s["n"]["user"]["f"].getValue(), 2 )
+
+	def testFramesPerSecond( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = Gaffer.Node()
+		s["n"]["user"]["f"] = Gaffer.FloatPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		s["e"] = Gaffer.Expression()
+		s["e"].setExpression( 'parent["n"]["user"]["f"] = context.getFramesPerSecond()' )
+
+		with Gaffer.Context() as c :
+			c.setFramesPerSecond( 24 )
+			self.assertEqual( s["n"]["user"]["f"].getValue(), 24 )
+			c.setFramesPerSecond( 48 )
+			self.assertEqual( s["n"]["user"]["f"].getValue(), 48 )
+
+	def testHashIgnoresTimeWhenTimeNotReferenced( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = Gaffer.Node()
+		s["n"]["user"]["f"] = Gaffer.FloatPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		s["e"] = Gaffer.Expression()
+		s["e"].setExpression( 'parent["n"]["user"]["f"] = 1' )
+
+		with Gaffer.Context() as c :
+			c.setTime( 1 )
+			h1 = s["n"]["user"]["f"].hash()
+			c.setTime( 2 )
+			h2 = s["n"]["user"]["f"].hash()
+
+		self.assertEqual( h1, h2 )
+
 if __name__ == "__main__":
 	unittest.main()
