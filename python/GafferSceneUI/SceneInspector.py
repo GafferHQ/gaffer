@@ -735,7 +735,7 @@ class DiffRow( Row ) :
 					diffWidget.contextMenuSignal().connect( Gaffer.WeakMethod( self.__contextMenu ) ),
 				] )
 
-			GafferUI.Spacer( IECore.V2i( 0 ), expand = True )
+			GafferUI.Spacer( IECore.V2i( 0 ), parenting = { "expand" : True } )
 
 		self.__inspector = inspector
 		self.__diffCreator = diffCreator
