@@ -150,7 +150,7 @@ class UIEditor( GafferUI.NodeSetEditor ) :
 			"/Edit UI...",
 			{
 				"command" : functools.partial( GafferUI.UIEditor.acquire, node ),
-				"active" : nodeEditor.nodeUI().plugValueWidget( node["user"] ) is not None
+				"active" : isinstance( node, Gaffer.Box ) or nodeEditor.nodeUI().plugValueWidget( node["user"] ) is not None
 			}
 		)
 
@@ -841,6 +841,9 @@ class _PlugListing( GafferUI.Widget ) :
 				parentSection = section( layout, parentPath )
 				if parentSection.child( sectionName ) is None :
 					parentSection.insert( sectionIndex, _SectionLayoutItem( sectionName ) )
+
+		if len( layout ) == 0 and isinstance( self.__parent, Gaffer.Node ) :
+			layout.append( _SectionLayoutItem( "Settings" ) )
 
 		expandedPaths = self.__pathListing.getExpandedPaths()
 		self.__pathListing.setPath( self.__LayoutPath( layout, "/" ) )

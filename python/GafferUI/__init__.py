@@ -226,6 +226,7 @@ from NodeMenu import NodeMenu
 import FileMenu
 import LayoutMenu
 import EditMenu
+import UserPlugs
 from Frame import Frame
 from CompoundNumericPlugValueWidget import CompoundNumericPlugValueWidget
 from BoxPlugValueWidget import BoxPlugValueWidget
@@ -255,7 +256,6 @@ from DispatcherUI import DispatcherWindow
 import LocalDispatcherUI
 import ExecutableNodeUI
 from IncrementingPlugValueWidget import IncrementingPlugValueWidget
-from UserPlugValueWidget import UserPlugValueWidget
 import PreferencesUI
 from SplinePlugValueWidget import SplinePlugValueWidget
 from RampPlugValueWidget import RampPlugValueWidget

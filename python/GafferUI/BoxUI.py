@@ -59,6 +59,24 @@ Gaffer.Metadata.registerNode(
 	node.
 	""",
 
+	# Add a + button for creating new plugs in the Settings tab.
+	"layout:customWidget:addButton:widgetType", "GafferUI.UserPlugs.plugCreationWidget",
+	"layout:customWidget:addButton:section", "Settings",
+	"layout:customWidget:addButton:index", -2,
+
+	plugs = {
+
+		"user" : [
+
+			# Disable the + button added by NodeUI, since
+			# we want users to use the button in the Settings
+			# tab instead.
+			"layout:customWidget:addButton:widgetType", "",
+
+		],
+
+	}
+
 )
 
 ##########################################################################
@@ -181,7 +199,6 @@ def __plugValueWidgetCreator( plug ) :
 for nodeType in ( Gaffer.Box, Gaffer.Reference ) :
 
 	GafferUI.PlugValueWidget.registerCreator( nodeType, "*" , __plugValueWidgetCreator )
-	GafferUI.PlugValueWidget.registerCreator( nodeType, "user", GafferUI.UserPlugValueWidget, editable = nodeType is Gaffer.Reference )
 
 # Shared menu code
 ##########################################################################
