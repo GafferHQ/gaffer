@@ -74,9 +74,11 @@ Crop::Crop( const std::string &name )
 	offset->offsetPlug()->setInput( offsetPlug() );
 	outPlug()->dataWindowPlug()->setInput( offset->outPlug()->dataWindowPlug() );
 	outPlug()->channelDataPlug()->setInput( offset->outPlug()->channelDataPlug() );
+	outPlug()->sampleOffsetsPlug()->setInput( offset->outPlug()->sampleOffsetsPlug() );
 
 	// We don't ever want to change these, so we make pass-through connections.
 	outPlug()->metadataPlug()->setInput( inPlug()->metadataPlug() );
+	outPlug()->deepPlug()->setInput( inPlug()->deepPlug() );
 	outPlug()->channelNamesPlug()->setInput( inPlug()->channelNamesPlug() );
 }
 

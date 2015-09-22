@@ -50,6 +50,8 @@ class CropTest( GafferImageTest.ImageTestCase ) :
 
 	imageFileUndersizeDataWindow = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/blueWithDataWindow.100x100.exr" )
 	imageFileOversizeDataWindow = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/checkerWithNegWindows.200x150.exr" )
+	representativeDeepImagePath = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/representativeDeepImage.exr" )
+
 
 	def testDefaultState( self ) :
 
@@ -268,6 +270,37 @@ class CropTest( GafferImageTest.ImageTestCase ) :
 
 		crop["area"]["min"].setValue( imath.V2i( 20 ) )
 		self.assertTrue( GafferImage.BufferAlgo.empty( crop["out"]["dataWindow"].getValue() ) )
+
+	def testDeep( self ) :
+		representativeDeep = GafferImage.ImageReader()
+		representativeDeep["fileName"].setValue( self.representativeDeepImagePath )
+
+		deepCrop = GafferImage.Crop()
+		deepCrop["in"].setInput( representativeDeep["out"] )
+
+		postFlatten = GafferImage.DeepToFlat()
+		postFlatten["in"].setInput( deepCrop["out"] )
+
+		preFlatten = GafferImage.DeepToFlat()
+		preFlatten["in"].setInput( representativeDeep["out"] )
+
+		flatCrop = GafferImage.Crop()
+		flatCrop["in"].setInput( preFlatten["out"] )
+
+		dataWindow = representativeDeep["out"].dataWindow()
+
+		for affectDisplay in [ True, False ]:
+			for area in [
+				imath.Box2i( imath.V2i( 0, 0 ), imath.V2i( 150, 100 ) ),
+				imath.Box2i( imath.V2i( -10, -13 ), imath.V2i( 157, 103 ) ),
+				imath.Box2i( imath.V2i( 10, 13 ), imath.V2i( 143, 77 ) ),
+				imath.Box2i( imath.V2i( 37, 65 ), imath.V2i( 101, 67 ) ),
+				imath.Box2i( imath.V2i( 0, 0 ), imath.V2i( 149, 99 ) )
+			] :
+				deepCrop["area"].setValue( area )
+				flatCrop["area"].setValue( area )
+
+				self.assertImagesEqual( postFlatten["out"], flatCrop["out"] )
 
 	def testFormatAffectsOutput( self ) :
 
