@@ -73,6 +73,8 @@ Crop::Crop( const std::string &name )
 
 	// We don't ever want to change these, so we make pass-through connections.
 	outPlug()->metadataPlug()->setInput( inPlug()->metadataPlug() );
+	outPlug()->deepStatePlug()->setInput( inPlug()->deepStatePlug() );
+	outPlug()->sampleOffsetsPlug()->setInput( inPlug()->sampleOffsetsPlug() );
 	outPlug()->channelNamesPlug()->setInput( inPlug()->channelNamesPlug() );
 }
 
