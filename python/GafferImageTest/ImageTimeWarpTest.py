@@ -60,7 +60,7 @@ class ImageTimeWarpTest( GafferImageTest.ImageTestCase ) :
 		timeWarp = Gaffer.TimeWarp()
 		timeWarp.setup( GafferImage.ImagePlug() )
 
-		for n in [ "format", "dataWindow", "metadata", "channelNames", "channelData" ] :
+		for n in [ "format", "dataWindow", "metadata", "deep", "sampleOffsets", "channelNames", "channelData" ] :
 			a = timeWarp.affects( timeWarp["in"][n] )
 			self.assertEqual( len( a ), 1 )
 			self.assertTrue( a[0].isSame( timeWarp["out"][n] ) )
@@ -70,7 +70,7 @@ class ImageTimeWarpTest( GafferImageTest.ImageTestCase ) :
 			self.assertEqual(
 				a,
 				set( [
-					"out.format", "out.dataWindow", "out.metadata", "out.channelNames", "out.channelData",
+					"out.format", "out.dataWindow", "out.metadata", "out.deep", "out.sampleOffsets", "out.channelNames", "out.channelData",
 				] ),
 			)
 
