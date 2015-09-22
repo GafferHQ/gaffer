@@ -398,6 +398,32 @@ class CompoundNumericPlugTest( GafferTest.TestCase ) :
 		self.assertEqual( s["n"]["p"].getValue(), IECore.V3f( 0 ) )
 		self.assertFalse( s.undoAvailable() )
 
+	def testUndoMergingWithUnchangingComponents( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = Gaffer.Node()
+		s["n"]["p"] = Gaffer.V3fPlug()
+
+		self.assertEqual( s["n"]["p"].getValue(), IECore.V3f( 0 ) )
+		self.assertFalse( s.undoAvailable() )
+
+		with Gaffer.UndoContext( s, mergeGroup="test" ) :
+			s["n"]["p"].setValue( IECore.V3f( 1, 2, 0 ) )
+
+		self.assertEqual( s["n"]["p"].getValue(), IECore.V3f( 1, 2, 0 ) )
+		self.assertTrue( s.undoAvailable() )
+
+		with Gaffer.UndoContext( s, mergeGroup="test" ) :
+			s["n"]["p"].setValue( IECore.V3f( 2, 4, 0 ) )
+
+		self.assertEqual( s["n"]["p"].getValue(), IECore.V3f( 2, 4, 0 ) )
+		self.assertTrue( s.undoAvailable() )
+
+		s.undo()
+
+		self.assertEqual( s["n"]["p"].getValue(), IECore.V3f( 0 ) )
+		self.assertFalse( s.undoAvailable() )
+
 	def testSerialisationVerbosity( self ) :
 
 		s = Gaffer.ScriptNode()

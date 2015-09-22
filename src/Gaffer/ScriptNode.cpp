@@ -141,33 +141,40 @@ class ScriptNode::CompoundAction : public Gaffer::Action
 				return false;
 			}
 
-			if( m_mergeGroup != compoundAction->m_mergeGroup )
-			{
-				return false;
-			}
-
-			if( m_actions.size() != compoundAction->m_actions.size() )
-			{
-				return false;
-			}
-
-			for( size_t i = 0, e = m_actions.size(); i < e; ++i )
-			{
-				if( !m_actions[i]->canMerge( compoundAction->m_actions[i].get() ) )
-				{
-					return false;
-				}
-			}
-
-			return true;
+			return m_mergeGroup == compoundAction->m_mergeGroup;
 		}
 
 		virtual void merge( const Action *other )
 		{
 			const CompoundAction *compoundAction = static_cast<const CompoundAction *>( other );
-			for( size_t i = 0, e = m_actions.size(); i < e; ++i )
+
+			bool canMergeChildActions = false;
+			if( m_actions.size() == compoundAction->m_actions.size() )
 			{
-				m_actions[i]->merge( compoundAction->m_actions[i].get() );
+				canMergeChildActions = true;
+				for( size_t i = 0, e = m_actions.size(); i < e; ++i )
+				{
+					if( !m_actions[i]->canMerge( compoundAction->m_actions[i].get() ) )
+					{
+						canMergeChildActions = false;
+						break;
+					}
+				}
+			}
+
+			if( canMergeChildActions )
+			{
+				for( size_t i = 0, e = m_actions.size(); i < e; ++i )
+				{
+					m_actions[i]->merge( compoundAction->m_actions[i].get() );
+				}
+			}
+			else
+			{
+				for( std::vector<ActionPtr>::const_iterator it = compoundAction->m_actions.begin(), eIt = compoundAction->m_actions.end(); it != eIt; ++it )
+				{
+					m_actions.push_back( *it );
+				}
 			}
 		}
 
