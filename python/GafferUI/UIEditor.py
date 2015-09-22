@@ -842,6 +842,9 @@ class _PlugListing( GafferUI.Widget ) :
 				if parentSection.child( sectionName ) is None :
 					parentSection.insert( sectionIndex, _SectionLayoutItem( sectionName ) )
 
+		if len( layout ) == 0 and isinstance( self.__parent, Gaffer.Node ) :
+			layout.append( _SectionLayoutItem( "Settings" ) )
+
 		expandedPaths = self.__pathListing.getExpandedPaths()
 		self.__pathListing.setPath( self.__LayoutPath( layout, "/" ) )
 		self.__pathListing.setExpandedPaths( expandedPaths )
