@@ -373,7 +373,7 @@ class NumericPlugTest( GafferTest.TestCase ) :
 		self.assertEqual( s["n"]["p"].getValue(), 0 )
 		self.assertFalse( s.undoAvailable() )
 
-	def testNoUndoMergingForDifferentPlugs( self ) :
+	def testUndoMergingForDifferentPlugs( self ) :
 
 		s = Gaffer.ScriptNode()
 		s["n"] = Gaffer.Node()
@@ -395,12 +395,6 @@ class NumericPlugTest( GafferTest.TestCase ) :
 		self.assertTrue( s.undoAvailable() )
 		self.assertEqual( s["n"]["p1"].getValue(), 20 )
 		self.assertEqual( s["n"]["p2"].getValue(), 30 )
-
-		s.undo()
-
-		self.assertTrue( s.undoAvailable() )
-		self.assertEqual( s["n"]["p1"].getValue(), 20 )
-		self.assertEqual( s["n"]["p2"].getValue(), 0 )
 
 		s.undo()
 

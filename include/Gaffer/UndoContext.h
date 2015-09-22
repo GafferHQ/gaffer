@@ -69,10 +69,10 @@ class UndoContext : DirtyPropagationScope
 		///
 		/// If mergeGroup is specified and matches the group used by
 		/// the previous UndoContext, then the actions performed will
-		/// be merged with the previous entry on the undo stack if
-		/// possible. This can be used by UI elements to compress a
-		/// series of individual editing events into a single item
-		/// on the undo stack.
+		/// be merged with the previous entry on the undo stack. This
+		/// can be used by UI elements to compress a series of individual
+		/// editing events such as an interactively updated drag into
+		/// a single item on the undo stack.
 		UndoContext( ScriptNodePtr script, State state=Enabled, const std::string &mergeGroup=std::string() );
 		~UndoContext();
 
