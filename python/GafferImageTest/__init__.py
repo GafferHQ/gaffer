@@ -98,6 +98,7 @@ from BleedFillTest import BleedFillTest
 from RectangleTest import RectangleTest
 from ModuleTest import ModuleTest
 from FlatToDeepTest import FlatToDeepTest
+from DeepMergeTest import DeepMergeTest
 
 if __name__ == "__main__":
 	import unittest

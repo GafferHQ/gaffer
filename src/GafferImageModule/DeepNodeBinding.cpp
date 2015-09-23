@@ -36,10 +36,8 @@
 
 #include "GafferBindings/DependencyNodeBinding.h"
 
-#include "GafferImage/DeepMerge.h"
-#include "GafferImage/ImageState.h"
-#include "GafferImage/Empty.h"
 #include "GafferImage/FlatToDeep.h"
+#include "GafferImage/DeepMerge.h"
 
 #include "DeepNodeBinding.h"
 
@@ -61,4 +59,5 @@ void GafferImageModule::bindDeepNodes()
 			.value( "Channel", FlatToDeep::ZBackMode::Channel )
 		;
 	}
+	DependencyNodeClass<DeepMerge>();
 }

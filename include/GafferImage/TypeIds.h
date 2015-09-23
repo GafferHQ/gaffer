@@ -119,6 +119,7 @@ enum TypeId
 	RampTypeId = 110823,
 	RectangleTypeId = 110824,
 	FlatToDeepTypeId = 110825,
+	DeepMergeTypeId = 110826,
 
 	LastTypeId = 110849
 };
