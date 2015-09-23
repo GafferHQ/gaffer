@@ -65,7 +65,7 @@ enum TypeId
 	UVWarpTypeId = 110769,
 	ImageWriterTypeId = 110770,
 	ImageTransformTypeId = 110771,
-	FilterTypeId = 110772, // Obsolete - available for reuse
+	FlatImageProcessorTypeId = 110772,
 	BoxFilterTypeId = 110773, // Obsolete - available for reuse
 	BilinearFilterTypeId = 110774, // Obsolete - available for reuse
 	SplineFilterTypeId = 110775, // Obsolete - available for reuse

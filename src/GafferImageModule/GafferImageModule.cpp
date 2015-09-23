@@ -61,6 +61,7 @@
 
 #include "GafferImageBindings/ImageNodeBinding.h"
 #include "GafferImageBindings/ImageProcessorBinding.h"
+#include "GafferImageBindings/FlatImageProcessorBinding.h"
 #include "GafferImageBindings/ImagePlugBinding.h"
 #include "GafferImageBindings/FormatBinding.h"
 #include "GafferImageBindings/FormatPlugBinding.h"
@@ -99,6 +100,7 @@ BOOST_PYTHON_MODULE( _GafferImage )
 
 	GafferImageBindings::bindImageNode();
 	GafferImageBindings::bindImageProcessor();
+	GafferImageBindings::bindFlatImageProcessor();
 	GafferBindings::DependencyNodeClass<ImagePrimitiveNode>();
 	GafferBindings::DependencyNodeClass<ImagePrimitiveProcessor>();
 	GafferBindings::DependencyNodeClass<Display>()
