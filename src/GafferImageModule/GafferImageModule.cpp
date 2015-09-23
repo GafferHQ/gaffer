@@ -58,6 +58,7 @@
 #include "GafferImage/Premultiply.h"
 #include "GafferImage/Unpremultiply.h"
 #include "GafferImage/Crop.h"
+#include "GafferImage/DeepMerge.h"
 
 #include "GafferImageBindings/ImageNodeBinding.h"
 #include "GafferImageBindings/ImageProcessorBinding.h"
@@ -122,6 +123,7 @@ BOOST_PYTHON_MODULE( _GafferImage )
 	GafferBindings::DependencyNodeClass<CopyImageMetadata>();
 	GafferBindings::DependencyNodeClass<Premultiply>();
 	GafferBindings::DependencyNodeClass<Unpremultiply>();
+	GafferBindings::DependencyNodeClass<DeepMerge>();
 
 	GafferImageBindings::bindDeleteChannels();
 	GafferImageBindings::bindFormat();
