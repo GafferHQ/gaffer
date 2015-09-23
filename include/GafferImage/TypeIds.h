@@ -122,6 +122,7 @@ enum TypeId
 	DeepMergeTypeId = 110826,
 	DeepStateTypeId = 110827,
 	EmptyTypeId = 110828,
+	FlatImageProcessorTypeId = 110829,
 
 	LastTypeId = 110849
 };
