@@ -50,6 +50,8 @@ class ConstantTest( GafferImageTest.ImageTestCase ) :
 		constant = GafferImage.Constant()
 		constant["format"].setValue( GafferImage.Format( IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 511 ) ), 1 ) )
 		constant["color"].setValue( IECore.Color4f( 0, 0.25, 0.5, 1 ) )
+		constant["z"].setValue( 2.0 )
+		constant["zBack"].setValue( 3.0 )
 
 		for i, channel in enumerate( [ "R", "G", "B", "A" ] ) :
 			channelData = constant["out"].channelData( channel, IECore.V2i( 0 ) )
@@ -57,6 +59,39 @@ class ConstantTest( GafferImageTest.ImageTestCase ) :
 			expectedValue = constant["color"][i].getValue()
 			for value in channelData :
 				self.assertEqual( value, expectedValue )
+
+		channelData = constant["out"].channelData( "Z", IECore.V2i( 0 ) )
+		self.assertEqual( len( channelData ), constant["out"].tileSize() * constant["out"].tileSize() )
+		expectedValue = constant["z"].getValue()
+		for value in channelData :
+			self.assertEqual( value, expectedValue )
+
+		channelData = constant["out"].channelData( "ZBack", IECore.V2i( 0 ) )
+		self.assertEqual( len( channelData ), constant["out"].tileSize() * constant["out"].tileSize() )
+		expectedValue = constant["zBack"].getValue()
+		for value in channelData :
+			self.assertEqual( value, expectedValue )
+
+		# Test that zBack is always kept to the max of z and zBack
+		constant["zBack"].setValue( 1.0 )
+
+		channelData = constant["out"].channelData( "ZBack", IECore.V2i( 0 ) )
+		self.assertEqual( len( channelData ), constant["out"].tileSize() * constant["out"].tileSize() )
+		expectedValue = constant["z"].getValue()
+		for value in channelData :
+			self.assertEqual( value, expectedValue )
+
+
+	def testDeepState( self ) :
+
+		constant = GafferImage.Constant()
+		constant["format"].setValue( GafferImage.Format( IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 511 ) ), 1 ) )
+		constant["color"].setValue( IECore.Color4f( 0 ) )
+		constant["z"].setValue( 0.0 )
+		constant["zBack"].setValue( 0.0 )
+
+		self.assertEqual( constant["out"]["deepState"].getValue(), GafferImage.ImagePlug.DeepState.Flat )
+
 
 	def testChannelDataHash( self ) :
 
@@ -66,16 +101,25 @@ class ConstantTest( GafferImageTest.ImageTestCase ) :
 		constant = GafferImage.Constant()
 		constant["format"].setValue( GafferImage.Format( IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 511 ) ), 1 ) )
 		constant["color"].setValue( IECore.Color4f( 0 ) )
+		constant["z"].setValue( 0.0 )
+		constant["zBack"].setValue( 0.0 )
 
-		channels = [ "R", "G", "B", "A" ]
+		channels = [ "R", "G", "B", "A", "Z" ]
+		channels = [ "R", "G", "B", "A", "Z", "ZBack" ]
 		for i, channel in enumerate( channels ) :
 
 			h1 = [ constant["out"].channelDataHash( c, IECore.V2i( 0 ) ) for c in channels ]
-			constant["color"][i].setValue( constant["color"][i].getValue() + .1 )
+			if i < 4 :
+				constant["color"][i].setValue( constant["color"][i].getValue() + .1 )
+			elif channel == "Z" :
+				constant["z"].setValue( constant["z"].getValue() + .1 )
+			elif channel == "ZBack" :
+				constant["zBack"].setValue( constant["zBack"].getValue() + .1 )
+
 			h2 = [ constant["out"].channelDataHash( c, IECore.V2i( 0 ) ) for c in channels ]
 
 			for j in range( 0, len( channels ) ) :
-				if j == i :
+				if j == i or ( channels[i] == "Z" and channels[j] == "ZBack" ) :
 					self.assertNotEqual( h1[j], h2[j] )
 				else :
 					self.assertEqual( h1[j], h2[j] )
@@ -129,6 +173,8 @@ class ConstantTest( GafferImageTest.ImageTestCase ) :
 		self.assertTrue( c.enabledPlug().isSame( c["enabled"] ) )
 		self.assertEqual( c.correspondingInput( c["out"] ), None )
 		self.assertEqual( c.correspondingInput( c["color"] ), None )
+		self.assertEqual( c.correspondingInput( c["z"] ), None )
+		self.assertEqual( c.correspondingInput( c["zBack"] ), None )
 		self.assertEqual( c.correspondingInput( c["format"] ), None )
 
 	def testChannelNamesHash( self ) :
@@ -136,6 +182,8 @@ class ConstantTest( GafferImageTest.ImageTestCase ) :
 		c = GafferImage.Constant()
 		h1 = c["out"]["channelNames"].hash()
 		c["color"].setValue( IECore.Color4f( 1, 0.5, 0.25, 1 ) )
+		c["z"].setValue( 3.5 )
+		c["zBack"].setValue( 4.5 )
 		h2 = c["out"]["channelNames"].hash()
 
 		self.assertEqual( h1, h2 )
