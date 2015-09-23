@@ -66,6 +66,24 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"z" : [
+
+			"description",
+			"""
+			The Z Depth value of the image.
+			""",
+
+		],
+
+		"zBack" : [
+
+			"description",
+			"""
+			The Z Back Depth value of the image.
+			""",
+
+		],
+
 	}
 
 )
