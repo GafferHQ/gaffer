@@ -1035,7 +1035,7 @@ class _PlugListing( GafferUI.Widget ) :
 		if self.__parent is None :
 			return
 
-		if plug is not None and not self.__parent.isSame( plug.parent() ) :
+		if plug is not None and not self.__parent.isSame( plug ) and not self.__parent.isSame( plug.parent() ) :
 			return
 
 		node = self.__parent.node() if isinstance( self.__parent, Gaffer.Plug ) else self.__parent
@@ -1712,6 +1712,11 @@ class _SectionEditor( GafferUI.Widget ) :
 		return self.__nameChangedSignal
 
 	def __nameWidgetEditingFinished( self, nameWidget ) :
+
+		if nameWidget.getText() == "" :
+			# Can't rename to the empty string - abandon the edit.
+			self.setSection( self.__section )
+			return
 
 		oldSectionPath = self.__section.split( "." )
 		newSectionPath = oldSectionPath[:]
