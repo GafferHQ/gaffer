@@ -1713,6 +1713,11 @@ class _SectionEditor( GafferUI.Widget ) :
 
 	def __nameWidgetEditingFinished( self, nameWidget ) :
 
+		if nameWidget.getText() == "" :
+			# Can't rename to the empty string - abandon the edit.
+			self.setSection( self.__section )
+			return
+
 		oldSectionPath = self.__section.split( "." )
 		newSectionPath = oldSectionPath[:]
 		newSectionPath[-1] = nameWidget.getText().replace( ".", "" )
