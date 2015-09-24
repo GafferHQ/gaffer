@@ -1035,7 +1035,7 @@ class _PlugListing( GafferUI.Widget ) :
 		if self.__parent is None :
 			return
 
-		if plug is not None and not self.__parent.isSame( plug.parent() ) :
+		if plug is not None and not self.__parent.isSame( plug ) and not self.__parent.isSame( plug.parent() ) :
 			return
 
 		node = self.__parent.node() if isinstance( self.__parent, Gaffer.Plug ) else self.__parent
