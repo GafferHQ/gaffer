@@ -46,8 +46,12 @@
 #include "GafferUIBindings/GadgetBinding.h"
 
 using namespace boost::python;
-using namespace GafferUIBindings;
+using namespace IECorePython;
 using namespace GafferUI;
+using namespace GafferUIBindings;
+
+namespace
+{
 
 struct NodeGadgetCreator
 {
@@ -69,22 +73,19 @@ struct NodeGadgetCreator
 
 };
 
-static void registerNodeGadget( IECore::TypeId nodeType, object creator )
+void registerNodeGadget( IECore::TypeId nodeType, object creator )
 {
 	NodeGadget::registerNodeGadget( nodeType, NodeGadgetCreator( creator ) );
 }
 
-static Gaffer::NodePtr node( NodeGadget &nodeGadget )
-{
-	return nodeGadget.node();
-}
+} // namespace
 
 void GafferUIBindings::bindNodeGadget()
 {
 	typedef NodeGadgetWrapper<NodeGadget> Wrapper;
 
 	NodeGadgetClass<NodeGadget, Wrapper>()
-		.def( "node", &node )
+		.def( "node", (Gaffer::Node *(NodeGadget::*)())&NodeGadget::node, return_value_policy<CastToIntrusivePtr>() )
 		.def( "create", &NodeGadget::create ).staticmethod( "create" )
 		.def( "registerNodeGadget", &registerNodeGadget ).staticmethod( "registerNodeGadget" )
 	;
