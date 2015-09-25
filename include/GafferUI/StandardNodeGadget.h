@@ -149,7 +149,7 @@ class StandardNodeGadget : public NodeGadget
 		void plugMetadataChanged( IECore::TypeId nodeTypeId, const Gaffer::MatchPattern &plugPath, IECore::InternedString key, const Gaffer::Plug *plug );
 		void nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore::InternedString key, const Gaffer::Node *node );
 
-		Nodule *updateNodule( Gaffer::Plug *plug );
+		void updateNodules( std::vector<Nodule *> &nodules, std::vector<Nodule *> &added, std::vector<NodulePtr> &removed );
 		void updateNoduleLayout();
 		bool updateUserColor();
 		void updatePadding();

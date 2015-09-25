@@ -222,6 +222,45 @@ class StandardNodeGadgetTest( GafferUITest.TestCase ) :
 		self.assertTrue( g.nodule( n["p2"] ).isSame( n2 ) )
 		self.assertTrue( n1.parent() is None )
 
+	def testNoduleSignals( self ) :
+
+		n = Gaffer.Node()
+		g = GafferUI.StandardNodeGadget( n )
+
+		added = GafferTest.CapturingSlot( g.noduleAddedSignal() )
+		removed = GafferTest.CapturingSlot( g.noduleRemovedSignal() )
+
+		n["p"] = Gaffer.Plug()
+		self.assertEqual( len( added ), 1 )
+		self.assertTrue( added[0][0].isSame( g ) )
+		self.assertTrue( added[0][1].isSame( g.nodule( n["p"] ) ) )
+		self.assertEqual( len( removed ), 0 )
+
+		del added[:]
+
+		Gaffer.Metadata.registerPlugValue( n["p"], "nodule:type", "" )
+		self.assertEqual( len( added ), 0 )
+		self.assertEqual( len( removed ), 1 )
+		self.assertTrue( removed[0][0].isSame( g ) )
+		self.assertTrue( removed[0][1].plug().isSame( n["p"] ) )
+
+		del removed[:]
+
+		Gaffer.Metadata.registerPlugValue( n["p"], "nodule:type", "GafferUI::StandardNodule" )
+		self.assertEqual( len( added ), 1 )
+		self.assertTrue( added[0][0].isSame( g ) )
+		self.assertTrue( added[0][1].isSame( g.nodule( n["p"] ) ) )
+		self.assertEqual( len( removed ), 0 )
+
+		del added[:]
+
+		p = n["p"]
+		del n["p"]
+		self.assertEqual( len( added ), 0 )
+		self.assertEqual( len( removed ), 1 )
+		self.assertTrue( removed[0][0].isSame( g ) )
+		self.assertTrue( removed[0][1].plug().isSame( p ) )
+
 if __name__ == "__main__":
 	unittest.main()
 

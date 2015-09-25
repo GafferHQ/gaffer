@@ -58,9 +58,10 @@
 #include "GafferUI/SpacerGadget.h"
 #include "GafferUI/ImageGadget.h"
 
-using namespace GafferUI;
-using namespace Gaffer;
+using namespace std;
 using namespace Imath;
+using namespace Gaffer;
+using namespace GafferUI;
 
 //////////////////////////////////////////////////////////////////////////
 // ErrorGadget implementation
@@ -716,28 +717,66 @@ void StandardNodeGadget::nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore:
 	}
 }
 
-Nodule *StandardNodeGadget::updateNodule( Gaffer::Plug *plug )
+void StandardNodeGadget::updateNodules( std::vector<Nodule *> &nodules, std::vector<Nodule *> &added, std::vector<NodulePtr> &removed )
 {
-	if( plug->getName().string().compare( 0, 2, "__" )==0 )
+	// Update the nodules for all our plugs.
+	for( PlugIterator it( node() ); it != it.end(); ++it )
 	{
-		return NULL;
+		Plug *plug = it->get();
+		if( plug->getName().string().compare( 0, 2, "__" )==0 )
+		{
+			continue;
+		}
+
+		IECore::ConstStringDataPtr typeData = Metadata::plugValue<IECore::StringData>( plug, g_noduleTypeKey );
+		IECore::InternedString type = typeData ? typeData->readable() : "GafferUI::StandardNodule";
+
+		NoduleMap::iterator it = m_nodules.find( plug );
+		if( it != m_nodules.end() && it->second.type == type )
+		{
+			if( it->second.nodule )
+			{
+				nodules.push_back( it->second.nodule.get() );
+			}
+		}
+		else
+		{
+			if( it != m_nodules.end() && it->second.nodule )
+			{
+				removed.push_back( it->second.nodule );
+			}
+			NodulePtr n = Nodule::create( plug );
+			m_nodules[plug] = TypeAndNodule( type, n );
+			if( n )
+			{
+				nodules.push_back( n.get() );
+				added.push_back( n.get() );
+			}
+		}
 	}
 
-	IECore::ConstStringDataPtr typeData = Metadata::plugValue<IECore::StringData>( plug, g_noduleTypeKey );
-	IECore::InternedString type = typeData ? typeData->readable() : "GafferUI::StandardNodule";
-	NoduleMap::iterator it = m_nodules.find( plug );
-	if( it != m_nodules.end() && it->second.type == type )
+	// Remove any nodules for which a plug no longer exists.
+	for( NoduleMap::iterator it = m_nodules.begin(); it != m_nodules.end(); )
 	{
-		return it->second.nodule.get();
+		NoduleMap::iterator next = it; next++;
+		if( it->first->parent<Node>() != node() )
+		{
+			removed.push_back( it->second.nodule );
+			m_nodules.erase( it );
+		}
+		it = next;
 	}
-
-	NodulePtr n = Nodule::create( plug );
-	m_nodules[plug] = TypeAndNodule( type, n );
-	return n.get();
 }
 
 void StandardNodeGadget::updateNoduleLayout()
 {
+	// Get an updated array of all our nodules,
+	// remembering what was added and removed.
+	vector<Nodule *> nodules;
+	vector<Nodule *> added;
+	vector<NodulePtr> removed;
+	updateNodules( nodules, added, removed );
+
 	// Clear the nodule containers for each edge,
 	// and remember the end gadget for each.
 	LinearContainer *edgeContainers[NumEdges];
@@ -752,12 +791,12 @@ void StandardNodeGadget::updateNoduleLayout()
 		}
 	}
 
-	for( PlugIterator it( node() ); it != it.end(); ++it )
+	// Refill the containers with the nodules in the
+	// right container.
+
+	for( vector<Nodule *>::const_iterator it = nodules.begin(), eIt = nodules.end(); it != eIt; ++it )
 	{
-		if( Nodule *n = updateNodule( it->get() ) )
-		{
-			edgeContainers[plugEdge( it->get() )]->addChild( n );
-		}
+		edgeContainers[plugEdge( (*it)->plug() )]->addChild( *it );
 	}
 
 	// Put back the end gadgets
@@ -766,19 +805,17 @@ void StandardNodeGadget::updateNoduleLayout()
 		edgeContainers[edge]->addChild( endGadgets[edge] );
 	}
 
-	// Remove any unused nodules
-	for( NoduleMap::iterator it = m_nodules.begin(); it != m_nodules.end(); )
+	// Let everyone know what we've done.
+	for( vector<NodulePtr>::const_iterator it = removed.begin(), eIt = removed.end(); it != eIt; ++it )
 	{
-		NoduleMap::iterator next = it; next++;
-		if(
-			it->first->parent<Node>() != node() ||
-			(it->second.nodule && !it->second.nodule->parent<Gadget>())
-		)
-		{
-			m_nodules.erase( it );
-		}
-		it = next;
+		noduleRemovedSignal()( this, it->get() );
 	}
+
+	for( vector<Nodule *>::const_iterator it = added.begin(), eIt = added.end(); it != eIt; ++it )
+	{
+		noduleAddedSignal()( this, *it );
+	}
+
 }
 
 bool StandardNodeGadget::updateUserColor()
