@@ -311,6 +311,7 @@ nodeMenu.append( "/Image/Utility/Delete Metadata", GafferImage.DeleteImageMetada
 nodeMenu.append( "/Image/Utility/Copy Metadata", GafferImage.CopyImageMetadata, searchText = "CopyImageMetadata" )
 nodeMenu.append( "/Image/Utility/Stats", GafferImage.ImageStats, searchText = "ImageStats", postCreator = GafferImageUI.ImageStatsUI.postCreate  )
 nodeMenu.append( "/Image/Utility/Sampler", GafferImage.ImageSampler, searchText = "ImageSampler" )
+nodeMenu.append( "/Image/Deep/Merge", GafferImage.DeepMerge, searchText = "DeepMerge" )
 
 # OSL nodes
 
