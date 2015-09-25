@@ -38,6 +38,8 @@
 #include "boost/python.hpp"
 
 #include "Gaffer/Plug.h"
+#include "GafferBindings/ExceptionAlgo.h"
+#include "GafferBindings/SignalBinding.h"
 
 #include "GafferUI/NodeGadget.h"
 #include "GafferUI/Nodule.h"
@@ -47,11 +49,28 @@
 
 using namespace boost::python;
 using namespace IECorePython;
+using namespace GafferBindings;
 using namespace GafferUI;
 using namespace GafferUIBindings;
 
 namespace
 {
+
+struct NoduleSlotCaller
+{
+	boost::signals::detail::unusable operator()( boost::python::object slot, NodeGadget *nodeGadget, Nodule *nodule )
+	{
+		try
+		{
+			slot( NodeGadgetPtr( nodeGadget ), NodulePtr( nodule ) );
+		}
+		catch( const error_already_set &e )
+		{
+			translatePythonException();
+		}
+		return boost::signals::detail::unusable();
+	}
+};
 
 struct NodeGadgetCreator
 {
@@ -86,7 +105,12 @@ void GafferUIBindings::bindNodeGadget()
 
 	NodeGadgetClass<NodeGadget, Wrapper>()
 		.def( "node", (Gaffer::Node *(NodeGadget::*)())&NodeGadget::node, return_value_policy<CastToIntrusivePtr>() )
+		.def( "noduleAddedSignal", &NodeGadget::noduleAddedSignal, return_internal_reference<1>() )
+		.def( "noduleRemovedSignal", &NodeGadget::noduleRemovedSignal, return_internal_reference<1>() )
 		.def( "create", &NodeGadget::create ).staticmethod( "create" )
 		.def( "registerNodeGadget", &registerNodeGadget ).staticmethod( "registerNodeGadget" )
 	;
+
+	SignalClass<NodeGadget::NoduleSignal, DefaultSignalCaller<NodeGadget::NoduleSignal>, NoduleSlotCaller >( "NoduleSignal" );
+
 }

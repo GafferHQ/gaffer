@@ -70,6 +70,16 @@ class NodeGadget : public Gadget
 		/// purposes of drawing connections.
 		virtual Imath::V3f noduleTangent( const Nodule *nodule ) const;
 
+		typedef boost::signal<void ( NodeGadget *, Nodule * )> NoduleSignal;
+		/// Emitted when a nodule is added. It is the responsibility
+		/// of derived classes and compound nodules to emit this when
+		/// appropriate.
+		NoduleSignal &noduleAddedSignal();
+		/// Emitted when a nodule is removed. It is the responsibility
+		/// of derived classes and compound nodules to emit this when
+		/// appropriate.
+		NoduleSignal &noduleRemovedSignal();
+
 		/// Creates a NodeGadget for the specified node.
 		static NodeGadgetPtr create( Gaffer::NodePtr node );
 
@@ -95,6 +105,8 @@ class NodeGadget : public Gadget
 	private :
 
 		Gaffer::Node *m_node;
+		NoduleSignal m_noduleAddedSignal;
+		NoduleSignal m_noduleRemovedSignal;
 
 		typedef std::map<IECore::TypeId, NodeGadgetCreator> CreatorMap;
 		static CreatorMap &creators();
