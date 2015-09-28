@@ -309,9 +309,12 @@ nodeMenu.append( "/Image/Context/Loop", GafferImage.ImageLoop, searchText = "Ima
 nodeMenu.append( "/Image/Utility/Metadata", GafferImage.ImageMetadata, searchText = "ImageMetadata" )
 nodeMenu.append( "/Image/Utility/Delete Metadata", GafferImage.DeleteImageMetadata, searchText = "DeleteImageMetadata" )
 nodeMenu.append( "/Image/Utility/Copy Metadata", GafferImage.CopyImageMetadata, searchText = "CopyImageMetadata" )
-nodeMenu.append( "/Image/Utility/Stats", GafferImage.ImageStats, searchText = "ImageStats", postCreator = GafferImageUI.ImageStatsUI.postCreate  )
+nodeMenu.append( "/Image/Utility/State", GafferImage.ImageState, searchText = "ImageState" )
+nodeMenu.append( "/Image/Utility/Stats", GafferImage.ImageStats, searchText = "ImageStats" )
 nodeMenu.append( "/Image/Utility/Sampler", GafferImage.ImageSampler, searchText = "ImageSampler" )
 nodeMenu.append( "/Image/Deep/Merge", GafferImage.DeepMerge, searchText = "DeepMerge" )
+nodeMenu.append( "/Image/Deep/Tidy", GafferImage.ImageState, postCreator = GafferImageUI.ImageStateUI.postCreateState( GafferImage.ImagePlug.DeepState.Tidy ), searchText = "DeepTidy" )
+nodeMenu.append( "/Image/Deep/Flatten", GafferImage.ImageState, postCreator = GafferImageUI.ImageStateUI.postCreateState( GafferImage.ImagePlug.DeepState.Flat ), searchText = "DeepFlatten" )
 
 # OSL nodes
 

@@ -1,7 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2012, John Haddon. All rights reserved.
-#  Copyright (c) 2012-2015, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,54 +34,58 @@
 #
 ##########################################################################
 
-from _GafferImageUI import *
+import Gaffer
+import GafferImage
 
-import DisplayUI
-from FormatPlugValueWidget import FormatPlugValueWidget
-from ChannelMaskPlugValueWidget import ChannelMaskPlugValueWidget
+def postCreateState( state ) :
+	def postCreateFunc( node, menu ) :
+		node["deepState"].setValue( state )
 
-import OpenImageIOReaderUI
-import ImageReaderUI
-import ImageViewUI
-import ImageTransformUI
-import ConstantUI
-import ImageSwitchUI
-import ColorSpaceUI
-import ImageContextVariablesUI
-import ImageStatsUI
-import DeleteChannelsUI
-import ObjectToImageUI
-import ClampUI
-import ImageWriterUI
-import GradeUI
-import ImageTimeWarpUI
-import ImageSamplerUI
-import MergeUI
-import ImageNodeUI
-import ChannelDataProcessorUI
-import ImageProcessorUI
-import FlatImageProcessorUI
-import ImageMetadataUI
-import DeleteImageMetadataUI
-import CopyImageMetadataUI
-import ImageLoopUI
-import ShuffleUI
-import PremultiplyUI
-import UnpremultiplyUI
-import CropUI
-import ResizeUI
-import ResampleUI
-import LUTUI
-import CDLUI
-import DisplayTransformUI
-import OffsetUI
-import BlurUI
-import ShapeUI
-import TextUI
-import WarpUI
-import UVWarpUI
-import MirrorUI
-import DeepMergeUI
-import ImageStateUI
+	return postCreateFunc
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferImageUI" )
+Gaffer.Metadata.registerNode(
+
+	GafferImage.ImageState,
+
+	"description",
+	"""
+	Modifies the samples in the input image to ensure
+	that the resulting State includes the checked state flags.
+	""",
+
+	plugs = {
+
+		"in" : [
+
+			"description",
+			"""
+			The input image data.
+			""",
+
+		],
+
+		"deepState" : [
+
+			"description",
+			"""
+			The deep state to convert the image into.
+			This will ensure that the resulting image is
+			at least the specified state. If the input image
+			has flags already set, they will remain set in
+			the resulting image. So if an already Tidy image
+			is passed in and requested that the output be
+			Sorted, the result will be Tidy (as Tidy images
+			are already Sorted by definition).
+			""",
+
+			"preset:Sorted", GafferImage.ImagePlug.DeepState.Sorted,
+			"preset:Tidy", GafferImage.ImagePlug.DeepState.Tidy,
+			"preset:Flat", GafferImage.ImagePlug.DeepState.Flat,
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
+		],
+
+	}
+
+)
