@@ -120,6 +120,7 @@ enum TypeId
 	RectangleTypeId = 110824,
 	FlatToDeepTypeId = 110825,
 	DeepMergeTypeId = 110826,
+	DeepStateTypeId = 110827,
 
 	LastTypeId = 110849
 };

@@ -100,5 +100,6 @@ import BleedFillUI
 import RectangleUI
 import FlatToDeepUI
 import DeepMergeUI
+import DeepStateUI
 
 __import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferImageUI" )

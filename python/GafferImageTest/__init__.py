@@ -99,6 +99,7 @@ from RectangleTest import RectangleTest
 from ModuleTest import ModuleTest
 from FlatToDeepTest import FlatToDeepTest
 from DeepMergeTest import DeepMergeTest
+from DeepStateTest import DeepStateTest
 
 if __name__ == "__main__":
 	import unittest

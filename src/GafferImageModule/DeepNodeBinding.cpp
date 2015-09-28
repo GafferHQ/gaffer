@@ -38,6 +38,7 @@
 
 #include "GafferImage/FlatToDeep.h"
 #include "GafferImage/DeepMerge.h"
+#include "GafferImage/DeepState.h"
 
 #include "DeepNodeBinding.h"
 
@@ -60,4 +61,13 @@ void GafferImageModule::bindDeepNodes()
 		;
 	}
 	DependencyNodeClass<DeepMerge>();
+	{
+		scope s = DependencyNodeClass<DeepState>();
+
+		enum_<DeepState::TargetState>( "TargetState" )
+			.value( "Sorted", DeepState::TargetState::Sorted )
+			.value( "Tidy", DeepState::TargetState::Tidy )
+			.value( "Flat", DeepState::TargetState::Flat )
+		;
+	}
 }
