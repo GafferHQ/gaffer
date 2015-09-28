@@ -732,12 +732,21 @@ class SceneView::LookThrough
 		{
 			if( !boost::starts_with( name.value(), "ui:" ) )
 			{
-				m_lookThroughCameraDirty = m_viewportCameraDirty = true;
+				if( enabledPlug()->getValue() )
+				{
+					m_lookThroughCameraDirty = m_viewportCameraDirty = true;
+				}
 			}
 		}
 
 		void plugDirtied( Gaffer::Plug *plug )
 		{
+			if( plug != enabledPlug() && !enabledPlug()->getValue() )
+			{
+				// No need to do anything if we're turned off.
+				return;
+			}
+
 			if(
 				plug == scenePlug()->childNamesPlug() ||
 				plug == scenePlug()->globalsPlug() ||
@@ -750,7 +759,7 @@ class SceneView::LookThrough
 				m_lookThroughCameraDirty = m_viewportCameraDirty = true;
 				if( plug == enabledPlug() && enabledPlug()->getValue() )
 				{
-					m_originalCamera = m_view->viewportGadget()->getCamera();
+					m_originalCamera = m_view->viewportGadget()->getCamera()->copy();
 				}
 				m_view->viewportGadget()->renderRequestSignal()( m_view->viewportGadget() );
 			}
