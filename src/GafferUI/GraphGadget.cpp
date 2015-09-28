@@ -778,6 +778,16 @@ void GraphGadget::plugSet( Gaffer::Plug *plug )
 	}
 }
 
+void GraphGadget::noduleAdded( Nodule *nodule )
+{
+	addConnectionGadgets( nodule->plug() );
+}
+
+void GraphGadget::noduleRemoved( Nodule *nodule )
+{
+	removeConnectionGadgets( nodule->plug() );
+}
+
 bool GraphGadget::buttonRelease( GadgetPtr gadget, const ButtonEvent &event )
 {
 	return true;
@@ -1392,6 +1402,8 @@ NodeGadget *GraphGadget::addNodeGadget( Gaffer::Node *node )
 	NodeGadgetEntry &nodeGadgetEntry = m_nodeGadgets[node];
 	nodeGadgetEntry.inputChangedConnection = node->plugInputChangedSignal().connect( boost::bind( &GraphGadget::inputChanged, this, ::_1 ) );
 	nodeGadgetEntry.plugSetConnection = node->plugSetSignal().connect( boost::bind( &GraphGadget::plugSet, this, ::_1 ) );
+	nodeGadgetEntry.noduleAddedConnection = nodeGadget->noduleAddedSignal().connect( boost::bind( &GraphGadget::noduleAdded, this, ::_2 ) );
+	nodeGadgetEntry.noduleRemovedConnection = nodeGadget->noduleRemovedSignal().connect( boost::bind( &GraphGadget::noduleRemoved, this, ::_2 ) );
 	nodeGadgetEntry.gadget = nodeGadget.get();
 
 	// highlight to reflect selection status
@@ -1447,35 +1459,29 @@ void GraphGadget::updateNodeGadgetTransform( NodeGadget *nodeGadget )
 	nodeGadget->setTransform( m );
 }
 
-void GraphGadget::addConnectionGadgets( Gaffer::GraphComponent *plugParent )
+void GraphGadget::addConnectionGadgets( Gaffer::GraphComponent *nodeOrPlug )
 {
-	/// \todo I think this could be faster if we could iterate over just the nodules rather than all the plugs. Perhaps
-	/// we could make it easy to recurse over all the Nodules of a NodeGadget if we had a RecursiveChildIterator for GraphComponents?
-	Gaffer::Node *node = plugParent->isInstanceOf( Gaffer::Node::staticTypeId() ) ? static_cast<Gaffer::Node *>( plugParent ) : plugParent->ancestor<Gaffer::Node>();
-
-	NodeGadget *nodeGadget = findNodeGadget( node );
-	if( !nodeGadget )
+	if( Gaffer::Plug *plug = runTimeCast<Gaffer::Plug>( nodeOrPlug ) )
 	{
-		return;
-	}
-
-	for( Gaffer::PlugIterator pIt( plugParent->children().begin(), plugParent->children().end() ); pIt!=pIt.end(); pIt++ )
-	{
-		if( (*pIt)->direction() == Gaffer::Plug::In )
+		NodeGadget *nodeGadget = findNodeGadget( plug->node() );
+		if( !nodeGadget )
 		{
-			// add connections for input plugs
-			if( !findConnectionGadget( pIt->get() ) )
+			return;
+		}
+
+		if( plug->direction() == Gaffer::Plug::In )
+		{
+			if( !findConnectionGadget( plug ) )
 			{
-				addConnectionGadget( pIt->get() );
+				addConnectionGadget( plug );
 			}
 		}
 		else
 		{
 			// reconnect any old output connections which may have been dangling
-			Nodule *srcNodule = nodeGadget->nodule( pIt->get() );
-			if( srcNodule )
+			if( Nodule *srcNodule = nodeGadget->nodule( plug ) )
 			{
-				for( Gaffer::Plug::OutputContainer::const_iterator oIt( (*pIt)->outputs().begin() ); oIt!= (*pIt)->outputs().end(); oIt++ )
+				for( Gaffer::Plug::OutputContainer::const_iterator oIt( plug->outputs().begin() ); oIt!= plug->outputs().end(); ++oIt )
 				{
 					ConnectionGadget *connection = findConnectionGadget( *oIt );
 					if( connection && !connection->srcNodule() )
@@ -1486,10 +1492,12 @@ void GraphGadget::addConnectionGadgets( Gaffer::GraphComponent *plugParent )
 				}
 			}
 		}
-
-		addConnectionGadgets( pIt->get() );
 	}
 
+	for( Gaffer::PlugIterator pIt( nodeOrPlug ); pIt != pIt.end(); ++pIt )
+	{
+		addConnectionGadgets( pIt->get() );
+	}
 }
 
 void GraphGadget::addConnectionGadget( Gaffer::Plug *dstPlug )
@@ -1538,37 +1546,31 @@ void GraphGadget::addConnectionGadget( Gaffer::Plug *dstPlug )
 	m_connectionGadgets[dstPlug] = connection.get();
 }
 
-void GraphGadget::removeConnectionGadgets( const Gaffer::GraphComponent *plugParent )
+void GraphGadget::removeConnectionGadgets( const Gaffer::GraphComponent *nodeOrPlug )
 {
-
-	/// \todo I think this could be faster if we could iterate over just the nodules rather than all the plugs. Perhaps
-	/// we could make it easy to recurse over all the Nodules of a NodeGadget if we had a RecursiveChildIterator for GraphComponents?
-
-	for( Gaffer::PlugIterator pIt( plugParent->children().begin(), plugParent->children().end() ); pIt!=pIt.end(); pIt++ )
+	if( const Gaffer::Plug *plug = runTimeCast<const Gaffer::Plug>( nodeOrPlug ) )
 	{
-		if( (*pIt)->direction() == Gaffer::Plug::In )
+		if( plug->direction() == Gaffer::Plug::In )
 		{
-			// remove input connection gadgets
-			{
-				removeConnectionGadget( pIt->get() );
-			}
+			removeConnectionGadget( plug );
 		}
 		else
 		{
 			// make output connection gadgets dangle
-			for( Gaffer::Plug::OutputContainer::const_iterator oIt( (*pIt)->outputs().begin() ); oIt!= (*pIt)->outputs().end(); oIt++ )
+			for( Gaffer::Plug::OutputContainer::const_iterator oIt( plug->outputs().begin() ); oIt!= plug->outputs().end(); oIt++ )
 			{
-				ConnectionGadget *connection = findConnectionGadget( *oIt );
-				if( connection )
+				if( ConnectionGadget *connection = findConnectionGadget( *oIt ) )
 				{
-					connection->setNodules( 0, connection->dstNodule() );
+					connection->setNodules( NULL, connection->dstNodule() );
 				}
 			}
 		}
-
-		removeConnectionGadgets( pIt->get() );
 	}
 
+	for( Gaffer::PlugIterator pIt( nodeOrPlug ); pIt != pIt.end(); ++pIt )
+	{
+		removeConnectionGadgets( pIt->get() );
+	}
 }
 
 void GraphGadget::removeConnectionGadget( const Gaffer::Plug *dstPlug )

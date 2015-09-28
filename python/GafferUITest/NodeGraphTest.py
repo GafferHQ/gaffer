@@ -1114,5 +1114,145 @@ class NodeGraphTest( GafferUITest.TestCase ) :
 
 		self.waitForIdle( 1000 )
 
+	def testMovePlugWithInputConnection( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["n1"] = Gaffer.Node()
+		script["n1"]["p"] = Gaffer.Plug()
+
+		script["n2"] = Gaffer.Node()
+		script["n2"]["p"] = Gaffer.Plug()
+		script["n2"]["p"].setInput( script["n1"]["p"] )
+
+		g = GafferUI.GraphGadget( script )
+
+		script["n3"] = Gaffer.Node()
+		script["n3"]["p"] = script["n2"]["p"]
+
+		connection = g.connectionGadget( script["n3"]["p"] )
+		dstNodule = connection.dstNodule()
+		srcNodule = connection.srcNodule()
+
+		self.assertTrue( dstNodule.plug().isSame( script["n3"]["p"] ) )
+		self.assertTrue( srcNodule.plug().isSame( script["n1"]["p"] ) )
+
+		self.assertTrue( g.nodeGadget( script["n1"] ).isAncestorOf( srcNodule ) )
+		self.assertTrue( g.nodeGadget( script["n3"] ).isAncestorOf( dstNodule ) )
+
+	def testMovePlugWithInputConnectionOutsideGraph( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["n1"] = Gaffer.Node()
+		script["n1"]["p"] = Gaffer.Plug()
+
+		script["n2"] = Gaffer.Node()
+		script["n2"]["p"] = Gaffer.Plug()
+		script["n2"]["p"].setInput( script["n1"]["p"] )
+
+		g = GafferUI.GraphGadget( script )
+
+		n3 = Gaffer.Node()
+		n3["p"] = script["n2"]["p"]
+
+		self.assertEqual( g.connectionGadget( n3["p"] ), None )
+
+	def testRemoveNoduleWithInputConnection( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["n1"] = Gaffer.Node()
+		script["n1"]["p"] = Gaffer.Plug()
+
+		script["n2"] = Gaffer.Node()
+		script["n2"]["p"] = Gaffer.Plug()
+		script["n2"]["p"].setInput( script["n1"]["p"] )
+
+		g = GafferUI.GraphGadget( script )
+
+		self.assertTrue( g.nodeGadget( script["n2"] ).nodule( script["n2"]["p"] ) is not None )
+		self.assertTrue( g.connectionGadget( script["n2"]["p"] ) is not None )
+
+		Gaffer.Metadata.registerPlugValue( script["n2"]["p"], "nodule:type", "" )
+		self.assertTrue( g.nodeGadget( script["n2"] ).nodule( script["n2"]["p"] ) is None )
+		self.assertTrue( g.connectionGadget( script["n2"]["p"] ) is None )
+
+	def testRemoveNoduleWithOutputConnections( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["n1"] = Gaffer.Node()
+		script["n1"]["out"] = Gaffer.Plug( direction = Gaffer.Plug.Direction.Out )
+
+		script["n2"] = Gaffer.Node()
+		script["n2"]["in"] = Gaffer.Plug()
+		script["n2"]["in"].setInput( script["n1"]["out"] )
+
+		g = GafferUI.GraphGadget( script )
+
+		c = g.connectionGadget( script["n2"]["in"] )
+		self.assertTrue( c is not None )
+		self.assertTrue( c.srcNodule().plug().isSame( script["n1"]["out"] ) )
+		self.assertTrue( c.dstNodule().plug().isSame( script["n2"]["in"] ) )
+
+		Gaffer.Metadata.registerPlugValue( script["n1"]["out"], "nodule:type", "" )
+
+		c = g.connectionGadget( script["n2"]["in"] )
+		self.assertTrue( c is not None )
+		self.assertTrue( c.srcNodule() is None )
+		self.assertTrue( c.dstNodule().plug().isSame( script["n2"]["in"] ) )
+
+		Gaffer.Metadata.registerPlugValue( script["n1"]["out"], "nodule:type", "GafferUI::StandardNodule" )
+
+		c = g.connectionGadget( script["n2"]["in"] )
+		self.assertTrue( c is not None )
+		self.assertTrue( c.srcNodule().plug().isSame( script["n1"]["out"] ) )
+		self.assertTrue( c.dstNodule().plug().isSame( script["n2"]["in"] ) )
+
+	def testAddNoduleWithInputConnection( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["n"] = Gaffer.Node()
+		script["n"]["in"] = Gaffer.Plug()
+		script["n"]["out"] = Gaffer.Plug( direction = Gaffer.Plug.Direction.Out )
+		script["n"]["out"].setInput( script["n"]["in"] )
+
+		Gaffer.Metadata.registerPlugValue( script["n"]["out"], "nodule:type", "" )
+
+		g = GafferUI.GraphGadget( script )
+		self.assertTrue( g.nodeGadget( script["n"] ).nodule( script["n"]["out"] ) is None )
+		self.assertTrue( g.connectionGadget( script["n"]["out"] ) is None )
+
+		Gaffer.Metadata.registerPlugValue( script["n"]["out"], "nodule:type", "GafferUI::StandardNodule" )
+
+		self.assertTrue( g.nodeGadget( script["n"] ).nodule( script["n"]["out"] ) is not None )
+		self.assertTrue( g.connectionGadget( script["n"]["out"] ) is None )
+
+	def testAddNoduleWithOutputConnection( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["n1"] = Gaffer.Node()
+		script["n1"]["out"] = Gaffer.Plug( direction = Gaffer.Plug.Direction.Out )
+
+		script["n2"] = Gaffer.Node()
+		script["n2"]["in"] = Gaffer.Plug()
+		script["n2"]["in"].setInput( script["n1"]["out"] )
+
+		Gaffer.Metadata.registerPlugValue( script["n1"]["out"], "nodule:type", "" )
+
+		g = GafferUI.GraphGadget( script )
+		self.assertTrue( g.nodeGadget( script["n1"] ).nodule( script["n1"]["out"] ) is None )
+		self.assertTrue( g.connectionGadget( script["n2"]["in"] ) is not None )
+		self.assertTrue( g.connectionGadget( script["n2"]["in"] ).srcNodule() is None )
+
+		Gaffer.Metadata.registerPlugValue( script["n1"]["out"], "nodule:type", "GafferUI::StandardNodule" )
+
+		self.assertTrue( g.nodeGadget( script["n1"] ).nodule( script["n1"]["out"] ) is not None )
+		self.assertTrue( g.connectionGadget( script["n2"]["in"] ) is not None )
+		self.assertTrue( g.connectionGadget( script["n2"]["in"] ).srcNodule() is not None )
+
 if __name__ == "__main__":
 	unittest.main()
