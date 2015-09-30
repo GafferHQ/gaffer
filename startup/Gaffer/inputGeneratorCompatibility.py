@@ -99,14 +99,14 @@ def __arrayPlugGetItem( self, key ) :
 def __arrayPlugHash( self ) :
 
 	if getattr( self, "enableInputGeneratorCompatibility", False ) :
-		return self[0].hash()
+		return self[0].hash() if isinstance( self[0], Gaffer.ValuePlug ) else None
 
 	raise AttributeError( "'ArrayPlug' object has no attribute 'hash'" )
 
 def __arrayPlugGetValue( self ) :
 
 	if getattr( self, "enableInputGeneratorCompatibility", False ) :
-		return self[0].getValue()
+		return self[0].getValue() if isinstance( self[0], Gaffer.ValuePlug ) else None
 
 	raise AttributeError( "'ArrayPlug' object has no attribute 'getValue'" )
 
