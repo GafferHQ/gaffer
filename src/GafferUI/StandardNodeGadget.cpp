@@ -200,9 +200,8 @@ static IECore::InternedString g_noduleTypeKey( "nodule:type" );
 static IECore::InternedString g_colorKey( "nodeGadget:color" );
 static IECore::InternedString g_errorGadgetName( "__error" );
 
-StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node, LinearContainer::Orientation orientation )
+StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node )
 	:	NodeGadget( node ),
-		m_orientation( orientation ),
 		m_nodeEnabled( true ),
 		m_labelsVisibleOnHover( true ),
 		m_dragDestinationProxy( 0 ),
@@ -214,7 +213,7 @@ StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node, LinearContainer::O
 
 	float horizontalNoduleSpacing = 2.0f;
 	float verticalNoduleSpacing = 0.2f;
-	float minWidth = m_orientation == LinearContainer::X ? 10.0f : 0.0f;
+	float minWidth = 10.0f;
 
 	if( IECore::ConstFloatDataPtr d = Metadata::nodeValue<IECore::FloatData>( node.get(), g_horizontalNoduleSpacingKey ) )
 	{
@@ -440,10 +439,6 @@ Imath::V3f StandardNodeGadget::noduleTangent( const Nodule *nodule ) const
 StandardNodeGadget::Edge StandardNodeGadget::plugEdge( const Gaffer::Plug *plug )
 {
 	Edge edge = plug->direction() == Gaffer::Plug::In ? TopEdge : BottomEdge;
-	if( m_orientation == LinearContainer::Y )
-	{
-		edge = edge == TopEdge ? LeftEdge : RightEdge;
-	}
 
 	if( IECore::ConstStringDataPtr d = Metadata::plugValue<IECore::StringData>( plug, g_nodulePositionKey ) )
 	{

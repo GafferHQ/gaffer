@@ -77,8 +77,7 @@ class StandardNodeGadget : public NodeGadget
 			InvalidEdge
 		};
 
-		/// \todo Remove orientation parameter - Metadata can do everything it can do.
-		StandardNodeGadget( Gaffer::NodePtr node, LinearContainer::Orientation orientation=LinearContainer::X );
+		StandardNodeGadget( Gaffer::NodePtr node );
 		virtual ~StandardNodeGadget();
 
 		virtual Nodule *nodule( const Gaffer::Plug *plug );
@@ -160,7 +159,6 @@ class StandardNodeGadget : public NodeGadget
 		void error( const Gaffer::Plug *plug, const Gaffer::Plug *source, const std::string &message );
 		void displayError( Gaffer::ConstPlugPtr plug, const std::string &message );
 
-		const LinearContainer::Orientation m_orientation;
 		bool m_nodeEnabled;
 		bool m_labelsVisibleOnHover;
 		// we accept drags from nodules and forward them to the
