@@ -60,8 +60,14 @@ class GraphComponentWrapper : public IECorePython::RunTimeTypedWrapper<WrappedTy
 
 	public :
 
-		GraphComponentWrapper( PyObject *self, const std::string &name=Gaffer::GraphComponent::defaultName<WrappedType>() )
-			:	IECorePython::RunTimeTypedWrapper<WrappedType>( self, name )
+		GraphComponentWrapper( PyObject *self )
+			:	IECorePython::RunTimeTypedWrapper<WrappedType>( self )
+		{
+		}
+
+		template<typename Arg1>
+		GraphComponentWrapper( PyObject *self, Arg1 arg1 )
+			:	IECorePython::RunTimeTypedWrapper<WrappedType>( self, arg1 )
 		{
 		}
 

@@ -60,8 +60,14 @@ class GadgetWrapper : public GafferBindings::GraphComponentWrapper<WrappedType>
 {
 	public :
 
-		GadgetWrapper( PyObject *self, const std::string &name=Gaffer::GraphComponent::defaultName<WrappedType>() )
-			:	GafferBindings::GraphComponentWrapper<WrappedType>( self, name )
+		GadgetWrapper( PyObject *self )
+			:	GafferBindings::GraphComponentWrapper<WrappedType>( self )
+		{
+		}
+
+		template<typename Arg1>
+		GadgetWrapper( PyObject *self, Arg1 arg1 )
+			:	GafferBindings::GraphComponentWrapper<WrappedType>( self, arg1 )
 		{
 		}
 
