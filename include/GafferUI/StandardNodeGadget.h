@@ -53,6 +53,7 @@ namespace GafferUI
 ///
 /// - "nodeGadget:nodulePosition" : a plug entry with a value of
 /// "left", "right", "top" or "bottom"
+/// - "nodeGadget:noduleIndex" : a plug entry with an int value
 /// - "nodeGadget:minimumWidth" : a node entry with a float value
 /// - "nodeGadget:horizontalNoduleSpacing" : a node entry with a float value
 /// - "nodeGadget:verticalNoduleSpacing" : a node entry with a float value

@@ -261,6 +261,29 @@ class StandardNodeGadgetTest( GafferUITest.TestCase ) :
 		self.assertTrue( removed[0][0].isSame( g ) )
 		self.assertTrue( removed[0][1].plug().isSame( p ) )
 
+	def testNoduleOrdering( self ) :
+
+		n = Gaffer.Node()
+		n["a"] = Gaffer.IntPlug()
+		n["b"] = Gaffer.IntPlug()
+
+		g = GafferUI.StandardNodeGadget( n )
+
+		g.bound()
+		self.assertLess(
+			g.nodule( n["a"] ).transformedBound().center().x,
+			g.nodule( n["b"] ).transformedBound().center().x
+		)
+
+		Gaffer.Metadata.registerPlugValue( n["a"], "nodeGadget:noduleIndex", 1 )
+		Gaffer.Metadata.registerPlugValue( n["b"], "nodeGadget:noduleIndex", 0 )
+
+		g.bound()
+		self.assertGreater(
+			g.nodule( n["a"] ).transformedBound().center().x,
+			g.nodule( n["b"] ).transformedBound().center().x
+		)
+
 if __name__ == "__main__":
 	unittest.main()
 

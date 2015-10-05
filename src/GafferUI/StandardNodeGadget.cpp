@@ -149,6 +149,39 @@ class StandardNodeGadget::ErrorGadget : public Gadget
 };
 
 //////////////////////////////////////////////////////////////////////////
+// Utilities
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+/// Used for sorting nodules for layout
+struct IndexAndNodule
+{
+
+	IndexAndNodule()
+		:	index( 0 ), nodule( NULL )
+	{
+	}
+
+	IndexAndNodule( int index, Nodule *nodule )
+		:	index( index ), nodule( nodule )
+	{
+	}
+
+	bool operator < ( const IndexAndNodule &rhs ) const
+	{
+		return index < rhs.index;
+	}
+
+	int index;
+	Nodule *nodule;
+
+};
+
+} // namespace
+
+//////////////////////////////////////////////////////////////////////////
 // StandardNodeGadget implementation
 //////////////////////////////////////////////////////////////////////////
 
@@ -162,6 +195,7 @@ static IECore::InternedString g_verticalNoduleSpacingKey( "nodeGadget:verticalNo
 static IECore::InternedString g_minWidthKey( "nodeGadget:minWidth"  );
 static IECore::InternedString g_paddingKey( "nodeGadget:padding"  );
 static IECore::InternedString g_nodulePositionKey( "nodeGadget:nodulePosition" );
+static IECore::InternedString g_noduleIndexKey( "nodeGadget:noduleIndex" );
 static IECore::InternedString g_noduleTypeKey( "nodule:type" );
 static IECore::InternedString g_colorKey( "nodeGadget:color" );
 static IECore::InternedString g_errorGadgetName( "__error" );
@@ -645,7 +679,7 @@ void StandardNodeGadget::plugMetadataChanged( IECore::TypeId nodeTypeId, const G
 		return;
 	}
 
-	if( key == g_nodulePositionKey || key == g_noduleTypeKey )
+	if( key == g_nodulePositionKey || key == g_noduleIndexKey || key == g_noduleTypeKey )
 	{
 		updateNoduleLayout();
 	}
@@ -719,7 +753,9 @@ void StandardNodeGadget::nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore:
 
 void StandardNodeGadget::updateNodules( std::vector<Nodule *> &nodules, std::vector<Nodule *> &added, std::vector<NodulePtr> &removed )
 {
-	// Update the nodules for all our plugs.
+	// Update the nodules for all our plugs, and build a vector
+	// of IndexAndNodule to sort ready for layout.
+	vector<IndexAndNodule> sortedNodules;
 	for( PlugIterator it( node() ); it != it.end(); ++it )
 	{
 		Plug *plug = it->get();
@@ -731,13 +767,11 @@ void StandardNodeGadget::updateNodules( std::vector<Nodule *> &nodules, std::vec
 		IECore::ConstStringDataPtr typeData = Metadata::plugValue<IECore::StringData>( plug, g_noduleTypeKey );
 		IECore::InternedString type = typeData ? typeData->readable() : "GafferUI::StandardNodule";
 
+		Nodule *nodule = NULL;
 		NoduleMap::iterator it = m_nodules.find( plug );
 		if( it != m_nodules.end() && it->second.type == type )
 		{
-			if( it->second.nodule )
-			{
-				nodules.push_back( it->second.nodule.get() );
-			}
+			nodule = it->second.nodule.get();
 		}
 		else
 		{
@@ -749,9 +783,19 @@ void StandardNodeGadget::updateNodules( std::vector<Nodule *> &nodules, std::vec
 			m_nodules[plug] = TypeAndNodule( type, n );
 			if( n )
 			{
-				nodules.push_back( n.get() );
 				added.push_back( n.get() );
+				nodule = n.get();
 			}
+		}
+
+		if( nodule )
+		{
+			int index = sortedNodules.size();
+			if( IECore::ConstIntDataPtr indexData = Metadata::plugValue<IECore::IntData>( plug, g_noduleIndexKey ) )
+			{
+				index = indexData->readable();
+			}
+			sortedNodules.push_back( IndexAndNodule( index, nodule ) );
 		}
 	}
 
@@ -765,6 +809,13 @@ void StandardNodeGadget::updateNodules( std::vector<Nodule *> &nodules, std::vec
 			m_nodules.erase( it );
 		}
 		it = next;
+	}
+
+	// Sort ready for layout.
+	sort( sortedNodules.begin(), sortedNodules.end() );
+	for( vector<IndexAndNodule>::const_iterator it = sortedNodules.begin(), eIt = sortedNodules.end(); it != eIt; ++it )
+	{
+		nodules.push_back( it->nodule );
 	}
 }
 
