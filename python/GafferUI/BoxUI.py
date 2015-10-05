@@ -323,6 +323,20 @@ def __setPlugMetadata( plug, key, value ) :
 	with Gaffer.UndoContext( plug.ancestor( Gaffer.ScriptNode ) ) :
 		Gaffer.Metadata.registerPlugValue( plug, key, value )
 
+def __edgePlugs( nodeGraph, plug ) :
+
+	nodeGadget = nodeGraph.graphGadget().nodeGadget( plug.node() )
+	nodule = nodeGadget.nodule( plug )
+	return [ n.plug() for n in nodule.parent().children( GafferUI.Nodule ) ]
+
+def __reorderPlugs( plugs, plug, newIndex ) :
+
+	plugs.remove( plug )
+	plugs.insert( newIndex, plug )
+	with Gaffer.UndoContext( plug.ancestor( Gaffer.ScriptNode ) ) :
+		for index, plug in enumerate( plugs ) :
+			Gaffer.Metadata.registerPlugValue( plug, "nodeGadget:noduleIndex", index )
+
 def __nodeGraphPlugContextMenu( nodeGraph, plug, menuDefinition ) :
 
 	if isinstance( plug.node(), Gaffer.Box ) :
@@ -343,6 +357,24 @@ def __nodeGraphPlugContextMenu( nodeGraph, plug, menuDefinition ) :
 					"active" : edge != currentEdge,
 				}
 			)
+
+		edgePlugs = __edgePlugs( nodeGraph, plug )
+		edgeIndex = edgePlugs.index( plug )
+		menuDefinition.append(
+			"/Move " + ( "Up" if currentEdge in ( "left", "right" ) else "Left" ),
+			{
+				"command" : functools.partial( __reorderPlugs, edgePlugs, plug, edgeIndex - 1 ),
+				"active" : edgeIndex > 0,
+			}
+		)
+
+		menuDefinition.append(
+			"/Move " + ( "Down" if currentEdge in ( "left", "right" ) else "Right" ),
+			{
+				"command" : functools.partial( __reorderPlugs, edgePlugs, plug, edgeIndex + 1 ),
+				"active" : edgeIndex < len( edgePlugs ) - 1,
+			}
+		)
 
 	__appendPlugDeletionMenuItems( menuDefinition, plug )
 	__appendPlugPromotionMenuItems( menuDefinition, plug )
