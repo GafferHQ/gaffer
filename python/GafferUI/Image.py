@@ -146,11 +146,13 @@ class Image( GafferUI.Widget ) :
 
 		s = interleaved.toString()
 		image = QtGui.QImage( s, imageSize.x, imageSize.y, format )
-
+		# The image is referencing the data we provided directly (s), and
+		# expects us to keep it alive as long as the image/pixmap is
+		# used. Since we don't want to do that, we make a deep copy of
+		# the image so we can dispose of s.
+		image = image.copy()
+		
 		pixmap = QtGui.QPixmap( image )
-		# seems like we have to keep the data alive for as long as the
-		# pixmap is going to be alive.
-		pixmap.__data = s
 
 		return pixmap
 
