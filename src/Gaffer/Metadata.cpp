@@ -390,6 +390,60 @@ std::string Metadata::nodeDescription( const Node *node, bool inherit )
 	return "";
 }
 
+void Metadata::nodesWithMetadata( std::vector<Node*> &components, GraphComponent *root, const std::string &key, bool inherit, bool instanceOnly )
+{
+	if( instanceOnly )
+	{
+		// if we're only looking for instance data, we can improve the performance
+		// for large graphs by explicitly iterating through the instanceMetaDataMap:
+		InstanceMetadataMap::const_iterator it = instanceMetadataMap().begin();
+		InstanceMetadataMap::const_iterator end = instanceMetadataMap().end();
+		for( ; it != end; ++it )
+		{
+			const Node* node = runTimeCast<const Node>( it->first );
+			if( !node )
+			{
+				continue;
+			}
+
+			InstanceValues::const_iterator vIt = it->second->begin();
+			InstanceValues::const_iterator vEnd = it->second->end();
+			for( ; vIt != vEnd; ++vIt )
+			{
+				if( vIt->name == key )
+				{
+					// check if the node is a descendant of root:
+					if( root->isAncestorOf( node ) )
+					{
+						components.push_back( const_cast<Node*>( node ) );
+					}
+					break;
+				}
+			}
+		}
+	}
+	else
+	{
+		RecursiveChildIterator it( root );
+		for( ; it != it.end(); ++it )
+		{
+			Node* node = runTimeCast<Node>( it->get() );
+			if( !node )
+			{
+				// we've hit a plug - no need to recurse, as nodes never get
+				// parented to plugs:
+				it.prune();
+				continue;
+			}
+			if( nodeValueInternal( node, key, inherit, instanceOnly ) )
+			{
+				components.push_back( node );
+			}
+		}
+	}
+}
+
+
 void Metadata::registerPlugValue( IECore::TypeId nodeTypeId, const MatchPattern &plugPath, IECore::InternedString key, IECore::ConstDataPtr value )
 {
 	registerPlugValue( nodeTypeId, plugPath, key, boost::lambda::constant( value ) );
@@ -547,6 +601,58 @@ std::string Metadata::plugDescription( const Plug *plug, bool inherit )
 		return d->readable();
 	}
 	return "";
+}
+
+void Metadata::plugsWithMetadata( std::vector<Plug*> &components, GraphComponent *root, const std::string &key, bool inherit, bool instanceOnly )
+{
+	if( instanceOnly )
+	{
+		// If we're only looking for instance data, we can improve the performance
+		// for large graphs by explicitly iterating through the instanceMetaDataMap.
+		// This reduced the time to call this function from 0.1 sec to 1.e-5 sec
+		// in my reasonably sized test scene.
+
+		InstanceMetadataMap::const_iterator it = instanceMetadataMap().begin();
+		InstanceMetadataMap::const_iterator end = instanceMetadataMap().end();
+		for( ; it != end; ++it )
+		{
+			const Plug* plug = runTimeCast<const Plug>( it->first );
+			if( !plug )
+			{
+				continue;
+			}
+
+			InstanceValues::const_iterator vIt = it->second->begin();
+			InstanceValues::const_iterator vEnd = it->second->end();
+			for( ; vIt != vEnd; ++vIt )
+			{
+				if( vIt->name == key )
+				{
+					if( root->isAncestorOf( plug ) )
+					{
+						components.push_back( const_cast<Plug*>( plug ) );
+					}
+					break;
+				}
+			}
+		}
+	}
+	else
+	{
+		RecursiveChildIterator it( root );
+		for( ; it != it.end(); ++it )
+		{
+			Plug* plug = runTimeCast<Plug>( it->get() );
+			if( !plug )
+			{
+				continue;
+			}
+			if( plugValueInternal( plug, key, inherit, false ) )
+			{
+				components.push_back( plug );
+			}
+		}
+	}
 }
 
 Metadata::NodeValueChangedSignal &Metadata::nodeValueChangedSignal()

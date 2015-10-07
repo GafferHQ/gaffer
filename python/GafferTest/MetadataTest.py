@@ -850,6 +850,53 @@ class MetadataTest( GafferTest.TestCase ) :
 
 		self.assertTrue( "Metadata" not in s.serialise() )
 
+	def testComponentsWithMetaData( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = GafferTest.AddNode()
+		s["n2"] = GafferTest.AddNode()
+		s["n3"] = GafferTest.AddNode()
+		s["m"] = GafferTest.MultiplyNode()
+
+		self.assertEqual( Gaffer.Metadata.nodesWithMetadata( s, "nodeData1"), [] )
+
+		# register instance node values on n and n2:
+		Gaffer.Metadata.registerNodeValue( s["n"], "nodeData1", "something" )
+		Gaffer.Metadata.registerNodeValue( s["n2"], "nodeData2", "something" )
+		Gaffer.Metadata.registerNodeValue( s["m"], "nodeData3", "something" )
+
+		# register class value on GafferTest.AddNode:
+		Gaffer.Metadata.registerNodeValue( GafferTest.AddNode, "nodeData3", "something" )
+
+		# reginster some instance plug values:
+		Gaffer.Metadata.registerPlugValue( s["n"]["op1"], "plugData1", "something" )
+		Gaffer.Metadata.registerPlugValue( s["n2"]["op2"], "plugData2", "something" )
+		Gaffer.Metadata.registerPlugValue( s["m"]["op2"], "plugData3", "something" )
+
+		# register class value on GafferTest.AddNode:
+		Gaffer.Metadata.registerPlugValue( GafferTest.AddNode, "op1", "plugData3", "somethingElse" )
+
+		# test it lists nodes with matching data:
+		self.assertEqual( Gaffer.Metadata.nodesWithMetadata( s, "nodeData1" ), [ s["n"] ] )
+		self.assertEqual( Gaffer.Metadata.nodesWithMetadata( s, "nodeData2" ), [ s["n2"] ] )
+		self.assertEqual( Gaffer.Metadata.nodesWithMetadata( s, "nodeData3" ), [ s["n"], s["n2"], s["n3"], s["m"] ] )
+		self.assertEqual( Gaffer.Metadata.nodesWithMetadata( s, "nodeData3", instanceOnly=True ), [ s["m"] ] )
+
+		# telling it to list plugs should make it return an empty list:
+		self.assertEqual( Gaffer.Metadata.plugsWithMetadata( s, "nodeData1" ), [] )
+		self.assertEqual( Gaffer.Metadata.plugsWithMetadata( s, "nodeData3" ), [] )
+
+		# test it lists plugs with matching data:
+		self.assertEqual( Gaffer.Metadata.plugsWithMetadata( s, "plugData1" ), [ s["n"]["op1"] ] )
+		self.assertEqual( Gaffer.Metadata.plugsWithMetadata( s, "plugData2" ), [ s["n2"]["op2"] ] )
+		self.assertEqual( Gaffer.Metadata.plugsWithMetadata( s, "plugData3" ), [ s["n"]["op1"], s["n2"]["op1"], s["n3"]["op1"], s["m"]["op2"] ] )
+		self.assertEqual( Gaffer.Metadata.plugsWithMetadata( s, "plugData3", instanceOnly=True ), [ s["m"]["op2"] ] )
+
+		# telling it to list nodes should make it return an empty list:
+		self.assertEqual( Gaffer.Metadata.nodesWithMetadata( s, "plugData1" ), [] )
+		self.assertEqual( Gaffer.Metadata.nodesWithMetadata( s, "plugData3" ), [] )
+
+
 if __name__ == "__main__":
 	unittest.main()
 

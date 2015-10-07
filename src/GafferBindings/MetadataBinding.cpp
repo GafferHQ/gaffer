@@ -279,6 +279,33 @@ list registeredPlugValues( const Plug *plug, bool inherit, bool instanceOnly, bo
 	return keysToList( keys );
 }
 
+
+list plugsWithMetadata( GraphComponent *root, const std::string &key, bool inherit, bool instanceOnly )
+{
+	std::vector<Plug*> plugs;
+	Metadata::plugsWithMetadata( plugs, root, key, inherit, instanceOnly );
+	list result;
+	for( std::vector<Plug*>::const_iterator it = plugs.begin(); it != plugs.end(); ++it )
+	{
+		result.append( PlugPtr(*it) );
+	}
+
+	return result;
+}
+
+list nodesWithMetadata( GraphComponent *root, const std::string &key, bool inherit, bool instanceOnly )
+{
+	std::vector<Node*> nodes;
+	Metadata::nodesWithMetadata( nodes, root, key, inherit, instanceOnly );
+	list result;
+	for( std::vector<Node*>::const_iterator it = nodes.begin(); it != nodes.end(); ++it )
+	{
+		result.append( NodePtr(*it) );
+	}
+
+	return result;
+}
+
 } // namespace
 
 namespace GafferBindings
@@ -388,6 +415,26 @@ void bindMetadata()
 
 		.def( "plugValueChangedSignal", &Metadata::plugValueChangedSignal, return_value_policy<reference_existing_object>() )
 		.staticmethod( "plugValueChangedSignal" )
+		
+		.def( "plugsWithMetadata", &plugsWithMetadata,
+			(
+				boost::python::arg( "root" ),
+				boost::python::arg( "key" ),
+				boost::python::arg( "inherit" ) = true,
+				boost::python::arg( "instanceOnly" ) = false
+			)
+		)
+		.staticmethod( "plugsWithMetadata" )
+		
+		.def( "nodesWithMetadata", &nodesWithMetadata,
+			(
+				boost::python::arg( "root" ),
+				boost::python::arg( "key" ),
+				boost::python::arg( "inherit" ) = true,
+				boost::python::arg( "instanceOnly" ) = false
+			)
+		)
+		.staticmethod( "nodesWithMetadata" )
 	;
 
 	SignalClass<Metadata::NodeValueChangedSignal, DefaultSignalCaller<Metadata::NodeValueChangedSignal>, ValueChangedSlotCaller>( "NodeValueChangedSignal" );
