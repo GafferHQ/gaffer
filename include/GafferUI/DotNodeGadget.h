@@ -41,6 +41,13 @@
 
 #include "GafferUI/StandardNodeGadget.h"
 
+namespace Gaffer
+{
+
+IE_CORE_FORWARDDECLARE( Plug )
+
+} // namespace Gaffer
+
 namespace GafferUI
 {
 
@@ -62,9 +69,20 @@ class DotNodeGadget : public StandardNodeGadget
 
 		Gaffer::Dot *dotNode();
 		const Gaffer::Dot *dotNode() const;
+		Gaffer::Node *upstreamNode();
+
+		void plugDirtied( const Gaffer::Plug *plug );
+		void nameChanged( const Gaffer::GraphComponent *graphComponent );
+		void updateUpstreamNameChangedConnection();
+		void updateLabel();
 
 		bool dragEnter( const DragDropEvent &event );
 		bool drop( const DragDropEvent &event );
+
+		boost::signals::scoped_connection m_upstreamNameChangedConnection;
+
+		std::string m_label;
+		Imath::V2f m_labelPosition;
 
 		static NodeGadgetTypeDescription<DotNodeGadget> g_nodeGadgetTypeDescription;
 

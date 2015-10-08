@@ -47,8 +47,15 @@ using namespace Gaffer;
 void GafferBindings::bindDot()
 {
 
-	DependencyNodeClass<Dot>()
+	scope s = DependencyNodeClass<Dot>()
 		.def( "setup", &Dot::setup )
+	;
+
+	enum_<Dot::LabelType>( "LabelType" )
+		.value( "None", Dot::None )
+		.value( "NodeName", Dot::NodeName )
+		.value( "UpstreamNodeName", Dot::UpstreamNodeName )
+		.value( "Custom", Dot::Custom )
 	;
 
 }
