@@ -38,9 +38,12 @@
 #define GAFFER_DOT_H
 
 #include "Gaffer/DependencyNode.h"
+#include "Gaffer/NumericPlug.h"
 
 namespace Gaffer
 {
+
+IE_CORE_FORWARDDECLARE( StringPlug )
 
 /// The Dot node has no computational purpose - it is merely a pass-through,
 /// used as an organisational tool in the graph.
@@ -76,9 +79,26 @@ class Dot : public DependencyNode
 		template<typename T>
 		const T *outPlug() const;
 
+		enum LabelType
+		{
+			None = 0,
+			NodeName = 1,
+			Custom = 2
+		};
+
+		IntPlug *labelTypePlug();
+		const IntPlug *labelTypePlug() const;
+
+		StringPlug *labelPlug();
+		const StringPlug *labelPlug() const;
+
 		virtual void affects( const Plug *input, AffectedPlugsContainer &outputs ) const;
 		virtual Plug *correspondingInput( const Plug *output );
 		virtual const Plug *correspondingInput( const Plug *output ) const;
+
+	private :
+
+		static size_t g_firstPlugIndex;
 
 };
 

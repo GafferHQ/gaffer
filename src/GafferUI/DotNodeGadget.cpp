@@ -36,9 +36,13 @@
 
 #include "boost/bind.hpp"
 
+#include "IECoreGL/GL.h"
+#include "IECoreGL/Selector.h"
+
 #include "Gaffer/Dot.h"
 #include "Gaffer/UndoContext.h"
 #include "Gaffer/ScriptNode.h"
+#include "Gaffer/StringPlug.h"
 
 #include "GafferUI/DotNodeGadget.h"
 #include "GafferUI/Style.h"
@@ -68,8 +72,13 @@ DotNodeGadget::DotNodeGadget( Gaffer::NodePtr node )
 	// largely by the nodeGadget:padding Metadata.
 	setContents( new SpacerGadget( Box3f( V3f( -0.25 ), V3f( 0.25 ) ) ) );
 
+	node->plugDirtiedSignal().connect( boost::bind( &DotNodeGadget::plugDirtied, this, ::_1 ) );
+	node->nameChangedSignal().connect( boost::bind( &DotNodeGadget::nameChanged, this, ::_1 ) );
+
 	dragEnterSignal().connect( boost::bind( &DotNodeGadget::dragEnter, this, ::_2 ) );
 	dropSignal().connect( boost::bind( &DotNodeGadget::drop, this, ::_2 ) );
+
+	updateLabel();
 }
 
 DotNodeGadget::~DotNodeGadget()
@@ -84,6 +93,14 @@ void DotNodeGadget::doRender( const Style *style ) const
 	const V3f s = b.size();
 	style->renderNodeFrame( Box2f( V2f( 0 ), V2f( 0 ) ), std::min( s.x, s.y ) / 2.0f, state, userColor() );
 
+	if( !m_label.empty() && !IECoreGL::Selector::currentSelector() )
+	{
+		glPushMatrix();
+		IECoreGL::glTranslate( m_labelPosition );
+		style->renderText( Style::LabelText, m_label );
+		glPopMatrix();
+	}
+
 	NodeGadget::doRender( style );
 }
 
@@ -95,6 +112,68 @@ Gaffer::Dot *DotNodeGadget::dotNode()
 const Gaffer::Dot *DotNodeGadget::dotNode() const
 {
 	return static_cast<const Dot *>( node() );
+}
+
+void DotNodeGadget::plugDirtied( const Gaffer::Plug *plug )
+{
+	const Dot *dot = dotNode();
+	if( plug == dot->labelTypePlug() || plug == dot->labelPlug() )
+	{
+		updateLabel();
+	}
+}
+
+void DotNodeGadget::nameChanged( const Gaffer::GraphComponent *graphComponent )
+{
+	updateLabel();
+}
+
+void DotNodeGadget::updateLabel()
+{
+	const Dot *dot = dotNode();
+
+	const Dot::LabelType labelType = (Dot::LabelType)dot->labelTypePlug()->getValue();
+	if( labelType == Dot::None )
+	{
+		m_label.clear();
+	}
+	else if( labelType == Dot::NodeName )
+	{
+		m_label = dot->getName();
+	}
+	else
+	{
+		m_label = dot->labelPlug()->getValue();
+	}
+
+	Edge labelEdge = RightEdge;
+	if( const Plug *p = dot->inPlug<Plug>() )
+	{
+		if( noduleTangent( nodule( p ) ).x != 0 )
+		{
+			labelEdge = TopEdge;
+		}
+	}
+
+	const Imath::Box3f thisBound = bound();
+	if( labelEdge == TopEdge )
+	{
+		const Imath::Box3f labelBound = style()->textBound( Style::LabelText, m_label );
+		m_labelPosition = V2f(
+			-labelBound.size().x / 2.0,
+			thisBound.max.y + 1.0
+		);
+	}
+	else
+	{
+		const Imath::Box3f characterBound = style()->characterBound( Style::LabelText );
+		m_labelPosition = V2f(
+			thisBound.max.x,
+			thisBound.center().y - characterBound.size().y / 2.0
+		);
+	}
+
+	requestRender();
 }
 
 bool DotNodeGadget::dragEnter( const DragDropEvent &event )
