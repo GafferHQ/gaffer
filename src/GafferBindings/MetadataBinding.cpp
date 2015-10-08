@@ -282,8 +282,7 @@ list registeredPlugValues( const Plug *plug, bool inherit, bool instanceOnly, bo
 
 list plugsWithMetadata( GraphComponent *root, const std::string &key, bool inherit, bool instanceOnly )
 {
-	std::vector<Plug*> plugs;
-	Metadata::plugsWithMetadata( plugs, root, key, inherit, instanceOnly );
+	std::vector<Plug*> plugs = Metadata::plugsWithMetadata( root, key, inherit, instanceOnly );
 	list result;
 	for( std::vector<Plug*>::const_iterator it = plugs.begin(); it != plugs.end(); ++it )
 	{
@@ -295,8 +294,7 @@ list plugsWithMetadata( GraphComponent *root, const std::string &key, bool inher
 
 list nodesWithMetadata( GraphComponent *root, const std::string &key, bool inherit, bool instanceOnly )
 {
-	std::vector<Node*> nodes;
-	Metadata::nodesWithMetadata( nodes, root, key, inherit, instanceOnly );
+	std::vector<Node*> nodes = Metadata::nodesWithMetadata( root, key, inherit, instanceOnly );
 	list result;
 	for( std::vector<Node*>::const_iterator it = nodes.begin(); it != nodes.end(); ++it )
 	{

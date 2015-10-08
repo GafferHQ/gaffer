@@ -868,7 +868,7 @@ class MetadataTest( GafferTest.TestCase ) :
 		# register class value on GafferTest.AddNode:
 		Gaffer.Metadata.registerNodeValue( GafferTest.AddNode, "nodeData3", "something" )
 
-		# reginster some instance plug values:
+		# register some instance plug values:
 		Gaffer.Metadata.registerPlugValue( s["n"]["op1"], "plugData1", "something" )
 		Gaffer.Metadata.registerPlugValue( s["n2"]["op2"], "plugData2", "something" )
 		Gaffer.Metadata.registerPlugValue( s["m"]["op2"], "plugData3", "something" )

@@ -390,8 +390,9 @@ std::string Metadata::nodeDescription( const Node *node, bool inherit )
 	return "";
 }
 
-void Metadata::nodesWithMetadata( std::vector<Node*> &components, GraphComponent *root, const std::string &key, bool inherit, bool instanceOnly )
+std::vector<Node*> Metadata::nodesWithMetadata( GraphComponent *root, IECore::InternedString key, bool inherit, bool instanceOnly )
 {
+	std::vector<Node*> nodes;
 	if( instanceOnly )
 	{
 		// if we're only looking for instance data, we can improve the performance
@@ -401,46 +402,30 @@ void Metadata::nodesWithMetadata( std::vector<Node*> &components, GraphComponent
 		for( ; it != end; ++it )
 		{
 			const Node* node = runTimeCast<const Node>( it->first );
-			if( !node )
+			if( !node || !root->isAncestorOf( node ) )
 			{
 				continue;
 			}
 
-			InstanceValues::const_iterator vIt = it->second->begin();
-			InstanceValues::const_iterator vEnd = it->second->end();
-			for( ; vIt != vEnd; ++vIt )
+			if( it->second->find( key ) != it->second->end() )
 			{
-				if( vIt->name == key )
-				{
-					// check if the node is a descendant of root:
-					if( root->isAncestorOf( node ) )
-					{
-						components.push_back( const_cast<Node*>( node ) );
-					}
-					break;
-				}
+				nodes.push_back( const_cast<Node*>( node ) );
+				break;
 			}
 		}
 	}
 	else
 	{
-		RecursiveChildIterator it( root );
+		RecursiveNodeIterator it( root );
 		for( ; it != it.end(); ++it )
 		{
-			Node* node = runTimeCast<Node>( it->get() );
-			if( !node )
+			if( nodeValueInternal( it->get(), key, inherit, instanceOnly ) )
 			{
-				// we've hit a plug - no need to recurse, as nodes never get
-				// parented to plugs:
-				it.prune();
-				continue;
-			}
-			if( nodeValueInternal( node, key, inherit, instanceOnly ) )
-			{
-				components.push_back( node );
+				nodes.push_back( it->get() );
 			}
 		}
 	}
+	return nodes;
 }
 
 
@@ -603,8 +588,9 @@ std::string Metadata::plugDescription( const Plug *plug, bool inherit )
 	return "";
 }
 
-void Metadata::plugsWithMetadata( std::vector<Plug*> &components, GraphComponent *root, const std::string &key, bool inherit, bool instanceOnly )
+std::vector<Plug*> Metadata::plugsWithMetadata( GraphComponent *root, IECore::InternedString key, bool inherit, bool instanceOnly )
 {
+	std::vector<Plug*> plugs;
 	if( instanceOnly )
 	{
 		// If we're only looking for instance data, we can improve the performance
@@ -617,42 +603,30 @@ void Metadata::plugsWithMetadata( std::vector<Plug*> &components, GraphComponent
 		for( ; it != end; ++it )
 		{
 			const Plug* plug = runTimeCast<const Plug>( it->first );
-			if( !plug )
+			if( !plug || !root->isAncestorOf( plug ) )
 			{
 				continue;
 			}
 
-			InstanceValues::const_iterator vIt = it->second->begin();
-			InstanceValues::const_iterator vEnd = it->second->end();
-			for( ; vIt != vEnd; ++vIt )
+			if( it->second->find( key ) != it->second->end() )
 			{
-				if( vIt->name == key )
-				{
-					if( root->isAncestorOf( plug ) )
-					{
-						components.push_back( const_cast<Plug*>( plug ) );
-					}
-					break;
-				}
+				plugs.push_back( const_cast<Plug*>( plug ) );
+				break;
 			}
 		}
 	}
 	else
 	{
-		RecursiveChildIterator it( root );
+		FilteredRecursiveChildIterator<TypePredicate<Plug> > it( root );
 		for( ; it != it.end(); ++it )
 		{
-			Plug* plug = runTimeCast<Plug>( it->get() );
-			if( !plug )
+			if( plugValueInternal( it->get(), key, inherit, false ) )
 			{
-				continue;
-			}
-			if( plugValueInternal( plug, key, inherit, false ) )
-			{
-				components.push_back( plug );
+				plugs.push_back( it->get() );
 			}
 		}
 	}
+	return plugs;
 }
 
 Metadata::NodeValueChangedSignal &Metadata::nodeValueChangedSignal()
