@@ -83,7 +83,8 @@ class Dot : public DependencyNode
 		{
 			None = 0,
 			NodeName = 1,
-			Custom = 2
+			UpstreamNodeName = 2,
+			Custom = 3
 		};
 
 		IntPlug *labelTypePlug();

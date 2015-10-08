@@ -90,11 +90,13 @@ Gaffer.Metadata.registerNode(
 			"description",
 			"""
 			The method used to apply an optional label
-			to the dot. Using the node name is recommended,
+			to the dot. Using a node name is recommended,
 			because it encourages the use of descriptive node
-			names. The custom label does however provide more
-			flexibility, since node names are restricted in the
-			characters they can use.
+			names, and updates automatically when nodes are
+			renamed or upstream connections change. The custom
+			label does however provide more flexibility, since
+			node names are restricted in the characters they
+			can use.
 			""",
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
@@ -102,6 +104,7 @@ Gaffer.Metadata.registerNode(
 
 			"preset:None", Gaffer.Dot.LabelType.None,
 			"preset:Node Name", Gaffer.Dot.LabelType.NodeName,
+			"preset:Upstream Node Name", Gaffer.Dot.LabelType.UpstreamNodeName,
 			"preset:Custom", Gaffer.Dot.LabelType.Custom,
 
 		],

@@ -54,6 +54,7 @@ void GafferBindings::bindDot()
 	enum_<Dot::LabelType>( "LabelType" )
 		.value( "None", Dot::None )
 		.value( "NodeName", Dot::NodeName )
+		.value( "UpstreamNodeName", Dot::UpstreamNodeName )
 		.value( "Custom", Dot::Custom )
 	;
 

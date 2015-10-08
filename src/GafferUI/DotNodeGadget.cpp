@@ -78,6 +78,7 @@ DotNodeGadget::DotNodeGadget( Gaffer::NodePtr node )
 	dragEnterSignal().connect( boost::bind( &DotNodeGadget::dragEnter, this, ::_2 ) );
 	dropSignal().connect( boost::bind( &DotNodeGadget::drop, this, ::_2 ) );
 
+	updateUpstreamNameChangedConnection();
 	updateLabel();
 }
 
@@ -114,6 +115,16 @@ const Gaffer::Dot *DotNodeGadget::dotNode() const
 	return static_cast<const Dot *>( node() );
 }
 
+Gaffer::Node *DotNodeGadget::upstreamNode()
+{
+	Plug *plug = dotNode()->inPlug<Plug>();
+	while( plug && runTimeCast<Dot>( plug->node() ) )
+	{
+		plug = plug->getInput<Plug>();
+	}
+	return plug ? plug->node() : NULL;
+}
+
 void DotNodeGadget::plugDirtied( const Gaffer::Plug *plug )
 {
 	const Dot *dot = dotNode();
@@ -121,11 +132,25 @@ void DotNodeGadget::plugDirtied( const Gaffer::Plug *plug )
 	{
 		updateLabel();
 	}
+	else if( plug == dot->inPlug<Plug>() )
+	{
+		updateUpstreamNameChangedConnection();
+		updateLabel();
+	}
 }
 
 void DotNodeGadget::nameChanged( const Gaffer::GraphComponent *graphComponent )
 {
 	updateLabel();
+}
+
+void DotNodeGadget::updateUpstreamNameChangedConnection()
+{
+	m_upstreamNameChangedConnection.disconnect();
+	if( Node *n = upstreamNode() )
+	{
+		m_upstreamNameChangedConnection = n->nameChangedSignal().connect( boost::bind( &DotNodeGadget::nameChanged, this, ::_1 ) );
+	}
 }
 
 void DotNodeGadget::updateLabel()
@@ -140,6 +165,11 @@ void DotNodeGadget::updateLabel()
 	else if( labelType == Dot::NodeName )
 	{
 		m_label = dot->getName();
+	}
+	else if( labelType == Dot::UpstreamNodeName )
+	{
+		const Node *n = upstreamNode();
+		m_label = n ? n->getName() : "";
 	}
 	else
 	{
