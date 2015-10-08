@@ -896,6 +896,12 @@ class MetadataTest( GafferTest.TestCase ) :
 		self.assertEqual( Gaffer.Metadata.nodesWithMetadata( s, "plugData1" ), [] )
 		self.assertEqual( Gaffer.Metadata.nodesWithMetadata( s, "plugData3" ), [] )
 
+		# test child removal:
+		m = s["m"]
+		s.removeChild( m )
+		self.assertEqual( Gaffer.Metadata.plugsWithMetadata( s, "plugData3", instanceOnly=True ), [] )
+		self.assertEqual( Gaffer.Metadata.nodesWithMetadata( s, "nodeData3", instanceOnly=True ), [] )
+
 
 if __name__ == "__main__":
 	unittest.main()
