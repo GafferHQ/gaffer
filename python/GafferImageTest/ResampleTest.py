@@ -144,5 +144,20 @@ class ResampleTest( GafferTest.TestCase ) :
 		for args in tests :
 			__test( *args )
 
+	def testSincUpsize( self ) :
+
+		c = GafferImage.Constant()
+		c["format"].setValue( GafferImage.Format( 100, 100 ) )
+		c["color"].setValue( IECore.Color4f( 1 ) )
+
+		r = GafferImage.Resample()
+		r["dataWindow"].setValue( IECore.Box2f( IECore.V2f( 0 ), IECore.V2f( 400 ) ) )
+		r["boundingMode"].setValue( GafferImage.Sampler.BoundingMode.Clamp )
+		r["filter"].setValue( "sinc" )
+		r["in"].setInput( c["out"] )
+
+		i = r["out"].image()
+		self.assertEqual( i["R"].data, IECore.FloatVectorData( [ 1.0 ] * 400 * 400 ) )
+
 if __name__ == "__main__":
 	unittest.main()
