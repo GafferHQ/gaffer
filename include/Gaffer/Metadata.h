@@ -105,6 +105,11 @@ class Metadata
 		/// Utility method calling nodeValue( node, "description", inherit );
 		static std::string nodeDescription( const Node *node, bool inherit = true );
 
+		/// Lists all node descendants of "root" with the specified metadata key. If inherit is true
+		/// then the search falls through to the base classes of the node if the node itself doesn't have a value,
+		/// and if instanceOnly is true the search is restricted to instance metadata.
+		static std::vector<Node*> nodesWithMetadata( GraphComponent *root, IECore::InternedString key, bool inherit = true, bool instanceOnly = false );
+
 		/// Registers a static metadata value for plugs with the specified path on the specified node type.
 		static void registerPlugValue( IECore::TypeId nodeTypeId, const MatchPattern &plugPath, IECore::InternedString key, IECore::ConstDataPtr value );
 		/// Registers a dynamic metadata value for the specified plug. Each time the data is retrieved, the
@@ -137,6 +142,11 @@ class Metadata
 		static void registerPlugDescription( IECore::TypeId nodeTypeId, const MatchPattern &plugPath, PlugValueFunction description );
 		/// Utility function calling plugValue( plug, "description", inherit )
 		static std::string plugDescription( const Plug *plug, bool inherit = true );
+
+		/// Lists all plug descendants of "root" with the specified metadata key. If inherit is true
+		/// then the search falls through to the base classes of the node if the node itself doesn't have a value,
+		/// and if instanceOnly is true the search is restricted to instance metadata.
+		static std::vector<Plug*> plugsWithMetadata( GraphComponent *root, IECore::InternedString key, bool inherit = true, bool instanceOnly = false );
 
 		/// @name Signals
 		/// These are emitted when the Metadata has been changed with one

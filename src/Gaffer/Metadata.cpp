@@ -390,6 +390,45 @@ std::string Metadata::nodeDescription( const Node *node, bool inherit )
 	return "";
 }
 
+std::vector<Node*> Metadata::nodesWithMetadata( GraphComponent *root, IECore::InternedString key, bool inherit, bool instanceOnly )
+{
+	std::vector<Node*> nodes;
+	if( instanceOnly )
+	{
+		// if we're only looking for instance data, we can improve the performance
+		// for large graphs by explicitly iterating through the instanceMetaDataMap:
+		InstanceMetadataMap::const_iterator it = instanceMetadataMap().begin();
+		InstanceMetadataMap::const_iterator end = instanceMetadataMap().end();
+		for( ; it != end; ++it )
+		{
+			const Node* node = runTimeCast<const Node>( it->first );
+			if( !node || !root->isAncestorOf( node ) )
+			{
+				continue;
+			}
+
+			if( it->second->find( key ) != it->second->end() )
+			{
+				nodes.push_back( const_cast<Node*>( node ) );
+				break;
+			}
+		}
+	}
+	else
+	{
+		RecursiveNodeIterator it( root );
+		for( ; it != it.end(); ++it )
+		{
+			if( nodeValueInternal( it->get(), key, inherit, instanceOnly ) )
+			{
+				nodes.push_back( it->get() );
+			}
+		}
+	}
+	return nodes;
+}
+
+
 void Metadata::registerPlugValue( IECore::TypeId nodeTypeId, const MatchPattern &plugPath, IECore::InternedString key, IECore::ConstDataPtr value )
 {
 	registerPlugValue( nodeTypeId, plugPath, key, boost::lambda::constant( value ) );
@@ -547,6 +586,47 @@ std::string Metadata::plugDescription( const Plug *plug, bool inherit )
 		return d->readable();
 	}
 	return "";
+}
+
+std::vector<Plug*> Metadata::plugsWithMetadata( GraphComponent *root, IECore::InternedString key, bool inherit, bool instanceOnly )
+{
+	std::vector<Plug*> plugs;
+	if( instanceOnly )
+	{
+		// If we're only looking for instance data, we can improve the performance
+		// for large graphs by explicitly iterating through the instanceMetaDataMap.
+		// This reduced the time to call this function from 0.1 sec to 1.e-5 sec
+		// in my reasonably sized test scene.
+
+		InstanceMetadataMap::const_iterator it = instanceMetadataMap().begin();
+		InstanceMetadataMap::const_iterator end = instanceMetadataMap().end();
+		for( ; it != end; ++it )
+		{
+			const Plug* plug = runTimeCast<const Plug>( it->first );
+			if( !plug || !root->isAncestorOf( plug ) )
+			{
+				continue;
+			}
+
+			if( it->second->find( key ) != it->second->end() )
+			{
+				plugs.push_back( const_cast<Plug*>( plug ) );
+				break;
+			}
+		}
+	}
+	else
+	{
+		FilteredRecursiveChildIterator<TypePredicate<Plug> > it( root );
+		for( ; it != it.end(); ++it )
+		{
+			if( plugValueInternal( it->get(), key, inherit, false ) )
+			{
+				plugs.push_back( it->get() );
+			}
+		}
+	}
+	return plugs;
 }
 
 Metadata::NodeValueChangedSignal &Metadata::nodeValueChangedSignal()
