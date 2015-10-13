@@ -1,3 +1,178 @@
+# 0.17.0.0
+==========
+
+This release brings several major features in addition to the usual
+enhancements and bug fixes. Of particular interest are the addition
+of a basic keyframing system, support for using OSL expressions
+alongside the existing Python expressions, and several new image
+processing nodes exposing OpenColorIO functionality.
+
+Core
+-----------------------------------------------------------------------
+
+- Added Animation node, providing basic support for keyframed animation.
+- Added frames-per-second support to Contexts, to map between frames
+  and a time in seconds.
+- Expression
+  - Fixed bug when identical expressions acted on different plug types.
+  - Added support for calling `context.getTime()`.
+  - Added support for calling `context.getFramesPerSecond()`.
+  - Fixed bugs when a plug or node is renamed.
+  - Fixed bugs when manually disconnecting an output or input
+    of an expression.
+  - Improved error reporting in the UI.
+- Fixed InputGenerator backwards compatibility bug introduced in
+  0.16.0.0.
+- Box
+  - Promoting a plug now properly copies plug metadata (#1468).
+- Plug
+  - Fixed rare crash during dirty propagation.
+  - Fixed bug in child connection tracking behaviour.
+
+UI
+-----------------------------------------------------------------------
+
+- NodeEditor
+  - Plug context menus
+    - Added keyframing menu items for numeric and bool plugs.
+    - Added Lock/Unlock meu items.
+    - Added menu item for creating an OSL expression.
+  - Tool menu
+    - Added "Revert to Defaults" menu item.
+- NodeGraph
+  - Added right click menu items for reordering plugs on Boxes.
+  - Fixed bugs triggered by the dynamic hiding and showing of plugs
+    via the UIEditor.
+- Dot
+  - Added optional labels. These can be derived from the
+    dot node name or the upstream node name or may be
+    specified directly.
+- Shader loading dialogues
+  - Added bookmarks.
+- Viewer
+  - Fixed bug which could mean the camera would move unexpectedly
+    even when look-through mode is not enabled.
+  - Fixed OpenColorIO configs.
+- UIEditor
+  - Fixed renaming of empty user sections.
+  - Prevented renaming of section to invalid names like "".
+  - Added default Settings section.
+  - Fixed presets UI to update values when the selected preset
+    changes.
+  - Ignores user plugs on box nodes.
+- Box
+  - Added default Settings section.
+  - Disabled plug addition button in User section.
+- Fixed bug which could cause the display of corrupted icons.
+- ShaderSwitch
+  - Fixed UI to provide access to each input rather than just the
+    array input as a whole (#1461).
+- Numeric fields
+  - Ensured that keyboard-nudged numbers have an extra 0 added as
+    necessary to ensure that the same digit is always being modified.
+
+Image
+-----------------------------------------------------------------------
+
+- New OpenColorIO nodes
+  - LUT
+  - CDL
+  - DisplayTransform
+- ImageWriter
+  - Added file format options.
+  - Made sure OIIO queries for nchannel and alpha support are
+    respected.
+- Merge
+  - Fixed artifacts when the data windows differ between layers.
+  - Fixed crash.
+- Resize
+  - Fixed artifacts when upsizing with the sinc filter (#1457).
+- Changed convention for image bounding boxes to specify that the
+  maximum coordinates are exclusive (outside the box).
+- Fixed Crop UI for images with the default format.
+- Resample
+  - Fixed incorrect input sample region.
+
+Scene
+-----------------------------------------------------------------------
+
+- Fixed loading of UnionFilters from Gaffer 0.15.0.0 (#1474).
+- Fixed loading of FilterSwitches from Gaffer 0.15.0.0 (#1474).
+- Attributes are now output to the renderer before shaders at the
+  same location. This works around a bug in 3delight's shader
+  construction.
+- Fixed crash when loading sets from an empty SceneReader.
+- Added support for frames-per-second to SceneReader, AlembicSource
+  and SceneWriter.
+
+OSL
+-----------------------------------------------------------------------
+
+- Added support for using OSL as a general purpose expression language.
+
+Cortex
+-----------------------------------------------------------------------
+
+- Fixed issue where non-ValuePlugs were not syncing during setPlugValue().
+- Fixed OpHolder node summaries.
+
+API
+-----------------------------------------------------------------------
+
+- Expression
+  - Redesigned API to better support multiple languages.
+- Context
+  - Added "framesPerSecond" variable and time accessors.
+- Metadata
+  - Added nodesWithMetadata() and plugsWithMetadata() methods.
+- StandardNodeGadget
+  - Removed orientation constructor parameter. Use metadata instead.
+  - Added dynamic nodule reordering controlled by metadata.
+- ScriptNode
+  - Fixed undo merging for CompoundNumericPlugs (#422).
+- Plug
+  - Made setFlags() undoable.
+- PlugLayout
+  - Ignore custom widgets with type "". This allows a widget
+    inherited from a base class to be removed by a derived class
+    or instance metadata.
+- Removed UserPlugValueWidget.
+- Added UserPlug namespace.
+- Deprecated use of arbitrary Widget constructor keyword arguments
+  for auto-parenting. The `parenting` argument should be used instead.
+- Image
+  - Renamed GafferImage::OpenColorIO to ColorSpace.
+  - Changed convention for image bounding boxes to specify that the
+    maximum coordinates are exclusive (outside the box).
+    - Added image window utility methods to assist with this change.
+  - Added OpenColorIOTransform abstract base class. This makes it
+    easy to implement nodes whose processing is performed via OpenColorIO.
+  - Sampler
+    - Remove sample window accessors.
+    - Deprecated constructor taking a filter.
+- Added NumericWidget.valueToString() method.
+
+Incompatibilities
+-----------------------------------------------------------------------
+
+- Redesigned expression API to better support multiple languages.
+- Changed convention for image bounding boxes to specify that the
+  maximum coordinates are exclusive (outside the box).
+- NodeGadget
+  - Added noduleAddedSignal() and noduleRemovedSignal().
+- StandardNodeGadget
+  - Removed orientation constructor parameter. Use metadata instead.
+- GraphComponentWrapper
+  - Improved constructors to allow any type to be passed to the single
+    argument constructor.
+- Removed UserPlugValueWidget.
+- Deprecated use of arbitrary Widget constructor keyword arguments
+  for auto-parenting. The `parenting` argument should be used instead.
+- Renamed GafferImage::OpenColorIO to ColorSpace.
+- Sampler
+  - Remove sample window accessors.
+  - Deprecated constructor taking a filter.
+
 # 0.16.0.4
 ==========
 
