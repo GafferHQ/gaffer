@@ -838,7 +838,7 @@ Core
 Core
 -----------------------------------------------------------------------
 
-- Reimplemented paths framework in C++ (#1190). This gives much 
+- Reimplemented paths framework in C++ (#1190). This gives much
   improved performance - 10x or more speed improvements in the
   SceneHierarchy panel.
 - Fixed subprocess hangs seen when dispatching renders inside Maya.
@@ -2590,14 +2590,14 @@ can be used to write values to the output primitive variables. The Out* shaders 
 	- OSLShader node represents OSL shaders and allows them to be connected into shading networks.
 	- OSLImage node executes OSL shaders in the context of an input image to perform arbitrary image processing.
 	- OSLObject node executes OSL shaders in the context of an object's primitive variables to perform geometry deformation.
-	
+
 #### API
 
 - Added custom formatters and name depth control to NameLabel.
 - Added Widget.isAncestorOf() method.
 - Added ButtonEvent.button field.
 - Improved path matching to provide more complete information.
-- Added GraphGadget::upstreamNodeGadgets() method. 
+- Added GraphGadget::upstreamNodeGadgets() method.
 
 #### Support apps
 
@@ -2674,7 +2674,7 @@ UI
 --
 
 - NodeGraph now only drag-selects nodes that are wholly contained in the drag area, not merely intersecting it.
-- Added a Backdrop node (#153). 
+- Added a Backdrop node (#153).
 
 RenderMan
 ---------
@@ -2739,7 +2739,7 @@ Core
 
 - Fixed serialisation of ExecutableOpHolder.
 - Added dynamic requirement plugs to Executable.
-- 
+-
 
 UI
 --
@@ -2843,13 +2843,13 @@ OS X
 - Added workaround for weird focus-stealing behaviour in Maya.
 - Added application variable to the scope available to the screen grab command.
 - Added support for empty and relative paths in Gaffer.Path. ( #432, #324 )
-    
+
     - Added root parameter to all path constructors. This is used to define the root when the path parameter is passed a list of items. Because python doesn't allow overloaded functions this is slightly awkward - see documentation of Path.__init__ for discussion of how this would break down into overloaded constructors when we move the implementation to C++.
     - Added Path.root() and Path.isEmpty() methods.
     - Added Path.setFromPath() method, which copies the elements and the root from another path. This should be used in place of code which formerly did path[:] = otherPath[:].
-    
+
     Note that the new root parameter changes the parameter order for all Path (and derived class) constructors - if you were formerly passing a filter as a non-keyword argument you should now pass it as a keyword argument to avoid problems. Additionally, if you implemented a custom Path subclass, you need to add the root parameter to your constructor and update your copy() and children() implementations. The DictPath changes provide a minimal example of what needs changing.
-    
+
 0.71.0
 ======
 
@@ -2882,7 +2882,7 @@ OS X
 * Added spline parameter support to RenderManShader::loadShader()
 * Added shader annotations for passing default values to RenderManShader splines
 * Added dividers in the NodeEditor, available to RenderMan shaders via the annotation "parameterName.divider" (#288)
-* Added API for undo merging. 
+* Added API for undo merging.
 * Added ScriptNode::undoAddedSignal() (#103)
 * Fixed hiding of Menu when using the search box
 * Fixed tab focus ordering in NodeEditor (#107)
@@ -2970,7 +2970,7 @@ OS X
 0.65.0
 ======
 
-* Added divisions plug to Plane node. 
+* Added divisions plug to Plane node.
 * Added Cube and Sphere scene sources (#97).
 * Added a Text node to GafferScene.
 * Added labelling support to TabbedContainer auto-parenting mechanism.
@@ -2981,7 +2981,7 @@ OS X
 * Improved ImageView to allow subclassing (#323).
 * Set the name attribute for lights properly in the Render node (#326).
 * Fixed GLWidget for use inside Maya 2013.
-* Fixed Recent Files menu bug (#333). 
+* Fixed Recent Files menu bug (#333).
 * Fixed a bug in ViewportGadget drag event propogation.
 
 0.64.0
@@ -3061,7 +3061,7 @@ OS X
     An activator is defined by a global annotation of this form :
         pragma annotation "activator.name.expression" "pythonExpression"
     The python expression may reference current parameter values by name, and also use the connected( "parameterName" ) function to query whether or not a parameter is connected.
-    Activators are then assigned to specific parameters using annotations of this form :    
+    Activators are then assigned to specific parameters using annotations of this form :
         pragma annotation "parameterName.activator" "name"
 
 * Implemented annotation-based uis for RenderManLight node.
@@ -3760,7 +3760,7 @@ can be constructed easily.
 
 * Fixed bug which meant that colour swatches for plugs had the wrong colour when first shown.
 
-* Simplified EditorWidget implementations by removing setScriptNode() method - now the scriptNode is always provided at construction and cannot be subsequently changed. Renamed ScriptWindow.getScript() to ScriptWindow.scriptNode() and EditorWidget.getScriptNode() to EditorWidget.scriptNode() for consistency. 
+* Simplified EditorWidget implementations by removing setScriptNode() method - now the scriptNode is always provided at construction and cannot be subsequently changed. Renamed ScriptWindow.getScript() to ScriptWindow.scriptNode() and EditorWidget.getScriptNode() to EditorWidget.scriptNode() for consistency.
 
 * Menus now support a "shortCut" entry in the MenuItemDefinition to provide keyboard shortcuts. The standard application, file and edit menus now provide the expected shortcuts, and are greyed out appropriately when they cannot be used for whatever reason.
 
@@ -4147,7 +4147,7 @@ files and file sequences.
 
 * The CheckBox class now has setText() and getText() accessors.
 
-* Added PathFilterWidget class to allow uis to be built for the filters on paths. Added filter ui to PathChooserWidget, along with a button to refresh the listing. 
+* Added PathFilterWidget class to allow uis to be built for the filters on paths. Added filter ui to PathChooserWidget, along with a button to refresh the listing.
 
 * The Path class now adds "name" and "fullName" entries to the info() dictionary.
 
@@ -4273,7 +4273,7 @@ new functionality.
 
 * Containers may now be used in the python with statement to make the creation of nested layouts more straightforward. For example :
 
-	with GafferUI.Collapsible() :	
+	with GafferUI.Collapsible() :
 		with GafferUI.ScrolledContainer() :
 			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical ) :
 				GafferUI.TextWidget( "Making uis is easier now" )
@@ -4288,7 +4288,7 @@ new functionality.
 * Viewer is no longer hardcoded to display the result of the "output" plug - it now displays the result of the first output ObjectPlug. This allows it to view the results of procedurals and ops.
 
 * The node creation menus for Ops and Procedurals now create OpHolder and ProceduralHolder nodes rather than generic ParameterisedHolder nodes. Ops and procedurals may now be run in Gaffer.
-			
+
 0.20.0
 ------
 
@@ -4450,7 +4450,7 @@ See python/GafferTest/ParameterHandlerTest.py for an example.
 	* Error when double clicking an item.
 	* Selection was not being cleared when the current path wasn't valid.
 	* Path wasn't being set when a leaf item was selected, which meant that hitting Enter in the PathChooserDialogue chose the wrong path.
-	* Double clicking a directory when the current path wasn't valid created another invalid path, rather than replacing the invalid section.	
+	* Double clicking a directory when the current path wasn't valid created another invalid path, rather than replacing the invalid section.
 
 * Added a "python" application which simply executes a python file in the Gaffer environment.
 
@@ -4595,7 +4595,7 @@ See python/GafferTest/ParameterHandlerTest.py for an example.
 	IECore.V3fParameter
 	IECore.Color3fParameter
 	IECore.Color4fParameter
-	
+
 * Fixed TypeError: invalid argument to sipBadCatcherResult() messages coming from ColorSwatch widget.
 
 0.9.0
@@ -4649,7 +4649,7 @@ See python/GafferTest/ParameterHandlerTest.py for an example.
 
 * Added a new op application, to allow users to run ops in a gui.
 
-* NodeEditor.registerNodeUI has been moved to NodeUI.registerNodeUI, and a NodeUI.create factory functiona added. This allows NodeUIs to be used in places other than the NodeEditor. 
+* NodeEditor.registerNodeUI has been moved to NodeUI.registerNodeUI, and a NodeUI.create factory functiona added. This allows NodeUIs to be used in places other than the NodeEditor.
 
 0.4.0
 -----
