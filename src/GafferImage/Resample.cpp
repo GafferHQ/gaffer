@@ -467,7 +467,7 @@ IECore::ConstFloatVectorDataPtr Resample::computeChannelData( const std::string 
 					}
 				}
 
-				if( totalW > 0.0f )
+				if( totalW != 0.0f )
 				{
 					*pIt = v / totalW;
 				}
@@ -517,7 +517,7 @@ IECore::ConstFloatVectorDataPtr Resample::computeChannelData( const std::string 
 					totalW += w;
 				}
 
-				if( totalW > 0.0f )
+				if( totalW != 0.0f )
 				{
 					*pIt = v / totalW;
 				}
@@ -560,7 +560,7 @@ IECore::ConstFloatVectorDataPtr Resample::computeChannelData( const std::string 
 					totalW += w;
 				}
 
-				if( totalW > 0.0f )
+				if( totalW != 0.0f )
 				{
 					*pIt = v / totalW;
 				}

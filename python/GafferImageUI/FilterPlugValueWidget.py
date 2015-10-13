@@ -58,6 +58,11 @@ class FilterPlugValueWidget( GafferUI.EnumPlugValueWidget ) :
 			# bound to Python though, so we need to decide
 			# whether to provide access via our own APIs, or
 			# to contribute some bindings to the OIIO project.
+			# Perhaps we will also need a way of specifying via
+			# metadata what sorts of filters are relevant - for
+			# instance we are currently hiding the Disk filter
+			# from this list because it is unsuitable for use for
+			# upsizing in the Resample node (see issue #1457).
 			values = [
 				( "Default", "" ),
 				( "Box", "box" ),
@@ -71,7 +76,6 @@ class FilterPlugValueWidget( GafferUI.EnumPlugValueWidget ) :
 				( "Radial Lanczos3", "radial-lanczos3" ),
 				( "Mitchell", "mitchell" ),
 				( "BSpline", "bspline" ),
-				( "Disk", "disk" ),
 				( "Cubic", "cubic" ),
 				( "Keys", "keys" ),
 				( "Simon", "simon" ),
