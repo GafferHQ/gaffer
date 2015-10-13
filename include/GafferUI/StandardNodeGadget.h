@@ -53,6 +53,7 @@ namespace GafferUI
 ///
 /// - "nodeGadget:nodulePosition" : a plug entry with a value of
 /// "left", "right", "top" or "bottom"
+/// - "nodeGadget:noduleIndex" : a plug entry with an int value
 /// - "nodeGadget:minimumWidth" : a node entry with a float value
 /// - "nodeGadget:horizontalNoduleSpacing" : a node entry with a float value
 /// - "nodeGadget:verticalNoduleSpacing" : a node entry with a float value
@@ -76,8 +77,7 @@ class StandardNodeGadget : public NodeGadget
 			InvalidEdge
 		};
 
-		/// \todo Remove orientation parameter - Metadata can do everything it can do.
-		StandardNodeGadget( Gaffer::NodePtr node, LinearContainer::Orientation orientation=LinearContainer::X );
+		StandardNodeGadget( Gaffer::NodePtr node );
 		virtual ~StandardNodeGadget();
 
 		virtual Nodule *nodule( const Gaffer::Plug *plug );
@@ -149,7 +149,7 @@ class StandardNodeGadget : public NodeGadget
 		void plugMetadataChanged( IECore::TypeId nodeTypeId, const Gaffer::MatchPattern &plugPath, IECore::InternedString key, const Gaffer::Plug *plug );
 		void nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore::InternedString key, const Gaffer::Node *node );
 
-		Nodule *updateNodule( Gaffer::Plug *plug );
+		void updateNodules( std::vector<Nodule *> &nodules, std::vector<Nodule *> &added, std::vector<NodulePtr> &removed );
 		void updateNoduleLayout();
 		bool updateUserColor();
 		void updatePadding();
@@ -159,7 +159,6 @@ class StandardNodeGadget : public NodeGadget
 		void error( const Gaffer::Plug *plug, const Gaffer::Plug *source, const std::string &message );
 		void displayError( Gaffer::ConstPlugPtr plug, const std::string &message );
 
-		const LinearContainer::Orientation m_orientation;
 		bool m_nodeEnabled;
 		bool m_labelsVisibleOnHover;
 		// we accept drags from nodules and forward them to the

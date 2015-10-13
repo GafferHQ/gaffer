@@ -58,9 +58,10 @@
 #include "GafferUI/SpacerGadget.h"
 #include "GafferUI/ImageGadget.h"
 
-using namespace GafferUI;
-using namespace Gaffer;
+using namespace std;
 using namespace Imath;
+using namespace Gaffer;
+using namespace GafferUI;
 
 //////////////////////////////////////////////////////////////////////////
 // ErrorGadget implementation
@@ -148,6 +149,39 @@ class StandardNodeGadget::ErrorGadget : public Gadget
 };
 
 //////////////////////////////////////////////////////////////////////////
+// Utilities
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+/// Used for sorting nodules for layout
+struct IndexAndNodule
+{
+
+	IndexAndNodule()
+		:	index( 0 ), nodule( NULL )
+	{
+	}
+
+	IndexAndNodule( int index, Nodule *nodule )
+		:	index( index ), nodule( nodule )
+	{
+	}
+
+	bool operator < ( const IndexAndNodule &rhs ) const
+	{
+		return index < rhs.index;
+	}
+
+	int index;
+	Nodule *nodule;
+
+};
+
+} // namespace
+
+//////////////////////////////////////////////////////////////////////////
 // StandardNodeGadget implementation
 //////////////////////////////////////////////////////////////////////////
 
@@ -161,13 +195,13 @@ static IECore::InternedString g_verticalNoduleSpacingKey( "nodeGadget:verticalNo
 static IECore::InternedString g_minWidthKey( "nodeGadget:minWidth"  );
 static IECore::InternedString g_paddingKey( "nodeGadget:padding"  );
 static IECore::InternedString g_nodulePositionKey( "nodeGadget:nodulePosition" );
+static IECore::InternedString g_noduleIndexKey( "nodeGadget:noduleIndex" );
 static IECore::InternedString g_noduleTypeKey( "nodule:type" );
 static IECore::InternedString g_colorKey( "nodeGadget:color" );
 static IECore::InternedString g_errorGadgetName( "__error" );
 
-StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node, LinearContainer::Orientation orientation )
+StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node )
 	:	NodeGadget( node ),
-		m_orientation( orientation ),
 		m_nodeEnabled( true ),
 		m_labelsVisibleOnHover( true ),
 		m_dragDestinationProxy( 0 ),
@@ -179,7 +213,7 @@ StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node, LinearContainer::O
 
 	float horizontalNoduleSpacing = 2.0f;
 	float verticalNoduleSpacing = 0.2f;
-	float minWidth = m_orientation == LinearContainer::X ? 10.0f : 0.0f;
+	float minWidth = 10.0f;
 
 	if( IECore::ConstFloatDataPtr d = Metadata::nodeValue<IECore::FloatData>( node.get(), g_horizontalNoduleSpacingKey ) )
 	{
@@ -405,10 +439,6 @@ Imath::V3f StandardNodeGadget::noduleTangent( const Nodule *nodule ) const
 StandardNodeGadget::Edge StandardNodeGadget::plugEdge( const Gaffer::Plug *plug )
 {
 	Edge edge = plug->direction() == Gaffer::Plug::In ? TopEdge : BottomEdge;
-	if( m_orientation == LinearContainer::Y )
-	{
-		edge = edge == TopEdge ? LeftEdge : RightEdge;
-	}
 
 	if( IECore::ConstStringDataPtr d = Metadata::plugValue<IECore::StringData>( plug, g_nodulePositionKey ) )
 	{
@@ -644,7 +674,7 @@ void StandardNodeGadget::plugMetadataChanged( IECore::TypeId nodeTypeId, const G
 		return;
 	}
 
-	if( key == g_nodulePositionKey || key == g_noduleTypeKey )
+	if( key == g_nodulePositionKey || key == g_noduleIndexKey || key == g_noduleTypeKey )
 	{
 		updateNoduleLayout();
 	}
@@ -716,28 +746,83 @@ void StandardNodeGadget::nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore:
 	}
 }
 
-Nodule *StandardNodeGadget::updateNodule( Gaffer::Plug *plug )
+void StandardNodeGadget::updateNodules( std::vector<Nodule *> &nodules, std::vector<Nodule *> &added, std::vector<NodulePtr> &removed )
 {
-	if( plug->getName().string().compare( 0, 2, "__" )==0 )
+	// Update the nodules for all our plugs, and build a vector
+	// of IndexAndNodule to sort ready for layout.
+	vector<IndexAndNodule> sortedNodules;
+	for( PlugIterator plugIt( node() ); plugIt != plugIt.end(); ++plugIt )
 	{
-		return NULL;
+		Plug *plug = plugIt->get();
+		if( plug->getName().string().compare( 0, 2, "__" )==0 )
+		{
+			continue;
+		}
+
+		IECore::ConstStringDataPtr typeData = Metadata::plugValue<IECore::StringData>( plug, g_noduleTypeKey );
+		IECore::InternedString type = typeData ? typeData->readable() : "GafferUI::StandardNodule";
+
+		Nodule *nodule = NULL;
+		NoduleMap::iterator it = m_nodules.find( plug );
+		if( it != m_nodules.end() && it->second.type == type )
+		{
+			nodule = it->second.nodule.get();
+		}
+		else
+		{
+			if( it != m_nodules.end() && it->second.nodule )
+			{
+				removed.push_back( it->second.nodule );
+			}
+			NodulePtr n = Nodule::create( plug );
+			m_nodules[plug] = TypeAndNodule( type, n );
+			if( n )
+			{
+				added.push_back( n.get() );
+				nodule = n.get();
+			}
+		}
+
+		if( nodule )
+		{
+			int index = sortedNodules.size();
+			if( IECore::ConstIntDataPtr indexData = Metadata::plugValue<IECore::IntData>( plug, g_noduleIndexKey ) )
+			{
+				index = indexData->readable();
+			}
+			sortedNodules.push_back( IndexAndNodule( index, nodule ) );
+		}
 	}
 
-	IECore::ConstStringDataPtr typeData = Metadata::plugValue<IECore::StringData>( plug, g_noduleTypeKey );
-	IECore::InternedString type = typeData ? typeData->readable() : "GafferUI::StandardNodule";
-	NoduleMap::iterator it = m_nodules.find( plug );
-	if( it != m_nodules.end() && it->second.type == type )
+	// Remove any nodules for which a plug no longer exists.
+	for( NoduleMap::iterator it = m_nodules.begin(); it != m_nodules.end(); )
 	{
-		return it->second.nodule.get();
+		NoduleMap::iterator next = it; next++;
+		if( it->first->parent<Node>() != node() )
+		{
+			removed.push_back( it->second.nodule );
+			m_nodules.erase( it );
+		}
+		it = next;
 	}
 
-	NodulePtr n = Nodule::create( plug );
-	m_nodules[plug] = TypeAndNodule( type, n );
-	return n.get();
+	// Sort ready for layout.
+	sort( sortedNodules.begin(), sortedNodules.end() );
+	for( vector<IndexAndNodule>::const_iterator it = sortedNodules.begin(), eIt = sortedNodules.end(); it != eIt; ++it )
+	{
+		nodules.push_back( it->nodule );
+	}
 }
 
 void StandardNodeGadget::updateNoduleLayout()
 {
+	// Get an updated array of all our nodules,
+	// remembering what was added and removed.
+	vector<Nodule *> nodules;
+	vector<Nodule *> added;
+	vector<NodulePtr> removed;
+	updateNodules( nodules, added, removed );
+
 	// Clear the nodule containers for each edge,
 	// and remember the end gadget for each.
 	LinearContainer *edgeContainers[NumEdges];
@@ -752,12 +837,12 @@ void StandardNodeGadget::updateNoduleLayout()
 		}
 	}
 
-	for( PlugIterator it( node() ); it != it.end(); ++it )
+	// Refill the containers with the nodules in the
+	// right container.
+
+	for( vector<Nodule *>::const_iterator it = nodules.begin(), eIt = nodules.end(); it != eIt; ++it )
 	{
-		if( Nodule *n = updateNodule( it->get() ) )
-		{
-			edgeContainers[plugEdge( it->get() )]->addChild( n );
-		}
+		edgeContainers[plugEdge( (*it)->plug() )]->addChild( *it );
 	}
 
 	// Put back the end gadgets
@@ -766,19 +851,17 @@ void StandardNodeGadget::updateNoduleLayout()
 		edgeContainers[edge]->addChild( endGadgets[edge] );
 	}
 
-	// Remove any unused nodules
-	for( NoduleMap::iterator it = m_nodules.begin(); it != m_nodules.end(); )
+	// Let everyone know what we've done.
+	for( vector<NodulePtr>::const_iterator it = removed.begin(), eIt = removed.end(); it != eIt; ++it )
 	{
-		NoduleMap::iterator next = it; next++;
-		if(
-			it->first->parent<Node>() != node() ||
-			(it->second.nodule && !it->second.nodule->parent<Gadget>())
-		)
-		{
-			m_nodules.erase( it );
-		}
-		it = next;
+		noduleRemovedSignal()( this, it->get() );
 	}
+
+	for( vector<Nodule *>::const_iterator it = added.begin(), eIt = added.end(); it != eIt; ++it )
+	{
+		noduleAddedSignal()( this, *it );
+	}
+
 }
 
 bool StandardNodeGadget::updateUserColor()

@@ -113,6 +113,16 @@ Imath::V3f NodeGadget::noduleTangent( const Nodule *nodule ) const
 	return V3f( 0, 1, 0 );
 }
 
+NodeGadget::NoduleSignal &NodeGadget::noduleAddedSignal()
+{
+	return m_noduleAddedSignal;
+}
+
+NodeGadget::NoduleSignal &NodeGadget::noduleRemovedSignal()
+{
+	return m_noduleRemovedSignal;
+}
+
 NodeGadget::CreatorMap &NodeGadget::creators()
 {
 	static CreatorMap c;

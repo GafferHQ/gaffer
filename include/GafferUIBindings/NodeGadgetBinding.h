@@ -60,8 +60,9 @@ class NodeGadgetWrapper : public GadgetWrapper<WrappedType>
 
 	public :
 
-		NodeGadgetWrapper( PyObject *self, Gaffer::NodePtr node )
-			:	GadgetWrapper<WrappedType>( self, node )
+		template<typename Arg1>
+		NodeGadgetWrapper( PyObject *self, Arg1 arg1 )
+			:	GadgetWrapper<WrappedType>( self, arg1 )
 		{
 		}
 

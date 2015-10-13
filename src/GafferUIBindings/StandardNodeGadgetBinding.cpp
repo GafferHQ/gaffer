@@ -54,8 +54,8 @@ class StandardNodeGadgetWrapper : public NodeGadgetWrapper<StandardNodeGadget>
 
 	public :
 
-		StandardNodeGadgetWrapper( PyObject *self, Gaffer::NodePtr node, LinearContainer::Orientation orientation )
-			:	NodeGadgetWrapper<StandardNodeGadget>( self, node, orientation )
+		StandardNodeGadgetWrapper( PyObject *self, Gaffer::NodePtr node )
+			:	NodeGadgetWrapper<StandardNodeGadget>( self, node )
 		{
 		}
 
@@ -74,7 +74,7 @@ static GadgetPtr getEdgeGadget( StandardNodeGadget &g, StandardNodeGadget::Edge 
 void GafferUIBindings::bindStandardNodeGadget()
 {
 	scope s = NodeGadgetClass<StandardNodeGadget, StandardNodeGadgetWrapper>()
-		.def( init<Gaffer::NodePtr, LinearContainer::Orientation>( ( arg( "node" ), arg( "orientation" )=LinearContainer::X ) ) )
+		.def( init<Gaffer::NodePtr>( arg( "node" ) ) )
 		.def( "setContents", &StandardNodeGadget::setContents )
 		.def( "getContents", &getContents )
 		.def( "setEdgeGadget", &StandardNodeGadget::setEdgeGadget )

@@ -178,6 +178,8 @@ class GraphGadget : public ContainerGadget
 		void filterMemberRemoved( Gaffer::Set *set, IECore::RunTimeTyped *member );
 		void inputChanged( Gaffer::Plug *dstPlug );
 		void plugSet( Gaffer::Plug *plug );
+		void noduleAdded( Nodule *nodule );
+		void noduleRemoved( Nodule *nodule );
 
 		bool keyPressed( GadgetPtr gadget, const KeyEvent &event );
 
@@ -200,9 +202,9 @@ class GraphGadget : public ContainerGadget
 		NodeGadget *findNodeGadget( const Gaffer::Node *node ) const;
 		void updateNodeGadgetTransform( NodeGadget *nodeGadget );
 
-		void addConnectionGadgets( Gaffer::GraphComponent *plugParent );
+		void addConnectionGadgets( Gaffer::GraphComponent *nodeOrPlug );
 		void addConnectionGadget( Gaffer::Plug *dstPlug );
-		void removeConnectionGadgets( const Gaffer::GraphComponent *plugParent );
+		void removeConnectionGadgets( const Gaffer::GraphComponent *nodeOrPlug );
 		void removeConnectionGadget( const Gaffer::Plug *dstPlug );
 		ConnectionGadget *findConnectionGadget( const Gaffer::Plug *dstPlug ) const;
 		void updateConnectionGadgetMinimisation( ConnectionGadget *gadget );
@@ -228,6 +230,8 @@ class GraphGadget : public ContainerGadget
 			NodeGadget *gadget;
 			boost::signals::scoped_connection inputChangedConnection;
 			boost::signals::scoped_connection plugSetConnection;
+			boost::signals::scoped_connection noduleAddedConnection;
+			boost::signals::scoped_connection noduleRemovedConnection;
 		};
 		typedef std::map<const Gaffer::Node *, NodeGadgetEntry> NodeGadgetMap;
 		NodeGadgetMap m_nodeGadgets;
