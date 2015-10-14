@@ -42,6 +42,7 @@
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/StandardSet.h"
 #include "Gaffer/Metadata.h"
+#include "Gaffer/Dot.h"
 
 #include "GafferUI/StandardConnectionGadget.h"
 #include "GafferUI/Style.h"
@@ -279,7 +280,27 @@ std::string StandardConnectionGadget::getToolTip( const IECore::LineSegment3f &l
 	}
 
 	const Gaffer::Plug *dstPlug = dstNodule()->plug();
+
+	int numSkippedDots = 0;
 	const Gaffer::Plug *srcPlug = dstPlug->getInput<Gaffer::Plug>();
+	while( const Dot *dot = IECore::runTimeCast<const Gaffer::Dot>( srcPlug->node() ) )
+	{
+		const Gaffer::Plug *inPlug = srcPlug->getInput<Gaffer::Plug>();
+		if(
+			srcPlug == dot->outPlug<Gaffer::Plug>() &&
+			inPlug == dot->inPlug<Gaffer::Plug>() &&
+			inPlug->getInput<Gaffer::Plug>()
+		)
+		{
+			srcPlug = inPlug->getInput<Gaffer::Plug>();
+			numSkippedDots += 1;
+		}
+		else
+		{
+			break;
+		}
+	}
+
 	const Gaffer::GraphComponent *ancestor = srcPlug->commonAncestor<Gaffer::GraphComponent>( dstPlug );
 
 	std::string srcName;
@@ -295,7 +316,14 @@ std::string StandardConnectionGadget::getToolTip( const IECore::LineSegment3f &l
 		dstName = dstPlug->fullName();
 	}
 
-	return srcName + " -> " + dstName;
+	result = srcName + " -> " + dstName;
+	if( numSkippedDots )
+	{
+		result += boost::str(
+			boost::format( " (via %d dot%s)" ) % numSkippedDots % ( numSkippedDots > 1 ? "s" : "" )
+		);
+	}
+	return result;
 }
 
 void StandardConnectionGadget::enter( GadgetPtr gadget, const ButtonEvent &event )
