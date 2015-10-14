@@ -53,7 +53,7 @@ Resize::Resize( const std::string &name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 
-	addChild( new AtomicFormatPlug( "format" ) );
+	addChild( new FormatPlug( "format" ) );
 	addChild( new IntPlug( "fitMode", Plug::In, Horizontal, Horizontal, Distort ) );
 	addChild( new StringPlug( "filter" ) );
 	addChild( new AtomicBox2fPlug( "__dataWindow", Plug::Out ) );
@@ -80,14 +80,14 @@ Resize::~Resize()
 {
 }
 
-GafferImage::AtomicFormatPlug *Resize::formatPlug()
+GafferImage::FormatPlug *Resize::formatPlug()
 {
-	return getChild<AtomicFormatPlug>( g_firstPlugIndex );
+	return getChild<FormatPlug>( g_firstPlugIndex );
 }
 
-const GafferImage::AtomicFormatPlug *Resize::formatPlug() const
+const GafferImage::FormatPlug *Resize::formatPlug() const
 {
-	return getChild<AtomicFormatPlug>( g_firstPlugIndex );
+	return getChild<FormatPlug>( g_firstPlugIndex );
 }
 
 Gaffer::IntPlug *Resize::fitModePlug()
@@ -134,7 +134,7 @@ void Resize::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs
 {
 	ImageProcessor::affects( input, outputs );
 
-	if( input == formatPlug() )
+	if( formatPlug()->isAncestorOf( input ) )
 	{
 		outputs.push_back( outPlug()->formatPlug() );
 		outputs.push_back( dataWindowPlug() );

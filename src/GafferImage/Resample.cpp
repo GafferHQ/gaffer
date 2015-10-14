@@ -315,12 +315,13 @@ void Resample::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outpu
 	if( input == dataWindowPlug() )
 	{
 		outputs.push_back( outPlug()->dataWindowPlug() );
+		outputs.push_back( outPlug()->channelDataPlug() );
 		outputs.push_back( horizontalPassPlug()->dataWindowPlug() );
+		outputs.push_back( horizontalPassPlug()->channelDataPlug() );
 	}
 	else if(
 		input == inPlug()->channelDataPlug() ||
 		input == inPlug()->dataWindowPlug() ||
-		input == dataWindowPlug() ||
 		input == filterPlug() ||
 		input == boundingModePlug() ||
 		input->parent<V2fPlug>() == filterWidthPlug() ||

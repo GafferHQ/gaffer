@@ -203,5 +203,16 @@ class ResizeTest( GafferTest.TestCase ) :
 				r["format"].setValue( GafferImage.Format( width, height ) )
 				r["out"].image()
 
+	def testFormatDependencies( self ) :
+
+		r = GafferImage.Resize()
+		cs = GafferTest.CapturingSlot( r.plugDirtiedSignal() )
+
+		r["format"].setValue( GafferImage.Format( 100, 200, 2 ) )
+		dirtiedPlugs = set( c[0] for c in cs )
+
+		self.assertTrue( r["out"]["format"] in dirtiedPlugs )
+		self.assertTrue( r["out"]["dataWindow"] in dirtiedPlugs )
+
 if __name__ == "__main__":
 	unittest.main()

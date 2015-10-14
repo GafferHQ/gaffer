@@ -40,6 +40,7 @@
 #include "Gaffer/NumericPlug.h"
 
 #include "GafferImage/ImageProcessor.h"
+#include "GafferImage/FormatPlug.h"
 
 namespace Gaffer
 {
@@ -71,8 +72,8 @@ class Resize : public ImageProcessor
 			Distort
 		};
 
-		GafferImage::AtomicFormatPlug *formatPlug();
-		const GafferImage::AtomicFormatPlug *formatPlug() const;
+		GafferImage::FormatPlug *formatPlug();
+		const GafferImage::FormatPlug *formatPlug() const;
 
 		Gaffer::IntPlug *fitModePlug();
 		const Gaffer::IntPlug *fitModePlug() const;
