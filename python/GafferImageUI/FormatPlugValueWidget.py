@@ -47,7 +47,7 @@ class FormatPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self.__menuButton = GafferUI.MenuButton( "", menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) ) )
 		GafferUI.PlugValueWidget.__init__( self, self.__menuButton, plug, **kw )
-		
+
 		self._addPopupMenu( self.__menuButton )
 		self._updateFromPlug()
 
@@ -96,5 +96,5 @@ class FormatPlugValueWidget( GafferUI.PlugValueWidget ) :
 		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
 			self.getPlug().setValue( fmt )
 
-GafferUI.PlugValueWidget.registerType( GafferImage.FormatPlug, FormatPlugValueWidget )
+GafferUI.PlugValueWidget.registerType( GafferImage.AtomicFormatPlug, FormatPlugValueWidget )
 
