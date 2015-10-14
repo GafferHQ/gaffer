@@ -101,5 +101,8 @@ if not hasattr( GafferImage.Format, "__originalRegisterFormat" ) :
 	GafferImage.AtomicFormatPlug.__originalSetValue = GafferImage.AtomicFormatPlug.setValue
 	GafferImage.AtomicFormatPlug.setValue = __formatPlugSetValue
 
+	GafferImage.FormatPlug.__originalSetValue = GafferImage.FormatPlug.setValue
+	GafferImage.FormatPlug.setValue = __formatPlugSetValue
+
 	GafferImage.Format.__originalRegisterFormat = GafferImage.Format.registerFormat
 	GafferImage.Format.registerFormat = __formatRegisterFormat
