@@ -45,7 +45,7 @@
 #include "Gaffer/ApplicationRoot.h"
 
 #include "GafferImage/Format.h"
-#include "GafferImage/FormatPlug.h"
+#include "GafferImage/AtomicFormatPlug.h"
 
 using namespace Gaffer;
 using namespace GafferImage;
@@ -178,11 +178,11 @@ const Format Format::getDefaultFormat( ScriptNode *scriptNode )
 	{
 		throw IECore::Exception("ScriptNode *is NULL");
 	}
-	const FormatPlug *plug( scriptNode->getChild<FormatPlug>( defaultFormatPlugName ) );
+	const AtomicFormatPlug *plug( scriptNode->getChild<AtomicFormatPlug>( defaultFormatPlugName ) );
 	if (!plug)
 	{
 		addDefaultFormatPlug( scriptNode );
-		plug = scriptNode->getChild<FormatPlug>( defaultFormatPlugName );
+		plug = scriptNode->getChild<AtomicFormatPlug>( defaultFormatPlugName );
 	}
 	return plug->getValue();
 }
@@ -206,14 +206,14 @@ void Format::addFormatToContext( Gaffer::Plug *defaultFormatPlug )
 	}
 
 	if ( n->typeId() == static_cast<IECore::TypeId>( Gaffer::ScriptNodeTypeId )
-	     && defaultFormatPlug->typeId() == static_cast<IECore::TypeId>( GafferImage::FormatPlugTypeId )
+	     && defaultFormatPlug->typeId() == static_cast<IECore::TypeId>( GafferImage::AtomicFormatPlugTypeId )
 	)
 	{
 		Gaffer::ScriptNode *s = static_cast<Gaffer::ScriptNode*>( n );
-		GafferImage::FormatPlug *p = static_cast<GafferImage::FormatPlug*>( defaultFormatPlug );
+		GafferImage::AtomicFormatPlug *p = static_cast<GafferImage::AtomicFormatPlug*>( defaultFormatPlug );
 		if ( !p )
 		{
-			throw IECore::Exception("Plug is not a FormatPlug");
+			throw IECore::Exception("Plug is not an AtomicFormatPlug");
 		}
 
 		Format f = p->getValue();
@@ -228,7 +228,7 @@ void Format::addDefaultFormatPlug( ScriptNode *scriptNode )
 		throw IECore::Exception("ScriptNode pointer is NULL");
 	}
 
-	FormatPlug* plug( scriptNode->getChild<FormatPlug>( defaultFormatPlugName ) );
+	AtomicFormatPlug* plug( scriptNode->getChild<AtomicFormatPlug>( defaultFormatPlugName ) );
 
 	Format initialFormatValue( 1920, 1080, 1. ); // The initial value that the default format will start with when gaffer is opened.
 
@@ -239,7 +239,7 @@ void Format::addDefaultFormatPlug( ScriptNode *scriptNode )
 		registerFormat( initialFormatValue, "HD 1080p 1920x1080 1" );
 
 		// Add a new plug to the script node to hold the default format and connect up the valueSet signal to our slot that will add the value to the context.
-		FormatPlug *defaultFormatPlug( new FormatPlug( defaultFormatPlugName, Gaffer::Plug::In, Format(), Gaffer::Plug::Dynamic | Gaffer::Plug::Default | Gaffer::Plug::Serialisable ) );
+		AtomicFormatPlug *defaultFormatPlug( new AtomicFormatPlug( defaultFormatPlugName, Gaffer::Plug::In, Format(), Gaffer::Plug::Dynamic | Gaffer::Plug::Default | Gaffer::Plug::Serialisable ) );
 		scriptNode->addChild( defaultFormatPlug );
 		scriptNode->plugSetSignal().connect( boost::bind( &Format::addFormatToContext, ::_1 ) );
 		defaultFormatPlug->setValue( initialFormatValue );
@@ -279,11 +279,11 @@ void Format::setDefaultFormat( ScriptNode *scriptNode, const Format &format )
 		throw IECore::Exception("ScriptNode *is NULL");
 	}
 
-	FormatPlug* plug( scriptNode->getChild<FormatPlug>( defaultFormatPlugName ) );
+	AtomicFormatPlug* plug( scriptNode->getChild<AtomicFormatPlug>( defaultFormatPlugName ) );
 	if (!plug)
 	{
 		addDefaultFormatPlug( scriptNode );
-		plug = scriptNode->getChild<FormatPlug>( defaultFormatPlugName );
+		plug = scriptNode->getChild<AtomicFormatPlug>( defaultFormatPlugName );
 	}
 
 	plug->setValue( format );
@@ -296,11 +296,11 @@ void Format::setDefaultFormat( ScriptNode *scriptNode, const std::string &name )
 		throw IECore::Exception("ScriptNode *is NULL");
 	}
 
-	FormatPlug* plug( scriptNode->getChild<FormatPlug>( defaultFormatPlugName ) );
+	AtomicFormatPlug* plug( scriptNode->getChild<AtomicFormatPlug>( defaultFormatPlugName ) );
 	if (!plug)
 	{
 		addDefaultFormatPlug( scriptNode );
-		plug = scriptNode->getChild<FormatPlug>( defaultFormatPlugName );
+		plug = scriptNode->getChild<AtomicFormatPlug>( defaultFormatPlugName );
 	}
 
 	Format format( getFormat( name ) );
