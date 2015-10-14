@@ -76,6 +76,7 @@ from LUTTest import LUTTest
 from CDLTest import CDLTest
 from ImageAlgoTest import ImageAlgoTest
 from DisplayTransformTest import DisplayTransformTest
+from FormatPlugTest import FormatPlugTest
 
 if __name__ == "__main__":
 	import unittest

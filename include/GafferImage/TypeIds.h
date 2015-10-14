@@ -100,6 +100,7 @@ enum TypeId
 	LUTTypeId = 110804,
 	CDLTypeId = 110805,
 	DisplayTransformTypeId = 110806,
+	FormatPlugTypeId = 110807,
 
 	LastTypeId = 110849
 };
