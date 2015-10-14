@@ -40,6 +40,7 @@
 #include "Gaffer/CompoundNumericPlug.h"
 
 #include "GafferImage/ImageNode.h"
+#include "GafferImage/FormatPlug.h"
 
 namespace GafferImage
 {
@@ -54,8 +55,8 @@ class Constant : public ImageNode
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::Constant, ConstantTypeId, ImageNode );
 
-		GafferImage::AtomicFormatPlug *formatPlug();
-		const GafferImage::AtomicFormatPlug *formatPlug() const;
+		GafferImage::FormatPlug *formatPlug();
+		const GafferImage::FormatPlug *formatPlug() const;
 		Gaffer::Color4fPlug *colorPlug();
 		const Gaffer::Color4fPlug *colorPlug() const;
 

@@ -58,7 +58,7 @@ Constant::Constant( const std::string &name )
 	:	ImageNode( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
-	addChild( new AtomicFormatPlug( "format" ) );
+	addChild( new FormatPlug( "format" ) );
 	addChild( new Color4fPlug( "color", Plug::In, Color4f( 0, 0, 0, 1 ) ) );
 }
 
@@ -66,14 +66,14 @@ Constant::~Constant()
 {
 }
 
-GafferImage::AtomicFormatPlug *Constant::formatPlug()
+GafferImage::FormatPlug *Constant::formatPlug()
 {
-	return getChild<AtomicFormatPlug>( g_firstPlugIndex );
+	return getChild<FormatPlug>( g_firstPlugIndex );
 }
 
-const GafferImage::AtomicFormatPlug *Constant::formatPlug() const
+const GafferImage::FormatPlug *Constant::formatPlug() const
 {
-	return getChild<AtomicFormatPlug>( g_firstPlugIndex );
+	return getChild<FormatPlug>( g_firstPlugIndex );
 }
 
 Gaffer::Color4fPlug *Constant::colorPlug()
@@ -100,11 +100,14 @@ void Constant::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outpu
 		}
 	}
 
-	if( input==formatPlug() )
+	if( formatPlug()->displayWindowPlug()->isAncestorOf( input ) )
 	{
 		outputs.push_back( outPlug()->formatPlug() );
 		outputs.push_back( outPlug()->dataWindowPlug() );
-		outputs.push_back( outPlug()->channelDataPlug() );
+	}
+	else if( input == formatPlug()->pixelAspectPlug() )
+	{
+		outputs.push_back( outPlug()->formatPlug() );
 	}
 }
 
