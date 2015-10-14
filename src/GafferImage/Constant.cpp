@@ -58,7 +58,7 @@ Constant::Constant( const std::string &name )
 	:	ImageNode( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
-	addChild( new FormatPlug( "format" ) );
+	addChild( new AtomicFormatPlug( "format" ) );
 	addChild( new Color4fPlug( "color", Plug::In, Color4f( 0, 0, 0, 1 ) ) );
 }
 
@@ -66,14 +66,14 @@ Constant::~Constant()
 {
 }
 
-GafferImage::FormatPlug *Constant::formatPlug()
+GafferImage::AtomicFormatPlug *Constant::formatPlug()
 {
-	return getChild<FormatPlug>( g_firstPlugIndex );
+	return getChild<AtomicFormatPlug>( g_firstPlugIndex );
 }
 
-const GafferImage::FormatPlug *Constant::formatPlug() const
+const GafferImage::AtomicFormatPlug *Constant::formatPlug() const
 {
-	return getChild<FormatPlug>( g_firstPlugIndex );
+	return getChild<AtomicFormatPlug>( g_firstPlugIndex );
 }
 
 Gaffer::Color4fPlug *Constant::colorPlug()

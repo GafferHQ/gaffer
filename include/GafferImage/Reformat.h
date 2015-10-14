@@ -58,8 +58,8 @@ class Reformat : public ImageProcessor
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::Reformat, ReformatTypeId, ImageProcessor );
 
 		/// Plug accessors.
-		GafferImage::FormatPlug *formatPlug();
-		const GafferImage::FormatPlug *formatPlug() const;
+		GafferImage::AtomicFormatPlug *formatPlug();
+		const GafferImage::AtomicFormatPlug *formatPlug() const;
 		GafferImage::FilterPlug *filterPlug();
 		const GafferImage::FilterPlug *filterPlug() const;
 

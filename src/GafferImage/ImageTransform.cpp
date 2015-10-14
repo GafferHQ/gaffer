@@ -41,7 +41,7 @@
 #include "GafferImage/ImageTransform.h"
 #include "GafferImage/Reformat.h"
 #include "GafferImage/Filter.h"
-#include "GafferImage/FormatPlug.h"
+#include "GafferImage/AtomicFormatPlug.h"
 #include "GafferImage/ImagePlug.h"
 #include "GafferImage/Sampler.h"
 
@@ -84,8 +84,8 @@ class Implementation : public ImageProcessor
 		const Gaffer::Transform2DPlug *transformPlug() const;
 		GafferImage::FilterPlug *filterPlug();
 		const GafferImage::FilterPlug *filterPlug() const;
-		GafferImage::FormatPlug *outputFormatPlug();
-		const GafferImage::FormatPlug *outputFormatPlug() const;
+		GafferImage::AtomicFormatPlug *outputAtomicFormatPlug();
+		const GafferImage::AtomicFormatPlug *outputAtomicFormatPlug() const;
 
 		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
 		virtual bool enabled() const;
@@ -111,7 +111,7 @@ Implementation::Implementation( const std::string &name )
 
 	addChild( new Gaffer::Transform2DPlug( "transform" ) );
 	addChild( new GafferImage::FilterPlug( "filter" ) );
-	addChild( new GafferImage::FormatPlug( "outputFormat" ) );
+	addChild( new GafferImage::AtomicFormatPlug( "outputFormat" ) );
 
 	// We don't ever want to change these, so we make pass-through connections.
 	outPlug()->metadataPlug()->setInput( inPlug()->metadataPlug() );
@@ -138,14 +138,14 @@ const GafferImage::FilterPlug *Implementation::filterPlug() const
 	return getChild<GafferImage::FilterPlug>( g_firstPlugIndex+1 );
 }
 
-GafferImage::FormatPlug *Implementation::outputFormatPlug()
+GafferImage::AtomicFormatPlug *Implementation::outputAtomicFormatPlug()
 {
-	return getChild<GafferImage::FormatPlug>( g_firstPlugIndex + 2 );
+	return getChild<GafferImage::AtomicFormatPlug>( g_firstPlugIndex + 2 );
 }
 
-const GafferImage::FormatPlug *Implementation::outputFormatPlug() const
+const GafferImage::AtomicFormatPlug *Implementation::outputAtomicFormatPlug() const
 {
-	return getChild<GafferImage::FormatPlug>( g_firstPlugIndex + 2 );
+	return getChild<GafferImage::AtomicFormatPlug>( g_firstPlugIndex + 2 );
 }
 
 void Implementation::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
@@ -164,7 +164,7 @@ void Implementation::affects( const Gaffer::Plug *input, AffectedPlugsContainer 
 	{
 		outputs.push_back( outPlug()->channelDataPlug() );
 	}
-	else if ( input == outputFormatPlug() )
+	else if ( input == outputAtomicFormatPlug() )
 	{
 		outputs.push_back( outPlug()->formatPlug() );
 	}
@@ -204,12 +204,12 @@ bool Implementation::enabled() const
 
 void Implementation::hashFormat( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	h = outputFormatPlug()->hash();
+	h = outputAtomicFormatPlug()->hash();
 }
 
 GafferImage::Format Implementation::computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
-	return outputFormatPlug()->getValue();
+	return outputAtomicFormatPlug()->getValue();
 }
 
 void Implementation::hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
@@ -285,7 +285,7 @@ IECore::ConstFloatVectorDataPtr Implementation::computeChannelData( const std::s
 Imath::M33f Implementation::computeAdjustedMatrix() const
 {
 	Format inFormat = inPlug()->formatPlug()->getValue();
-	Format outFormat = outputFormatPlug()->getValue();
+	Format outFormat = outputAtomicFormatPlug()->getValue();
 
 	// The desired scale factor.
 	Imath::V2f scale = transformPlug()->scalePlug()->getValue();
@@ -371,7 +371,7 @@ ImageTransform::ImageTransform( const std::string &name )
 	FilterPlug *filterPlug = new FilterPlug( "filter" );
 	addChild( filterPlug );
 
-	addChild( new GafferImage::FormatPlug( "__scaledFormat", Gaffer::Plug::Out ) );
+	addChild( new GafferImage::AtomicFormatPlug( "__scaledFormat", Gaffer::Plug::Out ) );
 
 	// Create the internal implementation of our transform and connect it up the our plugs.
 	GafferImage::Reformat *r = new GafferImage::Reformat( "__reformat" );
@@ -384,7 +384,7 @@ ImageTransform::ImageTransform( const std::string &name )
 	Detail::Implementation *t = new Detail::Implementation( "__implementation" );
 	t->inPlug()->setInput( r->outPlug() );
 	t->transformPlug()->setInput( transformPlug() );
-	t->outputFormatPlug()->setInput( inPlug()->formatPlug() );
+	t->outputAtomicFormatPlug()->setInput( inPlug()->formatPlug() );
 	t->filterPlug()->setInput( filterPlug );
 	t->enabledPlug()->setInput( enabledPlug() );
 	addChild( t );
@@ -425,14 +425,14 @@ const Gaffer::Transform2DPlug *ImageTransform::transformPlug() const
 	return getChild<Gaffer::Transform2DPlug>( g_firstPlugIndex );
 }
 
-GafferImage::FormatPlug *ImageTransform::formatPlug()
+GafferImage::AtomicFormatPlug *ImageTransform::formatPlug()
 {
-	return getChild<GafferImage::FormatPlug>( g_firstPlugIndex + 2 );
+	return getChild<GafferImage::AtomicFormatPlug>( g_firstPlugIndex + 2 );
 }
 
-const GafferImage::FormatPlug *ImageTransform::formatPlug() const
+const GafferImage::AtomicFormatPlug *ImageTransform::formatPlug() const
 {
-	return getChild<GafferImage::FormatPlug>( g_firstPlugIndex + 2 );
+	return getChild<GafferImage::AtomicFormatPlug>( g_firstPlugIndex + 2 );
 }
 
 void ImageTransform::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
@@ -451,7 +451,7 @@ void ImageTransform::hash( const ValuePlug *output, const Context *context, IECo
 {
 	ImageProcessor::hash( output, context, h );
 
-	const FormatPlug *fPlug = IECore::runTimeCast<const FormatPlug>(output);
+	const AtomicFormatPlug *fPlug = IECore::runTimeCast<const AtomicFormatPlug>(output);
 	if( fPlug == formatPlug() )
 	{
 		h = inPlug()->formatPlug()->hash();
@@ -472,7 +472,7 @@ void ImageTransform::compute( ValuePlug *output, const Context *context ) const
 			Imath::V2i( IECore::fastFloatCeil( ( f.getDisplayWindow().max.x - 1 ) * scale.x ) + 1, IECore::fastFloatCeil( ( f.getDisplayWindow().max.y - 1 ) * scale.y ) + 1 )
 		);
 
-		static_cast<FormatPlug *>( output )->setValue( GafferImage::Format( newDisplayWindow, 1.f ) );
+		static_cast<AtomicFormatPlug *>( output )->setValue( GafferImage::Format( newDisplayWindow, 1.f ) );
 		return;
 	}
 

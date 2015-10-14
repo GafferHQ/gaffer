@@ -194,7 +194,7 @@ void ImageNode::compute( ValuePlug *output, const Context *context ) const
 
 	if( output == imagePlug->formatPlug() )
 	{
-		static_cast<FormatPlug *>( output )->setValue(
+		static_cast<AtomicFormatPlug *>( output )->setValue(
 			computeFormat( context, imagePlug )
 		);
 	}

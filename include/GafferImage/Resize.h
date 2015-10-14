@@ -71,8 +71,8 @@ class Resize : public ImageProcessor
 			Distort
 		};
 
-		GafferImage::FormatPlug *formatPlug();
-		const GafferImage::FormatPlug *formatPlug() const;
+		GafferImage::AtomicFormatPlug *formatPlug();
+		const GafferImage::AtomicFormatPlug *formatPlug() const;
 
 		Gaffer::IntPlug *fitModePlug();
 		const Gaffer::IntPlug *fitModePlug() const;
