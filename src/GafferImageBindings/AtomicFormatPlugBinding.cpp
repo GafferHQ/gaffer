@@ -41,9 +41,9 @@
 #include "GafferBindings/ValuePlugBinding.h"
 #include "GafferBindings/TypedPlugBinding.h"
 
-#include "GafferImage/FormatPlug.h"
+#include "GafferImage/AtomicFormatPlug.h"
 #include "GafferImageBindings/FormatBinding.h"
-#include "GafferImageBindings/FormatPlugBinding.h"
+#include "GafferImageBindings/AtomicFormatPlugBinding.h"
 
 using namespace std;
 using namespace boost::python;
@@ -55,7 +55,7 @@ using namespace GafferImageBindings;
 namespace
 {
 
-class FormatPlugSerialiser : public GafferBindings::ValuePlugSerialiser
+class AtomicFormatPlugSerialiser : public GafferBindings::ValuePlugSerialiser
 {
 
 	public :
@@ -96,9 +96,9 @@ class FormatPlugSerialiser : public GafferBindings::ValuePlugSerialiser
 
 } // namespace
 
-void GafferImageBindings::bindFormatPlug()
+void GafferImageBindings::bindAtomicFormatPlug()
 {
-	TypedPlugClass<FormatPlug>();
+	TypedPlugClass<AtomicFormatPlug>();
 
-	Serialisation::registerSerialiser( static_cast<IECore::TypeId>(FormatPlugTypeId), new FormatPlugSerialiser );
+	Serialisation::registerSerialiser( static_cast<IECore::TypeId>(AtomicFormatPlugTypeId), new AtomicFormatPlugSerialiser );
 }

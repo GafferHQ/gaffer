@@ -42,7 +42,7 @@ import Gaffer
 
 import GafferImage
 
-class FormatPlugTest( unittest.TestCase ) :
+class AtomicFormatPlugTest( unittest.TestCase ) :
 
 	def testOldFormatCompatibility( self ) :
 
@@ -56,21 +56,21 @@ class FormatPlugTest( unittest.TestCase ) :
 
 		s = Gaffer.ScriptNode()
 		s["n"] = Gaffer.Node()
-		s["n"]["f"] = GafferImage.FormatPlug( "testPlug", defaultValue = GafferImage.Format( 10, 5, .5  ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["n"]["f"] = GafferImage.AtomicFormatPlug( "testPlug", defaultValue = GafferImage.Format( 10, 5, .5  ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 
 		se = s.serialise()
 
 		s2 = Gaffer.ScriptNode()
 		s2.execute( se )
 
-		self.failUnless( s2["n"]["f"].isInstanceOf( GafferImage.FormatPlug.staticTypeId() ) )
+		self.failUnless( s2["n"]["f"].isInstanceOf( GafferImage.AtomicFormatPlug.staticTypeId() ) )
 
 	def testOffsetSerialize( self ) :
 
 		format = GafferImage.Format( IECore.Box2i( IECore.V2i( -5, -11 ), IECore.V2i( 13, 19 ) ), .5 )
 		s = Gaffer.ScriptNode()
 		s["n"] = Gaffer.Node()
-		s["n"]["f"] = GafferImage.FormatPlug( "testPlug", defaultValue = format, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["n"]["f"] = GafferImage.AtomicFormatPlug( "testPlug", defaultValue = format, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 
 		se = s.serialise()
 
@@ -82,7 +82,7 @@ class FormatPlugTest( unittest.TestCase ) :
 	def testInputPlug( self ) :
 
 		n = Gaffer.Node()
-		f = GafferImage.FormatPlug("f", direction = Gaffer.Plug.Direction.In, flags = Gaffer.Plug.Flags.Default )
+		f = GafferImage.AtomicFormatPlug("f", direction = Gaffer.Plug.Direction.In, flags = Gaffer.Plug.Flags.Default )
 		n.addChild( f )
 		s = Gaffer.ScriptNode()
 		s.addChild( n )
@@ -120,7 +120,7 @@ class FormatPlugTest( unittest.TestCase ) :
 
 		s = Gaffer.ScriptNode()
 		s["n"] = Gaffer.Node()
-		s["n"]["p"] = GafferImage.FormatPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["n"]["p"] = GafferImage.AtomicFormatPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		s["n"]["p"].setValue( GafferImage.Format( IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 10 ) ), 2.0 ) )
 		s["n"]["p"].setFlags( Gaffer.Plug.Flags.ReadOnly, True )
 
@@ -135,8 +135,8 @@ class FormatPlugTest( unittest.TestCase ) :
 		s = Gaffer.ScriptNode()
 		s["n1"] = Gaffer.Node()
 		s["n2"] = Gaffer.Node()
-		s["n1"]["user"]["f"] = GafferImage.FormatPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
-		s["n2"]["user"]["f"] = GafferImage.FormatPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["n1"]["user"]["f"] = GafferImage.AtomicFormatPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["n2"]["user"]["f"] = GafferImage.AtomicFormatPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 
 		s["e"] = Gaffer.Expression()
 		s["e"].setExpression( 'f = parent["n1"]["user"]["f"]; b = f.getDisplayWindow(); b.min -= IECore.V2i( 10 ); b.max += IECore.V2i( 20 ); f.setPixelAspect( 0.5 ); f.setDisplayWindow( b ); parent["n2"]["user"]["f"] = f')

@@ -42,7 +42,7 @@ from ImageReaderTest import ImageReaderTest
 from ColorSpaceTest import ColorSpaceTest
 from ObjectToImageTest import ObjectToImageTest
 from FormatTest import FormatTest
-from FormatPlugTest import FormatPlugTest
+from AtomicFormatPlugTest import AtomicFormatPlugTest
 from MergeTest import MergeTest
 from GradeTest import GradeTest
 from ConstantTest import ConstantTest

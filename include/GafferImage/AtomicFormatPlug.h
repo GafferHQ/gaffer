@@ -34,8 +34,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_FORMATPLUG_H
-#define GAFFER_FORMATPLUG_H
+#ifndef GAFFER_ATOMICFORMATPLUG_H
+#define GAFFER_ATOMICFORMATPLUG_H
 
 #include "Gaffer/TypedPlug.h"
 
@@ -45,18 +45,18 @@
 namespace GafferImage
 {
 
-typedef Gaffer::TypedPlug<GafferImage::Format> FormatPlug;
+typedef Gaffer::TypedPlug<GafferImage::Format> AtomicFormatPlug;
 
-IE_CORE_DECLAREPTR( FormatPlug );
+IE_CORE_DECLAREPTR( AtomicFormatPlug );
 
-typedef Gaffer::FilteredChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::Invalid, FormatPlug> > FormatPlugIterator;
-typedef Gaffer::FilteredChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::In, FormatPlug> > InputFormatPlugIterator;
-typedef Gaffer::FilteredChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::Out, FormatPlug> > OutputFormatPlugIterator;
+typedef Gaffer::FilteredChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::Invalid, AtomicFormatPlug> > AtomicFormatPlugIterator;
+typedef Gaffer::FilteredChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::In, AtomicFormatPlug> > InputAtomicFormatPlugIterator;
+typedef Gaffer::FilteredChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::Out, AtomicFormatPlug> > OutputAtomicFormatPlugIterator;
 
-typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::Invalid, FormatPlug>, Gaffer::PlugPredicate<> > RecursiveFormatPlugIterator;
-typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::In, FormatPlug>, Gaffer::PlugPredicate<> > RecursiveInputFormatPlugIterator;
-typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::Out, FormatPlug>, Gaffer::PlugPredicate<> > RecursiveOutputFormatPlugIterator;
+typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::Invalid, AtomicFormatPlug>, Gaffer::PlugPredicate<> > RecursiveAtomicFormatPlugIterator;
+typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::In, AtomicFormatPlug>, Gaffer::PlugPredicate<> > RecursiveInputAtomicFormatPlugIterator;
+typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::Out, AtomicFormatPlug>, Gaffer::PlugPredicate<> > RecursiveOutputAtomicFormatPlugIterator;
 
 } // namespace GafferImage
 
-#endif // GAFFER_FORMATPLUG_H
+#endif // GAFFER_ATOMICFORMATPLUG_H

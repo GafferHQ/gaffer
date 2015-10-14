@@ -41,7 +41,7 @@
 #include "Gaffer/ScriptNode.h"
 
 #include "GafferImage/FormatData.h"
-#include "GafferImage/FormatPlug.h"
+#include "GafferImage/AtomicFormatPlug.h"
 
 using namespace Gaffer;
 using namespace GafferImage;
@@ -49,16 +49,16 @@ using namespace GafferImage;
 namespace Gaffer
 {
 
-IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( GafferImage::FormatPlug, FormatPlugTypeId )
+IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( GafferImage::AtomicFormatPlug, AtomicFormatPlugTypeId )
 
 template<>
-Format FormatPlug::getValue( const IECore::MurmurHash *precomputedHash ) const
+Format AtomicFormatPlug::getValue( const IECore::MurmurHash *precomputedHash ) const
 {
 	IECore::ConstObjectPtr o = getObjectValue( precomputedHash );
 	const GafferImage::FormatData *d = IECore::runTimeCast<const GafferImage::FormatData>( o.get() );
 	if( !d )
 	{
-		throw IECore::Exception( "FormatPlug::getObjectValue() didn't return FormatData - is the hash being computed correctly?" );
+		throw IECore::Exception( "AtomicFormatPlug::getObjectValue() didn't return FormatData - is the hash being computed correctly?" );
 	}
 	Format result = d->readable();
 	if( direction() == Plug::In && result.getDisplayWindow().isEmpty() && inCompute() )
@@ -69,19 +69,19 @@ Format FormatPlug::getValue( const IECore::MurmurHash *precomputedHash ) const
 }
 
 template<>
-IECore::MurmurHash FormatPlug::hash() const
+IECore::MurmurHash AtomicFormatPlug::hash() const
 {
-	const FormatPlug *p = source<FormatPlug>();
-	
+	const AtomicFormatPlug *p = source<AtomicFormatPlug>();
+
 	if( p->direction() == Plug::In )
 	{
 		IECore::ConstObjectPtr o = p->getObjectValue();
 		const GafferImage::FormatData *d = IECore::runTimeCast<const GafferImage::FormatData>( o.get() );
 		if( !d )
 		{
-			throw IECore::Exception( "FormatPlug::getObjectValue() didn't return FormatData - is the hash being computed correctly?" );
+			throw IECore::Exception( "AtomicFormatPlug::getObjectValue() didn't return FormatData - is the hash being computed correctly?" );
 		}
-		
+
 		Format v = d->readable();
 		if( v.getDisplayWindow().isEmpty() )
 		{
@@ -93,7 +93,7 @@ IECore::MurmurHash FormatPlug::hash() const
 		result.append( v.getPixelAspect() );
 		return result;
 	}
-	
+
 	return p->ValuePlug::hash();
 }
 

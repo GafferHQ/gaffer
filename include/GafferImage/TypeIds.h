@@ -54,7 +54,7 @@ enum TypeId
 	ColorSpaceTypeId = 110758,
 	ObjectToImageTypeId = 110759,
 	FormatDataTypeId = 110760,
-	FormatPlugTypeId = 110761,
+	AtomicFormatPlugTypeId = 110761,
 	MergeTypeId = 110762,
 	GradeTypeId = 110763,
 	ShuffleTypeId = 110764,
