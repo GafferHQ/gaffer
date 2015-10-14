@@ -96,5 +96,6 @@ class FormatPlugValueWidget( GafferUI.PlugValueWidget ) :
 		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
 			self.getPlug().setValue( fmt )
 
+GafferUI.PlugValueWidget.registerType( GafferImage.FormatPlug, FormatPlugValueWidget )
 GafferUI.PlugValueWidget.registerType( GafferImage.AtomicFormatPlug, FormatPlugValueWidget )
 
