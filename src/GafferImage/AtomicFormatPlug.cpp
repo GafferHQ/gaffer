@@ -36,9 +36,6 @@
 
 #include "Gaffer/TypedPlug.h"
 #include "Gaffer/TypedPlug.inl"
-#include "Gaffer/Context.h"
-#include "Gaffer/Node.h"
-#include "Gaffer/ScriptNode.h"
 
 #include "GafferImage/FormatData.h"
 #include "GafferImage/AtomicFormatPlug.h"
@@ -50,53 +47,6 @@ namespace Gaffer
 {
 
 IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( GafferImage::AtomicFormatPlug, AtomicFormatPlugTypeId )
-
-template<>
-Format AtomicFormatPlug::getValue( const IECore::MurmurHash *precomputedHash ) const
-{
-	IECore::ConstObjectPtr o = getObjectValue( precomputedHash );
-	const GafferImage::FormatData *d = IECore::runTimeCast<const GafferImage::FormatData>( o.get() );
-	if( !d )
-	{
-		throw IECore::Exception( "AtomicFormatPlug::getObjectValue() didn't return FormatData - is the hash being computed correctly?" );
-	}
-	Format result = d->readable();
-	if( direction() == Plug::In && result.getDisplayWindow().isEmpty() && inCompute() )
-	{
-		return Context::current()->get<Format>( Format::defaultFormatContextName, Format() );
-	}
-	return result;
-}
-
-template<>
-IECore::MurmurHash AtomicFormatPlug::hash() const
-{
-	const AtomicFormatPlug *p = source<AtomicFormatPlug>();
-
-	if( p->direction() == Plug::In )
-	{
-		IECore::ConstObjectPtr o = p->getObjectValue();
-		const GafferImage::FormatData *d = IECore::runTimeCast<const GafferImage::FormatData>( o.get() );
-		if( !d )
-		{
-			throw IECore::Exception( "AtomicFormatPlug::getObjectValue() didn't return FormatData - is the hash being computed correctly?" );
-		}
-
-		Format v = d->readable();
-		if( v.getDisplayWindow().isEmpty() )
-		{
-			v = Context::current()->get<Format>( Format::defaultFormatContextName, Format() );
-		}
-
-		IECore::MurmurHash result;
-		result.append( v.getDisplayWindow() );
-		result.append( v.getPixelAspect() );
-		return result;
-	}
-
-	return p->ValuePlug::hash();
-}
-
 template class TypedPlug<GafferImage::Format>;
 
 } // namespace Gaffer
