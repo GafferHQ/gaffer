@@ -179,6 +179,14 @@ class ResampleTest( GafferImageTest.ImageTestCase ) :
 		r["filterWidth"].setValue( IECore.V2f( 10 ) )
 		self.assertEqual( r["out"]["dataWindow"].getValue(), IECore.Box2i( d.min - IECore.V2i( 5 ), d.max + IECore.V2i( 5 ) ) )
 
+	# Tests that hashes pass through when the input data is not Flat
+	def testNonFlatHashPassThrough( self ) :
+
+		resample = GafferImage.Resample()
+		resample["dataWindow"].setValue( IECore.Box2f( IECore.V2f( 0 ), IECore.V2f( 1024 ) ) )
+
+		self._testNonFlatHashPassThrough( resample )
+
 	def __matrix( self, inputDataWindow, outputDataWindow ) :
 
 		return IECore.M33f()
