@@ -55,8 +55,8 @@ class ResizeTest( GafferTest.TestCase ) :
 		c1 = Gaffer.Context()
 		c2 = Gaffer.Context()
 
-		c1[GafferImage.Format.defaultFormatContextName] = GafferImage.FormatData( f1 )
-		c2[GafferImage.Format.defaultFormatContextName] = GafferImage.FormatData( f2 )
+		GafferImage.FormatPlug.setDefaultFormat( c1, f1 )
+		GafferImage.FormatPlug.setDefaultFormat( c2, f2 )
 
 		with c1 :
 			self.assertEqual( r["out"]["format"].getValue(), f1 )
