@@ -88,6 +88,15 @@ class ResizeTest( GafferImageTest.ImageTestCase ) :
 				)
 			)
 
+	# Tests that hashes pass through when the input data is not Flat
+	def testNonFlatHashPassThrough( self ) :
+
+		resize = GafferImage.Resize()
+		resize["format"].setValue( GafferImage.Format( IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 1024 ) ), 1 ) )
+
+		self._testNonFlatHashPassThrough( resize )
+
+
 	def testFit( self ) :
 
 		c = GafferImage.Constant()
