@@ -45,6 +45,7 @@
 
 #include "GafferImage/ImagePlug.h"
 #include "GafferImage/AtomicFormatPlug.h"
+#include "GafferImage/FormatPlug.h"
 
 using namespace std;
 using namespace Imath;
@@ -345,11 +346,11 @@ IECore::ImagePrimitivePtr ImagePlug::image() const
 	}
 
 	// use the default format if we don't have an explicit one.
-	/// \todo: remove this once AtomicFormatPlug is handling it for
+	/// \todo: remove this once FormatPlug is handling it for
 	/// us during ExecutableNode::execute (see issue #887).
 	if( format.getDisplayWindow().isEmpty() )
 	{
-		format = Context::current()->get<Format>( Format::defaultFormatContextName, Format() );
+		format = FormatPlug::getDefaultFormat( Context::current() );
 	}
 
 	Box2i newDisplayWindow = format.toEXRSpace( format.getDisplayWindow() );
