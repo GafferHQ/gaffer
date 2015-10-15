@@ -84,8 +84,6 @@ class ImageStats : public Gaffer::ComputeNode
 
 	private :
 
-		void inputChanged( Gaffer::Plug *plug );
-
 		/// Sets channelName to the channel which corresponds to the output plug. The channel name is
 		/// computed from the intersection of the "in" plug's channels and the "channels" plug's channels.
 		/// If multiple channels are found to have the same channel index, the first is used.
