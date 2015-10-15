@@ -155,6 +155,15 @@ class ImageTransformTest( GafferImageTest.ImageTestCase ) :
 
 		self.assertEqual( t["out"]["format"].hash(), r["out"]["format"].hash() )
 
+
+	def testNonFlatHashPassThrough( self ) :
+
+		transform = GafferImage.ImageTransform()
+		transform["transform"]["translate"].setValue( IECore.V2f( 20., 20.5 ) )
+
+		self._testNonFlatHashPassThrough( transform )
+
+
 	def testDisabled( self ) :
 
 		r = GafferImage.ImageReader()
