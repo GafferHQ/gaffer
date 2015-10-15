@@ -66,32 +66,6 @@ class AtomicFormatPlugSerialiser : public GafferBindings::ValuePlugSerialiser
 			modules.insert( "IECore" );
 		}
 
-		virtual std::string postConstructor( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const
-		{
-			std::string result;
-
-			const Plug *plug = static_cast<const Plug *>( graphComponent );
-			if( plug->node()->typeId() == static_cast<IECore::TypeId>(ScriptNodeTypeId) )
-			{
-				// If this is the default format plug then write out all of the formats.
-				/// \todo Why do we do this? Unfortunately it's very hard to tell because
-				/// there are no unit tests for it. Why don't we allow the config files to
-				/// just recreate the formats next time?
-				vector<string> names;
-				GafferImage::Format::formatNames( names );
-				for( vector<string>::const_iterator it = names.begin(), eIt = names.end(); it != eIt; ++it )
-				{
-					result +=
-						"GafferImage.Format.registerFormat( " +
-						formatRepr( Format::getFormat( *it ) ) +
-						", \"" + *it + "\" )\n";
-				}
-			}
-
-			result += ValuePlugSerialiser::postConstructor( graphComponent, identifier, serialisation );
-			return result;
-		}
-
 };
 
 } // namespace
