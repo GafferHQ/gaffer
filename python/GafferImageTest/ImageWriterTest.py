@@ -246,7 +246,10 @@ class ImageWriterTest( GafferTest.TestCase ) :
 		self.failIf( os.path.exists( testScanlineFile ) )
 		self.failIf( os.path.exists( testTileFile ) )
 
-		GafferImage.Format.setDefaultFormat( s, GafferImage.Format( IECore.Box2i( IECore.V2i( -7, -2 ), IECore.V2i( 23, 25 ) ), 1. ) )
+		GafferImage.FormatPlug.acquireDefaultFormatPlug( s ).setValue(
+			GafferImage.Format( IECore.Box2i( IECore.V2i( -7, -2 ), IECore.V2i( 23, 25 ) ), 1. )
+		)
+
 		w1["in"].setInput( g["out"] )
 		w1["fileName"].setValue( testScanlineFile )
 		w1["channels"].setValue( IECore.StringVectorData( g["out"]["channelNames"].getValue() ) )
@@ -478,35 +481,28 @@ class ImageWriterTest( GafferTest.TestCase ) :
 
 	def testOffsetDisplayWindowWrite( self ) :
 
-		s = Gaffer.ScriptNode()
 		c = GafferImage.Constant()
-		s.addChild( c )
+		format = GafferImage.Format( IECore.Box2i( IECore.V2i( -20, -15 ), IECore.V2i( 29, 14 ) ), 1. )
+		c["format"].setValue( format )
 
-		with s.context() :
+		testFile = self.__testFile( "offsetDisplayWindow", "RGBA", "exr" )
+		w = GafferImage.ImageWriter()
+		w["in"].setInput( c["out"] )
+		w["fileName"].setValue( testFile )
 
-			format = GafferImage.Format( IECore.Box2i( IECore.V2i( -20, -15 ), IECore.V2i( 29, 14 ) ), 1. )
-			GafferImage.Format.setDefaultFormat( s, format )
+		w.execute()
 
-			self.assertEqual( c["out"]["format"].getValue(), format )
+		self.failUnless( os.path.exists( testFile ) )
+		i = IECore.Reader.create( testFile ).read()
 
-			testFile = self.__testFile( "offsetDisplayWindow", "RGBA", "exr" )
-			w = GafferImage.ImageWriter()
-			w["in"].setInput( c["out"] )
-			w["fileName"].setValue( testFile )
+		# Cortex uses the EXR convention, which differs
+		# from Gaffer's, so we use the conversion methods to
+		# check that the image windows are as expected.
 
-			w.execute()
-
-			self.failUnless( os.path.exists( testFile ) )
-			i = IECore.Reader.create( testFile ).read()
-
-			# Cortex uses the EXR convention, which differs
-			# from Gaffer's, so we use the conversion methods to
-			# check that the image windows are as expected.
-
-			self.assertEqual(
-				format.toEXRSpace( format.getDisplayWindow() ),
-				i.displayWindow
-			)
+		self.assertEqual(
+			format.toEXRSpace( format.getDisplayWindow() ),
+			i.displayWindow
+		)
 
 	def testHash( self ) :
 
