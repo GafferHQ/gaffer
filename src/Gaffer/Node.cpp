@@ -89,12 +89,14 @@ const Gaffer::Plug *Node::userPlug() const
 
 ScriptNode *Node::scriptNode()
 {
-	return ancestor<ScriptNode>();
+	ScriptNode *s = IECore::runTimeCast<ScriptNode>( this );
+	return s ? s : ancestor<ScriptNode>();
 }
 
 const ScriptNode *Node::scriptNode() const
 {
-	return ancestor<ScriptNode>();
+	const ScriptNode *s = IECore::runTimeCast<const ScriptNode>( this );
+	return s ? s : ancestor<ScriptNode>();
 }
 
 bool Node::acceptsChild( const GraphComponent *potentialChild ) const

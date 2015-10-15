@@ -80,8 +80,9 @@ class NodeTest( GafferTest.TestCase ) :
 		sn.addChild( n )
 		n.addChild( n2 )
 
-		self.assert_( n.scriptNode().isSame( sn ) )
-		self.assert_( n2.scriptNode().isSame( sn ) )
+		self.assertTrue( sn.scriptNode().isSame( sn ) )
+		self.assertTrue( n.scriptNode().isSame( sn ) )
+		self.assertTrue( n2.scriptNode().isSame( sn ) )
 
 	def testExtendedConstructor( self ) :
 
