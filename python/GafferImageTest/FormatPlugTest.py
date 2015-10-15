@@ -83,5 +83,96 @@ class FormatPlugTest( unittest.TestCase ) :
 		self.assertEqual( p["displayWindow"].getValue(), v.getDisplayWindow() )
 		self.assertEqual( p["pixelAspect"].getValue(), v.getPixelAspect() )
 
+	def testDefaultFormatFromContext( self ) :
+
+		constant = GafferImage.Constant()
+
+		with Gaffer.Context() as context :
+
+			# Even if we haven't specified a default context, we should still
+			# be given something.
+			self.assertFalse(
+				GafferImage.empty(
+					constant["out"]["format"].getValue().getDisplayWindow()
+				)
+			)
+
+			# And if we specify something specific, we should get it.
+			f = GafferImage.Format( 100, 200, 2 )
+			GafferImage.FormatPlug.setDefaultFormat( context, f )
+			self.assertEqual( GafferImage.FormatPlug.getDefaultFormat( context ), f )
+			self.assertEqual( constant["out"]["format"].getValue(), f )
+
+			f = GafferImage.Format( 200, 400, 1 )
+			GafferImage.FormatPlug.setDefaultFormat( context, f )
+			self.assertEqual( GafferImage.FormatPlug.getDefaultFormat( context ), f )
+			self.assertEqual( constant["out"]["format"].getValue(), f )
+
+	def testAcquireDefaultFormatPlug( self ) :
+
+		s1 = Gaffer.ScriptNode()
+		s2 = Gaffer.ScriptNode()
+
+		p1A = GafferImage.FormatPlug.acquireDefaultFormatPlug( s1 )
+		p1B = GafferImage.FormatPlug.acquireDefaultFormatPlug( s1 )
+
+		p2A = GafferImage.FormatPlug.acquireDefaultFormatPlug( s2 )
+		p2B = GafferImage.FormatPlug.acquireDefaultFormatPlug( s2 )
+
+		self.assertTrue( p1A.isSame( p1B ) )
+		self.assertTrue( p2A.isSame( p2B ) )
+		self.assertFalse( p1A.isSame( p2A ) )
+
+	def testDefaultFormatFromScript( self ) :
+
+		s = Gaffer.ScriptNode()
+		self.assertFalse( "defaultFormat" in s )
+
+		s["c"] = GafferImage.Constant()
+		self.assertTrue( "defaultFormat" in s )
+
+		defaultFormatPlug = GafferImage.FormatPlug.acquireDefaultFormatPlug( s )
+		self.assertTrue( defaultFormatPlug.isSame( s["defaultFormat"] ) )
+
+		with s.context() :
+
+			self.assertFalse(
+				GafferImage.empty(
+					s["c"]["out"]["format"].getValue().getDisplayWindow()
+				)
+			)
+
+			f = GafferImage.Format( 100, 200, 2 )
+			defaultFormatPlug.setValue( f )
+			self.assertEqual( s["c"]["out"]["format"].getValue(), f )
+
+			f = GafferImage.Format( 200, 400, 1 )
+			defaultFormatPlug.setValue( f )
+			self.assertEqual( s["c"]["out"]["format"].getValue(), f )
+
+	def testDefaultFormatAfterScriptLoad( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["c"] = GafferImage.Constant()
+
+		f = GafferImage.Format( 100, 100 )
+		GafferImage.FormatPlug.acquireDefaultFormatPlug( s ).setValue( f )
+		with s.context() :
+			self.assertEqual( s["c"]["out"]["format"].getValue(), f )
+
+		s2 = Gaffer.ScriptNode( "s2" )
+		s2.execute( s.serialise() )
+		with s2.context() :
+			self.assertEqual( s2["c"]["out"]["format"].getValue(), f )
+
+	def testDefaultFormatFromScriptWithBox( self ) :
+
+		s = Gaffer.ScriptNode()
+		self.assertFalse( "defaultFormat" in s )
+
+		s["b"] = Gaffer.Box()
+		s["b"]["c"] = GafferImage.Constant()
+		self.assertTrue( "defaultFormat" in s )
+
 if __name__ == "__main__":
 	unittest.main()

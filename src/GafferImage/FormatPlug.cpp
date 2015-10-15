@@ -34,12 +34,22 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include "boost/bind.hpp"
+
+#include "Gaffer/ScriptNode.h"
+#include "Gaffer/Context.h"
+
 #include "GafferImage/FormatPlug.h"
+#include "GafferImage/FormatData.h"
 
 using namespace Gaffer;
 using namespace GafferImage;
 
 IE_CORE_DEFINERUNTIMETYPED( FormatPlug );
+
+const IECore::InternedString g_defaultFormatContextName( "image:defaultFormat" );
+static const IECore::InternedString g_defaultFormatPlugName( "defaultFormat" );
+static const Format g_defaultFormatFallback( 1920, 1080 );
 
 FormatPlug::FormatPlug( const std::string &name, Direction direction, Format defaultValue, unsigned flags )
 	:	ValuePlug( name, direction, flags ), m_defaultValue( defaultValue )
@@ -96,5 +106,83 @@ void FormatPlug::setValue( const Format &value )
 
 Format FormatPlug::getValue() const
 {
-	return Format( displayWindowPlug()->getValue(), pixelAspectPlug()->getValue() );
+	Format result( displayWindowPlug()->getValue(), pixelAspectPlug()->getValue() );
+	if( direction() == Plug::In && result.getDisplayWindow().isEmpty() && inCompute() )
+	{
+		return getDefaultFormat( Context::current() );
+	}
+	return result;
 }
+
+IECore::MurmurHash FormatPlug::hash() const
+{
+	if( direction() == Plug::In )
+	{
+		Format v( displayWindowPlug()->getValue(), pixelAspectPlug()->getValue() );
+		if( v.getDisplayWindow().isEmpty() )
+		{
+			v = getDefaultFormat( Context::current() );
+		}
+
+		IECore::MurmurHash result;
+		result.append( v.getDisplayWindow() );
+		result.append( v.getPixelAspect() );
+		return result;
+	}
+
+	return ValuePlug::hash();
+}
+
+Format FormatPlug::getDefaultFormat( const Gaffer::Context *context )
+{
+	return context->get<Format>( g_defaultFormatContextName, g_defaultFormatFallback );
+}
+
+void FormatPlug::setDefaultFormat( Gaffer::Context *context, const Format &format )
+{
+	context->set( g_defaultFormatContextName, format );
+}
+
+FormatPlug *FormatPlug::acquireDefaultFormatPlug( Gaffer::ScriptNode *scriptNode )
+{
+	if( FormatPlug *p = scriptNode->getChild<FormatPlug>( g_defaultFormatPlugName ) )
+	{
+		return p;
+	}
+
+	FormatPlugPtr p = new FormatPlug( g_defaultFormatPlugName, Plug::In, g_defaultFormatFallback, Plug::Default | Plug::Dynamic );
+	scriptNode->setChild( g_defaultFormatPlugName, p );
+	return p.get();
+}
+
+void FormatPlug::parentChanging( Gaffer::GraphComponent *newParent )
+{
+	ValuePlug::parentChanging( newParent );
+
+	m_plugDirtiedConnection.disconnect();
+
+	if( getName() != g_defaultFormatPlugName )
+	{
+		return;
+	}
+
+	if( ScriptNode *scriptNode = IECore::runTimeCast<ScriptNode>( newParent ) )
+	{
+		// We are the default format plug. Transfer our value into the
+		// script's context, and arrange to transfer it again later if
+		// it changes.
+		setDefaultFormat( scriptNode->context(), getValue() );
+		m_plugDirtiedConnection = scriptNode->plugDirtiedSignal().connect(
+			boost::bind( &FormatPlug::plugDirtied, this, ::_1 )
+		);
+	}
+}
+
+void FormatPlug::plugDirtied( Gaffer::Plug *plug )
+{
+	if( plug == this )
+	{
+		setDefaultFormat( parent<ScriptNode>()->context(), getValue() );
+	}
+}
+

@@ -93,29 +93,6 @@ class AtomicFormatPlugTest( unittest.TestCase ) :
 		# The default value of any input plug should be it's real value regardless of whether it is empty or not.
 		self.assertEqual( f1, GafferImage.Format() )
 
-	def testDefaultFormatOutput( self ) :
-
-		n = GafferImage.Constant()
-		s = Gaffer.ScriptNode()
-		s.addChild( n )
-
-		# Get the default format
-		defaultFormat = GafferImage.Format.getDefaultFormat( s )
-
-		with s.context() :
-			f1 = n["out"]["format"].getValue()
-
-		# Check that the output of the constant node matches the default format...
-		self.assertEqual( defaultFormat, f1 )
-
-		# Now change the default format and check it again!
-		GafferImage.Format.setDefaultFormat( s, GafferImage.Format( 100, 102, 1.3 ) )
-		with s.context() :
-			f1 = n["out"]["format"].getValue()
-
-		# Check that the output of the constant node matches the default format...
-		self.assertEqual( GafferImage.Format( 100, 102, 1.3 ), f1 )
-
 	def testReadOnlySerialisation( self ) :
 
 		s = Gaffer.ScriptNode()

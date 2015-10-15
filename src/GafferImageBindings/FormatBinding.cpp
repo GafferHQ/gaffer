@@ -65,11 +65,6 @@ struct UnaryFormatSlotCaller
 	}
 };
 
-boost::python::str defaultFormatContextName()
-{
-	return boost::python::str( Format::defaultFormatContextName.string() );
-}
-
 boost::python::list formatNamesList()
 {
 	std::vector<std::string> names;
@@ -122,8 +117,6 @@ void bindFormat()
 	static const Format &(*registerFormatPtr2)( const Format & ) (&Format::registerFormat);
 	static void (*removeFormatPtr1)( const Format & ) (&Format::removeFormat);
 	static void (*removeFormatPtr2)( const std::string & ) (&Format::removeFormat);
-	static void (*setDefaultFormatPtr1)( ScriptNode *scriptNode, const Format & ) (&Format::setDefaultFormat);
-	static void (*setDefaultFormatPtr2)( ScriptNode *scriptNode, const std::string & ) (&Format::setDefaultFormat);
 
 	class_<Format>( "Format" )
 
@@ -164,9 +157,6 @@ void bindFormat()
 		// Static bindings
 		.def( "formatAddedSignal", &Format::formatAddedSignal, return_value_policy<reference_existing_object>() ).staticmethod( "formatAddedSignal" )
 		.def( "formatRemovedSignal", &Format::formatRemovedSignal, return_value_policy<reference_existing_object>() ).staticmethod( "formatRemovedSignal" )
-		.def( "setDefaultFormat", setDefaultFormatPtr1, return_value_policy<reference_existing_object>() )
-		.def( "setDefaultFormat", setDefaultFormatPtr2, return_value_policy<reference_existing_object>() ).staticmethod( "setDefaultFormat" )
-		.def( "getDefaultFormat", &Format::getDefaultFormat, return_value_policy<return_by_value>() ).staticmethod( "getDefaultFormat" )
 		.def( "removeAllFormats", &Format::removeAllFormats ).staticmethod( "removeAllFormats" )
 		.def( "registerFormat", registerFormatPtr1, return_value_policy<reference_existing_object>() )
 		.def( "registerFormat", registerFormatPtr2, return_value_policy<reference_existing_object>() ).staticmethod( "registerFormat" )
@@ -178,7 +168,6 @@ void bindFormat()
 		.def( "formatNames", &formatNamesList ).staticmethod( "formatNames" )
 		.def( "__eq__", &Format::operator== )
 		.def( "__repr__", &formatRepr )
-		.add_static_property( "defaultFormatContextName", &defaultFormatContextName )
 	;
 
 	SignalClass<Format::UnaryFormatSignal, DefaultSignalCaller<Format::UnaryFormatSignal>, UnaryFormatSlotCaller >( "UnaryFormatSignal" );

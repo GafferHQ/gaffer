@@ -41,16 +41,6 @@
 
 #include "OpenEXR/ImathBox.h"
 
-#include "IECore/InternedString.h"
-
-namespace Gaffer
-{
-
-class ScriptNode;
-class Plug;
-
-} // namespace Gaffer
-
 namespace GafferImage
 {
 
@@ -100,25 +90,12 @@ class Format
 		inline Imath::Box2i toEXRSpace( const Imath::Box2i &internalSpace ) const;
 		//@}
 
-		/// @name Default Format methods
-		/// These functions are used to create, set and get the formatPlug
-		/// which resides on the script node. When a GafferImage node is created
-		/// addDefaultFormatPlug() is called from the "parentChanged" signal. This
-		/// initializes the default format which is held as a plug on the script node.
-		/// The Script Node's plugSetSignal() is connected to the addFormatToContext()
-		/// slot which updates an entry on the context every time that the plug is changed.
-		/// This causes the hash of the context to change which triggers the viewer to
-		/// recalculate it's output image.
-		/// \todo The Format should just be a basic class like Box or Vec -
-		/// keep the named format registry here but move all the stuff related
-		/// to nodes and plugs and contexts into FormatPlug.
+		/// @name Format registry
+		/// Maintains a list of named formats which may be registered
+		/// by config files, and made available to the user via the UI.
+		/// \todo Simplify and bring into line with the other registry APIs.
 		////////////////////////////////////////////////////////////////////
 		//@{
-		static void setDefaultFormat( Gaffer::ScriptNode *scriptNode, const Format &format );
-		static void setDefaultFormat( Gaffer::ScriptNode *scriptNode, const std::string &name );
-		static const Format getDefaultFormat( Gaffer::ScriptNode *scriptNode );
-
-		/// Accessors and creators for the format list.
 		static const Format &registerFormat( const Format &format, const std::string &name );
 		static const Format &registerFormat( const Format &format );
 
@@ -130,17 +107,10 @@ class Format
 		static const Format &getFormat( const std::string &name );
 		static std::string formatName( const Format &format );
 		static void formatNames( std::vector< std::string > &names );
-		static void addFormatToContext( Gaffer::Plug *defaultFormatPlug );
 
 		static UnaryFormatSignal &formatAddedSignal();
 		static UnaryFormatSignal &formatRemovedSignal();
 		//@}
-
-		/// Called by the Node class to setup the format plug on the script node.
-		static void addDefaultFormatPlug( Gaffer::ScriptNode *scriptNode );
-
-		static const IECore::InternedString defaultFormatContextName;
-		static const IECore::InternedString defaultFormatPlugName;
 
 	private :
 

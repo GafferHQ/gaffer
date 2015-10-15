@@ -42,6 +42,13 @@
 #include "GafferImage/Format.h"
 #include "GafferImage/TypeIds.h"
 
+namespace Gaffer
+{
+
+IE_CORE_FORWARDDECLARE( ScriptNode )
+
+} // namespace Gaffer
+
 namespace GafferImage
 {
 
@@ -80,11 +87,53 @@ class FormatPlug : public Gaffer::ValuePlug
 
 		/// \undoable
 		void setValue( const Format &value );
+		/// Implemented to substitute in the default format from the current
+		/// context if the current value is empty.
+		/// \note Substitution is not performed automatically when accessing
+		/// individual components (display window and pixel aspect) from the
+		/// child plugs directly.
 		Format getValue() const;
+
+		/// Reimplemented to account for the substitutions performed in getValue().
+		virtual IECore::MurmurHash hash() const;
+		/// Ensures the method above doesn't mask
+		/// ValuePlug::hash( h )
+		using ValuePlug::hash;
+
+		/// @name Default format
+		///
+		/// The FormatPlug provides the concept of a default format - one which
+		/// will be used automatically wherever a FormatPlug contains an empty
+		/// (default constructed) value. The default format is specified via a
+		/// context variable, so the same node graph may be evaluated with
+		/// different defaults in different contexts.
+		///
+		/// To expose this mechanism to user control, a default format may be
+		/// specified for each script via a plug on the ScriptNode itself.
+		////////////////////////////////////////////////////////////////////
+		//@{
+		/// Returns the default format in effect for the specified context.
+		static Format getDefaultFormat( const Gaffer::Context *context );
+		/// Sets the default format for the specified context.
+		static void setDefaultFormat( Gaffer::Context *context, const Format &format );
+		/// Acquires (creating if necessary) a plug which the user can use
+		/// to specify the default format for a particular script. When the
+		/// value of this plug is changed, the default format within
+		/// ScriptNode::context() will be updated automatically.
+		/// \todo This is currently called automatically in ImageNode::parentChanging(),
+		/// but it would be better to leave it to application config
+		/// files to call it, so each application can decide if it is
+		/// appropriate or not.
+		static FormatPlug *acquireDefaultFormatPlug( Gaffer::ScriptNode *scriptNode );
+		//@}
 
 	private :
 
+		virtual void parentChanging( Gaffer::GraphComponent *newParent );
+		void plugDirtied( Gaffer::Plug *plug );
+
 		Format m_defaultValue;
+		boost::signals::scoped_connection m_plugDirtiedConnection;
 
 };
 

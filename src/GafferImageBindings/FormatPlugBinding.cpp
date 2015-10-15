@@ -37,13 +37,16 @@
 #include "boost/python.hpp"
 #include "boost/format.hpp"
 
+#include "Gaffer/ScriptNode.h"
+#include "Gaffer/Context.h"
+
 #include "GafferBindings/ValuePlugBinding.h"
 
 #include "GafferImage/FormatPlug.h"
 #include "GafferImageBindings/FormatPlugBinding.h"
 
-
 using namespace boost::python;
+using namespace IECorePython;
 using namespace Gaffer;
 using namespace GafferBindings;
 using namespace GafferImage;
@@ -100,6 +103,12 @@ void GafferImageBindings::bindFormatPlug()
 		.def( "defaultValue", &FormatPlug::defaultValue, return_value_policy<boost::python::copy_const_reference>() )
 		.def( "setValue", &setValue )
 		.def( "getValue", &getValue )
+		.def( "setDefaultFormat", &FormatPlug::setDefaultFormat )
+		.staticmethod( "setDefaultFormat" )
+		.def( "getDefaultFormat", &FormatPlug::getDefaultFormat )
+		.staticmethod( "getDefaultFormat" )
+		.def( "acquireDefaultFormatPlug", &FormatPlug::acquireDefaultFormatPlug, return_value_policy<CastToIntrusivePtr>() )
+		.staticmethod( "acquireDefaultFormatPlug" )
 	;
 
 	Serialisation::registerSerialiser( FormatPlug::staticTypeId(), new FormatPlugSerialiser );
