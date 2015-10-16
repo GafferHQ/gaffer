@@ -34,53 +34,27 @@
 
 #include "boost/python.hpp"
 #include "boost/format.hpp"
+#include "boost/lexical_cast.hpp"
 
-#include "Gaffer/ScriptNode.h"
-
-#include "GafferBindings/SignalBinding.h"
 #include "GafferImageBindings/FormatBinding.h"
 
 using namespace boost::python;
-using namespace IECore;
-using namespace Gaffer;
-using namespace GafferBindings;
 using namespace GafferImage;
 
 namespace
 {
 
-struct UnaryFormatSlotCaller
-{
-	boost::signals::detail::unusable operator()( boost::python::object slot, const std::string &s )
-	{
-		try
-		{
-			slot( s );
-		}
-		catch( const error_already_set &e )
-		{
-			PyErr_PrintEx( 0 ); // clears the error status
-		}
-		return boost::signals::detail::unusable();
-	}
-};
-
-boost::python::list formatNamesList()
+boost::python::list registeredFormats()
 {
 	std::vector<std::string> names;
-	Format::formatNames( names );
+	Format::registeredFormats( names );
 	boost::python::list result;
-	for( std::vector<std::string>::const_iterator it = names.begin(); it != names.end(); it++ )
+	for( std::vector<std::string>::const_iterator it = names.begin(), eIt = names.end(); it != eIt; ++it )
 	{
 		result.append( *it );
 	}
 	return result;
 }
-
-} // namespace
-
-namespace GafferImageBindings
-{
 
 std::string formatRepr( const GafferImage::Format &format )
 {
@@ -110,14 +84,10 @@ std::string formatRepr( const GafferImage::Format &format )
 	}
 }
 
-void bindFormat()
-{
-	// Useful function pointers to the overloaded members
-	static const Format &(*registerFormatPtr1)( const Format &, const std::string & ) (&Format::registerFormat);
-	static const Format &(*registerFormatPtr2)( const Format & ) (&Format::registerFormat);
-	static void (*removeFormatPtr1)( const Format & ) (&Format::removeFormat);
-	static void (*removeFormatPtr2)( const std::string & ) (&Format::removeFormat);
+} // namespace
 
+void GafferImageBindings::bindFormat()
+{
 	class_<Format>( "Format" )
 
 		.def(
@@ -154,24 +124,15 @@ void bindFormat()
 		.def( "toEXRSpace", ( Imath::V2i (Format::*)( const Imath::V2i & ) const )&Format::toEXRSpace )
 		.def( "toEXRSpace", ( Imath::Box2i (Format::*)( const Imath::Box2i & ) const )&Format::toEXRSpace )
 
-		// Static bindings
-		.def( "formatAddedSignal", &Format::formatAddedSignal, return_value_policy<reference_existing_object>() ).staticmethod( "formatAddedSignal" )
-		.def( "formatRemovedSignal", &Format::formatRemovedSignal, return_value_policy<reference_existing_object>() ).staticmethod( "formatRemovedSignal" )
-		.def( "removeAllFormats", &Format::removeAllFormats ).staticmethod( "removeAllFormats" )
-		.def( "registerFormat", registerFormatPtr1, return_value_policy<reference_existing_object>() )
-		.def( "registerFormat", registerFormatPtr2, return_value_policy<reference_existing_object>() ).staticmethod( "registerFormat" )
-		.def( "removeFormat", removeFormatPtr1, return_value_policy<reference_existing_object>() )
-		.def( "removeFormat", removeFormatPtr2, return_value_policy<reference_existing_object>() ).staticmethod( "removeFormat" )
-		.def( "formatCount", &Format::formatCount, return_value_policy<return_by_value>() ).staticmethod( "formatCount" )
-		.def( "getFormat", &Format::getFormat, return_value_policy<reference_existing_object>() ).staticmethod( "getFormat" )
-		.def( "formatName", &Format::formatName ).staticmethod( "formatName" )
-		.def( "formatNames", &formatNamesList ).staticmethod( "formatNames" )
 		.def( "__eq__", &Format::operator== )
 		.def( "__repr__", &formatRepr )
+		.def( "__str__", &boost::lexical_cast<std::string, Format> )
+
+		.def( "registerFormat", &Format::registerFormat ).staticmethod( "registerFormat" )
+		.def( "deregisterFormat", &Format::deregisterFormat ).staticmethod( "deregisterFormat" )
+		.def( "registeredFormats", &registeredFormats ).staticmethod( "registeredFormats" )
+		.def( "format", &Format::format ).staticmethod( "format" )
+		.def( "name", &Format::name ).staticmethod( "name" )
 	;
 
-	SignalClass<Format::UnaryFormatSignal, DefaultSignalCaller<Format::UnaryFormatSignal>, UnaryFormatSlotCaller >( "UnaryFormatSignal" );
-
 }
-
-} // namespace GafferImageBindings

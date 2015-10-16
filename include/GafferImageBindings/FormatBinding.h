@@ -44,8 +44,6 @@ namespace GafferImageBindings
 
 void bindFormat();
 
-std::string formatRepr( const GafferImage::Format &format );
-
 }; // namespace GafferImageBindings
 
 #endif // GAFFERIMAGEBINDINGS_FORMATBINDING_H

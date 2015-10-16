@@ -72,12 +72,18 @@ def __formatPlugSetValue( self, *args, **kwargs ) :
 
 	return self.__originalSetValue( *args, **kwargs )
 
-def __formatRegisterFormat( *args, **kwargs ) :
+@staticmethod
+def __formatRegisterFormat( arg1, arg2 ) :
 
-	if args and isinstance( args[0], GafferImage.Format ) :
-		args = ( __convertFormat( args[0] ), ) + args[1:]
+	if isinstance( arg1, GafferImage.Format ) :
+		# Old ordering of arguments.
+		format = arg1
+		name = arg2
+	else :
+		name = arg1
+		format = arg2
 
-	return GafferImage.Format.__originalRegisterFormat( *args, **kwargs )
+	return GafferImage.Format.__originalRegisterFormat( name, __convertFormat( format ) )
 
 def __scriptNodeLoad( self, *args, **kwargs ) :
 
@@ -104,5 +110,5 @@ if not hasattr( GafferImage.Format, "__originalRegisterFormat" ) :
 	GafferImage.FormatPlug.__originalSetValue = GafferImage.FormatPlug.setValue
 	GafferImage.FormatPlug.setValue = __formatPlugSetValue
 
-	GafferImage.Format.__originalRegisterFormat = GafferImage.Format.registerFormat
+	GafferImage.Format.__originalRegisterFormat = staticmethod( GafferImage.Format.registerFormat )
 	GafferImage.Format.registerFormat = __formatRegisterFormat

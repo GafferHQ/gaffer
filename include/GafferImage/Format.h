@@ -37,19 +37,20 @@
 #ifndef GAFFERIMAGE_FORMAT_H
 #define GAFFERIMAGE_FORMAT_H
 
-#include "boost/signals.hpp"
+#include <string>
+#include <vector>
 
 #include "OpenEXR/ImathBox.h"
 
 namespace GafferImage
 {
 
+/// Basic maths class to represent the format of an image -
+/// its display window and pixel aspect ratio.
 class Format
 {
 
 	public :
-
-		typedef boost::signal<void (const std::string&)> UnaryFormatSignal;
 
 		inline Format();
 		inline explicit Format( const Imath::Box2i &displayWindow, double pixelAspect = 1., bool fromEXRSpace = false );
@@ -71,9 +72,11 @@ class Format
 		/// The image coordinate system used by Gaffer has the origin at the
 		/// bottom, with increasing Y coordinates going up. It also considers
 		/// image bounds to be exclusive at the max end.
+		///
 		/// The Cortex and OpenEXR coordinate systems have the origin at the
 		/// top with increasing Y coordinates going down. They use inclusive
 		/// image bounds.
+		///
 		/// These methods assist in converting between the two coordinate
 		/// systems.
 		////////////////////////////////////////////////////////////////////
@@ -93,41 +96,32 @@ class Format
 		/// @name Format registry
 		/// Maintains a list of named formats which may be registered
 		/// by config files, and made available to the user via the UI.
-		/// \todo Simplify and bring into line with the other registry APIs.
 		////////////////////////////////////////////////////////////////////
 		//@{
-		static const Format &registerFormat( const Format &format, const std::string &name );
-		static const Format &registerFormat( const Format &format );
-
-		static void removeFormat( const Format &format );
-		static void removeFormat( const std::string &name );
-		static void removeAllFormats();
-
-		static int formatCount();
-		static const Format &getFormat( const std::string &name );
-		static std::string formatName( const Format &format );
-		static void formatNames( std::vector< std::string > &names );
-
-		static UnaryFormatSignal &formatAddedSignal();
-		static UnaryFormatSignal &formatRemovedSignal();
+		/// Registers a format with the specified name.
+		static void registerFormat( const std::string &name, const Format &format );
+		/// Removes a previously registered format.
+		static void deregisterFormat( const std::string &name );
+		/// Lists all currently registered formats.
+		static void registeredFormats( std::vector<std::string> &names );
+		/// Returns the format registered with the specified name, or
+		/// an empty format if the name is not registered.
+		static Format format( const std::string &name );
+		/// Returns a name registered for the specific format, or
+		/// the empty string if the format has not been registered.
+		/// Note that this is unrelated to the ostream operator.
+		static std::string name( const Format &format );
 		//@}
 
 	private :
-
-		typedef std::pair< std::string, Format > FormatEntry;
-		typedef std::map< std::string, Format > FormatMap;
-
-		/// Method to return a static instance of the format mappings
-		inline static FormatMap &formatMap();
-
-		/// Generates a name for a given format. The result is returned in place.
-		static void generateFormatName( std::string &name, const Format &format);
 
 		Imath::Box2i m_displayWindow;
 		double m_pixelAspect;
 
 };
 
+/// Outputs a numeric description of the format, omitting default information
+/// where possible. Note that this is unrelated to Format::name().
 std::ostream & operator << ( std::ostream &os, const GafferImage::Format &format );
 
 } // namespace GafferImage

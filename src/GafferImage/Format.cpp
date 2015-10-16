@@ -36,140 +36,85 @@
 
 #include <map>
 
-#include "boost/format.hpp"
-#include "boost/foreach.hpp"
-
-#include "IECore/Exception.h"
-
 #include "GafferImage/Format.h"
 
 using namespace GafferImage;
 
-Format::FormatMap &Format::formatMap()
+namespace
 {
-	static Format::FormatMap map;
+
+typedef std::map<std::string, Format> FormatMap;
+
+FormatMap &formatMap()
+{
+	static FormatMap map;
 	return map;
 }
 
-std::ostream& GafferImage::operator<<(std::ostream& os, GafferImage::Format const& format)
+} // namespace
+
+std::ostream &GafferImage::operator << ( std::ostream &os, GafferImage::Format const &format )
 {
-    os << Format::formatName( format );
+    if( format.getDisplayWindow().min == Imath::V2i( 0 ) )
+    {
+		os << format.getDisplayWindow().max.x << "x" << format.getDisplayWindow().max.y;
+    }
+    else
+    {
+		os << format.getDisplayWindow().min << " - " << format.getDisplayWindow().max;
+    }
+
+    if( format.getPixelAspect() != 1.0 )
+    {
+		os << ", " << format.getPixelAspect();
+    }
+
     return os;
 }
 
-void Format::formatNames( std::vector< std::string > &names )
+void Format::registerFormat( const std::string &name, const Format &format )
 {
-	names.clear();
-	names.reserve( formatMap().size() );
-
-	FormatEntry entry;
-	BOOST_FOREACH( entry, formatMap() )
-	{
-		names.push_back( entry.first );
-	}
+	formatMap()[name] = format;
 }
 
-std::string Format::formatName( const Format &format )
-{
-	FormatMap::iterator it( formatMap().begin() );
-	FormatMap::iterator end( formatMap().end() );
-
-	for (; it != end; ++it)
-	{
-		if ( format == (*it).second )
-		{
-			return (*it).first;
-		}
-	}
-
-	std::string name;
-	generateFormatName( name, format );
-
-	return name;
-}
-
-const Format &Format::registerFormat( const Format &format, const std::string &name )
-{
-	FormatMap::iterator it( formatMap().begin() );
-	FormatMap::iterator end( formatMap().end() );
-
-	for (; it != end; ++it)
-	{
-		if ( format == (*it).second )
-		{
-			return (*it).second;
-		}
-	}
-
-	formatMap().insert( FormatEntry( name, format ) );
-	formatAddedSignal()( name );
-
-	return format;
-}
-
-const Format &Format::registerFormat( const Format &format )
-{
-	std::string name;
-	generateFormatName( name, format );
-	return registerFormat( format, name );
-}
-
-void Format::removeFormat( const Format &format )
-{
-	FormatMap::iterator it( formatMap().begin() );
-	FormatMap::iterator end( formatMap().end() );
-	for (; it != end; ++it)
-	{
-		if ( format == (*it).second )
-		{
-			formatRemovedSignal()( (*it).first );
-			formatMap().erase( it );
-			return;
-		}
-	}
-}
-
-void Format::removeFormat( const std::string &name )
+void Format::deregisterFormat( const std::string &name )
 {
 	formatMap().erase( name );
 }
 
-Format::UnaryFormatSignal &Format::formatAddedSignal()
+void Format::registeredFormats( std::vector<std::string> &names )
 {
-	static Format::UnaryFormatSignal formatAddedSignalSignal;
-	return formatAddedSignalSignal;
-}
+	const FormatMap &m = formatMap();
 
-Format::UnaryFormatSignal &Format::formatRemovedSignal()
-{
-	static Format::UnaryFormatSignal formatRemovedSignalSignal;
-	return formatRemovedSignalSignal;
-}
+	names.clear();
+	names.reserve( m.size() );
 
-const Format &Format::getFormat( const std::string &name )
-{
-	FormatMap::iterator it( formatMap().find( name ) );
-
-	if ( it == formatMap().end() )
+	for( FormatMap::const_iterator it = m.begin(), eIt = m.end(); it != eIt; ++it )
 	{
-		std::string err( boost::str( boost::format( "Failed to find format %s" ) % name ) );
-		throw IECore::Exception( err );
+		names.push_back( it->first );
 	}
-
-	return (*it).second;
 }
 
-void Format::generateFormatName( std::string &name, const Format &format)
+Format Format::format( const std::string &name )
 {
-	name = boost::str( boost::format( "%dx%d %.3f" ) % format.width() % format.height() % format.getPixelAspect() );
+	const FormatMap &m = formatMap();
+	FormatMap::const_iterator it = m.find( name );
+	if( it != m.end() )
+	{
+		return it->second;
+	}
+	return Format();
 }
 
-void Format::removeAllFormats()
+std::string Format::name( const Format &format )
 {
-	formatMap().clear();
-}
-
-int Format::formatCount()
-{
-	return formatMap().size();
+	const FormatMap &m = formatMap();
+	for( FormatMap::const_iterator it = m.begin(), eIt = m.end(); it != eIt; ++it )
+	{
+		if( it->second == format )
+		{
+			return it->first;
+		}
+	}
+	return "";
 }
