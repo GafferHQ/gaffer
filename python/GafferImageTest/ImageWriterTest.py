@@ -105,6 +105,28 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		self.failIf( w["preTasks"][0].acceptsInput( p ) )
 		self.failUnless( w["in"].acceptsInput( p ) )
 
+	def testFailureOnNonFlat( self ) :
+
+		c1 = GafferImage.Constant()
+		c1['format'].setValue( GafferImage.Format( 512, 512 ) )
+		c2 = GafferImage.Constant()
+		c2['format'].setValue( GafferImage.Format( 512, 512 ) )
+
+		m = GafferImage.DeepMerge()
+		m['in'][0].setInput( c1["out"] )
+		m['in'][1].setInput( c2["out"] )
+
+		testFile = self.__testFile( "default", "deep", "exr" )
+		self.failIf( os.path.exists( testFile ) )
+
+		w = GafferImage.ImageWriter()
+		w['in'].setInput( m["out"] )
+
+		w["fileName"].setValue( testFile )
+		with Gaffer.Context() :
+			with self.assertRaises( RuntimeError ) :
+				w.execute()
+
 	def testTiffWrite( self ) :
 		options = {}
 		options['maxError'] = 0.1
