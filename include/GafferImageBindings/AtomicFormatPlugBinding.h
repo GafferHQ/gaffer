@@ -34,8 +34,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERBINDINGS_ATOMICFORMATPLUGBINDING_H
-#define GAFFERBINDINGS_ATOMICFORMATPLUGBINDING_H
+#ifndef GAFFERIMAGEBINDINGS_ATOMICFORMATPLUGBINDING_H
+#define GAFFERIMAGEBINDINGS_ATOMICFORMATPLUGBINDING_H
 
 namespace GafferImageBindings
 {
@@ -44,4 +44,4 @@ void bindAtomicFormatPlug();
 
 } // namespace GafferImageBindings
 
-#endif // GAFFERBINDINGS_ATOMICFORMATPLUGBINDING_H
+#endif // GAFFERIMAGEBINDINGS_ATOMICFORMATPLUGBINDING_H

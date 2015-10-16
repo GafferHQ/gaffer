@@ -34,8 +34,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_ATOMICFORMATPLUG_H
-#define GAFFER_ATOMICFORMATPLUG_H
+#ifndef GAFFERIMAGE_ATOMICFORMATPLUG_H
+#define GAFFERIMAGE_ATOMICFORMATPLUG_H
 
 #include "Gaffer/TypedPlug.h"
 
@@ -59,4 +59,4 @@ typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::PlugPredicate<Gaffer::Plu
 
 } // namespace GafferImage
 
-#endif // GAFFER_ATOMICFORMATPLUG_H
+#endif // GAFFERIMAGE_ATOMICFORMATPLUG_H
