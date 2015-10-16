@@ -35,6 +35,7 @@
 ##########################################################################
 
 import unittest
+import inspect
 
 import IECore
 
@@ -173,6 +174,31 @@ class FormatPlugTest( unittest.TestCase ) :
 		s["b"] = Gaffer.Box()
 		s["b"]["c"] = GafferImage.Constant()
 		self.assertTrue( "defaultFormat" in s )
+
+	def testExpressions( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n1"] = Gaffer.Node()
+		s["n2"] = Gaffer.Node()
+		s["n1"]["user"]["f"] = GafferImage.FormatPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["n2"]["user"]["f"] = GafferImage.FormatPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		s["e"] = Gaffer.Expression()
+		s["e"].setExpression( inspect.cleandoc(
+			"""
+			f = parent["n1"]["user"]["f"]
+			b = f.getDisplayWindow()
+			b.min -= IECore.V2i( 10 )
+			b.max += IECore.V2i( 20 )
+			f.setPixelAspect( 0.5 )
+			f.setDisplayWindow( b )
+			parent["n2"]["user"]["f"] = f
+			"""
+		) )
+
+		s["n1"]["user"]["f"].setValue( GafferImage.Format( IECore.Box2i( IECore.V2i( 20, 30 ), IECore.V2i( 100, 110 ) ), 1 ) )
+
+		self.assertEqual( s["n2"]["user"]["f"].getValue(), GafferImage.Format( IECore.Box2i( IECore.V2i( 10, 20 ), IECore.V2i( 120, 130 ) ), 0.5 ) )
 
 if __name__ == "__main__":
 	unittest.main()

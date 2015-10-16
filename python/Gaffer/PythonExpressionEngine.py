@@ -285,7 +285,26 @@ def __defaultSetter( plug, topLevelPlug, value ) :
 	with IECore.IgnoredExceptions( AttributeError ) :
 		value = value.value
 
-	plug.setValue( value )
+	# Deal with the simple atomic plug case.
+	if plug.isSame( topLevelPlug ) :
+		plug.setValue( value )
+		return
+
+	# Plug must be a child of a compound of
+	# some sort. We need to try to extract
+	# the right part of the compound value.
+	componentValue = value
+	for name in plug.relativeName( topLevelPlug ).split( "." ) :
+		try :
+			componentValue = getattr( componentValue, name )
+		except AttributeError :
+			accessor = getattr( componentValue, "get" + name[0].upper() + name[1:], None )
+			if accessor is not None :
+				componentValue = accessor()
+			else :
+				raise TypeError( "Unsupported value type \"%s\"" % type( value ).__name__ )
+
+	plug.setValue( componentValue )
 
 _setters = {
 	Gaffer.IntPlug : __typedPlugSetter,
