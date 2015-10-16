@@ -91,7 +91,7 @@ class PythonExpressionEngine( Gaffer.Expression.Engine ) :
 
 	def apply( self, proxyOutput, topLevelProxyOutput, value ) :
 
-		_setPlugValue( proxyOutput, value )
+		_setPlugValue( proxyOutput, topLevelProxyOutput, value )
 
 	def identifier( self, node, plug ) :
 
@@ -262,40 +262,25 @@ class _Parser( ast.NodeVisitor ) :
 # Functions for setting plug values.
 ##########################################################################
 
-def __simpleTypedDataSetter( plug, value ) :
+def __typedPlugSetter( plug, topLevelPlug, value ) :
 
 	plug.setValue( value.value )
 
-def __compoundNumericDataSetter( plug, value ) :
+def __compoundNumericPlugSetter( plug, topLevelPlug, value ) :
 
-	index = plug.parent().children().index( plug )
+	index = topLevelPlug.children().index( plug )
 	plug.setValue( value.value[index] )
 
-def __boxDataSetter( plug, value ) :
+def __boxPlugSetter( plug, topLevelPlug, value ) :
 
-	value = value.value
+	vectorPlug = plug.parent()
+	index = vectorPlug.children().index( plug )
 
-	if isinstance( plug, ( Gaffer.FloatPlug, Gaffer.IntPlug ) ) :
+	vector = value.value.min if vectorPlug.getName() == "min" else value.value.max
 
-		vectorPlug = plug.parent()
-		boxPlug = vectorPlug.parent()
+	plug.setValue( vector[index] )
 
-		vector = value.min if vectorPlug.getName() == "min" else value.max
-		index = vectorPlug.children().index( plug )
-
-		plug.setValue( vector[index] )
-
-	else :
-
-		plug.setValue( value )
-
-def __nullObjectSetter( plug, value ) :
-
-	# NullObject signifies that the expression didn't
-	# provide a value at all - set the plug to its default.
-	plug.setToDefault()
-
-def __defaultSetter( plug, value ) :
+def __defaultSetter( plug, topLevelPlug, value ) :
 
 	with IECore.IgnoredExceptions( AttributeError ) :
 		value = value.value
@@ -303,23 +288,29 @@ def __defaultSetter( plug, value ) :
 	plug.setValue( value )
 
 _setters = {
-	IECore.IntData : __simpleTypedDataSetter,
-	IECore.FloatData : __simpleTypedDataSetter,
-	IECore.StringData : __simpleTypedDataSetter,
-	IECore.BoolData : __simpleTypedDataSetter,
-	IECore.V2fData : __compoundNumericDataSetter,
-	IECore.V2iData : __compoundNumericDataSetter,
-	IECore.V3fData : __compoundNumericDataSetter,
-	IECore.V3iData : __compoundNumericDataSetter,
-	IECore.Color3fData : __compoundNumericDataSetter,
-	IECore.Color4fData : __compoundNumericDataSetter,
-	IECore.Box2fData : __boxDataSetter,
-	IECore.Box2iData : __boxDataSetter,
-	IECore.Box3fData : __boxDataSetter,
-	IECore.Box3iData : __boxDataSetter,
-	IECore.NullObject : __nullObjectSetter,
+	Gaffer.IntPlug : __typedPlugSetter,
+	Gaffer.FloatPlug : __typedPlugSetter,
+	Gaffer.StringPlug : __typedPlugSetter,
+	Gaffer.BoolPlug : __typedPlugSetter,
+	Gaffer.V2fPlug : __compoundNumericPlugSetter,
+	Gaffer.V2iPlug : __compoundNumericPlugSetter,
+	Gaffer.V3fPlug : __compoundNumericPlugSetter,
+	Gaffer.V3iPlug : __compoundNumericPlugSetter,
+	Gaffer.Color3fPlug : __compoundNumericPlugSetter,
+	Gaffer.Color4fPlug : __compoundNumericPlugSetter,
+	Gaffer.Box2fPlug : __boxPlugSetter,
+	Gaffer.Box2iPlug : __boxPlugSetter,
+	Gaffer.Box3fPlug : __boxPlugSetter,
+	Gaffer.Box3iPlug : __boxPlugSetter,
 }
 
-def _setPlugValue( plug, value ) :
+def _setPlugValue( plug, topLevelPlug, value ) :
 
-	_setters.get( type( value ), __defaultSetter )( plug, value )
+	# NullObject signifies that the expression didn't
+	# provide a value at all - set the plug to its default.
+	if isinstance( value, IECore.NullObject ) :
+		plug.setToDefault()
+		return
+
+	# Otherwise delegate to the appropriate setter for the plug type
+	_setters.get( type( topLevelPlug ), __defaultSetter )( plug, topLevelPlug, value )
