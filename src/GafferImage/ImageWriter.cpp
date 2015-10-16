@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2013-2015, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2015, Nvizible Ltd. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -973,7 +974,7 @@ const Gaffer::ValuePlug *ImageWriter::fileFormatSettingsPlug( const std::string 
 
 const std::string ImageWriter::currentFileFormat() const
 {
-	const std::string fileName = fileNamePlug()->getValue();
+	const std::string fileName = Context::current()->substitute( fileNamePlug()->getValue() );
 	ImageOutputPtr out( ImageOutput::create( fileName.c_str() ) );
 	if( out != NULL )
 	{
@@ -1027,6 +1028,16 @@ void ImageWriter::execute() const
 		throw IECore::Exception( OpenImageIO::geterror() );
 	}
 
+	if( inPlug()->deepStatePlug()->getValue() != ImagePlug::Flat && !out->supports( "deepdata" ) )
+	{
+		throw IECore::Exception( boost::str( boost::format( "Deep data is not supported by %s files." ) % out->format_name() ) );
+	}
+
+	if( inPlug()->deepStatePlug()->getValue() != ImagePlug::Flat )
+	{
+		throw IECore::Exception( "Deep data is not currently supported." );
+	}
+
 	// Grab the intersection of the channels from the "channels" plug and the image input to see which channels we are to write out.
 	IECore::ConstStringVectorDataPtr channelNamesData = inPlug()->channelNamesPlug()->getValue();
 	std::vector<std::string> maskChannels = channelNamesData->readable();
@@ -1057,7 +1068,14 @@ void ImageWriter::execute() const
 		}
 	}
 
-	const Format imageFormat = inPlug()->formatPlug()->getValue();
+	Format imageFormat = inPlug()->formatPlug()->getValue();
+
+	/// \todo Remove when Issue #887 is done
+	if( imageFormat.getDisplayWindow().isEmpty() )
+	{
+		imageFormat = FormatPlug::getDefaultFormat( Context::current() );
+	}
+
 	Imath::Box2i dataWindow = inPlug()->dataWindowPlug()->getValue();
 	Imath::Box2i exrDataWindow( Imath::V2i( 0 ) );
 
