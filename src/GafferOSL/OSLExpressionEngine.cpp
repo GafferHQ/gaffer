@@ -464,24 +464,24 @@ class OSLExpressionEngine : public Gaffer::Expression::Engine
 			return result;
 		}
 
-		virtual void apply( Gaffer::ValuePlug *plug, const IECore::Object *value ) const
+		virtual void apply( Gaffer::ValuePlug *proxyOutput, const Gaffer::ValuePlug *topLevelProxyOutput, const IECore::Object *value ) const
 		{
 			switch( value->typeId() )
 			{
 				case FloatDataTypeId :
-					static_cast<FloatPlug *>( plug )->setValue( static_cast<const FloatData *>( value )->readable() );
+					static_cast<FloatPlug *>( proxyOutput )->setValue( static_cast<const FloatData *>( value )->readable() );
 					break;
 				case IntDataTypeId :
-					static_cast<IntPlug *>( plug )->setValue( static_cast<const IntData *>( value )->readable() );
+					static_cast<IntPlug *>( proxyOutput )->setValue( static_cast<const IntData *>( value )->readable() );
 					break;
 				case Color3fDataTypeId :
 				{
-					Color3fPlug *colorPlug = plug->parent<Color3fPlug>();
+					Color3fPlug *colorPlug = proxyOutput->parent<Color3fPlug>();
 					for( int i = 0; i < 3; ++i )
 					{
-						if( plug == colorPlug->getChild( i ) )
+						if( proxyOutput == colorPlug->getChild( i ) )
 						{
-							static_cast<FloatPlug *>( plug )->setValue( static_cast<const Color3fData *>( value )->readable()[i] );
+							static_cast<FloatPlug *>( proxyOutput )->setValue( static_cast<const Color3fData *>( value )->readable()[i] );
 							break;
 						}
 					}
@@ -489,19 +489,19 @@ class OSLExpressionEngine : public Gaffer::Expression::Engine
 				}
 				case V3fDataTypeId :
 				{
-					V3fPlug *vectorPlug = plug->parent<V3fPlug>();
+					V3fPlug *vectorPlug = proxyOutput->parent<V3fPlug>();
 					for( int i = 0; i < 3; ++i )
 					{
-						if( plug == vectorPlug->getChild( i ) )
+						if( proxyOutput == vectorPlug->getChild( i ) )
 						{
-							static_cast<FloatPlug *>( plug )->setValue( static_cast<const V3fData *>( value )->readable()[i] );
+							static_cast<FloatPlug *>( proxyOutput )->setValue( static_cast<const V3fData *>( value )->readable()[i] );
 							break;
 						}
 					}
 					break;
 				}
 				case StringDataTypeId :
-					static_cast<StringPlug *>( plug )->setValue( static_cast<const StringData *>( value )->readable() );
+					static_cast<StringPlug *>( proxyOutput )->setValue( static_cast<const StringData *>( value )->readable() );
 					break;
 				default :
 					// Shouldn't get here, as we've handled all the types

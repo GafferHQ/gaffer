@@ -89,9 +89,9 @@ class PythonExpressionEngine( Gaffer.Expression.Engine ) :
 
 		return result
 
-	def apply( self, plug, value ) :
+	def apply( self, proxyOutput, topLevelProxyOutput, value ) :
 
-		_setPlugValue( plug, value )
+		_setPlugValue( proxyOutput, value )
 
 	def identifier( self, node, plug ) :
 
