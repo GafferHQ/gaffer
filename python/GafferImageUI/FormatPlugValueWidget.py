@@ -51,25 +51,23 @@ class FormatPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__menuButton = GafferUI.MenuButton( menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) ) )
 		grid[0:2,0] = self.__menuButton
 
-		if isinstance( plug, GafferImage.FormatPlug ) :
+		self.__minLabel = GafferUI.Label( "Origin" )
+		grid.addChild( self.__minLabel, index = ( 0, 1 ), alignment = ( GafferUI.HorizontalAlignment.Right, GafferUI.VerticalAlignment.Center ) )
 
-			self.__minLabel = GafferUI.Label( "Origin" )
-			grid.addChild( self.__minLabel, index = ( 0, 1 ), alignment = ( GafferUI.HorizontalAlignment.Right, GafferUI.VerticalAlignment.Center ) )
+		self.__minWidget = GafferUI.CompoundNumericPlugValueWidget( plug["displayWindow"]["min"] )
+		grid[1,1] = self.__minWidget
 
-			self.__minWidget = GafferUI.CompoundNumericPlugValueWidget( plug["displayWindow"]["min"] )
-			grid[1,1] = self.__minWidget
+		self.__maxLabel = GafferUI.Label( "Size" )
+		grid.addChild( self.__maxLabel, index = ( 0, 2 ), alignment = ( GafferUI.HorizontalAlignment.Right, GafferUI.VerticalAlignment.Center ) )
 
-			self.__maxLabel = GafferUI.Label( "Size" )
-			grid.addChild( self.__maxLabel, index = ( 0, 2 ), alignment = ( GafferUI.HorizontalAlignment.Right, GafferUI.VerticalAlignment.Center ) )
+		self.__maxWidget = GafferUI.CompoundNumericPlugValueWidget( plug["displayWindow"]["max"] )
+		grid[1,2] = self.__maxWidget
 
-			self.__maxWidget = GafferUI.CompoundNumericPlugValueWidget( plug["displayWindow"]["max"] )
-			grid[1,2] = self.__maxWidget
+		self.__pixelAspectLabel = GafferUI.Label( "Pixel Aspect" )
+		grid.addChild( self.__pixelAspectLabel, index = ( 0, 3 ), alignment = ( GafferUI.HorizontalAlignment.Right, GafferUI.VerticalAlignment.Center ) )
 
-			self.__pixelAspectLabel = GafferUI.Label( "Pixel Aspect" )
-			grid.addChild( self.__pixelAspectLabel, index = ( 0, 3 ), alignment = ( GafferUI.HorizontalAlignment.Right, GafferUI.VerticalAlignment.Center ) )
-
-			self.__pixelAspectWidget = GafferUI.NumericPlugValueWidget( plug["pixelAspect"] )
-			grid[1,3] = self.__pixelAspectWidget
+		self.__pixelAspectWidget = GafferUI.NumericPlugValueWidget( plug["pixelAspect"] )
+		grid[1,3] = self.__pixelAspectWidget
 
 		self.__plugMetadataChangedConnection = Gaffer.Metadata.plugValueChangedSignal().connect( Gaffer.WeakMethod( self.__plugMetadataChanged ) )
 
@@ -188,5 +186,4 @@ class FormatPlugValueWidget( GafferUI.PlugValueWidget ) :
 			self._updateFromPlug()
 
 GafferUI.PlugValueWidget.registerType( GafferImage.FormatPlug, FormatPlugValueWidget )
-GafferUI.PlugValueWidget.registerType( GafferImage.AtomicFormatPlug, FormatPlugValueWidget )
 
