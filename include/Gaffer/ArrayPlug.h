@@ -40,7 +40,6 @@
 #include "OpenEXR/ImathLimits.h"
 
 #include "Gaffer/Plug.h"
-#include "Gaffer/PlugIterator.h"
 
 namespace Gaffer
 {

@@ -45,7 +45,6 @@
 #include "IECore/BoxAlgo.h"
 
 #include "Gaffer/Plug.h"
-#include "Gaffer/PlugIterator.h"
 #include "Gaffer/DependencyNode.h"
 #include "Gaffer/StandardSet.h"
 #include "Gaffer/Dot.h"

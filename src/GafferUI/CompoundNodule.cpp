@@ -40,8 +40,8 @@
 
 #include "IECore/SimpleTypedData.h"
 
-#include "Gaffer/PlugIterator.h"
 #include "Gaffer/Metadata.h"
+#include "Gaffer/Plug.h"
 
 #include "GafferUI/CompoundNodule.h"
 #include "GafferUI/LinearContainer.h"

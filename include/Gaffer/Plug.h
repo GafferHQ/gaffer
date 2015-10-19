@@ -38,9 +38,11 @@
 #ifndef GAFFER_PLUG_H
 #define GAFFER_PLUG_H
 
-#include "Gaffer/GraphComponent.h"
-
 #include "IECore/Object.h"
+
+#include "Gaffer/GraphComponent.h"
+#include "Gaffer/FilteredChildIterator.h"
+#include "Gaffer/FilteredRecursiveChildIterator.h"
 
 namespace Gaffer
 {
@@ -251,6 +253,34 @@ class Plug : public GraphComponent
 };
 
 IE_CORE_DECLAREPTR( Plug );
+
+template<Plug::Direction D=Plug::Invalid, typename T=Plug>
+struct PlugPredicate
+{
+	typedef T ChildType;
+
+	bool operator()( const GraphComponentPtr &g ) const
+	{
+		const T *p = IECore::runTimeCast<T>( g.get() );
+		if( !p )
+		{
+			return false;
+		}
+		if( D==Plug::Invalid )
+		{
+			return true;
+		}
+		return D==p->direction();
+	}
+};
+
+typedef FilteredChildIterator<PlugPredicate<> > PlugIterator;
+typedef FilteredChildIterator<PlugPredicate<Plug::In, Plug> > InputPlugIterator;
+typedef FilteredChildIterator<PlugPredicate<Plug::Out, Plug> > OutputPlugIterator;
+
+typedef FilteredRecursiveChildIterator<PlugPredicate<>, PlugPredicate<> > RecursivePlugIterator;
+typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, Plug>, PlugPredicate<> > RecursiveInputPlugIterator;
+typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, Plug>, PlugPredicate<> > RecursiveOutputPlugIterator;
 
 } // namespace Gaffer
 

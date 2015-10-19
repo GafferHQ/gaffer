@@ -39,7 +39,6 @@
 #include "IECore/SimpleTypedData.h"
 
 #include "Gaffer/CompoundPlug.h"
-#include "Gaffer/PlugIterator.h"
 
 #include "GafferCortex/CompoundParameterHandler.h"
 

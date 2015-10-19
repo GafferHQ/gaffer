@@ -41,7 +41,6 @@
 #include "IECore/Object.h"
 
 #include "Gaffer/Plug.h"
-#include "Gaffer/PlugIterator.h"
 
 namespace Gaffer
 {
