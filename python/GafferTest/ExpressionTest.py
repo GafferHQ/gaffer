@@ -1079,5 +1079,25 @@ class ExpressionTest( GafferTest.TestCase ) :
 
 		self.assertEqual( h1, h2 )
 
+	def testInPlugDoesntAcceptConnections( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n1"] = Gaffer.Node()
+		s["n1"]["p"] = Gaffer.ValuePlug()
+		s["n1"]["p"]["f"] = Gaffer.FloatPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		s["n2"] = Gaffer.Node()
+		s["n2"]["p"] = Gaffer.ValuePlug()
+		s["n2"]["p"]["f"]  = Gaffer.FloatPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		s["e"] = Gaffer.Expression()
+		s["e"].setExpression( 'parent["n2"]["p"]["f"] = parent["n1"]["p"]["f"]' )
+
+		self.assertTrue( s["e"]["__in"].getInput() is None )
+
+		s["n1"]["p"]["f2"] = Gaffer.FloatPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		self.assertEqual( len( s["e"]["__in"] ), 1 )
+
 if __name__ == "__main__":
 	unittest.main()
