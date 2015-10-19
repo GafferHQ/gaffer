@@ -148,7 +148,7 @@ class ImageWriterTest( GafferTest.TestCase ) :
 
 	def testTgaWrite( self ) :
 		options = {}
-		options['maxError'] = 1.1
+		options['maxError'] = 0.0
 		options['plugs'] = {}
 		options['plugs']['compression'] = [
 				{ 'value': "none" },
@@ -184,7 +184,7 @@ class ImageWriterTest( GafferTest.TestCase ) :
 
 	def testPngWrite( self ) :
 		options = {}
-		options['maxError'] = 0.1
+		options['maxError'] = 0.0
 		options['plugs'] = {}
 		options['plugs']['compression'] = [
 				{ 'value': "default" },
@@ -402,12 +402,30 @@ class ImageWriterTest( GafferTest.TestCase ) :
 			self.assertEqual( expectedMetadata, writerMetadata, "Metadata does not match : {} ({})".format(ext, name) )
 
 			op = IECore.ImageDiffOp()
-			op["maxError"].setValue(maxError)
+			op["maxError"].setValue( maxError )
 			res = op(
 				imageA = expectedOutput["out"].image(),
 				imageB = writerOutput["out"].image()
 			)
-			self.assertFalse( res.value, "Image data does not match : {} ({})".format(ext, name) )
+
+			if res.value :
+				matchingError = 0.0
+				for i in range( 10 ) :
+					maxError += 0.1
+					op["maxError"].setValue( maxError )
+					res = op(
+						imageA = expectedOutput["out"].image(),
+						imageB = writerOutput["out"].image()
+					)
+
+					if not res.value :
+						matchingError = maxError
+						break
+
+				if matchingError > 0.0 :
+					self.assertFalse( True, "Image data does not match : {} ({}). Matches with max error of {}".format( ext, name, matchingError ) )
+				else:
+					self.assertFalse( True, "Image data does not match : {} ({}).".format( ext, name ) )
 
 	def testPadDataWindowToDisplayWindowScanline ( self ) :
 		self.__testAdjustDataWindowToDisplayWindow( "png", self.__rgbFilePath )
