@@ -34,6 +34,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include "boost/algorithm/string/predicate.hpp"
+
 #include "Gaffer/SubGraph.h"
 #include "Gaffer/Dot.h"
 #include "Gaffer/Context.h"
@@ -150,7 +152,7 @@ IE_CORE_DEFINERUNTIMETYPED( ExecutableNode )
 size_t ExecutableNode::g_firstPlugIndex;
 
 ExecutableNode::ExecutableNode( const std::string &name )
-	:	Node( name )
+	:	DependencyNode( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new ArrayPlug( "requirements", Plug::In, new RequirementPlug( "requirement0" ) ) );
@@ -194,6 +196,23 @@ Plug *ExecutableNode::dispatcherPlug()
 const Plug *ExecutableNode::dispatcherPlug() const
 {
 	return getChild<Plug>( g_firstPlugIndex + 2 );
+}
+
+void ExecutableNode::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
+{
+	DependencyNode::affects( input, outputs );
+
+	if(
+		input->direction() == Plug::In &&
+		input != userPlug() &&
+		!userPlug()->isAncestorOf( input ) &&
+		input != dispatcherPlug() &&
+		!dispatcherPlug()->isAncestorOf( input ) &&
+		!boost::starts_with( input->getName().c_str(), "__" )
+	)
+	{
+		outputs.push_back( requirementPlug() );
+	}
 }
 
 void ExecutableNode::requirements( const Context *context, Tasks &requirements ) const

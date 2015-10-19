@@ -37,8 +37,7 @@
 #ifndef GAFFER_EXECUTABLENODE_H
 #define GAFFER_EXECUTABLENODE_H
 
-#include "Gaffer/Node.h"
-#include "Gaffer/Plug.h"
+#include "Gaffer/DependencyNode.h"
 
 namespace Gaffer
 {
@@ -51,7 +50,7 @@ IE_CORE_FORWARDDECLARE( ArrayPlug )
 /// ExecutableNodes can be chained together with other ExecutableNodes to define a required execution
 /// order. Typically ExecutableNodes should be executed by Dispatcher classes that can query the
 /// required execution order and schedule Tasks appropriately.
-class ExecutableNode : public Node
+class ExecutableNode : public DependencyNode
 {
 
 	public :
@@ -86,7 +85,7 @@ class ExecutableNode : public Node
 		typedef std::vector<Task> Tasks;
 		typedef std::vector<ConstContextPtr> Contexts;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::ExecutableNode, ExecutableNodeTypeId, Node );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::ExecutableNode, ExecutableNodeTypeId, DependencyNode );
 
 		ExecutableNode( const std::string &name=defaultName<ExecutableNode>() );
 		virtual ~ExecutableNode();
@@ -124,6 +123,10 @@ class ExecutableNode : public Node
 		/// documentation for more details.
 		Plug *dispatcherPlug();
 		const Plug *dispatcherPlug() const;
+
+		/// Implemented so that the output requirementPlug() is affected by all input
+		/// plugs except user plugs, dispatcher plugs and private (prefixed with __) plugs.
+		virtual void affects( const Plug *input, AffectedPlugsContainer &outputs ) const;
 
 		/// Fills requirements with all Tasks that must be completed before execute
 		/// can be called with the given context. The default implementation collects
