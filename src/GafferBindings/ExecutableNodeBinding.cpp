@@ -70,7 +70,7 @@ ContextPtr taskContext( const ExecutableNode::Task &t, bool copy = true )
 		return boost::const_pointer_cast<Context>( context );
 	}
 
-	return 0;
+	return NULL;
 }
 
 ExecutableNodePtr taskNode( const ExecutableNode::Task &t )
@@ -80,7 +80,7 @@ ExecutableNodePtr taskNode( const ExecutableNode::Task &t )
 		return boost::const_pointer_cast<ExecutableNode>( node );
 	}
 
-	return 0;
+	return NULL;
 }
 
 } // namespace
