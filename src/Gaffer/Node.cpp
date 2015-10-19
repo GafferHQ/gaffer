@@ -49,7 +49,7 @@ Node::Node( const std::string &name )
 	:	GraphComponent( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
-	addChild( new Plug( "user" ) );
+	addChild( new Plug( "user", Plug::In, Plug::Default & ~Plug::AcceptsInputs ) );
 }
 
 Node::~Node()
