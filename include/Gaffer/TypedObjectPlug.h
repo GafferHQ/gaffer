@@ -45,7 +45,6 @@
 #include "IECore/CompoundObject.h"
 
 #include "Gaffer/ValuePlug.h"
-#include "Gaffer/PlugIterator.h"
 
 namespace Gaffer
 {

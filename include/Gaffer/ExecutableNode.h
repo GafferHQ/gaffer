@@ -38,6 +38,7 @@
 #define GAFFER_EXECUTABLENODE_H
 
 #include "Gaffer/Node.h"
+#include "Gaffer/Plug.h"
 
 namespace Gaffer
 {

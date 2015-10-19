@@ -259,5 +259,22 @@ class NodeTest( GafferTest.TestCase ) :
 		self.assertNodesConstructWithDefaultValues( Gaffer )
 		self.assertNodesConstructWithDefaultValues( GafferTest )
 
+	def testUserPlugDoesntTrackChildConnections( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n1"] = Gaffer.Node()
+		s["n1"]["user"]["p"] = Gaffer.IntPlug()
+
+		s["n2"] = Gaffer.Node()
+		s["n2"]["user"]["p"] = Gaffer.IntPlug()
+
+		s["n2"]["user"]["p"].setInput( s["n1"]["user"]["p"] )
+		self.assertTrue( s["n2"]["user"]["p"].getInput().isSame( s["n1"]["user"]["p"] ) )
+		self.assertTrue( s["n2"]["user"].getInput() is None )
+
+		s["n1"]["user"]["p2"] = Gaffer.IntPlug()
+		self.assertEqual( len( s["n2"]["user"] ), 1 )
+
 if __name__ == "__main__":
 	unittest.main()

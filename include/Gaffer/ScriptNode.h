@@ -42,6 +42,7 @@
 
 #include "Gaffer/Node.h"
 #include "Gaffer/NumericPlug.h"
+#include "Gaffer/TypedPlug.h"
 #include "Gaffer/Container.h"
 #include "Gaffer/Set.h"
 #include "Gaffer/UndoContext.h"

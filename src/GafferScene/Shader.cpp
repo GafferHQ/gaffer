@@ -44,6 +44,7 @@
 #include "Gaffer/CompoundDataPlug.h"
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/Metadata.h"
+#include "Gaffer/CompoundPlug.h"
 
 #include "GafferScene/Shader.h"
 

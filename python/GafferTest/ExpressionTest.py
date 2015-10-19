@@ -339,7 +339,7 @@ class ExpressionTest( GafferTest.TestCase ) :
 
 		s = Gaffer.ScriptNode()
 		s["fileName"].setValue( os.path.dirname( __file__ ) + "/scripts/legacyExpression.gfr" )
-		s.load()
+		s.load( continueOnError = True )
 
 		s.context().setFrame( 3 )
 		with s.context() :
@@ -816,7 +816,7 @@ class ExpressionTest( GafferTest.TestCase ) :
 
 		s = Gaffer.ScriptNode()
 		s["fileName"].setValue( os.path.dirname( __file__ ) + "/scripts/expressionVersion-0.15.0.0.gfr" )
-		s.load()
+		s.load( continueOnError = True )
 
 		self.assertEqual( s["n"]["user"]["b"].getValue(), 2 )
 		self.assertTrue( s["n"]["user"]["b"].getInput().node().isSame( s["e"] ) )
@@ -1078,6 +1078,26 @@ class ExpressionTest( GafferTest.TestCase ) :
 			h2 = s["n"]["user"]["f"].hash()
 
 		self.assertEqual( h1, h2 )
+
+	def testInPlugDoesntAcceptConnections( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n1"] = Gaffer.Node()
+		s["n1"]["p"] = Gaffer.ValuePlug()
+		s["n1"]["p"]["f"] = Gaffer.FloatPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		s["n2"] = Gaffer.Node()
+		s["n2"]["p"] = Gaffer.ValuePlug()
+		s["n2"]["p"]["f"]  = Gaffer.FloatPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		s["e"] = Gaffer.Expression()
+		s["e"].setExpression( 'parent["n2"]["p"]["f"] = parent["n1"]["p"]["f"]' )
+
+		self.assertTrue( s["e"]["__in"].getInput() is None )
+
+		s["n1"]["p"]["f2"] = Gaffer.FloatPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		self.assertEqual( len( s["e"]["__in"] ), 1 )
 
 if __name__ == "__main__":
 	unittest.main()

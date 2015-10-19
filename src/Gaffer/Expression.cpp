@@ -83,7 +83,7 @@ Expression::Expression( const std::string &name )
 		)
 	);
 
-	addChild( new ValuePlug( "__in" ) );
+	addChild( new ValuePlug( "__in", Plug::In, Plug::Default & ~Plug::AcceptsInputs ) );
 	addChild( new ValuePlug( "__out", Plug::Out ) );
 	addChild( new ObjectVectorPlug( "__execute", Plug::Out, new ObjectVector ) );
 }

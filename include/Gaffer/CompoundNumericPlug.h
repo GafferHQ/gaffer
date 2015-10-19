@@ -41,7 +41,6 @@
 #include "OpenEXR/ImathVec.h"
 #include "OpenEXR/ImathColor.h"
 
-#include "Gaffer/CompoundPlug.h"
 #include "Gaffer/NumericPlug.h"
 
 namespace Gaffer

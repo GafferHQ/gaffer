@@ -36,7 +36,10 @@
 
 #include "tbb/tbb.h"
 
+#include "IECore/SimpleTypedData.h"
+
 #include "Gaffer/Node.h"
+#include "Gaffer/Plug.h"
 #include "Gaffer/Metadata.h"
 
 #include "GafferTest/Assert.h"

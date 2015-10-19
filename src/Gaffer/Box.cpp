@@ -41,7 +41,6 @@
 
 #include "Gaffer/Box.h"
 #include "Gaffer/StandardSet.h"
-#include "Gaffer/PlugIterator.h"
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/CompoundPlug.h"
 #include "Gaffer/ScriptNode.h"

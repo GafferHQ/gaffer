@@ -45,9 +45,11 @@
 #include "boost/optional.hpp"
 
 #include "IECore/CompoundData.h"
+#include "IECore/SimpleTypedData.h"
 
 #include "Gaffer/Node.h"
 #include "Gaffer/Action.h"
+#include "Gaffer/Plug.h"
 
 #include "Gaffer/Metadata.h"
 

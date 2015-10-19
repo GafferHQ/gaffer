@@ -35,6 +35,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include "IECore/SimpleTypedData.h"
+
 #include "Gaffer/Plug.h"
 #include "Gaffer/Node.h"
 #include "Gaffer/Metadata.h"

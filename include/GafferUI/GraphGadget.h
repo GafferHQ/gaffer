@@ -38,12 +38,13 @@
 #ifndef GAFFERUI_GRAPHGADGET_H
 #define GAFFERUI_GRAPHGADGET_H
 
+#include "Gaffer/Plug.h"
+
 #include "GafferUI/ContainerGadget.h"
 
 namespace Gaffer
 {
 IE_CORE_FORWARDDECLARE( Node );
-IE_CORE_FORWARDDECLARE( Plug );
 IE_CORE_FORWARDDECLARE( ScriptNode );
 IE_CORE_FORWARDDECLARE( Set );
 }

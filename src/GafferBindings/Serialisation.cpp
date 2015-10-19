@@ -46,6 +46,7 @@
 #include "IECorePython/ScopedGILLock.h"
 
 #include "Gaffer/Context.h"
+#include "Gaffer/Plug.h"
 
 #include "GafferBindings/Serialisation.h"
 #include "GafferBindings/GraphComponentBinding.h"
