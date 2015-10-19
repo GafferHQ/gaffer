@@ -339,7 +339,7 @@ class ExpressionTest( GafferTest.TestCase ) :
 
 		s = Gaffer.ScriptNode()
 		s["fileName"].setValue( os.path.dirname( __file__ ) + "/scripts/legacyExpression.gfr" )
-		s.load()
+		s.load( continueOnError = True )
 
 		s.context().setFrame( 3 )
 		with s.context() :
@@ -816,7 +816,7 @@ class ExpressionTest( GafferTest.TestCase ) :
 
 		s = Gaffer.ScriptNode()
 		s["fileName"].setValue( os.path.dirname( __file__ ) + "/scripts/expressionVersion-0.15.0.0.gfr" )
-		s.load()
+		s.load( continueOnError = True )
 
 		self.assertEqual( s["n"]["user"]["b"].getValue(), 2 )
 		self.assertTrue( s["n"]["user"]["b"].getInput().node().isSame( s["e"] ) )
