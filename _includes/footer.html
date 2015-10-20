@@ -1,23 +1,23 @@
 		</div>
-		
+
 		<hr>
 		<div class="container">
 			<div class="footer">
 				<p>&copy; 2013, Image Engine Design Inc. &copy; 2013, John Haddon</p>
 			</div>
 		</div>
-		
+
 	</div>
-	
+
 	<script src="http://code.jquery.com/jquery-latest.js"></script>
-	<script src="/gaffer/js/bootstrap.js"></script>
-	 
+	<script src="{{ site.baseurl }}/js/bootstrap.js"></script>
+
 	<script>
- 
+
 	$( document ).ready(function() {
 
 		// fade up page content on load
-	 
+
 		$( "#contentContainer" ).css( { opacity : 0 } );
 		$( "#contentContainer" ).fadeTo( 350, 1 );
 
@@ -31,17 +31,17 @@
 			{
 				return;
 			}
-			
+
 			// abort if the link is to an external url or to an
 			// anchor on this page - in that case we don't want to
 			// fade out.
-			
+
 			var href = this.href;
 			if( href.match( /:/ ) || href.match( /^#/ ) )
 			{
 				return;
 			}
-			
+
 			// fade our main content out, loading the new page manually
 			// when it's done.
 			$( "#contentContainer" ).fadeTo(

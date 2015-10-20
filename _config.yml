@@ -1,3 +1,3 @@
 paginate: 1
 permalink: /blog/:title/
-
+baseurl: /gaffer

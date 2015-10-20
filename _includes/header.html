@@ -4,11 +4,11 @@
 	<title>{{ page.title }}</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<!-- Bootstrap -->
-	<link href="/gaffer/css/bootstrap.css" rel="stylesheet" media="screen">
-	<link href="/gaffer/css/bootstrap-theme.css" rel="stylesheet">
+	<link href="{{ site.baseurl }}/css/bootstrap.css" rel="stylesheet" media="screen">
+	<link href="{{ site.baseurl }}/css/bootstrap-theme.css" rel="stylesheet">
 	<!-- Our styling -->
-	<link rel="stylesheet" type="text/css" href="css/custom-style.css"/>
-	<link rel="icon" type="image/png" href="/gaffer/img/GafferLogoMini.png" />
+	<link rel="stylesheet" type="text/css" href="{{ site.baseurl }}/css/custom-style.css"/>
+	<link rel="icon" type="image/png" href="{{ site.baseurl }}/img/GafferLogoMini.png" />
 </head>
 
 <body>
@@ -21,34 +21,34 @@
 				<span class="icon-bar"></span>
 				<span class="icon-bar"></span>
 			</button>
-			<a class="navbar-brand" href="/gaffer/index.html"> Gaffer</a>
+			<a class="navbar-brand" href="{{ site.baseurl }}/index.html"> Gaffer</a>
 		</div>
 		<!-- Collect the nav links, forms, and other content for toggling -->
 		<div class="collapse navbar-collapse">
 			<ul class="nav navbar-nav">
 				<li {% if page.url == '/index.html' %} class="active" {% endif %}>
-					<a href="/gaffer/index.html"> <span class="glyphicon glyphicon-home"></span> Home</a>
+					<a href="{{ site.baseurl }}/index.html"> <span class="glyphicon glyphicon-home"></span> Home</a>
 				</li>
 				<li {% if page.url == '/getStarted.html' %} class="active" {% endif %}>
-					<a href="/gaffer/getStarted.html">Get Started</a>
+					<a href="{{ site.baseurl }}/getStarted.html">Get Started</a>
 				</li>
 				<li {% if page.url == '/forum.html' %} class="active" {% endif %}>
-					<a href="/gaffer/forum.html">Forum</a>
+					<a href="{{ site.baseurl }}/forum.html">Forum</a>
 				</li>
 				<!--<li {% if page.url contains '/blog'  %} class="active" {% endif %}>
-					<a href="/gaffer/{{ site.posts.first.url }}">Blog</a>
+					<a href="{{ site.baseurl }}{{ site.posts.first.url }}">Blog</a>
 				</li>-->
 				<li {% if page.url == '/demos.html'  %} class="active" {% endif %}>
-					<a href="/gaffer/demos.html">Demos</a>
+					<a href="{{ site.baseurl }}/demos.html">Demos</a>
 				</li>
 			</ul>
 			<ul class="nav navbar-nav navbar-right">
 				<li class="dropdown">
 					<a href="#" class="dropdown-toggle" data-toggle="dropdown"> Documentation <b class="caret"></b></a>
 					<ul class="dropdown-menu">
-						<li><a href="resources/documents/latest/GafferUserGuide.pdf">User Guide</a></li>
-						<li><a href="resources/documents/latest/GafferNodeReference.pdf">Node Reference</a></li>
-						<li><a href="resources/documents/latest/GafferLicenses.pdf">Licenses</a></li>
+						<li><a href="{{ site.baseurl }}/resources/documents/latest/GafferUserGuide.pdf">User Guide</a></li>
+						<li><a href="{{ site.baseurl }}/resources/documents/latest/GafferNodeReference.pdf">Node Reference</a></li>
+						<li><a href="{{ site.baseurl }}/resources/documents/latest/GafferLicenses.pdf">Licenses</a></li>
 					</ul>
 				</li>
 		    </ul>
