@@ -170,7 +170,7 @@ class FormatPlugValueWidget( GafferUI.PlugValueWidget ) :
 			# actually be one of the registered formats. So we use this
 			# metadata value to keep track of the user's desire to be in
 			# custom mode despite of this fact. We use metadata rather than
-			# a member variable so that undo will take us make to the non-custom
+			# a member variable so that undo will take us back to the non-custom
 			# state automatically.
 			Gaffer.Metadata.registerPlugValue( self.getPlug(), "formatPlugValueWidget:mode", "custom", persistent = False )
 
