@@ -34,27 +34,36 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
-
-#include "IECorePython/ScopedGILRelease.h"
-
 #include "GafferImage/ImagePlug.h"
-
+#include "GafferImage/ImageAlgo.h"
 #include "GafferImageTest/ProcessTiles.h"
-#include "GafferImageTest/ImageReaderTest.h"
 
-using namespace boost::python;
-using namespace GafferImageTest;
+using namespace std;
+using namespace IECore;
+using namespace Gaffer;
+using namespace GafferImage;
 
-static void processTilesWrapper( GafferImage::ImagePlug *imagePlug )
+namespace
 {
-	IECorePython::ScopedGILRelease gilRelease;
-	processTiles( imagePlug );
+
+struct TilesEvaluateFunctor
+{
+	bool operator()( const GafferImage::ImagePlug *imagePlug, const std::string &channelName, const Imath::V2i &tileOrigin )
+	{
+		imagePlug->channelDataPlug()->getValue();
+		return true;
+	}
+};
+
+} // namespace
+
+namespace GafferImageTest
+{
+	
+void processTiles( const GafferImage::ImagePlug *imagePlug )
+{
+	TilesEvaluateFunctor f;
+	parallelProcessTiles( imagePlug, imagePlug->channelNamesPlug()->getValue()->readable(), f );
 }
 
-BOOST_PYTHON_MODULE( _GafferImageTest )
-{
-	def( "processTiles", &processTilesWrapper );
-	def( "testOIIOJpgRead", &testOIIOJpgRead );
-	def( "testOIIOExrRead", &testOIIOExrRead );
-}
+} // namespace GafferImageTest
