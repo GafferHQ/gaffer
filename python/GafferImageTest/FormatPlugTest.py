@@ -200,5 +200,20 @@ class FormatPlugTest( unittest.TestCase ) :
 
 		self.assertEqual( s["n2"]["user"]["f"].getValue(), GafferImage.Format( IECore.Box2i( IECore.V2i( 10, 20 ), IECore.V2i( 120, 130 ) ), 0.5 ) )
 
+	def testDefaultExpression( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = Gaffer.Node()
+		s["n"]["f"] = GafferImage.FormatPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		f = GafferImage.Format( 100, 200, 1 )
+		s["n"]["f"].setValue( f )
+
+		s["e"] = Gaffer.Expression()
+		s["e"].setExpression( s["e"].defaultExpression( s["n"]["f"], "python" ) )
+
+		self.assertTrue( s["n"]["f"].getInput().node().isSame( s["e"] ) )
+		self.assertEqual( s["n"]["f"].getValue(), f )
+
 if __name__ == "__main__":
 	unittest.main()

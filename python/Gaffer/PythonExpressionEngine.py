@@ -91,7 +91,17 @@ class PythonExpressionEngine( Gaffer.Expression.Engine ) :
 
 	def apply( self, proxyOutput, topLevelProxyOutput, value ) :
 
-		_setPlugValue( proxyOutput, topLevelProxyOutput, value )
+		# NullObject signifies that the expression didn't
+		# provide a value at all - set the plug to its default.
+		if isinstance( value, IECore.NullObject ) :
+			proxyOutput.setToDefault()
+			return
+
+		value = _extractPlugValue( proxyOutput, topLevelProxyOutput, value )
+		if value is None :
+			raise TypeError( "Unsupported value type \"%s\"" % type( value ).__name__ )
+		else :
+			proxyOutput.setValue( value )
 
 	def identifier( self, node, plug ) :
 
@@ -121,26 +131,58 @@ class PythonExpressionEngine( Gaffer.Expression.Engine ) :
 
 	def defaultExpression( self, plug ) :
 
-		if not isinstance( plug, (
-			Gaffer.FloatPlug, Gaffer.IntPlug,
-			Gaffer.StringPlug, Gaffer.BoolPlug,
-			Gaffer.V3fPlug, Gaffer.V3iPlug,
-			Gaffer.V2fPlug, Gaffer.V2iPlug,
-			Gaffer.Color3fPlug, Gaffer.Color4fPlug,
-			Gaffer.Box2fPlug, Gaffer.Box2iPlug,
-			Gaffer.Box3fPlug, Gaffer.Box3iPlug,
-		) ) :
-			return ""
-
+		# If there's no parent scope, we can't make an expression.
 		parentNode = plug.node().ancestor( Gaffer.Node )
 		if parentNode is None :
 			return ""
 
-		result = "parent[\""
+		# If we can't extract a value, we can't make an expression.
+		if not hasattr( plug, "getValue" ) :
+			return ""
+
+		# If we can't store the value in an ObjectVector, we can't
+		# return the value in execute().
+		value = plug.getValue()
+		objectVector = IECore.ObjectVector()
+		try :
+			objectVector.append( value )
+		except :
+			return ""
+
+		# If we can't extract the appropriate value for every leaf
+		# plug, we can't apply the value after execution.
+
+		def canExtractValue( plug, topLevelPlug, value ) :
+
+			if not len( plug ) :
+				# no children - must be able to extract
+				# a value for use in apply.
+				return _extractPlugValue( plug, topLevelPlug, value ) is not None
+			else :
+				# compound plug - check all children.
+				for child in plug.children() :
+					if not canExtractValue( child, topLevelPlug, value ) :
+						return False
+
+				return True
+
+		if not canExtractValue( plug, plug, objectVector[0] ) :
+			return ""
+
+		# Looks like we can support this plug, so make and return
+		# a suitable expression.
+
+		result = ""
+
+		modulePath = Gaffer.Serialisation.modulePath( value )
+		if modulePath not in ( "IECore", "" ) :
+			result += "import " + modulePath + "\n\n"
+
+		result += "parent[\""
 		result += plug.relativeName( parentNode ).replace( ".", "\"][\"" )
 		result += "\"] = "
 
-		result += repr( plug.getValue() )
+		result += repr( value )
 
 		return result
 
@@ -262,74 +304,65 @@ class _Parser( ast.NodeVisitor ) :
 # Functions for setting plug values.
 ##########################################################################
 
-def __typedPlugSetter( plug, topLevelPlug, value ) :
+def __typedPlugValueExtractor( plug, topLevelPlug, value ) :
 
-	plug.setValue( value.value )
+	return value.value
 
-def __compoundNumericPlugSetter( plug, topLevelPlug, value ) :
+def __compoundNumericPlugValueExtractor( plug, topLevelPlug, value ) :
 
 	index = topLevelPlug.children().index( plug )
-	plug.setValue( value.value[index] )
+	return value.value[index]
 
-def __boxPlugSetter( plug, topLevelPlug, value ) :
+def __boxPlugValueExtractor( plug, topLevelPlug, value ) :
 
 	vectorPlug = plug.parent()
 	index = vectorPlug.children().index( plug )
 
 	vector = value.value.min if vectorPlug.getName() == "min" else value.value.max
 
-	plug.setValue( vector[index] )
+	return vector[index]
 
-def __defaultSetter( plug, topLevelPlug, value ) :
+def __defaultValueExtractor( plug, topLevelPlug, value ) :
 
 	with IECore.IgnoredExceptions( AttributeError ) :
 		value = value.value
 
 	# Deal with the simple atomic plug case.
 	if plug.isSame( topLevelPlug ) :
-		plug.setValue( value )
-		return
+		return value
 
 	# Plug must be a child of a compound of
 	# some sort. We need to try to extract
 	# the right part of the compound value.
-	componentValue = value
 	for name in plug.relativeName( topLevelPlug ).split( "." ) :
 		try :
-			componentValue = getattr( componentValue, name )
+			value = getattr( value, name )
 		except AttributeError :
-			accessor = getattr( componentValue, "get" + name[0].upper() + name[1:], None )
+			accessor = getattr( value, "get" + name[0].upper() + name[1:], None )
 			if accessor is not None :
-				componentValue = accessor()
+				value = accessor()
 			else :
-				raise TypeError( "Unsupported value type \"%s\"" % type( value ).__name__ )
+				return None
 
-	plug.setValue( componentValue )
+	return value
 
-_setters = {
-	Gaffer.IntPlug : __typedPlugSetter,
-	Gaffer.FloatPlug : __typedPlugSetter,
-	Gaffer.StringPlug : __typedPlugSetter,
-	Gaffer.BoolPlug : __typedPlugSetter,
-	Gaffer.V2fPlug : __compoundNumericPlugSetter,
-	Gaffer.V2iPlug : __compoundNumericPlugSetter,
-	Gaffer.V3fPlug : __compoundNumericPlugSetter,
-	Gaffer.V3iPlug : __compoundNumericPlugSetter,
-	Gaffer.Color3fPlug : __compoundNumericPlugSetter,
-	Gaffer.Color4fPlug : __compoundNumericPlugSetter,
-	Gaffer.Box2fPlug : __boxPlugSetter,
-	Gaffer.Box2iPlug : __boxPlugSetter,
-	Gaffer.Box3fPlug : __boxPlugSetter,
-	Gaffer.Box3iPlug : __boxPlugSetter,
+_valueExtractors = {
+	Gaffer.IntPlug : __typedPlugValueExtractor,
+	Gaffer.FloatPlug : __typedPlugValueExtractor,
+	Gaffer.StringPlug : __typedPlugValueExtractor,
+	Gaffer.BoolPlug : __typedPlugValueExtractor,
+	Gaffer.V2fPlug : __compoundNumericPlugValueExtractor,
+	Gaffer.V2iPlug : __compoundNumericPlugValueExtractor,
+	Gaffer.V3fPlug : __compoundNumericPlugValueExtractor,
+	Gaffer.V3iPlug : __compoundNumericPlugValueExtractor,
+	Gaffer.Color3fPlug : __compoundNumericPlugValueExtractor,
+	Gaffer.Color4fPlug : __compoundNumericPlugValueExtractor,
+	Gaffer.Box2fPlug : __boxPlugValueExtractor,
+	Gaffer.Box2iPlug : __boxPlugValueExtractor,
+	Gaffer.Box3fPlug : __boxPlugValueExtractor,
+	Gaffer.Box3iPlug : __boxPlugValueExtractor,
 }
 
-def _setPlugValue( plug, topLevelPlug, value ) :
+def _extractPlugValue( plug, topLevelPlug, value ) :
 
-	# NullObject signifies that the expression didn't
-	# provide a value at all - set the plug to its default.
-	if isinstance( value, IECore.NullObject ) :
-		plug.setToDefault()
-		return
-
-	# Otherwise delegate to the appropriate setter for the plug type
-	_setters.get( type( topLevelPlug ), __defaultSetter )( plug, topLevelPlug, value )
+	return _valueExtractors.get( type( topLevelPlug ), __defaultValueExtractor )( plug, topLevelPlug, value )
