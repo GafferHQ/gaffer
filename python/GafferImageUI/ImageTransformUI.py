@@ -75,6 +75,8 @@ Gaffer.Metadata.registerNode(
 			the danger of aliasing or ringing.
 			""",
 
+			"plugValueWidget:type", "GafferImageUI.FilterPlugValueWidget",
+
 		],
 
 	}

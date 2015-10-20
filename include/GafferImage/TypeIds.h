@@ -77,7 +77,7 @@ enum TypeId
 	SincFilterTypeId = 110781,
 	LanczosFilterTypeId = 110782,
 	ImageStatsTypeId = 110783,
-	ImageTransformImplementationTypeId = 110784,
+	ImageTransformImplementationTypeId = 110784, // Obsolete - available for reuse
 	DeleteChannelsTypeId = 110785,
 	ColorProcessorTypeId = 110786,
 	ClampTypeId = 110787,

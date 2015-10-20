@@ -37,17 +37,22 @@
 #ifndef GAFFERSCENE_IMAGETRANSFORM_H
 #define GAFFERSCENE_IMAGETRANSFORM_H
 
-#include "Gaffer/Transform2DPlug.h"
-
 #include "GafferImage/ImageProcessor.h"
+
+namespace Gaffer
+{
+
+IE_CORE_FORWARDDECLARE( StringPlug )
+IE_CORE_FORWARDDECLARE( Transform2DPlug )
+
+} // namespace Gaffer
 
 namespace GafferImage
 {
 
-IE_CORE_FORWARDDECLARE( Reformat );
-IE_CORE_FORWARDDECLARE( FilterPlug );
+IE_CORE_FORWARDDECLARE( Resample )
 
-class ImageTransform : public GafferImage::ImageProcessor
+class ImageTransform : public ImageProcessor
 {
 	public :
 
@@ -57,20 +62,53 @@ class ImageTransform : public GafferImage::ImageProcessor
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::ImageTransform, ImageTransformTypeId, ImageProcessor );
 
 		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
-		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const;
 
 		Gaffer::Transform2DPlug *transformPlug();
 		const Gaffer::Transform2DPlug *transformPlug() const;
 
-		bool enabled() const;
+		Gaffer::StringPlug *filterPlug();
+		const Gaffer::StringPlug *filterPlug() const;
+
+	protected :
+
+		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const;
+
+		virtual void hashDataWindow( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual Imath::Box2i computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const;
+
+		virtual void hashChannelData( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual IECore::ConstFloatVectorDataPtr computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const;
 
 	private :
 
-		GafferImage::AtomicFormatPlug *formatPlug();
-		const GafferImage::AtomicFormatPlug *formatPlug() const;
+		// Output plug to compute the data window for the internal
+		// Resample.
+		Gaffer::AtomicBox2fPlug *resampleDataWindowPlug();
+		const Gaffer::AtomicBox2fPlug *resampleDataWindowPlug() const;
+
+		// Input plug to receive the scaled and translated image
+		// from the internal Resample.
+		ImagePlug *resampledInPlug();
+		const ImagePlug *resampledInPlug() const;
+
+		// The internal Resample node.
+		Resample *resample();
+		const Resample *resample() const;
+
+		enum Operation
+		{
+			Identity = 0,
+			Scale = 1,
+			Translate = 2,
+			Rotate = 4,
+		};
+
+		unsigned operation( Imath::M33f &matrix, Imath::M33f &resampleMatrix ) const;
+		Imath::Box2i sampler( unsigned op, const Imath::M33f &matrix, const Imath::M33f &resampleMatrix, const Imath::V2i &tileOrigin, const ImagePlug *&samplerImage, Imath::M33f &samplerMatrix ) const;
 
 		static size_t g_firstPlugIndex;
+
 };
 
 IE_CORE_DECLAREPTR( ImageTransform )
