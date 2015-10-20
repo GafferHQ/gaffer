@@ -40,3 +40,4 @@ GafferImage.Format.registerFormat( GafferImage.Format( 640, 480, 1. ), "PC Video
 GafferImage.Format.registerFormat( GafferImage.Format( 1024, 778, 1. ), "1K Super 35 (full-ap) 1024x778 1" )
 GafferImage.Format.registerFormat( GafferImage.Format( 2048, 1556, 1. ), "2K Super 35 (full-ap) 2048x1556 1" )
 GafferImage.Format.registerFormat( GafferImage.Format( 4096, 3112, 1. ), "4K Super 35 (full-ap) 4096x3112 1" )
+GafferImage.Format.registerFormat( GafferImage.Format( 1920, 1080, 1. ), "HD 1080p 1920x1080 1" )
