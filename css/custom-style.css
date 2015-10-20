@@ -5,3 +5,37 @@ code {
 	color:rgb(120,120,120);
 	background-color: transparent;
 }
+
+figure.titleFrame img {
+
+	opacity: 0.5
+
+}
+
+figure.titleFrame:before {
+
+	/* play button */
+	content: "\e029";
+
+	font-family: 'Glyphicons Halflings';
+	font-size: 2em;
+	text-align: center;
+	line-height: 50px;
+
+	position: absolute;
+	width: 50px;
+	/*height: 50px;*/
+	left: 50%;
+	top: 50%;
+	margin-left: -25px;
+	margin-top: -25px;
+
+}
+
+figure {
+
+	position: relative;
+	cursor: pointer;
+	display: inline-block;
+
+}

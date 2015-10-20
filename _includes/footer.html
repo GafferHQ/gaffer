@@ -17,11 +17,13 @@
 	$( document ).ready(function() {
 
 		// fade up page content on load
+		//////////////////////////////////////////////////////////////
 
 		$( "#contentContainer" ).css( { opacity : 0 } );
 		$( "#contentContainer" ).fadeTo( 350, 1 );
 
 		// fade out page content on visiting a link
+		//////////////////////////////////////////////////////////////
 
 		$( "a" ).on( "click", function( event ) {
 
@@ -54,11 +56,49 @@
 			event.preventDefault();
 
 		} );
-    
+
+		// find animated gifs and add nice features like click-to-play
+		//////////////////////////////////////////////////////////////
+
+		function toggleAnimation( image ) {
+
+			if( image.src.endsWith( ".png" ) )
+			{
+				image.src = image.src.replace( ".png", "Animation.gif" );
+				image.parentNode.setAttribute( "class", "" );
+			}
+			else
+			{
+				image.src = image.src.replace( "Animation.gif", ".png" );
+				image.parentNode.setAttribute( "class", "titleFrame" );
+			}
+
+		}
+
+		// it'd be nice to use an attribute to say which images
+		// get this treatment, but we use the filename instead,
+		// since we can't set arbitrary attributes using the
+		// markdown in our blog posts.
+
+		var animations = $( "img[src$='Animation.gif']" );
+
+		// wrap in a figure so we can add an overlay with the play icon.
+		// this is done via the css.
+
+		animations.wrap( "<figure></figure>" );
+
+		// turn off the animation to start with
+
+		animations.each( function() { toggleAnimation( this ); } );
+
+		// and arrange to turn it on when clicked
+
+		animations.on( "click", function() { toggleAnimation( this ); } );
+
 	});
- 
+
  	</script>
-    
+
 	</body>
 </html>
 
