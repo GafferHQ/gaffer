@@ -51,13 +51,13 @@ class FormatPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__menuButton = GafferUI.MenuButton( menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) ) )
 		grid[0:2,0] = self.__menuButton
 
-		self.__minLabel = GafferUI.Label( "Origin" )
+		self.__minLabel = GafferUI.Label( "Min" )
 		grid.addChild( self.__minLabel, index = ( 0, 1 ), alignment = ( GafferUI.HorizontalAlignment.Right, GafferUI.VerticalAlignment.Center ) )
 
 		self.__minWidget = GafferUI.CompoundNumericPlugValueWidget( plug["displayWindow"]["min"] )
 		grid[1,1] = self.__minWidget
 
-		self.__maxLabel = GafferUI.Label( "Size" )
+		self.__maxLabel = GafferUI.Label( "Max" )
 		grid.addChild( self.__maxLabel, index = ( 0, 2 ), alignment = ( GafferUI.HorizontalAlignment.Right, GafferUI.VerticalAlignment.Center ) )
 
 		self.__maxWidget = GafferUI.CompoundNumericPlugValueWidget( plug["displayWindow"]["max"] )
@@ -109,8 +109,14 @@ class FormatPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self.__menuButton.setText( text if mode != "custom" else "Custom" )
 
-		for widget in ( self.__minLabel, self.__minWidget, self.__maxLabel, self.__maxWidget, self.__pixelAspectLabel, self.__pixelAspectWidget ) :
+		nonZeroOrigin = fmt.getDisplayWindow().min != IECore.V2i( 0 )
+		for widget in ( self.__minLabel, self.__minWidget ) :
+			widget.setVisible( mode == "custom" and nonZeroOrigin )
+
+		for widget in ( self.__maxLabel, self.__maxWidget, self.__pixelAspectLabel, self.__pixelAspectWidget ) :
 			widget.setVisible( mode == "custom" )
+
+		self.__maxLabel.setText( "Max" if nonZeroOrigin else "Size" )
 
 	def __menuDefinition( self ) :
 
