@@ -70,6 +70,11 @@ class FormatPlugValueWidget( GafferUI.PlugValueWidget ) :
 		grid[1,3] = self.__pixelAspectWidget
 
 		self.__plugMetadataChangedConnection = Gaffer.Metadata.plugValueChangedSignal().connect( Gaffer.WeakMethod( self.__plugMetadataChanged ) )
+		# If the plug hasn't got an input, the PlugValueWidget base class assumes we're not
+		# sensitive to contex changes and omits calls to _updateFromPlug(). But the default
+		# format mechanism uses the context, so we must arrange to do updates ourselves when
+		# necessary.
+		self.__contextChangedConnection = self.getContext().changedSignal().connect( Gaffer.WeakMethod( self.__contextChanged ) )
 
 		self._addPopupMenu( self.__menuButton )
 		self._updateFromPlug()
@@ -94,18 +99,17 @@ class FormatPlugValueWidget( GafferUI.PlugValueWidget ) :
 			with self.getContext() :
 				fmt = self.getPlug().getValue()
 
+			text = self.__formatLabel( fmt )
+
 			if fmt == GafferImage.Format() :
-				text = "Default Format"
 				# The empty display window of the default format is
 				# confusing to look at, so turn off custom mode.
 				mode = "standard"
-			else :
-				text = GafferImage.Format.name( fmt )
-				if not text :
-					# If the chosen format hasn't been registered,
-					# force custom mode even if it hasn't been
-					# asked for explicitly.
-					mode = "custom"
+			elif not GafferImage.Format.name( fmt ) :
+				# If the chosen format hasn't been registered,
+				# force custom mode even if it hasn't been
+				# asked for explicitly.
+				mode = "custom"
 
 		self.__menuButton.setText( text if mode != "custom" else "Custom" )
 
@@ -124,18 +128,15 @@ class FormatPlugValueWidget( GafferUI.PlugValueWidget ) :
 		if self.getPlug() is None :
 			return result
 
-		formats = []
+		formats = [ GafferImage.Format.format( n ) for n in GafferImage.Format.registeredFormats() ]
 		if not self.getPlug().ancestor( Gaffer.ScriptNode ).isSame( self.getPlug().node() ) :
-			formats.append( ( "Default Format", GafferImage.Format() ) )
-
-		for name in GafferImage.Format.registeredFormats() :
-			formats.append( ( name, GafferImage.Format.format( name ) ) )
+			formats.insert( 0, GafferImage.Format() )
 
 		currentFormat = self.getPlug().getValue()
 		modeIsCustom = Gaffer.Metadata.plugValue( self.getPlug(), "formatPlugValueWidget:mode" ) == "custom"
-		for name, fmt in formats :
+		for fmt in formats :
 			result.append(
-				"/" + name,
+				"/" + self.__formatLabel( fmt ),
 				{
 					"command" : functools.partial( Gaffer.WeakMethod( self.__applyFormat ), fmt = fmt ),
 					"checkBox" : fmt == currentFormat and not modeIsCustom,
@@ -148,11 +149,22 @@ class FormatPlugValueWidget( GafferUI.PlugValueWidget ) :
 			"/Custom",
 			{
 				"command" : Gaffer.WeakMethod( self.__applyCustomFormat ),
-				"checkBox" : modeIsCustom or currentFormat not in [ f[1] for f in formats ],
+				"checkBox" : modeIsCustom or currentFormat not in formats,
 			}
 		)
 
 		return result
+
+	def __formatLabel( self, fmt ) :
+
+		if fmt == GafferImage.Format() :
+			return "Default ( %s )" % GafferImage.FormatPlug.getDefaultFormat( self.getContext() )
+		else :
+			name = GafferImage.Format.name( fmt )
+			if name :
+				return "%s ( %s )" % ( name, str( fmt ) )
+			else :
+				return "Custom"
 
 	def __applyFormat( self, unused, fmt ) :
 
@@ -189,6 +201,11 @@ class FormatPlugValueWidget( GafferUI.PlugValueWidget ) :
 			return
 
 		if key == "formatPlugValueWidget:mode" :
+			self._updateFromPlug()
+
+	def __contextChanged( self, context, key ) :
+
+		if key == "image:defaultFormat" :
 			self._updateFromPlug()
 
 GafferUI.PlugValueWidget.registerType( GafferImage.FormatPlug, FormatPlugValueWidget )
