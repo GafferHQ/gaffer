@@ -62,7 +62,7 @@ enum TypeId
 	ShuffleChannelPlugTypeId = 110766,
 	ChannelMaskPlugTypeId = 110767,
 	ReformatTypeId = 110768, // Obsolete - available for reuse
-	FilterPlugTypeId = 110769,
+	FilterPlugTypeId = 110769, // Obsolete - available for reuse
 	ImageWriterTypeId = 110770,
 	ImageTransformTypeId = 110771,
 	FilterTypeId = 110772,
