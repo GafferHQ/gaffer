@@ -76,16 +76,24 @@ class Sampler
 		/// @param boundingMode The method of handling samples that fall outside the data window.
 		Sampler( const GafferImage::ImagePlug *plug, const std::string &channelName, const Imath::Box2i &sampleWindow, BoundingMode boundingMode = Black );
 
-		/// \deprecated We are phasing out use of GafferImage::Filter.
-		Sampler( const GafferImage::ImagePlug *plug, const std::string &channelName, const Imath::Box2i &sampleWindow, GafferImage::ConstFilterPtr filter, BoundingMode boundingMode = Black );
+		/// Samples the channel value at the specified
+		/// integer pixel coordinate. It is the caller's
+		/// responsibility to ensure that this point is
+		/// contained within the sample window passed
+		/// to the constructor.
+		inline float sample( int x, int y );
 
-		/// Samples a colour value from the channel at x, y.
+		/// Samples the channel value at the specified
+		/// subpixel location using bilinear interpolation.
 		/// It is the caller's responsibility to ensure that
 		/// this point is contained within the sample window
 		/// passed to the constructor.
-		inline float sample( int x, int y );
-
-		/// Sub-samples the image using a filter.
+		///
+		/// \note The centres of pixels (where no interpolation
+		/// is needed) are located at N + 0.5 where N is the integer
+		/// pixel location. For instance, the centre of the
+		/// pixel at the bottom left of the image has coordinate
+		/// 0.5, 0.5.
 		inline float sample( float x, float y );
 
 		/// Appends a hash that represent all the pixel
@@ -95,10 +103,7 @@ class Sampler
 		/// empty hash object and return it.
 		IECore::MurmurHash hash() const;
 
-	private:
-
-		// Initialisation required by both constructors.
-		void init( const Imath::Box2i &sampleWindow );
+	private :
 
 		/// Cached data access
 		/// @param p Any point within the cache that we wish to retrieve the data for.
@@ -117,7 +122,6 @@ class Sampler
 		int m_cacheWidth;
 
 		BoundingMode m_boundingMode;
-		ConstFilterPtr m_filter;
 
 };
 

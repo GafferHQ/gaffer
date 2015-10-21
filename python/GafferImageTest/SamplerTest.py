@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2013-2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -47,157 +47,73 @@ class SamplerTest( GafferImageTest.ImageTestCase ) :
 
 	fileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/checker.exr" )
 
-	def testConstructors( self ) :
-
-		s = Gaffer.ScriptNode()
-		r = GafferImage.ImageReader()
-		s.addChild( r )
-
-		r["fileName"].setValue( self.fileName )
-
-		bounds = r["out"]["dataWindow"].getValue();
-
-		# Check that the default sampler is the same as a sampler with the default filter.
-		defaultSampler = GafferImage.Sampler( r["out"], "R", bounds, GafferImage.Sampler.BoundingMode.Black )
-
-		defaultFilter = GafferImage.Filter.create( GafferImage.Filter.defaultFilter() )
-		sampler = GafferImage.Sampler( r["out"], "R", bounds, defaultFilter, GafferImage.Sampler.BoundingMode.Black )
-
-		c = Gaffer.Context()
-		c["image:channelName"] = 'R'
-		c["image:tileOrigin"] = IECore.V2i( 0 )
-		with c:
-			self.assertEqual( sampler.sample( bounds.min.x+.5, bounds.min.y+.5 ), defaultSampler.sample( bounds.min.x+.5, bounds.min.y+.5 ) )
-
-
 	def testOutOfBoundsSampleModeBlack( self ) :
 
-		s = Gaffer.ScriptNode()
-		r = GafferImage.ImageReader()
-		r["fileName"].setValue( self.fileName )
-		s.addChild( r )
+		c = GafferImage.Constant()
+		c["color"].setValue( IECore.Color4f( 1 ) )
 
-		c = Gaffer.Context()
-		c["image:channelName"] = 'R'
-		c["image:tileOrigin"] = IECore.V2i( 0 )
+		dw = c["out"]["dataWindow"].getValue();
+		s = GafferImage.Sampler( c["out"], "R", dw, GafferImage.Sampler.BoundingMode.Black )
 
-		bounds = r["out"]["dataWindow"].getValue();
+		# Check integer sampling.
+		#########################
 
-		testCases = [
-			( bounds.min.x-1, bounds.min.y ),
-			( bounds.min.x, bounds.min.y-1 ),
-			( bounds.max.x-1, bounds.max.y ),
-			( bounds.max.x, bounds.max.y-1 ),
-			( bounds.min.x-1, bounds.max.y-1 ),
-			( bounds.min.x, bounds.max.y ),
-			( bounds.max.x, bounds.min.y ),
-			( bounds.max.x-1, bounds.min.y-1 )
-		]
+		# Pixels on corners of dataWindow should be white.
 
-		self.assertTrue( "Box" in GafferImage.Filter.filters() )
-		f = GafferImage.Filter.create("Box")
+		self.assertEqual( s.sample( dw.min.x, dw.min.y ), 1 )
+		self.assertEqual( s.sample( dw.max.x - 1, dw.min.y ), 1 )
+		self.assertEqual( s.sample( dw.max.x - 1, dw.max.y - 1 ), 1 )
+		self.assertEqual( s.sample( dw.min.x, dw.max.y - 1 ), 1 )
 
-		with c :
+		# Pixels just outside dataWindow should be white.
 
-			self.assertTrue( "R" in r["out"]["channelNames"].getValue() )
-			s = GafferImage.Sampler( r["out"], "R", bounds, f, GafferImage.Sampler.BoundingMode.Black )
+		self.assertEqual( s.sample( dw.min.x - 1, dw.min.y - 1 ), 0 )
+		self.assertEqual( s.sample( dw.max.x, dw.min.y - 1 ), 0 )
+		self.assertEqual( s.sample( dw.max.x, dw.max.y ), 0 )
+		self.assertEqual( s.sample( dw.min.x - 1, dw.max.y ), 0 )
 
-			# Check that the bounding pixels are non zero.
-			self.assertNotEqual( s.sample( bounds.min.x+.5, bounds.min.y+.5 ), 0. )
-			self.assertNotEqual( s.sample( bounds.max.x-.5, bounds.max.y-.5 ), 0. )
-			self.assertNotEqual( s.sample( bounds.min.x+.5, bounds.max.y-.5 ), 0. )
-			self.assertNotEqual( s.sample( bounds.max.x-.5, bounds.min.y+.5 ), 0. )
+		# Check interpolated sampling.
+		##############################
 
-			# Sample out of bounds and assert that a zero is returned.
-			for x, y in testCases :
-				self.assertEqual( s.sample( x+.5, y+.5 ), 0. )
+		# Pixels on corners of dataWindow should be interpolating
+		# to black. Note that here we're sampling at the corners
+		# of pixels, not centers.
+
+		self.assertEqual( s.sample( float( dw.min.x ), float( dw.min.y ) ), 0.25 )
+		self.assertEqual( s.sample( float( dw.max.x ), float( dw.min.y ) ), 0.25 )
+		self.assertEqual( s.sample( float( dw.max.x ), float( dw.max.y ) ), 0.25 )
+		self.assertEqual( s.sample( float( dw.min.x ), float( dw.max.y ) ), 0.25 )
+
+		# Pixel centers at the corners of dataWindow should be white.
+
+		self.assertEqual( s.sample( float( dw.min.x + 0.5 ), float( dw.min.y + 0.5 ) ), 1 )
+		self.assertEqual( s.sample( float( dw.max.x - 0.5 ), float( dw.min.y + 0.5 ) ), 1 )
+		self.assertEqual( s.sample( float( dw.max.x - 0.5 ), float( dw.max.y - 0.5 ) ), 1 )
+		self.assertEqual( s.sample( float( dw.min.x + 0.5 ), float( dw.max.y - 0.5 ) ), 1 )
 
 	def testOutOfBoundsSampleModeClamp( self ) :
 
-		s = Gaffer.ScriptNode()
 		r = GafferImage.ImageReader()
 		r["fileName"].setValue( self.fileName )
-		s.addChild( r )
 
-		c = Gaffer.Context()
-		c["image:channelName"] = 'R'
-		c["image:tileOrigin"] = IECore.V2i( 0 )
+		dw = r["out"]["dataWindow"].getValue();
+		s = GafferImage.Sampler( r["out"], "R", dw, GafferImage.Sampler.BoundingMode.Clamp )
 
-		bounds = r["out"]["dataWindow"].getValue();
-		f = GafferImage.Filter.create( "Box" )
+		# Get the exact values of the corner pixels.
+		bl = s.sample( dw.min.x, dw.min.y )
+		br = s.sample( dw.max.x - 1, dw.min.y  )
+		tr = s.sample( dw.max.x - 1, dw.max.y - 1 )
+		tl = s.sample( dw.min.x, dw.max.y - 1 )
 
-		with c :
-
-			self.assertTrue( "R" in r["out"]["channelNames"].getValue() )
-			s = GafferImage.Sampler( r["out"], "R", bounds, f, GafferImage.Sampler.BoundingMode.Clamp )
-
-			# Get the values of the corner pixels.
-			bl = s.sample( bounds.min.x+.5, bounds.min.y+.5 )
-			br = s.sample( bounds.max.x-.5, bounds.min.y+.5 )
-			tr = s.sample( bounds.max.x-.5, bounds.max.y-.5 )
-			tl = s.sample( bounds.min.x+.5, bounds.max.y-.5 )
-
-			# Sample out of bounds and assert that the same value as the nearest pixel is returned.
-			self.assertEqual( s.sample( bounds.min.x-1, bounds.min.y ), bl )
-			self.assertEqual( s.sample( bounds.min.x, bounds.min.y-1 ), bl )
-			self.assertEqual( s.sample( bounds.max.x-1, bounds.max.y ), tr )
-			self.assertEqual( s.sample( bounds.max.x, bounds.max.y-1 ), tr )
-			self.assertEqual( s.sample( bounds.min.x-1, bounds.max.y-1 ), tl )
-			self.assertEqual( s.sample( bounds.min.x, bounds.max.y ), tl )
-			self.assertEqual( s.sample( bounds.max.x, bounds.min.y ), br )
-			self.assertEqual( s.sample( bounds.max.x-1, bounds.min.y-1 ), br )
-
-	# Test that the hash() method accumulates all of the hashes of the tiles within the sample area
-	# for a large number of different sample areas.
-	def testSampleHash( self ) :
-
-		s = Gaffer.ScriptNode()
-		r = GafferImage.ImageReader()
-		r["fileName"].setValue( self.fileName )
-		s.addChild( r )
-
-		tileSize = GafferImage.ImagePlug.tileSize()
-		# Test one tile first.
-
-		for w in range(2, 6) :
-			for x in range(-3, 3) :
-				for y in range(-3, 3) :
-					sampleBox = IECore.Box2i( IECore.V2i( x*tileSize, y*tileSize ), IECore.V2i( x*tileSize+w*tileSize/2, y*tileSize+w*tileSize/2 ) )
-					self.__testHashOfBounds( sampleBox, "R", r["out"] )
-
-
-	# A private method that acumulates the hashes of the tiles within
-	# a box and compares them to the hash returned by the sampler.
-	def __testHashOfBounds( self, box, channel, plug ) :
-
-		tileOrigin = GafferImage.ImagePlug.tileOrigin( IECore.V2i( box.min ) )
-		self.assertTrue( channel in plug["channelNames"].getValue() )
-
-		c = Gaffer.Context()
-		c["image:channelName"] = channel
-		c["image:tileOrigin"] = tileOrigin
-
-		h = IECore.MurmurHash()
-		h2 = h
-
-		# Get the hash from the sampler.
-		with c :
-			f = GafferImage.Filter.create( "Box" )
-			s = GafferImage.Sampler( plug, channel, box, f, GafferImage.Sampler.BoundingMode.Clamp )
-			s.hash( h )
-
-		# Get the hash from the tiles within our desired sample area.
-		with c :
-			y = box.min.y
-			while y < box.max.y :
-				x = box.min.x
-				while x < box.max.x :
-					tileOrigin = GafferImage.ImagePlug.tileOrigin( IECore.V2i( x, y ) )
-					h2.append( plug.channelDataHash( channel, tileOrigin ) )
-					x += GafferImage.ImagePlug.tileSize()
-				y += GafferImage.ImagePlug.tileSize()
-
-		self.assertEqual( h, h2 )
+		# Sample out of bounds and assert that the same value as the nearest pixel is returned.
+		self.assertEqual( s.sample( dw.min.x-1, dw.min.y ), bl )
+		self.assertEqual( s.sample( dw.min.x, dw.min.y-1 ), bl )
+		self.assertEqual( s.sample( dw.max.x-1, dw.max.y ), tr )
+		self.assertEqual( s.sample( dw.max.x, dw.max.y-1 ), tr )
+		self.assertEqual( s.sample( dw.min.x-1, dw.max.y-1 ), tl )
+		self.assertEqual( s.sample( dw.min.x, dw.max.y ), tl )
+		self.assertEqual( s.sample( dw.max.x, dw.min.y ), br )
+		self.assertEqual( s.sample( dw.max.x-1, dw.min.y-1 ), br )
 
 	def test2x2Checker( self ) :
 

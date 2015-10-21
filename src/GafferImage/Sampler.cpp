@@ -44,34 +44,18 @@ using namespace GafferImage;
 Sampler::Sampler( const GafferImage::ImagePlug *plug, const std::string &channelName, const Imath::Box2i &sampleWindow, BoundingMode boundingMode )
 	: m_plug( plug ),
 	m_channelName( channelName ),
-	m_boundingMode( boundingMode ),
-	m_filter( Filter::create( Filter::defaultFilter() ) )
-{
-	init( sampleWindow );
-}
-
-Sampler::Sampler( const GafferImage::ImagePlug *plug, const std::string &channelName, const Imath::Box2i &sampleWindow, ConstFilterPtr filter, BoundingMode boundingMode )
-	: m_plug( plug ),
-	m_channelName( channelName ),
-	m_boundingMode( boundingMode ),
-	m_filter( filter )
-{
-	init( sampleWindow );
-}
-
-void Sampler::init( const Imath::Box2i &sampleWindow )
+	m_boundingMode( boundingMode )
 {
 	m_dataWindow = m_plug->dataWindowPlug()->getValue();
 
 	// We only store the sample window to be able to perform
 	// validation of the calls made to sample() in debug builds.
-	// The filtered sample() call generates additional lookups
-	// around the central pixel though, so we must also expand the
+	// The interpolated sample() call generates additional lookups
+	// around the specified point though, so we must also expand the
 	// stored sample window to take that into account.
 	m_sampleWindow = sampleWindow;
-	const V2i filterRadius( int(ceil( m_filter->width() / 2. )) );
-	m_sampleWindow.min -= filterRadius;
-	m_sampleWindow.max += filterRadius;
+	m_sampleWindow.min -= V2i( 1 );
+	m_sampleWindow.max += V2i( 1 );
 
 	// Compute the area we need to cache in order to
 	// be able to service calls within m_sampleWindow

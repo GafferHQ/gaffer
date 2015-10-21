@@ -60,14 +60,6 @@ void bindSampler()
 	}
 
 	cls.def(
-		init< const GafferImage::ImagePlug *, const std::string &, const Imath::Box2i &, ConstFilterPtr, Sampler::BoundingMode >
-			(
-				(
-					arg( "boundingMode" ) = Sampler::Black
-				)
-			)
-		)
-		.def(
 			init<const GafferImage::ImagePlug *, const std::string &, const Imath::Box2i &, Sampler::BoundingMode>
 			(
 				(
