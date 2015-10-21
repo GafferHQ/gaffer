@@ -714,6 +714,10 @@ class ImageViewGadget : public GafferUI::Gadget
 			{
 				formatName = boost::lexical_cast<std::string>( f );
 			}
+			else
+			{
+				formatName += " ( " + boost::lexical_cast<std::string>( f ) + " )";
+			}
 
 			style->renderText( Style::LabelText, formatName );
 			glLoadIdentity();
