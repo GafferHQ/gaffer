@@ -47,6 +47,7 @@ import GafferImage
 
 class ImageWriterTest( GafferTest.TestCase ) :
 
+	__largeFilePath = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/large.exr" )
 	__rgbFilePath = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/rgb.100x100" )
 	__negativeDataWindowFilePath = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/checkerWithNegativeDataWindow.200x150" )
 	__defaultFormatFile = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/defaultNegativeDisplayWindow.exr" )
@@ -312,6 +313,23 @@ class ImageWriterTest( GafferTest.TestCase ) :
 		self.assertEqual( w["tiff"]["dataType"].getValue(), "uint8" )
 
 		self.assertEqual( w["webp"]["compressionQuality"].getValue(), 100 )
+
+	def testMultipleWrite( self ) :
+
+		r = GafferImage.ImageReader()
+		r["fileName"].setValue( self.__largeFilePath )
+
+		for i in range( 20 ) :
+			r['refreshCount'].setValue( r['refreshCount'].getValue() + 1 )
+
+			testFile = self.__testFile( "multiple_{}".format( i ), "RGBA", "exr" )
+
+			w = GafferImage.ImageWriter()
+			w["in"].setInput( r["out"] )
+			w["fileName"].setValue( testFile )
+
+			with Gaffer.Context() :
+				w.execute()
 
 	# Write an RGBA image that has a data window to various supported formats and in both scanline and tile modes.
 	def __testExtension( self, ext, formatName, options = {}, metadataToIgnore = [] ) :
