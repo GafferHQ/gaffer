@@ -51,7 +51,6 @@ import ColorSpaceUI
 import ImageContextVariablesUI
 import ImageStatsUI
 import DeleteChannelsUI
-import ReformatUI
 import ObjectToImageUI
 import ClampUI
 import ImageWriterUI
