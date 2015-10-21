@@ -44,46 +44,36 @@ class FilterPlugValueWidget( GafferUI.EnumPlugValueWidget ) :
 
 	def __init__( self, plug, **kw ) :
 
-		if isinstance( plug, GafferImage.FilterPlug ) :
-			# Backwards compatibility for FilterPlug, which
-			# was used for specifying GafferImage.Filters.
-			values = [ (f, f) for f in GafferImage.FilterPlug.filters() ]
-		else :
-			assert( isinstance( plug, Gaffer.StringPlug ) )
-			# Just a StringPlug for specifying the name of
-			# an OIIO filter. This is how we want to do things
-			# from now on.
-			## \todo We should probably query these properly
-			# from OIIO. Currently the OIIO::Filter class isn't
-			# bound to Python though, so we need to decide
-			# whether to provide access via our own APIs, or
-			# to contribute some bindings to the OIIO project.
-			# Perhaps we will also need a way of specifying via
-			# metadata what sorts of filters are relevant - for
-			# instance we are currently hiding the Disk filter
-			# from this list because it is unsuitable for use for
-			# upsizing in the Resample node (see issue #1457).
-			values = [
-				( "Default", "" ),
-				( "Box", "box" ),
-				( "Triangle", "triangle" ),
-				( "Gaussian", "gaussian" ),
-				( "Sharp Gaussian", "sharp-gaussian" ),
-				( "Catmull-Rom", "catrom" ),
-				( "Blackman-Harris", "blackman-harris" ),
-				( "Sinc", "sinc" ),
-				( "Lanczos3", "lanczos3" ),
-				( "Radial Lanczos3", "radial-lanczos3" ),
-				( "Mitchell", "mitchell" ),
-				( "BSpline", "bspline" ),
-				( "Cubic", "cubic" ),
-				( "Keys", "keys" ),
-				( "Simon", "simon" ),
-				( "Rifman", "rifman" ),
-			]
+		assert( isinstance( plug, Gaffer.StringPlug ) )
+
+		## \todo We should probably query these properly
+		# from OIIO. Currently the OIIO::Filter class isn't
+		# bound to Python though, so we need to decide
+		# whether to provide access via our own APIs, or
+		# to contribute some bindings to the OIIO project.
+		# Perhaps we will also need a way of specifying via
+		# metadata what sorts of filters are relevant - for
+		# instance we are currently hiding the Disk filter
+		# from this list because it is unsuitable for use for
+		# upsizing in the Resample node (see issue #1457).
+		values = [
+			( "Default", "" ),
+			( "Box", "box" ),
+			( "Triangle", "triangle" ),
+			( "Gaussian", "gaussian" ),
+			( "Sharp Gaussian", "sharp-gaussian" ),
+			( "Catmull-Rom", "catrom" ),
+			( "Blackman-Harris", "blackman-harris" ),
+			( "Sinc", "sinc" ),
+			( "Lanczos3", "lanczos3" ),
+			( "Radial Lanczos3", "radial-lanczos3" ),
+			( "Mitchell", "mitchell" ),
+			( "BSpline", "bspline" ),
+			( "Cubic", "cubic" ),
+			( "Keys", "keys" ),
+			( "Simon", "simon" ),
+			( "Rifman", "rifman" ),
+		]
 
 		GafferUI.EnumPlugValueWidget.__init__( self, plug, values, **kw )
-
-
-GafferUI.PlugValueWidget.registerType( GafferImage.FilterPlug, FilterPlugValueWidget )
 
