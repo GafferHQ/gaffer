@@ -792,7 +792,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		self.assertEqual( r["out"]["metadata"].getValue()["PixelAspectRatio"], IECore.FloatData( 1 ) )
 
 		# change the Format pixel aspect
-		f = GafferImage.Reformat()
+		f = GafferImage.Resize()
 		f["in"].setInput( r["out"] )
 		f["format"].setValue( GafferImage.Format( r["out"]["format"].getValue().getDisplayWindow(), 2. ) )
 		self.assertEqual( f["out"]["format"].getValue().getPixelAspect(), 2 )

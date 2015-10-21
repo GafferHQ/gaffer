@@ -223,7 +223,7 @@ class MergeTest( GafferImageTest.ImageTestCase ) :
 	def testPassThrough( self ) :
 
 		c = GafferImage.Constant()
-		f = GafferImage.Reformat()
+		f = GafferImage.Resize()
 		f["in"].setInput( c["out"] )
 		f["format"].setValue( GafferImage.Format( IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 10 ) ), 1 ) )
 		d = GafferImage.ImageMetadata()
