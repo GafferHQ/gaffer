@@ -62,17 +62,12 @@ Gaffer.Metadata.registerNode(
 			"description",
 			"""
 			The coordinates of the pixel to sample. These can have
-			fractional values - the filter will be used to generate
-			appropriate interpolate values.
-			""",
+			fractional values and bilinear interpolation will be used
+			to interpolate between adjacent pixels.
 
-		],
-
-		"filter" : [
-
-			"description",
-			"""
-			The filter used to generate interpolated pixel values.
+			Note though that the coordinates at pixel centres are not integers.
+			For example, the centre of the bottom left pixel of an image is
+			at 0.5, 0.5.
 			""",
 
 		],
