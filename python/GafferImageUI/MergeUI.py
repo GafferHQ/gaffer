@@ -57,6 +57,7 @@ Gaffer.Metadata.registerNode(
 	  - Multiply : AB
 	  - Over : A + B(1-a)
 	  - Subtract : A - B
+	  - Difference : fabs( A - B )
 	  - Under : A(1-b) + B
 	""",
 
@@ -99,6 +100,7 @@ Gaffer.Metadata.registerNode(
 			"preset:Multiply", GafferImage.Merge.Operation.Multiply,
 			"preset:Over", GafferImage.Merge.Operation.Over,
 			"preset:Subtract", GafferImage.Merge.Operation.Subtract,
+			"preset:Difference", GafferImage.Merge.Operation.Difference,
 			"preset:Under", GafferImage.Merge.Operation.Under,
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",

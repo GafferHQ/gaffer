@@ -63,6 +63,7 @@ void bindMerge()
 		.value( "Multiply", Merge::Multiply )
 		.value( "Over", Merge::Over )
 		.value( "Subtract", Merge::Subtract )
+		.value( "Difference", Merge::Difference )
 		.value( "Under", Merge::Under )
 	;
 

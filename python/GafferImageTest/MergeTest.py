@@ -366,5 +366,27 @@ class MergeTest( GafferTest.TestCase ) :
 
 		merge["out"].image()
 
+	def testDifference( self ) :
+
+		a = GafferImage.Constant()
+		a["color"].setValue( IECore.Color4f( 0.1, 0.2, 0.3, 0.4 ) )
+
+		b = GafferImage.Constant()
+		b["color"].setValue( IECore.Color4f( 1, 0.3, 0.1, 0.2 ) )
+
+		merge = GafferImage.Merge()
+		merge["in"][0].setInput( a["out"] )
+		merge["in"][1].setInput( b["out"] )
+		merge["operation"].setValue( GafferImage.Merge.Operation.Difference )
+
+		sampler = GafferImage.ImageSampler()
+		sampler["image"].setInput( merge["out"] )
+		sampler["pixel"].setValue( IECore.V2f( 10 ) )
+
+		self.assertAlmostEqual( sampler["color"]["r"].getValue(), 0.9 )
+		self.assertAlmostEqual( sampler["color"]["g"].getValue(), 0.1 )
+		self.assertAlmostEqual( sampler["color"]["b"].getValue(), 0.2 )
+		self.assertAlmostEqual( sampler["color"]["a"].getValue(), 0.2 )
+
 if __name__ == "__main__":
 	unittest.main()
