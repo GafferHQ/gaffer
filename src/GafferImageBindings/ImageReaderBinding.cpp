@@ -62,8 +62,9 @@ void GafferImageBindings::bindImageReader()
 {
 
 	GafferBindings::DependencyNodeClass<ImageReader>()
-		.def( "supportedExtensions", &supportedExtensions )
-		.staticmethod( "supportedExtensions" )
+		.def( "supportedExtensions", &supportedExtensions ).staticmethod( "supportedExtensions" )
+		.def( "getCacheMemoryLimit", &ImageReader::getCacheMemoryLimit ).staticmethod( "getCacheMemoryLimit" )
+		.def( "setCacheMemoryLimit", &ImageReader::setCacheMemoryLimit ).staticmethod( "setCacheMemoryLimit" )
 	;
 
 }

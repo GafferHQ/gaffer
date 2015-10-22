@@ -84,6 +84,9 @@ ImageCache *imageCache()
 			/// OIIO - and test any performance implications of performing
 			/// the conversion in get_pixels() rather than immediately on load.
 			cache->attribute( "forcefloat", 1 );
+
+			// Set an initial cache size of 512Mb
+			cache->attribute( "max_memory_MB", 500.0f );
 		}
 	}
 	return cache;
@@ -513,6 +516,18 @@ IECore::ConstFloatVectorDataPtr ImageReader::computeChannelData( const std::stri
 	}
 
 	return resultData;
+}
+
+size_t ImageReader::getCacheMemoryLimit()
+{
+	float memoryLimit;
+	imageCache()->getattribute( "max_memory_MB", memoryLimit );
+	return memoryLimit;
+}
+
+void ImageReader::setCacheMemoryLimit( size_t mb )
+{
+	imageCache()->attribute( "max_memory_MB", float( mb ) );
 }
 
 void ImageReader::plugSet( Gaffer::Plug *plug )

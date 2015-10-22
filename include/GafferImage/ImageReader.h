@@ -78,6 +78,11 @@ class ImageReader : public ImageNode
 
 		static size_t supportedExtensions( std::vector<std::string> &extensions );
 
+		/// Returns the maximum amount of memory in Mb to use for the cache.
+		static size_t getCacheMemoryLimit();
+		/// Sets the maximum amount of memory the cache may use in Mb.
+		static void setCacheMemoryLimit( size_t mb );
+
 	protected :
 
 		virtual void hashFormat( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
