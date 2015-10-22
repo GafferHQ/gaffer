@@ -40,6 +40,7 @@
 #include "boost/bind.hpp"
 #include "boost/bind/placeholders.hpp"
 #include "boost/format.hpp"
+#include "boost/lexical_cast.hpp"
 
 #include "OpenEXR/ImathColorAlgo.h"
 
@@ -707,8 +708,16 @@ class ImageViewGadget : public GafferUI::Gadget
 
 			///\todo: How do we handle looking up the format here when we have a pixel aspect other than 1?
 			/// Does the IECore::ImagePrimitive have a pixel aspect?
-			GafferImage::Format f( m_displayWindow.size().x, m_displayWindow.size().y, 1. );
-			std::string formatName( Format::formatName( f ) ) ;
+			const GafferImage::Format f( m_displayWindow.size().x, m_displayWindow.size().y, 1. );
+			std::string formatName = Format::name( f );
+			if( formatName.empty() )
+			{
+				formatName = boost::lexical_cast<std::string>( f );
+			}
+			else
+			{
+				formatName += " ( " + boost::lexical_cast<std::string>( f ) + " )";
+			}
 
 			style->renderText( Style::LabelText, formatName );
 			glLoadIdentity();

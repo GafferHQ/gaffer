@@ -39,6 +39,18 @@ import GafferUI
 import GafferImage
 import GafferImageUI
 
+## A function suitable as the postCreator in a NodeMenu.append() call. It
+# sets the region of interest for the node to cover the entire format.
+def postCreate( node, menu ) :
+
+	with node.scriptNode().context() :
+		if node["in"].getInput() :
+			format = node["in"]["format"].getValue()
+		else:
+			format = GafferImage.FormatPlug.getDefaultFormat( node.scriptNode().context() )
+
+	node['regionOfInterest'].setValue( format.getDisplayWindow() )
+
 Gaffer.Metadata.registerNode(
 
 	GafferImage.ImageStats,

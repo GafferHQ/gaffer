@@ -50,7 +50,7 @@ Reformat::Reformat( const std::string &name )
 	:	ImageProcessor( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
-	addChild( new FormatPlug( "format" ) );
+	addChild( new AtomicFormatPlug( "format" ) );
 	addChild( new FilterPlug( "filter" ) );
 
 	// We don't ever want to change these, so we make pass-through connections.
@@ -62,14 +62,14 @@ Reformat::~Reformat()
 {
 }
 
-GafferImage::FormatPlug *Reformat::formatPlug()
+GafferImage::AtomicFormatPlug *Reformat::formatPlug()
 {
-	return getChild<FormatPlug>( g_firstPlugIndex );
+	return getChild<AtomicFormatPlug>( g_firstPlugIndex );
 }
 
-const GafferImage::FormatPlug *Reformat::formatPlug() const
+const GafferImage::AtomicFormatPlug *Reformat::formatPlug() const
 {
-	return getChild<FormatPlug>( g_firstPlugIndex );
+	return getChild<AtomicFormatPlug>( g_firstPlugIndex );
 }
 
 GafferImage::FilterPlug *Reformat::filterPlug()

@@ -34,16 +34,14 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGEBINDINGS_FORMATBINDING_H
-#define GAFFERIMAGEBINDINGS_FORMATBINDING_H
-
-#include "GafferImage/Format.h"
+#ifndef GAFFERIMAGEBINDINGS_ATOMICFORMATPLUGBINDING_H
+#define GAFFERIMAGEBINDINGS_ATOMICFORMATPLUGBINDING_H
 
 namespace GafferImageBindings
 {
 
-void bindFormat();
+void bindAtomicFormatPlug();
 
-}; // namespace GafferImageBindings
+} // namespace GafferImageBindings
 
-#endif // GAFFERIMAGEBINDINGS_FORMATBINDING_H
+#endif // GAFFERIMAGEBINDINGS_ATOMICFORMATPLUGBINDING_H

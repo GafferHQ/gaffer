@@ -46,43 +46,6 @@ import GafferImage
 
 class FormatTest( GafferTest.TestCase ) :
 
-	def testAddRemoveFormat( self ) :
-
-		# Get any existing format names
-		existingFormatNames = GafferImage.Format.formatNames()
-
-		# Assert that our test format is in not in the list of formats
-		self.assertFalse( self.__testFormatName() in existingFormatNames )
-
-		# Add a test format
-		GafferImage.Format.registerFormat( self.__testFormatValue(), self.__testFormatName() )
-
-		# Get the new list of format names and test that it contains our new format
-		self.assertTrue( self.__testFormatName() in GafferImage.Format.formatNames() )
-
-		# Attempt to get the format we added by name and check to see if the results are what we expect
-		testFormat = GafferImage.Format.getFormat( self.__testFormatName() )
-		self.__assertTestFormat( testFormat )
-
-		# Now remove it by name.
-		GafferImage.Format.removeFormat( self.__testFormatName() )
-
-		# Get the new list of format names and check that it is the same as the old list
-		self.assertEqual( set( existingFormatNames ), set( GafferImage.Format.formatNames() ) )
-
-	def testDefaultFormatPlugExists( self ) :
-
-		# Create a node to make sure that we have a default format...
-		s = Gaffer.ScriptNode()
-		n = GafferImage.Grade()
-		s.addChild( n )
-
-		try:
-			# Now assert that the default format plug exists. If it doesn't then an exception is raised.
-			s["defaultFormat"]
-		except:
-			self.assertTrue(False)
-
 	def testOffsetDisplayWindow( self ) :
 
 		box = IECore.Box2i( IECore.V2i( 6, -4 ), IECore.V2i( 50, 150 ) )
@@ -142,102 +105,6 @@ class FormatTest( GafferTest.TestCase ) :
 			f.getDisplayWindow(),
 			IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 100 ) ),
 		)
-
-	def testDefaultFormatContext( self ) :
-
-		# Create a node to make sure that we have a default format...
-		s = Gaffer.ScriptNode()
-		n = GafferImage.Grade()
-		s.addChild( n )
-		s.context().get("image:defaultFormat")
-
-	def __hashChanged( self, cls ) :
-
-		# Create the node and check that the format changes if it is unconnected.
-		n = cls()
-		s = Gaffer.ScriptNode()
-		s.addChild( n )
-
-		with s.context() :
-			h1 = n["out"]["format"].hash()
-
-		# Change the default format.
-		GafferImage.Format.registerFormat( self.__testFormatValue(), self.__testFormatName() )
-		GafferImage.Format.setDefaultFormat( s, self.__testFormatValue() )
-
-		# Check that the hash has changed.
-		with s.context() :
-			h2 = n["out"]["format"].hash()
-
-		# we want to assert h1 != h2, but we get a more useful failure message this way
-		if h1 == h2 :
-			self.assertFalse( cls.__name__ + " format hash did not change" )
-
-	def testHashChanged( self ) :
-		
-		def findNodes( base ) :
-			
-			result = []
-			
-			classes = base.__subclasses__()
-			if not classes :
-				result.append( base )
-			
-			for cls in classes :
-				result.extend( findNodes( cls ) )
-			
-			return result
-		
-		classes = findNodes( GafferImage.ImageProcessor )
-		
-		for cls in classes :
-			self.__hashChanged( cls )
-	
-	def testDefaultFormatChanged( self ) :
-
-		# Create a grade node and check that the format changes if it is unconnected.
-		n = GafferImage.Grade()
-		s = Gaffer.ScriptNode()
-		s.addChild( n )
-
-		p = GafferImage.ImagePlug( "test", GafferImage.ImagePlug.Direction.In )
-		p.setInput( n["out"] )
-
-		with s.context() :
-			f1 = p["format"].getValue()
-
-			# Change the default format.
-			GafferImage.Format.registerFormat( self.__testFormatValue(), self.__testFormatName() )
-			GafferImage.Format.setDefaultFormat( s, self.__testFormatValue() )
-
-			# Check that the hash has changed.
-			f2 = p["format"].getValue()
-
-			self.assertNotEqual( f1, f2 )
-
-	def testAddRemoveFormatByValue( self ) :
-
-		# Get any existing format names
-		existingFormatNames = GafferImage.Format.formatNames()
-
-		# Assert that our test format is in not in the list of formats
-		self.assertFalse( self.__testFormatName() in existingFormatNames )
-
-		# Add a test format by value only
-		GafferImage.Format.registerFormat( self.__testFormatValue() )
-
-		# Get the new list of format names and test that it contains our new format name
-		self.assertTrue( self.__testFormatName() in GafferImage.Format.formatNames() )
-
-		# Attempt to get the format we added by name and check to see if the results are what we expect
-		testFormat = GafferImage.Format.getFormat( self.__testFormatName() )
-		self.__assertTestFormat( testFormat )
-
-		# Now remove it by value.
-		GafferImage.Format.removeFormat( self.__testFormatValue() )
-
-		# Get the new list of format names and check that it is the same as the old list
-		self.assertEqual( set( existingFormatNames ), set( GafferImage.Format.formatNames() ) )
 
 	def testCoordinateSystemTransforms( self ) :
 
@@ -303,30 +170,49 @@ class FormatTest( GafferTest.TestCase ) :
 			f.getDisplayWindow()
 		)
 
-	def testDefaultFormatContextName( self ) :
+	def testRegistry( self ) :
 
-		self.assertEqual( GafferImage.Format.defaultFormatContextName, "image:defaultFormat" )
+		f = GafferImage.Format( 100, 200, 2 )
+
+		# Our test format should not be registered yet.
+		self.assertTrue( "testFormat" not in GafferImage.Format.registeredFormats() )
+		self.assertEqual( GafferImage.Format.name( f ), "" )
+
+		# If we register it, it should be queryable afterwards.
+		GafferImage.Format.registerFormat( "testFormat", f )
+		self.assertTrue( "testFormat" in GafferImage.Format.registeredFormats() )
+		self.assertEqual( GafferImage.Format.name( f ), "testFormat" )
+		self.assertEqual( GafferImage.Format.format( "testFormat"), f )
+
+		# And if we reregister it with a new value, that should
+		# override the previous registration.
+		f = GafferImage.Format( 200, 200, 2 )
+		GafferImage.Format.registerFormat( "testFormat", f )
+		self.assertTrue( "testFormat" in GafferImage.Format.registeredFormats() )
+		self.assertEqual( GafferImage.Format.name( f ), "testFormat" )
+		self.assertEqual( GafferImage.Format.format( "testFormat"), f )
+
+		# If we deregister it, it should be gone gone gone.
+		GafferImage.Format.deregisterFormat( "testFormat" )
+		self.assertTrue( "testFormat" not in GafferImage.Format.registeredFormats() )
+		self.assertEqual( GafferImage.Format.name( f ), "" )
+
+	def testStr( self ) :
+
+		f = GafferImage.Format( 10, 20 )
+		self.assertEqual( str( f ), "10x20" )
+
+		f = GafferImage.Format( 10, 20, 2 )
+		self.assertEqual( str( f ), "10x20, 2" )
+
+		f = GafferImage.Format( IECore.Box2i( IECore.V2i( 10 ), IECore.V2i( 20 ) ) )
+		self.assertEqual( str( f ), "(10 10) - (20 20)" )
 
 	def tearDown( self ) :
 
 		GafferTest.TestCase.tearDown( self )
 
-		GafferImage.Format.removeFormat( self.__testFormatName() )
-
-	def __assertTestFormat( self, testFormat ) :
-
-		self.assertEqual( testFormat.getPixelAspect(), 1.4 )
-		self.assertEqual( testFormat.width(), 1234 )
-		self.assertEqual( testFormat.height(), 5678 )
-		self.assertEqual( testFormat.getDisplayWindow(), IECore.Box2i( IECore.V2i( 0, 0 ), IECore.V2i( 1234, 5678 ) ) )
-
-	def __testFormatValue( self ) :
-
-		return GafferImage.Format( 1234, 5678, 1.4 )
-
-	def __testFormatName( self ) :
-
-		return '1234x5678 1.400'
+		GafferImage.Format.deregisterFormat( "testFormat" )
 
 if __name__ == "__main__":
 	unittest.main()

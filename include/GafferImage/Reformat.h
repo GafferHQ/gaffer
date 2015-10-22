@@ -44,9 +44,9 @@ namespace GafferImage
 {
 
 
-/// Reformats the input image to a new resolution using a resampling filter.
-/// \todo: Add support for changing the pixelAspect of the image.
-/// \todo Reimplement in terms of a network of simpler atomic operations.
+/// \deprecated Use Resize instead.
+/// \todo Remove. If necessary we should be able to use a
+/// config file to redirect to Resize instead.
 class Reformat : public ImageProcessor
 {
 
@@ -58,8 +58,8 @@ class Reformat : public ImageProcessor
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::Reformat, ReformatTypeId, ImageProcessor );
 
 		/// Plug accessors.
-		GafferImage::FormatPlug *formatPlug();
-		const GafferImage::FormatPlug *formatPlug() const;
+		GafferImage::AtomicFormatPlug *formatPlug();
+		const GafferImage::AtomicFormatPlug *formatPlug() const;
 		GafferImage::FilterPlug *filterPlug();
 		const GafferImage::FilterPlug *filterPlug() const;
 

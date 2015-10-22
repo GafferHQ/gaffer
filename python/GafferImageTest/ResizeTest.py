@@ -55,8 +55,8 @@ class ResizeTest( GafferTest.TestCase ) :
 		c1 = Gaffer.Context()
 		c2 = Gaffer.Context()
 
-		c1[GafferImage.Format.defaultFormatContextName] = GafferImage.FormatData( f1 )
-		c2[GafferImage.Format.defaultFormatContextName] = GafferImage.FormatData( f2 )
+		GafferImage.FormatPlug.setDefaultFormat( c1, f1 )
+		GafferImage.FormatPlug.setDefaultFormat( c2, f2 )
 
 		with c1 :
 			self.assertEqual( r["out"]["format"].getValue(), f1 )
@@ -202,6 +202,17 @@ class ResizeTest( GafferTest.TestCase ) :
 			for height in range( 1, 53 ) :
 				r["format"].setValue( GafferImage.Format( width, height ) )
 				r["out"].image()
+
+	def testFormatDependencies( self ) :
+
+		r = GafferImage.Resize()
+		cs = GafferTest.CapturingSlot( r.plugDirtiedSignal() )
+
+		r["format"].setValue( GafferImage.Format( 100, 200, 2 ) )
+		dirtiedPlugs = set( c[0] for c in cs )
+
+		self.assertTrue( r["out"]["format"] in dirtiedPlugs )
+		self.assertTrue( r["out"]["dataWindow"] in dirtiedPlugs )
 
 if __name__ == "__main__":
 	unittest.main()

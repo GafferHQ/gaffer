@@ -128,12 +128,14 @@ class Expression : public ComputeNode
 				///
 				////////////////////////////////////////////////////////////////////
 				//@{
-				/// Sets the plug using a value computed previously in execute().
-				/// Note that if a compound plug is written to by the expression, setPlugValue()
+				/// Sets the `proxyOutput` plug using the `value` computed previously in execute().
+				/// Note that if a compound plug is written to by the expression, apply()
 				/// will be called for each of the children of the compound, and it is the
-				/// responsibility of the engine to decompose the value for each child plug suitably.
+				/// responsibility of the engine to decompose the value for each child plug
+				/// suitably. In this case the `topLevelProxyOutput` argument provides the
+				/// proxy for the compound plug itself.
 				/// \threading This function may be called concurrently.
-				virtual void apply( ValuePlug *plug, const IECore::Object *value ) const = 0;
+				virtual void apply( ValuePlug *proxyOutput, const ValuePlug *topLevelProxyOutput, const IECore::Object *value ) const = 0;
 				/// Used to implement Expression::identifier.
 				virtual std::string identifier( const Expression *node, const ValuePlug *plug ) const = 0;
 				/// Returns a new expression, equivalent to the original but now acting on the

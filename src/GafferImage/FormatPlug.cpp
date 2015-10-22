@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012-2015, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,58 +34,94 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/TypedPlug.h"
-#include "Gaffer/TypedPlug.inl"
-#include "Gaffer/Context.h"
-#include "Gaffer/Node.h"
-#include "Gaffer/ScriptNode.h"
+#include "boost/bind.hpp"
 
-#include "GafferImage/FormatData.h"
+#include "Gaffer/ScriptNode.h"
+#include "Gaffer/Context.h"
+
 #include "GafferImage/FormatPlug.h"
+#include "GafferImage/FormatData.h"
 
 using namespace Gaffer;
 using namespace GafferImage;
 
-namespace Gaffer
-{
+IE_CORE_DEFINERUNTIMETYPED( FormatPlug );
 
-IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( GafferImage::FormatPlug, FormatPlugTypeId )
+const IECore::InternedString g_defaultFormatContextName( "image:defaultFormat" );
+static const IECore::InternedString g_defaultFormatPlugName( "defaultFormat" );
+static const Format g_defaultFormatFallback( 1920, 1080 );
 
-template<>
-Format FormatPlug::getValue( const IECore::MurmurHash *precomputedHash ) const
+FormatPlug::FormatPlug( const std::string &name, Direction direction, Format defaultValue, unsigned flags )
+	:	ValuePlug( name, direction, flags ), m_defaultValue( defaultValue )
 {
-	IECore::ConstObjectPtr o = getObjectValue( precomputedHash );
-	const GafferImage::FormatData *d = IECore::runTimeCast<const GafferImage::FormatData>( o.get() );
-	if( !d )
-	{
-		throw IECore::Exception( "FormatPlug::getObjectValue() didn't return FormatData - is the hash being computed correctly?" );
-	}
-	Format result = d->readable();
+	const unsigned childFlags = flags & ~Dynamic;
+	addChild( new Box2iPlug( "displayWindow", direction, defaultValue.getDisplayWindow(), childFlags ) );
+	addChild( new FloatPlug( "pixelAspect", direction, defaultValue.getPixelAspect(), Imath::limits<float>::min(), Imath::limits<float>::max(), childFlags ) );
+}
+
+FormatPlug::~FormatPlug()
+{
+}
+
+bool FormatPlug::acceptsChild( const GraphComponent *potentialChild ) const
+{
+	return children().size() < 2;
+}
+
+Gaffer::PlugPtr FormatPlug::createCounterpart( const std::string &name, Direction direction ) const
+{
+	return new FormatPlug( name, direction, defaultValue(), getFlags() );
+}
+
+Gaffer::Box2iPlug *FormatPlug::displayWindowPlug()
+{
+	return getChild<Box2iPlug>( 0 );
+}
+
+const Gaffer::Box2iPlug *FormatPlug::displayWindowPlug() const
+{
+	return getChild<Box2iPlug>( 0 );
+}
+
+Gaffer::FloatPlug *FormatPlug::pixelAspectPlug()
+{
+	return getChild<FloatPlug>( 1 );
+}
+
+const Gaffer::FloatPlug *FormatPlug::pixelAspectPlug() const
+{
+	return getChild<FloatPlug>( 1 );
+}
+
+const Format &FormatPlug::defaultValue() const
+{
+	return m_defaultValue;
+}
+
+void FormatPlug::setValue( const Format &value )
+{
+	displayWindowPlug()->setValue( value.getDisplayWindow() );
+	pixelAspectPlug()->setValue( value.getPixelAspect() );
+}
+
+Format FormatPlug::getValue() const
+{
+	Format result( displayWindowPlug()->getValue(), pixelAspectPlug()->getValue() );
 	if( direction() == Plug::In && result.getDisplayWindow().isEmpty() && inCompute() )
 	{
-		return Context::current()->get<Format>( Format::defaultFormatContextName, Format() );
+		return getDefaultFormat( Context::current() );
 	}
 	return result;
 }
 
-template<>
 IECore::MurmurHash FormatPlug::hash() const
 {
-	const FormatPlug *p = source<FormatPlug>();
-	
-	if( p->direction() == Plug::In )
+	if( direction() == Plug::In )
 	{
-		IECore::ConstObjectPtr o = p->getObjectValue();
-		const GafferImage::FormatData *d = IECore::runTimeCast<const GafferImage::FormatData>( o.get() );
-		if( !d )
-		{
-			throw IECore::Exception( "FormatPlug::getObjectValue() didn't return FormatData - is the hash being computed correctly?" );
-		}
-		
-		Format v = d->readable();
+		Format v( displayWindowPlug()->getValue(), pixelAspectPlug()->getValue() );
 		if( v.getDisplayWindow().isEmpty() )
 		{
-			v = Context::current()->get<Format>( Format::defaultFormatContextName, Format() );
+			v = getDefaultFormat( Context::current() );
 		}
 
 		IECore::MurmurHash result;
@@ -93,10 +129,60 @@ IECore::MurmurHash FormatPlug::hash() const
 		result.append( v.getPixelAspect() );
 		return result;
 	}
-	
-	return p->ValuePlug::hash();
+
+	return ValuePlug::hash();
 }
 
-template class TypedPlug<GafferImage::Format>;
+Format FormatPlug::getDefaultFormat( const Gaffer::Context *context )
+{
+	return context->get<Format>( g_defaultFormatContextName, g_defaultFormatFallback );
+}
 
-} // namespace Gaffer
+void FormatPlug::setDefaultFormat( Gaffer::Context *context, const Format &format )
+{
+	context->set( g_defaultFormatContextName, format );
+}
+
+FormatPlug *FormatPlug::acquireDefaultFormatPlug( Gaffer::ScriptNode *scriptNode )
+{
+	if( FormatPlug *p = scriptNode->getChild<FormatPlug>( g_defaultFormatPlugName ) )
+	{
+		return p;
+	}
+
+	FormatPlugPtr p = new FormatPlug( g_defaultFormatPlugName, Plug::In, g_defaultFormatFallback, Plug::Default | Plug::Dynamic );
+	scriptNode->setChild( g_defaultFormatPlugName, p );
+	return p.get();
+}
+
+void FormatPlug::parentChanging( Gaffer::GraphComponent *newParent )
+{
+	ValuePlug::parentChanging( newParent );
+
+	m_plugDirtiedConnection.disconnect();
+
+	if( getName() != g_defaultFormatPlugName )
+	{
+		return;
+	}
+
+	if( ScriptNode *scriptNode = IECore::runTimeCast<ScriptNode>( newParent ) )
+	{
+		// We are the default format plug. Transfer our value into the
+		// script's context, and arrange to transfer it again later if
+		// it changes.
+		setDefaultFormat( scriptNode->context(), getValue() );
+		m_plugDirtiedConnection = scriptNode->plugDirtiedSignal().connect(
+			boost::bind( &FormatPlug::plugDirtied, this, ::_1 )
+		);
+	}
+}
+
+void FormatPlug::plugDirtied( Gaffer::Plug *plug )
+{
+	if( plug == this )
+	{
+		setDefaultFormat( parent<ScriptNode>()->context(), getValue() );
+	}
+}
+

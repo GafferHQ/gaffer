@@ -150,5 +150,18 @@ class ConstantTest( unittest.TestCase ) :
 
 		self.assertEqual( s2["c"]["color"].getValue(), IECore.Color4f( 0, 1, 0, 0 ) )
 
+	def testFormatDependencies( self ) :
+
+		c = GafferImage.Constant()
+
+		self.assertEqual(
+			c.affects( c["format"]["displayWindow"]["min"]["x"] ),
+			[ c["out"]["format"], c["out"]["dataWindow"] ],
+		)
+		self.assertEqual(
+			c.affects( c["format"]["pixelAspect"] ),
+			[ c["out"]["format"] ],
+		)
+
 if __name__ == "__main__":
 	unittest.main()

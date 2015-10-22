@@ -40,6 +40,7 @@
 #include "Gaffer/NumericPlug.h"
 
 #include "GafferImage/ImageProcessor.h"
+#include "GafferImage/FormatPlug.h"
 
 namespace Gaffer
 {

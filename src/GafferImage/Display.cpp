@@ -49,6 +49,7 @@
 #include "Gaffer/Context.h"
 
 #include "GafferImage/Display.h"
+#include "GafferImage/FormatPlug.h"
 
 using namespace std;
 using namespace Imath;
@@ -391,9 +392,7 @@ void Display::hashFormat( const GafferImage::ImagePlug *output, const Gaffer::Co
 	}
 	else
 	{
-		/// \todo We should not need the default value here - there should always be a default
-		/// format in the context - something is broken in the Format mechanism.
-		format = Context::current()->get<Format>( Format::defaultFormatContextName, Format() );
+		format = FormatPlug::getDefaultFormat( Context::current() );
 	}
 
 	h.append( format.getDisplayWindow() );
@@ -409,9 +408,7 @@ GafferImage::Format Display::computeFormat( const Gaffer::Context *context, cons
 	}
 	else
 	{
-		/// \todo We should not need the default value here - there should always be a default
-		/// format in the context - something is broken in the Format mechanism.
-		format = Context::current()->get<Format>( Format::defaultFormatContextName, Format() );
+		format = FormatPlug::getDefaultFormat( context );
 	}
 
 	return format;

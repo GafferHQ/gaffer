@@ -44,6 +44,7 @@
 #include "Gaffer/Context.h"
 
 #include "GafferImage/ImagePlug.h"
+#include "GafferImage/AtomicFormatPlug.h"
 #include "GafferImage/FormatPlug.h"
 
 using namespace std;
@@ -160,7 +161,7 @@ ImagePlug::ImagePlug( const std::string &name, Direction direction, unsigned fla
 	unsigned childFlags = flags & ~(Dynamic | Serialisable);
 
 	addChild(
-		new FormatPlug(
+		new AtomicFormatPlug(
 			"format",
 			direction,
 			Format(),
@@ -255,14 +256,14 @@ Gaffer::PlugPtr ImagePlug::createCounterpart( const std::string &name, Direction
 	return new ImagePlug( name, direction, getFlags() );
 }
 
-GafferImage::FormatPlug *ImagePlug::formatPlug()
+GafferImage::AtomicFormatPlug *ImagePlug::formatPlug()
 {
-	return getChild<FormatPlug>( g_firstPlugIndex );
+	return getChild<AtomicFormatPlug>( g_firstPlugIndex );
 }
 
-const GafferImage::FormatPlug *ImagePlug::formatPlug() const
+const GafferImage::AtomicFormatPlug *ImagePlug::formatPlug() const
 {
-	return getChild<FormatPlug>( g_firstPlugIndex );
+	return getChild<AtomicFormatPlug>( g_firstPlugIndex );
 }
 
 Gaffer::AtomicBox2iPlug *ImagePlug::dataWindowPlug()
@@ -349,7 +350,7 @@ IECore::ImagePrimitivePtr ImagePlug::image() const
 	/// us during ExecutableNode::execute (see issue #887).
 	if( format.getDisplayWindow().isEmpty() )
 	{
-		format = Context::current()->get<Format>( Format::defaultFormatContextName, Format() );
+		format = FormatPlug::getDefaultFormat( Context::current() );
 	}
 
 	Box2i newDisplayWindow = format.toEXRSpace( format.getDisplayWindow() );

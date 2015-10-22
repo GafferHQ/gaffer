@@ -314,10 +314,10 @@ void Expression::compute( ValuePlug *output, const Context *context ) const
 	// See if we're computing a descendant of outPlug(),
 	// and if we are, get the immediate child of outPlug()
 	// that is its parent.
-	const Plug *outPlugChild = output;
+	const ValuePlug *outPlugChild = output;
 	while( outPlugChild )
 	{
-		const Plug *p = outPlugChild->parent<Plug>();
+		const ValuePlug *p = outPlugChild->parent<ValuePlug>();
 		if( p == outPlug() )
 		{
 			break;
@@ -338,7 +338,7 @@ void Expression::compute( ValuePlug *output, const Context *context ) const
 
 		if( index < values->members().size() )
 		{
-			m_engine->apply( output, values->members()[index].get() );
+			m_engine->apply( output, outPlugChild, values->members()[index].get() );
 		}
 		else
 		{

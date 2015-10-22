@@ -71,17 +71,12 @@ class DisplayTest( GafferTest.TestCase ) :
 
 	def testDefaultFormat( self ) :
 
-		s = Gaffer.ScriptNode()
 		d = GafferImage.Display()
-		s.addChild( d )
 
-		p = GafferImage.ImagePlug( "in", Gaffer.Plug.Direction.In )
-		p.setInput( d["out"] )
-
-		with s.context() :
-			self.assertEqual( p["format"].getValue(), GafferImage.Format.getDefaultFormat( s ) )
-			GafferImage.Format.setDefaultFormat( s, GafferImage.Format( 200, 150, 1. ) )
-			self.assertEqual( p["format"].getValue(), GafferImage.Format.getDefaultFormat( s ) )
+		with Gaffer.Context() as c :
+			self.assertEqual( d["out"]["format"].getValue(), GafferImage.FormatPlug.getDefaultFormat( c ) )
+			GafferImage.FormatPlug.setDefaultFormat( c, GafferImage.Format( 200, 150, 1. ) )
+			self.assertEqual( d["out"]["format"].getValue(), GafferImage.FormatPlug.getDefaultFormat( c ) )
 
 	def testTileHashes( self ) :
 

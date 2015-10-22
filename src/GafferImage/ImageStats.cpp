@@ -34,8 +34,6 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/bind.hpp"
-
 #include "Gaffer/TypedPlug.h"
 #include "Gaffer/BoxPlug.h"
 #include "Gaffer/Context.h"
@@ -44,7 +42,7 @@
 #include "GafferImage/ImageStats.h"
 #include "GafferImage/Sampler.h"
 #include "GafferImage/ChannelMaskPlug.h"
-#include "GafferImage/Format.h"
+#include "GafferImage/FormatPlug.h"
 
 using namespace GafferImage;
 using namespace Gaffer;
@@ -70,7 +68,6 @@ ImageStats::ImageStats( const std::string &name )
 	addChild( new Color4fPlug( "average", Gaffer::Plug::Out ) );
 	addChild( new Color4fPlug( "min", Gaffer::Plug::Out ) );
 	addChild( new Color4fPlug( "max", Gaffer::Plug::Out ) );
-	plugInputChangedSignal().connect( boost::bind( &ImageStats::inputChanged, this, ::_1 ) );
 }
 
 ImageStats::~ImageStats()
@@ -137,37 +134,22 @@ const Color4fPlug *ImageStats::maxPlug() const
 	return getChild<Color4fPlug>( g_firstPlugIndex + 5 );
 }
 
-void ImageStats::inputChanged( Gaffer::Plug *plug )
-{
-	const Imath::Box2i regionOfInterest( regionOfInterestPlug()->getValue() );
-	if( plug->isInstanceOf( ImagePlug::staticTypeId() ) && regionOfInterest.isEmpty() )
-	{
-		Imath::Box2i box( inPlug()->formatPlug()->getValue().getDisplayWindow() );
-		if( box.isEmpty() )
-		{
-			Gaffer::ScriptNode *s( scriptNode() );
-			if( s )
-			{
-				box = GafferImage::Format::getDefaultFormat( s ).getDisplayWindow();
-			}
-		}
-		regionOfInterestPlug()->setValue( box );
-	}
-}
-
 void ImageStats::parentChanging( Gaffer::GraphComponent *newParent )
 {
-	// Initialise the default format and setup any format knobs that are on this node.
-	if( newParent )
+	ComputeNode::parentChanging( newParent );
+
+	// Set up the default format plug.
+	Node *parentNode = IECore::runTimeCast<Node>( newParent );
+	if( !parentNode )
 	{
-		if ( static_cast<Gaffer::TypeId>(newParent->typeId()) == ScriptNodeTypeId )
-		{
-			ScriptNode *scriptNode =  static_cast<Gaffer::ScriptNode*>( newParent );
-			Format::addDefaultFormatPlug( scriptNode );
-		}
+		return;
 	}
 
-	ComputeNode::parentChanging( newParent );
+	ScriptNode *scriptNode = parentNode->scriptNode();
+	if( scriptNode )
+	{
+		FormatPlug::acquireDefaultFormatPlug( scriptNode );
+	}
 }
 
 void ImageStats::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const

@@ -58,6 +58,7 @@ class ImageStatsTest( unittest.TestCase ) :
 
 		s = GafferImage.ImageStats()
 		s["in"].setInput( r["out"] )
+		s["regionOfInterest"].setValue( r["out"]["format"].getValue().getDisplayWindow() )
 
 		s["channels"].setValue( IECore.StringVectorData( [ "G", "B" ] ) )
 		self.__assertColour( s["average"].getValue(), IECore.Color4f( 0., 0.0744, 0.1250, 1. ) )
@@ -126,43 +127,6 @@ class ImageStatsTest( unittest.TestCase ) :
 		self.assertNotEqual( minHash, s["min"].hash() )
 		self.assertNotEqual( maxHash, s["max"].hash() )
 		self.assertNotEqual( averageHash, s["average"].hash() )
-
-	def testImageDisconnectValue( self ) :
-
-		r = GafferImage.ImageReader()
-		r["fileName"].setValue( self.__rgbFilePath )
-		s = GafferImage.ImageStats()
-
-		# Connect.
-		s["in"].setInput( r["out"] )
-		self.__assertColour( s["average"].getValue(), IECore.Color4f( 0.0544, 0.0744, 0.1250, 1. ) )
-		self.__assertColour( s["min"].getValue(), IECore.Color4f( 0, 0, 0, 1. ) )
-		self.__assertColour( s["max"].getValue(), IECore.Color4f( 0.5, 0.5, 0.5, 1. ) )
-
-		# Disconnect.
-		s["in"].setInput( None )
-		self.__assertColour( s["average"].getValue(), IECore.Color4f( 0, 0, 0, 1 ) )
-		self.__assertColour( s["min"].getValue(), IECore.Color4f( 0, 0, 0, 1 ) )
-		self.__assertColour( s["max"].getValue(), IECore.Color4f( 0, 0, 0, 1 ) )
-
-		# Connect again.
-		s["in"].setInput( r["out"] )
-		self.__assertColour( s["average"].getValue(), IECore.Color4f( 0.0544, 0.0744, 0.1250, 1. ) )
-		self.__assertColour( s["min"].getValue(), IECore.Color4f( 0, 0, 0, 1. ) )
-		self.__assertColour( s["max"].getValue(), IECore.Color4f( 0.5, 0.5, 0.5, 1. ) )
-
-	def testRoiDefault( self ) :
-
-		reader = GafferImage.ImageReader()
-		script = Gaffer.ScriptNode()
-		stats = GafferImage.ImageStats()
-		script.addChild( reader )
-		script.addChild( stats )
-
-		with script.context() :
-			reader["fileName"].setValue( self.__rgbFilePath )
-			stats["in"].setInput( reader["out"] )
-			self.assertEqual( stats["regionOfInterest"].getValue(), reader["out"]["format"].getValue().getDisplayWindow() )
 
 	def testStats( self ) :
 

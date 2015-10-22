@@ -134,7 +134,7 @@ void Resize::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs
 {
 	ImageProcessor::affects( input, outputs );
 
-	if( input == formatPlug() )
+	if( formatPlug()->isAncestorOf( input ) )
 	{
 		outputs.push_back( outPlug()->formatPlug() );
 		outputs.push_back( dataWindowPlug() );

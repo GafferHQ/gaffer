@@ -119,9 +119,9 @@ class Node : public GraphComponent
 		Gaffer::Plug *userPlug();
 		const Gaffer::Plug *userPlug() const;
 
-		/// Convenience function which simply returns ancestor<ScriptNode>()
+		/// Convenience function which returns the script this node belongs to,
+		/// or the node itself if it is a ScriptNode.
 		ScriptNode *scriptNode();
-		/// Convenience function which simply returns ancestor<ScriptNode>()
 		const ScriptNode *scriptNode() const;
 
 		/// Accepts only Nodes and Plugs.

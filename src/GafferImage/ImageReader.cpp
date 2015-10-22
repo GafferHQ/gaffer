@@ -46,6 +46,7 @@ OIIO_NAMESPACE_USING
 #include "Gaffer/StringPlug.h"
 
 #include "GafferImage/ImageReader.h"
+#include "GafferImage/FormatPlug.h"
 
 using namespace std;
 using namespace tbb;
@@ -385,7 +386,7 @@ GafferImage::Format ImageReader::computeFormat( const Gaffer::Context *context, 
 	const ImageSpec *spec = imageSpec( ustring( fileNamePlug()->getValue() ) );
 	if( !spec )
 	{
-		return context->get<Format>( Format::defaultFormatContextName, Format() );
+		return FormatPlug::getDefaultFormat( context );
 	}
 
 	return GafferImage::Format(

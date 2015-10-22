@@ -67,8 +67,8 @@ class ImageTransform : public GafferImage::ImageProcessor
 
 	private :
 
-		GafferImage::FormatPlug *formatPlug();
-		const GafferImage::FormatPlug *formatPlug() const;
+		GafferImage::AtomicFormatPlug *formatPlug();
+		const GafferImage::AtomicFormatPlug *formatPlug() const;
 
 		static size_t g_firstPlugIndex;
 };

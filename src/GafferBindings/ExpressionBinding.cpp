@@ -170,7 +170,7 @@ class EngineWrapper : public IECorePython::RefCountedWrapper<Expression::Engine>
 			throw IECore::Exception( "Engine::execute() python method not defined" );
 		}
 
-		virtual void apply( ValuePlug *plug, const IECore::Object *value ) const
+		virtual void apply( ValuePlug *proxyOutput, const ValuePlug *topLevelProxyOutput, const IECore::Object *value ) const
 		{
 			if( isSubclassed() )
 			{
@@ -180,7 +180,7 @@ class EngineWrapper : public IECorePython::RefCountedWrapper<Expression::Engine>
 					object f = this->methodOverride( "apply" );
 					if( f )
 					{
-						f( ValuePlugPtr( plug ), IECore::ObjectPtr( const_cast<IECore::Object *>( value ) ) );
+						f( ValuePlugPtr( proxyOutput ), ValuePlugPtr( const_cast<ValuePlug *>( topLevelProxyOutput ) ), IECore::ObjectPtr( const_cast<IECore::Object *>( value ) ) );
 						return;
 					}
 				}

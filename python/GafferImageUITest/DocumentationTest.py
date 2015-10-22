@@ -46,7 +46,7 @@ class DocumentationTest( GafferUITest.TestCase ) :
 		self.maxDiff = None
 		self.assertNodesAreDocumented(
 			GafferImage,
-			additionalTerminalPlugTypes = ( GafferImage.ImagePlug, )
+			additionalTerminalPlugTypes = ( GafferImage.ImagePlug, GafferImage.FormatPlug )
 		)
 
 if __name__ == "__main__":

@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2012-2015, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,16 +34,19 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGEBINDINGS_FORMATBINDING_H
-#define GAFFERIMAGEBINDINGS_FORMATBINDING_H
+#include "Gaffer/TypedPlug.h"
+#include "Gaffer/TypedPlug.inl"
 
-#include "GafferImage/Format.h"
+#include "GafferImage/FormatData.h"
+#include "GafferImage/AtomicFormatPlug.h"
 
-namespace GafferImageBindings
+using namespace Gaffer;
+using namespace GafferImage;
+
+namespace Gaffer
 {
 
-void bindFormat();
+IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( GafferImage::AtomicFormatPlug, AtomicFormatPlugTypeId )
+template class TypedPlug<GafferImage::Format>;
 
-}; // namespace GafferImageBindings
-
-#endif // GAFFERIMAGEBINDINGS_FORMATBINDING_H
+} // namespace Gaffer

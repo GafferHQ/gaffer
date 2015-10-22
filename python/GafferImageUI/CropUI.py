@@ -40,15 +40,15 @@ import Gaffer
 import GafferImage
 import GafferUI
 
-## A command suitable for use with NodeMenu.definition().append(), to add a menu
-# item for the creation of a crop node
-def postCreateCrop( node, menu ) :
+## A function suitable as the postCreator in a NodeMenu.append() call. It
+# sets the area for the node to cover the entire format.
+def postCreate( node, menu ) :
 
 	with node.scriptNode().context() :
 		if node["in"].getInput() :
 			cropFormat = node["in"]["format"].getValue()
 		else:
-			cropFormat = node.scriptNode()["defaultFormat"].getValue()
+			cropFormat = GafferImage.FormatPlug.getDefaultFormat( node.scriptNode().context() )
 
 	node['area'].setValue( cropFormat.getDisplayWindow() )
 

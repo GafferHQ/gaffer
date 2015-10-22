@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,18 +34,108 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_FORMATPLUG_H
-#define GAFFER_FORMATPLUG_H
+#ifndef GAFFERIMAGE_FORMATPLUG_H
+#define GAFFERIMAGE_FORMATPLUG_H
 
-#include "Gaffer/TypedPlug.h"
+#include "Gaffer/BoxPlug.h"
 
-#include "GafferImage/FormatData.h"
+#include "GafferImage/Format.h"
 #include "GafferImage/TypeIds.h"
+
+namespace Gaffer
+{
+
+IE_CORE_FORWARDDECLARE( ScriptNode )
+
+} // namespace Gaffer
 
 namespace GafferImage
 {
 
-typedef Gaffer::TypedPlug<GafferImage::Format> FormatPlug;
+/// Compound plug for representing an image format in a way
+/// easily edited by users, with individual child plugs for
+/// each aspect of the format.
+class FormatPlug : public Gaffer::ValuePlug
+{
+
+	public :
+
+		typedef Format ValueType;
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::FormatPlug, FormatPlugTypeId, Gaffer::ValuePlug );
+
+		FormatPlug(
+			const std::string &name = defaultName<FormatPlug>(),
+			Direction direction=In,
+			Format defaultValue = Format(),
+			unsigned flags = Default
+		);
+
+		virtual ~FormatPlug();
+
+		/// Accepts no children following construction.
+		virtual bool acceptsChild( const GraphComponent *potentialChild ) const;
+		virtual Gaffer::PlugPtr createCounterpart( const std::string &name, Direction direction ) const;
+
+		Gaffer::Box2iPlug *displayWindowPlug();
+		const Gaffer::Box2iPlug *displayWindowPlug() const;
+
+		Gaffer::FloatPlug *pixelAspectPlug();
+		const Gaffer::FloatPlug *pixelAspectPlug() const;
+
+		const Format &defaultValue() const;
+
+		/// \undoable
+		void setValue( const Format &value );
+		/// Implemented to substitute in the default format from the current
+		/// context if the current value is empty.
+		/// \note Substitution is not performed automatically when accessing
+		/// individual components (display window and pixel aspect) from the
+		/// child plugs directly.
+		Format getValue() const;
+
+		/// Reimplemented to account for the substitutions performed in getValue().
+		virtual IECore::MurmurHash hash() const;
+		/// Ensures the method above doesn't mask
+		/// ValuePlug::hash( h )
+		using ValuePlug::hash;
+
+		/// @name Default format
+		///
+		/// The FormatPlug provides the concept of a default format - one which
+		/// will be used automatically wherever a FormatPlug contains an empty
+		/// (default constructed) value. The default format is specified via a
+		/// context variable, so the same node graph may be evaluated with
+		/// different defaults in different contexts.
+		///
+		/// To expose this mechanism to user control, a default format may be
+		/// specified for each script via a plug on the ScriptNode itself.
+		////////////////////////////////////////////////////////////////////
+		//@{
+		/// Returns the default format in effect for the specified context.
+		static Format getDefaultFormat( const Gaffer::Context *context );
+		/// Sets the default format for the specified context.
+		static void setDefaultFormat( Gaffer::Context *context, const Format &format );
+		/// Acquires (creating if necessary) a plug which the user can use
+		/// to specify the default format for a particular script. When the
+		/// value of this plug is changed, the default format within
+		/// ScriptNode::context() will be updated automatically.
+		/// \todo This is currently called automatically in ImageNode::parentChanging(),
+		/// but it would be better to leave it to application config
+		/// files to call it, so each application can decide if it is
+		/// appropriate or not.
+		static FormatPlug *acquireDefaultFormatPlug( Gaffer::ScriptNode *scriptNode );
+		//@}
+
+	private :
+
+		virtual void parentChanging( Gaffer::GraphComponent *newParent );
+		void plugDirtied( Gaffer::Plug *plug );
+
+		Format m_defaultValue;
+		boost::signals::scoped_connection m_plugDirtiedConnection;
+
+};
 
 IE_CORE_DECLAREPTR( FormatPlug );
 
@@ -59,4 +149,4 @@ typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::PlugPredicate<Gaffer::Plu
 
 } // namespace GafferImage
 
-#endif // GAFFER_FORMATPLUG_H
+#endif // GAFFERIMAGE_FORMATPLUG_H
