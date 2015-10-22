@@ -206,5 +206,14 @@ class ImageAlgoTest( GafferImageTest.ImageTestCase ) :
 		] :
 			self.assertEqual( GafferImage.colorIndex( channelName ), index )
 
+	def testParallelProcessEmptyDataWindow( self ) :
+
+		d = GafferImage.Display()
+		self.assertEqual( d["out"]["dataWindow"].getValue(), IECore.Box2i() )
+
+		GafferImageTest.processTiles( d["out"] )
+		d["out"].image()
+		d["out"].imageHash()
+
 if __name__ == "__main__":
 	unittest.main()
