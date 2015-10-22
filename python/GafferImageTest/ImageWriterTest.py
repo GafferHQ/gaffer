@@ -44,8 +44,9 @@ import IECore
 import Gaffer
 import GafferTest
 import GafferImage
+import GafferImageTest
 
-class ImageWriterTest( GafferTest.TestCase ) :
+class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 
 	__largeFilePath = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/large.exr" )
 	__rgbFilePath = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/rgb.100x100" )

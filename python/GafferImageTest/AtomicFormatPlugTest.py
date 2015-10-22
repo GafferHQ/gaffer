@@ -38,11 +38,12 @@ import os
 import unittest
 
 import IECore
+
 import Gaffer
-
 import GafferImage
+import GafferImageTest
 
-class AtomicFormatPlugTest( unittest.TestCase ) :
+class AtomicFormatPlugTest( GafferImageTest.ImageTestCase ) :
 
 	def testOldFormatCompatibility( self ) :
 

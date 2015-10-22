@@ -41,8 +41,9 @@ import IECore
 import Gaffer
 import GafferTest
 import GafferImage
+import GafferImageTest
 
-class ShuffleTest( GafferTest.TestCase ) :
+class ShuffleTest( GafferImageTest.ImageTestCase ) :
 
 	def test( self ) :
 

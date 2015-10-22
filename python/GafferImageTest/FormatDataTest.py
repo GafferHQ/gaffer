@@ -40,8 +40,9 @@ import IECore
 
 import Gaffer
 import GafferImage
+import GafferImageTest
 
-class FormatDataTest( unittest.TestCase ) :
+class FormatDataTest( GafferImageTest.ImageTestCase ) :
 
 	def test( self ) :
 

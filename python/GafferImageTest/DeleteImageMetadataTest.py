@@ -39,10 +39,11 @@ import os
 import IECore
 
 import Gaffer
-import GafferImage
 import GafferTest
+import GafferImage
+import GafferImageTest
 
-class DeleteImageMetadataTest( GafferTest.TestCase ) :
+class DeleteImageMetadataTest( GafferImageTest.ImageTestCase ) :
 
 	checkerFile = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/checker.exr" )
 

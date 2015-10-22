@@ -39,8 +39,9 @@ import unittest
 import Gaffer
 import GafferTest
 import GafferImage
+import GafferImageTest
 
-class ImageTimeWarpTest( GafferTest.TestCase ) :
+class ImageTimeWarpTest( GafferImageTest.ImageTestCase ) :
 
 	def testDefaultName( self ) :
 

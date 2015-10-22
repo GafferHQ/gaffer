@@ -43,8 +43,9 @@ import IECore
 import Gaffer
 import GafferTest
 import GafferImage
+import GafferImageTest
 
-class ColorSpaceTest( unittest.TestCase ) :
+class ColorSpaceTest( GafferImageTest.ImageTestCase ) :
 
 	fileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/checker.exr" )
 

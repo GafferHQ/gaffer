@@ -42,8 +42,9 @@ import IECore
 import Gaffer
 import GafferTest
 import GafferImage
+import GafferImageTest
 
-class LUTTest( unittest.TestCase ) :
+class LUTTest( GafferImageTest.ImageTestCase ) :
 
 	imageFile = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/checker.exr" )
 	lut = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/luts/slog10.spi1d" )

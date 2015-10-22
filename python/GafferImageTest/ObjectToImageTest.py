@@ -41,8 +41,9 @@ import IECore
 
 import Gaffer
 import GafferImage
+import GafferImageTest
 
-class ObjectToImageTest( unittest.TestCase ) :
+class ObjectToImageTest( GafferImageTest.ImageTestCase ) :
 
 	fileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/checker.exr" )
 	negFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/checkerWithNegativeDataWindow.200x150.exr" )

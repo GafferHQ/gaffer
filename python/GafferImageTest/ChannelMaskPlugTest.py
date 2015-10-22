@@ -34,14 +34,15 @@
 #
 ##########################################################################
 
-import os
 import unittest
+
 import IECore
+
 import Gaffer
 import GafferImage
-import sys
+import GafferImageTest
 
-class ChannelMaskPlugTest( unittest.TestCase ) :
+class ChannelMaskPlugTest( GafferImageTest.ImageTestCase ) :
 
 	def testChannelIndex( self ) :
 		# Check that the channelIndex method returns the correct index of a range of channels.

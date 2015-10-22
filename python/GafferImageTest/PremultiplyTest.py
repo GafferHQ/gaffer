@@ -42,8 +42,9 @@ import IECore
 
 import Gaffer
 import GafferImage
+import GafferImageTest
 
-class PremultiplyTest( unittest.TestCase ) :
+class PremultiplyTest( GafferImageTest.ImageTestCase ) :
 
 	checkerFile = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/rgbOverChecker.100x100.exr" )
 

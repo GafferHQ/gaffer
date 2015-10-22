@@ -39,8 +39,9 @@ import IECore
 import Gaffer
 import GafferTest
 import GafferImage
+import GafferImageTest
 
-class ImageSamplerTest( GafferTest.TestCase ) :
+class ImageSamplerTest( GafferImageTest.ImageTestCase ) :
 
 	def test( self ) :
 

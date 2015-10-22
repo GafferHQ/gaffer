@@ -35,14 +35,16 @@
 ##########################################################################
 
 import unittest
-
-import IECore
-import Gaffer
-import GafferImage
-import GafferTest
 import os
 
-class ClampTest( unittest.TestCase ) :
+import IECore
+
+import Gaffer
+import GafferTest
+import GafferImage
+import GafferImageTest
+
+class ClampTest( GafferImageTest.ImageTestCase ) :
 
 	def testClamp( self ) :
 

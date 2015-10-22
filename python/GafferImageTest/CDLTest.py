@@ -42,8 +42,9 @@ import IECore
 import Gaffer
 import GafferTest
 import GafferImage
+import GafferImageTest
 
-class CDLTest( unittest.TestCase ) :
+class CDLTest( GafferImageTest.ImageTestCase ) :
 
 	imageFile = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/checker.exr" )
 

@@ -34,14 +34,16 @@
 #
 ##########################################################################
 
+import os
 import unittest
 
 import IECore
+
 import Gaffer
 import GafferImage
-import os
+import GafferImageTest
 
-class SamplerTest( unittest.TestCase ) :
+class SamplerTest( GafferImageTest.ImageTestCase ) :
 
 	fileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/checker.exr" )
 

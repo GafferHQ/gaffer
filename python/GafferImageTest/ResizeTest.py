@@ -41,8 +41,9 @@ import IECore
 import Gaffer
 import GafferTest
 import GafferImage
+import GafferImageTest
 
-class ResizeTest( GafferTest.TestCase ) :
+class ResizeTest( GafferImageTest.ImageTestCase ) :
 
 	def testDefaultFormat( self ) :
 

@@ -44,7 +44,7 @@ import GafferTest
 import GafferImage
 import GafferImageTest
 
-class ImageNodeTest( GafferTest.TestCase ) :
+class ImageNodeTest( GafferImageTest.ImageTestCase ) :
 
 	def testCacheThreadSafety( self ) :
 

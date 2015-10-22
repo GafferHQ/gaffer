@@ -41,8 +41,9 @@ import IECore
 import Gaffer
 import GafferTest
 import GafferImage
+import GafferImageTest
 
-class ImageSwitchTest( GafferTest.TestCase ) :
+class ImageSwitchTest( GafferImageTest.ImageTestCase ) :
 
 	def testDefaultName( self ) :
 

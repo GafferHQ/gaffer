@@ -36,19 +36,16 @@
 
 import os
 import unittest
-import IECore
-import Gaffer
-import GafferImage
-import GafferTest
-import sys
-import math
 
-class ImageStatsTest( unittest.TestCase ) :
+import IECore
+
+import GafferTest
+import GafferImage
+import GafferImageTest
+
+class ImageStatsTest( GafferImageTest.ImageTestCase ) :
 
 	__rgbFilePath = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/rgb.100x100.exr" )
-
-	def testHash( self ) :
-		pass
 
 	# Test that the outputs change when different channels are selected.
 	def testChannels( self ) :

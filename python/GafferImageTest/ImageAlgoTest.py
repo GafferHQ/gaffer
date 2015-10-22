@@ -40,8 +40,9 @@ import IECore
 
 import GafferTest
 import GafferImage
+import GafferImageTest
 
-class ImageAlgoTest( GafferTest.TestCase ) :
+class ImageAlgoTest( GafferImageTest.ImageTestCase ) :
 
 	def testEmpty( self ) :
 

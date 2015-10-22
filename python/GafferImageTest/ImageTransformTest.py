@@ -41,8 +41,9 @@ import os
 import Gaffer
 import GafferTest
 import GafferImage
+import GafferImageTest
 
-class ImageTransformTest( unittest.TestCase ) :
+class ImageTransformTest( GafferImageTest.ImageTestCase ) :
 
 	fileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/checker.exr" )
 	path = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/" )
