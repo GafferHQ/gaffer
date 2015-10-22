@@ -42,8 +42,9 @@ import IECore
 import Gaffer
 import GafferTest
 import GafferImage
+import GafferImageTest
 
-class MergeTest( GafferTest.TestCase ) :
+class MergeTest( GafferImageTest.ImageTestCase ) :
 
 	rPath = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/redWithDataWindow.100x100.exr" )
 	gPath = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/greenWithDataWindow.100x100.exr" )
@@ -149,10 +150,10 @@ class MergeTest( GafferTest.TestCase ) :
 		merge["in"][1].setInput( g["out"] )
 		merge["in"][2].setInput( b["out"] )
 
-		mergeResult = merge["out"].image()
-		expected = IECore.Reader.create( self.rgbPath ).read()
+		expected = GafferImage.ImageReader()
+		expected["fileName"].setValue( self.rgbPath )
 
-		self.assertTrue( not IECore.ImageDiffOp()( imageA = expected, imageB = mergeResult, skipMissingChannels = False, maxError = 0.001 ).value )
+		self.assertImagesEqual( merge["out"], expected["out"], maxDifference = 0.001, ignoreMetadata = True )
 
 	# Overlay a red, green and blue tile of different data window sizes and check the data window is expanded on the result and looks as we expect.
 	def testOverRGBAonRGB( self ) :
@@ -176,10 +177,10 @@ class MergeTest( GafferTest.TestCase ) :
 		merge["in"][2].setInput( g["out"] )
 		merge["in"][3].setInput( b["out"] )
 
-		mergeResult = merge["out"].image()
-		expected = IECore.Reader.create( self.checkerRGBPath ).read()
+		expected = GafferImage.ImageReader()
+		expected["fileName"].setValue( self.checkerRGBPath )
 
-		self.assertTrue( not IECore.ImageDiffOp()( imageA = expected, imageB = mergeResult, skipMissingChannels = False, maxError = 0.001 ).value )
+		self.assertImagesEqual( merge["out"], expected["out"], maxDifference = 0.001, ignoreMetadata = True )
 
 	def testAffects( self ) :
 

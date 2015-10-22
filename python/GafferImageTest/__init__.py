@@ -37,6 +37,7 @@
 
 from _GafferImageTest import *
 
+from ImageTestCase import ImageTestCase
 from ImagePlugTest import ImagePlugTest
 from ImageReaderTest import ImageReaderTest
 from ColorSpaceTest import ColorSpaceTest
