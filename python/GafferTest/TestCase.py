@@ -225,5 +225,11 @@ class TestCase( unittest.TestCase ) :
 				continue
 
 			for plug in node.children( Gaffer.Plug ) :
-				if plug.direction() == plug.Direction.In and isinstance( plug, Gaffer.ValuePlug ) :
-					self.assertTrue( plug.isSetToDefault(), plug.fullName() + " not at default value following construction" )
+
+				if plug.direction() != plug.Direction.In or not isinstance( plug, Gaffer.ValuePlug ) :
+					continue
+
+				if not plug.getFlags( plug.Flags.Serialisable ) :
+					continue
+
+				self.assertTrue( plug.isSetToDefault(), plug.fullName() + " not at default value following construction" )
