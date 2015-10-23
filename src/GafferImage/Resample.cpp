@@ -160,7 +160,7 @@ void ratioAndOffset( const Box2f &dstDataWindow, const Box2i &srcDataWindow, V2f
 	const V2f srcSize = srcDataWindow.size();
 
 	ratio = dstSize / srcSize;
-	offset = srcDataWindow.min - dstDataWindow.min / ratio;
+	offset = V2f( srcDataWindow.min ) - dstDataWindow.min / ratio;
 }
 
 // The radius for the filter is specified in the output space. This
