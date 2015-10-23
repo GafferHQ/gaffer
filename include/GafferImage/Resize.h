@@ -91,6 +91,9 @@ class Resize : public ImageProcessor
 		virtual void hashFormat( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual GafferImage::Format computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const;
 
+		virtual void hashDataWindow( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual Imath::Box2i computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const;
+
 		virtual void hashChannelData( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual IECore::ConstFloatVectorDataPtr computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const;
 
@@ -99,8 +102,18 @@ class Resize : public ImageProcessor
 		Gaffer::AtomicBox2fPlug *dataWindowPlug();
 		const Gaffer::AtomicBox2fPlug *dataWindowPlug() const;
 
-		Resample *resample();
-		const Resample *resample() const;
+		// We use an internal Resample node to do all the hard
+		// work of filtering the image into a new data window,
+		// and receive the result of that through this plug.
+		ImagePlug *resampledInPlug();
+		const ImagePlug *resampledInPlug() const;
+
+		// When we're actually changing the format, we get our
+		// output from resampledInPlug(), but when the format
+		// happens to be the same as the input, we simply pass
+		// through inPlug(). This function just returns the
+		// appropriate plug.
+		const ImagePlug *source() const;
 
 		static size_t g_firstPlugIndex;
 

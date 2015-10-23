@@ -214,5 +214,21 @@ class ResizeTest( GafferTest.TestCase ) :
 		self.assertTrue( r["out"]["format"] in dirtiedPlugs )
 		self.assertTrue( r["out"]["dataWindow"] in dirtiedPlugs )
 
+	def testDisable( self ) :
+
+		c = GafferImage.Constant()
+		c["format"].setValue( GafferImage.Format( 100, 100 ) )
+
+		r = GafferImage.Resize()
+		r["in"].setInput( c["out"] )
+		r["format"].setValue( GafferImage.Format( 200, 200 ) )
+
+		self.assertEqual( r["out"]["format"].getValue(), GafferImage.Format( 200, 200 ) )
+		self.assertEqual( r["out"]["dataWindow"].getValue(), IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 200 ) ) )
+
+		r["enabled"].setValue( False )
+		self.assertEqual( r["out"]["format"].getValue(), GafferImage.Format( 100, 100 ) )
+		self.assertEqual( r["out"]["dataWindow"].getValue(), IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 100 ) ) )
+
 if __name__ == "__main__":
 	unittest.main()
