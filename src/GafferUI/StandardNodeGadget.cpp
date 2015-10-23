@@ -800,7 +800,10 @@ void StandardNodeGadget::updateNodules( std::vector<Nodule *> &nodules, std::vec
 		NoduleMap::iterator next = it; next++;
 		if( it->first->parent<Node>() != node() )
 		{
-			removed.push_back( it->second.nodule );
+			if( it->second.nodule )
+			{
+				removed.push_back( it->second.nodule );
+			}
 			m_nodules.erase( it );
 		}
 		it = next;
