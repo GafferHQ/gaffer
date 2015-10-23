@@ -57,6 +57,7 @@ Resize::Resize( const std::string &name )
 	addChild( new IntPlug( "fitMode", Plug::In, Horizontal, Horizontal, Distort ) );
 	addChild( new StringPlug( "filter" ) );
 	addChild( new AtomicBox2fPlug( "__dataWindow", Plug::Out ) );
+	addChild( new ImagePlug( "__resampledIn", Plug::In, Plug::Default & ~Plug::Serialisable ) );
 
 	// We don't really do much work ourselves - we just
 	// defer to an internal Resample node to do the hard
@@ -66,11 +67,13 @@ Resize::Resize( const std::string &name )
 	addChild( resample );
 
 	resample->inPlug()->setInput( inPlug() );
+
 	resample->filterPlug()->setInput( filterPlug() );
 	resample->dataWindowPlug()->setInput( dataWindowPlug() );
 	resample->boundingModePlug()->setValue( Sampler::Clamp );
 
-	outPlug()->dataWindowPlug()->setInput( resample->outPlug()->dataWindowPlug() );
+	resampledInPlug()->setInput( resample->outPlug() );
+
 	outPlug()->metadataPlug()->setInput( inPlug()->metadataPlug() );
 	outPlug()->channelNamesPlug()->setInput( inPlug()->channelNamesPlug() );
 
@@ -120,36 +123,46 @@ const Gaffer::AtomicBox2fPlug *Resize::dataWindowPlug() const
 	return getChild<AtomicBox2fPlug>( g_firstPlugIndex + 3 );
 }
 
-Resample *Resize::resample()
+ImagePlug *Resize::resampledInPlug()
 {
-	return getChild<Resample>( g_firstPlugIndex + 4 );
+	return getChild<ImagePlug>( g_firstPlugIndex + 4 );
 }
 
-const Resample *Resize::resample() const
+const ImagePlug *Resize::resampledInPlug() const
 {
-	return getChild<Resample>( g_firstPlugIndex + 4 );
+	return getChild<ImagePlug>( g_firstPlugIndex + 4 );
 }
 
 void Resize::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	ImageProcessor::affects( input, outputs );
 
-	if( formatPlug()->isAncestorOf( input ) )
-	{
-		outputs.push_back( outPlug()->formatPlug() );
-		outputs.push_back( dataWindowPlug() );
-	}
-	else if(
-		input == inPlug()->formatPlug() ||
+	if(
+		formatPlug()->isAncestorOf( input ) ||
 		input == fitModePlug() ||
+		input == inPlug()->formatPlug() ||
 		input == inPlug()->dataWindowPlug()
 	)
 	{
 		outputs.push_back( dataWindowPlug() );
 	}
-	else if(
+
+	if( formatPlug()->isAncestorOf( input ) )
+	{
+		outputs.push_back( outPlug()->formatPlug() );
+	}
+
+	if(
+		input == inPlug()->dataWindowPlug() ||
+		input == resampledInPlug()->dataWindowPlug()
+	)
+	{
+		outputs.push_back( outPlug()->dataWindowPlug() );
+	}
+
+	if(
 		input == inPlug()->channelDataPlug() ||
-		input == filterPlug()
+		input == resampledInPlug()->channelDataPlug()
 	)
 	{
 		outputs.push_back( outPlug()->channelDataPlug() );
@@ -249,26 +262,35 @@ GafferImage::Format Resize::computeFormat( const Gaffer::Context *context, const
 	return formatPlug()->getValue();
 }
 
+void Resize::hashDataWindow( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	h = source()->dataWindowPlug()->hash();
+}
+
+Imath::Box2i Resize::computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const
+{
+	return source()->dataWindowPlug()->getValue();
+}
+
 void Resize::hashChannelData( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	if( formatPlug()->getValue() == inPlug()->formatPlug()->getValue() )
-	{
-		h = inPlug()->channelDataPlug()->hash();
-	}
-	else
-	{
-		h = resample()->outPlug()->channelDataPlug()->hash();
-	}
+	h = source()->channelDataPlug()->hash();
 }
 
 IECore::ConstFloatVectorDataPtr Resize::computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const
 {
+	return source()->channelDataPlug()->getValue();
+}
+
+const ImagePlug *Resize::source() const
+{
 	if( formatPlug()->getValue() == inPlug()->formatPlug()->getValue() )
 	{
-		return inPlug()->channelDataPlug()->getValue();
+		return inPlug();
 	}
 	else
 	{
-		return resample()->outPlug()->channelDataPlug()->getValue();
+		return resampledInPlug();
 	}
 }
+
