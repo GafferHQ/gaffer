@@ -1202,5 +1202,19 @@ class GraphGadgetTest( GafferUITest.TestCase ) :
 		self.assertTrue( g.connectionGadget( script["n2"]["in"] ) is not None )
 		self.assertTrue( g.connectionGadget( script["n2"]["in"] ).srcNodule() is not None )
 
+	def testRemoveNonNodulePlug( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = Gaffer.Node()
+		s["n"]["p"] = Gaffer.Plug()
+		Gaffer.Metadata.registerPlugValue( s["n"]["p"], "nodule:type", "" )
+
+		g = GafferUI.GraphGadget( s )
+		self.assertTrue( g.nodeGadget( s["n"] ).nodule( s["n"]["p"] ) is None )
+
+		# Once upon a time, this would crash.
+		del s["n"]["p"]
+
 if __name__ == "__main__":
 	unittest.main()
