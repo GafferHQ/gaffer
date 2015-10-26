@@ -115,6 +115,7 @@ class Switch : public BaseType
 
 		void childAdded( GraphComponent *child );
 		void plugSet( Plug *plug );
+		void plugDirtied( Plug *plug );
 		void plugInputChanged( Plug *plug );
 		size_t inputIndex() const;
 
