@@ -244,6 +244,7 @@ class SamplerTest( unittest.TestCase ) :
 		crop["in"].setInput( constant["out"] )
 		crop["areaSource"].setValue( crop.AreaSource.Custom )
 		crop["area"].setValue( IECore.Box2i( IECore.V2i( 135 ), IECore.V2i( 214 ) ) )
+		crop["affectDisplayWindow"].setValue( False )
 
 		sampler = GafferImage.Sampler( crop["out"], "R", IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 50 ) ), boundingMode = GafferImage.Sampler.BoundingMode.Clamp )
 		self.assertEqual( sampler.sample( 0, 0 ), 1 )
