@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2013-2015, Image Engine Design Inc. All rights reserved.
-//  Copyright (c) 2015, Nvizible Ltd. All rights reserved.
+//  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,72 +34,46 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_CROP_H
-#define GAFFERIMAGE_CROP_H
+#ifndef GAFFERIMAGE_OFFSET_H
+#define GAFFERIMAGE_OFFSET_H
 
-#include "Gaffer/BoxPlug.h"
+#include "Gaffer/CompoundNumericPlug.h"
+
 #include "GafferImage/ImageProcessor.h"
 
 namespace GafferImage
 {
 
-class Crop : public ImageProcessor
+class Offset : public ImageProcessor
 {
 	public :
 
-		Crop( const std::string &name=defaultName<Crop>() );
-		virtual ~Crop();
+		Offset( const std::string &name=defaultName<Offset>() );
+		virtual ~Offset();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::Crop, CropTypeId, ImageProcessor );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::Offset, OffsetTypeId, ImageProcessor );
 
-		enum AreaSource
-		{
-			Custom = 0,
-			DataWindow = 1,
-			DisplayWindow = 2
-		};
-
-		Gaffer::IntPlug *areaSourcePlug();
-		const Gaffer::IntPlug *areaSourcePlug() const;
-
-		Gaffer::Box2iPlug *areaPlug();
-		const Gaffer::Box2iPlug *areaPlug() const;
-
-		Gaffer::BoolPlug *affectDataWindowPlug();
-		const Gaffer::BoolPlug *affectDataWindowPlug() const;
-
-		Gaffer::BoolPlug *affectDisplayWindowPlug();
-		const Gaffer::BoolPlug *affectDisplayWindowPlug() const;
-
-		Gaffer::BoolPlug *resetOriginPlug();
-		const Gaffer::BoolPlug *resetOriginPlug() const;
+		Gaffer::V2iPlug *offsetPlug();
+		const Gaffer::V2iPlug *offsetPlug() const;
 
 		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
 
 	protected :
 
-		virtual void hashFormat( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual void hashDataWindow( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual void hashChannelData( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 
-		virtual GafferImage::Format computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const;
 		virtual Imath::Box2i computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const;
-
-		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const;
+		virtual IECore::ConstFloatVectorDataPtr computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const;
 
 	private :
 
-		Gaffer::AtomicBox2iPlug *cropWindowPlug();
-		const Gaffer::AtomicBox2iPlug *cropWindowPlug() const;
-
-		Gaffer::V2iPlug *offsetPlug();
-		const Gaffer::V2iPlug *offsetPlug() const;
-
 		static size_t g_firstPlugIndex;
+
 };
 
-IE_CORE_DECLAREPTR( Crop )
+IE_CORE_DECLAREPTR( Offset )
 
 } // namespace GafferImage
 
-#endif // GAFFERIMAGE_CROP_H
+#endif // GAFFERIMAGE_OFFSET_H

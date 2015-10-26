@@ -277,6 +277,7 @@ class MergeTest( GafferTest.TestCase ) :
 		aCrop["in"].setInput( a["out"] )
 		aCrop["areaSource"].setValue( aCrop.AreaSource.Custom )
 		aCrop["area"].setValue( IECore.Box2i( IECore.V2i( 50 ), IECore.V2i( 162 ) ) )
+		aCrop["affectDisplayWindow"].setValue( False )
 
 		m = GafferImage.Merge()
 		m["operation"].setValue( m.Operation.Over )
@@ -318,6 +319,7 @@ class MergeTest( GafferTest.TestCase ) :
 		bCrop["in"].setInput( b["out"] )
 		bCrop["areaSource"].setValue( bCrop.AreaSource.Custom )
 		bCrop["area"].setValue( IECore.Box2i( IECore.V2i( 50 ), IECore.V2i( 162 ) ) )
+		bCrop["affectDisplayWindow"].setValue( False )
 
 		m = GafferImage.Merge()
 		m["operation"].setValue( m.Operation.Add )

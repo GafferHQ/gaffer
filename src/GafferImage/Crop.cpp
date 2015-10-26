@@ -36,9 +36,12 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "GafferImage/Crop.h"
+#include "GafferImage/ImageAlgo.h"
+#include "GafferImage/Offset.h"
 
-using namespace Gaffer;
+using namespace Imath;
 using namespace IECore;
+using namespace Gaffer;
 using namespace GafferImage;
 
 IE_CORE_DEFINERUNTIMETYPED( Crop );
@@ -53,13 +56,21 @@ Crop::Crop( const std::string &name )
 	addChild( new Box2iPlug( "area" ) );
 	addChild( new BoolPlug( "affectDataWindow", Gaffer::Plug::In, true ) );
 	addChild( new BoolPlug( "affectDisplayWindow", Gaffer::Plug::In, true ) );
+	addChild( new BoolPlug( "resetOrigin", Gaffer::Plug::In, true ) );
 
 	addChild( new AtomicBox2iPlug( "__cropWindow", Gaffer::Plug::Out ) );
+	addChild( new V2iPlug( "__offset", Gaffer::Plug::Out ) );
+
+	OffsetPtr offset = new Offset( "__offset" );
+	addChild( offset );
+	offset->inPlug()->setInput( inPlug() );
+	offset->enabledPlug()->setInput( enabledPlug() );
+	offset->offsetPlug()->setInput( offsetPlug() );
+	outPlug()->channelDataPlug()->setInput( offset->outPlug()->channelDataPlug() );
 
 	// We don't ever want to change these, so we make pass-through connections.
 	outPlug()->metadataPlug()->setInput( inPlug()->metadataPlug() );
 	outPlug()->channelNamesPlug()->setInput( inPlug()->channelNamesPlug() );
-	outPlug()->channelDataPlug()->setInput( inPlug()->channelDataPlug() );
 }
 
 Crop::~Crop()
@@ -106,35 +117,81 @@ const Gaffer::BoolPlug *Crop::affectDisplayWindowPlug() const
 	return getChild<BoolPlug>( g_firstPlugIndex+3 );
 }
 
+Gaffer::BoolPlug *Crop::resetOriginPlug()
+{
+	return getChild<BoolPlug>( g_firstPlugIndex + 4 );
+}
+
+const Gaffer::BoolPlug *Crop::resetOriginPlug() const
+{
+	return getChild<BoolPlug>( g_firstPlugIndex + 4 );
+}
+
 Gaffer::AtomicBox2iPlug *Crop::cropWindowPlug()
 {
-	return getChild<AtomicBox2iPlug>( g_firstPlugIndex+4 );
+	return getChild<AtomicBox2iPlug>( g_firstPlugIndex + 5 );
 }
 
 const Gaffer::AtomicBox2iPlug *Crop::cropWindowPlug() const
 {
-	return getChild<AtomicBox2iPlug>( g_firstPlugIndex+4 );
+	return getChild<AtomicBox2iPlug>( g_firstPlugIndex + 5 );
+}
+
+Gaffer::V2iPlug *Crop::offsetPlug()
+{
+	return getChild<V2iPlug>( g_firstPlugIndex + 6 );
+}
+
+const Gaffer::V2iPlug *Crop::offsetPlug() const
+{
+	return getChild<V2iPlug>( g_firstPlugIndex + 6 );
 }
 
 void Crop::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	ImageProcessor::affects( input, outputs );
 
-	if ( areaPlug()->isAncestorOf( input ) ||
-	     input == areaSourcePlug() ||
-	     input == inPlug()->dataWindowPlug() ||
-	     input == inPlug()->formatPlug() )
+	if(
+		areaPlug()->isAncestorOf( input ) ||
+		input == areaSourcePlug() ||
+		input == inPlug()->dataWindowPlug() ||
+		input == inPlug()->formatPlug()
+	)
 	{
 		outputs.push_back( cropWindowPlug() );
 	}
-	else if ( input == cropWindowPlug() ||
-	          input == affectDataWindowPlug() ||
-	          input == affectDisplayWindowPlug() ||
-	          input == inPlug()->dataWindowPlug() )
+
+	if(
+		input == cropWindowPlug() ||
+		input == affectDisplayWindowPlug() ||
+		input == resetOriginPlug() ||
+		input == inPlug()->formatPlug()
+	)
 	{
 		outputs.push_back( outPlug()->formatPlug() );
+	}
+
+	if(
+		input == cropWindowPlug() ||
+		input == affectDisplayWindowPlug() ||
+		input == affectDataWindowPlug() ||
+		input == resetOriginPlug() ||
+		input == inPlug()->dataWindowPlug()
+	)
+	{
 		outputs.push_back( outPlug()->dataWindowPlug() );
 	}
+
+	if(
+		input == affectDisplayWindowPlug() ||
+		input == resetOriginPlug() ||
+		input == cropWindowPlug()
+	)
+	{
+		outputs.push_back( offsetPlug()->getChild( 0 ) );
+		outputs.push_back( offsetPlug()->getChild( 1 ) );
+	}
+
 }
 
 void Crop::hashFormat( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
@@ -151,6 +208,7 @@ void Crop::hashFormat( const GafferImage::ImagePlug *parent, const Gaffer::Conte
 
 	inPlug()->formatPlug()->hash( h );
 	cropWindowPlug()->hash( h );
+	resetOriginPlug()->hash( h );
 }
 
 GafferImage::Format Crop::computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const
@@ -162,50 +220,44 @@ GafferImage::Format Crop::computeFormat( const Gaffer::Context *context, const I
 		return inPlug()->formatPlug()->getValue();
 	}
 
-	Imath::Box2i cropWindow = cropWindowPlug()->getValue();
+	Imath::Box2i displayWindow = cropWindowPlug()->getValue();
+	if( resetOriginPlug()->getValue() )
+	{
+		displayWindow.max -= displayWindow.min;
+		displayWindow.min = V2i( 0 );
+	}
 
-	return Format( cropWindow, inPlug()->formatPlug()->getValue().getPixelAspect() );
+	return Format( displayWindow, inPlug()->formatPlug()->getValue().getPixelAspect() );
 }
 
 
 void Crop::hashDataWindow( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	if ( ! affectDataWindowPlug()->getValue() )
-	{
-		// No-op because we are not applying this
-		// crop to the data window
-		h = inPlug()->dataWindowPlug()->hash();
-		return;
-	}
-
 	ImageProcessor::hashDataWindow( parent, context, h );
 
 	inPlug()->dataWindowPlug()->hash( h );
 	cropWindowPlug()->hash( h );
+	affectDataWindowPlug()->hash( h );
+	affectDisplayWindowPlug()->hash( h );
+	resetOriginPlug()->hash( h );
 }
 
 Imath::Box2i Crop::computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
-	if ( ! affectDataWindowPlug()->getValue() )
+	Box2i result = inPlug()->dataWindowPlug()->getValue();
+	const Box2i cropWindow = cropWindowPlug()->getValue();
+	if( affectDataWindowPlug()->getValue() )
 	{
-		// No-op because we are not applying this
-		// crop to the data window
-		return inPlug()->dataWindowPlug()->getValue();
+		result = intersection( result, cropWindow );
 	}
 
-	Imath::Box2i cropWindow = cropWindowPlug()->getValue();
-	Imath::Box2i dataWindow = inPlug()->dataWindowPlug()->getValue();
+	if( affectDisplayWindowPlug()->getValue() && resetOriginPlug()->getValue() )
+	{
+		result.min -= cropWindow.min;
+		result.max -= cropWindow.min;
+	}
 
-	return Imath::Box2i(
-		Imath::V2i(
-			std::max( dataWindow.min.x, cropWindow.min.x ),
-			std::max( dataWindow.min.y, cropWindow.min.y )
-		),
-		Imath::V2i(
-			std::min( dataWindow.max.x, cropWindow.max.x ),
-			std::min( dataWindow.max.y, cropWindow.max.y )
-		)
-	);
+	return result;
 }
 
 void Crop::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
@@ -234,6 +286,12 @@ void Crop::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context
 				break;
 			}
 		}
+	}
+	else if( output->parent<Plug>() == offsetPlug() )
+	{
+		affectDisplayWindowPlug()->hash( h );
+		resetOriginPlug()->hash( h );
+		cropWindowPlug()->hash( h );
 	}
 }
 
@@ -264,6 +322,17 @@ void Crop::compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) 
 		}
 
 		static_cast<Gaffer::AtomicBox2iPlug *>( output )->setValue( cropWindow );
+	}
+	else if( output->parent<Plug>() == offsetPlug() )
+	{
+		V2i offset( 0 );
+		if( affectDisplayWindowPlug()->getValue() && resetOriginPlug()->getValue() )
+		{
+			offset -= cropWindowPlug()->getValue().min;
+		}
+		static_cast<IntPlug *>( output )->setValue(
+			output == offsetPlug()->getChild( 0 ) ? offset[0] : offset[1]
+		);
 	}
 	else
 	{
