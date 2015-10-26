@@ -36,6 +36,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "GafferImage/Crop.h"
+#include "GafferImage/ImageAlgo.h"
 
 using namespace Gaffer;
 using namespace IECore;
@@ -120,17 +121,21 @@ void Crop::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs )
 {
 	ImageProcessor::affects( input, outputs );
 
-	if ( areaPlug()->isAncestorOf( input ) ||
-	     input == areaSourcePlug() ||
-	     input == inPlug()->dataWindowPlug() ||
-	     input == inPlug()->formatPlug() )
+	if(
+		areaPlug()->isAncestorOf( input ) ||
+		input == areaSourcePlug() ||
+		input == inPlug()->dataWindowPlug() ||
+		input == inPlug()->formatPlug()
+	)
 	{
 		outputs.push_back( cropWindowPlug() );
 	}
-	else if ( input == cropWindowPlug() ||
-	          input == affectDataWindowPlug() ||
-	          input == affectDisplayWindowPlug() ||
-	          input == inPlug()->dataWindowPlug() )
+	else if(
+		input == cropWindowPlug() ||
+		input == affectDataWindowPlug() ||
+		input == affectDisplayWindowPlug() ||
+		input == inPlug()->dataWindowPlug()
+	)
 	{
 		outputs.push_back( outPlug()->formatPlug() );
 		outputs.push_back( outPlug()->dataWindowPlug() );
@@ -193,19 +198,10 @@ Imath::Box2i Crop::computeDataWindow( const Gaffer::Context *context, const Imag
 		return inPlug()->dataWindowPlug()->getValue();
 	}
 
-	Imath::Box2i cropWindow = cropWindowPlug()->getValue();
-	Imath::Box2i dataWindow = inPlug()->dataWindowPlug()->getValue();
+	const Imath::Box2i cropWindow = cropWindowPlug()->getValue();
+	const Imath::Box2i dataWindow = inPlug()->dataWindowPlug()->getValue();
 
-	return Imath::Box2i(
-		Imath::V2i(
-			std::max( dataWindow.min.x, cropWindow.min.x ),
-			std::max( dataWindow.min.y, cropWindow.min.y )
-		),
-		Imath::V2i(
-			std::min( dataWindow.max.x, cropWindow.max.x ),
-			std::min( dataWindow.max.y, cropWindow.max.y )
-		)
-	);
+	return intersection( cropWindow, dataWindow );
 }
 
 void Crop::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
