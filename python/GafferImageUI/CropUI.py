@@ -36,9 +36,10 @@
 ##########################################################################
 
 import IECore
+
 import Gaffer
-import GafferImage
 import GafferUI
+import GafferImage
 
 ## A function suitable as the postCreator in a NodeMenu.append() call. It
 # sets the area for the node to cover the entire format.
@@ -64,6 +65,7 @@ Gaffer.Metadata.registerNode(
 	""",
 
 	"layout:activator:areaSourceIsCustom", lambda node : node["areaSource"].getValue() == GafferImage.Crop.AreaSource.Custom,
+	"layout:activator:affectDisplayWindowIsOn", lambda node : node["affectDisplayWindow"].getValue(),
 
 	plugs = {
 
@@ -119,6 +121,18 @@ Gaffer.Metadata.registerNode(
 			""",
 
 		],
+
+		"resetOrigin" : [
+
+			"description",
+			"""
+			Shifts the cropped image area back to the origin, so that
+			the bottom left of the display window is at ( 0, 0 ).
+			""",
+
+			"layout:activator", "affectDisplayWindowIsOn",
+
+		]
 
 	}
 
