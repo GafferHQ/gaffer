@@ -101,6 +101,7 @@ enum TypeId
 	CDLTypeId = 110805,
 	DisplayTransformTypeId = 110806,
 	FormatPlugTypeId = 110807,
+	OffsetTypeId = 110808,
 
 	LastTypeId = 110849
 };
