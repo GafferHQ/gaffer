@@ -162,6 +162,22 @@ class CropTest( unittest.TestCase ) :
 
 		self.assertEqual( i["out"]["format"].getValue().getDisplayWindow(), crop["out"]["dataWindow"].getValue() )
 
+	def testAffects( self ) :
+
+		c = GafferImage.Crop()
+
+		self.assertEqual(
+			set( c.affects( c["affectDisplayWindow"] ) ),
+			{ c["out"]["format"] }
+		)
+
+		self.assertEqual(
+			set( c.affects( c["affectDataWindow"] ) ),
+			{ c["out"]["dataWindow"] }
+		)
+
+		self.assertTrue( c["out"]["dataWindow"] in set( c.affects( c["in"]["dataWindow"] ) ) )
+		self.assertTrue( c["out"]["format"] in set( c.affects( c["in"]["format"] ) ) )
 
 if __name__ == "__main__":
 	unittest.main()

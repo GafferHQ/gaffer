@@ -130,14 +130,22 @@ void Crop::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs )
 	{
 		outputs.push_back( cropWindowPlug() );
 	}
-	else if(
+
+	if(
 		input == cropWindowPlug() ||
-		input == affectDataWindowPlug() ||
 		input == affectDisplayWindowPlug() ||
-		input == inPlug()->dataWindowPlug()
+		input == inPlug()->formatPlug()
 	)
 	{
 		outputs.push_back( outPlug()->formatPlug() );
+	}
+
+	if(
+		input == cropWindowPlug() ||
+		input == affectDataWindowPlug() ||
+		input == inPlug()->dataWindowPlug()
+	)
+	{
 		outputs.push_back( outPlug()->dataWindowPlug() );
 	}
 }
