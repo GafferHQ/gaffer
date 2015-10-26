@@ -68,6 +68,7 @@ class CropTest( unittest.TestCase ) :
 		crop["area"].setValue( IECore.Box2i( IECore.V2i( 40 ), IECore.V2i( 50 ) ) )
 		crop["affectDataWindow"].setValue( True )
 		crop["affectDisplayWindow"].setValue( True )
+		crop["resetOrigin"].setValue( False )
 
 		self.assertEqual(i['out'].channelDataHash( "R", IECore.V2i( 0 ) ), crop['out'].channelDataHash( "R", IECore.V2i( 0 ) ) )
 		self.assertEqual(i['out'].channelDataHash( "G", IECore.V2i( 0 ) ), crop['out'].channelDataHash( "G", IECore.V2i( 0 ) ) )
@@ -118,9 +119,15 @@ class CropTest( unittest.TestCase ) :
 		crop["area"].setValue( IECore.Box2i( IECore.V2i( 40 ), IECore.V2i( 50 ) ) )
 		crop["affectDataWindow"].setValue( False )
 		crop["affectDisplayWindow"].setValue( True )
+		crop["resetOrigin"].setValue( False )
 
 		self.assertEqual( crop["out"]["format"].getValue().getDisplayWindow(), IECore.Box2i( IECore.V2i( 40 ), IECore.V2i( 50 ) ) )
 		self.assertEqual( i["out"]["dataWindow"].getValue(), crop["out"]["dataWindow"].getValue() )
+
+		crop["resetOrigin"].setValue( True )
+
+		self.assertEqual( crop["out"]["format"].getValue().getDisplayWindow(), IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 10 ) ) )
+		self.assertEqual( crop["out"]["dataWindow"].getValue(), IECore.Box2i( IECore.V2i( -10 ), IECore.V2i( 40 ) ) )
 
 	def testIntersectDataWindow( self ) :
 
@@ -146,8 +153,15 @@ class CropTest( unittest.TestCase ) :
 		crop["areaSource"].setValue( GafferImage.Crop.AreaSource.DataWindow )
 		crop["affectDataWindow"].setValue( False )
 		crop["affectDisplayWindow"].setValue( True )
+		crop["resetOrigin"].setValue( False )
 
 		self.assertEqual( i["out"]["dataWindow"].getValue(), crop["out"]["format"].getValue().getDisplayWindow() )
+		self.assertEqual( crop["out"]["dataWindow"].getValue(), i["out"]["dataWindow"].getValue() )
+
+		crop["resetOrigin"].setValue( True )
+
+		self.assertEqual( crop["out"]["format"].getValue().getDisplayWindow(), IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 50 ) ) )
+		self.assertEqual( crop["out"]["dataWindow"].getValue(), IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 50 ) ) )
 
 	def testDisplayWindowToDataWindow( self ) :
 
@@ -168,7 +182,7 @@ class CropTest( unittest.TestCase ) :
 
 		self.assertEqual(
 			set( c.affects( c["affectDisplayWindow"] ) ),
-			{ c["out"]["format"] }
+			{ c["out"]["format"], c["out"]["dataWindow"], c["__offset"]["x"], c["__offset"]["y"] }
 		)
 
 		self.assertEqual(
@@ -178,6 +192,45 @@ class CropTest( unittest.TestCase ) :
 
 		self.assertTrue( c["out"]["dataWindow"] in set( c.affects( c["in"]["dataWindow"] ) ) )
 		self.assertTrue( c["out"]["format"] in set( c.affects( c["in"]["format"] ) ) )
+
+	def testResetOrigin( self ) :
+
+		constant = GafferImage.Constant()
+		constant["format"].setValue( GafferImage.Format( 100, 200, 1 ) )
+
+		crop = GafferImage.Crop()
+		crop["in"].setInput( constant["out"] )
+		self.assertEqual( crop["affectDisplayWindow"].getValue(), True )
+		self.assertEqual( crop["affectDataWindow"].getValue(), True )
+		self.assertEqual( crop["resetOrigin"].getValue(), True )
+
+		area = IECore.Box2i( IECore.V2i( 50 ), IECore.V2i( 100, 190 ) )
+		crop["area"].setValue( area )
+
+		self.assertEqual( crop["out"]["format"].getValue().getDisplayWindow(), IECore.Box2i( IECore.V2i( 0 ), area.size() ) )
+		self.assertEqual( crop["out"]["dataWindow"].getValue(), IECore.Box2i( IECore.V2i( 0 ), area.size() ) )
+
+		crop["resetOrigin"].setValue( False )
+
+		self.assertEqual( crop["out"]["format"].getValue().getDisplayWindow(), area )
+		self.assertEqual( crop["out"]["dataWindow"].getValue(), area )
+
+		# If we're not affecting the display window, then the reset origin flag
+		# should be ignored.
+		crop["resetOrigin"].setValue( True )
+		crop["affectDisplayWindow"].setValue( False )
+
+		self.assertEqual( crop["out"]["format"].getValue(), crop["in"]["format"].getValue() )
+		self.assertEqual( crop["out"]["dataWindow"].getValue(), area )
+
+		# But if we are affecting the display window, and we are resetting the origin,
+		# the data window should be offset even if affectDataWindow is off.
+
+		crop["affectDisplayWindow"].setValue( True )
+		crop["affectDataWindow"].setValue( False )
+
+		self.assertEqual( crop["out"]["format"].getValue().getDisplayWindow(), IECore.Box2i( IECore.V2i( 0 ), area.size() ) )
+		self.assertEqual( crop["out"]["dataWindow"].getValue(), IECore.Box2i( IECore.V2i( -50 ), IECore.V2i( 50, 150 ) ) )
 
 if __name__ == "__main__":
 	unittest.main()

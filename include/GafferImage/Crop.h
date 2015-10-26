@@ -60,15 +60,20 @@ class Crop : public ImageProcessor
 			DisplayWindow = 2
 		};
 
-		/// Plug accessors.
 		Gaffer::IntPlug *areaSourcePlug();
 		const Gaffer::IntPlug *areaSourcePlug() const;
+
 		Gaffer::Box2iPlug *areaPlug();
 		const Gaffer::Box2iPlug *areaPlug() const;
+
 		Gaffer::BoolPlug *affectDataWindowPlug();
 		const Gaffer::BoolPlug *affectDataWindowPlug() const;
+
 		Gaffer::BoolPlug *affectDisplayWindowPlug();
 		const Gaffer::BoolPlug *affectDisplayWindowPlug() const;
+
+		Gaffer::BoolPlug *resetOriginPlug();
+		const Gaffer::BoolPlug *resetOriginPlug() const;
 
 		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
 
@@ -87,6 +92,9 @@ class Crop : public ImageProcessor
 
 		Gaffer::AtomicBox2iPlug *cropWindowPlug();
 		const Gaffer::AtomicBox2iPlug *cropWindowPlug() const;
+
+		Gaffer::V2iPlug *offsetPlug();
+		const Gaffer::V2iPlug *offsetPlug() const;
 
 		static size_t g_firstPlugIndex;
 };
