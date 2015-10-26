@@ -86,6 +86,7 @@
 #include "GafferImageBindings/ResizeBinding.h"
 #include "GafferImageBindings/LUTBinding.h"
 #include "GafferImageBindings/ImageAlgoBinding.h"
+#include "GafferImageBindings/OffsetBinding.h"
 
 using namespace boost::python;
 using namespace GafferImage;
@@ -142,5 +143,6 @@ BOOST_PYTHON_MODULE( _GafferImage )
 	GafferImageBindings::bindResize();
 	GafferImageBindings::bindLUT();
 	GafferImageBindings::bindImageAlgo();
+	GafferImageBindings::bindOffset();
 }
 
