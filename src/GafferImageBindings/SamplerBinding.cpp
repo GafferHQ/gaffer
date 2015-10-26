@@ -34,11 +34,9 @@
 
 #include "boost/python.hpp"
 
-#include "GafferImage/Filter.h"
 #include "GafferImageBindings/SamplerBinding.h"
 
 using namespace boost::python;
-using namespace IECore;
 using namespace GafferImage;
 
 namespace GafferImageBindings

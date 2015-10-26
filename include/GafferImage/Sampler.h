@@ -40,7 +40,6 @@
 #include <vector>
 
 #include "GafferImage/ImagePlug.h"
-#include "GafferImage/Filter.h"
 
 namespace GafferImage
 {
