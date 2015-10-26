@@ -1216,5 +1216,17 @@ class GraphGadgetTest( GafferUITest.TestCase ) :
 		# Once upon a time, this would crash.
 		del s["n"]["p"]
 
+	def testEnabledException( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = GafferTest.AddNode()
+
+		s["e"] = Gaffer.Expression()
+		s["e"].setExpression( "parent['n']['enabled'] = undefinedVariable" )
+
+		g = GafferUI.GraphGadget( s )
+		self.assertTrue( g.nodeGadget( s["n"] ) is not None )
+
 if __name__ == "__main__":
 	unittest.main()

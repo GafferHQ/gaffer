@@ -153,6 +153,7 @@ class StandardNodeGadget : public NodeGadget
 		void updateNoduleLayout();
 		bool updateUserColor();
 		void updatePadding();
+		void updateNodeEnabled( const Gaffer::Plug *dirtiedPlug = NULL );
 
 		IE_CORE_FORWARDDECLARE( ErrorGadget );
 		ErrorGadget *errorGadget( bool createIfMissing = true );

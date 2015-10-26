@@ -307,15 +307,6 @@ StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node )
 	node->errorSignal().connect( boost::bind( &StandardNodeGadget::error, this, ::_1, ::_2, ::_3 ) );
 	node->plugDirtiedSignal().connect( boost::bind( &StandardNodeGadget::plugDirtied, this, ::_1 ) );
 
-	if( DependencyNode *dependencyNode = IECore::runTimeCast<DependencyNode>( node.get() ) )
-	{
-		const Gaffer::BoolPlug *enabledPlug = dependencyNode->enabledPlug();
-		if( enabledPlug )
-		{
-			m_nodeEnabled = enabledPlug->getValue();
-		}
-	}
-
 	dragEnterSignal().connect( boost::bind( &StandardNodeGadget::dragEnter, this, ::_1, ::_2 ) );
 	dragMoveSignal().connect( boost::bind( &StandardNodeGadget::dragMove, this, ::_1, ::_2 ) );
 	dragLeaveSignal().connect( boost::bind( &StandardNodeGadget::dragLeave, this, ::_1, ::_2 ) );
@@ -337,6 +328,7 @@ StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node )
 	updateNoduleLayout();
 	updateUserColor();
 	updatePadding();
+	updateNodeEnabled();
 }
 
 StandardNodeGadget::~StandardNodeGadget()
@@ -569,13 +561,7 @@ bool StandardNodeGadget::getLabelsVisibleOnHover() const
 
 void StandardNodeGadget::plugDirtied( const Gaffer::Plug *plug )
 {
-	const DependencyNode *dependencyNode = IECore::runTimeCast<const DependencyNode>( plug->node() );
-	if( dependencyNode && plug == dependencyNode->enabledPlug() )
-	{
-		m_nodeEnabled = static_cast<const Gaffer::BoolPlug *>( plug )->getValue();
- 		requestRender();
-	}
-
+	updateNodeEnabled( plug );
 	if( ErrorGadget *e = errorGadget( /* createIfMissing = */ false ) )
 	{
 		e->removeError( plug );
@@ -893,6 +879,46 @@ void StandardNodeGadget::updatePadding()
 	}
 
 	contentsContainer()->setPadding( Box3f( V3f( -padding ), V3f( padding ) ) );
+}
+
+void StandardNodeGadget::updateNodeEnabled( const Gaffer::Plug *dirtiedPlug )
+{
+	DependencyNode *dependencyNode = IECore::runTimeCast<DependencyNode>( node() );
+	if( !dependencyNode )
+	{
+		return;
+	}
+
+	const Gaffer::BoolPlug *enabledPlug = dependencyNode->enabledPlug();
+	if( !enabledPlug )
+	{
+		return;
+	}
+
+	if( dirtiedPlug && dirtiedPlug != enabledPlug )
+	{
+		return;
+	}
+
+	bool enabled = true;
+	try
+	{
+		enabled = enabledPlug->getValue();
+	}
+	catch( const std::exception &e )
+	{
+		// The error will be reported via Node::errorSignal() anyway.
+		return;
+	}
+
+
+	if( enabled == m_nodeEnabled )
+	{
+		return;
+	}
+
+	m_nodeEnabled = enabled;
+	requestRender();
 }
 
 StandardNodeGadget::ErrorGadget *StandardNodeGadget::errorGadget( bool createIfMissing )

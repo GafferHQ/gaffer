@@ -37,6 +37,8 @@
 
 from __future__ import with_statement
 
+import IECore
+
 import Gaffer
 import GafferUI
 
@@ -66,9 +68,18 @@ class BoolPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		if self.getPlug() is not None :
 
+			value = None
 			with self.getContext() :
+				# Since BoolWidget doesn't yet have a way of
+				# displaying errors, we just ignore exceptions
+				# and leave UI components like GraphGadget to
+				# display them via Node.errorSignal().
+				with IECore.IgnoredExceptions( Exception ) :
+					value = self.getPlug().getValue()
+
+			if value is not None :
 				with Gaffer.BlockedConnection( self.__stateChangedConnection ) :
-					self.__boolWidget.setState( self.getPlug().getValue() )
+					self.__boolWidget.setState( value )
 
 			displayMode = Gaffer.Metadata.plugValue( self.getPlug(), "boolPlugValueWidget:displayMode" )
 			if displayMode is not None :
