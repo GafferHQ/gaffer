@@ -162,5 +162,42 @@ class FilterSwitchTest( GafferSceneTest.SceneTestCase ) :
 		self.assertTrue( s["FilterSwitch1"]["in"][2].getInput().isSame( s["PathFilter2"]["out"] ) )
 		self.assertTrue( s["FilterSwitch1"]["out"].getInput().isSame( s["FilterSwitch1"]["in"][1] ) )
 
+	def testSwitchConnectionSerializationProblem( self ):
+
+		s = Gaffer.ScriptNode()
+		b1 = Gaffer.Box()
+		s.addChild( b1 )
+		b2 = Gaffer.Box()
+		b1.addChild( b2 )
+
+		fs = GafferScene.FilterSwitch()
+		b2.addChild( fs )
+
+		f1 = GafferScene.PathFilter()
+		b2.addChild( f1 )
+
+		f2 = GafferScene.PathFilter()
+		b2.addChild( f2 )
+
+		fs["in"]["in0"].setInput( f1["out"] )
+		fs["in"]["in1"].setInput( f2["out"] )
+
+		promoted = b2.promotePlug( fs["index"] )
+		promoted = b1.promotePlug( promoted )
+		promoted.setValue(1)
+
+		# correctly connected internally:
+		self.assertEqual( fs["out"].getInput(), fs["in"]["in1"] )
+
+		# serialize/deserialize:
+		ss = s.serialise()
+
+		s = Gaffer.ScriptNode()
+		s.execute( ss )
+		fs = s["Box"]["Box"]["FilterSwitch"]
+
+		# should still be correctly connected internally:
+		self.assertEqual( fs["out"].getInput(), fs["in"]["in1"] )
+
 if __name__ == "__main__":
 	unittest.main()
