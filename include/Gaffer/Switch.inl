@@ -84,6 +84,7 @@ void Switch<BaseType>::init( bool expectBaseClassPlugs )
 		BaseType::childAddedSignal().connect( boost::bind( &Switch::childAdded, this, ::_2 ) );
 	}
 
+	BaseType::plugDirtiedSignal().connect( boost::bind( &Switch::plugDirtied, this, ::_1 ) );
 	BaseType::plugSetSignal().connect( boost::bind( &Switch::plugSet, this, ::_1 ) );
 	BaseType::plugInputChangedSignal().connect( boost::bind( &Switch::plugInputChanged, this, ::_1 ) );
 }
@@ -291,6 +292,15 @@ void Switch<BaseType>::computeInternal( ValuePlug *output, const Context *contex
 
 template<typename BaseType>
 void Switch<BaseType>::plugSet( Plug *plug )
+{
+	if( plug == indexPlug() || plug == enabledPlug() )
+	{
+		updateInternalConnection();
+	}
+}
+
+template<typename BaseType>
+void Switch<BaseType>::plugDirtied( Plug *plug )
 {
 	if( plug == indexPlug() || plug == enabledPlug() )
 	{
