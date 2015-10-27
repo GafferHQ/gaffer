@@ -335,6 +335,35 @@ class SwitchTest( GafferTest.TestCase ) :
 		self.assertTrue( n["enabled"].acceptsInput( None ) )
 		self.assertTrue( n["index"].acceptsInput( None ) )
 
+	def testIndirectInputsToIndex( self ) :
+
+		n = Gaffer.SwitchDependencyNode()
+		n["in"] = Gaffer.ArrayPlug( element = Gaffer.Plug(), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		n["out"] = Gaffer.Plug( direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic  )
+
+		input0 = Gaffer.Plug()
+		input1 = Gaffer.Plug()
+		input2 = Gaffer.Plug()
+
+		n["in"][0].setInput( input0 )
+		n["in"][1].setInput( input1 )
+		n["in"][2].setInput( input2 )
+
+		self.assertTrue( n["out"].source().isSame( input0 ) )
+
+		indexInput = Gaffer.IntPlug()
+		n["index"].setInput( indexInput )
+		self.assertTrue( n["out"].source().isSame( input0 ) )
+
+		indirectIndexInput1 = Gaffer.IntPlug( defaultValue = 1 )
+		indirectIndexInput2 = Gaffer.IntPlug( defaultValue = 2 )
+
+		indexInput.setInput( indirectIndexInput1 )
+		self.assertTrue( n["out"].source().isSame( input1 ) )
+
+		indexInput.setInput( indirectIndexInput2 )
+		self.assertTrue( n["out"].source().isSame( input2 ) )
+
 	def setUp( self ) :
 
 		GafferTest.TestCase.setUp( self )
