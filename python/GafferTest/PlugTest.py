@@ -759,6 +759,41 @@ class PlugTest( GafferTest.TestCase ) :
 		p2["y"].setInput( p1["x"] )
 		self.assertTrue( p2.getInput() is None )
 
+	def testIndirectInputChangedSignal( self ) :
+
+		n = Gaffer.Node()
+		n["p1"] = Gaffer.Plug()
+		n["p2"] = Gaffer.Plug()
+		n["p3"] = Gaffer.Plug()
+		n["p4"] = Gaffer.Plug()
+
+		cs = GafferTest.CapturingSlot( n.plugInputChangedSignal() )
+
+		n["p4"].setInput( n["p3"] )
+		self.assertEqual( len( cs ), 1 )
+		self.assertEqual( cs[0], ( n["p4"], ) )
+
+		del cs[:]
+
+		# When the input to the input of a plug
+		# changes, we emit inputChangedSignal()
+		# for the whole chain, because the
+		# effective source for all downstream
+		# plugs has changed.
+
+		n["p3"].setInput( n["p2"] )
+		self.assertEqual( len( cs ), 2 )
+		self.assertEqual( cs[0], ( n["p3"], ) )
+		self.assertEqual( cs[1], ( n["p4"], ) )
+
+		del cs[:]
+
+		n["p2"].setInput( n["p1"] )
+		self.assertEqual( len( cs ), 3 )
+		self.assertEqual( cs[0], ( n["p2"], ) )
+		self.assertEqual( cs[1], ( n["p3"], ) )
+		self.assertEqual( cs[2], ( n["p4"], ) )
+
 if __name__ == "__main__":
 	unittest.main()
 

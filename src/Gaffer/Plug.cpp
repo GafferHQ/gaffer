@@ -356,12 +356,29 @@ void Plug::setInputInternal( PlugPtr input, bool emit )
 	}
 	if( emit )
 	{
-		Node *n = node();
-		if( n )
-		{
-			n->plugInputChangedSignal()( this );
-		}
+		// We must emit inputChanged prior to propagating
+		// dirtiness, because inputChanged slots may be
+		// used to rewire the graph, and we want to emit
+		// plugDirtied only after all the rewiring is done.
+		emitInputChanged();
 		propagateDirtiness( this );
+	}
+}
+
+void Plug::emitInputChanged()
+{
+	Node *n = node();
+	if( n )
+	{
+		n->plugInputChangedSignal()( this );
+	}
+
+	// Take a copy of the outputs, owning a reference - because who
+	// knows what will be added and removed by the connected slots.
+	std::vector<PlugPtr> o( outputs().begin(), outputs().end() );
+	for( std::vector<PlugPtr>::const_iterator it=o.begin(), eIt=o.end(); it!=eIt; ++it )
+	{
+		(*it)->emitInputChanged();
 	}
 }
 

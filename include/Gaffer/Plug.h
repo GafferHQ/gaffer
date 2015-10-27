@@ -231,6 +231,7 @@ class Plug : public GraphComponent
 
 		void setInput( PlugPtr input, bool setChildInputs, bool updateParentInput );
 		void setInputInternal( PlugPtr input, bool emit );
+		void emitInputChanged();
 
 		void updateInputFromChildInputs( Plug *checkFirst );
 

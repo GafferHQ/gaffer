@@ -83,8 +83,9 @@ class Node : public GraphComponent
 		/// \note Passive observers of the plug value should use plugDirtiedSignal()
 		/// rather than plugSetSignal().
 		UnaryPlugSignal &plugSetSignal();
-		/// Emitted immediately when the input changes on a plug of this node.
-		/// As with plugSetSignal(), it is acceptable for slots connected to
+		/// Emitted immediately when a plug's input is changed. Also emitted
+		/// for all outputs of such plugs, as in effect their input is being changed
+		/// too. As with plugSetSignal(), it is acceptable for slots connected to
 		/// this signal to rewire the node graph.
 		UnaryPlugSignal &plugInputChangedSignal();
 		/// Emitted when a plug of this node is dirtied - this signifies that any
