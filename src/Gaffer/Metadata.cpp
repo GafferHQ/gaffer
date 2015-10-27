@@ -412,7 +412,6 @@ std::vector<Node*> Metadata::nodesWithMetadata( GraphComponent *root, IECore::In
 			if( it->second->find( key ) != it->second->end() )
 			{
 				nodes.push_back( const_cast<Node*>( node ) );
-				break;
 			}
 		}
 	}
@@ -613,7 +612,6 @@ std::vector<Plug*> Metadata::plugsWithMetadata( GraphComponent *root, IECore::In
 			if( it->second->find( key ) != it->second->end() )
 			{
 				plugs.push_back( const_cast<Plug*>( plug ) );
-				break;
 			}
 		}
 	}
