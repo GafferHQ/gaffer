@@ -58,7 +58,7 @@ size_t bufferIndex( const V2i &p, const Box2i &b )
 {
 	assert( contains( b, p ) );
 	return
-		( p.y - b.min.y ) * b.size().x +
+		( p.y - b.min.y ) * ( b.max.x - b.min.x ) +
 		( p.x - b.min.x );
 }
 
