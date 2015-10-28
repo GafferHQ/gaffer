@@ -76,7 +76,7 @@ using namespace GafferSceneUI;
 // SceneView::ShadingMode implementation
 //////////////////////////////////////////////////////////////////////////
 
-class SceneView::ShadingMode
+class SceneView::ShadingMode : public boost::signals::trackable
 {
 
 	public :
@@ -189,7 +189,7 @@ class SceneView::ShadingMode
 // SceneView::Grid implementation
 //////////////////////////////////////////////////////////////////////////
 
-class SceneView::Grid
+class SceneView::Grid : public boost::signals::trackable
 {
 
 	public :
@@ -398,7 +398,7 @@ class GnomonGadget : public GafferUI::Gadget
 
 } // namespace
 
-class SceneView::Gnomon
+class SceneView::Gnomon : public boost::signals::trackable
 {
 
 	public :
@@ -632,7 +632,7 @@ IE_CORE_DECLAREPTR( CameraOverlay )
 
 } // namespace
 
-class SceneView::LookThrough
+class SceneView::LookThrough : public boost::signals::trackable
 {
 
 	public :
