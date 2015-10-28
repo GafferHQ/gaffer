@@ -105,7 +105,7 @@ struct ErrorSlotCaller
 void NodeSerialiser::moduleDependencies( const Gaffer::GraphComponent *graphComponent, std::set<std::string> &modules ) const
 {
 	Serialiser::moduleDependencies( graphComponent, modules );
-	modules.insert( "IECore" ); // for the metadata calls
+	metadataModuleDependencies( static_cast<const Gaffer::Node *>( graphComponent ), modules );
 }
 
 std::string NodeSerialiser::postHierarchy( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const

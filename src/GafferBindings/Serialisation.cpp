@@ -71,10 +71,12 @@ Serialisation::Serialisation( const Gaffer::GraphComponent *parent, const std::s
 	{
 		if( const Node *node = runTimeCast<const Node>( parent ) )
 		{
+			metadataModuleDependencies( node, m_modules );
 			m_postScript += metadataSerialisation( node, parentName );
 		}
 		else if( const Plug *plug = runTimeCast<const Plug>( parent ) )
 		{
+			metadataModuleDependencies( plug, m_modules );
 			m_postScript += metadataSerialisation( plug, parentName );
 		}
 	}
@@ -99,7 +101,7 @@ std::string Serialisation::result() const
 	)
 	{
 		boost::format formatter( "Gaffer.Metadata.registerNodeValue( %s, \"%s\", %d, persistent=False )\n" );
-		
+
 		result += "\n";
 		result += boost::str( formatter % m_parentName % "serialiser:milestoneVersion" % GAFFER_MILESTONE_VERSION );
 		result += boost::str( formatter % m_parentName % "serialiser:majorVersion" % GAFFER_MAJOR_VERSION );

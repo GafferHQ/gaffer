@@ -329,7 +329,7 @@ void bindMetadata()
 				boost::python::arg( "node" ),
 				boost::python::arg( "inherit" ) = true,
 				boost::python::arg( "instanceOnly" ) = false,
-				boost::python::arg( "persistentOnly" ) = false			
+				boost::python::arg( "persistentOnly" ) = false
 			)
 		)
 		.staticmethod( "registeredNodeValues" )
@@ -378,7 +378,7 @@ void bindMetadata()
 				boost::python::arg( "plug" ),
 				boost::python::arg( "inherit" ) = true,
 				boost::python::arg( "instanceOnly" ) = false,
-				boost::python::arg( "persistentOnly" ) = false			
+				boost::python::arg( "persistentOnly" ) = false
 			)
 		)
 		.staticmethod( "registeredPlugValues" )
@@ -414,7 +414,7 @@ void bindMetadata()
 
 		.def( "plugValueChangedSignal", &Metadata::plugValueChangedSignal, return_value_policy<reference_existing_object>() )
 		.staticmethod( "plugValueChangedSignal" )
-		
+
 		.def( "plugsWithMetadata", &plugsWithMetadata,
 			(
 				boost::python::arg( "root" ),
@@ -424,7 +424,7 @@ void bindMetadata()
 			)
 		)
 		.staticmethod( "plugsWithMetadata" )
-		
+
 		.def( "nodesWithMetadata", &nodesWithMetadata,
 			(
 				boost::python::arg( "root" ),
@@ -439,6 +439,22 @@ void bindMetadata()
 	SignalClass<Metadata::NodeValueChangedSignal, DefaultSignalCaller<Metadata::NodeValueChangedSignal>, ValueChangedSlotCaller>( "NodeValueChangedSignal" );
 	SignalClass<Metadata::PlugValueChangedSignal, DefaultSignalCaller<Metadata::NodeValueChangedSignal>, ValueChangedSlotCaller>( "PlugValueChangedSignal" );
 
+}
+
+void metadataModuleDependencies( const Gaffer::Node *node, std::set<std::string> &modules )
+{
+	/// \todo Derive from the registered values so we can support
+	/// datatypes from other modules.
+	modules.insert( "IECore" );
+	modules.insert( "Gaffer" );
+}
+
+void metadataModuleDependencies( const Gaffer::Plug *plug, std::set<std::string> &modules )
+{
+	/// \todo Derive from the registered values so we can support
+	/// datatypes from other modules.
+	modules.insert( "IECore" );
+	modules.insert( "Gaffer" );
 }
 
 std::string metadataSerialisation( const Gaffer::Node *node, const std::string &identifier )
