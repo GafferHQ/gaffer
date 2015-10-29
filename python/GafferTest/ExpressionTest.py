@@ -1157,5 +1157,22 @@ class ExpressionTest( GafferTest.TestCase ) :
 		for plug in s["n"]["user"] :
 			self.assertEqual( s["e"].defaultExpression( plug, "python" ), "" )
 
+	def testSetIntFromFloat( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = Gaffer.Node()
+		s["n"]["user"]["i"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		s["e"] = Gaffer.Expression()
+		s["e"].setExpression( "parent['n']['user']['i'] = context.getFrame()" )
+
+		with Gaffer.Context() as c :
+
+			c.setFrame( 0 )
+			self.assertEqual( s["n"]["user"]["i"].getValue(), 0 )
+
+			c.setFrame( 1 )
+			self.assertEqual( s["n"]["user"]["i"].getValue(), 1 )
+
 if __name__ == "__main__":
 	unittest.main()
