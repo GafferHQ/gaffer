@@ -1,3 +1,82 @@
+# 0.18.0.0
+==========
+
+This release brings a number of updates to GafferImage, including
+user-editable Formats, bug fixes to Resize and Crop, and a new Offset
+node. It also fixes a few bugs todo with Expressions, Switches, and UI
+crashes.
+
+Core
+-----------------------------------------------------------------------
+
+- `Node::userPlug()` is now a Plug instead of a CompoundPlug.
+- Preventing unwanted child connection tracking on userPlug().
+- Changed scriptNode() to return `this` when node is a ScriptNode.
+- Support indirect connections to Switch index
+    - Emitting Node::plugInputChangedSignal() for all downstream connections.
+- Expressions don't let `__in` plug track child inputs.
+- Added top level plug argument to `Expression::Engine::apply()`.
+- PythonExpressionEngine drives `apply()` by plug type not data type.
+- PythonExpressionEngine supports arbitrary compound plugs types.
+- Improved PythonExpressionEngine::defaultExpression().
+- Fixed a bug in plugs/nodesWithMetadata.
+- Fixed errors when serialising parent metadata only.
+- Reference/Box no longer export user plugs (#801).
+
+UI
+-----------------------------------------------------------------------
+
+- Skipping intermediate dots in tooltips.
+- Fixed crash in the GraphGadget when a non-nodule plug was removed from a node.
+- Improved UI robustness for errors on enabledPlug() expressions.
+- Fixed potential connection lifetime bugs in the Viewer.
+
+Image
+-----------------------------------------------------------------------
+
+- Added AtomicFormatPlug and replaced all non-user facing FormatPlugs with this.
+    - This plug does not perform default format substitutions.
+    - This plug does not serialise registered Formats.
+- Changed FormatPlug to be a user-editable Format specification
+    - Using FormatPlug in all user facing scenarios (e.g. Constant, Resize, etc).
+- Deprecated Reformat. Use Resize instead.
+- Moved default Format mechanism onto FormatPlug.
+- Fixed default Format issues inside boxes (#888).
+- Fixed nodes which were unusable if no default format was specified in the context (#888).
+    - We now fall back to a default default format in that case.
+- The default format was not getting transferred to the script context after loading (#888).
+- Rationalised and simplified the Format registry.
+    - Fixed registerFormat() so that a second registration overrides the first.
+    - Requiring name when registering a format.
+    - Names should no longer include the numeric values.
+    - Renamed removeFormat() to deregisterFormat().
+    - Removed unused signals and not-so-useful methods.
+    - Separated registered names and ostream output.
+        - The ostream output just uses numeric values, keeping it in line with
+          the Imath classes.
+        - Querying the registered name for a format returns an
+          empty string if it hasn't been registered. Previously it returned
+          a generated name, making it hard to tell if it had actually been
+          registered or not.
+- FormatPlugValueWidget supports manual entry of custom formats.
+    - This widget only supports FormatPlugs, not AtomicFormatPlugs.
+- ImageStats now uses a postCreate to set plug values via the UI only.
+- Renamed CropUI.postCreateCrop to CropUI.postCreate.
+- Fixed Resize disabling.
+- Add Offset node.
+- Fixed bug in Crop::affects().
+- Added Crop "resetOrigin" plug.
+    - This resets the origin of the format back to [0,0], which is intuitively what is expected.
+
+Incompatibilities
+-----------------------------------------------------------------------
+
+- Changed type of Node::userPlug()
+- Moved default Format API from Format class onto FormatPlug class.
+- Changed Format registry API.
+- Crop now resets the display window origin to 0,0. Turn off the "resetOrigin" plug for the old behaviour.
+- Renamed CropUI.postCreateCrop to CropUI.postCreate.
+
 # 0.17.0.0
 ==========
 
