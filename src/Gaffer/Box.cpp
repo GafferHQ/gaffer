@@ -365,7 +365,10 @@ void Box::exportForReference( const std::string &fileName ) const
 		}
 		else if( const Plug *plug = IECore::runTimeCast<Plug>( it->get() ) )
 		{
-			if( !boost::regex_match( plug->getName().c_str(), invisiblePlug ) )
+			if(
+				!boost::regex_match( plug->getName().c_str(), invisiblePlug )
+				&& plug != userPlug()
+			)
 			{
 				toExport->add( *it );
 			}

@@ -281,52 +281,52 @@ class ReferenceTest( GafferTest.TestCase ) :
 
 		s = Gaffer.ScriptNode()
 		s["b"] = Gaffer.Box()
-		s["b"]["user"]["p"] = Gaffer.Plug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["b"]["p"] = Gaffer.Plug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 
-		Gaffer.Metadata.registerPlugValue( s["b"]["user"]["p"], "description", "ddd" )
+		Gaffer.Metadata.registerPlugValue( s["b"]["p"], "description", "ddd" )
 
 		s["b"].exportForReference( "/tmp/test.grf" )
 
 		s["r"] = Gaffer.Reference()
 		s["r"].load( "/tmp/test.grf" )
 
-		self.assertEqual( Gaffer.Metadata.plugValue( s["r"]["user"]["p"], "description" ), "ddd" )
+		self.assertEqual( Gaffer.Metadata.plugValue( s["r"]["p"], "description" ), "ddd" )
 
 	def testReloadWithUnconnectedPlugs( self ) :
 
 		s = Gaffer.ScriptNode()
 		s["b"] = Gaffer.Box()
-		s["b"]["user"]["p"] = Gaffer.Plug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["b"]["p"] = Gaffer.Plug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		s["b"].exportForReference( "/tmp/test.grf" )
 
 		s["r"] = Gaffer.Reference()
 		s["r"].load( "/tmp/test.grf" )
 
-		self.assertEqual( s["r"]["user"].keys(), [ "p" ] )
+		self.assertEqual( s["r"].keys(), [ "user", "p" ] )
 
 		s2 = Gaffer.ScriptNode()
 		s2.execute( s.serialise() )
 
-		self.assertEqual( s2["r"]["user"].keys(), [ "p" ] )
+		self.assertEqual( s2["r"].keys(), [ "user", "p" ] )
 
 	def testReloadRefreshesMetadata( self ) :
 
 		s = Gaffer.ScriptNode()
 		s["b"] = Gaffer.Box()
-		s["b"]["user"]["p"] = Gaffer.Plug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["b"]["p"] = Gaffer.Plug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		s["b"].exportForReference( "/tmp/test.grf" )
 
 		s["r"] = Gaffer.Reference()
 		s["r"].load( "/tmp/test.grf" )
 
-		self.assertEqual( Gaffer.Metadata.plugValue( s["r"]["user"]["p"], "test" ), None )
+		self.assertEqual( Gaffer.Metadata.plugValue( s["r"]["p"], "test" ), None )
 
-		Gaffer.Metadata.registerPlugValue( s["b"]["user"]["p"], "test", 10 )
+		Gaffer.Metadata.registerPlugValue( s["b"]["p"], "test", 10 )
 		s["b"].exportForReference( "/tmp/test.grf" )
 
 		s["r"].load( "/tmp/test.grf" )
 
-		self.assertEqual( Gaffer.Metadata.plugValue( s["r"]["user"]["p"], "test" ), 10 )
+		self.assertEqual( Gaffer.Metadata.plugValue( s["r"]["p"], "test" ), 10 )
 
 	def testDefaultValueClashes( self ) :
 
@@ -731,14 +731,17 @@ class ReferenceTest( GafferTest.TestCase ) :
 		s["r"] = Gaffer.Reference()
 		s["r"].load( os.path.dirname( __file__ ) + "/references/version-0.8.0.0.grf" )
 
+		self.assertFalse( s["r"]["user"]["promoted"].getFlags( Gaffer.Plug.Flags.Dynamic ) )
 		self.assertEqual( s["r"]["user"]["promoted"].defaultValue(), False )
 		self.assertEqual( s["r"]["user"]["promoted"].getValue(), True )
 
 		s["r"]["user"]["promoted"].setValue( False )
+		self.assertFalse( s["r"]["user"]["promoted"].getFlags( Gaffer.Plug.Flags.Dynamic ) )
 		self.assertEqual( s["r"]["user"]["promoted"].defaultValue(), False )
 		self.assertEqual( s["r"]["user"]["promoted"].getValue(), False )
 
 		s["r"].load( os.path.dirname( __file__ ) + "/references/version-0.8.0.0.grf" )
+		self.assertFalse( s["r"]["user"]["promoted"].getFlags( Gaffer.Plug.Flags.Dynamic ) )
 		self.assertEqual( s["r"]["user"]["promoted"].defaultValue(), False )
 		self.assertEqual( s["r"]["user"]["promoted"].getValue(), False )
 
@@ -874,6 +877,36 @@ class ReferenceTest( GafferTest.TestCase ) :
 		self.assertEqual( s["r"].fileName(), "/tmp/test.grf" )
 		self.assertTrue( len( states ), 3 )
 		self.assertEqual( states[2], State( [ "user", "p" ], "/tmp/test.grf" ) )
+
+	def testUserPlugsNotReferenced( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["b"] = Gaffer.Box()
+		s["b"]["user"]["a"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		self.assertTrue( "a" in s["b"]["user"] )
+		s["b"].exportForReference( self.temporaryDirectory() + "/test.grf" )
+
+		s["r"] = Gaffer.Reference()
+		s["r"].load( self.temporaryDirectory() + "/test.grf" )
+		self.assertTrue( "a" not in s["r"]["user"] )
+
+		a = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		b = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["r"]["user"]["a"] = a
+		s["r"]["user"]["b"] = b
+		self.assertTrue( s["r"]["user"]["a"].isSame( a ) )
+		self.assertTrue( s["r"]["user"]["b"].isSame( b ) )
+
+		s["r"].load( self.temporaryDirectory() + "/test.grf" )
+		self.assertTrue( s["r"]["user"]["a"].isSame( a ) )
+		self.assertTrue( s["r"]["user"]["b"].isSame( b ) )
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+
+		self.assertTrue( "a" in s2["r"]["user"] )
+		self.assertTrue( "b" in s2["r"]["user"] )
 
 	def tearDown( self ) :
 
