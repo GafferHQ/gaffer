@@ -37,6 +37,7 @@
 
 import re
 import ast
+import functools
 
 import IECore
 
@@ -304,9 +305,12 @@ class _Parser( ast.NodeVisitor ) :
 # Functions for setting plug values.
 ##########################################################################
 
-def __typedPlugValueExtractor( plug, topLevelPlug, value ) :
+def __typedPlugValueExtractor( plug, topLevelPlug, value, converter = None ) :
 
-	return value.value
+	if converter is not None :
+		return converter( value.value )
+	else :
+		return value.value
 
 def __compoundNumericPlugValueExtractor( plug, topLevelPlug, value ) :
 
@@ -347,7 +351,7 @@ def __defaultValueExtractor( plug, topLevelPlug, value ) :
 	return value
 
 _valueExtractors = {
-	Gaffer.IntPlug : __typedPlugValueExtractor,
+	Gaffer.IntPlug : functools.partial( __typedPlugValueExtractor, converter = int ),
 	Gaffer.FloatPlug : __typedPlugValueExtractor,
 	Gaffer.StringPlug : __typedPlugValueExtractor,
 	Gaffer.BoolPlug : __typedPlugValueExtractor,
