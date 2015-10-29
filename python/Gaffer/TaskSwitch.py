@@ -1,7 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2014, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,31 +34,40 @@
 #
 ##########################################################################
 
-__import__( "IECore" )
+import IECore
 
-from _Gaffer import *
-from About import About
-from Application import Application
-from WeakMethod import WeakMethod
-from BlockedConnection import BlockedConnection
-from FileNamePathFilter import FileNamePathFilter
-from UndoContext import UndoContext
-from Context import Context
-from InfoPathFilter import InfoPathFilter
-from LazyModule import lazyImport, LazyModule
-from DictPath import DictPath
-from PythonExpressionEngine import PythonExpressionEngine
-from SequencePath import SequencePath
-from GraphComponentPath import GraphComponentPath
-from OutputRedirection import OutputRedirection
-from LocalDispatcher import LocalDispatcher
-from SystemCommand import SystemCommand
-from TaskList import TaskList
-from TaskContextProcessor import TaskContextProcessor
-from Wedge import Wedge
-from TaskContextVariables import TaskContextVariables
-from TaskSwitch import TaskSwitch
+import Gaffer
 
-import NodeAlgo
+class TaskSwitch( Gaffer.ExecutableNode ) :
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "Gaffer" )
+	def __init__( self, name = "TaskSwitch" ) :
+
+		Gaffer.ExecutableNode.__init__( self, name )
+
+		self["index"] = Gaffer.IntPlug( minValue = 0 )
+
+	def requirements( self, context ) :
+
+		index = self["index"].getValue()
+		index = index % ( len( self["requirements"] ) - 1 )
+
+		node = self["requirements"][index].source().node()
+		if not isinstance( node, Gaffer.ExecutableNode ) or node.isSame( self ) :
+			return []
+
+		return [ self.Task( node, context ) ]
+
+	def hash( self, context ) :
+
+		# Our hash is empty to signify that we don't do
+		# anything in execute().
+		return IECore.MurmurHash()
+
+	def execute( self ) :
+
+		# We don't need to do anything here because our
+		# sole purpose is to manipulate the context
+		# in which our requirements are executed.
+		pass
+
+IECore.registerRunTimeTyped( TaskSwitch, typeName = "Gaffer::TaskSwitch" )
