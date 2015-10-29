@@ -136,6 +136,7 @@ from TaskContextVariablesTest import TaskContextVariablesTest
 from SubGraphTest import SubGraphTest
 from FileSequencePathFilterTest import FileSequencePathFilterTest
 from AnimationTest import AnimationTest
+from TaskSwitchTest import TaskSwitchTest
 
 if __name__ == "__main__":
 	import unittest
