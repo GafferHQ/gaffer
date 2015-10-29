@@ -45,6 +45,7 @@
 #include "Gaffer/CompoundPlug.h"
 #include "Gaffer/Metadata.h"
 #include "Gaffer/StringPlug.h"
+#include "Gaffer/StandardSet.h"
 
 using namespace IECore;
 using namespace Gaffer;
@@ -110,11 +111,17 @@ void Reference::loadInternal( const std::string &fileName )
 		}
 	}
 
+	// We don't export user plugs to references, but old versions of
+	// Gaffer did, so as above, we must get them out of the way during
+	// the load.
 	for( PlugIterator it( userPlug() ); it != it.end(); ++it )
 	{
 		Plug *plug = it->get();
-		previousPlugs[plug->relativeName( this )] = plug;
-		plug->setName( "__tmp__" + plug->getName().string() );
+		if( isReferencePlug( plug ) )
+		{
+			previousPlugs[plug->relativeName( this )] = plug;
+			plug->setName( "__tmp__" + plug->getName().string() );
+		}
 	}
 
 	// if we're doing a reload, then we also need to delete all our child
@@ -129,6 +136,11 @@ void Reference::loadInternal( const std::string &fileName )
 		}
 		i--;
 	}
+
+	// Set up a container to catch all the children added during loading.
+	StandardSetPtr newChildren = new StandardSet;
+	childAddedSignal().connect( boost::bind( (bool (StandardSet::*)( IECore::RunTimeTypedPtr ) )&StandardSet::add, newChildren.get(), ::_2 ) );
+	userPlug()->childAddedSignal().connect( boost::bind( (bool (StandardSet::*)( IECore::RunTimeTypedPtr ) )&StandardSet::add, newChildren.get(), ::_2 ) );
 
 	// load the reference. we use continueOnError=true to get everything possible
 	// loaded, but if any errors do occur we throw an exception at the end of this
@@ -216,13 +228,19 @@ void Reference::loadInternal( const std::string &fileName )
 	// to be serialised in the script the reference is in - the whole
 	// point is that they are referenced.
 
-	for( RecursivePlugIterator it( this ); it != it.end(); ++it )
+	for( size_t i = 0, e = newChildren->size(); i < e; ++i )
 	{
-		if( isReferencePlug( it->get() ) )
+		if( Plug *plug = runTimeCast<Plug>( newChildren->member( i ) ) )
 		{
-			(*it)->setFlags( Plug::Dynamic, false );
+			plug->setFlags( Plug::Dynamic, false );
+			for( RecursivePlugIterator it( plug ); it != it.end(); ++it )
+			{
+				(*it)->setFlags( Plug::Dynamic, false );
+			}
 		}
 	}
+
+	// Finish up.
 
 	m_fileName = fileName;
 	referenceLoadedSignal()( this );
@@ -242,7 +260,7 @@ bool Reference::isReferencePlug( const Plug *plug ) const
 	// never come directly from a reference. This lines up
 	// with the export code in Box::exportForReference(), where
 	// such plugs are excluded from the export.
-	
+
 	// find ancestor of p which is a direct child of this node:
 	const Plug* ancestorPlug = plug;
 	const GraphComponent* parent = plug->parent<GraphComponent>();
@@ -257,15 +275,25 @@ bool Reference::isReferencePlug( const Plug *plug ) const
 		}
 		parent = ancestorPlug->parent<GraphComponent>();
 	}
-	
+
 	if( ancestorPlug && boost::starts_with( ancestorPlug->getName().c_str(), "__" ) )
 	{
 		return false;
 	}
-	
+
 	// we know this doesn't come from a reference,
 	// because it's made during construction.
 	if( plug == userPlug() )
+	{
+		return false;
+	}
+
+	// User plugs are not meant to be referenced either. But old
+	// versions of Gaffer did export them so we must be careful.
+	// Since we make loaded plugs non-dynamic, we can assume that
+	// if the plug is dynamic it was added locally by a user
+	// rather than loaded from a reference.
+	if( ancestorPlug == userPlug() && plug->getFlags( Plug::Dynamic ) )
 	{
 		return false;
 	}

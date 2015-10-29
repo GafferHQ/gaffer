@@ -93,7 +93,7 @@ static NodePtr node( Plug &p )
 void PlugSerialiser::moduleDependencies( const Gaffer::GraphComponent *graphComponent, std::set<std::string> &modules ) const
 {
 	Serialiser::moduleDependencies( graphComponent, modules );
-	modules.insert( "IECore" ); // for the metadata calls
+	metadataModuleDependencies( static_cast<const Plug *>( graphComponent ), modules );
 }
 
 std::string PlugSerialiser::constructor( const Gaffer::GraphComponent *graphComponent, const Serialisation &serialisation ) const
