@@ -288,6 +288,7 @@ import TaskContextProcessorUI
 import WedgeUI
 import TaskContextVariablesUI
 import AnimationUI
+import TaskSwitchUI
 
 # backwards compatibility
 ## \todo Remove me
