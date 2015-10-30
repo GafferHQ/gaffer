@@ -1,7 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2014, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,31 +34,34 @@
 #
 ##########################################################################
 
-__import__( "IECore" )
+import Gaffer
 
-from _Gaffer import *
-from About import About
-from Application import Application
-from WeakMethod import WeakMethod
-from BlockedConnection import BlockedConnection
-from FileNamePathFilter import FileNamePathFilter
-from UndoContext import UndoContext
-from Context import Context
-from InfoPathFilter import InfoPathFilter
-from LazyModule import lazyImport, LazyModule
-from DictPath import DictPath
-from PythonExpressionEngine import PythonExpressionEngine
-from SequencePath import SequencePath
-from GraphComponentPath import GraphComponentPath
-from OutputRedirection import OutputRedirection
-from LocalDispatcher import LocalDispatcher
-from SystemCommand import SystemCommand
-from TaskList import TaskList
-from TaskContextProcessor import TaskContextProcessor
-from Wedge import Wedge
-from TaskContextVariables import TaskContextVariables
-from TaskSwitch import TaskSwitch
+Gaffer.Metadata.registerNode(
 
-import NodeAlgo
+	Gaffer.TaskSwitch,
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "Gaffer" )
+	"description",
+	"""
+	Switches between upstream tasks, so that only
+	one is chosen for execution.
+	""",
+
+	plugs = {
+
+		"index" : [
+
+			"description",
+			"""
+			The index of the input task which is executed. A value
+			of 0 chooses the first input, 1 the second and so on. Values
+			larger than the number of available inputs wrap back around to
+			the beginning.
+			""",
+
+			"nodule:type", "",
+
+		],
+
+	}
+
+)
