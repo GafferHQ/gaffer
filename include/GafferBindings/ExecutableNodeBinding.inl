@@ -92,7 +92,7 @@ bool requiresSequenceExecution( T &n )
 
 template<typename T, typename Ptr>
 ExecutableNodeClass<T, Ptr>::ExecutableNodeClass( const char *docString )
-	:	NodeClass<T, Ptr>( docString )
+	:	DependencyNodeClass<T, Ptr>( docString )
 {
 	this->def( "requirements", &Detail::requirements<T> );
 	this->def( "hash", &Detail::hash<T> );

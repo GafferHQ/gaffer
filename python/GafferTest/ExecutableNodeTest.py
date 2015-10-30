@@ -366,6 +366,53 @@ class ExecutableNodeTest( GafferTest.TestCase ) :
 		s["fileName"].setValue( os.path.dirname( __file__ ) + "/scripts/promotedRequirementsNetworkVersion-0.15.0.0.gfr" )
 		s.load()
 
+	def testDependencyNode( self ) :
+
+		n = GafferTest.TextWriter()
+		self.assertTrue( isinstance( n, GafferTest.TextWriter) )
+		self.assertTrue( n.isInstanceOf( Gaffer.ExecutableNode.staticTypeId() ) )
+		self.assertTrue( GafferTest.TextWriter.inheritsFrom( Gaffer.ExecutableNode.staticTypeId() ) )
+
+	def testAffects( self ) :
+
+		n = GafferTest.TextWriter()
+		cs = GafferTest.CapturingSlot( n.plugDirtiedSignal() )
+
+		n["fileName"].setValue( "test.txt" )
+		self.assertEqual( len( cs ), 2 )
+		self.assertEqual( set( s[0] for s in cs ), { n["fileName"], n["requirement"] } )
+
+		del cs[:]
+
+		n["dispatcher"]["batchSize"].setValue( 100 )
+		self.assertEqual( len( cs ), 2 )
+		self.assertEqual( set( s[0] for s in cs ), { n["dispatcher"]["batchSize"], n["dispatcher"] } )
+
+		del cs[:]
+
+		n["user"]["p"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		self.assertEqual( len( cs ), 2 )
+		self.assertEqual( set( s[0] for s in cs ), { n["user"]["p"], n["user"] } )
+
+		del cs[:]
+
+		n["user"]["p"].setValue( 10 )
+		self.assertEqual( len( cs ), 2 )
+		self.assertEqual( set( s[0] for s in cs ), { n["user"]["p"], n["user"] } )
+
+		del cs[:]
+
+		n2 = GafferTest.TextWriter()
+		n["requirements"][0].setInput( n2["requirement"] )
+		self.assertEqual( len( cs ), 4 )
+		self.assertEqual( set( s[0] for s in cs ), { n["requirements"][0], n["requirements"][1], n["requirements"], n["requirement"] } )
+
+		del cs[:]
+
+		n2["fileName"].setValue( "test2.txt" )
+		self.assertEqual( len( cs ), 3 )
+		self.assertEqual( set( s[0] for s in cs ), { n["requirements"][0], n["requirements"], n["requirement"] } )
+
 if __name__ == "__main__":
 	unittest.main()
 

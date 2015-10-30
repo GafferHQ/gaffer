@@ -41,7 +41,7 @@
 
 #include "Gaffer/ExecutableNode.h"
 
-#include "GafferBindings/NodeBinding.h"
+#include "GafferBindings/DependencyNodeBinding.h"
 
 namespace GafferBindings
 {
@@ -49,7 +49,7 @@ namespace GafferBindings
 void bindExecutableNode();
 
 template<typename T, typename TWrapper=T>
-class ExecutableNodeClass : public NodeClass<T, TWrapper>
+class ExecutableNodeClass : public DependencyNodeClass<T, TWrapper>
 {
 	public :
 
@@ -58,12 +58,12 @@ class ExecutableNodeClass : public NodeClass<T, TWrapper>
 };
 
 template<typename WrappedType>
-class ExecutableNodeWrapper : public NodeWrapper<WrappedType>
+class ExecutableNodeWrapper : public DependencyNodeWrapper<WrappedType>
 {
 	public :
 
 		ExecutableNodeWrapper( PyObject *self, const std::string &name )
-			:	NodeWrapper<WrappedType>( self, name )
+			:	DependencyNodeWrapper<WrappedType>( self, name )
 		{
 		}
 
