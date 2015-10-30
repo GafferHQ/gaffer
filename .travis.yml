@@ -31,20 +31,21 @@ script:
     # Preload libSegFault when running tests, so we get stack
     # traces from any crashes.
     - export LD_PRELOAD=/lib/x86_64-linux-gnu/libSegFault.so
-    - ./install/gaffer-*/bin/gaffer test GafferTest
-    - ./install/gaffer-*/bin/gaffer test GafferUITest
-    - ./install/gaffer-*/bin/gaffer test GafferCortexTest
-    - ./install/gaffer-*/bin/gaffer test GafferCortexUITest
-    - ./install/gaffer-*/bin/gaffer test GafferImageTest
-    - ./install/gaffer-*/bin/gaffer test GafferImageUITest
-    - ./install/gaffer-*/bin/gaffer test GafferSceneTest
-    - ./install/gaffer-*/bin/gaffer test GafferSceneUITest
-    - ./install/gaffer-*/bin/gaffer test GafferOSLTest
-    - ./install/gaffer-*/bin/gaffer test GafferOSLUITest
-    - ./install/gaffer-*/bin/gaffer test GafferRenderManTest
-    - ./install/gaffer-*/bin/gaffer test GafferRenderManUITest
-    - ./install/gaffer-*/bin/gaffer test GafferAppleseedTest
-    - ./install/gaffer-*/bin/gaffer test GafferAppleseedUITest
+    - source ./config/travis/runGafferTest GafferTest
+    - source ./config/travis/runGafferTest GafferUITest
+    - source ./config/travis/runGafferTest GafferCortexTest
+    - source ./config/travis/runGafferTest GafferCortexUITest
+    - source ./config/travis/runGafferTest GafferImageTest
+    - source ./config/travis/runGafferTest GafferImageUITest
+    - source ./config/travis/runGafferTest GafferSceneTest
+    - source ./config/travis/runGafferTest GafferSceneUITest
+    - source ./config/travis/runGafferTest GafferOSLTest
+    - source ./config/travis/runGafferTest GafferOSLUITest
+    - source ./config/travis/runGafferTest GafferRenderManTest
+    - source ./config/travis/runGafferTest GafferRenderManUITest
+    - source ./config/travis/runGafferTest GafferAppleseedTest
+    - source ./config/travis/runGafferTest GafferAppleseedUITest
+    - ./config/travis/printTestResults
 
 compiler:
     - gcc
