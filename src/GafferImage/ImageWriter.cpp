@@ -334,8 +334,6 @@ ImageSpec createImageSpec( const ImageWriter *node, const ImageOutput *out, cons
 
 	ImageSpec spec( TypeDesc::UNKNOWN );
 
-	setImageSpecFormatOptions( node, &spec, fileFormatName );
-
 	// Specify the display window.
 	spec.full_x = displayWindow.min.x;
 	spec.full_y = displayWindow.min.y;
@@ -375,6 +373,11 @@ ImageSpec createImageSpec( const ImageWriter *node, const ImageOutput *out, cons
 	}
 
 	metadataToImageSpecAttributes( metadata.get(), spec );
+
+	// Apply the spec format options. Note this must happen
+	// after we transfer the input metadata to ensure the
+	// settings override anything from upstream data.
+	setImageSpecFormatOptions( node, &spec, fileFormatName );
 
 	// Add common attribs to the spec
 	std::string software = ( boost::format( "Gaffer %d.%d.%d.%d" ) % GAFFER_MILESTONE_VERSION % GAFFER_MAJOR_VERSION % GAFFER_MINOR_VERSION % GAFFER_PATCH_VERSION ).str();
