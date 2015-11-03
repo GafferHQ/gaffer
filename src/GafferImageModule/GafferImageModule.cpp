@@ -99,6 +99,7 @@ BOOST_PYTHON_MODULE( _GafferImage )
 	GafferImageBindings::bindImageNode();
 	GafferImageBindings::bindImageProcessor();
 	GafferBindings::DependencyNodeClass<ImagePrimitiveNode>();
+	GafferBindings::DependencyNodeClass<ImagePrimitiveProcessor>();
 	GafferBindings::DependencyNodeClass<Display>()
 		.def( "dataReceivedSignal", &Display::dataReceivedSignal, return_value_policy<reference_existing_object>() ).staticmethod( "dataReceivedSignal" )
 		.def( "imageReceivedSignal", &Display::imageReceivedSignal, return_value_policy<reference_existing_object>() ).staticmethod( "imageReceivedSignal" )

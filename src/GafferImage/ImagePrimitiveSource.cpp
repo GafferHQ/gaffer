@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -40,8 +41,10 @@ namespace GafferImage
 {
 
 IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( GafferImage::ImagePrimitiveNode, ImagePrimitiveNodeTypeId )
+IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( GafferImage::ImagePrimitiveProcessor, ImagePrimitiveProcessorTypeId )
 
 // explicit instantiation
 template class GafferImage::ImagePrimitiveSource<ImageNode>;
+template class GafferImage::ImagePrimitiveSource<ImageProcessor>;
 
 } // namespace GafferImage

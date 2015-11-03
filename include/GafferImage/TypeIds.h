@@ -102,6 +102,7 @@ enum TypeId
 	DisplayTransformTypeId = 110806,
 	FormatPlugTypeId = 110807,
 	OffsetTypeId = 110808,
+	ImagePrimitiveProcessorTypeId = 110809,
 
 	LastTypeId = 110849
 };

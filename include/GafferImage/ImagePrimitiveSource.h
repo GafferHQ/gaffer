@@ -41,6 +41,7 @@
 #include "Gaffer/TypedObjectPlug.h"
 
 #include "GafferImage/ImageNode.h"
+#include "GafferImage/ImageProcessor.h"
 
 namespace GafferImage
 {
@@ -94,6 +95,9 @@ class ImagePrimitiveSource : public BaseType
 
 typedef ImagePrimitiveSource<ImageNode> ImagePrimitiveNode;
 IE_CORE_DECLAREPTR( ImagePrimitiveNode );
+
+typedef ImagePrimitiveSource<ImageProcessor> ImagePrimitiveProcessor;
+IE_CORE_DECLAREPTR( ImagePrimitiveProcessor );
 
 } // namespace GafferImage
 
