@@ -448,9 +448,7 @@ Gaffer.Metadata.registerNode(
 			"preset:None", "none",
 			"preset:LZW", "lzw",
 			"preset:Zip", "zip",
-			"preset:Deflate", "deflate",
 			"preset:Pack Bits", "packbits",
-			"preset:CCITT RLE", "ccittrle",
 
 		],
 

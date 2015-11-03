@@ -117,9 +117,7 @@ class ImageWriterTest( GafferTest.TestCase ) :
 				{ 'value': "none", 'metadata' : { 'compression' : IECore.StringData( "none" ), 'tiff:Compression' : IECore.IntData( 1 ) } },
 				{ 'value': "lzw", 'metadata' : { 'compression' : IECore.StringData( "lzw" ), 'tiff:Compression' : IECore.IntData( 5 ) } },
 				{ 'value': "zip", 'metadata' : { 'compression' : IECore.StringData( "zip" ), 'tiff:Compression' : IECore.IntData( 8 ) } },
-				{ 'value': "deflate", 'metadata' : { 'compression' : IECore.StringData( "deflate" ), 'tiff:Compression' : IECore.IntData( 8 ) } },
 				{ 'value': "packbits", 'metadata' : { 'compression' : IECore.StringData( "packbits" ), 'tiff:Compression' : IECore.IntData( 32773 ) } },
-				{ 'value': "ccittrle", 'metadata' : { 'compression' : IECore.StringData( "ccittrle" ), 'tiff:Compression' : IECore.IntData( 8 ) } },
 			]
 		options['plugs']['dataType'] = [
 				{ 'value': "uint8", 'metadata': { 'oiio:BitsPerSample': IECore.IntData( 8 ) }, 'maxError': 0.0 },
