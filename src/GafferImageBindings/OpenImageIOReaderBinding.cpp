@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2014-2015, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,14 +34,37 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGEBINDINGS_IMAGEREADERBINDING_H
-#define GAFFERIMAGEBINDINGS_IMAGEREADERBINDING_H
+#include "boost/python.hpp"
 
-namespace GafferImageBindings
+#include "GafferBindings/DependencyNodeBinding.h"
+
+#include "GafferImage/OpenImageIOReader.h"
+
+#include "GafferImageBindings/OpenImageIOReaderBinding.h"
+
+using namespace GafferImage;
+
+static boost::python::list supportedExtensions()
+{
+	std::vector<std::string> e;
+	OpenImageIOReader::supportedExtensions( e );
+
+	boost::python::list result;
+	for( std::vector<std::string>::const_iterator it = e.begin(), eIt = e.end(); it != eIt; ++it )
+	{
+		result.append( *it );
+	}
+
+	return result;
+}
+
+void GafferImageBindings::bindOpenImageIOReader()
 {
 
-void bindImageReader();
+	GafferBindings::DependencyNodeClass<OpenImageIOReader>()
+		.def( "supportedExtensions", &supportedExtensions ).staticmethod( "supportedExtensions" )
+		.def( "getCacheMemoryLimit", &OpenImageIOReader::getCacheMemoryLimit ).staticmethod( "getCacheMemoryLimit" )
+		.def( "setCacheMemoryLimit", &OpenImageIOReader::setCacheMemoryLimit ).staticmethod( "setCacheMemoryLimit" )
+	;
 
-} // namespace GafferImageBindings
-
-#endif // GAFFERIMAGEBINDINGS_IMAGEREADERBINDING_H
+}

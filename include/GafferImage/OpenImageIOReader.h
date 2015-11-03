@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2012-2014, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2012-2015, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,8 +35,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_IMAGEREADER_H
-#define GAFFERSCENE_IMAGEREADER_H
+#ifndef GAFFERIMAGE_OPENIMAGEIOREADER_H
+#define GAFFERIMAGE_OPENIMAGEIOREADER_H
 
 #include "Gaffer/NumericPlug.h"
 
@@ -53,19 +53,18 @@ namespace GafferImage
 {
 
 /// \todo Linearise images. Perhaps this should be done by a super-node which just
-/// packages up an internal ImageReader and OpenColorIO node? If so then perhaps
-/// we should rename this class to SimpleImageReader or something? Perhaps we could
-/// also have a metaData() plug in the ImagePlug, fill it with the file metadata,
+/// packages up an internal OpenImageIOReader and OpenColorIO node? Perhaps we could
+/// use the metaData() plug to fill it with the file metadata,
 /// and use that to pass the input colorspace into the internal OpenColorIO node.
-class ImageReader : public ImageNode
+class OpenImageIOReader : public ImageNode
 {
 
 	public :
 
-		ImageReader( const std::string &name=defaultName<ImageReader>() );
-		virtual ~ImageReader();
+		OpenImageIOReader( const std::string &name=defaultName<OpenImageIOReader>() );
+		virtual ~OpenImageIOReader();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::ImageReader, ImageReaderTypeId, ImageNode );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::OpenImageIOReader, OpenImageIOReaderTypeId, ImageNode );
 
 		Gaffer::StringPlug *fileNamePlug();
 		const Gaffer::StringPlug *fileNamePlug() const;
@@ -105,8 +104,8 @@ class ImageReader : public ImageNode
 
 };
 
-IE_CORE_DECLAREPTR( ImageReader )
+IE_CORE_DECLAREPTR( OpenImageIOReader )
 
 } // namespace GafferImage
 
-#endif // GAFFERSCENE_IMAGEREADER_H
+#endif // GAFFERIMAGE_OPENIMAGEIOREADER_H

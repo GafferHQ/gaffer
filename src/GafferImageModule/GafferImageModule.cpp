@@ -75,7 +75,7 @@
 #include "GafferImageBindings/MergeBinding.h"
 #include "GafferImageBindings/MixinBinding.h"
 #include "GafferImageBindings/FormatDataBinding.h"
-#include "GafferImageBindings/ImageReaderBinding.h"
+#include "GafferImageBindings/OpenImageIOReaderBinding.h"
 #include "GafferImageBindings/ImageWriterBinding.h"
 #include "GafferImageBindings/ShuffleBinding.h"
 #include "GafferImageBindings/CropBinding.h"
@@ -132,7 +132,7 @@ BOOST_PYTHON_MODULE( _GafferImage )
 	GafferImageBindings::bindSampler();
 	GafferImageBindings::bindMixin();
 	GafferImageBindings::bindFormatData();
-	GafferImageBindings::bindImageReader();
+	GafferImageBindings::bindOpenImageIOReader();
 	GafferImageBindings::bindImageWriter();
 	GafferImageBindings::bindMerge();
 	GafferImageBindings::bindShuffle();

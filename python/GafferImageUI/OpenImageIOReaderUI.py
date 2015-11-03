@@ -42,12 +42,13 @@ import GafferImage
 
 Gaffer.Metadata.registerNode(
 
-	GafferImage.ImageReader,
+	GafferImage.OpenImageIOReader,
 
 	"description",
 	"""
-	Reads image files from disk using OpenImageIO. All file
-	types supported by OpenImageIO are supported by the ImageReader.
+	Utility node which reads image files from disk using OpenImageIO.
+	All file types supported by OpenImageIO are supported by the
+	OpenImageIOReader.
 	""",
 
 	plugs = {
@@ -64,7 +65,7 @@ Gaffer.Metadata.registerNode(
 			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
 			"pathPlugValueWidget:leaf", True,
 			"pathPlugValueWidget:bookmarks", "image",
-			"fileSystemPathPlugValueWidget:extensions", IECore.StringVectorData( GafferImage.ImageReader.supportedExtensions() ),
+			"fileSystemPathPlugValueWidget:extensions", IECore.StringVectorData( GafferImage.OpenImageIOReader.supportedExtensions() ),
 			"fileSystemPathPlugValueWidget:extensionsLabel", "Show only image files",
 			"fileSystemPathPlugValueWidget:includeSequences", True,
 
@@ -85,4 +86,4 @@ Gaffer.Metadata.registerNode(
 
 )
 
-GafferUI.PlugValueWidget.registerCreator( GafferImage.ImageReader, "refreshCount", GafferUI.IncrementingPlugValueWidget, label = "Refresh", undoable = False )
+GafferUI.PlugValueWidget.registerCreator( GafferImage.OpenImageIOReader, "refreshCount", GafferUI.IncrementingPlugValueWidget, label = "Refresh", undoable = False )

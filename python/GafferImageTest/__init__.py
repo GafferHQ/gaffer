@@ -39,7 +39,7 @@ from _GafferImageTest import *
 
 from ImageTestCase import ImageTestCase
 from ImagePlugTest import ImagePlugTest
-from ImageReaderTest import ImageReaderTest
+from OpenImageIOReaderTest import OpenImageIOReaderTest
 from ColorSpaceTest import ColorSpaceTest
 from ObjectToImageTest import ObjectToImageTest
 from FormatTest import FormatTest

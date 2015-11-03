@@ -46,7 +46,7 @@ import GafferTest
 import GafferImage
 import GafferImageTest
 
-class ImageReaderTest( GafferImageTest.ImageTestCase ) :
+class OpenImageIOReaderTest( GafferImageTest.TestCase ) :
 
 	fileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/checker.exr" )
 	offsetDataWindowFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/rgb.100x100.exr" )
@@ -62,7 +62,7 @@ class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 		exrDisplayWindow = image.displayWindow
 		exrDataWindow = image.dataWindow
 
-		n = GafferImage.ImageReader()
+		n = GafferImage.OpenImageIOReader()
 		n["fileName"].setValue( self.negativeDataWindowFileName )
 		gafferFormat = n["out"]["format"].getValue()
 
@@ -78,7 +78,7 @@ class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 
 	def test( self ) :
 
-		n = GafferImage.ImageReader()
+		n = GafferImage.OpenImageIOReader()
 		n["fileName"].setValue( self.fileName )
 
 		self.assertEqual( n["out"]["dataWindow"].getValue(), IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 200, 150 ) ) )
@@ -110,7 +110,7 @@ class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 
 	def testNegativeDisplayWindowRead( self ) :
 
-		n = GafferImage.ImageReader()
+		n = GafferImage.OpenImageIOReader()
 		n["fileName"].setValue( self.negativeDisplayWindowFileName )
 		f = n["out"]["format"].getValue()
 		d = n["out"]["dataWindow"].getValue()
@@ -125,7 +125,7 @@ class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 
 	def testNegativeDataWindow( self ) :
 
-		n = GafferImage.ImageReader()
+		n = GafferImage.OpenImageIOReader()
 		n["fileName"].setValue( self.negativeDataWindowFileName )
 		self.assertEqual( n["out"]["dataWindow"].getValue(), IECore.Box2i( IECore.V2i( -25, -30 ), IECore.V2i( 175, 120 ) ) )
 		self.assertEqual( n["out"]["format"].getValue().getDisplayWindow(), IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 200, 150 ) ) )
@@ -148,7 +148,7 @@ class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 
 	def testTileSize( self ) :
 
-		n = GafferImage.ImageReader()
+		n = GafferImage.OpenImageIOReader()
 		n["fileName"].setValue( self.fileName )
 
 		tile = n["out"].channelData( "R", IECore.V2i( 0 ) )
@@ -156,7 +156,7 @@ class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 
 	def testNoCaching( self ) :
 
-		n = GafferImage.ImageReader()
+		n = GafferImage.OpenImageIOReader()
 		n["fileName"].setValue( self.fileName )
 
 		c = Gaffer.Context()
@@ -175,13 +175,13 @@ class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 
 	def testUnspecifiedFilename( self ) :
 
-		n = GafferImage.ImageReader()
+		n = GafferImage.OpenImageIOReader()
 		n["out"]["channelNames"].getValue()
 		n["out"].channelData( "R", IECore.V2i( 0 ) )
 
 	def testNoOIIOErrorBufferOverflows( self ) :
 
-		n = GafferImage.ImageReader()
+		n = GafferImage.OpenImageIOReader()
 		n["fileName"].setValue( "thisReallyReallyReallyReallyReallyReallyReallyReallyReallyLongFilenameDoesNotExist.tif" )
 
 		for i in range( 0, 300000 ) :
@@ -190,7 +190,7 @@ class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 
 	def testChannelDataHashes( self ) :
 		# Test that two tiles within the same image have different hashes.
-		n = GafferImage.ImageReader()
+		n = GafferImage.OpenImageIOReader()
 		n["fileName"].setValue( self.fileName )
 		h1 = n["out"].channelData( "R", IECore.V2i( 0 ) ).hash()
 		h2 = n["out"].channelData( "R", IECore.V2i( GafferImage.ImagePlug().tileSize() ) ).hash()
@@ -199,7 +199,7 @@ class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 
 	def testDisabledChannelDataHashes( self ) :
 		# Test that two tiles within the same image have the same hash when disabled.
-		n = GafferImage.ImageReader()
+		n = GafferImage.OpenImageIOReader()
 		n["fileName"].setValue( self.fileName )
 		n["enabled"].setValue( False )
 		h1 = n["out"].channelData( "R", IECore.V2i( 0 ) ).hash()
@@ -209,7 +209,7 @@ class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 
 	def testOffsetDataWindowOrigin( self ) :
 
-		n = GafferImage.ImageReader()
+		n = GafferImage.OpenImageIOReader()
 		n["fileName"].setValue( self.offsetDataWindowFileName )
 
 		image = n["out"].image()
@@ -222,10 +222,10 @@ class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 
 	def testJpgRead( self ) :
 
-		exrReader = GafferImage.ImageReader()
+		exrReader = GafferImage.OpenImageIOReader()
 		exrReader["fileName"].setValue( self.circlesExrFileName )
 
-		jpgReader = GafferImage.ImageReader()
+		jpgReader = GafferImage.OpenImageIOReader()
 		jpgReader["fileName"].setValue( self.circlesJpgFileName )
 		## \todo This colorspace manipulation needs to be performed
 		# automatically in the ImageReader.
@@ -259,7 +259,7 @@ class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 
 	def testSupportedExtensions( self ) :
 
-		e = GafferImage.ImageReader.supportedExtensions()
+		e = GafferImage.OpenImageIOReader.supportedExtensions()
 
 		self.assertTrue( "exr" in e )
 		self.assertTrue( "jpg" in e )
@@ -273,7 +273,7 @@ class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 		testFile = self.temporaryDirectory() + "/refresh.exr"
 		shutil.copyfile( self.fileName, testFile )
 
-		reader = GafferImage.ImageReader()
+		reader = GafferImage.OpenImageIOReader()
 		reader["fileName"].setValue( testFile )
 		image1 = reader["out"].image()
 
@@ -288,7 +288,7 @@ class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 
 	def testNonexistentFiles( self ) :
 
-		reader = GafferImage.ImageReader()
+		reader = GafferImage.OpenImageIOReader()
 		reader["fileName"].setValue( "wellIDontExist.exr" )
 
 		self.assertRaisesRegexp( RuntimeError, ".*wellIDontExist.exr.*", reader["out"].image )

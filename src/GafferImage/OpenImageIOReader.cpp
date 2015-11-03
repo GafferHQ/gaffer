@@ -45,7 +45,7 @@ OIIO_NAMESPACE_USING
 #include "Gaffer/Context.h"
 #include "Gaffer/StringPlug.h"
 
-#include "GafferImage/ImageReader.h"
+#include "GafferImage/OpenImageIOReader.h"
 #include "GafferImage/FormatPlug.h"
 
 using namespace std;
@@ -293,14 +293,14 @@ void oiioParameterListToMetadata( const ImageIOParameterList &paramList, Compoun
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
-// ImageReader implementation
+// OpenImageIOReader implementation
 //////////////////////////////////////////////////////////////////////////
 
-IE_CORE_DEFINERUNTIMETYPED( ImageReader );
+IE_CORE_DEFINERUNTIMETYPED( OpenImageIOReader );
 
-size_t ImageReader::g_firstPlugIndex = 0;
+size_t OpenImageIOReader::g_firstPlugIndex = 0;
 
-ImageReader::ImageReader( const std::string &name )
+OpenImageIOReader::OpenImageIOReader( const std::string &name )
 	:	ImageNode( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
@@ -313,34 +313,34 @@ ImageReader::ImageReader( const std::string &name )
 		(*it)->setFlags( Plug::Cacheable, false );
 	}
 
-	plugSetSignal().connect( boost::bind( &ImageReader::plugSet, this, ::_1 ) );
+	plugSetSignal().connect( boost::bind( &OpenImageIOReader::plugSet, this, ::_1 ) );
 }
 
-ImageReader::~ImageReader()
+OpenImageIOReader::~OpenImageIOReader()
 {
 }
 
-Gaffer::StringPlug *ImageReader::fileNamePlug()
-{
-	return getChild<StringPlug>( g_firstPlugIndex );
-}
-
-const Gaffer::StringPlug *ImageReader::fileNamePlug() const
+Gaffer::StringPlug *OpenImageIOReader::fileNamePlug()
 {
 	return getChild<StringPlug>( g_firstPlugIndex );
 }
 
-Gaffer::IntPlug *ImageReader::refreshCountPlug()
+const Gaffer::StringPlug *OpenImageIOReader::fileNamePlug() const
+{
+	return getChild<StringPlug>( g_firstPlugIndex );
+}
+
+Gaffer::IntPlug *OpenImageIOReader::refreshCountPlug()
 {
 	return getChild<IntPlug>( g_firstPlugIndex + 1 );
 }
 
-const Gaffer::IntPlug *ImageReader::refreshCountPlug() const
+const Gaffer::IntPlug *OpenImageIOReader::refreshCountPlug() const
 {
 	return getChild<IntPlug>( g_firstPlugIndex + 1 );
 }
 
-size_t ImageReader::supportedExtensions( std::vector<std::string> &extensions )
+size_t OpenImageIOReader::supportedExtensions( std::vector<std::string> &extensions )
 {
 	std::string attr;
 	if( !getattribute( "extension_list", attr ) )
@@ -364,7 +364,7 @@ size_t ImageReader::supportedExtensions( std::vector<std::string> &extensions )
 	return extensions.size();
 }
 
-void ImageReader::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
+void OpenImageIOReader::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	ImageNode::affects( input, outputs );
 
@@ -377,14 +377,14 @@ void ImageReader::affects( const Gaffer::Plug *input, AffectedPlugsContainer &ou
 	}
 }
 
-void ImageReader::hashFormat( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void OpenImageIOReader::hashFormat( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	ImageNode::hashFormat( output, context, h );
 	fileNamePlug()->hash( h );
 	refreshCountPlug()->hash( h );
 }
 
-GafferImage::Format ImageReader::computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const
+GafferImage::Format OpenImageIOReader::computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
 	const ImageSpec *spec = imageSpec( ustring( fileNamePlug()->getValue() ) );
 	if( !spec )
@@ -401,14 +401,14 @@ GafferImage::Format ImageReader::computeFormat( const Gaffer::Context *context, 
 	);
 }
 
-void ImageReader::hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void OpenImageIOReader::hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	ImageNode::hashDataWindow( output, context, h );
 	fileNamePlug()->hash( h );
 	refreshCountPlug()->hash( h );
 }
 
-Imath::Box2i ImageReader::computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const
+Imath::Box2i OpenImageIOReader::computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
 	const ImageSpec *spec = imageSpec( ustring( fileNamePlug()->getValue() ) );
 	if( !spec )
@@ -422,14 +422,14 @@ Imath::Box2i ImageReader::computeDataWindow( const Gaffer::Context *context, con
 	return format.fromEXRSpace( dataWindow );
 }
 
-void ImageReader::hashMetadata( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void OpenImageIOReader::hashMetadata( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	ImageNode::hashMetadata( output, context, h );
 	fileNamePlug()->hash( h );
 	refreshCountPlug()->hash( h );
 }
 
-IECore::ConstCompoundObjectPtr ImageReader::computeMetadata( const Gaffer::Context *context, const ImagePlug *parent ) const
+IECore::ConstCompoundObjectPtr OpenImageIOReader::computeMetadata( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
 	const ImageSpec *spec = imageSpec( ustring( fileNamePlug()->getValue() ) );
 	if( !spec )
@@ -443,14 +443,14 @@ IECore::ConstCompoundObjectPtr ImageReader::computeMetadata( const Gaffer::Conte
 	return result;
 }
 
-void ImageReader::hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void OpenImageIOReader::hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	ImageNode::hashChannelNames( output, context, h );
 	fileNamePlug()->hash( h );
 	refreshCountPlug()->hash( h );
 }
 
-IECore::ConstStringVectorDataPtr ImageReader::computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const
+IECore::ConstStringVectorDataPtr OpenImageIOReader::computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
 	const ImageSpec *spec = imageSpec( ustring( fileNamePlug()->getValue() ) );
 	if( !spec )
@@ -463,7 +463,7 @@ IECore::ConstStringVectorDataPtr ImageReader::computeChannelNames( const Gaffer:
 	return result;
 }
 
-void ImageReader::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void OpenImageIOReader::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	ImageNode::hashChannelData( output, context, h );
 	h.append( context->get<V2i>( ImagePlug::tileOriginContextName ) );
@@ -472,7 +472,7 @@ void ImageReader::hashChannelData( const GafferImage::ImagePlug *output, const G
 	refreshCountPlug()->hash( h );
 }
 
-IECore::ConstFloatVectorDataPtr ImageReader::computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const
+IECore::ConstFloatVectorDataPtr OpenImageIOReader::computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const
 {
 	ustring fileName( fileNamePlug()->getValue() );
 	const ImageSpec *spec = imageSpec( fileName );
@@ -519,19 +519,19 @@ IECore::ConstFloatVectorDataPtr ImageReader::computeChannelData( const std::stri
 	return resultData;
 }
 
-size_t ImageReader::getCacheMemoryLimit()
+size_t OpenImageIOReader::getCacheMemoryLimit()
 {
 	float memoryLimit;
 	imageCache()->getattribute( "max_memory_MB", memoryLimit );
 	return (size_t)memoryLimit;
 }
 
-void ImageReader::setCacheMemoryLimit( size_t mb )
+void OpenImageIOReader::setCacheMemoryLimit( size_t mb )
 {
 	imageCache()->attribute( "max_memory_MB", float( mb ) );
 }
 
-void ImageReader::plugSet( Gaffer::Plug *plug )
+void OpenImageIOReader::plugSet( Gaffer::Plug *plug )
 {
 	// this clears the cache every time the refresh count is updated, so you don't get entries
 	// from old files hanging around.
