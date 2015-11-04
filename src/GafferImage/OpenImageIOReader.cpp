@@ -36,11 +36,16 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/bind.hpp"
+#include "boost/filesystem/path.hpp"
+#include "boost/regex.hpp"
 
 #include "OpenEXR/half.h"
 
 #include "OpenImageIO/imagecache.h"
 OIIO_NAMESPACE_USING
+
+#include "IECore/FileSequence.h"
+#include "IECore/FileSequenceFunctions.h"
 
 #include "Gaffer/Context.h"
 #include "Gaffer/StringPlug.h"
@@ -96,18 +101,67 @@ ImageCache *imageCache()
 // Returns the OIIO ImageSpec for the given filename in the current
 // context. Throws if the file is invalid, and returns NULL if
 // the filename is empty.
-const ImageSpec *imageSpec( ustring fileName )
+const ImageSpec *imageSpec( std::string &fileName, OpenImageIOReader::MissingFrameMode mode, const OpenImageIOReader *node, const Context *context )
 {
 	if( fileName.empty() )
 	{
 		return NULL;
 	}
+
+	const std::string resolvedFileName = context->substitute( fileName );
+
 	ImageCache *cache = imageCache();
-	const ImageSpec *spec = cache->imagespec( ustring( fileName.c_str() ) );
+	const ImageSpec *spec = cache->imagespec( ustring( resolvedFileName ) );
 	if( !spec )
 	{
-		throw( IECore::Exception( cache->geterror() ) );
+		if( mode == OpenImageIOReader::Black )
+		{
+			// we can simply return the null spec and rely on the
+			// compute methods to return default plug values.
+			return spec;
+		}
+		else if( mode == OpenImageIOReader::Hold )
+		{
+			ConstIntVectorDataPtr frameData = node->availableFramesPlug()->getValue();
+			const std::vector<int> &frames = frameData->readable();
+			if( frames.size() )
+			{
+				std::vector<int>::const_iterator fIt = std::lower_bound( frames.begin(), frames.end(), (int)context->getFrame() );
+
+				// decrement to get the previous frame, unless
+				// this is the first frame, in which case we
+				// hold to the beginning of the sequence
+				if( fIt != frames.begin() )
+				{
+					fIt--;
+				}
+
+				// clear any error from the original fileName
+				cache->geterror();
+
+				// setup a context with the new frame
+				ContextPtr holdContext = new Context( *context, Context::Shared );
+				holdContext->setFrame( *fIt );
+
+				return imageSpec( fileName, OpenImageIOReader::Error, node, holdContext.get() );
+			}
+
+			// if we got here, there was no suitable file sequence
+			throw( IECore::Exception( cache->geterror() ) );
+		}
+		else
+		{
+			throw( IECore::Exception( cache->geterror() ) );
+		}
 	}
+
+	// we overwrite the incoming fileName with
+	// the final successful fileName because
+	// computeChannelData needs to know the real
+	// file in order to fetch the pixels, and it
+	// isn't available from the ImageSpec directly.
+	fileName = resolvedFileName;
+
 	return spec;
 }
 
@@ -304,8 +358,16 @@ OpenImageIOReader::OpenImageIOReader( const std::string &name )
 	:	ImageNode( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
-	addChild( new StringPlug( "fileName" ) );
+	addChild(
+		new StringPlug(
+			"fileName", Plug::In, "",
+			/* flags */ Plug::Default,
+			/* substitutions */ Context::AllSubstitutions & ~Context::FrameSubstitutions
+		)
+	);
 	addChild( new IntPlug( "refreshCount" ) );
+	addChild( new IntPlug( "missingFrameMode", Plug::In, Error, /* min */ Error, /* max */ Hold ) );
+	addChild( new IntVectorDataPlug( "availableFrames", Plug::Out, new IntVectorData ) );
 
 	// disable caching on our outputs, as OIIO is already doing caching for us.
 	for( OutputPlugIterator it( outPlug() ); it!=it.end(); it++ )
@@ -340,6 +402,26 @@ const Gaffer::IntPlug *OpenImageIOReader::refreshCountPlug() const
 	return getChild<IntPlug>( g_firstPlugIndex + 1 );
 }
 
+Gaffer::IntPlug *OpenImageIOReader::missingFrameModePlug()
+{
+	return getChild<IntPlug>( g_firstPlugIndex + 2 );
+}
+
+const Gaffer::IntPlug *OpenImageIOReader::missingFrameModePlug() const
+{
+	return getChild<IntPlug>( g_firstPlugIndex + 2 );
+}
+
+Gaffer::IntVectorDataPlug *OpenImageIOReader::availableFramesPlug()
+{
+	return getChild<IntVectorDataPlug>( g_firstPlugIndex + 3 );
+}
+
+const Gaffer::IntVectorDataPlug *OpenImageIOReader::availableFramesPlug() const
+{
+	return getChild<IntVectorDataPlug>( g_firstPlugIndex + 3 );
+}
+
 size_t OpenImageIOReader::supportedExtensions( std::vector<std::string> &extensions )
 {
 	std::string attr;
@@ -370,6 +452,11 @@ void OpenImageIOReader::affects( const Gaffer::Plug *input, AffectedPlugsContain
 
 	if( input == fileNamePlug() || input == refreshCountPlug() )
 	{
+		outputs.push_back( availableFramesPlug() );
+	}
+	
+	if( input == fileNamePlug() || input == refreshCountPlug() || input == missingFrameModePlug() )
+	{
 		for( ValuePlugIterator it( outPlug() ); it != it.end(); it++ )
 		{
 			outputs.push_back( it->get() );
@@ -377,16 +464,75 @@ void OpenImageIOReader::affects( const Gaffer::Plug *input, AffectedPlugsContain
 	}
 }
 
+void OpenImageIOReader::hash( const ValuePlug *output, const Context *context, IECore::MurmurHash &h ) const
+{
+	ImageNode::hash( output, context, h );
+
+	if( output == availableFramesPlug() )
+	{
+		fileNamePlug()->hash( h );
+		refreshCountPlug()->hash( h );
+	}
+}
+
+void OpenImageIOReader::compute( ValuePlug *output, const Context *context ) const
+{
+	if( output == availableFramesPlug() )
+	{
+		FileSequencePtr fileSequence = NULL;
+		IECore::ls( fileNamePlug()->getValue(), fileSequence, /* minSequenceSize */ 1 );
+
+		if( fileSequence )
+		{
+			IntVectorDataPtr resultData = new IntVectorData;
+			std::vector<FrameList::Frame> frames;
+			fileSequence->getFrameList()->asList( frames );
+			std::vector<int> &result = resultData->writable();
+			result.resize( frames.size() );
+			std::copy( frames.begin(), frames.end(), result.begin() );
+			static_cast<IntVectorDataPlug *>( output )->setValue( resultData );
+		}
+		else
+		{
+			static_cast<IntVectorDataPlug *>( output )->setToDefault();
+		}
+	}
+	else
+	{
+		ImageNode::compute( output, context );
+	}
+}
+
+void OpenImageIOReader::hashFileName( const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	// since fileName excludes frame substitutions
+	// but we internally vary the result output by
+	// frame, we need to explicitly hash the frame
+	// when the value contains FrameSubstitutions.
+	const std::string &fileName = fileNamePlug()->getValue();
+	h.append( fileName );
+	if( Context::substitutions( fileNamePlug()->getValue() ) & Context::FrameSubstitutions )
+	{
+		h.append( context->getFrame() );
+	}
+}
+
 void OpenImageIOReader::hashFormat( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	ImageNode::hashFormat( output, context, h );
-	fileNamePlug()->hash( h );
+	hashFileName( context, h );
 	refreshCountPlug()->hash( h );
+	missingFrameModePlug()->hash( h );
 }
 
 GafferImage::Format OpenImageIOReader::computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
-	const ImageSpec *spec = imageSpec( ustring( fileNamePlug()->getValue() ) );
+	std::string fileName = fileNamePlug()->getValue();
+	// when we're in MissingFrameMode::Black we still want to
+	// match the format of the Hold frame.
+	MissingFrameMode mode = (MissingFrameMode)missingFrameModePlug()->getValue();
+	mode = ( mode == Black ) ? Hold : mode;
+	const ImageSpec *spec = imageSpec( fileName, mode, this, context );
 	if( !spec )
 	{
 		return FormatPlug::getDefaultFormat( context );
@@ -404,13 +550,19 @@ GafferImage::Format OpenImageIOReader::computeFormat( const Gaffer::Context *con
 void OpenImageIOReader::hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	ImageNode::hashDataWindow( output, context, h );
-	fileNamePlug()->hash( h );
+	hashFileName( context, h );
 	refreshCountPlug()->hash( h );
+	missingFrameModePlug()->hash( h );
 }
 
 Imath::Box2i OpenImageIOReader::computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
-	const ImageSpec *spec = imageSpec( ustring( fileNamePlug()->getValue() ) );
+	std::string fileName = fileNamePlug()->getValue();
+	// when we're in MissingFrameMode::Black we still want to
+	// match the data window of the Hold frame.
+	MissingFrameMode mode = (MissingFrameMode)missingFrameModePlug()->getValue();
+	mode = ( mode == Black ) ? Hold : mode;
+	const ImageSpec *spec = imageSpec( fileName, mode, this, context );
 	if( !spec )
 	{
 		return Box2i();
@@ -425,13 +577,15 @@ Imath::Box2i OpenImageIOReader::computeDataWindow( const Gaffer::Context *contex
 void OpenImageIOReader::hashMetadata( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	ImageNode::hashMetadata( output, context, h );
-	fileNamePlug()->hash( h );
+	hashFileName( context, h );
 	refreshCountPlug()->hash( h );
+	missingFrameModePlug()->hash( h );
 }
 
 IECore::ConstCompoundObjectPtr OpenImageIOReader::computeMetadata( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
-	const ImageSpec *spec = imageSpec( ustring( fileNamePlug()->getValue() ) );
+	std::string fileName = fileNamePlug()->getValue();
+	const ImageSpec *spec = imageSpec( fileName, (MissingFrameMode)missingFrameModePlug()->getValue(), this, context );
 	if( !spec )
 	{
 		return parent->metadataPlug()->defaultValue();
@@ -446,13 +600,15 @@ IECore::ConstCompoundObjectPtr OpenImageIOReader::computeMetadata( const Gaffer:
 void OpenImageIOReader::hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	ImageNode::hashChannelNames( output, context, h );
-	fileNamePlug()->hash( h );
+	hashFileName( context, h );
 	refreshCountPlug()->hash( h );
+	missingFrameModePlug()->hash( h );
 }
 
 IECore::ConstStringVectorDataPtr OpenImageIOReader::computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
-	const ImageSpec *spec = imageSpec( ustring( fileNamePlug()->getValue() ) );
+	std::string fileName = fileNamePlug()->getValue();
+	const ImageSpec *spec = imageSpec( fileName, (MissingFrameMode)missingFrameModePlug()->getValue(), this, context );
 	if( !spec )
 	{
 		return parent->channelNamesPlug()->defaultValue();
@@ -468,14 +624,15 @@ void OpenImageIOReader::hashChannelData( const GafferImage::ImagePlug *output, c
 	ImageNode::hashChannelData( output, context, h );
 	h.append( context->get<V2i>( ImagePlug::tileOriginContextName ) );
 	h.append( context->get<std::string>( ImagePlug::channelNameContextName ) );
-	fileNamePlug()->hash( h );
+	hashFileName( context, h );
 	refreshCountPlug()->hash( h );
+	missingFrameModePlug()->hash( h );
 }
 
 IECore::ConstFloatVectorDataPtr OpenImageIOReader::computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const
 {
-	ustring fileName( fileNamePlug()->getValue() );
-	const ImageSpec *spec = imageSpec( fileName );
+	std::string fileName = fileNamePlug()->getValue();
+	const ImageSpec *spec = imageSpec( fileName, (MissingFrameMode)missingFrameModePlug()->getValue(), this, context );
 	if( !spec )
 	{
 		return parent->channelDataPlug()->defaultValue();
@@ -495,7 +652,7 @@ IECore::ConstFloatVectorDataPtr OpenImageIOReader::computeChannelData( const std
 	std::vector<float> channelData( ImagePlug::tileSize() * ImagePlug::tileSize() );
 	size_t channelIndex = channelIt - spec->channelnames.begin();
 	imageCache()->get_pixels(
-		fileName,
+		ustring( fileName ),
 		0, 0, // subimage, miplevel
 		tileOrigin.x, tileOrigin.x + ImagePlug::tileSize(),
 		newY, newY + ImagePlug::tileSize(),

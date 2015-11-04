@@ -66,13 +66,26 @@ class OpenImageIOReader : public ImageNode
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::OpenImageIOReader, OpenImageIOReaderTypeId, ImageNode );
 
+		enum MissingFrameMode
+		{
+			Error = 0,
+			Black,
+			Hold,
+		};
+		
 		Gaffer::StringPlug *fileNamePlug();
 		const Gaffer::StringPlug *fileNamePlug() const;
 
 		/// Number of times the node has been refreshed.
 		Gaffer::IntPlug *refreshCountPlug();
 		const Gaffer::IntPlug *refreshCountPlug() const;
-		
+
+		Gaffer::IntPlug *missingFrameModePlug();
+		const Gaffer::IntPlug *missingFrameModePlug() const;
+
+		Gaffer::IntVectorDataPlug *availableFramesPlug();
+		const Gaffer::IntVectorDataPlug *availableFramesPlug() const;
+
 		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
 
 		static size_t supportedExtensions( std::vector<std::string> &extensions );
@@ -83,6 +96,9 @@ class OpenImageIOReader : public ImageNode
 		static void setCacheMemoryLimit( size_t mb );
 
 	protected :
+
+		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const;
 
 		virtual void hashFormat( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual void hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
@@ -97,6 +113,8 @@ class OpenImageIOReader : public ImageNode
 		virtual IECore::ConstFloatVectorDataPtr computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const;
 
 	private :
+
+		void hashFileName( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 
 		void plugSet( Gaffer::Plug *plug );
 		

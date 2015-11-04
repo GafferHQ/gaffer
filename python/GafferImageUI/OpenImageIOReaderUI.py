@@ -59,7 +59,8 @@ Gaffer.Metadata.registerNode(
 			"""
 			The name of the file to be read. File sequences with
 			arbitrary padding may be specified using the '#' character
-			as a placeholder for the frame numbers.
+			as a placeholder for the frame numbers. If this file sequence
+			format is used, then missingFrameMode will be activated.
 			""",
 
 			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
@@ -79,6 +80,41 @@ Gaffer.Metadata.registerNode(
 			changed on disk - otherwise old contents may still
 			be loaded via Gaffer's cache.
 			""",
+
+		],
+
+		"missingFrameMode" : [
+
+			"description",
+			"""
+			Determines how missing frames are handled when the input
+			fileName is a file sequence (uses the '#' character).
+			The default behaviour is to throw an exception, but it
+			can also hold the last valid frame in the sequence, or
+			return a black image which matches the data window and
+			display window of the previous valid frame in the sequence.
+			""",
+
+			"preset:Error", GafferImage.OpenImageIOReader.MissingFrameMode.Error,
+			"preset:Black", GafferImage.OpenImageIOReader.MissingFrameMode.Black,
+			"preset:Hold", GafferImage.OpenImageIOReader.MissingFrameMode.Hold,
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
+		],
+		
+		"availableFrames" : [
+
+			"description",
+			"""
+			An output of the available frames for the given file sequence.
+			Returns an empty vector when the input fileName is not a file
+			sequence, even if it has a file-sequence-like structure.
+			""",
+
+			## \todo: consider making this visible using a TextWidget with
+			## FrameList syntax (e.g. "1-100x5")
+			"plugValueWidget:type", "",
 
 		],
 

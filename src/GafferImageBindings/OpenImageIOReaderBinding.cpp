@@ -61,10 +61,16 @@ static boost::python::list supportedExtensions()
 void GafferImageBindings::bindOpenImageIOReader()
 {
 
-	GafferBindings::DependencyNodeClass<OpenImageIOReader>()
+	boost::python::scope s = GafferBindings::DependencyNodeClass<OpenImageIOReader>()
 		.def( "supportedExtensions", &supportedExtensions ).staticmethod( "supportedExtensions" )
 		.def( "getCacheMemoryLimit", &OpenImageIOReader::getCacheMemoryLimit ).staticmethod( "getCacheMemoryLimit" )
 		.def( "setCacheMemoryLimit", &OpenImageIOReader::setCacheMemoryLimit ).staticmethod( "setCacheMemoryLimit" )
+	;
+	
+	boost::python::enum_<OpenImageIOReader::MissingFrameMode>( "MissingFrameMode" )
+		.value( "Error", OpenImageIOReader::Error )
+		.value( "Black", OpenImageIOReader::Black )
+		.value( "Hold", OpenImageIOReader::Hold )
 	;
 
 }
