@@ -42,6 +42,7 @@ from FormatPlugValueWidget import FormatPlugValueWidget
 from ChannelMaskPlugValueWidget import ChannelMaskPlugValueWidget
 
 import OpenImageIOReaderUI
+import ImageReaderUI
 import ImageViewToolbar
 import ImageTransformUI
 import ConstantUI
