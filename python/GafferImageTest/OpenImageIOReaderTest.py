@@ -227,8 +227,6 @@ class OpenImageIOReaderTest( GafferImageTest.TestCase ) :
 
 		jpgReader = GafferImage.OpenImageIOReader()
 		jpgReader["fileName"].setValue( self.circlesJpgFileName )
-		## \todo This colorspace manipulation needs to be performed
-		# automatically in the ImageReader.
 		jpgOCIO = GafferImage.OpenColorIO()
 		jpgOCIO["in"].setInput( jpgReader["out"] )
 		jpgOCIO["inputSpace"].setValue( "sRGB" )

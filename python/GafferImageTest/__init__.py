@@ -40,6 +40,7 @@ from _GafferImageTest import *
 from ImageTestCase import ImageTestCase
 from ImagePlugTest import ImagePlugTest
 from OpenImageIOReaderTest import OpenImageIOReaderTest
+from ImageReaderTest import ImageReaderTest
 from ColorSpaceTest import ColorSpaceTest
 from ObjectToImageTest import ObjectToImageTest
 from FormatTest import FormatTest
