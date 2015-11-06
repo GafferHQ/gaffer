@@ -71,6 +71,7 @@ class CompoundNumericPlug : public ValuePlug
 		virtual bool acceptsChild( const GraphComponent *potentialChild ) const;
 		virtual PlugPtr createCounterpart( const std::string &name, Direction direction ) const;
 
+		using GraphComponent::getChild;
 		ChildType *getChild( size_t index );
 		const ChildType *getChild( size_t index ) const;
 
