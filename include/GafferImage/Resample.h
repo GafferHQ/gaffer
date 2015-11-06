@@ -88,6 +88,9 @@ class Resample : public ImageProcessor
 		Gaffer::IntPlug *boundingModePlug();
 		const Gaffer::IntPlug *boundingModePlug() const;
 
+		Gaffer::BoolPlug *expandDataWindowPlug();
+		const Gaffer::BoolPlug *expandDataWindowPlug() const;
+
 		Gaffer::IntPlug *debugPlug();
 		const Gaffer::IntPlug *debugPlug() const;
 

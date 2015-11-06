@@ -159,5 +159,23 @@ class ResampleTest( GafferTest.TestCase ) :
 		i = r["out"].image()
 		self.assertEqual( i["R"].data, IECore.FloatVectorData( [ 1.0 ] * 400 * 400 ) )
 
+	def testExpandDataWindow( self ) :
+
+		d = IECore.Box2i( IECore.V2i( 5, 6 ), IECore.V2i( 101, 304 ) )
+		c = GafferImage.Constant()
+		c["format"].setValue( GafferImage.Format( d ) )
+
+		r = GafferImage.Resample()
+		r["in"].setInput( c["out"] )
+		r["dataWindow"].setValue( IECore.Box2f( IECore.V2f( d.min ), IECore.V2f( d.max ) ) )
+		r["filter"].setValue( "box" )
+		self.assertEqual( r["out"]["dataWindow"].getValue(), d )
+
+		r["expandDataWindow"].setValue( True )
+		self.assertEqual( r["out"]["dataWindow"].getValue(), IECore.Box2i( d.min - IECore.V2i( 1 ), d.max + IECore.V2i( 1 ) ) )
+
+		r["filterWidth"].setValue( IECore.V2f( 10 ) )
+		self.assertEqual( r["out"]["dataWindow"].getValue(), IECore.Box2i( d.min - IECore.V2i( 5 ), d.max + IECore.V2i( 5 ) ) )
+
 if __name__ == "__main__":
 	unittest.main()

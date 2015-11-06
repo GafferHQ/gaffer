@@ -101,6 +101,16 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"expandDataWindow" : [
+
+			"description",
+			"""
+			Expands the data window by the filter radius, to include the
+			external pixels affected by the filter.
+			""",
+
+		],
+
 		"debug" : [
 
 
