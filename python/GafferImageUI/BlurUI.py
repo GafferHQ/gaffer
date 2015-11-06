@@ -1,7 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2012, John Haddon. All rights reserved.
-#  Copyright (c) 2012-2015, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2015, John Haddon. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,47 +34,65 @@
 #
 ##########################################################################
 
-from _GafferImageUI import *
+import Gaffer
+import GafferUI
+import GafferImage
 
-import DisplayUI
-from FormatPlugValueWidget import FormatPlugValueWidget
-from FilterPlugValueWidget import FilterPlugValueWidget
-from ChannelMaskPlugValueWidget import ChannelMaskPlugValueWidget
+# Command suitable for use with `NodeMenu.append()`.
+def nodeMenuCreateCommand( menu ) :
 
-import ImageReaderUI
-import ImageViewToolbar
-import ImageTransformUI
-import ConstantUI
-import ImageSwitchUI
-import ColorSpaceUI
-import ImageContextVariablesUI
-import ImageStatsUI
-import DeleteChannelsUI
-import ReformatUI
-import ObjectToImageUI
-import ClampUI
-import ImageWriterUI
-import GradeUI
-import ImageTimeWarpUI
-import ImageSamplerUI
-import MergeUI
-import ImageNodeUI
-import ChannelDataProcessorUI
-import ImageProcessorUI
-import ImageMetadataUI
-import DeleteImageMetadataUI
-import CopyImageMetadataUI
-import ImageLoopUI
-import ShuffleUI
-import PremultiplyUI
-import UnpremultiplyUI
-import CropUI
-import ResizeUI
-import ResampleUI
-import LUTUI
-import CDLUI
-import DisplayTransformUI
-import OffsetUI
-import BlurUI
+	blur = GafferImage.Blur()
+	blur["radius"].gang()
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferImageUI" )
+	return blur
+
+Gaffer.Metadata.registerNode(
+
+	GafferImage.Blur,
+
+	"description",
+	"""
+	Applies a gaussian blur to the image.
+	""",
+
+	plugs = {
+
+		"radius" : [
+
+			"description",
+			"""
+			The size of the blur in pixels. This can be varied independently
+			in the x and y directions, and fractional values are supported for
+			fine control.
+			""",
+
+		],
+
+		"boundingMode" : [
+
+			"description",
+			"""
+			The method used when the filter references pixels outside the
+			input data window.
+			""",
+
+			"preset:Black", GafferImage.Sampler.BoundingMode.Black,
+			"preset:Clamp", GafferImage.Sampler.BoundingMode.Clamp,
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
+		],
+
+		"expandDataWindow" : [
+
+			"description",
+			"""
+			Expands the data window to include the external pixels
+			which the blur will bleed onto.
+			"""
+
+		]
+
+	}
+
+)
