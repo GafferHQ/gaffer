@@ -57,6 +57,65 @@ using namespace GafferImage;
 namespace
 {
 
+// OIIO's built in gaussian filter is clipped quite aggressively, so there
+// is a significant step to zero at the edge of the filter. This makes it
+// unsuitable for use in a gaussian blur - as the filter radius expands to
+// include another pixel, it switches on suddenly rather than fades up from
+// black. This variant approaches very close to zero at the edge of its
+// support, making it more suitable for use in a blur.
+class SmoothGaussian2D : public OIIO::Filter2D
+{
+
+	public :
+
+		SmoothGaussian2D( float width, float height )
+			: Filter2D( width, height ), m_radiusInverse( 2.0f / width, 2.0f / height )
+		{
+		}
+
+		~SmoothGaussian2D()
+		{
+		}
+
+		virtual float operator()( float x, float y ) const
+		{
+			return gauss1d( x * m_radiusInverse.x ) *
+			       gauss1d( y * m_radiusInverse.y );
+		}
+
+		virtual bool separable() const
+		{
+			return true;
+		}
+
+		virtual float xfilt( float x ) const
+		{
+			return gauss1d( x * m_radiusInverse.x );
+		}
+
+		virtual float yfilt( float y ) const
+		{
+			return gauss1d( y * m_radiusInverse.y );
+		}
+
+		OIIO::string_view name() const
+		{
+			return "smoothGaussian";
+		}
+
+	private :
+
+		static float gauss1d( float x )
+		{
+			x = fabsf( x );
+			return ( x < 1.0f ) ? OIIO::fast_exp( -5.0f * ( x * x ) ) : 0.0f;
+		}
+
+		V2f m_radiusInverse;
+
+};
+
+
 // Used as a bitmask to say which filter pass(es) we're computing.
 enum Passes
 {
@@ -176,6 +235,13 @@ Filter2DPtr createFilter( const std::string &name, const V2f &filterWidth, const
 				OIIO::Filter2D::destroy
 			);
 		}
+	}
+
+	if( name == "smoothGaussian" )
+	{
+		/// \todo Perhaps we could add a registration mechanism to OIIO so we could register
+		/// our filter and look it up using the mechanism above?
+		return Filter2DPtr( new SmoothGaussian2D( filterWidth.x > 0 ? filterWidth.x : 3, filterWidth.y > 0 ? filterWidth.y : 3 ) );
 	}
 
 	throw Exception( boost::str( boost::format( "Unknown filter \"%s\"" ) % filterName ) );
