@@ -523,7 +523,7 @@ size_t ImageReader::getCacheMemoryLimit()
 {
 	float memoryLimit;
 	imageCache()->getattribute( "max_memory_MB", memoryLimit );
-	return memoryLimit;
+	return (size_t)memoryLimit;
 }
 
 void ImageReader::setCacheMemoryLimit( size_t mb )
