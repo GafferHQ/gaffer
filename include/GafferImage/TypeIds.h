@@ -103,6 +103,7 @@ enum TypeId
 	FormatPlugTypeId = 110807,
 	OffsetTypeId = 110808,
 	ImagePrimitiveProcessorTypeId = 110809,
+	BlurTypeId = 110810,
 
 	LastTypeId = 110849
 };
