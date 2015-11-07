@@ -517,7 +517,7 @@ void ImageWriter::createFileFormatOptionsPlugs()
 {
 	ValuePlug *exrOptionsPlug = new ValuePlug( "openexr" );
 	addChild( exrOptionsPlug );
-	exrOptionsPlug->addChild( new IntPlug( g_modePlugName, Plug::In, 0 ) );
+	exrOptionsPlug->addChild( new IntPlug( g_modePlugName, Plug::In, Scanline ) );
 	exrOptionsPlug->addChild( new StringPlug( g_compressionPlugName, Plug::In, "zip" ) );
 	exrOptionsPlug->addChild( new StringPlug( g_dataTypePlugName, Plug::In, "half" ) );
 
@@ -527,13 +527,13 @@ void ImageWriter::createFileFormatOptionsPlugs()
 
 	ValuePlug *tifOptionsPlug = new ValuePlug( "tiff" );
 	addChild( tifOptionsPlug );
-	tifOptionsPlug->addChild( new IntPlug( g_modePlugName, Plug::In, 0 ) );
+	tifOptionsPlug->addChild( new IntPlug( g_modePlugName, Plug::In, Scanline ) );
 	tifOptionsPlug->addChild( new StringPlug( g_compressionPlugName, Plug::In, "zip" ) );
 	tifOptionsPlug->addChild( new StringPlug( g_dataTypePlugName, Plug::In, "uint8" ) );
 
 	ValuePlug *f3dOptionsPlug = new ValuePlug( "field3d" );
 	addChild( f3dOptionsPlug );
-	f3dOptionsPlug->addChild( new IntPlug( g_modePlugName, Plug::In, 0 ) );
+	f3dOptionsPlug->addChild( new IntPlug( g_modePlugName, Plug::In, Scanline ) );
 	f3dOptionsPlug->addChild( new StringPlug( g_dataTypePlugName, Plug::In, "float" ) );
 
 	ValuePlug *fitsOptionsPlug = new ValuePlug( "fits" );
@@ -542,7 +542,7 @@ void ImageWriter::createFileFormatOptionsPlugs()
 
 	ValuePlug *iffOptionsPlug = new ValuePlug( "iff" );
 	addChild( iffOptionsPlug );
-	iffOptionsPlug->addChild( new IntPlug( g_modePlugName, Plug::In, 1 ) );
+	iffOptionsPlug->addChild( new IntPlug( g_modePlugName, Plug::In, Tile ) );
 
 	ValuePlug *jpgOptionsPlug = new ValuePlug( "jpeg" );
 	addChild( jpgOptionsPlug );
