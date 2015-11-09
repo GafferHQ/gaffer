@@ -878,36 +878,43 @@ class DiffColumn( GafferUI.Widget ) :
 	@GafferUI.LazyMethod()
 	def update( self, targets ) :
 
-		inspectors = {}
-		for target in targets :
-			inspectors.update( { i.name() : i for i in self.__inspector.children( target ) } )
+		# this doesn't always get called by SceneInspector.__update(), so we grab the
+		# context from the ancestor NodeSetEditor if it exists, and make it current:
+		nodeSetEditor = self.ancestor( GafferUI.NodeSetEditor )
+		context = nodeSetEditor.getContext() if nodeSetEditor else Gaffer.Context.current()
 
-		# mark all rows as invalid
-		for row in self.__rowContainer :
-			row.__valid = False
+		with context:
 
-		# iterate over the fields we want to display,
-		# creating/updating the rows that are to be valid.
-		for rowName in inspectors.keys() :
+			inspectors = {}
+			for target in targets :
+				inspectors.update( { i.name() : i for i in self.__inspector.children( target ) } )
 
-			row = self.__rows.get( rowName )
-			if row is None :
-				row = DiffRow( inspectors[rowName], self.__diffCreator )
-				self.__rows[rowName] = row
+			# mark all rows as invalid
+			for row in self.__rowContainer :
+				row.__valid = False
 
-			row.update( targets )
-			row.__valid = True
+			# iterate over the fields we want to display,
+			# creating/updating the rows that are to be valid.
+			for rowName in inspectors.keys() :
 
-		# update the rowContainer with _all_ rows (both
-		# valid and invalid) in the correct order. this
-		# is a no-op except when adding new rows. it is
-		# much quicker to hide invalid rows than it is
-		# to reparent widgets so that the container only
-		# contains the valid ones.
-		self.__rowContainer[:] = sorted( self.__rows.values(), key = lambda r : r.inspector().name() )
+				row = self.__rows.get( rowName )
+				if row is None :
+					row = DiffRow( inspectors[rowName], self.__diffCreator )
+					self.__rows[rowName] = row
 
-		# show only the currently valid ones.
-		self.__updateRowVisibility()
+				row.update( targets )
+				row.__valid = True
+
+			# update the rowContainer with _all_ rows (both
+			# valid and invalid) in the correct order. this
+			# is a no-op except when adding new rows. it is
+			# much quicker to hide invalid rows than it is
+			# to reparent widgets so that the container only
+			# contains the valid ones.
+			self.__rowContainer[:] = sorted( self.__rows.values(), key = lambda r : r.inspector().name() )
+
+			# show only the currently valid ones.
+			self.__updateRowVisibility()
 
 	def __updateRowVisibility( self ) :
 
