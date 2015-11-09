@@ -1174,5 +1174,42 @@ class ExpressionTest( GafferTest.TestCase ) :
 			c.setFrame( 1 )
 			self.assertEqual( s["n"]["user"]["i"].getValue(), 1 )
 
+	def testParseFailureLeavesStateUnchanged( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = Gaffer.Node()
+		s["n"]["user"]["i"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		s["e"] = Gaffer.Expression()
+		s["e"].setExpression( "parent['n']['user']['i'] = context.getFrame()" )
+
+		cs = GafferTest.CapturingSlot( s["e"].expressionChangedSignal() )
+
+		with Gaffer.Context() as c :
+
+			c.setFrame( 10 )
+			self.assertEqual( s["n"]["user"]["i"].getValue(), 10 )
+			c.setFrame( 20 )
+			self.assertEqual( s["n"]["user"]["i"].getValue(), 20 )
+
+		with Gaffer.UndoContext( s ) :
+
+			self.assertRaisesRegexp(
+				Exception,
+				"SyntaxError",
+				s["e"].setExpression,
+				"i'm not valid python"
+			)
+
+		self.assertEqual( len( cs ), 0 )
+		self.assertFalse( s.undoAvailable() )
+
+		with Gaffer.Context() as c :
+
+			c.setFrame( 11 )
+			self.assertEqual( s["n"]["user"]["i"].getValue(), 11 )
+			c.setFrame( 21 )
+			self.assertEqual( s["n"]["user"]["i"].getValue(), 21 )
+
 if __name__ == "__main__":
 	unittest.main()

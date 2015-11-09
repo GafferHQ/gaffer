@@ -103,14 +103,26 @@ std::string Expression::defaultExpression( const ValuePlug *output, const std::s
 	return e->defaultExpression( output );
 }
 
-void Expression::setExpression( const std::string &expression, const std::string &engine )
+void Expression::setExpression( const std::string &expression, const std::string &language )
 {
-	std::string currentEngine;
-	const std::string currentExpression = getExpression( currentEngine );
-	if( expression == currentExpression && engine == currentEngine )
+	std::string currentLanguage;
+	const std::string currentExpression = getExpression( currentLanguage );
+	if( expression == currentExpression && language == currentLanguage )
 	{
 		return;
 	}
+
+	// Create a new engine and parse the expression.
+	// We don't modify any internal state at this
+	// initial stage since parsing might throw if the
+	// expression is invalid.
+
+	EnginePtr engine = Engine::create( language );
+
+	std::vector<ValuePlug *> inPlugs, outPlugs;
+	std::vector<IECore::InternedString> contextNames;
+
+	engine->parse( this, expression, inPlugs, outPlugs, contextNames );
 
 	// The setExpression() method is undoable by virtue of being
 	// implemented entirely using other undoable functions - all
@@ -125,16 +137,10 @@ void Expression::setExpression( const std::string &expression, const std::string
 		boost::bind( boost::ref( expressionChangedSignal() ), this )
 	);
 
-	m_engine = NULL;
-	m_contextNames.clear();
-
-	m_engine = Engine::create( engine );
-
-	std::vector<ValuePlug *> inPlugs, outPlugs;
-	m_engine->parse( this, expression, inPlugs, outPlugs, m_contextNames );
+	m_engine = engine;
+	m_contextNames = contextNames;
 	updatePlugs( inPlugs, outPlugs );
-
-	enginePlug()->setValue( engine );
+	enginePlug()->setValue( language );
 
 	// We store the expression in a processed form, referencing
 	// the intermediate plugs on this node rather than the plugs
