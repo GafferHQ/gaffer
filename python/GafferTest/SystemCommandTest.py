@@ -96,6 +96,24 @@ class SystemCommandTest( GafferTest.TestCase ) :
 		# check that all hashes are unique
 		self.assertEqual( len( hashes ), len( set( hashes ) ) )
 
+	def testFrameRangeSubstitutions( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = Gaffer.SystemCommand()
+		s["n"]["command"].setValue( "touch " + self.temporaryDirectory() + "/systemCommandTest.####.txt" )
+
+		d = Gaffer.LocalDispatcher()
+		d["jobsDirectory"].setValue( self.temporaryDirectory() + "/jobs" )
+		d["framesMode"].setValue( d.FramesMode.CustomRange )
+		d["frameRange"].setValue( "1-10" )
+
+		d.dispatch( [ s["n"] ] )
+
+		sequences = IECore.ls( self.temporaryDirectory() )
+		self.assertEqual( len( sequences ), 1 )
+		self.assertEqual( str( sequences[0] ), "systemCommandTest.####.txt 1-10" )
+
 if __name__ == "__main__":
 	unittest.main()
 
