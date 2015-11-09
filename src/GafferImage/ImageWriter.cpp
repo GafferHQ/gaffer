@@ -334,8 +334,6 @@ ImageSpec createImageSpec( const ImageWriter *node, const ImageOutput *out, cons
 
 	ImageSpec spec( TypeDesc::UNKNOWN );
 
-	setImageSpecFormatOptions( node, &spec, fileFormatName );
-
 	// Specify the display window.
 	spec.full_x = displayWindow.min.x;
 	spec.full_y = displayWindow.min.y;
@@ -375,6 +373,11 @@ ImageSpec createImageSpec( const ImageWriter *node, const ImageOutput *out, cons
 	}
 
 	metadataToImageSpecAttributes( metadata.get(), spec );
+
+	// Apply the spec format options. Note this must happen
+	// after we transfer the input metadata to ensure the
+	// settings override anything from upstream data.
+	setImageSpecFormatOptions( node, &spec, fileFormatName );
 
 	// Add common attribs to the spec
 	std::string software = ( boost::format( "Gaffer %d.%d.%d.%d" ) % GAFFER_MILESTONE_VERSION % GAFFER_MAJOR_VERSION % GAFFER_MINOR_VERSION % GAFFER_PATCH_VERSION ).str();
@@ -514,7 +517,7 @@ void ImageWriter::createFileFormatOptionsPlugs()
 {
 	ValuePlug *exrOptionsPlug = new ValuePlug( "openexr" );
 	addChild( exrOptionsPlug );
-	exrOptionsPlug->addChild( new IntPlug( g_modePlugName, Plug::In, 0 ) );
+	exrOptionsPlug->addChild( new IntPlug( g_modePlugName, Plug::In, Scanline ) );
 	exrOptionsPlug->addChild( new StringPlug( g_compressionPlugName, Plug::In, "zip" ) );
 	exrOptionsPlug->addChild( new StringPlug( g_dataTypePlugName, Plug::In, "half" ) );
 
@@ -524,13 +527,13 @@ void ImageWriter::createFileFormatOptionsPlugs()
 
 	ValuePlug *tifOptionsPlug = new ValuePlug( "tiff" );
 	addChild( tifOptionsPlug );
-	tifOptionsPlug->addChild( new IntPlug( g_modePlugName, Plug::In, 0 ) );
+	tifOptionsPlug->addChild( new IntPlug( g_modePlugName, Plug::In, Scanline ) );
 	tifOptionsPlug->addChild( new StringPlug( g_compressionPlugName, Plug::In, "zip" ) );
 	tifOptionsPlug->addChild( new StringPlug( g_dataTypePlugName, Plug::In, "uint8" ) );
 
 	ValuePlug *f3dOptionsPlug = new ValuePlug( "field3d" );
 	addChild( f3dOptionsPlug );
-	f3dOptionsPlug->addChild( new IntPlug( g_modePlugName, Plug::In, 0 ) );
+	f3dOptionsPlug->addChild( new IntPlug( g_modePlugName, Plug::In, Scanline ) );
 	f3dOptionsPlug->addChild( new StringPlug( g_dataTypePlugName, Plug::In, "float" ) );
 
 	ValuePlug *fitsOptionsPlug = new ValuePlug( "fits" );
@@ -539,7 +542,7 @@ void ImageWriter::createFileFormatOptionsPlugs()
 
 	ValuePlug *iffOptionsPlug = new ValuePlug( "iff" );
 	addChild( iffOptionsPlug );
-	iffOptionsPlug->addChild( new IntPlug( g_modePlugName, Plug::In, 1 ) );
+	iffOptionsPlug->addChild( new IntPlug( g_modePlugName, Plug::In, Tile ) );
 
 	ValuePlug *jpgOptionsPlug = new ValuePlug( "jpeg" );
 	addChild( jpgOptionsPlug );

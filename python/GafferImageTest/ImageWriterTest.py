@@ -82,19 +82,19 @@ class ImageWriterTest( GafferTest.TestCase ) :
 	def testWriteModePlugCompatibility( self ) :
 		w = GafferImage.ImageWriter()
 
-		w['writeMode'].setValue( 0 )
+		w['writeMode'].setValue( GafferImage.ImageWriter.Mode.Scanline )
 
-		self.assertEqual( w['openexr']['mode'].getValue(), 0 )
-		self.assertEqual( w['tiff']['mode'].getValue(), 0 )
-		self.assertEqual( w['field3d']['mode'].getValue(), 0 )
-		self.assertEqual( w['iff']['mode'].getValue(), 0 )
+		self.assertEqual( w['openexr']['mode'].getValue(), GafferImage.ImageWriter.Mode.Scanline )
+		self.assertEqual( w['tiff']['mode'].getValue(), GafferImage.ImageWriter.Mode.Scanline )
+		self.assertEqual( w['field3d']['mode'].getValue(), GafferImage.ImageWriter.Mode.Scanline )
+		self.assertEqual( w['iff']['mode'].getValue(), GafferImage.ImageWriter.Mode.Scanline )
 
-		w['writeMode'].setValue( 1 )
+		w['writeMode'].setValue( GafferImage.ImageWriter.Mode.Tile )
 
-		self.assertEqual( w['openexr']['mode'].getValue(), 1 )
-		self.assertEqual( w['tiff']['mode'].getValue(), 1 )
-		self.assertEqual( w['field3d']['mode'].getValue(), 1 )
-		self.assertEqual( w['iff']['mode'].getValue(), 1 )
+		self.assertEqual( w['openexr']['mode'].getValue(), GafferImage.ImageWriter.Mode.Tile )
+		self.assertEqual( w['tiff']['mode'].getValue(), GafferImage.ImageWriter.Mode.Tile )
+		self.assertEqual( w['field3d']['mode'].getValue(), GafferImage.ImageWriter.Mode.Tile )
+		self.assertEqual( w['iff']['mode'].getValue(), GafferImage.ImageWriter.Mode.Tile )
 
 	def testAcceptsInput( self ) :
 
@@ -107,18 +107,17 @@ class ImageWriterTest( GafferTest.TestCase ) :
 	def testTiffWrite( self ) :
 		options = {}
 		options['maxError'] = 0.1
+		options['metadata'] = { 'compression' : IECore.StringData( "zip" ), 'tiff:Compression' : IECore.IntData( 8 ) }
 		options['plugs'] = {}
 		options['plugs']['mode'] = [
-				{ 'value': 0 },
-				{ 'value': 1 },
+				{ 'value': GafferImage.ImageWriter.Mode.Scanline },
+				{ 'value': GafferImage.ImageWriter.Mode.Tile },
 			]
 		options['plugs']['compression'] = [
-				{ 'value': "none" },
-				{ 'value': "lzw" },
-				{ 'value': "zip" },
-				{ 'value': "deflate" },
-				{ 'value': "packbits" },
-				{ 'value': "ccittrle" },
+				{ 'value': "none", 'metadata' : { 'compression' : IECore.StringData( "none" ), 'tiff:Compression' : IECore.IntData( 1 ) } },
+				{ 'value': "lzw", 'metadata' : { 'compression' : IECore.StringData( "lzw" ), 'tiff:Compression' : IECore.IntData( 5 ) } },
+				{ 'value': "zip", 'metadata' : { 'compression' : IECore.StringData( "zip" ), 'tiff:Compression' : IECore.IntData( 8 ) } },
+				{ 'value': "packbits", 'metadata' : { 'compression' : IECore.StringData( "packbits" ), 'tiff:Compression' : IECore.IntData( 32773 ) } },
 			]
 		options['plugs']['dataType'] = [
 				{ 'value': "uint8", 'metadata': { 'oiio:BitsPerSample': IECore.IntData( 8 ) }, 'maxError': 0.0 },
@@ -161,20 +160,21 @@ class ImageWriterTest( GafferTest.TestCase ) :
 	def testExrWrite( self ) :
 		options = {}
 		options['maxError'] = 0.0
+		options['metadata'] = { 'compression' : IECore.StringData( "zip" ) }
 		options['plugs'] = {}
 		options['plugs']['mode'] = [
-				{ 'value': 0 },
-				{ 'value': 1 },
+				{ 'value': GafferImage.ImageWriter.Mode.Scanline },
+				{ 'value': GafferImage.ImageWriter.Mode.Tile },
 			]
 		options['plugs']['compression'] = [
-				{ 'value': "none" },
-				{ 'value': "zip" },
-				{ 'value': "zips" },
-				{ 'value': "rle" },
-				{ 'value': "piz" },
-				{ 'value': "pxr24" },
-				{ 'value': "b44" },
-				{ 'value': "b44a" },
+				{ 'value': "none", 'metadata' : { 'compression' : IECore.StringData( "none" ) } },
+				{ 'value': "zip", 'metadata' : { 'compression' : IECore.StringData( "zip" ) } },
+				{ 'value': "zips", 'metadata' : { 'compression' : IECore.StringData( "zips" ) } },
+				{ 'value': "rle", 'metadata' : { 'compression' : IECore.StringData( "rle" ) } },
+				{ 'value': "piz", 'metadata' : { 'compression' : IECore.StringData( "piz" ) } },
+				{ 'value': "pxr24", 'metadata' : { 'compression' : IECore.StringData( "pxr24" ) } },
+				{ 'value': "b44", 'metadata' : { 'compression' : IECore.StringData( "b44" ) } },
+				{ 'value': "b44a", 'metadata' : { 'compression' : IECore.StringData( "b44a" ) } },
 			]
 		options['plugs']['dataType'] = [
 				{ 'value': "float" },
@@ -227,7 +227,7 @@ class ImageWriterTest( GafferTest.TestCase ) :
 		options['maxError'] = 0.1
 		options['plugs'] = {}
 		options['mode'] = [
-				{ 'value': 1 },
+				{ 'value': GafferImage.ImageWriter.Mode.Tile },
 			]
 
 		self.__testExtension( "iff", "iff", options = options, metadataToIgnore = [ "Artist", "DocumentName", "HostComputer", "Software" ] )
@@ -254,12 +254,12 @@ class ImageWriterTest( GafferTest.TestCase ) :
 		w1["in"].setInput( g["out"] )
 		w1["fileName"].setValue( testScanlineFile )
 		w1["channels"].setValue( IECore.StringVectorData( g["out"]["channelNames"].getValue() ) )
-		w1["openexr"]["mode"].setValue( 0 )
+		w1["openexr"]["mode"].setValue( GafferImage.ImageWriter.Mode.Scanline )
 
 		w2["in"].setInput( g["out"] )
 		w2["fileName"].setValue( testTileFile )
 		w2["channels"].setValue( IECore.StringVectorData( g["out"]["channelNames"].getValue() ) )
-		w2["openexr"]["mode"].setValue( 1 )
+		w2["openexr"]["mode"].setValue( GafferImage.ImageWriter.Mode.Tile )
 
 		# Try to execute. In older versions of the ImageWriter this would throw an exception.
 		with s.context() :
@@ -287,18 +287,18 @@ class ImageWriterTest( GafferTest.TestCase ) :
 
 		self.assertEqual( w["dpx"]["dataType"].getValue(), "uint10" )
 
-		self.assertEqual( w["field3d"]["mode"].getValue(), 0 )
+		self.assertEqual( w["field3d"]["mode"].getValue(), GafferImage.ImageWriter.Mode.Scanline )
 		self.assertEqual( w["field3d"]["dataType"].getValue(), "float" )
 
 		self.assertEqual( w["fits"]["dataType"].getValue(), "float" )
 
-		self.assertEqual( w["iff"]["mode"].getValue(), 1 )
+		self.assertEqual( w["iff"]["mode"].getValue(), GafferImage.ImageWriter.Mode.Tile )
 
 		self.assertEqual( w["jpeg"]["compressionQuality"].getValue(), 98 )
 
 		self.assertEqual( w["jpeg2000"]["dataType"].getValue(), "uint8" )
 
-		self.assertEqual( w["openexr"]["mode"].getValue(), 0 )
+		self.assertEqual( w["openexr"]["mode"].getValue(), GafferImage.ImageWriter.Mode.Scanline )
 		self.assertEqual( w["openexr"]["compression"].getValue(), "zip" )
 		self.assertEqual( w["openexr"]["dataType"].getValue(), "half" )
 
@@ -311,7 +311,7 @@ class ImageWriterTest( GafferTest.TestCase ) :
 
 		self.assertEqual( w["targa"]["compression"].getValue(), "rle" )
 
-		self.assertEqual( w["tiff"]["mode"].getValue(), 0 )
+		self.assertEqual( w["tiff"]["mode"].getValue(), GafferImage.ImageWriter.Mode.Scanline )
 		self.assertEqual( w["tiff"]["compression"].getValue(), "zip" )
 		self.assertEqual( w["tiff"]["dataType"].getValue(), "uint8" )
 
@@ -351,17 +351,18 @@ class ImageWriterTest( GafferTest.TestCase ) :
 		for optPlugName in options['plugs'] :
 			for optPlugVal in options['plugs'][optPlugName] :
 				name = "{}_{}".format(optPlugName, optPlugVal['value'])
+				optMetadata = dict(options.get( "metadata", {} ))
+				optMetadata.update( optPlugVal.get( "metadata", {} ) )
 				tests.append( {
 					'name': name,
 					'plugs': { optPlugName: optPlugVal['value'] },
-					'metadata': optPlugVal.get( "metadata", {} ),
+					'metadata': optMetadata,
 					'maxError': optPlugVal.get( "maxError", options['maxError'] ) } )
 
 		for test in tests:
 			name = test['name']
 			maxError = test['maxError']
 			overrideMetadata = test['metadata']
-
 			testFile = self.__testFile( name, "RGBA", ext )
 
 			self.failIf( os.path.exists( testFile ), "Temporary file already exists : {}".format( testFile ) )
@@ -420,7 +421,9 @@ class ImageWriterTest( GafferTest.TestCase ) :
 				if metaName in expectedMetadata :
 					del expectedMetadata[metaName]
 
-			self.assertEqual( expectedMetadata, writerMetadata, "Metadata does not match : {} ({})".format(ext, name) )
+			for metaName in expectedMetadata.keys() :
+				self.assertTrue( metaName in writerMetadata.keys(), "Writer Metadata missing expected key \"{}\" set to \"{}\" : {} ({})".format(metaName, str(expectedMetadata[metaName]), ext, name) )
+				self.assertEqual( expectedMetadata[metaName], writerMetadata[metaName], "Metadata does not match for key \"{}\" : {} ({})".format(metaName, ext, name) )
 
 			op = IECore.ImageDiffOp()
 			op["maxError"].setValue( maxError )
@@ -553,7 +556,7 @@ class ImageWriterTest( GafferTest.TestCase ) :
 
 		# other plugs matter too
 		current = writer.hash( c )
-		writer["openexr"]["mode"].setValue( 1 ) # tile mode
+		writer["openexr"]["mode"].setValue( GafferImage.ImageWriter.Mode.Tile )
 		self.assertNotEqual( writer.hash( c ), current )
 		current = writer.hash( c )
 		writer["channels"].setValue( IECore.StringVectorData( [ "R" ] ) )
@@ -622,7 +625,7 @@ class ImageWriterTest( GafferTest.TestCase ) :
 		result["refreshCount"].setValue( result["refreshCount"].getValue() + 1 )
 		self.assertEqual( result["out"]["metadata"].getValue()["DocumentName"].value, "/my/gaffer/script.gfr" )
 
-	def __testMetadataDoesNotAffectPixels( self, ext ) :
+	def __testMetadataDoesNotAffectPixels( self, ext, overrideMetadata = {}, metadataToIgnore = [] ) :
 
 		r = GafferImage.ImageReader()
 		r["fileName"].setValue( self.__rgbFilePath+"."+ext )
@@ -711,17 +714,45 @@ class ImageWriterTest( GafferTest.TestCase ) :
 				expectedMetadata["IPTC:OriginatingProgram"] = expectedMetadata["Software"]
 				expectedMetadata["IPTC:Creator"] = expectedMetadata["Artist"]
 				break
+		
+		for key in overrideMetadata :
+			expectedMetadata[key] = overrideMetadata[key]
+			beforeMetadata[key] = overrideMetadata[key]
+		
+		for key in metadataToIgnore :
+			if key in expectedMetadata :
+				del expectedMetadata[key]
+			if key in beforeMetadata :
+				del beforeMetadata[key]
+			if key in afterMetadata :
+				del afterMetadata[key]
+		
+		for metaName in expectedMetadata.keys() :
+			self.assertTrue( metaName in afterMetadata.keys(), "Writer Metadata missing expected key \"{}\" set to \"{}\" : {}".format(metaName, str(expectedMetadata[metaName]), ext) )
+			self.assertEqual( expectedMetadata[metaName], afterMetadata[metaName], "Metadata does not match for key \"{}\" : {}".format(metaName, ext) )
 
-		self.assertEqual( afterMetadata, expectedMetadata )
-		self.assertEqual( afterMetadata, beforeMetadata )
+		for metaName in beforeMetadata.keys() :
+			self.assertTrue( metaName in afterMetadata.keys(), "Writer Metadata missing expected key \"{}\" set to \"{}\" : {}".format(metaName, str(beforeMetadata[metaName]), ext) )
+			self.assertEqual( beforeMetadata[metaName], afterMetadata[metaName], "Metadata does not match for key \"{}\" : {}".format(metaName, ext) )
 
 	def testExrMetadata( self ) :
 
-		self.__testMetadataDoesNotAffectPixels( "exr" )
+		self.__testMetadataDoesNotAffectPixels(
+			"exr",
+			overrideMetadata = {
+				"compression" : IECore.StringData( "zip" )
+			},
+		)
 
 	def testTiffMetadata( self ) :
 
-		self.__testMetadataDoesNotAffectPixels( "tif" )
+		self.__testMetadataDoesNotAffectPixels(
+			"tif",
+			overrideMetadata = {
+				"compression" : IECore.StringData( "zip" ),
+				"tiff:Compression" : IECore.IntData( 8 )
+			},
+		)
 
 	def testWriteEmptyImage( self ) :
 

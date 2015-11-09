@@ -150,8 +150,8 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-			"preset:Scanline", 0,
-			"preset:Tile", 1,
+			"preset:Scanline", GafferImage.ImageWriter.Mode.Scanline,
+			"preset:Tile", GafferImage.ImageWriter.Mode.Tile,
 
 		],
 
@@ -211,8 +211,8 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-			"preset:Scanline", 0,
-			"preset:Tile", 1,
+			"preset:Scanline", GafferImage.ImageWriter.Mode.Scanline,
+			"preset:Tile", GafferImage.ImageWriter.Mode.Tile,
 
 		],
 
@@ -279,8 +279,8 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-			"preset:Scanline", 0,
-			"preset:Tile", 1,
+			"preset:Scanline", GafferImage.ImageWriter.Mode.Scanline,
+			"preset:Tile", GafferImage.ImageWriter.Mode.Tile,
 
 		],
 
@@ -433,8 +433,8 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-			"preset:Scanline", 0,
-			"preset:Tile", 1,
+			"preset:Scanline", GafferImage.ImageWriter.Mode.Scanline,
+			"preset:Tile", GafferImage.ImageWriter.Mode.Tile,
 
 		],
 
@@ -448,9 +448,7 @@ Gaffer.Metadata.registerNode(
 			"preset:None", "none",
 			"preset:LZW", "lzw",
 			"preset:Zip", "zip",
-			"preset:Deflate", "deflate",
 			"preset:Pack Bits", "packbits",
-			"preset:CCITT RLE", "ccittrle",
 
 		],
 
