@@ -47,8 +47,13 @@ using namespace GafferImage;
 void GafferImageBindings::bindImageWriter()
 {
 
-	GafferBindings::ExecutableNodeClass<ImageWriter>()
+	boost::python::scope s = GafferBindings::ExecutableNodeClass<ImageWriter>()
 		.def( "currentFileFormat", &ImageWriter::currentFileFormat )
+	;
+	
+	boost::python::enum_<ImageWriter::Mode>( "Mode" )
+		.value( "Scanline", ImageWriter::Scanline )
+		.value( "Tile", ImageWriter::Tile )
 	;
 
 }

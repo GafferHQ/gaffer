@@ -58,7 +58,7 @@ class ImageWriter : public Gaffer::ExecutableNode
 
 	public :
 
-		enum
+		enum Mode
 		{
 			Scanline = 0,
 			Tile = 1

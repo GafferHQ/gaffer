@@ -82,19 +82,19 @@ class ImageWriterTest( GafferTest.TestCase ) :
 	def testWriteModePlugCompatibility( self ) :
 		w = GafferImage.ImageWriter()
 
-		w['writeMode'].setValue( 0 )
+		w['writeMode'].setValue( GafferImage.ImageWriter.Mode.Scanline )
 
-		self.assertEqual( w['openexr']['mode'].getValue(), 0 )
-		self.assertEqual( w['tiff']['mode'].getValue(), 0 )
-		self.assertEqual( w['field3d']['mode'].getValue(), 0 )
-		self.assertEqual( w['iff']['mode'].getValue(), 0 )
+		self.assertEqual( w['openexr']['mode'].getValue(), GafferImage.ImageWriter.Mode.Scanline )
+		self.assertEqual( w['tiff']['mode'].getValue(), GafferImage.ImageWriter.Mode.Scanline )
+		self.assertEqual( w['field3d']['mode'].getValue(), GafferImage.ImageWriter.Mode.Scanline )
+		self.assertEqual( w['iff']['mode'].getValue(), GafferImage.ImageWriter.Mode.Scanline )
 
-		w['writeMode'].setValue( 1 )
+		w['writeMode'].setValue( GafferImage.ImageWriter.Mode.Tile )
 
-		self.assertEqual( w['openexr']['mode'].getValue(), 1 )
-		self.assertEqual( w['tiff']['mode'].getValue(), 1 )
-		self.assertEqual( w['field3d']['mode'].getValue(), 1 )
-		self.assertEqual( w['iff']['mode'].getValue(), 1 )
+		self.assertEqual( w['openexr']['mode'].getValue(), GafferImage.ImageWriter.Mode.Tile )
+		self.assertEqual( w['tiff']['mode'].getValue(), GafferImage.ImageWriter.Mode.Tile )
+		self.assertEqual( w['field3d']['mode'].getValue(), GafferImage.ImageWriter.Mode.Tile )
+		self.assertEqual( w['iff']['mode'].getValue(), GafferImage.ImageWriter.Mode.Tile )
 
 	def testAcceptsInput( self ) :
 
@@ -110,8 +110,8 @@ class ImageWriterTest( GafferTest.TestCase ) :
 		options['metadata'] = { 'compression' : IECore.StringData( "zip" ), 'tiff:Compression' : IECore.IntData( 8 ) }
 		options['plugs'] = {}
 		options['plugs']['mode'] = [
-				{ 'value': 0 },
-				{ 'value': 1 },
+				{ 'value': GafferImage.ImageWriter.Mode.Scanline },
+				{ 'value': GafferImage.ImageWriter.Mode.Tile },
 			]
 		options['plugs']['compression'] = [
 				{ 'value': "none", 'metadata' : { 'compression' : IECore.StringData( "none" ), 'tiff:Compression' : IECore.IntData( 1 ) } },
@@ -163,8 +163,8 @@ class ImageWriterTest( GafferTest.TestCase ) :
 		options['metadata'] = { 'compression' : IECore.StringData( "zip" ) }
 		options['plugs'] = {}
 		options['plugs']['mode'] = [
-				{ 'value': 0 },
-				{ 'value': 1 },
+				{ 'value': GafferImage.ImageWriter.Mode.Scanline },
+				{ 'value': GafferImage.ImageWriter.Mode.Tile },
 			]
 		options['plugs']['compression'] = [
 				{ 'value': "none", 'metadata' : { 'compression' : IECore.StringData( "none" ) } },
@@ -227,7 +227,7 @@ class ImageWriterTest( GafferTest.TestCase ) :
 		options['maxError'] = 0.1
 		options['plugs'] = {}
 		options['mode'] = [
-				{ 'value': 1 },
+				{ 'value': GafferImage.ImageWriter.Mode.Tile },
 			]
 
 		self.__testExtension( "iff", "iff", options = options, metadataToIgnore = [ "Artist", "DocumentName", "HostComputer", "Software" ] )
@@ -254,12 +254,12 @@ class ImageWriterTest( GafferTest.TestCase ) :
 		w1["in"].setInput( g["out"] )
 		w1["fileName"].setValue( testScanlineFile )
 		w1["channels"].setValue( IECore.StringVectorData( g["out"]["channelNames"].getValue() ) )
-		w1["openexr"]["mode"].setValue( 0 )
+		w1["openexr"]["mode"].setValue( GafferImage.ImageWriter.Mode.Scanline )
 
 		w2["in"].setInput( g["out"] )
 		w2["fileName"].setValue( testTileFile )
 		w2["channels"].setValue( IECore.StringVectorData( g["out"]["channelNames"].getValue() ) )
-		w2["openexr"]["mode"].setValue( 1 )
+		w2["openexr"]["mode"].setValue( GafferImage.ImageWriter.Mode.Tile )
 
 		# Try to execute. In older versions of the ImageWriter this would throw an exception.
 		with s.context() :
@@ -287,18 +287,18 @@ class ImageWriterTest( GafferTest.TestCase ) :
 
 		self.assertEqual( w["dpx"]["dataType"].getValue(), "uint10" )
 
-		self.assertEqual( w["field3d"]["mode"].getValue(), 0 )
+		self.assertEqual( w["field3d"]["mode"].getValue(), GafferImage.ImageWriter.Mode.Scanline )
 		self.assertEqual( w["field3d"]["dataType"].getValue(), "float" )
 
 		self.assertEqual( w["fits"]["dataType"].getValue(), "float" )
 
-		self.assertEqual( w["iff"]["mode"].getValue(), 1 )
+		self.assertEqual( w["iff"]["mode"].getValue(), GafferImage.ImageWriter.Mode.Tile )
 
 		self.assertEqual( w["jpeg"]["compressionQuality"].getValue(), 98 )
 
 		self.assertEqual( w["jpeg2000"]["dataType"].getValue(), "uint8" )
 
-		self.assertEqual( w["openexr"]["mode"].getValue(), 0 )
+		self.assertEqual( w["openexr"]["mode"].getValue(), GafferImage.ImageWriter.Mode.Scanline )
 		self.assertEqual( w["openexr"]["compression"].getValue(), "zip" )
 		self.assertEqual( w["openexr"]["dataType"].getValue(), "half" )
 
@@ -311,7 +311,7 @@ class ImageWriterTest( GafferTest.TestCase ) :
 
 		self.assertEqual( w["targa"]["compression"].getValue(), "rle" )
 
-		self.assertEqual( w["tiff"]["mode"].getValue(), 0 )
+		self.assertEqual( w["tiff"]["mode"].getValue(), GafferImage.ImageWriter.Mode.Scanline )
 		self.assertEqual( w["tiff"]["compression"].getValue(), "zip" )
 		self.assertEqual( w["tiff"]["dataType"].getValue(), "uint8" )
 
@@ -556,7 +556,7 @@ class ImageWriterTest( GafferTest.TestCase ) :
 
 		# other plugs matter too
 		current = writer.hash( c )
-		writer["openexr"]["mode"].setValue( 1 ) # tile mode
+		writer["openexr"]["mode"].setValue( GafferImage.ImageWriter.Mode.Tile )
 		self.assertNotEqual( writer.hash( c ), current )
 		current = writer.hash( c )
 		writer["channels"].setValue( IECore.StringVectorData( [ "R" ] ) )
