@@ -124,6 +124,25 @@ void Expression::setExpression( const std::string &expression, const std::string
 
 	engine->parse( this, expression, inPlugs, outPlugs, contextNames );
 
+	// Validate that the expression doesn't read from and write
+	// to the same plug, since circular dependencies aren't allowed.
+	if( inPlugs.size() )
+	{
+		std::vector<ValuePlug *> sortedInPlugs( inPlugs );
+		std::sort( sortedInPlugs.begin(), sortedInPlugs.end() );
+		for( std::vector<ValuePlug *>::const_iterator it = outPlugs.begin(), eIt = outPlugs.end(); it != eIt; ++it )
+		{
+			if( std::binary_search( sortedInPlugs.begin(), sortedInPlugs.end(), *it ) )
+			{
+				throw Exception( boost::str(
+					boost::format(
+						"Cannot both read from and write to plug \"%s\""
+					) % (*it)->relativeName( parent<GraphComponent>() )
+				) );
+			}
+		}
+	}
+
 	// The setExpression() method is undoable by virtue of being
 	// implemented entirely using other undoable functions - all
 	// except for emitting expressionChangedSignal(). When doing,

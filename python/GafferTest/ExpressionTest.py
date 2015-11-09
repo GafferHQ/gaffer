@@ -1211,5 +1211,19 @@ class ExpressionTest( GafferTest.TestCase ) :
 			c.setFrame( 21 )
 			self.assertEqual( s["n"]["user"]["i"].getValue(), 21 )
 
+	def testNoReadWrite( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = Gaffer.Node()
+		s["n"]["user"]["p"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		s["e"] = Gaffer.Expression()
+		self.assertRaisesRegexp(
+			RuntimeError,
+			"Cannot both read from and write to plug \"n.user.p\"",
+			s["e"].setExpression,
+			"parent['n']['user']['p'] = parent['n']['user']['p'] * 2"
+		)
+
 if __name__ == "__main__":
 	unittest.main()
