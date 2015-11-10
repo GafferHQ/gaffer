@@ -255,7 +255,7 @@ void ImageStats::channelNameFromOutput( const ValuePlug *output, std::string &ch
 		{
 			for( std::vector<std::string>::iterator it( uniqueChannels.begin() ); it != uniqueChannels.end(); ++it )
 			{
-				if ( GafferImage::ChannelMaskPlug::channelIndex( *it ) == channelIndex )
+				if ( colorIndex( *it ) == channelIndex )
 				{
 					channelName = *it;
 					return;
@@ -299,7 +299,7 @@ void ImageStats::compute( ValuePlug *output, const Context *context ) const
 		return;
 	}
 
-	int channelIndex = GafferImage::ChannelMaskPlug::channelIndex( channelName );
+	const int channelIndex = colorIndex( channelName );
 
 	// Set up the execution context.
 	ContextPtr tmpContext = new Context( *context, Context::Borrowed );

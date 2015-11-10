@@ -37,12 +37,11 @@
 #include "Gaffer/Context.h"
 
 #include "GafferImage/Grade.h"
+#include "GafferImage/ImageAlgo.h"
 
 using namespace IECore;
 using namespace Gaffer;
-
-namespace GafferImage
-{
+using namespace GafferImage;
 
 IE_CORE_DEFINERUNTIMETYPED( Grade );
 
@@ -164,7 +163,7 @@ bool Grade::channelEnabled( const std::string &channel ) const
 		return false;
 	}
 
-	int channelIndex = GafferImage::ChannelMaskPlug::channelIndex( channel );
+	const int channelIndex = std::max( 0, colorIndex( channel ) );
 
 	// Never bother to process the alpha channel.
 	if ( channelIndex == 3 ) return false;
@@ -222,8 +221,8 @@ void Grade::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer:
 
 	inPlug()->channelDataPlug()->hash( h );
 
-	std::string channelName = context->get<std::string>( ImagePlug::channelNameContextName );
-	int channelIndex = ChannelMaskPlug::channelIndex( channelName );
+	const std::string &channelName = context->get<std::string>( ImagePlug::channelNameContextName );
+	const int channelIndex = colorIndex( channelName );
 	if( channelIndex >= 0 and channelIndex < 3 )
 	{
 		/// \todo The channelIndex tests above might be guaranteed true by
@@ -248,7 +247,7 @@ void Grade::processChannelData( const Gaffer::Context *context, const ImagePlug 
 
 	// Do some pre-processing.
 	float A, B, gamma;
-	parameters( ChannelMaskPlug::channelIndex( channel ), A, B, gamma );
+	parameters( std::max( 0, colorIndex( channel ) ), A, B, gamma );
 	const float invGamma = 1. / gamma;
 	const bool whiteClamp = whiteClampPlug()->getValue();
 	const bool blackClamp = blackClampPlug()->getValue();
@@ -286,6 +285,3 @@ void Grade::parameters( size_t channelIndex, float &a, float &b, float &gamma ) 
 	a = multiply * ( gain - lift ) / ( whitePoint - blackPoint );
 	b = offset + lift - a * blackPoint;
 }
-
-} // namespace GafferImage
-
