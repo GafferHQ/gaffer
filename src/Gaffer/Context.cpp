@@ -506,16 +506,22 @@ typedef tbb::enumerable_thread_specific<ContextStack, tbb::cache_aligned_allocat
 static ThreadSpecificContextStack g_threadContexts;
 static ContextPtr g_defaultContext = new Context;
 
-Context::Scope::Scope( const Context *context )
+Context::Scope::Scope( const Context *context ) : m_context( context )
 {
-	ContextStack &stack = g_threadContexts.local();
-	stack.push( context );
+	if( context )
+	{
+		ContextStack &stack = g_threadContexts.local();
+		stack.push( context );
+	}
 }
 
 Context::Scope::~Scope()
 {
-	ContextStack &stack = g_threadContexts.local();
-	stack.pop();
+	if( m_context )
+	{
+		ContextStack &stack = g_threadContexts.local();
+		stack.pop();
+	}
 }
 
 const Context *Context::current()

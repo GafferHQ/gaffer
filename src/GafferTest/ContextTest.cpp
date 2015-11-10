@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2014-2015, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -118,4 +118,28 @@ void GafferTest::testManyEnvironmentSubstitutions()
 
 	// uncomment to get timing information
 	//std::cerr << t.stop() << std::endl;
+}
+
+// Tests that scoping a null context is a no-op
+void GafferTest::testScopingNullContext()
+{
+	ContextPtr context = new Context();
+	context->set( "foodType", std::string( "kipper" ) );
+	context->set( "cookingMethod", std::string( "smoke" ) );
+
+	const std::string phrase( "${cookingMethod} me a ${foodType}" );
+	const std::string expectedResult( "smoke me a kipper" );
+
+	{
+		Context::Scope scope( context.get() );
+		const std::string s = Context::current()->substitute( phrase );
+		GAFFERTEST_ASSERT( s == expectedResult );
+		
+		const Context *nullContext = NULL;
+		{
+			Context::Scope scope( nullContext );
+			const std::string s = Context::current()->substitute( phrase );
+			GAFFERTEST_ASSERT( s == expectedResult );
+		}
+	}
 }
