@@ -110,7 +110,6 @@ namespace GafferImageBindings
 		)
 		.def( "maskChannels", &maskChannelList )
 		.def( "removeDuplicateIndices", &removeDuplicates ).staticmethod("removeDuplicateIndices")
-		.def( "channelIndex", &ChannelMaskPlug::channelIndex ).staticmethod("channelIndex")
 	;
 }
 

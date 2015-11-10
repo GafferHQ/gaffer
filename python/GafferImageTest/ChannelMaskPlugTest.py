@@ -44,19 +44,6 @@ import GafferImageTest
 
 class ChannelMaskPlugTest( GafferImageTest.ImageTestCase ) :
 
-	def testChannelIndex( self ) :
-		# Check that the channelIndex method returns the correct index of a range of channels.
-		tests = [
-			("test.rgba.R",0),
-			("test.rgba.G",1),
-			("test.rgba.B",2),
-			("test.rgba.A",3),
-		]
-
-		for channel, expectedIdx in tests :
-			idx = GafferImage.ChannelMaskPlug.channelIndex( channel )
-			self.assertEqual( expectedIdx, idx )
-
 	def testDuplicateRemoval( self ) :
 		# Tests that the removeDuplicateIndices() call removes all duplicate channels which share an index with another.
 		# For example, XYZ.X and RGBA.R share the same channel index and so one should be removed.
