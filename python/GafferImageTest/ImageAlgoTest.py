@@ -157,5 +157,54 @@ class ImageAlgoTest( GafferImageTest.ImageTestCase ) :
 			IECore.V2i( 5, 9 )
 		)
 
+	def testLayerName( self ) :
+
+		for channelName, layerName in [
+			( "R", "" ),
+			( "A", "" ),
+			( "Z", "" ),
+			( "myFunkyChannel", "" ),
+			( "left.R", "left" ),
+			( "right.myFunkyChannel", "right" ),
+			( "diffuse.left.R", "diffuse.left" ),
+		] :
+			self.assertEqual( GafferImage.layerName( channelName ), layerName )
+
+	def testBaseName( self ) :
+
+		for channelName, baseName in [
+			( "R", "R" ),
+			( "A", "A" ),
+			( "Z", "Z" ),
+			( "myFunkyChannel", "myFunkyChannel" ),
+			( "left.R", "R" ),
+			( "right.myFunkyChannel", "myFunkyChannel" ),
+			( "diffuse.left.R", "R" ),
+		] :
+			self.assertEqual( GafferImage.baseName( channelName ), baseName )
+
+	def testColorIndex( self ) :
+
+		for channelName, index in [
+			( "R", 0 ),
+			( "G", 1 ),
+			( "B", 2 ),
+			( "A", 3 ),
+			( "Z", -1 ),
+			( "myFunkyChannel", -1 ),
+			( "left.R", 0 ),
+			( "left.G", 1 ),
+			( "left.B", 2 ),
+			( "left.A", 3 ),
+			( "left.Z", -1 ),
+			( "right.myFunkyChannel", -1 ),
+			( "diffuse.left.R", 0 ),
+			( "diffuse.left.G", 1 ),
+			( "diffuse.left.B", 2 ),
+			( "diffuse.left.A", 3 ),
+			( "diffuse.left.Z", -1 ),
+		] :
+			self.assertEqual( GafferImage.colorIndex( channelName ), index )
+
 if __name__ == "__main__":
 	unittest.main()
