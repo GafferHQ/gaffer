@@ -289,6 +289,7 @@ import WedgeUI
 import TaskContextVariablesUI
 import AnimationUI
 import TaskSwitchUI
+import PythonCommandUI
 
 # backwards compatibility
 ## \todo Remove me
