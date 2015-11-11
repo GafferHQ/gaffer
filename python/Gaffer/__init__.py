@@ -59,6 +59,7 @@ from TaskContextProcessor import TaskContextProcessor
 from Wedge import Wedge
 from TaskContextVariables import TaskContextVariables
 from TaskSwitch import TaskSwitch
+from PythonCommand import PythonCommand
 
 import NodeAlgo
 
