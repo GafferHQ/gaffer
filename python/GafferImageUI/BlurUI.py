@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2015, John Haddon. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,53 +35,35 @@
 ##########################################################################
 
 import Gaffer
+import GafferUI
 import GafferImage
+
+# Command suitable for use with `NodeMenu.append()`.
+def nodeMenuCreateCommand( menu ) :
+
+	blur = GafferImage.Blur()
+	blur["radius"].gang()
+
+	return blur
 
 Gaffer.Metadata.registerNode(
 
-	GafferImage.Resample,
+	GafferImage.Blur,
 
 	"description",
 	"""
-	Utility node used internally within GafferImage, but
-	not intended to be used directly by end users.
+	Applies a gaussian blur to the image.
 	""",
 
 	plugs = {
 
-		"dataWindow" : [
+		"radius" : [
 
 			"description",
 			"""
-			The output data window. The contents of the input
-			data window will be scaled and offset as necessary
-			to fill this.
-			""",
-
-		],
-
-		"filter" : [
-
-			"description",
-			"""
-			The filter used to perform the resampling. The name
-			of any OIIO filter may be specified. The default automatically
-			picks an appropriate high-quality filter based on whether
-			or not the image is being enlarged or reduced.
-			""",
-
-			"plugValueWidget:type", "GafferImageUI.FilterPlugValueWidget",
-
-		],
-
-		"filterWidth" : [
-
-			"description",
-			"""
-			An override for the width of the filter used. This is
-			specified as a number of pixels in the output image. The
-			default value of 0 causes a good default width to be
-			picked based on the filter type.
+			The size of the blur in pixels. This can be varied independently
+			in the x and y directions, and fractional values are supported for
+			fine control.
 			""",
 
 		],
@@ -90,7 +72,7 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			The method used when a filter references pixels outside the
+			The method used when the filter references pixels outside the
 			input data window.
 			""",
 
@@ -105,33 +87,11 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			Expands the data window by the filter radius, to include the
-			external pixels affected by the filter.
-			""",
-
-		],
-
-		"debug" : [
-
-
-			"description",
+			Expands the data window to include the external pixels
+			which the blur will bleed onto.
 			"""
-			Enables debug output. The HorizontalPass setting outputs
-			an intermediate image filtered just in the horizontal
-			direction - this is an internal optimisation used when
-			filtering with a separable filter. The SinglePass setting
-			forces all filtering to be done in a single pass (as if
-			the filter was non-separable) and can be used for validating
-			the results of the the two-pass (default) approach.
-			""",
 
-			"preset:Off", GafferImage.Resample.Debug.Off,
-			"preset:HorizontalPass", GafferImage.Resample.Debug.HorizontalPass,
-			"preset:SinglePass", GafferImage.Resample.Debug.SinglePass,
-
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-
-		],
+		]
 
 	}
 

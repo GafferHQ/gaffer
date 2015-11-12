@@ -57,6 +57,65 @@ using namespace GafferImage;
 namespace
 {
 
+// OIIO's built in gaussian filter is clipped quite aggressively, so there
+// is a significant step to zero at the edge of the filter. This makes it
+// unsuitable for use in a gaussian blur - as the filter radius expands to
+// include another pixel, it switches on suddenly rather than fades up from
+// black. This variant approaches very close to zero at the edge of its
+// support, making it more suitable for use in a blur.
+class SmoothGaussian2D : public OIIO::Filter2D
+{
+
+	public :
+
+		SmoothGaussian2D( float width, float height )
+			: Filter2D( width, height ), m_radiusInverse( 2.0f / width, 2.0f / height )
+		{
+		}
+
+		~SmoothGaussian2D()
+		{
+		}
+
+		virtual float operator()( float x, float y ) const
+		{
+			return gauss1d( x * m_radiusInverse.x ) *
+			       gauss1d( y * m_radiusInverse.y );
+		}
+
+		virtual bool separable() const
+		{
+			return true;
+		}
+
+		virtual float xfilt( float x ) const
+		{
+			return gauss1d( x * m_radiusInverse.x );
+		}
+
+		virtual float yfilt( float y ) const
+		{
+			return gauss1d( y * m_radiusInverse.y );
+		}
+
+		OIIO::string_view name() const
+		{
+			return "smoothGaussian";
+		}
+
+	private :
+
+		static float gauss1d( float x )
+		{
+			x = fabsf( x );
+			return ( x < 1.0f ) ? OIIO::fast_exp( -5.0f * ( x * x ) ) : 0.0f;
+		}
+
+		V2f m_radiusInverse;
+
+};
+
+
 // Used as a bitmask to say which filter pass(es) we're computing.
 enum Passes
 {
@@ -178,6 +237,13 @@ Filter2DPtr createFilter( const std::string &name, const V2f &filterWidth, const
 		}
 	}
 
+	if( name == "smoothGaussian" )
+	{
+		/// \todo Perhaps we could add a registration mechanism to OIIO so we could register
+		/// our filter and look it up using the mechanism above?
+		return Filter2DPtr( new SmoothGaussian2D( filterWidth.x > 0 ? filterWidth.x : 3, filterWidth.y > 0 ? filterWidth.y : 3 ) );
+	}
+
 	throw Exception( boost::str( boost::format( "Unknown filter \"%s\"" ) % filterName ) );
 }
 
@@ -229,6 +295,7 @@ Resample::Resample( const std::string &name )
 	addChild( new StringPlug( "filter" ) );
 	addChild( new V2fPlug( "filterWidth", Plug::In, V2f( 0 ), V2f( 0 ) ) );
 	addChild( new IntPlug( "boundingMode", Plug::In, Sampler::Black, Sampler::Black, Sampler::Clamp ) );
+	addChild( new BoolPlug( "expandDataWindow" ) );
 	addChild( new IntPlug( "debug", Plug::In, Off, Off, SinglePass ) );
 	addChild( new ImagePlug( "__horizontalPass", Plug::Out ) );
 
@@ -288,43 +355,60 @@ const Gaffer::IntPlug *Resample::boundingModePlug() const
 	return getChild<IntPlug>( g_firstPlugIndex + 3 );
 }
 
+Gaffer::BoolPlug *Resample::expandDataWindowPlug()
+{
+	return getChild<BoolPlug>( g_firstPlugIndex + 4 );
+}
+
+const Gaffer::BoolPlug *Resample::expandDataWindowPlug() const
+{
+	return getChild<BoolPlug>( g_firstPlugIndex + 4 );
+}
+
 Gaffer::IntPlug *Resample::debugPlug()
 {
-	return getChild<IntPlug>( g_firstPlugIndex + 4 );
+	return getChild<IntPlug>( g_firstPlugIndex + 5 );
 }
 
 const Gaffer::IntPlug *Resample::debugPlug() const
 {
-	return getChild<IntPlug>( g_firstPlugIndex + 4 );
+	return getChild<IntPlug>( g_firstPlugIndex + 5 );
 }
 
 ImagePlug *Resample::horizontalPassPlug()
 {
-	return getChild<ImagePlug>( g_firstPlugIndex + 5 );
+	return getChild<ImagePlug>( g_firstPlugIndex + 6 );
 }
 
 const ImagePlug *Resample::horizontalPassPlug() const
 {
-	return getChild<ImagePlug>( g_firstPlugIndex + 5 );
+	return getChild<ImagePlug>( g_firstPlugIndex + 6 );
 }
 
 void Resample::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	ImageProcessor::affects( input, outputs );
 
-	if( input == dataWindowPlug() )
+	if(
+		input == inPlug()->dataWindowPlug() ||
+		input == dataWindowPlug() ||
+		input == expandDataWindowPlug() ||
+		input == filterPlug() ||
+		input->parent<V2fPlug>() == filterWidthPlug() ||
+		input == debugPlug()
+	)
 	{
 		outputs.push_back( outPlug()->dataWindowPlug() );
-		outputs.push_back( outPlug()->channelDataPlug() );
 		outputs.push_back( horizontalPassPlug()->dataWindowPlug() );
-		outputs.push_back( horizontalPassPlug()->channelDataPlug() );
 	}
-	else if(
-		input == inPlug()->channelDataPlug() ||
+
+	if(
 		input == inPlug()->dataWindowPlug() ||
+		input == dataWindowPlug() ||
 		input == filterPlug() ||
-		input == boundingModePlug() ||
 		input->parent<V2fPlug>() == filterWidthPlug() ||
+		input == inPlug()->channelDataPlug() ||
+		input == boundingModePlug() ||
 		input == debugPlug()
 	)
 	{
@@ -337,22 +421,37 @@ void Resample::hashDataWindow( const GafferImage::ImagePlug *parent, const Gaffe
 {
 	ImageProcessor::hashDataWindow( parent, context, h );
 
+	inPlug()->dataWindowPlug()->hash( h );
 	dataWindowPlug()->hash( h );
-
-	if( parent == horizontalPassPlug() || debugPlug()->getValue() == HorizontalPass )
-	{
-		inPlug()->dataWindowPlug()->hash( h );
-	}
+	expandDataWindowPlug()->hash( h );
+	filterPlug()->hash( h );
+	filterWidthPlug()->hash( h );
+	debugPlug()->hash( h );
 }
 
 Imath::Box2i Resample::computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
-	Box2i dataWindow = box2fToBox2i( dataWindowPlug()->getValue() );
-	if( parent  == horizontalPassPlug() || debugPlug()->getValue() == HorizontalPass)
+	const Box2i srcDataWindow = inPlug()->dataWindowPlug()->getValue();
+	const Box2f dstDataWindow = dataWindowPlug()->getValue();
+
+	Box2f expandedDataWindow = dstDataWindow;
+	if( expandDataWindowPlug()->getValue() )
 	{
-		Box2i inDataWindow = inPlug()->dataWindowPlug()->getValue();
-		dataWindow.min.y = inDataWindow.min.y;
-		dataWindow.max.y = inDataWindow.max.y;
+		V2f ratio, offset;
+		ratioAndOffset( dstDataWindow, srcDataWindow, ratio, offset );
+
+		const Filter2DPtr filter = createFilter( filterPlug()->getValue(), filterWidthPlug()->getValue(), ratio );
+		const V2f filterRadius = V2f( filter->width(), filter->height() ) / 2.0f;
+
+		expandedDataWindow.min -= filterRadius;
+		expandedDataWindow.max += filterRadius;
+	}
+
+	Box2i dataWindow = box2fToBox2i( expandedDataWindow );
+	if( parent  == horizontalPassPlug() || debugPlug()->getValue() == HorizontalPass )
+	{
+		dataWindow.min.y = srcDataWindow.min.y;
+		dataWindow.max.y = srcDataWindow.max.y;
 	}
 
 	return dataWindow;

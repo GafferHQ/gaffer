@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2015, John Haddon. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,56 +34,29 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_RESAMPLE_H
-#define GAFFERIMAGE_RESAMPLE_H
+#ifndef GAFFERIMAGE_BLUR_H
+#define GAFFERIMAGE_BLUR_H
 
-#include "Gaffer/NumericPlug.h"
 #include "Gaffer/CompoundNumericPlug.h"
 
 #include "GafferImage/ImageProcessor.h"
 
-namespace Gaffer
-{
-
-IE_CORE_FORWARDDECLARE( StringPlug )
-
-} // namespace Gaffer
-
 namespace GafferImage
 {
 
-/// Utility node designed for internal use in other node implementations.
-/// It resamples all the data from the input data window into a new
-/// data window in the output image, using a chosen filter. Uses OIIO::Filter2D
-/// to provide the filter implementation, and is based heavily on OIIO's
-/// ImageBufAlgo resize() function.
-class Resample : public ImageProcessor
+IE_CORE_FORWARDDECLARE( Resample )
+
+class Blur : public ImageProcessor
 {
 	public :
 
-		Resample( const std::string &name=defaultName<Resample>() );
-		virtual ~Resample();
+		Blur( const std::string &name=defaultName<Blur>() );
+		virtual ~Blur();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::Resample, ResampleTypeId, ImageProcessor );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::Blur, BlurTypeId, ImageProcessor );
 
-		enum Debug
-		{
-			Off,
-			HorizontalPass,
-			SinglePass
-		};
-
-		/// Atomic plug, since values for this will most
-		/// commonly be computed by a wrapping class, rather
-		/// than set directly by a user.
-		Gaffer::AtomicBox2fPlug *dataWindowPlug();
-		const Gaffer::AtomicBox2fPlug *dataWindowPlug() const;
-
-		Gaffer::StringPlug *filterPlug();
-		const Gaffer::StringPlug *filterPlug() const;
-
-		Gaffer::V2fPlug *filterWidthPlug();
-		const Gaffer::V2fPlug *filterWidthPlug() const;
+		Gaffer::V2fPlug *radiusPlug();
+		const Gaffer::V2fPlug *radiusPlug() const;
 
 		Gaffer::IntPlug *boundingModePlug();
 		const Gaffer::IntPlug *boundingModePlug() const;
@@ -91,30 +64,45 @@ class Resample : public ImageProcessor
 		Gaffer::BoolPlug *expandDataWindowPlug();
 		const Gaffer::BoolPlug *expandDataWindowPlug() const;
 
-		Gaffer::IntPlug *debugPlug();
-		const Gaffer::IntPlug *debugPlug() const;
-
 		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
 
 	protected :
 
+		// Output plug to compute the data window for the internal Resample.
+		Gaffer::AtomicBox2fPlug *dataWindowPlug();
+		const Gaffer::AtomicBox2fPlug *dataWindowPlug() const;
+
+		// Output plug to compute the filter width for the internal Resample.
+		Gaffer::V2fPlug *filterWidthPlug();
+		const Gaffer::V2fPlug *filterWidthPlug() const;
+
+		// Input plug to receive the expanded data window from the internal Resample.
+		Gaffer::AtomicBox2iPlug *resampledDataWindowPlug();
+		const Gaffer::AtomicBox2iPlug *resampledDataWindowPlug() const;
+
+		// Input plug to receive the blurred channel data from the internal Resample.
+		Gaffer::FloatVectorDataPlug *resampledChannelDataPlug();
+		const Gaffer::FloatVectorDataPlug *resampledChannelDataPlug() const;
+
+		// Internal resample node.
+		Resample *resample();
+		const Resample *resample() const;
+
+		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const;
+
 		virtual void hashDataWindow( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual void hashChannelData( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-
 		virtual Imath::Box2i computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const;
+
+		virtual void hashChannelData( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual IECore::ConstFloatVectorDataPtr computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const;
-
-	private :
-
-		ImagePlug *horizontalPassPlug();
-		const ImagePlug *horizontalPassPlug() const;
 
 		static size_t g_firstPlugIndex;
 
 };
 
-IE_CORE_DECLAREPTR( Resample )
+IE_CORE_DECLAREPTR( Blur )
 
 } // namespace GafferImage
 
-#endif // GAFFERIMAGE_RESAMPLE_H
+#endif // GAFFERIMAGE_BLUR_H
