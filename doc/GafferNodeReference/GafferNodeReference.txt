@@ -1,6 +1,6 @@
 = Gaffer Node Reference
 image engine
-v0.89.0, 2014
+v0.18.00, 2015
 :doctype: book
 
 include::nodeDescription_dynamicContent.txt[]
