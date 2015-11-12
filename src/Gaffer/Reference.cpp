@@ -190,7 +190,7 @@ void Reference::loadInternal( const std::string &fileName )
 	}
 	const bool versionPriorTo09 = milestoneVersion == 0 && majorVersion < 9;
 
-	// transfer connections and values from the old plugs onto the corresponding new ones.
+	// Transfer connections, values and metadata from the old plugs onto the corresponding new ones.
 
 	for( std::map<std::string, Plug *>::const_iterator it = previousPlugs.begin(), eIt = previousPlugs.end(); it != eIt; ++it )
 	{
@@ -228,6 +228,7 @@ void Reference::loadInternal( const std::string &fileName )
 						outputPlug->setInput( newPlug );
 					}
 				}
+				transferPersistentMetadata( oldPlug, newPlug );
 			}
 			catch( const std::exception &e )
 			{
@@ -316,3 +317,21 @@ void Reference::convertPersistentMetadata( Plug *plug ) const
 	}
 }
 
+void Reference::transferPersistentMetadata( const Plug *srcPlug, Plug *dstPlug ) const
+{
+	vector<InternedString> keys;
+	Metadata::registeredPlugValues( srcPlug, keys, /* inherit = */ false, /* instanceOnly = */ true, /* persistentOnly = */ true );
+	for( vector<InternedString>::const_iterator it = keys.begin(), eIt = keys.end(); it != eIt; ++it )
+	{
+		ConstDataPtr value = Metadata::plugValue<Data>( srcPlug, *it );
+		Metadata::registerPlugValue( dstPlug, *it, value );
+	}
+
+	for( PlugIterator it( srcPlug ); it != it.end(); ++it )
+	{
+		if( Plug *dstChildPlug = dstPlug->getChild<Plug>( (*it)->getName() ) )
+		{
+			transferPersistentMetadata( it->get(), dstChildPlug );
+		}
+	}
+}

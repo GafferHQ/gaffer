@@ -71,6 +71,7 @@ class Reference : public SubGraph
 		bool isReferencePlug( const Plug *plug ) const;
 
 		void convertPersistentMetadata( Plug *plug ) const;
+		void transferPersistentMetadata( const Plug *srcPlug, Plug *dstPlug ) const;
 
 		std::string m_fileName;
 		ReferenceLoadedSignal m_referenceLoadedSignal;
