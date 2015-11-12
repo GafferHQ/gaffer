@@ -259,6 +259,10 @@ class ReferenceTest( GafferTest.TestCase ) :
 
 		self.assertEqual( Gaffer.Metadata.plugValue( s2["r"].descendant( p.relativeName( b ) ), "description" ), "ppp" )
 
+		s3 = Gaffer.ScriptNode()
+		s3.execute( s2.serialise() )
+		self.assertEqual( Gaffer.Metadata.plugValue( s3["r"].descendant( p.relativeName( b ) ), "description" ), "ppp" )
+
 	def testMetadataIsntResaved( self ) :
 
 		s = Gaffer.ScriptNode()

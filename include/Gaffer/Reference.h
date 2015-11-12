@@ -60,7 +60,7 @@ class Reference : public SubGraph
 		void load( const std::string &fileName );
 		/// Returns the name of the script currently being referenced.
 		const std::string &fileName() const;
-		
+
 		typedef boost::signal<void ( Reference * )> ReferenceLoadedSignal;
 		/// Emitted when a reference is loaded (or unloaded following an undo).
 		ReferenceLoadedSignal &referenceLoadedSignal();
@@ -69,6 +69,8 @@ class Reference : public SubGraph
 
 		void loadInternal( const std::string &fileName );
 		bool isReferencePlug( const Plug *plug ) const;
+
+		void convertPersistentMetadata( Plug *plug ) const;
 
 		std::string m_fileName;
 		ReferenceLoadedSignal m_referenceLoadedSignal;

@@ -47,6 +47,7 @@
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/StandardSet.h"
 
+using namespace std;
 using namespace IECore;
 using namespace Gaffer;
 
@@ -155,6 +156,25 @@ void Reference::loadInternal( const std::string &fileName )
 		errors = script->executeFile( fileName, this, /* continueOnError = */ true );
 	}
 
+	// Make the loaded plugs non-dynamic, because we don't want them
+	// to be serialised in the script the reference is in - the whole
+	// point is that they are referenced. For the same reason, make
+	// their instance metadata non-persistent.
+
+	for( size_t i = 0, e = newChildren->size(); i < e; ++i )
+	{
+		if( Plug *plug = runTimeCast<Plug>( newChildren->member( i ) ) )
+		{
+			plug->setFlags( Plug::Dynamic, false );
+			convertPersistentMetadata( plug );
+			for( RecursivePlugIterator it( plug ); it != it.end(); ++it )
+			{
+				(*it)->setFlags( Plug::Dynamic, false );
+				convertPersistentMetadata( it->get() );
+			}
+		}
+	}
+
 	// figure out what version of gaffer was used to save the reference. prior to
 	// version 0.9.0.0, references could contain setValue() calls for promoted plugs,
 	// and we must make sure they don't clobber the user-set values on the reference node.
@@ -224,22 +244,6 @@ void Reference::loadInternal( const std::string &fileName )
 		oldPlug->parent<GraphComponent>()->removeChild( oldPlug );
 	}
 
-	// make the loaded plugs non-dynamic, because we don't want them
-	// to be serialised in the script the reference is in - the whole
-	// point is that they are referenced.
-
-	for( size_t i = 0, e = newChildren->size(); i < e; ++i )
-	{
-		if( Plug *plug = runTimeCast<Plug>( newChildren->member( i ) ) )
-		{
-			plug->setFlags( Plug::Dynamic, false );
-			for( RecursivePlugIterator it( plug ); it != it.end(); ++it )
-			{
-				(*it)->setFlags( Plug::Dynamic, false );
-			}
-		}
-	}
-
 	// Finish up.
 
 	m_fileName = fileName;
@@ -300,3 +304,15 @@ bool Reference::isReferencePlug( const Plug *plug ) const
 	// everything else must be from a reference then.
 	return true;
 }
+
+void Reference::convertPersistentMetadata( Plug *plug ) const
+{
+	vector<InternedString> keys;
+	Metadata::registeredPlugValues( plug, keys, /* inherit = */ false, /* instanceOnly = */ true, /* persistentOnly = */ true );
+	for( vector<InternedString>::const_iterator it = keys.begin(), eIt = keys.end(); it != eIt; ++it )
+	{
+		ConstDataPtr value = Metadata::plugValue<Data>( plug, *it );
+		Metadata::registerPlugValue( plug, *it, value, /* persistent = */ false );
+	}
+}
+
