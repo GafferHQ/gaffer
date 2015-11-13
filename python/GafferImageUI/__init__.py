@@ -75,5 +75,6 @@ import CDLUI
 import DisplayTransformUI
 import OffsetUI
 import BlurUI
+import TextUI
 
 __import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferImageUI" )
