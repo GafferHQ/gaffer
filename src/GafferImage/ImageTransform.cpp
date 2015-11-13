@@ -348,7 +348,7 @@ unsigned ImageTransform::operation( Imath::M33f &matrix, Imath::M33f &resampleMa
 	M33f pivotInverseMatrix; pivotInverseMatrix.setTranslation( -pivot );
 	M33f translateMatrix; translateMatrix.setTranslation( translate );
 	M33f scaleMatrix; scaleMatrix.setScale( scale );
-	M33f rotateMatrix; rotateMatrix.setRotation( -degreesToRadians( rotate ) );
+	M33f rotateMatrix; rotateMatrix.setRotation( degreesToRadians( rotate ) );
 
 	matrix = pivotInverseMatrix * scaleMatrix * rotateMatrix * pivotMatrix * translateMatrix;
 	resampleMatrix = pivotInverseMatrix * scaleMatrix * pivotMatrix * translateMatrix;

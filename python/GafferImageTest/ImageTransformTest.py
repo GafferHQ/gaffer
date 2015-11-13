@@ -80,7 +80,7 @@ class ImageTransformTest( GafferImageTest.ImageTestCase ) :
 
 		t = GafferImage.ImageTransform()
 		t["in"].setInput( r["out"] )
-		t["transform"]["rotate"].setValue( 1. )
+		t["transform"]["rotate"].setValue( -1. )
 		t["transform"]["scale"].setValue( IECore.V2f( 1.5, 1. ) )
 		imageToTest = t["out"].image()
 		imageToTest.blindData().clear()
