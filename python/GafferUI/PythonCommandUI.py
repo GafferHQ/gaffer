@@ -1,7 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2014, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2015, John Haddon. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,32 +34,60 @@
 #
 ##########################################################################
 
-__import__( "IECore" )
+import Gaffer
+import GafferUI
 
-from _Gaffer import *
-from About import About
-from Application import Application
-from WeakMethod import WeakMethod
-from BlockedConnection import BlockedConnection
-from FileNamePathFilter import FileNamePathFilter
-from UndoContext import UndoContext
-from Context import Context
-from InfoPathFilter import InfoPathFilter
-from LazyModule import lazyImport, LazyModule
-from DictPath import DictPath
-from PythonExpressionEngine import PythonExpressionEngine
-from SequencePath import SequencePath
-from GraphComponentPath import GraphComponentPath
-from OutputRedirection import OutputRedirection
-from LocalDispatcher import LocalDispatcher
-from SystemCommand import SystemCommand
-from TaskList import TaskList
-from TaskContextProcessor import TaskContextProcessor
-from Wedge import Wedge
-from TaskContextVariables import TaskContextVariables
-from TaskSwitch import TaskSwitch
-from PythonCommand import PythonCommand
+Gaffer.Metadata.registerNode(
 
-import NodeAlgo
+	Gaffer.PythonCommand,
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "Gaffer" )
+	"description",
+	"""
+	Runs python code.
+	""",
+
+	plugs = {
+
+		"command" : (
+
+			"description",
+			"""
+			The command to run. This may reference any of the
+			variables by name, and also the node itself as `self`
+			and the current context as `context`.
+			""",
+
+			"nodule:type", "",
+			"plugValueWidget:type", "GafferUI.PythonCommandUI._CommandPlugValueWidget",
+
+		),
+
+		"variables" : (
+
+			"description",
+			"""
+			An arbitrary set of variables which can be referenced
+			by name from within the python command.
+			""",
+
+			"nodule:type", "",
+			"layout:section", "Settings.Variables",
+
+		),
+
+	}
+
+)
+
+class _CommandPlugValueWidget( GafferUI.MultiLineStringPlugValueWidget ) :
+
+	def __init__( self, plug, **kw ) :
+
+		GafferUI.MultiLineStringPlugValueWidget.__init__( self, plug, **kw )
+
+	def hasLabel( self ) :
+
+		## \todo Maybe there should be some metadata we could use
+		# to disable the label, rather than having to tell this little
+		# porky pie?
+		return True

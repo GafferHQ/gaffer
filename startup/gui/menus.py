@@ -335,6 +335,7 @@ if moduleSearchPath.find( "GafferOSL" ) :
 # Dispatch nodes
 
 nodeMenu.append( "/Dispatch/System Command", Gaffer.SystemCommand, searchText = "SystemCommand" )
+nodeMenu.append( "/Dispatch/Python Command", Gaffer.PythonCommand, searchText = "PythonCommand" )
 nodeMenu.append( "/Dispatch/Task List", Gaffer.TaskList, searchText = "TaskList" )
 nodeMenu.append( "/Dispatch/Task Switch", Gaffer.TaskSwitch, searchText = "TaskSwitch" )
 nodeMenu.append( "/Dispatch/Wedge", Gaffer.Wedge )
