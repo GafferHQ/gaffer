@@ -85,6 +85,7 @@
 #include "GafferImageBindings/ImageAlgoBinding.h"
 #include "GafferImageBindings/OffsetBinding.h"
 #include "GafferImageBindings/BlurBinding.h"
+#include "GafferImageBindings/ShapeBinding.h"
 
 using namespace boost::python;
 using namespace GafferImage;
@@ -141,6 +142,7 @@ BOOST_PYTHON_MODULE( _GafferImage )
 	GafferImageBindings::bindImageAlgo();
 	GafferImageBindings::bindOffset();
 	GafferImageBindings::bindBlur();
+	GafferImageBindings::bindShape();
 
 }
 
