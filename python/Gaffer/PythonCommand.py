@@ -40,6 +40,9 @@ import IECore
 
 import Gaffer
 
+## \todo Add a BoolPlug to allow sequence execution to
+# be requested, and then expose a `frames` python variable
+# when executing the python command from `executeSequence()`.
 class PythonCommand( Gaffer.ExecutableNode ) :
 
 	def __init__( self, name = "PythonCommand" ) :
