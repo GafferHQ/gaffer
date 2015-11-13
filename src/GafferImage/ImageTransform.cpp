@@ -241,11 +241,7 @@ void ImageTransform::hashDataWindow( const GafferImage::ImagePlug *parent, const
 {
 	M33f matrix, resampleMatrix;
 	const unsigned op = operation( matrix, resampleMatrix );
-	if( op == Identity )
-	{
-		h = inPlug()->dataWindowPlug()->hash();
-	}
-	else if( !(op & Rotate) )
+	if( !(op & Rotate) )
 	{
 		h = resampledInPlug()->dataWindowPlug()->hash();
 	}
@@ -261,11 +257,7 @@ Imath::Box2i ImageTransform::computeDataWindow( const Gaffer::Context *context, 
 {
 	M33f matrix, resampleMatrix;
 	const unsigned op = operation( matrix, resampleMatrix );
-	if( op == Identity )
-	{
-		return inPlug()->dataWindowPlug()->getValue();
-	}
-	else if( !(op & Rotate) )
+	if( !(op & Rotate) )
 	{
 		return resampledInPlug()->dataWindowPlug()->getValue();
 	}
@@ -280,11 +272,7 @@ void ImageTransform::hashChannelData( const GafferImage::ImagePlug *parent, cons
 {
 	M33f matrix, resampleMatrix;
 	const unsigned op = operation( matrix, resampleMatrix );
-	if( op == Identity )
-	{
-		h = inPlug()->channelDataPlug()->hash();
-	}
-	else if( !(op & Rotate) )
+	if( !(op & Rotate) )
 	{
 		h = resampledInPlug()->channelDataPlug()->hash();
 	}
@@ -311,11 +299,7 @@ IECore::ConstFloatVectorDataPtr ImageTransform::computeChannelData( const std::s
 {
 	M33f matrix, resampleMatrix;
 	const unsigned op = operation( matrix, resampleMatrix );
-	if( op == Identity )
-	{
-		return inPlug()->channelDataPlug()->getValue();
-	}
-	else if( !(op & Rotate) )
+	if( !(op & Rotate) )
 	{
 		return resampledInPlug()->channelDataPlug()->getValue();
 	}

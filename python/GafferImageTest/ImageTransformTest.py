@@ -50,15 +50,22 @@ class ImageTransformTest( GafferImageTest.ImageTestCase ) :
 	fileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/checker.exr" )
 	path = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/" )
 
-	def testHashPassThrough( self ) :
+	def testNoPassThrough( self ) :
+
+		# We don't want a perfect unfiltered pass-through when the
+		# transform is the identity. This is because it can cause
+		# conspicuous jumps when an animated transform happens to
+		# pass through the identity matrix on a particular frame.
 
 		r = GafferImage.ImageReader()
 		r["fileName"].setValue( self.fileName )
 
 		t = GafferImage.ImageTransform()
 		t["in"].setInput( r["out"] )
+		t["filter"].setValue( "blackman-harris" )
 
-		self.assertEqual( t["out"].imageHash(), t["in"].imageHash() )
+		self.assertNotEqual( t["out"].imageHash(), t["in"].imageHash() )
+		self.assertNotEqual( t["out"].image(), t["in"].image() )
 
 	def testTilesWithSameInputTiles( self ) :
 
@@ -177,9 +184,11 @@ class ImageTransformTest( GafferImageTest.ImageTestCase ) :
 		t["transform"]["translate"].setValue( IECore.V2f( 1, 0 ) )
 
 		self.assertEqual( t["out"]["metadata"].hash(), c["out"]["metadata"].hash() )
+		self.assertEqual( t["out"]["format"].hash(), c["out"]["format"].hash() )
 		self.assertEqual( t["out"]["channelNames"].hash(), c["out"]["channelNames"].hash() )
 
 		self.assertEqual( t["out"]["metadata"].getValue(), c["out"]["metadata"].getValue() )
+		self.assertEqual( t["out"]["format"].getValue(), c["out"]["format"].getValue() )
 		self.assertEqual( t["out"]["channelNames"].getValue(), c["out"]["channelNames"].getValue() )
 
 	def testCopyPaste( self ) :
