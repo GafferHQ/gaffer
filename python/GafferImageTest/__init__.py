@@ -78,6 +78,7 @@ from DisplayTransformTest import DisplayTransformTest
 from FormatPlugTest import FormatPlugTest
 from OffsetTest import OffsetTest
 from BlurTest import BlurTest
+from TextTest import TextTest
 
 if __name__ == "__main__":
 	import unittest
