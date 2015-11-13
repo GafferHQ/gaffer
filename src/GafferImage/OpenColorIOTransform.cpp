@@ -134,3 +134,16 @@ void OpenColorIOTransform::processColorData( const Gaffer::Context *context, IEC
 
 	processor->apply( image );
 }
+
+void OpenColorIOTransform::availableColorSpaces( std::vector<std::string> &colorSpaces )
+{
+	OpenColorIO::ConstConfigRcPtr config = OpenColorIO::GetCurrentConfig();
+
+	colorSpaces.clear();
+	colorSpaces.reserve( config->getNumColorSpaces() );
+
+	for( int i = 0; i < config->getNumColorSpaces(); ++i )
+	{
+		colorSpaces.push_back( config->getColorSpaceNameByIndex( i ) );
+	}
+}
