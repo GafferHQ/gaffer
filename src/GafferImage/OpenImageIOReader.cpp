@@ -509,9 +509,9 @@ void OpenImageIOReader::hashFileName( const Gaffer::Context *context, IECore::Mu
 	// but we internally vary the result output by
 	// frame, we need to explicitly hash the frame
 	// when the value contains FrameSubstitutions.
-	const std::string &fileName = fileNamePlug()->getValue();
+	const std::string fileName = fileNamePlug()->getValue();
 	h.append( fileName );
-	if( Context::substitutions( fileNamePlug()->getValue() ) & Context::FrameSubstitutions )
+	if( Context::substitutions( fileName ) & Context::FrameSubstitutions )
 	{
 		h.append( context->getFrame() );
 	}
