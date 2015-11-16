@@ -63,7 +63,13 @@ ImageReader::ImageReader( const std::string &name )
 	:	ImageNode( name )
 {
 	storeIndexOfNextChild( g_firstChildIndex );
-	addChild( new StringPlug( "fileName" ) );
+	addChild(
+		new StringPlug(
+			"fileName", Plug::In, "",
+			/* flags */ Plug::Default,
+			/* substitutions */ Context::AllSubstitutions & ~Context::FrameSubstitutions
+		)
+	);
 	addChild( new IntPlug( "refreshCount" ) );
 	addChild( new IntPlug( "missingFrameMode", Plug::In, Error, /* min */ Error, /* max */ Hold ) );
 	
