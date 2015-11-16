@@ -39,8 +39,6 @@
 
 #include "Gaffer/Plug.h"
 #include "Gaffer/Node.h"
-#include "Gaffer/Reference.h"
-#include "Gaffer/CompoundPlug.h"
 
 #include "GafferBindings/PlugBinding.h"
 #include "GafferBindings/MetadataBinding.h"
@@ -117,22 +115,7 @@ std::string PlugSerialiser::postHierarchy( const Gaffer::GraphComponent *graphCo
 			result += identifier + ".setFlags( Gaffer.Plug.Flags.ReadOnly, True )\n";
 		}
 
-		bool serialiseMetadata = true;
-		const Node *node = plug->node();
-		if( IECore::runTimeCast<const Reference>( node ) )
-		{
-			/// \todo Perhaps we need some sort of plug flag the Reference node can
-			/// set to influence the metadata serialisation, so that the PlugBinding
-			/// doesn't need to know about References at all?
-			if( plug != node->userPlug() && !node->userPlug()->isAncestorOf( plug ) )
-			{
-				serialiseMetadata = false;
-			}
-		}
-		if( serialiseMetadata )
-		{
-			result += metadataSerialisation( plug, identifier );
-		}
+		result += metadataSerialisation( plug, identifier );
 
 		return result;
 	}

@@ -259,6 +259,10 @@ class ReferenceTest( GafferTest.TestCase ) :
 
 		self.assertEqual( Gaffer.Metadata.plugValue( s2["r"].descendant( p.relativeName( b ) ), "description" ), "ppp" )
 
+		s3 = Gaffer.ScriptNode()
+		s3.execute( s2.serialise() )
+		self.assertEqual( Gaffer.Metadata.plugValue( s3["r"].descendant( p.relativeName( b ) ), "description" ), "ppp" )
+
 	def testMetadataIsntResaved( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -291,6 +295,80 @@ class ReferenceTest( GafferTest.TestCase ) :
 		s["r"].load( "/tmp/test.grf" )
 
 		self.assertEqual( Gaffer.Metadata.plugValue( s["r"]["p"], "description" ), "ddd" )
+
+	def testEditPlugMetadata( self ) :
+
+		# Export a box with some metadata
+
+		s = Gaffer.ScriptNode()
+		s["n1"] = GafferTest.AddNode()
+
+		b = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["n1"] ] ) )
+		p = b.promotePlug( b["n1"]["op1"] )
+		p.setName( "p" )
+
+		Gaffer.Metadata.registerPlugValue( p, "test", "referenced" )
+
+		b.exportForReference( "/tmp/test.grf" )
+
+		# Reference it, and check it loaded.
+
+		s2 = Gaffer.ScriptNode()
+		s2["r"] = Gaffer.Reference()
+		s2["r"].load( "/tmp/test.grf" )
+
+		self.assertEqual( Gaffer.Metadata.plugValue( s2["r"]["p"], "test" ), "referenced" )
+
+		# Edit it, and check it overwrote the original.
+
+		Gaffer.Metadata.registerPlugValue( s2["r"]["p"], "test", "edited" )
+		self.assertEqual( Gaffer.Metadata.plugValue( s2["r"]["p"], "test" ), "edited" )
+
+		# Save and load the script, and check the edit stays in place.
+
+		s3 = Gaffer.ScriptNode()
+		s3.execute( s2.serialise() )
+		self.assertEqual( Gaffer.Metadata.plugValue( s3["r"]["p"], "test" ), "edited" )
+
+		# Reload the reference, and check the edit stays in place.
+
+		s3["r"].load( "/tmp/test.grf" )
+		self.assertEqual( Gaffer.Metadata.plugValue( s3["r"]["p"], "test" ), "edited" )
+
+	def testAddPlugMetadata( self ) :
+
+		# Export a box with no metadata
+
+		s = Gaffer.ScriptNode()
+		s["n1"] = GafferTest.AddNode()
+
+		b = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["n1"] ] ) )
+		p = b.promotePlug( b["n1"]["op1"] )
+		p.setName( "p" )
+
+		b.exportForReference( "/tmp/test.grf" )
+
+		# Reference it, and check it loaded.
+
+		s2 = Gaffer.ScriptNode()
+		s2["r"] = Gaffer.Reference()
+		s2["r"].load( "/tmp/test.grf" )
+
+		# Add some metadata to the Reference node (not the reference file)
+
+		Gaffer.Metadata.registerPlugValue( s2["r"]["p"], "test", "added" )
+		self.assertEqual( Gaffer.Metadata.plugValue( s2["r"]["p"], "test" ), "added" )
+
+		# Save and load the script, and check the added metadata stays in place.
+
+		s3 = Gaffer.ScriptNode()
+		s3.execute( s2.serialise() )
+		self.assertEqual( Gaffer.Metadata.plugValue( s3["r"]["p"], "test" ), "added" )
+
+		# Reload the reference, and check the edit stays in place.
+
+		s3["r"].load( "/tmp/test.grf" )
+		self.assertEqual( Gaffer.Metadata.plugValue( s3["r"]["p"], "test" ), "added" )
 
 	def testReloadWithUnconnectedPlugs( self ) :
 
