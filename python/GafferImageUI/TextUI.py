@@ -87,8 +87,9 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			The font to render the text with. This should be a path
-			to a suitable .ttf format font file.
+			The font to render the text with. This should be a .ttf font file which
+			is located on the paths specified by the IECORE_FONT_PATHS
+			environment variable.
 			""",
 
 			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",

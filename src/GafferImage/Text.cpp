@@ -39,6 +39,9 @@
 
 #include "tbb/enumerable_thread_specific.h"
 
+#include "IECore/LRUCache.h"
+#include "IECore/SearchPath.h"
+
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/Transform2DPlug.h"
 
@@ -57,6 +60,29 @@ using namespace GafferImage;
 
 namespace
 {
+
+string fontFile( const std::string &font, size_t &cost )
+{
+	const char *e = getenv( "IECORE_FONT_PATHS" );
+	IECore::SearchPath sp( e ? e : "", ":" );
+
+	std::string file = sp.find( font ).string();
+	if( !file.size() )
+	{
+		throw Exception( boost::str( boost::format( "Unable to find font \"%s\"." ) % font ) );
+	}
+	
+	cost = 1;
+	return file;
+}
+
+typedef LRUCache<string, string> FontFileCache;
+
+FontFileCache &fontFileCache()
+{
+	static FontFileCache c( fontFile, 200 );
+	return c;
+};
 
 // FreeType recommends that for thread safety it is easiest to use
 // a distinct FT_Library instance per thread. This function returns
@@ -81,8 +107,10 @@ FT_Library library()
 typedef boost::shared_ptr<FT_FaceRec_> FacePtr;
 FacePtr face( const string &font, const V2i &size )
 {
+	string file = fontFileCache().get( font );
+
 	FT_Face face = NULL;
-	FT_Error e = FT_New_Face( library(), font.c_str(), 0, &face );
+	FT_Error e = FT_New_Face( library(), file.c_str(), 0, &face );
 	// We use a smart pointer to make sure we call FT_Done_Face no matter what.
 	FacePtr result( face, FT_Done_Face );
 
@@ -169,7 +197,7 @@ Text::Text( const std::string &name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new StringPlug( "text", Plug::In, "Hello World" ) );
-	addChild( new StringPlug( "font", Plug::In, "${GAFFER_ROOT}/fonts/Vera.ttf" ) );
+	addChild( new StringPlug( "font", Plug::In, "Vera.ttf" ) );
 	addChild( new V2iPlug( "size", Plug::In, V2i( 50 ), V2i( 0 ) ) );
 	addChild( new Box2iPlug( "area" ) );
 	addChild( new IntPlug( "justification", Plug::In, Left, Left, Center ) );
