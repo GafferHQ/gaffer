@@ -50,8 +50,21 @@ def __samplingSummary( plug ) :
 		info.append( "Glossy %d" % plug["giGlossySamples"]["value"].getValue() )
 	if plug["giRefractionSamples"]["enabled"].getValue() :
 		info.append( "Refraction %d" % plug["giRefractionSamples"]["value"].getValue() )
-
 	return ", ".join( info )
+
+def __rayDepthSummary( plug ) :
+
+	info = []
+	if plug["giDiffuseDepth"]["enabled"].getValue() :
+		info.append( "Diffuse Depth %d" % plug["giDiffuseDepth"]["value"].getValue() )
+	if plug["giGlossyDepth"]["enabled"].getValue() :
+		info.append( "Glossy Depth %d" % plug["giGlossyDepth"]["value"].getValue() )
+	if plug["giReflectionDepth"]["enabled"].getValue() :
+		info.append( "Reflection Depth %d" % plug["giReflectionDepth"]["value"].getValue() )
+	if plug["giRefractionDepth"]["enabled"].getValue() :
+		info.append( "Refraction Depth %d" % plug["giRefractionDepth"]["value"].getValue() )
+	return ", ".join( info )
+
 
 def __featuresSummary( plug ) :
 
@@ -109,6 +122,7 @@ Gaffer.Metadata.registerNode(
 		"options" : [
 
 			"layout:section:Sampling:summary", __samplingSummary,
+			"layout:section:Ray Depth:summary", __rayDepthSummary,
 			"layout:section:Features:summary", __featuresSummary,
 			"layout:section:Search Paths:summary", __searchPathsSummary,
 			"layout:section:Error Colors:summary", __errorColorsSummary,
@@ -177,6 +191,61 @@ Gaffer.Metadata.registerNode(
 
 			"layout:section", "Sampling",
 			"label", "Refraction Samples",
+
+		],
+
+		# Ray Depth
+
+		"options.giDiffuseDepth" : [
+
+			"description",
+			"""
+			Controls the number of ray bounces when
+			computing indirect illumination ("bounce light").
+			""",
+
+			"layout:section", "Ray Depth",
+			"label", "Diffuse Depth",
+
+		],
+
+		"options.giGlossyDepth" : [
+
+			"description",
+			"""
+			Controls the number of ray bounces when
+			computing glossy specular reflections.
+			""",
+
+			"layout:section", "Ray Depth",
+			"label", "Glossy Depth",
+
+		],
+
+		"options.giReflectionDepth" : [
+
+			"description",
+			"""
+			Controls the number of ray bounces when
+			computing reflections. 
+			""",
+
+			"layout:section", "Ray Depth",
+			"label", "Reflection Depth",
+
+		],
+
+
+		"options.giRefractionDepth" : [
+
+			"description",
+			"""
+			Controls the number of ray bounces when
+			computing refractions. 
+			""",
+
+			"layout:section", "Ray Depth",
+			"label", "Refraction Depth",
 
 		],
 
