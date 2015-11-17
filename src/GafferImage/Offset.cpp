@@ -101,10 +101,20 @@ void Offset::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs
 {
 	ImageProcessor::affects( input, outputs );
 
-	if( input->parent<Plug>() == offsetPlug() )
+	if(
+		input->parent<Plug>() == offsetPlug() ||
+		input == inPlug()->channelDataPlug()
+	)
+	{
+		outputs.push_back( outPlug()->channelDataPlug() );
+	}
+
+	if(
+		input->parent<Plug>() == offsetPlug() ||
+		input == inPlug()->dataWindowPlug()
+	)
 	{
 		outputs.push_back( outPlug()->dataWindowPlug() );
-		outputs.push_back( outPlug()->channelDataPlug() );
 	}
 }
 
