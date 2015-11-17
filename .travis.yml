@@ -4,6 +4,7 @@ language: cpp
 
 os:
     - linux
+    - osx
 
 addons:
   apt:
@@ -19,14 +20,15 @@ addons:
 
 before_install:
     - export DISPLAY=:99.0
-    - sh -e /etc/init.d/xvfb start
+    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sh -e /etc/init.d/xvfb start; fi
 
 install:
+    - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew install scons; fi
+    - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew install doxygen; fi
+    - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew tap homebrew/gui && brew install inkscape; fi
     - python ./config/travis/installDependencies.py
-    - export DELIGHT_PACKAGE=3delight-12.0.113-Linux-x86_64
-    - curl -A Mozilla/4.0 http://www.3delight.com/downloads/free/$DELIGHT_PACKAGE.tar.xz > $DELIGHT_PACKAGE.tar.xz
-    - tar -xf $DELIGHT_PACKAGE.tar.xz
-    - export DELIGHT=`pwd`/$DELIGHT_PACKAGE/3delight/Linux-x86_64
+    - ./config/travis/installDelight.sh
+    - export DELIGHT=`pwd`/3delight
     - export LD_LIBRARY_PATH=$DELIGHT/lib:$LD_LIBRARY_PATH
     - export DL_SHADERS_PATH=$DELIGHT/shaders
     - export DL_DISPLAYS_PATH=$DELIGHT/displays
@@ -56,22 +58,32 @@ script:
     - source ./config/travis/runGafferTest GafferAppleseedUITest
     - ./config/travis/printTestResults
 
-compiler:
-    - gcc
-    - clang
-
+# Default values for environment variables we use to
+# control the build.
 env:
     - COMPILER_VERSION= CXXSTD=c++98 DEBUG=0
-    - COMPILER_VERSION= CXXSTD=c++98 DEBUG=1
-    - COMPILER_VERSION=4.8 CXXSTD=c++98 DEBUG=0
-    - COMPILER_VERSION=4.8 CXXSTD=c++11 DEBUG=0
-    - COMPILER_VERSION=5 CXXSTD=c++11 DEBUG=0
 
 matrix:
-    exclude:
-        - compiler: clang
+    # Explicit list of all permutations of environment
+    # and compiler we want to test. These are on top
+    # of the defaults provided by the compiler and
+    # env setup above.
+    include:
+        - os: linux
+          compiler: gcc
+          env: COMPILER_VERSION= CXXSTD=c++98 DEBUG=1
+        - os: linux
+          compiler: gcc
           env: COMPILER_VERSION=4.8 CXXSTD=c++98 DEBUG=0
-        - compiler: clang
+        - os: linux
+          compiler: gcc
           env: COMPILER_VERSION=4.8 CXXSTD=c++11 DEBUG=0
-        - compiler: clang
+        - os: linux
+          compiler: gcc
           env: COMPILER_VERSION=5 CXXSTD=c++11 DEBUG=0
+        - os: linux
+          compiler: clang
+          env: COMPILER_VERSION= CXXSTD=c++98 DEBUG=0
+        - os: linux
+          compiler: clang
+          env: COMPILER_VERSION= CXXSTD=c++98 DEBUG=1
