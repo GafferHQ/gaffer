@@ -527,8 +527,8 @@ IECore::ConstFloatVectorDataPtr Text::computeShapeChannelData(  const Imath::V2i
 		FT_Matrix matrix = transform( transforms[i], delta );
 		FT_Set_Transform( face.get(), &matrix, &delta );
 
-		FT_Error e = FT_Load_Char( face.get(), characters[i], FT_LOAD_RENDER );
-		if( e )
+		FT_Error error = FT_Load_Char( face.get(), characters[i], FT_LOAD_RENDER );
+		if( error )
 		{
 			continue;
 		}
