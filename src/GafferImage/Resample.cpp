@@ -417,6 +417,21 @@ void Resample::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outpu
 	}
 }
 
+const std::vector<std::string> &Resample::filters()
+{
+	static std::vector<std::string> f;
+	if( !f.size() )
+	{
+		for( int i = 0, e = OIIO::Filter2D::num_filters();  i < e;  ++i )
+		{
+			OIIO::FilterDesc fd;
+			OIIO::Filter2D::get_filterdesc( i, &fd );
+			f.push_back( fd.name );
+		}
+	}
+	return f;
+}
+
 void Resample::hashDataWindow( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	ImageProcessor::hashDataWindow( parent, context, h );
