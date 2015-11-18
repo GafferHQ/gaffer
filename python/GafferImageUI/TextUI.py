@@ -125,7 +125,7 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"justification" : [
+		"horizontalAlignment" : [
 
 			"description",
 			"""
@@ -135,9 +135,25 @@ Gaffer.Metadata.registerNode(
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 
-			"preset:Left", GafferImage.Text.Justification.Left,
-			"preset:Right", GafferImage.Text.Justification.Right,
-			"preset:Center", GafferImage.Text.Justification.Center,
+			"preset:Left", GafferImage.Text.HorizontalAlignment.Left,
+			"preset:Right", GafferImage.Text.HorizontalAlignment.Right,
+			"preset:Center", GafferImage.Text.HorizontalAlignment.Center,
+
+		],
+		
+		"verticalAlignment" : [
+
+			"description",
+			"""
+			Determines whether the text is aligned to the bottom or
+			top of the text area, or centered within it.
+			""",
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
+			"preset:Bottom", GafferImage.Text.VerticalAlignment.Bottom,
+			"preset:Top", GafferImage.Text.VerticalAlignment.Top,
+			"preset:Center", GafferImage.Text.VerticalAlignment.Center,
 
 		],
 

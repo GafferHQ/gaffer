@@ -113,5 +113,43 @@ class TextTest( GafferImageTest.ImageTestCase ) :
 
 		self.assertImagesEqual( text["out"], reader["out"], ignoreMetadata = True, maxDifference = 0.001 )
 
+	def testHorizontalAlignment( self ) :
+	
+		text = GafferImage.Text()
+		
+		text["horizontalAlignment"].setValue( GafferImage.Text.HorizontalAlignment.Left )
+		leftDW = text["out"]["dataWindow"].getValue()
+		
+		text["horizontalAlignment"].setValue( GafferImage.Text.HorizontalAlignment.Right )
+		rightDW = text["out"]["dataWindow"].getValue()
+		
+		text["horizontalAlignment"].setValue( GafferImage.Text.HorizontalAlignment.Center )
+		centerDW = text["out"]["dataWindow"].getValue()
+			
+		self.assertLess( leftDW.min.x, centerDW.min.x )
+		self.assertLess( centerDW.min.x, rightDW.min.x )	
+	
+		self.assertEqual( leftDW.size().x, centerDW.size().x )
+		self.assertEqual( centerDW.size().x, rightDW.size().x )
+		
+	def testVerticalAlignment( self ) :
+	
+		text = GafferImage.Text()
+		
+		text["verticalAlignment"].setValue( GafferImage.Text.VerticalAlignment.Bottom )
+		bottomDW = text["out"]["dataWindow"].getValue()
+		
+		text["verticalAlignment"].setValue( GafferImage.Text.VerticalAlignment.Top )
+		topDW = text["out"]["dataWindow"].getValue()
+		
+		text["verticalAlignment"].setValue( GafferImage.Text.VerticalAlignment.Center )
+		centerDW = text["out"]["dataWindow"].getValue()
+			
+		self.assertLess( bottomDW.min.y, centerDW.min.y )
+		self.assertLess( centerDW.min.y, topDW.min.y )	
+	
+		self.assertEqual( bottomDW.size().y, centerDW.size().y )
+		self.assertEqual( centerDW.size().y, topDW.size().y )	
+
 if __name__ == "__main__":
 	unittest.main()

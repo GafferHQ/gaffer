@@ -62,11 +62,18 @@ class Text : public Shape
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::Text, TextTypeId, Shape );
 
-		enum Justification
+		enum HorizontalAlignment
 		{
 			Left,
 			Right,
-			Center
+			HorizontalCenter
+		};
+		
+		enum VerticalAlignment
+		{
+			Bottom,
+			Top,
+			VerticalCenter
 		};
 
 		Gaffer::StringPlug *textPlug();
@@ -81,8 +88,11 @@ class Text : public Shape
 		Gaffer::Box2iPlug *areaPlug();
 		const Gaffer::Box2iPlug *areaPlug() const;
 
-		Gaffer::IntPlug *justificationPlug();
-		const Gaffer::IntPlug *justificationPlug() const;
+		Gaffer::IntPlug *horizontalAlignmentPlug();
+		const Gaffer::IntPlug *horizontalAlignmentPlug() const;
+		
+		Gaffer::IntPlug *verticalAlignmentPlug();
+		const Gaffer::IntPlug *verticalAlignmentPlug() const;
 
 		Gaffer::Transform2DPlug *transformPlug();
 		const Gaffer::Transform2DPlug *transformPlug() const;

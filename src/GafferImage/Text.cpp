@@ -200,7 +200,8 @@ Text::Text( const std::string &name )
 	addChild( new StringPlug( "font", Plug::In, "Vera.ttf" ) );
 	addChild( new V2iPlug( "size", Plug::In, V2i( 50 ), V2i( 0 ) ) );
 	addChild( new Box2iPlug( "area" ) );
-	addChild( new IntPlug( "justification", Plug::In, Left, Left, Center ) );
+	addChild( new IntPlug( "horizontalAlignment", Plug::In, Left, Left, HorizontalCenter ) );
+	addChild( new IntPlug( "verticalAlignment", Plug::In, Top, Bottom, VerticalCenter ) );
 	addChild( new Transform2DPlug( "transform" ) );
 	addChild( new CompoundObjectPlug( "__layout", Plug::Out, new CompoundObject ) );
 }
@@ -249,34 +250,44 @@ const Gaffer::Box2iPlug *Text::areaPlug() const
 	return getChild<Box2iPlug>( g_firstPlugIndex + 3 );
 }
 
-Gaffer::IntPlug *Text::justificationPlug()
+Gaffer::IntPlug *Text::horizontalAlignmentPlug()
 {
 	return getChild<IntPlug>( g_firstPlugIndex + 4 );
 }
 
-const Gaffer::IntPlug *Text::justificationPlug() const
+const Gaffer::IntPlug *Text::horizontalAlignmentPlug() const
 {
 	return getChild<IntPlug>( g_firstPlugIndex + 4 );
+}
+
+Gaffer::IntPlug *Text::verticalAlignmentPlug()
+{
+	return getChild<IntPlug>( g_firstPlugIndex + 5 );
+}
+
+const Gaffer::IntPlug *Text::verticalAlignmentPlug() const
+{
+	return getChild<IntPlug>( g_firstPlugIndex + 5 );
 }
 
 Gaffer::Transform2DPlug *Text::transformPlug()
 {
-	return getChild<Transform2DPlug>( g_firstPlugIndex + 5 );
+	return getChild<Transform2DPlug>( g_firstPlugIndex + 6 );
 }
 
 const Gaffer::Transform2DPlug *Text::transformPlug() const
 {
-	return getChild<Transform2DPlug>( g_firstPlugIndex + 5 );
+	return getChild<Transform2DPlug>( g_firstPlugIndex + 6 );
 }
 
 Gaffer::CompoundObjectPlug *Text::layoutPlug()
 {
-	return getChild<CompoundObjectPlug>( g_firstPlugIndex + 6 );
+	return getChild<CompoundObjectPlug>( g_firstPlugIndex + 7 );
 }
 
 const Gaffer::CompoundObjectPlug *Text::layoutPlug() const
 {
-	return getChild<CompoundObjectPlug>( g_firstPlugIndex + 6 );
+	return getChild<CompoundObjectPlug>( g_firstPlugIndex + 7 );
 }
 
 void Text::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
@@ -322,7 +333,8 @@ bool Text::affectsLayout( const Gaffer::Plug *input ) const
 		input->parent<V2iPlug>() == sizePlug() ||
 		areaPlug()->isAncestorOf( input ) ||
 		input == inPlug()->formatPlug() ||
-		input == justificationPlug() ||
+		input == horizontalAlignmentPlug() ||
+		input == verticalAlignmentPlug() ||
 		transformPlug()->isAncestorOf( input );
 }
 
@@ -333,7 +345,8 @@ void Text::hashLayout( const Gaffer::Context *context, IECore::MurmurHash &h ) c
 	sizePlug()->hash( h );
 	areaPlug()->hash( h );
 	inPlug()->formatPlug()->hash( h );
-	justificationPlug()->hash( h );
+	horizontalAlignmentPlug()->hash( h );
+	verticalAlignmentPlug()->hash( h );
 	transformPlug()->hash( h );
 }
 
@@ -430,19 +443,30 @@ IECore::ConstCompoundObjectPtr Text::computeLayout( const Gaffer::Context *conte
 	// CompoundObject. It is also during this phase that we apply the
 	// justification.
 
-	const Justification justification = (Justification)justificationPlug()->getValue();
+	const HorizontalAlignment horizontalAlignment = (HorizontalAlignment)horizontalAlignmentPlug()->getValue();
+	const VerticalAlignment verticalAlignment = (VerticalAlignment)verticalAlignmentPlug()->getValue();
 	const M33f transform = transformPlug()->matrix();
 
+	float yOffset = 0;
+	if( verticalAlignment == Bottom )
+	{
+		yOffset = (float)(area.min.y - (pen.y + face->size->metrics.descender) ) / 64.0f;
+	}
+	else if( verticalAlignment == VerticalCenter )
+	{
+		yOffset = (float)(area.min.y - (pen.y + face->size->metrics.descender) ) / (64.0f * 2.0f);
+	}
+	
 	FT_GlyphSlot slot = face->glyph;
 
 	for( vector<Line>::const_iterator lIt = lines.begin(), leIt = lines.end(); lIt != leIt; ++lIt )
 	{
 		float xOffset = 0;
-		if( justification == Right )
+		if( horizontalAlignment == Right )
 		{
 			xOffset = (float)(area.size().x - lIt->width) / 64.0f;
 		}
-		else if( justification == Center )
+		else if( horizontalAlignment == HorizontalCenter )
 		{
 			xOffset = (float)(area.size().x - lIt->width) / (64.0f * 2.0f);
 		}
@@ -451,7 +475,7 @@ IECore::ConstCompoundObjectPtr Text::computeLayout( const Gaffer::Context *conte
 		{
 			M33f characterTransform;
 			characterTransform[2][0] = xOffset + (float)wIt->x / 64.0f;
-			characterTransform[2][1] = (float)lIt->y / 64.0f;
+			characterTransform[2][1] = yOffset + (float)lIt->y / 64.0f;
 			characterTransform *= transform;
 
 			for( const char *c = wIt->text.c_str(); *c; ++c )
