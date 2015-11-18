@@ -38,11 +38,13 @@ import os
 import unittest
 
 import IECore
+
 import Gaffer
 import GafferTest
 import GafferImage
+import GafferImageTest
 
-class DeleteChannelsTest( unittest.TestCase ) :
+class DeleteChannelsTest( GafferImageTest.ImageTestCase ) :
 
 	checkerFile = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/checker.exr" )
 

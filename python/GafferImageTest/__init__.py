@@ -37,6 +37,7 @@
 
 from _GafferImageTest import *
 
+from ImageTestCase import ImageTestCase
 from ImagePlugTest import ImagePlugTest
 from ImageReaderTest import ImageReaderTest
 from ColorSpaceTest import ColorSpaceTest
@@ -49,8 +50,6 @@ from ConstantTest import ConstantTest
 from ImageWriterTest import ImageWriterTest
 from ChannelMaskPlugTest import ChannelMaskPlugTest
 from SamplerTest import SamplerTest
-from ReformatTest import ReformatTest
-from FilterTest import FilterTest
 from DisplayTest import DisplayTest
 from ImageStatsTest import ImageStatsTest
 from ImageTransformTest import ImageTransformTest

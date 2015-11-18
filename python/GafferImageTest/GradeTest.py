@@ -41,8 +41,9 @@ import IECore
 
 import Gaffer
 import GafferImage
+import GafferImageTest
 
-class GradeTest( unittest.TestCase ) :
+class GradeTest( GafferImageTest.ImageTestCase ) :
 
 	checkerFile = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/checker.exr" )
 

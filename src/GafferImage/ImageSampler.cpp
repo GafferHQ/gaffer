@@ -36,7 +36,6 @@
 
 #include "GafferImage/ImageSampler.h"
 #include "GafferImage/ImagePlug.h"
-#include "GafferImage/FilterPlug.h"
 #include "GafferImage/Sampler.h"
 
 using namespace std;
@@ -57,7 +56,6 @@ ImageSampler::ImageSampler( const std::string &name )
 
 	addChild( new ImagePlug( "image" ) );
 	addChild( new V2fPlug( "pixel" ) );
-	addChild( new FilterPlug( "filter" ) );
 	addChild( new Color4fPlug( "color", Plug::Out ) );
 
 }
@@ -86,32 +84,25 @@ const Gaffer::V2fPlug *ImageSampler::pixelPlug() const
 	return getChild<V2fPlug>( g_firstPlugIndex + 1 );
 }
 
-FilterPlug *ImageSampler::filterPlug()
-{
-	return getChild<FilterPlug>( g_firstPlugIndex + 2 );
-}
-
-const FilterPlug *ImageSampler::filterPlug() const
-{
-	return getChild<FilterPlug>( g_firstPlugIndex + 2 );
-}
-
 Gaffer::Color4fPlug *ImageSampler::colorPlug()
 {
-	return getChild<Color4fPlug>( g_firstPlugIndex + 3 );
+	return getChild<Color4fPlug>( g_firstPlugIndex + 2 );
 }
 
 const Gaffer::Color4fPlug *ImageSampler::colorPlug() const
 {
-	return getChild<Color4fPlug>( g_firstPlugIndex + 3 );
+	return getChild<Color4fPlug>( g_firstPlugIndex + 2 );
 }
 
 void ImageSampler::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	ComputeNode::affects( input, outputs );
 
-	const Gaffer::Plug *inputParent = input->parent<Plug>();
-	if( inputParent == imagePlug() || inputParent == pixelPlug() || input == filterPlug() )
+	if(
+		input == imagePlug()->dataWindowPlug() ||
+		input == imagePlug()->channelDataPlug() ||
+		input->parent<Plug>() == pixelPlug()
+	)
 	{
 		for( ValuePlugIterator componentIt( colorPlug() ); componentIt != componentIt.end(); ++componentIt )
 		{
@@ -133,12 +124,10 @@ void ImageSampler::hash( const Gaffer::ValuePlug *output, const Gaffer::Context 
 			Box2i sampleWindow;
 			sampleWindow.extendBy( V2i( pixel ) - V2i( 1 ) );
 			sampleWindow.extendBy( V2i( pixel ) + V2i( 1 ) );
-			const string filter = filterPlug()->getValue();
-			Sampler sampler( imagePlug(), channel, sampleWindow, Filter::create( filter ) );
+			Sampler sampler( imagePlug(), channel, sampleWindow );
 
 			sampler.hash( h );
 			h.append( pixel );
-			h.append( filter );
 		}
 	}
 }
@@ -155,8 +144,8 @@ void ImageSampler::compute( Gaffer::ValuePlug *output, const Gaffer::Context *co
 			V2f pixel = pixelPlug()->getValue();
 			Box2i sampleWindow;
 			sampleWindow.extendBy( V2i( pixel ) - V2i( 1 ) );
-			sampleWindow.extendBy( V2i( pixel ) );
-			Sampler sampler( imagePlug(), channel, sampleWindow, Filter::create( filterPlug()->getValue() ) );
+			sampleWindow.extendBy( V2i( pixel ) + V2i( 1 ) );
+			Sampler sampler( imagePlug(), channel, sampleWindow );
 			sample = sampler.sample( pixel.x, pixel.y );
 		}
 

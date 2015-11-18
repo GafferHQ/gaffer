@@ -44,8 +44,9 @@ import IECore
 import Gaffer
 import GafferTest
 import GafferImage
+import GafferImageTest
 
-class ResampleTest( GafferTest.TestCase ) :
+class ResampleTest( GafferImageTest.ImageTestCase ) :
 
 	def testDataWindow( self ) :
 
@@ -104,12 +105,7 @@ class ResampleTest( GafferTest.TestCase ) :
 				)
 			)
 
-			self.assertFalse(
-				IECore.ImageDiffOp()(
-					imageA = expected["out"].image(),
-					imageB = result["out"].image()
-				).value
-			)
+			self.assertImagesEqual( result["out"], expected["out"], maxDifference = 0.0005, ignoreMetadata = True )
 
 			# Enable to write out images for visual comparison with OIIO.
 			# The images will appear in a "resampleComparison" subdirectory

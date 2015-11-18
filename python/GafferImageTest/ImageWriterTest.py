@@ -44,8 +44,9 @@ import IECore
 import Gaffer
 import GafferTest
 import GafferImage
+import GafferImageTest
 
-class ImageWriterTest( GafferTest.TestCase ) :
+class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 
 	__largeFilePath = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/large.exr" )
 	__rgbFilePath = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/rgb.100x100" )
@@ -791,7 +792,7 @@ class ImageWriterTest( GafferTest.TestCase ) :
 		self.assertEqual( r["out"]["metadata"].getValue()["PixelAspectRatio"], IECore.FloatData( 1 ) )
 
 		# change the Format pixel aspect
-		f = GafferImage.Reformat()
+		f = GafferImage.Resize()
 		f["in"].setInput( r["out"] )
 		f["format"].setValue( GafferImage.Format( r["out"]["format"].getValue().getDisplayWindow(), 2. ) )
 		self.assertEqual( f["out"]["format"].getValue().getPixelAspect(), 2 )

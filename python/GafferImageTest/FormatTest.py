@@ -43,8 +43,9 @@ import Gaffer
 import GafferTest
 
 import GafferImage
+import GafferImageTest
 
-class FormatTest( GafferTest.TestCase ) :
+class FormatTest( GafferImageTest.ImageTestCase ) :
 
 	def testOffsetDisplayWindow( self ) :
 

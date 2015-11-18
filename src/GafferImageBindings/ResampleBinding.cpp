@@ -43,12 +43,31 @@ using namespace boost::python;
 using namespace GafferImage;
 using namespace GafferBindings;
 
+namespace
+{
+
+list filters()
+{
+	list result;
+	const std::vector<std::string> &f = Resample::filters();
+	for( std::vector<std::string>::const_iterator it = f.begin(), eIt = f.end(); it != eIt; ++it )
+	{
+		result.append( *it );
+	}
+	return result;
+}
+
+} // namespace
+
 namespace GafferImageBindings
 {
 
 void bindResample()
 {
-	scope s = GafferBindings::DependencyNodeClass<Resample>();
+	scope s = GafferBindings::DependencyNodeClass<Resample>()
+		.def( "filters", &filters )
+		.staticmethod( "filters" )
+	;
 
 	enum_<Resample::Debug>( "Debug")
 		.value( "Off", Resample::Off )

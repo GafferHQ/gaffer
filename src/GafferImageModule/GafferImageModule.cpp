@@ -50,7 +50,6 @@
 #include "GafferImage/Grade.h"
 #include "GafferImage/Clamp.h"
 #include "GafferImage/Constant.h"
-#include "GafferImage/Reformat.h"
 #include "GafferImage/ImageTransform.h"
 #include "GafferImage/ImageStats.h"
 #include "GafferImage/ImageSampler.h"
@@ -71,8 +70,6 @@
 #include "GafferImageBindings/FormatPlugBinding.h"
 #include "GafferImageBindings/AtomicFormatPlugBinding.h"
 #include "GafferImageBindings/SamplerBinding.h"
-#include "GafferImageBindings/FilterPlugBindings.h"
-#include "GafferImageBindings/FilterBinding.h"
 #include "GafferImageBindings/DeleteChannelsBinding.h"
 #include "GafferImageBindings/ChannelMaskPlugBindings.h"
 #include "GafferImageBindings/MergeBinding.h"
@@ -115,7 +112,6 @@ BOOST_PYTHON_MODULE( _GafferImage )
 	GafferBindings::DependencyNodeClass<Grade>();
 	GafferBindings::DependencyNodeClass<Clamp>();
 	GafferBindings::DependencyNodeClass<Constant>();
-	GafferBindings::DependencyNodeClass<Reformat>();
 	GafferBindings::DependencyNodeClass<ImageTransform>();
 	GafferBindings::DependencyNodeClass<ImageStats>();
 	GafferBindings::DependencyNodeClass<ImageSampler>();
@@ -131,9 +127,7 @@ BOOST_PYTHON_MODULE( _GafferImage )
 	GafferImageBindings::bindFormatPlug();
 	GafferImageBindings::bindAtomicFormatPlug();
 	GafferImageBindings::bindChannelMaskPlug();
-	GafferImageBindings::bindFilterPlug();
 	GafferImageBindings::bindSampler();
-	GafferImageBindings::bindFilters();
 	GafferImageBindings::bindMixin();
 	GafferImageBindings::bindFormatData();
 	GafferImageBindings::bindImageReader();

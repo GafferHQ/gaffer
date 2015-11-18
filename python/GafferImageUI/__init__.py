@@ -39,7 +39,6 @@ from _GafferImageUI import *
 
 import DisplayUI
 from FormatPlugValueWidget import FormatPlugValueWidget
-from FilterPlugValueWidget import FilterPlugValueWidget
 from ChannelMaskPlugValueWidget import ChannelMaskPlugValueWidget
 
 import ImageReaderUI
@@ -51,7 +50,6 @@ import ColorSpaceUI
 import ImageContextVariablesUI
 import ImageStatsUI
 import DeleteChannelsUI
-import ReformatUI
 import ObjectToImageUI
 import ClampUI
 import ImageWriterUI

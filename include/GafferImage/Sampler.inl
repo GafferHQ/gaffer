@@ -34,56 +34,12 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include "OpenImageIO/fmath.h"
+
 #include "GafferImage/ImageAlgo.h"
 
 namespace GafferImage
 {
-
-float Sampler::sample( float x, float y )
-{
-	// Perform an early-out for the box filter.
-	if ( static_cast<GafferImage::TypeId>( m_filter->typeId() ) == GafferImage::BoxFilterTypeId )
-	{
-		return sample( IECore::fastFloatFloor( x ), IECore::fastFloatFloor( y ) );
-	}
-
-	// Otherwise do a filtered lookup.
-	int tapX = m_filter->tap( x - m_cacheWindow.min.x );
-	const int width = m_filter->width();
-	float weightsX[width];
-
-	for ( int i = 0; i < width; ++i )
-	{
-		weightsX[i] = m_filter->weight( x, tapX+i+m_cacheWindow.min.x );
-	}
-
-	int tapY = m_filter->tap( y - m_cacheWindow.min.y );
-	const int height = m_filter->width();
-	float weightsY[height];
-
-	for ( int i = 0; i < height; ++i )
-	{
-		weightsY[i] = m_filter->weight( y, tapY+i+m_cacheWindow.min.y );
-	}
-
-	float weightedSum = 0.;
-	float colour = 0.f;
-	int absY = tapY + m_cacheWindow.min.y;
-	for ( int y = 0; y < height; ++y, ++absY )
-	{
-		int absX = tapX + m_cacheWindow.min.x;
-		for ( int x = 0; x < width; ++x, ++absX )
-		{
-			float c = 0.;
-			float w = weightsX[x] * weightsY[y];
-			c = sample( absX, absY );
-			weightedSum += w;
-			colour += c * w;
-		}
-	}
-
-	return weightedSum == 0 ? 0 : colour / weightedSum;
-}
 
 float Sampler::sample( int x, int y )
 {
@@ -112,6 +68,21 @@ float Sampler::sample( int x, int y )
 	Imath::V2i tileIndex;
 	cachedData( p, tileData, tileOrigin, tileIndex );
 	return *(tileData + tileIndex.y * ImagePlug::tileSize() + tileIndex.x);
+}
+
+float Sampler::sample( float x, float y )
+{
+	int xi;
+	float xf = OIIO::floorfrac( x - 0.5, &xi );
+	int yi;
+	float yf = OIIO::floorfrac( y - 0.5, &yi );
+
+	float x0y0 = sample( xi, yi );
+	float x1y0 = sample( xi + 1, yi );
+	float x0y1 = sample( xi, yi + 1 );
+	float x1y1 = sample( xi + 1, yi + 1 );
+
+	return OIIO::bilerp( x0y0, x1y0, x0y1, x1y1, xf, yf );
 }
 
 void Sampler::cachedData( Imath::V2i p, const float *& tileData, Imath::V2i &tileOrigin, Imath::V2i &tileIndex )

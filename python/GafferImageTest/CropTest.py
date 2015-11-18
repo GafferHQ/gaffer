@@ -39,11 +39,13 @@ import unittest
 import os
 
 import IECore
+
 import Gaffer
 import GafferTest
 import GafferImage
+import GafferImageTest
 
-class CropTest( unittest.TestCase ) :
+class CropTest( GafferImageTest.ImageTestCase ) :
 
 	imageFileUndersizeDataWindow = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/blueWithDataWindow.100x100.exr" )
 	imageFileOversizeDataWindow = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/checkerWithNegWindows.200x150.exr" )

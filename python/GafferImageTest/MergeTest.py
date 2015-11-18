@@ -42,8 +42,9 @@ import IECore
 import Gaffer
 import GafferTest
 import GafferImage
+import GafferImageTest
 
-class MergeTest( GafferTest.TestCase ) :
+class MergeTest( GafferImageTest.ImageTestCase ) :
 
 	rPath = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/redWithDataWindow.100x100.exr" )
 	gPath = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/greenWithDataWindow.100x100.exr" )
@@ -149,10 +150,10 @@ class MergeTest( GafferTest.TestCase ) :
 		merge["in"][1].setInput( g["out"] )
 		merge["in"][2].setInput( b["out"] )
 
-		mergeResult = merge["out"].image()
-		expected = IECore.Reader.create( self.rgbPath ).read()
+		expected = GafferImage.ImageReader()
+		expected["fileName"].setValue( self.rgbPath )
 
-		self.assertTrue( not IECore.ImageDiffOp()( imageA = expected, imageB = mergeResult, skipMissingChannels = False, maxError = 0.001 ).value )
+		self.assertImagesEqual( merge["out"], expected["out"], maxDifference = 0.001, ignoreMetadata = True )
 
 	# Overlay a red, green and blue tile of different data window sizes and check the data window is expanded on the result and looks as we expect.
 	def testOverRGBAonRGB( self ) :
@@ -176,10 +177,10 @@ class MergeTest( GafferTest.TestCase ) :
 		merge["in"][2].setInput( g["out"] )
 		merge["in"][3].setInput( b["out"] )
 
-		mergeResult = merge["out"].image()
-		expected = IECore.Reader.create( self.checkerRGBPath ).read()
+		expected = GafferImage.ImageReader()
+		expected["fileName"].setValue( self.checkerRGBPath )
 
-		self.assertTrue( not IECore.ImageDiffOp()( imageA = expected, imageB = mergeResult, skipMissingChannels = False, maxError = 0.001 ).value )
+		self.assertImagesEqual( merge["out"], expected["out"], maxDifference = 0.001, ignoreMetadata = True )
 
 	def testAffects( self ) :
 
@@ -222,7 +223,7 @@ class MergeTest( GafferTest.TestCase ) :
 	def testPassThrough( self ) :
 
 		c = GafferImage.Constant()
-		f = GafferImage.Reformat()
+		f = GafferImage.Resize()
 		f["in"].setInput( c["out"] )
 		f["format"].setValue( GafferImage.Format( IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 10 ) ), 1 ) )
 		d = GafferImage.ImageMetadata()
@@ -365,6 +366,28 @@ class MergeTest( GafferTest.TestCase ) :
 		merge["in"][1].setInput( a["out"] )
 
 		merge["out"].image()
+
+	def testDifference( self ) :
+
+		a = GafferImage.Constant()
+		a["color"].setValue( IECore.Color4f( 0.1, 0.2, 0.3, 0.4 ) )
+
+		b = GafferImage.Constant()
+		b["color"].setValue( IECore.Color4f( 1, 0.3, 0.1, 0.2 ) )
+
+		merge = GafferImage.Merge()
+		merge["in"][0].setInput( a["out"] )
+		merge["in"][1].setInput( b["out"] )
+		merge["operation"].setValue( GafferImage.Merge.Operation.Difference )
+
+		sampler = GafferImage.ImageSampler()
+		sampler["image"].setInput( merge["out"] )
+		sampler["pixel"].setValue( IECore.V2f( 10 ) )
+
+		self.assertAlmostEqual( sampler["color"]["r"].getValue(), 0.9 )
+		self.assertAlmostEqual( sampler["color"]["g"].getValue(), 0.1 )
+		self.assertAlmostEqual( sampler["color"]["b"].getValue(), 0.2 )
+		self.assertAlmostEqual( sampler["color"]["a"].getValue(), 0.2 )
 
 if __name__ == "__main__":
 	unittest.main()

@@ -34,79 +34,46 @@
 #
 ##########################################################################
 
+import IECore
+
 import Gaffer
-import GafferUI
+import GafferTest
 import GafferImage
 
-Gaffer.Metadata.registerNode(
+class ImageTestCase( GafferTest.TestCase ) :
 
-	GafferImage.Merge,
+	def assertImagesEqual( self, imageA, imageB, maxDifference = 0, ignoreMetadata = False, ignoreDataWindow = False ) :
 
-	"description",
-	"""
-	Composites two or more images together. The following operations
-	are available :
+		self.assertEqual( imageA["format"].getValue(), imageB["format"].getValue() )
+		if not ignoreDataWindow :
+			self.assertEqual( imageA["dataWindow"].getValue(), imageB["dataWindow"].getValue() )
+		if not ignoreMetadata :
+			self.assertEqual( imageA["metadata"].getValue(), imageB["metadata"].getValue() )
+		self.assertEqual( imageA["channelNames"].getValue(), imageB["channelNames"].getValue() )
 
-	  - Add : A + B
-	  - Atop : Ab + B(1-a)
-	  - Divide : A / B
-	  - In : Ab
-	  - Out : A(1-b)
-	  - Mask : Ba
-	  - Matte : Aa + B(1.-a)
-	  - Multiply : AB
-	  - Over : A + B(1-a)
-	  - Subtract : A - B
-	  - Difference : fabs( A - B )
-	  - Under : A(1-b) + B
-	""",
+		for channelName in imageA["channelNames"].getValue() :
+			## \todo Lift this restriction
+			self.assertTrue( channelName in "RGBA" )
 
-	plugs = {
+		difference = GafferImage.Merge()
+		difference["in"][0].setInput( imageA )
+		difference["in"][1].setInput( imageB )
+		difference["operation"].setValue( GafferImage.Merge.Operation.Difference )
 
-		"in.in0" : [
+		stats = GafferImage.ImageStats()
+		stats["in"].setInput( difference["out"] )
+		stats["regionOfInterest"].setValue( imageA["format"].getValue().getDisplayWindow() )
+		stats["channels"].setValue( IECore.StringVectorData( [ "R", "G", "B", "A" ] ) )
 
-			"description",
-			"""
-			The B input.
-			""",
+		if "R" in imageA["channelNames"].getValue() :
+			self.assertLess( stats["max"]["r"].getValue(), maxDifference )
 
-		],
+		if "G" in imageA["channelNames"].getValue() :
+			self.assertLess( stats["max"]["g"].getValue(), maxDifference )
 
-		"in.in1" : [
+		if "B" in imageA["channelNames"].getValue() :
+			self.assertLess( stats["max"]["b"].getValue(), maxDifference )
 
-			"description",
-			"""
-			The A input.
-			""",
+		if "A" in imageA["channelNames"].getValue() :
+			self.assertLess( stats["max"]["a"].getValue(), maxDifference )
 
-		],
-
-		"operation" : [
-
-			"description",
-			"""
-			The compositing operation used to merge the
-			image together. See node documentation for
-			more details.
-			""",
-
-			"preset:Add", GafferImage.Merge.Operation.Add,
-			"preset:Atop", GafferImage.Merge.Operation.Atop,
-			"preset:Divide", GafferImage.Merge.Operation.Divide,
-			"preset:In", GafferImage.Merge.Operation.In,
-			"preset:Out", GafferImage.Merge.Operation.Out,
-			"preset:Mask", GafferImage.Merge.Operation.Mask,
-			"preset:Matte", GafferImage.Merge.Operation.Matte,
-			"preset:Multiply", GafferImage.Merge.Operation.Multiply,
-			"preset:Over", GafferImage.Merge.Operation.Over,
-			"preset:Subtract", GafferImage.Merge.Operation.Subtract,
-			"preset:Difference", GafferImage.Merge.Operation.Difference,
-			"preset:Under", GafferImage.Merge.Operation.Under,
-
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-
-		],
-
-	}
-
-)

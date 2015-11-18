@@ -42,8 +42,9 @@ import IECore
 import Gaffer
 import GafferTest
 import GafferImage
+import GafferImageTest
 
-class DisplayTransformTest( unittest.TestCase ) :
+class DisplayTransformTest( GafferImageTest.ImageTestCase ) :
 
 	imageFile = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/checker.exr" )
 

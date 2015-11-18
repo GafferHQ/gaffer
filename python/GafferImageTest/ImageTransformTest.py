@@ -35,33 +35,37 @@
 ##########################################################################
 
 import unittest
+import random
+import os
 
 import IECore
-import os
+
 import Gaffer
 import GafferTest
 import GafferImage
+import GafferImageTest
 
-class ImageTransformTest( unittest.TestCase ) :
+class ImageTransformTest( GafferImageTest.ImageTestCase ) :
 
 	fileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/checker.exr" )
 	path = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/" )
 
-	def testIdentityHash( self ) :
+	def testNoPassThrough( self ) :
+
+		# We don't want a perfect unfiltered pass-through when the
+		# transform is the identity. This is because it can cause
+		# conspicuous jumps when an animated transform happens to
+		# pass through the identity matrix on a particular frame.
 
 		r = GafferImage.ImageReader()
 		r["fileName"].setValue( self.fileName )
 
 		t = GafferImage.ImageTransform()
 		t["in"].setInput( r["out"] )
+		t["filter"].setValue( "blackman-harris" )
 
-		c = Gaffer.Context()
-		c["image:channelName"] = "R"
-		c["image:tileOrigin"] = IECore.V2i( 0 )
-		with c :
-			h1 = t["out"].hash()
-			h2 = r["out"].hash()
-			self.assertEqual( h1, h2 )
+		self.assertNotEqual( t["out"].imageHash(), t["in"].imageHash() )
+		self.assertNotEqual( t["out"].image(), t["in"].image() )
 
 	def testTilesWithSameInputTiles( self ) :
 
@@ -76,7 +80,7 @@ class ImageTransformTest( unittest.TestCase ) :
 
 		t = GafferImage.ImageTransform()
 		t["in"].setInput( r["out"] )
-		t["transform"]["rotate"].setValue( 1. )
+		t["transform"]["rotate"].setValue( -1. )
 		t["transform"]["scale"].setValue( IECore.V2f( 1.5, 1. ) )
 		imageToTest = t["out"].image()
 		imageToTest.blindData().clear()
@@ -94,18 +98,25 @@ class ImageTransformTest( unittest.TestCase ) :
 
 		self.assertFalse( res.value )
 
-	def testScaleHash( self ) :
+	def testImageHash( self ) :
 
 		r = GafferImage.ImageReader()
 		r["fileName"].setValue( self.fileName )
 
 		t = GafferImage.ImageTransform()
-		t["in"].setInput( r["out"] )
 
-		h1 = t["__scaledFormat"].hash()
-		t["transform"]["scale"].setValue( IECore.V2f( 2., 2. ) )
-		h2 = t["__scaledFormat"].hash()
-		self.assertNotEqual( h1, h2 )
+		previousHash = t["out"].imageHash()
+		for plug in t["transform"].children() :
+
+			if isinstance( plug, Gaffer.FloatPlug ) :
+				plug.setValue( 1 )
+			else :
+				plug.setValue( IECore.V2f( 2 ) )
+
+			hash = t["out"].imageHash()
+			self.assertNotEqual( hash, previousHash )
+
+			previousHash = hash
 
 	def testDirtyPropagation( self ) :
 
@@ -115,19 +126,23 @@ class ImageTransformTest( unittest.TestCase ) :
 		t = GafferImage.ImageTransform()
 		t["in"].setInput( r["out"] )
 
-		cs = GafferTest.CapturingSlot( t.plugDirtiedSignal() )
-		t["transform"]["scale"].setValue( IECore.V2f( 2., 2. ) )
+		for plug in t["transform"].children() :
 
-		dirtiedPlugs = set( [ x[0].relativeName( x[0].node() ) for x in cs ] )
-		self.assertEqual( len( dirtiedPlugs ), 8 )
-		self.assertTrue( "transform.scale.x" in dirtiedPlugs )
-		self.assertTrue( "transform.scale.y" in dirtiedPlugs )
-		self.assertTrue( "transform.scale" in dirtiedPlugs )
-		self.assertTrue( "transform" in dirtiedPlugs )
-		self.assertTrue( "out" in dirtiedPlugs )
-		self.assertTrue( "out.channelData" in dirtiedPlugs )
-		self.assertTrue( "out.dataWindow" in dirtiedPlugs )
-		self.assertTrue( "__scaledFormat" in dirtiedPlugs )
+			cs = GafferTest.CapturingSlot( t.plugDirtiedSignal() )
+			if isinstance( plug, Gaffer.FloatPlug ) :
+				plug.setValue( 1 )
+			else :
+				plug.setValue( IECore.V2f( 2 ) )
+
+			dirtiedPlugs = { x[0] for x in cs }
+
+			self.assertTrue( t["out"]["dataWindow"] in dirtiedPlugs )
+			self.assertTrue( t["out"]["channelData"] in dirtiedPlugs )
+			self.assertTrue( t["out"] in dirtiedPlugs )
+
+			self.assertFalse( t["out"]["format"] in dirtiedPlugs )
+			self.assertFalse( t["out"]["metadata"] in dirtiedPlugs )
+			self.assertFalse( t["out"]["channelNames"] in dirtiedPlugs )
 
 	def testOutputFormat( self ) :
 
@@ -138,29 +153,7 @@ class ImageTransformTest( unittest.TestCase ) :
 		t["in"].setInput( r["out"] )
 		t["transform"]["translate"].setValue( IECore.V2f( 2., 2. ) )
 
-		c = Gaffer.Context()
-		c["image:channelName"] = "R"
-		c["image:tileOrigin"] = IECore.V2i( 0 )
-		with c :
-			self.assertEqual( t["out"]["format"].hash(), r["out"]["format"].hash() )
-
-	def testHashPassThrough( self ) :
-
-		r = GafferImage.ImageReader()
-		r["fileName"].setValue( self.fileName )
-
-		t = GafferImage.ImageTransform()
-		t["in"].setInput( r["out"] )
-
-		c = Gaffer.Context()
-		c["image:channelName"] = "R"
-		c["image:tileOrigin"] = IECore.V2i( 0 )
-		t["enabled"].setValue( True )
-		with c :
-			self.assertEqual( r["out"].hash(), t["out"].hash() )
-
-			t["transform"]["translate"].setValue( IECore.V2f( 20., 20.5 ) )
-			self.assertNotEqual( r["out"].hash(), t["out"].hash() )
+		self.assertEqual( t["out"]["format"].hash(), r["out"]["format"].hash() )
 
 	def testDisabled( self ) :
 
@@ -183,62 +176,6 @@ class ImageTransformTest( unittest.TestCase ) :
 			t["enabled"].setValue( False )
 			self.assertEqual( r["out"].hash(), t["out"].hash() )
 
-	def testBoxFilter( self ) :
-		self.__testFilter( "Box" )
-
-	def testBSplineFilter( self ) :
-		self.__testFilter( "BSpline" )
-
-	def testBilinearFilter( self ) :
-		self.__testFilter( "Bilinear" )
-
-	def testCatmullRomFilter( self ) :
-		self.__testFilter( "CatmullRom" )
-
-	def testCubicFilter( self ) :
-		self.__testFilter( "Cubic" )
-
-	def testHermiteFilter( self ) :
-		self.__testFilter( "Hermite" )
-
-	def testLanczosFilter( self ) :
-		self.__testFilter( "Lanczos" )
-
-	def testMitchellFilter( self ) :
-		self.__testFilter( "Mitchell" )
-
-	def testSincFilter( self ) :
-		self.__testFilter( "Sinc" )
-
-	def __testFilter( self, filter ) :
-
-		reader = GafferImage.ImageReader()
-		reader["fileName"].setValue( os.path.join( self.path, "checkerWithNegativeDataWindow.200x150.exr" ) )
-
-		t = GafferImage.ImageTransform()
-		t["transform"]["translate"].setValue( IECore.V2f( 20, -10 ) )
-		t["transform"]["scale"].setValue( IECore.V2f( .75, 1.1 ) )
-		t["transform"]["rotate"].setValue( 40 )
-		t["transform"]["pivot"].setValue( IECore.V2f( 50, 30 ) )
-		t["filter"].setValue( filter )
-		t["in"].setInput( reader["out"] )
-		filteredImage = t["out"].image()
-		filteredImage.blindData().clear()
-
-		file = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/transformedChecker" + filter + ".200x150.exr" )
-		expectedOutput = GafferImage.ImageReader()
-		expectedOutput["fileName"].setValue( os.path.join( self.path, file ) )
-		expectedImage = expectedOutput['out'].image()
-		expectedImage.blindData().clear()
-
-		op = IECore.ImageDiffOp()
-		res = op(
-			imageA = filteredImage,
-			imageB = expectedImage
-		)
-
-		self.assertFalse( res.value )
-
 	def testPassThrough( self ) :
 
 		c = GafferImage.Constant()
@@ -247,9 +184,11 @@ class ImageTransformTest( unittest.TestCase ) :
 		t["transform"]["translate"].setValue( IECore.V2f( 1, 0 ) )
 
 		self.assertEqual( t["out"]["metadata"].hash(), c["out"]["metadata"].hash() )
+		self.assertEqual( t["out"]["format"].hash(), c["out"]["format"].hash() )
 		self.assertEqual( t["out"]["channelNames"].hash(), c["out"]["channelNames"].hash() )
 
 		self.assertEqual( t["out"]["metadata"].getValue(), c["out"]["metadata"].getValue() )
+		self.assertEqual( t["out"]["format"].getValue(), c["out"]["format"].getValue() )
 		self.assertEqual( t["out"]["channelNames"].getValue(), c["out"]["channelNames"].getValue() )
 
 	def testCopyPaste( self ) :
@@ -269,6 +208,88 @@ class ImageTransformTest( unittest.TestCase ) :
 		c["color"]["r"].setValue( .25 )
 
 		self.assertTrue( t["out"]["channelData"] in set( s[0] for s in cs ) )
+
+	def testInternalPlugsNotSerialised( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["t"] = GafferImage.ImageTransform()
+
+		ss = s.serialise()
+		for name in s["t"].keys() :
+			self.assertFalse( name in ss )
+
+	def testRotate360( self ) :
+
+		# Check that a 360 degree rotation gives us the
+		# same image back, regardless of pivot.
+
+		r = GafferImage.ImageReader()
+		r["fileName"].setValue( self.fileName )
+
+		t = GafferImage.ImageTransform()
+		t["in"].setInput( r["out"] )
+		t["transform"]["rotate"].setValue( 360 )
+
+		for i in range( 0, 100 ) :
+
+			# Check that the ImageTransform isn't being smart and treating
+			# this as a no-op. If the ImageTransform gets smart we'll need
+			# to adjust our test to force it to do an actual resampling of
+			# the image, since that's what we want to test.
+			self.assertNotEqual(
+				r["out"].channelDataHash( "R", IECore.V2i( 0 ) ),
+				t["out"].channelDataHash( "R", IECore.V2i( 0 ) )
+			)
+
+			# Check that the rotated image is basically the same as the input.
+			t["transform"]["pivot"].setValue(
+				IECore.V2f( random.uniform( -100, 100 ), random.uniform( -100, 100 ) ),
+			)
+			self.assertImagesEqual( r["out"], t["out"], maxDifference = 0.0001, ignoreDataWindow = True )
+
+	def testSubpixelTranslate( self ) :
+
+		# This checks we can do subpixel translations properly - at one
+		# time a bug in Resample prevented this.
+
+		# Use a Constant and a Crop to make a vertical line.
+		constant = GafferImage.Constant()
+		constant["format"].setValue( GafferImage.Format( 100, 100 ) )
+		constant["color"].setValue( IECore.Color4f( 1 ) )
+
+		crop = GafferImage.Crop()
+		crop["in"].setInput( constant["out"] )
+		crop["affectDataWindow"].setValue( True )
+		crop["affectDisplayWindow"].setValue( False )
+		crop["area"].setValue( IECore.Box2i( IECore.V2i( 10, 0 ), IECore.V2i( 11, 100 ) ) )
+
+		# Check it's where we expect
+
+		transform = GafferImage.ImageTransform()
+		transform["in"].setInput( crop["out"] )
+		transform["filter"].setValue( "lanczos3" )
+
+		def sample( position ) :
+
+			sampler = GafferImage.Sampler(
+				transform["out"],
+				"R",
+				IECore.Box2i( position, position + IECore.V2i( 1 ) )
+			)
+			return sampler.sample( position.x, position.y )
+
+		self.assertEqual( sample( IECore.V2i( 9, 10 ) ), 0 )
+		self.assertEqual( sample( IECore.V2i( 10, 10 ) ), 1 )
+		self.assertEqual( sample( IECore.V2i( 11, 10 ) ), 0 )
+
+		# Move it a tiiny bit, and check it has moved
+		# a tiiny bit.
+
+		transform["transform"]["translate"]["x"].setValue( 0.1 )
+
+		self.assertEqual( sample( IECore.V2i( 9, 10 ) ), 0 )
+		self.assertGreater( sample( IECore.V2i( 10, 10 ) ), 0.9 )
+		self.assertGreater( sample( IECore.V2i( 11, 10 ) ), 0.09 )
 
 if __name__ == "__main__":
 	unittest.main()

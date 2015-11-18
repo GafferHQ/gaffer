@@ -34,11 +34,9 @@
 
 #include "boost/python.hpp"
 
-#include "GafferImage/Filter.h"
 #include "GafferImageBindings/SamplerBinding.h"
 
 using namespace boost::python;
-using namespace IECore;
 using namespace GafferImage;
 
 namespace GafferImageBindings
@@ -60,14 +58,6 @@ void bindSampler()
 	}
 
 	cls.def(
-		init< const GafferImage::ImagePlug *, const std::string &, const Imath::Box2i &, ConstFilterPtr, Sampler::BoundingMode >
-			(
-				(
-					arg( "boundingMode" ) = Sampler::Black
-				)
-			)
-		)
-		.def(
 			init<const GafferImage::ImagePlug *, const std::string &, const Imath::Box2i &, Sampler::BoundingMode>
 			(
 				(

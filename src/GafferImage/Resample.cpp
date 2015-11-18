@@ -160,7 +160,7 @@ void ratioAndOffset( const Box2f &dstDataWindow, const Box2i &srcDataWindow, V2f
 	const V2f srcSize = srcDataWindow.size();
 
 	ratio = dstSize / srcSize;
-	offset = srcDataWindow.min - dstDataWindow.min / ratio;
+	offset = V2f( srcDataWindow.min ) - dstDataWindow.min / ratio;
 }
 
 // The radius for the filter is specified in the output space. This
@@ -415,6 +415,21 @@ void Resample::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outpu
 		outputs.push_back( outPlug()->channelDataPlug() );
 		outputs.push_back( horizontalPassPlug()->channelDataPlug() );
 	}
+}
+
+const std::vector<std::string> &Resample::filters()
+{
+	static std::vector<std::string> f;
+	if( !f.size() )
+	{
+		for( int i = 0, e = OIIO::Filter2D::num_filters();  i < e;  ++i )
+		{
+			OIIO::FilterDesc fd;
+			OIIO::Filter2D::get_filterdesc( i, &fd );
+			f.push_back( fd.name );
+		}
+	}
+	return f;
 }
 
 void Resample::hashDataWindow( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const

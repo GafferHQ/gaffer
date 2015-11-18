@@ -43,7 +43,7 @@ import GafferTest
 import GafferImage
 import GafferImageTest
 
-class ImagePlugTest( GafferTest.TestCase ) :
+class ImagePlugTest( GafferImageTest.ImageTestCase ) :
 
 	def testTileOrigin( self ) :
 

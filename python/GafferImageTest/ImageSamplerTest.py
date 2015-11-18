@@ -39,8 +39,9 @@ import IECore
 import Gaffer
 import GafferTest
 import GafferImage
+import GafferImageTest
 
-class ImageSamplerTest( GafferTest.TestCase ) :
+class ImageSamplerTest( GafferImageTest.ImageTestCase ) :
 
 	def test( self ) :
 
@@ -63,28 +64,17 @@ class ImageSamplerTest( GafferTest.TestCase ) :
 
 		sampler = GafferImage.ImageSampler()
 		sampler["image"].setInput( imageNode["out"] )
-		sampler["filter"].setValue( "Box" )
 
 		hashes = set()
 		for x in range( 0, 75 ) :
 			for y in range( 0, 75 ) :
-				sampler["pixel"].setValue( IECore.V2f( x, y ) )
+				sampler["pixel"].setValue( IECore.V2f( x + 0.5, y + 0.5 ) )
 				# the flip in y is necessary as gaffer image coordinates run bottom->top and
 				# cortex image coordinates run top->bottom.
 				self.assertEqual( sampler["color"].getValue(), IECore.Color4f( x, 74 - y, 0, 0 ) )
 				hashes.add( str( sampler["color"].hash() ) )
 
 		self.assertEqual( len( hashes ), 75 * 75 )
-
-	def testFilterAffectsHash( self ) :
-
-		constant = GafferImage.Constant()
-		sampler = GafferImage.ImageSampler()
-		sampler["image"].setInput( constant["out"] )
-
-		h = sampler["color"].hash()
-		sampler["filter"].setValue( "Box" )
-		self.assertNotEqual( sampler["color"].hash(), h )
 
 if __name__ == "__main__":
 	unittest.main()

@@ -67,9 +67,6 @@ class ImageSampler : public Gaffer::ComputeNode
 		Gaffer::V2fPlug *pixelPlug();
 		const Gaffer::V2fPlug *pixelPlug() const;
 
-		FilterPlug *filterPlug();
-		const FilterPlug *filterPlug() const;
-
 		Gaffer::Color4fPlug *colorPlug();
 		const Gaffer::Color4fPlug *colorPlug() const;
 

@@ -37,327 +37,57 @@
 #include "IECore/AngleConversion.h"
 
 #include "Gaffer/Context.h"
+#include "Gaffer/StringPlug.h"
+#include "Gaffer/Transform2DPlug.h"
 
 #include "GafferImage/ImageTransform.h"
-#include "GafferImage/Reformat.h"
-#include "GafferImage/Filter.h"
-#include "GafferImage/AtomicFormatPlug.h"
 #include "GafferImage/ImagePlug.h"
 #include "GafferImage/Sampler.h"
+#include "GafferImage/Resample.h"
 
-using namespace Gaffer;
+using namespace Imath;
 using namespace IECore;
+using namespace Gaffer;
 using namespace GafferImage;
 
-IE_CORE_DEFINERUNTIMETYPED( ImageTransform );
-
 //////////////////////////////////////////////////////////////////////////
-// Internal implementation details
+// Utilities
 //////////////////////////////////////////////////////////////////////////
 
-namespace GafferImage
+namespace
 {
 
-namespace Detail
+// Rounds min down, and max up, while converting from float to int.
+Box2i box2fToBox2i( const Box2f &b )
 {
-
-class Implementation : public ImageProcessor
-{
-	public :
-
-		Implementation( const std::string &name=staticTypeName() );
-
-		virtual ~Implementation(){};
-
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Implementation, ImageTransformImplementationTypeId, ImageProcessor );
-
-		virtual void hashFormat( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual void hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual void hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-
-		virtual GafferImage::Format computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const;
-		virtual Imath::Box2i computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const;
-		virtual IECore::ConstFloatVectorDataPtr computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const;
-
-		/// Plug accessors.
-		Gaffer::Transform2DPlug *transformPlug();
-		const Gaffer::Transform2DPlug *transformPlug() const;
-		GafferImage::FilterPlug *filterPlug();
-		const GafferImage::FilterPlug *filterPlug() const;
-		GafferImage::AtomicFormatPlug *outputAtomicFormatPlug();
-		const GafferImage::AtomicFormatPlug *outputAtomicFormatPlug() const;
-
-		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
-		virtual bool enabled() const;
-
-	private :
-
-		static size_t g_firstPlugIndex;
-
-		// A useful method that returns an axis-aligned box that contains box*m.
-		Imath::Box2i transformBox( const Imath::M33f &m, const Imath::Box2i &box ) const;
-
-		// A method that uses the input and output format along with the transform plug to create
-		// the transform matrix that will compensate for the reformat node having resized the input.
-		Imath::M33f computeAdjustedMatrix() const;
-};
-
-size_t Implementation::g_firstPlugIndex = 0;
-
-Implementation::Implementation( const std::string &name )
-	:	ImageProcessor( name )
-{
-	storeIndexOfNextChild( g_firstPlugIndex );
-
-	addChild( new Gaffer::Transform2DPlug( "transform" ) );
-	addChild( new GafferImage::FilterPlug( "filter" ) );
-	addChild( new GafferImage::AtomicFormatPlug( "outputFormat" ) );
-
-	// We don't ever want to change these, so we make pass-through connections.
-	outPlug()->metadataPlug()->setInput( inPlug()->metadataPlug() );
-	outPlug()->channelNamesPlug()->setInput( inPlug()->channelNamesPlug() );
-}
-
-Gaffer::Transform2DPlug *Implementation::transformPlug()
-{
-	return getChild<Gaffer::Transform2DPlug>( g_firstPlugIndex );
-}
-
-const Gaffer::Transform2DPlug *Implementation::transformPlug() const
-{
-	return getChild<Gaffer::Transform2DPlug>( g_firstPlugIndex );
-}
-
-GafferImage::FilterPlug *Implementation::filterPlug()
-{
-	return getChild<GafferImage::FilterPlug>( g_firstPlugIndex+1 );
-}
-
-const GafferImage::FilterPlug *Implementation::filterPlug() const
-{
-	return getChild<GafferImage::FilterPlug>( g_firstPlugIndex+1 );
-}
-
-GafferImage::AtomicFormatPlug *Implementation::outputAtomicFormatPlug()
-{
-	return getChild<GafferImage::AtomicFormatPlug>( g_firstPlugIndex + 2 );
-}
-
-const GafferImage::AtomicFormatPlug *Implementation::outputAtomicFormatPlug() const
-{
-	return getChild<GafferImage::AtomicFormatPlug>( g_firstPlugIndex + 2 );
-}
-
-void Implementation::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
-{
-	ImageProcessor::affects( input, outputs );
-
-	if( input == inPlug()->formatPlug()	)
-	{
-		outputs.push_back( outPlug()->channelDataPlug() );
-	}
-	else if( input == inPlug()->dataWindowPlug() )
-	{
-		outputs.push_back( outPlug()->dataWindowPlug() );
-	}
-	else if( input == inPlug()->channelDataPlug() )
-	{
-		outputs.push_back( outPlug()->channelDataPlug() );
-	}
-	else if ( input == outputAtomicFormatPlug() )
-	{
-		outputs.push_back( outPlug()->formatPlug() );
-	}
-	else if ( transformPlug()->isAncestorOf( input ) )
-	{
-		outputs.push_back( outPlug()->dataWindowPlug() );
-		outputs.push_back( outPlug()->channelDataPlug() );
-	}
-	else if ( input == filterPlug() )
-	{
-		outputs.push_back( outPlug()->channelDataPlug() );
-	}
-}
-
-bool Implementation::enabled() const
-{
-	if ( !ImageProcessor::enabled() )
-	{
-		return false;
-	}
-
-	// Disable the node if it isn't doing anything...
-	Imath::V2f scale = transformPlug()->scalePlug()->getValue();
-	Imath::V2f translate = transformPlug()->translatePlug()->getValue();
-	float rotate = transformPlug()->rotatePlug()->getValue();
-	if (
-		rotate == 0 &&
-		scale.x == 1 && scale.y == 1 &&
-		translate.x == 0 && translate.y == 0
-		)
-	{
-		return false;
-	}
-
-	return true;
-}
-
-void Implementation::hashFormat( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
-{
-	h = outputAtomicFormatPlug()->hash();
-}
-
-GafferImage::Format Implementation::computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const
-{
-	return outputAtomicFormatPlug()->getValue();
-}
-
-void Implementation::hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
-{
-	ImageProcessor::hashDataWindow( output, context, h );
-	inPlug()->dataWindowPlug()->hash( h );
-	transformPlug()->hash( h );
-}
-
-Imath::Box2i Implementation::computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const
-{
-	Imath::Box2i inWindow( inPlug()->dataWindowPlug()->getValue() );
-	Imath::M33f t = computeAdjustedMatrix();
-	Imath::Box2i outWindow( transformBox( t, inWindow ) );
-	return outWindow;
-}
-
-void Implementation::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
-{
-	ImageProcessor::hashChannelData( output, context, h );
-
-	// Hash all of the tiles that the sample requires for this tile.
-	Imath::V2i tileOrigin( Context::current()->get<Imath::V2i>( ImagePlug::tileOriginContextName ) );
-	std::string channelName( Context::current()->get<std::string>( ImagePlug::channelNameContextName ) );
-	Imath::M33f sampleTransform( computeAdjustedMatrix().inverse() );
-	Imath::Box2i tile( transformBox( sampleTransform, Imath::Box2i( tileOrigin, tileOrigin + Imath::V2i( ImagePlug::tileSize() ) ) ) );
-
-	GafferImage::FilterPtr filter = GafferImage::Filter::create( filterPlug()->getValue() );
-	Sampler sampler( inPlug(), channelName, tile, filter );
-	sampler.hash( h );
-
-	// Hash in the origin of the output tile. Multiple output tiles may share the exact same set of input
-	// tiles, but will reference different parts of them depending on the tile origin.
-	h.append( tileOrigin );
-
-	// Hash the filter type that we are using.
-	filterPlug()->hash( h );
-
-	// Finally we hash the transformation.
-	transformPlug()->hash( h );
-}
-
-IECore::ConstFloatVectorDataPtr Implementation::computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const
-{
-	// Allocate the new tile
-	FloatVectorDataPtr outDataPtr = new FloatVectorData;
-	std::vector<float> &out = outDataPtr->writable();
-	out.resize( ImagePlug::tileSize() * ImagePlug::tileSize() );
-
-	// Work out the bounds of the tile that we are outputting to.
-	Imath::Box2i tile( tileOrigin, Imath::V2i( tileOrigin.x + ImagePlug::tileSize(), tileOrigin.y + ImagePlug::tileSize() ) );
-
-	// Work out the sample area that we require to compute this tile.
-
-	Imath::M33f t = computeAdjustedMatrix().inverse();
-	Imath::Box2i sampleBox( transformBox( t, tile ) );
-
-	GafferImage::FilterPtr filter = GafferImage::Filter::create( filterPlug()->getValue() );
-	Sampler sampler( inPlug(), channelName, sampleBox, filter );
-	for ( int j = 0; j < ImagePlug::tileSize(); ++j )
-	{
-		for ( int i = 0; i < ImagePlug::tileSize(); ++i )
-		{
-			Imath::V3f p( i+tile.min.x+.5, j+tile.min.y+.5, 1. );
-			p *= t;
-			out[ i + j*ImagePlug::tileSize() ] = sampler.sample( p.x, p.y );
-		}
-	}
-
-	return outDataPtr;
-}
-
-Imath::M33f Implementation::computeAdjustedMatrix() const
-{
-	Format inFormat = inPlug()->formatPlug()->getValue();
-	Format outFormat = outputAtomicFormatPlug()->getValue();
-
-	// The desired scale factor.
-	Imath::V2f scale = transformPlug()->scalePlug()->getValue();
-
-	// The actual scale factor that the reformat node has resized the input to.
-	Imath::V2f trueScale = Imath::V2f(
-		float( inFormat.getDisplayWindow().size().x ) / ( outFormat.getDisplayWindow().size().x ),
-		float( inFormat.getDisplayWindow().size().y ) / ( outFormat.getDisplayWindow().size().y )
+	return Box2i(
+		V2i( floor( b.min.x ), floor( b.min.y ) ),
+		V2i( ceil( b.max.x ), ceil( b.max.y ) )
 	);
-
-	// To transform the image correctly we need to first move the image to the pivot point.
-	Imath::M33f pi;
-	Imath::V2f invPivotVec = -transformPlug()->pivotPlug()->getValue();
-	invPivotVec *= trueScale;
-	pi.translate( invPivotVec );
-
-	// As the input was only scaled to the nearest integer bounding box by the reformat node we need to
-	// do a slight scale adjustment to achieve any sub-pixel scale factor.
-	Imath::V2f scaleOffset = scale / trueScale;
-	Imath::M33f s;
-	s.scale( scaleOffset );
-
-	// The rotation component.
-	Imath::M33f r;
-	r.rotate( -IECore::degreesToRadians( transformPlug()->rotatePlug()->getValue() ) );
-
-	// The translation component.
-	Imath::M33f t;
-	t.translate( transformPlug()->translatePlug()->getValue() );
-
-	// Here we invert the pivot vector and translate the image back.
-	Imath::M33f p;
-	p.translate( transformPlug()->pivotPlug()->getValue() );
-
-	// Concatenate the transforms.
-	Imath::M33f result = pi * s * r * t * p;
-
-	return result;
 }
 
-Imath::Box2i Implementation::transformBox( const Imath::M33f &m, const Imath::Box2i &box ) const
+Box2f transform( const Box2f &b, const M33f &m )
 {
-	Imath::V3f pt[4];
-	pt[0] = Imath::V3f( box.min.x, box.min.y, 1. );
-	pt[1] = Imath::V3f( box.max.x-1, box.max.y-1, 1. );
-	pt[2] = Imath::V3f( box.max.x-1, box.min.y, 1. );
-	pt[3] = Imath::V3f( box.min.x, box.max.y-1, 1. );
-
-	int maxX = std::numeric_limits<int>::min();
-	int maxY = std::numeric_limits<int>::min();
-	int minX = std::numeric_limits<int>::max();
-	int minY = std::numeric_limits<int>::max();
-
-	for( unsigned int i = 0; i < 4; ++i )
+	if( b.isEmpty() )
 	{
-		pt[i] = pt[i] * m;
-		maxX = std::max( int( ceil( pt[i].x ) ), maxX );
-		maxY = std::max( int( ceil( pt[i].y ) ), maxY );
-		minX = std::min( int( floor( pt[i].x ) ), minX );
-		minY = std::min( int( floor( pt[i].y ) ), minY );
+		return b;
 	}
 
-	return Imath::Box2i( Imath::V2i( minX, minY ), Imath::V2i( maxX, maxY ) + Imath::V2i( 1 ) );
+	Box2f r;
+	r.extendBy( V2f( b.min.x, b.min.y ) * m );
+	r.extendBy( V2f( b.max.x, b.min.y ) * m );
+	r.extendBy( V2f( b.max.x, b.max.y ) * m );
+	r.extendBy( V2f( b.min.x, b.max.y ) * m );
+	return r;
 }
 
-} // namespace Detail
-
-} // namespace GafferImage
+} // namespace
 
 //////////////////////////////////////////////////////////////////////////
-// Implementation of ImageTransform
+// ImageTransform
 //////////////////////////////////////////////////////////////////////////
+
+IE_CORE_DEFINERUNTIMETYPED( ImageTransform );
 
 size_t ImageTransform::g_firstPlugIndex = 0;
 
@@ -367,118 +97,294 @@ ImageTransform::ImageTransform( const std::string &name )
 	storeIndexOfNextChild( g_firstPlugIndex );
 
 	addChild( new Gaffer::Transform2DPlug( "transform" ) );
+	addChild( new StringPlug( "filter", Plug::In, "cubic" ) );
 
-	FilterPlug *filterPlug = new FilterPlug( "filter" );
-	addChild( filterPlug );
+	// We use an internal Resample node to do filtered
+	// sampling of the translate and scale in one. Then,
+	// if we also have a rotation component we sample that
+	// from the intermediate result in computeChannelData().
 
-	addChild( new GafferImage::AtomicFormatPlug( "__scaledFormat", Gaffer::Plug::Out ) );
+	addChild( new AtomicBox2fPlug( "__resampleDataWindow", Plug::Out ) );
+	addChild( new ImagePlug( "__resampledIn", Plug::In, Plug::Default & ~Plug::Serialisable ) );
 
-	// Create the internal implementation of our transform and connect it up the our plugs.
-	GafferImage::Reformat *r = new GafferImage::Reformat( "__reformat" );
-	r->inPlug()->setInput( inPlug() );
-	r->filterPlug()->setInput( filterPlug );
-	r->formatPlug()->setInput( formatPlug() );
-	r->enabledPlug()->setInput( enabledPlug() );
-	addChild( r );
+	ResamplePtr resample = new Resample( "__resample" );
+	addChild( resample );
 
-	Detail::Implementation *t = new Detail::Implementation( "__implementation" );
-	t->inPlug()->setInput( r->outPlug() );
-	t->transformPlug()->setInput( transformPlug() );
-	t->outputAtomicFormatPlug()->setInput( inPlug()->formatPlug() );
-	t->filterPlug()->setInput( filterPlug );
-	t->enabledPlug()->setInput( enabledPlug() );
-	addChild( t );
+	resample->inPlug()->setInput( inPlug() );
+	resample->filterPlug()->setInput( filterPlug() );
+	resample->dataWindowPlug()->setInput( resampleDataWindowPlug() );
+	resampledInPlug()->setInput( resample->outPlug() );
 
-	outPlug()->setInput( t->outPlug() );
+	// Pass through the things we don't change at all.
+	outPlug()->formatPlug()->setInput( inPlug()->formatPlug() );
+	outPlug()->metadataPlug()->setInput( inPlug()->metadataPlug() );
+	outPlug()->channelNamesPlug()->setInput( inPlug()->channelNamesPlug() );
 }
 
-bool ImageTransform::enabled() const
+ImageTransform::~ImageTransform()
 {
-	if ( !ImageProcessor::enabled() )
-	{
-		return false;
-	}
-
-	// Disable the node if it isn't doing anything...
-	Imath::V2f scale = transformPlug()->scalePlug()->getValue();
-	Imath::V2f translate = transformPlug()->translatePlug()->getValue();
-	float rotate = transformPlug()->rotatePlug()->getValue();
-	if (
-		rotate == 0 &&
-		scale.x == 1 && scale.y == 1 &&
-		translate.x == 0 && translate.y == 0
-		)
-	{
-		return false;
-	}
-
-	return true;
 }
 
 Gaffer::Transform2DPlug *ImageTransform::transformPlug()
 {
-	return getChild<Gaffer::Transform2DPlug>( g_firstPlugIndex );
+	return getChild<Transform2DPlug>( g_firstPlugIndex );
 }
 
 const Gaffer::Transform2DPlug *ImageTransform::transformPlug() const
 {
-	return getChild<Gaffer::Transform2DPlug>( g_firstPlugIndex );
+	return getChild<Transform2DPlug>( g_firstPlugIndex );
 }
 
-GafferImage::AtomicFormatPlug *ImageTransform::formatPlug()
+Gaffer::StringPlug *ImageTransform::filterPlug()
 {
-	return getChild<GafferImage::AtomicFormatPlug>( g_firstPlugIndex + 2 );
+	return getChild<StringPlug>( g_firstPlugIndex + 1 );
 }
 
-const GafferImage::AtomicFormatPlug *ImageTransform::formatPlug() const
+const Gaffer::StringPlug *ImageTransform::filterPlug() const
 {
-	return getChild<GafferImage::AtomicFormatPlug>( g_firstPlugIndex + 2 );
+	return getChild<StringPlug>( g_firstPlugIndex + 1 );
+}
+
+Gaffer::AtomicBox2fPlug *ImageTransform::resampleDataWindowPlug()
+{
+	return getChild<AtomicBox2fPlug>( g_firstPlugIndex + 2 );
+}
+
+const Gaffer::AtomicBox2fPlug *ImageTransform::resampleDataWindowPlug() const
+{
+	return getChild<AtomicBox2fPlug>( g_firstPlugIndex + 2 );
+}
+
+ImagePlug *ImageTransform::resampledInPlug()
+{
+	return getChild<ImagePlug>( g_firstPlugIndex + 3 );
+}
+
+const ImagePlug *ImageTransform::resampledInPlug() const
+{
+	return getChild<ImagePlug>( g_firstPlugIndex + 3 );
+}
+
+Resample *ImageTransform::resample()
+{
+	return getChild<Resample>( g_firstPlugIndex + 4 );
+}
+
+const Resample *ImageTransform::resample() const
+{
+	return getChild<Resample>( g_firstPlugIndex + 4 );
 }
 
 void ImageTransform::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	ImageProcessor::affects( input, outputs );
 
-	if( transformPlug()->scalePlug()->isAncestorOf( input ) ||
-		input == inPlug()->formatPlug()
+	if(
+		input == inPlug()->dataWindowPlug() ||
+		input->parent<Plug>() == transformPlug()->translatePlug() ||
+		input->parent<Plug>() == transformPlug()->scalePlug() ||
+		input->parent<Plug>() == transformPlug()->pivotPlug()
 	)
 	{
-		outputs.push_back( formatPlug() );
+		outputs.push_back( resampleDataWindowPlug() );
 	}
+
+	if(
+		input == inPlug()->dataWindowPlug() ||
+		input == resampledInPlug()->dataWindowPlug() ||
+		transformPlug()->isAncestorOf( input )
+	)
+	{
+		outputs.push_back( outPlug()->dataWindowPlug() );
+	}
+
+	if(
+		input == inPlug()->channelDataPlug() ||
+		input == inPlug()->dataWindowPlug() ||
+		input == resampledInPlug()->channelDataPlug() ||
+		transformPlug()->isAncestorOf( input )
+	)
+	{
+		outputs.push_back( outPlug()->channelDataPlug() );
+	}
+
 }
 
 void ImageTransform::hash( const ValuePlug *output, const Context *context, IECore::MurmurHash &h ) const
 {
 	ImageProcessor::hash( output, context, h );
 
-	const AtomicFormatPlug *fPlug = IECore::runTimeCast<const AtomicFormatPlug>(output);
-	if( fPlug == formatPlug() )
+	if( output == resampleDataWindowPlug() )
 	{
-		h = inPlug()->formatPlug()->hash();
+		inPlug()->dataWindowPlug()->hash( h );
+		transformPlug()->translatePlug()->hash( h );
 		transformPlug()->scalePlug()->hash( h );
-		return;
+		transformPlug()->pivotPlug()->hash( h );
 	}
 }
 
 void ImageTransform::compute( ValuePlug *output, const Context *context ) const
 {
-	if( output == formatPlug() )
+	if( output == resampleDataWindowPlug() )
 	{
-		Imath::V2f scale = transformPlug()->scalePlug()->getValue();
-		GafferImage::Format f = inPlug()->formatPlug()->getValue();
-
-		Imath::Box2i newDisplayWindow(
-			Imath::V2i( IECore::fastFloatFloor( f.getDisplayWindow().min.x * scale.x ), IECore::fastFloatFloor( f.getDisplayWindow().min.y * scale.y ) ),
-			Imath::V2i( IECore::fastFloatCeil( ( f.getDisplayWindow().max.x - 1 ) * scale.x ) + 1, IECore::fastFloatCeil( ( f.getDisplayWindow().max.y - 1 ) * scale.y ) + 1 )
-		);
-
-		static_cast<AtomicFormatPlug *>( output )->setValue( GafferImage::Format( newDisplayWindow, 1.f ) );
-		return;
+		const Box2i in = inPlug()->dataWindowPlug()->getValue();
+		M33f matrix, resampleMatrix;
+		operation( matrix, resampleMatrix );
+		const Box2f out = transform( Box2f( in.min, in.max ), resampleMatrix );
+		static_cast<AtomicBox2fPlug *>( output )->setValue( out );
 	}
 
 	ImageProcessor::compute( output, context );
 }
 
-ImageTransform::~ImageTransform()
+void ImageTransform::hashDataWindow( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
+	M33f matrix, resampleMatrix;
+	const unsigned op = operation( matrix, resampleMatrix );
+	if( !(op & Rotate) )
+	{
+		h = resampledInPlug()->dataWindowPlug()->hash();
+	}
+	else
+	{
+		ImageProcessor::hashDataWindow( parent, context, h );
+		inPlug()->dataWindowPlug()->hash( h );
+		h.append( matrix );
+	}
+}
+
+Imath::Box2i ImageTransform::computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const
+{
+	M33f matrix, resampleMatrix;
+	const unsigned op = operation( matrix, resampleMatrix );
+	if( !(op & Rotate) )
+	{
+		return resampledInPlug()->dataWindowPlug()->getValue();
+	}
+	else
+	{
+		const Box2i in = inPlug()->dataWindowPlug()->getValue();
+		return box2fToBox2i( transform( Box2f( V2f( in.min ), V2f( in.max ) ), matrix ) );
+	}
+}
+
+void ImageTransform::hashChannelData( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	M33f matrix, resampleMatrix;
+	const unsigned op = operation( matrix, resampleMatrix );
+	if( !(op & Rotate) )
+	{
+		h = resampledInPlug()->channelDataPlug()->hash();
+	}
+	else
+	{
+		// Rotation of either the input or the resampled input.
+		ImageTransform::hashDataWindow( parent, context, h );
+
+		const ImagePlug *samplerImage; M33f samplerMatrix;
+		const Box2i samplerRegion = sampler( op, matrix, resampleMatrix, context->get<V2i>( ImagePlug::tileOriginContextName ), samplerImage, samplerMatrix );
+
+		Sampler sampler(
+			samplerImage,
+			context->get<std::string>( ImagePlug::channelNameContextName ),
+			samplerRegion
+		);
+		sampler.hash( h );
+
+		h.append( samplerMatrix );
+	}
+}
+
+IECore::ConstFloatVectorDataPtr ImageTransform::computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const
+{
+	M33f matrix, resampleMatrix;
+	const unsigned op = operation( matrix, resampleMatrix );
+	if( !(op & Rotate) )
+	{
+		return resampledInPlug()->channelDataPlug()->getValue();
+	}
+	else
+	{
+		// Rotation of either the input or the resampled input.
+
+		const ImagePlug *samplerImage; M33f samplerMatrix;
+		const Box2i samplerRegion = sampler( op, matrix, resampleMatrix, context->get<V2i>( ImagePlug::tileOriginContextName ), samplerImage, samplerMatrix );
+
+		Sampler sampler(
+			samplerImage,
+			channelName,
+			samplerRegion
+		);
+
+		FloatVectorDataPtr resultData = new FloatVectorData;
+		resultData->writable().resize( ImagePlug::tileSize() * ImagePlug::tileSize() );
+		std::vector<float>::iterator pIt = resultData->writable().begin();
+
+		const Box2i tileBound( tileOrigin, tileOrigin + V2i( ImagePlug::tileSize() ) );
+		V2i oP;
+		for( oP.y = tileBound.min.y; oP.y < tileBound.max.y; ++oP.y )
+		{
+			for( oP.x = tileBound.min.x; oP.x < tileBound.max.x; ++oP.x )
+			{
+				V2f iP = V2f( oP.x + 0.5, oP.y + 0.5 ) * samplerMatrix;
+				*pIt++ = sampler.sample( iP.x, iP.y );
+			}
+		}
+
+		return resultData;
+	}
+}
+
+unsigned ImageTransform::operation( Imath::M33f &matrix, Imath::M33f &resampleMatrix ) const
+{
+	const Transform2DPlug *plug = transformPlug();
+
+	const V2f pivot = plug->pivotPlug()->getValue();
+	const V2f translate = plug->translatePlug()->getValue();
+	const V2f scale = plug->scalePlug()->getValue();
+	const float rotate = plug->rotatePlug()->getValue();
+
+	M33f pivotMatrix; pivotMatrix.setTranslation( pivot );
+	M33f pivotInverseMatrix; pivotInverseMatrix.setTranslation( -pivot );
+	M33f translateMatrix; translateMatrix.setTranslation( translate );
+	M33f scaleMatrix; scaleMatrix.setScale( scale );
+	M33f rotateMatrix; rotateMatrix.setRotation( degreesToRadians( rotate ) );
+
+	matrix = pivotInverseMatrix * scaleMatrix * rotateMatrix * pivotMatrix * translateMatrix;
+	resampleMatrix = pivotInverseMatrix * scaleMatrix * pivotMatrix * translateMatrix;
+
+	unsigned op = 0;
+	if( translate != V2f( 0 ) )
+	{
+		op |= Translate;
+	}
+	if( scale != V2f( 1 ) )
+	{
+		op |= Scale;
+	}
+	if( rotate != 0 )
+	{
+		op |= Rotate;
+	}
+
+	return op;
+}
+
+Imath::Box2i ImageTransform::sampler( unsigned op, const Imath::M33f &matrix, const Imath::M33f &resampleMatrix, const Imath::V2i &tileOrigin, const ImagePlug *&samplerImage, Imath::M33f &samplerMatrix ) const
+{
+	assert( op & Rotate );
+
+	if( op & ( Scale | Translate ) )
+	{
+		samplerImage = resampledInPlug();
+		samplerMatrix = matrix.inverse() * resampleMatrix;
+	}
+	else
+	{
+		samplerImage = inPlug();
+		samplerMatrix = matrix.inverse();
+	}
+
+	const Box2f tileBound( tileOrigin, tileOrigin + V2i( ImagePlug::tileSize() ) );
+	return box2fToBox2i( transform( tileBound, samplerMatrix ) );
 }

@@ -34,41 +34,6 @@
 #
 ##########################################################################
 
-import Gaffer
 import GafferImage
 
-Gaffer.Metadata.registerNode(
-
-	GafferImage.Reformat,
-
-	"description",
-	"""
-	Reformats the image to a new resolution, scaling it
-	to fit the new display window.
-	""",
-
-	plugs = {
-
-		"format" : [
-
-			"description",
-			"""
-			The format (resolution and pixel aspect ratio) of the output image.
-			""",
-
-		],
-
-		"filter" : [
-
-			"description",
-			"""
-			The pixel filter used when transforming the image. Each
-			filter provides different tradeoffs between sharpness and
-			the danger of aliasing or ringing.
-			""",
-
-		],
-
-	}
-
-)
+GafferImage.Reformat = GafferImage.Resize

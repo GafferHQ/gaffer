@@ -60,6 +60,7 @@ float opMatte( float A, float B, float a, float b){ return A*a + B*(1.-a); }
 float opMultiply( float A, float B, float a, float b){ return A * B; }
 float opOver( float A, float B, float a, float b){ return A + B*(1.-a); }
 float opSubtract( float A, float B, float a, float b){ return A - B; }
+float opDifference( float A, float B, float a, float b){ return fabs( A - B ); }
 float opUnder( float A, float B, float a, float b){ return A*(1.-b) + B; }
 
 } // namespace
@@ -158,7 +159,7 @@ Imath::Box2i Merge::computeDataWindow( const Gaffer::Context *context, const Ima
 		// We don't need to check that the plug is connected here as unconnected plugs don't have data windows.
 		dataWindow.extendBy( (*it)->dataWindowPlug()->getValue() );
 	}
-	
+
 	return dataWindow;
 }
 
@@ -200,7 +201,7 @@ IECore::ConstStringVectorDataPtr Merge::computeChannelNames( const Gaffer::Conte
 	{
 		return outChannelStrVectorData;
 	}
-	
+
 	return inPlug()->channelNamesPlug()->defaultValue();
 }
 
@@ -210,7 +211,7 @@ void Merge::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer:
 
 	const V2i tileOrigin = context->get<V2i>( ImagePlug::tileOriginContextName );
 	const Box2i tileBound( tileOrigin, tileOrigin + V2i( ImagePlug::tileSize() ) );
-	
+
 	for( ImagePlugIterator it( inPlugs() ); it != it.end(); ++it )
 	{
 		if( !(*it)->getInput<ValuePlug>() )
@@ -234,7 +235,7 @@ void Merge::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer:
 		const Box2i validBound = boxIntersection( tileBound, (*it)->dataWindowPlug()->getValue() );
 		h.append( validBound );
 	}
-	
+
 	operationPlug()->hash( h );
 }
 
@@ -262,10 +263,12 @@ IECore::ConstFloatVectorDataPtr Merge::computeChannelData( const std::string &ch
 			return merge( opOver, tileOrigin );
 		case Subtract :
 			return merge( opSubtract, tileOrigin );
+		case Difference :
+			return merge( opDifference, tileOrigin );
 		case Under :
 			return merge( opUnder, tileOrigin );
 	}
-	
+
 	throw Exception( "Merge::computeChannelData : Invalid operation mode." );
 }
 

@@ -78,6 +78,7 @@ class Merge : public ImageProcessor
 			Multiply,  // AB
 			Over,      // A + B(1-a)
 			Subtract,  // A - B
+			Difference,// fabs( A - B )
 			Under      // A(1-b) + B
 		};
 
@@ -90,7 +91,7 @@ class Merge : public ImageProcessor
 
 		/// Reimplementated to check that at least two of the inputs are connected
 		virtual bool enabled() const;
-		
+
 		/// Reimplemented to hash the connected input plugs
 		virtual void hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual void hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;

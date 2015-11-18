@@ -41,8 +41,9 @@ import IECore
 import Gaffer
 import GafferTest
 import GafferImage
+import GafferImageTest
 
-class ImageLoopTest( GafferTest.TestCase ) :
+class ImageLoopTest( GafferImageTest.ImageTestCase ) :
 
 	def testDefaultName( self ) :
 
@@ -67,10 +68,10 @@ class ImageLoopTest( GafferTest.TestCase ) :
 		script["sampler"]["image"].setInput( script["loop"]["out"] )
 
 		with script.context() :
-			
+
 			script["loop"]["iterations"].setValue( 2 )
 			self.assertAlmostEqual( script["sampler"]["color"]["r"].getValue(), .2 )
-			
+
 			script["loop"]["iterations"].setValue( 4 )
 			self.assertAlmostEqual( script["sampler"]["color"]["r"].getValue(), .4 )
 
@@ -78,10 +79,10 @@ class ImageLoopTest( GafferTest.TestCase ) :
 		script2.execute( script.serialise() )
 
 		with script2.context() :
-			
+
 			script2["loop"]["iterations"].setValue( 3 )
 			self.assertAlmostEqual( script2["sampler"]["color"]["r"].getValue(), .3 )
-			
+
 			script2["loop"]["iterations"].setValue( 5 )
 			self.assertAlmostEqual( script2["sampler"]["color"]["r"].getValue(), .5 )
 

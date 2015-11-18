@@ -41,8 +41,9 @@ import IECore
 import Gaffer
 import GafferTest
 import GafferImage
+import GafferImageTest
 
-class ImageProcessorTest( GafferTest.TestCase ) :
+class ImageProcessorTest( GafferImageTest.ImageTestCase ) :
 
 	def testDerivingInPython( self ) :
 

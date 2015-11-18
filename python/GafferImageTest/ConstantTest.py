@@ -41,8 +41,9 @@ import IECore
 
 import Gaffer
 import GafferImage
+import GafferImageTest
 
-class ConstantTest( unittest.TestCase ) :
+class ConstantTest( GafferImageTest.ImageTestCase ) :
 
 	def testChannelData( self ) :
 

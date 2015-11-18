@@ -41,8 +41,9 @@ import IECore
 
 import Gaffer
 import GafferImage
+import GafferImageTest
 
-class FormatPlugTest( unittest.TestCase ) :
+class FormatPlugTest( GafferImageTest.ImageTestCase ) :
 
 	def testConstructor( self ) :
 

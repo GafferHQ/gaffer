@@ -44,8 +44,9 @@ import IECore
 import Gaffer
 import GafferTest
 import GafferImage
+import GafferImageTest
 
-class DisplayTest( GafferTest.TestCase ) :
+class DisplayTest( GafferImageTest.ImageTestCase ) :
 
 	def setUp( self ) :
 

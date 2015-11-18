@@ -56,6 +56,7 @@
 #include "IECoreGL/IECoreGL.h"
 
 #include "Gaffer/Context.h"
+#include "Gaffer/StringPlug.h"
 
 #include "GafferUI/Gadget.h"
 #include "GafferUI/Style.h"
@@ -68,7 +69,6 @@
 #include "GafferImage/ImageStats.h"
 #include "GafferImage/Clamp.h"
 #include "GafferImage/ImageSampler.h"
-#include "GafferImage/FilterPlug.h"
 
 #include "GafferImageUI/ImageView.h"
 
@@ -412,7 +412,13 @@ class ImageViewGadget : public GafferUI::Gadget
 		/// of dirtiness).
 		Color4f sampleColor( const V2f &point ) const
 		{
-			m_imageSampler->pixelPlug()->setValue( point );
+			m_imageSampler->pixelPlug()->setValue(
+				// Sample at pixel centers only.
+				V2f(
+					floor( point.x ) + 0.5,
+					floor( point.y ) + 0.5
+				)
+			);
 			Context::Scope context( m_context.get() );
 			return m_imageSampler->colorPlug()->getValue();
 		};
@@ -947,9 +953,6 @@ ImageView::ImageView( const std::string &name )
 	ImageSamplerPtr samplerNode = new ImageSampler( "__imageSampler" );
 	preprocessor->addChild( samplerNode );
 	samplerNode->imagePlug()->setInput( preprocessorInput );
-	/// \todo This gives us nearest neighbour filtering which is what we want,
-	// but only because the Sampler class doesn't do Box sampling properly.
-	samplerNode->filterPlug()->setValue( "Box" );
 
 	ClampPtr clampNode = new Clamp();
 	preprocessor->setChild(  "__clamp", clampNode );
