@@ -97,7 +97,7 @@ ImageTransform::ImageTransform( const std::string &name )
 	storeIndexOfNextChild( g_firstPlugIndex );
 
 	addChild( new Gaffer::Transform2DPlug( "transform" ) );
-	addChild( new StringPlug( "filter" ) );
+	addChild( new StringPlug( "filter", Plug::In, "cubic" ) );
 
 	// We use an internal Resample node to do filtered
 	// sampling of the translate and scale in one. Then,
