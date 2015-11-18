@@ -118,7 +118,9 @@ Gaffer.Metadata.registerNode(
 			"""
 			The area of the image within which the text is rendered.
 			The text will be word wrapped to fit within the area and
-			justified as specified by the justification setting.
+			justified as specified by the justification setting. If the
+			area is empty, then the full display window will be used
+			instead.
 			""",
 
 		],

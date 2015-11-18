@@ -321,6 +321,7 @@ bool Text::affectsLayout( const Gaffer::Plug *input ) const
 		input == fontPlug() ||
 		input->parent<V2iPlug>() == sizePlug() ||
 		areaPlug()->isAncestorOf( input ) ||
+		input == inPlug()->formatPlug() ||
 		input == justificationPlug() ||
 		transformPlug()->isAncestorOf( input );
 }
@@ -331,6 +332,7 @@ void Text::hashLayout( const Gaffer::Context *context, IECore::MurmurHash &h ) c
 	fontPlug()->hash( h );
 	sizePlug()->hash( h );
 	areaPlug()->hash( h );
+	inPlug()->formatPlug()->hash( h );
 	justificationPlug()->hash( h );
 	transformPlug()->hash( h );
 }
@@ -351,6 +353,11 @@ IECore::ConstCompoundObjectPtr Text::computeLayout( const Gaffer::Context *conte
 	// in a vector of Lines made up of Words.
 
 	Box2i area = areaPlug()->getValue();
+	if( empty( area ) )
+	{
+		area = inPlug()->formatPlug()->getValue().getDisplayWindow();
+	}
+	
 	area.min *= 64; area.max *= 64;
 	V2i pen = V2i( area.min.x, area.max.y - face->size->metrics.ascender );
 
