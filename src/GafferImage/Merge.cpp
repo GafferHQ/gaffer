@@ -119,41 +119,19 @@ void Merge::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs 
 	}
 }
 
-bool Merge::enabled() const
-{
-	if( !ImageProcessor::enabled() )
-	{
-		return false;
-	}
-
-	int numConnected = 0;
-	for( ImagePlugIterator it( inPlugs() ); it != it.end(); ++it )
-	{
-		if( (*it)->getInput<Plug>() )
-		{
-			numConnected++;
-		}
-	}
-
-	return numConnected >= 2;
-}
-
 void Merge::hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	ImageProcessor::hashDataWindow( output, context, h );
 
 	for( ImagePlugIterator it( inPlugs() ); it != it.end(); ++it )
 	{
-		if ( (*it)->getInput<ValuePlug>() )
-		{
-			(*it)->dataWindowPlug()->hash( h );
-		}
+		(*it)->dataWindowPlug()->hash( h );
 	}
 }
 
 Imath::Box2i Merge::computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
-	Imath::Box2i dataWindow = inPlug()->dataWindowPlug()->getValue();
+	Imath::Box2i dataWindow;
 	for( ImagePlugIterator it( inPlugs() ); it != it.end(); ++it )
 	{
 		// We don't need to check that the plug is connected here as unconnected plugs don't have data windows.
