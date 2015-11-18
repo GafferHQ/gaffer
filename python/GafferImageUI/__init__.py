@@ -39,7 +39,6 @@ from _GafferImageUI import *
 
 import DisplayUI
 from FormatPlugValueWidget import FormatPlugValueWidget
-from FilterPlugValueWidget import FilterPlugValueWidget
 from ChannelMaskPlugValueWidget import ChannelMaskPlugValueWidget
 
 import ImageReaderUI
