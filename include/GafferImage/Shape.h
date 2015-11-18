@@ -40,11 +40,13 @@
 #include "Gaffer/CompoundNumericPlug.h"
 
 #include "GafferImage/ImageProcessor.h"
+#include "GafferImage/ImageSwitch.h"
 
 namespace GafferImage
 {
 
 IE_CORE_FORWARDDECLARE( Merge )
+IE_CORE_FORWARDDECLARE( ImageTransform )
 
 /// Base class for nodes which draw shapes on top of an input image.
 /// Derived classes are responsible only for generating a mask for the
@@ -62,6 +64,18 @@ class Shape : public ImageProcessor
 
 		Gaffer::Color4fPlug *colorPlug();
 		const Gaffer::Color4fPlug *colorPlug() const;
+		
+		Gaffer::BoolPlug *shadowPlug();
+		const Gaffer::BoolPlug *shadowPlug() const;
+		
+		Gaffer::Color4fPlug *shadowColorPlug();
+		const Gaffer::Color4fPlug *shadowColorPlug() const;
+		
+		Gaffer::V2fPlug *shadowOffsetPlug();
+		const Gaffer::V2fPlug *shadowOffsetPlug() const;
+		
+		Gaffer::FloatPlug *shadowBlurPlug();
+		const Gaffer::FloatPlug *shadowBlurPlug() const;
 
 		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
 
@@ -97,11 +111,11 @@ class Shape : public ImageProcessor
 
 		ImagePlug *shapePlug();
 		const ImagePlug *shapePlug() const;
+		
+		ImagePlug *shadowShapePlug();
+		const ImagePlug *shadowShapePlug() const;
 
-		Merge *merge();
-		const Merge *merge() const;
-
-		float channelValue( const std::string &channelName ) const;
+		float channelValue( const GafferImage::ImagePlug *parent, const std::string &channelName ) const;
 
 		static size_t g_firstPlugIndex;
 
