@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import itertools
+
 import Gaffer
 import GafferImage
 
@@ -70,9 +72,15 @@ Gaffer.Metadata.registerNode(
 			or not the image is being enlarged or reduced.
 			""",
 
-			"plugValueWidget:type", "GafferImageUI.FilterPlugValueWidget",
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			
+			"preset:Default", "",
 
-		],
+		] + list( itertools.chain(
+		
+			*[ ( "preset:" + x.title(), x ) for x in GafferImage.Resample.filters() ]
+		
+		) ),
 
 		"filterWidth" : [
 

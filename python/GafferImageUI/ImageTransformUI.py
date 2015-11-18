@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import itertools
+
 import Gaffer
 import GafferUI
 import GafferImage
@@ -75,9 +77,15 @@ Gaffer.Metadata.registerNode(
 			the danger of aliasing or ringing.
 			""",
 
-			"plugValueWidget:type", "GafferImageUI.FilterPlugValueWidget",
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 
-		],
+		] + list( itertools.chain(
+		
+			# Disk doesn't make much sense as a resizing filter, and also causes artifacts because
+			# its default width is small enough to fall into the gaps between pixels. 
+			*[ ( "preset:" + x.title(), x ) for x in GafferImage.Resample.filters() if x != "disk" ]
+		
+		) ),
 
 	}
 
