@@ -1,3 +1,90 @@
+# 0.19.0.0
+==========
+
+Apps
+-----------------------------------------------------------------------
+
+- Added a preference for OIIO cache memory to the gui app.
+
+Core
+-----------------------------------------------------------------------
+
+- Added a TaskSwitch node.
+- Added support for variable substitutions within SystemCommand.
+- Added a PythonCommand node.
+- Expression
+	- Added support for assigning floats to IntPlugs in Python expressions.
+	- Added detection of circular dependencies within expressions.
+- Added support for metadata edits on Reference nodes (#1536).
+
+UI
+-----------------------------------------------------------------------
+
+- Fixed SceneInspector context bug.
+- Fixed display bug in Wedge string mode
+
+Image
+-----------------------------------------------------------------------
+
+- Added Blur node.
+- Added ImagePrimitiveProcessor base class.
+- Added methods for controlling the OIIO cache memory.
+- Fixed bug which prevented the ImageWriter using the requested
+  compression (#1538).
+- Resample
+	- Added expandDataWindow plug.
+	- Added support for "smoothGaussian" filter.
+	- Fixed bug which prevented subpixel translations.
+- Fixed dirty propagation bugs in Offset node.
+- Added Difference operation to Merge.
+- ImageTransform
+	- Improved performance up to 50%.
+	- Improved quality.
+	- Changed rotation direction to counter clockwise.
+	- Made "cubic" the default filter./
+- Removed Reformat node. Use Resize instead.
+
+Arnold
+-----------------------------------------------------------------------
+
+- Added ray depth setting to ArnoldOptions node.
+
+Documentation
+-----------------------------------------------------------------------
+
+- Updated for latest changes.
+
+API
+-----------------------------------------------------------------------
+
+- Added python bindings for ImageWriter::Mode.
+- Expression::setExpression() preserves previous state in the case
+  that parsing fails.
+- Stopped CompoundNumericPlug::getChild() from masking the base class
+  equivalents.
+- Added ImageTestCase with assertImagesEqual() method.
+- Removed filter from ImageSampler.
+- Added Resample::filters() method.
+
+Build
+-----------------------------------------------------------------------
+
+- Improved reporting in Travis config.
+
+Incompatibilities
+-----------------------------------------------------------------------
+
+- ImageTransform now uses OIIO filters rather than GafferImage filters - 
+  the old filter names are no longer supported.
+- ImageTransform now rotates counter clockwise.
+- Removed Reformat and redirected it to Resize, which supports OIIO filters
+  rather than GafferImage filters.
+- Removed filter plug from ImageSampler. Bilinear interpolation is used
+  instead.
+- Removed FilterPlug. Use StringPlug instead.
+- Removed Filter. Use OIIO filters instead.
+- Removed FilterPlugValueWidget. Use presets instead.
+
 # 0.18.0.0
 ==========
 
