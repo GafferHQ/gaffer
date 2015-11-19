@@ -377,9 +377,10 @@ IECore::ConstCompoundObjectPtr Text::computeLayout( const Gaffer::Context *conte
 	vector<Line> lines;
 	lines.push_back( Line( pen.y ) );
 
+	const std::string text = textPlug()->getValue();
 	typedef boost::tokenizer<boost::char_separator<char> > Tokenizer;
 	boost::char_separator<char> separator( "", " \n\t" );
-	Tokenizer tokenizer( textPlug()->getValue(), separator );
+	Tokenizer tokenizer( text, separator );
 	for( Tokenizer::iterator it = tokenizer.begin(), eIt = tokenizer.end(); it != eIt; ++it )
 	{
 		if( *it == "\n" )
