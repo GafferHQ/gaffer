@@ -137,8 +137,8 @@ FT_Matrix transform( const M33f &transform, FT_Vector &delta )
 	matrix.yx = (FT_Fixed)( transform[0][1] * 0x10000L );
 	matrix.yy = (FT_Fixed)( transform[1][1] * 0x10000L );
 
-	delta.x = transform.translation()[0] * 64; // FT_Set_Transform expects delta
-	delta.y = transform.translation()[1] * 64; // to be in 1/64ths of a pixel.
+	delta.x = (FT_Pos)(transform.translation()[0] * 64); // FT_Set_Transform expects delta
+	delta.y = (FT_Pos)(transform.translation()[1] * 64); // to be in 1/64ths of a pixel.
 
 	return matrix;
 }
