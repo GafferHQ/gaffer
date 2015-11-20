@@ -90,7 +90,7 @@ bool ImageNode::enabled() const
 
 void ImageNode::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	const ImagePlug *imagePlug = output->ancestor<ImagePlug>();
+	const ImagePlug *imagePlug = output->parent<ImagePlug>();
 	if( imagePlug && enabled() )
 	{
 		// We don't call ComputeNode::hash() immediately here, because for subclasses which
