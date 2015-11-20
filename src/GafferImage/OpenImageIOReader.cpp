@@ -558,14 +558,10 @@ void OpenImageIOReader::hashDataWindow( const GafferImage::ImagePlug *output, co
 Imath::Box2i OpenImageIOReader::computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
 	std::string fileName = fileNamePlug()->getValue();
-	// when we're in MissingFrameMode::Black we still want to
-	// match the data window of the Hold frame.
-	MissingFrameMode mode = (MissingFrameMode)missingFrameModePlug()->getValue();
-	mode = ( mode == Black ) ? Hold : mode;
-	const ImageSpec *spec = imageSpec( fileName, mode, this, context );
+	const ImageSpec *spec = imageSpec( fileName, (MissingFrameMode)missingFrameModePlug()->getValue(), this, context );
 	if( !spec )
 	{
-		return Box2i();
+		return parent->dataWindowPlug()->defaultValue();
 	}
 
 	Format format( Imath::Box2i( Imath::V2i( spec->full_x, spec->full_y ), Imath::V2i( spec->full_width + spec->full_x, spec->full_height + spec->full_y ) ) );

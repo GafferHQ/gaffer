@@ -373,7 +373,7 @@ class OpenImageIOReaderTest( GafferImageTest.TestCase ) :
 		with context :
 			self.assertNotEqual( reader["out"].image(), f1Image )
 			self.assertEqual( reader["out"]["format"].getValue(), f1Format )
-			self.assertEqual( reader["out"]["dataWindow"].getValue(), f1DataWindow )
+			self.assertEqual( reader["out"]["dataWindow"].getValue(), reader["out"]["dataWindow"].defaultValue() )
 			self.assertEqual( reader["out"]["metadata"].getValue(), reader["out"]["metadata"].defaultValue() )
 			self.assertEqual( reader["out"]["channelNames"].getValue(), reader["out"]["channelNames"].defaultValue() )
 			self.assertEqual( reader["out"].channelData( "R", IECore.V2i( 0 ) ), blackTile )
@@ -412,9 +412,8 @@ class OpenImageIOReaderTest( GafferImageTest.TestCase ) :
 		reader["missingFrameMode"].setValue( GafferImage.OpenImageIOReader.MissingFrameMode.Black )
 		with context :
 			self.assertNotEqual( reader["out"]["format"].getValue(), f1Format )
-			self.assertNotEqual( reader["out"]["dataWindow"].getValue(), f1DataWindow )
 			self.assertEqual( reader["out"]["format"].getValue(), f3Format )
-			self.assertEqual( reader["out"]["dataWindow"].getValue(), f3DataWindow )
+			self.assertEqual( reader["out"]["dataWindow"].getValue(), reader["out"]["dataWindow"].defaultValue() )
 			self.assertEqual( reader["out"]["metadata"].getValue(), reader["out"]["metadata"].defaultValue() )
 			self.assertEqual( reader["out"]["channelNames"].getValue(), reader["out"]["channelNames"].defaultValue() )
 			self.assertEqual( reader["out"].channelData( "R", IECore.V2i( 0 ) ), blackTile )
@@ -435,7 +434,7 @@ class OpenImageIOReaderTest( GafferImageTest.TestCase ) :
 		reader["missingFrameMode"].setValue( GafferImage.OpenImageIOReader.MissingFrameMode.Black )
 		with context :
 			self.assertEqual( reader["out"]["format"].getValue(), f1Format )
-			self.assertEqual( reader["out"]["dataWindow"].getValue(), f1DataWindow )
+			self.assertEqual( reader["out"]["dataWindow"].getValue(), reader["out"]["dataWindow"].defaultValue() )
 			self.assertEqual( reader["out"]["metadata"].getValue(), reader["out"]["metadata"].defaultValue() )
 			self.assertEqual( reader["out"]["channelNames"].getValue(), reader["out"]["channelNames"].defaultValue() )
 			self.assertEqual( reader["out"].channelData( "R", IECore.V2i( 0 ) ), blackTile )
@@ -455,7 +454,7 @@ class OpenImageIOReaderTest( GafferImageTest.TestCase ) :
 		with context :
 			self.assertRaisesRegexp( RuntimeError, ".*incompleteSequence.*.exr.*", reader["out"].image )
 			self.assertRaisesRegexp( RuntimeError, ".*incompleteSequence.*.exr.*", reader["out"]["format"].getValue )
-			self.assertRaisesRegexp( RuntimeError, ".*incompleteSequence.*.exr.*", reader["out"]["dataWindow"].getValue )
+			self.assertEqual( reader["out"]["dataWindow"].getValue(), reader["out"]["dataWindow"].defaultValue() )
 			self.assertEqual( reader["out"]["metadata"].getValue(), reader["out"]["metadata"].defaultValue() )
 			self.assertEqual( reader["out"]["channelNames"].getValue(), reader["out"]["channelNames"].defaultValue() )
 			self.assertEqual( reader["out"].channelData( "R", IECore.V2i( 0 ) ), blackTile )
