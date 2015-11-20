@@ -474,25 +474,18 @@ class OpenImageIOReaderTest( GafferImageTest.TestCase ) :
 		reader = GafferImage.OpenImageIOReader()
 		reader["fileName"].setValue( testSequence.fileName )
 		
-		# since the reader["out"] is never cached, we need
-		# to go through an intermediate node which does cache
-		# in order to see the affects of a frame change.
-		
-		metadata = GafferImage.ImageMetadata()
-		metadata["in"].setInput( reader["out"] )
-		
 		context = Gaffer.Context()
 		
 		# get frame 0 data for comparison
 		context.setFrame( 0 )
 		with context :
-			sequenceMetadataHash = metadata["out"]["metadata"].hash()
-			sequenceMetadataValue = metadata["out"]["metadata"].getValue()
+			sequenceMetadataHash = reader["out"]["metadata"].hash()
+			sequenceMetadataValue = reader["out"]["metadata"].getValue()
 		
 		context.setFrame( 1 )
 		with context :
-			self.assertNotEqual( metadata["out"]["metadata"].hash(), sequenceMetadataHash )
-			self.assertNotEqual( metadata["out"]["metadata"].getValue(), sequenceMetadataValue )
+			self.assertNotEqual( reader["out"]["metadata"].hash(), sequenceMetadataHash )
+			self.assertNotEqual( reader["out"]["metadata"].getValue(), sequenceMetadataValue )
 		
 		# but when we set an explicit fileName,
 		# we no longer re-compute per frame.
@@ -501,15 +494,15 @@ class OpenImageIOReaderTest( GafferImageTest.TestCase ) :
 		# get frame 0 data for comparison
 		context.setFrame( 0 )
 		with context :
-			explicitMetadataHash = metadata["out"]["metadata"].hash()
+			explicitMetadataHash = reader["out"]["metadata"].hash()
 			self.assertNotEqual( explicitMetadataHash, sequenceMetadataHash )
-			self.assertEqual( metadata["out"]["metadata"].getValue(), sequenceMetadataValue )
+			self.assertEqual( reader["out"]["metadata"].getValue(), sequenceMetadataValue )
 		
 		context.setFrame( 1 )
 		with context :
-			self.assertNotEqual( metadata["out"]["metadata"].hash(), sequenceMetadataHash )
-			self.assertEqual( metadata["out"]["metadata"].hash(), explicitMetadataHash )
-			self.assertEqual( metadata["out"]["metadata"].getValue(), sequenceMetadataValue )
+			self.assertNotEqual( reader["out"]["metadata"].hash(), sequenceMetadataHash )
+			self.assertEqual( reader["out"]["metadata"].hash(), explicitMetadataHash )
+			self.assertEqual( reader["out"]["metadata"].getValue(), sequenceMetadataValue )
 
 if __name__ == "__main__":
 	unittest.main()
