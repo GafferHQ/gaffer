@@ -61,29 +61,6 @@ using namespace GafferImage;
 namespace
 {
 
-string fontFile( const std::string &font, size_t &cost )
-{
-	const char *e = getenv( "IECORE_FONT_PATHS" );
-	IECore::SearchPath sp( e ? e : "", ":" );
-
-	std::string file = sp.find( font ).string();
-	if( !file.size() )
-	{
-		throw Exception( boost::str( boost::format( "Unable to find font \"%s\"." ) % font ) );
-	}
-	
-	cost = 1;
-	return file;
-}
-
-typedef LRUCache<string, string> FontFileCache;
-
-FontFileCache &fontFileCache()
-{
-	static FontFileCache c( fontFile, 200 );
-	return c;
-};
-
 // FreeType recommends that for thread safety it is easiest to use
 // a distinct FT_Library instance per thread. This function returns
 // the appropriate library for the current thread.
@@ -104,28 +81,57 @@ FT_Library library()
 	return l;
 }
 
+// We want to maintain a cache of FT_Faces, because creating them
+// is fairly costly. But since FT_Faces belong to FT_Libraries
+// the cache must be maintained per-thread.
 typedef boost::shared_ptr<FT_FaceRec_> FacePtr;
-FacePtr face( const string &font, const V2i &size )
+FacePtr faceLoader( const std::string &font, size_t &cost )
 {
-	string file = fontFileCache().get( font );
+	const char *e = getenv( "IECORE_FONT_PATHS" );
+	IECore::SearchPath sp( e ? e : "", ":" );
+
+	std::string file = sp.find( font ).string();
+	if( !file.size() )
+	{
+		throw Exception( boost::str( boost::format( "Unable to find font \"%s\"." ) % font ) );
+	}
 
 	FT_Face face = NULL;
-	FT_Error e = FT_New_Face( library(), file.c_str(), 0, &face );
-	// We use a smart pointer to make sure we call FT_Done_Face no matter what.
+	FT_Error error = FT_New_Face( library(), file.c_str(), 0, &face );
+	// We use a smart pointer now to make sure we call FT_Done_Face no matter what.
 	FacePtr result( face, FT_Done_Face );
 
-	if( e )
+	if( error )
 	{
 		throw Exception( boost::str( boost::format( "Error loading font \"%s\"." ) % font ) );
 	}
+		
+	cost = 1;
+	return result;
+}
 
-	e = FT_Set_Pixel_Sizes( face, size.x, size.y );
-	if( e )
+typedef LRUCache<string, FacePtr> FaceCache;
+typedef boost::shared_ptr<FaceCache> FaceCachePtr;
+FaceCachePtr createFaceCache()
+{
+	return boost::make_shared<FaceCache>( faceLoader );
+}
+	
+FacePtr face( const string &font, const V2i &size )
+{
+	typedef tbb::enumerable_thread_specific<FaceCachePtr> ThreadSpecificFaceCache;
+	static ThreadSpecificFaceCache g_faceCaches( createFaceCache );
+	
+	FacePtr face = g_faceCaches.local()->get( font );
+
+	FT_Set_Transform( face.get(), NULL, NULL );
+	FT_Error error = FT_Set_Pixel_Sizes( face.get(), size.x, size.y );
+	if( error )
 	{
 		throw Exception( boost::str( boost::format( "Error setting size for font \"%s\"." ) % font ) );
 	}
 
-	return result;
+	return face;
 }
 
 FT_Matrix transform( const M33f &transform, FT_Vector &delta )
