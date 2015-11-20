@@ -104,6 +104,8 @@ enum TypeId
 	OffsetTypeId = 110808,
 	ImagePrimitiveProcessorTypeId = 110809,
 	BlurTypeId = 110810,
+	ShapeTypeId = 110811,
+	TextTypeId = 110812,
 
 	LastTypeId = 110849
 };

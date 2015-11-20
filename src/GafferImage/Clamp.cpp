@@ -37,6 +37,7 @@
 #include "Gaffer/Context.h"
 
 #include "GafferImage/Clamp.h"
+#include "GafferImage/ImageAlgo.h"
 
 using namespace IECore;
 using namespace Gaffer;
@@ -189,8 +190,8 @@ void Clamp::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer:
 
 	inPlug()->channelDataPlug()->hash( h );
 
-	std::string channelName = context->get<std::string>( ImagePlug::channelNameContextName );
-	int channelIndex = ChannelMaskPlug::channelIndex( channelName );
+	const std::string &channelName = context->get<std::string>( ImagePlug::channelNameContextName );
+	const int channelIndex = std::max( 0, colorIndex( channelName ) );
 
 	minPlug()->getChild( channelIndex )->hash( h );
 	maxPlug()->getChild( channelIndex )->hash( h );
@@ -203,9 +204,9 @@ void Clamp::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer:
 	maxClampToEnabledPlug()->hash( h );
 }
 
-void Clamp::processChannelData( const Gaffer::Context *context, const ImagePlug *parent, const std::string &channel, FloatVectorDataPtr outData ) const
+void Clamp::processChannelData( const Gaffer::Context *context, const ImagePlug *parent, const std::string &channelName, FloatVectorDataPtr outData ) const
 {
-	int channelIndex = ChannelMaskPlug::channelIndex( channel );
+	const int channelIndex = std::max( 0, colorIndex( channelName ) );
 
 	const float minimum = minPlug()->getChild( channelIndex )->getValue();
 	const float maximum = maxPlug()->getChild( channelIndex )->getValue();

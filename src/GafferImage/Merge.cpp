@@ -119,41 +119,19 @@ void Merge::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs 
 	}
 }
 
-bool Merge::enabled() const
-{
-	if( !ImageProcessor::enabled() )
-	{
-		return false;
-	}
-
-	int numConnected = 0;
-	for( ImagePlugIterator it( inPlugs() ); it != it.end(); ++it )
-	{
-		if( (*it)->getInput<Plug>() )
-		{
-			numConnected++;
-		}
-	}
-
-	return numConnected >= 2;
-}
-
 void Merge::hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	ImageProcessor::hashDataWindow( output, context, h );
 
 	for( ImagePlugIterator it( inPlugs() ); it != it.end(); ++it )
 	{
-		if ( (*it)->getInput<ValuePlug>() )
-		{
-			(*it)->dataWindowPlug()->hash( h );
-		}
+		(*it)->dataWindowPlug()->hash( h );
 	}
 }
 
 Imath::Box2i Merge::computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
-	Imath::Box2i dataWindow = inPlug()->dataWindowPlug()->getValue();
+	Imath::Box2i dataWindow;
 	for( ImagePlugIterator it( inPlugs() ); it != it.end(); ++it )
 	{
 		// We don't need to check that the plug is connected here as unconnected plugs don't have data windows.
@@ -295,6 +273,12 @@ IECore::ConstFloatVectorDataPtr Merge::merge( F f, const Imath::V2i &tileOrigin 
 			// There's no guarantee that this layer actually covers the full data
 			// window though (the data window could have been expanded by the upper
 			// layers) so we must take care to mask out any invalid areas of the input.
+			/// \todo I'm not convinced this is correct - if we have no connection
+			/// to in[0] then should that not be treated as being a black image, so
+			/// we should unconditionally initaliase with in[0] and then always use
+			/// the operation for in[1:], even if in[0] is disconnected. In other
+			/// words, shouldn't multiplying a white constant over an unconnected
+			/// in[0] produce black?
 			resultData = (*it)->channelDataPlug()->getValue()->copy();
 			resultAlphaData = (*it)->channelData( "A", tileOrigin )->copy();
 			float *B = &resultData->writable().front();

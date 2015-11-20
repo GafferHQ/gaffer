@@ -389,5 +389,27 @@ class MergeTest( GafferImageTest.ImageTestCase ) :
 		self.assertAlmostEqual( sampler["color"]["b"].getValue(), 0.2 )
 		self.assertAlmostEqual( sampler["color"]["a"].getValue(), 0.2 )
 
+	def testDefaultFormat( self ) :
+	
+		a = GafferImage.Constant()
+		a["format"].setValue( GafferImage.Format( 100, 200 ) )
+		
+		m = GafferImage.Merge()
+		m["in"][1].setInput( a["out"] )
+		
+		with Gaffer.Context() as c :
+			GafferImage.FormatPlug().setDefaultFormat( c, GafferImage.Format( 1000, 2000 ) )
+			self.assertEqual( m["out"]["format"].getValue(), GafferImage.Format( 1000, 2000 ) )
+	
+	def testDataWindowWhenBNotConnected( self ) :
+	
+		a = GafferImage.Constant()
+		a["format"].setValue( GafferImage.Format( 100, 200 ) )
+		
+		m = GafferImage.Merge()
+		m["in"][1].setInput( a["out"] )
+		
+		self.assertEqual( m["out"]["dataWindow"].getValue(), a["out"]["dataWindow"].getValue() )
+	
 if __name__ == "__main__":
 	unittest.main()

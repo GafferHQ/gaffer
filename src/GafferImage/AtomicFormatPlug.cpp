@@ -34,11 +34,13 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include "Gaffer/Context.h"
 #include "Gaffer/TypedPlug.h"
 #include "Gaffer/TypedPlug.inl"
 
 #include "GafferImage/FormatData.h"
 #include "GafferImage/AtomicFormatPlug.h"
+#include "GafferImage/FormatPlug.h"
 
 using namespace Gaffer;
 using namespace GafferImage;
@@ -47,6 +49,42 @@ namespace Gaffer
 {
 
 IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( GafferImage::AtomicFormatPlug, AtomicFormatPlugTypeId )
+
+template<>
+Format AtomicFormatPlug::getValue( const IECore::MurmurHash *precomputedHash ) const
+{
+	IECore::ConstObjectPtr o = getObjectValue( precomputedHash );
+	const GafferImage::FormatData *d = IECore::runTimeCast<const GafferImage::FormatData>( o.get() );
+	if( !d )
+	{
+		throw IECore::Exception( "AtomicFormatPlug::getObjectValue() didn't return FormatData - is the hash being computed correctly?" );
+	}
+
+	Format result = d->readable();
+	if( result.getDisplayWindow().isEmpty() && ( ( direction() == Plug::In && inCompute() ) || direction() == Plug::Out ) )
+	{
+		return FormatPlug::getDefaultFormat( Context::current() );
+	}
+	return result;
+}
+
+template<>
+IECore::MurmurHash AtomicFormatPlug::hash() const
+{
+	Format v = getValue();
+	if( v.getDisplayWindow().isEmpty() )
+	{
+		v = FormatPlug::getDefaultFormat( Context::current() );
+	}
+
+	IECore::MurmurHash result;
+	result.append( v.getDisplayWindow() );
+	result.append( v.getPixelAspect() );
+	return result;
+
+	return ValuePlug::hash();
+}
+
 template class TypedPlug<GafferImage::Format>;
 
 } // namespace Gaffer

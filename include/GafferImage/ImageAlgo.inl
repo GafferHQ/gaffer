@@ -40,6 +40,10 @@
 namespace GafferImage
 {
 
+//////////////////////////////////////////////////////////////////////////
+// Window/Box utilities
+//////////////////////////////////////////////////////////////////////////
+
 inline bool empty( const Imath::Box2i &window )
 {
 	for( int i = 0; i < 2; ++i )
@@ -74,7 +78,7 @@ inline Imath::Box2i intersection( const Imath::Box2i &window1, const Imath::Box2
 	for( int i = 0; i < 2; ++i )
 	{
 		result.min[i] = std::max( window1.min[i], window2.min[i] );
-		result.max[i] = std::min( window1.max[i], window2.max[i] );	
+		result.max[i] = std::min( window1.max[i], window2.max[i] );
 	}
 
 	return result;
@@ -98,6 +102,73 @@ inline Imath::V2i clamp( const Imath::V2i &point, const Imath::Box2i &window )
 		std::max( std::min( point.x, window.max.x - 1 ), window.min.x ),
 		std::max( std::min( point.y, window.max.y - 1 ), window.min.y )
 	);
+}
+
+//////////////////////////////////////////////////////////////////////////
+// Channel name utilities
+//////////////////////////////////////////////////////////////////////////
+
+inline std::string layerName( const std::string &channelName )
+{
+	const size_t p = channelName.find_last_of( '.' );
+	if( p == std::string::npos )
+	{
+		return "";
+	}
+	else
+	{
+		return channelName.substr( 0, p );
+	}
+}
+
+inline std::string baseName( const std::string &channelName )
+{
+	const size_t p = channelName.find_last_of( '.' );
+	if( p == std::string::npos )
+	{
+		return channelName;
+	}
+	else
+	{
+		return channelName.substr( p + 1 );
+	}
+}
+
+inline int colorIndex( const std::string &channelName )
+{
+	const size_t p = channelName.find_last_of( '.' );
+
+	char baseName;
+	if( p == std::string::npos )
+	{
+		if( channelName.size() != 1 )
+		{
+			return -1;
+		}
+		baseName = channelName[0];
+	}
+	else
+	{
+		if( p != channelName.size() - 2 )
+		{
+			return -1;
+		}
+		baseName = *channelName.rbegin();
+	}
+
+	switch( baseName )
+	{
+		case 'R' :
+			return 0;
+		case 'G' :
+			return 1;
+		case 'B' :
+			return 2;
+		case 'A' :
+			return 3;
+		default :
+			return -1;
+	}
 }
 
 } // namespace GafferImage

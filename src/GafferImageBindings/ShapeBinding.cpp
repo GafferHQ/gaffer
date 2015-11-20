@@ -34,26 +34,19 @@
 
 #include "boost/python.hpp"
 
-#include "GafferImage/ImageAlgo.h"
-#include "GafferImageBindings/ImageAlgoBinding.h"
+#include "GafferImage/Shape.h"
 
-using namespace boost::python;
+#include "GafferBindings/DependencyNodeBinding.h"
+
+using namespace GafferImage;
 
 namespace GafferImageBindings
 {
 
-void bindImageAlgo()
+void bindShape()
 {
 
-	def( "empty", &GafferImage::empty );
-	def( "intersects", &GafferImage::intersects );
-	def( "intersection", &GafferImage::intersection );
-	def( "contains", &GafferImage::contains );
-	def( "clamp", &GafferImage::clamp );
-
-	def( "layerName", &GafferImage::layerName );
-	def( "baseName", &GafferImage::baseName );
-	def( "colorIndex", &GafferImage::colorIndex );
+	GafferBindings::DependencyNodeClass<Shape>();
 
 }
 
