@@ -159,6 +159,15 @@ class ImageStatsTest( GafferImageTest.ImageTestCase ) :
 		self.__assertColour( s["min"].getValue(), IECore.Color4f( 0.25, 0, 0, 0.5 ) )
 		self.__assertColour( s["max"].getValue(), IECore.Color4f( 0.5, 0.5, 0, 0.75 ) )
 
+	def testMin( self ) :
+
+		c = GafferImage.Constant()
+		s = GafferImage.ImageStats()
+		s["in"].setInput( c["out"] )
+		s["regionOfInterest"].setValue( c["out"]["format"].getValue().getDisplayWindow() )
+
+		self.assertEqual( s["max"]["r"].getValue(), 0 )
+
 	def __assertColour( self, colour1, colour2 ) :
 		for i in range( 0, 4 ):
 			self.assertEqual( "%.4f" % colour2[i], "%.4f" % colour1[i] )

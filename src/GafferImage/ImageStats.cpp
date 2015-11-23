@@ -36,7 +36,6 @@
 
 #include "Gaffer/TypedPlug.h"
 #include "Gaffer/BoxPlug.h"
-#include "Gaffer/Context.h"
 #include "Gaffer/ScriptNode.h"
 
 #include "GafferImage/ImageStats.h"
@@ -301,16 +300,12 @@ void ImageStats::compute( ValuePlug *output, const Context *context ) const
 
 	const int channelIndex = colorIndex( channelName );
 
-	// Set up the execution context.
-	ContextPtr tmpContext = new Context( *context, Context::Borrowed );
-	tmpContext->set( ImagePlug::channelNameContextName, channelName );
-	Context::Scope scopedContext( tmpContext.get() );
-
 	// Loop over the ROI and compute the min, max and average channel values and then set our outputs.
 	Sampler s( inPlug(), channelName, regionOfInterest );
 
-	float min = std::numeric_limits<float>::max();
-	float max = std::numeric_limits<float>::min();
+	float min = Imath::limits<float>::max();
+	float max = Imath::limits<float>::min();
+
 	float average = 0.f;
 
 	double sum = 0.;
