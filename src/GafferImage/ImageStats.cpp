@@ -309,8 +309,9 @@ void ImageStats::compute( ValuePlug *output, const Context *context ) const
 	// Loop over the ROI and compute the min, max and average channel values and then set our outputs.
 	Sampler s( inPlug(), channelName, regionOfInterest );
 
-	float min = std::numeric_limits<float>::max();
-	float max = std::numeric_limits<float>::min();
+	float min = Imath::limits<float>::max();
+	float max = Imath::limits<float>::min();
+
 	float average = 0.f;
 
 	double sum = 0.;
