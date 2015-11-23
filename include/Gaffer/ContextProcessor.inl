@@ -198,23 +198,34 @@ void ContextProcessor<BaseType>::compute( ValuePlug *output, const Context *cont
 template<typename BaseType>
 const ValuePlug *ContextProcessor<BaseType>::oppositePlug( const ValuePlug *plug ) const
 {
-	std::string path = plug->relativeName( this );
-	std::string oppositePath;
-
-	if( 0 == path.compare( 0, 2, "in" ) )
+	const static IECore::InternedString inName( "in" );
+	const static IECore::InternedString outName( "out" );
+	
+	if( plug->direction() == Plug::Out )
 	{
-		oppositePath = "out" + std::string( path, 2 );
+		const ValuePlug *inPlug = BaseType::template getChild<ValuePlug>( inName );
+		if( plug->getName() == outName )
+		{
+			return inPlug;
+		}
+		if( inPlug )
+		{
+			return inPlug->getChild<ValuePlug>( plug->getName() );
+		}
 	}
-	else if( 0 == path.compare( 0, 3, "out" ) )
+	else
 	{
-		oppositePath = "in" + std::string( path, 3 );
+		const ValuePlug *outPlug = BaseType::template getChild<ValuePlug>( outName );
+		if( plug->getName() == inName )
+		{
+			return outPlug;
+		}
+		if( outPlug )
+		{
+			return outPlug->getChild<ValuePlug>( plug->getName() );
+		}
 	}
-
-	if( oppositePath.size() )
-	{
-		return BaseType::template descendant<ValuePlug>( oppositePath );
-	}
-	return 0;
+	return NULL;
 }
 
 } // namespace Gaffer
