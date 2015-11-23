@@ -53,6 +53,10 @@ class OpenColorIOTransform : public ColorProcessor
 		OpenColorIOTransform( const std::string &name=defaultName<OpenColorIOTransform>() );
 		virtual ~OpenColorIOTransform();
 
+		/// Fills the vector will the available color spaces,
+		/// as defined by the current OpenColorIO config.
+		static void availableColorSpaces( std::vector<std::string> &colorSpaces );
+
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::OpenColorIOTransform, OpenColorIOTransformTypeId, ColorProcessor );
 
 	protected :

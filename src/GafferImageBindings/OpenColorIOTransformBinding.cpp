@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2014-2015, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -36,18 +36,23 @@
 
 #include "boost/python.hpp"
 
+#include "GafferImage/OpenColorIOTransform.h"
+#include "GafferImage/ColorSpace.h"
+#include "GafferImage/CDL.h"
+#include "GafferImage/DisplayTransform.h"
+#include "GafferImage/LUT.h"
+
 #include "GafferBindings/DependencyNodeBinding.h"
 
-#include "GafferImage/ImageReader.h"
-
-#include "GafferImageBindings/ImageReaderBinding.h"
+#include "GafferImageBindings/OpenColorIOTransformBinding.h"
+#include "GafferImageBindings/LUTBinding.h"
 
 using namespace GafferImage;
 
-static boost::python::list supportedExtensions()
+static boost::python::list availableColorSpaces()
 {
 	std::vector<std::string> e;
-	ImageReader::supportedExtensions( e );
+	OpenColorIOTransform::availableColorSpaces( e );
 
 	boost::python::list result;
 	for( std::vector<std::string>::const_iterator it = e.begin(), eIt = e.end(); it != eIt; ++it )
@@ -58,24 +63,17 @@ static boost::python::list supportedExtensions()
 	return result;
 }
 
-void GafferImageBindings::bindImageReader()
+void GafferImageBindings::bindOpenColorIOTransform()
 {
 
-	boost::python::scope s = GafferBindings::DependencyNodeClass<ImageReader>()
-		.def( "supportedExtensions", &supportedExtensions )
-		.staticmethod( "supportedExtensions" )
-	;
-
-	boost::python::enum_<ImageReader::MissingFrameMode>( "MissingFrameMode" )
-		.value( "Error", ImageReader::Error )
-		.value( "Black", ImageReader::Black )
-		.value( "Hold", ImageReader::Hold )
+	GafferBindings::DependencyNodeClass<OpenColorIOTransform>()
+		.def( "availableColorSpaces", &availableColorSpaces ).staticmethod( "availableColorSpaces" )
 	;
 	
-	boost::python::enum_<ImageReader::FrameMaskMode>( "FrameMaskMode" )
-		.value( "None", ImageReader::None )
-		.value( "BlackOutside", ImageReader::BlackOutside )
-		.value( "ClampToFrame", ImageReader::ClampToFrame )
-	;
+	GafferBindings::DependencyNodeClass<ColorSpace>();
+	GafferBindings::DependencyNodeClass<CDL>();
+	GafferBindings::DependencyNodeClass<DisplayTransform>();
+
+	GafferImageBindings::bindLUT();
 
 }

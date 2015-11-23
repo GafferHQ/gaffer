@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2014-2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -42,12 +42,13 @@ import GafferImage
 
 Gaffer.Metadata.registerNode(
 
-	GafferImage.LUT,
+	GafferImage.OpenImageIOReader,
 
 	"description",
 	"""
-	Applies color transformations provided by
-	OpenColorIO via a LUT file and OCIO FileTransform.
+	Utility node which reads image files from disk using OpenImageIO.
+	All file types supported by OpenImageIO are supported by the
+	OpenImageIOReader.
 	""",
 
 	plugs = {
@@ -56,46 +57,69 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			The name of the LUT file to be read. Only OpenColorIO
-			supported files will function as expected.
+			The name of the file to be read. File sequences with
+			arbitrary padding may be specified using the '#' character
+			as a placeholder for the frame numbers. If this file sequence
+			format is used, then missingFrameMode will be activated.
 			""",
 
 			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
 			"pathPlugValueWidget:leaf", True,
-			"pathPlugValueWidget:bookmarks", "color",
-			"fileSystemPathPlugValueWidget:extensions", IECore.StringVectorData( GafferImage.LUT.supportedExtensions() ),
-			"fileSystemPathPlugValueWidget:extensionsLabel", "Show only LUT files",
+			"pathPlugValueWidget:bookmarks", "image",
+			"fileSystemPathPlugValueWidget:extensions", IECore.StringVectorData( GafferImage.OpenImageIOReader.supportedExtensions() ),
+			"fileSystemPathPlugValueWidget:extensionsLabel", "Show only image files",
+			"fileSystemPathPlugValueWidget:includeSequences", True,
 
 		],
 
-		"interpolation" : [
+		"refreshCount" : [
 
 			"description",
 			"""
-			The interpolation mode for the color transformation.
+			May be incremented to force a reload if the file has
+			changed on disk - otherwise old contents may still
+			be loaded via Gaffer's cache.
 			""",
-
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-			"preset:Best", GafferImage.LUT.Interpolation.Best,
-			"preset:Nearest", GafferImage.LUT.Interpolation.Nearest,
-			"preset:Linear", GafferImage.LUT.Interpolation.Linear,
-			"preset:Tetrahedral", GafferImage.LUT.Interpolation.Tetrahedral,
 
 		],
 
-		"direction" : [
+		"missingFrameMode" : [
 
 			"description",
 			"""
-			The direction to perform the color transformation.
+			Determines how missing frames are handled when the input
+			fileName is a file sequence (uses the '#' character).
+			The default behaviour is to throw an exception, but it
+			can also hold the last valid frame in the sequence, or
+			return a black image which matches the data window and
+			display window of the previous valid frame in the sequence.
 			""",
 
+			"preset:Error", GafferImage.OpenImageIOReader.MissingFrameMode.Error,
+			"preset:Black", GafferImage.OpenImageIOReader.MissingFrameMode.Black,
+			"preset:Hold", GafferImage.OpenImageIOReader.MissingFrameMode.Hold,
+
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-			"preset:Forward", GafferImage.LUT.Direction.Forward,
-			"preset:Inverse", GafferImage.LUT.Direction.Inverse,
+
+		],
+		
+		"availableFrames" : [
+
+			"description",
+			"""
+			An output of the available frames for the given file sequence.
+			Returns an empty vector when the input fileName is not a file
+			sequence, even if it has a file-sequence-like structure.
+			""",
+
+			## \todo: consider making this visible using a TextWidget with
+			## FrameList syntax (e.g. "1-100x5")
+			"plugValueWidget:type", "",
 
 		],
 
 	}
 
 )
+
+GafferUI.PlugValueWidget.registerCreator( GafferImage.OpenImageIOReader, "refreshCount", GafferUI.IncrementingPlugValueWidget, label = "Refresh", undoable = False )

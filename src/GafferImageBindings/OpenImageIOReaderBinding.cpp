@@ -38,16 +38,16 @@
 
 #include "GafferBindings/DependencyNodeBinding.h"
 
-#include "GafferImage/ImageReader.h"
+#include "GafferImage/OpenImageIOReader.h"
 
-#include "GafferImageBindings/ImageReaderBinding.h"
+#include "GafferImageBindings/OpenImageIOReaderBinding.h"
 
 using namespace GafferImage;
 
 static boost::python::list supportedExtensions()
 {
 	std::vector<std::string> e;
-	ImageReader::supportedExtensions( e );
+	OpenImageIOReader::supportedExtensions( e );
 
 	boost::python::list result;
 	for( std::vector<std::string>::const_iterator it = e.begin(), eIt = e.end(); it != eIt; ++it )
@@ -58,24 +58,19 @@ static boost::python::list supportedExtensions()
 	return result;
 }
 
-void GafferImageBindings::bindImageReader()
+void GafferImageBindings::bindOpenImageIOReader()
 {
 
-	boost::python::scope s = GafferBindings::DependencyNodeClass<ImageReader>()
-		.def( "supportedExtensions", &supportedExtensions )
-		.staticmethod( "supportedExtensions" )
-	;
-
-	boost::python::enum_<ImageReader::MissingFrameMode>( "MissingFrameMode" )
-		.value( "Error", ImageReader::Error )
-		.value( "Black", ImageReader::Black )
-		.value( "Hold", ImageReader::Hold )
+	boost::python::scope s = GafferBindings::DependencyNodeClass<OpenImageIOReader>()
+		.def( "supportedExtensions", &supportedExtensions ).staticmethod( "supportedExtensions" )
+		.def( "getCacheMemoryLimit", &OpenImageIOReader::getCacheMemoryLimit ).staticmethod( "getCacheMemoryLimit" )
+		.def( "setCacheMemoryLimit", &OpenImageIOReader::setCacheMemoryLimit ).staticmethod( "setCacheMemoryLimit" )
 	;
 	
-	boost::python::enum_<ImageReader::FrameMaskMode>( "FrameMaskMode" )
-		.value( "None", ImageReader::None )
-		.value( "BlackOutside", ImageReader::BlackOutside )
-		.value( "ClampToFrame", ImageReader::ClampToFrame )
+	boost::python::enum_<OpenImageIOReader::MissingFrameMode>( "MissingFrameMode" )
+		.value( "Error", OpenImageIOReader::Error )
+		.value( "Black", OpenImageIOReader::Black )
+		.value( "Hold", OpenImageIOReader::Hold )
 	;
 
 }

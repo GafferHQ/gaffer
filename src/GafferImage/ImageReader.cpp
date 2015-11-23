@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2012-2015, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -37,260 +36,20 @@
 
 #include "boost/bind.hpp"
 
-#include "OpenEXR/half.h"
+#include "OpenColorIO/OpenColorIO.h"
 
-#include "OpenImageIO/imagecache.h"
-OIIO_NAMESPACE_USING
-
-#include "Gaffer/Context.h"
 #include "Gaffer/StringPlug.h"
 
+#include "GafferImage/ColorSpace.h"
 #include "GafferImage/ImageReader.h"
-#include "GafferImage/FormatPlug.h"
+#include "GafferImage/OpenImageIOReader.h"
 
 using namespace std;
 using namespace tbb;
 using namespace Imath;
 using namespace IECore;
-using namespace GafferImage;
 using namespace Gaffer;
-
-//////////////////////////////////////////////////////////////////////////
-// We use an OIIO image cache to deal with all file loading etc. This works
-// well for us, as due to the Gaffer architecture we'll be receiving many
-// different calls on different threads, each potentially asking for different
-// files (expressions and timewarps etc can change the fileName at any time).
-// The OIIO image cache is designed for exactly this scenario.
-//////////////////////////////////////////////////////////////////////////
-
-namespace
-{
-
-spin_rw_mutex g_imageCacheMutex;
-ImageCache *imageCache()
-{
-	spin_rw_mutex::scoped_lock lock( g_imageCacheMutex, false );
-	static ImageCache *cache = 0;
-	if( cache == 0 )
-	{
-		if( lock.upgrade_to_writer() )
-		{
-			cache = ImageCache::create();
-			// ImageReaderTest.testOIIOJpgRead exposes a bug in
-			// OpenImageIO where ImageCache::get_pixels() returns
-			// incorrect data when reading from non-float images.
-			// By forcing the image to be float on loading, we
-			// can work around that problem.
-			/// \todo Consider removing this once the bug is fixed in
-			/// OIIO - and test any performance implications of performing
-			/// the conversion in get_pixels() rather than immediately on load.
-			cache->attribute( "forcefloat", 1 );
-
-			// Set an initial cache size of 500Mb
-			cache->attribute( "max_memory_MB", 500.0f );
-		}
-	}
-	return cache;
-}
-
-// Returns the OIIO ImageSpec for the given filename in the current
-// context. Throws if the file is invalid, and returns NULL if
-// the filename is empty.
-const ImageSpec *imageSpec( ustring fileName )
-{
-	if( fileName.empty() )
-	{
-		return NULL;
-	}
-	ImageCache *cache = imageCache();
-	const ImageSpec *spec = cache->imagespec( ustring( fileName.c_str() ) );
-	if( !spec )
-	{
-		throw( IECore::Exception( cache->geterror() ) );
-	}
-	return spec;
-}
-
-} // namespace
-
-//////////////////////////////////////////////////////////////////////////
-// Utility for converting OIIO::TypeDesc types to IECore::Data types.
-//////////////////////////////////////////////////////////////////////////
-
-namespace
-{
-
-void oiioParameterListToMetadata( const ImageIOParameterList &paramList, CompoundObject *metadata )
-{
-	CompoundObject::ObjectMap &members = metadata->members();
-	for ( ImageIOParameterList::const_iterator it = paramList.begin(); it != paramList.end(); ++it )
-	{
-		ObjectPtr value = NULL;
-
-		const TypeDesc &type = it->type();
-		switch ( type.basetype )
-		{
-			case TypeDesc::CHAR :
-			{
-				if ( type.aggregate == TypeDesc::SCALAR )
-				{
-					value = new CharData( *static_cast<const char *>( it->data() ) );
-				}
-				break;
-			}
-			case TypeDesc::UCHAR :
-			{
-				if ( type.aggregate == TypeDesc::SCALAR )
-				{
-					value = new UCharData( *static_cast<const unsigned char *>( it->data() ) );
-				}
-				break;
-			}
-			case TypeDesc::STRING :
-			{
-				if ( type.aggregate == TypeDesc::SCALAR )
-				{
-					value = new StringData( *static_cast<const std::string *>( it->data() ) );
-				}
-				break;
-			}
-			case TypeDesc::USHORT :
-			{
-				if ( type.aggregate == TypeDesc::SCALAR )
-				{
-					value = new UShortData( *static_cast<const unsigned short *>( it->data() ) );
-				}
-				break;
-			}
-			case TypeDesc::SHORT :
-			{
-				if ( type.aggregate == TypeDesc::SCALAR )
-				{
-					value = new ShortData( *static_cast<const short *>( it->data() ) );
-				}
-				break;
-			}
-			case TypeDesc::UINT :
-			{
-				if ( type.aggregate == TypeDesc::SCALAR )
-				{
-					value = new UIntData( *static_cast<const unsigned *>( it->data() ) );
-				}
-				break;
-			}
-			case TypeDesc::INT :
-			{
-				const int *data = static_cast<const int *>( it->data() );
-				switch ( type.aggregate )
-				{
-					case TypeDesc::SCALAR :
-					{
-						value = new IntData( *data );
-						break;
-					}
-					case TypeDesc::VEC2 :
-					{
-						value = new V2iData( Imath::V2i( data[0], data[1] ) );
-						break;
-					}
-					case TypeDesc::VEC3 :
-					{
-						value = new V3iData( Imath::V3i( data[0], data[1], data[2] ) );
-						break;
-					}
-					default :
-					{
-						break;
-					}
-				}
-				break;
-			}
-			case TypeDesc::HALF :
-			{
-				if ( type.aggregate == TypeDesc::SCALAR )
-				{
-					value = new HalfData( *static_cast<const half *>( it->data() ) );
-				}
-				break;
-			}
-			case TypeDesc::FLOAT :
-			{
-				const float *data = static_cast<const float *>( it->data() );
-				switch ( type.aggregate )
-				{
-					case TypeDesc::SCALAR :
-					{
-						value = new FloatData( *data );
-						break;
-					}
-					case TypeDesc::VEC2 :
-					{
-						value = new V2fData( Imath::V2f( data[0], data[1] ) );
-						break;
-					}
-					case TypeDesc::VEC3 :
-					{
-						value = new V3fData( Imath::V3f( data[0], data[1], data[2] ) );
-						break;
-					}
-					case TypeDesc::MATRIX44 :
-					{
-						value = new M44fData( Imath::M44f( data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7], data[8], data[9], data[10], data[11], data[12], data[13], data[14], data[15] ) );
-						break;
-					}
-					default :
-					{
-						break;
-					}
-				}
-				break;
-			}
-			case TypeDesc::DOUBLE :
-			{
-				const double *data = static_cast<const double *>( it->data() );
-				switch ( type.aggregate )
-				{
-					case TypeDesc::SCALAR :
-					{
-						value = new DoubleData( *data );
-						break;
-					}
-					case TypeDesc::VEC2 :
-					{
-						value = new V2dData( Imath::V2d( data[0], data[1] ) );
-						break;
-					}
-					case TypeDesc::VEC3 :
-					{
-						value = new V3dData( Imath::V3d( data[0], data[1], data[2] ) );
-						break;
-					}
-					case TypeDesc::MATRIX44 :
-					{
-						value = new M44dData( Imath::M44d( data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7], data[8], data[9], data[10], data[11], data[12], data[13], data[14], data[15] ) );
-						break;
-					}
-					default :
-					{
-						break;
-					}
-				}
-				break;
-			}
-			default :
-			{
-				break;
-			}
-		}
-
-		if ( value )
-		{
-			members[ it->name().string() ] = value;
-		}
-	}
-}
-
-} // namespace
+using namespace GafferImage;
 
 //////////////////////////////////////////////////////////////////////////
 // ImageReader implementation
@@ -298,245 +57,335 @@ void oiioParameterListToMetadata( const ImageIOParameterList &paramList, Compoun
 
 IE_CORE_DEFINERUNTIMETYPED( ImageReader );
 
-size_t ImageReader::g_firstPlugIndex = 0;
+size_t ImageReader::g_firstChildIndex = 0;
 
 ImageReader::ImageReader( const std::string &name )
 	:	ImageNode( name )
 {
-	storeIndexOfNextChild( g_firstPlugIndex );
-	addChild( new StringPlug( "fileName" ) );
+	storeIndexOfNextChild( g_firstChildIndex );
+	addChild(
+		new StringPlug(
+			"fileName", Plug::In, "",
+			/* flags */ Plug::Default,
+			/* substitutions */ Context::AllSubstitutions & ~Context::FrameSubstitutions
+		)
+	);
 	addChild( new IntPlug( "refreshCount" ) );
+	addChild( new IntPlug( "missingFrameMode", Plug::In, Error, /* min */ Error, /* max */ Hold ) );
+	
+	ValuePlugPtr startPlug = new ValuePlug( "start", Plug::In );
+	startPlug->addChild( new IntPlug( "mode", Plug::In, None, /* min */ None, /* max */ ClampToFrame ) );
+	startPlug->addChild( new IntPlug( "frame", Plug::In, 0 ) );
+	addChild( startPlug );
+	
+	ValuePlugPtr endPlug = new ValuePlug( "end", Plug::In );
+	endPlug->addChild( new IntPlug( "mode", Plug::In, None, /* min */ None, /* max */ ClampToFrame ) );
+	endPlug->addChild( new IntPlug( "frame", Plug::In, 0 ) );
+	addChild( endPlug );
+	
+	addChild( new CompoundObjectPlug( "__intermediateMetadata", Plug::In, new CompoundObject, Plug::Default & ~Plug::Serialisable ) );
+	addChild( new StringPlug( "__intermediateColorSpace", Plug::Out, "", Plug::Default & ~Plug::Serialisable ) );
+	addChild( new ImagePlug( "__intermediateImage", Plug::In, Plug::Default & ~Plug::Serialisable ) );
+	
+	// We don't really do much work ourselves - we just
+	// defer to internal nodes to do the hard work.
 
-	// disable caching on our outputs, as OIIO is already doing caching for us.
-	for( OutputPlugIterator it( outPlug() ); it!=it.end(); it++ )
-	{
-		(*it)->setFlags( Plug::Cacheable, false );
-	}
+	OpenImageIOReaderPtr oiioReader = new OpenImageIOReader( "__oiioReader" );
+	addChild( oiioReader );
+	oiioReader->fileNamePlug()->setInput( fileNamePlug() );
+	oiioReader->refreshCountPlug()->setInput( refreshCountPlug() );
+	oiioReader->missingFrameModePlug()->setInput( missingFrameModePlug() );
+	intermediateMetadataPlug()->setInput( oiioReader->outPlug()->metadataPlug() );
 
-	plugSetSignal().connect( boost::bind( &ImageReader::plugSet, this, ::_1 ) );
+	ColorSpacePtr colorSpace = new ColorSpace( "__colorSpace" );
+	addChild( colorSpace );
+	colorSpace->inPlug()->setInput( oiioReader->outPlug() );
+	colorSpace->inputSpacePlug()->setInput( intermediateColorSpacePlug() );
+	colorSpace->outputSpacePlug()->setValue( OpenColorIO::ROLE_SCENE_LINEAR );
+	intermediateImagePlug()->setInput( colorSpace->outPlug() );
 }
 
 ImageReader::~ImageReader()
 {
 }
 
-Gaffer::StringPlug *ImageReader::fileNamePlug()
+StringPlug *ImageReader::fileNamePlug()
 {
-	return getChild<StringPlug>( g_firstPlugIndex );
+	return getChild<StringPlug>( g_firstChildIndex );
 }
 
-const Gaffer::StringPlug *ImageReader::fileNamePlug() const
+const StringPlug *ImageReader::fileNamePlug() const
 {
-	return getChild<StringPlug>( g_firstPlugIndex );
+	return getChild<StringPlug>( g_firstChildIndex );
 }
 
-Gaffer::IntPlug *ImageReader::refreshCountPlug()
+IntPlug *ImageReader::refreshCountPlug()
 {
-	return getChild<IntPlug>( g_firstPlugIndex + 1 );
+	return getChild<IntPlug>( g_firstChildIndex + 1 );
 }
 
-const Gaffer::IntPlug *ImageReader::refreshCountPlug() const
+const IntPlug *ImageReader::refreshCountPlug() const
 {
-	return getChild<IntPlug>( g_firstPlugIndex + 1 );
+	return getChild<IntPlug>( g_firstChildIndex + 1 );
+}
+
+IntPlug *ImageReader::missingFrameModePlug()
+{
+	return getChild<IntPlug>( g_firstChildIndex + 2 );
+}
+
+const IntPlug *ImageReader::missingFrameModePlug() const
+{
+	return getChild<IntPlug>( g_firstChildIndex + 2 );
+}
+
+IntPlug *ImageReader::startModePlug()
+{
+	return getChild<ValuePlug>( g_firstChildIndex + 3 )->getChild<IntPlug>( 0 );
+}
+
+const IntPlug *ImageReader::startModePlug() const
+{
+	return getChild<ValuePlug>( g_firstChildIndex + 3 )->getChild<IntPlug>( 0 );
+}
+
+IntPlug *ImageReader::startFramePlug()
+{
+	return getChild<ValuePlug>( g_firstChildIndex + 3 )->getChild<IntPlug>( 1 );
+}
+
+const IntPlug *ImageReader::startFramePlug() const
+{
+	return getChild<ValuePlug>( g_firstChildIndex + 3 )->getChild<IntPlug>( 1 );
+}
+
+IntPlug *ImageReader::endModePlug()
+{
+	return getChild<ValuePlug>( g_firstChildIndex + 4 )->getChild<IntPlug>( 0 );
+}
+
+const IntPlug *ImageReader::endModePlug() const
+{
+	return getChild<ValuePlug>( g_firstChildIndex + 4 )->getChild<IntPlug>( 0 );
+}
+
+IntPlug *ImageReader::endFramePlug()
+{
+	return getChild<ValuePlug>( g_firstChildIndex + 4 )->getChild<IntPlug>( 1 );
+}
+
+const IntPlug *ImageReader::endFramePlug() const
+{
+	return getChild<ValuePlug>( g_firstChildIndex + 4 )->getChild<IntPlug>( 1 );
+}
+
+CompoundObjectPlug *ImageReader::intermediateMetadataPlug()
+{
+	return getChild<CompoundObjectPlug>( g_firstChildIndex + 5 );
+}
+
+const CompoundObjectPlug *ImageReader::intermediateMetadataPlug() const
+{
+	return getChild<CompoundObjectPlug>( g_firstChildIndex + 5 );
+}
+
+StringPlug *ImageReader::intermediateColorSpacePlug()
+{
+	return getChild<StringPlug>( g_firstChildIndex + 6 );
+}
+
+const StringPlug *ImageReader::intermediateColorSpacePlug() const
+{
+	return getChild<StringPlug>( g_firstChildIndex + 6 );
+}
+
+ImagePlug *ImageReader::intermediateImagePlug()
+{
+	return getChild<ImagePlug>( g_firstChildIndex + 7 );
+}
+
+const ImagePlug *ImageReader::intermediateImagePlug() const
+{
+	return getChild<ImagePlug>( g_firstChildIndex + 7 );
+}
+
+OpenImageIOReader *ImageReader::oiioReader()
+{
+	return getChild<OpenImageIOReader>( g_firstChildIndex + 8 );
+}
+
+const OpenImageIOReader *ImageReader::oiioReader() const
+{
+	return getChild<OpenImageIOReader>( g_firstChildIndex + 8 );
+}
+
+ColorSpace *ImageReader::colorSpace()
+{
+	return getChild<ColorSpace>( g_firstChildIndex + 9 );
+}
+
+const ColorSpace *ImageReader::colorSpace() const
+{
+	return getChild<ColorSpace>( g_firstChildIndex + 9 );
 }
 
 size_t ImageReader::supportedExtensions( std::vector<std::string> &extensions )
 {
-	std::string attr;
-	if( !getattribute( "extension_list", attr ) )
-	{
-		return extensions.size();
-	}
-
-	typedef boost::tokenizer<boost::char_separator<char> > Tokenizer;
-	Tokenizer formats( attr, boost::char_separator<char>( ";" ) );
-	for( Tokenizer::const_iterator fIt = formats.begin(), eFIt = formats.end(); fIt != eFIt; ++fIt )
-	{
-		size_t colonPos = fIt->find( ':' );
-		if( colonPos != string::npos )
-		{
-			std::string formatExtensions = fIt->substr( colonPos + 1 );
-			Tokenizer extTok( formatExtensions, boost::char_separator<char>( "," ) );
-			std::copy( extTok.begin(), extTok.end(), std::back_inserter( extensions ) );
-		}
-	}
-
+	OpenImageIOReader::supportedExtensions( extensions );
 	return extensions.size();
 }
 
-void ImageReader::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
+void ImageReader::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	ImageNode::affects( input, outputs );
-
-	if( input == fileNamePlug() || input == refreshCountPlug() )
+	
+	if( input == intermediateMetadataPlug() )
 	{
-		for( ValuePlugIterator it( outPlug() ); it != it.end(); it++ )
+		outputs.push_back( intermediateColorSpacePlug() );
+	}
+	else if( input->parent<ImagePlug>() == intermediateImagePlug() )
+	{
+		outputs.push_back( outPlug()->getChild<ValuePlug>( input->getName() ) );
+	}
+	else if (
+		input == startFramePlug() ||
+		input == startModePlug() ||
+		input == endFramePlug() ||
+		input == endModePlug()
+	)
+	{
+		for( ValuePlugIterator it( outPlug() ); it != it.end(); ++it )
 		{
 			outputs.push_back( it->get() );
 		}
 	}
 }
 
-void ImageReader::hashFormat( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void ImageReader::hash( const ValuePlug *output, const Context *context, IECore::MurmurHash &h ) const
 {
-	ImageNode::hashFormat( output, context, h );
-	fileNamePlug()->hash( h );
-	refreshCountPlug()->hash( h );
-}
+	ImageNode::hash( output, context, h );
 
-GafferImage::Format ImageReader::computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const
-{
-	const ImageSpec *spec = imageSpec( ustring( fileNamePlug()->getValue() ) );
-	if( !spec )
+	if( output == intermediateColorSpacePlug() )
 	{
-		return FormatPlug::getDefaultFormat( context );
+		intermediateMetadataPlug()->hash( h );
 	}
-
-	return GafferImage::Format(
-		Imath::Box2i(
-			Imath::V2i( spec->full_x, spec->full_y ),
-			Imath::V2i( spec->full_x + spec->full_width, spec->full_y + spec->full_height )
-		),
-		spec->get_float_attribute( "PixelAspectRatio", 1.0f )
-	);
-}
-
-void ImageReader::hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
-{
-	ImageNode::hashDataWindow( output, context, h );
-	fileNamePlug()->hash( h );
-	refreshCountPlug()->hash( h );
-}
-
-Imath::Box2i ImageReader::computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const
-{
-	const ImageSpec *spec = imageSpec( ustring( fileNamePlug()->getValue() ) );
-	if( !spec )
+	else if(
+		output == outPlug()->formatPlug() ||
+		output == outPlug()->dataWindowPlug()
+	)
 	{
-		return Box2i();
+		// we always want to match the windows
+		// we would get inside the frame mask
+		hashMaskedOutput( output, context, h, /* alwaysClampToFrame */ true );
 	}
-
-	Format format( Imath::Box2i( Imath::V2i( spec->full_x, spec->full_y ), Imath::V2i( spec->full_width + spec->full_x, spec->full_height + spec->full_y ) ) );
-	Imath::Box2i dataWindow( Imath::V2i( spec->x, spec->y ), Imath::V2i( spec->width + spec->x - 1, spec->height + spec->y - 1 ) );
-
-	return format.fromEXRSpace( dataWindow );
-}
-
-void ImageReader::hashMetadata( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
-{
-	ImageNode::hashMetadata( output, context, h );
-	fileNamePlug()->hash( h );
-	refreshCountPlug()->hash( h );
-}
-
-IECore::ConstCompoundObjectPtr ImageReader::computeMetadata( const Gaffer::Context *context, const ImagePlug *parent ) const
-{
-	const ImageSpec *spec = imageSpec( ustring( fileNamePlug()->getValue() ) );
-	if( !spec )
+	else if(
+		output == outPlug()->metadataPlug() ||
+		output == outPlug()->channelNamesPlug() ||
+		output == outPlug()->channelDataPlug()
+	)
 	{
-		return parent->metadataPlug()->defaultValue();
+		hashMaskedOutput( output, context, h );
 	}
-
-	CompoundObjectPtr result = new CompoundObject;
-	oiioParameterListToMetadata( spec->extra_attribs, result.get() );
-
-	return result;
 }
 
-void ImageReader::hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void ImageReader::compute( ValuePlug *output, const Context *context ) const
 {
-	ImageNode::hashChannelNames( output, context, h );
-	fileNamePlug()->hash( h );
-	refreshCountPlug()->hash( h );
-}
-
-IECore::ConstStringVectorDataPtr ImageReader::computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const
-{
-	const ImageSpec *spec = imageSpec( ustring( fileNamePlug()->getValue() ) );
-	if( !spec )
+	if( output == intermediateColorSpacePlug() )
 	{
-		return parent->channelNamesPlug()->defaultValue();
-	}
-
-	StringVectorDataPtr result = new StringVectorData();
-	result->writable() = spec->channelnames;
-	return result;
-}
-
-void ImageReader::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
-{
-	ImageNode::hashChannelData( output, context, h );
-	h.append( context->get<V2i>( ImagePlug::tileOriginContextName ) );
-	h.append( context->get<std::string>( ImagePlug::channelNameContextName ) );
-	fileNamePlug()->hash( h );
-	refreshCountPlug()->hash( h );
-}
-
-IECore::ConstFloatVectorDataPtr ImageReader::computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const
-{
-	ustring fileName( fileNamePlug()->getValue() );
-	const ImageSpec *spec = imageSpec( fileName );
-	if( !spec )
-	{
-		return parent->channelDataPlug()->defaultValue();
-	}
-
-	vector<string>::const_iterator channelIt = find( spec->channelnames.begin(), spec->channelnames.end(), channelName );
-	if( channelIt == spec->channelnames.end() )
-	{
+		std::string intermediateSpace = "";
+		ConstCompoundObjectPtr metadata = intermediateMetadataPlug()->getValue();
+		if( const StringData *intermediateSpaceData = metadata->member<const StringData>( "oiio:ColorSpace" ) )
 		{
-			return parent->channelDataPlug()->defaultValue();
+			std::vector<std::string> colorSpaces;
+			OpenColorIOTransform::availableColorSpaces( colorSpaces );
+			if( std::find( colorSpaces.begin(), colorSpaces.end(), intermediateSpaceData->readable() ) != colorSpaces.end() )
+			{
+				intermediateSpace = intermediateSpaceData->readable();
+			}
 		}
+
+		static_cast<StringPlug *>( output )->setValue( intermediateSpace );
 	}
-
-	Format format( Imath::Box2i( Imath::V2i( spec->full_x, spec->full_y ), Imath::V2i( spec->full_width + spec->full_x, spec->full_height + spec->full_y ) ) );
-	const int newY = format.toEXRSpace( tileOrigin.y + ImagePlug::tileSize() - 1 );
-
-	std::vector<float> channelData( ImagePlug::tileSize() * ImagePlug::tileSize() );
-	size_t channelIndex = channelIt - spec->channelnames.begin();
-	imageCache()->get_pixels(
-		fileName,
-		0, 0, // subimage, miplevel
-		tileOrigin.x, tileOrigin.x + ImagePlug::tileSize(),
-		newY, newY + ImagePlug::tileSize(),
-		0, 1,
-		channelIndex, channelIndex + 1,
-		TypeDesc::FLOAT,
-		&(channelData[0])
-	);
-
-	// Create the output data buffer.
-	FloatVectorDataPtr resultData = new FloatVectorData;
-	vector<float> &result = resultData->writable();
-	result.resize( ImagePlug::tileSize() * ImagePlug::tileSize() );
-
-	// Flip the tile in the Y axis to convert it to our internal image data representation.
-	for( int y = 0; y < ImagePlug::tileSize(); ++y )
+	else if(
+		output == outPlug()->formatPlug() ||
+		output == outPlug()->dataWindowPlug()
+	)
 	{
-		memcpy( &(result[ ( ImagePlug::tileSize() - y - 1 ) * ImagePlug::tileSize() ]), &(channelData[ y * ImagePlug::tileSize() ]), sizeof(float)*ImagePlug::tileSize()  );
+		// we always want to match the windows
+		// we would get inside the frame mask
+		computeMaskedOutput( output, context, /* alwaysClampToFrame */ true );
 	}
-
-	return resultData;
-}
-
-size_t ImageReader::getCacheMemoryLimit()
-{
-	float memoryLimit;
-	imageCache()->getattribute( "max_memory_MB", memoryLimit );
-	return (size_t)memoryLimit;
-}
-
-void ImageReader::setCacheMemoryLimit( size_t mb )
-{
-	imageCache()->attribute( "max_memory_MB", float( mb ) );
-}
-
-void ImageReader::plugSet( Gaffer::Plug *plug )
-{
-	// this clears the cache every time the refresh count is updated, so you don't get entries
-	// from old files hanging around.
-	if( plug == refreshCountPlug() )
+	else if(
+		output == outPlug()->metadataPlug() ||
+		output == outPlug()->channelNamesPlug() ||
+		output == outPlug()->channelDataPlug()
+	)
 	{
-		imageCache()->invalidate_all( true );
+		computeMaskedOutput( output, context );
 	}
+	else
+	{
+		ImageNode::compute( output, context );
+	}
+}
+
+void ImageReader::hashMaskedOutput( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h, bool alwaysClampToFrame ) const
+{
+	ContextPtr maskedContext = NULL;
+	if( !computeFrameMask( context, maskedContext ) || alwaysClampToFrame )
+	{
+		Context::Scope scope( maskedContext.get() );
+		h = intermediateImagePlug()->getChild<ValuePlug>( output->getName() )->hash();
+	}
+}
+
+void ImageReader::computeMaskedOutput( Gaffer::ValuePlug *output, const Gaffer::Context *context, bool alwaysClampToFrame ) const
+{
+	ContextPtr maskedContext = NULL;
+	bool blackOutside = computeFrameMask( context, maskedContext );
+	if( blackOutside && !alwaysClampToFrame )
+	{
+		output->setToDefault();
+		return;
+	}
+
+	Context::Scope scope( maskedContext.get() );
+	output->setFrom( intermediateImagePlug()->getChild<ValuePlug>( output->getName() ) );
+}
+
+bool ImageReader::computeFrameMask( const Context *context, ContextPtr &maskedContext ) const
+{
+	int frameStartMask = startFramePlug()->getValue();
+	int frameEndMask = endFramePlug()->getValue();
+	FrameMaskMode frameStartMaskMode = (FrameMaskMode)startModePlug()->getValue();
+	FrameMaskMode frameEndMaskMode = (FrameMaskMode)endModePlug()->getValue();
+
+	int origFrame = (int)context->getFrame();
+	int maskedFrame = std::min( frameEndMask, std::max( frameStartMask, origFrame ) );
+
+	if( origFrame == maskedFrame )
+	{
+		// no need for anything special when
+		// we're within the mask range.
+		return false;
+	}
+
+	FrameMaskMode maskMode = ( origFrame < maskedFrame ) ? frameStartMaskMode : frameEndMaskMode;
+
+	if( maskMode == None )
+	{
+		// no need for anything special when
+		// we're in FrameMaskMode::None
+		return false;
+	}
+
+	// we need to create the masked context
+	// for both BlackOutSide and ClampToFrame,
+	// because some plugs require valid data
+	// from the mask range even in either way.
+
+	maskedContext = new Gaffer::Context( *context, Context::Borrowed );
+	maskedContext->setFrame( maskedFrame );
+
+	return ( maskMode == BlackOutside );
 }

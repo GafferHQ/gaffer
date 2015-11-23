@@ -225,6 +225,10 @@ class Context : public IECore::RefCounted
 				/// Destruction of the Scope pops the previously pushed context.
 				~Scope();
 
+			private :
+
+				const Context *m_context;
+
 		};
 
 		/// Returns the current context for the calling thread.

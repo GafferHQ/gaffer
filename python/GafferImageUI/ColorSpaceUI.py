@@ -34,8 +34,6 @@
 #
 ##########################################################################
 
-import PyOpenColorIO
-
 import IECore
 
 import Gaffer
@@ -44,15 +42,11 @@ import GafferImage
 
 def __colorSpacePresetNames( plug ) :
 
-	config = PyOpenColorIO.GetCurrentConfig()
-
-	return IECore.StringVectorData( [ "None" ] + [ cs.getName() for cs in config.getColorSpaces() ] )
+	return IECore.StringVectorData( [ "None" ] + GafferImage.OpenColorIOTransform.availableColorSpaces() )
 
 def __colorSpacePresetValues( plug ) :
 
-	config = PyOpenColorIO.GetCurrentConfig()
-
-	return IECore.StringVectorData( [ "" ] + [ cs.getName() for cs in config.getColorSpaces() ] )
+	return IECore.StringVectorData( [ "" ] + GafferImage.OpenColorIOTransform.availableColorSpaces() )
 
 Gaffer.Metadata.registerNode(
 

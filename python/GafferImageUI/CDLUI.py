@@ -34,8 +34,6 @@
 #
 ##########################################################################
 
-import PyOpenColorIO
-
 import IECore
 
 import Gaffer

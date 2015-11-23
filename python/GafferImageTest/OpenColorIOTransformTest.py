@@ -34,68 +34,27 @@
 #
 ##########################################################################
 
+import unittest
+
 import IECore
 
 import Gaffer
-import GafferUI
+import GafferTest
 import GafferImage
+import GafferImageTest
 
-Gaffer.Metadata.registerNode(
+import PyOpenColorIO
 
-	GafferImage.LUT,
+class OpenColorIOTransformTest( GafferTest.TestCase ) :
 
-	"description",
-	"""
-	Applies color transformations provided by
-	OpenColorIO via a LUT file and OCIO FileTransform.
-	""",
+	def testAvailableColorSpaces( self ) :
 
-	plugs = {
+		config = PyOpenColorIO.GetCurrentConfig()
+		
+		self.assertEqual(
+			GafferImage.OpenColorIOTransform.availableColorSpaces(),
+			[ cs.getName() for cs in config.getColorSpaces() ]
+		)
 
-		"fileName" : [
-
-			"description",
-			"""
-			The name of the LUT file to be read. Only OpenColorIO
-			supported files will function as expected.
-			""",
-
-			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
-			"pathPlugValueWidget:leaf", True,
-			"pathPlugValueWidget:bookmarks", "color",
-			"fileSystemPathPlugValueWidget:extensions", IECore.StringVectorData( GafferImage.LUT.supportedExtensions() ),
-			"fileSystemPathPlugValueWidget:extensionsLabel", "Show only LUT files",
-
-		],
-
-		"interpolation" : [
-
-			"description",
-			"""
-			The interpolation mode for the color transformation.
-			""",
-
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-			"preset:Best", GafferImage.LUT.Interpolation.Best,
-			"preset:Nearest", GafferImage.LUT.Interpolation.Nearest,
-			"preset:Linear", GafferImage.LUT.Interpolation.Linear,
-			"preset:Tetrahedral", GafferImage.LUT.Interpolation.Tetrahedral,
-
-		],
-
-		"direction" : [
-
-			"description",
-			"""
-			The direction to perform the color transformation.
-			""",
-
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-			"preset:Forward", GafferImage.LUT.Direction.Forward,
-			"preset:Inverse", GafferImage.LUT.Direction.Inverse,
-
-		],
-
-	}
-
-)
+if __name__ == "__main__":
+	unittest.main()

@@ -34,48 +34,14 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef GAFFERIMAGEBINDINGS_OPENIMAGEIOREADERBINDING_H
+#define GAFFERIMAGEBINDINGS_OPENIMAGEIOREADERBINDING_H
 
-#include "GafferBindings/DependencyNodeBinding.h"
-
-#include "GafferImage/ImageReader.h"
-
-#include "GafferImageBindings/ImageReaderBinding.h"
-
-using namespace GafferImage;
-
-static boost::python::list supportedExtensions()
-{
-	std::vector<std::string> e;
-	ImageReader::supportedExtensions( e );
-
-	boost::python::list result;
-	for( std::vector<std::string>::const_iterator it = e.begin(), eIt = e.end(); it != eIt; ++it )
-	{
-		result.append( *it );
-	}
-
-	return result;
-}
-
-void GafferImageBindings::bindImageReader()
+namespace GafferImageBindings
 {
 
-	boost::python::scope s = GafferBindings::DependencyNodeClass<ImageReader>()
-		.def( "supportedExtensions", &supportedExtensions )
-		.staticmethod( "supportedExtensions" )
-	;
+void bindOpenImageIOReader();
 
-	boost::python::enum_<ImageReader::MissingFrameMode>( "MissingFrameMode" )
-		.value( "Error", ImageReader::Error )
-		.value( "Black", ImageReader::Black )
-		.value( "Hold", ImageReader::Hold )
-	;
-	
-	boost::python::enum_<ImageReader::FrameMaskMode>( "FrameMaskMode" )
-		.value( "None", ImageReader::None )
-		.value( "BlackOutside", ImageReader::BlackOutside )
-		.value( "ClampToFrame", ImageReader::ClampToFrame )
-	;
+} // namespace GafferImageBindings
 
-}
+#endif // GAFFERIMAGEBINDINGS_OPENIMAGEIOREADERBINDING_H

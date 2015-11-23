@@ -106,6 +106,7 @@ enum TypeId
 	BlurTypeId = 110810,
 	ShapeTypeId = 110811,
 	TextTypeId = 110812,
+	OpenImageIOReaderTypeId = 110813,
 
 	LastTypeId = 110849
 };

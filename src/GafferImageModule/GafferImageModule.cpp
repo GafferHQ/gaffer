@@ -44,8 +44,7 @@
 
 #include "GafferImage/Display.h"
 #include "GafferImage/ChannelDataProcessor.h"
-#include "GafferImage/OpenColorIOTransform.h"
-#include "GafferImage/ColorSpace.h"
+#include "GafferImage/ColorProcessor.h"
 #include "GafferImage/ObjectToImage.h"
 #include "GafferImage/Grade.h"
 #include "GafferImage/Clamp.h"
@@ -60,8 +59,6 @@
 #include "GafferImage/Premultiply.h"
 #include "GafferImage/Unpremultiply.h"
 #include "GafferImage/Crop.h"
-#include "GafferImage/CDL.h"
-#include "GafferImage/DisplayTransform.h"
 
 #include "GafferImageBindings/ImageNodeBinding.h"
 #include "GafferImageBindings/ImageProcessorBinding.h"
@@ -75,18 +72,19 @@
 #include "GafferImageBindings/MergeBinding.h"
 #include "GafferImageBindings/MixinBinding.h"
 #include "GafferImageBindings/FormatDataBinding.h"
+#include "GafferImageBindings/OpenImageIOReaderBinding.h"
 #include "GafferImageBindings/ImageReaderBinding.h"
 #include "GafferImageBindings/ImageWriterBinding.h"
 #include "GafferImageBindings/ShuffleBinding.h"
 #include "GafferImageBindings/CropBinding.h"
 #include "GafferImageBindings/ResampleBinding.h"
 #include "GafferImageBindings/ResizeBinding.h"
-#include "GafferImageBindings/LUTBinding.h"
 #include "GafferImageBindings/ImageAlgoBinding.h"
 #include "GafferImageBindings/OffsetBinding.h"
 #include "GafferImageBindings/BlurBinding.h"
 #include "GafferImageBindings/ShapeBinding.h"
 #include "GafferImageBindings/TextBinding.h"
+#include "GafferImageBindings/OpenColorIOTransformBinding.h"
 
 using namespace boost::python;
 using namespace GafferImage;
@@ -106,10 +104,6 @@ BOOST_PYTHON_MODULE( _GafferImage )
 	;
 	GafferBindings::DependencyNodeClass<ChannelDataProcessor>();
 	GafferBindings::DependencyNodeClass<ColorProcessor>();
-	GafferBindings::DependencyNodeClass<OpenColorIOTransform>();
-	GafferBindings::DependencyNodeClass<ColorSpace>();
-	GafferBindings::DependencyNodeClass<CDL>();
-	GafferBindings::DependencyNodeClass<DisplayTransform>();
 	GafferBindings::DependencyNodeClass<ObjectToImage>();
 	GafferBindings::DependencyNodeClass<Grade>();
 	GafferBindings::DependencyNodeClass<Clamp>();
@@ -132,6 +126,7 @@ BOOST_PYTHON_MODULE( _GafferImage )
 	GafferImageBindings::bindSampler();
 	GafferImageBindings::bindMixin();
 	GafferImageBindings::bindFormatData();
+	GafferImageBindings::bindOpenImageIOReader();
 	GafferImageBindings::bindImageReader();
 	GafferImageBindings::bindImageWriter();
 	GafferImageBindings::bindMerge();
@@ -139,12 +134,12 @@ BOOST_PYTHON_MODULE( _GafferImage )
 	GafferImageBindings::bindCrop();
 	GafferImageBindings::bindResample();
 	GafferImageBindings::bindResize();
-	GafferImageBindings::bindLUT();
 	GafferImageBindings::bindImageAlgo();
 	GafferImageBindings::bindOffset();
 	GafferImageBindings::bindBlur();
 	GafferImageBindings::bindShape();
 	GafferImageBindings::bindText();
+	GafferImageBindings::bindOpenColorIOTransform();
 
 }
 

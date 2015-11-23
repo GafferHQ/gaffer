@@ -47,7 +47,8 @@ Gaffer.Metadata.registerNode(
 	"description",
 	"""
 	Reads image files from disk using OpenImageIO. All file
-	types supported by OpenImageIO are supported by the ImageReader.
+	types supported by OpenImageIO are supported by the ImageReader
+	and all channel data will be converted to linear using OpenColorIO.
 	""",
 
 	plugs = {
@@ -58,7 +59,8 @@ Gaffer.Metadata.registerNode(
 			"""
 			The name of the file to be read. File sequences with
 			arbitrary padding may be specified using the '#' character
-			as a placeholder for the frame numbers.
+			as a placeholder for the frame numbers. If this file sequence
+			format is used, then missingFrameMode will be activated.
 			""",
 
 			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
@@ -81,8 +83,165 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"missingFrameMode" : [
+
+			"description",
+			"""
+			Determines how missing frames are handled when the input
+			fileName is a file sequence (uses the '#' character).
+			The default behaviour is to throw an exception, but it
+			can also hold the last valid frame in the sequence, or
+			return a black image which matches the data window and
+			display window of the previous valid frame in the sequence.
+			""",
+
+			"preset:Error", GafferImage.ImageReader.MissingFrameMode.Error,
+			"preset:Black", GafferImage.ImageReader.MissingFrameMode.Black,
+			"preset:Hold", GafferImage.ImageReader.MissingFrameMode.Hold,
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
+		],
+
+		"start" : [
+
+			"description",
+			"""
+			Masks frames which preceed the specified start frame.
+			The default is to treat them based on the MissingFrameMode,
+			but they can also be clamped to the start frame, or
+			return a black image which matches the data window
+			and display window of the start frame.
+			""",
+			
+			"plugValueWidget:type", "GafferImageUI.ImageReaderUI._FrameMaskPlugValueWidget",
+
+		],
+		
+		"start.mode" : [
+
+			"description",
+			"""
+			The mode used detemine the mask behaviour for the start frame.
+			""",
+
+			"preset:None", GafferImage.ImageReader.FrameMaskMode.None,
+			"preset:Black Outside", GafferImage.ImageReader.FrameMaskMode.BlackOutside,
+			"preset:Clamp to Range", GafferImage.ImageReader.FrameMaskMode.ClampToFrame,
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
+		],
+		
+		"start.frame" : [
+
+			"description",
+			"""
+			The start frame of the masked range.
+			""",
+
+			"presetNames", lambda plug : IECore.StringVectorData( [ str(x) for x in plug.node()["__oiioReader"]["availableFrames"].getValue() ] ),
+			"presetValues", lambda plug : plug.node()["__oiioReader"]["availableFrames"].getValue(),
+
+		],
+
+		"end" : [
+
+			"description",
+			"""
+			Masks frames which follow the specified end frame.
+			The default is to treat them based on the MissingFrameMode,
+			but they can also be clamped to the end frame, or
+			return a black image which matches the data window
+			and display window of the end frame.
+			""",
+			
+			"plugValueWidget:type", "GafferImageUI.ImageReaderUI._FrameMaskPlugValueWidget",
+
+		],
+		
+		"end.mode" : [
+
+			"description",
+			"""
+			The mode used detemine the mask behaviour for the end frame.
+			""",
+
+			"preset:None", GafferImage.ImageReader.FrameMaskMode.None,
+			"preset:Black Outside", GafferImage.ImageReader.FrameMaskMode.BlackOutside,
+			"preset:Clamp to Range", GafferImage.ImageReader.FrameMaskMode.ClampToFrame,
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
+		],
+		
+		"end.frame" : [
+
+			"description",
+			"""
+			The end frame of the masked range.
+			""",
+
+			"presetNames", lambda plug : IECore.StringVectorData( [ str(x) for x in plug.node()["__oiioReader"]["availableFrames"].getValue() ] ),
+			"presetValues", lambda plug : plug.node()["__oiioReader"]["availableFrames"].getValue(),
+
+		],
+
 	}
 
 )
 
 GafferUI.PlugValueWidget.registerCreator( GafferImage.ImageReader, "refreshCount", GafferUI.IncrementingPlugValueWidget, label = "Refresh", undoable = False )
+
+class _FrameMaskPlugValueWidget( GafferUI.PlugValueWidget ) :
+
+	def __init__( self, plug, **kw ) :
+
+		with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing=4 ) as self.__row :
+
+			GafferUI.PlugValueWidget.create( plug["mode"] )
+			GafferUI.PlugValueWidget.create( plug["frame"] )
+
+		GafferUI.PlugValueWidget.__init__( self, self.__row, plug, **kw )
+
+	def setPlug( self, plug ) :
+
+		assert( len( plug ) == len( self.getPlug() ) )
+
+		GafferUI.PlugValueWidget.setPlug( self, plug )
+
+		for index, plug in enumerate( plug.children() ) :
+			self.__row[index].setPlug( plug )
+
+	def setHighlighted( self, highlighted ) :
+
+		GafferUI.PlugValueWidget.setHighlighted( self, highlighted )
+
+		for i in range( 0, len( self.getPlug() ) ) :
+			self.__row[i].setHighlighted( highlighted )
+
+	def setReadOnly( self, readOnly ) :
+
+		if readOnly == self.getReadOnly() :
+			return
+
+		GafferUI.PlugValueWidget.setReadOnly( self, readOnly )
+
+		for w in self.__row :
+			if isinstance( w, GafferUI.PlugValueWidget ) :
+				w.setReadOnly( readOnly )
+
+	def childPlugValueWidget( self, childPlug, lazy=True ) :
+
+		for i, p in enumerate( self.getPlug().children() ) :
+			if p.isSame( childPlug ) :
+				return self.__row[i]
+
+		return None
+
+	def _updateFromPlug( self ) :
+
+		with self.getContext() :
+			mode = self.getPlug()["mode"].getValue()
+		
+		self.childPlugValueWidget( self.getPlug()["frame"] ).setEnabled( mode != GafferImage.ImageReader.FrameMaskMode.None )
