@@ -45,7 +45,7 @@ import GafferTest
 import GafferImage
 import GafferImageTest
 
-class ImageReaderTest( GafferTest.TestCase ) :
+class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 
 	fileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/circles.exr" )
 	offsetDataWindowFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/rgb.100x100.exr" )
@@ -301,12 +301,12 @@ class ImageReaderTest( GafferTest.TestCase ) :
 			self.assertEqual( reader["out"].channelData( "R", IECore.V2i( 0 ) ), holdTile )
 			self.assertEqual( reader["out"].image(), holdImage )
 		
-		reader["frameStartMask"]["frame"].setValue( 4 )
-		reader["frameEndMask"]["frame"].setValue( 7 )
+		reader["start"]["frame"].setValue( 4 )
+		reader["end"]["frame"].setValue( 7 )
 		
 		# frame 0 errors, match from 1-10
-		reader["frameStartMask"]["mode"].setValue( GafferImage.ImageReader.FrameMaskMode.None )
-		reader["frameEndMask"]["mode"].setValue( GafferImage.ImageReader.FrameMaskMode.None )
+		reader["start"]["mode"].setValue( GafferImage.ImageReader.FrameMaskMode.None )
+		reader["end"]["mode"].setValue( GafferImage.ImageReader.FrameMaskMode.None )
 		with context :
 			
 			for i in range( 0, 11 ) :
@@ -314,7 +314,7 @@ class ImageReaderTest( GafferTest.TestCase ) :
 				assertMatch()
 
 		# black from 0-3, match from 4-10
-		reader["frameStartMask"]["mode"].setValue( GafferImage.ImageReader.FrameMaskMode.BlackOutside )
+		reader["start"]["mode"].setValue( GafferImage.ImageReader.FrameMaskMode.BlackOutside )
 		with context :
 			
 			for i in range( 0, 4 ) :
@@ -326,7 +326,7 @@ class ImageReaderTest( GafferTest.TestCase ) :
 				assertMatch()
 
 		# black from 0-3, match from 4-7, black from 8-10
-		reader["frameEndMask"]["mode"].setValue( GafferImage.ImageReader.FrameMaskMode.BlackOutside )
+		reader["end"]["mode"].setValue( GafferImage.ImageReader.FrameMaskMode.BlackOutside )
 		with context :
 			
 			for i in range( 0, 4 ) :
@@ -342,7 +342,7 @@ class ImageReaderTest( GafferTest.TestCase ) :
 				assertBlack()
 		
 		# hold frame 4 from 0-3, match from 4-7, black from 8-10
-		reader["frameStartMask"]["mode"].setValue( GafferImage.ImageReader.FrameMaskMode.ClampToRange )
+		reader["start"]["mode"].setValue( GafferImage.ImageReader.FrameMaskMode.ClampToFrame )
 		with context :
 			
 			for i in range( 0, 4 ) :
@@ -358,7 +358,7 @@ class ImageReaderTest( GafferTest.TestCase ) :
 				assertBlack()
 		
 		# hold frame 4 from 0-3, match from 4-7, hold frame 7 from 8-10
-		reader["frameEndMask"]["mode"].setValue( GafferImage.ImageReader.FrameMaskMode.ClampToRange )
+		reader["end"]["mode"].setValue( GafferImage.ImageReader.FrameMaskMode.ClampToFrame )
 		with context :
 			
 			for i in range( 0, 4 ) :

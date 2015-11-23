@@ -103,7 +103,7 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"frameStartMask" : [
+		"start" : [
 
 			"description",
 			"""
@@ -118,7 +118,7 @@ Gaffer.Metadata.registerNode(
 
 		],
 		
-		"frameStartMask.mode" : [
+		"start.mode" : [
 
 			"description",
 			"""
@@ -127,13 +127,13 @@ Gaffer.Metadata.registerNode(
 
 			"preset:None", GafferImage.ImageReader.FrameMaskMode.None,
 			"preset:Black Outside", GafferImage.ImageReader.FrameMaskMode.BlackOutside,
-			"preset:Clamp to Range", GafferImage.ImageReader.FrameMaskMode.ClampToRange,
+			"preset:Clamp to Range", GafferImage.ImageReader.FrameMaskMode.ClampToFrame,
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 
 		],
 		
-		"frameStartMask.frame" : [
+		"start.frame" : [
 
 			"description",
 			"""
@@ -145,7 +145,7 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"frameEndMask" : [
+		"end" : [
 
 			"description",
 			"""
@@ -160,7 +160,7 @@ Gaffer.Metadata.registerNode(
 
 		],
 		
-		"frameEndMask.mode" : [
+		"end.mode" : [
 
 			"description",
 			"""
@@ -169,13 +169,13 @@ Gaffer.Metadata.registerNode(
 
 			"preset:None", GafferImage.ImageReader.FrameMaskMode.None,
 			"preset:Black Outside", GafferImage.ImageReader.FrameMaskMode.BlackOutside,
-			"preset:Clamp to Range", GafferImage.ImageReader.FrameMaskMode.ClampToRange,
+			"preset:Clamp to Range", GafferImage.ImageReader.FrameMaskMode.ClampToFrame,
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 
 		],
 		
-		"frameEndMask.frame" : [
+		"end.frame" : [
 
 			"description",
 			"""

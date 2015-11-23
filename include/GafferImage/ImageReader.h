@@ -76,12 +76,13 @@ class ImageReader : public ImageNode
 		};
 		
 		/// The FrameMaskMode controls how to handle images
-		/// outside of the values provided by frameRangeMask().
+		/// outside of the values provided by the start
+		/// and end frame masks.
 		enum FrameMaskMode
 		{
 			None = 0,
 			BlackOutside,
-			ClampToRange,
+			ClampToFrame,
 		};
 
 		Gaffer::StringPlug *fileNamePlug();
@@ -94,17 +95,17 @@ class ImageReader : public ImageNode
 		Gaffer::IntPlug *missingFrameModePlug();
 		const Gaffer::IntPlug *missingFrameModePlug() const;
 
-		Gaffer::IntPlug *frameStartMaskModePlug();
-		const Gaffer::IntPlug *frameStartMaskModePlug() const;
+		Gaffer::IntPlug *startModePlug();
+		const Gaffer::IntPlug *startModePlug() const;
 
-		Gaffer::IntPlug *frameStartMaskPlug();
-		const Gaffer::IntPlug *frameStartMaskPlug() const;
+		Gaffer::IntPlug *startFramePlug();
+		const Gaffer::IntPlug *startFramePlug() const;
 
-		Gaffer::IntPlug *frameEndMaskModePlug();
-		const Gaffer::IntPlug *frameEndMaskModePlug() const;
+		Gaffer::IntPlug *endModePlug();
+		const Gaffer::IntPlug *endModePlug() const;
 
-		Gaffer::IntPlug *frameEndMaskPlug();
-		const Gaffer::IntPlug *frameEndMaskPlug() const;
+		Gaffer::IntPlug *endFramePlug();
+		const Gaffer::IntPlug *endFramePlug() const;
 
 		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
 
@@ -136,8 +137,8 @@ class ImageReader : public ImageNode
 		GafferImage::ImagePlug *intermediateImagePlug();
 		const GafferImage::ImagePlug *intermediateImagePlug() const;
 
-		void hashMaskedOutput( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h, bool alwaysClampToRange = false ) const;
-		void computeMaskedOutput( Gaffer::ValuePlug *output, const Gaffer::Context *context, bool alwaysClampToRange = false ) const;
+		void hashMaskedOutput( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h, bool alwaysClampToFrame = false ) const;
+		void computeMaskedOutput( Gaffer::ValuePlug *output, const Gaffer::Context *context, bool alwaysClampToFrame = false ) const;
 
 		bool computeFrameMask( const Gaffer::Context *context, Gaffer::ContextPtr &maskedContext ) const;
 

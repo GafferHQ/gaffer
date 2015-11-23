@@ -46,7 +46,7 @@ import GafferTest
 import GafferImage
 import GafferImageTest
 
-class OpenImageIOReaderTest( GafferImageTest.TestCase ) :
+class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 
 	fileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/checker.exr" )
 	offsetDataWindowFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/rgb.100x100.exr" )

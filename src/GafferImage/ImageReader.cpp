@@ -73,15 +73,15 @@ ImageReader::ImageReader( const std::string &name )
 	addChild( new IntPlug( "refreshCount" ) );
 	addChild( new IntPlug( "missingFrameMode", Plug::In, Error, /* min */ Error, /* max */ Hold ) );
 	
-	ValuePlugPtr frameStartMaskPlug = new ValuePlug( "frameStartMask", Plug::In );
-	frameStartMaskPlug->addChild( new IntPlug( "mode", Plug::In, None, /* min */ None, /* max */ ClampToRange ) );
-	frameStartMaskPlug->addChild( new IntPlug( "frame", Plug::In, 0 ) );
-	addChild( frameStartMaskPlug );
+	ValuePlugPtr startPlug = new ValuePlug( "start", Plug::In );
+	startPlug->addChild( new IntPlug( "mode", Plug::In, None, /* min */ None, /* max */ ClampToFrame ) );
+	startPlug->addChild( new IntPlug( "frame", Plug::In, 0 ) );
+	addChild( startPlug );
 	
-	ValuePlugPtr frameEndMaskPlug = new ValuePlug( "frameEndMask", Plug::In );
-	frameEndMaskPlug->addChild( new IntPlug( "mode", Plug::In, None, /* min */ None, /* max */ ClampToRange ) );
-	frameEndMaskPlug->addChild( new IntPlug( "frame", Plug::In, 0 ) );
-	addChild( frameEndMaskPlug );
+	ValuePlugPtr endPlug = new ValuePlug( "end", Plug::In );
+	endPlug->addChild( new IntPlug( "mode", Plug::In, None, /* min */ None, /* max */ ClampToFrame ) );
+	endPlug->addChild( new IntPlug( "frame", Plug::In, 0 ) );
+	addChild( endPlug );
 	
 	addChild( new CompoundObjectPlug( "__intermediateMetadata", Plug::In, new CompoundObject, Plug::Default & ~Plug::Serialisable ) );
 	addChild( new StringPlug( "__intermediateColorSpace", Plug::Out, "", Plug::Default & ~Plug::Serialisable ) );
@@ -139,42 +139,42 @@ const IntPlug *ImageReader::missingFrameModePlug() const
 	return getChild<IntPlug>( g_firstChildIndex + 2 );
 }
 
-IntPlug *ImageReader::frameStartMaskModePlug()
+IntPlug *ImageReader::startModePlug()
 {
 	return getChild<ValuePlug>( g_firstChildIndex + 3 )->getChild<IntPlug>( 0 );
 }
 
-const IntPlug *ImageReader::frameStartMaskModePlug() const
+const IntPlug *ImageReader::startModePlug() const
 {
 	return getChild<ValuePlug>( g_firstChildIndex + 3 )->getChild<IntPlug>( 0 );
 }
 
-IntPlug *ImageReader::frameStartMaskPlug()
+IntPlug *ImageReader::startFramePlug()
 {
 	return getChild<ValuePlug>( g_firstChildIndex + 3 )->getChild<IntPlug>( 1 );
 }
 
-const IntPlug *ImageReader::frameStartMaskPlug() const
+const IntPlug *ImageReader::startFramePlug() const
 {
 	return getChild<ValuePlug>( g_firstChildIndex + 3 )->getChild<IntPlug>( 1 );
 }
 
-IntPlug *ImageReader::frameEndMaskModePlug()
+IntPlug *ImageReader::endModePlug()
 {
 	return getChild<ValuePlug>( g_firstChildIndex + 4 )->getChild<IntPlug>( 0 );
 }
 
-const IntPlug *ImageReader::frameEndMaskModePlug() const
+const IntPlug *ImageReader::endModePlug() const
 {
 	return getChild<ValuePlug>( g_firstChildIndex + 4 )->getChild<IntPlug>( 0 );
 }
 
-IntPlug *ImageReader::frameEndMaskPlug()
+IntPlug *ImageReader::endFramePlug()
 {
 	return getChild<ValuePlug>( g_firstChildIndex + 4 )->getChild<IntPlug>( 1 );
 }
 
-const IntPlug *ImageReader::frameEndMaskPlug() const
+const IntPlug *ImageReader::endFramePlug() const
 {
 	return getChild<ValuePlug>( g_firstChildIndex + 4 )->getChild<IntPlug>( 1 );
 }
@@ -248,10 +248,10 @@ void ImageReader::affects( const Plug *input, AffectedPlugsContainer &outputs ) 
 		outputs.push_back( outPlug()->getChild<ValuePlug>( input->getName() ) );
 	}
 	else if (
-		input == frameStartMaskPlug() ||
-		input == frameStartMaskModePlug() ||
-		input == frameEndMaskPlug() ||
-		input == frameEndMaskModePlug()
+		input == startFramePlug() ||
+		input == startModePlug() ||
+		input == endFramePlug() ||
+		input == endModePlug()
 	)
 	{
 		for( ValuePlugIterator it( outPlug() ); it != it.end(); ++it )
@@ -276,7 +276,7 @@ void ImageReader::hash( const ValuePlug *output, const Context *context, IECore:
 	{
 		// we always want to match the windows
 		// we would get inside the frame mask
-		hashMaskedOutput( output, context, h, /* alwaysClampToRange */ true );
+		hashMaskedOutput( output, context, h, /* alwaysClampToFrame */ true );
 	}
 	else if(
 		output == outPlug()->metadataPlug() ||
@@ -313,7 +313,7 @@ void ImageReader::compute( ValuePlug *output, const Context *context ) const
 	{
 		// we always want to match the windows
 		// we would get inside the frame mask
-		computeMaskedOutput( output, context, /* alwaysClampToRange */ true );
+		computeMaskedOutput( output, context, /* alwaysClampToFrame */ true );
 	}
 	else if(
 		output == outPlug()->metadataPlug() ||
@@ -329,21 +329,21 @@ void ImageReader::compute( ValuePlug *output, const Context *context ) const
 	}
 }
 
-void ImageReader::hashMaskedOutput( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h, bool alwaysClampToRange ) const
+void ImageReader::hashMaskedOutput( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h, bool alwaysClampToFrame ) const
 {
 	ContextPtr maskedContext = NULL;
-	if( !computeFrameMask( context, maskedContext ) || alwaysClampToRange )
+	if( !computeFrameMask( context, maskedContext ) || alwaysClampToFrame )
 	{
 		Context::Scope scope( maskedContext.get() );
 		h = intermediateImagePlug()->getChild<ValuePlug>( output->getName() )->hash();
 	}
 }
 
-void ImageReader::computeMaskedOutput( Gaffer::ValuePlug *output, const Gaffer::Context *context, bool alwaysClampToRange ) const
+void ImageReader::computeMaskedOutput( Gaffer::ValuePlug *output, const Gaffer::Context *context, bool alwaysClampToFrame ) const
 {
 	ContextPtr maskedContext = NULL;
 	bool blackOutside = computeFrameMask( context, maskedContext );
-	if( blackOutside && !alwaysClampToRange )
+	if( blackOutside && !alwaysClampToFrame )
 	{
 		output->setToDefault();
 		return;
@@ -355,10 +355,10 @@ void ImageReader::computeMaskedOutput( Gaffer::ValuePlug *output, const Gaffer::
 
 bool ImageReader::computeFrameMask( const Context *context, ContextPtr &maskedContext ) const
 {
-	int frameStartMask = frameStartMaskPlug()->getValue();
-	int frameEndMask = frameEndMaskPlug()->getValue();
-	FrameMaskMode frameStartMaskMode = (FrameMaskMode)frameStartMaskModePlug()->getValue();
-	FrameMaskMode frameEndMaskMode = (FrameMaskMode)frameEndMaskModePlug()->getValue();
+	int frameStartMask = startFramePlug()->getValue();
+	int frameEndMask = endFramePlug()->getValue();
+	FrameMaskMode frameStartMaskMode = (FrameMaskMode)startModePlug()->getValue();
+	FrameMaskMode frameEndMaskMode = (FrameMaskMode)endModePlug()->getValue();
 
 	int origFrame = (int)context->getFrame();
 	int maskedFrame = std::min( frameEndMask, std::max( frameStartMask, origFrame ) );
@@ -380,11 +380,11 @@ bool ImageReader::computeFrameMask( const Context *context, ContextPtr &maskedCo
 	}
 
 	// we need to create the masked context
-	// for both BlackOutSide and ClampToRange,
+	// for both BlackOutSide and ClampToFrame,
 	// because some plugs require valid data
 	// from the mask range even in either way.
 
-	maskedContext = new Gaffer::Context( *context, Context::Shared );
+	maskedContext = new Gaffer::Context( *context, Context::Borrowed );
 	maskedContext->setFrame( maskedFrame );
 
 	return ( maskMode == BlackOutside );
