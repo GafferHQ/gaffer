@@ -42,6 +42,31 @@ import GafferImage
 
 class ImageTestCase( GafferTest.TestCase ) :
 
+	def assertImageHashesEqual( self, imageA, imageB ) :
+
+		self.assertEqual( imageA["format"].hash(), imageB["format"].hash() )
+		self.assertEqual( imageA["dataWindow"].hash(), imageB["dataWindow"].hash() )
+		self.assertEqual( imageA["metadata"].hash(), imageB["metadata"].hash() )
+		self.assertEqual( imageA["channelNames"].hash(), imageB["channelNames"].hash() )
+
+		dataWindow = imageA["dataWindow"].getValue()
+		self.assertEqual( dataWindow, imageB["dataWindow"].getValue() )
+
+		channelNames = imageA["channelNames"].getValue()
+		self.assertEqual( channelNames, imageB["channelNames"].getValue() )
+
+		tileOrigin = GafferImage.ImagePlug.tileOrigin( dataWindow.min )
+		while tileOrigin.y < dataWindow.max.y :
+			tileOrigin.x = GafferImage.ImagePlug.tileOrigin( dataWindow.min ).x
+			while tileOrigin.x < dataWindow.max.x :
+				for channelName in channelNames :
+					self.assertEqual(
+						imageA.channelDataHash( channelName, tileOrigin ),
+						imageB.channelDataHash( channelName, tileOrigin )
+					)
+				tileOrigin.x += GafferImage.ImagePlug.tileSize()
+			tileOrigin.y += GafferImage.ImagePlug.tileSize()
+
 	def assertImagesEqual( self, imageA, imageB, maxDifference = 0, ignoreMetadata = False, ignoreDataWindow = False ) :
 
 		self.assertEqual( imageA["format"].getValue(), imageB["format"].getValue() )
