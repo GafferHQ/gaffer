@@ -36,8 +36,6 @@
 ##########################################################################
 
 import unittest
-import threading
-import time
 
 import IECore
 
@@ -182,6 +180,33 @@ class NodeTest( GafferTest.TestCase ) :
 
 		self.assertEqual( n2["op1"].getInput(), None )
 
+	def testUnparentingRemovesUserConnections( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		n1 = GafferTest.AddNode()
+		n2 = GafferTest.AddNode()
+
+		s["n1"] = n1
+		s["n2"] = n2
+
+		s["n1"]["user"]["i1"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["n1"]["user"]["i2"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["n1"]["user"]["v"] = Gaffer.V2iPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		s["n1"]["user"]["i1"].setInput( n2["sum"] )
+		s["n2"]["op1"].setInput( s["n1"]["user"]["i2"] )
+		s["n1"]["user"]["v"][0].setInput( s["n2"]["sum"] )
+		s["n2"]["op2"].setInput( s["n1"]["user"]["v"][1] )
+
+		del s["n1"]
+		self.assertTrue( n1.parent() is None )
+
+		self.assertTrue( n1["user"]["i1"].getInput() is None )
+		self.assertTrue( n2["op1"].getInput() is None )
+		self.assertTrue( n1["user"]["v"][0].getInput() is None )
+		self.assertTrue( n2["op2"].getInput() is None )
+
 	def testOverrideAcceptsInput( self ) :
 
 		class AcceptsInputTestNode( Gaffer.Node ) :
@@ -277,5 +302,52 @@ class NodeTest( GafferTest.TestCase ) :
 		s["n1"]["user"]["p2"] = Gaffer.IntPlug()
 		self.assertEqual( len( s["n2"]["user"] ), 1 )
 
-if __name__ == "__main__":
+	def testInternalConnectionsSurviveUnparenting( self ) :
+
+		class InternalConnectionsNode( Gaffer.Node ) :
+
+			def __init__( self, name = "InternalConnectionsNode" ) :
+
+				Gaffer.Node.__init__( self, name )
+
+				self["in1"] = Gaffer.IntPlug()
+				self["in2"] = Gaffer.IntPlug()
+				self["__in"] = Gaffer.IntPlug()
+
+				self["out1"] = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.Out )
+				self["out2"] = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.Out )
+				self["__out"] = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.Out )
+
+				self["out1"].setInput( self["in1"] )
+
+				self["__add"] = GafferTest.AddNode()
+				self["__add"]["op1"].setInput( self["in2"] )
+				self["__add"]["op2"].setInput( self["__out"] )
+				self["__in"].setInput( self["__add"]["sum"] )
+
+				self["out2"].setInput( self["__add"]["sum"] )
+
+		IECore.registerRunTimeTyped( InternalConnectionsNode )
+
+		s = Gaffer.ScriptNode()
+		n = InternalConnectionsNode()
+		s["n"] = n
+
+		def assertConnections() :
+
+			self.assertTrue( n["out1"].getInput().isSame( n["in1"] ) )
+			self.assertTrue( n["__add"]["op1"].getInput().isSame( n["in2"] ) )
+			self.assertTrue( n["__add"]["op2"].getInput().isSame( n["__out"] ) )
+			self.assertTrue( n["out2"].getInput().isSame( n["__add"]["sum"] ) )
+			self.assertTrue( n["__in"].getInput().isSame( n["__add"]["sum"] ) )
+
+		assertConnections()
+
+		s.removeChild( n )
+		assertConnections()
+
+		s.addChild( n )
+		assertConnections()
+
+if __name__ == "__main__" :
 	unittest.main()

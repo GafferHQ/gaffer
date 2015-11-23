@@ -151,5 +151,17 @@ class TextTest( GafferImageTest.ImageTestCase ) :
 		self.assertEqual( bottomDW.size().y, centerDW.size().y )
 		self.assertEqual( centerDW.size().y, topDW.size().y )	
 
+	def testUnparenting( self ) :
+
+		t1 = GafferImage.Text()
+		t2 = GafferImage.Text()
+
+		s = Gaffer.ScriptNode()
+		s.addChild( t2 )
+		s.removeChild( t2 )
+
+		self.assertImageHashesEqual( t1["out"], t2["out"] )
+		self.assertImagesEqual( t1["out"], t2["out"] )
+
 if __name__ == "__main__":
 	unittest.main()
