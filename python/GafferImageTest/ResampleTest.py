@@ -50,7 +50,11 @@ class ResampleTest( GafferImageTest.ImageTestCase ) :
 
 	def testDataWindow( self ) :
 
+		c = GafferImage.Constant()
+		c["color"].setValue( IECore.Color4f( 1 ) )
+
 		r = GafferImage.Resample()
+		r["in"].setInput( c["out"] )
 		r["dataWindow"].setValue(
 			IECore.Box2f(
 				IECore.V2f( 10.5, 11.5 ),

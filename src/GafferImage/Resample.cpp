@@ -448,6 +448,19 @@ Imath::Box2i Resample::computeDataWindow( const Gaffer::Context *context, const 
 {
 	const Box2i srcDataWindow = inPlug()->dataWindowPlug()->getValue();
 	const Box2f dstDataWindow = dataWindowPlug()->getValue();
+	if( empty( srcDataWindow ) || dstDataWindow.isEmpty() )
+	{
+		// This is a meaningless transformation, so we output an empty data
+		// window. It is perhaps a little odd that you can request a specific
+		// (non-empty) data window via dataWindowPlug(), but then be
+		// overruled by an empty data window from inPlug()->dataWindowPlug().
+		// This is perhaps an indication that the API for Resample is a little
+		// unnatural, and it'd be better to use a scale/translate pair to
+		// define the transformation rather than using a target window. Using
+		// scale/translate would also make concatenation of Resample nodes
+		// more natural, so perhaps we'll need to go that way at some point.
+		return Box2i();
+	}
 
 	Box2f expandedDataWindow = dstDataWindow;
 	if( expandDataWindowPlug()->getValue() )
