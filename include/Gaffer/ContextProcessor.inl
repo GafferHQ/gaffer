@@ -196,36 +196,64 @@ void ContextProcessor<BaseType>::compute( ValuePlug *output, const Context *cont
 }
 
 template<typename BaseType>
+const ValuePlug *ContextProcessor<BaseType>::correspondingDescendant( const ValuePlug *plug, const ValuePlug *plugAncestor, const ValuePlug *oppositeAncestor )
+{
+	// this method recursively computes oppositeAncestor->descendant( plug->relativeName( plugAncestor ) ).
+	// ie it finds the relative path from plugAncestor to plug, and follows it from oppositeAncestor.
+
+	if( plug == plugAncestor )
+	{
+		// we're already at plugAncestor, so the relative path has zero length
+		// and we can return oppositeAncestor:
+		return oppositeAncestor;
+	}
+
+	// now we find the corresponding descendant of plug->parent(), and
+	// return its child with the same name as "plug" (if either of those things exist):
+
+	// get parent of this plug:
+	const ValuePlug *plugParent = plug->parent<ValuePlug>();
+	if( !plugParent )
+	{
+		// looks like the "plug" we initially called this function with wasn't
+		// a descendant of plugAncestor and we've recursed up into nothing, so
+		// we return NULL:
+		return NULL;
+	}
+
+	// find the corresponding plug for the parent:
+	const ValuePlug *oppositeParent = correspondingDescendant( plugParent, plugAncestor, oppositeAncestor );
+	if( !oppositeParent )
+	{
+		return NULL;
+	}
+
+	// find the child corresponding to "plug"
+	return oppositeParent->getChild<ValuePlug>( plug->getName() );
+}
+
+template<typename BaseType>
 const ValuePlug *ContextProcessor<BaseType>::oppositePlug( const ValuePlug *plug ) const
 {
 	const static IECore::InternedString inName( "in" );
 	const static IECore::InternedString outName( "out" );
 	
+	const ValuePlug *inPlug = BaseType::template getChild<ValuePlug>( inName );
+	const ValuePlug *outPlug = BaseType::template getChild<ValuePlug>( outName );
+	
+	if( !( outPlug && inPlug ) )
+	{
+		return 0;
+	}
+	
 	if( plug->direction() == Plug::Out )
 	{
-		const ValuePlug *inPlug = BaseType::template getChild<ValuePlug>( inName );
-		if( plug->getName() == outName )
-		{
-			return inPlug;
-		}
-		if( inPlug )
-		{
-			return inPlug->getChild<ValuePlug>( plug->getName() );
-		}
+		return correspondingDescendant( plug, outPlug, inPlug );
 	}
 	else
 	{
-		const ValuePlug *outPlug = BaseType::template getChild<ValuePlug>( outName );
-		if( plug->getName() == inName )
-		{
-			return outPlug;
-		}
-		if( outPlug )
-		{
-			return outPlug->getChild<ValuePlug>( plug->getName() );
-		}
+		return correspondingDescendant( plug, inPlug, outPlug );
 	}
-	return NULL;
 }
 
 } // namespace Gaffer
