@@ -149,7 +149,10 @@ class FormatTest( GafferImageTest.ImageTestCase ) :
 			b.extendBy( IECore.V2i( int( random.uniform( -500, 500 ) ), int( random.uniform( -500, 500 ) ) ) )
 
 			bDown = f.toEXRSpace( b )
-			self.assertEqual( f.fromEXRSpace( bDown ), b )
+			if not GafferImage.empty( b ) :
+				self.assertEqual( f.fromEXRSpace( bDown ), b )
+			else :
+				self.assertEqual( f.fromEXRSpace( bDown ), IECore.Box2i() )
 
 	def testDisplayWindowCoordinateSystemTransforms( self ) :
 
@@ -208,6 +211,13 @@ class FormatTest( GafferImageTest.ImageTestCase ) :
 
 		f = GafferImage.Format( IECore.Box2i( IECore.V2i( 10 ), IECore.V2i( 20 ) ) )
 		self.assertEqual( str( f ), "(10 10) - (20 20)" )
+
+	def testEmptyBoxCoordinateSystemTransforms( self ) :
+
+		f = GafferImage.Format( 100, 200 )
+		self.assertEqual( f.toEXRSpace( IECore.Box2i() ), IECore.Box2i() )
+		self.assertEqual( f.toEXRSpace( IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 0 ) ) ), IECore.Box2i() )
+		self.assertEqual( f.fromEXRSpace( IECore.Box2i() ), IECore.Box2i() )
 
 	def tearDown( self ) :
 
