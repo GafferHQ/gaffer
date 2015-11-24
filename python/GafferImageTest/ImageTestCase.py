@@ -101,3 +101,20 @@ class ImageTestCase( GafferTest.TestCase ) :
 
 		if "A" in imageA["channelNames"].getValue() :
 			self.assertLessEqual( stats["max"]["a"].getValue(), maxDifference )
+
+	## Returns an image node with an empty data window. This is useful in
+	# verifying that nodes deal correctly with such inputs.
+	def emptyImage( self ) :
+
+		image = IECore.ImagePrimitive( IECore.Box2i(), IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 100 ) ) )
+		image["R"] = IECore.PrimitiveVariable( IECore.PrimitiveVariable.Interpolation.Varying, IECore.FloatVectorData() )
+		image["G"] = IECore.PrimitiveVariable( IECore.PrimitiveVariable.Interpolation.Varying, IECore.FloatVectorData() )
+		image["B"] = IECore.PrimitiveVariable( IECore.PrimitiveVariable.Interpolation.Varying, IECore.FloatVectorData() )
+		image["A"] = IECore.PrimitiveVariable( IECore.PrimitiveVariable.Interpolation.Varying, IECore.FloatVectorData() )
+
+		result = GafferImage.ObjectToImage()
+		result["object"].setValue( image )
+
+		self.assertEqual( result["out"]["dataWindow"].getValue(), IECore.Box2i() )
+
+		return result

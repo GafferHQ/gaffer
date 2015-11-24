@@ -58,8 +58,12 @@ float Sampler::sample( int x, int y )
 	{
 		return 0.0f;
 	}
-	else if( m_boundingMode == Clamp )
+	else
 	{
+		if( empty( m_dataWindow ) )
+		{
+			return 0.0f;
+		}
 		p = clamp( p, m_dataWindow );
 	}
 
