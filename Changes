@@ -16,6 +16,8 @@ Core
 	- Added support for assigning floats to IntPlugs in Python expressions.
 	- Added detection of circular dependencies within expressions.
 - Added support for metadata edits on Reference nodes (#1536).
+- Fixed bug which caused internal connections to be removed when
+  unparenting a Node.
 
 UI
 -----------------------------------------------------------------------
@@ -27,6 +29,14 @@ Image
 -----------------------------------------------------------------------
 
 - Added Blur node.
+- Added Text node.
+- ImageReader
+	- Added modes for handling missing frames.
+	- Added settings for masking image sequences.
+	- Added automatic conversion to linear using OIIO colorspace
+	  metadata (#250).
+	- Renamed old ImageReader to OpenImageIOReader - this is now
+	  just a utility class which is used internally.
 - Added ImagePrimitiveProcessor base class.
 - Added methods for controlling the OIIO cache memory.
 - Fixed bug which prevented the ImageWriter using the requested
@@ -43,6 +53,11 @@ Image
 	- Changed rotation direction to counter clockwise.
 	- Made "cubic" the default filter./
 - Removed Reformat node. Use Resize instead.
+- Fixed computation of max in ImageStats.
+- Fixed performance bug when ImageNodes are used inside
+  a Box subclass implemented in Python.
+- Fixed Merge dataWindow computation when the first input
+  is unconnected.
 
 Arnold
 -----------------------------------------------------------------------
@@ -65,11 +80,27 @@ API
 - Added ImageTestCase with assertImagesEqual() method.
 - Removed filter from ImageSampler.
 - Added Resample::filters() method.
+- ImageTestCase
+	- Fixed threshold comparison bug in assertImagesEqual().
+	- Added assertImageHashesEqual() method.
+- Added OpenColorIOTransform::availableSpaces() method
+- Context::Scope may now be constructed with a NULL argument -
+  this is a no-op.
+- Reintroduced default format substitutions to AtomicFormatPlug.
+- Added GafferImage::Shape base class.
+- Removed ChannelMaskPlug::channelIndex() method. Use ImageAlgo
+  colorIndex() method instead.
+- Added channel name utility methods to ImageAlgo.
 
 Build
 -----------------------------------------------------------------------
 
 - Improved reporting in Travis config.
+- Updated several dependencies to match the VFX Reference Platform.
+	- Boost 1.55
+	- OpenEXR 2.2.0
+	- OpenColorIO 1.0.9
+- Updated to Appleseed 1.3.0-beta
 
 Incompatibilities
 -----------------------------------------------------------------------
@@ -84,6 +115,8 @@ Incompatibilities
 - Removed FilterPlug. Use StringPlug instead.
 - Removed Filter. Use OIIO filters instead.
 - Removed FilterPlugValueWidget. Use presets instead.
+- Removed ChannelMaskPlug::channelIndex() method. Use ImageAlgo
+  colorIndex() method instead.
 
 # 0.18.0.0
 ==========
