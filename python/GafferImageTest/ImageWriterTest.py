@@ -42,7 +42,7 @@ import unittest
 import IECore
 
 import Gaffer
-import GafferTest
+import GafferDispatch
 import GafferImage
 import GafferImageTest
 
@@ -920,7 +920,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		s["w2"]["fileName"].setValue( self.temporaryDirectory() + "/test2.exr" )
 		s["w2"]["requirements"][0].setInput( s["w1"]["requirement"] )
 
-		d = Gaffer.LocalDispatcher()
+		d = GafferDispatch.LocalDispatcher()
 		d["jobsDirectory"].setValue( self.temporaryDirectory() + "/jobs" )
 
 		with s.context() :
@@ -939,7 +939,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		s["w"]["in"].setInput( s["c"]["out"] )
 		s["w"]["fileName"].setValue( self.temporaryDirectory() + "/test.exr" )
 
-		d = Gaffer.LocalDispatcher()
+		d = GafferDispatch.LocalDispatcher()
 		d["jobsDirectory"].setValue( self.temporaryDirectory() + "/jobs" )
 		d["executeInBackground"].setValue( True )
 
