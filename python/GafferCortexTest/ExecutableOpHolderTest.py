@@ -40,6 +40,7 @@ import IECore
 
 import Gaffer
 import GafferTest
+import GafferDispatch
 import GafferCortex
 import GafferCortexTest
 
@@ -69,7 +70,7 @@ class ExecutableOpHolderTest( GafferTest.TestCase ) :
 
 	def testIsExecutable( self ) :
 
-		self.assertTrue( isinstance( GafferCortex.ExecutableOpHolder(), Gaffer.ExecutableNode ) )
+		self.assertTrue( isinstance( GafferCortex.ExecutableOpHolder(), GafferDispatch.ExecutableNode ) )
 
 	def testExecutablePlugs( self ) :
 
@@ -171,12 +172,12 @@ class ExecutableOpHolderTest( GafferTest.TestCase ) :
 		self.assertEqual( n2Requirements[0].context(), c )
 		self.assertEqual( n2Requirements[1].node(), n2b )
 		self.assertEqual( n2Requirements[1].context(), c )
-		t1 = Gaffer.ExecutableNode.Task(n2a,c)
-		t2 = Gaffer.ExecutableNode.Task(n2b,c)
+		t1 = GafferDispatch.ExecutableNode.Task(n2a,c)
+		t2 = GafferDispatch.ExecutableNode.Task(n2b,c)
 		self.assertEqual( n2Requirements[0], t1 )
 		self.assertEqual( n2Requirements[1], t2 )
 		self.assertEqual( len(set(n2.requirements(c)).difference([ t1, t2])), 0 )
-		self.assertEqual( n1.requirements(c), [ Gaffer.ExecutableNode.Task(n2,c) ] )
+		self.assertEqual( n1.requirements(c), [ GafferDispatch.ExecutableNode.Task(n2,c) ] )
 
 	def testSerialise( self ) :
 
