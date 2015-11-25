@@ -42,7 +42,8 @@ import os
 import IECore
 
 import Gaffer
-import GafferTest
+import GafferDispatch
+import GafferDispatchTest
 import GafferOSL
 import GafferOSLTest
 
@@ -316,12 +317,12 @@ class OSLExpressionEngineTest( GafferOSLTest.OSLTestCase ) :
 
 		script = Gaffer.ScriptNode()
 
-		script["writer"] = GafferTest.TextWriter()
+		script["writer"] = GafferDispatchTest.TextWriter()
 
 		script["expression"] = Gaffer.Expression()
 		script["expression"].setExpression( 'parent.writer.fileName = "' + self.temporaryDirectory() + '/test.txt"', "OSL" )
 
-		dispatcher = Gaffer.LocalDispatcher()
+		dispatcher = GafferDispatch.LocalDispatcher()
 		dispatcher["jobsDirectory"].setValue( "/tmp/gafferOSLExpressionEngineTest/jobs" )
 		dispatcher["executeInBackground"].setValue( True )
 		dispatcher.dispatch( [ script["writer"] ] )
