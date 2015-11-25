@@ -33,6 +33,8 @@ script:
     - export LD_PRELOAD=/lib/x86_64-linux-gnu/libSegFault.so
     - source ./config/travis/runGafferTest GafferTest
     - source ./config/travis/runGafferTest GafferUITest
+    - source ./config/travis/runGafferTest GafferDispatchTest
+    - source ./config/travis/runGafferTest GafferDispatchUITest
     - source ./config/travis/runGafferTest GafferCortexTest
     - source ./config/travis/runGafferTest GafferCortexUITest
     - source ./config/travis/runGafferTest GafferImageTest
