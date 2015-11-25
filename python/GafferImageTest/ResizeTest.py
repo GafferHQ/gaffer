@@ -231,5 +231,15 @@ class ResizeTest( GafferImageTest.ImageTestCase ) :
 		self.assertEqual( r["out"]["format"].getValue(), GafferImage.Format( 100, 100 ) )
 		self.assertEqual( r["out"]["dataWindow"].getValue(), IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 100 ) ) )
 
+	def testEmptyDataWindow( self ) :
+
+		e = self.emptyImage()
+
+		r = GafferImage.Resize()
+		r["in"].setInput( e["out"] )
+		r["format"].setValue( GafferImage.Format( 2121, 1012 ) )
+
+		self.assertEqual( r["out"]["dataWindow"].getValue(), IECore.Box2i() )
+
 if __name__ == "__main__":
 	unittest.main()

@@ -195,5 +195,11 @@ class SamplerTest( GafferImageTest.ImageTestCase ) :
 		self.assertNotEqual( sampler2.hash(), sampler3.hash() )
 		self.assertNotEqual( sampler3.hash(), sampler1.hash() )
 
+	def testClampModeWithEmptyDataWindow( self ) :
+
+		empty = self.emptyImage()
+		sampler = GafferImage.Sampler( empty["out"], "R", empty["out"]["format"].getValue().getDisplayWindow(), boundingMode = GafferImage.Sampler.BoundingMode.Clamp )
+		self.assertEqual( sampler.sample( 0, 0 ), 0.0 )
+
 if __name__ == "__main__":
 	unittest.main()

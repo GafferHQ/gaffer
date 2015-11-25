@@ -37,6 +37,8 @@
 #ifndef GAFFERIMAGE_FORMAT_INL
 #define GAFFERIMAGE_FORMAT_INL
 
+#include "GafferImage/ImageAlgo.h"
+
 namespace GafferImage
 {
 
@@ -124,6 +126,11 @@ inline Imath::V2i Format::fromEXRSpace( const Imath::V2i &exrSpace ) const
 
 inline Imath::Box2i Format::fromEXRSpace( const Imath::Box2i &exrSpace ) const
 {
+	if( exrSpace.isEmpty() )
+	{
+		return Imath::Box2i();
+	}
+
 	return Imath::Box2i(
 		Imath::V2i( exrSpace.min.x, fromEXRSpace( exrSpace.max.y ) ),
 		Imath::V2i( exrSpace.max.x + 1, fromEXRSpace( exrSpace.min.y ) + 1 )
@@ -143,6 +150,11 @@ inline Imath::V2i Format::toEXRSpace( const Imath::V2i &internalSpace ) const
 
 inline Imath::Box2i Format::toEXRSpace( const Imath::Box2i &internalSpace ) const
 {
+	if( empty( internalSpace ) )
+	{
+		return Imath::Box2i();
+	}
+
 	return Imath::Box2i(
 		Imath::V2i( internalSpace.min.x, toEXRSpace( internalSpace.max.y - 1 ) ),
 		Imath::V2i( internalSpace.max.x - 1, toEXRSpace( internalSpace.min.y ) )
