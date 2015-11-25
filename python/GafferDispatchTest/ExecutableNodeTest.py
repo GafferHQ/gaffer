@@ -46,6 +46,18 @@ import GafferDispatchTest
 
 class ExecutableNodeTest( GafferTest.TestCase ) :
 
+	def testTypeNamePrefixes( self ) :
+
+		self.assertTypeNamesArePrefixed( GafferDispatch )
+
+	def testDefaultNames( self ) :
+
+		self.assertDefaultNamesAreCorrect( GafferDispatch )
+
+	def testNodesConstructWithDefaultValues( self ) :
+
+		self.assertNodesConstructWithDefaultValues( GafferDispatch )
+
 	def testIsExecutable( self ) :
 
 		self.assertTrue( issubclass( GafferDispatchTest.CountingExecutableNode, GafferDispatch.ExecutableNode ) )
