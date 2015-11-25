@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,23 +34,13 @@
 #
 ##########################################################################
 
-import Gaffer
-import GafferDispatch
+import GafferUI
+import GafferDispatchUI
 
-# Backwards compatibility - import classes from GafferDispatch into
-# the Gaffer namespace.
-## \todo When GafferCortex is updated to use GafferDispatch directly,
-# move this into its own config file.
-for name in dir( GafferDispatch ) :
+# Backwards compatibility - import things from GafferDispatchUI into
+# the GafferUI namespace where appropriate.
+
+for name in dir( GafferDispatchUI ) :
 	if name.endswith( "__" ) :
 		continue
-	setattr( Gaffer, name, getattr( GafferDispatch, name ) )
-
-import GafferCortex
-
-# Backwards compatibility - import classes from GafferCortex into
-# the Gaffer namespace.
-for name in dir( GafferCortex ) :
-	if name.endswith( "__" ) :
-		continue
-	setattr( Gaffer, name, getattr( GafferCortex, name ) )
+	setattr( GafferUI, name, getattr( GafferDispatchUI, name ) )
