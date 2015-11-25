@@ -495,6 +495,8 @@ libraries = {
 
 	"GafferDispatchUI" : {},
 
+	"GafferDispatchUITest" : {},
+
 	"GafferCortex" : {
 		"envAppends" : {
 			"LIBS" : [ "Gaffer", "GafferDispatch" ],
