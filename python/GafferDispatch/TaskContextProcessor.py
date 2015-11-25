@@ -37,17 +37,18 @@
 import IECore
 
 import Gaffer
+import GafferDispatch
 
-class TaskContextProcessor( Gaffer.ExecutableNode ) :
+class TaskContextProcessor( GafferDispatch.ExecutableNode ) :
 
 	def __init__( self, name = "TaskContextProcessor" ) :
 
-		Gaffer.ExecutableNode.__init__( self, name )
+		GafferDispatch.ExecutableNode.__init__( self, name )
 
 	def requirements( self, context ) :
 
 		contexts = self._processedContexts( context )
-		
+
 		result = []
 		for plug in self["requirements"] :
 
@@ -78,4 +79,4 @@ class TaskContextProcessor( Gaffer.ExecutableNode ) :
 
 		raise NotImplementedError
 
-IECore.registerRunTimeTyped( TaskContextProcessor, typeName = "Gaffer::TaskContextProcessor" )
+IECore.registerRunTimeTyped( TaskContextProcessor, typeName = "GafferDispatch::TaskContextProcessor" )

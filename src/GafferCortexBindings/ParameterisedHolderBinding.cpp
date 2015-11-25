@@ -40,8 +40,9 @@
 
 #include "GafferBindings/DependencyNodeBinding.h"
 #include "GafferBindings/ComputeNodeBinding.h"
-#include "GafferBindings/ExecutableNodeBinding.h"
 #include "GafferBindings/Serialisation.h"
+
+#include "GafferDispatchBindings/ExecutableNodeBinding.h"
 
 #include "GafferCortex/ParameterisedHolder.h"
 #include "GafferCortex/CompoundParameterHandler.h"
@@ -50,6 +51,7 @@
 
 using namespace boost::python;
 using namespace GafferBindings;
+using namespace GafferDispatchBindings;
 using namespace GafferCortex;
 using namespace GafferCortexBindings;
 

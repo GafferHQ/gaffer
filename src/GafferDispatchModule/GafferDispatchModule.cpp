@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2013-2014, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,14 +34,16 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERBINDINGS_DISPATCHERBINDING_H
-#define GAFFERBINDINGS_DISPATCHERBINDING_H
+#include "GafferDispatchBindings/ExecutableNodeBinding.h"
+#include "GafferDispatchBindings/DispatcherBinding.h"
 
-namespace GafferBindings
+using namespace boost::python;
+using namespace GafferDispatchBindings;
+
+BOOST_PYTHON_MODULE( _GafferDispatch )
 {
 
-void bindDispatcher();
+	bindExecutableNode();
+	bindDispatcher();
 
-} // namespace GafferBindings
-
-#endif // GAFFERBINDINGS_DISPATCHERBINDING_H
+}

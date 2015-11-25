@@ -34,18 +34,24 @@
 #
 ##########################################################################
 
-__import__( "Gaffer" )
-__import__( "GafferDispatch" )
+import IECore
 
-from _GafferCortex import *
+import Gaffer
+import GafferDispatch
 
-from ObjectReader import ObjectReader
-from ObjectWriter import ObjectWriter
-from IndexedIOPath import IndexedIOPath
-from ClassLoaderPath import ClassLoaderPath
-from ClassParameterHandler import ClassParameterHandler
-from ClassVectorParameterHandler import ClassVectorParameterHandler
-from ParameterPath import ParameterPath
-from OpMatcher import OpMatcher
+# Used to collect Executable tasks for dispatching all at once
+class TaskList( GafferDispatch.ExecutableNode ) :
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferCortex" )
+	def __init__( self, name = "TaskList" ) :
+
+		GafferDispatch.ExecutableNode.__init__( self, name )
+
+	def hash( self, context ) :
+
+		return IECore.MurmurHash()
+
+	def execute( self ) :
+
+		pass
+
+IECore.registerRunTimeTyped( TaskList, typeName = "GafferDispatch::TaskList" )

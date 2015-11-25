@@ -40,7 +40,6 @@
 #include "IECorePython/ScopedGILRelease.h"
 
 #include "GafferBindings/DependencyNodeBinding.h"
-#include "GafferBindings/ExecutableNodeBinding.h"
 
 #include "GafferImage/Display.h"
 #include "GafferImage/ChannelDataProcessor.h"

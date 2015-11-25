@@ -34,14 +34,14 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERBINDINGS_EXECUTABLENODEBINDING_INL
-#define GAFFERBINDINGS_EXECUTABLENODEBINDING_INL
+#ifndef GAFFERDISPATCHBINDINGS_EXECUTABLENODEBINDING_INL
+#define GAFFERDISPATCHBINDINGS_EXECUTABLENODEBINDING_INL
 
 #include "boost/python/suite/indexing/container_utils.hpp"
 
 #include "IECorePython/ScopedGILRelease.h"
 
-namespace GafferBindings
+namespace GafferDispatchBindings
 {
 
 namespace Detail
@@ -50,10 +50,10 @@ namespace Detail
 template<typename T>
 boost::python::list requirements( T &n, Gaffer::Context *context )
 {
-	Gaffer::ExecutableNode::Tasks tasks;
+	GafferDispatch::ExecutableNode::Tasks tasks;
 	n.T::requirements( context, tasks );
 	boost::python::list result;
-	for( Gaffer::ExecutableNode::Tasks::const_iterator tIt = tasks.begin(); tIt != tasks.end(); ++tIt )
+	for( GafferDispatch::ExecutableNode::Tasks::const_iterator tIt = tasks.begin(); tIt != tasks.end(); ++tIt )
 	{
 		result.append( *tIt );
 	}
@@ -92,7 +92,7 @@ bool requiresSequenceExecution( T &n )
 
 template<typename T, typename Ptr>
 ExecutableNodeClass<T, Ptr>::ExecutableNodeClass( const char *docString )
-	:	NodeClass<T, Ptr>( docString )
+	:	GafferBindings::NodeClass<T, Ptr>( docString )
 {
 	this->def( "requirements", &Detail::requirements<T> );
 	this->def( "hash", &Detail::hash<T> );
@@ -101,6 +101,6 @@ ExecutableNodeClass<T, Ptr>::ExecutableNodeClass( const char *docString )
 	this->def( "requiresSequenceExecution", &Detail::requiresSequenceExecution<T> );
 }
 
-} // namespace GafferBindings
+} // namespace GafferDispatchBindings
 
-#endif // GAFFERBINDINGS_EXECUTABLENODEBINDING_INL
+#endif // GAFFERDISPATCHBINDINGS_EXECUTABLENODEBINDING_INL

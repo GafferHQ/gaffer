@@ -39,14 +39,15 @@ import math
 import IECore
 
 import Gaffer
+import GafferDispatch
 
-class Wedge( Gaffer.TaskContextProcessor ) :
+class Wedge( GafferDispatch.TaskContextProcessor ) :
 
 	Mode = IECore.Enum.create( "FloatRange", "IntRange", "ColorRange", "FloatList", "IntList", "StringList" )
 
 	def __init__( self, name = "Wedge" ) :
 
-		Gaffer.TaskContextProcessor.__init__( self, name )
+		GafferDispatch.TaskContextProcessor.__init__( self, name )
 
 		self["variable"] = Gaffer.StringPlug( defaultValue = "wedge:value" )
 		self["indexVariable"] = Gaffer.StringPlug( defaultValue = "wedge:index" )
@@ -104,12 +105,12 @@ class Wedge( Gaffer.TaskContextProcessor ) :
 			for i in range( 0, steps ) :
 				t = float( i ) / ( steps - 1 )
 				values.append( min + t * ( max - min ) )
-				
+
 		elif mode == self.Mode.IntRange :
 
 			min = self["intMin"].getValue()
 			max = self["intMax"].getValue()
-			step = self["intStep"].getValue()	
+			step = self["intStep"].getValue()
 
 			if max < min :
 				min, max = max, min
@@ -161,4 +162,4 @@ class Wedge( Gaffer.TaskContextProcessor ) :
 
 		return contexts
 
-IECore.registerRunTimeTyped( Wedge, typeName = "Gaffer::Wedge" )
+IECore.registerRunTimeTyped( Wedge, typeName = "GafferDispatch::Wedge" )

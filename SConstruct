@@ -478,9 +478,22 @@ libraries = {
 
 	"GafferUITest" : {},
 
-	"GafferCortex" : {
+	"GafferDispatch" : {
 		"envAppends" : {
 			"LIBS" : [ "Gaffer" ],
+		},
+		"pythonEnvAppends" : {
+			"LIBS" : [ "GafferBindings", "GafferDispatch" ],
+		},
+	},
+
+	"GafferDispatchTest" : {},
+
+	"GafferDispatchUI" : {},
+
+	"GafferCortex" : {
+		"envAppends" : {
+			"LIBS" : [ "Gaffer", "GafferDispatch" ],
 		},
 		"pythonEnvAppends" : {
 			"LIBS" : [ "GafferBindings", "GafferCortex" ],

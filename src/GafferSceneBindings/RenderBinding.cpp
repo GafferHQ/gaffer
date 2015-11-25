@@ -38,7 +38,7 @@
 
 #include "Gaffer/Context.h"
 
-#include "GafferBindings/ExecutableNodeBinding.h"
+#include "GafferDispatchBindings/ExecutableNodeBinding.h"
 
 #include "GafferScene/OpenGLRender.h"
 #include "GafferScene/InteractiveRender.h"
@@ -49,6 +49,7 @@ using namespace boost::python;
 
 using namespace Gaffer;
 using namespace GafferBindings;
+using namespace GafferDispatchBindings;
 using namespace GafferScene;
 
 class ExecutableRenderWrapper : public ExecutableNodeWrapper<ExecutableRender>
@@ -114,9 +115,9 @@ static ContextPtr interactiveRenderGetContext( InteractiveRender &r )
 void GafferSceneBindings::bindRender()
 {
 
-	GafferBindings::ExecutableNodeClass<ExecutableRender, ExecutableRenderWrapper>();
+	ExecutableNodeClass<ExecutableRender, ExecutableRenderWrapper>();
 
-	GafferBindings::NodeClass<OpenGLRender>();
+	ExecutableNodeClass<OpenGLRender>();
 
 	scope s = GafferBindings::NodeClass<InteractiveRender>()
 		.def( "getContext", &interactiveRenderGetContext )

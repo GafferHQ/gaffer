@@ -57,8 +57,9 @@ OIIO_NAMESPACE_USING
 using namespace std;
 using namespace Imath;
 using namespace IECore;
-using namespace GafferImage;
 using namespace Gaffer;
+using namespace GafferDispatch;
+using namespace GafferImage;
 
 static InternedString g_modePlugName( "mode" );
 static InternedString g_compressionPlugName( "compression" );
@@ -490,7 +491,7 @@ IE_CORE_DEFINERUNTIMETYPED( ImageWriter );
 size_t ImageWriter::g_firstPlugIndex = 0;
 
 ImageWriter::ImageWriter( const std::string &name )
-	:	Gaffer::ExecutableNode( name )
+	:	ExecutableNode( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new ImagePlug( "in" ) );

@@ -38,7 +38,7 @@
 #include "boost/python.hpp"
 
 #include "GafferBindings/ComputeNodeBinding.h"
-#include "GafferBindings/ExecutableNodeBinding.h"
+#include "GafferDispatchBindings/ExecutableNodeBinding.h"
 
 #include "GafferScene/SceneProcedural.h"
 #include "GafferScene/PrimitiveVariableProcessor.h"
@@ -126,7 +126,7 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	GafferBindings::DependencyNodeClass<GlobalsProcessor>();
 	GafferBindings::DependencyNodeClass<DeleteSets>();
 
-	GafferBindings::ExecutableNodeClass<SceneWriter>();
+	GafferDispatchBindings::ExecutableNodeClass<SceneWriter>();
 
 	bindDeleteGlobals();
 	bindOutputs();

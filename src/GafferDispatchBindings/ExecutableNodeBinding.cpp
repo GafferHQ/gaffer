@@ -38,16 +38,17 @@
 
 #include "Gaffer/Plug.h"
 #include "Gaffer/Context.h"
-#include "Gaffer/ExecutableNode.h"
-
-#include "GafferBindings/ExecutableNodeBinding.h"
 #include "GafferBindings/PlugBinding.h"
+
+#include "GafferDispatch/ExecutableNode.h"
+#include "GafferDispatchBindings/ExecutableNodeBinding.h"
 
 using namespace boost::python;
 using namespace IECore;
 using namespace IECorePython;
-using namespace GafferBindings;
 using namespace Gaffer;
+using namespace GafferBindings;
+using namespace GafferDispatch;
 
 namespace
 {
@@ -85,7 +86,7 @@ ExecutableNodePtr taskNode( const ExecutableNode::Task &t )
 
 } // namespace
 
-void GafferBindings::bindExecutableNode()
+void GafferDispatchBindings::bindExecutableNode()
 {
 	typedef ExecutableNodeWrapper<ExecutableNode> Wrapper;
 
@@ -93,7 +94,7 @@ void GafferBindings::bindExecutableNode()
 
 	class_<ExecutableNode::Task>( "Task", no_init )
 		.def( init<ExecutableNode::Task>() )
-		.def( init<Gaffer::ExecutableNodePtr,Gaffer::ContextPtr>() )
+		.def( init<GafferDispatch::ExecutableNodePtr,Gaffer::ContextPtr>() )
 		.def( "node", &taskNode )
 		.def( "context", &taskContext, ( boost::python::arg_( "_copy" ) = true ) )
 		.def("__eq__", &ExecutableNode::Task::operator== )

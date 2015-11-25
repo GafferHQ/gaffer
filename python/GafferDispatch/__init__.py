@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,23 +34,16 @@
 #
 ##########################################################################
 
-import IECore
+__import__( "Gaffer" )
 
-import Gaffer
+from _GafferDispatch import *
+from LocalDispatcher import LocalDispatcher
+from SystemCommand import SystemCommand
+from TaskList import TaskList
+from TaskContextProcessor import TaskContextProcessor
+from Wedge import Wedge
+from TaskContextVariables import TaskContextVariables
+from TaskSwitch import TaskSwitch
+from PythonCommand import PythonCommand
 
-# Used to collect Executable tasks for dispatching all at once
-class TaskList( Gaffer.ExecutableNode ) :
-	
-	def __init__( self, name = "TaskList" ) :
-		
-		Gaffer.ExecutableNode.__init__( self, name )
-	
-	def hash( self, context ) :
-		
-		return IECore.MurmurHash()
-	
-	def execute( self ) :
-		
-		pass
-
-IECore.registerRunTimeTyped( TaskList, typeName = "Gaffer::TaskList" )
+__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferDispatch" )

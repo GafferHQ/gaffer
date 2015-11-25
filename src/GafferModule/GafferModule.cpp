@@ -74,8 +74,6 @@
 #include "GafferBindings/ComputeNodeBinding.h"
 #include "GafferBindings/BoxBinding.h"
 #include "GafferBindings/ActionBinding.h"
-#include "GafferBindings/ExecutableNodeBinding.h"
-#include "GafferBindings/DispatcherBinding.h"
 #include "GafferBindings/ReferenceBinding.h"
 #include "GafferBindings/BehaviourBinding.h"
 #include "GafferBindings/ArrayPlugBinding.h"
@@ -147,7 +145,6 @@ BOOST_PYTHON_MODULE( _Gaffer )
 	bindDependencyNode();
 	bindComputeNode();
 	bindPlug();
-	bindExecutableNode();
 	bindValuePlug();
 	bindNumericPlug();
 	bindTypedPlug();
@@ -172,7 +169,6 @@ BOOST_PYTHON_MODULE( _Gaffer )
 	bindSubGraph();
 	bindBox();
 	bindAction();
-	bindDispatcher();
 	bindReference();
 	bindArrayPlug();
 	bindSerialisation();

@@ -40,13 +40,15 @@
 #include "IECore/MessageHandler.h"
 
 #include "Gaffer/Context.h"
-#include "Gaffer/Dispatcher.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/SubGraph.h"
 
+#include "GafferDispatch/Dispatcher.h"
+
 using namespace IECore;
 using namespace Gaffer;
+using namespace GafferDispatch;
 
 static InternedString g_frame( "frame" );
 static InternedString g_batchSize( "batchSize" );
@@ -395,9 +397,9 @@ Dispatcher::TaskBatchPtr Dispatcher::acquireBatch( const ExecutableNode::Task &t
 					}
 				}
 			}
-			
+
 			tasksToBatches[taskToBatchMapHash] = batch;
-			
+
 			return batch;
 		}
 	}
@@ -405,7 +407,7 @@ Dispatcher::TaskBatchPtr Dispatcher::acquireBatch( const ExecutableNode::Task &t
 	TaskBatchPtr batch = new TaskBatch( task );
 	currentBatches[batchMapHash] = batch;
 	tasksToBatches[taskToBatchMapHash] = batch;
-	
+
 	return batch;
 }
 
@@ -552,7 +554,7 @@ DispatcherPtr Dispatcher::create( const std::string &dispatcherType )
 	{
 		return 0;
 	}
-	
+
 	return it->second.first();
 }
 

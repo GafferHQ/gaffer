@@ -34,8 +34,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_DISPATCHER_H
-#define GAFFER_DISPATCHER_H
+#ifndef GAFFERDISPATCH_DISPATCHER_H
+#define GAFFERDISPATCH_DISPATCHER_H
 
 #include <string>
 #include <vector>
@@ -49,15 +49,19 @@
 #include "IECore/RunTimeTyped.h"
 
 #include "Gaffer/NumericPlug.h"
-#include "Gaffer/ExecutableNode.h"
 
-#include "GafferBindings/DispatcherBinding.h" // to enable friend declaration for TaskBatch.
+#include "GafferDispatch/ExecutableNode.h"
+#include "GafferDispatchBindings/DispatcherBinding.h" // to enable friend declaration for TaskBatch.
 
 namespace Gaffer
 {
 
-IE_CORE_FORWARDDECLARE( Dispatcher )
 IE_CORE_FORWARDDECLARE( StringPlug )
+
+} // namespace Gaffer
+
+namespace GafferDispatch
+{
 
 namespace Detail
 {
@@ -85,18 +89,20 @@ struct PreDispatchSignalCombiner
 
 } // namespace Detail
 
+IE_CORE_FORWARDDECLARE( Dispatcher )
+
 /// Abstract base class which defines an interface for scheduling the execution
 /// of Context specific Tasks from ExecutableNodes which exist within a ScriptNode.
 /// Dispatchers can also modify ExecutableNodes during construction, adding
 /// plugs which affect Task execution.
-class Dispatcher : public Node
+class Dispatcher : public Gaffer::Node
 {
 	public :
 
 		Dispatcher( const std::string &name=defaultName<Dispatcher>() );
 		virtual ~Dispatcher();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::Dispatcher, DispatcherTypeId, Node );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferDispatch::Dispatcher, DispatcherTypeId, Gaffer::Node );
 
 		typedef boost::signal<bool (const Dispatcher *, const std::vector<ExecutableNodePtr> &), Detail::PreDispatchSignalCombiner> PreDispatchSignal;
 		typedef boost::signal<void (const Dispatcher *, const std::vector<ExecutableNodePtr> &, bool)> PostDispatchSignal;
@@ -118,7 +124,7 @@ class Dispatcher : public Node
 		/// Calls doDispatch, taking care to trigger the dispatch signals at the appropriate times.
 		/// Note that this will throw unless all of the nodes are either ExecutableNodes or Boxes,
 		/// and it will also throw if cycles are detected in the resulting TaskBatch graph.
-		void dispatch( const std::vector<NodePtr> &nodes ) const;
+		void dispatch( const std::vector<Gaffer::NodePtr> &nodes ) const;
 
 		enum FramesMode
 		{
@@ -132,14 +138,14 @@ class Dispatcher : public Node
 		///////////////////////////////////////////////////
 		//@{
 		/// Returns a FramesMode for getting the active frame range.
-		IntPlug *framesModePlug();
-		const IntPlug *framesModePlug() const;
+		Gaffer::IntPlug *framesModePlug();
+		const Gaffer::IntPlug *framesModePlug() const;
 		/// Returns frame range to be used when framesModePlug is set to CustomRange.
-		StringPlug *frameRangePlug();
-		const StringPlug *frameRangePlug() const;
+		Gaffer::StringPlug *frameRangePlug();
+		const Gaffer::StringPlug *frameRangePlug() const;
 		/// Returns the FrameList that will be used during dispatch() to create the TaskBatches.
 		/// Derived classes which reimplement this must call the base class first.
-		virtual IECore::FrameListPtr frameRange( const ScriptNode *script, const Context *context ) const;
+		virtual IECore::FrameListPtr frameRange( const Gaffer::ScriptNode *script, const Gaffer::Context *context ) const;
 		//@}
 
 		//! @name Dispatcher Jobs
@@ -147,12 +153,12 @@ class Dispatcher : public Node
 		//////////////////////////////////////////////////////////////////////////
 		//@{
 		/// Returns the name of the next job to dispatch.
-		StringPlug *jobNamePlug();
-		const StringPlug *jobNamePlug() const;
+		Gaffer::StringPlug *jobNamePlug();
+		const Gaffer::StringPlug *jobNamePlug() const;
 		/// Returns the plug which specifies the directory used by dispatchers to store temporary
 		/// files on a per-job basis.
-		StringPlug *jobsDirectoryPlug();
-		const StringPlug *jobsDirectoryPlug() const;
+		Gaffer::StringPlug *jobsDirectoryPlug();
+		const Gaffer::StringPlug *jobsDirectoryPlug() const;
 		/// At the start of dispatch(), a directory is created under jobsDirectoryPlug + jobNamePlug
 		/// which the dispatcher writes temporary files to. This method returns the most recent created directory.
 		const std::string jobDirectory() const;
@@ -169,8 +175,8 @@ class Dispatcher : public Node
 		/// the ExecutableNode constructor, the non-dynamic plugs will always be created according to the current
 		/// definition, and will not be serialized into scripts. The downside of using non-dynamic plugs is that
 		/// loading a script before all Dispatchers have been registered could result in lost settings.
-		typedef boost::function<void ( Plug *parentPlug )> SetupPlugsFn;
-		
+		typedef boost::function<void ( Gaffer::Plug *parentPlug )> SetupPlugsFn;
+
 		//! @name Registration
 		/// Utility functions for registering and retrieving Dispatchers.
 		/////////////////////////////////////////////////////////////////
@@ -207,7 +213,7 @@ class Dispatcher : public Node
 				void execute() const;
 
 				const ExecutableNode *node() const;
-				const Context *context() const;
+				const Gaffer::Context *context() const;
 
 				std::vector<float> &frames();
 				const std::vector<float> &frames() const;
@@ -221,7 +227,7 @@ class Dispatcher : public Node
 			private :
 
 				ConstExecutableNodePtr m_node;
-				ConstContextPtr m_context;
+				Gaffer::ConstContextPtr m_context;
 				IECore::CompoundDataPtr m_blindData;
 				std::vector<float> m_frames;
 				TaskBatches m_requirements;
@@ -241,12 +247,12 @@ class Dispatcher : public Node
 		/////////////////////////////////////////////////////////////////////////////////////////////
 		//@{
 		/// Adds the custom plugs from all registered Dispatchers to the given parent Plug.
-		static void setupPlugs( Plug *parentPlug );
+		static void setupPlugs( Gaffer::Plug *parentPlug );
 		//@}
 
 	private :
 
-		std::string createJobDirectory( const Context *context ) const;
+		std::string createJobDirectory( const Gaffer::Context *context ) const;
 		mutable std::string m_jobDirectory;
 
 		typedef std::map<std::string, std::pair<Creator, SetupPlugsFn> > CreatorMap;
@@ -270,9 +276,9 @@ class Dispatcher : public Node
 		static PostDispatchSignal g_postDispatchSignal;
 		static std::string g_defaultDispatcherType;
 
-		friend void GafferBindings::bindDispatcher();
+		friend void GafferDispatchBindings::bindDispatcher();
 };
 
-} // namespace Gaffer
+} // namespace GafferDispatch
 
-#endif // GAFFER_DISPATCHER_H
+#endif // GAFFERDISPATCH_DISPATCHER_H

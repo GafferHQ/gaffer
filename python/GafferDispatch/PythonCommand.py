@@ -39,15 +39,16 @@ import ast
 import IECore
 
 import Gaffer
+import GafferDispatch
 
 ## \todo Add a BoolPlug to allow sequence execution to
 # be requested, and then expose a `frames` python variable
 # when executing the python command from `executeSequence()`.
-class PythonCommand( Gaffer.ExecutableNode ) :
+class PythonCommand( GafferDispatch.ExecutableNode ) :
 
 	def __init__( self, name = "PythonCommand" ) :
 
-		Gaffer.ExecutableNode.__init__( self, name )
+		GafferDispatch.ExecutableNode.__init__( self, name )
 
 		self["command"] = Gaffer.StringPlug()
 		self["variables"] = Gaffer.CompoundDataPlug()
@@ -128,4 +129,4 @@ class _Parser( ast.NodeVisitor ) :
 
 		ast.NodeVisitor.generic_visit( self, node )
 
-IECore.registerRunTimeTyped( PythonCommand, typeName = "Gaffer::PythonCommand" )
+IECore.registerRunTimeTyped( PythonCommand, typeName = "GafferDispatch::PythonCommand" )

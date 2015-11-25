@@ -37,12 +37,13 @@
 import IECore
 
 import Gaffer
+import GafferDispatch
 
-class TaskContextVariables( Gaffer.TaskContextProcessor ) :
+class TaskContextVariables( GafferDispatch.TaskContextProcessor ) :
 
 	def __init__( self, name = "TaskContextVariables" ) :
 
-		Gaffer.TaskContextProcessor.__init__( self, name )
+		GafferDispatch.TaskContextProcessor.__init__( self, name )
 
 		self["variables"] = Gaffer.CompoundDataPlug()
 
@@ -56,4 +57,4 @@ class TaskContextVariables( Gaffer.TaskContextProcessor ) :
 
 		return [ context ]
 
-IECore.registerRunTimeTyped( TaskContextVariables, typeName = "Gaffer::TaskContextVariables" )
+IECore.registerRunTimeTyped( TaskContextVariables, typeName = "GafferDispatch::TaskContextVariables" )

@@ -39,19 +39,21 @@
 #include "IECorePython/ScopedGILRelease.h"
 
 #include "Gaffer/Context.h"
-#include "Gaffer/Dispatcher.h"
 #include "Gaffer/ScriptNode.h"
 
-#include "GafferBindings/DispatcherBinding.h"
 #include "GafferBindings/NodeBinding.h"
 #include "GafferBindings/SignalBinding.h"
 #include "GafferBindings/ExceptionAlgo.h"
+
+#include "GafferDispatch/Dispatcher.h"
+#include "GafferDispatchBindings/DispatcherBinding.h"
 
 using namespace boost::python;
 using namespace IECore;
 using namespace IECorePython;
 using namespace Gaffer;
 using namespace GafferBindings;
+using namespace GafferDispatch;
 
 namespace
 {
@@ -107,7 +109,7 @@ class DispatcherWrapper : public NodeWrapper<Dispatcher>
 		FrameListPtr frameRange( const ScriptNode *script, const Context *context ) const
 		{
 			ScopedGILLock gilLock;
-			
+
 			boost::python::object f = this->methodOverride( "frameRange" );
 			if( f )
 			{
@@ -117,7 +119,7 @@ class DispatcherWrapper : public NodeWrapper<Dispatcher>
 						ScriptNodePtr( const_cast<ScriptNode *>( script ) ),
 						ContextPtr( const_cast<Context *>( context ) )
 					);
-					
+
 					return extract<FrameListPtr>( obj );
 				}
 				catch( const boost::python::error_already_set &e )
@@ -125,10 +127,10 @@ class DispatcherWrapper : public NodeWrapper<Dispatcher>
 					translatePythonException();
 				}
 			}
-			
+
 			return Dispatcher::frameRange( script, context );
 		}
-		
+
 		static void taskBatchExecute( const Dispatcher::TaskBatch &batch )
 		{
 			ScopedGILRelease gilRelease;
@@ -197,7 +199,7 @@ struct DispatcherHelper
 	DispatcherPtr operator()()
 	{
 		IECorePython::ScopedGILLock gilLock;
-		
+
 		try
 		{
 			DispatcherPtr result = extract<DispatcherPtr>( m_fn() );
@@ -207,10 +209,10 @@ struct DispatcherHelper
 		{
 			translatePythonException();
 		}
-		
+
 		return 0;
 	}
-	
+
 	void operator()( Plug *parentPlug )
 	{
 		IECorePython::ScopedGILLock gilLock;
@@ -303,7 +305,7 @@ struct PostDispatchSlotCaller
 
 } // namespace
 
-void GafferBindings::bindDispatcher()
+void GafferDispatchBindings::bindDispatcher()
 {
 	scope s = NodeClass<Dispatcher, DispatcherWrapper>()
 		.def( "dispatch", &DispatcherWrapper::dispatch )

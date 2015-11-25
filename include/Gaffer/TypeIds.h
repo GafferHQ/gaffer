@@ -96,12 +96,12 @@ enum TypeId
 	ContextVariablesComputeNodeTypeId = 110049,
 	RandomTypeId = 110050,
 	DependencyNodeTypeId = 110051,
-	ExecutableNodeRequirementPlugTypeId = 110052,
+	ExecutableNodeRequirementPlugTypeId = 110052, // obsolete - available for reuse
 	BoxTypeId = 110053,
 	InternedStringVectorDataPlugTypeId = 110054,
-	ExecutableNodeTypeId = 110055,
+	ExecutableNodeTypeId = 110055, // obsolete - available for reuse
 	ExecutableOpHolderTypeId = 110056, // obsolete - available for reuse
-	DispatcherTypeId = 110057,
+	DispatcherTypeId = 110057, // obsolete - available for reuse
 	Transform2DPlugTypeId = 110058,
 	ReferenceTypeId = 110059,
 	ComputeNodeTypeId = 110060,
@@ -128,7 +128,7 @@ enum TypeId
 	LoopComputeNodeTypeId = 110081,
 	FileSequencePathFilterTypeId = 110082,
 
-	LastTypeId = 110180,
+	LastTypeId = 110159,
 
 };
 

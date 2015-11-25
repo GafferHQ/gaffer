@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,50 +34,41 @@
 #
 ##########################################################################
 
-import os
-import subprocess32 as subprocess
-
 import IECore
 
 import Gaffer
+import GafferDispatch
 
-class SystemCommand( Gaffer.ExecutableNode ) :
+class TaskSwitch( GafferDispatch.ExecutableNode ) :
 
-	def __init__( self, name = "SystemCommand" ) :
+	def __init__( self, name = "TaskSwitch" ) :
 
-		Gaffer.ExecutableNode.__init__( self, name )
+		GafferDispatch.ExecutableNode.__init__( self, name )
 
-		self["command"] = Gaffer.StringPlug()
-		self["substitutions"] = Gaffer.CompoundDataPlug()
-		self["environmentVariables"] = Gaffer.CompoundDataPlug()
+		self["index"] = Gaffer.IntPlug( minValue = 0 )
 
-	def execute( self ) :
+	def requirements( self, context ) :
 
-		substitutions = IECore.CompoundData()
-		self["substitutions"].fillCompoundData( substitutions )
-		substitutions = { key : str( value ) for ( key, value ) in substitutions.items() }
+		index = self["index"].getValue()
+		index = index % ( len( self["requirements"] ) - 1 )
 
-		command = self["command"].getValue()
-		## \todo We can remove this manual subsitution when we finally sort out #887.
-		command = Gaffer.Context.current().substitute( command )
-		command = command.format( **substitutions )
+		node = self["requirements"][index].source().node()
+		if not isinstance( node, Gaffer.ExecutableNode ) or node.isSame( self ) :
+			return []
 
-		env = os.environ.copy()
-		environmentVariables = IECore.CompoundData()
-		self["environmentVariables"].fillCompoundData( environmentVariables )
-		for name, value in environmentVariables.items() :
-			env[name] = str( value )
-
-		subprocess.check_output( command, shell = True, env = env )
+		return [ self.Task( node, context ) ]
 
 	def hash( self, context ) :
 
-		h = Gaffer.ExecutableNode.hash( self, context )
+		# Our hash is empty to signify that we don't do
+		# anything in execute().
+		return IECore.MurmurHash()
 
-		self["command"].hash( h )
-		self["substitutions"].hash( h )
-		self["environmentVariables"].hash( h )
+	def execute( self ) :
 
-		return h
+		# We don't need to do anything here because our
+		# sole purpose is to manipulate the context
+		# in which our requirements are executed.
+		pass
 
-IECore.registerRunTimeTyped( SystemCommand, typeName = "Gaffer::SystemCommand" )
+IECore.registerRunTimeTyped( TaskSwitch, typeName = "GafferDispatch::TaskSwitch" )

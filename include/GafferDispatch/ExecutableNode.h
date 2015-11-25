@@ -34,24 +34,34 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_EXECUTABLENODE_H
-#define GAFFER_EXECUTABLENODE_H
+#ifndef GAFFERDISPATCH_EXECUTABLENODE_H
+#define GAFFERDISPATCH_EXECUTABLENODE_H
+
+#include "IECore/MurmurHash.h"
 
 #include "Gaffer/Node.h"
 #include "Gaffer/Plug.h"
+
+#include "GafferDispatch/TypeIds.h"
 
 namespace Gaffer
 {
 
 IE_CORE_FORWARDDECLARE( Context )
-IE_CORE_FORWARDDECLARE( ExecutableNode )
 IE_CORE_FORWARDDECLARE( ArrayPlug )
+
+} // namespace Gaffer
+
+namespace GafferDispatch
+{
+
+IE_CORE_FORWARDDECLARE( ExecutableNode )
 
 /// A base class for nodes with external side effects such as the creation of files, rendering, etc.
 /// ExecutableNodes can be chained together with other ExecutableNodes to define a required execution
 /// order. Typically ExecutableNodes should be executed by Dispatcher classes that can query the
 /// required execution order and schedule Tasks appropriately.
-class ExecutableNode : public Node
+class ExecutableNode : public Gaffer::Node
 {
 
 	public :
@@ -68,9 +78,9 @@ class ExecutableNode : public Node
 			public :
 
 				Task( const Task &t );
-				Task( ExecutableNodePtr n, ContextPtr c );
+				Task( ExecutableNodePtr n, Gaffer::ContextPtr c );
 				const ExecutableNode *node() const;
-				const Context *context() const;
+				const Gaffer::Context *context() const;
 				const IECore::MurmurHash hash() const;
 				bool operator == ( const Task &rhs ) const;
 				bool operator < ( const Task &rhs ) const;
@@ -78,33 +88,33 @@ class ExecutableNode : public Node
 			private :
 
 				ConstExecutableNodePtr m_node;
-				ConstContextPtr m_context;
+				Gaffer::ConstContextPtr m_context;
 				IECore::MurmurHash m_hash;
 
 		};
 
 		typedef std::vector<Task> Tasks;
-		typedef std::vector<ConstContextPtr> Contexts;
+		typedef std::vector<Gaffer::ConstContextPtr> Contexts;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::ExecutableNode, ExecutableNodeTypeId, Node );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferDispatch::ExecutableNode, ExecutableNodeTypeId, Gaffer::Node );
 
 		ExecutableNode( const std::string &name=defaultName<ExecutableNode>() );
 		virtual ~ExecutableNode();
 
 		/// The plug type used to connect ExecutableNodes
 		/// together to define order of execution.
-		class RequirementPlug : public Plug
+		class RequirementPlug : public Gaffer::Plug
 		{
 
 			public :
 
-				IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::ExecutableNode::RequirementPlug, ExecutableNodeRequirementPlugTypeId, Gaffer::Plug );
+				IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferDispatch::ExecutableNode::RequirementPlug, ExecutableNodeRequirementPlugTypeId, Gaffer::Plug );
 
 				RequirementPlug( const std::string &name=defaultName<RequirementPlug>(), Direction direction=In, unsigned flags=Default );
 
 				virtual bool acceptsChild( const Gaffer::GraphComponent *potentialChild ) const;
-				virtual bool acceptsInput( const Plug *input ) const;
-				virtual PlugPtr createCounterpart( const std::string &name, Direction direction ) const;
+				virtual bool acceptsInput( const Gaffer::Plug *input ) const;
+				virtual Gaffer::PlugPtr createCounterpart( const std::string &name, Direction direction ) const;
 
 		};
 
@@ -112,8 +122,8 @@ class ExecutableNode : public Node
 		IE_CORE_DECLAREPTR( RequirementPlug )
 
 		/// Array of ExecutableNodes which must be executed before this node can execute successfully.
-		ArrayPlug *requirementsPlug();
-		const ArrayPlug *requirementsPlug() const;
+		Gaffer::ArrayPlug *requirementsPlug();
+		const Gaffer::ArrayPlug *requirementsPlug() const;
 
 		/// Output plug used by other ExecutableNodes to declare this node as a requirement.
 		RequirementPlug *requirementPlug();
@@ -122,21 +132,21 @@ class ExecutableNode : public Node
 		/// Parent plug used by Dispatchers to expose per-node dispatcher settings.
 		/// See the "ExecutableNode Customization" section of the Gaffer::Dispatcher
 		/// documentation for more details.
-		Plug *dispatcherPlug();
-		const Plug *dispatcherPlug() const;
+		Gaffer::Plug *dispatcherPlug();
+		const Gaffer::Plug *dispatcherPlug() const;
 
 		/// Fills requirements with all Tasks that must be completed before execute
 		/// can be called with the given context. The default implementation collects
 		/// the Tasks defined by the inputs of the requirementsPlug().
 		/// \todo Remove the context argument and use the current context instead.
-		virtual void requirements( const Context *context, Tasks &requirements ) const;
+		virtual void requirements( const Gaffer::Context *context, Tasks &requirements ) const;
 
 		/// Returns a hash that uniquely represents the side effects (e.g. files created)
 		/// of calling execute with the given context. Derived nodes should call the base
 		/// implementation and append to the returned hash. Nodes can indicate that they
 		/// don't cause side effects for the given context by returning a default hash.
 		/// \todo Remove the context argument and use the current context instead.
-		virtual IECore::MurmurHash hash( const Context *context ) const = 0;
+		virtual IECore::MurmurHash hash( const Gaffer::Context *context ) const = 0;
 
 		/// Executes this node using the current Context.
 		virtual void execute() const = 0;
@@ -157,6 +167,6 @@ class ExecutableNode : public Node
 
 };
 
-} // namespace Gaffer
+} // namespace GafferDispatch
 
-#endif // GAFFER_EXECUTABLENODE_H
+#endif // GAFFERDISPATCH_EXECUTABLENODE_H

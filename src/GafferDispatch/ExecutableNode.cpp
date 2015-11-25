@@ -38,11 +38,13 @@
 #include "Gaffer/Dot.h"
 #include "Gaffer/Context.h"
 #include "Gaffer/ArrayPlug.h"
-#include "Gaffer/Dispatcher.h"
-#include "Gaffer/ExecutableNode.h"
+
+#include "GafferDispatch/Dispatcher.h"
+#include "GafferDispatch/ExecutableNode.h"
 
 using namespace IECore;
 using namespace Gaffer;
+using namespace GafferDispatch;
 
 //////////////////////////////////////////////////////////////////////////
 // Task implementation

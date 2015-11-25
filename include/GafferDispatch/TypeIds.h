@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2013-2014, Image Engine Design inc. All rights reserved.
+//  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,63 +34,23 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_SCENEWRITER_H
-#define GAFFERSCENE_SCENEWRITER_H
+#ifndef GAFFERDISPATCH_TYPEIDS_H
+#define GAFFERDISPATCH_TYPEIDS_H
 
-#include "IECore/SceneInterface.h"
-
-#include "Gaffer/TypedPlug.h"
-
-#include "GafferDispatch/ExecutableNode.h"
-
-#include "GafferScene/TypeIds.h"
-#include "GafferScene/ScenePlug.h"
-
-namespace GafferScene
+namespace GafferDispatch
 {
 
-class SceneWriter : public GafferDispatch::ExecutableNode
+enum TypeId
 {
 
-	public :
+	ExecutableNodeTypeId = 110160,
+	ExecutableNodeRequirementPlugTypeId = 110161,
+	DispatcherTypeId = 110162,
 
-		SceneWriter( const std::string &name=defaultName<SceneWriter>() );
-		virtual ~SceneWriter();
+	LastTypeId = 110180,
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::SceneWriter, SceneWriterTypeId, GafferDispatch::ExecutableNode );
-
-		Gaffer::StringPlug *fileNamePlug();
-		const Gaffer::StringPlug *fileNamePlug() const;
-
-		ScenePlug *inPlug();
-		const ScenePlug *inPlug() const;
-
-		ScenePlug *outPlug();
-		const ScenePlug *outPlug() const;
-
-		virtual IECore::MurmurHash hash( const Gaffer::Context *context ) const;
-
-		virtual void execute() const;
-
-		/// Re-implemented to open the file for writing, then iterate through the
-		/// frames, modifying the current Context and calling writeLocation().
-		virtual void executeSequence( const std::vector<float> &frames ) const;
-
-		/// Re-implemented to return true, since the entire file must be written at once.
-		virtual bool requiresSequenceExecution() const;
-
-	private :
-
-		void createDirectories( std::string &fileName ) const;
-		void writeLocation( const GafferScene::ScenePlug *scene, const ScenePlug::ScenePath &scenePath, Gaffer::Context *context, IECore::SceneInterface *output, double time ) const;
-
-		static size_t g_firstPlugIndex;
-
-		static const double g_frameRate;
 };
 
-IE_CORE_DECLAREPTR( SceneWriter )
+} // namespace GafferDispatch
 
-} // namespace GafferScene
-
-#endif // GAFFERSCENE_SCENEWRITER_H
+#endif // GAFFERDISPATCH_TYPEIDS_H

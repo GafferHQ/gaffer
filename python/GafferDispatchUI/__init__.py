@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,18 +34,18 @@
 #
 ##########################################################################
 
-__import__( "Gaffer" )
-__import__( "GafferDispatch" )
+__import__( "GafferUI" )
 
-from _GafferCortex import *
+import DispatcherUI
+from DispatcherUI import DispatcherWindow
+import LocalDispatcherUI
+import ExecutableNodeUI
+import SystemCommandUI
+import TaskListUI
+import TaskContextProcessorUI
+import WedgeUI
+import TaskContextVariablesUI
+import TaskSwitchUI
+import PythonCommandUI
 
-from ObjectReader import ObjectReader
-from ObjectWriter import ObjectWriter
-from IndexedIOPath import IndexedIOPath
-from ClassLoaderPath import ClassLoaderPath
-from ClassParameterHandler import ClassParameterHandler
-from ClassVectorParameterHandler import ClassVectorParameterHandler
-from ParameterPath import ParameterPath
-from OpMatcher import OpMatcher
-
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferCortex" )
+__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferDispatchUI" )

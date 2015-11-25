@@ -34,22 +34,22 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERBINDINGS_EXECUTABLENODEBINDING_H
-#define GAFFERBINDINGS_EXECUTABLENODEBINDING_H
+#ifndef GAFFERDISPATCHBINDINGS_EXECUTABLENODEBINDING_H
+#define GAFFERDISPATCHBINDINGS_EXECUTABLENODEBINDING_H
 
 #include "IECorePython/ScopedGILLock.h"
 
-#include "Gaffer/ExecutableNode.h"
-
 #include "GafferBindings/NodeBinding.h"
 
-namespace GafferBindings
+#include "GafferDispatch/ExecutableNode.h"
+
+namespace GafferDispatchBindings
 {
 
 void bindExecutableNode();
 
 template<typename T, typename TWrapper=T>
-class ExecutableNodeClass : public NodeClass<T, TWrapper>
+class ExecutableNodeClass : public GafferBindings::NodeClass<T, TWrapper>
 {
 	public :
 
@@ -58,16 +58,16 @@ class ExecutableNodeClass : public NodeClass<T, TWrapper>
 };
 
 template<typename WrappedType>
-class ExecutableNodeWrapper : public NodeWrapper<WrappedType>
+class ExecutableNodeWrapper : public GafferBindings::NodeWrapper<WrappedType>
 {
 	public :
 
 		ExecutableNodeWrapper( PyObject *self, const std::string &name )
-			:	NodeWrapper<WrappedType>( self, name )
+			:	GafferBindings::NodeWrapper<WrappedType>( self, name )
 		{
 		}
 
-		virtual void requirements( const Gaffer::Context *context, Gaffer::ExecutableNode::Tasks &requirements ) const
+		virtual void requirements( const Gaffer::Context *context, GafferDispatch::ExecutableNode::Tasks &requirements ) const
 		{
 			if( this->isSubclassed() )
 			{
@@ -83,7 +83,7 @@ class ExecutableNodeWrapper : public NodeWrapper<WrappedType>
 					requirements.reserve( len );
 					for( size_t i = 0; i < len; i++ )
 					{
-						requirements.push_back( boost::python::extract<Gaffer::ExecutableNode::Task>( requirementList[i] ) );
+						requirements.push_back( boost::python::extract<GafferDispatch::ExecutableNode::Task>( requirementList[i] ) );
 					}
 					return;
 				}
@@ -158,8 +158,8 @@ class ExecutableNodeWrapper : public NodeWrapper<WrappedType>
 
 };
 
-} // namespace GafferBindings
+} // namespace GafferDispatchBindings
 
-#include "GafferBindings/ExecutableNodeBinding.inl"
+#include "GafferDispatchBindings/ExecutableNodeBinding.inl"
 
-#endif // GAFFERBINDINGS_EXECUTABLENODEBINDING_H
+#endif // GAFFERDISPATCHBINDINGS_EXECUTABLENODEBINDING_H
