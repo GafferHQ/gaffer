@@ -38,12 +38,14 @@ import unittest
 
 import Gaffer
 import GafferTest
+import GafferDispatch
+import GafferDispatchTest
 
 class TaskSwitchTest( GafferTest.TestCase ) :
 
 	def __dispatcher( self ) :
 
-		result = Gaffer.LocalDispatcher()
+		result = GafferDispatch.LocalDispatcher()
 		result["jobsDirectory"].setValue( self.temporaryDirectory() + "/jobs" )
 
 		return result
@@ -52,10 +54,10 @@ class TaskSwitchTest( GafferTest.TestCase ) :
 
 		s = Gaffer.ScriptNode()
 
-		s["c1"] = GafferTest.CountingExecutableNode()
-		s["c2"] = GafferTest.CountingExecutableNode()
+		s["c1"] = GafferDispatchTest.CountingExecutableNode()
+		s["c2"] = GafferDispatchTest.CountingExecutableNode()
 
-		s["s"] = Gaffer.TaskSwitch()
+		s["s"] = GafferDispatch.TaskSwitch()
 		self.assertEqual( s["s"]["index"].getValue(), 0 )
 
 		s["s"]["requirements"][0].setInput( s["c1"]["requirement"] )
@@ -83,11 +85,11 @@ class TaskSwitchTest( GafferTest.TestCase ) :
 
 		s = Gaffer.ScriptNode()
 
-		s["c1"] = GafferTest.CountingExecutableNode()
-		s["c2"] = GafferTest.CountingExecutableNode()
-		s["c3"] = GafferTest.CountingExecutableNode()
+		s["c1"] = GafferDispatchTest.CountingExecutableNode()
+		s["c2"] = GafferDispatchTest.CountingExecutableNode()
+		s["c3"] = GafferDispatchTest.CountingExecutableNode()
 
-		s["s"] = Gaffer.TaskSwitch()
+		s["s"] = GafferDispatch.TaskSwitch()
 		s["s"]["requirements"][0].setInput( s["c1"]["requirement"] )
 		s["s"]["requirements"][1].setInput( s["c2"]["requirement"] )
 		s["s"]["requirements"][2].setInput( s["c3"]["requirement"] )
@@ -130,10 +132,10 @@ class TaskSwitchTest( GafferTest.TestCase ) :
 
 		s = Gaffer.ScriptNode()
 
-		s["c1"] = GafferTest.CountingExecutableNode()
-		s["c2"] = GafferTest.CountingExecutableNode()
+		s["c1"] = GafferDispatchTest.CountingExecutableNode()
+		s["c2"] = GafferDispatchTest.CountingExecutableNode()
 
-		s["s"] = Gaffer.TaskSwitch()
+		s["s"] = GafferDispatch.TaskSwitch()
 		s["s"]["requirements"][0].setInput( s["c1"]["requirement"] )
 		s["s"]["requirements"][1].setInput( s["c2"]["requirement"] )
 		s["s"]["requirements"][0].setInput( None )
@@ -148,4 +150,3 @@ class TaskSwitchTest( GafferTest.TestCase ) :
 
 if __name__ == "__main__":
 	unittest.main()
-

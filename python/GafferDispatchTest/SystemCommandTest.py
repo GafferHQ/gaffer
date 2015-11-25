@@ -41,12 +41,13 @@ import IECore
 
 import Gaffer
 import GafferTest
+import GafferDispatch
 
 class SystemCommandTest( GafferTest.TestCase ) :
 
 	def test( self ) :
 
-		n = Gaffer.SystemCommand()
+		n = GafferDispatch.SystemCommand()
 		n["command"].setValue( "touch " + self.temporaryDirectory() + "/systemCommandTest.txt" )
 
 		n.execute()
@@ -55,7 +56,7 @@ class SystemCommandTest( GafferTest.TestCase ) :
 
 	def testEnvironmentVariables( self ) :
 
-		n = Gaffer.SystemCommand()
+		n = GafferDispatch.SystemCommand()
 		n["command"].setValue( "env > " + self.temporaryDirectory() + "/systemCommandTest.txt" )
 		n["environmentVariables"].addMember( "GAFFER_SYSTEMCOMMAND_TEST", IECore.StringData( "test" ) )
 
@@ -66,7 +67,7 @@ class SystemCommandTest( GafferTest.TestCase ) :
 
 	def testSubstitutions( self ) :
 
-		n = Gaffer.SystemCommand()
+		n = GafferDispatch.SystemCommand()
 		n["command"].setValue( "echo {adjective} {noun} > " + self.temporaryDirectory() + "/systemCommandTest.txt" )
 		n["substitutions"].addMember( "adjective", IECore.StringData( "red" ) )
 		n["substitutions"].addMember( "noun", IECore.StringData( "truck" ) )
@@ -78,7 +79,7 @@ class SystemCommandTest( GafferTest.TestCase ) :
 
 		hashes = []
 
-		n = Gaffer.SystemCommand()
+		n = GafferDispatch.SystemCommand()
 		hashes.append( n.hash( Gaffer.Context.current() ) )
 
 		n["command"].setValue( "env" )
@@ -100,10 +101,10 @@ class SystemCommandTest( GafferTest.TestCase ) :
 
 		s = Gaffer.ScriptNode()
 
-		s["n"] = Gaffer.SystemCommand()
+		s["n"] = GafferDispatch.SystemCommand()
 		s["n"]["command"].setValue( "touch " + self.temporaryDirectory() + "/systemCommandTest.####.txt" )
 
-		d = Gaffer.LocalDispatcher()
+		d = GafferDispatch.LocalDispatcher()
 		d["jobsDirectory"].setValue( self.temporaryDirectory() + "/jobs" )
 		d["framesMode"].setValue( d.FramesMode.CustomRange )
 		d["frameRange"].setValue( "1-10" )
@@ -116,4 +117,3 @@ class SystemCommandTest( GafferTest.TestCase ) :
 
 if __name__ == "__main__":
 	unittest.main()
-

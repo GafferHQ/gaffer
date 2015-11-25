@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,27 +34,23 @@
 #
 ##########################################################################
 
-import unittest
+# Utility classes
 
-import IECore
+from CountingExecutableNode import CountingExecutableNode
+from TextWriter import TextWriter
 
-import Gaffer
-import GafferTest
+# Test cases
 
-class TaskListTest( GafferTest.TestCase ) :
-
-	def test( self ) :
-
-		n = Gaffer.TaskList()
-		c = Gaffer.Context()
-		c2 = Gaffer.Context()
-		c2["frame"] = 10.0
-		self.assertEqual( n.hash( c ), n.hash( c2 ) )
-
-		n2 = Gaffer.TaskList( "TaskList2" )
-		self.assertEqual( n.hash( c ), n2.hash( c ) )
-		self.assertEqual( n.hash( c2 ), n2.hash( c2 ) )
+from DispatcherTest import DispatcherTest
+from LocalDispatcherTest import LocalDispatcherTest
+from ExecutableNodeTest import ExecutableNodeTest
+from TaskSwitchTest import TaskSwitchTest
+from PythonCommandTest import PythonCommandTest
+from SystemCommandTest import SystemCommandTest
+from TaskListTest import TaskListTest
+from WedgeTest import WedgeTest
+from TaskContextVariablesTest import TaskContextVariablesTest
 
 if __name__ == "__main__":
+	import unittest
 	unittest.main()
-

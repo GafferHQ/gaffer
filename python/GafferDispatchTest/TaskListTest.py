@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,41 +34,27 @@
 #
 ##########################################################################
 
+import unittest
+
 import IECore
 
 import Gaffer
+import GafferTest
 import GafferDispatch
 
-class TaskSwitch( GafferDispatch.ExecutableNode ) :
+class TaskListTest( GafferTest.TestCase ) :
 
-	def __init__( self, name = "TaskSwitch" ) :
+	def test( self ) :
 
-		GafferDispatch.ExecutableNode.__init__( self, name )
+		n = GafferDispatch.TaskList()
+		c = Gaffer.Context()
+		c2 = Gaffer.Context()
+		c2["frame"] = 10.0
+		self.assertEqual( n.hash( c ), n.hash( c2 ) )
 
-		self["index"] = Gaffer.IntPlug( minValue = 0 )
+		n2 = GafferDispatch.TaskList( "TaskList2" )
+		self.assertEqual( n.hash( c ), n2.hash( c ) )
+		self.assertEqual( n.hash( c2 ), n2.hash( c2 ) )
 
-	def requirements( self, context ) :
-
-		index = self["index"].getValue()
-		index = index % ( len( self["requirements"] ) - 1 )
-
-		node = self["requirements"][index].source().node()
-		if not isinstance( node, GafferDispatch.ExecutableNode ) or node.isSame( self ) :
-			return []
-
-		return [ self.Task( node, context ) ]
-
-	def hash( self, context ) :
-
-		# Our hash is empty to signify that we don't do
-		# anything in execute().
-		return IECore.MurmurHash()
-
-	def execute( self ) :
-
-		# We don't need to do anything here because our
-		# sole purpose is to manipulate the context
-		# in which our requirements are executed.
-		pass
-
-IECore.registerRunTimeTyped( TaskSwitch, typeName = "GafferDispatch::TaskSwitch" )
+if __name__ == "__main__":
+	unittest.main()

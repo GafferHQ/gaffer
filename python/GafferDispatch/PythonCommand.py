@@ -55,7 +55,7 @@ class PythonCommand( GafferDispatch.ExecutableNode ) :
 
 	def hash( self, context ) :
 
-		h = Gaffer.ExecutableNode.hash( self, context )
+		h = GafferDispatch.ExecutableNode.hash( self, context )
 
 		command = self["command"].getValue()
 		h.append( command )

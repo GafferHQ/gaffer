@@ -65,8 +65,8 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 
 		def __init__( self, batch, dispatcher, name, jobId, directory ) :
 
-			assert( isinstance( batch, Gaffer.Dispatcher._TaskBatch ) )
-			assert( isinstance( dispatcher, Gaffer.Dispatcher ) )
+			assert( isinstance( batch, GafferDispatch.Dispatcher._TaskBatch ) )
+			assert( isinstance( dispatcher, GafferDispatch.Dispatcher ) )
 
 			self.__batch = batch
 			## \todo Stop storing this. It's just a temptation to access potentially

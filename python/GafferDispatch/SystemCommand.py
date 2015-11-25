@@ -73,7 +73,7 @@ class SystemCommand( GafferDispatch.ExecutableNode ) :
 
 	def hash( self, context ) :
 
-		h = Gaffer.ExecutableNode.hash( self, context )
+		h = GafferDispatch.ExecutableNode.hash( self, context )
 
 		self["command"].hash( h )
 		self["substitutions"].hash( h )

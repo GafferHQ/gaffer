@@ -37,13 +37,15 @@
 import os
 
 import IECore
-import Gaffer
 
-class TextWriter( Gaffer.ExecutableNode ) :
+import Gaffer
+import GafferDispatch
+
+class TextWriter( GafferDispatch.ExecutableNode ) :
 
 	def __init__( self, name="TextWriter", requiresSequenceExecution = False ) :
 
-		Gaffer.ExecutableNode.__init__( self, name )
+		GafferDispatch.ExecutableNode.__init__( self, name )
 
 		self.__requiresSequenceExecution = requiresSequenceExecution
 
@@ -74,7 +76,7 @@ class TextWriter( Gaffer.ExecutableNode ) :
 	def executeSequence( self, frames ) :
 
 		if not self.__requiresSequenceExecution :
-			Gaffer.ExecutableNode.executeSequence( self, frames )
+			GafferDispatch.ExecutableNode.executeSequence( self, frames )
 			return
 
 		context = Gaffer.Context( Gaffer.Context.current() )
@@ -89,7 +91,7 @@ class TextWriter( Gaffer.ExecutableNode ) :
 
 	def hash( self, context ) :
 
-		h = Gaffer.ExecutableNode.hash( self, context )
+		h = GafferDispatch.ExecutableNode.hash( self, context )
 		h.append( context.getFrame() )
 		h.append( context.get( "textWriter:replace", IECore.StringVectorData() ) )
 		h.append( context.substitute( self["fileName"].getValue() ) )
@@ -112,4 +114,4 @@ class TextWriter( Gaffer.ExecutableNode ) :
 
 		return text
 
-IECore.registerRunTimeTyped( TextWriter, typeName = "GafferTest::TextWriter" )
+IECore.registerRunTimeTyped( TextWriter, typeName = "GafferDispatchTest::TextWriter" )

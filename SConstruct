@@ -487,7 +487,11 @@ libraries = {
 		},
 	},
 
-	"GafferDispatchTest" : {},
+	"GafferDispatchTest" : {
+
+		"additionalFiles" : glob.glob( "python/GafferDispatchTest/*/*" ) + glob.glob( "python/GafferDispatchTest/*/*/*" ),
+
+	},
 
 	"GafferDispatchUI" : {},
 

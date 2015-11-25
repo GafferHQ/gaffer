@@ -38,12 +38,13 @@ import IECore
 
 import Gaffer
 import GafferTest
+import GafferDispatch
 
-class CountingExecutableNode( Gaffer.ExecutableNode ) :
+class CountingExecutableNode( GafferDispatch.ExecutableNode ) :
 
 	def __init__( self, name = "CountingExecutableNode", withHash = True, requiresSequenceExecution = False ) :
 
-		Gaffer.ExecutableNode.__init__( self, name )
+		GafferDispatch.ExecutableNode.__init__( self, name )
 
 		self.__requiresSequenceExecution = requiresSequenceExecution
 		self.__withHash = withHash
@@ -57,7 +58,7 @@ class CountingExecutableNode( Gaffer.ExecutableNode ) :
 	def executeSequence( self, frames ) :
 
 		if not self.__requiresSequenceExecution :
-			Gaffer.ExecutableNode.executeSequence( self, frames )
+			GafferDispatch.ExecutableNode.executeSequence( self, frames )
 			return
 
 		self.executionCount += 1
@@ -67,7 +68,7 @@ class CountingExecutableNode( Gaffer.ExecutableNode ) :
 		if not self.__withHash :
 			return IECore.MurmurHash()
 
-		h = Gaffer.ExecutableNode.hash( self, context )
+		h = GafferDispatch.ExecutableNode.hash( self, context )
 		h.append( context.getFrame() )
 		return h
 
@@ -75,4 +76,4 @@ class CountingExecutableNode( Gaffer.ExecutableNode ) :
 
 		return self.__requiresSequenceExecution
 
-IECore.registerRunTimeTyped( CountingExecutableNode, typeName = "GafferTest::CountingExecutableNode" )
+IECore.registerRunTimeTyped( CountingExecutableNode, typeName = "GafferDispatchTest::CountingExecutableNode" )

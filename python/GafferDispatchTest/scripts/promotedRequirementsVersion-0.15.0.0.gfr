@@ -24,4 +24,3 @@ Gaffer.Metadata.registerPlugValue( __children["b"]["n_requirement"], "compoundNo
 
 
 del __children
-

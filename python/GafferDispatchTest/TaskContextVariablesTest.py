@@ -39,12 +39,14 @@ import unittest
 
 import Gaffer
 import GafferTest
+import GafferDispatch
+import GafferDispatchTest
 
 class TaskContextVariablesTest( GafferTest.TestCase ) :
 
 	def __dispatcher( self, frameRange = None ) :
 
-		result = Gaffer.LocalDispatcher( jobPool = Gaffer.LocalDispatcher.JobPool() )
+		result = GafferDispatch.LocalDispatcher( jobPool = GafferDispatch.LocalDispatcher.JobPool() )
 		result["jobsDirectory"].setValue( self.temporaryDirectory() + "/jobs" )
 
 		return result
@@ -53,10 +55,10 @@ class TaskContextVariablesTest( GafferTest.TestCase ) :
 
 		script = Gaffer.ScriptNode()
 
-		script["writer"] = GafferTest.TextWriter()
+		script["writer"] = GafferDispatchTest.TextWriter()
 		script["writer"]["fileName"].setValue( self.temporaryDirectory() + "/${name}.txt" )
 
-		script["variables"] = Gaffer.TaskContextVariables()
+		script["variables"] = GafferDispatch.TaskContextVariables()
 		script["variables"]["requirements"][0].setInput( script["writer"]["requirement"] )
 		script["variables"]["variables"].addMember( "name", "jimbob" )
 
@@ -74,10 +76,10 @@ class TaskContextVariablesTest( GafferTest.TestCase ) :
 
 		script = Gaffer.ScriptNode()
 
-		script["writer"] = GafferTest.TextWriter()
+		script["writer"] = GafferDispatchTest.TextWriter()
 		script["writer"]["fileName"].setValue( self.temporaryDirectory() + "/${name1}${name2}.txt" )
 
-		script["variables"] = Gaffer.TaskContextVariables()
+		script["variables"] = GafferDispatch.TaskContextVariables()
 		script["variables"]["requirements"][0].setInput( script["writer"]["requirement"] )
 		jim = script["variables"]["variables"].addOptionalMember( "name1", "jim", enabled = False )
 		bob = script["variables"]["variables"].addOptionalMember( "name2", "bob", enabled = True )
@@ -96,10 +98,10 @@ class TaskContextVariablesTest( GafferTest.TestCase ) :
 
 		script = Gaffer.ScriptNode()
 
-		script["writer"] = GafferTest.TextWriter()
+		script["writer"] = GafferDispatchTest.TextWriter()
 		script["writer"]["fileName"].setValue( self.temporaryDirectory() + "/${name}.txt" )
 
-		script["variables"] = Gaffer.TaskContextVariables()
+		script["variables"] = GafferDispatch.TaskContextVariables()
 		script["variables"]["requirements"][0].setInput( script["writer"]["requirement"] )
 		script["variables"]["variables"].addMember( "name", "jimbob" )
 

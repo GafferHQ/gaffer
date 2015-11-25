@@ -107,11 +107,6 @@ from ComputeNodeTest import ComputeNodeTest
 from BoxPlugTest import BoxPlugTest
 from BoxTest import BoxTest
 from OutputRedirectionTest import OutputRedirectionTest
-from CountingExecutableNode import CountingExecutableNode
-from ExecutableNodeTest import ExecutableNodeTest
-from DispatcherTest import DispatcherTest
-from TextWriter import TextWriter
-from LocalDispatcherTest import LocalDispatcherTest
 from RecursiveChildIteratorTest import RecursiveChildIteratorTest
 from FilteredRecursiveChildIteratorTest import FilteredRecursiveChildIteratorTest
 from ReferenceTest import ReferenceTest
@@ -123,21 +118,15 @@ from SerialisationTest import SerialisationTest
 from SwitchTest import SwitchTest
 from MetadataTest import MetadataTest
 from StringAlgoTest import StringAlgoTest
-from SystemCommandTest import SystemCommandTest
-from TaskListTest import TaskListTest
 from NodeAlgoTest import NodeAlgoTest
 from DotTest import DotTest
 from ApplicationTest import ApplicationTest
 from LeafPathFilterTest import LeafPathFilterTest
 from MatchPatternPathFilterTest import MatchPatternPathFilterTest
 from LoopTest import LoopTest
-from WedgeTest import WedgeTest
-from TaskContextVariablesTest import TaskContextVariablesTest
 from SubGraphTest import SubGraphTest
 from FileSequencePathFilterTest import FileSequencePathFilterTest
 from AnimationTest import AnimationTest
-from TaskSwitchTest import TaskSwitchTest
-from PythonCommandTest import PythonCommandTest
 
 if __name__ == "__main__":
 	import unittest

@@ -41,12 +41,13 @@ import IECore
 
 import Gaffer
 import GafferTest
+import GafferDispatch
 
 class PythonCommandTest( GafferTest.TestCase ) :
 
 	def testSelf( self ) :
 
-		n = Gaffer.PythonCommand()
+		n = GafferDispatch.PythonCommand()
 		n["command"].setValue( "self.executionCount += 1" )
 
 		n.executionCount = 0
@@ -59,7 +60,7 @@ class PythonCommandTest( GafferTest.TestCase ) :
 
 	def testVariables( self ) :
 
-		n = Gaffer.PythonCommand()
+		n = GafferDispatch.PythonCommand()
 		n["variables"].addMember( "testInt", 1 )
 		n["variables"].addMember( "testFloat", 2.5 )
 		n["variables"].addMember( "testColor", IECore.Color3f( 1, 2, 3 ) )
@@ -79,7 +80,7 @@ class PythonCommandTest( GafferTest.TestCase ) :
 
 	def testContextAccess( self ) :
 
-		n = Gaffer.PythonCommand()
+		n = GafferDispatch.PythonCommand()
 		n["command"].setValue( inspect.cleandoc(
 			"""
 			self.frame = context.getFrame()
@@ -99,7 +100,7 @@ class PythonCommandTest( GafferTest.TestCase ) :
 
 		# Hash should be constant if context not
 		# accessed.
-		n = Gaffer.PythonCommand()
+		n = GafferDispatch.PythonCommand()
 		n["command"].setValue( "a = 10")
 
 		with Gaffer.Context() as c :
@@ -195,4 +196,3 @@ class PythonCommandTest( GafferTest.TestCase ) :
 
 if __name__ == "__main__":
 	unittest.main()
-
