@@ -43,6 +43,7 @@ import IECore
 
 import Gaffer
 import GafferTest
+import GafferDispatch
 import GafferImage
 import GafferScene
 import GafferArnold
@@ -275,9 +276,9 @@ class ArnoldRenderTest( GafferTest.TestCase ) :
 		s["fileName"].setValue( self.temporaryDirectory() + "/test.gfr" )
 		s.save()
 
-		dispatcher = Gaffer.LocalDispatcher()
+		dispatcher = GafferDispatch.LocalDispatcher()
 		dispatcher["jobsDirectory"].setValue( self.temporaryDirectory() + "/testJobDirectory" )
-		dispatcher["framesMode"].setValue( Gaffer.Dispatcher.FramesMode.CurrentFrame )
+		dispatcher["framesMode"].setValue( GafferDispatch.Dispatcher.FramesMode.CurrentFrame )
 		dispatcher["executeInBackground"].setValue( False )
 
 		dispatcher.dispatch( [ s["wedge"] ] )
