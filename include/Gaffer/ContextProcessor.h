@@ -83,6 +83,8 @@ class ContextProcessor : public BaseType
 
 	private :
 
+		static const ValuePlug *correspondingDescendant( const ValuePlug *plug, const ValuePlug *plugAncestor, const ValuePlug *oppositeAncestor );
+
 		/// Returns the input corresponding to the output and vice versa.
 		const ValuePlug *oppositePlug( const ValuePlug *plug ) const;
 
