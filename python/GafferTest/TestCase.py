@@ -135,6 +135,7 @@ class TestCase( unittest.TestCase ) :
 
 	def assertTypeNamesArePrefixed( self, module, namesToIgnore = () ) :
 
+		incorrectTypeNames = []
 		for name in dir( module ) :
 
 			cls = getattr( module, name )
@@ -144,7 +145,10 @@ class TestCase( unittest.TestCase ) :
 			if issubclass( cls, IECore.RunTimeTyped ) :
 				if cls.staticTypeName() in namesToIgnore :
 					continue
-				self.assertEqual( cls.staticTypeName(), module.__name__ + "::" + cls.__name__ )
+				if cls.staticTypeName() != module.__name__ + "::" + cls.__name__ :
+					incorrectTypeNames.append( cls.staticTypeName() )
+
+		self.assertEqual( incorrectTypeNames, [] )
 
 	def assertDefaultNamesAreCorrect( self, module ) :
 
