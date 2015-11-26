@@ -129,6 +129,11 @@ class ExecutableNode : public Gaffer::Node
 		Gaffer::ArrayPlug *preTasksPlug();
 		const Gaffer::ArrayPlug *preTasksPlug() const;
 
+		/// Input plugs to which tasks may be connected to cause them to be executed
+		/// after this node, potentially in parallel with downstream tasks.
+		Gaffer::ArrayPlug *postTasksPlug();
+		const Gaffer::ArrayPlug *postTasksPlug() const;
+
 		/// Output plug which can be connected to downstream preTasks plugs to cause
 		/// this node to be executed before the downstream nodes.
 		TaskPlug *taskPlug();
@@ -145,6 +150,12 @@ class ExecutableNode : public Gaffer::Node
 		/// the upstream Tasks connected into the preTasksPlug().
 		/// \todo Remove the context argument and use the current context instead.
 		virtual void preTasks( const Gaffer::Context *context, Tasks &tasks ) const;
+
+		/// Fills tasks with Tasks that must be executed following the execution
+		/// of this node in the given context. The default implementation collects
+		/// the tasks connected into the postTasksPlug().
+		/// \todo Remove the context argument and use the current context instead.
+		virtual void postTasks( const Gaffer::Context *context, Tasks &tasks ) const;
 
 		/// Returns a hash that uniquely represents the side effects (e.g. files created)
 		/// of calling execute with the given context. Derived nodes should call the base

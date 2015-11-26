@@ -93,6 +93,24 @@ class ExecutableNodeWrapper : public GafferBindings::NodeWrapper<WrappedType>
 			WrappedType::preTasks( context, tasks );
 		}
 
+		virtual void postTasks( const Gaffer::Context *context, GafferDispatch::ExecutableNode::Tasks &tasks ) const
+		{
+			if( this->isSubclassed() )
+			{
+				IECorePython::ScopedGILLock gilLock;
+				boost::python::object override = this->methodOverride( "postTasks" );
+				if( override )
+				{
+					boost::python::list pythonTasks = boost::python::extract<boost::python::list>(
+						override( Gaffer::ContextPtr( const_cast<Gaffer::Context *>( context ) ) )
+					);
+					boost::python::container_utils::extend_container( tasks, pythonTasks );
+					return;
+				}
+			}
+			WrappedType::postTasks( context, tasks );
+		}
+
 		virtual IECore::MurmurHash hash( const Gaffer::Context *context ) const
 		{
 			if( this->isSubclassed() )

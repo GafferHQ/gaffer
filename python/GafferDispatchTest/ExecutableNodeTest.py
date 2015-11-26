@@ -379,5 +379,20 @@ class ExecutableNodeTest( GafferTest.TestCase ) :
 		s["fileName"].setValue( os.path.dirname( __file__ ) + "/scripts/promotedRequirementsNetworkVersion-0.15.0.0.gfr" )
 		s.load()
 
+	def testPostTasks( self ) :
+
+		preWriter = GafferDispatchTest.TextWriter()
+		postWriter = GafferDispatchTest.TextWriter()
+
+		writer = GafferDispatchTest.TextWriter()
+		writer["preTasks"][0].setInput( preWriter["task"] )
+		writer["postTasks"][0].setInput( postWriter["task"] )
+
+		c = Gaffer.Context()
+		c["test"] = "test"
+		with c :
+			self.assertEqual( writer.preTasks( c ), [ GafferDispatch.ExecutableNode.Task( preWriter, c ) ] )
+			self.assertEqual( writer.postTasks( c ), [ GafferDispatch.ExecutableNode.Task( postWriter, c ) ] )
+
 if __name__ == "__main__":
 	unittest.main()

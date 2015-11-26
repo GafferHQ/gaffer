@@ -61,6 +61,19 @@ boost::python::list preTasks( T &n, Gaffer::Context *context )
 }
 
 template<typename T>
+boost::python::list postTasks( T &n, Gaffer::Context *context )
+{
+	GafferDispatch::ExecutableNode::Tasks tasks;
+	n.T::postTasks( context, tasks );
+	boost::python::list result;
+	for( GafferDispatch::ExecutableNode::Tasks::const_iterator tIt = tasks.begin(); tIt != tasks.end(); ++tIt )
+	{
+		result.append( *tIt );
+	}
+	return result;
+}
+
+template<typename T>
 IECore::MurmurHash hash( T &n, const Gaffer::Context *context )
 {
 	return n.T::hash( context );
@@ -95,6 +108,7 @@ ExecutableNodeClass<T, Ptr>::ExecutableNodeClass( const char *docString )
 	:	GafferBindings::NodeClass<T, Ptr>( docString )
 {
 	this->def( "preTasks", &Detail::preTasks<T> );
+	this->def( "postTasks", &Detail::postTasks<T> );
 	this->def( "hash", &Detail::hash<T> );
 	this->def( "execute", &Detail::execute<T> );
 	this->def( "executeSequence", &Detail::executeSequence<T> );

@@ -156,6 +156,7 @@ ExecutableNode::ExecutableNode( const std::string &name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new ArrayPlug( "preTasks", Plug::In, new TaskPlug( "preTask0" ) ) );
+	addChild( new ArrayPlug( "postTasks", Plug::In, new TaskPlug( "postTask0" ) ) );
 	addChild( new TaskPlug( "task", Plug::Out ) );
 
 	PlugPtr dispatcherPlug = new Plug( "dispatcher", Plug::In );
@@ -178,29 +179,54 @@ const ArrayPlug *ExecutableNode::preTasksPlug() const
 	return getChild<ArrayPlug>( g_firstPlugIndex );
 }
 
+ArrayPlug *ExecutableNode::postTasksPlug()
+{
+	return getChild<ArrayPlug>( g_firstPlugIndex + 1 );
+}
+
+const ArrayPlug *ExecutableNode::postTasksPlug() const
+{
+	return getChild<ArrayPlug>( g_firstPlugIndex + 1 );
+}
+
 ExecutableNode::TaskPlug *ExecutableNode::taskPlug()
 {
-	return getChild<TaskPlug>( g_firstPlugIndex + 1 );
+	return getChild<TaskPlug>( g_firstPlugIndex + 2 );
 }
 
 const ExecutableNode::TaskPlug *ExecutableNode::taskPlug() const
 {
-	return getChild<TaskPlug>( g_firstPlugIndex + 1 );
+	return getChild<TaskPlug>( g_firstPlugIndex + 2 );
 }
 
 Plug *ExecutableNode::dispatcherPlug()
 {
-	return getChild<Plug>( g_firstPlugIndex + 2 );
+	return getChild<Plug>( g_firstPlugIndex + 3 );
 }
 
 const Plug *ExecutableNode::dispatcherPlug() const
 {
-	return getChild<Plug>( g_firstPlugIndex + 2 );
+	return getChild<Plug>( g_firstPlugIndex + 3 );
 }
 
 void ExecutableNode::preTasks( const Context *context, Tasks &tasks ) const
 {
 	for( PlugIterator cIt( preTasksPlug() ); cIt != cIt.end(); ++cIt )
+	{
+		Plug *source = (*cIt)->source<Plug>();
+		if( source != *cIt )
+		{
+			if( ExecutableNodePtr n = runTimeCast<ExecutableNode>( source->node() ) )
+			{
+				tasks.push_back( Task( n, context ) );
+			}
+		}
+	}
+}
+
+void ExecutableNode::postTasks( const Context *context, Tasks &tasks ) const
+{
+	for( PlugIterator cIt( postTasksPlug() ); cIt != cIt.end(); ++cIt )
 	{
 		Plug *source = (*cIt)->source<Plug>();
 		if( source != *cIt )
