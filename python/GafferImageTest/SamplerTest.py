@@ -160,7 +160,7 @@ class SamplerTest( GafferImageTest.ImageTestCase ) :
 
 		crop = GafferImage.Crop()
 		crop["in"].setInput( constant["out"] )
-		crop["areaSource"].setValue( crop.AreaSource.Custom )
+		crop["areaSource"].setValue( crop.AreaSource.Area )
 		crop["area"].setValue( IECore.Box2i( IECore.V2i( 135 ), IECore.V2i( 214 ) ) )
 		crop["affectDisplayWindow"].setValue( False )
 
@@ -178,7 +178,7 @@ class SamplerTest( GafferImageTest.ImageTestCase ) :
 
 		crop = GafferImage.Crop()
 		crop["in"].setInput( constant["out"] )
-		crop["areaSource"].setValue( crop.AreaSource.Custom )
+		crop["areaSource"].setValue( crop.AreaSource.Area )
 		crop["area"].setValue( IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 200 ) ) )
 		crop["affectDisplayWindow"].setValue( False )
 		crop["affectDataWindow"].setValue( False )
