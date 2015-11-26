@@ -64,5 +64,6 @@ def __executableNodeGetItemWrapper( originalGetItem ) :
 
 GafferDispatch.ExecutableNode.__getitem__ = __executableNodeGetItemWrapper( GafferDispatch.ExecutableNode.__getitem__ )
 Gaffer.ArrayPlug.__getitem__ = __preTasksPlugGetItemWrapper( Gaffer.ArrayPlug.__getitem__ )
+GafferDispatch.ExecutableNode.RequirementPlug = GafferDispatch.ExecutableNode.TaskPlug
 GafferDispatch.ExecutableNode.requirements = GafferDispatch.ExecutableNode.preTasks
 GafferDispatch.Dispatcher._TaskBatch.requirements = GafferDispatch.Dispatcher._TaskBatch.preTasks

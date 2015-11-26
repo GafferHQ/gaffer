@@ -67,6 +67,24 @@ Gaffer.Metadata.registerNode(
 
 		),
 
+		"postTasks" : (
+
+			"description",
+			"""
+			Input connections to nodes which must be
+			executed after this node, but which don't
+			need to be executed before downstream nodes.
+			""",
+
+			"nodeGadget:nodulePosition", "right",
+			"nodule:type", "GafferUI::CompoundNodule",
+			"compoundNodule:spacing", 0.2,
+			"compoundNodule:orientation", "y",
+
+			"plugValueWidget:type", "",
+
+		),
+
 		"task" : (
 
 			"description",
