@@ -75,7 +75,7 @@ class ExecutableNode : public Gaffer::Node
 				/// Constructs a task representing the execution of
 				/// node n in context c. A copy of the context is
 				/// taken.
-				Task( ExecutableNodePtr n, Gaffer::ContextPtr c );
+				Task( ExecutableNodePtr n, const Gaffer::Context *c );
 				/// Returns the node to be executed.
 				const ExecutableNode *node() const;
 				/// Returns the context to execute the node in.

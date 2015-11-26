@@ -94,7 +94,7 @@ void GafferDispatchBindings::bindExecutableNode()
 
 	class_<ExecutableNode::Task>( "Task", no_init )
 		.def( init<ExecutableNode::Task>() )
-		.def( init<GafferDispatch::ExecutableNodePtr,Gaffer::ContextPtr>() )
+		.def( init<GafferDispatch::ExecutableNodePtr, const Gaffer::Context *>() )
 		.def( "node", &taskNode )
 		.def( "context", &taskContext, ( boost::python::arg_( "_copy" ) = true ) )
 		.def("__eq__", &ExecutableNode::Task::operator== )

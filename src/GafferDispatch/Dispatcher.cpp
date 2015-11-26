@@ -190,9 +190,8 @@ void Dispatcher::dispatch( const std::vector<NodePtr> &nodes ) const
 	{
 		for ( std::vector<ExecutableNodePtr>::const_iterator nIt = executables.begin(); nIt != executables.end(); ++nIt, ++i )
 		{
-			ContextPtr frameContext = new Context( *context, Context::Borrowed );
-			frameContext->setFrame( *fIt );
-			tasks.push_back( ExecutableNode::Task( *nIt, frameContext ) );
+			context->setFrame( *fIt );
+			tasks.push_back( ExecutableNode::Task( *nIt, context.get() ) );
 		}
 	}
 

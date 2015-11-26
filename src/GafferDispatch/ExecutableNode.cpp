@@ -54,7 +54,7 @@ ExecutableNode::Task::Task( const Task &t ) : m_node( t.m_node ), m_context( t.m
 {
 }
 
-ExecutableNode::Task::Task( ExecutableNodePtr n, ContextPtr c ) : m_node( n ), m_context( new Context( *c ) )
+ExecutableNode::Task::Task( ExecutableNodePtr n, const Context *c ) : m_node( n ), m_context( new Context( *c ) )
 {
 	Context::Scope scopedContext( m_context.get() );
 	m_hash = m_node->hash( m_context.get() );
@@ -202,15 +202,10 @@ void ExecutableNode::preTasks( const Context *context, Tasks &tasks ) const
 {
 	for( PlugIterator cIt( preTasksPlug() ); cIt != cIt.end(); ++cIt )
 	{
-		Plug *p = (*cIt)->source<Plug>();
-		if( p != *cIt )
+		ExecutableNode *n = runTimeCast<ExecutableNode>( (*cIt)->source<Plug>()->node() );
+		if( n && n != this )
 		{
-			if( ExecutableNode *n = runTimeCast<ExecutableNode>( p->node() ) )
-			{
-				/// \todo Can we not just reuse the context? Maybe we need to make
-				/// the context in Task const?
-				tasks.push_back( Task( n, new Context( *context ) ) );
-			}
+			tasks.push_back( Task( n, context ) );
 		}
 	}
 }
