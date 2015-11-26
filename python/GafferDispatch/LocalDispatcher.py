@@ -77,7 +77,7 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 			# use signals to report changes in status, and the JobPool should connect to those
 			# signals. Jobs should be blissfully ignorant of JobPools.
 			self.__dispatcher = dispatcher
-			script = batch.requirements()[0].node().scriptNode()
+			script = batch.preTasks()[0].node().scriptNode()
 			self.__context = Gaffer.Context( script.context() )
 
 			self.__name = name
@@ -184,13 +184,13 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 			# this doesn't set the status to Killed because that could
 			# run into a race condition with a background dispatch.
 			batch.blindData()["killed"] = IECore.BoolData( True )
-			for requirement in batch.requirements() :
-				self.__kill( requirement )
+			for upstreamBatch in batch.preTasks() :
+				self.__kill( upstreamBatch )
 
 		def __foregroundDispatch( self, batch ) :
 
-			for currentBatch in batch.requirements() :
-				if not self.__foregroundDispatch( currentBatch ) :
+			for upstreamBatch in batch.preTasks() :
+				if not self.__foregroundDispatch( upstreamBatch ) :
 					return False
 
 			if batch.blindData().get( "killed" ) :
@@ -222,8 +222,8 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 				if not self.__foregroundDispatch( batch ) :
 					return False
 			else :
-				for currentBatch in batch.requirements() :
-					if not self.__preBackgroundDispatch( currentBatch ) :
+				for upstreamBatch in batch.preTasks() :
+					if not self.__preBackgroundDispatch( upstreamBatch ) :
 						return False
 
 			return True
@@ -238,8 +238,8 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 			if self.__getStatus( batch ) == LocalDispatcher.Job.Status.Complete :
 				return True
 
-			for currentBatch in batch.requirements() :
-				if not self.__doBackgroundDispatch( currentBatch ) :
+			for upstreamBatch in batch.preTasks() :
+				if not self.__doBackgroundDispatch( upstreamBatch ) :
 					return False
 
 			if batch.blindData().get( "killed" ) :
@@ -312,8 +312,8 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 			batch.blindData()["status"] = IECore.IntData( int(status) )
 
 			if recursive :
-				for requirement in batch.requirements() :
-					self.__setStatus( requirement, status, recursive = True )
+				for upstreamBatch in batch.preTasks() :
+					self.__setStatus( upstreamBatch, status, recursive = True )
 
 		def __reportCompleted( self, batch ) :
 
@@ -339,9 +339,9 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 			if self.__getStatus( batch ) == LocalDispatcher.Job.Status.Running :
 				return batch
 
-			for requirement in batch.requirements() :
+			for upstreamBatch in batch.preTasks() :
 
-				batch = self.__currentBatch( requirement )
+				batch = self.__currentBatch( upstreamBatch )
 				if batch is not None :
 					return batch
 
@@ -352,8 +352,8 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 			if batch.node() :
 				batch.blindData()["nodeName"] = batch.node().relativeName( script )
 
-			for requirement in batch.requirements() :
-				self.__storeNodeNames( script, requirement )
+			for upstreamBatch in batch.preTasks() :
+				self.__storeNodeNames( script, upstreamBatch )
 
 	class JobPool( IECore.RunTimeTyped ) :
 

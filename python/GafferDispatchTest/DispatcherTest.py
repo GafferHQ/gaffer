@@ -80,7 +80,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 		def __dispatch( self, batch ) :
 
-			for currentBatch in batch.requirements() :
+			for currentBatch in batch.preTasks() :
 				self.__dispatch( currentBatch )
 
 			if not batch.node() or batch.blindData().get( "dispatched" ) :
@@ -291,9 +291,9 @@ class DispatcherTest( GafferTest.TestCase ) :
 		s["n2b"] = Gaffer.ExecutableOpHolder()
 		op2b = TestOp("2b", dispatcher.log)
 		s["n2b"].setParameterised( op2b )
-		s["n1"]['requirements'][0].setInput( s["n2"]['requirement'] )
-		s["n2"]['requirements'][0].setInput( s["n2a"]['requirement'] )
-		s["n2"]['requirements'][1].setInput( s["n2b"]['requirement'] )
+		s["n1"]["preTasks"][0].setInput( s["n2"]["task"] )
+		s["n2"]["preTasks"][0].setInput( s["n2a"]["task"] )
+		s["n2"]["preTasks"][1].setInput( s["n2b"]["task"] )
 
 		# Executing n1 should trigger execution of all of them
 		dispatcher.dispatch( [ s["n1"] ] )
@@ -359,9 +359,9 @@ class DispatcherTest( GafferTest.TestCase ) :
 		s["n2a"].setParameterised( op1 )
 		s["n2b"] = Gaffer.ExecutableOpHolder()
 		s["n2b"].setParameterised( op1 )
-		s["n1"]['requirements'][0].setInput( s["n2"]['requirement'] )
-		s["n2"]['requirements'][0].setInput( s["n2a"]['requirement'] )
-		s["n2"]['requirements'][1].setInput( s["n2b"]['requirement'] )
+		s["n1"]["preTasks"][0].setInput( s["n2"]["task"] )
+		s["n2"]["preTasks"][0].setInput( s["n2a"]["task"] )
+		s["n2"]["preTasks"][1].setInput( s["n2b"]["task"] )
 
 		# even though all tasks are identical, we still execute them all
 		dispatcher.dispatch( [ s["n1"] ] )
@@ -398,10 +398,10 @@ class DispatcherTest( GafferTest.TestCase ) :
 		s["n4"]["fileName"].setValue( fileName )
 		s["n4"]["text"].setValue( "d${frame};" )
 
-		s["n4"]['requirements'][0].setInput( s["n3"]['requirement'] )
-		s["n3"]['requirements'][0].setInput( s["n2"]['requirement'] )
-		s["n2"]['requirements'][0].setInput( s["n1"]['requirement'] )
-		s["n1"]['requirements'][0].setInput( s["n4"]['requirement'] )
+		s["n4"]["preTasks"][0].setInput( s["n3"]["task"] )
+		s["n3"]["preTasks"][0].setInput( s["n2"]["task"] )
+		s["n2"]["preTasks"][0].setInput( s["n1"]["task"] )
+		s["n1"]["preTasks"][0].setInput( s["n4"]["task"] )
 
 		self.assertNotEqual( s["n1"].hash( s.context() ), s["n2"].hash( s.context() ) )
 		self.assertNotEqual( s["n2"].hash( s.context() ), s["n3"].hash( s.context() ) )
@@ -431,9 +431,9 @@ class DispatcherTest( GafferTest.TestCase ) :
 		s["n3"]["fileName"].setValue( fileName )
 		s["n3"]["text"].setValue( "c${frame};" )
 
-		s["n3"]['requirements'][0].setInput( s["n2"]['requirement'] )
-		s["n3"]['requirements'][1].setInput( s["n1"]['requirement'] )
-		s["n2"]['requirements'][0].setInput( s["n1"]['requirement'] )
+		s["n3"]["preTasks"][0].setInput( s["n2"]["task"] )
+		s["n3"]["preTasks"][1].setInput( s["n1"]["task"] )
+		s["n2"]["preTasks"][0].setInput( s["n1"]["task"] )
 
 		self.assertNotEqual( s["n1"].hash( s.context() ), s["n2"].hash( s.context() ) )
 		self.assertNotEqual( s["n2"].hash( s.context() ), s["n3"].hash( s.context() ) )
@@ -555,8 +555,8 @@ class DispatcherTest( GafferTest.TestCase ) :
 		s["n3"]["mode"].setValue( "a" )
 		s["n3"]["fileName"].setValue( fileName )
 		s["n3"]["text"].setValue( "n3 on ${frame};" )
-		s["n2"]['requirements'][0].setInput( s["n1"]['requirement'] )
-		s["n3"]['requirements'][0].setInput( s["n2"]['requirement'] )
+		s["n2"]["preTasks"][0].setInput( s["n1"]["task"] )
+		s["n3"]["preTasks"][0].setInput( s["n2"]["task"] )
 
 		self.assertEqual( os.path.isfile( fileName ), False )
 
@@ -593,8 +593,8 @@ class DispatcherTest( GafferTest.TestCase ) :
 		s["n3"]["mode"].setValue( "a" )
 		s["n3"]["fileName"].setValue( fileName )
 		s["n3"]["text"].setValue( "n3 on ${frame};" )
-		s["n2"]['requirements'][0].setInput( s["n1"]['requirement'] )
-		s["n3"]['requirements'][0].setInput( s["n2"]['requirement'] )
+		s["n2"]["preTasks"][0].setInput( s["n1"]["task"] )
+		s["n3"]["preTasks"][0].setInput( s["n2"]["task"] )
 
 		self.assertEqual( os.path.isfile( fileName ), False )
 		dispatcher.dispatch( [ s["n3"] ] )
@@ -646,9 +646,9 @@ class DispatcherTest( GafferTest.TestCase ) :
 		s["n4"]["mode"].setValue( "a" )
 		s["n4"]["fileName"].setValue( fileName )
 		s["n4"]["text"].setValue( "n4 on ${frame};" )
-		s["n3"]['requirements'][0].setInput( s["n1"]['requirement'] )
-		s["n3"]['requirements'][1].setInput( s["n2"]['requirement'] )
-		s["n4"]['requirements'][0].setInput( s["n3"]['requirement'] )
+		s["n3"]["preTasks"][0].setInput( s["n1"]["task"] )
+		s["n3"]["preTasks"][1].setInput( s["n2"]["task"] )
+		s["n4"]["preTasks"][0].setInput( s["n3"]["task"] )
 
 		self.assertEqual( os.path.isfile( fileName ), False )
 		dispatcher.dispatch( [ s["n4"] ] )
@@ -702,16 +702,16 @@ class DispatcherTest( GafferTest.TestCase ) :
 		s["n4"]["mode"].setValue( "a" )
 		s["n4"]["fileName"].setValue( fileName )
 		s["n4"]["text"].setValue( "n4 on ${frame};" )
-		promotedPreTaskPlug = s["b"].promotePlug( s["b"]["n3"]["requirements"]["requirement0"] )
-		promotedPreTaskPlug.setInput( s["n1"]['requirement'] )
-		s["b"]["n3"]["requirements"][1].setInput( s["b"]["n2"]['requirement'] )
-		promotedTaskPlug = s["b"].promotePlug( s["b"]["n3"]['requirement'] )
-		s["n4"]['requirements'][0].setInput( promotedTaskPlug )
+		promotedPreTaskPlug = s["b"].promotePlug( s["b"]["n3"]["preTasks"][0] )
+		promotedPreTaskPlug.setInput( s["n1"]["task"] )
+		s["b"]["n3"]["preTasks"][1].setInput( s["b"]["n2"]["task"] )
+		promotedTaskPlug = s["b"].promotePlug( s["b"]["n3"]["task"] )
+		s["n4"]["preTasks"][0].setInput( promotedTaskPlug )
 		# export a reference too
 		s["b"].exportForReference( "/tmp/dispatcherTest/test.grf" )
 		s["r"] = Gaffer.Reference()
 		s["r"].load( "/tmp/dispatcherTest/test.grf" )
-		s["r"][promotedPreTaskPlug.getName()].setInput( s["n1"]['requirement'] )
+		s["r"][promotedPreTaskPlug.getName()].setInput( s["n1"]["task"] )
 
 		# dispatch an Executable that requires a Box
 
@@ -740,25 +740,9 @@ class DispatcherTest( GafferTest.TestCase ) :
 		expectedText = "n1 on 2;n2 on 2;n1 on 4;n2 on 4;n1 on 6;n2 on 6;n3 on 2;n3 on 4;n3 on 6;"
 		self.assertEqual( text, expectedText )
 
-		# only the promoted requirement dispatches
+		# only the promoted task dispatches
 
-		s["b"]["n3"]["requirements"][1].setInput( None )
-
-		os.remove( fileName )
-		self.assertEqual( os.path.isfile( fileName ), False )
-		dispatcher.dispatch( [ s["b"] ] )
-		shutil.rmtree( dispatcher.jobDirectory() )
-		self.assertEqual( os.path.isfile( fileName ), True )
-		with file( fileName, "r" ) as f :
-			text = f.read()
-
-		# all frames of n1, followed by the n3 sequence
-		expectedText = "n1 on 2;n1 on 4;n1 on 6;n3 on 2;n3 on 4;n3 on 6;"
-		self.assertEqual( text, expectedText )
-
-		# promoting a requirement doesn't dispatch unless it's connected
-
-		s["b"]["out2"] = s["b"]["n2"]['requirement'].createCounterpart( "out2", Gaffer.Plug.Direction.Out )
+		s["b"]["n3"]["preTasks"][1].setInput( None )
 
 		os.remove( fileName )
 		self.assertEqual( os.path.isfile( fileName ), False )
@@ -772,10 +756,26 @@ class DispatcherTest( GafferTest.TestCase ) :
 		expectedText = "n1 on 2;n1 on 4;n1 on 6;n3 on 2;n3 on 4;n3 on 6;"
 		self.assertEqual( text, expectedText )
 
-		# multiple promoted requirements will dispatch
+		# promoting a preTask doesn't dispatch unless it's connected
 
-		s["b"]["out3"] = s["b"]["n2"]['requirement'].createCounterpart( "out3", Gaffer.Plug.Direction.Out )
-		s["b"]["out3"].setInput( s["b"]["n2"]["requirement"] )
+		s["b"]["out2"] = s["b"]["n2"]["task"].createCounterpart( "out2", Gaffer.Plug.Direction.Out )
+
+		os.remove( fileName )
+		self.assertEqual( os.path.isfile( fileName ), False )
+		dispatcher.dispatch( [ s["b"] ] )
+		shutil.rmtree( dispatcher.jobDirectory() )
+		self.assertEqual( os.path.isfile( fileName ), True )
+		with file( fileName, "r" ) as f :
+			text = f.read()
+
+		# all frames of n1, followed by the n3 sequence
+		expectedText = "n1 on 2;n1 on 4;n1 on 6;n3 on 2;n3 on 4;n3 on 6;"
+		self.assertEqual( text, expectedText )
+
+		# multiple promoted preTasks will dispatch
+
+		s["b"]["out3"] = s["b"]["n2"]["task"].createCounterpart( "out3", Gaffer.Plug.Direction.Out )
+		s["b"]["out3"].setInput( s["b"]["n2"]["task"] )
 
 		os.remove( fileName )
 		self.assertEqual( os.path.isfile( fileName ), False )
@@ -792,7 +792,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		# dispatch an Executable that requires a Reference
 
 		os.remove( fileName )
-		s["n4"]['requirements'][0].setInput( s["r"][promotedTaskPlug.getName()] )
+		s["n4"]["preTasks"][0].setInput( s["r"][promotedTaskPlug.getName()] )
 		self.assertEqual( os.path.isfile( fileName ), False )
 		dispatcher.dispatch( [ s["n4"] ] )
 		shutil.rmtree( dispatcher.jobDirectory() )
@@ -876,7 +876,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		self.assertNotEqual( op1.frames, frameList.asList() )
 		self.assertEqual( op1.frames, binaryFrames.asList() )
 
-	def testRequirementsOverride( self ) :
+	def testPreTasksOverride( self ) :
 
 		class SelfRequiringNode( GafferDispatch.ExecutableNode ) :
 
@@ -889,13 +889,13 @@ class DispatcherTest( GafferTest.TestCase ) :
 				self.preExecutionCount = 0
 				self.mainExecutionCount = 0
 
-			def requirements( self, context ) :
+			def preTasks( self, context ) :
 
 				if context.get( "selfExecutingNode:preExecute", None ) is None :
 
 					customContext = Gaffer.Context( context )
 					customContext["selfExecutingNode:preExecute"] = True
-					requirements = [ GafferDispatch.ExecutableNode.Task( self, customContext ) ]
+					preTasks = [ GafferDispatch.ExecutableNode.Task( self, customContext ) ]
 
 				else :
 
@@ -907,9 +907,9 @@ class DispatcherTest( GafferTest.TestCase ) :
 					# that has meaning for any of our external requirements.
 					customContext = Gaffer.Context( context )
 					del customContext["selfExecutingNode:preExecute"]
-					requirements = GafferDispatch.ExecutableNode.requirements( self, customContext )
+					preTasks = GafferDispatch.ExecutableNode.preTasks( self, customContext )
 
-				return requirements
+				return preTasks
 
 			def hash( self, context ) :
 
@@ -930,20 +930,20 @@ class DispatcherTest( GafferTest.TestCase ) :
 		s = Gaffer.ScriptNode()
 		s["e1"] = SelfRequiringNode()
 		s["e2"] = SelfRequiringNode()
-		s["e2"]["requirements"][0].setInput( s["e1"]['requirement'] )
+		s["e2"]["preTasks"][0].setInput( s["e1"]["task"] )
 
 		c1 = s.context()
 		c2 = Gaffer.Context( s.context() )
 		c2["selfExecutingNode:preExecute"] = True
 
 		# e2 requires itself with a different context
-		self.assertEqual( s["e2"].requirements( c1 ), [ GafferDispatch.ExecutableNode.Task( s["e2"], c2 ) ] )
+		self.assertEqual( s["e2"].preTasks( c1 ), [ GafferDispatch.ExecutableNode.Task( s["e2"], c2 ) ] )
 		# e2 in the other context requires e1 with the original context
-		self.assertEqual( s["e2"].requirements( c2 ), [ GafferDispatch.ExecutableNode.Task( s["e1"], c1 ) ] )
+		self.assertEqual( s["e2"].preTasks( c2 ), [ GafferDispatch.ExecutableNode.Task( s["e1"], c1 ) ] )
 		# e1 requires itself with a different context
-		self.assertEqual( s["e1"].requirements( c1 ), [ GafferDispatch.ExecutableNode.Task( s["e1"], c2 ) ] )
+		self.assertEqual( s["e1"].preTasks( c1 ), [ GafferDispatch.ExecutableNode.Task( s["e1"], c2 ) ] )
 		# e1 in the other context has no requirements
-		self.assertEqual( s["e1"].requirements( c2 ), [] )
+		self.assertEqual( s["e1"].preTasks( c2 ), [] )
 
 		self.assertEqual( s["e1"].preExecutionCount, 0 )
 		self.assertEqual( s["e1"].mainExecutionCount, 0 )
@@ -972,7 +972,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 				GafferDispatch.ExecutableNode.__init__( self, name )
 
-			def requirements( self, context ) :
+			def preTasks( self, context ) :
 
 				assert( context.isSame( Gaffer.Context.current() ) )
 
@@ -981,7 +981,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 				upstreamContext.setFrame( 10 )
 
 				result = []
-				for plug in self["requirements"] :
+				for plug in self["preTasks"] :
 					node = plug.source().node()
 					if node.isSame( self ) or not isinstance( node, GafferDispatch.ExecutableNode ):
 						continue
@@ -1007,7 +1007,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		s["e"].setExpression( 'parent["w"]["text"] = context["myText"]' )
 
 		s["c"] = ContextChangingExecutable()
-		s["c"]["requirements"][0].setInput( s["w"]["requirement"] )
+		s["c"]["preTasks"][0].setInput( s["w"]["task"] )
 
 		GafferDispatch.Dispatcher.create( "testDispatcher" ).dispatch( [ s["c"] ] )
 

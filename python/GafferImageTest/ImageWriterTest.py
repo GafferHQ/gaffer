@@ -102,7 +102,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		w = GafferImage.ImageWriter()
 		p = GafferImage.ImagePlug( direction = Gaffer.Plug.Direction.Out )
 
-		self.failIf( w['requirements']['requirement0'].acceptsInput( p ) )
+		self.failIf( w["preTasks"][0].acceptsInput( p ) )
 		self.failUnless( w["in"].acceptsInput( p ) )
 
 	def testTiffWrite( self ) :
@@ -918,7 +918,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		s["w2"] = GafferImage.ImageWriter()
 		s["w2"]["in"].setInput( s["r"]["out"] )
 		s["w2"]["fileName"].setValue( self.temporaryDirectory() + "/test2.exr" )
-		s["w2"]["requirements"][0].setInput( s["w1"]["requirement"] )
+		s["w2"]["preTasks"][0].setInput( s["w1"]["task"] )
 
 		d = GafferDispatch.LocalDispatcher()
 		d["jobsDirectory"].setValue( self.temporaryDirectory() + "/jobs" )

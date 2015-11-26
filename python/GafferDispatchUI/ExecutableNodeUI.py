@@ -52,7 +52,7 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"requirements" : (
+		"preTasks" : (
 
 			"description",
 			"""
@@ -67,7 +67,7 @@ Gaffer.Metadata.registerNode(
 
 		),
 
-		"requirement" : (
+		"task" : (
 
 			"description",
 			"""

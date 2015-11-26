@@ -88,9 +88,9 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		s["n2"] = createWriter( "n2" )
 		s["n2a"] = createWriter( "n2a" )
 		s["n2b"] = createWriter( "n2b" )
-		s["n1"]['requirements'][0].setInput( s["n2"]['requirement'] )
-		s["n2"]['requirements'][0].setInput( s["n2a"]['requirement'] )
-		s["n2"]['requirements'][1].setInput( s["n2b"]['requirement'] )
+		s["n1"]["preTasks"][0].setInput( s["n2"]["task"] )
+		s["n2"]["preTasks"][0].setInput( s["n2a"]["task"] )
+		s["n2"]["preTasks"][1].setInput( s["n2b"]["task"] )
 
 		# No files should exist yet
 		self.assertEqual( os.path.isfile( fileName ), False )
@@ -184,9 +184,9 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		s["n2"] = createWriter( "n2" )
 		s["n2a"] = createWriter( "n2a" )
 		s["n2b"] = createWriter( "n2b" )
-		s["n1"]['requirements'][0].setInput( s["n2"]['requirement'] )
-		s["n2"]['requirements'][0].setInput( s["n2a"]['requirement'] )
-		s["n2"]['requirements'][1].setInput( s["n2b"]['requirement'] )
+		s["n1"]["preTasks"][0].setInput( s["n2"]["task"] )
+		s["n2"]["preTasks"][0].setInput( s["n2a"]["task"] )
+		s["n2"]["preTasks"][1].setInput( s["n2b"]["task"] )
 
 		# No files should exist yet
 		self.assertEqual( os.path.isfile( fileName ), False )
@@ -241,9 +241,9 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		s["n2"] = createWriter( "n2" )
 		s["n2a"] = createWriter( "n2a" )
 		s["n2b"] = createWriter( "n2b" )
-		s["n1"]['requirements'][0].setInput( s["n2"]['requirement'] )
-		s["n2"]['requirements'][0].setInput( s["n2a"]['requirement'] )
-		s["n2"]['requirements'][1].setInput( s["n2b"]['requirement'] )
+		s["n1"]["preTasks"][0].setInput( s["n2"]["task"] )
+		s["n2"]["preTasks"][0].setInput( s["n2a"]["task"] )
+		s["n2"]["preTasks"][1].setInput( s["n2b"]["task"] )
 
 		# No files should exist yet
 		self.assertEqual( os.path.isfile( fileName ), False )
@@ -407,10 +407,10 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		s["n2a"] = createWriter( "n2a" )
 		s["n2b"] = createWriter( "n2b" )
 		s["n3"] = createWriter( "n3" )
-		s["n1"]['requirements'][0].setInput( s["n2"]['requirement'] )
-		s["n1"]['requirements'][1].setInput( s["n3"]['requirement'] )
-		s["n2"]['requirements'][0].setInput( s["n2a"]['requirement'] )
-		s["n2"]['requirements'][1].setInput( s["n2b"]['requirement'] )
+		s["n1"]["preTasks"][0].setInput( s["n2"]["task"] )
+		s["n1"]["preTasks"][1].setInput( s["n3"]["task"] )
+		s["n2"]["preTasks"][0].setInput( s["n2a"]["task"] )
+		s["n2"]["preTasks"][1].setInput( s["n2b"]["task"] )
 
 		dispatcher = GafferDispatch.Dispatcher.create( "LocalTest" )
 		dispatcher["executeInBackground"].setValue( True )
@@ -487,8 +487,8 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		s["n3"] = GafferDispatchTest.TextWriter()
 		s["n3"]["fileName"].setValue( "/tmp/dispatcherTest/n3_####.txt" )
 		s["n3"]["text"].setValue( "n3 on ${frame}" )
-		s["n1"]['requirements'][0].setInput( s["n2"]['requirement'] )
-		s["n2"]['requirements'][0].setInput( s["n3"]['requirement'] )
+		s["n1"]["preTasks"][0].setInput( s["n2"]["task"] )
+		s["n2"]["preTasks"][0].setInput( s["n3"]["task"] )
 
 		dispatcher = GafferDispatch.Dispatcher.create( "LocalTest" )
 		dispatcher.dispatch( [ s["n1"] ] )

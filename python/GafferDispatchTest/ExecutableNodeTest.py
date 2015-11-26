@@ -146,8 +146,7 @@ class ExecutableNodeTest( GafferTest.TestCase ) :
 		n = GafferDispatchTest.CountingExecutableNode()
 		self.assertEqual( n.requiresSequenceExecution(), False )
 
-	def testRequirements( self ) :
-		"""Test the function requirements and Executable::defaultRequirements """
+	def testPreTasks( self ) :
 
 		c1 = Gaffer.Context()
 		c1.setFrame( 1 )
@@ -158,11 +157,11 @@ class ExecutableNodeTest( GafferTest.TestCase ) :
 		n2 = GafferDispatchTest.CountingExecutableNode()
 
 		# make n2 require n
-		n2["requirements"][0].setInput( n['requirement'] )
+		n2["preTasks"][0].setInput( n["task"] )
 
-		self.assertEqual( n.requirements(c1), [] )
-		self.assertEqual( n2.requirements(c1), [ GafferDispatch.ExecutableNode.Task( n, c1 ) ] )
-		self.assertEqual( n2.requirements(c2), [ GafferDispatch.ExecutableNode.Task( n, c2 ) ] )
+		self.assertEqual( n.preTasks(c1), [] )
+		self.assertEqual( n2.preTasks(c1), [ GafferDispatch.ExecutableNode.Task( n, c1 ) ] )
+		self.assertEqual( n2.preTasks(c2), [ GafferDispatch.ExecutableNode.Task( n, c2 ) ] )
 
 	def testTaskConstructors( self ) :
 
@@ -265,56 +264,56 @@ class ExecutableNodeTest( GafferTest.TestCase ) :
 		s["a"] = GafferDispatchTest.TextWriter()
 		s["b"] = GafferDispatchTest.TextWriter()
 		s["n"] = Gaffer.Node()
-		s["n"]["requirement"] = Gaffer.Plug( direction = Gaffer.Plug.Direction.Out )
+		s["n"]["task"] = Gaffer.Plug( direction = Gaffer.Plug.Direction.Out )
 
 		# the ExecutableNode shouldn't accept inputs from any old node
 
-		self.assertTrue( s["b"]["requirements"][0].acceptsInput( s["a"]["requirement"] ) )
-		self.assertFalse( s["b"]["requirements"][0].acceptsInput( s["n"]["requirement"] ) )
+		self.assertTrue( s["b"]["preTasks"][0].acceptsInput( s["a"]["task"] ) )
+		self.assertFalse( s["b"]["preTasks"][0].acceptsInput( s["n"]["task"] ) )
 
 		# and that shouldn't change just because we happen to be inside a box
 
 		b = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["a"], s["b"], s["n"] ] ) )
 
-		self.assertTrue( b["b"]["requirements"][0].acceptsInput( b["a"]["requirement"] ) )
-		self.assertFalse( b["b"]["requirements"][0].acceptsInput( b["n"]["requirement"] ) )
+		self.assertTrue( b["b"]["preTasks"][0].acceptsInput( b["a"]["task"] ) )
+		self.assertFalse( b["b"]["preTasks"][0].acceptsInput( b["n"]["task"] ) )
 
 	def testInputAcceptanceFromBoxes( self ) :
 
 		s = Gaffer.ScriptNode()
 
 		s["n"] = Gaffer.Node()
-		s["n"]["requirement"] = Gaffer.Plug( direction = Gaffer.Plug.Direction.Out )
+		s["n"]["task"] = Gaffer.Plug( direction = Gaffer.Plug.Direction.Out )
 		s["a"] = GafferDispatchTest.TextWriter()
 
 		s["b"] = Gaffer.Box()
 		s["b"]["a"] = GafferDispatchTest.TextWriter()
 		s["b"]["b"] = GafferDispatchTest.TextWriter()
 		s["b"]["n"] = Gaffer.Node()
-		s["b"]["n"]["requirement"] = Gaffer.Plug( direction = Gaffer.Plug.Direction.Out )
-		s["b"]["in"] = s["b"]["a"]["requirements"][0].createCounterpart( "in", Gaffer.Plug.Direction.In )
-		s["b"]["out"] = s["b"]["a"]["requirement"].createCounterpart( "out", Gaffer.Plug.Direction.Out )
+		s["b"]["n"]["task"] = Gaffer.Plug( direction = Gaffer.Plug.Direction.Out )
+		s["b"]["in"] = s["b"]["a"]["preTasks"][0].createCounterpart( "in", Gaffer.Plug.Direction.In )
+		s["b"]["out"] = s["b"]["a"]["task"].createCounterpart( "out", Gaffer.Plug.Direction.Out )
 
 		# ExecutableNodes should accept connections speculatively from unconnected box inputs and outputs
 
-		self.assertTrue( s["b"]["a"]["requirements"][0].acceptsInput( s["b"]["in"] ) )
-		self.assertTrue( s["a"]["requirements"][0].acceptsInput( s["b"]["out"] ) )
+		self.assertTrue( s["b"]["a"]["preTasks"][0].acceptsInput( s["b"]["in"] ) )
+		self.assertTrue( s["a"]["preTasks"][0].acceptsInput( s["b"]["out"] ) )
 
 		# But the promoted plugs shouldn't accept any old inputs.
 
-		self.assertFalse( s["b"]["in"].acceptsInput( s["n"]["requirement"] ) )
-		self.assertFalse( s["b"]["out"].acceptsInput( s["b"]["n"]["requirement"] ) )
+		self.assertFalse( s["b"]["in"].acceptsInput( s["n"]["task"] ) )
+		self.assertFalse( s["b"]["out"].acceptsInput( s["b"]["n"]["task"] ) )
 
 		# We should be able to connect them up only to other appropriate requirement plugs.
 
-		self.assertTrue( s["a"]["requirements"][0].acceptsInput( s["b"]["out"] ) )
+		self.assertTrue( s["a"]["preTasks"][0].acceptsInput( s["b"]["out"] ) )
 
 		s["c"] = GafferDispatchTest.TextWriter()
-		s["b"]["in"].setInput( s["c"]["requirement"] )
-		self.assertTrue( s["b"]["a"]["requirements"][0].acceptsInput( s["b"]["in"] ) )
+		s["b"]["in"].setInput( s["c"]["task"] )
+		self.assertTrue( s["b"]["a"]["preTasks"][0].acceptsInput( s["b"]["in"] ) )
 
-		s["b"]["out"].setInput( s["b"]["b"]["requirement"] )
-		self.assertTrue( s["a"]["requirements"][0].acceptsInput( s["b"]["out"] ) )
+		s["b"]["out"].setInput( s["b"]["b"]["task"] )
+		self.assertTrue( s["a"]["preTasks"][0].acceptsInput( s["b"]["out"] ) )
 
 	def testInputAcceptanceFromDots( self ) :
 
@@ -322,21 +321,21 @@ class ExecutableNodeTest( GafferTest.TestCase ) :
 		e2 = GafferDispatchTest.TextWriter()
 
 		d1 = Gaffer.Dot()
-		d1.setup( e1["requirement"] )
+		d1.setup( e1["task"] )
 
-		self.assertTrue( e2["requirements"][0].acceptsInput( d1["out"] ) )
+		self.assertTrue( e2["preTasks"][0].acceptsInput( d1["out"] ) )
 
-		d1["in"].setInput( e1["requirement"] )
+		d1["in"].setInput( e1["task"] )
 
-		self.assertTrue( e2["requirements"][0].acceptsInput( d1["out"] ) )
+		self.assertTrue( e2["preTasks"][0].acceptsInput( d1["out"] ) )
 
-	def testReferencePromotedRequirementPlug( self ) :
+	def testReferencePromotedPreTasksPlug( self ) :
 
 		s = Gaffer.ScriptNode()
 
 		s["b"] = Gaffer.Box()
 		s["b"]["e"] = GafferDispatchTest.TextWriter()
-		p = s["b"].promotePlug( s["b"]["e"]["requirements"][0] )
+		p = s["b"].promotePlug( s["b"]["e"]["preTasks"][0] )
 		p.setName( "p" )
 
 		s["b"].exportForReference( self.temporaryDirectory() + "/test.grf" )
@@ -346,15 +345,15 @@ class ExecutableNodeTest( GafferTest.TestCase ) :
 
 		s["e"] = GafferDispatchTest.TextWriter()
 
-		s["r"]["p"].setInput( s["e"]["requirement"] )
+		s["r"]["p"].setInput( s["e"]["task"] )
 
-	def testReferencePromotedRequirementsPlug( self ) :
+	def testReferencePromotedPreTasksPlug( self ) :
 
 		s = Gaffer.ScriptNode()
 
 		s["b"] = Gaffer.Box()
 		s["b"]["e"] = GafferDispatchTest.TextWriter()
-		p = s["b"].promotePlug( s["b"]["e"]["requirements"] )
+		p = s["b"].promotePlug( s["b"]["e"]["preTasks"] )
 		p.setName( "p" )
 
 		s["b"].exportForReference( self.temporaryDirectory() + "/test.grf" )
@@ -364,9 +363,9 @@ class ExecutableNodeTest( GafferTest.TestCase ) :
 
 		s["e"] = GafferDispatchTest.TextWriter()
 
-		s["r"]["p"][0].setInput( s["e"]["requirement"] )
+		s["r"]["p"][0].setInput( s["e"]["task"] )
 
-		self.assertTrue( s["r"]["e"]["requirements"][0].source().isSame( s["e"]["requirement"] ) )
+		self.assertTrue( s["r"]["e"]["preTasks"][0].source().isSame( s["e"]["task"] ) )
 
 	def testLoadPromotedRequirementsFromVersion0_15( self ) :
 

@@ -60,8 +60,8 @@ class TaskSwitchTest( GafferTest.TestCase ) :
 		s["s"] = GafferDispatch.TaskSwitch()
 		self.assertEqual( s["s"]["index"].getValue(), 0 )
 
-		s["s"]["requirements"][0].setInput( s["c1"]["requirement"] )
-		s["s"]["requirements"][1].setInput( s["c2"]["requirement"] )
+		s["s"]["preTasks"][0].setInput( s["c1"]["task"] )
+		s["s"]["preTasks"][1].setInput( s["c2"]["task"] )
 
 		d = self.__dispatcher()
 		d.dispatch( [ s["s"] ] )
@@ -90,9 +90,9 @@ class TaskSwitchTest( GafferTest.TestCase ) :
 		s["c3"] = GafferDispatchTest.CountingExecutableNode()
 
 		s["s"] = GafferDispatch.TaskSwitch()
-		s["s"]["requirements"][0].setInput( s["c1"]["requirement"] )
-		s["s"]["requirements"][1].setInput( s["c2"]["requirement"] )
-		s["s"]["requirements"][2].setInput( s["c3"]["requirement"] )
+		s["s"]["preTasks"][0].setInput( s["c1"]["task"] )
+		s["s"]["preTasks"][1].setInput( s["c2"]["task"] )
+		s["s"]["preTasks"][2].setInput( s["c3"]["task"] )
 
 		s["e"] = Gaffer.Expression()
 		s["e"].setExpression( "parent['s']['index'] = context.getFrame()" )
@@ -136,9 +136,9 @@ class TaskSwitchTest( GafferTest.TestCase ) :
 		s["c2"] = GafferDispatchTest.CountingExecutableNode()
 
 		s["s"] = GafferDispatch.TaskSwitch()
-		s["s"]["requirements"][0].setInput( s["c1"]["requirement"] )
-		s["s"]["requirements"][1].setInput( s["c2"]["requirement"] )
-		s["s"]["requirements"][0].setInput( None )
+		s["s"]["preTasks"][0].setInput( s["c1"]["task"] )
+		s["s"]["preTasks"][1].setInput( s["c2"]["task"] )
+		s["s"]["preTasks"][0].setInput( None )
 		s["s"]["index"].setValue( 0 )
 
 		d = self.__dispatcher()

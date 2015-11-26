@@ -59,7 +59,7 @@ class TaskContextVariablesTest( GafferTest.TestCase ) :
 		script["writer"]["fileName"].setValue( self.temporaryDirectory() + "/${name}.txt" )
 
 		script["variables"] = GafferDispatch.TaskContextVariables()
-		script["variables"]["requirements"][0].setInput( script["writer"]["requirement"] )
+		script["variables"]["preTasks"][0].setInput( script["writer"]["task"] )
 		script["variables"]["variables"].addMember( "name", "jimbob" )
 
 		self.__dispatcher().dispatch( [ script["variables"] ] )
@@ -80,7 +80,7 @@ class TaskContextVariablesTest( GafferTest.TestCase ) :
 		script["writer"]["fileName"].setValue( self.temporaryDirectory() + "/${name1}${name2}.txt" )
 
 		script["variables"] = GafferDispatch.TaskContextVariables()
-		script["variables"]["requirements"][0].setInput( script["writer"]["requirement"] )
+		script["variables"]["preTasks"][0].setInput( script["writer"]["task"] )
 		jim = script["variables"]["variables"].addOptionalMember( "name1", "jim", enabled = False )
 		bob = script["variables"]["variables"].addOptionalMember( "name2", "bob", enabled = True )
 
@@ -102,7 +102,7 @@ class TaskContextVariablesTest( GafferTest.TestCase ) :
 		script["writer"]["fileName"].setValue( self.temporaryDirectory() + "/${name}.txt" )
 
 		script["variables"] = GafferDispatch.TaskContextVariables()
-		script["variables"]["requirements"][0].setInput( script["writer"]["requirement"] )
+		script["variables"]["preTasks"][0].setInput( script["writer"]["task"] )
 		script["variables"]["variables"].addMember( "name", "jimbob" )
 
 		dispatcher = self.__dispatcher()

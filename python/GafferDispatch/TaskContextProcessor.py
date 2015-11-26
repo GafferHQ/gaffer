@@ -45,12 +45,12 @@ class TaskContextProcessor( GafferDispatch.ExecutableNode ) :
 
 		GafferDispatch.ExecutableNode.__init__( self, name )
 
-	def requirements( self, context ) :
+	def preTasks( self, context ) :
 
 		contexts = self._processedContexts( context )
 
 		result = []
-		for plug in self["requirements"] :
+		for plug in self["preTasks"] :
 
 			node = plug.source().node()
 			if node.isSame( self ) or not isinstance( node, GafferDispatch.ExecutableNode ):
@@ -70,7 +70,7 @@ class TaskContextProcessor( GafferDispatch.ExecutableNode ) :
 
 		# We don't need to do anything here because our
 		# sole purpose is to manipulate the context
-		# in which our requirements are executed.
+		# in which our preTasks are executed.
 		pass
 
 	## Must be implemented by derived classes to return

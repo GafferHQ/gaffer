@@ -66,7 +66,7 @@ class WedgeTest( GafferTest.TestCase ) :
 		script["writer"]["fileName"].setValue( self.temporaryDirectory() + "/${name}.txt" )
 
 		script["wedge"] = GafferDispatch.Wedge()
-		script["wedge"]["requirements"][0].setInput( script["writer"]["requirement"] )
+		script["wedge"]["preTasks"][0].setInput( script["writer"]["task"] )
 		script["wedge"]["variable"].setValue( "name" )
 		script["wedge"]["mode"].setValue( int( GafferDispatch.Wedge.Mode.StringList ) )
 		script["wedge"]["strings"].setValue( IECore.StringVectorData( [ "tom", "dick", "harry" ] ) )
@@ -90,7 +90,7 @@ class WedgeTest( GafferTest.TestCase ) :
 		script["writer"]["fileName"].setValue( self.temporaryDirectory() + "/${wedge:value}.txt" )
 
 		script["wedge"] = GafferDispatch.Wedge()
-		script["wedge"]["requirements"][0].setInput( script["writer"]["requirement"] )
+		script["wedge"]["preTasks"][0].setInput( script["writer"]["task"] )
 		script["wedge"]["mode"].setValue( int( GafferDispatch.Wedge.Mode.IntList ) )
 		script["wedge"]["ints"].setValue( IECore.IntVectorData( [ 1, 21, 44 ] ) )
 
@@ -114,7 +114,7 @@ class WedgeTest( GafferTest.TestCase ) :
 		script["writer"]["text"].setValue( "${wedge:value}" )
 
 		script["wedge"] = GafferDispatch.Wedge()
-		script["wedge"]["requirements"][0].setInput( script["writer"]["requirement"] )
+		script["wedge"]["preTasks"][0].setInput( script["writer"]["task"] )
 		script["wedge"]["mode"].setValue( int( GafferDispatch.Wedge.Mode.FloatList ) )
 		script["wedge"]["floats"].setValue( IECore.FloatVectorData( [ 1.25, 2.75, 44.0 ] ) )
 
@@ -141,7 +141,7 @@ class WedgeTest( GafferTest.TestCase ) :
 		script["writer"]["fileName"].setValue( self.temporaryDirectory() + "/${number}.txt" )
 
 		script["wedge"] = GafferDispatch.Wedge()
-		script["wedge"]["requirements"][0].setInput( script["writer"]["requirement"] )
+		script["wedge"]["preTasks"][0].setInput( script["writer"]["task"] )
 		script["wedge"]["variable"].setValue( "number" )
 		script["wedge"]["mode"].setValue( int( GafferDispatch.Wedge.Mode.IntRange ) )
 		script["wedge"]["intMin"].setValue( 3 )
@@ -168,7 +168,7 @@ class WedgeTest( GafferTest.TestCase ) :
 		script["writer"]["text"].setValue( "${wedge:value}" )
 
 		script["wedge"] = GafferDispatch.Wedge()
-		script["wedge"]["requirements"][0].setInput( script["writer"]["requirement"] )
+		script["wedge"]["preTasks"][0].setInput( script["writer"]["task"] )
 		script["wedge"]["mode"].setValue( int( GafferDispatch.Wedge.Mode.FloatRange ) )
 		script["wedge"]["floatMin"].setValue( 0 )
 		script["wedge"]["floatMax"].setValue( 1 )
@@ -202,7 +202,7 @@ class WedgeTest( GafferTest.TestCase ) :
 		script["writer"]["text"].setValue( "${wedge:value}" )
 
 		script["wedge"] = GafferDispatch.Wedge()
-		script["wedge"]["requirements"][0].setInput( script["writer"]["requirement"] )
+		script["wedge"]["preTasks"][0].setInput( script["writer"]["task"] )
 		script["wedge"]["mode"].setValue( int( GafferDispatch.Wedge.Mode.FloatRange ) )
 		script["wedge"]["floatMin"].setValue( 0 )
 		script["wedge"]["floatMax"].setValue( 1 )
@@ -250,7 +250,7 @@ class WedgeTest( GafferTest.TestCase ) :
 		script["expression"].setExpression( 'c = context["wedge:value"]; parent["writer"]["text"] = "%.1f %.1f %.1f" % ( c[0], c[1], c[2] )' )
 
 		script["wedge"] = GafferDispatch.Wedge()
-		script["wedge"]["requirements"][0].setInput( script["writer"]["requirement"] )
+		script["wedge"]["preTasks"][0].setInput( script["writer"]["task"] )
 		script["wedge"]["mode"].setValue( int( GafferDispatch.Wedge.Mode.ColorRange ) )
 		script["wedge"]["colorSteps"].setValue( 3 )
 
@@ -277,7 +277,7 @@ class WedgeTest( GafferTest.TestCase ) :
 		script["writer"]["fileName"].setValue( self.temporaryDirectory() + "/${wedge:x}.${wedge:y}.txt" )
 
 		script["wedgeX"] = GafferDispatch.Wedge()
-		script["wedgeX"]["requirements"][0].setInput( script["writer"]["requirement"] )
+		script["wedgeX"]["preTasks"][0].setInput( script["writer"]["task"] )
 		script["wedgeX"]["variable"].setValue( "wedge:x" )
 		script["wedgeX"]["mode"].setValue( int( GafferDispatch.Wedge.Mode.IntRange ) )
 		script["wedgeX"]["intMin"].setValue( 1 )
@@ -285,7 +285,7 @@ class WedgeTest( GafferTest.TestCase ) :
 		script["wedgeX"]["intStep"].setValue( 1 )
 
 		script["wedgeY"] = GafferDispatch.Wedge()
-		script["wedgeY"]["requirements"][0].setInput( script["wedgeX"]["requirement"] )
+		script["wedgeY"]["preTasks"][0].setInput( script["wedgeX"]["task"] )
 		script["wedgeY"]["variable"].setValue( "wedge:y" )
 		script["wedgeY"]["mode"].setValue( int( GafferDispatch.Wedge.Mode.IntRange ) )
 		script["wedgeY"]["intMin"].setValue( 1 )
@@ -314,7 +314,7 @@ class WedgeTest( GafferTest.TestCase ) :
 		script["writer"]["fileName"].setValue( self.temporaryDirectory() + "/${name}.####.txt" )
 
 		script["wedge"] = GafferDispatch.Wedge()
-		script["wedge"]["requirements"][0].setInput( script["writer"]["requirement"] )
+		script["wedge"]["preTasks"][0].setInput( script["writer"]["task"] )
 		script["wedge"]["variable"].setValue( "name" )
 		script["wedge"]["mode"].setValue( int( GafferDispatch.Wedge.Mode.StringList ) )
 		script["wedge"]["strings"].setValue( IECore.StringVectorData( [ "tom", "dick", "harry" ] ) )
@@ -340,11 +340,11 @@ class WedgeTest( GafferTest.TestCase ) :
 		script["constant"] = GafferDispatchTest.CountingExecutableNode()
 
 		script["writer"] = GafferDispatchTest.TextWriter()
-		script["writer"]["requirements"][0].setInput( script["constant"]["requirement"] )
+		script["writer"]["preTasks"][0].setInput( script["constant"]["task"] )
 		script["writer"]["fileName"].setValue( self.temporaryDirectory() + "/${name}.txt" )
 
 		script["wedge"] = GafferDispatch.Wedge()
-		script["wedge"]["requirements"][0].setInput( script["writer"]["requirement"] )
+		script["wedge"]["preTasks"][0].setInput( script["writer"]["task"] )
 		script["wedge"]["variable"].setValue( "name" )
 		script["wedge"]["mode"].setValue( int( GafferDispatch.Wedge.Mode.StringList ) )
 		script["wedge"]["strings"].setValue( IECore.StringVectorData( [ "tom", "dick", "harry" ] ) )

@@ -47,12 +47,12 @@ class TaskSwitch( GafferDispatch.ExecutableNode ) :
 
 		self["index"] = Gaffer.IntPlug( minValue = 0 )
 
-	def requirements( self, context ) :
+	def preTasks( self, context ) :
 
 		index = self["index"].getValue()
-		index = index % ( len( self["requirements"] ) - 1 )
+		index = index % ( len( self["preTasks"] ) - 1 )
 
-		node = self["requirements"][index].source().node()
+		node = self["preTasks"][index].source().node()
 		if not isinstance( node, GafferDispatch.ExecutableNode ) or node.isSame( self ) :
 			return []
 
@@ -67,8 +67,8 @@ class TaskSwitch( GafferDispatch.ExecutableNode ) :
 	def execute( self ) :
 
 		# We don't need to do anything here because our
-		# sole purpose is to manipulate the context
-		# in which our requirements are executed.
+		# sole purpose is to determine which upstream
+		# node is executed.
 		pass
 
 IECore.registerRunTimeTyped( TaskSwitch, typeName = "GafferDispatch::TaskSwitch" )

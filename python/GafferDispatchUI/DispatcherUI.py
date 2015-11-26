@@ -512,7 +512,7 @@ def selectedNodes( script ) :
 		if isinstance( n, Gaffer.ExecutableNode):
 			result.append( n )
 		elif isinstance( n, Gaffer.SubGraph ) :
-			for p in n.children( Gaffer.ExecutableNode.RequirementPlug ) :
+			for p in n.children( Gaffer.ExecutableNode.TaskPlug ) :
 				if p.direction() == Gaffer.Plug.Direction.Out and p.source() :
 					result.append( n )
 
