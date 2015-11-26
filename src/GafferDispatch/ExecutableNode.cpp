@@ -86,22 +86,22 @@ bool ExecutableNode::Task::operator < ( const Task &rhs ) const
 }
 
 //////////////////////////////////////////////////////////////////////////
-// RequirementPlug implementation.
+// TaskPlug implementation.
 //////////////////////////////////////////////////////////////////////////
 
-IE_CORE_DEFINERUNTIMETYPED( ExecutableNode::RequirementPlug );
+IE_CORE_DEFINERUNTIMETYPED( ExecutableNode::TaskPlug );
 
-ExecutableNode::RequirementPlug::RequirementPlug( const std::string &name, Direction direction, unsigned flags )
+ExecutableNode::TaskPlug::TaskPlug( const std::string &name, Direction direction, unsigned flags )
 	:	Plug( name, direction, flags )
 {
 }
 
-bool ExecutableNode::RequirementPlug::acceptsChild( const Gaffer::GraphComponent *potentialChild ) const
+bool ExecutableNode::TaskPlug::acceptsChild( const Gaffer::GraphComponent *potentialChild ) const
 {
 	return false;
 }
 
-bool ExecutableNode::RequirementPlug::acceptsInput( const Plug *input ) const
+bool ExecutableNode::TaskPlug::acceptsInput( const Plug *input ) const
 {
 	if( !Plug::acceptsInput( input ) )
 	{
@@ -120,7 +120,7 @@ bool ExecutableNode::RequirementPlug::acceptsInput( const Plug *input ) const
 
 	// Ideally we'd return false right now, but we must
 	// provide backwards compatibility with old scripts
-	// where the requirement plugs were just represented
+	// where the task plugs were just represented
 	// as standard Plugs, and may have been promoted to
 	// Boxes and Dots in that form.
 	if( input->typeId() == Plug::staticTypeId() )
@@ -138,9 +138,9 @@ bool ExecutableNode::RequirementPlug::acceptsInput( const Plug *input ) const
 
 }
 
-PlugPtr ExecutableNode::RequirementPlug::createCounterpart( const std::string &name, Direction direction ) const
+PlugPtr ExecutableNode::TaskPlug::createCounterpart( const std::string &name, Direction direction ) const
 {
-	return new RequirementPlug( name, direction, getFlags() );
+	return new TaskPlug( name, direction, getFlags() );
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -155,8 +155,8 @@ ExecutableNode::ExecutableNode( const std::string &name )
 	:	Node( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
-	addChild( new ArrayPlug( "requirements", Plug::In, new RequirementPlug( "requirement0" ) ) );
-	addChild( new RequirementPlug( "requirement", Plug::Out ) );
+	addChild( new ArrayPlug( "preTasks", Plug::In, new TaskPlug( "preTask0" ) ) );
+	addChild( new TaskPlug( "task", Plug::Out ) );
 
 	PlugPtr dispatcherPlug = new Plug( "dispatcher", Plug::In );
 	addChild( dispatcherPlug );
@@ -168,24 +168,24 @@ ExecutableNode::~ExecutableNode()
 {
 }
 
-ArrayPlug *ExecutableNode::requirementsPlug()
+ArrayPlug *ExecutableNode::preTasksPlug()
 {
 	return getChild<ArrayPlug>( g_firstPlugIndex );
 }
 
-const ArrayPlug *ExecutableNode::requirementsPlug() const
+const ArrayPlug *ExecutableNode::preTasksPlug() const
 {
 	return getChild<ArrayPlug>( g_firstPlugIndex );
 }
 
-ExecutableNode::RequirementPlug *ExecutableNode::requirementPlug()
+ExecutableNode::TaskPlug *ExecutableNode::taskPlug()
 {
-	return getChild<RequirementPlug>( g_firstPlugIndex + 1 );
+	return getChild<TaskPlug>( g_firstPlugIndex + 1 );
 }
 
-const ExecutableNode::RequirementPlug *ExecutableNode::requirementPlug() const
+const ExecutableNode::TaskPlug *ExecutableNode::taskPlug() const
 {
-	return getChild<RequirementPlug>( g_firstPlugIndex + 1 );
+	return getChild<TaskPlug>( g_firstPlugIndex + 1 );
 }
 
 Plug *ExecutableNode::dispatcherPlug()
@@ -198,9 +198,9 @@ const Plug *ExecutableNode::dispatcherPlug() const
 	return getChild<Plug>( g_firstPlugIndex + 2 );
 }
 
-void ExecutableNode::requirements( const Context *context, Tasks &requirements ) const
+void ExecutableNode::preTasks( const Context *context, Tasks &tasks ) const
 {
-	for( PlugIterator cIt( requirementsPlug() ); cIt != cIt.end(); ++cIt )
+	for( PlugIterator cIt( preTasksPlug() ); cIt != cIt.end(); ++cIt )
 	{
 		Plug *p = (*cIt)->source<Plug>();
 		if( p != *cIt )
@@ -209,7 +209,7 @@ void ExecutableNode::requirements( const Context *context, Tasks &requirements )
 			{
 				/// \todo Can we not just reuse the context? Maybe we need to make
 				/// the context in Task const?
-				requirements.push_back( Task( n, new Context( *context ) ) );
+				tasks.push_back( Task( n, new Context( *context ) ) );
 			}
 		}
 	}

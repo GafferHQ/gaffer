@@ -702,16 +702,16 @@ class DispatcherTest( GafferTest.TestCase ) :
 		s["n4"]["mode"].setValue( "a" )
 		s["n4"]["fileName"].setValue( fileName )
 		s["n4"]["text"].setValue( "n4 on ${frame};" )
-		s["b"].promotePlug( s["b"]["n3"]["requirements"]["requirement0"] )
-		s["b"]["requirements_requirement0"].setInput( s["n1"]['requirement'] )
+		promotedPreTaskPlug = s["b"].promotePlug( s["b"]["n3"]["requirements"]["requirement0"] )
+		promotedPreTaskPlug.setInput( s["n1"]['requirement'] )
 		s["b"]["n3"]["requirements"][1].setInput( s["b"]["n2"]['requirement'] )
-		s["b"].promotePlug( s["b"]["n3"]['requirement'] )
-		s["n4"]['requirements'][0].setInput( s["b"]['requirement'] )
+		promotedTaskPlug = s["b"].promotePlug( s["b"]["n3"]['requirement'] )
+		s["n4"]['requirements'][0].setInput( promotedTaskPlug )
 		# export a reference too
 		s["b"].exportForReference( "/tmp/dispatcherTest/test.grf" )
 		s["r"] = Gaffer.Reference()
 		s["r"].load( "/tmp/dispatcherTest/test.grf" )
-		s["r"]["requirements_requirement0"].setInput( s["n1"]['requirement'] )
+		s["r"][promotedPreTaskPlug.getName()].setInput( s["n1"]['requirement'] )
 
 		# dispatch an Executable that requires a Box
 
@@ -792,7 +792,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		# dispatch an Executable that requires a Reference
 
 		os.remove( fileName )
-		s["n4"]['requirements'][0].setInput( s["r"]['requirement'] )
+		s["n4"]['requirements'][0].setInput( s["r"][promotedTaskPlug.getName()] )
 		self.assertEqual( os.path.isfile( fileName ), False )
 		dispatcher.dispatch( [ s["n4"] ] )
 		shutil.rmtree( dispatcher.jobDirectory() )

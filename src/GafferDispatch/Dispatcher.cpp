@@ -343,15 +343,15 @@ void Dispatcher::batchTasksWalk( Dispatcher::TaskBatchPtr parent, const Executab
 		parentRequirements.push_back( batch );
 	}
 
-	ExecutableNode::Tasks taskRequirements;
+	ExecutableNode::Tasks preTasks;
 	{
 		Context::Scope scopedTaskContext( task.context() );
-		task.node()->requirements( task.context(), taskRequirements );
+		task.node()->preTasks( task.context(), preTasks );
 	}
 
 	ancestors.insert( parent.get() );
 
-	for ( ExecutableNode::Tasks::const_iterator it = taskRequirements.begin(); it != taskRequirements.end(); ++it )
+	for( ExecutableNode::Tasks::const_iterator it = preTasks.begin(); it != preTasks.end(); ++it )
 	{
 		batchTasksWalk( batch, *it, currentBatches, tasksToBatches, ancestors );
 	}

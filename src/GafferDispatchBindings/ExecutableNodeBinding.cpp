@@ -101,10 +101,10 @@ void GafferDispatchBindings::bindExecutableNode()
 		.def("__hash__", &taskHash )
 	;
 
-	PlugClass<ExecutableNode::RequirementPlug>()
+	PlugClass<ExecutableNode::TaskPlug>()
 		.def( init<const char *, Plug::Direction, unsigned>(
 				(
-					boost::python::arg_( "name" )=GraphComponent::defaultName<ExecutableNode::RequirementPlug>(),
+					boost::python::arg_( "name" )=GraphComponent::defaultName<ExecutableNode::TaskPlug>(),
 					boost::python::arg_( "direction" )=Plug::In,
 					boost::python::arg_( "flags" )=Plug::Default
 				)
@@ -112,7 +112,7 @@ void GafferDispatchBindings::bindExecutableNode()
 		)
 		// Adjusting the name so that it correctly reflects
 		// the nesting, and can be used by the PlugSerialiser.
-		.attr( "__name__" ) = "ExecutableNode.RequirementPlug"
+		.attr( "__name__" ) = "ExecutableNode.TaskPlug"
 	;
 
 }

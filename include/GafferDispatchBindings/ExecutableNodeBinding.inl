@@ -48,10 +48,10 @@ namespace Detail
 {
 
 template<typename T>
-boost::python::list requirements( T &n, Gaffer::Context *context )
+boost::python::list preTasks( T &n, Gaffer::Context *context )
 {
 	GafferDispatch::ExecutableNode::Tasks tasks;
-	n.T::requirements( context, tasks );
+	n.T::preTasks( context, tasks );
 	boost::python::list result;
 	for( GafferDispatch::ExecutableNode::Tasks::const_iterator tIt = tasks.begin(); tIt != tasks.end(); ++tIt )
 	{
@@ -94,7 +94,7 @@ template<typename T, typename Ptr>
 ExecutableNodeClass<T, Ptr>::ExecutableNodeClass( const char *docString )
 	:	GafferBindings::NodeClass<T, Ptr>( docString )
 {
-	this->def( "requirements", &Detail::requirements<T> );
+	this->def( "preTasks", &Detail::preTasks<T> );
 	this->def( "hash", &Detail::hash<T> );
 	this->def( "execute", &Detail::execute<T> );
 	this->def( "executeSequence", &Detail::executeSequence<T> );

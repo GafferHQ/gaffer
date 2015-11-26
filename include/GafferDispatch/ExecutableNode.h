@@ -66,21 +66,24 @@ class ExecutableNode : public Gaffer::Node
 
 	public :
 
-		/// A Task defines the execution of an ExecutableNode given a specific Context.
-		/// Tasks are used to describe requirements between ExecutableNodes, and by
-		/// Dispatchers to schedule context specific execution. Tasks are immutable,
-		/// and their hash is computed at construction, matching the node's hash()
-		/// for the given context. The hash is used to define the comparison operators,
-		/// and any changes made to the node after construction invalidate the Task.
-		/// Changing the Context is acceptable, as the Task has its own copy.
+		/// Defines the execution of an ExecutableNode in a specific Context.
 		class Task
 		{
 			public :
 
 				Task( const Task &t );
+				/// Constructs a task representing the execution of
+				/// node n in context c. A copy of the context is
+				/// taken.
 				Task( ExecutableNodePtr n, Gaffer::ContextPtr c );
+				/// Returns the node to be executed.
 				const ExecutableNode *node() const;
+				/// Returns the context to execute the node in.
 				const Gaffer::Context *context() const;
+				/// A hash uniquely representing the side effects
+				/// of the task. This is stored from ExecutableNode::hash()
+				/// during construction, so editing the node or upstream
+				/// graph will invalidate the hash (and therefore the task).
 				const IECore::MurmurHash hash() const;
 				bool operator == ( const Task &rhs ) const;
 				bool operator < ( const Task &rhs ) const;
@@ -103,14 +106,14 @@ class ExecutableNode : public Gaffer::Node
 
 		/// The plug type used to connect ExecutableNodes
 		/// together to define order of execution.
-		class RequirementPlug : public Gaffer::Plug
+		class TaskPlug : public Gaffer::Plug
 		{
 
 			public :
 
-				IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferDispatch::ExecutableNode::RequirementPlug, ExecutableNodeRequirementPlugTypeId, Gaffer::Plug );
+				IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferDispatch::ExecutableNode::TaskPlug, ExecutableNodeTaskPlugTypeId, Gaffer::Plug );
 
-				RequirementPlug( const std::string &name=defaultName<RequirementPlug>(), Direction direction=In, unsigned flags=Default );
+				TaskPlug( const std::string &name=defaultName<TaskPlug>(), Direction direction=In, unsigned flags=Default );
 
 				virtual bool acceptsChild( const Gaffer::GraphComponent *potentialChild ) const;
 				virtual bool acceptsInput( const Gaffer::Plug *input ) const;
@@ -118,16 +121,18 @@ class ExecutableNode : public Gaffer::Node
 
 		};
 
-		typedef Gaffer::FilteredChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::Invalid, RequirementPlug> > RequirementPlugIterator;
-		IE_CORE_DECLAREPTR( RequirementPlug )
+		typedef Gaffer::FilteredChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::Invalid, TaskPlug> > TaskPlugIterator;
+		IE_CORE_DECLAREPTR( TaskPlug )
 
-		/// Array of ExecutableNodes which must be executed before this node can execute successfully.
-		Gaffer::ArrayPlug *requirementsPlug();
-		const Gaffer::ArrayPlug *requirementsPlug() const;
+		/// Input plugs to which upstream tasks may be connected to cause them
+		/// to be executed before this node.
+		Gaffer::ArrayPlug *preTasksPlug();
+		const Gaffer::ArrayPlug *preTasksPlug() const;
 
-		/// Output plug used by other ExecutableNodes to declare this node as a requirement.
-		RequirementPlug *requirementPlug();
-		const RequirementPlug *requirementPlug() const;
+		/// Output plug which can be connected to downstream preTasks plugs to cause
+		/// this node to be executed before the downstream nodes.
+		TaskPlug *taskPlug();
+		const TaskPlug *taskPlug() const;
 
 		/// Parent plug used by Dispatchers to expose per-node dispatcher settings.
 		/// See the "ExecutableNode Customization" section of the Gaffer::Dispatcher
@@ -135,11 +140,11 @@ class ExecutableNode : public Gaffer::Node
 		Gaffer::Plug *dispatcherPlug();
 		const Gaffer::Plug *dispatcherPlug() const;
 
-		/// Fills requirements with all Tasks that must be completed before execute
+		/// Fills tasks with all Tasks that must be completed before execute
 		/// can be called with the given context. The default implementation collects
-		/// the Tasks defined by the inputs of the requirementsPlug().
+		/// the upstream Tasks connected into the preTasksPlug().
 		/// \todo Remove the context argument and use the current context instead.
-		virtual void requirements( const Gaffer::Context *context, Tasks &requirements ) const;
+		virtual void preTasks( const Gaffer::Context *context, Tasks &tasks ) const;
 
 		/// Returns a hash that uniquely represents the side effects (e.g. files created)
 		/// of calling execute with the given context. Derived nodes should call the base

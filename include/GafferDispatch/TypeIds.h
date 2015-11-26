@@ -44,7 +44,7 @@ enum TypeId
 {
 
 	ExecutableNodeTypeId = 110160,
-	ExecutableNodeRequirementPlugTypeId = 110161,
+	ExecutableNodeTaskPlugTypeId = 110161,
 	DispatcherTypeId = 110162,
 
 	LastTypeId = 110180,

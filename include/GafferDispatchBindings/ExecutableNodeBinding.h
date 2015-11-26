@@ -37,6 +37,8 @@
 #ifndef GAFFERDISPATCHBINDINGS_EXECUTABLENODEBINDING_H
 #define GAFFERDISPATCHBINDINGS_EXECUTABLENODEBINDING_H
 
+#include "boost/python/suite/indexing/container_utils.hpp"
+
 #include "IECorePython/ScopedGILLock.h"
 
 #include "GafferBindings/NodeBinding.h"
@@ -67,28 +69,28 @@ class ExecutableNodeWrapper : public GafferBindings::NodeWrapper<WrappedType>
 		{
 		}
 
-		virtual void requirements( const Gaffer::Context *context, GafferDispatch::ExecutableNode::Tasks &requirements ) const
+		virtual void preTasks( const Gaffer::Context *context, GafferDispatch::ExecutableNode::Tasks &tasks ) const
 		{
 			if( this->isSubclassed() )
 			{
 				IECorePython::ScopedGILLock gilLock;
-				boost::python::object req = this->methodOverride( "requirements" );
-				if( req )
+				boost::python::object override = this->methodOverride( "preTasks" );
+				if( !override )
 				{
-					boost::python::list requirementList = boost::python::extract<boost::python::list>(
-						req( Gaffer::ContextPtr( const_cast<Gaffer::Context *>( context ) ) )
-					);
+					// backwards compatibility with old method name
+					override = this->methodOverride( "requirements" );
+				}
 
-					size_t len = boost::python::len( requirementList );
-					requirements.reserve( len );
-					for( size_t i = 0; i < len; i++ )
-					{
-						requirements.push_back( boost::python::extract<GafferDispatch::ExecutableNode::Task>( requirementList[i] ) );
-					}
+				if( override )
+				{
+					boost::python::list pythonTasks = boost::python::extract<boost::python::list>(
+						override( Gaffer::ContextPtr( const_cast<Gaffer::Context *>( context ) ) )
+					);
+					boost::python::container_utils::extend_container( tasks, pythonTasks );
 					return;
 				}
 			}
-			WrappedType::requirements( context, requirements );
+			WrappedType::preTasks( context, tasks );
 		}
 
 		virtual IECore::MurmurHash hash( const Gaffer::Context *context ) const
