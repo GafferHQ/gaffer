@@ -40,6 +40,7 @@
 
 #include "GafferScene/ShaderAssignment.h"
 #include "GafferScene/Shader.h"
+#include "GafferScene/Light.h"
 #include "GafferScene/ShaderSwitch.h"
 
 using namespace IECore;
@@ -159,8 +160,25 @@ IECore::ConstCompoundObjectPtr ShaderAssignment::computeProcessedAttributes( con
 		return inputAttributes;
 	}
 
+	std::string type;
 	const IECore::Shader *primaryShader = runTimeCast<IECore::Shader>( state->members().back().get() );
-	if( !primaryShader || !primaryShader->getType().size() )
+	const IECore::Light *primaryLight = runTimeCast<IECore::Light>( state->members().back().get() );
+	if( primaryShader && primaryShader->getType().size() )
+	{
+		type = primaryShader->getType();
+	}
+	else if( primaryLight )
+	{
+		size_t colon = primaryLight->getName().find( ":" );
+
+		if( colon == std::string::npos )
+		{
+			return inputAttributes;
+		}
+
+		type = primaryLight->getName().substr( 0, colon ) + ":light";
+	}
+	else
 	{
 		return inputAttributes;
 	}
@@ -176,7 +194,7 @@ IECore::ConstCompoundObjectPtr ShaderAssignment::computeProcessedAttributes( con
 	// returned, will also be treated as const and cached. for that reason the
 	// temporary const_cast needed to put it into the result is justified -
 	// we never change the object and nor can anyone after it is returned.
-	result->members()[primaryShader->getType()] = boost::const_pointer_cast<ObjectVector>( state );
+	result->members()[type] = boost::const_pointer_cast<ObjectVector>( state );
 
 	return result;
 }

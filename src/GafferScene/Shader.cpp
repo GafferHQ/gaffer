@@ -365,15 +365,23 @@ IECore::StateRenderable *Shader::NetworkBuilder::shader( const Shader *shaderNod
 		return shaderAndHash.shader.get();
 	}
 
+	const std::string &shaderType = shaderNode->typePlug()->getValue();
 	if( boost::ends_with( shaderNode->typePlug()->getValue(), ":light" ) )
 	{
-		IECore::Light *lightShader =  new IECore::Light( shaderNode->namePlug()->getValue(), shaderNode->typePlug()->getValue() );
+		std::string prefix = "";
+		size_t colon = shaderType.find_first_of( ":" );
+		if( colon != std::string::npos )
+		{
+			prefix = shaderType.substr( 0, colon );
+		}
+
+		IECore::Light *lightShader =  new IECore::Light( prefix + ":" + shaderNode->namePlug()->getValue(), "LIGHT_HANDLE_UNUSED" );
 		parameterValueWalk( shaderNode, shaderNode->parametersPlug(), IECore::InternedString(), lightShader->parameters() );
 		shaderAndHash.shader = lightShader;
 	}
 	else
 	{
-		IECore::ShaderPtr shaderShader = new IECore::Shader( shaderNode->namePlug()->getValue(), shaderNode->typePlug()->getValue() );
+		IECore::ShaderPtr shaderShader = new IECore::Shader( shaderNode->namePlug()->getValue(), shaderType );
 		parameterValueWalk( shaderNode, shaderNode->parametersPlug(), IECore::InternedString(), shaderShader->parameters() );
 		shaderAndHash.shader = shaderShader;
 	}
