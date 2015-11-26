@@ -252,13 +252,28 @@ bool outputLight( const ScenePlug *scene, const ScenePlug::ScenePath &path, IECo
 
 				if( !constLight ) continue;
 
-				InternedString metadataTarget = "light:" + constLight->getName();
-				ConstM44fDataPtr orientation = Metadata::value<M44fData>( metadataTarget, "renderOrientation" );
+				LightPtr light = constLight->copy();
 
-				AttributeBlock attributeBlock( renderer );
-				if( orientation )
+				bool areaLight = false;
+				const BoolData *areaLightParm = light->parametersData()->member<BoolData>( "__areaLight" );
+				if( areaLightParm )
 				{
-					renderer->concatTransform( orientation->readable() );
+					areaLight = areaLightParm->readable();
+				}
+
+				/// If this is a non-areaLight which could have orientation metadata,
+				/// add an extra attribute block to contain it
+				AttributeBlock attributeBlock( renderer, !areaLight );
+
+				if( !areaLight )
+				{
+					InternedString metadataTarget = "light:" + constLight->getName();
+					ConstM44fDataPtr orientation = Metadata::value<M44fData>( metadataTarget, "renderOrientation" );
+
+					if( orientation )
+					{
+						renderer->concatTransform( orientation->readable() );
+					}
 				}
 
 				for( unsigned int i = 0; i < lightShaders->members().size() - 1; i++ )
@@ -270,8 +285,6 @@ bool outputLight( const ScenePlug *scene, const ScenePlug::ScenePath &path, IECo
 					}
 				}
 
-				LightPtr light = NULL;
-				light = constLight->copy();
 				light->setHandle( lightHandle );
 
 				light->render( renderer );
