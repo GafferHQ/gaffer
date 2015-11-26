@@ -172,10 +172,10 @@ class DispatcherWrapper : public NodeWrapper<Dispatcher>
 			return result;
 		}
 
-		static boost::python::list taskBatchGetRequirements( const Dispatcher::TaskBatchPtr &batch )
+		static boost::python::list taskBatchGetPreTasks( const Dispatcher::TaskBatchPtr &batch )
 		{
 			boost::python::list result;
-			for ( std::vector<TaskBatchPtr>::const_iterator it = batch->requirements().begin(); it != batch->requirements().end(); ++it )
+			for( std::vector<TaskBatchPtr>::const_iterator it = batch->preTasks().begin(); it != batch->preTasks().end(); ++it )
 			{
 				result.append( *it );
 			}
@@ -331,7 +331,7 @@ void GafferDispatchBindings::bindDispatcher()
 		.def( "node", &DispatcherWrapper::taskBatchGetNode )
 		.def( "context", &DispatcherWrapper::taskBatchGetContext, ( boost::python::arg_( "_copy" ) = true ) )
 		.def( "frames", &DispatcherWrapper::taskBatchGetFrames )
-		.def( "requirements", &DispatcherWrapper::taskBatchGetRequirements )
+		.def( "preTasks", &DispatcherWrapper::taskBatchGetPreTasks )
 		.def( "blindData", &DispatcherWrapper::taskBatchGetBlindData )
 	;
 

@@ -198,7 +198,7 @@ void Dispatcher::dispatch( const std::vector<NodePtr> &nodes ) const
 
 	TaskBatchPtr rootBatch = batchTasks( tasks );
 
-	if ( !rootBatch->requirements().empty() )
+	if( !rootBatch->preTasks().empty() )
 	{
 		doDispatch( rootBatch.get() );
 	}
@@ -332,15 +332,15 @@ void Dispatcher::batchTasksWalk( Dispatcher::TaskBatchPtr parent, const Executab
 {
 	TaskBatchPtr batch = acquireBatch( task, currentBatches, tasksToBatches );
 
-	TaskBatches &parentRequirements = parent->requirements();
-	if ( std::find( parentRequirements.begin(), parentRequirements.end(), batch ) == parentRequirements.end() )
+	TaskBatches &parentPreTasks = parent->preTasks();
+	if( std::find( parentPreTasks.begin(), parentPreTasks.end(), batch ) == parentPreTasks.end() )
 	{
 		if ( ancestors.find( batch.get() ) != ancestors.end() )
 		{
 			throw IECore::Exception( ( boost::format( "Dispatched nodes cannot have cyclic dependencies. %s and %s are involved in a cycle." ) % batch->node()->relativeName( batch->node()->scriptNode() ) % parent->node()->relativeName( parent->node()->scriptNode() ) ).str() );
 		}
 
-		parentRequirements.push_back( batch );
+		parentPreTasks.push_back( batch );
 	}
 
 	ExecutableNode::Tasks preTasks;
@@ -470,13 +470,12 @@ FrameListPtr Dispatcher::frameRange( const ScriptNode *script, const Context *co
 //////////////////////////////////////////////////////////////////////////
 
 Dispatcher::TaskBatch::TaskBatch()
-	: m_node(), m_context(), m_frames(), m_requirements()
 {
 	m_blindData = new CompoundData;
 }
 
 Dispatcher::TaskBatch::TaskBatch( const ExecutableNode::Task &task )
-	: m_node( task.node() ), m_context( task.context() ), m_frames(), m_requirements()
+	: m_node( task.node() ), m_context( task.context() )
 {
 	m_blindData = new CompoundData;
 
@@ -487,7 +486,7 @@ Dispatcher::TaskBatch::TaskBatch( const ExecutableNode::Task &task )
 }
 
 Dispatcher::TaskBatch::TaskBatch( const TaskBatch &other )
-	: m_node( other.m_node ), m_context( other.m_context ), m_blindData( other.m_blindData ), m_frames( other.m_frames ), m_requirements( other.m_requirements )
+	: m_node( other.m_node ), m_context( other.m_context ), m_blindData( other.m_blindData ), m_frames( other.m_frames ), m_preTasks( other.m_preTasks )
 {
 }
 
@@ -522,14 +521,14 @@ const std::vector<float> &Dispatcher::TaskBatch::frames() const
 	return m_frames;
 }
 
-std::vector<Dispatcher::TaskBatchPtr> &Dispatcher::TaskBatch::requirements()
+std::vector<Dispatcher::TaskBatchPtr> &Dispatcher::TaskBatch::preTasks()
 {
-	return m_requirements;
+	return m_preTasks;
 }
 
-const std::vector<Dispatcher::TaskBatchPtr> &Dispatcher::TaskBatch::requirements() const
+const std::vector<Dispatcher::TaskBatchPtr> &Dispatcher::TaskBatch::preTasks() const
 {
-	return m_requirements;
+	return m_preTasks;
 }
 
 CompoundData *Dispatcher::TaskBatch::blindData()

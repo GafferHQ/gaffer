@@ -199,7 +199,14 @@ class Dispatcher : public Gaffer::Node
 
 		typedef std::vector<TaskBatchPtr> TaskBatches;
 
-		/// Representation of a Task and its requirements.
+		/// A batch of tasks to be executed together, along
+		/// with references to batches of preTasks which must
+		/// be executed first. This DAG is the primary
+		/// data structure used in the dispatch process.
+		///
+		/// All tasks within a batch are from the same node
+		/// and have identical contexts except for the frame
+		/// number.
 		class TaskBatch : public IECore::RefCounted
 		{
 			public :
@@ -218,8 +225,8 @@ class Dispatcher : public Gaffer::Node
 				std::vector<float> &frames();
 				const std::vector<float> &frames() const;
 
-				std::vector<TaskBatchPtr> &requirements();
-				const std::vector<TaskBatchPtr> &requirements() const;
+				std::vector<TaskBatchPtr> &preTasks();
+				const std::vector<TaskBatchPtr> &preTasks() const;
 
 				IECore::CompoundData *blindData();
 				const IECore::CompoundData *blindData() const;
@@ -230,15 +237,14 @@ class Dispatcher : public Gaffer::Node
 				Gaffer::ConstContextPtr m_context;
 				IECore::CompoundDataPtr m_blindData;
 				std::vector<float> m_frames;
-				TaskBatches m_requirements;
+				TaskBatches m_preTasks;
 
 		};
 
-		/// Derived classes should implement doDispatch to dispatch the execution of
-		/// the given TaskBatches, taking care to respect each set of requirements,
-		/// executing required Tasks as well when necessary. Note that it is possible
-		/// for an individual TaskBatch to appear multiple times within the graph of
-		/// TaskBatches. It is the responsibility of derived classes to track which
+		/// Must be implemented by derived classes to execute the DAG of task batches,
+		/// taking care that all Batch::preTasks() are executed before the batch itself.
+		/// Note that it is possible for an individual TaskBatch to appear multiple
+		/// times within the graph. It is the responsibility of derived classes to track which
 		/// batches have been dispatched in order to prevent duplicate work.
 		virtual void doDispatch( const TaskBatch *batch ) const = 0;
 
@@ -261,11 +267,8 @@ class Dispatcher : public Gaffer::Node
 		typedef std::map<IECore::MurmurHash, TaskBatchPtr> BatchMap;
 		typedef std::map<IECore::MurmurHash, TaskBatchPtr> TaskToBatchMap;
 
-		// Utility functions that recursively collect all nodes and their execution requirements,
-		// arranging them into a graph of TaskBatches. Tasks will be grouped by executionHash,
-		// and the requirements will be a union of the requirements from all equivalent Tasks.
-		// Tasks with otherwise identical Contexts also be grouped into batches of frames. Nodes
-		// which require sequence execution will be grouped together as well.
+		// Utility functions that recursively collect all tasks and their preTasks,
+		// arranging them into a graph of TaskBatches ready for dispatch.
 		static TaskBatchPtr batchTasks( const ExecutableNode::Tasks &tasks );
 		static void batchTasksWalk( TaskBatchPtr parent, const ExecutableNode::Task &task, BatchMap &currentBatches, TaskToBatchMap &tasksToBatches, std::set<const TaskBatch *> &ancestors );
 		static TaskBatchPtr acquireBatch( const ExecutableNode::Task &task, BatchMap &currentBatches, TaskToBatchMap &tasksToBatches );
