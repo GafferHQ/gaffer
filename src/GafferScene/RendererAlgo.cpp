@@ -258,13 +258,24 @@ bool outputLight( const ScenePlug *scene, const ScenePlug::ScenePath &path, IECo
 
 				if( !constLight ) continue;
 
-				InternedString metadataTarget = "light:" + constLight->getName();
-				ConstM44fDataPtr orientation = Metadata::value<M44fData>( metadataTarget, "renderOrientation" );
-
-				AttributeBlock attributeBlock( renderer );
-				if( orientation )
+				bool areaLight = false;
+				const BoolData *areaLightParm = constLight->parametersData()->member<BoolData>( "__areaLight" );
+				if( areaLightParm )
 				{
-					renderer->concatTransform( orientation->readable() );
+					areaLight = areaLightParm->readable();
+				}
+
+				AttributeBlock *attributeBlock = NULL;
+				if( !areaLight )
+				{
+					attributeBlock = new AttributeBlock( renderer );
+					InternedString metadataTarget = "light:" + constLight->getName();
+					ConstM44fDataPtr orientation = Metadata::value<M44fData>( metadataTarget, "renderOrientation" );
+
+					if( orientation )
+					{
+						renderer->concatTransform( orientation->readable() );
+					}
 				}
 
 				for( unsigned int i = 0; i < lightShaders->members().size() - 1; i++ )
@@ -281,6 +292,10 @@ bool outputLight( const ScenePlug *scene, const ScenePlug::ScenePath &path, IECo
 				light->setHandle( lightHandle );
 
 				light->render( renderer );
+				if( attributeBlock )
+				{
+					delete attributeBlock;
+				}
 			}
 		}
 
