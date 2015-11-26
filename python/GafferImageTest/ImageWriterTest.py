@@ -761,7 +761,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		i["format"].setValue( GafferImage.Format( IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 100 ) ), 1 ) )
 
 		c = GafferImage.Crop()
-		c["areaSource"].setValue( GafferImage.Crop.AreaSource.Custom )
+		c["areaSource"].setValue( GafferImage.Crop.AreaSource.Area )
 		c["area"].setValue( IECore.Box2i( IECore.V2i( 40 ), IECore.V2i( 40 ) ) )
 		c["affectDisplayWindow"].setValue( False )
 		c["affectDataWindow"].setValue( True )
