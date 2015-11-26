@@ -50,6 +50,7 @@ from SystemCommandTest import SystemCommandTest
 from TaskListTest import TaskListTest
 from WedgeTest import WedgeTest
 from TaskContextVariablesTest import TaskContextVariablesTest
+from ExecuteApplicationTest import ExecuteApplicationTest
 
 if __name__ == "__main__":
 	import unittest

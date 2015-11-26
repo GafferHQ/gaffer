@@ -81,7 +81,6 @@ from AboutTest import AboutTest
 from ChildSetTest import ChildSetTest
 from PythonApplicationTest import PythonApplicationTest
 from ApplicationRootTest import ApplicationRootTest
-from ExecuteApplicationTest import ExecuteApplicationTest
 from ContextTest import ContextTest
 from CompoundPathFilterTest import CompoundPathFilterTest
 from BadNode import BadNode

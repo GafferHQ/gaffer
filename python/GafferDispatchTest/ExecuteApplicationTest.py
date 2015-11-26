@@ -43,6 +43,7 @@ import IECore
 
 import Gaffer
 import GafferTest
+import GafferDispatchTest
 
 class ExecuteApplicationTest( GafferTest.TestCase ) :
 
@@ -215,7 +216,7 @@ class ExecuteApplicationTest( GafferTest.TestCase ) :
 
 		s = Gaffer.ScriptNode()
 		s["fileName"].setValue( self.__scriptFileName )
-		s["t"] = GafferTest.TextWriter()
+		s["t"] = GafferDispatchTest.TextWriter()
 		s["t"]["fileName"].setValue( "" ) # will cause an error
 		s.save()
 
@@ -235,7 +236,7 @@ class ExecuteApplicationTest( GafferTest.TestCase ) :
 
 		s = Gaffer.ScriptNode()
 		s["fileName"].setValue( self.__scriptFileNameWithSpecialCharacters )
-		s["t"] = GafferTest.TextWriter()
+		s["t"] = GafferDispatchTest.TextWriter()
 		s["t"]["fileName"].setValue( self.__outputTextFile )
 		s.save()
 
@@ -251,4 +252,3 @@ class ExecuteApplicationTest( GafferTest.TestCase ) :
 
 if __name__ == "__main__":
 	unittest.main()
-
