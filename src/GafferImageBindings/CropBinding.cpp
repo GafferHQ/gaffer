@@ -53,7 +53,8 @@ void bindCrop()
 	scope s = GafferBindings::DependencyNodeClass<Crop>();
 
 	enum_<Crop::AreaSource>( "AreaSource" )
-		.value( "Custom", Crop::Custom )
+		.value( "Area", Crop::Area )
+		.value( "Format", Crop::Format )
 		.value( "DataWindow", Crop::DataWindow )
 		.value( "DisplayWindow", Crop::DisplayWindow )
 	;
