@@ -1241,6 +1241,20 @@ a = A()"""
 		self.assertEqual( Gaffer.Metadata.nodeValue( s2, "serialiser:minorVersion" ), Gaffer.About.minorVersion() )
 		self.assertEqual( Gaffer.Metadata.nodeValue( s2, "serialiser:patchVersion" ), Gaffer.About.patchVersion() )
 
+	def testFramesPerSecond( self ) :
+
+		s = Gaffer.ScriptNode()
+		self.assertEqual( s["framesPerSecond"].getValue(), 24.0 )
+		self.assertEqual( s.context().getFramesPerSecond(), 24.0 )
+
+		s["framesPerSecond"].setValue( 48.0 )
+		self.assertEqual( s.context().getFramesPerSecond(), 48.0 )
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+		self.assertEqual( s2["framesPerSecond"].getValue(), 48.0 )
+		self.assertEqual( s2.context().getFramesPerSecond(), 48.0 )
+
 if __name__ == "__main__":
 	unittest.main()
 

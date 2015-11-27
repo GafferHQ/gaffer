@@ -219,6 +219,7 @@ ScriptNode::ScriptNode( const std::string &name )
 	frameRangePlug->addChild( frameEndPlug );
 	addChild( frameRangePlug );
 
+	addChild( new FloatPlug( "framesPerSecond", Plug::In, 24.0f, 0.0f ) );
 	addChild( new CompoundDataPlug( "variables" ) );
 
 	m_context->set( "script:name", std::string( "" ) );
@@ -272,14 +273,24 @@ const IntPlug *ScriptNode::frameEndPlug() const
 	return getChild<ValuePlug>( g_firstPlugIndex + 2 )->getChild<IntPlug>( 1 );
 }
 
+FloatPlug *ScriptNode::framesPerSecondPlug()
+{
+	return getChild<FloatPlug>( g_firstPlugIndex + 3 );
+}
+
+const FloatPlug *ScriptNode::framesPerSecondPlug() const
+{
+	return getChild<FloatPlug>( g_firstPlugIndex + 3 );
+}
+
 CompoundDataPlug *ScriptNode::variablesPlug()
 {
-	return getChild<CompoundDataPlug>( g_firstPlugIndex + 3 );
+	return getChild<CompoundDataPlug>( g_firstPlugIndex + 4 );
 }
 
 const CompoundDataPlug *ScriptNode::variablesPlug() const
 {
-	return getChild<CompoundDataPlug>( g_firstPlugIndex + 3 );
+	return getChild<CompoundDataPlug>( g_firstPlugIndex + 4 );
 }
 
 bool ScriptNode::acceptsParent( const GraphComponent *potentialParent ) const
@@ -628,7 +639,6 @@ const Context *ScriptNode::context() const
 
 void ScriptNode::plugSet( Plug *plug )
 {
-	/// \todo Implement this min/max behaviour enforcement as a Behaviour subclass.
 	if( plug == frameStartPlug() )
 	{
 		frameEndPlug()->setValue( std::max( frameEndPlug()->getValue(), frameStartPlug()->getValue() ) );
@@ -636,6 +646,10 @@ void ScriptNode::plugSet( Plug *plug )
 	else if( plug == frameEndPlug() )
 	{
 		frameStartPlug()->setValue( std::min( frameStartPlug()->getValue(), frameEndPlug()->getValue() ) );
+	}
+	else if( plug == framesPerSecondPlug() )
+	{
+		context()->setFramesPerSecond( framesPerSecondPlug()->getValue() );
 	}
 	else if( plug == variablesPlug() )
 	{

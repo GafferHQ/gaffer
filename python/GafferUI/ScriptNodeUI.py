@@ -110,6 +110,16 @@ Gaffer.Metadata.registerNode(
 
 		),
 
+		"framesPerSecond" : (
+
+			"description",
+			"""
+			The framerate used to convert between the current
+			frame number and the time in seconds.
+			""",
+
+		),
+
 		"variables" : (
 
 			"description",
