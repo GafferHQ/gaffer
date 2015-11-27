@@ -232,6 +232,56 @@ ScriptNode::~ScriptNode()
 {
 }
 
+StringPlug *ScriptNode::fileNamePlug()
+{
+	return getChild<StringPlug>( g_firstPlugIndex );
+}
+
+const StringPlug *ScriptNode::fileNamePlug() const
+{
+	return getChild<StringPlug>( g_firstPlugIndex );
+}
+
+BoolPlug *ScriptNode::unsavedChangesPlug()
+{
+	return getChild<BoolPlug>( g_firstPlugIndex + 1 );
+}
+
+const BoolPlug *ScriptNode::unsavedChangesPlug() const
+{
+	return getChild<BoolPlug>( g_firstPlugIndex + 1 );
+}
+
+IntPlug *ScriptNode::frameStartPlug()
+{
+	return getChild<ValuePlug>( g_firstPlugIndex + 2 )->getChild<IntPlug>( 0 );
+}
+
+const IntPlug *ScriptNode::frameStartPlug() const
+{
+	return getChild<ValuePlug>( g_firstPlugIndex + 2 )->getChild<IntPlug>( 0 );
+}
+
+IntPlug *ScriptNode::frameEndPlug()
+{
+	return getChild<ValuePlug>( g_firstPlugIndex + 2 )->getChild<IntPlug>( 1 );
+}
+
+const IntPlug *ScriptNode::frameEndPlug() const
+{
+	return getChild<ValuePlug>( g_firstPlugIndex + 2 )->getChild<IntPlug>( 1 );
+}
+
+CompoundDataPlug *ScriptNode::variablesPlug()
+{
+	return getChild<CompoundDataPlug>( g_firstPlugIndex + 3 );
+}
+
+const CompoundDataPlug *ScriptNode::variablesPlug() const
+{
+	return getChild<CompoundDataPlug>( g_firstPlugIndex + 3 );
+}
+
 bool ScriptNode::acceptsParent( const GraphComponent *potentialParent ) const
 {
 	return potentialParent->isInstanceOf( ScriptContainer::staticTypeId() );
@@ -521,26 +571,6 @@ void ScriptNode::deleteNodes( Node *parent, const Set *filter, bool reconnect )
 	}
 }
 
-StringPlug *ScriptNode::fileNamePlug()
-{
-	return getChild<StringPlug>( g_firstPlugIndex );
-}
-
-const StringPlug *ScriptNode::fileNamePlug() const
-{
-	return getChild<StringPlug>( g_firstPlugIndex );
-}
-
-BoolPlug *ScriptNode::unsavedChangesPlug()
-{
-	return getChild<BoolPlug>( g_firstPlugIndex + 1 );
-}
-
-const BoolPlug *ScriptNode::unsavedChangesPlug() const
-{
-	return getChild<BoolPlug>( g_firstPlugIndex + 1 );
-}
-
 bool ScriptNode::execute( const std::string &pythonScript, Node *parent, bool continueOnError )
 {
 	throw IECore::Exception( "Cannot execute scripts on a ScriptNode not created in Python." );
@@ -594,36 +624,6 @@ Context *ScriptNode::context()
 const Context *ScriptNode::context() const
 {
 	return m_context.get();
-}
-
-CompoundDataPlug *ScriptNode::variablesPlug()
-{
-	return getChild<CompoundDataPlug>( g_firstPlugIndex + 3 );
-}
-
-const CompoundDataPlug *ScriptNode::variablesPlug() const
-{
-	return getChild<CompoundDataPlug>( g_firstPlugIndex + 3 );
-}
-
-IntPlug *ScriptNode::frameStartPlug()
-{
-	return getChild<ValuePlug>( g_firstPlugIndex + 2 )->getChild<IntPlug>( 0 );
-}
-
-const IntPlug *ScriptNode::frameStartPlug() const
-{
-	return getChild<ValuePlug>( g_firstPlugIndex + 2 )->getChild<IntPlug>( 0 );
-}
-
-IntPlug *ScriptNode::frameEndPlug()
-{
-	return getChild<ValuePlug>( g_firstPlugIndex + 2 )->getChild<IntPlug>( 1 );
-}
-
-const IntPlug *ScriptNode::frameEndPlug() const
-{
-	return getChild<ValuePlug>( g_firstPlugIndex + 2 )->getChild<IntPlug>( 1 );
 }
 
 void ScriptNode::plugSet( Plug *plug )
