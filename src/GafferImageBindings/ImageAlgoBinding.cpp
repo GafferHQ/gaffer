@@ -45,12 +45,6 @@ namespace GafferImageBindings
 void bindImageAlgo()
 {
 
-	def( "empty", &GafferImage::empty );
-	def( "intersects", &GafferImage::intersects );
-	def( "intersection", &GafferImage::intersection );
-	def( "clamp", &GafferImage::clamp );
-	def( "contains", ( bool (*)( const Imath::Box2i&, const Imath::V2i & ) )&GafferImage::contains );
-
 	def( "layerName", &GafferImage::layerName );
 	def( "baseName", &GafferImage::baseName );
 	def( "colorIndex", &GafferImage::colorIndex );
