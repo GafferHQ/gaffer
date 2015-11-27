@@ -75,6 +75,7 @@ from ResizeTest import ResizeTest
 from LUTTest import LUTTest
 from CDLTest import CDLTest
 from ImageAlgoTest import ImageAlgoTest
+from BufferAlgoTest import BufferAlgoTest
 from DisplayTransformTest import DisplayTransformTest
 from FormatPlugTest import FormatPlugTest
 from OffsetTest import OffsetTest
