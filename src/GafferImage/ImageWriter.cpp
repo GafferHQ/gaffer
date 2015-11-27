@@ -54,6 +54,7 @@ OIIO_NAMESPACE_USING
 
 #include "GafferImage/FormatPlug.h"
 #include "GafferImage/ImageAlgo.h"
+#include "GafferImage/BufferAlgo.h"
 #include "GafferImage/ImageWriter.h"
 #include "GafferImage/ImagePlug.h"
 #include "GafferImage/ChannelMaskPlug.h"
