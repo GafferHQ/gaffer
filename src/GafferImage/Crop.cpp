@@ -36,7 +36,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "GafferImage/Crop.h"
-#include "GafferImage/ImageAlgo.h"
+#include "GafferImage/BufferAlgo.h"
 #include "GafferImage/Offset.h"
 #include "GafferImage/FormatPlug.h"
 
