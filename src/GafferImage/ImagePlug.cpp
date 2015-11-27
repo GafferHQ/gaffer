@@ -40,6 +40,7 @@
 #include "GafferImage/ImagePlug.h"
 #include "GafferImage/FormatPlug.h"
 #include "GafferImage/ImageAlgo.h"
+#include "GafferImage/BufferAlgo.h"
 
 using namespace std;
 using namespace tbb;
