@@ -37,7 +37,7 @@
 #include "Gaffer/Context.h"
 
 #include "GafferImage/Offset.h"
-#include "GafferImage/ImageAlgo.h"
+#include "GafferImage/BufferAlgo.h"
 
 using namespace std;
 using namespace Imath;
