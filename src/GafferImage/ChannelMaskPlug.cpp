@@ -36,6 +36,7 @@
 
 #include "Gaffer/TypedObjectPlug.h"
 
+#include "GafferImage/ImagePlug.h"
 #include "GafferImage/ChannelMaskPlug.h"
 #include "GafferImage/ImageAlgo.h"
 
