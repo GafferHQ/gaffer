@@ -76,138 +76,6 @@ Dispatcher::~Dispatcher()
 {
 }
 
-namespace
-{
-
-/// Guard class for calling a dispatcher's preDispatchSignal(), then guaranteeing postDispatchSignal() gets called
-class DispatcherSignalGuard
-{
-public:
-	DispatcherSignalGuard( const Dispatcher* d, const std::vector<ExecutableNodePtr> &executables ) : m_dispatchSuccessful( false ), m_executables( executables ), m_dispatcher( d )
-	{
-		m_cancelledByPreDispatch = m_dispatcher->preDispatchSignal()( m_dispatcher, m_executables );
-	}
-
-	~DispatcherSignalGuard()
-	{
-		try
-		{
-			m_dispatcher->postDispatchSignal()( m_dispatcher, m_executables, (m_dispatchSuccessful && ( !m_cancelledByPreDispatch )) );
-		}
-		catch( const std::exception& e )
-		{
-			IECore::msg( IECore::Msg::Error, "postDispatchSignal exception:", e.what() );
-		}
-	}
-
-	bool cancelledByPreDispatch( )
-	{
-		return m_cancelledByPreDispatch;
-	}
-
-	void success()
-	{
-		m_dispatchSuccessful = true;
-	}
-
-private:
-
-	bool m_cancelledByPreDispatch;
-	bool m_dispatchSuccessful;
-
-	const std::vector<ExecutableNodePtr> &m_executables;
-	const Dispatcher* m_dispatcher;
-};
-
-}
-
-void Dispatcher::dispatch( const std::vector<NodePtr> &nodes ) const
-{
-	// clear job directory, so that if our node validation fails,
-	// jobDirectory() won't return the result from the previous dispatch.
-	m_jobDirectory = "";
-
-	// validate the nodes we've been given
-
-	if ( nodes.empty() )
-	{
-		throw IECore::Exception( getName().string() + ": Must specify at least one node to dispatch." );
-	}
-
-	std::vector<ExecutableNodePtr> executables;
-	const ScriptNode *script = (*nodes.begin())->scriptNode();
-	for ( std::vector<NodePtr>::const_iterator nIt = nodes.begin(); nIt != nodes.end(); ++nIt )
-	{
-		const ScriptNode *currentScript = (*nIt)->scriptNode();
-		if ( !currentScript || currentScript != script )
-		{
-			throw IECore::Exception( getName().string() + ": Dispatched nodes must all belong to the same ScriptNode." );
-		}
-
-		if ( ExecutableNode *executable = runTimeCast<ExecutableNode>( nIt->get() ) )
-		{
-			executables.push_back( executable );
-		}
-		else if ( const SubGraph *subGraph = runTimeCast<const SubGraph>( nIt->get() ) )
-		{
-			for ( RecursiveOutputPlugIterator plugIt( subGraph ); plugIt != plugIt.end(); ++plugIt )
-			{
-				Node *sourceNode = plugIt->get()->source<Plug>()->node();
-				if ( ExecutableNode *executable = runTimeCast<ExecutableNode>( sourceNode ) )
-				{
-					executables.push_back( executable );
-				}
-			}
-		}
-		else
-		{
-			throw IECore::Exception( getName().string() + ": Dispatched nodes must be ExecutableNodes or SubGraphs containing ExecutableNodes." );
-		}
-	}
-
-	// create the job directory now, so it's available in preDispatchSignal().
-	ContextPtr context = new Context( *Context::current(), Context::Borrowed );
-	m_jobDirectory = createJobDirectory( context.get() );
-	context->set( g_jobDirectoryContextEntry, m_jobDirectory );
-
-	// this object calls this->preDispatchSignal() in its constructor and this->postDispatchSignal()
-	// in its destructor, thereby guaranteeing that we always call this->postDispatchSignal().
-
-	DispatcherSignalGuard signalGuard( this, executables );
-	if ( signalGuard.cancelledByPreDispatch() )
-	{
-		return;
-	}
-
-	std::vector<FrameList::Frame> frames;
-	FrameListPtr frameList = frameRange( script, context.get() );
-	frameList->asList( frames );
-
-	size_t i = 0;
-	ExecutableNode::Tasks tasks;
-	tasks.reserve( executables.size() * frames.size() );
-	for ( std::vector<FrameList::Frame>::const_iterator fIt = frames.begin(); fIt != frames.end(); ++fIt )
-	{
-		for ( std::vector<ExecutableNodePtr>::const_iterator nIt = executables.begin(); nIt != executables.end(); ++nIt, ++i )
-		{
-			context->setFrame( *fIt );
-			tasks.push_back( ExecutableNode::Task( *nIt, context.get() ) );
-		}
-	}
-
-	TaskBatchPtr rootBatch = batchTasks( tasks );
-
-	if( !rootBatch->preTasks().empty() )
-	{
-		doDispatch( rootBatch.get() );
-	}
-
-	// inform the guard that the process has been completed, so it can pass this info to
-	// postDispatchSignal():
-
-	signalGuard.success();
-}
-
 IntPlug *Dispatcher::framesModePlug()
 {
 	return getChild<IntPlug>( g_firstPlugIndex );
@@ -311,134 +179,6 @@ void Dispatcher::setupPlugs( Plug *parentPlug )
 	}
 }
 
-Dispatcher::TaskBatchPtr Dispatcher::batchTasks( const ExecutableNode::Tasks &tasks )
-{
-	TaskBatchPtr root = new TaskBatch;
-
-	BatchMap currentBatches;
-	TaskToBatchMap tasksToBatches;
-	std::set<const TaskBatch *> ancestors;
-
-	for ( ExecutableNode::Tasks::const_iterator it = tasks.begin(); it != tasks.end(); ++it )
-	{
-		batchTasksWalk( root, *it, currentBatches, tasksToBatches, ancestors );
-	}
-
-	return root;
-}
-
-void Dispatcher::batchTasksWalk( Dispatcher::TaskBatchPtr parent, const ExecutableNode::Task &task, BatchMap &currentBatches, TaskToBatchMap &tasksToBatches, std::set<const TaskBatch *> &ancestors )
-{
-	TaskBatchPtr batch = acquireBatch( task, currentBatches, tasksToBatches );
-
-	TaskBatches &parentPreTasks = parent->preTasks();
-	if( std::find( parentPreTasks.begin(), parentPreTasks.end(), batch ) == parentPreTasks.end() )
-	{
-		if ( ancestors.find( batch.get() ) != ancestors.end() )
-		{
-			throw IECore::Exception( ( boost::format( "Dispatched nodes cannot have cyclic dependencies. %s and %s are involved in a cycle." ) % batch->node()->relativeName( batch->node()->scriptNode() ) % parent->node()->relativeName( parent->node()->scriptNode() ) ).str() );
-		}
-
-		parentPreTasks.push_back( batch );
-	}
-
-	ExecutableNode::Tasks preTasks;
-	{
-		Context::Scope scopedTaskContext( task.context() );
-		task.node()->preTasks( task.context(), preTasks );
-	}
-
-	ancestors.insert( parent.get() );
-
-	for( ExecutableNode::Tasks::const_iterator it = preTasks.begin(); it != preTasks.end(); ++it )
-	{
-		batchTasksWalk( batch, *it, currentBatches, tasksToBatches, ancestors );
-	}
-
-	ancestors.erase( parent.get() );
-}
-
-Dispatcher::TaskBatchPtr Dispatcher::acquireBatch( const ExecutableNode::Task &task, BatchMap &currentBatches, TaskToBatchMap &tasksToBatches )
-{
-	MurmurHash taskToBatchMapHash = task.hash();
-	taskToBatchMapHash.append( (uint64_t)task.node() );
-	TaskToBatchMap::iterator it = tasksToBatches.find( taskToBatchMapHash );
-	if ( it != tasksToBatches.end() )
-	{
-		return it->second;
-	}
-
-	MurmurHash batchMapHash = batchHash( task );
-	BatchMap::iterator bIt = currentBatches.find( batchMapHash );
-	if ( bIt != currentBatches.end() )
-	{
-		TaskBatchPtr batch = bIt->second;
-
-		std::vector<float> &frames = batch->frames();
-		const Plug *dispatcherPlug = task.node()->dispatcherPlug();
-		const IntPlug *batchSizePlug = dispatcherPlug->getChild<const IntPlug>( g_batchSize );
-		size_t batchSize = ( batchSizePlug ) ? batchSizePlug->getValue() : 1;
-
-		if ( task.node()->requiresSequenceExecution() || ( frames.size() < batchSize ) )
-		{
-			if ( task.hash() != MurmurHash() )
-			{
-				float frame = task.context()->getFrame();
-				if ( std::find( frames.begin(), frames.end(), frame ) == frames.end() )
-				{
-					if ( task.node()->requiresSequenceExecution() )
-					{
-						frames.insert( std::lower_bound( frames.begin(), frames.end(), frame ), frame );
-					}
-					else
-					{
-						frames.push_back( frame );
-					}
-				}
-			}
-
-			tasksToBatches[taskToBatchMapHash] = batch;
-
-			return batch;
-		}
-	}
-
-	TaskBatchPtr batch = new TaskBatch( task );
-	currentBatches[batchMapHash] = batch;
-	tasksToBatches[taskToBatchMapHash] = batch;
-
-	return batch;
-}
-
-IECore::MurmurHash Dispatcher::batchHash( const ExecutableNode::Task &task )
-{
-	MurmurHash result;
-	result.append( (uint64_t)task.node() );
-
-	if ( task.hash() == MurmurHash() )
-	{
-		return result;
-	}
-
-	const Context *context = task.context();
-	std::vector<IECore::InternedString> names;
-	context->names( names );
-	for ( std::vector<IECore::InternedString>::const_iterator it = names.begin(); it != names.end(); ++it )
-	{
-		// ignore the frame and the ui values
-		if ( ( *it != g_frame ) && it->string().compare( 0, 3, "ui:" ) )
-		{
-			result.append( *it );
-			if ( const IECore::Data *data = context->get<const IECore::Data>( *it ) )
-			{
-				data->hash( result );
-			}
-		}
-	}
-
-	return result;
-}
-
 FrameListPtr Dispatcher::frameRange( const ScriptNode *script, const Context *context ) const
 {
 	FramesMode mode = (FramesMode)framesModePlug()->getValue();
@@ -538,6 +278,291 @@ CompoundData *Dispatcher::TaskBatch::blindData()
 const CompoundData *Dispatcher::TaskBatch::blindData() const
 {
 	return m_blindData.get();
+}
+
+//////////////////////////////////////////////////////////////////////////
+// Batcher class. This is an internal utility class for constructing
+// the DAG of TaskBatches to be dispatched. It is a separate class so
+// that it can track the necessary temporary state as member data.
+//////////////////////////////////////////////////////////////////////////
+
+class Dispatcher::Batcher
+{
+
+	public :
+
+		Batcher()
+			:	m_rootBatch( new TaskBatch() )
+		{
+		}
+
+		void addTask( const ExecutableNode::Task &task )
+		{
+			std::set<const TaskBatch *> ancestors;
+			batchTasksWalk( task, m_rootBatch.get(), ancestors );
+		}
+
+		TaskBatch *rootBatch()
+		{
+			return m_rootBatch.get();
+		}
+
+	private :
+
+		void batchTasksWalk( const ExecutableNode::Task &task, Dispatcher::TaskBatch *parent, std::set<const TaskBatch *> &ancestors )
+		{
+			TaskBatchPtr batch = acquireBatch( task );
+
+			TaskBatches &parentPreTasks = parent->preTasks();
+			if( std::find( parentPreTasks.begin(), parentPreTasks.end(), batch ) == parentPreTasks.end() )
+			{
+				if( ancestors.find( batch.get() ) != ancestors.end() )
+				{
+					throw IECore::Exception( ( boost::format( "Dispatched nodes cannot have cyclic dependencies. %s and %s are involved in a cycle." ) % batch->node()->relativeName( batch->node()->scriptNode() ) % parent->node()->relativeName( parent->node()->scriptNode() ) ).str() );
+				}
+
+				parentPreTasks.push_back( batch );
+			}
+
+			ExecutableNode::Tasks preTasks;
+			{
+				Context::Scope scopedTaskContext( task.context() );
+				task.node()->preTasks( task.context(), preTasks );
+			}
+
+			ancestors.insert( parent );
+
+			for( ExecutableNode::Tasks::const_iterator it = preTasks.begin(); it != preTasks.end(); ++it )
+			{
+				batchTasksWalk( *it, batch.get(), ancestors );
+			}
+
+			ancestors.erase( parent );
+		}
+
+		TaskBatchPtr acquireBatch( const ExecutableNode::Task &task )
+		{
+			MurmurHash taskToBatchMapHash = task.hash();
+			taskToBatchMapHash.append( (uint64_t)task.node() );
+			TaskToBatchMap::iterator it = m_tasksToBatches.find( taskToBatchMapHash );
+			if( it != m_tasksToBatches.end() )
+			{
+				return it->second;
+			}
+
+			MurmurHash batchMapHash = batchHash( task );
+			BatchMap::iterator bIt = m_currentBatches.find( batchMapHash );
+			if( bIt != m_currentBatches.end() )
+			{
+				TaskBatchPtr batch = bIt->second;
+
+				std::vector<float> &frames = batch->frames();
+				const Plug *dispatcherPlug = task.node()->dispatcherPlug();
+				const IntPlug *batchSizePlug = dispatcherPlug->getChild<const IntPlug>( g_batchSize );
+				size_t batchSize = ( batchSizePlug ) ? batchSizePlug->getValue() : 1;
+
+				if( task.node()->requiresSequenceExecution() || ( frames.size() < batchSize ) )
+				{
+					if( task.hash() != MurmurHash() )
+					{
+						float frame = task.context()->getFrame();
+						if( std::find( frames.begin(), frames.end(), frame ) == frames.end() )
+						{
+							if( task.node()->requiresSequenceExecution() )
+							{
+								frames.insert( std::lower_bound( frames.begin(), frames.end(), frame ), frame );
+							}
+							else
+							{
+								frames.push_back( frame );
+							}
+						}
+					}
+
+					m_tasksToBatches[taskToBatchMapHash] = batch;
+
+					return batch;
+				}
+			}
+
+			TaskBatchPtr batch = new TaskBatch( task );
+			m_currentBatches[batchMapHash] = batch;
+			m_tasksToBatches[taskToBatchMapHash] = batch;
+
+			return batch;
+		}
+
+		IECore::MurmurHash batchHash( const ExecutableNode::Task &task )
+		{
+			MurmurHash result;
+			result.append( (uint64_t)task.node() );
+
+			if( task.hash() == MurmurHash() )
+			{
+				return result;
+			}
+
+			const Context *context = task.context();
+			std::vector<IECore::InternedString> names;
+			context->names( names );
+			for( std::vector<IECore::InternedString>::const_iterator it = names.begin(); it != names.end(); ++it )
+			{
+				// ignore the frame and the ui values
+				if( ( *it != g_frame ) && it->string().compare( 0, 3, "ui:" ) )
+				{
+					result.append( *it );
+					if( const IECore::Data *data = context->get<const IECore::Data>( *it ) )
+					{
+						data->hash( result );
+					}
+				}
+			}
+
+			return result;
+		}
+
+		typedef std::map<IECore::MurmurHash, TaskBatchPtr> BatchMap;
+		typedef std::map<IECore::MurmurHash, TaskBatchPtr> TaskToBatchMap;
+
+		TaskBatchPtr m_rootBatch;
+		BatchMap m_currentBatches;
+		TaskToBatchMap m_tasksToBatches;
+
+};
+
+//////////////////////////////////////////////////////////////////////////
+// Dispatcher::dispatch()
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+/// Guard class for calling a dispatcher's preDispatchSignal(), then guaranteeing postDispatchSignal() gets called
+class DispatcherSignalGuard
+{
+
+	public:
+
+		DispatcherSignalGuard( const Dispatcher* d, const std::vector<ExecutableNodePtr> &executables ) : m_dispatchSuccessful( false ), m_executables( executables ), m_dispatcher( d )
+		{
+			m_cancelledByPreDispatch = m_dispatcher->preDispatchSignal()( m_dispatcher, m_executables );
+		}
+
+		~DispatcherSignalGuard()
+		{
+			try
+			{
+				m_dispatcher->postDispatchSignal()( m_dispatcher, m_executables, (m_dispatchSuccessful && ( !m_cancelledByPreDispatch )) );
+			}
+			catch( const std::exception& e )
+			{
+				IECore::msg( IECore::Msg::Error, "postDispatchSignal exception:", e.what() );
+			}
+		}
+
+		bool cancelledByPreDispatch( )
+		{
+			return m_cancelledByPreDispatch;
+		}
+
+		void success()
+		{
+			m_dispatchSuccessful = true;
+		}
+
+	private:
+
+		bool m_cancelledByPreDispatch;
+		bool m_dispatchSuccessful;
+
+		const std::vector<ExecutableNodePtr> &m_executables;
+		const Dispatcher* m_dispatcher;
+
+};
+
+} // namespace
+
+void Dispatcher::dispatch( const std::vector<NodePtr> &nodes ) const
+{
+	// clear job directory, so that if our node validation fails,
+	// jobDirectory() won't return the result from the previous dispatch.
+	m_jobDirectory = "";
+
+	// validate the nodes we've been given
+
+	if ( nodes.empty() )
+	{
+		throw IECore::Exception( getName().string() + ": Must specify at least one node to dispatch." );
+	}
+
+	std::vector<ExecutableNodePtr> executables;
+	const ScriptNode *script = (*nodes.begin())->scriptNode();
+	for ( std::vector<NodePtr>::const_iterator nIt = nodes.begin(); nIt != nodes.end(); ++nIt )
+	{
+		const ScriptNode *currentScript = (*nIt)->scriptNode();
+		if ( !currentScript || currentScript != script )
+		{
+			throw IECore::Exception( getName().string() + ": Dispatched nodes must all belong to the same ScriptNode." );
+		}
+
+		if ( ExecutableNode *executable = runTimeCast<ExecutableNode>( nIt->get() ) )
+		{
+			executables.push_back( executable );
+		}
+		else if ( const SubGraph *subGraph = runTimeCast<const SubGraph>( nIt->get() ) )
+		{
+			for ( RecursiveOutputPlugIterator plugIt( subGraph ); plugIt != plugIt.end(); ++plugIt )
+			{
+				Node *sourceNode = plugIt->get()->source<Plug>()->node();
+				if ( ExecutableNode *executable = runTimeCast<ExecutableNode>( sourceNode ) )
+				{
+					executables.push_back( executable );
+				}
+			}
+		}
+		else
+		{
+			throw IECore::Exception( getName().string() + ": Dispatched nodes must be ExecutableNodes or SubGraphs containing ExecutableNodes." );
+		}
+	}
+
+	// create the job directory now, so it's available in preDispatchSignal().
+	ContextPtr context = new Context( *Context::current(), Context::Borrowed );
+	m_jobDirectory = createJobDirectory( context.get() );
+	context->set( g_jobDirectoryContextEntry, m_jobDirectory );
+
+	// this object calls this->preDispatchSignal() in its constructor and this->postDispatchSignal()
+	// in its destructor, thereby guaranteeing that we always call this->postDispatchSignal().
+
+	DispatcherSignalGuard signalGuard( this, executables );
+	if ( signalGuard.cancelledByPreDispatch() )
+	{
+		return;
+	}
+
+	std::vector<FrameList::Frame> frames;
+	FrameListPtr frameList = frameRange( script, context.get() );
+	frameList->asList( frames );
+
+	Batcher batcher;
+	for( std::vector<FrameList::Frame>::const_iterator fIt = frames.begin(); fIt != frames.end(); ++fIt )
+	{
+		for( std::vector<ExecutableNodePtr>::const_iterator nIt = executables.begin(); nIt != executables.end(); ++nIt )
+		{
+			context->setFrame( *fIt );
+			batcher.addTask( ExecutableNode::Task( *nIt, context.get() ) );
+		}
+	}
+
+	if( !batcher.rootBatch()->preTasks().empty() )
+	{
+		doDispatch( batcher.rootBatch() );
+	}
+
+	// inform the guard that the process has been completed, so it can pass this info to
+	// postDispatchSignal():
+
+	signalGuard.success();
 }
 
 //////////////////////////////////////////////////////////////////////////

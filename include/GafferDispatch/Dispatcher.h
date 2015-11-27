@@ -264,15 +264,7 @@ class Dispatcher : public Gaffer::Node
 		typedef std::map<std::string, std::pair<Creator, SetupPlugsFn> > CreatorMap;
 		static CreatorMap &creators();
 
-		typedef std::map<IECore::MurmurHash, TaskBatchPtr> BatchMap;
-		typedef std::map<IECore::MurmurHash, TaskBatchPtr> TaskToBatchMap;
-
-		// Utility functions that recursively collect all tasks and their preTasks,
-		// arranging them into a graph of TaskBatches ready for dispatch.
-		static TaskBatchPtr batchTasks( const ExecutableNode::Tasks &tasks );
-		static void batchTasksWalk( TaskBatchPtr parent, const ExecutableNode::Task &task, BatchMap &currentBatches, TaskToBatchMap &tasksToBatches, std::set<const TaskBatch *> &ancestors );
-		static TaskBatchPtr acquireBatch( const ExecutableNode::Task &task, BatchMap &currentBatches, TaskToBatchMap &tasksToBatches );
-		static IECore::MurmurHash batchHash( const ExecutableNode::Task &task );
+		class Batcher;
 
 		static size_t g_firstPlugIndex;
 		static PreDispatchSignal g_preDispatchSignal;
