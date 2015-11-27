@@ -42,6 +42,7 @@
 #include "GafferImage/Sampler.h"
 #include "GafferImage/ChannelMaskPlug.h"
 #include "GafferImage/FormatPlug.h"
+#include "GafferImage/ImageAlgo.h"
 
 using namespace GafferImage;
 using namespace Gaffer;
