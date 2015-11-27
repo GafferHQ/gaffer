@@ -40,6 +40,7 @@ import Gaffer
 import GafferTest
 import GafferDispatch
 
+## \todo Remove this in preference to LoggingExecutableNode.
 class CountingExecutableNode( GafferDispatch.ExecutableNode ) :
 
 	def __init__( self, name = "CountingExecutableNode", withHash = True, requiresSequenceExecution = False ) :

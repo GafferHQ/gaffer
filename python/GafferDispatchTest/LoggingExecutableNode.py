@@ -34,25 +34,69 @@
 #
 ##########################################################################
 
-# Utility classes
+import collections
 
-from CountingExecutableNode import CountingExecutableNode
-from TextWriter import TextWriter
-from LoggingExecutableNode import LoggingExecutableNode
+import IECore
 
-# Test cases
+import Gaffer
+import GafferDispatch
 
-from DispatcherTest import DispatcherTest
-from LocalDispatcherTest import LocalDispatcherTest
-from ExecutableNodeTest import ExecutableNodeTest
-from TaskSwitchTest import TaskSwitchTest
-from PythonCommandTest import PythonCommandTest
-from SystemCommandTest import SystemCommandTest
-from TaskListTest import TaskListTest
-from WedgeTest import WedgeTest
-from TaskContextVariablesTest import TaskContextVariablesTest
-from ExecuteApplicationTest import ExecuteApplicationTest
+class LoggingExecutableNode( GafferDispatch.ExecutableNode ) :
 
-if __name__ == "__main__":
-	import unittest
-	unittest.main()
+	LogEntry = collections.namedtuple( "LogEntry", [ "node", "context", "frames" ] )
+
+	def __init__( self, name = "LoggingExecutableNode", log = None ) :
+
+		GafferDispatch.ExecutableNode.__init__( self, name )
+
+		self["noOp"] = Gaffer.BoolPlug()
+		self["requiresSequenceExecution"] = Gaffer.BoolPlug()
+
+		self.log = log if log is not None else []
+
+	def execute( self ) :
+
+		self.log.append(
+			self.LogEntry(
+				node = self,
+				context = Gaffer.Context( Gaffer.Context.current() ),
+				frames = None
+			)
+		)
+
+	def executeSequence( self, frames ) :
+
+		if not self["requiresSequenceExecution"].getValue() :
+			GafferDispatch.ExecutableNode.executeSequence( self, frames )
+			return
+
+		self.log.append(
+			self.LogEntry(
+				node = self,
+				context = Gaffer.Context( Gaffer.Context.current() ),
+				frames = frames
+			)
+		)
+
+	def hash( self, context ) :
+
+		if self["noOp"].getValue() :
+			return IECore.MurmurHash()
+
+		h = GafferDispatch.ExecutableNode.hash( self, context )
+
+		# Hash in any additional plugs that have been added after construction.
+		# This allows the test cases to customise the hashing by adding plugs
+		# and connecting them as required.
+		for plug in self.children( Gaffer.ValuePlug ) :
+			if plug.getName() in ( "noOp", "requiresSequenceExecution" ) :
+				continue
+			plug.hash( h )
+
+		return h
+
+	def requiresSequenceExecution( self ) :
+
+		return self["requiresSequenceExecution"].getValue()
+
+IECore.registerRunTimeTyped( LoggingExecutableNode, typeName = "GafferDispatchTest::LoggingExecutableNode" )
