@@ -45,30 +45,6 @@ namespace GafferImage
 
 class ImagePlug;
 
-/// Image window utility functions. The GafferImage convention is that
-/// the minimum coordinate is included within the window and the
-/// maximum coordinate is outside it - these functions take that into
-/// account and should therefore be used in favour of the Imath equivalents.
-////////////////////////////////////////////////////////////////////////////
-
-/// Returns true if the window contains no pixels, and false otherwise.
-inline bool empty( const Imath::Box2i &window );
-
-/// Returns true if the image windows intersect.
-inline bool intersects( const Imath::Box2i &window1, const Imath::Box2i &window2 );
-
-/// Return the intersection of the two image windows.
-inline Imath::Box2i intersection( const Imath::Box2i &window1, const Imath::Box2i &window2 );
-
-/// Returns true if the given point is inside the window.
-inline bool contains( const Imath::Box2i &window, const Imath::V2i &point );
-
-/// Returns true if the given area is inside the window.
-inline bool contains( const Imath::Box2i &window, const Imath::Box2i &area );
-
-/// Clamps the point so that it is contained inside the window.
-inline Imath::V2i clamp( const Imath::V2i &point, const Imath::Box2i &window );
-
 /// Channel name utility functions.
 ///
 /// Gaffer follows the OpenEXR convention for channel names, as documented at

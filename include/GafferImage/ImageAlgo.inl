@@ -42,6 +42,7 @@
 
 #include "Gaffer/Context.h"
 #include "GafferImage/ImagePlug.h"
+#include "GafferImage/BufferAlgo.h"
 
 namespace GafferImage
 {
@@ -410,82 +411,6 @@ class GatherFunctorFilter
 };
 
 };
-
-//////////////////////////////////////////////////////////////////////////
-// Window/Box utilities
-//////////////////////////////////////////////////////////////////////////
-
-inline bool empty( const Imath::Box2i &window )
-{
-	for( int i = 0; i < 2; ++i )
-	{
-		if( window.max[i] <= window.min[i] )
-		{
-			return true;
-		}
-	}
-	return false;
-}
-
-inline bool intersects( const Imath::Box2i &window1, const Imath::Box2i &window2 )
-{
-	for( int i = 0; i < 2; ++i )
-	{
-		if( window1.max[i] <= window2.min[i] )
-		{
-			return false;
-		}
-		if( window1.min[i] >= window2.max[i] )
-		{
-			return false;
-		}
-	}
-	return true;
-}
-
-inline Imath::Box2i intersection( const Imath::Box2i &window1, const Imath::Box2i &window2 )
-{
-	Imath::Box2i result;
-	for( int i = 0; i < 2; ++i )
-	{
-		result.min[i] = std::max( window1.min[i], window2.min[i] );
-		result.max[i] = std::min( window1.max[i], window2.max[i] );
-	}
-
-	return result;
-}
-
-inline bool contains( const Imath::Box2i &window, const Imath::V2i &point )
-{
-	for( int i = 0; i < 2; ++i )
-	{
-		if( point[i] < window.min[i] || point[i] >= window.max[i] )
-		{
-			return false;
-		}
-	}
-	return true;
-}
-
-inline bool contains( const Imath::Box2i &window, const Imath::Box2i &area )
-{
-	for( int i = 0; i < 2; ++i )
-	{
-		if( area.min[i] < window.min[i] || area.max[i] > window.max[i] )
-		{
-			return false;
-		}
-	}
-	return true;
-}
-
-inline Imath::V2i clamp( const Imath::V2i &point, const Imath::Box2i &window )
-{
-	return Imath::V2i(
-		std::max( std::min( point.x, window.max.x - 1 ), window.min.x ),
-		std::max( std::min( point.y, window.max.y - 1 ), window.min.y )
-	);
-}
 
 //////////////////////////////////////////////////////////////////////////
 // Channel name utilities
