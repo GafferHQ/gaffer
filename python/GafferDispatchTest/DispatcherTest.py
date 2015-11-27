@@ -46,24 +46,6 @@ import GafferTest
 import GafferDispatch
 import GafferDispatchTest
 
-class TestOp (IECore.Op) :
-
-	def __init__( self, name, executionOrder ) :
-
-		IECore.Op.__init__( self, "Test op", IECore.IntParameter( "result", "", 0 ) )
-		self.parameters().addParameter( IECore.StringParameter( "name", "unique name to force different executions", name ) )
-		self.parameters().addParameter( IECore.StringParameter( "currentFrame", "testing context substitution", "${frame}" ) )
-		self.counter = 0
-		self.frames = []
-		self.executionOrder = executionOrder
-
-	def doOperation( self, args ) :
-
-		self.counter += 1
-		self.frames.append( int(args["currentFrame"].value) )
-		self.executionOrder.append( self )
-		return IECore.IntData( self.counter )
-
 class DispatcherTest( GafferTest.TestCase ) :
 
 	class TestDispatcher( GafferDispatch.Dispatcher ) :
@@ -71,11 +53,9 @@ class DispatcherTest( GafferTest.TestCase ) :
 		def __init__( self ) :
 
 			GafferDispatch.Dispatcher.__init__( self )
-			self.log = list()
 
 		def _doDispatch( self, batch ) :
 
-			del self.log[:]
 			self.__dispatch( batch )
 
 		def __dispatch( self, batch ) :
@@ -119,10 +99,9 @@ class DispatcherTest( GafferTest.TestCase ) :
 		self.assertEqual( dispatcher["jobsDirectory"].getValue(), self.temporaryDirectory() )
 
 		s = Gaffer.ScriptNode()
-		op1 = TestOp("1", dispatcher.log)
-		s["n1"] = Gaffer.ExecutableOpHolder()
-		s["n1"].setParameterised( op1 )
+		s["n1"] = GafferDispatchTest.LoggingExecutableNode()
 		dispatcher.dispatch( [ s["n1"] ] )
+
 		jobDir = dispatcher.jobDirectory()
 		self.assertEqual( jobDir, self.temporaryDirectory() + "/000000" )
 		self.assertTrue( os.path.exists( jobDir ) )
@@ -132,44 +111,36 @@ class DispatcherTest( GafferTest.TestCase ) :
 		dispatcher = GafferDispatch.Dispatcher.create( "testDispatcher" )
 
 		s = Gaffer.ScriptNode()
-		op1 = TestOp("1", dispatcher.log)
-		s["n1"] = Gaffer.ExecutableOpHolder()
-		s["n1"].setParameterised( op1 )
+		s["n1"] = GafferDispatchTest.LoggingExecutableNode()
 
 		dispatcher.dispatch( [ s["n1"] ] )
 
-		self.assertEqual( op1.counter, 1 )
+		self.assertEqual( len( s["n1"].log ), 1 )
 
 	def testNoScript( self ) :
 
 		dispatcher = GafferDispatch.Dispatcher.create( "testDispatcher" )
 
-		op1 = TestOp("1", dispatcher.log)
-		n1 = Gaffer.ExecutableOpHolder()
-		n1.setParameterised( op1 )
+		n = GafferDispatchTest.LoggingExecutableNode()
 
-		self.assertRaises( RuntimeError, dispatcher.dispatch, [ n1 ] )
+		self.assertRaises( RuntimeError, dispatcher.dispatch, [ n ] )
 		self.assertEqual( dispatcher.jobDirectory(), "" )
-		self.assertEqual( op1.counter, 0 )
+		self.assertEqual( n.log, [] )
 
 	def testDifferentScripts( self ) :
 
 		dispatcher = GafferDispatch.Dispatcher.create( "testDispatcher" )
 
-		op1 = TestOp("1", dispatcher.log)
 		s = Gaffer.ScriptNode()
-		s["n1"] = Gaffer.ExecutableOpHolder()
-		s["n1"].setParameterised( op1 )
+		s["n1"] = GafferDispatchTest.LoggingExecutableNode()
 
-		op2 = TestOp("2", dispatcher.log)
 		s2 = Gaffer.ScriptNode()
-		s2["n2"] = Gaffer.ExecutableOpHolder()
-		s2["n2"].setParameterised( op2 )
+		s2["n2"] = GafferDispatchTest.LoggingExecutableNode()
 
 		self.assertRaises( RuntimeError, dispatcher.dispatch, [ s["n1"], s2["n2"] ] )
 		self.assertEqual( dispatcher.jobDirectory(), "" )
-		self.assertEqual( op1.counter, 0 )
-		self.assertEqual( op2.counter, 0 )
+		self.assertEqual( s["n1"].log, [] )
+		self.assertEqual( s2["n2"].log, [] )
 
 	def testNonExecutables( self ) :
 
@@ -204,11 +175,9 @@ class DispatcherTest( GafferTest.TestCase ) :
 		postCs = GafferTest.CapturingSlot( GafferDispatch.Dispatcher.postDispatchSignal() )
 		self.assertEqual( len( postCs ), 0 )
 
-		log = list()
-		op1 = TestOp("1", log)
 		s = Gaffer.ScriptNode()
-		s["n1"] = Gaffer.ExecutableOpHolder()
-		s["n1"].setParameterised( op1 )
+		s["n1"] = GafferDispatchTest.LoggingExecutableNode()
+
 		dispatcher = GafferDispatch.Dispatcher.create( "testDispatcher" )
 		dispatcher.dispatch( [ s["n1"] ] )
 
@@ -224,7 +193,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 		def onlyRunOnce( dispatcher, nodes ) :
 
-			if len(dispatcher.log) :
+			if len( s["n1"].log ) :
 				return True
 
 			return False
@@ -232,33 +201,29 @@ class DispatcherTest( GafferTest.TestCase ) :
 		connection = GafferDispatch.Dispatcher.preDispatchSignal().connect( onlyRunOnce )
 
 		dispatcher = GafferDispatch.Dispatcher.create( "testDispatcher" )
-		op1 = TestOp( "1", dispatcher.log )
+
 		s = Gaffer.ScriptNode()
-		s["n1"] = Gaffer.ExecutableOpHolder()
-		s["n1"].setParameterised( op1 )
+		s["n1"] = GafferDispatchTest.LoggingExecutableNode()
 
 		# never run
-		self.assertEqual( len(dispatcher.log), 0 )
-		self.assertEqual( op1.counter, 0 )
+		self.assertEqual( len( s["n1"].log ), 0 )
 
 		# runs the first time
 		dispatcher.dispatch( [ s["n1"] ] )
-		self.assertEqual( len(dispatcher.log), 1 )
-		self.assertEqual( op1.counter, 1 )
+		self.assertEqual( len( s["n1"].log ), 1 )
 
 		# never runs again
 		dispatcher.dispatch( [ s["n1"] ] )
-		self.assertEqual( len(dispatcher.log), 1 )
-		self.assertEqual( op1.counter, 1 )
+		self.assertEqual( len( s["n1"].log ), 1 )
 
 	def testPlugs( self ) :
 
-		n = Gaffer.ExecutableOpHolder()
+		n = GafferDispatchTest.TextWriter()
 		self.assertEqual( n['dispatcher'].getChild( 'testDispatcherPlug' ), None )
 
 		GafferDispatch.Dispatcher.registerDispatcher( "testDispatcherWithCustomPlugs", DispatcherTest.TestDispatcher, setupPlugsFn = DispatcherTest.TestDispatcher._doSetupPlugs )
 
-		n2 = Gaffer.ExecutableOpHolder()
+		n2 = GafferDispatchTest.TextWriter()
 		self.assertTrue( isinstance( n2['dispatcher'].getChild( 'testDispatcherPlug' ), Gaffer.IntPlug ) )
 		self.assertEqual( n2['dispatcher']['testDispatcherPlug'].direction(), Gaffer.Plug.Direction.In )
 
@@ -271,95 +236,81 @@ class DispatcherTest( GafferTest.TestCase ) :
 		# - n2 requires:
 		#    -n2a
 		#    -n2b
-		op1 = TestOp("1", dispatcher.log)
+		log = []
 		s = Gaffer.ScriptNode()
-		s["n1"] = Gaffer.ExecutableOpHolder()
-		s["n1"].setParameterised( op1 )
-		s["n2"] = Gaffer.ExecutableOpHolder()
-		op2 = TestOp("2", dispatcher.log)
-		s["n2"].setParameterised( op2 )
-		s["n2a"] = Gaffer.ExecutableOpHolder()
-		op2a = TestOp("2a", dispatcher.log)
-		s["n2a"].setParameterised( op2a )
-		s["n2b"] = Gaffer.ExecutableOpHolder()
-		op2b = TestOp("2b", dispatcher.log)
-		s["n2b"].setParameterised( op2b )
+		s["n1"] = GafferDispatchTest.LoggingExecutableNode( log = log )
+		s["n2"] = GafferDispatchTest.LoggingExecutableNode( log = log )
+		s["n2a"] = GafferDispatchTest.LoggingExecutableNode( log = log )
+		s["n2b"] = GafferDispatchTest.LoggingExecutableNode( log = log )
 		s["n1"]["preTasks"][0].setInput( s["n2"]["task"] )
 		s["n2"]["preTasks"][0].setInput( s["n2a"]["task"] )
 		s["n2"]["preTasks"][1].setInput( s["n2b"]["task"] )
 
 		# Executing n1 should trigger execution of all of them
 		dispatcher.dispatch( [ s["n1"] ] )
-		self.assertEqual( op1.counter, 1 )
-		self.assertEqual( op2.counter, 1 )
-		self.assertEqual( op2a.counter, 1 )
-		self.assertEqual( op2b.counter, 1 )
-		self.assertTrue( dispatcher.log == [ op2a, op2b, op2, op1 ] or dispatcher.log == [ op2b, op2a, op2, op1 ] )
+		self.assertTrue(
+			[ l.node for l in log ] == [ s["n2a"], s["n2b"], s["n2"], s["n1"] ] or
+			[ l.node for l in log ] == [ s["n2b"], s["n2a"], s["n2"], s["n1"] ]
+		)
 
 		# Executing n1 and anything else, should be the same as just n1
+		del log[:]
 		dispatcher.dispatch( [ s["n2b"], s["n1"] ] )
-		self.assertEqual( op1.counter, 2 )
-		self.assertEqual( op2.counter, 2 )
-		self.assertEqual( op2a.counter, 2 )
-		self.assertEqual( op2b.counter, 2 )
-		self.assertTrue( dispatcher.log == [ op2a, op2b, op2, op1 ] or dispatcher.log == [ op2b, op2a, op2, op1 ] )
+		self.assertTrue(
+			[ l.node for l in log ] == [ s["n2a"], s["n2b"], s["n2"], s["n1"] ] or
+			[ l.node for l in log ] == [ s["n2b"], s["n2a"], s["n2"], s["n1"] ]
+		)
 
 		# Executing all nodes should be the same as just n1
+		del log[:]
 		dispatcher.dispatch( [ s["n2"], s["n2b"], s["n1"], s["n2a"] ] )
-		self.assertEqual( op1.counter, 3 )
-		self.assertEqual( op2.counter, 3 )
-		self.assertEqual( op2a.counter, 3 )
-		self.assertEqual( op2b.counter, 3 )
-		self.assertTrue( dispatcher.log == [ op2a, op2b, op2, op1 ] or dispatcher.log == [ op2b, op2a, op2, op1 ] )
+		self.assertTrue(
+			[ l.node for l in log ] == [ s["n2a"], s["n2b"], s["n2"], s["n1"] ] or
+			[ l.node for l in log ] == [ s["n2b"], s["n2a"], s["n2"], s["n1"] ]
+		)
 
 		# Executing a sub-branch (n2) should only trigger execution in that branch
+		del log[:]
 		dispatcher.dispatch( [ s["n2"] ] )
-		self.assertEqual( op1.counter, 3 )
-		self.assertEqual( op2.counter, 4 )
-		self.assertEqual( op2a.counter, 4 )
-		self.assertEqual( op2b.counter, 4 )
-		self.assertTrue( dispatcher.log == [ op2a, op2b, op2 ] or dispatcher.log == [ op2b, op2a, op2 ] )
+		self.assertTrue(
+			[ l.node for l in log ] == [ s["n2a"], s["n2b"], s["n2"] ] or
+			[ l.node for l in log ] == [ s["n2b"], s["n2a"], s["n2"] ]
+		)
 
 		# Executing a leaf node, should not trigger other executions.
+		del log[:]
 		dispatcher.dispatch( [ s["n2b"] ] )
-		self.assertEqual( op1.counter, 3 )
-		self.assertEqual( op2.counter, 4 )
-		self.assertEqual( op2a.counter, 4 )
-		self.assertEqual( op2b.counter, 5 )
-		self.assertTrue( dispatcher.log == [ op2b ] )
+		self.assertEqual( [ l.node for l in log ], [ s["n2b"] ] )
 
 	def testDispatchIdenticalTasks( self ) :
-
-		dispatcher = GafferDispatch.Dispatcher.create( "testDispatcher" )
 
 		# Create a tree of dependencies for execution:
 		# n1 requires:
 		# - n2 requires:
 		#    -n2a
 		#    -n2b
-		op1 = TestOp("1", dispatcher.log)
+
+		log = []
 		s = Gaffer.ScriptNode()
-		s["n1"] = Gaffer.ExecutableOpHolder()
-		s["n1"].setParameterised( op1 )
-		s["n2"] = Gaffer.ExecutableOpHolder()
-		s["n2"].setParameterised( op1 )
-		s["n2a"] = Gaffer.ExecutableOpHolder()
-		s["n2a"].setParameterised( op1 )
-		s["n2b"] = Gaffer.ExecutableOpHolder()
-		s["n2b"].setParameterised( op1 )
+		s["n1"] = GafferDispatchTest.LoggingExecutableNode( log = log )
+		s["n2"] = GafferDispatchTest.LoggingExecutableNode( log = log )
+		s["n2a"] = GafferDispatchTest.LoggingExecutableNode( log = log )
+		s["n2b"] = GafferDispatchTest.LoggingExecutableNode( log = log )
 		s["n1"]["preTasks"][0].setInput( s["n2"]["task"] )
 		s["n2"]["preTasks"][0].setInput( s["n2a"]["task"] )
 		s["n2"]["preTasks"][1].setInput( s["n2b"]["task"] )
 
 		# even though all tasks are identical, we still execute them all
+		dispatcher = GafferDispatch.Dispatcher.create( "testDispatcher" )
 		dispatcher.dispatch( [ s["n1"] ] )
-		self.assertEqual( op1.counter, 4 )
-		self.assertEqual( dispatcher.log, [ op1, op1, op1, op1 ] )
+		self.assertEqual( len( log ), 4 )
+		self.assertEqual( [ l.node for l in log ], [ s["n2a"], s["n2b"], s["n2"], s["n1"] ] )
 
 		# Executing them all should do the same, with no duplicates
+		del log[:]
 		dispatcher.dispatch( [ s["n2"], s["n2b"], s["n1"], s["n2a"] ] )
-		self.assertEqual( op1.counter, 8 )
-		self.assertEqual( dispatcher.log, [ op1, op1, op1, op1 ] )
+		self.assertEqual( len( log ), 4 )
+		self.assertEqual( [ l.node for l in log ], [ s["n2a"], s["n2b"], s["n2"], s["n1"] ] )
 
 	def testCyclesThrow( self ) :
 
@@ -436,13 +387,14 @@ class DispatcherTest( GafferTest.TestCase ) :
 	def testNoTask( self ) :
 
 		s = Gaffer.ScriptNode()
-		s["n1"] = Gaffer.ExecutableOpHolder()
+		s["n1"] = GafferDispatchTest.LoggingExecutableNode()
+		s["n1"]["noOp"].setValue( True )
 		self.assertEqual( s["n1"].hash( s.context() ), IECore.MurmurHash() )
 
 		# It doesn't execute, because the executionHash is null
 		dispatcher = GafferDispatch.Dispatcher.create( "testDispatcher" )
 		dispatcher.dispatch( [ s["n1"] ] )
-		self.assertEqual( dispatcher.log, [] )
+		self.assertEqual( s["n1"].log, [] )
 
 	def testDispatchDifferentFrame( self ) :
 
@@ -450,9 +402,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		dispatcher["framesMode"].setValue( GafferDispatch.Dispatcher.FramesMode.CurrentFrame )
 
 		s = Gaffer.ScriptNode()
-		op1 = TestOp("1", dispatcher.log)
-		s["n1"] = Gaffer.ExecutableOpHolder()
-		s["n1"].setParameterised( op1 )
+		s["n1"] = GafferDispatchTest.LoggingExecutableNode()
 
 		context = Gaffer.Context( s.context() )
 		context.setFrame( s.context().getFrame() + 10 )
@@ -461,8 +411,8 @@ class DispatcherTest( GafferTest.TestCase ) :
 		with context :
 			dispatcher.dispatch( [ s["n1"] ] )
 
-		self.assertEqual( op1.counter, 1 )
-		self.assertEqual( op1.frames, [ context.getFrame() ] )
+		self.assertEqual( len( s["n1"].log ), 1 )
+		self.assertEqual( s["n1"].log[0].context.getFrame(), context.getFrame() )
 
 	def testDispatchFullRange( self ) :
 
@@ -470,16 +420,15 @@ class DispatcherTest( GafferTest.TestCase ) :
 		dispatcher["framesMode"].setValue( GafferDispatch.Dispatcher.FramesMode.FullRange )
 
 		s = Gaffer.ScriptNode()
-		op1 = TestOp("1", dispatcher.log)
-		s["n1"] = Gaffer.ExecutableOpHolder()
-		s["n1"].setParameterised( op1 )
+		s["n1"] = GafferDispatchTest.LoggingExecutableNode()
+		s["n1"]["frame"] = Gaffer.StringPlug( defaultValue = "${frame}", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 
 		dispatcher.dispatch( [ s["n1"] ] )
 
 		frameRange = IECore.FrameRange( s["frameRange"]["start"].getValue(), s["frameRange"]["end"].getValue() )
 		self.assertEqual( dispatcher.frameRange( s, s.context() ), frameRange )
-		self.assertEqual( op1.counter, len(frameRange.asList()) )
-		self.assertEqual( op1.frames, frameRange.asList() )
+		self.assertEqual( len( s["n1"].log ), len( frameRange.asList() ) )
+		self.assertEqual( [ l.context.getFrame() for l in s["n1"].log ], frameRange.asList() )
 
 	def testDispatchCustomRange( self ) :
 
@@ -489,16 +438,15 @@ class DispatcherTest( GafferTest.TestCase ) :
 		dispatcher["frameRange"].setValue( str(frameList) )
 
 		s = Gaffer.ScriptNode()
-		op1 = TestOp("1", dispatcher.log)
-		s["n1"] = Gaffer.ExecutableOpHolder()
-		s["n1"].setParameterised( op1 )
+		s["n1"] = GafferDispatchTest.LoggingExecutableNode()
+		s["n1"]["frame"] = Gaffer.StringPlug( defaultValue = "${frame}", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 
 		dispatcher.dispatch( [ s["n1"] ] )
 
 		frames = frameList.asList()
 		self.assertEqual( dispatcher.frameRange( s, s.context() ), frameList )
-		self.assertEqual( op1.counter, len(frames) )
-		self.assertEqual( op1.frames, frames )
+		self.assertEqual( len( s["n1"].log ), len( frames ) )
+		self.assertEqual( [ l.context.getFrame() for l in s["n1"].log ], frames )
 
 	def testDispatchBadCustomRange( self ) :
 
@@ -507,14 +455,11 @@ class DispatcherTest( GafferTest.TestCase ) :
 		dispatcher["frameRange"].setValue( "notAFrameRange" )
 
 		s = Gaffer.ScriptNode()
-		op1 = TestOp("1", dispatcher.log)
-		s["n1"] = Gaffer.ExecutableOpHolder()
-		s["n1"].setParameterised( op1 )
+		s["n1"] = GafferDispatchTest.LoggingExecutableNode()
 
 		self.assertRaises( RuntimeError, dispatcher.dispatch, [ s["n1"] ] )
 		self.assertRaises( RuntimeError, dispatcher.frameRange, s, s.context() )
-		self.assertEqual( op1.counter, 0 )
-		self.assertEqual( op1.frames, [] )
+		self.assertEqual( len( s["n1"].log ), 0 )
 
 	def testDoesNotRequireSequenceExecution( self ) :
 
@@ -823,9 +768,8 @@ class DispatcherTest( GafferTest.TestCase ) :
 		dispatcher["frameRange"].setValue( str(frameList) )
 
 		s = Gaffer.ScriptNode()
-		op1 = TestOp("1", dispatcher.log)
-		s["n1"] = Gaffer.ExecutableOpHolder()
-		s["n1"].setParameterised( op1 )
+		s["n1"] = GafferDispatchTest.LoggingExecutableNode()
+		s["n1"]["frame"] = Gaffer.StringPlug( defaultValue = "${frame}", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 
 		dispatcher["framesMode"].setValue( GafferDispatch.Dispatcher.FramesMode.CurrentFrame )
 		self.assertEqual( dispatcher.frameRange( s, s.context() ), IECore.frameListFromList( [ int(s.context().getFrame()) ] ) )
@@ -839,9 +783,8 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 		dispatcher.dispatch( [ s["n1"] ] )
 
-		self.assertEqual( op1.counter, len(frameList.asList()) )
-		self.assertNotEqual( op1.frames, frameList.asList() )
-		self.assertEqual( op1.frames, binaryFrames.asList() )
+		self.assertEqual( len( s["n1"].log ), len( frameList.asList() ) )
+		self.assertEqual( [ l.context.getFrame() for l in s["n1"].log ], binaryFrames.asList() )
 
 	def testPreTasksOverride( self ) :
 
