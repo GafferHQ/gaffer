@@ -1007,5 +1007,129 @@ class DispatcherTest( GafferTest.TestCase ) :
 		dispatcher = GafferDispatch.Dispatcher.create( "testDispatcher" )
 		self.assertRaisesRegexp( RuntimeError, "cannot have cyclic dependencies", dispatcher.dispatch, [ s["t"] ] )
 
+	def testPostTasks( self ) :
+
+		# t - p
+		# |
+		# e
+
+		s = Gaffer.ScriptNode()
+
+		log = []
+		s["p"] = GafferDispatchTest.LoggingExecutableNode( log = log )
+
+		s["t"] = GafferDispatchTest.LoggingExecutableNode( log = log )
+		s["t"]["postTasks"][0].setInput( s["p"]["task"] )
+
+		s["e"] = GafferDispatchTest.LoggingExecutableNode( log = log )
+		s["e"]["preTasks"][0].setInput( s["t"]["task"] )
+
+		dispatcher = GafferDispatch.Dispatcher.create( "testDispatcher" )
+		dispatcher.dispatch( [ s["e"] ] )
+
+		self.assertEqual( [ l.node for l in log ], [ s["t"], s["p"], s["e"] ] )
+
+	def testSerialPostTasks( self ) :
+
+		# t1 - p1
+		# |
+		# t2 - p2
+
+		s = Gaffer.ScriptNode()
+
+		log = []
+		s["p1"] = GafferDispatchTest.LoggingExecutableNode( log = log )
+		s["p2"] = GafferDispatchTest.LoggingExecutableNode( log = log )
+		s["t1"] = GafferDispatchTest.LoggingExecutableNode( log = log )
+		s["t2"] = GafferDispatchTest.LoggingExecutableNode( log = log )
+
+		s["t1"]["postTasks"][0].setInput( s["p1"]["task"] )
+		s["t2"]["postTasks"][0].setInput( s["p2"]["task"] )
+		s["t2"]["preTasks"][0].setInput( s["t1"]["task"] )
+
+		dispatcher = GafferDispatch.Dispatcher.create( "testDispatcher" )
+		dispatcher.dispatch( [ s["t2"] ] )
+
+		self.assertEqual( [ l.node for l in log ], [ s["t1"], s["p1"], s["t2"], s["p2"] ] )
+
+	def testStaticPostTask( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["p"] = GafferDispatchTest.LoggingExecutableNode()
+
+		s["t"] = GafferDispatchTest.LoggingExecutableNode()
+		s["t"]["f"] = Gaffer.StringPlug( defaultValue = "####" )
+		s["t"]["postTasks"][0].setInput( s["p"]["task"] )
+
+		dispatcher = GafferDispatch.Dispatcher.create( "testDispatcher" )
+		dispatcher["framesMode"].setValue( dispatcher.FramesMode.CustomRange )
+		dispatcher["frameRange"].setValue( "1-10" )
+
+		dispatcher.dispatch( [ s["t"] ] )
+		self.assertEqual( len( s["t"].log ), 10 )
+		self.assertEqual( len( s["p"].log ), 1  )
+
+	def testPostTaskWithPreTasks( self ) :
+
+		#     u
+		#     |
+		# e - p
+
+		s = Gaffer.ScriptNode()
+
+		log = []
+		s["u"] = GafferDispatchTest.LoggingExecutableNode( log = log )
+		s["p"] = GafferDispatchTest.LoggingExecutableNode( log = log )
+		s["p"]["preTasks"][0].setInput( s["u"]["task"] )
+		s["e"] = GafferDispatchTest.LoggingExecutableNode( log = log )
+		s["e"]["postTasks"][0].setInput( s["p"]["task"] )
+
+		dispatcher = GafferDispatch.Dispatcher.create( "testDispatcher" )
+		dispatcher.dispatch( [ s["e"] ] )
+
+		self.assertEqual( [ l.node for l in log ], [ s["u"], s["e"], s["p"] ] )
+
+	def testPostTaskWithDownstreamTasks( self ) :
+
+		# e - p
+		#     |
+		#     d
+
+		s = Gaffer.ScriptNode()
+
+		log = []
+		s["p"] = GafferDispatchTest.LoggingExecutableNode( log = log )
+		s["e"] = GafferDispatchTest.LoggingExecutableNode( log = log )
+		s["e"]["postTasks"][0].setInput( s["p"]["task"] )
+		s["d"] = GafferDispatchTest.LoggingExecutableNode( log = log )
+		s["d"]["preTasks"][0].setInput( s["p"]["task"] )
+
+		dispatcher = GafferDispatch.Dispatcher.create( "testDispatcher" )
+
+		# Dispatching e should cause p to execute as a post task, but
+		# tasks downstream of p should be ignored.
+		dispatcher.dispatch( [ s["e"] ] )
+		self.assertEqual( [ l.node for l in log ], [ s["e"], s["p"] ] )
+
+		# Dispatching d should cause p to be executed as a pre task,
+		# but that should not cause e to execute.
+		del log[:]
+		dispatcher.dispatch( [ s["d"] ] )
+		self.assertEqual( [ l.node for l in log ], [ s["p"], s["d"] ] )
+
+	def testPostTaskCycles( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["t1"] = GafferDispatchTest.LoggingExecutableNode()
+		s["t2"] = GafferDispatchTest.LoggingExecutableNode()
+
+		s["t2"]["preTasks"][0].setInput( s["t1"]["task"] )
+		s["t2"]["postTasks"][0].setInput( s["t1"]["task"] )
+
+		dispatcher = GafferDispatch.Dispatcher.create( "testDispatcher" )
+		self.assertRaisesRegexp( RuntimeError, "cannot have cyclic dependencies", dispatcher.dispatch, [ s["t2"] ] )
+
 if __name__ == "__main__":
 	unittest.main()

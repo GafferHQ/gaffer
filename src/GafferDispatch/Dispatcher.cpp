@@ -298,8 +298,7 @@ class Dispatcher::Batcher
 
 		void addTask( const ExecutableNode::Task &task )
 		{
-			std::set<const TaskBatch *> ancestors;
-			batchTasksWalk( task, m_rootBatch.get(), ancestors );
+			addPreTask( m_rootBatch.get(), batchTasksWalk( task ) );
 		}
 
 		TaskBatch *rootBatch()
@@ -309,35 +308,63 @@ class Dispatcher::Batcher
 
 	private :
 
-		void batchTasksWalk( const ExecutableNode::Task &task, Dispatcher::TaskBatch *parent, std::set<const TaskBatch *> &ancestors )
+		TaskBatchPtr batchTasksWalk( const ExecutableNode::Task &task, const std::set<const TaskBatch *> &ancestors = std::set<const TaskBatch *>() )
 		{
+			// Acquire a batch with this task placed in it,
+			// and check that we haven't discovered a cyclic
+			// dependency.
 			TaskBatchPtr batch = acquireBatch( task );
-
-			TaskBatches &parentPreTasks = parent->preTasks();
-			if( std::find( parentPreTasks.begin(), parentPreTasks.end(), batch ) == parentPreTasks.end() )
+			if( ancestors.find( batch.get() ) != ancestors.end() )
 			{
-				if( ancestors.find( batch.get() ) != ancestors.end() )
-				{
-					throw IECore::Exception( ( boost::format( "Dispatched nodes cannot have cyclic dependencies. %s and %s are involved in a cycle." ) % batch->node()->relativeName( batch->node()->scriptNode() ) % parent->node()->relativeName( parent->node()->scriptNode() ) ).str() );
-				}
-
-				parentPreTasks.push_back( batch );
+				throw IECore::Exception( ( boost::format( "Dispatched nodes cannot have cyclic dependencies but %s is involved in a cycle." ) % batch->node()->relativeName( batch->node()->scriptNode() ) ).str() );
 			}
 
+			// Ask the node what preTasks and postTasks it would like.
 			ExecutableNode::Tasks preTasks;
+			ExecutableNode::Tasks postTasks;
 			{
 				Context::Scope scopedTaskContext( task.context() );
 				task.node()->preTasks( task.context(), preTasks );
+				task.node()->postTasks( task.context(), postTasks );
 			}
 
-			ancestors.insert( batch.get() );
+			// Collect all the batches the postTasks belong in.
+			// We grab these first because they need to be included
+			// in the ancestors for cycle detection when getting
+			// the preTask batches.
+			std::vector<TaskBatchPtr> postBatches;
+			for( ExecutableNode::Tasks::const_iterator it = postTasks.begin(); it != postTasks.end(); ++it )
+			{
+				postBatches.push_back( batchTasksWalk( *it ) );
+			}
+
+			// Collect all the batches the preTasks belong in,
+			// and add them as preTasks for our batch.
+
+			std::set<const TaskBatch *> preTaskAncestors( ancestors );
+			preTaskAncestors.insert( batch.get() );
+			for( std::vector<TaskBatchPtr>::const_iterator it = postBatches.begin(), eIt = postBatches.end(); it != eIt; ++it )
+			{
+				preTaskAncestors.insert( it->get() );
+			}
 
 			for( ExecutableNode::Tasks::const_iterator it = preTasks.begin(); it != preTasks.end(); ++it )
 			{
-				batchTasksWalk( *it, batch.get(), ancestors );
+				addPreTask( batch.get(), batchTasksWalk( *it, preTaskAncestors ) );
 			}
 
-			ancestors.erase( batch.get() );
+			// As far as TaskBatch and doDispatch() are concerned, there
+			// is no such thing as a postTask, so we emulate them by making
+			// this batch a preTask of each of the postTask batches. We also
+			// add the postTask batches as preTasks for the root, so that they
+			// are reachable from doDispatch().
+			for( std::vector<TaskBatchPtr>::const_iterator it = postBatches.begin(), eIt = postBatches.end(); it != eIt; ++it )
+			{
+				addPreTask( it->get(), batch );
+				addPreTask( m_rootBatch.get(), *it );
+			}
+
+			return batch;
 		}
 
 		TaskBatchPtr acquireBatch( const ExecutableNode::Task &task )
@@ -437,6 +464,15 @@ class Dispatcher::Batcher
 			}
 
 			return result;
+		}
+
+		void addPreTask( TaskBatch *batch, TaskBatchPtr preTask )
+		{
+			std::vector<TaskBatchPtr> &preTasks = batch->preTasks();
+			if( std::find( preTasks.begin(), preTasks.end(), preTask ) == preTasks.end() )
+			{
+				preTasks.push_back( preTask );
+			}
 		}
 
 		typedef std::map<IECore::MurmurHash, TaskBatchPtr> BatchMap;
