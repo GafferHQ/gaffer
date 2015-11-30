@@ -972,5 +972,30 @@ class DispatcherTest( GafferTest.TestCase ) :
 		self.assertEqual( [ l.context.getFrame() for l in log ], [ 1, 1, 2, 2, 3, 3, 4, 4, 5, 5 ] )
 		self.assertEqual( [ l.node for l in log ], [ s["perFrame1"], s["perFrame2"] ] * 5 )
 
+	def testManyFrames( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["t1"] = GafferDispatchTest.LoggingExecutableNode()
+		s["t1"]["f"] = Gaffer.StringPlug( defaultValue = "T1.####" )
+
+		s["t2"] = GafferDispatchTest.LoggingExecutableNode()
+		s["t2"]["f"] = Gaffer.StringPlug( defaultValue = "T1.####" )
+
+		s["t3"] = GafferDispatchTest.LoggingExecutableNode()
+		s["t3"]["f"] = Gaffer.StringPlug( defaultValue = "T1.####" )
+
+		s["t2"]["preTasks"][0].setInput( s["t1"]["task"] )
+		s["t3"]["preTasks"][0].setInput( s["t2"]["task"] )
+
+		dispatcher = GafferDispatch.Dispatcher.create( "testDispatcher" )
+		dispatcher["framesMode"].setValue( dispatcher.FramesMode.CustomRange )
+		dispatcher["frameRange"].setValue( "1-10000" )
+		dispatcher.dispatch( [ s["t3"] ] )
+
+		self.assertEqual( len( s["t1"].log ), 10000 )
+		self.assertEqual( len( s["t2"].log ), 10000 )
+		self.assertEqual( len( s["t3"].log ), 10000 )
+
 if __name__ == "__main__":
 	unittest.main()
