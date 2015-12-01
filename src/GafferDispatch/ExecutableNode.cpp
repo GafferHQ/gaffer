@@ -202,10 +202,13 @@ void ExecutableNode::preTasks( const Context *context, Tasks &tasks ) const
 {
 	for( PlugIterator cIt( preTasksPlug() ); cIt != cIt.end(); ++cIt )
 	{
-		ExecutableNode *n = runTimeCast<ExecutableNode>( (*cIt)->source<Plug>()->node() );
-		if( n && n != this )
+		Plug *source = (*cIt)->source<Plug>();
+		if( source != *cIt )
 		{
-			tasks.push_back( Task( n, context ) );
+			if( ExecutableNodePtr n = runTimeCast<ExecutableNode>( source->node() ) )
+			{
+				tasks.push_back( Task( n, context ) );
+			}
 		}
 	}
 }

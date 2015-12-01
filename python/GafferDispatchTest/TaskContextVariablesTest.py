@@ -119,5 +119,14 @@ class TaskContextVariablesTest( GafferTest.TestCase ) :
 			}
 		)
 
+	def testDirectCycles( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["variables"] = GafferDispatch.TaskContextVariables()
+		s["variables"]["preTasks"][0].setInput( s["variables"]["task"] )
+
+		d = self.__dispatcher()
+		self.assertRaisesRegexp( RuntimeError, "cannot have cyclic dependencies", d.dispatch, [ s["variables"] ] )
+
 if __name__ == "__main__":
 	unittest.main()

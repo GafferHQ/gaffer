@@ -148,5 +148,14 @@ class TaskSwitchTest( GafferTest.TestCase ) :
 		self.assertEqual( s["c1"].executionCount, 0 )
 		self.assertEqual( s["c2"].executionCount, 0 )
 
+	def testDirectCycles( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["s"] = GafferDispatch.TaskSwitch()
+		s["s"]["preTasks"][0].setInput( s["s"]["task"] )
+
+		d = self.__dispatcher()
+		self.assertRaisesRegexp( RuntimeError, "cannot have cyclic dependencies", d.dispatch, [ s["s"] ] )
+
 if __name__ == "__main__":
 	unittest.main()

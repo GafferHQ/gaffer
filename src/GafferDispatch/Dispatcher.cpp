@@ -330,14 +330,14 @@ class Dispatcher::Batcher
 				task.node()->preTasks( task.context(), preTasks );
 			}
 
-			ancestors.insert( parent );
+			ancestors.insert( batch.get() );
 
 			for( ExecutableNode::Tasks::const_iterator it = preTasks.begin(); it != preTasks.end(); ++it )
 			{
 				batchTasksWalk( *it, batch.get(), ancestors );
 			}
 
-			ancestors.erase( parent );
+			ancestors.erase( batch.get() );
 		}
 
 		TaskBatchPtr acquireBatch( const ExecutableNode::Task &task )

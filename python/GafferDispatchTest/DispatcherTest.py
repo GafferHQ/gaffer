@@ -997,5 +997,15 @@ class DispatcherTest( GafferTest.TestCase ) :
 		self.assertEqual( len( s["t2"].log ), 10000 )
 		self.assertEqual( len( s["t3"].log ), 10000 )
 
+	def testDirectCyles( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["t"] = GafferDispatchTest.LoggingExecutableNode()
+		s["t"]["preTasks"][0].setInput( s["t"]["task"] )
+
+		dispatcher = GafferDispatch.Dispatcher.create( "testDispatcher" )
+		self.assertRaisesRegexp( RuntimeError, "cannot have cyclic dependencies", dispatcher.dispatch, [ s["t"] ] )
+
 if __name__ == "__main__":
 	unittest.main()

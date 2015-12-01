@@ -52,11 +52,14 @@ class TaskContextProcessor( GafferDispatch.ExecutableNode ) :
 		result = []
 		for plug in self["preTasks"] :
 
-			node = plug.source().node()
-			if node.isSame( self ) or not isinstance( node, GafferDispatch.ExecutableNode ):
+			source = plug.source()
+			if source.isSame( plug ) :
 				continue
 
-			result.extend( [ self.Task( node, c ) for c in contexts ] )
+			if not isinstance( source.node(), GafferDispatch.ExecutableNode ):
+				continue
+
+			result.extend( [ self.Task( source.node(), c ) for c in contexts ] )
 
 		return result
 
