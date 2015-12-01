@@ -150,13 +150,7 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 		def execute( self, background = False ) :
 
 			if background :
-
-				with self.__messageHandler :
-					if not self.__preBackgroundDispatch( self.__batch ) :
-						return
-
 				threading.Thread( target = self.__backgroundDispatch ).start()
-
 			else :
 				with self.__messageHandler :
 					self.__foregroundDispatch( self.__batch )
@@ -213,18 +207,6 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 				return False
 
 			self.__setStatus( batch, LocalDispatcher.Job.Status.Complete )
-
-			return True
-
-		def __preBackgroundDispatch( self, batch ) :
-
-			if batch.node() and batch.node()["dispatcher"]["local"]["executeInForeground"].getValue() :
-				if not self.__foregroundDispatch( batch ) :
-					return False
-			else :
-				for upstreamBatch in batch.preTasks() :
-					if not self.__preBackgroundDispatch( upstreamBatch ) :
-						return False
 
 			return True
 
@@ -439,15 +421,7 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 
 		job.execute( background = self["executeInBackground"].getValue() )
 
-	@staticmethod
-	def _doSetupPlugs( parentPlug ) :
-
-		parentPlug["local"] = Gaffer.Plug()
-
-		foregroundPlug = Gaffer.BoolPlug( "executeInForeground", defaultValue = False )
-		parentPlug["local"].addChild( foregroundPlug )
-
 IECore.registerRunTimeTyped( LocalDispatcher, typeName = "GafferDispatch::LocalDispatcher" )
 IECore.registerRunTimeTyped( LocalDispatcher.JobPool, typeName = "GafferDispatch::LocalDispatcher::JobPool" )
 
-GafferDispatch.Dispatcher.registerDispatcher( "Local", LocalDispatcher, setupPlugsFn = LocalDispatcher._doSetupPlugs )
+GafferDispatch.Dispatcher.registerDispatcher( "Local", LocalDispatcher )

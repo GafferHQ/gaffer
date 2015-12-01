@@ -376,7 +376,7 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 
 		self.assertTrue( os.path.isfile( s.context().substitute( s["n1"]["fileName"].getValue() ) ) )
 
-	def testMixedForegroundAndBackground( self ) :
+	def testMixedImmediateAndBackground( self ) :
 
 		preCs = GafferTest.CapturingSlot( GafferDispatch.LocalDispatcher.preDispatchSignal() )
 		self.assertEqual( len( preCs ), 0 )
@@ -403,7 +403,7 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		s["n1"] = createWriter( "n1" )
 		s["n2"] = createWriter( "n2" )
 		# force the entire n2 tree to execute in the foreground
-		s["n2"]["dispatcher"]["local"]["executeInForeground"].setValue( True )
+		s["n2"]["dispatcher"]["immediate"].setValue( True )
 		s["n2a"] = createWriter( "n2a" )
 		s["n2b"] = createWriter( "n2b" )
 		s["n3"] = createWriter( "n3" )

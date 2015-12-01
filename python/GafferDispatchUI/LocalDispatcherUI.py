@@ -61,9 +61,7 @@ Gaffer.Metadata.registerNode(
 			"description",
 			"""
 			Executes the dispatched tasks in separate processes via a
-			background thread. Foreground execution may still be forced
-			for specific nodes using the dispatcher.local.executeInForeground
-			plug on the node itself.
+			background thread.
 			""",
 
 		),
@@ -77,37 +75,6 @@ Gaffer.Metadata.registerNode(
 			""",
 
 		)
-
-	}
-
-)
-
-Gaffer.Metadata.registerNode(
-
-	Gaffer.ExecutableNode,
-
-	plugs = {
-
-		"dispatcher.local" : [
-
-			"description",
-			"""
-			Settings used by the local dispatcher.
-			""",
-
-			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
-			"layout:section", "Local",
-
-		],
-
-		"dispatcher.local.executeInForeground" : [
-
-			"description",
-			"""
-			Forces the tasks from this node (and all preceding tasks) to execute on the current thread.
-			"""
-
-		]
 
 	}
 
