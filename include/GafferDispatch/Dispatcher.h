@@ -212,8 +212,7 @@ class Dispatcher : public Gaffer::Node
 			public :
 
 				TaskBatch();
-				TaskBatch( const ExecutableNode::Task &task );
-				TaskBatch( const TaskBatch &other );
+				TaskBatch( ConstExecutableNodePtr node, Gaffer::ConstContextPtr context );
 
 				IE_CORE_DECLAREMEMBERPTR( TaskBatch );
 

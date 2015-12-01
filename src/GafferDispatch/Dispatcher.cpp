@@ -209,23 +209,12 @@ FrameListPtr Dispatcher::frameRange( const ScriptNode *script, const Context *co
 //////////////////////////////////////////////////////////////////////////
 
 Dispatcher::TaskBatch::TaskBatch()
+	:	m_blindData( new CompoundData )
 {
-	m_blindData = new CompoundData;
 }
 
-Dispatcher::TaskBatch::TaskBatch( const ExecutableNode::Task &task )
-	: m_node( task.node() ), m_context( task.context() )
-{
-	m_blindData = new CompoundData;
-
-	if ( task.hash() != MurmurHash() )
-	{
-		m_frames.push_back( task.context()->getFrame() );
-	}
-}
-
-Dispatcher::TaskBatch::TaskBatch( const TaskBatch &other )
-	: m_node( other.m_node ), m_context( other.m_context ), m_blindData( other.m_blindData ), m_frames( other.m_frames ), m_preTasks( other.m_preTasks )
+Dispatcher::TaskBatch::TaskBatch( ConstExecutableNodePtr node, Gaffer::ConstContextPtr context )
+	:	m_node( node ), m_context( context ), m_blindData( new CompoundData )
 {
 }
 
@@ -369,6 +358,9 @@ class Dispatcher::Batcher
 
 		TaskBatchPtr acquireBatch( const ExecutableNode::Task &task )
 		{
+			// See if we've previously visited this task, and therefore
+			// have placed it in a batch already, which we can return
+			// unchanged.
 			MurmurHash taskToBatchMapHash = task.hash();
 			taskToBatchMapHash.append( (uint64_t)task.node() );
 			if( task.hash() == MurmurHash() )
@@ -377,50 +369,59 @@ class Dispatcher::Batcher
 				// batch. See comments in batchHash().
 				taskToBatchMapHash.append( task.context()->getFrame() );
 			}
-			TaskToBatchMap::iterator it = m_tasksToBatches.find( taskToBatchMapHash );
+			const TaskToBatchMap::const_iterator it = m_tasksToBatches.find( taskToBatchMapHash );
 			if( it != m_tasksToBatches.end() )
 			{
 				return it->second;
 			}
 
-			MurmurHash batchMapHash = batchHash( task );
+			// We haven't seen this task before, so we need to find
+			// an appropriate batch to put it in. This may be one of
+			// our current batches, or we may need to make a new one
+			// entirely.
+
+			TaskBatchPtr batch = NULL;
+			const MurmurHash batchMapHash = batchHash( task );
 			BatchMap::iterator bIt = m_currentBatches.find( batchMapHash );
 			if( bIt != m_currentBatches.end() )
 			{
-				TaskBatchPtr batch = bIt->second;
-
-				std::vector<float> &frames = batch->frames();
-				const Plug *dispatcherPlug = task.node()->dispatcherPlug();
-				const IntPlug *batchSizePlug = dispatcherPlug->getChild<const IntPlug>( g_batchSize );
-				size_t batchSize = ( batchSizePlug ) ? batchSizePlug->getValue() : 1;
-
-				if( task.node()->requiresSequenceExecution() || ( frames.size() < batchSize ) )
+				TaskBatchPtr candidateBatch = bIt->second;
+				const IntPlug *batchSizePlug = task.node()->dispatcherPlug()->getChild<const IntPlug>( g_batchSize );
+				const size_t batchSize = ( batchSizePlug ) ? batchSizePlug->getValue() : 1;
+				if( task.node()->requiresSequenceExecution() || ( candidateBatch->frames().size() < batchSize ) )
 				{
-					if( task.hash() != MurmurHash() )
-					{
-						float frame = task.context()->getFrame();
-						if( std::find( frames.begin(), frames.end(), frame ) == frames.end() )
-						{
-							if( task.node()->requiresSequenceExecution() )
-							{
-								frames.insert( std::lower_bound( frames.begin(), frames.end(), frame ), frame );
-							}
-							else
-							{
-								frames.push_back( frame );
-							}
-						}
-					}
-
-					m_tasksToBatches[taskToBatchMapHash] = batch;
-
-					return batch;
+					batch = candidateBatch;
 				}
 			}
 
-			TaskBatchPtr batch = new TaskBatch( task );
+			if( !batch )
+			{
+				batch = new TaskBatch( task.node(), task.context() );
+				m_currentBatches[batchMapHash] = batch;
+			}
 
-			m_currentBatches[batchMapHash] = batch;
+			// Now we have an appropriate batch, update it to include
+			// our task.
+
+			if( task.hash() != MurmurHash() )
+			{
+				float frame = task.context()->getFrame();
+				std::vector<float> &frames = batch->frames();
+				if( std::find( frames.begin(), frames.end(), frame ) == frames.end() )
+				{
+					if( task.node()->requiresSequenceExecution() )
+					{
+						frames.insert( std::lower_bound( frames.begin(), frames.end(), frame ), frame );
+					}
+					else
+					{
+						frames.push_back( frame );
+					}
+				}
+			}
+
+			// Remember which batch we stored this task in, for
+			// the next time someone asks for it.
 			m_tasksToBatches[taskToBatchMapHash] = batch;
 
 			return batch;
