@@ -321,7 +321,7 @@ class Dispatcher::Batcher
 			// We grab these first because they need to be included
 			// in the ancestors for cycle detection when getting
 			// the preTask batches.
-			std::vector<TaskBatchPtr> postBatches;
+			TaskBatches postBatches;
 			for( ExecutableNode::Tasks::const_iterator it = postTasks.begin(); it != postTasks.end(); ++it )
 			{
 				postBatches.push_back( batchTasksWalk( *it ) );
@@ -332,7 +332,7 @@ class Dispatcher::Batcher
 
 			std::set<const TaskBatch *> preTaskAncestors( ancestors );
 			preTaskAncestors.insert( batch.get() );
-			for( std::vector<TaskBatchPtr>::const_iterator it = postBatches.begin(), eIt = postBatches.end(); it != eIt; ++it )
+			for( TaskBatches::const_iterator it = postBatches.begin(), eIt = postBatches.end(); it != eIt; ++it )
 			{
 				preTaskAncestors.insert( it->get() );
 			}
@@ -347,7 +347,7 @@ class Dispatcher::Batcher
 			// this batch a preTask of each of the postTask batches. We also
 			// add the postTask batches as preTasks for the root, so that they
 			// are reachable from doDispatch().
-			for( std::vector<TaskBatchPtr>::const_iterator it = postBatches.begin(), eIt = postBatches.end(); it != eIt; ++it )
+			for( TaskBatches::const_iterator it = postBatches.begin(), eIt = postBatches.end(); it != eIt; ++it )
 			{
 				addPreTask( it->get(), batch );
 				addPreTask( m_rootBatch.get(), *it );
@@ -469,7 +469,7 @@ class Dispatcher::Batcher
 
 		void addPreTask( TaskBatch *batch, TaskBatchPtr preTask )
 		{
-			std::vector<TaskBatchPtr> &preTasks = batch->preTasks();
+			TaskBatches &preTasks = batch->preTasks();
 			if( std::find( preTasks.begin(), preTasks.end(), preTask ) == preTasks.end() )
 			{
 				preTasks.push_back( preTask );

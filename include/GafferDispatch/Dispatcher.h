@@ -224,8 +224,8 @@ class Dispatcher : public Gaffer::Node
 				std::vector<float> &frames();
 				const std::vector<float> &frames() const;
 
-				std::vector<TaskBatchPtr> &preTasks();
-				const std::vector<TaskBatchPtr> &preTasks() const;
+				TaskBatches &preTasks();
+				const TaskBatches &preTasks() const;
 
 				IECore::CompoundData *blindData();
 				const IECore::CompoundData *blindData() const;
