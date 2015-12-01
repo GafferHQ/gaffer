@@ -56,19 +56,14 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 		def _doDispatch( self, batch ) :
 
-			self.__dispatch( batch )
-
-		def __dispatch( self, batch ) :
-
-			for currentBatch in batch.preTasks() :
-				self.__dispatch( currentBatch )
-
-			if not batch.node() or batch.blindData().get( "dispatched" ) :
+			if batch.blindData().get( "testDispatcher:dispatched" ) :
 				return
 
-			batch.execute()
+			for upstreamBatch in batch.preTasks() :
+				self._doDispatch( upstreamBatch )
 
-			batch.blindData()["dispatched"] = IECore.BoolData( True )
+			batch.execute()
+			batch.blindData()["testDispatcher:dispatched"] = IECore.BoolData( True )
 
 		@staticmethod
 		def _doSetupPlugs( parentPlug ) :
