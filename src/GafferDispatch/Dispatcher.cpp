@@ -52,6 +52,9 @@ using namespace GafferDispatch;
 
 static InternedString g_frame( "frame" );
 static InternedString g_batchSize( "batchSize" );
+static InternedString g_immediatePlugName( "immediate" );
+static InternedString g_immediateBlindDataName( "dispatcher:immediate" );
+static InternedString g_executedBlindDataName( "dispatcher:executed" );
 static InternedString g_jobDirectoryContextEntry( "dispatcher:jobDirectory" );
 
 size_t Dispatcher::g_firstPlugIndex = 0;
@@ -168,6 +171,8 @@ void Dispatcher::setupPlugs( Plug *parentPlug )
 			parentPlug->addChild( new IntPlug( g_batchSize, Plug::In, 1 ) );
 		}
 	}
+
+	parentPlug->addChild( new BoolPlug( g_immediatePlugName, Plug::In, false ) );
 
 	const CreatorMap &m = creators();
 	for ( CreatorMap::const_iterator it = m.begin(); it != m.end(); ++it )
@@ -401,7 +406,7 @@ class Dispatcher::Batcher
 			}
 
 			// Now we have an appropriate batch, update it to include
-			// our task.
+			// the frame for our task, and any other relevant information.
 
 			if( task.hash() != MurmurHash() )
 			{
@@ -418,6 +423,16 @@ class Dispatcher::Batcher
 						frames.push_back( frame );
 					}
 				}
+			}
+
+			const BoolPlug *immediatePlug = task.node()->dispatcherPlug()->getChild<const BoolPlug>( g_immediatePlugName );
+			if( immediatePlug && immediatePlug->getValue() )
+			{
+				/// \todo Should we be scoping a context for this, to allow the plug to
+				/// have expressions on it? If so, should we be doing the same before
+				/// calling requiresSequenceExecution()? Or should we instead require that
+				/// they always be constant?
+				batch->blindData()->writable()[g_immediateBlindDataName] = new BoolData( true );
 			}
 
 			// Remember which batch we stored this task in, for
@@ -609,6 +624,8 @@ void Dispatcher::dispatch( const std::vector<NodePtr> &nodes ) const
 		}
 	}
 
+	executeAndPruneImmediateBatches( batcher.rootBatch() );
+
 	if( !batcher.rootBatch()->preTasks().empty() )
 	{
 		doDispatch( batcher.rootBatch() );
@@ -618,6 +635,36 @@ void Dispatcher::dispatch( const std::vector<NodePtr> &nodes ) const
 	// postDispatchSignal():
 
 	signalGuard.success();
+}
+
+void Dispatcher::executeAndPruneImmediateBatches( TaskBatch *batch, bool immediate ) const
+{
+	if( batch->blindData()->member<BoolData>( g_executedBlindDataName ) )
+	{
+		return;
+	}
+
+	immediate = immediate || batch->blindData()->member<BoolData>( g_immediateBlindDataName );
+
+	TaskBatches &preTasks = batch->preTasks();
+	for( TaskBatches::iterator it = preTasks.begin(); it != preTasks.end(); )
+	{
+		executeAndPruneImmediateBatches( it->get(), immediate );
+		if( (*it)->blindData()->member<BoolData>( g_executedBlindDataName ) )
+		{
+			it = preTasks.erase( it );
+		}
+		else
+		{
+			++it;
+		}
+	}
+
+	if( immediate )
+	{
+		batch->execute();
+		batch->blindData()->writable()[g_executedBlindDataName] = new BoolData( true );
+	}
 }
 
 //////////////////////////////////////////////////////////////////////////

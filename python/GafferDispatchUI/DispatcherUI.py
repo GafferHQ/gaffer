@@ -139,6 +139,22 @@ Gaffer.Metadata.registerNode(
 
 		),
 
+		"dispatcher.immediate" : (
+
+			"description",
+			"""
+			Causes this node to be executed immediately upon dispatch,
+			rather than have its execution be scheduled normally by
+			the dispatcher. For instance, when using the LocalDispatcher,
+			the node will be executed immediately in the dispatching process
+			and not in a background process as usual.
+
+			When a node is made immediate, all upstream nodes are automatically
+			considered to be immediate too, regardless of their settings.
+			"""
+
+		)
+
 	}
 
 )

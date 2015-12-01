@@ -260,6 +260,8 @@ class Dispatcher : public Gaffer::Node
 		std::string createJobDirectory( const Gaffer::Context *context ) const;
 		mutable std::string m_jobDirectory;
 
+		void executeAndPruneImmediateBatches( TaskBatch *batch, bool immediate = false ) const;
+
 		typedef std::map<std::string, std::pair<Creator, SetupPlugsFn> > CreatorMap;
 		static CreatorMap &creators();
 

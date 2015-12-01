@@ -75,6 +75,18 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 	IECore.registerRunTimeTyped( TestDispatcher )
 
+	class NullDispatcher( GafferDispatch.Dispatcher ) :
+
+		def __init__( self ) :
+
+			GafferDispatch.Dispatcher.__init__( self )
+
+		def _doDispatch( self, batch ) :
+
+			pass
+
+	IECore.registerRunTimeTyped( NullDispatcher )
+
 	def setUp( self ) :
 
 		GafferTest.TestCase.setUp( self )
@@ -1125,6 +1137,94 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 		dispatcher = GafferDispatch.Dispatcher.create( "testDispatcher" )
 		self.assertRaisesRegexp( RuntimeError, "cannot have cyclic dependencies", dispatcher.dispatch, [ s["t2"] ] )
+
+	def testImmediateDispatch( self ) :
+
+		# nonImmediate1
+		# |
+		# immediate
+		# |
+		# nonImmediate2
+
+		s = Gaffer.ScriptNode()
+
+		log = []
+		s["nonImmediate1"] = GafferDispatchTest.LoggingExecutableNode( log = log )
+		s["immediate"] = GafferDispatchTest.LoggingExecutableNode( log = log )
+		s["immediate"]["preTasks"][0].setInput( s["nonImmediate1"]["task"] )
+		s["immediate"]["dispatcher"]["immediate"].setValue( True )
+		s["nonImmediate2"] = GafferDispatchTest.LoggingExecutableNode( log = log )
+		s["nonImmediate2"]["preTasks"][0].setInput( s["immediate"]["task"] )
+
+		dispatcher = self.NullDispatcher()
+		dispatcher.dispatch( [ s["nonImmediate2"] ] )
+
+		self.assertEqual( [ l.node for l in log ], [ s["nonImmediate1"], s["immediate" ] ] )
+
+	def testImmediateDispatchWithSharedBatches( self ) :
+
+		#   n1
+		#  / \
+		# i1 12
+		#  \ /
+		#   n2
+
+		s = Gaffer.ScriptNode()
+
+		log = []
+		s["n1"] = GafferDispatchTest.LoggingExecutableNode( log = log )
+		s["i1"] = GafferDispatchTest.LoggingExecutableNode( log = log )
+		s["i1"]["preTasks"][0].setInput( s["n1"]["task"] )
+		s["i1"]["dispatcher"]["immediate"].setValue( True )
+		s["i2"] = GafferDispatchTest.LoggingExecutableNode( log = log )
+		s["i2"]["preTasks"][0].setInput( s["n1"]["task"] )
+		s["i2"]["dispatcher"]["immediate"].setValue( True )
+		s["n2"] = GafferDispatchTest.LoggingExecutableNode( log = log )
+		s["n2"]["preTasks"][0].setInput( s["i1"]["task"] )
+		s["n2"]["preTasks"][1].setInput( s["i2"]["task"] )
+
+		# NullDispatcher dispatch should only execute the immediate nodes.
+		dispatcher = self.NullDispatcher()
+		dispatcher.dispatch( [ s["n2"] ] )
+		self.assertEqual( [ l.node for l in log ], [ s["n1"], s["i1" ], s["i2"] ] )
+
+		# And a more usual dispatch shouldn't double up dispatch on anything.
+		del log[:]
+		dispatcher = GafferDispatch.Dispatcher.create( "testDispatcher" )
+		dispatcher.dispatch( [ s["n2"] ] )
+		self.assertEqual( [ l.node for l in log ], [ s["n1"], s["i1"], s["i2"], s["n2"] ] )
+
+	def testImmediateDispatchWithSplitSharedBatches( self ) :
+
+		#   n1
+		#  / \
+		# i1 n2
+		#  \ /
+		#   n3
+
+		s = Gaffer.ScriptNode()
+
+		log = []
+		s["n1"] = GafferDispatchTest.LoggingExecutableNode( log = log )
+		s["i1"] = GafferDispatchTest.LoggingExecutableNode( log = log )
+		s["i1"]["preTasks"][0].setInput( s["n1"]["task"] )
+		s["i1"]["dispatcher"]["immediate"].setValue( True )
+		s["n2"] = GafferDispatchTest.LoggingExecutableNode( log = log )
+		s["n2"]["preTasks"][0].setInput( s["n1"]["task"] )
+		s["n3"] = GafferDispatchTest.LoggingExecutableNode( log = log )
+		s["n3"]["preTasks"][0].setInput( s["i1"]["task"] )
+		s["n3"]["preTasks"][1].setInput( s["n2"]["task"] )
+
+		# NullDispatcher dispatch should only execute the immediate nodes.
+		dispatcher = self.NullDispatcher()
+		dispatcher.dispatch( [ s["n3"] ] )
+		self.assertEqual( [ l.node for l in log ], [ s["n1"], s["i1" ] ] )
+
+		# And a more usual dispatch shouldn't double up dispatch on anything.
+		del log[:]
+		dispatcher = GafferDispatch.Dispatcher.create( "testDispatcher" )
+		dispatcher.dispatch( [ s["n3"] ] )
+		self.assertEqual( [ l.node for l in log ], [ s["n1"], s["i1"], s["n2"], s["n3"] ] )
 
 if __name__ == "__main__":
 	unittest.main()
