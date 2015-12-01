@@ -344,6 +344,12 @@ class Dispatcher::Batcher
 		{
 			MurmurHash taskToBatchMapHash = task.hash();
 			taskToBatchMapHash.append( (uint64_t)task.node() );
+			if( task.hash() == MurmurHash() )
+			{
+				// Make sure we don't coalesce all no-ops into a single
+				// batch. See comments in batchHash().
+				taskToBatchMapHash.append( task.context()->getFrame() );
+			}
 			TaskToBatchMap::iterator it = m_tasksToBatches.find( taskToBatchMapHash );
 			if( it != m_tasksToBatches.end() )
 			{
@@ -386,36 +392,48 @@ class Dispatcher::Batcher
 			}
 
 			TaskBatchPtr batch = new TaskBatch( task );
+
 			m_currentBatches[batchMapHash] = batch;
 			m_tasksToBatches[taskToBatchMapHash] = batch;
 
 			return batch;
 		}
 
+		// Hash used to determine how to coalesce tasks into batches.
+		// If `batchHash( task1 ) == batchHash( task2 )` then the two
+		// tasks can be placed in the same batch.
 		IECore::MurmurHash batchHash( const ExecutableNode::Task &task )
 		{
 			MurmurHash result;
 			result.append( (uint64_t)task.node() );
-
-			if( task.hash() == MurmurHash() )
-			{
-				return result;
-			}
 
 			const Context *context = task.context();
 			std::vector<IECore::InternedString> names;
 			context->names( names );
 			for( std::vector<IECore::InternedString>::const_iterator it = names.begin(); it != names.end(); ++it )
 			{
-				// ignore the frame and the ui values
-				if( ( *it != g_frame ) && it->string().compare( 0, 3, "ui:" ) )
+				// Ignore the UI values since they should be irrelevant
+				// to execution.
+				if( it->string().compare( 0, 3, "ui:" ) == 0 )
 				{
-					result.append( *it );
-					if( const IECore::Data *data = context->get<const IECore::Data>( *it ) )
-					{
-						data->hash( result );
-					}
+					continue;
 				}
+				// Ignore the frame, since the whole point of batching
+				// is to allow multiple frames to be placed in the same
+				// batch if the context is otherwise identical.
+				///
+				// There is one exception to this though - if the task is
+				// a no-op, then we don't want to coalesce, because then
+				// every single frame of the no-op would be placed in the
+				// same batch, and all downstream frames would then be forced
+				// to depend unnecessarily on all upstream frames.
+				if( *it == g_frame && task.hash() != MurmurHash() )
+				{
+					continue;
+				}
+
+				result.append( *it );
+				context->get<const IECore::Data>( *it )->hash( result );
 			}
 
 			return result;

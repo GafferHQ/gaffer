@@ -943,5 +943,34 @@ class DispatcherTest( GafferTest.TestCase ) :
 		self.assertEqual( next( open( "%s/test.0004.txt" % jobDir ) ), "w on 4 from %s" % jobDir )
 		self.assertEqual( next( open( "%s/test.0006.txt" % jobDir ) ), "w on 6 from %s" % jobDir )
 
+	def testNoOpDoesntBreakFrameParallelism( self ) :
+
+		# perFrame1
+		# |
+		# contextVariables
+		# |
+		# perFrame2
+
+		s = Gaffer.ScriptNode()
+
+		log = []
+		s["perFrame1"] = GafferDispatchTest.LoggingExecutableNode( log = log )
+		s["perFrame1"]["f"] = Gaffer.StringPlug( defaultValue = "perFrame1.####" )
+
+		s["contextVariables"] = GafferDispatch.TaskContextVariables()
+		s["contextVariables"]["preTasks"][0].setInput( s["perFrame1"]["task"] )
+
+		s["perFrame2"] = GafferDispatchTest.LoggingExecutableNode( log = log )
+		s["perFrame2"]["f"] = Gaffer.StringPlug( defaultValue = "perFrame2.####" )
+		s["perFrame2"]["preTasks"][0].setInput( s["contextVariables"]["task"] )
+
+		dispatcher = GafferDispatch.Dispatcher.create( "testDispatcher" )
+		dispatcher["framesMode"].setValue( dispatcher.FramesMode.CustomRange )
+		dispatcher["frameRange"].setValue( "1-5" )
+		dispatcher.dispatch( [ s["perFrame2"] ] )
+
+		self.assertEqual( [ l.context.getFrame() for l in log ], [ 1, 1, 2, 2, 3, 3, 4, 4, 5, 5 ] )
+		self.assertEqual( [ l.node for l in log ], [ s["perFrame1"], s["perFrame2"] ] * 5 )
+
 if __name__ == "__main__":
 	unittest.main()
