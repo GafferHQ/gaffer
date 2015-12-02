@@ -42,8 +42,24 @@ import IECore
 import Gaffer
 import GafferTest
 import GafferDispatch
+import GafferDispatchTest
 
 class PythonCommandTest( GafferTest.TestCase ) :
+
+	## \todo Something like his exists in several test cases now. Move it
+	# to a new DispatchTestCase base class? If we do that, then
+	# also use it in DispatcherTest instead of abusing the registry
+	# in setUp().
+	def __dispatcher( self, frameRange = None ) :
+
+		result = GafferDispatchTest.DispatcherTest.TestDispatcher()
+		result["jobsDirectory"].setValue( self.temporaryDirectory() + "/jobs" )
+
+		if frameRange is not None :
+			result["framesMode"].setValue( result.FramesMode.CustomRange )
+			result["frameRange"].setValue( frameRange )
+
+		return result
 
 	def testSelf( self ) :
 
@@ -66,9 +82,9 @@ class PythonCommandTest( GafferTest.TestCase ) :
 		n["variables"].addMember( "testColor", IECore.Color3f( 1, 2, 3 ) )
 		n["command"].setValue( inspect.cleandoc(
 			"""
-			self.testInt = testInt
-			self.testFloat = testFloat
-			self.testColor = testColor
+			self.testInt = variables["testInt"]
+			self.testFloat = variables["testFloat"]
+			self.testColor = variables["testColor"]
 			"""
 		) )
 
@@ -193,6 +209,68 @@ class PythonCommandTest( GafferTest.TestCase ) :
 			self.assertEqual( n.hash( c ), h3 )
 			c.setFrame( 3 )
 			self.assertEqual( n.hash( c ), h3 )
+
+	def testRequiresSequenceExecution( self ) :
+
+		n = GafferDispatch.PythonCommand()
+		self.assertFalse( n.requiresSequenceExecution() )
+
+		n["sequence"].setValue( True )
+		self.assertTrue( n.requiresSequenceExecution() )
+
+	def testFramesNotAvailableInNonSequenceMode( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = GafferDispatch.PythonCommand()
+		s["n"]["command"].setValue( "self.frames = frames" )
+
+		d = self.__dispatcher( frameRange = "1-5" )
+		self.assertRaisesRegexp( RuntimeError, "NameError: name 'frames' is not defined", d.dispatch, [ s["n"] ] )
+
+		s["n"]["dispatcher"]["batchSize"].setValue( 5 )
+		self.assertRaisesRegexp( RuntimeError, "NameError: name 'frames' is not defined", d.dispatch, [ s["n"] ] )
+
+	def testSequenceMode( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = GafferDispatch.PythonCommand()
+		# We need a variable which depends on the current frame
+		# so that all our tasks don't collapse into one.
+		s["n"]["variables"].addMember( "frameString", "####" )
+		# Then we can meaningfully ask for sequence execution.
+		s["n"]["sequence"].setValue( True )
+
+		s["n"]["command"].setValue( inspect.cleandoc(
+			"""
+			self.frames = frames
+			self.frameStrings = []
+			for frame in self.frames :
+				context.setFrame( frame )
+				self.frameStrings.append( variables["frameString"] )
+			"""
+		) )
+
+		d = self.__dispatcher( frameRange = "1-5" )
+		d.dispatch( [ s[ "n" ] ] )
+
+		self.assertEqual( s["n"].frames, [ 1, 2, 3, 4, 5 ] )
+		self.assertEqual( s["n"].frameStrings, [ "0001", "0002", "0003", "0004", "0005" ] )
+
+	def testCannotAccessVariablesOutsideFrameRange( self ) :
+
+		# We don't want to allow access to variables outside the frame range,
+		# because that would mean that PythonCommand.hash() was no longer accurate.
+
+		n = GafferDispatch.PythonCommand()
+		n["variables"].addMember( "testInt", 1 )
+		n["command"].setValue( inspect.cleandoc(
+			"""
+			context.setFrame( context.getFrame() + 1 )
+			self.testInt = variables["testInt"]
+			"""
+		) )
+
+		self.assertRaisesRegexp( Exception, "Invalid frame", n.execute )
 
 if __name__ == "__main__":
 	unittest.main()
