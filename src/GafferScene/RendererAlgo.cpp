@@ -211,6 +211,7 @@ bool outputLight( const ScenePlug *scene, const ScenePlug::ScenePath &path, IECo
 	}
 
 	ConstCompoundObjectPtr attributes = scene->fullAttributes( path );
+	ConstObjectPtr object = scene->object( path );
 	const M44f transform = scene->fullTransform( path );
 
 	std::string lightHandle;
@@ -283,6 +284,10 @@ bool outputLight( const ScenePlug *scene, const ScenePlug::ScenePath &path, IECo
 			}
 		}
 
+		if( const VisibleRenderable* renderable = runTimeCast< const VisibleRenderable >( object.get() ) )
+		{
+			renderable->render( renderer );
+		}
 	}
 
 
@@ -397,6 +402,12 @@ void outputAttributes( const IECore::CompoundObject *attributes, IECore::Rendere
 
 	for( CompoundObject::ObjectMap::const_iterator it = attributes->members().begin(), eIt = attributes->members().end(); it != eIt; it++ )
 	{
+		if( boost::ends_with( it->first.c_str(), ":light" ) )
+		{
+			// Currently lights are output in separate prepass
+			continue;
+		}
+
 		if( const StateRenderable *s = runTimeCast<const StateRenderable>( it->second.get() ) )
 		{
 			s->render( renderer );
