@@ -42,6 +42,7 @@
 #include "IECorePython/ScopedGILLock.h"
 
 #include "GafferBindings/NodeBinding.h"
+#include "GafferBindings/ExceptionAlgo.h"
 
 #include "GafferDispatch/ExecutableNode.h"
 
@@ -74,20 +75,27 @@ class ExecutableNodeWrapper : public GafferBindings::NodeWrapper<WrappedType>
 			if( this->isSubclassed() )
 			{
 				IECorePython::ScopedGILLock gilLock;
-				boost::python::object override = this->methodOverride( "preTasks" );
-				if( !override )
+				try
 				{
-					// backwards compatibility with old method name
-					override = this->methodOverride( "requirements" );
-				}
+					boost::python::object override = this->methodOverride( "preTasks" );
+					if( !override )
+					{
+						// backwards compatibility with old method name
+						override = this->methodOverride( "requirements" );
+					}
 
-				if( override )
+					if( override )
+					{
+						boost::python::list pythonTasks = boost::python::extract<boost::python::list>(
+							override( Gaffer::ContextPtr( const_cast<Gaffer::Context *>( context ) ) )
+						);
+						boost::python::container_utils::extend_container( tasks, pythonTasks );
+						return;
+					}
+				}
+				catch( const boost::python::error_already_set &e )
 				{
-					boost::python::list pythonTasks = boost::python::extract<boost::python::list>(
-						override( Gaffer::ContextPtr( const_cast<Gaffer::Context *>( context ) ) )
-					);
-					boost::python::container_utils::extend_container( tasks, pythonTasks );
-					return;
+					GafferBindings::translatePythonException();
 				}
 			}
 			WrappedType::preTasks( context, tasks );
@@ -98,14 +106,21 @@ class ExecutableNodeWrapper : public GafferBindings::NodeWrapper<WrappedType>
 			if( this->isSubclassed() )
 			{
 				IECorePython::ScopedGILLock gilLock;
-				boost::python::object override = this->methodOverride( "postTasks" );
-				if( override )
+				try
 				{
-					boost::python::list pythonTasks = boost::python::extract<boost::python::list>(
-						override( Gaffer::ContextPtr( const_cast<Gaffer::Context *>( context ) ) )
-					);
-					boost::python::container_utils::extend_container( tasks, pythonTasks );
-					return;
+					boost::python::object override = this->methodOverride( "postTasks" );
+					if( override )
+					{
+						boost::python::list pythonTasks = boost::python::extract<boost::python::list>(
+							override( Gaffer::ContextPtr( const_cast<Gaffer::Context *>( context ) ) )
+						);
+						boost::python::container_utils::extend_container( tasks, pythonTasks );
+						return;
+					}
+				}
+				catch( const boost::python::error_already_set &e )
+				{
+					GafferBindings::translatePythonException();
 				}
 			}
 			WrappedType::postTasks( context, tasks );
@@ -116,12 +131,19 @@ class ExecutableNodeWrapper : public GafferBindings::NodeWrapper<WrappedType>
 			if( this->isSubclassed() )
 			{
 				IECorePython::ScopedGILLock gilLock;
-				boost::python::object h = this->methodOverride( "hash" );
-				if( h )
+				try
 				{
-					return boost::python::extract<IECore::MurmurHash>(
-						h( Gaffer::ContextPtr( const_cast<Gaffer::Context *>( context ) ) )
-					);
+					boost::python::object h = this->methodOverride( "hash" );
+					if( h )
+					{
+						return boost::python::extract<IECore::MurmurHash>(
+							h( Gaffer::ContextPtr( const_cast<Gaffer::Context *>( context ) ) )
+						);
+					}
+				}
+				catch( const boost::python::error_already_set &e )
+				{
+					GafferBindings::translatePythonException();
 				}
 			}
 			return WrappedType::hash( context );
@@ -132,11 +154,18 @@ class ExecutableNodeWrapper : public GafferBindings::NodeWrapper<WrappedType>
 			if( this->isSubclassed() )
 			{
 				IECorePython::ScopedGILLock gilLock;
-				boost::python::object exec = this->methodOverride( "execute" );
-				if( exec )
+				try
 				{
-					exec();
-					return;
+					boost::python::object exec = this->methodOverride( "execute" );
+					if( exec )
+					{
+						exec();
+						return;
+					}
+				}
+				catch( const boost::python::error_already_set &e )
+				{
+					GafferBindings::translatePythonException();
 				}
 			}
 			WrappedType::execute();
@@ -147,16 +176,23 @@ class ExecutableNodeWrapper : public GafferBindings::NodeWrapper<WrappedType>
 			if( this->isSubclassed() )
 			{
 				IECorePython::ScopedGILLock gilLock;
-				boost::python::object execSeq = this->methodOverride( "executeSequence" );
-				if( execSeq )
+				try
 				{
-					boost::python::list frameList;
-					for( std::vector<float>::const_iterator it = frames.begin(); it != frames.end(); ++it )
+					boost::python::object execSeq = this->methodOverride( "executeSequence" );
+					if( execSeq )
 					{
-						frameList.append( *it );
+						boost::python::list frameList;
+						for( std::vector<float>::const_iterator it = frames.begin(); it != frames.end(); ++it )
+						{
+							frameList.append( *it );
+						}
+						execSeq( frameList );
+						return;
 					}
-					execSeq( frameList );
-					return;
+				}
+				catch( const boost::python::error_already_set &e )
+				{
+					GafferBindings::translatePythonException();
 				}
 			}
 			WrappedType::executeSequence( frames );
@@ -167,10 +203,17 @@ class ExecutableNodeWrapper : public GafferBindings::NodeWrapper<WrappedType>
 			if( this->isSubclassed() )
 			{
 				IECorePython::ScopedGILLock gilLock;
-				boost::python::object reqSecExec = this->methodOverride( "requiresSequenceExecution" );
-				if( reqSecExec )
+				try
 				{
-					return reqSecExec();
+					boost::python::object reqSecExec = this->methodOverride( "requiresSequenceExecution" );
+					if( reqSecExec )
+					{
+						return reqSecExec();
+					}
+				}
+				catch( const boost::python::error_already_set &e )
+				{
+					GafferBindings::translatePythonException();
 				}
 			}
 			return WrappedType::requiresSequenceExecution();
