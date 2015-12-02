@@ -418,6 +418,11 @@ class FlatScanlineWriter
 			const Imath::Box2i exrScanlinesBounds( Imath::V2i( m_spec.x, exrInTileBounds.min.y ), Imath::V2i( m_spec.x + m_spec.width - 1, exrInTileBounds.max.y ) );
 			const Imath::Box2i scanlinesBounds( m_format.fromEXRSpace( exrScanlinesBounds ) );
 
+			if( firstTileOfRow( channelIndex, tileOrigin ) )
+			{
+				std::fill( m_scanlinesData.begin(), m_scanlinesData.end(), 0.0 );
+			}
+
 			Imath::Box2i copyArea( intersection( m_processWindow, intersection( inTileBounds, scanlinesBounds ) ) );
 
 			copyBufferArea( &data->readable()[0], inTileBounds, &m_scanlinesData[0], scanlinesBounds, channelIndex, m_spec.channelnames.size(), true, copyArea );
