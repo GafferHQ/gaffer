@@ -107,7 +107,22 @@ IECore::ConstCompoundObjectPtr Light::computeAttributes( const SceneNode::SceneP
 {
 	IECore::CompoundObjectPtr result = new IECore::CompoundObject;
 
-	result->members()[lightAttribute()] = computeLight( context );
+	std::string lightAttribute = "light";
+
+	IECore::ObjectVectorPtr lightShaders = computeLight( context );
+	if( lightShaders->members().size() > 0 )
+	{
+		IECore::LightPtr light = IECore::runTimeCast< IECore::Light >(
+			lightShaders->members()[ lightShaders->members().size() - 1 ] );
+		std::string lightName = light->getName();
+		size_t colon = lightName.find( ":" );
+		if( colon != std::string::npos )
+		{
+			lightAttribute = lightName.substr( 0, colon ) + ":light";
+		}
+	}
+
+	result->members()[lightAttribute] = lightShaders;
 
 	return result;
 }
