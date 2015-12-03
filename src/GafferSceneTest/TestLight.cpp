@@ -47,6 +47,7 @@ TestLight::TestLight( const std::string &name )
 	:	Light( name )
 {
 	parametersPlug()->addChild( new Color3fPlug( "intensity" ) );
+	parametersPlug()->addChild( new BoolPlug( "areaLight" ) );
 }
 
 TestLight::~TestLight()
@@ -65,6 +66,7 @@ IECore::ObjectVectorPtr TestLight::computeLight( const Gaffer::Context *context 
 {
 	IECore::LightPtr result = new IECore::Light( "testLight" );
 	result->parameters()["intensity"] = new IECore::Color3fData( parametersPlug()->getChild<Color3fPlug>( "intensity" )->getValue() );
+	result->parameters()["__areaLight"] = new IECore::BoolData( parametersPlug()->getChild<BoolPlug>( "areaLight" )->getValue() );
 
 	IECore::ObjectVectorPtr resultVector = new IECore::ObjectVector();
 	resultVector->members().push_back( result );
