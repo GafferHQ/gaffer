@@ -179,7 +179,7 @@ class DependencyNodeTest( GafferTest.TestCase ) :
 
 		class SimpleDependencyNode( Gaffer.DependencyNode ) :
 
-			def __init__( self, name="PassThrough", inputs={}, dynamicPlugs=() ) :
+			def __init__( self, name="PassThrough" ) :
 
 				Gaffer.DependencyNode.__init__( self, name )
 

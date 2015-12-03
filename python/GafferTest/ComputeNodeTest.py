@@ -306,7 +306,7 @@ class ComputeNodeTest( GafferTest.TestCase ) :
 
 	class PassThrough( Gaffer.ComputeNode ) :
 
-		def __init__( self, name="PassThrough", inputs={}, dynamicPlugs=() ) :
+		def __init__( self, name="PassThrough" ) :
 
 			Gaffer.ComputeNode.__init__( self, name )
 
