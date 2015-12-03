@@ -41,6 +41,7 @@
 #include "IECore/Camera.h"
 #include "IECore/WorldBlock.h"
 #include "IECore/Light.h"
+#include "IECore/Shader.h"
 #include "IECore/AttributeBlock.h"
 #include "IECore/Display.h"
 #include "IECore/TransformBlock.h"
@@ -197,7 +198,6 @@ void outputLights( const ScenePlug *scene, const IECore::CompoundObject *globals
 
 bool outputLight( const ScenePlug *scene, const ScenePlug::ScenePath &path, IECore::Renderer *renderer )
 {
-	IECore::ConstLightPtr constLight = runTimeCast<const IECore::Light>( scene->object( path ) );
 
 	if( !visible( scene, path ) )
 	{
@@ -216,37 +216,75 @@ bool outputLight( const ScenePlug *scene, const ScenePlug::ScenePath &path, IECo
 	std::string lightHandle;
 	ScenePlug::pathToString( path, lightHandle );
 
-	/// \todo Outputting a light object is now optional
-	/// We are currently setting up lights like shaders, as attributes instead of objects
-	/// Support for light objects is just for backwards compatibility with old light rig sccs,
-	/// and can be removed in the future.
-	LightPtr light = NULL;
-	if( constLight )
-	{
-		light = constLight->copy();
-		light->setHandle( lightHandle );
-	}
-
 	{
 		AttributeBlock attributeBlock( renderer );
 
 		renderer->setAttribute( "name", new StringData( lightHandle ) );
 		outputAttributes( attributes.get(), renderer );
-
 		renderer->concatTransform( transform );
 
-		InternedString metadataTarget = "light:" + constLight->getName();
-		ConstM44fDataPtr orientation = Metadata::value<M44fData>( metadataTarget, "renderOrientation" );
-		if( orientation )
+
+		/// \todo Outputting a light object is now optional
+		/// We are currently setting up lights like shaders, as attributes instead of objects
+		/// Support for light objects is just for backwards compatibility with old light rig sccs,
+		/// and can be removed in the future.
+		IECore::ConstLightPtr lightObject = runTimeCast<const IECore::Light>( scene->object( path ) );
+		if( lightObject )
 		{
-			renderer->concatTransform( orientation->readable() );
+			LightPtr light = NULL;
+			light = lightObject->copy();
+			light->setHandle( lightHandle );
+
+			if( light )
+			{
+				light->render( renderer );
+			}
 		}
 
-		if( light )
+
+		for( IECore::CompoundObject::ObjectMap::const_iterator it = attributes->members().begin();
+			it != attributes->members().end(); it++ )
 		{
-			light->render( renderer );
+			const std::string &key = it->first.string();
+			if( key.size() >= 6 && key.compare( key.length() - 6, 6, ":light" ) == 0 )
+			{
+				const IECore::ObjectVector *lightShaders = runTimeCast<const IECore::ObjectVector>( it->second.get() );
+
+				if( !lightShaders || lightShaders->members().size() == 0 ) continue;
+
+				IECore::ConstLightPtr constLight = runTimeCast< const IECore::Light >(
+					lightShaders->members()[ lightShaders->members().size() - 1 ] );
+
+				if( !constLight ) continue;
+
+				InternedString metadataTarget = "light:" + constLight->getName();
+				ConstM44fDataPtr orientation = Metadata::value<M44fData>( metadataTarget, "renderOrientation" );
+
+				AttributeBlock attributeBlock( renderer );
+				if( orientation )
+				{
+					renderer->concatTransform( orientation->readable() );
+				}
+
+				for( unsigned int i = 0; i < lightShaders->members().size() - 1; i++ )
+				{
+					IECore::ConstShaderPtr shader = runTimeCast< const IECore::Shader >( lightShaders->members()[i] );
+					if( shader )
+					{
+						shader->render( renderer );
+					}
+				}
+
+				LightPtr light = NULL;
+				light = constLight->copy();
+				light->setHandle( lightHandle );
+
+				light->render( renderer );
+			}
 		}
+
 	}
+
 
 	renderer->illuminate( lightHandle, true );
 

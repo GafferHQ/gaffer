@@ -64,12 +64,16 @@ class Light : public ObjectSource
 		virtual void hashSource( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual IECore::ConstObjectPtr computeSource( const Gaffer::Context *context ) const;
 
+		virtual void hashAttributes( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const;
+		virtual IECore::ConstCompoundObjectPtr computeAttributes( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
+
+
 		virtual IECore::InternedString standardSetName() const;
 
 		/// Must be implemented by derived classes to hash and generate the light to be placed
 		/// in the scene graph.
 		virtual void hashLight( const Gaffer::Context *context, IECore::MurmurHash &h ) const = 0;
-		virtual IECore::LightPtr computeLight( const Gaffer::Context *context ) const = 0;
+		virtual IECore::ObjectVectorPtr computeLight( const Gaffer::Context *context ) const = 0;
 
 		// The name of the attribute where the light will be stored
 		// Current convention is <rendererPrefix>:light

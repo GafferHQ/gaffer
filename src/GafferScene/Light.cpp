@@ -75,21 +75,39 @@ void Light::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs 
 
 	if( parametersPlug()->isAncestorOf( input ) )
 	{
-		outputs.push_back( sourcePlug() );
+		outputs.push_back( outPlug()->attributesPlug() );
 	}
+
 }
 
 void Light::hashSource( const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	hashLight( context, h );
 }
 
 IECore::ConstObjectPtr Light::computeSource( const Context *context ) const
 {
-	return computeLight( context );
+	// The light node now creates a new location in the scene, but just assigns attributes to it,
+	// and doesn't create an object here
+	return NULL;
 }
 
 IECore::InternedString Light::standardSetName() const
 {
 	return g_lightsSetName;
 }
+
+void Light::hashAttributes( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	hashLight( context, h );
+}
+
+IECore::ConstCompoundObjectPtr Light::computeAttributes( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+{
+	IECore::CompoundObjectPtr result = new IECore::CompoundObject;
+
+	result->members()[lightAttribute()] = computeLight( context );
+
+	return result;
+}
+
+

@@ -74,14 +74,19 @@ void RenderManLight::hashLight( const Gaffer::Context *context, IECore::MurmurHa
 	shaderNamePlug()->hash( h );
 }
 
-IECore::LightPtr RenderManLight::computeLight( const Gaffer::Context *context ) const
+IECore::ObjectVectorPtr RenderManLight::computeLight( const Gaffer::Context *context ) const
 {
 	IECore::LightPtr result = new IECore::Light( "ri:" + shaderNamePlug()->getValue() );
+
+	// TODO - Is it OK to use CompoundDataPlug::extractDataFromPlug on a Plug?
 	for( InputValuePlugIterator it( parametersPlug() ); it!=it.end(); it++ )
 	{
 		result->parameters()[(*it)->getName()] = CompoundDataPlug::extractDataFromPlug( it->get() );
 	}
-	return result;
+
+	IECore::ObjectVectorPtr resultVector = new IECore::ObjectVector();
+	resultVector->members().push_back( result );
+	return resultVector;
 }
 
 static IECore::InternedString g_lightAttribute( "ri:light" );
