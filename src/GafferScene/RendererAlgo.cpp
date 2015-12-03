@@ -198,10 +198,6 @@ void outputLights( const ScenePlug *scene, const IECore::CompoundObject *globals
 bool outputLight( const ScenePlug *scene, const ScenePlug::ScenePath &path, IECore::Renderer *renderer )
 {
 	IECore::ConstLightPtr constLight = runTimeCast<const IECore::Light>( scene->object( path ) );
-	if( !constLight )
-	{
-		return false;
-	}
 
 	if( !visible( scene, path ) )
 	{
@@ -220,8 +216,16 @@ bool outputLight( const ScenePlug *scene, const ScenePlug::ScenePath &path, IECo
 	std::string lightHandle;
 	ScenePlug::pathToString( path, lightHandle );
 
-	LightPtr light = constLight->copy();
-	light->setHandle( lightHandle );
+	/// \todo Outputting a light object is now optional
+	/// We are currently setting up lights like shaders, as attributes instead of objects
+	/// Support for light objects is just for backwards compatibility with old light rig sccs,
+	/// and can be removed in the future.
+	LightPtr light = NULL;
+	if( constLight )
+	{
+		light = constLight->copy();
+		light->setHandle( lightHandle );
+	}
 
 	{
 		AttributeBlock attributeBlock( renderer );
@@ -238,7 +242,10 @@ bool outputLight( const ScenePlug *scene, const ScenePlug::ScenePath &path, IECo
 			renderer->concatTransform( orientation->readable() );
 		}
 
-		light->render( renderer );
+		if( light )
+		{
+			light->render( renderer );
+		}
 	}
 
 	renderer->illuminate( lightHandle, true );
