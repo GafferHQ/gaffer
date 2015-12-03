@@ -114,6 +114,14 @@ IECore::LightPtr AppleseedLight::computeLight( const Gaffer::Context *context ) 
 	return result;
 }
 
+static IECore::InternedString g_lightAttribute( "as:light" );
+
+IECore::InternedString AppleseedLight::lightAttribute() const
+{
+	return g_lightAttribute;
+}
+
+
 Gaffer::StringPlug *AppleseedLight::modelPlug()
 {
 	return getChild<StringPlug>( g_firstPlugIndex );

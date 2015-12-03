@@ -71,6 +71,10 @@ class Light : public ObjectSource
 		virtual void hashLight( const Gaffer::Context *context, IECore::MurmurHash &h ) const = 0;
 		virtual IECore::LightPtr computeLight( const Gaffer::Context *context ) const = 0;
 
+		// The name of the attribute where the light will be stored
+		// Current convention is <rendererPrefix>:light
+		virtual IECore::InternedString lightAttribute() const = 0;
+
 	private :
 
 		static size_t g_firstPlugIndex;

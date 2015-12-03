@@ -99,6 +99,14 @@ IECore::LightPtr ArnoldLight::computeLight( const Gaffer::Context *context ) con
 	return result;
 }
 
+static IECore::InternedString g_lightAttribute( "ai:light" );
+
+IECore::InternedString ArnoldLight::lightAttribute() const
+{
+	return g_lightAttribute;
+}
+
+
 Gaffer::StringPlug *ArnoldLight::shaderNamePlug()
 {
 	return getChild<StringPlug>( g_firstPlugIndex );

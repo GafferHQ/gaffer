@@ -84,6 +84,14 @@ IECore::LightPtr RenderManLight::computeLight( const Gaffer::Context *context ) 
 	return result;
 }
 
+static IECore::InternedString g_lightAttribute( "ri:light" );
+
+IECore::InternedString RenderManLight::lightAttribute() const
+{
+	return g_lightAttribute;
+}
+
+
 
 Gaffer::StringPlug *RenderManLight::shaderNamePlug()
 {
