@@ -84,6 +84,7 @@ class PythonCommand( GafferDispatch.ExecutableNode ) :
 			# varying results for requiresSequenceExecution(), with sequences
 			# going into their own batch independent of non-sequence batches.
 			Gaffer.ExecutableNode.executeSequence( self, frames )
+			return
 
 		executionDict = self.__executionDict( frames )
 		exec( self["command"].getValue(), executionDict, executionDict )

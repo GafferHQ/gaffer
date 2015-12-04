@@ -272,5 +272,23 @@ class PythonCommandTest( GafferTest.TestCase ) :
 
 		self.assertRaisesRegexp( Exception, "Invalid frame", n.execute )
 
+	def testNonSequenceDispatch( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = GafferDispatch.PythonCommand()
+		s["n"]["command"].setValue( inspect.cleandoc(
+			"""
+			try :
+				self.numCalls += 1
+			except AttributeError :
+				self.numCalls = 1
+			"""
+		) )
+
+		d = self.__dispatcher()
+		d.dispatch( [ s["n"] ] )
+
+		self.assertEqual( s["n"].numCalls, 1 )
+
 if __name__ == "__main__":
 	unittest.main()
