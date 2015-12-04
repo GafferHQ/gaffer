@@ -234,19 +234,15 @@ class PythonCommandTest( GafferTest.TestCase ) :
 
 		s = Gaffer.ScriptNode()
 		s["n"] = GafferDispatch.PythonCommand()
-		# We need a variable which depends on the current frame
-		# so that all our tasks don't collapse into one.
-		s["n"]["variables"].addMember( "frameString", "####" )
-		# Then we can meaningfully ask for sequence execution.
 		s["n"]["sequence"].setValue( True )
 
 		s["n"]["command"].setValue( inspect.cleandoc(
 			"""
 			self.frames = frames
-			self.frameStrings = []
-			for frame in self.frames :
-				context.setFrame( frame )
-				self.frameStrings.append( variables["frameString"] )
+			try :
+				self.numCalls += 1
+			except AttributeError :
+				self.numCalls = 1
 			"""
 		) )
 
@@ -254,7 +250,7 @@ class PythonCommandTest( GafferTest.TestCase ) :
 		d.dispatch( [ s[ "n" ] ] )
 
 		self.assertEqual( s["n"].frames, [ 1, 2, 3, 4, 5 ] )
-		self.assertEqual( s["n"].frameStrings, [ "0001", "0002", "0003", "0004", "0005" ] )
+		self.assertEqual( s["n"].numCalls, 1 )
 
 	def testCannotAccessVariablesOutsideFrameRange( self ) :
 
@@ -289,6 +285,19 @@ class PythonCommandTest( GafferTest.TestCase ) :
 		d.dispatch( [ s["n"] ] )
 
 		self.assertEqual( s["n"].numCalls, 1 )
+
+	def testStringSubstitutions( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = GafferDispatch.PythonCommand()
+		s["n"]["variables"].addMember( "frameString", "###" )
+		s["n"]["command"].setValue( 'self.frameString = variables["frameString"]' )
+
+		with Gaffer.Context() as c :
+			c.setFrame( 10 )
+			s["n"].execute()
+
+		self.assertEqual( s["n"].frameString, "010" )
 
 if __name__ == "__main__":
 	unittest.main()

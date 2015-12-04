@@ -68,6 +68,9 @@ class PythonCommand( GafferDispatch.ExecutableNode ) :
 
 		self["variables"].hash( h )
 
+		if self.requiresSequenceExecution() :
+			h.append( context.getFrame() )
+
 		return h
 
 	def execute( self ) :
