@@ -74,14 +74,17 @@ void RenderManLight::hashLight( const Gaffer::Context *context, IECore::MurmurHa
 	shaderNamePlug()->hash( h );
 }
 
-IECore::LightPtr RenderManLight::computeLight( const Gaffer::Context *context ) const
+IECore::ObjectVectorPtr RenderManLight::computeLight( const Gaffer::Context *context ) const
 {
 	IECore::LightPtr result = new IECore::Light( "ri:" + shaderNamePlug()->getValue() );
 	for( InputValuePlugIterator it( parametersPlug() ); it!=it.end(); it++ )
 	{
 		result->parameters()[(*it)->getName()] = CompoundDataPlug::extractDataFromPlug( it->get() );
 	}
-	return result;
+
+	IECore::ObjectVectorPtr resultVector = new IECore::ObjectVector();
+	resultVector->members().push_back( result );
+	return resultVector;
 }
 
 

@@ -61,7 +61,7 @@ class AppleseedLight : public GafferScene::Light
 	protected :
 
 		virtual void hashLight( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual IECore::LightPtr computeLight( const Gaffer::Context *context ) const;
+		virtual IECore::ObjectVectorPtr computeLight( const Gaffer::Context *context ) const;
 
 	private :
 
