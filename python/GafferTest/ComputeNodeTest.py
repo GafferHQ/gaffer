@@ -306,7 +306,7 @@ class ComputeNodeTest( GafferTest.TestCase ) :
 
 	class PassThrough( Gaffer.ComputeNode ) :
 
-		def __init__( self, name="PassThrough", inputs={}, dynamicPlugs=() ) :
+		def __init__( self, name="PassThrough" ) :
 
 			Gaffer.ComputeNode.__init__( self, name )
 
@@ -451,6 +451,36 @@ class ComputeNodeTest( GafferTest.TestCase ) :
 			n["out1"].getValue()
 
 		self.assertTrue( self.fRan )
+
+	def testPlugDestructionDuringComputation( self ) :
+
+		class PlugDestructionNode( GafferTest.AddNode ) :
+
+			def __init__( self, name="PlugDestructionNode" ) :
+
+				GafferTest.AddNode.__init__( self, name )
+
+			def compute( self, plug, context ) :
+
+				# It's not particularly smart to create a plug from
+				# inside a compute, but here we're doing it to emulate
+				# a situation which can occur when the python
+				# garbage collector kicks in during computation.
+				# When that happens, the garbage collector might
+				# collect and destroy plugs from other graphs, and
+				# we need the computation framework to be robust to
+				# that. See #1576 for details of the original garbage
+				# collection manifesting itself.
+				v = Gaffer.ValuePlug()
+				del v
+
+				GafferTest.AddNode.compute( self, plug, context )
+
+		IECore.registerRunTimeTyped( PlugDestructionNode )
+
+		n = PlugDestructionNode()
+		n["op1"].setValue( 1 )
+		self.assertEqual( n["sum"].getValue(), 1 )
 
 	def testThreading( self ) :
 

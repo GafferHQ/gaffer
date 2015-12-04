@@ -38,7 +38,6 @@
 #include <stack>
 
 #include "tbb/enumerable_thread_specific.h"
-#include "tbb/spin_mutex.h"
 
 #include "boost/bind.hpp"
 #include "boost/format.hpp"
@@ -197,12 +196,19 @@ class ValuePlug::Computation
 			// The docs for enumerable_thread_specific aren't particularly clear
 			// on whether or not it's ok to iterate an e_t_s while concurrently using
 			// local(), which is what we do here. So far in practice it seems to be
-			// sufficient just to mutex the access to the hash cache within.
+			// OK.
 			tbb::enumerable_thread_specific<ValuePlug::Computation::ThreadData>::iterator it, eIt;
 			for( it = g_threadData.begin(), eIt = g_threadData.end(); it != eIt; ++it )
 			{
-				HashCacheMutex::scoped_lock lock( it->hashCacheMutex );
-				it->hashCache.clear();
+				// We can't clear the cache now, because it is most likely
+				// in use by the owning thread. Instead we set this flag to
+				// politely request that the thread clears the cache itself
+				// at its earliest convenience - in the Computation constructor.
+				// This delay in clearing is OK, because it is illegal to modify
+				// a graph while a computation is being performed with it, and
+				// we know that the plug requesting the clear will be removed
+				// from the cache before the next computation starts.
+				it->clearHashCache = 1;
 			}
 		}
 
@@ -213,9 +219,19 @@ class ValuePlug::Computation
 		{
 			if( m_threadData->computationStack.empty() )
 			{
-				m_threadData->hashCacheComputationLock.acquire( m_threadData->hashCacheMutex );
+				if( ++(m_threadData->hashCacheClearCount) == 100 || m_threadData->clearHashCache )
+				{
+					// Prevent unbounded growth in the hash cache
+					// if many computations are being performed
+					// without any plugs being dirtied in between,
+					// by clearing it after every Nth computation.
+					// N == 100 was chosen based on memory/performance
+					// analysis of a particularly heavy render process.
+					m_threadData->hashCache.clear();
+					m_threadData->hashCacheClearCount = 0;
+					m_threadData->clearHashCache = 0;
+				}
 			}
-
 			m_threadData->computationStack.push( this );
 		}
 
@@ -224,19 +240,7 @@ class ValuePlug::Computation
 			m_threadData->computationStack.pop();
 			if( m_threadData->computationStack.empty() )
 			{
-				if( ++(m_threadData->hashCacheClearCount) == 100 )
-				{
-					// Prevent unbounded growth in the hash cache
-					// if many computations are being performed
-					// without any plugs being dirtied in between,
-					// by clearing it after every Nth computation.
-					// N == 100 was chosen based on memory/performance
-					// analysis of a particularly heavy render process.
-					m_threadData->hashCacheClearCount = 0;
-					m_threadData->hashCache.clear();
-				}
 				m_threadData->errorSource = NULL;
-				m_threadData->hashCacheComputationLock.release();
 			}
 		}
 
@@ -418,9 +422,6 @@ class ValuePlug::Computation
 		// computations, to prevent unbounded growth.
 		typedef std::pair<const ValuePlug *, IECore::MurmurHash> HashCacheKey;
 		typedef boost::unordered_map<HashCacheKey, IECore::MurmurHash> HashCache;
-		// Even though the hash cache is per-thread, we do need to visit all caches
-		// in clearHashCaches(), so we protect each hash cache with a mutex.
-		typedef tbb::spin_mutex HashCacheMutex;
 
 		// A computation starts with a call to ValuePlug::getValue(), but the compute()
 		// that triggers will make calls to getValue() on upstream plugs too. We use this
@@ -435,13 +436,8 @@ class ValuePlug::Computation
 			ThreadData() :	hashCacheClearCount( 0 ), errorSource( NULL ) {}
 			int hashCacheClearCount;
 			HashCache hashCache;
-			// Used to protect the computation's use of the hash
-			// cache from clearHashCaches() method.
-			HashCacheMutex hashCacheMutex;
-			// Lock acquired when first computation is pushed
-			// onto computationStack - this prevents clearHashCaches()
-			// from clearing it while it's in use.
-			HashCacheMutex::scoped_lock hashCacheComputationLock;
+			// Flag to request that hashCache be cleared.
+			tbb::atomic<int> clearHashCache;
 			ComputationStack computationStack;
 			const Plug *errorSource;
 		};
