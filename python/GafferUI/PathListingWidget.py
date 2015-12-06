@@ -181,13 +181,13 @@ class PathListingWidget( GafferUI.Widget ) :
 	def setPathCollapsed( self, path, collapsed ) :
 
 		warnings.warn( "PathListingWidget.setPathCollapsed() is deprecated, use PathListingWidget.setPathExpanded() instead.", DeprecationWarning, 2 )
-		self.setPathExpanded( self, path, not collapsed )
+		self.setPathExpanded( path, not collapsed )
 
 	## \deprecated Use getPathExpanded() instead.
 	def getPathCollapsed( self, path ) :
 
 		warnings.warn( "PathListingWidget.getPathCollapsed() is deprecated, use PathListingWidget.getPathExpanded() instead.", DeprecationWarning, 2 )
-		return not self.getPathExpaned( self, path )
+		return not self.getPathExpaned( path )
 
 	def setPathExpanded( self, path, expanded ) :
 
