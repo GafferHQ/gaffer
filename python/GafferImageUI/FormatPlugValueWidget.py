@@ -85,7 +85,7 @@ class FormatPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__maxWidget.setPlug( plug["displayWindow"]["max"] )
 		self.__pixelAspectWidget.setPlug( plug["pixelAspect"] )
 
-		GafferUI.PlugValueWidget.setPlug( plug )
+		GafferUI.PlugValueWidget.setPlug( self, plug )
 
 	def _updateFromPlug( self ) :
 
