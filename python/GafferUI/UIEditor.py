@@ -540,7 +540,7 @@ class _LayoutItem( object ) :
 		if self.__parent is None :
 			return None
 		else :
-			return self.__parent()
+			return self.__parent
 
 	def child( self, name ) :
 
