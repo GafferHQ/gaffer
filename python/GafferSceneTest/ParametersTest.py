@@ -46,14 +46,12 @@ class ParametersTest( GafferSceneTest.SceneTestCase ) :
 
 	def test( self ) :
 
-		light = GafferSceneTest.TestLight()
 		camera = GafferScene.Camera()
 		procedural = GafferScene.ExternalProcedural()
 		group = GafferScene.Group()
 
-		group["in"][0].setInput( light["out"] )
-		group["in"][1].setInput( camera["out"] )
-		group["in"][2].setInput( procedural["out"] )
+		group["in"][0].setInput( camera["out"] )
+		group["in"][1].setInput( procedural["out"] )
 
 		parameters = GafferScene.Parameters()
 		parameters["in"].setInput( group["out"] )
@@ -71,14 +69,6 @@ class ParametersTest( GafferSceneTest.SceneTestCase ) :
 		self.assertSceneValid( parameters["out"] )
 		self.assertScenesEqual( parameters["out"], group["out"], childPlugNamesToIgnore = ( "object", ) )
 		self.assertSceneHashesEqual( parameters["out"], group["out"], childPlugNamesToIgnore = ( "object", ) )
-
-		lightIn = group["out"].object( "/group/light" )
-		lightOut = parameters["out"].object( "/group/light" )
-		self.assertNotEqual( lightIn, lightOut )
-		self.assertEqual( lightOut.parameters["test"], IECore.IntData( 10 ) )
-		del lightOut.parameters["test"]
-		self.assertEqual( lightIn, lightOut )
-		self.assertTrue( isinstance( lightOut, IECore.Light ) )
 
 		cameraIn = group["out"].object( "/group/camera" )
 		cameraOut = parameters["out"].object( "/group/camera" )
