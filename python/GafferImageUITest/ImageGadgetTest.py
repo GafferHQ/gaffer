@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,10 +34,49 @@
 #
 ##########################################################################
 
-from FormatPlugValueWidgetTest import FormatPlugValueWidgetTest
-from ImageViewTest import ImageViewTest
-from DocumentationTest import DocumentationTest
-from ImageGadgetTest import ImageGadgetTest
+import unittest
+
+import IECore
+
+import Gaffer
+import GafferUITest
+import GafferImage
+import GafferImageUI
+
+class ImageGadgetTest( GafferUITest.TestCase ) :
+
+	def testBound( self ) :
+
+		g = GafferImageUI.ImageGadget()
+		self.assertEqual( g.bound(), IECore.Box3f() )
+
+		c = GafferImage.Constant()
+		c["format"].setValue( GafferImage.Format( 200, 100 ) )
+
+		g.setImage( c["out"] )
+		self.assertEqual( g.bound(), IECore.Box3f( IECore.V3f( 0 ), IECore.V3f( 200, 100, 0) ) )
+
+		c["format"].setValue( GafferImage.Format( 200, 100, 2 ) )
+		self.assertEqual( g.bound(), IECore.Box3f( IECore.V3f( 0 ), IECore.V3f( 400, 100, 0) ) )
+
+		c2 = GafferImage.Constant()
+		g.setImage( c2["out"] )
+
+		f = GafferImage.FormatPlug.getDefaultFormat( g.getContext() ).getDisplayWindow()
+		self.assertEqual( g.bound(), IECore.Box3f( IECore.V3f( f.min.x, f.min.y, 0 ), IECore.V3f( f.max.x, f.max.y, 0 ) ) )
+
+		GafferImage.FormatPlug.setDefaultFormat( g.getContext(), GafferImage.Format( IECore.Box2i( IECore.V2i( 10, 20 ), IECore.V2i( 30, 40 ) ) ) )
+		self.assertEqual( g.bound(), IECore.Box3f( IECore.V3f( 10, 20, 0 ), IECore.V3f( 30, 40, 0 ) ) )
+
+	def testGetImage( self ) :
+
+		g = GafferImageUI.ImageGadget()
+		self.assertEqual( g.getImage(), None )
+
+		c = GafferImage.Constant()
+		g.setImage( c["out"] )
+		self.assertTrue( g.getImage().isSame( c["out"] ) )
 
 if __name__ == "__main__":
 	unittest.main()
+
