@@ -53,7 +53,7 @@ Crop::Crop( const std::string &name )
 	:   ImageProcessor( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
-	addChild( new IntPlug( "areaSource", Gaffer::Plug::In, Crop::Area, Crop::Area, Crop::DisplayWindow ) );
+	addChild( new IntPlug( "areaSource", Gaffer::Plug::In, Crop::Area, Crop::Area, Crop::Format ) );
 	addChild( new Box2iPlug( "area" ) );
 	addChild( new FormatPlug( "format" ) );
 	addChild( new BoolPlug( "formatCenter" ) );

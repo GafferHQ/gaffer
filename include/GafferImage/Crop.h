@@ -57,9 +57,9 @@ class Crop : public ImageProcessor
 		enum AreaSource
 		{
 			Area = 0,
-			Format = 1,
-			DataWindow = 2,
-			DisplayWindow = 3
+			DataWindow = 1,
+			DisplayWindow = 2,
+			Format = 3
 		};
 
 		Gaffer::IntPlug *areaSourcePlug();
