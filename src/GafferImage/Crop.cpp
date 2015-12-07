@@ -357,7 +357,7 @@ void Crop::compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) 
 				if( formatCenterPlug()->getValue() )
 				{
 					const Imath::Box2i displayWindow = inPlug()->formatPlug()->getValue().getDisplayWindow();
-					Imath::V2i centerOffset( ( ( cropWindow.max - displayWindow.max ) + ( cropWindow.min - displayWindow.min ) ) / 2 );
+					Imath::V2i centerOffset( cropWindow.center() - displayWindow.center() );
 
 					cropWindow.min -= centerOffset;
 					cropWindow.max -= centerOffset;
