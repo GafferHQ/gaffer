@@ -46,6 +46,8 @@
 #include "Gaffer/Metadata.h"
 #include "Gaffer/CompoundPlug.h"
 
+#include "IECore/Light.h"
+
 #include "GafferScene/Shader.h"
 
 using namespace Imath;
@@ -349,7 +351,7 @@ void Shader::NetworkBuilder::parameterHashWalk( const Shader *shaderNode, const 
 	}
 }
 
-IECore::Shader *Shader::NetworkBuilder::shader( const Shader *shaderNode )
+IECore::StateRenderable *Shader::NetworkBuilder::shader( const Shader *shaderNode )
 {
 	shaderNode = effectiveNode( shaderNode );
 	if( !shaderNode )
@@ -363,9 +365,26 @@ IECore::Shader *Shader::NetworkBuilder::shader( const Shader *shaderNode )
 		return shaderAndHash.shader.get();
 	}
 
-	shaderAndHash.shader = new IECore::Shader( shaderNode->namePlug()->getValue(), shaderNode->typePlug()->getValue() );
+	const std::string &shaderType = shaderNode->typePlug()->getValue();
+	if( boost::ends_with( shaderNode->typePlug()->getValue(), ":light" ) )
+	{
+		std::string prefix = "";
+		size_t colon = shaderType.find_first_of( ":" );
+		if( colon != std::string::npos )
+		{
+			prefix = shaderType.substr( 0, colon );
+		}
 
-	parameterValueWalk( shaderNode, shaderNode->parametersPlug(), IECore::InternedString(), shaderAndHash.shader->parameters() );
+		IECore::Light *lightShader =  new IECore::Light( prefix + ":" + shaderNode->namePlug()->getValue(), "LIGHT_HANDLE_UNUSED" );
+		parameterValueWalk( shaderNode, shaderNode->parametersPlug(), IECore::InternedString(), lightShader->parameters() );
+		shaderAndHash.shader = lightShader;
+	}
+	else
+	{
+		IECore::ShaderPtr shaderShader = new IECore::Shader( shaderNode->namePlug()->getValue(), shaderType );
+		parameterValueWalk( shaderNode, shaderNode->parametersPlug(), IECore::InternedString(), shaderShader->parameters() );
+		shaderAndHash.shader = shaderShader;
+	}
 
 	shaderAndHash.shader->blindData()->writable()["gaffer:nodeName"] = new IECore::StringData( shaderNode->nodeNamePlug()->getValue() );
 	shaderAndHash.shader->blindData()->writable()["gaffer:nodeColor"] = new IECore::Color3fData( shaderNode->nodeColorPlug()->getValue() );
@@ -404,7 +423,7 @@ void Shader::NetworkBuilder::parameterValueWalk( const Shader *shaderNode, const
 
 const std::string &Shader::NetworkBuilder::shaderHandle( const Shader *shaderNode )
 {
-	IECore::Shader *s = shader( shaderNode );
+	IECore::Shader *s = IECore::runTimeCast<IECore::Shader>( shader( shaderNode ) );
 	if( !s )
 	{
 		static std::string emptyString;

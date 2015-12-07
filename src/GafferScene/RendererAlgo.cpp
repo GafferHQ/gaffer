@@ -41,6 +41,7 @@
 #include "IECore/Camera.h"
 #include "IECore/WorldBlock.h"
 #include "IECore/Light.h"
+#include "IECore/Shader.h"
 #include "IECore/AttributeBlock.h"
 #include "IECore/Display.h"
 #include "IECore/TransformBlock.h"
@@ -48,6 +49,7 @@
 #include "IECore/ClippingPlane.h"
 
 #include "Gaffer/Context.h"
+#include "Gaffer/Metadata.h"
 
 #include "GafferScene/RendererAlgo.h"
 #include "GafferScene/SceneProcedural.h"
@@ -196,11 +198,6 @@ void outputLights( const ScenePlug *scene, const IECore::CompoundObject *globals
 
 bool outputLight( const ScenePlug *scene, const ScenePlug::ScenePath &path, IECore::Renderer *renderer )
 {
-	IECore::ConstLightPtr constLight = runTimeCast<const IECore::Light>( scene->object( path ) );
-	if( !constLight )
-	{
-		return false;
-	}
 
 	if( !visible( scene, path ) )
 	{
@@ -214,24 +211,100 @@ bool outputLight( const ScenePlug *scene, const ScenePlug::ScenePath &path, IECo
 	}
 
 	ConstCompoundObjectPtr attributes = scene->fullAttributes( path );
+	ConstObjectPtr object = scene->object( path );
 	const M44f transform = scene->fullTransform( path );
 
 	std::string lightHandle;
 	ScenePlug::pathToString( path, lightHandle );
-
-	LightPtr light = constLight->copy();
-	light->setHandle( lightHandle );
 
 	{
 		AttributeBlock attributeBlock( renderer );
 
 		renderer->setAttribute( "name", new StringData( lightHandle ) );
 		outputAttributes( attributes.get(), renderer );
-
 		renderer->concatTransform( transform );
 
-		light->render( renderer );
+
+		/// \todo Outputting a light object is now optional
+		/// We are currently setting up lights like shaders, as attributes instead of objects
+		/// Support for light objects is just for backwards compatibility with old light rig sccs,
+		/// and can be removed in the future.
+		IECore::ConstLightPtr lightObject = runTimeCast<const IECore::Light>( scene->object( path ) );
+		if( lightObject )
+		{
+			LightPtr light = NULL;
+			light = lightObject->copy();
+			light->setHandle( lightHandle );
+
+			if( light )
+			{
+				light->render( renderer );
+			}
+		}
+
+
+		for( IECore::CompoundObject::ObjectMap::const_iterator it = attributes->members().begin();
+			it != attributes->members().end(); it++ )
+		{
+			const std::string &key = it->first.string();
+			if( key.size() >= 6 && key.compare( key.length() - 6, 6, ":light" ) == 0 )
+			{
+				const IECore::ObjectVector *lightShaders = runTimeCast<const IECore::ObjectVector>( it->second.get() );
+
+				if( !lightShaders || lightShaders->members().size() == 0 ) continue;
+
+				IECore::ConstLightPtr constLight = runTimeCast< const IECore::Light >(
+					lightShaders->members()[ lightShaders->members().size() - 1 ] );
+
+				if( !constLight ) continue;
+
+				bool areaLight = false;
+				const BoolData *areaLightParm = constLight->parametersData()->member<BoolData>( "__areaLight" );
+				if( areaLightParm )
+				{
+					areaLight = areaLightParm->readable();
+				}
+
+				AttributeBlock *attributeBlock = NULL;
+				if( !areaLight )
+				{
+					attributeBlock = new AttributeBlock( renderer );
+					InternedString metadataTarget = "light:" + constLight->getName();
+					ConstM44fDataPtr orientation = Metadata::value<M44fData>( metadataTarget, "renderOrientation" );
+
+					if( orientation )
+					{
+						renderer->concatTransform( orientation->readable() );
+					}
+				}
+
+				for( unsigned int i = 0; i < lightShaders->members().size() - 1; i++ )
+				{
+					IECore::ConstShaderPtr shader = runTimeCast< const IECore::Shader >( lightShaders->members()[i] );
+					if( shader )
+					{
+						shader->render( renderer );
+					}
+				}
+
+				LightPtr light = NULL;
+				light = constLight->copy();
+				light->setHandle( lightHandle );
+
+				light->render( renderer );
+				if( attributeBlock )
+				{
+					delete attributeBlock;
+				}
+			}
+		}
+
+		if( const VisibleRenderable* renderable = runTimeCast< const VisibleRenderable >( object.get() ) )
+		{
+			renderable->render( renderer );
+		}
 	}
+
 
 	renderer->illuminate( lightHandle, true );
 
@@ -344,6 +417,12 @@ void outputAttributes( const IECore::CompoundObject *attributes, IECore::Rendere
 
 	for( CompoundObject::ObjectMap::const_iterator it = attributes->members().begin(), eIt = attributes->members().end(); it != eIt; it++ )
 	{
+		if( boost::ends_with( it->first.c_str(), ":light" ) )
+		{
+			// Currently lights are output in separate prepass
+			continue;
+		}
+
 		if( const StateRenderable *s = runTimeCast<const StateRenderable>( it->second.get() ) )
 		{
 			s->render( renderer );

@@ -146,7 +146,15 @@ void ObjectSource::compute( Gaffer::ValuePlug *output, const Gaffer::Context *co
 {
 	if( output == sourcePlug() )
 	{
-		static_cast<Gaffer::ObjectPlug *>( output )->setValue( computeSource( context ) );
+		IECore::ConstObjectPtr source = computeSource( context );
+		if( source )
+		{
+			static_cast<Gaffer::ObjectPlug *>( output )->setValue( source );
+		}
+		else
+		{
+			static_cast<Gaffer::ObjectPlug *>( output )->setValue( static_cast<Gaffer::ObjectPlug *>( output )->defaultValue() );
+		}
 		return;
 	}
 
