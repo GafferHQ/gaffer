@@ -177,18 +177,6 @@ class PathListingWidget( GafferUI.Widget ) :
 
 		return self.__pathForIndex( index )
 
-	## \deprecated Use setPathExpanded() instead.
-	def setPathCollapsed( self, path, collapsed ) :
-
-		warnings.warn( "PathListingWidget.setPathCollapsed() is deprecated, use PathListingWidget.setPathExpanded() instead.", DeprecationWarning, 2 )
-		self.setPathExpanded( self, path, not collapsed )
-
-	## \deprecated Use getPathExpanded() instead.
-	def getPathCollapsed( self, path ) :
-
-		warnings.warn( "PathListingWidget.getPathCollapsed() is deprecated, use PathListingWidget.getPathExpanded() instead.", DeprecationWarning, 2 )
-		return not self.getPathExpaned( self, path )
-
 	def setPathExpanded( self, path, expanded ) :
 
 		index = self.__indexForPath( path )
