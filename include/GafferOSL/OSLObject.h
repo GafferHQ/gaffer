@@ -57,6 +57,9 @@ class OSLObject : public GafferScene::SceneElementProcessor
 		Gaffer::Plug *shaderPlug();
 		const Gaffer::Plug *shaderPlug() const;
 
+		GafferScene::ScenePlug *traceGeometryPlug();
+		const GafferScene::ScenePlug *traceGeometryPlug() const;
+
 		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
 
 	protected :

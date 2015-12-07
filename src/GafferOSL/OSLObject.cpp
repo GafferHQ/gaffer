@@ -39,6 +39,7 @@
 #include "Gaffer/StringPlug.h"
 
 #include "GafferScene/ShaderSwitch.h"
+#include "GafferScene/SceneProcedural.h"
 
 #include "GafferOSL/OSLShader.h"
 #include "GafferOSL/OSLImage.h"
@@ -59,6 +60,7 @@ OSLObject::OSLObject( const std::string &name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new Plug( "shader" ) );
+	addChild( new ScenePlug( "traceGeometry" ) );
 
 	// Pass-throughs for things we don't want to modify
 	outPlug()->attributesPlug()->setInput( inPlug()->attributesPlug() );
@@ -79,6 +81,16 @@ const Gaffer::Plug *OSLObject::shaderPlug() const
 	return getChild<Plug>( g_firstPlugIndex );
 }
 
+GafferScene::ScenePlug *OSLObject::traceGeometryPlug()
+{
+	return getChild<GafferScene::ScenePlug>( g_firstPlugIndex + 1 );
+}
+
+const GafferScene::ScenePlug *OSLObject::traceGeometryPlug() const
+{
+	return getChild<GafferScene::ScenePlug>( g_firstPlugIndex + 1 );
+}
+
 void OSLObject::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	SceneElementProcessor::affects( input, outputs );
@@ -90,6 +102,10 @@ void OSLObject::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outp
 	else if( input == outPlug()->objectPlug() )
 	{
 		outputs.push_back( outPlug()->boundPlug() );
+	}
+	else if( input == traceGeometryPlug() )
+	{
+		outputs.push_back( outPlug()->objectPlug() );
 	}
 }
 
@@ -197,9 +213,20 @@ IECore::ConstObjectPtr OSLObject::computeProcessedObject( const ScenePath &path,
 		}
 	}
 
+	OSLRenderer::TraceEnginePtr traceEngine;
+	if( traceGeometryPlug()->getInput<ScenePlug>() )
+	{
+		OSLRendererPtr traceGeoRenderer = new OSLRenderer();
+		GafferScene::SceneProcedural traceGeo( traceGeometryPlug(), context );
+		traceGeoRenderer->worldBegin();
+		traceGeo.render( traceGeoRenderer.get() );
+		traceGeoRenderer->worldEnd();
+		traceEngine = traceGeoRenderer->traceEngine();
+	}
+
 	PrimitivePtr outputPrimitive = inputPrimitive->copy();
 
-	CompoundDataPtr shadedPoints = shadingEngine->shade( shadingPoints.get() );
+	CompoundDataPtr shadedPoints = shadingEngine->shade( shadingPoints.get(), traceEngine );
 	for( CompoundDataMap::const_iterator it = shadedPoints->readable().begin(), eIt = shadedPoints->readable().end(); it != eIt; ++it )
 	{
 		if( it->first != "Ci" )

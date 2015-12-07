@@ -41,6 +41,8 @@
 
 #include "IECore/Renderer.h"
 #include "IECore/Shader.h"
+#include "IECore/Primitive.h"
+#include "IECore/PrimitiveEvaluator.h"
 
 #include "GafferOSL/TypeIds.h"
 
@@ -59,6 +61,7 @@ class OSLRenderer : public IECore::Renderer
 {
 
 	public :
+		class TraceData;
 
 		OSLRenderer();
 		virtual ~OSLRenderer();
@@ -125,6 +128,39 @@ class OSLRenderer : public IECore::Renderer
 		virtual void editBegin( const std::string &editType, const IECore::CompoundDataMap &parameters );
 		virtual void editEnd();
 
+		struct PrimitiveListEntry
+		{
+			PrimitiveListEntry( IECore::PrimitivePtr p, Imath::M44f t ):
+				primitive( p ), transform( t ) {};
+			IECore::PrimitivePtr primitive;
+			Imath::M44f transform;
+		};
+		typedef std::vector<PrimitiveListEntry> PrimitiveList;
+
+		class TraceEngine : public IECore::RefCounted
+		{
+
+			public :
+
+				IE_CORE_DECLAREMEMBERPTR( TraceEngine )
+
+				bool trace( Imath::V3f &origin, Imath::V3f &direction, TraceData *result, float maxDistance = Imath::limits<float>::max() ) const;
+
+			private :
+
+				friend class OSLRenderer;
+
+				TraceEngine( const PrimitiveList &primList );
+
+				struct PrimitiveIntersectorListEntry
+				{
+					IECore::PrimitiveEvaluatorPtr primitiveEvaluator;
+					Imath::M44f transform;
+				};
+				std::vector<PrimitiveIntersectorListEntry> m_primitiveIntersectorList;
+		};
+		IE_CORE_DECLAREPTR( TraceEngine )
+
 		class ShadingEngine : public IECore::RefCounted
 		{
 
@@ -132,7 +168,7 @@ class OSLRenderer : public IECore::Renderer
 
 				IE_CORE_DECLAREMEMBERPTR( ShadingEngine )
 
-				IECore::CompoundDataPtr shade( const IECore::CompoundData *points ) const;
+				IECore::CompoundDataPtr shade( const IECore::CompoundData *points, TraceEnginePtr traceEngine = NULL  ) const;
 
 			private :
 
@@ -150,7 +186,12 @@ class OSLRenderer : public IECore::Renderer
 		/// Returns a shading engine set up using the current attribute state.
 		ShadingEnginePtr shadingEngine() const;
 
+		/// Returns a trace engine set up using the current geometry
+		TraceEnginePtr traceEngine() const;
+
 	private :
+		void addPrimitive( const IECore::PrimitivePtr primitive );
+
 
 		class RenderState;
 		class RendererServices;
@@ -165,6 +206,7 @@ class OSLRenderer : public IECore::Renderer
 		struct EmissionParameters;
 		struct DebugParameters;
 
+		RendererServices *m_rendererServices;
 		boost::shared_ptr<OSL::ShadingSystem> m_shadingSystem;
 
 		struct State
@@ -181,6 +223,10 @@ class OSLRenderer : public IECore::Renderer
 
 		StateStack m_stateStack;
 
+		typedef std::stack<Imath::M44f> TransformStack;
+		TransformStack m_transformStack;
+
+		PrimitiveList m_primitiveList;
 };
 
 IE_CORE_DECLAREPTR( OSLRenderer );
