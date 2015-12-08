@@ -132,7 +132,7 @@ class ResizeTest( GafferImageTest.ImageTestCase ) :
 
 		crop = GafferImage.Crop()
 		crop["in"].setInput( constant["out"] )
-		crop["areaSource"].setValue( crop.AreaSource.Custom )
+		crop["areaSource"].setValue( crop.AreaSource.Area )
 		crop["area"].setValue( IECore.Box2i( IECore.V2i( 64 ), IECore.V2i( 128 ) ) )
 		crop["affectDisplayWindow"].setValue( False )
 		crop["affectDataWindow"].setValue( True )

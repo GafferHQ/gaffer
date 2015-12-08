@@ -43,6 +43,7 @@
 
 namespace GafferImage
 {
+	IE_CORE_FORWARDDECLARE( FormatPlug );
 
 class Crop : public ImageProcessor
 {
@@ -55,9 +56,10 @@ class Crop : public ImageProcessor
 
 		enum AreaSource
 		{
-			Custom = 0,
+			Area = 0,
 			DataWindow = 1,
-			DisplayWindow = 2
+			DisplayWindow = 2,
+			Format = 3
 		};
 
 		Gaffer::IntPlug *areaSourcePlug();
@@ -65,6 +67,12 @@ class Crop : public ImageProcessor
 
 		Gaffer::Box2iPlug *areaPlug();
 		const Gaffer::Box2iPlug *areaPlug() const;
+
+		GafferImage::FormatPlug *formatPlug();
+		const GafferImage::FormatPlug *formatPlug() const;
+
+		Gaffer::BoolPlug *formatCenterPlug();
+		const Gaffer::BoolPlug *formatCenterPlug() const;
 
 		Gaffer::BoolPlug *affectDataWindowPlug();
 		const Gaffer::BoolPlug *affectDataWindowPlug() const;
