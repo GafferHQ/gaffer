@@ -142,7 +142,8 @@ class RenderTest( GafferSceneTest.SceneTestCase ) :
 		l = w.children()[0].state()
 		self.assertTrue( isinstance( l[0], IECore.AttributeState ) )
 		self.assertEqual( l[0].attributes["user:test"], IECore.IntData( 10 ) )
-		self.assertTrue( isinstance( l[1], IECore.Light ) )
+		l2 = w.children()[0].children()[0].state()
+		self.assertTrue( isinstance( l2[0], IECore.Light ) )
 
 	def testLightName( self ) :
 
@@ -164,6 +165,34 @@ class RenderTest( GafferSceneTest.SceneTestCase ) :
 			s["r"].execute()
 
 		w = s["r"].world()
+		self.assertEqual( w.children()[0].state()[0].attributes["name"].value, "/group/light" )
+		self.assertEqual( w.children()[0].children()[0].state()[0].handle, "/group/light" )
+
+	def testAreaLight( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["fileName"].setValue( self.temporaryDirectory() + "/test.gfr" )
+
+		s["l"] = GafferSceneTest.TestLight()
+		s["l"]["parameters"]["areaLight"].setValue( True );
+
+		s["g"] = GafferScene.Group()
+		s["g"]["in"][0].setInput( s["l"]["out"] )
+
+		self.assertSceneValid( s["g"]["out"] )
+
+		s["r"] = GafferSceneTest.TestRender()
+		s["r"]["in"].setInput( s["g"]["out"] )
+
+		# CapturingRenderer outputs some spurious errors which
+		# we suppress by capturing them.
+		with IECore.CapturingMessageHandler() :
+			s["r"].execute()
+
+		w = s["r"].world()
+
+		# Check that we get just one group with both attributes and the light when writing area lights,
+		# instead of the extra attribute block
 		self.assertEqual( w.children()[0].state()[0].attributes["name"].value, "/group/light" )
 		self.assertEqual( w.children()[0].state()[1].handle, "/group/light" )
 

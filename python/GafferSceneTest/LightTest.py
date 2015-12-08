@@ -56,7 +56,8 @@ class LightTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( l["out"].transform( "/" ), IECore.M44f() )
 		self.assertEqual( l["out"].childNames( "/" ), IECore.InternedStringVectorData( [ "light" ] ) )
 
-		self.assertTrue( isinstance( l["out"].object( "/light" ), IECore.Light ) )
+		self.assertTrue( isinstance( l["out"].object( "/light" ), IECore.NullObject ) )
+		self.assertTrue( isinstance( l["out"].attributes( "/light" )["light"][-1], IECore.Light ) )
 
 		self.assertEqual( l["out"].transform( "/light" ), IECore.M44f() )
 		self.assertEqual( l["out"].childNames( "/light" ), IECore.InternedStringVectorData() )
@@ -95,7 +96,7 @@ class LightTest( GafferSceneTest.SceneTestCase ) :
 		l["parameters"]["intensity"]["r"].setValue( 10 )
 
 		dirtiedNames = [ p[0].relativeName( p[0].node() ) for p in cs ]
-		self.assertTrue( "out.object" in dirtiedNames )
+		self.assertTrue( "out.attributes" in dirtiedNames )
 		self.assertTrue( "out" in dirtiedNames )
 
 	def testDisabled( self ) :
