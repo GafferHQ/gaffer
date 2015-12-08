@@ -67,7 +67,7 @@ Gaffer.Metadata.registerNode(
 	"layout:activator:areaSourceIsArea", lambda node : node["areaSource"].getValue() == GafferImage.Crop.AreaSource.Area,
 	"layout:activator:areaSourceIsFormat", lambda node : node["areaSource"].getValue() == GafferImage.Crop.AreaSource.Format,
 	"layout:activator:affectDisplayWindowIsOn", lambda node : node["affectDisplayWindow"].getValue(),
-	"layout:areaSourceIsFormatAndAffectDisplayWindowIsOn", lambda node : (node['affectDisplayWindow'].getValue() and node["areaSource"].getValue() == GafferImage.Crop.AreaSource.Format),
+	"layout:activator:areaSourceIsFormatAndAffectDisplayWindowIsOn", lambda node : node["areaSource"].getValue() == GafferImage.Crop.AreaSource.Format and node["affectDisplayWindow"].getValue(),
 
 	plugs = {
 
@@ -128,10 +128,7 @@ Gaffer.Metadata.registerNode(
 			Window' it checked.
 			""",
 
-			# "layout:activator", "areaSourceIsFormatAndAffectDisplayWindowIsOn",
-			"layout:activator", "areaSourceIsFormat",
-			"layout:activator", "affectDisplayWindowIsOn",
-
+			"layout:activator", "areaSourceIsFormatAndAffectDisplayWindowIsOn",
 			"divider", True
 
 		],
