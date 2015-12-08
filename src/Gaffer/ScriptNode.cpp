@@ -219,6 +219,7 @@ ScriptNode::ScriptNode( const std::string &name )
 	frameRangePlug->addChild( frameEndPlug );
 	addChild( frameRangePlug );
 
+	addChild( new FloatPlug( "framesPerSecond", Plug::In, 24.0f, 0.0f ) );
 	addChild( new CompoundDataPlug( "variables" ) );
 
 	m_context->set( "script:name", std::string( "" ) );
@@ -230,6 +231,66 @@ ScriptNode::ScriptNode( const std::string &name )
 
 ScriptNode::~ScriptNode()
 {
+}
+
+StringPlug *ScriptNode::fileNamePlug()
+{
+	return getChild<StringPlug>( g_firstPlugIndex );
+}
+
+const StringPlug *ScriptNode::fileNamePlug() const
+{
+	return getChild<StringPlug>( g_firstPlugIndex );
+}
+
+BoolPlug *ScriptNode::unsavedChangesPlug()
+{
+	return getChild<BoolPlug>( g_firstPlugIndex + 1 );
+}
+
+const BoolPlug *ScriptNode::unsavedChangesPlug() const
+{
+	return getChild<BoolPlug>( g_firstPlugIndex + 1 );
+}
+
+IntPlug *ScriptNode::frameStartPlug()
+{
+	return getChild<ValuePlug>( g_firstPlugIndex + 2 )->getChild<IntPlug>( 0 );
+}
+
+const IntPlug *ScriptNode::frameStartPlug() const
+{
+	return getChild<ValuePlug>( g_firstPlugIndex + 2 )->getChild<IntPlug>( 0 );
+}
+
+IntPlug *ScriptNode::frameEndPlug()
+{
+	return getChild<ValuePlug>( g_firstPlugIndex + 2 )->getChild<IntPlug>( 1 );
+}
+
+const IntPlug *ScriptNode::frameEndPlug() const
+{
+	return getChild<ValuePlug>( g_firstPlugIndex + 2 )->getChild<IntPlug>( 1 );
+}
+
+FloatPlug *ScriptNode::framesPerSecondPlug()
+{
+	return getChild<FloatPlug>( g_firstPlugIndex + 3 );
+}
+
+const FloatPlug *ScriptNode::framesPerSecondPlug() const
+{
+	return getChild<FloatPlug>( g_firstPlugIndex + 3 );
+}
+
+CompoundDataPlug *ScriptNode::variablesPlug()
+{
+	return getChild<CompoundDataPlug>( g_firstPlugIndex + 4 );
+}
+
+const CompoundDataPlug *ScriptNode::variablesPlug() const
+{
+	return getChild<CompoundDataPlug>( g_firstPlugIndex + 4 );
 }
 
 bool ScriptNode::acceptsParent( const GraphComponent *potentialParent ) const
@@ -521,26 +582,6 @@ void ScriptNode::deleteNodes( Node *parent, const Set *filter, bool reconnect )
 	}
 }
 
-StringPlug *ScriptNode::fileNamePlug()
-{
-	return getChild<StringPlug>( g_firstPlugIndex );
-}
-
-const StringPlug *ScriptNode::fileNamePlug() const
-{
-	return getChild<StringPlug>( g_firstPlugIndex );
-}
-
-BoolPlug *ScriptNode::unsavedChangesPlug()
-{
-	return getChild<BoolPlug>( g_firstPlugIndex + 1 );
-}
-
-const BoolPlug *ScriptNode::unsavedChangesPlug() const
-{
-	return getChild<BoolPlug>( g_firstPlugIndex + 1 );
-}
-
 bool ScriptNode::execute( const std::string &pythonScript, Node *parent, bool continueOnError )
 {
 	throw IECore::Exception( "Cannot execute scripts on a ScriptNode not created in Python." );
@@ -596,39 +637,8 @@ const Context *ScriptNode::context() const
 	return m_context.get();
 }
 
-CompoundDataPlug *ScriptNode::variablesPlug()
-{
-	return getChild<CompoundDataPlug>( g_firstPlugIndex + 3 );
-}
-
-const CompoundDataPlug *ScriptNode::variablesPlug() const
-{
-	return getChild<CompoundDataPlug>( g_firstPlugIndex + 3 );
-}
-
-IntPlug *ScriptNode::frameStartPlug()
-{
-	return getChild<ValuePlug>( g_firstPlugIndex + 2 )->getChild<IntPlug>( 0 );
-}
-
-const IntPlug *ScriptNode::frameStartPlug() const
-{
-	return getChild<ValuePlug>( g_firstPlugIndex + 2 )->getChild<IntPlug>( 0 );
-}
-
-IntPlug *ScriptNode::frameEndPlug()
-{
-	return getChild<ValuePlug>( g_firstPlugIndex + 2 )->getChild<IntPlug>( 1 );
-}
-
-const IntPlug *ScriptNode::frameEndPlug() const
-{
-	return getChild<ValuePlug>( g_firstPlugIndex + 2 )->getChild<IntPlug>( 1 );
-}
-
 void ScriptNode::plugSet( Plug *plug )
 {
-	/// \todo Implement this min/max behaviour enforcement as a Behaviour subclass.
 	if( plug == frameStartPlug() )
 	{
 		frameEndPlug()->setValue( std::max( frameEndPlug()->getValue(), frameStartPlug()->getValue() ) );
@@ -636,6 +646,10 @@ void ScriptNode::plugSet( Plug *plug )
 	else if( plug == frameEndPlug() )
 	{
 		frameStartPlug()->setValue( std::min( frameStartPlug()->getValue(), frameEndPlug()->getValue() ) );
+	}
+	else if( plug == framesPerSecondPlug() )
+	{
+		context()->setFramesPerSecond( framesPerSecondPlug()->getValue() );
 	}
 	else if( plug == variablesPlug() )
 	{

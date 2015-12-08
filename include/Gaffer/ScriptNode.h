@@ -226,6 +226,9 @@ class ScriptNode : public Node
 		/// with this context, or one which inherits its variables.
 		Context *context();
 		const Context *context() const;
+		/// Drives the framesPerSecond variable in the context.
+		FloatPlug *framesPerSecondPlug();
+		const FloatPlug *framesPerSecondPlug() const;
 		/// All members of this plug are mapped into custom variables
 		/// in the context.
 		CompoundDataPlug *variablesPlug();
