@@ -47,29 +47,6 @@ import GafferSceneTest
 
 class ObjectToSceneTest( GafferSceneTest.SceneTestCase ) :
 
-	def testFileInput( self ) :
-
-		fileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/cobs/pSphereShape1.cob" )
-
-		read = Gaffer.ObjectReader()
-		read["fileName"].setValue( fileName )
-		object = IECore.Reader.create( fileName ).read()
-
-		objectToScene = GafferScene.ObjectToScene()
-		objectToScene["object"].setInput( read["out"] )
-
-		self.assertEqual( objectToScene["out"].bound( "/" ), object.bound() )
-		self.assertEqual( objectToScene["out"].transform( "/" ), IECore.M44f() )
-		self.assertEqual( objectToScene["out"].object( "/" ), IECore.NullObject() )
-		self.assertEqual( objectToScene["out"].childNames( "/" ), IECore.InternedStringVectorData( [ "object" ] ) )
-
-		self.assertEqual( objectToScene["out"].bound( "/object" ), object.bound() )
-		self.assertEqual( objectToScene["out"].transform( "/object" ), IECore.M44f() )
-		self.assertEqual( objectToScene["out"].object( "/object" ), object )
-		self.assertEqual( objectToScene["out"].childNames( "/object" ), IECore.InternedStringVectorData() )
-
-		self.assertSceneValid( objectToScene["out"] )
-
 	def testMeshInput( self ) :
 
 		p = GafferScene.ObjectToScene()
