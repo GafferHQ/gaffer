@@ -44,7 +44,7 @@ using namespace GafferSceneUI;
 void GafferSceneUIBindings::bindLightVisualiser()
 {
 
-	IECorePython::RefCountedClass<LightVisualiser, Visualiser>( "LightVisualiser" )
+	IECorePython::RefCountedClass<LightVisualiser, IECore::RefCounted>( "LightVisualiser" )
 		.def( "registerLightVisualiser", &LightVisualiser::registerLightVisualiser )
 		.staticmethod( "registerLightVisualiser" )
 	;

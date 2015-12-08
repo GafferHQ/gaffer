@@ -37,7 +37,7 @@
 #ifndef GAFFERSCENEUI_LIGHTVISUALISER_H
 #define GAFFERSCENEUI_LIGHTVISUALISER_H
 
-#include "IECore/Light.h"
+#include "IECore/ObjectVector.h"
 
 #include "GafferSceneUI/Visualiser.h"
 
@@ -51,29 +51,23 @@ IE_CORE_FORWARDDECLARE( LightVisualiser )
 /// depending on their shader name (accessed using `IECore::Light::getName()`). A
 /// factory mechanism is provided to map from this type to a specialised
 /// LightVisualiser.
-class LightVisualiser : public Visualiser
+class LightVisualiser : public IECore::RefCounted
 {
 
 	public :
 
 		IE_CORE_DECLAREMEMBERPTR( LightVisualiser )
 
-		typedef IECore::Light ObjectType;
-
 		LightVisualiser();
 		virtual ~LightVisualiser();
 
 		/// Uses a custom visualisation registered via `registerLightVisualiser()` if one
-		/// is available, if not falls back to a basic point light visualisation.
-		virtual IECoreGL::ConstRenderablePtr visualise( const IECore::Object *object ) const;
+		/// is available, if not falls back to a basic point light visualisation.  // TODO
+		/// TODO - should this be able to return multiple renderables?
+		virtual IECoreGL::ConstRenderablePtr visualise( const IECore::ObjectVector *shaderVector, IECoreGL::State &state ) const = 0;
 
 		/// Registers a visualiser to use for the specified light type.
 		static void registerLightVisualiser( const IECore::InternedString &name, ConstLightVisualiserPtr visualiser );
-
-	protected :
-
-		static VisualiserDescription<LightVisualiser> g_visualiserDescription;
-
 };
 
 } // namespace GafferSceneUI

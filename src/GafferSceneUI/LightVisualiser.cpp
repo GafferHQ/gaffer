@@ -40,6 +40,7 @@
 #include "IECoreGL/Group.h"
 
 #include "GafferSceneUI/LightVisualiser.h"
+#include "GafferSceneUI/AttributeVisualiser.h"
 #include "GafferSceneUI/StandardLightVisualiser.h"
 
 using namespace std;
@@ -60,13 +61,94 @@ LightVisualisers &lightVisualisers()
 	return l;
 }
 
+const LightVisualiser *standardLightVisualiser()
+{
+	static StandardLightVisualiser l;
+	return &l;
+}
+
+/// Class for visualisation of lights. All lights in Gaffer are represented
+/// as IECore::Light objects, but we need to visualise them differently
+/// depending on their shader name (accessed using `IECore::Light::getName()`). A
+/// factory mechanism is provided to map from this type to a specialised
+/// LightVisualiser.
+class AttributeVisualiserForLights : public AttributeVisualiser
+{
+
+    public :
+
+        IE_CORE_DECLAREMEMBERPTR( AttributeVisualiserForLights )
+
+        typedef IECore::Light ObjectType;
+
+        //AttributeVisualiserForLights();
+        //virtual ~AttributeVisualiserForLights();
+
+        /// Uses a custom visualisation registered via `registerLightVisualiser()` if one
+        /// is available, if not falls back to a basic point light visualisation.
+        virtual void visualise( const IECore::CompoundObject *attributes,
+            std::vector< IECoreGL::ConstRenderablePtr> &renderables, IECoreGL::State &state ) const;
+
+    protected :
+
+        static AttributeVisualiser::AttributeVisualiserDescription<AttributeVisualiserForLights> g_visualiserDescription;
+
+};
+
 } // namespace
+
+void AttributeVisualiserForLights::visualise( const IECore::CompoundObject *attributes,
+            std::vector< IECoreGL::ConstRenderablePtr> &renderables, IECoreGL::State &state ) const
+{
+	if( !attributes )
+    {
+        return;
+    }
+
+    // TODO - this seems pretty expensive to do everywhere.  Could we have a way to only run this for locations
+    // in the __lights set?
+    for( IECore::CompoundObject::ObjectMap::const_iterator it = attributes->members().begin();
+        it != attributes->members().end(); it++ )
+    {
+        const std::string &key = it->first.string();
+        if( key.size() >= 6 && key.compare( key.length() - 6, 6, ":light" ) == 0 )
+        {
+            const IECore::ObjectVector *shaderVector = IECore::runTimeCast<const IECore::ObjectVector>( it->second.get() );
+            if( !shaderVector || shaderVector->members().size() == 0 ) continue;
+
+            const IECore::Light *lightShader = IECore::runTimeCast<const IECore::Light>(
+                 shaderVector->members()[ shaderVector->members().size() - 1 ] ).get();
+            if( !lightShader ) continue;
+
+
+			const LightVisualiser *currentVisualiser = standardLightVisualiser();
+
+			const LightVisualisers &l = lightVisualisers();
+			LightVisualisers::const_iterator findVis = l.find( lightShader->getName() );
+			if( findVis != l.end() )
+			{
+				currentVisualiser = findVis->second.get();
+			}
+			IECoreGL::ConstRenderablePtr renderableVis = currentVisualiser->visualise( shaderVector, state );
+			if( renderableVis )
+			{
+				renderables.push_back( renderableVis );
+			}
+		}
+	}
+}
+
+AttributeVisualiser::AttributeVisualiserDescription<AttributeVisualiserForLights> AttributeVisualiserForLights::g_visualiserDescription;
+
+
+
+
+
 
 //////////////////////////////////////////////////////////////////////////
 // LightVisualiser class
 //////////////////////////////////////////////////////////////////////////
 
-Visualiser::VisualiserDescription<LightVisualiser> LightVisualiser::g_visualiserDescription;
 
 LightVisualiser::LightVisualiser()
 {
@@ -74,27 +156,6 @@ LightVisualiser::LightVisualiser()
 
 LightVisualiser::~LightVisualiser()
 {
-}
-
-IECoreGL::ConstRenderablePtr LightVisualiser::visualise( const IECore::Object *object ) const
-{
-	const IECore::Light *light = IECore::runTimeCast<const IECore::Light>( object );
-	if( !light )
-	{
-		return NULL;
-	}
-
-	const LightVisualisers &l = lightVisualisers();
-	LightVisualisers::const_iterator it = l.find( light->getName() );
-	if( it != l.end() )
-	{
-		return it->second->visualise( object );
-	}
-	else
-	{
-		static StandardLightVisualiserPtr g_defaultVisualiser = new StandardLightVisualiser();
-		return g_defaultVisualiser->visualise( object );
-	}
 }
 
 void LightVisualiser::registerLightVisualiser( const IECore::InternedString &name, ConstLightVisualiserPtr visualiser )
