@@ -67,6 +67,8 @@ IE_CORE_FORWARDDECLARE( ImageSampler )
 namespace GafferImageUI
 {
 
+IE_CORE_FORWARDDECLARE( ImageGadget )
+
 /// \todo Refactor this into smaller components, along the lines of the SceneView class.
 /// Consider redesigning the View/Tool classes so that view functionality can be built up
 /// by adding tools like samplers etc. A good starting point for this refactoring would be
@@ -99,6 +101,8 @@ class ImageView : public GafferUI::View
 		Gaffer::StringPlug *displayTransformPlug();
 		const Gaffer::StringPlug *displayTransformPlug() const;
 
+		virtual void setContext( Gaffer::ContextPtr context );
+
 		typedef boost::function<GafferImage::ImageProcessorPtr ()> DisplayTransformCreator;
 
 		static void registerDisplayTransform( const std::string &name, DisplayTransformCreator creator );
@@ -115,8 +119,6 @@ class ImageView : public GafferUI::View
 		/// \note Subclasses are not allowed to call setPreprocessor() as the
 		/// preprocessor is managed by the ImageView base class.
 		void insertConverter( Gaffer::NodePtr converter );
-
-		virtual void update();
 
 	private:
 
@@ -136,10 +138,16 @@ class ImageView : public GafferUI::View
 		const GafferImage::ImageProcessor *displayTransformNode() const;
 
 		void plugSet( Gaffer::Plug *plug );
+		bool keyPress( const GafferUI::KeyEvent &event );
+		void preRender();
+
 		void insertDisplayTransform();
 
 		typedef std::map<std::string, GafferImage::ImageProcessorPtr> DisplayTransformMap;
 		DisplayTransformMap m_displayTransforms;
+
+		ImageGadgetPtr m_imageGadget;
+		bool m_framed;
 
 		int m_channelToView;
 		Imath::V2f m_mousePos;

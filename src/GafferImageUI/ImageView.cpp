@@ -70,6 +70,7 @@
 #include "GafferImage/Clamp.h"
 #include "GafferImage/ImageSampler.h"
 
+#include "GafferImageUI/ImageGadget.h"
 #include "GafferImageUI/ImageView.h"
 
 using namespace boost;
@@ -930,6 +931,8 @@ ImageView::ViewDescription<ImageView> ImageView::g_viewDescription( GafferImage:
 
 ImageView::ImageView( const std::string &name )
 	:	View( name, new GafferImage::ImagePlug() ),
+		m_imageGadget( new ImageGadget() ),
+		m_framed( false ),
 		m_channelToView( 0 ),
 		m_mousePos( Imath::V2f( 0.0f ) ),
 		m_sampleColor( Imath::Color4f( 0.0f ) ),
@@ -992,10 +995,19 @@ ImageView::ImageView( const std::string &name )
 	// connect up to some signals
 
 	plugSetSignal().connect( boost::bind( &ImageView::plugSet, this, ::_1 ) );
+	viewportGadget()->keyPressSignal().connect( boost::bind( &ImageView::keyPress, this, ::_2 ) );
+	viewportGadget()->preRenderSignal().connect( boost::bind( &ImageView::preRender, this ) );
 
 	// get our display transform right
 
 	insertDisplayTransform();
+
+	// Now we can connect up our ImageGadget, which will do the
+	// hard work of actually displaying the image.
+
+	m_imageGadget->setImage( preprocessedInPlug<ImagePlug>() );
+	m_imageGadget->setContext( getContext() );
+	viewportGadget()->setPrimaryChild( m_imageGadget );
 }
 
 void ImageView::insertConverter( Gaffer::NodePtr converter )
@@ -1114,18 +1126,10 @@ const GafferImage::Grade *ImageView::gradeNode() const
 	return getPreprocessor<Node>()->getChild<Grade>( "__grade" );
 }
 
-void ImageView::update()
+void ImageView::setContext( Gaffer::ContextPtr context )
 {
-	Context::Scope context( getContext() );
-	ConstImagePrimitivePtr image = preprocessedInPlug<ImagePlug>()->image();
-
-	Detail::ImageViewGadgetPtr imageViewGadget = new Detail::ImageViewGadget( image, imageStatsNode(), imageSamplerNode(), getContext(), m_channelToView, m_mousePos, m_sampleColor, m_minColor, m_maxColor, m_averageColor );
-	bool hadChild = viewportGadget()->getPrimaryChild();
-	viewportGadget()->setPrimaryChild( imageViewGadget );
-	if( !hadChild )
-	{
-		viewportGadget()->frame( imageViewGadget->bound() );
-	}
+	View::setContext( context );
+	m_imageGadget->setContext( context );
 }
 
 void ImageView::plugSet( Gaffer::Plug *plug )
@@ -1147,6 +1151,40 @@ void ImageView::plugSet( Gaffer::Plug *plug )
 	{
 		insertDisplayTransform();
 	}
+}
+
+bool ImageView::keyPress( const GafferUI::KeyEvent &event )
+{
+	const char *rgba[4] = { "R", "G", "B", "A" };
+	for( int i = 0; i < 4; ++i )
+	{
+		if( event.key == rgba[i] )
+		{
+			m_imageGadget->setSoloChannel(
+				m_imageGadget->getSoloChannel() == i ? -1 : i
+			);
+			return true;
+		}
+	}
+
+	return false;
+}
+
+void ImageView::preRender()
+{
+	if( m_framed )
+	{
+		return;
+	}
+
+	const Box3f b = m_imageGadget->bound();
+	if( b.isEmpty() )
+	{
+		return;
+	}
+
+	viewportGadget()->frame( b );
+	m_framed = true;
 }
 
 void ImageView::insertDisplayTransform()
