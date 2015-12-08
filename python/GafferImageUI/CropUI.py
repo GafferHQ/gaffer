@@ -64,23 +64,12 @@ Gaffer.Metadata.registerNode(
 	or Display Window.
 	""",
 
-	"layout:activator:areaSourceIsCustom", lambda node : node["areaSource"].getValue() == GafferImage.Crop.AreaSource.Custom,
+	"layout:activator:areaSourceIsArea", lambda node : node["areaSource"].getValue() == GafferImage.Crop.AreaSource.Area,
+	"layout:activator:areaSourceIsFormat", lambda node : node["areaSource"].getValue() == GafferImage.Crop.AreaSource.Format,
 	"layout:activator:affectDisplayWindowIsOn", lambda node : node["affectDisplayWindow"].getValue(),
+	"layout:activator:areaSourceIsFormatAndAffectDisplayWindowIsOn", lambda node : node["areaSource"].getValue() == GafferImage.Crop.AreaSource.Format and node["affectDisplayWindow"].getValue(),
 
 	plugs = {
-
-		"area" : [
-
-			"description",
-			"""
-			The custom area to set the Data/Display Window to.
-			This plug is only used if 'Area Source' is set to
-			Custom.
-			""",
-
-			"layout:activator", "areaSourceIsCustom",
-
-		],
 
 		"areaSource" : [
 
@@ -93,11 +82,54 @@ Gaffer.Metadata.registerNode(
 			the Area plug.
 			""",
 
+			"preset:Area", GafferImage.Crop.AreaSource.Area,
+			"preset:Format", GafferImage.Crop.AreaSource.Format,
 			"preset:DataWindow", GafferImage.Crop.AreaSource.DataWindow,
 			"preset:DisplayWindow", GafferImage.Crop.AreaSource.DisplayWindow,
-			"preset:Custom", GafferImage.Crop.AreaSource.Custom,
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
+		],
+
+		"area" : [
+
+			"description",
+			"""
+			The custom area to set the Data/Display Window to.
+			This plug is only used if 'Area Source' is set to
+			Custom.
+			""",
+
+			"layout:activator", "areaSourceIsArea",
+
+		],
+
+		"format" : [
+
+			"description",
+			"""
+			The Format to use as the area to set the Data/Display
+			Window to. This plug is only used if 'Area Source' is
+			set to Format.
+			""",
+
+			"layout:activator", "areaSourceIsFormat",
+
+		],
+
+		"formatCenter" : [
+
+			"description",
+			"""
+			Whether to center the output image (based on the
+			existing display window) inside the new display
+			window format. This plug is only used if
+			'Area Source' is set to Format, and 'Affect Display
+			Window' it checked.
+			""",
+
+			"layout:activator", "areaSourceIsFormatAndAffectDisplayWindowIsOn",
+			"divider", True
 
 		],
 

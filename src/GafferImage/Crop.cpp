@@ -38,6 +38,7 @@
 #include "GafferImage/Crop.h"
 #include "GafferImage/ImageAlgo.h"
 #include "GafferImage/Offset.h"
+#include "GafferImage/FormatPlug.h"
 
 using namespace Imath;
 using namespace IECore;
@@ -52,8 +53,10 @@ Crop::Crop( const std::string &name )
 	:   ImageProcessor( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
-	addChild( new IntPlug( "areaSource", Gaffer::Plug::In, Crop::Custom, Crop::Custom, Crop::DisplayWindow ) );
+	addChild( new IntPlug( "areaSource", Gaffer::Plug::In, Crop::Area, Crop::Area, Crop::Format ) );
 	addChild( new Box2iPlug( "area" ) );
+	addChild( new FormatPlug( "format" ) );
+	addChild( new BoolPlug( "formatCenter" ) );
 	addChild( new BoolPlug( "affectDataWindow", Gaffer::Plug::In, true ) );
 	addChild( new BoolPlug( "affectDisplayWindow", Gaffer::Plug::In, true ) );
 	addChild( new BoolPlug( "resetOrigin", Gaffer::Plug::In, true ) );
@@ -89,62 +92,82 @@ const Gaffer::IntPlug *Crop::areaSourcePlug() const
 
 Gaffer::Box2iPlug *Crop::areaPlug()
 {
-	return getChild<Box2iPlug>( g_firstPlugIndex+1 );
+	return getChild<Box2iPlug>( g_firstPlugIndex + 1 );
 }
 
 const Gaffer::Box2iPlug *Crop::areaPlug() const
 {
-	return getChild<Box2iPlug>( g_firstPlugIndex+1 );
+	return getChild<Box2iPlug>( g_firstPlugIndex + 1 );
+}
+
+GafferImage::FormatPlug *Crop::formatPlug()
+{
+	return getChild<FormatPlug>( g_firstPlugIndex + 2 );
+}
+
+const GafferImage::FormatPlug *Crop::formatPlug() const
+{
+	return getChild<FormatPlug>( g_firstPlugIndex + 2 );
+}
+
+Gaffer::BoolPlug *Crop::formatCenterPlug()
+{
+	return getChild<BoolPlug>( g_firstPlugIndex + 3 );
+}
+
+const Gaffer::BoolPlug *Crop::formatCenterPlug() const
+{
+	return getChild<BoolPlug>( g_firstPlugIndex + 3 );
 }
 
 Gaffer::BoolPlug *Crop::affectDataWindowPlug()
 {
-	return getChild<BoolPlug>( g_firstPlugIndex+2 );
+	return getChild<BoolPlug>( g_firstPlugIndex + 4 );
 }
 
 const Gaffer::BoolPlug *Crop::affectDataWindowPlug() const
 {
-	return getChild<BoolPlug>( g_firstPlugIndex+2 );
+	return getChild<BoolPlug>( g_firstPlugIndex + 4 );
 }
 
 Gaffer::BoolPlug *Crop::affectDisplayWindowPlug()
 {
-	return getChild<BoolPlug>( g_firstPlugIndex+3 );
+	return getChild<BoolPlug>( g_firstPlugIndex + 5 );
 }
 
 const Gaffer::BoolPlug *Crop::affectDisplayWindowPlug() const
 {
-	return getChild<BoolPlug>( g_firstPlugIndex+3 );
+	return getChild<BoolPlug>( g_firstPlugIndex + 5 );
 }
 
 Gaffer::BoolPlug *Crop::resetOriginPlug()
 {
-	return getChild<BoolPlug>( g_firstPlugIndex + 4 );
+	return getChild<BoolPlug>( g_firstPlugIndex + 6 );
 }
 
 const Gaffer::BoolPlug *Crop::resetOriginPlug() const
 {
-	return getChild<BoolPlug>( g_firstPlugIndex + 4 );
+	return getChild<BoolPlug>( g_firstPlugIndex + 6 );
 }
 
 Gaffer::AtomicBox2iPlug *Crop::cropWindowPlug()
 {
-	return getChild<AtomicBox2iPlug>( g_firstPlugIndex + 5 );
+	return getChild<AtomicBox2iPlug>( g_firstPlugIndex + 7 );
 }
 
 const Gaffer::AtomicBox2iPlug *Crop::cropWindowPlug() const
 {
-	return getChild<AtomicBox2iPlug>( g_firstPlugIndex + 5 );
+	return getChild<AtomicBox2iPlug>( g_firstPlugIndex + 7 );
 }
 
 Gaffer::V2iPlug *Crop::offsetPlug()
 {
-	return getChild<V2iPlug>( g_firstPlugIndex + 6 );
+	return getChild<V2iPlug>( g_firstPlugIndex + 8 );
 }
 
 const Gaffer::V2iPlug *Crop::offsetPlug() const
 {
-	return getChild<V2iPlug>( g_firstPlugIndex + 6 );
+	return getChild<V2iPlug>( g_firstPlugIndex + 8 );
 }
 
 void Crop::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
@@ -152,8 +175,10 @@ void Crop::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs )
 	ImageProcessor::affects( input, outputs );
 
 	if(
-		areaPlug()->isAncestorOf( input ) ||
 		input == areaSourcePlug() ||
+		areaPlug()->isAncestorOf( input ) ||
+		input == formatPlug() ||
+		input == formatCenterPlug() ||
 		input == inPlug()->dataWindowPlug() ||
 		input == inPlug()->formatPlug()
 	)
@@ -164,7 +189,7 @@ void Crop::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs )
 	if(
 		input == cropWindowPlug() ||
 		input == affectDisplayWindowPlug() ||
-		input == resetOriginPlug() ||
+		offsetPlug()->isAncestorOf( input ) ||
 		input == inPlug()->formatPlug()
 	)
 	{
@@ -175,7 +200,7 @@ void Crop::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs )
 		input == cropWindowPlug() ||
 		input == affectDisplayWindowPlug() ||
 		input == affectDataWindowPlug() ||
-		input == resetOriginPlug() ||
+		offsetPlug()->isAncestorOf( input ) ||
 		input == inPlug()->dataWindowPlug()
 	)
 	{
@@ -184,6 +209,8 @@ void Crop::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs )
 
 	if(
 		input == affectDisplayWindowPlug() ||
+		input == areaSourcePlug() ||
+		input == formatCenterPlug() ||
 		input == resetOriginPlug() ||
 		input == cropWindowPlug()
 	)
@@ -208,7 +235,7 @@ void Crop::hashFormat( const GafferImage::ImagePlug *parent, const Gaffer::Conte
 
 	inPlug()->formatPlug()->hash( h );
 	cropWindowPlug()->hash( h );
-	resetOriginPlug()->hash( h );
+	offsetPlug()->hash( h );
 }
 
 GafferImage::Format Crop::computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const
@@ -221,13 +248,12 @@ GafferImage::Format Crop::computeFormat( const Gaffer::Context *context, const I
 	}
 
 	Imath::Box2i displayWindow = cropWindowPlug()->getValue();
-	if( resetOriginPlug()->getValue() )
-	{
-		displayWindow.max -= displayWindow.min;
-		displayWindow.min = V2i( 0 );
-	}
+	const Imath::V2i offset = offsetPlug()->getValue();
 
-	return Format( displayWindow, inPlug()->formatPlug()->getValue().getPixelAspect() );
+	displayWindow.max += offset;
+	displayWindow.min += offset;
+
+	return GafferImage::Format( displayWindow, inPlug()->formatPlug()->getValue().getPixelAspect() );
 }
 
 
@@ -239,23 +265,21 @@ void Crop::hashDataWindow( const GafferImage::ImagePlug *parent, const Gaffer::C
 	cropWindowPlug()->hash( h );
 	affectDataWindowPlug()->hash( h );
 	affectDisplayWindowPlug()->hash( h );
-	resetOriginPlug()->hash( h );
+	offsetPlug()->hash( h );
 }
 
 Imath::Box2i Crop::computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
 	Box2i result = inPlug()->dataWindowPlug()->getValue();
 	const Box2i cropWindow = cropWindowPlug()->getValue();
+	const V2i offset = offsetPlug()->getValue();
 	if( affectDataWindowPlug()->getValue() )
 	{
 		result = intersection( result, cropWindow );
 	}
 
-	if( affectDisplayWindowPlug()->getValue() && resetOriginPlug()->getValue() )
-	{
-		result.min -= cropWindow.min;
-		result.max -= cropWindow.min;
-	}
+	result.min += offset;
+	result.max += offset;
 
 	return result;
 }
@@ -270,14 +294,23 @@ void Crop::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context
 
 		switch ( areaSource )
 		{
-			case DataWindow:
+			case Crop::DataWindow:
 			{
 				inPlug()->dataWindowPlug()->hash( h );
 				break;
 			}
-			case DisplayWindow:
+			case Crop::DisplayWindow:
 			{
 				inPlug()->formatPlug()->hash( h );
+				break;
+			}
+			case Crop::Format:
+			{
+				formatPlug()->hash( h );
+				if( formatCenterPlug()->getValue() )
+				{
+					inPlug()->formatPlug()->hash( h );
+				}
 				break;
 			}
 			default:
@@ -292,6 +325,10 @@ void Crop::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context
 		affectDisplayWindowPlug()->hash( h );
 		resetOriginPlug()->hash( h );
 		cropWindowPlug()->hash( h );
+		if( areaSourcePlug()->getValue() == Crop::Format && formatCenterPlug()->getValue() )
+		{
+			inPlug()->formatPlug()->hash( h );
+		}
 	}
 }
 
@@ -304,14 +341,27 @@ void Crop::compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) 
 
 		switch ( areaSource )
 		{
-			case DataWindow:
+			case Crop::DataWindow:
 			{
 				cropWindow = inPlug()->dataWindowPlug()->getValue();
 				break;
 			}
-			case DisplayWindow:
+			case Crop::DisplayWindow:
 			{
 				cropWindow = inPlug()->formatPlug()->getValue().getDisplayWindow();
+				break;
+			}
+			case Crop::Format:
+			{
+				cropWindow = formatPlug()->getValue().getDisplayWindow();
+				if( formatCenterPlug()->getValue() )
+				{
+					const Imath::Box2i displayWindow = inPlug()->formatPlug()->getValue().getDisplayWindow();
+					Imath::V2i centerOffset( cropWindow.center() - displayWindow.center() );
+
+					cropWindow.min -= centerOffset;
+					cropWindow.max -= centerOffset;
+				}
 				break;
 			}
 			default:
@@ -326,9 +376,16 @@ void Crop::compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) 
 	else if( output->parent<Plug>() == offsetPlug() )
 	{
 		V2i offset( 0 );
-		if( affectDisplayWindowPlug()->getValue() && resetOriginPlug()->getValue() )
+		if( affectDisplayWindowPlug()->getValue() )
 		{
-			offset -= cropWindowPlug()->getValue().min;
+			if( resetOriginPlug()->getValue() )
+			{
+				offset -= cropWindowPlug()->getValue().min;
+			}
+			else if( areaSourcePlug()->getValue() == Crop::Format && formatCenterPlug()->getValue() )
+			{
+				offset -= cropWindowPlug()->getValue().min - formatPlug()->getValue().getDisplayWindow().min;
+			}
 		}
 		static_cast<IntPlug *>( output )->setValue(
 			output == offsetPlug()->getChild( 0 ) ? offset[0] : offset[1]
