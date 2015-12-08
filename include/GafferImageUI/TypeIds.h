@@ -43,6 +43,7 @@ namespace GafferImageUI
 enum TypeId
 {
 	ImageViewTypeId = 110850,
+	ImageGadgetTypeId = 110851,
 
 	LastTypeId = 110899
 };
