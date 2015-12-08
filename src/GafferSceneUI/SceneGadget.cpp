@@ -53,6 +53,7 @@
 
 #include "GafferSceneUI/SceneGadget.h"
 #include "GafferSceneUI/Visualiser.h"
+#include "GafferSceneUI/AttributeVisualiser.h"
 
 using namespace std;
 using namespace Imath;
@@ -196,6 +197,11 @@ class SceneGadget::SceneGraph
 					if( m_renderable )
 					{
 						m_renderable->render( currentState );
+					}
+
+					for( unsigned int i = 0; i < m_attributeRenderables.size(); i++ )
+					{
+						m_attributeRenderables[i]->render( currentState );
 					}
 
 					if( m_boundRenderable )
@@ -355,6 +361,7 @@ class SceneGadget::SceneGraph
 		IECoreGL::ConstStatePtr m_state;
 		IECoreGL::ConstRenderablePtr m_renderable;
 		IECoreGL::ConstRenderablePtr m_boundRenderable;
+		std::vector<IECoreGL::ConstRenderablePtr> m_attributeRenderables;
 		std::vector<SceneGraph *> m_children;
 		mutable GLuint m_selectionId;
 		bool m_selected;
@@ -409,9 +416,17 @@ class SceneGadget::UpdateTask : public tbb::task
 					const IECore::BoolData *visibilityData = attributes->member<IECore::BoolData>( "scene:visible" );
 					m_sceneGraph->m_visible = visibilityData ? visibilityData->readable() : true;
 
-					IECore::ConstRunTimeTypedPtr glState = IECoreGL::CachedConverter::defaultCachedConverter()->convert( attributes.get() );
+					IECore::ConstRunTimeTypedPtr glStateConverted = IECoreGL::CachedConverter::defaultCachedConverter()->convert( attributes.get() );
+
+					IECoreGL::StatePtr glState = new IECoreGL::State(
+						*IECore::runTimeCast<const IECoreGL::State>( glStateConverted ) );
+
+					m_sceneGraph->m_attributeRenderables.clear();
+					AttributeVisualiser::visualiseFromRegistry( attributes.get(), m_sceneGraph->m_attributeRenderables, *glState.get() );
+
 					deferReferenceRemoval( m_sceneGraph->m_state );
-					m_sceneGraph->m_state = IECore::runTimeCast<const IECoreGL::State>( glState );
+					m_sceneGraph->m_state = glState;
+
 
 					m_sceneGraph->m_attributesHash = attributesHash;
 				}
