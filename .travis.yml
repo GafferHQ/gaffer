@@ -32,7 +32,7 @@ install:
     - if [ -n "$COMPILER_VERSION" ]; then export CXX="${CXX}-${COMPILER_VERSION}"; fi
 
 script:
-    - scons -j 2 install CXX=$CXX ENV_VARS_TO_IMPORT=PATH RMAN_ROOT=$DELIGHT
+    - scons -j 2 install CXX=$CXX CXXSTD=$CXXSTD ENV_VARS_TO_IMPORT=PATH RMAN_ROOT=$DELIGHT
     # Preload libSegFault when running tests, so we get stack
     # traces from any crashes.
     - export LD_PRELOAD=/lib/x86_64-linux-gnu/libSegFault.so
@@ -57,10 +57,13 @@ compiler:
     - clang
 
 env:
-    - COMPILER_VERSION=
-    - COMPILER_VERSION=4.8
+    - COMPILER_VERSION= CXXSTD=c++98
+    - COMPILER_VERSION=4.8 CXXSTD=c++98
+    - COMPILER_VERSION=4.8 CXXSTD=c++11
 
 matrix:
     exclude:
         - compiler: clang
-          env: COMPILER_VERSION=4.8
+          env: COMPILER_VERSION=4.8 CXXSTD=c++98
+        - compiler: clang
+          env: COMPILER_VERSION=4.8 CXXSTD=c++11
