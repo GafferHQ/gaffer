@@ -499,6 +499,10 @@ void parallelProcessTiles( const ImagePlug *imagePlug, ThreadableFunctor &functo
 	if( empty( processWindow ) )
 	{
 		processWindow = imagePlug->dataWindowPlug()->getValue();
+		if( empty( processWindow ) )
+		{
+			return;
+		}
 	}
 
 	const Imath::V2i tilesOrigin = ImagePlug::tileOrigin( processWindow.min );
@@ -515,6 +519,10 @@ void parallelProcessTiles( const ImagePlug *imagePlug, const std::vector<std::st
 	if( empty( processWindow ) )
 	{
 		processWindow = imagePlug->dataWindowPlug()->getValue();
+		if( empty( processWindow ) )
+		{
+			return;
+		}
 	}
 
 	const Imath::V2i tilesOrigin = ImagePlug::tileOrigin( processWindow.min );
@@ -531,6 +539,10 @@ void parallelGatherTiles( const ImagePlug *imagePlug, TileFunctor &tileFunctor, 
 	if( empty( processWindow ) )
 	{
 		processWindow = imagePlug->dataWindowPlug()->getValue();
+		if( empty( processWindow ) )
+		{
+			return;
+		}
 	}
 
 	const Imath::V2i tilesOrigin = ImagePlug::tileOrigin( processWindow.min );
@@ -557,12 +569,10 @@ void parallelGatherTiles( const ImagePlug *imagePlug, TileFunctor &tileFunctor, 
 template <class TileFunctor, class GatherFunctor>
 void parallelGatherTiles( const ImagePlug *imagePlug, const std::vector<std::string> &channelNames, TileFunctor &tileFunctor, GatherFunctor &gatherFunctor, const Imath::Box2i &window, TileOrder tileOrder )
 {
-
 	Imath::Box2i processWindow = window;
 	if( empty( processWindow ) )
 	{
 		processWindow = imagePlug->dataWindowPlug()->getValue();
-
 		if( empty( processWindow ) )
 		{
 			return;
