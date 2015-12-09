@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2015, John Haddon. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,33 +34,52 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENETEST_TESTLIGHT_H
-#define GAFFERSCENETEST_TESTLIGHT_H
+#include "GafferSceneUI/Visualiser.h"
 
-#include "GafferScene/Light.h"
+using namespace GafferSceneUI;
 
-#include "GafferSceneTest/TypeIds.h"
+Visualiser::Visualiser()
+{
+}
 
-namespace GafferSceneTest
+Visualiser::~Visualiser()
+{
+}
+
+//////////////////////////////////////////////////////////////////////////
+// Factory
+//////////////////////////////////////////////////////////////////////////
+
+namespace
 {
 
-class TestLight : public GafferScene::Light
+typedef std::map<IECore::TypeId, ConstVisualiserPtr> Visualisers;
+
+Visualisers &visualisers()
 {
+	static Visualisers v;
+	return v;
+}
 
-	public :
+} // namespace
 
-		TestLight( const std::string &name=defaultName<TestLight>() );
-		virtual ~TestLight();
+const Visualiser *Visualiser::acquire( IECore::TypeId objectType )
+{
+	const Visualisers &v = visualisers();
+	while( objectType != IECore::InvalidTypeId )
+	{
+		Visualisers::const_iterator it = v.find( objectType );
+		if( it != v.end() )
+		{
+			return it->second.get();
+		}
+		objectType = IECore::RunTimeTyped::baseTypeId( objectType );
+	}
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferSceneTest::TestLight, TestLightTypeId, GafferScene::Light );
+	return NULL;
+}
 
-	protected :
-
-		virtual void hashLight( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual IECore::ObjectVectorPtr computeLight( const Gaffer::Context *context ) const;
-
-};
-
-} // namespace GafferSceneTest
-
-#endif // GAFFERSCENETEST_TESTLIGHT_H
+void Visualiser::registerVisualiser( IECore::TypeId objectType, ConstVisualiserPtr visualiser )
+{
+	visualisers()[objectType] = visualiser;
+}

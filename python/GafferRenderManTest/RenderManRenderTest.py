@@ -652,7 +652,6 @@ class RenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		rib = "\n".join( file( self.temporaryDirectory() + "/test.rib" ).readlines() )
 		self.assertTrue( "ClippingPlane" in rib )
 
-	@unittest.skipIf( "TRAVIS" in os.environ, "Unknown problem running on Travis" )
 	def testWedge( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -709,9 +708,11 @@ class RenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 
 		hiddenStats = GafferImage.ImageStats()
 		hiddenStats["in"].setInput( hidden["out"] )
+		hiddenStats['regionOfInterest'].setValue( IECore.Box2i( IECore.V2i( 0, 0 ), IECore.V2i( 640, 480 ) ) )
 
 		visibleStats = GafferImage.ImageStats()
 		visibleStats["in"].setInput( visible["out"] )
+		visibleStats['regionOfInterest'].setValue( IECore.Box2i( IECore.V2i( 0, 0 ), IECore.V2i( 640, 480 ) ) )
 
 		self.assertLess( hiddenStats["average"].getValue()[0], 0.05 )
 		self.assertGreater( visibleStats["average"].getValue()[0], .35 )

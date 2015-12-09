@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2015, Image Engine. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,33 +34,55 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENETEST_TESTLIGHT_H
-#define GAFFERSCENETEST_TESTLIGHT_H
+#ifndef GAFFERSCENEUI_ATTRIBUTEVISUALISER_H
+#define GAFFERSCENEUI_ATTRIBUTEVISUALISER_H
 
-#include "GafferScene/Light.h"
+#include "IECore/Light.h"
 
-#include "GafferSceneTest/TypeIds.h"
+#include "GafferSceneUI/Visualiser.h"
+#include "IECore/CompoundObject.h"
 
-namespace GafferSceneTest
+namespace GafferSceneUI
 {
 
-class TestLight : public GafferScene::Light
+IE_CORE_FORWARDDECLARE( AttributeVisualiser )
+
+
+class AttributeVisualiser : public IECore::RefCounted
 {
 
 	public :
 
-		TestLight( const std::string &name=defaultName<TestLight>() );
-		virtual ~TestLight();
+		IE_CORE_DECLAREMEMBERPTR( AttributeVisualiser )
+		virtual ~AttributeVisualiser();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferSceneTest::TestLight, TestLightTypeId, GafferScene::Light );
+		virtual void visualise( const IECore::CompoundObject *attributes,
+			std::vector< IECoreGL::ConstRenderablePtr> &renderables, IECoreGL::State &state ) const = 0;
+
+		/// Registers a visualiser to use for the specified light type.
+		static void registerVisualiser( ConstAttributeVisualiserPtr visualiser );
+		static void visualiseFromRegistry( const IECore::CompoundObject *attributes,
+			std::vector< IECoreGL::ConstRenderablePtr> &renderables, IECoreGL::State &state );
 
 	protected :
 
-		virtual void hashLight( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual IECore::ObjectVectorPtr computeLight( const Gaffer::Context *context ) const;
+		AttributeVisualiser();
 
+		template<typename VisualiserType>
+        struct AttributeVisualiserDescription
+        {
+
+            AttributeVisualiserDescription()
+            {
+                registerVisualiser( new VisualiserType );
+            }
+
+        };
 };
 
-} // namespace GafferSceneTest
 
-#endif // GAFFERSCENETEST_TESTLIGHT_H
+IE_CORE_DECLAREPTR( AttributeVisualiser )
+
+} // namespace GafferSceneUI
+
+#endif // GAFFERSCENEUI_ATTRIBUTEVISUALISER_H

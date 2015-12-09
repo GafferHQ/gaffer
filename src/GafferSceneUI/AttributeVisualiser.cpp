@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2015, Image Engine. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,33 +34,45 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENETEST_TESTLIGHT_H
-#define GAFFERSCENETEST_TESTLIGHT_H
+#include "GafferSceneUI/AttributeVisualiser.h"
 
-#include "GafferScene/Light.h"
+using namespace GafferSceneUI;
 
-#include "GafferSceneTest/TypeIds.h"
-
-namespace GafferSceneTest
+namespace
 {
 
-class TestLight : public GafferScene::Light
+ConstAttributeVisualiserPtr foo;
+
+typedef std::vector<ConstAttributeVisualiserPtr> AttributeVisualisers;
+
+AttributeVisualisers &visualisers()
 {
+	static AttributeVisualisers v;
+	return v;
+}
 
-	public :
+} // namespace
 
-		TestLight( const std::string &name=defaultName<TestLight>() );
-		virtual ~TestLight();
+AttributeVisualiser::AttributeVisualiser()
+{
+}
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferSceneTest::TestLight, TestLightTypeId, GafferScene::Light );
+AttributeVisualiser::~AttributeVisualiser()
+{
+}
 
-	protected :
 
-		virtual void hashLight( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual IECore::ObjectVectorPtr computeLight( const Gaffer::Context *context ) const;
+void AttributeVisualiser::visualiseFromRegistry( const IECore::CompoundObject *attributes,
+            std::vector< IECoreGL::ConstRenderablePtr> &renderables, IECoreGL::State &state )
+{
+	const AttributeVisualisers &v = visualisers();
+	for( unsigned int i = 0; i < v.size(); i++ )
+	{
+		v[i]->visualise( attributes, renderables, state );
+	}
+}
 
-};
-
-} // namespace GafferSceneTest
-
-#endif // GAFFERSCENETEST_TESTLIGHT_H
+void AttributeVisualiser::registerVisualiser( ConstAttributeVisualiserPtr visualiser )
+{
+	visualisers().push_back( visualiser );
+}

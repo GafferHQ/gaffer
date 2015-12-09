@@ -60,6 +60,26 @@ namespace
 
 InternedString g_descriptionName( "description" );
 
+struct PythonValueFunction
+{
+	PythonValueFunction( object fn )
+		:	m_fn( fn )
+	{
+	}
+
+	ConstDataPtr operator()()
+	{
+		IECorePython::ScopedGILLock gilLock;
+		ConstDataPtr result = extract<ConstDataPtr>( m_fn() );
+		return result;
+	}
+
+	private :
+
+		object m_fn;
+
+};
+
 struct PythonNodeValueFunction
 {
 	PythonNodeValueFunction( object fn )
@@ -119,6 +139,19 @@ ConstDataPtr dedent( InternedString name, IECore::ConstDataPtr data )
 	return data;
 }
 
+Metadata::ValueFunction objectToValueFunction( InternedString name, object o )
+{
+	extract<IECore::DataPtr> dataExtractor( o );
+	if( dataExtractor.check() )
+	{
+		return boost::lambda::constant( dedent( name, dataExtractor() ) );
+	}
+	else
+	{
+		return PythonValueFunction( o );
+	}
+}
+
 Metadata::NodeValueFunction objectToNodeValueFunction( InternedString name, object o )
 {
 	extract<IECore::DataPtr> dataExtractor( o );
@@ -143,6 +176,17 @@ Metadata::PlugValueFunction objectToPlugValueFunction( InternedString name, obje
 	{
 		return PythonPlugValueFunction( o );
 	}
+}
+
+void registerValue( IECore::InternedString target, IECore::InternedString key, object &value )
+{
+	Metadata::registerValue( target, key, objectToValueFunction( key, value ) );
+}
+
+object value( const char *target, const char *key, bool copy )
+{
+	ConstDataPtr d = Metadata::value<Data>( target, key );
+	return dataToPython( d.get(), copy );
 }
 
 void registerNodeValue( IECore::TypeId nodeTypeId, IECore::InternedString key, object &value )
@@ -241,6 +285,12 @@ void registerPlugDescription( IECore::TypeId nodeTypeId, const char *plugPath, o
 struct ValueChangedSlotCaller
 {
 
+	boost::signals::detail::unusable operator()( boost::python::object slot, IECore::InternedString target, IECore::InternedString key )
+	{
+		slot( target.c_str(), key.c_str() );
+		return boost::signals::detail::unusable();
+	}
+
 	boost::signals::detail::unusable operator()( boost::python::object slot, IECore::TypeId nodeTypeId, IECore::InternedString key, Node *node )
 	{
 		slot( nodeTypeId, key.c_str(), NodePtr( node ) );
@@ -264,6 +314,13 @@ list keysToList( const std::vector<InternedString> &keys )
 	}
 
 	return result;
+}
+
+list registeredValues( IECore::InternedString target )
+{
+	std::vector<InternedString> keys;
+	Metadata::registeredValues( target, keys );
+	return keysToList( keys );
 }
 
 list registeredNodeValues( const Node *node, bool inherit, bool instanceOnly, bool persistentOnly )
@@ -313,6 +370,21 @@ namespace GafferBindings
 void bindMetadata()
 {
 	scope s = class_<Metadata>( "Metadata", no_init )
+
+		.def( "registerValue", &registerValue )
+		.staticmethod( "registerValue" )
+
+		.def( "registeredValues", &registeredValues )
+		.staticmethod( "registeredValues" )
+
+		.def( "value", &value,
+			(
+				boost::python::arg( "target" ),
+				boost::python::arg( "key" ),
+				boost::python::arg( "_copy" ) = true
+			)
+		)
+		.staticmethod( "value" )
 
 		.def( "registerNodeValue", &registerNodeValue )
 		.def( "registerNodeValue", (void (*)( Node *, InternedString key, ConstDataPtr value, bool ))&Metadata::registerNodeValue,
@@ -409,6 +481,9 @@ void bindMetadata()
 		)
 		.staticmethod( "plugDescription" )
 
+		.def( "valueChangedSignal", &Metadata::valueChangedSignal, return_value_policy<reference_existing_object>() )
+		.staticmethod( "valueChangedSignal" )
+
 		.def( "nodeValueChangedSignal", &Metadata::nodeValueChangedSignal, return_value_policy<reference_existing_object>() )
 		.staticmethod( "nodeValueChangedSignal" )
 
@@ -436,6 +511,7 @@ void bindMetadata()
 		.staticmethod( "nodesWithMetadata" )
 	;
 
+	SignalClass<Metadata::ValueChangedSignal, DefaultSignalCaller<Metadata::NodeValueChangedSignal>, ValueChangedSlotCaller>( "ValueChangedSignal" );
 	SignalClass<Metadata::NodeValueChangedSignal, DefaultSignalCaller<Metadata::NodeValueChangedSignal>, ValueChangedSlotCaller>( "NodeValueChangedSignal" );
 	SignalClass<Metadata::PlugValueChangedSignal, DefaultSignalCaller<Metadata::NodeValueChangedSignal>, ValueChangedSlotCaller>( "PlugValueChangedSignal" );
 

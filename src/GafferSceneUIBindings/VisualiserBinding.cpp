@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2015, John Haddon. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,33 +34,32 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENETEST_TESTLIGHT_H
-#define GAFFERSCENETEST_TESTLIGHT_H
+#include "IECorePython/RefCountedBinding.h"
 
-#include "GafferScene/Light.h"
+#include "GafferSceneUI/Visualiser.h"
+#include "GafferSceneUIBindings/VisualiserBinding.h"
 
-#include "GafferSceneTest/TypeIds.h"
+using namespace GafferSceneUI;
 
-namespace GafferSceneTest
+namespace {
+	// TODO - An ugly hack I don't entirely understand in order to get the Python binding to work
+	// To my understanding, there isn't really such a thing in Python as a const class,
+	// so I think if you modify the result of visualise(), this will cause Bad Things to happen
+	static IECoreGL::RenderablePtr visualise( const Visualiser &v, const IECore::Object *object )
+	{
+		return boost::const_pointer_cast<IECoreGL::Renderable>( v.visualise( object ) );
+	}
+}
+
+void GafferSceneUIBindings::bindVisualiser()
 {
 
-class TestLight : public GafferScene::Light
-{
+	IECorePython::RefCountedClass<Visualiser, IECore::RefCounted>( "Visualiser" )
+		.def( "visualise", &visualise )
+		.def( "registerVisualiser", &Visualiser::registerVisualiser )
+		.staticmethod( "registerVisualiser" )
+		.def( "acquire", &Visualiser::acquire, boost::python::return_internal_reference<>() )
+		.staticmethod( "acquire" )
+	;
 
-	public :
-
-		TestLight( const std::string &name=defaultName<TestLight>() );
-		virtual ~TestLight();
-
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferSceneTest::TestLight, TestLightTypeId, GafferScene::Light );
-
-	protected :
-
-		virtual void hashLight( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual IECore::ObjectVectorPtr computeLight( const Gaffer::Context *context ) const;
-
-};
-
-} // namespace GafferSceneTest
-
-#endif // GAFFERSCENETEST_TESTLIGHT_H
+}

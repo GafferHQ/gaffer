@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2015, John Haddon. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,33 +34,42 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENETEST_TESTLIGHT_H
-#define GAFFERSCENETEST_TESTLIGHT_H
+#ifndef GAFFERSCENEUI_LIGHTVISUALISER_H
+#define GAFFERSCENEUI_LIGHTVISUALISER_H
 
-#include "GafferScene/Light.h"
+#include "IECore/ObjectVector.h"
 
-#include "GafferSceneTest/TypeIds.h"
+#include "GafferSceneUI/Visualiser.h"
 
-namespace GafferSceneTest
+namespace GafferSceneUI
 {
 
-class TestLight : public GafferScene::Light
+IE_CORE_FORWARDDECLARE( LightVisualiser )
+
+/// Class for visualisation of lights. All lights in Gaffer are represented
+/// as IECore::Light objects, but we need to visualise them differently
+/// depending on their shader name (accessed using `IECore::Light::getName()`). A
+/// factory mechanism is provided to map from this type to a specialised
+/// LightVisualiser.
+class LightVisualiser : public IECore::RefCounted
 {
 
 	public :
 
-		TestLight( const std::string &name=defaultName<TestLight>() );
-		virtual ~TestLight();
+		IE_CORE_DECLAREMEMBERPTR( LightVisualiser )
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferSceneTest::TestLight, TestLightTypeId, GafferScene::Light );
+		LightVisualiser();
+		virtual ~LightVisualiser();
 
-	protected :
+		/// Uses a custom visualisation registered via `registerLightVisualiser()` if one
+		/// is available, if not falls back to a basic point light visualisation.  // TODO
+		/// TODO - should this be able to return multiple renderables?
+		virtual IECoreGL::ConstRenderablePtr visualise( const IECore::ObjectVector *shaderVector, IECoreGL::State &state ) const = 0;
 
-		virtual void hashLight( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual IECore::ObjectVectorPtr computeLight( const Gaffer::Context *context ) const;
-
+		/// Registers a visualiser to use for the specified light type.
+		static void registerLightVisualiser( const IECore::InternedString &name, ConstLightVisualiserPtr visualiser );
 };
 
-} // namespace GafferSceneTest
+} // namespace GafferSceneUI
 
-#endif // GAFFERSCENETEST_TESTLIGHT_H
+#endif // GAFFERSCENEUI_LIGHTVISUALISER_H

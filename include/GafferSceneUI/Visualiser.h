@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2015, John Haddon. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,33 +34,63 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENETEST_TESTLIGHT_H
-#define GAFFERSCENETEST_TESTLIGHT_H
+#ifndef GAFFERSCENEUI_VISUALISER_H
+#define GAFFERSCENEUI_VISUALISER_H
 
-#include "GafferScene/Light.h"
+#include "IECore/Object.h"
+#include "IECoreGL/Renderable.h"
 
-#include "GafferSceneTest/TypeIds.h"
-
-namespace GafferSceneTest
+namespace GafferSceneUI
 {
 
-class TestLight : public GafferScene::Light
+IE_CORE_FORWARDDECLARE( Visualiser )
+
+/// Base class for providing OpenGL visualisations of otherwise
+/// non-renderable objects. For geometric objects such as meshes,
+/// the IECoreGL::ToGLConverter is sufficient for providing
+/// OpenGL rendering, but for non-geometric types such as cameras
+/// and lights, IECoreGL provides no visualisation capabilities.
+/// This class allows custom visualisers to be registered to
+/// perform an appropriate visualisation for any such type.
+class Visualiser : public IECore::RefCounted
 {
 
 	public :
 
-		TestLight( const std::string &name=defaultName<TestLight>() );
-		virtual ~TestLight();
+		IE_CORE_DECLAREMEMBERPTR( Visualiser )
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferSceneTest::TestLight, TestLightTypeId, GafferScene::Light );
+		virtual ~Visualiser();
+
+		/// Must be implemented by derived classes to return a suitable
+		/// visualisation of the object.
+		virtual IECoreGL::ConstRenderablePtr visualise( const IECore::Object *object ) const = 0;
+
+		/// @name Factory
+		///////////////////////////////////////////////////////////////////
+		//@{
+		/// Acquires a visualiser for the specified Object type.
+		static const Visualiser *acquire( IECore::TypeId objectType );
+		/// Registers a visualiser to use for the specified object type.
+		static void registerVisualiser( IECore::TypeId objectType, ConstVisualiserPtr visualiser );
+		//@}
 
 	protected :
 
-		virtual void hashLight( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual IECore::ObjectVectorPtr computeLight( const Gaffer::Context *context ) const;
+		Visualiser();
+
+		template<typename VisualiserType>
+		struct VisualiserDescription
+		{
+
+			VisualiserDescription()
+			{
+				registerVisualiser( VisualiserType::ObjectType::staticTypeId(), new VisualiserType );
+			}
+
+		};
 
 };
 
-} // namespace GafferSceneTest
+} // namespace GafferSceneUI
 
-#endif // GAFFERSCENETEST_TESTLIGHT_H
+#endif // GAFFERSCENEUI_VISUALISER_H

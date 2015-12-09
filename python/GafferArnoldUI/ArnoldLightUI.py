@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2015, John Haddon. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,11 +34,23 @@
 #
 ##########################################################################
 
-import ArnoldShaderUI
-import ArnoldRenderUI
-import ShaderMenu
-import ArnoldOptionsUI
-import ArnoldAttributesUI
-import ArnoldLightUI
+import Gaffer
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferArnoldUI" )
+Gaffer.Metadata.registerValue( "light:ai:spot_light", "type", "spot" )
+Gaffer.Metadata.registerValue( "light:ai:spot_light", "coneAngleParameter", "cone_angle" )
+Gaffer.Metadata.registerValue( "light:ai:spot_light", "penumbraAngleParameter", "penumbra_angle" )
+Gaffer.Metadata.registerValue( "light:ai:spot_light", "penumbraType", "inset" )
+Gaffer.Metadata.registerValue( "light:ai:spot_light", "intensityParameter", "intensity" )
+Gaffer.Metadata.registerValue( "light:ai:spot_light", "exposureParameter", "exposure" )
+Gaffer.Metadata.registerValue( "light:ai:spot_light", "colorParameter", "color" )
+
+Gaffer.Metadata.registerValue( "light:ai:point_light", "type", "point" )
+Gaffer.Metadata.registerValue( "light:ai:point_light", "intensityParameter", "intensity" )
+Gaffer.Metadata.registerValue( "light:ai:point_light", "exposureParameter", "exposure" )
+Gaffer.Metadata.registerValue( "light:ai:point_light", "colorParameter", "color" )
+
+Gaffer.Metadata.registerValue( "light:ai:distant_light", "type", "distant" )
+Gaffer.Metadata.registerValue( "light:ai:distant_light", "intensityParameter", "intensity" )
+Gaffer.Metadata.registerValue( "light:ai:distant_light", "exposureParameter", "exposure" )
+Gaffer.Metadata.registerValue( "light:ai:distant_light", "colorParameter", "color" )
+
