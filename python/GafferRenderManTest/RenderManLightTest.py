@@ -51,12 +51,15 @@ class RenderManLightTest( GafferRenderManTest.RenderManTestCase ) :
 		n = GafferRenderMan.RenderManLight()
 		n.loadShader( "pointlight" )
 
-		light = n["out"].object( "/light" )
+		lightObject = n["out"].object( "/light" )
+		self.assertTrue( isinstance( lightObject, IECore.NullObject ) )
+
+		light = n["out"].attributes( "/light" )["ri:light"][-1]
 		self.assertTrue( isinstance( light, IECore.Light ) )
 		self.assertEqual( light.parameters["intensity"].value, 1 )
 
 		n["parameters"]["intensity"].setValue( 10 )
-		light = n["out"].object( "/light" )
+		light = n["out"].attributes( "/light" )["ri:light"][-1]
 		self.assertEqual( light.parameters["intensity"].value, 10 )
 
 	@unittest.skipIf( "TRAVIS" in os.environ, "No license available on Travis" )

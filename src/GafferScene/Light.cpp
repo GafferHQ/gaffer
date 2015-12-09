@@ -34,6 +34,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include "IECore/NullObject.h"
+
 #include "Gaffer/StringPlug.h"
 
 #include "GafferScene/Light.h"
@@ -75,21 +77,54 @@ void Light::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs 
 
 	if( parametersPlug()->isAncestorOf( input ) )
 	{
-		outputs.push_back( sourcePlug() );
+		outputs.push_back( outPlug()->attributesPlug() );
 	}
+
 }
 
 void Light::hashSource( const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	hashLight( context, h );
 }
 
 IECore::ConstObjectPtr Light::computeSource( const Context *context ) const
 {
-	return computeLight( context );
+	// The light node now creates a new location in the scene, but just assigns attributes to it,
+	// and doesn't create an object here
+	return IECore::NullObject::defaultNullObject();
 }
 
 IECore::InternedString Light::standardSetName() const
 {
 	return g_lightsSetName;
 }
+
+void Light::hashAttributes( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	hashLight( context, h );
+}
+
+IECore::ConstCompoundObjectPtr Light::computeAttributes( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+{
+	IECore::CompoundObjectPtr result = new IECore::CompoundObject;
+
+	std::string lightAttribute = "light";
+
+	IECore::ObjectVectorPtr lightShaders = computeLight( context );
+	if( lightShaders->members().size() > 0 )
+	{
+		IECore::LightPtr light = IECore::runTimeCast< IECore::Light >(
+			lightShaders->members()[ lightShaders->members().size() - 1 ] );
+		std::string lightName = light->getName();
+		size_t colon = lightName.find( ":" );
+		if( colon != std::string::npos )
+		{
+			lightAttribute = lightName.substr( 0, colon ) + ":light";
+		}
+	}
+
+	result->members()[lightAttribute] = lightShaders;
+
+	return result;
+}
+
+

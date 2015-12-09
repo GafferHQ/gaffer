@@ -904,6 +904,37 @@ class MetadataTest( GafferTest.TestCase ) :
 		self.assertEqual( Gaffer.Metadata.plugsWithMetadata( s, "plugData3", instanceOnly=True ), [] )
 		self.assertEqual( Gaffer.Metadata.nodesWithMetadata( s, "nodeData3", instanceOnly=True ), [ s["n"] ] )
 
+	def testNonNodeMetadata( self ) :
+
+		cs = GafferTest.CapturingSlot( Gaffer.Metadata.valueChangedSignal() )
+		self.assertEqual( len( cs ), 0 )
+
+		Gaffer.Metadata.registerValue( "testTarget", "testInt", 1 )
+		self.assertEqual( Gaffer.Metadata.value( "testTarget", "testInt" ), 1 )
+
+		self.assertEqual( len( cs ), 1 )
+		self.assertEqual( cs[0], ( "testTarget", "testInt" ) )
+
+		intVectorData = IECore.IntVectorData( [ 1, 2 ] )
+		Gaffer.Metadata.registerValue( "testTarget", "testIntVectorData", intVectorData )
+		self.assertEqual( Gaffer.Metadata.value( "testTarget", "testIntVectorData" ), intVectorData )
+		self.assertFalse( Gaffer.Metadata.value( "testTarget", "testIntVectorData" ).isSame( intVectorData ) )
+
+		self.assertEqual( len( cs ), 2 )
+		self.assertEqual( cs[1], ( "testTarget", "testIntVectorData" ) )
+
+		Gaffer.Metadata.registerValue( "testTarget", "testDynamicValue", lambda : 20 )
+		self.assertEqual( Gaffer.Metadata.value( "testTarget", "testDynamicValue" ), 20 )
+
+		self.assertEqual( len( cs ), 3 )
+		self.assertEqual( cs[2], ( "testTarget", "testDynamicValue" ) )
+
+		names = Gaffer.Metadata.registeredValues( "testTarget" )
+		self.assertTrue( "testInt" in names )
+		self.assertTrue( "testIntVectorData" in names )
+		self.assertTrue( "testDynamicValue" in names )
+		self.assertTrue( names.index( "testInt" ) < names.index( "testIntVectorData" ) )
+		self.assertTrue( names.index( "testIntVectorData" ) < names.index( "testDynamicValue" ) )
 
 if __name__ == "__main__":
 	unittest.main()
