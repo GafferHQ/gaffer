@@ -88,6 +88,12 @@ options.Add(
 )
 
 options.Add(
+	"CXXSTD",
+	"The C++ standard to build against.",
+	"c++98",
+)
+
+options.Add(
 	"LINKFLAGS",
 	"The extra flags to pass to the C++ linker during compilation.",
 	"",
@@ -273,15 +279,26 @@ if env["PLATFORM"] == "darwin" :
 
 elif env["PLATFORM"] == "posix" :
 
-	# gcc 4.1.2 in conjunction with boost::flat_map produces crashes when
-	# using the -fstrict-aliasing optimisation (which defaults to on with -O2),
-	# so we turn the optimisation off here, only for that specific gcc version.
 	if "g++" in os.path.basename( env["CXX"] ) :
+
 		gccVersion = subprocess.Popen( [ env["CXX"], "-dumpversion" ], env=env["ENV"], stdout=subprocess.PIPE ).stdout.read().strip()
-		if gccVersion == "4.1.2" :
+		gccVersion = [ int( v ) for v in gccVersion.split( "." ) ]
+
+		# GCC 4.1.2 in conjunction with boost::flat_map produces crashes when
+		# using the -fstrict-aliasing optimisation (which defaults to on with -O2),
+		# so we turn the optimisation off here, only for that specific GCC version.
+		if gccVersion == [ 4, 1, 2 ] :
 			env.Append( CXXFLAGS = [ "-fno-strict-aliasing" ] )
 
+		# GCC prior to 4.8 emits spurious "assuming signed overflow does not occur"
+		# warnings, typically triggered by the comparisons in Box3f::isEmpty().
+		# Downgrade these back to warning status.
+		if gccVersion[0] == 4 and gccVersion[1] < 8 :
+			env.Append( CXXFLAGS = [ "-Wno-error=strict-overflow" ] )
+
 	env["GAFFER_PLATFORM"] = "linux"
+
+env.Append( CXXFLAGS = [ "-std=$CXXSTD" ] )
 
 if env["BUILD_CACHEDIR"] != "" :
 	CacheDir( env["BUILD_CACHEDIR"] )

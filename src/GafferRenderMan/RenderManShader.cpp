@@ -133,7 +133,7 @@ void RenderManShader::loadShader( const std::string &shaderName, bool keepExisti
 
 	// A metadata option to override the shader type.
 	// This can be useful to work around some 3delight issues.
-	// For example, if you want to call illuminance() in a coshader, you need to add a 
+	// For example, if you want to call illuminance() in a coshader, you need to add a
 	// dummy surface() method, but you still want the type to be "ri:shader".
 	ConstCompoundDataPtr annotations = shader->blindData()->member<CompoundData>( "ri:annotations" );
 	if( annotations )
@@ -417,6 +417,9 @@ static void loadCoshaderArrayParameter( Gaffer::Plug *parametersPlug, const std:
 
 	if( existingPlug )
 	{
+		// Must take a copy as the contents of `existingPlug->children()` is
+		// modified each time we transfer a child over with plug->addChild() below.
+		GraphComponent::ChildContainer existingChildren = existingPlug->children();
 		for( size_t i = 0, e = std::min( existingPlug->children().size(), maxSize ); i < e; ++i )
 		{
 			if( i < plug->children().size() )
@@ -425,7 +428,7 @@ static void loadCoshaderArrayParameter( Gaffer::Plug *parametersPlug, const std:
 			}
 			else
 			{
-				plug->addChild( existingPlug->getChild<Plug>( i ) );
+				plug->addChild( existingChildren[i] );
 			}
 		}
 	}
