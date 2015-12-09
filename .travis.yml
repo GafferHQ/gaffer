@@ -7,9 +7,13 @@ os:
 
 addons:
   apt:
+    sources:
+        - ubuntu-toolchain-r-test
     packages:
         - inkscape
         - doxygen
+        - gcc-4.8
+        - g++-4.8
 
 before_install:
     - export DISPLAY=:99.0
@@ -25,6 +29,7 @@ install:
     - export DL_SHADERS_PATH=$DELIGHT/shaders
     - export DL_DISPLAYS_PATH=$DELIGHT/displays
     - export PATH=$DELIGHT/bin:$PATH
+    - if [ -n "$COMPILER_VERSION" ]; then export CXX="${CXX}-${COMPILER_VERSION}"; fi
 
 script:
     - scons -j 2 install CXX=$CXX ENV_VARS_TO_IMPORT=PATH RMAN_ROOT=$DELIGHT
@@ -50,3 +55,12 @@ script:
 compiler:
     - gcc
     - clang
+
+env:
+    - COMPILER_VERSION=
+    - COMPILER_VERSION=4.8
+
+matrix:
+    exclude:
+        - compiler: clang
+          env: COMPILER_VERSION=4.8
