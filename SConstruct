@@ -88,6 +88,12 @@ options.Add(
 )
 
 options.Add(
+	"CXXSTD",
+	"The C++ standard to build against.",
+	"c++98",
+)
+
+options.Add(
 	"LINKFLAGS",
 	"The extra flags to pass to the C++ linker during compilation.",
 	"",
@@ -291,6 +297,8 @@ elif env["PLATFORM"] == "posix" :
 			env.Append( CXXFLAGS = [ "-Wno-error=strict-overflow" ] )
 
 	env["GAFFER_PLATFORM"] = "linux"
+
+env.Append( CXXFLAGS = [ "-std=$CXXSTD" ] )
 
 if env["BUILD_CACHEDIR"] != "" :
 	CacheDir( env["BUILD_CACHEDIR"] )
