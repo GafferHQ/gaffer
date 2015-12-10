@@ -34,20 +34,26 @@
 #
 ##########################################################################
 
+import IECore
+
 import Gaffer
 import GafferUI
 import GafferImageUI
 
+##########################################################################
+# _TogglePlugValueWidget
+##########################################################################
+
 # Toggles between default value and the last non-default value
 class _TogglePlugValueWidget( GafferUI.PlugValueWidget ) :
 
-	def __init__( self, plug, imagePrefix, defaultToggleValue = None, **kw ) :
+	def __init__( self, plug, **kw ) :
 
 		row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 2 )
 
 		GafferUI.PlugValueWidget.__init__( self, row, plug, **kw )
 
-		self.__imagePrefix = imagePrefix
+		self.__imagePrefix = Gaffer.Metadata.plugValue( plug, "togglePlugValueWidget:imagePrefix" )
 		with row :
 
 			self.__button = GafferUI.Button( "", self.__imagePrefix + "Off.png", hasFrame=False )
@@ -57,7 +63,7 @@ class _TogglePlugValueWidget( GafferUI.PlugValueWidget ) :
 				plugValueWidget = GafferUI.PlugValueWidget.create( plug, useTypeOnly=True )
 				plugValueWidget.numericWidget().setFixedCharacterWidth( 5 )
 
-		self.__toggleValue = defaultToggleValue
+		self.__toggleValue = Gaffer.Metadata.plugValue( plug, "togglePlugValueWidget:defaultToggleValue" )
 		self._updateFromPlug()
 
 	def hasLabel( self ) :
@@ -97,70 +103,85 @@ class _TogglePlugValueWidget( GafferUI.PlugValueWidget ) :
 		else :
 			self.getPlug().setToDefault()
 
-## Clipping, exposure and gamma
+##########################################################################
+# _DisplayTransformPlugValueWidget
+##########################################################################
 
-GafferUI.PlugValueWidget.registerCreator(
+class _DisplayTransformPlugValueWidget( GafferUI.PresetsPlugValueWidget ) :
+
+	def __init__( self, plug, **kw ) :
+
+		GafferUI.PresetsPlugValueWidget.__init__( self, plug, **kw )
+
+		## \todo Perhaps the layout could do this sort of thing for us
+		# based on a metadata value?
+		self._qtWidget().setFixedWidth( 100 )
+
+##########################################################################
+# Metadata registration.
+##########################################################################
+
+Gaffer.Metadata.registerNode(
+
 	GafferImageUI.ImageView,
-	"clipping",
-	_TogglePlugValueWidget,
-	imagePrefix ="clipping",
-	defaultToggleValue = True,
-)
 
-Gaffer.Metadata.registerPlugValue( GafferImageUI.ImageView, "clipping", "divider", True )
+	plugs = {
 
-Gaffer.Metadata.registerPlugDescription( GafferImageUI.ImageView, "clipping",
-	"Highlights the regions in which the colour values go above 1 or below 0."
-)
+		"clipping" : [
 
-GafferUI.PlugValueWidget.registerCreator(
-	GafferImageUI.ImageView,
-	"exposure",
-	_TogglePlugValueWidget,
-	imagePrefix ="exposure",
-	defaultToggleValue = 1,
-)
+			"description",
+			"""
+			Highlights the regions in which the colour values go above 1 or below 0.
+			""",
 
-Gaffer.Metadata.registerPlugDescription( GafferImageUI.ImageView, "exposure",
-	"Applies an exposure adjustment to the image."
-)
+			"plugValueWidget:type", "GafferImageUI.ImageViewToolbar._TogglePlugValueWidget",
+			"togglePlugValueWidget:imagePrefix", "clipping",
+			"togglePlugValueWidget:defaultToggleValue", True,
 
-GafferUI.PlugValueWidget.registerCreator(
-	GafferImageUI.ImageView,
-	"gamma",
-	_TogglePlugValueWidget,
-	imagePrefix ="gamma",
-	defaultToggleValue = 2,
-)
+		],
 
-Gaffer.Metadata.registerPlugDescription( GafferImageUI.ImageView, "gamma",
-	"Applies a gamma correction to the image."
-)
+		"exposure" : [
 
-## Display Transform
+			"description",
+			"""
+			Applies an exposure adjustment to the image.
+			""",
 
-Gaffer.Metadata.registerPlugValue( GafferImageUI.ImageView, "displayTransform", "label", "" )
+			"plugValueWidget:type", "GafferImageUI.ImageViewToolbar._TogglePlugValueWidget",
+			"togglePlugValueWidget:imagePrefix", "exposure",
+			"togglePlugValueWidget:defaultToggleValue", 1,
 
-def __displayTransformPlugValueWidgetCreator( plug ) :
+		],
 
-	widget = GafferUI.EnumPlugValueWidget(
-		plug,
-		labelsAndValues = zip(
-			GafferImageUI.ImageView.registeredDisplayTransforms(),
-			GafferImageUI.ImageView.registeredDisplayTransforms(),
-		),
-	)
+		"gamma" : [
 
-	widget.selectionMenu()._qtWidget().setFixedWidth( 100 )
+			"description",
+			"""
+			Applies a gamma correction to the image.
+			""",
 
-	return widget
+			"plugValueWidget:type", "GafferImageUI.ImageViewToolbar._TogglePlugValueWidget",
+			"togglePlugValueWidget:imagePrefix", "gamma",
+			"togglePlugValueWidget:defaultToggleValue", 2,
 
-GafferUI.PlugValueWidget.registerCreator(
-	GafferImageUI.ImageView,
-	"displayTransform",
-	__displayTransformPlugValueWidgetCreator
-)
+		],
 
-Gaffer.Metadata.registerPlugDescription( GafferImageUI.ImageView, "displayTransform",
-	"Applies colour space transformations for viewing the image correctly."
+		"displayTransform" : [
+
+			"description",
+			"""
+			Applies colour space transformations for viewing the image correctly.
+			""",
+
+
+			"plugValueWidget:type", "GafferImageUI.ImageViewToolbar._DisplayTransformPlugValueWidget",
+			"label", "",
+
+			"presetNames", lambda plug : IECore.StringVectorData( GafferImageUI.ImageView.registeredDisplayTransforms() ),
+			"presetValues", lambda plug : IECore.StringVectorData( GafferImageUI.ImageView.registeredDisplayTransforms() ),
+
+		],
+
+	}
+
 )
