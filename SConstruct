@@ -290,11 +290,10 @@ elif env["PLATFORM"] == "posix" :
 		if gccVersion == [ 4, 1, 2 ] :
 			env.Append( CXXFLAGS = [ "-fno-strict-aliasing" ] )
 
-		# GCC prior to 4.8 emits spurious "assuming signed overflow does not occur"
+		# GCC emits spurious "assuming signed overflow does not occur"
 		# warnings, typically triggered by the comparisons in Box3f::isEmpty().
 		# Downgrade these back to warning status.
-		if gccVersion[0] == 4 and gccVersion[1] < 8 :
-			env.Append( CXXFLAGS = [ "-Wno-error=strict-overflow" ] )
+		env.Append( CXXFLAGS = [ "-Wno-error=strict-overflow" ] )
 
 	env["GAFFER_PLATFORM"] = "linux"
 
