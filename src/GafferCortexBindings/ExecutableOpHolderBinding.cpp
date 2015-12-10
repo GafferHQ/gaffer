@@ -40,7 +40,7 @@
 
 #include "Gaffer/Context.h"
 
-#include "GafferBindings/ExecutableNodeBinding.h"
+#include "GafferDispatchBindings/ExecutableNodeBinding.h"
 
 #include "GafferCortex/ExecutableOpHolder.h"
 #include "GafferCortex/CompoundParameterHandler.h"
@@ -49,7 +49,7 @@
 #include "GafferCortexBindings/ExecutableOpHolderBinding.h"
 
 using namespace boost::python;
-using namespace GafferBindings;
+using namespace GafferDispatchBindings;
 using namespace GafferCortex;
 using namespace GafferCortexBindings;
 

@@ -39,8 +39,9 @@
 
 #include "IECore/SceneInterface.h"
 
-#include "Gaffer/ExecutableNode.h"
 #include "Gaffer/TypedPlug.h"
+
+#include "GafferDispatch/ExecutableNode.h"
 
 #include "GafferScene/TypeIds.h"
 #include "GafferScene/ScenePlug.h"
@@ -48,7 +49,7 @@
 namespace GafferScene
 {
 
-class SceneWriter : public Gaffer::ExecutableNode
+class SceneWriter : public GafferDispatch::ExecutableNode
 {
 
 	public :
@@ -56,7 +57,7 @@ class SceneWriter : public Gaffer::ExecutableNode
 		SceneWriter( const std::string &name=defaultName<SceneWriter>() );
 		virtual ~SceneWriter();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::SceneWriter, SceneWriterTypeId, Gaffer::ExecutableNode );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::SceneWriter, SceneWriterTypeId, GafferDispatch::ExecutableNode );
 
 		Gaffer::StringPlug *fileNamePlug();
 		const Gaffer::StringPlug *fileNamePlug() const;

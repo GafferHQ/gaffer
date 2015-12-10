@@ -36,7 +36,7 @@
 
 #include "Gaffer/Context.h"
 
-#include "GafferBindings/ExecutableNodeBinding.h"
+#include "GafferDispatchBindings/ExecutableNodeBinding.h"
 
 #include "GafferImage/ImageWriter.h"
 
@@ -47,7 +47,7 @@ using namespace GafferImage;
 void GafferImageBindings::bindImageWriter()
 {
 
-	boost::python::scope s = GafferBindings::ExecutableNodeClass<ImageWriter>()
+	boost::python::scope s = GafferDispatchBindings::ExecutableNodeClass<ImageWriter>()
 		.def( "currentFileFormat", &ImageWriter::currentFileFormat )
 	;
 	

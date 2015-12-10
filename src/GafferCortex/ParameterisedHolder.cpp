@@ -280,4 +280,4 @@ IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( GafferCortex::ParameterisedHol
 template class ParameterisedHolder<Gaffer::Node>;
 template class ParameterisedHolder<Gaffer::DependencyNode>;
 template class ParameterisedHolder<Gaffer::ComputeNode>;
-template class ParameterisedHolder<Gaffer::ExecutableNode>;
+template class ParameterisedHolder<GafferDispatch::ExecutableNode>;

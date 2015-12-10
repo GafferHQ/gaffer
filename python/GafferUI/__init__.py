@@ -251,10 +251,6 @@ from LabelPlugValueWidget import LabelPlugValueWidget
 from CompoundDataPlugValueWidget import CompoundDataPlugValueWidget
 from LayoutPlugValueWidget import LayoutPlugValueWidget
 import ScriptNodeUI
-import DispatcherUI
-from DispatcherUI import DispatcherWindow
-import LocalDispatcherUI
-import ExecutableNodeUI
 from IncrementingPlugValueWidget import IncrementingPlugValueWidget
 import PreferencesUI
 from SplinePlugValueWidget import SplinePlugValueWidget
@@ -276,20 +272,13 @@ import ExpressionUI
 import BoxUI
 import ReferenceUI
 import BackdropUI
-import SystemCommandUI
 import DotUI
-import TaskListUI
 import SubGraphUI
 import SwitchUI
 import ContextVariablesUI
 import TimeWarpUI
 import LoopUI
-import TaskContextProcessorUI
-import WedgeUI
-import TaskContextVariablesUI
 import AnimationUI
-import TaskSwitchUI
-import PythonCommandUI
 
 # backwards compatibility
 ## \todo Remove me

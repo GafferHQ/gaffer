@@ -35,6 +35,7 @@
 ##########################################################################
 
 __import__( "Gaffer" )
+__import__( "GafferDispatch" )
 
 from _GafferCortex import *
 

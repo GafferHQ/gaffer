@@ -40,6 +40,7 @@ import IECore
 
 import Gaffer
 import GafferTest
+import GafferDispatch
 import GafferCortex
 import GafferCortexTest
 
@@ -69,13 +70,13 @@ class ExecutableOpHolderTest( GafferTest.TestCase ) :
 
 	def testIsExecutable( self ) :
 
-		self.assertTrue( isinstance( GafferCortex.ExecutableOpHolder(), Gaffer.ExecutableNode ) )
+		self.assertTrue( isinstance( GafferCortex.ExecutableOpHolder(), GafferDispatch.ExecutableNode ) )
 
 	def testExecutablePlugs( self ) :
 
 		n = GafferCortex.ExecutableOpHolder()
-		self.assertEqual( n['requirement'].direction(), Gaffer.Plug.Direction.Out )
-		self.assertEqual( n['requirements'].direction(), Gaffer.Plug.Direction.In )
+		self.assertEqual( n["task"].direction(), Gaffer.Plug.Direction.Out )
+		self.assertEqual( n["preTasks"].direction(), Gaffer.Plug.Direction.In )
 
 	def testSetOp( self ) :
 
@@ -144,39 +145,33 @@ class ExecutableOpHolderTest( GafferTest.TestCase ) :
 		self.assertEqual( op.counter, 4 )
 		self.assertEqual( op.stringValue, "passed" )
 
-	def testRequirements( self ) :
+	def testPreTasks( self ) :
 
 		n1 = GafferCortex.ExecutableOpHolder()
 		n2 = GafferCortex.ExecutableOpHolder()
 		n2a = GafferCortex.ExecutableOpHolder()
 		n2b = GafferCortex.ExecutableOpHolder()
 
-		r1 = Gaffer.Plug( name = "r1" )
-		n1['requirements'].addChild( r1 )
-		r1.setInput( n2['requirement'] )
-
-		r1 = Gaffer.Plug( name = "r1" )
-		n2['requirements'].addChild( r1 )
-		r1.setInput( n2a['requirement'] )
+		n1["preTasks"][0].setInput( n2["task"] )
+		n2["preTasks"][0].setInput( n2a["task"] )
 
 		r2 = Gaffer.Plug( name = "r2" )
-		n2['requirements'].addChild( r2 )
-		r2.setInput( n2b['requirement'] )
+		n2["preTasks"][1].setInput( n2b["task"] )
 
 		c = Gaffer.Context()
-		self.assertEqual( n2a.requirements(c), [] )
-		self.assertEqual( n2b.requirements(c), [] )
-		n2Requirements = n2.requirements(c)
-		self.assertEqual( n2Requirements[0].node(), n2a )
-		self.assertEqual( n2Requirements[0].context(), c )
-		self.assertEqual( n2Requirements[1].node(), n2b )
-		self.assertEqual( n2Requirements[1].context(), c )
-		t1 = Gaffer.ExecutableNode.Task(n2a,c)
-		t2 = Gaffer.ExecutableNode.Task(n2b,c)
-		self.assertEqual( n2Requirements[0], t1 )
-		self.assertEqual( n2Requirements[1], t2 )
-		self.assertEqual( len(set(n2.requirements(c)).difference([ t1, t2])), 0 )
-		self.assertEqual( n1.requirements(c), [ Gaffer.ExecutableNode.Task(n2,c) ] )
+		self.assertEqual( n2a.preTasks(c), [] )
+		self.assertEqual( n2b.preTasks(c), [] )
+		n2PreTasks = n2.preTasks(c)
+		self.assertEqual( n2PreTasks[0].node(), n2a )
+		self.assertEqual( n2PreTasks[0].context(), c )
+		self.assertEqual( n2PreTasks[1].node(), n2b )
+		self.assertEqual( n2PreTasks[1].context(), c )
+		t1 = GafferDispatch.ExecutableNode.Task(n2a,c)
+		t2 = GafferDispatch.ExecutableNode.Task(n2b,c)
+		self.assertEqual( n2PreTasks[0], t1 )
+		self.assertEqual( n2PreTasks[1], t2 )
+		self.assertEqual( len(set(n2.preTasks(c)).difference([ t1, t2])), 0 )
+		self.assertEqual( n1.preTasks(c), [ GafferDispatch.ExecutableNode.Task(n2,c) ] )
 
 	def testSerialise( self ) :
 

@@ -41,6 +41,7 @@ import subprocess32 as subprocess
 import IECore
 
 import Gaffer
+import GafferDispatch
 import GafferImage
 import GafferScene
 import GafferSceneTest
@@ -396,9 +397,9 @@ class RenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		# dispatch the render on the foreground thread. if we don't manage
 		# the GIL appropriately, we'll get a deadlock when the Display signals
 		# above try to enter python on the background thread.
-		dispatcher = Gaffer.LocalDispatcher()
+		dispatcher = GafferDispatch.LocalDispatcher()
 		dispatcher["jobsDirectory"].setValue( self.temporaryDirectory() + "/testJobDirectory" )
-		dispatcher["framesMode"].setValue( Gaffer.Dispatcher.FramesMode.CurrentFrame )
+		dispatcher["framesMode"].setValue( GafferDispatch.Dispatcher.FramesMode.CurrentFrame )
 		dispatcher["executeInBackground"].setValue( False )
 
 		dispatcher.dispatch( [ s["render"] ] )
@@ -652,7 +653,6 @@ class RenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		rib = "\n".join( file( self.temporaryDirectory() + "/test.rib" ).readlines() )
 		self.assertTrue( "ClippingPlane" in rib )
 
-	@unittest.skipIf( "TRAVIS" in os.environ, "Unknown problem running on Travis" )
 	def testWedge( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -686,17 +686,17 @@ class RenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		s["render"]["ribFileName"].setValue( self.temporaryDirectory() + "/test.rib" )
 		s["render"]["in"].setInput( s["outputs"]["out"] )
 
-		s["wedge"] = Gaffer.Wedge()
+		s["wedge"] = GafferDispatch.Wedge()
 		s["wedge"]["mode"].setValue( int( s["wedge"].Mode.StringList ) )
 		s["wedge"]["strings"].setValue( IECore.StringVectorData( [ "visible", "hidden" ] ) )
-		s["wedge"]["requirements"][0].setInput( s["render"]["requirement"] )
+		s["wedge"]["preTasks"][0].setInput( s["render"]["task"] )
 
 		s["fileName"].setValue( self.temporaryDirectory() + "/test.gfr" )
 		s.save()
 
-		dispatcher = Gaffer.LocalDispatcher()
+		dispatcher = GafferDispatch.LocalDispatcher()
 		dispatcher["jobsDirectory"].setValue( self.temporaryDirectory() + "/testJobDirectory" )
-		dispatcher["framesMode"].setValue( Gaffer.Dispatcher.FramesMode.CurrentFrame )
+		dispatcher["framesMode"].setValue( GafferDispatch.Dispatcher.FramesMode.CurrentFrame )
 		dispatcher["executeInBackground"].setValue( False )
 
 		dispatcher.dispatch( [ s["wedge"] ] )
@@ -709,9 +709,11 @@ class RenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 
 		hiddenStats = GafferImage.ImageStats()
 		hiddenStats["in"].setInput( hidden["out"] )
+		hiddenStats["regionOfInterest"].setValue( hidden["out"]["format"].getValue().getDisplayWindow() )
 
 		visibleStats = GafferImage.ImageStats()
 		visibleStats["in"].setInput( visible["out"] )
+		visibleStats["regionOfInterest"].setValue( visible["out"]["format"].getValue().getDisplayWindow() )
 
 		self.assertLess( hiddenStats["average"].getValue()[0], 0.05 )
 		self.assertGreater( visibleStats["average"].getValue()[0], .35 )
