@@ -120,13 +120,7 @@ class ImageView : public GafferUI::View
 		/// preprocessor is managed by the ImageView base class.
 		void insertConverter( Gaffer::NodePtr converter );
 
-	private:
-
-		GafferImage::ImageStats *imageStatsNode();
-		const GafferImage::ImageStats *imageStatsNode() const;
-
-		GafferImage::ImageSampler *imageSamplerNode();
-		const GafferImage::ImageSampler *imageSamplerNode() const;
+	private :
 
 		GafferImage::Clamp *clampNode();
 		const GafferImage::Clamp *clampNode() const;
@@ -149,12 +143,8 @@ class ImageView : public GafferUI::View
 		ImageGadgetPtr m_imageGadget;
 		bool m_framed;
 
-		int m_channelToView;
-		Imath::V2f m_mousePos;
-		Imath::Color4f m_sampleColor;
-		Imath::Color4f m_minColor;
-		Imath::Color4f m_maxColor;
-		Imath::Color4f m_averageColor;
+		class ColorInspector;
+		boost::shared_ptr<ColorInspector> m_colorInspector;
 
 		typedef std::map<std::string, DisplayTransformCreator> DisplayTransformCreatorMap;
 		static DisplayTransformCreatorMap &displayTransformCreators();

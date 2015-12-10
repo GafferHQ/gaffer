@@ -118,6 +118,54 @@ class _DisplayTransformPlugValueWidget( GafferUI.PresetsPlugValueWidget ) :
 		self._qtWidget().setFixedWidth( 100 )
 
 ##########################################################################
+# _ColorInspectorPlugValueWidget
+##########################################################################
+
+class _ColorInspectorPlugValueWidget( GafferUI.PlugValueWidget ) :
+
+	def __init__( self, plug, **kw ) :
+
+		self.__row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
+		GafferUI.PlugValueWidget.__init__( self, self.__row, plug, **kw )
+
+		with self.__row :
+
+			self.__positionLabel = GafferUI.Label()
+			self.__positionLabel._qtWidget().setFixedWidth( 100 )
+			self.__swatch = GafferUI.ColorSwatch()
+			self.__rgbLabel = GafferUI.Label()
+			self.__rgbLabel._qtWidget().setFixedWidth( 200 )
+			self.__hsvLabel = GafferUI.Label()
+			self.__hsvLabel._qtWidget().setFixedWidth( 150 )
+
+	def _updateFromPlug( self ) :
+
+		view = self.getPlug().node()
+
+		## \todo We're getting the context from the view because our
+		# own context hasn't been set properly. We need to fix that
+		# properly, I think by having some sort of ContextSensitiveWidget
+		# base class which inherits contexts from parents.
+		with view.getContext() :
+			channelNames = view.viewportGadget().getPrimaryChild().getImage()["channelNames"].getValue()
+			pixel = self.getPlug()["pixel"].getValue()
+			color = self.getPlug()["color"].getValue()
+
+		if "A" not in channelNames :
+			color = IECore.Color3f( color[0], color[1], color[2] )
+
+		hsv = color.rgbToHSV()
+
+		self.__swatch.setColor( color )
+		self.__positionLabel.setText( "XY : %d, %d" % ( pixel.x, pixel.y ) )
+		self.__hsvLabel.setText( "HSV : %s %s %s" % tuple( GafferUI.NumericWidget.valueToString( x ) for x in ( hsv.r, hsv.g, hsv.b ) ) )
+
+		if isinstance( color, IECore.Color4f ) :
+			self.__rgbLabel.setText( "RGBA : %s %s %s %s" % tuple( GafferUI.NumericWidget.valueToString( x ) for x in ( color.r, color.g, color.b, color.a ) ) )
+		else :
+			self.__rgbLabel.setText( "RGB : %s %s %s" % tuple( GafferUI.NumericWidget.valueToString( x ) for x in ( color.r, color.g, color.b ) ) )
+
+##########################################################################
 # Metadata registration.
 ##########################################################################
 
@@ -137,6 +185,7 @@ Gaffer.Metadata.registerNode(
 			"plugValueWidget:type", "GafferImageUI.ImageViewToolbar._TogglePlugValueWidget",
 			"togglePlugValueWidget:imagePrefix", "clipping",
 			"togglePlugValueWidget:defaultToggleValue", True,
+			"divider", True,
 
 		],
 
@@ -179,6 +228,15 @@ Gaffer.Metadata.registerNode(
 
 			"presetNames", lambda plug : IECore.StringVectorData( GafferImageUI.ImageView.registeredDisplayTransforms() ),
 			"presetValues", lambda plug : IECore.StringVectorData( GafferImageUI.ImageView.registeredDisplayTransforms() ),
+
+		],
+
+		"colorInspector" : [
+
+			"plugValueWidget:type", "GafferImageUI.ImageViewToolbar._ColorInspectorPlugValueWidget",
+			"label", "",
+			"layout:index", 0,
+			"divider", True,
 
 		],
 
