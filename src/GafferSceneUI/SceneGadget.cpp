@@ -53,6 +53,7 @@
 
 #include "GafferSceneUI/SceneGadget.h"
 #include "GafferSceneUI/ObjectVisualiser.h"
+#include "GafferSceneUI/AttributeVisualiser.h"
 
 using namespace std;
 using namespace Imath;
@@ -198,6 +199,11 @@ class SceneGadget::SceneGraph
 						m_renderable->render( currentState );
 					}
 
+					if( m_attributesRenderable )
+					{
+						m_attributesRenderable->render( currentState );
+					}
+
 					if( m_boundRenderable )
 					{
 						IECoreGL::State::ScopedBinding wireframeScope( wireframeState(), *currentState );
@@ -265,6 +271,7 @@ class SceneGadget::SceneGraph
 			deferReferenceRemoval( m_state );
 			deferReferenceRemoval( m_renderable );
 			deferReferenceRemoval( m_boundRenderable );
+			deferReferenceRemoval( m_attributesRenderable );
 			clearChildren();
 			m_objectHash = m_attributesHash = IECore::MurmurHash();
 		}
@@ -355,6 +362,7 @@ class SceneGadget::SceneGraph
 		IECoreGL::ConstStatePtr m_state;
 		IECoreGL::ConstRenderablePtr m_renderable;
 		IECoreGL::ConstRenderablePtr m_boundRenderable;
+		IECoreGL::ConstRenderablePtr m_attributesRenderable;
 		std::vector<SceneGraph *> m_children;
 		mutable GLuint m_selectionId;
 		bool m_selected;
@@ -409,9 +417,29 @@ class SceneGadget::UpdateTask : public tbb::task
 					const IECore::BoolData *visibilityData = attributes->member<IECore::BoolData>( "scene:visible" );
 					m_sceneGraph->m_visible = visibilityData ? visibilityData->readable() : true;
 
-					IECore::ConstRunTimeTypedPtr glState = IECoreGL::CachedConverter::defaultCachedConverter()->convert( attributes.get() );
+					IECore::ConstRunTimeTypedPtr glStateCachedTyped = IECoreGL::CachedConverter::defaultCachedConverter()->convert( attributes.get() );
+					IECoreGL::ConstStatePtr glStateCached = IECore::runTimeCast<const IECoreGL::State>( glStateCachedTyped );
+					
+
+
+					IECoreGL::ConstStatePtr visState = NULL;
+					
+					deferReferenceRemoval( m_sceneGraph->m_attributesRenderable );
+					m_sceneGraph->m_attributesRenderable = AttributeVisualiser::allVisualisations( attributes.get(), visState );
+
 					deferReferenceRemoval( m_sceneGraph->m_state );
-					m_sceneGraph->m_state = IECore::runTimeCast<const IECoreGL::State>( glState );
+					if( visState )
+					{
+						IECoreGL::StatePtr glState = new IECoreGL::State( *glStateCached );
+						glState->add( const_cast< IECoreGL::State* >( visState.get() ) );
+
+						m_sceneGraph->m_state = glState;
+					}
+					else
+					{
+						m_sceneGraph->m_state = glStateCached;
+					}
+
 
 					m_sceneGraph->m_attributesHash = attributesHash;
 				}
