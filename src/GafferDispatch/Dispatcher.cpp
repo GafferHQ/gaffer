@@ -354,7 +354,7 @@ class Dispatcher::Batcher
 			// are reachable from doDispatch().
 			for( TaskBatches::const_iterator it = postBatches.begin(), eIt = postBatches.end(); it != eIt; ++it )
 			{
-				addPreTask( it->get(), batch );
+				addPreTask( it->get(), batch, /* front = */ true );
 				addPreTask( m_rootBatch.get(), *it );
 			}
 
@@ -482,12 +482,19 @@ class Dispatcher::Batcher
 			return result;
 		}
 
-		void addPreTask( TaskBatch *batch, TaskBatchPtr preTask )
+		void addPreTask( TaskBatch *batch, TaskBatchPtr preTask, bool front = false )
 		{
 			TaskBatches &preTasks = batch->preTasks();
 			if( std::find( preTasks.begin(), preTasks.end(), preTask ) == preTasks.end() )
 			{
-				preTasks.push_back( preTask );
+				if( front )
+				{
+					preTasks.insert( preTasks.begin(), preTask );
+				}
+				else
+				{
+					preTasks.push_back( preTask );
+				}
 			}
 		}
 

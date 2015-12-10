@@ -1095,7 +1095,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		dispatcher = GafferDispatch.Dispatcher.create( "testDispatcher" )
 		dispatcher.dispatch( [ s["e"] ] )
 
-		self.assertEqual( [ l.node for l in log ], [ s["u"], s["e"], s["p"] ] )
+		self.assertEqual( [ l.node for l in log ], [ s["e"], s["u"], s["p"] ] )
 
 	def testPostTaskWithDownstreamTasks( self ) :
 
