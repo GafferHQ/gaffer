@@ -41,9 +41,6 @@ import IECore
 import Gaffer
 import GafferDispatch
 
-## \todo Add a BoolPlug to allow sequence execution to
-# be requested, and then expose a `frames` python variable
-# when executing the python command from `executeSequence()`.
 class PythonCommand( GafferDispatch.ExecutableNode ) :
 
 	def __init__( self, name = "PythonCommand" ) :
@@ -52,6 +49,7 @@ class PythonCommand( GafferDispatch.ExecutableNode ) :
 
 		self["command"] = Gaffer.StringPlug()
 		self["variables"] = Gaffer.CompoundDataPlug()
+		self["sequence"] = Gaffer.BoolPlug()
 
 	def hash( self, context ) :
 
@@ -70,21 +68,96 @@ class PythonCommand( GafferDispatch.ExecutableNode ) :
 
 		self["variables"].hash( h )
 
+		if self.requiresSequenceExecution() :
+			h.append( context.getFrame() )
+
 		return h
 
 	def execute( self ) :
 
-		executionDict = { "IECore" : IECore, "Gaffer" : Gaffer, "self" : self, "context" : Gaffer.Context.current() }
+		executionDict = self.__executionDict()
+		exec( self["command"].getValue(), executionDict, executionDict )
 
-		for plug in self["variables"].children() :
-			value, name = self["variables"].memberDataAndName( plug )
+	def executeSequence( self, frames ) :
+
+		if not self.requiresSequenceExecution() :
+			## \todo It'd be nice if the dispatcher didn't call
+			# executeSequence() if requiresSequenceExecution() was False.
+			# At the same time we could look into properly supporting
+			# varying results for requiresSequenceExecution(), with sequences
+			# going into their own batch independent of non-sequence batches.
+			Gaffer.ExecutableNode.executeSequence( self, frames )
+			return
+
+		executionDict = self.__executionDict( frames )
+		exec( self["command"].getValue(), executionDict, executionDict )
+
+	def requiresSequenceExecution( self ) :
+
+		return self["sequence"].getValue()
+
+	def __executionDict( self, frames = None ) :
+
+		result = {
+			"IECore" : IECore,
+			"Gaffer" : Gaffer,
+			"self" : self,
+			"context" : Gaffer.Context.current(),
+			"variables" : _VariablesDict(
+				self["variables"],
+				Gaffer.Context.current(),
+				validFrames = set( frames ) if frames is not None else { Gaffer.Context.current().getFrame() }
+			)
+		}
+
+		if frames is not None :
+			result["frames"] = frames
+
+		return result
+
+class _VariablesDict( dict ) :
+
+	def __init__( self, variables, context, validFrames ) :
+
+		dict.__init__( self )
+
+		self.__variables = variables
+		self.__context = context
+		self.__validFrames = validFrames
+		self.__frame = None
+
+	def keys( self ) :
+
+		self.__update()
+		return dict.keys( self )
+
+	def __getitem__( self, key ) :
+
+		self.__update()
+		return dict.__getitem__( self, key )
+
+	def __update( self ) :
+
+		if self.__frame == self.__context.getFrame() :
+			return
+
+		if self.__context.getFrame() not in self.__validFrames :
+			raise ValueError( "Invalid frame" )
+
+		self.clear()
+		for plug in self.__variables.children() :
+			value, name = self.__variables.memberDataAndName( plug )
 			if value is None :
 				continue
 			with IECore.IgnoredExceptions( Exception ) :
 				value = value.value
-			executionDict[name] = value
+			if isinstance( value, str ) :
+				## \todo Remove when #887 is fixed.
+				value = self.__context.substitute( value )
 
-		exec( self["command"].getValue(), executionDict, executionDict )
+			self[name] = value
+
+		self.__frame = self.__context.getFrame()
 
 class _Parser( ast.NodeVisitor ) :
 

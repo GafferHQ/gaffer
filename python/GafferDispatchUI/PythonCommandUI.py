@@ -66,12 +66,44 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			An arbitrary set of variables which can be referenced
-			by name from within the python command.
+			An arbitrary set of variables which can be accessed via
+			the `variables` dictionary within the python command.
 			""",
 
 			"nodule:type", "",
-			"layout:section", "Settings.Variables",
+			"layout:section", "Variables",
+
+		),
+
+		"sequence" : (
+
+			"description",
+			"""
+			Calls the command once for each sequence, instead of once
+			per frame. In this mode, an additional variable called `frames`
+			is available to the command, containing a list of all frame
+			numbers for which execution should be performed. The context may
+			be updated to reference any frame from this list, and accessing
+			a variable returns the value for the current frame.
+
+			A typical structure for the command might look something like this :
+
+			```
+			# Do some one-time initialization
+			...
+			# Process all frames
+			for frame in frames :
+				context.setFrame( frame )
+				# Read variables after setting the frame to get
+				# the right values for that frame.
+				v = variables["v"]
+				...
+			# Do some one-time finalization
+			...
+			```
+			""",
+
+			"layout:section", "Advanced",
 
 		),
 
