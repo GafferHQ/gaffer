@@ -35,11 +35,14 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/container/flat_map.hpp"
+#include "boost/algorithm/string/predicate.hpp"
 
 #include "IECoreGL/CurvesPrimitive.h"
 #include "IECoreGL/Group.h"
+#include "IECore/Light.h"
 
 #include "GafferSceneUI/LightVisualiser.h"
+#include "GafferSceneUI/AttributeVisualiser.h"
 #include "GafferSceneUI/StandardLightVisualiser.h"
 
 using namespace std;
@@ -60,13 +63,115 @@ LightVisualisers &lightVisualisers()
 	return l;
 }
 
+const LightVisualiser *standardLightVisualiser()
+{
+	static ConstLightVisualiserPtr l = new StandardLightVisualiser;
+	return l.get();
+}
+
+/// Class for visualisation of lights. All lights in Gaffer are represented
+/// as IECore::Light objects, but we need to visualise them differently
+/// depending on their shader name (accessed using `IECore::Light::getName()`). A
+/// factory mechanism is provided to map from this type to a specialised
+/// LightVisualiser.
+class AttributeVisualiserForLights : public AttributeVisualiser
+{
+
+	public :
+
+		IE_CORE_DECLAREMEMBERPTR( AttributeVisualiserForLights )
+
+		/// Uses a custom visualisation registered via `registerLightVisualiser()` if one
+		/// is available, if not falls back to a basic point light visualisation.
+		virtual IECoreGL::ConstRenderablePtr visualise( const IECore::CompoundObject *attributes,
+			IECoreGL::ConstStatePtr &state ) const;
+
+	protected :
+
+		static AttributeVisualiser::AttributeVisualiserDescription<AttributeVisualiserForLights> g_visualiserDescription;
+
+};
+
 } // namespace
+
+IECoreGL::ConstRenderablePtr AttributeVisualiserForLights::visualise( const IECore::CompoundObject *attributes,
+	IECoreGL::ConstStatePtr &state ) const
+{
+	if( !attributes )
+	{
+		return NULL;
+	}
+
+	IECoreGL::GroupPtr resultGroup = NULL;
+	IECoreGL::StatePtr resultState = NULL;
+	
+	/// This seems pretty expensive to do everywhere.
+	/// The alternative would be to register attribute visualisers to specific attributes.  But then we wouldn't be able to have a visualiser that is influenced by multiple attributes simultaneously
+	for( IECore::CompoundObject::ObjectMap::const_iterator it = attributes->members().begin();
+		it != attributes->members().end(); it++ )
+	{
+		const std::string &key = it->first.string();
+		if( !( boost::ends_with( key, ":light" ) || key == "light" ) )
+		{
+			continue;
+		}
+
+		const IECore::ObjectVector *shaderVector = IECore::runTimeCast<const IECore::ObjectVector>( it->second.get() );
+		if( !shaderVector || shaderVector->members().size() == 0 ) continue;
+
+		const IECore::Light *lightShader = IECore::runTimeCast<const IECore::Light>(
+			 shaderVector->members()[ shaderVector->members().size() - 1 ] ).get();
+		if( !lightShader ) continue;
+
+
+		const LightVisualiser *currentVisualiser = standardLightVisualiser();
+
+		const LightVisualisers &l = lightVisualisers();
+		LightVisualisers::const_iterator findVis = l.find( lightShader->getName() );
+		if( findVis != l.end() )
+		{
+			currentVisualiser = findVis->second.get();
+		}
+
+		IECoreGL::ConstStatePtr curState = NULL;
+		IECoreGL::ConstRenderablePtr curVis = currentVisualiser->visualise( shaderVector, curState );
+
+		if( curVis )
+		{
+			if( !resultGroup )
+			{
+				resultGroup = new IECoreGL::Group();
+			}
+			// resultGroup will be returned as const, so const-casting the children in order to add them
+			// is safe
+			resultGroup->addChild( const_cast<IECoreGL::Renderable*>( curVis.get() ) );
+		}
+
+		if( curState )
+		{
+			if( !resultState )
+			{
+				resultState = new IECoreGL::State( false );
+			}
+			resultState->add( const_cast<IECoreGL::State*>( curState.get() ) );
+		}
+	}
+
+	state = resultState;
+	return resultGroup;
+}
+
+AttributeVisualiser::AttributeVisualiserDescription<AttributeVisualiserForLights> AttributeVisualiserForLights::g_visualiserDescription;
+
+
+
+
+
 
 //////////////////////////////////////////////////////////////////////////
 // LightVisualiser class
 //////////////////////////////////////////////////////////////////////////
 
-Visualiser::VisualiserDescription<LightVisualiser> LightVisualiser::g_visualiserDescription;
 
 LightVisualiser::LightVisualiser()
 {
@@ -74,27 +179,6 @@ LightVisualiser::LightVisualiser()
 
 LightVisualiser::~LightVisualiser()
 {
-}
-
-IECoreGL::ConstRenderablePtr LightVisualiser::visualise( const IECore::Object *object ) const
-{
-	const IECore::Light *light = IECore::runTimeCast<const IECore::Light>( object );
-	if( !light )
-	{
-		return NULL;
-	}
-
-	const LightVisualisers &l = lightVisualisers();
-	LightVisualisers::const_iterator it = l.find( light->getName() );
-	if( it != l.end() )
-	{
-		return it->second->visualise( object );
-	}
-	else
-	{
-		static StandardLightVisualiserPtr g_defaultVisualiser = new StandardLightVisualiser();
-		return g_defaultVisualiser->visualise( object );
-	}
 }
 
 void LightVisualiser::registerLightVisualiser( const IECore::InternedString &name, ConstLightVisualiserPtr visualiser )
