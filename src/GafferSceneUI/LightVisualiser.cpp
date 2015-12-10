@@ -34,88 +34,117 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECore/Light.h"
+#include "boost/container/flat_map.hpp"
 
 #include "IECoreGL/CurvesPrimitive.h"
 #include "IECoreGL/Group.h"
 
-#include "GafferSceneUI/Visualiser.h"
+#include "GafferSceneUI/LightVisualiser.h"
 
 using namespace std;
 using namespace Imath;
 using namespace GafferSceneUI;
 
+//////////////////////////////////////////////////////////////////////////
+// Internal implementation details
+//////////////////////////////////////////////////////////////////////////
+
 namespace
 {
 
-class LightVisualiser : public Visualiser
+IECoreGL::ConstRenderablePtr fallbackVisualisation()
 {
+	static IECoreGL::GroupPtr group = NULL;
+	if( !group )
+	{
+		group = new IECoreGL::Group;
 
-	public :
+		group->getState()->add( new IECoreGL::Primitive::DrawWireframe( true ) );
+		group->getState()->add( new IECoreGL::Primitive::DrawSolid( false ) );
+		group->getState()->add( new IECoreGL::CurvesPrimitive::UseGLLines( true ) );
+		group->getState()->add( new IECoreGL::WireframeColorStateComponent( Color4f( 0.5, 0, 0, 1 ) ) );
 
-		typedef IECore::Light ObjectType;
+		const float a = 0.5f;
+		const float phi = 1.0f + sqrt( 5.0f ) / 2.0f;
+		const float b = 1.0f / ( 2.0f * phi );
 
-		LightVisualiser()
-			:	m_group( new IECoreGL::Group() )
+		// icosahedron points
+		IECore::V3fVectorDataPtr pData = new IECore::V3fVectorData;
+		vector<V3f> &p = pData->writable();
+		p.resize( 24 );
+		p[0] = V3f( 0, b, -a );
+		p[2] = V3f( b, a, 0 );
+		p[4] = V3f( -b, a, 0 );
+		p[6] = V3f( 0, b, a );
+		p[8] = V3f( 0, -b, a );
+		p[10] = V3f( -a, 0, b );
+		p[12] = V3f( 0, -b, -a );
+		p[14] = V3f( a, 0, -b );
+		p[16] = V3f( a, 0, b );
+		p[18] = V3f( -a, 0, -b );
+		p[20] = V3f( b, -a, 0 );
+		p[22] = V3f( -b, -a, 0 );
+
+		for( size_t i = 0; i<12; i++ )
 		{
-			m_group->getState()->add( new IECoreGL::Primitive::DrawWireframe( true ) );
-			m_group->getState()->add( new IECoreGL::Primitive::DrawSolid( false ) );
-			m_group->getState()->add( new IECoreGL::CurvesPrimitive::UseGLLines( true ) );
-			m_group->getState()->add( new IECoreGL::WireframeColorStateComponent( Color4f( 0.5, 0, 0, 1 ) ) );
-
-			const float a = 0.5f;
-			const float phi = 1.0f + sqrt( 5.0f ) / 2.0f;
-			const float b = 1.0f / ( 2.0f * phi );
-
-			// icosahedron points
-			IECore::V3fVectorDataPtr pData = new IECore::V3fVectorData;
-			vector<V3f> &p = pData->writable();
-			p.resize( 24 );
-			p[0] = V3f( 0, b, -a );
-			p[2] = V3f( b, a, 0 );
-			p[4] = V3f( -b, a, 0 );
-			p[6] = V3f( 0, b, a );
-			p[8] = V3f( 0, -b, a );
-			p[10] = V3f( -a, 0, b );
-			p[12] = V3f( 0, -b, -a );
-			p[14] = V3f( a, 0, -b );
-			p[16] = V3f( a, 0, b );
-			p[18] = V3f( -a, 0, -b );
-			p[20] = V3f( b, -a, 0 );
-			p[22] = V3f( -b, -a, 0 );
-
-			for( size_t i = 0; i<12; i++ )
-			{
-				p[i*2] = 2.0f * p[i*2].normalized();
-				p[i*2+1] = V3f( 0 );
-			}
-
-			IECore::IntVectorDataPtr vertsPerCurve = new IECore::IntVectorData;
-			vertsPerCurve->writable().resize( 12, 2 );
-
-			IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), false, vertsPerCurve );
-			curves->addPrimitiveVariable( "P", IECore::PrimitiveVariable( IECore::PrimitiveVariable::Vertex, pData ) );
-
-			m_group->addChild( curves );
+			p[i*2] = 2.0f * p[i*2].normalized();
+			p[i*2+1] = V3f( 0 );
 		}
 
-		virtual ~LightVisualiser()
-		{
-		}
+		IECore::IntVectorDataPtr vertsPerCurve = new IECore::IntVectorData;
+		vertsPerCurve->writable().resize( 12, 2 );
 
-		virtual IECoreGL::ConstRenderablePtr visualise( const IECore::Object *object ) const
-		{
-			return m_group;
-		}
+		IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), false, vertsPerCurve );
+		curves->addPrimitiveVariable( "P", IECore::PrimitiveVariable( IECore::PrimitiveVariable::Vertex, pData ) );
 
-	protected :
+		group->addChild( curves );
+	}
 
-		static VisualiserDescription<LightVisualiser> g_visualiserDescription;
+	return group;
+}
 
-		IECoreGL::GroupPtr m_group;
+typedef boost::container::flat_map<IECore::InternedString, ConstLightVisualiserPtr> LightVisualisers;
+LightVisualisers &lightVisualisers()
+{
+	static LightVisualisers l;
+	return l;
+}
 
-};
+} // namespace
+
+//////////////////////////////////////////////////////////////////////////
+// LightVisualiser class
+//////////////////////////////////////////////////////////////////////////
 
 Visualiser::VisualiserDescription<LightVisualiser> LightVisualiser::g_visualiserDescription;
 
-} // namespace
+LightVisualiser::LightVisualiser()
+{
+}
+
+LightVisualiser::~LightVisualiser()
+{
+}
+
+IECoreGL::ConstRenderablePtr LightVisualiser::visualise( const IECore::Object *object ) const
+{
+	const IECore::Light *light = IECore::runTimeCast<const IECore::Light>( object );
+	if( !light )
+	{
+		return NULL;
+	}
+
+	const LightVisualisers &l = lightVisualisers();
+	LightVisualisers::const_iterator it = l.find( light->getName() );
+	if( it != l.end() )
+	{
+		return it->second->visualise( object );
+	}
+
+	return fallbackVisualisation();
+}
+
+void LightVisualiser::registerLightVisualiser( const IECore::InternedString &name, ConstLightVisualiserPtr visualiser )
+{
+	lightVisualisers()[name] = visualiser;
+}
