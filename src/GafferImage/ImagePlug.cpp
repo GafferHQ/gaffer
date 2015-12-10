@@ -35,115 +35,111 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "tbb/tbb.h"
-
-#include "IECore/Exception.h"
-#include "IECore/BoxOps.h"
-#include "IECore/BoxAlgo.h"
-
 #include "Gaffer/Context.h"
 
 #include "GafferImage/ImagePlug.h"
-#include "GafferImage/AtomicFormatPlug.h"
 #include "GafferImage/FormatPlug.h"
+#include "GafferImage/ImageAlgo.h"
+#include "GafferImage/BufferAlgo.h"
 
 using namespace std;
+using namespace tbb;
 using namespace Imath;
 using namespace IECore;
 using namespace Gaffer;
 using namespace GafferImage;
-using namespace tbb;
 
 IE_CORE_DEFINERUNTIMETYPED( ImagePlug );
 
 //////////////////////////////////////////////////////////////////////////
-// Implementation of CopyTiles:
-// A simple class for multithreading the copying of
-// image tiles from an input plug to an output plug.
+// Utilities
 //////////////////////////////////////////////////////////////////////////
 
-namespace GafferImage
+namespace
 {
 
-namespace Detail
+class CopyTile
 {
 
-class CopyTiles
-{
-	public:
-		CopyTiles(
+	public :
+
+		CopyTile(
 				const vector<float *> &imageChannelData,
 				const vector<string> &channelNames,
-				const Gaffer::FloatVectorDataPlug *channelDataPlug,
-				const Box2i& dataWindow,
-				const Context *context, const int tileSize
+				const Box2i &dataWindow
 			) :
 				m_imageChannelData( imageChannelData ),
 				m_channelNames( channelNames ),
-				m_channelDataPlug( channelDataPlug ),
-				m_dataWindow( dataWindow ),
-				m_parentContext( context ),
-				m_tileSize( tileSize )
+				m_dataWindow( dataWindow )
 		{}
 
-		void operator()( const blocked_range3d<size_t>& r ) const
+		void operator()( const ImagePlug *imagePlug, const string &channelName, const V2i &tileOrigin )
 		{
-			ContextPtr context = new Context( *m_parentContext, Context::Borrowed );
-			Context::Scope scope( context.get() );
+			const Box2i tileBound( tileOrigin, tileOrigin + V2i( ImagePlug::tileSize() ) );
+			const Box2i b = intersection( tileBound, m_dataWindow );
 
-			const Box2i operationWindow( V2i( r.rows().begin()+m_dataWindow.min.x, r.cols().begin()+m_dataWindow.min.y ), V2i( r.rows().end()+m_dataWindow.min.x, r.cols().end()+m_dataWindow.min.y ) );
+			const size_t imageStride = m_dataWindow.size().x;
+			const size_t tileStrideSize = sizeof(float) * b.size().x;
 
-			V2i minTileOrigin = ImagePlug::tileOrigin( operationWindow.min );
-			V2i maxTileOrigin = ImagePlug::tileOrigin( operationWindow.max - V2i( 1 ) );
+			const int channelIndex = std::find( m_channelNames.begin(), m_channelNames.end(), channelName ) - m_channelNames.begin();
+			float *channelBegin = m_imageChannelData[channelIndex];
 
-			size_t imageStride = m_dataWindow.size().x;
+			ConstFloatVectorDataPtr tileData = imagePlug->channelDataPlug()->getValue();
+			const float *tileDataBegin = &(tileData->readable()[0]);
 
-			for( size_t channelIndex = r.pages().begin(); channelIndex < r.pages().end(); ++channelIndex )
+			for( int y = b.min.y; y < b.max.y; y++ )
 			{
-				context->set( ImagePlug::channelNameContextName, m_channelNames[channelIndex] );
-				float *channelBegin = m_imageChannelData[channelIndex];
-
-				for( int tileOriginY = minTileOrigin.y; tileOriginY <= maxTileOrigin.y; tileOriginY += m_tileSize )
-				{
-					for( int tileOriginX = minTileOrigin.x; tileOriginX <= maxTileOrigin.x; tileOriginX += m_tileSize )
-					{
-						context->set( ImagePlug::tileOriginContextName, V2i( tileOriginX, tileOriginY ) );
-
-						Box2i tileBound( V2i( tileOriginX, tileOriginY ), V2i( tileOriginX + m_tileSize, tileOriginY + m_tileSize ) );
-						Box2i b = boxIntersection( tileBound, operationWindow );
-
-						size_t tileStrideSize = sizeof(float) * b.size().x;
-
-						ConstFloatVectorDataPtr tileData = m_channelDataPlug->getValue();
-						const float *tileDataBegin = &(tileData->readable()[0]);
-
-						for( int y = b.min.y; y<b.max.y; y++ )
-						{
-							const float *tilePtr = tileDataBegin + (y - tileOriginY) * m_tileSize + (b.min.x - tileOriginX);
-							float *channelPtr = channelBegin + ( m_dataWindow.size().y - ( 1 + y - m_dataWindow.min.y ) ) * imageStride + (b.min.x - m_dataWindow.min.x);
-							std::memcpy( channelPtr, tilePtr, tileStrideSize );
-						}
-					}
-				}
+				const float *tilePtr = tileDataBegin + ( y - tileOrigin.y ) * ImagePlug::tileSize() + ( b.min.x - tileOrigin.x );
+				float *channelPtr = channelBegin + ( m_dataWindow.size().y - ( 1 + y - m_dataWindow.min.y ) ) * imageStride + ( b.min.x - m_dataWindow.min.x );
+				std::memcpy( channelPtr, tilePtr, tileStrideSize );
 			}
 		}
 
-	private:
+	private :
+
 		const vector<float *> &m_imageChannelData;
 		const vector<string> &m_channelNames;
-		const Gaffer::FloatVectorDataPlug *m_channelDataPlug;
 		const Box2i &m_dataWindow;
-		const Context *m_parentContext;
-		const int m_tileSize;
-};
 
 };
 
+struct HashTile
+{
+
+	typedef MurmurHash Result;
+
+	Result operator()( const ImagePlug *imagePlug, const string &channelName, const V2i &tileOrigin )
+	{
+		return imagePlug->channelDataPlug()->hash();
+	}
+
 };
+
+struct AppendHash
+{
+
+	AppendHash( MurmurHash &hash )
+		:	m_hash( hash )
+	{
+	}
+
+	void operator()( const ImagePlug *imagePlug, const string &channelName, const V2i &tileOrigin, const IECore::MurmurHash &tileHash )
+	{
+		m_hash.append( tileHash );
+	}
+
+	private :
+
+		MurmurHash &m_hash;
+
+};
+
+} // namespace
 
 //////////////////////////////////////////////////////////////////////////
 // Implementation of ImagePlug
 //////////////////////////////////////////////////////////////////////////
+
 const IECore::InternedString ImagePlug::channelNameContextName = "image:channelName";
 const IECore::InternedString ImagePlug::tileOriginContextName = "image:tileOrigin";
 
@@ -336,7 +332,7 @@ IECore::ImagePrimitivePtr ImagePlug::image() const
 	Box2i dataWindow = dataWindowPlug()->getValue();
 	Box2i newDataWindow( Imath::V2i( 0 ) );
 
-	if( dataWindow.hasVolume() )
+	if( !empty( dataWindow ) )
 	{
 		newDataWindow = format.toEXRSpace( dataWindow );
 	}
@@ -373,8 +369,8 @@ IECore::ImagePrimitivePtr ImagePlug::image() const
 		imageChannelData.push_back( &(c[0]) );
 	}
 
-	parallel_for( blocked_range3d<size_t>( 0, imageChannelData.size(), 1, 0, dataWindow.size().x, tileSize(), 0, dataWindow.size().y, tileSize() ),
-		      GafferImage::Detail::CopyTiles( imageChannelData, channelNames, channelDataPlug(), dataWindow, Context::current(), tileSize()) );
+	CopyTile copyTile( imageChannelData, channelNames, dataWindow );
+	parallelProcessTiles( this, channelNames, copyTile, dataWindow );
 
 	return result;
 }
@@ -390,24 +386,9 @@ IECore::MurmurHash ImagePlug::imageHash() const
 	result.append( metadataPlug()->hash() );
 	result.append( channelNamesPlug()->hash() );
 
-	V2i minTileOrigin = tileOrigin( dataWindow.min );
-	V2i maxTileOrigin = tileOrigin( dataWindow.max );
-
-	ContextPtr context = new Context( *Context::current(), Context::Borrowed );
-	Context::Scope scope( context.get() );
-
-	for( vector<string>::const_iterator it = channelNames.begin(), eIt = channelNames.end(); it!=eIt; it++ )
-	{
-		context->set( ImagePlug::channelNameContextName, *it );
-		for( int tileOriginY = minTileOrigin.y; tileOriginY<=maxTileOrigin.y; tileOriginY += tileSize() )
-		{
-			for( int tileOriginX = minTileOrigin.x; tileOriginX<=maxTileOrigin.x; tileOriginX += tileSize() )
-			{
-				context->set( ImagePlug::tileOriginContextName, V2i( tileOriginX, tileOriginY ) );
-				channelDataPlug()->hash( result );
-			}
-		}
-	}
+	HashTile hashTile;
+	AppendHash appendHash( result );
+	parallelGatherTiles( this, channelNames, hashTile, appendHash, dataWindow, BottomToTop );
 
 	return result;
 }

@@ -37,31 +37,13 @@
 #ifndef GAFFERIMAGE_IMAGEALGO_H
 #define GAFFERIMAGE_IMAGEALGO_H
 
+#include <vector>
 #include "OpenEXR/ImathBox.h"
 
 namespace GafferImage
 {
 
-/// Image window utility functions. The GafferImage convention is that
-/// the minimum coordinate is included within the window and the
-/// maximum coordinate is outside it - these functions take that into
-/// account and should therefore be used in favour of the Imath equivalents.
-////////////////////////////////////////////////////////////////////////////
-
-/// Returns true if the window contains no pixels, and false otherwise.
-inline bool empty( const Imath::Box2i &window );
-
-/// Returns true if the image windows intersect.
-inline bool intersects( const Imath::Box2i &window1, const Imath::Box2i &window2 );
-
-/// Return the intersection of the two image windows.
-inline Imath::Box2i intersection( const Imath::Box2i &window1, const Imath::Box2i &window2 );
-
-/// Returns true if the given point is inside the window.
-inline bool contains( const Imath::Box2i &window, const Imath::V2i &point );
-
-/// Clamps the point so that it is contained inside the window.
-inline Imath::V2i clamp( const Imath::V2i &point, const Imath::Box2i &window );
+class ImagePlug;
 
 /// Channel name utility functions.
 ///
@@ -95,6 +77,53 @@ inline std::string baseName( const std::string &channelName );
 /// Returns 0, 1, 2 and 3 for base names "R", "G", "B"
 /// and "A" respectively. Returns -1 for all other base names.
 inline int colorIndex( const std::string &channelName );
+
+enum TileOrder
+{
+	Unordered,
+	BottomToTop,
+	TopToBottom
+};
+
+// Call the functor in parallel, once per tile
+template <class ThreadableFunctor>
+void parallelProcessTiles(
+	const ImagePlug *imagePlug,
+	ThreadableFunctor &functor, // Signature : void functor( const ImagePlug *imagePlug, const V2i &tileOrigin )
+	const Imath::Box2i &window = Imath::Box2i() // Uses dataWindow if not specified.
+);
+
+// Call the functor in parallel, once per tile per channel
+template <class ThreadableFunctor>
+void parallelProcessTiles(
+	const ImagePlug *imagePlug,
+	const std::vector<std::string> &channelNames,
+	ThreadableFunctor &functor, // Signature : void functor( const ImagePlug *imagePlug, const string &channelName, const V2i &tileOrigin )
+	const Imath::Box2i &window = Imath::Box2i() // Uses dataWindow if not specified.
+);
+
+// Process all tiles in parallel using TileFunctor, passing the
+// results in series to GatherFunctor.
+template <class TileFunctor, class GatherFunctor>
+void parallelGatherTiles(
+	const ImagePlug *image,
+	TileFunctor &tileFunctor, // Signature : TileFunctor::Result tileFunctor( const ImagePlug *imagePlug, const V2i &tileOrigin )
+	GatherFunctor &gatherFunctor, // Signature : void gatherFunctor( const ImagePlug *imagePlug, const V2i &tileOrigin, TileFunctor::Result )
+	const Imath::Box2i &window = Imath::Box2i(), // Uses dataWindow if not specified.
+	TileOrder tileOrder = Unordered
+);
+
+// Process all tiles in parallel using TileFunctor, passing the
+// results in series to GatherFunctor.
+template <class TileFunctor, class GatherFunctor>
+void parallelGatherTiles(
+	const ImagePlug *image,
+	const std::vector<std::string> &channelNames,
+	TileFunctor &tileFunctor, // Signature : TileFunctor::Result tileFunctor( const ImagePlug *imagePlug, const string &channelName, const V2i &tileOrigin )
+	GatherFunctor &gatherFunctor, // Signature : void gatherFunctor( const ImagePlug *imagePlug, const string &channelName, const V2i &tileOrigin, TileFunctor::Result )
+	const Imath::Box2i &window = Imath::Box2i(), // Uses dataWindow if not specified.
+	TileOrder tileOrder = Unordered
+);
 
 } // namespace GafferImage
 

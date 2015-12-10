@@ -46,7 +46,7 @@
 #include "Gaffer/Transform2DPlug.h"
 
 #include "GafferImage/Text.h"
-#include "GafferImage/ImageAlgo.h"
+#include "GafferImage/BufferAlgo.h"
 
 using namespace std;
 using namespace Imath;

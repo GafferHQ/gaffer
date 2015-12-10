@@ -37,7 +37,7 @@
 #ifndef GAFFERIMAGE_FORMAT_INL
 #define GAFFERIMAGE_FORMAT_INL
 
-#include "GafferImage/ImageAlgo.h"
+#include "GafferImage/BufferAlgo.h"
 
 namespace GafferImage
 {

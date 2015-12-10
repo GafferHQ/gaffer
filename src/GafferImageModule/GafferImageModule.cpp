@@ -80,6 +80,7 @@
 #include "GafferImageBindings/ResampleBinding.h"
 #include "GafferImageBindings/ResizeBinding.h"
 #include "GafferImageBindings/ImageAlgoBinding.h"
+#include "GafferImageBindings/BufferAlgoBinding.h"
 #include "GafferImageBindings/OffsetBinding.h"
 #include "GafferImageBindings/BlurBinding.h"
 #include "GafferImageBindings/ShapeBinding.h"
@@ -135,6 +136,7 @@ BOOST_PYTHON_MODULE( _GafferImage )
 	GafferImageBindings::bindResample();
 	GafferImageBindings::bindResize();
 	GafferImageBindings::bindImageAlgo();
+	GafferImageBindings::bindBufferAlgo();
 	GafferImageBindings::bindOffset();
 	GafferImageBindings::bindBlur();
 	GafferImageBindings::bindShape();

@@ -35,6 +35,7 @@
 #
 ##########################################################################
 
+import os
 import unittest
 
 import IECore
@@ -121,6 +122,20 @@ class ImagePlugTest( GafferImageTest.ImageTestCase ) :
 
 		self.assertDefaultNamesAreCorrect( GafferImage )
 		self.assertDefaultNamesAreCorrect( GafferImageTest )
+
+	def testImageHash( self ) :
+
+		r = GafferImage.ImageReader()
+		r['fileName'].setValue( os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/checker.exr" ) )
+
+		h = r['out'].imageHash()
+
+		for i in range( 20 ) :
+			self.assertEqual( h, r['out'].imageHash() )
+
+		r['refreshCount'].setValue( 2 )
+
+		self.assertNotEqual( h, r['out'].imageHash() )
 
 if __name__ == "__main__":
 	unittest.main()

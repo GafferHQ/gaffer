@@ -34,20 +34,22 @@
 
 #include "boost/python.hpp"
 
-#include "GafferImage/ImageAlgo.h"
-#include "GafferImageBindings/ImageAlgoBinding.h"
+#include "GafferImage/BufferAlgo.h"
+#include "GafferImageBindings/BufferAlgoBinding.h"
 
 using namespace boost::python;
 
 namespace GafferImageBindings
 {
 
-void bindImageAlgo()
+void bindBufferAlgo()
 {
 
-	def( "layerName", &GafferImage::layerName );
-	def( "baseName", &GafferImage::baseName );
-	def( "colorIndex", &GafferImage::colorIndex );
+	def( "empty", &GafferImage::empty );
+	def( "intersects", &GafferImage::intersects );
+	def( "intersection", &GafferImage::intersection );
+	def( "clamp", &GafferImage::clamp );
+	def( "contains", ( bool (*)( const Imath::Box2i&, const Imath::V2i & ) )&GafferImage::contains );
 
 }
 

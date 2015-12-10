@@ -44,119 +44,6 @@ import GafferImageTest
 
 class ImageAlgoTest( GafferImageTest.ImageTestCase ) :
 
-	def testEmpty( self ) :
-
-		self.assertTrue( GafferImage.empty( IECore.Box2i() ) )
-		self.assertTrue( GafferImage.empty( IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 0 ) ) ) )
-		self.assertFalse( GafferImage.empty( IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 1 ) ) ) )
-
-	def testIntersects( self ) :
-
-		self.assertFalse(
-			GafferImage.intersects(
-				IECore.Box2i(), IECore.Box2i()
-			)
-		)
-
-		self.assertFalse(
-			GafferImage.intersects(
-				IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 10 ) ),
-				IECore.Box2i( IECore.V2i( 10 ), IECore.V2i( 20 ) ),
-			)
-		)
-
-		self.assertTrue(
-			GafferImage.intersects(
-				IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 10 ) ),
-				IECore.Box2i( IECore.V2i( 9 ), IECore.V2i( 20 ) ),
-			)
-		)
-
-	def testIntersection( self ) :
-
-		self.assertEqual(
-			GafferImage.intersection(
-				IECore.Box2i( IECore.V2i( 1, 2 ), IECore.V2i( 9, 10 ) ),
-				IECore.Box2i( IECore.V2i( 2, 0 ), IECore.V2i( 8, 29 ) ),
-			),
-			IECore.Box2i(
-				IECore.V2i( 2, 2 ),
-				IECore.V2i( 8, 10 )
-			)
-		)
-
-	def testContains( self ) :
-
-		self.assertFalse(
-			GafferImage.contains(
-				IECore.Box2i(),
-				IECore.V2i( 0 )
-			)
-		)
-
-		self.assertFalse(
-			GafferImage.contains(
-				IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 0 ) ),
-				IECore.V2i( 0 )
-			)
-		)
-
-		self.assertFalse(
-			GafferImage.contains(
-				IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 1 ) ),
-				IECore.V2i( 1 )
-			)
-		)
-
-		self.assertTrue(
-			GafferImage.contains(
-				IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 1 ) ),
-				IECore.V2i( 0 )
-			)
-		)
-
-	def testClamp( self ) :
-
-		self.assertEqual(
-			GafferImage.clamp(
-				IECore.V2i( 5, 6 ),
-				IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 10 ) )
-			),
-			IECore.V2i( 5, 6 )
-		)
-
-		self.assertEqual(
-			GafferImage.clamp(
-				IECore.V2i( 10, 6 ),
-				IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 10 ) )
-			),
-			IECore.V2i( 9, 6 )
-		)
-
-		self.assertEqual(
-			GafferImage.clamp(
-				IECore.V2i( 0, 6 ),
-				IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 10 ) )
-			),
-			IECore.V2i( 0, 6 )
-		)
-
-		self.assertEqual(
-			GafferImage.clamp(
-				IECore.V2i( 5, -1 ),
-				IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 10 ) )
-			),
-			IECore.V2i( 5, 0 )
-		)
-
-		self.assertEqual(
-			GafferImage.clamp(
-				IECore.V2i( 5, 10 ),
-				IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 10 ) )
-			),
-			IECore.V2i( 5, 9 )
-		)
-
 	def testLayerName( self ) :
 
 		for channelName, layerName in [
@@ -205,6 +92,15 @@ class ImageAlgoTest( GafferImageTest.ImageTestCase ) :
 			( "diffuse.left.Z", -1 ),
 		] :
 			self.assertEqual( GafferImage.colorIndex( channelName ), index )
+
+	def testParallelProcessEmptyDataWindow( self ) :
+
+		d = GafferImage.Display()
+		self.assertEqual( d["out"]["dataWindow"].getValue(), IECore.Box2i() )
+
+		GafferImageTest.processTiles( d["out"] )
+		d["out"].image()
+		d["out"].imageHash()
 
 if __name__ == "__main__":
 	unittest.main()

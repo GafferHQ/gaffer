@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,73 +34,88 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/TypedObjectPlug.h"
+#ifndef GAFFERIMAGE_BUFFERALGO_INL
+#define GAFFERIMAGE_BUFFERALGO_INL
 
-#include "GafferImage/ImagePlug.h"
-#include "GafferImage/ChannelMaskPlug.h"
-#include "GafferImage/ImageAlgo.h"
-
-using namespace GafferImage;
-using namespace IECore;
-
-IE_CORE_DEFINERUNTIMETYPED( ChannelMaskPlug );
-
-ChannelMaskPlug::ChannelMaskPlug(
-	const std::string &name,
-	Direction direction,
-	IECore::ConstStringVectorDataPtr defaultValue,
-	unsigned flags
-)
-	:	Gaffer::StringVectorDataPlug( name, direction, defaultValue, flags )
+namespace GafferImage
 {
-}
 
-ChannelMaskPlug::~ChannelMaskPlug()
+//////////////////////////////////////////////////////////////////////////
+// Window/Box utilities
+//////////////////////////////////////////////////////////////////////////
+
+inline bool empty( const Imath::Box2i &window )
 {
-}
-
-void ChannelMaskPlug::maskChannels( std::vector<std::string> &inChannels ) const
-{
-	ConstStringVectorDataPtr channelNamesData = getValue();
-	const std::vector<std::string> &maskChannels = channelNamesData->readable();
-
-	// Intersect the inChannels and the maskChannels in place.
-	std::vector<std::string>::iterator cIt( inChannels.begin() );
-	while ( cIt != inChannels.end() )
+	for( int i = 0; i < 2; ++i )
 	{
-		if ( std::find( maskChannels.begin(), maskChannels.end(), (*cIt) ) == maskChannels.end() )
+		if( window.max[i] <= window.min[i] )
 		{
-			cIt = inChannels.erase( cIt );
-		}
-		else
-		{
-			++cIt;
+			return true;
 		}
 	}
+	return false;
 }
 
-void ChannelMaskPlug::removeDuplicateIndices( std::vector<std::string> &inChannels )
+inline bool intersects( const Imath::Box2i &window1, const Imath::Box2i &window2 )
 {
-	if( inChannels.size() > 1 )
+	for( int i = 0; i < 2; ++i )
 	{
-		std::vector<std::string>::iterator cIt( inChannels.begin() );
-		while ( cIt != inChannels.end() )
+		if( window1.max[i] <= window2.min[i] )
 		{
-			int idx = colorIndex( *cIt );
-			std::vector<std::string>::iterator duplicateIt( cIt + 1 );
-			while ( duplicateIt != inChannels.end() )
-			{
-				if ( colorIndex( *duplicateIt ) == idx )
-				{
-					inChannels.erase( duplicateIt );
-					duplicateIt = cIt + 1;
-				}
-				else
-				{
-					++duplicateIt;
-				}
-			}
-			++cIt;
+			return false;
+		}
+		if( window1.min[i] >= window2.max[i] )
+		{
+			return false;
 		}
 	}
+	return true;
 }
+
+inline Imath::Box2i intersection( const Imath::Box2i &window1, const Imath::Box2i &window2 )
+{
+	Imath::Box2i result;
+	for( int i = 0; i < 2; ++i )
+	{
+		result.min[i] = std::max( window1.min[i], window2.min[i] );
+		result.max[i] = std::min( window1.max[i], window2.max[i] );
+	}
+
+	return result;
+}
+
+inline bool contains( const Imath::Box2i &window, const Imath::V2i &point )
+{
+	for( int i = 0; i < 2; ++i )
+	{
+		if( point[i] < window.min[i] || point[i] >= window.max[i] )
+		{
+			return false;
+		}
+	}
+	return true;
+}
+
+inline bool contains( const Imath::Box2i &window, const Imath::Box2i &area )
+{
+	for( int i = 0; i < 2; ++i )
+	{
+		if( area.min[i] < window.min[i] || area.max[i] > window.max[i] )
+		{
+			return false;
+		}
+	}
+	return true;
+}
+
+inline Imath::V2i clamp( const Imath::V2i &point, const Imath::Box2i &window )
+{
+	return Imath::V2i(
+		std::max( std::min( point.x, window.max.x - 1 ), window.min.x ),
+		std::max( std::min( point.y, window.max.y - 1 ), window.min.y )
+	);
+}
+
+} // namespace GafferImage
+
+#endif // GAFFERIMAGE_BUFFERALGO_INL

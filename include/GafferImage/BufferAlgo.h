@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,27 +34,42 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef GAFFERIMAGE_BUFFERALGO_H
+#define GAFFERIMAGE_BUFFERALGO_H
 
-#include "IECorePython/ScopedGILRelease.h"
+#include <vector>
+#include "OpenEXR/ImathBox.h"
 
-#include "GafferImage/ImagePlug.h"
-
-#include "GafferImageTest/ProcessTiles.h"
-#include "GafferImageTest/ImageReaderTest.h"
-
-using namespace boost::python;
-using namespace GafferImageTest;
-
-static void processTilesWrapper( GafferImage::ImagePlug *imagePlug )
+namespace GafferImage
 {
-	IECorePython::ScopedGILRelease gilRelease;
-	processTiles( imagePlug );
-}
 
-BOOST_PYTHON_MODULE( _GafferImageTest )
-{
-	def( "processTiles", &processTilesWrapper );
-	def( "testOIIOJpgRead", &testOIIOJpgRead );
-	def( "testOIIOExrRead", &testOIIOExrRead );
-}
+/// Image window utility functions. The GafferImage convention is that
+/// the minimum coordinate is included within the window and the
+/// maximum coordinate is outside it - these functions take that into
+/// account and should therefore be used in favour of the Imath equivalents.
+////////////////////////////////////////////////////////////////////////////
+
+/// Returns true if the window contains no pixels, and false otherwise.
+inline bool empty( const Imath::Box2i &window );
+
+/// Returns true if the image windows intersect.
+inline bool intersects( const Imath::Box2i &window1, const Imath::Box2i &window2 );
+
+/// Return the intersection of the two image windows.
+inline Imath::Box2i intersection( const Imath::Box2i &window1, const Imath::Box2i &window2 );
+
+/// Returns true if the given point is inside the window.
+inline bool contains( const Imath::Box2i &window, const Imath::V2i &point );
+
+/// Returns true if the given area is inside the window.
+inline bool contains( const Imath::Box2i &window, const Imath::Box2i &area );
+
+/// Clamps the point so that it is contained inside the window.
+inline Imath::V2i clamp( const Imath::V2i &point, const Imath::Box2i &window );
+
+} // namespace GafferImage
+
+#include "GafferImage/BufferAlgo.inl"
+
+#endif // GAFFERIMAGE_BUFFERALGO_H
+
