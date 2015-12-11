@@ -394,5 +394,18 @@ class ExecutableNodeTest( GafferTest.TestCase ) :
 			self.assertEqual( writer.preTasks( c ), [ GafferDispatch.ExecutableNode.Task( preWriter, c ) ] )
 			self.assertEqual( writer.postTasks( c ), [ GafferDispatch.ExecutableNode.Task( postWriter, c ) ] )
 
+	def testLoadNetworkFromVersion0_19( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["fileName"].setValue( os.path.dirname( __file__ ) + "/scripts/version-0.19.0.0.gfr" )
+		s.load()
+
+		self.assertEqual( len( s["TaskList"]["preTasks"] ), 2 )
+		self.assertEqual( s["TaskList"]["preTasks"][0].getName(), "preTask0" )
+		self.assertEqual( s["TaskList"]["preTasks"][1].getName(), "preTask1" )
+
+		self.assertTrue( s["TaskList"]["preTasks"][0].getInput().isSame( s["SystemCommand"]["task"] ) )
+		self.assertTrue( s["TaskList"]["preTasks"][1].getInput() is None )
+
 if __name__ == "__main__":
 	unittest.main()
