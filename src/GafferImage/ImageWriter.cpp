@@ -177,7 +177,7 @@ class FlatTileWriter
 				m_processWindow( processWindow ),
 				m_inputTilesBounds( Imath::Box2i( ImagePlug::tileOrigin( processWindow.min ), ImagePlug::tileOrigin( processWindow.max - Imath::V2i( 1 ) ) + Imath::V2i( ImagePlug::tileSize() ) ) ),
 				m_outputDataWindow( m_format.fromEXRSpace( Imath::Box2i( Imath::V2i( m_spec.x, m_spec.y ), Imath::V2i( m_spec.x + m_spec.width - 1, m_spec.y + m_spec.height - 1 ) ) ) ),
-				m_numTiles( Imath::V2i( ceil( float( m_spec.width ) / m_spec.tile_width ), ceil( float( m_spec.height ) / m_spec.tile_height ) ) ),
+				m_numTiles( Imath::V2i( (int)ceil( float( m_spec.width ) / m_spec.tile_width ), (int)ceil( float( m_spec.height ) / m_spec.tile_height ) ) ),
 				m_nextTileIndex( 0 ),
 				m_blackTile( NULL )
 		{

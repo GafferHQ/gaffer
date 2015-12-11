@@ -293,7 +293,8 @@ elif env["PLATFORM"] == "posix" :
 		# GCC emits spurious "assuming signed overflow does not occur"
 		# warnings, typically triggered by the comparisons in Box3f::isEmpty().
 		# Downgrade these back to warning status.
-		env.Append( CXXFLAGS = [ "-Wno-error=strict-overflow" ] )
+		if gccVersion >= [ 4, 2 ] :
+			env.Append( CXXFLAGS = [ "-Wno-error=strict-overflow" ] )
 
 	env["GAFFER_PLATFORM"] = "linux"
 
