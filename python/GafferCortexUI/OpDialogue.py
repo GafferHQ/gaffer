@@ -359,7 +359,7 @@ class OpDialogue( GafferUI.Dialogue ) :
 
 	def __initiateErrorDisplay( self, exceptionInfo ) :
 
-		self.__progressIconFrame.setChild( GafferUI.Image( "opDialogueFailure.png" ) )
+		self.__progressIconFrame.setChild( GafferUI.Image( "failure.png" ) )
 		self.__progressLabel.setText( "<h3>Failed</h3>" )
 
 		self.__messageCollapsible.setCollapsed( False )
@@ -417,7 +417,7 @@ class OpDialogue( GafferUI.Dialogue ) :
 		# going to anyway, because we don't want the problems to go unnoticed.
 
 		self.__progressIconFrame.setChild(
-			GafferUI.Image( "opDialogueSuccessWarning.png" if problems else "opDialogueSuccess.png" )
+			GafferUI.Image( "successWarning.png" if problems else "success.png" )
 		)
 
 		completionMessage = "Completed"
@@ -485,6 +485,6 @@ class OpDialogue( GafferUI.Dialogue ) :
 		if isinstance( graphComponent, Gaffer.Plug ) and hasattr( graphComponent, "getValue" ) :
 			with IECore.IgnoredExceptions( Exception ) :
 				Gaffer.Metadata.registerPlugValue( graphComponent, "userDefault", graphComponent.getValue() )
-		
+
 		for child in graphComponent.children() :
 			self.__setUserDefaults( child )
