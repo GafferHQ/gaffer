@@ -1,3 +1,95 @@
+# 0.20.0.0
+==========
+
+Core
+-----------------------------------------------------------------------
+
+- Improved ContextProcessor performance. This shaved 10% off the startup
+  time for a complex render (#1573).
+- Added framesPerSecond plug to ScriptNode. This provides user-level
+  control over the frame rate for each script (#1576).
+- Fixed hang triggered by deletion of a plug during computation
+  (#1576, #1580).
+
+Dispatch
+-----------------------------------------------------------------------
+
+- Moved all dispatch functionality from Gaffer module into a new
+  GafferDispatch module. Backwards compatibility is provided by
+  config files, but it is recommended that code be updated to use
+  GafferDispatch directly (#1577).
+- Renamed "requirements" plug to "preTasks" and "requirement" plug
+  to "task". Again, backwards compatibility is provided by a config
+  file, but it is recommended that code be updated to use the new
+  names (#1577).
+- Added "postTasks". These are nodes that are executed following another
+  node, even if they are not explicitly included in the list of nodes
+  to dispatch (#1577).
+- Added "dispatcher.immediate" plug to all executable nodes. This
+  causes the node to be executed immediately in the current process
+  when dispatched (#1577).
+- Removed "dispatcher.local.executeInForeground" plug - use the new
+  "dispatcher.immediate" plug instead (#1577).
+- Added sequence support to PythonCommand node. This causes the command
+  to be called once for all frames, instead of once per frame (#1578).
+- Fixed bug which could cause all frames downstream of pass-through
+  nodes (like TaskList and TaskContextVariables) to depend on all
+  upstream frames (#1577).
+- Fixed detection of direct dependency cycles (#1577).
+
+Image
+-----------------------------------------------------------------------
+
+- Crop
+  - Added option to crop to a specific format, optionally centered (#1570).
+- Fixed crashes triggered by images with empty data windows (#1575).
+- Improved ImageWriter to write out images progressively as the input
+  image is generated (#1517). This improved speed by 65% and memory usage
+  by 60% when generating a 10K image.
+
+RenderMan
+-----------------------------------------------------------------------
+
+- Fixed crash when reloading coshader arrays.
+
+UI
+-----------------------------------------------------------------------
+
+- Added workaround for PySide bug which prevented stylesheets from
+  working as expected (#1574).
+
+API
+-----------------------------------------------------------------------
+
+- ImageAlgo
+  - Added parallelProcessTiles and parallelGather tiles functions
+    to facilitate easy parallel processing of images (#1517).
+- BufferAlgo
+  - Moved image window methods from ImageAlgo (#1517).
+- Format
+  - Fixed space conversions for empty boxes (#1575).
+- TestCase
+  - Improved output for assertTypeNamesArePrefixed() failures.
+- Dispatch
+  - Renamed requirements -> preTasks
+  - Added LoggingExecutableNode to GafferDispatchTest. This
+    facilitates easier testing of dispatchers.
+
+Build
+-----------------------------------------------------------------------
+
+- Added CXXSTD argument to SConstruct. Pass CXXSTD=c++11 to build
+  with C++11 support (#1586).
+- Added testing with GCC 4.8 and C++11 to Travis test setup (#1586).
+- Updated Cortex version to 9.5.0.
+
+Incompatibilities
+-----------------------------------------------------------------------
+
+- Removed "dispatcher.local.executeInForeground" plug - use the new
+  "dispatcher.immediate" plug instead.
+- Moved image window methods from ImageAlgo.h into BufferAlgo.h.
+
 # 0.19.0.0
 ==========
 
@@ -105,7 +197,7 @@ Build
 Incompatibilities
 -----------------------------------------------------------------------
 
-- ImageTransform now uses OIIO filters rather than GafferImage filters - 
+- ImageTransform now uses OIIO filters rather than GafferImage filters -
   the old filter names are no longer supported.
 - ImageTransform now rotates counter clockwise.
 - Removed Reformat and redirected it to Resize, which supports OIIO filters
