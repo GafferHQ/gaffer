@@ -38,6 +38,7 @@
 #include "boost/bind.hpp"
 
 #include "IECore/LRUCache.h"
+#include "IECore/Renderable.h"
 
 #include "Gaffer/Context.h"
 #include "Gaffer/StringPlug.h"

@@ -36,6 +36,7 @@
 
 #include "IECore/TransformOp.h"
 #include "IECore/DespatchTypedData.h"
+#include "IECore/Primitive.h"
 
 #include "Gaffer/Context.h"
 

@@ -47,6 +47,7 @@
 #include "IECore/StateRenderable.h"
 #include "IECore/AngleConversion.h"
 #include "IECore/MotionBlock.h"
+#include "IECore/Primitive.h"
 
 #include "Gaffer/Context.h"
 #include "Gaffer/ScriptNode.h"

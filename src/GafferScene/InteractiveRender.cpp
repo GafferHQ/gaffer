@@ -44,6 +44,7 @@
 #include "IECore/EditBlock.h"
 #include "IECore/MessageHandler.h"
 #include "IECore/SceneInterface.h"
+#include "IECore/VisibleRenderable.h"
 
 #include "Gaffer/Context.h"
 #include "Gaffer/ScriptNode.h"

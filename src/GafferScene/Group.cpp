@@ -41,6 +41,7 @@
 #include "OpenEXR/ImathBoxAlgo.h"
 
 #include "IECore/CompoundObject.h"
+#include "IECore/CompoundData.h"
 
 #include "Gaffer/Context.h"
 #include "Gaffer/StringPlug.h"

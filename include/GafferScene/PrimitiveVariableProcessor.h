@@ -38,6 +38,8 @@
 #ifndef GAFFERSCENE_PRIMITIVEVARIABLEPROCESSOR_H
 #define GAFFERSCENE_PRIMITIVEVARIABLEPROCESSOR_H
 
+#include "IECore/Primitive.h"
+
 #include "GafferScene/SceneElementProcessor.h"
 
 namespace Gaffer

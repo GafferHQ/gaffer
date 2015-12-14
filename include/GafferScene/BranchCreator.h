@@ -38,6 +38,8 @@
 #ifndef GAFFERSCENE_BRANCHCREATOR_H
 #define GAFFERSCENE_BRANCHCREATOR_H
 
+#include "IECore/CompoundData.h"
+
 #include "GafferScene/SceneProcessor.h"
 #include "GafferScene/Filter.h"
 

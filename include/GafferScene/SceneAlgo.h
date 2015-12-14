@@ -47,6 +47,7 @@ namespace IECore
 
 IE_CORE_FORWARDDECLARE( Transform )
 IE_CORE_FORWARDDECLARE( Camera )
+IE_CORE_FORWARDDECLARE( CompoundData )
 
 } // namespace IECore
 
