@@ -57,7 +57,7 @@ FreezeTransform::FreezeTransform( const std::string &name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new M44fPlug( "__transform", Plug::Out ) );
-	
+
 	// pass through the things we don't want to change
 	outPlug()->attributesPlug()->setInput( inPlug()->attributesPlug() );
 	outPlug()->childNamesPlug()->setInput( inPlug()->childNamesPlug() );

@@ -51,7 +51,7 @@ PrimitiveVariables::PrimitiveVariables( const std::string &name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new CompoundDataPlug( "primitiveVariables" ) );
-	
+
 	// Fast pass-throughs for things we don't modify
 	outPlug()->attributesPlug()->setInput( inPlug()->attributesPlug() );
 	outPlug()->transformPlug()->setInput( inPlug()->transformPlug() );
