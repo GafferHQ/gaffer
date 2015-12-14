@@ -47,6 +47,7 @@
 #include "IECore/StateRenderable.h"
 #include "IECore/AngleConversion.h"
 #include "IECore/MotionBlock.h"
+#include "IECore/Primitive.h"
 
 #include "Gaffer/Context.h"
 #include "Gaffer/ScriptNode.h"
@@ -66,7 +67,7 @@ using namespace GafferScene;
 // to schedule the work. Generally if left to do this, it schedules it by
 // making as many threads as there are cores, to make best use of the hardware.
 // This is all well and good, until you're running multiple renders side-by-side,
-// telling the renderer to use a limited number of threads so they all play nicely 
+// telling the renderer to use a limited number of threads so they all play nicely
 // together. Let's use the example of a 32 core machine with 4 8-thread 3delight
 // renders running side by side.
 //
@@ -165,13 +166,13 @@ SceneProcedural::SceneProcedural( ConstScenePlugPtr scenePlug, const Gaffer::Con
 
 	transformBlurData = globals->member<BoolData>( "attribute:gaffer:transformBlur" );
 	m_attributes.transformBlur = transformBlurData ? transformBlurData->readable() : true;
-	
+
 	const IntData *transformBlurSegmentsData = globals->member<IntData>( "attribute:gaffer:transformBlurSegments" );
 	m_attributes.transformBlurSegments = transformBlurSegmentsData ? transformBlurSegmentsData->readable() : 1;
-	
+
 	deformationBlurData = globals->member<BoolData>( "attribute:gaffer:deformationBlur" );
 	m_attributes.deformationBlur = deformationBlurData ? deformationBlurData->readable() : true;
-	
+
 	const IntData *deformationBlurSegmentsData = globals->member<IntData>( "attribute:gaffer:deformationBlurSegments" );
 	m_attributes.deformationBlurSegments = deformationBlurSegmentsData ? deformationBlurSegmentsData->readable() : 1;
 
@@ -259,7 +260,7 @@ void SceneProcedural::computeBound()
 	}
 	catch( const std::exception &e )
 	{
-		m_bound = Imath::Box3f();	
+		m_bound = Imath::Box3f();
 		std::string name;
 		ScenePlug::pathToString( m_scenePath, name );
 		IECore::msg( IECore::Msg::Error, "SceneProcedural::bound() " + name, e.what() );
@@ -290,7 +291,7 @@ class SceneProcedural::SceneProceduralCreate
 			SceneProceduralContainer &childProcedurals,
 			const SceneProcedural &parent,
 			const vector<InternedString> &childNames
-			
+
 		) :
 			m_childProcedurals( childProcedurals ),
 			m_parent( parent ),
@@ -308,13 +309,13 @@ class SceneProcedural::SceneProceduralCreate
 				m_childProcedurals[ i ] = sceneProcedural;
 			}
 		}
-	
+
 	private:
-	
+
 		SceneProceduralContainer &m_childProcedurals;
 		const SceneProcedural &m_parent;
 		const vector<InternedString> &m_childNames;
-		
+
 };
 
 
@@ -327,7 +328,7 @@ void SceneProcedural::render( Renderer *renderer ) const
 
 	std::string name;
 	ScenePlug::pathToString( m_scenePath, name );
-	
+
 	/// \todo See above.
 	try
 	{
@@ -338,7 +339,7 @@ void SceneProcedural::render( Renderer *renderer ) const
 		const BoolData *visibilityData = attributes->member<BoolData>( "scene:visible" );
 		if( visibilityData && !visibilityData->readable() )
 		{
-		
+
 			if( !m_rendered )
 			{
 				decrementPendingProcedurals();
@@ -475,9 +476,9 @@ IECore::MurmurHash SceneProcedural::hash() const
 void SceneProcedural::updateAttributes( bool full )
 {
 	Context::Scope scopedContext( m_context.get() );
-	
+
 	// \todo: Investigate if it's worth keeping these around and reusing them in SceneProcedural::render().
-	
+
 	ConstCompoundObjectPtr attributes;
 	if( full )
 	{

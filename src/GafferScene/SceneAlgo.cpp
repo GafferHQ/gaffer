@@ -43,6 +43,7 @@
 #include "IECore/CoordinateSystem.h"
 #include "IECore/ClippingPlane.h"
 #include "IECore/NullObject.h"
+#include "IECore/VisibleRenderable.h"
 
 #include "Gaffer/Context.h"
 

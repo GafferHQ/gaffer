@@ -41,6 +41,7 @@
 #include "boost/lexical_cast.hpp"
 
 #include "IECore/VectorTypedData.h"
+#include "IECore/Primitive.h"
 
 #include "Gaffer/Context.h"
 #include "Gaffer/StringPlug.h"
