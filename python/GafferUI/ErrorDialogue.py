@@ -48,22 +48,38 @@ class ErrorDialogue( GafferUI.Dialogue ) :
 
 		GafferUI.Dialogue.__init__( self, title, sizeMode=GafferUI.Window.SizeMode.Manual, **kw )
 
-		with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing = 8 ) as column :
-			with GafferUI.Frame( borderWidth = 8 ) :
-				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal ) :
-					GafferUI.Spacer( IECore.V2i( 1 ) )
-					GafferUI.Label( IECore.StringUtil.wrap( message, 60 ) )
-					GafferUI.Spacer( IECore.V2i( 1 ) )
+		with GafferUI.Frame() as frame :
 
-			if details is not None :
-				with GafferUI.Collapsible( label = "Details", collapsed = True ) :
-					with GafferUI.Frame( borderWidth=8 ) :
+			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing = 8 ) as column :
+
+				GafferUI.Spacer( IECore.V2i( 1 ), parenting = { "expand" : True } )
+
+				GafferUI.Image(
+					"failure.png",
+					parenting = {
+						"horizontalAlignment" : GafferUI.HorizontalAlignment.Center,
+						"expand" : True,
+					}
+				)
+
+				GafferUI.Spacer( IECore.V2i( 250, 1 ), parenting = { "expand"  : True } )
+
+				GafferUI.Label(
+					"<b>" + IECore.StringUtil.wrap( message, 60 ).replace( "\n", "<br>" ) + "</b>",
+					parenting = {
+						"horizontalAlignment" : GafferUI.HorizontalAlignment.Center
+					}
+
+				)
+
+				if details is not None :
+					with GafferUI.Collapsible( label = "Details", collapsed = True ) :
 						GafferUI.MultiLineTextWidget(
 							text = details,
 							editable = False,
 						)
 
-		self._setWidget( column )
+		self._setWidget( frame )
 
 		self.__closeButton = self._addButton( "Close" )
 

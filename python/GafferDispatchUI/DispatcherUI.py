@@ -319,8 +319,8 @@ class DispatcherWindow( GafferUI.Window ) :
 
 	def __dispatchClicked( self, button ) :
 
-		_dispatch( self.__nodes )
-		self.close()
+		if _dispatch( self.__nodes ) :
+			self.close()
 
 	def __dispatcherChanged( self, menu ) :
 
@@ -503,10 +503,16 @@ def _dispatch( nodes ) :
 
 	script = nodes[0].scriptNode()
 	with script.context() :
-		__dispatcherWindow( script ).getCurrentDispatcher().dispatch( nodes )
+		success = False
+		with GafferUI.ErrorDialogue.ExceptionHandler( title = "Dispatch Error" ) :
+			__dispatcherWindow( script ).getCurrentDispatcher().dispatch( nodes )
+			success = True
 
-	scriptWindow = GafferUI.ScriptWindow.acquire( script )
-	scriptWindow._lastDispatch = [ weakref.ref( node ) for node in nodes ]
+	if success :
+		scriptWindow = GafferUI.ScriptWindow.acquire( script )
+		scriptWindow._lastDispatch = [ weakref.ref( node ) for node in nodes ]
+
+	return success
 
 def __dispatcherWindow( script ) :
 

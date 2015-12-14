@@ -1707,7 +1707,7 @@
        style="fill:none;stroke:none" />
     <path
        inkscape:label="#path3910"
-       id="forExport:opDialogueSuccess"
+       id="forExport:success"
        d="m 30.013395,193.54296 c -13.176684,0 -23.8585234,10.68182 -23.8585234,23.8585 0,13.17673 10.6818394,23.85853 23.8585234,23.85853 13.176684,0 23.858505,-10.6818 23.858505,-23.85853 0,-13.17668 -10.681821,-23.8585 -23.858505,-23.8585 z"
        style="opacity:0.98999999;fill:#69ffa5;fill-opacity:1;fill-rule:evenodd;stroke:#3c3c3c;stroke-width:1.99999988;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:0.99215686;stroke-dasharray:none"
        inkscape:connector-curvature="0"
@@ -1718,7 +1718,7 @@
        id="path3236"
        inkscape:connector-curvature="0" />
     <g
-       id="forExport:opDialogueFailure"
+       id="forExport:failure"
        transform="matrix(1.8253088,0,0,1.8253088,-39.283415,-210.61758)"
        inkscape:label="#g4022">
       <path
@@ -2046,7 +2046,7 @@
        inkscape:connector-curvature="0"
        style="opacity:0.98999999000000005;fill:#efc618;fill-opacity:1;fill-rule:evenodd;stroke:#3c3c3c;stroke-width:1.99999988000000006;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:0.99215686000000003;stroke-dasharray:none"
        d="m 30.013395,253.54296 c -13.176684,0 -23.8585234,10.68182 -23.8585234,23.8585 0,13.17673 10.6818394,23.85853 23.8585234,23.85853 13.176684,0 23.858505,-10.6818 23.858505,-23.85853 0,-13.17668 -10.681821,-23.8585 -23.858505,-23.8585 z"
-       id="forExport:opDialogueSuccessWarning"
+       id="forExport:successWarning"
        inkscape:label="#path3910" />
     <path
        inkscape:connector-curvature="0"
@@ -2279,7 +2279,7 @@
     </g>
     <g
        id="g4488"
-       transform="matrix(1.3868993,0,0,1.3868993,-57.129221,-44.589805)"
+       transform="matrix(1.3868993,0,0,1.3868993,-57.129221,-64.589805)"
        style="fill:#779bbc;fill-opacity:1">
       <path
          style="fill:#557490;fill-opacity:1;stroke:#3c3c3c;stroke-width:0.72103286;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
