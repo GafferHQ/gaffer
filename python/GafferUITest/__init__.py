@@ -105,6 +105,7 @@ from LazyMethodTest import LazyMethodTest
 from ReferenceUITest import ReferenceUITest
 from CompoundDataPlugValueWidgetTest import CompoundDataPlugValueWidgetTest
 from GraphGadgetTest import GraphGadgetTest
+from MenuBarTest import MenuBarTest
 
 if __name__ == "__main__":
 	unittest.main()

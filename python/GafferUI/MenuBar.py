@@ -39,6 +39,7 @@ import platform
 
 import IECore
 
+import Gaffer
 import GafferUI
 
 QtGui = GafferUI._qtImport( "QtGui" )
@@ -47,9 +48,15 @@ class MenuBar( GafferUI.Widget ) :
 
 	def __init__( self, definition, **kw ) :
 
-		GafferUI.Widget.__init__( self, _MenuBar(), **kw )
+		menuBar = QtGui.QMenuBar()
+		menuBar.setSizePolicy( QtGui.QSizePolicy( QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Fixed ) )
+		menuBar.setNativeMenuBar( False )
+
+		GafferUI.Widget.__init__( self, menuBar, **kw )
 
 		self.definition = definition
+
+		self.__visibilityChangedConnection = self.visibilityChangedSignal().connect( Gaffer.WeakMethod( self.__visibilityChanged ) )
 
 	def __setattr__( self, key, value ) :
 
@@ -57,7 +64,7 @@ class MenuBar( GafferUI.Widget ) :
 		if key=="definition" :
 
 			self._qtWidget().clear()
-			self._subMenus = []
+			self.__subMenus = []
 
 			done = set()
 			for path, item in self.definition.items() :
@@ -74,35 +81,29 @@ class MenuBar( GafferUI.Widget ) :
 					menu = GafferUI.Menu( subMenuDefinition, _qtParent=self._qtWidget() )
 					menu._qtWidget().setTitle( name )
 					self._qtWidget().addMenu( menu._qtWidget() )
-					self._subMenus.append( menu )
+					self.__subMenus.append( menu )
 
 				done.add( name )
 
-class _MenuBar( QtGui.QMenuBar ) :
+			if self.visible() :
+				self.__buildSubMenusFully()
 
-	def __init__( self, parent=None ) :
+	def __visibilityChanged( self, widget ) :
 
-		QtGui.QMenuBar.__init__( self, parent )
+		if self.visible() :
+			# normally, Menus aren't populated with items until they're shown,
+			# but we need them populated before so that the keyboard shortcuts
+			# become available. we wait until a menu bar show event because we
+			# know then that we're parented below a Window, and many of our menu
+			# commands and status items we use need to find their parent ScriptWindow
+			# before they work properly.
+			self.__buildSubMenusFully()
 
-		self.setSizePolicy( QtGui.QSizePolicy( QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Fixed ) )
+	def __buildSubMenusFully( self ) :
 
-		# disable menu merging on mac
-		self.setNativeMenuBar( False )
-
-	def showEvent( self, event ) :
-
-		# normally, Menus aren't populated with items until they're shown,
-		# but we need them populated before so that the keyboard shortcuts
-		# become available. we wait until a menu bar show event because we
-		# know then that we're parented below a Window, and many of our menu
-		# commands and status items we use need to find their parent ScriptWindow
-		# before they work properly.
-
-		for subMenu in GafferUI.Widget._owner( self )._subMenus :
+		for subMenu in self.__subMenus :
 
 			# in order to avoid the potential overhead caused by building the submenus
 			# fully every time the showEvent is triggered we just do it once
 			if subMenu._qtWidget().isEmpty() :
 				subMenu._buildFully()
-
-		return QtGui.QMenuBar.showEvent( self, event )
