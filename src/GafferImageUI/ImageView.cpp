@@ -147,7 +147,7 @@ class ImageView::ColorInspector : public boost::signals::trackable
 		{
 			if( event.buttons != ButtonEvent::Left || event.modifiers )
 			{
-				return false;
+				return NULL;
 			}
 
 			Pointer::setCurrent( "rgba" );
