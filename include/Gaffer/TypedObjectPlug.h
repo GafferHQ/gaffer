@@ -41,7 +41,6 @@
 #include "IECore/Object.h"
 #include "IECore/VectorTypedData.h"
 #include "IECore/ObjectVector.h"
-#include "IECore/Primitive.h"
 #include "IECore/CompoundObject.h"
 
 #include "Gaffer/ValuePlug.h"
