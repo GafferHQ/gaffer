@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2012-2015, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2012-2019, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -52,6 +52,7 @@
 #include "IECore/MessageHandler.h"
 
 #include "OpenImageIO/imagecache.h"
+#include "OpenImageIO/deepdata.h"
 
 #include "boost/bind.hpp"
 #include "boost/filesystem/path.hpp"
@@ -136,6 +137,8 @@ V2i coordinateDivide( V2i a, V2i b )
 // image, whichever is larger ).  This amortizes the waste from tiles which lie over the edge of a tile batch,
 // and need to be read multiple times.
 // Either way, a tile batch contains all channels stored in the subimage which contains the desired channel.
+// For deep images, the tile batch also contains an extra channel worth of tiles at the end which store the
+// samples offsets.
 //
 // Tile batches are selected using V3i "tileBatchIndex".  The Z component is the subimage to load channels from.
 // The X and Y component select a region of the image.
@@ -174,7 +177,8 @@ class File
 					currentSpec.depth == m_imageSpec.depth &&
 					currentSpec.tile_width == m_imageSpec.tile_width &&
 					currentSpec.tile_height == m_imageSpec.tile_height &&
-					currentSpec.tile_depth == m_imageSpec.tile_depth
+					currentSpec.tile_depth == m_imageSpec.tile_depth &&
+					currentSpec.deep == m_imageSpec.deep
 				) )
 				{
 					IECore::msg( IECore::Msg::Warning, "OpenImageIOReader",
@@ -203,6 +207,13 @@ class File
 						m_channelMap[ channelName ] = ChannelMapEntry( subImageIndex, &n - &currentSpec.channelnames[0] );
 						channelNames.push_back( channelName );
 					}
+				}
+
+				if( currentSpec.deep )
+				{
+					// Don't try to load multiple subimages for deep - we require the same sampleOffsets for
+					// all channels, so we don't really support multiple subimages for deep.
+					break;
 				}
 				subImageIndex++;
 			} while( m_imageInput->seek_subimage( subImageIndex, 0, currentSpec ) );
@@ -234,6 +245,7 @@ class File
 			}
 		}
 
+
 		// Read a chunk of data from the file, formatted as a tile batch that will be stored on the tile batch plug
 		ConstObjectVectorPtr readTileBatch( V3i tileBatchIndex )
 		{
@@ -253,21 +265,38 @@ class File
 
 			// Do the actual read of data
 			std::vector<float> fileData;
+			DeepData fileDeepData;
 			Box2i fileDataRegion;
-			const int nchannels = readRegion( tileBatchIndex.z, targetRegion, fileData, fileDataRegion );
+			const int nchannels = readRegion( tileBatchIndex.z, targetRegion, fileData, fileDeepData, fileDataRegion );
 
 			// Pull data apart into tiles ( separate for each channel instead of interleaved )
 			int tileBatchNumElements = nchannels * m_tileBatchSize.y * m_tileBatchSize.x;
 			ObjectVectorPtr result = new ObjectVector();
 			result->members().resize( tileBatchNumElements );
 
-			for( int c = 0; c < nchannels; c++ )
+			ObjectVectorPtr resultChannels = result;
+
+			std::vector< int > deepTileSizes;
+
+			if( m_imageSpec.deep )
 			{
+				result = new ObjectVector();
+				result->members().resize( 2 );
+				result->members()[1] = resultChannels;
+
+				ObjectVectorPtr resultOffsets = new ObjectVector();
+				resultOffsets->members().resize( m_tileBatchSize.y * m_tileBatchSize.x );
+				result->members()[0] = resultOffsets;
+
+				deepTileSizes.resize( m_tileBatchSize.y * m_tileBatchSize.x );
+
 				for( int ty = batchFirstTile.y; ty < batchFirstTile.y + m_tileBatchSize.y; ty++ )
 				{
 					for( int tx = batchFirstTile.x; tx < batchFirstTile.x + m_tileBatchSize.x; tx++ )
 					{
 						V2i tileOffset = ImagePlug::tileSize() * V2i( tx, ty );
+						int subIndex = tileBatchSubIndex( 0, tileOffset );
+
 						Box2i tileRelativeFileRegion( fileDataRegion.min - tileOffset, fileDataRegion.max - tileOffset );
 						Box2i tileRegion = BufferAlgo::intersection(
 							Box2i( V2i( 0 ), V2i( ImagePlug::tileSize() ) ), tileRelativeFileRegion
@@ -278,35 +307,145 @@ class File
 							// Result will be treated as const as soon as we set it on the plug, and we're not
 							// going to modify any elements after setting them, so it's safe to store a const
 							// value in one of the elements
-							result->members()[ tileBatchSubIndex( c, tileOffset ) ] =
-								const_cast<FloatVectorData*>( ImagePlug::blackTile() );
+							resultOffsets->members()[ subIndex ] = const_cast<IntVectorData*>( ImagePlug::emptyTileSampleOffsets() );
+
 							continue;
 						}
 
-						FloatVectorDataPtr tileData = new IECore::FloatVectorData(
-							std::vector<float>( ImagePlug::tileSize()*ImagePlug::tileSize() )
+						IntVectorDataPtr tileData = new IECore::IntVectorData(
+							std::vector<int>( ImagePlug::tilePixels(), 0 )
 						);
-						vector<float> &tile = tileData->writable();
+						vector<int> &tile = tileData->writable();
+						int curOffset = 0;
 
+						int *tileIndex = &tile[ tileRegion.min.y * ImagePlug::tileSize() + tileRegion.min.x];
 						for( int y = tileRegion.min.y; y < tileRegion.max.y; ++y )
 						{
+							int *newTileIndex = &tile[ y * ImagePlug::tileSize() + tileRegion.min.x ];
 
-							float *tileIndex = &tile[ y * ImagePlug::tileSize() + tileRegion.min.x ];
+							// Any empty pixels we're skipping should get filled with an offset that
+							// hasn't changed
+							while( tileIndex < newTileIndex )
+							{
+								*tileIndex = curOffset;
+								tileIndex++;
+							}
+							tileIndex = newTileIndex;
+
 							int scanline = fileDataRegion.size().y - 1 - (y - tileRelativeFileRegion.min.y);
-							float *dataIndex = &fileData[
-								( scanline * fileDataRegion.size().x + tileRegion.min.x - tileRelativeFileRegion.min.x
-								) * nchannels + c
-							];
+							int dataIndex = scanline * fileDataRegion.size().x +
+								tileRegion.min.x - tileRelativeFileRegion.min.x;
+
 							for( int x = tileRegion.min.x; x < tileRegion.max.x; x++ )
 							{
-								*tileIndex = *dataIndex;
+								curOffset += fileDeepData.samples( dataIndex );
+								*tileIndex = curOffset;
 								tileIndex++;
-								dataIndex += nchannels;
+								dataIndex++;
 							}
 						}
+						// Any empty pixels at the end should get filled with an offset that hasn't changed
+						while( tileIndex <= &tile.back() )
+						{
+							*tileIndex = curOffset;
+							tileIndex++;
+						}
+						resultOffsets->members()[ subIndex ] = tileData;
 
+						deepTileSizes[ ( ty - batchFirstTile.y ) * m_tileBatchSize.x  + tx - batchFirstTile.x ] = curOffset;
+					}
+				}
+			}
 
-						result->members()[ tileBatchSubIndex( c, tileOffset ) ] = tileData;
+			for( int c = 0; c < nchannels; c++ )
+			{
+				for( int ty = batchFirstTile.y; ty < batchFirstTile.y + m_tileBatchSize.y; ty++ )
+				{
+					for( int tx = batchFirstTile.x; tx < batchFirstTile.x + m_tileBatchSize.x; tx++ )
+					{
+						V2i tileOffset = ImagePlug::tileSize() * V2i( tx, ty );
+						int subIndex = tileBatchSubIndex( c, tileOffset );
+
+						Box2i tileRelativeFileRegion( fileDataRegion.min - tileOffset, fileDataRegion.max - tileOffset );
+						Box2i tileRegion = BufferAlgo::intersection(
+							Box2i( V2i( 0 ), V2i( ImagePlug::tileSize() ) ), tileRelativeFileRegion
+						);
+
+						if( BufferAlgo::empty( tileRegion ) )
+						{
+							const FloatVectorData* emptyResult;
+							if( !m_imageSpec.deep )
+							{
+								emptyResult = ImagePlug::blackTile();
+							}
+							else
+							{
+								emptyResult = ImagePlug::emptyTile();
+							}
+
+							// Result will be treated as const as soon as we set it on the plug, and we're not
+							// going to modify any elements after setting them, so it's safe to store a const
+							// value in one of the elements
+							resultChannels->members()[ subIndex ] = const_cast<FloatVectorData*>( emptyResult );
+
+							continue;
+						}
+
+						if( !m_imageSpec.deep )
+						{
+							FloatVectorDataPtr tileData = new IECore::FloatVectorData(
+								std::vector<float>( ImagePlug::tilePixels() )
+							);
+							vector<float> &tile = tileData->writable();
+
+							for( int y = tileRegion.min.y; y < tileRegion.max.y; ++y )
+							{
+
+								float *tileIndex = &tile[ y * ImagePlug::tileSize() + tileRegion.min.x ];
+								int scanline = fileDataRegion.size().y - 1 - (y - tileRelativeFileRegion.min.y);
+								float *dataIndex = &fileData[
+									( scanline * fileDataRegion.size().x + tileRegion.min.x - tileRelativeFileRegion.min.x
+									) * nchannels + c
+								];
+								for( int x = tileRegion.min.x; x < tileRegion.max.x; x++ )
+								{
+									*tileIndex = *dataIndex;
+									tileIndex++;
+									dataIndex += nchannels;
+								}
+							}
+							resultChannels->members()[ subIndex ] = tileData;
+						}
+						else
+						{
+							int curSize = deepTileSizes[ ( ty - batchFirstTile.y ) * m_tileBatchSize.x  + tx - batchFirstTile.x ];
+							FloatVectorDataPtr tileData = new IECore::FloatVectorData(
+								std::vector<float>( curSize )
+							);
+							vector<float> &tile = tileData->writable();
+
+							float *tileIndex = &tile[0];
+
+							for( int y = tileRegion.min.y; y < tileRegion.max.y; ++y )
+							{
+								int scanline = fileDataRegion.size().y - 1 - (y - tileRelativeFileRegion.min.y);
+								int dataIndex = scanline * fileDataRegion.size().x +
+									tileRegion.min.x - tileRelativeFileRegion.min.x;
+
+								for( int x = tileRegion.min.x; x < tileRegion.max.x; x++ )
+								{
+									int s = fileDeepData.samples( dataIndex );
+									for( int i = 0; i < s; i++ )
+									{
+										*tileIndex = fileDeepData.deep_value( dataIndex, c, i );
+										tileIndex++;
+									}
+									dataIndex++;
+								}
+							}
+							assert( tileIndex - &tile[0] == curSize );
+							resultChannels->members()[ subIndex ] = tileData;
+						}
 					}
 				}
 			}
@@ -319,9 +458,19 @@ class File
 		// within that tile to use
 		void findTile( const std::string &channelName, const Imath::V2i &tileOrigin, V3i &batchIndex, int &batchSubIndex ) const
 		{
-			ChannelMapEntry channelMapEntry = m_channelMap.at( channelName );
-			batchIndex = tileBatchIndex( channelMapEntry.subImage, tileOrigin );
-			batchSubIndex = tileBatchSubIndex( channelMapEntry.channelIndex, tileOrigin );
+			if( !channelName.size() )
+			{
+				// For computing sample offsets
+				// This is a bit of a weird interface, I should probably fix it
+				batchIndex = tileBatchIndex( 0, tileOrigin );
+				batchSubIndex = tileBatchSubIndex( 0, tileOrigin );
+			}
+			else
+			{
+				ChannelMapEntry channelMapEntry = m_channelMap.at( channelName );
+				batchIndex = tileBatchIndex( channelMapEntry.subImage, tileOrigin );
+				batchSubIndex = tileBatchSubIndex( channelMapEntry.channelIndex, tileOrigin );
+			}
 		}
 
 		const ImageSpec &imageSpec() const
@@ -340,11 +489,14 @@ class File
 		}
 
 	private:
-
-		// Fill the data array with all data for the specified subImage and target region,
+		// Fill the data vector ( for a flat image ) or the deepData object ( for a deep image )
+		// with all data for the specified subImage and target region,
 		// setting the dataRegion to represent the actual bounds of the data read ( which may have had to
-		// be enlarged to match tile boundaries ), and returning the number of channels read.
-		int readRegion( int subImage, const Box2i &targetRegion, std::vector<float> &data, Box2i &dataRegion )
+		// be enlarged to match tile boundaries ), and returning the number of channels read
+		//
+		// This is currenly only used by readTileBatch below - we always cache to tile batches when reading
+		// channel data.
+		int readRegion( int subImage, const Box2i &targetRegion, std::vector<float> &data, DeepData &deepData, Box2i &dataRegion )
 		{
 			/// \todo OIIO 2.0 introduces thread-safe `read_*()` methods that
 			/// are passed the subimage directly. Upgrade to use those and remove
@@ -370,9 +522,23 @@ class File
 			{
 				fileDataRegion = fileTargetRegion;
 
-				data.resize( subImageSpec.nchannels * fileDataRegion.size().x * fileDataRegion.size().y );
 
-				if( !m_imageInput->read_scanlines( fileDataRegion.min.y, fileDataRegion.max.y, 0, TypeDesc::FLOAT, &data[0] ) )
+				bool success;
+				if( !m_imageSpec.deep )
+				{
+					data.resize( subImageSpec.nchannels * fileDataRegion.size().x * fileDataRegion.size().y );
+					success = m_imageInput->read_scanlines(
+						fileDataRegion.min.y, fileDataRegion.max.y, 0, TypeDesc::FLOAT, &data[0]
+					);
+				}
+				else
+				{
+					success = m_imageInput->read_native_deep_scanlines(
+						fileDataRegion.min.y, fileDataRegion.max.y, 0, 0, subImageSpec.nchannels, deepData
+					);
+				}
+
+				if( !success )
 				{
 					throw IECore::Exception( boost::str (
 						boost::format( "OpenImageIOReader : Failed to read scanlines %i to %i.  Error: %s" ) %
@@ -397,12 +563,26 @@ class File
 					coordinateDivide( fileTargetRegion.max - fileDataOrigin + tileSize - V2i(1), tileSize ) * tileSize + fileDataOrigin
 				) );
 
-				data.resize( subImageSpec.nchannels * fileDataRegion.size().x * fileDataRegion.size().y );
 
-				if( !m_imageInput->read_tiles (
-					fileDataRegion.min.x, fileDataRegion.max.x,
-					fileDataRegion.min.y, fileDataRegion.max.y, 0, 1, TypeDesc::FLOAT, &data[0]
-				) )
+				bool success;
+				if( !m_imageSpec.deep )
+				{
+					data.resize( subImageSpec.nchannels * fileDataRegion.size().x * fileDataRegion.size().y );
+					success = m_imageInput->read_tiles (
+						fileDataRegion.min.x, fileDataRegion.max.x,
+						fileDataRegion.min.y, fileDataRegion.max.y, 0, 1, TypeDesc::FLOAT, &data[0]
+					);
+				}
+				else
+				{
+					success = m_imageInput->read_native_deep_tiles (
+						fileDataRegion.min.x, fileDataRegion.max.x,
+						fileDataRegion.min.y, fileDataRegion.max.y, 0, 1, 0, subImageSpec.nchannels, deepData
+					);
+				}
+
+
+				if( !success )
 				{
 					throw IECore::Exception( boost::str (
 						boost::format( "OpenImageIOReader : Failed to read tiles %i,%i to %i,%i.  Error: %s" ) %
@@ -872,7 +1052,7 @@ IECore::ConstCompoundDataPtr OpenImageIOReader::computeMetadata( const Gaffer::C
 		const int bitsPerSample = spec.get_int_attribute( "oiio:BitsPerSample", 0 );
 		if( bitsPerSample )
 		{
-			dataType = boost::str( boost::format( "uint%d"  ) % bitsPerSample );
+			dataType = boost::str( boost::format( "uint%d" ) % bitsPerSample );
 		}
 	}
 	else if( dataType == "uint" )
@@ -914,6 +1094,77 @@ IECore::ConstStringVectorDataPtr OpenImageIOReader::computeChannelNames( const G
 		return parent->channelNamesPlug()->defaultValue();
 	}
 	return file->channelNamesData();
+}
+
+void OpenImageIOReader::hashDeep( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	ImageNode::hashDeep( output, context, h );
+	hashFileName( context, h );
+	refreshCountPlug()->hash( h );
+	missingFrameModePlug()->hash( h );
+}
+
+bool OpenImageIOReader::computeDeep( const Gaffer::Context *context, const ImagePlug *parent ) const
+{
+	std::string fileName = fileNamePlug()->getValue();
+	FilePtr file = retrieveFile( fileName, (MissingFrameMode)missingFrameModePlug()->getValue(), this, context );
+	if( !file )
+	{
+		return false;
+	}
+	return file->imageSpec().deep;
+}
+
+void OpenImageIOReader::hashSampleOffsets( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	ImageNode::hashSampleOffsets( output, context, h );
+
+	h.append( context->get<V2i>( ImagePlug::tileOriginContextName ) );
+
+	{
+		ImagePlug::GlobalScope c( context );
+		hashFileName( context, h );
+		refreshCountPlug()->hash( h );
+		missingFrameModePlug()->hash( h );
+	}
+}
+
+IECore::ConstIntVectorDataPtr OpenImageIOReader::computeSampleOffsets( const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const
+{
+	ImagePlug::GlobalScope c( context );
+	std::string fileName = fileNamePlug()->getValue();
+	FilePtr file = retrieveFile( fileName, (MissingFrameMode)missingFrameModePlug()->getValue(), this, context );
+
+	if( !file || !file->imageSpec().deep )
+	{
+		return ImagePlug::flatTileSampleOffsets();
+	}
+	else
+	{
+
+		Box2i dataWindow = outPlug()->dataWindowPlug()->getValue();
+		const Box2i tileBound( tileOrigin, tileOrigin + V2i( ImagePlug::tileSize() ) );
+		if( !BufferAlgo::intersects( dataWindow, tileBound ) )
+		{
+			throw IECore::Exception( boost::str(
+				boost::format( "OpenImageIOReader : Invalid tile (%i,%i) -> (%i,%i) not within data window (%i,%i) -> (%i,%i)." ) %
+				tileBound.min.x % tileBound.min.y % tileBound.max.x % tileBound.max.y %
+				dataWindow.min.x % dataWindow.min.y % dataWindow.max.x % dataWindow.max.y
+			) );
+		}
+
+		V3i tileBatchIndex;
+		int subIndex;
+		std::string channelName(""); // TODO - should have better interface for selecting sampleOffsets
+		file->findTile( channelName, tileOrigin, tileBatchIndex, subIndex );
+
+		c.set( g_tileBatchIndexContextName, tileBatchIndex );
+
+		ConstObjectVectorPtr tileBatch = tileBatchPlug()->getValue();
+
+		ConstObjectPtr curTileSampleOffsets = IECore::runTimeCast< const ObjectVector >( tileBatch->members()[0] )->members()[ subIndex ];
+		return IECore::runTimeCast< const IntVectorData >( curTileSampleOffsets );
+	}
 }
 
 void OpenImageIOReader::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
@@ -959,7 +1210,15 @@ IECore::ConstFloatVectorDataPtr OpenImageIOReader::computeChannelData( const std
 	c.set( g_tileBatchIndexContextName, tileBatchIndex );
 
 	ConstObjectVectorPtr tileBatch = tileBatchPlug()->getValue();
-	ConstObjectPtr curTileChannel = tileBatch->members()[ subIndex ];
+	ConstObjectPtr curTileChannel;
+	if( !file->imageSpec().deep )
+	{
+		curTileChannel = tileBatch->members()[ subIndex ];
+	}
+	else
+	{
+		curTileChannel = IECore::runTimeCast< const ObjectVector >( tileBatch->members()[1] )->members()[ subIndex ];
+	}
 	return IECore::runTimeCast< const FloatVectorData >( curTileChannel );
 }
 
