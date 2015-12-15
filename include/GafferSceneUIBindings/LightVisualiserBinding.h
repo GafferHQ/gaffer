@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2015, John Haddon. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,33 +34,14 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENETEST_TESTLIGHT_H
-#define GAFFERSCENETEST_TESTLIGHT_H
+#ifndef GAFFERSCENEUIBINDINGS_LIGHTVISUALISERBINDING_H
+#define GAFFERSCENEUIBINDINGS_LIGHTVISUALISERBINDING_H
 
-#include "GafferScene/Light.h"
-
-#include "GafferSceneTest/TypeIds.h"
-
-namespace GafferSceneTest
+namespace GafferSceneUIBindings
 {
 
-class TestLight : public GafferScene::Light
-{
+void bindLightVisualiser();
 
-	public :
+} // namespace GafferSceneUIBindings
 
-		TestLight( const std::string &name=defaultName<TestLight>() );
-		virtual ~TestLight();
-
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferSceneTest::TestLight, TestLightTypeId, GafferScene::Light );
-
-	protected :
-
-		virtual void hashLight( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual IECore::ObjectVectorPtr computeLight( const Gaffer::Context *context ) const;
-
-};
-
-} // namespace GafferSceneTest
-
-#endif // GAFFERSCENETEST_TESTLIGHT_H
+#endif // GAFFERSCENEUIBINDINGS_LIGHTVISUALISERBINDING_H

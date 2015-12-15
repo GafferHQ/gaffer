@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2015, John Haddon. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,33 +34,52 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENETEST_TESTLIGHT_H
-#define GAFFERSCENETEST_TESTLIGHT_H
+#include "GafferSceneUI/ObjectVisualiser.h"
 
-#include "GafferScene/Light.h"
+using namespace GafferSceneUI;
 
-#include "GafferSceneTest/TypeIds.h"
+ObjectVisualiser::ObjectVisualiser()
+{
+}
 
-namespace GafferSceneTest
+ObjectVisualiser::~ObjectVisualiser()
+{
+}
+
+//////////////////////////////////////////////////////////////////////////
+// Factory
+//////////////////////////////////////////////////////////////////////////
+
+namespace
 {
 
-class TestLight : public GafferScene::Light
+typedef std::map<IECore::TypeId, ConstObjectVisualiserPtr> ObjectVisualisers;
+
+ObjectVisualisers &objectVisualisers()
 {
+	static ObjectVisualisers v;
+	return v;
+}
 
-	public :
+} // namespace
 
-		TestLight( const std::string &name=defaultName<TestLight>() );
-		virtual ~TestLight();
+const ObjectVisualiser *ObjectVisualiser::acquire( IECore::TypeId objectType )
+{
+	const ObjectVisualisers &v = objectVisualisers();
+	while( objectType != IECore::InvalidTypeId )
+	{
+		ObjectVisualisers::const_iterator it = v.find( objectType );
+		if( it != v.end() )
+		{
+			return it->second.get();
+		}
+		objectType = IECore::RunTimeTyped::baseTypeId( objectType );
+	}
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferSceneTest::TestLight, TestLightTypeId, GafferScene::Light );
+	return NULL;
+}
 
-	protected :
-
-		virtual void hashLight( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual IECore::ObjectVectorPtr computeLight( const Gaffer::Context *context ) const;
-
-};
-
-} // namespace GafferSceneTest
-
-#endif // GAFFERSCENETEST_TESTLIGHT_H
+void ObjectVisualiser::registerVisualiser( IECore::TypeId objectType, ConstObjectVisualiserPtr visualiser )
+{
+	objectVisualisers()[objectType] = visualiser;
+}

@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2015, John Haddon. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,33 +34,17 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENETEST_TESTLIGHT_H
-#define GAFFERSCENETEST_TESTLIGHT_H
+#include "IECorePython/RefCountedBinding.h"
 
-#include "GafferScene/Light.h"
+#include "GafferSceneUI/StandardLightVisualiser.h"
+#include "GafferSceneUIBindings/StandardLightVisualiserBinding.h"
 
-#include "GafferSceneTest/TypeIds.h"
+using namespace GafferSceneUI;
 
-namespace GafferSceneTest
+void GafferSceneUIBindings::bindStandardLightVisualiser()
 {
 
-class TestLight : public GafferScene::Light
-{
+	IECorePython::RefCountedClass<StandardLightVisualiser, LightVisualiser>( "StandardLightVisualiser" )
+	;
 
-	public :
-
-		TestLight( const std::string &name=defaultName<TestLight>() );
-		virtual ~TestLight();
-
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferSceneTest::TestLight, TestLightTypeId, GafferScene::Light );
-
-	protected :
-
-		virtual void hashLight( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual IECore::ObjectVectorPtr computeLight( const Gaffer::Context *context ) const;
-
-};
-
-} // namespace GafferSceneTest
-
-#endif // GAFFERSCENETEST_TESTLIGHT_H
+}

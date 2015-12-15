@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2015, Image Engine. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,33 +34,73 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENETEST_TESTLIGHT_H
-#define GAFFERSCENETEST_TESTLIGHT_H
+#include "GafferSceneUI/AttributeVisualiser.h"
+#include "IECoreGL/Group.h"
+#include "IECoreGL/State.h"
 
-#include "GafferScene/Light.h"
+using namespace GafferSceneUI;
 
-#include "GafferSceneTest/TypeIds.h"
-
-namespace GafferSceneTest
+namespace
 {
 
-class TestLight : public GafferScene::Light
+typedef std::vector<ConstAttributeVisualiserPtr> AttributeVisualisers;
+
+AttributeVisualisers &visualisers()
 {
+	static AttributeVisualisers v;
+	return v;
+}
 
-	public :
+} // namespace
 
-		TestLight( const std::string &name=defaultName<TestLight>() );
-		virtual ~TestLight();
+AttributeVisualiser::AttributeVisualiser()
+{
+}
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferSceneTest::TestLight, TestLightTypeId, GafferScene::Light );
+AttributeVisualiser::~AttributeVisualiser()
+{
+}
 
-	protected :
 
-		virtual void hashLight( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual IECore::ObjectVectorPtr computeLight( const Gaffer::Context *context ) const;
+IECoreGL::ConstRenderablePtr AttributeVisualiser::allVisualisations( const IECore::CompoundObject *attributes,
+	IECoreGL::ConstStatePtr &state )
+{
+	const AttributeVisualisers &v = visualisers();
 
-};
+	IECoreGL::GroupPtr resultGroup = NULL;
+	IECoreGL::StatePtr resultState = NULL;
 
-} // namespace GafferSceneTest
+	for( unsigned int i = 0; i < v.size(); i++ )
+	{
+		IECoreGL::ConstStatePtr curState = NULL;
+		IECoreGL::ConstRenderablePtr curVis = v[i]->visualise( attributes, curState );
 
-#endif // GAFFERSCENETEST_TESTLIGHT_H
+		if( curVis )
+		{
+			if( !resultGroup )
+			{
+				resultGroup = new IECoreGL::Group();
+			}
+			// resultGroup will be returned as const, so const-casting the children in order to add them
+			// is safe
+			resultGroup->addChild( const_cast<IECoreGL::Renderable*>( curVis.get() ) );
+		}
+
+		if( curState )
+		{
+			if( !resultState )
+			{
+				resultState = new IECoreGL::State( false );
+			}
+			resultState->add( const_cast<IECoreGL::State*>( curState.get() ) );
+		}
+	}
+
+	state = resultState;
+	return resultGroup;
+}
+
+void AttributeVisualiser::registerVisualiser( ConstAttributeVisualiserPtr visualiser )
+{
+	visualisers().push_back( visualiser );
+}

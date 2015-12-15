@@ -48,3 +48,19 @@ Gaffer.Metadata.registerNode(
 	""",
 
 )
+
+Gaffer.Metadata.registerValue( "light:ri:spotlight", "type", "spot" )
+Gaffer.Metadata.registerValue( "light:ri:spotlight", "coneAngleParameter", "coneangle" )
+Gaffer.Metadata.registerValue( "light:ri:spotlight", "penumbraAngleParameter", "conedeltaangle" )
+Gaffer.Metadata.registerValue( "light:ri:spotlight", "penumbraType", "inset" )
+Gaffer.Metadata.registerValue( "light:ri:spotlight", "angleUnit", "radians" )
+Gaffer.Metadata.registerValue( "light:ri:spotlight", "intensityParameter", "intensity" )
+Gaffer.Metadata.registerValue( "light:ri:spotlight", "colorParameter", "lightcolor" )
+
+Gaffer.Metadata.registerValue( "light:ri:pointlight", "type", "point" )
+Gaffer.Metadata.registerValue( "light:ri:pointlight", "intensityParameter", "intensity" )
+Gaffer.Metadata.registerValue( "light:ri:pointlight", "colorParameter", "lightcolor" )
+
+Gaffer.Metadata.registerValue( "light:ri:distantlight", "type", "distant" )
+Gaffer.Metadata.registerValue( "light:ri:distantlight", "intensityParameter", "intensity" )
+Gaffer.Metadata.registerValue( "light:ri:distantlight", "colorParameter", "lightcolor" )
