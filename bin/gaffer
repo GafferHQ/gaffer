@@ -155,7 +155,11 @@ fi
 ##########################################################################
 
 if [[ -n $GAFFER_DEBUG ]] ; then 
-	exec gdb --args $GAFFER_ROOT/bin/python $GAFFER_ROOT/bin/gaffer.py "$@"
+	if [[ -z $GAFFER_DEBUGGER ]] ; then
+		export GAFFER_DEBUGGER="gdb --args"
+	fi
+
+	exec $GAFFER_DEBUGGER $GAFFER_ROOT/bin/python $GAFFER_ROOT/bin/gaffer.py "$@"
 else
 	exec $GAFFER_ROOT/bin/python $GAFFER_ROOT/bin/gaffer.py "$@"
 fi
