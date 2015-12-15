@@ -37,8 +37,11 @@
 import weakref
 import functools
 import types
+import traceback
 import re
+import sys
 import collections
+import inspect
 
 import IECore
 
@@ -107,6 +110,9 @@ class UIEditor( GafferUI.NodeSetEditor ) :
 
 			self.__plugTab.setSizes( [ 0.3, 0.7 ] )
 
+			# Activators tab
+			self.__activatorEditor = _ActivatorEditor( parenting = { "label" : "Activators" } )
+
 		# initialise our selection to nothing
 
 		self.__node = None
@@ -136,6 +142,11 @@ class UIEditor( GafferUI.NodeSetEditor ) :
 	def plugEditor( self ) :
 
 		return self.__plugTab
+
+	## Returns the widget layout responsible for editing activators.
+	def activatorEditor( self ) :
+
+		return self.__activatorEditor
 
 	@classmethod
 	def appendNodeContextMenuDefinitions( cls, nodeGraph, node, menuDefinition ) :
@@ -174,6 +185,7 @@ class UIEditor( GafferUI.NodeSetEditor ) :
 		if self.__node is None :
 			self.__plugListing.setPlugParent( None )
 			self.__sectionEditor.setPlugParent( None )
+			self.__activatorEditor.setPlugParent( None )
 		else :
 			plugParent = self.__node["user"]
 			if isinstance( self.__node, Gaffer.Box ) :
@@ -185,6 +197,7 @@ class UIEditor( GafferUI.NodeSetEditor ) :
 				plugParent = self.__node
 			self.__plugListing.setPlugParent( plugParent )
 			self.__sectionEditor.setPlugParent( plugParent )
+			self.__activatorEditor.setPlugParent( plugParent )
 
 		for widget in self.__nodeMetadataWidgets :
 			widget.setTarget( self.__node )
@@ -429,6 +442,10 @@ class _MultiLineStringMetadataWidget( _MetadataWidget ) :
 			Gaffer.WeakMethod( self.__editingFinished )
 		)
 
+		self.__activatedConnection = self.__textWidget.activatedSignal().connect(
+			Gaffer.WeakMethod( self.__activated )
+		)
+
 	def textWidget( self ) :
 
 		return self.__textWidget
@@ -438,6 +455,10 @@ class _MultiLineStringMetadataWidget( _MetadataWidget ) :
 		self.__textWidget.setText( value if value is not None else "" )
 
 	def __editingFinished( self, *unused ) :
+
+		self._updateFromWidget( self.__textWidget.getText() )
+
+	def __activated( self, *unused ) :
 
 		self._updateFromWidget( self.__textWidget.getText() )
 
@@ -518,6 +539,90 @@ class _MenuMetadataWidget( _MetadataWidget ) :
 	def __setValue( self, unused, value ) :
 
 		self._updateFromWidget( value )
+
+class _ActivatorMetadataWidget( _MetadataWidget ) :
+
+	def __init__( self, key, target = None, **kw ) :
+
+		self.__menuButton = GafferUI.MenuButton(
+			menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) )
+		)
+
+		self.__currentValue = None
+
+		_MetadataWidget.__init__( self, self.__menuButton, key, target, **kw )
+
+	def _updateFromValue( self, value ) :
+
+		self.__currentValue = value
+		self.__menuButton.setText( value if value else "None" )
+
+	def __menuDefinition( self ) :
+
+		result = IECore.MenuDefinition()
+		if self.getTarget() is None :
+			return result
+
+		for name in _registeredMetadata( self.getTarget().parent() ) :
+
+			if not name.startswith( "layout:activator:" ) :
+				continue
+
+			activatorName = name[17:]
+			result.append(
+				"/" + activatorName,
+				{
+					"command" : functools.partial( self.__setValue, value = activatorName ),
+					"checkBox" : activatorName == self.__currentValue,
+				}
+			)
+
+		result.append(
+			"/None",
+			{
+				"command" : functools.partial( self.__setValue, value = None ),
+				"checkBox" : not self.__currentValue,
+			}
+		)
+
+		result.append( "/EditNewDivider", { "divider" : True } )
+
+		result.append(
+			"/New...",
+			{
+				"command" : functools.partial( self.__new ),
+			}
+		)
+
+		result.append(
+			"/Edit...",
+			{
+				"command" : functools.partial( self.__edit ),
+				"active" : bool( self.__currentValue ),
+			}
+		)
+
+		return result
+
+	def __setValue( self, unused, value ) :
+
+		self._updateFromWidget( value )
+
+	def __new( self ) :
+
+		editor = self.ancestor( UIEditor ).activatorEditor()
+		activator = editor.addActivator()
+
+		self._updateFromWidget( activator )
+		self.__menuButton.setText( activator )
+
+		editor.reveal()
+
+	def __edit( self ) :
+
+		editor = self.ancestor( UIEditor ).activatorEditor()
+		editor.setActivator( self.__currentValue )
+		editor.reveal()
 
 ##########################################################################
 # Hierarchical representation of a plug layout, suitable for manipulating
@@ -1432,6 +1537,16 @@ class _PlugEditor( GafferUI.Widget ) :
 					menu = GafferUI.Menu( Gaffer.WeakMethod( self.__widgetMenuDefinition ) )
 				)
 
+			with _Row() :
+
+				_Label( "Activator" )
+				self.__metadataWidgets["layout:activator"] = _ActivatorMetadataWidget( "layout:activator" )
+
+			with _Row() :
+
+				_Label( "Visibility Activator" )
+				self.__metadataWidgets["layout:visibilityActivator"] = _ActivatorMetadataWidget( "layout:visibilityActivator" )
+
 			with GafferUI.Collapsible( "Presets", collapsed = True ) :
 
 				with _Row() :
@@ -1760,6 +1875,323 @@ class _SectionEditor( GafferUI.Widget ) :
 
 		self.setSection( ".".join( newSectionPath ) )
 		self.nameChangedSignal()( self, ".".join( oldSectionPath ), ".".join( newSectionPath ) )
+
+##########################################################################
+# _ActivatorEditor. This provides a panel for editing the available
+# activators.
+##########################################################################
+
+class _ActivatorEditor( GafferUI.Widget ) :
+
+	def __init__( self, **kw ) :
+
+		row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 8, borderWidth = 8 )
+		GafferUI.Widget.__init__( self, row, **kw )
+
+		with row :
+
+			with GafferUI.ListContainer( spacing = 4 ) :
+
+				self.__pathListing = GafferUI.PathListingWidget(
+					Gaffer.DictPath( collections.OrderedDict(), "/" ),
+					columns = ( GafferUI.PathListingWidget.defaultNameColumn, ),
+				)
+				self.__pathListing.setDragPointer( "" )
+				self.__pathListing.setSortable( False )
+				self.__pathListing.setHeaderVisible( False )
+				self.__pathListing._qtWidget().setFixedWidth( 200 )
+
+				self.__pathListingSelectionChangedConnection = self.__pathListing.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__selectionChanged ) )
+
+				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
+
+					self.__addButton = GafferUI.Button( image = "plus.png", hasFrame = False )
+					self.__addButtonClickedConnection = self.__addButton.clickedSignal().connect( Gaffer.WeakMethod( self.__addButtonClicked ) )
+
+					self.__deleteButton = GafferUI.Button( image = "minus.png", hasFrame = False )
+					self.__deleteButtonClickedConnection = self.__deleteButton.clickedSignal().connect( Gaffer.WeakMethod( self.__deleteButtonClicked ) )
+
+			with GafferUI.ListContainer( spacing = 4 ) as self.__editingColumn :
+
+				GafferUI.Label( "Name" )
+
+				self.__nameWidget = GafferUI.TextWidget()
+				self.__nameEditingFinishedConnection = self.__nameWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__nameEditingFinished ) )
+
+				GafferUI.Spacer( IECore.V2i( 4 ), maximumSize = IECore.V2i( 4 ) )
+
+				GafferUI.Label( "Activator" )
+
+				with GafferUI.SplitContainer() :
+
+					self.__activatorMetadataWidget = _MultiLineStringMetadataWidget( key = "" )
+					self.__dropTextConnection = self.__activatorMetadataWidget.textWidget().dropTextSignal().connect( Gaffer.WeakMethod( self.__dropText ) )
+					self.__activatorMetadataWidget.setToolTip(
+						inspect.cleandoc( # this dedents the triple quoted string
+							"""
+							A Python function to return True or False based on the current values of plugs.
+							This can then be referenced in the plugs section of the UIEditor to drive enabled
+							state and visibility.
+
+							- Retrieve plug values with parent["plugName"].getValue()
+							- Drag + drop plugs onto the text field to automatically insert the appropriate text
+							- Ctrl+Enter to commit
+							"""
+						)
+					)
+
+					self.__diagnosticsWidget = GafferUI.MultiLineTextWidget( "", editable = False )
+
+		self.__parent = None # the parent of the plugs we're editing the activators for
+
+	def setPlugParent( self, parent ) :
+
+		assert( isinstance( parent, ( Gaffer.Plug, Gaffer.Node, types.NoneType ) ) )
+
+		self.__parent = parent
+		self.__activatorMetadataWidget.setTarget( parent )
+
+		if isinstance( self.__parent, Gaffer.Node ) :
+			self.__metadataChangedConnection = Gaffer.Metadata.nodeValueChangedSignal().connect(
+				Gaffer.WeakMethod( self.__nodeMetadataChanged )
+			)
+			self.__plugDirtiedConnection = self.__parent.plugDirtiedSignal().connect(
+				Gaffer.WeakMethod( self.__plugDirtied )
+			)
+		elif isinstance( self.__parent, Gaffer.Plug ) :
+			self.__metadataChangedConnection = Gaffer.Metadata.plugValueChangedSignal().connect(
+				Gaffer.WeakMethod( self.__plugMetadataChanged )
+			)
+			self.__plugDirtiedConnection = self.__parent.node().plugDirtiedSignal().connect(
+				Gaffer.WeakMethod( self.__plugDirtied )
+			)
+		else :
+			self.__metadataChangedConnection = None
+			self.__plugDirtiedConnection = None
+
+		self.setEnabled( self.__parent is not None )
+
+		self.__updatePath()
+		self.__updateDiagnostics()
+
+	def getPlugParent( self ) :
+
+		return self.__parent
+
+	def setActivator( self, activator ) :
+
+		self.__pathListing.setSelectedPaths(
+			self.__pathListing.getPath().copy().setFromString( "/" + activator )
+		)
+
+	def getActivator( self ) :
+
+		selectedPaths = self.__pathListing.getSelectedPaths()
+		if not selectedPaths :
+			return None
+
+		return selectedPaths[0][0]
+
+	def addActivator( self ) :
+
+		existingNames = [ p[0] for p in self.__pathListing.getPath().children() ]
+
+		name = "New Activator"
+		index = 1
+		while name in existingNames :
+			name = "New Activator %d" % index
+			index += 1
+
+		activatorText = inspect.cleandoc( # this dedents the triple quoted string
+			"""
+			def active( parent ) :
+
+				return True
+			"""
+		)
+
+		with Gaffer.UndoContext( self.__parent.ancestor( Gaffer.ScriptNode ) ) :
+			_registerMetadata( self.__parent, "layout:activator:" + name, activatorText )
+
+		self.setActivator( name )
+
+		self.__nameWidget.grabFocus()
+		self.__nameWidget.setSelection( 0, len( name ) )
+
+		return name
+
+	def __updatePath( self ) :
+
+		d = self.__pathListing.getPath().dict()
+		d.clear()
+		if self.__parent is not None :
+			for name in _registeredMetadata( self.__parent, instanceOnly = True, persistentOnly = True ) :
+				if name.startswith( "layout:activator:" ) :
+					d[name[17:]] = True # we don't assign specific meaning to the value, so True will do
+
+		self.__pathListing.getPath().pathChangedSignal()( self.__pathListing.getPath() )
+
+	def __nodeMetadataChanged( self, nodeTypeId, key, node ) :
+
+		if not key.startswith( "layout:activator:" ) :
+			return
+		if node is None or not node.isSame( self.__parent ) :
+			return
+		if not self.__parent.isInstanceOf( nodeTypeId ) :
+			return
+
+		self.__updatePath()
+		self.__updateDiagnostics()
+
+	def __plugMetadataChanged( self, nodeTypeId, plugPath, key, plug ) :
+
+		if not key.startswith( "layout:activator:" ) :
+			return
+		if plug is None or not plug.isSame( self.__parent ) :
+			return
+
+		self.__updatePath()
+		self.__updateDiagnostics()
+
+	def __plugDirtied( self, plug ) :
+
+		self.__updateDiagnostics()
+
+	def __selectionChanged( self, listing ) :
+
+		selectedPaths = listing.getSelectedPaths()
+
+		self.__editingColumn.setEnabled( bool( selectedPaths ) )
+		self.__deleteButton.setEnabled( bool( selectedPaths ) )
+
+		self.__nameWidget.setText( selectedPaths[0][0] if selectedPaths else "" )
+		self.__activatorMetadataWidget.setKey( ( "layout:activator:" + selectedPaths[0][0] ) if selectedPaths else "" )
+
+		self.__updateDiagnostics()
+
+	def __addButtonClicked( self, button ) :
+
+		self.addActivator()
+		return True
+
+	def __deleteButtonClicked( self, button ) :
+
+		paths = self.__pathListing.getPath().children()
+		selectedActivator = self.__pathListing.getSelectedPaths()[0][0]
+		selectedIndex = [ p[0] for p in paths ].index( selectedActivator )
+
+		with Gaffer.UndoContext( self.__parent.ancestor( Gaffer.ScriptNode ) ) :
+
+			for plug in self.__parent.children( Gaffer.Plug ) :
+				if Gaffer.Metadata.plugValue( plug, "layout:activator" ) == selectedActivator :
+					Gaffer.Metadata.deregisterPlugValue( plug, "layout:activator" )
+				if Gaffer.Metadata.plugValue( plug, "layout:visibilityActivator" ) == selectedActivator :
+					Gaffer.Metadata.deregisterPlugValue( plug, "layout:visibilityActivator" )
+
+			_deregisterMetadata( self.__parent, "layout:activator:" + selectedActivator )
+
+		del paths[selectedIndex]
+		if len( paths ) :
+			self.__pathListing.setSelectedPaths( [ paths[min(selectedIndex,len( paths )-1)] ] )
+
+		return True
+
+	def __nameEditingFinished( self, nameWidget ) :
+
+		selectedPaths = self.__pathListing.getSelectedPaths()
+		if not len( selectedPaths ) :
+			return True
+
+		oldName = selectedPaths[0][0]
+		newName = nameWidget.getText()
+
+		if oldName == newName :
+			return True
+
+		items = self.__pathListing.getPath().dict().items()
+		with Gaffer.BlockedConnection( self.__metadataChangedConnection ) :
+			with Gaffer.UndoContext( self.__parent.ancestor( Gaffer.ScriptNode ) ) :
+				_registerMetadata( self.__parent, "layout:activator:" + newName,
+					_metadata( self.__parent, "layout:activator:" + oldName )
+				)
+				_deregisterMetadata( self.__parent, "layout:activator:" + oldName )
+				for plug in self.__parent.children( Gaffer.Plug ) :
+					if Gaffer.Metadata.plugValue( plug, "layout:activator" ) == oldName :
+						Gaffer.Metadata.registerPlugValue( plug, "layout:activator", newName )
+
+		self.__updatePath()
+		self.__pathListing.setSelectedPaths( [ self.__pathListing.getPath().copy().setFromString( "/" + newName ) ] )
+
+		return True
+
+	def __dropText( self, widget, dragData ) :
+
+		if self.__parent is None :
+			return None
+
+		if not isinstance( dragData, Gaffer.Plug ) :
+			return None
+
+		if not self.__parent.isAncestorOf( dragData ) :
+			return None
+
+		name = dragData.relativeName( self.__parent )
+		return "parent" + "".join( [ "['" + n + "']" for n in name.split( "." ) ] ) + ".getValue()"
+
+	def __updateDiagnostics( self ) :
+
+		self.__diagnosticsWidget.setText( "" )
+		if self.__parent is None or not self.getActivator() :
+			return
+
+		value = _metadata( self.__parent, "layout:activator:" + self.getActivator() )
+		if not isinstance( value, str ) :
+			self.__diagnosticsWidget.setText( str( value ) )
+			return
+
+		scope = {}
+		try :
+			with self.ancestor( GafferUI.EditorWidget ).getContext() :
+				exec value in scope, scope
+				for f in scope.values() :
+					if isinstance( f, types.FunctionType ) :
+						active = f( self.__parent )
+						self.__diagnosticsWidget.setText( str( bool( active ) ) )
+		except SyntaxError as e :
+			self.__diagnosticsWidget.appendHTML( self.__syntaxErrorToHTML( e ) )
+		except Exception as e :
+			self.__diagnosticsWidget.appendHTML( self.__exceptionToHTML() )
+
+	## \todo These HTML formatting function are cribbed from ScriptEditor.
+	# Is there somewhere sensible we could put them to be shared? Ideally though,
+	# I think we want to use MarkDown as our standard markup format throughout
+	# Gaffer's code and documentation, in which case a public API involving
+	# MarkDown would make much more sense than one involving HTML.
+	def __codeToHTML( self, code ) :
+
+		code = code.replace( "<", "&lt;" ).replace( ">", "&gt;" )
+		return "<pre>" + code + "</pre>"
+
+	def __syntaxErrorToHTML( self, syntaxError ) :
+
+		formatted = traceback.format_exception_only( SyntaxError, syntaxError )
+		lineNumber = formatted[0].rpartition( "," )[2].strip()
+		headingText = formatted[-1].replace( ":", " : " + lineNumber + " : ", 1 )
+		result = "<h1 class='ERROR'>%s</h1>" % headingText
+		result += "<br>" + self.__codeToHTML( "".join( formatted[1:-1] ) )
+
+		return result
+
+	def __exceptionToHTML( self ) :
+
+		t = traceback.extract_tb( sys.exc_info()[2] )
+		lineNumber = str( t[1][1] )
+		headingText = traceback.format_exception_only( *(sys.exc_info()[:2]) )[0].replace( ":", " : line " + lineNumber + " : ", 1 )
+		result = "<h1 class='ERROR'>%s</h1>" % headingText
+		if len( t ) > 2 :
+			result += "<br>" + self.__codeToHTML( "".join( traceback.format_list( t[2:] ) ) )
+
+		return result
 
 # Metadata utility methods.
 # \todo We should change the Metadata API to provide overloads
