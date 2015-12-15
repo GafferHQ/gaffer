@@ -1,6 +1,12 @@
 # 0.20.0.0
 ==========
 
+Apps
+-----------------------------------------------------------------------
+
+- Added support for choosing the debugger used via a new GAFFER_DEBUGGER
+  environment variable.
+
 Core
 -----------------------------------------------------------------------
 
@@ -47,6 +53,18 @@ Image
   image is generated (#1517). This improved speed by 65% and memory usage
   by 60% when generating a 10K image.
 
+Scene
+-----------------------------------------------------------------------
+
+- Lights are now represented as attributes at a location rather than as
+  objects. This allows lights for multiple different renderers to exist
+  at the same location, allows the creation of area lights, and provides
+  the necessary support for using shader networks within lights in the
+  future (#1590).
+- Shader nodes now support the loading of light shaders (#1590).
+- Added metadata support for specifying the orientation of lights
+  in the renderer (#1590).
+
 RenderMan
 -----------------------------------------------------------------------
 
@@ -55,8 +73,11 @@ RenderMan
 UI
 -----------------------------------------------------------------------
 
+- Improved viewport visualisation of lights (#1590, #11).
 - Added workaround for PySide bug which prevented stylesheets from
   working as expected (#1574).
+- Improved error reporting for failed dispatches (#1593).
+- Fixed graphical glitch in OpDialogue error icon (#1593).
 
 API
 -----------------------------------------------------------------------
@@ -74,6 +95,12 @@ API
   - Renamed requirements -> preTasks
   - Added LoggingExecutableNode to GafferDispatchTest. This
     facilitates easier testing of dispatchers.
+- SceneUI
+  - Added ObjectVisualiser and AttributeVisualiser base classes
+    to support custom representations of objects and attributes
+    within the viewport (#1590).
+- Metadata
+  - Added methods for adding and querying non-node values (#1590).
 
 Build
 -----------------------------------------------------------------------
@@ -81,7 +108,7 @@ Build
 - Added CXXSTD argument to SConstruct. Pass CXXSTD=c++11 to build
   with C++11 support (#1586).
 - Added testing with GCC 4.8 and C++11 to Travis test setup (#1586).
-- Updated Cortex version to 9.5.0.
+- Updated Cortex version to 9.5.0 (minimum requirement is 9.3.0).
 
 Incompatibilities
 -----------------------------------------------------------------------
@@ -89,6 +116,8 @@ Incompatibilities
 - Removed "dispatcher.local.executeInForeground" plug - use the new
   "dispatcher.immediate" plug instead.
 - Moved image window methods from ImageAlgo.h into BufferAlgo.h.
+- Lights are now represented as attributes rather than as objects (#1590).
+- The Parameters node no longer works for lights (#1590).
 
 # 0.19.0.0
 ==========
