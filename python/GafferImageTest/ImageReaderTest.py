@@ -74,8 +74,10 @@ class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 		self.assertEqual( n["out"]["format"].getValue(), oiio["out"]["format"].getValue() )
 		self.assertEqual( n["out"]["dataWindow"].getValue(), oiio["out"]["dataWindow"].getValue() )
 		self.assertEqual( n["out"]["metadata"].getValue(), oiio["out"]["metadata"].getValue() )
+		self.assertEqual( n["out"]["deep"].getValue(), oiio["out"]["deep"].getValue() )
 		self.assertEqual( n["out"]["channelNames"].getValue(), oiio["out"]["channelNames"].getValue() )
-		self.assertEqual( n["out"].channelData( "R", imath.V2i( 0 ) ),oiio["out"].channelData( "R", imath.V2i( 0 ) ) )
+		self.assertEqual( n["out"].sampleOffsets( imath.V2i( 0 ) ), oiio["out"].sampleOffsets( imath.V2i( 0 ) ) )
+		self.assertEqual( n["out"].channelData( "R", imath.V2i( 0 ) ), oiio["out"].channelData( "R", imath.V2i( 0 ) ) )
 		self.assertImagesEqual( n["out"], oiio["out"] )
 
 	def testUnspecifiedFilename( self ) :

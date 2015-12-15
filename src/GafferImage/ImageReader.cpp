@@ -436,6 +436,60 @@ IECore::ConstCompoundDataPtr ImageReader::computeMetadata( const Gaffer::Context
 	}
 }
 
+void ImageReader::hashDeep( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	FrameMaskScope scope( context, this );
+	if( scope.mode() == BlackOutside )
+	{
+		ImageNode::hashDeep( parent, context, h );
+	}
+	else
+	{
+		h = intermediateImagePlug()->deepPlug()->hash();
+	}
+}
+
+bool ImageReader::computeDeep( const Gaffer::Context *context, const ImagePlug *parent ) const
+{
+	FrameMaskScope scope( context, this );
+	if( scope.mode() == BlackOutside )
+	{
+		return intermediateImagePlug()->deepPlug()->defaultValue();
+	}
+	else
+	{
+		return intermediateImagePlug()->deepPlug()->getValue();
+	}
+}
+
+void ImageReader::hashSampleOffsets( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	FrameMaskScope scope( context, this );
+	if( scope.mode() == BlackOutside )
+	{
+		h = intermediateImagePlug()->sampleOffsetsPlug()->defaultValue()->Object::hash();
+	}
+	else
+	{
+		h = intermediateImagePlug()->sampleOffsetsPlug()->hash();
+	}
+}
+
+IECore::ConstIntVectorDataPtr ImageReader::computeSampleOffsets( const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const
+{
+	FrameMaskScope scope( context, this );
+	if( scope.mode() == BlackOutside )
+	{
+		return intermediateImagePlug()->sampleOffsetsPlug()->defaultValue();
+	}
+	else
+	{
+		return intermediateImagePlug()->sampleOffsetsPlug()->getValue();
+	}
+}
+
+
+
 void ImageReader::hashChannelNames( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	FrameMaskScope scope( context, this );
