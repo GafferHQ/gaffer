@@ -107,11 +107,16 @@ class TextTest( GafferImageTest.ImageTestCase ) :
 		text["transform"]["pivot"].setValue( IECore.V2f( 50 ) )
 		text["transform"]["rotate"].setValue( 90 )
 
+		deleteChans = GafferImage.DeleteChannels()
+		deleteChans["in"].setInput( text["out"] )
+		deleteChans["mode"].setValue( GafferImage.DeleteChannels.Mode.Keep )
+		deleteChans["channels"].setValue( IECore.StringVectorData( [ "R", "G", "B", "A" ] ) )
+
 		reader = GafferImage.ImageReader()
 		reader["fileName"].setValue( os.path.dirname( __file__ ) + "/images/text.exr" )
 		expectedImage = reader['out'].image()
 
-		self.assertImagesEqual( text["out"], reader["out"], ignoreMetadata = True, maxDifference = 0.001 )
+		self.assertImagesEqual( deleteChans["out"], reader["out"], ignoreMetadata = True, maxDifference = 0.001 )
 
 	def testHorizontalAlignment( self ) :
 
@@ -154,6 +159,37 @@ class TextTest( GafferImageTest.ImageTestCase ) :
 		# and then must be rounded to pixel space to make the enclosing data window.
 		self.assertAlmostEqual( bottomDW.size().y, centerDW.size().y, delta = 1 )
 		self.assertAlmostEqual( centerDW.size().y, topDW.size().y, delta = 1 )
+
+	# Tests that hashes pass through when the input data is not Flat
+	def testNonFlatHashPassThrough( self ) :
+
+		text = GafferImage.Text()
+		text["size"].setValue( IECore.V2i( 20 ) )
+		text["area"].setValue( IECore.Box2i( IECore.V2i( 5 ), IECore.V2i( 95 ) ) )
+
+		self._testNonFlatHashPassThrough( text )
+
+	def testImagePlugs( self ) :
+
+		constant = GafferImage.Constant()
+		constant["format"].setValue( GafferImage.Format( IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 512 ) ), 1 ) )
+		constant["color"].setValue( IECore.Color4f( 0 ) )
+
+		text = GafferImage.Text()
+		text["in"].setInput( constant["out"] )
+
+		c = Gaffer.Context()
+		c["image:channelName"] = "R"
+		c["image:tileOrigin"] = IECore.V2i( 0 )
+
+		with c :
+			text["out"]["format"].getValue()
+			text["out"]["dataWindow"].getValue()
+			text["out"]["metadata"].getValue()
+			text["out"]["channelNames"].getValue()
+			text["out"]["deepState"].getValue()
+			text["out"]["sampleOffsets"].getValue()
+			text["out"]["channelData"].getValue()
 
 	def testUnparenting( self ) :
 
