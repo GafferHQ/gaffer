@@ -615,6 +615,26 @@ IECore::ConstStringVectorDataPtr OpenImageIOReader::computeChannelNames( const G
 	return result;
 }
 
+void OpenImageIOReader::hashDeepState( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	ImageNode::hashDeepState( output, context, h );
+}
+
+int OpenImageIOReader::computeDeepState( const Gaffer::Context *context, const ImagePlug *parent ) const
+{
+	return ImagePlug::Flat;
+}
+
+void OpenImageIOReader::hashSampleOffsets( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	ImagePlug::flatTileSampleOffsets()->hash( h );
+}
+
+IECore::ConstIntVectorDataPtr OpenImageIOReader::computeSampleOffsets( const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const
+{
+	return ImagePlug::flatTileSampleOffsets();
+}
+
 void OpenImageIOReader::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	ImageNode::hashChannelData( output, context, h );
