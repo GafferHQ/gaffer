@@ -105,7 +105,7 @@ class Merge : public ImageProcessor
 
 		// Performs the merge operation using the functor 'F'.
 		template<typename F>
-		IECore::ConstFloatVectorDataPtr merge( F f, const Imath::V2i &tileOrigin ) const;
+		IECore::ConstFloatVectorDataPtr merge( F f, const std::string &channelName, const Imath::V2i &tileOrigin ) const;
 
 		static size_t g_firstPlugIndex;
 
