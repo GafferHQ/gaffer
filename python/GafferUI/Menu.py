@@ -72,6 +72,7 @@ class Menu( GafferUI.Widget ) :
 
 		self.__popupParent = None
 		self.__popupPosition = None
+		self.__firstTime = True
 
 	## Displays the menu at the specified position, and attached to
 	# an optional parent. If position is not specified then it
@@ -176,6 +177,7 @@ class Menu( GafferUI.Widget ) :
 		# we rebuild each menu every time it's shown, to support the use of callable items to provide
 		# dynamic submenus and item states.
 		self.__build( self._qtWidget() )
+		self.__firstTime = False
 
 		if self.__searchable :
 			# Searchable menus need to initialize a search structure so they can be searched without
@@ -229,6 +231,7 @@ class Menu( GafferUI.Widget ) :
 		# active). See also hideEvent below().
 
 		self.__build( self._qtWidget(), activeOverride=True, recurse=True )
+		self.__firstTime = False
 
 	def __build( self, qtMenu, activeOverride=None, recurse=False ) :
 
@@ -279,8 +282,32 @@ class Menu( GafferUI.Widget ) :
 
 					else :
 
+						# This is causing a problem when I'm docking gaffer in other apps (eg maya).
+						# By default, a QAction has its shortcutContext set to QtCore.Qt.WindowShortcut.
+						# This means the shortcut is scoped on the entire window, meaning eg the gaffer
+						# delete key stomps over maya's delete key when there's a gaffer panel docked in
+						# maya. This means you can no longer delete maya objects, and you're liable to
+						# accidentally delete gaffer nodes etc instead.
+						
+						# I can stop this happening by setting the QAction's shortcutContext to
+						# QtCore.Qt.WidgetWithChildrenShortcut and adding the QAction directly to the 
+						# ScriptWindow. WidgetWithChildrenShortcut means the shortcut is only activated
+						# if one of the descendants of the widget the QAction is added to has focus. This
+						# makes things work again, as the maya viewport isn't a descendant of the ScriptWindow
+						# so things don't clash any more.
+
+						# A remaining problem is that __build can get called multiple times, meaning multiple
+						# actions get added to the ScriptWindow with the same shortcut keys. This leads to
+						# errors like this: "QAction::eventFilter: Ambiguous shortcut overload: Del", so I
+						# set up that __firstTime flag.
+
 						# it's not a submenu
-						qtMenu.addAction( self.__buildAction( item, name, qtMenu, activeOverride ) )
+						qtAction = self.__buildAction( item, name, qtMenu, activeOverride )
+						qtAction.setShortcutContext( QtCore.Qt.WidgetWithChildrenShortcut )
+
+						qtMenu.addAction( qtAction )
+						if self.__firstTime:
+							self.ancestor( GafferUI.Window )._qtWidget().addAction( qtAction )
 
 				done.add( name )
 
