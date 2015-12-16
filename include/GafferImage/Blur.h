@@ -39,21 +39,21 @@
 
 #include "Gaffer/CompoundNumericPlug.h"
 
-#include "GafferImage/ImageProcessor.h"
+#include "GafferImage/FlatImageProcessor.h"
 
 namespace GafferImage
 {
 
 IE_CORE_FORWARDDECLARE( Resample )
 
-class Blur : public ImageProcessor
+class Blur : public FlatImageProcessor
 {
 	public :
 
 		Blur( const std::string &name=defaultName<Blur>() );
 		virtual ~Blur();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::Blur, BlurTypeId, ImageProcessor );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::Blur, BlurTypeId, FlatImageProcessor );
 
 		Gaffer::V2fPlug *radiusPlug();
 		const Gaffer::V2fPlug *radiusPlug() const;
@@ -87,11 +87,11 @@ class Blur : public ImageProcessor
 		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const;
 
-		virtual void hashDataWindow( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual Imath::Box2i computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const;
+		virtual void hashFlatDataWindow( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual Imath::Box2i computeFlatDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const;
 
-		virtual void hashChannelData( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual IECore::ConstFloatVectorDataPtr computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const;
+		virtual void hashFlatChannelData( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual IECore::ConstFloatVectorDataPtr computeFlatChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const;
 
 		static size_t g_firstPlugIndex;
 
