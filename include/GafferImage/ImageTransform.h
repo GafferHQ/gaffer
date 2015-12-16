@@ -37,7 +37,7 @@
 #ifndef GAFFERSCENE_IMAGETRANSFORM_H
 #define GAFFERSCENE_IMAGETRANSFORM_H
 
-#include "GafferImage/ImageProcessor.h"
+#include "GafferImage/FlatImageProcessor.h"
 
 namespace Gaffer
 {
@@ -52,14 +52,14 @@ namespace GafferImage
 
 IE_CORE_FORWARDDECLARE( Resample )
 
-class GAFFERIMAGE_API ImageTransform : public ImageProcessor
+class GAFFERIMAGE_API ImageTransform : public FlatImageProcessor
 {
 	public :
 
 		ImageTransform( const std::string &name=defaultName<ImageTransform>() );
 		~ImageTransform() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferImage::ImageTransform, ImageTransformTypeId, ImageProcessor );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferImage::ImageTransform, ImageTransformTypeId, FlatImageProcessor );
 
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 

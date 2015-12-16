@@ -54,7 +54,7 @@ GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Mix );
 size_t Mix::g_firstPlugIndex = 0;
 
 Mix::Mix( const std::string &name )
-	:	ImageProcessor( name, 2, 2 )
+	:	FlatImageProcessor( name, 2, 2 )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new ImagePlug( "mask", Gaffer::Plug::In ) );
@@ -104,7 +104,7 @@ const Gaffer::StringPlug *Mix::maskChannelPlug() const
 
 void Mix::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
-	ImageProcessor::affects( input, outputs );
+	FlatImageProcessor::affects( input, outputs );
 
 	if( input == maskChannelPlug() || input == mixPlug() || input == maskPlug()->channelDataPlug() )
 	{
@@ -138,7 +138,7 @@ void Mix::hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Co
 		return;
 	}
 
-	ImageProcessor::hashDataWindow( output, context, h );
+	FlatImageProcessor::hashDataWindow( output, context, h );
 
 	for( ImagePlugIterator it( inPlugs() ); !it.done(); ++it )
 	{
@@ -182,7 +182,7 @@ void Mix::hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::
 		return;
 	}
 
-	ImageProcessor::hashChannelNames( output, context, h );
+	FlatImageProcessor::hashChannelNames( output, context, h );
 
 	for( ImagePlugIterator it( inPlugs() ); !it.done(); ++it )
 	{
@@ -247,7 +247,7 @@ void Mix::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::C
 		return;
 	}
 
-	ImageProcessor::hashChannelData( output, context, h );
+	FlatImageProcessor::hashChannelData( output, context, h );
 	h.append( mix );
 
 	const std::string channelName = context->get<std::string>( ImagePlug::channelNameContextName );
@@ -415,3 +415,27 @@ IECore::ConstFloatVectorDataPtr Mix::computeChannelData( const std::string &chan
 
 	return resultData;
 }
+
+void Mix::hashDeepState( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	const float mix = mixPlug()->getValue();
+
+	if( mix == 0.0f )
+	{
+		// If the mix is 0, we are totally a pass-through, and we don't even check if the image is deep
+		h = inPlugs()->getChild< ImagePlug >( 0 )->deepStatePlug()->hash();
+	}
+	else if( mix == 1.0f && !maskPlug()->getInput<ValuePlug>() )
+	{
+		// If the mix is 1, and there is no mask, we are totally a pass-through,
+		// and we don't even check if the image is deep
+		h = inPlugs()->getChild< ImagePlug >( 1 )->deepStatePlug()->hash();
+	}
+	else
+	{
+		// This changes the hash so that our compute is called, and we can check if the deep state is valid
+		FlatImageProcessor::hashDeepState( parent, context, h );
+	}
+}
+
+// TODO - need to override computeDeepState

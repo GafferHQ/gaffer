@@ -428,6 +428,23 @@ class MergeTest( GafferImageTest.ImageTestCase ) :
 		self.assertAlmostEqual( sampler["color"]["b"].getValue(), 0.3 + 0.1 )
 		self.assertAlmostEqual( sampler["color"]["a"].getValue(), 0.4 + 0.2 )
 
+	def testNonFlatThrows( self ) :
+
+		deep = GafferImage.Empty()
+		flat = GafferImage.Constant()
+
+		merge = GafferImage.Merge()
+		merge["in"][0].setInput( flat["out"] )
+		merge["in"][1].setInput( flat["out"] )
+
+		self.assertNotEqual( GafferImage.ImageAlgo.imageHash( merge["out"] ), GafferImage.ImageAlgo.imageHash( flat["out"] ) )
+
+		merge["in"][0].setInput( deep["out"] )
+		self.assertRaisesRegexp( RuntimeError, 'Deep data not supported in input "in.in0"', GafferImage.ImageAlgo.image, merge["out"] )
+		merge["in"][0].setInput( flat["out"] )
+		merge["in"][1].setInput( deep["out"] )
+		self.assertRaisesRegexp( RuntimeError, 'Deep data not supported in input "in.in1"', GafferImage.ImageAlgo.image, merge["out"] )
+
 	def testDefaultFormat( self ) :
 
 		a = GafferImage.Constant()

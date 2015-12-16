@@ -85,7 +85,7 @@ GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( CopyChannels );
 size_t CopyChannels::g_firstPlugIndex = 0;
 
 CopyChannels::CopyChannels( const std::string &name )
-	:	ImageProcessor( name, /* minInputs = */ 2 )
+	:	FlatImageProcessor( name, /* minInputs = */ 2 )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 
@@ -122,7 +122,7 @@ const Gaffer::CompoundObjectPlug *CopyChannels::mappingPlug() const
 
 void CopyChannels::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
-	ImageProcessor::affects( input, outputs );
+	FlatImageProcessor::affects( input, outputs );
 
 	const ImagePlug *imagePlug = input->parent<ImagePlug>();
 	if( imagePlug && imagePlug->parent<Plug>() != inPlugs() )
@@ -159,7 +159,7 @@ void CopyChannels::affects( const Gaffer::Plug *input, AffectedPlugsContainer &o
 
 void CopyChannels::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	ImageProcessor::hash( output, context, h );
+	FlatImageProcessor::hash( output, context, h );
 
 	if( output == mappingPlug() )
 	{
@@ -215,13 +215,13 @@ void CopyChannels::compute( Gaffer::ValuePlug *output, const Gaffer::Context *co
 		return;
 	}
 
-	ImageProcessor::compute( output, context );
+	FlatImageProcessor::compute( output, context );
 }
 
 
 void CopyChannels::hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	ImageProcessor::hashDataWindow( output, context, h );
+	FlatImageProcessor::hashDataWindow( output, context, h );
 
 	for( ImagePlugIterator it( inPlugs() ); !it.done(); ++it )
 	{
@@ -242,7 +242,7 @@ Imath::Box2i CopyChannels::computeDataWindow( const Gaffer::Context *context, co
 
 void CopyChannels::hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	ImageProcessor::hashChannelNames( output, context, h );
+	FlatImageProcessor::hashChannelNames( output, context, h );
 
 	mappingPlug()->hash( h );
 }
@@ -279,7 +279,7 @@ void CopyChannels::hashChannelData( const GafferImage::ImagePlug *parent, const 
 		}
 		else
 		{
-			ImageProcessor::hashChannelData( parent, context, h );
+			FlatImageProcessor::hashChannelData( parent, context, h );
 			if( !BufferAlgo::empty( validBound ) )
 			{
 				inputImage->channelDataPlug()->hash( h );

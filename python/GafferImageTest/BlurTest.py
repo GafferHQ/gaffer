@@ -40,7 +40,6 @@ import imath
 import IECore
 
 import Gaffer
-import GafferTest
 import GafferImage
 import GafferImageTest
 import os
@@ -57,6 +56,13 @@ class BlurTest( GafferImageTest.ImageTestCase ) :
 
 		self.assertImageHashesEqual( c["out"], b["out"] )
 		self.assertImagesEqual( c["out"], b["out"] )
+
+	def testNonFlatThrows( self ) :
+
+		blur = GafferImage.Blur()
+		blur["radius"].setValue( imath.V2f( 1 ) )
+
+		self.assertRaisesDeepNotSupported( blur )
 
 	def testExpandDataWindow( self ) :
 

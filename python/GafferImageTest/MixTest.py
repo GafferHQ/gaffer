@@ -423,5 +423,26 @@ class MixTest( GafferImageTest.ImageTestCase ) :
 		m["maskChannel"].setValue( "DOES_NOT_EXIST" )
 		self.assertEqual( sample( 49, 49 ), imath.Color3f( 0.75, 0.25, 0 ) )
 
+	def testNonFlatThrows( self ) :
+
+		deep1 = self.deepImage()
+		deep2 = self.deepImage()
+		deep1["deepState"].setValue( GafferImage.ImagePlug.DeepState.Flat )
+		deep2["deepState"].setValue( GafferImage.ImagePlug.DeepState.Flat )
+
+		mix = GafferImage.Mix()
+		mix["mix"].setValue( 0.5 )
+		mix["in"][0].setInput( deep1["out"] )
+		mix["in"][1].setInput( deep2["out"] )
+
+		self.assertNotEqual( GafferImage.ImageAlgo.imageHash( mix["out"] ), GafferImage.ImageAlgo.imageHash( deep1["out"] ) )
+
+		deep1["deepState"].setValue( GafferImage.ImagePlug.DeepState.Messy )
+		self.assertRaisesRegexp( RuntimeError, 'Deep data not supported in input "in.in0"', GafferImage.ImageAlgo.image, mix["out"] )
+		deep1["deepState"].setValue( GafferImage.ImagePlug.DeepState.Flat )
+		deep2["deepState"].setValue( GafferImage.ImagePlug.DeepState.Messy )
+		self.assertRaisesRegexp( RuntimeError, 'Deep data not supported in input "in.in1"', GafferImage.ImageAlgo.image, mix["out"] )
+
+
 if __name__ == "__main__":
 	unittest.main()

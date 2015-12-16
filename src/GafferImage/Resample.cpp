@@ -242,7 +242,7 @@ GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Resample );
 size_t Resample::g_firstPlugIndex = 0;
 
 Resample::Resample( const std::string &name )
-	:   ImageProcessor( name )
+	:   FlatImageProcessor( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new M33fPlug( "matrix" ) );
@@ -341,7 +341,7 @@ const ImagePlug *Resample::horizontalPassPlug() const
 
 void Resample::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
-	ImageProcessor::affects( input, outputs );
+	FlatImageProcessor::affects( input, outputs );
 
 	if(
 		input == inPlug()->dataWindowPlug() ||
@@ -373,7 +373,7 @@ void Resample::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outpu
 
 void Resample::hashDataWindow( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	ImageProcessor::hashDataWindow( parent, context, h );
+	FlatImageProcessor::hashDataWindow( parent, context, h );
 
 	inPlug()->dataWindowPlug()->hash( h );
 	matrixPlug()->hash( h );
@@ -452,7 +452,7 @@ Imath::Box2i Resample::computeDataWindow( const Gaffer::Context *context, const 
 
 void Resample::hashChannelData( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	ImageProcessor::hashChannelData( parent, context, h );
+	FlatImageProcessor::hashChannelData( parent, context, h );
 
 	V2f ratio, offset;
 	{

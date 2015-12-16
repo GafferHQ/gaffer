@@ -58,7 +58,7 @@ size_t Shape::g_firstPlugIndex = 0;
 static std::string g_shapeChannelName( "__shape" );
 
 Shape::Shape( const std::string &name )
-	:	ImageProcessor( name )
+	:	FlatImageProcessor( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 
@@ -190,7 +190,7 @@ const ImagePlug *Shape::shadowShapePlug() const
 
 void Shape::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
-	ImageProcessor::affects( input, outputs );
+	FlatImageProcessor::affects( input, outputs );
 
 	// TypeId comparison is necessary to avoid calling pure virtual
 	// methods below if we're called before being fully constructed.
@@ -237,7 +237,7 @@ Imath::Box2i Shape::computeDataWindow( const Gaffer::Context *context, const Ima
 void Shape::hashChannelNames( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	assert( parent == shapePlug() );
-	ImageProcessor::hashChannelNames( parent, context, h );
+	FlatImageProcessor::hashChannelNames( parent, context, h );
 	// Because our channel names are constant, we don't need to add
 	// anything else to the hash.
 }
@@ -272,7 +272,7 @@ void Shape::hashChannelData( const GafferImage::ImagePlug *parent, const Gaffer:
 		}
 		else
 		{
-			ImageProcessor::hashChannelData( parent, context, h );
+			FlatImageProcessor::hashChannelData( parent, context, h );
 			h.append( shapeHash );
 			h.append( c );
 		}
@@ -329,7 +329,7 @@ bool Shape::affectsShapeDataWindow( const Gaffer::Plug *input ) const
 
 void Shape::hashShapeDataWindow( const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	ImageProcessor::hashDataWindow( shapePlug(), context, h );
+	FlatImageProcessor::hashDataWindow( shapePlug(), context, h );
 }
 
 bool Shape::affectsShapeChannelData( const Gaffer::Plug *input ) const
@@ -339,5 +339,5 @@ bool Shape::affectsShapeChannelData( const Gaffer::Plug *input ) const
 
 void Shape::hashShapeChannelData( const Imath::V2i &tileOrigin, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	ImageProcessor::hashChannelData( shapePlug(), context, h );
+	FlatImageProcessor::hashChannelData( shapePlug(), context, h );
 }

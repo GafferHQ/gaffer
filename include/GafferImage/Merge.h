@@ -37,7 +37,7 @@
 #ifndef GAFFERIMAGE_MERGE_H
 #define GAFFERIMAGE_MERGE_H
 
-#include "GafferImage/ImageProcessor.h"
+#include "GafferImage/FlatImageProcessor.h"
 
 #include "Gaffer/NumericPlug.h"
 
@@ -56,7 +56,7 @@ namespace GafferImage
 /// - For some operations we do not need to track the intermediate alpha values at all.
 /// - We could improve our masking of invalid pixels with special cases for wholly valid tiles,
 ///   wholly invalid tiles, and by chunking the work on the valid sections.
-class GAFFERIMAGE_API Merge : public ImageProcessor
+class GAFFERIMAGE_API Merge : public FlatImageProcessor
 {
 
 	public :
@@ -64,7 +64,7 @@ class GAFFERIMAGE_API Merge : public ImageProcessor
 		Merge( const std::string &name=defaultName<Merge>() );
 		~Merge() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferImage::Merge, MergeTypeId, ImageProcessor );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferImage::Merge, MergeTypeId, FlatImageProcessor );
 
 		enum Operation
 		{

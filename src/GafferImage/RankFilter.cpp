@@ -54,7 +54,7 @@ GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( RankFilter );
 size_t RankFilter::g_firstPlugIndex = 0;
 
 RankFilter::RankFilter( const std::string &name, Mode mode )
-	:   ImageProcessor( name )
+	:   FlatImageProcessor( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 
@@ -127,7 +127,7 @@ const Gaffer::V2iVectorDataPlug *RankFilter::pixelOffsetsPlug() const
 
 void RankFilter::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
-	ImageProcessor::affects( input, outputs );
+	FlatImageProcessor::affects( input, outputs );
 
 	if(
 		input == expandDataWindowPlug() ||
@@ -159,7 +159,7 @@ void RankFilter::hashDataWindow( const GafferImage::ImagePlug *parent, const Gaf
 		return;
 	}
 
-	ImageProcessor::hashDataWindow( parent, context, h );
+	FlatImageProcessor::hashDataWindow( parent, context, h );
 	h.append( radius );
 }
 
@@ -182,7 +182,7 @@ Imath::Box2i RankFilter::computeDataWindow( const Gaffer::Context *context, cons
 
 void RankFilter::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	ImageProcessor::hash( output, context, h );
+	FlatImageProcessor::hash( output, context, h );
 	if( output == pixelOffsetsPlug() )
 	{
 		const V2i radius = radiusPlug()->getValue();
@@ -308,7 +308,7 @@ void RankFilter::compute( Gaffer::ValuePlug *output, const Gaffer::Context *cont
 	}
 	else
 	{
-		ImageProcessor::compute( output, context );
+		FlatImageProcessor::compute( output, context );
 	}
 }
 
@@ -322,7 +322,7 @@ void RankFilter::hashChannelData( const GafferImage::ImagePlug *parent, const Ga
 		return;
 	}
 
-	ImageProcessor::hashChannelData( parent, context, h );
+	FlatImageProcessor::hashChannelData( parent, context, h );
 
 	const V2i tileOrigin = context->get<V2i>( ImagePlug::tileOriginContextName );
 	const Box2i tileBound( tileOrigin, tileOrigin + V2i( ImagePlug::tileSize() ) );

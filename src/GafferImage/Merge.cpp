@@ -74,7 +74,7 @@ GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Merge );
 size_t Merge::g_firstPlugIndex = 0;
 
 Merge::Merge( const std::string &name )
-	:	ImageProcessor( name, 2 )
+	:	FlatImageProcessor( name, 2 )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild(
@@ -108,7 +108,7 @@ const Gaffer::IntPlug *Merge::operationPlug() const
 
 void Merge::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
-	ImageProcessor::affects( input, outputs );
+	FlatImageProcessor::affects( input, outputs );
 
 	if( input == operationPlug() )
 	{
@@ -125,7 +125,7 @@ void Merge::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs 
 
 void Merge::hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	ImageProcessor::hashDataWindow( output, context, h );
+	FlatImageProcessor::hashDataWindow( output, context, h );
 
 	for( ImagePlugIterator it( inPlugs() ); !it.done(); ++it )
 	{
@@ -150,7 +150,7 @@ Imath::Box2i Merge::computeDataWindow( const Gaffer::Context *context, const Ima
 
 void Merge::hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	ImageProcessor::hashChannelNames( output, context, h );
+	FlatImageProcessor::hashChannelNames( output, context, h );
 
 	for( ImagePlugIterator it( inPlugs() ); !it.done(); ++it )
 	{
@@ -192,7 +192,7 @@ IECore::ConstStringVectorDataPtr Merge::computeChannelNames( const Gaffer::Conte
 
 void Merge::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	ImageProcessor::hashChannelData( output, context, h );
+	FlatImageProcessor::hashChannelData( output, context, h );
 
 	const std::string channelName = context->get<std::string>( ImagePlug::channelNameContextName );
 	const V2i tileOrigin = context->get<V2i>( ImagePlug::tileOriginContextName );
@@ -336,6 +336,14 @@ IECore::ConstFloatVectorDataPtr Merge::merge( F f, const std::string &channelNam
 			alphaData = ImagePlug::blackTile();
 		}
 
+		if( (int)alphaData->readable().size() != ImagePlug::tilePixels()  )
+		{
+			throw IECore::Exception( "Merge::computeChannelData : Cannot process deep data." );
+		}
+		if( (int)channelData->readable().size() != ImagePlug::tilePixels() )
+		{
+			throw IECore::Exception( "Merge::computeChannelData : Cannot process deep data." );
+		}
 
 		if( !resultData )
 		{

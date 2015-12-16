@@ -95,7 +95,7 @@ GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Mirror );
 size_t Mirror::g_firstPlugIndex = 0;
 
 Mirror::Mirror( const std::string &name )
-	:	ImageProcessor( name )
+	:	FlatImageProcessor( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new BoolPlug( "horizontal" ) );
@@ -132,7 +132,7 @@ const Gaffer::BoolPlug *Mirror::verticalPlug() const
 
 void Mirror::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
-	ImageProcessor::affects( input, outputs );
+	FlatImageProcessor::affects( input, outputs );
 
 	const bool affectsTransform =
 		input == inPlug()->formatPlug() ||
@@ -168,7 +168,7 @@ void Mirror::hashDataWindow( const GafferImage::ImagePlug *parent, const Gaffer:
 		return;
 	}
 
-	ImageProcessor::hashDataWindow( parent, context, h );
+	FlatImageProcessor::hashDataWindow( parent, context, h );
 	inPlug()->dataWindowPlug()->hash( h );
 	inPlug()->formatPlug()->hash( h );
 	h.append( horizontal );
@@ -209,7 +209,7 @@ void Mirror::hashChannelData( const GafferImage::ImagePlug *parent, const Gaffer
 		return;
 	}
 
-	ImageProcessor::hashChannelData( parent, context, h );
+	FlatImageProcessor::hashChannelData( parent, context, h );
 
 	const std::string &channelName = context->get<string>( ImagePlug::channelNameContextName );
 	const V2i tileOrigin = context->get<V2i>( ImagePlug::tileOriginContextName );

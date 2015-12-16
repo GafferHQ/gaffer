@@ -211,5 +211,12 @@ class ResampleTest( GafferImageTest.ImageTestCase ) :
 		bt.cancelAndWait()
 		self.assertLess( time.time() - t, acceptableCancellationDelay )
 
+	def testNonFlatThrows( self ) :
+
+		resample = GafferImage.Resample()
+		resample["matrix"].setValue( imath.M33f().scale( imath.V2f( 0.5 ) ) )
+
+		self.assertRaisesDeepNotSupported( resample )
+
 if __name__ == "__main__":
 	unittest.main()
