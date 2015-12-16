@@ -389,6 +389,38 @@ class MergeTest( GafferImageTest.ImageTestCase ) :
 		self.assertAlmostEqual( sampler["color"]["b"].getValue(), 0.2 )
 		self.assertAlmostEqual( sampler["color"]["a"].getValue(), 0.2 )
 
+	def testChannelRequest( self ) :
+
+		a = GafferImage.Constant()
+		a["color"].setValue( IECore.Color4f( 0.1, 0.2, 0.3, 0.4 ) )
+
+		ad = GafferImage.DeleteChannels()
+		ad["in"].setInput( a["out"] )
+		ad["mode"].setValue( GafferImage.DeleteChannels.Mode.Delete )
+		ad["channels"].setValue( IECore.StringVectorData( [ "R" ] ) )
+
+		b = GafferImage.Constant()
+		b["color"].setValue( IECore.Color4f( 1.0, 0.3, 0.1, 0.2 ) )
+
+		bd = GafferImage.DeleteChannels()
+		bd["in"].setInput( b["out"] )
+		bd["mode"].setValue( GafferImage.DeleteChannels.Mode.Delete )
+		bd["channels"].setValue( IECore.StringVectorData( [ "G" ] ) )
+
+		merge = GafferImage.Merge()
+		merge["in"][0].setInput( ad["out"] )
+		merge["in"][1].setInput( bd["out"] )
+		merge["operation"].setValue( GafferImage.Merge.Operation.Add )
+
+		sampler = GafferImage.ImageSampler()
+		sampler["image"].setInput( merge["out"] )
+		sampler["pixel"].setValue( IECore.V2f( 10 ) )
+
+		self.assertAlmostEqual( sampler["color"]["r"].getValue(), 0.0 + 1.0 )
+		self.assertAlmostEqual( sampler["color"]["g"].getValue(), 0.2 + 0.0 )
+		self.assertAlmostEqual( sampler["color"]["b"].getValue(), 0.3 + 0.1 )
+		self.assertAlmostEqual( sampler["color"]["a"].getValue(), 0.4 + 0.2 )
+
 	def testDefaultFormat( self ) :
 	
 		a = GafferImage.Constant()
